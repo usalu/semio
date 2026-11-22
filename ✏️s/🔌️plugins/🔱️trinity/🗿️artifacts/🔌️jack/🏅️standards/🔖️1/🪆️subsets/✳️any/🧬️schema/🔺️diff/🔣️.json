@@ -7,7 +7,7 @@
   "required": [
     "schema",
     "name",
-    "manifest",
+    "manifestId",
     "camera",
     "content",
     "query"
@@ -31,17 +31,6 @@
       "type": [
         "string",
         "null"
-      ],
-      "x-semio-state": "artifact"
-    },
-    "manifest": {
-      "anyOf": [
-        {
-          "type": "null"
-        },
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/trinity/jack/artifact.json#/$defs/Manifest"
-        }
       ],
       "x-semio-state": "artifact"
     },

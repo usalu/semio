@@ -2,7 +2,30 @@
 
 The acceptance target is the repository-owned Note editor running the real guest with a fresh browser profile. The ticket's existing feature plan also names rich text, table cells, resizing, multi-block gestures, erasers, clipboard and keyboard shortcuts. Test results below describe the coverage available for each area.
 
-| Area | Current evidence | Live evidence required |
+## Current status
+
+The repository-owned Note server on port 6080 is serving the managed attempt 57 guest. Native Cargo linked all 880 units and the artifact build recorded zero failures across 11 stages. The published component receipt is `5a55b3eb29a25e7471746adeccb90bbf58d2ed811ac7fa2a215a9af49878f61d`, byte-for-byte the linked candidate. It records source digest `88ac9542166edeff4be3a4ba88f288950e6385cac93a4186f64afbfe037f5ece`. The staged and HTTP-served WebAssembly core agree at 99,295,879 bytes and SHA-256 `ae502d654040428593176e396578bbe2b6dba6c574600700354593dec7afe326`. After publication, the repo operation reported status 75 when a concurrent Cargo registry change invalidated its post-build snapshot. The outer wrapper exited nonzero. The artifact report and independently verified published bytes confirm that packaging completed.
+
+Fresh Chromium passed all six scenarios in the main acceptance batch and all three focused canvas scenarios against that guest.
+
+| Area | Observed result |
+| --- | --- |
+| Editor and history | All 21 full editor checks passed. Chromium created Text, Table and Math blocks, committed bold text and edited a table cell. The Artifact tree reflected selection. Delete, Undo and Redo updated the document. |
+| Drawing and erasing | Pencil added one stroke in Canvas and Navigator. Point Eraser split it into two. Stroke Eraser removed one fragment. Undo restored both fragments, then the original stroke, then the empty drawing. |
+| Geometry | Group movement translated both blocks by 68 × 41. Eight resize samples grew one block from 280 × 120 to 332 × 147 while its neighbor kept its size. Undo restored Canvas and Navigator. |
+| Clipboard and camera | Block copy and paste created a second block from a 329-byte clipboard payload. Anchored zoom moved from 1 to 1.08000004 with 0.0612 px of pointer error and survived a 12 × 8 SVG paste. |
+| Archive | The full editor downloaded a new four-block archive, reloaded into a fresh Demo, and restored the same bold text, edited table cell, Math and SVG. Independent history-only, Math-only and mixed archives also reopened. Both focused restored documents accepted a subsequent edit. |
+| Viewer and cancellation | Viewer displayed one block with zero editor controls. Import displayed an active progress bar. Cancelling preserved the current document and allowed a subsequent edit. |
+
+The 212 mounted renderer tests passed across seven suites, and the separate media and file suite passed all 15 checks. The 22 language-neutral tests passed with 168 assertions across 12 files. The mounted runs cover ink editing, clipboard, marquee and operation scheduling. The neutral checks use SQLite as an independent oracle for retained grant and ordering contracts.
+
+All four renderer contract generators completed. The project-owned typecheck reached its two-minute execution limit. The pinned compiler completed directly with the same renderer project configuration and reported 27 diagnostics in other renderer code and fixtures. Two supplementary native replay fixture tests compile and link, then fail at their authority or payload admission assertions. The standard graph-backed dev launch could not complete its preflight while the shared graph builder held admission. Live verification used the repository-owned React dev activation. The separate WGPU browser route remains unverified.
+
+See [ink tool authority](note-ink-tool-authority.md), [native archive grant](note-native-archive-grant.md), [native fixture evidence](note-native-replay-fixture-authority.md), [media picker verification](note-original-media-picker-cancellation.md), and [standard launch preflight](note-standard-launch-preflight.md).
+
+## Earlier checkpoints
+
+| Area | Earlier evidence | Then required |
 | --- | --- | --- |
 | Dev contribution and launch | Ajv verifies the launch declaration. Attempt 45 served a sealed Note guest on port 6080 and Chromium mounted Canvas and Navigator. | Repeat against the final staged guest. |
 | Artifact creation and editing | Chromium on attempt 45 added Text, Table and Math after the Store Closing fix. The mounted React tests cover editing text on blur, Escape, table cell navigation and targeting rendered cells. The live editor opens both fields, but the native `updateBlock` derivation omits paragraph and cell changes. | Add all three blocks, edit text and a table cell, then observe the settled artifact and Canvas. |
@@ -48,3 +71,19 @@ In the old camera guest, the retained authority closure received 3 Work units an
 A separate real Chromium session on attempt 52 opened the Tasks panel during mixed archive import and observed the active progress bar. Cancel closed the transfer, preserved the original empty Demo, and allowed a subsequent normal Text block edit. The completed archive case uses a separate session.
 
 The isolated captured attempt 53 retained the anchored zoom after publishing a real 12 × 8 SVG edit. The focused case observed zoom 1.0800000429153442 and offset [−5.11999989, −10.17879963] at both steps, with 0.0612 px pointer anchor error. The first test incorrectly compared the newly updated block count a second time; the corrected test uses the immutable initial count and passed.
+
+The standalone shell reopened the archived one-block Math document in the captured guest and accepted an additional Text block. The test selected Close and discard only for its fresh, empty Demo. The detached profile had no document data folder. The older native guest then warned about zero progress during background retirement of the predecessor, and the new document remained editable.
+
+The combined current-source neutral test run passed 9 tests and 86 assertions across archive polling cadence, receiving grants, maintenance wake, native transpiler preflight, camera authority Work and Pencil window projection. The browser runner and isolated binding helper also pass syntax checks.
+
+The actual published attempt 54 passed anchored zoom after SVG paste and, in the full editor session, a Pencil stroke in both Canvas and Navigator with Undo restoring both. The focused empty Demo case selected Pencil visually but did not produce a stroke or reach its eraser checks. The actual mixed and Math archive baselines did not complete on that earlier native scheduler. The older full acceptance run was stopped after the verified Pencil and Undo checkpoints so the corrected guest could build.
+
+Managed attempt 55 compiled 880 Rust units and sealed compiler provenance. Its compiler dependency claims match the current native sources for archive maintenance scheduling, archive replacement initializer diagnostics, replay receiving grants, cleanup progress validation, and scoped window projection. Guest publication and browser checks are tracked separately.
+
+The nine current-source neutral suites passed 16 tests and 135 assertions for mount ownership, archive waking and polling, standalone adoption, replay grant narrowing, camera authority and batching, native preflight, and window projection.
+
+The Note browser host now routes Pencil and Eraser using the mounted surface's own shell utility register. All 47 focused renderer tests pass. The live attempt 55 browser opened an empty Demo and completed drawing, point erasure, stroke erasure, and Undo in Canvas and Navigator. See note-ink-tool-authority.md.
+
+The actual attempt 55 mixed archive avoided the old Source copy exhaustion and reached store initialization, which reported that native construction exceeded the original remaining Job grant. Viewer and the focused Math archive failed during live cleanup of their prepared instance. A direct Viewer worker receipt showed an issued three-item grant and a four-item callback receipt, with 323 copied bytes and 224 bytes of retained capacity. The managed guest and browser suite therefore remain under native initialization repair.
+
+A fresh browser on attempt 55 also cancelled the active mixed-archive transfer from the Tasks panel, preserved the initial Demo, and added a Text block afterward.

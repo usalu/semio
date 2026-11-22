@@ -1,7 +1,7 @@
 //! 🖊️ Animate presentation app — the `main` mode: the single tile-editor authoring layout.
 
 use crate::editor::animate::modes::main::windows::tile_editor;
-use semio_plugin::create_default_layout;
+use semio_plugin::{create_default_layout, create_stack_layout};
 use semio_ui_locale::LocalizedLabel;
 use semio_plugin::ModeDefinition;
 use semio_plugin::WindowLayout;
@@ -17,7 +17,7 @@ pub fn definition() -> ModeDefinition {
 /// 🪟️ The app's default window layout — this mode is the app's `default_mode_id`, so its layout IS the
 /// app-level `default_layout`.
 pub fn layout() -> WindowLayout {
-    create_default_layout(&[tile_editor::PRESENTATION_PLAY_WINDOW_MAIN.into()], "stack", None, Some(&["Tile editor".into()]))
+    create_stack_layout(&[tile_editor::PRESENTATION_PLAY_WINDOW_MAIN.into()], Some(&["Tile editor".into()]))
 }
 //#endregion 🔖️Definition
 

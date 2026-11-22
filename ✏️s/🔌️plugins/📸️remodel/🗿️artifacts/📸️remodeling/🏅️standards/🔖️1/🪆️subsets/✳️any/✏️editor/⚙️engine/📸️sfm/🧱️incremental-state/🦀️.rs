@@ -88,6 +88,7 @@ pub struct Reconstruction {
 /// since [`BipartiteResiduals::evaluate`] receives a term but not its index into `residual_terms()`.
 #[derive(semio_framework_value::RetireOwned)]
 pub struct SfmBundleProblem {
+    /// 📷️ Fixed calibration in the camera block order.
     pub intrinsics: Vec<Intrinsics>,
     pub num_cameras: usize,
     pub num_points: usize,
@@ -338,6 +339,7 @@ pub struct ReconstructionSnapshotPreparation {
 
 impl IncrementalSfm {
     /// 🆕️ Starts an empty incremental reconstruction over a shared calibration, precomputed feature tracks and per-frame keypoints.
+    /// 🆕️ Opens a reconstruction with one calibration for each feature frame, in the same order.
     pub fn new(intrinsics: Vec<Intrinsics>, tracks: FeatureTracks, keypoints_per_frame: Vec<Vec<Keypoint>>, cfg: SfmConfig) -> Self {
         assert_eq!(intrinsics.len(), keypoints_per_frame.len(), "one calibration per feature frame");
         Self { intrinsics, tracks, keypoints_per_frame, pairwise_matches: Vec::new(), cfg, cameras: Vec::new(), points: std::collections::BTreeMap::new(), point_events: None }

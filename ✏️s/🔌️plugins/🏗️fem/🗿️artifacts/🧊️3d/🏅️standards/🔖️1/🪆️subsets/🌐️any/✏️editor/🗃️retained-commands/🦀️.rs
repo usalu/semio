@@ -9,7 +9,7 @@ use super::*;
 /// equality at construction time: a row missing here, or an action left `BatchOnlyPendingRewrite`,
 /// faults the whole app with `interactive-job.catalog-incomplete` instead of silently going
 /// dispatch-dead at the UI gate — which is what the pre-migration two-row list did to the other 16.
-pub(super) const FEM3D_RETAINED_TOOL_IDS: &[&str] = &[
+pub const FEM3D_RETAINED_TOOL_IDS: &[&str] = &[
     "addNode",
     "addBar",
     "addFrame",
@@ -48,31 +48,31 @@ pub(super) const FEM3D_RETAINED_TOOL_IDS: &[&str] = &[
 
 const FEM3D_RETAINED_PAYLOAD_SCHEMA: &str = "fem.3d.tool-command.v1";
 
-pub(super) const FEM3D_RETAINED_RAW_BYTES: usize = 65_536;
+pub const FEM3D_RETAINED_RAW_BYTES: usize = 65_536;
 
-pub(super) const FEM3D_RETAINED_DECODED_ITEMS: usize = 4_096;
+pub const FEM3D_RETAINED_DECODED_ITEMS: usize = 4_096;
 
-pub(super) const FEM3D_RETAINED_OUTPUT_BYTES: usize = 262_144;
+pub const FEM3D_RETAINED_OUTPUT_BYTES: usize = 262_144;
 
 const FEM3D_RETAINED_STEP_MICROS: u32 = 7_500;
 
 /// 🎒️ Semantic work ceiling for one retained fem3d command: the document's own id-keyed collections
 /// (`removeSelection` walks every one of them), so a model beyond this size falls out of the retained
 /// path with `fem3d-command-payload-too-large` rather than blocking the interactive step budget.
-pub(super) const FEM3D_RETAINED_WORK_ITEMS: usize = 4_096;
+pub const FEM3D_RETAINED_WORK_ITEMS: usize = 4_096;
 
-pub(super) const FEM3D_WINDOW_COMMAND_VALUE_BYTES: usize = 512;
+pub const FEM3D_WINDOW_COMMAND_VALUE_BYTES: usize = 512;
 
 /// 🎒️ Real bound for one Artifact-lane edit: the largest single `Fem3dMutation` any of the 15 document
 /// tools emits is `CreateSolid` (outline + holes polygons) — 64 KiB is a genuine ceiling for that
 /// encoded op, not a rubber stamp.
-pub(super) const FEM3D_ARTIFACT_STORE_MAXIMUM_BYTES: usize = 65_536;
+pub const FEM3D_ARTIFACT_STORE_MAXIMUM_BYTES: usize = 65_536;
 
 /// 🧾️ Document commands publish artifact mutations; example loading emits a host effect.
 /// Camera and result display publish only to the addressed window's configuration. The gumball verbs
 /// publish a committed transaction into the artifact and the dispatching window's open gesture into the
 /// FEM gumball transient.
-pub(super) const FEM3D_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
+pub const FEM3D_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
     ArtifactToolPublicationContract { tool_id: "addNode", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "addBar", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "addFrame", lanes: &[ArtifactToolPublicationLane::Artifact] },
@@ -113,7 +113,7 @@ pub(super) const FEM3D_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublication
 /// calls this same fn, so the declared proof row and the registered factory can never disagree (they did
 /// before: the proof declared `bounded_first_step` while the factory returned `resumable`, which made
 /// `validate_tool_job_rows`' `registration.contract == row.contract` check reject even `setCamera`).
-pub(super) fn fem3d_retained_contract() -> ToolExecutionContract {
+pub fn fem3d_retained_contract() -> ToolExecutionContract {
     ToolExecutionContract::bounded_first_step(FEM3D_RETAINED_RAW_BYTES, FEM3D_RETAINED_DECODED_ITEMS, 1, FEM3D_RETAINED_OUTPUT_BYTES, FEM3D_RETAINED_STEP_MICROS)
 }
 
@@ -257,12 +257,12 @@ impl ArtifactCommandWork<EditorApp<Fem3dPlayApp>> for Fem3dCommandWork {
     }
 }
 
-pub(super) struct Fem3dRetainedCommandJobFactory {
+pub struct Fem3dRetainedCommandJobFactory {
     pub(super) keys: Vec<ToolFactoryKey>,
 }
 
 impl Fem3dRetainedCommandJobFactory {
-    pub(super) fn new(controller_id: &str) -> Self {
+    pub fn new(controller_id: &str) -> Self {
         Self { keys: FEM3D_RETAINED_TOOL_IDS.iter().map(|tool_id| ToolFactoryKey::new(controller_id, *tool_id)).collect() }
     }
 }

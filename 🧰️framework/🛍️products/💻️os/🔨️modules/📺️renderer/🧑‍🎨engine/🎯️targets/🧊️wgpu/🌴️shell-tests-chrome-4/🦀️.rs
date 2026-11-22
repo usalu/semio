@@ -9,7 +9,7 @@ use semio_renderer_wgpu_contracts::{SHELL_FIND_ITEM_CAPACITY, ShellFindItem, She
 use semio_renderer_wgpu_dock::{DockNode, DockStackTab, WindowSilhouette, push_window_silhouette_border};
 use semio_renderer_wgpu_fixtures::shell::split_pane_shell;
 use semio_renderer_wgpu_shell_actions::{ActionsCtx, staged_arg_value};
-use semio_renderer_wgpu_shell_async::{INTRODUCED_PULSE_PERIOD_MS, engagement_completion_suffix, engagement_ghost_accept_on_click, introduced_pulse_thickness, utility_subtree_has_active_path};
+use semio_renderer_wgpu_shell_async::{engagement_completion_suffix, engagement_ghost_accept_on_click, utility_subtree_has_active_path};
 #[cfg(not(target_arch = "wasm32"))]
 use semio_renderer_wgpu_shell_chrome_state::assert_shell_chrome_build_state_is_send;
 use semio_renderer_wgpu_shell_chrome_state::{
@@ -26,7 +26,7 @@ use semio_renderer_wgpu_shell_prefs::{
 use semio_renderer_wgpu_shell_session::{FRAMEWORK_SETTINGS_PANEL_ID, SessionCtx, panel_ui_records};
 use semio_renderer_wgpu_shell_state::{SHELL_DEFAULT_MERGE_POLICY, ShellState};
 use semio_renderer_wgpu_shell_view_chrome::{ChromeViewCtx, ShellChromeChildCursor, render_retained_chrome_group_item_step, render_utility_node_step, render_utility_nodes};
-use semio_renderer_wgpu_shell_view_overlays::{INTRODUCTION_INFO_BOX_GAP, OverlaysViewCtx, chrome_dialog_paint_ops, introduction_veil_bands, punch_introduction_cutout, resolve_introduction_placement};
+use semio_renderer_wgpu_shell_view_overlays::{OverlaysViewCtx, clear_introduction_info_box_near_misses, dock_introduction_info_box, introduction_info_box_gap, chrome_dialog_paint_ops, introduction_veil_bands, punch_introduction_cutout, resolve_introduction_placement};
 use semio_renderer_wgpu_shell_view_paint::RetainedChromeGroupStep;
 use semio_renderer_wgpu_shell_view_panels::{PanelsViewCtx, ShellChromeFrameCursor, ShellChromeFramePhase};
 use semio_renderer_wgpu_shell_window_actions::{custom_theme_id_for_label, delete_custom_theme, engagement_control_rows, merge_committed_args, staged_color_value};
@@ -50,5 +50,7 @@ use semio_ui_declaration::layout::WindowStackCorner;
 
 #[path = "../../../🧱️elements/🐚️Shell/🧪️tests/🔬️wgpu-chrome-overlays-tour/🦀️.rs"]
 mod chrome_overlays_tour_tests;
+#[path = "../../../🧱️elements/🐚️Shell/🧪️tests/🔬️wgpu-tutorial-presentation/🦀️.rs"]
+mod tutorial_presentation_tests;
 #[path = "../../../🧱️elements/🐚️Shell/🧪️tests/🎨️wgpu-theme-editor-and-accessibility/🦀️.rs"]
 mod theme_editor_and_accessibility_tests;

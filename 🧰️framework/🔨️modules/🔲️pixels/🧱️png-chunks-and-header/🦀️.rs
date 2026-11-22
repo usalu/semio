@@ -6,13 +6,23 @@ use super::*;
 pub(super) const PNG_SIGNATURE: [u8; 8] = [137, 80, 78, 71, 13, 10, 26, 10];
 
 pub(super) fn write_chunk(out: &mut Vec<u8>, ty: &[u8; 4], data: &[u8]) {
-    out.extend_from_slice(&(data.len() as u32).to_be_bytes());
-    out.extend_from_slice(ty);
+    let at = begin_chunk(out, ty);
     out.extend_from_slice(data);
-    let mut crc_in = Vec::with_capacity(4 + data.len());
-    crc_in.extend_from_slice(ty);
-    crc_in.extend_from_slice(data);
-    out.extend_from_slice(&crc32(&crc_in).to_be_bytes());
+    finish_chunk(out, at);
+}
+
+pub(super) fn begin_chunk(out: &mut Vec<u8>, ty: &[u8; 4]) -> usize {
+    let at = out.len();
+    out.extend_from_slice(&[0; 4]);
+    out.extend_from_slice(ty);
+    at
+}
+
+pub(super) fn finish_chunk(out: &mut Vec<u8>, at: usize) {
+    let length = (out.len() - at - 8) as u32;
+    let checksum = crc32(&out[at + 4..]);
+    out[at..at + 4].copy_from_slice(&length.to_be_bytes());
+    out.extend_from_slice(&checksum.to_be_bytes());
 }
 
 type PngChunk<'a> = ([u8; 4], &'a [u8]);

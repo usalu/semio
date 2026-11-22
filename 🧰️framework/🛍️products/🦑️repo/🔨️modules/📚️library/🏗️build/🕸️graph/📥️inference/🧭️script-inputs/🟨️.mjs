@@ -47,7 +47,7 @@ import { createReachSetsV1 } from "./🧠️reach-memo/🟨️.mjs";
 const { existsSync, statSync } = observedFs;
 
 /** 🚧️ Turns an import of a command closure that resolves to nothing into the withheld-project failure of its importing source, so one broken file withholds its own project instead of aborting the whole graph. */
-function unresolvedSourceImportV1(error,path){return Object.assign(Error(String(error.message),{cause:error}),{code:"BUILD_SOURCE_UNPARSEABLE",source:path,sha256:createHash("sha256").update(observedFs.readFileSync(path)).digest("hex")});}
+function unresolvedSourceImportV1(error,path){return Object.assign(Error(String(error.message),{cause:error}),{code:"BUILD_SOURCE_UNPARSEABLE",unresolvedImport:true,source:path,sha256:createHash("sha256").update(observedFs.readFileSync(path)).digest("hex")});}
 
 /** 🏷️ Names this component as its roster entry does. */
 export const component = "script-inputs";
@@ -142,6 +142,12 @@ export function buildImportResourceV1(containing,specifier){
  return {specifier:relative?fileURLToPath(url):base,suffix:url.search+url.hash,source:!query.has("raw")&&(!query.has("url")||query.has("worker")||query.has("sharedworker"))};
 }
 
+/** 🩺️ Why a package manifest does not resolve a subpath: `export-not-declared` when its `exports` name no such entry, `export-target-missing` (with the absolute target) when the entry is declared and the file it maps to is absent, the state of a manifest whose entry was written before its target; read from the manifest bytes the resolver just observed. */
+function exportDiagnosisV1(manifest, packageName, specifier, directory) {
+  const entry = manifest.exports?.["." + specifier.slice(packageName.length)], leaf = (value) => typeof value === "string" ? value : value && typeof value === "object" ? Object.values(value).map(leaf).find((item) => item !== undefined) : undefined, target = leaf(entry);
+  return target === undefined || target.includes("*") ? { reason: "export-not-declared" } : { reason: "export-target-missing", target: resolve(directory, target) };
+}
+
 /** 📦️ Resolves a package specifier to the workspace module it names, so imports through `@scope/package` subpaths join a command closure like relative ones; installed registry packages stay covered by their locked external dependency. */
 export function workspacePackageModuleV1(containing, specifier, workspaceRoot, compiler=parserTypescriptV1(), host=observedTypeScriptHost(compiler.sys), mode=compiler.ModuleKind.ESNext, declarations=false,producedOutput) {
   if (specifier.startsWith(".") || isAbsolute(specifier) || isBuiltin(specifier) || /^[a-z][a-z0-9+.-]*:/u.test(specifier)) return undefined;
@@ -165,7 +171,7 @@ export function workspacePackageModuleV1(containing, specifier, workspaceRoot, c
       const physical=host.realpath?host.realpath(manifest):manifest,local=relative(workspaceRoot,physical);
       if(local===""||local.startsWith("..")||isAbsolute(local)||local.split(sep).includes("node_modules"))continue;
       const text=host.readFile(physical);
-      if(text!==undefined&&JSON.parse(text).name===packageName){const error=new Error("Workspace import is not resolved by current package metadata: "+specifier+" from "+containing);error.code="MODULE_NOT_FOUND";error.unresolved=true;throw error;}
+      if(text!==undefined&&JSON.parse(text).name===packageName){const diagnosis=exportDiagnosisV1(JSON.parse(text),packageName,specifier,dirname(physical)),error=new Error("Workspace import is not resolved by current package metadata: "+specifier+" from "+containing+" ("+diagnosis.reason+(diagnosis.target?": "+diagnosis.target:"")+")");error.code="MODULE_NOT_FOUND";error.unresolved=true;error.importer=containing;error.specifier=specifier;error.watched=[physical];if(diagnosis.target)error.target=diagnosis.target;throw error;}
     }
     return undefined;
   }
@@ -1892,6 +1898,14 @@ export function closureApiV1(scripts, workspaceRoot) {
   const used = new Map(), fact = async (recipe, query) => { const key = closureRecipeKeyV1(recipe); knownClosureRecipesV1.set(key, recipe); used.set(key, recipe); let entry = await ensureClosureEntryV1(workspaceRoot, recipe), providers = await ensureProviderEntriesV1(workspaceRoot, entry); const answer = await answeredAgainstFreshProvidersV1(() => closureAnswerV1(workspaceRoot, entry, query, providers), async () => { entry = await ensureClosureEntryV1(workspaceRoot, recipe); providers = await ensureProviderEntriesV1(workspaceRoot, entry); }); if (answer === undefined) throw Object.assign(refuseBuildV1("invalid", "closure.provider-entry-stale", { port: sharedReferencesOfV1(entry.value).map(row => row.recipe.port ?? row.recipe.name).join(", ") }), { storeChanged: true }); recordClosureFactV1(JSON.stringify([workspaceRoot, key, query]), JSON.stringify(answer)); return answer; };
   const expanded = value => expandedCommandInputsV1(value, workspaceRoot, scripts);
   const relativeEntries = entries => entries.map(entry => relative(workspaceRoot, entry).split(sep).join("/"));
+  const sharedClosureGroupReaders = (projectRoot, declared) => {
+    const designation = providerDesignationV1(scripts);
+    if (resolve(workspaceRoot, projectRoot, declared) !== resolve(designation.path)) throw refuseBuildV1("invalid", "closure.provider-designation-differs", { designation: String(declared) });
+    const readers = [];
+    for (const port of Object.keys(designation.providers).sort()) for (const view of Object.keys(PROVIDER_CLOSURE_POLICY_V1.views)) readers.push([providerGroupNameV1(port, view), () => late ? closureHandleV1({ fn: "script-provider", port, view }) : scriptProviderGroupV1(workspaceRoot, scripts, port, view)]);
+    for (const name of Object.keys(PROVIDER_CLOSURE_POLICY_V1.tools.closures).sort()) readers.push([toolGroupNameV1(name), () => late ? closureHandleV1({ fn: "tool-closure", name, view: PROVIDER_CLOSURE_POLICY_V1.tools.closures[name].view }) : toolClosureGroupV1(workspaceRoot, scripts, name)]);
+    return readers;
+  };
   return Object.freeze({
     late,
     async nativeCommandInputs() { return late ? closureHandleV1({ fn: "native-command" }) : nativeCommandInputs(workspaceRoot, scripts); },
@@ -1904,12 +1918,10 @@ export function closureApiV1(scripts, workspaceRoot) {
     async genericTargetCommandInputs(target, projectRoot) { return late ? closureHandleV1({ fn: "generic-target", target: closureTargetV1(target), projectRoot }) : genericTargetCommandInputs(target, workspaceRoot, genericCommandFallbackInputs(workspaceRoot), scripts, projectRoot); },
     async closureOf(entries, extras, role) { closureRoleViewV1(role); return late ? closureHandleV1({ fn: "closure-of", entries: relativeEntries(entries), extras, role }) : closureOfV1(entries, workspaceRoot, scripts, extras, role); },
     async toolClosure(name) { return toolReferencesV1(scripts, name); },
+    sharedClosureGroupReaders,
     async sharedClosureGroups(projectRoot, declared) {
-      const designation = providerDesignationV1(scripts);
-      if (resolve(workspaceRoot, projectRoot, declared) !== resolve(designation.path)) throw refuseBuildV1("invalid", "closure.provider-designation-differs", { designation: String(declared) });
       const groups = [];
-      for (const port of Object.keys(designation.providers).sort()) for (const view of Object.keys(PROVIDER_CLOSURE_POLICY_V1.views)) groups.push([providerGroupNameV1(port, view), late ? closureHandleV1({ fn: "script-provider", port, view }) : await scriptProviderGroupV1(workspaceRoot, scripts, port, view)]);
-      for (const name of Object.keys(PROVIDER_CLOSURE_POLICY_V1.tools.closures).sort()) groups.push([toolGroupNameV1(name), late ? closureHandleV1({ fn: "tool-closure", name, view: PROVIDER_CLOSURE_POLICY_V1.tools.closures[name].view }) : await toolClosureGroupV1(workspaceRoot, scripts, name)]);
+      for (const [name, read] of sharedClosureGroupReaders(projectRoot, declared)) groups.push([name, await read()]);
       return groups;
     },
     async derive(recipe) {
@@ -2026,7 +2038,7 @@ export async function yieldInferenceV1(context,phase,index,force=false){
  throwIfOwnerExceededV1();
  if(!context.invocation)return;
  const last=yieldInferenceV1.last??=new WeakMap(),now=performance.now();
- if(!force&&now-(last.get(context)??-Infinity)<INFERENCE_LIMITS_V1.advanceThrottleMilliseconds){context.invocation.control.signal.throwIfAborted();return;}
- last.set(context,now);
+ if(!force&&now-(last.get(context.invocation)??-Infinity)<INFERENCE_LIMITS_V1.advanceThrottleMilliseconds){context.invocation.control.signal.throwIfAborted();return;}
+ last.set(context.invocation,now);
  requireIssuedResourceControlInvocationV1(context.phaseControl,context.invocation);checkScriptInvocation(context.invocation);checkResourceLeaseControl(context.phaseControl);await advanceScriptInvocation(context.invocation,phase,"running");checkResourceLeaseControl(context.phaseControl);
 }

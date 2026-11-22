@@ -1,7 +1,7 @@
 /** 🖼️ TiledMapHost renderer: the `MapRenderer` that drives the map session, fetches and caches raster and vector tiles and uploads them. */
 import { publishedPageUrl } from "@semio-tech/framework/assets/published-page";
 import { type MapWasmSession } from "../../🪪️WasmSessionLoader/🟦️.tsx";
-import { EASED_SURFACE_TRAILING_WINDOW_MS, createDemandFrameScheduler } from "@semio-tech/framework/canvas/react-renderer";
+import { createDemandFrameScheduler } from "@semio-tech/framework/canvas/react-renderer";
 import { type MapCamera, type MapOverlayLayerInfo, type MapRenderMode, MAX_CONCURRENT_TILE_FETCHES, MAX_RASTER_TILE_BYTES_CACHED, MAX_TILE_MISS_ENTRIES, MAX_VECTOR_TILE_BYTES_CACHED, MAX_VECTOR_TILE_MISS_ENTRIES, parseCameraJson, parseMapOverlayIndex, parseVisibleTilesJson, syncMapInteraction, TILE_REFRESH_DEBOUNCE_MS, type VisibleTileRow } from "../📐️map-parsing/🟦️.ts";
 import { serializeMapCanvasThemeJson } from "../🎨️map-theme/🟦️.ts";
 import { createBoundedSet, createByteLru, createLeadingTrailingDebounce, type LeadingTrailingDebounce } from "../🗃️tile-cache/🟦️.ts";
@@ -48,7 +48,6 @@ export class MapRenderer {
   private logicalHeight = 1;
   private dpr = 1;
   private scheduler: ReturnType<typeof createDemandFrameScheduler> | null = null;
-  private readonly continuousInteractions = new Set<string>();
 
   constructor(tileUrlTemplate: string, vectorTileUrlTemplate: string, session: MapWasmSession) {
     this.session = session;
@@ -102,6 +101,7 @@ export class MapRenderer {
     this.vectorTileMiss.clear();
     this.lastRefreshRevisions = { raster: null, vector: null };
     this.lastPolledRevisions = { raster: null, vector: null };
+    this.invalidate();
     this.scheduleRefreshTiles();
   }
 
@@ -152,26 +152,9 @@ export class MapRenderer {
     this.invalidate();
   }
 
-  /** 🪶️ REDUCE-DEMONSTRATOR-IDLE-MEMORY-FOOTPRINT: schedules one render (plus a brief trailing
-   * window — see `createDemandFrameScheduler`) instead of relying on the permanent loop this class
-   * used to run. Safe to call before `startLoop()`/after `stopLoop()` — it's a no-op until the
-   * scheduler exists. */
+  /** 🪶️ Schedules one paint on the next frame when the scheduler is active. */
   invalidate(): void {
     this.scheduler?.invalidate();
-  }
-
-  /** 🪶️ Held down for the duration of a pan/zoom gesture (see `TiledMapHost`'s pointer handlers) so
-   * tile visibility keeps getting polled every frame while the viewport is actually moving, instead
-   * of only on each discrete `invalidate()`. */
-  beginContinuousInteraction(reason: string): void {
-    this.continuousInteractions.add(reason);
-    this.scheduler?.beginContinuous(reason);
-  }
-
-  endContinuousInteraction(reason: string): void {
-    this.continuousInteractions.delete(reason);
-    this.scheduler?.endContinuous(reason);
-    this.invalidate();
   }
 
   /** 🪶️ Public wrapper so `TiledMapHost` can drive this from `useCanvasAppearanceSync` (fires on
@@ -330,31 +313,19 @@ export class MapRenderer {
     }
   }
 
-  /** 🪶️ REDUCE-DEMONSTRATOR-IDLE-MEMORY-FOOTPRINT: used to be an unconditional 60fps
-   * `requestAnimationFrame` loop for the surface's entire lifetime, no dirty check — see
-   * `createDemandFrameScheduler`'s docstring. Theme sync moved off the per-frame path onto
-   * `syncTheme()` (driven by `useCanvasAppearanceSync` in `TiledMapHost`, which only fires on actual
-   * theme changes); tile-visibility polling still runs every scheduled frame — cheap on its own
-   * (two allocation-free wasm revision-number reads, only *schedules* a refresh when a revision
-   * actually changed — see `pollVisibleTilesForRefresh`) but now only runs while something has called `invalidate()` or
-   * `beginContinuousInteraction()` (pan/zoom gestures — see `TiledMapHost`'s pointer handlers),
-   * instead of forever. */
+  /** 🕰️ Starts painting in response to map changes. The map session applies camera changes synchronously. */
   startLoop(onFailure?: () => void): void {
     if (this.scheduler) return;
-    this.scheduler = createDemandFrameScheduler(
-      () => {
-        if (this.disposed) return;
-        try {
-          this.pollVisibleTilesForRefresh();
-          this.session.renderFrame();
-        } catch (error) {
-          if (!onFailure) throw error;
-          onFailure();
-        }
-      },
-      { trailingWindowMs: EASED_SURFACE_TRAILING_WINDOW_MS },
-    );
-    for (const reason of this.continuousInteractions) this.scheduler.beginContinuous(reason);
+    this.scheduler = createDemandFrameScheduler(() => {
+      if (this.disposed) return;
+      try {
+        this.pollVisibleTilesForRefresh();
+        this.session.renderFrame();
+      } catch (error) {
+        if (!onFailure) throw error;
+        onFailure();
+      }
+    });
     this.scheduler.invalidate();
   }
 

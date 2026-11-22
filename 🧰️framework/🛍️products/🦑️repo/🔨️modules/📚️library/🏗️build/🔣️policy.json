@@ -32,7 +32,7 @@
     "server": {
       "host": "127.0.0.1",
       "port": 6090,
-      "fleetDirectory": ".cache/f/cache-server",
+      "fleetArea": "fleet-cache-index",
       "directory": ".🧬semio/🦑️repo/⚡️cache/remote-cache",
       "maximumBytes": 2684354560,
       "maximumEntryBytes": 536870912,
@@ -172,6 +172,7 @@
       "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧷️pin/**/*",
       "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🗓️scheduler/**/*",
       "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚢️fleet-status/**/*",
+      "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔬️test-file/**/*",
       "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚪️door/**/*",
       "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧠️memory/**/*",
       "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🕸️graph/**/*",
@@ -232,8 +233,9 @@
     },
     "swap": {
       "ceilingBasisPoints": 2500,
-      "activeMegabytesPerSecond": 1,
-      "outMegabytesPerSecond": 64
+      "activeBasisPointsPerSecond": 0.6,
+      "outBasisPointsPerSecond": 40,
+      "shortBasisPoints": 2500
     },
     "pressure": {
       "psiWarnPercent": 10,
@@ -265,7 +267,10 @@
       "maximumBypasses": 6,
       "agingMilliseconds": 300000,
       "lendAfterMilliseconds": 5000,
-      "jitterBasisPoints": 2500
+      "jitterBasisPoints": 2500,
+      "deadlineInteractiveMilliseconds": 120000,
+      "deadlineBatchMilliseconds": 300000,
+      "starvedMilliseconds": 1800000
     },
     "kinds": {
       "test": {
@@ -369,7 +374,8 @@
         "shape": "fixed",
         "fixedMegabytes": 2048,
         "cpu": 1,
-        "priority": "batch"
+        "priority": "batch",
+        "minimumMegabytes": 1024
       },
       {
         "name": "tool-format",
@@ -404,6 +410,11 @@
         "name": "read-parent",
         "pattern": "^(?:show|graph)(?::|$)",
         "megabytes": 4096
+      },
+      {
+        "name": "dry-run",
+        "pattern": ":dry$",
+        "megabytes": 2304
       }
     ],
     "estimates": {
@@ -424,6 +435,9 @@
       "phaseReferenceMegabytes": 1024,
       "rebuildPriorMegabytes": 4096,
       "rebuildShareBasisPoints": 5000,
+      "rebuildMinimumMegabytes": 2304,
+      "maximumPhaseMegabytes": 4096,
+      "rebuildQuantileBasisPoints": 5000,
       "maximumRebuildSlots": 4,
       "quietReferenceMegabytes": 512,
       "quietMaximumMegabytes": 1024,

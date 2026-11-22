@@ -4,7 +4,7 @@ name = "semio-ui-wgpu-hosting"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
-description = "semio wgpu hosting: accessibility projection, cursors, shell, window host and scene slots"
+description = "semio wgpu hosting: accessibility projection, cursors, clipboard host and scene slots"
 
 [package.metadata.semio]
 role = "framework"
@@ -31,7 +31,6 @@ semio-framework-job-worker-authority = { path = "../../../../../../🧵️job/�
 semio-ui-arena = { path = "../../../../../🌳️retained/🏟️arena/📦️packages/🦀️rust" }
 semio-ui-declaration = { path = "../../../../../📜️declaration/📦️packages/🦀️rust" }
 semio-ui-draw-contract = { path = "../../../🖍️draw/🏷️types/📦️packages/🦀️rust" }
-semio-ui-locale = { path = "../../../../../🌐️locale/📦️packages/🦀️rust" }
 semio-ui-retained-tree = { path = "../../../../../🌳️retained/🌳️tree/📦️packages/🦀️rust" }
 semio-ui-text = { path = "../../../../../🔤️typography/📦️packages/🦀️rust" }
 semio-ui-theme = { path = "../../../../../🎨️styling/🎭️theme/📦️packages/🦀️rust" }
@@ -56,6 +55,7 @@ winit = { version = "0.30.12", features = ["rwh_06", "x11", "wayland", "wayland-
 arboard = { version = "3" }
 
 [dev-dependencies]
+semio-ui-locale = { path = "../../../../../🌐️locale/📦️packages/🦀️rust" }
 semio-ui-retained-tree = { path = "../../../../../🌳️retained/🌳️tree/📦️packages/🦀️rust", features = ["testkit"] }
 semio-ui-contract-values = { path = "../../../../../🧬️contract/🌱️values/📦️packages/🦀️rust", features = ["testkit"] }
 semio-ui-text = { path = "../../../../../🔤️typography/📦️packages/🦀️rust", features = ["testkit"] }

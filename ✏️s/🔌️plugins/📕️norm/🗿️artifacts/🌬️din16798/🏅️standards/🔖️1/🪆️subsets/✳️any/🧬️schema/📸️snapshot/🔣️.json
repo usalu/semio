@@ -348,6 +348,22 @@
             },
             "role": "value"
           }
+        },
+        "unoccupiedVentilation": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/UnoccupiedVentilation"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Unoccupied ventilation",
+              "de": "Lüftung bei Nichtbelegung"
+            }
+          }
         }
       },
       "x-semio-formats": [
@@ -619,6 +635,45 @@
       "x-semio-formats": [
         "🔣️jsonschema"
       ]
+    },
+    "UnoccupiedVentilation": {
+      "title": "UnoccupiedVentilation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "operation",
+        "assessedAreaM2",
+        "zoneVolumeM3",
+        "minutesBeforeOccupancy",
+        "residentialDesignRateLPerSM2",
+        "outdoorAirM3H"
+      ],
+      "properties": {
+        "operation": {
+          "type": "string",
+          "enum": [
+            "nonResidentialPurge",
+            "nonResidentialReduced",
+            "residentialReduced",
+            "residentialShutdown"
+          ]
+        },
+        "assessedAreaM2": {
+          "type": "number"
+        },
+        "zoneVolumeM3": {
+          "type": "number"
+        },
+        "minutesBeforeOccupancy": {
+          "type": "number"
+        },
+        "residentialDesignRateLPerSM2": {
+          "type": "number"
+        },
+        "outdoorAirM3H": {
+          "type": "number"
+        }
+      }
     }
   },
   "additionalProperties": false

@@ -88,6 +88,13 @@ describe("tool resolution", () => {
     const sha = "a".repeat(64), found = resolveToolV1(go, host({ pins: { ["/repo/" + BOOT]: bootstrap }, present: [`/repo/.cache/b/t/m/native/go/1.26.9/darwin-arm64-${sha.slice(0, 16)}/bin/go`] }));
     expect(found.source).toBe("provisioned");
   });
+  test("finds the Tectonic the print pipeline retains below the tools partition by its rust target", () => {
+    const file = "🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/🔧️toolchain/🔣️.json", tectonic = findToolV1("tectonic")!, pins = { ["/repo/" + file]: readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../../../../🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/🔧️toolchain/🔣️.json"), "utf8") };
+    const found = resolveToolV1(tectonic, host({ pins, present: ["/repo/.cache/b/t/m/print/tectonic/aarch64-apple-darwin/tectonic"] }));
+    expect(found.source).toBe("provisioned");
+    expect(resolveToolV1(tectonic, host({ pins, architecture: "x64", present: ["/repo/.cache/b/t/m/print/tectonic/aarch64-apple-darwin/tectonic"] })).command).toBeNull();
+    expect(resolveToolV1(tectonic, host({ pins, architecture: "x64", present: ["/repo/.cache/b/t/m/print/tectonic/x86_64-apple-darwin/tectonic"] })).source).toBe("provisioned");
+  });
   test("runs a package script through its interpreter and refuses a platform the tool lacks", () => {
     const found = resolveToolV1(tsc, host({ runtimeCommand: "bun", execPath: "/x/bun", present: ["/repo/node_modules/typescript/bin/tsc"] }));
     expect(found.command).toBe("/x/bun");

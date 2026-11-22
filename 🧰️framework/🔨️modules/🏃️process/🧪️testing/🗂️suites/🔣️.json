@@ -45,7 +45,8 @@
       "budgetMs": 300000,
       "typecheck": "none",
       "files": [
-        "📦️artifacts/🏗️native-build/📥️source/🎟️admission/🧪️tests/🟦️.ts"
+        "📦️artifacts/🏗️native-build/📥️source/🎟️admission/🧪️tests/🟦️.ts",
+        "📦️artifacts/🏗️native-build/📥️source/🏭️generated-owner/🧪️tests/🟦️.ts"
       ],
       "platforms": [
         "darwin",
@@ -507,6 +508,22 @@
         "darwin",
         "linux",
         "win32"
+      ]
+    },
+    {
+      "id": "native-image-availability",
+      "budgetMs": 120000,
+      "typecheck": "none",
+      "files": [
+        "📦️artifacts/🏗️native-build/💾️storage/🍎️image/♻️reclaim/🧪️tests/🟦️.ts"
+      ],
+      "testNamePattern": "availability corpus|storage floor corpus",
+      "platforms": [
+        "darwin",
+        "linux"
+      ],
+      "platformCauses": [
+        "python3-command"
       ]
     },
     {

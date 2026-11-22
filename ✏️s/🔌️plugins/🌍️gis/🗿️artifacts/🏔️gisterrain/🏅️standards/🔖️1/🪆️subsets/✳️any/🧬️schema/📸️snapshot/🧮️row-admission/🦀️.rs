@@ -1,11 +1,10 @@
 //! 🧮️ Borrowed terrain and native Record trees count every normalized SQL owner row.
-use super::GisTerrainSnapshot;
+use super::{GisTerrainSnapshot, elevation_side_in_range};
 use crate::schema::imported_map::ImportedMap;
 use semio_framework_dsl_record::{FieldValue, RecordValue};
 use semio_framework_value::{DslValue, ValueError, ValueRefusalKind};
 fn invalid(message: &'static str) -> ValueError { ValueError::new(ValueRefusalKind::InvalidValue, message) }
 struct Rows { count: usize, maximum: usize }
-const ELEVATION_SIDE: usize = 33;
 impl Rows {
  fn add(&mut self, count: usize) -> Result<(), ValueError> { self.count = self.count.checked_add(count).filter(|count| *count <= self.maximum).ok_or_else(|| ValueError::new(ValueRefusalKind::WorkLimit, "terrain native complete owner row limit exceeded"))?; Ok(()) }
  fn tree(&mut self, value: &DslValue, depth: usize, checkpoint: &mut impl FnMut() -> Result<(), ValueError>) -> Result<(), ValueError> {
@@ -31,7 +30,12 @@ pub fn snapshot(value: &GisTerrainSnapshot, maximum: usize, mut checkpoint: impl
  if let Some(source) = &value.elevation_source {
   checkpoint()?;
   if !source.is_valid() { return Err(invalid("invalid GIS elevation source")); }
-  rows.add(1 + ELEVATION_SIDE * ELEVATION_SIDE)?;
+  let (columns, height) = source.dimensions().ok_or_else(|| invalid("invalid GIS elevation dimensions"))?;
+  rows.add(1)?;
+  for _ in 0..height {
+   checkpoint()?;
+   rows.add(columns)?;
+  }
  }
  Ok(rows.count)
 }
@@ -45,13 +49,25 @@ pub fn native(value: &RecordValue, maximum: usize, mut checkpoint: impl FnMut() 
   None | Some(FieldValue::Absent) => (),
   Some(FieldValue::Record(source)) => {
    rows.add(1)?;
-   let Some(FieldValue::List(samples)) = source.get(1) else { return Err(invalid("terrain native elevation samples require rows")); };
-   if samples.len() != ELEVATION_SIDE { return Err(invalid("terrain native elevation row count differs")); }
+   let Some(FieldValue::List(samples)) = source.get(0) else { return Err(invalid("terrain native elevation samples require rows")); };
+   if !elevation_side_in_range(samples.len()) { return Err(invalid("terrain native elevation row count differs")); }
+   let columns = match samples.first() {
+    Some(FieldValue::List(samples)) if elevation_side_in_range(samples.len()) => samples.len(),
+    _ => return Err(invalid("terrain native elevation column count differs")),
+   };
+   match source.get(2) {
+    None | Some(FieldValue::Absent) => (),
+    Some(FieldValue::Text(mask)) if mask.len() == (columns * samples.len()).div_ceil(8) * 2 => (),
+    _ => return Err(invalid("terrain native elevation mask size differs")),
+   }
    for sample_row in samples {
     checkpoint()?;
     let FieldValue::List(samples) = sample_row else { return Err(invalid("terrain native elevation row requires samples")); };
-    if samples.len() != ELEVATION_SIDE { return Err(invalid("terrain native elevation column count differs")); }
-    rows.add(samples.len())?;
+    if samples.len() != columns { return Err(invalid("terrain native elevation column count differs")); }
+    rows.add(columns)?;
+    if samples.iter().any(|sample| !matches!(sample, FieldValue::Int(value) if i32::try_from(*value).is_ok())) {
+     return Err(invalid("terrain native elevation sample exceeds signed millimetres"));
+    }
    }
   }
   _ => return Err(invalid("terrain native optional elevation source differs")),

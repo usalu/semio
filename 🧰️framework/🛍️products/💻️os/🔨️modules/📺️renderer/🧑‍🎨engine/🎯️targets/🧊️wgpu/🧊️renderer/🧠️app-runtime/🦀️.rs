@@ -44,12 +44,12 @@ impl MailboxRuntime for AppRuntime {
         AppRuntime::interaction_available(self)
     }
 
-    fn interaction_checkout(&self) -> &runtime_mailbox_core::InteractionCheckoutLedger {
-        &self.checkout
+    fn admit_interaction_checkout(&mut self, requires_interaction: bool, available: bool, owner_outstanding: bool) -> runtime_mailbox_core::InteractionCheckoutStep {
+        self.checkout.admit(requires_interaction, available, owner_outstanding)
     }
 
-    fn interaction_checkout_mut(&mut self) -> &mut runtime_mailbox_core::InteractionCheckoutLedger {
-        &mut self.checkout
+    fn interaction_checkout_site(&self) -> Option<&'static str> {
+        self.checkout.site()
     }
 
     fn check_out_interaction(&mut self, site: &'static str) -> Option<AppInteractionState> {
@@ -216,6 +216,12 @@ impl AppRuntime {
             }
             FrameBuildPhase::Hover => {
                 self.poll_world_touch();
+                if ui_gpu::platform::take_device_loss().is_some() {
+                    let hosts: Vec<String> = self.shell.surfaces.tiled_map_states.iter().map(|(host_id, _)| host_id.clone()).collect();
+                    for host_id in hosts {
+                        semio_renderer_wgpu_engine_board::tiled_map::tiled_map_device_lost(&host_id);
+                    }
+                }
                 let (hover_x, hover_y) = (self.last_pointer_x, self.last_pointer_y);
                 self.input.update_hover(hover_x, hover_y);
                 cursor.phase = FrameBuildPhase::InputFrame;
@@ -636,7 +642,10 @@ impl AppRuntime {
                     self.pending_frame_deferred = deferred;
                     match original { Ok(true) => {}, Ok(false) => return FrameFinishBoundaryStep::Pending, Err(failure) => return FrameFinishBoundaryStep::CloseFailure(failure) }
                 }
-                if partial.resource_input.is_none() || partial.engine_packets.is_none() { return FrameFinishBoundaryStep::Fault("frame completion lost its original input or engine packets"); }
+                let Some(input_generation) = partial.resource_input.as_ref().map(|input| input.preview_generation) else {
+                    return FrameFinishBoundaryStep::Fault("frame completion lost its original input");
+                };
+                if partial.engine_packets.is_none() { return FrameFinishBoundaryStep::Fault("frame completion lost its original engine packets"); }
                 if has_deferred {
                     let mut cancel = None;
                     let admission = context.admit_original_cancel_alias(&mut cancel);
@@ -645,15 +654,16 @@ impl AppRuntime {
                         if !deferred_actions.is_empty() {
                             log_debug("[TRACE] frame deferred install carries an action");
                         }
-                        let generation = partial.resource_input.as_ref().expect("validated frame resource input").preview_generation;
-                        let mut deferred = FrameDeferredCursor::new(deferred_actions, cursor.pump_sync, cursor.flush_tutorial, cursor.shell_maintenance, cursor.settle, generation, cancel);
-                        if admission.is_err() { deferred.begin_close(); }
+                        let mut deferred = FrameDeferredCursor::new(deferred_actions, cursor.pump_sync, cursor.flush_tutorial, cursor.shell_maintenance, cursor.settle, input_generation, cancel);
+                        if admission.is_err() {
+                            deferred.begin_close();
+                        }
                         self.pending_frame_deferred = Some(deferred);
                     }
                     match admission {
-                        Ok(true) => {},
+                        Ok(true) => {}
                         Ok(false) => return FrameFinishBoundaryStep::Pending,
-                        Err(failure) => return FrameFinishBoundaryStep::CloseFailure(failure),
+                        Err(error) => return FrameFinishBoundaryStep::CloseFailure(error),
                     }
                 }
                 let Some(input) = partial.resource_input.take() else {

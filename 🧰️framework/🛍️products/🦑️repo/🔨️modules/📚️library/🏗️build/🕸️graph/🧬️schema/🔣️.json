@@ -14,6 +14,7 @@
         "snapshotReadChunkBytes": 65536,
         "repairRounds": 4,
         "ownerFactsMemoEntries": 16384,
+        "editFollowPauseMilliseconds": 250,
         "sealStalePaths": 4096
       }
     },
@@ -28,6 +29,7 @@
           "reasonCharacters": "The most characters of the reason a failed prefetch reports.",
           "snapshotReadChunkBytes": "The size of one read while a retained graph snapshot is staged (64 KiB).",
           "repairRounds": "The most rounds a graph read follows the tree after a source it read, the membership or the owner closure changed (only the changed owners are observed or inferred again) before it seals with the records it has and says how many observed rows changed later.",
+          "editFollowPauseMilliseconds": "The pause before the follow-up round of an inventory that a path moved under (a directory that vanished between its listing and its read), multiplied by the round and never longer than eight times this, so the peer that edits the tree has finished before the owners that read it are observed again.",
           "ownerFactsMemoEntries": "The most owner admission observations one process keeps to answer a repeated attempt without observing the owner again.",
           "sealStalePaths": "The most changed observed rows a sealed read keeps to name the owners that are stale in the next read."
         },
@@ -40,6 +42,7 @@
           "reasonCharacters": "Die meisten Zeichen des Grundes, den ein fehlgeschlagener Vorabruf meldet.",
           "snapshotReadChunkBytes": "Die Größe eines Lesevorgangs, während ein behaltener Graph-Schnappschuss bereitgestellt wird (64 KiB).",
           "repairRounds": "Wie viele Runden ein Graph-Lesen dem Baum folgt, nachdem sich eine gelesene Quelle, die Mitgliedschaft oder der Eigentümerabschluss änderte (nur die geänderten Eigentümer werden neu beobachtet oder abgeleitet), bevor es mit den vorhandenen Datensätzen versiegelt und sagt, wie viele beobachtete Zeilen sich später änderten.",
+          "editFollowPauseMilliseconds": "Die Pause vor der Folgerunde eines Verzeichnisses, unter dem sich ein Pfad bewegte (ein Verzeichnis, das zwischen Auflisten und Lesen verschwand), multipliziert mit der Runde und nie länger als das Achtfache, damit der Partner, der den Baum bearbeitet, fertig ist, bevor die Eigentümer, die ihn lasen, neu beobachtet werden.",
           "ownerFactsMemoEntries": "Wie viele Zulassungsbeobachtungen von Eigentümern ein Prozess behält, um einen wiederholten Versuch ohne neue Beobachtung des Eigentümers zu beantworten.",
           "sealStalePaths": "Wie viele geänderte beobachtete Zeilen ein versiegeltes Lesen behält, um die Eigentümer zu nennen, die im nächsten Lesen veraltet sind."
         }
@@ -67,6 +70,10 @@
         {
           "code": "BUILD_OWNER_MANIFEST_ABSENT",
           "prefix": "Native execution contract requires a native project owner: "
+        },
+        {
+          "code": "BUILD_OWNER_MANIFEST_ABSENT",
+          "prefix": "Build owner manifest absent: "
         }
       ]
     }

@@ -946,6 +946,7 @@ pub fn sync_world3d_scene_document_lanes(session_state: &mut WorldSessionState, 
         world.references_json.as_deref().unwrap_or(""),
         world.engagement_preview_json.as_deref().unwrap_or(""),
         world.pick_targets_json.as_deref().unwrap_or(""),
+        world.points_json.as_deref().unwrap_or(""),
     ]);
     if bridge_state.scene_document_lanes_digest == Some(digest) {
         return;
@@ -957,6 +958,7 @@ pub fn sync_world3d_scene_document_lanes(session_state: &mut WorldSessionState, 
     let references: Vec<WorldReferenceRecord> = world.references_json.as_deref().map(|json| serde_json::from_str(json).unwrap_or_default()).unwrap_or_default();
     reconcile_world3d_reference_urls(scene_state, assets_state, &references);
     scene_state.references = references;
+    scene_state.point_draws = world_point_cloud_draws(world.points_json.as_deref());
     scene_state.engagement_preview = world.engagement_preview_json.as_deref().map(|json| serde_json::from_str(json).unwrap_or_default()).unwrap_or_default();
     selection_state.pick_targets = world.pick_targets_json.as_deref().map(world_pick_targets_from_json).unwrap_or_default();
     if selection_state.pick_hover_key.as_deref().is_some_and(|key| !selection_state.pick_targets.iter().any(|target| world_pick_keys_match(Some(target.key().as_str()), Some(key)))) {

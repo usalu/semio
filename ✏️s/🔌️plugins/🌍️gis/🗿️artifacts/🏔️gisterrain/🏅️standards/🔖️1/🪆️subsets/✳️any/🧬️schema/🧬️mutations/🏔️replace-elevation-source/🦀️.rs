@@ -31,7 +31,7 @@ impl MutationKind<GisTerrainSnapshot, GisTerrainMutation> for ReplaceElevationSo
 impl ColdMutationKind<GisTerrainSnapshot, GisTerrainMutation> for ReplaceElevationSource {
     fn diff(&self, base: &GisTerrainSnapshot) -> MutationOutcome<GisTerrainDiff> {
         if self.new_elevation_source.as_ref().is_some_and(|source| !source.is_valid()) {
-            return MutationOutcome::error("terrain.elevation-source.invalid", "Elevation requires ordered WGS84 bounds and exactly 33 rows of 33 samples.", ["elevationSource"]);
+            return MutationOutcome::error("terrain.elevation-source.invalid", "Elevation requires ordered WGS84 bounds and a rectangular grid with 2 to 65 samples per axis.", ["elevationSource"]);
         }
         if self.new_elevation_source == base.elevation_source {
             return MutationOutcome::empty().warning("mutation.no-op", "The authored elevation source is already identical.");

@@ -6343,11 +6343,12 @@
         "namedLayouts": [],
         "defaultLayout": {
           "root": {
-            "kind": "row",
+            "kind": "split",
+            "axis": "horizontal",
             "children": [
               {
                 "kind": "stack",
-                "size": 50.0,
+                "size": 0.5,
                 "children": [
                   {
                     "kind": "window",
@@ -6358,7 +6359,7 @@
               },
               {
                 "kind": "stack",
-                "size": 25.0,
+                "size": 0.25,
                 "children": [
                   {
                     "kind": "window",
@@ -6369,7 +6370,7 @@
               },
               {
                 "kind": "stack",
-                "size": 25.0,
+                "size": 0.25,
                 "children": [
                   {
                     "kind": "window",

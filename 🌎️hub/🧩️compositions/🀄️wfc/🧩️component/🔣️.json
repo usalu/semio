@@ -6965,11 +6965,12 @@
         "namedLayouts": [],
         "defaultLayout": {
           "root": {
-            "kind": "row",
+            "kind": "split",
+            "axis": "horizontal",
             "children": [
               {
                 "kind": "stack",
-                "size": 50.0,
+                "size": 0.5,
                 "children": [
                   {
                     "kind": "window",
@@ -6980,7 +6981,7 @@
               },
               {
                 "kind": "stack",
-                "size": 50.0,
+                "size": 0.5,
                 "children": [
                   {
                     "kind": "window",
@@ -8355,11 +8356,12 @@
         "namedLayouts": [],
         "defaultLayout": {
           "root": {
-            "kind": "row",
+            "kind": "split",
+            "axis": "horizontal",
             "children": [
               {
                 "kind": "stack",
-                "size": 50.0,
+                "size": 0.5,
                 "children": [
                   {
                     "kind": "window",
@@ -8370,7 +8372,7 @@
               },
               {
                 "kind": "stack",
-                "size": 50.0,
+                "size": 0.5,
                 "children": [
                   {
                     "kind": "window",
@@ -15962,11 +15964,12 @@
         "namedLayouts": [],
         "defaultLayout": {
           "root": {
-            "kind": "row",
+            "kind": "split",
+            "axis": "horizontal",
             "children": [
               {
                 "kind": "stack",
-                "size": 50.0,
+                "size": 0.5,
                 "children": [
                   {
                     "kind": "window",
@@ -15977,7 +15980,7 @@
               },
               {
                 "kind": "stack",
-                "size": 50.0,
+                "size": 0.5,
                 "children": [
                   {
                     "kind": "window",
@@ -25074,11 +25077,12 @@
         "namedLayouts": [],
         "defaultLayout": {
           "root": {
-            "kind": "row",
+            "kind": "split",
+            "axis": "horizontal",
             "children": [
               {
                 "kind": "stack",
-                "size": 50.0,
+                "size": 0.5,
                 "children": [
                   {
                     "kind": "window",
@@ -25089,7 +25093,7 @@
               },
               {
                 "kind": "stack",
-                "size": 50.0,
+                "size": 0.5,
                 "children": [
                   {
                     "kind": "window",
@@ -26066,17 +26070,12 @@
         "namedLayouts": [],
         "defaultLayout": {
           "root": {
-            "kind": "row",
+            "kind": "stack",
             "children": [
               {
-                "kind": "stack",
-                "children": [
-                  {
-                    "kind": "window",
-                    "windowKindId": "wfc-2d-board",
-                    "title": "Board"
-                  }
-                ]
+                "kind": "window",
+                "windowKindId": "wfc-2d-board",
+                "title": "Board"
               }
             ]
           }
@@ -34655,11 +34654,12 @@
         "namedLayouts": [],
         "defaultLayout": {
           "root": {
-            "kind": "row",
+            "kind": "split",
+            "axis": "horizontal",
             "children": [
               {
                 "kind": "stack",
-                "size": 50.0,
+                "size": 0.5,
                 "children": [
                   {
                     "kind": "window",
@@ -34670,7 +34670,7 @@
               },
               {
                 "kind": "stack",
-                "size": 50.0,
+                "size": 0.5,
                 "children": [
                   {
                     "kind": "window",
@@ -35612,17 +35612,12 @@
         "namedLayouts": [],
         "defaultLayout": {
           "root": {
-            "kind": "row",
+            "kind": "stack",
             "children": [
               {
-                "kind": "stack",
-                "children": [
-                  {
-                    "kind": "window",
-                    "windowKindId": "wfc-grid3d-view",
-                    "title": "Preview"
-                  }
-                ]
+                "kind": "window",
+                "windowKindId": "wfc-grid3d-view",
+                "title": "Preview"
               }
             ]
           }
@@ -43540,11 +43535,12 @@
         "namedLayouts": [],
         "defaultLayout": {
           "root": {
-            "kind": "row",
+            "kind": "split",
+            "axis": "horizontal",
             "children": [
               {
                 "kind": "stack",
-                "size": 50.0,
+                "size": 0.5,
                 "children": [
                   {
                     "kind": "window",
@@ -43555,7 +43551,7 @@
               },
               {
                 "kind": "stack",
-                "size": 50.0,
+                "size": 0.5,
                 "children": [
                   {
                     "kind": "window",
@@ -44484,18 +44480,12 @@
         "namedLayouts": [],
         "defaultLayout": {
           "root": {
-            "kind": "row",
+            "kind": "stack",
             "children": [
               {
-                "kind": "stack",
-                "size": 100.0,
-                "children": [
-                  {
-                    "kind": "window",
-                    "windowKindId": "wfc-3d-view",
-                    "title": "Preview"
-                  }
-                ]
+                "kind": "window",
+                "windowKindId": "wfc-3d-view",
+                "title": "Preview"
               }
             ]
           }

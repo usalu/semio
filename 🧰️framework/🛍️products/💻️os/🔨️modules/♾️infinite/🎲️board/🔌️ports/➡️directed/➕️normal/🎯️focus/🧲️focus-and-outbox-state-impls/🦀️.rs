@@ -121,6 +121,28 @@ impl BoardOutboxState {
         }
     }
 
+    /// 🪞️ Packs live positions into transient rows for sibling panes, leaving payload
+    /// space in each row for maximally escaped ids and decimal coordinates.
+    pub fn publish_transform_previews<'a>(&mut self, mut moves: impl Iterator<Item = (&'a str, f64, f64)>) {
+        loop {
+            let mut batch = [("", 0.0, 0.0); 6];
+            let mut len = 0;
+            for (slot, value) in batch.iter_mut().zip(moves.by_ref()) {
+                *slot = value;
+                len += 1;
+            }
+            if len == 0 {
+                return;
+            }
+            let Ok(event) = BoardOwnedEvent::transform_preview(batch[..len].iter().copied()) else {
+                return;
+            };
+            if self.events.push(event).is_err() {
+                return;
+            }
+        }
+    }
+
     //#region 🎬️Gestures
     /// 🪪️ Opens the next pointer gesture: a fresh id, nothing staged yet.
     pub fn begin_gesture(&mut self) -> GestureStage {

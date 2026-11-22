@@ -19240,11 +19240,12 @@
         "namedLayouts": [],
         "defaultLayout": {
           "root": {
-            "kind": "row",
+            "kind": "split",
+            "axis": "horizontal",
             "children": [
               {
                 "kind": "stack",
-                "size": 28.0,
+                "size": 0.28,
                 "children": [
                   {
                     "kind": "window",
@@ -19255,7 +19256,7 @@
               },
               {
                 "kind": "stack",
-                "size": 38.0,
+                "size": 0.38,
                 "children": [
                   {
                     "kind": "window",
@@ -19266,7 +19267,7 @@
               },
               {
                 "kind": "stack",
-                "size": 18.0,
+                "size": 0.18,
                 "children": [
                   {
                     "kind": "window",
@@ -19277,7 +19278,7 @@
               },
               {
                 "kind": "stack",
-                "size": 16.0,
+                "size": 0.16,
                 "children": [
                   {
                     "kind": "window",
@@ -23340,11 +23341,12 @@
         "namedLayouts": [],
         "defaultLayout": {
           "root": {
-            "kind": "row",
+            "kind": "split",
+            "axis": "horizontal",
             "children": [
               {
                 "kind": "stack",
-                "size": 60.0,
+                "size": 0.6,
                 "children": [
                   {
                     "kind": "window",
@@ -23355,7 +23357,7 @@
               },
               {
                 "kind": "stack",
-                "size": 40.0,
+                "size": 0.4,
                 "children": [
                   {
                     "kind": "window",

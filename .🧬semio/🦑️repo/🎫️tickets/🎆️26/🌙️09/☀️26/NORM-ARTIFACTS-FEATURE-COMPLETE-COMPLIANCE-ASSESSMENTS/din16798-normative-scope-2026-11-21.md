@@ -7,3 +7,5 @@ DIN EN 16798-3:2026-10 adopts EN 16798-3:2025 and supersedes the German 2017 edi
 DIN EN 16798-1:2022-03 NA.5.1.1 and EN 16798-1:2019 B.3.1.1 establish a hygienic design minimum of 4 L/s per person for occupied non-residential zones under complete mixing. The airflow and system-capacity checks apply this limit using the entered design occupancy. See [the worked cases and source assessment](din16798-hygienic-airflow-2026-11-21.md).
 
 DIN EN 16798-17:2019-09 NA.1 and EN 16798-17:2017 §1 distinguish the inspection method from the nationally set inspection schedule. The report shows the recorded age and the applicable standards context. See [the inspection scope assessment](din16798-inspection-age-2026-11-21.md).
+
+- VE-22 EN 16798-1:2019 Annex B.3.1.5 and B.3.2.5 document the unoccupied operating regime and assess purge or setback separately from occupied airflow. The German applicability remains unverified.

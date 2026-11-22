@@ -1,0 +1,7 @@
+# Archive Receiver Audit
+
+The browser archive operation 111 advanced in equal completed/total increments and reached 483/484 at poll 226. It remained running with ahead 0 and an empty fault through more than 2,100 polls. The picker decoded the archive and created a Terrain instance; host document adoption did not occur. The component predates the latest Store issuer pair.
+
+`document-archive-load/🦀️.rs` initializes total to the member count plus one and adds replacement fold progress to both counters in status. `docs/staging/maintenance-ladder/🦀️.rs` adds copied history items equally to completed and total during DecodeParent. It advances the parent item only after HydrateParent returns an envelope and begins persisted store replacement. With no archive members and no fold progress, 483/484 is consistent with unfinished parent decode or parent hydration before that handoff; counters alone do not distinguish these phases. `plugin-app-impl/🦀️.rs` exposes a diagnostic including archive phase and hydration state, which can resolve this in the replacement component.
+
+The latest native history log shows `conflict_history_edits_end_to_end` panic in `fixture-dispatch-steps-and-document-loading/🦀️.rs:185`. `close_fixture_action_inputs` invokes `ActionIngressRecord::receive` once on remaining arguments or fault and expects an immediate owner; it does not renew and continue if receiving yields. The same log reports separate replay and original receiving failures, which need independent diagnosis.

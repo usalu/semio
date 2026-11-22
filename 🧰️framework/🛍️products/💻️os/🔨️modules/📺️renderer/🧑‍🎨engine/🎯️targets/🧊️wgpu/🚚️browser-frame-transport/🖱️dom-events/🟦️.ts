@@ -15,7 +15,7 @@ export type BrowserFrameDomEvent =
   | ({ readonly type: "pointerdown" } & BrowserFramePointerDomFields)
   | ({ readonly type: "pointerup" } & BrowserFramePointerDomFields)
   | ({ readonly type: "wheel"; readonly offsetX: number; readonly offsetY: number; readonly deltaX: number; readonly deltaY: number } & BrowserFrameModifiers)
-  | ({ readonly type: "keydown" } & BrowserFrameKeyDomFields)
+  | ({ readonly type: "keydown"; readonly repeat: boolean } & BrowserFrameKeyDomFields)
   | ({ readonly type: "keyup" } & BrowserFrameKeyDomFields)
   | { readonly type: "resize"; readonly clientWidth: number; readonly clientHeight: number };
 
@@ -94,12 +94,11 @@ export function browserFrameEventFromDom(event: BrowserFrameDomEvent, devicePixe
   if (event.type === "pointerdown" || event.type === "pointerup") return { kind: event.type === "pointerdown" ? "pointer-down" : "pointer-up", ...pointerFields(event), button: pointerButtonName(event.button) };
   if (event.type === "wheel") return { kind: "wheel", x: event.offsetX, y: event.offsetY, deltaX: event.deltaX, deltaY: event.deltaY, shift: event.shift, ctrl: event.ctrl, alt: event.alt, meta: event.meta };
   if (event.type === "resize") return { kind: "resize", width: Math.max(1, Math.round(physical(event.clientWidth, devicePixelRatio))), height: Math.max(1, Math.round(physical(event.clientHeight, devicePixelRatio))), dpr: devicePixelRatio };
-  return { kind: event.type === "keydown" ? "key-down" : "key-up", key: event.key, shift: event.shift, ctrl: event.ctrl, alt: event.alt, meta: event.meta };
+  const key = { key: event.key, shift: event.shift, ctrl: event.ctrl, alt: event.alt, meta: event.meta };
+  return event.type === "keydown" ? { kind: "key-down", ...key, repeat: event.repeat } : { kind: "key-up", ...key };
 }
 
-/** 🫧 Whether a projected wire event belongs to the coalescing lane (`enqueueReplaceable`) rather
- * than the credit-bearing lossless lane. A pointer MOVE, a wheel and a resize are each "the newest one
- * wins"; a button transition and a key transition are not, because dropping one latches shell state. */
+/** 🫧 Identifies pointer moves and resizes that can coalesce between ordered samples. */
 export function browserFrameEventIsReplaceable(event: BrowserFrameReplaceableEvent | BrowserFrameLosslessEvent): event is BrowserFrameReplaceableEvent {
-  return event.kind === "pointer-move" || event.kind === "pointer-leave" || event.kind === "wheel" || event.kind === "resize";
+  return event.kind === "pointer-move" || event.kind === "resize";
 }

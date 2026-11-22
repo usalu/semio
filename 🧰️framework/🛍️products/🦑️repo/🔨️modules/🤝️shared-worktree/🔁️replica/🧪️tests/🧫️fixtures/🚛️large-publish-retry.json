@@ -1,0 +1,8 @@
+{
+  "unstable": "unstable.pack",
+  "independent": "remaining.pack",
+  "bytes": 67108864,
+  "unstableAt": 7000,
+  "secondTurn": 7500,
+  "eligibleAt": 12000
+}

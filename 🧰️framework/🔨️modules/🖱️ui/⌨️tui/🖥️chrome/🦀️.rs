@@ -1,7 +1,7 @@
 use semio_ui_tui_core::cell::{Cell, CellBuffer};
 use crate::footer::paint_footer;
 use semio_ui_tui_core::geometry::{Pos, Rect};
-use crate::layout::{solve_window_layout, weight_of, WindowLayout};
+use crate::layout::{solve_window_layout, weight_of, stack_windows, window_id, window_corner, window_label, Axis, WindowLayout, WindowLayoutNode};
 use semio_ui_tui_core::docking::WindowStackCorner;
 use crate::navbar::paint_navbar;
 use crate::scene::{AxisState, Node, NodeContent, NodeId, Scene};
@@ -793,40 +793,33 @@ fn find_window(windows: &[(String, NodeId)], id: &str) -> Option<NodeId> {
 
 /// 🫂️ How many windows share the canvas of `layout`.
 fn layout_peers(layout: &WindowLayout) -> usize {
-    use crate::layout::{WindowLayoutChild, WindowLayoutRoot};
-    fn count_windows(child: &WindowLayoutChild) -> usize {
-        match child {
-            WindowLayoutChild::Stack(s) => s.children.len(),
-            WindowLayoutChild::Axis(a) => a.children.iter().map(count_windows).sum(),
+    fn count_windows(node: &WindowLayoutNode) -> usize {
+        match node {
+            WindowLayoutNode::Window { .. } => 1,
+            WindowLayoutNode::Stack { children, .. } | WindowLayoutNode::Split { children, .. } => children.iter().map(count_windows).sum(),
         }
     }
-    match &layout.root {
-        WindowLayoutRoot::Axis(axis) => axis.children.iter().map(count_windows).sum(),
-        WindowLayoutRoot::Stack(stack) => stack.children.len(),
-    }
-}
-
-fn tab_label(child: &crate::layout::WindowLayoutWindowNode) -> String {
-    child.title.clone().unwrap_or_else(|| child.window_kind_id.clone())
+    count_windows(&layout.root)
 }
 
 /// 🪧️ The tab strip of `stack`, each tab carrying the task status of its mounted window.
-fn stack_tab_states(scene: &Scene, windows: &[(String, NodeId)], stack: &crate::layout::WindowLayoutStackNode) -> Vec<WindowStackTabState> {
+fn stack_tab_states(scene: &Scene, windows: &[(String, NodeId)], stack: &WindowLayoutNode) -> Vec<WindowStackTabState> {
     let status_of = |id: &str| find_window(windows, id).and_then(|node| match &scene.node(node).content {
         NodeContent::Chrome(ChromeState::Window(state)) => state.status,
         _ => None,
     });
-    stack.children.iter().map(|c| WindowStackTabState { label: tab_label(c), corner: c.corner.unwrap_or_default(), status: status_of(&c.window_kind_id) }).collect()
+    stack_windows(stack).iter().map(|c| WindowStackTabState { label: window_label(c), corner: window_corner(c), status: status_of(window_id(c)) }).collect()
 }
 
 /// 🛂️ Applies the stack slot a mount gives a window: its tabs, ids, active tab, peers, zoom and title.
-fn apply_stack_slot(ws: &mut WindowState, stack: &crate::layout::WindowLayoutStackNode, slot: &StackSlot<'_>, tabs: Vec<WindowStackTabState>) {
+fn apply_stack_slot(ws: &mut WindowState, stack: &WindowLayoutNode, slot: &StackSlot<'_>, tabs: Vec<WindowStackTabState>) {
+    let children = stack_windows(stack);
     ws.stack_tabs = tabs;
-    ws.tab_ids = stack.children.iter().map(|c| c.window_kind_id.clone()).collect();
-    ws.active_stack_tab = stack.children.iter().position(|t| t.window_kind_id == slot.active).unwrap_or(0);
+    ws.tab_ids = children.iter().map(|c| window_id(c).to_string()).collect();
+    ws.active_stack_tab = children.iter().position(|t| window_id(t) == slot.active).unwrap_or(0);
     ws.peers = slot.peers;
     ws.zoomed = slot.zoomed;
-    if let Some(title) = stack.children.iter().find(|c| c.window_kind_id == slot.own).map(tab_label) {
+    if let Some(title) = children.iter().find(|c| window_id(c) == slot.own).map(window_label) {
         ws.title = title;
     }
 }
@@ -855,7 +848,7 @@ pub fn project_window_layout(scene: &Scene, layout: &WindowLayout, area: Rect, w
 /// 🪆 Mirrors `layout` into nested row/column/stack boxes under `canvas`, reparenting existing window nodes.
 /// Axes share one splitter cell between adjacent children; a zoomed layout hides every other window.
 pub fn mount_window_layout(scene: &mut Scene, canvas: NodeId, layout: &WindowLayout, windows: &[(String, NodeId)], mount_root: &mut Option<NodeId>) {
-    use crate::layout::{Constraint, Dimension, Direction, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode};
+    use crate::layout::{Constraint, Dimension, Direction};
 
     scene.window_layouts.retain(|mounted| mounted.canvas != canvas);
     scene.window_layouts.push(crate::scene::MountedWindowLayout { canvas, layout: layout.clone(), windows: windows.to_vec() });
@@ -871,7 +864,7 @@ pub fn mount_window_layout(scene: &mut Scene, canvas: NodeId, layout: &WindowLay
     scene.node_mut(mount).set_constraint(Constraint { direction: Direction::Stack, width: Dimension::Weight(1), height: Dimension::Weight(1), ..Default::default() });
     *mount_root = Some(mount);
 
-    fn style_window(scene: &mut Scene, windows: &[(String, NodeId)], win_id: NodeId, stack: &WindowLayoutStackNode, slot: &StackSlot<'_>) {
+    fn style_window(scene: &mut Scene, windows: &[(String, NodeId)], win_id: NodeId, stack: &WindowLayoutNode, slot: &StackSlot<'_>) {
         let tabs = stack_tab_states(scene, windows, stack);
         scene.node_mut(win_id).set_visible(slot.own == slot.active);
         scene.node_mut(win_id).set_constraint(window_constraint());
@@ -880,23 +873,24 @@ pub fn mount_window_layout(scene: &mut Scene, canvas: NodeId, layout: &WindowLay
         }
     }
 
-    fn mount_stack(scene: &mut Scene, parent: NodeId, stack: &WindowLayoutStackNode, windows: &[(String, NodeId)], weight: u16, peers: usize) {
+    fn mount_stack(scene: &mut Scene, parent: NodeId, stack: &WindowLayoutNode, windows: &[(String, NodeId)], weight: u16, peers: usize) {
         let box_id = scene.add(parent, Node::new(NodeContent::Box));
         scene.node_mut(box_id).set_constraint(Constraint { direction: Direction::Stack, width: Dimension::Weight(weight), height: Dimension::Weight(weight), ..Default::default() });
-        let active = stack.active_window_kind_id.as_deref().unwrap_or_else(|| stack.children.first().map_or("", |c| c.window_kind_id.as_str()));
-        for child in &stack.children {
-            if let Some(win_id) = find_window(windows, &child.window_kind_id) {
+        let WindowLayoutNode::Stack { active_window_id, children, .. } = stack else { return };
+        let active = active_window_id.as_deref().unwrap_or_else(|| children.first().map_or("", |c| window_id(c)));
+        for child in children {
+            if let Some(win_id) = find_window(windows, window_id(child)) {
                 scene.reparent(win_id, box_id);
-                style_window(scene, windows, win_id, stack, &StackSlot { own: &child.window_kind_id, active, peers, zoomed: false });
+                style_window(scene, windows, win_id, stack, &StackSlot { own: window_id(child), active, peers, zoomed: false });
             }
         }
     }
 
-    fn mount_child(scene: &mut Scene, parent: NodeId, child: &WindowLayoutChild, windows: &[(String, NodeId)], path: &[usize], peers: usize) {
+    fn mount_child(scene: &mut Scene, parent: NodeId, child: &WindowLayoutNode, windows: &[(String, NodeId)], path: &[usize], peers: usize) {
         match child {
-            WindowLayoutChild::Axis(axis) => {
-                let is_row = axis.kind == "row";
-                let weight = weight_of(axis.size);
+            WindowLayoutNode::Split { axis, size, children } => {
+                let is_row = *axis == Axis::Horizontal;
+                let weight = weight_of(*size);
                 let box_id = scene.add(parent, Node::new(NodeContent::Axis(AxisState::new(is_row, path.to_vec()))));
                 scene.node_mut(box_id).set_constraint(Constraint {
                     direction: if is_row { Direction::Row } else { Direction::Column },
@@ -904,13 +898,14 @@ pub fn mount_window_layout(scene: &mut Scene, canvas: NodeId, layout: &WindowLay
                     height: Dimension::Weight(weight),
                     ..Default::default()
                 });
-                for (i, c) in axis.children.iter().enumerate() {
+                for (i, c) in children.iter().enumerate() {
                     let mut child_path = path.to_vec();
                     child_path.push(i);
                     mount_child(scene, box_id, c, windows, &child_path, peers);
                 }
             }
-            WindowLayoutChild::Stack(stack) => mount_stack(scene, parent, stack, windows, weight_of(stack.size), peers),
+            WindowLayoutNode::Stack { size, .. } => mount_stack(scene, parent, child, windows, weight_of(*size), peers),
+            WindowLayoutNode::Window { .. } => {}
         }
     }
 
@@ -938,8 +933,8 @@ pub fn mount_window_layout(scene: &mut Scene, canvas: NodeId, layout: &WindowLay
     }
 
     match &layout.root {
-        WindowLayoutRoot::Axis(axis) => mount_child(scene, mount, &WindowLayoutChild::Axis(axis.clone()), windows, &[], peers),
-        WindowLayoutRoot::Stack(stack) => mount_stack(scene, mount, stack, windows, 1, peers),
+        WindowLayoutNode::Stack { .. } => mount_stack(scene, mount, &layout.root, windows, 1, peers),
+        root => mount_child(scene, mount, root, windows, &[], peers),
     }
 }
 

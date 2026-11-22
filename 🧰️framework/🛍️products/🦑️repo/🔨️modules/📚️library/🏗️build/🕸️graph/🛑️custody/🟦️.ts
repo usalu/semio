@@ -2,7 +2,7 @@ import{machinePathV1}from"../../../../../../../🔨️modules/🏃️process/�
 import type {BuildGraphInvalidationInventoryV1} from "../📋️model/🟦️.ts";
 import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {withRepositoryBuildGraphFactStoreV1,withRepositoryBuildGraphSelectionV1} from "../../📥️inputs/💾️storage/🟨️.mjs";
-import {buildGraphPublicationWriterResourceV1} from "../../📥️inputs/💾️storage/🔒️writer/🟨️.mjs";
+import {buildGraphPublicationWriterResourceV1,buildGraphScopeWriterResourceV1} from "../../📥️inputs/💾️storage/🔒️writer/🟨️.mjs";
 import {readdir,lstat,rm} from "node:fs/promises";
 import {join,dirname,resolve} from "node:path";
 import {randomBytes,createHash} from "node:crypto";
@@ -20,14 +20,22 @@ import {CATALOG_LANGUAGES_V1} from "../../../../../../../🔨️modules/🏃️p
 import {buildGraphPathV1,planBuildGraphInvalidationV1} from "../📜️contract/🟦️.ts";
 
 
-/** 🛑️ Serializes graph publication and invalidation inside the original enforcing store. */
-export async function withBuildGraphStateV1<T>(root:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,body:(store:RepositoryCacheStoreV1,actualControl:ResourceLeaseControl)=>Promise<T>,scope?:string):Promise<T> {
+/** 🔐️ Runs the part of a graph state change that must not interleave with another publisher or reader of the same publication (the staging cleanup and the rename of a published selected graph); a canonical state holds its publication lock for the whole change, so there it runs in place. */
+export type BuildGraphCriticalV1=<R>(run:()=>Promise<R>)=>Promise<R>;
+
+
+/** 🛑️ Serializes graph publication and invalidation inside the original enforcing store. A selected scope holds only its own claim (a bucket of a fixed catalog) and a shared cohort of its fact shard for the whole load, and takes the exclusive publication lock of its shard only inside `critical`, so a load of another scope that hashes to the same shard neither waits for the hours of inference nor for the claim.
+ * @see ../../📥️inputs/💾️storage/🔒️writer/🟨️.mjs */
+export async function withBuildGraphStateV1<T>(root:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,body:(store:RepositoryCacheStoreV1,actualControl:ResourceLeaseControl,critical:BuildGraphCriticalV1)=>Promise<T>,scope?:string):Promise<T> {
   requireIssuedResourceControlInvocationV1(phaseControl,invocation);checkResourceLeaseControl(phaseControl);checkScriptInvocation(invocation);
   const run=async(store:RepositoryCacheStoreV1,actualControl:ResourceLeaseControl)=>{
-    const writer=await acquireQueuedResourceLease({directory:machinePathV1(root,".cache/b/l/m/data"),resource:scope?buildGraphPublicationWriterResourceV1(store.root,scope):"build-graph-state:"+store.root,mode:"exclusive",owner:randomBytes(16).toString("base64url"),control:actualControl,signal:actualControl.signal});
-    try{checkResourceLeaseControl(actualControl);return await body(store,actualControl);}finally{writer.release();}
+    const hold=async<R>(resource:string,work:()=>Promise<R>):Promise<R>=>{
+      const writer=await acquireQueuedResourceLease({directory:machinePathV1(root,".cache/b/l/m/data"),resource,mode:"exclusive",owner:randomBytes(16).toString("base64url"),control:actualControl,signal:actualControl.signal});
+      try{checkResourceLeaseControl(actualControl);return await work();}finally{writer.release();}
+    };
+    return scope===undefined?hold("build-graph-state:"+store.root,()=>body(store,actualControl,work=>work())):hold(buildGraphScopeWriterResourceV1(store.root,scope),()=>body(store,actualControl,work=>hold(buildGraphPublicationWriterResourceV1(store.root,scope),work)));
   };
-  return scope?withRepositoryBuildGraphSelectionV1(root,invocation,phaseControl,scope,run):withRepositoryBuildGraphFactStoreV1(root,invocation,phaseControl,run);
+  return scope?withRepositoryBuildGraphSelectionV1(root,invocation,phaseControl,scope,run,{shared:true}):withRepositoryBuildGraphFactStoreV1(root,invocation,phaseControl,run);
 }
 
 

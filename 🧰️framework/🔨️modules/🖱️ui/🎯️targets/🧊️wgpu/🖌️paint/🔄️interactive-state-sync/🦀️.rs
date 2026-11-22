@@ -1,6 +1,11 @@
 //! 🔄️ Interactive state sync: the retained sync keys, records, frames, phases and cursor and the interactive state node step. See [`super`].
 
-use super::*;
+use semio_ui_arena::NodeId;
+use semio_ui_retained_tree::tree::{Node, NodeFlags, NodeKey, UiTree, WidgetSpec};
+use semio_ui_declaration::ui::{UiNode, UiTreeItemNode};
+use semio_ui_locale::Locale;
+use semio_ui_theme::geometry::Rect;
+use semio_ui_theme::Theme;
 
 // #region paint
 //#region 🔖️InteractiveStateSync
@@ -30,8 +35,8 @@ const RETAINED_SYNC_KEY_BYTES: usize = 256;
 
 #[derive(Clone, Copy)]
 struct RetainedSyncKey {
-    pub(super) bytes: [u8; RETAINED_SYNC_KEY_BYTES],
-    pub(super) len: u16,
+    pub bytes: [u8; RETAINED_SYNC_KEY_BYTES],
+    pub len: u16,
 }
 
 impl RetainedSyncKey {
@@ -44,18 +49,18 @@ impl RetainedSyncKey {
         Some(Self { bytes, len: value.len() as u16 })
     }
 
-    pub(super) fn as_str(&self) -> Option<&str> {
+    pub fn as_str(&self) -> Option<&str> {
         std::str::from_utf8(&self.bytes[..usize::from(self.len)]).ok()
     }
 }
 
 #[derive(Clone, Copy)]
 struct RetainedSyncTreeRecord {
-    pub(super) key: RetainedSyncKey,
-    pub(super) parent: Option<usize>,
-    pub(super) retained: Option<NodeId>,
+    pub key: RetainedSyncKey,
+    pub parent: Option<usize>,
+    pub retained: Option<NodeId>,
     draggable: bool,
-    pub(super) section: bool,
+    pub section: bool,
 }
 
 #[derive(Clone, Copy)]
@@ -78,6 +83,12 @@ enum RetainedInteractiveSyncPhase {
     /// a closed `Select` leaves no arena node behind exactly as React unmounts `SelectContent`.
     SelectRetire,
     SelectWrite,
+    /// 🖼️ An icon selector's cell `cursor.item` has no retained child yet or one to refresh — find it by key.
+    IconCellScan,
+    /// 🖼️ Synthesize the cell (mode `Select`, mono editor `Input`, Import and Clear `Button`s) as a ledgered composite child.
+    IconCellMint,
+    /// 🖼️ Write the cell's spec and its explicit rect inside the selector.
+    IconCellWrite,
     StackWrite,
     TreeSection,
     TreeItem,
@@ -89,9 +100,9 @@ enum RetainedInteractiveSyncPhase {
 
 /// 🧭️ Retains one mounted interaction-layout synchronization authority.
 pub struct RetainedInteractiveSyncCursor {
-    pub(super) node: Option<NodeId>,
-    pub(super) phase: RetainedInteractiveSyncPhase,
-    pub(super) item: usize,
+    pub node: Option<NodeId>,
+    pub phase: RetainedInteractiveSyncPhase,
+    pub item: usize,
     child_scan: Option<NodeId>,
     matched: Option<NodeId>,
     select_width: f32,
@@ -147,7 +158,7 @@ pub enum RetainedInteractiveSyncStep {
 }
 
 impl RetainedInteractiveSyncCursor {
-    pub(super) fn finish(&mut self) -> RetainedInteractiveSyncStep {
+    pub fn finish(&mut self) -> RetainedInteractiveSyncStep {
         self.node = None;
         self.phase = RetainedInteractiveSyncPhase::Bind;
         self.item = 0;
@@ -267,7 +278,7 @@ fn retained_sync_tree_item_step(cursor: &mut RetainedInteractiveSyncCursor) -> R
 }
 
 /// 🧩️ Advances one retained synchronization item, child lookup, layout output, or close owner.
-pub fn sync_interactive_state_node_step(tree: &mut UiTree, id: NodeId, theme: &Theme, cursor: &mut RetainedInteractiveSyncCursor) -> RetainedInteractiveSyncStep {
+pub fn sync_interactive_state_node_step(tree: &mut UiTree, id: NodeId, theme: &Theme, locale: Option<Locale>, cursor: &mut RetainedInteractiveSyncCursor) -> RetainedInteractiveSyncStep {
     if cursor.node.is_none() {
         cursor.node = Some(id);
         cursor.phase = RetainedInteractiveSyncPhase::Bind;
@@ -321,6 +332,11 @@ pub fn sync_interactive_state_node_step(tree: &mut UiTree, id: NodeId, theme: &T
                     }
                     cursor.finish()
                 }
+                UiNode::IconSelect(_) => {
+                    cursor.item = 0;
+                    cursor.phase = RetainedInteractiveSyncPhase::IconCellScan;
+                    RetainedInteractiveSyncStep::Pending
+                }
                 UiNode::Stack(_) => {
                     cursor.phase = RetainedInteractiveSyncPhase::StackWrite;
                     RetainedInteractiveSyncStep::Pending
@@ -369,7 +385,7 @@ pub fn sync_interactive_state_node_step(tree: &mut UiTree, id: NodeId, theme: &T
             // next frame instead of minting a second copy, and ledgered on the tree so the document
             // reconcile can retire it before it relinks the arena (`UiTree::mint_composite_row`).
             let row = tree.node(id).and_then(|node| match &node.spec.0 {
-                UiNode::Select(select) => select.items.get(cursor.item).map(|item| (semio_ui_retained_tree::reconcile::select_item_row(select, item), item.value.clone())),
+                UiNode::Select(select) => select.items.get(cursor.item).map(|item| (semio_ui_retained_tree::reconcile::select_item_row_committing(select, item, &semio_ui_retained_tree::reconcile::select_commit_value(tree, id, &item.value)), item.value.clone())),
                 _ => None,
             });
             let Some((spec, key)) = row else { return retained_sync_fault(cursor, line!()) };
@@ -403,7 +419,7 @@ pub fn sync_interactive_state_node_step(tree: &mut UiTree, id: NodeId, theme: &T
         RetainedInteractiveSyncPhase::SelectWrite => {
             let Some(child) = cursor.matched.take() else { return retained_sync_fault(cursor, line!()) };
             let spec = tree.node(id).and_then(|node| match &node.spec.0 {
-                UiNode::Select(select) => select.items.get(cursor.item).map(|item| semio_ui_retained_tree::reconcile::select_item_row(select, item)),
+                UiNode::Select(select) => select.items.get(cursor.item).map(|item| semio_ui_retained_tree::reconcile::select_item_row_committing(select, item, &semio_ui_retained_tree::reconcile::select_commit_value(tree, id, &item.value))),
                 _ => None,
             });
             let Some(spec) = spec else { return retained_sync_fault(cursor, line!()) };
@@ -426,6 +442,68 @@ pub fn sync_interactive_state_node_step(tree: &mut UiTree, id: NodeId, theme: &T
             let Some(item) = cursor.item.checked_add(1) else { return retained_sync_fault(cursor, line!()) };
             cursor.item = item;
             cursor.phase = RetainedInteractiveSyncPhase::SelectItem;
+            RetainedInteractiveSyncStep::Pending
+        }
+        RetainedInteractiveSyncPhase::IconCellScan => {
+            let cell_count = semio_ui_retained_tree::reconcile::ICON_SELECT_CELLS;
+            if cursor.item >= cell_count {
+                return cursor.finish();
+            }
+            let key = tree.node(id).and_then(|node| match &node.spec.0 {
+                UiNode::IconSelect(select) => Some(semio_ui_retained_tree::reconcile::icon_select_cell_key(select, cursor.item)),
+                _ => None,
+            });
+            let Some(key) = key else { return retained_sync_fault(cursor, line!()) };
+            let mut found = None;
+            let mut child = tree.node(id).and_then(|node| node.first_child);
+            while let Some(candidate) = child {
+                if matches!(tree.node(candidate).map(|node| &node.key), Some(NodeKey::Explicit(existing)) if *existing == key) {
+                    found = Some(candidate);
+                    break;
+                }
+                child = tree.node(candidate).and_then(|node| node.next_sibling);
+            }
+            cursor.matched = found;
+            cursor.phase = if found.is_some() { RetainedInteractiveSyncPhase::IconCellWrite } else { RetainedInteractiveSyncPhase::IconCellMint };
+            RetainedInteractiveSyncStep::Pending
+        }
+        RetainedInteractiveSyncPhase::IconCellMint => {
+            let cell = tree.node(id).and_then(|node| match &node.spec.0 {
+                UiNode::IconSelect(select) => Some(semio_ui_retained_tree::reconcile::icon_select_cell(select, cursor.item, locale)),
+                _ => None,
+            });
+            let Some((key, spec)) = cell else { return retained_sync_fault(cursor, line!()) };
+            let Some(minted) = tree.mint_composite_row(id, Node::new(NodeKey::Explicit(key), WidgetSpec(spec))) else {
+                cursor.matched = None;
+                cursor.item = cursor.item.saturating_add(1);
+                cursor.phase = RetainedInteractiveSyncPhase::IconCellScan;
+                return RetainedInteractiveSyncStep::Pending;
+            };
+            cursor.matched = Some(minted);
+            cursor.phase = RetainedInteractiveSyncPhase::IconCellWrite;
+            RetainedInteractiveSyncStep::Pending
+        }
+        RetainedInteractiveSyncPhase::IconCellWrite => {
+            let Some(child) = cursor.matched.take() else { return retained_sync_fault(cursor, line!()) };
+            let cell = tree.node(id).and_then(|node| match &node.spec.0 {
+                UiNode::IconSelect(select) => Some((semio_ui_retained_tree::reconcile::icon_select_cell(select, cursor.item, locale).1, semio_ui_declaration::ui::UiIconSelectNode::decode_mode(&select.value).0.editor_rows())),
+                _ => None,
+            });
+            let Some((spec, rows)) = cell else { return retained_sync_fault(cursor, line!()) };
+            let Some(layout) = tree.accepted_layout(id) else { return retained_sync_fault(cursor, line!()) };
+            let cells = semio_ui_wgpu_layout::layout::icon_select_rows(Rect::new(0.0, 0.0, layout.width, layout.height), rows);
+            let rect = [cells.mode, cells.editor, cells.import, cells.clear].get(cursor.item).copied().unwrap_or_default();
+            let Some(node) = tree.node_mut(child) else { return retained_sync_fault(cursor, line!()) };
+            if node.spec.0 != spec {
+                node.spec = WidgetSpec(spec);
+            }
+            node.layout.x = rect.x;
+            node.layout.y = rect.y;
+            node.layout.width = rect.w;
+            node.layout.height = rect.h;
+            let Some(item) = cursor.item.checked_add(1) else { return retained_sync_fault(cursor, line!()) };
+            cursor.item = item;
+            cursor.phase = RetainedInteractiveSyncPhase::IconCellScan;
             RetainedInteractiveSyncStep::Pending
         }
         RetainedInteractiveSyncPhase::StackWrite => {
@@ -535,7 +613,7 @@ pub fn select_popup_row_rect(select_w: f32, index: usize, menu_top: f32, theme: 
 /// trigger flips above it, exactly as React's `SelectContent` does.
 pub fn select_menu_top_for(tree: &UiTree, id: NodeId, select_h: f32, items: usize, theme: &Theme) -> f32 {
     let menu_h = semio_ui_select_behavior::select_menu_height(items, theme);
-    let absolute_y = semio_ui_wgpu_events::node_abs_rect(tree, id).map_or(0.0, |rect| rect.y);
+    let absolute_y = semio_ui_wgpu_events_focus::node_abs_rect(tree, id).map_or(0.0, |rect| rect.y);
     let viewport_h = tree.root.and_then(|root| tree.accepted_layout(root)).map_or(0.0, |layout| layout.height);
     semio_ui_select_behavior::select_menu_top(absolute_y, select_h, menu_h, viewport_h)
 }

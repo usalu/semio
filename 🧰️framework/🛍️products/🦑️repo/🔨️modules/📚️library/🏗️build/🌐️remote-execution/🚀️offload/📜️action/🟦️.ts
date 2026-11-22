@@ -19,7 +19,7 @@ const digestOf=(data:Uint8Array):OffloadDigestV1=>({hash:sha(data),size_bytes:da
 
 /** 🏷️ The platform properties of an offloaded rustc action: the machine kind of the requester, its exact compiler (`semio-target`, `semio-toolchain`), the target libraries the unit needs when it is not the host, and the two control properties of the scheduler (`semio-offload=if-idle`, `semio-origin`). Sorted, so equal units are equal actions. */
 export function offloadPlatformV1(host:readonly RemoteExecutionPropertyV1[],toolchain:OffloadToolchainV1,target:string|undefined,origin:string|undefined):readonly RemoteExecutionPropertyV1[]{
- const p=policy.property,rows=[...host.filter(row=>row.name!==p.target&&row.name!==p.toolchain),{name:p.offload,value:p.offloadValue},{name:p.target,value:toolchain.host},{name:p.toolchain,value:toolchain.digest},...origin?[{name:p.origin,value:origin}]:[]];
+ const p=policy.property,rows=[...host.filter(row=>row.name!==p.target&&row.name!==p.toolchain),{name:p.offload,value:p.offloadValue},{name:p.format,value:p.formatValue},{name:p.target,value:toolchain.host},{name:p.toolchain,value:toolchain.digest},...origin?[{name:p.origin,value:origin}]:[]];
  if(target!==undefined&&target!==toolchain.host)rows.push({name:p.targetPrefix+target,value:"1"});
  return rows.sort((left,right)=>left.name<right.name?-1:left.name>right.name?1:0);
 }
@@ -30,6 +30,18 @@ export function parseRustcIdentityV1(text:string):Readonly<{commit:string;host:s
  return commit&&host?{commit,host,digest:sha(text).slice(0,16)}:undefined;
 }
 
+/** 🧬️ The command of one planned unit in argv form, the same on every operating system and run without a shell: the program `@tool:rustc`, the compiler arguments (the working-directory remap and, for a macOS host, the object-prefix flag first; the remaps of the shipped directories and the source of an absolute path last) and the environment, where every path below the worker's private input root is spelled `@root/<relative posix path>` and mapped to native separators by the worker. The platform key decides who may run it, never its encoding: remapped names are written with `/`, and no input carries an executable bit, so the same unit described from a POSIX and from a Windows requester has one digest. */
+export function offloadCommandV1(plan:OffloadPlanV1,host:string):Readonly<{arguments:readonly string[];environment:readonly (readonly [string,string])[]}>{
+ const mark=policy.root.placeholder,env=plan.environment,remaps=(env.SEMIO_REMAPS??"").split("\n").filter(line=>line!==""),source=env.SEMIO_SOURCE;
+ const spelled=(text:string):string=>text.replace(/\\/gu,"/"),rooted=(path:string):string=>path==="."||path===""?mark:`${mark}/${path}`;
+ const absolute=(env.SEMIO_ABSOLUTE??"").split(" ").filter(part=>part!=="");
+ const variables:[string,string][]=Object.entries(env).filter(([name])=>!name.startsWith("SEMIO_")&&!absolute.includes(name)).map(([name,value])=>[name,value]);
+ for(const name of absolute)variables.push([name,rooted(env[`SEMIO_REL_${name}`]??"")]);
+ variables.push(["HOME",rooted(policy.root.home)],[policy.root.report,policy.virtual.root]);
+ const argumentsList=[`${policy.tool.placeholder}:${policy.tool.name}`,`--remap-path-prefix=${mark}=${spelled(env.SEMIO_CWD_NAME??"")}`,...host.includes("apple-darwin")?[`-Clink-arg=-Wl,-oso_prefix,${rooted(policy.virtual.out)}/`]:[],...plan.arguments,...remaps.map(entry=>{const equals=entry.indexOf("=");return `--remap-path-prefix=${rooted(entry.slice(0,equals))}=${spelled(entry.slice(equals+1))}`;}),...source===undefined?[]:[rooted(source)]];
+ return Object.freeze({arguments:Object.freeze(argumentsList),environment:Object.freeze(variables.sort(([left],[right])=>left<right?-1:left>right?1:0))});
+}
+
 type Node={files:Map<string,{digest:OffloadDigestV1;executable:boolean}>;directories:Map<string,Node>};
 
 /** 🏗️ Builds the action of one planned unit and uploads what the store lacks: the input tree (files by content digest, so equal files are stored once for the whole fleet), the command and the action. Resolves to a decline when an input cannot be read or the policy bounds are exceeded. */
@@ -37,13 +49,13 @@ export async function buildOffloadActionV1(input:Readonly<{plan:OffloadPlanV1;co
  const {plan,content,instance,platform,signal}=input,blobs=new Map<string,{digest:OffloadDigestV1;path?:string;bytes?:Uint8Array}>(),root:Node={files:new Map(),directories:new Map()};
  let bytes=0;
  for(const [path,real] of [...plan.files].sort((left,right)=>left[0]<right[0]?-1:1)){
-  let size:number,mode:number,hash:string|null;
-  try{const stat=statSync(real);size=stat.size;mode=stat.mode;hash=input.digest?.(real)??sha(readFileSync(real));}catch{return{declined:"unreadable-input",detail:real};}
+  let size:number,hash:string|null;
+  try{const stat=statSync(real);size=stat.size;hash=input.digest?.(real)??sha(readFileSync(real));}catch{return{declined:"unreadable-input",detail:real};}
   if(hash===null)return{declined:"unreadable-input",detail:real};
-  bytes+=size;if(bytes>policy.limits.maximumInputBytes)return{declined:"inputs-too-large",detail:String(bytes)};
+  bytes+=size;
   const parts=path.split("/");let node=root;
   for(const part of parts.slice(0,-1)){let next=node.directories.get(part);if(!next){next={files:new Map(),directories:new Map()};node.directories.set(part,next);}node=next;}
-  const digest={hash,size_bytes:size};node.files.set(parts.at(-1)!,{digest,executable:(mode&0o111)!==0});
+  const digest={hash,size_bytes:size};node.files.set(parts.at(-1)!,{digest,executable:false});
   if(size>0&&!blobs.has(hash))blobs.set(hash,{digest,path:real});
  }
  const stage=(data:Uint8Array):OffloadDigestV1=>{const digest=digestOf(data);if(digest.size_bytes>0&&!blobs.has(digest.hash))blobs.set(digest.hash,{digest,bytes:data});return digest;};
@@ -53,14 +65,16 @@ export async function buildOffloadActionV1(input:Readonly<{plan:OffloadPlanV1;co
   symlinks:[],
  }));
  const rootDigest=build(root),properties=platform.map(row=>({name:row.name,value:row.value}));
- const argumentsList=["/bin/sh","-c",policy.script,"semio-rustc",...plan.arguments];
+ const built=offloadCommandV1(plan,platform.find(row=>row.name===policy.property.target)?.value??"");
  const command=stage(encodeProtobufV1(REAPI_V1.command,{
-  arguments:argumentsList,environment_variables:Object.entries(plan.environment).sort(([left],[right])=>left<right?-1:1).map(([name,value])=>({name,value})),
+  arguments:[...built.arguments],environment_variables:built.environment.map(([name,value])=>({name,value})),
   output_files:[],output_directories:[],output_paths:[policy.virtual.out,policy.virtual.root],platform:{properties},working_directory:"",
  }));
  const action=stage(encodeProtobufV1(REAPI_V1.action,{command_digest:command,input_root_digest:rootDigest,timeout:{seconds:policy.timeouts.actionSeconds},platform:{properties}}));
  const absent=new Set((await content.missing(instance,[...blobs.values()].map(row=>({hash:row.digest.hash,size:row.digest.size_bytes})),signal)).map(row=>row.hash));
  const rows=[...blobs.values()].filter(row=>absent.has(row.digest.hash));let next=0;
+  const travelling=rows.reduce((sum,row)=>sum+row.digest.size_bytes,0);
+ if(travelling>policy.limits.maximumUploadBytes)return{declined:"inputs-too-large",detail:`upload ${travelling}`};
  await Promise.all(Array.from({length:Math.min(8,rows.length)},async()=>{
   for(;;){const row=rows[next++];if(row===undefined)return;await content.write(instance,{hash:row.digest.hash,size:row.digest.size_bytes},row.bytes??readFileSync(row.path!),signal);}
  }));

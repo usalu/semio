@@ -88,7 +88,7 @@ mod ui_tree_reconcile;
 
 #[path = "🔽️composite-expansion-rows/🦀️.rs"]
 mod composite_expansion_rows;
-pub use composite_expansion_rows::select_item_row;
+pub use composite_expansion_rows::{icon_select_cell, icon_select_cell_key, icon_select_mode_label, select_commit_value, select_item_row, select_item_row_committing, ICON_SELECT_CELLS};
 #[cfg(any(test,feature="testkit"))]
 use composite_expansion_rows::{layout_affecting_change, own_fields_equal, tree_section_row};
 

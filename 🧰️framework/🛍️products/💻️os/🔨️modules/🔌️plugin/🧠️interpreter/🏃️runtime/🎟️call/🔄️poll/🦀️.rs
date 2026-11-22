@@ -19,7 +19,7 @@ impl OwnedRuntime {
             }
         }
         let events=ordinary.as_ref().map_or(&[][..],std::slice::from_ref);
-        crate::operation::input::encode_json_input_into(&OwnedPollInput{events,command_page,cold_pair_page,budget},control,output)
+        crate::operation::input::encode_json_input_into(&OwnedPollInput::with_budget(events,command_page,cold_pair_page,budget)?,control,output)
     }
 }
 
@@ -41,7 +41,7 @@ fn original_poll_uses_the_same_borrowed_json_envelope_as_the_independent_seriali
         assert_eq!(result.is_ok(),row["valid"].as_bool().unwrap());
         if result.is_ok(){let bytes=output.take().unwrap();
             let actual:serde_json::Value=serde_json::from_slice(&bytes).unwrap();
-            assert_eq!(actual,serde_json::json!({"events":row["events"],"command_page":null,"cold_pair_page":null,"budget":fixture["budget"]}));
+            assert_eq!(actual,serde_json::json!({"Poll":{"events":row["events"],"command_page":null,"cold_pair_page":null,"limits":fixture["limits"]}}));
             assert_eq!(control.owned_bytes(),bytes.capacity());
         }else{assert_eq!(control.owned_bytes(),0);}
     }

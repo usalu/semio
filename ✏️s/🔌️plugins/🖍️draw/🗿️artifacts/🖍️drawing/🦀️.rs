@@ -18,6 +18,9 @@ extern crate semio_framework_schema as framework_schema;
 // conditional-compilation bug here) — this crate declares no `serde` feature, so rustc flags the value as
 // unrecognized. Harmless, but a hard error under `-D warnings` without this crate-wide allow.
 
+/// 📤️ The registered maximum byte size of one encoded Drawing export owner.
+pub use semio_s_artifact_draw_drawing_write::owned::RAW_OUTPUT_LIMIT as DRAW_EXPORT_MAXIMUM_BYTES;
+
 //#region 🔖️ArtifactKind
 
 /// 🔖️ This artifact's OLD capability-row definition (ticket

@@ -67,6 +67,30 @@ fn shared_dock_frames_abut_and_resize_hit_stays_centered() {
     assert_eq!(dock.split_axis_extent(&Vec::new(), bounds, 0.0), Some(800.0));
 }
 
+/// 🖐️ React's `RESIZABLE_HIT_TARGET_MIN_FINE_PX`/`_COARSE_PX` read from the fixture its own Canvas test pins them to: a touch-class dock registers the 28 px splitter, a fine one the 20 px.
+#[test]
+fn the_splitter_hit_is_react_s_fine_target_and_its_coarse_target_on_a_touch_dock() {
+    let fixture: serde_json::Value = serde_json::from_str(repo_text!("🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎨️Canvas/🧪️tests/dock-cases.json")).expect("shared dock fixture");
+    let (fine, coarse) = (fixture["fineHitSize"].as_f64().unwrap() as f32, fixture["coarseHitSize"].as_f64().unwrap() as f32);
+    assert_eq!((split_hit_extent(false), split_hit_extent(true)), (fine, coarse));
+    let bounds = Rect::new(0.0, 0.0, 800.0, 600.0);
+    let theme = Theme::default();
+    let width_of = |coarse_pointer: bool| {
+        let mut dock = DockState::from_app(&sample_app(&["a", "b"], None), Some("a"));
+        dock.root = DockNode::Row(vec![(stack_with("a"), 1.0), (stack_with("b"), 1.0)]);
+        dock.coarse_pointer = coarse_pointer;
+        let mut atlas = FontAtlas::builtin();
+        let mut input = InputState::<ActionDescriptor>::default();
+        let mut draw = DrawList::default();
+        let labels = HashMap::new();
+        let icons = IconAtlas::default();
+        let mut ctx = DockRenderContext { draw: &mut draw, atlas: &mut atlas, icons: &icons, input: &mut input, theme: &theme, window_labels: &labels, window_icon_ids: &labels, control_names: None };
+        dock.register_resize_hits(&mut ctx, bounds);
+        input.staged_hits().iter().find(|hit| matches!(hit.kind, HitKind::DockSplit)).unwrap().rect.w
+    };
+    assert_eq!((width_of(false), width_of(true)), (fine, coarse));
+}
+
 #[test]
 fn shared_dock_seam_is_one_hover_stroke_next_to_active_window() {
     let mut dock = DockState::from_app(&sample_app(&["a", "b"], None), Some("a"));

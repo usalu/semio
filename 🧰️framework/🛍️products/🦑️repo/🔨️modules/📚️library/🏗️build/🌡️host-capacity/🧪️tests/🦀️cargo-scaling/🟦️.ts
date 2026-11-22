@@ -34,6 +34,8 @@ for(const item of cases.runs)test(`cargo run: ${item.name}`,async()=>{
  expect(parallelism).toBe(`--parallelism=${jobs}`);
 },30000);
 
+const fleetWithHeadroom=(candidates:number)=>({fetch:(async()=>new Response(JSON.stringify({workers:candidates+2,compatible:candidates,headroom:candidates,candidates}))) as unknown as typeof fetch});
+
 for (const item of cases.fleetRuns) test(`cargo with published fleet execution ${item.name}`, async () => {
  const directory = fresh();
  const environment = {
@@ -48,7 +50,7 @@ for (const item of cases.fleetRuns) test(`cargo with published fleet execution $
   localParallelism: readRepositoryCargoLaunchV1(grant.args.slice(1), environment).parallelism,
  }), {
   policy, directory, strip, write: () => undefined,
-  offloadAdmission: { probe: testHostProbeV1("critical-pressure-gigabyte-swap"), policy },
+  offloadAdmission: { probe: testHostProbeV1("critical-pressure-gigabyte-swap"), policy, fleet: fleetWithHeadroom(2) },
  });
  expect(result).toEqual({ args, hostGranted: false, localParallelism: item.localParallelism });
 });
@@ -77,7 +79,7 @@ for (const item of cases.queuedFleetRuns) test(`cargo with published fleet execu
   directory, policy, write: () => undefined,
   sample: async () => ({host: queued && item.outcome === "local" ? host() : {...host(), availableMegabytes: item.hostAvailableMegabytes}, swappedOutMegabytes: 0}),
   observe: async () => 0,
-  offloadAdmission: {policy, probe: {...quiet, run: async (command, arguments_, signal) => {
+  offloadAdmission: {policy, fleet: item.outcome === "cancelled" ? {fetch: (async (_url: unknown, init?: RequestInit) => {if (queued) {controller.abort(cancelled); init?.signal?.throwIfAborted();} return fleetWithHeadroom(2).fetch(_url as string);}) as unknown as typeof fetch} : fleetWithHeadroom(2), probe: {...quiet, run: async (command, arguments_, signal) => {
    if (command === "vm_stat") {
     waitersAtProbe.push(existsSync(queue) ? readdirSync(queue) : []);
     if (queued) expect(signal).toBe(controller.signal);
@@ -97,3 +99,16 @@ for (const item of cases.queuedFleetRuns) test(`cargo with published fleet execu
  expect(readdirSync(join(directory, "grants"))).toEqual([]);
  expect(launches).toBe(item.outcome === "cancelled" ? 0 : 1);
 });
+
+test("a machine the door would make wait starts cargo with a minimal local grant when the fleet has headroom, and keeps waiting when it has none or the scheduler does not answer",async()=>{
+ const directory=fresh(),environment:Record<string,string|undefined>={LANG:"en_US.UTF-8",SEMIO_WORKSPACE_ROOT:directory,SEMIO_REMOTE_EXECUTION_ENDPOINT:"grpc://192.0.2.1:8980"};
+ const args=["cargo","--store=shared","--configuration=prototype","--","check","-p","x"],pressured=testHostProbeV1("critical-pressure-gigabyte-swap");
+ const started=await withBuildCapacityV1(args,environment,async grant=>({granted:grant.handle!==undefined,slots:environment.SEMIO_UNIT_CACHE_SLOTS,pressure:environment.SEMIO_OFFLOAD_PRESSURE}),{policy,directory,strip,write:()=>undefined,offloadAdmission:{probe:pressured,policy,fleet:fleetWithHeadroom(1)}});
+ expect(started).toEqual({granted:false,slots:"1",pressure:"door"});
+ expect(environment.SEMIO_UNIT_CACHE_SLOTS,"restored after the build").toBeUndefined();expect(environment.SEMIO_OFFLOAD_PRESSURE).toBeUndefined();
+ for(const [label,fleet] of [["nobody has headroom",fleetWithHeadroom(0)],["the scheduler does not answer",{fetch:(async()=>{throw Error("unreachable");}) as unknown as typeof fetch}]] as const){
+  const controller=new AbortController(),timer=setTimeout(()=>{controller.abort(Error("kept waiting"));},1200);let launched=false;
+  const outcome=await withBuildCapacityV1(args,{...environment},async()=>{launched=true;return "launched";},{policy,directory:fresh(),strip,write:()=>undefined,sample:async()=>({host:{...host(),availableMegabytes:100},swappedOutMegabytes:0}),observe:async()=>0,offloadAdmission:{probe:pressured,policy,fleet},control:{signal:controller.signal,remainingMilliseconds:()=>null,publish:()=>undefined,yieldContinuation:async()=>undefined}}).catch(error=>error).finally(()=>clearTimeout(timer));
+  expect(launched,label).toBe(false);expect(String((outcome as Error).message),label).toContain("kept waiting");
+ }
+},30000);

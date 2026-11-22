@@ -39,7 +39,7 @@ fn original_job_receives_and_retires_fem_rows(){
  let mut published=None;
  let turn=received(&mut caller,&mut decoder,stock(),|owner|Fem2dSnapshot::receive_authoring(&mut source,&mut published,owner)).expect("the original receiving scope ran");
  assert!(turn.work>0);turn.result.unwrap();assert_eq!(caller.stock(),stock());
- let snapshot=published.take().unwrap();assert_eq!(snapshot.nodes.len(),1);assert_eq!(snapshot.nodes.get(0).unwrap().id.as_str(),"a");close(&mut caller,snapshot);
+ let snapshot=published.take().unwrap();assert_eq!(snapshot.nodes.len(),1);assert_eq!(snapshot.nodes.get().get(0).unwrap().id.as_str(),"a");close(&mut caller,snapshot);
  close_decoder(&mut caller,&mut decoder);
  if let Some(source)=source{close(&mut caller,source)}caller.retire(stock());
 }
@@ -74,6 +74,6 @@ fn original_job_receives_typed_record_into_caller_slot(){
  let mut caller=OriginalJobFixtureCaller::admit(OperationId(948),Generation(12),stock(),||Some(0),u64::MAX,10_000_000);let mut decoder=OriginalJobDecodeOwner::empty();
  let mut source=Fem2dSnapshotValue::default();source.nodes.push(FemNodeValue{id:"node".into(),x:1.,y:2.,});let record=source.__dsl_to_record();let mut output=None;
  let turn=received(&mut caller,&mut decoder,stock(),|owner|Fem2dSnapshot::receive_exchange_record(&record,&mut output,owner)).expect("the original receiving scope ran");
- assert!(turn.work>0);turn.result.unwrap();let snapshot=output.take().unwrap();assert_eq!(snapshot.nodes.len(),1);assert_eq!(snapshot.nodes.get(0).unwrap().id.as_str(),"node");close(&mut caller,snapshot);
+ assert!(turn.work>0);turn.result.unwrap();let snapshot=output.take().unwrap();assert_eq!(snapshot.nodes.len(),1);assert_eq!(snapshot.nodes.get().get(0).unwrap().id.as_str(),"node");close(&mut caller,snapshot);
  close_decoder(&mut caller,&mut decoder);close(&mut caller,record);close(&mut caller,source);caller.retire(stock());
 }

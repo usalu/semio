@@ -1356,48 +1356,48 @@
      "tone": 0.6,
      "profile": [
       [
-       -0.68,
-       -0.02
+       0.68,
+       0.02
       ],
       [
        0.0,
-       -0.02
+       0.02
       ],
       [
-       0.00765,
-       -0.01848
-      ],
-      [
-       0.01414,
-       -0.01414
-      ],
-      [
-       0.01848,
-       -0.00765
-      ],
-      [
-       0.02,
-       -0.0
-      ],
-      [
-       0.01848,
-       0.00765
-      ],
-      [
-       0.01414,
-       0.01414
-      ],
-      [
-       0.00765,
+       -0.00765,
        0.01848
       ],
       [
-       0.0,
-       0.02
+       -0.01414,
+       0.01414
       ],
       [
-       -0.68,
-       0.02
+       -0.01848,
+       0.00765
+      ],
+      [
+       -0.02,
+       0.0
+      ],
+      [
+       -0.01848,
+       -0.00765
+      ],
+      [
+       -0.01414,
+       -0.01414
+      ],
+      [
+       -0.00765,
+       -0.01848
+      ],
+      [
+       0.0,
+       -0.02
+      ],
+      [
+       0.68,
+       -0.02
       ]
      ],
      "plane": "xy",
@@ -1426,8 +1426,8 @@
      ],
      "transform": {
       "translation": [
-       -0.6675,
-       -0.0,
+       0.6675,
+       0.0,
        0.0
       ]
      }
@@ -1530,8 +1530,8 @@
      "sections": [
       {
        "at": [
-        -0.63,
-        0.036,
+        0.63,
+        -0.036,
         -0.4025
        ],
        "rx": 0.019,
@@ -1540,8 +1540,8 @@
       },
       {
        "at": [
-        -0.63,
-        0.04256,
+        0.63,
+        -0.04256,
         -0.30188
        ],
        "rx": 0.019,
@@ -1550,8 +1550,8 @@
       },
       {
        "at": [
-        -0.63,
-        0.04725,
+        0.63,
+        -0.04725,
         -0.20125
        ],
        "rx": 0.019,
@@ -1560,8 +1560,8 @@
       },
       {
        "at": [
-        -0.63,
-        0.05006,
+        0.63,
+        -0.05006,
         -0.10062
        ],
        "rx": 0.019,
@@ -1570,8 +1570,8 @@
       },
       {
        "at": [
-        -0.63,
-        0.051,
+        0.63,
+        -0.051,
         0.0
        ],
        "rx": 0.019,
@@ -1580,8 +1580,8 @@
       },
       {
        "at": [
-        -0.63,
-        0.05006,
+        0.63,
+        -0.05006,
         0.10062
        ],
        "rx": 0.019,
@@ -1590,8 +1590,8 @@
       },
       {
        "at": [
-        -0.63,
-        0.04725,
+        0.63,
+        -0.04725,
         0.20125
        ],
        "rx": 0.019,
@@ -1600,8 +1600,8 @@
       },
       {
        "at": [
-        -0.63,
-        0.04256,
+        0.63,
+        -0.04256,
         0.30188
        ],
        "rx": 0.019,
@@ -1610,8 +1610,8 @@
       },
       {
        "at": [
-        -0.63,
-        0.036,
+        0.63,
+        -0.036,
         0.4025
        ],
        "rx": 0.019,
@@ -1624,7 +1624,7 @@
      "repeat": {
       "count": 10,
       "translation": [
-       0.065,
+       -0.065,
        0.0,
        0.0
       ]
@@ -1645,15 +1645,15 @@
      "cornerRadius": 0.005,
      "transform": {
       "translation": [
-       -0.63,
-       0.035,
+       0.63,
+       -0.035,
        0.4025
       ]
      },
      "repeat": {
       "count": 10,
       "translation": [
-       0.065,
+       -0.065,
        0.0,
        0.0
       ]
@@ -1674,15 +1674,15 @@
      "cornerRadius": 0.005,
      "transform": {
       "translation": [
-       -0.63,
-       0.035,
+       0.63,
+       -0.035,
        -0.4025
       ]
      },
      "repeat": {
       "count": 10,
       "translation": [
-       0.065,
+       -0.065,
        0.0,
        0.0
       ]
@@ -2034,8 +2034,8 @@
      "sections": [
       {
        "at": [
-        -0.72,
-        0.1,
+        0.72,
+        -0.1,
         0.0
        ],
        "rx": 0.402,
@@ -2044,8 +2044,8 @@
       },
       {
        "at": [
-        -0.716,
-        0.1,
+        0.716,
+        -0.1,
         0.0
        ],
        "rx": 0.42,
@@ -2054,8 +2054,8 @@
       },
       {
        "at": [
-        -0.708,
-        0.1,
+        0.708,
+        -0.1,
         0.0
        ],
        "rx": 0.434,
@@ -2064,8 +2064,8 @@
       },
       {
        "at": [
-        -0.695,
-        0.1,
+        0.695,
+        -0.1,
         0.0
        ],
        "rx": 0.443,
@@ -2074,8 +2074,8 @@
       },
       {
        "at": [
-        -0.675,
-        0.1,
+        0.675,
+        -0.1,
         0.0
        ],
        "rx": 0.447,
@@ -2084,8 +2084,8 @@
       },
       {
        "at": [
-        -0.672,
-        0.1,
+        0.672,
+        -0.1,
         0.0
        ],
        "rx": 0.447,
@@ -2094,8 +2094,8 @@
       },
       {
        "at": [
-        -0.015,
-        0.1,
+        0.015,
+        -0.1,
         0.0
        ],
        "rx": 0.447,
@@ -2104,8 +2104,8 @@
       },
       {
        "at": [
-        -0.012,
-        0.1,
+        0.012,
+        -0.1,
         0.0
        ],
        "rx": 0.447,
@@ -2114,8 +2114,8 @@
       },
       {
        "at": [
-        -0.008,
-        0.1,
+        0.008,
+        -0.1,
         0.0
        ],
        "rx": 0.4464,
@@ -2124,8 +2124,8 @@
       },
       {
        "at": [
-        -0.004,
-        0.1,
+        0.004,
+        -0.1,
         0.0
        ],
        "rx": 0.4452,
@@ -2135,7 +2135,7 @@
       {
        "at": [
         0.0,
-        0.1,
+        -0.1,
         0.0
        ],
        "rx": 0.443,
@@ -2390,8 +2390,8 @@
      "sections": [
       {
        "at": [
-        0.012,
-        0.178,
+        -0.012,
+        -0.178,
         0.444
        ],
        "rx": 0.004,
@@ -2400,8 +2400,8 @@
       },
       {
        "at": [
-        -0.673,
-        0.178,
+        0.673,
+        -0.178,
         0.444
        ],
        "rx": 0.004,
@@ -2410,8 +2410,8 @@
       },
       {
        "at": [
-        -0.6955,
-        0.178,
+        0.6955,
+        -0.178,
         0.43797
        ],
        "rx": 0.004,
@@ -2420,8 +2420,8 @@
       },
       {
        "at": [
-        -0.71197,
-        0.178,
+        0.71197,
+        -0.178,
         0.4215
        ],
        "rx": 0.004,
@@ -2430,8 +2430,8 @@
       },
       {
        "at": [
-        -0.718,
-        0.178,
+        0.718,
+        -0.178,
         0.399
        ],
        "rx": 0.004,
@@ -2440,8 +2440,8 @@
       },
       {
        "at": [
-        -0.718,
-        0.178,
+        0.718,
+        -0.178,
         0.0
        ],
        "rx": 0.004,
@@ -2566,8 +2566,8 @@
      "sections": [
       {
        "at": [
-        0.012,
-        0.178,
+        -0.012,
+        -0.178,
         -0.444
        ],
        "rx": 0.004,
@@ -2576,8 +2576,8 @@
       },
       {
        "at": [
-        -0.673,
-        0.178,
+        0.673,
+        -0.178,
         -0.444
        ],
        "rx": 0.004,
@@ -2586,8 +2586,8 @@
       },
       {
        "at": [
-        -0.6955,
-        0.178,
+        0.6955,
+        -0.178,
         -0.43797
        ],
        "rx": 0.004,
@@ -2596,8 +2596,8 @@
       },
       {
        "at": [
-        -0.71197,
-        0.178,
+        0.71197,
+        -0.178,
         -0.4215
        ],
        "rx": 0.004,
@@ -2606,8 +2606,8 @@
       },
       {
        "at": [
-        -0.718,
-        0.178,
+        0.718,
+        -0.178,
         -0.399
        ],
        "rx": 0.004,
@@ -2616,8 +2616,8 @@
       },
       {
        "at": [
-        -0.718,
-        0.178,
+        0.718,
+        -0.178,
         0.0
        ],
        "rx": 0.004,
@@ -2742,8 +2742,8 @@
      "sections": [
       {
        "at": [
-        0.012,
-        0.022,
+        -0.012,
+        -0.022,
         0.444
        ],
        "rx": 0.004,
@@ -2752,8 +2752,8 @@
       },
       {
        "at": [
-        -0.673,
-        0.022,
+        0.673,
+        -0.022,
         0.444
        ],
        "rx": 0.004,
@@ -2762,8 +2762,8 @@
       },
       {
        "at": [
-        -0.6955,
-        0.022,
+        0.6955,
+        -0.022,
         0.43797
        ],
        "rx": 0.004,
@@ -2772,8 +2772,8 @@
       },
       {
        "at": [
-        -0.71197,
-        0.022,
+        0.71197,
+        -0.022,
         0.4215
        ],
        "rx": 0.004,
@@ -2782,8 +2782,8 @@
       },
       {
        "at": [
-        -0.718,
-        0.022,
+        0.718,
+        -0.022,
         0.399
        ],
        "rx": 0.004,
@@ -2792,8 +2792,8 @@
       },
       {
        "at": [
-        -0.718,
-        0.022,
+        0.718,
+        -0.022,
         0.0
        ],
        "rx": 0.004,
@@ -2918,8 +2918,8 @@
      "sections": [
       {
        "at": [
-        0.012,
-        0.022,
+        -0.012,
+        -0.022,
         -0.444
        ],
        "rx": 0.004,
@@ -2928,8 +2928,8 @@
       },
       {
        "at": [
-        -0.673,
-        0.022,
+        0.673,
+        -0.022,
         -0.444
        ],
        "rx": 0.004,
@@ -2938,8 +2938,8 @@
       },
       {
        "at": [
-        -0.6955,
-        0.022,
+        0.6955,
+        -0.022,
         -0.43797
        ],
        "rx": 0.004,
@@ -2948,8 +2948,8 @@
       },
       {
        "at": [
-        -0.71197,
-        0.022,
+        0.71197,
+        -0.022,
         -0.4215
        ],
        "rx": 0.004,
@@ -2958,8 +2958,8 @@
       },
       {
        "at": [
-        -0.718,
-        0.022,
+        0.718,
+        -0.022,
         -0.399
        ],
        "rx": 0.004,
@@ -2968,8 +2968,8 @@
       },
       {
        "at": [
-        -0.718,
-        0.022,
+        0.718,
+        -0.022,
         0.0
        ],
        "rx": 0.004,
@@ -3096,8 +3096,8 @@
      "sections": [
       {
        "at": [
-        -0.71,
-        0.1,
+        0.71,
+        -0.1,
         0.0
        ],
        "rx": 0.392,
@@ -3106,8 +3106,8 @@
       },
       {
        "at": [
-        -0.706,
-        0.1,
+        0.706,
+        -0.1,
         0.0
        ],
        "rx": 0.41,
@@ -3116,8 +3116,8 @@
       },
       {
        "at": [
-        -0.698,
-        0.1,
+        0.698,
+        -0.1,
         0.0
        ],
        "rx": 0.424,
@@ -3126,8 +3126,8 @@
       },
       {
        "at": [
-        -0.685,
-        0.1,
+        0.685,
+        -0.1,
         0.0
        ],
        "rx": 0.433,
@@ -3136,8 +3136,8 @@
       },
       {
        "at": [
-        -0.665,
-        0.1,
+        0.665,
+        -0.1,
         0.0
        ],
        "rx": 0.437,
@@ -3146,8 +3146,8 @@
       },
       {
        "at": [
-        -0.662,
-        0.1,
+        0.662,
+        -0.1,
         0.0
        ],
        "rx": 0.437,
@@ -3156,8 +3156,8 @@
       },
       {
        "at": [
-        -0.015,
-        0.1,
+        0.015,
+        -0.1,
         0.0
        ],
        "rx": 0.437,
@@ -3166,8 +3166,8 @@
       },
       {
        "at": [
-        -0.012,
-        0.1,
+        0.012,
+        -0.1,
         0.0
        ],
        "rx": 0.437,
@@ -3176,8 +3176,8 @@
       },
       {
        "at": [
-        -0.008,
-        0.1,
+        0.008,
+        -0.1,
         0.0
        ],
        "rx": 0.4364,
@@ -3186,8 +3186,8 @@
       },
       {
        "at": [
-        -0.004,
-        0.1,
+        0.004,
+        -0.1,
         0.0
        ],
        "rx": 0.4352,
@@ -3197,7 +3197,7 @@
       {
        "at": [
         0.0,
-        0.1,
+        -0.1,
         0.0
        ],
        "rx": 0.433,
@@ -3645,48 +3645,48 @@
      "tone": 0.6,
      "profile": [
       [
-       -0.68,
-       -0.02
+       0.68,
+       0.02
       ],
       [
        0.0,
-       -0.02
+       0.02
       ],
       [
-       0.00765,
-       -0.01848
-      ],
-      [
-       0.01414,
-       -0.01414
-      ],
-      [
-       0.01848,
-       -0.00765
-      ],
-      [
-       0.02,
-       -0.0
-      ],
-      [
-       0.01848,
-       0.00765
-      ],
-      [
-       0.01414,
-       0.01414
-      ],
-      [
-       0.00765,
+       -0.00765,
        0.01848
       ],
       [
-       0.0,
-       0.02
+       -0.01414,
+       0.01414
       ],
       [
-       -0.68,
-       0.02
+       -0.01848,
+       0.00765
+      ],
+      [
+       -0.02,
+       0.0
+      ],
+      [
+       -0.01848,
+       -0.00765
+      ],
+      [
+       -0.01414,
+       -0.01414
+      ],
+      [
+       -0.00765,
+       -0.01848
+      ],
+      [
+       0.0,
+       -0.02
+      ],
+      [
+       0.68,
+       -0.02
       ]
      ],
      "plane": "xy",
@@ -3717,8 +3717,8 @@
      ],
      "transform": {
       "translation": [
-       -0.6675,
-       -0.0,
+       0.6675,
+       0.0,
        0.0
       ]
      },
@@ -3827,8 +3827,8 @@
      "sections": [
       {
        "at": [
-        -0.63,
-        0.036,
+        0.63,
+        -0.036,
         -0.4025
        ],
        "rx": 0.019,
@@ -3837,8 +3837,8 @@
       },
       {
        "at": [
-        -0.63,
-        0.04256,
+        0.63,
+        -0.04256,
         -0.30188
        ],
        "rx": 0.019,
@@ -3847,8 +3847,8 @@
       },
       {
        "at": [
-        -0.63,
-        0.04725,
+        0.63,
+        -0.04725,
         -0.20125
        ],
        "rx": 0.019,
@@ -3857,8 +3857,8 @@
       },
       {
        "at": [
-        -0.63,
-        0.05006,
+        0.63,
+        -0.05006,
         -0.10062
        ],
        "rx": 0.019,
@@ -3867,8 +3867,8 @@
       },
       {
        "at": [
-        -0.63,
-        0.051,
+        0.63,
+        -0.051,
         0.0
        ],
        "rx": 0.019,
@@ -3877,8 +3877,8 @@
       },
       {
        "at": [
-        -0.63,
-        0.05006,
+        0.63,
+        -0.05006,
         0.10062
        ],
        "rx": 0.019,
@@ -3887,8 +3887,8 @@
       },
       {
        "at": [
-        -0.63,
-        0.04725,
+        0.63,
+        -0.04725,
         0.20125
        ],
        "rx": 0.019,
@@ -3897,8 +3897,8 @@
       },
       {
        "at": [
-        -0.63,
-        0.04256,
+        0.63,
+        -0.04256,
         0.30188
        ],
        "rx": 0.019,
@@ -3907,8 +3907,8 @@
       },
       {
        "at": [
-        -0.63,
-        0.036,
+        0.63,
+        -0.036,
         0.4025
        ],
        "rx": 0.019,
@@ -3921,7 +3921,7 @@
      "repeat": {
       "count": 10,
       "translation": [
-       0.065,
+       -0.065,
        0.0,
        0.0
       ]
@@ -3944,15 +3944,15 @@
      "cornerRadius": 0.005,
      "transform": {
       "translation": [
-       -0.63,
-       0.035,
+       0.63,
+       -0.035,
        0.4025
       ]
      },
      "repeat": {
       "count": 10,
       "translation": [
-       0.065,
+       -0.065,
        0.0,
        0.0
       ]
@@ -3975,15 +3975,15 @@
      "cornerRadius": 0.005,
      "transform": {
       "translation": [
-       -0.63,
-       0.035,
+       0.63,
+       -0.035,
        -0.4025
       ]
      },
      "repeat": {
       "count": 10,
       "translation": [
-       0.065,
+       -0.065,
        0.0,
        0.0
       ]
@@ -4559,8 +4559,8 @@
      ],
      "transform": {
       "translation": [
-       -0.36,
-       0.015,
+       0.36,
+       -0.015,
        0.0
       ]
      },
@@ -4581,8 +4581,8 @@
      ],
      "transform": {
       "translation": [
-       -0.36,
-       0.1,
+       0.36,
+       -0.1,
        0
       ]
      },
@@ -5691,8 +5691,8 @@
      ],
      "transform": {
       "translation": [
-       -0.335,
-       -0.0,
+       0.335,
+       0.0,
        0.4025
       ]
      },
@@ -5719,8 +5719,8 @@
      ],
      "transform": {
       "translation": [
-       -0.6675,
-       -0.0,
+       0.6675,
+       0.0,
        0.0
       ]
      }
@@ -5735,8 +5735,8 @@
      "sections": [
       {
        "at": [
-        -0.3375,
-        0.03,
+        0.3375,
+        -0.03,
         -0.415
        ],
        "rx": 0.3115,
@@ -5745,8 +5745,8 @@
       },
       {
        "at": [
-        -0.3375,
-        0.03712,
+        0.3375,
+        -0.03712,
         -0.2075
        ],
        "rx": 0.3115,
@@ -5755,8 +5755,8 @@
       },
       {
        "at": [
-        -0.3375,
-        0.0395,
+        0.3375,
+        -0.0395,
         0.0
        ],
        "rx": 0.3115,
@@ -5765,8 +5765,8 @@
       },
       {
        "at": [
-        -0.3375,
-        0.03712,
+        0.3375,
+        -0.03712,
         0.2075
        ],
        "rx": 0.3115,
@@ -5775,8 +5775,8 @@
       },
       {
        "at": [
-        -0.3375,
-        0.03,
+        0.3375,
+        -0.03,
         0.415
        ],
        "rx": 0.3115,
@@ -5921,8 +5921,8 @@
      "sections": [
       {
        "at": [
-        -0.72,
-        0.1,
+        0.72,
+        -0.1,
         0.0
        ],
        "rx": 0.407,
@@ -5931,8 +5931,8 @@
       },
       {
        "at": [
-        -0.705,
-        0.1,
+        0.705,
+        -0.1,
         0.0
        ],
        "rx": 0.435,
@@ -5941,8 +5941,8 @@
       },
       {
        "at": [
-        -0.675,
-        0.1,
+        0.675,
+        -0.1,
         0.0
        ],
        "rx": 0.447,
@@ -5951,8 +5951,8 @@
       },
       {
        "at": [
-        -0.672,
-        0.1,
+        0.672,
+        -0.1,
         0.0
        ],
        "rx": 0.447,
@@ -5961,8 +5961,8 @@
       },
       {
        "at": [
-        -0.018,
-        0.1,
+        0.018,
+        -0.1,
         0.0
        ],
        "rx": 0.447,
@@ -5971,8 +5971,8 @@
       },
       {
        "at": [
-        -0.015,
-        0.1,
+        0.015,
+        -0.1,
         0.0
        ],
        "rx": 0.447,
@@ -5981,8 +5981,8 @@
       },
       {
        "at": [
-        -0.007,
-        0.1,
+        0.007,
+        -0.1,
         0.0
        ],
        "rx": 0.445,
@@ -5992,7 +5992,7 @@
       {
        "at": [
         0.0,
-        0.1,
+        -0.1,
         0.0
        ],
        "rx": 0.441,
@@ -6190,6 +6190,288 @@
    ],
    "thermal": [
     {
+     "id": "th-mat-head-core",
+     "kind": "loft",
+     "bone": "mat-head",
+     "material": "cold-foam",
+     "role": "body",
+     "tone": 0.75,
+     "sections": [
+      {
+       "at": [
+        0.71,
+        -0.1,
+        0.0
+       ],
+       "rx": 0.397,
+       "ry": 0.06,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.695,
+        -0.1,
+        0.0
+       ],
+       "rx": 0.425,
+       "ry": 0.082,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.665,
+        -0.1,
+        0.0
+       ],
+       "rx": 0.437,
+       "ry": 0.09,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.662,
+        -0.1,
+        0.0
+       ],
+       "rx": 0.437,
+       "ry": 0.09,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.018,
+        -0.1,
+        0.0
+       ],
+       "rx": 0.437,
+       "ry": 0.09,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.015,
+        -0.1,
+        0.0
+       ],
+       "rx": 0.437,
+       "ry": 0.09,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.007,
+        -0.1,
+        0.0
+       ],
+       "rx": 0.435,
+       "ry": 0.087,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.0,
+        -0.1,
+        0.0
+       ],
+       "rx": 0.431,
+       "ry": 0.082,
+       "exponent": 10
+      }
+     ],
+     "capStart": true,
+     "capEnd": true,
+     "region": "mattress",
+     "layer": "foam-core"
+    },
+    {
+     "id": "th-mat-mid-core",
+     "kind": "loft",
+     "bone": "mat-mid",
+     "material": "cold-foam",
+     "role": "body",
+     "tone": 0.75,
+     "sections": [
+      {
+       "at": [
+        0.0,
+        0.1,
+        0.0
+       ],
+       "rx": 0.434,
+       "ry": 0.082,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.007,
+        0.1,
+        0.0
+       ],
+       "rx": 0.438,
+       "ry": 0.087,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.015,
+        0.1,
+        0.0
+       ],
+       "rx": 0.44,
+       "ry": 0.09,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.018,
+        0.1,
+        0.0
+       ],
+       "rx": 0.44,
+       "ry": 0.09,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.582,
+        0.1,
+        0.0
+       ],
+       "rx": 0.44,
+       "ry": 0.09,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.585,
+        0.1,
+        0.0
+       ],
+       "rx": 0.44,
+       "ry": 0.09,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.593,
+        0.1,
+        0.0
+       ],
+       "rx": 0.438,
+       "ry": 0.087,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.6,
+        0.1,
+        0.0
+       ],
+       "rx": 0.434,
+       "ry": 0.082,
+       "exponent": 10
+      }
+     ],
+     "capStart": true,
+     "capEnd": true,
+     "region": "mattress",
+     "layer": "foam-core"
+    },
+    {
+     "id": "th-mat-foot-core",
+     "kind": "loft",
+     "bone": "mat-foot",
+     "material": "cold-foam",
+     "role": "body",
+     "tone": 0.75,
+     "sections": [
+      {
+       "at": [
+        0.0,
+        0.1,
+        0.0
+       ],
+       "rx": 0.434,
+       "ry": 0.082,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.007,
+        0.1,
+        0.0
+       ],
+       "rx": 0.438,
+       "ry": 0.087,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.015,
+        0.1,
+        0.0
+       ],
+       "rx": 0.44,
+       "ry": 0.09,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.018,
+        0.1,
+        0.0
+       ],
+       "rx": 0.44,
+       "ry": 0.09,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.622,
+        0.1,
+        0.0
+       ],
+       "rx": 0.44,
+       "ry": 0.09,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.625,
+        0.1,
+        0.0
+       ],
+       "rx": 0.44,
+       "ry": 0.09,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.655,
+        0.1,
+        0.0
+       ],
+       "rx": 0.428,
+       "ry": 0.082,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.67,
+        0.1,
+        0.0
+       ],
+       "rx": 0.4,
+       "ry": 0.06,
+       "exponent": 10
+      }
+     ],
+     "capStart": true,
+     "capEnd": true,
+     "region": "mattress",
+     "layer": "foam-core"
+    },
+    {
      "id": "th-post-head",
      "of": "post-head",
      "region": "bed-frame"
@@ -6363,8 +6645,8 @@
      ],
      "transform": {
       "translation": [
-       -0.335,
-       -0.0,
+       0.335,
+       0.0,
        0.4025
       ]
      },
@@ -6392,8 +6674,8 @@
      ],
      "transform": {
       "translation": [
-       -0.6675,
-       -0.0,
+       0.6675,
+       0.0,
        0.0
       ]
      },
@@ -6409,8 +6691,8 @@
      "sections": [
       {
        "at": [
-        -0.3375,
-        0.03,
+        0.3375,
+        -0.03,
         -0.415
        ],
        "rx": 0.3115,
@@ -6419,8 +6701,8 @@
       },
       {
        "at": [
-        -0.3375,
-        0.03712,
+        0.3375,
+        -0.03712,
         -0.2075
        ],
        "rx": 0.3115,
@@ -6429,8 +6711,8 @@
       },
       {
        "at": [
-        -0.3375,
-        0.0395,
+        0.3375,
+        -0.0395,
         0.0
        ],
        "rx": 0.3115,
@@ -6439,8 +6721,8 @@
       },
       {
        "at": [
-        -0.3375,
-        0.03712,
+        0.3375,
+        -0.03712,
         0.2075
        ],
        "rx": 0.3115,
@@ -6449,8 +6731,8 @@
       },
       {
        "at": [
-        -0.3375,
-        0.03,
+        0.3375,
+        -0.03,
         0.415
        ],
        "rx": 0.3115,
@@ -6591,17 +6873,20 @@
     {
      "id": "th-mat-head",
      "of": "mat-head",
-     "region": "mattress"
+     "region": "mattress",
+     "layer": "quilt"
     },
     {
      "id": "th-mat-mid",
      "of": "mat-mid",
-     "region": "mattress"
+     "region": "mattress",
+     "layer": "quilt"
     },
     {
      "id": "th-mat-foot",
      "of": "mat-foot",
-     "region": "mattress"
+     "region": "mattress",
+     "layer": "quilt"
     }
    ],
    "structure": [
@@ -6733,8 +7018,8 @@
      ],
      "transform": {
       "translation": [
-       -0.36,
-       0.015,
+       0.36,
+       -0.015,
        0.0
       ]
      },
@@ -6755,8 +7040,8 @@
      ],
      "transform": {
       "translation": [
-       -0.36,
-       0.1,
+       0.36,
+       -0.1,
        0
       ]
      },
@@ -7282,8 +7567,8 @@
      "de": "Körper, für 15 mm neu gebaut: glatte gerundete Pfosten ohne Fase; Riegel und Füllungen als glatte Bretter in wahrer Dicke; Seitenholm und Auflageleiste zu einem L-Profil verschmolzen; Rostholme, Querstege und Kopfrahmen bleiben; Leisten und Kappen jedes Abschnitts zu einem gewölbten Deck verschmolzen; die Matratzenteile mit einfacherer Rundung und ohne Keder. Bolzen und V-Fugen entfallen."
     },
     {
-     "en": "Thermal: one surface per region, the mattress layers merged (cover and core are told apart only at 1:50). Structure: the frame members, base rails, lifting frame and slat decks; hinge and bed bolts as 15 mm pins; glides; bearing strips and masses of the mattress parts.",
-     "de": "Thermik: eine Oberfläche je Region, die Matratzenschichten verschmolzen (Bezug und Kern werden nur bei 1:50 unterschieden). Tragwerk: die Rahmenstäbe, Rostholme, Kopfrahmen und Leistendecks; Gelenk- und Bettbolzen als 15-mm-Stifte; Gleiter; Tragstreifen und Massen der Matratzenteile."
+     "en": "Thermal: one surface per region; the mattress keeps its two nested shells, the cover as the body surface around the cold-foam core set in by 10 mm. Structure: the frame members, base rails, lifting frame and slat decks; hinge and bed bolts as 15 mm pins; glides; bearing strips and masses of the mattress parts.",
+     "de": "Thermik: eine Oberfläche je Region; die Matratze behält ihre zwei verschachtelten Schalen, den Bezug als Körperoberfläche um den um 10 mm zurückgesetzten Kaltschaumkern. Tragwerk: die Rahmenstäbe, Rostholme, Kopfrahmen und Leistendecks; Gelenk- und Bettbolzen als 15-mm-Stifte; Gleiter; Tragstreifen und Massen der Matratzenteile."
     }
    ]
   },
@@ -7469,8 +7754,8 @@
      ],
      "transform": {
       "translation": [
-       -0.3575,
-       0.015,
+       0.3575,
+       -0.015,
        0.0
       ]
      }
@@ -7525,8 +7810,8 @@
      "sections": [
       {
        "at": [
-        -0.72,
-        0.1,
+        0.72,
+        -0.1,
         0.0
        ],
        "rx": 0.417,
@@ -7535,8 +7820,8 @@
       },
       {
        "at": [
-        -0.708,
-        0.1,
+        0.708,
+        -0.1,
         0.0
        ],
        "rx": 0.437,
@@ -7545,8 +7830,8 @@
       },
       {
        "at": [
-        -0.68,
-        0.1,
+        0.68,
+        -0.1,
         0.0
        ],
        "rx": 0.447,
@@ -7555,8 +7840,8 @@
       },
       {
        "at": [
-        -0.677,
-        0.1,
+        0.677,
+        -0.1,
         0.0
        ],
        "rx": 0.447,
@@ -7565,8 +7850,8 @@
       },
       {
        "at": [
-        -0.003,
-        0.1,
+        0.003,
+        -0.1,
         0.0
        ],
        "rx": 0.447,
@@ -7576,7 +7861,7 @@
       {
        "at": [
         0.0,
-        0.1,
+        -0.1,
         0.0
        ],
        "rx": 0.447,
@@ -7714,6 +7999,208 @@
    ],
    "thermal": [
     {
+     "id": "th-mat-head-core",
+     "kind": "loft",
+     "bone": "mat-head",
+     "material": "cold-foam",
+     "role": "body",
+     "tone": 0.75,
+     "sections": [
+      {
+       "at": [
+        0.71,
+        -0.1,
+        0.0
+       ],
+       "rx": 0.407,
+       "ry": 0.065,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.698,
+        -0.1,
+        0.0
+       ],
+       "rx": 0.427,
+       "ry": 0.083,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.67,
+        -0.1,
+        0.0
+       ],
+       "rx": 0.437,
+       "ry": 0.09,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.667,
+        -0.1,
+        0.0
+       ],
+       "rx": 0.437,
+       "ry": 0.09,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.003,
+        -0.1,
+        0.0
+       ],
+       "rx": 0.437,
+       "ry": 0.09,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.0,
+        -0.1,
+        0.0
+       ],
+       "rx": 0.437,
+       "ry": 0.09,
+       "exponent": 10
+      }
+     ],
+     "capStart": true,
+     "capEnd": true,
+     "region": "mattress",
+     "layer": "foam-core"
+    },
+    {
+     "id": "th-mat-mid-core",
+     "kind": "loft",
+     "bone": "mat-mid",
+     "material": "cold-foam",
+     "role": "body",
+     "tone": 0.75,
+     "sections": [
+      {
+       "at": [
+        0.0,
+        0.1,
+        0.0
+       ],
+       "rx": 0.44,
+       "ry": 0.09,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.003,
+        0.1,
+        0.0
+       ],
+       "rx": 0.44,
+       "ry": 0.09,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.597,
+        0.1,
+        0.0
+       ],
+       "rx": 0.44,
+       "ry": 0.09,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.6,
+        0.1,
+        0.0
+       ],
+       "rx": 0.44,
+       "ry": 0.09,
+       "exponent": 10
+      }
+     ],
+     "capStart": true,
+     "capEnd": true,
+     "region": "mattress",
+     "layer": "foam-core"
+    },
+    {
+     "id": "th-mat-foot-core",
+     "kind": "loft",
+     "bone": "mat-foot",
+     "material": "cold-foam",
+     "role": "body",
+     "tone": 0.75,
+     "sections": [
+      {
+       "at": [
+        0.0,
+        0.1,
+        0.0
+       ],
+       "rx": 0.44,
+       "ry": 0.09,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.003,
+        0.1,
+        0.0
+       ],
+       "rx": 0.44,
+       "ry": 0.09,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.627,
+        0.1,
+        0.0
+       ],
+       "rx": 0.44,
+       "ry": 0.09,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.63,
+        0.1,
+        0.0
+       ],
+       "rx": 0.44,
+       "ry": 0.09,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.658,
+        0.1,
+        0.0
+       ],
+       "rx": 0.43,
+       "ry": 0.083,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.67,
+        0.1,
+        0.0
+       ],
+       "rx": 0.41,
+       "ry": 0.065,
+       "exponent": 10
+      }
+     ],
+     "capStart": true,
+     "capEnd": true,
+     "region": "mattress",
+     "layer": "foam-core"
+    },
+    {
      "id": "th-post-head",
      "of": "post-head",
      "region": "bed-frame"
@@ -7762,8 +8249,8 @@
      ],
      "transform": {
       "translation": [
-       -0.3575,
-       0.015,
+       0.3575,
+       -0.015,
        0.0
       ]
      },
@@ -7814,17 +8301,20 @@
     {
      "id": "th-mat-head",
      "of": "mat-head",
-     "region": "mattress"
+     "region": "mattress",
+     "layer": "quilt"
     },
     {
      "id": "th-mat-mid",
      "of": "mat-mid",
-     "region": "mattress"
+     "region": "mattress",
+     "layer": "quilt"
     },
     {
      "id": "th-mat-foot",
      "of": "mat-foot",
-     "region": "mattress"
+     "region": "mattress",
+     "layer": "quilt"
     }
    ],
    "structure": [
@@ -7978,8 +8468,8 @@
      ],
      "transform": {
       "translation": [
-       -0.36,
-       0.015,
+       0.36,
+       -0.015,
        0.0
       ]
      },
@@ -8000,8 +8490,8 @@
      ],
      "transform": {
       "translation": [
-       -0.36,
-       0.1,
+       0.36,
+       -0.1,
        0
       ]
      },
@@ -8343,8 +8833,8 @@
      "de": "Körper, für 30 mm neu gebaut: kantige Pfosten; Kopf- und Fußteil je ein 30-mm-Brett vom Holm bis zum oberen Riegel; Seitenholme; Mittelsteg und Fuß; jeder Rostabschnitt mit seinen Holmen zu einer Platte von der Auflageleiste bis zum Leistenscheitel verschmolzen; Matratzenteile mit einer Rundungsstufe. Auflageleisten, Füllungen als eigene Teile und alle Beschläge sind verschmolzen oder entfallen."
     },
     {
-     "en": "Thermal: one surface per region; the slat slabs are the hidden region. Structure: posts, side rails, the top and bottom rails of both ends as members of their own (the boards are cladding), cross beam, leg and the slat slabs; hinge pins; glides; bearing strips and masses of the mattress parts.",
-     "de": "Thermik: eine Oberfläche je Region; die Rostplatten sind die verdeckte Region. Tragwerk: Pfosten, Seitenholme, die oberen und unteren Riegel beider Enden als eigene Stäbe (die Bretter sind Verkleidung), Mittelsteg, Fuß und die Rostplatten; Gelenkstifte; Gleiter; Tragstreifen und Massen der Matratzenteile."
+     "en": "Thermal: one surface per region; the slat slabs are the hidden region; the mattress is the cover shell around the cold-foam core set in by 10 mm. Structure: posts, side rails, the top and bottom rails of both ends as members of their own (the boards are cladding), cross beam, leg and the slat slabs; hinge pins; glides; bearing strips and masses of the mattress parts.",
+     "de": "Thermik: eine Oberfläche je Region; die Rostplatten sind die verdeckte Region; die Matratze ist die Bezugsschale um den um 10 mm zurückgesetzten Kaltschaumkern. Tragwerk: Pfosten, Seitenholme, die oberen und unteren Riegel beider Enden als eigene Stäbe (die Bretter sind Verkleidung), Mittelsteg, Fuß und die Rostplatten; Gelenkstifte; Gleiter; Tragstreifen und Massen der Matratzenteile."
     }
    ]
   },
@@ -8354,43 +8844,93 @@
    "body": [
     {
      "id": "head",
-     "kind": "box",
+     "kind": "extrude",
      "bone": "frame",
      "material": "pine-timber",
      "role": "body",
      "tone": 0.5,
-     "size": [
-      0.06,
-      0.95,
-      1.01
-     ],
-     "transform": {
-      "translation": [
-       0.03,
-       0.475,
-       0.0
+     "profile": [
+      [
+       0,
+       0.505
+      ],
+      [
+       0.95,
+       0.505
+      ],
+      [
+       0.95,
+       -0.505
+      ],
+      [
+       0,
+       -0.505
+      ],
+      [
+       0,
+       -0.445
+      ],
+      [
+       0.14,
+       -0.445
+      ],
+      [
+       0.14,
+       0.445
+      ],
+      [
+       0,
+       0.445
       ]
-     }
+     ],
+     "plane": "yz",
+     "from": 0.0,
+     "to": 0.06
     },
     {
      "id": "foot",
-     "kind": "box",
+     "kind": "extrude",
      "bone": "frame",
      "material": "pine-timber",
      "role": "body",
      "tone": 0.5,
-     "size": [
-      0.06,
-      0.55,
-      1.01
-     ],
-     "transform": {
-      "translation": [
-       2.09,
-       0.275,
-       0.0
+     "profile": [
+      [
+       0,
+       0.505
+      ],
+      [
+       0.55,
+       0.505
+      ],
+      [
+       0.55,
+       -0.505
+      ],
+      [
+       0,
+       -0.505
+      ],
+      [
+       0,
+       -0.445
+      ],
+      [
+       0.14,
+       -0.445
+      ],
+      [
+       0.14,
+       0.445
+      ],
+      [
+       0,
+       0.445
       ]
-     }
+     ],
+     "plane": "yz",
+     "from": 2.06,
+     "to": 2.12
     },
     {
      "id": "tray",
@@ -8446,8 +8986,8 @@
      ],
      "transform": {
       "translation": [
-       -0.36,
-       0.1,
+       0.36,
+       -0.1,
        0.0
       ]
      }
@@ -8495,6 +9035,72 @@
    ],
    "thermal": [
     {
+     "id": "th-mat-head-core",
+     "kind": "box",
+     "bone": "mat-head",
+     "material": "cold-foam",
+     "role": "body",
+     "tone": 0.75,
+     "size": [
+      0.71,
+      0.18,
+      0.874
+     ],
+     "transform": {
+      "translation": [
+       0.355,
+       -0.1,
+       0.0
+      ]
+     },
+     "region": "mattress",
+     "layer": "foam-core"
+    },
+    {
+     "id": "th-mat-mid-core",
+     "kind": "box",
+     "bone": "mat-mid",
+     "material": "cold-foam",
+     "role": "body",
+     "tone": 0.75,
+     "size": [
+      0.6,
+      0.18,
+      0.88
+     ],
+     "transform": {
+      "translation": [
+       0.3,
+       0.1,
+       0.0
+      ]
+     },
+     "region": "mattress",
+     "layer": "foam-core"
+    },
+    {
+     "id": "th-mat-foot-core",
+     "kind": "box",
+     "bone": "mat-foot",
+     "material": "cold-foam",
+     "role": "body",
+     "tone": 0.75,
+     "size": [
+      0.67,
+      0.18,
+      0.88
+     ],
+     "transform": {
+      "translation": [
+       0.335,
+       0.1,
+       0.0
+      ]
+     },
+     "region": "mattress",
+     "layer": "foam-core"
+    },
+    {
      "id": "th-head",
      "of": "head",
      "region": "bed-frame"
@@ -8517,17 +9123,20 @@
     {
      "id": "th-mat-head",
      "of": "mat-head",
-     "region": "mattress"
+     "region": "mattress",
+     "layer": "quilt"
     },
     {
      "id": "th-mat-mid",
      "of": "mat-mid",
-     "region": "mattress"
+     "region": "mattress",
+     "layer": "quilt"
     },
     {
      "id": "th-mat-foot",
      "of": "mat-foot",
-     "region": "mattress"
+     "region": "mattress",
+     "layer": "quilt"
     },
     {
      "id": "th-slats",
@@ -8687,6 +9296,29 @@
      "part": "member"
     },
     {
+     "id": "member-cross-beam",
+     "kind": "box",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.5,
+     "size": [
+      0.04,
+      0.065,
+      0.91
+     ],
+     "transform": {
+      "translation": [
+       1.06,
+       0.1725,
+       0.0
+      ]
+     },
+     "member": "frame",
+     "part": "member",
+     "slender": true
+    },
+    {
      "id": "member-leg-mid",
      "of": "leg-mid",
      "member": "frame",
@@ -8706,8 +9338,8 @@
      ],
      "transform": {
       "translation": [
-       -0.35,
-       0.0125,
+       0.35,
+       -0.0125,
        0.0
       ]
      },
@@ -8772,8 +9404,8 @@
      ],
      "transform": {
       "translation": [
-       -0.36,
-       0.0375,
+       0.36,
+       -0.0375,
        0.0
       ]
      },
@@ -8794,8 +9426,8 @@
      ],
      "transform": {
       "translation": [
-       -0.36,
-       0.1,
+       0.36,
+       -0.1,
        0
       ]
      },
@@ -9057,12 +9689,12 @@
    ],
    "decisions": [
     {
-     "en": "Body, authored anew for 75 mm: head end and foot end as one panel each at their true heights of 0.95 and 0.55 m, side rails and slatted base merged into one tray on the centre leg, the mattress as three plain blocks with soft long edges on their bones. The model is minimal: nothing smaller can be left out without losing the bed.",
-     "de": "Körper, für 75 mm neu gebaut: Kopf- und Fußteil je eine Platte in wahrer Höhe von 0,95 und 0,55 m, Seitenholme und Lattenrost zu einer Wanne auf dem Mittelfuß verschmolzen, die Matratze als drei glatte Blöcke mit weichen Längskanten auf ihren Knochen. Das Modell ist minimal: kleiner geht es nicht, ohne das Bett zu verlieren."
+     "en": "Body, authored anew for 75 mm: head end and foot end as one panel each at their true heights of 0.95 and 0.55 m, standing on their two posts with the 140 mm clear height under the lower rail left open; side rails and slatted base merged into one tray on the centre leg; the mattress as three plain blocks on their bones. The model is minimal: nothing smaller can be left out without losing the bed.",
+     "de": "Körper, für 75 mm neu gebaut: Kopf- und Fußteil je eine Platte in wahrer Höhe von 0,95 und 0,55 m, die auf ihren beiden Pfosten steht und die lichte Höhe von 140 mm unter dem unteren Riegel offen lässt; Seitenholme und Lattenrost zu einer Wanne auf dem Mittelfuß verschmolzen; die Matratze als drei glatte Blöcke auf ihren Knochen. Das Modell ist minimal: kleiner geht es nicht, ohne das Bett zu verlieren."
     },
     {
-     "en": "Thermal: panels, tray and leg are the frame surface, the mattress blocks the mattress surface, the slatted base is one hidden plate inside the tray. Structure: four posts, two side rails, the two end rails, the leg and three slat plates as members; glides; bearing strips and masses of the mattress parts.",
-     "de": "Thermik: Platten, Wanne und Fuß sind die Rahmenoberfläche, die Matratzenblöcke die Matratzenoberfläche, der Lattenrost ist eine verdeckte Platte in der Wanne. Tragwerk: vier Pfosten, zwei Seitenholme, die beiden Querriegel, der Fuß und drei Rostplatten als Stäbe; Gleiter; Tragstreifen und Massen der Matratzenteile."
+     "en": "Thermal: panels, tray and leg are the frame surface, the mattress blocks the cover shell around three core blocks set in by 10 mm, the slatted base is one hidden plate inside the tray. Structure: four posts, two side rails, the two end rails, the cross beam at its true 40 x 65 mm section on the centre leg and three slat plates as members; glides; bearing strips and masses of the mattress parts.",
+     "de": "Thermik: Platten, Wanne und Fuß sind die Rahmenoberfläche, die Matratzenblöcke die Bezugsschale um drei um 10 mm zurückgesetzte Kernblöcke, der Lattenrost ist eine verdeckte Platte in der Wanne. Tragwerk: vier Pfosten, zwei Seitenholme, die beiden Querriegel, der Mittelsteg im wahren Querschnitt 40 x 65 mm auf dem Mittelfuß und drei Rostplatten als Stäbe; Gleiter; Tragstreifen und Massen der Matratzenteile."
     }
    ]
   }

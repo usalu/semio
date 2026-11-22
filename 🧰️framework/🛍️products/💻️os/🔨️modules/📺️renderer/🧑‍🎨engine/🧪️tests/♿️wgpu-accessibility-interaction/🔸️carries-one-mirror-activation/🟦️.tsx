@@ -56,7 +56,7 @@ export function registerCarriesOneMirrorActivationTests(): void {
     expect(frameTransport.flush(1)).toBe(true);
     const batch = worker.messages.at(-1);
     if (batch?.kind !== "batch") throw new Error("accessibility activation batch");
-    expect(batch.lossless).toEqual([expect.objectContaining({ kind: "accessibility-activate", windowGeneration: chrome.firstEpoch, nodeKey: "ui.panelToggle.display" })]);
+    expect(batch.events).toEqual([expect.objectContaining({ kind: "accessibility-activate", windowGeneration: chrome.firstEpoch, nodeKey: "ui.panelToggle.display" })]);
     worker.reply({ kind: "batch-accepted", lifecycle: 1, inputSequence: batch.inputSequence, generation: batch.generation });
     displayChecked = true;
     generation = chrome.successorEpoch;
@@ -67,13 +67,13 @@ export function registerCarriesOneMirrorActivationTests(): void {
     expect(frameTransport.flush(2)).toBe(true);
     const successor = worker.messages.at(-1);
     if (successor?.kind !== "batch") throw new Error("successor accessibility activation batch");
-    expect(successor.lossless).toEqual([expect.objectContaining({ kind: "accessibility-activate", windowGeneration: chrome.successorEpoch, nodeKey: "ui.panelToggle.settings" })]);
+    expect(successor.events).toEqual([expect.objectContaining({ kind: "accessibility-activate", windowGeneration: chrome.successorEpoch, nodeKey: "ui.panelToggle.settings" })]);
     staleDisplay.click();
     worker.reply({ kind: "batch-accepted", lifecycle: 1, inputSequence: successor.inputSequence, generation: successor.generation });
     expect(frameTransport.flush(3)).toBe(true);
     const stale = worker.messages.at(-1);
     if (stale?.kind !== "batch") throw new Error("stale accessibility activation batch");
-    expect(stale.lossless).toEqual([expect.objectContaining({ kind: "accessibility-activate", windowGeneration: chrome.firstEpoch })]);
+    expect(stale.events).toEqual([expect.objectContaining({ kind: "accessibility-activate", windowGeneration: chrome.firstEpoch })]);
     mirror.dispose();
     frameTransport.close();
   });

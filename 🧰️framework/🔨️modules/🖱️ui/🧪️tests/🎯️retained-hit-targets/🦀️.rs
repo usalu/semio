@@ -189,6 +189,7 @@ fn kind_name(kind: HitKind) -> &'static str {
         HitKind::DockSplit => "dockSplit",
         HitKind::DockJoinCorner => "dockJoinCorner",
         HitKind::ScrollRegion => "scrollRegion",
+        HitKind::ScrollThumb => "scrollThumb",
         HitKind::ContextMenu => "contextMenu",
         HitKind::DropdownItem => "dropdownItem",
         HitKind::Generic => "generic",

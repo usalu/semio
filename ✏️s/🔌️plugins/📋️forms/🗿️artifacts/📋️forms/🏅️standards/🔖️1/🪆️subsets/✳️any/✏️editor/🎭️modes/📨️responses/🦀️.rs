@@ -1,5 +1,5 @@
 //! 📨️ Review and export submissions independently of the form authoring layout.
-use semio_plugin::create_default_layout;
+use semio_plugin::{create_default_layout, Axis};
 use semio_plugin::create_named_layout;
 use semio_ui_locale::LocalizedLabel;
 use semio_plugin::ModeDefinition;
@@ -13,6 +13,6 @@ pub fn definition() -> ModeDefinition {
 }
 
 pub fn layout() -> NamedLayout {
-    create_named_layout(LAYOUT, "Responses", create_default_layout(&[results::WINDOW.into()], "row", None, None), "builtin", Some("list-checks".into()), None)
+    create_named_layout(LAYOUT, "Responses", create_default_layout(&[results::WINDOW.into()], Axis::Horizontal, None, None), "builtin", Some("list-checks".into()), None)
 }
 

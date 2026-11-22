@@ -14,24 +14,23 @@ mod layout_wire_format_tests {
         assert_eq!(json, GOLDEN_ACTION_DESCRIPTOR_JSON);
     }
 
-    const GOLDEN_WINDOW_LAYOUT_JSON: &str = "{\"root\":{\"kind\":\"horizontal\",\"children\":[{\"kind\":\"stack\",\"size\":0.5,\"activeWindowKindId\":\"main\",\"children\":[{\"kind\":\"window\",\"windowKindId\":\"main\",\"title\":\"Main\"}]},{\"kind\":\"vertical\",\"size\":0.5,\"children\":[]}]}}";
+    const GOLDEN_WINDOW_LAYOUT_JSON: &str = "{\"root\":{\"kind\":\"split\",\"axis\":\"horizontal\",\"children\":[{\"kind\":\"stack\",\"size\":0.5,\"activeWindowId\":\"main\",\"children\":[{\"kind\":\"window\",\"windowKindId\":\"main\",\"title\":\"Main\"}]},{\"kind\":\"split\",\"axis\":\"vertical\",\"size\":0.5,\"children\":[]}]}}";
 
     #[semio_framework_async_macros::async_test]
     async fn window_layout_serializes_to_golden_json() {
         let layout = WindowLayout {
-            root: WindowLayoutRoot::Axis(WindowLayoutAxisNode {
-                kind: "horizontal".into(),
+            root: WindowLayoutNode::Split {
+                axis: Axis::Horizontal,
                 size: None,
                 children: vec![
-                    WindowLayoutChild::Stack(WindowLayoutStackNode {
-                        kind: "stack".into(),
+                    WindowLayoutNode::Stack {
                         size: Some(0.5),
-                        active_window_kind_id: Some("main".into()),
-                        children: vec![WindowLayoutWindowNode { kind: "window".into(), window_kind_id: "main".into(), title: Some("Main".into()), instance_id: None, template_id: None, corner: None }],
-                    }),
-                    WindowLayoutChild::Axis(WindowLayoutAxisNode { kind: "vertical".into(), size: Some(0.5), children: vec![] }),
+                        active_window_id: Some("main".into()),
+                        children: vec![WindowLayoutNode::Window { window_kind_id: "main".into(), title: Some("Main".into()), instance_id: None, template_id: None, corner: None }],
+                    },
+                    WindowLayoutNode::Split { axis: Axis::Vertical, size: Some(0.5), children: vec![] },
                 ],
-            }),
+            },
         };
         let json = serde_json::to_string(&layout).unwrap();
         assert_eq!(json, GOLDEN_WINDOW_LAYOUT_JSON);
@@ -42,9 +41,10 @@ mod layout_wire_format_tests {
     #[semio_framework_async_macros::async_test]
     async fn window_layout_discriminator_is_exact_for_serde_and_first_party_value() {
         let empty_stack: WindowLayout = serde_json::from_str(r#"{"root":{"kind":"stack","children":[]}}"#).expect("empty stack is selected by its discriminator");
-        assert!(matches!(empty_stack.root, WindowLayoutRoot::Stack(_)));
+        assert!(matches!(empty_stack.root, WindowLayoutNode::Stack { .. }));
         assert!(serde_json::from_str::<WindowLayout>(r#"{"root":{"kind":"bogus","children":[]}}"#).is_err());
-        assert!(WindowLayoutRoot::from_value(DslValue::Object(vec![("kind".into(), DslValue::String("bogus".into()))])).is_err());
+        assert!(serde_json::from_str::<WindowLayout>(r#"{"root":{"kind":"row","children":[]}}"#).is_err());
+        assert!(WindowLayoutNode::from_value(DslValue::Object(vec![("kind".into(), DslValue::String("bogus".into()))])).is_err());
     }
 
     const GOLDEN_WINDOW_MEASURE_JSON: &str = "[{\"kind\":\"select\",\"id\":\"m1\",\"label\":\"Mode\",\"value\":\"a\",\"items\":[{\"id\":\"a\",\"value\":\"a\",\"label\":\"A\"}],\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"measureSelect\"}},{\"kind\":\"slider\",\"id\":\"m2\",\"label\":null,\"value\":1.0,\"min\":0.0,\"max\":2.0,\"step\":0.5,\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"measureSlider\"}},{\"kind\":\"toggle\",\"id\":\"m3\",\"iconId\":\"layout-grid\",\"label\":null,\"pressed\":true,\"text\":null,\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"measureToggle\"}},{\"kind\":\"group\",\"id\":\"m4\",\"label\":\"Group\",\"defaultOpen\":true,\"children\":[]}]";

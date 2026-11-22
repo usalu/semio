@@ -64,6 +64,8 @@ fn element_scalar_average_covers_every_variant_and_scalar_combination() {
     assert_eq!(element_scalar_average(&bar, StressScalar::VonMises), None);
 }
 
+const GRAPH_TURN_BOUND: u32 = 10_000;
+
 fn graph_operation(id: u64) -> Operation {
     Operation::new(semio_framework_job::OperationId(id), semio_framework_job::RevisionId(4), semio_framework_job::Generation(2), 9)
 }
@@ -84,33 +86,37 @@ fn graph_plan() -> Vec<FemStagePlan> {
 #[test]
 fn fem_job_graph_checkpoint_resume_preserves_stage_order() {
     let operation = graph_operation(201);
+    let mut fixture = semio_s_fem_test_support::OriginalNumericalFixture::new(operation);
     let mut graph = FemJobGraph::new(operation, graph_plan(), 2);
-    let mut sequence = 0;
+    let mut turns = 0;
     let checkpoint = loop {
-        let mut sequence_receipt = RetainedCloneProgress::default();
-        let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(2, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
-        match seen_of(graph.step_plain(&mut context)) {
+        turns += 1;
+        assert!(turns <= GRAPH_TURN_BOUND, "graph reached no checkpoint within {GRAPH_TURN_BOUND} turns: {:?}", graph.progress());
+        match fixture.step_seen(&mut graph, TEST_GRANT, 2, u64::MAX) {
             Seen::Checkpoint(pages) => break pages_bytes(&pages),
-            outcome => assert!(!matches!(outcome, Seen::Complete(_)), "graph must checkpoint before completing"),
+            outcome => assert!(!matches!(outcome, Seen::Complete(_) | Seen::Fault(_) | Seen::Cancelled), "graph must checkpoint before it ends: {outcome:?}"),
         }
     };
     let mut resumed = FemJobGraph::from_checkpoint(operation, &checkpoint).expect("graph checkpoint restores");
     assert_eq!(resumed.checkpoint_bytes(), checkpoint);
     let mut seen = Vec::new();
+    turns = 0;
     loop {
+        turns += 1;
+        assert!(turns <= GRAPH_TURN_BOUND, "resumed graph did not complete within {GRAPH_TURN_BOUND} turns: {:?}", resumed.progress());
         if let Some(stage) = resumed.progress().stage {
             if seen.last() != Some(&stage) {
                 seen.push(stage);
             }
         }
-        let mut sequence_receipt = RetainedCloneProgress::default();
-        let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(3, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
-        if matches!(seen_of(resumed.step_plain(&mut context)), Seen::Complete(_)) {
-            break;
+        match fixture.step_seen(&mut resumed, TEST_GRANT, 3, u64::MAX) {
+            Seen::Complete(_) => break,
+            outcome => assert!(!matches!(outcome, Seen::Fault(_) | Seen::Cancelled), "resumed graph must not end early: {outcome:?}"),
         }
     }
-    close_job(&mut graph);
-    close_job(&mut resumed);
+    fixture.close(&mut graph);
+    fixture.close(&mut resumed);
+    fixture.finish();
     assert_eq!(resumed.progress().completed_units, 36);
     assert_eq!(seen, graph_plan().into_iter().skip(1).map(|plan| plan.stage).collect::<Vec<_>>());
 }
@@ -123,7 +129,7 @@ fn fem_job_graph_rejects_stale_and_cancelled_steps_without_mutation() {
     let mut sequence = 0;
     let mut sequence_receipt = RetainedCloneProgress::default();
     let mut stale = StepContext::new(operation.operation, semio_framework_job::Generation(operation.generation.0 + 1), semio_framework_job::StepBudget::new(2, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
-    assert!(matches!(seen_of(graph.step(&mut stale)), Seen::Fault(_)));
+    assert!(matches!(seen_of(graph.step_plain(&mut stale)), Seen::Fault(_)));
     assert_eq!(graph.checkpoint_bytes(), before);
 
     let token = semio_framework_job::root_cancel_token();
@@ -131,7 +137,7 @@ fn fem_job_graph_rejects_stale_and_cancelled_steps_without_mutation() {
     let mut sequence_receipt = RetainedCloneProgress::default();
     drop(stale);
     let mut cancelled = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(2, u64::MAX, TEST_GRANT), token, || Some(0), &mut sequence, &mut sequence_receipt);
-    assert_eq!(seen_of(graph.step(&mut cancelled)), Seen::Cancelled);
+    assert_eq!(seen_of(graph.step_plain(&mut cancelled)), Seen::Cancelled);
     assert_eq!(graph.checkpoint_bytes(), before);
 }
 

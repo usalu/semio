@@ -14,10 +14,10 @@ import {capabilityIdV1,verifyCapabilityV1,createRevocationRegistryV1} from "../.
 import coreSchema from "../../../📥️caller/🛰️service/🧬️schema/🔣️.json" with {type:"json"};
 import {createFilterV1} from "../../🗃️state/🟨️.mjs";
 import {taskClosureV1} from "../../🔌️ports/🗺️graph/🟨️.mjs";
-import {cleanup,haveBinary,pick,residentWatcherV1,rng,shortTempDirectory,sleep,snapshot,tempRoot,waitFor,writeTree} from "../🟦️.ts";
+import {cleanup,haveBinary,nativeWatcherUsableV1,pick,residentWatcherV1,rng,shortTempDirectory,sleep,snapshot,tempRoot,waitFor,writeTree} from "../🟦️.ts";
 import {agentSessionAddressV1,agentSessionRegistryRootV1,agentSessionStoreV1,agentSessionWorktreeKeyV1,readAgentSessionTokenV1,readAgentSessionV1,listAgentSessionsV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🪪️agent-sessions/🟦️.ts";
 
-const WATCHER=await residentWatcherV1(),native=haveBinary(WATCHER);
+const WATCHER=await residentWatcherV1(),native=await nativeWatcherUsableV1(WATCHER);
 const cleanups:(()=>Promise<void>|void)[]=[];
 afterAll(async()=>{for(const fn of cleanups.reverse())await fn();});
 
@@ -132,7 +132,7 @@ describe("memo, planning and invalidation",()=>{
   const unknown=await s.run("run",["zzz:build"]);expect(unknown.exit).toBe(1);expect(unknown.err).toContain("unknown task");
  });
 
- test("run-many, test, affected and dirty queries",async()=>{
+ test.skipIf(!native)("run-many, test, affected and dirty queries",async()=>{
   const s=await startService();
   expect((await s.run("run-many",["a","d","--targets=build"])).served).toBe("executed");
   expect((await s.run("test",["b"])).exit).toBe(0);
@@ -147,7 +147,7 @@ describe("memo, planning and invalidation",()=>{
 });
 
 describe("frontier cursors for the generation host",()=>{
- test("adopted digests answer dirty --digest from the journal; unknown digests, foreign instances and bad cursors prove nothing",async()=>{
+ test.skipIf(!native)("adopted digests answer dirty --digest from the journal; unknown digests, foreign instances and bad cursors prove nothing",async()=>{
   const s=await startService();
   const cursor=JSON.parse((await s.run("cursor",[])).out),digest="ab".repeat(32);
   expect((await s.run("dirty",["--digest",digest])).out).toContain('"reason":"digest"');
@@ -162,7 +162,7 @@ describe("frontier cursors for the generation host",()=>{
 });
 
 describe("graph changes",()=>{
- test("editing a project configuration re-reads the graph: new tasks appear, changed commands rebuild, untouched results stay valid",async()=>{
+ test.skipIf(!native)("editing a project configuration re-reads the graph: new tasks appear, changed commands rebuild, untouched results stay valid",async()=>{
   const s=await startService();await s.run("run",["c:build"]);
   expect((await s.run("run",["i:build"])).exit).toBe(1);
   writeTree(s.root,{"pkgs/i/src/x.ts":"i"});
@@ -499,7 +499,7 @@ describe("process level crash safety",()=>{
  },30000);
 });
 
-test("foreground repository composition retains native readiness through the status and stop commands of the service",async()=>{
+test.skipIf(!native)("foreground repository composition retains native readiness through the status and stop commands of the service",async()=>{
  const {createForegroundRunnerV1}=await import("../../🏗️composition/🟨️.mjs"),{forwardCommandV1}=await import("../../🚪️client/🟨️.mjs"),{mintCapabilityV1}=await import("../../📨️protocol/🔑️capability/🟨️.mjs");
  const root=tempRoot("svc-composition-"),base=shortTempDirectory("sc-");cleanups.push(()=>cleanup(root),()=>cleanup(base));writeFileSync(join(root,"visible.json"),"visible");
  const environment={...ambientV1,XDG_RUNTIME_DIR:base,SEMIO_RESIDENT_EXECUTORS:"0"},runtime=endpointsV1(root,environment),controller=new AbortController();

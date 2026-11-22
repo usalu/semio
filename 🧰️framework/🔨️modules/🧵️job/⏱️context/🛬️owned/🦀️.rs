@@ -109,10 +109,20 @@ impl StepContext<'_>{
       Some((grant, work)) => (G { maximum_depth: whole.maximum_depth, ..grant }, work),
       None => (unquoted_receiving_grant(whole), unquoted_receiving_work(self.fuel_remaining)),
   };
-  let Some(plan)=stock::OriginalReturnScopePlan::quote::<Input>(self.retained_grant(),quantum,self.fuel_remaining(),quantum_work,existing,owner.scope.is_some(),owner.state.pending_work(),owner.state.has_pending_receiving(),retirement,local,placement,placement_work)?else{return Ok(false)};
+  let Some(mut plan)=stock::OriginalReturnScopePlan::quote::<Input>(self.retained_grant(),quantum,self.fuel_remaining(),quantum_work,existing,owner.scope.is_some(),owner.state.pending_work(),owner.state.has_pending_receiving(),retirement,local,placement,placement_work)?else{return Ok(false)};
   let reserved_receipt=typed||plan.recovering_pending;
   if retirement&&plan.ready&&!reserved_receipt{self.receiving.open(self.retained_grant())?}
   let epoch=self.original_source_epoch().unwrap_or(0);let admitted={let Self{original_decoder,return_budget,..}=self;return_budget.as_mut().unwrap().get_mut().admit_scope(&mut original_decoder.as_deref_mut().unwrap().scope,plan.wanted,epoch)?};let Some((progress,work))=admitted else{if self.reclaim_original_escrow_slot()?{return Ok(false)}return Err(ValueError::literal(semio_framework_value_retained_clone::ValueRefusalKind::OwnershipLimit,"original return escrow table has no free slot for a new receiving scope").into())};let posted=self.consume_retained(progress);self.consume_fuel(work);posted?;if !plan.ready{return Ok(false)}
+  if !plan.recovering_pending {
+   let grant = plan.quantum.restricted_by(self.native_scope_quantum());
+   let work = plan.quantum_work.min(self.fuel_remaining);
+   if grant.maximum_items == 0 || grant.maximum_depth == 0 || work == 0
+       || quote.is_some() && (grant != plan.quantum || work != plan.quantum_work) {
+    return Ok(false);
+   }
+   plan.quantum = grant;
+   plan.quantum_work = work;
+  }
   let before=self.retained_progress();let result={let Self{original_decoder,return_budget,retained_progress,receiving,deadline_us,now_us,original_retirement,cancel,source_turn,..}=self;let source=source_turn.as_ref().map(|turn|turn.token().witness());let mut ready=||if retirement{*original_retirement||now_us().is_some_and(|now|now<*deadline_us)}else{!cancel.is_cancelled_now()&&now_us().is_some_and(|now|now<*deadline_us)};let owner=original_decoder.as_deref_mut().unwrap();
    let mut reserved_spent=P::default();
    let receiving_spent=if reserved_receipt{&mut reserved_spent}else{receiving.spent_mut()};

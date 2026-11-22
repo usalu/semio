@@ -1,6 +1,8 @@
 extern crate semio_os_kernel as store;
 #[path = "../../../../🧪️tests/🧰️support/🦀️.rs"]
 mod context;
+#[path = "🧩️contributions/🦀️.rs"]
+mod contributions;
 use semio_s_artifact_process_process3d_panels::workshop::*;
 use semio_s_artifact_process_process3d_kit::iconed_tree_item_with_action;
 use semio_s_artifact_process_process3d_kit::installed_catalogs;
@@ -169,6 +171,7 @@ fn window_view(node_key: &str, open: Option<bool>, offset: u32, rows: u32) -> Vi
 /// slice, and never summarises the remainder as a `+n` / `…more` continuation row.
 #[test]
 fn an_oversized_workshop_stamps_its_full_machine_count() {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     let json = project(&oversized_workshop(), &TreeWindows::unhosted());
     let (total, offset, rows) = container_of(&json, PROCESS_3D_PLAY_WORKSHOP_MACHINES);
     assert_eq!(total, 60, "the machines section stamps every installed machine: {json}");
@@ -181,6 +184,7 @@ fn an_oversized_workshop_stamps_its_full_machine_count() {
 /// ⚖️ LAW (b): a closed section states its extent and materialises nothing.
 #[test]
 fn a_closed_workshop_section_stamps_its_total_with_no_rows() {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     let view = window_view(PROCESS_3D_PLAY_WORKSHOP_MACHINES, Some(false), 0, 0);
     let json = project(&oversized_workshop(), &TreeWindows::for_body(&view, PROCESS_3D_PLAY_BODY_WORKSHOP));
     let (total, offset, rows) = container_of(&json, PROCESS_3D_PLAY_WORKSHOP_MACHINES);
@@ -193,6 +197,7 @@ fn a_closed_workshop_section_stamps_its_total_with_no_rows() {
 /// canonical `"machine:{id}"` domain target id.
 #[test]
 fn a_workshop_window_request_materialises_exactly_its_slice() {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     let view = window_view(PROCESS_3D_PLAY_WORKSHOP_MACHINES, Some(true), 30, 5);
     let json = project(&oversized_workshop(), &TreeWindows::for_body(&view, PROCESS_3D_PLAY_BODY_WORKSHOP));
     let (total, offset, rows) = container_of(&json, PROCESS_3D_PLAY_WORKSHOP_MACHINES);
@@ -207,6 +212,7 @@ fn a_workshop_window_request_materialises_exactly_its_slice() {
 /// one `interactionSelect`.
 #[test]
 fn workshop_machine_rows_declare_their_granularity_and_carry_no_activate_binding() {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     let view = window_view(PROCESS_3D_PLAY_WORKSHOP_MACHINES, Some(true), 0, 5);
     let json = project(&oversized_workshop(), &TreeWindows::for_body(&view, PROCESS_3D_PLAY_BODY_WORKSHOP));
     let projection: serde_json::Value = serde_json::from_str(&json).expect("workshop projection json");

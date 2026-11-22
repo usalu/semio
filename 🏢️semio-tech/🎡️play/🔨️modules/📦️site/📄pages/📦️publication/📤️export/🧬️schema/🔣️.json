@@ -1,0 +1,161 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "Protocol": {
+      "const": {
+        "descriptor": "🔣️cdn.json",
+        "cohort": "🔣️cohort.json",
+        "defaultDirectory": "🏢️semio-tech/🎡️play/dist/cdn"
+      }
+    },
+    "Cdn": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "mode",
+        "cohortSha256",
+        "families",
+        "rules"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "mode": {
+          "const": "release"
+        },
+        "cohortSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "families": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 4,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "family",
+              "host",
+              "directory",
+              "files",
+              "bytes",
+              "headers",
+              "contentTypes",
+              "unmappedExtensions"
+            ],
+            "properties": {
+              "family": {
+                "enum": [
+                  "play",
+                  "map",
+                  "media",
+                  "modules"
+                ]
+              },
+              "host": {
+                "type": "string",
+                "minLength": 1
+              },
+              "directory": {
+                "type": "string",
+                "minLength": 1
+              },
+              "files": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "bytes": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "headers": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "name",
+                    "value"
+                  ],
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "value": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  }
+                }
+              },
+              "contentTypes": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "extension",
+                    "type"
+                  ],
+                  "properties": {
+                    "extension": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "type": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  }
+                }
+              },
+              "unmappedExtensions": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            }
+          }
+        },
+        "rules": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "serveFamilyAtHostRoot",
+            "missingFileStatus",
+            "spaFallback",
+            "crossOriginIsolation",
+            "uploadOneGeneration",
+            "exactContentTypes"
+          ],
+          "properties": {
+            "serveFamilyAtHostRoot": {
+              "const": true
+            },
+            "missingFileStatus": {
+              "const": 404
+            },
+            "spaFallback": {
+              "const": false
+            },
+            "crossOriginIsolation": {
+              "const": false
+            },
+            "uploadOneGeneration": {
+              "const": true
+            },
+            "exactContentTypes": {
+              "const": true
+            }
+          }
+        }
+      }
+    }
+  }
+}

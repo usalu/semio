@@ -307,9 +307,35 @@ impl<O:WindowConfigOwner> TypedWindowConfigPackLoad<O>{
  /// 📦️ Admits the original wire alias chain; the ready output moves through a construction, every allocating phase through the decoder's effect.
  fn wire_step(&mut self,cx:&mut StepContext<'_>)->Result<(),OriginalTurnFailure>{
   let admission=self.wire_admission.as_mut().ok_or_else(||invalid("native saved Window operation wire admission absent"))?;
-  if admission.phase()=="ready"{let held=&mut self.wire_admission;let wire=&mut self.wire;effected(cx,header::<Option<RetainedCloneSource<Vec<u8>>>>(),|_,effect|{let admission=held.as_mut().ok_or_else(||invalid("native saved Window operation wire admission absent"))?;let mut output=None;admission.take_output(&mut output,effect).result?;if output.is_some(){*wire=output;*held=None;}Ok(())})?;return Ok(())}
-  let d=admission.next_demand()?;
-  if self.closing{retire(cx,d,|effect|{let result=admission.advance(effect).result;settle_step(effect,result)})}else{effected(cx,d,|_,effect|Ok(admission.advance(effect).result?)).map(|_|())}
+  let phase=admission.phase();
+  if self.closing&&phase!="ready"{
+   if admission.projection_result()==Some(true){
+    return retire(cx,admission.discard_projection_demand(),|effect|{let turn=admission.discard_projection(effect);settle_step(effect,turn.result)});
+   }
+   let demand=admission.next_return_demand()?;
+   let edit=self.sources.edit.as_mut().ok_or_else(||invalid("native saved Window operation source is absent"))?;
+   let rows=if self.stage==14{&mut edit.ops}else{&mut edit.inverse};
+   let payload=&mut rows.get_mut(self.operation_index).ok_or_else(||invalid("native saved Window operation ordinal absent"))?.binary;
+   if payload.is_some(){return Err(invalid("native saved Window operation return place is occupied").into())}
+   retire(cx,demand,|effect|{
+    let mut returned=None;
+    let turn=admission.return_inputs(&mut returned,effect);
+    if let Some((bytes,()))=returned{*payload=Some(bytes);}
+    settle_step(effect,turn.result)
+   })?;
+  }else{
+   let demand=match phase{"ready"=>admission.take_output_demand(),"projectionStart"=>admission.owned_projection_demand()?,_=>admission.next_demand()?};
+   let wire=&mut self.wire;
+   let mut advance=|effect:&mut RetainedAllocationEffect<'_>|match phase{
+    "ready"=>admission.take_output(wire,effect).result,
+    "projectionStart"=>admission.project_owned(effect).result,
+    _=>admission.advance(effect).result,
+   };
+   if self.closing{retire(cx,demand,|effect|{let result=advance(effect);settle_step(effect,result)})?;}
+   else{effected(cx,demand,|_,effect|advance(effect))?;}
+  }
+  if admission.terminal_is_empty(){self.wire_admission=None;}
+  Ok(())
  }
  fn advance_native(&mut self,cx:&mut StepContext<'_>)->Result<WindowConfigPackLoadStep,OriginalTurnFailure>{if !self.binding.matches(cx){return Err(invalid("saved Window load changed its original mounted source").into())}if self.closing||cx.is_cancelled(){return Ok(self.reject(WindowConfigPackLoadDiagnostic::Cancelled))}if self.sources.failure.is_some()||self.construction.refused(){return Ok(self.reject(WindowConfigPackLoadDiagnostic::Replay))}if self.diagnostic.is_some(){return Ok(WindowConfigPackLoadStep::Rejected(self.diagnostic.unwrap()))}if cx.should_yield(){return Ok(self.pending())}
   if self.construction.resume(){self.settle(cx)?;return Ok(self.pending())}
@@ -366,7 +392,7 @@ impl<O:WindowConfigOwner> TypedWindowConfigPackLoad<O>{
   let source=self.sources.edit.as_ref().unwrap();let rows=if self.stage==14{&source.ops}else{&source.inverse};if self.operation_index==rows.len(){self.stage=if self.stage==14{15}else{16};self.operation_index=0;return Ok(())}
   if self.factory.is_none(){let bytes=semio_framework_value::factory_arc_birth_bytes::<semio_framework_value::factory::OwnedValueRetirementFactory<O::Mutation>>();return self.paid(cx,RetirementDemand{capacity_bytes:bytes,..header::<std::sync::Arc<dyn store::ArtifactOwnedValueRetirementFactory<O::Mutation>>>()},|this|{this.factory=Some(O::build_mutation_retirement_factory());Ok(())})}
   if self.wire.is_none()&&self.wire_admission.is_none(){let source=self.sources.edit.as_mut().ok_or_else(||invalid("native saved Window operation source is absent"))?;let rows=if self.stage==14{&mut source.ops}else{&mut source.inverse};let payload=&mut rows[self.operation_index];let bytes=payload.binary.as_ref().ok_or_else(||invalid("native saved Window operation requires its original binary wire"))?;if bytes.is_empty()||bytes.len()>O::MAXIMUM_PUBLICATION_BYTES{return Err(invalid("saved Window operation exceeds its original vocabulary bound").into())}let original=payload.binary.take().ok_or_else(||invalid("native saved Window operation binary is absent"))?;self.wire_admission=Some(RetainedCloneSource::admission_owned(original,()));return Ok(())}
-  if self.wire.is_none(){return self.wire_step(cx)}
+  if self.wire_admission.is_some(){return self.wire_step(cx)}
   let wire=self.wire.as_ref().unwrap();let admission=&mut self.wire_projecting;
   if admission.terminal_is_empty(){let source=wire.try_borrow()?;let d=admission.demand(source)?;let stash=&mut self.wire_reply;effected(cx,d,|_,effect|{if let Some(answer)=stash.run(|reply,recover|(if recover{admission.recover_admit(reply)}else{admission.admit(source,effect,reply)}).map(drop))?{answer?;}Ok(())})?;return Ok(())}
   let d=admission.take_demand()?;let stash=&mut self.wire_take_reply;let output=&mut self.wire_projection;effected(cx,d,|_,effect|{if let Some(answer)=stash.run(|reply,recover|(if recover{admission.recover_take(reply)}else{admission.take(output,effect,reply)}).map(drop))?{answer?;}Ok(())}).map(|_|())

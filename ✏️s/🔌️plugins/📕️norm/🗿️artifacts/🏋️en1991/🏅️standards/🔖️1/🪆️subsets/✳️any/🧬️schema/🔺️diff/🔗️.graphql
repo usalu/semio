@@ -111,10 +111,10 @@ type En1991Diff {
   dustExplosions: En1991DustExplosionDelta!
   railLoadGroups: En1991RailLoadGroupDelta!
   railDerailments: En1991RailDerailmentDelta!
-  fatigueModels: En1991FatigueModelDelta
-  supportCollisions: En1991SupportCollisionDelta
-  localFires: En1991LocalFireDelta
-  snowGuards: En1991SnowGuardDelta
+  fatigueModels: En1991FatigueModelDelta!
+  supportCollisions: En1991SupportCollisionDelta!
+  localFires: En1991LocalFireDelta!
+  snowGuards: En1991SnowGuardDelta!
 }
 type En1991FatigueModelPatch {
   model: JSON

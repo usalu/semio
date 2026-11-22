@@ -236,18 +236,23 @@ export function parseProcessTableV1(text:string):readonly Readonly<{pid:number;p
  return rows;
 }
 
-/** 🌿️ The pids of a process and all of its descendants, root first; empty when the process is not in the table. */
-export function treePidsV1(rows:readonly Readonly<{pid:number;parent:number}>[],root:number):readonly number[]{
- if(!rows.some(row=>row.pid===root))return[];
+type HostProcessTreeScopeV1=Readonly<{attached:readonly number[];excluded:ReadonlySet<number>}>;
+
+/** 🌿️ Visits the owner and attached process trees once, stopping at separately priced subtrees. Returns an empty list when the owner has exited. */
+export function treePidsV1(rows:readonly Readonly<{pid:number;parent:number}>[],root:number,scope?:HostProcessTreeScopeV1):readonly number[]{
+ const live=new Set(rows.map(row=>row.pid));if(!live.has(root))return[];
  const children=new Map<number,number[]>();for(const row of rows){const list=children.get(row.parent)??[];list.push(row.pid);children.set(row.parent,list);}
- const seen=new Set<number>(),order:number[]=[],pending=[root];
- for(let pid=pending.pop();pid!==undefined;pid=pending.pop()){if(seen.has(pid))continue;seen.add(pid);order.push(pid);pending.push(...children.get(pid)??[]);}
+ const seen=new Set<number>(),order:number[]=[],pending=[...scope?.attached??[],root];
+ for(let pid=pending.pop();pid!==undefined;pid=pending.pop()){
+  if(seen.has(pid)||!live.has(pid)||pid!==root&&scope?.excluded.has(pid))continue;
+  seen.add(pid);order.push(pid);pending.push(...children.get(pid)??[]);
+ }
  return order;
 }
 
 /** 🌲️ Sums the kilobyte column (the resident set, or the private working set of the Windows footprint table) of a process and all of its descendants. */
-export function treeMegabytesV1(rows:readonly Readonly<{pid:number;parent:number;rssKilobytes:number}>[],root:number):number|null{
- const members=treePidsV1(rows,root);if(!members.length)return null;
+export function treeMegabytesV1(rows:readonly Readonly<{pid:number;parent:number;rssKilobytes:number}>[],root:number,scope?:HostProcessTreeScopeV1):number|null{
+ const members=treePidsV1(rows,root,scope);if(!members.length)return null;
  const kilobytes=new Map(rows.map(row=>[row.pid,row.rssKilobytes] as const));
  return Math.floor(members.reduce((total,pid)=>total+(kilobytes.get(pid)??0),0)/1024);
 }
@@ -287,30 +292,30 @@ export function parseSmapsRollupV1(text:string,fields:readonly string[]=OBSERVER
 }
 
 /** 👁️ Observes what the process tree under one pid holds, in the footprint by default (`HostMemoryMeasureV1`): `footprint` on macOS (one call for the whole tree, the process table names its members), `/proc/<pid>/smaps_rollup` on Linux (no external tool), the native process walk on Windows (`K32GetProcessMemoryInfo`: the private commit is the footprint, the working set the resident set); a platform whose footprint source cannot be read says so once in every language and reads the resident set instead. null when the process is gone or, on Windows, when the native calls cannot answer at all, which is announced once in every language (the gate then learns nothing from the run and keeps the declared sizes). */
-export async function observeTreeMegabytesV1(pid:number,run:HostCommandRunnerV1=runHostCommandV1,platform:HostSampleV1["platform"]=osPlatform() as HostSampleV1["platform"],proc:Readonly<{read:HostTextReaderV1;list:()=>Promise<readonly string[]>}>={read:readHostTextV1,list:()=>readdir("/proc")},notify?:(line:string)=>void,measure:HostMemoryMeasureV1="footprint",windows?:WindowsMemoryPortV1):Promise<number|null>{
+export async function observeTreeMegabytesV1(pid:number,run:HostCommandRunnerV1=runHostCommandV1,platform:HostSampleV1["platform"]=osPlatform() as HostSampleV1["platform"],proc:Readonly<{read:HostTextReaderV1;list:()=>Promise<readonly string[]>}>={read:readHostTextV1,list:()=>readdir("/proc")},notify?:(line:string)=>void,measure:HostMemoryMeasureV1="footprint",windows?:WindowsMemoryPortV1,scope?:HostProcessTreeScopeV1):Promise<number|null>{
  const reason=(error:unknown)=>(language:"en"|"de"):string=>(isRepoErrorV1(error)?renderRepoErrorV1(error,language):String((error as Error)?.message??error)).split("\n")[0]!.slice(0,LIMITS.reasonCharacters),fallback=(why:(language:"en"|"de")=>string):void=>noticeOnceV1("footprintFallback."+platform,"footprintFallback",{platform,reason:why},notify);
  if(platform==="win32"){
   const table=(windows??systemWindowsMemoryPortV1()).processes();
   if(!table.known){noticeOnceV1("treeUnobserved.win32","treeUnobserved",{platform,reason:unknownTextV1(table)},notify);return null;}
   if(measure==="footprint"&&table.rows.length>0&&table.rows.every(row=>row.privateBytes===null))fallback(()=>"K32GetProcessMemoryInfo answered no private usage");
   const footprint=measure==="footprint"&&table.rows.some(row=>row.privateBytes!==null);
-  return treeMegabytesV1(table.rows.map(row=>({pid:row.pid,parent:row.parent,rssKilobytes:Math.floor(((footprint?row.privateBytes:row.workingSetBytes)??row.workingSetBytes??0)/1024)})),pid);
+  return treeMegabytesV1(table.rows.map(row=>({pid:row.pid,parent:row.parent,rssKilobytes:Math.floor(((footprint?row.privateBytes:row.workingSetBytes)??row.workingSetBytes??0)/1024)})),pid,scope);
  }
  if(platform==="linux"){
   const rows=await readLinuxProcessTableV1(proc.read,proc.list);
-  if(measure==="resident")return treeMegabytesV1(rows,pid);
-  const members=treePidsV1(rows,pid);if(!members.length)return null;
+  if(measure==="resident")return treeMegabytesV1(rows,pid,scope);
+  const members=treePidsV1(rows,pid,scope);if(!members.length)return null;
   const linux=OBSERVERS.platforms.linux,resident=new Map(rows.map(row=>[row.pid,row.rssKilobytes] as const));let unread=0;
   const kilobytes=await Promise.all(members.map(async member=>{try{const text=await proc.read(`${linux.processDirectory}/${member}/${linux.footprint.file}`),value=text===null?undefined:parseSmapsRollupV1(text,linux.footprint.fields);if(value!==undefined)return value;}catch{}unread++;return resident.get(member)??0;}));
   if(unread===members.length)fallback(()=>`${linux.footprint.file} unreadable`);
   return Math.floor(kilobytes.reduce((total,value)=>total+value,0)/1024);
  }
  const table=OBSERVERS.platforms.darwin.table,rows=parseProcessTableV1(await run(table.command,table.arguments));
- if(measure==="resident")return treeMegabytesV1(rows,pid);
- const members=treePidsV1(rows,pid);if(!members.length)return null;
+ if(measure==="resident")return treeMegabytesV1(rows,pid,scope);
+ const members=treePidsV1(rows,pid,scope);if(!members.length)return null;
  const tool=OBSERVERS.platforms.darwin.footprint;let failure:(language:"en"|"de")=>string=()=>"footprint printed no process";
  const text=await run(tool.command,[...tool.arguments,...members.flatMap(member=>[tool.pidFlag,String(member)])]).catch((error:unknown)=>{failure=reason(error);const partial=(error as {stdout?:unknown})?.stdout;return typeof partial==="string"?partial:"";}),bytes=parseFootprintV1(text);
- if(!bytes.size){fallback(failure);return treeMegabytesV1(rows,pid);}
+ if(!bytes.size){fallback(failure);return treeMegabytesV1(rows,pid,scope);}
  const resident=new Map(rows.map(row=>[row.pid,row.rssKilobytes*1024] as const));
  return Math.floor(members.reduce((total,member)=>total+(bytes.get(member)??resident.get(member)??0),0)/MEGABYTE);
 }

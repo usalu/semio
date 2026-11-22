@@ -1,0 +1,11 @@
+{
+  "initialCamera": [12, 8, 2],
+  "liveCamera": [40, 25, 4],
+  "cases": [
+    { "name": "one loss re-attaches and keeps the camera", "losses": 1, "states": ["reattached"], "restored": null },
+    { "name": "a second loss gives up with the live camera", "losses": 2, "states": ["reattached", "unavailable"], "restored": [40, 25, 4] },
+    { "name": "further losses stay unavailable", "losses": 3, "states": ["reattached", "unavailable", "unavailable"], "restored": [40, 25, 4] }
+  ],
+  "unavailableNotice": { "en": "Canvas unavailable", "de": "Leinwand nicht verfügbar" },
+  "retry": { "en": "Retry", "de": "Erneut versuchen" }
+}

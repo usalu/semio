@@ -40,6 +40,7 @@ use semio_framework_3d_brep_queries::mass_properties::{closest_point_on_face, cl
 use semio_framework_3d_brep_tessellation::TessellationJob;
 #[cfg(test)] use semio_framework_3d_brep_tessellation::tessellate_solid;
 use semio_framework_3d_brep_validation::{issue_reaches, validate_body};
+pub use semio_framework_3d_brep_validation::SolidHealing;
 use semio_framework_3d_brep_representation::arena::{ArenaId, EdgeId, FaceId, SolidId};
 use {semio_framework_3d_brep_curve::curve_ops::{approximate_curve_with_count, closest_parameter as curve_closest_parameter_fn, interpolate_curve, ParamMethod}, semio_framework_3d_brep_surface::surface_ops::{coons_patch_nurbs, interpolate_surface_grid}};
 use semio_framework_3d_brep_curve::Curve3;

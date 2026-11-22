@@ -3,7 +3,9 @@ use semio_s_artifact_procedural_3d_mutations::WidgetInputValue;
 use semio_framework_artifact_flow_flow::neural::{Value,Atom,Dictionary};
 use semio_os_flow::{OrderedMap,OriginalOwnedEntry,FlowTextCopyWork};
 use semio_framework_job::{OriginalSourceBinding,OriginalTurnFailure,StepContext};
-use semio_framework_value::{RetirementDemand,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome,ValueError,ValueRefusalKind};
+use super::retained_scratch_driver::{begun,effected,pay,replied,settled_step};
+use semio_framework_value::{OriginalRetirementFailure,OriginalRetirementPoll,RetainedAllocationEffect,RetirementDemand,RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome,RetirementPollExit,ValueError,ValueRefusalKind};
+use semio_framework_value::retirement::controlled::ControlledRetirement;
 use semio_framework_value::retained_clone::{RetainedCloneClose,retained_clone_grant_admits};
 use std::mem::{ManuallyDrop,size_of};
 const META:usize=2*size_of::<usize>()+2*size_of::<u8>();
@@ -60,18 +62,17 @@ fn field(input:&WidgetInputValue,frame:Frame)->Result<Option<Field<'_>>,ValueErr
 #[derive(Clone,Copy,PartialEq,Eq)]enum Target{Key,Value}
 struct Owners{map0:Option<OrderedMap<Value>>,map1:Option<OrderedMap<Value>>,key0:Option<String>,key1:Option<String>,string:Option<String>,value:Option<Value>,map_output:Option<OrderedMap<Value>>,output:Option<Value>}
 pub(crate) struct TypedLiteralWork{
- owners:ManuallyDrop<Owners>,text:Option<FlowTextCopyWork>,entry:Option<OriginalOwnedEntry<Value>>,retirement:RetainedCloneClose,
+ owners:ManuallyDrop<Owners>,text:Option<FlowTextCopyWork>,entry:Option<OriginalOwnedEntry<Value>>,entry_close:Option<ControlledRetirement<OriginalOwnedEntry<Value>>>,retirement:RetainedCloneClose,recover:bool,
  binding:Option<OriginalSourceBinding>,identity:Option<InputIdentity>,frames:[Frame;2],depth:usize,numeric:[u8;20],numeric_length:usize,
- phase:Phase,target:Target,closing:bool,progress:RetainedCloneProgress,work:u64,
+ phase:Phase,target:Target,closing:bool,progress:RetainedCloneProgress,
 }
 impl TypedLiteralWork{
  pub(crate) fn new(cx:&StepContext<'_>)->Self{Self::new_original(OriginalSourceBinding::borrow(cx))}
- pub(crate) fn new_original(binding:OriginalSourceBinding)->Self{Self{owners:ManuallyDrop::new(Owners{map0:None,map1:None,key0:None,key1:None,string:None,value:None,map_output:None,output:None}),text:None,entry:None,retirement:Default::default(),binding:Some(binding),identity:None,frames:[Frame{view:View::Root,member:0};2],depth:0,numeric:[0;20],numeric_length:0,phase:Phase::Bind,target:Target::Key,closing:false,progress:Default::default(),work:0}}
+ pub(crate) fn new_original(binding:OriginalSourceBinding)->Self{Self{owners:ManuallyDrop::new(Owners{map0:None,map1:None,key0:None,key1:None,string:None,value:None,map_output:None,output:None}),text:None,entry:None,entry_close:None,retirement:Default::default(),recover:false,binding:Some(binding),identity:None,frames:[Frame{view:View::Root,member:0};2],depth:0,numeric:[0;20],numeric_length:0,phase:Phase::Bind,target:Target::Key,closing:false,progress:Default::default()}}
  pub(crate) fn source_binding(&self)->OriginalSourceBinding{self.binding.expect("live original typed literal binding")}
  pub(crate) fn step(&mut self,input:&WidgetInputValue,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{let mut source=input;super::retained_scratch_driver::drive(self,&mut source,cx)}
  pub(crate) fn ready(&self)->bool{!self.closing&&self.phase==Phase::Ready}
  pub(crate) fn step_progress(&self)->RetainedCloneProgress{self.progress}
- pub(crate) fn last_turn_work(&self)->u64{self.work}
  pub(crate) fn advancing_retirement(&self)->bool{matches!(self.phase,Phase::TextClose|Phase::EntryClose)||self.entry.as_ref().is_some_and(OriginalOwnedEntry::advancing_retirement)}
  fn fixed(bytes:usize)->RetirementDemand{RetirementDemand{copy_bytes:bytes,depth:1,..Default::default()}}
  fn checked(&self,input:&WidgetInputValue)->Result<(),ValueError>{if self.closing||self.identity.is_some_and(|identity|identity!=InputIdentity::capture(input)){Err(invalid())}else{Ok(())}}
@@ -92,91 +93,103 @@ impl TypedLiteralWork{
    Phase::String=>Self::fixed(2*size_of::<String>()+2*size_of::<Value>()+META),
    Phase::Entry=>Self::fixed(2*size_of::<OriginalOwnedEntry<Value>>()+2*size_of::<OrderedMap<Value>>()+2*size_of::<String>()+2*size_of::<Value>()+META),
    Phase::EntryStep=>Self::add(self.entry.as_ref().ok_or_else(invalid)?.next_demands(copy.saturating_sub(META))?,META)?,
-   Phase::EntryClose=>{let entry=self.entry.as_ref().ok_or_else(invalid)?;if entry.terminal_is_empty(){Self::fixed(size_of::<Option<OriginalOwnedEntry<Value>>>()+META)}else{entry.next_close_demands(copy)?}},
+   Phase::EntryClose=>{let close=self.entry_close.as_ref().ok_or_else(invalid)?;if close.terminal_is_empty(){Self::fixed(size_of::<Option<ControlledRetirement<OriginalOwnedEntry<Value>>>>()+META)}else{close.selected_demand(copy)?}},
    Phase::Map=>Self::fixed(2*size_of::<OrderedMap<Value>>()+META),
    Phase::Ready=>Default::default(),Phase::Taken=>return Err(invalid()),
   })
  }
- fn paid(&mut self,d:RetirementDemand){self.work=1;self.progress=RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:d.capacity_bytes,released_bytes:d.release_bytes}}
- fn absorb(&mut self,turn:RetainedWorkOutcome)->Result<(),ValueError>{self.work=turn.work;self.progress=turn.result.as_ref().map_or_else(|error|error.retained_progress(),|step|step.progress());turn.result.map(|_|())}
+ fn paid(&mut self,d:RetirementDemand){self.progress=RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:d.capacity_bytes,released_bytes:d.release_bytes}}
  fn map_mut(&mut self)->Result<&mut Option<OrderedMap<Value>>,ValueError>{match self.depth{1=>Ok(&mut self.owners.map0),2=>Ok(&mut self.owners.map1),_=>Err(invalid())}}
  fn key_mut(&mut self)->Result<&mut Option<String>,ValueError>{match self.depth{1=>Ok(&mut self.owners.key0),2=>Ok(&mut self.owners.key1),_=>Err(invalid())}}
- pub(crate) fn advance(&mut self,input:&WidgetInputValue,g:RetainedCloneGrant)->RetainedWorkOutcome<bool>{
-  self.progress=Default::default();self.work=0;
-  let result=self.advance_inner(input,g).map_err(|error|error.with_retained_progress(self.progress));RetainedWorkOutcome{result,work:self.work}
+ pub(crate) fn advance(&mut self,input:&WidgetInputValue,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome<bool>{
+  self.progress=Default::default();
+  let result=self.advance_inner(input,effect).map_err(|error|{if self.progress==Default::default(){self.progress=error.retained_progress()}error.with_retained_progress(self.progress)});RetainedWorkOutcome{result,work:effect.performed_work()}
  }
- fn advance_inner(&mut self,input:&WidgetInputValue,g:RetainedCloneGrant)->Result<bool,ValueError>{
-  self.checked(input)?;if self.ready(){return Ok(true)}let demand=self.next_demands(input,g.maximum_copy_bytes)?;if !retained_clone_grant_admits(g,demand){return Ok(false)}
+ fn advance_inner(&mut self,input:&WidgetInputValue,effect:&mut RetainedAllocationEffect<'_>)->Result<bool,ValueError>{
+  let g=effect.grant();self.checked(input)?;if self.ready(){return Ok(true)}let demand=self.next_demands(input,g.maximum_copy_bytes)?;if !retained_clone_grant_admits(g,demand){return Ok(false)}
   match self.phase{
-   Phase::Bind=>{self.paid(demand);self.identity=Some(InputIdentity::capture(input));if matches!(literal(input,View::Root)?,Literal::List(count)if count>1024){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"typed input collection exceeds its original schema bound"))}self.depth=1;self.owners.map0=Some(OrderedMap::new());self.phase=Phase::Field},
+   Phase::Bind=>{if !pay(effect,1)?{return Ok(false)}self.paid(demand);self.identity=Some(InputIdentity::capture(input));if matches!(literal(input,View::Root)?,Literal::List(count)if count>1024){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"typed input collection exceeds its original schema bound"))}self.depth=1;self.owners.map0=Some(OrderedMap::new());self.phase=Phase::Field},
    Phase::Field=>{
-    let Some(field)=field(input,self.current()?)? else{self.paid(demand);let value=Value::Dictionary(Dictionary{pairs:self.map_mut()?.take().ok_or_else(invalid)?});if self.depth==1{self.owners.output=Some(value);self.phase=Phase::Ready}else{self.depth-=1;self.owners.value=Some(value);self.phase=Phase::Entry}return Ok(self.ready())};
-    self.paid(demand);self.numeric_length=0;if let Key::Index(mut index)=field.key{let mut position=self.numeric.len();loop{position-=1;self.numeric[position]=b'0'+(index%10)as u8;index/=10;if index==0{break}}let count=self.numeric.len()-position;self.numeric.copy_within(position..,0);self.numeric_length=count}
+    let Some(field)=field(input,self.current()?)? else{if !pay(effect,1)?{return Ok(false)}self.paid(demand);let value=Value::Dictionary(Dictionary{pairs:self.map_mut()?.take().ok_or_else(invalid)?});if self.depth==1{self.owners.output=Some(value);self.phase=Phase::Ready}else{self.depth-=1;self.owners.value=Some(value);self.phase=Phase::Entry}return Ok(self.ready())};
+    if !pay(effect,1)?{return Ok(false)}self.paid(demand);self.numeric_length=0;if let Key::Index(mut index)=field.key{let mut position=self.numeric.len();loop{position-=1;self.numeric[position]=b'0'+(index%10)as u8;index/=10;if index==0{break}}let count=self.numeric.len()-position;self.numeric.copy_within(position..,0);self.numeric_length=count}
     self.text=Some(FlowTextCopyWork::new());self.target=Target::Key;self.phase=Phase::Text;
    },
    Phase::Text=>{
     let source=Self::source(input,self.current()?,self.target,&self.numeric,self.numeric_length)?;
-    if !self.text.as_ref().ok_or_else(invalid)?.ready(){let turn=self.text.as_mut().unwrap().advance_original(source,g);self.absorb(turn)?;}else{
-     let child=RetainedCloneGrant{maximum_copy_bytes:g.maximum_copy_bytes-META,..g};let turn=self.text.as_mut().unwrap().take_original(child);self.work=turn.work;
-     match turn.result{Ok(Some((value,p)))=>{self.progress=p;self.progress.copied_bytes+=META;if self.target==Target::Key{*self.key_mut()?=Some(value)}else{self.owners.string=Some(value)}self.text.as_mut().unwrap().begin_close();self.phase=Phase::TextClose},Ok(None)=>{},Err(error)=>{self.progress=error.retained_progress();return Err(error)}}
+    let text=self.text.as_mut().ok_or_else(invalid)?;
+    if !text.ready(){
+     if effect.remaining_work_units()?<text.next_work_demand(source,g.maximum_copy_bytes)?{return Ok(false)}
+     self.progress=text.advance_original(source,effect).result?.progress();
+    }else{
+     if effect.remaining_work_units()?<text.take_work_demand()?{return Ok(false)}
+     if let Some((value,p))=text.take_original(effect).result?{self.progress=p;self.progress.copied_bytes+=META;if self.target==Target::Key{*self.key_mut()?=Some(value)}else{self.owners.string=Some(value)}self.text.as_mut().unwrap().begin_close();self.phase=Phase::TextClose}
     }
    },
-   Phase::TextClose=>if self.text.as_ref().ok_or_else(invalid)?.terminal_is_empty(){self.paid(demand);self.text=None;self.phase=if self.target==Target::Key{Phase::Value}else{Phase::String}}else{let turn=self.text.as_mut().unwrap().close_step(g);self.absorb(turn)?},
-   Phase::Value=>{let payload=field(input,self.current()?)?.ok_or_else(invalid)?.payload;self.paid(demand);match payload{
+   Phase::TextClose=>if self.text.as_ref().ok_or_else(invalid)?.terminal_is_empty(){if !pay(effect,1)?{return Ok(false)}self.paid(demand);self.text=None;self.phase=if self.target==Target::Key{Phase::Value}else{Phase::String}}else{self.progress=settled_step(self.text.as_mut().unwrap().close_step(g.maximum_copy_bytes,effect))?.progress()},
+   Phase::Value=>{let payload=field(input,self.current()?)?.ok_or_else(invalid)?.payload;if !pay(effect,1)?{return Ok(false)}self.paid(demand);match payload{
     Payload::Text(_)=>{self.text=Some(FlowTextCopyWork::new());self.target=Target::Value;self.phase=Phase::Text},
     Payload::Number(value)=>{if !value.is_finite(){self.progress.copied_bytes=META;return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"typed input number must be finite"))}self.owners.value=Some(Value::Atom(Atom::Decimal(value)));self.phase=Phase::Entry},
     Payload::Boolean(value)=>{self.owners.value=Some(Value::Atom(Atom::Boolean(value)));self.phase=Phase::Entry},
     Payload::Child(view)=>{if self.depth!=1||self.owners.map1.is_some(){return Err(invalid())}self.frames[1]=Frame{view,member:0};self.depth=2;self.owners.map1=Some(OrderedMap::new());self.phase=Phase::Field},
    }},
-   Phase::String=>{self.paid(demand);self.owners.value=Some(Value::Atom(Atom::String(self.owners.string.take().ok_or_else(invalid)?)));self.phase=Phase::Entry},
-   Phase::Entry=>{self.paid(demand);let map=self.map_mut()?.take().ok_or_else(invalid)?;let key=self.key_mut()?.take().ok_or_else(invalid)?;let value=self.owners.value.take().ok_or_else(invalid)?;self.entry=Some(OriginalOwnedEntry::new(map,key,value));self.phase=Phase::EntryStep},
+   Phase::String=>{if !pay(effect,1)?{return Ok(false)}self.paid(demand);self.owners.value=Some(Value::Atom(Atom::String(self.owners.string.take().ok_or_else(invalid)?)));self.phase=Phase::Entry},
+   Phase::Entry=>{if !pay(effect,1)?{return Ok(false)}self.paid(demand);let map=self.map_mut()?.take().ok_or_else(invalid)?;let key=self.key_mut()?.take().ok_or_else(invalid)?;let value=self.owners.value.take().ok_or_else(invalid)?;self.entry=Some(OriginalOwnedEntry::new(map,key,value));self.phase=Phase::EntryStep},
    Phase::EntryStep=>{
-    let child=RetainedCloneGrant{maximum_copy_bytes:g.maximum_copy_bytes-META,..g};let turn=self.entry.as_mut().ok_or_else(invalid)?.advance(child);self.work=turn.work;self.progress=self.entry.as_ref().unwrap().step_progress();
-    match turn.result{Ok(Some(map))=>{self.progress.copied_bytes+=META;self.owners.map_output=Some(map);self.entry.as_mut().unwrap().begin_close();self.phase=Phase::EntryClose},Ok(None)=>{},Err(error)=>return Err(error)}
+    let body=g.maximum_copy_bytes.saturating_sub(META);let entry=self.entry.as_mut().ok_or_else(invalid)?;
+    if effect.remaining_work_units()?<entry.next_work_demand(body)?{return Ok(false)}
+    let mut output=None;
+    let reply=if self.recover{replied(effect,|effect,reply|entry.recover_advance_into(body,&mut output,effect,reply))}else{replied(effect,|effect,reply|entry.advance_into(body,&mut output,effect,reply))}?;
+    match reply{
+     Some(result)=>{self.recover=false;self.progress=result.map_err(OriginalRetirementFailure::into_value_error)?.progress();if let Some(map)=output{self.progress.copied_bytes+=META;self.owners.map_output=Some(map);let entry=self.entry.take().unwrap();self.entry_close=Some(ControlledRetirement::new(entry).unwrap_or_else(|_|unreachable!("typed literal entry declares controlled retirement")));self.phase=Phase::EntryClose}},
+     None=>self.recover=true,
+    }
    },
-   Phase::EntryClose=>if self.entry.as_ref().ok_or_else(invalid)?.terminal_is_empty(){self.paid(demand);self.entry=None;self.phase=Phase::Map}else{let turn=self.entry.as_mut().unwrap().close_step(g);self.absorb(turn)?},
-   Phase::Map=>{self.paid(demand);let map=self.owners.map_output.take().ok_or_else(invalid)?;*self.map_mut()?=Some(map);self.frames[self.depth-1].member+=1;self.phase=Phase::Field},
+   Phase::EntryClose=>{let close=self.entry_close.as_mut().ok_or_else(invalid)?;if close.terminal_is_empty(){if !pay(effect,1)?{return Ok(false)}self.paid(demand);self.entry_close=None;self.phase=Phase::Map}else{self.progress=settled_step(close.step(g.maximum_copy_bytes,effect))?.progress()}},
+   Phase::Map=>{if !pay(effect,1)?{return Ok(false)}self.paid(demand);let map=self.owners.map_output.take().ok_or_else(invalid)?;*self.map_mut()?=Some(map);self.frames[self.depth-1].member+=1;self.phase=Phase::Field},
    _=>return Err(invalid()),
   }Ok(self.ready())
  }
  pub(crate) fn take_demands(&self)->Result<RetirementDemand,ValueError>{if !self.ready(){return Err(invalid())}Ok(Self::fixed(2*size_of::<Value>()+META))}
- pub(crate) fn take_original(&mut self,g:RetainedCloneGrant)->RetainedWorkOutcome<Option<(Value,RetainedCloneProgress)>>{
-  self.progress=Default::default();self.work=0;let d=match self.take_demands(){Ok(d)=>d,Err(error)=>return RetainedWorkOutcome{result:Err(error),work:0}};if !retained_clone_grant_admits(g,d){return RetainedWorkOutcome{result:Ok(None),work:0}}self.paid(d);let result=self.owners.output.take().ok_or_else(invalid).map(|value|{self.phase=Phase::Taken;Some((value,self.progress))});RetainedWorkOutcome{result,work:self.work}
+ pub(crate) fn take_original(&mut self,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome<Option<(Value,RetainedCloneProgress)>>{
+  self.progress=Default::default();let result=(||{let d=self.take_demands()?;if !retained_clone_grant_admits(effect.grant(),d)||!pay(effect,1)?{return Ok(None)}self.paid(d);let value=self.owners.output.take().ok_or_else(invalid)?;self.phase=Phase::Taken;Ok(Some((value,self.progress)))})();RetainedWorkOutcome{result,work:effect.performed_work()}
  }
  pub(crate) fn take_into(&mut self,slot:&mut Option<Value>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
-  if slot.is_some()||!self.source_binding().matches(cx){return Err(invalid().into())}let d=self.take_demands()?;if !cx.retained_work_can_enter(d){return Ok(false)}let turn=self.take_original(cx.retained_grant());cx.consume_fuel(turn.work);let Some((value,p))=turn.result? else{return Ok(false)};*slot=Some(value);cx.consume_retained(p)?;Ok(true)
+  if slot.is_some()||!self.source_binding().matches(cx){return Err(invalid().into())}let d=self.take_demands()?;
+  effected(cx,d,|effect|{let Some((value,p))=self.take_original(effect).result? else{return Ok(RetainedCloneStep::Progress(Default::default()))};*slot=Some(value);Ok(RetainedCloneStep::Progress(p))})?;Ok(slot.is_some())
  }
- pub(crate) fn begin_close(&mut self){self.closing=true;if let Some(text)=self.text.as_mut(){text.begin_close()}if let Some(entry)=self.entry.as_mut(){entry.begin_close()}}
+ pub(crate) fn begin_close(&mut self){self.closing=true;if let Some(text)=self.text.as_mut(){text.begin_close()}}
  pub(crate) fn next_close_demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{
   if let Some(text)=self.text.as_ref(){return if text.terminal_is_empty(){Ok(Self::fixed(size_of::<Option<FlowTextCopyWork>>()))}else{text.close_demands(copy)}}
-  if let Some(entry)=self.entry.as_ref(){return if entry.terminal_is_empty(){Ok(Self::fixed(size_of::<Option<OriginalOwnedEntry<Value>>>()))}else{entry.next_close_demands(copy)}}
+  if let Some(close)=self.entry_close.as_ref(){return if close.terminal_is_empty(){Ok(Self::fixed(size_of::<Option<ControlledRetirement<OriginalOwnedEntry<Value>>>>()))}else{close.selected_demand(copy)}}
+  if self.entry.is_some(){return Ok(Self::fixed(size_of::<Option<OriginalOwnedEntry<Value>>>()))}
   if !self.retirement.is_empty(){return self.retirement.demands(copy)}
   macro_rules! owner{($field:ident,$ty:ty)=>{if self.owners.$field.is_some(){return self.retirement.next_owner_demands::<$ty>(true,&None,copy)}}}
   owner!(output,Value);owner!(value,Value);owner!(map_output,OrderedMap<Value>);owner!(string,String);owner!(key1,String);owner!(key0,String);owner!(map1,OrderedMap<Value>);owner!(map0,OrderedMap<Value>);
   Ok(if self.binding.is_some()||self.identity.is_some()||self.depth!=0{Self::fixed(size_of::<Option<OriginalSourceBinding>>()+size_of::<Option<InputIdentity>>()+2*size_of::<Frame>()+META)}else{Default::default()})
  }
- pub(crate) fn close_step(&mut self,g:RetainedCloneGrant)->RetainedWorkOutcome{
-  self.progress=Default::default();self.work=0;let result=self.close_inner(g).map_err(|error|error.with_retained_progress(self.progress));RetainedWorkOutcome{result,work:self.work}
+ pub(crate) fn close_step(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{
+  self.progress=Default::default();let result=self.close_inner(body,effect).map_err(|exit|match exit{RetirementPollExit::Failed(failure)=>{if self.progress==Default::default(){self.progress=failure.retained_progress()}RetirementPollExit::Failed(failure.with_retained_progress(self.progress))},pending=>pending});RetirementPollExit::settle(effect,result)
  }
- fn close_inner(&mut self,g:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
-  if !self.closing{return Err(invalid())}let d=self.next_close_demands(g.maximum_copy_bytes)?;if !retained_clone_grant_admits(g,d){return Ok(RetainedCloneStep::Progress(Default::default()))}
-  macro_rules! child{($field:ident,$ty:ty)=>{if let Some(child)=self.$field.as_mut(){if child.terminal_is_empty(){self.paid(Self::fixed(size_of::<Option<$ty>>()));self.$field=None}else{let turn=child.close_step(g);self.absorb(turn)?}return Ok(RetainedCloneStep::Progress(self.progress))}}}
-  child!(text,FlowTextCopyWork);child!(entry,OriginalOwnedEntry<Value>);
-  if !self.retirement.is_empty(){let turn=self.retirement.step_granted(g);self.absorb(turn)?;return Ok(RetainedCloneStep::Progress(self.progress))}
-  macro_rules! owner{($field:ident)=>{if self.owners.$field.is_some(){let turn=self.retirement.begin_granted(&mut self.owners.$field,g);let turn=RetainedWorkOutcome{result:turn.result.map(|step|step.unwrap_or(RetainedCloneStep::Progress(Default::default()))),work:turn.work};self.absorb(turn)?;return Ok(RetainedCloneStep::Progress(self.progress))}}}
+ fn close_inner(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,RetirementPollExit>{
+  if !self.closing{return Err(invalid().into())}let d=self.next_close_demands(body)?;if !retained_clone_grant_admits(effect.grant(),d){return Ok(RetainedCloneStep::Progress(Default::default()))}
+  if let Some(text)=self.text.as_mut(){if text.terminal_is_empty(){self.text=None;self.progress.copied_items=1}else{self.progress=RetirementPollExit::resume(text.close_step(body,effect))?.progress()}return Ok(RetainedCloneStep::Progress(self.progress))}
+  if let Some(close)=self.entry_close.as_mut(){if close.terminal_is_empty(){self.entry_close=None;self.progress.copied_items=1}else{self.progress=RetirementPollExit::resume(close.step(body,effect))?.progress()}return Ok(RetainedCloneStep::Progress(self.progress))}
+  if let Some(entry)=self.entry.take(){self.entry_close=Some(ControlledRetirement::new(entry).unwrap_or_else(|_|unreachable!("typed literal entry declares controlled retirement")));self.progress.copied_items=1;return Ok(RetainedCloneStep::Progress(self.progress))}
+  if !self.retirement.is_empty(){self.progress=RetirementPollExit::resume(self.retirement.step_granted(body,effect))?.progress();return Ok(RetainedCloneStep::Progress(self.progress))}
+  macro_rules! owner{($field:ident)=>{if self.owners.$field.is_some(){self.progress=begun(&mut self.retirement,&mut self.owners.$field,effect)?.progress();return Ok(RetainedCloneStep::Progress(self.progress))}}}
   owner!(output);owner!(value);owner!(map_output);owner!(string);owner!(key1);owner!(key0);owner!(map1);owner!(map0);
   if self.binding.is_some()||self.identity.is_some()||self.depth!=0{self.paid(d);self.binding=None;self.identity=None;self.depth=0;self.frames=[Frame{view:View::Root,member:0};2];self.numeric_length=0;self.phase=Phase::Taken}
   Ok(RetainedCloneStep::Complete(self.progress))
  }
- pub(crate) fn terminal_is_empty(&self)->bool{self.closing&&self.binding.is_none()&&self.identity.is_none()&&self.depth==0&&self.text.is_none()&&self.entry.is_none()&&self.retirement.is_empty()&&self.owners.output.is_none()&&self.owners.value.is_none()&&self.owners.map_output.is_none()&&self.owners.string.is_none()&&self.owners.key0.is_none()&&self.owners.key1.is_none()&&self.owners.map0.is_none()&&self.owners.map1.is_none()}
+ pub(crate) fn terminal_is_empty(&self)->bool{self.closing&&self.binding.is_none()&&self.identity.is_none()&&self.depth==0&&self.text.is_none()&&self.entry.is_none()&&self.entry_close.is_none()&&self.retirement.is_empty()&&self.owners.output.is_none()&&self.owners.value.is_none()&&self.owners.map_output.is_none()&&self.owners.string.is_none()&&self.owners.key0.is_none()&&self.owners.key1.is_none()&&self.owners.map0.is_none()&&self.owners.map1.is_none()}
 }
 impl<'a> super::retained_scratch_driver::OriginalScratchWork<&'a WidgetInputValue> for TypedLiteralWork{
  fn source_binding(&self)->OriginalSourceBinding{self.source_binding()}
  fn origin(&self)->(u64,u64){(self.source_binding().operation().0,self.source_binding().generation().0)}
  fn ready(&self)->bool{self.ready()}
  fn advancing_retirement(&self)->bool{self.advancing_retirement()}
- fn next_demands(&self,input:&&'a WidgetInputValue,copy:usize)->Result<RetirementDemand,ValueError>{self.next_demands(input,copy)}
- fn advance(&mut self,input:&mut &'a WidgetInputValue,g:RetainedCloneGrant)->RetainedWorkOutcome<bool>{self.advance(input,g)}
+ fn next_demands(&self,input:&&'a WidgetInputValue,copy:usize,_work:u64)->Result<RetirementDemand,ValueError>{self.next_demands(input,copy)}
+ fn advance(&mut self,input:&mut &'a WidgetInputValue,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome<bool>{self.advance(input,effect)}
  fn step_progress(&self)->RetainedCloneProgress{self.step_progress()}
 }
 impl Drop for TypedLiteralWork{fn drop(&mut self){assert!(self.terminal_is_empty(),"typed literal must close every original map, text, AVL cursor and pending value");unsafe{ManuallyDrop::drop(&mut self.owners)}}}

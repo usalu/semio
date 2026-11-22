@@ -91,7 +91,7 @@ export function manifestTermV1(term:FleetTermV1):Uint8Array|undefined{
 }
 
 /** ✖️ Folds a term into a running digest: XOR is its own inverse, so adding and removing a term use the same call. */
-export function foldTermV1(digest:Uint8Array,term:Uint8Array):void{for(let index=0;index<32;index++)digest[index]^=term[index]!;}
+export function foldTermV1(digest:Uint8Array,term:Uint8Array):void{for(let index=0;index<32;index++)digest[index]=(digest[index]??0)^(term[index]??0);}
 
 /** 🔤️ Spells a running digest as lower-case hex. */
 export function digestHexV1(digest:Uint8Array):string{return Buffer.from(digest.buffer,digest.byteOffset,32).toString("hex");}
@@ -120,7 +120,7 @@ export function bucketOfV1(path:string):number{
 export function emptyBucketsV1():Uint8Array{return new Uint8Array(bucketCountV1*bucketWidth);}
 
 /** ✖️ Folds the first two bytes of a term into the bucket of its path; like the digest it is its own inverse. */
-export function foldBucketV1(buckets:Uint8Array,bucket:number,term:Uint8Array):void{for(let index=0;index<bucketWidth;index++)buckets[bucket*bucketWidth+index]^=term[index]!;}
+export function foldBucketV1(buckets:Uint8Array,bucket:number,term:Uint8Array):void{for(let index=0;index<bucketWidth;index++){const at=bucket*bucketWidth+index;buckets[at]=(buckets[at]??0)^(term[index]??0);}}
 
 /** 🔤️ Spells buckets as 1024 lower-case hex characters. */
 export function bucketsHexV1(buckets:Uint8Array):string{return Buffer.from(buckets.buffer,buckets.byteOffset,buckets.length).toString("hex");}

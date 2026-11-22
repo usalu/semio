@@ -143,7 +143,7 @@ fn focus_next_and_prev_cycle_only_through_focusable_nodes() {
     let mut dispatcher = Dispatcher::new();
     let element_a = tree.node(button_a).unwrap().element;
     let element_b = tree.node(button_b).unwrap().element;
-    let tab = |shift: bool| DispatchEvent::KeyDown { key: "Tab".into(), modifiers: EventModifiers { shift, ..Default::default() } };
+    let tab = |shift: bool| DispatchEvent::KeyDown { key: "Tab".into(), modifiers: EventModifiers { shift, ..Default::default() }, repeat: false };
 
     dispatcher.dispatch(&tree, &tab(false));
     assert_eq!(dispatcher.focused(), Some(element_a));
@@ -260,7 +260,7 @@ fn escape_closes_only_the_topmost_of_two_open_overlays() {
     dispatcher.open_overlay(menu_element, OverlayKind::ContextMenu, OverlayAnchor::Element(menu_element));
     dispatcher.open_overlay(submenu_element, OverlayKind::ContextMenu, OverlayAnchor::Element(menu_element));
 
-    dispatcher.dispatch(&tree, &DispatchEvent::KeyDown { key: "Escape".into(), modifiers: EventModifiers::default() });
+    dispatcher.dispatch(&tree, &DispatchEvent::KeyDown { key: "Escape".into(), modifiers: EventModifiers::default(), repeat: false });
 
     assert_eq!(dispatcher.open_overlays().len(), 1);
     assert_eq!(dispatcher.open_overlays()[0].root, menu_element, "only the topmost overlay closes on Escape");
@@ -281,7 +281,7 @@ fn tab_focus_is_trapped_inside_an_open_dialog_overlay() {
     let element_d = tree.node(button_d).unwrap().element;
     dispatcher.open_overlay(dialog_element, OverlayKind::Dialog, OverlayAnchor::Point { x: 0.0, y: 0.0 });
 
-    let tab = || DispatchEvent::KeyDown { key: "Tab".into(), modifiers: EventModifiers::default() };
+    let tab = || DispatchEvent::KeyDown { key: "Tab".into(), modifiers: EventModifiers::default(), repeat: false };
     dispatcher.dispatch(&tree, &tab());
     assert_eq!(dispatcher.focused(), Some(element_c));
     dispatcher.dispatch(&tree, &tab());
@@ -300,7 +300,7 @@ fn closing_an_overlay_clears_focus_that_was_inside_it() {
     let dialog_element = tree.node(dialog).unwrap().element;
     let button_element = tree.node(button).unwrap().element;
     dispatcher.open_overlay(dialog_element, OverlayKind::Dialog, OverlayAnchor::Point { x: 0.0, y: 0.0 });
-    dispatcher.dispatch(&tree, &DispatchEvent::KeyDown { key: "Tab".into(), modifiers: EventModifiers::default() });
+    dispatcher.dispatch(&tree, &DispatchEvent::KeyDown { key: "Tab".into(), modifiers: EventModifiers::default(), repeat: false });
     assert_eq!(dispatcher.focused(), Some(button_element));
 
     assert!(dispatcher.close_overlay(&tree, dialog_element));
@@ -443,14 +443,14 @@ fn arrow_keys_move_the_caret_and_backspace_deletes_the_previous_char() {
     dispatcher.dispatch(&tree, &up(1, 10.0, 10.0));
     let input_element = dispatcher.focused().unwrap();
 
-    dispatcher.dispatch(&tree, &DispatchEvent::KeyDown { key: "ArrowLeft".into(), modifiers: EventModifiers::default() });
+    dispatcher.dispatch(&tree, &DispatchEvent::KeyDown { key: "ArrowLeft".into(), modifiers: EventModifiers::default(), repeat: false });
     assert_eq!(dispatcher.edit_state(input_element).unwrap().caret, 2);
 
-    dispatcher.dispatch(&tree, &DispatchEvent::KeyDown { key: "ArrowLeft".into(), modifiers: EventModifiers { shift: true, ..Default::default() } });
+    dispatcher.dispatch(&tree, &DispatchEvent::KeyDown { key: "ArrowLeft".into(), modifiers: EventModifiers { shift: true, ..Default::default() }, repeat: false });
     let edit = dispatcher.edit_state(input_element).unwrap();
     assert_eq!((edit.anchor, edit.caret), (2, 1), "shift+arrow extends the selection instead of collapsing it");
 
-    dispatcher.dispatch(&tree, &DispatchEvent::KeyDown { key: "Backspace".into(), modifiers: EventModifiers::default() });
+    dispatcher.dispatch(&tree, &DispatchEvent::KeyDown { key: "Backspace".into(), modifiers: EventModifiers::default(), repeat: false });
     let edit = dispatcher.edit_state(input_element).unwrap();
     assert_eq!(edit.text, "ac", "backspace over a selection deletes the selected range");
     assert_eq!((edit.anchor, edit.caret), (1, 1));
@@ -466,8 +466,8 @@ fn character_insertion_replaces_the_selection() {
     dispatcher.dispatch(&tree, &up(1, 10.0, 10.0));
     let input_element = dispatcher.focused().unwrap();
 
-    dispatcher.dispatch(&tree, &DispatchEvent::KeyDown { key: "Home".into(), modifiers: EventModifiers::default() });
-    dispatcher.dispatch(&tree, &DispatchEvent::KeyDown { key: "End".into(), modifiers: EventModifiers { shift: true, ..Default::default() } });
+    dispatcher.dispatch(&tree, &DispatchEvent::KeyDown { key: "Home".into(), modifiers: EventModifiers::default(), repeat: false });
+    dispatcher.dispatch(&tree, &DispatchEvent::KeyDown { key: "End".into(), modifiers: EventModifiers { shift: true, ..Default::default() }, repeat: false });
     dispatcher.dispatch(&tree, &DispatchEvent::TextInput { text: "xyz".into() });
 
     let edit = dispatcher.edit_state(input_element).unwrap();
@@ -485,9 +485,9 @@ fn copy_over_a_selection_emits_a_clipboard_intent_without_mutating_the_buffer() 
     dispatcher.dispatch(&tree, &up(1, 10.0, 10.0));
     let input_element = dispatcher.focused().unwrap();
 
-    dispatcher.dispatch(&tree, &DispatchEvent::KeyDown { key: "Home".into(), modifiers: EventModifiers::default() });
-    dispatcher.dispatch(&tree, &DispatchEvent::KeyDown { key: "End".into(), modifiers: EventModifiers { shift: true, ..Default::default() } });
-    let outcome = dispatcher.dispatch(&tree, &DispatchEvent::KeyDown { key: "c".into(), modifiers: EventModifiers { ctrl: true, ..Default::default() } });
+    dispatcher.dispatch(&tree, &DispatchEvent::KeyDown { key: "Home".into(), modifiers: EventModifiers::default(), repeat: false });
+    dispatcher.dispatch(&tree, &DispatchEvent::KeyDown { key: "End".into(), modifiers: EventModifiers { shift: true, ..Default::default() }, repeat: false });
+    let outcome = dispatcher.dispatch(&tree, &DispatchEvent::KeyDown { key: "c".into(), modifiers: EventModifiers { ctrl: true, ..Default::default() }, repeat: false });
 
     assert!(outcome.intents.iter().any(|intent| { intent.action == ActionId::try_v1("dispatch", "clipboardCopy").expect("bounded test action") && intent.input == Some(UiValue::Text(UiText::try_from_str("hello").expect("bounded fixture text"))) }));
     assert_eq!(dispatcher.edit_state(input_element).unwrap().text, "hello", "copy must not mutate the buffer");

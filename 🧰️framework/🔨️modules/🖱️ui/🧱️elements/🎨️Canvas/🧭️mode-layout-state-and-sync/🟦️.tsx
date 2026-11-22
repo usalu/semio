@@ -8,11 +8,11 @@ import { shellFloorFillClass } from "../../../🔨️modules/🏠️shell-floor-
 import { useUiTranslation } from "../../🏷️Label/🟦️.tsx";
 import { useShellKeydown, useShellScopeOptional, NULL_SHELL_ROOT_REF } from "../../🐚️ShellScope/🟦️.tsx";
 import { useSurface } from "../../🌈️Surface/🟦️.tsx";
-import type { WindowLayoutNode, WindowStackCorner } from "../../../🔨️modules/🗺️window-layout/🟦️.ts";
+import { type WindowLayoutDropZone, type WindowLayoutNode, type WindowLayoutPath, type WindowStackCorner, setActiveWindow } from "@semio-tech/ui-layout";
 import { focusActiveSearchInput, routeWindowSearchEscape, routeWindowSearchKeydown, routeWindowSearchSpace } from "../../🔍️WindowSearch/🟦️.tsx";
 import { type ModeWindowDescriptor } from "../🪟️template-drag/🟦️.ts";
-import { type ModeLayoutPath, resolveModeLayout, setActiveWindowInLayout } from "../🗺️layout/🟦️.ts";
-import { type ModeDragState, type ModeDropZone, type ModePendingDrag } from "../🎯️drop/🟦️.ts";
+import { resolveModeLayout } from "../🗺️layout/🟦️.ts";
+import { type ModeDragState, type ModePendingDrag } from "../🎯️drop/🟦️.ts";
 
 /** 🗺 Binds the translation, the window indexes, the layout state, the refs and the prop synchronization effects. */
 export function useModeLayoutState({ windows, layout, onLayoutChange, activeWindowId }: { readonly windows: ModeWindowDescriptor[]; readonly layout: WindowLayoutNode | undefined; readonly onLayoutChange: ((layout: WindowLayoutNode) => void) | undefined; readonly activeWindowId: string | null }) {
@@ -23,19 +23,19 @@ export function useModeLayoutState({ windows, layout, onLayoutChange, activeWind
   const windowsById = reactHostPort.useMemo(() => new Map(windows.map((window) => [window.id, window])), [windows]);
   const windowsKey = reactHostPort.useMemo(() => windows.map((window) => window.id).join("|"), [windows]);
   const layoutKey = reactHostPort.useMemo(() => JSON.stringify(layout ?? null), [layout]);
-  const layoutGeometryKey = reactHostPort.useMemo(() => JSON.stringify(layout ?? null, (key, value) => key === "title" ? undefined : value), [layout]);
+  const layoutGeometryKey = reactHostPort.useMemo(() => JSON.stringify(layout ?? null, (key, value) => key === "title" || key === "templateId" ? undefined : value), [layout]);
   const initialLayout = reactHostPort.useMemo(() => resolveModeLayout(windows, layout), [layout, windows]);
   const [layoutState, setLayoutState] = reactHostPort.useState<WindowLayoutNode>(() => initialLayout);
-  const [maximizedStackPath, setMaximizedStackPath] = reactHostPort.useState<ModeLayoutPath | null>(null);
+  const [maximizedStackPath, setMaximizedStackPath] = reactHostPort.useState<WindowLayoutPath | null>(null);
   const [dragState, setDragState] = reactHostPort.useState<ModeDragState | null>(null);
   const [templateDrag, setTemplateDrag] = reactHostPort.useState<{ readonly label: string; readonly x: number; readonly y: number } | null>(null);
   const [pendingDrag, setPendingDrag] = reactHostPort.useState<ModePendingDrag | null>(null);
-  const [dropZone, setDropZone] = reactHostPort.useState<ModeDropZone | null>(null);
-  const dropZoneRef = reactHostPort.useRef<ModeDropZone | null>(null);
+  const [dropZone, setDropZone] = reactHostPort.useState<WindowLayoutDropZone | null>(null);
+  const dropZoneRef = reactHostPort.useRef<WindowLayoutDropZone | null>(null);
   const modeBodyRef = reactHostPort.useRef<HTMLDivElement>(null);
-  const axisGroupRefsRef = reactHostPort.useRef(new Map<ModeLayoutPath, ResizableGroupHandle>());
-  const axisGroupElementsRef = reactHostPort.useRef(new Map<ModeLayoutPath, HTMLDivElement>());
-  const stackDropElementsRef = reactHostPort.useRef(new Map<ModeLayoutPath, { corners: Partial<Record<WindowStackCorner, HTMLElement | null>>; body: HTMLElement | null }>());
+  const axisGroupRefsRef = reactHostPort.useRef(new Map<string, ResizableGroupHandle>());
+  const axisGroupElementsRef = reactHostPort.useRef(new Map<string, HTMLDivElement>());
+  const stackDropElementsRef = reactHostPort.useRef(new Map<string, { path: WindowLayoutPath; corners: Partial<Record<WindowStackCorner, HTMLElement | null>>; body: HTMLElement | null }>());
   const layoutStateRef = reactHostPort.useRef(layoutState);
   const dragLayoutSnapshotRef = reactHostPort.useRef<WindowLayoutNode | null>(null);
   const layoutKeyRef = reactHostPort.useRef(layoutKey);
@@ -65,7 +65,7 @@ export function useModeLayoutState({ windows, layout, onLayoutChange, activeWind
 
   reactHostPort.useEffect(() => {
     if (!activeWindowId) return;
-    setLayoutState((prev) => setActiveWindowInLayout(prev, activeWindowId));
+    setLayoutState((prev) => setActiveWindow(prev, activeWindowId));
   }, [activeWindowId]);
 
   useShellKeydown(

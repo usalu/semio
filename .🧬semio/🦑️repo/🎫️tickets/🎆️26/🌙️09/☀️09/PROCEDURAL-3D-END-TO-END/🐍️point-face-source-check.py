@@ -283,16 +283,24 @@ section_polygon = section_contract[section_contract.index("const MAX_PROFILE"):s
 print("mod polygon_opening { use super::*; use solid_publication::store_demand; use retained_clone::retained_clone_grant_admits; "
       "use std::mem::{size_of,take}; type Progress=RetainedCloneProgress;"
       + section_polygon + "#[derive(Clone, Copy)]" + opening_code + "}")
+wire_recipe = (topology / "🛤️wire-recipe/🦀️.rs").read_text().split("/// 🌀️ Samples", 1)[1]
+print("mod wire_recipe { use super::*; /// 🌀️ Samples" + wire_recipe + "}")
+solid_mapping = (topology / "🔁️mapped-boundary/🦀️.rs").read_text().split("const MAXIMUM_EDGES", 1)[1]
+print("mod solid_mapped_boundary { use super::*; use std::mem::size_of; const MAXIMUM_EDGES" + solid_mapping + "}")
 suffix = "}"
 for name,path in [("polygon_wire_publication","🛤️polygon-wire-publication"),("polygon_face_publication","📐️polygon-face-publication")]:
     source = (root / path / "🦀️.rs").read_text().split("\n",2)[2]
     source = source.replace("use semio_framework_3d_brep_representation::topology::{Edge, Vertex};", "")
     source = source.replace("use semio_framework_3d_brep_representation::topology::{Coedge, Face, Loop, dummy_coedge};", "")
+    if name == "polygon_wire_publication":
+        source = source.replace("pub use semio_framework_3d_brep_solid_topology::", "pub use crate::wire_recipe::")
     if name == "polygon_face_publication":
+        source = source.replace("semio_framework_3d_brep_solid_topology::mapped_boundary::", "crate::solid_mapped_boundary::")
         source = source.replace("use semio_framework_3d_brep_solid_topology::", "use polygon_opening::")
         source = source.replace("use semio_framework_3d_brep_vector::Pnt2;", "").replace("use semio_framework_3d_brep_curve::Curve2;", "")
         submodule = (root / path / "🔁️mapped-boundary/🦀️.rs").read_text().split("\n",2)[2]
         submodule = submodule.replace("use semio_framework_3d_brep_representation::topology::Edge;", "")
+        submodule = submodule.replace("semio_framework_3d_brep_solid_topology::mapped_boundary::", "crate::solid_mapped_boundary::")
         source = source.replace('#[path = "🔁️mapped-boundary/🦀️.rs"]\nmod mapped_boundary;', "mod mapped_boundary {\n" + submodule + "\n}")
         start=source.index("    /// 📦️ Recognizes a rectangular source")
         end=source.index("    /// 🗄️ Quotes the live index reservation",start)

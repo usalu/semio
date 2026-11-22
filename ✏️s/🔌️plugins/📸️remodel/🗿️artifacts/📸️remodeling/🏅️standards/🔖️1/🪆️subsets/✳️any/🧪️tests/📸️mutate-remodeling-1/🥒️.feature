@@ -33,13 +33,10 @@ Feature: Apply every typed remodeling-scene mutation to its committed specificat
   compile-time `include_str!` literals and this feature's own Examples columns addressing names that
   no longer existed. A path that appears exactly once, in the row that owns it, cannot repeat that.
 
-  🔑 One real content-address hazard survives, narrowly: `create-asset` mints a NEW
-  `assets.<key>.childId` via `std::collections::hash_map::DefaultHasher` — an algorithm the Rust
-  standard library explicitly documents as unspecified, not merely un-surveyed. The Python reference
-  compares every other field exactly and only checks that digest's SHAPE, adopting the committed
-  value for equality rather than fabricating an independent match — stated in the reference's own
-  docstring, not concealed. `delete-asset`'s inverse sidesteps the hazard entirely, because the
-  committed BEFORE-document already carries the target's fully-formed handle verbatim.
+  🔑 `create-asset` assigns `remodeling-asset-` followed by the first 16 lowercase hex digits of
+  SHA-256 over the UTF-8 MIME type, U+001F, and the exact Base64 text. The Python reference computes
+  the ID and checks both the handle and its durable octet arrays. Overwrite and deletion inverses
+  restore the handle and leaf from the before-document.
 
   ⛓️ OWNERSHIP AND ORDER are the two laws every vector here is measured against. A `delete-*` takes
   what its record OWNS with it (a stream carries its frames, a GCP its observations) and REFUSES with

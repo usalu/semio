@@ -4,7 +4,7 @@
  */
 
 import { useCallback, useEffect } from "../../⚛️react-port/🟦️.ts";
-import { resizeCanvasBackingStore } from "../🖼️dag-overlays/🟦️.tsx";
+import { resizeCanvasBackingStore } from "../../📐️Canvas2dHost/📏️backing-store/🟦️.ts";
 import { observeFlowTask } from "../🔄️flow-session-sync/🟦️.ts";
 import type { FlowCoreAfterFlowOverlayAndRender } from "../🎨️flow-overlay-render/🟦️.ts";
 //#region 🔖️NodeGraphHost

@@ -10,6 +10,7 @@ impl PreparedRenderJob {
             PreparationSection::Draw => {
                 let input = self.input.as_ref()?;
                 self.has_animated_primitives |= Self::animated_primitive_at(&input.draw, self.draw_cursor);
+                self.has_animated_primitives |= input.draw.motion_pending();
                 if let Some(usage) = Self::next_draw_usage(&input.draw, &mut self.draw_cursor) {
                     return Some(usage);
                 }
@@ -20,6 +21,7 @@ impl PreparedRenderJob {
                 let input = self.input.as_ref()?;
                 if let Some(overlay) = &input.overlay {
                     self.has_animated_primitives |= Self::animated_primitive_at(overlay, self.overlay_cursor);
+                    self.has_animated_primitives |= overlay.motion_pending();
                     if let Some(usage) = Self::next_draw_usage(overlay, &mut self.overlay_cursor) {
                         return Some(usage);
                     }

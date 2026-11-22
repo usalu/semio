@@ -21,7 +21,7 @@ use semio_plugin::app::Dialect;
 use semio_plugin::app::InteractionView;
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
 use semio_plugin::app_commands;
-use semio_plugin::create_tab_stack_layout;
+use semio_plugin::create_stack_layout;
 use semio_plugin::AppOperationContext;
 use semio_plugin::ArtifactEditor;
 use semio_plugin::ArtifactOwnedToolJobFactory;
@@ -639,7 +639,7 @@ pub async fn create_home_app() -> semio_plugin::AppDefinition {
         .mode_def(crate::editor::home::modes::explore::definition())
         .default_mode_id("explore")
         .window_kind_def(crate::editor::home::modes::explore::windows::main::definition())
-        .default_layout(create_tab_stack_layout(&[crate::editor::home::modes::explore::windows::main::S_HOME_WINDOW.into()], Some(&["Studios".into()])))
+        .default_layout(create_stack_layout(&[crate::editor::home::modes::explore::windows::main::S_HOME_WINDOW.into()], Some(&["Studios".into()])))
         .mutation("createStudio", LocalizedLabel::native("Create Studio", "Studio erstellen"))
         .shell_action("bindSpaceFile", LocalizedLabel::native("Bind Studio File", "Studio-Datei verknüpfen"))
         .mutation("importSpace", LocalizedLabel::native("Import Studio", "Studio importieren"))

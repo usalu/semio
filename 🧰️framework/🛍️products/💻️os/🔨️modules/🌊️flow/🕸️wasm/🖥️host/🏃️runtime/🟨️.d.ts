@@ -23,4 +23,7 @@ export interface FlowHost {
   stepProgress():FlowRetainedProgress;
   terminalIsEmpty():boolean;
 }
+/** 🧬️ The wire field descriptor of each flow operation, as `name:code` pairs. */
+export const FlowOperationFields: Readonly<Record<string, string>>;
+
 export function createFlowHost(options:FlowHostOptions):FlowHost;

@@ -1,5 +1,6 @@
 //! 📕️ Editable PDF page/text projection and canonical PDF operator export.
 use super::*;
+use semio_framework_io_base64::{base64_standard_decode, base64_standard_encode};
 #[path="🏷️text/🦀️.rs"]
 mod marked_text;
 #[path="🖍️paths/🦀️.rs"]mod paths;
@@ -70,7 +71,7 @@ pub(super) fn export(doc: &LayoutSnapshot, control: &mut InterchangeControl<'_>)
                 Frame::Image { link_id, .. } => {
                     let link = doc.links.iter().find(|link| &link.id == link_id).ok_or("layout.pdf.missing-link")?;
                     let source = link.proxy_data_url.as_deref().and_then(|value| value.strip_prefix("data:image/png;base64,")).ok_or("layout.pdf.image-requires-png-proxy")?;
-                    let bytes = store::pack_rt::pack_value_from_base64(source).map_err(|error| error.to_string())?;
+                    let bytes = base64_standard_decode(source).map_err(|error| error.to_string())?;
                     let image = semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::project_png(&bytes)?;
                     if u64::from(image.width) * u64::from(image.height) > 4_194_304 { return Err("layout.pdf.image-pixel-limit".into()); }
                     let mut rgb = Vec::with_capacity(image.pixels.len() / 4 * 3);
@@ -187,7 +188,7 @@ fn import_graphics(pdf:&PdfSnapshot,index:usize,doc:&mut LayoutSnapshot,page:&mu
                     match image_bytes(pdf,image).and_then(|(mime,bytes)|Ok((mime,bytes,bounds(state.matrix,0.0,0.0,1.0,1.0,page.height,unit)?))){
                         Ok((mime,bytes,bounds))=>{
                             let id=format!("{}-image-{oi}",page.id);let link_id=format!("link-{id}");
-                            let payload=store::pack_rt::pack_value_to_base64(&bytes);doc.links.push(semio_s_artifact_layout_layout_model::ImageLink{id:link_id.clone(),path:format!("{id}.{}",if mime=="image/png"{"png"}else{"jpg"}),hash:String::new(),width:image.width,height:image.height,dpi:72,color_profile:None,state:Some("ok".into()),proxy_data_url:Some(format!("data:{mime};base64,{payload}")),artifact_kind:if mime=="image/png"{"s.stdio.png".into()}else{"s.stdio.jpg".into()},artifact_ref:String::new()});
+                            let payload=base64_standard_encode(&bytes);doc.links.push(semio_s_artifact_layout_layout_model::ImageLink{id:link_id.clone(),path:format!("{id}.{}",if mime=="image/png"{"png"}else{"jpg"}),hash:String::new(),width:image.width,height:image.height,dpi:72,color_profile:None,state:Some("ok".into()),proxy_data_url:Some(format!("data:{mime};base64,{payload}")),artifact_kind:if mime=="image/png"{"s.stdio.png".into()}else{"s.stdio.jpg".into()},artifact_ref:String::new()});
                             page.layers[0].object_ids.push(id.clone());page.frames.push(Frame::Image{id,layer_id:page.layer_ids[0].clone(),bounds,link_id,locked:None,visible:None});
                         },Err(error)=>diagnostics.push(diagnostic("layout.pdf.image",&error)),
                     }

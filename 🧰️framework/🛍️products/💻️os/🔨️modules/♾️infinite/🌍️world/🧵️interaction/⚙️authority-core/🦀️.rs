@@ -5,16 +5,52 @@ use super::*;
 use semio_os_infinite_world_model::WorldTerrainStroke;
 
 impl WorldAuthorityState {
-    /// 🖌️ Checks both an active brush stroke and a primary press still waiting in the intent queue.
+    /// 🖌️ Checks active terrain gestures and any primary press still waiting in the queue.
     pub fn terrain_stroke_armed(&self) -> bool {
         self.interaction_authority.as_ref().is_some_and(|authority| {
-            authority.terrain_press.is_some() || authority.queue.primary_press_pending()
+            authority.terrain_press.is_some() || authority.terrain_position_press.is_some() || authority.queue.primary_press_pending()
                 || authority.blocked.is_some_and(|intent| intent.phase == WorldInteractionPhase::PointerButton && intent.button == 0 && intent.down)
         })
     }
 }
 
 impl WorldInteractionAuthority {
+    fn terrain_position_move(&mut self, session: &WorldSessionState, camera: &WorldCameraState, terrain: &WorldTerrainState, intent: &WorldInteractionIntent) -> Option<Option<WorldInteractionPlan>> {
+        if matches!(intent.phase, WorldInteractionPhase::PointerLeave | WorldInteractionPhase::Cancel | WorldInteractionPhase::Wheel | WorldInteractionPhase::Close)
+            || intent.button != 0
+        {
+            self.terrain_position_press = None;
+            return None;
+        }
+        let Some((action, revision)) = terrain.terrain_move_position() else {
+            return self.terrain_position_press.take().is_some().then_some(None);
+        };
+        self.terrain_press = None;
+        if intent.phase != WorldInteractionPhase::PointerButton {
+            return intent.down.then_some(None);
+        }
+        let previous = self.terrain_position_press.take();
+        let Some((x, y, viewport)) = pointer_in_pick_rect(session, intent.x, intent.y) else { return Some(None) };
+        let camera3d = camera.orbit.to_camera();
+        let (origin, direction) = ui_scene::math::projection_spec_ray_from_screen(&camera3d, camera.projection_spec, x, y, viewport.w, viewport.h);
+        let hit = terrain.pick_terrain_grid(origin.to_array().map(f64::from), direction.to_array().map(f64::from));
+        if intent.down {
+            if terrain.terrain_move_position_current(revision) {
+                let terrain_depth = hit.map(|hit| Vec3::new(hit.position[0] as f32, hit.position[1] as f32, hit.position[2] as f32).sub(origin).dot(direction));
+                if let Some(id) = pick_terrain_position_marker(terrain, &camera3d, viewport, origin, direction, terrain_depth) {
+                    self.terrain_position_press = Some(TerrainPositionPress { id: id.into(), point: [intent.x, intent.y], revision });
+                }
+            }
+            return Some(None);
+        }
+        let Some(press) = previous else { return Some(None) };
+        let [start_x, start_y] = press.point;
+        if press.revision != revision || (intent.x - start_x).hypot(intent.y - start_y) < 3.0 {
+            return Some(None);
+        }
+        Some(hit.and_then(|hit| plan_world3d_terrain_position_move(session, intent.generation, action, &press.id, hit.coordinates, revision)))
+    }
+
     fn terrain_stroke(&mut self, session: &WorldSessionState, camera: &WorldCameraState, terrain: &WorldTerrainState, intent: &WorldInteractionIntent) -> Option<Option<WorldInteractionPlan>> {
         if matches!(intent.phase, WorldInteractionPhase::PointerLeave | WorldInteractionPhase::Cancel | WorldInteractionPhase::Wheel | WorldInteractionPhase::Close)
             || intent.button != 0
@@ -120,10 +156,12 @@ impl WorldInteractionAuthority {
         }
         if let Some(mut active) = self.active.take() {
             if let WorldInteractionActive::Plan { plan, retirement } = &mut active {
-                if plan.cursor == 0 && plan.terrain_stroke.as_ref().is_some_and(|stroke| {
-                    terrain_state.terrain_style_pending()
-                        || terrain_state.terrain_brush().is_none_or(|(_, digest)| !stroke.is_current(terrain_state.terrain_revision, digest))
-                }) {
+                if plan.cursor == 0 && (plan.terrain_position_revision.is_some_and(|revision| !terrain_state.terrain_move_position_current(revision))
+                    || plan.terrain_stroke.as_ref().is_some_and(|stroke| {
+                        terrain_state.terrain_style_pending()
+                            || terrain_state.terrain_brush().is_none_or(|(_, digest)| !stroke.is_current(terrain_state.terrain_revision, digest))
+                    }))
+                {
                     *retirement = Some(WorldInteractionAuthorityStep::Stale);
                 }
             }
@@ -212,7 +250,9 @@ impl WorldInteractionAuthority {
             self.faulted = true;
             return WorldInteractionAuthorityStep::Fault;
         }
-        if let Some(plan) = self.terrain_stroke(session_state, camera_state, terrain_state, &intent) {
+        if let Some(plan) = self.terrain_position_move(session_state, camera_state, terrain_state, &intent)
+            .or_else(|| self.terrain_stroke(session_state, camera_state, terrain_state, &intent))
+        {
             self.active = plan.map(|plan| WorldInteractionActive::Plan { plan, retirement: None });
             if self.active.is_none() {
                 self.queue.retire_front(intent.generation);
@@ -287,7 +327,7 @@ impl WorldInteractionAuthority {
                 let dy = intent.y - start[1];
                 self.right_dragged |= (dx * dx + dy * dy).sqrt() > CLICK_DRAG_THRESHOLD_PX;
             }
-            let modifiers = PointerModifiers { shift: intent.shift, ctrl: intent.ctrl, alt: intent.alt, meta: intent.meta };
+            let modifiers = PointerModifiers { shift: intent.shift, ctrl: intent.ctrl, alt: intent.alt, meta: intent.meta, repeat: false };
             if let Some(plan) = plan_world3d_drag(session_state, camera_state, generation, intent.dx, intent.dy, intent.button, &modifiers) {
                 self.active = Some(WorldInteractionActive::Plan { plan, retirement: None });
                 context.consume_fuel(1);
@@ -436,7 +476,7 @@ impl WorldInteractionAuthority {
                     context.consume_fuel(1);
                     return WorldInteractionAuthorityStep::Complete;
                 }
-                let modifiers = PointerModifiers { shift: intent.shift, ctrl: intent.ctrl, alt: intent.alt, meta: intent.meta };
+                let modifiers = PointerModifiers { shift: intent.shift, ctrl: intent.ctrl, alt: intent.alt, meta: intent.meta, repeat: false };
                 let Some(plan) = plan_world3d_drag(session_state, camera_state, generation, intent.dx, intent.dy, intent.button, &modifiers) else {
                     self.queue.retire_front(intent.generation);
                     context.consume_fuel(1);
@@ -451,7 +491,7 @@ impl WorldInteractionAuthority {
                     context.consume_fuel(1);
                     return WorldInteractionAuthorityStep::Complete;
                 }
-                let modifiers = PointerModifiers { shift: intent.shift, ctrl: intent.ctrl, alt: intent.alt, meta: intent.meta };
+                let modifiers = PointerModifiers { shift: intent.shift, ctrl: intent.ctrl, alt: intent.alt, meta: intent.meta, repeat: false };
                 if intent.down {
                     if let Some(plan) = plan_world3d_drag(session_state, camera_state, generation, intent.dx, intent.dy, intent.button, &modifiers) {
                         Some(WorldInteractionActive::Plan { plan, retirement: None })

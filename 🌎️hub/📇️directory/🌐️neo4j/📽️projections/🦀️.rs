@@ -125,11 +125,13 @@ impl Neo4jDirectory {
             DirectoryEventBody::DocumentAnnounced { descriptor } => {
                 let scope_key = document_scope_key_v1(&DocumentScope::new(&descriptor.space_id, &descriptor.document_id));
                 txn.run(
-                    query("MATCH (s:Space {id: $space_id}) MERGE (d:DocumentDescriptor {scopeKey: $scope_key}) ON CREATE SET d.spaceId = $space_id, d.documentId = $document_id, d.descriptor = $descriptor, d.announcedAt = $announced_at MERGE (s)-[:CONTAINS_DOCUMENT]->(d)")
+                    query("MATCH (s:Space {id: $space_id}) MERGE (d:DocumentDescriptor {scopeKey: $scope_key}) ON CREATE SET d.spaceId = $space_id, d.documentId = $document_id, d.descriptor = $descriptor, d.artifactKind = $artifact_kind, d.artifactSchema = $artifact_schema, d.announcedAt = $announced_at MERGE (s)-[:CONTAINS_DOCUMENT]->(d)")
                         .param("space_id", descriptor.space_id.clone())
                         .param("scope_key", scope_key)
                         .param("document_id", descriptor.document_id.clone())
                         .param("descriptor", semio_framework_pack_json::to_json_string(descriptor))
+                        .param("artifact_kind", descriptor.artifact_kind.clone())
+                        .param("artifact_schema", descriptor.artifact_schema.clone())
                         .param("announced_at", event.recorded_at_ms),
                 )
                 .await

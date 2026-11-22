@@ -19,7 +19,19 @@ mod media_and_slot_nodes;
 use media_and_slot_nodes::{paint_image_node_step, paint_component_scene_node_step, paint_external_slot_node_step};
 
 // #region paint
-#[allow(clippy::too_many_arguments, reason = "one retained paint context plus the canonical driver drag axis")]
+/// 🗨️ The localized `ui.common.*` caption a control shows when its record names none, or empty while the host has named no locale — there is no default language.
+pub(super) fn ui_common_label(locale: Option<semio_ui_locale::Locale>, pick: impl FnOnce(&semio_ui_locale::UiCommonLabels) -> semio_ui_locale::LabelText) -> &'static str {
+    locale.map_or("", |locale| pick(<semio_ui_locale::UiCommonLabels as semio_ui_locale::AppLabels>::labels(locale, semio_ui_locale::Terminology::Native)).as_str())
+}
+
+/// 🧭️ What the host decides about presentation and the retained node must not: the resolved UI driver (captions or icons only, drag affordance) and the language its own default strings speak. `locale` is `None` until the host names one — there is no default language, so a default string paints empty rather than in a guessed language.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct RetainedPaintPresentation {
+    pub driver: UiDriverChrome,
+    pub locale: Option<semio_ui_locale::Locale>,
+}
+
+#[allow(clippy::too_many_arguments, reason = "one retained paint context plus the canonical presentation")]
 pub fn paint_node_step_with_driver(
     tree: &UiTree,
     id: NodeId,
@@ -29,7 +41,7 @@ pub fn paint_node_step_with_driver(
     atlas: &mut FontAtlas,
     icons: Option<&IconAtlas>,
     has_scene_host: bool,
-    driver_drag: UiDriverDrag,
+    presentation: RetainedPaintPresentation,
     block_reversed: bool,
     inline: ui_contract::FlowInline,
     hover_pointer: Option<(f32, f32)>,
@@ -78,29 +90,29 @@ pub fn paint_node_step_with_driver(
             UiNode::Text(text) => paint_text_node_step(text, atlas, draw, cursor, theme, bounds, presence),
             UiNode::Stack(stack) => paint_stack_node_step(stack, tree, id, draw, cursor, theme, bounds, presence, flags),
             UiNode::Separator(_) => paint_separator_node_step(draw, cursor, theme, bounds, presence),
-            UiNode::Button(button) => paint_button_node_step(button, atlas, icons, draw, cursor, theme, bounds, presence, flags),
+            UiNode::Button(button) => paint_button_node_step(button, atlas, icons, draw, cursor, theme, bounds, presence, flags, presentation.driver.labels),
             UiNode::Input(input_node) => paint_input_node_step(input_node, atlas, draw, cursor, node, theme, bounds, presence, flags),
-            UiNode::Select(select) => paint_select_node_step(select, tree, id, atlas, icons, draw, cursor, node, theme, bounds, presence, flags),
+            UiNode::Select(select) => paint_select_node_step(select, tree, id, atlas, icons, draw, cursor, node, theme, bounds, presence, flags, presentation, inline, hover_pointer),
             UiNode::Toggle(toggle) => paint_toggle_node_step(toggle, atlas, icons, inline, draw, cursor, node, theme, bounds, presence, flags),
             UiNode::KeyValue(key_value) => paint_key_value_node_step(key_value, atlas, draw, cursor, theme, bounds, presence),
-            UiNode::Slider(slider) => paint_slider_node_step(slider, atlas, inline, draw, cursor, node, unscoped_body_font_size, theme, bounds, presence, layout.inline_suffix_width),
-            UiNode::NumberStepper(stepper) => paint_number_stepper_node_step(stepper, atlas, icons, inline, draw, cursor, node, theme, bounds, presence, flags),
+            UiNode::Slider(slider) => paint_slider_node_step(slider, atlas, inline, draw, cursor, node, unscoped_body_font_size, theme, bounds, presence, layout.inline_suffix_width, flags, hover_pointer),
+            UiNode::NumberStepper(stepper) => paint_number_stepper_node_step(stepper, atlas, icons, inline, draw, cursor, node, theme, bounds, presence, flags, presentation),
             UiNode::Ring(ring) => paint_ring_node_step(ring, draw, cursor, theme, bounds, presence),
             UiNode::Progress(progress) => paint_progress_node_step(progress, draw, cursor, theme, bounds, presence),
-            UiNode::IconSelect(select) => paint_icon_select_node_step(select, atlas, draw, cursor, node, theme, bounds, presence),
+            UiNode::IconSelect(select) => paint_icon_select_node_step(select, atlas, icons, draw, cursor, theme, bounds, presence),
             UiNode::Field(field) => paint_field_node_step(field, tree, id, atlas, draw, cursor, theme, bounds, presence),
             UiNode::Section(section) => paint_section_node_step(section, tree, id, atlas, draw, cursor, theme, bounds, presence),
             UiNode::CardStack(_) => {
                 let pointer = hover_pointer.filter(|_| node.flags.contains(NodeFlags::HOVERED));
                 paint_card_stack_node_step(tree, id, atlas, draw, cursor, theme, bounds, presence, pointer)
             }
-            UiNode::OverviewCard(_) => retained_presence_step(draw, bounds, theme, presence),
+            UiNode::OverviewCard(_) | UiNode::Table(_) => retained_presence_step(draw, bounds, theme, presence),
             UiNode::Group(_) if semio_ui_wgpu_mounted_layout::owning_tree_spec(tree, id).is_some() => retained_presence_step(draw, bounds, theme, presence),
             UiNode::Group(group) => paint_group_node_step(group, atlas, icons, draw, cursor, theme, bounds, presence),
-            UiNode::Tree(tree_node) => retained_tree_node_step(tree, id, tree_node, bounds, theme, driver_drag, block_reversed, inline, atlas, icons, draw, cursor),
+            UiNode::Tree(tree_node) => retained_tree_node_step(tree, id, tree_node, bounds, theme, presentation.driver.drag, block_reversed, inline, atlas, icons, draw, cursor),
             UiNode::Image(image) => paint_image_node_step(image, atlas, has_scene_host, draw, cursor, theme, bounds, presence),
             UiNode::ComponentScene(scene) => paint_component_scene_node_step(scene, atlas, has_scene_host, draw, cursor, theme, bounds, presence),
-            UiNode::ExternalSlot(slot) => paint_external_slot_node_step(slot, atlas, draw, cursor, theme, bounds, presence),
+            UiNode::ExternalSlot(slot) => paint_external_slot_node_step(slot, atlas, draw, cursor, theme, bounds, presence, presentation.locale),
         };
     match step {
         RetainedNodePaintStep::Complete => cursor.finish(),

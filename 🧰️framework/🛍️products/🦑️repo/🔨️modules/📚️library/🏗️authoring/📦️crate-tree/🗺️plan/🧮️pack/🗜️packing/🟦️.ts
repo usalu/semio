@@ -8,6 +8,8 @@ import type { buildCarveSlices, indexRootItems, readCrateSource } from "../📥�
 import type { defineMirrorMeasurement } from "../🧲️slice-ownership/🟦️.ts";
 import type { collectComponentBlockers, mergeCoupledComponents } from "../🧵️weave-merge-and-blockers/🟦️.ts";
 import type { PackedGroup } from "../📚️pack-types/🟦️.ts";
+import type { CarvedCrate } from "../../../🧱️carved-layout/🟦️.ts";
+import { stronglyConnected } from "../../🧭️module-chains/🟦️.ts";
 
 /** 🪜 Layers the components by dependency depth and defines the group, acyclicity and mirror validity helpers. */
 export function prepareComponentPacking({ componentList, edgesOf, repoRoot, measureRoot, options }: Pick<ReturnType<typeof collectComponentBlockers>, "componentList"> & Pick<ReturnType<typeof mergeCoupledComponents>, "edgesOf"> & { readonly repoRoot: string; readonly options: PlanOptions } & Pick<ReturnType<typeof indexRootItems>, "measureRoot">) {
@@ -37,24 +39,89 @@ export function prepareComponentPacking({ componentList, edgesOf, repoRoot, meas
   const packing: PackingStats = { pruned: 0, measured: 0, merged: 0 };
   const incremental = options.incrementalMeasure !== false;
   const groupOfSlice = new Map<string, number>();
-  const acyclic = (grouping: { components: number[] }[]): boolean => {
+  const pinDeps = new Map<string, readonly string[]>((options.carved?.crates ?? []).filter((crate) => crate.signed).map((crate) => [crate.name, crate.dependsOn]));
+  const groupEdges = (grouping: readonly { components: number[]; pin?: CarvedCrate }[]): Set<number>[] => {
     const owner = new Map<number, number>();
-    grouping.forEach((group, i) => group.components.forEach((c) => owner.set(c, i)));
-    const edges = grouping.map((group) => new Set(group.components.flatMap((c) => [...componentDeps[c]!].map((dep) => owner.get(dep)!)).filter((dep) => dep !== undefined)));
+    const pinOwner = new Map<string, number>();
+    grouping.forEach((group, i) => { group.components.forEach((c) => owner.set(c, i)); if (group.pin) for (const crate of [group.pin, ...((group as PackedGroup).supersedes ?? [])]) pinOwner.set(crate.name, i); });
+    return grouping.map((group, i) => new Set([...group.components.flatMap((c) => [...componentDeps[c]!].map((dep) => owner.get(dep)!)), ...[group.pin, ...((group as PackedGroup).supersedes ?? [])].flatMap((crate) => (crate ? pinDeps.get(crate.name) ?? [] : []).map((name) => pinOwner.get(name)!))].filter((dep) => dep !== undefined && dep !== i)));
+  };
+  const acyclic = (grouping: readonly { components: number[]; pin?: CarvedCrate }[]): boolean => {
+    const edges = groupEdges(grouping);
     const state = grouping.map(() => 0);
-    const visit = (i: number): boolean => { if (state[i] === 1) return false; if (state[i] === 2) return true; state[i] = 1; for (const next of edges[i]!) if (next !== i && !visit(next)) return false; state[i] = 2; return true; };
+    const visit = (i: number): boolean => { if (state[i] === 1) return false; if (state[i] === 2) return true; state[i] = 1; for (const next of edges[i]!) if (!visit(next)) return false; state[i] = 2; return true; };
     return grouping.every((_, i) => visit(i));
   };
   const mirrorValid = (members: readonly CarveSlice[]): boolean => {
     const attached = members.flatMap((slice) => slice.attach);
     return !attached.some((outer) => !outer.node.inline && !outer.isComponent && attached.some((inner) => inner !== outer && inner.eff.length > outer.eff.length && outer.eff.every((segment, index) => segment === inner.eff[index])));
   };
-  return { order, groupOfSlice, groups, incremental, packing, acyclic, mirrorValid, startGroup };
+  const pinned = new Set<number>();
+  const carved = (options.carved?.crates ?? []).filter((crate) => crate.signed);
+  const ownerOf = new Map<string, CarvedCrate>(carved.flatMap((crate) => (crate.recorded ?? crate.owned).map((eff): [string, CarvedCrate] => [eff, crate])));
+  const parent = new Map<CarvedCrate, CarvedCrate>(carved.map((crate) => [crate, crate]));
+  const rootOf = (crate: CarvedCrate): CarvedCrate => { let at = crate; while (parent.get(at) !== at) at = parent.get(at)!; return at; };
+  const slicePin = new Map<string, CarvedCrate[]>();
+  const declOwner = new Map<string, CarvedCrate>();
+  const allInfos = componentList.flat();
+  for (const info of allInfos) {
+    const crates = [...new Set(info.slice.decls.map((decl) => ownerOf.get(decl.eff.join("::"))).filter((entry): entry is CarvedCrate => entry !== undefined))];
+    if (crates.length) { slicePin.set(info.slice.id, crates); for (const decl of info.slice.decls) declOwner.set(decl.id, crates[0]!); }
+  }
+  for (let changed = true; changed;) {
+    changed = false;
+    for (const info of allInfos) {
+      if (slicePin.has(info.slice.id)) continue;
+      const inherited = info.slice.attach.map((decl) => (decl.parentId ? declOwner.get(decl.parentId) : undefined)).find((entry) => entry !== undefined && entry.recorded === null);
+      if (!inherited) continue;
+      slicePin.set(info.slice.id, [inherited]);
+      for (const decl of info.slice.decls) declOwner.set(decl.id, inherited);
+      changed = true;
+    }
+  }
+  const crateOfComponent = (index: number): CarvedCrate[] => [...new Set(componentList[index]!.flatMap((member) => slicePin.get(member.slice.id) ?? []))];
+  for (const index of order) { const crates = crateOfComponent(index); for (const other of crates.slice(1)) parent.set(rootOf(other), rootOf(crates[0]!)); }
+  const byCrate = new Map<CarvedCrate, number[]>();
+  for (const index of order) { const crates = crateOfComponent(index); if (crates.length) byCrate.set(rootOf(crates[0]!), [...(byCrate.get(rootOf(crates[0]!)) ?? []), index]); }
+  for (const crate of carved) {
+    const components = byCrate.get(crate);
+    if (!components) continue;
+    const group = startGroup(components[0]!, componentList[components[0]!]!);
+    for (const index of components.slice(1)) { group.components.push(index); group.infos.push(...componentList[index]!); group.lib.add(componentList[index]!.map((member) => member.lib!.entries)); group.test.add(componentList[index]!.map((member) => member.test!.entries)); }
+    group.pin = crate;
+    group.supersedes = carved.filter((other) => other !== crate && rootOf(other) === crate);
+    groups.push(group);
+    for (const index of components) pinned.add(index);
+  }
+  const settle = (): void => {
+    const rings = stronglyConnected(groups.map((_, i) => String(i)), new Map(groupEdges(groups).map((edges, i) => [String(i), new Set([...edges].map(String))]))).filter((ring) => ring.length > 1);
+    const absorbed = new Set<number>();
+    for (const ring of rings) {
+      const [head, ...rest] = ring.map(Number).sort((a, b) => a - b);
+      const into = groups[head!]!;
+      for (const at of rest) {
+        const from = groups[at]!;
+        for (const index of from.components) into.components.push(index);
+        into.infos.push(...from.infos);
+        into.lib.add(from.infos.map((info) => info.lib!.entries));
+        into.test.add(from.infos.map((info) => info.test!.entries));
+        into.supersedes = [...(into.supersedes ?? []), ...(from.pin ? [from.pin] : []), ...(from.supersedes ?? [])];
+        absorbed.add(at);
+      }
+    }
+    if (!absorbed.size) return;
+    const kept = groups.filter((_, i) => !absorbed.has(i));
+    groups.splice(0, groups.length, ...kept);
+    groups.forEach((group, i) => group.infos.forEach((info) => groupOfSlice.set(info.slice.id, i)));
+  };
+  settle();
+  return { order, groupOfSlice, groups, incremental, packing, acyclic, mirrorValid, startGroup, pinned, settle };
 }
 
 /** 🧳 Packs the components into crate groups by the measured budget. */
-export async function packComponents({ order, componentList, sliceOfDecl, groupOfSlice, edgesOf, groups, incremental, target, packing, acyclic, mirrorValid, measureMembers, startGroup }: Pick<ReturnType<typeof prepareComponentPacking>, "order" | "groupOfSlice" | "groups" | "incremental" | "packing" | "acyclic" | "mirrorValid" | "startGroup"> & Pick<ReturnType<typeof collectComponentBlockers>, "componentList"> & Pick<ReturnType<typeof buildCarveSlices>, "sliceOfDecl"> & Pick<ReturnType<typeof mergeCoupledComponents>, "edgesOf"> & Pick<ReturnType<typeof readCrateSource>, "target"> & Pick<ReturnType<typeof defineMirrorMeasurement>, "measureMembers">) {
+export async function packComponents({ order, componentList, sliceOfDecl, groupOfSlice, edgesOf, groups, incremental, target, packing, acyclic, mirrorValid, measureMembers, startGroup, pinned, settle }: Pick<ReturnType<typeof prepareComponentPacking>, "order" | "groupOfSlice" | "groups" | "incremental" | "packing" | "acyclic" | "mirrorValid" | "startGroup" | "pinned" | "settle"> & Pick<ReturnType<typeof collectComponentBlockers>, "componentList"> & Pick<ReturnType<typeof buildCarveSlices>, "sliceOfDecl"> & Pick<ReturnType<typeof mergeCoupledComponents>, "edgesOf"> & Pick<ReturnType<typeof readCrateSource>, "target"> & Pick<ReturnType<typeof defineMirrorMeasurement>, "measureMembers">) {
   for (const index of order) {
+    if (pinned.has(index)) continue;
     const members = componentList[index]!;
     let placed = false;
     const parentSliceIds = new Set(members.flatMap((member) => member.slice.attach.map((decl) => (decl.parentId ? sliceOfDecl.get(decl.parentId)?.id : undefined)).filter((id): id is string => id !== undefined)));
@@ -67,7 +134,7 @@ export async function packComponents({ order, componentList, sliceOfDecl, groupO
     for (const candidate of candidates) {
       const group = groups[candidate]!;
       if (incremental && (!totalsFit(group.lib.peek(members.map((member) => member.lib!.entries)), target) || !totalsFit(group.test.peek(members.map((member) => member.test!.entries)), target))) { packing.pruned += 1; continue; }
-      const trial = groups.map((entry, i) => (i === candidate ? { components: [...entry.components, index] } : { components: entry.components }));
+      const trial = groups.map((entry, i) => ({ ...entry, components: i === candidate ? [...entry.components, index] : entry.components }));
       if (!acyclic(trial)) continue;
       const merged = [...group.infos, ...members].map((info) => info.slice);
       if (!mirrorValid(merged)) continue;
@@ -87,4 +154,5 @@ export async function packComponents({ order, componentList, sliceOfDecl, groupO
       groups.push(startGroup(index, members));
     }
   }
+  settle();
 }

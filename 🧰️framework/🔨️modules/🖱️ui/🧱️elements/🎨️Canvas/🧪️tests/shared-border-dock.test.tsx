@@ -3,7 +3,7 @@ import { readFileSync, existsSync } from "node:fs";
 import Decimal from "decimal.js";
 import Ajv from "ajv";
 import schema from "./dock-cases.schema.json";
-import { Canvas, HorizontalWindows, VerticalWindows, Layout, Mode } from "@semio-tech/ui-react";
+import { Canvas, HorizontalWindows, VerticalWindows, Layout, Mode, uiDataLabel } from "@semio-tech/ui-react";
 import { render, fireEvent, cleanup, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -150,8 +150,8 @@ describe("flush dock boundaries", () => {
   });
 
   it("keeps navbar, tiled stacks and footer adjacent in the real layout composition", () => {
-    const windows = [{ id: "a", title: "A", children: <div>A</div> }, { id: "b", title: "B", children: <div>B</div> }];
-    const { container } = render(<Layout navbar={<div data-testid="navbar" />} footer={<div data-testid="footer" />} canvas={<Canvas><Mode windows={windows} activeWindowId="a" layout={{ kind: "row", children: windows.map(({ id }) => ({ kind: "stack", children: [{ kind: "window", id }] })) }} /></Canvas>} />);
+    const windows = [{ id: "a", title: uiDataLabel("A"), iconId: "app-window" as const, children: <div>A</div> }, { id: "b", title: uiDataLabel("B"), iconId: "app-window" as const, children: <div>B</div> }];
+    const { container } = render(<Layout navbar={<div data-testid="navbar" />} footer={<div data-testid="footer" />} canvas={<Canvas><Mode windows={windows} activeWindowId="a" layout={{ kind: "split", axis: "horizontal", children: windows.map(({ id }) => ({ kind: "stack", children: [{ kind: "window", windowKindId: id }] })) }} /></Canvas>} />);
     const body = container.querySelector('[data-slot="mode-body"]')!;
     expect(body.className).toContain("p-0");
     const stacks = body.querySelectorAll('[data-slot="mode-dock-stack"]');
@@ -277,7 +277,7 @@ describe("flush dock boundaries", () => {
 
   it("keeps corner hit areas invisible to controls and supports dual-axis dragging", () => {
     const resize = vi.fn();
-    const spec = { parentKind: "row", mainAxisPath: "", mainSeparatorIndex: 1, crossAxisPath: "0", crossSeparatorIndex: 1, edgeSide: "leading", alongFraction: 0.5 } as const;
+    const spec = { parentAxis: "horizontal", mainAxisPath: "", mainSeparatorIndex: 1, crossAxisPath: "0", crossSeparatorIndex: 1, edgeSide: "leading", alongFraction: 0.5 } as const;
     vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (this: HTMLElement) {
       if (this.dataset.slot === "resizable-corner") return new DOMRect(90, 0, 20, 20);
       return new DOMRect(0, 0, 200, 100);
@@ -298,10 +298,9 @@ describe("flush dock boundaries", () => {
   });
 
   it.each(fixture.cases)("$id uses full extent for resize and half-panel previews", (row) => {
-    const mainKind = row.orientation === "horizontal" ? "row" : "column";
-    const deltas = resolveJoinCornerResizeDeltas(mainKind, row.delta, row.delta, row.extent, row.extent);
+    const deltas = resolveJoinCornerResizeDeltas(row.orientation as "horizontal" | "vertical", row.delta, row.delta, row.extent, row.extent);
     const sizes = Object.fromEntries(row.sizes.map((size, i) => [String(i), size]));
-    const resized = Object.values(applyAxisGroupLayoutDelta(sizes, "", 1, deltas.mainDeltaPct));
+    const resized = Object.values(applyAxisGroupLayoutDelta(sizes, [], 1, deltas.mainDeltaPct));
     expect(resized).toEqual(row.resized);
     const independentDelta = new Decimal(row.delta).div(row.extent).mul(100);
     expect(resized).toEqual(row.sizes.map((size, i) => new Decimal(size).add(i === 0 ? independentDelta : i === 1 ? independentDelta.negated() : 0).toNumber()));

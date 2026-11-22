@@ -17,10 +17,7 @@ use semio_ui_locale::LocalizedLabel;
 use semio_plugin::ModeDefinition;
 use semio_plugin::ToolRef;
 use semio_plugin::WindowLayout;
-use semio_plugin::WindowLayoutAxisNode;
-use semio_plugin::WindowLayoutChild;
-use semio_plugin::WindowLayoutRoot;
-use semio_plugin::WindowLayoutStackNode;
+use semio_plugin::{WindowLayoutNode, Axis};
 
 pub const PUZZLE3D_PLAY_MODE_EDIT: &str = "edit";
 
@@ -40,24 +37,18 @@ pub fn definition() -> ModeDefinition {
 /// 🪟️ Top (left ⅓) + Perspective (right ⅔) — the default dual-pane workbench for Puzzle 3D and the Aggregator.
 pub fn layout() -> WindowLayout {
     WindowLayout {
-        root: WindowLayoutRoot::Axis(WindowLayoutAxisNode {
-            kind: "row".into(),
-            size: None,
+        root: WindowLayoutNode::Split { axis: Axis::Horizontal, size: None,
             children: vec![
-                WindowLayoutChild::Stack(WindowLayoutStackNode {
-                    kind: "stack".into(),
-                    size: Some(100.0 / 3.0),
-                    active_window_kind_id: None,
+                WindowLayoutNode::Stack { size: Some(1.0 / 3.0),
+                    active_window_id: None,
                     children: vec![create_window_layout(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID, Some("Top".into()), Some(main::WINDOW_INSTANCE_TOP.into()), Some(main::TEMPLATE_TOP.into()))],
-                }),
-                WindowLayoutChild::Stack(WindowLayoutStackNode {
-                    kind: "stack".into(),
-                    size: Some(200.0 / 3.0),
-                    active_window_kind_id: None,
+                },
+                WindowLayoutNode::Stack { size: Some(2.0 / 3.0),
+                    active_window_id: None,
                     children: vec![create_window_layout(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID, Some("Perspective".into()), Some(main::WINDOW_INSTANCE_PERSPECTIVE.into()), Some(main::TEMPLATE_PERSPECTIVE.into()))],
-                }),
+                },
             ],
-        }),
+        },
     }
 }
 //#endregion 🔖️Definition

@@ -1,25 +1,24 @@
 //! ✍️ Artifact editor: the `ArtifactEditor` implementation of the puzzle5d play app. See [`super`].
 
 use super::*;
-use super::session::snapshot_import::PUZZLE5D_REWRITE_INPUT_PORT;
-use semio_s_artifact_trinity_rewriting_inferences::rule_media::{REWRITE_MEDIA_SCHEMA, REWRITE_MEDIA_TYPE};
+use semio_framework_value::retained_clone::RetainedCloneBirthDemand;
+use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress, RetirementDemand, ValueError};
+use std::sync::Arc;
+use store::os_store::document_store_owners::{self, DocumentStoreOwners, DocumentStoreOwnersAdmissionError};
+
+type Puzzle5dHistoryPreparation = store::os_store::ColdMutationApplyFactory<Puzzle5dPlaySnapshot, Puzzle5dMutation>;
+
+fn puzzle5d_document_semantic_birth() -> RetainedCloneBirthDemand {
+    RetainedCloneBirthDemand {
+        capacity_bytes: semio_framework_value::factory_arc_birth_bytes::<Puzzle5dStorePreparationFactory>()
+            + semio_framework_value::factory_arc_birth_bytes::<Puzzle5dHistoryPreparation>(),
+        depth: 1,
+    }
+}
 
 //#region 🔖️PlayApp
 impl ArtifactEditor for Puzzle5dPlayApp {
     type Members = semio_s_artifact_puzzle_5d_kind_catalogs::standards::v1::subsets::any::schema::kind_catalogs::Puzzle5dMembers;
-
-    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<semio_os_kernel::semio_framework_composition_admission::ChildRestoreProjection<'_>, semio_plugin::Fault> {
-        semio_os_kernel::semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(snapshot)
-            .map_err(|error| semio_plugin::Fault::from(error.to_string()))
-    }
-
-    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Result<Option<Vec<u8>>, semio_framework_value::ValueError> {
-        let document = snapshot.typed();
-        semio_s_artifact_puzzle_5d_kind_catalogs::standards::v1::subsets::any::schema::kind_catalogs::genesis_kind_catalogs_pack(
-            &document.kind_catalogs, &document.kind_catalogs_extra, slot, child_id,
-        )
-    }
-
     const DIALECT: semio_plugin::app::Dialect = crate::PUZZLE5D_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = PUZZLE5D_SCHEMA;
     type Snapshot = Puzzle5dPlaySnapshot;
@@ -48,25 +47,6 @@ impl ArtifactEditor for Puzzle5dPlayApp {
     }
 
 
-
-    fn document_store_owners_source_demands() -> Result<semio_plugin::__value::RetirementDemand, semio_plugin::__value::ValueError> {
-        semio_plugin::cold_replay_document_store_owners_source_demands::<Self::Snapshot, Self::Mutation>()
-    }
-
-    fn build_document_store_owners(
-        grant: semio_plugin::__value::retained_clone::RetainedCloneGrant,
-    ) -> Option<Result<
-        (store::os_store::document_store_owners::DocumentStoreOwners<Self::Snapshot, Self::Mutation>, semio_plugin::__value::retained_clone::RetainedCloneProgress),
-        store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::Snapshot, Self::Mutation>,
-    >> {
-        Some(semio_plugin::cold_replay_document_store_owners::<Self::Snapshot, Self::Mutation>(grant).map(
-            |(mut owners, progress)| {
-                owners.operation_wire.source = semio_s_artifact_puzzle_5d_mut_any_5::standards::v1::subsets::any::io::binary::mutations::prepared_operation_wire_source;
-                owners.operation_wire = owners.operation_wire.with_original_binary_receiving();
-                (owners, progress)
-            },
-        ))
-    }
 
     fn build_document_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
         Some(semio_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
@@ -100,6 +80,26 @@ impl ArtifactEditor for Puzzle5dPlayApp {
 
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
         Some(std::sync::Arc::new(Puzzle5dStorePreparationFactory))
+    }
+
+    fn document_store_owners_source_demands() -> Result<RetirementDemand, ValueError> {
+        let mut demand = document_store_owners::bounded_artifact_store_owners_source_demands::<Self::Snapshot, Self::Mutation>()?;
+        let semantics = puzzle5d_document_semantic_birth();
+        demand.capacity_bytes = demand.capacity_bytes.checked_add(semantics.capacity_bytes)
+            .ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "Puzzle5d document catalog capacity overflows"))?;
+        demand.depth = demand.depth.max(semantics.depth);
+        Ok(demand)
+    }
+
+    fn build_document_store_owners(grant: RetainedCloneGrant) -> Option<Result<(DocumentStoreOwners<Self::Snapshot, Self::Mutation>, RetainedCloneProgress), DocumentStoreOwnersAdmissionError<Self::Snapshot, Self::Mutation>>> {
+        Some(document_store_owners::bounded_artifact_store_owners_with_semantic_preparations(grant, puzzle5d_document_semantic_birth(), || {
+            (Arc::new(Puzzle5dStorePreparationFactory), Arc::new(Puzzle5dHistoryPreparation::default()))
+        }).map(|(mut owners, progress)| {
+            owners.operation_wire = owners.operation_wire
+                .with_original_target(Self::Mutation::original_conflict_target)
+                .with_original_pack_value_receiving();
+            (owners, progress)
+        }))
     }
 
     fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
@@ -171,6 +171,16 @@ impl ArtifactEditor for Puzzle5dPlayApp {
             }};
         }
         let nonce=puzzle5d_operation_nonce(&original.operation);
+        macro_rules! patch {
+            ($owner:ty) => {{
+                let demand = <$owner>::original_birth_demands(&original.command);
+                semio_plugin::retained_command::producer::admit_retained_tool_producer_measured_scoped(
+                    request, output, cx, Puzzle5dCommand::action_id, PUZZLE5D_RETAINED_RAW_BYTES,
+                    crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS, true, demand,
+                    |request, scope| <$owner>::from_original_construction(&request.command, scope),
+                )
+            }};
+        }
         match tool_id {
             "engagementAbort" | "openVortexSuggestions" | "closeVortexSuggestions" => seed!(|request, seed| Puzzle5dWindowCommandWork::new(tool_id, seed).bound(request.instance_operation_owner.clone())),
             window if PUZZLE5D_WINDOW_TOOL_IDS.contains(&window) => seed!(|request, seed| Puzzle5dWindowCommandWork::new(window, seed).bound(request.instance_operation_owner.clone())),
@@ -179,12 +189,12 @@ impl ArtifactEditor for Puzzle5dPlayApp {
             "translateSelection" | "rotateSelection" | "scaleSelection" | "worldRelocate" | "relocateTargetVolume" => seed!(|request, seed| Puzzle5dTransformWork::new(tool_id, seed)),
             "patchPart" if puzzle5d_inspector_nudge(original.command.args()).is_some() => seed!(|request, seed| Puzzle5dTransformWork::new(tool_id, seed)),
             "focusSelection" => work!(|request| Puzzle5dFocusSelectionWork::default()),
-            "patchPart" => owned!(Puzzle5dPatchPartWork, |request, scope| Puzzle5dPatchPartWork::from_original_construction(scope)),
-            "patchFastener" => owned!(Puzzle5dPatchFastenerWork, |request, scope| Puzzle5dPatchFastenerWork::from_original_construction(scope)),
+            "patchPart" => patch!(Puzzle5dPatchPartWork),
+            "patchFastener" => patch!(Puzzle5dPatchFastenerWork),
             "editFastener" => owned!(Puzzle5dEditFastenerWork, |request, scope| Puzzle5dEditFastenerWork::from_original_construction(scope)),
             "retargetFastener" => owned!(Puzzle5dRetargetFastenerWork, |request, scope| Puzzle5dRetargetFastenerWork::from_original_construction(scope)),
             "proximityConnect" => owned!(Puzzle5dProximityConnectWork, |request, scope| Puzzle5dProximityConnectWork::from_original_construction(scope).map(|(work, progress)| (work.bound(nonce), progress))),
-            "patchGrip" => owned!(Puzzle5dPatchGripWork, |request, scope| Puzzle5dPatchGripWork::from_original_construction(scope)),
+            "patchGrip" => patch!(Puzzle5dPatchGripWork),
             "deleteFastener" => owned!(Puzzle5dDeleteFastenerWork, |request, scope| Puzzle5dDeleteFastenerWork::from_original_construction(scope)),
             "addNode" => owned!(Puzzle5dAddNodeWork, |request, scope| Puzzle5dAddNodeWork::from_original_construction(scope).map(|(work, progress)| (work.bound(nonce), progress))),
             "createFastener" => work!(|request| Puzzle5dCreateFastenerWork::default().bound(nonce)),
@@ -294,6 +304,17 @@ impl ArtifactEditor for Puzzle5dPlayApp {
         Puzzle5dCommand::try_from_action(action, args, window_id).ok_or_else(|| Fault::from(format!("unknown Puzzle 5D action '{action}'")))
     }
 
+    /// 📥️ The reassembled import uses the declared Puzzle file wire budget.
+    fn original_action_command_producer() -> Option<&'static dyn semio_plugin::ArtifactOriginalCommandProducerFactory<Self::Command>> {
+        Some(&semio_plugin::OriginalActionCommandBridge(Self::command_from_action, |command| {
+            if matches!(command, Puzzle5dCommand::ImportSnapshot { .. }) {
+                crate::retained_command::PUZZLE_IMPORT_RAW_BYTES
+            } else {
+                semio_plugin::RUNTIME_COMMAND_WIRE_MAXIMUM
+            }
+        }))
+    }
+
     /// 🧩️ Thin typed-command adapter — reconstructs the exact `(action, args, window_id)`
     /// triple `handle_action_impl` expects from the typed `Puzzle5dCommand`.
     fn handle(
@@ -335,7 +356,11 @@ impl ArtifactEditor for Puzzle5dPlayApp {
 })())
 }
 
-    /// 🔌️ Declares catalog import, rewrite-rule application and design export alongside the document ports.
+    /// 🔌️ Declares puzzle5d's typed media I/O surface: the implicit document ports (from
+    /// `.document([...])`/`.artifact_kind(...)` in `create_puzzle5d_app`) plus `kit:in` (accepting a
+    /// `kit.catalog` fragment shaped like block3d's `puzzle3d_catalog_fragment`, fanning IN from
+    /// potentially many producers) and `design:out` (this app's own `5d.puzzle` design artifact, fanning
+    /// OUT to potentially many consumers).
     fn io() -> Option<AppIo> {
         let io = ::semio_framework_async::poll::resolve_ready(AppIo::from_artifact(
             "puzzle.5d",
@@ -353,15 +378,6 @@ impl ArtifactEditor for Puzzle5dPlayApp {
                 multiplicity: PortMultiplicity::Many,
             },
             MediaPortSpec {
-                id: PUZZLE5D_REWRITE_INPUT_PORT.into(),
-                label: LocalizedLabel::native("Rewrite Rule", "Umschreibregel"),
-                direction: MediaPortDirection::In,
-                media_type: REWRITE_MEDIA_TYPE,
-                kind_id: Some(REWRITE_MEDIA_SCHEMA.into()),
-                required: false,
-                multiplicity: PortMultiplicity::One,
-            },
-            MediaPortSpec {
                 id: "design:out".into(),
                 label: LocalizedLabel::native("5D Puzzle Design", "5D-Puzzle-Entwurf"),
                 direction: MediaPortDirection::Out,
@@ -373,11 +389,8 @@ impl ArtifactEditor for Puzzle5dPlayApp {
         ])))
     }
 
-    fn accepts_original_structured_media(port: &str, schema: &str, media_type: &MediaType) -> bool {
-        port == PUZZLE5D_REWRITE_INPUT_PORT && schema == REWRITE_MEDIA_SCHEMA && *media_type == REWRITE_MEDIA_TYPE
-    }
-
-    /// 🧵️ All imports enter the retained media job and publish through its completion.
+    /// 🧵️ The synchronous editor callback is deliberately closed: production import enters only
+    /// remains batch-only until an artifact-lane preparation owner can retire its publication roots.
     fn import_media(_port: &str, _media: &Media, _doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>) -> Result<Emit<Puzzle5dMutation, Puzzle5dConfigMutation, Self::DraftMutation>, MediaError> {
         Err(MediaError::NotImplemented)
     }

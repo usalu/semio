@@ -15,7 +15,7 @@ impl BoardHost {
             set_hovered_id(&mut self.scene, &mut self.focus, &mut self.outbox, None);
             return;
         }
-        if cancel_transform_drag(&mut self.scene, &mut self.gestures) {
+        if self.cancel_transform_preview() {
             return;
         }
         if matches!(self.focus.interaction, Interaction::None) {
@@ -25,7 +25,7 @@ impl BoardHost {
 
     pub fn pointer_cancel_screen(&mut self) -> bool {
         begin_pointer_cancel(&mut self.scene, &mut self.commit);
-        let cancelled_region = cancel_region_paint(&mut self.scene, &mut self.gestures) | cancel_region_drag(&mut self.scene, &mut self.focus, &mut self.gestures) | cancel_transform_drag(&mut self.scene, &mut self.gestures);
+        let cancelled_region = cancel_region_paint(&mut self.scene, &mut self.gestures) | cancel_region_drag(&mut self.scene, &mut self.focus, &mut self.gestures) | self.cancel_transform_preview();
         let cancelled_brush = self.brush.brush_preview.is_some() || self.brush.brush_slot_source_id.is_some();
         self.brush.brush_slot_suggestions_active = false;
         self.brush.brush_slot_source_id = None;
@@ -39,6 +39,12 @@ impl BoardHost {
         match interaction {
             Interaction::DragNodes { start_positions, gesture, .. } => cancel_node_drag(&mut self.scene, &mut self.focus, &mut self.outbox, start_positions, gesture),
             Interaction::SelectionPending { initial_ids, .. } | Interaction::Selection { initial_ids, .. } => {
+                if !self.focus.preselect.is_empty() || !self.focus.preselect_removed.is_empty() {
+                    let event = BoardOwnedEvent::id_list(BoardEventKind::PreselectCancel, "ids", initial_ids.iter().map(String::as_str));
+                    if let Ok(reservation) = event.map_err(|_| ()).and_then(|event| self.outbox.events.reserve_event(event).map_err(|_| ())) {
+                        self.outbox.publish_event_reservation(reservation);
+                    }
+                }
                 self.focus.selection = initial_ids;
                 self.focus.preselect.clear();
                 self.focus.preselect_removed.clear();
@@ -67,7 +73,7 @@ impl BoardHost {
         if cancel_region_paint(&mut self.scene, &mut self.gestures) || cancel_region_drag(&mut self.scene, &mut self.focus, &mut self.gestures) {
             return true;
         }
-        if cancel_transform_drag(&mut self.scene, &mut self.gestures) {
+        if self.cancel_transform_preview() {
             return true;
         }
         let reservation = match &self.focus.interaction {
@@ -107,6 +113,17 @@ impl BoardHost {
                 false
             }
         }
+    }
+
+    /// 🪞️ Restores local rotation geometry and sends sibling panes the grab-time positions.
+    fn cancel_transform_preview(&mut self) -> bool {
+        let Some(drag) = self.gestures.transform_drag.as_ref() else {
+            return false;
+        };
+        if drag.radians != 0.0 {
+            self.outbox.publish_transform_previews(drag.start_positions.iter().map(|(id, (x, y))| (id.as_str(), *x, *y)));
+        }
+        cancel_transform_drag(&mut self.scene, &mut self.gestures)
     }
 
     /// ⭕️ Pivot and ring radius when the rotate gumball is live: the select utility is

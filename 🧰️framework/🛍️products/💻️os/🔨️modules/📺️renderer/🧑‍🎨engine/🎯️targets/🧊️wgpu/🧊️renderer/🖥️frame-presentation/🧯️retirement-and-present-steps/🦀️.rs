@@ -1,9 +1,10 @@
 //! 🧯️ Retirement and present steps: the presented retirement, the surface resize steps, the presentation gate, the close steps and the admit and present steps. See [`super`].
 
 use super::*;
+use semio_framework_job::{OriginalTurnFailure, StepContext};
 
-pub(super) fn presentation_fault(source: impl Into<String>) -> semio_framework_job::OriginalTurnFailure {
-    semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, source.into()).into()
+fn frame_present_fault(message: String) -> OriginalTurnFailure {
+    semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, message).into()
 }
 
 //#region 📮️RuntimeMailbox
@@ -51,21 +52,21 @@ impl AppPresentedRetirement {
         }
     }
 
-    pub(super) fn step(&mut self, gpu: &mut GpuContext, gate: &semio_ui_prepared::PreparedRenderGate, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
+    pub(super) fn step(&mut self, gpu: &mut GpuContext, gate: &semio_ui_prepared::PreparedRenderGate, cx: &mut StepContext<'_>) -> Result<bool, OriginalTurnFailure> {
         if self.raster == RasterCandidateRetirement::Infer {
             self.raster = RasterCandidateRetirement::Complete;
             return Ok(false);
         }
         match self.raster {
             RasterCandidateRetirement::Abort(witness) => {
-                if !gpu.abort_presented_rasters_step(witness).map_err(presentation_fault)? {
+                if !gpu.abort_presented_rasters_step(witness).map_err(frame_present_fault)? {
                     return Ok(false);
                 }
                 self.raster = RasterCandidateRetirement::Complete;
                 return Ok(false);
             }
             RasterCandidateRetirement::Commit(witness) => {
-                if !gpu.commit_presented_rasters_step(witness).map_err(presentation_fault)? {
+                if !gpu.commit_presented_rasters_step(witness).map_err(frame_present_fault)? {
                     return Ok(false);
                 }
                 self.raster = RasterCandidateRetirement::Complete;
@@ -78,7 +79,7 @@ impl AppPresentedRetirement {
         }
         if let Some(packet) = gate.last_valid() {
             if self.acknowledged_eviction < packet.evictions().len() {
-                let Some(eviction) = packet.evictions().get(self.acknowledged_eviction) else { return Err(presentation_fault("prepared eviction cursor exceeded its fixed list".to_string())) };
+                let Some(eviction) = packet.evictions().get(self.acknowledged_eviction) else { return Err(frame_present_fault("prepared eviction cursor exceeded its fixed list".into())) };
                 let key = match eviction {
                     semio_ui_prepared::PreparedRenderEviction::Mesh { key } => key,
                 };
@@ -86,7 +87,7 @@ impl AppPresentedRetirement {
                     if let semio_ui_prepared::PreparedRenderUpload::Mesh { key: upload_key, version, .. } = upload {
                         if upload_key == key {
                             let Some(slot) = self.acknowledged_versions.get_mut(self.acknowledged_version_count) else {
-                                return Err(presentation_fault("prepared mesh eviction keep-version credits exhausted".to_string()));
+                                return Err(frame_present_fault("prepared mesh eviction keep-version credits exhausted".into()));
                             };
                             *slot = *version;
                             self.acknowledged_version_count += 1;
@@ -95,7 +96,7 @@ impl AppPresentedRetirement {
                     self.acknowledged_upload_scan += 1;
                     return Ok(false);
                 }
-                if gpu.apply_prepared_eviction_step(packet, self.acknowledged_eviction, &self.acknowledged_versions[..self.acknowledged_version_count]).map_err(presentation_fault)? {
+                if gpu.apply_prepared_eviction_step(packet, self.acknowledged_eviction, &self.acknowledged_versions[..self.acknowledged_version_count]).map_err(frame_present_fault)? {
                     self.acknowledged_eviction += 1;
                     self.acknowledged_upload_scan = 0;
                     self.acknowledged_version_count = 0;
@@ -104,9 +105,9 @@ impl AppPresentedRetirement {
             }
         }
         if let Some(previous) = self.previous.as_mut() {
+            let demand = previous.next_close_demands(cx.retained_grant().maximum_copy_bytes)?;
+            semio_ui_prepared::retirement::prepared_close_turn(cx, demand, |effect| previous.close_step(effect))?;
             if !previous.retirement_is_empty() {
-                let quote = previous.next_close_demands(cx.retained_grant().maximum_copy_bytes)?;
-                semio_ui_prepared::retirement::prepared_close_turn(cx, quote, |effect| previous.close_step(effect))?;
                 return Ok(false);
             }
             self.previous = None;
@@ -118,16 +119,15 @@ impl AppPresentedRetirement {
             return Ok(false);
         }
         if !self.unowned_rasters_retired {
-            if !gpu.retire_unowned_raster_step().map_err(presentation_fault)? {
+            if !gpu.retire_unowned_raster_step().map_err(frame_present_fault)? {
                 return Ok(false);
             }
             self.unowned_rasters_retired = true;
             return Ok(false);
         }
         if let Some(frame) = self.completed_frame.as_mut() {
-            let retained = frame.retained.restricted_by(cx.retained_grant());
-            let step = semio_ui_prepared::retirement::prepared_close_turn(cx, retained, |effect| frame.close_step(effect))?;
-            if !matches!(step, InteractiveJobCloseStep::Complete { .. }) {
+            if !frame.terminal_is_empty() {
+                frame.close_step_on_original(cx)?;
                 return Ok(false);
             }
             self.completed_frame = None;
@@ -259,12 +259,27 @@ impl AppPresenter {
     pub fn close_original_media_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         let Some(cursor)=self.pending.as_mut()else{return Ok(true)};
         if !cursor.media_collect.terminal_is_empty(){if !semio_renderer_wgpu_ui_engine_dump::chrome_ledger::close_presented_media_slots(&mut cursor.media_collect,cx)?{return Ok(false)}}
-        if let Some(owner)=cursor.media_close.as_mut(){if owner.terminal_is_empty(){let grant=cx.retained_grant();if cx.retirement_should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}cursor.media_close=None;cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);return Ok(false)}let body=cx.retained_grant().maximum_copy_bytes;let demand=owner.selected_demand(body)?;let _=semio_framework_job::close_original_effect_step(cx,demand,|effect|owner.step(body,effect))?;return Ok(false)}
+        if let Some(owner) = cursor.media_close.as_mut() {
+            if owner.terminal_is_empty() {
+                let grant = cx.retained_grant();
+                if cx.retirement_should_yield() || grant.maximum_items == 0 || grant.maximum_depth == 0 {
+                    return Ok(false);
+                }
+                cursor.media_close = None;
+                cx.consume_retained(RetainedCloneProgress { copied_items: 1, ..Default::default() })?;
+                cx.consume_fuel(1);
+            } else {
+                let body = cx.retained_grant().maximum_copy_bytes;
+                let demand = owner.selected_demand(body)?;
+                semio_framework_job::close_original_effect_step(cx, demand, |effect| owner.step(body, effect))?;
+            }
+            return Ok(false);
+        }
         if !cursor.media_slots.is_empty(){let grant=cx.retained_grant();if cx.retirement_should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}let original=std::mem::take(&mut cursor.media_slots);match semio_framework_value::retirement::controlled::ControlledRetirement::new(original){Ok(owner)=>cursor.media_close=Some(owner),Err((original,source))=>{cursor.media_slots=source;return Err(original.into())}}cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);return Ok(false)}Ok(true)
     }
 
-    pub fn close_frame_owners_step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
-        if !self.engine.close_active_candidate_step(&mut self.gpu).map_err(presentation_fault)? {
+    pub fn close_frame_owners_step(&mut self, cx: &mut StepContext<'_>) -> Result<bool, OriginalTurnFailure> {
+        if !self.engine.close_active_candidate_step(&mut self.gpu).map_err(frame_present_fault)? {
             return Ok(false);
         }
         if let Some(mut cursor) = self.pending.take() {
@@ -280,7 +295,7 @@ impl AppPresenter {
                 };
                 if !interaction.shell.input.discard_presented_input_candidate(input_candidate) {
                     self.pending = Some(cursor);
-                    return Err(presentation_fault("presenter close lost its staged input witness".to_string()));
+                    return Err(frame_present_fault("presenter close lost its staged input witness".into()));
                 }
                 cursor.frame.input_candidate = None;
                 self.pending = Some(cursor);
@@ -302,13 +317,13 @@ impl AppPresenter {
             let retirement = self.retirement.get_or_insert_with(|| AppPresentedRetirement::new(None));
             if retirement.completed_frame.is_some() {
                 self.pending = Some(cursor);
-                return Err(presentation_fault("presenter close retirement capacity exhausted".to_string()));
+                return Err(frame_present_fault("presenter close retirement capacity exhausted".into()));
             }
             if let Some(witness) = cursor.raster_witness.take() {
                 if let Err(error) = self.raster_operation_authority.release(witness) {
                     cursor.raster_witness = Some(witness);
                     self.pending = Some(cursor);
-                    return Err(presentation_fault(error.to_string()));
+                    return Err(frame_present_fault(error.to_string()));
                 }
                 retirement.raster = RasterCandidateRetirement::Abort(witness);
             }
@@ -317,10 +332,10 @@ impl AppPresenter {
         }
         if let Some(packet) = self.gate.abort_pending() {
             if self.retirement.is_some() {
-                return Err(presentation_fault("presenter pending packet cannot overtake retirement".to_string()));
+                return Err(frame_present_fault("presenter pending packet cannot overtake retirement".into()));
             }
-            let witness = self.raster_operation_authority.current().ok_or_else(|| presentation_fault("presenter raster operation witness was missing during close"))?;
-            self.raster_operation_authority.release(witness).map_err(presentation_fault)?;
+            let witness = self.raster_operation_authority.current().ok_or_else(|| frame_present_fault("presenter raster operation witness was missing during close".into()))?;
+            self.raster_operation_authority.release(witness).map_err(|error| frame_present_fault(error.to_owned()))?;
             self.retirement = Some(AppPresentedRetirement::abort(packet, witness));
             return Ok(false);
         }
@@ -348,7 +363,7 @@ impl AppPresenter {
         Ok(self.pending.is_none() && self.retirement.as_ref().is_none_or(AppPresentedRetirement::terminal_is_empty) && self.retained_fault.is_none() && self.gate.terminal_is_empty() && self.raster_operation_authority.current().is_none())
     }
 
-    pub fn close_world_owners_step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
+    pub fn close_world_owners_step(&mut self, cx: &mut StepContext<'_>) -> Result<bool, OriginalTurnFailure> {
         if !self.close_frame_owners_step(cx)? || !self.engine.terminal_is_empty() {
             return Ok(false);
         }
@@ -358,7 +373,7 @@ impl AppPresenter {
         if !self.gpu.close_mesh_table_step() {
             return Ok(false);
         }
-        if !self.gpu.close_raster_table_step().map_err(presentation_fault)? {
+        if !self.gpu.close_raster_table_step().map_err(frame_present_fault)? {
             return Ok(false);
         }
         Ok(self.world_owners_terminal_is_empty())
@@ -440,7 +455,24 @@ impl AppPresenter {
             })
         });
         let _latency = owner.map(|(generation, stage)| frame_latency::FrameLatencyTimer::start(frame_latency::FrameLatencyAuthority::renderer_frame(generation), stage, 1));
-        self.present_step_inner(cx)
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            let _ = RENDERER_IO_WAKE.swap(false, Ordering::AcqRel);
+            let _ = pump_renderer_io_sessions(1);
+        }
+        semio_framework_job_worker::pump_worker_job_retirements(1, cx)?;
+        if cx.should_yield() {
+            return Ok(AppPresentStep::Pending);
+        }
+        if self.pending.is_none() {
+            if let Some(retirement) = self.retirement.as_mut() {
+                if retirement.step(&mut self.gpu, &self.gate, cx)? {
+                    self.retirement = None;
+                }
+                return Ok(AppPresentStep::Pending);
+            }
+        }
+        self.present_step_inner().map_err(frame_present_fault)
     }
 
 }

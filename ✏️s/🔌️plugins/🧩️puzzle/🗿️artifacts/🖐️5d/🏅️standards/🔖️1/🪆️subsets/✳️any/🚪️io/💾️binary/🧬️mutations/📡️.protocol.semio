@@ -89,3 +89,7 @@ record rotate-selection3d tag=37
 field payload bytes
 record scale-selection3d tag=38
 field payload bytes
+record splice-scene-rows tag=39
+field payload bytes
+record splice-scene-row-batch tag=40
+field payload bytes

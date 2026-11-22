@@ -2,7 +2,7 @@
 use semio_plugin_decl_app::tool_contract::ToolOwnerWitness;
 use semio_plugin_decl_app::tool_contract::ArtifactReservedJob;
 use semio_plugin_decl_app::tool_contract::ArtifactReservedToolJob;
-use semio_plugin_decl_app::tool_contract::BOUNDED_FIRST_STEP_FACTORY;
+use semio_plugin_decl_app::tool_contract::{BOUNDED_FIRST_STEP_FACTORY, NATURAL_SOURCE_TOOL_CONTRACT};
 use std::collections::BTreeSet;
 use std::collections::BTreeMap;
 use semio_plugin_window_kits::AppActionRegistry;
@@ -246,9 +246,9 @@ framework_reserved_job!(FrameworkRevertToCommandJob, FrameworkRevertToCommandJob
 
 framework_reserved_job!(FrameworkCopyJob, FrameworkCopyJobFactory, "copy", 7, 8_192, 4_096, 256, semio_framework::kernel::CLIPBOARD_FRAGMENT_MAX_WIRE_BYTES, lanes: [HostOnly]);
 
-framework_reserved_job!(FrameworkCutJob, FrameworkCutJobFactory, "cut", 8, 8_192, 4_096, 256, semio_framework::kernel::CLIPBOARD_FRAGMENT_MAX_WIRE_BYTES, lanes: [Artifact, Child]);
+framework_reserved_job!(FrameworkCutJob, FrameworkCutJobFactory, "cut", 8, 8_192, 4_096, 256, semio_framework::kernel::CLIPBOARD_FRAGMENT_MAX_WIRE_BYTES, lanes: [Artifact, Child, Interaction]);
 
-framework_reserved_job!(FrameworkPasteJob, FrameworkPasteJobFactory, "paste", 9, semio_framework::kernel::CLIPBOARD_PASTE_MAX_WIRE_BYTES, 4_096, 4_096, semio_framework::kernel::CLIPBOARD_FRAGMENT_MAX_WIRE_BYTES*2, lanes: [Artifact, Child]);
+framework_reserved_job!(FrameworkPasteJob, FrameworkPasteJobFactory, "paste", 9, semio_framework::kernel::CLIPBOARD_PASTE_MAX_WIRE_BYTES, 4_096, 4_096, semio_framework::kernel::CLIPBOARD_FRAGMENT_MAX_WIRE_BYTES*2, lanes: [Artifact, Child, Interaction]);
 
 // 🔌️ Route ordinal 10. `dispatch_import_media` still resolves `qualified_tool_proof("import-media")`
 // and admits its exact wire against it, so without this registration EVERY app's `import_media`
@@ -277,6 +277,13 @@ framework_reserved_job!(FrameworkSetSelectionModeJob, FrameworkSetSelectionModeJ
 framework_reserved_job!(FrameworkSetActiveToolJob, FrameworkSetActiveToolJobFactory, "setActiveTool", 20, 16_384, 64, 1_024, 16_384, lanes: [HostOnly]);
 
 framework_reserved_job!(FrameworkSetActiveUtilityJob, FrameworkSetActiveUtilityJobFactory, "setActiveUtility", 21, 16_384, 64, 1_024, 16_384, lanes: [HostOnly]);
+
+framework_reserved_job!(
+    FrameworkImportNaturalSourceJob, FrameworkImportNaturalSourceJobFactory, "import-natural-source", 22,
+    NATURAL_SOURCE_TOOL_CONTRACT.max_raw_wire_bytes, NATURAL_SOURCE_TOOL_CONTRACT.max_decoded_items,
+    NATURAL_SOURCE_TOOL_CONTRACT.max_work_units_per_step, NATURAL_SOURCE_TOOL_CONTRACT.max_output_bytes,
+    lanes: [Artifact, Child]
+);
 
 fn framework_reserved_route_job(action: &str, raw: Vec<u8>, work_items: usize) -> Result<ArtifactReservedToolJob, Fault> {
     Ok(match action {
@@ -572,6 +579,9 @@ pub fn register_framework_reserved_factories<A: ArtifactApp>(registry: &mut Arti
     registry.register(FrameworkCutJobFactory::<A>::new(&controller_id))?;
     registry.register(FrameworkPasteJobFactory::<A>::new(&controller_id))?;
     registry.register(FrameworkImportMediaJobFactory::<A>::new(&controller_id))?;
+    if A::natural_file_paged_maximum_bytes() != 0 {
+        registry.register(FrameworkImportNaturalSourceJobFactory::<A>::new(&controller_id))?;
+    }
     registry.register(FrameworkNoteShellCommandJobFactory::<A>::new(&controller_id))?;
     registry.register(FrameworkSetHistoryCommandFilterJobFactory::<A>::new(&controller_id))?;
     registry.register(FrameworkRecordTutorialJobFactory::<A>::new(&controller_id))?;
@@ -1013,7 +1023,7 @@ pub fn is_framework_reserved_action_id(action: &str) -> bool {
         || action == CANCEL_TYPED_OPERATION_ACTION_ID
         || action == semio_framework::HOST_EVENT_ACTION_ID
         || matches!(action, REVERT_TO_COMMAND_ACTION_ID | SET_HISTORY_COMMAND_FILTER_ACTION_ID | NOTE_SHELL_COMMAND_ACTION_ID | RECORD_TUTORIAL_ACTION_ID)
-        || matches!(action, semio_framework::EXPORT_ARTIFACT_DOCUMENT_ACTION_ID | semio_framework::IMPORT_ARTIFACT_DOCUMENT_ACTION_ID | semio_framework::EXPORT_MEDIA_FILE_ACTION_ID | semio_framework::EXPORT_SNAPSHOT_FILE_ACTION_ID)
+        || matches!(action, semio_framework::EXPORT_ARTIFACT_DOCUMENT_ACTION_ID | semio_framework::IMPORT_ARTIFACT_DOCUMENT_ACTION_ID | semio_framework::EXPORT_MEDIA_FILE_ACTION_ID | semio_framework::EXPORT_SNAPSHOT_FILE_ACTION_ID | semio_framework::NODE_GRAPH_FIT_ACTION_ID)
 }
 
 /// 📜️ Joins the app's declared bounded-first-step proofs to the live registry and its exact factory registrations.
@@ -1127,3 +1137,7 @@ pub mod original_checkpoint;
 #[cfg(test)]
 #[path = "metadata-tests.rs"]
 mod metadata_tests;
+
+#[cfg(test)]
+#[path = "natural-source-limits-tests.rs"]
+mod natural_source_limits_tests;

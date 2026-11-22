@@ -32,3 +32,12 @@ export function nativeBuildJobStallV1(job:string,watch:NativeBuildJobWatchV1,now
   const idle=nowMs-watch.progressedAtMs(),wait=watch.waiting(nowMs);
   return wait&&idle>=stallMs?`Native build stalled: job:${job} made no progress for ${Math.round(idle/1000)} s and has only waited on ${wait.subject} since ${Math.round((nowMs-wait.sinceMs)/1000)} s`:undefined;
 }
+
+
+/** ⏲️ Detects a compiler idle timeout from the active driver observations. */
+export function nativeBuildCompilerIdleStallV1(observation: Readonly<{
+  children: number; planning: number; runningUnits: number; runningStages: number; idleMilliseconds: number; stallMilliseconds: number;
+}>): boolean {
+  return observation.children > observation.planning && observation.runningUnits === 0 && observation.runningStages === 0
+    && observation.idleMilliseconds >= observation.stallMilliseconds;
+}

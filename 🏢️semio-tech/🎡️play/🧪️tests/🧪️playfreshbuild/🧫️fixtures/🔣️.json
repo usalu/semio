@@ -32,6 +32,7 @@
     "command": "repo ./📜️script.ts release",
     "generationEnvironment": "SEMIO_NATIVE_BUILD_GENERATION",
     "generationPrefix": "f",
+    "minimumReleaseDeadlineMilliseconds": 64800000,
     "owner": "buildReleasePipelineV1",
     "ownerModule": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🧩️driver-stages/🟦️.ts",
     "ownerArguments": [

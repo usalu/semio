@@ -1,9 +1,11 @@
 import {randomUUID} from "node:crypto";
 import {decodeProtobufV1,REAPI_V1} from "../📡️wire/📦️protobuf/🟦️.ts";
 import type {RemoteExecutionContentV1} from "../🗄️content/🟦️.ts";
-import {placementAnyCandidateV1,placementHasHeadroomV1,placementIdleElsewhereV1,placementKeyV1,planDispatchV1,RemoteExecutionLoadTableV1,type PlacementOperationV1,type PlacementWorkerV1} from "./⚖️placement/🟦️.ts";
+import {placementAnyCandidateV1,placementHasHeadroomV1,placementIdleCountV1,placementIdleElsewhereV1,placementKeyV1,planDispatchV1,RemoteExecutionLoadTableV1,type PlacementOperationV1,type PlacementWorkerV1} from "./⚖️placement/🟦️.ts";
 import type {RemoteExecutionLoadReportV1,RemoteExecutionWorkerStateV1} from "../🌡️load/🟦️.ts";
 import {remoteExecutionWorkerWhyV1} from "../🌡️load/🔎️why/🟦️.ts";
+import {OFFLOAD_REFUSAL_PREFIX_V1} from "../🚀️offload/🩺️failure/🟦️.ts";
+import {OFFLOAD_POLICY_V1} from "../🚀️offload/📐️policy/🟦️.ts";
 
 const withoutWhyV1=(state:RemoteExecutionWorkerStateV1):Omit<RemoteExecutionWorkerStateV1,"why">=>{const {why:_why,...rest}=state;return rest;};
 import {remoteExecutionControlV1,remoteExecutionDigestV1,remoteExecutionMatchPropertiesV1,remoteExecutionPlatformKeyV1,remoteExecutionPlatformMatchesV1,type RemoteExecutionDigestV1,type RemoteExecutionHeartbeatAnswerV1,type RemoteExecutionPollAnswerV1,type RemoteExecutionPropertyV1,type RemoteExecutionTaskResultV1,type RemoteExecutionTaskStatusV1,type RemoteExecutionTaskV1,type RemoteExecutionWorkerRegisteredV1,type RemoteExecutionWorkerRegistrationV1} from "../🟦️.ts";
@@ -32,6 +34,8 @@ type Worker={
  id:string;registration:RemoteExecutionWorkerRegistrationV1;lastSeen:number;running:Set<string>;cancel:Set<string>;waiter?:(answer:RemoteExecutionPollAnswerV1)=>void;draining:boolean;refusedUntil:number;refused:number;
 };
 
+/** ⏳️ How long the answer "another machine is idle" holds for the machine that was told: its next units are queued instead of declined while the headroom that was promised may have been taken by someone else in between (the queue limit of the requester still bounds the wait). */
+const RESERVATION_SECONDS=20;
 const OK:RemoteExecutionTaskStatusV1={code:0,message:""},DECLINED:RemoteExecutionTaskStatusV1={code:8,message:"No other machine has headroom: run the action locally"},FAILED_BACK=(why:string):RemoteExecutionTaskStatusV1=>({code:14,message:`${why}; run the action locally`}),MISSING=(digest:RemoteExecutionDigestV1):RemoteExecutionTaskStatusV1=>({code:9,message:`Missing blob ${digest.hash}/${digest.size}`,missing:[digest]});
 
 /** 🗓️ The scheduler: deduplicates identical actions, answers from the action cache, queues actions, hands each to the least loaded compatible long-polling worker that has headroom (see `⚖️placement`), tracks leases and heartbeats, reschedules lost work once on another worker and then fails it back to the requester, cancels abandoned work, keeps the live load table of the fleet and counters. Pure logic over a content store; transports are separate. */
@@ -40,6 +44,7 @@ export class RemoteExecutionSchedulerV1{
  private readonly byKey=new Map<string,Operation>();
  private readonly queue:Operation[]=[];
  private readonly workers=new Map<string,Worker>();
+ private readonly reserved=new Map<string,number>();
  private readonly counters={queued:0,executing:0,completed:0,cached:0,failed:0,cancelled:0,retried:0,deduplicated:0,refused:0,offloadRejected:0};
  readonly load:RemoteExecutionLoadTableV1;
  private readonly clock:()=>number;
@@ -100,7 +105,7 @@ export class RemoteExecutionSchedulerV1{
     }
    }
    if(operation.stage!=="CACHE_CHECK")return;
-   if(operation.offload&&!placementIdleElsewhereV1(this.view(operation),this.views(),this.load,this.clock())){this.counters.offloadRejected++;this.emit("declined",this.label(operation));return this.finish(operation,{status:DECLINED,actionResult:null,cached:false,worker:""});}
+   if(operation.offload&&!placementIdleElsewhereV1(this.view(operation),this.views(),this.load,this.clock())&&!((this.reserved.get(operation.requester??"")??0)>this.clock())){this.counters.offloadRejected++;const standing=placementIdleCountV1(this.view(operation),this.views(),this.load,this.clock());this.emit("declined",`${this.label(operation)}: ${standing.workers} workers, ${standing.compatible} compatible, ${standing.headroom} with headroom, requester ${operation.requester??"unknown"}`);return this.finish(operation,{status:DECLINED,actionResult:null,cached:false,worker:""});}
    if(operation.requester!==undefined&&!placementAnyCandidateV1(this.view(operation),this.views(),this.load))return this.finish(operation,{status:FAILED_BACK("No other machine can take the action"),actionResult:null,cached:false,worker:""});
    if(operation.requester!==undefined)this.load.count(operation.requester,"offloadedOut");
    if(this.queue.length>=this.options.maximumQueued)return this.finish(operation,{status:{code:8,message:"Execution queue is full"},actionResult:null,cached:false,worker:""});
@@ -274,13 +279,17 @@ export class RemoteExecutionSchedulerV1{
   if(result.outcome==="refused"){
    if(worker){worker.refusedUntil=this.clock()+this.options.refusalCooldownSeconds*1000;worker.refused++;this.load.count(worker.registration.origin,"refused");this.load.refuse(worker.registration.origin);}
    this.counters.refused++;this.emit("refused",`${this.label(operation)} by ${name}: ${result.refusal??"headroom"}`);
-   if(operation.offload){this.counters.offloadRejected++;this.finish(operation,{status:DECLINED,actionResult:null,cached:false,worker:name});}
+   if(operation.offload){
+    if(worker)operation.tried.add(placementKeyV1(this.workerView(worker)));
+    if(placementIdleElsewhereV1(this.view(operation),this.views(),this.load,this.clock()))this.requeue(operation,`Worker ${name} refused the action, another machine has headroom`,false);
+    else{this.counters.offloadRejected++;this.finish(operation,{status:DECLINED,actionResult:null,cached:false,worker:name});}
+   }
    else this.requeue(operation,`Worker ${name} refused the action`,false);
    return true;
   }
   if(result.outcome==="cancelled"){if(operation.cancelRequested)this.finish(operation,{status:{code:1,message:"Cancelled"},actionResult:null,cached:false,worker:name});else{if(worker)operation.tried.add(placementKeyV1(this.workerView(worker)));this.requeue(operation,"Worker abandoned the task",true);}return true;}
   if(result.outcome==="failed"){
-   const policy=result.status.code===9&&operation.requester!==undefined&&result.status.message.startsWith("Action refused by the worker policy");
+   const policy=result.status.code===9&&operation.requester!==undefined&&result.status.message.startsWith(OFFLOAD_REFUSAL_PREFIX_V1);
    if(([10,14].includes(result.status.code)||policy)&&operation.failures+1<this.options.maximumAttempts){if(worker)operation.tried.add(placementKeyV1(this.workerView(worker)));this.requeue(operation,result.status.message,true);}
    else this.finish(operation,{status:result.status,actionResult:null,cached:false,worker:name});
    return true;
@@ -323,6 +332,14 @@ export class RemoteExecutionSchedulerV1{
   });
   let running=0;for(const worker of this.workers.values())running+=worker.running.size;
   return {counters:{...this.counters,queued:this.queue.length,executing:running},workers,platforms:[...platforms.values()],queued:this.queue.length,running};
+ }
+
+ /** 🔢️ How the workers stand for a unit of `requester` right now, by the very counting the submission check uses, for the action format of this version: what the build door asks before it admits cargo without a grant. */
+ idleFor(requester:string):ReturnType<typeof placementIdleCountV1>{
+  const property=OFFLOAD_POLICY_V1.property;
+  const standing=placementIdleCountV1({id:"idle-probe",platform:[{name:property.format,value:property.formatValue}],tried:new Set<string>(),requester},this.views(),this.load,this.clock());
+  if(standing.candidates>0)this.reserved.set(requester,this.clock()+RESERVATION_SECONDS*1000);
+  return standing;
  }
 
  /** 📩️ Takes the load report of a machine into the live table and gives the queue a chance to use the new headroom. */

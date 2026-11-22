@@ -318,7 +318,8 @@
       "target": "@semio-tech/framework-process:test-cargo-source-admission",
       "typedCompiler": false,
       "runtimeEntries": [
-        "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🎟️admission/🧪️tests/🟦️.ts"
+        "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🎟️admission/🧪️tests/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🏭️generated-owner/🧪️tests/🟦️.ts"
       ],
       "dataEntries": [],
       "dispatchOwners": [

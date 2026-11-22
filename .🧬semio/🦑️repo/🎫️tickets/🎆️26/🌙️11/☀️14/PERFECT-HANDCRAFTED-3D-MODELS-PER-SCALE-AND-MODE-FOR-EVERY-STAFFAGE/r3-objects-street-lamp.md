@@ -132,3 +132,13 @@ Scripts: `r5-street-lamp-kit.py`, `-model.py`, `-roots.py` (the round-3 chain ca
 - Door lock and hatch latch are not modelled (round 3 reasons stand).
 - At 1:500 the 80 mm arm bar is as thick as the luminaire is high; that is the feature floor (true 60 mm tube).
 - 1:500 structure bearing pad wider than the plinth (round 3 reason stands).
+
+## Bracket bearing and service closures, 21 November
+
+The original 1:500 body used an 80 mm arm and its structural view used a solid 75 mm bar. The detailed structural sleeve had a 58.4 mm bore around a 60.4 mm tube, a 2 mm diametral interference. The terminal door had no lock and the gear cover had no latch.
+
+At each scale the aluminium arm is a 60.4 mm tube with a 3 mm wall. It enters a 76 mm outside-diameter sleeve by 130 mm. The 60.6 mm bore leaves 0.1 mm radial clearance. All three modes retain this geometry. The 500 mm service door has a 10 mm square-drive lock near its upper end. A 39 × 12 mm folded steel catch spans the transverse gear-cover seam; its heel and keeper attach to opposite sides. The 1:500 body retains the five-station rounded housing. The existing outer projection and mounting height are preserved.
+
+The candidate and canonical source passed JSON Schema, asset validation and every measured volume rule. The independent GLB reader reopened all 12 scenes at 1,287,080 bytes with zero findings. The catalog and authoring volume documents matched on readback. Reviewed canonical SHA-256 `50897e941e38ca8848661523b0f052fcde0e79b4d7f95dbd3e627e4b5ebd6318`.
+
+At 1:50 the close views show the 4 mm square recess in the round 10 mm lock and the raised spring catch bridging the cover seam between its pivot and keeper. All 22 maintained model-bounds tests passed after these changes.

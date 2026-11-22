@@ -1,0 +1,19 @@
+{"cases":[
+ {"name":"plain manifest","path":"a/package.json","text":"{\"name\":\"a\",\"version\":\"1.0.0\"}"},
+ {"name":"scripts edited is inert","path":"a/package.json","text":"{\"name\":\"a\",\"version\":\"1.0.0\",\"scripts\":{\"x\":\"y\"}}"},
+ {"name":"semio edited counts","path":"a/package.json","text":"{\"semio\":{\"k\":1},\"name\":\"a\",\"version\":\"1.0.0\"}"},
+ {"name":"key order is inert","path":"a/package.json","text":"{\"version\":\"1.0.0\",\"name\":\"a\"}"},
+ {"name":"whitespace is inert","path":"a/package.json","text":"{ \"name\" : \"a\",\n \"version\":\"1.0.0\" }\n"},
+ {"name":"exports edited counts","path":"a/package.json","text":"{\"name\":\"a\",\"version\":\"1.0.0\",\"exports\":{\".\":\"./x.ts\"}}"},
+ {"name":"exports nested order is inert","path":"a/package.json","text":"{\"name\":\"a\",\"version\":\"1.0.0\",\"exports\":{\".\":{\"import\":\"./x.ts\",\"default\":\"./y.ts\"}}}"},
+ {"name":"exports nested reordered","path":"a/package.json","text":"{\"name\":\"a\",\"version\":\"1.0.0\",\"exports\":{\".\":{\"default\":\"./y.ts\",\"import\":\"./x.ts\"}}}"},
+ {"name":"dependency edited counts","path":"a/package.json","text":"{\"name\":\"a\",\"version\":\"1.0.0\",\"dependencies\":{\"d\":\"^1\"}}"},
+ {"name":"version edited counts","path":"a/package.json","text":"{\"name\":\"a\",\"version\":\"2.0.0\"}"},
+ {"name":"array order counts","path":"a/package.json","text":"{\"name\":\"a\",\"workspaces\":[\"x\",\"y\"]}"},
+ {"name":"array order swapped counts","path":"a/package.json","text":"{\"name\":\"a\",\"workspaces\":[\"y\",\"x\"]}"},
+ {"name":"unicode value","path":"a/package.json","text":"{\"name\":\"a\",\"description\":\"Zeichen ä ö ü 🧩\"}"},
+ {"name":"not an object","path":"a/package.json","text":"[1]"},
+ {"name":"malformed","path":"a/package.json","text":"{"},
+ {"name":"not a manifest","path":"a/readme.json","text":"{\"name\":\"a\"}"},
+ {"name":"root manifest","path":"package.json","text":"{\"name\":\"root\"}"}
+]}

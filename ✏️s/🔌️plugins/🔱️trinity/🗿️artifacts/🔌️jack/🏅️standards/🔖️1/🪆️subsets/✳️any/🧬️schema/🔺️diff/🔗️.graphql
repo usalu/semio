@@ -4,13 +4,9 @@ type JackDiff {
   schema: String @state(class: ARTIFACT)
   name: String @state(class: ARTIFACT)
   manifestId: String @state(class: ARTIFACT)
-  manifest: Manifest @state(class: ARTIFACT)
   camera: Camera @state(class: ARTIFACT)
   content: ArtifactChild @state(class: ARTIFACT)
   rootNodeId: String @state(class: ARTIFACT)
   query: String @state(class: ARTIFACT)
 }
 type Camera { x: Float! y: Float! zoom: Float! }
-type Manifest { nodeKinds: [ManifestKind!]! edgeKinds: [ManifestKind!]! portKinds: [ManifestPortKind!]! }
-type ManifestKind { name: String! }
-type ManifestPortKind { name: String! direction: String! }

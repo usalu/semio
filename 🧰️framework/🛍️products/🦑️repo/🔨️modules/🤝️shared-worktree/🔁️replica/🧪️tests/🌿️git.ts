@@ -777,6 +777,47 @@ posixTest("ready stage registers settle before unrelated worktree payload",async
  }finally{database.close();for(const machine of machines)await shut(machine);}
 },20000);
 
+test.skipIf(!gitAvailable)("a follower holds its stage through a bounded author slice and adopts exactly the pinned author cut",async()=>{
+ const {store,machines}=await fleet(["g1-server","g1-m01"]),[server,worker]=machines as [Machine,Machine];
+ try{
+  const baseline=tree(worker),head=(await readHeadV1(store,server.name))!;
+  const a=cli(server,["rev-parse",":a.txt"]).trim(),b=cli(server,["rev-parse",":b.txt"]).trim();
+  cli(server,["update-index","--cacheinfo",`100644,${b},a.txt`]);
+  const prefix=tree(server);
+  cli(server,["update-index","--cacheinfo",`100644,${a},b.txt`]);
+  const complete=tree(server);
+  expect(new Set([baseline,prefix,complete]).size).toBe(3);
+  const ignore=fixture.gitignore+"\n# stop the first intake pass and apply this edit\n";
+  write(server,".gitignore",ignore);
+  const {sha256,bytes}=await journal.storeBlobV1(store,server.name,at(server,".gitignore"));
+  const ms=Math.max(Date.now(),journal.parseHlcV1(head.hlc).ms+1);
+  let counter=0;
+  const stamp=(event:Omit<FleetEventV1,"version"|"hlc">):FleetEventV1=>({...event,version:1,hlc:formatHlcV1({ms,counter:counter++},server.name)});
+  const first=INDEX_PREFIX_V1+"a.txt",last=INDEX_PREFIX_V1+"b.txt";
+  const cut=await appendEventsV1(store,server.name,[
+   stamp({operation:"link",path:first,target:`100644 ${b}`,base:null}),
+   stamp({operation:"put",path:".gitignore",sha256,bytes,executable:false,base:server.replica!.manifest.get(".gitignore")!.sha256!}),
+   ...Array.from({length:1023},()=>stamp({operation:"delete",path:"retired.txt",base:null})),
+   stamp({operation:"link",path:last,target:`100644 ${a}`,base:null})
+  ]);
+  expect((await followOnceV1(worker.replica!)).events).toBe(1024);
+  expect(readFileSync(at(worker,".gitignore"),"utf8")).toBe(ignore);
+  expect(worker.replica!.manifest.get(first)?.target).toBe(`100644 ${b}`);
+  expect(worker.replica!.manifest.get(last)).toBeUndefined();
+  expect(tree(worker)).toBe(baseline);
+
+  const ordinary="later-source.txt";
+  await appendEventsV1(store,server.name,[stamp({operation:"put",path:ordinary,sha256,bytes,executable:false,base:null})]);
+  await followOnceV1(worker.replica!);
+  expect(tree(worker)).toBe(complete);
+  expect(worker.replica!.cursors[server.name]).toEqual({segment:cut.segment,bytes:cut.bytes});
+  expect(existsSync(at(worker,ordinary))).toBe(false);
+  await followOnceV1(worker.replica!);
+  expect(readFileSync(at(worker,ordinary),"utf8")).toBe(ignore);
+  expect(tree(worker)).toBe(complete);
+ }finally{for(const who of machines)await shut(who);}
+},20000);
+
 
 posixTest("an exact incremental stage applies before unrelated pack hydration completes",async()=>{
  const {store,machines}=await fleet(["g1-server","g1-m01"]),[server,worker]=machines as [Machine,Machine];

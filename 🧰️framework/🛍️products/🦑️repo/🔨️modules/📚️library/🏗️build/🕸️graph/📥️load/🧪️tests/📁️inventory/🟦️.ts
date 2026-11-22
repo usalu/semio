@@ -1,30 +1,23 @@
 import {expect,test} from "bun:test";
 import Ajv from "ajv";
 import {Database} from "bun:sqlite";
-import ts from "typescript";
-import {readFileSync} from "node:fs";
 import {createHash} from "node:crypto";
 import {buildSliceReportV1,describeSliceReadStepV1,sliceReadMovedAtV1,sliceReadStepV1} from "../../../../🧠️memory/📋️slice-report/🟨️.mjs";
 import schema from "../../../../🧠️memory/📋️slice-report/🧬️schema/🔣️.json" with {type:"json"};
 import cases from "./🔣️.json" with {type:"json"};
 import owners from "./🧭️owners.json" with {type:"json"};
 import graphSchema from "../../../🧬️schema/🔣️.json" with {type:"json"};
+import {instantiateOwnerClosureV1,prepareOwnerClosureV1} from "../../../../🧪️tests/🕸️graph/🧰️support/🔗️owner-closure/🟦️.ts";
 
 type Phase={phase:string;elapsedMilliseconds:number;observations?:number;completedOwners?:number;verifiedMemoRows?:number;files?:number;published?:boolean};
 type Report={active:Phase;completed:Phase[];activeOwner?:{owner:string;stage:string;elapsedMilliseconds:number}};
 const verify=new Ajv({strict:true}).compile({...schema,$ref:"#/definitions/InventoryAwait"});
-const graphSource=ts.createSourceFile("graph-load.ts",readFileSync(new URL("../../🟦️.ts",import.meta.url),"utf8"),ts.ScriptTarget.Latest,true);
-/** 🔬️ Executes the actual inventory closure and its timing owner with independent controlled await ports. */
-function inventoryFixture(ports:Record<string,unknown>,realMemo=false){
- ports={sliceReportSchema:schema,createHash,GRAPH_LIMITS_V1:graphSchema.definitions.Limits.const,...ports};
- const tracker=graphSource.statements.find((node):node is ts.FunctionDeclaration=>ts.isFunctionDeclaration(node)&&node.name?.text==="createGraphInventoryAwaitReportV1");
- let inventory:ts.VariableDeclaration|undefined;
- const find=(node:ts.Node):void=>{if(ts.isVariableDeclaration(node)&&node.name.getText(graphSource)==="inventory")inventory=node;else ts.forEachChild(node,find);};find(graphSource);
- if(!tracker||!inventory)throw Error("Actual graph inventory closure and timing owner required");
- const memo=graphSource.statements.find((node):node is ts.FunctionDeclaration=>ts.isFunctionDeclaration(node)&&node.name?.text==="observeOwnerFactsMemoizedV1");
- if(realMemo&&!memo)throw Error("Actual owner memo lookup required");
- const source=(realMemo?memo!.getText(graphSource).replace("export ","")+"\n":"")+tracker.getText(graphSource)+"\nconst "+inventory.getText(graphSource)+";return {inventory,report:createGraphInventoryAwaitReportV1};";
- return new Function(...Object.keys(ports),ts.transpileModule(source,{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText)(...Object.values(ports));
+const LOADER_URL=new URL("../../🟦️.ts",import.meta.url);
+/** 🔬️ Executes the actual inventory closure and its timing owner with independent controlled await ports; every name the owners read that the ports do not supply is bound from the loader module itself. */
+async function inventoryFixture(ports:Record<string,unknown>){
+ ports={sliceReportSchema:schema,createHash,GRAPH_LIMITS_V1:graphSchema.definitions.Limits.const,checkpointForScope:async()=>undefined,...ports};
+ const provided=Object.keys(ports),inventory=await prepareOwnerClosureV1({moduleUrl:LOADER_URL,owner:"inventory",within:"loadBuildGraphAttemptV1",provided}),report=await prepareOwnerClosureV1({moduleUrl:LOADER_URL,owner:"createGraphInventoryAwaitReportV1",provided});
+ return {inventory:instantiateOwnerClosureV1(inventory,ports),report:instantiateOwnerClosureV1(report,ports)};
 }
 
 for(const vector of cases)test("inventory receipt "+vector.mode,async()=>{
@@ -42,7 +35,6 @@ for(const vector of cases)test("inventory receipt "+vector.mode,async()=>{
   producer:{readBuildOwnerRegistrySourceV1:()=>"{}",discoverBuildOwnerAdmissionFactsV1:async()=>({})},
   readAdmissionMemoV1:async()=>{sample("memo-read");return{admission,observations:[1,2]};},
   selectedAdmissionFactsV1:{entries:()=>[],seed:()=>undefined},ownersOfAdmissionMemoV1:()=>[],
-  buildGraphSourceFactsHoldV1:async()=>{sample("memo-check");return vector.mode==="hit";},
   observation:{captureObservedSourceInputsV1:async(read:()=>Promise<unknown>)=>({value:await read(),observations:[3]}),settleObservedComputationV1:async(run:()=>Promise<unknown>)=>{sample("scoped-discovery");return run();}},
   closeBuildOwnerAdmissionV1:async(_selection:unknown,_registry:unknown,observe:(owner:unknown,targets:unknown,inputs:unknown)=>Promise<unknown>)=>{
    await observe(owner,[],[]);
@@ -53,19 +45,19 @@ for(const vector of cases)test("inventory receipt "+vector.mode,async()=>{
    }
    return admission;
   },
-  observeOwnerFactsMemoizedV1:async(input:{observe:()=>Promise<unknown>})=>input.observe(),isOwnerRegistryInvalidationV1:()=>false,checkScriptInvocation:()=>signals.signal.throwIfAborted(),
+  observeOwnerFactsMemoizedV1:async(input:{observe:()=>Promise<unknown>;outcome?:(kind:string)=>void})=>{if(vector.mode==="hit"){input.outcome?.("memo");return {};}input.outcome?.("discovery");return input.observe();},isOwnerRegistryInvalidationV1:()=>false,checkScriptInvocation:()=>signals.signal.throwIfAborted(),
   writeAdmissionMemoV1:async()=>{sample("memo-publish");if(vector.mode==="memo-over-size")return false;if(vector.mode==="write-completed")return true;if(vector.mode==="cancel")signals.abort(cause);throw Error("write refused");},
   packAdmissionMemoV1:(v:unknown)=>v,graphSnapshotPolicyV1:{maximumSnapshotBytes:4096},timing:()=>undefined,
   workspaceBuildFilesV1:async()=>{sample("catalog");return admission.files;},buildGraphMembersV1:(files:string[])=>files,inventoryDirectoriesV1:new WeakMap(),
-  buildGraphMembershipV1:async()=>{sample("membership-hash");return "digest";},
+  buildGraphMembershipV1:async()=>{sample("membership-hash");return "digest";},buildGraphSourceFactsHoldV1:async()=>false,
  };
  try{
-  const {inventory,report}=inventoryFixture(ports),activity=report(()=>now),result=sliceReadStepV1("inventory",()=>inventory(activity),{},activity.read);
+  const {inventory,report}=await inventoryFixture(ports),activity=report(()=>now),result=sliceReadStepV1("inventory",()=>inventory(activity),{},activity.read);
   if(vector.settlement==="cancelled")await expect(result).rejects.toBe(cause);else expect(await result).toMatchObject({files:admission.files,digest:"digest"});
   expect(db.query("select value from json_each(?1) order by key").all(JSON.stringify(calls))).toEqual(vector.calls.map(value=>({value})));
   expect((buildSliceReportV1({reason:"end"}).sources as {inventory?:Report}).inventory).toBeUndefined();
   if(["write-refused","memo-over-size","write-completed"].includes(vector.mode)){const completed=samples.at(-1)!.completed;expect(completed.find(row=>row.phase==="scoped-discovery")).toMatchObject({elapsedMilliseconds:13,completedOwners:vector.mode==="write-completed"?2:1});const publish=completed.find(row=>row.phase==="memo-publish");expect(publish?.observations).toBe(1);expect(publish?.published).toBe(vector.mode==="write-refused"?undefined:vector.mode==="write-completed");}
-  if(vector.mode==="hit")expect(samples.at(-1)!.completed.find(row=>row.phase==="memo-check")).toMatchObject({reused:true,observations:2});
+  if(vector.mode==="hit")expect(samples.at(-1)!.completed.find(row=>row.phase==="memo-publish")).toBeUndefined();
  }finally{db.close();}
 });
 
@@ -115,7 +107,7 @@ for(const vector of owners)test("active admission lookup "+vector.mode,async()=>
   inventoryDirectoriesV1:new WeakMap(),buildGraphMembershipV1:async()=> "digest",
  };
  try{
-  const {inventory,report}=inventoryFixture(ports,true),activity=report(()=>now),result=sliceReadStepV1("inventory",()=>inventory(activity),{},activity.read);
+  const {inventory,report}=await inventoryFixture(ports),activity=report(()=>now),result=sliceReadStepV1("inventory",()=>inventory(activity),{},activity.read);
   if(vector.mode==="cancel")await expect(result).rejects.toBe(cause);else expect(await result).toMatchObject({files:facts.files,digest:"digest"});
   expect(activity.read().activeOwner).toBeUndefined();expect(read()).toBeUndefined();
   expect(received.map(row=>row.stage)).toEqual(vector.stages);

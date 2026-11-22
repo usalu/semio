@@ -198,6 +198,10 @@ pub use ui_helpers_and_app_assembly::create_fem2d_app;
 
 //#region 📬️ArtifactStorePreparation
 
+#[cfg(test)]
+#[path = "🧪️tests/🔬️scoped-identity/🦀️.rs"]
+mod scoped_identity_laws;
+
 //#region 🧪️ArtifactPreparationLaws
 #[cfg(test)]
 #[path = "🧪️tests/🔬️fem2d-artifact-preparation-laws/🦀️.rs"]

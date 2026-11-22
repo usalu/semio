@@ -263,8 +263,8 @@ fn history_lane(app: &mut Puzzle2dApp, verb: &str, what: &str) {
 fn reload(app: &mut Puzzle2dApp, form: &str, what: &str) {
     let mut reloaded = app_with_registry();
     match form {
-        "text" => block_on(semio_plugin::app::artifact_app_laws::load_document_text(&mut *reloaded.0, &block_on(app.document_text()).expect("document text"), &mut semio_plugin::artifact_app_laws::fixture_identity(), reloaded.1.cx())).unwrap_or_else(|fault| panic!("{what}: text reload: {fault:?}")),
-        _ => block_on(semio_plugin::app::artifact_app_laws::load_document(&mut *reloaded.0, &block_on(app.document_pack()).expect("document pack"), &mut semio_plugin::artifact_app_laws::fixture_identity(), reloaded.1.cx())).unwrap_or_else(|fault| panic!("{what}: pack reload: {fault:?}")),
+        "text" => block_on(semio_plugin::app::artifact_app_laws::load_document_text(&mut reloaded.0, &block_on(app.document_text()).expect("document text"), &mut semio_plugin::artifact_app_laws::fixture_identity(), reloaded.1.cx())).unwrap_or_else(|fault| panic!("{what}: text reload: {fault:?}")),
+        _ => block_on(semio_plugin::app::artifact_app_laws::load_document(&mut reloaded.0, &block_on(app.document_pack()).expect("document pack"), &mut semio_plugin::artifact_app_laws::fixture_identity(), reloaded.1.cx())).unwrap_or_else(|fault| panic!("{what}: pack reload: {fault:?}")),
     }
     let mut previous = std::mem::replace(app, reloaded);
     close_app(&mut previous);
@@ -602,7 +602,7 @@ fn board_trace(app: &mut Puzzle2dApp) -> (Vec<Value>, Option<String>, usize) {
 
 /// 🌳️ Borrows the projected current line, including the implicit trunk represented by an absent branch id.
 fn current_line(app: &mut Puzzle2dApp) -> Option<String> {
-    block_on(semio_plugin::app::artifact_app_laws::with_document_view(&**app, |view| view.history.active_alternative_id.clone())).expect("current line projection")
+    block_on(semio_plugin::app::artifact_app_laws::with_document_view(&mut app.0, |view| view.history.active_alternative_id.clone())).expect("current line projection")
 }
 
 /// ⚖️ LAW (gap N17): switching to an alternative whose 360 drags are not applied is a local history step, which the

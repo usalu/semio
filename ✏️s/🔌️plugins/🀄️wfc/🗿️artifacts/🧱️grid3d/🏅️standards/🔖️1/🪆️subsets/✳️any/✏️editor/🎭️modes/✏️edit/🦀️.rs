@@ -4,7 +4,7 @@
 
 use crate::editor::grid3d::modes::edit::tools;
 use crate::editor::grid3d::modes::edit::windows::{grid, preview};
-use semio_plugin::create_default_layout;
+use semio_plugin::{create_default_layout, Axis};
 use semio_ui_locale::LocalizedLabel;
 use semio_plugin::ModeDefinition;
 use semio_plugin::WindowLayout;
@@ -20,6 +20,6 @@ pub fn definition() -> ModeDefinition {
 
 /// 🪟️ Grid left, preview right, equal halves.
 pub fn layout() -> WindowLayout {
-    create_default_layout(&[grid::WINDOW_KIND_ID.into(), preview::WINDOW_KIND_ID.into()], "row", Some(&[50.0, 50.0]), Some(&["Grid".into(), "Preview".into()]))
+    create_default_layout(&[grid::WINDOW_KIND_ID.into(), preview::WINDOW_KIND_ID.into()], Axis::Horizontal, Some(&[0.5, 0.5]), Some(&["Grid".into(), "Preview".into()]))
 }
 //#endregion 🔖️Definition

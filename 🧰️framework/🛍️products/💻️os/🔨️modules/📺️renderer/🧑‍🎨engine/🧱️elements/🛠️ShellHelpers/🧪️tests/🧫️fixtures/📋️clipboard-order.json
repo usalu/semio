@@ -1,0 +1,6 @@
+{
+  "submitted": ["copy", "paste", "cut", "paste"],
+  "copied": ["first selection", "second selection"],
+  "pasted": ["first selection", "second selection"],
+  "placement": {"anchor": "centroid", "position": [4, -2, 0], "windowId": "main"}
+}

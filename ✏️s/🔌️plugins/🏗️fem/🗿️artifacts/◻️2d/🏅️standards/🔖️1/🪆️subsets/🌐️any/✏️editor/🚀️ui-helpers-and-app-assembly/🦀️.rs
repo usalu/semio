@@ -1,5 +1,6 @@
 //! 🚀️ UI helpers and app assembly: the utility helpers, the patch action and the app creation with its manifest stitch. See [`super`].
 
+use semio_plugin::Axis;
 use super::*;
 
 //#region 🔖️Fem2dPlayApp
@@ -41,11 +42,9 @@ pub fn create_fem2d_app() -> semio_plugin::AppDefinition {
             .window_kind(model_window::WINDOW_KIND_ID, LocalizedLabel::native("Model", "Modell"), model_window::BODY_KEY, semio_ui_contract::SurfaceKind::Canvas2d, "fem-model")
             .window_kind(results_window::WINDOW_KIND_ID, LocalizedLabel::native("Results", "Ergebnisse"), results_window::BODY_KEY, semio_ui_contract::SurfaceKind::Canvas2d, "bar-chart-3")
             .default_layout(create_default_layout(
-                &[model_window::WINDOW_KIND_ID.into(), results_window::WINDOW_KIND_ID.into()],
-                "row",
-                Some(&[50.0, 50.0]),
-                Some(&["Model".into(), "Results".into()]),
-            ))
+                &[model_window::WINDOW_KIND_ID.into(), results_window::WINDOW_KIND_ID.into()], Axis::Horizontal,
+                Some(&[0.5, 0.5]),
+                Some(&["Model".into(), "Results".into()])))
             .mutation("addNode", LocalizedLabel::native("Add Node", "Knoten hinzufügen"))
             .action_args("addNode", vec![
                 ActionArgDef::number("x", LocalizedLabel::native("X", "X")).required(),

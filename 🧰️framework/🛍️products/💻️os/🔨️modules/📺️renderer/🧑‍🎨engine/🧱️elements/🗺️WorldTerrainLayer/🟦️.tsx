@@ -5,11 +5,12 @@
 
 // #region 🔌️Adapters
 import { publishedPageUrl } from "@semio-tech/framework/assets/published-page";
-import { useEffect, useMemo, useRef, useState } from "../⚛️react-port/🟦️.ts";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "../⚛️react-port/🟦️.ts";
 import { BufferAttribute, BufferGeometry, CanvasTexture, ClampToEdgeWrapping, DoubleSide, MeshStandardMaterial } from "@semio-tech/ui-react";
 import { createTerrainSession, type TerrainWasmSession } from "../🪪️WasmSessionLoader/🟦️.tsx";
 import { parseTerrainOverlayDescriptor, TerrainMapFeatures, type TerrainOverlayTile } from "./🗺️overlays/🟦️.tsx";
 import { TerrainBrushStroke, type TerrainBrushSample } from "./🖌️brush/👆️stroke.ts";
+import { TerrainPositionDrag, type TerrainPositionMove } from "./🗺️overlays/📍️move-position.ts";
 // #endregion 🔌️Adapters
 
 //#region 🔖️WorldTerrainLayerHost
@@ -199,10 +200,9 @@ class TerrainTileRenderer {
     return row ? this.session?.terrain_origin_elevation(row.z, row.x, row.y) : undefined;
   }
 
-  pickElevationSample(origin: readonly number[], direction: readonly number[]): readonly [number, number] | undefined {
-    if (!this.style.elevationGridJson || !this.session) return undefined;
-    const hit = JSON.parse(this.session.pickElevationGridJson(JSON.stringify({ origin, direction }))) as { readonly sample: readonly [number, number] } | null;
-    return hit?.sample;
+  pickElevationGrid(origin: readonly number[], direction: readonly number[]): { readonly sample: readonly [number, number]; readonly coordinates: readonly [number, number] } | null {
+    if (!this.style.elevationGridJson || !this.session) return null;
+    return JSON.parse(this.session.pickElevationGridJson(JSON.stringify({ origin, direction })));
   }
 
   private pump(): void {
@@ -287,7 +287,7 @@ class TerrainTileRenderer {
 //#region WorldTerrainLayer
 /** ⛰️ Renders GIS 3D terrain as chunked DEM-tile meshes inside the shared `World3d` viewport —
  * mounted alongside `WorldInstancesLayer` when `scene.terrainJson` is present. */
-export function WorldTerrainLayer({ terrainJson, cameraPosition, cameraTarget, onFeatureHover, onOriginElevation, brush, onElevationStroke }: {
+export function WorldTerrainLayer({ terrainJson, cameraPosition, cameraTarget, onFeatureHover, onOriginElevation, brush, onElevationStroke, movePosition, onPositionMoved }: {
   readonly terrainJson: string | undefined;
   readonly cameraPosition: readonly [number, number, number];
   readonly cameraTarget: readonly [number, number, number];
@@ -295,11 +295,14 @@ export function WorldTerrainLayer({ terrainJson, cameraPosition, cameraTarget, o
   readonly onOriginElevation?: (elevation: number) => void;
   readonly brush?: { readonly radius: number; readonly key: string };
   readonly onElevationStroke?: (samples: readonly TerrainBrushSample[]) => void;
+  readonly movePosition?: string;
+  readonly onPositionMoved?: (move: TerrainPositionMove) => void;
 }) {
   const style = useMemo(() => parseWorldTerrainStyle(terrainJson), [terrainJson]);
   const overlaysJson = useMemo(() => JSON.stringify(parseTerrainOverlayDescriptor(terrainJson).overlays), [terrainJson]);
   const rendererRef = useRef<TerrainTileRenderer | null>(null);
   const stroke = useMemo(() => new TerrainBrushStroke(), []);
+  const positionDrag = useMemo(() => new TerrainPositionDrag(), []);
   const [geometries, setGeometries] = useState<Map<string, BufferGeometry>>(new Map());
   const material = useMemo(() => new MeshStandardMaterial({ map: getHypsometricTexture(), side: DoubleSide, roughness: 1, metalness: 0 }), []);
 
@@ -350,18 +353,38 @@ export function WorldTerrainLayer({ terrainJson, cameraPosition, cameraTarget, o
     };
   }, [stroke, brush?.key, style?.elevationGridJson, style?.projectOriginLon, style?.projectOriginLat, style?.exaggeration]);
 
+  useLayoutEffect(() => {
+    if (!movePosition || !style?.elevationGridJson) return;
+    const cancel = () => positionDrag.cancel();
+    const keyDown = (event: KeyboardEvent) => { if (event.key === "Escape") cancel(); };
+    const cancelPointer = (event: PointerEvent) => positionDrag.cancel(event.pointerId);
+    window.addEventListener("keydown", keyDown, true);
+    window.addEventListener("blur", cancel);
+    window.addEventListener("wheel", cancel, true);
+    window.addEventListener("pointercancel", cancelPointer, true);
+    window.addEventListener("lostpointercapture", cancelPointer, true);
+    return () => {
+      window.removeEventListener("keydown", keyDown, true);
+      window.removeEventListener("blur", cancel);
+      window.removeEventListener("wheel", cancel, true);
+      window.removeEventListener("pointercancel", cancelPointer, true);
+      window.removeEventListener("lostpointercapture", cancelPointer, true);
+      cancel();
+    };
+  }, [positionDrag, movePosition, terrainJson, style?.elevationGridJson]);
+
   if (!style) return null;
 
   return (
     <group>
       {[...geometries.entries()].map(([key, geometry]) => (
-        <TerrainTileVisual key={key} tileKey={key} geometry={geometry} material={material} renderer={rendererRef.current} overlaysJson={overlaysJson} onFeatureHover={onFeatureHover} stroke={stroke} radius={style.elevationGridJson && onElevationStroke ? brush?.radius : undefined} onElevationStroke={onElevationStroke} />
+        <TerrainTileVisual key={key} tileKey={key} geometry={geometry} material={material} renderer={rendererRef.current} overlaysJson={overlaysJson} onFeatureHover={onFeatureHover} stroke={stroke} radius={style.elevationGridJson && onElevationStroke ? brush?.radius : undefined} onElevationStroke={onElevationStroke} positionDrag={positionDrag} onPositionMoved={style.elevationGridJson && movePosition ? onPositionMoved : undefined} />
       ))}
     </group>
   );
 }
 
-function TerrainTileVisual({ tileKey, geometry, material, renderer, overlaysJson, onFeatureHover, stroke, radius, onElevationStroke }: {
+function TerrainTileVisual({ tileKey, geometry, material, renderer, overlaysJson, onFeatureHover, stroke, radius, onElevationStroke, positionDrag, onPositionMoved }: {
   readonly tileKey: string;
   readonly geometry: BufferGeometry;
   readonly material: MeshStandardMaterial;
@@ -371,8 +394,11 @@ function TerrainTileVisual({ tileKey, geometry, material, renderer, overlaysJson
   readonly stroke: TerrainBrushStroke;
   readonly radius: number | undefined;
   readonly onElevationStroke?: (samples: readonly TerrainBrushSample[]) => void;
+  readonly positionDrag: TerrainPositionDrag;
+  readonly onPositionMoved?: (move: TerrainPositionMove) => void;
 }) {
   const overlays = useMemo(() => overlaysJson && renderer ? JSON.parse(renderer.getTerrainOverlayTile(tileKey, overlaysJson)) as TerrainOverlayTile | null : null, [renderer, tileKey, geometry, overlaysJson]);
+  useLayoutEffect(() => () => positionDrag.cancel(), [positionDrag, geometry]);
   const positions = geometry.getAttribute("position");
   const width = positions.getX(positions.count - 1) - positions.getX(0);
   return (
@@ -381,9 +407,13 @@ function TerrainTileVisual({ tileKey, geometry, material, renderer, overlaysJson
         geometry={geometry}
         material={material}
         receiveShadow
-        onPointerDown={radius === undefined ? undefined : (event) => {
+        onPointerDown={radius === undefined && !onPositionMoved ? undefined : (event) => {
           if (event.button !== 0 || event.isPrimary === false) return;
-          const sample = renderer?.pickElevationSample(event.ray.origin.toArray(), event.ray.direction.toArray());
+          if (radius === undefined) {
+            event.stopPropagation();
+            return;
+          }
+          const sample = renderer?.pickElevationGrid(event.ray.origin.toArray(), event.ray.direction.toArray())?.sample;
           if (!sample) return;
           const { pointerId } = event;
           const target = event.target as unknown as Pick<Element, "hasPointerCapture" | "setPointerCapture" | "releasePointerCapture"> | null;
@@ -407,17 +437,56 @@ function TerrainTileVisual({ tileKey, geometry, material, renderer, overlaysJson
         onPointerMove={radius === undefined ? undefined : (event) => {
           if (!stroke.owns(event.pointerId)) return;
           event.stopPropagation();
-          stroke.move(event.pointerId, renderer?.pickElevationSample(event.ray.origin.toArray(), event.ray.direction.toArray()));
+          stroke.move(event.pointerId, renderer?.pickElevationGrid(event.ray.origin.toArray(), event.ray.direction.toArray())?.sample);
         }}
         onPointerUp={radius === undefined ? undefined : (event) => {
           if (!stroke.owns(event.pointerId)) return;
           event.stopPropagation();
           if (event.button !== 0) return;
-          const samples = stroke.finish(event.pointerId, renderer?.pickElevationSample(event.ray.origin.toArray(), event.ray.direction.toArray()));
+          const samples = stroke.finish(event.pointerId, renderer?.pickElevationGrid(event.ray.origin.toArray(), event.ray.direction.toArray())?.sample);
           if (samples) onElevationStroke?.(samples);
         }}
       />
-      {overlays && width > 0 ? <TerrainMapFeatures tile={overlays} tileWidth={width} onFeatureHover={onFeatureHover} /> : null}
+      {overlays && width > 0 ? <TerrainMapFeatures
+        tile={overlays}
+        tileWidth={width}
+        onFeatureHover={onFeatureHover}
+        onPositionDown={onPositionMoved && ((id, event) => {
+          if (event.button !== 0 || event.isPrimary === false) return;
+          const { pointerId, clientX, clientY } = event;
+          const target = event.target as unknown as Pick<Element, "hasPointerCapture" | "setPointerCapture" | "releasePointerCapture">;
+          const source = event.nativeEvent.target;
+          if (!target || !(source instanceof HTMLElement)) return;
+          const otherPointer = (other: PointerEvent) => {
+            if (other.button !== 0 || (other.pointerType === "touch" && other.pointerId !== pointerId)) positionDrag.cancel(pointerId);
+          };
+          if (!positionDrag.begin(pointerId, id, clientX, clientY, () => {
+            source.removeEventListener("pointerdown", otherPointer);
+            if (target.hasPointerCapture(pointerId)) target.releasePointerCapture(pointerId);
+          })) return;
+          try {
+            target.setPointerCapture(pointerId);
+            source.addEventListener("pointerdown", otherPointer);
+            event.stopPropagation();
+          } catch {
+            positionDrag.cancel(pointerId);
+          }
+        })}
+        onPositionMove={onPositionMoved && ((event) => {
+          if (positionDrag.owns(event.pointerId)) event.stopPropagation();
+        })}
+        onPositionUp={onPositionMoved && ((event) => {
+          const { pointerId, clientX, clientY } = event;
+          if (event.button !== 0 || !positionDrag.owns(pointerId)) return;
+          event.stopPropagation();
+          const bounds = (event.nativeEvent.target as Element).getBoundingClientRect();
+          const hit = clientX >= bounds.left && clientX < bounds.right && clientY >= bounds.top && clientY < bounds.bottom
+            ? renderer?.pickElevationGrid(event.ray.origin.toArray(), event.ray.direction.toArray())
+            : null;
+          const move = positionDrag.finish(pointerId, clientX, clientY, hit?.coordinates);
+          if (move) onPositionMoved(move);
+        })}
+      /> : null}
     </group>
   );
 }

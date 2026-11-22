@@ -195,11 +195,11 @@ impl OriginalJobReturnBirth{
  }
  fn admit_authorities(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   if self.work.is_none(){
-   if self.work_born.is_none(){if self.work_loan.is_none(){cx.original_source_parent()?.admit_loan(&mut self.work_loan,cx)?;return Ok(false)}let(loan,born_slot)=(&mut self.work_loan,&mut self.work_born);Self::paid_step::<()>(cx,|cx,e|OriginalJobNativeWork::admit(loan,born_slot,cx,e),Default::default())?;return Ok(false)}
+   if self.work_born.is_none(){if self.work_loan.is_none(){cx.original_source_parent()?.admit_resident_loan(&mut self.work_loan,cx)?;return Ok(false)}let(loan,born_slot)=(&mut self.work_loan,&mut self.work_born);Self::paid_step::<()>(cx,|cx,e|OriginalJobNativeWork::admit(loan,born_slot,cx,e),Default::default())?;return Ok(false)}
    let(born,authority)=(&mut self.work_born,&mut self.work);Self::paid_step::<()>(cx,|cx,e|{let lock=RetainedOwnerGate::new(cx);let context=OriginalJobNativeTurnContext::new(&lock);let observed:&dyn OriginalJobNativeContext=&context;OriginalWorkAuthority::admit_from(born,authority,&observed,e)},Default::default())?;return Ok(false)
   }
   if self.construction.is_none(){
-   if self.construction_born.is_none(){if self.construction_loan.is_none(){cx.original_source_parent()?.admit_loan(&mut self.construction_loan,cx)?;return Ok(false)}let(loan,born_slot)=(&mut self.construction_loan,&mut self.construction_born);Self::paid_step::<()>(cx,|cx,e|OriginalJobNativeConstruction::admit(loan,born_slot,cx,e),Default::default())?;return Ok(false)}
+   if self.construction_born.is_none(){if self.construction_loan.is_none(){cx.original_source_parent()?.admit_resident_loan(&mut self.construction_loan,cx)?;return Ok(false)}let(loan,born_slot)=(&mut self.construction_loan,&mut self.construction_born);Self::paid_step::<()>(cx,|cx,e|OriginalJobNativeConstruction::admit(loan,born_slot,cx,e),Default::default())?;return Ok(false)}
    let(born,authority)=(&mut self.construction_born,&mut self.construction);Self::paid_step::<()>(cx,|cx,e|{let lock=RetainedOwnerGate::new(cx);let context=OriginalJobNativeTurnContext::new(&lock);let observed:&dyn OriginalJobNativeContext=&context;OriginalConstructionAuthority::admit_from(born,authority,&observed,e)},Default::default())?;return Ok(false)
   }
   Ok(true)
@@ -247,7 +247,7 @@ impl OriginalJobReturnBirth{
   if self.construction.is_some(){let(authority,born)=(&mut self.construction,&mut self.construction_born);Self::paid_step::<()>(cx,|cx,e|{let lock=RetainedOwnerGate::new(cx);let context=OriginalJobNativeTurnContext::new(&lock);let observed:&dyn OriginalJobNativeContext=&context;OriginalConstructionAuthority::return_into(authority,born,&observed,e)},Default::default())?;return Ok(false)}
   if self.work_born.is_some(){let(born,loan)=(&mut self.work_born,&mut self.work_loan);Self::paid_step::<()>(cx,|cx,e|OriginalJobNativeWork::return_into(born,loan,cx,e),Default::default())?;return Ok(false)}
   if self.construction_born.is_some(){let(born,loan)=(&mut self.construction_born,&mut self.construction_loan);Self::paid_step::<()>(cx,|cx,e|OriginalJobNativeConstruction::return_into(born,loan,cx,e),Default::default())?;return Ok(false)}
-  for slot in[&mut self.work_loan,&mut self.construction_loan]{if let Some(loan)=slot.as_mut(){let parent=cx.original_source_parent()?;loan.close_step(parent,cx)?;if loan.terminal_is_empty(){slot.take();}return Ok(false)}}
+  for slot in[&mut self.work_loan,&mut self.construction_loan]{if let Some(loan)=slot.as_mut(){let parent=cx.original_source_parent()?;loan.close_step(parent,cx)?;if loan.terminal_is_empty(){slot.take();parent.release_resident_loan();}return Ok(false)}}
   Ok(true)
  }
 }

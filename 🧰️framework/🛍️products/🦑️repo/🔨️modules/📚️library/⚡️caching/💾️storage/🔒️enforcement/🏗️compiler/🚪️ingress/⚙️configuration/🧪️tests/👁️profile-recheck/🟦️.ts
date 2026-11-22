@@ -1,22 +1,23 @@
-import "../📮️order.ts";
 import {test,expect} from "bun:test";
 import {Database} from "bun:sqlite";
 import Ajv from "ajv";
 import {mkdtempSync,rmSync,writeFileSync} from "node:fs";
 import {join} from "node:path";
-import {recheckCargoProfileSourceV1} from "../../🟦️.ts";
+import {recheckCargoProfileSourceV1,requireLoadedCargoProfilePolicyV1} from "../../🟦️.ts";
 import {withBuildTestInvocationV1} from "../../../../../../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts";
 import {createIssuedResourceControlV1} from "../../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {churnProtocolV1,concurrentEditOfV1} from "../../../../../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
+import {churnProtocolV1,concurrentEditOfV1,STALE_IMPLEMENTATION_CODE_V1,retryOnConcurrentEditV1} from "../../../../../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
 import fixture from "./🔣️.json" with {type:"json"};
 import schema from "./🧬️.json" with {type:"json"};
+import {declareLibraryBuildTestEnvelopeV1} from "../../../../../../../../🧪️testing/🪪️native-birth/🟦️.ts";
+declareLibraryBuildTestEnvelopeV1({suite:"storage-compiler",maximumElapsedMilliseconds:15000});
 
 
 test("captured Cargo profile changes request a new build without admitting different source bytes",async()=>{
  expect(new Ajv({strict:true}).compile(schema)(fixture)).toBe(true);
  const artifacts=process.env.SEMIO_TEST_ARTIFACT_DIR;
  if(!artifacts)throw Error("Explicit test artifact directory required");
- const root=mkdtempSync(join(artifacts,"profile-")),source={path:"profile.json",bytes:Buffer.byteLength(fixture.original),digest:new Bun.CryptoHasher("sha256").update(fixture.original).digest("hex")};
+ const root=mkdtempSync(join(artifacts,"p")),source={path:"profile.json",bytes:Buffer.byteLength(fixture.original),digest:new Bun.CryptoHasher("sha256").update(fixture.original).digest("hex")};
  const path=join(root,source.path),oracle=new Database(":memory:");
  try{
   const classify=oracle.query<{reason:string|null},[string|null,string]>("SELECT CASE WHEN ?1 IS NULL THEN 'vanished' WHEN length(cast(?1 AS blob)) != length(cast(?2 AS blob)) THEN 'length' WHEN ?1 != ?2 THEN 'bytes' END AS reason");
@@ -35,4 +36,14 @@ test("captured Cargo profile changes request a new build without admitting diffe
    }
   });
  }finally{oracle.close();rmSync(root,{recursive:true,force:true});}
+});
+
+
+test("changed loaded Cargo profile requests a fresh process without snapshot retries",async()=>{
+ const prior='{"version":1,"rows":[1]}', equivalent='{ \"version\": 1, \"rows\": [1] }', changed='{"version":1,"rows":[2]}';
+ const digest=new Bun.CryptoHasher("sha256").update(JSON.stringify(JSON.parse(prior))).digest("hex");
+ const oracle=new Database(":memory:");try{const same=oracle.query<{equal:number},[string,string]>("select json(?1)=json(?2) as equal");expect(same.get(prior,equivalent)?.equal).toBe(1);expect(same.get(prior,changed)?.equal).toBe(0);}finally{oracle.close();}
+ expect(requireLoadedCargoProfilePolicyV1("profile.json",new TextEncoder().encode(equivalent),digest)).toBeUndefined();
+ let attempts=0;const failure=await retryOnConcurrentEditV1("snapshot",async()=>{attempts++;requireLoadedCargoProfilePolicyV1("profile.json",new TextEncoder().encode(changed),digest);}).then(()=>null,error=>error);
+ expect(attempts).toBe(1);expect(failure.code).toBe(STALE_IMPLEMENTATION_CODE_V1);expect(String(failure)).toContain("profile.json");
 });

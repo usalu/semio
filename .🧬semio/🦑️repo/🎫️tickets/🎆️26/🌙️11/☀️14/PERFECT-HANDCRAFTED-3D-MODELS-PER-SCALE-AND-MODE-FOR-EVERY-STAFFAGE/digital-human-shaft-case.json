@@ -1,0 +1,416 @@
+{
+  "scales": [
+    50,
+    100,
+    200,
+    500
+  ],
+  "sides": [
+    "l",
+    "r"
+  ],
+  "limbs": {
+    "femur": "thigh",
+    "humerus": "arm",
+    "radius": "forearm",
+    "ulna": "forearm",
+    "tibia": "shank",
+    "fibula": "shank"
+  },
+  "subjects": {
+    "cyclist": {
+      "prefix": "",
+      "pose": "standing-on-pedals",
+      "lengths": {
+        "arm": 0.31878,
+        "thigh": 0.4042,
+        "forearm": 0.25116,
+        "shank": 0.4231
+      },
+      "femurDiameterM": [
+        0.023,
+        0.04
+      ]
+    },
+    "wheelchair-user": {
+      "prefix": "",
+      "pose": "ramp-ascent",
+      "lengths": {
+        "arm": 0.3234,
+        "thigh": 0.4263,
+        "forearm": 0.2548,
+        "shank": 0.43
+      },
+      "femurDiameterM": [
+        0.023,
+        0.04
+      ]
+    },
+    "parent-with-stroller": {
+      "prefix": "",
+      "pose": "checking-child",
+      "lengths": {
+        "arm": 0.3082,
+        "thigh": 0.4276,
+        "forearm": 0.2685,
+        "shank": 0.4176
+      },
+      "femurDiameterM": [
+        0.023,
+        0.04
+      ],
+      "members": {
+        "arm": "upper-arm"
+      },
+      "joints": {
+        "arm": "shoulder",
+        "forearm": "elbow",
+        "thigh": "hip",
+        "shank": "knee"
+      }
+    },
+    "courier-with-hand-truck": {
+      "prefix": "",
+      "pose": "tilted-back",
+      "lengths": {
+        "arm": 0.3366,
+        "forearm": 0.2652,
+        "thigh": 0.4437,
+        "shank": 0.4335
+      },
+      "members": {
+        "arm": "arm"
+      },
+      "jointNames": {
+        "arm": "humeral-head",
+        "forearm": "elbow",
+        "thigh": "femoral-head",
+        "shank": "knee"
+      },
+      "femurDiameterM": [
+        0.017,
+        0.05
+      ]
+    },
+    "jogger": {
+      "prefix": "sk-",
+      "pose": "propulsion-l",
+      "lengths": {
+        "arm": 0.336,
+        "forearm": 0.2792,
+        "thigh": 0.4447,
+        "shank": 0.4343
+      },
+      "members": {
+        "arm": "upper-arm"
+      },
+      "jointNames": {
+        "arm": "joint-upper-arm",
+        "forearm": "joint-forearm",
+        "thigh": "joint-thigh",
+        "shank": "joint-shank"
+      },
+      "femurDiameterM": [
+        0.017,
+        0.05
+      ]
+    },
+    "kneeling-gardener": {
+      "prefix": "sk-",
+      "pose": "reaching-trug",
+      "lengths": {
+        "arm": 0.2925,
+        "forearm": 0.2546,
+        "thigh": 0.4055,
+        "shank": 0.3961
+      },
+      "members": {
+        "arm": "upper-arm"
+      },
+      "jointNames": {
+        "arm": "joint-upper-arm",
+        "forearm": "joint-forearm",
+        "thigh": "joint-thigh",
+        "shank": "joint-shank"
+      },
+      "femurDiameterM": [
+        0.017,
+        0.05
+      ]
+    },
+    "leaning-person": {
+      "prefix": "",
+      "pose": "pushing-off",
+      "lengths": {
+        "arm": 0.318,
+        "forearm": 0.252,
+        "thigh": 0.4202,
+        "shank": 0.4105
+      },
+      "members": {
+        "arm": "upper-arm"
+      },
+      "jointNames": {
+        "arm": "joint-shoulder",
+        "forearm": "joint-elbow",
+        "thigh": "joint-hip",
+        "shank": "joint-knee"
+      },
+      "femurDiameterM": [
+        0.017,
+        0.05
+      ]
+    },
+    "person-cooking": {
+      "prefix": "",
+      "pose": "tasting",
+      "lengths": {
+        "arm": 0.3135,
+        "forearm": 0.247,
+        "thigh": 0.41325,
+        "shank": 0.40375
+      },
+      "members": {
+        "arm": "arm"
+      },
+      "jointNames": {
+        "arm": "joint-shoulder",
+        "forearm": "joint-elbow",
+        "thigh": "joint-hip",
+        "shank": "joint-knee"
+      },
+      "femurDiameterM": [
+        0.017,
+        0.05
+      ]
+    },
+    "pregnant-person": {
+      "prefix": "",
+      "pose": "cradling-belly",
+      "lengths": {
+        "arm": 0.3102,
+        "forearm": 0.2444,
+        "thigh": 0.40673,
+        "shank": 0.39738
+      },
+      "members": {
+        "arm": "arm"
+      },
+      "jointNames": {
+        "arm": "joint-shoulder",
+        "forearm": "joint-elbow",
+        "thigh": "joint-hip",
+        "shank": "joint-knee"
+      },
+      "femurDiameterM": [
+        0.017,
+        0.05
+      ]
+    },
+    "runner-with-blade-prosthesis": {
+      "prefix": "sk-",
+      "pose": "standing-ready",
+      "lengths": {
+        "arm": 0.33,
+        "forearm": 0.26,
+        "thigh": 0.435,
+        "shank": 0.425
+      },
+      "members": {
+        "arm": "arm"
+      },
+      "jointNames": {
+        "arm": "joint-arm",
+        "forearm": "joint-forearm",
+        "thigh": "joint-thigh",
+        "shank": "joint-shank"
+      },
+      "femurDiameterM": [
+        0.017,
+        0.05
+      ],
+      "sideLengths": {
+        "r": {
+          "shank": 0.18
+        }
+      },
+      "stationsBySide": {
+        "r": {
+          "shank": [
+            0.34,
+            0.48,
+            0.61
+          ]
+        }
+      }
+    },
+    "seated-guitarist": {
+      "prefix": "",
+      "pose": "tuning",
+      "lengths": {
+        "arm": 0.327,
+        "forearm": 0.257,
+        "thigh": 0.43,
+        "shank": 0.435
+      },
+      "members": {
+        "arm": "upper-arm"
+      },
+      "jointNames": {
+        "arm": "joint-upper-arm",
+        "forearm": "joint-forearm",
+        "thigh": "joint-thigh",
+        "shank": "joint-shank"
+      },
+      "femurDiameterM": [
+        0.017,
+        0.05
+      ]
+    },
+    "seated-office-worker": {
+      "prefix": "",
+      "pose": "leaning-back",
+      "lengths": {
+        "arm": 0.33,
+        "forearm": 0.26,
+        "thigh": 0.435,
+        "shank": 0.438
+      },
+      "members": {
+        "arm": "arm"
+      },
+      "jointNames": {
+        "arm": "joint-arm",
+        "forearm": "joint-forearm",
+        "thigh": "joint-thigh",
+        "shank": "joint-shank"
+      },
+      "femurDiameterM": [
+        0.017,
+        0.05
+      ]
+    },
+    "seated-reader": {
+      "prefix": "",
+      "pose": "reaching-for-cup",
+      "lengths": {
+        "arm": 0.3115,
+        "forearm": 0.2454,
+        "thigh": 0.4106,
+        "shank": 0.413
+      },
+      "members": {
+        "arm": "arm"
+      },
+      "jointNames": {
+        "arm": "joint-arm",
+        "forearm": "joint-forearm",
+        "thigh": "joint-thigh",
+        "shank": "joint-shank"
+      },
+      "femurDiameterM": [
+        0.017,
+        0.05
+      ]
+    },
+    "skateboarder": {
+      "prefix": "",
+      "pose": "ollie-air",
+      "lengths": {
+        "arm": 0.3346,
+        "forearm": 0.2581,
+        "thigh": 0.4183,
+        "shank": 0.4379
+      },
+      "members": {
+        "arm": "upper-arm"
+      },
+      "jointNames": {
+        "arm": "joint-upper-arm",
+        "forearm": "joint-forearm",
+        "thigh": "joint-thigh",
+        "shank": "joint-shank"
+      },
+      "femurDiameterM": [
+        0.017,
+        0.05
+      ]
+    },
+    "sleeping-person": {
+      "prefix": "",
+      "pose": "curled",
+      "lengths": {
+        "arm": 0.3152,
+        "forearm": 0.2483,
+        "thigh": 0.4,
+        "shank": 0.4185
+      },
+      "members": {
+        "arm": "arm"
+      },
+      "jointNames": {
+        "arm": "joint-arm",
+        "forearm": "joint-forearm",
+        "thigh": "joint-thigh",
+        "shank": "joint-shank"
+      },
+      "femurDiameterM": [
+        0.017,
+        0.05
+      ]
+    },
+    "standing-adult": {
+      "prefix": "",
+      "pose": "pointing",
+      "lengths": {
+        "arm": 0.3135,
+        "forearm": 0.247,
+        "thigh": 0.41325,
+        "shank": 0.40375
+      },
+      "members": {
+        "arm": "arm"
+      },
+      "jointNames": {
+        "arm": "joint-shoulder",
+        "forearm": "joint-elbow",
+        "thigh": "joint-hip",
+        "shank": "joint-knee"
+      },
+      "femurDiameterM": [
+        0.017,
+        0.05
+      ]
+    },
+    "walking-commuter": {
+      "prefix": "",
+      "pose": "check-watch",
+      "lengths": {
+        "arm": 0.33,
+        "forearm": 0.26,
+        "thigh": 0.435,
+        "shank": 0.425
+      },
+      "members": {
+        "arm": "arm"
+      },
+      "jointNames": {
+        "arm": "joint-arm",
+        "forearm": "joint-forearm",
+        "thigh": "joint-thigh",
+        "shank": "joint-shank"
+      },
+      "femurDiameterM": [
+        0.017,
+        0.05
+      ]
+    }
+  },
+  "stations": [
+    0.34,
+    0.52,
+    0.7
+  ],
+  "maxDiameterDeviationM": 0.0038,
+  "maxCentreDeviationM": 0.0032
+}

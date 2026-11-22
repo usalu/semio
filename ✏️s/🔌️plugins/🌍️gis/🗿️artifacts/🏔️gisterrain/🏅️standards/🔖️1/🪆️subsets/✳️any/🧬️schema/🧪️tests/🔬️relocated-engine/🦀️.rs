@@ -22,7 +22,7 @@ async fn build_terrain_scene_json_roundtrips_descriptor_fields() {
     assert_eq!(value["projectOriginLon"], descriptor.project_origin.lon);
     assert_eq!(value["exaggeration"], document.exaggeration);
     assert!(value.get("tileUrlTemplate").is_none());
-    assert_eq!(value["elevationGrid"]["rows"].as_array().expect("rows").len(), 33);
+    assert_eq!(value["elevationGrid"]["rowsMillimetres"].as_array().expect("millimetre rows").len(), 33);
 }
 
 #[semio_framework_async_macros::async_test]

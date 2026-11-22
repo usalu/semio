@@ -1,0 +1,26 @@
+{
+  "title": "Get Trinity and Jack Working End to End",
+  "emoji": "🔱",
+  "status": "open",
+  "description": "Get the trinity s plugin and its jack artifact (editor + viewer, LSP, shell, dev graph) working end to end: builds, tests pass, loads in s and exposes its artifacts. Fall back to native tools if the shared work fleet mechanism does not work.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2793"
+  },
+  "goal": "RUNNING-FRAMEWORK/RUNNING-PRODUCTS/RUNNING-OS/RUNNING-S/RUNNING-PLUGINS/RUNNING-TRINITY",
+  "sessions": [
+    "1d3410ba-2499-4f39-aa47-da6957607f39"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-22 01:56:58",
+      "author": "",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Get the trinity s plugin and its jack artifact (editor + viewer, LSP, shell, dev graph) working end to end: builds, tests pass, loads in s and exposes its artifacts. Fall back to native tools if the shared work fleet mechanism does not work.",
+      "llm": "opus-4-7",
+      "effort": "medium"
+    }
+  ]
+}

@@ -243,7 +243,7 @@ fn closing_a_partially_staged_batch_retires_one_descriptor_then_its_reservation(
     cursor.closing = true;
     assert!(!caller.turn(|cx| cursor.close_step(cx)).unwrap(), "one original turn transfers the exact staged descriptor into retirement custody");
     assert!(!cursor.actions.is_empty());
-    assert!(cursor.actions.batch.is_some(), "the reservation remains while its descriptor fields close");
+    assert!(cursor.actions.staged_batch_remaining().is_some(), "the reservation remains while its descriptor fields close");
     close_original_deferred(&mut cursor, &mut caller);
     assert!(cursor.terminal_is_empty());
     caller.finish();
@@ -251,7 +251,7 @@ fn closing_a_partially_staged_batch_retires_one_descriptor_then_its_reservation(
 
 #[test]
 fn the_ledger_is_the_runtimes_and_no_frame_candidate_owns_one() {
-    assert!(RENDERER_SOURCE().contains("    frame_actions: FrameActionOwners,"), "the runtime declares the ledger");
+    assert!(RENDERER_SOURCE().contains("frame_actions: FrameActionOwners,"), "the runtime declares the ledger");
     assert!(RENDERER_SOURCE().contains("app.frame_actions.try_push(action)"), "the frame's authorities push onto the RUNTIME's ledger");
     assert!(RENDERER_SOURCE().contains("std::mem::take(&mut self.frame_actions)"), "only a completing frame takes it, and takes all of it");
     for candidate in ["struct FrameTransaction {", "struct FrameBuildCursor {", "struct AppFrameAfterChrome {", "struct FrameFinishCursor {"] {

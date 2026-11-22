@@ -7198,17 +7198,12 @@
             "iconId": "play",
             "layout": {
               "root": {
-                "kind": "row",
+                "kind": "stack",
                 "children": [
                   {
-                    "kind": "stack",
-                    "children": [
-                      {
-                        "kind": "window",
-                        "windowKindId": "forms-try",
-                        "title": "forms-try"
-                      }
-                    ]
+                    "kind": "window",
+                    "windowKindId": "forms-try",
+                    "title": "forms-try"
                   }
                 ]
               }
@@ -7221,17 +7216,12 @@
             "iconId": "list-checks",
             "layout": {
               "root": {
-                "kind": "row",
+                "kind": "stack",
                 "children": [
                   {
-                    "kind": "stack",
-                    "children": [
-                      {
-                        "kind": "window",
-                        "windowKindId": "forms-responses",
-                        "title": "forms-responses"
-                      }
-                    ]
+                    "kind": "window",
+                    "windowKindId": "forms-responses",
+                    "title": "forms-responses"
                   }
                 ]
               }
@@ -7241,11 +7231,12 @@
         ],
         "defaultLayout": {
           "root": {
-            "kind": "row",
+            "kind": "split",
+            "axis": "horizontal",
             "children": [
               {
                 "kind": "stack",
-                "size": 50.0,
+                "size": 0.5,
                 "children": [
                   {
                     "kind": "window",
@@ -7256,7 +7247,7 @@
               },
               {
                 "kind": "stack",
-                "size": 50.0,
+                "size": 0.5,
                 "children": [
                   {
                     "kind": "window",

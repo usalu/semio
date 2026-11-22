@@ -1,29 +1,56 @@
 //! 📖️ Genuine scene owners emit paged PDF objects, transparency resources and exact xref entries.
-use semio_s_artifact_draw_drawing_scene::preparation::{DocumentScenePlan, DocumentSceneNode, DocumentSceneContent};
+use semio_s_artifact_draw_drawing_scene::preparation::{advance_original_scene, DocumentScenePlan, DocumentSceneNode, DocumentSceneContent, DocumentSceneError};
 use semio_s_artifact_draw_drawing_geometry::{ArcGeometry, arc_geometry};
 use semio_s_artifact_draw_drawing_model::{FillStyle, GradientStop, StrokeStyle, PathSegment};
-use semio_s_artifact_draw_drawing_io::byte_writer::{Fragment, PAGE, reserve};
-use semio_framework_value::retirement::RetireOwned;
+use semio_s_artifact_draw_drawing_io::byte_writer::{Fragment, PAGE};
+use crate::writer_work::Storage;
+use semio_framework_job::{OriginalWorkFailure, StepContext};
+use semio_framework_value::{RetirementDemand, ValueError, retirement::RetireOwned, work::RetainedWorkLedger};
 use semio_framework_value_persistent::list::PagedList;
 use std::fmt::Write;
+
+type WriteResult<T> = Result<T, &'static str>;
 type Pages=PagedList<Vec<u8>,{usize::MAX}>;
 #[derive(Clone,Copy)]
 pub struct PdfWriteLimits{pub view_box:[f64;4],pub max_output_bytes:usize,pub max_work:u64}
 #[derive(Clone,Copy,Debug)]
 pub struct PdfWriteProgress{pub phase:&'static str,pub nodes:usize,pub bytes:usize,pub work:u64,pub done:bool}
 #[derive(semio_framework_value::RetireOwned)]
-struct Body{pages:Pages,dict:String,stream:bool,length:usize}
-impl Body{fn new(dict:String,stream:bool)->Self{Self{pages:Pages::new(),dict,stream,length:0}}}
+struct Body{pages:Pages,dict:Option<StreamDictionary>,length:usize}
+impl Body{fn new(dict:Option<StreamDictionary>)->Self{Self{pages:Pages::new(),dict,length:0}}}
+#[derive(Clone, Copy)]
+enum StreamDictionary {
+    Content,
+    Form([f64; 4]),
+    AlphaForm([f64; 4]),
+    Image { width: u32, height: u32, mask: Option<usize> },
+}
+impl StreamDictionary {
+    fn write(self, out: &mut Fragment) -> std::fmt::Result {
+        match self {
+            Self::Content => Ok(()),
+            Self::Form([x0, y0, x1, y1]) => write!(out, "/Type /XObject /Subtype /Form /FormType 1 /BBox [{x0} {y0} {x1} {y1}] /Resources 5 0 R /Group << /S /Transparency /CS /DeviceRGB /I true >>"),
+            Self::AlphaForm([x0, y0, x1, y1]) => write!(out, "/Type /XObject /Subtype /Form /BBox [{x0} {y0} {x1} {y1}] /Resources 5 0 R /Group << /S /Transparency /CS /DeviceGray >>"),
+            Self::Image { width, height, mask } => {
+                let color = if mask.is_some() { "RGB" } else { "Gray" };
+                write!(out, "/Type /XObject /Subtype /Image /Width {width} /Height {height} /ColorSpace /Device{color} /BitsPerComponent 8")?;
+                if let Some(mask) = mask { write!(out, " /SMask {mask} 0 R")?; }
+                Ok(())
+            }
+        }
+    }
+}
+
 #[derive(Clone,Copy,Default)]
 struct Span{from:f64,to:f64,left:usize,right:usize}
 #[derive(Clone,Copy)]
 struct Record{parent:Option<usize>,constant:Option<[f64;4]>,stops:[usize;64],stop_count:usize,spans:[Span;65],span_count:usize,asset:Option<usize>,gradient:bool}
 impl Default for Record{fn default()->Self{Self{parent:None,constant:None,stops:[0;64],stop_count:0,spans:[Span::default();65],span_count:0,asset:None,gradient:false}}}
-semio_framework_value::artifact_retire_leaf!(Span,Record);
+semio_framework_value::artifact_retire_leaf!(Span,Record,StreamDictionary);
 #[derive(semio_framework_value::RetireOwned)]
 #[doc(hidden)]
-pub struct Owners{plan:DocumentScenePlan,objects:PagedList<Option<Body>,{usize::MAX}>,records:PagedList<Record,{usize::MAX}>,offsets:PagedList<usize,{usize::MAX}>,output:Body,failure:Option<String>}
-pub struct PdfWriteJob{owners:Owners,limits:PdfWriteLimits,pending:Fragment,destination:usize,phase:u8,node:usize,part:usize,search:usize,work:u64,bytes:usize,object:usize,object_page:usize,xref:usize,next_free:usize,cancelled:bool,pen:[f64;2],start:[f64;2],open:bool,arc:Option<ArcGeometry>,arc_piece:usize,arc_pieces:usize,arc_to:[f64;2],stroke_pass:bool,function_alpha:bool,resource_part:usize,source_at:usize}
+pub struct Owners{plan:DocumentScenePlan,objects:PagedList<Option<Body>,{usize::MAX}>,records:PagedList<Record,{usize::MAX}>,offsets:PagedList<usize,{usize::MAX}>,output:Body,spare:Vec<u8>}
+pub struct PdfWriteJob{owners:Owners,failure:Option<&'static str>,limits:PdfWriteLimits,pending:Fragment,destination:usize,phase:u8,node:usize,part:usize,search:usize,work:u64,bytes:usize,object:usize,object_page:usize,xref:usize,next_free:usize,cancelled:bool,pen:[f64;2],start:[f64;2],open:bool,arc:Option<ArcGeometry>,arc_piece:usize,arc_pieces:usize,arc_to:[f64;2],stroke_pass:bool,function_alpha:bool,resource_part:usize,source_at:usize}
 impl RetireOwned for PdfWriteJob{type RetirementCursor = <Owners as RetireOwned>::RetirementCursor;
     fn retirement_seed(self) -> Self::RetirementCursor { self.owners.retirement_seed() }
     fn retirement_ready(&self) -> bool { self.owners.retirement_ready() }fn retirement_birth_bytes(&self)->Option<usize>{self.owners.retirement_birth_bytes()}fn controlled_retirement_supported()->bool{true}}
@@ -33,33 +60,82 @@ fn paint(node:&DocumentSceneNode)->(Option<&FillStyle>,Option<&StrokeStyle>,&str
 fn stops(fill:&FillStyle)->&PagedList<GradientStop,{usize::MAX}>{match fill{FillStyle::LinearGradient{stops,..}|FillStyle::RadialGradient{stops,..}=>stops,_=>unreachable!()}}
 fn color(out:&mut Fragment,c:[f64;4],alpha:bool)->std::fmt::Result{if alpha{write!(out,"{}",c[3])}else{write!(out,"{} {} {}",c[0],c[1],c[2])}}
 fn blend(value:&str)->&str{match value{"normal"=>"Normal","multiply"=>"Multiply","screen"=>"Screen","overlay"=>"Overlay","darken"=>"Darken","lighten"=>"Lighten","colorDodge"=>"ColorDodge","colorBurn"=>"ColorBurn","hardLight"=>"HardLight","softLight"=>"SoftLight","difference"=>"Difference","exclusion"=>"Exclusion","hue"=>"Hue","saturation"=>"Saturation","color"=>"Color","luminosity"=>"Luminosity",_=>"Normal"}}
-fn create(objects:&mut PagedList<Option<Body>,{usize::MAX}>,destination:&mut usize,id:usize,dict:String,stream:bool){let slot=objects.get_mut(id).unwrap();assert!(slot.is_none());*slot=Some(Body::new(dict,stream));*destination=id;}
+fn create(objects:&mut PagedList<Option<Body>,{usize::MAX}>,destination:&mut usize,id:usize,dict:Option<StreamDictionary>){let slot=objects.get_mut(id).unwrap();assert!(slot.is_none());*slot=Some(Body::new(dict));*destination=id;}
 impl PdfWriteJob{
- pub fn new(plan:DocumentScenePlan,limits:PdfWriteLimits)->Self{let failure=(!limits.view_box.iter().all(|n|n.is_finite())||limits.view_box[2]<=0.0||limits.view_box[3]<=0.0||!(64..=67108864).contains(&limits.max_output_bytes)||!(1..=1000000000).contains(&limits.max_work)||plan.nodes.len()>1024).then(||"Invalid PDF writer limits".into());Self{owners:Owners{plan,objects:PagedList::new(),records:PagedList::new(),offsets:PagedList::new(),output:Body::new(String::new(),false),failure},limits,pending:Fragment::default(),destination:0,phase:0,node:0,part:0,search:0,work:0,bytes:0,object:0,object_page:0,xref:0,next_free:0,cancelled:false,pen:[0.0;2],start:[0.0;2],open:false,arc:None,arc_piece:0,arc_pieces:0,arc_to:[0.0;2],stroke_pass:false,function_alpha:false,resource_part:0,source_at:0}}
+ pub fn new(plan:DocumentScenePlan,limits:PdfWriteLimits)->Self{let failure=(!limits.view_box.iter().all(|n|n.is_finite())||limits.view_box[2]<=0.0||limits.view_box[3]<=0.0||!(64..=67108864).contains(&limits.max_output_bytes)||!(1..=1000000000).contains(&limits.max_work)||plan.nodes.len()>1024).then_some("Invalid PDF writer limits");Self{owners:Owners{plan,objects:PagedList::new(),records:PagedList::new(),offsets:PagedList::new(),output:Body::new(None),spare:Vec::new()},failure,limits,pending:Fragment::default(),destination:0,phase:0,node:0,part:0,search:0,work:0,bytes:0,object:0,object_page:0,xref:0,next_free:0,cancelled:false,pen:[0.0;2],start:[0.0;2],open:false,arc:None,arc_piece:0,arc_pieces:0,arc_to:[0.0;2],stroke_pass:false,function_alpha:false,resource_part:0,source_at:0}}
  fn stage(&self)->&'static str{match self.phase{0=>"init",1=>"node",2=>"parent",3=>"call",4=>"layerState",5=>"preparePaint",6=>"spans",7=>"paintState",8=>"shade",9=>"functionStart",10=>"functionPieces",11=>"functionBounds",12=>"functionEncode",13=>"maskForm",14=>"maskState",15=>"bodyStart",16=>"stroke",17=>"dash",18=>"fill",19=>"path",20=>"pathPaint",30=>"asset",31=>"leafEnd",32=>"imageRgb",33=>"imageData",34=>"imageAlpha",39=>"next",40=>"catalog",41=>"pages",42=>"page",44=>"resources",45=>"resourceEntries",46=>"fileHeader",47=>"objectHeader",48=>"objectData",50=>"freeChain",51=>"xref",60=>"complete",_=>"refused"}}
  fn done(&self)->bool{self.phase==60&&self.pending.at==self.pending.len}
  fn reset_path(&mut self){self.part=0;self.pen=[0.0;2];self.start=[0.0;2];self.open=false;self.arc=None;}
- fn step(&mut self)->Result<(),String>{
-  if self.pending.at<self.pending.len{let target=if self.destination==0{&mut self.owners.output}else{self.owners.objects.get_mut(self.destination).unwrap().as_mut().unwrap()};if target.pages.last().is_none_or(|page|page.len()==PAGE){if !reserve(&mut target.pages)?{return Ok(());}let mut page=Vec::new();page.try_reserve_exact(PAGE).map_err(|_|"PDF page allocation refused")?;target.pages.push_reserved(page).unwrap_or_else(|_|unreachable!());return Ok(());}let page=target.pages.last_mut().unwrap();let count=(self.pending.len-self.pending.at).min(PAGE-page.len());if (if self.destination==0{target.length}else{self.bytes})+count>self.limits.max_output_bytes{return Err("PDF output or private body byte limit exceeded".into());}page.extend_from_slice(&self.pending.bytes[self.pending.at..self.pending.at+count]);self.pending.at+=count;target.length+=count;if self.destination!=0{self.bytes+=count;}return Ok(());}
+ fn next_demand(&self) -> Result<RetirementDemand, ValueError> {
+    let slot_error = ValueError::invariant;
+    if self.pending.at < self.pending.len {
+        let target = if self.destination == 0 { &self.owners.output } else { self.owners.objects[self.destination].as_ref().unwrap() };
+        if let Some(page) = target.pages.last().filter(|page| page.len() < PAGE) {
+            let copy_bytes = (self.pending.len - self.pending.at).min(PAGE - page.len());
+            return Ok(RetirementDemand { copy_bytes, depth: 1, ..Default::default() });
+        }
+        let mut demand = RetainedWorkLedger::slot_demand(&target.pages).map_err(slot_error)?;
+        if demand.capacity_bytes == 0 && self.owners.spare.capacity() == 0 { demand.capacity_bytes = PAGE; }
+        return Ok(demand);
+    }
+    if self.phase == 0 && self.owners.objects.len() < 7 + self.owners.plan.nodes.len() * 11 {
+        let mut demand = RetainedWorkLedger::slot_demand(&self.owners.objects).map_err(slot_error)?;
+        if demand.capacity_bytes == 0 {
+            let offset = RetainedWorkLedger::slot_demand(&self.owners.offsets).map_err(slot_error)?;
+            demand.copy_bytes += offset.copy_bytes;
+            demand.capacity_bytes = offset.capacity_bytes;
+            demand.depth = demand.depth.max(offset.depth);
+        }
+        return Ok(demand);
+    }
+    if self.phase == 1 && self.node < self.owners.plan.nodes.len() {
+        return RetainedWorkLedger::slot_demand(&self.owners.records).map_err(slot_error);
+    }
+    Ok(RetirementDemand { depth: 1, ..Default::default() })
+ }
+ fn step(&mut self, storage: &mut Storage<'_, '_>) -> WriteResult<bool> {
+    if self.pending.at < self.pending.len {
+        let target = if self.destination == 0 { &mut self.owners.output } else { self.owners.objects[self.destination].as_mut().unwrap() };
+        if target.pages.last().is_none_or(|page| page.len() == PAGE) {
+            if !storage.slot(&mut target.pages, "PDF paged list allocation refused")? { return Ok(true); }
+            if !storage.page(&mut self.owners.spare, PAGE, "PDF page allocation refused")? { return Ok(false); }
+            if let Err(page) = storage.push(&mut target.pages, std::mem::take(&mut self.owners.spare)) {
+                self.owners.spare = page;
+                return Err("PDF page reservation lost");
+            }
+            return Ok(true);
+        }
+        let page = target.pages.last_mut().unwrap();
+        let count = (self.pending.len - self.pending.at).min(PAGE - page.len());
+        if (if self.destination == 0 { target.length } else { self.bytes }) + count > self.limits.max_output_bytes {
+            return Err("PDF output or private body byte limit exceeded");
+        }
+        if !storage.copy(count) { return Ok(false); }
+        page.extend_from_slice(&self.pending.bytes[self.pending.at..self.pending.at + count]);
+        self.pending.at += count;
+        target.length += count;
+        if self.destination != 0 { self.bytes += count; }
+        return Ok(true);
+    }
   self.pending.reset();
-  if self.phase==0{if self.owners.objects.len()<7+self.owners.plan.nodes.len()*11{if !reserve(&mut self.owners.objects)?||!reserve(&mut self.owners.offsets)?{return Ok(());}self.owners.objects.push_reserved(None).unwrap_or_else(|_|unreachable!());self.owners.offsets.push_reserved(0).unwrap_or_else(|_|unreachable!());return Ok(());}create(&mut self.owners.objects,&mut self.destination,6,String::new(),true);let[x,y,_,height]=self.limits.view_box;write!(&mut self.pending,"q 1 0 0 -1 {} {} cm\n",-x,y+height).map_err(|_|"PDF scalar fragment exceeds capacity")?;self.phase=1;return Ok(());}
-  if self.phase==1{let Some(node)=self.owners.plan.nodes.get(self.node)else{self.destination=6;self.pending.write_str("Q\n").map_err(|_|"PDF scalar fragment exceeds capacity")?;self.phase=40;return Ok(());};if matches!(node.content,DocumentSceneContent::Boolean{..}|DocumentSceneContent::Trace{..}|DocumentSceneContent::Text{..}){return Err("PDF requires resolved authored geometry".into());}if !reserve(&mut self.owners.records)?{return Ok(());}self.owners.records.push_reserved(Record::default()).unwrap_or_else(|_|unreachable!());self.search=0;self.phase=2;return Ok(());}
+  if self.phase==0{if self.owners.objects.len()<7+self.owners.plan.nodes.len()*11{if !storage.slot(&mut self.owners.objects, "PDF paged list allocation refused")?||!storage.slot(&mut self.owners.offsets, "PDF paged list allocation refused")?{return Ok(true);}storage.push(&mut self.owners.objects,None).unwrap_or_else(|_|unreachable!());storage.push(&mut self.owners.offsets,0).unwrap_or_else(|_|unreachable!());return Ok(true);}create(&mut self.owners.objects,&mut self.destination,6,Some(StreamDictionary::Content));let[x,y,_,height]=self.limits.view_box;write!(&mut self.pending,"q 1 0 0 -1 {} {} cm\n",-x,y+height).map_err(|_|"PDF scalar fragment exceeds capacity")?;self.phase=1;return Ok(true);}
+  if self.phase==1{let Some(node)=self.owners.plan.nodes.get(self.node)else{self.destination=6;self.pending.write_str("Q\n").map_err(|_|"PDF scalar fragment exceeds capacity")?;self.phase=40;return Ok(true);};if matches!(node.content,DocumentSceneContent::Boolean{..}|DocumentSceneContent::Trace{..}|DocumentSceneContent::Text{..}){return Err("PDF requires resolved authored geometry");}if !storage.slot(&mut self.owners.records, "PDF paged list allocation refused")?{return Ok(true);}storage.push(&mut self.owners.records,Record::default()).unwrap_or_else(|_|unreachable!());self.search=0;self.phase=2;return Ok(true);}
   if self.phase==18{self.reset_path();self.stroke_pass=false;}
   let node=self.owners.plan.nodes.get(self.node);let id=base(self.node);let record=self.owners.records.get_mut(self.node);let[x,y,width,height]=self.limits.view_box;let out=&mut self.pending;let objects=&mut self.owners.objects;let destination=&mut self.destination;
   (||->std::fmt::Result{match self.phase{
-   2=>{let n=node.unwrap();let r=record.unwrap();if let Some(group)=n.groups.last(){if self.search==self.owners.plan.nodes.len(){self.phase=61;return Ok(());}if self.owners.plan.nodes[self.search].id!=group.id{self.search+=1;return Ok(());}r.parent=Some(self.search);}create(objects,destination,id,format!("/Type /XObject /Subtype /Form /FormType 1 /BBox [{x} {y} {} {}] /Resources 5 0 R /Group << /S /Transparency /CS /DeviceRGB /I true >>",x+width,y+height),true);self.phase=3;},
+   2=>{let n=node.unwrap();let r=record.unwrap();if let Some(group)=n.groups.last(){if self.search==self.owners.plan.nodes.len(){self.phase=61;return Ok(());}if self.owners.plan.nodes[self.search].id!=group.id{self.search+=1;return Ok(());}r.parent=Some(self.search);}create(objects,destination,id,Some(StreamDictionary::Form([x,y,x+width,y+height])));self.phase=3;},
    3=>{let n=node.unwrap();let isolated=matches!(n.content,DocumentSceneContent::Group{isolation:true,..})||n.opacity!=1.0||n.blend_mode!="normal";if n.visible&&n.opacity>0.0&&(!matches!(n.content,DocumentSceneContent::Group{..})||isolated){*destination=record.unwrap().parent.map_or(6,base);write!(out,"q /L{} gs /Fm{} Do Q\n",self.node,self.node)?;}self.phase=4;},
-   4=>{let n=node.unwrap();create(objects,destination,id+1,String::new(),false);write!(out,"<< /Type /ExtGState /ca {} /CA {} /BM /{} >>",n.opacity,n.opacity,blend(&n.blend_mode))?;self.phase=5;self.part=0;},
+   4=>{let n=node.unwrap();create(objects,destination,id+1,None);write!(out,"<< /Type /ExtGState /ca {} /CA {} /BM /{} >>",n.opacity,n.opacity,blend(&n.blend_mode))?;self.phase=5;self.part=0;},
    5=>{let r=record.unwrap();let Some(fill)=paint(node.unwrap()).0 else{self.phase=7;return Ok(());};if let FillStyle::Solid{color}=fill{r.constant=Some(*color);self.phase=7;return Ok(());}let stops=stops(fill);if stops.len()>64{self.phase=62;return Ok(());}if self.part<stops.len(){let index=self.part;self.part+=1;let mut at=r.stop_count;while at>0&&stops[r.stops[at-1]].offset>stops[index].offset{r.stops[at]=r.stops[at-1];at-=1;}r.stops[at]=index;r.stop_count+=1;return Ok(());}let degenerate=match fill{FillStyle::LinearGradient{x1,y1,x2,y2,..}=>x1==x2&&y1==y2,FillStyle::RadialGradient{r,..}=>*r==0.0,_=>false};if r.stop_count<=1||degenerate{r.constant=Some(if r.stop_count==0{[0.0;4]}else{stops[r.stops[if degenerate{r.stop_count-1}else{0}]].color});self.phase=7;}else{r.gradient=true;self.part=0;self.phase=6;}},
    6=>{let r=record.unwrap();let stops=stops(paint(node.unwrap()).0.unwrap());let span=if self.part==0{self.part+=1;let first=r.stops[0];(stops[first].offset>0.0).then_some(Span{from:0.0,to:stops[first].offset,left:first,right:first})}else if self.part<r.stop_count{let a=r.stops[self.part-1];let b=r.stops[self.part];self.part+=1;(stops[b].offset>stops[a].offset).then_some(Span{from:stops[a].offset,to:stops[b].offset,left:a,right:b})}else{self.phase=7;let last=r.stops[r.stop_count-1];(stops[last].offset<1.0).then_some(Span{from:stops[last].offset,to:1.0,left:last,right:last})};if let Some(span)=span{r.spans[r.span_count]=span;r.span_count+=1;}},
-   7=>{let r=record.unwrap();let stroke=paint(node.unwrap()).1;create(objects,destination,id+2,String::new(),false);write!(out,"<< /Type /ExtGState /ca {} /CA {} /BM /Normal >>",r.constant.map_or(1.0,|c|c[3]),stroke.map_or(1.0,|s|s.color[3]))?;self.phase=if r.gradient{8}else{15};self.function_alpha=false;},
-   8=>{let fill=paint(node.unwrap()).0.unwrap();let alpha=self.function_alpha;create(objects,destination,id+if alpha{7}else{3},String::new(),false);write!(out,"<< /ShadingType {} /ColorSpace /Device{} /Coords [",if matches!(fill,FillStyle::LinearGradient{..}){2}else{3},if alpha{"Gray"}else{"RGB"})?;match fill{FillStyle::LinearGradient{x1,y1,x2,y2,..}=>write!(out,"{x1} {y1} {x2} {y2}")?,FillStyle::RadialGradient{cx,cy,r,..}=>write!(out,"{cx} {cy} 0 {cx} {cy} {r}")?,_=>unreachable!()};write!(out,"] /Function {} 0 R /Extend [true true] >>",id+if alpha{8}else{4})?;self.phase=9;},
-   9=>{create(objects,destination,id+if self.function_alpha{8}else{4},String::new(),false);out.write_str("<< /FunctionType 3 /Domain [0 1] /Functions [")?;self.part=0;self.phase=10;},
+   7=>{let r=record.unwrap();let stroke=paint(node.unwrap()).1;create(objects,destination,id+2,None);write!(out,"<< /Type /ExtGState /ca {} /CA {} /BM /Normal >>",r.constant.map_or(1.0,|c|c[3]),stroke.map_or(1.0,|s|s.color[3]))?;self.phase=if r.gradient{8}else{15};self.function_alpha=false;},
+   8=>{let fill=paint(node.unwrap()).0.unwrap();let alpha=self.function_alpha;create(objects,destination,id+if alpha{7}else{3},None);write!(out,"<< /ShadingType {} /ColorSpace /Device{} /Coords [",if matches!(fill,FillStyle::LinearGradient{..}){2}else{3},if alpha{"Gray"}else{"RGB"})?;match fill{FillStyle::LinearGradient{x1,y1,x2,y2,..}=>write!(out,"{x1} {y1} {x2} {y2}")?,FillStyle::RadialGradient{cx,cy,r,..}=>write!(out,"{cx} {cy} 0 {cx} {cy} {r}")?,_=>unreachable!()};write!(out,"] /Function {} 0 R /Extend [true true] >>",id+if alpha{8}else{4})?;self.phase=9;},
+   9=>{create(objects,destination,id+if self.function_alpha{8}else{4},None);out.write_str("<< /FunctionType 3 /Domain [0 1] /Functions [")?;self.part=0;self.phase=10;},
    10=>{let r=record.unwrap();let stops=stops(paint(node.unwrap()).0.unwrap());if self.part<r.span_count{let span=r.spans[self.part];self.part+=1;out.write_str("<< /FunctionType 2 /Domain [0 1] /C0 [")?;color(out,stops[span.left].color,self.function_alpha)?;out.write_str("] /C1 [")?;color(out,stops[span.right].color,self.function_alpha)?;out.write_str("] /N 1 >> ")?;}else{out.write_str("] /Bounds [")?;self.part=0;self.phase=11;}},
    11=>{let r=record.unwrap();if self.part+1<r.span_count{write!(out,"{} ",r.spans[self.part].to)?;self.part+=1;}else{out.write_str("] /Encode [")?;self.part=0;self.phase=12;}},
    12=>{if self.part<record.unwrap().span_count{self.part+=1;out.write_str("0 1 ")?;}else{out.write_str("] >>")?;if self.function_alpha{self.phase=13;}else{self.function_alpha=true;self.phase=8;}}},
-   13=>{let[a,b,c,d,e,f]=node.unwrap().transform;let det=a*d-b*c;let mut bounds=[f64::INFINITY,f64::INFINITY,f64::NEG_INFINITY,f64::NEG_INFINITY];for[px,py]in [[x,y],[x+width,y],[x,y+height],[x+width,y+height]]{let p=if det!=0.0{[(d*(px-e)-c*(py-f))/det,(-b*(px-e)+a*(py-f))/det]}else{[x,y]};bounds=[bounds[0].min(p[0]),bounds[1].min(p[1]),bounds[2].max(p[0]),bounds[3].max(p[1])];}create(objects,destination,id+9,format!("/Type /XObject /Subtype /Form /BBox [{} {} {} {}] /Resources 5 0 R /Group << /S /Transparency /CS /DeviceGray >>",bounds[0],bounds[1],bounds[2],bounds[3]),true);write!(out,"/ShA{} sh\n",self.node)?;self.phase=14;},
-   14=>{create(objects,destination,id+10,String::new(),false);write!(out,"<< /Type /ExtGState /SMask << /S /Luminosity /G {} 0 R >> >>",id+9)?;self.phase=15;},
+   13=>{let[a,b,c,d,e,f]=node.unwrap().transform;let det=a*d-b*c;let mut bounds=[f64::INFINITY,f64::INFINITY,f64::NEG_INFINITY,f64::NEG_INFINITY];for[px,py]in [[x,y],[x+width,y],[x,y+height],[x+width,y+height]]{let p=if det!=0.0{[(d*(px-e)-c*(py-f))/det,(-b*(px-e)+a*(py-f))/det]}else{[x,y]};bounds=[bounds[0].min(p[0]),bounds[1].min(p[1]),bounds[2].max(p[0]),bounds[3].max(p[1])];}create(objects,destination,id+9,Some(StreamDictionary::AlphaForm(bounds)));write!(out,"/ShA{} sh\n",self.node)?;self.phase=14;},
+   14=>{create(objects,destination,id+10,None);write!(out,"<< /Type /ExtGState /SMask << /S /Luminosity /G {} 0 R >> >>",id+9)?;self.phase=15;},
    15=>{let n=node.unwrap();*destination=id;if matches!(n.content,DocumentSceneContent::Group{..})||!n.visible||n.opacity==0.0{self.phase=39;return Ok(());}let[a,b,c,d,e,f]=n.transform;write!(out,"q {a} {b} {c} {d} {e} {f} cm /P{} gs\n",self.node)?;self.part=0;self.search=0;self.phase=if matches!(n.content,DocumentSceneContent::Image{..}){30}else{16};},
    16=>{if let Some(stroke)=paint(node.unwrap()).1{color(out,stroke.color,false)?;write!(out," RG {} w {} J {} j\n[",stroke.width,match stroke.cap.as_str(){"round"=>1,"square"=>2,_=>0},match stroke.join.as_str(){"round"=>1,"bevel"=>2,_=>0})?;self.part=0;self.phase=17;}else{self.phase=18;}},
    17=>{let stroke=paint(node.unwrap()).1.unwrap();if let Some(value)=stroke.dash.as_ref().and_then(|dash|dash.get(self.part)){write!(out,"{value} ")?;self.part+=1;}else{out.write_str("] 0 d\n")?;self.phase=18;}},
@@ -68,27 +144,77 @@ impl PdfWriteJob{
    20=>{let r=record.unwrap();let(_,stroke,rule)=paint(node.unwrap());let stroke=stroke.is_some_and(|s|s.width>0.0&&s.color[3]>0.0);let fill=r.gradient||r.constant.is_some_and(|c|c[3]>0.0);let star=if rule=="evenodd"{"*"}else{""};if r.gradient&&!self.stroke_pass{write!(out,"W{star} n /A{} gs /Sh{} sh Q\n",self.node,self.node)?;if stroke{self.stroke_pass=true;self.part=0;self.pen=[0.0;2];self.start=[0.0;2];self.open=false;self.arc=None;self.phase=19;}else{self.phase=31;}}else{let op=if self.stroke_pass||!fill&&stroke{"S"}else if fill&&stroke{"B"}else if fill{"f"}else{"n"};write!(out,"{op}{}\n",if matches!(op,"B"|"f"){star}else{""})?;self.phase=31;}},
    30=>{let DocumentSceneContent::Image{asset,width,height}=&node.unwrap().content else{unreachable!()};let Some(source)=self.owners.plan.assets.get(self.search)else{self.phase=63;return Ok(());};if &source.id!=asset{self.search+=1;return Ok(());}record.unwrap().asset=Some(self.search);write!(out,"q {width} 0 0 {} 0 {height} cm /Img{} Do Q\n",-height,self.node)?;self.phase=31;},
    31=>{out.write_str("Q\n")?;self.phase=if record.unwrap().asset.is_some(){32}else{39};},
-   32|34=>{let image=&self.owners.plan.assets[record.unwrap().asset.unwrap()].image;let alpha=self.phase==34;create(objects,destination,id+if alpha{6}else{5},format!("/Type /XObject /Subtype /Image /Width {} /Height {} /ColorSpace /Device{} /BitsPerComponent 8{}",image.width,image.height,if alpha{"Gray"}else{"RGB"},if alpha{String::new()}else{format!(" /SMask {} 0 R",id+6)}),true);self.source_at=0;self.function_alpha=alpha;self.phase=33;},
+   32|34=>{let image=&self.owners.plan.assets[record.unwrap().asset.unwrap()].image;let alpha=self.phase==34;create(objects,destination,id+if alpha{6}else{5},Some(StreamDictionary::Image{width:image.width,height:image.height,mask:(!alpha).then_some(id+6)}));self.source_at=0;self.function_alpha=alpha;self.phase=33;},
    33=>{let image=&self.owners.plan.assets[record.unwrap().asset.unwrap()].image;let channels=if self.function_alpha{1}else{3};let total=image.width as usize*image.height as usize*channels;if self.source_at<total{let count=PAGE.min(total-self.source_at);for at in 0..count{let index=self.source_at+at;out.bytes[at]=image.pixels[if self.function_alpha{index*4+3}else{index/3*4+index%3}];}out.len=count;self.source_at+=count;}else{self.phase=if self.function_alpha{39}else{34};}},
    39=>{self.node+=1;self.part=0;self.search=0;self.phase=1;},
-   40=>{create(objects,destination,1,String::new(),false);out.write_str("<< /Type /Catalog /Pages 2 0 R >>")?;self.phase=41;},
-   41=>{create(objects,destination,2,String::new(),false);out.write_str("<< /Type /Pages /Count 1 /Kids [3 0 R] >>")?;self.phase=42;},
-   42=>{create(objects,destination,3,String::new(),false);write!(out,"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 {width} {height}] /Resources 5 0 R /Contents 6 0 R >>")?;self.phase=44;},
-   44=>{create(objects,destination,5,String::new(),false);out.write_str("<< /XObject << ")?;self.node=0;self.resource_part=0;self.phase=45;},
+   40=>{create(objects,destination,1,None);out.write_str("<< /Type /Catalog /Pages 2 0 R >>")?;self.phase=41;},
+   41=>{create(objects,destination,2,None);out.write_str("<< /Type /Pages /Count 1 /Kids [3 0 R] >>")?;self.phase=42;},
+   42=>{create(objects,destination,3,None);write!(out,"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 {width} {height}] /Resources 5 0 R /Contents 6 0 R >>")?;self.phase=44;},
+   44=>{create(objects,destination,5,None);out.write_str("<< /XObject << ")?;self.node=0;self.resource_part=0;self.phase=45;},
    45=>{if let Some(r)=record{let i=self.node;let b=base(i);self.node+=1;match self.resource_part{0=>{write!(out,"/Fm{i} {b} 0 R ")?;if r.asset.is_some(){write!(out,"/Img{i} {} 0 R ",b+5)?;}},1=>{write!(out,"/L{i} {} 0 R /P{i} {} 0 R ",b+1,b+2)?;if r.gradient{write!(out,"/A{i} {} 0 R ",b+10)?;}},_=>{if r.gradient{write!(out,"/Sh{i} {} 0 R /ShA{i} {} 0 R ",b+3,b+7)?;}}}}else{out.write_str(match self.resource_part{0=>">> /ExtGState << ",1=>">> /Shading << ",_=>">> >>"})?;self.node=0;self.resource_part+=1;if self.resource_part==3{self.phase=46;}}},
    46=>{*destination=0;out.write_str("%PDF-1.4\n%\u{e2}\u{e3}\u{cf}\u{d3}\n")?;self.object=1;self.phase=47;},
-   47=>{if self.object==objects.len(){self.object=objects.len()-1;self.phase=50;return Ok(());}let Some(body)=objects.get(self.object).unwrap()else{self.object+=1;return Ok(());};*self.owners.offsets.get_mut(self.object).unwrap()=self.owners.output.length;*destination=0;write!(out,"{} 0 obj\n",self.object)?;if body.stream{write!(out,"<< {} /Length {} >>\nstream\n",body.dict,body.length)?;}self.object_page=0;self.phase=48;},
-   48=>{let body=objects.get(self.object).unwrap().as_ref().unwrap();if let Some(page)=body.pages.get(self.object_page){out.write_bytes(page)?;self.object_page+=1;}else{write!(out,"{}endobj\n",if body.stream{"\nendstream\n"}else{"\n"})?;self.object+=1;self.phase=47;}},
+   47=>{if self.object==objects.len(){self.object=objects.len()-1;self.phase=50;return Ok(());}let Some(body)=objects.get(self.object).unwrap()else{self.object+=1;return Ok(());};*self.owners.offsets.get_mut(self.object).unwrap()=self.owners.output.length;*destination=0;write!(out,"{} 0 obj\n",self.object)?;if let Some(dict)=body.dict{out.write_str("<< ")?;dict.write(out)?;write!(out," /Length {} >>\nstream\n",body.length)?;}self.object_page=0;self.phase=48;},
+   48=>{let body=objects.get(self.object).unwrap().as_ref().unwrap();if let Some(page)=body.pages.get(self.object_page){out.write_bytes(page)?;self.object_page+=1;}else{write!(out,"{}endobj\n",if body.dict.is_some(){"\nendstream\n"}else{"\n"})?;self.object+=1;self.phase=47;}},
    50=>{if self.object>0{if objects.get(self.object).unwrap().is_none(){*self.owners.offsets.get_mut(self.object).unwrap()=self.next_free;self.next_free=self.object;}self.object-=1;}else{self.xref=self.owners.output.length;write!(out,"xref\n0 {}\n{:010} 65535 f \n",objects.len(),self.next_free)?;self.object=1;self.phase=51;}},
    51=>{if self.object<objects.len(){let index=self.object;self.object+=1;write!(out,"{:010} 00000 {} \n",self.owners.offsets[index],if objects.get(index).unwrap().is_some(){"n"}else{"f"})?;}else{write!(out,"trailer\n<< /Size {} /Root 1 0 R >>\nstartxref\n{}\n%%EOF\n",objects.len(),self.xref)?;self.phase=60;}},
    _=>{},
-  }Ok(())})().map_err(|_|"PDF scalar fragment or embedded font authority refused".to_owned())?;
-  match self.phase{61=>Err("Missing PDF isolated ancestry".into()),62=>Err("PDF retained paint stop capacity exceeded".into()),63=>Err("Missing authoritative PDF image".into()),_=>Ok(())}
+  }Ok(())})() .map_err(|_|"PDF scalar fragment or embedded font authority refused")?;
+  match self.phase{61=>Err("Missing PDF isolated ancestry"),62=>Err("PDF retained paint stop capacity exceeded"),63=>Err("Missing authoritative PDF image"),_=>Ok(true)}
  }
- pub fn advance(&mut self,grant:usize)->Result<PdfWriteProgress,String>{if grant==0{return Err("Invalid PDF work grant".into());}if self.cancelled{return Err("PDF writer cancelled".into());}if let Some(error)=&self.owners.failure{return Err(error.clone());}for _ in 0..grant{if self.done(){break;}if self.work>=self.limits.max_work{self.owners.failure=Some("PDF work limit exceeded".into());return Err(self.owners.failure.as_ref().unwrap().clone());}if let Err(error)=self.step(){self.owners.failure=Some(error.clone());return Err(error);}self.work+=1;}Ok(PdfWriteProgress{phase:self.stage(),nodes:self.node,bytes:self.owners.output.length,work:self.work,done:self.done()})}
- pub fn result(&self)->Result<&Pages,String>{if self.cancelled||self.owners.failure.is_some()||!self.done(){return Err("PDF output incomplete or cancelled".into());}Ok(&self.owners.output.pages)}
+ fn progress(&self) -> PdfWriteProgress {
+    PdfWriteProgress { phase: self.stage(), nodes: self.node, bytes: self.owners.output.length, work: self.work, done: self.done() }
+ }
+ fn check(&self) -> WriteResult<()> {
+    if self.cancelled { return Err("PDF writer cancelled"); }
+    self.failure.map_or(Ok(()), Err)
+ }
+ fn advance_step(&mut self, storage: &mut Storage<'_, '_>) -> WriteResult<()> {
+    let result = if self.work >= self.limits.max_work { Err("PDF work limit exceeded") } else { self.step(storage) };
+    match result {
+        Ok(completed) => { self.work += u64::from(completed); Ok(()) }
+        Err(error) => { self.failure = Some(error); Err(error) }
+    }
+ }
+ pub fn advance(&mut self, grant: usize) -> Result<PdfWriteProgress, String> {
+    if grant == 0 { return Err("Invalid PDF work grant".into()); }
+    self.check()?;
+    for _ in 0..grant {
+        if self.done() { break; }
+        self.advance_step(&mut Storage::Standalone)?;
+    }
+    Ok(self.progress())
+ }
+ /// 🎟️ Writes PDF objects under the original caller’s work and allocation grant.
+ pub fn advance_original(&mut self, cx: &mut StepContext<'_>) -> Result<PdfWriteProgress, OriginalWorkFailure<DocumentSceneError>> {
+    OriginalWorkFailure::qualify(cx)?;
+    if cx.is_cancelled() {
+        OriginalWorkFailure::fold(cx, Some(DocumentSceneError::Cancelled), Default::default(), 0)?;
+    }
+    while !cx.should_yield() {
+        let idle = self.progress();
+        let status = self.check();
+        if status.is_ok() && idle.done { return Ok(idle); }
+        let demand = if status.is_err() || self.work >= self.limits.max_work {
+            Ok(true)
+        } else {
+            self.next_demand().and_then(|demand| cx.admit_work_step(demand))
+        };
+        if matches!(demand, Ok(false)) { return Ok(idle); }
+        let before = cx.fuel_remaining();
+        advance_original_scene(cx, idle, |work, effect| {
+            if let Err(error) = demand { return (Err(DocumentSceneError::Refused(error)), 0); }
+            if let Err(error) = status { return (Err(DocumentSceneError::literal(error)), 0); }
+            let result = self.advance_step(&mut Storage::Original(work, effect)).map_err(DocumentSceneError::literal);
+            work.note_source(true);
+            (result.map(|()| self.progress()), 1)
+        })?;
+        if before == cx.fuel_remaining() { break; }
+    }
+    Ok(self.progress())
+ }
+ pub fn result(&self)->Result<&Pages,String>{if self.cancelled||self.failure.is_some()||!self.done(){return Err("PDF output incomplete or cancelled".into());}Ok(&self.owners.output.pages)}
  pub fn cancel(&mut self){self.cancelled=true;}
- pub fn into_retirement(mut self)->(PdfWriteRetirement,Option<Pages>){let output=(!self.cancelled&&self.owners.failure.is_none()&&self.done()).then(||std::mem::replace(&mut self.owners.output.pages,Pages::new()));self.cancelled=true;(PdfWriteRetirement::new(self),output)}
+ pub fn into_retirement(mut self)->(PdfWriteRetirement,Option<Pages>){let output=(!self.cancelled&&self.failure.is_none()&&self.done()).then(||std::mem::replace(&mut self.owners.output.pages,Pages::new()));self.cancelled=true;(PdfWriteRetirement::new(self),output)}
 }
 
 #[cfg(test)] #[path="🧪️tests/🦀️.rs"] mod tests;

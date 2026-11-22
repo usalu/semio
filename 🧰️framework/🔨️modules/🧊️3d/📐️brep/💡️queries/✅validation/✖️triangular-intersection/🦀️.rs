@@ -12,10 +12,10 @@ semio_framework_value::artifact_retire_struct!(TrianglePairs {shell_a,shell_b,fa
 fn finite(point:Pnt3)->bool{[point.x,point.y,point.z].into_iter().all(f64::is_finite)}
 
 pub(super) fn triangle(body:&Body,id:FaceId)->Option<[Pnt3;3]>{
-    read_triangle(body,id,None).ok().flatten()
+    read_triangle(body,id,None,&|_,position|position).ok().flatten()
 }
 
-fn read_triangle(body:&Body,id:FaceId,mut demand:Option<&mut usize>)->Result<Option<[Pnt3;3]>,ValueError>{
+fn read_triangle(body:&Body,id:FaceId,mut demand:Option<&mut usize>,positions:&impl Fn(VertexId,Pnt3)->Pnt3)->Result<Option<[Pnt3;3]>,ValueError>{
     macro_rules! row {
         ($arena:ident,$key:expr)=>{
             {
@@ -37,7 +37,7 @@ fn read_triangle(body:&Body,id:FaceId,mut demand:Option<&mut usize>)->Result<Opt
         let edge=row!(edges,use_.edge);
         if !matches!(row!(curves3,edge.curve),Curve3::Line{..}){return Ok(None);}
         let vertex=if use_.forward{edge.v0}else{edge.v1};
-        *point=row!(vertices,vertex).position;
+        *point=positions(vertex,row!(vertices,vertex).position);
         if !finite(*point){return Ok(None);}
         current=use_.next;
     }
@@ -135,7 +135,7 @@ impl BodyValidationJob {
                 let id=if cursor.left.is_none(){left.faces.get(cursor.face_a)}
                     else{right.faces.get(cursor.face_b)};
                 if let Some(&id)=id{
-                    let points=read_triangle(body,id,Some(&mut depth))?;
+                    let points=read_triangle(body,id,Some(&mut depth),&|_,position|position)?;
                     if cursor.left.is_none()&&points.is_some(){copy_bytes=size_of::<[Pnt3;3]>();}
                 }
             }
@@ -143,7 +143,7 @@ impl BodyValidationJob {
         Ok(RetirementDemand{copy_bytes,depth,..Default::default()})
     }
 
-    pub(super) fn probe_triangle_pair(&mut self,body:&Body){
+    pub(super) fn probe_triangle_pair(&mut self,body:&Body,positions:&impl Fn(VertexId,Pnt3)->Pnt3){
         let cursor=&mut self.triangle_pairs;
         let Some(left)=self.shells.get(cursor.shell_a)else{self.phase=BodyValidationPhase::Complete;return;};
         let Some(right)=self.shells.get(cursor.shell_b).filter(|right|right.solid==left.solid)else{
@@ -162,13 +162,13 @@ impl BodyValidationJob {
             return;
         };
         let Some(first)=cursor.left else {
-            cursor.left=triangle(body,a).filter(|points|projection(*points).is_some());
+            cursor.left=read_triangle(body,a,None,positions).ok().flatten().filter(|points|projection(*points).is_some());
             if cursor.left.is_none(){cursor.advance_left();}
             return;
         };
         let Some(&b)=right.faces.get(cursor.face_b)else{cursor.advance_left();return;};
         cursor.face_b+=1;
-        if a!=b&&triangle(body,b).is_some_and(|second|triangles_intersect(first,second)){
+        if a!=b&&read_triangle(body,b,None,positions).ok().flatten().is_some_and(|second|triangles_intersect(first,second)){
             self.hold_topology_finding(retained_loop::LoopFinding::Intersection{a,b});
         }
     }

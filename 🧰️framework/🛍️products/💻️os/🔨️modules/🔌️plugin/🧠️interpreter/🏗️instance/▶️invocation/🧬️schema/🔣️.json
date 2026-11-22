@@ -8,6 +8,7 @@
     "expectedInstructions",
     "physicalCloseSeparately",
     "deniedFrameKeepsOperands",
+    "returnedFrame",
     "stackGrowth"
   ],
   "properties": {
@@ -30,6 +31,17 @@
     "deniedFrameKeepsOperands": {
       "const": true
     },
+    "returnedFrame": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["controlBackingElements", "releaseBytesBelowExact", "copyBytesBelowExact", "expected"],
+      "properties": {
+        "controlBackingElements": { "const": 1 },
+        "releaseBytesBelowExact": { "const": 1 },
+        "copyBytesBelowExact": { "const": 1 },
+        "expected": { "const": 30 }
+      }
+    },
     "stackGrowth": {
       "type": "object",
       "additionalProperties": false,
@@ -37,7 +49,8 @@
         "moduleHex",
         "expected",
         "operandPeak",
-        "framePeak"
+        "framePeak",
+        "vmFuelByCategory"
       ],
       "properties": {
         "moduleHex": {
@@ -54,6 +67,19 @@
         "framePeak": {
           "type": "integer",
           "minimum": 3
+        },
+        "vmFuelByCategory": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["scalar", "frameBirth", "frameReturn", "control", "memory", "hostCall"],
+          "properties": {
+            "scalar": { "type": "integer", "minimum": 0 },
+            "frameBirth": { "type": "integer", "minimum": 0 },
+            "frameReturn": { "type": "integer", "minimum": 0 },
+            "control": { "type": "integer", "minimum": 0 },
+            "memory": { "type": "integer", "minimum": 0 },
+            "hostCall": { "type": "integer", "minimum": 0 }
+          }
         }
       }
     }

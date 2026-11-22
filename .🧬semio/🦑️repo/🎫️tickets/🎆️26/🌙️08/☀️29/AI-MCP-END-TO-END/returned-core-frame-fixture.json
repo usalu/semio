@@ -1,0 +1,13 @@
+{
+  "moduleHex": "0061736d01000000010a0260017f017f6000017f030403000001070a0106696e766f6b6500020a35030d01027f200120006a200021010b1901017f20001000200041016a10006a20016a41e30021010f0b0b0041051001410b10016a0b",
+  "exportName": "invoke",
+  "expectedResult": 34,
+  "expectedCoreInstructions": 50,
+  "callWaves": [
+    {"outerCalls": 1, "childCallsPerOuter": 2},
+    {"outerCalls": 1, "childCallsPerOuter": 2}
+  ],
+  "localCountsIncludingParameters": {"outer": 2, "child": 3},
+  "returnModes": {"outer": "explicit", "child": "end"},
+  "expectedNestedBackingBirths": {"withoutReuse": 6, "withDepthReuse": 2}
+}

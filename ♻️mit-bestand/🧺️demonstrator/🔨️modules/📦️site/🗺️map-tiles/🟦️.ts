@@ -24,6 +24,14 @@ export async function prefetchDemonstratorMapTiles(repoRoot: string, signal: Abo
     log: (line) => console.log(line),
   });
   signal.throwIfAborted();
+  if (result.failed > 0) throw new Error(`[demonstrator:site] map tile prefetch failed for ${result.failed} tile(s)`);
+  const world = await prefetchMapTiles({
+    repoRoot, signal, bounds: { west: -180, south: -85, east: 180, north: 85 },
+    raster: false, vector: true, zMinVector: 0, zMaxVector: 3, skipExisting: true,
+    log: (line) => console.log(line),
+  });
+  signal.throwIfAborted();
+  if (world.failed > 0) throw new Error(`[demonstrator:site] map tile prefetch failed for ${world.failed} tile(s)`);
   const { osm, vt } = mapTileCacheRoots(repoRoot);
   const canaryVt = resolve(vt, "3/4/2.pbf");
   const canaryOsm = resolve(osm, "0/0/0.png");

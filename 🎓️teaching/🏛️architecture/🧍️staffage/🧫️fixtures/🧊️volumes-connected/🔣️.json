@@ -1,0 +1,3076 @@
+{
+ "description": "Vectors of the contact measure behind `volumes-connected` and of the sheet judgement and the per-scale judgement of `volumes-feature`. All lengths in metres, y up, the ground is y = 0. A solid is an axis-aligned cuboid (`centre`, `size`), optionally turned by `turnZDeg` about the z axis through its centre, optionally repeated: `copies` are the centres of the copies of one solid (its `repeat`). The smallest feature is that of 1:50 (7.5 mm), so the contact tolerance is 1.5 mm (a fifth), the clearance 7.5 mm (one feature) and the gap cap 45 mm (six features). Every expected value is derived by hand in `hand`. `structures` cases may carry `en` and `de`: fragments that the finding of `volumes-connected` for the structure list of 1:50 contains, and `absent`: fragments that no message contains. `spans` holds the vectors of the member solids that span several bones (`members`).",
+ "featureM": 0.0075,
+ "toleranceM": 0.0015,
+ "apartM": 0.0075,
+ "capM": 0.045,
+ "limits": {
+  "connectedToleranceFeatures": 0.2,
+  "connectedApartFeatures": 1,
+  "connectedGapCapFeatures": 6,
+  "sheetRatio": 20,
+  "slenderMemberRatio": 5,
+  "slenderMemberFeatures": 2,
+  "memberSpanFeatures": 1,
+  "memberSpanSamples": 9
+ },
+ "distanceToleranceM": 1e-09,
+ "oracleSpacingM": 0.001,
+ "oracleToleranceM": 1e-06,
+ "triangles": [
+  {
+   "name": "parallel faces",
+   "hand": "the same triangle lifted by 3 mm along z: 0.003",
+   "a": [
+    [
+     0,
+     0,
+     0
+    ],
+    [
+     1,
+     0,
+     0
+    ],
+    [
+     0,
+     1,
+     0
+    ]
+   ],
+   "b": [
+    [
+     0,
+     0,
+     0.003
+    ],
+    [
+     1,
+     0,
+     0.003
+    ],
+    [
+     0,
+     1,
+     0.003
+    ]
+   ],
+   "distanceM": 0.003
+  },
+  {
+   "name": "a vertex over a face",
+   "hand": "the vertex (0.25, 0.25, 0.004) lies over the interior of the triangle in z = 0, the rest of the second triangle is higher: 0.004",
+   "a": [
+    [
+     0,
+     0,
+     0
+    ],
+    [
+     1,
+     0,
+     0
+    ],
+    [
+     0,
+     1,
+     0
+    ]
+   ],
+   "b": [
+    [
+     0.25,
+     0.25,
+     0.004
+    ],
+    [
+     0.25,
+     0.25,
+     1
+    ],
+    [
+     0.3,
+     0.3,
+     1
+    ]
+   ],
+   "distanceM": 0.004
+  },
+  {
+   "name": "two edges passing each other",
+   "hand": "the first triangle lies in z = 0 with y <= 0 and its edge on the x axis; the edge of the second from (0.5, 0.003, -0.5) to (0.5, 0.003, 0.5) passes 3 mm above that edge at x = 0.5 and no vertex is nearer: 0.003",
+   "a": [
+    [
+     0,
+     0,
+     0
+    ],
+    [
+     1,
+     0,
+     0
+    ],
+    [
+     0.5,
+     -1,
+     0
+    ]
+   ],
+   "b": [
+    [
+     0.5,
+     0.003,
+     -0.5
+    ],
+    [
+     0.5,
+     0.003,
+     0.5
+    ],
+    [
+     0.5,
+     1,
+     0
+    ]
+   ],
+   "distanceM": 0.003
+  },
+  {
+   "name": "an edge through a face",
+   "hand": "the edge from (0.2, 0.2, -0.5) to (0.2, 0.2, 0.5) pierces the first triangle at (0.2, 0.2, 0): 0",
+   "a": [
+    [
+     0,
+     0,
+     0
+    ],
+    [
+     1,
+     0,
+     0
+    ],
+    [
+     0,
+     1,
+     0
+    ]
+   ],
+   "b": [
+    [
+     0.2,
+     0.2,
+     -0.5
+    ],
+    [
+     0.2,
+     0.2,
+     0.5
+    ],
+    [
+     0.9,
+     0.9,
+     0.5
+    ]
+   ],
+   "distanceM": 0
+  },
+  {
+   "name": "vertex to vertex",
+   "hand": "the vertex (1.003, 0, 0.004) against the vertex (1, 0, 0): sqrt(0.003^2 + 0.004^2) = 0.005; the hypotenuse of the first triangle ends at (1, 0, 0) for that point",
+   "a": [
+    [
+     0,
+     0,
+     0
+    ],
+    [
+     1,
+     0,
+     0
+    ],
+    [
+     0,
+     1,
+     0
+    ]
+   ],
+   "b": [
+    [
+     1.003,
+     0,
+     0.004
+    ],
+    [
+     2,
+     0,
+     0.004
+    ],
+    [
+     2,
+     1,
+     0.004
+    ]
+   ],
+   "distanceM": 0.005
+  },
+  {
+   "name": "a shared edge",
+   "hand": "both triangles share the edge from (1, 0, 0) to (0, 1, 0): 0",
+   "a": [
+    [
+     0,
+     0,
+     0
+    ],
+    [
+     1,
+     0,
+     0
+    ],
+    [
+     0,
+     1,
+     0
+    ]
+   ],
+   "b": [
+    [
+     1,
+     0,
+     0
+    ],
+    [
+     1,
+     1,
+     0
+    ],
+    [
+     0,
+     1,
+     0
+    ]
+   ],
+   "distanceM": 0
+  }
+ ],
+ "cases": [
+  {
+   "name": "two cubes face to face",
+   "hand": "20 mm cubes at x = 0 and x = 0.02: the faces at x = 0.01 coincide, gap 0, one group",
+   "solids": [
+    {
+     "id": "a",
+     "centre": [
+      0,
+      0.01,
+      0
+     ],
+     "size": [
+      0.02,
+      0.02,
+      0.02
+     ]
+    },
+    {
+     "id": "b",
+     "centre": [
+      0.02,
+      0.01,
+      0
+     ],
+     "size": [
+      0.02,
+      0.02,
+      0.02
+     ]
+    }
+   ],
+   "groups": [
+    [
+     "a",
+     "b"
+    ]
+   ],
+   "loose": []
+  },
+  {
+   "name": "a gap inside the tolerance",
+   "hand": "the second cube 1.2 mm away (centre x = 0.0212): 1.2 <= 1.5, one group",
+   "solids": [
+    {
+     "id": "a",
+     "centre": [
+      0,
+      0.01,
+      0
+     ],
+     "size": [
+      0.02,
+      0.02,
+      0.02
+     ]
+    },
+    {
+     "id": "b",
+     "centre": [
+      0.0212,
+      0.01,
+      0
+     ],
+     "size": [
+      0.02,
+      0.02,
+      0.02
+     ]
+    }
+   ],
+   "groups": [
+    [
+     "a",
+     "b"
+    ]
+   ],
+   "loose": []
+  },
+  {
+   "name": "a cube hovering over another",
+   "hand": "the upper cube begins 1.8 mm above the lower (centre y = 0.0318): 1.8 > 1.5, two groups; the lower stands on the ground, the upper touches nothing: floating, gap 0.0018",
+   "solids": [
+    {
+     "id": "a",
+     "centre": [
+      0,
+      0.01,
+      0
+     ],
+     "size": [
+      0.02,
+      0.02,
+      0.02
+     ]
+    },
+    {
+     "id": "b",
+     "centre": [
+      0,
+      0.0318,
+      0
+     ],
+     "size": [
+      0.02,
+      0.02,
+      0.02
+     ]
+    }
+   ],
+   "groups": [
+    [
+     "a"
+    ],
+    [
+     "b"
+    ]
+   ],
+   "loose": [
+    {
+     "reason": "floating",
+     "ids": [
+      "b"
+     ],
+     "parts": 1,
+     "gapM": 0.0018,
+     "nearest": "a"
+    }
+   ]
+  },
+  {
+   "name": "corner to edge inside the tolerance",
+   "hand": "the second cube is 1 mm off in x and 1 mm in y: its edge is sqrt(2) = 1.414 mm from the edge of the first, <= 1.5, one group although the cubes are apart along both axes",
+   "solids": [
+    {
+     "id": "a",
+     "centre": [
+      0,
+      0.01,
+      0
+     ],
+     "size": [
+      0.02,
+      0.02,
+      0.02
+     ]
+    },
+    {
+     "id": "b",
+     "centre": [
+      0.021,
+      0.031,
+      0
+     ],
+     "size": [
+      0.02,
+      0.02,
+      0.02
+     ]
+    }
+   ],
+   "groups": [
+    [
+     "a",
+     "b"
+    ]
+   ],
+   "loose": []
+  },
+  {
+   "name": "corner to edge outside the tolerance",
+   "hand": "2 mm off in x and in y: sqrt(8) = 2.8284 mm > 1.5; the upper cube floats",
+   "solids": [
+    {
+     "id": "a",
+     "centre": [
+      0,
+      0.01,
+      0
+     ],
+     "size": [
+      0.02,
+      0.02,
+      0.02
+     ]
+    },
+    {
+     "id": "b",
+     "centre": [
+      0.022,
+      0.032,
+      0
+     ],
+     "size": [
+      0.02,
+      0.02,
+      0.02
+     ]
+    }
+   ],
+   "groups": [
+    [
+     "a"
+    ],
+    [
+     "b"
+    ]
+   ],
+   "loose": [
+    {
+     "reason": "floating",
+     "ids": [
+      "b"
+     ],
+     "parts": 1,
+     "gapM": 0.0028284271247461905,
+     "nearest": "a"
+    }
+   ]
+  },
+  {
+   "name": "a cube in the empty corner of the box of a diagonal bar",
+   "hand": "a bar 100 x 4 x 4 mm turned 45 degrees about z through (0, 0.05, 0) has the axis y = x + 0.05 and the box x within +-0.0368, y from 0.0132 to 0.0868; a 10 mm cube at (0.025, 0.025, 0) lies inside that box. Its nearest corner (0.02, 0.03) is |0.02 - 0.03 + 0.05| / sqrt(2) = 0.028284 from the axis, minus half the bar thickness 0.002: gap 0.026284. Bounding boxes would join them; the bar has the larger box and is the body, the cube is 20 mm above the ground and floats",
+   "solids": [
+    {
+     "id": "bar",
+     "centre": [
+      0,
+      0.05,
+      0
+     ],
+     "size": [
+      0.1,
+      0.004,
+      0.004
+     ],
+     "turnZDeg": 45
+    },
+    {
+     "id": "cube",
+     "centre": [
+      0.025,
+      0.025,
+      0
+     ],
+     "size": [
+      0.01,
+      0.01,
+      0.01
+     ]
+    }
+   ],
+   "groups": [
+    [
+     "bar"
+    ],
+    [
+     "cube"
+    ]
+   ],
+   "loose": [
+    {
+     "reason": "floating",
+     "ids": [
+      "cube"
+     ],
+     "parts": 1,
+     "gapM": 0.0262842712474619,
+     "nearest": "bar"
+    }
+   ]
+  },
+  {
+   "name": "two bars crossing without a vertex of one in the other",
+   "hand": "a bar along x and a bar along y through the same centre, 100 x 4 x 4 mm each: the surfaces cross, gap 0, one group; no vertex of either lies in the box of the other",
+   "solids": [
+    {
+     "id": "x",
+     "centre": [
+      0,
+      0.05,
+      0
+     ],
+     "size": [
+      0.1,
+      0.004,
+      0.004
+     ]
+    },
+    {
+     "id": "y",
+     "centre": [
+      0,
+      0.05,
+      0
+     ],
+     "size": [
+      0.004,
+      0.1,
+      0.004
+     ]
+    }
+   ],
+   "groups": [
+    [
+     "x",
+     "y"
+    ]
+   ],
+   "loose": []
+  },
+  {
+   "name": "a cube wholly inside a cube",
+   "hand": "a 10 mm cube in the middle of a 60 mm cube: the surfaces are 25 mm apart, but the small one lies inside the large one: one group",
+   "solids": [
+    {
+     "id": "shell",
+     "centre": [
+      0,
+      0.03,
+      0
+     ],
+     "size": [
+      0.06,
+      0.06,
+      0.06
+     ]
+    },
+    {
+     "id": "core",
+     "centre": [
+      0,
+      0.03,
+      0
+     ],
+     "size": [
+      0.01,
+      0.01,
+      0.01
+     ]
+    }
+   ],
+   "groups": [
+    [
+     "shell",
+     "core"
+    ]
+   ],
+   "loose": []
+  },
+  {
+   "name": "a separate object within one feature",
+   "hand": "three touching cubes and a fourth 6 mm from the third (centre x = 0.066), all on the ground: the fourth rests on its own, but 6 <= 7.5: near, gap 0.006",
+   "solids": [
+    {
+     "id": "a",
+     "centre": [
+      0,
+      0.01,
+      0
+     ],
+     "size": [
+      0.02,
+      0.02,
+      0.02
+     ]
+    },
+    {
+     "id": "b",
+     "centre": [
+      0.02,
+      0.01,
+      0
+     ],
+     "size": [
+      0.02,
+      0.02,
+      0.02
+     ]
+    },
+    {
+     "id": "c",
+     "centre": [
+      0.04,
+      0.01,
+      0
+     ],
+     "size": [
+      0.02,
+      0.02,
+      0.02
+     ]
+    },
+    {
+     "id": "d",
+     "centre": [
+      0.066,
+      0.01,
+      0
+     ],
+     "size": [
+      0.02,
+      0.02,
+      0.02
+     ]
+    }
+   ],
+   "groups": [
+    [
+     "a",
+     "b",
+     "c"
+    ],
+    [
+     "d"
+    ]
+   ],
+   "loose": [
+    {
+     "reason": "near",
+     "ids": [
+      "d"
+     ],
+     "parts": 1,
+     "gapM": 0.006,
+     "nearest": "c"
+    }
+   ]
+  },
+  {
+   "name": "a separate object clearly apart",
+   "hand": "the fourth cube 9 mm from the third (centre x = 0.069), on the ground: 9 > 7.5, a second object, no finding",
+   "solids": [
+    {
+     "id": "a",
+     "centre": [
+      0,
+      0.01,
+      0
+     ],
+     "size": [
+      0.02,
+      0.02,
+      0.02
+     ]
+    },
+    {
+     "id": "b",
+     "centre": [
+      0.02,
+      0.01,
+      0
+     ],
+     "size": [
+      0.02,
+      0.02,
+      0.02
+     ]
+    },
+    {
+     "id": "c",
+     "centre": [
+      0.04,
+      0.01,
+      0
+     ],
+     "size": [
+      0.02,
+      0.02,
+      0.02
+     ]
+    },
+    {
+     "id": "d",
+     "centre": [
+      0.069,
+      0.01,
+      0
+     ],
+     "size": [
+      0.02,
+      0.02,
+      0.02
+     ]
+    }
+   ],
+   "groups": [
+    [
+     "a",
+     "b",
+     "c"
+    ],
+    [
+     "d"
+    ]
+   ],
+   "loose": []
+  },
+  {
+   "name": "a part far away is reported at the cap",
+   "hand": "a cube 100 mm above the other: floating, the gap is reported as the cap of 45 mm",
+   "solids": [
+    {
+     "id": "a",
+     "centre": [
+      0,
+      0.01,
+      0
+     ],
+     "size": [
+      0.02,
+      0.02,
+      0.02
+     ]
+    },
+    {
+     "id": "b",
+     "centre": [
+      0,
+      0.13,
+      0
+     ],
+     "size": [
+      0.02,
+      0.02,
+      0.02
+     ]
+    }
+   ],
+   "groups": [
+    [
+     "a"
+    ],
+    [
+     "b"
+    ]
+   ],
+   "loose": [
+    {
+     "reason": "floating",
+     "ids": [
+      "b"
+     ],
+     "parts": 1,
+     "gapM": 0.045
+    }
+   ]
+  },
+  {
+   "name": "one copy of a repeated post hovers",
+   "hand": "a plate 100 x 4 x 20 mm on the ground and one solid of three posts 4 x 20 x 4 mm: the first and the third stand on the plate (y from 0.004), the second begins 10 mm above it (y from 0.014). The solid as a whole touches the plate, its second copy does not: floating, gap 0.010",
+   "solids": [
+    {
+     "id": "plate",
+     "centre": [
+      0,
+      0.002,
+      0
+     ],
+     "size": [
+      0.1,
+      0.004,
+      0.02
+     ]
+    },
+    {
+     "id": "post",
+     "size": [
+      0.004,
+      0.02,
+      0.004
+     ],
+     "copies": [
+      [
+       -0.03,
+       0.014,
+       0
+      ],
+      [
+       0,
+       0.024,
+       0
+      ],
+      [
+       0.03,
+       0.014,
+       0
+      ]
+     ]
+    }
+   ],
+   "groups": [
+    [
+     "plate",
+     "post",
+     "post"
+    ],
+    [
+     "post"
+    ]
+   ],
+   "loose": [
+    {
+     "reason": "floating",
+     "ids": [
+      "post"
+     ],
+     "parts": 1,
+     "gapM": 0.01,
+     "nearest": "plate"
+    }
+   ]
+  }
+ ],
+ "structures": [
+  {
+   "name": "a portal with a mass marker",
+   "hand": "two supports on the ground, two columns on them, a beam on the columns, all face to face; the mass marker hangs 30 mm over the beam and may: no finding",
+   "solids": [
+    {
+     "id": "support-l",
+     "part": "support",
+     "centre": [
+      0,
+      0.002,
+      0
+     ],
+     "size": [
+      0.02,
+      0.004,
+      0.02
+     ]
+    },
+    {
+     "id": "support-r",
+     "part": "support",
+     "centre": [
+      0.1,
+      0.002,
+      0
+     ],
+     "size": [
+      0.02,
+      0.004,
+      0.02
+     ]
+    },
+    {
+     "id": "column-l",
+     "part": "member",
+     "centre": [
+      0,
+      0.034,
+      0
+     ],
+     "size": [
+      0.008,
+      0.06,
+      0.008
+     ]
+    },
+    {
+     "id": "column-r",
+     "part": "member",
+     "centre": [
+      0.1,
+      0.034,
+      0
+     ],
+     "size": [
+      0.008,
+      0.06,
+      0.008
+     ]
+    },
+    {
+     "id": "beam",
+     "part": "member",
+     "centre": [
+      0.05,
+      0.068,
+      0
+     ],
+     "size": [
+      0.108,
+      0.008,
+      0.008
+     ]
+    },
+    {
+     "id": "mass",
+     "part": "mass",
+     "centre": [
+      0.05,
+      0.107,
+      0
+     ],
+     "size": [
+      0.01,
+      0.01,
+      0.01
+     ]
+    }
+   ],
+   "groups": 2,
+   "loose": []
+  },
+  {
+   "name": "a column that stops short of the beam",
+   "hand": "the right column is 3 mm shorter (centre y = 0.0325, height 0.057): beam, left column and left support are one supported group; the right column and its support are a second supported group 3 mm from the beam, 3 <= 7.5: near",
+   "solids": [
+    {
+     "id": "support-l",
+     "part": "support",
+     "centre": [
+      0,
+      0.002,
+      0
+     ],
+     "size": [
+      0.02,
+      0.004,
+      0.02
+     ]
+    },
+    {
+     "id": "support-r",
+     "part": "support",
+     "centre": [
+      0.1,
+      0.002,
+      0
+     ],
+     "size": [
+      0.02,
+      0.004,
+      0.02
+     ]
+    },
+    {
+     "id": "column-l",
+     "part": "member",
+     "centre": [
+      0,
+      0.034,
+      0
+     ],
+     "size": [
+      0.008,
+      0.06,
+      0.008
+     ]
+    },
+    {
+     "id": "column-r",
+     "part": "member",
+     "centre": [
+      0.1,
+      0.0325,
+      0
+     ],
+     "size": [
+      0.008,
+      0.057,
+      0.008
+     ]
+    },
+    {
+     "id": "beam",
+     "part": "member",
+     "centre": [
+      0.05,
+      0.068,
+      0
+     ],
+     "size": [
+      0.108,
+      0.008,
+      0.008
+     ]
+    }
+   ],
+   "groups": 2,
+   "loose": [
+    {
+     "reason": "near",
+     "ids": [
+      "support-r",
+      "column-r"
+     ],
+     "parts": 2,
+     "gapM": 0.003,
+     "nearest": "beam"
+    }
+   ],
+   "en": [
+    "1 group of members and joints of the structure of 1:50 has its own load path to a support solid, the ground or an anchor but passes within 7.5 mm",
+    "\"support-r\" (+1) 3.0 mm from \"beam\"",
+    "Members that meet at a joint touch there"
+   ],
+   "de": [
+    "1 Gruppe von Stäben und Gelenken des Tragwerks von 1:50 hat einen eigenen Lastpfad zu einem Auflagerkörper, zum Boden oder zu einem Anker, kommt aber",
+    "\"support-r\" (+1) 3.0 mm von \"beam\"",
+    "Stäbe, die sich an einem Gelenk treffen, berühren sich dort"
+   ],
+   "absent": [
+    "own supports",
+    "eigenem Auflager"
+   ]
+  },
+  {
+   "name": "a bracket that reaches nothing",
+   "hand": "the portal and a joint and a member 1.8 mm beside the left column (the joint from x = 0.0058): 1.8 > 1.5, the two form a group without a support: unsupported, gap 0.0018",
+   "solids": [
+    {
+     "id": "support-l",
+     "part": "support",
+     "centre": [
+      0,
+      0.002,
+      0
+     ],
+     "size": [
+      0.02,
+      0.004,
+      0.02
+     ]
+    },
+    {
+     "id": "support-r",
+     "part": "support",
+     "centre": [
+      0.1,
+      0.002,
+      0
+     ],
+     "size": [
+      0.02,
+      0.004,
+      0.02
+     ]
+    },
+    {
+     "id": "column-l",
+     "part": "member",
+     "centre": [
+      0,
+      0.034,
+      0
+     ],
+     "size": [
+      0.008,
+      0.06,
+      0.008
+     ]
+    },
+    {
+     "id": "column-r",
+     "part": "member",
+     "centre": [
+      0.1,
+      0.034,
+      0
+     ],
+     "size": [
+      0.008,
+      0.06,
+      0.008
+     ]
+    },
+    {
+     "id": "beam",
+     "part": "member",
+     "centre": [
+      0.05,
+      0.068,
+      0
+     ],
+     "size": [
+      0.108,
+      0.008,
+      0.008
+     ]
+    },
+    {
+     "id": "joint",
+     "part": "joint",
+     "centre": [
+      0.0088,
+      0.03,
+      0
+     ],
+     "size": [
+      0.006,
+      0.006,
+      0.006
+     ]
+    },
+    {
+     "id": "bracket",
+     "part": "member",
+     "centre": [
+      0.0218,
+      0.03,
+      0
+     ],
+     "size": [
+      0.02,
+      0.004,
+      0.004
+     ]
+    }
+   ],
+   "groups": 2,
+   "loose": [
+    {
+     "reason": "unsupported",
+     "ids": [
+      "joint",
+      "bracket"
+     ],
+     "parts": 2,
+     "gapM": 0.0018,
+     "nearest": "column-l"
+    }
+   ]
+  },
+  {
+   "name": "a frame that ends in the air over its support",
+   "hand": "a support 20 x 4 x 20 mm on the ground, a column from y = 0.01 (6 mm above the support) to 0.07 and a beam on it: the frame is the larger group and holds no support although the list has one: unsupported, gap 0.006; the support stands on its own 6 mm from the column, 6 <= 7.5: near",
+   "solids": [
+    {
+     "id": "support",
+     "part": "support",
+     "centre": [
+      0,
+      0.002,
+      0
+     ],
+     "size": [
+      0.02,
+      0.004,
+      0.02
+     ]
+    },
+    {
+     "id": "column",
+     "part": "member",
+     "centre": [
+      0,
+      0.04,
+      0
+     ],
+     "size": [
+      0.008,
+      0.06,
+      0.008
+     ]
+    },
+    {
+     "id": "beam",
+     "part": "member",
+     "centre": [
+      0.05,
+      0.074,
+      0
+     ],
+     "size": [
+      0.108,
+      0.008,
+      0.008
+     ]
+    }
+   ],
+   "groups": 2,
+   "loose": [
+    {
+     "reason": "unsupported",
+     "ids": [
+      "column",
+      "beam"
+     ],
+     "parts": 2,
+     "gapM": 0.006,
+     "nearest": "support"
+    },
+    {
+     "reason": "near",
+     "ids": [
+      "support"
+     ],
+     "parts": 1,
+     "gapM": 0.006,
+     "nearest": "column"
+    }
+   ]
+  },
+  {
+   "name": "a frame that stands on the ground without a support solid",
+   "hand": "the same column from y = 0 and the beam on it: the column touches the ground plane, the load path ends there, no finding",
+   "solids": [
+    {
+     "id": "column",
+     "part": "member",
+     "centre": [
+      0,
+      0.03,
+      0
+     ],
+     "size": [
+      0.008,
+      0.06,
+      0.008
+     ]
+    },
+    {
+     "id": "beam",
+     "part": "member",
+     "centre": [
+      0.05,
+      0.064,
+      0
+     ],
+     "size": [
+      0.108,
+      0.008,
+      0.008
+     ]
+    }
+   ],
+   "groups": 1,
+   "loose": []
+  },
+  {
+   "name": "a list without support solids is judged for being one structure",
+   "hand": "a column from y = 0.01 and a beam on it, no support solid in the list and nothing on the ground (a skeleton idealised in the sagittal plane ends above the ground in the foot): the largest group is the structure itself, no finding; a second member 1.8 mm beside the column (from x = 0.0058) does not join it: unsupported, gap 0.0018",
+   "solids": [
+    {
+     "id": "column",
+     "part": "member",
+     "centre": [
+      0,
+      0.04,
+      0
+     ],
+     "size": [
+      0.008,
+      0.06,
+      0.008
+     ]
+    },
+    {
+     "id": "beam",
+     "part": "member",
+     "centre": [
+      0.05,
+      0.074,
+      0
+     ],
+     "size": [
+      0.108,
+      0.008,
+      0.008
+     ]
+    },
+    {
+     "id": "stray",
+     "part": "member",
+     "centre": [
+      0.0108,
+      0.03,
+      0
+     ],
+     "size": [
+      0.01,
+      0.004,
+      0.004
+     ]
+    }
+   ],
+   "groups": 2,
+   "loose": [
+    {
+     "reason": "unsupported",
+     "ids": [
+      "stray"
+     ],
+     "parts": 1,
+     "gapM": 0.0018,
+     "nearest": "column"
+    }
+   ]
+  },
+  {
+   "name": "a bracket beside a mass marker that reaches nothing",
+   "hand": "the portal, the joint and the bracket 1.8 mm beside the left column as before, and a mass marker 1.6 mm over the bracket (a 10 mm cube from y = 0.0336, the bracket ends at y = 0.032): 1.6 > 1.5, three groups; the mass marker is nearer than the column, but a mass is no load path: the gap is measured to the column, 0.0018, and the column is named",
+   "solids": [
+    {
+     "id": "support-l",
+     "part": "support",
+     "centre": [
+      0,
+      0.002,
+      0
+     ],
+     "size": [
+      0.02,
+      0.004,
+      0.02
+     ]
+    },
+    {
+     "id": "support-r",
+     "part": "support",
+     "centre": [
+      0.1,
+      0.002,
+      0
+     ],
+     "size": [
+      0.02,
+      0.004,
+      0.02
+     ]
+    },
+    {
+     "id": "column-l",
+     "part": "member",
+     "centre": [
+      0,
+      0.034,
+      0
+     ],
+     "size": [
+      0.008,
+      0.06,
+      0.008
+     ]
+    },
+    {
+     "id": "column-r",
+     "part": "member",
+     "centre": [
+      0.1,
+      0.034,
+      0
+     ],
+     "size": [
+      0.008,
+      0.06,
+      0.008
+     ]
+    },
+    {
+     "id": "beam",
+     "part": "member",
+     "centre": [
+      0.05,
+      0.068,
+      0
+     ],
+     "size": [
+      0.108,
+      0.008,
+      0.008
+     ]
+    },
+    {
+     "id": "joint",
+     "part": "joint",
+     "centre": [
+      0.0088,
+      0.03,
+      0
+     ],
+     "size": [
+      0.006,
+      0.006,
+      0.006
+     ]
+    },
+    {
+     "id": "bracket",
+     "part": "member",
+     "centre": [
+      0.0218,
+      0.03,
+      0
+     ],
+     "size": [
+      0.02,
+      0.004,
+      0.004
+     ]
+    },
+    {
+     "id": "mass",
+     "part": "mass",
+     "centre": [
+      0.025,
+      0.0386,
+      0
+     ],
+     "size": [
+      0.01,
+      0.01,
+      0.01
+     ]
+    }
+   ],
+   "groups": 3,
+   "loose": [
+    {
+     "reason": "unsupported",
+     "ids": [
+      "joint",
+      "bracket"
+     ],
+     "parts": 2,
+     "gapM": 0.0018,
+     "nearest": "column-l"
+    }
+   ],
+   "en": [
+    "\"joint\" (+1) 1.8 mm from \"column-l\""
+   ],
+   "de": [
+    "\"joint\" (+1) 1.8 mm von \"column-l\""
+   ],
+   "absent": [
+    "\"mass\""
+   ]
+  },
+  {
+   "name": "a post on the ground beside a mass marker",
+   "hand": "the portal and, 92 mm beside it (farther than the cap of 45 mm), a post 8 x 30 x 8 mm standing on the ground with a mass marker 3 mm over it (a 10 mm cube from y = 0.033): three groups; the post has its own load path into the ground and the only solid within one feature of it is the mass marker, which is no load path: no finding",
+   "solids": [
+    {
+     "id": "support-l",
+     "part": "support",
+     "centre": [
+      0,
+      0.002,
+      0
+     ],
+     "size": [
+      0.02,
+      0.004,
+      0.02
+     ]
+    },
+    {
+     "id": "support-r",
+     "part": "support",
+     "centre": [
+      0.1,
+      0.002,
+      0
+     ],
+     "size": [
+      0.02,
+      0.004,
+      0.02
+     ]
+    },
+    {
+     "id": "column-l",
+     "part": "member",
+     "centre": [
+      0,
+      0.034,
+      0
+     ],
+     "size": [
+      0.008,
+      0.06,
+      0.008
+     ]
+    },
+    {
+     "id": "column-r",
+     "part": "member",
+     "centre": [
+      0.1,
+      0.034,
+      0
+     ],
+     "size": [
+      0.008,
+      0.06,
+      0.008
+     ]
+    },
+    {
+     "id": "beam",
+     "part": "member",
+     "centre": [
+      0.05,
+      0.068,
+      0
+     ],
+     "size": [
+      0.108,
+      0.008,
+      0.008
+     ]
+    },
+    {
+     "id": "post",
+     "part": "member",
+     "centre": [
+      0.2,
+      0.015,
+      0
+     ],
+     "size": [
+      0.008,
+      0.03,
+      0.008
+     ]
+    },
+    {
+     "id": "mass",
+     "part": "mass",
+     "centre": [
+      0.2,
+      0.038,
+      0
+     ],
+     "size": [
+      0.01,
+      0.01,
+      0.01
+     ]
+    }
+   ],
+   "groups": 3,
+   "loose": []
+  }
+ ],
+ "sheets": {
+  "declarations": {
+   "hand": "limits 7.5 mm (1:50) and 75 mm (1:500), ratio 20; `thin` counts the findings of a dimension below the limit, `hint` whether that finding asks for `sheet: true`, `declaration` the findings of a `sheet` that is no thin sheet, `both` those of `sheet` with `slender`, `ratio` the middle extent over the thickness. A plate 300 x 300 x 1 mm: 300 >= max(7.5, 20) and 300 >= max(75, 20), a sheet at both scales, ratio 300; undeclared it fails with the hint, declared it passes at 1:50 and with the same thickness at 1:500. A declared lump 2 x 3 x 3 mm: ratio 1.5, no sheet. A declared strip 300 x 10 x 1 mm: ratio 10, no sheet. A declared ribbon 300 x 1 x 0.04 mm: ratio 25, but 1 mm across is below the limit, no sheet. The garment layer of the sample figure declares 3 mm cotton on the torso: a 300 x 300 x 3 mm cotton plate bound to it passes without a flag; 1 mm thick it is off its gauge and fails without the hint, and declared it fails the declaration as well. A plate with `sheet` and `slender` fails for declaring both (`slender` exempts it from the thickness). A declared board 300 x 300 x 10 mm is thicker than 7.5 mm and 30 times as broad: the flag is in order. A declared block 300 x 300 x 20 mm: ratio 15, no sheet although nothing is below the limit. The two rib hoops (10 x 10 mm section, 212 and 178 mm across) at 1:500: both are 10 mm thin without the hint, because a hoop is a bent rod and no sheet; declared a sheet the hoop fails the declaration too (band 10 mm over thickness 10 mm: ratio 1). Declared `slender` both pass (`longMembers`).",
+   "cases": [
+    {
+     "name": "an undeclared broad plate",
+     "scale": 50,
+     "solid": {
+      "kind": "box",
+      "size": [
+       0.3,
+       0.001,
+       0.3
+      ]
+     },
+     "thin": 1,
+     "hint": true,
+     "declaration": 0,
+     "both": 0
+    },
+    {
+     "name": "the broad plate declared",
+     "scale": 50,
+     "solid": {
+      "kind": "box",
+      "size": [
+       0.3,
+       0.001,
+       0.3
+      ],
+      "sheet": true
+     },
+     "thin": 0,
+     "hint": false,
+     "declaration": 0,
+     "both": 0,
+     "ratio": 300
+    },
+    {
+     "name": "a declared lump",
+     "scale": 50,
+     "solid": {
+      "kind": "box",
+      "size": [
+       0.002,
+       0.003,
+       0.003
+      ],
+      "sheet": true
+     },
+     "thin": 1,
+     "hint": false,
+     "declaration": 1,
+     "both": 0,
+     "ratio": 1.5
+    },
+    {
+     "name": "a declared strip",
+     "scale": 50,
+     "solid": {
+      "kind": "box",
+      "size": [
+       0.3,
+       0.001,
+       0.01
+      ],
+      "sheet": true
+     },
+     "thin": 1,
+     "hint": false,
+     "declaration": 1,
+     "both": 0,
+     "ratio": 10
+    },
+    {
+     "name": "a declared ribbon narrower than the feature",
+     "scale": 50,
+     "solid": {
+      "kind": "box",
+      "size": [
+       0.3,
+       4e-05,
+       0.001
+      ],
+      "sheet": true
+     },
+     "thin": 1,
+     "hint": false,
+     "declaration": 1,
+     "both": 0,
+     "ratio": 25
+    },
+    {
+     "name": "a sheet at the gauge of its thermal layer, without the flag",
+     "scale": 50,
+     "solid": {
+      "kind": "box",
+      "size": [
+       0.3,
+       0.003,
+       0.3
+      ],
+      "bone": "torso",
+      "material": "cotton-clothing"
+     },
+     "bound": {
+      "region": "torso",
+      "layer": "garment"
+     },
+     "thin": 0,
+     "hint": false,
+     "declaration": 0,
+     "both": 0
+    },
+    {
+     "name": "a bound sheet off its gauge, without the flag",
+     "scale": 50,
+     "solid": {
+      "kind": "box",
+      "size": [
+       0.3,
+       0.001,
+       0.3
+      ],
+      "bone": "torso",
+      "material": "cotton-clothing"
+     },
+     "bound": {
+      "region": "torso",
+      "layer": "garment"
+     },
+     "thin": 1,
+     "hint": false,
+     "declaration": 0,
+     "both": 0
+    },
+    {
+     "name": "a bound sheet off its gauge, declared",
+     "scale": 50,
+     "solid": {
+      "kind": "box",
+      "size": [
+       0.3,
+       0.001,
+       0.3
+      ],
+      "sheet": true,
+      "bone": "torso",
+      "material": "cotton-clothing"
+     },
+     "bound": {
+      "region": "torso",
+      "layer": "garment"
+     },
+     "thin": 1,
+     "hint": false,
+     "declaration": 1,
+     "both": 0,
+     "ratio": 300
+    },
+    {
+     "name": "a plate that declares sheet and slender",
+     "scale": 50,
+     "solid": {
+      "kind": "box",
+      "size": [
+       0.3,
+       0.001,
+       0.3
+      ],
+      "sheet": true,
+      "slender": true
+     },
+     "thin": 0,
+     "hint": false,
+     "declaration": 0,
+     "both": 1,
+     "ratio": 300
+    },
+    {
+     "name": "an undeclared broad plate at 1:500",
+     "scale": 500,
+     "solid": {
+      "kind": "box",
+      "size": [
+       0.3,
+       0.001,
+       0.3
+      ]
+     },
+     "thin": 1,
+     "hint": true,
+     "declaration": 0,
+     "both": 0
+    },
+    {
+     "name": "the declared plate at 1:500 with its 1:50 thickness",
+     "scale": 500,
+     "solid": {
+      "kind": "box",
+      "size": [
+       0.3,
+       0.001,
+       0.3
+      ],
+      "sheet": true
+     },
+     "thin": 0,
+     "hint": false,
+     "declaration": 0,
+     "both": 0,
+     "ratio": 300
+    },
+    {
+     "name": "a declared board thicker than the feature",
+     "scale": 50,
+     "solid": {
+      "kind": "box",
+      "size": [
+       0.3,
+       0.01,
+       0.3
+      ],
+      "sheet": true
+     },
+     "thin": 0,
+     "hint": false,
+     "declaration": 0,
+     "both": 0,
+     "ratio": 30
+    },
+    {
+     "name": "a declared block thicker than the feature",
+     "scale": 50,
+     "solid": {
+      "kind": "box",
+      "size": [
+       0.3,
+       0.02,
+       0.3
+      ],
+      "sheet": true
+     },
+     "thin": 0,
+     "hint": false,
+     "declaration": 1,
+     "both": 0,
+     "ratio": 15
+    },
+    {
+     "name": "an undeclared rib hoop of 212 mm",
+     "scale": 500,
+     "solid": {
+      "kind": "revolve",
+      "profile": [
+       [
+        -0.005,
+        0.095821
+       ],
+       [
+        0.005,
+        0.095821
+       ],
+       [
+        0.005,
+        0.105821
+       ],
+       [
+        -0.005,
+        0.105821
+       ],
+       [
+        -0.005,
+        0.095821
+       ]
+      ],
+      "axis": [
+       0.99382,
+       -0.11098,
+       0
+      ],
+      "origin": [
+       0.05884,
+       -0.09726,
+       0
+      ],
+      "lateralScale": 1.1307
+     },
+     "thin": 1,
+     "hint": false,
+     "declaration": 0,
+     "both": 0
+    },
+    {
+     "name": "an undeclared rib hoop of 178 mm",
+     "scale": 500,
+     "solid": {
+      "kind": "revolve",
+      "profile": [
+       [
+        -0.005,
+        0.078801
+       ],
+       [
+        0.005,
+        0.078801
+       ],
+       [
+        0.005,
+        0.088801
+       ],
+       [
+        -0.005,
+        0.088801
+       ],
+       [
+        -0.005,
+        0.078801
+       ]
+      ],
+      "axis": [
+       0.97083,
+       -0.23975,
+       0
+      ],
+      "origin": [
+       0.18101,
+       -0.08638,
+       0
+      ],
+      "lateralScale": 1.0501
+     },
+     "thin": 1,
+     "hint": false,
+     "declaration": 0,
+     "both": 0
+    },
+    {
+     "name": "a rib hoop of 212 mm declared a sheet",
+     "scale": 500,
+     "solid": {
+      "kind": "revolve",
+      "profile": [
+       [
+        -0.005,
+        0.095821
+       ],
+       [
+        0.005,
+        0.095821
+       ],
+       [
+        0.005,
+        0.105821
+       ],
+       [
+        -0.005,
+        0.105821
+       ],
+       [
+        -0.005,
+        0.095821
+       ]
+      ],
+      "axis": [
+       0.99382,
+       -0.11098,
+       0
+      ],
+      "origin": [
+       0.05884,
+       -0.09726,
+       0
+      ],
+      "lateralScale": 1.1307,
+      "sheet": true
+     },
+     "thin": 1,
+     "hint": false,
+     "declaration": 1,
+     "both": 0,
+     "ratio": 1
+    }
+   ]
+  },
+  "hand": "limit 7.5 mm (1:50), ratio 20. A feather vane as a loft 120 mm long with a lens section 24 x 1 mm: thickness 1, middle extent 24 >= max(7.5, 20 x 1 = 20): a sheet. The same vane 6 mm wide: 6 < 20, a strip, not a sheet (and not slender either: 120 / 6 = 20 would need the declaration). A lump 2 x 3 x 3 mm: 3 < 7.5, no sheet. A board 5 x 90 x 300 mm as a box: 90 < 20 x 5 = 100: no sheet; 4 mm thick: 90 >= 80: a sheet. A disc of 1 mm and 60 mm diameter as an ellipsoid: a sheet. With a declared gauge of 0.5 mm a 1 mm sheet is not at its gauge: no sheet. A ring is as broad as its band, not as its diameter: two rib hoops of the labrador (revolves of a closed 10 x 10 mm loop at radii of 96 and 79 mm, overall 10 x 212 x 239 and 10 x 178 x 187 mm) have a band of 10 mm, under the limit (7.5 mm here, and 10 < 20 x 10): neither is a sheet, although the diameter of the first is over 20 times its thickness and that of the second is not (by their diameters the two equal hoops were judged differently). A washer 1 mm thick from radius 5 to 50 mm has a band of 45 >= max(7.5, 20): a sheet.",
+  "limitM": 0.0075,
+  "cases": [
+   {
+    "name": "a feather vane",
+    "solid": {
+     "kind": "loft",
+     "sections": [
+      {
+       "at": [
+        0,
+        0,
+        0
+       ],
+       "rx": 0.012,
+       "ry": 0.0005
+      },
+      {
+       "at": [
+        0.12,
+        0,
+        0
+       ],
+       "rx": 0.012,
+       "ry": 0.0005
+      }
+     ]
+    },
+    "sheet": true
+   },
+   {
+    "name": "a narrow strip",
+    "solid": {
+     "kind": "loft",
+     "sections": [
+      {
+       "at": [
+        0,
+        0,
+        0
+       ],
+       "rx": 0.003,
+       "ry": 0.0005
+      },
+      {
+       "at": [
+        0.12,
+        0,
+        0
+       ],
+       "rx": 0.003,
+       "ry": 0.0005
+      }
+     ]
+    },
+    "sheet": false
+   },
+   {
+    "name": "a lump below the feature",
+    "solid": {
+     "kind": "box",
+     "size": [
+      0.002,
+      0.003,
+      0.003
+     ]
+    },
+    "sheet": false
+   },
+   {
+    "name": "a board too thick for its width",
+    "solid": {
+     "kind": "box",
+     "size": [
+      0.3,
+      0.005,
+      0.09
+     ]
+    },
+    "sheet": false
+   },
+   {
+    "name": "a board thin enough for its width",
+    "solid": {
+     "kind": "box",
+     "size": [
+      0.3,
+      0.004,
+      0.09
+     ]
+    },
+    "sheet": true
+   },
+   {
+    "name": "a thin disc",
+    "solid": {
+     "kind": "ellipsoid",
+     "radii": [
+      0.03,
+      0.0005,
+      0.03
+     ]
+    },
+    "sheet": true
+   },
+   {
+    "name": "a sheet off its declared gauge",
+    "solid": {
+     "kind": "ellipsoid",
+     "radii": [
+      0.03,
+      0.0005,
+      0.03
+     ]
+    },
+    "gaugeM": 0.0005,
+    "sheet": false
+   },
+   {
+    "name": "a sheet at its declared gauge",
+    "solid": {
+     "kind": "ellipsoid",
+     "radii": [
+      0.03,
+      0.0005,
+      0.03
+     ]
+    },
+    "gaugeM": 0.001,
+    "sheet": true
+   },
+   {
+    "name": "a solid at the feature is no sheet",
+    "solid": {
+     "kind": "box",
+     "size": [
+      0.3,
+      0.0075,
+      0.3
+     ]
+    },
+    "sheet": false
+   },
+   {
+    "name": "a rib hoop of 212 mm with a 10 x 10 mm section",
+    "solid": {
+     "kind": "revolve",
+     "profile": [
+      [
+       -0.005,
+       0.095821
+      ],
+      [
+       0.005,
+       0.095821
+      ],
+      [
+       0.005,
+       0.105821
+      ],
+      [
+       -0.005,
+       0.105821
+      ],
+      [
+       -0.005,
+       0.095821
+      ]
+     ],
+     "axis": [
+      0.99382,
+      -0.11098,
+      0
+     ],
+     "origin": [
+      0.05884,
+      -0.09726,
+      0
+     ],
+     "lateralScale": 1.1307
+    },
+    "sheet": false
+   },
+   {
+    "name": "a rib hoop of 178 mm with a 10 x 10 mm section",
+    "solid": {
+     "kind": "revolve",
+     "profile": [
+      [
+       -0.005,
+       0.078801
+      ],
+      [
+       0.005,
+       0.078801
+      ],
+      [
+       0.005,
+       0.088801
+      ],
+      [
+       -0.005,
+       0.088801
+      ],
+      [
+       -0.005,
+       0.078801
+      ]
+     ],
+     "axis": [
+      0.97083,
+      -0.23975,
+      0
+     ],
+     "origin": [
+      0.18101,
+      -0.08638,
+      0
+     ],
+     "lateralScale": 1.0501
+    },
+    "sheet": false
+   },
+   {
+    "name": "a washer of 1 mm with a band of 45 mm",
+    "solid": {
+     "kind": "revolve",
+     "profile": [
+      [
+       0,
+       0.005
+      ],
+      [
+       0.001,
+       0.005
+      ],
+      [
+       0.001,
+       0.05
+      ],
+      [
+       0,
+       0.05
+      ],
+      [
+       0,
+       0.005
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0,
+      0,
+      0
+     ]
+    },
+    "sheet": true
+   }
+  ]
+ },
+ "vessels": {
+  "hand": "1:50, limit 7.5 mm. A hollow vessel is judged by its overall extents, never by its wall: a compressor shell 200 mm long, 120 mm across with a 3.5 mm wall as a revolve of the closed loop of its wall has the extents 200 x 120 x 120 mm and passes; a casing panel 300 x 200 x 3.5 mm that declares `sheet: true` is a sheet (200 >= 20 x 3.5 = 70) and passes, the same panel without the declaration is reported; a pellet of 3.5 mm is below the feature in every direction and is reported.",
+  "cases": [
+   {
+    "name": "a compressor shell with a 3.5 mm wall",
+    "solid": {
+     "kind": "revolve",
+     "profile": [
+      [
+       0,
+       0.0565
+      ],
+      [
+       0.2,
+       0.0565
+      ],
+      [
+       0.2,
+       0.06
+      ],
+      [
+       0,
+       0.06
+      ],
+      [
+       0,
+       0.0565
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0,
+      0,
+      0
+     ]
+    },
+    "finding": false
+   },
+   {
+    "name": "a casing panel of 3.5 mm",
+    "solid": {
+     "kind": "box",
+     "sheet": true,
+     "size": [
+      0.3,
+      0.0035,
+      0.2
+     ]
+    },
+    "finding": false
+   },
+   {
+    "name": "an undeclared casing panel of 3.5 mm",
+    "solid": {
+     "kind": "box",
+     "size": [
+      0.3,
+      0.0035,
+      0.2
+     ]
+    },
+    "finding": true
+   },
+   {
+    "name": "a pellet of 3.5 mm",
+    "solid": {
+     "kind": "ellipsoid",
+     "radii": [
+      0.00175,
+      0.00175,
+      0.00175
+     ]
+    },
+    "finding": true
+   }
+  ]
+ },
+ "raster": {
+  "hand": "The rule raster has a cell of a quarter feature, but at least 256 cells along the long side of what is compared and never a cell below 0.05 mm: a valve of 60 mm at 1:50 gets 0.06 / 256 = 0.234375 mm instead of 1.875 mm; a figure of 2 m keeps 1.875 mm; a table of 1.2 m at 1:500 gets 1.2 / 256 = 4.6875 mm instead of 18.75 mm; a part of 5 mm gets the floor. Two rectangles: A from (0.4, 0.3) to (60.7, 30.1) mm and B, the same 3 mm shorter at its right end: the intersection is B, the union is A, IoU = 57.3 / 60.3 = 0.950249. On cells of 1.875 mm the columns along the two right edges are in doubt, one column is 1.875 / 60.3 = 3.1 % of the union; on cells of 0.234375 mm one column is 0.39 %.",
+  "cells": 256,
+  "floorM": 5e-05,
+  "cases": [
+   {
+    "featureM": 0.0075,
+    "longM": 0.06,
+    "cellM": 0.000234375
+   },
+   {
+    "featureM": 0.0075,
+    "longM": 2,
+    "cellM": 0.001875
+   },
+   {
+    "featureM": 0.075,
+    "longM": 1.2,
+    "cellM": 0.0046875
+   },
+   {
+    "featureM": 0.0075,
+    "longM": 0.005,
+    "cellM": 5e-05
+   }
+  ],
+  "rectangles": {
+   "a": [
+    0.0004,
+    0.0003,
+    0.0607,
+    0.0301
+   ],
+   "b": [
+    0.0004,
+    0.0003,
+    0.0577,
+    0.0301
+   ],
+   "featureM": 0.0075,
+   "iou": 0.9502487562189055,
+   "toleranceIou": 0.008
+  }
+ },
+ "longMembers": {
+  "hand": "1:500, feature 75 mm, a structure member counts as a bar from 2 x 75 = 150 mm of length and 5 times its largest cross extent (the forearm bones that `🧪️tests/🧊️model-skeleton` pins at their true shaft at every scale are 220 to 280 mm long). A femur as a loft 390 mm long with shaft radii of 14 to 17.5 mm: largest cross extent 35 mm, 390 / 35 = 11.1 >= 5 and 390 >= 150: declared `slender` it keeps its true section (no `volumes-feature`, no `volumes-slender` finding); not declared, its 28 mm shaft is below 75 mm and `volumes-feature` reports it. A radius as a loft 240 mm long with shaft radii of 7 to 9 mm: 240 / 18 = 13.3 >= 5 and 240 >= 150, declared `slender` it keeps its true section as well. A finger bone of 80 x 18 mm declared slender: 80 < 150, so it needs the general ratio 20 and has 4.4: `volumes-slender` reports it. The same femur in the body list is no structure member: 11.1 < 20, `volumes-slender` reports it. Two rib hoops with the same 10 x 10 mm section, 212 and 178 mm across: a hoop is slender by the centre line it follows (about 640 and 540 mm of circumference over 10 mm), so both pass once declared `slender`, in any list, and both are reported by `volumes-feature` when not declared: equal hoops, equal verdicts.",
+  "scale": 500,
+  "femur": {
+   "kind": "loft",
+   "sections": [
+    {
+     "at": [
+      0.0,
+      0,
+      0
+     ],
+     "rx": 0.016,
+     "ry": 0.016
+    },
+    {
+     "at": [
+      0.2,
+      0,
+      0
+     ],
+     "rx": 0.014,
+     "ry": 0.014
+    },
+    {
+     "at": [
+      0.39,
+      0,
+      0
+     ],
+     "rx": 0.0175,
+     "ry": 0.0175
+    }
+   ],
+   "capStart": true,
+   "capEnd": true
+  },
+  "radius": {
+   "kind": "loft",
+   "sections": [
+    {
+     "at": [
+      0.0,
+      0,
+      0
+     ],
+     "rx": 0.009,
+     "ry": 0.009
+    },
+    {
+     "at": [
+      0.12,
+      0,
+      0
+     ],
+     "rx": 0.007,
+     "ry": 0.007
+    },
+    {
+     "at": [
+      0.24,
+      0,
+      0
+     ],
+     "rx": 0.009,
+     "ry": 0.009
+    }
+   ],
+   "capStart": true,
+   "capEnd": true
+  },
+  "finger": {
+   "kind": "capsule",
+   "p0": [
+    0,
+    0,
+    0
+   ],
+   "p1": [
+    0.062,
+    0,
+    0
+   ],
+   "r0": 0.009,
+   "r1": 0.009
+  },
+  "cases": [
+   {
+    "name": "a femur declared slender in the structure",
+    "list": "structure",
+    "solid": "femur",
+    "slender": true,
+    "feature": false,
+    "slenderFinding": false
+   },
+   {
+    "name": "a radius declared slender in the structure",
+    "list": "structure",
+    "solid": "radius",
+    "slender": true,
+    "feature": false,
+    "slenderFinding": false
+   },
+   {
+    "name": "a radius not declared slender",
+    "list": "structure",
+    "solid": "radius",
+    "slender": false,
+    "feature": true,
+    "slenderFinding": false
+   },
+   {
+    "name": "a femur not declared slender",
+    "list": "structure",
+    "solid": "femur",
+    "slender": false,
+    "feature": true,
+    "slenderFinding": false
+   },
+   {
+    "name": "a finger bone declared slender",
+    "list": "structure",
+    "solid": "finger",
+    "slender": true,
+    "feature": false,
+    "slenderFinding": true
+   },
+   {
+    "name": "a femur declared slender in the body",
+    "list": "body",
+    "solid": "femur",
+    "slender": true,
+    "feature": false,
+    "slenderFinding": true
+   },
+   {
+    "name": "a rib hoop of 212 mm declared slender in the body",
+    "list": "body",
+    "solid": "hoopWide",
+    "slender": true,
+    "feature": false,
+    "slenderFinding": false
+   },
+   {
+    "name": "a rib hoop of 178 mm declared slender in the body",
+    "list": "body",
+    "solid": "hoopNarrow",
+    "slender": true,
+    "feature": false,
+    "slenderFinding": false
+   },
+   {
+    "name": "a rib hoop of 212 mm not declared slender",
+    "list": "structure",
+    "solid": "hoopWide",
+    "slender": false,
+    "feature": true,
+    "slenderFinding": false
+   },
+   {
+    "name": "a rib hoop of 178 mm not declared slender",
+    "list": "structure",
+    "solid": "hoopNarrow",
+    "slender": false,
+    "feature": true,
+    "slenderFinding": false
+   }
+  ],
+  "hoopWide": {
+   "kind": "revolve",
+   "profile": [
+    [
+     -0.005,
+     0.095821
+    ],
+    [
+     0.005,
+     0.095821
+    ],
+    [
+     0.005,
+     0.105821
+    ],
+    [
+     -0.005,
+     0.105821
+    ],
+    [
+     -0.005,
+     0.095821
+    ]
+   ],
+   "axis": [
+    0.99382,
+    -0.11098,
+    0
+   ],
+   "origin": [
+    0.05884,
+    -0.09726,
+    0
+   ],
+   "lateralScale": 1.1307
+  },
+  "hoopNarrow": {
+   "kind": "revolve",
+   "profile": [
+    [
+     -0.005,
+     0.078801
+    ],
+    [
+     0.005,
+     0.078801
+    ],
+    [
+     0.005,
+     0.088801
+    ],
+    [
+     -0.005,
+     0.088801
+    ],
+    [
+     -0.005,
+     0.078801
+    ]
+   ],
+   "axis": [
+    0.97083,
+    -0.23975,
+    0
+   ],
+   "origin": [
+    0.18101,
+    -0.08638,
+    0
+   ],
+   "lateralScale": 1.0501
+  }
+ },
+ "spans": {
+  "hand": "A `member` solid of the structure list may name in `members` the further bones it spans besides `member`. The names are bones of the rig, distinct, and form with `member` one connected piece of the rig (each the parent or a child of another); only a `member` part spans (`volume-member`, reported under `volumes-structure-coverage`). In the default pose each named bone, sampled at 9 evenly spaced points from its joint to its tip, lies in the solid or within one smallest feature of the scale of its surface (`spanGapM:<solid>:<bone>`, limit 7.5 mm at 1:50, 75 mm at 1:500). The solid then counts as the member solid of every named bone and is judged for `slender` by its own extents. `segments` measure a rod 20 x 300 x 20 mm standing on the ground at the origin (x and z from -0.01 to 0.01, y from 0 to 0.3). `cases` patch the sample figure, whose pelvis (0.1 m), torso (0.45 m) and head (0.22 m) stand in one vertical line and whose thigh (0.45 m) and shank (0.43 m) hang in one line below the hip; its member solids are capsules along the bones with a radius of 75 mm at 1:500 and 40 mm at 1:50. `coverage`, `feature` and `slender` count the findings of `volumes-structure-coverage` (without its `outsideBodyM` findings: the foot members of the sample figure reach beyond its body whatever the patch), `volumes-feature` and `volumes-slender`; `gaps` are the measured `spanGapM` values, compared within `gapToleranceM` because a capsule is a faceted mesh.",
+  "gapToleranceM": 0.002,
+  "rod": {
+   "id": "rod",
+   "centre": [
+    0,
+    0.15,
+    0
+   ],
+   "size": [
+    0.02,
+    0.3,
+    0.02
+   ]
+  },
+  "segments": [
+   {
+    "name": "a bone inside the rod",
+    "hand": "from y = 0.05 to 0.25 on the axis: every point inside, 0",
+    "from": [
+     0,
+     0.05,
+     0
+    ],
+    "to": [
+     0,
+     0.25,
+     0
+    ],
+    "gapM": 0
+   },
+   {
+    "name": "a bone that runs on beyond the end of the rod",
+    "hand": "from y = 0.2 on the axis to 0.36: the tip is 60 mm over the top face at y = 0.3",
+    "from": [
+     0,
+     0.2,
+     0
+    ],
+    "to": [
+     0,
+     0.36,
+     0
+    ],
+    "gapM": 0.06
+   },
+   {
+    "name": "a bone beside the rod",
+    "hand": "parallel at x = 0.04, 30 mm off the face x = 0.01",
+    "from": [
+     0.04,
+     0.05,
+     0
+    ],
+    "to": [
+     0.04,
+     0.25,
+     0
+    ],
+    "gapM": 0.03
+   },
+   {
+    "name": "a bone that leaves the rod at a right angle",
+    "hand": "from the axis at y = 0.15 to x = 0.11: the tip is 100 mm off the face x = 0.01",
+    "from": [
+     0,
+     0.15,
+     0
+    ],
+    "to": [
+     0.11,
+     0.15,
+     0
+    ],
+    "gapM": 0.1
+   },
+   {
+    "name": "a bone that leaves over the top edge",
+    "hand": "from the axis at y = 0.2 to (0.04, 0.34): the tip is 30 mm beside and 40 mm over the edge x = 0.01, y = 0.3: 50 mm",
+    "from": [
+     0,
+     0.2,
+     0
+    ],
+    "to": [
+     0.04,
+     0.34,
+     0
+    ],
+    "gapM": 0.05
+   }
+  ],
+  "cases": [
+   {
+    "name": "one rod for pelvis, torso and head at its true section",
+    "hand": "1:500: the three members are replaced by one capsule on the pelvis from the hip 0.77 m up, radius 20 mm, `slender`, `members` torso and head: the three bones lie on its axis (gaps 0), each has its member solid, and the rod is 810 mm long and 40 mm thick, 20 times: slender from 5 times and 150 mm, so neither rule reports its 40 mm",
+    "scale": 500,
+    "operations": [
+     {
+      "op": "remove",
+      "path": "/volumes/500/structure/id=member-torso"
+     },
+     {
+      "op": "remove",
+      "path": "/volumes/500/structure/id=member-head"
+     },
+     {
+      "op": "replace",
+      "path": "/volumes/500/structure/id=member-pelvis",
+      "value": {
+       "id": "member-pelvis",
+       "kind": "capsule",
+       "bone": "pelvis",
+       "material": "skin",
+       "role": "body",
+       "tone": 0.4,
+       "p0": [
+        0,
+        0,
+        0
+       ],
+       "p1": [
+        0.77,
+        0,
+        0
+       ],
+       "r0": 0.02,
+       "r1": 0.02,
+       "slender": true,
+       "member": "pelvis",
+       "part": "member",
+       "members": [
+        "torso",
+        "head"
+       ]
+      }
+     }
+    ],
+    "coverage": 0,
+    "feature": 0,
+    "slender": 0,
+    "gaps": {
+     "member-pelvis:torso": 0,
+     "member-pelvis:head": 0
+    },
+    "en": [],
+    "de": []
+   },
+   {
+    "name": "the same rod without `members`",
+    "hand": "the rod names only the pelvis: torso and head have no member solid, two findings",
+    "scale": 500,
+    "operations": [
+     {
+      "op": "remove",
+      "path": "/volumes/500/structure/id=member-torso"
+     },
+     {
+      "op": "remove",
+      "path": "/volumes/500/structure/id=member-head"
+     },
+     {
+      "op": "replace",
+      "path": "/volumes/500/structure/id=member-pelvis",
+      "value": {
+       "id": "member-pelvis",
+       "kind": "capsule",
+       "bone": "pelvis",
+       "material": "skin",
+       "role": "body",
+       "tone": 0.4,
+       "p0": [
+        0,
+        0,
+        0
+       ],
+       "p1": [
+        0.77,
+        0,
+        0
+       ],
+       "r0": 0.02,
+       "r1": 0.02,
+       "slender": true,
+       "member": "pelvis",
+       "part": "member"
+      }
+     }
+    ],
+    "coverage": 2,
+    "feature": 0,
+    "slender": 0,
+    "gaps": {},
+    "en": [
+     "Load-bearing bone \"torso\" has no member solid at 1:500",
+     "Load-bearing bone \"head\" has no member solid at 1:500"
+    ],
+    "de": [
+     "Der tragende Knochen \"torso\" hat bei 1:500 keinen Stabkörper"
+    ]
+   },
+   {
+    "name": "a short rod of three bones that is not slender",
+    "hand": "1:500: a capsule from the hip 0.1 m up with a radius of 20 mm names torso and head but ends at the torso joint: 140 mm long, under 150 mm, so it is no slender member (one `volumes-slender` finding, 3.5 times against 20), and torso and head run 0.43 m and 0.65 m beyond its end (0.45 - 0.02 and 0.67 - 0.02): two coverage findings",
+    "scale": 500,
+    "operations": [
+     {
+      "op": "remove",
+      "path": "/volumes/500/structure/id=member-torso"
+     },
+     {
+      "op": "remove",
+      "path": "/volumes/500/structure/id=member-head"
+     },
+     {
+      "op": "replace",
+      "path": "/volumes/500/structure/id=member-pelvis",
+      "value": {
+       "id": "member-pelvis",
+       "kind": "capsule",
+       "bone": "pelvis",
+       "material": "skin",
+       "role": "body",
+       "tone": 0.4,
+       "p0": [
+        0,
+        0,
+        0
+       ],
+       "p1": [
+        0.1,
+        0,
+        0
+       ],
+       "r0": 0.02,
+       "r1": 0.02,
+       "slender": true,
+       "member": "pelvis",
+       "part": "member",
+       "members": [
+        "torso",
+        "head"
+       ]
+      }
+     }
+    ],
+    "coverage": 2,
+    "feature": 0,
+    "slender": 1,
+    "gaps": {
+     "member-pelvis:torso": 0.43,
+     "member-pelvis:head": 0.65
+    },
+    "en": [
+     "names bone \"torso\" in `members` but does not hold it",
+     "names bone \"head\" in `members` but does not hold it"
+    ],
+    "de": [
+     "nennt den Knochen \"torso\" in `members`, fasst ihn aber nicht"
+    ]
+   },
+   {
+    "name": "the torso member takes the pelvis in at 1:500",
+    "hand": "the pelvis member is removed and the torso capsule (radius 75 mm, a hemisphere around the torso joint) names the pelvis: the hip, the farthest point of the pelvis, is 0.1 - 0.075 = 0.025 m from the capsule, within 75 mm: held",
+    "scale": 500,
+    "operations": [
+     {
+      "op": "remove",
+      "path": "/volumes/500/structure/id=member-pelvis"
+     },
+     {
+      "op": "add",
+      "path": "/volumes/500/structure/id=member-torso/members",
+      "value": [
+       "pelvis"
+      ]
+     }
+    ],
+    "coverage": 0,
+    "feature": 0,
+    "slender": 0,
+    "gaps": {
+     "member-torso:pelvis": 0.025
+    },
+    "en": [],
+    "de": []
+   },
+   {
+    "name": "the torso member cannot take the pelvis in at 1:50",
+    "hand": "the same at 1:50, where the capsule has a radius of 40 mm: the hip is 0.1 - 0.04 = 0.06 m away, over 7.5 mm: the scale shows the pelvis apart, one finding",
+    "scale": 50,
+    "operations": [
+     {
+      "op": "remove",
+      "path": "/volumes/50/structure/id=member-pelvis"
+     },
+     {
+      "op": "add",
+      "path": "/volumes/50/structure/id=member-torso/members",
+      "value": [
+       "pelvis"
+      ]
+     }
+    ],
+    "coverage": 1,
+    "feature": 0,
+    "slender": 0,
+    "gaps": {
+     "member-torso:pelvis": 0.06
+    },
+    "en": [
+     "Member solid \"member-torso\" of 1:50 names bone \"pelvis\" in `members` but does not hold it",
+     "limit 7.5 mm"
+    ],
+    "de": [
+     "Stabkörper \"member-torso\" von 1:50 nennt den Knochen \"pelvis\" in `members`, fasst ihn aber nicht"
+    ]
+   },
+   {
+    "name": "a thigh member that names the shank but ends at the knee",
+    "hand": "1:500: the shank member is removed and the thigh capsule names the shank: the ankle is 0.43 - 0.075 = 0.355 m beyond its end, one finding",
+    "scale": 500,
+    "operations": [
+     {
+      "op": "remove",
+      "path": "/volumes/500/structure/id=member-shank-l"
+     },
+     {
+      "op": "add",
+      "path": "/volumes/500/structure/id=member-thigh-l/members",
+      "value": [
+       "shank-l"
+      ]
+     }
+    ],
+    "coverage": 1,
+    "feature": 0,
+    "slender": 0,
+    "gaps": {
+     "member-thigh-l:shank-l": 0.355
+    },
+    "en": [
+     "names bone \"shank-l\" in `members` but does not hold it"
+    ],
+    "de": [
+     "fasst ihn aber nicht"
+    ]
+   },
+   {
+    "name": "a thigh member that names the other thigh",
+    "hand": "both thighs hang from the pelvis, neither is the parent of the other and the pelvis is not named: not one connected piece of the rig, one finding",
+    "scale": 500,
+    "operations": [
+     {
+      "op": "add",
+      "path": "/volumes/500/structure/id=member-thigh-l/members",
+      "value": [
+       "thigh-r"
+      ]
+     }
+    ],
+    "coverage": 1,
+    "feature": 0,
+    "slender": 0,
+    "en": [
+     "spans \"thigh-r\", which is not joined to bone \"thigh-l\" through the named bones"
+    ],
+    "de": [
+     "überspannt \"thigh-r\", der über die genannten Knochen nicht mit dem Knochen \"thigh-l\" verbunden ist"
+    ]
+   },
+   {
+    "name": "a member that names its own bone again",
+    "hand": "`members` lists further bones: the thigh member naming the thigh is one finding",
+    "scale": 500,
+    "operations": [
+     {
+      "op": "add",
+      "path": "/volumes/500/structure/id=member-thigh-l/members",
+      "value": [
+       "thigh-l"
+      ]
+     }
+    ],
+    "coverage": 1,
+    "feature": 0,
+    "slender": 0,
+    "en": [
+     "names a bone twice in `member` and `members`"
+    ],
+    "de": [
+     "nennt einen Knochen doppelt"
+    ]
+   },
+   {
+    "name": "a member that names a bone the rig does not have",
+    "hand": "no bone `tail` in the rig: one finding",
+    "scale": 500,
+    "operations": [
+     {
+      "op": "add",
+      "path": "/volumes/500/structure/id=member-thigh-l/members",
+      "value": [
+       "tail"
+      ]
+     }
+    ],
+    "coverage": 1,
+    "feature": 0,
+    "slender": 0,
+    "en": [
+     "spans \"tail\", which does not exist in the rig"
+    ],
+    "de": [
+     "überspannt \"tail\", der im Rig nicht existiert"
+    ]
+   },
+   {
+    "name": "a mass marker that names spanned bones",
+    "hand": "a 150 mm cube on the torso as a `mass` part with `members`: only a member part spans bones, one finding",
+    "scale": 500,
+    "operations": [
+     {
+      "op": "add",
+      "path": "/volumes/500/structure/-",
+      "value": {
+       "id": "mass-test",
+       "kind": "box",
+       "bone": "torso",
+       "material": "skin",
+       "role": "body",
+       "tone": 0.4,
+       "size": [
+        0.15,
+        0.15,
+        0.15
+       ],
+       "transform": {
+        "translation": [
+         0.2,
+         0,
+         0
+        ]
+       },
+       "member": "torso",
+       "members": [
+        "pelvis"
+       ],
+       "part": "mass"
+      }
+     }
+    ],
+    "coverage": 1,
+    "feature": 0,
+    "slender": 0,
+    "en": [
+     "names spanned bones in `members` but is a mass; only a member part spans bones"
+    ],
+    "de": [
+     "nur ein Stab (member) überspannt Knochen"
+    ]
+   }
+  ]
+ }
+}

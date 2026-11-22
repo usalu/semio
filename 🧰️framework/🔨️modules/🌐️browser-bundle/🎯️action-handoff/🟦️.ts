@@ -1,4 +1,5 @@
 /** 🎯️ Strict private Shell-to-browser-actor action handoff. */
+import { admitSegmentedDownloadOperationId, SEGMENTED_DOWNLOAD_CONTRACT } from "../../🎭️actor/📮️shard-client/📤️segmented-download/🟦️.ts";
 
 export const BROWSER_ACTOR_ACTION_PACK_MAXIMUM_BYTES = 256 * 1024;
 export const BROWSER_ACTOR_ACTION_MUTATION_MAXIMUM = 4_096;
@@ -20,7 +21,8 @@ export type BrowserActorActionOwnerV1 = {
 
 export type BrowserActorActionPayloadV1 =
   | { readonly kind: "ui-intent"; readonly bytes: readonly number[] }
-  | { readonly kind: "app-command"; readonly bytes: readonly number[] };
+  | { readonly kind: "app-command"; readonly bytes: readonly number[] }
+  | { readonly kind: "segmented-download"; readonly operationId: string };
 
 export type BrowserActorActionRequestV1 = BrowserActorActionOwnerV1 & {
   readonly kind: "browser-actor-action";
@@ -37,6 +39,7 @@ export type BrowserActorActionResultV1 = BrowserActorActionOwnerV1 & {
   readonly commit: BrowserActorActionCommitReceiptV1 | null;
   readonly hostEffects: readonly (readonly number[])[];
   readonly historyPatches: readonly (readonly number[])[];
+  readonly downloadChunk?: { readonly operationId: string; readonly bytes: readonly number[] | null };
   readonly reason?: string;
 };
 
@@ -109,12 +112,24 @@ function scope(value: unknown): BrowserActorActionScopeV1 {
   return { spaceId: text(record.spaceId, "browserActorAction.scope.spaceId"), documentId: text(record.documentId, "browserActorAction.scope.documentId") };
 }
 
-function bytes(value: unknown, path: string): readonly number[] {
-  if (!Array.isArray(value) || value.length === 0 || value.length > BROWSER_ACTOR_ACTION_PACK_MAXIMUM_BYTES || value.some((byte) => typeof byte !== "number" || !Number.isInteger(byte) || byte < 0 || byte > 255)) throw new Error(`${path}: invalid bounded bytes`);
-  return [...value];
+function bytes(value: unknown, path: string, maximum = BROWSER_ACTOR_ACTION_PACK_MAXIMUM_BYTES): readonly number[] {
+  if (!Array.isArray(value) || value.length === 0 || value.length > maximum) throw new Error(`${path}: invalid bounded bytes`);
+  const copied = [...value];
+  if (copied.some((byte) => typeof byte !== "number" || !Number.isInteger(byte) || byte < 0 || byte > 255)) throw new Error(`${path}: invalid bounded bytes`);
+  return copied;
+}
+
+function downloadOperationId(value: unknown, path: string): string {
+  const decimal = decimalU64(value, path);
+  admitSegmentedDownloadOperationId(BigInt(decimal));
+  return decimal;
 }
 
 function payload(value: unknown): BrowserActorActionPayloadV1 {
+  if (value !== null && typeof value === "object" && "kind" in value && value.kind === "segmented-download") {
+    const record = object(value, "browserActorAction.payload", ["kind", "operationId"]);
+    return { kind: "segmented-download", operationId: downloadOperationId(record.operationId, "browserActorAction.payload.operationId") };
+  }
   const record = object(value, "browserActorAction.payload", ["bytes", "kind"]);
   if (record.kind !== "ui-intent" && record.kind !== "app-command") throw new Error("browserActorAction.payload.kind: invalid");
   return { kind: record.kind, bytes: bytes(record.bytes, "browserActorAction.payload.bytes") };
@@ -166,7 +181,7 @@ export function parseBrowserActorActionRequestV1(value: unknown): BrowserActorAc
 
 /** 📤️ Decodes the worker's exact action disposition; mutation bodies remain on the ordinary Commands lane. */
 export function parseBrowserActorActionResultV1(value: unknown): BrowserActorActionResultV1 {
-  const source = object(value, "browserActorActionResult", ["actionSequence", "activationGeneration", "appChannelVersion", "commit", "historyPatches", "hostEffects", "instanceId", "kind", "mutationCount", "outcome", "scope", "surfaceRevision", "verifiedSurfaceId"], ["reason"]);
+  const source = object(value, "browserActorActionResult", ["actionSequence", "activationGeneration", "appChannelVersion", "commit", "historyPatches", "hostEffects", "instanceId", "kind", "mutationCount", "outcome", "scope", "surfaceRevision", "verifiedSurfaceId"], ["reason", "downloadChunk"]);
   if (source.kind !== "browser-actor-action-result" || (source.outcome !== "guest-applied" && source.outcome !== "rejected")) throw new Error("browserActorActionResult.outcome: invalid");
   if ((source.outcome === "rejected") !== (source.reason !== undefined)) throw new Error("browserActorActionResult.reason: invalid pairing");
   const commit = commitReceipt(source.commit);
@@ -175,14 +190,25 @@ export function parseBrowserActorActionResultV1(value: unknown): BrowserActorAct
   if (source.outcome === "rejected" && hostEffects.length !== 0) throw new Error("browserActorActionResult.hostEffects: rejected publication");
   const historyPatches = parseBrowserActorHistoryPatchBytesV1(source.historyPatches);
   if (source.outcome === "rejected" && historyPatches.length !== 0) throw new Error("browserActorActionResult.historyPatches: rejected publication");
+  const mutationCount = natural(source.mutationCount, "browserActorActionResult.mutationCount", 0, BROWSER_ACTOR_ACTION_MUTATION_MAXIMUM);
+  let downloadChunk: BrowserActorActionResultV1["downloadChunk"];
+  if (Object.hasOwn(source, "downloadChunk")) {
+    if (source.outcome !== "guest-applied" || mutationCount !== 0 || commit !== null || hostEffects.length !== 0 || historyPatches.length !== 0) throw new Error("browserActorActionResult.downloadChunk: invalid publication");
+    const chunk = object(source.downloadChunk, "browserActorActionResult.downloadChunk", ["operationId", "bytes"]);
+    downloadChunk = {
+      operationId: downloadOperationId(chunk.operationId, "browserActorActionResult.downloadChunk.operationId"),
+      bytes: chunk.bytes === null ? null : bytes(chunk.bytes, "browserActorActionResult.downloadChunk.bytes", SEGMENTED_DOWNLOAD_CONTRACT.chunkBytes),
+    };
+  }
   return {
     kind: "browser-actor-action-result",
     ...owner(source),
     outcome: source.outcome,
-    mutationCount: natural(source.mutationCount, "browserActorActionResult.mutationCount", 0, BROWSER_ACTOR_ACTION_MUTATION_MAXIMUM),
+    mutationCount,
     commit,
     hostEffects,
     historyPatches,
+    ...(downloadChunk === undefined ? {} : { downloadChunk }),
     ...(source.reason === undefined ? {} : { reason: text(source.reason, "browserActorActionResult.reason") }),
   };
 }

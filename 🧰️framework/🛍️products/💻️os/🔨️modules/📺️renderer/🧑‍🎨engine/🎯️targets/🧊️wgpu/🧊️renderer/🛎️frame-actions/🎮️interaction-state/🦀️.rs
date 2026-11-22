@@ -63,6 +63,11 @@ impl AppInteractionState {
             self.shell.settle.touch_gestures.extend(gestures);
             self.shell.settle.owe_settle();
         }
+        let holds: Vec<(f32, f32)> = world_touch::due_holds(app_now_ms()).into_iter().filter(|(host_id, _, _)| self.shell.surfaces.world3d_states.contains_key(host_id)).map(|(_, x, y)| (x, y)).collect();
+        if !holds.is_empty() {
+            self.shell.settle.suggestion_holds.extend(holds);
+            self.shell.settle.owe_settle();
+        }
     }
 
     /// ⏰️ The wake-up deadline of the shell on the monotonic clock: `chrome` (the chrome and tutorial deadline) or the moment a held finger turns into a long press, whichever is earlier, so an idle app wakes exactly when the menu is due and never polls.
@@ -205,6 +210,9 @@ impl AppInteractionState {
             return;
         }
         if semio_renderer_wgpu_ui_engine_focus::text_and_table_focus::apply_focused_table_stepper_key(&action, &mut self.input) {
+            return;
+        }
+        if semio_renderer_wgpu_ui_engine_focus::text_and_table_focus::apply_focused_table_row_key(&action, &modifiers, &mut self.input) {
             return;
         }
         if semio_renderer_wgpu_ui_engine_focus::ink_and_vfs_focus::apply_focused_ink_editor_key(&action, &modifiers, &mut self.input) {
@@ -372,6 +380,7 @@ impl AppInteractionState {
         semio_renderer_wgpu_ui_engine_focus::text_and_table_focus::blur_focused_text_editor_for_pointer(target.as_ref(), down, button);
         semio_renderer_wgpu_ui_engine_focus::text_and_table_focus::blur_focused_node_graph_caret_for_pointer(target.as_ref(), down, button);
         semio_renderer_wgpu_ui_engine_focus::text_and_table_focus::blur_focused_table_stepper_for_pointer(down, button);
+        semio_renderer_wgpu_ui_engine_focus::text_and_table_focus::blur_focused_table_row_for_pointer(down, button);
         semio_renderer_wgpu_ui_engine_focus::ink_and_vfs_focus::blur_focused_vfs_control_for_pointer(down, button);
         let owner = if down {
             let Some(owner) = self.pointer_capture.press(pointer.id, if target.is_some() { PointerHitOwner::Surface } else { PointerHitOwner::Chrome }, x, y) else {
@@ -408,10 +417,7 @@ impl AppInteractionState {
         let touch_profile = self.touch_profile();
         let mut touch_gestures = Vec::new();
         let outcome = match target.kind {
-            SurfaceKind::World3d => self.shell.surfaces.world3d_states.get_mut(host_id).filter(|state| {
-                state.session.window_instance_id.as_deref() == Some(target.window_id.as_str())
-                    && state.session.surface_id == target.surface_id
-            }).map(|state| {
+            SurfaceKind::World3d => self.shell.surfaces.world3d_states.get_mut(host_id).map(|state| {
                 if pointer.kind == ui_render::PointerKind::Touch {
                     let contact = if down { world_touch::Contact::Down { id: pointer.id.0, x: f64::from(x), y: f64::from(y) } } else { world_touch::Contact::Up { id: pointer.id.0 } };
                     let steps = world_touch::feed(host_id, touch_profile, app_now_ms(), contact);
@@ -432,13 +438,17 @@ impl AppInteractionState {
                 outcome
             }
             SurfaceKind::TiledMap => self.shell.surfaces.tiled_map_states.get(host_id).filter(|surface| surface.window_id == target.window_id).map(|surface| {
-                if pointer.kind == ui_render::PointerKind::Touch {
-                    if down {
-                        semio_renderer_wgpu_scene_feeds::tiled_map_touch_pointer_down(&target, surface.bounds, pointer.id, x, y, &modifiers);
-                        Ok(())
+                let touch_handled = pointer.kind == ui_render::PointerKind::Touch
+                    && if down {
+                        semio_renderer_wgpu_scene_feeds::tiled_map_touch_pointer_down(&target, surface.bounds, pointer.id, x, y, &modifiers)
                     } else {
-                        semio_renderer_wgpu_scene_feeds::tiled_map_touch_pointer_up_into(host_id, &surface.controller_id, pointer.id, Some((surface.bounds, x, y)), &mut self.input).map(|_| ())
-                    }
+                        match semio_renderer_wgpu_scene_feeds::tiled_map_touch_pointer_up_into(host_id, &surface.controller_id, pointer.id, Some((surface.bounds, x, y)), &mut self.input) {
+                            Ok(handled) => handled,
+                            Err(fault) => return Err(fault),
+                        }
+                    };
+                if touch_handled {
+                    Ok(())
                 } else if down {
                     semio_renderer_wgpu_scene_feeds::tiled_map_pointer_down_into(&target, &surface.controller_id, surface.bounds, x, y, button, modifiers.shift, modifiers.ctrl_or_meta(), &surface.selection_method, &mut self.input).map(|_| ())
                 } else {
@@ -496,6 +506,7 @@ impl AppInteractionState {
         self.last_pointer_y = y;
         self.pointer_down = self.pointer_capture.any_active();
         self.pointer_button = button;
+        self.shell.dock.shell_hooks.note_touch(pointer.kind == ui_render::PointerKind::Touch);
         self.modifiers = modifiers.clone();
         self.input.modifiers = modifiers.clone();
         self.input.pointer_x = x;
@@ -514,16 +525,12 @@ impl AppInteractionState {
         if target.is_none() && self.pointer_capture.holder(pointer.id) != Some(PointerHitOwner::Surface) {
             PointerCtx::of(&mut self.shell).handle_pointer_move_for(pointer.id, x, y, down, &mut self.input, &self.theme);
         }
-        let world_target = target.as_ref().filter(|target| target.kind == SurfaceKind::World3d);
+        let world_id = target.as_ref().filter(|target| target.kind == SurfaceKind::World3d).map(|target| target.host_id.as_str());
         let touch = pointer.kind == ui_render::PointerKind::Touch;
         let touch_profile = self.touch_profile();
         let mut touch_gestures = Vec::new();
         for (host_id, state) in self.shell.surfaces.world3d_states.iter_mut() {
-            let intent = if world_target.is_some_and(|target| {
-                target.host_id.as_str() == host_id.as_str()
-                    && state.session.window_instance_id.as_deref() == Some(target.window_id.as_str())
-                    && state.session.surface_id == target.surface_id
-            }) {
+            let intent = if Some(host_id.as_str()) == world_id {
                 if touch {
                     let steps = world_touch::feed(host_id, touch_profile, app_now_ms(), world_touch::Contact::Move { id: pointer.id.0, x: f64::from(x), y: f64::from(y) });
                     if let Err(fault) = world_touch::apply(state, &steps, &modifiers, &mut touch_gestures) {
@@ -589,8 +596,7 @@ impl AppInteractionState {
                 .get(host_id)
                 .filter(|surface| surface.window_id == target.window_id)
                 .map(|surface| {
-                    if pointer.kind == ui_render::PointerKind::Touch {
-                        semio_renderer_wgpu_scene_feeds::tiled_map_touch_pointer_move(host_id, surface.bounds, pointer.id, x, y);
+                    if pointer.kind == ui_render::PointerKind::Touch && semio_renderer_wgpu_scene_feeds::tiled_map_touch_pointer_move(host_id, surface.bounds, pointer.id, x, y) {
                         Ok(())
                     } else {
                         semio_renderer_wgpu_scene_feeds::tiled_map_pointer_move_into(&target, &surface.controller_id, surface.bounds, x, y, down, &mut self.input).map(|_| ())
@@ -643,7 +649,7 @@ pub async fn dispatch_normalized_event(app: &mut AppInteractionState, event: &mu
                 let terrain_captured = semio_renderer_wgpu_ui_engine::retained_ui_engine::captured_scene_pointer(pointer.id).is_some_and(|target| {
                     target.kind == semio_ui_declaration::ui::SurfaceKind::World3d
                         && app.shell.surfaces.world3d_states.get(&target.host_id).is_some_and(|state| {
-                            state.terrain.terrain_brush().is_some() && state.authority.terrain_stroke_armed()
+                            state.terrain.terrain_pointer_utility_active() && state.authority.terrain_stroke_armed()
                         })
                 });
                 if terrain_captured {
@@ -654,7 +660,8 @@ pub async fn dispatch_normalized_event(app: &mut AppInteractionState, event: &mu
                 if !app.clear_node_graph_hover_except(None) { return; }
                 for (_, state) in app.shell.surfaces.world3d_states.iter_mut() {
                     if world3d_hover_clear_is_owed(&state.selection, &state.authority) {
-                        let intent = WorldInteractionIntent::pointer_leave(state.session.bounds.x - 1.0, state.session.bounds.y - 1.0);
+                        let bounds = state.session.bounds;
+                        let intent = WorldInteractionIntent::pointer_leave(bounds.x - 1.0, bounds.y - 1.0);
                         if enqueue_world3d_event(&mut state.selection, &mut state.authority, intent).is_err() {
                             app.input.record_action_fault(semio_ui_action::BoundedActionFault::ItemCredits);
                             return;
@@ -666,7 +673,7 @@ pub async fn dispatch_normalized_event(app: &mut AppInteractionState, event: &mu
         DispatchEvent::Scroll { x, y, delta_x, delta_y, modifiers } => {
             app.handle_pointer_wheel(*x, *y, *delta_x, *delta_y, event_modifiers_to_pointer(*modifiers));
         }
-        DispatchEvent::KeyDown { key, modifiers } => {
+        DispatchEvent::KeyDown { key, modifiers, repeat } => {
             app.modifiers = event_modifiers_to_pointer(*modifiers);
             if (modifiers.ctrl || modifiers.meta) && key.eq_ignore_ascii_case("z") && app.undo_text_operation() {
                 return;
@@ -675,7 +682,7 @@ pub async fn dispatch_normalized_event(app: &mut AppInteractionState, event: &mu
                 app.cancel_text_operations();
             }
             if let Some(action) = key_action_from_dispatch(key, true) {
-                app.handle_key(action, event_modifiers_to_pointer(*modifiers)).await;
+                app.handle_key(action, PointerModifiers { repeat: *repeat, ..event_modifiers_to_pointer(*modifiers) }).await;
             }
         }
         DispatchEvent::KeyUp { key, modifiers } => {

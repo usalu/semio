@@ -1,5 +1,5 @@
 import {fileURLToPath} from "node:url";
-import {DOCTOR_POLICY_V1,DOCTOR_PROTOCOL_V1,DOCTOR_RULES_V1,type DoctorAreaV1,type DoctorFactsV1,type DoctorPolicyV1,type DoctorProbeRowV1,type DoctorReportV1,type DoctorRepairResultV1,type DoctorRuleV1} from "../🟦️.ts";
+import {DoctorCancelledV1,DOCTOR_POLICY_V1,DOCTOR_PROTOCOL_V1,DOCTOR_RULES_V1,type DoctorAreaV1,type DoctorFactsV1,type DoctorPolicyV1,type DoctorProbeRowV1,type DoctorReportV1,type DoctorRepairResultV1,type DoctorRuleV1} from "../🟦️.ts";
 import {analyzeDoctorV1,buildDoctorReportV1} from "../🧮️analysis/🟦️.ts";
 import type {DoctorPortsV1} from "../🔌️ports/🟦️.ts";
 import {DOCTOR_PROBES_V1,DOCTOR_REPAIRS_V1} from "../🔎️probes/🟦️.ts";
@@ -18,7 +18,7 @@ const LIBRARY_ROOT=fileURLToPath(new URL("../../../",import.meta.url));
 const firstLine=(error:unknown):string=>(error instanceof Error?error.message:String(error)).split("\n")[0]!.slice(0,300);
 
 /** ✋️ The error of a doctor run that was cancelled; nothing it read is reported. */
-export class DoctorCancelledV1 extends Error{constructor(){super("doctor cancelled");this.name="DoctorCancelledV1";}}
+export {DoctorCancelledV1};
 
 /** 🔎️ Runs one probe with its own time budget: a probe that overruns is cut off and reported, a probe that throws is reported and never stops the others. */
 async function runProbe(probe:DoctorProbeV1,ports:DoctorPortsV1,context:DoctorProbeContextV1,policy:DoctorPolicyV1):Promise<Readonly<{row:DoctorProbeRowV1;sections?:DoctorSectionsV1}>>{

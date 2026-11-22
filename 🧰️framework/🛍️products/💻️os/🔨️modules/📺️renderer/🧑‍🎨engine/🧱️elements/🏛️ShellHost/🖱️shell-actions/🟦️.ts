@@ -3,7 +3,7 @@
  * 🧱️ Child hook module of {@link ../🟦️.tsx | ShellHost}: `useShellActions` runs the original statements in order and returns the bindings later hooks and the render read; the parent merges them into the shared core object.
  */
 
-import { shellDialogSessionIsCurrentV1, type ShellDialogOriginV1 } from "../🗨️dialog-origin/🟦️.ts";
+import { type ShellDialogOriginV1 } from "../🗨️dialog-origin/🟦️.ts";
 import { useCallback, useEffect, useRef } from "../../⚛️react-port/🟦️.ts";
 // #region 🔌️Adapters
 import {
@@ -11,7 +11,6 @@ import {
   type ActionDescriptor,
   SemioFaultError,
   SURFACE_FAULT_CODES,
-  type HistoryPatch,
   CLEAR_SELECTION_ACTION_ID,
   panelTabKindId,
   RECORD_TUTORIAL_ACTION_ID,
@@ -30,7 +29,6 @@ import {
   panelViewContext,
   windowViewContext
 } from "@semio-tech/framework";
-import { decodePackWire } from "@semio-tech/framework/packs";
 import {
   programHistoryKeyV1,
   programHistoryProjectionV1,
@@ -85,7 +83,6 @@ import { uiIntentToActionDescriptor } from "../../🛠️ShellHelpers/🌳️tre
 // #endregion 🔌️Adapters
 import { browserActorActionRefusalReasonV1 } from "@semio-tech/framework/browser-bundle/action-handoff/requests";
 import { BROWSER_ACTOR_ACTION_APP_CHANNEL_VERSION } from "@semio-tech/framework/browser-bundle/action-handoff";
-import { publishBrowserActorHostEffectsV1 } from "@semio-tech/framework/browser-bundle/action-handoff/publication";
 import type { ShellCoreAfterShellUriAndDocuments } from "../🗄️shell-uri-documents/🟦️.ts";
 import type { RetainedBrowserActorUiV1 } from "../🔒️identity-document-ports/🧰️identity-port-types/🟦️.ts";
 import { runShellInput } from "./🧭️input-funnel/🟦️.ts";
@@ -102,12 +99,12 @@ export function useShellActions(core: ShellCoreAfterShellUriAndDocuments) {
     dropForSealedInstance, dropForRetiredInstance, treeWindowSchedulerRef, identityRef, verifiedSessionAuthorityRef,
     uiLocaleRef, uiTerminologyRef, showTransientNoticeRef, dispatchCheckpointRef, inferenceHistoryByRuntimeKeyRef,
     openDocumentSessionsRef, captureDialogOrigin, isCurrentDialogOrigin, captureEffectOwner, isCurrentEffectOwner,
-    browserActorUiByRuntimeKeyRef, ensureBackboneWorker, primaryPluginId, reloadPlugin, uninstallPlugin, panel,
+    ensureBackboneWorker, primaryPluginId, reloadPlugin, uninstallPlugin, panel,
     spawnedIdsRef, historyCanUndo, activeUtilityByWindowIdRef, activeToolIdRef, inputLedgerRef, refusalNoticeThrottleRef,
     hubIdentityGateRef, hubIdentitySettleRef, writeUtilityRegister, clearAllWindowUtilities, writeToolRegister,
     activeWindowIdRef, startTutorialRef, toggleTutorialRecordingRef, tutorialDrivenRef, tutorialPlayingRef,
     tutorialRecordingRef, tutorialRecorderRef, shellStateRef, observeLocalInteraction, completeIntroductionInteraction,
-    injectActiveUtility, updateSpacePanel, requestServiceOperation, directBrowserActorForSession,
+    injectActiveUtility, updateSpacePanel, directBrowserActorForSession,
     dispatchDirectBrowserActorCommand, applyHostEffects, attachSyncTarget, detachSyncBackbone, browseSyncBackbonePath,
     spawnProgram
   } = core;
@@ -242,40 +239,38 @@ export function useShellActions(core: ShellCoreAfterShellUriAndDocuments) {
       if (ledger.settle(outcome)) console.warn(inputRefusalTextV1(issued.action, outcome as Extract<InputOutcomeV1, { kind: "refused" }>, issued.provenance));
       return outcome;
     };
-    const retained = browserActorUiByRuntimeKeyRef.current.get(runtimeKey);
-    const entry = openDocumentSessionsRef.current.get(runtimeKey);
-    const store = retained?.windows.get(surfaceKey) ?? retained?.panels.get(surfaceKey);
-    if (store === undefined || retained?.actions !== captured.actions || retained.identity === null || entry?.clientInstanceId !== captured.clientInstanceId || entry.session.instanceId !== captured.sessionInstanceId || !shellDialogSessionIsCurrentV1(shellStateRef.current.pluginRuntime.session, entry.session)) return refused("owner-mismatch", "browser actor owner retired");
-    const current = (): boolean => {
-      const live = browserActorUiByRuntimeKeyRef.current.get(runtimeKey);
-      const opening = openDocumentSessionsRef.current.get(runtimeKey);
-      return live?.actions === captured.actions && live.identity !== null && opening?.clientInstanceId === captured.clientInstanceId && opening.session.instanceId === captured.sessionInstanceId && shellDialogSessionIsCurrentV1(shellStateRef.current.pluginRuntime.session, opening.session);
-    };
     try {
-      const result = await retained.actions.dispatchIntent({
-        scope: retained.scope,
-        verifiedSurfaceId: retained.verifiedSurfaceId,
-        activationGeneration: retained.activationGeneration,
-        appChannelVersion: BROWSER_ACTOR_ACTION_APP_CHANNEL_VERSION,
-        instanceId: retained.identity.instanceId,
-        surfaceRevision: store.getRevisionSnapshot(),
-      }, surfaceKey, intent);
-      if (!current()) return refused("owner-mismatch", "browser actor owner retired after completion");
-      for (const patch of result.historyPatches) if (current()) applyHistoryPatch(decodePackWire(Uint8Array.from(patch), "$.historyPatch") as HistoryPatch, false, { pluginId: entry.session.pluginId, instanceId: entry.session.instanceId });
-      await publishBrowserActorHostEffectsV1(result.hostEffects, current, (effect) => {
-        if ("requestServiceOperation" in effect) return requestServiceOperation(entry.session, effect.requestServiceOperation, current);
-        else window.open(effect.openExternalUrl.url, "_blank", "noopener,noreferrer");
-      });
-      if (!current()) return refused("owner-mismatch", "browser actor owner retired during publication");
+      const entry = openDocumentSessionsRef.current.get(runtimeKey);
+      const actor = entry === undefined ? null : directBrowserActorForSession(entry.session);
+      const store = captured.windows.get(surfaceKey) ?? captured.panels.get(surfaceKey);
+      if (!actor || actor.runtimeKey !== runtimeKey || actor.retained.actions !== captured.actions || actor.identity !== captured.identity || store === undefined
+        || core.sealedInstancesRef.current.sealed(actor.entry.plugin, actor.entry.session.pluginId, actor.entry.session.instanceId)) {
+        return refused("owner-mismatch", "browser actor owner retired");
+      }
+      const owner = core.captureBrowserActorEffectOwner(actor, issued.provenance.inputSeq);
+      const release = core.sessionWorkRef.current.begin(actor.entry.session.pluginId, actor.entry.session.instanceId, "typed-operation");
+      let result: Awaited<ReturnType<typeof captured.actions.dispatchIntent>>;
+      try {
+        result = await captured.actions.dispatchIntent({
+          scope: captured.scope,
+          verifiedSurfaceId: captured.verifiedSurfaceId,
+          activationGeneration: captured.activationGeneration,
+          appChannelVersion: BROWSER_ACTOR_ACTION_APP_CHANNEL_VERSION,
+          instanceId: actor.identity.instanceId,
+          surfaceRevision: store.getRevisionSnapshot(),
+        }, surfaceKey, intent);
+      } finally {
+        release();
+      }
+      await core.publishBrowserActorResult(actor, result, owner, action.action);
       return applied(result.commit ?? undefined);
     } catch (error) {
       const reason = browserActorActionRefusalReasonV1(error) ?? "dispatch-failed";
       const detail = String(error instanceof Error ? error.message : error);
-      if (browserActorUiByRuntimeKeyRef.current.get(runtimeKey)?.actions !== captured.actions) return refused("owner-mismatch", detail);
-      core.showTransientNotice(shellLabel("ui.common.renderError"), "error");
+      if (reason === "dispatch-failed") core.showTransientNotice(shellLabel("ui.common.renderError"), "error");
       return refused(reason, detail, error instanceof SemioFaultError ? inputDiagnosticV1(error.fault) : undefined);
     }
-  }, [applyHistoryPatch, requestServiceOperation]);
+  }, [directBrowserActorForSession, core.captureBrowserActorEffectOwner, core.publishBrowserActorResult, core.showTransientNotice]);
 
   return { onAction, noteShellCommand, onActionStable, onIntentStable, onBrowserActorIntent };
 }

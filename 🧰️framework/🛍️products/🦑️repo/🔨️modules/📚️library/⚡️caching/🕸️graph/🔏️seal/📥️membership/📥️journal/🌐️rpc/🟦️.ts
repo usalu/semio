@@ -1,7 +1,6 @@
 import { createHash } from "node:crypto";
 import { lstatSync, readFileSync, realpathSync } from "node:fs";
 import { dirname, isAbsolute, join } from "node:path";
-import {nxAuthorizerReceiptHoldsV1} from "../../../../../🚀️bootstrap/🛠️tools/🔏️authorizers/📤️receipt/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with { type: "json" };
 import neutralSchema from "../../../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📥️journal/🧬️schema/🔣️.json"with{type:"json"};
 import { validateJsonSchemaSubset } from "../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
@@ -45,7 +44,6 @@ export function loadedFilesystemJournalToolingIdentityV1(implementationDirectory
       if (!status.isFile() || status.isSymbolicLink() || !sdk) return null;
       const marker = JSON.parse(readFileSync(markerFile, "utf8")), version = JSON.parse(readFileSync(join(sdk, "package.json"), "utf8")).version;
       if (marker.version !== 1 || !/^[a-f0-9]{64}$/.test(marker.digest) || directory.split(/[\\/]/).at(-1) !== marker.digest) return null;
-      if(!nxAuthorizerReceiptHoldsV1(directory,marker.authorizers))return null;
       const receipt = marker.patches?.[`nx@${version}`];
       if (receipt?.version !== 1 || !receipt.files || typeof receipt.files !== "object" || !Object.keys(receipt.files).length) return null;
       for (const [path, expected] of Object.entries(receipt.files)) {

@@ -80,6 +80,13 @@ export const FOCUS_ROW_CONTROL_KEY = "F2";
 /** ✏️ Mirrors Rust `FOCUS_ROW_CONTROL_EDITABLE_KINDS`: the input kinds a row cell edits by typing. */
 export const FOCUS_ROW_CONTROL_EDITABLE_KINDS = ["text", "longText", "number", "date"] as const;
 
+/** 🕸️ Mirrors Rust `NODE_GRAPH_VIEWPORT_ACTION_ID`: a window kind that declares it hosts one node-graph viewport. */
+export const NODE_GRAPH_VIEWPORT_ACTION_ID = "nodeGraphViewport";
+/** 🔲️ The framework-owned "fit the whole graph into view" action id, shell-intercepted in every app — mirrors Rust `NODE_GRAPH_FIT_ACTION_ID`; the i18n label key of its control is `nodeGraph.fitGraph`, the window resolves from a scoped `windowId` when present, else from the focused window. */
+export const NODE_GRAPH_FIT_ACTION_ID = "fitGraph";
+/** 🪞️ Mirrors Rust `NODE_GRAPH_FIT_KEY`: the chord of {@link NODE_GRAPH_FIT_ACTION_ID}. */
+export const NODE_GRAPH_FIT_KEY = "f";
+
 /** 📤️ The framework-owned Export Document action id, shell-intercepted in every app — mirrors Rust
  * `EXPORT_ARTIFACT_DOCUMENT_ACTION_ID`. */
 export const EXPORT_ARTIFACT_DOCUMENT_ACTION_ID = "exportArtifactDocument";

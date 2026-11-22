@@ -265,7 +265,7 @@ impl<'ctx> PointerCtx<'ctx> {
                 return Ok(true);
             }
             UI_INTRODUCTION_VEIL_CONTROL_ID | UI_INTRODUCTION_SKIP_CONTROL_ID => {
-                match self.docs.introduction_seen_key() {
+                match self.docs.chrome_tour_seen_key(&self.chrome) {
                     Some(seen_key) => self.chrome.chrome_build.dismiss_introduction(&seen_key),
                     None => self.chrome.chrome_build.skip_introduction(),
                 }

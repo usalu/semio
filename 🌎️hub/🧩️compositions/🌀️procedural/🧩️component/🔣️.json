@@ -1743,6 +1743,64 @@
                   },
                   "audience": "chrome"
                 }
+              },
+              {
+                "id": "fitGraph",
+                "label": {
+                  "native": {
+                    "en": "Fit graph",
+                    "de": "Graph einpassen"
+                  },
+                  "reuse": {
+                    "en": "Fit graph",
+                    "de": "Graph einpassen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "maximize-2",
+                "args": [],
+                "keys": "f",
+                "inPalette": true,
+                "category": "view",
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Frames the whole node graph of the window in its view; only the view changes.",
+                      "de": "Zeigt den gesamten Knotengraphen des Fensters formatfüllend; nur die Ansicht ändert sich."
+                    },
+                    "reuse": {
+                      "en": "Frames the whole node graph of the window in its view; only the view changes.",
+                      "de": "Zeigt den gesamten Knotengraphen des Fensters formatfüllend; nur die Ansicht ändert sich."
+                    }
+                  },
+                  "audience": "chrome"
+                }
               }
             ],
             "utilities": [],
@@ -11824,6 +11882,13 @@
               "controllerId": "s.procedural.generation2d@1/*#editor",
               "action": "toolRunFinalize"
             }
+          },
+          {
+            "keys": "f",
+            "action": {
+              "controllerId": "s.procedural.generation2d@1/*#editor",
+              "action": "fitGraph"
+            }
           }
         ],
         "utilities": [],
@@ -12378,11 +12443,12 @@
             "iconId": "sparkles",
             "layout": {
               "root": {
-                "kind": "row",
+                "kind": "split",
+                "axis": "horizontal",
                 "children": [
                   {
                     "kind": "stack",
-                    "size": 22.0,
+                    "size": 0.22,
                     "children": [
                       {
                         "kind": "window",
@@ -12393,7 +12459,7 @@
                   },
                   {
                     "kind": "stack",
-                    "size": 43.0,
+                    "size": 0.43,
                     "children": [
                       {
                         "kind": "window",
@@ -12404,7 +12470,7 @@
                   },
                   {
                     "kind": "stack",
-                    "size": 35.0,
+                    "size": 0.35,
                     "children": [
                       {
                         "kind": "window",
@@ -12421,11 +12487,12 @@
         ],
         "defaultLayout": {
           "root": {
-            "kind": "row",
+            "kind": "split",
+            "axis": "horizontal",
             "children": [
               {
                 "kind": "stack",
-                "size": 55.0,
+                "size": 0.55,
                 "children": [
                   {
                     "kind": "window",
@@ -12436,7 +12503,7 @@
               },
               {
                 "kind": "stack",
-                "size": 45.0,
+                "size": 0.45,
                 "children": [
                   {
                     "kind": "window",
@@ -15507,6 +15574,64 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "audience": "chrome"
+                }
+              },
+              {
+                "id": "fitGraph",
+                "label": {
+                  "native": {
+                    "en": "Fit graph",
+                    "de": "Graph einpassen"
+                  },
+                  "reuse": {
+                    "en": "Fit graph",
+                    "de": "Graph einpassen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "maximize-2",
+                "args": [],
+                "keys": "f",
+                "inPalette": true,
+                "category": "view",
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Frames the whole node graph of the window in its view; only the view changes.",
+                      "de": "Zeigt den gesamten Knotengraphen des Fensters formatfüllend; nur die Ansicht ändert sich."
+                    },
+                    "reuse": {
+                      "en": "Frames the whole node graph of the window in its view; only the view changes.",
+                      "de": "Zeigt den gesamten Knotengraphen des Fensters formatfüllend; nur die Ansicht ändert sich."
+                    }
                   },
                   "audience": "chrome"
                 }
@@ -27972,6 +28097,13 @@
               "controllerId": "s.procedural.generation3d@1/*#editor",
               "action": "toolRunFinalize"
             }
+          },
+          {
+            "keys": "f",
+            "action": {
+              "controllerId": "s.procedural.generation3d@1/*#editor",
+              "action": "fitGraph"
+            }
           }
         ],
         "utilities": [
@@ -28902,11 +29034,12 @@
             "iconId": "sparkles",
             "layout": {
               "root": {
-                "kind": "row",
+                "kind": "split",
+                "axis": "horizontal",
                 "children": [
                   {
                     "kind": "stack",
-                    "size": 22.0,
+                    "size": 0.22,
                     "children": [
                       {
                         "kind": "window",
@@ -28917,7 +29050,7 @@
                   },
                   {
                     "kind": "stack",
-                    "size": 43.0,
+                    "size": 0.43,
                     "children": [
                       {
                         "kind": "window",
@@ -28928,7 +29061,7 @@
                   },
                   {
                     "kind": "stack",
-                    "size": 35.0,
+                    "size": 0.35,
                     "children": [
                       {
                         "kind": "window",
@@ -28945,11 +29078,12 @@
         ],
         "defaultLayout": {
           "root": {
-            "kind": "row",
+            "kind": "split",
+            "axis": "horizontal",
             "children": [
               {
                 "kind": "stack",
-                "size": 68.0,
+                "size": 0.68,
                 "children": [
                   {
                     "kind": "window",
@@ -28960,7 +29094,7 @@
               },
               {
                 "kind": "stack",
-                "size": 32.0,
+                "size": 0.32,
                 "children": [
                   {
                     "kind": "window",

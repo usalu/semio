@@ -39,6 +39,37 @@ fn input_admission_full_refusal_preserves_generation() {
 }
 
 #[test]
+fn ordered_browser_input_preserves_pointer_samples_across_drain_pages() {
+    use ui_render::{EventModifiers, PointerButton, PointerId, PointerInfo, PointerKind};
+    let mut queue = EventQueue::new();
+    let ui = UiThreadToken::mint();
+    let pointer = PointerInfo { id: PointerId(7), kind: PointerKind::Mouse, pressure: None, tilt: None };
+    let modifiers = EventModifiers::default();
+    let down = DispatchEvent::PointerDown { pointer, x: 0.0, y: 0.0, button: PointerButton::Primary, modifiers };
+    let movement = |x| DispatchEvent::PointerMove { pointer, x, y: 0.0, modifiers };
+    let up = DispatchEvent::PointerUp { pointer, x: 4.0, y: 0.0, button: PointerButton::Primary, modifiers };
+    let expected = [down, movement(1.0), movement(2.0), movement(3.0), up, movement(5.0)];
+    assert!(!queue.prepare_ordered_batch(ui, DISCRETE_QUEUE_CAPACITY + 1, 0));
+    assert_eq!(queue.current_generation(), InputGeneration(0));
+    assert!(queue.prepare_ordered_batch(ui, expected.len(), 0));
+    for event in expected.iter().cloned() {
+        assert_eq!(queue.enqueue_ordered(ui, event), EnqueueOutcome::Accepted);
+    }
+    let generation = queue.current_generation();
+    let first = queue.drain_page(WorkerContext::new(generation));
+    let second = queue.drain_page(WorkerContext::new(generation));
+    assert!(first.pointer_move.is_none() && second.pointer_move.is_none());
+    let observed: Vec<_> = first.discrete.into_iter().chain(second.discrete).flatten().collect();
+    assert_eq!(observed.len(), expected.len());
+    for ((index, row), event) in observed.into_iter().enumerate().zip(expected) {
+        assert_eq!(row.generation, InputGeneration(index as u64 + 1));
+        assert_eq!(row.event, event);
+    }
+    assert!(queue.is_empty());
+    drain(&mut queue);
+}
+
+#[test]
 fn input_admission_generation_exhaustion_does_not_wrap() {
     let mut queue = EventQueue::new();
     queue.generation = InputGeneration(u64::MAX);

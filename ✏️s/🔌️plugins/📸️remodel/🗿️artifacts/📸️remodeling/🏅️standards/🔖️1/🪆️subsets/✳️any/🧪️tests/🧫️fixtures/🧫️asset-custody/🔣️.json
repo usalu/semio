@@ -1,0 +1,58 @@
+{
+  "payloads": {
+    "original": { "mime": "image/png", "data": "iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAE0lEQVR4AWP8z8DwnwEImBigAAAfFwICgH3ifwAAAABJRU5ErkJggg==", "width": 2, "height": 2 },
+    "replacement": { "mime": "image/png", "data": "iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAE0lEQVR4AWNkYPj/nwEImBigAAAdGQICxBbJ1AAAAABJRU5ErkJggg==", "width": 2, "height": 2 },
+    "conflict": { "mime": "image/png", "data": "iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAE0lEQVR4AWP8z8DwnwEImBigAAAfFwICgH3ifwAAAABJRU5ErkJggg==", "width": 3, "height": 2 }
+  },
+  "contentIds": {
+    "original": "remodeling-asset-f61b8e9a2a083c03",
+    "replacement": "remodeling-asset-241f4b5d6fd44aa0",
+    "conflict": "remodeling-asset-f61b8e9a2a083c03"
+  },
+  "cases": [
+    {
+      "id": "delete first then last binding",
+      "steps": [
+        { "op": "createAsset", "key": "a", "asset": "original", "bindings": { "a": "original" }, "leaves": ["original"] },
+        { "op": "createAsset", "key": "b", "asset": "original", "bindings": { "a": "original", "b": "original" }, "leaves": ["original"] },
+        { "op": "deleteAsset", "key": "a", "bindings": { "b": "original" }, "leaves": ["original"] },
+        { "op": "deleteAsset", "key": "b", "bindings": {}, "leaves": [] }
+      ]
+    },
+    {
+      "id": "overwrite one shared binding then rebind it",
+      "steps": [
+        { "op": "createAsset", "key": "a", "asset": "original", "bindings": { "a": "original" }, "leaves": ["original"] },
+        { "op": "createAsset", "key": "b", "asset": "original", "bindings": { "a": "original", "b": "original" }, "leaves": ["original"] },
+        { "op": "createAsset", "key": "a", "asset": "replacement", "bindings": { "a": "replacement", "b": "original" }, "leaves": ["original", "replacement"] },
+        { "op": "createAsset", "key": "a", "asset": "original", "bindings": { "a": "original", "b": "original" }, "leaves": ["original"] },
+        { "op": "createAsset", "key": "a", "asset": "original", "bindings": { "a": "original", "b": "original" }, "leaves": ["original"] }
+      ]
+    },
+    {
+      "id": "refuse conflicting metadata at an existing address",
+      "steps": [
+        { "op": "createAsset", "key": "a", "asset": "original", "bindings": { "a": "original" }, "leaves": ["original"] },
+        { "op": "createAsset", "key": "b", "asset": "original", "bindings": { "a": "original", "b": "original" }, "leaves": ["original"] },
+        { "op": "createAsset", "key": "a", "asset": "conflict", "diagnostic": "mutation.target-mismatch", "bindings": { "a": "original", "b": "original" }, "leaves": ["original"] },
+        { "op": "createAsset", "key": "c", "asset": "conflict", "diagnostic": "mutation.target-mismatch", "bindings": { "a": "original", "b": "original" }, "leaves": ["original"] }
+      ]
+    },
+    {
+      "id": "undo binding preexisting unbound content",
+      "unbound": ["original"],
+      "steps": [
+        { "op": "createAsset", "key": "a", "asset": "original", "bindings": { "a": "original" }, "leaves": ["original"] },
+        { "op": "createAsset", "key": "a", "asset": "replacement", "bindings": { "a": "replacement" }, "leaves": ["replacement"] }
+      ]
+    },
+    {
+      "id": "undo overwrite onto preexisting unbound content",
+      "unbound": ["original", "replacement"],
+      "steps": [
+        { "op": "createAsset", "key": "a", "asset": "original", "bindings": { "a": "original" }, "leaves": ["original", "replacement"] },
+        { "op": "createAsset", "key": "a", "asset": "replacement", "bindings": { "a": "replacement" }, "leaves": ["replacement"] }
+      ]
+    }
+  ]
+}

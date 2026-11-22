@@ -132,3 +132,71 @@ fn original_checkpoint_keeps_replay_input(){register_fixture();let mut source=so
 /// 🧮️ Builtin semantic decode/execute may not hide allocation behind a fuel-only phase price.
 #[test]
 fn a_builtin_walks_decode_then_execute_to_a_terminal_outcome(){let payload=semio_framework_pack_json::to_json_string(&semio_framework::io_schema::IoPayload::Text("hello".into()));let input=format!("{{\"source\":\"framework.io.binary@raw/*\",\"target\":\"s.jobtest.walk@1/*\",\"payload\":{payload}}}").into_bytes();let mut source=source_fixture(50,JOB_KIND_IO_SNIFF,input,None);assert!(admit_fixture(&mut source,fixture_grant()).unwrap());assert!(matches!(terminal_fixture(50),JobStep::Done(_)))}
+
+/// 🧷️ The registered driver funds the original source close beyond its narrow execution budget.
+#[test]
+fn fixture_registry_driver_retains_its_original_source_through_terminal_publication() {
+    use crate::registry_driver::RegistryJobDriver;
+    use semio_framework_value::retirement::retirement_cursor_birth_demand;
+
+    register_fixture();
+    let scenario: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎛️registry-driver/🔣️.json")).unwrap();
+    let job = scenario["job"].as_u64().unwrap();
+    let kind = scenario["kind"].as_str().unwrap();
+    let input = scenario["input"].as_str().unwrap().as_bytes();
+    let expected: Vec<u8> = serde_json::from_value(scenario["output"].clone()).unwrap();
+    let original = (input.to_vec(), None::<Vec<u8>>);
+    let close_copy = retirement_cursor_birth_demand(&original).unwrap().copy_bytes;
+    let policy = fixture_grant();
+    let grant = RetainedCloneGrant {
+        maximum_copy_bytes: policy.maximum_copy_bytes.min(close_copy - 1),
+        ..policy
+    };
+
+    let mut driver = RegistryJobDriver::new(job, grant);
+    driver.start(kind, original.0, original.1).unwrap();
+    let original_kind = || JOBS.with(|jobs| {
+        let jobs = jobs.borrow();
+        jobs.iter().flatten().find(|slot| slot.job == job)
+            .and_then(|slot| slot.source.as_ref())
+            .map(|source| source.kind.as_ptr())
+    });
+    let pointer = original_kind().unwrap();
+    let mut progress_pages = 0;
+    let mut observed = Vec::new();
+    for _ in 0..100_000 {
+        match driver.step().unwrap() {
+            JobStep::Running(Some(page)) => {
+                assert_eq!(original_kind(), Some(pointer));
+                progress_pages += 1;
+                observed.extend(page);
+            }
+            JobStep::Running(None) => {}
+            JobStep::Done(page) => {
+                observed.extend(page);
+                assert_eq!(progress_pages, 1);
+                assert_eq!(observed, expected);
+                assert!(!has_owned_jobs(job, 1));
+                break;
+            }
+            JobStep::Failed(error) => panic!("registry fixture failed: {}", String::from_utf8_lossy(&error)),
+        }
+    }
+    assert!(!has_owned_jobs(job, 1), "registry fixture did not publish its terminal result");
+    drop(driver);
+
+    let mut abandoned = RegistryJobDriver::new(job, grant);
+    abandoned.start(kind, input.to_vec(), None).unwrap();
+    for _ in 0..100_000 {
+        match abandoned.step().unwrap() {
+            JobStep::Running(Some(_)) => {
+                drop(abandoned);
+                assert!(!has_owned_jobs(job, 1));
+                return;
+            }
+            JobStep::Running(None) => {}
+            _ => panic!("registry fixture completed before its progress page"),
+        }
+    }
+    panic!("registry fixture did not publish progress before caller close");
+}

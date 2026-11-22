@@ -7,7 +7,7 @@ import{withRepositoryBuildGraphConsumerV1}from"../../📥️inputs/💾️storag
 import{types}from"node:util";
 import{requireIssuedResourceControlV1}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import{checkResourceLeaseControl}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
-import{readInventoryRecordLeanV1,rememberInventoryRecordV1,inventoryRecordStillHoldsV1}from"../../📥️inputs/🪶️lean-inventory/🟨️.mjs";
+import{readInventoryRecordLeanV1,rememberInventoryRecordV1,inventoryRecordStillHoldsV1,inventoryRecordCorruptV1}from"../../📥️inputs/🪶️lean-inventory/🟨️.mjs";
 import{captureSourceInputInventoryV1,captureCargoLockInventoryV1}from"../../📥️inputs/📋️data/📥️load/🟨️.mjs";
 import{createPresenceCoalescerV1}from"./🧺️coalesce/🟨️.mjs";
 import{createInferenceInventoryTimingsV1}from"./⏱️timing/🟨️.mjs";
@@ -71,10 +71,10 @@ export function inferenceInventoryLeafMissingV1(code){return code==="ENOENT";}
 function requireInventoryLeafAbsentV1(path,parents,control){recheckInventoryParentsV1(parents,control);try{lstatSync(path,{bigint:true});}catch(error){if(!inferenceInventoryLeafMissingV1(error?.code))throw error;recheckInventoryParentsV1(parents,control);checkResourceLeaseControl(control);return;}throw inventoryChangedV1("Inference inventory absence changed");}
 
 /** 📥️ The inventory names of `names` that are not stored, under one storage consumer: genuine image custody is retained while the physical identities are revalidated before each immutable-record memo hit. */
-async function missingInventoryNamesV1(root,names,control,withdraw){
+async function missingInventoryNamesV1(root,names,control,withdraw,held){
  const timings=presenceStateV1(root,control).timings,phase=timings.batch();phase("reader");
  try{
-  const result=await withRepositoryBuildGraphConsumerV1(root,control,(store,actual)=>inventoryNamesSettledV1(async names=>{
+  const body=(store,actual)=>inventoryNamesSettledV1(async names=>{
    if(withdraw?.aborted)return undefined;
    const parents=new Map(),missing=[],present=[];let bytes=0,done=0;
    const measure=(operation,run)=>{const finish=timings.body(operation);try{return run();}finally{finish();}};
@@ -101,8 +101,9 @@ async function missingInventoryNamesV1(root,names,control,withdraw){
     }
     if(!before.isFile()||before.isSymbolicLink()||before.nlink!==1n||before.dev!==ancestry.device||before.size<1n||before.size>BigInt(readPolicy.maximumClosureBytes))throw Error("Single-link bounded original inventory record required");
     const size=Number(before.size);if(bytes>policy.maximumInventoryBytes-size)throw Error("Inference inventory aggregate bytes exceeded before read");bytes+=size;
+    let corrupt=false;
     if(!measure("fileChecks",()=>inventoryRecordStillHoldsV1(root,directory,key)))measure("recordRead",()=>{
-     const file=readInventoryRecordLeanV1(directory,key,readPolicy.maximumClosureBytes);
+     let file;try{file=readInventoryRecordLeanV1(directory,key,readPolicy.maximumClosureBytes);}catch(error){if(!inventoryRecordCorruptV1(error))throw error;corrupt=true;return;}
      if(!inferenceInventoryRecordHoldsV1(root,name,file))throw Error("Inference inventory record identity refused");
      rememberInventoryRecordV1(root,directory,key,file.stamp);
     });else measure("fileChecks",()=>{
@@ -112,18 +113,19 @@ async function missingInventoryNamesV1(root,names,control,withdraw){
     measure("fileChecks",()=>{
      recheckInventoryParentsV1(ancestry,actual);const after=lstatSync(path,{bigint:true});
      if(!after.isFile()||after.isSymbolicLink()||inventoryStampV1(after)!==inventoryStampV1(before))throw inventoryChangedV1("Inference inventory leaf changed");
-     present.push({path,ancestry,stamp:inventoryStampV1(after)});
+     if(corrupt)missing.push({name,path,ancestry,corrupt:inventoryStampV1(after)});else present.push({path,ancestry,stamp:inventoryStampV1(after)});
     });
     if(++done%128===0){await recheck();await continuation();checkResourceLeaseControl(actual);}
    }
    checkResourceLeaseControl(actual);if(withdraw?.aborted)return undefined;await recheck();if(withdraw?.aborted)return undefined;
    measure("fileChecks",()=>{
     for(const ancestry of parents.values())recheckInventoryParentsV1(ancestry,actual);
-    for(const row of missing)requireInventoryLeafAbsentV1(row.path,row.ancestry,actual);
+    for(const row of missing){if(row.corrupt===undefined){requireInventoryLeafAbsentV1(row.path,row.ancestry,actual);continue;}recheckInventoryParentsV1(row.ancestry,actual);const after=lstatSync(row.path,{bigint:true});if(!after.isFile()||after.isSymbolicLink()||inventoryStampV1(after)!==row.corrupt)throw inventoryChangedV1("Inference inventory corrupt leaf changed before delivery");}
     for(const row of present){recheckInventoryParentsV1(row.ancestry,actual);const after=lstatSync(row.path,{bigint:true});if(!after.isFile()||after.isSymbolicLink()||inventoryStampV1(after)!==row.stamp)throw inventoryChangedV1("Inference inventory leaf changed before delivery");}
    });
    checkResourceLeaseControl(actual);measure("implementationCheck",()=>requireCurrentInferenceInventoryReuseV1());return new Set(missing.map(row=>row.name));
-  },names,{say:inventoryLogV1}),withdraw,phase,timings.native);
+  },names,{say:inventoryLogV1});
+  const result=held!==undefined?await body(held.store,held.actual):await withRepositoryBuildGraphConsumerV1(root,control,body,withdraw,phase,timings.native);
   return result??new Set(names);
  }finally{phase();}
 }
@@ -142,7 +144,13 @@ export async function inventoryNamesSettledV1(run,names,{attempts=policy.changeA
 
 /** 🧺️ The presence coalescers of this process, one per storage control and workspace root: every look that asks while a batch is running joins the next batch instead of taking a lease of its own. */
 const presenceStatesV1=new WeakMap(),inventoryLogV1=line=>{try{process.stderr.write("[inventory] "+line+"\n");}catch{}};
-const presenceStateV1=(root,control)=>{let byRoot=presenceStatesV1.get(control);if(byRoot===undefined){byRoot=new Map();presenceStatesV1.set(control,byRoot);}let state=byRoot.get(root);if(state===undefined){state={timings:createInferenceInventoryTimingsV1(),coalescer:createPresenceCoalescerV1({run:(names,withdraw)=>missingInventoryNamesV1(root,names,control,withdraw),maximumNames:policy.maximumReferences>512?512:policy.maximumReferences})};byRoot.set(root,state);}return state;};
+const presenceStateV1=(root,control)=>{let byRoot=presenceStatesV1.get(control);if(byRoot===undefined){byRoot=new Map();presenceStatesV1.set(control,byRoot);}let state=byRoot.get(root);if(state===undefined){state={timings:createInferenceInventoryTimingsV1(),coalescer:createPresenceCoalescerV1({run:(names,withdraw)=>missingInventoryNamesV1(root,names,control,withdraw,state.held),session:work=>presenceSessionV1(root,control,state,work),lingerMilliseconds:policy.sessionLingerMilliseconds,maximumSessionMilliseconds:policy.sessionMaximumMilliseconds,sessionOverheadFactor:policy.sessionOverheadFactor,sessionCeilingMilliseconds:policy.sessionCeilingMilliseconds,maximumNames:policy.maximumReferences>512?512:policy.maximumReferences})};byRoot.set(root,state);}return state;};
+/** 🪟️ One storage consumer for the batches that follow each other: the consumer verifies the reservation of the mounted image before and after its body (15 s on a loaded 16 GB worker: 283 batches, 4,377,613 ms, against 15,310 ms of checks), so the batches of a take pass run inside one consumer while asks keep coming and every batch still rechecks the store identity itself; the consumer ends after the linger of the coalescer or its maximum, and the next asks open a new one.
+ * @see ./🧺️coalesce/🟨️.mjs */
+function presenceSessionV1(root,control,state,work){
+ const phase=state.timings.batch();phase("reader");
+ return withRepositoryBuildGraphConsumerV1(root,control,async(store,actual)=>{state.held=Object.freeze({store,actual});try{return await work();}finally{state.held=undefined;}},undefined,phase,state.timings.native).finally(()=>phase());
+}
 const presenceCoalescerV1=(root,control)=>presenceStateV1(root,control).coalescer;
 
 /** 📊️ How the inventory presence checks of `control` and `root` went: asked, answered from the memory of the round, batches that took a lease, names they checked, batches asked again caller by caller. */

@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "The single-owner inference harness: one owner is inferred in the session a farm child gets (staging directory instead of custody of the graph store), so that it can be timed and profiled alone.",
+  "definitions": {
+    "Result": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "root", "native", "mode", "wallMilliseconds", "cpuMilliseconds", "targets", "rows", "recordBytes", "managedMegabytes", "digest"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "root": { "type": "string", "minLength": 1 },
+        "native": { "type": "boolean" },
+        "mode": { "enum": ["full", "selected"] },
+        "wallMilliseconds": { "type": "integer", "minimum": 0 },
+        "cpuMilliseconds": { "type": "integer", "minimum": 0 },
+        "targets": { "type": "array", "items": { "type": "string" } },
+        "rows": { "type": "integer", "minimum": 0 },
+        "recordBytes": { "type": "integer", "minimum": 0 },
+        "managedMegabytes": { "type": "integer", "minimum": 0 },
+        "digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    },
+    "Policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["stagingPrefix", "registryDigest", "commandRevision"],
+      "properties": { "stagingPrefix": { "type": "string" }, "registryDigest": { "type": "string" }, "commandRevision": { "type": "string" } },
+      "const": { "stagingPrefix": "semio-owner-harness-", "registryDigest": "harness", "commandRevision": "harness" }
+    }
+  }
+}

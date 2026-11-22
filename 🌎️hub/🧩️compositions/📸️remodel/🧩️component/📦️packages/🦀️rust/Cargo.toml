@@ -5,6 +5,7 @@ version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 description = "The `remodel` plugin component: the one cdylib of `semio-hub-remodel`, holding only its entry point"
+build = "build.rs"
 
 [lints]
 workspace = true

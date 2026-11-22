@@ -115,7 +115,7 @@ test.skipIf(!python)("alias source groups render alias labels, keep repository l
 });
 
 test.skipIf(!python)("the generated workspace names aliased sources for host-state and hermetic actions alike, links the farm, records the closure and every label resolves",async()=>{
- const directory=mkdtempSync(join(tmpdir(),"bazel-gen-")),checkout=join(directory,"checkout"),workspace=join(directory,"workspace"),host=bazelExecutionPlatformV1(process.platform,process.arch);
+ const directory=mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir(),"bazel-gen-")),checkout=join(directory,"checkout"),workspace=join(directory,"workspace"),host=bazelExecutionPlatformV1(process.platform,process.arch);
  const deep="deep/"+Array.from({length:9},(_value,index)=>"🏗️native-build-"+index+"-unit").join("/"),files:Record<string,string>={
   "lib/src/a.txt":"alpha\n","lib/gen.ts":"export {};\n","app/build.ts":"export {};\n","app/src/c.txt":"gamma\n",["app/"+deep+"/🟦️.ts"]:"export {};\n"
  };

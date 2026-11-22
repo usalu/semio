@@ -34,17 +34,17 @@ fn close(cursor: &mut Puzzle2dConnectEdgeCursor) {
         let depth=cursor.next_close_depth_demand().unwrap();
         assert!(copy+capacity+release<=4096);
         let permit=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:capacity,maximum_release_bytes:release,maximum_depth:depth};
-        assert_eq!(observed(Default::default(),||cursor.close_step(Default::default())).progress(),RetainedCloneProgress::default());
+        assert_eq!(observed(Default::default(),||test_source_custody::close_turn(Default::default(), |effect| cursor.close_step(effect))).progress(),RetainedCloneProgress::default());
         for axis in 0..4 {
             let mut below=permit;
             let demand=match axis {0=>&mut below.maximum_copy_bytes,1=>&mut below.maximum_capacity_bytes,2=>&mut below.maximum_release_bytes,_=>&mut below.maximum_depth};
             if *demand==0 {continue;}*demand-=1;
-            let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.close_step(below));
+            let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||test_source_custody::close_turn(below, |effect| cursor.close_step(effect)));
             assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert!(!heap.overflowed);
             match result{Ok(step)=>assert_eq!(step.progress(),RetainedCloneProgress::default()),Err(error)=>assert!(axis==3&&error.kind==semio_framework_value::ValueRefusalKind::DepthLimit)}
             assert_eq!((cursor.next_close_copy_byte_demand().unwrap(),cursor.next_close_capacity_byte_demand(copy).unwrap(),cursor.next_close_release_byte_demand().unwrap(),cursor.next_close_depth_demand().unwrap()),(copy,capacity,release,depth));
         }
-        observed(permit, || cursor.close_step(permit));
+        observed(permit, || test_source_custody::close_turn(permit, |effect| cursor.close_step(effect)));
     }
     panic!("edge assembly retained native ownership after closure");
 }
@@ -52,7 +52,7 @@ fn retire(edge: Puzzle2dEdge) {
     let (owner, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| ControlledRetirement::new(edge));
     assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
     let mut owner = match owner { Ok(owner) => owner, Err((error, _)) => panic!("{error:?}") };
-    for turn in 0..1_000_000 { if owner.terminal_is_empty() { return; } let permit = grant(turn); observed(permit, || owner.step(permit)); }
+    for turn in 0..1_000_000 { if owner.terminal_is_empty() { return; } let permit = grant(turn); observed(permit, || test_source_custody::close_turn(permit, |effect| owner.step(4096, effect))); }
     panic!("returned native edge did not retire");
 }
 
@@ -70,9 +70,9 @@ fn history_edit_puzzle2d_owned_connect_edge_assembly_preserves_native_fields_exa
         let mut authority = test_source_custody::admit();
         let (mut cursor, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(Puzzle2dConnectEdgeCursor::default);
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
-        assert_eq!(observed(Default::default(), || cursor.advance(authority.borrow(&payload), Default::default())).progress(), RetainedCloneProgress::default());
+        assert_eq!(observed(Default::default(), || test_source_custody::run(Default::default(), |effect| cursor.advance(authority.borrow(&payload), 4096, effect))).progress(), RetainedCloneProgress::default());
         let mut complete = false;
-        for turn in 0..1_000_000 { let permit = grant(turn); if matches!(observed(permit, || cursor.advance(authority.borrow(&payload), permit)), RetainedCloneStep::Complete(_)) { complete = true; break; } }
+        for turn in 0..1_000_000 { let permit = grant(turn); if matches!(observed(permit, || test_source_custody::run(permit, |effect| cursor.advance(authority.borrow(&payload), 4096, effect))), RetainedCloneStep::Complete(_)) { complete = true; break; } }
         assert!(complete);
         let edge = cursor.take().unwrap();
         assert_eq!(edge.id, text(&case["edge"]["id"]));
@@ -91,13 +91,13 @@ fn history_edit_puzzle2d_owned_connect_edge_assembly_preserves_native_fields_exa
         assert_eq!(payload.index, Some(usize::MAX));
         assert_eq!(payload.id, text(&input["id"]));
         let mut swapped = Puzzle2dConnectEdgeCursor::default();
-        observed(grant(0), || swapped.advance(authority.borrow(&payload), grant(0)));
+        observed(grant(0), || test_source_custody::run(grant(0), |effect| swapped.advance(authority.borrow(&payload), 4096, effect)));
         let other = payload.clone();
-        assert!(swapped.advance(authority.borrow(&other), grant(1)).is_err());
+        assert!(test_source_custody::run(grant(1), |effect| swapped.advance(authority.borrow(&other), 4096, effect)).is_err());
         close(&mut swapped);
         for pause in [0, 1, 17, 200] {
             let mut paused = Puzzle2dConnectEdgeCursor::default();
-            for turn in 0..pause { let permit = grant(turn); let step = observed(permit, || paused.advance(authority.borrow(&payload), permit)); if matches!(step, RetainedCloneStep::Complete(_)) { break; } }
+            for turn in 0..pause { let permit = grant(turn); let step = observed(permit, || test_source_custody::run(permit, |effect| paused.advance(authority.borrow(&payload), 4096, effect))); if matches!(step, RetainedCloneStep::Complete(_)) { break; } }
             close(&mut paused);
             assert!(paused.take().is_none());
         }
@@ -105,7 +105,7 @@ fn history_edit_puzzle2d_owned_connect_edge_assembly_preserves_native_fields_exa
             let mut cancelled = Puzzle2dConnectEdgeCursor::default();
             let mut actual_capacity = 0;
             let mut copied_body = 0;
-            for turn in 0..1_000_000 { let permit = grant(turn); let step = observed(permit, || cancelled.advance(authority.borrow(&payload), permit)); assert!(!matches!(step, RetainedCloneStep::Complete(_))); actual_capacity += step.progress().retained_capacity_bytes; if actual_capacity > 0 { copied_body += step.progress().copied_bytes; } if copied_body >= 128 { break; } }
+            for turn in 0..1_000_000 { let permit = grant(turn); let step = observed(permit, || test_source_custody::run(permit, |effect| cancelled.advance(authority.borrow(&payload), 4096, effect))); assert!(!matches!(step, RetainedCloneStep::Complete(_))); actual_capacity += step.progress().retained_capacity_bytes; if actual_capacity > 0 { copied_body += step.progress().copied_bytes; } if copied_body >= 128 { break; } }
             assert!(actual_capacity > 0 && copied_body >= 128);
             close(&mut cancelled);
         }

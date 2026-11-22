@@ -199,6 +199,7 @@
         "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧪️tests/🧫️fixtures/✏️editing/🔣️.json",
         "{workspaceRoot}/🧰️framework/🔨️modules/🛠️tool-machine/🧪️tests/🧫️fixtures/🧫️node-graph-edit-rows/🔣️.json",
         "{workspaceRoot}/🧰️framework/🔨️modules/🛠️tool-machine/🧬️schema/🔣️node-graph-edit-rows/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🖥️host/🧪️tests/🧫️fixtures/🚪️workflow-opening/🔣️.json",
         "{workspaceRoot}/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕹️nudge-selection/🧫️fixtures/🔣️.json",
         "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🪟️details/🧪️tests/🧫️fixtures/🪟️collection-tree-shape/🔣️.json"
       ]
@@ -220,6 +221,12 @@
     "typecheck": {
       "executor": "repo:script",
       "cache": true,
+      "dependsOn": [
+        "@semio-tech/framework-rs:generate",
+        "@semio-tech/ui-contract-rs:generate",
+        "@semio-tech/framework-actor-rs:typegen",
+        "@semio-tech/framework-os-shell-rs:typegen"
+      ],
       "inputs": [
         "default",
         "^default",

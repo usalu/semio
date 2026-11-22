@@ -144,3 +144,7 @@ export function observeCargoPreparationOutputV1(path:string,bytes:string|Buffer)
 export function completeCargoPreparationObservationV1():void {
  const state=capture();if(!state)return;const row={...state.row,resolverInputs:[],resolutions:[],sources:[...state.sources.values()],inputs:[...state.inputs.values()],outputs:[...state.outputs.values()]};assertCargoPreparationBytesCurrentV1(admitCargoPreparationObservationV1(row));writeFileSync(process.env.SEMIO_CARGO_PREPARATION_OBSERVATION!,JSON.stringify(row));active=undefined;
 }
+/** 🔪️ Keeps the head (the `error:` line and first causes) and the tail of a diagnostic within a bounded size so a root cause is never cut off. */
+export function boundCargoDiagnosticV1(text:string,head:number=2048,tail:number=2048):string {
+ return text.length<=head+tail?text:text.slice(0,head)+"\n[... "+(text.length-head-tail)+" characters omitted ...]\n"+text.slice(-tail);
+}

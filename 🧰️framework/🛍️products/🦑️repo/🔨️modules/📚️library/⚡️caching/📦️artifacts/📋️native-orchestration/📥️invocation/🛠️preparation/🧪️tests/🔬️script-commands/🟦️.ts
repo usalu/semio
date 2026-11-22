@@ -6,18 +6,10 @@ import { withPreparedCargoDependencyPairV1 } from "../../../../../../../🗂️w
 import { runOwnedCommand, type OwnedCommandOptions } from "../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { acquireQueuedResourceLease } from "../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import { createIssuedResourceControlV1 } from "../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { nativeCallerPhaseV1 } from "../../../🟦️.ts";
-import { Script, findWorkspaceRoot } from "../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { nativeCallerPhaseV1, readNativeCallerAuthorityV1 } from "../../../🟦️.ts";
+import { Script } from "../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { getWorkspaceRoot } from "../../../../../../../🗂️workspaces/🟦️.ts";
 import { cargoWorkspacePreparationInvocationV1, cargoWorkspaceForManifest, prepareCargoOwnersControlledV1, publishCargoWorkspaceMembership, logCargoPreparationDiagnosticV1 } from "../../../../../../../🗂️workspaces/🦀️cargo/🟦️.ts";
-import { dirname as scriptModuleDirname, resolve as scriptModuleResolve } from "node:path";
-
-/** 📍️ Location of the former `📜️script.ts` of this module, kept for code that resolves siblings of its entry. */
-const scriptModulePath = scriptModuleResolve(import.meta.dir, "../../📜️script.ts");
-const scriptModuleDirectory = scriptModuleDirname(scriptModulePath);
-
-
-
 /** 🛠️ Prepares the selected Cargo owner under the original native caller and queued custody. */
 export class PreparationScript extends Script {
  protected readonly environment:Readonly<Record<string,string|undefined>>=process.env;
@@ -26,7 +18,7 @@ export class PreparationScript extends Script {
   if(args.length<2||args[0]!=="--manifest"||(args.length-2)%2||args.slice(2).some((value,index)=>index%2===0?value!=="--package":!value))throw new Error("prepare --manifest <selected-scope> [--package <name>...]");
   const names=args.filter((_,index)=>index>=3&&index%2===1),phase=this.phase();await phase.advance("cargo:preparation");
   const waiting=performance.now();let lease:Awaited<ReturnType<typeof acquireQueuedResourceLease>>|undefined;
-  try{lease=await acquireQueuedResourceLease({directory:cargoPreparationStorageFromEnvironmentV1(this.environment).leaseDirectory,resource:"cargo-preparation:"+this.root,mode:"exclusive",owner:randomBytes(16).toString("base64url"),signal:this.invocation.control.signal,control:phase.leaseControl,onWait:progress=>logCargoPreparationDiagnosticV1("lease-wait",args[1]!,progress.elapsedMs,1)});phase.budget();logCargoPreparationDiagnosticV1("lease",args[1]!,performance.now()-waiting,1);const scope=cargoWorkspaceForManifest(this.root,args[1]!);await prepareCargoOwnersControlledV1(this.root,scope,cargoPreparationControlV1(phase),names,cargoPreparationStorageFromEnvironmentV1(this.environment).directory);phase.budget();await phase.advance("cargo:publication");const publishing=performance.now(),changed=publishCargoWorkspaceMembership(this.root,cargoWorkspaceForManifest(this.root,scope.manifest),"write");phase.budget();logCargoPreparationDiagnosticV1("publication",scope.manifest,performance.now()-publishing,Number(changed));}
+  try{lease=await acquireQueuedResourceLease({directory:cargoPreparationStorageFromEnvironmentV1(this.environment).leaseDirectory,resource:"cargo-preparation:"+this.root,mode:"exclusive",owner:randomBytes(16).toString("base64url"),signal:phase.leaseControl.signal,control:phase.leaseControl,onWait:progress=>logCargoPreparationDiagnosticV1("lease-wait",args[1]!,progress.elapsedMs,1)});phase.budget();logCargoPreparationDiagnosticV1("lease",args[1]!,performance.now()-waiting,1);const scope=cargoWorkspaceForManifest(this.root,args[1]!);await prepareCargoOwnersControlledV1(this.root,scope,cargoPreparationControlV1(phase),names,cargoPreparationStorageFromEnvironmentV1(this.environment).directory);phase.budget();await phase.advance("cargo:publication");const publishing=performance.now(),changed=publishCargoWorkspaceMembership(this.root,cargoWorkspaceForManifest(this.root,scope.manifest),"write");phase.budget();logCargoPreparationDiagnosticV1("publication",scope.manifest,performance.now()-publishing,Number(changed));}
   catch(error){this.invocation.control.signal.throwIfAborted();throw error;}
   finally{lease?.release();}
  }
@@ -54,9 +46,9 @@ export class SynchronizeScript extends Script {
 export class BoundedPreparationScript extends Script {
   async run(args: string[]): Promise<void> {
     const root = getWorkspaceRoot();
-    await withRepositoryCargoPreparationV1(findWorkspaceRoot(scriptModuleDirectory), root, this.invocation, createIssuedResourceControlV1(this.invocation, "native:preparation-entry", 0), process.env, async (environment, phase) => {
+    await withRepositoryCargoPreparationV1(readNativeCallerAuthorityV1(this.invocation.capabilities).repositoryRoot, root, this.invocation, createIssuedResourceControlV1(this.invocation, "native:preparation-entry", 0), process.env, async (environment, phase) => {
       class BoundedPreparation extends PreparationScript { protected override readonly environment = environment; protected override phase() { return phase; } }
-      await new BoundedPreparation(root, findWorkspaceRoot(root), this.invocation).run(args);
+      await new BoundedPreparation(root, readNativeCallerAuthorityV1(this.invocation.capabilities).repositoryRoot, this.invocation).run(args);
     });
   }
 }
@@ -65,14 +57,14 @@ export class BoundedPreparationScript extends Script {
 export class BoundedSynchronizeScript extends Script {
   async run(args: string[]): Promise<void> {
     const root = getWorkspaceRoot();
-    await withRepositoryCargoPreparationV1(findWorkspaceRoot(scriptModuleDirectory), root, this.invocation, createIssuedResourceControlV1(this.invocation, "native:preparation-entry", 0), process.env, async (environment, phase, store, storeControl) => {
+    await withRepositoryCargoPreparationV1(readNativeCallerAuthorityV1(this.invocation.capabilities).repositoryRoot, root, this.invocation, createIssuedResourceControlV1(this.invocation, "native:preparation-entry", 0), process.env, async (environment, phase, store, storeControl) => {
       class BoundedSynchronize extends SynchronizeScript {
         protected override readonly environment = environment;
         protected override phase() { return phase; }
         protected override toolInputs(): readonly string[] { return [store.toolchain.cargo]; }
         protected override execute(command: string, args: string[], cwd: string, label: string, budget: number, options: OwnedCommandOptions): Promise<void> { return withCompilerWorkspaceSharedWriteV1(store.storage, cargoPreparationStorageFromEnvironmentV1(environment).leaseDirectory, storeControl, () => super.execute(command, args, cwd, label, budget, options)); }
       }
-      await new BoundedSynchronize(root, findWorkspaceRoot(root), this.invocation).run(args);
+      await new BoundedSynchronize(root, readNativeCallerAuthorityV1(this.invocation.capabilities).repositoryRoot, this.invocation).run(args);
     });
   }
 }

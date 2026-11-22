@@ -1,18 +1,8 @@
 import{machinePathV1}from"../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import {existsSync,readFileSync,readdirSync,statSync} from "node:fs";
 import {join,resolve} from "node:path";
-import {readLeaseReportV1,type LeaseHolderV1} from "../../../../../../../🔨️modules/🏃️process/🔒️leases/📋️status/🟦️.ts";
-import {leaseRegistryRootV1,readLeaseHistoryV1} from "../../../../../../../🔨️modules/🏃️process/🔒️leases/🧭️order/🗂️registry/🟦️.ts";
-import {leaseHistoryKeyV1} from "../../../../../../../🔨️modules/🏃️process/🔒️leases/📈️standing/🟦️.ts";
-import {describeHostReasonV1,hostCapacityDirectoryV1,observeTreeMegabytesV1,readHostCapacityStatusV1,readHostEstimateStoreV1} from "../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🟦️.ts";
-import {agentSessionRegistryRootV1,agentSessionStoreV1,parseAgentSessionAddressV1,readAgentSessionV1} from "../../../../../../../🔨️modules/🏃️process/🪪️agent-sessions/🗄️store/🟦️.ts";
-import {BUILD_HOST_CAPACITY_POLICY_V1,createCapacityControlV1} from "../../🌡️host-capacity/🟦️.ts";
-import {cacheLedgerV1} from "../../../⚡️caching/💾️storage/🧾️ledger/🟦️.ts";
-import {machinePolicyV1,planMachineBudgetV1,resolveMachineTotalV1} from "../../../⚡️caching/💾️storage/🧾️ledger/🎚️machine/🟦️.ts";
-import {repositoryCachePartitionRootDataV1} from "../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📂️paths/🟦️.ts";
-import {bazelServerDirectoryV1,listBazelSlotsV1,readBazelServerPidSyncV1,readBazelSlotStateSyncV1} from "../../🔧️tools/🏗️bazel/🧵️sessions/📖️status/🟦️.ts";
+import type {LeaseHolderV1} from "../../../../../../../🔨️modules/🏃️process/🔒️leases/📋️status/🟦️.ts";
 import sessionSchema from "../../🔧️tools/🏗️bazel/🧵️sessions/🧬️schema/🔣️.json" with {type:"json"};
-import {implementationModeV1,readSealedBlockedV1,readSealedPointerV1,readSealedReceiptV1,sealedEntryOfV1,sealedPointerOfV1,sealedStoreDirectoryV1,sealedTreeDriftV1} from "../../🏛️sealed/🟦️.ts";
 import generationSchema from "../../🕸️graph/🕰️generations/🧬️schema/🔣️.json" with {type:"json"};
 import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
@@ -32,6 +22,9 @@ const standingOf=(row:NonNullable<LeaseHolderV1["standing"]>):FleetStandingFactV
 
 /** 🔒️ Leases: holders, waiters and cycles of the checkout's lease directory, with the history of the kinds of hold the waiters queue behind. */
 export const readFleetLeasesV1:FleetReaderV1=async context=>{
+ const {readLeaseReportV1}=await import("../../../../../../../🔨️modules/🏃️process/🔒️leases/📋️status/🟦️.ts");
+ const {leaseRegistryRootV1,readLeaseHistoryV1}=await import("../../../../../../../🔨️modules/🏃️process/🔒️leases/🧭️order/🗂️registry/🟦️.ts");
+ const {leaseHistoryKeyV1}=await import("../../../../../../../🔨️modules/🏃️process/🔒️leases/📈️standing/🟦️.ts");
  const directory=resolve(machinePathV1(context.root,REPOSITORY_LEASE_DIRECTORY_FLEET_V1)),report=readLeaseReportV1(directory,context.environment,context.now(),0),registry=leaseRegistryRootV1(context.environment);
  const holders:FleetHolderFactV1[]=report.holders.map(row=>({pid:row.pid,resource:row.resource,mode:row.mode,class:row.class,heldSeconds:row.heldSeconds,...row.command===undefined?{}:{command:row.command},...row.session===undefined?{}:{session:row.session},...row.agent===undefined?{}:{agent:row.agent},...row.standing===undefined?{}:{standing:standingOf(row.standing)}}));
  const waiters:FleetWaiterFactV1[]=report.waiters.map(row=>({pid:row.pid,resource:row.resource,mode:row.mode,class:row.class,waitedSeconds:row.waitedSeconds,blockers:[...row.blockers],...row.position===undefined?{}:{position:row.position},...row.command===undefined?{}:{command:row.command},...row.session===undefined?{}:{session:row.session},...row.agent===undefined?{}:{agent:row.agent},...row.priority===undefined?{}:{priority:row.priority},historyKey:leaseHistoryKeyV1(row.resource,row.command??"")}));
@@ -40,25 +33,29 @@ export const readFleetLeasesV1:FleetReaderV1=async context=>{
  return {leases:{holders,waiters,cycles:report.cycles.map(cycle=>cycle.members.join(" → "))},history};
 };
 
-const agentOf=(environment:NodeJS.ProcessEnv,address:string|undefined,cache:Map<string,string|undefined>):string|undefined=>{
+type AgentSessionsV1=typeof import("../../../../../../../🔨️modules/🏃️process/🪪️agent-sessions/🗄️store/🟦️.ts");
+const agentOf=(sessions:AgentSessionsV1,environment:NodeJS.ProcessEnv,address:string|undefined,cache:Map<string,string|undefined>):string|undefined=>{
  if(address===undefined)return undefined;
  if(cache.has(address))return cache.get(address);
- const parsed=parseAgentSessionAddressV1(address),found=parsed===undefined?undefined:readAgentSessionV1(agentSessionStoreV1(agentSessionRegistryRootV1(environment),parsed.worktree),parsed.id)?.agent.id;
+ const parsed=sessions.parseAgentSessionAddressV1(address),found=parsed===undefined?undefined:sessions.readAgentSessionV1(sessions.agentSessionStoreV1(sessions.agentSessionRegistryRootV1(environment),parsed.worktree),parsed.id)?.agent.id;
  cache.set(address,found);return found;
 };
 
-const agentField=(environment:NodeJS.ProcessEnv,address:string|undefined,cache:Map<string,string|undefined>):{agent?:string}=>{const agent=agentOf(environment,address,cache);return agent===undefined?{}:{agent};};
+const agentField=(sessions:AgentSessionsV1,environment:NodeJS.ProcessEnv,address:string|undefined,cache:Map<string,string|undefined>):{agent?:string}=>{const agent=agentOf(sessions,environment,address,cache);return agent===undefined?{}:{agent};};
 
 /** 🌡️ Capacity: the host sample, the live grants (reserved against really used), the queue in decision order and what earlier runs of each operation took. */
 export const readFleetCapacityV1:FleetReaderV1=async context=>{
+ const {describeHostReasonV1,hostCapacityDirectoryV1,readHostCapacityStatusV1,readHostEstimateStoreV1}=await import("../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🟦️.ts");
+ const {BUILD_HOST_CAPACITY_POLICY_V1,createCapacityControlV1}=await import("../../🌡️host-capacity/🎛️control/🟦️.ts");
+ const sessions=await import("../../../../../../../🔨️modules/🏃️process/🪪️agent-sessions/🗄️store/🟦️.ts");
  const control=createCapacityControlV1();
  try{
   const directory=hostCapacityDirectoryV1(context.environment),policy=BUILD_HOST_CAPACITY_POLICY_V1,snapshot=await readHostCapacityStatusV1({directory,policy,control:control.control,now:context.now}),now=context.now(),agents=new Map<string,string|undefined>();
-  const grants:FleetGrantFactV1[]=snapshot.grants.map(row=>({id:row.id,operation:row.operation,pid:row.pid,jobs:row.jobs,reservedMegabytes:row.reservedMegabytes,observedMegabytes:row.observedMegabytes,heldSeconds:Math.max(0,Math.floor((now-row.admittedAtMs)/1000)),...row.phase===undefined?{}:{phase:row.phase},...row.lentSinceMs===undefined?{}:{lent:true},...row.session===undefined?{}:{session:row.session},...agentField(context.environment,row.session,agents)}));
+  const grants:FleetGrantFactV1[]=snapshot.grants.map(row=>({id:row.id,operation:row.operation,pid:row.pid,jobs:row.jobs,reservedMegabytes:row.reservedMegabytes,observedMegabytes:row.observedMegabytes,heldSeconds:Math.max(0,Math.floor((now-row.admittedAtMs)/1000)),...row.phase===undefined?{}:{phase:row.phase},...row.lentSinceMs===undefined?{}:{lent:true},...row.session===undefined?{}:{session:row.session},...agentField(sessions,context.environment,row.session,agents)}));
   const order=new Map(snapshot.evaluation.decisions.map((row,index)=>[row.id,index] as const)),reasons=new Map(snapshot.evaluation.decisions.map(row=>[row.id,row.reason] as const));
   const waiters:FleetCapacityWaiterFactV1[]=[...snapshot.waiters].sort((left,right)=>(order.get(left.request.id)??Infinity)-(order.get(right.request.id)??Infinity)||left.arrivedAtMs-right.arrivedAtMs).map((row,index)=>{
-   const reason=reasons.get(row.request.id)??"queue-order",text=reason==="fits"||reason==="reduced"||reason==="override"?reason:describeHostReasonV1(context.language,reason);
-   return {id:row.request.id,operation:row.request.operation,pid:row.pid,needMegabytes:row.request.fixedMegabytes+row.request.minimumJobs*row.request.perJobMegabytes,waitedSeconds:Math.max(0,Math.floor((now-row.arrivedAtMs)/1000)),reason,reasonText:text,position:index+1,...row.session===undefined?{}:{session:row.session},...agentField(context.environment,row.session,agents)};
+   const reason=reasons.get(row.request.id)??"queue-order",text=reason==="fits"||reason==="reduced"||reason==="override"||reason==="shrunk"||reason==="lent"?reason:describeHostReasonV1(context.language,reason);
+   return {id:row.request.id,operation:row.request.operation,pid:row.pid,needMegabytes:row.request.fixedMegabytes+row.request.minimumJobs*row.request.perJobMegabytes,waitedSeconds:Math.max(0,Math.floor((now-row.arrivedAtMs)/1000)),reason,reasonText:text,position:index+1,...row.session===undefined?{}:{session:row.session},...agentField(sessions,context.environment,row.session,agents)};
   });
   const store=readHostEstimateStoreV1(directory),wanted=new Set([...grants.map(row=>row.operation),...waiters.map(row=>row.operation)]),active:Record<string,readonly number[]>={};
   for(const operation of wanted){const samples=store.classes[operation]?.samples;if(samples)active[operation]=samples.map(row=>row.activeMilliseconds).reverse();}
@@ -69,6 +66,9 @@ export const readFleetCapacityV1:FleetReaderV1=async context=>{
 
 /** 🏗️ Bazel: every slot with an output base, the server process living in it and its memory, and what the slot remembers. */
 export const readFleetBazelV1:FleetReaderV1=async context=>{
+ const {observeTreeMegabytesV1}=await import("../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🟦️.ts");
+ const {repositoryCachePartitionRootDataV1}=await import("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📂️paths/🟦️.ts");
+ const {bazelServerDirectoryV1,listBazelSlotsV1,readBazelServerPidSyncV1,readBazelSlotStateSyncV1}=await import("../../🔧️tools/🏗️bazel/🧵️sessions/📖️status/🟦️.ts");
  const server=bazelServerDirectoryV1(repositoryCachePartitionRootDataV1(context.root,"products")),slots:(Omit<FleetBazelSlotFactV1,"treeMegabytes">&{treeMegabytes:Promise<number|null>|null})[]=[];
  for(const slot of listBazelSlotsV1(server)){
   const pid=readBazelServerPidSyncV1(join(server,slot)),state=readBazelSlotStateSyncV1(server,slot);
@@ -80,11 +80,13 @@ export const readFleetBazelV1:FleetReaderV1=async context=>{
 
 /** 💾️ Storage: the images and areas of the cache ledger from statfs and the size ledger (no tree is walked) and the machine budget plan. */
 export const readFleetStorageV1:FleetReaderV1=async context=>{
- const {cacheRunnerPortsV1,machineHostFreeBytesV1,machineUsesV1,reportCacheLedgerV1}=await import("../../🧹️cache-gc/🏃️runner/🟦️.ts");
+ const {cacheLedgerV1}=await import("../../../⚡️caching/💾️storage/🧾️ledger/🟦️.ts");
+ const {machineHostFloorV1,machinePolicyV1,planMachineBudgetV1,resolveMachineTotalV1}=await import("../../../⚡️caching/💾️storage/🧾️ledger/🎚️machine/🟦️.ts");
+ const {cacheRunnerPortsV1,machineHostFreeBytesV1,machineHostTotalBytesV1,machineUsesV1,reportCacheLedgerV1}=await import("../../🧹️cache-gc/🏃️runner/🟦️.ts");
  const ledger=cacheLedgerV1(),ports=cacheRunnerPortsV1({signal:new AbortController().signal,progress:async()=>{},exclusive:async()=>undefined}),report=await reportCacheLedgerV1(context.root,ledger,ports),declared=machinePolicyV1();
  const fileText=(()=>{try{return readFileSync(join(context.root,...ledger.roots.repository.directory.split("/"),declared.file),"utf8");}catch{return undefined;}})(),total=resolveMachineTotalV1({environment:context.environment,...fileText===undefined?{}:{fileText}},declared);
- const plan=planMachineBudgetV1({totalBytes:total.bytes,hostFreeBytes:machineHostFreeBytesV1(context.root),uses:machineUsesV1(report)},declared);
- return {storage:{hostFreeBytes:machineHostFreeBytesV1(context.root),hostFreeFloorBytes:declared.hostFreeFloorBytes,images:report.partitions.map(row=>({id:row.id,kind:row.kind,state:row.state,usedBytes:row.usedBytes,capacityBytes:row.capacityBytes,budgetBytes:row.budgetBytes,source:row.source})),overAreas:report.areas.filter(row=>row.over).map(row=>row.id),machine:{totalBytes:plan.totalBytes,effectiveTotalBytes:plan.effectiveTotalBytes,usedBytes:plan.usedBytes,footprintBytes:plan.footprintBytes,overBytes:plan.overBytes,evictBytes:plan.evictBytes,blockedBytes:plan.blockedBytes,source:total.source}}};
+ const plan=planMachineBudgetV1({totalBytes:total.bytes,hostFreeBytes:machineHostFreeBytesV1(context.root),hostTotalBytes:machineHostTotalBytesV1(context.root),uses:machineUsesV1(report)},declared);
+ return {storage:{hostFreeBytes:machineHostFreeBytesV1(context.root),hostFreeFloorBytes:machineHostFloorV1(declared,machineHostTotalBytesV1(context.root)),images:report.partitions.map(row=>({id:row.id,kind:row.kind,state:row.state,usedBytes:row.usedBytes,capacityBytes:row.capacityBytes,budgetBytes:row.budgetBytes,source:row.source})),overAreas:report.areas.filter(row=>row.over).map(row=>row.id),machine:{totalBytes:plan.totalBytes,effectiveTotalBytes:plan.effectiveTotalBytes,usedBytes:plan.usedBytes,footprintBytes:plan.footprintBytes,overBytes:plan.overBytes,evictBytes:plan.evictBytes,blockedBytes:plan.blockedBytes,source:total.source}}};
 };
 
 const promotionOf=(path:string):FleetSealedEntryFactV1["last"]=>{
@@ -92,6 +94,7 @@ const promotionOf=(path:string):FleetSealedEntryFactV1["last"]=>{
 };
 /** 🏛️ Sealed implementation: the mode, and for every entry of the store its pointer, whether the live tree still equals the tree it was captured from (stat only, nothing is hashed unless a stamp moved), a blocked promotion and the last promotion. */
 export const readFleetSealedV1:FleetReaderV1=async context=>{
+ const {implementationModeV1,readSealedBlockedV1,readSealedPointerV1,readSealedReceiptV1,sealedEntryOfV1,sealedPointerOfV1,sealedStoreDirectoryV1,sealedTreeDriftV1}=await import("../../🏛️sealed/🟦️.ts");
  const store=sealedStoreDirectoryV1(context.root),entries:FleetSealedEntryFactV1[]=[];
  let names:string[]=[];try{names=readdirSync(store,{withFileTypes:true}).filter(row=>row.isDirectory()).map(row=>row.name).sort();}catch{}
  for(const name of names){
@@ -107,6 +110,7 @@ export const readFleetSealedV1:FleetReaderV1=async context=>{
 const popcount=(base64:string):number=>{let count=0;for(const byte of Buffer.from(base64,"base64")){let value=byte;while(value){count+=value&1;value>>=1;}}return count;};
 /** 🕰️ Generation: the published pointer and manifest of the graph store, read as plain files under their schema (the owner table of the manifest is counted, not walked), with how many owners the last verification covered. The graph itself is never loaded. */
 export const readFleetGenerationV1:FleetReaderV1=async context=>{
+ const {repositoryCachePartitionRootDataV1}=await import("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📂️paths/🟦️.ts");
  const defs=generationSchema.definitions,policy=defs.Policy.const as {pointer:string;manifests:string},directory=join(repositoryCachePartitionRootDataV1(context.root,"graph"),"generations");
  if(!existsSync(join(directory,policy.pointer)))return {};
  const pointer=JSON.parse(readFileSync(join(directory,policy.pointer),"utf8")) as {generation:number;manifest:string|null;verified?:{atMs:number;count:number;owners:string}};
@@ -131,8 +135,17 @@ export async function readFleetLoadV1(context:FleetReaderContextV1):Promise<Part
  return fleet===undefined?{}:{fleet};
 }
 
+/** 🩺️ Workers: every origin of the fleet store judged by the age of its readiness record and of the heartbeats of its machine, so a receipt that claims `running` with no live writer shows as offline; nothing without a fleet store. */
+export async function readFleetWorkersV1(context:FleetReaderContextV1):Promise<Partial<FleetFactsV1>>{
+ const [{readReadyWorkersV1,READY_OFFLINE_SECONDS_V1},{fleetStoreRootV1}]=await Promise.all([import("../../🌐️remote-execution/🛰️sidecar/🚦️ready/🩺️workers/🟦️.ts"),import("../../🌐️remote-cache/🛰️fleet/🟦️.ts")]);
+ const store=context.environment.SEMIO_FLEET_STORE_ROOT??fleetStoreRootV1(context.root);
+ if(store===undefined||store==="")return {};
+ const rows=readReadyWorkersV1({store,nowMs:context.now()});
+ return rows.length===0?{}:{workers:{offlineSeconds:READY_OFFLINE_SECONDS_V1,rows}};
+}
+
 /** 🏭️ The readers of the real workspace. */
-export const FLEET_READERS_V1:FleetReadersV1=Object.freeze({leases:readFleetLeasesV1,capacity:readFleetCapacityV1,bazel:readFleetBazelV1,storage:readFleetStorageV1,sealed:readFleetSealedV1,generation:readFleetGenerationV1,scheduler:readFleetSchedulerV1,fleet:readFleetLoadV1});
+export const FLEET_READERS_V1:FleetReadersV1=Object.freeze({leases:readFleetLeasesV1,capacity:readFleetCapacityV1,bazel:readFleetBazelV1,storage:readFleetStorageV1,sealed:readFleetSealedV1,generation:readFleetGenerationV1,scheduler:readFleetSchedulerV1,fleet:readFleetLoadV1,workers:readFleetWorkersV1});
 
 /** 🧺️ Runs every reader at once, times it and merges what it returned; a reader that throws is a failed source, never a failed command. */
 export async function collectFleetFactsV1(context:FleetReaderContextV1,readers:FleetReadersV1=FLEET_READERS_V1,timeoutMilliseconds:number=policy.readers.timeoutMilliseconds):Promise<FleetFactsV1>{

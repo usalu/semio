@@ -198,7 +198,7 @@ fn ring() -> UiNode {
     UiNode::Ring(UiRingNode { id: "orbit".into(), orb_id: "sun".into(), t: 0.0, on_change: binding(), presence: UiPresence::default(), menu: None })
 }
 
-/// ⭕️ A ring drag is one press like a slider's: ticks while the pointer moves, ONE release where the pointer lets go —
+/// ⭕️ A ring drag starts on its orb (12 o'clock at t = 0, React) and is one press like a slider's: ticks while the pointer moves, ONE release where the pointer lets go —
 /// even off the control — under one gesture; a lost capture cancels it with no value.
 #[test]
 fn a_ring_drag_is_one_press_and_a_lost_capture_cancels_it() {
@@ -206,16 +206,17 @@ fn a_ring_drag_is_one_press_and_a_lost_capture_cancels_it() {
     let root = place(&mut tree, None, 0, stack(), (0.0, 0.0, 600.0, 200.0));
     let orbit = place(&mut tree, Some(root), 1, ring(), (0.0, 0.0, 100.0, 100.0));
     let mut router = EventRouter::new("main");
-    let mut commands = router.dispatch(&mut tree, root, &down(90.0, 50.0));
-    commands.extend(router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 50.0, y: 90.0, modifiers: EventModifiers::default() }));
+    let mut commands = router.dispatch(&mut tree, root, &down(50.0, 10.0));
+    commands.extend(router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 90.0, y: 50.0, modifiers: EventModifiers::default() }));
     commands.extend(router.dispatch(&mut tree, root, &up(-250.0, 50.0)));
     let drag = presses(&commands);
-    assert_eq!(drag.iter().map(|press| (press.0, press.2, press.3.clone())).collect::<Vec<_>>(), vec![(Some(0.0), Some(false), None), (Some(0.25), Some(false), None), (Some(0.5), Some(true), None)]);
+    assert_eq!(drag.iter().map(|press| (press.0, press.2, press.3.clone())).collect::<Vec<_>>(), vec![(Some(0.25), Some(false), None), (Some(0.75), Some(true), None)], "the orb press itself commits nothing, as React (the value follows the move)");
     assert!(drag.iter().all(|press| press.1 == drag[0].1), "one gesture: {drag:?}");
-    let mut cancelled = router.dispatch(&mut tree, root, &down(90.0, 50.0));
+    let mut cancelled = router.dispatch(&mut tree, root, &down(50.0, 10.0));
+    cancelled.extend(router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 90.0, y: 50.0, modifiers: EventModifiers::default() }));
     cancelled.extend(router.dispatch(&mut tree, root, &UiEvent::PointerCancel));
     let cancelled = presses(&cancelled);
-    assert_eq!(cancelled.iter().map(|press| (press.0, press.2, press.3.clone())).collect::<Vec<_>>(), vec![(Some(0.0), Some(false), None), (None, None, Some("captureLost".to_string()))]);
+    assert_eq!(cancelled.iter().map(|press| (press.0, press.2, press.3.clone())).collect::<Vec<_>>(), vec![(Some(0.25), Some(false), None), (None, None, Some("captureLost".to_string()))]);
     assert_eq!(cancelled[1].1, cancelled[0].1, "the cancel names the open press");
     assert_ne!(cancelled[0].1, drag[0].1, "another drag is another press");
     assert!(tree.node(orbit).expect("ring").state.scrub_gesture.is_none(), "the press is closed");

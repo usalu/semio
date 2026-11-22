@@ -1,0 +1,9 @@
+# Stage Wave at 21:05 UTC
+
+The coordinator first reported local staged tree `9c4d168ad54c06a72c8b89c1d9ea0047052c48f0` before its journal head reflected the subsequent stage wave. The server journal later committed virtual `.cache/f/index/` register events beginning at segment 186 byte 685800 with HLC 1795295094415, continuing into segment 187. The sampled server head at 21:05:31 was 187:253151. These events are replicated stage registers, not a direct write to a Git index by this audit.
+
+At that sample m01, m02, m03, m08, m10, m12 and m13 freshly reported the new tree and had server cursors at the sampled head. The server own earlier attestation was behind that cut. At 21:06:00 it too reported the new tree and head cursor with incoming zero. m05 had reached the same journal cursor but still reported prior tree `7d8c0b059bcaed05be881279fe59b4fa8305d514` and 5,867 incoming. m07 still reported the old tree with 354 incoming and an earlier cursor; m11 reported the old tree at 186:442976, with zero incoming in its then-current local queue. A folded cursor or empty local queue alone does not establish stage application.
+
+These are fresh mirrored observations, not independently verified signatures or a Ready verdict. The records do not establish who made the stage change or why. No Git index, process or state was modified by this audit.
+
+At 21:07:04.913 UTC m11 advanced its server cursor from 186:442976 to 186:713425 and reported 1,900 incoming entries, still with the prior tree. At 21:07:39.875 and 21:08:25.545 the cursor was unchanged while incoming fell to 1,611 and then 1,208; no new failure kind was reported. The server head then was 187:305028. This shows a sampled intake advance followed by local queue drainage, not a proven permanently blocked cursor or completion of the stage. The separate workspace Ready receipt remained running and false.

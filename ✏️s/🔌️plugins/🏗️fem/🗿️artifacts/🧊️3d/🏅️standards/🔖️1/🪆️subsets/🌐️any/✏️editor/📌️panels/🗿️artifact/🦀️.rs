@@ -69,7 +69,7 @@ pub const TREE_NAMESPACE: &str = "fem3d-play-artifact";
 pub const SECTIONS: usize = 9;
 /// 🎯️ Ids the builder records as selected/hovered — one `UiFixedList`, so a wider selection marks
 /// its first page rather than refusing the whole render.
-const MARKED_IDS_LIMIT: usize = semio_ui_contract::UI_FIXED_LIST_ITEMS;
+pub const MARKED_IDS_LIMIT: usize = semio_ui_contract::UI_FIXED_LIST_ITEMS;
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
@@ -255,7 +255,7 @@ fn load_is_dangling(document: &Fem3dSnapshot, load: &FemLoad) -> bool {
 //#endregion 🔖️Predicates
 
 //#region 🔖️Render
-fn marked_ids(ids: &[String]) -> Vec<String> {
+pub fn marked_ids(ids: &[String]) -> Vec<String> {
     ids.iter().take(MARKED_IDS_LIMIT).cloned().collect()
 }
 

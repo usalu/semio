@@ -800,6 +800,11 @@
             "type": "string"
           }
         },
+        "rootVariables": {
+          "description": "Names set to the repository root of the run (after the fixed values, before what the caller passes): a variable that makes the tool stop its search for configuration at the repository, so no file of a parent directory (a user's home) changes a run.",
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
         "cacheDirectories": {
           "type": "object",
           "additionalProperties": {

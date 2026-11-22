@@ -1,7 +1,7 @@
 //! 👁️ WFC 3D viewer — the `view` mode: one full-pane preview of the solved assembly.
 
 use crate::viewer::wfc3d::modes::view::windows::preview;
-use semio_plugin::create_default_layout;
+use semio_plugin::{create_default_layout, Axis};
 use semio_ui_locale::LocalizedLabel;
 use semio_plugin::ModeDefinition;
 use semio_plugin::WindowLayout;
@@ -15,6 +15,6 @@ pub fn definition() -> ModeDefinition {
 
 /// 🪟️ A single full-pane preview — a read-only surface has no second half to show.
 pub fn layout() -> WindowLayout {
-    create_default_layout(&[preview::WFC_3D_VIEW_WINDOW.into()], "row", Some(&[100.0]), Some(&["Preview".into()]))
+    create_default_layout(&[preview::WFC_3D_VIEW_WINDOW.into()], Axis::Horizontal, Some(&[1.0]), Some(&["Preview".into()]))
 }
 //#endregion 🔖️Definition

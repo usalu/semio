@@ -1,17 +1,19 @@
 import {spawn,spawnSync} from "node:child_process";
-import {createHash,randomUUID} from "node:crypto";
+import {createHash,randomBytes,randomUUID} from "node:crypto";
 import {accessSync,constants,createReadStream,createWriteStream,statSync} from "node:fs";
-import {chmod,copyFile,lstat,mkdir,readdir,readlink,realpath,rename,rm,stat,symlink,utimes,writeFile} from "node:fs/promises";
+import {chmod,copyFile,lstat,mkdir,readdir,readlink,realpath,rename,rm,stat,utimes,writeFile} from "node:fs/promises";
 import {availableParallelism,hostname,platform as osPlatform,totalmem} from "node:os";
 import {delimiter,dirname,isAbsolute,join,normalize,sep} from "node:path";
 import {decodeProtobufV1,encodeProtobufV1,REAPI_V1,type ProtobufMessageV1} from "../📡️wire/📦️protobuf/🟦️.ts";
 import {httpRemoteExecutionContentV1,RemoteExecutionContentErrorV1,type RemoteExecutionContentV1} from "../🗄️content/🟦️.ts";
-import {selectRemoteExecutionSandboxV1,type RemoteExecutionSandboxStrategyV1} from "../🔒️sandbox/🟦️.ts";
-import {validateRemoteExecutionRustcActionV1,type RemoteExecutionActionPolicyV1} from "../🧱️actions/🟦️.ts";
+import {placeRemoteExecutionLinkV1,remoteExecutionLinkEscapesV1,selectRemoteExecutionSandboxV1,type RemoteExecutionSandboxStrategyV1} from "../🔒️sandbox/🟦️.ts";
+import {expandRemoteExecutionRootV1,remoteExecutionNativePathV1,remoteExecutionToolOfProgramV1,validateRemoteExecutionRustcActionV1,type RemoteExecutionActionPolicyV1} from "../🧱️actions/🟦️.ts";
+import {OFFLOAD_POLICY_V1} from "../🚀️offload/📐️policy/🟦️.ts";
 import type {RemoteExecutionAdmissionV1,RemoteExecutionWorkerStateV1} from "../🌡️load/🟦️.ts";
 import {readRemoteExecutionPolicyV1,remoteExecutionHostPropertiesV1,remoteExecutionDigestV1,requireRemoteExecutionShapeV1,type RemoteExecutionConfinementV1,type RemoteExecutionDigestV1,type RemoteExecutionNetworkV1,type RemoteExecutionHeartbeatAnswerV1,type RemoteExecutionPollAnswerV1,type RemoteExecutionPropertyV1,type RemoteExecutionSandboxV1,type RemoteExecutionTaskResultV1,type RemoteExecutionTaskStatusV1,type RemoteExecutionTaskV1,type RemoteExecutionWorkerRegisteredV1} from "../🟦️.ts";
 import { runtimeSleepV1 } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🚀️process/🟦️.ts";
 import {runtimeIdentityV1} from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
+import {OFFLOAD_REFUSAL_PREFIX_V1} from "../🚀️offload/🩺️failure/🟦️.ts";
 
 const EMPTY_HASH="e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 
@@ -25,7 +27,7 @@ export type RemoteExecutionWorkerOptionsV1=Readonly<{
  origin?:string;capacity?:Readonly<{cores:number;memoryMegabytes:number}>;network?:"deny"|"allow";tools?:RemoteExecutionToolsV1;confinement?:"required"|"best-effort";admit?:(running:number)=>Promise<RemoteExecutionAdmissionV1>;observe?:(state:RemoteExecutionWorkerStateV1)=>void;admitRetryMilliseconds?:number;
 }>;
 
-/** 🛠️ The tools a worker owns by name: an action that declares `SEMIO_TOOL_<NAME>=@tool` in its environment gets the path of the tool of that name, and its confined process may read the listed directories. The toolchain itself is never shipped, a worker that lacks the tool refuses the action with a precondition failure. */
+/** 🛠️ The tools a worker owns by name: an action whose program is `@tool:<name>` runs the tool of that name, and its confined process may read the listed directories. The toolchain itself is never shipped, a worker that lacks the tool refuses the action with a precondition failure. */
 export type RemoteExecutionToolsV1=Readonly<Record<string,Readonly<{path:string;readable:readonly string[]}>>>;
 
 /** 🎬️ What executing one action needs besides the store. */
@@ -103,6 +105,12 @@ export class RemoteExecutionBlobCacheV1{
  }
 }
 
+/** 📏️ The directory name of a worker below `work/`: at most 16 characters (a long host name is cut and made unique by a hash), so the input roots stay inside the 256-character path budget of native Windows. */
+export function remoteExecutionWorkNameV1(name:string):string{
+ const clean=name.replace(/[^A-Za-z0-9._-]/gu,"_");
+ return clean.length<=16?clean:`${clean.slice(0,9)}-${sha256(name).slice(0,6)}`;
+}
+
 function safeName(name:string):string{
  if(name===""||name==="."||name===".."||name.includes("/")||name.includes("\\")||name.includes("\0"))throw new RemoteExecutionContentErrorV1(3,`Valid path segment required: ${JSON.stringify(name)}`);
  return name;
@@ -130,7 +138,7 @@ function killTree(pid:number|undefined):void{
 function resolveExecutable(first:string,env:Readonly<Record<string,string>>,root:string,cwd:string):string|undefined{
  const extensions=process.platform==="win32"?["",...(env.PATHEXT??".EXE;.CMD;.BAT").split(";")]:[""];
  const usable=(path:string):boolean=>{for(const extension of extensions){try{if(statSync(path+extension).isFile()){accessSync(path+extension,constants.X_OK);return true;}}catch{}}return false;};
- if(first.includes("/")||first.includes("\\")){const full=isAbsolute(first)?first:join(root,first);return usable(full)?full:undefined;}
+ if(first.includes("/")||first.includes("\\")){const full=isAbsolute(first)?first:remoteExecutionNativePathV1(root,first,{join,sep});return usable(full)?full:undefined;}
  for(const directory of (env.PATH??"").split(delimiter)){if(directory==="")continue;const full=join(isAbsolute(directory)?directory:join(cwd,directory),first);if(usable(full))return full;}
  return undefined;
 }
@@ -163,7 +171,7 @@ type Directory=ProtobufMessageV1;
 
 /** 🧰️ Executes one action the way the protocol describes: fetch the action, its command and its input tree, build a private input root, run the command in the sandbox with exactly the declared environment, collect the declared outputs into the store and answer an ActionResult. Failures of the infrastructure are statuses, failures of the action are exit codes. */
 export async function executeRemoteExecutionActionV1(run:RemoteExecutionExecutionV1):Promise<RemoteExecutionExecutionResultV1>{
- const started=Date.now(),task=randomUUID(),work=join(run.work??join(run.directory,"work"),task),root=join(work,"root"),blobs=run.blobs??new RemoteExecutionBlobCacheV1(join(run.directory,"blobs"),run.content,Number.MAX_SAFE_INTEGER);
+ const started=Date.now(),task=randomBytes(6).toString("hex"),work=join(run.work??join(run.directory,"work"),task),root=join(work,"r"),links:{target:string;path:string}[]=[],blobs=run.blobs??new RemoteExecutionBlobCacheV1(join(run.directory,"blobs"),run.content,Number.MAX_SAFE_INTEGER);
  const fail=(code:number,message:string,missing?:RemoteExecutionDigestV1[]):RemoteExecutionExecutionResultV1=>({outcome:"failed",status:{code,message,...(missing?{missing}:{})},actionResult:null});
  const directories=new Map<string,Directory>();
  const loadDirectory=async(digest:RemoteExecutionDigestV1):Promise<Directory>=>{
@@ -183,7 +191,7 @@ export async function executeRemoteExecutionActionV1(run:RemoteExecutionExecutio
    const source=await blobs.path(run.instance,unwire(node.digest),run.signal);
    await placeFile(source,join(target,node.name),node.is_executable,run.materialize);
   });
-  for(const node of directory.symlinks as {name:string;target:string}[])await symlink(node.target,join(target,node.name));
+  for(const node of directory.symlinks as {name:string;target:string}[])links.push({target:node.target,path:join(target,node.name)});
   await limited(directory.directories as {name:string;digest:{hash:string;size_bytes:number}}[],8,node=>materialize(unwire(node.digest),join(target,node.name),depth+1));
  };
  try{
@@ -195,28 +203,35 @@ export async function executeRemoteExecutionActionV1(run:RemoteExecutionExecutio
   if(command.arguments.length===0)return fail(3,"Command without arguments");
   if(run.actions!=="any"){
    const refusal=run.actions==="none"?"this worker runs no actions":validateRemoteExecutionRustcActionV1(command);
-   if(refusal!==undefined)return fail(9,`Action refused by the worker policy: ${refusal}`);
+   if(refusal!==undefined)return fail(9,`${OFFLOAD_REFUSAL_PREFIX_V1}: ${refusal}`);
   }
   if(command.output_paths.length===0&&(command.output_files.length>0||command.output_directories.length>0))return fail(3,"Command declares only REAPI 2.0 output_files or output_directories; declare output_paths (REAPI 2.1)");
   const rootDigest=action.input_root_digest?unwire(action.input_root_digest):{hash:EMPTY_HASH,size:0},fetchStart=Date.now();
   await materialize(rootDigest,root,0);
+  for(const link of links){
+   if(remoteExecutionLinkEscapesV1(root,link.path,link.target))throw new RemoteExecutionContentErrorV1(3,`Input link leaves the input root: ${link.target}`);
+   await placeRemoteExecutionLinkV1(link.target,link.path,root);
+  }
   const cwdRelative=command.working_directory===""?"":safeRelative(command.working_directory),cwd=cwdRelative===""?root:join(root,cwdRelative),declared=command.output_paths;
   await mkdir(cwd,{recursive:true});
   for(const path of declared){const clean=safeRelative(path),directory=dirname(join(cwd,clean));await mkdir(directory,{recursive:true});}
-  const env:Record<string,string>={};
+  const env:Record<string,string>={},report=OFFLOAD_POLICY_V1.root.report;
   for(const variable of command.environment_variables)env[variable.name]=variable.value;
+  const reported=env[report];delete env[report];
+  for(const name of Object.keys(env))if(!name.startsWith("CARGO_PKG_")&&(env[name]===OFFLOAD_POLICY_V1.root.placeholder||env[name]!.startsWith(OFFLOAD_POLICY_V1.root.placeholder+"/")))env[name]=expandRemoteExecutionRootV1(env[name]!,root,{join,sep});
+  if(reported!==undefined){const file=join(root,...safeRelative(reported).split(sep));await mkdir(dirname(file),{recursive:true});await writeFile(file,root);}
   const scratch=join(root,".tmp");await mkdir(scratch,{recursive:true});
+  if(reported!==undefined)for(const directory of OFFLOAD_POLICY_V1.root.directories)await mkdir(remoteExecutionNativePathV1(root,directory,{join,sep}),{recursive:true});
   if(env.TMPDIR===undefined&&process.platform!=="win32")env.TMPDIR=scratch;
-  const readable:string[]=[];
-  for(const [name,value] of Object.entries(env)){
-   if(value!=="@tool"||!name.startsWith("SEMIO_TOOL_"))continue;
-   const tool=run.tools?.[name.slice("SEMIO_TOOL_".length).toLowerCase()];
-   if(!tool)return fail(9,`This worker does not offer the tool ${name.slice("SEMIO_TOOL_".length).toLowerCase()}`);
-   env[name]=tool.path;readable.push(...tool.readable);
+  const readable:string[]=[],args=command.arguments.map(argument=>expandRemoteExecutionRootV1(argument,root,{join,sep})),toolName=remoteExecutionToolOfProgramV1(args[0]!);
+  if(toolName!==undefined){
+   const tool=run.tools?.[toolName];
+   if(!tool)return fail(9,`This worker does not offer the tool ${toolName}`);
+   args[0]=tool.path;readable.push(...tool.readable);
   }
-  const first=command.arguments[0]!,executable=resolveExecutable(first,env,root,cwd),executionStart=Date.now();
+  const first=args[0]!,executable=resolveExecutable(first,env,root,cwd),executionStart=Date.now();
   const collected:Collected=executable===undefined?{exitCode:127,stdout:new Uint8Array(0),stderr:new TextEncoder().encode(`Executable not found: ${first}\n`),timedOut:false,cancelled:false}:await(async()=>{
-   const wrapped=run.sandbox.wrap({argv:[executable,...command.arguments.slice(1)],env,cwd,root,network:run.network===true,...(readable.length>0?{readable}:{})});
+   const wrapped=run.sandbox.wrap({argv:[executable,...args.slice(1)],env,cwd,root,network:run.network===true,...(readable.length>0?{readable}:{})});
    return execute(wrapped.argv,wrapped.env,wrapped.cwd,run.timeoutSeconds*1000,run.signal);
   })(),executionEnd=Date.now();
   if(collected.cancelled||run.signal.aborted)return {outcome:"cancelled",status:{code:1,message:"Cancelled"},actionResult:null};
@@ -238,15 +253,15 @@ export async function executeRemoteExecutionActionV1(run:RemoteExecutionExecutio
   const outputFiles:ProtobufMessageV1[]=[],outputDirectories:ProtobufMessageV1[]=[],outputSymlinks:ProtobufMessageV1[]=[];
   const realRoot=await realpath(root);
   for(const path of declared){
-   const clean=safeRelative(path),full=join(cwd,clean),parent=await realpath(dirname(full)).catch(()=>undefined);
+   const clean=safeRelative(path),shown=clean.split(sep).join("/"),full=join(cwd,clean),parent=await realpath(dirname(full)).catch(()=>undefined);
    if(parent!==undefined&&parent!==realRoot&&!parent.startsWith(realRoot+sep))return fail(3,`Output path leaves the input root: ${path}`);
    const info=await lstat(full).catch(()=>undefined);
    if(!info)continue;
-   if(info.isSymbolicLink())outputSymlinks.push({path:clean,target:await readlink(full)});
+   if(info.isSymbolicLink())outputSymlinks.push({path:shown,target:await readlink(full)});
    else if(info.isDirectory()){
     const collect:Directory[]=[],rootDirectory=await walk(full,collect),rootMessage=collect[collect.length-1]!,tree={root:rootMessage,children:collect.slice(0,-1)},treeBytes=encodeProtobufV1(REAPI_V1.tree,tree),treeDigest=digestOf(treeBytes);
-    stage(treeDigest,treeBytes);outputDirectories.push({path:clean,tree_digest:wire(treeDigest),root_directory_digest:wire(rootDirectory)});
-   }else if(info.isFile())outputFiles.push({path:clean,...(await fileNode(full,clean).then(({digest,is_executable})=>({digest,is_executable})))});
+    stage(treeDigest,treeBytes);outputDirectories.push({path:shown,tree_digest:wire(treeDigest),root_directory_digest:wire(rootDirectory)});
+   }else if(info.isFile())outputFiles.push({path:shown,...(await fileNode(full,clean).then(({digest,is_executable})=>({digest,is_executable})))});
   }
   const stdoutDigest=digestOf(collected.stdout),stderrDigest=digestOf(collected.stderr);
   const inlineOut=collected.stdout.length<=run.inlineOutputBytes,inlineErr=collected.stderr.length<=run.inlineOutputBytes;
@@ -332,7 +347,7 @@ export async function runRemoteExecutionWorkerV1(options:RemoteExecutionWorkerOp
  };
  await register();
  if(!registered||!content)return;
- const store=new RemoteExecutionBlobCacheV1(join(options.directory,"blobs"),content,options.maximumBlobBytes),workDirectory=join(options.directory,"work",name.replace(/[^A-Za-z0-9._-]/gu,"_"));
+ const store=new RemoteExecutionBlobCacheV1(join(options.directory,"blobs"),content,options.maximumBlobBytes),workDirectory=join(options.directory,"work",remoteExecutionWorkNameV1(name));
  await rm(workDirectory,{recursive:true,force:true}).catch(()=>{});
  await store.prune().catch(()=>0);let pruned=Date.now();
  const cancel=(ids:readonly string[]):void=>{for(const id of ids)running.get(id)?.abort();};

@@ -268,7 +268,7 @@ pub(super) fn register_solid_features(registry: &mut Registry, session: &Session
         "Defeature",
         "Def",
         "emoji:🧱️",
-        &q("defeature", "Remove faces"),
+        &q("defeature", "Restore rectangular stock by removing a through bore, blind bore or complete fillet"),
         vec![geometry_channel("geometry", "brep.solid.defeature"), list_channel("faces", "brep.solid.defeature")],
         out_solid("DefeaturedSolid"),
         &["Features"],

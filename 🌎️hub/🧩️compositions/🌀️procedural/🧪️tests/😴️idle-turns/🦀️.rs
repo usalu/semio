@@ -40,6 +40,7 @@ fn idle_budget() -> Budget {
 
 fn open_event(app_id: &str) -> Event {
     Event::InstanceOpen {
+        purpose: semio_framework::kernel::ActorInstanceOpenPurpose::Ordinary,
         request: ActorInstanceOpenRequest { activation_generation: 1, instance_id: IDLE_INSTANCE, request_sequence: 1 },
         app_id: AppInstanceId(app_id.into()),
         actor: "procedural#idle".into(),

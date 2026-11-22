@@ -108,12 +108,14 @@ export function uiTreeNodeToTreePanelConfig(treeNode: PanelTreeNode, onAction: (
   };
 }
 
-/** 🖱️ First catalogue-transfer MIME on a declarative {@link Tree} document, if any row carries drag data. */
-export function treeSectionsCatalogueDragMime(sections: readonly TreeDataSection[]): string | undefined {
+export const TREE_ROW_REORDER_MIME = "application/x-semio-tree-row-reorder";
+
+/** 🖱️ First matching MIME in the drag data of a declarative tree row. */
+export function treeSectionsDragMime(sections: readonly TreeDataSection[], matches: (mime: string) => boolean): string | undefined {
   const visit = (items: readonly TreeDataItem[]): string | undefined => {
     for (const item of items) {
       if (item.dragData) {
-        const mime = Object.keys(item.dragData).find((key) => key === "application/x-semio-catalogue-item");
+        const mime = Object.keys(item.dragData).find(matches);
         if (mime) return mime;
       }
       if (item.items?.length) {

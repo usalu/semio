@@ -172,12 +172,11 @@ semio_plugin::app_commands! {
 
 #[path = "🗃️retained-commands/🦀️.rs"]
 mod retained_commands;
-pub(crate) use retained_commands::*;
-pub use retained_commands::fem3d_route;
+pub use retained_commands::*;
 
 #[path = "📬️store-preparation/🦀️.rs"]
 mod store_preparation;
-use store_preparation::*;
+pub use store_preparation::*;
 
 #[path = "🔌️json-io-and-arg-helpers/🦀️.rs"]
 mod json_io_and_arg_helpers;

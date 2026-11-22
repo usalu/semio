@@ -75,3 +75,11 @@ Final check line (`$BUN volumes-check.ts objects/shopping-trolley --product`, 16
 - Not modelled: wire welds, brake pedal, plastic deflector rings, coin-lock chain, child seat flap on the gate (an option of the class), tray nesting hinge (the tray is fixed).
 - Castor fork legs are 7.5 mm (1:50) and 8 mm (1:100) instead of about 4 mm pressed steel: thickened to the scale's feature.
 - 1:500 straightens the rail bend, upright and handle arm into one line and puts the bar 12 mm behind the grip axis; 1:200 and 1:500 coarse-scale wire bundles exist only in thermal.
+
+## Coarse castors, 21 November
+
+The 1:500 render showed four floor contacts. Each was a 75 mm wide single extrusion combining the wheel, fork, swivel and plate. At the rear, the extrusion was also 2.5 mm off the wheel centreline. The new wheel is 125 mm in diameter and 32 mm wide. Its 14 mm wide tread crown is centred at the existing anchor. The rear wheel centres span 500 mm and the front centres span 396 mm. Steel fork cheeks, spindle, crown and swivel mount are independent of the rubber tread. The body and temperature models use these physical surfaces, and the structural model transfers each wheel to its fork. The four castor mass markers retain the 16 mm radius of the detailed view with eight faces apiece.
+
+The 1:500 side drawing distinguishes the wheel from its fork and the 8 mm mounting plate. In the coarsest paper front view the wheel pair on each side reads as a single sign. The maintained contact test measures the floor intersection of tessellated solids in body, thermal and structural views. The original 1:500 floor contact exceeded the tyre width by 43 mm. All 13 geometry rules passed for the revised scale. The independent GLB reader reopened 12 scenes, 2,856,124 bytes in total, with zero findings. The four-scale render shows the individual tyres beneath the tapering chassis rails.
+
+The canonical full strict run returned zero schema, asset and measured-volume findings across all four scales. The published volume document matched the authoring source. Reviewed canonical SHA-256 `9669dc888d54546d65c83b5ab81489d111b026eca4912f3065e8d7f05c933a93`.

@@ -9,9 +9,9 @@ import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};
 import table from "../🎯️slo/🔣️.json" with {type:"json"};
 import catalog from "../../../⚙️operations/🔣️catalog.json" with {type:"json"};
-import {benchBaselineV1,benchBudgetV1,benchCompareV1,benchHistoryLatestV1,benchHistoryNameV1,benchLineKeyV1,benchObservedValuesV1,benchObserverV1,renderBenchBudgetV1,benchHostV1,benchJudgeV1,benchLoadClassV1,benchMarkersV1,benchMutateV1,benchReportV1,benchSelectV1,benchSeriesV1,benchSloIssuesV1,benchStatsV1,benchTallyV1,renderBenchComparisonV1,renderBenchListV1,renderBenchReportV1,type BenchProbeV1,type BenchReportV1,type BenchRowV1,type BenchSampleV1,type BenchSeriesV1,type BenchSloSetV1,type BenchSloV1,type BenchToolV1} from "../🟦️.ts";
+import {benchHistoryPruneV1,benchBaselineV1,benchBudgetV1,benchCompareV1,benchHistoryLatestV1,benchHistoryNameV1,benchLineKeyV1,benchObservedValuesV1,benchObserverV1,renderBenchBudgetV1,benchHostV1,benchJudgeV1,benchLoadClassV1,benchMarkersV1,benchMutateV1,benchReportV1,benchSelectV1,benchSeriesV1,benchSloIssuesV1,benchStatsV1,benchTallyV1,renderBenchComparisonV1,renderBenchListV1,renderBenchReportV1,type BenchProbeV1,type BenchReportV1,type BenchRowV1,type BenchSampleV1,type BenchSeriesV1,type BenchSloSetV1,type BenchSloV1,type BenchToolV1} from "../🟦️.ts";
 import {benchCliPortsV1,benchConcurrencyFromReportV1,benchRunArgumentsV1,benchRunProbeV1,benchRunV1,benchSpawnV1,benchTreeRssV1,type BenchHostPortsV1,type BenchPortsV1,type BenchRunV1,type BenchSpawnSpecV1} from "../🏃️runner/🟦️.ts";
-import {benchArgumentsV1,benchOptionNamesV1,runBenchCommandV1,type BenchCommandPortsV1} from "../⌨️command/🟦️.ts";
+import {benchArgumentsV1,benchHistoryFolderV1,benchOptionNamesV1,runBenchCommandV1,type BenchCommandPortsV1} from "../⌨️command/🟦️.ts";
 import {validateJsonSchemaSubset} from "../../../../../../../..//🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 
 const set=table as unknown as BenchSloSetV1,policy=schema.definitions.Policy.const,plain=(value:unknown):any=>JSON.parse(JSON.stringify(value));
@@ -210,9 +210,10 @@ test("objectives are selected by id, probe, kind or all, probes are paired with 
  expect(python("select",fixture.selection.map(row=>({set:row.set,ids:row.ids,tools:row.tools})))!.map((row:any)=>row.pairs)).toEqual(fixture.selection.map(row=>row.pairs));
  const all=benchSelectV1(set,"all",["nx","bazel"]);
  expect(all[0]!.probe.cold).toBe(true);
- expect(all.filter(pair=>pair.tool==="neutral").length).toBe(1);
+ const fleet=set.probes.filter(row=>row.kind==="fleet").length;
+ expect(all.filter(pair=>pair.tool==="neutral").length).toBe(1+fleet);
  const single=set.probes.filter(row=>row.kind==="planning").length;
- expect(all.length).toBe((set.probes.length-single)*2-1+single);
+ expect(all.length).toBe((set.probes.length-single-fleet)*2-1+single+fleet);
  expect(benchSelectV1(set,["kind:cache"],["nx"]).map(pair=>pair.probe.id)).toEqual(["cache-second-run-build","cache-second-run-test"]);
  expect(()=>benchSelectV1(set,["kind:cache"],[])).toThrow(/Implementierungen/u);
  expect(()=>benchSelectV1(set,["nope"],["nx"])).toThrow(/Unbekanntes Ziel/u);
@@ -486,8 +487,9 @@ test("the option parser accepts every documented form, refuses every other and m
  expect(ok(["run","--slo=all,a"]).slo).toBe("all");
  expect(ok(["compare","--current=a","--baseline=b","--markdown=m"])).toMatchObject({operation:"compare",current:"a",baseline:"b"});
  expect(ok(["compare","--history=h"])).toMatchObject({operation:"compare",history:"h",current:undefined,baseline:undefined});
+ expect(ok(["compare"])).toMatchObject({operation:"compare",history:undefined,current:undefined,baseline:undefined});
  expect(ok(["run","--history","h","--slo=a"])).toMatchObject({history:"h",slo:["a"]});
- for(const bad of [[],["frobnicate"],["run","extra"],["run","--runs=0"],["run","--runs=1001"],["run","--runs=x"],["run","--runs=1.5"],["run","--max-load=0"],["run","--max-load=-1"],["run","--max-load=abc"],["run","--slo"],["run","--slo","--json"],["run","--slo=a","--slo=b"],["run","--json=1"],["run","--implementations=cargo"],["run","--lang=fr"],["run","--nope"],["compare"],["compare","--current=a"],["compare","--baseline=b"],["compare","--history=h","--current=a"],["compare","--history=h","--baseline=b"],["list","--history=h"],["run","--history"],["run","--history=a","--history=b"],["run","--current=a"],["list","--prepare"],["list","--runs=3"],["compare","--current=a","--baseline=b","--save-baseline=c"],["compare","--current=a","--baseline=b","--max-load=1"]])expect(()=>ok(bad),JSON.stringify(bad)).toThrow(/Erwartet|Unbekannt|braucht|Wiederholte|gehört|gehören|ganze Zahl|positive Zahl/u);
+ for(const bad of [[],["frobnicate"],["run","extra"],["run","--runs=0"],["run","--runs=1001"],["run","--runs=x"],["run","--runs=1.5"],["run","--max-load=0"],["run","--max-load=-1"],["run","--max-load=abc"],["run","--slo"],["run","--slo","--json"],["run","--slo=a","--slo=b"],["run","--json=1"],["run","--implementations=cargo"],["run","--lang=fr"],["run","--nope"],["compare","--current=a"],["compare","--baseline=b"],["compare","--history=h","--current=a"],["compare","--history=h","--baseline=b"],["list","--history=h"],["run","--history"],["run","--history=a","--history=b"],["run","--current=a"],["list","--prepare"],["list","--runs=3"],["compare","--current=a","--baseline=b","--save-baseline=c"],["compare","--current=a","--baseline=b","--max-load=1"]])expect(()=>ok(bad),JSON.stringify(bad)).toThrow(/Erwartet|Unbekannt|braucht|Wiederholte|gehört|gehören|ganze Zahl|positive Zahl/u);
  const entry=(catalog as any).operations.find((row:any)=>row.name==="bench"),names=benchOptionNamesV1(),flags=(catalog as any).flags;
  expect(entry).toBeDefined();
  expect(entry.requires).toBe("none");
@@ -925,4 +927,46 @@ test("planning probes run the dry-run, plan a peer at the same time, restore the
  expect(done.samples[0]!.ok).toBe(true);
  expect(edited.files.get(file)).toBe("pub fn a(){}\n");
  expect(edited.log.filter(row=>row.startsWith("write:"))).toHaveLength(2);
+});
+
+test("the oldest history reports beyond the keep limit of one host class are named like the Python model names them",()=>{
+ const name=(day:number,host:string)=>`202610${String(day).padStart(2,"0")}T000000Z-${host}.json`,files=[...Array.from({length:70},(_,at)=>name(at%28+1,"h")).map((row,at)=>row.replace("T000000Z",`T0${String(at).padStart(5,"0")}Z`)),name(1,"other"),"notes.md"];
+ const mine=benchHistoryPruneV1(files,"h",64);
+ expect(mine.length).toBe(6);expect(mine.every(row=>row.endsWith("-h.json"))).toBe(true);
+ expect(mine).toEqual(files.filter(row=>row.endsWith("-h.json")).sort().slice(0,6));
+ expect(benchHistoryPruneV1(files,"h",100)).toEqual([]);expect(benchHistoryPruneV1(files,"none",1)).toEqual([]);
+});
+
+test("without --history reports go to the default history folder of the diagnostics partition, the next run and a bare compare read from there, and reports beyond the keep limit are removed; fleet-only runs need no prepared copy",async()=>{
+ const live=mkdtempSync(join(tmpdir(),"bench-live-")),env={...process.env,SEMIO_LANGUAGE:"en"},folder=benchHistoryFolderV1(live),sample=()=>benchHostV1({platform:"test",arch:"x",cpus:10,memoryBytes:1e10,load1:1});
+ expect(folder).toContain(join("b","o"));expect(folder.endsWith("bench")).toBe(true);expect(folder.length).toBeLessThan(policy.maximumPathLength);
+ const scripted=async()=>({hitRatio:1,executedActions:0});
+ try{
+  let tick=0;const stamped={fleet:scripted,sample,clock:()=>`2026-10-26T0${++tick}:00:00.000Z`};
+  const first=commandPorts(live,join(live,"nowhere"),env);
+  await runBenchCommandV1(live,["bench","run","--slo=probe:fleet-unit-warm"],{...first.ports,overrides:stamped});
+  const names=[...first.texts.keys()];
+  expect(names.map(row=>dirname(row))).toEqual([folder]);
+  const old=Array.from({length:70},(_,at)=>join(folder,`20250101T0${String(at).padStart(5,"0")}Z-test-x-10.json`)),removed:string[]=[];
+  const second=commandPorts(live,join(live,"nowhere"),env,{remove:async path=>{removed.push(path);}});
+  for(const row of old)second.texts.set(row,"{}");second.texts.set(names[0]!,first.texts.get(names[0]!)!);
+  await runBenchCommandV1(live,["bench","run","--slo=probe:fleet-unit-warm","--json"],{...second.ports,overrides:stamped});
+  expect((JSON.parse(second.out[0]!) as BenchReportV1).tally.pass).toBe(2);
+  expect(removed).toEqual(old.slice(0,8));
+  const compare=commandPorts(live,join(live,"nowhere"),env);
+  for(const[row,text]of second.texts)if(!old.includes(row))compare.texts.set(row,text);
+  await runBenchCommandV1(live,["bench","compare"],{...compare.ports,overrides:{sample}});
+  expect(compare.out[0]).toContain("Comparison with the baseline");
+ }finally{rmSync(live,{recursive:true,force:true});}
+},60000);
+
+test("fleet probes take their values from the scenario port and a failing scenario is a failed sample, not a crash",async()=>{
+ const probe=set.probes.find(row=>row.id==="fleet-offload-pressure")!,world=scripted({files:{},spawn:()=>({exit:0,wallMs:1,startedMs:0,firstOutputMs:1,markerMs:null,peakRssBytes:null})}),asked:string[]=[];
+ const ok=await benchRunProbeV1(set,{...probe,runs:2},"neutral",{override:null,service:false},{...world.ports,fleet:async scenario=>{asked.push(scenario);return {offloadMs:700,offloadedUnits:1};}});
+ expect(asked).toEqual(["offload-pressure","offload-pressure"]);expect(ok.samples.map(row=>row.values)).toEqual([{offloadMs:700,offloadedUnits:1},{offloadMs:700,offloadedUnits:1}]);
+ const row=benchJudgeV1(set.slos.find(item=>item.id==="fleet-offload-pressure-offloaded-min")!,"neutral",ok);expect([row.status,row.value]).toEqual(["pass",1]);
+ const bad=await benchRunProbeV1(set,{...probe,runs:1},"neutral",{override:null,service:false},{...world.ports,fleet:async()=>{throw Error("boom");}});
+ expect([bad.failed,bad.samples[0]!.ok]).toEqual([1,false]);
+ const none=await benchRunProbeV1(set,{...probe,runs:1},"neutral",{override:null,service:false},world.ports);
+ expect(none.failed).toBe(1);
 });

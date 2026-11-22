@@ -22,7 +22,7 @@ pub struct XrefOffsetCursor {
 
 impl XrefOffsetCursor {
     /// ▶️ Charges one work unit per visited table slot or header byte.
-    pub fn advance(&mut self, source: &[u8], entries: &XrefIndex, grant: usize, cancelled: bool) -> (usize, XrefOffsetStatus) {
+    pub fn advance(&mut self, byte_at: impl Fn(usize) -> Option<u8>, entries: &XrefIndex, grant: usize, cancelled: bool) -> (usize, XrefOffsetStatus) {
         if cancelled && self.terminal.is_none() { self.terminal = Some(XrefOffsetStatus::Cancelled); }
         if let Some(status) = self.terminal { return (0, status); }
 
@@ -31,7 +31,7 @@ impl XrefOffsetCursor {
             if let Some((expected, offset, cursor)) = self.header.as_mut() {
                 let start = cursor.position();
                 let remaining = grant - work;
-                let status = match cursor.advance(source, remaining) {
+                let status = match cursor.advance(&byte_at, remaining) {
                     Ok((used, HeaderStep::Complete { id, .. })) => {
                         work += used;
                         if id == *expected {

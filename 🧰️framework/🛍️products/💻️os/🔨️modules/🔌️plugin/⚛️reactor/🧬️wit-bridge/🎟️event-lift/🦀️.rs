@@ -148,6 +148,83 @@ fn original_media_control(value: &DslValue) -> Lift<ev::OriginalMediaControlEven
     })
 }
 
+fn closed_natural_fields(value: &DslValue, expected: &[&str]) -> Lift<()> {
+    let DslValue::Object(fields) = value else { return Err(outside()); };
+    if fields.len() != expected.len() || expected.iter().any(|key| value.get(key).is_none()) {
+        return Err(outside());
+    }
+    Ok(())
+}
+
+fn natural_declaration(value: &DslValue) -> Lift<ev::NaturalSourceDeclaration> {
+    closed_natural_fields(value, &["formatKind", "extension", "mediaType", "binary"])?;
+    Ok(ev::NaturalSourceDeclaration {
+        format_kind: bounded_media_text(value, "formatKind", 128)?,
+        extension: bounded_media_text(value, "extension", 16)?,
+        media_type: bounded_media_text(value, "mediaType", 128)?,
+        binary: flag(value, "binary")?,
+    })
+}
+
+fn natural_purpose(value: &DslValue) -> Lift<ev::ActorInstanceOpenPurpose> {
+    let (tag, val) = tagged(value)?;
+    Ok(match (tag.as_str(), val) {
+        ("ordinary", None) => {
+            closed_natural_fields(value, &["tag"])?;
+            ev::ActorInstanceOpenPurpose::Ordinary
+        }
+        ("natural-source", Some(source)) => {
+            closed_natural_fields(value, &["tag", "val"])?;
+            closed_natural_fields(source, &["declaration", "extent"])?;
+            ev::ActorInstanceOpenPurpose::NaturalSource(ev::NaturalSourceLaunch {
+                declaration: natural_declaration(field(source, "declaration")?)?,
+                extent: word32(source, "extent")?,
+            })
+        }
+        _ => return Err(outside()),
+    })
+}
+
+fn natural_prepare(value: &DslValue) -> Lift<ev::NaturalSourcePrepare> {
+    closed_natural_fields(value, &["instanceId", "seq", "declaration", "extent"])?;
+    Ok(ev::NaturalSourcePrepare {
+        instance_id: word32(value, "instanceId")?,
+        seq: word64(value, "seq")?,
+        declaration: natural_declaration(field(value, "declaration")?)?,
+        extent: word32(value, "extent")?,
+    })
+}
+
+fn natural_control(value: &DslValue) -> Lift<ev::NaturalSourceControlEvent> {
+    closed_natural_fields(value, &["loan", "owner", "seq", "kind", "extent", "control"])?;
+    let loan = field(value, "loan")?;
+    closed_natural_fields(loan, &["operationId", "generation", "instanceId", "declaration", "extent"])?;
+    let hex = |key| {
+        let value = bounded_media_text(loan, key, 16)?;
+        if value.len() != 16 || value == "0000000000000000" ||
+           !value.bytes().all(|ch| ch.is_ascii_digit() || (b'a'..=b'f').contains(&ch)) { return Err(outside()); }
+        Ok(value)
+    };
+    let control = match field(value, "control")?.as_str().ok_or_else(outside)? {
+        "begin" => ev::NaturalSourceControl::Begin,
+        "complete" => ev::NaturalSourceControl::Complete,
+        "cancel" => ev::NaturalSourceControl::Cancel,
+        _ => return Err(outside()),
+    };
+    Ok(ev::NaturalSourceControlEvent {
+        loan: ev::NaturalSourceLoan {
+            operation_id: hex("operationId")?,
+            generation: hex("generation")?,
+            instance_id: word32(loan, "instanceId")?,
+            declaration: natural_declaration(field(loan, "declaration")?)?,
+            extent: word32(loan, "extent")?,
+        },
+        owner: word64(value, "owner")?, seq: word64(value, "seq")?,
+        kind: u8::try_from(word64(value, "kind")?).map_err(|_| outside())?,
+        extent: word32(value, "extent")?, control,
+    })
+}
+
 /// 🎟️ Lifts one event value; the guest never sees a host-built generated value, only this schema-checked lift.
 pub fn event_from_value(value: &DslValue) -> Lift<ev::Event> {
     let (tag, val) = tagged(value)?;
@@ -157,7 +234,11 @@ pub fn event_from_value(value: &DslValue) -> Lift<ev::Event> {
     let val = payload(val)?;
     Ok(match tag.as_str() {
         "original-media-control" => ev::Event::OriginalMediaControl(original_media_control(val)?),
+        "natural-source-prepare" => ev::Event::NaturalSourcePrepare(natural_prepare(val)?),
+        "natural-source-control" => ev::Event::NaturalSourceControl(natural_control(val)?),
+        "folder-archive-load" => ev::Event::FolderArchiveLoad(ev::FolderArchiveLoadEvent { instance: word32(val, "instance")?, request: pack(val, "request")? }),
         "instance-open" => ev::Event::InstanceOpen(ev::InstanceOpenEvent {
+            purpose: natural_purpose(field(val, "purpose")?)?,
             instance: word32(val, "instance")?,
             activation_generation: word64(val, "activationGeneration")?,
             request_sequence: word64(val, "requestSequence")?,

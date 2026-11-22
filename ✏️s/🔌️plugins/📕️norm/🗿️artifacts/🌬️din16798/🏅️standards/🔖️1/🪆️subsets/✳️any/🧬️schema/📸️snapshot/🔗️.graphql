@@ -20,6 +20,16 @@ type Din16798Zone {
   turbulenceIntensityPercent: Float!
   ventMethod: String!
   ventSystemId: String!
+  unoccupiedVentilation: Din16798UnoccupiedVentilation
+}
+
+type Din16798UnoccupiedVentilation {
+  operation: String!
+  assessedAreaM2: Float!
+  zoneVolumeM3: Float!
+  minutesBeforeOccupancy: Float!
+  residentialDesignRateLPerSM2: Float!
+  outdoorAirM3H: Float!
 }
 
 type Din16798VentSystem {

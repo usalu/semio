@@ -54,6 +54,7 @@ pub(super) struct WorldGeometryPipelines {
     pub(super) world_section_cap_pipeline: gpu_device::RenderPipeline,
     pub(super) world_shadow_pipeline: gpu_device::RenderPipeline,
     pub(super) world_line_pipeline: gpu_device::RenderPipeline,
+    pub(super) world_points_pipeline: gpu_device::RenderPipeline,
 }
 
 /// 🏔 Builds the world mesh, translucent, section stencil, section cap, shadow and line pipelines and their depth states.
@@ -196,10 +197,40 @@ pub(super) fn build_world_geometry_pipelines(
             compilation_options: Default::default(),
         }),
         primitive: gpu_device::PrimitiveState { topology: gpu_device::PrimitiveTopology::LineList, ..Default::default() },
+        depth_stencil: world_line_depth_state.clone(),
+        multisample: gpu_device::MultisampleState::default(),
+        multiview_mask: None,
+        cache: None,
+    });
+    let world_points_shader = device.create_shader_module(gpu_device::ShaderModuleDescriptor { label: Some("world3d_points_shader"), source: gpu_device::ShaderSource::Wgsl(WORLD3D_POINTS_SHADER.into()) });
+    let world_points_pipeline = device.create_render_pipeline(&gpu_device::RenderPipelineDescriptor {
+        label: Some("world3d_points_pipeline"),
+        layout: Some(world_pipeline_layout),
+        vertex: gpu_device::VertexState {
+            module: &world_points_shader,
+            entry_point: Some("vs_main"),
+            buffers: &[gpu_device::VertexBufferLayout {
+                array_stride: size_of::<WorldPointGpuInstance>() as gpu_device::BufferAddress,
+                step_mode: gpu_device::VertexStepMode::Instance,
+                attributes: &[
+                    gpu_device::VertexAttribute { offset: 0, shader_location: 0, format: gpu_device::VertexFormat::Float32x3 },
+                    gpu_device::VertexAttribute { offset: 12, shader_location: 1, format: gpu_device::VertexFormat::Float32x4 },
+                    gpu_device::VertexAttribute { offset: 28, shader_location: 2, format: gpu_device::VertexFormat::Float32x4 },
+                ],
+            }],
+            compilation_options: Default::default(),
+        },
+        fragment: Some(gpu_device::FragmentState {
+            module: &world_points_shader,
+            entry_point: Some("fs_main"),
+            targets: &[Some(gpu_device::ColorTargetState { format: world_encoded_format, blend: Some(gpu_device::BlendState::ALPHA_BLENDING), write_mask: gpu_device::ColorWrites::ALL })],
+            compilation_options: Default::default(),
+        }),
+        primitive: gpu_device::PrimitiveState::default(),
         depth_stencil: world_line_depth_state,
         multisample: gpu_device::MultisampleState::default(),
         multiview_mask: None,
         cache: None,
     });
-    WorldGeometryPipelines { world_pipeline, world_pipeline_translucent, world_section_stencil_pipeline, world_section_cap_pipeline, world_shadow_pipeline, world_line_pipeline }
+    WorldGeometryPipelines { world_pipeline, world_pipeline_translucent, world_section_stencil_pipeline, world_section_cap_pipeline, world_shadow_pipeline, world_line_pipeline, world_points_pipeline }
 }

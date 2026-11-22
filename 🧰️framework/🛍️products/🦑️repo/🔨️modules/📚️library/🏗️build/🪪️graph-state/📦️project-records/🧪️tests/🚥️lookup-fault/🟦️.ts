@@ -2,7 +2,7 @@
 import{expect,test}from"bun:test";
 import{Database}from"bun:sqlite";
 import{createHash}from"node:crypto";
-import{mkdtempSync,rmSync,mkdirSync,writeFileSync}from"node:fs";
+import{mkdtempSync,rmSync,mkdirSync,writeFileSync,utimesSync}from"node:fs";
 import{tmpdir}from"node:os";
 import{join}from"node:path";
 import fixture from"./🔣️.json"with{type:"json"};
@@ -10,7 +10,7 @@ import{createProjectFleetPortV1,projectRecordStateV1,runTakeLookV1,type ProjectR
 import{graphFleetClientV1,packGraphDocumentV1,type GraphEntryNoteV1}from"../../../🛰️exchange/🟦️.ts";
 import graphSchema from"../../../🧬️schema/🔣️.json"with{type:"json"};
 import{REAPI_V1,encodeProtobufV1}from"../../../../🌐️remote-execution/📡️wire/📦️protobuf/🟦️.ts";
-import{createAdoptCountersV1,recordTakeLookFailureV1}from"../../../../🕸️graph/📥️inference/📦️project-nodes/📥️take/🟨️.mjs";
+import{createAdoptCountersV1,recordTakeLookFailureV1,takePassV1}from"../../../../🕸️graph/📥️inference/📦️project-nodes/📥️take/🟨️.mjs";
 
 test("real owner take preserves fallback while wire fault, miss and cancellation reach distinct counters",async()=>{
  const root=mkdtempSync(join(tmpdir(),"fo-")),db=new Database(":memory:"),counters=createAdoptCountersV1();
@@ -57,5 +57,50 @@ test("real owner take preserves fallback while wire fault, miss and cancellation
  const outcomes=db.query<{kind:string;count:number},[string]>("select json_extract(value,'$.reported') kind,count(*) count from json_each(?1) group by kind").all(JSON.stringify(fixture.cases));
  expect(counters.counts()).toMatchObject({...Object.fromEntries(outcomes.filter(row=>row.kind!=="cancelled").map(row=>[row.kind,row.count])),stale:0});
  expect(imports).toBe(0);
+ }finally{db.close();rmSync(root,{recursive:true,force:true});}
+},30000);
+
+test("an open owner-cache breaker avoids repeated transport and recovers on the ordinary path",async()=>{
+ const root=mkdtempSync(join(tmpdir(),"look-breaker-")),db=new Database(":memory:");
+ const checked:typeof fixture.breakerCases=[];
+ try{for(const row of fixture.breakerCases){
+  const directory=join(root,row.name),marker=join(directory,"down"),counts=createAdoptCountersV1(),events:string[]=[];
+  mkdirSync(directory);
+  if(row.initial==="open")writeFileSync(marker,"");
+  const client=graphFleetClientV1({endpoint:"http://127.0.0.1:1",instance:"main",token:"test-reader",upload:true,stateDirectory:directory},{fetch:(async(address,options)=>{
+   expect(new Headers(options?.headers).get("authorization")).toBe("Bearer test-reader");
+   const path=new URL(String(address)).pathname;
+   if(path.includes("/claim/")){events.push("claim");return Response.json({state:"full"},{status:503});}
+   events.push("request");
+   if(row.initial==="transport"&&events.filter(event=>event==="request").length===1)return new Response(null,{status:503});
+   if(row.initial==="malformed"&&events.filter(event=>event==="request").length===1)return new Response("invalid ActionResult");
+   return new Response(null,{status:404});
+  }) as typeof fetch});
+  const sleep=async()=>{events.push("pause");},port=createProjectFleetPortV1({root,environment:{},client,platform:"fixture",sleep,random:()=>0})!;
+  const info:ProjectRecordInfoV1={cachePath:join(directory,"p.json"),fleet:"owner",keyText:"fixture",exportRecord:()=>undefined,import:async()=>{throw Error("No bytes to adopt");}};
+  if(row.lane==="take"){
+   const outcomes=await takePassV1({names:["owner"],sleep,attempt:()=>runTakeLookV1(async looked=>{
+    events.push("look");
+    expect((await port.gate(info)).seeded).toBe(false);
+    return recordTakeLookFailureV1(Object.assign(Error("fixture"),{code:"BUILD_TAKE_MISS",outcome:looked.outcome,lookupFault:looked.fault}),counts,false);
+   })});
+   expect(outcomes.get("owner")).toBe("miss");
+  }else{
+   expect((await port.gate(info)).seeded).toBe(false);
+  }
+  checked.push({...row,events:[...events]});
+  if(row.reopens){
+   expect(client.usable()).toBe(false);
+   const old=new Date(0);
+   utimesSync(marker,old,old);
+   expect(client.usable()).toBe(true);
+   const before=events.length;
+   expect((await port.gate(info)).seeded).toBe(false);
+   expect(events.slice(before)).toEqual(["request","claim"]);
+  }
+ }
+ const tally=(input:typeof fixture.breakerCases)=>db.query("SELECT json_extract(entry.value,'$.name') AS name, sum(ifnull(event.value='request',0)) AS requests, sum(ifnull(event.value='pause',0)) AS pauses FROM json_each(?1) AS entry LEFT JOIN json_each(entry.value,'$.events') AS event ON 1 GROUP BY name ORDER BY name").all(JSON.stringify(input));
+ expect(checked).toEqual(fixture.breakerCases);
+ expect(tally(checked)).toEqual(tally(fixture.breakerCases));
  }finally{db.close();rmSync(root,{recursive:true,force:true});}
 },30000);

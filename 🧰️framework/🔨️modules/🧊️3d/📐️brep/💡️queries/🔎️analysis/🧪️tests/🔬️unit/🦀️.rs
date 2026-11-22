@@ -1,11 +1,12 @@
-use super::*;
+use semio_framework_3d_brep_analysis::*;
+use semio_framework_3d_brep_representation::arena::SolidId;
 use semio_framework_3d_brep_construction::primitives::{make_box, make_cone, make_cylinder, make_sphere, make_torus};
 use semio_framework_3d_brep_curve::bspline::KnotVector;
 use semio_framework_3d_brep_curve::Curve3;
 use semio_framework_3d_brep_queries::planar_section::{PlanarSection, planar_section, spherical_strip_section};
 use semio_framework_3d_brep_surface::Surface;
 use semio_framework_3d_brep_representation::topology::history::OpRecorder;
-use semio_framework_3d_brep_representation::topology::Shell;
+use semio_framework_3d_brep_representation::topology::{Body, Shell};
 use semio_framework_3d_brep_vector::matrix::Frame3;
 use semio_framework_3d_brep_vector::{Pnt3, Vec3};
 use serde_json::Value;
@@ -643,3 +644,6 @@ fn planar_section_keeps_disconnected_material_faces() {
         }
     }
 }
+
+#[path = "✂️disconnected-void-section.rs"]
+mod disconnected_void_section;

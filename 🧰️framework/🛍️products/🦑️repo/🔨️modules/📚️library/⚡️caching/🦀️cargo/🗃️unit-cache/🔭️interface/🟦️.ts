@@ -1,5 +1,5 @@
 import {createHash,randomBytes} from "node:crypto";
-import {readFileSync,readdirSync,renameSync,utimesSync,writeFileSync} from "node:fs";
+import {readFileSync,readdirSync,renameSync,statSync,utimesSync,writeFileSync} from "node:fs";
 import {spawnSync} from "node:child_process";
 import {basename,dirname,join,resolve} from "node:path";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
@@ -311,32 +311,56 @@ export function currentHashV1(path:string,digest:(path:string)=>string|null,inne
 }
 
 const LIBRARY_FILES=["lib{id}.rmeta","lib{id}.dylib","lib{id}.so","{id}.dll"] as const;
-/** 🗂️ The library files of a unit's dependency directories by crate identifier (`<name>-<suffix>`): the metadata file of a library, the dynamic library of a proc-macro; the first directory that holds one wins. */
-export function dependencyLibrariesV1(directories:readonly string[]):ReadonlyMap<string,string>{
- const found=new Map<string,string>();
+const outputLayout=policy.rebase.cargoOutputLayout,unitSuffix=new RegExp(outputLayout.suffix,"u");
+const [archiveHead,archiveTail]=policy.rebase.embeddedMetadataLibrary.split("{id}") as [string,string];
+
+function managedUnitSuffixV1(directory:string):string|undefined{
+ const unit=dirname(directory),container=dirname(dirname(unit)),suffix=basename(unit);
+ return basename(directory)===outputLayout.output&&basename(container)===outputLayout.container&&unitSuffix.test(suffix)?suffix:undefined;
+}
+
+function dependencyFilesV1(directories:readonly string[]){
+ const metadata=new Map<string,string>(),archives=new Map<string,string[]>(),managed=new Set<string>();
  for(const directory of directories){
+  const suffix=managedUnitSuffixV1(directory);if(suffix!==undefined)managed.add(suffix);
   let names:string[];try{names=readdirSync(directory);}catch{continue;}
-  for(const name of names)for(const pattern of LIBRARY_FILES){
-   const [head,tail]=pattern.split("{id}") as [string,string];
-   if(name.startsWith(head)&&name.endsWith(tail)&&name.length>head.length+tail.length){const id=name.slice(head.length,name.length-tail.length);if(!found.has(id))found.set(id,join(directory,name));}
+  for(const name of names){
+   if(name.startsWith(archiveHead)&&name.endsWith(archiveTail)){
+    const id=name.slice(archiveHead.length,name.length-archiveTail.length),path=join(directory,name);
+    archives.set(id,[...(archives.get(id)??[]),path]);
+   }
+   for(const pattern of LIBRARY_FILES){
+    const [head,tail]=pattern.split("{id}") as [string,string];
+    if(name.startsWith(head)&&name.endsWith(tail)&&name.length>head.length+tail.length){const id=name.slice(head.length,name.length-tail.length);if(!metadata.has(id))metadata.set(id,join(directory,name));}
+   }
   }
  }
- return found;
+ return {metadata,archives,managed};
+}
+
+function missingManagedLibraryV1(id:string,files:ReturnType<typeof dependencyFilesV1>):boolean{
+ if(!files.managed.has(id.slice(id.lastIndexOf("-")+1)))return false;
+ return !(files.archives.get(id)??[]).some(path=>{try{return statSync(path,{throwIfNoEntry:false})?.isFile()===true;}catch{return false;}});
+}
+/** 🗂️ The library files of a unit's dependency directories by crate identifier (`<name>-<suffix>`): the metadata file of a library, the dynamic library of a proc-macro; the first directory that holds one wins. */
+export function dependencyLibrariesV1(directories:readonly string[]):ReadonlyMap<string,string>{
+ return dependencyFilesV1(directories).metadata;
 }
 
 const hashesOf=(path:string):DependenciesRow|undefined=>{const row=readJson<DependenciesRow>(dependenciesPath(path));return row!==undefined&&row.version===1?row:undefined;};
 
-/** 🧞️ Makes a unit restored from the cache consistent with the dependencies in the directory it is restored into: every crate hash its metadata records for a library or proc-macro library found there is replaced by that library's current hash. Returns `false` (the unit must be compiled) when the metadata cannot be proven consistent: the unit travels without its sidecar, a library's hash is unknown, or a hash does not occur exactly once. Other crates (the standard library) are not in the directories and keep their hashes. */
+/** 🧞️ Makes a unit restored from the cache consistent with the dependencies in the directory it is restored into: every crate hash its metadata records for a library or proc-macro library found there is replaced by that library's current hash. Returns `false` (the unit must be compiled) when the metadata cannot be proven consistent: the unit travels without its sidecar, a declared Cargo library is absent, a library's hash is unknown, or a hash does not occur exactly once. Crates resolved outside the declared directories, such as the standard library, keep their hashes. */
 export function rebaseRestoredUnitV1(input:Readonly<{outputs:readonly string[];directories:readonly string[];digest:(path:string)=>string|null;inner:readonly string[];environment:Readonly<Record<string,string|undefined>>}>):boolean{
- const libraries=dependencyLibrariesV1(input.directories);
+ const libraries=dependencyFilesV1(input.directories);
  for(const path of input.outputs){
   if(!path.endsWith(".rmeta"))continue;
   const travelling=hashesOf(path);
   if(travelling===undefined)return false;
   const pairs:Array<[string,string]>=[];
   for(const [id,then] of travelling.dependencies){
-   const candidate=libraries.get(id);
-   if(candidate===undefined||candidate===path)continue;
+   const candidate=libraries.metadata.get(id);
+   if(candidate===undefined){if(missingManagedLibraryV1(id,libraries))return false;continue;}
+   if(candidate===path)continue;
    const now=currentHashV1(candidate,input.digest,input.inner,input.environment);
    if(now===undefined)return false;
    if(now!==then)pairs.push([then,now]);
@@ -355,16 +379,17 @@ export function rebaseRestoredUnitV1(input:Readonly<{outputs:readonly string[];d
  return true;
 }
 
-/** 🚧️ Admits a restored unit that cannot be rebased (it emits code) only when its whole dependency closure is the one it was compiled against: every crate hash its metadata records (from the sidecar that travels with the unit, else asked of the compiler) for a library or proc-macro library found in the dependency directories must equal that library's current crate hash. `undefined` when the closure matches, else the first difference as text. A unit restored against another generation of a dependency cannot be loaded by its dependants (`E0463 can't find crate`), so the caller compiles it instead. */
+/** 🚧️ Admits a restored unit that cannot be rebased (it emits code) only when its whole dependency closure is the one it was compiled against: an explicitly declared Cargo library must be available, and every crate hash its metadata records (from the sidecar that travels with the unit, else asked of the compiler) for metadata or a proc-macro library found in the dependency directories must equal that library's current crate hash. `undefined` when the closure matches, else the first difference as text. A unit restored against another generation of a dependency cannot be loaded by its dependants (`E0463 can't find crate`), so the caller compiles it instead. */
 export function restoredClosureViolationV1(input:Readonly<{outputs:readonly string[];directories:readonly string[];digest:(path:string)=>string|null;inner:readonly string[];environment:Readonly<Record<string,string|undefined>>}>):string|undefined{
- const libraries=dependencyLibrariesV1(input.directories);
+ const libraries=dependencyFilesV1(input.directories);
  for(const path of input.outputs){
   if(!path.endsWith(".rmeta"))continue;
   const recorded=hashesOf(path)?.dependencies??listRootV1(input.inner,path,input.environment)?.dependencies;
   if(recorded===undefined)return"the crate hashes of "+basename(path)+" are unknown";
   for(const [id,then] of recorded){
-   const candidate=libraries.get(id);
-   if(candidate===undefined||candidate===path)continue;
+   const candidate=libraries.metadata.get(id);
+   if(candidate===undefined){if(missingManagedLibraryV1(id,libraries))return id+" is absent from the Cargo dependency directories";continue;}
+   if(candidate===path)continue;
    const now=currentHashV1(candidate,input.digest,input.inner,input.environment);
    if(now===undefined)return"the crate hash of "+id+" is unknown";
    if(now!==then)return id+" has the crate hash "+now+" here, "+basename(path)+" was compiled against "+then;

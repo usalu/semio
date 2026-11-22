@@ -1,9 +1,10 @@
 syntax = "proto3";
 package semio.s.gis.gisterrain;
 
-message ElevationRow { repeated sint32 height_meters = 1; }
+message ElevationRow { repeated sint32 height_millimetres = 1; }
 message ElevationSource {
   repeated double bounds = 1;
-  repeated ElevationRow rows = 2;
+  repeated ElevationRow rows_millimetres = 2;
+  optional string missing_samples = 3;
 }
 message ElevationSourceChange { optional ElevationSource value = 1; }

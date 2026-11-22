@@ -22,13 +22,12 @@ export function wgpuHostAnswerCeilingBytes(): number {
 }
 
 /** 📏️ Continuation turns ONE host call may spend settling the typed operations it started before
- * it hands the rest to {@link drainTypedOperationTurns}. A `Migrated` interactive job returns its
+ * it hands the rest to {@link drainTypedOperationBatches}. A `Migrated` interactive job returns its
  * "started" reply immediately, so this only has to carry the operation far enough to publish its
  * first pages and their acknowledgements. */
 export const WGPU_TYPED_OPERATION_SETTLE_LIMIT = 64;
 
-/** 📏️ Continuation polls the standing drain submits for one instance before it gives up — the wgpu
- * twin of `PLUGIN_OPERATION_DRAIN_BUDGET`. */
+/** 📏️ Continuation polls per standing drain batch for one instance. */
 export const WGPU_TYPED_OPERATION_DRAIN_BUDGET = 4_096;
 
 /** 📏️ Retained authority for the host effects a drain accumulates between drains. An operation

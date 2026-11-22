@@ -41,3 +41,44 @@ Feature: The rig, its poses and its clips become a neutral node tree through the
     Given the FBX of each clip loaded by three's FBXLoader
     When an AnimationMixer plays it to arbitrary times
     Then every bone world position equals the evaluated one within 6 mm
+
+  Scenario: The doe carries its paired glands under gravity
+    Given the doe in standing, climbing and browsing poses
+    Then the fixture angles are measured to vertical and both glands and teats have exposed skin at all four scales
+
+  Scenario: A canine lumbar column encloses an open spinal canal
+    Given the Labrador's structural model at each of the four scales
+    Then seven distinct vertebrae enclose a clear axial passage and each has solid bone ventral to the passage
+
+  Scenario: Four wheels support the skateboard at every digital scale
+    Given the 11.5 mm concave maple deck on its two trucks
+    Then the physical model, rolling members and thermal wheel surfaces share four 54 mm wheels on a 171 mm track
+
+  Scenario: The tower crane trolley runs on four flanged wheels
+    Given a trolley on two jib rails and two wire-rope sheaves
+    Then all four treads meet the rail tops and both sheaves have a 12 mm groove at all four scales
+
+  Scenario: A red squirrel articulates its tapered brush from the rump
+    Given the seated, running and climbing squirrel across the four digital scales
+    Then the six joined groups carry 23 caudal centra, conserve tail mass and carry the guard locks on the same thermal surface
+
+  Scenario: Display scale preserves an individual's long-bone shaft
+    Given the eight adults in the anatomical fixture at all four scales
+    Then the left and right humeri, femora, tibiae, radii and ulnae retain their own fine-scale cross section
+
+  Scenario: Three road vehicles retain distinct wheel centres and heat surfaces
+    Given the five-spoke city wheel, pressed delivery-van wheel and twelve-spoke period wheel
+    Then the four tyres have open beads, coaxial hubs, separate brake and metal surfaces and physical wheel members at every scale
+
+  Scenario: Lifting-arm pivots and excavator rollers keep their physical contact geometry
+    Given the scissor pin and crawler idler clearance dimensions in the fixture
+    Then every link has three open bores and both tracks have eight supported rollers
+
+  Scenario: The industrial running gear carries each load to the ground
+    Given a forklift, four-axle concrete mixer and motor scooter at every scale
+    Then all their tyres are present in the structural load path and their thermal tyre surface
+
+  Scenario: Cycle spokes meet their actual seats and the scooter axle passes through its cartridges
+    Given the authored front and rear wheels at each digital scale
+    Then each bicycle wheel carries thirty-six spokes and an independently ray-tested bore in each nipple
+    And the scooter rear wheel has five windows and two 14 by 32 by 9 millimetre annular bearings

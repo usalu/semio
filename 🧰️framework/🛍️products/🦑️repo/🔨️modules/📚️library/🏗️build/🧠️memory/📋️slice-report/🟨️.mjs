@@ -74,31 +74,39 @@ const fill=(text,fields)=>text.replace(/\{(\w+)\}/gu,(_,name)=>String(fields[nam
 /** 🪜️ Runs `run` as the step `id` of the read with its declared bound. The progress line names the innermost active step. The inventory step can supply timing diagnostics and completed owner checks. A step that ends or fails is removed.
  * @see ./🧬️schema/🔣️.json */
 export async function sliceReadStepV1(id,run,detail={},diagnostics){
- const row={id,startedMs:performance.now(),detail,diagnostics,boundMilliseconds:detail.boundMilliseconds??STEPS.steps[id]?.boundMilliseconds};
+ const interned=readSliceReportSourceV1("caches")?.interned,row={id,startedMs:performance.now(),progressMs:performance.now(),progressSign:"",internedStart:Number.isSafeInteger(interned)?interned:0,detail,diagnostics,boundMilliseconds:detail.boundMilliseconds??STEPS.steps[id]?.boundMilliseconds};
  if(row.boundMilliseconds===undefined)throw Error("Declared slice read step required: "+id);
  steps.push(row);movedAt=performance.now();
  try{return await run();}finally{const at=steps.lastIndexOf(row);if(at>=0)steps.splice(at,1);movedAt=performance.now();}
 }
 
-/** 🪧️ What the progress line says about the innermost running step: `{phase,done,total}` with the step in both languages, the seconds it has run as `done` and its bound as `total`, or undefined while no step runs. */
+/** 🪧️ What the progress line says about the innermost running step: `{phase,done,total}` with the step in both languages, the seconds it has run as `done` (for the inventory step the seconds since it last made progress: an owner check, a verified memo row or an observation) and its bound as `total` (for the inventory step the stall bound), or undefined while no step runs. */
 export function describeSliceReadStepV1(now=performance.now()){
  const row=steps.at(-1);if(row===undefined)return undefined;
- const seconds=Math.round((now-row.startedMs)/1000),bound=Math.round(row.boundMilliseconds/1000),spec=STEPS.steps[row.id],fields={round:1,...row.detail};
+ let seconds=Math.round((now-row.startedMs)/1000);const bound=Math.round(row.boundMilliseconds/1000),spec=STEPS.steps[row.id],fields={round:1,...row.detail};
  if(row.id==="inventory"){
   const count=readSliceReportSourceV1("caches")?.interned;
-  if(Number.isSafeInteger(count)&&count>=0)row.observations=Math.max(row.observations??0,count);
+  if(Number.isSafeInteger(count)&&count>=row.internedStart)row.observations=Math.max(row.observations??0,count-row.internedStart);
   try{
    const sample=row.diagnostics?.(),completed=sample?.completed;
    const discovery=sample?.active?.phase==="scoped-discovery"?sample.active:Array.isArray(completed)&&completed.length<=schema.definitions.InventoryAwait.properties.completed.maxItems?completed.find(value=>value.phase==="scoped-discovery"):undefined,checks=discovery?.completedOwners;
    if(Number.isSafeInteger(checks)&&checks>(row.completedOwnerChecks??0))row.completedOwnerChecks=checks;
    const verified=discovery?.verifiedMemoRows;
    if(Number.isSafeInteger(verified)&&verified>(row.verifiedMemoRows??0))row.verifiedMemoRows=verified;
+   const admitted=discovery?.admittedOwners;
+   if(Number.isSafeInteger(admitted)&&admitted>(row.admittedOwners??0))row.admittedOwners=admitted;
   }catch{}
+ }
+ if(row.id==="inventory"){
+  const sign=JSON.stringify([row.observations,row.completedOwnerChecks,row.verifiedMemoRows,row.admittedOwners,row.diagnostics?.()?.active?.phase]);
+  if(sign!==row.progressSign){row.progressSign=sign;row.progressMs=now;}
+  seconds=Math.round((now-row.progressMs)/1000);
  }
  const observations=language=>row.observations===undefined?"":" ("+fill(STEPS.inventoryObservations[language],{rows:row.observations})+")";
  const ownerChecks=language=>row.completedOwnerChecks===undefined?"":" ("+fill(STEPS.inventoryOwnerChecks[language],{rows:row.completedOwnerChecks})+")";
  const memoChecks=language=>row.verifiedMemoRows===undefined?"":" ("+fill(STEPS.inventoryMemoChecks[language],{rows:row.verifiedMemoRows})+")";
- const text=language=>fill(spec[language],fields)+observations(language)+ownerChecks(language)+memoChecks(language)+" ("+STEPS.counter[language]+")"+(seconds>bound?" ("+fill(STEPS.overBound[language],{bound})+")":"");
+ const admittedOwners=language=>row.admittedOwners===undefined?"":" ("+fill(STEPS.inventoryAdmittedOwners[language],{rows:row.admittedOwners})+")";
+ const text=language=>fill(spec[language],fields)+observations(language)+ownerChecks(language)+memoChecks(language)+admittedOwners(language);
  return{id:row.id,phase:text("en")+" / "+text("de"),done:seconds,total:bound};
 }
 
@@ -122,7 +130,7 @@ export function startSliceProgressV1({emit,read=readSliceReportSourceV1,final=re
   const valid=Number.isSafeInteger(done)&&Number.isSafeInteger(total)&&total>0,fresh=valid&&(live===undefined?finished!==ledger:done!==told||pass!==toldPass);
   if(step!==undefined&&!(step.id==="owners-round"&&fresh)){
    if(step.id!=="owners-round")told=undefined;
-   try{emit({phase:step.phase,done:step.done,total:step.total});}catch{}
+   try{emit({phase:step.phase,done:step.done,total:step.total,step:true});}catch{}
    return;
   }
   if(!fresh)return;

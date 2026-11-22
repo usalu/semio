@@ -224,10 +224,11 @@ export async function openTaskViewV1(request:TaskViewRequestV1):Promise<TaskView
   if(chosen!=="hardlink")await writeLedger(directory,policy,ledger,inputs,rows);
   const bytes=rows.reduce((sum,row)=>sum+row[1],0),manifest:Manifest={version:1,hash:request.hash,strategy:chosen,createdAt:clock(),files:inputs.length,bytes,inputs:key,rows};
   await writeFile(join(temporary,layout.manifest),JSON.stringify(manifest));
-  try{await rename(temporary,final);temporary=undefined;}
+  const moving=temporary;
+  try{await rename(moving,final);temporary=undefined;}
   catch(error){
    const winner=await readManifest(final,policy);
-   if(winner!==undefined&&winner.inputs===key){await rm(temporary,{recursive:true,force:true});temporary=undefined;return open(winner,true);}
+   if(winner!==undefined&&winner.inputs===key){await rm(moving,{recursive:true,force:true});temporary=undefined;return open(winner,true);}
    throw error;
   }
   return open(manifest,false);

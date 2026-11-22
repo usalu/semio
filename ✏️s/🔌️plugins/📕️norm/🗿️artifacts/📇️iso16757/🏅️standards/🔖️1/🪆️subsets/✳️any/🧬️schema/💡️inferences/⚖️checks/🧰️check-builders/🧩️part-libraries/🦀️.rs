@@ -260,19 +260,24 @@ pub mod part_4 {
     }
 
     pub fn detect_subtype_cycle(dictionary: &Dictionary) -> bool {
-        for subject in &dictionary.subjects {
-            let mut visited = HashSet::new();
-            let mut stack = vec![subject.id.clone()];
-            while let Some(current) = stack.pop() {
-                if !visited.insert(current.clone()) {
-                    return true;
-                }
-                for rel in dictionary.relationships.iter().filter(|r| r.kind == RelationshipKind::IsSubtypeOf && r.source_id == current) {
-                    stack.push(rel.target_id.clone());
-                }
+        let mut outgoing: HashMap<&str, Vec<&str>> = HashMap::new();
+        let mut incoming: HashMap<&str, usize> = HashMap::new();
+        for r in dictionary.relationships.iter().filter(|r| r.kind == RelationshipKind::IsSubtypeOf) {
+            outgoing.entry(&r.source_id).or_default().push(&r.target_id);
+            incoming.entry(&r.source_id).or_default();
+            *incoming.entry(&r.target_id).or_default() += 1;
+        }
+        let mut ready: Vec<_> = incoming.iter().filter_map(|(&subject, &count)| (count == 0).then_some(subject)).collect();
+        let mut removed = 0;
+        while let Some(subject) = ready.pop() {
+            removed += 1;
+            for &parent in outgoing.get(subject).into_iter().flatten() {
+                let count = incoming.get_mut(parent).expect("every relationship endpoint was indexed");
+                *count -= 1;
+                if *count == 0 { ready.push(parent); }
             }
         }
-        false
+        removed != incoming.len()
     }
 
     pub fn filter_controlled_values(list: &ControlledValueList, subject_id: &str, dictionary: &Dictionary) -> Vec<String> {

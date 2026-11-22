@@ -3,7 +3,7 @@
 use super::*;
 
 //#region 🧭️Geometry
-pub(super) fn page_objects(snapshot: &PdfSnapshot, page_index: usize, page: &PdfPage, metrics: &mut FontMeasurements<'_>) -> Vec<PageObject> {
+pub fn page_objects(snapshot: &PdfSnapshot, page_index: usize, page: &PdfPage, metrics: &mut FontMeasurements<'_>) -> Vec<PageObject> {
     let mut found = content_objects(snapshot, page_index, page, &page.content, Graphics::default(), metrics);
     for (index, annotation) in page.annotations.iter().enumerate() {
         let state = Graphics::default();
@@ -15,19 +15,19 @@ pub(super) fn page_objects(snapshot: &PdfSnapshot, page_index: usize, page: &Pdf
     found
 }
 
-pub(super) fn find_object(snapshot: &PdfSnapshot, address: &str) -> Option<PageObject> {
+pub fn find_object(snapshot: &PdfSnapshot, address: &str) -> Option<PageObject> {
     let (page, _) = address.strip_prefix('p')?.split_once(':')?;
     let index = page.parse::<usize>().ok()?;
     page_objects(snapshot, index, snapshot.pages.get(index)?, &mut FontMeasurements::new(snapshot)).into_iter().find(|object| object.id == address)
 }
 
-pub(super) fn form_objects(snapshot: &PdfSnapshot, form: &PdfFormXObject, placement: &PageObject, ctm: PdfMatrix, metrics: &mut FontMeasurements<'_>) -> Vec<PageObject> {
+pub fn form_objects(snapshot: &PdfSnapshot, form: &PdfFormXObject, placement: &PageObject, ctm: PdfMatrix, metrics: &mut FontMeasurements<'_>) -> Vec<PageObject> {
     let mut state = placement.form_graphics.clone().unwrap_or_default();
     state.ctm = multiply(ctm, form.matrix);
     content_objects(snapshot, placement.page, &snapshot.pages[placement.page], &form.content, state, metrics)
 }
 
-pub(super) fn content_objects(snapshot: &PdfSnapshot, page_index: usize, page: &PdfPage, content: &[PdfOp], initial: Graphics, metrics: &mut FontMeasurements<'_>) -> Vec<PageObject> {
+pub fn content_objects(snapshot: &PdfSnapshot, page_index: usize, page: &PdfPage, content: &[PdfOp], initial: Graphics, metrics: &mut FontMeasurements<'_>) -> Vec<PageObject> {
     let mut found = Vec::new();
     let mut stack = vec![initial];
     let mut pending_clip = None;
@@ -324,7 +324,7 @@ fn shading_corners(snapshot: &PdfSnapshot, name: &str, page: &PdfPage, ctm: PdfM
     }
     match &shading.kind {
         PdfShadingKind::Axial { coords, .. } => vec![apply(ctm, coords[0], coords[1]), apply(ctm, coords[2], coords[3])],
-        PdfShadingKind::Radial { coords, .. } => vec![apply(ctm, coords[0] - coords[2], coords[1] - coords[2]), apply(ctm, coords[3] + coords[5], coords[4] + coords[5])],
+        PdfShadingKind::Radial { coords, .. } => vec![apply(ctm, coords[0] - coords[2], coords[1] - coords[2]), apply(ctm, coords[0] + coords[2], coords[1] + coords[2]), apply(ctm, coords[3] - coords[5], coords[4] - coords[5]), apply(ctm, coords[3] + coords[5], coords[4] + coords[5])],
         PdfShadingKind::FunctionBased { domain, matrix, .. } => {
             let domain = domain.unwrap_or([0.0, 1.0, 0.0, 1.0]);
             let placed = multiply(ctm, matrix.unwrap_or(PDF_IDENTITY_MATRIX));
@@ -345,10 +345,10 @@ fn move_text(state: &mut Graphics, tx: f64, ty: f64, set_leading: bool) {
     state.text_matrix = state.line_matrix;
 }
 
-pub(super) use semio_s_artifact_stdio_pdf_page_coordinates::{apply, invert, multiply, unapply, user_delta, PageViewport};
+pub use semio_s_artifact_stdio_pdf_page_coordinates::{apply, invert, multiply, unapply, user_delta, PageViewport};
 use semio_s_artifact_stdio_pdf_page_coordinates::{bounds, box_corners, unit_square, vector_bound_points};
 
-pub(super) fn visible_page_box(page: &PdfPage) -> [f64; 4] {
+pub fn visible_page_box(page: &PdfPage) -> [f64; 4] {
     semio_s_artifact_stdio_pdf_page_coordinates::visible_page_box(page.media_box, page.crop_box)
 }
 
@@ -356,18 +356,10 @@ fn viewport(page: &PdfPage, top: f64) -> PageViewport {
     PageViewport::new(page.media_box, page.crop_box, page.rotate, page.user_unit, top)
 }
 
-pub(super) fn page_viewports(snapshot: &PdfSnapshot) -> impl Iterator<Item = PageViewport> + '_ {
-    snapshot.pages.iter().scan(0.0, |top, page| {
-        let viewport = viewport(page, *top);
-        *top += viewport.clip_rect()[3] + 16.0;
-        Some(viewport)
-    })
-}
-
-pub(crate) struct Placed {
+pub struct Placed {
     pub object: PageObject,
     pub top: f64,
-    pub(super) viewport: PageViewport,
+    pub viewport: PageViewport,
     pub canvas_x: f64,
     pub canvas_y: f64,
     pub canvas_w: f64,
@@ -375,20 +367,20 @@ pub(crate) struct Placed {
 }
 
 impl Placed {
-    pub(super) fn new(object: PageObject, viewport: PageViewport) -> Self {
+    pub fn new(object: PageObject, viewport: PageViewport) -> Self {
         let (canvas_x, canvas_y, canvas_w, canvas_h) = viewport.rect(object.x, object.y, object.width, object.height);
         Self { object, top: viewport.top, viewport, canvas_x, canvas_y, canvas_w, canvas_h }
     }
 }
 
-pub(super) fn placement(snapshot: &PdfSnapshot, viewports: &[PageViewport], metrics: &mut FontMeasurements<'_>) -> Vec<Placed> {
+pub fn placement(snapshot: &PdfSnapshot, viewports: &[PageViewport], metrics: &mut FontMeasurements<'_>) -> Vec<Placed> {
     measured_objects(snapshot, metrics)
         .into_iter()
         .map(|object| { let viewport = viewports[object.page]; Placed::new(object, viewport) })
         .collect()
 }
 
-pub(super) fn display_point(page: &PdfPage, top: f64, x: f64, y: f64) -> (f64, f64) {
+pub fn display_point(page: &PdfPage, top: f64, x: f64, y: f64) -> (f64, f64) {
     viewport(page, top).point(x, y)
 }
 
@@ -432,12 +424,12 @@ fn append_path_segment(path: &mut Vec<VectorSegment>, current: &mut (f64, f64), 
     }
 }
 
-pub(super) fn vector_segments(page: &PdfPage, top: f64, path: &[VectorSegment]) -> Vec<Value> {
+pub fn vector_segments(page: &PdfPage, top: f64, path: &[VectorSegment]) -> Vec<Value> {
     let viewport = viewport(page, top);
     mapped_vector_segments(path, |(x, y)| viewport.point(x, y), false)
 }
 
-pub(super) fn mapped_vector_segments(path: &[VectorSegment], display: impl Fn((f64, f64)) -> (f64, f64), open_dash_seam: bool) -> Vec<Value> {
+pub fn mapped_vector_segments(path: &[VectorSegment], display: impl Fn((f64, f64)) -> (f64, f64), open_dash_seam: bool) -> Vec<Value> {
     let mut start = (0.0, 0.0);
     let mut segments = Vec::with_capacity(path.len());
     for (index, segment) in path.iter().enumerate() {
@@ -460,18 +452,14 @@ pub(super) fn mapped_vector_segments(path: &[VectorSegment], display: impl Fn((f
     segments
 }
 
-pub(super) fn rect_segments(x: f64, y: f64, width: f64, height: f64) -> Value {
-    json!([{ "kind": "move", "to": [x, y] }, { "kind": "line", "to": [x + width, y] }, { "kind": "line", "to": [x + width, y + height] }, { "kind": "line", "to": [x, y + height] }, { "kind": "close" }])
-}
-
-pub(super) fn shown(text: &PdfTextString) -> String {
+pub fn shown(text: &PdfTextString) -> String {
     match text {
         PdfTextString::Text { text } => text.clone(),
         PdfTextString::Codes { codes } => codes.iter().map(|code|char::from_u32(*code).unwrap_or('\u{FFFD}')).collect(),
     }
 }
 
-pub(super) fn form_corners(form: &PdfFormXObject, ctm: PdfMatrix) -> [(f64, f64); 4] {
+pub fn form_corners(form: &PdfFormXObject, ctm: PdfMatrix) -> [(f64, f64); 4] {
     box_corners(multiply(ctm, form.matrix), form.bbox)
 }
 

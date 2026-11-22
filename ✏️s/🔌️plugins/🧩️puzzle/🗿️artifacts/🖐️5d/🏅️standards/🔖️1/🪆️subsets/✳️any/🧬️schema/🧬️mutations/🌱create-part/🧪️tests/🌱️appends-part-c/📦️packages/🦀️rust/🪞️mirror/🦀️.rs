@@ -21,6 +21,10 @@ pub mod play_snapshot;
                         #[path = "../../../../../../🦀️.rs"]
                         mod component;
                         pub use component::*;
+                        #[path = "../../../../../../🔀️splice-scene-rows/🦀️.rs"]
+                        pub mod splice_scene_rows;
+                        #[path = "../../../../../../🔀️splice-scene-row-batch/🦀️.rs"]
+                        pub mod splice_scene_row_batch;
                         pub use semio_s_artifact_puzzle_5d_kind_catalogs::standards::v1::subsets::any::schema::mutations::support;
                         #[path = "."]
                         pub mod create_part {

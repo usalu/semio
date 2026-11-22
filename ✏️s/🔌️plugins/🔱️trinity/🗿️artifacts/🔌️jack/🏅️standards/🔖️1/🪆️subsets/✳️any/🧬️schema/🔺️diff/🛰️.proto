@@ -6,9 +6,8 @@ message JackDiff {
   optional string schema = 1;
   optional string name = 2;
   optional string manifest_id = 3;
-  optional semio.s.trinity.jack.artifact.Manifest manifest = 4;
-  optional semio.s.trinity.jack.artifact.Camera camera = 5;
-  optional semio.framework.schema.artifact_child.ArtifactChild content = 6;
-  optional string root_node_id = 7;
-  optional string query = 8;
+  optional semio.s.trinity.jack.artifact.Camera camera = 4;
+  optional semio.framework.schema.artifact_child.ArtifactChild content = 5;
+  optional string root_node_id = 6;
+  optional string query = 7;
 }

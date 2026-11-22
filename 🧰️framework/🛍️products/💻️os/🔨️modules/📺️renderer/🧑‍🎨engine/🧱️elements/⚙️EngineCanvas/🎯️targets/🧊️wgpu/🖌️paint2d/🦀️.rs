@@ -7,6 +7,7 @@ use semio_renderer_wgpu_engine_registry::engine_surface_registry::engine_camera_
 use semio_renderer_wgpu_engine_registry::engine_surface_registry::{NodeGraphEngine, ENGINE_SURFACES};
 use crate::element_contracts::WorkerCell;
 use semio_framework_canvas as canvas;
+pub use semio_framework_surface::paint::PixelKeyInput;
 use semio_framework_surface::paint::RasterHost;
 use serde_json::{json, Value};
 use std::collections::HashMap;
@@ -264,7 +265,8 @@ pub fn paint2d_pixel_selection_progress(surface_id:&str)->Option<(u64,u64)>{PAIN
 pub fn cancel_paint2d_pixel_selection(surface_id:&str)->bool{
     let cancelled=PAINT2D_PIXEL_CANDIDATES.with(|cell|{if let Some(entry)=cell.borrow_mut().remove(surface_id){if let Some(handle)=entry.submitted{handle.cancel();}true}else{false}});
     let tracking=with_paint2d_marquee(surface_id,|marquee|{let tracking=marquee.tracking;if tracking{*marquee=Paint2dMarquee::default();}tracking});
-    cancelled||tracking
+    let anchored=with_raster_host_mut(surface_id,|host|host.cancel_keyboard_marquee()).unwrap_or(false);
+    cancelled||tracking||anchored
 }
 
 /// ⏳️ Encodes a bounded path grant; the config owner computes and publishes selection coverage.
@@ -650,5 +652,48 @@ pub fn paint2d_wheel_into(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: 
     write_surface_camera(&mut batch, scene, camera)?;
     batch.publish()?;
     Ok(true)
+}
+
+/** ⌨️ One key press on a focused paint-2d surface — the pixel cursor, stamp, keyboard marquee and camera keys of React's `keyboardPaint`. The cursor announcement is read back from the host's [`semio_framework_surface::paint::PixelKeyboard`]. Returns whether the surface took the key.
+ *
+ * @see `🧱️elements/🖌️Paint2dHost/✍️editing/🟦️.tsx` — `keyboardPaint` */
+pub fn paint2d_key_into(scene: &UiComponentSceneNode, key: PixelKeyInput<'_>, locale: &str, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_ui_action::BoundedActionFault> {
+    if scene.paint_2d.as_ref().is_none_or(|paint| paint.view_mode == "navigator") {
+        return Ok(false);
+    }
+    let ready = !PAINT2D_PIXEL_CANDIDATES.with(|cell| cell.borrow().contains_key(&scene.host_id));
+    let Some(outcome) = with_raster_host_mut(&scene.host_id, |host| host.pixel_key_down(&key, locale, ready)) else { return Ok(false) };
+    use semio_framework_surface::paint::PixelKeyOutcome;
+    match outcome {
+        PixelKeyOutcome::Ignored => Ok(false),
+        PixelKeyOutcome::Consumed => Ok(true),
+        PixelKeyOutcome::Camera(camera) => {
+            let bytes = semio_ui_action::checked_action_string_bytes(&[&scene.controller_id, "setCamera", "surfaceId", &scene.surface_id, "camera", "x", "y", "zoom"])?;
+            let mut batch = input.reserve_actions(1, bytes)?;
+            write_surface_camera(&mut batch, scene, (camera[0], camera[1], camera[2]))?;
+            batch.publish()?;
+            Ok(true)
+        }
+        PixelKeyOutcome::Edit => flush_paint2d_edit(scene, input).map(|_| true),
+        PixelKeyOutcome::Select { method, path } => {
+            let intent = with_raster_host_mut(&scene.host_id, |host| host.pixel_selection_intent_local(&path)).flatten();
+            if let (Some(intent), Some(paint)) = (intent, scene.paint_2d.as_ref()) {
+                PAINT2D_PIXEL_CANDIDATES.with(|cell| cell.borrow_mut().insert(scene.host_id.clone(), Paint2dPixelCandidate { utility: paint.active_utility.clone(), intent, method: method.into(), mode: "replace".into(), path: String::new(), cursor: 0, submitted: None, progress: (0, 0) }));
+            }
+            Ok(true)
+        }
+    }
+}
+
+/// 📣️ The live-region text of a paint-2d surface's pixel cursor, empty until the keyboard moved it.
+pub fn paint2d_keyboard_announcement(surface_id: &str) -> String {
+    ENGINE_SURFACES.with(|cell| cell.borrow().get(surface_id).and_then(|entry| entry.raster_host.as_ref()).map(|host| host.keyboard().announcement.clone()).unwrap_or_default())
+}
+
+/// 📣️ Every paint-2d surface with a pending pixel-cursor announcement, ordered by surface id: the polite live-region nodes the shell projects.
+pub fn paint2d_keyboard_announcements() -> Vec<(String, String)> {
+    let mut rows: Vec<(String, String)> = ENGINE_SURFACES.with(|cell| cell.borrow().slots.iter().filter_map(|slot| Some((slot.id.as_ref()?.as_str().to_string(), slot.value.as_ref()?.raster_host.as_ref()?.keyboard().announcement.clone()))).filter(|(_, text)| !text.is_empty()).collect());
+    rows.sort();
+    rows
 }
 //#endregion Paint2d

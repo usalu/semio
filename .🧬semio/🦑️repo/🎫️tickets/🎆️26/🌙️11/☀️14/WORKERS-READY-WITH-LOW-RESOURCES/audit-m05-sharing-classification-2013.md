@@ -1,0 +1,7 @@
+# m05 Sharing Classification at 20:13 UTC
+
+At 20:13:42 UTC m05 freshly attested replica digest `06102e8b3eb19c67dd0eca3234e9920da806b8ff8288b41cc1f10d8d431d5516`, index tree `7d8c0b059bcaed05be881279fe59b4fa8305d514`, and 5,072 incoming entries. Its diagnostic summary reported 91,120 blocked-sharing-violation events and 21 blocked-pack-incomplete events. The former are retry events, not distinct paths, and the receipt does not identify a process epoch or the affected paths. The rolling apply-latency sample reported median 54,416 ms and p95 84,530 ms across 100 samples.
+
+The current replica `sharing` predicate treats `EBUSY`, `EPERM`, and `EACCES` alike. Its unlink and rename paths label exhaustion as `sharing-violation` and leave the entry queued. The mirrored summary therefore does not distinguish an active operating-system sharing lock from a stable permission or ACL denial, nor identify a holder. Repeated apply requeue is evidenced; its physical cause is not. The appropriate distinguishing evidence is the host-owned per-path error and filesystem access context, without changing queued data or weakening access checks.
+
+The separate Ready receipt was last updated at 20:05:33 and reported dependencies disk-collecting, 5,127 MB free against 6,144 MB required. The fresh replica attestation does not establish Ready collector liveness or current Windows disk space. No process, permission, queue or cache was changed.

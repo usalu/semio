@@ -61,8 +61,10 @@ export type CollectorTargetV1=Readonly<{area:string;arguments:readonly string[];
 const graphTarget:CollectorTargetV1=Object.freeze({area:"graph-inference",arguments:["--area=graph-inference"],name:"graph-collector",failed:"gc.graph.launch.failed",intervalMs:GRAPH_COLLECTOR_INTERVAL_MS_V1}),productsTarget:CollectorTargetV1=Object.freeze({area:"bazel-workspaces",arguments:["--area=bazel-workspaces,bazel-outputs"],name:"products-collector",failed:"gc.products.launch.failed",intervalMs:PRODUCTS_COLLECTOR_INTERVAL_MS_V1});
 const nxToolingTarget:CollectorTargetV1=Object.freeze({area:"nx-tooling",arguments:["--area=nx-tooling,nx-tmp"],name:"nx-tooling-collector",failed:"nxTooling.launch.failed",intervalMs:nxToolingStoreBoundPolicyV1().intervalMs});
 
-async function launchCollectorV1(workspace:string,availableBytes:number,target:CollectorTargetV1,overrides:Partial<GraphCollectorPortsV1>,ledger:CacheLedgerV1):Promise<GraphCollectorDecisionV1>{
- const ports={...defaults(),...overrides},area=ledger.areas.find(row=>row.id===target.area),soft=area?.reclaim?.softAvailableBytes;
+async function launchCollectorV1(workspace:string,availableBytes:number,target:CollectorTargetV1,overrides:Partial<GraphCollectorPortsV1>,given:CacheLedgerV1|undefined):Promise<GraphCollectorDecisionV1>{
+ const ports={...defaults(),...overrides};let ledger:CacheLedgerV1;
+ try{ledger=given??cacheLedgerV1();}catch(error){ports.report(["en","de"].map(language=>cacheTextV1(language as "en"|"de",target.failed,{message:String((error as Error).message)})).join("\n"));return "failed";}
+ const area=ledger.areas.find(row=>row.id===target.area),soft=area?.reclaim?.softAvailableBytes;
  if(soft===undefined)return "enough";
  const stamp=repoCacheDirectory(workspace,"build",target.name+".stamp"),log=repoCacheDirectory(workspace,"build",target.name+".log"),status=repoCacheDirectory(workspace,"build",target.name+".status.json"),now=ports.now(),decision=graphCollectorDecisionV1({availableBytes,softBytes:soft,nowMs:now,lastLaunchMs:await ports.readStamp(stamp),minimumIntervalMs:target.intervalMs});
  if(decision!=="launch")return decision;
@@ -77,13 +79,13 @@ async function launchCollectorV1(workspace:string,availableBytes:number,target:C
 }
 
 /** 🚀️ Starts the graph optional-cache collector as a detached, low-priority `repo cache gc --area=graph-inference` (output in `graph-collector.log` of the build area) when the image has less free space than the ledger's soft threshold but more than the hard floor; never waits for it and never fails the writer: a collector that cannot start is reported on the writer's stderr in both languages, recorded in `graph-collector.status.json` and returned as `failed`. Returns the decision taken. */
-export async function launchGraphOptionalCollectorV1(workspace:string,availableBytes:number,overrides:Partial<GraphCollectorPortsV1>={},ledger:CacheLedgerV1=cacheLedgerV1()):Promise<GraphCollectorDecisionV1>{return launchCollectorV1(workspace,availableBytes,graphTarget,overrides,ledger);}
+export async function launchGraphOptionalCollectorV1(workspace:string,availableBytes:number,overrides:Partial<GraphCollectorPortsV1>={},ledger?:CacheLedgerV1):Promise<GraphCollectorDecisionV1>{return launchCollectorV1(workspace,availableBytes,graphTarget,overrides,ledger);}
 
 /** 🔰️ Starts the products collector as a detached, low-priority `repo cache gc --area=bazel-workspaces,bazel-outputs` (output in `products-collector.log` of the build area) below the soft threshold the ledger declares for the Bazel workspaces; single-flight (the stamp allows one launch per interval and the collector itself takes the session collector lease without waiting), never waits for it and never fails the writer. */
-export async function launchProductsCollectorV1(workspace:string,availableBytes:number,overrides:Partial<GraphCollectorPortsV1>={},ledger:CacheLedgerV1=cacheLedgerV1()):Promise<GraphCollectorDecisionV1>{return launchCollectorV1(workspace,availableBytes,productsTarget,overrides,ledger);}
+export async function launchProductsCollectorV1(workspace:string,availableBytes:number,overrides:Partial<GraphCollectorPortsV1>={},ledger?:CacheLedgerV1):Promise<GraphCollectorDecisionV1>{return launchCollectorV1(workspace,availableBytes,productsTarget,overrides,ledger);}
 
 /** 🧶️ Starts the Nx toolkit store collector as a detached, low-priority `repo cache gc --area=nx-tooling,nx-tmp` (output in `nx-tooling-collector.log` of the build area) below the soft free-space threshold the ledger declares for the tools image; single-flight (one launch per interval of the bound policy, and the collector itself takes a lease without waiting), never waits for it and never fails the writer. Returns the decision taken. */
-export async function launchNxToolingCollectorV1(workspace:string,availableBytes:number,overrides:Partial<GraphCollectorPortsV1>={},ledger:CacheLedgerV1=cacheLedgerV1()):Promise<GraphCollectorDecisionV1>{return launchCollectorV1(workspace,availableBytes,nxToolingTarget,overrides,ledger);}
+export async function launchNxToolingCollectorV1(workspace:string,availableBytes:number,overrides:Partial<GraphCollectorPortsV1>={},ledger?:CacheLedgerV1):Promise<GraphCollectorDecisionV1>{return launchCollectorV1(workspace,availableBytes,nxToolingTarget,overrides,ledger);}
 
 /** 🧰️ What any Nx run does about a pressed tools image: it reads the free space of the mounted image (`undefined` means not mounted, which counts as free) and launches the single-flight background collector below the soft threshold. Never waits, never throws. */
 export async function launchNxToolingCollectorIfPressedV1(workspace:string,overrides:Partial<GraphCollectorPortsV1>={},measure:(workspace:string)=>number|undefined=mountedToolsFreeBytesV1):Promise<GraphCollectorDecisionV1|"unmounted">{

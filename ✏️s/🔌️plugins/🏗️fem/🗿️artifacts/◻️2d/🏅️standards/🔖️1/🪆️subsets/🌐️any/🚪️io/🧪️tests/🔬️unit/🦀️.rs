@@ -32,7 +32,7 @@ async fn csv_is_the_node_table_read_by_a_third_party_reader() {
     assert_eq!(reader.headers().expect("header").iter().collect::<Vec<_>>(), ["id", "x", "y"]);
     let rows: Vec<csv::StringRecord> = reader.records().map(|row| row.expect("row")).collect();
     assert_eq!(rows.len(), snapshot.nodes.len());
-    for (row, node) in rows.iter().zip(&snapshot.nodes) {
+    for (row, node) in rows.iter().zip(snapshot.nodes.get().iter()) {
         assert_eq!(&row[0], node.id.as_str());
         let read: Vec<f64> = row.iter().skip(1).map(|value| value.parse().expect("number")).collect();
         assert_eq!(read, [node.x, node.y].to_vec(), "coordinates survive bit for bit");
@@ -89,3 +89,42 @@ fn example_fixture_parses_and_solves() {
     assert!(buckling.factors[0].is_finite() && buckling.factors[0] > 1.0, "expected an illustrative (finite, >1) load factor: {:?}", buckling.factors);
 }
 // #endregion 🔖️ExampleFixture
+
+/// 📐️ Every vector of the portable region surface corpus runs through the installed OBJ and ASCII STL exports beside the neutral kernel; the rows are handed to the owning TypeScript oracle through `SEMIO_FEM_SURFACE_RESULTS`.
+/// Links: the corpus `✏️s/🔨️modules/🏗️fem/⚙️engine/🕸️mesh/📐️surface/🧪️tests/🧫️fixtures/🔣️.json`.
+#[semio_framework_async_macros::async_test]
+async fn surface_corpus_exports_obj_and_stl_beside_the_neutral_surface() {
+    use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemRegion;
+    let path = std::env::var_os("SEMIO_FEM_SURFACE_RESULTS").expect("owning surface contract command must declare its output path");
+    let fixture: serde_json::Value = serde_json::from_str(semio_framework_test_fixtures::repo_text!("✏️s/🔨️modules/🏗️fem/⚙️engine/🕸️mesh/📐️surface/🧪️tests/🧫️fixtures/🔣️.json")).expect("surface corpus");
+    let vectors = fixture["vectors"].as_array().expect("vectors");
+    assert_eq!(vectors.len(), 9);
+    let mut observed = Vec::new();
+    for vector in vectors {
+        let mut snapshot = from_dsl_text(EXAMPLE).expect("the shipped example must parse");
+        snapshot.regions.clear();
+        let mut regions = Vec::new();
+        for input in vector["regions"].as_array().expect("regions") {
+            let id = input["regionId"].as_str().expect("region id").to_string();
+            let outline: Vec<[f64; 2]> = serde_json::from_value(input["domain"]["outer"].clone()).expect("outer");
+            let holes: Vec<Vec<[f64; 2]>> = serde_json::from_value(input["domain"]["holes"].clone()).expect("holes");
+            let thickness = input["thickness"].as_f64().expect("thickness");
+            let mesh_size = input["options"]["maxEdge"].as_f64().expect("max edge");
+            assert_eq!(input["options"]["minAngleDeg"].as_f64().expect("min angle"), 20.0, "the installed export meshes with the declared 20 degree minimum angle");
+            let domain = semio_s_fem_mesh::PlanarDomain { outer: outline.clone(), holes: holes.clone() };
+            let options = semio_s_fem_mesh::MeshOpts { max_edge: mesh_size, min_angle_deg: 20.0 };
+            if let Ok(triangulated) = semio_s_fem_mesh::triangulate(&domain, &options) {
+                let volume = semio_s_fem_mesh_derived::split_to_tets(&semio_s_fem_mesh_derived::extrude_tri_mesh(&triangulated, thickness, 1));
+                let triangles = semio_s_fem_mesh_derived::boundary_faces(&volume);
+                let tetrahedra: Vec<[u32; 4]> = volume.cells.iter().map(|cell| match cell { semio_s_fem_mesh_derived::Cell::Tet4(tet) => *tet, _ => panic!("split_to_tets retained a non-tetrahedral cell") }).collect();
+                regions.push(serde_json::json!({"regionId": id, "points": volume.points, "tetrahedra": tetrahedra, "triangles": triangles}));
+            }
+            snapshot.regions.push(FemRegion { id: id.clone(), name: id, outline, holes, thickness, material_id: String::new(), mesh_size });
+        }
+        observed.push(serde_json::json!({"id": vector["id"], "neutral": {"regions": regions}, "obj": obj_text(&snapshot).expect("obj export must succeed"), "stl": stl_text(&snapshot).expect("stl export must succeed")}));
+    }
+    let bytes = serde_json::to_vec(&observed).expect("rows");
+    let path = std::path::Path::new(&path);
+    std::fs::create_dir_all(path.parent().expect("parent")).expect("directory");
+    std::fs::write(path, bytes).expect("results");
+}

@@ -383,13 +383,14 @@ async fn rewrite_in_waits_for_its_original_publication_before_answering() {
 }
 
 //#region 🔖️ClipboardMaximum
-static CLIPBOARD_MAXIMUM_FIXTURE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../🪆️subsets/✳️any/🧪️tests/🧫️fixtures/📋️clipboard-maximum/🔣️.json"));
+static CLIPBOARD_MAXIMUM_FIXTURE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../🧪️tests/🧫️fixtures/📋️clipboard-maximum/🔣️.json"));
 
 /// 📋️ LAW (language-neutral fixture): on the largest shipped example with every part selected, the copy fragment
 /// carries every part, the cut removes every copied part and the paste of that fragment creates every part again.
 /// Each verb runs as one step of its framework-reserved job (cost in `📓️wave-W2-B.md` §5).
 #[test]
 fn clipboard_verbs_cover_every_part_of_the_largest_example() {
+    admit_capsule_dream_fixture();
     let fixture: serde_json::Value = serde_json::from_str((*CLIPBOARD_MAXIMUM_FIXTURE)).expect("clipboard fixture parses");
     assert_eq!(fixture["example"], PUZZLE5D_EXAMPLE_CAPSULE_DREAM);
     let offset = fixture["pasteOffset"].as_array().expect("offset").iter().map(|axis| axis.as_f64().expect("axis")).collect::<Vec<_>>();
@@ -578,13 +579,15 @@ async fn sun_verbs_publish_the_world_window_config() {
 
 /// ⚖️🚧️ LAW (Config-lane family): the contact tolerance and both renamed kind-weight verbs are shared
 /// app configuration, not window state — dispatched through the real retained factory they publish the
-/// `Config` lane, leave the addressed pane's window partition at generation zero and never touch the
+/// `Config` lane, preserve the addressed pane's window partition and never touch the
 /// document.
 #[semio_framework_async_macros::async_test]
 async fn config_lane_verbs_publish_the_shared_app_config_only() {
     let mut app = Box::new(app_with_registry());
     let pane = "puzzle5d-config-pane";
     let view = window_view(world3d::WINDOW_KIND_ID, pane);
+    dispatch(&mut app, "setGridVisible", Some(&semio_framework_pack_json::json!({ "pressed": false })), Some(pane)).expect("open the addressed window partition");
+    let window_before = app.window_config_generation(&view).await.expect("window config generation").expect("the pane owns its config");
     let document_before = projection_of(&app);
     let mut config_before = app.config_pack().await.expect("app config before");
 
@@ -601,11 +604,12 @@ async fn config_lane_verbs_publish_the_shared_app_config_only() {
         ("setPartKindWeight", semio_framework_pack_json::json!({ "kindId": part_kind.as_str(), "value": 0.75 })),
         ("setGripKindWeight", semio_framework_pack_json::json!({ "kindId": grip_kind.as_str(), "value": 0.25 })),
     ] {
-        let result = dispatch(&mut app, tool_id, Some(&args), Some(pane)).expect("Config-lane dispatch through the retained factory");
+        let result = dispatch(&mut app, tool_id, Some(&args), Some(pane))
+            .unwrap_or_else(|fault| panic!("{tool_id} Config-lane dispatch through the retained factory: {fault:?}"));
         assert!(result.mutations.is_empty(), "{tool_id} is never a document edit");
         let after = app.config_pack().await.expect("app config after a Config-lane publication");
         assert_ne!((&after.pack, &after.spr), (&config_before.pack, &config_before.spr), "{tool_id} must be a real shared-app-config publication");
-        assert_eq!(app.window_config_generation(&view).await.expect("window config generation").unwrap_or(0), 0, "{tool_id} must publish no window partition");
+        assert_eq!(app.window_config_generation(&view).await.expect("window config generation"), Some(window_before), "{tool_id} must preserve the window partition");
         config_before = after;
     }
 

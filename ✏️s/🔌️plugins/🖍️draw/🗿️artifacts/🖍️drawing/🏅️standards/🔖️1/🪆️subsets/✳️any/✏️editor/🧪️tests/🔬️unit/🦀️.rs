@@ -57,7 +57,7 @@ use semio_s_artifact_draw_drawing_scene_mounted as geometry_session;
         DrawingAppFixture(app, scope)
     }
 
-    semio_plugin::history_edit_acceptance_law!("draw", DrawingPlayApp, || App { definition: create_drawing_app(), examples: Vec::new() }, "../..");
+    semio_plugin::history_edit_acceptance_law!("draw", DrawingPlayApp, || App { definition: create_drawing_app(), examples: Vec::new() }, "../../../../../../../../..");
 
     /// 🧰️ Captures the host-owned active utility in one operation's invocation context.
     pub fn meta_with_utility(utility: &str) -> ActionMeta {

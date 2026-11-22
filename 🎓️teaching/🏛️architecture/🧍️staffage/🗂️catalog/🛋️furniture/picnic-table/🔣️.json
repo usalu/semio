@@ -11490,8 +11490,8 @@
             "tone": 0.22,
             "profile": [[0.01, -0.085], [0.085, -0.085], [0.085, -0.01], [0.01, -0.01]],
             "plane": "xy",
-            "from": 0.675,
-            "to": 0.75
+            "from": 0.7025,
+            "to": 0.7775
           },
           {
             "id": "bracket-r-b",
@@ -11502,8 +11502,8 @@
             "tone": 0.22,
             "profile": [[0.01, -0.085], [0.085, -0.085], [0.085, -0.01], [0.01, -0.01]],
             "plane": "xy",
-            "from": -0.75,
-            "to": -0.675
+            "from": -0.7775,
+            "to": -0.7025
           },
           {
             "id": "seat-l",
@@ -11526,8 +11526,8 @@
             "tone": 0.22,
             "profile": [[0.01, 0.01], [0.085, 0.01], [0.085, 0.085], [0.01, 0.085]],
             "plane": "xy",
-            "from": 0.675,
-            "to": 0.75
+            "from": 0.7025,
+            "to": 0.7775
           },
           {
             "id": "bracket-l-b",
@@ -11538,8 +11538,8 @@
             "tone": 0.22,
             "profile": [[0.01, 0.01], [0.085, 0.01], [0.085, 0.085], [0.01, 0.085]],
             "plane": "xy",
-            "from": -0.75,
-            "to": -0.675
+            "from": -0.7775,
+            "to": -0.7025
           }
         ],
         "thermal": [
@@ -11857,8 +11857,8 @@
         ],
         "decisions": [
           {
-            "en": "Body, authored for 75 mm: the top with its cleats as one 75 mm slab, each A-frame as one 90 mm plate of both legs and the stretcher (legs and stretcher keep their 95 mm), each bench as a 75 mm board with its top at seat height, each bracket as a 75 mm block under the board end; braces (45 mm) are left out.",
-            "de": "Körper, für 75 mm gebaut: die Platte mit ihren Riegeln als eine 75-mm-Scheibe, jeder A-Bock als eine 90-mm-Scheibe aus beiden Beinen und der Zange (Beine und Zange behalten ihre 95 mm), jede Bank als 75-mm-Brett mit Oberkante auf Sitzhöhe, jede Konsole als 75-mm-Block unter dem Brettende; die Streben (45 mm) entfallen."
+            "en": "Body, authored for 75 mm: the top with its cleats as one 75 mm slab, each A-frame as one 90 mm plate of both legs and the stretcher (legs and stretcher keep their 95 mm), each bench as a 75 mm board with its top at seat height, each bracket as a 75 mm block under the board end that reaches the inner face of the A-frame, so the bench hangs between the frames; braces (45 mm) are left out.",
+            "de": "Körper, für 75 mm gebaut: die Platte mit ihren Riegeln als eine 75-mm-Scheibe, jeder A-Bock als eine 90-mm-Scheibe aus beiden Beinen und der Zange (Beine und Zange behalten ihre 95 mm), jede Bank als 75-mm-Brett mit Oberkante auf Sitzhöhe, jede Konsole als 75-mm-Block unter dem Brettende, der bis an die Innenfläche des A-Bocks reicht, sodass die Bank zwischen den Böcken hängt; die Streben (45 mm) entfallen."
           },
           {
             "en": "Thermal: one surface per region. Structure: slab on two A-frames, boards on bracket blocks, 75 mm pivot pins, seat blocks of the slab and foot pads; the model is minimal at this scale.",

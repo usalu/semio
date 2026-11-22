@@ -60,7 +60,7 @@ export async function readBackbonePayload(uri: string, documentId: string | null
       if (canonical.state !== "published" || !canonical.archive) return null;
       const bytes = canonical.archive instanceof Uint8Array ? canonical.archive : new Uint8Array(canonical.archive as ArrayBuffer);
       const archive = decodeDocumentArchiveBytes(bytes);
-      const pack = Uint8Array.from(archive.parent_pack), spr = Uint8Array.from(archive.parent_spr);
+      const pack = archive.parent_pack as Uint8Array, spr = archive.parent_spr as Uint8Array;
       if (canonical.stagedAggregate !== canonical.expectedAggregate || createHash("sha256").update(pack).update(spr).digest("hex") !== canonical.expectedAggregate) return null;
       return bytes;
     }

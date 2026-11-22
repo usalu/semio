@@ -471,27 +471,25 @@ export function expiredHorizonV1(entryHlc:string,snapshotHlc:string):boolean{
 /** 🩹️ What a repair of a segment that was shorter than its head reports: the segment that was sealed short, its real size in bytes and how many complete lines it holds. */
 export type FleetJournalRepairV1=Readonly<{segment:number;bytes:number;found:number}>;
 
-/** ✍️ Appends event lines to the origin's segments (fsync), sealing full segments, then publishes the new head through tmp + rename. A segment that is shorter than its head (a store host that crashed before the data reached the disk, a removed file) is sealed at the size it has and the append continues in the next segment: peers read a sealed segment to its end and then the next one from its start, so no cursor ends up in front of new events; `onRepair` is told. */
+/** ✍️ Validates every event, encodes and fsyncs one segment at a time, then publishes the new head through tmp + rename. A segment that is shorter than its head (a store host that crashed before the data reached the disk, a removed file) is sealed at the size it has and the append continues in the next segment: peers read a sealed segment to its end and then the next one from its start, so no cursor ends up in front of new events; `onRepair` is told. */
 export async function appendEventsV1(storeRoot:string,originId:string,events:readonly FleetEventV1[],onRepair?:(repair:FleetJournalRepairV1)=>void):Promise<FleetHeadV1>{
  requireOriginIdV1(originId);
- const lines=events.map(event=>{
+ for(const event of events){
   requireEventV1(event);
   if(parseHlcV1(event.hlc).originId!==originId)throw Error(`Fleet event hlc belongs to another origin than ${originId}: ${event.hlc}`);
-  return Buffer.from(`${JSON.stringify(event)}\n`,"utf8");
- });
+ }
  const prior=await readHeadV1(storeRoot,originId);
- if(lines.length===0){
+ if(events.length===0){
   if(prior)return prior;
   throw Error("Fleet append requires at least one event");
  }
  const {origins,tmp}=storePathsV1(storeRoot),directory=join(origins,originId),segments=join(directory,"segments");
  await ensureStoreDirectoryV1(storeRoot,segments);
  let segment=prior?.segment??0,bytes=prior?.bytes??0,count=prior?.events??0,hlc=prior?.hlc??"",index=0;
- while(index<lines.length){
+ let lookahead:Buffer|undefined;
+ while(index<events.length){
   if(count>=segmentEvents||bytes>=segmentBytes){segment++;bytes=0;count=0;}
-  let end=index,size=bytes;
-  while(end<lines.length&&count+(end-index)<segmentEvents&&(end===index||size+lines[end]!.length<=segmentBytes)){size+=lines[end]!.length;end++;}
-  const data=Buffer.concat(lines.slice(index,end)),file=join(segments,segmentName(segment)),handle=await open(file,await exists(file)?"r+":"w+");
+  const file=join(segments,segmentName(segment)),handle=await open(file,await exists(file)?"r+":"w+");
   try{
    const current=(await handle.stat()).size;
    if(current<bytes){
@@ -501,13 +499,21 @@ export async function appendEventsV1(storeRoot:string,originId:string,events:rea
     segment++;bytes=0;count=0;
     continue;
    }
+   const lines:Buffer[]=[];
+   let end=index,length=0;
+   while(end<events.length&&count+(end-index)<segmentEvents){
+    lookahead??=Buffer.from(`${JSON.stringify(events[end])}\n`,"utf8");
+    if(end>index&&bytes+length+lookahead.length>segmentBytes)break;
+    lines.push(lookahead);length+=lookahead.length;end++;lookahead=undefined;
+   }
+   const data=Buffer.concat(lines,length);
    if(current>bytes)await handle.truncate(bytes);
    let done=0;
    while(done<data.length){const {bytesWritten}=await handle.write(data,done,data.length-done,bytes+done);done+=bytesWritten;}
    await handle.sync();
+   for(let at=index;at<end;at++)if(events[at]!.hlc>hlc)hlc=events[at]!.hlc;
+   bytes+=length;count+=end-index;index=end;
   }finally{await handle.close();}
-  for(let at=index;at<end;at++)if(events[at]!.hlc>hlc)hlc=events[at]!.hlc;
-  bytes+=data.length;count+=end-index;index=end;
  }
  const head:FleetHeadV1={version:1,segment,bytes,events:count,hlc};
  if(!isHeadV1(head))check("Head",head,"Closed fleet head required");

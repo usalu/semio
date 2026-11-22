@@ -70,7 +70,61 @@ fn disconnected_section_crosses_both_arms() {
         if direction < 0. { void.reverse(); }
         regions.add_void(SectionPolygon::ordered_ring(&void).unwrap(), &Frame3::from_normal(anchor,axis).unwrap()).unwrap();
         assert_eq!(measure(&regions), EXPECTED_CAVITY);
+        prove_section_publication(regions, direction);
     }
+}
+
+fn prove_section_publication(regions: PlanarSectionRegions, sign: f64) {
+    use crate::polygon_face_publication::{FaceOpening, PolygonSectionSet, SECTION_FACE_LIMIT};
+    let mut kernel = crate::BrepRegistry::default();
+    let mut faces = PolygonSectionSet::default();
+    for region in regions.into_regions() {
+        let (outer, holes) = region.into_rings();
+        let points: Vec<_> = (0..outer.count()).map(|i| outer.point(i).unwrap()).collect();
+        let mut face = kernel.plan_polygon_face_points(outer.count()).unwrap();
+        if holes.iter().any(Option::is_some) {
+            let holes = holes.map(|hole| hole.map(|hole| {
+                let points: Vec<_> = (0..hole.count()).map(|i| pnt(hole.point(i).unwrap())).collect();
+                crate::polygon_opening::SectionPolygon::ordered_ring(&points).unwrap()
+            }));
+            face.opening = Some(FaceOpening::Polygon(crate::polygon_opening::PolygonOpening::new(holes)));
+        }
+        for _ in 0..500 {
+            if face.topology_ready() { break; }
+            crate::advance(&mut kernel, &mut face, &points).unwrap();
+        }
+        assert!(face.topology_ready());
+        assert!(kernel.live.0.is_empty());
+        faces.push((face, outer));
+    }
+    let count = faces.count();
+    assert_eq!(count, 2);
+    let mut keys: [String; SECTION_FACE_LIMIT] = std::array::from_fn(|i| {
+        if i < count { faces.face(i).0.handle().to_owned() } else { String::new() }
+    });
+    let expected = keys.clone();
+    let denied = crate::RetirementDemand { maximum_items: 0, ..Default::default() };
+    assert!(kernel.publish_polygon_section(&mut faces, &mut keys, denied).is_err());
+    assert_eq!(keys, expected);
+    assert!(kernel.live.0.is_empty());
+    let grant = crate::RetirementDemand { maximum_items: 1, ..Default::default() };
+    kernel.publish_polygon_section(&mut faces, &mut keys, grant).unwrap();
+    assert!(keys.iter().all(String::is_empty));
+    assert_eq!(kernel.unpublished_topology, 0);
+    assert_eq!(kernel.live.0.len(), count);
+    let mut inner_counts = Vec::new();
+    for i in 0..count {
+        let crate::Entity::Face(id) = kernel.live.0[&expected[i]] else { panic!("published Section face"); };
+        let face = kernel.body.faces.get(id).unwrap();
+        let crate::Surface::Plane { frame } = kernel.body.surfaces.get(face.surface).unwrap() else { panic!("original section plane"); };
+        assert!((frame.z.y - sign).abs() < 1e-10);
+        inner_counts.push(face.inners.len());
+        crate::close(&mut kernel, &mut faces.face_mut(i).0);
+        assert!(kernel.body.faces.get(id).is_some());
+    }
+    inner_counts.sort_unstable();
+    assert_eq!(inner_counts, [0, 1]);
+    assert_eq!(kernel.live.0.len(), count);
 }
 """.replace("PROFILE", profile).replace("HEIGHT", str(float(fixture["height"]))).replace("CUT", str(float(fixture["cut"]))).replace("HOLE", hole)
 for key, row in zip(("EXPECTED_PLAIN", "EXPECTED_CAVITY"), fixture["cases"]):

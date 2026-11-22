@@ -536,3 +536,16 @@ A real opening that is open at 1:50 (waste-bin lid notches 14 mm, chalkboard lea
 ## 2026-11-21 04:02 r5 O02 agent: candidate files removed by mistake
 
 While cleaning its own outputs the O02 agent (storage-crate-stack, waste-bin, chalkboard, cooking-pot, drinking-fountain) ran `rm -f 🗑️generated/r5-*/🔣️.json`, which also removed candidate documents of other agents under `🗑️generated/r5-<slug>/🔣️.json`. They are generated files: an agent whose `r3-validate.ts --file` or apply step now misses its candidate re-runs its build script. No catalog file or source was touched.
+
+## 2026-11-22 — rework 02: `volumes-connected` (structure) and figures on `contact` anchors — resolved while writing
+
+Between two runs of rework 02 the rule changed from "every structure group must contain a `support` solid" (impossible for the 24 humans with `structure.supports: []`, because `volume-anchor` refuses a support solid at a `contact` anchor and the solver treats declared supports as permanently active) to "reaches a support solid, the ground or a contact or support anchor". Nothing left to do; the skeletons of rework 02 end in a pad of sole and plantar tissue (`st-sole-l|r`) at the forefoot contact anchor.
+
+## 2026-11-22 validator: answers to open requests (details at the top of `validator.md`, "Rule changes authors must know")
+
+- **C31 flood vs real openings below the coarse flood cell** (waste-bin, chalkboard; 2026-11-21): resolved without redrawing gaps. Declare the narrowest real air passage of the asset once as `thermal.minimumAirPassageM` (metres; chalkboard 0.004, waste-bin 0.014): the flood keeps a cell of at most a third of it at every scale, so the opening is open at 1:100 to 1:500 as at 1:50. When the asset is too large for that cell, `volumes-thermal-coverage` reports it (`airPassageCellM`) instead of silently closing the passage. The chalkboard gap drawn at 7.5 mm at 1:100 can go back to its true 4 mm.
+- **Thermal area counts the inside of hollow shells** (rework 17: pump flanges, TRV sensor cap): fixed in the rule. A solid of another region covers a face only when it stands between the face and the air; a neck or sensor that passes through a closed shell covers nothing inside it. Model the shell hollow, remove the lumps.
+- **Feature rule and true thin parts** (rework 08 feathers, rework 11 vessel walls): `sheet: true` on the solid (schema), or a thermal layer `thicknessM` for bone and material; closed-loop `revolve` and `extrude` with `holes` are judged by their overall extents.
+- **`r3-sheet.ts --file`** (rework 08, 11): available, as `r3-2d.ts --file` and `r3-validate.ts --file` (`r3-tools.md`).
+- **Silhouette of very small assets** (rework 11): raster of at least 256 cells along the long side; the pen stays at its drawn width.
+- **`🌓️silhouette` `copyMesh` drops `weights`** (2026-11-21, r3-lib `meshesIn`): still open, not touched in this round (the rig agent is changing the rest placement of bones; the weighted pose of the validator has to follow that change, not precede it).

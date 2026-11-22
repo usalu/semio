@@ -33,6 +33,7 @@ async fn open_live(config: serde_json::Value, identity:&mut semio_os_vcs::io::bi
     let compiled = runtime.compile(&package, &bytes).await.expect("scale component compiles");
     let mut instance = runtime.instantiate(&compiled, RuntimeActorId(1), &[], &budget()).await.expect("scale component instantiates");
     let open = Event::InstanceOpen {
+        purpose: semio_framework::kernel::ActorInstanceOpenPurpose::Ordinary,
         request: ActorInstanceOpenRequest { activation_generation: ACTIVATION_GENERATION, instance_id: 1, request_sequence: OPEN_SEQUENCE },
         app_id: AppInstanceId("scale-ui".to_string()),
         actor: "scale-ui".to_string(),

@@ -1,0 +1,17 @@
+# Process3d Mesh Import Retirement
+
+The native editor run reproduced a controlled-retirement Drop assertion in `composition::imported_cube_reopens_and_exports_using_the_same_geometry` and `composition::open_glb_remains_displayable_after_reopen_without_admitting_solid_operations`. Both go through the synchronous B-Rep mesh import before reopening the Process3d snapshot. The editor log identified the Drop assertion and did not contain a stack trace.
+
+Source tracing connects the two codecs to the same retirement mismatch. `ObjSolidImporter` and `GlbSolidImporter` call their respective `Brep` synchronous methods, which both reach `import_triangle_mesh_to_body` and `MeshImportCursor::step`. In phase 4 the cursor transfers its scratch into a `ControlledRetirement<ImportScratch>`. The scratch cursor is a `RetirementRecord`, whose `native_retirement_reply!` rejects an effect with no original producer invocation. The plain `AuthoringWallet::run` supplied that effect. The close error propagated out of the synchronous driver, which still held the incomplete scratch retirement at Drop.
+
+Synchronous cleanup now quotes the selected close work and runs it through `AuthoringWallet::run_invoked`. The operation receives its exact original grant and work ceiling by reborrowing the invoked effect, leaving the outer reply handoff to the wallet. The existing caller-funded cancellation test uses the same invoked authority. The native happy-path test drives the shared two-triangle fixture through the synchronous import and checks the shell, edge incidence, and absence of a solid.
+
+The independent Three.js fixture test passed all six assertions, including two faces, five edges, and four boundary edges. The two changed Rust sources parsed through rustfmt without rewriting them. The repository source scan admitted the mesh-I/O production closure at 2,954 active lines and 159,057 bytes and the test closure at 3,202 active lines and 184,815 bytes. Scoped whitespace checks passed.
+
+The new native regression and the two original editor cases still require an admitted native execution. The previously linked suite was retired to recover compiler-image capacity. No new compiler job was started for this investigation.
+
+## Rollback after a late topology refusal
+
+The position and index prepass validates every triangle before topology creation. A later triangle can still fail on nonfinite normals, degeneracy, or incoherent winding after earlier faces are in the body. The synchronous facade previously returned the first error and dropped the canceled cursor at this point. The retained publication API separately marks a forward refusal canceled and requires the owner to fund close turns.
+
+The synchronous facade now retains the initial forward refusal and drives the same bounded cursor to terminal cancellation before returning it. Rollback removes the topology recorded in the import journal. The new native case starts with an existing box and passes two finite, nondegenerate triangles that traverse their common edge in the same direction. It checks the original typed winding error, every live arena count, the box face IDs, and byte-identical OBJ export. The Three.js fixture confirms both triangle areas and the shared edge orientation. Both independent fixture tests passed with ten assertions. Production admission measured 2,966 active lines and 159,358 bytes. The test closure measured 3,240 active lines and 186,579 bytes. Scoped whitespace checks passed. Native test execution remains pending the managed compiler window.

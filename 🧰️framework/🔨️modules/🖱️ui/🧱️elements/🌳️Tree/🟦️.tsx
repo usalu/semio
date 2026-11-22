@@ -186,6 +186,16 @@ export const Tree = (({
 
   const handleDragOverItem = reactHostPort.useCallback(
     (event: React.DragEvent<HTMLDivElement>, item: TreeDataItem) => {
+      const mime = dragAndDropController?.rowReorderMime;
+      if (mime && event.dataTransfer.types.includes(mime)) {
+        event.preventDefault();
+        event.stopPropagation();
+        const position = resolveTreeDropPosition(event);
+        const accepts = Boolean(item.dragData?.[mime]) && position !== "inside" && !draggedIds.includes(item.id);
+        event.dataTransfer.dropEffect = accepts ? "move" : "none";
+        setDropPreview((previous) => !accepts ? null : previous?.targetId === item.id && previous.position === position ? previous : { targetId: item.id, position });
+        return;
+      }
       handleDragOver(event);
       if (isTreeReorderDragEvent(event)) {
         const position = resolveTreeDropPosition(event);
@@ -194,7 +204,7 @@ export const Tree = (({
       }
       setDropPreview(null);
     },
-    [handleDragOver],
+    [dragAndDropController?.rowReorderMime, draggedIds, handleDragOver],
   );
 
   const handleSelectItem = reactHostPort.useCallback(
@@ -230,7 +240,8 @@ export const Tree = (({
     (event: React.DragEvent<HTMLDivElement>, item: TreeDataItem, section: TreeDataSection) => {
       event.stopPropagation();
       const currentSelectedIds = selectionStoreRef.current.getSelectedIds();
-      const nextDraggedIds = currentSelectedIds.includes(item.id) ? [...currentSelectedIds] : [item.id];
+      const reorderMime = dragAndDropController?.rowReorderMime;
+      const nextDraggedIds = !reorderMime && currentSelectedIds.includes(item.id) ? [...currentSelectedIds] : [item.id];
       const sourceItems = nextDraggedIds.map((id) => itemMap[id]).filter((item):item is TreeDataItem=>item!==undefined);
       setDraggedIds(nextDraggedIds);
       event.dataTransfer.effectAllowed = "move";
@@ -239,7 +250,7 @@ export const Tree = (({
       Object.entries(customData ?? {}).forEach(([kind, value]) => {
         event.dataTransfer.setData(kind, value);
       });
-      if (customData && Object.keys(customData).length > 0) {
+      if (customData && Object.keys(customData).length > 0 && !(reorderMime && customData[reorderMime])) {
         event.dataTransfer.effectAllowed = "copy";
         const labelText = typeof item.label === "string" ? item.label : typeof item.label === "number" ? String(item.label) : "Kind";
         const ghost = document.createElement("div");

@@ -11,11 +11,11 @@ impl PreparedRenderJob {
                     *cursor = DrawMeasureCursor::Complete;
                     return Some(PreparedRenderUsage::default());
                 };
-                let _ = value;
-                let region = draw.glass_regions.partition_point(|region| region.layer_index < layer);
-                let next = if draw.glass_regions.get(region).is_some_and(|region| region.layer_index == layer) { DrawMeasureCursor::Glass(region) } else { Self::layer_channel_cursor(draw, layer, 0) };
+                let next = if value.group.is_some_and(|group| group.begin) { DrawMeasureCursor::GroupBegin(layer) } else { Self::after_layer_header(draw, layer) };
                 (PreparedRenderUsage { draw_items: 1, draw_bytes: size_of::<DrawLayer>(), ..PreparedRenderUsage::default() }, next)
             }
+            DrawMeasureCursor::GroupBegin(layer) => (PreparedRenderUsage { draw_items: 1, ..PreparedRenderUsage::default() }, Self::after_layer_header(draw, layer)),
+            DrawMeasureCursor::GroupEnd(layer) => (PreparedRenderUsage { draw_items: 1, ..PreparedRenderUsage::default() }, DrawMeasureCursor::LayerHeader(layer + 1)),
             DrawMeasureCursor::LayerUi { layer, item, overlay } => {
                 let value = &draw.layers[layer];
                 let items = if overlay { &value.overlay_ui_instances } else { &value.ui_instances };
@@ -119,6 +119,16 @@ impl PreparedRenderJob {
             DrawMeasureCursor::PassLineVertex { pass, draw: draw_index, vertex } => {
                 let next = if vertex + 1 < draw.scene_passes[pass].line_draws[draw_index].vertices.len() { DrawMeasureCursor::PassLineVertex { pass, draw: draw_index, vertex: vertex + 1 } } else { Self::next_pass_line(draw, pass, draw_index) };
                 (PreparedRenderUsage { draw_items: 1, draw_bytes: size_of::<semio_ui_scene_pass::LineVertex3d>(), ..PreparedRenderUsage::default() }, next)
+            }
+            DrawMeasureCursor::PassPoint { pass, draw: draw_index } => {
+                let next = if draw.scene_passes[pass].point_draws[draw_index].vertices.is_empty() { Self::next_pass_point(draw, pass, draw_index) } else { DrawMeasureCursor::PassPointChunk { pass, draw: draw_index, start: 0 } };
+                (PreparedRenderUsage { draw_items: 1, draw_bytes: size_of::<semio_ui_scene_pass::PointDraw3d>(), ..PreparedRenderUsage::default() }, next)
+            }
+            DrawMeasureCursor::PassPointChunk { pass, draw: draw_index, start } => {
+                let length = draw.scene_passes[pass].point_draws[draw_index].vertices.len();
+                let end = (start + semio_ui_scene_pass::POINT_CHUNK_VERTICES).min(length);
+                let next = if end < length { DrawMeasureCursor::PassPointChunk { pass, draw: draw_index, start: end } } else { Self::next_pass_point(draw, pass, draw_index) };
+                (PreparedRenderUsage { draw_items: 1, draw_bytes: (end - start) * size_of::<semio_ui_scene_pass::PointVertex3d>(), ..PreparedRenderUsage::default() }, next)
             }
             DrawMeasureCursor::PassTextured { pass, draw: draw_index } => {
                 let value = &draw.scene_passes[pass].textured_draws[draw_index];
@@ -226,6 +236,26 @@ impl PreparedRenderJob {
         if from_channel < 3 {
             Self::next_after_layer(draw, layer)
         } else {
+            Self::layer_exit(draw, layer)
+        }
+    }
+
+    fn after_layer_header(draw: &DrawList, layer: usize) -> DrawMeasureCursor {
+        let region = draw.glass_regions.partition_point(|region| region.layer_index < layer);
+        if draw.glass_regions.get(region).is_some_and(|region| region.layer_index == layer) {
+            DrawMeasureCursor::Glass(region)
+        } else {
+            Self::layer_channel_cursor(draw, layer, 0)
+        }
+    }
+
+    /// 🫥️ Leaving `layer`: a group's last layer first closes the group (composites its offscreen target).
+    fn layer_exit(draw: &DrawList, layer: usize) -> DrawMeasureCursor {
+        let member = draw.layers.get(layer).is_some_and(|value| value.group.is_some());
+        let continues = draw.layers.get(layer + 1).is_some_and(|next| next.group.is_some_and(|group| !group.begin));
+        if member && !continues {
+            DrawMeasureCursor::GroupEnd(layer)
+        } else {
             DrawMeasureCursor::LayerHeader(layer + 1)
         }
     }
@@ -307,6 +337,14 @@ impl PreparedRenderJob {
         }
     }
 
+    fn next_pass_point(draw: &DrawList, pass: usize, draw_index: usize) -> DrawMeasureCursor {
+        if draw_index + 1 < draw.scene_passes[pass].point_draws.len() {
+            DrawMeasureCursor::PassPoint { pass, draw: draw_index + 1 }
+        } else {
+            Self::next_after_points(draw, pass)
+        }
+    }
+
     fn next_textured_instance(draw: &DrawList, pass: usize, draw_index: usize, instance: usize) -> DrawMeasureCursor {
         if instance + 1 < draw.scene_passes[pass].textured_draws[draw_index].instances.len() {
             DrawMeasureCursor::PassTexturedInstance { pass, draw: draw_index, instance: instance + 1 }
@@ -370,6 +408,14 @@ impl PreparedRenderJob {
     }
 
     fn next_after_lines(draw: &DrawList, pass: usize) -> DrawMeasureCursor {
+        if draw.scene_passes[pass].point_draws.is_empty() {
+            Self::next_after_points(draw, pass)
+        } else {
+            DrawMeasureCursor::PassPoint { pass, draw: 0 }
+        }
+    }
+
+    fn next_after_points(draw: &DrawList, pass: usize) -> DrawMeasureCursor {
         let value = &draw.scene_passes[pass];
         if !value.translucent_draws.is_empty() {
             DrawMeasureCursor::PassDraw { pass, draw: 0, translucent: true }
@@ -378,7 +424,7 @@ impl PreparedRenderJob {
         }
     }
 
-    /// 🖼️ A scene pass is measured — and therefore encoded — TEXTURED → opaque → lines → translucent.
+    /// 🖼️ A scene pass is measured — and therefore encoded — TEXTURED → opaque → lines → points → translucent.
     ///
     /// 🩸️ The textured underlay used to come last, so the world reference plane composited OVER the
     /// grid and the model and tinted everything it covered. React draws the same plane at

@@ -5,7 +5,7 @@ export function grantJobLimitV1(grant:Readonly<{reservedMegabytes:number}>,optio
  return jobPolicyForReservationV1(grant.reservedMegabytes,1,options);
 }
 
-/** 📈️ The run a grant reports to the learned estimates: a job stopped at its limit is recorded with the peak it needed (the limit grown by the breach growth), so the next reservation, and with it the next limit, is larger; any other outcome leaves the run as measured. */
-export function learnedRunAfterOutcomeV1<Run extends Readonly<{peakMegabytes:number;status:string}>>(run:Run,outcome:JobOutcomeV1|undefined):Run{
- return outcome===undefined||outcome.kind!=="memory-exceeded"?run:{...run,peakMegabytes:Math.max(run.peakMegabytes,jobBreachLearnedPeakV1(outcome)),status:run.status==="cancelled"?run.status:"failed"};
+/** 📈️ The run a grant reports to the learned estimates: a job stopped at its limit is recorded with the peak it needed (the limit grown by the breach growth), so the next reservation, and with it the next limit, is larger (`limited`: the one failed run that may teach, because the gate itself stopped it at the memory it granted); any other outcome leaves the run as measured. */
+export function learnedRunAfterOutcomeV1<Run extends Readonly<{peakMegabytes:number;status:string}>>(run:Run,outcome:JobOutcomeV1|undefined):Run&Readonly<{limited?:true}>{
+ return outcome===undefined||outcome.kind!=="memory-exceeded"?run:{...run,peakMegabytes:Math.max(run.peakMegabytes,jobBreachLearnedPeakV1(outcome)),status:run.status==="cancelled"?run.status:"failed",limited:true};
 }

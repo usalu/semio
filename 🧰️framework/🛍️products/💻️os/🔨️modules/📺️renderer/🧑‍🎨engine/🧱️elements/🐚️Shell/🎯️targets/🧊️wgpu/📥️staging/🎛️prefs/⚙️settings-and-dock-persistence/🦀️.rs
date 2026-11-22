@@ -14,6 +14,7 @@ impl PrefsState {
     pub fn clear_driver_draft(&mut self, chrome: &mut ChromeState) {
         self.driver_draft = None;
         chrome.chrome_build.driver = resolve_ui_driver_chrome(&self.driver_id, &chrome.chrome_build.preferences.custom_drivers);
+        semio_renderer_wgpu_ui_engine::retained_ui_engine::set_ui_engine_driver(chrome.chrome_build.driver);
     }
 
     pub fn set_driver_field(&mut self, key: &str, value: &str, chrome: &mut ChromeState) -> bool {
@@ -28,6 +29,7 @@ impl PrefsState {
             if let Some((_,axis))=entries.iter_mut().find(|(name,_)|name==key){*axis=DslValue::String(value.to_owned());}else{entries.push((key.to_owned(),DslValue::String(value.to_owned())));}
         }
         chrome.chrome_build.driver = ui_driver_document_chrome(&draft);
+        semio_renderer_wgpu_ui_engine::retained_ui_engine::set_ui_engine_driver(chrome.chrome_build.driver);
         self.driver_draft = Some(draft);
         true
     }

@@ -189,6 +189,7 @@ impl DrawList {
                     let mut layer = work.source.layers.pop().ok_or(RetainedOutputError::Capacity)?;
                     layer.scissor = match (layer.scissor, self.scissor_stack.last().copied()) { (Some(local), Some(parent)) => Some(local.intersect(&parent)), (local, parent) => local.or(parent) };
                     layer.foreground_of = foreground;
+                    if self.active_group.is_some() { layer.group = self.active_group; }
                     work.local_clip = layer.clip.take();
                     if work.local_clip.is_some() || self.clip_stack.last().is_some() { layer.clip = Some(ClipRegion { scissors: PagedVec::new() }); }
                     work.pending = Some(layer); work.left = 0; work.right = 0; work.phase = 1;

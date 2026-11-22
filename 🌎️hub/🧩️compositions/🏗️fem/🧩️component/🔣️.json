@@ -8317,11 +8317,12 @@
         "namedLayouts": [],
         "defaultLayout": {
           "root": {
-            "kind": "row",
+            "kind": "split",
+            "axis": "horizontal",
             "children": [
               {
                 "kind": "stack",
-                "size": 50.0,
+                "size": 0.5,
                 "children": [
                   {
                     "kind": "window",
@@ -8332,7 +8333,7 @@
               },
               {
                 "kind": "stack",
-                "size": 50.0,
+                "size": 0.5,
                 "children": [
                   {
                     "kind": "window",
@@ -9395,17 +9396,12 @@
         "namedLayouts": [],
         "defaultLayout": {
           "root": {
-            "kind": "row",
+            "kind": "stack",
             "children": [
               {
-                "kind": "stack",
-                "children": [
-                  {
-                    "kind": "window",
-                    "windowKindId": "fem2d-view-model",
-                    "title": "fem2d-view-model"
-                  }
-                ]
+                "kind": "window",
+                "windowKindId": "fem2d-view-model",
+                "title": "fem2d-view-model"
               }
             ]
           }
@@ -17374,11 +17370,12 @@
         "namedLayouts": [],
         "defaultLayout": {
           "root": {
-            "kind": "row",
+            "kind": "split",
+            "axis": "horizontal",
             "children": [
               {
                 "kind": "stack",
-                "size": 50.0,
+                "size": 0.5,
                 "children": [
                   {
                     "kind": "window",
@@ -17389,7 +17386,7 @@
               },
               {
                 "kind": "stack",
-                "size": 50.0,
+                "size": 0.5,
                 "children": [
                   {
                     "kind": "window",
@@ -18477,17 +18474,12 @@
         "namedLayouts": [],
         "defaultLayout": {
           "root": {
-            "kind": "row",
+            "kind": "stack",
             "children": [
               {
-                "kind": "stack",
-                "children": [
-                  {
-                    "kind": "window",
-                    "windowKindId": "fem3d-view-model",
-                    "title": "fem3d-view-model"
-                  }
-                ]
+                "kind": "window",
+                "windowKindId": "fem3d-view-model",
+                "title": "fem3d-view-model"
               }
             ]
           }

@@ -17,3 +17,6 @@ mod tree_row_rect_tests;
 #[path = "../../../../../🧪️tests/📊️table-row-grid/🦀️.rs"]
 mod table_row_grid_tests;
 
+
+#[path = "../../../../../🧪️tests/📊️table-column-model/🦀️.rs"]
+mod table_column_model_tests;

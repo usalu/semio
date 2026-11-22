@@ -74,8 +74,8 @@ async fn selectable_kinds_publish_the_addressed_window_config() {
     dispatch(&mut app, "setSelectableKind", Some(&semio_framework_pack_json::json!({ "windowId": board2d::WINDOW_KIND_ID, "kind": "grips", "pressed": false })), Some(board)).expect("press board grips off");
     let kinds = board_window_config(&mut app, board).await.selectable_kinds;
     assert_eq!((kinds.parts, kinds.grips, kinds.fasteners), (true, false, true), "only the named kind changed");
-    let untouched = world_window_config(&mut app, world).await.selectable_kinds;
-    assert!(untouched.grips, "the pick filter is per pane");
+    let world_view = window_view(world3d::WINDOW_KIND_ID, world);
+    assert_eq!(app.window_config_generation(&world_view).await.expect("world config generation"), None, "the board edit leaves the world partition unopened");
 
     dispatch(&mut app, "setSelectableKind", Some(&semio_framework_pack_json::json!({ "kind": "fasteners" })), Some(world)).expect("argument-less fastener toggle");
     assert!(!world_window_config(&mut app, world).await.selectable_kinds.fasteners, "an absent `pressed` flips the current state");
@@ -111,7 +111,7 @@ async fn grip_show_and_direction_publish_the_world_window_config() {
 async fn projection_verbs_publish_the_world_window_config_and_repose_only_when_they_must() {
     let mut app = Box::new(app_with_registry());
     let world = "puzzle5d-projection-world";
-    let before = world_window_config(&mut app, world).await.camera3d;
+    let before = window_ownership::Puzzle5dWorldWindowConfig::default().camera3d;
 
     dispatch(&mut app, "setProjection", Some(&semio_framework_pack_json::json!({ "field": "orthographicView", "value": "front" })), Some(world)).expect("setProjection");
     let reposed = world_window_config(&mut app, world).await.camera3d;
@@ -294,12 +294,13 @@ async fn created_part_board_and_world_edits_reopen_with_history() {
         let edited = projection_of(&original);
         assert_eq!(edited.get("parts").and_then(Value::as_array).and_then(|parts| parts.first()).and_then(|part| part.get("3d")).and_then(|volume| volume.get("origin")).and_then(Value::as_array).and_then(|origin| origin.first()).and_then(Value::as_f64), Some(world_x));
         let mut reopened = Box::new(app_with_registry());
+        let Puzzle5dTestApp(reopened_app, reopened_scope) = reopened.as_mut();
         if form == "text" {
             let saved = original.document_text().await.expect("save text");
-            semio_plugin::app::artifact_app_laws::load_document_text(&mut reopened.0, &saved, &mut semio_plugin::artifact_app_laws::fixture_identity(), reopened.1.cx()).await.expect("reopen text");
+            semio_plugin::app::artifact_app_laws::load_document_text(reopened_app, &saved, &mut semio_plugin::artifact_app_laws::fixture_identity(), reopened_scope.cx()).await.expect("reopen text");
         } else {
             let saved = original.document_pack().await.expect("save pack");
-            semio_plugin::app::artifact_app_laws::load_document(&mut reopened.0, &saved, &mut semio_plugin::artifact_app_laws::fixture_identity(), reopened.1.cx()).await.expect("reopen pack");
+            semio_plugin::app::artifact_app_laws::load_document(reopened_app, &saved, &mut semio_plugin::artifact_app_laws::fixture_identity(), reopened_scope.cx()).await.expect("reopen pack");
         }
         assert_eq!(projection_of(&reopened), edited, "{form} reopened both edits");
         dispatch(&mut reopened, "undo", None, None).expect("undo world edit");
@@ -311,22 +312,53 @@ async fn created_part_board_and_world_edits_reopen_with_history() {
     }
 }
 
+/// 🧩️ Play snapshot composition declares the slots used to restore the authored Nakagin child.
+#[test]
+fn nakagin_play_snapshot_declares_the_typed_composition_slots() {
+    use crate::standards::v1::subsets::any::io::text::snapshot::{PUZZLE5D_NAKAGIN_EXAMPLE_TEXT, parse_dsl};
+    use semio_framework_schema_composition::ArtifactCompositionFields;
+
+    let typed = parse_dsl(PUZZLE5D_NAKAGIN_EXAMPLE_TEXT).expect("authored Nakagin admits");
+    let catalog = typed.kind_catalogs.expect("authored Nakagin owns a catalog");
+    let kind = catalog.target.borrowed().artifact_kind;
+    assert_eq!(kind, "s.stdio.semio");
+    assert!(Puzzle5dPlaySnapshot::child_slots().iter().any(|slot| slot.name == "kindCatalogs" && slot.selection.accepts_kind(kind) && !slot.many));
+    assert_eq!(Puzzle5dPlaySnapshot::child_slots(), Puzzle5dSnapshot::child_slots());
+    assert_eq!(Puzzle5dPlaySnapshot::link_slots(), Puzzle5dSnapshot::link_slots());
+}
+
 /// 🛍️ LAW: the example switcher really switches, and it can NEVER produce the framework's opaque
 /// "exceeds fixed semantic work capacity" fault: `extent` answers `Some(_)` for every shipped example id,
 /// refusing an oversized switch with the localized `example_too_large` notice on its first step instead.
 #[semio_framework_async_macros::async_test]
 async fn set_active_example_switches_the_document_and_never_faults_on_capacity() {
+    admit_capsule_dream_fixture();
     let mut app = Box::new(app_with_registry());
+    let mut previous = None;
     for (example_id, document) in [("", empty_document()), ("concrete-forest", concrete_forest_example_document()), ("nakagin", nakagin_example_document())] {
         dispatch(&mut app, "setActiveExample", Some(&semio_framework_pack_json::json!({ "exampleId": example_id })), None).unwrap_or_else(|error| panic!("setActiveExample {example_id} must reach the document, not fault: {error:?}"));
-        assert_eq!(part_count(&app), document.parts.len(), "setActiveExample {example_id} really replaced the document");
+        let projection = projection_of(&app);
+        assert_eq!(projection.get("parts").and_then(Value::as_array).map(Vec::len), Some(document.parts.len()), "{example_id} parts landed");
+        assert_eq!(projection.get("fasteners").and_then(Value::as_array).map(Vec::len), Some(document.fasteners.len()), "{example_id} fasteners landed");
+        if example_id.is_empty() {
+            let patch = dispatch(&mut app, "patchPart", Some(&semio_framework_pack_json::json!({ "field": "x", "value": 1.0 })), None).expect("patching an empty document settles");
+            assert!(patch.mutations.is_empty());
+            assert_eq!(projection_of(&app), projection);
+        } else if example_id == "concrete-forest" {
+            previous = Some(projection);
+        } else if example_id == "nakagin" {
+            dispatch(&mut app, "undo", None, None).expect("undo Nakagin example switch");
+            assert_eq!(projection_of(&app), previous.take().expect("Concrete Forest projection"));
+            dispatch(&mut app, "redo", None, None).expect("redo Nakagin example switch");
+            assert_eq!(projection_of(&app), projection);
+        }
     }
     let snapshot = Puzzle5dPlaySnapshot::new(crate::editor::puzzle5d::entities::puzzle5d_snapshot_from_document(&concrete_forest_example_document()).expect("authored document admits"));
     let interaction = protocol::InteractionState::default();
     let work = Puzzle5dSetActiveExampleWork::default();
     for example_id in ["", "concrete-forest", "nakagin", "capsule-dream"] {
         let command = Puzzle5dCommand::try_from_action("setActiveExample", Some(semio_framework_pack_json::json!({ "exampleId": example_id })), None).expect("registered example command");
-        let extent = semio_plugin::retained_command::ArtifactCommandWork::<EditorApp<Puzzle5dPlayApp>>::extent(&work, &command, &snapshot, &interaction, None);
+        let extent = semio_plugin::retained_command::ArtifactCommandWork::<semio_plugin::EditorApp<Puzzle5dPlayApp>>::extent(&work, &command, &snapshot, &interaction, None);
         assert!(extent.is_some(), "setActiveExample {example_id} must declare an extent — `None` is the opaque capacity fault this slice replaced with a notice");
         assert!(extent.is_some_and(|extent| extent <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS), "setActiveExample {example_id} must stay inside the fixed work ceiling");
     }
@@ -336,32 +368,33 @@ async fn set_active_example_switches_the_document_and_never_faults_on_capacity()
     close_app(&mut app);
 }
 
-/// 🌙️ LAW: switching to `capsule-dream` really lands its 2 880 parts.
-///
-/// 🐛️ BLOCKED IN THE FRAMEWORK, not here. The switch is admitted (its `extent` is ~110 chunk units
-/// against `PUZZLE_COMMAND_WORK_ITEMS = 4 096`, asserted by the sibling law above) and the work runs;
-/// what refuses it is the PUBLICATION of the one edit it produces. `capsule-dream` is 2 880
-/// `createPart` + 2 865 `connectGrips`, and `fault_stalled_typed_operation_publication`
-/// (`🧰️framework/…/🔌️plugin/🦀️.rs`) terminates a `Publishing` operation once
-/// `TYPED_OPERATION_STALL_FAULT_CEILING = 4 096` consecutive units leave `typed_operation_stall_witness()`
-/// — `(operation_id, stage, flags)` — unchanged. None of those three facts changes while a healthy
-/// ladder folds one mutation per unit, so a big edit is indistinguishable from a stuck owner and the
-/// operation dies with `interactive-job.publication-stalled`. Measured 2026-09-22; the witness needs the
-/// publication's own monotone progress term (proposed diff in `📓️block-puzzle.md` §9.11, routed to the
-/// framework owner). This is the same defect puzzle 3d's
-/// `one_mutation_publishes_in_a_bounded_size_independent_number_of_host_turns` measures, and it is why
-/// the live `puzzle5d` pane draws its boot document while its picker reads "Capsule Dream".
-///
-/// Ignored rather than deleted or loosened: nothing about the assertion changes, and un-ignoring it is
-/// the proof that the framework fix landed. It also costs ~380 s of the binary's 30-minute watchdog
-/// budget on its way to that fault, which is what kept this whole suite from ever reporting.
-#[ignore = "blocked on the framework publication-stall ceiling (📓️block-puzzle.md §9.11); un-ignore when the stall witness carries publication progress"]
+/// 🌙️ Publishes the Capsule Dream example through the editor and verifies its parts and fasteners.
 #[semio_framework_async_macros::async_test]
 async fn set_active_example_reaches_the_capsule_dream_document() {
+    use semio_plugin::artifact_app_laws::HostLifetimeStock;
+
+    admit_capsule_dream_fixture();
     let mut app = Box::new(app_with_registry());
+    let before = app.1.cx().retained_progress();
+    let work_before = app.1.cx().original_work_units_spent();
     dispatch_traced(&mut app, "setActiveExample", Some(&semio_framework_pack_json::json!({ "exampleId": "capsule-dream" })), None)
         .unwrap_or_else(|error| panic!("setActiveExample capsule-dream must reach the document, not fault: {error:?}"));
-    assert_eq!(part_count(&app), capsule_dream_example_document().parts.len(), "setActiveExample capsule-dream really replaced the document");
+    let after = app.1.cx().retained_progress();
+    let work = app.1.cx().original_work_units_spent() - work_before;
+    let axes = [
+        ("items", after.copied_items - before.copied_items, HostLifetimeStock::ITEMS),
+        ("copy bytes", after.copied_bytes - before.copied_bytes, HostLifetimeStock::COPY_BYTES),
+        ("capacity bytes", after.retained_capacity_bytes - before.retained_capacity_bytes, HostLifetimeStock::CAPACITY_BYTES),
+        ("release bytes", after.released_bytes - before.released_bytes, HostLifetimeStock::RELEASE_BYTES),
+    ];
+    for (name, spent, maximum) in axes {
+        assert!(spent <= maximum, "Capsule Dream uses {spent} {name} with a host limit of {maximum}");
+    }
+    assert!(work <= u128::from(HostLifetimeStock::FUEL), "Capsule Dream uses {work} work units");
+    let projection = projection_of(&app);
+    let expected = capsule_dream_example_document();
+    assert_eq!(projection.get("parts").and_then(Value::as_array).map(Vec::len), Some(expected.parts.len()), "Capsule Dream parts landed");
+    assert_eq!(projection.get("fasteners").and_then(Value::as_array).map(Vec::len), Some(expected.fasteners.len()), "Capsule Dream fasteners landed");
     close_app(&mut app);
 }
 
@@ -373,14 +406,14 @@ async fn focus_selection_publishes_the_addressed_pane_camera() {
     let parts = seeded_parts(&mut app, 2);
     select_id(&mut app, PUZZLE5D_GRANULARITY_PART, &parts[1]).expect("select one part");
     let world = "puzzle5d-focus-world";
-    let before = world_window_config(&mut app, world).await.camera3d;
+    let before = window_ownership::Puzzle5dWorldWindowConfig::default().camera3d;
     let focused = dispatch(&mut app, "focusSelection", Some(&semio_framework_pack_json::json!({ "windowId": world3d::WINDOW_KIND_ID })), Some(world)).expect("focusSelection in the world pane");
     assert!(focused.mutations.is_empty(), "a camera focus is never a document edit");
     let after = world_window_config(&mut app, world).await.camera3d;
     assert_ne!(after.target, before.target, "the world pane's orbit target moved onto the selection");
 
     let board = "puzzle5d-focus-board";
-    let board_before = board_window_config(&mut app, board).await.camera2d;
+    let board_before = window_ownership::Puzzle5dBoardWindowConfig::default().camera2d;
     dispatch(&mut app, "focusSelection", Some(&semio_framework_pack_json::json!({ "windowId": board2d::WINDOW_KIND_ID })), Some(board)).expect("focusSelection in the board pane");
     let board_after = board_window_config(&mut app, board).await.camera2d;
     assert!(board_after != board_before, "the board pane's flat camera moved onto the selection");

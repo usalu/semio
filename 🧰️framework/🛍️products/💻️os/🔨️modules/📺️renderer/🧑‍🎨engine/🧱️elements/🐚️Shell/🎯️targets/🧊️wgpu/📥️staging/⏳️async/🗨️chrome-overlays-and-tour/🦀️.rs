@@ -25,6 +25,18 @@ pub fn chrome_now_ms() -> f64 {
     std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|duration| duration.as_secs_f64() * 1000.0).unwrap_or(0.0)
 }
 
+/// 🎞️ Shell motion clock in seconds, one second after the first read so `0.0` stays the unstamped sentinel of the draw clock; f32 resolves a 60 Hz frame for about a day.
+pub fn chrome_motion_seconds() -> f32 {
+    static ORIGIN_MS: std::sync::OnceLock<f64> = std::sync::OnceLock::new();
+    let now = chrome_now_ms();
+    chrome_motion_seconds_since(now, *ORIGIN_MS.get_or_init(|| now))
+}
+
+/// 🎞️ Pure twin of [`chrome_motion_seconds`] for a wall clock reading and its origin, both in milliseconds.
+pub fn chrome_motion_seconds_since(now_ms: f64, origin_ms: f64) -> f32 {
+    ((now_ms - origin_ms).max(0.0) / 1000.0) as f32 + 1.0
+}
+
 //#endregion 🔖️ChromeOverlaysAndTour
 //#endregion ShellChrome
 
@@ -42,15 +54,6 @@ pub fn utility_subtree_has_active_path(nodes: &[UtilityNode]) -> bool {
         UtilityNode::Collection { children, .. } => utility_subtree_has_active_path(children),
         _ => false,
     })
-}
-
-/// 🎓️ Raised-cosine breathing thickness for the introduced-element pulse ring — mirrors the
-/// `data-introduced` CSS keyframes (`ui/styling/js/🎨️ui.css`: hairline → focus → hairline over 1.6s,
-/// ease-in-out), which are exactly a raised cosine.
-#[cfg(any(test, feature = "testkit"))]
-pub fn introduced_pulse_thickness(now_ms: f64, hairline: f32, focus: f32) -> f32 {
-    let phase = (now_ms.rem_euclid(INTRODUCED_PULSE_PERIOD_MS) / INTRODUCED_PULSE_PERIOD_MS) as f32;
-    hairline + (focus - hairline) * 0.5 * (1.0 - (phase * std::f32::consts::TAU).cos())
 }
 
 /// 👻️ Pure accept-decision for the ghost-text click affordance — factored out of
@@ -94,7 +97,5 @@ pub fn engagement_completion_suffix(query: &str, possibles: Option<&[semio_ui_de
     String::new()
 }
 
-#[cfg(any(test, feature = "testkit"))]
-pub const INTRODUCED_PULSE_PERIOD_MS: f64 = 1600.0;
 //#endregion 🔖️ChromeOverlaysAndTour
 //#endregion ShellChrome

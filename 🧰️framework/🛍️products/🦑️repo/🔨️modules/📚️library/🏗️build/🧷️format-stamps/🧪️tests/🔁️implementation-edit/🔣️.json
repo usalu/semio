@@ -8,6 +8,8 @@
   {"id": "syntax-error-of-a-module", "error": {"name": "BuildMessage", "message": "Unexpected ;"}, "origin": "load"},
   {"id": "private-engine-import-in-transit", "error": {"name": "PrivateEngineImportMissingError", "message": "Private Nx engine import missing: ./go.ts from /tree/engine.ts"}, "origin": "load"},
   {"id": "unresolvable-import", "error": {"name": "ResolveMessage", "code": "ERR_MODULE_NOT_FOUND", "message": "Cannot find module './x.mjs' imported from /a/b.mjs"}, "origin": "load"},
+  {"id": "a-missing-import-of-an-owner-source-is-the-owner-not-the-implementation", "error": {"name": "Error", "code": "BUILD_SOURCE_UNPARSEABLE", "message": "Cannot find module '../x.ts'", "cause": {"name": "ResolveMessage", "code": "MODULE_NOT_FOUND", "message": "Cannot find module '../x.ts'"}}, "origin": null},
+  {"id": "a-missing-import-of-a-source-a-peer-just-edited-waits-for-the-replica", "error": {"name": "Error", "code": "BUILD_SOURCE_UNPARSEABLE", "replicaUnsettled": true, "message": "Cannot find module '../x.ts'", "cause": {"name": "ResolveMessage", "code": "MODULE_NOT_FOUND", "message": "Cannot find module '../x.ts'"}}, "origin": "error"},
   {"id": "export-missing", "error": {"name": "SyntaxError", "message": "Export named 'x' not found in module '/a/b.mjs'."}, "origin": "load"},
   {"id": "json-syntax-error-is-a-read", "error": {"name": "SyntaxError", "message": "JSON Parse error: Unexpected EOF"}, "origin": null},
   {"id": "bundler-failure-is-a-product-source-problem", "error": {"name": "AggregateError", "message": "Bundle failed", "errors": [{"name": "BuildMessage", "message": "Unexpected ;"}]}, "origin": null},

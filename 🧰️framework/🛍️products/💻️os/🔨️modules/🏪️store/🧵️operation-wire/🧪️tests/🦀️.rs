@@ -194,7 +194,17 @@ fn prepared_operation_output_preserves_every_original_prefix_and_physical_cancel
                 if offset==source.len(){break;}
                 let end=(offset+64).min(source.len());
                 let(zero,event)=semio_framework_trace::observe_heap_allocations_on_this_thread(||effect_fixture::fx(RetainedCloneGrant{maximum_items:0,..policy},|e|owner.append(&source.as_bytes()[offset..end],e)).unwrap());assert_eq!(zero,RetainedCloneProgress::default());assert_eq!((event.requested_bytes,event.released_bytes),(0,0));
-                let(progress,event)=semio_framework_trace::observe_heap_allocations_on_this_thread(||effect_fixture::fx(policy,|e|owner.append(&source.as_bytes()[offset..end],e)).unwrap());assert!(progress.fits(policy));assert_eq!(event.requested_bytes,progress.retained_capacity_bytes);assert_eq!(event.released_bytes,0);retained+=event.requested_bytes;offset+=progress.copied_bytes;assert_eq!(owner.len(),offset);for index in 0..offset{assert_eq!(owner.byte_at(index),Some(source.as_bytes()[index]));}
+                let demand=owner.append_demands(end-offset).unwrap();
+                let grant=RetainedCloneGrant{maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_depth:demand.depth,..policy};
+                let(progress,event)=semio_framework_trace::observe_heap_allocations_on_this_thread(||effect_fixture::fx(grant,|e|owner.append(&source.as_bytes()[offset..end],e)).unwrap());
+                assert!(progress.fits(grant));
+                assert_eq!((event.requested_bytes,event.released_bytes),(demand.capacity_bytes,0));
+                assert_eq!((progress.copied_bytes,progress.retained_capacity_bytes),(demand.copy_bytes,demand.capacity_bytes));
+                retained+=event.requested_bytes;
+                let written=owner.len()-offset;
+                assert_eq!(written,if demand.capacity_bytes==0{demand.copy_bytes}else{0});
+                offset+=written;
+                for index in 0..offset{assert_eq!(owner.byte_at(index),Some(source.as_bytes()[index]));}
             }
             assert_eq!(source.as_ptr(),original);assert_eq!(owner.allocated_bytes(),retained);
             let mut released=0;owner.begin_close();
@@ -251,7 +261,18 @@ fn original_operation_contiguous_handoff_conserves_supplied_birth_copy_and_cance
  for row in rows["examples"].as_array().unwrap(){let original=row["text"].as_str().unwrap().repeat(row["repeat"].as_u64().unwrap_or(1)as usize);let pointer=original.as_ptr();
   for cut in rows["cancelStops"].as_array().unwrap().iter().map(|v|v.as_u64().unwrap()as usize).chain(std::iter::once(12000)){
    let mut owner=ArtifactPreparedOperationOutput::empty(maximum,capacity).unwrap();let mut live=0;let mut offset=0;
-   for _ in 0..10000{if offset==original.len(){break;}let end=(offset+64).min(original.len());let(progress,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||effect_fixture::fx(policy,|e|owner.append(&original.as_bytes()[offset..end],e)).unwrap());assert!(progress.fits(policy));assert_eq!(heap.requested_bytes,progress.retained_capacity_bytes);assert_eq!(heap.released_bytes,progress.released_bytes);live+=heap.requested_bytes;live-=heap.released_bytes;offset+=progress.copied_bytes;}
+   for _ in 0..10000{
+    if offset==original.len(){break;}
+    let end=(offset+64).min(original.len());
+    let demand=owner.append_demands(end-offset).unwrap();
+    let grant=RetainedCloneGrant{maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_depth:demand.depth,..policy};
+    let(progress,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||effect_fixture::fx(grant,|e|owner.append(&original.as_bytes()[offset..end],e)).unwrap());
+    assert!(progress.fits(grant));
+    assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));
+    live+=heap.requested_bytes;
+    live-=heap.released_bytes;
+    offset=owner.len();
+   }
    assert_eq!(offset,original.len());let mut transferred=None;
    for _ in 0..cut{
     let(prefix,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.contiguous_prefix().map(|value|(value.as_ptr(),value.len())));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));

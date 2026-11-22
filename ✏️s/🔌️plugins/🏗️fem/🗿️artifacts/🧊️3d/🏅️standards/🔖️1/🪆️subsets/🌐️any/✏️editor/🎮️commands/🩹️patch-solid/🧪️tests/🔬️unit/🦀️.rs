@@ -4,7 +4,7 @@ use super::*;
 #[test]
 fn layer_count_text_admission_is_exact_and_sparse() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
-    let mut base = semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::text::snapshot::fem3d_demo_snapshot();
+    let mut base = semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::text::snapshot::fem3d_demo_snapshot().expect("demo snapshot");
     base.solids.iter_mut().find(|solid| solid.id == "sol1").unwrap().layers = 2;
     for row in fixture["layerCounts"].as_array().unwrap() {
         let result = emit(&base, PatchSolid { id: "sol1".into(), field: "layers".into(), value: row["text"].as_str().unwrap().into() });
@@ -24,7 +24,11 @@ use semio_s_artifact_fem_3d_editor::editor::fem3d::Fem3dCommand;
 #[cfg(test)] use semio_plugin::component::ArtifactView;
 #[cfg(test)] use semio_plugin::component::NoConfig;
 #[cfg(test)] use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
-#[cfg(test)] use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::patch_solid::PatchSolid;
+#[cfg(test)] use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::patch_solid::{handle, PatchSolid};
+#[cfg(test)] use semio_plugin::ConfigView;
+#[cfg(test)] use semio_s_artifact_fem_3d_mesh_solids::standards::v1::subsets::any::schema::mutations::change_solid::ChangeSolid;
+#[cfg(test)] use semio_s_artifact_fem_3d_diff::standards::v1::subsets::any::schema::diff::Fem3dSolidPatch;
+#[cfg(test)] use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemAxis;
 #[cfg(test)] use semio_plugin::component::Emit;
 #[cfg(test)] use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
 #[cfg(test)] use semio_plugin::component::NoConfigMutation;
@@ -67,5 +71,5 @@ fn sibling_field_commands_and_inverse_preserve_concurrent_intent(){
     let first_diff=protocol::ColdMutation::diff(&first,&base).into_parts().0;let second_diff=protocol::ColdMutation::diff(&second,&base).into_parts().0;
     let mut sum=first_diff.clone();protocol::ColdMutationDiff::absorb(&mut sum,second_diff);
     assert_eq!(protocol::apply_diff_cold(&sum,&base).unwrap(),combined);
-    assert_eq!(protocol::apply_diff_cold(&protocol::DiffAlgebra::inverse(&sum,&base),&combined).unwrap(),base);
+    assert_eq!(protocol::apply_diff_cold(&protocol::ColdDiffAlgebra::inverse(&sum,&base),&combined).unwrap(),base);
 }

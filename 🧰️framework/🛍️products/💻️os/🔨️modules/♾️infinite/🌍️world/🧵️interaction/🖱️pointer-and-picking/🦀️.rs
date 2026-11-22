@@ -95,6 +95,18 @@ pub fn resolve_world_context_menu_target(selection_state: &WorldSelectionState) 
     Some(("object", hovered.to_string()))
 }
 
+/// 🌪️ How long one finger holds still before it asks for vortex suggestions — React's `createLongPressV1` options in `🌐️World3dHost/🟦️.tsx`, one value in `🌪️vortex-suggestions.json` for both languages.
+pub const WORLD3D_SUGGESTIONS_HOLD_MS: f64 = 500.0;
+
+/// 🌪️ How far the held finger may drift before the hold disarms, in pixels.
+pub const WORLD3D_SUGGESTIONS_HOLD_SLOP_PX: f64 = 10.0;
+
+/// 🌪️ The `openVortexSuggestions` request of one Alt-held secondary press on a hovered vortex marker — React's `world3dSuggestionsGestureTarget` plus `dispatch("openVortexSuggestions", { fullId, x, y, windowId })` (`🧱️elements/🌐️World3dHost/🟦️.tsx:109`). `None` when no marker is hovered.
+pub fn world3d_open_vortex_suggestions(session_state: &WorldSessionState, selection_state: &WorldSelectionState, x: f32, y: f32, window_id: &str) -> Option<ActionDescriptor> {
+    let full_id = selection_state.hovered_vortex_id.as_deref().filter(|id| !id.is_empty())?;
+    Some(ActionDescriptor { controller_id: session_state.controller_id.clone(), action: "openVortexSuggestions".into(), args: Some(semio_framework::dsl_value!({ "fullId": full_id, "x": x, "y": y, "windowId": window_id })) })
+}
+
 /// 🪧️ The `surface` half of one world right-click's context-menu request: the entity under the
 /// pointer as the single `hits` row, and the painted selection as per-domain `selection` groups —
 /// the Rust twin of `world3dContextMenuSurfaceV1`

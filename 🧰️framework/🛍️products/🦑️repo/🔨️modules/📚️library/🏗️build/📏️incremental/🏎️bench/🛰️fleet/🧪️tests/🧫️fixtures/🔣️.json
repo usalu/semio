@@ -1,0 +1,518 @@
+{
+ "version": 1,
+ "warm": [
+  {
+   "name": "all found",
+   "published": 6,
+   "hits": 6,
+   "expected": {
+    "hitRatio": 1,
+    "executedActions": 0
+   }
+  },
+  {
+   "name": "one missing",
+   "published": 6,
+   "hits": 5,
+   "expected": {
+    "hitRatio": 0.8333333333333334,
+    "executedActions": 1
+   }
+  },
+  {
+   "name": "none found",
+   "published": 6,
+   "hits": 0,
+   "expected": {
+    "hitRatio": 0,
+    "executedActions": 6
+   }
+  }
+ ],
+ "badWarm": [
+  {
+   "published": 0,
+   "hits": 0
+  },
+  {
+   "published": 6,
+   "hits": 7
+  },
+  {
+   "published": 6,
+   "hits": -1
+  },
+  {
+   "published": 1.5,
+   "hits": 1
+  }
+ ],
+ "twin": [
+  {
+   "name": "identical",
+   "outputs": [
+    {
+     "name": "liba.rlib",
+     "left": "aa",
+     "right": "aa"
+    },
+    {
+     "name": "liba.rmeta",
+     "left": "bb",
+     "right": "bb"
+    }
+   ],
+   "answers": [
+    true,
+    true
+   ],
+   "expected": {
+    "divergentWrites": 0
+   }
+  },
+  {
+   "name": "one output differs and the cache refuses the second write",
+   "outputs": [
+    {
+     "name": "liba.rlib",
+     "left": "aa",
+     "right": "ab"
+    },
+    {
+     "name": "liba.rmeta",
+     "left": "bb",
+     "right": "bb"
+    }
+   ],
+   "answers": [
+    true,
+    "diverged"
+   ],
+   "expected": {
+    "divergentWrites": 2
+   }
+  },
+  {
+   "name": "cache refuses although bytes are equal",
+   "outputs": [
+    {
+     "name": "liba.rlib",
+     "left": "aa",
+     "right": "aa"
+    }
+   ],
+   "answers": [
+    "diverged"
+   ],
+   "expected": {
+    "divergentWrites": 1
+   }
+  }
+ ],
+ "memory": [
+  {
+   "name": "within the laws",
+   "cores": 8,
+   "floorMegabytes": 2048,
+   "availableMegabytes": 8192,
+   "pressure": "normal",
+   "decisions": [
+    {
+     "verdict": "admit",
+     "jobs": 7,
+     "reservedMegabytes": 4096
+    },
+    {
+     "verdict": "wait",
+     "jobs": 0,
+     "reservedMegabytes": 0
+    }
+   ],
+   "expected": {
+    "value": 4096,
+    "breaches": []
+   }
+  },
+  {
+   "name": "too many jobs and too much memory",
+   "cores": 8,
+   "floorMegabytes": 2048,
+   "availableMegabytes": 8192,
+   "pressure": "normal",
+   "decisions": [
+    {
+     "verdict": "admit",
+     "jobs": 7,
+     "reservedMegabytes": 6000
+    },
+    {
+     "verdict": "admit",
+     "jobs": 7,
+     "reservedMegabytes": 6000
+    }
+   ],
+   "expected": {
+    "value": 12000,
+    "breaches": [
+     "jobs 14 exceed 8 cores",
+     "reserved 12000 MB exceed available 8192 MB beyond the floor 2048 MB"
+    ]
+   }
+  },
+  {
+   "name": "critical pressure admits",
+   "cores": 8,
+   "floorMegabytes": 2048,
+   "availableMegabytes": 8192,
+   "pressure": "critical",
+   "decisions": [
+    {
+     "verdict": "admit",
+     "jobs": 1,
+     "reservedMegabytes": 512
+    }
+   ],
+   "expected": {
+    "value": 512,
+    "breaches": [
+     "1 requests admitted under critical pressure"
+    ]
+   }
+  },
+  {
+   "name": "roomy host admits nothing",
+   "cores": 8,
+   "floorMegabytes": 2048,
+   "availableMegabytes": 8192,
+   "pressure": "normal",
+   "decisions": [
+    {
+     "verdict": "wait",
+     "jobs": 0,
+     "reservedMegabytes": 0
+    }
+   ],
+   "expected": {
+    "value": 0,
+    "breaches": [
+     "no request admitted on a roomy host"
+    ]
+   }
+  },
+  {
+   "name": "host below its floor waits",
+   "cores": 8,
+   "floorMegabytes": 2048,
+   "availableMegabytes": 1000,
+   "pressure": "normal",
+   "decisions": [
+    {
+     "verdict": "wait",
+     "jobs": 0,
+     "reservedMegabytes": 0
+    }
+   ],
+   "expected": {
+    "value": 0,
+    "breaches": []
+   }
+  }
+ ],
+ "disk": [
+  {
+   "name": "three images within the share",
+   "freeBytes": 60129542144,
+   "born": [
+    34359738368,
+    6442450944,
+    8589934592
+   ],
+   "sharePercent": 90,
+   "mebibyte": 1048576,
+   "expected": {
+    "value": 49392123904,
+    "breaches": []
+   }
+  },
+  {
+   "name": "an image that is not a whole number of mebibytes",
+   "freeBytes": 60129542144,
+   "born": [
+    1000
+   ],
+   "sharePercent": 90,
+   "mebibyte": 1048576,
+   "expected": {
+    "value": 1000,
+    "breaches": [
+     "image of 1000 bytes is not a whole number of mebibytes"
+    ]
+   }
+  },
+  {
+   "name": "images beyond the share",
+   "freeBytes": 60129542144,
+   "born": [
+    60129542144
+   ],
+   "sharePercent": 90,
+   "mebibyte": 1048576,
+   "expected": {
+    "value": 60129542144,
+    "breaches": [
+     "images of 60129542144 bytes exceed 90 % of 60129542144 free bytes"
+    ]
+   }
+  }
+ ],
+ "host": [
+  {
+   "name": "breaches add up, the most reserved memory counts",
+   "memory": [
+    {
+     "value": 4096,
+     "breaches": []
+    },
+    {
+     "value": 12000,
+     "breaches": [
+      "a",
+      "b"
+     ]
+    }
+   ],
+   "disk": {
+    "value": 49392123904,
+    "breaches": [
+     "c"
+    ]
+   },
+   "mebibyte": 1048576,
+   "expected": {
+    "capacityBreaches": 3,
+    "reservedBytes": 12582912000,
+    "storeBytes": 49392123904
+   }
+  }
+ ],
+ "outcomes": [
+  {
+   "name": "warm",
+   "scenario": "unit-cache-warm",
+   "values": {
+    "hitRatio": 1,
+    "executedActions": 0
+   },
+   "valid": true
+  },
+  {
+   "name": "a metric is missing",
+   "scenario": "unit-cache-warm",
+   "values": {
+    "hitRatio": 1
+   },
+   "valid": false
+  },
+  {
+   "name": "a metric is foreign",
+   "scenario": "twin-build",
+   "values": {
+    "divergentWrites": 0,
+    "hitRatio": 1
+   },
+   "valid": false
+  },
+  {
+   "name": "a metric is negative",
+   "scenario": "twin-build",
+   "values": {
+    "divergentWrites": -1
+   },
+   "valid": false
+  },
+  {
+   "name": "the scenario is unknown",
+   "scenario": "nope",
+   "values": {
+    "divergentWrites": 0
+   },
+   "valid": false
+  }
+ ],
+ "ready": [
+  {
+   "name": "two of four are Ready, times 100 s and 300 s",
+   "nowMs": 10000000,
+   "maximumAgeMs": 600000,
+   "receipts": [
+    {
+     "ready": true,
+     "startedMs": 9000000,
+     "readyMs": 9100000,
+     "updatedMs": 9990000
+    },
+    {
+     "ready": true,
+     "startedMs": 9000000,
+     "readyMs": 9300000,
+     "updatedMs": 9990000
+    },
+    {
+     "ready": false,
+     "startedMs": 9500000,
+     "readyMs": null,
+     "updatedMs": 9990000
+    },
+    {
+     "ready": false,
+     "startedMs": 9500000,
+     "readyMs": 9000000,
+     "updatedMs": 9990000
+    },
+    {
+     "ready": true,
+     "startedMs": 1,
+     "readyMs": 2,
+     "updatedMs": 1
+    }
+   ],
+   "expected": {
+    "readyRatio": 0.5,
+    "wallMs": 200000
+   }
+  },
+  {
+   "name": "none Ready: a ratio of zero and no time",
+   "nowMs": 10000000,
+   "maximumAgeMs": 600000,
+   "receipts": [
+    {
+     "ready": false,
+     "startedMs": 9500000,
+     "readyMs": null,
+     "updatedMs": 9999000
+    }
+   ],
+   "expected": {
+    "readyRatio": 0
+   }
+  },
+  {
+   "name": "Ready from an earlier life counts without a time",
+   "nowMs": 10000000,
+   "maximumAgeMs": 600000,
+   "receipts": [
+    {
+     "ready": true,
+     "startedMs": 9500000,
+     "readyMs": 9000000,
+     "updatedMs": 9999000
+    }
+   ],
+   "expected": {
+    "readyRatio": 1
+   }
+  },
+  {
+   "name": "odd count takes the middle",
+   "nowMs": 10000000,
+   "maximumAgeMs": 600000,
+   "receipts": [
+    {
+     "ready": true,
+     "startedMs": 0,
+     "readyMs": 10,
+     "updatedMs": 9999999
+    },
+    {
+     "ready": true,
+     "startedMs": 0,
+     "readyMs": 50,
+     "updatedMs": 9999999
+    },
+    {
+     "ready": true,
+     "startedMs": 0,
+     "readyMs": 30,
+     "updatedMs": 9999999
+    }
+   ],
+   "expected": {
+    "readyRatio": 1,
+    "wallMs": 30
+   }
+  }
+ ],
+ "badReady": [
+  {
+   "nowMs": 10000000,
+   "maximumAgeMs": 600000,
+   "receipts": []
+  },
+  {
+   "nowMs": 10000000,
+   "maximumAgeMs": 600000,
+   "receipts": [
+    {
+     "ready": true,
+     "startedMs": 1,
+     "readyMs": 2,
+     "updatedMs": 1
+    }
+   ]
+  }
+ ],
+ "firstTask": [
+  {
+   "name": "first task after the graph",
+   "wallMs": 4200,
+   "lines": [
+    {
+     "atMs": 10,
+     "text": "Loading the project graph"
+    },
+    {
+     "atMs": 1500,
+     "text": "> nx run a:build  [local cache]"
+    },
+    {
+     "atMs": 4000,
+     "text": "> nx run b:build  [local cache]"
+    }
+   ],
+   "expected": {
+    "firstTaskMs": 1500,
+    "wallMs": 4200
+   }
+  },
+  {
+   "name": "a task line must start the line",
+   "wallMs": 50,
+   "lines": [
+    {
+     "atMs": 5,
+     "text": "log: > nx run x"
+    },
+    {
+     "atMs": 9,
+     "text": "> nx run y:t"
+    }
+   ],
+   "expected": {
+    "firstTaskMs": 9,
+    "wallMs": 50
+   }
+  }
+ ],
+ "badFirstTask": [
+  {
+   "wallMs": 5,
+   "lines": [
+    {
+     "atMs": 1,
+     "text": "nothing"
+    }
+   ]
+  }
+ ]
+}

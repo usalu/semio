@@ -371,7 +371,7 @@ export function resolveMarqueeComponentIds(
   coverage: SelectionMarqueeCoverage,
 ): readonly number[] {
   const active = instances.find((instance) => instance.id === activeObjectId) ?? instances.find((instance) => instance.interactionId === activeObjectId);
-  if (!active || active.componentPickable === false) return [];
+  if (!active) return [];
   const meshId = active.meshId ?? active.id;
   const meshData = meshes.find((mesh) => mesh.id === meshId)?.data;
   if (!meshData) return [];
@@ -738,14 +738,23 @@ export function worldRayFromNdc(ndcX: number, ndcY: number, camera: ThreeCamera)
 
 /** 🎯️ Intersects the camera ray through a client point with the world Z=0 ground plane (catalogue drop + face drag). */
 export function raycastGroundPoint(clientX: number, clientY: number, hostRect: DOMRect, camera: ThreeCamera): [number, number, number] | null {
+  return raycastWorldPlanePoint(clientX, clientY, hostRect, camera, 2, 0);
+}
+
+/** 📐️ Intersects the client ray with the coordinate plane at a fixed axis value. */
+export function raycastWorldPlanePoint(clientX: number, clientY: number, hostRect: DOMRect, camera: ThreeCamera, axis: 0 | 1 | 2, coordinate: number): [number, number, number] | null {
+  if (hostRect.width <= 0 || hostRect.height <= 0) return null;
   const ndcX = ((clientX - hostRect.left) / hostRect.width) * 2 - 1;
   const ndcY = -(((clientY - hostRect.top) / hostRect.height) * 2 - 1);
   const ray = worldRayFromNdc(ndcX, ndcY, camera);
   if (!ray) return null;
-  if (Math.abs(ray.direction.z) < 1e-6) return null;
-  const t = -ray.origin.z / ray.direction.z;
+  const direction = ray.direction.getComponent(axis);
+  if (Math.abs(direction) < 1e-6) return null;
+  const t = (coordinate - ray.origin.getComponent(axis)) / direction;
   if (t < 0) return null;
   const hit = ray.origin.add(ray.direction.multiplyScalar(t));
-  return [hit.x, hit.y, hit.z];
+  const point: [number, number, number] = [hit.x, hit.y, hit.z];
+  point[axis] = coordinate;
+  return point;
 }
 //#endregion 🔖️World3dHost

@@ -1,0 +1,55 @@
+{
+  "type": "array",
+  "minItems": 9,
+  "maxItems": 9,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "name",
+      "mode",
+      "fault",
+      "expected"
+    ],
+    "properties": {
+      "name": {
+        "type": "string",
+        "minLength": 1
+      },
+      "mode": {
+        "enum": [
+          "ordinary",
+          "first"
+        ]
+      },
+      "fault": {
+        "enum": [
+          "none",
+          "identity",
+          "folder",
+          "persist",
+          "cancel",
+          "attach",
+          "catalog",
+          "panel"
+        ]
+      },
+      "expected": {
+        "type": "array",
+        "items": {
+          "enum": [
+            "identity",
+            "archive",
+            "persist",
+            "attach",
+            "record",
+            "publish",
+            "close",
+            "unlist"
+          ]
+        },
+        "minItems": 1
+      }
+    }
+  }
+}

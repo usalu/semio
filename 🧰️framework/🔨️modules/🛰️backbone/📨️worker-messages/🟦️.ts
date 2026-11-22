@@ -121,8 +121,8 @@ export type BackboneWorkerRequest =
   /** 📇️ A mounted space index's directory lane: its space's full event history (sealed pages from the first event),
    * then every live event of that space. The space index is the shell's projection of a space's directory, not a hub
    * document, so it has no document scope and no document-scoped stream. */
-  | { readonly kind: "directory-space-open"; readonly baseUrl: string; readonly spaceId: string }
-  | { readonly kind: "directory-space-close"; readonly spaceId: string }
+  | { readonly kind: "directory-space-open"; readonly baseUrl: string; readonly spaceId: string; readonly clientInstanceId?: string }
+  | { readonly kind: "directory-space-close"; readonly spaceId: string; readonly clientInstanceId?: string }
   | { readonly kind: "directory-command"; readonly requestId: string; readonly command: DirectoryCommand }
   | { readonly kind: "directory-command-cancel"; readonly requestId: string }
   | { readonly kind: "space-artifact-creation-catalog-open"; readonly clientInstanceId: string; readonly spaceId: string }
@@ -130,6 +130,9 @@ export type BackboneWorkerRequest =
   | { readonly kind: "space-artifact-create-cancel"; readonly requestId: string; readonly spaceId: string }
   /** 📌️ Hub Check In of one mounted hub document at the head its socket had acknowledged once every
    * local edit is acknowledged; the worker names the head, the host never does. */
+  | { readonly kind: "document-archive-read"; readonly requestId: string; readonly clientInstanceId: string; readonly scope: DocumentScope }
+  | { readonly kind: "document-archive-read-cancel"; readonly requestId: string; readonly clientInstanceId: string; readonly scope: DocumentScope }
+  | { readonly kind: "document-settle"; readonly requestId: string; readonly clientInstanceId: string; readonly scope: DocumentScope }
   | { readonly kind: "document-check-in"; readonly requestId: string; readonly clientInstanceId: string; readonly scope: DocumentScope }
   | { readonly kind: "document-check-in-cancel"; readonly requestId: string; readonly scope: DocumentScope }
   | { readonly kind: "directory-administration-open"; readonly operationEpoch: number; readonly spaceId: string }
@@ -190,7 +193,8 @@ export type BackboneWorkerResponse =
   | { readonly kind: "directory-bootstrap-failed"; readonly bootstrapEpoch: number; readonly code: "unauthorized" | "cancelled" | "transport" | "invalid-page"; readonly retryable: boolean }
   | { readonly kind: "directory-scope-revoked"; readonly scope: DocumentScope }
   /** 📇️ Events of one space for its mounted index lane, in ascending `seq` (history first, then live). */
-  | { readonly kind: "directory-space-events"; readonly spaceId: string; readonly events: readonly DirectoryEvent[] }
+  | { readonly kind: "directory-space-events"; readonly spaceId: string; readonly events: readonly DirectoryEvent[]; readonly clientInstanceId?: string }
+  | { readonly kind: "directory-space-history-ready"; readonly spaceId: string; readonly clientInstanceId: string }
   | { readonly kind: "directory-command-receipt"; readonly requestId: string; readonly receipt: DirectoryCommandReceiptV1 }
   | { readonly kind: "directory-command-failed"; readonly requestId: string; readonly code: DirectoryCommandErrorCodeV1 }
   | SpaceArtifactCreationCatalogV1
@@ -200,6 +204,8 @@ export type BackboneWorkerResponse =
   | { readonly kind: "socket-actor"; readonly documentId: string; readonly clientInstanceId: string; readonly scope?: DocumentScope; readonly actorId: string }
   /** 📌️ One hub Check In status, exactly as the hub answered it (or a local `failed` when the
    * document had no acknowledged head to name). */
+  | { readonly kind: "document-archive-page"; readonly requestId: string; readonly clientInstanceId: string; readonly scope: DocumentScope; readonly offset: number; readonly total: number; readonly bytes: Uint8Array }
+  | { readonly kind: "document-settled"; readonly requestId: string; readonly clientInstanceId: string; readonly scope: DocumentScope; readonly settled: boolean }
   | { readonly kind: "document-check-in-status"; readonly clientInstanceId: string; readonly scope: DocumentScope; readonly status: DocumentCheckInStatusV1 }
   | { readonly kind: "socket-actor-failed"; readonly documentId: string; readonly clientInstanceId: string; readonly scope?: DocumentScope; readonly code: "installed-target-unavailable" | "session-mismatch" }
   /** 🪪️ Bounded execution-target install status for the React host's localized live region. It

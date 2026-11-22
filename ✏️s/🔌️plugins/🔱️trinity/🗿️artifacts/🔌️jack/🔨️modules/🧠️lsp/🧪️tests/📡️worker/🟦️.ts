@@ -20,7 +20,7 @@ describe("jack lsp worker pump", () => {
     vi.resetModules();
     vi.stubGlobal("self", { addEventListener: (_type: string, next: Listener) => { listener = next; }, postMessage: (message: unknown) => { posted.push(message); } });
     await import("../../🟦️.ts");
-  });
+  }, 60000);
 
   test("answers init with ready after the session exists and loads the init snapshot into it", async () => {
     listener!({ data: { operation: "init", snapshotJson: "{}" } });

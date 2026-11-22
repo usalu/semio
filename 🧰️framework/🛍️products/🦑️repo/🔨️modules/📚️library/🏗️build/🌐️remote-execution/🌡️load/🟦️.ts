@@ -15,7 +15,7 @@ import {requireRemoteExecutionShapeV1,type RemoteExecutionConfinementV1,type Rem
 export type RemoteExecutionPlatformIdentityV1=Readonly<{key:string;os:string;arch:string;toolchain:string|null;target:string|null}>;
 
 /** 📈️ The counters of the rustc wrapper and the unit cache of one machine. */
-export type RemoteExecutionMachineCountersV1=Readonly<{unit:Readonly<{localHit:number;remoteHit:number;miss:number;stored:number;skipped?:number}>;offload:Readonly<{out:number;refused:number;fellBack:number}>}>;
+export type RemoteExecutionMachineCountersV1=Readonly<{unit:Readonly<{localHit:number;remoteHit:number;miss:number;stored:number;skipped?:number}>;skipReasons?:Readonly<Record<string,number>>;keySamples?:Readonly<{blob:string;count:number;atMs:number}>;offload:Readonly<{out:number;refused:number;fellBack:number}>}>;
 
 /** 👷️ What the build worker of a machine does right now. */
 export type RemoteExecutionWorkerStateV1=Readonly<{state:"absent"|"idle"|"busy"|"refusing";concurrency:number;running:number;sandbox:RemoteExecutionSandboxV1|null;confinement:RemoteExecutionConfinementV1|null;network:RemoteExecutionNetworkV1|null;why?:RemoteExecutionWorkerWhyV1}>;
@@ -68,8 +68,8 @@ const ZERO:RemoteExecutionMachineCountersV1=Object.freeze({unit:Object.freeze({l
 /** 🧮️ Reads the counters of the wrapper from `.cache/f/build-counters.json` below the worktree (zeros when the file is absent or not of the closed shape). */
 export function readRemoteExecutionCountersV1(root:string):RemoteExecutionMachineCountersV1{
  try{
-  const value=JSON.parse(readFileSync(machinePathV1(root,".cache","f","build-counters.json"),"utf8")) as {unit?:unknown;offload?:unknown};
-  const counters={unit:value.unit,offload:value.offload};
+  const value=JSON.parse(readFileSync(machinePathV1(root,".cache","f","build-counters.json"),"utf8")) as {unit?:unknown;skipReasons?:unknown;keySamples?:unknown;offload?:unknown};
+  const counters={unit:value.unit,...value.skipReasons===undefined?{}:{skipReasons:value.skipReasons},...value.keySamples===undefined?{}:{keySamples:value.keySamples},offload:value.offload};
   requireRemoteExecutionShapeV1("MachineCounters",counters,"Closed build counters required");
   return counters as RemoteExecutionMachineCountersV1;
  }catch{return ZERO;}

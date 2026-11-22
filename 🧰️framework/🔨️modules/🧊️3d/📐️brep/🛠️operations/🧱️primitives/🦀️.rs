@@ -170,7 +170,7 @@ pub fn is_degenerate_edge(edge: &Edge, curve: &Curve3) -> bool {
 #[path = "🧊️analytic-solids/🦀️.rs"]
 mod analytic_solids;
 pub use analytic_solids::{BoxSectionDraft, SectionPolygon, PrimitiveEdge, PrimitiveTrim, SolidPrimitive};
-use analytic_solids::make_analytic_solid;
+pub(crate) use analytic_solids::make_analytic_solid;
 
 // #region 🔖️Solids
 

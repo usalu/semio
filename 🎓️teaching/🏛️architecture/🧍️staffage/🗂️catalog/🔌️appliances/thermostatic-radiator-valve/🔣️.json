@@ -695,6 +695,10 @@
             "knob": {
               "exposedFraction": 1,
               "sunlitFraction": 0
+            },
+            "sensor": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
             }
           },
           "emitters": {},
@@ -741,6 +745,10 @@
             "knob": {
               "exposedFraction": 1,
               "sunlitFraction": 0
+            },
+            "sensor": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
             }
           },
           "emitters": {},
@@ -785,6 +793,10 @@
               "sunlitFraction": 0
             },
             "knob": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "sensor": {
               "exposedFraction": 1,
               "sunlitFraction": 0
             }
@@ -1120,7 +1132,7 @@
               "kind": "metal",
               "material": "brass",
               "thicknessM": 0.003,
-              "resistanceM2KW": 3e-5,
+              "resistanceM2KW": 3e-05,
               "heatCapacityJM2K": 2800,
               "source": "authored-estimate",
               "reference": "incropera-2018"
@@ -1209,6 +1221,43 @@
           },
           "source": "authored-estimate",
           "reference": "incropera-2018"
+        },
+        {
+          "id": "sensor",
+          "title": {
+            "en": "Sensor element, pin and valve disc",
+            "de": "Fühlerelement, Stift und Ventilteller"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "brass",
+          "areaM2": 0.0064,
+          "characteristicLengthM": 0.025,
+          "geometry": "cylinder",
+          "skyViewFactor": 0,
+          "layers": [
+            {
+              "id": "element",
+              "title": {
+                "en": "Brass capsule wall 0.5 mm",
+                "de": "Messing-Kapselwand 0,5 mm"
+              },
+              "kind": "metal",
+              "material": "brass",
+              "thicknessM": 0.0005,
+              "resistanceM2KW": 4.2e-06,
+              "heatCapacityJM2K": 1615,
+              "source": "authored-estimate",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 1615,
+          "source": "authored-estimate",
+          "reference": "incropera-2018",
+          "hidden": {
+            "en": "The liquid-filled sensor element sits in the cap, its bellows pushes the pressure pin through the bonnet onto the spindle, and the valve disc closes on its seat against the return spring; all of it is inside the head and the brass chamber and no drawing shows it. The region is passive: the room air reaches the element through the cap, which the knob region models.",
+            "de": "Das flüssigkeitsgefüllte Fühlerelement sitzt in der Kappe, sein Faltenbalg drückt den Druckstift durch das Oberteil auf die Spindel, und der Ventilteller schließt gegen die Rückstellfeder auf seinem Sitz; alles liegt im Kopf und in der Messingkammer, und keine Zeichnung zeigt es. Die Region ist passiv: die Raumluft erreicht das Element durch die Kappe, die die Region des Knopfs abbildet."
+          }
         }
       ],
       "emitters": [],
@@ -1538,22 +1587,59 @@
             "layer": "wall"
           },
           {
-            "id": "th-inlet-neck",
-            "of": "inlet-neck",
+            "id": "th-valve-chamber",
+            "bone": "body",
+            "material": "brass",
+            "role": "body",
+            "tone": 0.6,
             "region": "body",
-            "layer": "wall"
+            "layer": "wall",
+            "kind": "revolve",
+            "profile": [
+              [0.0155, 0.0],
+              [0.0155, 0.009],
+              [0.0147, 0.0124],
+              [0.0132, 0.014],
+              [-0.009, 0.014],
+              [-0.0096, 0.015],
+              [-0.0227, 0.015],
+              [-0.0235, 0.0142],
+              [-0.0235, 0.004],
+              [-0.0205, 0.004],
+              [-0.0205, 0.0115],
+              [0.012, 0.0115],
+              [0.0125, 0.008],
+              [0.0125, 0.0],
+              [0.0155, 0.0]
+            ],
+            "axis": [0, 0, 1],
+            "origin": [0, 0, 0]
           },
           {
-            "id": "th-valve-chamber",
-            "of": "valve-chamber",
+            "id": "th-inlet-neck",
+            "bone": "body",
+            "material": "brass",
+            "role": "body",
+            "tone": 0.6,
             "region": "body",
-            "layer": "wall"
+            "layer": "wall",
+            "kind": "revolve",
+            "profile": [[-0.02, 0.0065], [-0.02, 0.011], [-0.007, 0.011], [-0.007, 0.0065], [-0.02, 0.0065]],
+            "axis": [0, 1, 0],
+            "origin": [0, 0, 0]
           },
           {
             "id": "th-outlet-boss",
-            "of": "outlet-boss",
+            "bone": "body",
+            "material": "brass",
+            "role": "body",
+            "tone": 0.6,
             "region": "body",
-            "layer": "wall"
+            "layer": "wall",
+            "kind": "revolve",
+            "profile": [[0.004, 0.0065], [0.004, 0.0132], [0.02, 0.0132], [0.02, 0.0065], [0.004, 0.0065]],
+            "axis": [1, 0, 0],
+            "origin": [0, 0, 0]
           },
           {
             "id": "th-union-nut",
@@ -1583,29 +1669,251 @@
           },
           {
             "id": "th-base-ring",
-            "of": "base-ring",
+            "bone": "head",
+            "material": "abs-plastic",
+            "role": "body",
+            "tone": 0.85,
             "region": "head",
-            "layer": "shell"
+            "layer": "shell",
+            "kind": "revolve",
+            "profile": [[-0.025, 0.009], [-0.025, 0.0205], [-0.0265, 0.022], [-0.041, 0.022], [-0.041, 0.0195], [-0.0275, 0.0195], [-0.0275, 0.009], [-0.025, 0.009]],
+            "axis": [0, 0, 1],
+            "origin": [0, 0, 0]
           },
           {
             "id": "th-scale-band",
-            "of": "scale-band",
+            "bone": "knob",
+            "material": "abs-plastic",
+            "role": "body",
+            "tone": 0.85,
             "region": "head",
-            "layer": "shell"
+            "layer": "shell",
+            "kind": "revolve",
+            "profile": [[-0.035, 0.0225], [-0.035, 0.025], [-0.0365, 0.0265], [-0.046, 0.0265], [-0.046, 0.0252], [-0.048, 0.0252], [-0.048, 0.0225], [-0.035, 0.0225]],
+            "axis": [0, 0, 1],
+            "origin": [0, 0, 0]
           },
           {
             "id": "th-grip",
-            "of": "grip",
+            "bone": "knob",
+            "material": "abs-plastic",
+            "role": "body",
+            "tone": 0.85,
             "region": "head",
             "layer": "shell",
-            "sectionFaces": ["-w"]
+            "kind": "extrude",
+            "profile": [
+              [0.0265, 0.0],
+              [0.02556, 0.00269],
+              [0.02436, 0.00518],
+              [0.02444, 0.00794],
+              [0.02421, 0.01078],
+              [0.02295, 0.01325],
+              [0.02144, 0.01558],
+              [0.0191, 0.0172],
+              [0.01666, 0.0185],
+              [0.0151, 0.02079],
+              [0.01325, 0.02295],
+              [0.01078, 0.02421],
+              [0.00819, 0.0252],
+              [0.00534, 0.02514],
+              [0.0026, 0.02476],
+              [0.0, 0.0257],
+              [-0.00277, 0.02635],
+              [-0.00551, 0.02592],
+              [-0.00819, 0.0252],
+              [-0.01045, 0.02348],
+              [-0.01245, 0.02156],
+              [-0.0151, 0.02079],
+              [-0.01773, 0.01969],
+              [-0.01969, 0.01773],
+              [-0.02144, 0.01558],
+              [-0.02226, 0.01285],
+              [-0.02275, 0.01013],
+              [-0.02444, 0.00794],
+              [-0.02592, 0.00551],
+              [-0.02635, 0.00277],
+              [-0.0265, 0.0],
+              [-0.02556, -0.00269],
+              [-0.02436, -0.00518],
+              [-0.02444, -0.00794],
+              [-0.02421, -0.01078],
+              [-0.02295, -0.01325],
+              [-0.02144, -0.01558],
+              [-0.0191, -0.0172],
+              [-0.01666, -0.0185],
+              [-0.0151, -0.02079],
+              [-0.01325, -0.02295],
+              [-0.01078, -0.02421],
+              [-0.00819, -0.0252],
+              [-0.00534, -0.02514],
+              [-0.0026, -0.02476],
+              [-0.0, -0.0257],
+              [0.00277, -0.02635],
+              [0.00551, -0.02592],
+              [0.00819, -0.0252],
+              [0.01045, -0.02348],
+              [0.01245, -0.02156],
+              [0.0151, -0.02079],
+              [0.01773, -0.01969],
+              [0.01969, -0.01773],
+              [0.02144, -0.01558],
+              [0.02226, -0.01285],
+              [0.02275, -0.01013],
+              [0.02444, -0.00794],
+              [0.02592, -0.00551],
+              [0.02635, -0.00277]
+            ],
+            "plane": "xy",
+            "from": -0.072,
+            "to": -0.0475,
+            "holes": [
+              [
+                [0.021, 0.0],
+                [0.02028, 0.00544],
+                [0.01819, 0.0105],
+                [0.01485, 0.01485],
+                [0.0105, 0.01819],
+                [0.00544, 0.02028],
+                [0.0, 0.021],
+                [-0.00544, 0.02028],
+                [-0.0105, 0.01819],
+                [-0.01485, 0.01485],
+                [-0.01819, 0.0105],
+                [-0.02028, 0.00544],
+                [-0.021, 0.0],
+                [-0.02028, -0.00544],
+                [-0.01819, -0.0105],
+                [-0.01485, -0.01485],
+                [-0.0105, -0.01819],
+                [-0.00544, -0.02028],
+                [-0.0, -0.021],
+                [0.00544, -0.02028],
+                [0.0105, -0.01819],
+                [0.01485, -0.01485],
+                [0.01819, -0.0105],
+                [0.02028, -0.00544]
+              ]
+            ]
           },
           {
             "id": "th-sensor-cap",
             "of": "sensor-cap",
             "region": "knob",
-            "layer": "shell",
-            "sectionFaces": ["+w"]
+            "layer": "shell"
+          },
+          {
+            "id": "th-sensor-element",
+            "bone": "knob",
+            "material": "brass",
+            "role": "body",
+            "tone": 0.55,
+            "region": "sensor",
+            "layer": "element",
+            "kind": "revolve",
+            "profile": [[-0.067, 0.0], [-0.067, 0.0105], [-0.065, 0.0125], [-0.052, 0.0125], [-0.05, 0.0105], [-0.05, 0.0]],
+            "axis": [0, 0, 1],
+            "origin": [0, 0, 0]
+          },
+          {
+            "id": "th-bellows",
+            "bone": "knob",
+            "material": "brass",
+            "role": "body",
+            "tone": 0.5,
+            "region": "sensor",
+            "layer": "element",
+            "kind": "revolve",
+            "profile": [
+              [-0.05, 0.0],
+              [-0.05, 0.008],
+              [-0.0485, 0.011],
+              [-0.047, 0.008],
+              [-0.0455, 0.011],
+              [-0.044, 0.008],
+              [-0.0425, 0.011],
+              [-0.041, 0.008],
+              [-0.0395, 0.011],
+              [-0.038, 0.008],
+              [-0.038, 0.0]
+            ],
+            "axis": [0, 0, 1],
+            "origin": [0, 0, 0]
+          },
+          {
+            "id": "th-pressure-pin",
+            "bone": "head",
+            "material": "brass",
+            "role": "body",
+            "tone": 0.45,
+            "region": "sensor",
+            "layer": "element",
+            "kind": "revolve",
+            "profile": [[-0.038, 0], [-0.038, 0.00225], [-0.016, 0.00225], [-0.016, 0]],
+            "axis": [0, 0, 1],
+            "origin": [0, 0, 0]
+          },
+          {
+            "id": "th-spindle",
+            "bone": "body",
+            "material": "brass",
+            "role": "body",
+            "tone": 0.45,
+            "region": "sensor",
+            "layer": "element",
+            "kind": "revolve",
+            "profile": [[-0.019, 0], [-0.019, 0.002], [0.0, 0.002], [0.0, 0]],
+            "axis": [0, 0, 1],
+            "origin": [0, 0, 0]
+          },
+          {
+            "id": "th-return-spring",
+            "bone": "body",
+            "material": "brass",
+            "role": "body",
+            "tone": 0.4,
+            "region": "sensor",
+            "layer": "element",
+            "kind": "revolve",
+            "profile": [
+              [-0.0185, 0.0035],
+              [-0.0185, 0.006],
+              [-0.016, 0.0045],
+              [-0.0135, 0.006],
+              [-0.011, 0.0045],
+              [-0.0085, 0.006],
+              [-0.006, 0.0045],
+              [-0.006, 0.0035],
+              [-0.0185, 0.0035]
+            ],
+            "axis": [0, 0, 1],
+            "origin": [0, 0, 0]
+          },
+          {
+            "id": "th-valve-disc",
+            "bone": "body",
+            "material": "brass",
+            "role": "body",
+            "tone": 0.3,
+            "region": "sensor",
+            "layer": "element",
+            "kind": "revolve",
+            "profile": [[-0.001, 0], [-0.001, 0.0075], [0.003, 0.0075], [0.003, 0]],
+            "axis": [0, 0, 1],
+            "origin": [0, 0, 0]
+          },
+          {
+            "id": "th-valve-seat",
+            "bone": "body",
+            "material": "brass",
+            "role": "body",
+            "tone": 0.5,
+            "region": "sensor",
+            "layer": "element",
+            "kind": "revolve",
+            "profile": [[0.003, 0.006], [0.003, 0.0095], [0.0065, 0.0095], [0.0065, 0.006], [0.003, 0.006]],
+            "axis": [0, 0, 1],
+            "origin": [0, 0, 0]
           }
         ],
         "structure": [
@@ -1810,8 +2118,8 @@
             "de": "Körper: ein Winkeleckventil DN 15 nach dem zitierten Datenblatt: 15-mm-Rohr mit Schnittende und Bohrung, Klemmmutter SW 24, Sechskant-Eingangsmuffe SW 27, Eingangshals, Ventilkammer mit dem Bund M30 x 1,5, Ausgangsstutzen G 3/4, Überwurfmutter SW 30 und der gebohrte Schraubnippel R 1/2 bis 58 mm von der Mitte; der Kopf ist die gerändelte Überwurfmutter, der feste Sockelring mit Indexpfeil und das Handrad von 53 mm mit Skalenband, zehn Griffmulden und der geschlitzten Fühlerkappe mit der geprägten Frontmarke."
           },
           {
-            "en": "Thermal: every region is the outer surface of its body solids: the brass region is the pipe, the fittings, the valve body and the union with the tailpiece (the cut end of the pipe and the end of the tailpiece inside the radiator are section faces, their bores carry water and count for no area), the head region the coupling nut, the base ring, the scale band and the fluted grip, the knob region the slotted sensor cap (the plane where grip and cap meet is a cut through the one handwheel and counts for neither); each region has one layer, so no nested shells are needed.",
-            "de": "Thermik: jede Region ist die Außenfläche ihrer Körper: die Messingregion ist Rohr, Verschraubungen, Ventilkörper und Verschraubung mit Schraubnippel (das Schnittende des Rohrs und das Ende des Schraubnippels im Heizkörper sind Schnittflächen, ihre Bohrungen führen Wasser und zählen nicht zur Fläche), die Kopfregion Überwurfmutter, Sockelring, Skalenband und Griffteil, die Knopfregion die geschlitzte Fühlerkappe (die Ebene, in der Griff und Kappe zusammentreffen, ist ein Schnitt durch das eine Handrad und zählt für keine von beiden); jede Region hat eine Schicht, daher braucht es keine verschachtelten Schalen."
+            "en": "Thermal: valve chamber, inlet neck, outlet boss, base ring, scale band and hand wheel are shells as the parts are, so that the thermostat shows in section: the liquid-filled sensor element of 25 mm diameter in the hand wheel behind the cap, the bellows with four folds behind it, the 4.5 mm pressure pin through the bonnet, the spindle with its return spring, the valve disc of 15 mm and its seat ring facing the inlet. The inner parts are one hidden region; pipe, nuts and tailpiece stay solid as water-filled brass.",
+            "de": "Thermik: Ventilkammer, Zulaufhals, Abgangsstutzen, Sockelring, Skalenband und Handrad sind Schalen wie die Teile selbst, sodass der Thermostat im Schnitt lesbar ist: das flüssigkeitsgefüllte Fühlerelement von 25 mm Durchmesser im Handrad hinter der Kappe, dahinter der Faltenbalg mit vier Falten, der Druckstift von 4,5 mm durch das Oberteil, die Spindel mit Rückstellfeder, der Ventilteller von 15 mm und sein Sitzring zum Zulauf. Die Innenteile sind eine verdeckte Region; Rohr, Muttern und Anschlussstück bleiben massiv als wassergefülltes Messing."
           },
           {
             "en": "Structure: three brass tubes meeting at the valve centre (inlet with the pipe, outlet with the tailpiece, chamber towards the head), the coupling nut and the base sleeve as the head member, the handwheel hub with the pressure pin as the knob member, joints at the compression fitting, the union and the setting thread, a pin at the pipe joint, a roller at the radiator union and the masses of the body and of the liquid sensor.",
@@ -1944,6 +2252,45 @@
             "region": "knob",
             "layer": "shell",
             "sectionFaces": ["+w"]
+          },
+          {
+            "id": "th-sensor-element",
+            "bone": "knob",
+            "material": "brass",
+            "role": "body",
+            "tone": 0.55,
+            "region": "sensor",
+            "layer": "element",
+            "kind": "revolve",
+            "profile": [[-0.067, 0], [-0.067, 0.0125], [-0.05, 0.0125], [-0.05, 0]],
+            "axis": [0, 0, 1],
+            "origin": [0, 0, 0]
+          },
+          {
+            "id": "th-bellows",
+            "bone": "knob",
+            "material": "brass",
+            "role": "body",
+            "tone": 0.5,
+            "region": "sensor",
+            "layer": "element",
+            "kind": "revolve",
+            "profile": [[-0.05, 0], [-0.05, 0.0095], [-0.038, 0.0095], [-0.038, 0]],
+            "axis": [0, 0, 1],
+            "origin": [0, 0, 0]
+          },
+          {
+            "id": "th-valve-disc",
+            "bone": "body",
+            "material": "brass",
+            "role": "body",
+            "tone": 0.3,
+            "region": "sensor",
+            "layer": "element",
+            "kind": "revolve",
+            "profile": [[-0.016, 0], [-0.016, 0.0075], [0.003, 0.0075], [0.003, 0]],
+            "axis": [0, 0, 1],
+            "origin": [0, 0, 0]
           }
         ],
         "structure": [
@@ -2081,6 +2428,10 @@
           {
             "en": "Structure: the three brass tubes, one sleeve for nut and base, the handwheel hub, pin and roller as 15 mm rings round the pipe at the compression fitting and round the tailpiece at the union, and the two masses; the joints and the pressure pin are below the feature and merged into the members.",
             "de": "Tragwerk: die drei Messingrohre, eine Hülse für Mutter und Sockel, die Handradnabe, Fest- und Rollenlager als 15-mm-Ringe um das Rohr an der Klemmverschraubung und um den Schraubnippel an der Verschraubung und die beiden Massen; Gelenke und Druckstift liegen unter der Strukturgröße und gehen in den Gliedern auf."
+          },
+          {
+            "en": "Thermal: the sensor element, the bellows behind it and the valve disc on its spindle stand inside the head and the chamber as one hidden region.",
+            "de": "Thermik: das Fühlerelement, der Faltenbalg dahinter und der Ventilteller auf seiner Spindel stehen als eine verdeckte Region in Kopf und Kammer."
           }
         ]
       },
@@ -2176,6 +2527,19 @@
             "region": "knob",
             "layer": "shell",
             "sectionFaces": ["+w"]
+          },
+          {
+            "id": "th-sensor-element",
+            "bone": "knob",
+            "material": "brass",
+            "role": "body",
+            "tone": 0.55,
+            "region": "sensor",
+            "layer": "element",
+            "kind": "revolve",
+            "profile": [[-0.067, 0], [-0.067, 0.0125], [-0.038, 0.0125], [-0.038, 0]],
+            "axis": [0, 0, 1],
+            "origin": [0, 0, 0]
           }
         ],
         "structure": [
@@ -2288,6 +2652,10 @@
           {
             "en": "Structure: two brass tubes along the pipe and the tail, one sleeve along the head axis, the handwheel hub, block supports at the pipe joint and the radiator union and one mass for the whole valve.",
             "de": "Tragwerk: zwei Messingrohre entlang Rohr und Nippel, eine Hülse entlang der Kopfachse, die Handradnabe, Blocklager an Rohrverschraubung und Heizkörperverschraubung und eine Masse für das ganze Ventil."
+          },
+          {
+            "en": "Thermal: the sensor element with its bellows stands inside the head as one hidden body.",
+            "de": "Thermik: das Fühlerelement mit seinem Faltenbalg steht als ein verdeckter Körper im Kopf."
           }
         ]
       },
@@ -2371,6 +2739,19 @@
             "region": "knob",
             "layer": "shell",
             "sectionFaces": ["+w"]
+          },
+          {
+            "id": "th-sensor-element",
+            "bone": "knob",
+            "material": "brass",
+            "role": "body",
+            "tone": 0.55,
+            "region": "sensor",
+            "layer": "element",
+            "kind": "revolve",
+            "profile": [[-0.067, 0], [-0.067, 0.0125], [-0.04, 0.0125], [-0.04, 0]],
+            "axis": [0, 0, 1],
+            "origin": [0, 0, 0]
           }
         ],
         "structure": [
@@ -2487,6 +2868,10 @@
           {
             "en": "Structure: four square bars along the three axes (inlet, outlet, head sleeve, handwheel hub), two block supports and one mass.",
             "de": "Tragwerk: vier Vierkantstäbe entlang der drei Achsen (Eingang, Ausgang, Kopfhülse, Handradnabe), zwei Blocklager und eine Masse."
+          },
+          {
+            "en": "Thermal: the sensor element with its bellows stands inside the head as one hidden body.",
+            "de": "Thermik: das Fühlerelement mit seinem Faltenbalg steht als ein verdeckter Körper im Kopf."
           }
         ]
       }

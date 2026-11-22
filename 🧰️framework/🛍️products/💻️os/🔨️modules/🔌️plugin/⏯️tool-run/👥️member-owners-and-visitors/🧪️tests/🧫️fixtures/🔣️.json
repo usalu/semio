@@ -1,0 +1,8 @@
+{
+  "contract": "plugin.tool-run-retained-snapshot-close/v1",
+  "maximumTurns": 4096,
+  "cases": [
+    { "id": "sole-tool-snapshot", "keepAlias": false, "deniedItems": 0, "terminalEmpty": true, "payloadAlive": false },
+    { "id": "shared-tool-snapshot", "keepAlias": true, "deniedItems": 0, "terminalEmpty": true, "payloadAlive": true }
+  ]
+}

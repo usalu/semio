@@ -14,8 +14,7 @@ use std::collections::{BTreeMap, BTreeSet};
 #[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub struct Graph {
     pub name: String,
-    pub manifest_id: Option<String>,
-    pub manifest: Manifest,
+    pub manifest_id: String,
     pub camera: Camera,
     pub nodes: BTreeMap<String, Node>,
     pub edges: BTreeMap<String, Edge>,
@@ -30,13 +29,11 @@ impl Graph {
     }
 
     /// 🧸️ The in-memory graph of a parent document over the scene its composed `content` child holds.
-    pub fn with_scene(mut snapshot: JackSnapshot, scene: JackWorkingScene) -> Result<Self, TrinityRamError> {
+    pub fn with_scene(snapshot: JackSnapshot, scene: JackWorkingScene) -> Result<Self, TrinityRamError> {
         snapshot.validate_schema()?;
-        snapshot.resolve_manifest()?;
-        if let Some(id) = snapshot.manifest_id.as_deref() {
-            if let Some(gm) = manifest_by_id(id) {
-                validate_trinity_scene(&gm, &scene)?;
-            }
+        snapshot.manifest()?;
+        if let Some(gm) = manifest_by_id(&snapshot.manifest_id) {
+            validate_trinity_scene(&gm, &scene)?;
         }
         let mut nodes = BTreeMap::new();
         for node in scene.nodes {
@@ -46,18 +43,23 @@ impl Graph {
         for edge in scene.edges {
             edges.insert(edge.id.clone(), edge);
         }
-        Ok(Self { name: snapshot.name, manifest_id: snapshot.manifest_id, manifest: snapshot.manifest, camera: snapshot.camera, nodes, edges, root_node_id: snapshot.root_node_id, query: snapshot.query })
+        Ok(Self { name: snapshot.name, manifest_id: snapshot.manifest_id, camera: snapshot.camera, nodes, edges, root_node_id: snapshot.root_node_id, query: snapshot.query })
+    }
+
+    /// 🪪️ The interned manifest this graph's `manifest_id` names.
+    pub fn manifest(&self) -> Result<std::sync::Arc<Manifest>, TrinityRamError> {
+        Manifest::shared(&self.manifest_id).ok_or_else(|| TrinityRamError::UnknownManifestId(self.manifest_id.clone()))
     }
 
     pub fn to_snapshot<C:JackContentFactory>(&self) -> JackSnapshot {
-        JackSnapshot { query: self.query.clone(), ..JackSnapshot::with_content::<C>(JackSnapshot::SCHEMA.to_string(), self.name.clone(), self.manifest_id.clone(), self.manifest.clone(), self.camera.clone(), JackWorkingScene { nodes: self.nodes.values().cloned().collect(), edges: self.edges.values().cloned().collect() }, self.root_node_id.clone()) }
+        JackSnapshot { query: self.query.clone(), ..JackSnapshot::with_content::<C>(JackSnapshot::SCHEMA.to_string(), self.name.clone(), self.manifest_id.clone(), self.camera.clone(), JackWorkingScene { nodes: self.nodes.values().cloned().collect(), edges: self.edges.values().cloned().collect() }, self.root_node_id.clone()) }
     }
 
     pub fn load_json(json: &str) -> Result<Self, TrinityRamError> {
         Self::from_snapshot(JackSnapshot::from_json(json)?)
     }
 
-    /// 📥️ Loads the self-contained scene document [`JackQueryGraphSnapshot::to_json`] writes: manifest, nodes and edges inline.
+    /// 📥️ Loads the self-contained scene document [`JackQueryGraphSnapshot::to_json`] writes: manifest id, nodes and edges inline.
     pub fn load_scene_json(json: &str) -> Result<Self, TrinityRamError> {
         JackQueryGraphSnapshot::from_json(json)?.into_graph()
     }
@@ -71,7 +73,7 @@ impl Graph {
         let nodes: Vec<Node> = node_ids.iter().filter_map(|id| self.nodes.get(id).cloned()).collect();
         let edges: Vec<Edge> = edge_ids.iter().filter_map(|id| self.edges.get(id).cloned()).collect();
         let root_node_id = self.root_node_id.clone().filter(|id| node_ids.contains(id));
-        JackQueryGraphSnapshot { schema: JackSnapshot::SCHEMA.into(), name: format!("{} subgraph", self.name), manifest_id: self.manifest_id.clone(), manifest: self.manifest.clone(), camera: self.camera.clone(), nodes, edges, root_node_id, query: String::new() }
+        JackQueryGraphSnapshot { schema: JackSnapshot::SCHEMA.into(), name: format!("{} subgraph", self.name), manifest_id: self.manifest_id.clone(), camera: self.camera.clone(), nodes, edges, root_node_id, query: String::new() }
     }
 
     pub fn node(&self, id: &str) -> Option<&Node> {

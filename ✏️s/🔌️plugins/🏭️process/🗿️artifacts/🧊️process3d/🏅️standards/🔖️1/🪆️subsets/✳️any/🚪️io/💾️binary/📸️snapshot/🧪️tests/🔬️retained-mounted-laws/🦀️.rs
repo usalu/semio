@@ -2,6 +2,12 @@ use crate::{standards::v1::subsets::any::io::component::binary::snapshot::Proces
 use super::*;
 use crate::{snapshot::ProcessMeasure, snapshot::StepOrigin, snapshot::StockQuantity};
 
+/// 🪙️ Runs one closure inside one original effect funded by a fresh generous fixture wallet.
+fn cold<R>(run: impl FnOnce(&mut semio_framework_value::RetainedAllocationEffect<'_>) -> R) -> R {
+    let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1 << 20, maximum_copy_bytes: 1 << 28, maximum_capacity_bytes: 1 << 28, maximum_release_bytes: 1 << 28, maximum_depth: 16 };
+    semio_framework_value::AuthoringWallet::new(grant, 1 << 20).run_invoked(grant, 1024, run).expect("the fixture wallet funds its own grant").expect("the fixture work quote is admitted").output
+}
+
 fn capability(id: &str, recipe: MeasureRecipe) -> Capability {
     Capability {
         id: id.into(),
@@ -50,7 +56,7 @@ fn complete_snapshot() -> Process3dSnapshot {
         },
         ProcessStep { id: "cylinder".into(), label: "Cylinder".into(), enabled: true, origin: None, measure: ProcessMeasure::Cut { tool: WorkingSolid::Cylinder { radius: 1.0, height: 2.0 }, pose: Pose::default() } },
         ProcessStep { id: "sphere".into(), label: "Sphere".into(), enabled: true, origin: None, measure: ProcessMeasure::Attach { component: WorkingSolid::Sphere { radius: 1.0 }, pose: Pose::default() } },
-        ProcessStep { id: "solid".into(), label: "Solid".into(), enabled: false, origin: None, measure: ProcessMeasure::Attach { component: semio_s_artifact_process_process3d_model::snapshot::pack_imported_brep(&semio_s_artifact_process_process3d_model::snapshot::brep_snapshot_for_working_solid(&WorkingSolid::Sphere { radius: 0.5 })).expect("exact sphere fixture"), pose: Pose::default() } },
+        ProcessStep { id: "solid".into(), label: "Solid".into(), enabled: false, origin: None, measure: ProcessMeasure::Attach { component: crate::snapshot::pack_imported_brep(&crate::snapshot::brep_snapshot_for_working_solid(&WorkingSolid::Sphere { radius: 0.5 })).expect("exact sphere fixture"), pose: Pose::default() } },
         ProcessStep { id: "reference".into(), label: "Reference".into(), enabled: true, origin: None, measure: ProcessMeasure::Cut { tool: WorkingSolid::Reference { reference_id: "ref-1".into() }, pose: Pose::default() } },
         ProcessStep { id: "drill".into(), label: "Drill".into(), enabled: true, origin: None, measure: ProcessMeasure::Drill { radius: 0.2, depth: 0.4, pose: Pose::default() } },
     ];
@@ -61,7 +67,7 @@ fn complete_snapshot() -> Process3dSnapshot {
 fn admit(session: &mut Process3dMountedPackSession, value: u8) {
     loop {
         if let Some(exact) = session.next_retained_allocation_bytes().expect("process3d source allocation query") {
-            assert!(session.reserve_retained_allocation(exact).expect("process3d source allocation grant").progressed);
+            assert!(cold(|effect| session.reserve_retained_allocation(exact, effect)).expect("process3d source allocation grant").progressed);
             continue;
         }
         session.admit_byte(value).expect("one admitted snapshot byte");
@@ -81,7 +87,7 @@ fn ingest(bytes: &[u8]) -> Process3dMountedPackSession {
 fn grant(session: &mut Process3dMountedPackSession) -> bool {
     loop {
         if let Some(exact) = session.next_retained_allocation_bytes().expect("process3d retained allocation query") {
-            assert!(session.reserve_retained_allocation(exact).expect("process3d retained allocation grant").progressed);
+            assert!(cold(|effect| session.reserve_retained_allocation(exact, effect)).expect("process3d retained allocation grant").progressed);
             continue;
         }
         return session.grant().expect("one retained snapshot grant");
@@ -94,7 +100,7 @@ fn close(session: &mut Process3dMountedPackSession) {
     let mut released_allocation_bytes = 0;
     for _ in 0..100_000 {
         let maximum_bytes = session.next_retained_release_allocation_bytes().unwrap_or(0);
-        let step = session.close_step(1, maximum_bytes).expect("process3d retained session close");
+        let step = cold(|effect| session.close_step(1, maximum_bytes, effect)).expect("process3d retained session close");
         if let mounted::RetainedTypedPackCloseStep::Pending { released_bytes, .. } = step {
             released_allocation_bytes += released_bytes;
         }

@@ -31,7 +31,7 @@ impl EventRouter {
         let node = tree.node(id)?;
         let UiNode::ComponentScene(scene) = &node.spec.0 else { return None };
         let rect = absolute_rect(tree, id)?;
-        Some(UiCommand::Scene { window_id: self.window_id.clone(), node: id, surface_id: scene.surface_id.clone(), kind: scene.component_kind, rect, event: event.clone() })
+        Some(UiCommand::Scene { window_id: self.window_id.clone(), node: id, surface_id: scene.surface_id.clone(), kind: scene.component_kind, rect, event: event.clone(), click_count: self.click_count() })
     }
 
     /// ⏎️ The action `Enter` or `Space` activates on the focused enabled `Button` — the keyboard half of a click, as a
@@ -47,6 +47,36 @@ impl EventRouter {
         }
     }
 
+    /// 📊️ A focused document-table row answers React's `TableView` keys through the shared table model: Up/Down/PageUp/PageDown/Home/End move focus over the table's rows, Enter and Space activate the row (`Trigger::Activate`); Escape and every other key stay with the generic routes.
+    pub(super) fn focused_table_row_key(&mut self, tree: &mut UiTree, key: &str, modifiers: EventModifiers, commands: &mut Vec<UiCommand>) -> bool {
+        if modifiers.ctrl || modifiers.meta || modifiers.alt {
+            return false;
+        }
+        let Some(row) = self.focus.focused else { return false };
+        if semio_ui_wgpu_mounted_layout::document_table_row(tree, row).is_none() {
+            return false;
+        }
+        let Some(table) = tree.node(row).and_then(|node| node.parent) else { return false };
+        let rows: Vec<NodeId> = tree.children(table).filter(|id| semio_ui_wgpu_mounted_layout::document_table_row(tree, *id).is_some()).collect();
+        let Some(current) = rows.iter().position(|id| *id == row) else { return false };
+        let row_height = tree.accepted_layout(row).map_or(0.0, |layout| layout.height).max(1.0);
+        let page = tree.accepted_layout(table).map_or(1, |layout| ((layout.height / row_height) as usize).saturating_sub(1).max(1));
+        let key = if key == "NumpadEnter" { "Enter" } else { key };
+        let outcome = semio_ui_wgpu_layout::table::table_key(key, modifiers.shift, false, current, rows.len(), page);
+        if let Some(next) = outcome.focus.and_then(|index| rows.get(index).copied()) {
+            if let Some((blurred, fired)) = self.focus.set_focus(tree, Some(next), true) {
+                self.push_app_command(tree, blurred, fired, commands);
+            }
+            commands.push(UiCommand::FocusChanged { window_id: self.window_id.clone(), node: self.focus.focused });
+            return true;
+        }
+        if outcome.activate {
+            commands.extend(self.dispatch_accessibility(tree, row, &AccessibilityUiEvent::Activate));
+            return true;
+        }
+        false
+    }
+
     pub(super) fn focused_disclosure_activation(&mut self, tree: &mut UiTree, key: &str) -> bool {
         if !matches!(key, "Enter" | "NumpadEnter" | " ") {
             return false;
@@ -55,6 +85,13 @@ impl EventRouter {
     }
 
     //#region 🔖️WidgetKeyboard
+    /// 🔘️ Picks the segment of the segmented select `id` under pointer `x` — a click on the chosen segment changes nothing, as a radio cannot press off.
+    pub(super) fn segmented_select_click(&mut self, tree: &mut UiTree, id: NodeId, x: f32, out: &mut Vec<UiCommand>) {
+        let (Some(bounds), Some(UiNode::Select(select))) = (absolute_rect(tree, id), tree.node(id).map(|node| &node.spec.0)) else { return };
+        let Some(item) = select::select_segment_at(bounds, select.items.len(), x, self.flow.inline.is_rtl()).map(|index| &select.items[index]).filter(|item| item.value != select.value) else { return };
+        if let Some(fired) = fired_action(&select.on_change, Trigger::Change, DslValue::String(item.value.clone())) { self.push_app_command(tree, id, fired, out); }
+    }
+
     /// 🔽️ Routes one key at the focused `Select`, returning whether it was consumed. Opens the popup
     /// (highlighting the selected/last/first-matching row), moves the highlight, commits it, closes
     /// on `Tab`, or extends the typeahead query — the union of React's `SelectTrigger` and
@@ -74,18 +111,8 @@ impl EventRouter {
             return false;
         }
         if select_is_segmented(tree, id) {
-            let step = match self.mirrored_inline_key(key) {
-                "ArrowRight" | "ArrowDown" => 1,
-                "ArrowLeft" | "ArrowUp" => select.items.len().saturating_sub(1),
-                _ => return false,
-            };
-            if select.items.is_empty() {
-                return true;
-            }
-            let next = select.items.iter().position(|item| item.value == select.value).map_or(0, |current| (current + step) % select.items.len());
-            if let Some(fired) = fired_action(&select.on_change, Trigger::Change, DslValue::String(select.items[next].value.clone())) {
-                self.push_app_command(tree, id, fired, out);
-            }
+            let Some(next) = select::select_segment_key(select.items.iter().position(|item| item.value == select.value), select.items.len(), key, self.flow.inline.is_rtl(), |_| false) else { return matches!(key, "ArrowLeft" | "ArrowRight" | "Home" | "End") };
+            if let Some(fired) = fired_action(&select.on_change, Trigger::Change, DslValue::String(select.items[next].value.clone())) { self.push_app_command(tree, id, fired, out); }
             return true;
         }
         let open = node.state.open;
@@ -114,7 +141,8 @@ impl EventRouter {
             }
             select::SelectKey::Commit => {
                 let Some(value) = highlighted.and_then(|index| values.get(index)) else { return true };
-                if let Some(fired) = fired_action(&on_change, Trigger::Change, DslValue::String(value.clone())) {
+                let committed = semio_ui_retained_tree::reconcile::select_commit_value(tree, id, value);
+                if let Some(fired) = fired_action(&on_change, Trigger::Change, DslValue::String(committed)) {
                     self.push_app_command(tree, id, fired, out);
                 }
                 self.select_typeahead = None;
@@ -144,7 +172,7 @@ impl EventRouter {
 
     /// 🔤️ Appends `char` to the live typeahead query, restarting it when the previous keystroke is
     /// older than `select::SELECT_TYPEAHEAD_RESET_SECONDS`.
-    fn extend_select_typeahead(&mut self, char: char) -> String {
+    pub(super) fn extend_select_typeahead(&mut self, char: char) -> String {
         let fresh = self.select_typeahead.as_ref().is_some_and(|(_, at)| self.clock_seconds - at < f64::from(select::SELECT_TYPEAHEAD_RESET_SECONDS));
         let mut query = if fresh { self.select_typeahead.take().map(|(query, _)| query).unwrap_or_default() } else { String::new() };
         query.push(char);
@@ -218,10 +246,13 @@ impl EventRouter {
     /// 👆️ The `UiCommand::App` a press/drag at `(x, y)` over `id` commits, for the pointer-valued
     /// control kinds — see `pointer_commit_action`. The rect it measures the gesture against is the
     /// node's own absolute painted rect, the same one `paint` drew the knob/segments at.
-    pub(super) fn pointer_commit(&mut self, tree: &mut UiTree, id: NodeId, x: f32, y: f32) -> Option<UiCommand> {
+    pub(super) fn pointer_commit(&mut self, tree: &mut UiTree, id: NodeId, x: f32, y: f32, press: bool) -> Option<UiCommand> {
         let bounds = absolute_rect(tree, id)?;
         let inline_suffix_width = tree.accepted_inline_suffix_width(id).unwrap_or(0.0);
         let node = tree.node(id)?;
+        if press && matches!(node.spec.0, UiNode::Ring(_)) {
+            return None;
+        }
         let (local_delta, local_slider) = match &node.spec.0 {
             UiNode::Slider(slider) => {
                 let unit_width = slider.unit_label().map(|_| inline_suffix_width);

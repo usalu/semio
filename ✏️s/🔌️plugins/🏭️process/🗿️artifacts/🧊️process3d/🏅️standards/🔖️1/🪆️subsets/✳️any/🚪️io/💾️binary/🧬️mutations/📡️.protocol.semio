@@ -5,41 +5,8 @@ schema process3d.structural
 start record
 framing record
 
-# Real op frame (`dsl::variants_binary::encode_tagged_op`): `format u8` (`OP_BINARY_FORMAT`) then `tag varint`,
-# then the kind's framework record body (`os_pack::encode_record_body`). Each record is one mutation kind at its
-# wire tag; this file is the only source of those tags, which the codec looks up by the kind's keyword.
-header fixed 2
-field format u8
-field tag varint
-record create-step tag=0
-field payload bytes
-record delete-step tag=1
-field payload bytes
-record rename-step tag=2
-field payload bytes
-record change-step-enabled tag=3
-field payload bytes
-record change-step-origin tag=4
-field payload bytes
-record replace-step-measure tag=5
-field payload bytes
-record reorder-steps tag=6
-field payload bytes
-record create-machine tag=7
-field payload bytes
-record delete-machine tag=8
-field payload bytes
-record rename-machine tag=9
-field payload bytes
-record change-machine-icon tag=10
-field payload bytes
-record replace-machine-capabilities tag=11
-field payload bytes
-record move-stock tag=12
-field payload bytes
-record change-stock-label tag=13
-field payload bytes
-record replace-stock-solid tag=14
-field payload bytes
-record resize-stock tag=15
+# One canonical framework Pack value document. Its root is the Process3d mutation
+# record with the textual mutation discriminator and the fields of that variant.
+# Length and scalar encoding are defined by the framework Pack value protocol.
+record mutation tag=0
 field payload bytes

@@ -48,7 +48,6 @@ semio-s-artifact-gis-gisterrain-inferences = { path = "../../../../💡️infere
 semio-s-artifact-gis-gisterrain-operations = { path = "../../../../⚙️operations/📦️packages/🦀️rust" }
 semio-s-artifact-gis-gisterrain-schema = { path = "../../../../📦️packages/🦀️rust" }
 semio-s-artifact-gis-gisterrain-terrain-descriptor = { path = "../../../../🧭️terrain-descriptor/📦️packages/🦀️rust" }
-semio-s-artifact-stdio-dwg = { workspace = true }
 semio-s-artifact-stdio-gltf = { workspace = true }
 semio-s-artifact-stdio-json = { workspace = true }
 semio-s-artifact-stdio-las = { workspace = true }

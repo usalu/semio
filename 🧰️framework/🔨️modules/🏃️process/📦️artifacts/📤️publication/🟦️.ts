@@ -6,7 +6,7 @@ import{withArtifactDescriptorSlotV1}from"./📥️sources/🟦️.ts";
 import{readArtifactPublicationManifestV1,type ArtifactPublicationManifestV1}from"./📋️manifest/🟦️.ts";
 import { waitingDelayV1 as delay } from "../../🧭️routing/📥️invocation/🏃️process/🐕️watchdog/🟦️.ts";
 import { basename, dirname, resolve, join, isAbsolute, relative } from "node:path";
-import { acquireResourceLease, captureResourceLeaseWriterProofV1, requireResourceLeaseWriterProofV1, resourceLeasePathV1, checkResourceLeaseControl, type ResourceLease, type ResourceLeaseControl, type ResourceLeaseWriterProofV1, type LeaseWait } from "../../🔒️leases/🟦️.ts";
+import { acquireResourceLease, captureResourceLeaseWriterProofV1, requireResourceLeaseWriterProofV1, resourceLeasePathV1, checkResourceLeaseControl, ResourceLeaseTimeoutErrorV1, type ResourceLease, type ResourceLeaseAdmissionTimeoutV1, type ResourceLeaseControl, type ResourceLeaseWriterProofV1, type LeaseWait } from "../../🔒️leases/🟦️.ts";
 
 import{requireIssuedResourceControlV1,requireAcceptedPhysicalCleanupControlV1,readAcceptedPhysicalCleanupV1,beginAcceptedPhysicalCleanupV1,checkAcceptedPhysicalCleanupV1}from"../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import type{AcceptedPhysicalCleanupV1}from"../../🧭️routing/📥️invocation/🏃️process/🧹️cleanup/🟦️.ts";
@@ -91,9 +91,21 @@ export async function withFreshArtifactPublicationWritersV1<T>(destination:strin
   leaseDirectory=resolve(leaseDirectory);
   const leases:ResourceLease[]=[],failures:unknown[]=[];
   const acquire=async(resource:string)=>{
-    const lease=await acquireResourceLease({directory:leaseDirectory,resource,mode:"exclusive",control,signal:control.signal,timeoutMs:0,admissionPatienceMs:freshAdmission.const.directoryPatienceMilliseconds});
-    leases.push(lease);
-    return captureResourceLeaseWriterProofV1(lease,leaseDirectory,resource,control);
+    for (let attempt = 1; ; attempt++) {
+      try {
+        const lease = await acquireResourceLease({
+          directory: leaseDirectory, resource, mode: "exclusive", control,
+          signal: control.signal, timeoutMs: 0,
+          admissionPatienceMs: freshAdmission.const.directoryPatienceMilliseconds,
+        });
+        leases.push(lease);
+        return captureResourceLeaseWriterProofV1(lease, leaseDirectory, resource, control);
+      } catch (error) {
+        if (!(error instanceof ResourceLeaseTimeoutErrorV1) || attempt >= freshAdmission.const.directoryAttempts) throw error;
+        const admission: ResourceLeaseAdmissionTimeoutV1 | undefined = Object.getOwnPropertyDescriptor(error, "resourceLeaseAdmission")?.value;
+        if (admission?.operation !== "open" || admission.resource !== resource || admission.mode !== "shared") throw error;
+      }
+    }
   };
   let accepting=true,stage:Promise<void>|undefined,value:T|undefined;
   try{

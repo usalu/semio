@@ -3,6 +3,7 @@ import { useShellScopeOptional } from "@semio-tech/ui/elements/ShellScope";
 import { elementIdSelector } from "@semio-tech/ui/elements/ElementId";
 import type { IntroductionPlacement } from "@semio-tech/framework-onboarding/declaration";
 import { ephemeralMap } from "@semio-tech/framework-transient";
+import chromeParityConstants from "../../../🧬️schema/📐️chrome-parity-constants/🧮️values.json";
 
 type IntroductionRect = { readonly top: number; readonly left: number; readonly width: number; readonly height: number };
 
@@ -203,7 +204,13 @@ export function useIntroductionElevation(ids: readonly string[]): ReadonlySet<st
 export type IntroductionInfoBoxPosition = { readonly top: number; readonly left: number };
 
 /** 📏️ The distance between the info box and the element it points at, and its inset from the viewport edge: none, the box docks flush so its border is the target's (and the viewport's) one shared line. */
-export const INTRODUCTION_INFO_BOX_GAP_PX = 0;
+export const INTRODUCTION_INFO_BOX_GAP_PX: number = chromeParityConstants.introduction.infoBoxGapPx;
+
+/** 🧲️ How far (px) the info box reaches to dock onto a border line beneath it, from the schema shared with the wgpu chrome. */
+export const INTRODUCTION_DOCK_REACH_PX: number = chromeParityConstants.introduction.dockReachPx;
+
+/** 🌬️ How far (px) the info box may slide to keep its own lines clear of the chips beneath, from the schema shared with the wgpu chrome. */
+export const INTRODUCTION_CLEAR_RANGE_PX: number = chromeParityConstants.introduction.clearRangePx;
 
 /** 📝️ Splits an introduction step body into visual paragraphs on blank lines so each
  * paragraph can emphasize independently on hover. */

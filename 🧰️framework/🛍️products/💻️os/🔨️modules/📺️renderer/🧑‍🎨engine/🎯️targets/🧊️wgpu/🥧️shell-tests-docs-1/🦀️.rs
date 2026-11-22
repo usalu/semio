@@ -17,6 +17,7 @@ use semio_renderer_wgpu_host_base::action_args_json;
 use semio_renderer_wgpu_program_bridge::operation_publications_from_json;
 use semio_renderer_wgpu_scene_canvas2d::ui_image_loading::framework_widget_context;
 use semio_renderer_wgpu_scene_state::{SceneChromeLabels, SceneEngineHosts};
+use semio_renderer_wgpu_shell_frame_pumps::FramePumpsCtx;
 use semio_renderer_wgpu_shell_actions::{ActionsCtx, command_rejection_notice, staged_arg_value, uncommitted_edit_count};
 use semio_renderer_wgpu_shell_chrome_state::{ChromeDialogRequest, ChromeDialogStop, RefusedGuestFault, SHELL_SHORTCUT_ROWS, format_keybinding_shortcut, reference_selection_ids, shell_shortcut_table, time_travel_chord_yields_to};
 use semio_renderer_wgpu_shell_directory::time_travel_peer_presence;

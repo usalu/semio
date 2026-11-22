@@ -2,7 +2,8 @@
 import {expect,test} from "bun:test";
 import {Database} from "bun:sqlite";
 import packedStampFixture from "./🪶️packed-stamps.json";
-import {createFactIndexV1} from "../../🟨️.mjs";
+import {createFactIndexV1,createFrontierV1,createGenerationStoreV1} from "../../🟨️.mjs";
+import {createMemoryFilePort,IDENTITY,IMPLEMENTATION} from "../🏃️world/🟦️.ts";
 import {encodeFactIndexV1,openFactIndexV1} from "../../🧮️fact-codec/🟨️.mjs";
 import {mkdirSync,mkdtempSync,readFileSync,rmSync,statSync,utimesSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
@@ -133,8 +134,11 @@ test("directory stamp passes skip packed content-only rows without losing struct
  const root=join(process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir(),"packed-rows"),at=(scope:string,name?:string)=>name?join(root,scope,name):join(root,scope),rows=[];
  for(let id=0;id<packedStampFixture.files;id++)rows.push({kind:"file",path:at("contents","f"+id),fact:{size:id,mtimeMs:7,ctimeMs:8,ino:id,sha256:"0".repeat(64)}});
  for(let id=0;id<packedStampFixture.digests;id++)rows.push({kind:"digest",path:at("contents","d"+id),fact:{size:id,mtimeMs:7,sha256:"a".repeat(64)}});
+ for(const kind of packedStampFixture.contentOnly.kinds)for(let id=0;id<packedStampFixture.contentOnly.rowsPerKind;id++)rows.push({kind,path:at("contents",kind+id),fact:{nestedObservations:[{kind:"readdir",path:at("irrelevant"),fact:[]}],ordinal:id}});
  rows.push(
   {kind:"readdir",path:at("listing"),fact:["one"]},
+  {kind:"readdirNames",path:at("aliases"),fact:["one"]},
+  {kind:"lstat",path:at("changed","one"),fact:{mode:33188}},
   {kind:"fileExists",path:at("missing","one"),fact:false},
   {kind:"exists",path:at("present","one"),fact:true},
   {kind:"analysis",path:at("contents","analyzed"),fact:{nestedObservations:[{kind:"lstat",path:at("nested","one"),fact:"file"}]}},
@@ -153,6 +157,22 @@ test("directory stamp passes skip packed content-only rows without losing struct
   expect(await doubt.settled({rows:settled.rows,index:settled,ids:[stable],stale:new Set()} as never)).toBe(true);
   expect(names([...excluded!])).toEqual(lookup(packedStampFixture.excluded));
   expect(settled.rowsRead()).toBe(packedStampFixture.settledReads);
+
+  let coldReads:number|undefined;
+  const store=createGenerationStoreV1({root:join(root,"store"),fs:createMemoryFilePort().port,holds:async()=>true,resources:{facts:"fixture"},durableAnswers:false,doubt:{...doubt,async published(input){
+   const before=input.index.rowsRead();
+   const saved=await doubt.published(input);
+   coldReads=input.index.rowsRead()-before;
+   return saved;
+  }}});
+  const fresh=await store.refresh({identity:IDENTITY,implementation:IMPLEMENTATION,
+   membership:async()=>({digest:IDENTITY,frontier:createFrontierV1({members:[],directories:[],capturedAt:1}),changes:[]}),
+   compute:async()=>({owners:[{name:"owner",root:"owner",kind:"project",node:{name:"owner"},edges:[],targets:[],rows:rows.filter(row=>row.kind!=="derived")}],env:{digest:IDENTITY,rows:[]}})
+  });
+  expect(fresh.published).toBe(true);
+  expect((await store.read())?.pointer).toEqual(fresh.current.pointer);
+  expect(names(checked!)).toEqual(lookup(packedStampFixture.published));
+  expect(coldReads).toBe(packedStampFixture.publishedReads);
  }finally{database.close();}
 });
 

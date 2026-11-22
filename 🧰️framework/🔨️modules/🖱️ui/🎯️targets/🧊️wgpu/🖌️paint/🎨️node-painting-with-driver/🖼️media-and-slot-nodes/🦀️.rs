@@ -30,6 +30,15 @@ pub(super) fn paint_image_node_step(
         } else {
             retained_presence_step(draw, bounds, theme, presence)
         }
+    } else if cursor.phase == 0 && image.source_page.is_some() {
+        let track = [bounds.x, bounds.y + (bounds.h - SIZE_TINY) * 0.5, bounds.w, SIZE_TINY];
+        let result = retained_fixed_output(draw, |draw| draw.push_rounded(track, theme.muted, theme.border_radius));
+        cursor.advance(2);
+        if result.is_err() {
+            RetainedNodePaintStep::Fault
+        } else {
+            RetainedNodePaintStep::Pending
+        }
     } else if cursor.phase == 0 {
         let result = retained_fixed_output(draw, |draw| draw.push_rounded([bounds.x, bounds.y, bounds.w, bounds.h], theme.panel, theme.border_radius));
         cursor.advance(1);
@@ -39,7 +48,7 @@ pub(super) fn paint_image_node_step(
             RetainedNodePaintStep::Pending
         }
     } else if cursor.phase == 1 {
-        let label = image.alt.as_ref().map_or(image.id.as_str(), Label::as_str);
+        let label = image.alt.as_ref().map_or("", Label::as_str);
         match retained_text_node_step(label, bounds, theme.font_size_small, theme.text_muted, atlas, draw, cursor) {
             RetainedNodePaintStep::Complete => {
                 cursor.advance(2);
@@ -87,7 +96,7 @@ pub(super) fn paint_component_scene_node_step(
     }
 }
 
-/// 🔌 Paints one step of an external slot node: the slot placeholder chrome.
+/// 🔌 Paints one step of an external slot node. The reserved media transport owns its rect (the host paints over the panel chrome and any status text); every other extension has no registered host on this target, so it shows what React's `ExtensionView` shows: the muted `text-xs` line `Extension unavailable: <extension>`, on no fill.
 pub(super) fn paint_external_slot_node_step(
     slot: &semio_ui_declaration::ui::UiExternalSlotNode,
     atlas: &mut FontAtlas,
@@ -96,8 +105,10 @@ pub(super) fn paint_external_slot_node_step(
     theme: &Theme,
     bounds: Rect,
     presence: &UiPresence,
+    locale: Option<semio_ui_locale::Locale>,
 ) -> RetainedNodePaintStep {
-    if cursor.phase == 0 {
+    let hosted = slot.body_key == semio_ui_retained_tree::reconcile::MEDIA_TRANSPORT_EXTENSION_ID;
+    if cursor.phase == 0 && hosted {
         let result = retained_fixed_output(draw, |draw| draw.push_rounded([bounds.x, bounds.y, bounds.w, bounds.h], theme.panel, theme.border_radius));
         cursor.advance(1);
         if result.is_err() {
@@ -105,8 +116,10 @@ pub(super) fn paint_external_slot_node_step(
         } else {
             RetainedNodePaintStep::Pending
         }
-    } else if cursor.phase == 1 {
-        match retained_text_node_step(slot.host_status.as_deref().unwrap_or(slot.body_key.as_str()), bounds, theme.font_size_small, theme.text_muted, atlas, draw, cursor) {
+    } else if cursor.phase <= 1 {
+        let unavailable = format!("{}: {}", super::ui_common_label(locale, |labels| labels.extension_unavailable), slot.body_key);
+        let text = if hosted { slot.host_status.as_deref().unwrap_or(slot.body_key.as_str()) } else { unavailable.as_str() };
+        match retained_text_node_step(text, bounds, theme.font_size_small, theme.text_muted, atlas, draw, cursor) {
             RetainedNodePaintStep::Complete => {
                 cursor.advance(2);
                 RetainedNodePaintStep::Pending

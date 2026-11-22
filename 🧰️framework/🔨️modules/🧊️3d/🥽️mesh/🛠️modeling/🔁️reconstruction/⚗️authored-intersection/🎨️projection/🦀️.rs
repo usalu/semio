@@ -1,6 +1,7 @@
 //! 🎨️ Transfers complete authored rings or projects clipped patches through their supporting polygons.
 
 use super::*;
+use semio_framework_3d_mesh_contract::MeshSourceVertex;
 use semio_framework_mesh_engine::{PolygonSurfaceKind as Kind,PolygonSurfaceSample as Sample};
 use semio_framework_value::DslValue;
 
@@ -11,7 +12,7 @@ fn dot(a:Point,b:Point)->f64{(0..3).map(|i|a[i]*b[i]).sum()}
 fn cross([a,b,c]:Point,[d,e,f]:Point)->Point{[b*f-c*e,c*d-a*f,a*e-b*d]}
 
 #[derive(Clone,Copy,semio_framework_value::RetireOwned)]
-struct Chart {source:usize,start:usize,basis:[usize;3],origin:Point,u:Point,v:Point,normal:Point,gram:[f64;3],epsilon:f64,uncut:bool,needs_affine:bool,boundary_only:bool,reversed:bool,exact_ring_start:Option<usize>,exact_ring_checked:bool}
+struct Chart {source:usize,start:usize,basis:[usize;3],origin:Point,u:Point,v:Point,normal:Point,gram:[f64;3],epsilon:f64,uncut:bool,needs_affine:bool,profile_cap:bool,reversed:bool,exact_ring_start:Option<usize>,exact_ring_checked:bool}
 
 impl Chart {
     fn new(source:&PolygonMeshSource,face:usize,start:usize,index:usize)->Option<Self>{
@@ -23,7 +24,7 @@ impl Chart {
         let epsilon=uu.sqrt().max(vv.sqrt())*1e-6;
         if length<=epsilon*epsilon{return None;}
         Some(Self{source:face,start,basis:[0,1,index],origin,u,v,normal:cross.map(|n|n/length),
-            gram:[uu,vv,uv],epsilon,uncut:true,needs_affine:false,boundary_only:false,reversed:false,exact_ring_start:None,exact_ring_checked:false})
+            gram:[uu,vv,uv],epsilon,uncut:true,needs_affine:false,profile_cap:false,reversed:false,exact_ring_start:None,exact_ring_checked:false})
     }
 
     fn ring_corner(&self,start:usize,step:usize,len:usize)->usize{
@@ -141,22 +142,22 @@ fn linear(a:&MeshAttribute)->bool{varying(a)&&a.interpolation==MeshAttributeInte
 
 #[derive(semio_framework_value::RetireOwned)]
 pub(super) struct Projection {
-    solid:MeshIntersectionSolid,source:PolygonMeshSource,output:PolygonMeshSource,offset:usize,
+    solid:MeshIntersectionSolid,source:PolygonMeshSource,output:PolygonMeshSource,offset:usize,vertex_offset:u32,
     offsets:Vec<usize>,vertex_ids:HistoryFoldIndex<u32,u32>,charts:Vec<Chart>,rows:Vec<Corner>,surface:Surface,
     keep_vertex_domain:bool,vertex_rows:Vec<usize>,
     normals:Vec<DslValue>,name:Option<String>,named_normal:bool,has_reversed:bool,
     attr:Option<Attribute>,face:usize,corner:usize,edge:usize,slot:usize,cursor:usize,
-    start:usize,exact:Option<usize>,edge_origin:Option<usize>,edge_sample:Option<(usize,f64)>,phase:u8,work:usize,
+    start:usize,exact:Option<usize>,edge_origin:Option<usize>,edge_sample:Option<(usize,f64)>,profile_inside:bool,phase:u8,work:usize,
 }
 
 impl Projection {
-    pub(super) fn new(solid:MeshIntersectionSolid,source:PolygonMeshSource,offset:usize)->Self{
+    pub(super) fn new(solid:MeshIntersectionSolid,source:PolygonMeshSource,offset:usize,vertex_offset:u32)->Self{
         let keep_vertex_domain=solid.right_interpolations.is_empty()&&!solid.right_points.is_empty()
             &&solid.points.len()+solid.right_points.len()==solid.geometry.positions.len();
-        Self{solid,source,output:empty(),offset,offsets:Vec::new(),vertex_ids:HistoryFoldIndex::new(),
+        Self{solid,source,output:empty(),offset,vertex_offset,offsets:Vec::new(),vertex_ids:HistoryFoldIndex::new(),
             keep_vertex_domain,vertex_rows:Vec::new(),
             charts:Vec::new(),rows:Vec::new(),surface:Default::default(),normals:Vec::new(),name:None,named_normal:false,has_reversed:false,
-            attr:None,face:0,corner:0,edge:0,slot:0,cursor:0,start:0,exact:None,edge_origin:None,edge_sample:None,phase:0,work:0}
+            attr:None,face:0,corner:0,edge:0,slot:0,cursor:0,start:0,exact:None,edge_origin:None,edge_sample:None,profile_inside:false,phase:0,work:0}
     }
 
     pub(super) fn progress(&self)->f32{f32::from(self.phase)/9.0}
@@ -174,7 +175,7 @@ impl Projection {
         if i>=ring.len(){return Err(refuse("intersection supporting face has no affine chart"));}
         if let Some(mut chart)=Chart::new(&self.source,source,self.offsets[source],i){
             chart.reversed=matches!(self.solid.faces[self.face],MeshIntersectionFace::ReversedRightPlane(_));
-            chart.boundary_only=matches!(self.solid.faces[self.face],MeshIntersectionFace::LeftBoundary(_)|MeshIntersectionFace::RightBoundary(_));
+            chart.profile_cap=matches!(self.solid.faces[self.face],MeshIntersectionFace::LeftBoundary(_)|MeshIntersectionFace::RightBoundary(_));
             self.has_reversed|=chart.reversed;
             chart.uncut=ring.len()==self.solid.geometry.faces[self.face].len();
             self.charts.push(chart);self.output.faces.push(Vec::new());self.edge=0;
@@ -212,6 +213,43 @@ impl Projection {
         if chart.exact_ring_checked{self.edge=0;}
     }
 
+    fn profile_blend(&mut self,chart:Chart,id:u32,point:Point)->Option<Blend>{
+        if !self.profile_inside{return None;}
+        let (side,_) = self.solid.faces[self.face].source_face();
+        let recipe = if side == 0 {
+            if let Some(recipe) = self.solid.points.get(id as usize) { recipe }
+            else {
+                let start=self.solid.points.len() as u32;
+                if self.solid.right_points.first().copied()!=Some(start)
+                    || self.solid.right_points.get(id.checked_sub(start)? as usize).copied()!=Some(id) { return None; }
+                self.keep_vertex_domain=false;
+                return Some(chart.face_blend(point));
+            }
+        } else {
+            let samples = &self.solid.right_interpolations;
+            &samples[samples.binary_search_by_key(&id, |(vertex, _)| *vertex).ok()?].1
+        };
+        let MeshSourceVertex::Weighted{vertices,weights}=recipe else{return None;};
+        let ring = &self.source.faces[chart.source];
+        let mut blend = Blend { corners:[0;3], weights:[0.;3] };
+        let mut count = 0;
+        for (&vertex,&weight) in vertices.iter().zip(weights) {
+            if !weight.is_finite() || weight < 0. {return None;}
+            if weight == 0. {continue;}
+            let source = vertex.checked_add(self.vertex_offset * side as u32)?;
+            *blend.corners.get_mut(count)? = ring.iter().position(|&value|value == source)?;
+            blend.weights[count] = weight;
+            count += 1;
+        }
+        if (blend.weights.iter().sum::<f64>() - 1.).abs() > 1e-6 {return None;}
+        let samples = blend.corners.map(|corner| chart.basis_point(&self.source,corner));
+        for (axis,coordinate) in point.into_iter().enumerate() {
+            let sample: f64 = samples.iter().zip(blend.weights).map(|(p,w)|p[axis]*w).sum();
+            if (sample - coordinate).abs() > chart.epsilon {return None;}
+        }
+        Some(blend)
+    }
+
     fn geometry(&mut self)->Result<(),ValueError>{
         if self.face==self.solid.geometry.faces.len(){self.next();return Ok(());}
         if self.charts.len()==self.face{return self.chart();}
@@ -225,14 +263,14 @@ impl Projection {
             let corner=chart.ring_corner(start,self.corner,source_len);
             self.exact=Some(corner);
             self.edge_origin=Some(if chart.reversed{(corner+source_len-1)%source_len}else{corner});
-            self.finish_corner(chart,id,p);
+            self.finish_corner(chart,id,p,None);
             return Ok(());
         }
         let q=self.solid.geometry.positions[ring[(self.corner+1)%ring.len()] as usize].map(f64::from);
         let j=self.edge;
         let (a,b)=(chart.basis_point(&self.source,j),chart.basis_point(&self.source,(j+1)%source_len));
         let (side,parameter)=chart.edge_parameter(a,b,p);
-        if (!chart.boundary_only&&side< -chart.epsilon)||dot(difference(p,chart.origin),chart.normal).abs()>chart.epsilon{
+        if (!chart.profile_cap&&side< -chart.epsilon)||dot(difference(p,chart.origin),chart.normal).abs()>chart.epsilon{
             return Err(refuse("intersection crosses a coplanar authored supporting-face boundary"));
         }
         if let Some(t)=parameter{
@@ -240,17 +278,24 @@ impl Projection {
             if chart.edge_parameter(a,b,q).1.is_some(){self.edge_origin=Some(j);}
         }
         if p==a{self.exact=Some(j);}
+        if chart.profile_cap && self.exact.is_none() && self.edge_sample.is_none() {
+            let axis = (0..3).max_by(|&a,&b|chart.normal[a].abs().total_cmp(&chart.normal[b].abs())).unwrap();
+            let [u,v] = [(axis+1)%3,(axis+2)%3];
+            if (a[v]>p[v])!=(b[v]>p[v]) && p[u]<a[u]+(p[v]-a[v])*(b[u]-a[u])/(b[v]-a[v]){
+                self.profile_inside = !self.profile_inside;
+            }
+        }
         self.edge+=1;
         if self.edge==source_len{
-            if chart.boundary_only&&self.exact.is_none()&&self.edge_sample.is_none(){
-                return Err(refuse("certified profile cut lost its authored boundary sample"));
-            }
-            self.finish_corner(chart,id,p);
+            let interior = if chart.profile_cap&&self.exact.is_none()&&self.edge_sample.is_none(){
+                Some(self.profile_blend(chart,id,p).ok_or_else(||refuse("certified profile cut has no authored interior sample"))?)
+            } else {None};
+            self.finish_corner(chart,id,p,interior);
         }
         Ok(())
     }
 
-    fn finish_corner(&mut self,chart:Chart,id:u32,point:Point){
+    fn finish_corner(&mut self,chart:Chart,id:u32,point:Point,interior:Option<Blend>){
         let vertex=*self.vertex_ids.entry(id).or_insert_with(||{
             let next=self.output.vertices.len() as u32;
             self.output.vertices.push(self.solid.geometry.positions[id as usize]);
@@ -262,12 +307,12 @@ impl Projection {
         let edge_sample=self.edge_sample.take();
         self.charts[self.face].uncut&=exact.is_some();
         self.charts[self.face].needs_affine|=exact.is_none()&&edge_sample.is_none();
-        let blend=edge_sample.map_or_else(||chart.face_blend(point),|(a,t)|{
+        let blend=edge_sample.map_or_else(||interior.unwrap_or_else(||chart.face_blend(point)),|(a,t)|{
             let b=(a+1)%self.source.faces[chart.source].len();
             Blend{corners:[a,b,a],weights:[1.-t,t,0.]}
         });
         self.rows.push(Corner{face:self.face,vertex,blend,exact,edge:self.edge_origin.take()});
-        self.edge=0;self.corner+=1;
+        self.edge=0;self.corner+=1;self.profile_inside=false;
         if self.corner==self.solid.geometry.faces[self.face].len(){
             if self.surface.smooth.contains(&chart.source){
                 self.output.surface.push(Sample{kind:Kind::SmoothFace,index:self.face as u32,normal:None,uv:None});

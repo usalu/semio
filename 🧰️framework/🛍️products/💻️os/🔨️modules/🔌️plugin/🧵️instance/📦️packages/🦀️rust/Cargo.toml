@@ -22,7 +22,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [features]
-artifact-app-testing = ["dep:semio-framework-test-fixtures", "semio-plugin-instance-dispatch/artifact-app-testing", "semio-plugin-instance-jobs/artifact-app-testing", "semio-plugin-instance-render/artifact-app-testing", "semio-plugin-instance-stores/artifact-app-testing", "semio-plugin-instance-children/artifact-app-testing"]
+artifact-app-testing = ["dep:semio-framework-test-fixtures", "semio-plugin-instance-dispatch/artifact-app-testing", "semio-plugin-instance-jobs/artifact-app-testing", "semio-plugin-instance-render/artifact-app-testing", "semio-plugin-instance-stores/artifact-app-testing", "semio-plugin-instance-children/artifact-app-testing", "semio-plugin-time-travel/artifact-app-testing"]
 
 [dependencies]
 semio-framework-value-factory = {path="../../../../../../../🔨️modules/🌱️value/♻️retirement/🏭️factory/📦️packages/🦀️rust"}
@@ -55,11 +55,13 @@ semio-plugin-instance-initialization = { path = "../../🌱️initialization/�
 semio-plugin-instance-history = { path = "../../📜️history/📦️packages/🦀️rust" }
 semio-plugin-instance-children = { path = "../../🪆️children/📦️packages/🦀️rust" }
 semio-plugin-instance-jobs = { path = "../../👷️jobs/📦️packages/🦀️rust" }
+semio-plugin-instance-natural-publication = { path = "../../🎟️natural-publication/📦️packages/🦀️rust" }
 semio-plugin-instance-docs = { path = "../../📄️docs/📦️packages/🦀️rust"}
 semio-plugin-instance-extension = { path = "../../🧩️extensions/📦️packages/🦀️rust" }
 semio-plugin-instance-commands = { path = "../../🧷️command-routes/📦️packages/🦀️rust" }
 semio-plugin-instance-typed-ops = { path = "../../🧾️typed-operations/📦️packages/🦀️rust" }
 semio-plugin-instance-render = { path = "../../🖼️render/📦️packages/🦀️rust" }
+semio-plugin-instance-members = { path = "../../🪢️members/📦️packages/🦀️rust" }
 semio-plugin-instance-ladders = { path = "../../../🪜️maintenance-ladder/📦️packages/🦀️rust" }
 semio-plugin-time-travel-turns = { path = "../../../⏪️time-travel/🧵️instance/📦️packages/🦀️rust" }
 semio-plugin-tool-run-turns = { path = "../../../⏯️tool-run/🧵️instance/📦️packages/🦀️rust" }

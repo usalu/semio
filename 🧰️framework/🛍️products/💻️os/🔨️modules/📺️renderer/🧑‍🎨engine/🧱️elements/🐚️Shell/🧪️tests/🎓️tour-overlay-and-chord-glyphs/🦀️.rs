@@ -42,7 +42,7 @@ struct PaintedTour {
 /// 🔬️ Drives `render_chrome_tour_step` to completion and reports what the OVERLAY draw list and the
 /// hit ledger actually received — the introspection oracle this law is written against, because the
 /// defect it pins is "hit rows exist, nothing is painted".
-fn paint_tour(shell: &mut ShellState, theme: &Theme) -> PaintedTour {
+fn paint_tour(mut shell: &mut ShellState, theme: &Theme) -> PaintedTour {
     let mut overlay = DrawList::default();
     let mut atlas = FontAtlas::builtin();
     let icons = IconAtlas::default();
@@ -160,7 +160,7 @@ fn the_veil_owns_every_pointer_it_covers() {
     let stray = HitTarget { rect: Rect::new(0.0, 0.0, 10.0, 10.0), event: None, control_id: Some("tree.label.seed-left-001".into()), kind: HitKind::Button, drag_axis: None, drag_data: None };
     assert!(!pointer_press_belongs_to_shell_chrome(Some(&stray)), "🧯️ and an ordinary chrome Button still leaves the surface's press alone");
 
-    let press = |shell: &mut ShellState, control_id: &str| {
+    let press = |mut shell: &mut ShellState, control_id: &str| {
         let hit = HitTarget { rect: Rect::new(0.0, 0.0, 10.0, 10.0), event: None, control_id: Some(control_id.to_string()), kind: HitKind::Button, drag_axis: None, drag_data: None };
         assert!(semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_shell_hit(&hit, &InputState::<ActionDescriptor>::default())).expect("a tour press never errors"), "🧯️ the shell claims {control_id}");
     };
@@ -556,7 +556,7 @@ fn every_overlay_sheet_with_a_glass_region_encodes_its_glyphs_in_the_foreground_
     let icons = IconAtlas::default();
     let mut input = InputState::<ActionDescriptor>::default();
     let mut cursor = ShellChromeChildCursor::default();
-    let complete = (0..8192).any(|_| ChromeViewCtx::of(&mut shell).render_context_menu_step(&mut cursor, &mut overlay, &mut atlas, &icons, &mut input, &theme, 1440.0, 900.0));
+    let complete = (0..8192).any(|_| ChromeOverlaysCtx::of(&mut shell).render_context_menu_step(&mut cursor, &mut overlay, &mut atlas, &icons, &mut input, &theme, 1440.0, 900.0));
     assert!(complete, "🖱️ the context-menu walk terminates");
     let sheet = overlay.layers.iter().find_map(|layer| layer.foreground_of).expect("🫧 the context menu opens a glass-content layer");
     let menu = overlay.glass_regions[sheet].rect;

@@ -689,6 +689,58 @@ pub fn build_declaration() -> ArtifactDeclaration<FixtureApps> {
         assert!(semio_plugin_runtime_ops::ops_document::plugin_artifact_pack_schema_hash(&runtime, "semio.testkit.nobody/v1").await.is_err(), "no owner is refused");
     }
 
+    /// 🌳️ Answers the shared dialect ownership cases through registered guest codec candidates.
+    #[test]
+    fn codec_owner_selects_the_most_general_dialect_of_each_role() {
+        use semio_framework_artifact_reference::io::text::artifact_reference::DialectCoordinateText as _;
+        use semio_plugin_runtime_ops::ops_document::artifact_codec_owner;
+
+        const SCHEMA: &str = "semio.testkit.shared-document/v1";
+        let fixture: serde_json::Value = serde_json::from_str(include_str!(
+            "../../../🚪️io/🧪️tests/🧫️fixtures/🌳️most-general-dialect/🔣️.json"
+        )).expect("shared most-general-dialect fixture");
+        for case in fixture["cases"].as_array().unwrap() {
+            let coordinates = case["candidates"].as_array().unwrap();
+            let dialects: Vec<_> = coordinates.iter().map(|coordinate| {
+                ArtifactDialect::parse_coordinate(coordinate.as_str().unwrap()).unwrap()
+            }).collect();
+            for role in [AppRole::Editor, AppRole::Viewer] {
+                for indices in [(0..dialects.len()).collect::<Vec<_>>(), (0..dialects.len()).rev().collect()] {
+                    let mut plugin = Plugin::<FixtureApps>::new("testkit", "Testkit", "1.0.0");
+                    for index in indices {
+                        let (mut app, mut factory) = project_artifact_declarations(&[build_declaration()])
+                            .unwrap().app_defs.into_iter().find(|(app, _)| app.definition.role == role).unwrap();
+                        app.definition.id = format!("fixture-codec-owner-{index}");
+                        app.definition.dialect = dialects[index].clone();
+                        app.definition.io.artifact_schema = SCHEMA.to_owned();
+                        factory.document_schema = SCHEMA;
+                        plugin = plugin.register_app_factory(app, factory);
+                    }
+                    let assert_owner = |selector| {
+                        let actual = artifact_codec_owner(&plugin, selector);
+                        if let Some(index) = case["mostGeneral"].as_u64() {
+                            let owner = actual.unwrap_or_else(|fault| panic!("{}: {fault:?}", case["name"]));
+                            assert_eq!(owner.id, format!("fixture-codec-owner-{index}"), "{}", case["name"]);
+                            assert_eq!(owner.role, role);
+                        } else {
+                            let fault = actual.err().expect("missing or ambiguous owner must be refused");
+                            let expected_message = if case["mostGeneral"] == "ambiguous" {
+                                "artifact codec schema resolves more than one app of the same role"
+                            } else {
+                                "artifact codec schema is owned by no app of this bundle"
+                            };
+                            assert_eq!(fault.message, expected_message, "{}", case["name"]);
+                        }
+                    };
+                    assert_owner(SCHEMA);
+                    if let Some(first) = dialects.first().filter(|first| dialects.iter().all(|dialect| dialect.artifact_kind == first.artifact_kind)) {
+                        assert_owner(&first.artifact_kind);
+                    }
+                }
+            }
+        }
+    }
+
     /// 🎯️ Force a preflight failure by construction: standard "2"'s subset gets standard
     /// "1"/"any"'s schema id, but with DIFFERENT facet content — `schema_descriptor` alone
     /// would build byte-identical (harmlessly idempotent) descriptors for the same id, so

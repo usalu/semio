@@ -10,10 +10,26 @@ impl DocumentState {
     /// shared by every wgpu tour touchpoint beyond painting (reveal, advance-by-doing, keyboard) so they
     /// can never drift on what "the active step" means.
     pub fn chrome_tour_active_step(&self, chrome: &ChromeState) -> Option<semio_framework::onboarding::IntroductionStepDefinition> {
-        let session = self.session.as_ref()?;
-        let intro = session.app.introduction.as_ref()?;
         let step_index = chrome.chrome_build.tour_state.as_ref().map(|state| state.step_index)?;
-        intro.steps.get(step_index).cloned()
+        self.chrome_tour_definition(chrome)?.steps.get(step_index).cloned()
+    }
+
+    /// 🎓️ The definition the running tour walks — the hub first-run tour's, or the open app's. The hub tour
+    /// is the same overlay fed a second definition, never a second onboarding surface.
+    pub fn chrome_tour_definition(&self, chrome: &ChromeState) -> Option<&semio_framework::onboarding::IntroductionDefinition> {
+        match chrome.chrome_build.tour_state.as_ref()?.source {
+            semio_renderer_wgpu_shell_chrome_state::ChromeTourSource::HubFirstRun => Some(semio_renderer_wgpu_hub_workspace::hub_first_run::hub_first_run_introduction()),
+            semio_renderer_wgpu_shell_chrome_state::ChromeTourSource::App => self.session.as_ref()?.app.introduction.as_ref(),
+        }
+    }
+
+    /// 🎓️🏷️ The key the running tour's answer is filed under: `os.hub` for the hub tour (React's
+    /// `markHubFirstRunSeenV1`, never brand-scoped), the app's brand-scoped key otherwise.
+    pub fn chrome_tour_seen_key(&self, chrome: &ChromeState) -> Option<String> {
+        match chrome.chrome_build.tour_state.as_ref()?.source {
+            semio_renderer_wgpu_shell_chrome_state::ChromeTourSource::HubFirstRun => Some(semio_renderer_wgpu_hub_workspace::hub_first_run::hub_first_run_introduction_id().to_string()),
+            semio_renderer_wgpu_shell_chrome_state::ChromeTourSource::App => self.introduction_seen_key(),
+        }
     }
 
     /// 🎓️ Advance-by-doing (Part B) — called from the single funnel points a user/plugin action can take
@@ -66,17 +82,17 @@ impl DocumentState {
     }
 
     pub fn chrome_tour_advance_current_step(&mut self, step: &semio_framework::onboarding::IntroductionStepDefinition, chrome: &mut ChromeState) {
-        let Some(session) = self.session.as_ref() else {
-            return;
-        };
-        let Some(intro) = session.app.introduction.as_ref() else {
+        let Some(intro) = self.chrome_tour_definition(chrome) else {
             return;
         };
         let step_index = intro.steps.iter().position(|candidate| candidate.id == step.id).unwrap_or(0);
-        if step_index + 1 >= intro.steps.len() {
-            chrome.chrome_build.mark_introduction_seen(&session.app.id);
+        let step_count = intro.steps.len();
+        if step_index + 1 >= step_count {
+            if let Some(seen_key) = self.chrome_tour_seen_key(chrome) {
+                chrome.chrome_build.mark_introduction_seen(&seen_key);
+            }
         }
-        chrome.chrome_build.advance_introduction(intro.steps.len());
+        chrome.chrome_build.advance_introduction(step_count);
     }
 }
 

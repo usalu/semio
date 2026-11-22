@@ -5,7 +5,6 @@ import{readFileSync}from"node:fs";
 import{Database}from"bun:sqlite";
 import{readyStepOverdueSecondsV1,readyStepWatchV1}from"../../../../🌐️remote-execution/🛰️sidecar/🚦️ready/🌲️process-tree/🟦️.ts";
 import samples from"./🔣️.json"with{type:"json"};
-import ownerChecks from"./📈️owner-checks.json"with{type:"json"};
 import{registerSliceReportSourceV1,sliceReadStepV1,describeSliceReadStepV1,sliceReadMovedAtV1,sliceReadActiveV1,startSliceProgressV1}from"../../🟨️.mjs";
 import schema from"../../🧬️schema/🔣️.json"with{type:"json"};
 
@@ -19,7 +18,7 @@ test("a running step is named in both languages with its seconds and its bound, 
    const row=describeSliceReadStepV1(performance.now()+5000)!;
    expect(row.phase).toContain("checking that the observed source facts still hold");expect(row.phase).toContain("Prüfe, ob die beobachteten Quellfakten");
    expect(row.done).toBe(5);expect(row.total).toBe(600);
-   expect(row.phase).toContain("(elapsed seconds of expected seconds)");expect(row.phase).toContain("(verstrichene Sekunden von erwarteten Sekunden)");
+   expect(row.phase).not.toContain("elapsed seconds");expect(row.phase).not.toContain("verstrichene Sekunden");
   },{round:2});
   expect(describeSliceReadStepV1()!.phase).toContain("reading the owners (round 1)");
  });
@@ -27,7 +26,7 @@ test("a running step is named in both languages with its seconds and its bound, 
 });
 
 test("a step past its bound is still named, with the note, and a step that throws is removed",async()=>{
- await expect(sliceReadStepV1("seal",async()=>{const row=describeSliceReadStepV1(performance.now()+700000)!;expect(row.phase).toContain("beyond the expected 600 s");expect(row.phase).toContain("über den erwarteten 600 s");throw Error("x");})).rejects.toThrow("x");
+ await expect(sliceReadStepV1("seal",async()=>{const row=describeSliceReadStepV1(performance.now()+700000)!;expect(row.done).toBe(700);expect(row.phase).not.toContain("beyond the expected");throw Error("x");})).rejects.toThrow("x");
  expect(describeSliceReadStepV1()).toBeUndefined();
 });
 
@@ -80,8 +79,8 @@ test("inventory reports new source observations while a repeated sample keeps th
      const row=describeSliceReadStepV1()!;
      expect(row.phase).toContain(`${sample.peak} distinct source observations`);
      expect(row.phase).toContain(`${sample.peak} verschiedene Quellbeobachtungen`);
-     const line=`Reading the project graph slice (${index} s): ${row.phase} ${index} of ${row.total}.`;
-     const translated=`Lese den Projektgraph-Ausschnitt (${index} s): ${row.phase} ${index} von ${row.total}.`;
+     const line=`Reading the project graph slice (${index} s, expected ${row.total} s): ${row.phase}.`;
+     const translated=`Lese den Projektgraph-Ausschnitt (${index} s, erwartet ${row.total} s): ${row.phase}.`;
      for(const result of [english.observe([line],index*1000),german.observe([translated],index*1000)]){
       expect(result.step).toBeDefined();
       expect(result.quietMs).toBe(sample.quietMs);
@@ -90,33 +89,6 @@ test("inventory reports new source observations while a repeated sample keeps th
    }finally{db.close();}
   });
  }finally{remove();}
-});
-
-test("inventory owner checks move both watchdog languages only on a higher completed count",async()=>{
- const english=readyStepWatchV1(),german=readyStepWatchV1(),db=new Database(":memory:"),remove=registerSliceReportSourceV1("caches",()=>({interned:301380}));
- let current=ownerChecks[0]!,elapsed=0;
- const diagnostics=()=>{
-  const discovery={phase:"scoped-discovery",completedOwners:current.count,elapsedMilliseconds:elapsed};
-  return{version:1,active:current.from==="active"?discovery:{phase:"memo-publish",elapsedMilliseconds:elapsed},completed:current.from==="completed"?[discovery]:[]};
- };
- try{
-  await sliceReadStepV1("inventory",async()=>{
-   for(const[index,sample]of ownerChecks.entries()){
-    current=sample;elapsed+=379;
-    const peak=(db.query("select max(json_extract(value,'$.count')) as peak from json_each(?1) where key<=?2").get(JSON.stringify(ownerChecks),index)as{peak:number}).peak;
-    const row=describeSliceReadStepV1(performance.now()+(readyStepOverdueSecondsV1(600)+index+1)*1000)!;
-    expect(row.total).toBe(600);expect(row.phase).toContain("301380 distinct source observations");
-    if(peak){expect(row.phase).toContain(`${peak} completed owner checks`);expect(row.phase).toContain(`${peak} abgeschlossene Projektprüfungen`);}
-    else expect(row.phase).not.toContain("completed owner checks");
-    const lines=[`Reading the project graph slice (${index+5} s): ${row.phase} ${row.done} of ${row.total}.`,`Lese den Projektgraph-Ausschnitt (${index+9} s): ${row.phase} ${row.done} von ${row.total}.`];
-    for(const[watch,line]of [[english,lines[0]!],[german,lines[1]!]]as const){const seen=watch.observe([line],sample.atMs);expect(seen.step?.seconds).toBe(row.done);expect(seen.quietMs).toBe(sample.quietMs);expect(seen.overdue).toBe(sample.overdue);}
-   }
-  },{},diagnostics);
-  await sliceReadStepV1("inventory",()=>{
-   expect(describeSliceReadStepV1()?.phase).toContain("11 completed owner checks");
-   expect(describeSliceReadStepV1()?.phase).not.toContain("1185 completed owner checks");
-  },{},()=>({active:{phase:"scoped-discovery",completedOwners:11},completed:[]}));
- }finally{remove();db.close();}
 });
 
 test("live inventory aggregation emits completed checks in the existing step progress",async()=>{

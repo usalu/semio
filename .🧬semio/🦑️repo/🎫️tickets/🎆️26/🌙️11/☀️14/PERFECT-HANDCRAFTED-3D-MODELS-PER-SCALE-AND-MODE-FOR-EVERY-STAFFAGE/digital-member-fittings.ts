@@ -15,9 +15,11 @@ if(a.id==='cyclist'){
   const vol=a.volumes[k]
   for(const [joint,stock] of [['joint-jib-heel','jib-heel-cross'],['joint-jib-heel-top','jib-heel-pin']]){
    if(!vol.body.some(q=>q.id===stock))continue
-   vol.structure=vol.structure.filter(s=>s.id!=='member-'+stock)
-   const i=vol.structure.findIndex(q=>q.id===joint)
-   vol.structure[i]={id:joint,of:stock,member:'jib',part:'joint'}
+   const member=vol.body.find(q=>q.id===stock),i=vol.structure.findIndex(q=>q.id===joint)
+   const length=member.profile.at(-1)[0],radius=member.profile[0][1],width=1.6*radius
+   const endCollar={...structuredClone(member),id:joint,part:'joint',member:'jib',profile:[[0,radius],[width,radius]]}
+   const other=structuredClone(endCollar);other.id=joint+'-opposite';other.origin=member.origin.map((x,k)=>+(x+(length-width)*member.axis[k]).toFixed(7))
+   vol.structure.splice(i,1,endCollar,other)
   }
  }
 }else if(a.id==='london-plane-pollarded'){

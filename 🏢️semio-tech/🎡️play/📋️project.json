@@ -725,6 +725,26 @@
         }
       }
     },
+    "release-export": {
+      "executor": "repo:script",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "cwd": "🏢️semio-tech/🎡️play",
+        "command": "repo ./🔨️modules/📦️site/📜️script.ts export",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "mutates-workspace"
+          }
+        }
+      }
+    },
     "release-verify": {
       "executor": "repo:script",
       "cache": false,

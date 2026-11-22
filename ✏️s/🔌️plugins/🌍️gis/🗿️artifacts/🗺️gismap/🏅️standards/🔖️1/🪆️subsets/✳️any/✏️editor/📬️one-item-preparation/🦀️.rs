@@ -65,7 +65,24 @@ impl semio_framework_value::FactoryPayloadRetirement for GisMapStampSlot {
         let step = if effect.grant().maximum_items == 0 { RetainedCloneStep::Progress(Default::default()) } else { drop(state.take()); RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, ..Default::default() }) };
         semio_framework_value::RetainedWorkPoll::Complete(semio_framework_value::RetainedWorkOutcome { result: Ok(step), work: 0 })
     }
+    /// 🧹️ The terminal option is empty after the controlled stamp owner has closed.
+    unsafe fn close_state_terminal_native_release_safe() -> bool { true }
     fn close_state_terminal_is_empty(state: &Self::CloseState) -> bool { state.is_none() }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use semio_framework_value::FactoryPayloadRetirement;
+
+    #[test]
+    fn gis_map_preparation_factory_can_release_its_terminal_header() {
+        type Factory = Gis2dOneItemPreparationFactory<GisMapSnapshot, GisMapMutation>;
+        let factory = Factory::default();
+        let stamp_state = factory.stamp.prepare_close_state();
+        assert!(GisMapStampSlot::close_state_terminal_is_empty(&stamp_state));
+        assert!(unsafe { Factory::close_state_terminal_native_release_safe() });
+    }
 }
 
 /// 📍 Creates the exact parent Map preparation port used by the retained fixed-three assembly.

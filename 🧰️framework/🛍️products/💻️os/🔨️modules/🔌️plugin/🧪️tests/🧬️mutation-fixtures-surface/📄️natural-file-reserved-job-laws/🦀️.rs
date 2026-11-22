@@ -446,3 +446,23 @@ async fn natural_file_controlled_decoder_crosses_turns_and_retires_its_owner() {
 
     }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original caller paid terminal retirement");result
 }
+
+/// 📶️ Natural-file publication checkpoints follow the contract quantum and the terminal stage change instead of every funded Pack slice, so a small PDF whose Pack export spans hundreds of 64-unit slices no longer spends its mounted Open on checkpoint delivery, acknowledgement and retirement round trips.
+#[test]
+fn natural_file_publication_checkpoints_follow_the_contract_quantum_not_every_pack_slice() {
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📄️natural-file-lifecycle/📶️publication-checkpoints.json")).expect("publication checkpoint law");
+    let [quantum, slice, empty_every, polls, legacy] = ["quantum", "sliceUnits", "emptySliceEvery", "polls", "legacyCheckpoints"].map(|key| law[key].as_u64().expect("law integer"));
+    let (mut work, mut actual, mut legacy_actual) = (0_u64, Vec::new(), 0_u64);
+    for poll in 1..=polls {
+        let previous = work;
+        work += if poll % empty_every == 0 { 0 } else { slice };
+        legacy_actual += u64::from(work != previous);
+        if crate::natural_file_import::publication_checkpoint_due(previous, work, quantum, poll == polls) { actual.push(serde_json::json!([poll, work])); }
+    }
+    assert_eq!(legacy_actual, legacy);
+    assert_eq!(serde_json::Value::Array(actual), law["expectedCheckpoints"]);
+    assert!(crate::natural_file_import::publication_checkpoint_due(0, 0, 0, true));
+    assert!(!crate::natural_file_import::publication_checkpoint_due(3, 3, 0, false));
+    assert!(!crate::natural_file_import::publication_checkpoint_due(u64::MAX, u64::MAX, quantum, false));
+    assert!(crate::natural_file_import::publication_checkpoint_due(quantum - 1, 2 * quantum + 1, quantum, false));
+}

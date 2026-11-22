@@ -54,7 +54,7 @@ async fn jack_child_restore_projection_accepts_the_exact_owned_content() {
 }
 
 fn mini_fixture() -> JackSnapshot {
-    JackSnapshot::with_content::<SemioJackComposition>(JackSnapshot::SCHEMA.into(), "mini".into(), Some("nakagin".into()), Manifest::nakagin_default(), Camera::default(), JackWorkingScene { nodes: vec![
+    JackSnapshot::with_content::<SemioJackComposition>(JackSnapshot::SCHEMA.into(), "mini".into(), "nakagin".into(), Camera::default(), JackWorkingScene { nodes: vec![
             Node {
                 id: "root".into(),
                 kind: "Piece".into(),
@@ -107,11 +107,23 @@ async fn manifest_nakagin_has_piece_and_connection() {
 }
 
 #[semio_framework_async_macros::async_test]
+async fn manifests_are_interned_once_and_shared_by_id() {
+    let first = Manifest::shared("nakagin").expect("built-in manifest");
+    assert!(std::sync::Arc::ptr_eq(&first, &Manifest::shared("nakagin").unwrap()));
+    assert_eq!(*first, Manifest::nakagin_default());
+    assert!(Manifest::shared("unregistered-manifest").is_none());
+    let custom = Manifest { node_kinds: first.node_kinds[..1].to_vec(), edge_kinds: Vec::new(), port_kinds: Vec::new() };
+    let id = Manifest::intern(custom.clone());
+    assert_eq!(id, Manifest::intern(custom.clone()));
+    assert_eq!(*Manifest::shared(&id).unwrap(), custom);
+    assert!(std::sync::Arc::ptr_eq(&Manifest::shared(&id).unwrap(), &Manifest::shared(&id).unwrap()));
+}
+
+#[semio_framework_async_macros::async_test]
 async fn fixture_loads_manifest_id_only() {
-    let json = r#"{"schema":"trinity.graph","name":"mini","manifestId":"nakagin","manifest":{"nodeKinds":[],"edgeKinds":[],"portKinds":[]},"camera":{"x":0,"y":0,"zoom":1},"content":{"childId":"mini-content","target":{"artifactId":"mini-content","dialect":{"artifactKind":"s.stdio.semio","standard":"v1","subset":"graph"}}},"query":""}"#;
-    let mut snapshot = JackSnapshot::from_json(json).unwrap();
-    snapshot.resolve_manifest().unwrap();
-    assert!(snapshot.manifest.node_kind("Piece").is_some());
+    let json = r#"{"schema":"trinity.graph","name":"mini","manifestId":"nakagin","camera":{"x":0,"y":0,"zoom":1},"content":{"childId":"mini-content","target":{"artifactId":"mini-content","dialect":{"artifactKind":"s.stdio.semio","standard":"v1","subset":"graph"}}},"query":""}"#;
+    let snapshot = JackSnapshot::from_json(json).unwrap();
+    assert!(snapshot.manifest().unwrap().node_kind("Piece").is_some());
 }
 
 #[semio_framework_async_macros::async_test]
@@ -203,22 +215,22 @@ async fn graph_effects_reject_an_unknown_node_kind() {
 
 #[semio_framework_async_macros::async_test]
 async fn from_json_rejects_wrong_schema() {
-    let json = r#"{"schema":"bogus","name":"x","manifest":{"nodeKinds":[],"edgeKinds":[],"portKinds":[]},"camera":{"x":0,"y":0,"zoom":1},"content":{"childId":"x-content","target":{"artifactId":"x-content","dialect":{"artifactKind":"s.stdio.semio","standard":"v1","subset":"graph"}}},"query":""}"#;
+    let json = r#"{"schema":"bogus","name":"x","camera":{"x":0,"y":0,"zoom":1},"content":{"childId":"x-content","target":{"artifactId":"x-content","dialect":{"artifactKind":"s.stdio.semio","standard":"v1","subset":"graph"}}},"query":""}"#;
     let err = JackSnapshot::from_json(json).expect_err("schema mismatch");
     assert!(err.to_string().contains("expected schema trinity.graph"));
 }
 
 #[semio_framework_async_macros::async_test]
-async fn resolve_manifest_errors_when_missing_and_empty() {
-    let mut fixture = JackSnapshot::with_content::<SemioJackComposition>(JackSnapshot::SCHEMA.into(), "x".into(), None, Manifest::default(), Camera::default(), JackWorkingScene { nodes: vec![], edges: vec![] }, None);
-    let err = fixture.resolve_manifest().expect_err("missing manifest");
+async fn manifest_errors_when_the_id_is_empty() {
+    let fixture = JackSnapshot::with_content::<SemioJackComposition>(JackSnapshot::SCHEMA.into(), "x".into(), String::new(), Camera::default(), JackWorkingScene { nodes: vec![], edges: vec![] }, None);
+    let err = fixture.manifest().expect_err("missing manifest");
     assert!(matches!(err, TrinityRamError::ManifestMissing));
 }
 
 #[semio_framework_async_macros::async_test]
-async fn resolve_manifest_errors_on_unknown_id() {
-    let mut fixture = JackSnapshot::with_content::<SemioJackComposition>(JackSnapshot::SCHEMA.into(), "x".into(), Some("nope".into()), Manifest::default(), Camera::default(), JackWorkingScene { nodes: vec![], edges: vec![] }, None);
-    let err = fixture.resolve_manifest().expect_err("unknown manifest id");
+async fn manifest_errors_on_unknown_id() {
+    let fixture = JackSnapshot::with_content::<SemioJackComposition>(JackSnapshot::SCHEMA.into(), "x".into(), "nope".into(), Camera::default(), JackWorkingScene { nodes: vec![], edges: vec![] }, None);
+    let err = fixture.manifest().expect_err("unknown manifest id");
     assert!(err.to_string().contains("unknown manifest id nope"));
 }
 
@@ -227,7 +239,7 @@ async fn graph_from_host_snapshot_rejects_port_kind_not_declared_on_node_kind() 
     let fixture = mini_fixture();
     let mut nodes = fixture.nodes().expect("valid retained Jack child");
     nodes[0].ports.push(Port { id: "bad".into(), kind: "core circular bottom".into(), direction: PortDirection::Out, properties: PropertyBag::new() });
-    let fixture = JackSnapshot::with_content::<SemioJackComposition>(fixture.schema.clone(), fixture.name.clone(), fixture.manifest_id.clone(), fixture.manifest.clone(), fixture.camera.clone(), JackWorkingScene { nodes: nodes, edges: fixture.edges().expect("valid retained Jack child") }, fixture.root_node_id.clone());
+    let fixture = JackSnapshot::with_content::<SemioJackComposition>(fixture.schema.clone(), fixture.name.clone(), fixture.manifest_id.clone(), fixture.camera.clone(), JackWorkingScene { nodes: nodes, edges: fixture.edges().expect("valid retained Jack child") }, fixture.root_node_id.clone());
     let err = Graph::from_snapshot(fixture).expect_err("undeclared port kind");
     assert!(matches!(err, TrinityRamError::PortKindNotDeclaredOnFixture { .. }));
     assert!(err.to_string().contains("root"));
@@ -280,7 +292,7 @@ async fn graph_to_host_snapshot_and_fixture_json() {
     let g = Graph::from_snapshot(mini_fixture()).unwrap();
     let fixture = g.to_snapshot::<SemioJackComposition>();
     assert_eq!(fixture.nodes().expect("valid retained Jack child").len(), 2);
-    assert_eq!(fixture.manifest_id.as_deref(), Some("nakagin"));
+    assert_eq!(fixture.manifest_id, "nakagin");
     let json = g.host_snapshot_json::<SemioJackComposition>().expect("fixture json");
     assert!(json.contains("\"schema\""));
 }

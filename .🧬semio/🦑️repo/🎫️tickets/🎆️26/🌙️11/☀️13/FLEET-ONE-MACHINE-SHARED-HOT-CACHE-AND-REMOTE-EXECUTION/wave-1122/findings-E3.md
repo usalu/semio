@@ -1,0 +1,22 @@
+# Findings E3 (for E1, graph record writer)
+
+219 of the 1000 divergences are graph project records (`record.br` plus `leaf/*` and optional `closure-*`), class `project-inference`; 426 are owner pool failure notes. Neither refused copy was available (the CAS had collected the blobs), so this is reasoning from the writer code and a kept record (`rec.br` of key 22b10c0d..., decoded: `{version,digest,image,rows:{table,pool,lists,extras}}`).
+
+Record already normalises times (`mtimeMs/ctimeMs/ino` are 0, root is the token `⟦semio-root⟧`). Candidates that can still differ between machines for one record key (check first, in this order):
+1. `analysis` rows carry `provider` ids; `registeredProvidersV1` in `📦️project-records/🟦️.ts` documents that "the id of a provider contains a hash of the module location": a module path is a machine path unless tokenised.
+2. `readdirNames` rows hold a digest of a directory listing: any local untracked or generated entry (`target`, `node_modules`, `.DS_Store`, a peer's scratch file) changes it. The tree is replicated, but build outputs are per machine.
+3. `exists` rows (38 in the sample, e.g. an absent `📜️script.ts`): depend on files present on one machine only.
+4. `lstat` rows (11): file type of a path; same cause as 3.
+5. Row order: `table` is ordered by observation order, not sorted; two machines that observe in a different order give different bytes for the same observations. Sorting the table (and re-indexing `lists`) before packing makes the bytes a function of the set.
+
+The server now keeps the refused result and the differing blobs (see result-E3 round 2): after the next divergence `GET /evidence` names the differing document, and a decoded diff of `record.br` ends the guessing. I did not touch `🪪️graph-state/📦️project-records` (E1's folder).
+
+Failure notes (`failure.br`, 426): the note is `{version,revision,cause(300 chars),origin,atMs}` published by `publishOwnerPoolFailureV1` from `🔬️inference/🟨️.mjs` line 54 for every deterministic failure, per record digest. Every machine that fails the same owner within the 20 minute window writes its own note, so two notes always differ in `origin` and `atMs`: the conflicts say that many machines run the same failing owner, not that they fail differently. The cause text of the samples could not be read (blobs collected). Improvement for E1: skip publishing when a live note for the record digest and revision already exists (`readOwnerPoolFailureV1` is already called at line 48); that stops the write churn. The server now replaces notes instead of refusing, so the newest note wins.
+
+# Update 02:10: the first real divergences, diffed (server on the new code since 01:53)
+
+Six `project-inference` divergences were captured and diffed with `repo remote-cache evidence show <id>` (all `record.br`, sizes 5 KB to 620 KB). What differs:
+1. File observation rows (`size`, `sha256`) of the same source file: kept 25881 bytes against refused 26709, 7635 against 8741, 8488 against 8711. The two machines inferred the same record key while the live tree held two versions of those files (50 agents edit it; the replica lags up to a few seconds). The records are both correct for the tree they saw: this is tree churn, not nondeterminism.
+2. Directory listing rows of `node_modules` (`node_modules/typescript`, `/ajv`, `node_modules/@semio-tech/process/execution`, `typescript.js`): the content of `node_modules` is installed per machine, so a `readdirNames` row over it differs between machines. E1: observations of directories below `node_modules` (and other installed, ignored trees) must not enter a shared record, or must be hashed over the tracked entries only.
+3. Pool/analysis index shifts (`"$": 487` against `488`...) and a whole-table difference (kept 620459 bytes, refused 603259: the stamp rows are present on one side) follow from 1 and 2 (indices move when rows are added), except the last: one record has stamp rows on one side only; that is a different record-code state (revision), check `revision` handling in the key.
+Policy consequence for the server: for graph records first-writer-wins keeps the older tree state; every machine at the newer state rejects it on take and infers again, so the refused newer record is exactly what the fleet needs. A newest-wins rule for `project-inference` records (like the notes) would converge on the freshest tree; I did not change it: it is E1's contract (record `diverged` counters, adoption). Decide together.

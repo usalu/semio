@@ -149,3 +149,29 @@ fn the_flow_axes_round_trip_on_the_wire_as_reacts_own_lowercase_tags() {
 }
 
 //#endregion 🧭️FlowTests
+
+/// 📍️ The vectors React's own `resolvePopoverPlacement` produced (`🧱️elements/🗨️Popover/🧪️tests/🧩️component/placement.tsx` replays the same file), so both sides provably share one algorithm.
+#[test]
+fn the_placement_matches_every_vector_react_s_resolver_produced() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/📍️overlay-placement/🔣️.json")).expect("placement vectors");
+    let number = |value: &serde_json::Value| value.as_f64().expect("number") as f32;
+    for case in fixture["cases"].as_array().expect("cases") {
+        let side = |name: &str| match name {
+            "top" => OverlaySide::Top,
+            "right" => OverlaySide::Right,
+            "left" => OverlaySide::Left,
+            _ => OverlaySide::Bottom,
+        };
+        let align = match case["align"].as_str().unwrap() {
+            "start" => OverlayAlign::Start,
+            "end" => OverlayAlign::End,
+            _ => OverlayAlign::Center,
+        };
+        let placement = AnchoredPlacement { side: side(case["side"].as_str().unwrap()), align, side_offset: number(&case["sideOffset"]), align_offset: number(&case["alignOffset"]), collision_padding: number(&case["collisionPadding"]), avoid_collisions: case["avoidCollisions"].as_bool().unwrap() };
+        let flow = if case["rtl"].as_bool().unwrap() { FlowInline::Rtl } else { FlowInline::Ltr };
+        let anchor = &case["anchor"];
+        let resolved = resolve_anchored_placement(OverlayRect::new(number(&anchor["x"]), number(&anchor["y"]), number(&anchor["width"]), number(&anchor["height"])), (number(&case["content"]["width"]), number(&case["content"]["height"])), (number(&case["viewport"]["width"]), number(&case["viewport"]["height"])), placement, flow);
+        let expected = &case["expected"];
+        assert_eq!((resolved.side, resolved.x, resolved.y), (side(expected["side"].as_str().unwrap()), number(&expected["left"]), number(&expected["top"])), "{}", case["name"]);
+    }
+}

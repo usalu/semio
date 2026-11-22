@@ -184,7 +184,7 @@ fn runtime_raster_operation_authority_rejects_stale_duplicate_and_device_close_a
 #[test]
 fn runtime_raster_operation_authority_exhausts_permanently_without_aba() {
     let authority = RuntimeRasterOperationAuthority::new();
-    authority.0.next_operation.store(u64::MAX - 1, Ordering::Release);
+    authority.testkit_seed_next_operation(u64::MAX - 1);
 
     let penultimate = authority.begin(8, 13).expect("MAX-1 operation");
     assert_eq!(penultimate.operation, u64::MAX - 1);
@@ -196,8 +196,7 @@ fn runtime_raster_operation_authority_exhausts_permanently_without_aba() {
     authority.release(last).expect("release MAX");
     assert!(authority.begin(8, 13).is_err(), "exhaustion remains permanent after release");
     assert!(authority.current().is_none());
-    assert!(authority.0.exhausted.load(Ordering::Acquire));
-    assert_eq!(authority.0.next_operation.load(Ordering::Acquire), u64::MAX);
+    assert_eq!(authority.testkit_exhaustion(), (true, u64::MAX));
 }
 
 /// 🎟️ LAW (source census): the presentation authority is read ONCE per frame, by the BUILD, and the
@@ -238,7 +237,7 @@ fn presenter_retirement_contract(glue: &str, prepared: &str, gpu: &str, draw: &s
         && prepared.contains("pub fn acknowledge_presented")
         && prepared.contains("pub fn abort_pending")
         && prepared.contains("pub fn take_last_valid")
-        && prepared.contains("pub fn retire_step(&mut self) -> bool")
+        && prepared.contains("pub fn close_step(&mut self, effect: &mut RetainedAllocationEffect")
         && !prepared.contains("Option<Arc<PreparedRenderPacket>>")
         && glue.contains("AppPresentPhase::Acknowledge")
         && glue.contains("AppPresentPhase::Stage")
@@ -270,7 +269,7 @@ fn presenter_retirement_contract(glue: &str, prepared: &str, gpu: &str, draw: &s
         && glue.contains("acknowledged_eviction")
         && glue.contains("acknowledged_upload_scan")
         && glue.contains("acknowledged_versions")
-        && glue.contains("previous.retire_step()")
+        && glue.contains("prepared_close_turn(cx, demand, |effect| previous.close_step(effect))")
         && glue.contains("if !gpu.close_mesh_upload_step()")
         && glue.contains("self.gpu.close_mesh_table_step()")
         && glue.contains("pub(crate) fn admit_next_frame")
@@ -341,7 +340,7 @@ impl PresenterContractSource {
 const PRESENTER_RETIREMENT_MUTATIONS: &[(PresenterContractSource, &str, &str, bool)] = &[
     (PresenterContractSource::Glue, "AppPresentPhase::Acknowledge", "AppPresentPhase::Fullscreen", false),
     (PresenterContractSource::Glue, "self.gate.acknowledge_presented(witness)", "drop(witness); self.gate.acknowledge_presented_unchecked()", false),
-    (PresenterContractSource::Glue, "previous.retire_step()", "drop(previous)", false),
+    (PresenterContractSource::Glue, "prepared_close_turn(cx, demand, |effect| previous.close_step(effect))", "drop(previous)", false),
     (PresenterContractSource::Glue, "AppPresentPhase::Stage", "AppPresentPhase::Render", false),
     (PresenterContractSource::Glue, "AppPresentPhase::Aborted", "AppPresentPhase::Render", false),
     (PresenterContractSource::Glue, "let expected = self.presentation_authority.admitted();", "let expected = self.presentation_authority.current();", false),
@@ -354,7 +353,7 @@ const PRESENTER_RETIREMENT_MUTATIONS: &[(PresenterContractSource, &str, &str, bo
     (PresenterContractSource::Glue, "if !gpu.close_mesh_upload_step()", "if false", false),
     (PresenterContractSource::Prepared, "pub fn abort_pending", "fn abandon_pending", false),
     (PresenterContractSource::Prepared, "last_valid: Option<PreparedRenderPacket>", "last_valid: Option<Arc<PreparedRenderPacket>>", false),
-    (PresenterContractSource::Prepared, "pub fn retire_step(&mut self) -> bool", "pub fn retire_all(&mut self)", false),
+    (PresenterContractSource::Prepared, "pub fn close_step(&mut self, effect: &mut RetainedAllocationEffect", "pub fn retire_all(&mut self)", false),
     (PresenterContractSource::Gpu, "self.mesh_store.evict_mesh_except_step(key, keep_versions)", "self.mesh_store.evict_mesh_step(key)", false),
     (PresenterContractSource::Gpu, "self.mesh_store.close_step()", "drop(&mut self.mesh_store)", false),
     (PresenterContractSource::Draw, "MESH_GPU_TABLE_CAPACITY: usize = 256", "MESH_GPU_TABLE_CAPACITY: usize = usize::MAX", false),

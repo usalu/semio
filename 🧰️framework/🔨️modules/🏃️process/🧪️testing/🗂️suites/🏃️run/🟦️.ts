@@ -11,7 +11,7 @@ import{runOwnedBunFilesV1}from"../../🟨️bun/📁️files/🟦️.ts";
 import{pinnedRustToolchainV1,pinnedTestToolsV1}from"../../🧰️toolchain/📌️pinned/🟦️.ts";
 import{textV1}from"../../../🏗️build/🗣️language/📖️catalog/🟦️.ts";
 import{toolLanguageV1}from"../../../🧰️tools/📖️registry/🟦️.ts";
-import{discoverProcessTestFilesV1,expandProcessTestSuiteV1,processTestProtocolV1,processTestSuiteRunsOnV1,type ProcessTestTableV1}from"../🟦️.ts";
+import{discoverProcessTestFilesV1,expandProcessTestSuiteV1,processTestProtocolV1,processTestScratchParentV1,processTestSuiteRunsOnV1,type ProcessTestScratchV1,type ProcessTestTableV1}from"../🟦️.ts";
 import{announceTestWorkersV1,readTestWorkerPolicyV1,testWorkersV1,type TestWorkerPolicyV1}from"../../👷️workers/🟦️.ts";
 import{createTestFileMemoryV1,readTestFileBudgetsV1,testFileRatioBasisPointsV1,type TestFileBudgetsV1,type TestFileProcessRowsV1}from"../../👷️workers/📏️file-budgets/🟦️.ts";
 import{learnedTestWorkerRatioV1,withTestWorkerLearningV1,type TestWorkerLearningV1}from"../../👷️workers/📐️learning/🟦️.ts";
@@ -30,8 +30,8 @@ export function processTestCheckoutV1(start:string,fallback:string):string{
 }
 
 /** 🏖️ Runs `work` with the artifact directory the caller configured or else a per-run test sandbox of `route` (inside the checkout below the declared scratch directory for `checkout` scratch), released on every exit. */
-export async function withProcessTestOutputV1(checkout:string,route:string,work:(output:string)=>Promise<void>,scratch:"sandbox"|"checkout"="sandbox"):Promise<void>{
- const configured=process.env.SEMIO_TEST_ARTIFACT_DIR,sandbox=configured?undefined:testSandboxEnvironmentV1(process.env,{route,checkout,...(scratch==="checkout"?{parent:join(checkout,processTestProtocolV1.checkoutScratchDirectory)}:{})}),output=resolve(configured??sandbox!.environment.SEMIO_TEST_ARTIFACT_DIR!);
+export async function withProcessTestOutputV1(checkout:string,route:string,work:(output:string)=>Promise<void>,scratch:ProcessTestScratchV1="sandbox"):Promise<void>{
+ const configured=process.env.SEMIO_TEST_ARTIFACT_DIR,sandbox=configured?undefined:testSandboxEnvironmentV1(process.env,{route,checkout,...(processTestScratchParentV1(checkout,scratch)===undefined?{}:{parent:processTestScratchParentV1(checkout,scratch)!})}),output=resolve(configured??sandbox!.environment.SEMIO_TEST_ARTIFACT_DIR!);
  if(configured)requireArtifactOutsideManagedParentV1(output);
  const temporary=configured?safeTemporaryDirectoryV1(process.env.TMPDIR):undefined,saved=["TMPDIR","TMP","TEMP"].map(name=>[name,process.env[name]] as const);
  if(temporary!==undefined)for(const[name]of saved)process.env[name]=temporary;

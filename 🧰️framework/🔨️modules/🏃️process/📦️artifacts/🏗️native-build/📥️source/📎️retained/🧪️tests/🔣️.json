@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "admitted": "pub fn admitted() -> u8 { 1 }\n",
+  "edited": "pub fn admitted() -> u8 { 2 }\n",
+  "cases": [
+    {"id": "unchanged and consumed", "edit": false, "claims": [{"body": "admitted", "recent": true}], "outcome": "proven", "proven": 1},
+    {"id": "unchanged without checksum evidence", "edit": false, "claims": [], "outcome": "proven", "proven": 0},
+    {"id": "edited after the unit consumed the admitted body", "edit": true, "claims": [{"body": "admitted", "recent": true}], "outcome": "proven", "proven": 1},
+    {"id": "edited while a cached unit proves the admitted body", "edit": true, "claims": [{"body": "admitted", "recent": false}], "outcome": "proven", "proven": 1},
+    {"id": "stale cached claim of another version is ignored", "edit": true, "claims": [{"body": "edited", "recent": false}, {"body": "admitted", "recent": true}], "outcome": "proven", "proven": 1},
+    {"id": "edited before a later unit consumed the new body", "edit": true, "claims": [{"body": "edited", "recent": true}], "outcome": "refused"},
+    {"id": "edited without any checksum evidence", "edit": true, "claims": [], "outcome": "refused"},
+    {"id": "edit missed by the watcher but consumed", "edit": false, "claims": [{"body": "edited", "recent": true}], "outcome": "refused"},
+    {"id": "units consumed different versions", "edit": true, "claims": [{"body": "admitted", "recent": true}, {"body": "edited", "recent": true}], "outcome": "refused"}
+  ]
+}

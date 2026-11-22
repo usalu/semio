@@ -677,7 +677,7 @@
    ],
    "expect": {
     "tree": {
-     "x.txt": "b offline and newer"
+      "x.txt": "a published earlier"
     },
     "converged": [
      "a",
@@ -685,9 +685,9 @@
     ],
     "lost": {
      "a": 0,
-     "b": 0
+      "b": 1
     },
-    "keptOn": [
+     "staleOn": [
      "b"
     ]
    }
@@ -1081,7 +1081,7 @@
    ],
    "expect": {
     "tree": {
-     "x.txt": "b offline newer"
+      "x.txt": "a offline newer"
     },
     "converged": [
      "a",
@@ -1089,9 +1089,9 @@
     ],
     "lost": {
      "a": 0,
-     "b": 0
+      "b": 1
     },
-    "keptOn": [
+     "staleOn": [
      "b"
     ]
    }

@@ -109,7 +109,7 @@ test("Memory that frees up only for a moment never grows a run, and the growth i
 test("A run grows only while nothing else of ours waits for memory: the waiting run is served first",async()=>{
  let waited=false;
  await run("en_US.UTF-8",call=>call===0?floor+4000:floor+30000,async(handle,directory)=>{
-  const cancel=new AbortController(),other=withHostCapacityV1({directory,policy:live,request:{...full(newHostCapacityIdV1()),preferredJobs:1,fixedMegabytes:31000,perJobMegabytes:0},control:control(cancel.signal),environment:{LANG:"en_US.UTF-8"},write:()=>undefined,sample:async()=>({host:{...sample(floor+30000),atMs:Date.now()},swappedOutMegabytes:0}),observe:async()=>null,waited:()=>0,children:()=>[1]},async()=>{waited=true;}).catch(()=>undefined);
+  const cancel=new AbortController(),other=withHostCapacityV1({directory,policy:live,request:{...full(newHostCapacityIdV1()),preferredJobs:1,fixedMegabytes:26000,perJobMegabytes:0},control:control(cancel.signal),environment:{LANG:"en_US.UTF-8"},write:()=>undefined,sample:async()=>({host:{...sample(floor+30000),atMs:Date.now()},swappedOutMegabytes:0}),observe:async()=>null,waited:()=>0,children:()=>[1]},async()=>{waited=true;}).catch(()=>undefined);
   await sleep(600);expect((await row(directory,handle.id)).jobs,"the growth waits behind the waiting run").toBe(1);
   cancel.abort();await other;
   expect(await until(async()=>(await row(directory,handle.id)).jobs===8,3000),"once nothing waits it grows").toBe(true);

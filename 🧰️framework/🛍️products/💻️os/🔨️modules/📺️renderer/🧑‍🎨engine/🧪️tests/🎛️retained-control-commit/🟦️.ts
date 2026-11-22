@@ -84,10 +84,18 @@ const sliderValueAt = (bounds: readonly [number, number, number, number], x: num
   return Math.min(max, Math.max(min, snapped));
 };
 
-/** 💍️ The ring `t` a press reports: the turn fraction of the angle from the centre of its own bounds, normalised into [0, 1). */
+/** 💍️ The ring `t` a press reports: the turn fraction of the angle from the centre of its own bounds, 0 at 12 o'clock and clockwise like React's `Ring` (`atan2 + π/2`), normalised into [0, 1). */
 const ringTAt = (bounds: readonly [number, number, number, number], x: number, y: number): number => {
-  const turns = Math.atan2(y - (bounds[1] + bounds[3] * 0.5), x - (bounds[0] + bounds[2] * 0.5)) / (Math.PI * 2);
+  const turns = Math.atan2(y - (bounds[1] + bounds[3] * 0.5), x - (bounds[0] + bounds[2] * 0.5)) / (Math.PI * 2) + 0.25;
   return turns - Math.floor(turns);
+};
+
+/** 💍️ Whether a press lands on the ring's orb: React starts a drag only from the orb circle (radius 7 selected, centred on `t` clockwise from 12 o'clock on the 100 unit ring of radius 40). */
+const ringOrbHit = (bounds: readonly [number, number, number, number], t: number, x: number, y: number): boolean => {
+  const angle = t * Math.PI * 2 - Math.PI / 2;
+  const scale = Math.min(100, bounds[2], bounds[3]) / 100;
+  const cx = bounds[0] + 50 * scale, cy = bounds[1] + 50 * scale;
+  return Math.hypot(x - (cx + Math.cos(angle) * 40 * scale), y - (cy + Math.sin(angle) * 40 * scale)) <= 7 * scale;
 };
 
 /** ➖️➕️ Which of a stepper's three equal segments a point lands in: -1 decrement, 1 increment, 0 the value readout. */
@@ -110,14 +118,14 @@ const expectedDispatch = (testCase: FixtureCase): { action: string; args: Record
       if (inputCommitsOnBlur(node)) return gesture.kind === "type" ? undefined : dispatch(testCase.binding, value);
       return dispatch(testCase.binding, value);
     }
-    case "iconSelect":
-      return dispatch(testCase.binding, typedBuffer(node, gesture));
     case "toggle":
       return dispatch(testCase.binding, !node.on);
     case "slider":
       return dispatch(testCase.binding, sliderValueAt(bounds, x, node.min ?? 0, node.max ?? 0, node.step ?? 0));
-    case "ring":
-      return dispatch(testCase.binding, ringTAt(bounds, x, y));
+    case "ring": {
+      const start = gesture.at;
+      return ringOrbHit(bounds, Number(node.t ?? 0), bounds[0] + bounds[2] * start[0], bounds[1] + bounds[3] * start[1]) ? dispatch(testCase.binding, ringTAt(bounds, x, y)) : undefined;
+    }
     case "numberStepper": {
       const sign = stepperSegmentSign(bounds, x);
       if (sign === 0) return undefined;
@@ -141,7 +149,7 @@ const expectedPress = (testCase: FixtureCase): "open" | "released" | undefined =
 describe("retained control commit", () => {
   it("covers every value-carrying component kind", () => {
     const kinds = new Set(law.cases.map((testCase) => testCase.node.kind));
-    expect([...kinds].sort()).toEqual(["iconSelect", "input", "numberStepper", "ring", "slider", "toggle"]);
+    expect([...kinds].sort()).toEqual(["input", "numberStepper", "ring", "slider", "toggle"]);
   });
 
   for (const testCase of law.cases) {

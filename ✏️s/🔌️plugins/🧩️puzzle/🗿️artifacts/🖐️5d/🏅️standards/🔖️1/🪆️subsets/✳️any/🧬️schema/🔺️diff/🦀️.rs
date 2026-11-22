@@ -4,6 +4,7 @@ use crate::standards::v1::subsets::any::schema::Puzzle5dArtifact;
 use crate::standards::v1::subsets::any::schema::document_records::{Puzzle5dCompatSpecificity, Puzzle5dFastener, Puzzle5dGrip, Puzzle5dKindCompatibility, Puzzle5dMeta, Puzzle5dPart, Puzzle5dPart2d, Puzzle5dPart3d, Puzzle5dPartAnchor, Puzzle5dGrip2d, Puzzle5dGrip3d, Puzzle5dScale, Puzzle5dTargetVolume};
 use crate::standards::v1::subsets::any::schema::kind_catalogs::{Puzzle5dKindCatalogsExtra};
 use crate::Puzzle5dSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::Puzzle5dParts;
 use ::semio_framework_schema::ArtifactSchema;
 use protocol::{ColdDiffAlgebra, DiffAlgebra};
 
@@ -221,7 +222,7 @@ pub struct Puzzle5dMetaPatch {
 
 //#region 🔖️Deltas
 protocol::list_delta! { pub Puzzle5dGripsDelta { removal: Puzzle5dGripRemoval, insertion: Puzzle5dGripInsertion, relocation: Puzzle5dGripRelocation, modification: Puzzle5dGripModification, row: Puzzle5dGrip, patch: Puzzle5dGripPatch, list: Vec<Puzzle5dGrip>, key: String = by Puzzle5dGripKeys } }
-protocol::list_delta! { pub Puzzle5dPartsDelta { removal: Puzzle5dPartRemoval, insertion: Puzzle5dPartInsertion, relocation: Puzzle5dPartRelocation, modification: Puzzle5dPartModification, row: Puzzle5dPart, patch: Puzzle5dPartPatch, list: Vec<Puzzle5dPart>, key: String = by Puzzle5dPartKeys } }
+protocol::list_delta! { pub Puzzle5dPartsDelta { removal: Puzzle5dPartRemoval, insertion: Puzzle5dPartInsertion, relocation: Puzzle5dPartRelocation, modification: Puzzle5dPartModification, row: Puzzle5dPart, patch: Puzzle5dPartPatch, list: Puzzle5dParts, key: String = by Puzzle5dPartKeys } }
 protocol::list_delta! { pub Puzzle5dFastenersDelta { removal: Puzzle5dFastenerRemoval, insertion: Puzzle5dFastenerInsertion, relocation: Puzzle5dFastenerRelocation, modification: Puzzle5dFastenerModification, row: Puzzle5dFastener, patch: Puzzle5dFastenerPatch, list: Vec<Puzzle5dFastener>, key: String = by Puzzle5dFastenerKeys } }
 protocol::list_delta! { pub Puzzle5dTargetVolumesDelta { removal: Puzzle5dTargetVolumeRemoval, insertion: Puzzle5dTargetVolumeInsertion, relocation: Puzzle5dTargetVolumeRelocation, modification: Puzzle5dTargetVolumeModification, row: Puzzle5dTargetVolume, patch: Puzzle5dTargetVolumePatch, list: Vec<Puzzle5dTargetVolume>, key: String = by Puzzle5dTargetVolumeKeys } }
 protocol::list_delta! { pub Puzzle5dKindCompatibilityDelta { removal: Puzzle5dKindCompatibilityRemoval, insertion: Puzzle5dKindCompatibilityInsertion, relocation: Puzzle5dKindCompatibilityRelocation, modification: Puzzle5dKindCompatibilityModification, row: Puzzle5dKindCompatibility, patch: Puzzle5dKindCompatibilityPatch, list: Vec<Puzzle5dKindCompatibility>, key: Puzzle5dKindCompatibilityKey = by Puzzle5dKindCompatibilityKeys } }
@@ -763,6 +764,13 @@ impl RowPatch<Puzzle5dMeta> for Puzzle5dMetaPatch {
     }
     fn is_empty(&self) -> bool {
         self.description.is_none()
+    }
+}
+
+impl Puzzle5dDiff {
+    /// 📸️ Uses one already-applied snapshot as the complete document diff.
+    pub fn replace_snapshot(snapshot: Puzzle5dSnapshot) -> Self {
+        Self { artifact: Some(Box::new(Puzzle5dArtifact::from_snapshot(snapshot))), ..Default::default() }
     }
 }
 

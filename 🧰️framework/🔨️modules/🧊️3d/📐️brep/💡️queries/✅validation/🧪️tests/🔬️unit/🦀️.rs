@@ -713,3 +713,67 @@ fn original_scoped_validation_ignores_an_unrelated_inward_solid() {
     }
     caller.retire_exact();
 }
+
+#[test]
+fn original_solid_healing_validates_private_coordinates_before_funded_commit() {
+    use semio_framework_3d_brep_construction::primitives::make_box;
+    use semio_framework_3d_brep_representation::topology::EntityRef;
+    use semio_framework_value::{RetainedWorkPoll, retirement::controlled::ControlledRetirement};
+
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🧪️tests/🔬️unit/🔣️retained-heal.json")).unwrap();
+    let axes = |key: &str| serde_json::from_value::<[f64; 3]>(fixture[key].clone()).unwrap();
+    let [x, y, z] = axes("original");
+    let [dx, dy, dz] = axes("shift");
+    let [width, depth, height] = axes("size");
+    let restored = Pnt3::new(x, y, z);
+    let displaced = Pnt3::new(x + dx, y + dy, z + dz);
+    let mut body = Body::new();
+    let mut recorder = OpRecorder::new();
+    let selected = make_box(&mut body, width, depth, height, &mut recorder).unwrap();
+    let unrelated = make_box(&mut body, width, depth, height, &mut recorder).unwrap();
+    let find_corner = |solid| body.reachable_from(&[EntityRef::Solid(solid)]).vertices.iter()
+        .copied().find(|vertex| body.vertices.get(*vertex).unwrap().position == restored).unwrap();
+    let selected_corner = find_corner(selected);
+    let unrelated_corner = find_corner(unrelated);
+    body.vertices.get_mut(selected_corner).unwrap().position = displaced;
+    body.vertices.get_mut(unrelated_corner).unwrap().position = displaced;
+
+    let revision = (0, 0, body.labels.next());
+    let tolerance = fixture["tolerance"].as_f64().unwrap();
+    let mut job = SolidHealing::new(&body, selected, revision, false, tolerance).unwrap();
+    let mut caller = validation_fixture_caller();
+    let grant_for = |demand: semio_framework_value::RetirementDemand| ValidationGrant {
+        maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes,
+        maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth,
+    };
+    let mut turns = 0;
+    while !job.ready() {
+        let copy = job.demand(&body, revision, 0).unwrap().copy_bytes;
+        let grant = grant_for(job.demand(&body, revision, copy).unwrap());
+        let ((receipt, _), heap) = observed_validation_turn(&mut caller, grant,
+            |effect| job.step(&body, revision, effect).map(|receipt| (receipt, 1)));
+        assert!(receipt.fits(grant));
+        assert_eq!(heap, (receipt.retained_capacity_bytes, receipt.released_bytes));
+        assert_eq!(body.vertices.get(selected_corner).unwrap().position, displaced);
+        turns += 1;
+        assert!(turns < 10000);
+    }
+
+    let grant = grant_for(job.demand(&body, revision, 0).unwrap());
+    let weak = ValidationGrant { maximum_copy_bytes: grant.maximum_copy_bytes - 1, ..grant };
+    let declined = caller.with_effect(weak, |effect| job.commit(&mut body, revision, effect).unwrap()).ok().unwrap();
+    assert_eq!(declined, (false, false, Default::default()));
+    let (ready, changed, receipt) = caller.with_effect(grant, |effect| job.commit(&mut body, revision, effect).unwrap()).ok().unwrap();
+    assert!(ready && changed && receipt.fits(grant));
+    assert_eq!(body.vertices.get(selected_corner).unwrap().position, restored);
+    assert_eq!(body.vertices.get(unrelated_corner).unwrap().position, displaced);
+
+    let mut close = ControlledRetirement::new(job).unwrap_or_else(|_| panic!("expected funded healing retirement"));
+    while !close.terminal_is_empty() {
+        let demand = close.next_demand(0).and_then(|first| close.next_demand(first.copy_bytes)).unwrap();
+        let grant = grant_for(demand);
+        let result = caller.with_effect(grant, |effect| close.step(grant.maximum_copy_bytes, effect)).ok().unwrap();
+        if let RetainedWorkPoll::Complete(turn) = result { assert!(turn.result.is_ok()); }
+    }
+    caller.retire_exact();
+}

@@ -159,6 +159,7 @@ export const BAND_BLOCK = 48;
 /** 📏️ The squared distance in cells from every cell to the nearest cell whose value is `wanted` (Felzenszwalb-Huttenlocher in three passes). */
 export function distance3(grid: Uint8Array, nx: number, ny: number, nz: number, wanted: 0 | 1): Float32Array {
   const big = 1e20;
+  const unset = Math.fround(big);
   const out = new Float32Array(grid.length);
   for (let i = 0; i < grid.length; i++) out[i] = grid[i] === wanted ? 0 : big;
   const n = Math.max(nx, ny, nz);
@@ -166,7 +167,14 @@ export function distance3(grid: Uint8Array, nx: number, ny: number, nz: number, 
   const v = new Int32Array(n);
   const pass = (length: number, stride: number, starts: readonly number[]): void => {
     for (const start of starts) {
-      for (let q = 0; q < length; q++) f[q] = out[start + q * stride]!;
+      let [lo, hi] = [Infinity, -Infinity];
+      for (let q = 0; q < length; q++) {
+        const value = out[start + q * stride]!;
+        f[q] = value;
+        if (value < lo) lo = value;
+        if (value > hi) hi = value;
+      }
+      if (lo === hi && (lo === 0 || lo === unset)) continue;
       edt1(f, length, d, v, z);
       for (let q = 0; q < length; q++) out[start + q * stride] = d[q]!;
     }
@@ -218,7 +226,10 @@ export function orientationOf(solid: World): Orientation {
 /** 🔒️ Whether the mesh is closed: every edge is used by exactly two triangles (the kernel's closedness). Only closed meshes have an inside; an open skin buries nothing. */
 export const isClosed = (solid: World): boolean => orientationOf(solid).closed;
 
-type Grid = { readonly min: Vec; readonly max: Vec; readonly n: number; readonly bins: Int32Array[]; readonly stamp: Int32Array; stampValue: number };
+type Grid = { readonly min: Vec; readonly max: Vec; readonly n: number; readonly bins: Int32Array[]; readonly stamp: Int32Array; stampValue: number; readonly rays: Float64Array };
+
+/** 🎯️ The numbers kept per triangle for the ray of {@link insideAny} (`rays` of the grid): its first corner, its two edges, the cross product of the ray direction with the second edge and the determinant, computed once per mesh with the expressions the test used per query. */
+const RAY_STRIDE = 13;
 
 const GRIDS = new WeakMap<World, Grid>();
 
@@ -241,7 +252,16 @@ function gridOf(solid: World): Grid {
     const zs = [q[indices[t]! * 3 + 2]!, q[indices[t + 1]! * 3 + 2]!, q[indices[t + 2]! * 3 + 2]!];
     for (let j = at(Math.min(...zs), min[2], max[2]); j <= at(Math.max(...zs), min[2], max[2]); j++) for (let i = at(Math.min(...xs), min[0], max[0]); i <= at(Math.max(...xs), min[0], max[0]); i++) lists[j * n + i]!.push(t);
   }
-  grid = { min, max, n, bins: lists.map((l) => Int32Array.from(l)), stamp: new Int32Array(indices.length / 3), stampValue: 0 };
+  const rays = new Float64Array((indices.length / 3) * RAY_STRIDE);
+  const d: Vec = [SKEW[0], SKEW[2], SKEW[1]];
+  for (let t = 0, o = 0; t < indices.length; t += 3, o += RAY_STRIDE) {
+    const [a, b, c] = [indices[t]! * 3, indices[t + 1]! * 3, indices[t + 2]! * 3];
+    const e1: Vec = [q[b]! - q[a]!, q[b + 1]! - q[a + 1]!, q[b + 2]! - q[a + 2]!];
+    const e2: Vec = [q[c]! - q[a]!, q[c + 1]! - q[a + 1]!, q[c + 2]! - q[a + 2]!];
+    const h: Vec = [d[1] * e2[2] - d[2] * e2[1], d[2] * e2[0] - d[0] * e2[2], d[0] * e2[1] - d[1] * e2[0]];
+    rays.set([q[a]!, q[a + 1]!, q[a + 2]!, e1[0], e1[1], e1[2], e2[0], e2[1], e2[2], h[0], h[1], h[2], e1[0] * h[0] + e1[1] * h[1] + e1[2] * h[2]], o);
+  }
+  grid = { min, max, n, bins: lists.map((l) => Int32Array.from(l)), stamp: new Int32Array(indices.length / 3), stampValue: 0, rays };
   GRIDS.set(source, grid);
   return grid;
 }
@@ -281,44 +301,51 @@ function disjointParts(solid: World): readonly World[] {
 
 const SKEW: Vec = [0.000123, 0.000317, 1];
 
+/** 🗃️ The bin of the coordinate `v` in a grid of `n` bins from `lo` to `hi`, clamped. */
+const binOf =(v: number, lo: number, hi: number, n: number): number => Math.max(0, Math.min(n - 1, Math.floor(((v - lo) / Math.max(hi - lo, 1e-12)) * n)));
+
 /** 🔎️ Whether the point is inside any of the closed meshes that `skip` does not exclude: parity of the crossings of a slightly skewed ray along +y (Möller-Trumbore), candidates taken from a grid over x and z of each mesh. */
 export function insideAny(solids: readonly World[], p: Vec, skip: (solid: World, index: number) => boolean = () => false): boolean {
-  const d: Vec = [SKEW[0], SKEW[2], SKEW[1]];
+  const [d0, d1, d2] = [SKEW[0], SKEW[2], SKEW[1]];
+  const [px, py, pz] = [p[0], p[1], p[2]];
   for (let k = 0; k < solids.length; k++) {
     const solid = solids[k]!;
     const { min, max } = boxOf(solid);
     const drift = 0.0004 * (max[1] - min[1]) + 1e-9;
-    if (p[0] < min[0] - drift || p[0] > max[0] + drift || p[2] < min[2] - drift || p[2] > max[2] + drift || p[1] < min[1] || p[1] > max[1] || skip(solid, k) || !isClosed(solid)) continue;
+    if (px < min[0] - drift || px > max[0] + drift || pz < min[2] - drift || pz > max[2] + drift || py < min[1] || py > max[1] || skip(solid, k) || !isClosed(solid)) continue;
     if (solid.separateCopies) {
       if (insideAny(disjointParts(solid), p)) return true;
       continue;
     }
     const g = gridOf(solid);
-    const { positions: q, indices } = solid;
-    const at = (v: number, lo: number, hi: number): number => Math.max(0, Math.min(g.n - 1, Math.floor(((v - lo) / Math.max(hi - lo, 1e-12)) * g.n)));
-    const [i0, i1] = [at(p[0] - drift, g.min[0], g.max[0]), at(p[0] + drift, g.min[0], g.max[0])];
-    const [j0, j1] = [at(p[2] - drift, g.min[2], g.max[2]), at(p[2] + drift, g.min[2], g.max[2])];
-    g.stampValue++;
+    const { n, bins, stamp, rays } = g;
+    const [i0, i1] = [binOf(px - drift, g.min[0], g.max[0], n), binOf(px + drift, g.min[0], g.max[0], n)];
+    const [j0, j1] = [binOf(pz - drift, g.min[2], g.max[2], n), binOf(pz + drift, g.min[2], g.max[2], n)];
+    const mark = ++g.stampValue;
     let crossings = 0;
     for (let j = j0; j <= j1; j++)
-      for (let i = i0; i <= i1; i++)
-        for (const t of g.bins[j * g.n + i]!) {
-          if (g.stamp[t / 3] === g.stampValue) continue;
-          g.stamp[t / 3] = g.stampValue;
-          const [a, b, c] = [indices[t]! * 3, indices[t + 1]! * 3, indices[t + 2]! * 3];
-          const e1: Vec = [q[b]! - q[a]!, q[b + 1]! - q[a + 1]!, q[b + 2]! - q[a + 2]!];
-          const e2: Vec = [q[c]! - q[a]!, q[c + 1]! - q[a + 1]!, q[c + 2]! - q[a + 2]!];
-          const h: Vec = [d[1] * e2[2] - d[2] * e2[1], d[2] * e2[0] - d[0] * e2[2], d[0] * e2[1] - d[1] * e2[0]];
-          const det = e1[0] * h[0] + e1[1] * h[1] + e1[2] * h[2];
+      for (let i = i0; i <= i1; i++) {
+        const bin = bins[j * n + i]!;
+        for (let m = 0; m < bin.length; m++) {
+          const face = bin[m]! / 3;
+          if (stamp[face] === mark) continue;
+          stamp[face] = mark;
+          const o = face * RAY_STRIDE;
+          const det = rays[o + 12]!;
           if (Math.abs(det) < 1e-18) continue;
-          const s: Vec = [p[0] - q[a]!, p[1] - q[a + 1]!, p[2] - q[a + 2]!];
-          const u = (s[0] * h[0] + s[1] * h[1] + s[2] * h[2]) / det;
+          const s0 = px - rays[o]!;
+          const s1 = py - rays[o + 1]!;
+          const s2 = pz - rays[o + 2]!;
+          const u = (s0 * rays[o + 9]! + s1 * rays[o + 10]! + s2 * rays[o + 11]!) / det;
           if (u < 0 || u > 1) continue;
-          const r: Vec = [s[1] * e1[2] - s[2] * e1[1], s[2] * e1[0] - s[0] * e1[2], s[0] * e1[1] - s[1] * e1[0]];
-          const v = (d[0] * r[0] + d[1] * r[1] + d[2] * r[2]) / det;
+          const r0 = s1 * rays[o + 5]! - s2 * rays[o + 4]!;
+          const r1 = s2 * rays[o + 3]! - s0 * rays[o + 5]!;
+          const r2 = s0 * rays[o + 4]! - s1 * rays[o + 3]!;
+          const v = (d0 * r0 + d1 * r1 + d2 * r2) / det;
           if (v < 0 || u + v > 1) continue;
-          if ((e2[0] * r[0] + e2[1] * r[1] + e2[2] * r[2]) / det > 0) crossings++;
+          if ((rays[o + 6]! * r0 + rays[o + 7]! * r1 + rays[o + 8]! * r2) / det > 0) crossings++;
         }
+      }
     if (crossings % 2 === 1) return true;
   }
   return false;
@@ -354,6 +381,26 @@ function subdivision(m: number): readonly (readonly [number, number, number])[] 
 const BURIAL_PROBE_FEATURE = 0.02;
 const BURIAL_MAX_SPLITS = 24;
 
+/** 🔢️ The step between the sample numbers of two faces: {@link exposedShares} hands `outside` the number `(face of the target) · SAMPLES_PER_FACE + sample of the face`, the same for the same target whatever is buried, so that a caller that measures one target twice can remember the reach of a sample ({@link rememberedReach}). */
+export const SAMPLES_PER_FACE = BURIAL_MAX_SPLITS ** 2;
+
+/** 🧠️ `reach` with its answers remembered by sample number: the outer shares and the exposed area of one region ask the flood for the same samples of the same target. */
+export function rememberedReach(reach: (base: Vec, normal: Vec) => Reach | undefined): (base: Vec, normal: Vec, sample: number) => Reach | undefined {
+  const known = new Map<number, Int8Array>();
+  return (base, normal, sample) => {
+    const face = Math.floor(sample / SAMPLES_PER_FACE);
+    const at = sample - face * SAMPLES_PER_FACE;
+    let answers = known.get(face);
+    if (answers === undefined || answers.length <= at) {
+      const grown = new Int8Array(2 ** Math.ceil(Math.log2(at + 1)));
+      if (answers !== undefined) grown.set(answers);
+      known.set(face, (answers = grown));
+    }
+    if (answers[at] === 0) answers[at] = 2 + REACHES.indexOf(reach(base, normal) as Reach);
+    return answers[at] === 1 ? undefined : REACHES[answers[at]! - 2];
+  };
+}
+
 /** 🧭️ Why a face sample may count as outer surface (C31, E3): `air` the air from outside reaches it, `cover` a solid of another region that the air reaches covers it (C29), `cavity` it looks into a closed cavity and the region's own wall behind it does not separate that cavity from the air, so it exchanges with the enclosed air when the region is contents of the cavity ({@link outerOfShares}). */
 export type Reach = "air" | "cover" | "cavity";
 
@@ -364,10 +411,13 @@ export const isContents = (shares: Readonly<Record<Reach, number>>): boolean => 
 export const outerOfShares = (shares: Readonly<Record<Reach, number>>): number => shares.air + shares.cover + (isContents(shares) ? shares.cavity : 0);
 
 /** 🧿️ The exposed area in m² of the triangles of `target`, split by {@link Reach}: faces that are not buried inside a mesh of `against` (a probe moved `probeM` out of the face, 0.5 mm by default and 0.02 smallest features in the rules, along its normal lies inside it; `ignore` excludes meshes; with `contactM` above the probe a face is also buried when a probe at half that distance or at that distance lies inside, so that two solids that meet within `contactM` of each other, as the facets of two tessellations of one curved surface do, count as touching and the seam between them is no surface), not lying in a contact plane and not within 45 degrees of a declared `sectionFaces` axis of their solid. Without `outside` every such face is `air`; with it every face is sampled and a sample counts with the reach `outside` gives for its foot and outward normal, and not at all when it gives none ({@link outsideOf}). */
-export function exposedShares(target: readonly World[], against: readonly World[], planes: readonly ContactPlane[] = [], ignore: (solid: World) => boolean = () => false, probeM: number = BURIAL_PROBE_M, contactM = 0, outside?: (base: Vec, normal: Vec) => Reach | undefined): Readonly<Record<Reach, number>> {
+export function exposedShares(target: readonly World[], against: readonly World[], planes: readonly ContactPlane[] = [], ignore: (solid: World) => boolean = () => false, probeM: number = BURIAL_PROBE_M, contactM = 0, outside?: (base: Vec, normal: Vec, sample: number) => Reach | undefined): Readonly<Record<Reach, number>> {
   const shares: Record<Reach, number> = { air: 0, cover: 0, cavity: 0 };
   const cos = Math.cos((VOLUME_LIMITS.sectionAngleDeg * Math.PI) / 180);
+  let faces = 0;
   for (const solid of target) {
+    const first = faces;
+    faces += solid.indices.length / 3;
     const q = solid.positions;
     const outward = orientationOf(solid).normals;
     const reachM = Math.max(probeM, contactM) + 1e-6;
@@ -403,10 +453,11 @@ export function exposedShares(target: readonly World[], against: readonly World[
       const weights = subdivision(Math.min(BURIAL_MAX_SPLITS, Math.max(1, Math.ceil(longest / (2 * (probeM / BURIAL_PROBE_FEATURE))))));
       const free: Record<Reach, number> = { air: 0, cover: 0, cavity: 0 };
       const reach = contactM > probeM ? [probeM, contactM / 2, contactM] : [probeM];
-      for (const [wa, wb, wc] of weights) {
+      for (let s = 0; s < weights.length; s++) {
+        const [wa, wb, wc] = weights[s]!;
         const base: Vec = [wa * q[a]! + wb * q[b]! + wc * q[c]!, wa * q[a + 1]! + wb * q[b + 1]! + wc * q[c + 1]!, wa * q[a + 2]! + wb * q[b + 2]! + wc * q[c + 2]!];
         if (around.length > 0 && reach.some((r) => insideAny(around, [base[0] + n[0] * r, base[1] + n[1] * r, base[2] + n[2] * r]))) continue;
-        const why = outside === undefined ? "air" : outside(base, n);
+        const why = outside === undefined ? "air" : outside(base, n, (first + t / 3) * SAMPLES_PER_FACE + s);
         if (why !== undefined) free[why]++;
       }
       for (const why of REACHES) shares[why] += (twice / 2) * (free[why] / weights.length);
@@ -418,7 +469,7 @@ export function exposedShares(target: readonly World[], against: readonly World[
 const REACHES: readonly Reach[] = ["air", "cover", "cavity"];
 
 /** 🧿️ The exposed area in m² of the triangles of `target`: the sum of {@link exposedShares}. */
-export function exposedArea(target: readonly World[], against: readonly World[], planes: readonly ContactPlane[] = [], ignore: (solid: World) => boolean = () => false, probeM: number = BURIAL_PROBE_M, contactM = 0, outside?: (base: Vec, normal: Vec) => Reach | undefined): number {
+export function exposedArea(target: readonly World[], against: readonly World[], planes: readonly ContactPlane[] = [], ignore: (solid: World) => boolean = () => false, probeM: number = BURIAL_PROBE_M, contactM = 0, outside?: (base: Vec, normal: Vec, sample: number) => Reach | undefined): number {
   const shares = exposedShares(target, against, planes, ignore, probeM, contactM, outside);
   return shares.air + shares.cover + shares.cavity;
 }
@@ -432,7 +483,7 @@ function airCell(featureM: number, passageM?: number): number {
   return Math.min(FLOOD_FEATURES * featureM, passageM !== undefined && passageM > 0 ? passageM / 3 : Infinity);
 }
 
-/** 🌊️ What is outer surface among `walls`, the solids of one scale (C31, E3): `reach` says why a face sample with the foot `base` and the outward unit normal `normal` is outer for a region whose solids `own` names, or nothing when it is not. It is `air` when the air flooded from outside through the walls reaches the probe `probeM` in front of it (an open tube end, a cup or a duct mouth lets the air in); `cover` when a solid of another region covers it (C29: the probe lies inside that solid, or its surface is the first one within {@link COVER_FEATURES} features in front of the face) and that solid itself has surface the air reaches; `cavity` when it looks into a closed cavity and the region's own wall behind it does not separate that cavity from the air: walking against the normal through the region's own solids (gaps of at most {@link SEAM_FEATURES} features between them are seams), the first free point beyond them is not reached by the air. So the inside of a closure (the bore of a capped tube, the inside of a casing, the underside of a glass cover, the face of a kettle against its sealed water) is never outer, while the faces of the contents of a cavity (the absorber and headers under the glass of a collector, a seat in a closed cabin) are `cavity` and count by {@link outerOfShares}. `cellM` is the cell the flood used: {@link FLOOD_FEATURES} features unless the budget of the flood raised it. `tick` is called regularly and may throw to cancel. */
+/** 🌊️ What is outer surface among `walls`, the solids of one scale (C31, E3): `reach` says why a face sample with the foot `base` and the outward unit normal `normal` is outer for a region whose solids `own` names, or nothing when it is not. It is `air` when the air flooded from outside through the walls reaches the probe `probeM` in front of it (an open tube end, a cup or a duct mouth lets the air in); `cover` when a solid of another region covers it (C29: the probe lies inside that solid, or its surface is the first one within {@link COVER_FEATURES} features in front of the face), that solid itself has surface the air reaches and it stands between the face and the air: walking on along the normal through the solids, the first free space (free for {@link COVER_FEATURES} features) is reached by the air, so a neck, a spigot or a sensor that passes through a closed shell covers nothing of the inside of that shell; `cavity` when it looks into a closed cavity and the region's own wall behind it does not separate that cavity from the air: walking against the normal through the region's own solids (gaps of at most {@link SEAM_FEATURES} features between them are seams), the first free point beyond them is not reached by the air. So the inside of a closure (the bore of a capped tube, the inside of a casing, the underside of a glass cover, the face of a kettle against its sealed water) is never outer, while the faces of the contents of a cavity (the absorber and headers under the glass of a collector, a seat in a closed cabin) are `cavity` and count by {@link outerOfShares}. `cellM` is the cell the flood used: {@link FLOOD_FEATURES} features unless the budget of the flood raised it. `tick` is called regularly and may throw to cancel. */
 export type Outside = { readonly cellM: number; readonly reach: (base: Vec, normal: Vec, own: (solid: World) => boolean) => Reach | undefined };
 export function outsideOf(walls: readonly World[], featureM: number, probeM: number = BURIAL_PROBE_M, tick: () => void = () => {}, minimumAirPassageM?: number): Outside {
   const flood = floodOutside(walls, airCell(featureM,minimumAirPassageM), tick);
@@ -482,14 +533,35 @@ export function outsideOf(walls: readonly World[], featureM: number, probeM: num
       return flood.reaches(x, back);
     }
   };
+  const beyond = (p: Vec, n: Vec): boolean => {
+    const at = (d: number): Vec => [p[0] + n[0] * d, p[1] + n[1] * d, p[2] + n[2] * d];
+    const hits: number[] = [];
+    let marched = 0;
+    const march = (untilM: number): void => {
+      while (marched < untilM && marched < limitM) {
+        for (const along of flood.crossings(at(marched), at(marched + stepM), () => true)) hits.push(marched + along * stepM);
+        marched += stepM;
+      }
+      hits.sort((u, v) => u - v);
+    };
+    for (let k = 0; ; k++) {
+      while (k >= hits.length && marched < limitM) march(marched + stepM);
+      if (k >= hits.length) return true;
+      const d = hits[k]!;
+      march(d + coverM + probeM);
+      const x = at(d + probeM);
+      if (insideAny(walls, x)) continue;
+      if (hits.some((h) => h > d + probeM && h <= d + coverM)) continue;
+      return flood.reaches(x, n);
+    }
+  };
   return {
     cellM: flood.cellM,
     reach: (base, n, own) => {
       const p: Vec = [base[0] + n[0] * probeM, base[1] + n[1] * probeM, base[2] + n[2] * probeM];
       if (flood.reaches(p, n)) return "air";
-      if (insideAny(walls, p, (solid) => own(solid) || !isOpen(solid))) return "cover";
-      const hit = flood.firstHit(p, [base[0] + n[0] * coverM, base[1] + n[1] * coverM, base[2] + n[2] * coverM]);
-      if (hit >= 0 && !own(walls[hit]!) && isOpen(walls[hit]!)) return "cover";
+      const hit = insideAny(walls, p, (solid) => own(solid) || !isOpen(solid)) ? -2 : flood.firstHit(p, [base[0] + n[0] * coverM, base[1] + n[1] * coverM, base[2] + n[2] * coverM]);
+      if ((hit === -2 || (hit >= 0 && !own(walls[hit]!) && isOpen(walls[hit]!))) && beyond(p, n)) return "cover";
       return closure(base, n, own) ? undefined : "cavity";
     },
   };

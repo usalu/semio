@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "phase": "hashing-component",
+  "report": "activation: hashing-component",
+  "startsAt": 0.275,
+  "finishesAt": 0.2875,
+  "before": "running",
+  "after": "cancelled",
+  "proposalState": "none",
+  "persistedPairIdentical": true
+}

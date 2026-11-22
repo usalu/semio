@@ -131,7 +131,7 @@ impl ColdMutationDiff<Puzzle3dPlaySnapshot> for Puzzle3dDiff {
     }
 
     fn apply(&self, projection: &mut Puzzle3dPlaySnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
-        ColdMutationDiff::<Puzzle3dSnapshot>::apply(self, std::sync::Arc::make_mut(&mut projection.typed), capability).map_err(|error| error.under(["document"]))?;
+        self.apply_shared(&mut projection.typed, capability).map_err(|error| error.under(["document"]))?;
         projection.value = std::sync::OnceLock::new();
         Ok(())
     }

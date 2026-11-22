@@ -35,7 +35,7 @@ import { agentBridgeOfferScopeFromDelegationsV1 } from "../../../🔗️AgentBri
 import { hubBootstrapOriginV1, readViteSEnv } from "../../🔐️identity-binding/🟦️.ts";
 import { captureSpaceArtifactCreationCatalogAuthorityV1, mintDirectoryCommandRequestId } from "../../🧾️space-artifact-creation/🟦️.ts";
 import { type ShellSpaceAdministrationStateV1 } from "../../🏠️space-administration/🟦️.ts";
-import type { ShellCoreAfterShellCoreState } from "../../🧩️shell-core-state/🟦️.ts";
+import type { ShellCoreAfterShellCoreState, ShellEffectOwnerForward } from "../../🧩️shell-core-state/🟦️.ts";
 import type { useIdentityAgentBridgeAndDirectoryState } from "../🪪️identity-and-directory-state/🟦️.ts";
 import type { MountedInferenceHistoryV1, OpenDocumentSession, RetainedBrowserActorUiV1 } from "../🧰️identity-port-types/🟦️.ts";
 import { beginDocumentSourceWorkV1 } from "../../../🛠️ShellHelpers/📝️source-revision/document.ts";
@@ -276,7 +276,7 @@ export function useEffectOwnersAndDialogs({ captureDialogOrigin, core, spaceArti
   /** 🔗️ `inputSeq` is the ledger entry (`🎯️input-ledger`) whose guest answer this owner's effect pass
    * applies — `onAction` passes its own entry, every other owner (a refresh, a tutorial, a route) is a
    * root (`null`) — so a guest follow-up (`replayShellCommand`, `dispatchAction`) can carry `causedBy`. */
-  const captureEffectOwner = useCallback((source: ActiveSession, presentation: ShellDialogOriginV1 | null, inputSeq: number | null = null) => ({
+  const captureEffectOwner = useCallback((source: ActiveSession, presentation: ShellDialogOriginV1 | null, inputSeq: number | null = null): ShellEffectOwnerForward => ({
     presentation,
     source: captureDialogOrigin(source),
     session: source,
@@ -288,7 +288,8 @@ export function useEffectOwnersAndDialogs({ captureDialogOrigin, core, spaceArti
     const primary = core.shellStateRef.current.pluginRuntime.session;
     const spawned = primary === null ? [] : parsePanelState(primary.viewState)?.spawnedApps ?? [];
     const contributorParents = primary === null ? [] : [primary, ...spawned];
-    return owner.plugin !== null
+    return owner.browserActor?.current() !== false
+      && owner.plugin !== null
       && core.loadedPluginsRef.current.find((entry) => entry.handle.pluginId === owner.session.pluginId)?.handle === owner.plugin
       && shellEffectOwnerIsCurrentV1(owner, { presentation: captureDialogOrigin(primary), mounted: captureDialogOrigin(owner.session), primary, spawned: primary === null ? [] : [
         ...spawned,

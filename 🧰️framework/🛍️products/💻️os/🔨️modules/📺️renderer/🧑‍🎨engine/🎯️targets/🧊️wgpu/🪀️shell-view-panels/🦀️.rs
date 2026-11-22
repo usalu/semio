@@ -20,10 +20,11 @@ use semio_renderer_wgpu_shell_session::{SHELL_PALETTE_PLAN_ENTRY_CAPACITY, Sessi
 use semio_renderer_wgpu_shell_state::ShellState;
 use semio_renderer_wgpu_shell_surfaces::{SettleState, ShellDetached, SurfaceState, TutorialState};
 use semio_renderer_wgpu_shell_sync::{Phase, SyncState};
+use semio_renderer_wgpu_shell_view_chrome_overlays::ChromeOverlaysCtx;
 use semio_renderer_wgpu_shell_view_chrome::{ChromeViewCtx, ShellChromeCenteredBand, ShellChromeChildCursor, chrome_text_complete_step, document_opening_rect, document_opportunity_remains, note_dock_control_name, render_retained_chrome_group_item_step, render_retained_panel_chrome_item_step, shell_chrome_centered_band, shell_chrome_clip_horizontal};
 use semio_renderer_wgpu_shell_view_overlays::{OverlaysViewCtx, chrome_status_accessibility_node};
-use semio_renderer_wgpu_shell_view_paint::{PLUGIN_INSTALL_TOP_GAP, RetainedChromeGroupStep, SHELL_WINDOW_PAINT_OPPORTUNITIES, ShellChromeBandSpan, ShellUtilityPath, plugin_install_action_rect, scene_chrome_labels, surface_fits_overlay, transient_notice_tone};
-use semio_renderer_wgpu_shell_window_actions::{render_tutorial_gesture_overlay_node, window_actions_rect, window_search_rect};
+use semio_renderer_wgpu_shell_view_paint::{PLUGIN_INSTALL_TOP_GAP, render_tutorial_gesture_overlay_node, RetainedChromeGroupStep, SHELL_WINDOW_PAINT_OPPORTUNITIES, ShellChromeBandSpan, ShellUtilityPath, plugin_install_action_rect, scene_chrome_labels, surface_fits_overlay, transient_notice_tone};
+use semio_renderer_wgpu_shell_window_actions::{window_actions_rect, window_search_rect};
 use semio_renderer_wgpu_shell_windows::{PanelAnchor, WindowState};
 use semio_renderer_wgpu_dock::{DockRenderContext, drop_zone_indicator_rect};
 use semio_renderer_wgpu_hub_workspace::hub_connection::HubConnectionState;

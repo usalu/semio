@@ -2,11 +2,6 @@
   "schema": "trinity.graph",
   "name": "Nakagin Capsule Tower",
   "manifestId": "nakagin",
-  "manifest": {
-    "nodeKinds": [],
-    "edgeKinds": [],
-    "portKinds": []
-  },
   "camera": {
     "x": 0,
     "y": 0,

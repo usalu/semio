@@ -9,8 +9,8 @@ export function closureReferencesOfTextV1(text: string): Map<string, ClosureName
 export function closureReferencePairsOfTextV1(text: string): IterableIterator<[string, ClosureNamespaceV1]>;
 /** 🚫️ The typed failure of an absent closure leaf (code `closure-missing`, never ENOENT). */
 export function closureMissingErrorV1(input: { namespace: string; key: string; projects?: readonly string[]; cause?: unknown }): Error & { code: "closure-missing"; missingClosure: string; missingNamespace: string; missingProjects: readonly string[] };
-/** 🗄️ Whether the leaf is on this machine. */
-export function closureLeafPresentV1(directory: string, key: string): boolean;
+/** 🗄️ Whether the leaf is on this machine and its bytes match its sha256 name. */
+export function closureLeafPresentV1(directory: string, key: string, maximumBytes?: number): boolean;
 /** 🧲️ Obtains one closure leaf: present, refetched from the fleet cache, or missing. */
 export function obtainClosureLeafV1(input: { directory: (namespace: ClosureNamespaceV1) => string; namespace: ClosureNamespaceV1; key: string; fetch?: (namespace: ClosureNamespaceV1, key: string, signal?: AbortSignal) => Promise<Uint8Array | undefined>; put?: (namespace: ClosureNamespaceV1, key: string, bytes: Uint8Array) => Promise<void>; signal?: AbortSignal; verify?: (namespace: ClosureNamespaceV1, key: string) => Promise<boolean>; maximumBytes?: number }): Promise<"present" | "refetched" | "missing">;
 /** 📖️ Reads one closure leaf, obtaining it when absent. */

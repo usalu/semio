@@ -21,6 +21,6 @@
   "graphlessSuppressedCodePrefix": "jack/unknown-",
   "documentTooLargeCode": "jack/document-too-large",
   "extensions": {
-    "jack/loadSnapshot": { "params": { "json": "string: a Jack snapshot JSON document (manifest, nodes, edges)" }, "result": null, "effect": "re-publishes the diagnostics of every open document" }
+    "jack/loadSnapshot": { "params": { "json": "string: a Jack scene JSON document (manifestId, nodes, edges)" }, "result": null, "effect": "re-publishes the diagnostics of every open document" }
   }
 }

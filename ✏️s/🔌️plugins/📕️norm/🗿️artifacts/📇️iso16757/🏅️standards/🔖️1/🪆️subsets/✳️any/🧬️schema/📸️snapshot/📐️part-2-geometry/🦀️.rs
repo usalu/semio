@@ -5,6 +5,9 @@ use super::catalogue_core::IdMap;
 #[path = "🧊️solid-volume/🦀️.rs"]
 pub mod solid;
 
+#[path = "📦️space-envelopes/🦀️.rs"]
+pub mod space_envelopes;
+
 /// 📐️ Space classification per Part 2 §5.3.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_dsl_record_derive::DslScalar, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]

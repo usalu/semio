@@ -94,6 +94,30 @@ fn diagrams_obey_the_diagram_laws_and_the_monthly_balance_sums_to_the_annual_dem
 }
 
 #[test]
+fn energy_diagrams_retain_both_languages_of_the_governing_check() {
+    let house = model::subjects::compliant_detached_house();
+    let house_report = checks::evaluate_document(&house);
+    let gain = house_report.checks.iter().find(|check| check.id == "din18599.10.residential-internal-gains").expect("residential gains");
+    let house_diagrams = diagrams(&house, &house_report, None);
+    let balance = house_diagrams.iter().find(|diagram| diagram.id.starts_with("monthly-balance:")).expect("monthly balance");
+    assert!(balance.description.en.contains(&gain.explanation.en));
+    assert!(balance.description.de.contains(&gain.explanation.de));
+
+    let office = model::subjects::cooled_office_building();
+    let office_report = checks::evaluate_document(&office);
+    let office_diagrams = diagrams(&office, &office_report, None);
+    let related = office_diagrams.iter().filter(|diagram| diagram.id.starts_with("element-u:")).filter_map(|diagram| {
+        let check_id = diagram.markers.first()?.bound_check.as_ref()?;
+        let copy = &office_report.checks.iter().find(|check| check.id == *check_id)?.explanation;
+        Some((&diagram.description, copy))
+    }).collect::<Vec<_>>();
+    assert!(!related.is_empty(), "the office envelope charts bind the GEG checks");
+    for (display, source) in related {
+        assert_eq!((&display.en, &display.de), (&source.en, &source.de));
+    }
+}
+
+#[test]
 fn the_energy_flow_primary_energy_matches_the_balance() {
     let document = model::subjects::cooled_office_building();
     let derived = checks::derive_balance(&document);

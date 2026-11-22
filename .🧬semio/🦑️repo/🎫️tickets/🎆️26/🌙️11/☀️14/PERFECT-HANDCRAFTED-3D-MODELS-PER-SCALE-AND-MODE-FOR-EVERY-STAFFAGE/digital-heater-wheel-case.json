@@ -1,0 +1,23 @@
+{
+  "axisOriginM": [
+    0.05,
+    0.26,
+    0
+  ],
+  "wheelCenterZM": [
+    0.16,
+    -0.16
+  ],
+  "bracketCenterZM": [
+    0.094,
+    -0.094
+  ],
+  "tyreOuterM": 0.045,
+  "tyreSeatM": 0.029,
+  "tyreWidthM": 0.03,
+  "shaftRadiusM": 0.006,
+  "clearanceRadiusM": 0.00625,
+  "bushOuterM": 0.009,
+  "bracketHalfWidthM": 0.004,
+  "parkedClearanceM": 0.005
+}

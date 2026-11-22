@@ -35,6 +35,8 @@ impl Puzzle5dPlayApp {
 }
 
 //#region 🧵️RetainedCommands
+const PUZZLE5D_RETAINED_STEP_WORK: u64 = 16;
+
 pub struct Puzzle5dRetainedCommandJobFactory {
     keys: Vec<ToolFactoryKey>,
     pub(super) contract: ToolExecutionContract,
@@ -44,7 +46,7 @@ impl Puzzle5dRetainedCommandJobFactory {
     pub fn new(controller_id: &str) -> Self {
         Self {
             keys: PUZZLE5D_RETAINED_TOOL_IDS.iter().map(|tool_id| ToolFactoryKey::new(controller_id, *tool_id)).collect(),
-            contract: ToolExecutionContract::resumable(PUZZLE5D_RETAINED_RAW_BYTES, PUZZLE5D_RETAINED_DECODED_ITEMS, 1, crate::retained_command::PUZZLE_COMMAND_OUTPUT_BYTES, crate::retained_command::PUZZLE_COMMAND_STEP_MICROS, 1, 1),
+            contract: ToolExecutionContract::resumable(PUZZLE5D_RETAINED_RAW_BYTES, PUZZLE5D_RETAINED_DECODED_ITEMS, PUZZLE5D_RETAINED_STEP_WORK, crate::retained_command::PUZZLE_COMMAND_OUTPUT_BYTES, crate::retained_command::PUZZLE_COMMAND_STEP_MICROS, 1, 1),
         }
     }
 }
@@ -197,7 +199,7 @@ impl Puzzle5dRetainedCommandProofs {
         artifact_schema: "puzzle.5d",
         factory: "Puzzle5dRetainedCommandJobFactory",
         factory_type: Puzzle5dRetainedCommandJobFactory,
-        contract: ToolExecutionContract::resumable(PUZZLE5D_RETAINED_RAW_BYTES, PUZZLE5D_RETAINED_DECODED_ITEMS, 1, 262_144, 7_500, 1, 1),
+        contract: ToolExecutionContract::resumable(PUZZLE5D_RETAINED_RAW_BYTES, PUZZLE5D_RETAINED_DECODED_ITEMS, PUZZLE5D_RETAINED_STEP_WORK, 262_144, 7_500, 1, 1),
         tools: [
             "canvasPointerDown",
             "cycleBrushCandidate",

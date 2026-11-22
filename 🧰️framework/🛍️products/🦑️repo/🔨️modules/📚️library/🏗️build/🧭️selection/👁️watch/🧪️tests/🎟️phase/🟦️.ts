@@ -1,4 +1,5 @@
-import {declareBuildTestEnvelopeV1,withBuildTestInvocationV1} from "@semio-tech/process/testing/invocation";
+import {withBuildTestInvocationV1} from "@semio-tech/process/testing/invocation";
+import {declareLibraryBuildTestEnvelopeV1} from "../../../../../🧪️testing/🪪️native-birth/🟦️.ts";
 import {test,expect} from "bun:test";
 import {readFile} from "node:fs/promises";
 import {createHash} from "node:crypto";
@@ -18,7 +19,7 @@ import ownership from "../../../../../🗂️workspaces/🔣️policy.json";
 import {isOpaqueSourcePathV1} from "../../../../../⚡️caching/🔍️discovery/📂️source/🟦️.ts";
 import schema from "./📋️schema.json";
 import corpus from "./🔣️.json";
-declareBuildTestEnvelopeV1({owner:"test:build-selection-watch-phase",maximumElapsedMilliseconds:300000,capabilities:{artifacts:true}});
+declareLibraryBuildTestEnvelopeV1({suite:"build-targets-selection"});
 
 const source=await readFile(new URL("../../../🟦️.ts",import.meta.url),"utf8"),tree=ts.createSourceFile("watch.ts",source,ts.ScriptTarget.Latest,true),declaration=tree.statements.find(node=>ts.isFunctionDeclaration(node)&&node.name?.text==="watchBuildInvocationV1");
 if(!declaration||!ts.isFunctionDeclaration(declaration))throw Error("Actual watch owner required");

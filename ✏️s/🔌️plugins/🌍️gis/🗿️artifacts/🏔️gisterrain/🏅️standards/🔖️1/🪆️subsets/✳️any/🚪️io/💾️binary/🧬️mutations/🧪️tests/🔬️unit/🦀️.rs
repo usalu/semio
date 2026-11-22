@@ -5,17 +5,53 @@ use crate::{GisTerrainSnapshot, GIS_3D_TERRAIN_SCHEMA};
 
 #[test]
 fn authored_elevation_operation_and_snapshot_round_trip() {
-    let authored = crate::schema::snapshot::ElevationSource {
-        bounds: [7.1, 46.0, 7.2, 46.1],
-        rows: vec![vec![1250; 33]; 33],
-    };
+    use protocol::ColdMutation as _;
+    use semio_framework_dsl_record::{DslField, FieldValue};
+    let fixture = semio_framework_test_fixtures::repo_text!(
+        "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧬️mutations/🏔️replace-elevation-source/🏔️authors/🦠️mutation/🔣️.json"
+    );
+    let command: GisTerrainMutation = semio_framework_pack_json::from_json_str(
+        fixture, semio_framework_pack_json::JsonMemberPolicy::Reject,
+    ).expect("authored rectangular mutation");
+    let GisTerrainMutation::ReplaceElevationSource(command) = command else { panic!("elevation mutation required") };
+    let authored = command.new_elevation_source.unwrap();
+    assert_eq!(authored.dimensions(), Some((4, 3)));
+    assert_eq!(authored.rows_millimetres[0][0], -3007);
     let operation = |new_elevation_source| GisTerrainMutation::ReplaceElevationSource(
         crate::mutations::ReplaceElevationSource { new_elevation_source }
     );
     store::os_store::test_support::assert_op_text_binary_equivalence(&operation(Some(authored.clone())));
     store::os_store::test_support::assert_op_text_binary_equivalence(&operation(None));
+    let previous_unit = FieldValue::Record({
+        let mut record = semio_framework_dsl_record::RecordValue::default();
+        record.fields.insert(0, DslField::to_value(&authored.bounds));
+        record.fields.insert(1, DslField::to_value(&vec![vec![1250_i16; 33]; 33]));
+        record
+    });
+    assert!(<crate::schema::snapshot::ElevationSource as DslField>::from_value(&previous_unit).is_err());
     let snapshot = GisTerrainSnapshot { elevation_source: Some(authored), ..Default::default() };
     store::os_store::test_support::assert_dsl_pack_equivalence(&snapshot);
+    let replacement = operation(Some(crate::schema::snapshot::ElevationSource {
+        missing_samples: None,
+        bounds: [7.1, 46.0, 7.2, 46.1],
+        rows_millimetres: vec![vec![i32::MIN, -1], vec![0, i32::MAX]],
+    }));
+    let replaced = protocol::apply_diff_cold(replacement.diff(&snapshot).diff(), &snapshot).unwrap();
+    assert_eq!(replaced.elevation_source.as_ref().unwrap().dimensions(), Some((2, 2)));
+    let mut only_mask = replaced.elevation_source.clone().unwrap();
+    only_mask.missing_samples = Some("04".into());
+    let mask_change = operation(Some(only_mask.clone()));
+    store::os_store::test_support::assert_op_text_binary_equivalence(&mask_change);
+    let masked = protocol::apply_diff_cold(mask_change.diff(&replaced).diff(), &replaced).unwrap();
+    assert_eq!(masked.elevation_source.as_ref(), Some(&only_mask));
+    store::os_store::test_support::assert_dsl_pack_equivalence(&masked);
+    let unmask = mask_change.inverse(&replaced).unwrap();
+    let unmasked = protocol::apply_diff_cold(unmask[0].diff(&masked).diff(), &masked).unwrap();
+    assert_eq!(unmasked.elevation_source, replaced.elevation_source);
+    let inverse = replacement.inverse(&snapshot).unwrap();
+    assert_eq!(inverse.len(), 1);
+    let restored = protocol::apply_diff_cold(inverse[0].diff(&replaced).diff(), &replaced).unwrap();
+    assert_eq!(restored.elevation_source, snapshot.elevation_source);
 }
 
 #[semio_framework_async_macros::async_test]

@@ -10,7 +10,9 @@ import{repositoryCompilerLayoutV1}from"../../../📍️layout/🟦️.ts";
 import fixture from"../♻️recovery.json"with{type:"json"};
 import pressure from"./🔣️.json"with{type:"json"};
 import{privateRepositoryWorkspaceV1}from"../../../../../../../🧪️testing/🧫️private-repository/🟦️.ts";
-const repository=await privateRepositoryWorkspaceV1();
+import {declareLibraryBuildTestEnvelopeV1} from "../../../../../../../🧪️testing/🪪️native-birth/🟦️.ts";
+declareLibraryBuildTestEnvelopeV1({suite:"storage-compiler-processes"});
+const repository=await privateRepositoryWorkspaceV1();await repository.prepare("diagnostics");
 
 test.skipIf(process.platform!=="darwin")("compact headroom recovery runs under the budgeted preparation control chain of an ordinary compiler store",async()=>receiveScriptProcessInvocation(process.env,async original=>{
  const base=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!base)throw Error("Original diagnostic fixture directory required");
@@ -35,4 +37,4 @@ test.skipIf(process.platform!=="darwin")("compact headroom recovery runs under t
    rmSync(parent,{recursive:true,force:true});
   }
  }));
-}),560000);
+}),290000);

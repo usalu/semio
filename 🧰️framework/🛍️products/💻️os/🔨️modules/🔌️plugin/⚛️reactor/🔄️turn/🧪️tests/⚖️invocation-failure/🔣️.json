@@ -1,0 +1,31 @@
+{
+  "open": {
+    "seq": 17,
+    "artifact": "pdf:original-failed-open",
+    "role": 1,
+    "plugin": "pdf",
+    "app": "editor"
+  },
+  "closure": {
+    "receipt": "original decoded-command receipt refusal",
+    "primary": "original decoded-command source close failure",
+    "context": "original decoded-command source close context refusal"
+  },
+  "cases": [
+    {
+      "step": "pending",
+      "kept": true,
+      "cause": null
+    },
+    {
+      "step": "refused",
+      "kept": true,
+      "cause": "retirement refused"
+    },
+    {
+      "step": "failed",
+      "kept": false,
+      "cause": "original decoded-command failure"
+    }
+  ]
+}

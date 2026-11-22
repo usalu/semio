@@ -31,7 +31,6 @@ use semio_plugin::NoTransient;
 use semio_plugin::NoTransientMutation;
 use {semio_framework_artifact_reference::StandardId};
 use {semio_framework_artifact_reference::SubsetId};
-use semio_ui_locale::Label;
 
 //#region 🔖️Dialect
 /// 🪪️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §1: the canonical surface-id
@@ -127,7 +126,7 @@ impl ArtifactEditor for XlsxTransitionalEditor {
         store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::Snapshot, Self::Mutation>,
     >> {
         Some(semio_plugin::cold_replay_document_store_owners::<Self::Snapshot, Self::Mutation>(grant).map(|(mut owners, progress)| {
-            owners.operation_wire = owners.operation_wire.with_original_target(XlsxMutation::original_conflict_target);
+            owners.operation_wire = XlsxMutation::install_original_history_wire(owners.operation_wire);
             (owners, progress)
         }))
     }
@@ -200,7 +199,7 @@ impl ArtifactEditor for XlsxTransitionalEditor {
         doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
         _interaction: &semio_plugin::app::InteractionView<'_>,
-        _view_state: Option<&semio_plugin::ViewModel>,
+        view_state: Option<&semio_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<Self::Mutation>, Fault> {
@@ -208,7 +207,7 @@ impl ArtifactEditor for XlsxTransitionalEditor {
             let semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Edit(event) = command else { unreachable!() };
             return <Self as semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor>::snapshot_edit_emit(event, doc.snapshot);
         };
-        xlsx_set_cell_emit(doc.snapshot, command)
+        xlsx_set_cell_emit(doc.snapshot, command, view_state.map(|view| view.locale))
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
@@ -224,14 +223,14 @@ impl ArtifactEditor for XlsxTransitionalEditor {
                 &semio_plugin::TreeWindows::for_body(view_state, semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_BODY_KEY),
             )
             .map(semio_plugin::built_to_component_tree),
-            _ => semio_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
+            _ => semio_plugin::built_text_to_component_tree(semio_s_artifact_stdio_xlsx_base::editor::xlsx::standards::v_ecma_376::subsets::base::xlsx_editor_labels(view_state.locale).unknown_body.fill(&[("body", body_key)])),
         }
     }
 }
 
-fn xlsx_set_cell_emit(snapshot: &XlsxSnapshot, command: &XlsxTransitionalEditorCommand) -> Result<Emit<XlsxMutation>, Fault> {
+fn xlsx_set_cell_emit(snapshot: &XlsxSnapshot, command: &XlsxTransitionalEditorCommand, locale: Option<semio_ui_locale::Locale>) -> Result<Emit<XlsxMutation>, Fault> {
     let XlsxTransitionalEditorCommand::SetCell { sheet_name, row, column, revision, value } = command;
-    semio_s_artifact_stdio_xlsx_base::editor::xlsx::standards::v_ecma_376::subsets::base::xlsx_set_cell_emit_fields(snapshot, sheet_name, *row, *column, revision, value, "stdio.xlsx.transitional")
+    semio_s_artifact_stdio_xlsx_base::editor::xlsx::standards::v_ecma_376::subsets::base::xlsx_set_cell_emit_fields(snapshot, sheet_name, *row, *column, revision, value, locale, "stdio.xlsx.transitional")
 }
 
 impl semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor for XlsxTransitionalEditor {
@@ -259,7 +258,7 @@ semio_s_artifact_stdio_contract::bounded_native_editing_editor! {
         let semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(command) = command else {
             return Err(Fault::from("stdio-xlsx-transitional-native-edit-command-mismatch"));
         };
-        xlsx_set_cell_emit(snapshot, command)
+        xlsx_set_cell_emit(snapshot, command, None)
     },
 }
 //#endregion 🔖️Editor
@@ -274,7 +273,7 @@ pub fn create_xlsx_transitional_editor() -> semio_plugin::AppDefinition {
         .default_mode_id(edit::XLSX_TRANSITIONAL_EDIT_MODE_ID)
         .window_kind_def(main::definition())
         .window_kind_def(semio_s_artifact_stdio_contract::editing::snapshot_details_window_definition())
-        .default_layout(semio_s_artifact_stdio_contract::editing::snapshot_details_split_layout(main::WINDOW_KIND_ID, "Transitional workbook"));
+        .default_layout(semio_s_artifact_stdio_contract::editing::snapshot_details_split_layout(main::WINDOW_KIND_ID));
     semio_s_artifact_stdio_contract::editing::snapshot_edit_actions_with(builder).build_definition()
 }
 //#endregion 🔖️Manifest

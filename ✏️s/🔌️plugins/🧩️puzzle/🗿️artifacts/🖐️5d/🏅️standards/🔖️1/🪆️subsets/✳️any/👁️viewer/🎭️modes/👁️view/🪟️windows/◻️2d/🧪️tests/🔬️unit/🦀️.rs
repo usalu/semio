@@ -36,7 +36,7 @@ fn render_produces_a_scene_node_for_the_default_document() {
 #[test]
 fn fixture_carries_one_node_per_part_and_one_edge_per_fastener() {
     let document = Puzzle5dSnapshot {
-        parts: vec![Puzzle5dPart { id: "teil-ä".into(), ..Default::default() }, Puzzle5dPart { id: "teil-ß".into(), ..Default::default() }],
+        parts: [Puzzle5dPart { id: "teil-ä".into(), ..Default::default() }, Puzzle5dPart { id: "teil-ß".into(), ..Default::default() }].into_iter().collect(),
         fasteners: vec![Puzzle5dFastener {
             id: "kante-ß".into(),
             source: "teil-ä:g1".into(),
@@ -56,7 +56,7 @@ fn fixture_carries_one_node_per_part_and_one_edge_per_fastener() {
     let fixture: serde_json::Value = serde_json::from_str(&board_snapshot_json(&document)).expect("board fixture json");
     assert_eq!(fixture["nodes"].as_array().map(Vec::len), Some(2));
     assert_eq!(fixture["edges"].as_array().map(Vec::len), Some(1));
-    assert_eq!(fixture["edges"][0]["source"], semio_framework_pack_json::json!("teil-ä:g1"));
+    assert_eq!(fixture["edges"][0]["source"].as_str(), Some("teil-ä:g1"));
 }
 
 #[test]

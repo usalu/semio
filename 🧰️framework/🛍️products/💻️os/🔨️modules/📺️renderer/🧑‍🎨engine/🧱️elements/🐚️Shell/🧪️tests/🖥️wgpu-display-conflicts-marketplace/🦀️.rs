@@ -429,7 +429,7 @@ fn the_marketplace_announces_a_disabled_uninstall_as_a_disabled_row_action_butto
 }
 
 /// ♿️ The mounted Marketplace's retained accessibility projection, with the session program's row in view.
-fn marketplace_accessibility_nodes(shell: &mut ShellState) -> Vec<ui_contract::AccessibilityProjectionNode> {
+fn marketplace_accessibility_nodes(mut shell: &mut ShellState) -> Vec<ui_contract::AccessibilityProjectionNode> {
     marketplace_window_at(shell, "space");
     let records = panel_ui_records(FRAMEWORK_MARKETPLACE_TAB_ID, &SessionCtx::of(&mut shell).build_marketplace_ui()).expect("the marketplace body projects");
     let mut document = semio_ui_retained_tree::tree::UiDocumentTree::new(ui_contract::UiDocumentLeaseHeader {
@@ -690,7 +690,7 @@ fn display_projection_disclosures_reflow_the_actual_hugging_shell_panel() {
     let mut input = InputState::<ActionDescriptor>::default();
     let theme = Theme::default();
     let body = SessionCtx::of(&mut shell).body_rect(&theme);
-    let mut paint = |shell: &mut ShellState, input: &mut InputState<ActionDescriptor>| {
+    let mut paint = |mut shell: &mut ShellState, input: &mut InputState<ActionDescriptor>| {
         while input.retire_hit_step() {}
         shell.input.retained_hit_windows_staging.clear();
         let mut draw = DrawList::default();

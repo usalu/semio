@@ -9,6 +9,7 @@ import { requireExplicitBunTestOperandsV1 } from "../../🧪️testing/🟨️bu
 import { testCheckoutRootV1 } from "../../🧪️testing/🏖️sandbox/🛡️guard/🟦️.ts";
 import { settleOwnedChildV1 } from "../../🎛️owned-execution/🏁️settlement/🟦️.ts";
 import { hostCapacityDirectoryV1, newHostCapacityIdV1, sizeHostRequestV1, withHostCapacityV1, type HostActionKindV1, type HostCapacityPolicyV1 } from "../../🏗️build/🌡️host-capacity/🟦️.ts";
+import { hostProfileV1 } from "../../🏗️build/🌡️host-capacity/🪞️profile/🟦️.ts";
 import { findToolV1, toolCallerAllowedV1, toolLanguageV1, toolMessageV1, TOOL_REGISTRY_V1, type ToolEntryV1, type ToolRegistryV1 } from "../📖️registry/🟦️.ts";
 import { resolveToolV1, systemToolHostV1, toolRootV1, type ToolHostV1, type ToolResolutionV1 } from "../🔎️resolve/🟦️.ts";
 import { toolEnvironmentV1 } from "../🌿️environment/🟦️.ts";
@@ -57,7 +58,7 @@ export function setDefaultToolAdmissionV1(admission: ToolAdmissionV1 | undefined
 /** 🏗️ Builds the admission port over the host capacity gate of the process module with an explicit policy. */
 export function createToolAdmissionV1(policy: HostCapacityPolicyV1, ports: Readonly<{ environment?: NodeJS.ProcessEnv; directory?: string; write?: (line: string) => void }> = {}): ToolAdmissionV1 {
   return async (ask, body, signal) => {
-    const request = sizeHostRequestV1(policy, { id: newHostCapacityIdV1(), operation: ask.operation, ...ask.kind === undefined ? {} : { kinds: [ask.kind] } });
+    const request = sizeHostRequestV1(policy, { id: newHostCapacityIdV1(), operation: ask.operation, host: hostProfileV1(ports.environment ?? process.env), ...ask.kind === undefined ? {} : { kinds: [ask.kind] } });
     if (request === undefined) return body({ environment: {}, jobs: 1 });
     const controller = new AbortController(), forward = (): void => controller.abort(signal?.reason);
     signal?.addEventListener("abort", forward, { once: true });

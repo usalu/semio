@@ -2,14 +2,14 @@
   "schema": "semio.plugin.cold-document-pair-ingress-corpus/v1",
   "limits": {
     "pageBytes": 65536,
-    "maximumPages": 64,
-    "maximumPairBytes": 4194304,
+    "maximumPages": 256,
+    "maximumPairBytes": 16777216,
     "childMessageBytes": 262144
   },
   "exact": {
-    "packLength": 2097152,
-    "sprLength": 2097152,
-    "pageCount": 64,
+    "packLength": 8388608,
+    "sprLength": 8388608,
+    "pageCount": 256,
     "packPattern": {
       "multiplier": 31,
       "addend": 7
@@ -18,9 +18,9 @@
       "multiplier": 17,
       "addend": 11
     },
-    "packSha256": "15d80ba308304e391a817479e20a3922787105dfdff12e2251e83d80f8c32195",
-    "sprSha256": "8807958a84cd0f2c56dfbbf5ce02cb84b518f03572d8f0d3452ec40f4e98cf14",
-    "aggregateSha256": "4710c01dee5a714b6cb62150df7de95abdefd2753e63e81b9f3f896412b9d422"
+    "packSha256": "0ff4d6c068be24637e84ea9f481c3c29f7afcdef1e06e1f40a68e5de85dcbb5b",
+    "sprSha256": "eb4892c4b6af7e251ddf7f004626e179a351398d363797926fd637e43504db03",
+    "aggregateSha256": "89506f46ae6be761f2e301273a9e97d24897f8483f140fd76cd8b2195d919b24"
   },
   "hostile": [
     {
@@ -77,8 +77,8 @@
     "everyPageLiveFence": true,
     "onePageOutstanding": true,
     "incrementalHashing": true,
-    "aggregateReservedByteCapacity": 4194304,
-    "aggregateReservedPageCapacity": 64,
+    "aggregateReservedByteCapacity": 16777216,
+    "aggregateReservedPageCapacity": 256,
     "malformedFirstPageRetainsBytes": 0,
     "loadOwnerRetained": true,
     "unexpectedRegistryDrop": "terminal-required",

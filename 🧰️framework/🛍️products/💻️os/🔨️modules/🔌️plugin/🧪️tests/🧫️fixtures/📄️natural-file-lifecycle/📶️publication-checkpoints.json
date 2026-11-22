@@ -1,0 +1,47 @@
+{
+  "schema": "semio.framework.os.plugin.natural-file-publication-checkpoints/v1",
+  "note": "A 963-byte two-page PDF packs about 32,960 work units in 64-unit slices; the old cadence delivered, acknowledged and retired one checkpoint per nonempty slice (515) so the mounted Open exceeded the host poll ceiling while staying in Worker. The quantum cadence emits one per contract quantum and on the terminal stage change.",
+  "quantum": 4096,
+  "sliceUnits": 64,
+  "emptySliceEvery": 7,
+  "polls": 600,
+  "legacyCheckpoints": 515,
+  "expectedCheckpoints": [
+    [
+      74,
+      4096
+    ],
+    [
+      149,
+      8192
+    ],
+    [
+      223,
+      12288
+    ],
+    [
+      298,
+      16384
+    ],
+    [
+      373,
+      20480
+    ],
+    [
+      447,
+      24576
+    ],
+    [
+      522,
+      28672
+    ],
+    [
+      597,
+      32768
+    ],
+    [
+      600,
+      32960
+    ]
+  ]
+}

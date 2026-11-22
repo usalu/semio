@@ -23,7 +23,7 @@ const stamp = Date.now().toString(36);
 let status = 0;
 for (const locale of ["en", "de"]) {
   const output = join(generated, "br-" + port + "-" + stamp + "-" + locale);
-  const stage = "browser-" + (port === 6064 ? "canonical" : "native") + "-" + locale;
+  const stage = "browser-" + (process.env.DRAW_BROWSER_STAGE ?? (port === 6064 ? "canonical" : port === 16064 ? "native" : "installed")) + "-" + locale;
   const task = Bun.spawn(["repo", "tools", "exec", "--light", "bun", "--", launcher, generated, stage, browser, "browser-acceptance", "--serve", url, "--locale", locale, "--output", output], {
     cwd: process.cwd(), stdout: "inherit", stderr: "inherit",
   });

@@ -1,5 +1,6 @@
+import { createHash } from "node:crypto";
 import { execFile } from "node:child_process";
-import { readFileSync, readdirSync, statSync } from "node:fs";
+import { closeSync, constants, mkdirSync, openSync, readFileSync, readdirSync, renameSync, rmSync, statSync, writeSync } from "node:fs";
 import { join } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 import { localMachineSpeedFactorV1, scaledMillisecondsV1 } from "../../../../🐢️speed/🟨️.mjs";
@@ -37,6 +38,12 @@ export function takePollWaitV1(round, policy = TAKE_POLICY_V1) {
  * @see ./🧪️tests/🟦️.ts */
 export function takeConcurrencyV1(cutConcurrency = Infinity, policy = TAKE_POLICY_V1) {
   return Math.max(1, Math.min(policy.concurrency, cutConcurrency));
+}
+
+/** 🪜️ The looks of a take pass at once: the cut that protects the memory of an inference does not apply to a look in full, because a look waits for the fleet cache, the presence batch of the store and the verification of rows, not for memory, and the footprint gate of {@link takeAdmittedV1} bounds what looks hold; so a cut process still runs `lookFloorConcurrency` looks (never more than `concurrency`), and a batch of the presence coalescer then carries that many owners instead of the 3 or 4 that a cut allowed (15 s per batch on the mounted image, 283 batches for 946 asks on a 16 GB worker).
+ * @see ./🧪️tests/🟦️.ts */
+export function takeLookConcurrencyV1(cutConcurrency = Infinity, policy = TAKE_POLICY_V1) {
+  return Math.max(takeConcurrencyV1(cutConcurrency, policy), Math.min(policy.concurrency, policy.lookFloorConcurrency));
 }
 
 /** 🚦 A look admitted like an inference: before it starts, the footprint gate of the process (`gate()`, none installed: no wait) settles from its soft share of the grant and holds from its hard share until the footprint falls, so looks never pile up above the memory a plan may take, and a look that finds no other look in flight (`state.flying`, shared by every lane of the pass) is always admitted, so the pass can never starve behind a host that is short of memory (they had no admission at all: a burst of Rust owner looks moved the tree from 0.6 to 4.7 GB in seconds).
@@ -240,9 +247,48 @@ export async function takePassV1({ names, attempt, concurrency = TAKE_POLICY_V1.
   return outcomes;
 }
 
-/** 📣️ The names of the owners that the pools of the fleet say they stored: every pool child appends the name to `pool-published-<wave>.txt` below its origin in the shared store, so a reader finds them with one directory read per origin and looks at those first instead of rotating through thousands of owners. Files older than `publishedMaximumAgeMilliseconds` and everything unreadable count for nothing.
+/** 🔒️ The claims of the owners that loads of one checkout infer at the same time (a follower load runs beside the leader after the bounded wait, and an owner the leader started but has not stored would be inferred twice): `claim(stem)` creates `<directory>/<stem>.json` with `wx` (`{version,pid,startMs}`), answers `granted`, and answers `running` while another claim file names a live process younger than `staleMilliseconds`; a dead or stale claim is taken over by renaming it away first (one process wins the rename), `release(stem)` removes the claim this process holds. A claim that cannot be written or read never blocks: the owner is then inferred (`granted`), as without claims.
+ * @see ./🧪️tests/🔒️claims/🟦️.ts */
+export function createOwnerClaimsV1({ directory, pid = process.pid, now = Date.now, alive = value => { try { process.kill(value, 0); return true; } catch (error) { return error?.code === "EPERM"; } }, staleMilliseconds = TAKE_POLICY_V1.claimStaleMilliseconds }) {
+  const held = new Set(), file = stem => join(directory, stem + ".json");
+  const create = stem => { const fd = openSync(file(stem), constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL); try { writeSync(fd, JSON.stringify({ version: 1, pid, startMs: now() })); } finally { closeSync(fd); } held.add(stem); return "granted"; };
+  return Object.freeze({
+    claim(stem) {
+      try {
+        mkdirSync(directory, { recursive: true });
+        if (held.has(stem)) return "granted";
+        try { return create(stem); } catch (error) { if (error?.code !== "EEXIST") return "granted"; }
+        let row; try { row = JSON.parse(readFileSync(file(stem), "utf8")); } catch { row = undefined; }
+        if (row !== undefined && Number.isSafeInteger(row.pid) && row.pid !== pid && alive(row.pid) && now() - row.startMs < staleMilliseconds) return "running";
+        const away = file(stem) + "." + pid + "." + now() + ".stale";
+        try { renameSync(file(stem), away); } catch { return "running"; }
+        try { rmSync(away, { force: true }); } catch {}
+        try { return create(stem); } catch { return "running"; }
+      } catch { return "granted"; }
+    },
+    release(stem) { if (!held.delete(stem)) return; try { rmSync(file(stem), { force: true }); } catch {} },
+  });
+}
+
+/** 🔒️ What a reader does before it infers an owner: it holds the claim of the owner (`release` frees it when the inference ends) or, while another load runs the owner, looks for the record that load stores (`look` answers "present" or "fetched" when it arrived) every `pollMilliseconds` and takes it; a stale or dead claimant ends the wait because its claim is taken over.
+ * @see ./🧪️tests/🔒️claims/🟦️.ts */
+export async function takeClaimedV1({ name, stem, claims, look, signal, sleep = takeDelayV1, pollMilliseconds = TAKE_POLICY_V1.claimPollMilliseconds }) {
+  for (;;) {
+    signal?.throwIfAborted();
+    if (claims.claim(stem) === "granted") return Object.freeze({ release: () => claims.release(stem) });
+    let outcome; try { outcome = await look(name); } catch { outcome = undefined; }
+    if (outcome === "present" || outcome === "fetched") return Object.freeze({ outcome });
+    await sleep(pollMilliseconds, signal);
+  }
+}
+
+/** 🔑️ The eight hex digits that name, in a `pool-published-<wave>-<key>.txt` file, the globals (project authority, registry digest, command revision, late) the records of that wave were keyed with: a record is only fetchable under the key of its own globals, so a reader that lists the owners of a wave with other globals (453 waves in a day, 20 of them younger than two hours, 1880 owners listed, 1 adopted, 2584 missed on the coordinator) looks at names that can only miss.
  * @see ./🧪️tests/📣️published/🟦️.ts */
-export function fleetPublishedNamesV1(store, now = Date.now(), policy = TAKE_POLICY_V1) {
+export function fleetGlobalsKeyV1(globals) { return createHash("sha256").update(JSON.stringify(globals)).digest("hex").slice(0, 8); }
+
+/** 📣️ The names of the owners that the pools of the fleet say they stored, of the waves whose globals are `globals` (every wave when none are given): every pool child appends the name to `pool-published-<wave>.txt` below its origin in the shared store, so a reader finds them with one directory read per origin and looks at those first instead of rotating through thousands of owners. Files older than `publishedMaximumAgeMilliseconds` and everything unreadable count for nothing.
+ * @see ./🧪️tests/📣️published/🟦️.ts */
+export function fleetPublishedNamesV1(store, now = Date.now(), policy = TAKE_POLICY_V1, globals) {
   const names = new Set();
   if (typeof store !== "string" || store === "") return names;
   let origins = [];
@@ -250,7 +296,7 @@ export function fleetPublishedNamesV1(store, now = Date.now(), policy = TAKE_POL
   for (const origin of origins) {
     const directory = join(store, "v1", "origins", origin);
     let files = [];
-    try { files = readdirSync(directory).filter(file => /^pool-published-[0-9a-f]+\.txt$/u.test(file)); } catch { continue; }
+    try { files = readdirSync(directory).filter(file => { const found = /^pool-published-[0-9a-f]+(?:-([0-9a-f]{8}))?\.txt$/u.exec(file); return found !== null && (globals === undefined || found[1] === fleetGlobalsKeyV1(globals)); }); } catch { continue; }
     for (const file of files) { try { if (now - statSync(join(directory, file)).mtimeMs > policy.publishedMaximumAgeMilliseconds) continue; for (const line of readFileSync(join(directory, file), "utf8").split("\n")) if (line !== "") names.add(line); } catch {} }
   }
   return names;
@@ -320,13 +366,13 @@ export function createAdoptCountersV1() {
   });
 }
 
-/** 🩺️ Counts one unsuccessful look from the exchange evidence while preserving its original fallback. */
+/** 🩺️ Counts one unsuccessful look and lets the take pass move on when the exchange is already unavailable. */
 export function recordTakeLookFailureV1(error, counters, cancelled) {
   if (cancelled) { counters.outcome("cancelled"); return "miss"; }
   if (error?.code !== "BUILD_TAKE_MISS") { counters.outcome("fault"); return "miss"; }
   const seen = error.outcome, result = seen === "fetched" ? "stale" : seen === "fault" ? "fault" : "miss";
   counters.outcome(seen === "incomplete" ? "incomplete" : error.lookupFault !== undefined ? "fault" : result, error.lookupFault);
-  return result;
+  return seen === "fault" && error.lookupFault === "unavailable" ? "miss" : result;
 }
 
 /** 🔥️ The names the fleet lists as stored, read from the shared store at most once per `hotNamesMilliseconds` (the owner loop asks for every owner it meets, a directory read per ask would cost more than the looks it saves), and counted as listed. */

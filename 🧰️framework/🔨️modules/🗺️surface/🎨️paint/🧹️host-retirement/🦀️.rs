@@ -40,6 +40,7 @@ impl RasterHostRetirement {
             mask_value: _,
             paint_gesture,
             paint_edit,
+            keyboard: _,
             pan_last: _,
             show_selection_chrome: _,
             theme_clear: _,

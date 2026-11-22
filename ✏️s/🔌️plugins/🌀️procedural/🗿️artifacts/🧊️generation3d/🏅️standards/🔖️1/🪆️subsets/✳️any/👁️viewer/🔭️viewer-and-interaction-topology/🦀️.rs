@@ -118,12 +118,12 @@ impl semio_plugin::ArtifactViewer for Generation3dViewer {
         let viewed = Generation3dViewedDocument::resolve(doc.snapshot, cfg.snapshot);
         let servable = preview_eval::may_rearm(&viewed.snapshot().host_snapshot);
         viewed.retire();
-        let applied_edits = doc.provisional_generation();
+        let document = preview_eval::PreviewEvalDocumentStamp { content_revision: doc.source_version().canonical_revision, provisional_generation: doc.provisional_generation() };
         owner
             .with_mut::<Generation3dViewInstanceOperationOwner, _>(|owner| {
                 use preview_eval::PreviewEvalRunOwner as _;
                 let (session, link) = owner.preview_eval_parts().ok_or_else(|| Fault::from("generation3d-view-eval-session-closing"))?;
-                Ok(preview_eval::preview_eval_run_effects(session, link, &windows, doc.tool_run(), servable, applied_edits))
+                Ok(preview_eval::preview_eval_run_effects(session, link, &windows, doc.tool_run(), servable, document))
             })
             .unwrap_or_default()
     }

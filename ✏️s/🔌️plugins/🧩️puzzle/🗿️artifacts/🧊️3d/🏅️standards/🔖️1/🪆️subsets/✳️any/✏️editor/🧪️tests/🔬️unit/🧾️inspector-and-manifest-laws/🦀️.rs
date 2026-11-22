@@ -230,7 +230,7 @@ async fn app_definition_declares_its_four_panel_tabs() {
 #[semio_framework_async_macros::async_test]
 async fn every_declared_action_bridges_to_a_command() {
     semio_plugin::artifact_app_laws::assert_declared_actions_bridge_to_commands::<EditorApp<Puzzle3dPlayApp>>(puzzle3d_manifest_for_tests).await;
-    assert!(Puzzle3dPlayApp::command_from_action("noSuchAction", None, None).is_err());
+    assert!(<Puzzle3dPlayApp as ArtifactEditor>::command_from_action("noSuchAction", &mut None, &mut None).is_err());
 }
 
 /// 🌉️ Every declared app action (framework-injected verbs never reach `Puzzle3dCommand::from_action`

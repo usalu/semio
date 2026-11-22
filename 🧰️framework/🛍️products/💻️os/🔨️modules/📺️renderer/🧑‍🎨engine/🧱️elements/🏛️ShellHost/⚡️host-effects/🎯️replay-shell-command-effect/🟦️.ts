@@ -2,17 +2,19 @@
  *
  * 🧱️ Child module of {@link ../🟦️.ts | useApplyHostEffects}: the effect arm of the `applyHostEffects` pass, moved verbatim. */
 import { shellDialogSessionIsCurrentV1 } from "../../🗨️dialog-origin/🟦️.ts";
-import { type Effect, type UiDirtyScope } from "@semio-tech/framework";
+import { dialectCoordinate, type LocalizedLabel, type Effect, type UiDirtyScope } from "@semio-tech/framework";
 import { encodeBackboneWorkerRequest } from "@semio-tech/framework/backbone";
 import { LOCAL_CATALOG_ACTIONS_V1, localCatalogAdmissionV1, localCatalogAdmitMutationV1, localCatalogDocumentIdV1, localCatalogNoticeCodeV1, localCatalogNoticeTextV1, localCatalogRehydrationArgumentsV1 } from "../../🗂️local-catalog/🟦️.ts";
 import { retireLocalDocument } from "@semio-tech/framework/config/mutations";
 import { sharedDocumentOpeningRoleV1 } from "../../🧭️opening/🟦️.ts";
+import { resolveManifestLabel } from "../../../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
 import { type ActiveSession } from "../../../🐚️Shell/📦️program-sessions/🟦️.ts";
 import { isShellOwnedCommandId } from "../../../🛠️ShellHelpers/🔩️plumbing/🆔️action-ids/🟦️.ts";
 import { makeEffectDispatchOne } from "../../../🛠️ShellHelpers/🔩️plumbing/🚀️effect-dispatch/🟦️.ts";
 import { reduceArtifactCreationProgressUiV1 } from "../../🌱️artifact-creation/🟦️.tsx";
 import { replayRefusalCodeV1, replayRefusalNoticeTextV1, type ReplayRefusalReasonV1 } from "../../📣️replay-refusal/🟦️.ts";
 import { captureSpaceArtifactCreationCatalogAuthorityV1, directoryCommandFromAction, mintDirectoryCommandRequestId, SPACE_INDEX_DOCUMENT_ID, type SpaceArtifactCreationOwnerV1, spaceArtifactCreationRequestFromAction, spaceIndexOpeningArgsV1 } from "../../🧾️space-artifact-creation/🟦️.ts";
+import { readWorkflowArtifactCreationCatalogV1, workflowArtifactCreationRequestV1, workflowArtifactDropV1 } from "../../🧾️space-artifact-creation/🔁️workflow/🟦️.ts";
 import { replayOpenArtifactV1 } from "./🚪️open-artifact/🟦️.ts";
 import { shellSpaceAdministrationOpening } from "../../🏠️space-administration/🟦️.ts";
 import type { ShellCoreAfterSpawnedSession } from "../../🛫️spawned-session/🟦️.ts";
@@ -87,6 +89,63 @@ export async function applyReplayShellCommandEffect({ showTransientNoticeRef, ui
         const worker = ensureBackboneWorker();
         worker.postMessage({ wire: encodeBackboneWorkerRequest(request) });
       }
+    }
+  } else if (actionId === "os.create-workflow-artifact") {
+    const spaceId = core.openSpaceIdRef.current;
+    const spaceEpoch = core.openSpaceEpochRef.current;
+    const identity = identityRef.current?.userId;
+    const drop = workflowArtifactDropV1(argsRecord);
+    const app = drop === null ? undefined : loadedPluginsRef.current.find((plugin) => plugin.handle.pluginId === drop.pluginId)
+      ?.manifest.apps.find((app) => app.id === drop.appId);
+    if (!spaceId || spaceId === "demo" || baseSession.pluginId !== core.hostConfig?.pluginId || baseSession.app.id !== core.hostAppId
+      || !shellDialogSessionIsCurrentV1(baseSession, shellStateRef.current.pluginRuntime.session)) {
+      refuseReplay("space-required", "workflow artifact creation requires an open Studio");
+    } else if (identity === undefined) {
+      refuseReplay("sign-in-required", "workflow artifact creation requires a signed-in identity");
+    } else if (drop === null || !app?.dialect || !app.io?.artifactSchema) {
+      refuseReplay("invalid-request", "workflow artifact creation requires a registered document app");
+    } else {
+      const worker = ensureBackboneWorker();
+      const requestId = mintDirectoryCommandRequestId();
+      const current = (): boolean => core.openSpaceEpochRef.current === spaceEpoch && core.openSpaceIdRef.current === spaceId
+        && identityRef.current?.userId === identity && core.backboneWorkerRef.current === worker && isCurrentEffectOwner(effectOwner);
+      const name = resolveManifestLabel(app.label as LocalizedLabel | string, core.uiTerminologyRef.current, uiLocaleRef.current);
+      const expectedSchema = app.io.artifactSchema;
+      const expectedDialect = dialectCoordinate(app.dialect);
+      const source = effectOwner.source?.document;
+      void readWorkflowArtifactCreationCatalogV1(worker, spaceId).then((catalog) => {
+        if (!current()) return;
+        const request = catalog === null ? null : workflowArtifactCreationRequestV1(catalog, app, spaceId, requestId, name);
+        if (request === null) {
+          refuseReplay("invalid-request", "the Studio app has no exact kind in the trusted Space catalog");
+          return;
+        }
+        const progressOwner = {
+          requestId, spaceId, name, kindId: request.kindId, expectedCatalogGenerationId: request.expectedCatalogGenerationId,
+          runtimeKey: source?.runtimeKey ?? `workflow:${spaceId}:${baseSession.instanceId}`,
+          clientInstanceId: source?.clientInstanceId ?? requestId,
+          sessionInstanceId: baseSession.instanceId,
+        };
+        const owner: SpaceArtifactCreationOwnerV1 = {
+          ...progressOwner, opening: false, cancelRequested: false, ready: null,
+          workflow: {
+            current, expectedSchema, expectedDialect,
+            finish: async ({ artifactId, artifactSchema }) => {
+              const outcome = await core.onActionRef.current({
+                controllerId: baseSession.app.controllerId, action: "finishSpawnApp",
+                args: { ...drop, artifactId, artifactSchema, spaceId, name },
+                provenance: { origin: "guest", causedBy: effectOwner.inputSeq, windowId: baseSession.viewState.windowId ?? baseSession.app.windowKinds[0]?.id ?? null },
+              }, undefined, false, undefined, effectOwner);
+              return outcome.kind === "applied";
+            },
+          },
+        };
+        spaceArtifactCreationOwnersRef.current.set(requestId, owner);
+        setSpaceArtifactCreationUi((state) => reduceArtifactCreationProgressUiV1(state, { kind: "issued", owner: progressOwner, atMs: Date.now() }));
+        worker.postMessage({ wire: encodeBackboneWorkerRequest(request) });
+      }).catch((error) => {
+        if (current()) refuseReplay("invalid-request", "the trusted Space catalog could not be read", error);
+      });
     }
   } else if (actionId.startsWith("os.directory.")) {
     const indexScope = [...openDocumentSessionsRef.current.values()].find((entry) => entry.session.pluginId === baseSession.pluginId && entry.session.instanceId === baseSession.instanceId)?.scope;

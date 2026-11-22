@@ -1,0 +1,25 @@
+import { readFileSync, mkdirSync } from "node:fs";
+import { join } from "node:path";
+import { CurrentPhysicalOwnerV1 } from "../../../../../../../🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📁️current/🟦️.ts";
+import { CargoProvenanceSessionV1, sharedProvenanceCustodyV1 } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts";
+import { cargoProvenancePhysicalControlV1, decodeCargoProvenanceV1 } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧾️receipt/🟦️.ts";
+
+const observed = decodeCargoProvenanceV1(readFileSync(process.argv[2]!, "utf8")), limit = Number(process.argv[3] ?? 1e9);
+const units = observed.units.slice(0, limit).map((unit) => ({ message: unit.message, evidence: { version: 1, kind: "discovery", paths: [], producer: null } }));
+const invocation = { manifest: observed.manifest, cwd: observed.cwd, command: observed.command, args: observed.args, buildDirectory: observed.buildDirectory, builtAtMs: Date.now(), status: 0, cancelled: false, units, buildScripts: observed.buildScripts.filter((script: any) => units.some((unit) => unit.message.package_id === script.package_id)) };
+mkdirSync("G:/t/prov/rr", { recursive: true });
+const control = () => cargoProvenancePhysicalControlV1({ cancelled: () => false, onProgress: () => undefined });
+const session = new CargoProvenanceSessionV1(sharedProvenanceCustodyV1(observed.cwd, control));
+const stats = { owners: 0, directories: 0, missing: 0, uniqueDirectories: new Set<string>(), uniqueMissing: new Set<string>(), passes: 0 };
+const original = CurrentPhysicalOwnerV1.prototype.recheckStructure;
+CurrentPhysicalOwnerV1.prototype.recheckStructure = function (this: any, keep?: any) { stats.passes++; stats.owners++; for (const path of this.directories.keys()) { stats.directories++; stats.uniqueDirectories.add(path); } for (const path of this.missing) { stats.missing++; stats.uniqueMissing.add(path); } return original.call(this, keep); };
+const prefetchStart = performance.now();
+if (process.env.PREFETCH) for (const unit of units) await session.prefetch({ filenames: (unit.message as any).filenames });
+const prefetchMs = Math.round(performance.now() - prefetchStart);
+const started = performance.now(), cpu0 = process.cpuUsage();
+await session.write(join("G:/t/prov/rr", "receipt-" + units.length + ".json"), invocation as any, new Map(), "C:/Users/Ueli/.cargo");
+const written = performance.now(), cpuWrite = process.cpuUsage(cpu0);
+const cpuClose0 = process.cpuUsage();
+await session.close();
+const cpuClose = process.cpuUsage(cpuClose0);
+console.log(JSON.stringify({ prefetchMs, structural: { owners: stats.owners, directories: stats.directories, uniqueDirectories: stats.uniqueDirectories.size, missing: stats.missing, uniqueMissing: stats.uniqueMissing.size }, units: units.length, writeMs: Math.round(written - started), writeCpuMs: Math.round((cpuWrite.user + cpuWrite.system) / 1000), closeCpuMs: Math.round((cpuClose.user + cpuClose.system) / 1000), closeMs: Math.round(performance.now() - written) }));

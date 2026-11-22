@@ -16,7 +16,7 @@ export async function registerRetryableLifecycleDeadlineTests(
   const lifecycleEventEnvelope = (kind: string): Record<string, unknown> | null => {
     switch (kind) {
       case "open":
-        return { kind: "instance-open", payload: { instance: 7, activationGeneration: 41n, requestSequence: 8, appId: "s.test.synthetic@1/*#editor", actor: "fixture", config: [], assets: [], capabilities: [], quotas: {} } };
+        return { kind: "instance-open", payload: { instance: 7, purpose: { tag: "ordinary" }, activationGeneration: 41n, requestSequence: 8, appId: "s.test.synthetic@1/*#editor", actor: "fixture", config: [], assets: [], capabilities: [], quotas: {} } };
       case "close":
         return { kind: "instance-close", payload: { kind: "close", lifetime: { activationGeneration: 41n, instanceId: 7, guestLifetime: 3n }, requestSequence: 9 } };
       case "ack":

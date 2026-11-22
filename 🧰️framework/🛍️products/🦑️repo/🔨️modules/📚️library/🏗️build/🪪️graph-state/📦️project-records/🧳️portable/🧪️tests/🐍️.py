@@ -124,6 +124,17 @@ def generation_tokens(rows):
         out.append(row)
     return out
 
+def install_rows(rows,base):
+    pat=re.compile(r"(\.cache/b/d/m/j[\\/])([0-9a-f]{16,64})(?=[\\/]|$)")
+    def probe(r):return r["kind"] in P["installKinds"] and P["probe"] in re.split(r"[\\/]",r["path"]) and pat.search(r["path"]) is None
+    if not any(probe(r) for r in rows):return rows
+    ids=sorted({m.group(2) for r in rows for m in pat.finditer(json.dumps([r["path"],r.get("fact")],ensure_ascii=False))})
+    kept=[r for r in rows if not probe(r)];named={r["path"] for r in kept if r["kind"]=="exists"}
+    for ident in ids:
+        path=base+"/"+P["dependencyRoot"]+"/"+ident+"/"+P["probe"]
+        if path not in named:kept.append({"kind":"exists","path":path,"fact":True})
+    return kept
+
 def neutral_way(root,keys):return {"keys":keys,"owner":owner_neutral,"path":lambda x:neutral_path(x,root),"text":lambda x:neutral_text(x,root)}
 def local_way(root,keys,providers):return {"keys":keys,"owner":owner_local(providers),"path":lambda x:local_path(x,root),"text":lambda x:local_text(x,root)}
 
@@ -142,7 +153,7 @@ def unstamp(row):
 def neutral_rows(rows,root,keys):
     way=neutral_way(root,keys)
     kept=[r for r in rows if not (r["kind"] in P["locationKinds"] and r.get("fact")=="directory" and above(r["path"],root))]
-    return generation_tokens([unstamp(convert_row(r,way)) for r in kept])
+    return generation_tokens(install_rows([unstamp(convert_row(r,way)) for r in kept],TOKEN))
 
 def local_rows(rows,root,keys,providers,generation):
     way=local_way(root,keys,providers);put=generation if generation is not None else UNAVAILABLE
@@ -215,7 +226,7 @@ def run(fixture):
 
 def generation_case(case):
     kept=[r for r in case["rows"] if not (r["kind"] in P["locationKinds"] and r.get("fact")=="directory" and above(r["path"],case["root"]))]
-    portable=generation_tokens(kept)
+    portable=generation_tokens(install_rows(kept,case["root"].replace("\\","/").rstrip("/")))
     put=case["generation"] if case["generation"] is not None else UNAVAILABLE
     def deep(v):
         if isinstance(v,str):return v.replace(GEN,put)

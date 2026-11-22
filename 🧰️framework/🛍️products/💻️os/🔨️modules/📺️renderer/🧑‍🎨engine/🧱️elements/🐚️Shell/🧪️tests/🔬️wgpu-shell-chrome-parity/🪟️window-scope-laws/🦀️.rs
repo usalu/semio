@@ -4,24 +4,12 @@
 
 const WINDOW_SCOPE_FIXTURE: &str = include_str!("../../../../🏛️ShellHost/🧪️tests/🧫️fixtures/⌨️window-scope/🔣️.json");
 
-/// 🪟️ Rebuilds a fixture layout node as the wgpu dock tree. The fixture is authored in the React
-/// shell's own layout vocabulary (`window` / `stack` + `activeId` / `row` / `column`), which is the
-/// point: ONE corpus, two renderers.
+/// 🪟️ Rebuilds a fixture layout node as the wgpu dock tree. The fixture is authored in the shared
+/// contract `WindowLayoutNode` vocabulary (`window` / `stack` + `activeWindowId` / `split` + `axis`),
+/// which is the point: ONE corpus, two renderers.
 fn window_scope_node(value: &Value) -> semio_renderer_wgpu_dock::DockNode {
-    match value["kind"].as_str().expect("⌨️ fixture layout node kind") {
-        "window" => {
-            let id = value["id"].as_str().expect("⌨️ fixture window id").to_string();
-            semio_renderer_wgpu_dock::DockNode::Stack { windows: vec![DockStackTab::new(id.clone())], active: id }
-        }
-        "stack" => {
-            let windows: Vec<DockStackTab> = value["children"].as_array().expect("⌨️ fixture stack children").iter().map(|child| DockStackTab::new(child["id"].as_str().expect("⌨️ fixture window id"))).collect();
-            let active = value["activeId"].as_str().map(str::to_string).or_else(|| windows.first().map(|tab| tab.window_id.clone())).unwrap_or_default();
-            semio_renderer_wgpu_dock::DockNode::Stack { windows, active }
-        }
-        "row" => semio_renderer_wgpu_dock::DockNode::Row(value["children"].as_array().expect("⌨️ fixture row children").iter().map(|child| (window_scope_node(child), 1.0)).collect()),
-        "column" => semio_renderer_wgpu_dock::DockNode::Column(value["children"].as_array().expect("⌨️ fixture column children").iter().map(|child| (window_scope_node(child), 1.0)).collect()),
-        other => panic!("⌨️ unknown fixture layout node kind {other}"),
-    }
+    let node: semio_ui_layout::layout::WindowLayoutNode = serde_json::from_value(value.clone()).expect("⌨️ fixture layout node is a contract WindowLayoutNode");
+    semio_renderer_wgpu_dock::dock_from_window_layout(&node)
 }
 
 /// 📇️ An app whose window kinds declare exactly the fixture's per-kind action ids — the shape

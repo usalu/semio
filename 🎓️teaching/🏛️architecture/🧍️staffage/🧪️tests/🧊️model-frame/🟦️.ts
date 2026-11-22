@@ -27,6 +27,7 @@ type Vectors = {
   transforms: { name: string; transform: { translation?: Triple; rotation?: [number, number, number, number]; scale?: Triple } | null; repeat: { count: number; translation?: Triple; rotationAxis?: Triple; rotationRad?: number; origin?: Triple } | null }[];
   probes: Triple[];
   loft: { solid: string; boundsBoneLocal: { min: Triple; max: Triple }; toleranceM: number };
+  loftAxes: { base: string; path: Triple[]; rx: number; ry: number; toleranceM: number; cases: { name: string; path?: Triple[]; toleranceM?: number; rotation: [number, number, number, number] | null; rx: Triple; ry: Triple; boundsBoneLocal: { min: Triple; max: Triple } }[] };
 };
 
 const vectors = fixture<Vectors>("🧊️model-frame");
@@ -156,4 +157,20 @@ describe("🧊️ frame conversion between the staffage world and the neutral mo
     near(box.min.toArray(), min, vectors.loft.toleranceM);
     near(box.max.toArray(), max, vectors.loft.toleranceM);
   });
+
+  for (const c of vectors.loftAxes.cases)
+    it(`lays the semi-axes of a loft section along the stated bone axes: ${c.name}`, () => {
+      const { base, rx, ry } = vectors.loftAxes;
+      const [path, toleranceM] = [c.path ?? vectors.loftAxes.path, c.toleranceM ?? vectors.loftAxes.toleranceM];
+      const solid = { ...bodyOf(sampleFigure(), 50).find((s) => s.id === base)!, sections: path.map((at) => ({ at, rx, ry, ...(c.rotation ? { rotation: c.rotation } : {}) })) };
+      const geometry = tessellateSolid(solidOf(solid as never, "m"), FINE);
+      const box = new Box3();
+      for (let i = 0; i < geometry.positions.length; i += 3) box.expandByPoint(new Vector3(geometry.positions[i], geometry.positions[i + 1], -geometry.positions[i + 2]!));
+      near(box.min.toArray(), c.boundsBoneLocal.min, toleranceM);
+      near(box.max.toArray(), c.boundsBoneLocal.max, toleranceM);
+      if (c.rotation === null) return;
+      const turn = new Quaternion(...c.rotation);
+      near(new Vector3(1, 0, 0).applyQuaternion(turn).toArray().map(Math.abs), c.rx, toleranceM);
+      near(new Vector3(0, 1, 0).applyQuaternion(turn).toArray().map(Math.abs), c.ry, toleranceM);
+    });
 });

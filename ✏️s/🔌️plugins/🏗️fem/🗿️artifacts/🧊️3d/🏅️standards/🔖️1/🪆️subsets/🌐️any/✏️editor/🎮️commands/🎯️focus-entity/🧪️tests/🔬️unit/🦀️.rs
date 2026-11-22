@@ -1,4 +1,5 @@
 use semio_s_artifact_fem_3d_editor::editor::fem3d::commands::focus_entity::*;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 use semio_s_artifact_fem_3d_editor::editor::fem3d::commands::set_camera::SetCamera;
 use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::fem3d_entity_point;
 use semio_s_artifact_fem_3d_editor_model_window::editor::fem3d::modes::edit::windows::model;

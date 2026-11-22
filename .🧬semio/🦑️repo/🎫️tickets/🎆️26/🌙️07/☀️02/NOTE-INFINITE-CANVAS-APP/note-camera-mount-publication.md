@@ -22,7 +22,7 @@ Run `repo tools exec --light bun -- test './.🧬semio/🦑️repo/🎫️ticket
 
 The existing native window publication law was extended in the shared worktree to check that constructor admission spends no native scope work and produces an exact receipt once before a WindowConfig page. The authority Work fixture captures the measured 3-versus-4 denial, the funded retry, a different child Work demand, copy-credit refusal even with sufficient Work, and terminal frame clearance. Its SQLite oracle and actual source quote checks pass. The unchanged Git HEAD source fails the phase-specific assertion. Both focused suites together passed 4 tests and 26 assertions.
 
-Rust test execution and fresh browser camera acceptance are pending the coordinated guest rebuild.
+The browser camera check against the repository-published guest passed. Native WindowConfig regression execution remains pending.
 
 ## Source
 
@@ -48,4 +48,11 @@ The restarted publication needs the supported component entry and executable ove
 
 Rechecked the exact linked attempt `wsiZgfi` guest using isolated repository-transpiled core and shim files with Chromium. The camera zoomed from 1 to 1.0800000429153442 with 0.0612 px anchor error. Pasting the 12 × 8 SVG published one new block and retained the same zoom and camera offset `[-5.119999885559082, -10.178799629211426]`. The typed-operation lane retired from one slot to zero and the check exited successfully.
 
-The first run reached the same view but a harness closure evaluated the paste count after its baseline had advanced. The acceptance harness now holds an immutable before-paste count and reuses the checked publication result. See `🗑️generated/note-capture53-camera-recheck.log` and its `console.txt`; the independently published component check remains pending.
+The first run reached the same view but a harness closure evaluated the paste count after its baseline had advanced. The acceptance harness now holds an immutable before-paste count and reuses the checked publication result. See `🗑️generated/note-capture53-camera-recheck.log` and its `console.txt` for the earlier isolated capture.
+
+
+## Published Guest Camera Check
+
+The repository's prototype browser publication advanced to receipt SHA-256 `ef4ed9a41879dab2812e696cef67af18a8968053428ae40f75888e2004c0dc0d` with a 99,263,539-byte served core. A fresh Chromium session at the regular editor route used that publication and exited successfully without fixture or artifact overrides.
+
+The zoom moved from 1 to 1.0800000429153442, with a 0.0612 px anchor error. The 12 × 8 SVG produced one additional document block and the zoom and camera offset `[-5.119999885559082, -10.178799629211426]` survived that edit. The typed-operation lane returned to zero live slots. The four steps recorded no page or native faults. See `🗑️generated/note-final54-camera-rearm.log` and `🗑️generated/note-final54-camera-rearm/report.json`.

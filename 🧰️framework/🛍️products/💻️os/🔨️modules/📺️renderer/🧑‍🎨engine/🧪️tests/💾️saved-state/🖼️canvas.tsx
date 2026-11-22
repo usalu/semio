@@ -22,7 +22,7 @@ function setup(count = 1) {
   const spawned = { id: "guest", pluginId: "stdio", appId: "txt", instanceId: 7, label: "Text", breadcrumb: ["Text"] };
   const panel = { activePanelTab: "main", spawnedApps: [spawned], activeSpawnedId: "guest" };
   const kinds = Array.from({ length: count }, (_, i) => ({ id: "w" + i, bodyKey: "body", label: { en: "Window", de: "Fenster" } }));
-  const layout = { kind: "stack", children: kinds.map(kind => ({ kind: "window", id: "guest::" + kind.id })) };
+  const layout = { kind: "stack", children: kinds.map(kind => ({ kind: "window", windowKindId: kind.id, instanceId: "guest::" + kind.id })) };
   const app = { id: "host", modes: [], breadcrumb: ["Host"], label: { en: "Host" }, windowKinds: [], defaultLayout: {} };
   const sessionRef = { current: { app, viewState: { panelJson: panelJsonFromState(panel) } } };
   const destroyApp = vi.fn(async () => { trace.push("destroy"); });

@@ -1,0 +1,38 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "chain",
+    "fan",
+    "cycle",
+    "devFrom",
+    "devTo"
+  ],
+  "properties": {
+    "chain": {
+      "type": "integer",
+      "minimum": 24
+    },
+    "fan": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "cycle": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "devFrom": {
+      "type": "string",
+      "minLength": 1
+    },
+    "devTo": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}

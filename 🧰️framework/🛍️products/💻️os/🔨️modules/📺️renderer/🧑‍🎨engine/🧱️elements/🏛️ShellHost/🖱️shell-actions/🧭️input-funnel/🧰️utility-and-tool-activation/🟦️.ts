@@ -36,6 +36,8 @@ export async function handleSetActiveUtilityAction({ activeWindowIdRef, activeUt
   const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === utilitySession.pluginId);
   const program = pluginEntry?.handle;
   if (program) {
+    const windowInstances = sessionWindowInstances(utilitySession.app, utilityExtraInstances);
+    const refreshedBody = viewInputsChanged ? windowInstances.find((instance) => instance.id === utilityGuestWindowId)?.bodyKey : undefined;
     const viewState = windowViewContext(
       {
         ...utilitySession.viewState,
@@ -43,7 +45,7 @@ export async function handleSetActiveUtilityAction({ activeWindowIdRef, activeUt
         terminology: uiTerminologyRef.current,
         activeToolId: next ? undefined : activeToolIdRef.current ?? undefined,
         activeUtilityByWindowId: guestActiveUtilityByWindowIdV1(activeUtilityByWindowIdRef.current, utilitySpawnedId, spawnedIdsRef.current),
-        windowInstances: sessionWindowInstances(utilitySession.app, utilityExtraInstances).map((instance) => ({ id: instance.id, windowKindId: instance.windowKindId })),
+        windowInstances: windowInstances.map((instance) => ({ id: instance.id, windowKindId: instance.windowKindId })),
       },
       utilityGuestWindowId,
     );
@@ -54,7 +56,7 @@ export async function handleSetActiveUtilityAction({ activeWindowIdRef, activeUt
       applyHistoryPatch(response.historyPatch, false, { pluginId: utilitySession.pluginId, instanceId: utilitySession.instanceId });
       applyLeftoverInteractionView(response.output, windowId);
       if (isCurrentEffectOwner(primaryActionOwner)) {
-        await applyHostEffects(response.requestedEffects ?? [], { ...utilitySession, viewState }, resolveUiDirtyScope(response.uiScope), primaryActionOwner, viewInputsChanged);
+        await applyHostEffects(response.requestedEffects ?? [], { ...utilitySession, viewState }, resolveUiDirtyScope(response.uiScope), primaryActionOwner, refreshedBody);
       }
     } catch (error) {
       return refuse("dispatch-failed", String(error));

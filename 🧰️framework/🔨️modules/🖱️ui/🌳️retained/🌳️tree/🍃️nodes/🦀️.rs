@@ -14,7 +14,7 @@ pub use retained_document_tree::{UiDocumentPageRejection, UiDocumentTree, UiDocu
 #[path = "🧩️node-model/🦀️.rs"]
 mod node_model;
 pub use node_model::{
-    AcceptedLayout, EditState, LayoutBucket, Node, NodeFlags, NodeKey, NodeKeyRef, PaintBucket,
+    AcceptedLayout, EditState, EditTextLayout, EditTextStop, LayoutBucket, Node, NodeFlags, NodeKey, NodeKeyRef, PaintBucket,
     TextMeasureCache, WidgetSpec, WidgetState,
 };
 use node_model::MountedLayoutRecord;

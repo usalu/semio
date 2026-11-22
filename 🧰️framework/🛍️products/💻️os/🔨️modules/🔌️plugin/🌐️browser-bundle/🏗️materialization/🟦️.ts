@@ -39,9 +39,7 @@ export function transpilePluginComponent(artifact: string, outDir: string, compo
   rewritePreview2ShimImports(join(outDir, `${componentBase}.js`), ctx.preview2VendorDir);
 }
 
-/** 🧬️ The location-independent half of a component's transpile: jco's module files with the async result lifting and the versioned core asset URLs
- * rewritten, before any `wasm-opt` pass and before the preview2 shim imports are pointed at a vendor directory. A pure function of the component bytes,
- * the jco version, `componentBase` and this file, so it is cached by content. */
+/** 🧬️ Runs native transpilation and rewrites async results and core asset URLs before optimization and vendor import assembly. */
 export async function transpilePluginComponentModulesAsync(artifact: string, outDir: string, componentBase: string, ctx: PluginWebMaterializeContext): Promise<void> {
   const slim = join(dirname(outDir), `${componentBase}.nodebug.wasm`);
   try {

@@ -1,6 +1,6 @@
 //! 🎯 Ray queries against an editable elevation grid.
 
-use super::{projection, TerrainSessionCore, ELEVATION_GRID_TILE, TERRAIN_GRID_RESOLUTION};
+use super::{projection, TerrainGridTopology, TerrainSessionCore, ELEVATION_GRID_TILE};
 use semio_framework_pack_json::{from_json_str, to_json_string, JsonMemberPolicy};
 
 #[derive(semio_framework_value::FromValue)]
@@ -19,7 +19,7 @@ pub struct TerrainGridHit {
 }
 
 impl TerrainSessionCore {
-    /// 🌄 Returns the nearest forward intersection with one of the embedded grid's 2,048 rendered triangles.
+    /// 🌄 Returns the nearest forward intersection with the embedded grid's rendered triangles.
     pub fn pick_elevation_grid(&self, origin: [f64; 3], direction: [f64; 3]) -> Option<TerrainGridHit> {
         let grid = self.elevation_grid.as_ref()?;
         if !origin.into_iter().chain(direction).all(f64::is_finite) {
@@ -57,18 +57,31 @@ impl TerrainSessionCore {
         let vertex = |index: u32| {
             std::array::from_fn(|axis| f64::from(mesh.positions[index as usize * 3 + axis]))
         };
-        let distance = mesh.indices.as_chunks::<3>().0.iter()
-            .filter_map(|&[a, b, c]| triangle_hit(origin, direction, vertex(a), vertex(b), vertex(c)))
-            .min_by(f64::total_cmp)?;
+        let (distance, face) = mesh.indices.as_chunks::<3>().0.iter().filter_map(|&face| {
+            let [a, b, c] = face.map(vertex);
+            triangle_hit(origin, direction, a, b, c).map(|distance| (distance, face))
+        }).min_by(|(first, _), (second, _)| first.total_cmp(second))?;
         let position = std::array::from_fn(|axis| direction[axis].mul_add(distance, origin[axis]));
         let (lon, lat) = projection::local_meters_to_lonlat(position[0], position[1], self.origin_lon, self.origin_lat);
-        let cells = f64::from(TERRAIN_GRID_RESOLUTION - 1);
-        let sample_index = |fraction: f64| (fraction * cells).round().clamp(0.0, cells) as u32;
-        Some(TerrainGridHit {
-            position,
-            coordinates: [lon.clamp(west, east), lat.clamp(south, north)],
-            sample: [sample_index((lon - west) / (east - west)), sample_index((lat - south) / (north - south))],
-        })
+        let [width, height] = grid.dimensions()?;
+        let sample_index = |fraction: f64, extent| {
+            let cells = f64::from(extent - 1);
+            (fraction * cells).round().clamp(0.0, cells) as u32
+        };
+        let fractions = [(lon - west) / (east - west), (lat - south) / (north - south)];
+        let sample = if grid.missing_samples.is_none() {
+            [sample_index(fractions[0], width), sample_index(fractions[1], height)]
+        } else {
+            let topology = TerrainGridTopology::new([width, height], grid.missing_samples.as_deref());
+            let x = fractions[0] * f64::from(width - 1);
+            let y = fractions[1] * f64::from(height - 1);
+            let distance = |[column, row]: [u32; 2]| {
+                (x - f64::from(column)).powi(2) + (y - f64::from(row)).powi(2)
+            };
+            face.map(|vertex| topology.sample(vertex)).into_iter()
+                .min_by(|&a, &b| distance(a).total_cmp(&distance(b)).then_with(|| a.cmp(&b)))?
+        };
+        Some(TerrainGridHit { position, coordinates: [lon.clamp(west, east), lat.clamp(south, north)], sample })
     }
 
     /// 🌐 Decodes a browser ray and publishes the same geographic hit as native hosts.
@@ -98,7 +111,7 @@ fn triangle_hit(origin: [f64; 3], direction: [f64; 3], a: [f64; 3], b: [f64; 3],
     let u = dot(offset, perpendicular) / determinant;
     let transverse = cross(offset, ab);
     let v = dot(direction, transverse) / determinant;
-    let tolerance = 16.0 * f64::EPSILON;
+    let tolerance = 4.0 * f64::from(f32::EPSILON);
     if u < -tolerance || v < -tolerance || u + v > 1.0 + tolerance {
         return None;
     }

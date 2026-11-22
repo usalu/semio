@@ -8,7 +8,7 @@ use store::os_store::store_schema::ArtifactCommand;
 use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
 use semio_plugin_job::reserved_jobs::{CLIPBOARD_ACTION_IDS, FrameworkReservedCommit, FrameworkReservedCommitPermit, FrameworkReservedCommitStage, HISTORY_ACTION_IDS, PendingFrameworkReserved, encode_framework_reserved_job_input};
-use semio_framework::kernel::{ClipboardFragment, Effect, FRAMEWORK_RESERVED_JOB_KIND, InvocationResult, UiDirtyScope};
+use semio_framework::kernel::{Effect, FRAMEWORK_RESERVED_JOB_KIND, InvocationResult, UiDirtyScope};
 use crate::command_bundle::CommandCtx;
 use semio_framework_value::DslValue;
 use semio_ui_layout::layout::FRAMEWORK_HISTORY_BODY_KEY;
@@ -60,18 +60,6 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                     None => Ok(1),
                 }
             }
-            "copy" | "cut" => {
-                let interaction = self.interaction.interaction_selection_snapshot(&*self.stores);
-                Ok(interaction.selection.values().map(|selection| selection.ids.len()).sum::<usize>().max(1))
-            }
-            "paste" => {
-                let fragment_bytes = args
-                    .and_then(|value| value.get("fragment"))
-                    .and_then(|value| <ClipboardFragment as semio_framework_value::FromValue>::from_value(value.clone()).ok())
-                    .map(|fragment| fragment.pack_bytes.map_or(fragment.dsl_text.len(), |bytes| bytes.len()))
-                    .unwrap_or_default();
-                Ok(fragment_bytes.div_ceil(4_096).max(1))
-            }
             _ => Ok(1),
         }
     }
@@ -84,21 +72,21 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
     /// (ticket 26/09/02/PUZZLE-3D-END-TO-END battery #44-pre: `framework route 'interactionSelect'
     /// has no exact pending spawn slot`). `retire_pending_reserved_latest_wins` still runs first, so
     /// an interaction storm keeps its latest-wins retirement rather than filling the table.
-    pub(super) async fn dispatch_framework_reserved_action(&mut self, action: &str, args: Option<&DslValue>, meta: &ActionMeta, cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<InvocationResult>, semio_framework_job::OriginalTurnFailure> {
+    pub(super) async fn dispatch_framework_reserved_action(&mut self, action: &str, args: &mut Option<DslValue>, meta: &ActionMeta, cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<InvocationResult>, semio_framework_job::OriginalTurnFailure> {
         if let Some(fault) = X::reserved_action_refusal(&*self.time_travel, &*self.tool_runs, action) {
             return Err(fault.into());
         }
         let contract = self.tools.qualified_tool_proof(&*self.stores, action)?.contract();
-        let decoded_items = bounded_json_items(args, contract.max_decoded_items)?;
-        let wire_args = args.cloned();
-        let raw = semio_framework_pack_json::to_json_string(&(action, wire_args)).into_bytes();
-        let work_items = self.framework_reserved_work_items(action, args).await?;
         if CLIPBOARD_ACTION_IDS.contains(&action) {
             let mut finished=None;
-            if !self.as_dispatch().advance_original_reserved_action(action,args,decoded_items,meta,contract.max_raw_wire_bytes,&mut finished,cx).await?{return Ok(None)}
+            if !self.as_dispatch().advance_original_reserved_action(action,args,meta,contract,&mut finished,cx).await?{return Ok(None)}
             let operation=finished.ok_or_else(||plugin_sdk_fault("clipboard producer settled without its operation"))?;
             return Ok(Some(self.as_dispatch().reserved_started_result(action,meta,operation).await));
         }
+        let args = args.as_ref();
+        let decoded_items = bounded_json_items(args, contract.max_decoded_items)?;
+        let raw = semio_framework_pack_json::to_json_string(&(action, args.cloned())).into_bytes();
+        let work_items = self.framework_reserved_work_items(action, args).await?;
         let Some(permit)=self.as_dispatch().admit_framework_reserved_spawn(action,&raw,decoded_items,meta,cx).await?else{return Ok(None)};
         let mut job = permit.operation.operation.0;
         self.pending.retire_pending_reserved_latest_wins(action, job);

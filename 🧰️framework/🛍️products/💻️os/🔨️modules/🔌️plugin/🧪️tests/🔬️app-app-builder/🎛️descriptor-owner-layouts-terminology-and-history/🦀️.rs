@@ -4,7 +4,7 @@
     #[semio_framework_async_macros::async_test]
     async fn shared_framework_action_descriptor_owner_laws_execute_production_join() {
         let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../../🔨️modules/🧵️job/🧪️tests/🧫️fixtures/⚖️shared-framework-action-routes-law.json"))).expect("plain neutral descriptor laws");
-        let base = App::builder(canonical_test_app_id("shared-actions").await, LocalizedLabel::data("Shared actions")).await.document(["semio", "shared-actions"]).mode("edit", LocalizedLabel::data("Edit"), "pencil").await.window_kind("main", LocalizedLabel::data("Main"), "shared.main", SurfaceKind::Canvas2d, IconName::AppWindow).await.default_layout(create_default_layout(&["main".into()], "row", None, None)).await.build_definition();
+        let base = App::builder(canonical_test_app_id("shared-actions").await, LocalizedLabel::data("Shared actions")).await.document(["semio", "shared-actions"]).mode("edit", LocalizedLabel::data("Edit"), "pencil").await.window_kind("main", LocalizedLabel::data("Main"), "shared.main", SurfaceKind::Canvas2d, IconName::AppWindow).await.default_layout(create_default_layout(&["main".into()], Axis::Horizontal, None, None)).await.build_definition();
         let laws = fixture["descriptorLaws"].as_array().expect("descriptor laws");
         for law in laws {
             let mut definition = base.clone();
@@ -77,7 +77,7 @@ pub async fn canonical_test_app_id(slug: &str) -> String {
             .await
             .window_kind("main", LocalizedLabel::data("Main"), "bad.main", SurfaceKind::Canvas2d, IconName::AppWindow)
             .await
-            .default_layout(create_default_layout(&["missing".into()], "row", None, None))
+            .default_layout(create_default_layout(&["missing".into()], Axis::Horizontal, None, None))
             .await;
         let result = std::panic::catch_unwind(move || __chain.build_definition());
         assert!(result.is_err());
@@ -97,7 +97,7 @@ pub async fn canonical_test_app_id(slug: &str) -> String {
             .await
             .panel_tab("framework.panel.artifact", LocalizedLabel::data("Artifact"), PanelGroup::Workbench, "good.document")
             .await
-            .default_layout(create_default_layout(&["main".into()], "row", None, None))
+            .default_layout(create_default_layout(&["main".into()], Axis::Horizontal, None, None))
             .await
             .build_definition();
         assert_eq!(definition.window_kinds.len(), 1);
@@ -120,7 +120,7 @@ pub async fn canonical_test_app_id(slug: &str) -> String {
             .await
             .window_kind("main", LocalizedLabel::data("Main"), "icon.main", SurfaceKind::Canvas2d, IconName::AppWindow)
             .await
-            .default_layout(create_default_layout(&["main".into()], "row", None, None))
+            .default_layout(create_default_layout(&["main".into()], Axis::Horizontal, None, None))
             .await
             .build_definition();
         assert_eq!(definition.modes.first().icon_id.as_str(), "pencil");
@@ -137,7 +137,7 @@ pub async fn canonical_test_app_id(slug: &str) -> String {
             .await
             .window_kind("main", LocalizedLabel::data("Main"), "bad.main", SurfaceKind::Canvas2d, IconName::AppWindow)
             .await
-            .default_layout(create_default_layout(&["main".into()], "row", None, None))
+            .default_layout(create_default_layout(&["main".into()], Axis::Horizontal, None, None))
             .await
             .terminology_document("reuse", [LocalizedLabel::data("Designing with Existing Stock"), LocalizedLabel::native("Designing with Existing Stock", "Entwerfen mit Bestand"), LocalizedLabel::data("Bad")])
             .await;
@@ -156,7 +156,7 @@ pub async fn canonical_test_app_id(slug: &str) -> String {
             .await
             .window_kind("main", LocalizedLabel::data("Main"), "good.main", SurfaceKind::Canvas2d, IconName::AppWindow)
             .await
-            .default_layout(create_default_layout(&["main".into()], "row", None, None))
+            .default_layout(create_default_layout(&["main".into()], Axis::Horizontal, None, None))
             .await
             .terminology("reuse")
             .await

@@ -284,7 +284,7 @@ fn bounded_graph_selection(dag: &flow::dag::DagHost, ports: Option<&FlowPortAddr
         return Err(semio_ui_action::BoundedActionFault::NodeCredits);
     }
     let nodes = dag.graph.selected_node_id_refs();
-    let edge_id_refs = || selected.edge_ids.iter().filter_map(move |id| dag.graph.edge_id_map.get(id).map(String::as_str));
+    let edges = selected.edge_ids.iter().filter_map(|id| dag.graph.edge_id_map.get(id).map(String::as_str));
     let handles = selected.handle_ids.iter().filter_map(|id| dag.graph.channel_view(*id));
     let mut bytes = 0usize;
     let mut credit = |len: usize| {
@@ -293,7 +293,12 @@ fn bounded_graph_selection(dag: &flow::dag::DagHost, ports: Option<&FlowPortAddr
         if bytes > semio_ui_action::ACTION_ITEM_BYTE_CAPACITY { return Err(semio_ui_action::BoundedActionFault::ByteCredits); }
         Ok(())
     };
-    for id in dag.graph.selected_node_id_refs().chain(edge_id_refs()) { credit(id.len())?; }
+    for id in dag.graph.selected_node_id_refs() { credit(id.len())?; }
+    let mut edge_ids = Vec::new();
+    for id in edges {
+        credit(id.len())?;
+        edge_ids.push(id.to_owned());
+    }
     let mut handle_ids = Vec::new();
     for channel in handles {
         let port = ports.and_then(|ports| ports.semantic(channel.widget_id, channel.port, channel.direction)).unwrap_or(channel.port);
@@ -301,7 +306,6 @@ fn bounded_graph_selection(dag: &flow::dag::DagHost, ports: Option<&FlowPortAddr
         handle_ids.push(format!("{}@{port}", channel.widget_id));
     }
     handle_ids.sort_unstable();
-    let mut edge_ids: Vec<_> = edge_id_refs().map(str::to_owned).collect();
     edge_ids.sort_unstable();
     Ok(DagSelectionDomains { nodes: nodes.map(str::to_owned).collect(), edges: edge_ids, handles: handle_ids })
 }

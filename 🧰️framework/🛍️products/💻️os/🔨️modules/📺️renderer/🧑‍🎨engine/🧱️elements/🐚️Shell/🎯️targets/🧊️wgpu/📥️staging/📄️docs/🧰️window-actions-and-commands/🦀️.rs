@@ -51,7 +51,7 @@ pub fn reserved_shell_chords_v1(shell_table: &[(String, String)], overrides: &[(
 
 //#endregion ⌨️WindowScope
 /// ⌨️ Whether a key event matches a keybinding chord such as `"mod+shift+z"`, `"ctrl+k"`, or `"escape"`.
-/// `"mod"` is the platform accelerator (meta OR ctrl). Declared modifiers must be present and no
+/// `"mod"` is the platform accelerator: meta on Apple hosts, ctrl elsewhere ([`semio_renderer_wgpu_host_base::host_platform_uses_meta`]), exactly React's `parseOwnedHotkeyChords`. Declared modifiers must be present and no
 /// undeclared accelerator/shift/alt may be held, so `mod+z` never fires for `mod+shift+z`.
 pub fn key_event_matches_chord(action: &semio_ui_wgpu_input::KeyAction, modifiers: &PointerModifiers, chord: &str) -> bool {
     let mut want_mod = false;
@@ -77,11 +77,9 @@ pub fn key_event_matches_chord(action: &semio_ui_wgpu_input::KeyAction, modifier
     if modifiers.shift != want_shift || modifiers.alt != want_alt {
         return false;
     }
-    if want_mod {
-        if want_ctrl || want_meta || modifiers.ctrl == modifiers.meta {
-            return false;
-        }
-    } else if modifiers.ctrl != want_ctrl || modifiers.meta != want_meta {
+    let apple = semio_renderer_wgpu_host_base::host_platform_uses_meta();
+    let (want_ctrl, want_meta) = (want_ctrl || (want_mod && !apple), want_meta || (want_mod && apple));
+    if modifiers.ctrl != want_ctrl || modifiers.meta != want_meta {
         return false;
     }
     match action {
@@ -217,7 +215,7 @@ impl DocumentState {
             let group = command_category_label(&definition.category);
             let is_os = matches!(address.owner, semio_framework::manifest::CommandOwnerAddress::Os);
             let platform = command_host_platform();
-            let chords: Vec<String> = definition.keybindings.iter().filter(|binding| binding.platform.is_none_or(|declared| declared == platform)).map(|binding| format_keybinding_shortcut(&binding.chord)).collect();
+            let chords: Vec<String> = semio_renderer_wgpu_shell_chrome_state::command_active_chords(&definition, platform, &chrome.chrome_build.preferences.keybinding_overrides).iter().map(|chord| format_keybinding_shortcut(chord)).collect();
             let description = (!chords.is_empty()).then(|| chords.join(","));
             let label = definition.label.resolve(prefs.active_terminology(), prefs.active_locale()).to_string();
             if definition.args.is_empty() {
@@ -311,6 +309,7 @@ impl DocumentState {
         leaves.push(FRAMEWORK_SYNC_PANEL_TAB_ID.to_string());
         leaves.push(FRAMEWORK_TASK_MANAGER_PANEL_ID.to_string());
         leaves.push(FRAMEWORK_CHAT_PANEL_ID.to_string());
+        leaves.push(ROUTE_NOT_FOUND_PANEL_ID.to_string());
         leaves.push(semio_renderer_wgpu_hub_workspace::hub_connection::FRAMEWORK_HUB_PANEL_ID.to_string());
         leaves.extend(self.tool_panel_tabs(prefs).into_iter().map(|tab| tab.id));
         leaves

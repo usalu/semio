@@ -59,6 +59,8 @@
   "cases": [
     {"name":"same-length dependency change","changed":"direct","code":"E0432","initialExit":101,"retryExit":0,"graphStable":true,"attempts":2,"exit":0},
     {"name":"stale transitive metadata","changed":"transitive","code":"E0599","initialExit":101,"retryExit":101,"graphStable":true,"attempts":2,"exit":101},
+    {"name":"a missing trait member retries with a stale dependency checksum","changed":"direct","code":"E0407","initialExit":101,"retryExit":0,"graphStable":true,"attempts":2,"exit":0},
+    {"name":"a missing trait member with unchanged dependency stays failed","changed":null,"code":"E0407","initialExit":101,"retryExit":0,"graphStable":true,"attempts":1,"exit":101},
     {"name":"unchanged input","changed":null,"code":"E0432","initialExit":101,"retryExit":0,"graphStable":true,"attempts":1,"exit":101},
     {"name":"unrelated output","changed":"unrelated","code":"E0432","initialExit":101,"retryExit":0,"graphStable":true,"attempts":1,"exit":101},
     {"name":"other variant of the same package","changed":"host","code":"E0432","initialExit":101,"retryExit":0,"graphStable":true,"attempts":1,"exit":101},

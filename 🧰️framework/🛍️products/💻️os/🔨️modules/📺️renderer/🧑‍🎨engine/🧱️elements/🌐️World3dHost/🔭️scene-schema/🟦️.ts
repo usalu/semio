@@ -181,6 +181,7 @@ export type WorldSuggestionMenuRecord = {
 export type WorldInteractionRecord = {
   readonly activeUtility?: string;
   readonly terrainBrush?: unknown;
+  readonly terrainMovePosition?: unknown;
   readonly brushCandidateIndex?: number;
   readonly hoveredVortexFullId?: string;
   readonly voxelDims?: readonly [number, number, number];

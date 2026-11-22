@@ -29,18 +29,12 @@ import {
   type UiPatch,
   type WindowEngagement,
   type WindowEngagementControl,
-  type WindowLayout,
-  type WindowLayoutAxisNode,
-  type WindowLayoutStackNode,
-  type WindowLayoutWindowNode,
-  type WindowMeasure,
-  type WindowStackCorner
+  type WindowMeasure
 } from "@semio-tech/framework";
 import { type CommandRejectionCodeV1, type CommandRejectionV1 } from "@semio-tech/framework/wire-contracts";
 import { decodeWorldProjectionTemplateId } from "@semio-tech/framework/infinite/world/r3f";
 import {
   type Anchor,
-  createEvenWindowLayout,
   type EngagementControl,
   type EngagementSpec,
   Icon,
@@ -51,9 +45,9 @@ import {
   staticTreePanelDefinition,
   UI_TERMINOLOGY_NATIVE,
   uiDataLabel,
-  type UiTranslationKey,
-  type WindowLayoutNode
+  type UiTranslationKey
 } from "@semio-tech/ui-react";
+import { type WindowLayout, type WindowLayoutNode, type WindowLayoutPanel, type WindowLayoutWindowNode, evenWindowLayout, mapLayoutStacks, windowIdOf } from "@semio-tech/ui-layout";
 // #endregion 🔌️Adapters
 import * as React from "../../⚛️react-port/🟦️.ts";
 import { type ReactNode } from "../../⚛️react-port/🟦️.ts";
@@ -72,7 +66,6 @@ import {
   retainedSectionValueV1,
   type PluginWasmHandle
 } from "../../🔌️PluginRuntime/🟦️.tsx";
-import { wireLabel } from "../../🗣️Interpreter/🌉️scene-host-contract/🟦️.ts";
 import {
   currentShellLocaleV1,
   type FrozenLabel,
@@ -98,7 +91,7 @@ function isStudioMode(catalog: PluginCatalog, pluginFilter?: string): boolean {
   return pluginFilter !== undefined && resolvePluginHostConfig(catalog, pluginFilter) !== undefined;
 }
 
-export type ShellRoute = { readonly kind: "landing" } | { readonly kind: "space"; readonly spaceId: string; readonly instanceId?: string } | { readonly kind: "notFound"; readonly path: string };
+export type ShellRoute = { readonly kind: "landing" } | { readonly kind: "space"; readonly spaceId: string; readonly instanceId?: string; readonly studio?: true } | { readonly kind: "notFound"; readonly path: string };
 
 /** 🧭️ Classifies shell history paths into landing, studio space, or unknown routes. */
 export function parseShellRoute(path: string): ShellRoute {
@@ -106,6 +99,8 @@ export function parseShellRoute(path: string): ShellRoute {
   if (normalized === "/") return { kind: "landing" };
   const match = /^\/spaces\/([^/]+)(?:\/instances\/([^/]+))?$/.exec(normalized);
   if (match) return { kind: "space", spaceId: match[1]!, instanceId: match[2] };
+  const studio = /^\/spaces\/([^/]+)\/studio(?:\/instances\/([^/]+))?$/.exec(normalized);
+  if (studio) return { kind: "space", spaceId: studio[1]!, instanceId: studio[2], studio: true };
   return { kind: "notFound", path: normalized };
 }
 
@@ -177,49 +172,15 @@ export function partitionFrameworkHistoryPanelTab<Tab extends { readonly kind: P
   return { history: tabs.find((tab) => panelTabKindId(tab.kind) === FRAMEWORK_PANEL_TAB_HISTORY_ID), rest: tabs.filter((tab) => panelTabKindId(tab.kind) !== FRAMEWORK_PANEL_TAB_HISTORY_ID) };
 }
 
-/** 🪟️ One leaf in a framework layout tree, with optional instance/template binding for multi-pane world views. */
-type FrameworkLayoutWindowSeed = {
-  readonly windowId: string;
-  readonly windowKindId: string;
-  readonly title?: string;
-  readonly templateId?: string;
-  readonly size: number;
-  readonly corner?: WindowStackCorner;
-};
-
-/** 🪟️ Walks a framework layout and collects every window leaf, preferring `instanceId` as the live pane id. */
-function collectFrameworkLayoutWindowSeeds(node: WindowLayoutAxisNode | WindowLayoutStackNode | WindowLayoutWindowNode, parentSize = 100): FrameworkLayoutWindowSeed[] {
-  if (node.kind === "window") {
-    return [
-      {
-        windowId: node.instanceId ?? node.windowKindId,
-        windowKindId: node.windowKindId,
-        title: node.title,
-        templateId: node.templateId,
-        size: parentSize,
-        corner: node.corner,
-      },
-    ];
-  }
-  if (node.kind === "stack") {
-    const size = node.size ?? parentSize;
-    return node.children.map((child) => ({
-      windowId: child.instanceId ?? child.windowKindId,
-      windowKindId: child.windowKindId,
-      title: child.title,
-      templateId: child.templateId,
-      size,
-      corner: child.corner,
-    }));
-  }
-  const childSizes = node.children.map((child) => ("size" in child ? child.size : undefined));
-  const explicitTotal = childSizes.reduce<number>((sum, size) => sum + (size ?? 0), 0);
-  const unsetCount = childSizes.filter((size) => size === undefined).length;
-  const defaultEach = unsetCount > 0 ? Math.max(0, 100 - explicitTotal) / unsetCount : 0;
-  return node.children.flatMap((child, index) => {
-    const fraction = childSizes[index] ?? defaultEach;
-    return collectFrameworkLayoutWindowSeeds(child, parentSize * (fraction / 100));
+/** 🪟️ Every window leaf of a layout in document order. */
+export function layoutWindows(layout: WindowLayoutNode): WindowLayoutWindowNode[] {
+  if (layout.kind === "window") return [layout];
+  const windows: WindowLayoutWindowNode[] = [];
+  mapLayoutStacks(layout, (stack) => {
+    windows.push(...stack.children);
+    return stack;
   });
+  return windows;
 }
 
 /** 🗣️ For a single, non-instanced window (`instanceId` unset — the common case, one window per kind),
@@ -244,34 +205,23 @@ function resolveFrameworkWindowTitle(
   return kind ? resolveManifestLabel(kind.label, terminology, locale) : (bakedTitle ?? windowKindId);
 }
 
-function convertFrameworkLayoutNodeToModeLayout(
-  node: WindowLayoutAxisNode | WindowLayoutStackNode,
+function titleFrameworkLayout(
+  node: WindowLayoutPanel,
   appLabelsOverlay: PluginAppLabelsOverlay,
   windowKinds: readonly { readonly id: string; readonly label: unknown }[],
   terminology: string,
   locale: string,
-): Exclude<WindowLayoutNode, { kind: "window" }> {
+): WindowLayoutPanel {
   if (node.kind === "stack") {
     return {
-      kind: "stack",
-      size: node.size,
+      ...node,
       children: node.children.map((child) => {
-        const id = child.instanceId ?? child.windowKindId;
         const title = resolveFrameworkWindowTitle(child.windowKindId, child.instanceId, child.title, windowKinds, terminology, locale);
-        return {
-          kind: "window" as const,
-          id,
-          title: wireLabel(resolveAppLabel(appLabelsOverlay, "windowKind", id, title)),
-          corner: child.corner,
-        };
+        return { ...child, title: resolveAppLabel(appLabelsOverlay, "windowKind", windowIdOf(child), title) };
       }),
     };
   }
-  return {
-    kind: node.kind,
-    size: node.size,
-    children: node.children.map((child) => convertFrameworkLayoutNodeToModeLayout(child, appLabelsOverlay, windowKinds, terminology, locale)),
-  };
+  return { ...node, children: node.children.map((child) => titleFrameworkLayout(child, appLabelsOverlay, windowKinds, terminology, locale)) };
 }
 
 /** 🏷️ Localizes singleton window titles while retaining authored instance names and the live layout. */
@@ -284,16 +234,17 @@ export function retitleWindowLayoutNode(
   titleOverrides: Readonly<Record<string, string>>,
 ): WindowLayoutNode {
   if (node.kind === "window") {
-    const extra = extraInstances.find((entry) => entry.id === node.id);
-    const kind = windowKinds.find((entry) => entry.id === node.id);
-    const override=titleOverrides[node.id];
-    const title = override !== undefined ? wireLabel(override) : extra ? wireLabel(extra.title) : kind ? wireLabel(resolveManifestLabel(kind.label, terminology, locale)) : (node.title ?? uiDataLabel(node.id));
+    const id = windowIdOf(node);
+    const extra = extraInstances.find((entry) => entry.id === id);
+    const kind = windowKinds.find((entry) => entry.id === id);
+    const override = titleOverrides[id];
+    const title = override !== undefined ? override : extra ? extra.title : kind ? resolveManifestLabel(kind.label, terminology, locale) : (node.title ?? id);
     return { ...node, title };
   }
   return {
     ...node,
     children: node.children.map((child) => retitleWindowLayoutNode(child, windowKinds, extraInstances, terminology, locale, titleOverrides)),
-  } as WindowLayoutNode;
+  } as WindowLayoutPanel;
 }
 
 /** 🪟️ The window instances a framework layout DECLARES beyond one per kind — every leaf whose instance id differs
@@ -303,9 +254,9 @@ export function retitleWindowLayoutNode(
 export function frameworkLayoutDeclaredInstances(layout: WindowLayout | undefined, windowKinds: readonly { readonly id: string }[]): readonly { readonly id: string; readonly windowKindId: string }[] {
   if (!layout?.root) return [];
   const kindIds = new Set(windowKinds.map((kind) => kind.id));
-  return collectFrameworkLayoutWindowSeeds(layout.root)
-    .filter((seed) => seed.windowId !== seed.windowKindId && kindIds.has(seed.windowKindId))
-    .map((seed) => ({ id: seed.windowId, windowKindId: seed.windowKindId }));
+  return layoutWindows(layout.root)
+    .filter((window) => window.instanceId !== undefined && window.instanceId !== window.windowKindId && kindIds.has(window.windowKindId))
+    .map((window) => ({ id: windowIdOf(window), windowKindId: window.windowKindId }));
 }
 
 /** 🪟️ Resolves a framework layout into the live mode tree, extra instances, and pending projection templates without inferring window focus (no side effects). */
@@ -323,29 +274,30 @@ export function resolveFrameworkLayoutSeed(
   const windowIds = windowKinds.map((kind) => kind.id);
   if (!layout?.root) {
     return {
-      modeLayout: createEvenWindowLayout(windowIds.length ? windowIds : ["main"]),
+      modeLayout: evenWindowLayout(windowIds.length ? windowIds : ["main"]),
       extraInstances: [],
       pendingProjections: [],
     };
   }
-  const seeds = collectFrameworkLayoutWindowSeeds(layout.root);
+  const windows = layoutWindows(layout.root);
   const kindById = new Map(windowKinds.map((kind) => [kind.id, kind] as const));
   const extraInstances: ExtraWindowInstance[] = [];
   const pendingProjections: { readonly windowId: string; readonly templateId: string }[] = [];
-  for (const seed of seeds) {
-    const kind = kindById.get(seed.windowKindId);
+  for (const window of windows) {
+    const kind = kindById.get(window.windowKindId);
     if (!kind) continue;
-    if (seed.windowId !== seed.windowKindId) {
+    const windowId = windowIdOf(window);
+    if (windowId !== window.windowKindId) {
       extraInstances.push({
-        id: seed.windowId,
-        windowKindId: seed.windowKindId,
-        title: resolveAppLabel(appLabelsOverlay, "windowKind", seed.windowId, seed.title ?? resolveManifestLabel(kind.label, terminology, locale)),
+        id: windowId,
+        windowKindId: window.windowKindId,
+        title: resolveAppLabel(appLabelsOverlay, "windowKind", windowId, window.title ?? resolveManifestLabel(kind.label, terminology, locale)),
       });
     }
-    if (seed.templateId) pendingProjections.push({ windowId: seed.windowId, templateId: seed.templateId });
+    if (window.templateId) pendingProjections.push({ windowId, templateId: window.templateId });
   }
   return {
-    modeLayout: convertFrameworkLayoutNodeToModeLayout(layout.root, appLabelsOverlay, windowKinds, terminology, locale),
+    modeLayout: titleFrameworkLayout(layout.root, appLabelsOverlay, windowKinds, terminology, locale),
     extraInstances,
     pendingProjections,
   };
@@ -370,46 +322,11 @@ export function applyFrameworkLayoutSeed(
   return { modeLayout: seed.modeLayout, extraInstances: seed.extraInstances };
 }
 
-function modeLayoutNodeToFramework(node: WindowLayoutNode, kindByInstanceId: ReadonlyMap<string, string>): WindowLayoutAxisNode | WindowLayoutStackNode | WindowLayoutWindowNode {
-  if (node.kind === "window") {
-    const windowKindId = kindByInstanceId.get(node.id) ?? node.id;
-    const instanceId = kindByInstanceId.has(node.id) ? node.id : undefined;
-    return {
-      kind: "window",
-      windowKindId,
-      ...(node.title ? { title: node.title } : {}),
-      ...(instanceId ? { instanceId } : {}),
-    };
-  }
-  if (node.kind === "stack") {
-    return {
-      kind: "stack",
-      ...(node.size !== undefined ? { size: node.size } : {}),
-      children: node.children.map((child) => {
-        const windowKindId = kindByInstanceId.get(child.id) ?? child.id;
-        const instanceId = kindByInstanceId.has(child.id) ? child.id : undefined;
-        return {
-          kind: "window" as const,
-          windowKindId,
-          ...(child.title ? { title: child.title } : {}),
-          ...(instanceId ? { instanceId } : {}),
-        };
-      }),
-    };
-  }
-  return {
-    kind: node.kind,
-    ...(node.size !== undefined ? { size: node.size } : {}),
-    children: node.children.map((child) => modeLayoutNodeToFramework(child, kindByInstanceId) as WindowLayoutStackNode | WindowLayoutAxisNode),
-  };
-}
-
-export function captureCurrentFrameworkLayout(shellLayout: WindowLayoutNode | null, extraWindowInstances: readonly ExtraWindowInstance[], fallback?: WindowLayout): WindowLayout | undefined {
+/** 📸️ The live mode layout as the framework layout a named layout or tutorial snapshot persists. */
+export function captureCurrentFrameworkLayout(shellLayout: WindowLayoutNode | null, fallback?: WindowLayout): WindowLayout | undefined {
   if (!shellLayout) return fallback;
-  const kindByInstanceId = new Map(extraWindowInstances.map((entry) => [entry.id, entry.windowKindId] as const));
-  const root = modeLayoutNodeToFramework(shellLayout, kindByInstanceId);
-  if (root.kind === "window") return { root: { kind: "stack", children: [root] } };
-  return { root };
+  if (shellLayout.kind === "window") return { root: { kind: "stack", children: [shellLayout] } };
+  return { root: shellLayout };
 }
 
 //#region WindowLayoutChangeClassify
@@ -419,21 +336,22 @@ export function captureCurrentFrameworkLayout(shellLayout: WindowLayoutNode | nu
  * drag-settle pattern already in this file. */
 export const LAYOUT_CHANGE_SETTLE_MS = 350;
 
-/** 🪟️ Recursive skeleton of a {@link WindowLayoutNode} — kind/id/nesting only, stripping `size` (resize) and
- * a stack's `activeId` (mere focus echo) — so two trees compare equal here iff neither differs. */
-type WindowLayoutSkeletonNode = { readonly kind: string; readonly id?: string; readonly corner?: string; readonly children?: readonly WindowLayoutSkeletonNode[] };
+/** 🪟️ Recursive skeleton of a {@link WindowLayoutNode} — kind/axis/id/nesting only, stripping `size` (resize) and
+ * a stack's `activeWindowId` (mere focus echo) — so two trees compare equal here iff neither differs. */
+type WindowLayoutSkeletonNode = { readonly kind: string; readonly axis?: string; readonly id?: string; readonly corner?: string; readonly children?: readonly WindowLayoutSkeletonNode[] };
 function windowLayoutSkeleton(node: WindowLayoutNode): WindowLayoutSkeletonNode {
-  if (node.kind === "window") return { kind: node.kind, id: node.id, corner: node.corner };
-  return { kind: node.kind, children: node.children.map((child) => windowLayoutSkeleton(child as WindowLayoutNode)) };
+  if (node.kind === "window") return { kind: node.kind, id: windowIdOf(node), corner: node.corner };
+  if (node.kind === "stack") return { kind: node.kind, children: node.children.map(windowLayoutSkeleton) };
+  return { kind: node.kind, axis: node.axis, children: node.children.map(windowLayoutSkeleton) };
 }
 
-/** 🪟️ Like {@link windowLayoutSkeleton} but keeps each node's `size` (still ignores a stack's `activeId`) —
+/** 🪟️ Like {@link windowLayoutSkeleton} but keeps each node's `size` (still ignores a stack's `activeWindowId`) —
  * comparing two of these (after their plain skeletons already matched) is how {@link classifyWindowLayoutChange}
  * tells a pure resize apart from no change at all. */
 type WindowLayoutSizedSkeletonNode = { readonly kind: string; readonly id?: string; readonly size?: number; readonly children?: readonly WindowLayoutSizedSkeletonNode[] };
 function windowLayoutSizedSkeleton(node: WindowLayoutNode): WindowLayoutSizedSkeletonNode {
-  if (node.kind === "window") return { kind: node.kind, id: node.id, size: node.size };
-  return { kind: node.kind, size: node.size, children: node.children.map((child) => windowLayoutSizedSkeleton(child as WindowLayoutNode)) };
+  if (node.kind === "window") return { kind: node.kind, id: windowIdOf(node) };
+  return { kind: node.kind, size: node.size, children: node.children.map(windowLayoutSizedSkeleton) };
 }
 
 /** 🪟️ Classifies a `Mode.onLayoutChange` delta by comparing the previous and next layout tree — `"rearrange"`

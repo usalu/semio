@@ -11,6 +11,7 @@ use semio_plugin_decl_app::ArtifactApp;
 pub use semio_plugin_document_media::OriginalDocumentArchiveAdmission;
 use semio_framework::kernel::{Effect, MessageEndpoint};
 use semio_framework::{Fault, FaultFrom};
+use semio_framework_artifact_reference::{MostGeneralDialect, most_general_dialect};
 use semio_framework_value::{FromValue, ToValue};
 use semio_plugin_reactor_lifecycle::life_instance_registry::{PLUGIN_RUNTIME_INSTANCE_SLOTS, PluginRuntime, RuntimeDocumentBackboneBindingV1};
 use semio_plugin_plugin_program::{Plugin, PluginProgram, encode_wire_serialized};
@@ -74,18 +75,22 @@ fn plugin_artifact_codec<PA: PluginApp>(runtime: &PluginRuntime<PA>, artifact_sc
 pub fn artifact_codec_candidates<'a, PA: PluginApp>(program: &'a Plugin<PA>, artifact_schema: &'a str) -> impl Iterator<Item = &'a semio_framework::AppDefinition> + 'a {
     program.manifest.apps.iter().filter(move |definition| program.app_document_schema(&definition.id) == Some(artifact_schema) || definition.dialect.artifact_kind == artifact_schema)
 }
-/// 🎯️ The ONE app whose codec answers `artifact_schema`: the owning editor — only an editor's snapshot is the
-/// kind's creation authority — else the owning viewer. Two owners of the same role are refused rather than
-/// resolved by order, and no owner is refused; all of it decided on the declarations.
+/// 🎯️ The app whose codec answers the schema or artifact kind. Resolve the unique most general
+/// declaration of each role, then prefer the editor as the kind's creation authority.
 #[doc(hidden)]
 pub fn artifact_codec_owner<'a, PA: PluginApp>(program: &'a Plugin<PA>, artifact_schema: &'a str) -> Result<&'a semio_framework::AppDefinition, Fault> {
-    let (mut editor, mut viewer) = (None, None);
-    for definition in artifact_codec_candidates(program, artifact_schema) {
-        let slot = if definition.role == semio_framework::AppRole::Editor { &mut editor } else { &mut viewer };
-        if slot.replace(definition).is_some() {
-            return Err(plugin_internal_fault("artifact codec schema resolves more than one app of the same role"));
-        }
-    }
+    let (editors, viewers): (Vec<_>, Vec<_>) = artifact_codec_candidates(program, artifact_schema)
+        .partition(|definition| definition.role == semio_framework::AppRole::Editor);
+    let resolve = |candidates| match most_general_dialect(candidates, |definition: &&semio_framework::AppDefinition| {
+        let dialect = &definition.dialect;
+        (dialect.artifact_kind.as_str(), dialect.standard.as_str(), dialect.subset.as_str())
+    }) {
+        MostGeneralDialect::One(definition) => Ok(Some(definition)),
+        MostGeneralDialect::Empty => Ok(None),
+        MostGeneralDialect::Ambiguous => Err(plugin_internal_fault("artifact codec schema resolves more than one app of the same role")),
+    };
+    let editor = resolve(editors)?;
+    let viewer = resolve(viewers)?;
     editor.or(viewer).ok_or_else(|| plugin_internal_fault("artifact codec schema is owned by no app of this bundle"))
 }
 /// 🧬️ `codec.pack-schema-hash` — the kind's own 32-byte snapshot-record fingerprint.

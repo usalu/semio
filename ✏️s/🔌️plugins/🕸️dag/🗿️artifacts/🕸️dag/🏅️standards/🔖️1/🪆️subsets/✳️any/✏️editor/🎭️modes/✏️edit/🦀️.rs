@@ -3,7 +3,7 @@
 
 use crate::editor::dag::modes::edit::tools::reorganize;
 use crate::editor::dag::modes::edit::windows::{compiled, main};
-use semio_plugin::create_default_layout;
+use semio_plugin::{create_default_layout, Axis};
 use semio_ui_locale::LocalizedLabel;
 use semio_plugin::ModeDefinition;
 use semio_plugin::ToolRef;
@@ -20,7 +20,7 @@ pub fn definition() -> ModeDefinition {
 /// 🪟️ The app's default window layout — this mode is the app's `default_mode_id`, so its layout IS the
 /// app-level `default_layout`.
 pub fn layout() -> WindowLayout {
-    create_default_layout(&[main::DAG_PLAY_WINDOW_MAIN.into(), compiled::DAG_PLAY_WINDOW_COMPILED.into()], "row", Some(&[68.0, 32.0]), Some(&["DAG".into(), "DSL".into()]))
+    create_default_layout(&[main::DAG_PLAY_WINDOW_MAIN.into(), compiled::DAG_PLAY_WINDOW_COMPILED.into()], Axis::Horizontal, Some(&[0.68, 0.32]), Some(&["DAG".into(), "DSL".into()]))
 }
 //#endregion 🔖️Definition
 

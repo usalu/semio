@@ -1,0 +1,51 @@
+//! 🧩️ Store coordinator admissions bind original semantic producers to the component frontier.
+use super::*;
+use semio_framework_value::{RetirementDemand,ValueRefusalKind};
+use std::mem::ManuallyDrop;
+fn funded(grant:RetainedCloneGrant,demand:RetirementDemand)->bool { grant.maximum_items>0&&grant.maximum_copy_bytes>=demand.copy_bytes&&grant.maximum_capacity_bytes>=demand.capacity_bytes&&grant.maximum_release_bytes>=demand.release_bytes&&grant.maximum_depth>=demand.depth }
+fn header<T>()->RetirementDemand { RetirementDemand{copy_bytes:size_of::<T>(),depth:1,..Default::default()} }
+fn refusal(message:&'static str)->ValueError { ValueError::literal(ValueRefusalKind::InvariantViolated,message) }
+impl<'a, P, M, Log> StoreDerived<'a, P, M, Log>
+where
+    P: semio_os_spr::StoreState,
+    M: semio_os_spr::StoreMutationFor<P>,
+    Log: std::ops::Deref<Target = StoreLog<P, M>>,
+{
+    /// 🎟️ Quotes the installed original producer before any projection alias transfers.
+    pub fn derived_operation_birth_demand(&self,source:&ArtifactDerivedSnapshot<P>)->Result<RetirementDemand,ValueError> {
+        self.admit_derived_source(&source.registry,source.generation,source.revision).map_err(|_|refusal("derived operation requires this Store's current original source"))?;
+        self.owned_mutation_retirement_factory()?;
+        if self.owners.initial_snapshot_retirement_factory.is_none(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"derived operation requires its installed snapshot cleanup issuer"));}
+        self.owners.replay_preparation_factory.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"derived operation requires its installed semantic factory"))?;
+        let demand=RetirementDemand{copy_bytes:size_of::<ArtifactDerivedOperation<P,M>>()+SnapshotRead::<P>::capture_copy_byte_demand()+5*size_of::<Arc<dyn semio_framework_value::FactoryRetirement>>(),depth:1,..Default::default()};
+        Ok(demand)
+    }
+    /// 🌱️ Moves a genuine retained input and original Store read into its installed semantic producer.
+    pub fn begin_derived_operation(&self,slot:&mut Option<ArtifactDerivedOperation<P,M>>,source:&ArtifactDerivedSnapshot<P>,input:&mut Option<semio_framework_value::retained_clone::RetainedOwnedProjection<M>>,operation_index:u32,mode:ArtifactDerivedOperationMode,grant:RetainedCloneGrant)->Result<Option<RetainedCloneProgress>,ValueError> {
+        if slot.is_some(){return Err(refusal("derived operation slot retains its original producer"));}
+        let demand=self.derived_operation_birth_demand(source)?;if !funded(grant,demand){return Ok(None);}
+        if input.is_none(){return Err(refusal("derived operation requires a genuine original input projection"));}
+        let context=ArtifactReplayPreparationContext{mode:ArtifactReplayPreparationMode::Prefix,operation_index,generation:source.generation,base_revision:source.revision};
+        let alias=Arc::clone(&source.owner);let lease=match self.owners.snapshot_read_leases.try_issue(Arc::clone(&alias)){Ok(lease)=>lease,Err(alias)=>{drop(alias);return Ok(None);}};
+        let mut owner=ArtifactDerivedOperation{base:ManuallyDrop::new(Some(SnapshotRead::new(alias,lease))),producer:ManuallyDrop::new(Some(Arc::clone(self.owners.replay_preparation_factory.as_ref().unwrap()))),registry:Some(source.registry.clone()),context,failed_read:ManuallyDrop::new(None),failed_input:ManuallyDrop::new(input.take()),registry_close:ManuallyDrop::new(None),mode,policy:self.merge_policy(),task:ManuallyDrop::new(None),task_close:ManuallyDrop::new(None),prepared:ManuallyDrop::new(None),mutation:ManuallyDrop::new(None),retirement:ManuallyDrop::new(None),snapshots:ManuallyDrop::new(Some(Arc::clone(self.owners.initial_snapshot_retirement_factory.as_ref().unwrap()))),mutations:ManuallyDrop::new(Some(Arc::clone(self.owners.mutation_retirement_factory.as_ref().unwrap()))),factory_close:std::array::from_fn(|_|None),message:0,accepted:true,ready:false,finished:false,closing:false,last_work:0,progress:Default::default()};
+        let progress=RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()};owner.record(progress);*slot=Some(owner);Ok(Some(progress))
+    }
+    /// 📏️ Requires this Store's original issuer before exposing the next retained work frontier.
+    pub fn derived_operation_demands(&self,owner:&ArtifactDerivedOperation<P,M>,body:usize,maximum_work_units:u64)->Result<RetirementDemand,ValueError>{
+        if !owner.registry.as_ref().is_none_or(|registry|registry.ptr_eq(&self.owners.snapshot_read_leases)){return Err(refusal("foreign derived operation issuer"));}owner.demands(self.generation(),self.content_revision(),body,maximum_work_units)
+    }
+    /// 🧳️ Keeps a refused replay request's original read, projection and exact issuers for paid closure.
+    pub fn retain_refused_replay_request(&self,request:ArtifactReplayPreparationRequest<P,M>)->ArtifactDerivedOperation<P,M>{
+        ArtifactDerivedOperation{base:ManuallyDrop::new(None),producer:ManuallyDrop::new(None),registry:Some(self.owners.snapshot_read_leases.clone()),context:request.context,failed_read:ManuallyDrop::new(Some(request.base.into_erased())),failed_input:ManuallyDrop::new(Some(request.input)),registry_close:ManuallyDrop::new(None),mode:ArtifactDerivedOperationMode::HistoryPrefix,policy:self.merge_policy(),task:ManuallyDrop::new(None),task_close:ManuallyDrop::new(None),prepared:ManuallyDrop::new(None),mutation:ManuallyDrop::new(None),retirement:ManuallyDrop::new(None),snapshots:ManuallyDrop::new(Some(request.snapshots)),mutations:ManuallyDrop::new(Some(request.mutations)),factory_close:std::array::from_fn(|_|None),message:0,accepted:false,ready:false,finished:false,closing:true,last_work:0,progress:Default::default()}
+    }
+    /// ⏯️ Supplies the current frontier to the original retained operation; closing needs no source reads.
+    pub fn step_derived_operation(&self,owner:&mut ArtifactDerivedOperation<P,M>,body:usize,grant:RetainedCloneGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,deadline:&mut dyn FnMut()->bool)->Result<RetainedCloneStep,semio_framework_value::OriginalRetirementFailure>{
+        if !owner.registry.as_ref().is_none_or(|registry|registry.ptr_eq(&self.owners.snapshot_read_leases)){return Err(refusal("foreign derived operation issuer").into());}owner.step(self.generation(),self.content_revision(),body,grant,receiving,deadline)
+    }
+    /// 📤️ Transfers only a completely settled result from the same unchanged Store authority.
+    pub fn take_derived_operation(&self,owner:&mut ArtifactDerivedOperation<P,M>,grant:RetainedCloneGrant)->Result<Option<((Option<ArtifactDerivedSnapshot<P>>,Vec<protocol::MutationMessage>),RetainedCloneProgress)>,ValueError> {
+        if !owner.is_finished(){return Ok(None);}if !owner.registry.as_ref().is_some_and(|registry|registry.ptr_eq(&self.owners.snapshot_read_leases)){return Err(refusal("derived operation handoff requires its original Store issuer"));}if owner.context.generation!=self.generation()||owner.context.base_revision!=self.content_revision(){return Err(refusal("derived operation result moved from its original Store frontier"));}
+        let demand=header::<ArtifactReplayPrepared<P,M>>();if !funded(grant,demand){return Ok(None);}let mut prepared=owner.prepared.take().unwrap();owner.finished=false;owner.closing=true;let result=(prepared.next.take().map(|next|self.seal_derived_snapshot(next)),std::mem::take(&mut prepared.messages));let p=RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()};owner.record(p);Ok(Some((result,p)))
+    }
+}
+

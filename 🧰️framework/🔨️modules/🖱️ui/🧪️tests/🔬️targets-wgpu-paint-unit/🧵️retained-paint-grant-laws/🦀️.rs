@@ -116,7 +116,7 @@ fn retained_select_sync_writes_at_most_one_row_per_grant() {
     let mut complete = false;
     for _ in 0..64 {
         let before: Vec<(f32, f32, f32, f32)> = children.iter().filter_map(|child| tree.node(*child).map(|node| (node.layout.x, node.layout.y, node.layout.width, node.layout.height))).collect();
-        let step = sync_interactive_state_node_step(&mut tree, root, &theme, &mut cursor);
+        let step = sync_interactive_state_node_step(&mut tree, root, &theme, None, &mut cursor);
         let changed = children.iter().zip(before.iter()).filter(|(child, before)| tree.node(**child).is_some_and(|node| (node.layout.x, node.layout.y, node.layout.width, node.layout.height) != **before)).count();
         assert!(changed <= 1);
         if step == RetainedInteractiveSyncStep::Complete {
@@ -142,8 +142,8 @@ fn retained_select_sync_max_plus_one_fault_closes_exact_cursor_owner() {
         _ => panic!("retained select owner"),
     };
     let mut cursor = RetainedInteractiveSyncCursor::default();
-    assert_eq!(sync_interactive_state_node_step(&mut tree, root, &theme, &mut cursor), RetainedInteractiveSyncStep::Pending);
-    assert_eq!(sync_interactive_state_node_step(&mut tree, root, &theme, &mut cursor), RetainedInteractiveSyncStep::Fault);
+    assert_eq!(sync_interactive_state_node_step(&mut tree, root, &theme, None, &mut cursor), RetainedInteractiveSyncStep::Pending);
+    assert_eq!(sync_interactive_state_node_step(&mut tree, root, &theme, None, &mut cursor), RetainedInteractiveSyncStep::Fault);
     assert!(!cursor.close_step());
     assert!(cursor.close_step());
     assert!(cursor.terminal_is_empty());
@@ -179,7 +179,7 @@ fn retained_tree_sync_skips_a_declared_row_the_document_never_mounted() {
     let mut cursor = RetainedInteractiveSyncCursor::default();
     let mut complete = false;
     for _ in 0..256 {
-        let step = sync_interactive_state_node_step(&mut tree, root, &theme, &mut cursor);
+        let step = sync_interactive_state_node_step(&mut tree, root, &theme, None, &mut cursor);
         assert_ne!(step, RetainedInteractiveSyncStep::Fault);
         if step == RetainedInteractiveSyncStep::Complete {
             complete = true;
@@ -206,7 +206,7 @@ fn retained_tree_sync_abandonment_releases_one_record_or_depth_owner_per_grant()
     let (mut tree, root, theme, _) = setup(&authored);
     let mut cursor = RetainedInteractiveSyncCursor::default();
     for _ in 0..32 {
-        assert_ne!(sync_interactive_state_node_step(&mut tree, root, &theme, &mut cursor), RetainedInteractiveSyncStep::Fault);
+        assert_ne!(sync_interactive_state_node_step(&mut tree, root, &theme, None, &mut cursor), RetainedInteractiveSyncStep::Fault);
         if cursor.tree_record_len >= 3 {
             break;
         }

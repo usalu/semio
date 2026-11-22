@@ -40,6 +40,19 @@ fn mesh_bounds(data: Option<&Value>, key: &str) -> Option<([f64; 3], [f64; 3])> 
     Some((min, max))
 }
 
+#[cfg(any(target_arch = "wasm32", any(test, feature = "testkit")))]
+fn instance_transform<const N: usize>(entry: &Value, key: &str) -> Option<[f64; N]> {
+    let values = entry.get(key)?.as_array()?;
+    if values.len() != N {
+        return None;
+    }
+    let mut coordinates = [0.0; N];
+    for (coordinate, value) in coordinates.iter_mut().zip(values) {
+        *coordinate = value.as_f64()?;
+    }
+    Some(coordinates)
+}
+
 /// 🧊️ One `World3d` scene's published payload, parsed. Pure over the scene and its page rect, so the
 /// native law exercises exactly what the browser export answers.
 #[cfg(any(target_arch = "wasm32", any(test, feature = "testkit")))]
@@ -80,7 +93,14 @@ pub fn mesh_stats_for_scene(scene: &UiComponentSceneNode, rect: [f32; 4]) -> Opt
                 .iter()
                 .map(|entry| {
                     let id = entry.get("id").and_then(Value::as_str).unwrap_or_default().to_string();
-                    DumpMeshInstance { interaction_id: entry.get("interactionId").and_then(Value::as_str).unwrap_or(id.as_str()).to_string(), mesh_id: entry.get("meshId").and_then(Value::as_str).unwrap_or_default().to_string(), id }
+                    DumpMeshInstance {
+                        interaction_id: entry.get("interactionId").and_then(Value::as_str).unwrap_or(id.as_str()).to_string(),
+                        mesh_id: entry.get("meshId").and_then(Value::as_str).unwrap_or_default().to_string(),
+                        id,
+                        position: instance_transform(entry, "position"),
+                        rotation: instance_transform(entry, "rotation"),
+                        scale: instance_transform(entry, "scale"),
+                    }
                 })
                 .collect()
         })

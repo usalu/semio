@@ -2,7 +2,7 @@
 //! counterpart of the editor's `edit` mode.
 
 use crate::viewer::writer::modes::view::windows::main;
-use semio_plugin::create_default_layout;
+use semio_plugin::{create_default_layout, Axis};
 use semio_ui_locale::LocalizedLabel;
 use semio_plugin::ModeDefinition;
 use semio_plugin::WindowLayout;
@@ -17,7 +17,7 @@ pub fn definition() -> ModeDefinition {
 
 /// 🪟️ Single full-width window — the read-only viewer has no quadrant layout to allocate.
 pub fn layout() -> WindowLayout {
-    create_default_layout(&[main::WRITER_VIEW_WINDOW_KIND.into()], "row", Some(&[100.0]), Some(&["Text".into()]))
+    create_default_layout(&[main::WRITER_VIEW_WINDOW_KIND.into()], Axis::Horizontal, Some(&[1.0]), Some(&["Text".into()]))
 }
 //#endregion 🔖️Definition
 

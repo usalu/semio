@@ -10,7 +10,6 @@ import { terminateOwnedChildTree } from "../../../../../../../🔨️modules/�
 import { scriptCompilerAdmissionControlV1, compilerCapacityWorkerCountV1, compilerAdmissionBudgetV1, requestedCompilerAdmissionControlV1, type CompilerAdmissionControl } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { readBuildMode } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 
-import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { copyFileSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
@@ -98,13 +97,13 @@ function toolIdentityV1(key: string, compute: () => Promise<string>): Promise<st
 
 /** 🧬️ The identity of the sources the transpile stage runs: the transpile orchestration, the jco module rewrites and the contract they share. */
 async function materializationIdentityV1(): Promise<string> {
-  const digests = await Promise.all(["../🟦️.ts", "../🧬️jco-module-rewrites/🟦️.ts", "../🧾️contract/🟦️.ts"].map((source) => fileDigest(fileURLToPath(new URL(source, import.meta.url)))));
+  const digests = await Promise.all(["../🟦️.ts", "../🧬️jco-module-rewrites/🟦️.ts", "../🧾️contract/🟦️.ts", "../🦀️native-transpile/🟦️.ts"].map((source) => fileDigest(fileURLToPath(new URL(source, import.meta.url)))));
   return createHash("sha256").update(digests.join("\n")).digest("hex");
 }
 
-/** 🧬️ Identifies the component, selected native transpile bytes, jco version, materializer and module name independently of checkout paths. */
-export function transpileStageRequestV1(component: string, jco: string, materialization: string, base: string, native: string) {
-  return { stage: "transpile", schemaVersion: 1, inputs: { component }, tools: { jco, materialization, base, "native-transpile": native } };
+/** 🧬️ Keys native transpilation by component bytes, native executable, materializer and module name. */
+export function transpileStageRequestV1(component: string, materialization: string, base: string, native: string) {
+  return { stage: "transpile", schemaVersion: 2, inputs: { component }, tools: { materialization, base, "native-transpile": native } };
 }
 
 /** 🪶️ The optimize stage cache request of one extracted core: its digest, the optimizer's version and its arguments. */
@@ -112,14 +111,17 @@ export function optimizeStageRequestV1(core: string, version: string, args: read
   return { stage: "optimize", schemaVersion: 1, inputs: { core }, tools: { "wasm-opt": version, args: args.join(" ") } };
 }
 
-/** 🧬️ The transpile stage: jco's location-independent module files of the component, cached by the digest of the debug-stripped bytes jco actually reads, the jco version, this module's
- * implementation and the module name. */
+/** 🧬️ Transpiles the debug-stripped component through the staged native executable and caches the location-independent module files. */
 export async function transpileComponentModulesV1(work: ComponentModuleWorkV1): Promise<string> {
   checkResourceLeaseControl(work.control);
   const base = componentBaseV1(work.target), output = join(work.work, "transpiled");
   const nativeBinary = nativeTranspileBinaryV1(work.repoRoot, work.deliverable.profile, work.environment);
-  const [component, jco, materialization, native] = await Promise.all([Promise.resolve(createHash("sha256").update(stripWasmDebugSectionsV1(readFileSync(work.deliverable.wasm))).digest("hex")), toolIdentityV1("jco", async () => JSON.parse(readFileSync(createRequire(join(work.repoRoot, "package.json")).resolve("@bytecodealliance/jco/package.json"), "utf8")).version), toolIdentityV1("materialization", materializationIdentityV1), fileDigest(nativeBinary, work.control.signal)]);
-  await work.cache.run(transpileStageRequestV1(component, jco, materialization, base, native), output, (directory) => transpilePluginComponentModulesAsync(work.deliverable.wasm, directory, base, { repoRoot: work.repoRoot, mode: work.deliverable.profile, preview2VendorDir: join(builtPluginModulesRootIn(work.repoRoot, work.deliverable.profile), PREVIEW2_VENDOR_RELATIVE), environment: work.environment, control: work.control }), work.control.signal, base);
+  const component = createHash("sha256").update(stripWasmDebugSectionsV1(readFileSync(work.deliverable.wasm))).digest("hex");
+  const [materialization, native] = await Promise.all([
+    toolIdentityV1("materialization", materializationIdentityV1),
+    fileDigest(nativeBinary, work.control.signal),
+  ]);
+  await work.cache.run(transpileStageRequestV1(component, materialization, base, native), output, (directory) => transpilePluginComponentModulesAsync(work.deliverable.wasm, directory, base, { repoRoot: work.repoRoot, mode: work.deliverable.profile, preview2VendorDir: join(builtPluginModulesRootIn(work.repoRoot, work.deliverable.profile), PREVIEW2_VENDOR_RELATIVE), environment: work.environment, control: work.control }), work.control.signal, base);
   checkResourceLeaseControl(work.control);
   return output;
 }

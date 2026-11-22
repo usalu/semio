@@ -116,3 +116,7 @@ No geometry change. Every scale and list rendered and opened (body, structure, t
 ### Check: red, not by the model
 
 `volumes-check.ts --product` fails at 1:50, 1:100 (per region) and 1:200 (total): since the C31 flood the glazed box is a closed cavity, so the absorber (3.88 m²) and both headers measure an outer area near 0, glazing 1.99 against 3.96 and housing 2.94 against 5.27. The values are beyond the factor 1.5 an author may apply (C16) and the absorber/header case is a rule conflict (C31 e asks for `hidden`, B4 and the `hidden` text forbid it for a visible part). Logged in `area-review.md` and `tool-requests.md` (2026-11-21); not forced.
+
+## Canonical component readback, 2026-11-21
+
+Canonical source `08a286c22a4637fd`. Two bolted 2 × 20 mm straps cross behind the folded foot channels, posts and knee stays. The sheet shows the straps and their bolts from the rear. Inside the folded tray the 3.2 mm cover, absorber, mineral wool and two actual headers remain distinct. All twelve exported scenes reopened (850,844 bytes). The strict catalog source readback passed.

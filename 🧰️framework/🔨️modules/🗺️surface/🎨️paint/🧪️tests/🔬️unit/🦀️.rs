@@ -931,3 +931,159 @@ fn paint_mask_stroke_cancels_on_mask_placement_or_target_change(){
     }
     let mut host=RasterHost::new();host.sync_document_json(&base["document"].to_string()).unwrap();host.sync_interaction(&["p".into()],None);host.set_active_utility("paintBrush");host.set_paint_target(PaintTarget::Mask);host.pointer_down_screen(50.0,50.0,0);assert!(host.paint_gesture.is_some());host.set_paint_target(PaintTarget::Mask);assert!(host.paint_gesture.is_some());host.set_paint_target(PaintTarget::Pixels);assert!(host.paint_gesture.is_none());host.pointer_up_screen(50.0,50.0);assert!(host.take_paint_edit().is_none());
 }
+
+fn keyboard_fixture() -> serde_json::Value {
+    serde_json::from_str(include_str!("../🧫️fixtures/⌨️keyboard/🔣️.json")).unwrap()
+}
+
+fn pair(value: &serde_json::Value) -> (u32, u32) {
+    (value[0].as_u64().unwrap() as u32, value[1].as_u64().unwrap() as u32)
+}
+
+fn cursor_of(value: &serde_json::Value) -> PixelCursor {
+    let (x, y) = pair(value);
+    PixelCursor { x, y }
+}
+
+fn extent_of(value: &serde_json::Value) -> PixelExtent {
+    let (width, height) = pair(value);
+    PixelExtent { width, height }
+}
+
+/// ⌨️ The pure keyboard functions answer the shared fixture exactly as `Paint2dHost/✍️editing/⌨️keyboard` does.
+#[test]
+fn keyboard_functions_match_the_shared_fixture() {
+    let fixture = keyboard_fixture();
+    for case in fixture["cursorSteps"].as_array().unwrap() {
+        let moved = step_keyboard_cursor(cursor_of(&case["cursor"]), case["key"].as_str().unwrap(), extent_of(&case["extent"]), case["stride"].as_u64().unwrap() as u32);
+        assert_eq!(moved, (!case["expected"].is_null()).then(|| cursor_of(&case["expected"])), "{case}");
+    }
+    for case in fixture["marquees"].as_array().unwrap() {
+        let marquee = keyboard_marquee(cursor_of(&case["anchor"]), cursor_of(&case["cursor"]));
+        let expected: Vec<u32> = case["expected"].as_array().unwrap().iter().map(|v| v.as_u64().unwrap() as u32).collect();
+        assert_eq!([marquee.x, marquee.y, marquee.width, marquee.height], expected.as_slice(), "{case}");
+    }
+    for case in fixture["announcements"].as_array().unwrap() {
+        assert_eq!(cursor_announcement(case["locale"].as_str().unwrap(), cursor_of(&case["cursor"]), extent_of(&case["extent"])), case["expected"].as_str().unwrap());
+    }
+    for case in fixture["cameras"].as_array().unwrap() {
+        let camera: [f64; 3] = serde_json::from_value(case["camera"].clone()).unwrap();
+        let expected: Option<[f64; 3]> = serde_json::from_value(case["expected"].clone()).unwrap();
+        assert_eq!(keyboard_camera_step(camera, case["key"].as_str().unwrap(), case["stride"].as_f64().unwrap()), expected, "{case}");
+    }
+    for case in fixture["limits"].as_array().unwrap() {
+        let state = match stroke_limit_state(case["count"].as_u64().unwrap() as usize) {
+            StrokeLimit::Ok => "ok",
+            StrokeLimit::Warn => "warn",
+            StrokeLimit::Full => "full",
+        };
+        assert_eq!(state, case["expected"].as_str().unwrap(), "{case}");
+    }
+    for case in fixture["rollover"].as_array().unwrap() {
+        let points: Vec<[f64; 2]> = (0..case["points"].as_u64().unwrap()).map(|index| [index as f64, 0.0]).collect();
+        let rolled = rollover_stroke(&points, case["sent"].as_u64().unwrap() as usize, case["cap"].as_u64().unwrap() as usize);
+        if case["expected"].is_null() && case.get("expectedBatch").is_none() {
+            assert!(rolled.is_none());
+            continue;
+        }
+        let rolled = rolled.unwrap();
+        let xs = |points: &[[f64; 2]]| points.iter().map(|point| point[0]).collect::<Vec<_>>();
+        assert_eq!(xs(&rolled.batch), serde_json::from_value::<Vec<f64>>(case["expectedBatch"].clone()).unwrap());
+        assert_eq!(xs(&rolled.points), serde_json::from_value::<Vec<f64>>(case["expectedKept"].clone()).unwrap());
+        assert_eq!(rolled.sent as u64, case["expectedSent"].as_u64().unwrap());
+    }
+    assert_eq!(keyboard_stamp_path(PixelCursor { x: 5, y: 4 }), [[5.5, 4.5], [5.5, 4.5]]);
+}
+
+fn keyboard_host(utility: &str) -> RasterHost {
+    let mut host = two_pixel_layer_host();
+    host.sync_interaction(&["back".into()], None);
+    host.set_active_utility(utility);
+    host
+}
+
+fn press(host: &mut RasterHost, key: &str, shift: bool) -> PixelKeyOutcome {
+    host.pixel_key_down(&PixelKeyInput { key, shift, ..Default::default() }, "en", true)
+}
+
+/// 🖋️ Arrow keys move the pixel cursor and announce it; Enter stamps the pixel center as a whole two-point stroke.
+#[test]
+fn keyboard_brush_moves_the_cursor_announces_and_stamps() {
+    let fixture = keyboard_fixture();
+    let mut host = keyboard_host("paintBrush");
+    for step in fixture["host"]["brushKeys"].as_array().unwrap() {
+        let outcome = press(&mut host, step["key"].as_str().unwrap(), false);
+        if let Some(text) = step.get("expectedAnnouncement") {
+            assert_eq!(outcome, PixelKeyOutcome::Consumed);
+            assert_eq!(host.keyboard().announcement, text.as_str().unwrap());
+        }
+        if let Some(points) = step.get("expectedPoints") {
+            assert_eq!(outcome, PixelKeyOutcome::Edit);
+            let edit = host.take_paint_edit().unwrap();
+            assert_eq!((edit.tool, edit.phase, edit.layer_id.as_str()), ("brush", None, "back"));
+            assert_eq!(edit.points, serde_json::from_value::<Vec<[f64; 2]>>(points.clone()).unwrap());
+        }
+    }
+    let space = host.pixel_key_down(&PixelKeyInput { key: " ", space: true, ..Default::default() }, "en", true);
+    assert_eq!(space, PixelKeyOutcome::Edit, "Space stamps with a brush");
+    host.take_paint_edit();
+    assert_eq!(host.pixel_key_down(&PixelKeyInput { key: "Enter", repeat: true, ..Default::default() }, "en", true), PixelKeyOutcome::Consumed);
+    assert_eq!(host.pixel_key_down(&PixelKeyInput { key: "Enter", ..Default::default() }, "en", false), PixelKeyOutcome::Consumed);
+    assert!(host.take_paint_edit().is_none());
+}
+
+/// ▭ Shift with arrows spans a marquee from the anchor; Enter asks for that rectangle as a pixel selection and drops the anchor.
+#[test]
+fn keyboard_marquee_selects_the_inclusive_rectangle() {
+    let fixture = keyboard_fixture();
+    let mut host = keyboard_host("selectMarquee");
+    let mut last = PixelKeyOutcome::Ignored;
+    for step in fixture["host"]["marqueeKeys"].as_array().unwrap() {
+        last = press(&mut host, step["key"].as_str().unwrap(), step.get("shift").is_some_and(|v| v.as_bool().unwrap()));
+    }
+    let expected: Vec<[f64; 2]> = serde_json::from_value(fixture["host"]["marqueeKeys"][2]["expectedPath"].clone()).unwrap();
+    assert_eq!(last, PixelKeyOutcome::Select { method: "rectangle", path: expected });
+    assert!(host.keyboard().anchor.is_none());
+    assert!(!host.cancel_keyboard_marquee());
+}
+
+/// 🔍️ With no pixel tool the arrows pan and the zoom keys zoom the camera; a utility switch drops the cursor.
+#[test]
+fn keyboard_camera_and_context_reset() {
+    let mut host = keyboard_host("paintBrush");
+    press(&mut host, "ArrowRight", false);
+    assert!(host.keyboard().cursor.is_some());
+    host.set_active_utility("selectLasso");
+    host.sync_keyboard();
+    assert!(host.keyboard().cursor.is_none() && host.keyboard().announcement.is_empty());
+    host.set_active_utility("paintPan");
+    assert_eq!(press(&mut host, "+", false), PixelKeyOutcome::Camera([0.0, 0.0, 1.25]));
+    assert_eq!(press(&mut host, "ArrowRight", false), PixelKeyOutcome::Camera([32.0, 0.0, 1.25]));
+    assert_eq!(press(&mut host, "q", false), PixelKeyOutcome::Ignored);
+}
+
+/// ✂️ A stroke that fills its buffer streams the unsent samples and restarts at the last one, so a long gesture never drops samples.
+#[test]
+fn native_stroke_rolls_over_at_the_point_cap() {
+    let mut host = keyboard_host("paintBrush");
+    host.set_size(4000, 400, 1.0);
+    host.pointer_down_screen(0.0, 200.0, 0);
+    let mut edits = Vec::new();
+    for step in 1..=2600 {
+        host.pointer_move_screen(f64::from(step), 200.0);
+        edits.extend(host.take_paint_edit());
+    }
+    host.pointer_up_screen(2601.0, 200.0);
+    edits.extend(host.take_paint_edit());
+    let total: usize = edits.iter().map(|edit| edit.points.len()).sum();
+    assert!(edits.iter().all(|edit| edit.gesture == edits[0].gesture), "one press id");
+    assert_eq!(edits.last().unwrap().phase, Some("commit"));
+    assert_eq!(total, 2602 + edits.iter().filter(|edit| edit.phase == Some("stream")).count().min(0), "every sample once");
+}
+
+/// ┄ The keyboard marquee outline alternates `dash` drawn and `dash` skipped runs along the perimeter, as React's `setLineDash` does.
+#[test]
+fn dashed_marquee_outline_alternates_equal_runs() {
+    let path = raster_host::dashed_rect_path(0.0, 0.0, 8.0, 4.0, 4.0);
+    assert_eq!(path.segments().count(), 3, "perimeter 24 holds three drawn runs of four with three skipped");
+}

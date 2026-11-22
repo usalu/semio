@@ -5,6 +5,7 @@ import { Script, ScriptRouter } from "../../../../../../🔨️modules/🏃️pr
 import { nativeCommandPolicyV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import { runRepositoryCommand } from "../../🏃️process/🎛️owned-execution/🟦️.ts";
 import { repoTestArtifactEnvironment } from "../../🏃️process/🌿️environment/🧪️test-output/🟦️.ts";
+import { repositoryCargoPreparationStorageV1 } from "../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
 import { getWorkspaceRoot } from "../🟦️.ts";
 import { CapabilityContractScript, RuntimeInputScript, MembersScript } from "./🧪️tests/🔬️script-commands/🟦️.ts";
 import { isMainModuleV1 } from "../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏁️main/🟦️.ts";
@@ -22,21 +23,24 @@ class NativeInputScript extends Script {
   }
 }
 
+/** 🎟️ The environment of a contract target's test child: the artifact sandbox of its route and the repository's Cargo preparation custody storage the Cargo workspace tests require.
+ * @see ../../🏗️build/🔬️test-file/🔣️.json */
+const cargoContractEnvironmentV1=(route:string):NodeJS.ProcessEnv=>({...repoTestArtifactEnvironment(getWorkspaceRoot(),route),SEMIO_CARGO_PREPARATION_STORAGE:JSON.stringify(repositoryCargoPreparationStorageV1(getWorkspaceRoot()))});
 class ContractScript extends Script {
   async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("contract-check accepts no overrides");
-    await runRepositoryCommand(this.invocation,runtimeExecutableV1(),runtimeTestArgumentsV1([join(import.meta.dirname, "🧪️tests/🟦️.ts"), join(import.meta.dirname,"🧪️tests/🪆️nested-owners/🟦️.ts"), join(import.meta.dirname,"🧪️tests/📦️identity/🟦️.ts")]),getWorkspaceRoot(),"cargo-workspace-contract",{version:1,maximumElapsedMilliseconds:15_000,output:{maximumBytes:134217728,maximumLines:65536}},{env: repoTestArtifactEnvironment(getWorkspaceRoot(), "cargo-workspace-contract")});
+    await runRepositoryCommand(this.invocation,runtimeExecutableV1(),runtimeTestArgumentsV1([join(import.meta.dirname, "🧪️tests/🟦️.ts"), join(import.meta.dirname,"🧪️tests/🪆️nested-owners/🟦️.ts"), join(import.meta.dirname,"🧪️tests/📦️identity/🟦️.ts")]),getWorkspaceRoot(),"cargo-workspace-contract",{version:1,maximumElapsedMilliseconds:15_000,output:{maximumBytes:134217728,maximumLines:65536}},{env:cargoContractEnvironmentV1("cargo-workspace-contract")});
   }
 }
 /** 🕰️ Verifies queued preparation with an independent owner holding the native lease. */
 class QueuedContractScript extends Script {
   async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("queued-contract-check accepts no overrides");
-    await runRepositoryCommand(this.invocation,runtimeExecutableV1(),runtimeTestArgumentsV1([join(import.meta.dirname, "🧪️tests/🕰️queued-preparation/🟦️.ts")]),getWorkspaceRoot(),"cargo-queued-preparation-contract",{version:1,maximumElapsedMilliseconds:45_000,output:{maximumBytes:134217728,maximumLines:65536}},{env: repoTestArtifactEnvironment(getWorkspaceRoot(), "cargo-queued-preparation-contract")});
+    await runRepositoryCommand(this.invocation,runtimeExecutableV1(),runtimeTestArgumentsV1([join(import.meta.dirname, "🧪️tests/🕰️queued-preparation/🟦️.ts")]),getWorkspaceRoot(),"cargo-queued-preparation-contract",{version:1,maximumElapsedMilliseconds:45_000,output:{maximumBytes:134217728,maximumLines:65536}},{env:cargoContractEnvironmentV1("cargo-queued-preparation-contract")});
   }
 }
 class OriginalControlContractScript extends Script {
- async run(args:string[]):Promise<void>{if(args.length)throw new Error("original-control-contract-check accepts no overrides");await runRepositoryCommand(this.invocation,runtimeExecutableV1(),runtimeTestArgumentsV1([join(import.meta.dirname,"🧪️tests/📥️original-control/🟦️.ts"), join(import.meta.dirname,"🧪️tests/🎛️preparation/🟦️.ts")]),getWorkspaceRoot(),"cargo-original-control-contract",{version:1,maximumElapsedMilliseconds:45_000,output:{maximumBytes:134217728,maximumLines:65536}},{env:repoTestArtifactEnvironment(getWorkspaceRoot(),"cargo-original-control-contract")});}
+ async run(args:string[]):Promise<void>{if(args.length)throw new Error("original-control-contract-check accepts no overrides");await runRepositoryCommand(this.invocation,runtimeExecutableV1(),runtimeTestArgumentsV1([join(import.meta.dirname,"🧪️tests/📥️original-control/🟦️.ts"), join(import.meta.dirname,"🧪️tests/🎛️preparation/🟦️.ts")]),getWorkspaceRoot(),"cargo-original-control-contract",{version:1,maximumElapsedMilliseconds:45_000,output:{maximumBytes:134217728,maximumLines:65536}},{env:cargoContractEnvironmentV1("cargo-original-control-contract")});}
 }
 class BunContractScript extends Script {
   async run(args: string[]): Promise<void> { if(args.length)throw new Error("bun-contract-check accepts no overrides");await runRepositoryCommand(this.invocation,runtimeExecutableV1(),runtimeTestArgumentsV1([join(import.meta.dirname,"../🟦️bun/🧪️tests/🟦️.ts")]),getWorkspaceRoot(),"bun-workspace-contract",{version:1,maximumElapsedMilliseconds:15_000,output:{maximumBytes:134217728,maximumLines:65536}}); }

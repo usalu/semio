@@ -1,0 +1,10 @@
+{
+ "version": 1,
+ "cases": [
+  {"root": "warm-invalid-config", "gitAccepts": false, "observation": "observation-failed"},
+  {"root": "missing", "gitAccepts": false, "observation": null},
+  {"root": "empty", "gitAccepts": false, "observation": "observation-failed"},
+  {"root": "invalid-head", "gitAccepts": false, "observation": "observation-failed"},
+  {"root": "invalid-marker", "gitAccepts": false, "observation": "observation-failed"}
+ ]
+}

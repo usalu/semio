@@ -1,0 +1,67 @@
+{
+ "schema": "semio.picked-raster.route/v1",
+ "inlineBytes": 24546,
+ "inlinePixels": 4096,
+ "pngBytes": 524288,
+ "pngPixels": 262144,
+ "dctBytes": 4194304,
+ "dctPixels": 67108864,
+ "cases": [
+  {
+   "name": "tiny flat PNG",
+   "format": "png",
+   "width": 32,
+   "height": 32,
+   "fileBytes": 100,
+   "route": "inline"
+  },
+  {
+   "name": "521 by 257 noise PNG",
+   "format": "png",
+   "width": 521,
+   "height": 257,
+   "fileBytes": 402534,
+   "route": "pagedPng"
+  },
+  {
+   "name": "flat PNG above the sampled pixel cap but small",
+   "format": "png",
+   "width": 600,
+   "height": 600,
+   "fileBytes": 1888,
+   "route": "refused"
+  },
+  {
+   "name": "noise PNG above the paged PNG byte cap",
+   "format": "png",
+   "width": 720,
+   "height": 720,
+   "fileBytes": 1558116,
+   "route": "refused"
+  },
+  {
+   "name": "2.1 MB class JPEG",
+   "format": "jpeg",
+   "width": 1600,
+   "height": 1200,
+   "fileBytes": 2101918,
+   "route": "pagedDct"
+  },
+  {
+   "name": "small JPEG",
+   "format": "jpeg",
+   "width": 64,
+   "height": 64,
+   "fileBytes": 8291,
+   "route": "pagedDct"
+  },
+  {
+   "name": "JPEG above the paged DCT byte cap",
+   "format": "jpeg",
+   "width": 2800,
+   "height": 2200,
+   "fileBytes": 25306870,
+   "route": "refused"
+  }
+ ]
+}

@@ -40,7 +40,7 @@ fn retained_image_import_shared_cases() {
   let snapshot=DrawingSnapshot::default();let saved=snapshot.clone();let command=DrawingCommand::ImportImage(import_image::ImportImage {payload:row["input"]["payload"].as_str().unwrap().into(),name:Some("Artwork.png".into()),parent_id:None,index:None});
   let config=NoConfig {};let history=semio_plugin::HistoryView::empty();let interaction=protocol::InteractionState::default();let hover=semio_plugin::app::InteractionHoverState::new();
   let operation=semio_plugin::AppOperationContext {app_instance_id:1,parent_document_id:"images".into(),operation_id:1,generation:1,canonical_base_revision:[0;32],retained:semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation,authoring_seed:"images".into()};
-  let input=ArtifactCommandInputs::<App> {command:&command,snapshot:&snapshot,snapshot_owner:None,snapshot_read:None,config:&config,history:&history,interaction:&interaction,hover:&hover,context:None,operation:&operation};
+  let input=ArtifactCommandInputs::<App> {command:&command,snapshot:&snapshot,snapshot_owner:None,snapshot_read:semio_plugin::retained_command::ArtifactCommandSnapshotRead::unavailable(&operation),config:&config,history:&history,interaction:&interaction,hover:&hover,context:None,operation:&operation};
   for stop in [0,1,25,100,usize::MAX] {
    let mut work=Work::new();let mut completed=false;
    let mut caller = job_caller(&operation);

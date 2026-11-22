@@ -23,6 +23,9 @@
   "serviceHostShare": 0.6,
   "serviceMinimumMegabytes": 2048,
   "initialOwnerMegabytes": 256,
+  "kindLimits": {
+    "language:rust": 2
+  },
   "floorOwnerMegabytes": 64,
   "safetyMarginBasisPoints": 1000,
   "parentManagedMegabytes": 1536,

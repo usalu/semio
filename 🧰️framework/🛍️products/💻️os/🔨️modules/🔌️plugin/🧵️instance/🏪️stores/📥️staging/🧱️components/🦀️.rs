@@ -237,7 +237,7 @@ pub struct ActionIngress {
     pub action_ingress_sources: ArtifactFixedRegistry<crate::action_ingress::ActionIngressRecord>,
     pub pending_action_ingress: ManuallyDrop<Option<crate::action_ingress::ActionIngressSource>>,
     pub pending_action_ingress_caller: std::mem::ManuallyDrop<Option<semio_framework_job::OriginalCallerSourceLoan>>,
-    pub pending_action_ingress_identity: Option<(semio_framework_job::OperationId,semio_framework_job::Generation)>,
+    pub pending_action_ingress_identity: Option<semio_framework_job::OriginalSourceBinding>,
     pub pending_action_ingress_retirement: ManuallyDrop<Option<semio_framework_value::retirement::controlled::ControlledRetirement<Option<crate::action_ingress::ActionIngressSource>>>>,
 }
 

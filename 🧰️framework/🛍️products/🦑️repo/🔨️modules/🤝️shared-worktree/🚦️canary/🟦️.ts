@@ -48,7 +48,7 @@ export function canaryCandidatesV1(input:Pick<CanaryInputV1,"originId"|"groupId"
 /** 🚦️ Decides whether this origin may switch to the code on disk. Deterministic and free of I/O, so that every origin that reads the same store reaches the same order. A digest somebody refused never passes; a digest with a healthy store snapshot, or that another origin has run healthy for `canaryMs`, passes; code written entirely here passes; otherwise nobody has proven it and the candidates go one after another (group server first, then ascending ids), the first after `waitMs`, each further one `turnMs` later, so that the fleet can never wait on itself and one bad code never reaches two machines before the first has shown it healthy. */
 export function decideCanaryV1(input:CanaryInputV1):CanaryVerdictV1{
  if(input.digest===input.running)return {ok:true,role:"running"};
- const refusal=input.refusals.filter(item=>item.digest===input.digest).sort((left,right)=>left.wallMs-right.wallMs||bytewise(left.originId,right.originId))[0];
+ const refusal=input.refusals.filter(item=>item.digest===input.digest&&!transientRefusalExpiredV1(item,input.now)).sort((left,right)=>left.wallMs-right.wallMs||bytewise(left.originId,right.originId))[0];
  if(refusal!==undefined)return {ok:false,why:"refused",origin:refusal.originId,seconds:0};
  if(input.snapshots.includes(input.digest))return {ok:true,role:"snapshot"};
  const retired=new Set(input.retired),runners=input.peers.filter(peer=>peer.originId!==input.originId&&peer.groupId===input.groupId&&!retired.has(peer.originId)&&peer.code===input.digest&&peer.sync&&!peer.fallback&&Math.abs(input.now-peer.wallMs)<=input.limits.freshMs).map(peer=>peer.originId).sort(bytewise);
@@ -64,6 +64,26 @@ export function decideCanaryV1(input:CanaryInputV1):CanaryVerdictV1{
  if(input.waitedMs<input.limits.waitMs)return {ok:false,why:"mixed",origin:order[0]!,seconds:seconds(input.limits.waitMs-input.waitedMs)};
  return {ok:false,why:"turn",origin:order[rank-1]!,seconds:seconds(due-input.waitedMs)};
 }
+
+const transientStartPatternsV1=[/the watchdog of the daemon fell silent/u,/the event loop was blocked for/u,/the daemon was not ready after/u,/the readiness side/u,/did not stop within/u,/the watchdog ended this code while it was new/u],transientMarkerV1=/ \[transient ([0-9]+)\]$/u;
+
+/** 🌫️ Tells whether a start failure says something about the load of the machine (a silent watchdog, a blocked event loop, a daemon not ready in time, a stop that took too long, a watchdog end of new code) and not about the code: such a failure is refused only for a back-off, a deterministic one (an exit status, a self-check, a start error) for good. */
+export function transientStartV1(reason:string):boolean{return transientStartPatternsV1.some(pattern=>pattern.test(reason));}
+
+/** 🔢️ How many times in a row a transient refusal was published for its digest (`[transient n]` ends its reason); 0 for a refusal that stays. */
+export function transientRefusalCountV1(reason:string):number{return Number(transientMarkerV1.exec(reason)?.[1]??0);}
+
+/** ⏳️ The back-off of a transient refusal: five minutes, doubled with every further failure of the same digest, at most half an hour. */
+export function transientBackoffMsV1(count:number):number{return Math.min(1_800_000,300_000*2**Math.max(0,count-1));}
+
+/** 🕰️ Tells whether a transient refusal has served its back-off, so that the digest may be tried again. */
+export function transientRefusalExpiredV1(refusal:CanaryRefusalV1,now:number):boolean{
+ const count=transientRefusalCountV1(refusal.reason);
+ return count>0&&now-refusal.wallMs>=transientBackoffMsV1(count);
+}
+
+/** ⏱️ The longest a change set waits for its turn: a machine adopts the newest digest after fifteen minutes of continuous waiting, whatever newer edits arrived meanwhile, if nobody refused it (`maximumWaitMsV1`). */
+export const maximumWaitMsV1=900_000;
 
 /** 📖️ The words of a waiting verdict, English and German in one line (`English / Deutsch`), as the attestation and `status` show them. */
 export function canaryReasonV1(verdict:Extract<CanaryVerdictV1,{ok:false}>):string{
@@ -125,9 +145,10 @@ export async function readRefusalsV1(storeRoot:string,signal?:AbortSignal):Promi
 
 /** 🚫️ Publishes that this origin refuses a code digest (the own record only, tmp + fsync + rename): every origin that reads the store then waits for a different code. Idempotent; keeps the newest 64; `true` when a record was written. */
 export async function publishRefusalV1(storeRoot:string,originId:string,input:Readonly<{digest:string;reason:string}>,now:number):Promise<boolean>{
- const before=await readRefusalsOfV1(storeRoot,originId)??[];
- if(before.some(item=>item.digest===input.digest))return false;
- const refused=[...before,{digest:input.digest,reason:input.reason.slice(0,512)||"refused",wallMs:now}].slice(-64);
+ const before=await readRefusalsOfV1(storeRoot,originId)??[],existing=before.find(item=>item.digest===input.digest),transient=transientStartV1(input.reason);
+ if(existing!==undefined&&(!transient||transientRefusalCountV1(existing.reason)===0||!transientRefusalExpiredV1(existing,now)))return false;
+ const count=transient?transientRefusalCountV1(existing?.reason??"")+1:0,reason=(transient?`${input.reason.slice(0,480)} [transient ${count}]`:input.reason.slice(0,512))||"refused";
+ const refused=[...before.filter(item=>item.digest!==input.digest),{digest:input.digest,reason,wallMs:now}].slice(-64);
  await replaceOriginFileV1(storeRoot,originId,"refused.json",JSON.stringify({version:1,originId,refused}));
  return true;
 }

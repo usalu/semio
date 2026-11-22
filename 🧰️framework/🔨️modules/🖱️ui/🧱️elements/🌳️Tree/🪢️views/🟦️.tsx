@@ -57,14 +57,16 @@ const TreeDataItemView = reactHostPort.memo(function TreeDataItemView(props: { r
   }, [hasDynamicChildren, item, loadItemItems, treeOpenState.open]);
 
   const palettePointerProps = buildPalettePointerProps(item, section);
-  const dragRoles = reactHostPort.useMemo(() => deriveTreeDragRoles(item, Boolean(dragAndDropController?.pointerPaletteDrag)), [dragAndDropController?.pointerPaletteDrag, item]);
+  const reorderMime = dragAndDropController?.rowReorderMime;
+  const paletteDragEnabled = Boolean(dragAndDropController?.pointerPaletteDrag);
+  const dragRoles = reactHostPort.useMemo(() => reorderMime && item.dragData?.[reorderMime] ? ["sort"] as const : deriveTreeDragRoles(item, paletteDragEnabled), [item, paletteDragEnabled, reorderMime]);
   const palettePointerClassName = dragAndDropController?.pointerPaletteDrag && dragRoles.includes("transfer") ? "touch-none" : undefined;
 
   return (
     <TreeItem
       id={item.id}
       focusPath={path}
-      label={hasControl ? item.label : getTreeItemLabel(item)}
+      label={hasControl ? (item.labelId ? <span id={item.labelId}>{item.label}</span> : item.label) : getTreeItemLabel(item)}
       description={hasControl ? item.description : undefined}
       icon={item.icon}
       className={cn(item.className, palettePointerClassName)}

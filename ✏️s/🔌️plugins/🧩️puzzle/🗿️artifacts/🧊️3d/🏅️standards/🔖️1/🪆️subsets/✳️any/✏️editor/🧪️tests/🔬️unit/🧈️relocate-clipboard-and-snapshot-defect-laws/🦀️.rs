@@ -165,30 +165,6 @@ async fn export_snapshot_downloads_round_trippable_json() {
     assert_eq!(exported.get("objects").and_then(Value::as_array).map(Vec::len), before.get("objects").and_then(Value::as_array).map(Vec::len));
 }
 
-/// 🧬️ Identity of imported objects without scene_snapshot/snapshot projection twins (anchor / null scale).
-fn object_cores(value: &Value) -> Vec<(String, String, String, Value, Vec<String>)> {
-    value
-        .get("objects")
-        .and_then(Value::as_array)
-        .into_iter()
-        .flatten()
-        .filter_map(|object| {
-            let id = object.get("id").and_then(Value::as_str)?.to_string();
-            let kind = object.get("objectKind").and_then(Value::as_str).unwrap_or_default().to_string();
-            let mesh = object.get("meshUrl").and_then(Value::as_str).unwrap_or_default().to_string();
-            let origin = object.get("origin").cloned().unwrap_or(Value::Null);
-            let vortices = object
-                .get("vortices")
-                .and_then(Value::as_array)
-                .into_iter()
-                .flatten()
-                .filter_map(|vortex| vortex.get("id").and_then(Value::as_str).map(str::to_string))
-                .collect();
-            Some((id, kind, mesh, origin, vortices))
-        })
-        .collect()
-}
-
 /// 📥️ Wave W-Y: importing that JSON reproduces the document as one Mutation edit.
 #[semio_framework_async_macros::async_test]
 async fn import_snapshot_reproduces_the_exported_document() {
@@ -381,7 +357,7 @@ async fn a_one_hundred_forty_five_kilobyte_distinct_fixture_imports_inside_one_s
     dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE3D_EXAMPLE_NAKAGIN })), None).await.expect("load the nakagin example");
     let seeded = object_count(&app);
     dispatch(&mut app, "addObjectKind", Some(&json!({ "objectKind": "Object", "origin": [220.0, 0.0, 0.0] })), None).await.expect("seed one more object");
-    let distinct = crate::editor::puzzle3d::commands::export_snapshot::puzzle3d_export_json(&puzzle3d_scene_snapshot_from_document(app.snapshot().expect("typed app snapshot").typed()));
+    let distinct = semio_s_artifact_puzzle_3d_commands_document::export_snapshot::puzzle3d_export_json(&puzzle3d_scene_snapshot_from_document(app.snapshot().expect("typed app snapshot").typed()));
     dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE3D_EXAMPLE_NAKAGIN })), None).await.expect("return to the example document");
     assert_eq!(object_count(&app), seeded, "the document is back at the example census before the import");
     assert!(distinct.len() > 140_000, "the payload under test must be the product's own size class; observed {} B", distinct.len());
@@ -410,7 +386,7 @@ async fn a_chunked_pick_reaches_import_snapshot_as_one_whole_file_through_the_fr
     dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE3D_EXAMPLE_NAKAGIN })), None).await.expect("load the nakagin example");
     let seeded = object_count(&app);
     dispatch(&mut app, "addObjectKind", Some(&json!({ "objectKind": "Object", "origin": [220.0, 0.0, 0.0] })), None).await.expect("seed one more object");
-    let distinct = crate::editor::puzzle3d::commands::export_snapshot::puzzle3d_export_json(&puzzle3d_scene_snapshot_from_document(app.snapshot().expect("typed app snapshot").typed()));
+    let distinct = semio_s_artifact_puzzle_3d_commands_document::export_snapshot::puzzle3d_export_json(&puzzle3d_scene_snapshot_from_document(app.snapshot().expect("typed app snapshot").typed()));
     dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE3D_EXAMPLE_NAKAGIN })), None).await.expect("return to the example document");
     let chunks = semio_framework::kernel::import_payload_chunks(&distinct);
     assert!(chunks.len() > 1, "a product-sized payload spans several host chunks; observed {}", chunks.len());
@@ -437,7 +413,7 @@ async fn a_chunked_pick_reaches_import_snapshot_as_one_whole_file_through_the_fr
 /// and never a fault — the framework hands the whole file, so this budget is the app's one size rule.
 #[semio_framework_async_macros::async_test]
 async fn an_import_above_the_export_budget_refuses_with_a_notice() {
-    use crate::retained_command::PUZZLE_IMPORT_TOTAL_BYTES;
+    use semio_s_plugin_puzzle_retained::PUZZLE_IMPORT_TOTAL_BYTES;
     let mut app = app().await;
     dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE3D_EXAMPLE_NAKAGIN })), None).await.expect("load the nakagin example");
     let seeded = object_count(&app);
@@ -463,12 +439,12 @@ async fn an_import_above_the_export_budget_refuses_with_a_notice() {
 /// read by `puzzle3d_import_value`, rebuilds a scene_snapshot whose own export is byte-identical.
 #[test]
 fn the_nakagin_export_reimports_byte_for_byte() {
-    use crate::editor::puzzle3d::commands::import_snapshot::puzzle3d_import_value;
-    let payload = crate::editor::puzzle3d::commands::export_snapshot::puzzle3d_export_json(&NAKAGIN_EXAMPLE_SNAPSHOT.clone());
+    use semio_s_artifact_puzzle_3d_commands_document::import_snapshot::puzzle3d_import_value;
+    let payload = semio_s_artifact_puzzle_3d_commands_document::export_snapshot::puzzle3d_export_json(&NAKAGIN_EXAMPLE_SNAPSHOT.clone());
     assert!(payload.len() > semio_framework::kernel::IMPORT_CHUNK_BYTES, "the payload under test spans several host chunks: {} B", payload.len());
     let root = puzzle3d_import_value(&json!({ "payload": payload.as_str(), "name": "nakagin.json" })).expect("the whole export is a puzzle 3D document");
     assert_eq!(
-        crate::editor::puzzle3d::commands::export_snapshot::puzzle3d_export_json(&Puzzle3dSceneSnapshot::from_value(semio_framework_pack_json::to_dsl_value(&root)).expect("the imported root IS a puzzle 3D document")),
+        semio_s_artifact_puzzle_3d_commands_document::export_snapshot::puzzle3d_export_json(&Puzzle3dSceneSnapshot::from_value(semio_framework_pack_json::to_dsl_value(&root)).expect("the imported root IS a puzzle 3D document")),
         payload,
         "the import is byte-identical to the document that was exported"
     );
@@ -536,10 +512,10 @@ async fn export_snapshot_names_the_download_after_the_active_example() {
 /// `Fault`. The refusal names the file, its size and the budget, so the answer is readable.
 #[test]
 fn export_refuses_a_payload_above_the_declared_segmented_budget_with_a_notice() {
-    use crate::editor::puzzle3d::commands::export_snapshot::puzzle3d_export_refusal;
-    use crate::editor::puzzle3d::commands::export_snapshot::puzzle3d_export_segmented;
-    use crate::editor::puzzle3d::commands::export_snapshot::puzzle3d_export_segmented_budget_bytes;
-    use crate::retained_command::PUZZLE_COMMAND_OUTPUT_BYTES;
+    use semio_s_artifact_puzzle_3d_commands_document::export_snapshot::puzzle3d_export_refusal;
+    use semio_s_artifact_puzzle_3d_commands_document::export_snapshot::puzzle3d_export_segmented;
+    use semio_s_artifact_puzzle_3d_commands_document::export_snapshot::puzzle3d_export_segmented_budget_bytes;
+    use semio_s_plugin_puzzle_retained::PUZZLE_COMMAND_OUTPUT_BYTES;
     use semio_plugin::app::ArtifactOutputChunks;
     let budget = puzzle3d_export_segmented_budget_bytes().expect("the declared output budget is within the framework cap");
     assert_eq!(budget, PUZZLE_COMMAND_OUTPUT_BYTES, "the segmented budget IS this command's declared contract output budget");

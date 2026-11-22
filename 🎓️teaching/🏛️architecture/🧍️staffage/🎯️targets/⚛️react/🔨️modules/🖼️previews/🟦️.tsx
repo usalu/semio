@@ -6,7 +6,7 @@
  * @see ../🧭️context/🟦️.tsx — the ambient clock
  */
 import { Component, useEffect, useLayoutEffect, useMemo, useRef, useState, type ErrorInfo, type ReactElement, type ReactNode } from "react";
-import type { Asset, EvaluationQuery, Language, View, PlanarViewpoint } from "@teaching/staffage";
+import type { Asset, EvaluationQuery, Issue, Language, View, PlanarViewpoint } from "@teaching/staffage";
 import { defaultQuery, depictionOptions, queryAt } from "../🧮️pipeline/🟦️.ts";
 import { drawFigure, type Drawing } from "../🧮️pipeline/🏁️drawing/🟦️.ts";
 import { retainDrawing } from "../🧮️pipeline/🏁️drawing/queue.ts";
@@ -81,14 +81,38 @@ export function UnavailableNotice(props: { readonly row: Row; readonly compact?:
       ) : (
         <>
           <p className="m-0">{t("state.invalid.body", { count: issues.length })}</p>
-          <ul className="m-0 mt-single list-disc pl-4">
-            {issues.slice(0, 5).map((issue, index) => (
-              <li key={`${issue.path}-${index}`}>
-                <code className="font-mono">{issue.path}</code> · {issue.message[language]}
-              </li>
-            ))}
-          </ul>
+          <IssueList issues={issues.slice(0, 5)} language={language} />
         </>
+      )}
+    </Notice>
+  );
+}
+
+function IssueList({ issues, language }: { readonly issues: readonly Issue[]; readonly language: Language }): ReactElement {
+  return (
+    <ul className="m-0 mt-single list-disc pl-4">
+      {issues.map((issue, index) => (
+        <li key={`${issue.path}-${index}`}>
+          <code className="font-mono">{issue.path}</code> · {issue.message[language]}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/** 🩺️ The findings of a check that ended after its asset was offered: the first of them, and all of them on request. The asset stays shown beside this notice.
+ * @see ../📚️catalog/🟦️.ts — `Row.findings` */
+export function FindingsNotice({ findings }: { readonly findings: readonly Issue[] }): ReactElement {
+  const { t, language } = useArchive();
+  return (
+    <Notice kind="error" compact data={{ "data-asset-state": "findings" }} title={t("state.findings.title", { count: findings.length })}>
+      <p className="m-0">{t("state.findings.body")}</p>
+      <IssueList issues={findings.slice(0, 5)} language={language} />
+      {findings.length <= 5 ? null : (
+        <details>
+          <summary className="cursor-pointer">{t("state.findings.all", { count: findings.length })}</summary>
+          <div className="max-h-[40vh] overflow-auto"><IssueList issues={findings} language={language} /></div>
+        </details>
       )}
     </Notice>
   );

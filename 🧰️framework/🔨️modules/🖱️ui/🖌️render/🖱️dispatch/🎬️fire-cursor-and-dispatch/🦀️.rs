@@ -207,7 +207,7 @@ impl Dispatcher {
                 }
                 outcome.cursor = self.cursor_for(tree, target);
             }
-            DispatchEvent::KeyDown { key, modifiers } => {
+            DispatchEvent::KeyDown { key, modifiers, .. } => {
                 if key == "Escape" {
                     if self.close_topmost_overlay(tree) {
                         outcome.handled = true;

@@ -32,6 +32,11 @@ impl JackLanguageSession {
         Self { server: LanguageServer::new(JackEngine::default()) }
     }
 
+    /// 🪪️ Interns one manifest definition under its id; snapshots loaded afterwards name it by `manifestId`.
+    pub fn register_manifest(&mut self, id: &str, json: &str) -> Result<(), String> {
+        self.server.engine_mut().register_manifest(id, json)
+    }
+
     /// 📸️ Loads the snapshot the session checks documents against, before or after `initialize`.
     pub fn load_snapshot(&mut self, json: &str) -> Result<(), String> {
         self.server.engine_mut().load_snapshot(json)

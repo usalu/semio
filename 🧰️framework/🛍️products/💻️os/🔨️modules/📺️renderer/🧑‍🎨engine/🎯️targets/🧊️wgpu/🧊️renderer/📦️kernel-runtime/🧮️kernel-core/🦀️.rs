@@ -37,7 +37,6 @@ impl RendererSequenceAuthority {
     }
 }
 
-/// 🔢️ Holds a renderer generation until it is committed or released on drop.
 pub struct RendererSequenceReservation {
     generation: u64,
     active: bool,
@@ -412,7 +411,7 @@ pub struct ExtensionRecord {
 
 /// 🧩️ `by_parent[plugin_id]` = every installed extension whose descriptor `extends == plugin_id`
 /// — exactly the "descriptors carry `extends`... zero special-casing" design requirement.
-struct ExtensionIndex {
+pub struct ExtensionIndex {
     by_parent: HashMap<String, Vec<ExtensionRecord>>,
 }
 
@@ -453,6 +452,16 @@ pub use create_app_source::{CreateAppBorrowed,CreateAppRequestOwner,CreateAppSou
 #[path = "📥️original-media.rs"]
 mod queued_original_media;
 use queued_original_media::QueuedOriginalMedia;
+use semio_framework::kernel::ActorInstanceOpenPurpose;
+
+/// 🎟️ Checks bounded launch intent metadata before accepting a CreateApp request.
+pub fn valid_instance_open_purpose(purpose: &ActorInstanceOpenPurpose) -> bool {
+    match purpose {
+        ActorInstanceOpenPurpose::Ordinary => true,
+        ActorInstanceOpenPurpose::NaturalSource { declaration, extent } =>
+            queued_original_media::valid_natural_declaration(declaration, *extent),
+    }
+}
 
 #[derive(Clone, Copy)]
 pub enum QueuedKernelEventKind {
@@ -507,6 +516,9 @@ impl QueuedKernelEvent {
     pub fn try_from_original_media(instance: u32, event: Event) -> Result<Self, RejectedKernelEvents> {
         let same_instance = match &event {
             Event::OriginalMediaControl(control) => control.loan.instance_id == instance,
+            Event::NaturalSourcePrepare(prepare) => prepare.instance_id == instance,
+            Event::NaturalSourceControl(control) => control.loan.instance_id == instance,
+            Event::FolderArchiveLoad(load) => load.instance == instance,
             Event::CommandIngressPage { cursor, .. } => cursor.instance == instance,
             Event::Wake => instance != 0,
             _ => false,
@@ -632,6 +644,7 @@ impl RejectedKernelEvents {
 pub enum KernelRequest {
     CreateApp {
         owner: CreateAppRequestOwner,
+        purpose: ActorInstanceOpenPurpose,
     },
     DestroyApp {
         owner: Arc<KernelCloseSubmission>,
@@ -696,7 +709,11 @@ impl KernelRequest {
         match self {
             Self::ExchangeCommands { driver, .. } => (driver.remaining_pages(), driver.remaining_bytes()),
             Self::CloseRejectedCommandBuild { owner, .. } => (owner.remaining_pages(), owner.remaining_bytes()),
-            Self::CreateApp { .. } => (0, 0),
+            Self::CreateApp { purpose, .. } => (0, match purpose {
+                ActorInstanceOpenPurpose::Ordinary => 0,
+                ActorInstanceOpenPurpose::NaturalSource { declaration, .. } =>
+                    queued_original_media::natural_declaration_bytes(declaration),
+            }),
             Self::Exchange { event, .. } => event.credits(),
             Self::AdvanceRetained { .. }
             | Self::MountProductReplay { .. }

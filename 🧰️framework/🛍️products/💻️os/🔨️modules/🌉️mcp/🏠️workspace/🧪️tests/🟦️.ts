@@ -15,6 +15,9 @@ test("folder custody vectors match independent SQLite guarded append and ownersh
  }
  for(const row of fixture.owners){db.exec("delete from owners");for(const declaration of row.declarations)db.query("insert into owners values(?,?,?)").run(...declaration as [string,string,string]);
  const result=db.query<{n:number},[string]>("select count(*) n from (select distinct plugin,app from owners where schema=?)").get(row.schema)!;expect(result.n===1,row.id).toBe(row.accepted);}
+ for(const row of fixture.schemaReads){
+ const result=db.query("select coalesce(?1,?2) schema, case when ?1 is null and ?2 is null then 'PLUGIN_UNAVAILABLE' end error").get(row.live,row.ownerSchema);
+ expect(result,row.id).toEqual({schema:row.schema,error:row.error});}
  }finally{db.close();}
 });
 

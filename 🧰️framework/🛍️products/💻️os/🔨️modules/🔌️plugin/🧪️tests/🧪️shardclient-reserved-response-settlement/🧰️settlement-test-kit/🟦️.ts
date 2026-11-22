@@ -220,7 +220,7 @@ export function createShardClientSettlementTestKit(vitest: NonNullable<ImportMet
   async function captureFixtureInstance(client: ShardClient, worker: FakeShardWorker, actorId: string, instanceId = 7, guestLifetime = 13n): Promise<ShardInstanceLifecycleLease> {
     const lease = client.captureInstanceLifecycle(actorId, instanceId);
     const captured: ActorInstanceLifecycleReceipt = { kind: "captured", lifetime: { activationGeneration: lease.activation.activationGeneration, instanceId, guestLifetime }, requestSequence: lease.openRequest.requestSequence };
-    await answerLifecycle(worker, lease.open({ appId: "fixture", actor: "fixture", config: [], assets: [], capabilities: [], quotas: [] }, BUDGET), captured);
+    await answerLifecycle(worker, lease.open({ appId: "fixture", purpose: { tag: "ordinary" }, actor: "fixture", config: [], assets: [], capabilities: [], quotas: [] }, BUDGET), captured);
     await answerLifecycle(worker, lease.acknowledge(captured, BUDGET));
     bindFixtureHost(lease);
     return lease;

@@ -25,7 +25,7 @@
       "wire": "breaker",
       "reason": "unavailable",
       "reported": "fault",
-      "outcome": "fault",
+      "outcome": "miss",
       "requests": 0
     },
     {
@@ -83,6 +83,58 @@
       "reported": "cancelled",
       "outcome": "miss",
       "requests": 1
+    }
+  ],
+  "breakerCases": [
+    {
+      "name": "take-while-open",
+      "lane": "take",
+      "initial": "open",
+      "events": [
+        "look"
+      ],
+      "reopens": true
+    },
+    {
+      "name": "wire-fault-opens-before-retry",
+      "lane": "take",
+      "initial": "transport",
+      "events": [
+        "look",
+        "request",
+        "pause",
+        "look"
+      ],
+      "reopens": true
+    },
+    {
+      "name": "inference-while-open",
+      "lane": "infer",
+      "initial": "open",
+      "events": [],
+      "reopens": true
+    },
+    {
+      "name": "inference-wire-fault-opens",
+      "lane": "infer",
+      "initial": "transport",
+      "events": [
+        "request",
+        "pause"
+      ],
+      "reopens": true
+    },
+    {
+      "name": "healthy-cache-retries-malformed",
+      "lane": "infer",
+      "initial": "malformed",
+      "events": [
+        "request",
+        "pause",
+        "request",
+        "claim"
+      ],
+      "reopens": false
     }
   ]
 }

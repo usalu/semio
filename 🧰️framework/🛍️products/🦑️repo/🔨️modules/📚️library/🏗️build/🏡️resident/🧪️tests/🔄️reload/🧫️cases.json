@@ -1,6 +1,10 @@
 {
  "policy": {"quietMilliseconds": 100, "maximumDeferralMilliseconds": 1000, "retryMilliseconds": 500},
  "implementation": "old",
+ "drain": {"stallMs": 400, "cases": [
+  {"name": "drain-replayed-detail", "beatMs": 40, "durationMs": 1400, "advances": false},
+  {"name": "drain-live-detail", "beatMs": 40, "durationMs": 1000, "advances": true}
+ ]},
  "cases": [
   {"name": "same implementation keeps the service", "ticks": [
    {"at": 0, "identify": {"implementation": "old"}},

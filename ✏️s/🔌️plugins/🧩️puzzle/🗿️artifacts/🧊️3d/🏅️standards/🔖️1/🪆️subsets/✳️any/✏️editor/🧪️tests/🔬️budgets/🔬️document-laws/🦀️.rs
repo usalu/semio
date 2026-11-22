@@ -43,13 +43,6 @@ async fn a_browser_shaped_pick_survives_every_render_route_and_both_mutating_dis
     );
 }
 
-fn object_flag(app: &Puzzle3dApp, object_id: &str, flag: &str) -> Option<bool> {
-    projection_of(app)
-        .get("objects")
-        .and_then(Value::as_array)
-        .and_then(|objects| objects.iter().find(|object| object.get("id").and_then(Value::as_str) == Some(object_id)).cloned())
-        .and_then(|object| object.get(flag).and_then(Value::as_bool))
-}
 //#endregion 🔬️B23RenderedVsMutatedDocument
 
 //#region 🔖️Pz2ShippedKindCatalog

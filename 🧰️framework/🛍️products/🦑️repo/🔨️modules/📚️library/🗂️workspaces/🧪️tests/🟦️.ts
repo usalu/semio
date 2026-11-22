@@ -16,8 +16,7 @@ import schema from "./🧬️schema/🔣️.json";
 
 setDefaultTimeout(120000);
 const here=dirname(fileURLToPath(import.meta.url)),python=testPythonV1();
-const roots:string[]=[];afterAll(()=>{process.chdir(original);for(const root of roots)rmSync(root,{recursive:true,force:true});});
-const original=process.cwd();
+const roots:string[]=[];afterAll(()=>{for(const root of roots)rmSync(root,{recursive:true,force:true});});
 const build=(files:Readonly<Record<string,string|undefined>>):string=>{const root=realpathSync(mkdtempSync(join(tmpdir(),"workspaces-")));roots.push(root);for(const[path,text]of Object.entries(files)){if(text===undefined)continue;const target=join(root,...path.split("/"));mkdirSync(dirname(target),{recursive:true});writeFileSync(target,text);}return root;};
 const virtual=(files:Record<string,string>,root:string):PackagePayloadOperations=>{
  const table=new Map<string,string>(Object.entries(files).map(([path,text])=>[join(root,...path.split("/")),text])),directories=new Set<string>([root]);
@@ -40,14 +39,14 @@ for(const row of corpus.membership)test("membership comparison: "+row.name,()=>{
  expect({fresh:comparison.fresh,orderChanged:comparison.orderChanged,missing:comparison.missing,stale:comparison.stale,expected:comparison.expected}).toEqual({fresh:row.fresh,orderChanged:row.orderChanged,missing:row.missing,stale:row.stale,expected:corpus.expected});
 });
 for(const row of corpus.env)test("workspace root from the environment: "+row.name,()=>{
- const root=build({"package.json":JSON.stringify({name:"unrelated"})});process.chdir(root);
- try{const found=getWorkspaceRoot(row.env);expect(found).toBe(row.expected===null?root:row.expected==="REL"?resolve("rel/root"):resolve(row.expected));}finally{process.chdir(original);}
+ const root=build({"package.json":JSON.stringify({name:"unrelated"})});
+ const found=getWorkspaceRoot(row.env,{directory:root,ceiling:root});expect(found).toBe(row.expected===null?root:row.expected==="REL"?resolve("rel/root"):resolve(row.expected));
 });
 test("without hints the nearest package named workspace above the working directory is the root",()=>{
  const root=build({"package.json":JSON.stringify({name:corpus.workspaceMarker.name}),[corpus.workspaceMarker.nested+"/package.json"]:JSON.stringify({name:"inner"}),[corpus.workspaceMarker.nested+"/x.txt"]:"x"});
- try{process.chdir(join(root,...corpus.workspaceMarker.nested.split("/")));expect(realpathSync(getWorkspaceRoot({}))).toBe(root);}finally{process.chdir(original);}
- const bare=build({"a/b/x.txt":"x"});try{process.chdir(join(bare,"a","b"));expect(realpathSync(getWorkspaceRoot({}))).toBe(realpathSync(process.cwd()));}finally{process.chdir(original);}
- const broken=build({"package.json":"{","a/x.txt":"x"});try{process.chdir(join(broken,"a"));expect(typeof getWorkspaceRoot({})).toBe("string");}finally{process.chdir(original);}
+ expect(realpathSync(getWorkspaceRoot({},{directory:join(root,...corpus.workspaceMarker.nested.split("/")),ceiling:root}))).toBe(root);
+ const bare=build({"a/b/x.txt":"x"});const bareDirectory=join(bare,"a","b");expect(realpathSync(getWorkspaceRoot({},{directory:bareDirectory,ceiling:bare}))).toBe(realpathSync(bareDirectory));
+ const broken=build({"package.json":"{","a/x.txt":"x"});expect(typeof getWorkspaceRoot({},{directory:join(broken,"a"),ceiling:broken})).toBe("string");
 });
 test("the corpus is closed under its schema",()=>{const ajv=new Ajv({strict:true});expect(ajv.validate(schema,corpus),JSON.stringify(ajv.errors)).toBe(true);});
 test("the independent Python model reaches the same verdicts",()=>{

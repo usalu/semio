@@ -21,7 +21,7 @@ fn admit_fem3d_artifact_mutation(mutation: &Fem3dMutation) -> Result<store::os_s
 /// `VcsArtifactApp` rejects any tool whose declared lane has no one-item preparation factory with
 /// `interactive-job.publication-authority-missing`.
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
-pub(super) struct Fem3dArtifactPreparationFactory;
+pub struct Fem3dArtifactPreparationFactory;
 
 struct Fem3dArtifactPreparation {
     pub(super) owners: store::OneItemOwners<Fem3dSnapshot, Fem3dMutation>,

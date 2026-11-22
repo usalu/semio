@@ -19,6 +19,7 @@ import { validateJsonSchemaSubset } from "../../../🧬️schema/✅️validator
 import { collectArtifactFiles } from "../🗂️files/🟦️.ts";
 import {runOwnedCommand} from "../../🎛️owned-execution/🟦️.ts";
 import { admitCargoSelectionV1, type AdmittedCargoSourceRosterV1, type CargoSourceBoundaryPolicyV1 } from "../🏗️native-build/📥️source/🎟️admission/🟦️.ts";
+import {RetainedCargoSourcesV1,type CargoSourceProvenanceV1} from "../🏗️native-build/📥️source/📎️retained/🟦️.ts";
 import {publishCargoSourceDriftV1,watchCargoSourceDriftV1} from "../🏗️native-build/📥️source/👁️drift/🟦️.ts";
 import{withCargoCompilerInputsV1,type CargoCompilerInputsPortV1}from"../🏗️native-build/📥️inputs/🟦️.ts";
 
@@ -41,7 +42,7 @@ export type WasmBuildPolicyV1 = Readonly<{ version: 1; cwd: string; workspaceRoo
  * `componentDir` is the `🧩️component` cdylib crate wasm-bindgen links (a library crate is never a cdylib). */
 export type WasmPackWebBuildOptions = Readonly<{ storage:NativeStorageReservationV1;consume:(capture:ProducedWasmPackageV1)=>Promise<void>;environment:Readonly<Record<string,string|undefined>>; control: CompilerAdmissionControl;withCargoInputs?:CargoCompilerInputsPortV1; rsDir: string; componentDir: string; logPrefix: string; pkg: WasmPackWebPkg; wasmBaseName: string; threads?: boolean; cargoFeatures?: readonly string[]; noDefaultFeatures?: boolean; cargoConfigurationSelectors: readonly string[]; report?: (line: string) => void }>;
 /** 🔌️ Executes an explicitly selected compiler with bounded cancellation; `admit` refuses the exact Cargo selection before it compiles. */
-export type WasmBuildExecutionPortV1 = Readonly<{ run: (command: string, args: readonly string[], options: Readonly<{ cwd: string; environment: Readonly<Record<string,string|undefined>>; budgetMs: number; label: string; signal: AbortSignal;control:CompilerAdmissionControl }>) => Promise<void>; admit: (args: readonly string[], options: Readonly<{ cwd: string; environment: Readonly<Record<string,string|undefined>>; policy: WasmBuildPolicyV1; storage:NativeStorageReservationV1;control: CompilerAdmissionControl }>) => Promise<AdmittedCargoSourceRosterV1> }>;
+export type WasmBuildExecutionPortV1 = Readonly<{ run: (command: string, args: readonly string[], options: Readonly<{ cwd: string; environment: Readonly<Record<string,string|undefined>>; budgetMs: number; label: string; signal: AbortSignal;control:CompilerAdmissionControl }>) => Promise<void>; admit: (args: readonly string[], options: Readonly<{ cwd: string; environment: Readonly<Record<string,string|undefined>>; policy: WasmBuildPolicyV1; storage:NativeStorageReservationV1;control: CompilerAdmissionControl }>) => Promise<AdmittedCargoSourceRosterV1&Readonly<{cargoWorkspace?:string}>> }>;
 
 /** 📏️ Admits one wasm-bindgen Cargo selection through the one Source admission owner, keyed by the policy's repository root.
  * @see ../🏗️native-build/📥️source/🎟️admission/🟦️.ts */
@@ -97,14 +98,16 @@ export const runWasmBuildCommandV1:WasmBuildExecutionPortV1["run"]=async(command
   }
 };
 
-/** 👁️ Watches the admitted Rust inputs through one owned compiler command and drains it before propagating proven churn. */
-export function runWasmCargoCommandV1(run:WasmBuildExecutionPortV1["run"],command:string,args:readonly string[],options:Parameters<WasmBuildExecutionPortV1["run"]>[2],sources:AdmittedCargoSourceRosterV1):Promise<void>{
+/** 👁️ Watches the admitted Rust inputs through one owned compiler command and drains it before propagating proven churn.
+ * With `retained`, an edit to a file whose admitted body is held is deferred to the post-compile proof instead of cancelling the command.
+ * @see ../🏗️native-build/📥️source/📎️retained/🟦️.ts */
+export function runWasmCargoCommandV1(run:WasmBuildExecutionPortV1["run"],command:string,args:readonly string[],options:Parameters<WasmBuildExecutionPortV1["run"]>[2],sources:AdmittedCargoSourceRosterV1,retained?:RetainedCargoSourcesV1):Promise<void>{
   if(options.signal!==options.control.signal)throw Error("Original WASM compiler signal required");
   const drift=new AbortController();
   return withRequestedIssuedResourceControlV1(options.control,0,async control=>{
     let driftDiagnostic:Promise<void>|undefined;
     const stop=watchCargoSourceDriftV1(sources.inputs,sources.startedMs,mismatch=>{
-      if(control.signal.aborted)return;
+      if(control.signal.aborted||retained?.defer(mismatch,options.control))return false;
       driftDiagnostic=publishCargoSourceDriftV1(options.control,mismatch);
       drift.abort(concurrentEditV1("input",mismatch.path,"Running WASM Cargo Source differs from admission: "+JSON.stringify(mismatch),"build"));
     });
@@ -161,15 +164,16 @@ export async function buildWasmWebV1(opts: WasmPackWebBuildOptions, policy: Wasm
     await withCargoCompilerInputsV1({manifest:join(componentDir,"Cargo.toml"),cwd:componentDir,arguments:selection.cargo,environment:buildEnv,control},opts.withCargoInputs,async actual=>{
     leased=await acquireCargoBuildLeaseV1({directory:policy.leaseDirectory,buildDirectory:policy.buildDirectory,targetDirectory:cargoOutput,args:selection.cargo,signal:actual.control.signal,control:actual.control});
     const produced=await actual.withWriter(async control=>{
-    let capacity: Awaited<ReturnType<typeof acquireCompilerCapacityLeaseV1>> | undefined,bodyFailed=false;
+    let capacity: Awaited<ReturnType<typeof acquireCompilerCapacityLeaseV1>> | undefined,retained:RetainedCargoSourcesV1|undefined,bodyFailed=false;
     try{
     const signal=control.signal;capacity=await acquireCompilerCapacityLeaseV1({request:{kind:"available",maximumParallelism:Math.max(1,Math.min(availableParallelism(),4))},directory:policy.leaseDirectory,control});checkResourceLeaseControl(control);
     const environment:Record<string,string|undefined>={...actual.environment,SEMIO_COMPILER_CAPACITY_HELD:"true",SEMIO_COMPILER_PARALLELISM:String(capacity.parallelism)};if(!environment.MAKEFLAGS&&!environment.CARGO_MAKEFLAGS)environment.CARGO_BUILD_JOBS=String(capacity.parallelism);
     const sources=await port.admit(actual.arguments,{cwd:componentDir,environment,policy,storage:opts.storage,control});
-    const invoke=async(command:string,args:readonly string[],monitor?:AdmittedCargoSourceRosterV1)=>{
+    retained=await RetainedCargoSourcesV1.admit(sources,{workspace:policy.workspaceRoot,directory:`${cargoOutput}-sources`,storage:opts.storage,control,maxSourceBytes:policy.sourceBoundary.maxSourceBytes});
+    const held=retained,invoke=async(command:string,args:readonly string[],monitor?:AdmittedCargoSourceRosterV1)=>{
       checkResourceLeaseControl(control);
       const options={cwd:componentDir,environment,budgetMs:compilerAdmissionBudgetV1(control),label:logPrefix,signal,control};
-      if(monitor)await runWasmCargoCommandV1(port.run,command,args,options,monitor);
+      if(monitor)await runWasmCargoCommandV1(port.run,command,args,options,monitor,held);
       else await port.run(command,args,options);
       checkResourceLeaseControl(control);
     };
@@ -188,6 +192,8 @@ export async function buildWasmWebV1(opts: WasmPackWebBuildOptions, policy: Wasm
       await invoke(policy.wasmPack.command,[...policy.wasmPack.args,...buildArgs],sources);
     }
     report?.(`[${logPrefix}] wasm build done in ${((Date.now() - t0) / 1000).toFixed(1)}s`);
+    const provenance=await held.prove([cargoOutput,policy.buildDirectory],t0,control);
+    report?.(`[${logPrefix}] admitted sources ${provenance.sha256} files=${provenance.files} proven=${provenance.proven} deferred=${provenance.deferred.length}`);
 
     if (!existsSync(pkgDir)) mkdirSync(pkgDir, { recursive: true });
     const snippetFiles=[...(await collectArtifactFiles(pkgDir,signal)).keys()].filter(name=>name.startsWith("snippets/"));
@@ -204,15 +210,15 @@ export async function buildWasmWebV1(opts: WasmPackWebBuildOptions, policy: Wasm
     if (existsSync(wasmPath)) {
       const sz = (statSync(wasmPath).size / (1024 * 1024)).toFixed(2);
       const files = await collectArtifactFiles(pkgDir, signal);
-      return {files,owner:readWasmPackageOwnerV1(pkgJson.semioWasmOwner),sz};
+      return {files,owner:readWasmPackageOwnerV1(pkgJson.semioWasmOwner),sz,provenance};
     } else {
       throw new Error(`[${logPrefix}] expected wasm output missing: ${wasmPath}`);
     }
     }catch(error){bodyFailed=true;throw error;}finally{
-      let failed=false,failure:unknown;for(const cleanup of[()=>{const held=capacity;capacity=undefined;held?.release();}])try{cleanup();}catch(error){if(!failed){failed=true;failure=error;}}if(!bodyFailed&&failed)throw failure;
+      let failed=false,failure:unknown;for(const cleanup of[async()=>{const held=retained;retained=undefined;await held?.close();},async()=>{const held=capacity;capacity=undefined;held?.release();}])try{await cleanup();}catch(error){if(!failed){failed=true;failure=error;}}if(!bodyFailed&&failed)throw failure;
     }
     });
-    await consumeProducedWasmPackageV1(produced.files,produced.owner,{...opts,control:actual.control},()=>undefined);
+    await consumeProducedWasmPackageV1(produced.files,produced.owner,{...opts,control:actual.control},()=>undefined,produced.provenance);
     report?.(`[${logPrefix}] owned ${policy.mode}/${wasmBaseName}_bg.wasm consumed (${produced.sz} MiB)`);
     });
   }catch(error){primaryFailed=true;throw error;}finally{
@@ -224,7 +230,7 @@ export async function buildWasmWebV1(opts: WasmPackWebBuildOptions, policy: Wasm
 
 declare const wasmPackageBrand:unique symbol;
 export type ProducedWasmPackageV1=Readonly<{readonly[wasmPackageBrand]:true}>;
-export interface ProducedWasmPackageViewV1{readonly files:ReadonlyMap<string,string>;readonly owner:WasmPackageOwnerV1;readonly control:CompilerAdmissionControl;recheck():Promise<void>}
+export interface ProducedWasmPackageViewV1{readonly files:ReadonlyMap<string,string>;readonly owner:WasmPackageOwnerV1;readonly sources:CargoSourceProvenanceV1;readonly control:CompilerAdmissionControl;recheck():Promise<void>}
 type PackageScope={live:boolean;accepting:boolean;view:ProducedWasmPackageViewV1;pending:Set<Promise<unknown>>;failures:unknown[]};
 const producedPackages=new WeakMap<ProducedWasmPackageV1,PackageScope>();
 /** 📥️ Enrolls a task only against an actually issued finite package while its compiler store remains held. */
@@ -252,7 +258,7 @@ async function readProducedWasmIdentityV1(name:string,path:string,before?:import
  }
  return stat;
 }
-async function consumeProducedWasmPackageV1(files:ReadonlyMap<string,string>,owner:WasmPackageOwnerV1,options:WasmPackWebBuildOptions,compilerStopped:()=>void):Promise<void>{
+async function consumeProducedWasmPackageV1(files:ReadonlyMap<string,string>,owner:WasmPackageOwnerV1,options:WasmPackWebBuildOptions,compilerStopped:()=>void,sources:CargoSourceProvenanceV1):Promise<void>{
  const limits=sourceSchema.properties;
  requireIssuedResourceControlV1(options.control);
  requireNativeStorageReservationV1(options.storage,options.control);
@@ -297,6 +303,6 @@ async function consumeProducedWasmPackageV1(files:ReadonlyMap<string,string>,own
    if(actual.sha256!==fact.sha256||actual.byteLength!==fact.byteLength)throw Error(`Actual WASM package bytes changed: ${JSON.stringify(name)}`);
   }
  };
- const token=Object.freeze({})as ProducedWasmPackageV1,scope:PackageScope={live:true,accepting:true,view:Object.freeze({files:new Map(files),owner:Object.freeze({...owner}),control:options.control,recheck}),pending:new Set(),failures:[]};producedPackages.set(token,scope);let failed=false,failure:unknown;
+ const token=Object.freeze({})as ProducedWasmPackageV1,scope:PackageScope={live:true,accepting:true,view:Object.freeze({files:new Map(files),owner:Object.freeze({...owner}),sources,control:options.control,recheck}),pending:new Set(),failures:[]};producedPackages.set(token,scope);let failed=false,failure:unknown;
  compilerStopped();try{try{await withIssuedResourceOperationV1(options.control,()=>options.consume(token));}catch(error){failed=true;failure=error;}scope.accepting=false;while(scope.pending.size)await Promise.allSettled([...scope.pending]);if(failed)throw failure;if(scope.failures.length)throw scope.failures[0];await recheck();}finally{scope.accepting=false;scope.live=false;}
 }

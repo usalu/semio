@@ -95,7 +95,7 @@ fn native_action_ingress_retains_original_sources_through_paid_close(){
  use semio_plugin::action_ingress::{ActionIngressRecord,ActionIngressSource};
  use semio_framework_trace::observe_heap_allocations_on_this_thread as heap;
  fn ingress(args:Option<semio_framework_value::DslValue>,prepared:Option<semio_framework_value::DslValue>,fault:Option<Fault>)->ActionIngressSource {
-  ActionIngressSource { original_typing_ready:false,original_typing_control_ready:false,original_press_result:None,original_tool_dispatch:None,original_press_tag:None,original_tool_tag:None,original_tool_tag_ready:false,action:None,args,prepared,assembled:None,fault }
+  ActionIngressSource { original_typing_ready:false,original_typing_control_ready:false,original_press_selected:false,original_press_result:None,original_tool_dispatch:None,original_press_tag:None,original_tool_tag:None,original_tool_tag_ready:false,action:None,args,prepared,assembled:None,fault }
  }
  fn data(value:&semio_framework_value::DslValue)->usize{match value{semio_framework_value::DslValue::Object(fields)=>fields.as_ptr()as usize,_=>panic!("closed original fixture must be an object")}}
  fn original(value:&serde_json::Value)->semio_framework_value::DslValue{semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(&value.to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap())}
@@ -166,17 +166,16 @@ fn native_parsed_command_moves_original_address_backing_without_allocation(){
 
 #[test]
 fn native_jack_record_reconstruction_moves_original_fields_through_paid_close(){
- use jack::standards::v1::subsets::any::io::binary::snapshot::receiving::{JackRecordReconstruction,JackRecordReconstructionPolicy};
+ use jack::standards::v1::subsets::any::io::binary::snapshot::receiving::JackRecordReconstruction;
  use jack::standards::v1::subsets::any::schema::content::retire_owned_to_terminal;
  use semio_framework_trace::observe_heap_allocations_on_this_thread as heap;
  use semio_framework_value::{RetainedCloneProgress,RetainedWorkPoll,ToValue};
  let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/🫴️receiving/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  let mut expected=SemioJackComposition::initial_snapshot();
  expected.name=fixture["source"]["name"].as_str().unwrap().into();
- expected.manifest.node_kinds.push(jack::standards::v1::subsets::any::schema::manifest::NodeKindDef{name:"nested original".into(),properties:vec![semio_framework_graph_manifest::PropertyDef{name:"schema original".into(),kind:semio_framework_graph_manifest::PropertyKind::Derived,value_type:semio_framework_value::ValueType::List(Box::new(semio_framework_value::ValueType::Schema("s.fixture.original".into()))),expr:Some("original expression".into())}],port_kinds:vec!["original port".into()]});
  let bytes=expected.encode_pack();let(_,body)=store::semio_format::unwrap_binary(&bytes).unwrap();let(record,_)=store::pack_rt::decode_document(&body,&jack::standards::v1::subsets::any::schema::snapshot::JackSnapshot::record_spec().unwrap(),&Default::default()).unwrap();
  let semio_framework_dsl_record::FieldValue::Text(text)=record.get(1).unwrap()else{panic!("original native name is text")};let pointer=text.as_ptr()as usize;
- let mut source=Some(record);let policy=&fixture["nativePolicy"];let mut cursor=JackRecordReconstruction::empty(JackRecordReconstructionPolicy{maximum_rows:policy["maximumRows"].as_u64().unwrap()as usize,maximum_type_depth:policy["maximumTypeDepth"].as_u64().unwrap()as usize});
+ let mut source=Some(record);let mut cursor=JackRecordReconstruction::empty();
  let mut caller=semio_plugin::artifact_app_laws::OriginalFixtureCaller::admit().unwrap();let mut context=caller.context();let cx=&mut context;
  let before=cx.retained_progress();let(posted,physical)=heap(||cx.with_retained_loan(semio_framework_value::RetainedCloneGrant{maximum_items:0,..cx.retained_grant()},|same|cursor.receive(&mut source,same.retained_grant()).map_err(Into::into)));assert_eq!(posted.unwrap(),RetainedCloneProgress::default());assert!(source.is_some());assert_eq!((physical.requested_bytes,physical.released_bytes),(0,0));assert_eq!(cx.retained_progress(),before);
  let(posted,physical)=heap(||cursor.receive(&mut source,cx.retained_grant()));let posted=posted.unwrap();cx.consume_retained(posted).unwrap();assert_eq!((physical.requested_bytes,physical.released_bytes),(posted.retained_capacity_bytes,posted.released_bytes));assert!(source.is_none());

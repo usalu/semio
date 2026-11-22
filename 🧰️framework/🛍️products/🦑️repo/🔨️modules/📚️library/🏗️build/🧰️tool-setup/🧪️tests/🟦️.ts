@@ -280,7 +280,11 @@ describe("setup", () => {
   });
 
   test("selects a group, refuses an unknown tool and keeps the order of the table", () => {
-    expect(toolRowsV1("all").map(row => row.id)).toEqual(TOOL_SETUP_V1.groups.all);
+    const host = process.platform, scoped = TOOL_SETUP_V1.tools.filter(row => row.platforms !== undefined && !row.platforms.includes(host)).map(row => row.id);
+    expect(toolRowsV1("all").map(row => row.id)).toEqual(TOOL_SETUP_V1.groups.all.filter(id => !scoped.includes(id)));
+    expect(toolRowV1("micromamba").platforms).toEqual(["darwin"]);
+    expect(toolRowsV1("all").some(row => row.id === "micromamba")).toBe(host === "darwin");
+    expect(toolRowsV1(["micromamba"]).length).toBe(1);
     expect(() => toolRowsV1(["nope"], {SEMIO_LANGUAGE: "de"})).toThrow(/Unbekanntes gepinntes Werkzeug: nope/u);
     expect(readdirSync(here).length).toBeGreaterThan(0);
   });

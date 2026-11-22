@@ -39,6 +39,7 @@ async fn document_panel_lists_stock_and_steps() {
 /// record since wave 4, not the unresolvable `steps` child handle.
 #[semio_framework_async_macros::async_test]
 async fn document_panel_lists_every_step_payload_in_order() {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     use semio_s_artifact_process_process3d_model::{snapshot::process_working_scene_to_snapshot, snapshot::ProcessMeasure, snapshot::ProcessStep, snapshot::ProcessWorkingScene, snapshot::Stock, snapshot::Workshop};
     let scene = ProcessWorkingScene {
         stock: Stock::default(),
@@ -103,7 +104,7 @@ fn project(document: &Process3dSnapshot, windows: &semio_plugin::TreeWindows<'_>
 /// 🔎️ The projected body at the viewer's replay cursor `resolved_up_to`.
 fn project_at(document: &Process3dSnapshot, resolved_up_to: Option<usize>, windows: &semio_plugin::TreeWindows<'_>) -> String {
     let labels = semio_s_artifact_process_process3d_kit::editor::process3d::terminology::process3d_labels(&ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native));
-    let node = render(document, resolved_up_to, labels, windows).expect("document tree renders");
+    let node = render(document, resolved_up_to, labels, windows, Some("timeline-document")).expect("document tree renders");
     semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).expect("document projection")
 }
 
@@ -115,6 +116,7 @@ fn window_view(node_key: &str, open: Option<bool>, offset: u32, rows: u32) -> Vi
 /// never summarises a remainder as a `+n`.
 #[semio_framework_async_macros::async_test]
 async fn an_oversized_timeline_stamps_every_sections_total() {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     let document = oversized_document();
     let json = project(&document, &semio_plugin::TreeWindows::unhosted());
     let (stock_total, _, stock_rows) = container_of(&json, PROCESS_3D_PLAY_DOCUMENT_STOCK);
@@ -131,6 +133,7 @@ async fn an_oversized_timeline_stamps_every_sections_total() {
 /// ⚖️ LAW (b): a closed section states its extent and materialises nothing.
 #[semio_framework_async_macros::async_test]
 async fn a_closed_steps_section_stamps_its_total_with_no_rows() {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     let document = oversized_document();
     let view = window_view(PROCESS_3D_PLAY_DOCUMENT_STEPS, Some(false), 0, 0);
     let json = project(&document, &semio_plugin::TreeWindows::for_body(&view, PROCESS_3D_PLAY_BODY_ARTIFACT));
@@ -144,6 +147,7 @@ async fn a_closed_steps_section_stamps_its_total_with_no_rows() {
 /// step id the `geometry` domain targets — and each of those rows keeps BOTH its own row actions.
 #[semio_framework_async_macros::async_test]
 async fn a_steps_window_request_materialises_exactly_its_slice_with_its_row_actions() {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     let document = oversized_document();
     let view = window_view(PROCESS_3D_PLAY_DOCUMENT_STEPS, Some(true), 100, 6);
     let json = project(&document, &semio_plugin::TreeWindows::for_body(&view, PROCESS_3D_PLAY_BODY_ARTIFACT));
@@ -159,15 +163,29 @@ async fn a_steps_window_request_materialises_exactly_its_slice_with_its_row_acti
 /// `granularity` and carry no per-row activate BINDING (their row actions are a separate channel).
 #[semio_framework_async_macros::async_test]
 async fn document_rows_declare_their_granularity_and_pick_through_the_tree() {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     let document = oversized_document();
     let json = project(&document, &semio_plugin::TreeWindows::unhosted());
     let projection: serde_json::Value = serde_json::from_str(&json).expect("document projection json");
     assert_eq!(projection["component"]["interactionDomain"].as_str(), Some(PROCESS3D_INTERACTION_DOMAIN), "{json}");
     assert_eq!(projection["bindings"].as_array().cloned().unwrap_or_default().iter().filter(|binding| binding["trigger"] == "activate").count(), 1, "exactly one tree-level interactionSelect: {json}");
+    assert!(projection["bindings"].as_array().unwrap().iter().any(|binding| binding["trigger"] == "drop"), "React receives the tree drop action");
     for section in projection["children"].as_array().cloned().unwrap_or_default() {
         for row in section["children"].as_array().cloned().unwrap_or_default() {
             assert_eq!(row["component"]["granularity"].as_str(), Some(PROCESS3D_GRANULARITY_OBJECT), "{row}");
-            assert!(row["bindings"].as_array().map(|bindings| bindings.is_empty()).unwrap_or(true), "a pick row carries no binding of its own: {row}");
+            let bindings = row["bindings"].as_array().cloned().unwrap_or_default();
+            assert!(!bindings.iter().any(|binding| binding["trigger"] == "activate"), "a pick row uses the tree's selection action: {row}");
+            if section["key"] == PROCESS_3D_PLAY_DOCUMENT_STEPS {
+                assert_eq!(row["component"]["draggable"].as_bool(), Some(true), "{row}");
+                let encoded = row["component"]["dragData"][semio_s_artifact_process_process3d_kit::TREE_ROW_REORDER_MIME].as_str().expect("step drag payload");
+                let payload: serde_json::Value = serde_json::from_str(encoded).expect("step drag payload JSON");
+                assert_eq!(payload["documentId"], "timeline-document");
+                assert_eq!(payload["stepId"], row["key"]);
+                assert!(bindings.iter().any(|binding| binding["trigger"] == "drop"), "WGPU receives the row drop action: {row}");
+            } else {
+                assert!(row["component"]["dragData"].is_null());
+                assert!(bindings.is_empty());
+            }
         }
     }
 }
@@ -177,6 +195,7 @@ async fn document_rows_declare_their_granularity_and_pick_through_the_tree() {
 /// document renders differently for two viewers and never changes itself.
 #[semio_framework_async_macros::async_test]
 async fn steps_past_the_viewers_cursor_render_pending() {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     use semio_s_artifact_process_process3d_model::{snapshot::process_working_scene_to_snapshot, snapshot::ProcessMeasure, snapshot::ProcessStep, snapshot::ProcessWorkingScene, snapshot::Stock, snapshot::Workshop};
     let step = |id: &str| ProcessStep { id: id.into(), label: id.into(), enabled: true, origin: None, measure: ProcessMeasure::Drill { radius: 0.01, depth: 0.02, pose: Default::default() } };
     let fixture = process_working_scene_to_snapshot(&ProcessWorkingScene { stock: Stock::default(), steps: vec![step("a"), step("b"), step("c")] }, Workshop::default());

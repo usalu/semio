@@ -3,16 +3,17 @@ import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import Ajv from "ajv";
-import { act, createElement } from "react";
+import { act, createElement, type ContextType } from "react";
 import { afterEach, describe, expect, it } from "vitest";
 import { cleanup, fireEvent, render } from "@semio-tech/ui-react/test";
 import { InkCanvasHost } from "../../🧱️elements/🖋️InkCanvasHost/🟦️.tsx";
+import { WindowActiveUtilityContext } from "../../🧱️elements/🗣️Interpreter/🌉️scene-host-contract/🟦️.ts";
 
 const suiteRoot = dirname(fileURLToPath(import.meta.url));
 const engineRoot = resolve(suiteRoot, "../..");
 const fixture = JSON.parse(readFileSync(resolve(engineRoot, "🧪️tests/🧫️fixtures/🖋️ink-canvas-domain-interaction/🔣️.json"), "utf8")) as any;
 
-function mountHost(activeUtility = "selectDirect", interactive = true, viewMode = "composite", selectionJson = fixture.scene.selectionJson) {
+function mountHost(activeUtility = "selectDirect", interactive = true, viewMode = "composite", selectionJson = fixture.scene.selectionJson, register: ContextType<typeof WindowActiveUtilityContext> = null, document = fixture.document) {
   const actions: any[] = [];
   const node = {
     type: "componentScene",
@@ -20,7 +21,7 @@ function mountHost(activeUtility = "selectDirect", interactive = true, viewMode 
     controllerId: fixture.scene.controllerId,
     componentKind: "ink-canvas",
     inkCanvas: {
-      documentJson: JSON.stringify(fixture.document),
+      documentJson: JSON.stringify(document),
       selectionJson,
       hoveredId: fixture.scene.hoveredId,
       activeUtility,
@@ -29,7 +30,7 @@ function mountHost(activeUtility = "selectDirect", interactive = true, viewMode 
       interactionDomain: fixture.scene.interactionDomain,
     },
   };
-  const mounted = render(createElement(InkCanvasHost, { node, onAction: (action: unknown) => actions.push(action) } as any));
+  const mounted = render(createElement(WindowActiveUtilityContext.Provider, { value: register }, createElement(InkCanvasHost, { node, onAction: (action: unknown) => actions.push(action) } as any)));
   const root = mounted.container.querySelector(`[data-surface-id="${fixture.scene.surfaceId}"]`) as HTMLDivElement;
   Object.defineProperty(root, "getBoundingClientRect", {
     value: () => ({ x: 0, y: 0, left: 0, top: 0, right: fixture.viewport.width, bottom: fixture.viewport.height, width: fixture.viewport.width, height: fixture.viewport.height, toJSON: () => ({}) }),
@@ -124,6 +125,12 @@ describe("InkCanvas canonical interaction domain", () => {
       expect(actions.at(-1)).toEqual(expectedAction(testCase));
       cleanup();
     }
+  });
+
+  it.each(fixture.utilityAuthority)("$id routes the first pointer through the owned utility register", ({ scene, register, action }) => {
+    const { actions, root } = mountHost(scene, true, "composite", "[]", register, { ...fixture.document, blocks: [] });
+    fireEvent.pointerDown(root, { button: 0, pointerId: 19, clientX: 80, clientY: 100 });
+    expect(actions.at(-1)?.action).toBe(action);
   });
 
   it("draws through a rendered block while Pencil owns the pointer", () => {

@@ -110,7 +110,7 @@ impl ShellInputState {
         let mut selector = vec![theme_editor_control_item(
             "framework.settings.theme.select.picker",
             shell_chrome_string("settings.theme.select", is_de),
-            UiControlNode::Select(UiSelectNode {
+            UiControlNode::Select(UiSelectNode { appearance: Default::default(),
                 presence: UiPresence::default(),
                 id: "framework.settings.theme.select".into(),
                 value: active_id.clone(),

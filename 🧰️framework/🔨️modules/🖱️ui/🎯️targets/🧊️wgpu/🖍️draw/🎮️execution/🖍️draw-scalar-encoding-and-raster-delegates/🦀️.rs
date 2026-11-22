@@ -17,8 +17,33 @@ impl GpuContext {
             self.roots.queue.submit(encoder.finish()).expect("same-session recorded command");
             return Ok(());
         }
+        match cursor {
+            DrawMeasureCursor::GroupBegin(layer) => {
+                let group = draw.layers.get(layer).and_then(|layer| layer.group).ok_or_else(|| "prepared group begin cursor was stale".to_string())?;
+                PreparedGroupTarget::ensure(&self.roots.device, &mut self.group_target, self.width, self.height, self.color_target_format);
+                let target = self.group_target.as_ref().ok_or_else(|| "prepared group target was missing".to_string())?;
+                let mut encoder = self.roots.device.create_command_encoder(&gpu_device::CommandEncoderDescriptor { label: Some("prepared_group_begin") });
+                self.pipelines.encode_prepared_group_clear(&mut encoder, target);
+                self.roots.queue.submit(encoder.finish()).expect("same-session recorded command");
+                self.group_open = Some(group);
+                return Ok(());
+            }
+            DrawMeasureCursor::GroupEnd(_) => {
+                let Some(group) = self.group_open.take() else { return Ok(()) };
+                let target = self.group_target.as_ref().ok_or_else(|| "prepared group target was missing".to_string())?;
+                let composite = self.composite_color.as_ref().ok_or_else(|| "prepared group composite target was missing".to_string())?;
+                let mut encoder = self.roots.device.create_command_encoder(&gpu_device::CommandEncoderDescriptor { label: Some("prepared_group_end") });
+                self.pipelines.encode_prepared_group_composite(&self.roots.device, &self.roots.queue, &mut encoder, target, composite.view(), group.alpha, group.bounds, self.logical_width, self.logical_height);
+                self.roots.queue.submit(encoder.finish()).expect("same-session recorded command");
+                return Ok(());
+            }
+            _ => {}
+        }
         let world_encoded = prepared_draw_scalar_uses_world_encoded_attachment(cursor);
-        let color_view = self.composite_color.as_ref().map(|composite| if world_encoded { composite.world_encoded_view() } else { composite.view() }).ok_or_else(|| "prepared composite target was missing".to_string())?;
+        let color_view = match (world_encoded, self.group_open.is_some(), self.group_target.as_ref()) {
+            (false, true, Some(group)) => &group.view,
+            _ => self.composite_color.as_ref().map(|composite| if world_encoded { composite.world_encoded_view() } else { composite.view() }).ok_or_else(|| "prepared composite target was missing".to_string())?,
+        };
         let Some(depth) = self.depth_view.as_ref() else { return Err("prepared depth owner was missing".to_string()) };
         let width = self.logical_width;
         let height = self.logical_height;
@@ -154,6 +179,15 @@ impl GpuContext {
                 let segment = line_owner.vertices.get(start..=vertex).ok_or_else(|| "prepared line segment cursor was stale".to_string())?;
                 let mut encoder = self.roots.device.create_command_encoder(&gpu_device::CommandEncoderDescriptor { label: Some("prepared_world_line") });
                 self.pipelines.encode_prepared_world_line(&self.roots.device, &self.roots.queue, &mut encoder, color_view, depth, &mut self.frame_buffers, pass_owner, segment, scissor).map_err(str::to_owned)?;
+                self.roots.queue.submit(encoder.finish()).expect("same-session recorded command");
+            }
+            DrawMeasureCursor::PassPointChunk { pass, draw: draw_index, start } => {
+                let scissor = scissor.ok_or_else(|| "prepared world point clip piece was missing".to_string())?;
+                let pass_owner = draw.scene_passes.get(pass).ok_or_else(|| "prepared point pass cursor was stale".to_string())?;
+                let point_owner = pass_owner.point_draws.get(draw_index).ok_or_else(|| "prepared point draw cursor was stale".to_string())?;
+                let chunk = point_owner.vertices.get(start..(start + semio_ui_scene_pass::POINT_CHUNK_VERTICES).min(point_owner.vertices.len())).ok_or_else(|| "prepared point chunk cursor was stale".to_string())?;
+                let mut encoder = self.roots.device.create_command_encoder(&gpu_device::CommandEncoderDescriptor { label: Some("prepared_world_points") });
+                self.pipelines.encode_prepared_world_points(&self.roots.device, &self.roots.queue, &mut encoder, color_view, depth, &mut self.frame_buffers, pass_owner, point_owner, chunk, scissor).map_err(str::to_owned)?;
                 self.roots.queue.submit(encoder.finish()).expect("same-session recorded command");
             }
             DrawMeasureCursor::PassPostprocess { pass } => {

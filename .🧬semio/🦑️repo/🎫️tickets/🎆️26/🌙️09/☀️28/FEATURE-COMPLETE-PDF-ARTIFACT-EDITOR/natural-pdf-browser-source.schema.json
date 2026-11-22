@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "array",
+  "minItems": 1,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "case",
+      "result",
+      "reads",
+      "pages",
+      "retirements",
+      "retries",
+      "completionPolls"
+    ],
+    "properties": {
+      "case": {
+        "enum": [
+          "source-complete",
+          "prepare-refused",
+          "foreign-preparation",
+          "prepare-cancelled",
+          "pending-read-cancelled",
+          "foreign-page-ack",
+          "short-read"
+        ]
+      },
+      "result": {
+        "type": "string",
+        "minLength": 1
+      },
+      "reads": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "pages": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "retirements": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "retries": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "completionPolls": {
+        "type": "integer",
+        "minimum": 0
+      }
+    }
+  }
+}

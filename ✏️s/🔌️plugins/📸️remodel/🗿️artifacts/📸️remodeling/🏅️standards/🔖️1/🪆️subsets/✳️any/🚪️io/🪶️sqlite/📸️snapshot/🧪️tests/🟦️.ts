@@ -54,8 +54,20 @@ test("SQLite remodeling declared mutation schemas share exact words and raw octe
  for(const[slug,value]of schemas){const json=JSON.parse(readFileSync(new URL('🧬️mutations/'+slug+'/🧬️schema/🔣️.json',schemaRoot),'utf8'));const valid=ajv.compile(json);expect(valid(value)).toBe(true)}
 });
 test("SQLite remodeling declared Text owns tagged buffers octets and literal references",()=>{
- const text='semio remodeling.remodeling.dsl v1\nschema="literal" id="retained"\nassets={"__proto__"{child_id="local" target { artifact-id="" artifact-kind="literal!@/" standard="" subset="*" }}}\nresults { sparse { points { inline values=[nan32_7f800001 -0] } colors="AAF/gP8=" } dense { positions { content content-id="unresolved" chunk-count=18446744073709551615 } } }';
+ const text='semio remodeling.remodeling.dsl v1\nschema="literal" id="retained"\nassets={"__proto__"{child_id="local" target=artifact-id="" artifact-kind="literal!@/" standard="" subset="*"}}\nresults { sparse { points { inline values=[nan32_7f800001 -0] } colors="AAF/gP8=" } dense { positions { content content-id="unresolved" chunk-count=18446744073709551615 } } }';
  const restored=remodelingSnapshotFromDslText(text);expect(restored.results.sparse?.points).toEqual({kind:'inline',values:[{bits:0x7f800001},{bits:0x80000000}]});expect(restored.results.sparse?.colors).toEqual(Uint8Array.from(Buffer.from('AAF/gP8=','base64')));expect(restored.results.dense?.positions).toEqual({kind:'content',contentId:'unresolved',chunkCount:18446744073709551615n});expect(Object.hasOwn(restored.assets,'__proto__')).toBe(true);expect(restored.assets['__proto__']).toEqual({childId:'local',target:{artifactId:'',dialect:{artifactKind:'literal!@/',standard:'',subset:'*'}}});
+});
+test("SQLite remodeling inline artifact references validate against the independent schema",()=>{
+ const prefix='semio remodeling.remodeling.dsl v1\nschema="literal" id="x"\nassets={"a"{child_id="local" target=';
+ const suffix='}}';
+ const target=remodelingSnapshotFromDslText(prefix+'artifact-id="a:b" artifact-kind="s.stdio.semio" standard="v1" subset="mesh"'+suffix).assets.a!.target;
+ const ajv=new Ajv({strict:false,validateFormats:false}).addSchema(documentSchema);
+ expect(ajv.getSchema(documentSchema.$id+'#/$defs/ArtifactRef')!(target)).toBe(true);
+ expect(target).toEqual({artifactId:'a:b',dialect:{artifactKind:'s.stdio.semio',standard:'v1',subset:'mesh'}});
+ for(const reference of ['artifact-id="x" artifact-kind="k" standard="v1"','artifact-id="x" artifact-kind="k" standard="v1" standard="v2"','artifact-id="x" artifact-kind="k" standard="v1" unknown="v"'])expect(()=>remodelingSnapshotFromDslText(prefix+reference+suffix)).toThrow();
+ const literal='artifact-id="x" artifact-kind="k" standard="v1" subset="mesh"';
+ expect(()=>remodelingSnapshotFromDslText(prefix+literal+' target='+literal+suffix)).toThrow('duplicate artifact reference target');
+ expect(()=>remodelingSnapshotFromDslText(prefix.slice(0,-1)+' { artifact-id="x" artifact-kind="k" standard="v1" subset="mesh" }'+suffix)).toThrow();
 });
 test("SQLite remodeling native Text binary32 widening is exact and refuses lost payload",()=>{
  for(const value of laws.nativeTextWordCases){const oracle=new DataView(new ArrayBuffer(8));oracle.setBigUint64(0,BigInt('0x'+value.widenedBinary64Bits));expect(Number.isNaN(oracle.getFloat64(0))).toBe(true);const restored=remodelingSnapshotFromDslText('semio remodeling.remodeling.dsl v1\nschema="literal" id="x"\nparams { ingest { min-sharpness=nan64_'+value.widenedBinary64Bits+' } }');expect(restored.params.ingest.minSharpness).toEqual({bits:Number.parseInt(value.binary32Bits,16)})}

@@ -346,6 +346,9 @@ export function typedOperationPageAnswerV1(page: TypedOperationPage): Readonly<{
   return { acknowledgement: page.acknowledgement, refused: page.lane === TYPED_OPERATION_LANE_FAULT, artifact: page.lane === TYPED_OPERATION_LANE_ARTIFACT };
 }
 
+type TypedOperationTurn = { readonly status: unknown; readonly nextWake: number | null };
+type TypedOperationDrain = { readonly polls: number; readonly stopped: "idle" | "closed" | "budget"; readonly nextWake: number | null };
+
 /** 🔁️ The bounded poll that keeps a mounted typed operation advancing once no host call is left to
  * drive it: submit one continuation settle, stop the moment the actor reports anything other than
  * `more-work`, and yield between polls so a long drain never starves rendering. `live`/`settle`/
@@ -354,9 +357,9 @@ export function typedOperationPageAnswerV1(page: TypedOperationPage): Readonly<{
 export async function drainTypedOperationTurns(
   budget: number,
   live: () => boolean,
-  settle: () => Promise<{ readonly status: unknown; readonly nextWake: number | null }>,
+  settle: () => Promise<TypedOperationTurn>,
   yieldTurn: () => Promise<void>,
-): Promise<{ readonly polls: number; readonly stopped: "idle" | "closed" | "budget"; readonly nextWake: number | null }> {
+): Promise<TypedOperationDrain> {
   for (let poll = 0; poll < budget; poll += 1) {
     if (!live()) return { polls: poll, stopped: "closed", nextWake: null };
     const settled = await settle();
@@ -364,6 +367,21 @@ export async function drainTypedOperationTurns(
     await yieldTurn();
   }
   return { polls: budget, stopped: "budget", nextWake: null };
+}
+
+/** 🧵️ Continues a live operation across poll batches while retaining its acknowledgements and wake. */
+export async function drainTypedOperationBatches(
+  budget: number,
+  live: () => boolean,
+  settle: () => Promise<TypedOperationTurn>,
+  yieldTurn: () => Promise<void>,
+): Promise<TypedOperationDrain> {
+  let polls = 0;
+  for (;;) {
+    const outcome = await drainTypedOperationTurns(budget, live, settle, yieldTurn);
+    polls += outcome.polls;
+    if (outcome.stopped !== "budget" || outcome.polls === 0) return { ...outcome, polls };
+  }
 }
 //#endregion 📬️TypedOperationPage
 /** 🚥️ Normalizes `TurnResult.status` to its kebab-case tag — jco hands a variant `{tag}`, a plain

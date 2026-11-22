@@ -1,0 +1,13 @@
+{
+  "messages": [
+    {"name": "bun package from importer", "message": "Cannot find package '@semio-tech/schema-validator-ts' from '/w/framework/a/b/file.ts'", "package": "@semio-tech/schema-validator-ts"},
+    {"name": "bun package with a subpath", "message": "Cannot find package '@semio-tech/schema-validator-ts/testing' from '/w/framework/a/file.ts'", "package": "@semio-tech/schema-validator-ts"},
+    {"name": "unscoped package", "message": "Cannot find package 'ajv' from '/w/framework/a/file.ts'", "package": "ajv"},
+    {"name": "node style module", "message": "Cannot find package 'typescript' imported from /w/framework/a/file.ts", "package": "typescript"},
+    {"name": "bun module wording", "message": "Cannot find module 'yaml' from '/w/framework/a/file.ts'", "package": "yaml"},
+    {"name": "a relative specifier is a missing file", "message": "Cannot find module './missing.mjs' from '/w/framework/a/file.ts'", "package": null},
+    {"name": "an absolute specifier is a missing file", "message": "Cannot find module '/w/missing.mjs' from '/w/framework/a/file.ts'", "package": null},
+    {"name": "a syntax error is not a resolution failure", "message": "Unexpected ;", "package": null},
+    {"name": "a missing export is not a resolution failure", "message": "Export named 'x' not found in module '/w/a.mjs'.", "package": null}
+  ]
+}

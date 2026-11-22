@@ -1,0 +1,10 @@
+{
+  "freeMiB": 5200,
+  "requiredMiB": 6144,
+  "budgetMs": 25,
+  "writers": [
+    {"id":"small","elapsedMs":0,"bytes":1024},
+    {"id":"slow","elapsedMs":1000,"bytes":4096},
+    {"id":"later","elapsedMs":1,"bytes":2048}
+  ]
+}

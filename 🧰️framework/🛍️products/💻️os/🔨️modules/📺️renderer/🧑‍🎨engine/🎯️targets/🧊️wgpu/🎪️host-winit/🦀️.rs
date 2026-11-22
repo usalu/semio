@@ -2,6 +2,8 @@
 //!
 //! 🧭️ The files WP3 staged for this crate (`wp3-tools/crate-map.json`) are mounted here from their place in the renderer tree; the renderer root re-exports this crate.
 
+#![recursion_limit = "256"]
+
 extern crate infinite_canvas as infinite_world;
 use semio_renderer_wgpu_app_runtime::AppMailbox;
 use semio_renderer_wgpu_frame_actions::AppInteractionState;

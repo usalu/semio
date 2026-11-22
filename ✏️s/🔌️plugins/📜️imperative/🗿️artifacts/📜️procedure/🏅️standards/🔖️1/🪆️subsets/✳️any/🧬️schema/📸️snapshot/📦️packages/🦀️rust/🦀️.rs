@@ -79,6 +79,8 @@ pub mod standards {
                         pub mod inferences;
                         #[path = "../../../../🚪️io/📝️text/🧬️mutations/🦀️.rs"]
                         pub mod mutations;
+                        #[path = "../../../../🚪️io/📝️text/🔺️diff/🦀️.rs"]
+                        pub mod diff;
                     }
                     #[path = "."]
                     pub mod sqlite {

@@ -72,6 +72,6 @@ test("the read wires it: the owner loop decides before every inference, the adop
  expect(text).toContain("countedGate");expect(text).toContain("adopt.line(language)");expect(text).toContain("adopt.staleRow(looked.staleRow?.kind)");
  expect(text).toContain("outcomes:adopt.lookups()");expect(text).toContain("recordTakeLookFailureV1(error,adopt,signal.aborted||waveSignal.aborted)");
  expect(text).toContain("adopt.look(lane)");expect(text).toContain("adopt.outcome(outcome)");expect(text).toContain("adopt.skipInferring(job.name)");
- expect(text.includes("fleetPublishedNamesV1(process.env.SEMIO_FLEET_STORE_ROOT)"),"the store is read in one place, through the hot names").toBe(true);
- expect(text.split("fleetPublishedNamesV1(process.env.SEMIO_FLEET_STORE_ROOT)").length-1).toBe(1);
+ expect(text.includes("fleetPublishedNamesV1(process.env.SEMIO_FLEET_STORE_ROOT,Date.now(),TAKE_POLICY_V1,{registryDigest,commandRevision,late})"),"the store is read in one place, through the hot names of the globals of this read").toBe(true);
+ expect(text.split("fleetPublishedNamesV1(process.env.SEMIO_FLEET_STORE_ROOT,").length-1).toBe(1);
 });

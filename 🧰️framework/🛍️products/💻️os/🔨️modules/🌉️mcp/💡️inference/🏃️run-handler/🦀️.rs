@@ -54,11 +54,15 @@ pub(super) fn run_guest_inference(workspace: &Arc<HeadlessWorkspace>, actions: &
         Some(artifact_id) => format!("binding artifact `{artifact_id}` into the request body"),
         None => "no artifact binding declared — the caller's own body travels verbatim".to_string(),
     }));
-    let artifact_document = match resolve_inference_artifact_document(workspace, item, artifact_id, job_id, &cancel.0) {
+    let artifact_document = match resolve_inference_artifact_document(workspace, item, artifact_id, job_id, cancel.activation().cancel()) {
         Ok(document) => document,
         Err(_) if jobs.is_cancel_requested(job_id) => return Ok(None),
         Err(error) => return Err(error.with_details(serde_json::json!({ "field": "artifactId" }))),
     };
+    let activation_job = job_id.to_owned();
+    let cancel = cancel.with_activation_report(move |phase, fraction| {
+        job_registry().report_progress(&activation_job, 0.25 + 0.1 * phase.at(fraction), Some(format!("activation: {}", phase.id())));
+    });
     let command = InferCommand {
         plugin_id: item.route_plugin_id().to_string(),
         artifact_kind: item.artifact_kind.clone(),
@@ -78,12 +82,19 @@ pub(super) fn run_guest_inference(workspace: &Arc<HeadlessWorkspace>, actions: &
     if jobs.is_cancel_requested(job_id) {
         return Ok(None);
     }
-    jobs.report_progress(job_id, 0.35, Some("running in the plugin's guest".to_string()));
     match actions.run_inference(INFERENCE_ROUTED_INSTANCE, command) {
         Err(_) if jobs.is_cancel_requested(job_id) => Ok(None),
         Err(error) => Err(error),
         Ok(outcome) => Ok(Some(GuestInferenceRun { inference_schema: outcome.inference_schema, complete: outcome.complete, payload: outcome.payload })),
     }
+}
+
+/// 🪜️ Gives each native inference driver the same stack as the framework's retained-work workers.
+#[cfg(not(target_arch = "wasm32"))]
+pub(super) fn guest_inference_thread(job_id: &str) -> std::thread::Builder {
+    std::thread::Builder::new()
+        .name(format!("semio-inference-{job_id}"))
+        .stack_size(semio_framework_async::WORKER_STACK_BYTES)
 }
 
 /// 💡️ Runs one declared inference to completion in a single call — the synchronous sibling of [Design notes](README.md#source-notes-89).
@@ -129,7 +140,7 @@ pub(super) fn inference_run_handler(context: &InferenceToolContext<'_>, argument
         "artifactId": requested_artifact.unwrap_or_default(),
         "site": InferenceExecutionSiteV1::Guest,
     });
-    let hook = cancel.0.clone();
+    let hook = cancel.activation().cancel().clone();
     jobs.bind_cancel(&job_id, move || hook.cancel_now());
     jobs.report_progress(&job_id, 0.05, Some(format!("checking `{}` against its published payload contract", item.inference_schema)));
     if let Err(error) = validate_inference_request(&item, caller_payload, requested_artifact) {
@@ -142,7 +153,18 @@ pub(super) fn inference_run_handler(context: &InferenceToolContext<'_>, argument
         job_registry().mark_cancelled(job_id);
         CallToolResult::ok(vec![ContentBlock::Text { text: format!("inference job {job_id} was cancelled") }], Some(merge_inference_run_fields(base, serde_json::json!({ "status": "CANCELLED", "complete": false }))))
     };
-    match run_guest_inference(workspace, context.actions, &item, requested_artifact, &arguments, &job_id, cancel) {
+    let actions = context.actions.as_ref();
+    let run = || run_guest_inference(workspace, actions, &item, requested_artifact, &arguments, &job_id, cancel);
+    #[cfg(not(target_arch = "wasm32"))]
+    let run = std::thread::scope(|scope| {
+        let worker = guest_inference_thread(&job_id).spawn_scoped(scope, run).map_err(|error| {
+            GatewayError::new(GatewayErrorCode::Internal, format!("could not start the inference job thread: {error}"))
+        })?;
+        worker.join().map_err(|_| GatewayError::new(GatewayErrorCode::Internal, "the inference job thread ended without returning its result"))?
+    });
+    #[cfg(target_arch = "wasm32")]
+    let run = run();
+    match run {
         Ok(Some(_)) | Err(_) if jobs.is_cancel_requested(&job_id) => cancelled(&job_id, base),
         Ok(None) => cancelled(&job_id, base),
         Ok(Some(run)) => {

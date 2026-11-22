@@ -1,7 +1,7 @@
 import {expect,test} from "bun:test";
 import {spawnSync} from "node:child_process";
 import {join} from "node:path";
-import {planDispatchV1,placementIdleElsewhereV1,placementKeyV1,placementRequiredV1,RemoteExecutionLoadTableV1,type PlacementOperationV1,type PlacementWorkerV1,type RemoteExecutionLoadEntryV1} from "../🟦️.ts";
+import {planDispatchV1,placementAnyCandidateV1,placementIdleElsewhereV1,placementKeyV1,placementRequiredV1,RemoteExecutionLoadTableV1,type PlacementOperationV1,type PlacementWorkerV1,type RemoteExecutionLoadEntryV1} from "../🟦️.ts";
 import {remoteExecutionPlatformMatchesV1,type RemoteExecutionPropertyV1} from "../../../🟦️.ts";
 import type {RemoteExecutionLoadReportV1} from "../../../🌡️load/🟦️.ts";
 
@@ -118,4 +118,17 @@ test("an independent python implementation of the policy makes the same decision
  expect(run.status,run.stderr).toBe(0);
  const expected=JSON.parse(run.stdout) as {operation:string;worker:string}[][];
  scenarios.forEach((value,index)=>{expect(planDispatchV1(operationsOf(value),value.workers,tableOf(value),value.now),`scenario ${index}`).toEqual(expected[index]!);});
+});
+
+test("a Windows worker is a normal worker: units of its own platform key reach it, units of a macOS requester find no compatible worker as an ordinary placement result",()=>{
+ const windows=(origin:string,id:string):PlacementWorkerV1=>({id,name:origin,origin,properties:[{name:"Arch",value:"x86_64"},{name:"OSFamily",value:"windows"},{name:"semio-toolchain",value:"cccccccccccccccc"},{name:"semio-target",value:"x86_64-pc-windows-msvc"}],concurrency:2,running:0,waiting:true,draining:false,refusedUntilMs:0});
+ const none={get:()=>undefined},workers=[windows("g1-m05","w1")];
+ const macos:PlacementOperationV1={id:"a",platform:[{name:"OSFamily",value:"macos"},{name:"semio-toolchain",value:"aaaaaaaaaaaaaaaa"}],tried:new Set(),requester:"g1-m01"};
+ const same:PlacementOperationV1={id:"b",platform:[{name:"OSFamily",value:"windows"},{name:"semio-toolchain",value:"cccccccccccccccc"}],tried:new Set(),requester:"g1-m06"};
+ expect(planDispatchV1([macos],workers,none,1_000_000)).toEqual([]);
+ expect(placementIdleElsewhereV1(macos,workers,none,1_000_000)).toBe(false);
+ expect(placementAnyCandidateV1(macos,workers,none)).toBe(false);
+ expect(planDispatchV1([same],workers,none,1_000_000)).toEqual([{operation:"b",worker:"w1"}]);
+ expect(placementIdleElsewhereV1(same,workers,none,1_000_000)).toBe(true);
+ expect(planDispatchV1([{...same,requester:"g1-m05"}],workers,none,1_000_000),"never its own requester").toEqual([]);
 });

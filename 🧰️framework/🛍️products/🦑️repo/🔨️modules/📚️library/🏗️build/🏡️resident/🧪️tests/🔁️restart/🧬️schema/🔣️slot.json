@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["capacity", "backoffMilliseconds", "requests"],
+  "properties": {
+    "capacity": {"const": 1},
+    "backoffMilliseconds": {"type": "integer", "minimum": 100},
+    "requests": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "root", "arguments"],
+        "properties": {
+          "name": {"type": "string", "minLength": 1},
+          "root": {"type": "string", "minLength": 1},
+          "arguments": {"type": "array", "minItems": 1, "items": {"type": "string"}}
+        }
+      }
+    }
+  }
+}

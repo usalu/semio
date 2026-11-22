@@ -231,7 +231,7 @@ export function useBackboneWorker(core: ShellCoreAfterIdentityAndDocumentPorts) 
         return;
       }
       if (message.kind === "directory-space-events") {
-        collectSpaceDirectoryEvents(message.events);
+        if (message.clientInstanceId === undefined) collectSpaceDirectoryEvents(message.events);
         return;
       }
       if (message.kind === "directory-scope-revoked") {

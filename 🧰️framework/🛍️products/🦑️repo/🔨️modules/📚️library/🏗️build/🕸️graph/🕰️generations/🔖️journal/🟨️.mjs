@@ -6,6 +6,7 @@ import{canonicalJsonV1}from"../🧮️fact-codec/🟨️.mjs";
 import{P,aborted,fail,isObject,requireCount,requireHex,requireKeys,requireText,sha256}from"../🧱️guards/🟨️.mjs";
 import{createRowLogV1}from"../🗃️row-log/🟨️.mjs";
 import{readGenerationManifestV1}from"../📖️documents/🟨️.mjs";
+import{derivedOwnerNameV1,isDerivedOwnerV1,isDerivedRowV1}from"../✂️cutoff/🟨️.mjs";
 
 /** 📏️ The declared limits of the build journal: the directory under the store root, the version and the rows one line of a rows file carries at most. */
 export const BUILD_JOURNAL_V1=Object.freeze({directory:"j",version:1,rowsPerLine:4096,maximumOwners:200000});
@@ -19,9 +20,10 @@ export const buildJournalKeyV1=input=>createHash("sha256").update(canonicalJsonV
  */
 export function readBuildJournalV1(bytes){
  const value=JSON.parse(Buffer.from(bytes).toString("utf8"));
- requireKeys(value,["version","key","state","parent","generation","identity","implementation","steps"],["repair","names","done","owners","dropped","returned","derived","rows","manifest","env"],"build journal");
+ requireKeys(value,["version","key","state","parent","generation","identity","implementation","steps"],["repair","names","done","owners","dropped","returned","derived","rows","manifest","env","membership"],"build journal");
  if(value.version!==BUILD_JOURNAL_V1.version)throw fail("Build journal version 1 required");
  requireHex(value.key,"key");if(value.parent!==null)requireHex(value.parent,"parent");requireCount(value.generation,"generation");
+ if(value.membership!==undefined)requireHex(value.membership,"membership");
  if(value.repair!==undefined){requireKeys(value.repair,["parent","receipt"],[],"journal repair");requireHex(value.repair.parent,"repair parent");requireHex(value.repair.receipt,"repair receipt");}
  for(const key of["identity","implementation"])requireHex(value[key],key);
  if(!["waves","sealed"].includes(value.state))throw fail("Closed build journal state required");
@@ -76,6 +78,39 @@ export function createBuildJournalV1({fs,root,manifestPath,publish,settler,say,s
   const[fragments,indexes,frontiers]=(await Promise.all([fs.names(join(root,P.fragments)),fs.names(join(root,P.indexes)),fs.names(join(root,P.frontiers))])).map(list=>new Set(list));
   return fragments.has(manifest.global+".json.br")&&indexes.has(manifest.factIndex+".facts.br")&&(manifest.frontier===null||frontiers.has(manifest.frontier+".json.br"))&&Object.values(manifest.owners).every(owner=>fragments.has(owner.fragment+".json.br"));
  };
+
+ const reconcileWaves=async({saved,current,found,ordered,hold,signal,membership})=>{
+  const parent=current.manifest;
+  if(saved.env.digest!==parent.env||found.envStale||found.added.length||found.removed.length||saved.dropped.length)return undefined;
+  const raw=rows=>rows.filter(row=>!isDerivedRowV1(row)),holds=async rows=>{const list=raw(rows);return list.length===0||await hold(list,signal);};
+  const returned=new Set(saved.returned),verdict=new Map(),refs=new Map(),pseudo=new Map(),files=[];
+  for(const file of saved.rows){
+   const bytes=await fs.read(join(directory,file.file));
+   if(!bytes||sha256(bytes)!==file.sha256)return undefined;
+   const entries=decodeJournalRowsV1(bytes);files.push(entries);
+   for(const entry of entries){
+    aborted(signal);
+    if(entry.mode==="a")return undefined;
+    if(isDerivedOwnerV1(entry.name)){pseudo.set(entry.name,(pseudo.get(entry.name)??true)&&await holds(entry.rows));continue;}
+    if(!returned.has(entry.name))continue;
+    verdict.set(entry.name,(verdict.get(entry.name)??true)&&await holds(entry.rows));
+    const named=refs.get(entry.name)??new Set();for(const row of entry.rows)if(isDerivedRowV1(row))named.add(derivedOwnerNameV1(row));refs.set(entry.name,named);
+   }
+  }
+  const reusable=saved.returned.filter(name=>verdict.get(name)===true&&[...refs.get(name)??[]].every(derived=>pseudo.get(derived)===true));
+  if(reusable.length===0)return undefined;
+  const reused=new Set(reusable),needed=new Set(reusable.flatMap(name=>[...refs.get(name)??[]])),keepEntry=entry=>isDerivedOwnerV1(entry.name)?needed.has(entry.name):reused.has(entry.name);
+  const log=createRowLogV1({path:join(tmpdir(),"semio-row-logs","resume-"+saved.key.slice(0,16)+"-"+process.pid+".rows")}),upserts=new Map(),rewritten=[];
+  for(let at=0;at<saved.rows.length;at++){
+   const kept=files[at].filter(keepEntry),bytes=encodeJournalRowsV1(kept.map(entry=>({name:entry.name,mode:entry.mode,rows:entry.rows})));
+   await fs.write(join(directory,saved.rows[at].file),bytes);rewritten.push({file:saved.rows[at].file,sha256:sha256(bytes),bytes:bytes.length});
+   for(const entry of kept){const known=upserts.get(entry.name);upserts.set(entry.name,known?known.concat(entry.rows):log.append(entry.rows));}
+  }
+  const owners={...saved.owners};
+  for(const name of saved.returned)if(!reused.has(name)){if(parent.owners[name])owners[name]=parent.owners[name];else delete owners[name];}
+  const remaining=ordered.filter(name=>!reused.has(name)),names=[...reusable,...remaining];
+  return{names:remaining,carry:{owners,env:saved.env.digest,envParts:saved.env.parts,upserts,append:new Map(),dropped:new Set(),returned:new Set(reusable),derived:new Set(saved.derived),names,done:reusable.length,waves:saved.rows.length,files:rewritten,disposers:[()=>log.close()],resumedFrom:true,membership}};
+ };
  return Object.freeze({
   clear,
   sealed:input=>save({...header(input),state:"sealed",manifest:input.manifest,derived:input.derived}),
@@ -85,9 +120,9 @@ export function createBuildJournalV1({fs,root,manifestPath,publish,settler,say,s
    for(const[name,list]of append)entries.push({name,mode:"a",rows:await rowsOf(list)});
    const bytes=encodeJournalRowsV1(entries),file=key+"."+carry.waves+".rows";
    await fs.write(join(directory,file),bytes);carry.files.push({file,sha256:sha256(bytes),bytes:bytes.length});
-   await save({...header({key,current,repair,identity,implementation,steps}),state:"waves",names:carry.names,done:carry.done,owners,dropped:[...carry.dropped],returned:[...carry.returned],derived:[...carry.derived],rows:carry.files,env});
+   await save({...header({key,current,repair,identity,implementation,steps}),state:"waves",names:carry.names,done:carry.done,owners,dropped:[...carry.dropped],returned:[...carry.returned],derived:[...carry.derived],rows:carry.files,env,...carry.membership===undefined?{}:{membership:carry.membership}});
   },
-  async resume({key,current,repair,identity,implementation,found,signal,claim,qualify,verify}){
+  async resume({key,current,repair,identity,implementation,found,signal,claim,qualify,verify,ordered=[],membership,hold}){
    const saved=await load(key),generation=(current?.pointer.generation??-1)+1;
    if(!saved)return undefined;
    if(saved.parent!==(current?.pointer.manifest??null)||saved.generation!==generation||saved.identity!==identity||(repair||saved.state==="sealed")&&saved.implementation!==implementation||saved.repair?.receipt!==repair?.receipt||saved.repair?.parent!==repair?.parent){await clear(key);return undefined;}
@@ -111,6 +146,12 @@ export function createBuildJournalV1({fs,root,manifestPath,publish,settler,say,s
     const bytes=await fs.read(join(directory,file.file));
     if(!bytes||sha256(bytes)!==file.sha256){log.close();await clear(key);return undefined;}
     for(const entry of decodeJournalRowsV1(bytes)){const target=entry.mode==="u"?upserts:append,known=target.get(entry.name);target.set(entry.name,known?known.concat(entry.rows):log.append(entry.rows));}
+   }
+   if(!(saved.membership===membership&&membership!==undefined&&canonicalJsonV1(saved.names)===canonicalJsonV1(ordered))){
+    const kept=hold&&current?.manifest?await reconcileWaves({saved,current,found,ordered,hold,signal,membership}):undefined;
+    if(!kept){await clear(key);return undefined;}
+    say?.("resumedWaves",{done:kept.carry.done,total:kept.carry.names.length});
+    return kept;
    }
    say?.("resumedWaves",{done:saved.done,total:saved.names.length});
    return{names:saved.names.slice(saved.done),carry:{owners:saved.owners,env:saved.env.digest,envParts:saved.env.parts,upserts,append,dropped:new Set(saved.dropped),returned:new Set(saved.returned),derived:new Set(saved.derived),names:saved.names,done:saved.done,waves:saved.rows.length,files:[...saved.rows],disposers:[()=>log.close()],resumedFrom:true}};

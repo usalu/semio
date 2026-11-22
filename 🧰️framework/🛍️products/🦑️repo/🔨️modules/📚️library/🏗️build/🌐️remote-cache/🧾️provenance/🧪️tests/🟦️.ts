@@ -6,7 +6,7 @@ import {join,resolve} from "node:path";
 import {fileURLToPath} from "node:url";
 import {encodeProtobufV1,REAPI_V1} from "../../../🌐️remote-execution/📡️wire/📦️protobuf/🟦️.ts";
 import {parseRemoteCacheStableResultV1} from "../../🔬️action-result/🟦️.ts";
-import {openProvenanceV1,PROVENANCE_VOLATILE_OUTPUTS_V1,provenanceFingerprintV1} from "../🟦️.ts";
+import {openProvenanceV1,PROVENANCE_ADVISORY_OUTPUTS_V1,PROVENANCE_VOLATILE_OUTPUTS_V1,provenanceClassV1,provenanceDifferingV1,provenanceFingerprintV1} from "../🟦️.ts";
 import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};
 
 /** 🧾️ The fingerprint ignores the manifest names that carry timestamps, and the consumption record counts who read whose results. The fingerprint cases are one shared fixture checked by an independent Python implementation. */
@@ -23,7 +23,27 @@ test("the fingerprint of an action result leaves out the volatile manifest and e
   expect(parsed.manifest,row.name).toBe(row.manifest);
  }
  const python=spawnSync("python3",["-I",resolve(here,"🐍️.py"),resolve(here,"🧫️fixtures/🔣️.json")],{encoding:"utf8"});
- if(python.error===undefined)expect(python.stdout.trim(),python.stderr).toBe("ok "+fixture.cases.length);
+ if(python.error===undefined)expect(python.stdout.trim(),python.stderr).toBe(`ok ${fixture.cases.length}\nok classes ${fixture.classes.length} differing ${fixture.differing.length}`);
+});
+
+test("the class of a result and the paths that differ between two results equal the independent Python computation on every fixture case",()=>{
+ expect(PROVENANCE_ADVISORY_OUTPUTS_V1).toEqual(fixture.advisory);
+ for(const row of fixture.classes)expect(provenanceClassV1(row.paths,row.manifest),row.name).toEqual({sort:row.sort,advisory:row.advisory});
+ for(const row of fixture.differing)expect(provenanceDifferingV1(row.kept,row.refused),row.name).toEqual(row.differing);
+});
+
+test("the divergence count is the lifetime total beyond the 1000 kept rows, the count per class and the first time survive a restart, and a note counts as advice, not as divergence",async()=>{
+ const root=directory();let now=5000;
+ const first=await openProvenanceV1(root,{now:()=>now}),row=(index:number,sort:string)=>({namespace:"main",kind:"ac" as const,key:String(index).padStart(64,"0"),keptOrigin:"g1-m01",keptSha256:"a".repeat(64),refusedOrigin:"g1-m02",refusedSha256:"b".repeat(64),sort,differing:["out/x.rlib"]});
+ for(let index=0;index<1100;index++)first.diverged(row(index,index%4===0?"unit":"project-inference"));
+ first.advised("failure-note");first.advised("failure-note");first.advised("costs");
+ expect(first.summary().count).toBe(1100);expect(first.summary().byClass).toEqual({"project-inference":825,unit:275});expect(first.summary().advisory).toEqual({costs:1,"failure-note":2});
+ await first.flush();
+ const file=JSON.parse(readFileSync(join(root,"fleet","divergences.json"),"utf8")) as {rows:unknown[];total:number};expect(file.rows.length).toBe(1000);expect(file.total).toBe(1100);
+ now=9000;const second=await openProvenanceV1(root,{now:()=>now});
+ expect(second.summary().count).toBe(1100);expect(second.summary().byClass).toEqual({"project-inference":825,unit:275});expect(second.summary().since).toBe(5000);expect(second.summary().advisory).toEqual({});
+ expect(second.summary().recent.at(-1)!.differing).toEqual(["out/x.rlib"]);
+ second.diverged(row(5000,"unit"));await second.flush();expect(second.summary().count).toBe(1101);expect(second.summary().byClass.unit).toBe(276);
 });
 
 test("consumption counts producer>consumer pairs with the compiled units among them, survives a restart and stays bounded",async()=>{
@@ -42,4 +62,19 @@ test("consumption counts producer>consumer pairs with the compiled units among t
  const pairs=Object.keys(second.consumption().pairs);expect(pairs.length).toBeLessThanOrEqual(1025);expect(second.consumption().pairs["*>*"]!.hits).toBeGreaterThan(0);
  expect(second.consumption().total).toBe(5+1+1100);
  await second.flush();
+});
+
+test("evidence keeps both sides of a divergence, replaces one per key and origin, keeps the newest 64 per class and survives a restart",async()=>{
+ const root=directory();let now=100;
+ const first=await openProvenanceV1(root,{now:()=>now}),blobs=new Map<string,Uint8Array>([["h1",new Uint8Array([1,2,3])],["h2",new Uint8Array([4,5,6])]]);
+ const input=(key:string,sort:string)=>({outcome:"refused" as const,sort,namespace:"main",key,keptOrigin:"g1-m01",refusedOrigin:"g1-m02",differing:["out/x.rlib"],kept:new Uint8Array([9]),refused:new Uint8Array([8]),keptRows:[{path:"out/x.rlib",hash:"h1"}],refusedRows:[{path:"out/x.rlib",hash:"h2"}],blob:async(hash:string)=>blobs.get(hash)});
+ await first.evidence.keep(input("a".repeat(64),"unit"));
+ const entry=first.evidence.list()[0]!;
+ expect(entry.differing).toEqual(["out/x.rlib"]);expect(entry.files.map(file=>file.name).sort()).toEqual(["kept.1","kept.ac","refused.1","refused.ac"]);
+ expect(Array.from(await first.evidence.read(entry.id,"kept.1")!)).toEqual([1,2,3]);expect(Array.from(await first.evidence.read(entry.id,"refused.1")!)).toEqual([4,5,6]);
+ expect(await first.evidence.read(entry.id,"../meta.json")).toBeUndefined();expect(await first.evidence.read("nothing","kept.ac")).toBeUndefined();
+ now=200;await first.evidence.keep(input("a".repeat(64),"unit"));expect(first.evidence.list().length).toBe(1);
+ for(let index=0;index<70;index++){now=300+index;await first.evidence.keep(input(String(index).padStart(64,"0"),"project-inference"));}
+ expect(first.evidence.summary().byClass).toEqual({"project-inference":64,unit:1});
+ const second=await openProvenanceV1(root,{now:()=>now});expect(second.evidence.summary().count).toBe(65);expect(second.summary().evidence.count).toBe(65);
 });

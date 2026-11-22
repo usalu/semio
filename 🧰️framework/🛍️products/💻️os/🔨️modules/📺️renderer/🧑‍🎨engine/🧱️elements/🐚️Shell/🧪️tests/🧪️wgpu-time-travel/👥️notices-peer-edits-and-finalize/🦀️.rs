@@ -8,7 +8,7 @@
 fn every_transient_notice_is_a_polite_status_named_by_its_message_and_described_by_its_code() {
     let fixture: Value = serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🧯️wgpu-transient-notice/🔣️.json")).expect("the transient notice fixture parses");
     let expected = &fixture["node"];
-    let notice_node = |shell: &ShellState| PanelsViewCtx::of(&mut shell).chrome_accessibility_nodes(&[]).into_iter().filter(|node| node.key == expected["key"].as_str().expect("key")).collect::<Vec<_>>();
+    let notice_node = |mut shell: &ShellState| PanelsViewCtx::of(&mut shell).chrome_accessibility_nodes(&[]).into_iter().filter(|node| node.key == expected["key"].as_str().expect("key")).collect::<Vec<_>>();
     for notice in fixture["notices"].as_array().expect("notices") {
         let mut shell = session_shell();
         shell.prefs.locale_id = notice["locale"].as_str().expect("locale").into();
@@ -158,14 +158,14 @@ fn finalize_dialog() -> DialogDefinition {
 
 /// 🗨️ Opens the framework-injected finalize prompt exactly as the runtime does: `Effect::OpenDialog` seeded with the
 /// localized default name and the session generation (a context arg no field declares).
-fn open_finalize_prompt(shell: &mut ShellState, name: &str) {
+fn open_finalize_prompt(mut shell: &mut ShellState, name: &str) {
     let controller = shell.docs.session.as_ref().map(|session| session.app.controller_id.clone()).expect("a session");
     let generation = shell.history.history_time_travel().map(|status| status.generation).expect("a live session");
     WindowActionsCtx::of(&mut shell).queue_host_effects(&controller, vec![semio_framework::kernel::Effect::OpenDialog { req: semio_framework::kernel::RequestId(1), dialog_id: "finalizeHistoryEdit".into(), args: Some(DslValue::from(serde_json::json!({ "name": name, "generation": generation }))) }]);
     assert!(shell.chrome.chrome_build.dialog_open(), "the prompt opened from the session's dialogs");
 }
 
-fn key(shell: &mut ShellState, input: &mut InputState<ActionDescriptor>, action: semio_ui_wgpu_input::KeyAction) {
+fn key(mut shell: &mut ShellState, input: &mut InputState<ActionDescriptor>, action: semio_ui_wgpu_input::KeyAction) {
     semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_keyboard_async(action, &PointerModifiers::default(), input)).expect("the key routes");
 }
 

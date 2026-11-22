@@ -27,6 +27,8 @@ pub struct SceneSurfaceState {
     /// authority, because a `ComponentScene` leaf registers exactly one retained hit target for the
     /// WHOLE surface (`retained_scene_hit`), so `InputState::hovered_id` can never name a row.
     pub hovered_control_id: Option<String>,
+    /// ⌨️ The table row the keyboard has focused, painted with the focus ring.
+    pub table_focused_row: Option<String>,
     #[cfg(test)]
     node_positions: BTreeMap<String, (f32, f32)>,
     #[cfg(any(test, feature = "testkit"))]
@@ -76,7 +78,7 @@ pub(crate) enum SceneValueRetirement {
     Text(String),
 }
 
-pub(crate) struct SceneSurfaceRetirement {
+pub struct SceneSurfaceRetirement {
     pub(crate) host_id: Box<str>,
     pub(crate) owner: AdmittedSurfaceCloseOwner<SceneSurfaceState>,
     pub(crate) external_target: Option<crate::element_contracts::ScenePointerTarget>,
@@ -486,7 +488,7 @@ impl SceneSurfaceRetirement {
             state.ink_last_hover = None;
             return false;
         }
-        for text in [&mut state.last_click_target, &mut state.hovered_control_id, &mut state.vfs_selection_anchor, &mut state.map_last_hover_json, &mut state.camera_dispatch_controller_id] {
+        for text in [&mut state.last_click_target, &mut state.hovered_control_id, &mut state.table_focused_row, &mut state.vfs_selection_anchor, &mut state.map_last_hover_json, &mut state.camera_dispatch_controller_id] {
             if let Some(value) = text.as_mut() {
                 if retire_scene_text(value) {
                     return false;

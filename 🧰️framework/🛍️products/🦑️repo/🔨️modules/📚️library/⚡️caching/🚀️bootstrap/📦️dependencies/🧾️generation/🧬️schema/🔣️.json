@@ -37,7 +37,7 @@
           "mode"
         ],
         "projectionDigestUnits": 32,
-        "walkStamp": "semio.dependency-generation-walk/2",
+        "walkStamp": "semio.dependency-generation-walk/3",
         "producer": {
           "scopeFiles": {
             "$manager": "producerInputs.scopeFiles"
@@ -307,7 +307,8 @@
         "dev",
         "ino",
         "mode",
-        "sha256"
+        "sha256",
+        "profileSha256"
       ],
       "properties": {
         "path": {
@@ -331,6 +332,17 @@
           "minimum": 0
         },
         "sha256": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "profileSha256": {
           "anyOf": [
             {
               "type": "string",
@@ -448,7 +460,8 @@
       "additionalProperties": false,
       "required": [
         "path",
-        "sha256"
+        "sha256",
+        "profileSha256"
       ],
       "properties": {
         "path": {
@@ -459,6 +472,17 @@
         "sha256": {
           "type": "string",
           "pattern": "^[a-f0-9]{64}$"
+        },
+        "profileSha256": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },

@@ -101,7 +101,7 @@
           "next": "close-actor"
         },
         {
-          "event": "actor-closed",
+          "event": "actor-core-quiescent",
           "next": "complete"
         }
       ]

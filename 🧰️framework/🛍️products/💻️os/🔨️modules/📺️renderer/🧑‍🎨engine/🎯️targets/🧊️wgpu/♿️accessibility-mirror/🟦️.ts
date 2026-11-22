@@ -27,6 +27,7 @@ export type AccessibilityProjectionNode = {
   readonly controls?: string;
   readonly activeDescendant?: string;
   readonly level?: number;
+  readonly multiselectable?: boolean;
   readonly valueMin?: number;
   readonly valueMax?: number;
   readonly valueNow?: number;
@@ -37,6 +38,7 @@ export type AccessibilityProjectionNode = {
   readonly setSize?: number;
   readonly posInSet?: number;
   readonly tone?: string;
+  readonly sort?: "ascending" | "descending";
 };
 
 /** 🗝️ The attribute a mirrored control lists its engine-owned keys in, space separated. */
@@ -134,6 +136,7 @@ export function createAccessibilityMirror(root: HTMLElement, transport: Accessib
     if (node.controls !== undefined && ids.has(node.controls)) element.setAttribute("aria-controls", ids.get(node.controls)!);
     if (node.activeDescendant !== undefined && ids.has(node.activeDescendant)) element.setAttribute("aria-activedescendant", ids.get(node.activeDescendant)!);
     if (node.level !== undefined) element.setAttribute("aria-level", String(node.level));
+    if (node.multiselectable === true) element.setAttribute("aria-multiselectable", "true");
     if (node.valueMin !== undefined) element.setAttribute("aria-valuemin", String(node.valueMin));
     if (node.valueMax !== undefined) element.setAttribute("aria-valuemax", String(node.valueMax));
     if (node.valueNow !== undefined) element.setAttribute("aria-valuenow", String(node.valueNow));
@@ -143,6 +146,7 @@ export function createAccessibilityMirror(root: HTMLElement, transport: Accessib
     if (node.setSize !== undefined) element.setAttribute("aria-setsize", String(node.setSize));
     if (node.posInSet !== undefined) element.setAttribute("aria-posinset", String(node.posInSet));
     if (node.tone !== undefined) element.dataset.tone = node.tone;
+    if (node.sort !== undefined) element.setAttribute("aria-sort", node.sort);
     if (node.focused === true) element.dataset.focused = "true";
     if (node.focusable === true) element.dataset.focusable = "true";
     if (node.actionable === true) element.dataset.actionable = "true";

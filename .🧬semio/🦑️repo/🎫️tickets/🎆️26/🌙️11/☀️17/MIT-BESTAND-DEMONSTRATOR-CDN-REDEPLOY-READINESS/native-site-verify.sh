@@ -3,9 +3,14 @@
 set -euo pipefail
 T="$(cd "$(dirname "$0")" && pwd)"
 ROOT="$(cd "$T/../../../../../../.." && pwd)"
-accepted="$T/🗑️generated/static-accepted.sha256"
-before="$T/🗑️generated/static-before.sha256"
-if [[ "${VERIFY_QUEUE_RECEIPTS:-0}" == 1 ]]; then rm -f "$accepted"; fi
+generated="$T/🗑️generated"
+mkdir -p "$generated"
+lock="$generated/static-verification.lock"
+if ! mkdir "$lock" 2>/dev/null; then echo "another static verification owns $lock" >&2; exit 1; fi
+trap 'rmdir "$lock"' EXIT
+accepted="$generated/static-accepted.sha256"
+before="$generated/static-before.sha256"
+rm -f "$accepted"
 capture=$(mktemp "$T/🗑️generated/native-site-verify.XXXXXX")
 NATIVE_SITE_RUN_LOG="$capture" MEM=4096 bash "$T/native-wasm.sh" site
 OUT="$(python3 "$T/captured-site.py" "$ROOT" "$capture")"

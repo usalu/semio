@@ -492,7 +492,10 @@ async fn wit_effect_to_kernel(effect: wit_effects::Effect) -> Result<semio_frame
             label: inner.params.label,
             document_json: inner.params.artifact_json,
         },
-        E::OpenPluginInstance(inner) => K::OpenPluginInstance { plugin_id: inner.plugin_id, app_id: inner.app_id, os_instance_id: inner.os_instance_id },
+        E::OpenPluginInstance(inner) => K::OpenPluginInstance {
+            plugin_id: inner.plugin_id, app_id: inner.app_id, os_instance_id: inner.os_instance_id,
+            document: inner.document.map(|target| semio_framework::kernel::PluginDocumentTarget { document_id: target.document_id, schema: target.schema, space_id: target.space_id }),
+        },
         E::OpenDialog(inner) => {
             let args = match inner.params.args {
                 Some(bytes) => decode_dsl(&bytes).await,

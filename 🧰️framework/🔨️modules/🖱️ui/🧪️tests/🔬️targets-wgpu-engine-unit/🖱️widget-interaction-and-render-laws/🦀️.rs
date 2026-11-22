@@ -31,223 +31,38 @@ fn widget_interaction_maps_clear_frame_empties_every_map() {
     assert!(maps.tree_selection_change.is_none());
 }
 
-#[test]
-fn render_widget_input_registers_interaction_meta_when_maps_present() {
-    let mut h = WidgetHarness::new();
-    let node = WidgetNode::Input { id: "in".into(), input_kind: "text".into(), value: "hello".into(), placeholder: None, commit: Some("blur".into()), min: None, max: None, step: None, accept: None, on_change: Some(action()) };
-    render_widget(&node, VIEWPORT, &mut h.ctx());
-    let meta = h.maps.input_metas.get("in").expect("register_input_meta must populate the map when interaction_maps is Some and on_change is Some");
-    assert_eq!(meta.value, "hello");
-    assert_eq!(meta.commit.as_deref(), Some("blur"));
+struct WidgetHarness {
+    draw: DrawList,
+    atlas: FontAtlas,
+    theme: Theme,
+    input: semio_ui_wgpu_input::InputState<ActionDescriptor>,
+    scroll_offsets: std::collections::HashMap<String, f32>,
+    collapsed_sections: std::collections::HashMap<String, bool>,
+    open_selects: std::collections::HashMap<String, bool>,
+    maps: WidgetInteractionMaps<ActionDescriptor>,
 }
 
-#[test]
-fn render_widget_input_with_no_on_change_does_not_register_meta() {
-    let mut h = WidgetHarness::new();
-    let node = WidgetNode::Input { id: "in".into(), input_kind: "text".into(), value: "hello".into(), placeholder: None, commit: None, min: None, max: None, step: None, accept: None, on_change: None };
-    render_widget(&node, VIEWPORT, &mut h.ctx());
-    assert!(h.maps.input_metas.is_empty(), "no on_change means nothing should be wired for the host to fire");
-}
+impl WidgetHarness {
+    fn new() -> Self {
+        Self { draw: DrawList::default(), atlas: FontAtlas::builtin(), theme: Theme::default(), input: Default::default(), scroll_offsets: Default::default(), collapsed_sections: Default::default(), open_selects: Default::default(), maps: Default::default() }
+    }
 
-#[test]
-fn render_widget_select_and_toggle_register_interaction_metas() {
-    let mut h = WidgetHarness::new();
-    let select = WidgetNode::Select { id: "sel".into(), value: "a".into(), items: vec![SelectItem { value: "a".into(), label: Label::data("Alpha").to_string() }], placeholder: None, on_change: Some(action()) };
-    render_widget(&select, VIEWPORT, &mut h.ctx());
-    assert!(h.maps.select_metas.contains_key("sel"));
-
-    let toggle = WidgetNode::Toggle { id: "tog".into(), icon_id: IconName::CircleDot, pressed: true, text: Some("On".into()), on_change: Some(action()) };
-    render_widget(&toggle, VIEWPORT, &mut h.ctx());
-    let (pressed, _) = h.maps.toggle_metas.get("tog").expect("toggle meta must be registered");
-    assert!(*pressed);
-}
-
-#[test]
-fn render_widget_slider_registers_meta_and_live_value_unless_disabled() {
-    let mut h = WidgetHarness::new();
-    let enabled = WidgetNode::Slider { id: "sl".into(), value: 0.5, min: 0.0, max: 1.0, step: 0.01, ready: None, disabled: false, on_change: Some(action()) };
-    render_widget(&enabled, VIEWPORT, &mut h.ctx());
-    let presentation = semio_ui_wgpu_layout::layout::slider_control_presentation(VIEWPORT, 0.5, 0.0, 1.0, None, Theme::default().gap_standard, ui_contract::FlowInline::Ltr).slider;
-    let meta = h.maps.slider_metas.get("sl").expect("enabled slider meta");
-    assert_eq!((meta.bounds_x, meta.bounds_w), (presentation.track_cell.x, presentation.track_cell.w));
-    assert!(h.maps.slider_live_values.contains_key("sl"));
-    let hit = h.input.staged_hits().iter().find(|hit| hit.kind == HitKind::Slider).expect("enabled slider hit");
-    assert_eq!(hit.rect, presentation.track_cell, "immediate pointer authority excludes the inert readout cell");
-
-    let mut h2 = WidgetHarness::new();
-    let disabled = WidgetNode::Slider { id: "sl".into(), value: 0.5, min: 0.0, max: 1.0, step: 0.01, ready: None, disabled: true, on_change: Some(action()) };
-    render_widget(&disabled, VIEWPORT, &mut h2.ctx());
-    assert!(h2.maps.slider_metas.is_empty(), "a disabled slider must not register interaction metadata");
-    assert!(h2.maps.slider_live_values.is_empty());
-}
-
-#[test]
-fn render_widget_number_stepper_registers_stepper_meta() {
-    let mut h = WidgetHarness::new();
-    let node = WidgetNode::NumberStepper { id: "ns".into(), value: 3.0, step: 1.0, uniform: false, on_absolute: Some(action()), on_delta: Some(action()) };
-    render_widget(&node, VIEWPORT, &mut h.ctx());
-    let meta = h.maps.stepper_metas.get("ns").expect("stepper meta must be registered when both on_absolute and on_delta are Some");
-    assert_eq!(meta.value, 3.0);
-    assert!(h.maps.input_metas.contains_key("ns.input"), "the stepper's embedded value segment renders through render_input and must also register an input meta");
-}
-
-#[test]
-fn render_widget_ring_registers_meta_and_live_value() {
-    let mut h = WidgetHarness::new();
-    let node = WidgetNode::Ring { id: "r".into(), t: 0.25, disabled: false, on_change: Some(action()) };
-    render_widget(&node, VIEWPORT, &mut h.ctx());
-    assert!(h.maps.ring_metas.contains_key("r"));
-    assert_eq!(h.maps.ring_live_values.get("r"), Some(&0.25));
-}
-
-#[test]
-fn render_widget_field_draws_label_and_delegates_to_control() {
-    let mut h = WidgetHarness::new();
-    let node = WidgetNode::Field {
-        id: "f".into(),
-        label: Label::data("Name").to_string(),
-        child: ControlNode::Input { id: "in".into(), input_kind: "text".into(), value: "x".into(), placeholder: None, commit: None, min: None, max: None, step: None, accept: None, on_change: Some(action()) },
-    };
-    render_widget(&node, VIEWPORT, &mut h.ctx());
-    assert!(h.maps.input_metas.contains_key("in"), "Field must render its child control (an Input here), which registers its own interaction meta");
-    let total: usize = h.draw.layers.iter().map(|l| l.ui_instances.len()).sum();
-    assert!(total > 0, "Field must paint its label plus its child control");
-}
-
-#[test]
-fn render_widget_section_toggles_collapsed_state_from_default_open() {
-    let child = || WidgetNode::<ActionDescriptor>::Text { value: "child text".into(), emphasize: false };
-    let mut h = WidgetHarness::new();
-    let closed = WidgetNode::<ActionDescriptor>::Section { id: "sec".into(), label: Some(Label::data("Sec").to_string()), default_open: false, children: vec![child()] };
-    render_widget(&closed, VIEWPORT, &mut h.ctx());
-    assert_eq!(h.collapsed_sections.get("section.sec"), Some(&true), "a Section with default_open: false must seed its collapsed_sections entry as collapsed");
-
-    let mut h2 = WidgetHarness::new();
-    let open = WidgetNode::<ActionDescriptor>::Section { id: "sec".into(), label: Some(Label::data("Sec").to_string()), default_open: true, children: vec![child()] };
-    render_widget(&open, VIEWPORT, &mut h2.ctx());
-    assert_eq!(h2.collapsed_sections.get("section.sec"), Some(&false));
-    let closed_instances: usize = h.draw.layers.iter().map(|l| l.ui_instances.len()).sum();
-    let open_instances: usize = h2.draw.layers.iter().map(|l| l.ui_instances.len()).sum();
-    assert!(open_instances > closed_instances, "an open section must also paint its (visible) child's glyphs, a collapsed one must not");
-}
-
-#[test]
-fn render_widget_tree_populates_hover_and_unhover_commands() {
-    let mut h = WidgetHarness::new();
-    let item = TreeItem {
-        window: None,
-        id: "i1".into(),
-        label: Label::data("Item").to_string(),
-        description: None,
-        icon_id: None,
-        selected: false,
-        highlighted: false,
-        default_open: false,
-        dimmed: false,
-        event: None,
-        hover_event: Some(action()),
-        unhover_event: Some(action()),
-        actions: vec![],
-        draggable: false,
-        drag_data: StdHashMap::new(),
-        control: None,
-        children: vec![],
-    };
-    let node = WidgetNode::<ActionDescriptor>::Tree {
-        sections: vec![TreeSection { window: None, id: "s".into(), label: Some(Label::data("Section").to_string()), default_open: true, items: vec![item] }],
-        selected_ids: vec![],
-        highlighted_ids: vec![],
-        selection_change: Some(action()),
-    };
-    render_widget(&node, VIEWPORT, &mut h.ctx());
-    assert!(h.maps.tree_hover_commands.contains_key("i1"));
-    assert!(h.maps.tree_unhover_commands.contains_key("i1"));
-    assert_eq!(h.maps.tree_selection_change, Some(action()));
-}
-
-#[test]
-fn render_widget_tree_row_actions_register_hits_without_hover() {
-    let mut h = WidgetHarness::new();
-    let item = TreeItem {
-        window: None,
-        id: "i1".into(),
-        label: Label::data("Item").to_string(),
-        description: None,
-        icon_id: None,
-        selected: false,
-        highlighted: false,
-        default_open: false,
-        dimmed: false,
-        event: None,
-        hover_event: None,
-        unhover_event: None,
-        actions: vec![TreeItemAction { icon_id: IconName::CircleDot, label: Some(Label::data("Del").to_string()), event: action(), placement: UiTreeActionPlacement::Row }],
-        draggable: false,
-        drag_data: StdHashMap::new(),
-        control: None,
-        children: vec![],
-    };
-    let node = WidgetNode::<ActionDescriptor>::Tree { sections: vec![TreeSection { window: None, id: "s".into(), label: None, default_open: true, items: vec![item] }], selected_ids: vec![], highlighted_ids: vec![], selection_change: None };
-    render_widget(&node, VIEWPORT, &mut h.ctx());
-    let action_hits = h.input.staged_hits().iter().filter(|t| t.control_id.as_deref() == Some("tree.action.i1.0")).count();
-    assert_eq!(action_hits, 1, "row-placement actions must register a hit target even when the row is unhovered");
-}
-
-#[test]
-fn render_widget_tree_menu_placement_skips_row_action_hits() {
-    let mut h = WidgetHarness::new();
-    let item = TreeItem {
-        window: None,
-        id: "i1".into(),
-        label: Label::data("Item").to_string(),
-        description: None,
-        icon_id: None,
-        selected: false,
-        highlighted: false,
-        default_open: false,
-        dimmed: false,
-        event: None,
-        hover_event: None,
-        unhover_event: None,
-        actions: vec![TreeItemAction { icon_id: IconName::CircleDot, label: Some(Label::data("Del").to_string()), event: action(), placement: UiTreeActionPlacement::Menu }],
-        draggable: false,
-        drag_data: StdHashMap::new(),
-        control: None,
-        children: vec![],
-    };
-    let node = WidgetNode::<ActionDescriptor>::Tree { sections: vec![TreeSection { window: None, id: "s".into(), label: None, default_open: true, items: vec![item] }], selected_ids: vec![], highlighted_ids: vec![], selection_change: None };
-    render_widget(&node, VIEWPORT, &mut h.ctx());
-    let action_hits = h.input.staged_hits().iter().filter(|t| t.control_id.as_deref() == Some("tree.action.i1.0")).count();
-    assert_eq!(action_hits, 0, "menu-placement actions must not register row hit targets");
-}
-
-#[test]
-fn render_widget_tree_marks_selected_and_highlighted_ids_via_ids_list() {
-    let mut h = WidgetHarness::new();
-    let item = TreeItem {
-        window: None,
-        id: "i1".into(),
-        label: Label::data("Item").to_string(),
-        description: None,
-        icon_id: None,
-        selected: false,
-        highlighted: false,
-        default_open: false,
-        dimmed: false,
-        event: Some(action()),
-        hover_event: None,
-        unhover_event: None,
-        actions: vec![],
-        draggable: false,
-        drag_data: StdHashMap::new(),
-        control: None,
-        children: vec![],
-    };
-    let node =
-        WidgetNode::<ActionDescriptor>::Tree { sections: vec![TreeSection { window: None, id: "s".into(), label: None, default_open: true, items: vec![item] }], selected_ids: vec!["i1".into()], highlighted_ids: vec![], selection_change: None };
-    render_widget(&node, VIEWPORT, &mut h.ctx());
-    let hit = h.input.staged_hits().iter().find(|t| t.control_id.as_deref() == Some("tree.label.i1")).expect("tree item label must register a hit target");
-    assert_eq!(hit.event, Some(action()));
+    fn ctx(&mut self) -> semio_ui_wgpu_widget_kit::WidgetContext<'_, ActionDescriptor> {
+        semio_ui_wgpu_widget_kit::WidgetContext {
+            draw: &mut self.draw,
+            overlay: None,
+            atlas: &mut self.atlas,
+            icons: None,
+            input: &mut self.input,
+            theme: &self.theme,
+            scroll_offsets: &mut self.scroll_offsets,
+            collapsed_sections: &mut self.collapsed_sections,
+            open_selects: &mut self.open_selects,
+            interaction_maps: Some(&mut self.maps),
+            pick_clip: None,
+            viewport_height: 0.0,
+        }
+    }
 }
 
 #[test]

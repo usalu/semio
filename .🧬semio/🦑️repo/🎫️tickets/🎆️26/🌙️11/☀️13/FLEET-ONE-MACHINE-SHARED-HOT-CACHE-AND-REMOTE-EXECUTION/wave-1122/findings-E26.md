@@ -1,0 +1,9 @@
+# Findings E26 (outside the lane)
+
+Observed while running the catalogue-bound tests after the `repo test-file` landing (05:44 to 05:57). None is caused by it; each failed on the same assertion before the registration or is unrelated to the touched files.
+
+1. `🏗️build/🗂️suites/🧪️tests` (4 of 9 fail): test files unrouted by any suite (`🏞️task-view/*/🧪️tests`, `🐢️speed/🧪️tests`, `🚀️bootstrap/🔷️typescript-compiler/🧪️tests/*`); `📥️inputs/💾️storage/🧪️tests/🟦️.ts` imports two other test files (`🩹️torn-closure`, `🪣️refusal`); suite `build-workspace-laws` starts processes in `🧪️tests/🏭️generate-class` with a 15 s budget (needs 300 s); `⚡️caching/🧪️tests/📦️native-dependencies/🧪️tests/🟦️.ts` declares the unknown suite `native-dependencies`.
+2. `🚪️door/🧪️tests/🚦️startup` row `fleet-door`: loaded bytes 1,962,327 against the limit 1,300,000 (the fleet-status closure grew). The test stops at the first failing row, so rows after it (including the new `test-file-entry`, which I measured separately: 16 modules, 74 KB) are not evaluated until that limit is raised or the closure shrinks.
+3. `⚙️operations/🧪️tests/🧭️help-offline`: 58 front-door spawns (every operation, two languages) against a 120 s test timeout; at load 30 to 40 a spawn takes about 2.7 s, so the test cannot finish. It needs a larger budget or one spawn per operation with the language pair checked from the snapshot.
+4. Drift fixed on the way: the cli entrypoint schema constant lacked `scheduler` (the fixture had it); the scoping fixture `noteCount` was one ahead of the catalogue before the new notes were added.
+5. `repo verify <lane> --lang=en` treats `--lang=en` as a lane segment (usage refusal for lanes that take no segments); the language must come from `SEMIO_LANGUAGE`. A global `--lang` should be consumed before the lane is dispatched.

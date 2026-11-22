@@ -30,6 +30,7 @@
   "!{workspaceRoot}/**/.git/**",
   "!{workspaceRoot}/**/.nx/**",
   "!{workspaceRoot}/**/.cache/**",
+  "!{workspaceRoot}/**/.test-scratch/**",
   "!{workspaceRoot}/**/target/**",
   "!{workspaceRoot}/**/dist/**",
   "!{workspaceRoot}/**/📤️dist/**",

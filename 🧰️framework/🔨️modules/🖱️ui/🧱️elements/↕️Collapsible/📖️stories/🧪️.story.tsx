@@ -52,7 +52,7 @@ export const Default: Story = {
             <span className="text-xs text-muted-foreground">2.5m × 4.0m</span>
           </SharedBorderRowCell>
         </SharedBorderRow>
-        <CollapsibleContent asChild>
+        <CollapsibleContent>
           <SharedBorderRow orientation="vertical" edges={["right", "bottom", "left"]}>
             <SharedBorderRowCell className="text-sm">Capsule L</SharedBorderRowCell>
             <SharedBorderRowCell className="text-sm">Capsule P</SharedBorderRowCell>

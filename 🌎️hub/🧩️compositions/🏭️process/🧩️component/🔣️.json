@@ -5528,17 +5528,12 @@
         "namedLayouts": [],
         "defaultLayout": {
           "root": {
-            "kind": "row",
+            "kind": "stack",
             "children": [
               {
-                "kind": "stack",
-                "children": [
-                  {
-                    "kind": "window",
-                    "windowKindId": "process-workpiece",
-                    "title": "Workpiece"
-                  }
-                ]
+                "kind": "window",
+                "windowKindId": "process-workpiece",
+                "title": "Workpiece"
               }
             ]
           }
@@ -6506,17 +6501,12 @@
         "namedLayouts": [],
         "defaultLayout": {
           "root": {
-            "kind": "row",
+            "kind": "stack",
             "children": [
               {
-                "kind": "stack",
-                "children": [
-                  {
-                    "kind": "window",
-                    "windowKindId": "process-workpiece-view",
-                    "title": "Workpiece"
-                  }
-                ]
+                "kind": "window",
+                "windowKindId": "process-workpiece-view",
+                "title": "Workpiece"
               }
             ]
           }

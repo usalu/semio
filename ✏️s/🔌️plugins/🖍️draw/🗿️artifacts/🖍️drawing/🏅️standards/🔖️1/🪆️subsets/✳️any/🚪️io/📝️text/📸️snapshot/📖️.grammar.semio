@@ -21,15 +21,14 @@ start document
 # `fill { ... }` block (possibly empty) even when no variant is set, while `attributes.stroke` is
 # omitted entirely when absent (both fixture-observed, asymmetric despite similar `#[dsl(...)]`
 # attrs) — this asymmetry is stated as observed fact, not re-derived from the derive macro source.
-document = "schema=" text SP "id=" text opt-title NL layers-block opt-assets opt-artboard
+document = "schema=" text SP "id=" text opt-title NL layers-block assets opt-artboard
 
 opt-title = (SP "title=" text)?
-opt-assets = ("assets" "=" "{" NL asset-entry* "}" NL)?
+assets = "assets" "=" "{" NL? asset-entry* "}" NL
 opt-artboard = ("artboard" "{" NL "width=" number SP "height=" number NL "}" NL)?
 # Record-valued map entries delimit each image asset with braces.
-asset-entry = IDENT "=" "{" "mime=" text SP "data=" text opt-asset-width opt-asset-height "}"
-opt-asset-width = (SP "width=" number)?
-opt-asset-height = (SP "height=" number)?
+asset-entry = text "=" "{" "width=" number SP "height=" number SP "samples=" "[" pixel-sample* "]" "}"
+pixel-sample = number4
 
 # `layers` is `#[dsl(statements, block)]` — a bare `layers { ... }` block whose items each carry
 # their own leading layer-kind keyword (🦀️.rs:281-298, `DrawingLayerNode`'s 7 variants).

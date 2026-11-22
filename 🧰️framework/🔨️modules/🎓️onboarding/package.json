@@ -8,11 +8,13 @@
   "exports": {
     ".": "./🟦️.ts",
     "./declaration": "./🏷️declaration/🟦️.ts",
-    "./testing/fixtures": "./🧪️tests/🧫️fixtures/🟦️.ts",
-    "./window-layout": "./🗺️window-layout/🟦️.ts"
+    "./testing/fixtures": "./🧪️tests/🧫️fixtures/🟦️.ts"
   },
   "license": "LGPL-3.0-or-later",
   "bundleKind": "library",
+  "dependencies": {
+    "@semio-tech/ui-layout": "workspace:*"
+  },
   "devDependencies": {
     "immer": "10.1.1"
   }

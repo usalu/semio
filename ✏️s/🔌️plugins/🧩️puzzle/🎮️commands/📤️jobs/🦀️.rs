@@ -208,7 +208,7 @@ impl JobOutbox {
         }
     }
 
-    /// ♻️ Closes the lent publication first, then the staged commit pages, then clears the staging flags.
+    /// ♻️ Closes the lent publication first, then the staged commit pages, then pays the source backing's release and clears the staging flags.
     pub fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> RetainedWorkOutcome {
         if self.terminal_is_empty() {
             return RetainedWorkOutcome { result: Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default())), work: 0 };
@@ -219,9 +219,6 @@ impl JobOutbox {
             if step.result.is_ok() && self.publication.terminal_is_empty() {
                 self.kind = None;
                 self.retiring = false;
-                if !self.committing {
-                    self.source = Vec::new();
-                }
             }
             return step;
         }
@@ -230,14 +227,21 @@ impl JobOutbox {
             if step.result.is_ok() && self.commit.terminal_is_empty() {
                 self.commit_cursor = 0;
                 self.committing = false;
-                self.source = Vec::new();
             }
             return step;
+        }
+        let demand = self.source_release_demand();
+        if !effect.performed(1).unwrap_or(false) {
+            return RetainedWorkOutcome { result: Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default())), work: 0 };
         }
         self.commit_cursor = 0;
         self.committing = false;
         self.source = Vec::new();
-        RetainedWorkOutcome { result: Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default())), work: 0 }
+        RetainedWorkOutcome { result: Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, released_bytes: demand.release_bytes, ..Default::default() })), work: 1 }
+    }
+
+    fn source_release_demand(&self) -> RetirementDemand {
+        RetirementDemand { release_bytes: std::mem::size_of::<u8>() * self.source.capacity(), depth: 1, ..Default::default() }
     }
 
     pub fn retirement_demands(&self) -> Result<RetirementDemand, ValueError> {
@@ -247,11 +251,11 @@ impl JobOutbox {
         if !self.commit.terminal_is_empty() {
             return self.commit.retirement_demands();
         }
-        Ok(RetirementDemand::default())
+        Ok(self.source_release_demand())
     }
 
     pub fn terminal_is_empty(&self) -> bool {
-        self.kind.is_none() && !self.committing && self.publication.terminal_is_empty() && self.commit.terminal_is_empty()
+        self.kind.is_none() && !self.committing && self.publication.terminal_is_empty() && self.commit.terminal_is_empty() && self.source.capacity() == 0
     }
 }
 
@@ -259,11 +263,7 @@ impl JobOutbox {
 pub fn job_close_step<T: RetireOwned + 'static>(outbox: &mut JobOutbox, owners: &mut WorkClosing<T>, cx: &mut StepContext<'_>) -> Result<InteractiveJobCloseStep, semio_framework_job::OriginalTurnFailure> {
     if !outbox.terminal_is_empty() {
         let demand = outbox.retirement_demands()?;
-        let step = semio_framework_job::close_original_effect_step(cx, demand, |effect| semio_framework_value::RetainedWorkPoll::Complete(outbox.close_step(effect)))?;
-        return Ok(match step {
-            InteractiveJobCloseStep::Complete { progress } if !outbox.terminal_is_empty() || !owners.is_empty() => InteractiveJobCloseStep::Pending { progress },
-            step => step,
-        });
+        return semio_framework_job::close_original_effect_step(cx, demand, |effect| semio_framework_value::RetainedWorkPoll::Complete(outbox.close_step(effect)));
     }
     owners.close_step(cx)
 }
@@ -458,13 +458,17 @@ pub mod testing {
 
         /// ▶️ One fixture turn of the production job step: the caller's return origin is prepared, claimed, answered and acknowledged before the lent outcome is read as owned bytes.
         pub fn step_job<J: InteractiveJob + ?Sized>(&mut self, job: &mut J, budget: semio_framework_job::StepBudget) -> Result<Option<(JobTurn, Option<Vec<u8>>)>, semio_framework_job::OriginalTurnFailure> {
+            self.step_job_observed(job, budget, &mut None)
+        }
+
+        /// 🔭️ [`Self::step_job`] that also reports the callback verdict the production step observed.
+        pub fn step_job_observed<J: InteractiveJob + ?Sized>(&mut self, job: &mut J, budget: semio_framework_job::StepBudget, verdict: &mut Option<semio_framework_trace::CallbackVerdict>) -> Result<Option<(JobTurn, Option<Vec<u8>>)>, semio_framework_job::OriginalTurnFailure> {
             let answered = self.caller.as_mut().expect("original fixture remains live").turn_with_decoder(budget.retained, &mut self.decoder, |cx| cx.with_original_work_loan(budget.fuel, budget.deadline_us, |cx| {
                 if self.received.is_some() && !self.returns.receive_outcome(cx, &mut self.received)? { return Ok(false); }
                 if self.summary.is_some() { return self.returns.acknowledge_outcome(cx); }
                 if !self.returns.admit(cx)? { return Ok(false); }
-                let mut verdict = None;
                 let (_, receiver) = self.returns.context_parts()?;
-                match semio_framework_job::drive_step(job, cx, receiver, "puzzle_fixture", semio_framework_job::InteractiveStage::InteractiveStep, &mut verdict)? {
+                match semio_framework_job::drive_step(job, cx, receiver, "puzzle_fixture", semio_framework_job::InteractiveStage::InteractiveStep, verdict)? {
                     semio_framework_job::OriginalJobReturn::Preparing | semio_framework_job::OriginalJobReturn::Pending => Ok(false),
                     semio_framework_job::OriginalJobReturn::Outcome(reply) => {
                         self.summary = Some(match reply.original() {
@@ -483,11 +487,18 @@ pub mod testing {
         }
 
         pub fn construct<T>(&mut self, demand: RetirementDemand, construct: impl FnOnce(&mut semio_framework::action_bus::OriginalToolConstructionScope<'_>) -> Result<(T, RetainedCloneProgress), ValueError>) -> T {
-            let mut output = None;
-            let mut admission = semio_framework_job::OriginalConstructionAdmission::default();
+            let mut resident = semio_framework::action_bus::ResidentConstruction::default();
+            let mut construct = Some(construct);
             let demand = semio_framework::action_bus::ToolJobAdmissionDemand { items: 1, copy_bytes: demand.copy_bytes, capacity_bytes: demand.capacity_bytes, release_bytes: demand.release_bytes, depth: demand.depth.max(1) };
-            assert_eq!(self.turn(fixture_stock(), |cx| semio_framework::action_bus::admit_original_tool_construction_scoped(cx, &mut admission, &mut output, demand, |scope| construct(scope).map(|(candidate, mut progress)| { progress.copied_items = progress.copied_items.max(1); (candidate, progress) }))).expect("original Puzzle fixture construction"), semio_framework_job::OriginalConstructionStatus::Ready);
-            output.expect("original Puzzle candidate remains in fixture custody")
+            for _ in 0..64 {
+                let output = self.turn(fixture_stock(), |cx| resident.drive_tool(cx, demand, |scope| {
+                    let (candidate, mut progress) = construct.take().expect("one original Puzzle construction")(scope)?;
+                    progress.copied_items = progress.copied_items.max(1);
+                    Ok((candidate, progress))
+                })).expect("original Puzzle fixture construction");
+                if let Some(output) = output { return output; }
+            }
+            panic!("original Puzzle fixture construction did not settle")
         }
 
         pub fn construct_boxed<T>(&mut self, extra: RetirementDemand, construct: impl FnOnce(&mut semio_framework::action_bus::OriginalToolConstructionScope<'_>) -> Result<(T, RetainedCloneProgress), ValueError>) -> Box<T> {

@@ -12,16 +12,7 @@
       "en": "A 0.30 m domino gas hob seen from the front: a steel plate with one burner, a flame crown of about 2.5 kW, a control knob and a cast-iron pan support that glows once the flame burns.",
       "de": "Ein 0,30 m breites Domino-Gaskochfeld in der Frontansicht: eine Stahlplatte mit einem Brenner, einem Flammenkranz von rund 2,5 kW, einem Bedienknebel und einem gusseisernen Pfannenträger, der aufglüht, sobald die Flamme brennt."
     },
-    "tags": [
-      "hob",
-      "gas",
-      "cooking",
-      "flame",
-      "burner",
-      "kitchen",
-      "internal-gain",
-      "plume"
-    ],
+    "tags": ["hob", "gas", "cooking", "flame", "burner", "kitchen", "internal-gain", "plume"],
     "provenance": {
       "author": "Semio staffage content (G2)",
       "method": "handcrafted",
@@ -53,12 +44,12 @@
         }
       ],
       "notes": {
-        "en": "A table-top domino gas hob of 0.30 m by 0.52 m (0.497 m plate and the 23 mm knob in front of it; built-in 30 cm dominoes measure 306 by 527 mm) with one rapid burner of 2.5 kW rated heat input: a 10 mm enamelled steel top with a pressed spill well around the burner on a pressed housing standing on four rubber feet, a brass burner (cup, crown with 36 flame ports on a ring of 0.09 m, cap of 96 mm), a cast-iron pan support (a 0.27 m square frame of 10 by 12 mm bars on four legs with four fingers towards the burner; the pan rests 48 mm above the plate) and a bakelite knob at the right of the front fascia that turns the gas tap behind it. The mass of 5.6 kg is the sum of the housing (4.1 kg), burner (0.4 kg), pan support (1.1 kg) and knob (0.03 kg). Natural gas releases 10 kWh per cubic metre; the thermal model puts 865 W into the flame region (about 35 percent of the rated input leaves the flame directly as plume and radiation, the pot absorbs about 1200 W, 48 percent, as the cooking-pot asset books it) and 260 W into the pan support, 120 W into the burner head and 55 W into the plate (authored estimates). The origin is the centre of the hob on the ground line; the burner axis stands 30 mm behind it; the elevation is the front view.",
-        "de": "Ein Tisch-Domino-Gaskochfeld von 0,30 m mal 0,52 m (0,497 m Platte und davor der 23 mm tiefe Knebel; eingebaute 30-cm-Dominos messen 306 mal 527 mm) mit einem Starkbrenner von 2,5 kW Nennwärmebelastung: eine 10 mm starke emaillierte Stahlplatte mit einer gepressten Überlaufmulde um den Brenner auf einem gepressten Gehäuse, das auf vier Gummifüßen steht, ein Messingbrenner (Topf, Brennerkrone mit 36 Flammenöffnungen auf einem Kreis von 0,09 m, Deckel von 96 mm), ein gusseiserner Pfannenträger (ein quadratischer Rahmen von 0,27 m aus 10-mal-12-mm-Stäben auf vier Beinen mit vier Fingern zum Brenner; der Topf steht 48 mm über der Platte) und ein Bakelit-Knebel rechts an der Frontblende, der den Gashahn dahinter dreht. Die Masse von 5,6 kg ist die Summe aus Gehäuse (4,1 kg), Brenner (0,4 kg), Pfannenträger (1,1 kg) und Knebel (0,03 kg). Erdgas setzt 10 kWh je Kubikmeter frei; das Wärmemodell legt 865 W in die Flammenregion (rund 35 Prozent der Nennbelastung verlassen die Flamme direkt als Fahne und Strahlung, der Topf nimmt etwa 1200 W auf, 48 Prozent, wie es das Asset cooking-pot bucht) und 260 W in den Pfannenträger, 120 W in den Brennerkopf und 55 W in die Platte (Schätzwerte). Der Ursprung ist die Mitte des Kochfelds auf der Standlinie; die Brennerachse steht 30 mm dahinter; die Ansicht ist die Vorderansicht."
+        "en": "A table-top domino gas hob of 0.30 m by 0.52 m (0.497 m plate and the 25 mm knob in front of it; built-in 30 cm dominoes measure 306 by 527 mm) with one rapid burner of 2.5 kW rated heat input: a 10 mm enamelled steel top with a pressed spill well around the burner on a pressed housing standing on four rubber feet, a brass burner (cup, crown with 36 flame ports on a ring of 0.09 m, cap of 96 mm), a cast-iron pan support (a 0.27 m square frame of 10 by 12 mm bars on four legs with four fingers towards the burner; the pan rests 48 mm above the plate) and a bakelite knob of 37 mm on a 42 mm skirt at the right of the 50 mm front fascia that turns the gas tap behind it; a gas rail runs inside the housing from the R 1/2 inlet at the back to the tap and on to the injector under the burner, and the pan support stands 0.114 m above the table. The mass of 5.6 kg is the sum of the housing (4.1 kg), burner (0.4 kg), pan support (1.1 kg) and knob (0.03 kg). Natural gas releases 10 kWh per cubic metre; the thermal model puts 865 W into the flame region (about 35 percent of the rated input leaves the flame directly as plume and radiation, the pot absorbs about 1200 W, 48 percent, as the cooking-pot asset books it) and 260 W into the pan support, 120 W into the burner head and 55 W into the plate (authored estimates). The origin is the centre of the hob on the ground line; the burner axis stands 30 mm behind it; the elevation is the front view.",
+        "de": "Ein Tisch-Domino-Gaskochfeld von 0,30 m mal 0,52 m (0,497 m Platte und davor der 25 mm tiefe Knebel; eingebaute 30-cm-Dominos messen 306 mal 527 mm) mit einem Starkbrenner von 2,5 kW Nennwärmebelastung: eine 10 mm starke emaillierte Stahlplatte mit einer gepressten Überlaufmulde um den Brenner auf einem gepressten Gehäuse, das auf vier Gummifüßen steht, ein Messingbrenner (Topf, Brennerkrone mit 36 Flammenöffnungen auf einem Kreis von 0,09 m, Deckel von 96 mm), ein gusseiserner Pfannenträger (ein quadratischer Rahmen von 0,27 m aus 10-mal-12-mm-Stäben auf vier Beinen mit vier Fingern zum Brenner; der Topf steht 48 mm über der Platte) und ein Bakelit-Knebel von 37 mm auf einer 42-mm-Rosette rechts an der 50 mm hohen Frontblende, der den Gashahn dahinter dreht; ein Gasrohr läuft im Gehäuse vom R-1/2-Anschluss an der Rückseite zum Hahn und weiter zur Düse unter dem Brenner, und der Pfannenträger steht 0,114 m über dem Tisch. Die Masse von 5,6 kg ist die Summe aus Gehäuse (4,1 kg), Brenner (0,4 kg), Pfannenträger (1,1 kg) und Knebel (0,03 kg). Erdgas setzt 10 kWh je Kubikmeter frei; das Wärmemodell legt 865 W in die Flammenregion (rund 35 Prozent der Nennbelastung verlassen die Flamme direkt als Fahne und Strahlung, der Topf nimmt etwa 1200 W auf, 48 Prozent, wie es das Asset cooking-pot bucht) und 260 W in den Pfannenträger, 120 W in den Brennerkopf und 55 W in die Platte (Schätzwerte). Der Ursprung ist die Mitte des Kochfelds auf der Standlinie; die Brennerachse steht 30 mm dahinter; die Ansicht ist die Vorderansicht."
       }
     },
     "dimensions": {
-      "heightM": 0.088,
+      "heightM": 0.114,
       "widthM": 0.3,
       "depthM": 0.52,
       "massKg": 5.63
@@ -169,7 +160,7 @@
           "mass": {
             "kg": 4.1,
             "comX": 0,
-            "comY": 0.02,
+            "comY": 0.033,
             "distribution": "point",
             "source": "authored-estimate"
           }
@@ -178,7 +169,7 @@
           "id": "burner",
           "parent": "hob",
           "x": 0,
-          "y": 0.04,
+          "y": 0.066,
           "angleDeg": 0,
           "title": {
             "en": "Burner head with cap",
@@ -200,7 +191,7 @@
           "id": "trivet",
           "parent": "hob",
           "x": 0,
-          "y": 0.04,
+          "y": 0.066,
           "angleDeg": 0,
           "title": {
             "en": "Cast-iron pan support",
@@ -222,13 +213,13 @@
           "id": "knob",
           "parent": "hob",
           "x": 0.105,
-          "y": 0.019,
+          "y": 0.031,
           "angleDeg": 0,
           "title": {
             "en": "Control knob",
             "de": "Bedienknebel"
           },
-          "lengthM": 0.012,
+          "lengthM": 0.018,
           "joint": {
             "type": "revolute",
             "minDeg": -130,
@@ -389,7 +380,19 @@
               "region": "burner",
               "material": "brass",
               "kind": "poly",
-              "points": [[0.0465, 0.0122], [0.048, 0.0135], [0.048, 0.0172], [0.0462, 0.019], [0.03, 0.0196], [0.0, 0.02], [-0.03, 0.0196], [-0.0462, 0.019], [-0.048, 0.0172], [-0.048, 0.0135], [-0.0465, 0.0122]],
+              "points": [
+                [0.0465, 0.0122],
+                [0.048, 0.0135],
+                [0.048, 0.0172],
+                [0.0462, 0.019],
+                [0.03, 0.0196],
+                [0.0, 0.02],
+                [-0.03, 0.0196],
+                [-0.0462, 0.019],
+                [-0.048, 0.0172],
+                [-0.048, 0.0135],
+                [-0.0465, 0.0122]
+              ],
               "closed": true
             },
             {
@@ -416,7 +419,7 @@
               "material": "steel-enamel",
               "kind": "rect",
               "x": -0.15,
-              "y": 0.03,
+              "y": 0.056,
               "w": 0.3,
               "h": 0.01
             },
@@ -427,13 +430,13 @@
               "z": 3.55,
               "filled": true,
               "tone": 0.4,
-              "region": "plate",
+              "region": "housing",
               "material": "steel-enamel",
               "kind": "rect",
               "x": -0.14,
               "y": 0.0075,
               "w": 0.28,
-              "h": 0.0225
+              "h": 0.0485
             },
             {
               "id": "feet",
@@ -458,12 +461,12 @@
               "kind": "ellipse",
               "cx": 0.0,
               "cy": 0.0,
-              "rx": 0.013,
-              "ry": 0.013,
+              "rx": 0.021,
+              "ry": 0.021,
               "solid": {
                 "kind": "extruded",
                 "sweep": "w",
-                "z0": -0.2575,
+                "z0": -0.259,
                 "z1": -0.234
               }
             },
@@ -477,7 +480,7 @@
               "region": "knob",
               "material": "bakelite",
               "kind": "path",
-              "d": "M -0.0037 -0.011 L 0.0037 -0.011 L 0.0037 0.011 L -0.0037 0.011 L -0.0037 -0.011 M 0.0 0.0045 L 0.0 0.0095"
+              "d": "M -0.0045 -0.018 L 0.0045 -0.018 L 0.0045 0.018 L -0.0045 0.018 L -0.0045 -0.018 M 0.0 0.008 L 0.0 0.016 M -0.0185 0.0 A 0.0185 0.0185 0 1 0 0.0185 0.0 A 0.0185 0.0185 0 1 0 -0.0185 0.0"
             },
             {
               "id": "trivet-leg-left",
@@ -519,7 +522,26 @@
               "region": "trivet",
               "material": "cast-iron",
               "kind": "poly",
-              "points": [[-0.135, 0.048], [-0.135, 0.036], [-0.12, 0.036], [-0.067, 0.0338], [-0.0635, 0.034], [-0.0622, 0.0355], [-0.062, 0.036], [-0.005, 0.036], [-0.005, 0.0338], [0.005, 0.0338], [0.005, 0.036], [0.062, 0.036], [0.0622, 0.0355], [0.0635, 0.034], [0.067, 0.0338], [0.12, 0.036], [0.135, 0.036], [0.135, 0.048]],
+              "points": [
+                [-0.135, 0.048],
+                [-0.135, 0.036],
+                [-0.12, 0.036],
+                [-0.067, 0.0338],
+                [-0.0635, 0.034],
+                [-0.0622, 0.0355],
+                [-0.062, 0.036],
+                [-0.005, 0.036],
+                [-0.005, 0.0338],
+                [0.005, 0.0338],
+                [0.005, 0.036],
+                [0.062, 0.036],
+                [0.0622, 0.0355],
+                [0.0635, 0.034],
+                [0.067, 0.0338],
+                [0.12, 0.036],
+                [0.135, 0.036],
+                [0.135, 0.048]
+              ],
               "closed": true
             },
             {
@@ -530,7 +552,7 @@
               "filled": false,
               "tone": 0.3,
               "kind": "path",
-              "d": "M -0.11 0.012 L -0.11 0.02 M -0.09 0.012 L -0.09 0.02 M -0.07 0.012 L -0.07 0.02 M -0.05 0.012 L -0.05 0.02 M -0.03 0.012 L -0.03 0.02 M -0.01 0.012 L -0.01 0.02 M 0.01 0.012 L 0.01 0.02 M 0.03 0.012 L 0.03 0.02 M 0.05 0.012 L 0.05 0.02"
+              "d": "M -0.11 0.029 L -0.11 0.043 M -0.09 0.029 L -0.09 0.043 M -0.07 0.029 L -0.07 0.043 M -0.05 0.029 L -0.05 0.043 M -0.03 0.029 L -0.03 0.043 M -0.01 0.029 L -0.01 0.043 M 0.01 0.029 L 0.01 0.043 M 0.03 0.029 L 0.03 0.043 M 0.05 0.029 L 0.05 0.043"
             },
             {
               "id": "front-panel-seam",
@@ -540,7 +562,7 @@
               "filled": false,
               "tone": 0.3,
               "kind": "path",
-              "d": "M -0.136 0.0235 L 0.136 0.0235"
+              "d": "M -0.136 0.0495 L 0.136 0.0495"
             },
             {
               "id": "burner-ports",
@@ -610,7 +632,80 @@
               "region": "flame",
               "material": "flame",
               "kind": "poly",
-              "points": [[0.0066, 0.0801], [0.0107, 0.0875], [0.0195, 0.0851], [0.0193, 0.0767], [0.0252, 0.0828], [0.0331, 0.0782], [0.0307, 0.0701], [0.038, 0.0745], [0.0445, 0.068], [0.0401, 0.0607], [0.0482, 0.0631], [0.0528, 0.0552], [0.0467, 0.0493], [0.0551, 0.0495], [0.0575, 0.0407], [0.0501, 0.0366], [0.0583, 0.0346], [0.0583, 0.0254], [0.0501, 0.0234], [0.0575, 0.0193], [0.0551, 0.0105], [0.0467, 0.0107], [0.0528, 0.0048], [0.0482, -0.0031], [0.0401, -0.0007], [0.0445, -0.008], [0.038, -0.0145], [0.0307, -0.0101], [0.0331, -0.0182], [0.0252, -0.0228], [0.0193, -0.0167], [0.0195, -0.0251], [0.0107, -0.0275], [0.0066, -0.0201], [0.0046, -0.0283], [-0.0046, -0.0283], [-0.0066, -0.0201], [-0.0107, -0.0275], [-0.0195, -0.0251], [-0.0193, -0.0167], [-0.0252, -0.0228], [-0.0331, -0.0182], [-0.0307, -0.0101], [-0.038, -0.0145], [-0.0445, -0.008], [-0.0401, -0.0007], [-0.0482, -0.0031], [-0.0528, 0.0048], [-0.0467, 0.0107], [-0.0551, 0.0105], [-0.0575, 0.0193], [-0.0501, 0.0234], [-0.0583, 0.0254], [-0.0583, 0.0346], [-0.0501, 0.0366], [-0.0575, 0.0407], [-0.0551, 0.0495], [-0.0467, 0.0493], [-0.0528, 0.0552], [-0.0482, 0.0631], [-0.0401, 0.0607], [-0.0445, 0.068], [-0.038, 0.0745], [-0.0307, 0.0701], [-0.0331, 0.0782], [-0.0252, 0.0828], [-0.0193, 0.0767], [-0.0195, 0.0851], [-0.0107, 0.0875], [-0.0066, 0.0801], [-0.0046, 0.0883], [0.0046, 0.0883]],
+              "points": [
+                [0.0066, 0.0801],
+                [0.0107, 0.0875],
+                [0.0195, 0.0851],
+                [0.0193, 0.0767],
+                [0.0252, 0.0828],
+                [0.0331, 0.0782],
+                [0.0307, 0.0701],
+                [0.038, 0.0745],
+                [0.0445, 0.068],
+                [0.0401, 0.0607],
+                [0.0482, 0.0631],
+                [0.0528, 0.0552],
+                [0.0467, 0.0493],
+                [0.0551, 0.0495],
+                [0.0575, 0.0407],
+                [0.0501, 0.0366],
+                [0.0583, 0.0346],
+                [0.0583, 0.0254],
+                [0.0501, 0.0234],
+                [0.0575, 0.0193],
+                [0.0551, 0.0105],
+                [0.0467, 0.0107],
+                [0.0528, 0.0048],
+                [0.0482, -0.0031],
+                [0.0401, -0.0007],
+                [0.0445, -0.008],
+                [0.038, -0.0145],
+                [0.0307, -0.0101],
+                [0.0331, -0.0182],
+                [0.0252, -0.0228],
+                [0.0193, -0.0167],
+                [0.0195, -0.0251],
+                [0.0107, -0.0275],
+                [0.0066, -0.0201],
+                [0.0046, -0.0283],
+                [-0.0046, -0.0283],
+                [-0.0066, -0.0201],
+                [-0.0107, -0.0275],
+                [-0.0195, -0.0251],
+                [-0.0193, -0.0167],
+                [-0.0252, -0.0228],
+                [-0.0331, -0.0182],
+                [-0.0307, -0.0101],
+                [-0.038, -0.0145],
+                [-0.0445, -0.008],
+                [-0.0401, -0.0007],
+                [-0.0482, -0.0031],
+                [-0.0528, 0.0048],
+                [-0.0467, 0.0107],
+                [-0.0551, 0.0105],
+                [-0.0575, 0.0193],
+                [-0.0501, 0.0234],
+                [-0.0583, 0.0254],
+                [-0.0583, 0.0346],
+                [-0.0501, 0.0366],
+                [-0.0575, 0.0407],
+                [-0.0551, 0.0495],
+                [-0.0467, 0.0493],
+                [-0.0528, 0.0552],
+                [-0.0482, 0.0631],
+                [-0.0401, 0.0607],
+                [-0.0445, 0.068],
+                [-0.038, 0.0745],
+                [-0.0307, 0.0701],
+                [-0.0331, 0.0782],
+                [-0.0252, 0.0828],
+                [-0.0193, 0.0767],
+                [-0.0195, 0.0851],
+                [-0.0107, 0.0875],
+                [-0.0066, 0.0801],
+                [-0.0046, 0.0883],
+                [0.0046, 0.0883]
+              ],
               "closed": true
             },
             {
@@ -638,7 +733,19 @@
               "region": "trivet",
               "material": "cast-iron",
               "kind": "poly",
-              "points": [[-0.135, 0.161], [-0.135, 0.155], [-0.005, 0.155], [-0.005, 0.0925], [0.0, 0.092], [0.005, 0.0925], [0.005, 0.155], [0.135, 0.155], [0.135, 0.161], [0.131, 0.165], [-0.131, 0.165]],
+              "points": [
+                [-0.135, 0.161],
+                [-0.135, 0.155],
+                [-0.005, 0.155],
+                [-0.005, 0.0925],
+                [0.0, 0.092],
+                [0.005, 0.0925],
+                [0.005, 0.155],
+                [0.135, 0.155],
+                [0.135, 0.161],
+                [0.131, 0.165],
+                [-0.131, 0.165]
+              ],
               "closed": true
             },
             {
@@ -651,7 +758,19 @@
               "region": "trivet",
               "material": "cast-iron",
               "kind": "poly",
-              "points": [[-0.131, -0.105], [0.131, -0.105], [0.135, -0.101], [0.135, -0.095], [0.005, -0.095], [0.005, -0.0325], [0.0, -0.032], [-0.005, -0.0325], [-0.005, -0.095], [-0.135, -0.095], [-0.135, -0.101]],
+              "points": [
+                [-0.131, -0.105],
+                [0.131, -0.105],
+                [0.135, -0.101],
+                [0.135, -0.095],
+                [0.005, -0.095],
+                [0.005, -0.0325],
+                [0.0, -0.032],
+                [-0.005, -0.0325],
+                [-0.005, -0.095],
+                [-0.135, -0.095],
+                [-0.135, -0.101]
+              ],
               "closed": true
             },
             {
@@ -690,10 +809,10 @@
               "region": "knob",
               "material": "bakelite",
               "kind": "rect",
-              "x": 0.092,
-              "y": -0.2573,
-              "w": 0.026,
-              "h": 0.0233
+              "x": 0.0865,
+              "y": -0.259,
+              "w": 0.037,
+              "h": 0.025
             },
             {
               "id": "plan-knob-pointer",
@@ -705,7 +824,7 @@
               "region": "knob",
               "material": "bakelite",
               "kind": "poly",
-              "points": [[0.0945, -0.2495], [0.1155, -0.2495]],
+              "points": [[0.0865, -0.25], [0.1235, -0.25]],
               "closed": false
             }
           ],
@@ -720,7 +839,7 @@
               "region": "flame",
               "material": "flame",
               "kind": "path",
-              "d": "M -0.0034 0.0451 L 0.0763 0.0456 L 0.0857 0.0521 L 0.0881 0.0657 L 0.0796 0.0676 L 0.0745 0.0634 L 0.0698 0.0671 L 0.0665 0.0601 L 0.0632 0.0592 L 0.0613 0.0657 L 0.0576 0.0667 L 0.0534 0.0578 L 0.0501 0.0568 L 0.0473 0.0662 L 0.044 0.0671 L 0.0393 0.0563 L 0.036 0.0554 L 0.0313 0.0671 L 0.0271 0.0653 L 0.0238 0.0559 L 0.0205 0.0568 L 0.0163 0.0671 L 0.0126 0.0657 L 0.0098 0.0573 L 0.0065 0.0582 L 0.0023 0.0671 L -0.0015 0.0657 L -0.0034 0.0596 L -0.0099 0.0667 L -0.0169 0.0638 L -0.0193 0.0676 L -0.0268 0.0671 L -0.0282 0.0582 L -0.0202 0.047 Z"
+              "d": "M -0.0034 0.0711 L 0.0763 0.0716 L 0.0857 0.0781 L 0.0881 0.0917 L 0.0796 0.0936 L 0.0745 0.0894 L 0.0698 0.0931 L 0.0665 0.0861 L 0.0632 0.0852 L 0.0613 0.0917 L 0.0576 0.0927 L 0.0534 0.0838 L 0.0501 0.0828 L 0.0473 0.0922 L 0.044 0.0931 L 0.0393 0.0823 L 0.036 0.0814 L 0.0313 0.0931 L 0.0271 0.0913 L 0.0238 0.0819 L 0.0205 0.0828 L 0.0163 0.0931 L 0.0126 0.0917 L 0.0098 0.0833 L 0.0065 0.0842 L 0.0023 0.0931 L -0.0015 0.0917 L -0.0034 0.0856 L -0.0099 0.0927 L -0.0169 0.0898 L -0.0193 0.0936 L -0.0268 0.0931 L -0.0282 0.0842 L -0.0202 0.073 Z"
             },
             {
               "id": "flame-right",
@@ -732,7 +851,7 @@
               "region": "flame",
               "material": "flame",
               "kind": "path",
-              "d": "M -0.0034 0.0451 L 0.0763 0.0456 L 0.0857 0.0521 L 0.0881 0.0657 L 0.0796 0.0676 L 0.0745 0.0634 L 0.0698 0.0671 L 0.0665 0.0601 L 0.0632 0.0592 L 0.0613 0.0657 L 0.0576 0.0667 L 0.0534 0.0578 L 0.0501 0.0568 L 0.0473 0.0662 L 0.044 0.0671 L 0.0393 0.0563 L 0.036 0.0554 L 0.0313 0.0671 L 0.0271 0.0653 L 0.0238 0.0559 L 0.0205 0.0568 L 0.0163 0.0671 L 0.0126 0.0657 L 0.0098 0.0573 L 0.0065 0.0582 L 0.0023 0.0671 L -0.0015 0.0657 L -0.0034 0.0596 L -0.0099 0.0667 L -0.0169 0.0638 L -0.0193 0.0676 L -0.0268 0.0671 L -0.0282 0.0582 L -0.0202 0.047 Z"
+              "d": "M -0.0034 0.0711 L 0.0763 0.0716 L 0.0857 0.0781 L 0.0881 0.0917 L 0.0796 0.0936 L 0.0745 0.0894 L 0.0698 0.0931 L 0.0665 0.0861 L 0.0632 0.0852 L 0.0613 0.0917 L 0.0576 0.0927 L 0.0534 0.0838 L 0.0501 0.0828 L 0.0473 0.0922 L 0.044 0.0931 L 0.0393 0.0823 L 0.036 0.0814 L 0.0313 0.0931 L 0.0271 0.0913 L 0.0238 0.0819 L 0.0205 0.0828 L 0.0163 0.0931 L 0.0126 0.0917 L 0.0098 0.0833 L 0.0065 0.0842 L 0.0023 0.0931 L -0.0015 0.0917 L -0.0034 0.0856 L -0.0099 0.0927 L -0.0169 0.0898 L -0.0193 0.0936 L -0.0268 0.0931 L -0.0282 0.0842 L -0.0202 0.073 Z"
             },
             {
               "id": "flame-centre",
@@ -744,7 +863,7 @@
               "region": "flame",
               "material": "flame",
               "kind": "path",
-              "d": "M 0.073 0.0423 L 0.0767 0.0423 L 0.087 0.0517 L 0.0898 0.0578 L 0.0889 0.0662 L 0.0856 0.0653 L 0.0781 0.0536 L 0.0715 0.0503 Z M -0.0166 0.0423 L -0.011 0.0437 L -0.0114 0.0503 L -0.0175 0.0531 L -0.0292 0.0662 L -0.0274 0.0522 Z"
+              "d": "M 0.073 0.0683 L 0.0767 0.0683 L 0.087 0.0777 L 0.0898 0.0838 L 0.0889 0.0922 L 0.0856 0.0913 L 0.0781 0.0796 L 0.0715 0.0763 Z M -0.0166 0.0683 L -0.011 0.0697 L -0.0114 0.0763 L -0.0175 0.0791 L -0.0292 0.0922 L -0.0274 0.0782 Z"
             },
             {
               "id": "burner-cap",
@@ -756,7 +875,19 @@
               "region": "burner",
               "material": "brass",
               "kind": "poly",
-              "points": [[0.0765, 0.0522], [0.078, 0.0535], [0.078, 0.0572], [0.0762, 0.059], [0.06, 0.0596], [0.03, 0.06], [0.0, 0.0596], [-0.0162, 0.059], [-0.018, 0.0572], [-0.018, 0.0535], [-0.0165, 0.0522]],
+              "points": [
+                [0.0765, 0.0782],
+                [0.078, 0.0795],
+                [0.078, 0.0832],
+                [0.0762, 0.085],
+                [0.06, 0.0856],
+                [0.03, 0.086],
+                [0.0, 0.0856],
+                [-0.0162, 0.085],
+                [-0.018, 0.0832],
+                [-0.018, 0.0795],
+                [-0.0165, 0.0782]
+              ],
               "closed": true
             },
             {
@@ -769,7 +900,7 @@
               "region": "burner",
               "material": "brass",
               "kind": "poly",
-              "points": [[0.071, 0.036], [0.073, 0.042], [0.075, 0.042], [0.075, 0.0522], [-0.015, 0.0522], [-0.015, 0.042], [-0.013, 0.042], [-0.011, 0.036]],
+              "points": [[0.071, 0.062], [0.073, 0.068], [0.075, 0.068], [0.075, 0.0782], [-0.015, 0.0782], [-0.015, 0.068], [-0.013, 0.068], [-0.011, 0.062]],
               "closed": true
             },
             {
@@ -783,7 +914,7 @@
               "material": "steel-enamel",
               "kind": "rect",
               "x": -0.236,
-              "y": 0.03,
+              "y": 0.056,
               "w": 0.496,
               "h": 0.01
             },
@@ -794,13 +925,13 @@
               "z": 3.55,
               "filled": true,
               "tone": 0.4,
-              "region": "plate",
+              "region": "housing",
               "material": "steel-enamel",
               "kind": "rect",
               "x": -0.234,
               "y": 0.0075,
               "w": 0.484,
-              "h": 0.0225
+              "h": 0.0485
             },
             {
               "id": "feet",
@@ -825,12 +956,12 @@
               "kind": "ellipse",
               "cx": 0.0,
               "cy": 0.0,
-              "rx": 0.013,
-              "ry": 0.013,
+              "rx": 0.021,
+              "ry": 0.021,
               "solid": {
                 "kind": "extruded",
                 "sweep": "w",
-                "z0": -0.2575,
+                "z0": -0.259,
                 "z1": -0.234
               }
             },
@@ -845,7 +976,7 @@
               "material": "cast-iron",
               "kind": "rect",
               "x": 0.155,
-              "y": 0.04,
+              "y": 0.066,
               "w": 0.01,
               "h": 0.037
             },
@@ -860,7 +991,7 @@
               "material": "cast-iron",
               "kind": "rect",
               "x": -0.105,
-              "y": 0.04,
+              "y": 0.066,
               "w": 0.01,
               "h": 0.037
             },
@@ -874,7 +1005,26 @@
               "region": "trivet",
               "material": "cast-iron",
               "kind": "poly",
-              "points": [[-0.105, 0.088], [-0.105, 0.076], [-0.09, 0.076], [-0.037, 0.0738], [-0.0335, 0.074], [-0.0322, 0.0755], [-0.032, 0.076], [0.025, 0.076], [0.025, 0.0738], [0.035, 0.0738], [0.035, 0.076], [0.092, 0.076], [0.0922, 0.0755], [0.0935, 0.074], [0.097, 0.0738], [0.15, 0.076], [0.165, 0.076], [0.165, 0.088]],
+              "points": [
+                [-0.105, 0.114],
+                [-0.105, 0.102],
+                [-0.09, 0.102],
+                [-0.037, 0.0998],
+                [-0.0335, 0.1],
+                [-0.0322, 0.1015],
+                [-0.032, 0.102],
+                [0.025, 0.102],
+                [0.025, 0.0998],
+                [0.035, 0.0998],
+                [0.035, 0.102],
+                [0.092, 0.102],
+                [0.0922, 0.1015],
+                [0.0935, 0.1],
+                [0.097, 0.0998],
+                [0.15, 0.102],
+                [0.165, 0.102],
+                [0.165, 0.114]
+              ],
               "closed": true
             },
             {
@@ -885,7 +1035,7 @@
               "filled": false,
               "tone": 0.3,
               "kind": "path",
-              "d": "M -0.2 0.012 L -0.2 0.02 M -0.16 0.012 L -0.16 0.02 M -0.12 0.012 L -0.12 0.02 M -0.08 0.012 L -0.08 0.02 M -0.04 0.012 L -0.04 0.02 M 0.0 0.012 L 0.0 0.02 M 0.04 0.012 L 0.04 0.02 M 0.08 0.012 L 0.08 0.02 M 0.12 0.012 L 0.12 0.02 M 0.16 0.012 L 0.16 0.02 M 0.2 0.012 L 0.2 0.02"
+              "d": "M -0.2 0.029 L -0.2 0.043 M -0.16 0.029 L -0.16 0.043 M -0.12 0.029 L -0.12 0.043 M -0.08 0.029 L -0.08 0.043 M -0.04 0.029 L -0.04 0.043 M 0.0 0.029 L 0.0 0.043 M 0.04 0.029 L 0.04 0.043 M 0.08 0.029 L 0.08 0.043 M 0.12 0.029 L 0.12 0.043 M 0.16 0.029 L 0.16 0.043 M 0.2 0.029 L 0.2 0.043"
             },
             {
               "id": "front-panel-seam",
@@ -895,14 +1045,14 @@
               "filled": false,
               "tone": 0.3,
               "kind": "path",
-              "d": "M -0.23 0.0235 L 0.246 0.0235"
+              "d": "M -0.23 0.0495 L 0.246 0.0495"
             }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "A 0.30 m table-top domino hob seen from the front, 6 mm wide and 1.8 mm tall on paper: the housing on four feet with the knob on the fascia, the 10 mm top, the burner with its crown of flame tongues and the cast-iron pan support standing over it on two legs. Front view from the side, 10.4 mm by 1.8 mm: the 0.497 m top with the knob in front of it, the housing on its feet, burner and flames 30 mm behind the middle, the pan support with its two legs. Plan, 6 mm by 10.4 mm: the top with its spill well, the burner cap ringed by 24 flame lobes, the square pan support with its four fingers and the knob in front of the top.",
-            "de": "Ein Tisch-Domino-Gaskochfeld von 0,30 m in der Vorderansicht, auf Papier 6 mm breit und 1,8 mm hoch: das Gehäuse auf vier Füßen mit dem Knebel an der Blende, die 10 mm starke Platte, der Brenner mit seinem Kranz aus Flammenzungen und der gusseiserne Pfannenträger, der auf zwei Beinen darüber steht. Seitenansicht, 10,4 mm auf 1,8 mm: die 0,497 m tiefe Platte mit dem Knebel davor, das Gehäuse auf seinen Füßen, Brenner und Flammen 30 mm hinter der Mitte, der Pfannenträger mit seinen zwei Beinen. Grundriss, 6 mm auf 10,4 mm: die Platte mit ihrer Überlaufmulde, der Brennerdeckel mit 24 Flammenbögen, der quadratische Pfannenträger mit seinen vier Fingern und der Knebel vor der Platte."
+            "en": "A 0.30 m table-top domino hob seen from the front, 6 mm wide and 2.3 mm tall on paper: the housing on four feet with the knob on the fascia, the 10 mm top, the burner with its crown of flame tongues and the cast-iron pan support standing over it on two legs. Front view from the side, 10.4 mm by 2.3 mm: the 0.497 m top with the knob in front of it, the housing on its feet, burner and flames 30 mm behind the middle, the pan support with its two legs. Plan, 6 mm by 10.4 mm: the top with its spill well, the burner cap ringed by 24 flame lobes, the square pan support with its four fingers and the knob in front of the top.",
+            "de": "Ein Tisch-Domino-Gaskochfeld von 0,30 m in der Vorderansicht, auf Papier 6 mm breit und 2,3 mm hoch: das Gehäuse auf vier Füßen mit dem Knebel an der Blende, die 10 mm starke Platte, der Brenner mit seinem Kranz aus Flammenzungen und der gusseiserne Pfannenträger, der auf zwei Beinen darüber steht. Seitenansicht, 10,4 mm auf 2,3 mm: die 0,497 m tiefe Platte mit dem Knebel davor, das Gehäuse auf seinen Füßen, Brenner und Flammen 30 mm hinter der Mitte, der Pfannenträger mit seinen zwei Beinen. Grundriss, 6 mm auf 10,4 mm: die Platte mit ihrer Überlaufmulde, der Brennerdeckel mit 24 Flammenbögen, der quadratische Pfannenträger mit seinen vier Fingern und der Knebel vor der Platte."
           },
           "retained": {
             "en": "Housing with bead, vent slots and feet, the 10 mm top, the knob with grip ridge and pointer, burner cup and crown with its ports, the cap, the flame tongues in three groups (left, right and the front and back tongues on the stretching tip), the pan support with frame, fingers and legs, the spill well in the plan.",
@@ -984,12 +1134,12 @@
               "filled": true,
               "tone": 0.3,
               "material": "steel-enamel",
-              "region": "plate",
               "kind": "rect",
               "x": -0.15,
               "y": 0.0,
               "w": 0.3,
-              "h": 0.04
+              "h": 0.066,
+              "regions": ["plate", "housing"]
             },
             {
               "id": "knob",
@@ -1003,12 +1153,12 @@
               "kind": "ellipse",
               "cx": 0.0,
               "cy": 0.0,
-              "rx": 0.013,
-              "ry": 0.013,
+              "rx": 0.02,
+              "ry": 0.02,
               "solid": {
                 "kind": "extruded",
                 "sweep": "w",
-                "z0": -0.2575,
+                "z0": -0.259,
                 "z1": -0.234
               }
             },
@@ -1082,10 +1232,7 @@
               "z": 2,
               "filled": true,
               "tone": 0.5,
-              "regions": [
-                "burner",
-                "flame"
-              ],
+              "regions": ["burner", "flame"],
               "material": "brass",
               "kind": "ellipse",
               "cx": 0.0,
@@ -1115,10 +1262,10 @@
               "region": "knob",
               "material": "bakelite",
               "kind": "rect",
-              "x": 0.092,
-              "y": -0.2575,
-              "w": 0.026,
-              "h": 0.0235
+              "x": 0.085,
+              "y": -0.259,
+              "w": 0.04,
+              "h": 0.025
             }
           ],
           "front": [
@@ -1132,7 +1279,7 @@
               "region": "flame",
               "material": "flame",
               "kind": "path",
-              "d": "M -0.029 0.044 L 0.089 0.044 L 0.089 0.062 L 0.081 0.0705 L 0.07 0.0595 L 0.058 0.0705 L 0.044 0.059 L 0.03 0.0705 L 0.016 0.059 L 0.002 0.0705 L -0.01 0.0595 L -0.021 0.0705 L -0.029 0.062 Z"
+              "d": "M -0.029 0.07 L 0.089 0.07 L 0.089 0.088 L 0.081 0.0965 L 0.07 0.0855 L 0.058 0.0965 L 0.044 0.085 L 0.03 0.0965 L 0.016 0.085 L 0.002 0.0965 L -0.01 0.0855 L -0.021 0.0965 L -0.029 0.088 Z"
             },
             {
               "id": "burner",
@@ -1144,7 +1291,7 @@
               "region": "burner",
               "material": "brass",
               "kind": "poly",
-              "points": [[0.076, 0.038], [0.077, 0.0565], [0.06, 0.0595], [0.03, 0.06], [0.0, 0.0595], [-0.017, 0.0565], [-0.016, 0.038]],
+              "points": [[0.076, 0.064], [0.077, 0.0825], [0.06, 0.0855], [0.03, 0.086], [0.0, 0.0855], [-0.017, 0.0825], [-0.016, 0.064]],
               "closed": true
             },
             {
@@ -1155,12 +1302,12 @@
               "filled": true,
               "tone": 0.3,
               "material": "steel-enamel",
-              "region": "plate",
               "kind": "rect",
               "x": -0.236,
               "y": 0.0,
               "w": 0.496,
-              "h": 0.04
+              "h": 0.066,
+              "regions": ["plate", "housing"]
             },
             {
               "id": "knob",
@@ -1174,12 +1321,12 @@
               "kind": "ellipse",
               "cx": 0.0,
               "cy": 0.0,
-              "rx": 0.013,
-              "ry": 0.013,
+              "rx": 0.02,
+              "ry": 0.02,
               "solid": {
                 "kind": "extruded",
                 "sweep": "w",
-                "z0": -0.2575,
+                "z0": -0.259,
                 "z1": -0.234
               }
             },
@@ -1194,7 +1341,7 @@
               "material": "cast-iron",
               "kind": "rect",
               "x": 0.155,
-              "y": 0.04,
+              "y": 0.066,
               "w": 0.01,
               "h": 0.0365
             },
@@ -1209,7 +1356,7 @@
               "material": "cast-iron",
               "kind": "rect",
               "x": -0.105,
-              "y": 0.04,
+              "y": 0.066,
               "w": 0.01,
               "h": 0.0365
             },
@@ -1224,7 +1371,7 @@
               "material": "cast-iron",
               "kind": "rect",
               "x": -0.105,
-              "y": 0.076,
+              "y": 0.102,
               "w": 0.27,
               "h": 0.012
             }
@@ -1232,8 +1379,8 @@
         },
         "decisions": {
           "silhouette": {
-            "en": "A 0.30 m hob 3 mm wide on paper: the block of housing and top with the knob, the burner puck with its crown of twelve tongues and the pan support on two legs. Front view, 5.2 mm by 0.9 mm: the block with the knob in front, burner, crown and pan support. Plan, 3 mm by 5.2 mm: the top, the burner with its flame crown as one disc, the square pan support with its fingers and the knob in front of the top.",
-            "de": "Ein Kochfeld von 0,30 m, auf Papier 3 mm breit: der Block aus Gehäuse und Platte mit dem Knebel, die Brennerscheibe mit ihrem Kranz aus zwölf Zungen und der Pfannenträger auf zwei Beinen. Seitenansicht, 5,2 mm auf 0,9 mm: der Block mit dem Knebel davor, Brenner, Kranz und Pfannenträger. Grundriss, 3 mm auf 5,2 mm: die Platte, der Brenner mit seinem Flammenkranz als eine Scheibe, der quadratische Pfannenträger mit seinen Fingern und der Knebel vor der Platte."
+            "en": "A 0.30 m hob 3 mm wide on paper: the block of housing and top with the knob, the burner puck with its crown of twelve tongues and the pan support on two legs. Front view, 5.2 mm by 1.1 mm: the block with the knob in front, burner, crown and pan support. Plan, 3 mm by 5.2 mm: the top, the burner with its flame crown as one disc, the square pan support with its fingers and the knob in front of the top.",
+            "de": "Ein Kochfeld von 0,30 m, auf Papier 3 mm breit: der Block aus Gehäuse und Platte mit dem Knebel, die Brennerscheibe mit ihrem Kranz aus zwölf Zungen und der Pfannenträger auf zwei Beinen. Seitenansicht, 5,2 mm auf 1,1 mm: der Block mit dem Knebel davor, Brenner, Kranz und Pfannenträger. Grundriss, 3 mm auf 5,2 mm: die Platte, der Brenner mit seinem Flammenkranz als eine Scheibe, der quadratische Pfannenträger mit seinen Fingern und der Knebel vor der Platte."
           },
           "retained": {
             "en": "Block, knob, burner, crown, pan support with frame, fingers and legs.",
@@ -1289,14 +1436,27 @@
               "z": 3.9,
               "filled": true,
               "tone": 0.45,
-              "regions": [
-                "trivet",
-                "burner",
-                "flame"
-              ],
+              "regions": ["trivet", "burner", "flame"],
               "material": "cast-iron",
               "kind": "poly",
-              "points": [[-0.135, 0.0], [-0.135, 0.048], [0.135, 0.048], [0.135, 0.0], [0.105, 0.0], [0.105, 0.018], [0.062, 0.018], [0.062, 0.007], [0.05, 0.007], [0.05, 0.0], [-0.05, 0.0], [-0.05, 0.007], [-0.062, 0.007], [-0.062, 0.018], [-0.105, 0.018], [-0.105, 0.0]],
+              "points": [
+                [-0.135, 0.0],
+                [-0.135, 0.048],
+                [0.135, 0.048],
+                [0.135, 0.0],
+                [0.105, 0.0],
+                [0.105, 0.018],
+                [0.062, 0.018],
+                [0.062, 0.007],
+                [0.05, 0.007],
+                [0.05, 0.0],
+                [-0.05, 0.0],
+                [-0.05, 0.007],
+                [-0.062, 0.007],
+                [-0.062, 0.018],
+                [-0.105, 0.018],
+                [-0.105, 0.0]
+              ],
               "closed": true
             },
             {
@@ -1306,16 +1466,13 @@
               "z": 3.6,
               "filled": true,
               "tone": 0.3,
-              "regions": [
-                "plate",
-                "knob"
-              ],
+              "regions": ["plate", "housing", "knob"],
               "material": "steel-enamel",
               "kind": "rect",
               "x": -0.15,
               "y": 0.0,
               "w": 0.3,
-              "h": 0.04
+              "h": 0.066
             }
           ],
           "plan": [
@@ -1326,13 +1483,27 @@
               "z": 1,
               "filled": true,
               "tone": 0.3,
-              "regions": [
-                "plate",
-                "knob"
-              ],
+              "regions": ["plate", "knob"],
               "material": "steel-enamel",
               "kind": "poly",
-              "points": [[-0.15, -0.224], [-0.1465, -0.2325], [-0.138, -0.236], [0.09, -0.236], [0.09, -0.26], [0.12, -0.26], [0.12, -0.236], [0.138, -0.236], [0.1465, -0.2325], [0.15, -0.224], [0.15, 0.248], [0.1465, 0.2565], [0.138, 0.26], [-0.138, 0.26], [-0.1465, 0.2565], [-0.15, 0.248]],
+              "points": [
+                [-0.15, -0.224],
+                [-0.1465, -0.2325],
+                [-0.138, -0.236],
+                [0.085, -0.236],
+                [0.085, -0.26],
+                [0.125, -0.26],
+                [0.125, -0.236],
+                [0.138, -0.236],
+                [0.1465, -0.2325],
+                [0.15, -0.224],
+                [0.15, 0.248],
+                [0.1465, 0.2565],
+                [0.138, 0.26],
+                [-0.138, 0.26],
+                [-0.1465, 0.2565],
+                [-0.15, 0.248]
+              ],
               "closed": true
             },
             {
@@ -1342,10 +1513,7 @@
               "z": 2,
               "filled": true,
               "tone": 0.5,
-              "regions": [
-                "burner",
-                "flame"
-              ],
+              "regions": ["burner", "flame"],
               "material": "brass",
               "kind": "ellipse",
               "cx": 0.0,
@@ -1374,13 +1542,10 @@
               "z": 3.6,
               "filled": true,
               "tone": 0.3,
-              "regions": [
-                "plate",
-                "knob"
-              ],
+              "regions": ["plate", "housing", "knob"],
               "material": "steel-enamel",
               "kind": "poly",
-              "points": [[-0.236, 0.0], [0.26, 0.0], [0.26, 0.04], [-0.236, 0.04], [-0.236, 0.034], [-0.26, 0.034], [-0.26, 0.004], [-0.236, 0.004]],
+              "points": [[-0.236, 0.0], [0.26, 0.0], [0.26, 0.066], [-0.236, 0.066], [-0.236, 0.051], [-0.26, 0.051], [-0.26, 0.011], [-0.236, 0.011]],
               "closed": true
             },
             {
@@ -1390,22 +1555,35 @@
               "z": 3.9,
               "filled": true,
               "tone": 0.45,
-              "regions": [
-                "trivet",
-                "burner",
-                "flame"
-              ],
+              "regions": ["trivet", "burner", "flame"],
               "material": "cast-iron",
               "kind": "poly",
-              "points": [[-0.105, 0.088], [-0.105, 0.04], [-0.075, 0.04], [-0.075, 0.058], [-0.032, 0.058], [-0.032, 0.047], [-0.02, 0.047], [-0.02, 0.04], [0.08, 0.04], [0.08, 0.047], [0.092, 0.047], [0.092, 0.058], [0.135, 0.058], [0.135, 0.04], [0.165, 0.04], [0.165, 0.088]],
+              "points": [
+                [-0.105, 0.114],
+                [-0.105, 0.066],
+                [-0.075, 0.066],
+                [-0.075, 0.084],
+                [-0.032, 0.084],
+                [-0.032, 0.073],
+                [-0.02, 0.073],
+                [-0.02, 0.066],
+                [0.08, 0.066],
+                [0.08, 0.073],
+                [0.092, 0.073],
+                [0.092, 0.084],
+                [0.135, 0.084],
+                [0.135, 0.066],
+                [0.165, 0.066],
+                [0.165, 0.114]
+              ],
               "closed": true
             }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "A 1.5 mm wide hob: the block, the burner puck under its flame crown and the pan support as a frame on two posts with the gap under it. Front view, 2.6 mm by 0.45 mm: the block with the knob step and one outline of pan support, burner and flame. Plan, 1.5 mm by 2.6 mm: the block with the knob step, the burner disc and the square frame of the pan support.",
-            "de": "Ein 1,5 mm breites Kochfeld: der Block, die Brennerscheibe unter ihrem Flammenkranz und der Pfannenträger als Rahmen auf zwei Pfosten mit der Lücke darunter. Seitenansicht, 2,6 mm auf 0,45 mm: der Block mit der Knebelstufe und ein Umriss aus Pfannenträger, Brenner und Flamme. Grundriss, 1,5 mm auf 2,6 mm: der Block mit der Knebelstufe, die Brennerscheibe und der quadratische Rahmen des Pfannenträgers."
+            "en": "A 1.5 mm wide hob: the block, the burner puck under its flame crown and the pan support as a frame on two posts with the gap under it. Front view, 2.6 mm by 0.57 mm: the block with the knob step and one outline of pan support, burner and flame. Plan, 1.5 mm by 2.6 mm: the block with the knob step, the burner disc and the square frame of the pan support.",
+            "de": "Ein 1,5 mm breites Kochfeld: der Block, die Brennerscheibe unter ihrem Flammenkranz und der Pfannenträger als Rahmen auf zwei Pfosten mit der Lücke darunter. Seitenansicht, 2,6 mm auf 0,57 mm: der Block mit der Knebelstufe und ein Umriss aus Pfannenträger, Brenner und Flamme. Grundriss, 1,5 mm auf 2,6 mm: der Block mit der Knebelstufe, die Brennerscheibe und der quadratische Rahmen des Pfannenträgers."
           },
           "retained": {
             "en": "Block with knob, burner, flame crown, pan-support frame and posts.",
@@ -1483,9 +1661,7 @@
           }
         },
         "ground": "auto",
-        "contacts": [
-          "base-contact"
-        ],
+        "contacts": ["base-contact"],
         "thermal": {
           "regions": {
             "plate": {
@@ -1509,6 +1685,10 @@
               "exposedFraction": 1
             },
             "trivet": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1
+            },
+            "housing": {
               "sunlitFraction": 0,
               "exposedFraction": 1
             }
@@ -1541,9 +1721,7 @@
           }
         },
         "ground": "auto",
-        "contacts": [
-          "base-contact"
-        ],
+        "contacts": ["base-contact"],
         "thermal": {
           "regions": {
             "plate": {
@@ -1567,6 +1745,10 @@
               "exposedFraction": 1
             },
             "trivet": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1
+            },
+            "housing": {
               "sunlitFraction": 0,
               "exposedFraction": 1
             }
@@ -1596,9 +1778,7 @@
           }
         },
         "ground": "auto",
-        "contacts": [
-          "base-contact"
-        ],
+        "contacts": ["base-contact"],
         "thermal": {
           "regions": {
             "plate": {
@@ -1622,6 +1802,10 @@
               "exposedFraction": 1
             },
             "trivet": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1
+            },
+            "housing": {
               "sunlitFraction": 0,
               "exposedFraction": 1
             }
@@ -1663,10 +1847,10 @@
             "ease": "smooth",
             "bones": {
               "flame-body": {
-                "angleDeg": -8
+                "angleDeg": -5
               },
               "flame-tip": {
-                "dy": 0.005
+                "dy": 0.004
               }
             }
           },
@@ -1676,7 +1860,7 @@
             "ease": "smooth",
             "bones": {
               "flame-body": {
-                "angleDeg": 7
+                "angleDeg": 4
               },
               "flame-tip": {
                 "dy": -0.003
@@ -1689,10 +1873,10 @@
             "ease": "smooth",
             "bones": {
               "flame-body": {
-                "angleDeg": -4
+                "angleDeg": -3
               },
               "flame-tip": {
-                "dy": 0.004
+                "dy": 0.003
               }
             }
           },
@@ -2010,6 +2194,39 @@
           "reference": "incropera-2018"
         },
         {
+          "id": "housing",
+          "title": {
+            "en": "Pressed housing",
+            "de": "Gepresstes Gehäuse"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "steel-enamel",
+          "areaM2": 0.211,
+          "characteristicLengthM": 0.05,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "housing-skin",
+              "title": {
+                "en": "Pressed housing",
+                "de": "Gepresstes Gehäuse"
+              },
+              "kind": "metal",
+              "material": "steel-enamel",
+              "thicknessM": 0.0008,
+              "resistanceM2KW": 2e-05,
+              "heatCapacityJM2K": 3500,
+              "source": "authored-estimate",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 3500,
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        },
+        {
           "id": "knob",
           "title": {
             "en": "Control knob",
@@ -2018,8 +2235,8 @@
           "kind": "surface",
           "model": "passive",
           "material": "bakelite",
-          "areaM2": 0.002,
-          "characteristicLengthM": 0.025,
+          "areaM2": 0.0046,
+          "characteristicLengthM": 0.04,
           "geometry": "vertical-plate",
           "skyViewFactor": 0.5,
           "layers": [
@@ -2187,9 +2404,7 @@
     "structure": {
       "gravityMS2": 9.80665,
       "dynamics": "quasi-static",
-      "supports": [
-        "base-contact"
-      ],
+      "supports": ["base-contact"],
       "assumptions": [
         {
           "en": "The 5.6 kg hob stands on four rubber feet under its housing: a unilateral contact on a footprint of 0.26 m by 0.455 m carries the weight.",
@@ -2234,7 +2449,7 @@
             ],
             "plane": "zx",
             "from": 0.0075,
-            "to": 0.031
+            "to": 0.057
           },
           {
             "id": "feet-front",
@@ -2296,8 +2511,8 @@
               [-0.226, 0.15]
             ],
             "plane": "zx",
-            "from": 0.03,
-            "to": 0.04,
+            "from": 0.056,
+            "to": 0.066,
             "holes": [
               [
                 [0.03, 0.075],
@@ -2374,7 +2589,7 @@
             "material": "steel-enamel",
             "role": "body",
             "tone": 0.3,
-            "profile": [[0.0303, 0.075], [0.04, 0.075], [0.0393, 0.0715], [0.0372, 0.0655], [0.0362, 0.06], [0.036, 0.055], [0.036, 0.036], [0.0303, 0.036], [0.0303, 0.075]],
+            "profile": [[0.0563, 0.075], [0.066, 0.075], [0.0653, 0.0715], [0.0632, 0.0655], [0.0622, 0.06], [0.062, 0.055], [0.062, 0.036], [0.0563, 0.036], [0.0563, 0.075]],
             "axis": [0, 1, 0],
             "origin": [0.0, 0.0, 0.03]
           },
@@ -2385,8 +2600,8 @@
             "material": "steel-enamel",
             "role": "detail",
             "tone": 0.3,
-            "p0": [-0.136, 0.0235, -0.2343],
-            "p1": [0.136, 0.0235, -0.2343],
+            "p0": [-0.136, 0.0495, -0.2343],
+            "p1": [0.136, 0.0495, -0.2343],
             "r0": 0.0008,
             "r1": 0.0008,
             "texture": true
@@ -2398,8 +2613,8 @@
             "material": "steel-enamel",
             "role": "detail",
             "tone": 0.3,
-            "p0": [-0.136, 0.0235, 0.2503],
-            "p1": [0.136, 0.0235, 0.2503],
+            "p0": [-0.136, 0.0495, 0.2503],
+            "p1": [0.136, 0.0495, 0.2503],
             "r0": 0.0008,
             "r1": 0.0008,
             "texture": true
@@ -2411,8 +2626,8 @@
             "material": "steel-enamel",
             "role": "detail",
             "tone": 0.3,
-            "p0": [0.1403, 0.0235, -0.23],
-            "p1": [0.1403, 0.0235, 0.246],
+            "p0": [0.1403, 0.0495, -0.23],
+            "p1": [0.1403, 0.0495, 0.246],
             "r0": 0.0008,
             "r1": 0.0008,
             "texture": true
@@ -2424,8 +2639,8 @@
             "material": "steel-enamel",
             "role": "detail",
             "tone": 0.3,
-            "p0": [-0.1403, 0.0235, -0.23],
-            "p1": [-0.1403, 0.0235, 0.246],
+            "p0": [-0.1403, 0.0495, -0.23],
+            "p1": [-0.1403, 0.0495, 0.246],
             "r0": 0.0008,
             "r1": 0.0008,
             "texture": true
@@ -2437,9 +2652,9 @@
             "material": "steel-enamel",
             "role": "detail",
             "tone": 0.15,
-            "size": [0.003, 0.008, 0.0008],
+            "size": [0.003, 0.014, 0.0008],
             "transform": {
-              "translation": [-0.11, 0.016, -0.2343]
+              "translation": [-0.11, 0.036, -0.2343]
             },
             "texture": true,
             "repeat": {
@@ -2454,9 +2669,9 @@
             "material": "steel-enamel",
             "role": "detail",
             "tone": 0.15,
-            "size": [0.0008, 0.008, 0.003],
+            "size": [0.0008, 0.014, 0.003],
             "transform": {
-              "translation": [0.1403, 0.016, -0.2]
+              "translation": [0.1403, 0.036, -0.2]
             },
             "texture": true,
             "repeat": {
@@ -2471,15 +2686,26 @@
             "material": "steel-enamel",
             "role": "detail",
             "tone": 0.15,
-            "size": [0.0008, 0.008, 0.003],
+            "size": [0.0008, 0.014, 0.003],
             "transform": {
-              "translation": [-0.1403, 0.016, -0.2]
+              "translation": [-0.1403, 0.036, -0.2]
             },
             "texture": true,
             "repeat": {
               "count": 11,
               "translation": [0, 0, 0.04]
             }
+          },
+          {
+            "id": "gas-inlet",
+            "kind": "revolve",
+            "bone": "hob",
+            "material": "brass",
+            "role": "body",
+            "tone": 0.5,
+            "profile": [[0.0, 0.0], [0.0, 0.0135], [0.004, 0.0135], [0.004, 0.0105], [0.0098, 0.0105], [0.0098, 0.0]],
+            "axis": [0, 0, 1],
+            "origin": [0.105, 0.03, 0.25]
           },
           {
             "id": "burner-ring",
@@ -2521,6 +2747,30 @@
               "rotationRad": 0.17453,
               "origin": [0.0, 0.0, 0.03]
             }
+          },
+          {
+            "id": "igniter",
+            "kind": "revolve",
+            "bone": "burner",
+            "material": "steel-enamel",
+            "role": "detail",
+            "tone": 0.9,
+            "profile": [[0.0, 0.0], [0.0, 0.0035], [0.011, 0.0035], [0.012, 0.0015], [0.0155, 0.0015], [0.0155, 0.0]],
+            "axis": [0, 1, 0],
+            "origin": [0.0368, -0.004, -0.0068],
+            "texture": true
+          },
+          {
+            "id": "thermocouple",
+            "kind": "revolve",
+            "bone": "burner",
+            "material": "brass",
+            "role": "detail",
+            "tone": 0.5,
+            "profile": [[0.0, 0.0], [0.0, 0.003], [0.013, 0.003], [0.0145, 0.0015], [0.0145, 0.0]],
+            "axis": [0, 1, 0],
+            "origin": [-0.0368, -0.004, -0.0068],
+            "texture": true
           },
           {
             "id": "flame-ring",
@@ -2727,7 +2977,7 @@
             "material": "bakelite",
             "role": "body",
             "tone": 0.6,
-            "profile": [[0.0, 0.0], [0.0, 0.013], [0.0035, 0.013], [0.0042, 0.0115], [0.0148, 0.0115], [0.016, 0.0105], [0.016, 0.0]],
+            "profile": [[0.0, 0.0], [0.0, 0.021], [0.002, 0.021], [0.003, 0.0125], [0.006, 0.0125], [0.006, 0.0185], [0.0165, 0.0185], [0.018, 0.017], [0.018, 0.0]],
             "axis": [0, 0, -1],
             "origin": [0.0, 0.0, -0.234]
           },
@@ -2738,9 +2988,9 @@
             "material": "bakelite",
             "role": "body",
             "tone": 0.6,
-            "size": [0.0075, 0.022, 0.0075],
+            "size": [0.009, 0.036, 0.009],
             "transform": {
-              "translation": [0.0, 0.0, -0.25325]
+              "translation": [0.0, 0.0, -0.2545]
             },
             "cornerRadius": 0.002
           },
@@ -2751,9 +3001,9 @@
             "material": "bakelite",
             "role": "detail",
             "tone": 0.95,
-            "size": [0.0012, 0.0065, 0.0004],
+            "size": [0.0012, 0.008, 0.0004],
             "transform": {
-              "translation": [0.0, 0.0068, -0.2571]
+              "translation": [0.0, 0.012, -0.2591]
             },
             "texture": true
           },
@@ -2881,6 +3131,12 @@
             "sectionFaces": ["-v"]
           },
           {
+            "id": "th-housing",
+            "of": "housing",
+            "region": "housing",
+            "sectionFaces": ["+v"]
+          },
+          {
             "id": "th-knob",
             "of": "knob",
             "region": "knob",
@@ -2988,7 +3244,7 @@
             ],
             "plane": "zx",
             "from": 0.0075,
-            "to": 0.031,
+            "to": 0.057,
             "holes": [
               [
                 [0.242, 0.1392],
@@ -3047,11 +3303,32 @@
             "material": "steel-enamel",
             "role": "body",
             "tone": 0.4,
-            "p0": [0.105, 0.019, -0.176],
-            "p1": [0.0, 0.016, 0.03],
+            "p0": [0.105, 0.031, -0.176],
+            "p1": [0.0, 0.046, 0.03],
             "r0": 0.004,
             "r1": 0.004,
             "slender": true,
+            "member": "hob",
+            "part": "member"
+          },
+          {
+            "id": "member-gas-rail",
+            "kind": "capsule",
+            "bone": "hob",
+            "material": "steel-enamel",
+            "role": "body",
+            "tone": 0.4,
+            "p0": [0.105, 0.03, 0.248],
+            "p1": [0.105, 0.031, -0.176],
+            "r0": 0.006,
+            "r1": 0.006,
+            "slender": true,
+            "member": "hob",
+            "part": "member"
+          },
+          {
+            "id": "member-gas-inlet",
+            "of": "gas-inlet",
             "member": "hob",
             "part": "member"
           },
@@ -3124,7 +3401,7 @@
             "tone": 0.4,
             "radii": [0.02, 0.009, 0.02],
             "transform": {
-              "translation": [0.0, 0.02, 0.007]
+              "translation": [0.0, 0.033, 0.007]
             },
             "member": "hob",
             "part": "mass"
@@ -3319,16 +3596,16 @@
         ],
         "decisions": [
           {
-            "en": "Body: the real table-top hob. A pressed housing of 0.28 m by 0.484 m with a stiffening bead and nine vent slots on the fascia and eleven on each side stands on four rubber feet of 20 mm; on it lies the 10 mm enamelled top, one pressed piece without a seam, of 0.30 m by 0.497 m, flush with the fascia at the front and 10 mm proud at the sides and back, with a pressed spill well of 0.15 m around the burner. The brass burner is turned from its real section: cup on the well floor, crown with 36 flame ports, cap of 96 mm. The flame is the inner-cone ring at the ports and 24 tongues of 7.5 mm (lofts square to their curved centre lines) leaning outwards and up to 22 mm; the front and back tongues sit on the stretching flame-tip bone. The cast-iron pan support is a 0.27 m square frame of cast bars 10 mm wide and 12 mm deep (the section of the BSH domino grates) on four legs with four fingers that droop towards the burner; the bakelite knob of 26 mm with its grip ridge and pointer turns on the fascia.",
-            "de": "Körper: das reale Tischkochfeld. Ein gepresstes Gehäuse von 0,28 m mal 0,484 m mit Versteifungssicke und neun Lüftungsschlitzen an der Blende und elf an jeder Seite steht auf vier Gummifüßen von 20 mm; darauf liegt die 10 mm starke emaillierte Platte, ein gepresstes Stück ohne Naht, von 0,30 m mal 0,497 m, vorn bündig mit der Blende und seitlich und hinten 10 mm überstehend, mit einer gepressten Überlaufmulde von 0,15 m um den Brenner. Der Messingbrenner ist aus seinem realen Querschnitt gedreht: Topf auf dem Muldenboden, Brennerkrone mit 36 Flammenöffnungen, Deckel von 96 mm. Die Flamme ist der Ring der inneren Kegel an den Öffnungen und 24 Zungen von 7,5 mm (Lofts quer zu ihrer gekrümmten Mittellinie), die sich nach außen und bis 22 mm hoch neigen; die vordere und hintere Zunge sitzen auf dem streckbaren Knochen der Flammenspitze. Der gusseiserne Pfannenträger ist ein quadratischer Rahmen von 0,27 m aus gegossenen Stäben von 10 mm Breite und 12 mm Höhe (der Querschnitt der BSH-Domino-Roste) auf vier Beinen mit vier Fingern, die sich zum Brenner neigen; der Bakelit-Knebel von 26 mm mit Griffsteg und Zeiger dreht sich an der Blende."
+            "en": "Body: the real table-top hob. A pressed housing of 0.28 m by 0.484 m and 50 mm height with a stiffening bead and nine vent slots on the fascia and eleven on each side stands on four rubber feet of 20 mm; on it lies the 10 mm enamelled top, one pressed piece without a seam, of 0.30 m by 0.497 m, flush with the fascia at the front and 10 mm proud at the sides and back, with a pressed spill well of 0.15 m around the burner. The brass burner is turned from its real section: cup on the well floor, crown with 36 flame ports, cap of 96 mm. The flame is the inner-cone ring at the ports and 24 tongues of 7.5 mm (lofts square to their curved centre lines) leaning outwards and up to 22 mm; the front and back tongues sit on the stretching flame-tip bone. The cast-iron pan support is a 0.27 m square frame of cast bars 10 mm wide and 12 mm deep (the section of the BSH domino grates) on four legs with four fingers that droop towards the burner; the bakelite knob of 37 mm on its 42 mm skirt with grip ridge and pointer turns on the 50 mm fascia, which is as tall as a real table-top cooker needs to hold the tap; the R 1/2 gas inlet sits on the back wall under the overhang of the top, and a spark electrode and a thermocouple stand in the well beside the crown.",
+            "de": "Körper: das reale Tischkochfeld. Ein gepresstes Gehäuse von 0,28 m mal 0,484 m und 50 mm Höhe mit Versteifungssicke und neun Lüftungsschlitzen an der Blende und elf an jeder Seite steht auf vier Gummifüßen von 20 mm; darauf liegt die 10 mm starke emaillierte Platte, ein gepresstes Stück ohne Naht, von 0,30 m mal 0,497 m, vorn bündig mit der Blende und seitlich und hinten 10 mm überstehend, mit einer gepressten Überlaufmulde von 0,15 m um den Brenner. Der Messingbrenner ist aus seinem realen Querschnitt gedreht: Topf auf dem Muldenboden, Brennerkrone mit 36 Flammenöffnungen, Deckel von 96 mm. Die Flamme ist der Ring der inneren Kegel an den Öffnungen und 24 Zungen von 7,5 mm (Lofts quer zu ihrer gekrümmten Mittellinie), die sich nach außen und bis 22 mm hoch neigen; die vordere und hintere Zunge sitzen auf dem streckbaren Knochen der Flammenspitze. Der gusseiserne Pfannenträger ist ein quadratischer Rahmen von 0,27 m aus gegossenen Stäben von 10 mm Breite und 12 mm Höhe (der Querschnitt der BSH-Domino-Roste) auf vier Beinen mit vier Fingern, die sich zum Brenner neigen; der Bakelit-Knebel von 37 mm auf seiner 42-mm-Rosette mit Griffsteg und Zeiger dreht sich an der 50 mm hohen Blende, die so hoch ist, wie ein echter Tischkocher für den Hahn braucht; der R-1/2-Gasanschluss sitzt an der Rückwand unter dem Überstand der Platte, und eine Zündelektrode und ein Thermoelement stehen in der Mulde neben der Krone."
           },
           {
-            "en": "Thermal: every region on its real surface. Plate: the one-piece top and the spill well; the underside, which closes the housing, is marked as mounting face (C25 b). Knob: its turned body and ridge, the back on the fascia marked. Burner: cup, crown and cap, the cup's seat on the well floor marked. Flame: the inner-cone ring and all 26 tongues. Pan support: frame, legs and fingers. The plume emitter is the 7.5 mm outlet ring at the tongue tips (D2). The housing is not a thermal region of this asset and stays a ghost.",
-            "de": "Thermik: jede Region auf ihrer realen Oberfläche. Platte: die einteilige Deckplatte und die Überlaufmulde; die Unterseite, die das Gehäuse schließt, ist als Auflagefläche markiert (C25 b). Knebel: sein gedrehter Körper und der Steg, die Rückseite an der Blende markiert. Brenner: Topf, Krone und Deckel, der Sitz des Topfs auf dem Muldenboden markiert. Flamme: der Ring der inneren Kegel und alle 26 Zungen. Pfannenträger: Rahmen, Beine und Finger. Der Fahnenemitter ist der 7,5-mm-Auslassring an den Zungenspitzen (D2). Das Gehäuse ist keine Thermikregion dieses Assets und bleibt Geist."
+            "en": "Thermal: every region on its real surface. Plate: the one-piece top and the spill well; the underside, which closes the housing, is marked as mounting face (C25 b). Knob: its turned body and ridge, the back on the fascia marked. Burner: cup, crown and cap, the cup's seat on the well floor marked. Flame: the inner-cone ring and all 26 tongues. Pan support: frame, legs and fingers. The plume emitter is the 7.5 mm outlet ring at the tongue tips (D2). Housing: the pressed tray below the top as its own passive region, its top under the plate marked.",
+            "de": "Thermik: jede Region auf ihrer realen Oberfläche. Platte: die einteilige Deckplatte und die Überlaufmulde; die Unterseite, die das Gehäuse schließt, ist als Auflagefläche markiert (C25 b). Knebel: sein gedrehter Körper und der Steg, die Rückseite an der Blende markiert. Brenner: Topf, Krone und Deckel, der Sitz des Topfs auf dem Muldenboden markiert. Flamme: der Ring der inneren Kegel und alle 26 Zungen. Pfannenträger: Rahmen, Beine und Finger. Der Fahnenemitter ist der 7,5-mm-Auslassring an den Zungenspitzen (D2). Gehäuse: die gepresste Wanne unter der Platte als eigene passive Region, ihre Oberseite unter der Platte markiert."
           },
           {
-            "en": "Structure: the real load path. The pressed housing tray (0.8 mm walls) with the one-piece top plate and the well, the four rubber feet and the support ring through the foot centres at the base-contact anchor; the gas pipe from the tap to the burner; the burner body on its seat ring in the well (joint); the knob spindle into the brass gas tap (joint of the turning knob); the pan-support frame, legs and fingers with the leg seats on the plate (joints) and four mass lumps on the frame whose centroid is the support's centre of mass; masses of housing and burner at their centres. The flames carry no load: the member of each flame bone is a thin turned band, the flame sheet its tongues stand on, never the flame volume itself.",
-            "de": "Tragwerk: der reale Lastpfad. Die gepresste Gehäusewanne (0,8 mm Wände) mit der einteiligen Deckplatte und der Mulde, die vier Gummifüße und der Auflagering durch die Fußmitten am Anker base-contact; die Gasleitung vom Hahn zum Brenner; der Brennerkörper auf seinem Sitzring in der Mulde (Gelenk); die Knebelspindel in den Messing-Gashahn (Gelenk des drehenden Knebels); Rahmen, Beine und Finger des Pfannenträgers mit den Beinsitzen auf der Platte (Gelenke) und vier Massenklumpen auf dem Rahmen, deren Schwerpunkt der des Trägers ist; Massen von Gehäuse und Brenner in ihren Schwerpunkten. Die Flammen tragen keine Last: der Stab jedes Flammenknochens ist ein dünnes gedrehtes Band, die Flammenschicht, auf der die Zungen stehen, nie das Flammenvolumen selbst."
+            "en": "Structure: the real load path. The pressed housing tray (0.8 mm walls) with the one-piece top plate and the well, the four rubber feet and the support ring through the foot centres at the base-contact anchor; the gas rail from the R 1/2 inlet on the back wall to the tap and the gas pipe from the tap to the injector under the burner; the burner body on its seat ring in the well (joint); the knob spindle into the brass gas tap (joint of the turning knob); the pan-support frame, legs and fingers with the leg seats on the plate (joints) and four mass lumps on the frame whose centroid is the support's centre of mass; masses of housing and burner at their centres. The flames carry no load: the member of each flame bone is a thin turned band, the flame sheet its tongues stand on, never the flame volume itself.",
+            "de": "Tragwerk: der reale Lastpfad. Die gepresste Gehäusewanne (0,8 mm Wände) mit der einteiligen Deckplatte und der Mulde, die vier Gummifüße und der Auflagering durch die Fußmitten am Anker base-contact; das Gasrohr vom R-1/2-Anschluss an der Rückwand zum Hahn und die Gasleitung vom Hahn zur Düse unter dem Brenner; der Brennerkörper auf seinem Sitzring in der Mulde (Gelenk); die Knebelspindel in den Messing-Gashahn (Gelenk des drehenden Knebels); Rahmen, Beine und Finger des Pfannenträgers mit den Beinsitzen auf der Platte (Gelenke) und vier Massenklumpen auf dem Rahmen, deren Schwerpunkt der des Trägers ist; Massen von Gehäuse und Brenner in ihren Schwerpunkten. Die Flammen tragen keine Last: der Stab jedes Flammenknochens ist ein dünnes gedrehtes Band, die Flammenschicht, auf der die Zungen stehen, nie das Flammenvolumen selbst."
           }
         ]
       },
@@ -3367,7 +3644,7 @@
             ],
             "plane": "zx",
             "from": 0.0,
-            "to": 0.04
+            "to": 0.066
           },
           {
             "id": "knob",
@@ -3376,7 +3653,7 @@
             "material": "bakelite",
             "role": "body",
             "tone": 0.6,
-            "profile": [[0.0, 0.0], [0.0, 0.013], [0.0215, 0.013], [0.0235, 0.011], [0.0235, 0.0]],
+            "profile": [[0.0, 0.0], [0.0, 0.02], [0.022, 0.02], [0.025, 0.017], [0.025, 0.0]],
             "axis": [0, 0, -1],
             "origin": [0.0, 0.0, -0.234]
           },
@@ -3578,10 +3855,45 @@
               [-0.226, 0.15]
             ],
             "plane": "zx",
-            "from": 0.025,
-            "to": 0.04,
+            "from": 0.051,
+            "to": 0.066,
             "region": "plate",
             "sectionFaces": ["-v"]
+          },
+          {
+            "id": "th-housing",
+            "kind": "extrude",
+            "bone": "hob",
+            "material": "steel-enamel",
+            "role": "body",
+            "tone": 0.4,
+            "profile": [
+              [0.25, 0.15],
+              [0.25383, 0.14924],
+              [0.25707, 0.14707],
+              [0.25924, 0.14383],
+              [0.26, 0.14],
+              [0.26, -0.14],
+              [0.25924, -0.14383],
+              [0.25707, -0.14707],
+              [0.25383, -0.14924],
+              [0.25, -0.15],
+              [-0.226, -0.15],
+              [-0.22983, -0.14924],
+              [-0.23307, -0.14707],
+              [-0.23524, -0.14383],
+              [-0.236, -0.14],
+              [-0.236, 0.14],
+              [-0.23524, 0.14383],
+              [-0.23307, 0.14707],
+              [-0.22983, 0.14924],
+              [-0.226, 0.15]
+            ],
+            "plane": "zx",
+            "from": 0.0,
+            "to": 0.051,
+            "region": "housing",
+            "sectionFaces": ["+v"]
           },
           {
             "id": "th-knob",
@@ -3665,8 +3977,8 @@
               [-0.226, 0.15]
             ],
             "plane": "zx",
-            "from": 0.0,
-            "to": 0.025,
+            "from": 0.008,
+            "to": 0.051,
             "holes": [
               [
                 [0.25, 0.1492],
@@ -3724,8 +4036,8 @@
               [-0.226, 0.15]
             ],
             "plane": "zx",
-            "from": 0.025,
-            "to": 0.04,
+            "from": 0.051,
+            "to": 0.066,
             "holes": [
               [
                 [0.03, 0.046],
@@ -3834,7 +4146,7 @@
             "tone": 0.4,
             "radii": [0.02, 0.0095, 0.02],
             "transform": {
-              "translation": [0.0, 0.0145, 0.007]
+              "translation": [0.0, 0.028, 0.007]
             },
             "member": "hob",
             "part": "mass"
@@ -3972,16 +4284,16 @@
         ],
         "decisions": [
           {
-            "en": "Body at 15 mm: housing, top and feet are one rounded block of 0.30 m by 0.497 m (the 10 mm overhang, the 7.5 mm feet, bead, slots and well are below the feature); the knob is a 26 mm turned stub without ridge; burner cup, crown and cap are one turned puck of 94 mm; the flame is twelve 15 mm tongues; the pan support keeps its frame, four legs and four fingers as 10 by 12 mm bars, drawn that way in the 1:100 drawings.",
-            "de": "Körper bei 15 mm: Gehäuse, Platte und Füße sind ein gerundeter Block von 0,30 m mal 0,497 m (der 10-mm-Überstand, die 7,5-mm-Füße, Sicke, Schlitze und Mulde liegen unter dem Merkmal); der Knebel ist ein gedrehter Stumpf von 26 mm ohne Steg; Topf, Krone und Deckel des Brenners sind eine gedrehte Scheibe von 94 mm; die Flamme sind zwölf Zungen von 15 mm; der Pfannenträger behält Rahmen, vier Beine und vier Finger als Stäbe von 10 mal 12 mm, so wie die Zeichnungen 1:100 sie zeigen."
+            "en": "Body at 15 mm: housing, top and feet are one rounded block of 0.30 m by 0.497 m (the 10 mm overhang, the 7.5 mm feet, bead, slots and well are below the feature); the knob is a 40 mm turned stub without ridge; burner cup, crown and cap are one turned puck of 94 mm; the flame is twelve 15 mm tongues; the pan support keeps its frame, four legs and four fingers as 10 by 12 mm bars, drawn that way in the 1:100 drawings.",
+            "de": "Körper bei 15 mm: Gehäuse, Platte und Füße sind ein gerundeter Block von 0,30 m mal 0,497 m (der 10-mm-Überstand, die 7,5-mm-Füße, Sicke, Schlitze und Mulde liegen unter dem Merkmal); der Knebel ist ein gedrehter Stumpf von 40 mm ohne Steg; Topf, Krone und Deckel des Brenners sind eine gedrehte Scheibe von 94 mm; die Flamme sind zwölf Zungen von 15 mm; der Pfannenträger behält Rahmen, vier Beine und vier Finger als Stäbe von 10 mal 12 mm, so wie die Zeichnungen 1:100 sie zeigen."
           },
           {
-            "en": "Thermal: the plate is the top 15 mm of the block with its underside on the housing marked; knob, burner (seat marked), flame crown and pan support reference their body solids; the plume emitter is a 15 mm outlet ring at the tongue tips.",
-            "de": "Thermik: die Platte sind die oberen 15 mm des Blocks, ihre Unterseite auf dem Gehäuse markiert; Knebel, Brenner (Sitz markiert), Flammenkranz und Pfannenträger verweisen auf ihre Körper; der Fahnenemitter ist ein 15-mm-Auslassring an den Zungenspitzen."
+            "en": "Thermal: the plate is the top 15 mm of the block with its underside on the housing marked; the housing is the 51 mm of the block below it as its own passive region; knob, burner (seat marked), flame crown and pan support reference their body solids; the plume emitter is a 15 mm outlet ring at the tongue tips.",
+            "de": "Thermik: die Platte sind die oberen 15 mm des Blocks, ihre Unterseite auf dem Gehäuse markiert; das Gehäuse sind die 51 mm des Blocks darunter als eigene passive Region; Knebel, Brenner (Sitz markiert), Flammenkranz und Pfannenträger verweisen auf ihre Körper; der Fahnenemitter ist ein 15-mm-Auslassring an den Zungenspitzen."
           },
           {
-            "en": "Structure: the housing tray merged with the overhang, the top plate as a 15 mm slab with the burner opening, the support ring of 15 mm at the anchor, burner on a 15 mm seat ring, knob spindle of 15 mm into the tap, the pan support's bars, four mass lumps on the frame, a ring member for the flame bone, the crown and two 15 mm tongues for the flame tip; feet, pipe and leg seats are merged.",
-            "de": "Tragwerk: die Gehäusewanne mit dem Überstand zusammengefasst, die Deckplatte als 15-mm-Scheibe mit der Brenneröffnung, der Auflagering von 15 mm am Anker, der Brenner auf einem 15-mm-Sitzring, die Knebelspindel von 15 mm in den Hahn, die Stäbe des Pfannenträgers, vier Massenklumpen auf dem Rahmen, ein Ringstab für den Flammenknochen, der Kranz und zwei 15-mm-Zungen für die Flammenspitze; Füße, Leitung und Beinsitze sind zusammengefasst."
+            "en": "Structure: the housing tray merged with the overhang, the top plate as a 15 mm slab with the burner opening, the support ring of 15 mm at the anchor showing in the 8 mm gap under the tray, burner on a 15 mm seat ring, knob spindle of 15 mm into the tap, the pan support's bars, four mass lumps on the frame, a ring member for the flame bone, the crown and two 15 mm tongues for the flame tip; feet, pipe and leg seats are merged.",
+            "de": "Tragwerk: die Gehäusewanne mit dem Überstand zusammengefasst, die Deckplatte als 15-mm-Scheibe mit der Brenneröffnung, der Auflagering von 15 mm am Anker, sichtbar in der 8-mm-Fuge unter der Wanne, der Brenner auf einem 15-mm-Sitzring, die Knebelspindel von 15 mm in den Hahn, die Stäbe des Pfannenträgers, vier Massenklumpen auf dem Rahmen, ein Ringstab für den Flammenknochen, der Kranz und zwei 15-mm-Zungen für die Flammenspitze; Füße, Leitung und Beinsitze sind zusammengefasst."
           }
         ]
       },
@@ -4020,7 +4332,7 @@
             ],
             "plane": "zx",
             "from": 0.0,
-            "to": 0.04
+            "to": 0.066
           },
           {
             "id": "knob",
@@ -4029,7 +4341,7 @@
             "material": "bakelite",
             "role": "body",
             "tone": 0.6,
-            "profile": [[-0.004, 0.0], [-0.004, 0.015], [0.026, 0.015], [0.026, 0.0]],
+            "profile": [[-0.004, 0.0], [-0.004, 0.02], [0.026, 0.02], [0.026, 0.0]],
             "axis": [0, 0, -1],
             "origin": [0.0, 0.0, -0.234]
           },
@@ -4178,10 +4490,45 @@
               [-0.224, 0.15]
             ],
             "plane": "zx",
-            "from": 0.01,
-            "to": 0.04,
+            "from": 0.036,
+            "to": 0.066,
             "region": "plate",
             "sectionFaces": ["-v"]
+          },
+          {
+            "id": "th-housing",
+            "kind": "extrude",
+            "bone": "hob",
+            "material": "steel-enamel",
+            "role": "body",
+            "tone": 0.4,
+            "profile": [
+              [0.248, 0.15],
+              [0.25259, 0.14909],
+              [0.25649, 0.14649],
+              [0.25909, 0.14259],
+              [0.26, 0.138],
+              [0.26, -0.138],
+              [0.25909, -0.14259],
+              [0.25649, -0.14649],
+              [0.25259, -0.14909],
+              [0.248, -0.15],
+              [-0.224, -0.15],
+              [-0.22859, -0.14909],
+              [-0.23249, -0.14649],
+              [-0.23509, -0.14259],
+              [-0.236, -0.138],
+              [-0.236, 0.138],
+              [-0.23509, 0.14259],
+              [-0.23249, 0.14649],
+              [-0.22859, 0.14909],
+              [-0.224, 0.15]
+            ],
+            "plane": "zx",
+            "from": 0.0,
+            "to": 0.036,
+            "region": "housing",
+            "sectionFaces": ["+v"]
           },
           {
             "id": "th-knob",
@@ -4248,6 +4595,16 @@
               "translation": [0.26, 0, 0]
             },
             "region": "trivet"
+          },
+          {
+            "id": "th-trivet-posts-front",
+            "of": "trivet-posts-front",
+            "region": "trivet"
+          },
+          {
+            "id": "th-trivet-posts-back",
+            "of": "trivet-posts-back",
+            "region": "trivet"
           }
         ],
         "structure": [
@@ -4282,7 +4639,7 @@
             ],
             "plane": "zx",
             "from": 0.0,
-            "to": 0.04,
+            "to": 0.066,
             "holes": [
               [
                 [0.226, 0.12],
@@ -4340,8 +4697,8 @@
               [-0.202, 0.12]
             ],
             "plane": "zx",
-            "from": 0.01,
-            "to": 0.04,
+            "from": 0.036,
+            "to": 0.066,
             "holes": [
               [
                 [0.03, 0.05],
@@ -4450,7 +4807,7 @@
             "tone": 0.4,
             "radii": [0.03, 0.015, 0.03],
             "transform": {
-              "translation": [0.0, 0.02, 0.007]
+              "translation": [0.0, 0.033, 0.007]
             },
             "member": "hob",
             "part": "mass"
@@ -4554,12 +4911,12 @@
         ],
         "decisions": [
           {
-            "en": "Body at 30 mm: the hob is one rounded block of 0.30 m by 0.497 m by 40 mm with the knob as a 30 mm stub on its fascia; the burner is a 30 mm turned puck, the flame a 30 mm crown ring standing on the cap rim, open in the middle so the cap shows through; the pan support is its frame of 30 mm bars on four 30 mm posts (30 mm, the feature of the scale, keep the bars printable to the end of the band at 1:350) with the open gap under it, as the 1:200 drawing draws the separate legs; the fingers are merged.",
-            "de": "Körper bei 30 mm: das Kochfeld ist ein gerundeter Block von 0,30 m mal 0,497 m mal 40 mm mit dem Knebel als 30-mm-Stumpf an der Blende; der Brenner ist eine gedrehte Scheibe von 30 mm, die Flamme ein Kranzring von 30 mm auf dem Deckelrand, in der Mitte offen, so dass der Deckel durchscheint; der Pfannenträger ist sein Rahmen aus 30-mm-Stäben auf vier Pfosten von 30 mm (30 mm, das Merkmal des Maßstabs, halten die Stäbe bis zum Bandende bei 1:350 druckbar) mit der offenen Lücke darunter, so wie die Zeichnung 1:200 die einzelnen Beine zeichnet; die Finger sind zusammengefasst."
+            "en": "Body at 30 mm: the hob is one rounded block of 0.30 m by 0.497 m by 66 mm with the knob as a 40 mm stub on its fascia; the burner is a 30 mm turned puck, the flame a 30 mm crown ring standing on the cap rim, open in the middle so the cap shows through; the pan support is its frame of 30 mm bars on four 30 mm posts (30 mm, the feature of the scale, keep the bars printable to the end of the band at 1:350) with the open gap under it, as the 1:200 drawing draws the separate legs; the fingers are merged.",
+            "de": "Körper bei 30 mm: das Kochfeld ist ein gerundeter Block von 0,30 m mal 0,497 m mal 66 mm mit dem Knebel als 40-mm-Stumpf an der Blende; der Brenner ist eine gedrehte Scheibe von 30 mm, die Flamme ein Kranzring von 30 mm auf dem Deckelrand, in der Mitte offen, so dass der Deckel durchscheint; der Pfannenträger ist sein Rahmen aus 30-mm-Stäben auf vier Pfosten von 30 mm (30 mm, das Merkmal des Maßstabs, halten die Stäbe bis zum Bandende bei 1:350 druckbar) mit der offenen Lücke darunter, so wie die Zeichnung 1:200 die einzelnen Beine zeichnet; die Finger sind zusammengefasst."
           },
           {
-            "en": "Thermal: the plate is the top 30 mm of the block (underside on the housing marked), the knob its stub (back marked), burner (seat marked), the crown references its body, the pan support is its four real 10 by 12 mm bars as slender solids inside the 30 mm body bars (C2), so that its area stays the real grate's, the plume emitter is a 30 mm outlet ring above the crown.",
-            "de": "Thermik: die Platte sind die oberen 30 mm des Blocks (Unterseite auf dem Gehäuse markiert), der Knebel sein Stumpf (Rückseite markiert), Brenner (Sitz markiert), der Kranz verweist auf seinen Körper, der Pfannenträger sind seine vier wirklichen Stäbe von 10 mal 12 mm als schlanke Körper in den 30-mm-Körperstäben (C2), damit seine Fläche die des wirklichen Rosts bleibt, der Fahnenemitter ist ein 30-mm-Auslassring über dem Kranz."
+            "en": "Thermal: the plate is the top 30 mm of the block (underside on the housing marked), the housing the 36 mm below it as its own passive region, the knob its stub (back marked), burner (seat marked), the crown references its body, the pan support is its four real 10 by 12 mm bars as slender solids inside the 30 mm body bars (C2), so that its area stays close to the real grate's, standing on the four body posts so that it does not float, the plume emitter is a 30 mm outlet ring above the crown.",
+            "de": "Thermik: die Platte sind die oberen 30 mm des Blocks (Unterseite auf dem Gehäuse markiert), das Gehäuse die 36 mm darunter als eigene passive Region, der Knebel sein Stumpf (Rückseite markiert), Brenner (Sitz markiert), der Kranz verweist auf seinen Körper, der Pfannenträger sind seine vier wirklichen Stäbe von 10 mal 12 mm als schlanke Körper in den 30-mm-Körperstäben (C2), damit seine Fläche nahe an der des wirklichen Rosts bleibt, auf den vier Körperpfosten stehend, damit er nicht schwebt, der Fahnenemitter ist ein 30-mm-Auslassring über dem Kranz."
           },
           {
             "en": "Structure: the housing tray as a ring of 30 mm walls with the top plate as a 30 mm slab set into it, open around the burner, the support ring at the anchor, the burner, a 30 mm knob spindle, the pan-support frame and posts with four mass lumps, three 30 mm flame bands for the flame bones, which carry no load; joints are merged into their members.",
@@ -4581,7 +4938,7 @@
             "profile": [[0.256, 0.15], [0.26, 0.146], [0.26, -0.146], [0.256, -0.15], [-0.232, -0.15], [-0.236, -0.146], [-0.236, 0.146], [-0.232, 0.15]],
             "plane": "zx",
             "from": 0.0,
-            "to": 0.04
+            "to": 0.066
           },
           {
             "id": "knob",
@@ -4590,7 +4947,7 @@
             "material": "bakelite",
             "role": "body",
             "tone": 0.6,
-            "profile": [[-0.004, 0.0], [-0.004, 0.015], [0.021, 0.015], [0.021, 0.0]],
+            "profile": [[-0.004, 0.0], [-0.004, 0.02], [0.026, 0.02], [0.026, 0.0]],
             "axis": [0, 0, -1],
             "origin": [0.0, 0.0, -0.234]
           },
@@ -4707,10 +5064,24 @@
             "tone": 0.35,
             "profile": [[0.256, 0.15], [0.26, 0.146], [0.26, -0.146], [0.256, -0.15], [-0.232, -0.15], [-0.236, -0.146], [-0.236, 0.146], [-0.232, 0.15]],
             "plane": "zx",
-            "from": 0.02,
-            "to": 0.04,
+            "from": 0.046,
+            "to": 0.066,
             "region": "plate",
             "sectionFaces": ["-v"]
+          },
+          {
+            "id": "th-housing",
+            "kind": "extrude",
+            "bone": "hob",
+            "material": "steel-enamel",
+            "role": "body",
+            "tone": 0.4,
+            "profile": [[0.256, 0.15], [0.26, 0.146], [0.26, -0.146], [0.256, -0.15], [-0.232, -0.15], [-0.236, -0.146], [-0.236, 0.146], [-0.232, 0.15]],
+            "plane": "zx",
+            "from": 0.0,
+            "to": 0.046,
+            "region": "housing",
+            "sectionFaces": ["+v"]
           },
           {
             "id": "th-knob",
@@ -4752,7 +5123,7 @@
             "tone": 0.3,
             "size": [0.27, 0.012, 0.01],
             "transform": {
-              "translation": [0.0, 0.042, -0.1]
+              "translation": [0.0, 0.0345, -0.1]
             },
             "slender": true,
             "repeat": {
@@ -4770,7 +5141,7 @@
             "tone": 0.3,
             "size": [0.01, 0.012, 0.25],
             "transform": {
-              "translation": [-0.13, 0.042, 0.03]
+              "translation": [-0.13, 0.0345, 0.03]
             },
             "slender": true,
             "repeat": {
@@ -4791,6 +5162,16 @@
             "origin": [0.0, 0.0, 0.03],
             "region": "flame",
             "tags": ["flame-plume"]
+          },
+          {
+            "id": "th-trivet-posts-front",
+            "of": "trivet-posts-front",
+            "region": "trivet"
+          },
+          {
+            "id": "th-trivet-posts-back",
+            "of": "trivet-posts-back",
+            "region": "trivet"
           }
         ],
         "structure": [
@@ -4804,7 +5185,7 @@
             "profile": [[0.256, 0.15], [0.26, 0.146], [0.26, -0.146], [0.256, -0.15], [-0.232, -0.15], [-0.236, -0.146], [-0.236, 0.146], [-0.232, 0.15]],
             "plane": "zx",
             "from": 0.0,
-            "to": 0.04,
+            "to": 0.066,
             "holes": [
               [[0.218, 0.11], [0.22, 0.108], [0.22, -0.108], [0.218, -0.11], [-0.194, -0.11], [-0.196, -0.108], [-0.196, 0.108], [-0.194, 0.11]]
             ],
@@ -4820,8 +5201,8 @@
             "tone": 0.3,
             "profile": [[0.218, 0.11], [0.22, 0.108], [0.22, -0.108], [0.218, -0.11], [-0.194, -0.11], [-0.196, -0.108], [-0.196, 0.108], [-0.194, 0.11]],
             "plane": "zx",
-            "from": 0.02,
-            "to": 0.04,
+            "from": 0.046,
+            "to": 0.066,
             "holes": [
               [
                 [0.03, 0.062],
@@ -4877,7 +5258,7 @@
             "tone": 0.4,
             "radii": [0.04, 0.012, 0.04],
             "transform": {
-              "translation": [0.0, 0.02, 0.007]
+              "translation": [0.0, 0.033, 0.007]
             },
             "member": "hob",
             "part": "mass"
@@ -4982,16 +5363,16 @@
         ],
         "decisions": [
           {
-            "en": "Body at 75 mm: a crisp massing of the hob. Housing, top and feet are one 40 mm slab of 0.30 m by 0.497 m; the knob is a 30 mm turned stub on the fascia; burner, cap and flame are one turned crown of 124 mm with a conical top; the pan support is its square frame of 20 mm bars on two pairs of 20 mm posts with the gap under it, so the silhouette stays a hob with a pan support and not a block.",
-            "de": "Körper bei 75 mm: eine klare Massenform des Kochfelds. Gehäuse, Platte und Füße sind eine 40-mm-Scheibe von 0,30 m mal 0,497 m; der Knebel ist ein gedrehter 30-mm-Stumpf an der Blende; Brenner, Deckel und Flamme sind eine gedrehte Krone von 124 mm mit kegeligem Abschluss; der Pfannenträger ist sein quadratischer Rahmen aus 20-mm-Stäben auf zwei Paaren von 20-mm-Pfosten mit der Lücke darunter, damit der Umriss ein Kochfeld mit Pfannenträger bleibt und kein Block."
+            "en": "Body at 75 mm: a crisp massing of the hob. Housing, top and feet are one 66 mm slab of 0.30 m by 0.497 m; the knob is a 40 mm turned stub on the fascia; burner, cap and flame are one turned crown of 124 mm with a conical top; the pan support is its square frame of 20 mm bars on two pairs of 20 mm posts with the gap under it, so the silhouette stays a hob with a pan support and not a block.",
+            "de": "Körper bei 75 mm: eine klare Massenform des Kochfelds. Gehäuse, Platte und Füße sind eine 66-mm-Scheibe von 0,30 m mal 0,497 m; der Knebel ist ein gedrehter 40-mm-Stumpf an der Blende; Brenner, Deckel und Flamme sind eine gedrehte Krone von 124 mm mit kegeligem Abschluss; der Pfannenträger ist sein quadratischer Rahmen aus 20-mm-Stäben auf zwei Paaren von 20-mm-Pfosten mit der Lücke darunter, damit der Umriss ein Kochfeld mit Pfannenträger bleibt und kein Block."
           },
           {
-            "en": "Thermal at 75 mm: the plate is the top 20 mm of the slab (underside marked), the knob its stub (back marked), the burner the lower 12 mm of the crown (seat marked), the flame its conical top, the pan support its four real 10 by 12 mm bars as slender solids (C2) inside the 20 mm body frame.",
-            "de": "Thermik bei 75 mm: die Platte sind die oberen 20 mm der Scheibe (Unterseite markiert), der Knebel sein Stumpf (Rückseite markiert), der Brenner die unteren 12 mm der Krone (Sitz markiert), die Flamme ihr kegeliger Abschluss, der Pfannenträger seine vier wirklichen Stäbe von 10 mal 12 mm als schlanke Körper (C2) im 20-mm-Körperrahmen."
+            "en": "Thermal at 75 mm: the plate is the top 20 mm of the slab (underside marked), the housing the 46 mm below it as its own passive region, the knob its stub (back marked), the burner the lower 12 mm of the crown (seat marked), the flame its conical top, the pan support its four real 10 by 12 mm bars as slender solids (C2) inside the 20 mm body frame, standing on the four body posts.",
+            "de": "Thermik bei 75 mm: die Platte sind die oberen 20 mm der Scheibe (Unterseite markiert), das Gehäuse die 46 mm darunter als eigene passive Region, der Knebel sein Stumpf (Rückseite markiert), der Brenner die unteren 12 mm der Krone (Sitz markiert), die Flamme ihr kegeliger Abschluss, der Pfannenträger seine vier wirklichen Stäbe von 10 mal 12 mm als schlanke Körper (C2) im 20-mm-Körperrahmen, auf den vier Körperpfosten stehend."
           },
           {
-            "en": "Structure at 75 mm: the housing tray as a ring of 40 mm walls with a 20 mm top slab set into it, open around the burner, the support slab over the foot rectangle at the anchor, the burner crown, a 20 mm knob spindle, the pan-support frame and posts with four mass lumps, three 20 mm flame bands for the flame bones.",
-            "de": "Tragwerk bei 75 mm: die Gehäusewanne als Ring aus 40-mm-Wänden mit einer darin eingesetzten 20-mm-Deckscheibe, um den Brenner offen, die Auflagescheibe über dem Fußrechteck am Anker, die Brennerkrone, eine 20-mm-Knebelspindel, Rahmen und Pfosten des Pfannenträgers mit vier Massenklumpen, drei 20-mm-Flammenbänder für die Flammenknochen."
+            "en": "Structure at 75 mm: the housing tray as a ring of 66 mm walls with a 20 mm top slab set into it, open around the burner, the support slab over the foot rectangle at the anchor, the burner crown, a 20 mm knob spindle, the pan-support frame and posts with four mass lumps, three 20 mm flame bands for the flame bones.",
+            "de": "Tragwerk bei 75 mm: die Gehäusewanne als Ring aus 66-mm-Wänden mit einer darin eingesetzten 20-mm-Deckscheibe, um den Brenner offen, die Auflagescheibe über dem Fußrechteck am Anker, die Brennerkrone, eine 20-mm-Knebelspindel, Rahmen und Pfosten des Pfannenträgers mit vier Massenklumpen, drei 20-mm-Flammenbänder für die Flammenknochen."
           }
         ]
       }
@@ -5001,20 +5382,7 @@
       "defaultClip": "flicker",
       "defaultScale": 50
     },
-    "exports": [
-      "svg",
-      "pdf",
-      "dxf",
-      "dwg",
-      "png-sequence",
-      "mp4",
-      "webm",
-      "component",
-      "glb",
-      "fbx",
-      "model",
-      "model-zip"
-    ],
+    "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component", "glb", "fbx", "model", "model-zip"],
     "completion": "authored"
   }
 }

@@ -14,6 +14,6 @@ mod routed_io;
 pub mod registered_job;
 
 pub use grants::{NATIVE_MAXIMUM_BYTES, mounted_policy, original_grant, unbounded_grant};
-pub use native_output::{assert_output, assert_reconstruction};
+pub use native_output::{assert_output, assert_reconstruction, decode_native, encode_native};
 pub use native_owners::{with_decoding, with_encoding, with_encoding_async};
 pub use routed_io::{io_run, with_sqlite_recipient};

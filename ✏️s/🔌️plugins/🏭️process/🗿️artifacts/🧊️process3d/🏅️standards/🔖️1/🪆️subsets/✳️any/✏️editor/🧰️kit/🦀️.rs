@@ -88,6 +88,14 @@ pub const PROCESS3D_EXAMPLE_CONCRETE_FOREST: &str = "concrete-forest";
 pub fn process3d_action(action: &str, args: Option<semio_plugin::UiValue>) -> semio_plugin::UiAssemblyResult<(semio_plugin::ActionId, Option<semio_plugin::UiValue>)> {
     semio_plugin::ActionFactory::new(PROCESS_3D_PLAY_CONTROLLER_ID).action(action, args)
 }
+
+pub use semio_ui_contract::TREE_ROW_REORDER_MIME;
+
+/// 🪝️ Encodes the stable document and step identities carried by a timeline drag.
+pub fn process3d_step_drag_payload(document_id: &str, step_id: &str) -> String {
+    semio_framework_pack_json::to_json_string(&semio_framework_pack_json::json!({ "documentId": document_id, "stepId": step_id }))
+}
+
 /// 🧱️ Admits one fixed UI text action value without JSON staging.
 pub fn ui_value_text(value: impl AsRef<str>) -> semio_plugin::UiAssemblyResult<semio_plugin::UiValue> {
     semio_plugin::UiText::try_from_str(value.as_ref()).map(semio_plugin::UiValue::Text).ok_or_else(|| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI text admission failed"))

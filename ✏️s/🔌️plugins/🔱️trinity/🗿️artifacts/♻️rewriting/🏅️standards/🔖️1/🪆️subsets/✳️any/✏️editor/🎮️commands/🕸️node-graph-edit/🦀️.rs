@@ -60,7 +60,7 @@ fn endpoint_key((node, port): &(GraphNodeId, Option<String>)) -> String {
 /// 🏷️ The edge kind a wire drawn on the working graph carries: the first edge kind the rule's working-graph manifest declares, else
 /// the kind its existing wires carry; `None` when the graph names neither.
 fn working_edge_kind(state: &RewritingSnapshot, work: &SemioGraphSnapshot) -> Option<String> {
-    state.working_graph.manifest.edge_kinds.first().map(|kind| kind.name.clone()).or_else(|| work.edges.first().map(|edge| edge.kind.clone()))
+    state.working_graph.manifest().ok().and_then(|manifest| manifest.edge_kinds.first().map(|kind| kind.name.clone())).or_else(|| work.edges.first().map(|edge| edge.kind.clone()))
 }
 
 /// 🧮️ What ONE working-canvas row means over the working child `work` the previous rows left: the drag records it releases and

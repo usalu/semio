@@ -27,6 +27,8 @@ pub struct RetainedGlyphCursor {
     pub(super) byte: usize,
     pub(super) line: usize,
     pen_x: f32,
+    /// 🔠️ Whether the run is set in the mono face (React's `font-mono`); the sans face otherwise.
+    pub(super) mono: bool,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -111,7 +113,13 @@ pub fn paint_retained_glyph_step_weighted(
     draw: &mut DrawList,
     cursor: &mut RetainedGlyphCursor,
 ) -> RetainedGlyphStep {
-    paint_retained_glyph_step_inner(value, bounds, size, color, flow, weight, atlas, draw, cursor)
+    paint_retained_glyph_step_inner(value, bounds, size, color, flow, weight, 0.0, atlas, draw, cursor)
+}
+
+/// 🔠️ [`paint_retained_glyph_step_weighted`] with letter spacing: `tracking` extra logical pixels after every glyph (React's `tracking-wide`, `Theme::tracking_wide` × the font size).
+#[allow(clippy::too_many_arguments, reason = "one arg per retained text input; a struct here is a T2 restructure of every glyph call site")]
+pub fn paint_retained_glyph_step_tracked(value: &str, bounds: Rect, size: f32, color: Rgba, flow: RetainedTextFlow, weight: semio_ui_text::TextWeight, tracking: f32, atlas: &mut FontAtlas, draw: &mut DrawList, cursor: &mut RetainedGlyphCursor) -> RetainedGlyphStep {
+    paint_retained_glyph_step_inner(value, bounds, size, color, flow, weight, tracking, atlas, draw, cursor)
 }
 
 /// 🌊️ [`paint_retained_glyph_step`] with an explicit [`RetainedTextFlow`] — the entry chrome text
@@ -127,11 +135,11 @@ pub fn paint_retained_glyph_step_weighted(
 /// (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY packet W9a).
 #[allow(clippy::too_many_arguments, reason = "one arg per retained text input; a struct here is a T2 restructure of every glyph call site")]
 pub fn paint_retained_glyph_step_flowed(value: &str, bounds: Rect, size: f32, color: Rgba, flow: RetainedTextFlow, atlas: &mut FontAtlas, draw: &mut DrawList, cursor: &mut RetainedGlyphCursor) -> RetainedGlyphStep {
-    paint_retained_glyph_step_inner(value, bounds, size, color, flow, semio_ui_text::TextWeight::Regular, atlas, draw, cursor)
+    paint_retained_glyph_step_inner(value, bounds, size, color, flow, semio_ui_text::TextWeight::Regular, 0.0, atlas, draw, cursor)
 }
 
 #[allow(clippy::too_many_arguments, reason = "one arg per retained text input; a struct here is a T2 restructure of every glyph call site")]
-fn paint_retained_glyph_step_inner(value: &str, bounds: Rect, size: f32, color: Rgba, flow: RetainedTextFlow, weight: semio_ui_text::TextWeight, atlas: &mut FontAtlas, draw: &mut DrawList, cursor: &mut RetainedGlyphCursor) -> RetainedGlyphStep {
+fn paint_retained_glyph_step_inner(value: &str, bounds: Rect, size: f32, color: Rgba, flow: RetainedTextFlow, weight: semio_ui_text::TextWeight, tracking: f32, atlas: &mut FontAtlas, draw: &mut DrawList, cursor: &mut RetainedGlyphCursor) -> RetainedGlyphStep {
     if value.len() > RETAINED_NODE_TEXT_MAX_BYTES || !value.is_char_boundary(cursor.byte) {
         return RetainedGlyphStep::Fault;
     }
@@ -151,9 +159,10 @@ fn paint_retained_glyph_step_inner(value: &str, bounds: Rect, size: f32, color: 
         cursor.pen_x = 0.0;
         return RetainedGlyphStep::Pending;
     }
-    let mut kerning = if cursor.pen_x > 0.0 { atlas.kerning_at(value, cursor.byte, size) } else { 0.0 };
+    let face = retained_face(cursor.mono);
+    let mut kerning = if cursor.pen_x > 0.0 { retained_kerning(atlas, face, value, cursor.byte, size) } else { 0.0 };
     if matches!(flow, RetainedTextFlow::Wrap) && cursor.pen_x > 0.0 && semio_ui_text::is_break_opportunity(value, cursor.byte) {
-        let run = atlas.measure_range(value, cursor.byte, semio_ui_text::unbreakable_run_end(value, cursor.byte), size);
+        let run = atlas.measure_range_face(face, value, cursor.byte, semio_ui_text::unbreakable_run_end(value, cursor.byte), size);
         if cursor.pen_x + kerning + run > bounds.w.max(1.0) + RETAINED_TEXT_FIT_EPSILON {
             let Some(next_line) = cursor.line.checked_add(1) else { return RetainedGlyphStep::Fault };
             cursor.line = next_line;
@@ -167,7 +176,7 @@ fn paint_retained_glyph_step_inner(value: &str, bounds: Rect, size: f32, color: 
     }
     let atlas_w = atlas.width as f32;
     let atlas_h = atlas.height as f32;
-    let glyph = atlas.ensure_glyph(ch, size);
+    let glyph = atlas.ensure_glyph_for(face, ch, size);
     let (atlas_x, atlas_y, width, height, advance, bearing_x, bearing_y) = (glyph.atlas_x, glyph.atlas_y, glyph.width, glyph.height, glyph.advance, glyph.bearing_x, glyph.bearing_y);
     let (logical_w, logical_h) = (glyph.logical_width(), glyph.logical_height());
     let hangs = matches!(flow, RetainedTextFlow::Wrap) && semio_ui_text::is_wrap_space(ch);
@@ -177,7 +186,7 @@ fn paint_retained_glyph_step_inner(value: &str, bounds: Rect, size: f32, color: 
             return RetainedGlyphStep::Fault;
         }
         cursor.byte = next_byte;
-        cursor.pen_x += kerning + advance;
+        cursor.pen_x += kerning + advance + tracking;
         return RetainedGlyphStep::Pending;
     }
     if overflows {
@@ -206,8 +215,101 @@ fn paint_retained_glyph_step_inner(value: &str, bounds: Rect, size: f32, color: 
         return RetainedGlyphStep::Fault;
     }
     cursor.byte = next_byte;
-    cursor.pen_x += advance;
+    cursor.pen_x += advance + tracking;
     RetainedGlyphStep::Pending
+}
+
+/// 🧭️ One scalar of a field's text as the wrap law places it: its byte range, the line it lands on and the pen interval it spans there.
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
+pub(super) struct RetainedProbeGlyph {
+    pub(super) start: usize,
+    pub(super) end: usize,
+    pub(super) line: usize,
+    pub(super) x0: f32,
+    pub(super) x1: f32,
+}
+
+/// 🔠️ The face a retained text run is set in: the mono face for React's `font-mono` fields, the sans face otherwise.
+fn retained_face(mono: bool) -> semio_ui_text::TextFace {
+    if mono { semio_ui_text::TextFace::Mono } else { semio_ui_text::TextFace::Sans }
+}
+
+/// 🤝️ The pair kerning before the scalar at `byte` in `face`.
+fn retained_kerning(atlas: &mut FontAtlas, face: semio_ui_text::TextFace, value: &str, byte: usize, size: f32) -> f32 {
+    if face == semio_ui_text::TextFace::Sans {
+        return atlas.kerning_at(value, byte, size);
+    }
+    match (value.get(..byte).and_then(|before| before.chars().next_back()), value.get(byte..).and_then(|after| after.chars().next())) {
+        (Some(left), Some(right)) => atlas.kerning_for(face, left, right, size),
+        _ => 0.0,
+    }
+}
+
+/// 📐️ The incremental line-and-pen walk over a field's text: one scalar per step, the same breaks `FontAtlas::wrap_lines` and the glyph painter take.
+#[derive(Clone, Copy, Debug, Default)]
+pub(super) struct RetainedWrapProbe {
+    pub(super) mono: bool,
+    pub(super) byte: usize,
+    pub(super) line: usize,
+    pub(super) pen: f32,
+    pub(super) glyph: RetainedProbeGlyph,
+    pub(super) selection: RetainedSpanRun,
+    pub(super) preedit: RetainedSpanRun,
+}
+
+/// 🖍️ The open rectangle of one highlighted span on the line the probe is on.
+#[derive(Clone, Copy, Debug, Default)]
+pub(super) struct RetainedSpanRun {
+    pub(super) open: bool,
+    pub(super) line: usize,
+    pub(super) x0: f32,
+    pub(super) x1: f32,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(super) enum RetainedProbeStep {
+    Glyph,
+    Done,
+    Fault,
+}
+
+/// 🪜️ Advances `probe` by one scalar of `value` wrapped at `width` (`multi`) or laid on one unbounded line, leaving the scalar in `probe.glyph`.
+pub(super) fn retained_wrap_probe_step(value: &str, width: f32, size: f32, multi: bool, atlas: &mut FontAtlas, probe: &mut RetainedWrapProbe) -> RetainedProbeStep {
+    if value.len() > RETAINED_NODE_TEXT_MAX_BYTES || !value.is_char_boundary(probe.byte) {
+        return RetainedProbeStep::Fault;
+    }
+    let Some(ch) = value[probe.byte..].chars().next() else { return RetainedProbeStep::Done };
+    let start = probe.byte;
+    let end = start + ch.len_utf8();
+    if ch == '\n' && multi {
+        probe.glyph = RetainedProbeGlyph { start, end, line: probe.line, x0: probe.pen, x1: probe.pen };
+        probe.line += 1;
+        probe.pen = 0.0;
+        probe.byte = end;
+        return RetainedProbeStep::Glyph;
+    }
+    let limit = width.max(1.0) + RETAINED_TEXT_FIT_EPSILON;
+    let face = retained_face(probe.mono);
+    let mut kerning = if probe.pen > 0.0 { retained_kerning(atlas, face, value, start, size) } else { 0.0 };
+    if multi && probe.pen > 0.0 && semio_ui_text::is_break_opportunity(value, start) {
+        let run = atlas.measure_range_face(face, value, start, semio_ui_text::unbreakable_run_end(value, start), size);
+        if probe.pen + kerning + run > limit {
+            probe.line += 1;
+            probe.pen = 0.0;
+            kerning = 0.0;
+        }
+    }
+    let advance = atlas.ensure_glyph_for(face, ch, size).advance;
+    if multi && probe.pen > 0.0 && !semio_ui_text::is_wrap_space(ch) && probe.pen + kerning + advance > limit {
+        probe.line += 1;
+        probe.pen = 0.0;
+        kerning = 0.0;
+    }
+    let x0 = probe.pen + kerning;
+    probe.glyph = RetainedProbeGlyph { start, end, line: probe.line, x0, x1: x0 + advance };
+    probe.pen = x0 + advance;
+    probe.byte = end;
+    RetainedProbeStep::Glyph
 }
 
 /// 🖌️ Generation-qualified cursor for one retained node's byte, glyph, line, and chrome output.
@@ -217,6 +319,8 @@ pub struct RetainedNodePaintCursor {
     pub(super) measure_byte: usize,
     pub(super) measure_width: f32,
     pub(super) caret_width: f32,
+    pub(super) probe: RetainedWrapProbe,
+    pub(super) edit_caret: (usize, f32),
     pub(super) origin_x: f32,
     pub(super) origin_y: f32,
     pub(super) chrome: bool,
@@ -240,6 +344,8 @@ impl Default for RetainedNodePaintCursor {
             measure_byte: 0,
             measure_width: 0.0,
             caret_width: 0.0,
+            probe: RetainedWrapProbe::default(),
+            edit_caret: (0, 0.0),
             origin_x: 0.0,
             origin_y: 0.0,
             chrome: false,
@@ -311,6 +417,8 @@ impl RetainedNodePaintCursor {
         self.measure_byte = 0;
         self.measure_width = 0.0;
         self.caret_width = 0.0;
+        self.probe = RetainedWrapProbe::default();
+        self.edit_caret = (0, 0.0);
         self.chrome = false;
         self.phase = 0;
         self.item = 0;
@@ -330,6 +438,7 @@ impl RetainedNodePaintCursor {
         self.measure_byte = 0;
         self.measure_width = 0.0;
         self.caret_width = 0.0;
+        self.probe = RetainedWrapProbe::default();
         self.chrome = false;
         self.item = 0;
     }

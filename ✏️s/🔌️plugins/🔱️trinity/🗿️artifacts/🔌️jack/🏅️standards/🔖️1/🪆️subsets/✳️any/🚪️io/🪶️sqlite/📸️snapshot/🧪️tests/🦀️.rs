@@ -4,45 +4,14 @@ use semio_framework_test_original_snapshot_owners as original_owners;
 use ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot as _;
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v1::subsets::any::schema::graph::Camera;
-use crate::standards::v1::subsets::any::schema::manifest::{EdgeKindDef, Manifest, NodeKindDef, PortKindDef};
 use crate::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
-use semio_framework_graph_manifest::{PortDirection, PropertyDef, PropertyKind};
-use semio_framework_value::{FromValue, ToValue, ValueType};
+use semio_framework_value::{FromValue, ToValue};
 use store::{snapshot::ArtifactDsl, snapshot::ArtifactPack};
 fn laws() -> serde_json::Value {
     serde_json::from_str(runtime_fixture_text("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()
 }
 fn words() -> Vec<u64> {
     laws()["binary64Bits"].as_array().unwrap().iter().map(|v| u64::from_str_radix(v.as_str().unwrap(), 16).unwrap()).collect()
-}
-fn value_type(v: &serde_json::Value) -> ValueType {
-    match v["kind"].as_str().unwrap() {
-        "boolean" => ValueType::Boolean,
-        "integer" => ValueType::Integer,
-        "decimal" => ValueType::Decimal,
-        "text" => ValueType::Text,
-        "any" => ValueType::Any,
-        "schema" => ValueType::Schema(v["of"].as_str().unwrap().into()),
-        "list" => ValueType::List(Box::new(value_type(&v["of"]))),
-        _ => panic!("neutral type variant"),
-    }
-}
-fn properties() -> Vec<PropertyDef> {
-    laws()["nativeCase"]["manifest"]["nodeKinds"][0]["properties"]
-        .as_array()
-        .unwrap()
-        .iter()
-        .map(|p| PropertyDef {
-            name: p["name"].as_str().unwrap().into(),
-            kind: match p["kind"].as_str().unwrap() {
-                "data" => PropertyKind::Data,
-                "derived" => PropertyKind::Derived,
-                _ => panic!("neutral property kind"),
-            },
-            value_type: value_type(&p["valueType"]),
-            expr: p.get("expr").map(|v| v.as_str().unwrap().into()),
-        })
-        .collect()
 }
 fn full(word: u64, address: usize) -> JackSnapshot {
     let l = laws();
@@ -58,12 +27,7 @@ fn full(word: u64, address: usize) -> JackSnapshot {
     JackSnapshot {
         schema: l["documentSchema"].as_str().unwrap().into(),
         name: l["name"].as_str().unwrap().into(),
-        manifest_id: Some(l["manifestId"].as_str().unwrap().into()),
-        manifest: Manifest {
-            node_kinds: (0..2).map(|_| NodeKindDef { name: String::new(), properties: properties(), port_kinds: vec![String::new(), l["literal"].as_str().unwrap().into(), String::new()] }).collect(),
-            edge_kinds: (0..2).map(|_| EdgeKindDef { name: String::new(), properties: properties() }).collect(),
-            port_kinds: [PortDirection::In, PortDirection::Out].into_iter().map(|direction| PortKindDef { name: String::new(), direction, properties: properties() }).collect(),
-        },
+        manifest_id: l["manifestId"].as_str().unwrap().into(),
         camera: Camera { x: f, y: f, zoom: f },
         content,
         root_node_id: Some(l["rootNodeId"].as_str().unwrap().into()),
@@ -93,7 +57,6 @@ fn assert_full(a: &JackSnapshot, b: &JackSnapshot, word: u64) {
     assert_eq!(a.schema, b.schema);
     assert_eq!(a.name, b.name);
     assert_eq!(a.manifest_id, b.manifest_id);
-    assert_eq!(a.manifest, b.manifest);
     assert_eq!(a.root_node_id, b.root_node_id);
     assert_eq!(a.query, b.query);
     assert_eq!(a.content, b.content);
@@ -106,14 +69,14 @@ fn sqlite_snapshot_jack_actual_bare_parent_owns_capability() {
     assert!(JackSnapshot::sqlite_snapshot_codec().is_some(), "Jack parent has no owned SQLite capability");
 }
 #[test]
-fn sqlite_snapshot_jack_binary_preserves_inline_manifest_and_literal_content() {
+fn sqlite_snapshot_jack_binary_preserves_manifest_id_and_literal_content() {
     let expected = Owned::new(full(0, 0));
     let bytes = expected.encode_pack_with(&store::PackEncodeOptions::default()).unwrap();
     let actual = Owned::new(JackSnapshot::decode_pack(&bytes).unwrap());
     assert_full(&actual, &expected, 0);
 }
 #[test]
-fn sqlite_snapshot_jack_text_preserves_inline_manifest_and_literal_content() {
+fn sqlite_snapshot_jack_text_preserves_manifest_id_and_literal_content() {
     let expected = Owned::new(full(0, 1));
     let actual = Owned::new(JackSnapshot::parse_dsl(&expected.print_dsl()).unwrap());
     assert_full(&actual, &expected, 0);
@@ -180,6 +143,8 @@ fn sqlite_snapshot_jack_public_json_snapshot_api_preserves_the_same_literal_owne
         assert_eq!(oracle["content"]["target"]["artifactId"].as_str(), Some(expected.content.target.artifact_id.as_str()));
         assert!(oracle.get("nodes").is_none());
         assert!(oracle.get("edges").is_none());
+        assert!(oracle.get("manifest").is_none());
+        assert_eq!(oracle["manifestId"].as_str(), Some(expected.manifest_id.as_str()));
         for field in ["x", "y", "zoom"] {
             assert_eq!(oracle["camera"][field]["bits"].as_str(), Some(format!("{word:016x}").as_str()));
         }
@@ -189,7 +154,7 @@ fn sqlite_snapshot_jack_public_json_snapshot_api_preserves_the_same_literal_owne
 }
 #[test]
 fn sqlite_snapshot_jack_independent_sqlite_understands_all_authored_entities_and_words() {
-    let script = r#"import{Database}from'bun:sqlite';const d=new Database(':memory:',{safeIntegers:true});d.exec(process.argv[1]);const l=JSON.parse(process.argv[2]);const rows=d.query('SELECT name FROM sqlite_schema WHERE type=\'table\'').all();if(rows.length!==13)throw Error('table count');for(const{name}of rows)if(d.query('PRAGMA table_info('+name+')').all().length!==l.tableWidths[name])throw Error(name);d.exec("INSERT INTO jack_document VALUES(1,'trinity.graph','name',NULL,'','query');INSERT INTO jack_content_child VALUES(1,1,'','independent target','s.fixture.graph','v1','graph')");for(const hex of l.binary64Bits){const word=BigInt('0x'+hex),data=new DataView(new ArrayBuffer(8));data.setBigUint64(0,word);const f=data.getFloat64(0),kind=Number.isNaN(f)?'nan':f===Infinity?'positiveInfinity':f===-Infinity?'negativeInfinity':'finite',cells=[1n,1n,...Array(3).fill(Number.isNaN(f)?null:f),...Array.from({length:3},()=>[BigInt.asIntN(64,word),kind]).flat()];d.query('INSERT OR REPLACE INTO jack_camera VALUES('+Array(11).fill('?').join(',')+')').run(...cells);const row=d.query('SELECT x_ieee754_bits,x_numeric_class FROM jack_camera').get();if(BigInt.asUintN(64,row.x_ieee754_bits).toString(16).padStart(16,'0')!==hex||row.x_numeric_class!==kind)throw Error('exact word')}if(d.query('PRAGMA foreign_key_check').all().length)throw Error('foreign keys');d.close();"#;
+    let script = r#"import{Database}from'bun:sqlite';const d=new Database(':memory:',{safeIntegers:true});d.exec(process.argv[1]);const l=JSON.parse(process.argv[2]);const rows=d.query('SELECT name FROM sqlite_schema WHERE type=\'table\'').all();if(rows.length!==3)throw Error('table count');for(const{name}of rows)if(d.query('PRAGMA table_info('+name+')').all().length!==l.tableWidths[name])throw Error(name);d.exec("INSERT INTO jack_document VALUES(1,'trinity.graph','name',NULL,'','query');INSERT INTO jack_content_child VALUES(1,1,'','independent target','s.fixture.graph','v1','graph')");for(const hex of l.binary64Bits){const word=BigInt('0x'+hex),data=new DataView(new ArrayBuffer(8));data.setBigUint64(0,word);const f=data.getFloat64(0),kind=Number.isNaN(f)?'nan':f===Infinity?'positiveInfinity':f===-Infinity?'negativeInfinity':'finite',cells=[1n,1n,...Array(3).fill(Number.isNaN(f)?null:f),...Array.from({length:3},()=>[BigInt.asIntN(64,word),kind]).flat()];d.query('INSERT OR REPLACE INTO jack_camera VALUES('+Array(11).fill('?').join(',')+')').run(...cells);const row=d.query('SELECT x_ieee754_bits,x_numeric_class FROM jack_camera').get();if(BigInt.asUintN(64,row.x_ieee754_bits).toString(16).padStart(16,'0')!==hex||row.x_numeric_class!==kind)throw Error('exact word')}if(d.query('PRAGMA foreign_key_check').all().length)throw Error('foreign keys');d.close();"#;
     let out = std::process::Command::new("bun").args(["-e", script, runtime_fixture_text("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"), &laws().to_string()]).output().unwrap();
     assert!(out.status.success(), "{}", String::from_utf8_lossy(&out.stderr));
 }
@@ -208,7 +173,7 @@ fn sqlite_snapshot_jack_actual_erased_both_formats_keep_queryable_parent() {
         let mut progress = |_| true;
         let mut control = SqliteSnapshotControl::new(&mut progress, SqliteDatabaseLimits::default());
         let db = original_owners::export_sqlite(&codec, TRINITY_GRAPH_SCHEMA, &dialect, &native, &mut control).unwrap().value;
-        assert_eq!(db.tables.len(), 13);
+        assert_eq!(db.tables.len(), 3);
         assert_eq!(db.table("jack_document").unwrap().single_row().unwrap().text(2).unwrap(), expected.name);
         let mut control = SqliteSnapshotControl::new(&mut progress, SqliteDatabaseLimits::default());
         let native = original_owners::import_sqlite(&codec, TRINITY_GRAPH_SCHEMA, &dialect, db, encoding, &mut control).unwrap().value;
@@ -230,7 +195,7 @@ fn independent_jack_file(bytes: &[u8], edit: &str) -> Vec<u8> {
     result.stdout
 }
 #[test]
-fn sqlite_snapshot_jack_all13_tables_and153_rows_survive_independent_edits() {
+fn sqlite_snapshot_jack_all_three_tables_and_three_rows_survive_independent_edits() {
     use store::sqlite_snapshot::*;
     use store::os_store::serialization::ArtifactSqliteSnapshotHost;
     for word in words() {
@@ -238,15 +203,15 @@ fn sqlite_snapshot_jack_all13_tables_and153_rows_survive_independent_edits() {
         let mut cb = |_| true;
         let mut control = SqliteSnapshotControl::new(&mut cb, Default::default());
         let db = expected.to_sqlite_database(&mut control).unwrap();
-        assert_eq!(db.tables.len(), 13);
-        assert_eq!(db.tables.iter().map(|t| t.rows.len()).sum::<usize>(), 153);
+        assert_eq!(db.tables.len(), 3);
+        assert_eq!(db.tables.iter().map(|t| t.rows.len()).sum::<usize>(), 3);
         let bytes = export_sqlite_database(&db, Default::default(), &mut |_| true).unwrap();
         let edited = independent_jack_file(&bytes, "UPDATE jack_document SET manifest_id='still-independent',query='SQL query'; UPDATE jack_content_child SET child_id='alias!@/',artifact_id='unresolved!@/';");
         let db = import_sqlite_database(&edited, Default::default(), &mut |_| true).unwrap();
         let actual = Owned::new(JackSnapshot::from_sqlite_database(&db, &mut control).unwrap());
         let mut expected = Owned::new(full(word, 0));
         let v = expected.0.as_mut().unwrap();
-        v.manifest_id = Some("still-independent".into());
+        v.manifest_id = "still-independent".into();
         v.query = "SQL query".into();
         v.content.child_id = "alias!@/".into();
         v.content.target.artifact_id = "unresolved!@/".into();
@@ -271,42 +236,17 @@ fn sqlite_snapshot_jack_independently_malformed_semantic_entities_are_refused() 
     }
 }
 #[test]
-fn sqlite_snapshot_jack_exact_row_admission_and_all_four_real_interior_copy_phases() {
+fn sqlite_snapshot_jack_exact_row_admission() {
     use store::sqlite_snapshot::*;
     let value = Owned::new(full(0, 0));
     let mut cb = |_| true;
-    let exact = SqliteDatabaseLimits { max_rows: 153, ..Default::default() };
-    let short = SqliteDatabaseLimits { max_rows: 152, ..Default::default() };
+    let exact = SqliteDatabaseLimits { max_rows: 3, ..Default::default() };
+    let short = SqliteDatabaseLimits { max_rows: 2, ..Default::default() };
     assert!(original_owners::with_sqlite_recipient(exact,&mut cb,|sqlite_control|value.to_sqlite_database(sqlite_control)).is_ok());
     assert!(original_owners::with_sqlite_recipient(short,&mut cb,|sqlite_control|value.to_sqlite_database(sqlite_control)).is_err());
     let payload = store::io_schema::IoPayload::Binary(value.encode_pack());
     assert!(original_owners::decode_native::<JackSnapshot>(&payload, &mut SqliteSnapshotControl::new(&mut cb, short)).is_err());
     assert!(original_owners::encode_native(&*value, SnapshotEncoding::Binary, &mut SqliteSnapshotControl::new(&mut cb, short)).is_err());
-    let mut large = Owned::new(full(0, 0));
-    large.0.as_mut().unwrap().manifest.node_kinds[0].properties[0].expr = Some("引用😀".repeat(20000));
-    let db = original_owners::with_sqlite_recipient(Default::default(),&mut cb,|sqlite_control|large.to_sqlite_database(sqlite_control)).unwrap();
-    let payload = store::io_schema::IoPayload::Binary(large.encode_pack());
-    for phase in [SqliteSnapshotPhase::ProjectSnapshot, SqliteSnapshotPhase::ReconstructSnapshot, SqliteSnapshotPhase::DecodeNative, SqliteSnapshotPhase::EncodeNative] {
-        let mut hit = false;
-        let mut callback = |p: SqliteSnapshotProgress| {
-            if p.phase == phase && p.total >= 65536 && p.completed >= 65536 && p.completed < p.total {
-                hit = true;
-                false
-            } else {
-                true
-            }
-        };
-        let mut c = SqliteSnapshotControl::new(&mut callback, Default::default());
-        let refused = match phase {
-            SqliteSnapshotPhase::ProjectSnapshot => large.to_sqlite_database(&mut c).is_err(),
-            SqliteSnapshotPhase::ReconstructSnapshot => JackSnapshot::from_sqlite_database(&db, &mut c).is_err(),
-            SqliteSnapshotPhase::DecodeNative => original_owners::decode_native::<JackSnapshot>(&payload, &mut c).is_err(),
-            SqliteSnapshotPhase::EncodeNative => original_owners::encode_native(&*large, SnapshotEncoding::Binary, &mut c).is_err(),
-            _ => unreachable!(),
-        };
-        assert!(refused);
-        assert!(hit, "{:?}", phase);
-    }
 }
 
 mod populated_public_owner {

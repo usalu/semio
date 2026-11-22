@@ -22,9 +22,11 @@ test("Terrain History resolves and validates the authored elevation payload", ()
   if (schema?.kind !== "object") throw new Error("Terrain elevation is an editable object");
   expect(schema.fields.map((field) => field.id)).toEqual(Object.keys(elevationSchema.properties).map((key) => `/${key}`));
   const validate = new Ajv({ strict: false }).addSchema(elevationSchema).compile(replaceElevationSchema);
-  const rows = Array.from({ length: 33 }, () => Array(33).fill(12));
-  const elevation = { bounds: [0, 0, 1, 1], rows };
+  const rowsMillimetres = [[12_000, 12_125, 13_000], [12_001, 0, -500]];
+  const elevation = { bounds: [0, 0, 1, 1], rowsMillimetres };
   expect(validate({ newElevationSource: elevation })).toBe(true);
-  expect(validate({ newElevationSource: { ...elevation, rows: rows.slice(1) } })).toBe(false);
+  expect(validate({ newElevationSource: { ...elevation, missingSamples: "10" } })).toBe(true);
+  expect(validate({ newElevationSource: { ...elevation, missingSamples: "00" } })).toBe(false);
+  expect(validate({ newElevationSource: { ...elevation, rowsMillimetres: rowsMillimetres.slice(1) } })).toBe(false);
   expect(validate({})).toBe(true);
 });

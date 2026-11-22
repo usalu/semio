@@ -29,7 +29,7 @@ fn flatten_writes_diagram_offsets_onto_part_2d() {
         kind_catalogs: None,
         kind_catalogs_extra: None,
         kind_compatibility: Vec::new(),
-        parts: vec![
+        parts: [
             Puzzle5dPart {
                 id: "p".into(),
                 part_kind: None,
@@ -56,7 +56,7 @@ fn flatten_writes_diagram_offsets_onto_part_2d() {
                     grip_3d: Puzzle5dGrip3d { position: [0.0, 0.0, -1.0], direction: Some([0.0, 0.0, -1.0]), radius: None, label: None },
                 }],
             },
-        ],
+        ].into_iter().collect(),
         fasteners: vec![Puzzle5dFastener { id: "f".into(), source: "p:top".into(), target: "c:bottom".into(), fastener_kind: None, gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0, x: 1.5, y: 2.5 }],
         target_volumes: Vec::new(),
     };

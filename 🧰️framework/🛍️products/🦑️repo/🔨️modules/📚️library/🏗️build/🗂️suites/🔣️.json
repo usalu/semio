@@ -541,6 +541,25 @@
       ]
     },
     {
+      "id": "build-source-tree",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "📥️source/🔏️closure/🛂️readmission/🧪️tests/🏃️tasks/🟦️.ts",
+        "📥️source/🔏️closure/🧪️tests/🧾️mismatch/🟦️.ts",
+        "📥️source/🔏️closure/🧪️tests/🌳️test-tree/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux"
+      ],
+      "platformCauses": [
+        "python3-command",
+        "permission-bits"
+      ],
+      "scratch": "checkout-test"
+    },
+    {
       "id": "build-native-storage",
       "budgetMs": 300000,
       "typecheck": "none",
@@ -628,6 +647,7 @@
       "id": "build-bazel-snapshots",
       "budgetMs": 300000,
       "typecheck": "none",
+      "scratch": "sandbox",
       "trees": [
         "🔧️tools/🏗️bazel/📐️path-plan",
         "🔧️tools/🏗️bazel/📸️snapshot",
@@ -707,11 +727,51 @@
       ]
     },
     {
+      "id": "build-task-view",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "scratch": "sandbox",
+      "trees": [
+        "🏞️task-view"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
+      ]
+    },
+    {
+      "id": "build-typescript-compiler",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "trees": [
+        "🚀️bootstrap/🔷️typescript-compiler"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
+      ]
+    },
+    {
       "id": "build-fleet-status",
       "budgetMs": 300000,
       "typecheck": "none",
       "trees": [
         "🚢️fleet-status"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
+      ]
+    },
+    {
+      "id": "build-test-file",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "trees": [
+        "🔬️test-file"
       ],
       "platforms": [
         "darwin",

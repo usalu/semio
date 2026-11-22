@@ -1,3 +1,4 @@
+import type {TakenMemoV1} from "../📥️inference/📦️project-nodes/♻️taken-memo/🟨️.mjs";
 import type {BuildGraphPartStubV1,BuildGraphPartV1,BuildGraphRowV1,BuildGraphV1,BuildUnavailableProjectV1} from "../📋️model/🟦️.ts";
 import {pinnedAuthorityReadV1} from "../../📥️inputs/🔏️revision/🟨️.mjs";
 import * as observationV1 from "../../👁️observation/🟨️.mjs";
@@ -57,14 +58,14 @@ export function buildGraphProjectInferenceOptionsV1(selection:BuildGraphSelectio
 }
 
 /** 📚️ Assembles all owned inference contributions without installing or invoking Nx. */
-export async function discoverBuildGraphV1(root:string,selection:BuildGraphSelectionV1,registry:BuildOwnerRegistryV1,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,suppliedFiles?:string[],admission?:BuildOwnerAdmissionV1,compact=false):Promise<BuildGraphV1> {
+export async function discoverBuildGraphV1(root:string,selection:BuildGraphSelectionV1,registry:BuildOwnerRegistryV1,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,suppliedFiles?:string[],admission?:BuildOwnerAdmissionV1,compact=false,takenMemo?:TakenMemoV1):Promise<BuildGraphV1> {
   requireIssuedResourceControlInvocationV1(phaseControl,invocation);checkResourceLeaseControl(phaseControl);selection=readBuildGraphSelectionV1(selection);registry=readBuildOwnerRegistryV1(registry);
   requireBuildOwnerRegistryAuthorityV1(registry,JSON.parse(pinnedAuthorityReadV1(join(root,"📋️build-owners.json"),()=>observationV1.observedFs.readFileSync(join(root,"📋️build-owners.json"),"utf8"))));
   if(selection.kind!=="all"&&!admission)throw Error("Closed selected owner admission required");
   const files=suppliedFiles??(selection.kind==="all"?buildGraphMembersV1(await workspaceBuildFilesV1(root,invocation)):admission!.files);
   const [owner,tests,policies]=await Promise.all([import("../📥️inference/🟨️.mjs"),import("../../../../🧪️test/📦️packages/🟦️typescript/🟨️.mjs"),import("../📥️inference/🛡️policy/🟨️.mjs")]);checkResourceLeaseControl(phaseControl);
   const policy=graphDeclarationV1("../🔣️policy.json"),options=buildGraphProjectInferenceOptionsV1(selection,registry,admission),foreign=new Set(admission?.observedFiles??[]);
-  const primary=await owner.discoverBuildProjectsV1(files.filter(file=>file.endsWith("📋️project.json")||file.endsWith("Cargo.toml")?!foreign.has(file):javascriptManagerV1.lockFileNames().includes(file)||file.endsWith(".patch")),{...options,catalogFiles:[...foreign].sort()},{workspaceRoot:root,invocation,phaseControl,registry});
+  const primary=await owner.discoverBuildProjectsV1(files.filter(file=>file.endsWith("📋️project.json")||file.endsWith("Cargo.toml")?!foreign.has(file):javascriptManagerV1.lockFileNames().includes(file)||file.endsWith(".patch")),{...options,catalogFiles:[...foreign].sort()},{workspaceRoot:root,invocation,phaseControl,registry,...takenMemo===undefined?{}:{takenMemo}});
   if(invocation)await advanceScriptInvocation(invocation,"build:infer","running");
   const contributions=[...primary,...await tests.discoverTestBuildProjectsV1(files.filter(file=>file.endsWith(".feature")),{}, {workspaceRoot:root,invocation,phaseControl})];
   const policyOwners=Object.assign({},...contributions.map(([,contribution])=>contribution.projects??{}));
@@ -174,5 +175,5 @@ export async function discoverBuildGraphPartV1(root:string,registry:BuildOwnerRe
       edgeOnly:[...edgeNames.map(name=>streamed.has(name)?{name,streamed:true as const}:{name}),...refresh.withheld.map(name=>({name}))],reEdge:streaming&&((name:string,fragment:{node?:any})=>streaming.edgesOf(name,fragment.node)),readsOf:(name:string)=>edgeReads.finish(name),carried:refresh.carried,derived:[...derivedFacts.values()],edges:edges as BuildGraphPartV1["edges"],externalNodes,parseUnavailable:rows.filter(row=>row.project===undefined),env,replaceTags:retained?[]:incremental?["policy",POLICY_TAG_V1]:["tests","policy",TEST_TAG_V1,POLICY_TAG_V1],
     };
   },undefined,false,rowLog))).catch(error=>{rowLog.close();throw error;});
-  return {...captured.value,rows:captured.observations as unknown as RowLogListV1<BuildGraphRowV1>,dispose:()=>rowLog.close()};
+  return {...captured.value,rows:captured.observations,dispose:()=>rowLog.close()};
 }

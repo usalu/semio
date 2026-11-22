@@ -2,29 +2,6 @@
 
 use super::*;
 
-/// 🩺️ How many consecutive publication units advanced the SAME operation without changing any of
-/// [`Self::typed_operation_stall_witness`]'s three facts — `Some(streak)` only on a power of two at
-/// or above [`TYPED_OPERATION_STALL_WITNESS_FLOOR`], so one stalled operation costs at most a
-/// handful of lines however long it spins.
-///
-/// 🐛️ A mounted operation that never publishes its terminal keeps the actor in `MoreWork` with no
-/// effect, no patch and no fault, which every other instrument reads as silence: the host's own
-/// drain polls forever, the reactor's more-work streak names only `typed_operation` as its source,
-/// and nothing says WHICH arm of the publication ladder is not moving. Measured 2026-09-20 on the
-/// signed-in `s` Home, whose `applyDirectoryEventPage` operation spun for the whole session
-/// (ticket 26/09/18 S8).
-pub(crate) fn typed_operation_stall_streak<A: ArtifactApp>(before: (u64, u8, u8, u64), after: (u64, u8, u8, u64)) -> Option<u64> {
-    static WITNESS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(u64::MAX);
-    static STREAK: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
-    let key = (after.0.wrapping_shl(16) | u64::from(after.1).wrapping_shl(8) | u64::from(after.2)) ^ after.3.wrapping_mul(TYPED_OPERATION_STALL_PROGRESS_MIX);
-    if before != after || WITNESS.swap(key, std::sync::atomic::Ordering::Relaxed) != key {
-        STREAK.store(0, std::sync::atomic::Ordering::Relaxed);
-        return None;
-    }
-    let streak = STREAK.fetch_add(1, std::sync::atomic::Ordering::Relaxed).saturating_add(1);
-    (streak >= TYPED_OPERATION_STALL_WITNESS_FLOOR && streak.is_power_of_two()).then_some(streak)
-}
-
 /// 🕹️ Whether this operation's next publication unit is its [`InteractionWrite`] lane: every
 /// durable store lane of its emit is already drained (a selection may only name ids the
 /// document already holds), and there is at least one write left to apply. Sync and
@@ -49,63 +26,33 @@ pub(crate) fn mounted_typed_interaction_writes_are_next<A: ArtifactApp>(mounted:
         && ephemeral.transient.is_empty()
 }
 
+/// 🩺️ Captures the selected operation's publication stage, ownership flags and store progress.
+fn publication_witness<A: ArtifactApp>(operation: &MountedTypedCommandFullOperation<A>) -> (MountedTypedCommandFullOperationStage, u8, u64) {
+    let flags = u8::from(operation.session.is_some())
+        | u8::from(operation.session_rejected.is_some()) << 1
+        | u8::from(operation.completion.is_some()) << 2
+        | u8::from(operation.publication.is_some()) << 3
+        | u8::from(operation.pending_artifact_publication.is_some()) << 4
+        | u8::from(operation.worker_outcome_pending) << 5
+        | u8::from(operation.terminal_seen) << 6
+        | u8::from(operation.result_page.is_some()) << 7;
+    (operation.stage, flags, operation.publication_progress)
+}
+
+/// 🔢️ Counts consecutive attempts against one owner while its publishing frontier is unchanged.
+fn observe_publication_stall(streak: &mut u64, attempted: bool, changed: bool, publishing: bool, genesis: bool) -> u64 {
+    if !attempted { return 0 }
+    if changed || !publishing || genesis {
+        *streak = 0;
+    } else {
+        *streak = streak.saturating_add(1);
+    }
+    *streak
+}
+
 impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> TypedCtx<'ctx, A, M, X> {
     pub async fn advance_typed_operation_publication_one(&mut self,identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
-        let before = self.tools.typed_operation_stall_witness();
-        let advanced = self.advance_typed_operation_publication_unit(identity,cx).await;
-        if let (Some(before), Some(after)) = (before, self.tools.typed_operation_stall_witness()) {
-            if self.tools.tool_operations.get(after.0).is_some_and(|operation|matches!(operation.publication,Some(ArtifactToolCompletionValue::Genesis(_,Some(_))))) {
-                return advanced;
-            }
-            if let Some(streak) = typed_operation_stall_streak::<A>(before, after) {
-                if let Some(operation) = self.tools.tool_operations.get(after.0) {
-                    let child = operation.pending_child_publication.as_ref().map(|child| {
-                        let receiving = child.native_receiver.as_ref().map(|receiver| {
-                            (receiver.ready(), receiver.settling(), receiver.terminal_is_empty(), receiver.demands(cx.retained_grant().maximum_copy_bytes))
-                        });
-                        (child.phase, child.native_child_index, child.native_wires.is_some(), child.native_batch.is_some(), receiving)
-                    });
-                    let body = self.mounted_policy.close.maximum_copy_bytes;
-                    let group = operation.owned_child_group.and_then(|id| self.child_composition.private_child_groups.get(id)).map(|owner| {
-                        let publication = owner.publication.as_ref().map(|group| (group.requires_native_source_close(), group.retirement_demands(body)));
-                        (owner.phase, owner.closing, owner.retirement_demands(body), owner.receipts.is_some(), publication)
-                    });
-                    let child_result_pending = operation.owned_child_result_pending;
-                    let page_pending = operation.page_publication_pending();
-                    let result_page = operation.result_page.as_ref().map(|page| (page.lane, page.token.sequence, operation.result_page_presented));
-                    let receipt_pending = operation.publication_ownership_progress.is_some();
-                    let store = operation.pending_artifact_publication.as_ref().map(|owner| {
-                        let batch = match owner {
-                            PendingArtifactStorePublication::Artifact(publication) => Some((publication.phase(), publication.progress(), publication.last_turn_work())),
-                            PendingArtifactStorePublication::Config(publication) => Some((publication.phase(), publication.progress(), publication.last_turn_work())),
-                            PendingArtifactStorePublication::Draft(publication) => Some((publication.phase(), publication.progress(), publication.last_turn_work())),
-                            _ => None,
-                        };
-                        (owner.lane().1, owner.is_closing(), owner.accepted_receipt().is_some(), batch)
-                    });
-                    let window_store_phase = match operation.pending_artifact_publication.as_ref() {
-                        Some(PendingArtifactStorePublication::WindowConfig(publication)) => publication.store_batch_phase(),
-                        _ => None,
-                    };
-                    let (released_reads, outstanding_reads) = match operation.pending_artifact_publication.as_ref() {
-                        Some(PendingArtifactStorePublication::Config(_)) => (self.stores.config_store.returned_snapshot_read_count(), self.stores.config_store.outstanding_snapshot_read_count()),
-                        Some(PendingArtifactStorePublication::Draft(_)) => (self.stores.draft_store.returned_snapshot_read_count(), self.stores.draft_store.outstanding_snapshot_read_count()),
-                        _ => (self.stores.store.returned_snapshot_read_count(), self.stores.store.outstanding_snapshot_read_count()),
-                    };
-                    let grant = cx.retained_grant();
-                    let turn = (grant, cx.fuel_remaining(), cx.should_yield());
-                    semio_plugin_reactor_app::debug_runtime_line(format_args!("[DEBUG] typed-operation {} advanced {streak} units with no change: operation={} stage={} flags={:#010b} progress={} child={child:?} group={group:?} child_result_pending={child_result_pending} page_pending={page_pending} result_page={result_page:?} receipt_pending={receipt_pending} store={store:?} window_store_phase={window_store_phase:?} released_reads={released_reads} outstanding_reads={outstanding_reads} turn={turn:?}", operation.verb, after.0, after.1, after.2, after.3));
-                }
-                if after.1 == TYPED_OPERATION_STALL_PUBLISHING_STAGE && streak >= TYPED_OPERATION_STALL_FAULT_CEILING {
-                    self.tools.fault_stalled_typed_operation_publication(after.0, streak)?;
-                    if let Some(operation) = self.tools.tool_operations.get(after.0) {
-                        let page = operation.result_page.as_ref().map(|page| (page.lane, page.token.sequence, operation.result_page_presented));
-                        semio_plugin_reactor_app::debug_runtime_line(format_args!("[DEBUG] typed-operation {} advanced to stall fault: operation={} awaiting_ack={} page={page:?}", operation.verb, after.0, operation.stage == MountedTypedCommandFullOperationStage::AwaitingAck));
-                    }
-                }
-            }
-        }
-        advanced
+        self.advance_typed_operation_publication_unit(identity,cx).await
     }
 
     /// ♻️ A retiring operation answers `has_runnable_typed_operations`, so the turn driver that reports it
@@ -143,12 +90,42 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         }
         let mut mounted =
             self.tools.tool_operations.remove(operation_id).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.publication-authority"), "typed-operation publication owner changed before one-unit transfer"))?;
+        let before = publication_witness(&mounted);
         let outcome=if mounted.borrows_original_emission_authority(){self.publish_original_emission_run(&mut mounted,identity,cx,retained).await}else{self.publish_mounted_typed_operation_run(&mut mounted,cx,retained).await};
-        if let Err(failure)=outcome{self.tools.tool_operations.insert_admitted(operation_id,mounted);return Err(failure);}
-        mounted.publication_attempt=0;
+        let attempted = match outcome {
+            Ok(attempted) => attempted,
+            Err(failure) => {
+                self.tools.tool_operations.insert_admitted(operation_id, mounted);
+                return Err(failure)
+            }
+        };
         let driver_result=self.revalidate_mounted_publication(&mut mounted,identity,cx).await;
+        let after = publication_witness(&mounted);
+        let genesis = matches!(mounted.publication, Some(ArtifactToolCompletionValue::Genesis(_, Some(_))));
+        let streak = observe_publication_stall(
+            &mut mounted.publication_stall_streak, attempted, before != after,
+            after.0 == MountedTypedCommandFullOperationStage::Publishing, genesis,
+        );
+        if streak >= TYPED_OPERATION_STALL_WITNESS_FLOOR && streak.is_power_of_two() {
+            let pending = mounted.pending_artifact_publication.as_ref();
+            let checkpoint = match pending {
+                Some(PendingArtifactStorePublication::Artifact(publication)) => Some(publication.progress()),
+                Some(PendingArtifactStorePublication::Config(publication)) => Some(publication.progress()),
+                Some(PendingArtifactStorePublication::Draft(publication)) => Some(publication.progress()),
+                _ => None,
+            };
+            semio_plugin_reactor_app::debug_runtime_line(format_args!(
+                "[TRACE] typed-operation {} advanced {streak} units with no change: operation={operation_id} stage={:?} flags={:#010b} lane={:?} checkpoint={checkpoint:?} returned_reads={} fuel={} grant={:?}",
+                mounted.verb, after.0, after.1, pending.map(|publication| publication.lane().0),
+                self.stores.store.returned_snapshot_read_count(), cx.fuel_remaining(), cx.retained_grant(),
+            ));
+        }
         self.tools.tool_operations.insert_admitted(operation_id, mounted);
-        driver_result
+        driver_result?;
+        if streak >= TYPED_OPERATION_STALL_FAULT_CEILING {
+            self.tools.fault_stalled_typed_operation_publication(operation_id, streak)?;
+        }
+        Ok(())
     }
 
 }
@@ -192,5 +169,43 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             if mounted.reserve_store_result(TypedOperationResultLane::WindowConfig,receipt,None,cx)?{X::window_config_published(&mut *self.time_travel,&mut *self.tool_runs);}
         }
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{observe_publication_stall, TYPED_OPERATION_STALL_FAULT_CEILING};
+
+    #[test]
+    fn selected_publication_streaks_match_the_fixture() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!(
+            "../../../../../🧪️tests/🧫️fixtures/publication-stall.json"
+        )).unwrap();
+        let rounds = fixture["rounds"].as_u64().unwrap();
+        assert_eq!(fixture["faultCeiling"].as_u64(), Some(TYPED_OPERATION_STALL_FAULT_CEILING));
+        let streams = fixture["streams"].as_array().unwrap();
+        let mut outcomes = vec![(0, None); streams.len()];
+        for turn in 1..=rounds {
+            for (stream, (streak, first_fault)) in streams.iter().zip(&mut outcomes) {
+                let attempted = turn > stream["skipBefore"].as_u64().unwrap();
+                let every = stream["progressEvery"].as_u64().unwrap();
+                let receipt_every = stream["receiptEvery"].as_u64().unwrap_or(0);
+                let changed = (every != 0 && turn % every == 0) || (receipt_every != 0 && turn % receipt_every == 0);
+                let genesis = stream["genesis"].as_bool().unwrap();
+                let observed = observe_publication_stall(streak, attempted, changed, true, genesis);
+                if observed >= TYPED_OPERATION_STALL_FAULT_CEILING {
+                    first_fault.get_or_insert(turn);
+                }
+            }
+        }
+        for (stream, (streak, first_fault)) in streams.iter().zip(outcomes) {
+            assert_eq!(Some(streak), stream["streak"].as_u64());
+            assert_eq!(first_fault, stream["firstFault"].as_u64());
+        }
+        let mut streak = 7;
+        assert_eq!(observe_publication_stall(&mut streak, false, false, true, false), 0);
+        assert_eq!(streak, 7);
+        assert_eq!(observe_publication_stall(&mut streak, true, false, false, false), 0);
+        assert_eq!(streak, 0);
     }
 }

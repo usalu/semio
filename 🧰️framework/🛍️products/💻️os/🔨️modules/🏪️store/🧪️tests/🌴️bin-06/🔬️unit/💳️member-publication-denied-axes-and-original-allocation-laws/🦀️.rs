@@ -204,7 +204,7 @@ fn current_catalog_sources_admit_original_allocations_then_fund_each_ticket() {
     for _ in 0..128 {
         if owners.constructor_is_complete() { break; }
         let grant = physical_test_close_grant();
-        let (admitted, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| owners.admit_constructor(grant).unwrap());
+        let (admitted, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| owners.admit_constructor_cold(grant).unwrap());
         assert_eq!(admitted.copied_items, 1);
         assert_eq!(admitted.copied_bytes, 0);
         assert!(admitted.fits(grant));

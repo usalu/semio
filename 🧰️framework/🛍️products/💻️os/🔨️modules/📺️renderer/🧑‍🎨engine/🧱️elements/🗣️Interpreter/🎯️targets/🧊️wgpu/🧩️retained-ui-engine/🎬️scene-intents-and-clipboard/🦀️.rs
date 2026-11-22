@@ -14,7 +14,7 @@ pub const SCENE_INTENT_ID_BYTES: usize = 256;
 pub enum SceneIntentEvent {
     PointerLeave,
     PointerDown { x: f32, y: f32, button: i16, modifiers: semio_ui_wgpu_events::EventModifiers },
-    PointerUp { x: f32, y: f32, button: i16, modifiers: semio_ui_wgpu_events::EventModifiers },
+    PointerUp { x: f32, y: f32, button: i16, modifiers: semio_ui_wgpu_events::EventModifiers, click_count: u32 },
     PointerMove { x: f32, y: f32, modifiers: semio_ui_wgpu_events::EventModifiers },
     Scroll { x: f32, y: f32, delta_y: f32, modifiers: semio_ui_wgpu_events::EventModifiers },
 }

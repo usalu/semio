@@ -29,7 +29,7 @@ impl ClassicSectionCursor {
     }
 
     /// 📋️ Emits one row or advances the typed trailer using the remaining allocation and work grant.
-    pub fn advance(&mut self, source: &[u8], grant: CosGrant, cancelled: bool) -> ClassicSectionReceipt {
+    pub fn advance(&mut self, byte_at: impl Fn(usize) -> Option<u8>, grant: CosGrant, cancelled: bool) -> ClassicSectionReceipt {
         use ClassicSectionEvent::{Progress, Row};
         use CosStatus as Status;
         let blank = |event| ClassicSectionReceipt { event: Ok(Progress(event)), work: 0, allocated_bytes: 0, released_bytes: 0 };
@@ -37,7 +37,7 @@ impl ClassicSectionCursor {
         if self.closing { return blank(Status::Closed); }
         if self.cancelled { return blank(Status::Cancelled); }
         if let Some(trailer) = self.trailer.as_mut() {
-            let receipt = trailer.advance(source, grant, false);
+            let receipt = trailer.advance_bytes(&byte_at, grant, false);
             let event = receipt.status.and_then(|status| {
                 if matches!(status, CosStatus::Complete { .. }) && !matches!(trailer.ready_value(), Some(PdfObject::Dict(_))) {
                     Err("trailer is not a dict")
@@ -47,7 +47,7 @@ impl ClassicSectionCursor {
             });
             return ClassicSectionReceipt { event, work: receipt.work, allocated_bytes: receipt.allocated_bytes, released_bytes: receipt.released_bytes };
         }
-        let receipt = self.rows.advance(source, grant.work);
+        let receipt = self.rows.advance(byte_at, grant.work);
         let event = receipt.event.map(|step| match step {
             ClassicXrefEvent::Entry { number, offset, generation, live } => Row { number, offset, generation, live },
             ClassicXrefEvent::Trailer => {

@@ -27,7 +27,7 @@ test("a reader whose take pass is long keeps its unchanged wave on the pointer: 
  const cache=temp("cache"),server=await startRemoteCacheServerV1({directory:cache,host:"127.0.0.1",port:0,maximumBytes:2**28,maximumEntryBytes:2**26,maximumAgeDays:30,defaultInstance:"main",tokens:{read:"r",write:"w"},validation:"off"});
  try{
   const environment={...process.env,SEMIO_REMOTE_CACHE_ENDPOINT:server.url,SEMIO_REMOTE_CACHE_ACCESS:"read-write",SEMIO_REMOTE_CACHE_TOKEN:"w",SEMIO_REMOTE_CACHE_INSTANCE:"main"},published:OwnerPoolManifestV1[]=[],clock={at:1000000};
-  const publisher=createOwnerPoolPublisherV1({workspaceRoot:temp("root"),environment,identity:"id",globals:{projectAuthority:"a",registryDigest:"r",commandRevision:"c",late:false},session:()=>({tag:"s"}),units:()=>unitsOf(500),now:()=>clock.at,publish:async input=>{published.push(input.manifest);return true;}});
+  const publisher=createOwnerPoolPublisherV1({workspaceRoot:temp("root"),environment,identity:"id",globals:{registryDigest:"r",commandRevision:"c",late:false},session:()=>({tag:"s"}),units:()=>unitsOf(500),now:()=>clock.at,publish:async input=>{published.push(input.manifest);return true;}});
   publisher.announce(500);await pause(50);expect(published.length).toBe(1);
   publisher.learn(500);clock.at+=P.republishKeepAliveMilliseconds-1;publisher.learn(500);await pause(50);
   expect(published.length,"inside the interval nothing is put again").toBe(1);
@@ -53,7 +53,7 @@ test("small membership changes renew the accepted owner wave without uploading n
    return fetch(url,init);
   }) as typeof fetch});
   let open:OwnerPoolUnitV1[]=[],permit=true,sessions=0,accepted:OwnerPoolManifestV1|undefined;
-  const publisher=createOwnerPoolPublisherV1({workspaceRoot:root,environment,identity:"native-keepalive",globals:{projectAuthority:"a",registryDigest:"r",commandRevision:"c",late:false},session:()=>({serial:++sessions}),units:()=>open,now:()=>clock.at,publish:input=>{
+  const publisher=createOwnerPoolPublisherV1({workspaceRoot:root,environment,identity:"native-keepalive",globals:{registryDigest:"r",commandRevision:"c",late:false},session:()=>({serial:++sessions}),units:()=>open,now:()=>clock.at,publish:input=>{
    observed.push(input.manifest);
    const about=permit?client:{...client,putResult:async()=>({stored:false as const,refusal:graphRefusalOfV1(507)})};
    return publishOwnerPoolV1({...input,client:about,now:()=>clock.at});

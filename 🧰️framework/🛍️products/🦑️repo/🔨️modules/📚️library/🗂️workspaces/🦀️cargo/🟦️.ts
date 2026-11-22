@@ -11,10 +11,10 @@ import type {CargoPreparationControlV1,CargoWorkspaceControlV1,CargoWorkspacePro
 import {createHash} from "node:crypto";
 import {runOwnedCommand,type OwnedCommandOptions} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import {readCargoPreparationProgramContextV1,readCargoPreparationSourceEditV1,admitCargoPreparationObservationV1,assertCargoPreparationObservationCurrentV1,cargoPreparationProgramSourcesV1,type CargoPreparationObservationV1} from "./🛠️preparation/🧾️custody/🟦️.ts";
-import {cargoPreparationWitnessHoldsV1,observeCargoPhysicalV1,type CargoPhysicalObservationsV1,type CargoPhysicalOperationKindV1} from "./🛠️preparation/👁️witness/🟦️.ts";
+import {cargoPreparationWitnessHoldsV1,cargoPriorListingV1,cargoStatTextV1,observeCargoPhysicalV1,type CargoPriorListingV1,type CargoPhysicalObservationsV1,type CargoPhysicalOperationKindV1} from "./🛠️preparation/👁️witness/🟦️.ts";
 import custodySchema from "./🛠️preparation/🧾️custody/🧬️schema/🔣️.json" with { type: "json" };
 import invocationSchema from "./🧬️schema/🏃️invocation/🔣️.json" with { type: "json" };
-import { existsSync, lstatSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, lstatSync, readdirSync, readFileSync, writeFileSync, type Dirent } from "node:fs";
 import workspaceModule from "../🟨️.cjs";
 import { runToolSyncV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 import { runtimeCommandNameV1 } from "../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
@@ -38,32 +38,43 @@ export function parseCargoWorkspaceContribution(value: unknown): CargoWorkspaceC
   return { schemaVersion: 1, members: [...row.members], exclude: [...row.exclude] };
 }
 
-type CargoPhysicalOperationV1=Readonly<{operation:"program";path:string;root:string}>|Readonly<{operation:"current";path:string;root:string;observation:CargoPreparationObservationV1}>|Readonly<{operation:"state"|"presence"|"list"|"text";path:string;root:string}>|Readonly<{operation:"recipe";path:string;root:string;args:string[];cwd:string;sourceSha256:string;environment:Record<string,string|undefined>}>;
+type CargoPhysicalOperationV1=Readonly<{operation:"program";path:string;root:string}>|Readonly<{operation:"current";path:string;root:string;observation:CargoPreparationObservationV1}>|Readonly<{operation:"state";path:string;root:string}>|Readonly<{operation:"presence";path:string;root:string}>|Readonly<{operation:"list";path:string;root:string}>|Readonly<{operation:"text";path:string;root:string}>|Readonly<{operation:"recipe";path:string;root:string;args:string[];cwd:string;sourceSha256:string;environment:Record<string,string|undefined>}>;
 type CargoPhysicalPlanV1<T>=Generator<CargoPhysicalOperationV1,T,any>;
-/** 🛡️ Rechecks current directory custody immediately before one physical operation. */
-function directory(root:string,path:string):void {
+/** 🛡️ Rechecks current directory custody immediately before one physical operation: the directory itself every time, its ancestors once per `verified` pass instead of once per operation, which keeps a walk of N directories at O(N) instead of O(N·depth) metadata calls. */
+function directory(root:string,path:string,verified?:Set<string>,fresh=true):void {
  const full=resolve(root,path),local=slash(relative(root,full));if(local.startsWith("../")||isAbsolute(local))throw Error(`Cargo workspace path escapes repository: ${path}`);
- let current=resolve(root);for(const part of ["",...local.split("/").filter(Boolean)]){if(part)current=join(current,part);const info=lstatSync(current);if(info.isSymbolicLink())throw Error(`Cargo workspace path contains a symlink: ${path}`);if(!info.isDirectory())throw Error(`Cargo workspace path is not a directory: ${path}`);}
+ const parts=local.split("/").filter(Boolean);let current=resolve(root);for(let index=-1;index<parts.length;index++){if(index>=0)current=join(current,parts[index]!);if((index<parts.length-1||!fresh)&&verified?.has(current))continue;const info=lstatSync(current);if(info.isSymbolicLink())throw Error(`Cargo workspace path contains a symlink: ${path}`);if(!info.isDirectory())throw Error(`Cargo workspace path is not a directory: ${path}`);verified?.add(current);}
 }
 /** 🧾️ Guards actual recipe source and working directory immediately before child acquisition. */
 function recipeCurrent(step:Extract<CargoPhysicalOperationV1,{operation:"recipe"}>):void {directory(step.root,step.cwd);if(createHash("sha256").update(readFileSync(physical(step.root,step.path))).digest("hex")!==step.sourceSha256)throw Error("Cargo recipe source changed before acquisition");}
-const operate=(step:CargoPhysicalOperationV1):any=>{
+const operate=(step:CargoPhysicalOperationV1,verified?:Set<string>,observations?:CargoPhysicalObservationsV1):any=>{
  if(step.operation==="program"||step.operation==="current")throw Error("Controlled asynchronous Cargo custody required");
  if(step.operation==="recipe"){recipeCurrent(step);const result=runToolSyncV1(runtimeCommandNameV1(),[step.path,...step.args],{cwd:step.cwd,env:step.environment,stdio:["ignore","pipe","inherit"],timeout:30_000});if(result.stdout.byteLength)process.stderr.write(result.stdout);if(result.status!==0)throw Error(`Cargo owner preparation failed: ${step.path} (${result.status})`);return;}
- if(step.operation==="list"){directory(step.root,step.path);return readdirSync(step.path,{withFileTypes:true});}
- directory(step.root,step.path===resolve(step.root)?step.root:dirname(step.path));
+ if(step.operation==="list"){const replayed=observations&&replayListing(step,cargoPriorListingV1(observations,step.path),verified);if(replayed)return replayed;directory(step.root,step.path,verified);return readdirSync(step.path,{withFileTypes:true});}
+ directory(step.root,step.path===resolve(step.root)?step.root:dirname(step.path),verified);
  if(step.operation==="state")return lstatSync(step.path);
  if(step.operation==="presence"){try{const info=lstatSync(step.path);if(info.isSymbolicLink())throw Error(`Cargo workspace path contains a symlink: ${step.path}`);return true;}catch(error){if((error as NodeJS.ErrnoException).code==="ENOENT")return false;throw error;}}
- return readFileSync(physical(step.root,step.path),"utf8");
+ const file=resolve(step.root,step.path),info=lstatSync(file);if(info.isSymbolicLink())throw Error(`Cargo workspace path contains a symlink: ${step.path}`);if(!info.isFile())throw Error(`Cargo manifest is not a regular file: ${step.path}`);return readFileSync(file,"utf8");
 };
 /** 🏃️ Drains the same physical operation plan for synchronous repository consumers. */
+/** ♻️ Answers a listing from a prior settled pass when the directory still has exactly its recorded stat, still under verified non-symlink ancestors; the manifest entry is re-examined because the recorded names do not say file from directory. */
+function replayListing(step:Extract<CargoPhysicalOperationV1,{operation:"list"}>,prior:CargoPriorListingV1|undefined,verified?:Set<string>):Dirent[]|undefined {
+ if(!prior)return;
+ try{
+  const full=resolve(step.root,step.path),local=slash(relative(step.root,full));if(local.startsWith("../")||isAbsolute(local))return;
+  const info=lstatSync(full,{bigint:true});if(!info.isDirectory()||info.isSymbolicLink()||cargoStatTextV1(info)!==prior.stat)return;
+  if(local)directory(step.root,dirname(full),verified,false);
+  verified?.add(full);
+  return prior.entries.map(name=>{const file=name==="Cargo.toml"&&lstatSync(join(full,name)).isFile();return{name,isFile:()=>file,isDirectory:()=>!file,isSymbolicLink:()=>false} as unknown as Dirent;});
+ }catch{return;}
+}
 function drain<T>(plan:CargoPhysicalPlanV1<T>,observations?:CargoPhysicalObservationsV1):T {
- let step=plan.next();try{while(!step.done){const operation=step.value;step=plan.next(observations&&operation.operation!=="recipe"?observeCargoPhysicalV1(observations,operation.operation as CargoPhysicalOperationKindV1,operation.path,()=>operate(operation)):operate(operation));}return step.value;}finally{plan.return(undefined as T);}
+ const verified=new Set<string>();let step=plan.next();try{while(!step.done){const operation=step.value;step=plan.next(observations&&operation.operation!=="recipe"?observeCargoPhysicalV1(observations,operation.operation as CargoPhysicalOperationKindV1,operation.path,()=>operate(operation,verified,observations)):operate(operation,verified,observations));}return step.value;}finally{plan.return(undefined as T);}
 }
 /** 🛑️ Preserves original cancellation across every reported physical operation. */
 async function controlled<T>(plan:CargoPhysicalPlanV1<T>,control:CargoWorkspaceControlV1,observations?:CargoPhysicalObservationsV1):Promise<T> {
- control.signal.throwIfAborted();let count=0,step=plan.next();
- try{while(!step.done){control.signal.throwIfAborted();const operation=step.value;let value:any;if(operation.operation==="program"||operation.operation==="current"){if(!("leaseControl"in control))throw Error("Actual Cargo preparation phase required");const preparation=control as CargoPreparationControlV1;value=operation.operation==="program"?await cargoPreparationProgramSourcesV1(operation.root,operation.path,preparation):await assertCargoPreparationObservationCurrentV1(operation.observation,preparation);}else if(operation.operation==="recipe"){if(!("childBudget" in control)||typeof control.childBudget!=="function"||!("childOptions" in control)||typeof control.childOptions!=="function")throw Error("Original Cargo preparation child control required");await control.advance({operation:operation.operation,path:operation.path,completedOperations:count+1});control.signal.throwIfAborted();const budget=control.childBudget(30_000),options=control.childOptions(operation.environment);if(!Number.isFinite(budget)||budget<=0||options.signal!==control.signal||!options.output||typeof options.onProgress!=="function")throw Error("Original Cargo preparation child options required");recipeCurrent(operation);try{await runOwnedCommand(process.execPath,[operation.path,...operation.args],operation.cwd,"cargo:owner-preparation",budget,{...options,stdout:"stderr"});}catch(error){control.signal.throwIfAborted();throw error;}}else value=observations?observeCargoPhysicalV1(observations,operation.operation as CargoPhysicalOperationKindV1,operation.path,()=>operate(operation)):operate(operation);control.signal.throwIfAborted();await control.advance({operation:operation.operation==="program"||operation.operation==="current"?"recipe":operation.operation,path:operation.path,completedOperations:++count});control.signal.throwIfAborted();step=plan.next(value);}return step.value;}finally{plan.return(undefined as T);}
+ control.signal.throwIfAborted();const verified=new Set<string>();let count=0,step=plan.next();
+ try{while(!step.done){control.signal.throwIfAborted();const operation=step.value;let value:any;if(operation.operation==="program"||operation.operation==="current"){if(!("leaseControl"in control))throw Error("Actual Cargo preparation phase required");const preparation=control as CargoPreparationControlV1;value=operation.operation==="program"?await cargoPreparationProgramSourcesV1(operation.root,operation.path,preparation):await assertCargoPreparationObservationCurrentV1(operation.observation,preparation);}else if(operation.operation==="recipe"){if(!("childBudget" in control)||typeof control.childBudget!=="function"||!("childOptions" in control)||typeof control.childOptions!=="function")throw Error("Original Cargo preparation child control required");await control.advance({operation:operation.operation,path:operation.path,completedOperations:count+1});control.signal.throwIfAborted();const budget=control.childBudget(30_000),options=control.childOptions(operation.environment);if(!Number.isFinite(budget)||budget<=0||options.signal!==control.signal||!options.output||typeof options.onProgress!=="function")throw Error("Original Cargo preparation child options required");recipeCurrent(operation);try{await runOwnedCommand(process.execPath,[operation.path,...operation.args],operation.cwd,"cargo:owner-preparation",budget,{...options,stdout:"stderr"});}catch(error){control.signal.throwIfAborted();throw error;}}else value=observations?observeCargoPhysicalV1(observations,operation.operation as CargoPhysicalOperationKindV1,operation.path,()=>operate(operation,verified,observations)):operate(operation,verified,observations);control.signal.throwIfAborted();await control.advance({operation:operation.operation==="program"||operation.operation==="current"?"recipe":operation.operation,path:operation.path,completedOperations:++count});control.signal.throwIfAborted();step=plan.next(value);}return step.value;}finally{plan.return(undefined as T);}
 }
 /** 📁️ Refuses escaped or symlink-backed manifest ancestry before reading owner authority. */
 function* physicalPlan(root:string,path:string):CargoPhysicalPlanV1<string> {
@@ -120,7 +131,7 @@ function* discoverPlan(root:string):CargoPhysicalPlanV1<readonly CargoWorkspaceS
 }
 
 /** 🦀️ Expands each admitted Cargo-native pattern against current physical manifests and rejects absent exact owners. */
-export function cargoWorkspaceMembers(root:string,owner:CargoWorkspaceScope,observations?:CargoPhysicalObservationsV1):readonly CargoWorkspacePackage[] {return drain(membersPlan(root,owner),observations);}
+export function cargoWorkspaceMembers(root:string,owner:CargoWorkspaceScope,observations?:CargoPhysicalObservationsV1,within?:string):readonly CargoWorkspacePackage[] {return drain(membersPlan(root,owner,within),observations);}
 /** 🏭️ Reads current production member authority through one cancellable physical plan. */
 export function cargoWorkspaceMembersControlledV1(root:string,owner:CargoWorkspaceScope,control:CargoWorkspaceControlV1):Promise<readonly CargoWorkspacePackage[]> {return controlled(membersPlan(root,owner),control);}
 /** 📏️ Binds one owner's admitted member patterns once, for the whole-owner walk and the single-manifest check alike. */
@@ -137,12 +148,13 @@ function memberRules(root:string,owner:CargoWorkspaceScope){
    rootAdmitted:patterns.some(pattern=>pattern.match("Cargo.toml"))&&!excluded.some(pattern=>pattern.match(".")||pattern.match("./")||pattern.match("Cargo.toml"))});
 }
 type CargoMemberRulesV1=ReturnType<typeof memberRules>;
-function* membersPlan(root:string,owner:CargoWorkspaceScope):CargoPhysicalPlanV1<readonly CargoWorkspacePackage[]> {
+function* membersPlan(root:string,owner:CargoWorkspaceScope,within?:string):CargoPhysicalPlanV1<readonly CargoWorkspacePackage[]> {
   const documents = new Map<string, Record<string, any>>(), scopes = new Map<string, CargoWorkspaceScope>();
   const readDocument=function*(path:string):CargoPhysicalPlanV1<Record<string,any>>{const current=documents.get(path);if(current)return current;const document=yield* readPlan(root,path);documents.set(path,document);return document;};
-  const rules=memberRules(root,owner),cwd=rules.cwd,paths=new Set<string>();
+  const rules=memberRules(root,owner),cwd=rules.cwd,paths=new Set<string>(),target=within===undefined?undefined:slash(relative(cwd,resolve(root,within))).replace(/^\.$/u,"")||undefined;
   const walk=function*(directory:string):CargoPhysicalPlanV1<void>{
     if(!rules.reaches(directory))return;
+    if(target!==undefined&&directory&&target!==directory&&!target.startsWith(directory+"/")&&!directory.startsWith(target+"/"))return;
     if (directory && rules.leaf(directory)) {
       const manifest = join(cwd, directory, "Cargo.toml");
       if((yield {operation:"presence",path:manifest,root}) && (yield* readDocument(slash(relative(root,manifest)))).package!==undefined){yield* physicalPlan(root,slash(relative(root,manifest)));paths.add(slash(relative(root,manifest)));return;}
@@ -163,7 +175,7 @@ function* membersPlan(root:string,owner:CargoWorkspaceScope):CargoPhysicalPlanV1
   yield* walk("");
   const owned:string[]=[];
   for(const manifest of paths)if((yield* readDocument(manifest)).package!==undefined && (yield* selectPlan(root,manifest,readDocument,scopes)).directory===owner.directory)owned.push(manifest);
-  if(!owned.length)throw Error(`Cargo workspace has no current source-bound members: ${owner.manifest}`);
+  if(!owned.length&&within===undefined)throw Error(`Cargo workspace has no current source-bound members: ${owner.manifest}`);
   const names=new Set<string>(),result:CargoWorkspacePackage[]=[];
   for(const manifest of owned.sort()){
    const document=yield* readDocument(manifest),name=document.package?.name;
@@ -326,10 +338,10 @@ function publishMembership(root: string, owner: CargoWorkspaceScope, mode: "chec
   const known=new Map(owners.map(scope=>[scope.directory,scope]));
   if(owner.directory!==".")for(let directory=dirname(owner.directory);;directory=dirname(directory)){
     const manifest=directory==="."?"Cargo.toml":`${slash(directory)}/Cargo.toml`;
-    if(existsSync(resolve(root,manifest))&&read(root,manifest).workspace!==undefined){const ancestor=cargoWorkspaceForManifest(root,manifest);known.set(ancestor.directory,ancestor);}
+    if(!known.has(directory)&&existsSync(resolve(root,manifest))&&read(root,manifest).workspace!==undefined){const ancestor=cargoWorkspaceForManifest(root,manifest);known.set(ancestor.directory,ancestor);}
     if(directory===".")break;
   }
-  const foreign=[...known.values()].filter(other=>other.directory!==owner.directory&&!(owner.directory==="."||other.directory.startsWith(owner.directory+"/"))).flatMap(other=>cargoWorkspaceMembers(root,other)).map(row=>slash(relative(resolve(root,owner.directory),resolve(root,row.directory)))).filter(directory=>directory!=="."&&directory!==".."&&!directory.startsWith("../")&&!children.some(child=>directory===child||directory.startsWith(child+"/")));
+  const foreign=[...known.values()].filter(other=>other.directory!==owner.directory&&!(owner.directory==="."||other.directory.startsWith(owner.directory+"/"))&&(other.directory==="."||owner.directory.startsWith(other.directory+"/"))).flatMap(other=>cargoWorkspaceMembers(root,other,undefined,owner.directory)).map(row=>slash(relative(resolve(root,owner.directory),resolve(root,row.directory)))).filter(directory=>directory!=="."&&directory!==".."&&!directory.startsWith("../")&&!children.some(child=>directory===child||directory.startsWith(child+"/")));
   const exclude=[...new Set([...owner.contribution.exclude,...(retainExclusions?document.workspace.exclude??[]:[]),...children,...foreign])].sort();
   if(JSON.stringify(document.workspace.members)===JSON.stringify(members) && JSON.stringify(document.workspace.exclude??[])===JSON.stringify(exclude))return false;
   if(mode==="check")throw Error(`Cargo source membership is stale: ${owner.manifest}`);
@@ -359,26 +371,26 @@ export function parseCargoPreparation(value: unknown): CargoPreparationV1 {
  const row=object(value);if(Object.keys(row).some(k=>!["script","command"].includes(k)) || (typeof row.script!=="string" || !row.script || isAbsolute(row.script) || /^[A-Za-z]:\//.test(row.script) || row.script.includes("\\")) || row.script.split("/").at(-1)!=="📜️script.ts" || !Array.isArray(row.command) || !row.command.length || row.command.some((v:unknown)=>typeof v!=="string" || !v || v.includes("\0")))throw new Error("Invalid Cargo preparation recipe");return {script:row.script,command:[...row.command]};
 }
 /** 🔗️ Selects only native scopes reached by the current workspace's authored local dependency paths. */
-export type CargoPreparationResultV1=Readonly<{manifests:readonly string[];owners:readonly string[];recipes:readonly CargoPreparationObservationV1[]}>;
-export function prepareCargoOwners(root:string,selected:CargoWorkspaceScope,names:readonly string[]=[],observationDirectory?:string):CargoPreparationResultV1 {return drain(preparationPlan(root,selected,names,observationDirectory));}
+export type CargoPreparationResultV1=Readonly<{manifests:readonly string[];owners:readonly string[];recipes:readonly CargoPreparationObservationV1[];inventories:Readonly<Record<string,readonly CargoWorkspacePackage[]>>}>;
+export function prepareCargoOwners(root:string,selected:CargoWorkspaceScope,names:readonly string[]=[],observationDirectory?:string,observations?:CargoPhysicalObservationsV1):CargoPreparationResultV1 {return drain(preparationPlan(root,selected,names,observationDirectory),observations);}
 /** 🎚️ Keeps selected dependency closure and real recipe execution under the original caller control. */
 export async function prepareCargoOwnersControlledV1(root:string,selected:CargoWorkspaceScope,control:CargoPreparationControlV1,names:readonly string[]=[],observationDirectory?:string,observations?:CargoPhysicalObservationsV1):Promise<CargoPreparationResultV1> {requireIssuedResourceControlV1(control.leaseControl);if(control.signal!==control.leaseControl.signal)throw Error("Actual Cargo preparation signal required");return controlled(preparationPlan(root,selected,names,observationDirectory),control,observations);}
 function* preparationPlan(root:string,selected:CargoWorkspaceScope,names:readonly string[],observationDirectory?:string):CargoPhysicalPlanV1<CargoPreparationResultV1> {
  const timed=process.env.SEMIO_CARGO_PREPARATION_TIMING==="1",started=timed?performance.now():0;
  const diagnostic=(phase:CargoPreparationDiagnosticPhaseV1,owner:string,start:number,items:number):void=>{if(timed)logCargoPreparationDiagnosticV1(phase,owner,performance.now()-start,items);};
- const recipes:CargoPreparationObservationV1[]=[];
+ const recipes:CargoPreparationObservationV1[]=[];let stale=false;
  selected=yield* selectPlan(root,selected.manifest,function*(path){return yield* readPlan(root,path);},new Map());
  let scopes=[selected];const nativeScopes=new Map(scopes.map(scope=>[scope.manifest,scope])), inventories=new Map<string,readonly CargoWorkspacePackage[]>(), documents=new Map<string,Record<string,any>>(), executed=new Set<string>(),observedManifests=new Set<string>(),observedOwners=new Set<string>();
  diagnostic("discovery",selected.manifest,started,scopes.length);
  const document=function*(manifest:string):CargoPhysicalPlanV1<Record<string,any>>{observedManifests.add(manifest);let value=documents.get(manifest);if(!value){value=yield* readPlan(root,manifest);documents.set(manifest,value);}return value;};
  const members=function*(owner:CargoWorkspaceScope):CargoPhysicalPlanV1<readonly CargoWorkspacePackage[]>{observedOwners.add(owner.directory);let value=inventories.get(owner.directory);if(!value){const start=timed?performance.now():0;value=yield* membersPlan(root,owner);inventories.set(owner.directory,value);diagnostic("inventory",owner.manifest,start,value.length);}return value;};
  const binding=function*(manifest:string):CargoPhysicalPlanV1<{owner:CargoWorkspaceScope;pkg:CargoWorkspacePackage;current:Record<string,any>}>{const native=yield* selectPlan(root,manifest,document,nativeScopes),owner=native;if(!scopes.some(scope=>scope.manifest===owner.manifest))scopes.push(owner);const pkg=(yield* members(owner)).find(pkg=>pkg.manifest===manifest);if(!pkg)throw Error(`Cargo dependency lacks authored member authority: ${manifest}`);return{owner,pkg,current:yield* document(manifest)};};
- const refresh=function*():CargoPhysicalPlanV1<void>{const manifests=scopes.map(scope=>scope.manifest);documents.clear();inventories.clear();nativeScopes.clear();scopes=[];for(const manifest of manifests){const current=yield* selectPlan(root,manifest,document,nativeScopes);if(current.manifest!==manifest)throw Error(`Prepared workspace boundary changed: ${manifest}`);if(!scopes.some(scope=>scope.manifest===current.manifest))scopes.push(current);}};
+ const refresh=function*():CargoPhysicalPlanV1<void>{if(!stale)return;stale=false;const manifests=scopes.map(scope=>scope.manifest);documents.clear();inventories.clear();nativeScopes.clear();scopes=[];for(const manifest of manifests){const current=yield* selectPlan(root,manifest,document,nativeScopes);if(current.manifest!==manifest)throw Error(`Prepared workspace boundary changed: ${manifest}`);if(!scopes.some(scope=>scope.manifest===current.manifest))scopes.push(current);}};
  const localDependencies=function*(manifest:string,development:boolean):CargoPhysicalPlanV1<string[]>{
  const {owner,pkg,current}=yield* binding(manifest),authority=(yield* document(owner.manifest)).workspace,groups=[current,...Object.values(current.target??{})] as Record<string,any>[],paths:string[]=[];
- for(const group of groups)for(const kind of development?["dependencies","dev-dependencies","build-dependencies"]:["dependencies","build-dependencies"])for(const [alias,value] of Object.entries(group[kind]??{})){
+ for(const group of groups)for(const kind of ["dependencies","dev-dependencies","build-dependencies"])for(const [alias,value] of Object.entries(group[kind]??{})){
  const entry=value as any;if(!entry || typeof entry!=="object")continue;const dependency=entry.workspace?authority.dependencies?.[alias]:entry;
- if(!dependency)throw Error(`Missing inherited Cargo dependency: ${manifest} ${alias}`);if(typeof dependency.path!=="string")continue;
+ if(!dependency)throw Error(`Missing inherited Cargo dependency: ${manifest} ${alias}`);if(typeof dependency.path!=="string"||(kind==="dev-dependencies"&&!development))continue;
  const path=resolve(root,entry.workspace?owner.directory:pkg.directory,dependency.path,"Cargo.toml"),local=slash(relative(root,path));
  if(local.startsWith("../") || isAbsolute(local))throw Error(`Cargo dependency escapes preparation authority: ${alias}`);yield* physicalPlan(root,local);paths.push(local);
  }return paths;};
@@ -397,7 +409,7 @@ function* preparationPlan(root:string,selected:CargoWorkspaceScope,names:readonl
  console.error(`[cargo-preparation] ${manifest} ${recipe.command.join(" ")}`);
  const recipeStart=timed?performance.now():0;
  const observation=observationDirectory?join(observationDirectory,createHash("sha256").update(key).digest("hex")+".json"):undefined, before=createHash("sha256").update(readFileSync(physical(root,script))).digest("hex"), program=observation?(yield{operation:"program",path:script,root}):undefined;
- yield {operation:"recipe",path:script,root,args:[...recipe.command],cwd:resolve(root,pkg.directory),sourceSha256:before,environment:{...process.env,SEMIO_WORKSPACE_ROOT:root,SEMIO_CARGO_PREPARATION_ACTIVE:script,...(observation?{SEMIO_CARGO_PREPARATION_OBSERVATION:observation}:{})}};
+ stale=true;yield {operation:"recipe",path:script,root,args:[...recipe.command],cwd:resolve(root,pkg.directory),sourceSha256:before,environment:{...process.env,SEMIO_WORKSPACE_ROOT:root,SEMIO_CARGO_PREPARATION_ACTIVE:script,...(observation?{SEMIO_CARGO_PREPARATION_OBSERVATION:observation}:{})}};
  if(observation){const captured=admitCargoPreparationObservationV1(JSON.parse(readFileSync(observation,"utf8")));if(captured.root!==root||captured.sourceRoot!==program!.sourceRoot||captured.script!==script||JSON.stringify(captured.command)!==JSON.stringify(recipe.command)||captured.sources.find(input=>input.path===script)?.sha256!==before)throw Error("Preparation observation does not bind its original producer");yield{operation:"current",path:script,root,observation:captured};yield{operation:"current",path:script,root,observation:{...captured,sources:program!.sources,resolverInputs:program!.resolverInputs,inputs:program!.inputs,outputs:[],resolutions:program!.resolutions}};const merged={...captured,resolverInputs:program!.resolverInputs,resolutions:program!.resolutions,sources:[...new Map([...program!.sources,...captured.sources].map(input=>[input.path,input])).values()],inputs:[...new Map([...program!.inputs,...captured.inputs].map(input=>[JSON.stringify([input.path,input.kind]),input])).values()]};yield{operation:"current",path:script,root,observation:merged};recipes.push(merged);}
  diagnostic("recipe",manifest,recipeStart,1);
  yield* refresh();
@@ -415,7 +427,7 @@ function* preparationPlan(root:string,selected:CargoWorkspaceScope,names:readonl
  }
  for(const recipe of recipes)yield{operation:"current",path:recipe.script,root,observation:recipe};
  diagnostic("finished",selected.manifest,started,pending.size);
- return {manifests:[...new Set([...observedManifests,...scopes.map(scope=>scope.manifest)])],owners:[...observedOwners],recipes};
+ return {manifests:[...new Set([...observedManifests,...scopes.map(scope=>scope.manifest)])],owners:[...observedOwners],recipes,inventories:Object.fromEntries([...observedOwners].flatMap(owner=>{const value=inventories.get(owner);return value?[[owner,value]]:[];}))};
 }
 
 export type CargoPreparationSelectionV1=Readonly<{manifest:string;packages:readonly string[]}>;
@@ -462,6 +474,7 @@ export async function prepareCargoWorkspaceInvocation(storage:CargoPreparationSt
  const request=cargoWorkspacePreparationInvocationV1(storage,root,args,cwd,environment);if(!request||cargoPreparationInvocationCurrentV1(storage,root,request))return;
  const result=await captureOwnedCommandResultV1(request.command,request.args,request.cwd,{control,env:request.environment,output:{maximumBytes:16777216,maximumLines:65536}});
  control.signal.throwIfAborted();
+ if(result.status===0&&result.signal===null&&result.stderr)process.stderr.write(result.stderr);
  if(result.status!==0||result.signal!==null){
   const sourceEdit=readCargoPreparationSourceEditV1(result,root);if(sourceEdit)throw sourceEdit;
   const encoding=readOwnedCommandEncodingContextV1(result.stderr)||readOwnedCommandEncodingContextV1(result.stdout),program=readCargoPreparationProgramContextV1(result.stderr)||readCargoPreparationProgramContextV1(result.stdout);throw Error("Native Cargo owner preparation failed status="+result.status+" signal="+result.signal+(encoding?" encoding="+JSON.stringify(encoding):"")+(program?" preparation="+JSON.stringify(program):"")+": "+(result.stderr||result.stdout).slice(-2048));

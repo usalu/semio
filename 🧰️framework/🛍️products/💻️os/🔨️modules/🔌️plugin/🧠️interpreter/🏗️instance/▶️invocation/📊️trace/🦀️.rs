@@ -4,6 +4,40 @@ use std::cell::Cell;
 use std::io::Write;
 use std::sync::OnceLock;
 
+#[cfg(feature = "testkit")]
+impl CoreInstance {
+    /// 📍️ Observes the current function index and instruction byte offset for testkit profiling.
+    pub fn testkit_scalar_site(&self) -> Option<(u32, usize)> {
+        let frame = self.machine.as_ref()?.frames.last()?;
+        Some((frame.function, frame.pc))
+    }
+}
+
+/// 🔎️ Identifies an explicitly requested Input call without exposing its wire payload.
+pub(super) fn input_witness(module: &CoreModule, function: u32, arguments: &[Value], core: &CoreInstance) {
+    static ENABLED: OnceLock<bool> = OnceLock::new();
+    if !*ENABLED.get_or_init(|| std::env::var_os("SEMIO_TRACE_OWNED_INPUT_WITNESS").as_deref() == Some(std::ffi::OsStr::new("1"))) {
+        return;
+    }
+    if !matches!(module.export(OwnedSemioExport::AdmitActorInput.core_name()), Some(ExportKind::Function(expected)) if *expected == function) {
+        return;
+    }
+    let [Value::I32(pointer), Value::I32(length), words @ ..] = arguments else { return };
+    let start = *pointer as u32 as usize;
+    let size = *length as u32 as usize;
+    if words.len() != OriginalJobBudget::SCALAR_ARGUMENT_COUNT || size > 1024 {
+        return;
+    }
+    let Some(bytes) = start.checked_add(size).and_then(|end| core.memories.first()?.bytes.get(start..end)) else { return };
+    let fingerprint = bytes.iter().fold(0xcbf29ce484222325u64, |hash, byte| (hash ^ u64::from(*byte)).wrapping_mul(0x100000001b3));
+    let mut budget = [0; OriginalJobBudget::SCALAR_ARGUMENT_COUNT];
+    for (slot, value) in budget.iter_mut().zip(words) {
+        let Value::I64(word) = value else { return };
+        *slot = *word as u64;
+    }
+    eprintln!("[DEBUG] Core Input witness length={size} fnv1a={fingerprint:016x} scalar_budget={budget:?}");
+}
+
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub(super) enum Category {
     Scalar,

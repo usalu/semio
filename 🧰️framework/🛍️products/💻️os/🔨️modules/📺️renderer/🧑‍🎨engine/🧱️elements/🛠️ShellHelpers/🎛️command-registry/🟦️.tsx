@@ -70,7 +70,7 @@ import {
 } from "../🏷️labels/🟦️.tsx";
 import { FRAMEWORK_CATEGORY_TOOL_ID } from "../🔩️plumbing/🟦️.ts";
 import { windowMeasuresToTreeItems } from "../🪟️window-panes/🎚️window-measures/🟦️.tsx";
-import { renderStagedArgControl } from "../🪟️window-panes/📝️staged-args/🟦️.tsx";
+import { stagedArgTreeItem } from "../🪟️window-panes/📝️staged-args/🟦️.tsx";
 
 //#region ShellHelpers
 //#region 🎛️CommandRegistry
@@ -458,14 +458,10 @@ export function buildCommandCategoryTree(
     sections.push({
       id: `command.category.${expanded.definition.category}.form`,
       label: expanded.definition.label,
-      items: expanded.definition.args.map(
-        (def): TreeDataItem => ({
-          id: `command.${expandedElementKey}.arg.${def.id}`,
-          label: def.label,
-          description: def.description,
-          control: renderStagedArgControl(def, effective[def.id], (value) => onStageArg(expandedKey, def.id, value)),
-        }),
-      ),
+      items: expanded.definition.args.map((def) => stagedArgTreeItem(
+        `command.${expandedElementKey}.arg.${def.id}`,
+        def, effective[def.id], (value) => onStageArg(expandedKey, def.id, value),
+      )),
       actions: [
         {
           id: `command-${expandedElementKey}-execute`,

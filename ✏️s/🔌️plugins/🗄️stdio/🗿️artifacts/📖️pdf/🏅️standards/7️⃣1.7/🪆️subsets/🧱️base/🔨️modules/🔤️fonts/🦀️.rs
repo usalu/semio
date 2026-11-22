@@ -264,7 +264,7 @@ pub struct FontCodec {
     cid_to_gid: BTreeMap<u32, u16>,
     cid_to_gid_identity: bool,
     program: Option<TrueTypeFont>,
-    raw_cff: Option<Vec<u8>>,
+    raw_cff: Option<Cow<'static, [u8]>>,
     code_to_gid: BTreeMap<u32, u16>,
     to_unicode: Option<PdfToUnicode>,
     pub type3_matrix: Option<[f64; 6]>,
@@ -275,15 +275,245 @@ use crate::standards::v1_7::subsets::base::io::error::{PResult, PdfEngineError};
 
 fn program_data(program:&PdfFontProgram,resources:&dyn PdfArtifactResourcePort)->PResult<Vec<u8>> {crate::standards::v1_7::subsets::base::io::foreign_artifacts::require_font_artifact_kind(program)?;match resources.resolve(program.reference())? {crate::standards::v1_7::subsets::base::schema::snapshot::PdfObject::Stream {data,..}=>Ok(data),_=>Err(PdfEngineError::Unsupported("font artifact is not a native stream".into()))}}
 
+
+fn standard_outline_program(name: &str) -> Option<&'static [u8]> {
+    Some(match name {
+        "Helvetica" => semio_s_artifact_stdio_pdf_base14_sans::NIMBUSSANS_REGULAR,
+        "Helvetica-Bold" => semio_s_artifact_stdio_pdf_base14_sans::NIMBUSSANS_BOLD,
+        "Helvetica-Oblique" => semio_s_artifact_stdio_pdf_base14_sans::NIMBUSSANS_ITALIC,
+        "Helvetica-BoldOblique" => semio_s_artifact_stdio_pdf_base14_sans::NIMBUSSANS_BOLDITALIC,
+        "Times-Roman" => semio_s_artifact_stdio_pdf_base14_serif::NIMBUSROMAN_REGULAR,
+        "Times-Bold" => semio_s_artifact_stdio_pdf_base14_serif::NIMBUSROMAN_BOLD,
+        "Times-Italic" => semio_s_artifact_stdio_pdf_base14_serif_italic::NIMBUSROMAN_ITALIC,
+        "Times-BoldItalic" => semio_s_artifact_stdio_pdf_base14_serif_italic::NIMBUSROMAN_BOLDITALIC,
+        "Courier" => semio_s_artifact_stdio_pdf_base14_mono::NIMBUSMONOPS_REGULAR,
+        "Courier-Bold" => semio_s_artifact_stdio_pdf_base14_mono::NIMBUSMONOPS_BOLD,
+        "Courier-Oblique" => semio_s_artifact_stdio_pdf_base14_mono_italic::NIMBUSMONOPS_ITALIC,
+        "Courier-BoldOblique" => semio_s_artifact_stdio_pdf_base14_mono_italic::NIMBUSMONOPS_BOLDITALIC,
+        "Symbol" => semio_s_artifact_stdio_pdf_base14_symbol::STANDARDSYMBOLSPS,
+        "ZapfDingbats" => semio_s_artifact_stdio_pdf_base14_symbol::D050000L,
+        _ => return None,
+    })
+}
+
+fn zapf_unicode(name: &str) -> Option<&'static str> {
+    const GLYPHS: &[(&str, &str)] = &[
+        ("a1", "✁"),
+        ("a10", "✡"),
+        ("a100", "❞"),
+        ("a101", "❡"),
+        ("a102", "❢"),
+        ("a103", "❣"),
+        ("a104", "❤"),
+        ("a105", "✐"),
+        ("a106", "❥"),
+        ("a107", "❦"),
+        ("a108", "❧"),
+        ("a109", "♠"),
+        ("a11", "☛"),
+        ("a110", "♥"),
+        ("a111", "♦"),
+        ("a112", "♣"),
+        ("a117", "✉"),
+        ("a118", "✈"),
+        ("a119", "✇"),
+        ("a12", "☞"),
+        ("a120", "①"),
+        ("a121", "②"),
+        ("a122", "③"),
+        ("a123", "④"),
+        ("a124", "⑤"),
+        ("a125", "⑥"),
+        ("a126", "⑦"),
+        ("a127", "⑧"),
+        ("a128", "⑨"),
+        ("a129", "⑩"),
+        ("a13", "✌"),
+        ("a130", "❶"),
+        ("a131", "❷"),
+        ("a132", "❸"),
+        ("a133", "❹"),
+        ("a134", "❺"),
+        ("a135", "❻"),
+        ("a136", "❼"),
+        ("a137", "❽"),
+        ("a138", "❾"),
+        ("a139", "❿"),
+        ("a14", "✍"),
+        ("a140", "➀"),
+        ("a141", "➁"),
+        ("a142", "➂"),
+        ("a143", "➃"),
+        ("a144", "➄"),
+        ("a145", "➅"),
+        ("a146", "➆"),
+        ("a147", "➇"),
+        ("a148", "➈"),
+        ("a149", "➉"),
+        ("a15", "✎"),
+        ("a150", "➊"),
+        ("a151", "➋"),
+        ("a152", "➌"),
+        ("a153", "➍"),
+        ("a154", "➎"),
+        ("a155", "➏"),
+        ("a156", "➐"),
+        ("a157", "➑"),
+        ("a158", "➒"),
+        ("a159", "➓"),
+        ("a16", "✏"),
+        ("a160", "➔"),
+        ("a161", "→"),
+        ("a162", "➣"),
+        ("a163", "↔"),
+        ("a164", "↕"),
+        ("a165", "➙"),
+        ("a166", "➛"),
+        ("a167", "➜"),
+        ("a168", "➝"),
+        ("a169", "➞"),
+        ("a17", "✑"),
+        ("a170", "➟"),
+        ("a171", "➠"),
+        ("a172", "➡"),
+        ("a173", "➢"),
+        ("a174", "➤"),
+        ("a175", "➥"),
+        ("a176", "➦"),
+        ("a177", "➧"),
+        ("a178", "➨"),
+        ("a179", "➩"),
+        ("a18", "✒"),
+        ("a180", "➫"),
+        ("a181", "➭"),
+        ("a182", "➯"),
+        ("a183", "➲"),
+        ("a184", "➳"),
+        ("a185", "➵"),
+        ("a186", "➸"),
+        ("a187", "➺"),
+        ("a188", "➻"),
+        ("a189", "➼"),
+        ("a19", "✓"),
+        ("a190", "➽"),
+        ("a191", "➾"),
+        ("a192", "➚"),
+        ("a193", "➪"),
+        ("a194", "➶"),
+        ("a195", "➹"),
+        ("a196", "➘"),
+        ("a197", "➴"),
+        ("a198", "➷"),
+        ("a199", "➬"),
+        ("a2", "✂"),
+        ("a20", "✔"),
+        ("a200", "➮"),
+        ("a201", "➱"),
+        ("a202", "✃"),
+        ("a203", "❐"),
+        ("a204", "❒"),
+        ("a205", "❮"),
+        ("a206", "❰"),
+        ("a21", "✕"),
+        ("a22", "✖"),
+        ("a23", "✗"),
+        ("a24", "✘"),
+        ("a25", "✙"),
+        ("a26", "✚"),
+        ("a27", "✛"),
+        ("a28", "✜"),
+        ("a29", "✢"),
+        ("a3", "✄"),
+        ("a30", "✣"),
+        ("a31", "✤"),
+        ("a32", "✥"),
+        ("a33", "✦"),
+        ("a34", "✧"),
+        ("a35", "★"),
+        ("a36", "✩"),
+        ("a37", "✪"),
+        ("a38", "✫"),
+        ("a39", "✬"),
+        ("a4", "☎"),
+        ("a40", "✭"),
+        ("a41", "✮"),
+        ("a42", "✯"),
+        ("a43", "✰"),
+        ("a44", "✱"),
+        ("a45", "✲"),
+        ("a46", "✳"),
+        ("a47", "✴"),
+        ("a48", "✵"),
+        ("a49", "✶"),
+        ("a5", "✆"),
+        ("a50", "✷"),
+        ("a51", "✸"),
+        ("a52", "✹"),
+        ("a53", "✺"),
+        ("a54", "✻"),
+        ("a55", "✼"),
+        ("a56", "✽"),
+        ("a57", "✾"),
+        ("a58", "✿"),
+        ("a59", "❀"),
+        ("a6", "✝"),
+        ("a60", "❁"),
+        ("a61", "❂"),
+        ("a62", "❃"),
+        ("a63", "❄"),
+        ("a64", "❅"),
+        ("a65", "❆"),
+        ("a66", "❇"),
+        ("a67", "❈"),
+        ("a68", "❉"),
+        ("a69", "❊"),
+        ("a7", "✞"),
+        ("a70", "❋"),
+        ("a71", "●"),
+        ("a72", "❍"),
+        ("a73", "■"),
+        ("a74", "❏"),
+        ("a75", "❑"),
+        ("a76", "▲"),
+        ("a77", "▼"),
+        ("a78", "◆"),
+        ("a79", "❖"),
+        ("a8", "✟"),
+        ("a81", "◗"),
+        ("a82", "❘"),
+        ("a83", "❙"),
+        ("a84", "❚"),
+        ("a85", "❯"),
+        ("a86", "❱"),
+        ("a87", "❲"),
+        ("a88", "❳"),
+        ("a89", "❨"),
+        ("a9", "✠"),
+        ("a90", "❩"),
+        ("a91", "❬"),
+        ("a92", "❭"),
+        ("a93", "❪"),
+        ("a94", "❫"),
+        ("a95", "❴"),
+        ("a96", "❵"),
+        ("a97", "❛"),
+        ("a98", "❜"),
+        ("a99", "❝"),
+    ];
+    GLYPHS.binary_search_by_key(&name, |(glyph, _)| *glyph).ok().map(|index| GLYPHS[index].1)
+}
+
 impl FontCodec {
     /// 🏗️ Builds the codec for `font`.
     pub fn new(font: &PdfFont,resources:&dyn PdfArtifactResourcePort) -> PResult<Self> {
         let mut codec = Self { composite: false, cid_codec: None, code_to_text: BTreeMap::new(), text_to_code: HashMap::new(), simple_widths: BTreeMap::new(), default_width: 0.0, cid_widths: BTreeMap::new(), cid_to_gid: BTreeMap::new(), cid_to_gid_identity: true, program: None, raw_cff: None, code_to_gid: BTreeMap::new(), to_unicode: font.to_unicode.clone(), type3_matrix: None };
         match &font.kind {
             PdfFontKind::Type1 { base_font, encoding, first_char, widths, descriptor, program } => {
+                let standard = standard_font(base_font);
                 let symbolic = descriptor.as_ref().is_some_and(|d| d.flags & 4 != 0 && d.flags & 32 == 0);
                 let raw = match program {
-                    Some(program @ PdfFontProgram::Cff { .. }) => Some(program_data(program, resources)?),
+                    Some(program @ PdfFontProgram::Cff { .. }) => Some(Cow::Owned(program_data(program, resources)?)),
+                    None => standard.and_then(|font| standard_outline_program(font.name)).map(Cow::Borrowed),
                     _ => None,
                 };
                 let cff = raw.as_deref().and_then(CffOutlineFont::new);
@@ -292,7 +522,7 @@ impl FontCodec {
                     Some(PdfFontProgram::Cff { .. }) => cff.as_ref().and_then(CffOutlineFont::builtin_encoding).unwrap_or_default(),
                     _ => standard_font(base_font).filter(|f| f.symbolic).map(|f| f.builtin_encoding.iter().map(|(c, n)| (*c, n.to_string())).collect()).unwrap_or_default(),
                 };
-                let names = simple_names(encoding, &builtin, raw.is_none() && symbolic && !builtin.is_empty());
+                let names = simple_names(encoding, &builtin, (raw.is_none() || program.is_none()) && symbolic && !builtin.is_empty());
                 if let Some(cff) = cff {
                     let mut glyphs = BTreeMap::new();
                     if cff.visit_glyph_names(|name, id| { glyphs.insert(name, id); }).is_some() {
@@ -316,7 +546,7 @@ impl FontCodec {
                         }
                     }
                 }
-                codec.install_simple(&names, *first_char, widths, standard_font(base_font), descriptor.as_ref().and_then(|d| d.missing_width), symbolic || standard_font(base_font).is_some_and(|f| f.symbolic));
+                codec.install_simple(&names, *first_char, widths, standard, descriptor.as_ref().and_then(|d| d.missing_width), symbolic || standard.is_some_and(|f| f.symbolic));
                 if widths.is_empty() {
                     if let Some(font) = &codec.program {
                         for (&code, &glyph) in &codec.code_to_gid {
@@ -381,7 +611,7 @@ impl FontCodec {
                     _ => None,
                 };
                 let raw = match &descendant.program {
-                    Some(program @ PdfFontProgram::CidCff { .. }) => Some(program_data(program, resources)?),
+                    Some(program @ PdfFontProgram::CidCff { .. }) => Some(Cow::Owned(program_data(program, resources)?)),
                     _ => None,
                 };
                 if descendant.cid_to_gid.is_none() || raw.is_some() {
@@ -417,8 +647,10 @@ impl FontCodec {
     }
 
     fn install_simple(&mut self, names: &BTreeMap<u32, String>, first_char: u32, widths: &[f64], standard: Option<&StandardFontMetrics>, missing_width: Option<f64>, symbolic: bool) {
+        let dingbats = standard.is_some_and(|font| font.name == "ZapfDingbats");
         for (code, name) in names {
-            if let Some(text) = glyph_name_to_unicode(name) {
+            let text = dingbats.then(|| zapf_unicode(name)).flatten().map(str::to_owned).or_else(|| glyph_name_to_unicode(name));
+            if let Some(text) = text {
                 self.text_to_code.entry(text.clone()).or_insert((*code, 1));
                 self.code_to_text.insert(*code, text);
             } else if (0x20..=0x7E).contains(code) && name != ".notdef" {

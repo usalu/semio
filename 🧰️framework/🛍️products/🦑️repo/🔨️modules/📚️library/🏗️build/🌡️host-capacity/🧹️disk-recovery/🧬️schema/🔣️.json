@@ -7,6 +7,7 @@
       "const": {
         "version": 1,
         "collectorBudgetMilliseconds": 600000,
+        "consumerBudgetMilliseconds": 5000,
         "consumerCount": 5,
         "measureEntryLimit": 2000000,
         "environmentChild": "SEMIO_DISK_RECOVERY_CHILD",
@@ -39,7 +40,7 @@
         "class": {"enum": ["derivable", "recoverable", "content", "store", "image"]},
         "relief": {"enum": ["host", "image", "none"]},
         "root": {"type": "string", "minLength": 1},
-        "collector": {"enum": ["ledger", "cas-lru", "staging-sweep", "image-sweep", "age-prune", "log-rotate", "image-reset", "store-compaction", "manual"]},
+        "collector": {"enum": ["ledger", "cas-lru", "staging-sweep", "image-sweep", "age-prune", "log-rotate", "native-shards", "image-reset", "store-compaction", "manual"]},
         "command": {"type": "string", "minLength": 1},
         "bound": {"type": "object", "additionalProperties": false, "required": ["en", "de"], "properties": {"en": {"type": "string", "minLength": 1}, "de": {"type": "string", "minLength": 1}}}
       }
@@ -49,6 +50,7 @@
         {"id": "cargo-incremental", "priority": 10, "class": "derivable", "relief": "image", "root": "{workspace}/.cache/b/r/m/cargo", "collector": "ledger", "command": "repo cache gc --area=cargo-store", "bound": {"en": "Cargo incremental caches, trimmed by the ledger collector (area cargo-store).", "de": "Cargo-Inkrementalcaches, vom Ledger-Sammler gekürzt (Bereich cargo-store)."}},
         {"id": "compile-caches", "priority": 62, "class": "derivable", "relief": "host", "root": "{workspace}/.🧬semio/🦑️repo/⚡️cache", "collector": "ledger", "command": "repo cache gc", "bound": {"en": "Go, Vite, Vitest and compile caches below their ledger ages and budgets.", "de": "Go-, Vite-, Vitest- und Compile-Caches unter ihren Ledger-Altern und -Budgets."}},
         {"id": "tool-generations", "priority": 20, "class": "derivable", "relief": "image", "root": "{workspace}/.cache/b/t/m/nx", "collector": "ledger", "command": "repo cache gc --area=nx-tooling,nx-tmp", "bound": {"en": "Newest few Nx tooling generations plus the current one.", "de": "Neueste paar Nx-Werkzeuggenerationen plus die aktuelle."}},
+        {"id": "nx-native-data", "priority": 25, "class": "derivable", "relief": "image", "root": "{workspace}/.cache/b/n/m", "collector": "native-shards", "command": "repo cache gc", "bound": {"en": "The Nx file map (nx_files.nxt) inside each native Nx shard, removed when the shard cannot rewrite it next to the old copy and no run holds the shard; Nx rebuilds it.", "de": "Die Nx-Dateikarte (nx_files.nxt) in jedem nativen Nx-Shard, entfernt, wenn der Shard sie nicht neben die alte Kopie schreiben kann und kein Lauf ihn hält; Nx baut sie neu auf."}},
         {"id": "closure-layers", "priority": 30, "class": "derivable", "relief": "image", "root": "{workspace}/.cache/b/g/m", "collector": "ledger", "command": "repo cache gc --area=graph-inference", "bound": {"en": "Superseded closure entries and unreferenced layers after a grace.", "de": "Abgelöste Abschlusseinträge und unreferenzierte Schichten nach einer Karenz."}},
         {"id": "task-views", "priority": 35, "class": "derivable", "relief": "host", "root": "{workspace}/.cache/f/tv", "collector": "age-prune", "command": "repo cache gc", "bound": {"en": "A pinned task root goes after maximumIdleMilliseconds unused, the least recently used beyond maximumViews or maximumLogicalBytes go first; a view a running task holds is never collected.", "de": "Eine fixierte Aufgabenwurzel geht nach maximumIdleMilliseconds ohne Nutzung, die am längsten ungenutzten jenseits von maximumViews oder maximumLogicalBytes zuerst; eine Sicht, die eine laufende Aufgabe hält, wird nie gesammelt."}},
         {"id": "stale-waves", "priority": 40, "class": "derivable", "relief": "host", "root": "{workspace}/.cache/f/owner-pool-waves", "collector": "age-prune", "command": "repo cache gc", "bound": {"en": "A wave directory goes after maximumAgeMilliseconds without a write, the newest keepNewest stay.", "de": "Ein Wellenverzeichnis geht nach maximumAgeMilliseconds ohne Schreiben, die neuesten keepNewest bleiben."}},
@@ -72,6 +74,18 @@
           "recovery.start": {
             "en": "Partition {partition} has {free} free, below the {target} this command needs with its reserve: freeing derivable caches first, then the least recently used cache objects.",
             "de": "Partition {partition} hat {free} frei, weniger als die {target}, die dieser Befehl mit seiner Reserve braucht: zuerst ableitbare Caches, dann die am längsten ungenutzten Cache-Objekte werden freigegeben."
+          },
+          "recovery.collector-start": {
+            "en": "Starting collector {id}.",
+            "de": "Sammler {id} startet."
+          },
+          "recovery.consumer-measure": {
+            "en": "Measuring disk consumer {id}.",
+            "de": "Ermittle Speicherverbrauch von {id}."
+          },
+          "recovery.consumer-budget": {
+            "en": "Stopped measuring disk consumers at the {budget} ms budget. The volume has {free} free and needs {target}.",
+            "de": "Die Messung der Speicherverbraucher hat das Budget von {budget} ms erreicht. {free} frei, {target} erforderlich."
           },
           "recovery.step": {
             "en": "Collector {id} freed {freed}; {free} free now.",
@@ -110,8 +124,64 @@
             "de": "Image {id}: Die Freigabe lieferte kein stabiles Ergebnis zur Belegung."
           },
           "image.reclaim-skipped": {
-            "en": "Image {id} could not be reclaimed in place ({slack} of slack): it is held, retiring or not bloated enough.",
-            "de": "Image {id} konnte nicht an Ort und Stelle zurückgegeben werden ({slack} Überhang): es ist gehalten, wird abgeräumt oder nicht genug aufgebläht."
+            "en": "Image {id} could not be reclaimed in place ({slack} of slack): {reason}.",
+            "de": "Image {id} konnte nicht an Ort und Stelle zurückgegeben werden ({slack} Überhang): {reason}."
+          },
+          "image.reclaim-reason-platform": {
+            "en": "there is no reclaim mechanism for this platform",
+            "de": "für diese Plattform gibt es kein Verfahren zur Freigabe"
+          },
+          "image.reclaim-reason-retirement-pending": {
+            "en": "image retirement is pending",
+            "de": "das Abräumen des Images steht aus"
+          },
+          "image.reclaim-reason-not-due": {
+            "en": "the routine reclaim criterion was not met",
+            "de": "das Kriterium für die reguläre Freigabe wurde nicht erfüllt"
+          },
+          "image.reclaim-reason-recovery-profile": {
+            "en": "this partition is not eligible for automatic reclaim",
+            "de": "diese Partition ist nicht für die automatische Freigabe zugelassen"
+          },
+          "image.reclaim-reason-backing-unavailable": {
+            "en": "the required image backing or mount could not be confirmed",
+            "de": "die erforderliche Image-Datei oder Einhängung konnte nicht bestätigt werden"
+          },
+          "image.reclaim-reason-measurement-unavailable": {
+            "en": "filesystem occupancy could not be measured",
+            "de": "die Dateisystembelegung konnte nicht gemessen werden"
+          },
+          "image.reclaim-reason-recovery-device-mismatch": {
+            "en": "the backing volume did not match the requested device",
+            "de": "das Volume der Image-Datei entspricht nicht dem angeforderten Gerät"
+          },
+          "image.reclaim-reason-recovery-pressure-unconfirmed": {
+            "en": "the current volume did not meet the requested disk pressure",
+            "de": "das aktuelle Volume erfüllt die angeforderten Bedingungen zum Platzmangel nicht"
+          },
+          "image.reclaim-reason-recovery-slack-insufficient": {
+            "en": "the measured slack no longer met the reclaim floor",
+            "de": "der gemessene Überhang erreicht die Mindestgröße für die Freigabe nicht"
+          },
+          "image.reclaim-reason-inspection-failed": {
+            "en": "the image inspection failed",
+            "de": "die Prüfung des Images ist fehlgeschlagen"
+          },
+          "image.reclaim-reason-lease-timeout": {
+            "en": "the exclusive image lease could not be acquired in the nonwaiting attempt",
+            "de": "die exklusive Image-Lease konnte beim Versuch ohne Wartezeit nicht erworben werden"
+          },
+          "image.reclaim-reason-lease-failed": {
+            "en": "the exclusive image lease request failed",
+            "de": "die Anforderung der exklusiven Image-Lease ist fehlgeschlagen"
+          },
+          "image.reclaim-reason-lease-release-failed": {
+            "en": "release of the exclusive image lease failed",
+            "de": "die exklusive Image-Lease konnte nicht freigegeben werden"
+          },
+          "image.reclaim-reason-reclaim-failed": {
+            "en": "the native reclaim cycle failed",
+            "de": "die native Freigabe ist fehlgeschlagen"
           },
           "image.reclaim-failed": {
             "en": "Image {id} reclaim failed: {message}",

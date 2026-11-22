@@ -6,7 +6,7 @@ use super::*;
 //#region 📤️📥️DocumentIO
 #[test]
 fn import_identity_matches_neutral_fixtures_and_independent_json() {
-    let text = semio_framework_test_fixtures::fixture_text!("../../../🎮️commands/📥️import-snapshot/🧫️fixtures/🔣️.json");
+    let text = semio_framework_test_fixtures::fixture_text!("../../../../🎮️commands/📥️import-snapshot/🧫️fixtures/🔣️.json");
     let corpus: serde_json::Value = serde_json::from_str(text).expect("independent import corpus");
     assert_eq!(corpus["schema"].as_str(), Some(PUZZLE5D_SCHEMA));
     for case in corpus["cases"].as_array().expect("import cases") {
@@ -98,6 +98,7 @@ fn catalog_extensions_round_trip_against_independent_json() {
 /// silently into an empty 5d document instead of failing. This law is the one place that refuses it.
 #[test]
 fn every_shipped_example_document_really_carries_its_content() {
+    admit_capsule_dream_fixture();
     for (id, document, parts, fasteners, catalogs) in [
         (PUZZLE5D_EXAMPLE_CONCRETE_FOREST, concrete_forest_example_document(), 1, 0, false),
         (PUZZLE5D_EXAMPLE_NAKAGIN, nakagin_example_document(), 180, 179, true),
@@ -117,6 +118,7 @@ fn every_shipped_example_document_really_carries_its_content() {
 /// whole file the framework hands the import (`puzzle5d_decode_document`).
 #[test]
 fn export_import_round_trips_every_shipped_example_byte_for_byte() {
+    admit_capsule_dream_fixture();
     for document in [concrete_forest_example_document(), nakagin_example_document(), capsule_dream_example_document()] {
         assert!(!document.parts.is_empty(), "a round trip over an empty document proves nothing");
         let exported = export_snapshot::puzzle5d_export_json(&document);
@@ -131,6 +133,7 @@ fn export_import_round_trips_every_shipped_example_byte_for_byte() {
 /// shipped examples are deliberately one case each.
 #[test]
 fn export_publication_picks_its_lane_by_payload_size() {
+    admit_capsule_dream_fixture();
     let inline_budget = export_snapshot::puzzle5d_export_inline_budget_bytes();
     let segmented_budget = export_snapshot::puzzle5d_export_segmented_budget_bytes().expect("segmented budget");
     assert!(inline_budget < segmented_budget, "the inline page must be the narrower of the two budgets");
@@ -159,6 +162,7 @@ fn export_publication_picks_its_lane_by_payload_size() {
 /// never lands as two files with one name; a document with no label keeps the app-generic name.
 #[test]
 fn export_filename_follows_the_document_label() {
+    admit_capsule_dream_fixture();
     assert_eq!(export_snapshot::puzzle5d_export_filename(&concrete_forest_example_document()), "concrete-forest.json");
     assert_eq!(export_snapshot::puzzle5d_export_filename(&nakagin_example_document()), "nakagin-capsule-tower.json");
     assert_eq!(export_snapshot::puzzle5d_export_filename(&capsule_dream_example_document()), "capsule-dream.json");
@@ -305,6 +309,7 @@ pub(super) fn declared_actions(definition: &semio_plugin::AppDefinition) -> Vec<
 /// dialog and the standalone arg form offer the SAME select so they cannot drift.
 #[semio_framework_async_macros::async_test]
 async fn add_part_dialog_enumerates_live_part_kinds() {
+    admit_capsule_dream_fixture();
     let definition = create_puzzle5d_app();
     let dialog = definition.dialogs.iter().find(|dialog| dialog.id == open_add_part_dialog::PUZZLE5D_ADD_PART_DIALOG).expect("addPart dialog");
     let arg = dialog.args.iter().find(|arg| arg.id == "partKind").expect("the dialog declares the partKind select");
@@ -385,6 +390,14 @@ fn context_menu_actions(rows: &[semio_plugin::ContextMenuItemSpec]) -> Vec<Strin
     out
 }
 
+/// 🎬️ Loads the authored scene with a part, grip and fastener for the menu subject laws.
+fn context_menu_fixture() -> Puzzle5dTestApp {
+    let mut app = app_with_registry();
+    dispatch(&mut app, "setActiveExample", Some(&semio_framework_pack_json::json!({ "exampleId": PUZZLE5D_EXAMPLE_NAKAGIN })), None)
+        .expect("load the authored menu scene");
+    app
+}
+
 /// 🖱️ LAW: EVERY context-menu row resolves to something the app can really dispatch — a declared
 /// action classified `Migrated` (an unmigrated verb is hard-dead at the dispatch gate, so a row
 /// pointing at one is a visibly dead menu entry), or one of the four framework-reserved verbs this
@@ -398,16 +411,15 @@ async fn every_context_menu_row_resolves_to_a_live_verb() {
         .filter(|action| action.semantics.execution.interactive_job == InteractiveJobClassification::Migrated)
         .map(|action| action.id.as_str())
         .collect();
-    let mut app = app_with_registry();
-    dispatch(&mut app, "setActiveExample", Some(&semio_framework_pack_json::json!({ "exampleId": PUZZLE5D_EXAMPLE_NAKAGIN })), None).expect("load nakagin");
+    let mut app = context_menu_fixture();
     let part_id = first_part_id(&app);
     let projection = projection_of(&app);
     let grip_id = projection
         .get("parts")
         .and_then(Value::as_array)
         .and_then(|parts| parts.iter().find_map(|part| Some(puzzle5d_grip_full_id(part.get("id")?.as_str()?, part.get("grips")?.as_array()?.first()?.get("id")?.as_str()?))))
-        .expect("a shipped part carries a grip");
-    let fastener_id = projection.get("fasteners").and_then(Value::as_array).and_then(|rows| rows.first()).and_then(|row| row.get("id")).and_then(Value::as_str).expect("a shipped fastener").to_string();
+        .expect("a fixture part carries a grip");
+    let fastener_id = projection.get("fasteners").and_then(Value::as_array).and_then(|rows| rows.first()).and_then(|row| row.get("id")).and_then(Value::as_str).expect("the fixture fastener").to_string();
     let surfaces = [
         vec![],
         vec![(PUZZLE5D_GRANULARITY_PART, vec![part_id.clone()])],
@@ -432,16 +444,15 @@ async fn every_context_menu_row_resolves_to_a_live_verb() {
 /// delete. Each branch names the verbs that branch exists for.
 #[semio_framework_async_macros::async_test]
 async fn context_menu_rows_follow_the_selected_granularity() {
-    let mut app = app_with_registry();
-    dispatch(&mut app, "setActiveExample", Some(&semio_framework_pack_json::json!({ "exampleId": PUZZLE5D_EXAMPLE_NAKAGIN })), None).expect("load nakagin");
+    let mut app = context_menu_fixture();
     let part_id = first_part_id(&app);
     let projection = projection_of(&app);
     let grip_id = projection
         .get("parts")
         .and_then(Value::as_array)
         .and_then(|parts| parts.iter().find_map(|part| Some(puzzle5d_grip_full_id(part.get("id")?.as_str()?, part.get("grips")?.as_array()?.first()?.get("id")?.as_str()?))))
-        .expect("a shipped part carries a grip");
-    let fastener_id = projection.get("fasteners").and_then(Value::as_array).and_then(|rows| rows.first()).and_then(|row| row.get("id")).and_then(Value::as_str).expect("a shipped fastener").to_string();
+        .expect("a fixture part carries a grip");
+    let fastener_id = projection.get("fasteners").and_then(Value::as_array).and_then(|rows| rows.first()).and_then(|row| row.get("id")).and_then(Value::as_str).expect("the fixture fastener").to_string();
 
     let empty = context_menu_actions(&context_menu_of(&mut app, vec![]));
     for expected in ["selectAll", "paste", "openAddPartDialog"] {

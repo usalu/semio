@@ -73,7 +73,7 @@ fn close_all<const N: usize>(ingress: &mut ColdDocumentPairIngressRegistry<N>, l
 }
 
 #[test]
-fn cold_pair_ingress_streams_the_exact_four_mibibyte_pair_and_loads_once() {
+fn cold_pair_ingress_streams_the_exact_sixteen_mibibyte_pair_and_loads_once() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     let pack = patterned(fixture["exact"]["packLength"].as_u64().unwrap() as usize, 31, 7);
     let spr = patterned(fixture["exact"]["sprLength"].as_u64().unwrap() as usize, 17, 11);
@@ -102,7 +102,7 @@ fn cold_pair_ingress_streams_the_exact_four_mibibyte_pair_and_loads_once() {
         matches!(status, ColdPairIngressStatus::Applied(receipt) if receipt.lifetime == exact_header.lifetime && receipt.transfer_generation == 51 && receipt.baseline_frontier == exact_header.baseline_frontier && receipt.aggregate_sha256 == exact_header.aggregate_sha256)
     );
     assert!(ingress.is_applied(exact_header.lifetime));
-    assert!(matches!(ingress.accept_page(&page(&exact_header, &pack, &spr, 63), Some(exact_header.lifetime)), ColdPairIngressStatus::Backpressure(_)));
+    assert!(matches!(ingress.accept_page(&page(&exact_header, &pack, &spr, COLD_PAIR_MAXIMUM_PAGES - 1), Some(exact_header.lifetime)), ColdPairIngressStatus::Backpressure(_)));
     let (wiped, steps) = close_all(&mut ingress, exact_header.lifetime);
     assert_eq!(wiped, pack.len() + spr.len());
     assert_eq!(steps, COLD_PAIR_MAXIMUM_PAGES as usize);
@@ -184,7 +184,7 @@ fn cold_pair_ingress_final_live_fence_rejects_post_await_revocation() {
 
 #[test]
 fn cold_pair_ingress_charges_aggregate_reserved_capacity_until_final_close() {
-    let pack = patterned(2 * 1024 * 1024, 3, 7);
+    let pack = patterned(8 * 1024 * 1024, 3, 7);
     let spr = vec![9];
     let first_lifetime = ActorInstanceLifetime { activation_generation: 41, instance_id: 1, guest_lifetime: 13 };
     let second_lifetime = ActorInstanceLifetime { activation_generation: 41, instance_id: 2, guest_lifetime: 14 };

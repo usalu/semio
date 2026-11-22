@@ -1,0 +1,40 @@
+[
+  {
+    "name": "a startup provider that reappears after a missing import lets the next slice process finish",
+    "initialSource": null,
+    "repairSource": "export const ready=true;",
+    "result": {
+      "exit": null,
+      "code": null
+    },
+    "starts": 2,
+    "restarts": [
+      75
+    ]
+  },
+  {
+    "name": "an ordinary exception during startup is a terminal failure",
+    "initialSource": "throw new Error(\"ordinary bootstrap failure\");",
+    "repairSource": null,
+    "result": {
+      "exit": 1,
+      "code": null
+    },
+    "starts": 1,
+    "restarts": []
+  },
+  {
+    "name": "a persistently missing startup provider exhausts the existing same-cause limit",
+    "initialSource": null,
+    "repairSource": null,
+    "result": {
+      "exit": 75,
+      "code": "slice-worker-failing"
+    },
+    "starts": 3,
+    "restarts": [
+      75,
+      75
+    ]
+  }
+]

@@ -1,0 +1,5 @@
+humans/parent-carrying-toddler
+humans/parent-with-stroller
+humans/pregnant-person
+humans/person-cooking
+humans/person-with-umbrella

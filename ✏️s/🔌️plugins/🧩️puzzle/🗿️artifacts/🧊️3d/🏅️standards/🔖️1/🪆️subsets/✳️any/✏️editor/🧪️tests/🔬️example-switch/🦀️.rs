@@ -1,6 +1,16 @@
 use crate::context::*;
 use super::*;
 
+#[semio_framework_async_macros::async_test]
+async fn local_fill_count_publishes_through_the_config_store() {
+    let mut app = app().await;
+    let object_count_before = object_count(&app);
+    let next = if Puzzle3dConfig::default().fill_count == 3 { 4 } else { 3 };
+    dispatch(&mut app, "setFillCount", Some(&json!({ "count": next })), None).await.expect("publish fill count");
+    assert_eq!(app.stores.config_store.snapshot_read_original().expect("published config").get().fill_count, next);
+    assert_eq!(object_count(&app), object_count_before);
+}
+
 /// 🏷️ Wave B30: the ACTIVE EXAMPLE must be known from the first render, not only after the user
 /// switches. `ArtifactApp::initial_snapshot` seeds a fresh document from `default_scene_snapshot()` — the
 /// Concrete Forest example — while `Puzzle3dConfig::active_example_id` defaulted to `""`, i.e. "this
@@ -28,6 +38,8 @@ async fn a_fresh_session_config_names_the_example_its_document_was_seeded_from()
     );
     dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE3D_EXAMPLE_NAKAGIN })), None).await.expect("nakagin switch");
     assert_ne!(object_count(&app), seeded, "the switch must actually replace the document it was measured against");
+    let config = app.stores.config_store.snapshot_read_original().expect("published example config");
+    assert_eq!(config.get().active_example_id, PUZZLE3D_EXAMPLE_NAKAGIN);
 }
 
 /// 🎵️ Wave W-X: a whole-scene_snapshot switch must stay cursorized (hostile law) but land as ONE

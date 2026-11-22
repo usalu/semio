@@ -44,8 +44,8 @@ impl JackComposition for SemioJackComposition{
  fn initial_snapshot()->jack::standards::v1::subsets::any::schema::snapshot::JackSnapshot{
   let asset=semio_framework_pack_json::parse(include_str!("🖼️assets/🎬️demo/🔣️.query.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).expect("authored query scene JSON");
   let scene:jack::standards::v1::subsets::any::schema::ast::JackQueryGraphSnapshot=semio_framework_value::FromValue::from_value(semio_framework_pack_json::to_dsl_value(&asset)).expect("authored query scene schema");
-  let mut snapshot=jack::standards::v1::subsets::any::schema::snapshot::JackSnapshot::with_content::<Self>(scene.schema,scene.name,scene.manifest_id,scene.manifest,scene.camera,jack::standards::v1::subsets::any::schema::content::JackWorkingScene{nodes:scene.nodes,edges:scene.edges},scene.root_node_id);
-  snapshot.query=scene.query;snapshot.resolve_manifest().expect("authored scene manifest");snapshot
+  let mut snapshot=jack::standards::v1::subsets::any::schema::snapshot::JackSnapshot::with_content::<Self>(scene.schema,scene.name,scene.manifest_id,scene.camera,jack::standards::v1::subsets::any::schema::content::JackWorkingScene{nodes:scene.nodes,edges:scene.edges},scene.root_node_id);
+  snapshot.query=scene.query;snapshot.manifest().expect("authored scene manifest");snapshot
  }
  fn example_snapshot(id:&str)->Option<jack::standards::v1::subsets::any::schema::snapshot::JackSnapshot>{matches!(id,"demo"|"nakagin"|"nakagin-capsule-tower"|"branch-chain").then(Self::initial_snapshot)}
  fn initial_viewer_snapshot()->jack::standards::v1::subsets::any::schema::snapshot::JackSnapshot{jack::standards::v1::subsets::any::schema::snapshot::empty_trinity_graph_snapshot::<Self>()}

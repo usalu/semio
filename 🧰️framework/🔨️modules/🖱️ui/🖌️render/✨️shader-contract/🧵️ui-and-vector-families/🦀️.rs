@@ -142,7 +142,7 @@ if (kind == 9) {
     let two_pi = 6.28318530718;
     let duration = 1.6;
     let phase = globals._pad.x / duration;
-    let pulse = 0.5 - 0.5 * cos(two_pi * phase);
+    let pulse = 0.85 + 0.15 * cos(two_pi * phase);
     let alpha = border_alpha * pulse * in.color.a;
     return vec4<f32>(in.color.rgb, alpha);
 }

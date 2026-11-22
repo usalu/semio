@@ -155,6 +155,17 @@ impl ShellInputState {
         semio_renderer_wgpu_ui_engine::scene_interaction::text_editor_claim_alt_completions(&window_id, x - body.x, y - body.y)
     }
 
+    /// 🌪️ The vortex-suggestions request of one gesture on a world surface — React's `onContextMenu` Alt and brush-armed branches, the long press and the `ContextMenu` / `Shift+F10` chord. `None` leaves the gesture to the caller; `Some(None)` consumes it with no marker to ask about; `Some(Some(action))` is the `openVortexSuggestions` dispatch. `gesture` is an Alt press, a long press or the key chord; the brush utility with a hovered marker arms it without one.
+    pub fn world3d_suggestions_request(&self, x: f32, y: f32, surfaces: &SurfaceState, gesture: bool) -> Option<Option<ActionDescriptor>> {
+        let (window_id, _) = self.retained_context_menu_window(x, y)?;
+        let state = surfaces.world3d_state_for_window(&window_id)?;
+        let brush_armed = state.session.active_utility == "brush" && state.selection.hovered_vortex_id.as_deref().is_some_and(|id| !id.is_empty());
+        if !gesture && !brush_armed {
+            return None;
+        }
+        Some(infinite_world::world::world3d_open_vortex_suggestions(&state.session, &state.selection, x, y, &window_id))
+    }
+
     /// 🪟️ The retained body a right-click landed in, as `(window_id, body_rect)` — the hit registry's
     /// own owner map first (a press on a registered row inside the body), then the dock body the point
     /// falls in, so a click on a scene that registers no target of its own still resolves its window.

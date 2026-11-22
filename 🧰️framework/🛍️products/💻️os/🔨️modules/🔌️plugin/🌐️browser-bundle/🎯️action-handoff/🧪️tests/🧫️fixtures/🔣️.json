@@ -284,6 +284,15 @@
         "url": "https://example.invalid/source"
       }
     },
+    "clipboardFragment": {
+      "schema": "puzzle.3d.clipboard.v1",
+      "mediaType": { "class": "threeD", "form": "design" },
+      "dslText": "{\"objects\":[{\"id\":\"a\"}]}",
+      "sourceApp": "puzzle.3d",
+      "label": "1 object",
+      "packBytes": [0, 127, 255]
+    },
+    "notice": "Die Auswahl ist gesperrt",
     "servicePayloads": [
       {
         "name": "empty-object",

@@ -11,6 +11,7 @@ import {tmpdir} from "node:os";
 import {fileURLToPath} from "node:url";
 import {dirname,join,relative} from "node:path";
 import {captureGenerationReceiptV1,describeGenerationMismatchV1,generationAnchorV1,generationCanonicalJsonV1,generationProjectionDigestV1,generationProtocolV1 as protocol,generationSha256V1,generationStampV1,parseGenerationReceiptV1,sealGenerationReceiptV1,verifyGenerationReceiptV1,type GenerationCaptureInputV1,type GenerationControlV1,type GenerationObservationV1,type GenerationReceiptV1,type GenerationRuntimeV1,type GenerationVerifyInputV1} from "../🟦️.ts";
+import {manifestProfileSha256V1} from "../🪪️profile/🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import fixtures from "./🔣️.json" with {type:"json"};
 import {createNativeBuildCallerCapabilitiesV1} from "../../../../../🏗️build/📥️caller/🟦️.ts";
@@ -56,7 +57,7 @@ async function capture(root:string,store:string,startedAtMs:number,subject:Subje
   input:GenerationCaptureInputV1={
    workspace:root,storeRoot:store,scope:".",startedAtMs,runtime,producer:glue.observeJavascriptDependencyGenerationProducerV1(root,store,["."],subject.ambient),recipeSha256:"c".repeat(64),ownershipSha256:"d".repeat(64),required:["."],
    inputs:[{scope:".",sources:[directory(root),source(join(root,"package.json")),source(join(root,"bun.lock")),absent(join(root,"bunfig.toml"))]}],
-   membership:walked,bindings:[{scope:".",pairs,observation:bindingText(pairs)}],ready:[{scope:".",generation:"e".repeat(64),path:join(store,"j/g1/bindings.json"),fingerprint:readyFingerprint(join(store,"j/g1/bindings.json"))}],
+   membership:{...walked,texts:walked.texts.map(row=>({...row,profileSha256:manifestProfileSha256V1(row.path,readFileSync(join(root,row.path)))}))},bindings:[{scope:".",pairs,observation:bindingText(pairs)}],ready:[{scope:".",generation:"e".repeat(64),path:join(store,"j/g1/bindings.json"),fingerprint:readyFingerprint(join(store,"j/g1/bindings.json"))}],
    execution:{scopes:[{scope:".",sha256:"f".repeat(64)}],runtimeSha256:runtime.sha256,observations},scopeReadSha256:"0".repeat(64),control:control({ticks:0,checks:0}),
   };
  const receiptsAndBindings=[{scope:".",generation:"e".repeat(64),fingerprint:input.ready[0]!.fingerprint}],scopeReadSha256=generationSha256V1(JSON.stringify([receiptsAndBindings,[[".",input.bindings[0]!.observation]],input.execution.scopes])),sealed={...input,scopeReadSha256};
@@ -84,9 +85,9 @@ function mutate(root:string,place:(value:string)=>string,mutation:Mutation,env:R
 }
 const outcome=(result:{status:string;class?:string})=>result.status==="match"?"match":"mismatch:"+result.class;
 const keyingOracle=fileURLToPath(new URL("./🐍️.py",import.meta.url)),schemaPath=fileURLToPath(new URL("../🧬️schema/🔣️.json",import.meta.url)),python=()=>testPythonV1()??"python3";
-const oracleVerify=(root:string,store:string,receipt:GenerationReceiptV1)=>{
+const oracleVerify=(root:string,store:string,receipt:GenerationReceiptV1,env:Record<string,string|undefined>)=>{
  const file=root+".receipt.json";writeFileSync(file,JSON.stringify(receipt));
- const run=spawnSync(python(),["-I",keyingOracle,"verify",file,root,store,JSON.stringify(runtime),schemaPath],{encoding:"utf8"});rmSync(file,{force:true});
+ const run=spawnSync(python(),["-I",keyingOracle,"verify",file,root,store,JSON.stringify(runtime),schemaPath,JSON.stringify({env,policy:protocol.producer})],{encoding:"utf8"});rmSync(file,{force:true});
  if(run.status!==0)throw Error("keying oracle failed: "+run.stderr);return JSON.parse(run.stdout)as{status:string;class?:string;path?:string;detail?:string};
 };
 
@@ -118,7 +119,7 @@ test("generation receipt: every fixture case verifies exactly as declared (match
     const counter={ticks:0,checks:0},verdict=await verifyGenerationReceiptV1(verifyInput(root,store,receipt,files,counter,undefined,row.port,subject));
     expect(outcome(verdict),row.name).toBe(row.expect);
     if(row.reason)expect(verdict,row.name).toMatchObject(row.reason);
-    if(row.oracle){const python=oracleVerify(root,store,receipt);expect(python.status==='match'?'match':'mismatch:'+python.class,row.name).toBe(row.expect);if(row.reason)expect(python,row.name).toMatchObject(row.reason);}
+    if(row.oracle){const python=oracleVerify(root,store,receipt,env);expect(python.status==='match'?'match':'mismatch:'+python.class,row.name).toBe(row.expect);if(row.reason)expect(python,row.name).toMatchObject(row.reason);}
     if(verdict.status==="match"){expect(verdict.required).toEqual(["."]);expect(verdict.receipts[0]!.fingerprint).toBe(readyFingerprint(join(store,"j/g1/bindings.json")));}
    }finally{(protocol as {maximumRelist:number}).maximumRelist=before;}
   }finally{rmSync(root,{recursive:true,force:true});}
@@ -420,7 +421,10 @@ test("generation receipt glue: a captured complete walk verifies under real read
   write();
   const match=await glue.verifyJavascriptDependencyGenerationReceiptV1(root,context,phase,".",subject);expect(match.status).toBe("match");if(match.status==="match"){expect(match.sha256).toBe(sha256);expect(match.receipts).toEqual(receipts);}
   expect(await glue.verifyJavascriptDependencyGenerationReceiptV1(root,context,phase,"other",subject)).toEqual({status:"absent"});
-  writeFileSync(join(root,"package.json"),readFileSync(join(root,"package.json"),"utf8")+" ");
+  const manifest=readFileSync(join(root,"package.json"),"utf8");
+  writeFileSync(join(root,"package.json"),manifest+" ");
+  expect((await glue.verifyJavascriptDependencyGenerationReceiptV1(root,context,phase,".",subject)).status).toBe("match");
+  writeFileSync(join(root,"package.json"),manifest.replace('"version": "0.0.0"','"version": "0.0.1"'));
   expect(await glue.verifyJavascriptDependencyGenerationReceiptV1(root,context,phase,".",subject)).toMatchObject({status:"mismatch",class:"input-changed"});
   const second=await glue.captureJavascriptDependencyGenerationReceiptV1(root,{root:store},generationControl,{...walk,projection:{...walk.projection,plans:[{...walk.projection.plans[0]!,plan:{...walk.projection.plans[0]!.plan,sources:[{...walk.projection.plans[0]!.plan.sources[0]!,bytes:readFileSync(join(root,"package.json")),ino:String(lstatSync(join(root,"package.json")).ino)}]}}]}} as never,await withCurrentBunWorkspaceOwnershipV1(root,{kind:"all"},{signal:new AbortController().signal,advance:async()=>{}},async custody=>custody.observed()),Date.now()+10000,subject);
   expect(second.status).toBe("captured");if(second.status!=="captured")return;

@@ -4,6 +4,7 @@
   "environment": "SEMIO_CACHE_BUDGET_BYTES",
   "file": "🎚️machine-budget.json",
   "hostFreeFloorBytes": 16106127360,
+  "hostFreeFloorPercent": 6,
   "alignBytes": 268435456,
   "toleranceBytes": 1048576,
   "dedupe": [

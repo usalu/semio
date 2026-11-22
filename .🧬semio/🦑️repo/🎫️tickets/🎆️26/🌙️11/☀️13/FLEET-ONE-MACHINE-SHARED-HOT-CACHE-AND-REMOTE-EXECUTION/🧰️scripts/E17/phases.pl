@@ -1,0 +1,1 @@
+while(<>){ next unless /^\s*([\d.]+) (.*)$/; ($t,$m)=($1,$2); next if $m=~/still working|still running/ || $m=~/^\[script\] \{/; $k=$m; $k=~s/\d+/N/g; $k=~s/:.*//; if($k ne $p){printf("%6.1f %s\n",$t,substr($m,0,170)); $p=$k}}

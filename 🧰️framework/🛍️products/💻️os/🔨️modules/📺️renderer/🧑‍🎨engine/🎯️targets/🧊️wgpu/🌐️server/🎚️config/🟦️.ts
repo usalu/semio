@@ -21,28 +21,45 @@ export function wgpuCompletedProfileV1(): "prototype" | "release" {
 /** 📂️ Owns the completed native/browser roots shared by server mounts and runtime graph verification. */
 export function wgpuCompletedFrameworkRootsV1(profile: "prototype" | "release") {
   return {
+    workspace,
+    profile,
+    moduleRoot: builtPluginModulesRootIn(workspace, profile),
     compilerRoot: frameworkOsViteArtifactPathsV1(repositoryCachePartitionRootDataV1(workspace, "products"), profile).renderer.directory,
     bootRoot: resolve(root, "../🚀️browser-boot/🤖️generated"),
     libraryRoot: resolve(root, "../🎬️renderer-boot/🤖️generated"),
     workerRoot: resolve(root, "../🎞️frame-worker/🤖️generated"),
   };
 }
-export function createCompletedWgpuConfigurationV1(options: { readonly variant: string | undefined; readonly nativeCatalog?: NativeCatalogV1; readonly catalog: import("@semio-tech/framework/plugin-catalog").PluginCatalogRowsV1; readonly assets: readonly import("@semio-tech/assets/resolver/dispatch").AssetDeliveryDeclarationV1[] }) {
+export function createCompletedWgpuConfigurationV1(options: { readonly variant: string | undefined; readonly nativeCatalog?: NativeCatalogV1; readonly catalog: import("@semio-tech/framework/plugin-catalog").PluginCatalogRowsV1; readonly assets: readonly import("@semio-tech/assets/resolver/dispatch").AssetDeliveryDeclarationV1[] }, capture?: WgpuCapturedArtifactInputsV1) {
   const variant = options.variant;
   const profile = wgpuCompletedProfileV1();
-  const moduleRoot = builtPluginModulesRootIn(workspace,profile);
   const runtime = developmentRuntimeRoot(workspace, variant!, profile, "wgpu");
+  const completed = wgpuCompletedFrameworkRootsV1(profile);
+  const captured = capture ? {
+    compilerRoot: capture.rootFor(completed.compilerRoot),
+    capturedFontsRoot: capture.rootFor(frameworkOsViteArtifactPathsV1(repositoryCachePartitionRootDataV1(workspace, "products"), profile).fonts),
+    openCapturedFile: capture.openFile,
+  } : {};
   const config = createWgpuBrowserConfig({
-    workspace, root, profile, variant,
+    root, variant,
     catalog: options.catalog, nativeCatalog: options.nativeCatalog ?? emptyNativeCatalogV1(),
-    ...wgpuCompletedFrameworkRootsV1(profile),
-    moduleRoot,
+    ...completed,
+    ...captured,
     extensionRoot: join(runtime, "extensions"),
     reloadFile: join(runtime, "activation", ACTIVATION_RECEIPT_FILE),
     assets: options.assets,
     assetServeMode: resolveAssetDeliveryModeV1(process.env.SEMIO_ASSET_SERVE_MODE),
   });
   return { ...config, plugins: [semioServeCloseVitePlugin(), ...config.plugins!, semioBackboneVitePlugin(), ...semioAssetsVitePlugin(workspace), ...semioSourceFreshnessVitePlugins({ repoRoot: workspace })], server: { ...config.server, ...(process.env.S_LOCAL_RELAY_URL ? { proxy: { "/_semio": { target: process.env.S_LOCAL_RELAY_URL, changeOrigin: false, headers: process.env.S_LOCAL_RELAY_SECRET ? { "x-semio-local-relay": process.env.S_LOCAL_RELAY_SECRET } : undefined } } } : {}) } };
+}
+
+export interface WgpuCapturedArtifactInputsV1 {
+  readonly rootFor: (publishedRoot: string) => string;
+  readonly openFile: (path: string) => number | undefined;
+}
+
+export function createCapturedWgpuConfigurationV1(capture: WgpuCapturedArtifactInputsV1, variant: string) {
+  return createCompletedWgpuConfigurationV1({ variant, catalog: { version: 1, targets: [], hosts: [], playgrounds: [] }, assets: [] }, capture);
 }
 
 export default () => createCompletedWgpuConfigurationV1({ variant: undefined, catalog: { version: 1, targets: [], hosts: [], playgrounds: [] }, assets: [] });

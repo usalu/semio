@@ -1,6 +1,7 @@
 //! 📊️ Windowed per-worksheet spreadsheet grids with revision-bound occupied and vacant cells.
 
 use crate::editor::xlsx::standards::v_ecma_376::subsets::base::render_xlsx_cell_value;
+use crate::editor::xlsx::standards::v_ecma_376::subsets::base::xlsx_editor_labels;
 use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::vocabulary::column_letter;
 use semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::cell_address::xlsx_cell_address;
 use semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::cell_address::xlsx_worksheet_address;
@@ -67,16 +68,13 @@ fn render_sheet_grid(
     let worksheet = xlsx_worksheet_address(document, &sheet.name).map_err(|error| PluginAssemblyError::new("xlsx.worksheet-address", error))?;
     let (row_total, column_total) = grid_extent(sheet);
     let table_id = format!("xlsx-sheet-{sheet_ordinal}-grid");
-    let (row_label, column_label) = match locale {
-        Locale::En => ("Row", "Column"),
-        Locale::De => ("Zeile", "Spalte"),
-    };
+    let labels = xlsx_editor_labels(locale);
     TableWindowKit::render_indexed_matrix_with_id(
         windows,
         &table_id,
         &sheet.name,
-        row_label,
-        column_label,
+        labels.row.as_str(),
+        labels.column.as_str(),
         column_total,
         |column| UiLabel::try_from(column_letter(column as u32)).map_err(|_| PluginAssemblyError::new("xlsx.column-label", "column label exceeds the UI label bound")),
         None,
@@ -89,7 +87,7 @@ fn render_sheet_grid(
                 let (value, revision) = match cells.get(&(row, column)) {
                     Some(cell) => {
                         let address = xlsx_cell_address(document, &sheet.name, row, column).map_err(|error| PluginAssemblyError::new("xlsx.cell-address", error))?;
-                        (render_xlsx_cell_value(&cell.value, shared_strings), address.revision)
+                        (render_xlsx_cell_value(&cell.value, shared_strings, Some(locale)), address.revision)
                     }
                     None => (String::new(), worksheet.revision.clone()),
                 };

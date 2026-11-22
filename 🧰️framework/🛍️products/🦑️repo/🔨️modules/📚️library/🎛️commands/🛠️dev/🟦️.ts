@@ -23,8 +23,26 @@ function requireRepoMcpBinary(root: string): string {
 export class DevScript extends Script {
   async run(segments: string[]): Promise<void> {
     if (segments[0] === "playground") {
-      const { serveRootPlaygroundV1 } = await import("./🎮️playground/🟦️.ts");
-      return serveRootPlaygroundV1(this.repoRoot, this.invocation, ["dev", ...segments]);
+      const argv = ["dev", ...segments];
+      const { rootDevPlaygroundRequestV1 } = await import("./🌱️birth/🟦️.ts");
+      const request = rootDevPlaygroundRequestV1(argv);
+      if (!request) throw Error("usage: dev playground <variant> <react|wgpu|native> <prototype|release>");
+      const { readOwnedBuildInvocationV1 } = await import("../../🏗️build/📥️caller/🟦️.ts");
+      const original = readOwnedBuildInvocationV1(this.repoRoot, this.invocation, argv);
+      if (original.buildMode !== request.profile) throw Error("Playground profile must match the original native request");
+      const { issueRepositoryScriptProvidersV1 } = await import("../../🏃️process/🔌️providers/🟦️.ts");
+      issueRepositoryScriptProvidersV1(process.env);
+      const [{ withRepositoryCacheStoreV1 }, { withRepositoryCompilerRuntimeEntriesV1 }] = await Promise.all([
+        import("../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts"),
+        import("../../🏗️build/📥️source/🔏️closure/🚪️command/🔌️runtime/🟦️.ts"),
+      ]);
+      const control = createIssuedResourceControlV1(this.invocation, "dev:playground:bootstrap", 0);
+      return withRepositoryCompilerRuntimeEntriesV1(original.codeRoot, this.invocation, control, async () => {
+        const { serveRootPlaygroundV1 } = await withRepositoryCacheStoreV1(this.repoRoot, "dependencies", this.invocation, control, (_dependencies, phase) =>
+          withRepositoryCacheStoreV1(this.repoRoot, "products", this.invocation, phase, () => import("./🎮️playground/🟦️.ts")),
+        );
+        return serveRootPlaygroundV1(this.repoRoot, this.invocation, argv);
+      });
     }
     if (segments[0] === "time-travel") {
       const { issueRepositoryScriptProvidersV1 } = await import("../../🏃️process/🔌️providers/🟦️.ts");

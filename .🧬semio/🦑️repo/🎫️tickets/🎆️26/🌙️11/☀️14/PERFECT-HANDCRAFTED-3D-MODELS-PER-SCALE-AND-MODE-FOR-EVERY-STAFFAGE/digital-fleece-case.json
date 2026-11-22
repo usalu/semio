@@ -1,0 +1,46 @@
+{
+  "surface": {
+    "hindbody": "fleece-trunk",
+    "chest": "fleece-trunk",
+    "neck": "fleece-neck"
+  },
+  "parts": [
+    "hindbody",
+    "chest",
+    "neck"
+  ],
+  "scales": {
+    "50": {
+      "axial": 27,
+      "around": 48,
+      "bands": 6,
+      "locks": 11,
+      "reliefM": 0.014,
+      "outlineM": 0.009
+    },
+    "100": {
+      "axial": 22,
+      "around": 40,
+      "bands": 5,
+      "locks": 9,
+      "reliefM": 0.014,
+      "outlineM": 0.014
+    },
+    "200": {
+      "axial": 17,
+      "around": 32,
+      "bands": 4,
+      "locks": 7,
+      "reliefM": 0.015,
+      "outlineM": 0.022
+    },
+    "500": {
+      "axial": 13,
+      "around": 24,
+      "bands": 3,
+      "locks": 5,
+      "reliefM": 0.016,
+      "outlineM": 0.029
+    }
+  }
+}

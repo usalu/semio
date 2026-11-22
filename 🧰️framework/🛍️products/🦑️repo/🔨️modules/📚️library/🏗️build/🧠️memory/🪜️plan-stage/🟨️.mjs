@@ -75,10 +75,25 @@ export function farmWidthV1({hostMegabytes,reservedMegabytes=0,policy=PLAN_STAGE
  return free>=child.capMegabytes?1+Math.floor((free-child.capMegabytes)/child.typicalMegabytes):0;
 }
 
+/** 🎟️ The physical memory a farm is planned against: the host's, lowered to the memory whose `treeShare` equals the rebuild reservation the gate granted (`grantEnvironment`, in megabytes), so a rebuild admitted with less than it asked for runs a narrower farm instead of the full one inside a smaller booking; the host's own when no grant names one. */
+export function grantedHostMegabytesV1(hostMegabytes,environment=process.env,policy=PLAN_STAGE_POLICY_V1){
+ const granted=Number(environment[policy.grantEnvironment]);
+ return Number.isFinite(granted)&&granted>0&&hostMegabytes>0?Math.min(hostMegabytes,Math.floor(granted/policy.treeShare)):hostMegabytes;
+}
+
+/** 🌊️ The physical memory a farm is planned against when the machine has more free memory than the rebuild reservation: the granted memory of {@link grantedHostMegabytesV1} plus the free memory above the floor (`availableFloorMegabytes`) turned into the physical memory whose `treeShare` it is, never above the host. The children of the farm are admitted one by one by the host gate against the real free memory, so a shrunk reservation of the parent no longer narrows the farm to nothing while the machine is idle; without a reading of the free memory the granted memory stands.
+ * @see ./🧬️schema/🔣️.json */
+export function farmHostMegabytesV1(hostMegabytes,environment=process.env,availableMegabytes=undefined,policy=PLAN_STAGE_POLICY_V1){
+ const granted=grantedHostMegabytesV1(hostMegabytes,environment,policy);
+ if(granted>=hostMegabytes||!Number.isFinite(availableMegabytes))return granted;
+ return Math.min(hostMegabytes,granted+Math.floor(Math.max(0,availableMegabytes-policy.availableFloorMegabytes)/policy.treeShare));
+}
+
 /** 🏊️ How many worker processes of `workerMegabytes` a plan that holds `residentMegabytes` already (its own resident set by default) may start so that its whole process tree stays within `treeShare` of the physical memory (the slice guard judges the tree, not the managed bytes of the plan); Infinity where the plan has no limit (a serving machine, `off`), or the cap of the cut of the load (`SEMIO_GRAPH_CUT_CONCURRENCY`, see `../✂️cut`) where the work was cut smaller. A lean read (`../🪶️lean`) plans with the parent it is designed to keep (`parentMegabytes` of the lean policy, never less than what it holds) and the budget of its child, and always grants the first project child when one fits beside the parent within the ceiling. @see ./🧬️schema/🔣️.json */
-export function planFarmWorkersV1({workerMegabytes,residentMegabytes=process.memoryUsage().rss/MEGABYTE,environment=process.env,hostMegabytes=hostMemoryMegabytesV1(),policy=PLAN_STAGE_POLICY_V1,kind,counted=kind}){
+export function planFarmWorkersV1({workerMegabytes,residentMegabytes=process.memoryUsage().rss/MEGABYTE,environment=process.env,hostMegabytes:physicalMegabytes=hostMemoryMegabytesV1(),policy=PLAN_STAGE_POLICY_V1,kind,counted=kind,availableMegabytes}){
+ const hostMegabytes=farmHostMegabytesV1(physicalMegabytes,environment,availableMegabytes,policy);
  const cut=graphCutConcurrencyV1(environment);
- if(planStageLimitBytesV1(environment,hostMegabytes,policy)===Infinity)return cut;
+ if(hostMegabytes===physicalMegabytes&&planStageLimitBytesV1(environment,hostMegabytes,policy)===Infinity)return cut;
  const child=kind===undefined?undefined:policy.farmChildFootprintMegabytes?.[kind];
  if(child!==undefined)return Math.min(cut,farmWidthV1({hostMegabytes,reservedMegabytes:counted===undefined?0:reservedMegabytes(counted),policy,child}));
  const lean=kind===undefined?undefined:leanSliceV1({environment,hostMegabytes,residentMegabytes,policy}),leaning=lean?.lean===true,parent=kind===undefined?residentMegabytes:Math.max(residentMegabytes,leaning?lean.parentMegabytes:policy.parentMegabytes),cost=kind===undefined?workerMegabytes:leaning&&kind==="project-farm"?lean.childMegabytes:Math.max(workerMegabytes,policy.farmWorkerPeakMegabytes[kind]??0);

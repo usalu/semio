@@ -28,8 +28,11 @@ semio-ui-arena = { path = "../../../../../🌳️retained/🏟️arena/📦️pa
 semio-ui-declaration = { path = "../../../../../📜️declaration/📦️packages/🦀️rust" }
 semio-ui-retained-tree = { path = "../../../../../🌳️retained/🌳️tree/📦️packages/🦀️rust" }
 semio-ui-theme = { path = "../../../../../🎨️styling/🎭️theme/📦️packages/🦀️rust" }
+semio-ui-wgpu-events-commit = { path = "../../🧮️control-commit-rules/📦️packages/🦀️rust" }
+semio-ui-wgpu-events-focus = { path = "../../🧭️event-model-and-focus/📦️packages/🦀️rust" }
 semio-ui-wgpu-controls = { path = "../../../🔘️controls/📦️packages/🦀️rust" }
 semio-ui-wgpu-layout = { path = "../../../🧱️layout-stack/📦️packages/🦀️rust" }
+semio-ui-wgpu-light = { path = "../../../🪶️light/📦️packages/🦀️rust" }
 semio-ui-wgpu-mounted-layout = { path = "../../../📌️mounted_layout/📦️packages/🦀️rust" }
 semio-ui-wgpu-widget-kit = { path = "../../../🪀️widgets/🧰️kit/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../🌱️value/📦️packages/🦀️rust" }

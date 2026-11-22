@@ -87,12 +87,12 @@ pub fn render(doc:&semio_plugin::ArtifactView<'_,IfcSnapshot>,interaction:&Inter
 }
 
 pub fn layout(main_window:&str,editable:bool)->semio_plugin::WindowLayout {
-    let mut layout=editing::snapshot_details_split_layout(main_window,"Main");
-    if let semio_plugin::WindowLayoutRoot::Axis(axis)=&mut layout.root {
-        if let Some(semio_plugin::WindowLayoutChild::Stack(stack))=axis.children.last_mut(){
-            if !editable{stack.children.clear();}
-            stack.active_window_kind_id=Some(BODY_KEY.into());
-            stack.children.insert(0,semio_plugin::WindowLayoutWindowNode{kind:"window".into(),window_kind_id:BODY_KEY.into(),title:None,instance_id:None,template_id:None,corner:None});
+    let mut layout=editing::snapshot_details_split_layout(main_window);
+    if let semio_plugin::WindowLayoutNode::Split { children, .. } = &mut layout.root {
+        if let Some(semio_plugin::WindowLayoutNode::Stack { active_window_id, children: tabs, .. }) = children.last_mut() {
+            if !editable { tabs.clear(); }
+            *active_window_id = Some(BODY_KEY.into());
+            tabs.insert(0, semio_plugin::WindowLayoutNode::Window { window_kind_id: BODY_KEY.into(), title: None, instance_id: None, template_id: None, corner: None });
         }
     }
     layout

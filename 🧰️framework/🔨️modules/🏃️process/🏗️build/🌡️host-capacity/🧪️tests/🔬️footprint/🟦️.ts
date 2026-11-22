@@ -1,4 +1,5 @@
 /** 🔬️ Contract: the capacity gate prices a process tree by its memory footprint (what the processes hold privately plus what was swapped or compressed out of them), not by its resident set: on macOS a process keeps its resident high-water mark after it freed memory, and the learned peaks follow what it really held. Per platform the observer is data (`Observers` of the schema) read from fixtures: macOS `footprint` (the kernel's phys_footprint), Linux `smaps_rollup` (proportional set size plus swapped), Windows the private working set table; a source that cannot be read falls back to the resident set and says so once in every language. Oracle: a Python parser of the same outputs (standard library only) and, on macOS, the kernel's own `proc_pid_rusage` read by a child through ctypes. */
+import {Database} from "bun:sqlite";
 import {expect,test} from "bun:test";
 import {spawnSync} from "node:child_process";
 import {mkdtempSync,rmSync,writeFileSync} from "node:fs";
@@ -13,6 +14,7 @@ import {observeTreeMegabytesV1,parseProcessTableV1,parseFootprintV1,parseSmapsRo
 import schema from "../../🧬️schema/🔣️.json";
 import decision from "../🧫️fixtures/🔣️.json";
 import fixture from "./🧫️fixtures/🔣️.json";
+import partition from "./🧫️fixtures/🪢️trees.json";
 
 const here=fileURLToPath(new URL(".",import.meta.url)),python=testPythonV1(),observers=schema.definitions.Observers.const,policy=readHostCapacityPolicyV1(decision.policy);
 const oracle=python?JSON.parse(spawnSync(python,["-I",join(here,"🐍️oracle","🐍️.py"),join(here,"🧫️fixtures","🔣️.json")],{encoding:"utf8",maxBuffer:64*1024*1024}).stdout):undefined;
@@ -47,6 +49,29 @@ test("the tree of a process is its descendants, root first, and the resident sum
  const rows=[{pid:1,parent:0,rssKilobytes:1024},{pid:2,parent:1,rssKilobytes:2048},{pid:3,parent:1,rssKilobytes:4096},{pid:4,parent:2,rssKilobytes:1024},{pid:9,parent:8,rssKilobytes:99999}];
  expect([...treePidsV1(rows,1)].sort()).toEqual([1,2,3,4]);expect(treePidsV1(rows,1)[0]).toBe(1);expect(treePidsV1(rows,7)).toEqual([]);
  expect(treeMegabytesV1(rows,1)).toBe(8);expect(treeMegabytesV1(rows,2)).toBe(3);expect(treeMegabytesV1(rows,7)).toBeNull();
+});
+
+test("An attached graph worker cuts its subtree out of the enclosing grant, and a grant counts its own attached roots once",async()=>{
+ const {rows,root,attached,separate,megabytes}=partition;
+ const table=rows.map(row=>`${row.pid} ${row.parent} ${row.rssKilobytes}`).join("\n");
+ const observer:HostCommandRunnerV1=async()=>table;
+ const scope={attached,excluded:new Set(separate)};
+ expect(await observeTreeMegabytesV1(root,observer,"darwin",undefined,noNotice,"resident",undefined,scope)).toBe(megabytes);
+ using database=new Database();
+ database.exec("CREATE TABLE processes(pid INTEGER PRIMARY KEY,parent INTEGER,rss INTEGER); CREATE TABLE starts(pid INTEGER); CREATE TABLE excluded(pid INTEGER)");
+ const add=database.query("INSERT INTO processes VALUES (?, ?, ?)");
+ for(const {pid,parent,rssKilobytes} of rows)add.run(pid,parent,rssKilobytes);
+ for(const pid of [root,...attached])database.query("INSERT INTO starts VALUES (?)").run(pid);
+ for(const pid of separate)database.query("INSERT INTO excluded VALUES (?)").run(pid);
+ const result=database.query(`
+  WITH RECURSIVE owned(pid) AS (
+   SELECT processes.pid FROM processes JOIN starts USING(pid) WHERE pid NOT IN (SELECT pid FROM excluded)
+   UNION
+   SELECT processes.pid FROM processes JOIN owned ON parent=owned.pid WHERE processes.pid NOT IN (SELECT pid FROM excluded)
+  )
+  SELECT SUM(rss)/1024 AS megabytes FROM processes JOIN owned USING(pid)
+ `).get();
+ expect(result).toEqual({megabytes});
 });
 
 test("on macOS one footprint call prices the whole tree, a process it did not print is priced by its resident set, and a refusal falls back to the resident set once in every language",async()=>{

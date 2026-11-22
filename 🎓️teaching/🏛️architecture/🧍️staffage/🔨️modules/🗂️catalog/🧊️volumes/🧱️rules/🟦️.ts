@@ -1,7 +1,7 @@
 /** 🧱️ The analytic rules of the volumes of an asset: those that need no tessellation and run inside `validateAsset` as well as inside `checkVolumes`.
  *
  * `volumes-availability` (authored at every scale with a drawing), `volumes-bones` (every bone with drawn 2D shapes has a body solid at that scale), `volumes-feature` (no solid dimension below the
- * smallest feature of the scale, except thin sheets of a closed list of roles), `volumes-thermal-coverage` (every region, layer shell, emitter has a solid; hidden regions never reuse a body solid) and
+ * smallest feature of the scale, except thin sheets of a closed list of roles and thin sheets declared with `sheet: true` or by a thermal layer gauge), `volumes-thermal-coverage` (every region, layer shell, emitter has a solid; hidden regions never reuse a body solid) and
  * `volumes-structure-coverage` (every eligible bone of the structural view, every 2D member shape and every support anchor has exactly one support solid) and `volumes-copied` (no authored scale is an identical, subset or uniformly scaled copy of a finer one). The thresholds are in {@link VOLUME_LIMITS}; the design is
  * `PERFECT-HANDCRAFTED-3D-MODELS-PER-SCALE-AND-MODE-FOR-EVERY-STAFFAGE/design.md` (rules 1, 4, 7-9, amendments B1-B4).
  *
@@ -17,13 +17,13 @@ import { centreLineOf } from "../🧵️centreline/🟦️.ts";
 import { copyMesh, extentOf, repeatMaps } from "../🌓️silhouette/🟦️.ts";
 import { qualityOf } from "../../../🧊️volume/⏱️job/🟦️.ts";
 
-/** 📜️ The rule ids of the volumes. `volumes-solids` is the per-solid family (`volume-*` codes), `volumes-copied` the 3D twin of `representation-copied`, `volumes-slender` the check of the `slender` declaration, `volumes-views-disagree` the agreement of the 2D viewpoints with each other. */
-export const VOLUME_RULES = ["volumes-availability", "volumes-silhouette", "volumes-bounds", "volumes-feature", "volumes-monotonic", "volumes-cross-scale", "volumes-thermal-coverage", "volumes-structure-coverage", "volumes-bones", "volumes-solids", "volumes-copied", "volumes-slender", "volumes-views-disagree"] as const;
+/** 📜️ The rule ids of the volumes. `volumes-solids` is the per-solid family (`volume-*` codes), `volumes-copied` the 3D twin of `representation-copied`, `volumes-slender` the check of the `slender` declaration, `volumes-views-disagree` the agreement of the 2D viewpoints with each other, `volumes-connected` the measured contact of the body solids with each other and of the structure solids with a support. */
+export const VOLUME_RULES = ["volumes-availability", "volumes-silhouette", "volumes-bounds", "volumes-feature", "volumes-monotonic", "volumes-cross-scale", "volumes-thermal-coverage", "volumes-structure-coverage", "volumes-bones", "volumes-solids", "volumes-copied", "volumes-slender", "volumes-views-disagree", "volumes-connected"] as const;
 
 /** 🏷️ One of {@link VOLUME_RULES}. */
 export type VolumeRule = (typeof VOLUME_RULES)[number];
 
-/** 🚦️ The thresholds of the design, never weakened silently: silhouette IoU and Hausdorff (in smallest features), bounds (in features), cross-scale IoU, Hausdorff and union volume change, thermal area tolerance at 1:50 and at coarser scales, the margin of the thermal bounding box (in features), the roles of thin sheets, the decision prefix that declares a scale already minimal, the region kinds that are transparent closures of a cavity and the share of its outer area below which a region counts as lying wholly in a closed cavity (E3). */
+/** 🚦️ The thresholds of the design, never weakened silently: silhouette IoU and Hausdorff (in smallest features), bounds (in features), cross-scale IoU, Hausdorff and union volume change, thermal area tolerance at 1:50 and at coarser scales, the margin of the thermal bounding box (in features), the roles of thin sheets, the decision prefix that declares a scale already minimal, the region kinds that are transparent closures of a cavity and the share of its outer area below which a region counts as lying wholly in a closed cavity (E3), the ratio of the middle extent of a declared thin sheet (`sheet: true`, or a thermal layer gauge for its bone and material) to its thickness (`sheetRatio`, the twin of `slenderRatio`), the ratio and the length in smallest features from which a `member` solid of the structure list may declare itself `slender` (`slenderMemberRatio`, `slenderMemberFeatures`: a bone, a strut), and for `volumes-connected` the contact tolerance, the clearance below which two groups that both rest on something are neither joined nor apart, and the distance up to which a gap is measured exactly, all three in smallest features. */
 export const VOLUME_LIMITS = {
   silhouetteIouElevation: 0.9,
   silhouetteIouOther: 0.88,
@@ -56,6 +56,14 @@ export const VOLUME_LIMITS = {
   sectionAngleDeg: 45,
   transparentRegionKinds: ["glazing"],
   enclosedOuterFraction: 0.02,
+  sheetRatio: 20,
+  slenderMemberRatio: 5,
+  slenderMemberFeatures: 2,
+  memberSpanFeatures: 1,
+  memberSpanSamples: 9,
+  connectedToleranceFeatures: 0.2,
+  connectedApartFeatures: 1,
+  connectedGapCapFeatures: 6,
 } as const;
 
 /** 📐️ One measured quantity of a rule against its limit: `bound` "min" means the value must be at least the limit, "max" at most. */
@@ -247,20 +255,39 @@ type Point3 = readonly [number, number, number];
 const offset3 = (a: Point3, b: Point3): Point3 => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
 const dot3 = (a: Point3, b: Point3): number => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
 
-/** 📍️ Whether a triangle intersects the sphere around an outlet centre, including its three edges. */
-function nearTriangle(p: Point3, a: Point3, b: Point3, c: Point3, radius2: number): boolean {
+/** 📍️ The squared distance from a point to a triangle: the least over its three edges and, where the foot of the perpendicular falls inside it, its face. */
+function pointTriangle2(p: Point3, a: Point3, b: Point3, c: Point3): number {
+  let best = Infinity;
   for (const [start, end] of [[a, b], [b, c], [c, a]] as const) {
     const edge = offset3(end, start), delta = offset3(p, start);
     const length2 = dot3(edge, edge), along = dot3(delta, edge);
     const t = Math.min(1, Math.max(0, along / (length2 || 1)));
-    if (dot3(delta, delta) - 2 * t * along + t * t * length2 <= radius2) return true;
+    best = Math.min(best, dot3(delta, delta) - 2 * t * along + t * t * length2);
   }
   const ab = offset3(b, a), ac = offset3(c, a), ap = offset3(p, a);
   const xx = dot3(ab, ab), xy = dot3(ab, ac), yy = dot3(ac, ac), px = dot3(ap, ab), py = dot3(ap, ac);
   const det = xx * yy - xy * xy;
-  if (det <= 0) return false;
+  if (det <= 0) return Math.max(0, best);
   const u = (yy * px - xy * py) / det, v = (xx * py - xy * px) / det;
-  return u >= 0 && v >= 0 && u + v <= 1 && dot3(ap, ap) - u * px - v * py <= radius2;
+  return Math.max(0, u >= 0 && v >= 0 && u + v <= 1 ? Math.min(best, dot3(ap, ap) - u * px - v * py) : best);
+}
+
+/** 📍️ Whether a triangle intersects the sphere around an outlet centre, including its three edges. */
+const nearTriangle = (p: Point3, a: Point3, b: Point3, c: Point3, radius2: number): boolean => pointTriangle2(p, a, b, c) <= radius2;
+
+/** 🦴️ How far a bone leaves a solid that spans it, in metres: the largest distance from {@link VOLUME_LIMITS}.memberSpanSamples evenly spaced points of the segment `from`-`to` (the joint and the tip of the bone included) to the triangles of the solid, a point that `inside` finds in the solid counting 0. `volumes-structure-coverage` lets a `member` solid stand for a bone of its `members` when this is at most {@link VOLUME_LIMITS}.memberSpanFeatures smallest features of the scale: the scale cannot show the bone apart from the solid. */
+export function spanGap(mesh: { readonly positions: ArrayLike<number>; readonly indices: ArrayLike<number> }, from: Point3, to: Point3, inside: (point: Point3) => boolean): number {
+  const corner = (k: number): Point3 => [mesh.positions[3 * mesh.indices[k]!]!, mesh.positions[3 * mesh.indices[k]! + 1]!, mesh.positions[3 * mesh.indices[k]! + 2]!];
+  let worst = 0;
+  for (let s = 0; s < VOLUME_LIMITS.memberSpanSamples; s++) {
+    const t = s / (VOLUME_LIMITS.memberSpanSamples - 1);
+    const point: Point3 = [from[0] + (to[0] - from[0]) * t, from[1] + (to[1] - from[1]) * t, from[2] + (to[2] - from[2]) * t];
+    if (inside(point)) continue;
+    let best = Infinity;
+    for (let k = 0; k < mesh.indices.length; k += 3) best = Math.min(best, pointTriangle2(point, corner(k), corner(k + 1), corner(k + 2)));
+    worst = Math.max(worst, Math.sqrt(best));
+  }
+  return worst;
 }
 
 /** 👃️ A located source lies within one declared aperture diameter of its physical tissue boundary in the same bone frame. */
@@ -323,68 +350,58 @@ function sheetGauges(asset: Asset, volume: AuthoredVolume): ReadonlyMap<string, 
   return gauges;
 }
 
-/** 📐 A planar sheet keeps its declared material gauge through the normal and must still meet the feature width within its plane. */
-function matchesSheet(solid: VolumeSolid, gauge: number | undefined, feature: number): boolean {
-  if (solid.kind !== "extrude" || !(gauge !== undefined && gauge > 0) || solid.taperTo !== undefined) return false;
+/** 📐️ The two extents that decide a thin sheet in metres: its thickness (the smallest extent) and its middle extent, for a planar extrusion across its thickness the smallest width of its profile over all directions, and for a ring (a revolve of a closed profile loop that stays off the axis, flat along the axis) the radial width of its band, never its diameter: a hoop of 10 x 10 mm section is a bent rod, whatever its diameter, and is declared `slender` along its centre line ({@link slendernessOf}). */
+export function sheetExtents(solid: VolumeSolid): readonly [thickness: number, middle: number] {
+  const [thickness, middle] = sortedExtents(solid);
+  if (solid.kind === "revolve") {
+    const [first, last, radial] = [solid.profile[0]!, solid.profile[solid.profile.length - 1]!, solid.profile.map((q) => q[1])];
+    const factor = solid.transform?.scale === undefined ? 1 : Math.min(...solid.transform.scale);
+    const ring = solid.profile.length > 3 && Math.hypot(first[0] - last[0], first[1] - last[1]) <= 1e-9 && Math.min(...radial) > 1e-9;
+    if (!ring || span(solid.profile.map((q) => q[0])) * factor > thickness * (1 + 1e-9)) return [thickness, middle];
+    return [thickness, Math.min(middle, span(radial) * factor)];
+  }
+  if (solid.kind !== "extrude" || solid.taperTo !== undefined) return [thickness, middle];
   const [u, v, normal] = solid.plane === "xy" ? [0,1,2] as const : solid.plane === "yz" ? [1,2,0] as const : [2,0,1] as const;
   const scale = solid.transform?.scale ?? [1,1,1];
-  const thickness = Math.abs((solid.to - solid.from) * scale[normal]!);
-  if (Math.abs(thickness - gauge) > Math.max(1e-9, gauge * 1e-5)) return false;
-  const width = minimumWidth(solid.profile.map(([a,b]) => ({ x:a * scale[u]!, y:b * scale[v]! })));
-  return width >= Math.max(feature, VOLUME_LIMITS.slenderRatio * thickness) - 1e-9;
+  if (Math.abs((solid.to - solid.from) * scale[normal]!) > thickness * (1 + 1e-9)) return [thickness, middle];
+  return [thickness, minimumWidth(solid.profile.map(([a,b]) => ({ x:a * scale[u]!, y:b * scale[v]! })))];
 }
 
-/** 🪡 Exact physical correspondence keeps material gauges and anatomical dimensions independent of paper scale. */
-function sameValue(a: unknown, b: unknown): boolean {
-  if (a === b) return true;
-  if (!a || !b || typeof a !== "object" || typeof b !== "object" || Array.isArray(a) !== Array.isArray(b)) return false;
-  const left = a as Record<string,unknown>, right = b as Record<string,unknown>;
-  return Object.keys(left).length === Object.keys(right).length && Object.keys(left).every(key => Object.hasOwn(right,key) && sameValue(left[key],right[key]));
+/** 📐️ Whether a solid has the shape of a thin sheet at a limit: its thickness is below the limit, its middle extent ({@link sheetExtents}) is at least the limit and at least {@link VOLUME_LIMITS}.sheetRatio times the thickness, and a `gauge` declared for its bone and material (NaN when the declarations conflict) equals the thickness. A lump below the limit in two directions is no sheet. The shape alone exempts nothing: `volumes-feature` lets only a declared sheet (`sheet: true`, or a thermal layer gauge) pass. */
+export function isSheet(solid: VolumeSolid, limit: number, gauge?: number): boolean {
+  const [thickness, middle] = sheetExtents(solid);
+  if (!(thickness > 0) || thickness >= limit) return false;
+  if (gauge !== undefined && !(Math.abs(thickness - gauge) <= Math.max(1e-9, gauge * 1e-5))) return false;
+  return middle >= Math.max(limit, VOLUME_LIMITS.sheetRatio * thickness) - 1e-9;
 }
 
-function retainedStations(coarse: readonly unknown[], fine: readonly unknown[]): boolean {
-  if (coarse.length < 2 || coarse.length > fine.length || !sameValue(coarse[0],fine[0]) || !sameValue(coarse.at(-1),fine.at(-1))) return false;
-  let at = 1;
-  for (let i = 1; i < coarse.length - 1; i++) {
-    while (at < fine.length - 1 && !sameValue(coarse[i],fine[at])) at++;
-    if (at >= fine.length - 1) return false;
-    at++;
+/** 📐 Match the stress section to an actual elliptical station normal to the mechanical member axis. */
+function sectionGauges(asset: Asset, volume: AuthoredVolume): Map<Slug, {material: Slug; thicknessM: number}> {
+  const sections = new Map(asset.rig.bones.filter(b => b.section).map(b => [b.id,b.section!]));
+  const gauges = new Map<Slug, {material: Slug; thicknessM: number}>();
+  const agrees = (x: number, y: number) => Math.abs(x-y) <= .002*Math.max(x,y);
+  for (const solid of volume.structure) {
+    if (!("kind" in solid) || solid.kind !== "loft" || solid.part !== "member" || solid.bone !== solid.member || solid.transform || solid.weights) continue;
+    const section = sections.get(solid.bone);
+    if (!section || section.material !== solid.material || gauges.has(solid.bone)) continue;
+    for (const station of solid.sections) {
+      if ((station.exponent ?? 2) !== 2 || !station.rotation) continue;
+      const [x,y,z,w] = station.rotation;
+      if (Math.abs(2*Math.abs(x*z+y*w)-1) > .00001) continue;
+      const radius = Math.hypot(station.rx*2*(x*y+z*w),station.ry*(1-2*(x*x+z*z)));
+      const area = Math.PI*station.rx*station.ry;
+      if (agrees(area,section.areaM2) && agrees(radius,section.extremeFibreM) && agrees(area*radius*radius/4,section.secondMomentM4)) {
+        gauges.set(solid.bone,{material:solid.material,thicknessM:2*Math.min(station.rx,station.ry)});
+        break;
+      }
+    }
   }
-  return true;
+  return gauges;
 }
 
-type PhysicalFields = Readonly<Record<string,unknown>>;
-
-const displayFields = new Set(["id","of","tone","sectionFaces"]);
-
-function physicalMatch(coarse: PhysicalFields, fine: PhysicalFields): boolean {
-  const keys = Object.keys(coarse).filter(key => !displayFields.has(key));
-  if (keys.length !== Object.keys(fine).filter(key => !displayFields.has(key)).length) return false;
-  return keys.every(key => {
-    if (!Object.hasOwn(fine,key)) return false;
-    if (key === "sections" && coarse.kind === "loft") return retainedStations(coarse[key] as readonly unknown[],fine[key] as readonly unknown[]);
-    return sameValue(coarse[key],fine[key]);
-  });
-}
-
-function physicalSources(fine: AuthoredVolume, list: VolumeList): (solid: VolumeSolid) => boolean {
-  const groups = new Map<string,PhysicalFields[]>();
-  const group = (s: PhysicalFields) => JSON.stringify([s.bone,s.kind,s.material,s.region,s.layer,s.member,s.part,s.anchor]);
-  const body = new Map(fine.body.map(s => [s.id,s]));
-  for (const entry of fine[list]) {
-    const solid = "of" in entry ? { ...body.get(entry.of), ...entry } : entry;
-    const key = group(solid), groupSolids = groups.get(key);
-    if (groupSolids) groupSolids.push(solid);
-    else groups.set(key,[solid]);
-  }
-  return solid => groups.get(group(solid))?.some(source => physicalMatch(solid,source)) ?? false;
-}
-
-/** 🔬️ `volumes-feature` (amendments C13, C20; the aggregate `minDimensionM` is information, the per-solid findings judge): no solid of any list has a dimension below min(the smallest feature of the scale, the thinnest filled 2D shape extent drawn for its bone at that scale), except `role` in {@link VOLUME_LIMITS}.thinRoles (declared thin sheets), `slender` solids (C2), `texture` solids (C10) and thermal shells with a `layer` and physiological surfaces without an individual filled region on their bone in print. Broad flat extrusions matching the thermal material gauge retain their sheet thickness. A tagged breath outlet on the anchor bone retains its physical thickness when its face spans the declared diameter above a separate tissue surface. A coarser solid may keep the exact dimensions of its 1:50 counterpart on the same bone and material, including a loft with unchanged end sections and a subset of its original interior stations. */
+/** 🔬️ `volumes-feature` (amendments C13, C20; the aggregate `minDimensionM` is information, the per-solid findings judge): no solid of any list has a dimension below min(the smallest feature of the scale, the thinnest filled 2D shape extent drawn for its bone at that scale), except `role` in {@link VOLUME_LIMITS}.thinRoles (declared thin sheets), `slender` solids (C2), `texture` solids (C10), thermal shells with a `layer` and physiological surfaces without an individual filled region on their bone in print. A thin sheet of any kind (a feather vane, a membrane, a board, a panel) passes below the limit only when it is declared, the way a slender solid is: by `sheet: true`, or by a gauge that the thermal layers declare for its bone and material. A declared sheet is judged by its two large extents ({@link isSheet}): its middle extent is at least the limit and at least {@link VOLUME_LIMITS}.sheetRatio times its thickness, and where a gauge is declared the thickness is that gauge; an undeclared sheet-shaped solid fails like any other thin solid. The declaration is checked here (`sheetRatio:<id>`): a solid with `sheet: true` that is narrower than {@link VOLUME_LIMITS}.sheetRatio times its thickness, or that is below the limit without being a sheet there (a lump, a strip, a thickness that differs from the gauge), fails, as does `sheet` together with `slender`; a declared sheet that is at least as thick as the limit keeps the flag, so the same part carries it at every scale. Structural lofts on their own member can use a physical gauge established by an elliptical section matching the declared material, area, extreme fibre and second moment. A tagged breath outlet on the anchor bone retains its physical thickness when its face spans the declared diameter above a separate tissue surface. Every scale is judged on its own: a solid of a coarser scale gains nothing from being identical to a 1:50 solid, so a coarse scale that carries the 1:50 parts list fails with every part that is below its feature. */
 export function featureRule(asset: Asset, scales?: readonly ScaleDenominator[], minFeatureMm: number = VOLUME_LIMITS.minFeatureMm): RuleResult {
   const c = collector("volumes-feature");
-  const finest = asset.volumes?.["50"];
-  const sources = new Map<VolumeList,(solid: VolumeSolid) => boolean>();
   const tissueRegions = new Set(asset.thermal.regions.filter((region) => region.model === "body").map((region) => region.id));
   const respiration = new Map<Slug | undefined, Respiration | undefined>();
   respiration.set(undefined, asset.thermal.respiration);
@@ -423,6 +440,7 @@ export function featureRule(asset: Asset, scales?: readonly ScaleDenominator[], 
     }
     const feature = featureOf(volume.denominator, minFeatureMm);
     const drawn = thinnestDrawn(asset, volume.denominator);
+    const mechanical = sectionGauges(asset,volume);
     for (const list of ["body", "thermal", "structure"] as const) {
       const solids = (volume[list] as readonly (VolumeSolid | ThermalSolid | StructuralSolid)[]).filter((solid) => !isReference(solid)) as readonly VolumeSolid[];
       let smallest = Infinity;
@@ -437,18 +455,30 @@ export function featureRule(asset: Asset, scales?: readonly ScaleDenominator[], 
             onTissue(solid, tissueSurfaces.get(key)!, emitter.diameterM, qualityOf(asset, volume.denominator)))) return;
         }
         const dimension = smallestDimension(solid);
-        const limit = Math.min(feature, drawn.get(solid.bone) ?? Infinity);
-        const sheet = dimension < limit && list === "body" && matchesSheet(solid, gauges.get(`${solid.bone}/${solid.material}`), limit);
+        const member = list === "structure" ? solid as StructuralSolid : undefined;
+        const section = member && "kind" in member && member.kind === "loft" && member.part === "member" &&
+          member.bone === member.member && !member.weights && !member.transform ? mechanical.get(member.bone) : undefined;
+        const gauge = section?.material === solid.material ? section.thicknessM : Infinity;
+        const limit = Math.min(feature, drawn.get(solid.bone) ?? Infinity, gauge);
+        const sheetGauge = gauges.get(`${solid.bone}/${solid.material}`);
+        const shaped = isSheet(solid, limit, sheetGauge);
+        const sheet = shaped && (solid.sheet === true || Number.isFinite(sheetGauge));
+        const path = `volumes.${volume.denominator}.${list}[${(volume[list] as readonly { id: string }[]).findIndex((s) => s.id === solid.id)}]`;
+        if (solid.sheet === true) {
+          const [thickness, middle] = sheetExtents(solid);
+          const m = c.measure({ scale: volume.denominator, list, name: `sheetRatio:${solid.id}`, value: thickness > 0 ? middle / thickness : 0, limit: VOLUME_LIMITS.sheetRatio, bound: "min" });
+          if (!(m.value >= VOLUME_LIMITS.sheetRatio - 1e-9) || (dimension < limit - 1e-9 && !shaped)) {
+            const [thick, across, least] = [thickness, middle, Math.max(limit, VOLUME_LIMITS.sheetRatio * thickness)].map((metres) => (metres * 1000).toFixed(1));
+            const gauged = sheetGauge !== undefined && dimension < limit - 1e-9;
+            c.fail(path, `Solid "${solid.id}" of ${list} declares \`sheet\` but is no thin sheet: ${thick} mm thick, ${across} mm across (at least ${least} mm)${gauged ? `, with the thickness of the thermal layer of bone "${solid.bone}" and material "${solid.material}"${Number.isFinite(sheetGauge) ? ` (${(sheetGauge! * 1000).toFixed(1)} mm)` : " (declared inconsistently)"}` : ""}. A lump or a strip is no sheet.`, `Körper "${solid.id}" von ${list} erklärt \`sheet\`, ist aber keine dünne Platte: ${thick} mm dick, ${across} mm breit (mindestens ${least} mm)${gauged ? `, mit der Dicke der thermischen Schicht von Knochen "${solid.bone}" und Material "${solid.material}"${Number.isFinite(sheetGauge) ? ` (${(sheetGauge! * 1000).toFixed(1)} mm)` : " (widersprüchlich erklärt)"}` : ""}. Ein Klumpen oder ein Streifen ist keine Platte.`, { scale: volume.denominator, list, measurements: [m], data: { solid: solid.id } });
+          }
+          if (solid.slender === true) c.fail(path, `Solid "${solid.id}" of ${list} declares both \`sheet\` and \`slender\`: a part is either a thin sheet or a slender rod.`, `Körper "${solid.id}" von ${list} erklärt sowohl \`sheet\` als auch \`slender\`: ein Teil ist entweder eine dünne Platte oder ein schlanker Stab.`, { scale: volume.denominator, list, data: { solid: solid.id } });
+        }
         const thin = sheet || (VOLUME_LIMITS.thinRoles as readonly string[]).includes(solid.role) || solid.slender === true || solid.texture === true || (list === "thermal" && (solid as { layer?: string }).layer !== undefined);
         if (!thin && dimension < smallest) smallest = dimension;
         if (!thin && dimension < limit - 1e-9) {
-          if (volume.denominator !== 50 && finest?.status === "authored") {
-            let matches = sources.get(list);
-            if (!matches) { matches = physicalSources(finest,list); sources.set(list,matches); }
-            if (matches(solid)) return;
-          }
           const m = c.measure({ scale: volume.denominator, list, name: `minDimensionM:${solid.id}`, value: dimension, limit, bound: "min" });
-          c.fail(`volumes.${volume.denominator}.${list}[${(volume[list] as readonly { id: string }[]).findIndex((s) => s.id === solid.id)}]`, `Solid "${solid.id}" of ${list} is ${(dimension * 1000).toFixed(1)} mm thin, below ${(limit * 1000).toFixed(1)} mm (the smallest feature of 1:${volume.denominator}${limit < feature ? ` or the thinnest drawing of bone "${solid.bone}"` : ""}).`, `Körper "${solid.id}" von ${list} ist ${(dimension * 1000).toFixed(1)} mm dünn, unter ${(limit * 1000).toFixed(1)} mm (dem kleinsten Merkmal von 1:${volume.denominator}${limit < feature ? ` oder der dünnsten Zeichnung des Knochens "${solid.bone}"` : ""}).`, { scale: volume.denominator, list, measurements: [m] });
+          c.fail(path, `Solid "${solid.id}" of ${list} is ${(dimension * 1000).toFixed(1)} mm thin, below ${(limit * 1000).toFixed(1)} mm (the smallest feature of 1:${volume.denominator}${limit < feature ? ` or the thinnest drawing of bone "${solid.bone}"` : ""})${shaped && !sheet ? "; if this is a true thin sheet, declare `sheet: true`" : ""}.`, `Körper "${solid.id}" von ${list} ist ${(dimension * 1000).toFixed(1)} mm dünn, unter ${(limit * 1000).toFixed(1)} mm (dem kleinsten Merkmal von 1:${volume.denominator}${limit < feature ? ` oder der dünnsten Zeichnung des Knochens "${solid.bone}"` : ""})${shaped && !sheet ? "; ist dies eine echte dünne Platte, `sheet: true` erklären" : ""}.`, { scale: volume.denominator, list, measurements: [m], data: { solid: solid.id } });
         }
       });
       c.measure({ scale: volume.denominator, list, name: "minDimensionM", value: smallest === Infinity ? feature : smallest, limit: 0, bound: "min" });
@@ -498,7 +528,7 @@ export function thermalCoverageRule(asset: Asset, scales?: readonly ScaleDenomin
   return c;
 }
 
-/** 🏗️ `volumes-structure-coverage` (presence part, amendment B1, B3): every bone `eligibleBones` of the structural view selects has a `member` solid, every 2D `member` shape at the scale has one more solid along its bone, and every `structure.supports` anchor has exactly one `support` solid naming it in `anchor`. Containment in the body and the ground contact are geometric (`checkVolumes`). */
+/** 🏗️ `volumes-structure-coverage` (presence part, amendment B1, B3): every bone `eligibleBones` of the structural view selects has a `member` solid (its own, naming it in `member`, or one that spans it and names it in `members`; `checkVolumes` measures with {@link spanGap} that a spanning solid holds each bone it names), every 2D `member` shape at the scale has one more solid along its bone, and every `structure.supports` anchor has exactly one `support` solid naming it in `anchor`. Containment in the body and the ground contact are geometric (`checkVolumes`). */
 export function structureCoverageRule(asset: Asset, scales?: readonly ScaleDenominator[]): RuleResult {
   const c = collector("volumes-structure-coverage");
   const eligible = eligibleBones(asset, asset.dimensions.heightM);
@@ -509,7 +539,7 @@ export function structureCoverageRule(asset: Asset, scales?: readonly ScaleDenom
     const d = volume.denominator;
     const base = `volumes.${d}.structure`;
     const rep = asset.representations[`${d}`];
-    const parts = (part: string, bone: Slug): number => volume.structure.filter((solid) => (solid as { part: string }).part === part && (solid as { member: Slug }).member === bone).length;
+    const parts = (part: string, bone: Slug): number => volume.structure.filter((solid) => (solid as { part: string }).part === part && ((solid as { member: Slug }).member === bone || (part === "member" && ((solid as { members?: readonly Slug[] }).members ?? []).includes(bone)))).length;
     const memberShapes = new Map<Slug, number>();
     if (rep !== undefined && rep.status === "authored")
       for (const shapes of [rep.geometry.elevation, rep.geometry.front, rep.geometry.plan]) {
@@ -647,17 +677,20 @@ export function slendernessOf(asset: Asset, solid: VolumeSolid): number {
   return line === undefined || !(line.thickness > 0) ? boxes : Math.max(boxes, line.length / line.thickness);
 }
 
-/** 🪢️ `volumes-slender`: a solid that declares `slender: true` is at least {@link VOLUME_LIMITS}.slenderRatio times as long as its largest cross extent, measured along its centre line ({@link slendernessOf}), in every list of every authored scale. */
-export function slenderRule(asset: Asset, scales?: readonly ScaleDenominator[]): RuleResult {
+/** 🪢️ `volumes-slender`: a solid that declares `slender: true` is at least {@link VOLUME_LIMITS}.slenderRatio times as long as its largest cross extent, measured along its centre line ({@link slendernessOf}), in every list of every authored scale. A `member` solid of the structure list is a bar that is drawn by its axis: it may also declare itself slender when it is at least {@link VOLUME_LIMITS}.slenderMemberRatio times as long as its largest cross extent and at least {@link VOLUME_LIMITS}.slenderMemberFeatures smallest features of its scale long (a femur of 390 x 35 mm or a radius of 240 x 18 mm with its true shaft at 1:500, the shafts `🧪️tests/🧊️model-skeleton` pins at one section for every scale; ruling of 2026-11-22: a long member keeps its true section at every scale and is drawn as a pen-widened stroke, C24); a compact solid (a knob, a bolt head, a finger at 1:500) is neither and stays under `volumes-feature`. */
+export function slenderRule(asset: Asset, scales?: readonly ScaleDenominator[], minFeatureMm: number = VOLUME_LIMITS.minFeatureMm): RuleResult {
   const c = collector("volumes-slender");
   for (const volume of authoredVolumes(asset)) {
     if (scales !== undefined && !scales.includes(volume.denominator)) continue;
+    const feature = featureOf(volume.denominator, minFeatureMm);
     for (const list of ["body", "thermal", "structure"] as const)
       (volume[list] as readonly object[]).forEach((entry, index) => {
         const solid = entry as VolumeSolid;
         if (solid.slender !== true || isReference(solid)) return;
-        const m = c.measure({ scale: volume.denominator, list, name: `slenderRatio:${solid.id}`, value: slendernessOf(asset, solid), limit: VOLUME_LIMITS.slenderRatio, bound: "min" });
-        if (!m.ok) c.fail(`volumes.${volume.denominator}.${list}[${index}]`, `Solid "${solid.id}" is declared slender but is only ${m.value.toFixed(1)} times as long as thick (at least ${VOLUME_LIMITS.slenderRatio}).`, `Körper "${solid.id}" ist als schlank erklärt, aber nur ${m.value.toFixed(1)}-mal so lang wie dick (mindestens ${VOLUME_LIMITS.slenderRatio}).`, { scale: volume.denominator, list, measurements: [m] });
+        const member = list === "structure" && (solid as StructuralSolid & { part?: string }).part === "member" && sortedExtents(solid)[2] >= VOLUME_LIMITS.slenderMemberFeatures * feature - 1e-9;
+        const limit = member ? VOLUME_LIMITS.slenderMemberRatio : VOLUME_LIMITS.slenderRatio;
+        const m = c.measure({ scale: volume.denominator, list, name: `slenderRatio:${solid.id}`, value: slendernessOf(asset, solid), limit, bound: "min" });
+        if (!m.ok) c.fail(`volumes.${volume.denominator}.${list}[${index}]`, `Solid "${solid.id}" is declared slender but is only ${m.value.toFixed(1)} times as long as thick (at least ${limit}${list === "structure" && !member ? `; a structure member of at least ${(VOLUME_LIMITS.slenderMemberFeatures * feature * 1000).toFixed(0)} mm length needs ${VOLUME_LIMITS.slenderMemberRatio}` : ""}).`, `Körper "${solid.id}" ist als schlank erklärt, aber nur ${m.value.toFixed(1)}-mal so lang wie dick (mindestens ${limit}${list === "structure" && !member ? `; ein Tragwerksstab von mindestens ${(VOLUME_LIMITS.slenderMemberFeatures * feature * 1000).toFixed(0)} mm Länge braucht ${VOLUME_LIMITS.slenderMemberRatio}` : ""}).`, { scale: volume.denominator, list, measurements: [m] });
       });
   }
   return c;
@@ -665,5 +698,5 @@ export function slenderRule(asset: Asset, scales?: readonly ScaleDenominator[]):
 
 /** 🧰️ The analytic rules in order, for the callers that run them together. */
 export function analyticRules(asset: Asset, scales?: readonly ScaleDenominator[], minFeatureMm: number = VOLUME_LIMITS.minFeatureMm): readonly VolumeFinding[] {
-  return [availabilityRule(asset, scales), bonesRule(asset, scales), featureRule(asset, scales, minFeatureMm), thermalCoverageRule(asset, scales), structureCoverageRule(asset, scales), copiedRule(asset, scales), slenderRule(asset, scales)].flatMap((result) => result.findings);
+  return [availabilityRule(asset, scales), bonesRule(asset, scales), featureRule(asset, scales, minFeatureMm), thermalCoverageRule(asset, scales), structureCoverageRule(asset, scales), copiedRule(asset, scales), slenderRule(asset, scales, minFeatureMm)].flatMap((result) => result.findings);
 }

@@ -17,7 +17,7 @@ pub(super) struct DumpViewport {
 
 #[cfg(any(target_arch = "wasm32", any(test, feature = "testkit")))]
 #[derive(serde::Serialize)]
-struct DumpNodeState {
+pub struct DumpNodeState {
     pub(super) hovered: bool,
     pub(super) disabled: bool,
     pub selected: bool,
@@ -36,7 +36,7 @@ pub struct DumpNode {
     font_size: Option<f32>,
     font_weight: Option<u32>,
     pub visible: bool,
-    state: DumpNodeState,
+    pub state: DumpNodeState,
     #[serde(skip_serializing_if = "Option::is_none")]
     graph_hover: Option<semio_ui_declaration::ui::NodeGraphHover>,
 }
@@ -134,6 +134,12 @@ pub struct DumpMeshInstance {
     pub id: String,
     pub mesh_id: String,
     pub interaction_id: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub position: Option<[f64; 3]>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub rotation: Option<[f64; 4]>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub scale: Option<[f64; 3]>,
 }
 
 /// 🌍️ One `World3d` surface's whole published payload: where it sits on the page, what it publishes,
@@ -208,6 +214,7 @@ pub fn ui_node_kind_tag(node: &UiNode) -> &'static str {
         UiNode::CardStack(_) => "cardStack",
         UiNode::OverviewCard(_) => "overviewCard",
         UiNode::Tree(_) => "tree",
+        UiNode::Table(_) => "table",
         UiNode::Image(_) => "image",
         UiNode::ComponentScene(_) => "componentScene",
         UiNode::ExternalSlot(_) => "externalSlot",
@@ -235,6 +242,7 @@ fn ui_node_declared_id(node: &UiNode) -> Option<&str> {
         UiNode::Group(n) => Some(n.id.as_str()),
         UiNode::CardStack(n) => Some(n.id.as_str()),
         UiNode::OverviewCard(n) => Some(n.id.as_str()),
+        UiNode::Table(n) => n.id.as_deref(),
         UiNode::Progress(n) => Some(n.id.as_str()),
         UiNode::Image(n) => Some(n.id.as_str()),
         UiNode::ComponentScene(n) => Some(n.surface_id.as_str()),
@@ -335,8 +343,9 @@ fn dump_visual_fields(node: &UiNode, theme: &Theme, hovered: bool) -> (Option<St
             None => (None, None, None, None),
         },
         UiNode::Group(group) => (Some(group.label.as_str().to_string()), Some(rgba_array(theme.text)), None, Some(theme.font_size_body)),
-        UiNode::CardStack(_) | UiNode::Tree(_) => (None, None, None, None),
+        UiNode::CardStack(_) => (None, None, None, None),
         UiNode::OverviewCard(card) => (Some(card.title.as_str().to_string()), Some(rgba_array(theme.text)), None, Some(theme.font_size_body)),
+        UiNode::Tree(_) | UiNode::Table(_) => (None, None, None, None),
         UiNode::Image(image) => (image.alt.as_ref().map(|alt| alt.as_str().to_string()), None, None, None),
         UiNode::ComponentScene(_) => (None, None, None, None),
         UiNode::ExternalSlot(_) => (None, None, None, None),

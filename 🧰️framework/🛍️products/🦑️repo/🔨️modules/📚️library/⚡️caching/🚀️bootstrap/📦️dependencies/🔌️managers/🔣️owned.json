@@ -76,12 +76,6 @@
         "lock"
       ]
     },
-    "🏗️build/🕸️graph/🧮️derived-nodes/🧩️closure-kinds/🧭️row-paths/🟨️.mjs": {
-      "ecosystem": "javascript",
-      "names": [
-        "lock"
-      ]
-    },
     "🏗️build/🗄️cas/🧬️schema/🔣️.json": {
       "ecosystem": "javascript",
       "names": []
@@ -91,6 +85,32 @@
       "names": [
         "lock",
         "scopeConfig"
+      ]
+    },
+    "🏗️build/🌐️remote-execution/🛰️sidecar/🚦️ready/🧬️schema/🔣️.json": {
+      "ecosystem": "javascript",
+      "names": [
+        "lock"
+      ]
+    },
+    "🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🔌️provider-closures/🔣️.json": {
+      "ecosystem": "javascript",
+      "names": [
+        "scopeConfig"
+      ]
+    },
+    "🏗️build/🚀️bootstrap/🔷️typescript-compiler/🧬️schema/🔣️.json": {
+      "ecosystem": "javascript",
+      "names": [
+        "lock"
+      ]
+    },
+    "🧪️testing/🔬️slice-lab/🏠️home/🧬️schema/🔣️.json": {
+      "ecosystem": "javascript",
+      "names": [
+        "scopeConfig",
+        "cache",
+        "home"
       ]
     }
   }

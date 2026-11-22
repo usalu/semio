@@ -308,6 +308,79 @@ pub fn block_list_transfer_drop_action(scene: &UiComponentSceneNode, bounds: Rec
     }
 }
 
+/// 🫥️ React's `opacity: 0.5` on the dragged sortable row, painted as one group.
+const BLOCK_LIST_DRAG_ALPHA: f32 = 0.5;
+
+/// ↕️ The vertical shift dnd-kit's `verticalListSortingStrategy` gives each sortable row while `active` hovers `over`: rows between slide one row (plus their gap) toward the vacated slot and the active row snaps onto the over row. `rects` are `(top, height)`.
+pub fn sortable_vertical_offsets(rects: &[(f32, f32)], active: usize, over: usize) -> Vec<f32> {
+    let gap = |index: usize| {
+        let previous = index.checked_sub(1).and_then(|at| rects.get(at));
+        let next = rects.get(index + 1);
+        let (top, height) = rects[index];
+        match (previous, next) {
+            (None, None) => 0.0,
+            (Some(previous), _) if active < index => top - (previous.0 + previous.1),
+            (None, Some(next)) if active < index => next.0 - (top + height),
+            (_, Some(next)) => next.0 - (top + height),
+            (Some(previous), None) => top - (previous.0 + previous.1),
+        }
+    };
+    let (active_top, active_height) = rects[active];
+    (0..rects.len())
+        .map(|index| {
+            if index == active {
+                let (over_top, over_height) = rects[over];
+                return if active < over { over_top + over_height - (active_top + active_height) } else { over_top - active_top };
+            }
+            if index > active && index <= over {
+                -active_height - gap(index)
+            } else if index < active && index >= over {
+                active_height + gap(index)
+            } else {
+                0.0
+            }
+        })
+        .collect()
+}
+
+fn block_list_group_starts(plan: &BlockListPlan, is_start: impl Fn(&BlockListRole) -> bool, range: std::ops::Range<usize>) -> Vec<usize> {
+    range.filter(|index| is_start(&plan.targets[*index].role)).collect()
+}
+
+/// ↕️ Slides the rows of a promoted step or block sort drag the way dnd-kit does: the dragged row snaps onto the closest-center row (the row a release would move it to) and the rows between shift to make room, children travelling with their row.
+fn block_list_displace_sorting(plan: &mut BlockListPlan, session: &SceneListTransferSession) -> Option<std::ops::Range<usize>> {
+    let step_start = |role: &BlockListRole| matches!(role, BlockListRole::Step { .. });
+    let block_start = |role: &BlockListRole| matches!(role, BlockListRole::Block { .. });
+    let (range, is_start, active_role): (std::ops::Range<usize>, &dyn Fn(&BlockListRole) -> bool, BlockListRole) = match &session.source {
+        SceneListTransferSource::BlockListStep { step_id, index } => (plan.body_range.clone(), &step_start, BlockListRole::Step { step_id: step_id.clone(), index: *index }),
+        SceneListTransferSource::BlockListBlock { step_id, block_id, index } => {
+            let step = plan.targets.iter().position(|target| matches!(&target.role, BlockListRole::Step { step_id: candidate, .. } if candidate == step_id))?;
+            let end = plan.targets[step + 1..plan.body_range.end].iter().position(|target| step_start(&target.role)).map_or(plan.body_range.end, |offset| step + 1 + offset);
+            (step + 1..end, &block_start, BlockListRole::Block { step_id: step_id.clone(), block_id: block_id.clone(), index: *index })
+        }
+        _ => return None,
+    };
+    let starts = block_list_group_starts(plan, is_start, range.clone());
+    let active = starts.iter().position(|start| plan.targets[*start].role == active_role)?;
+    let rects: Vec<(f32, f32)> = starts.iter().map(|start| (plan.targets[*start].rect.y, plan.targets[*start].rect.h)).collect();
+    let active_rect = plan.targets[starts[active]].rect;
+    let center_x = active_rect.x + active_rect.w * 0.5 + (session.current_x - session.start_x);
+    let center_y = active_rect.y + active_rect.h * 0.5 + (session.current_y - session.start_y);
+    let over_role = block_list_closest_target(plan, center_x, center_y, |role| is_start(role) && match (&active_role, role) {
+        (BlockListRole::Block { step_id, .. }, BlockListRole::Block { step_id: candidate, .. }) => step_id == candidate,
+        _ => true,
+    })?;
+    let over = starts.iter().position(|start| &plan.targets[*start].role == over_role)?;
+    let offsets = sortable_vertical_offsets(&rects, active, over);
+    for (group, start) in starts.iter().enumerate() {
+        let end = starts.get(group + 1).copied().unwrap_or(range.end);
+        for target in &mut plan.targets[*start..end] {
+            target.rect.y += offsets[group];
+        }
+    }
+    Some(starts[active]..starts.get(active + 1).copied().unwrap_or(range.end))
+}
+
 /// 🖌️ Draws one planned block-list target.
 fn paint_block_list_target(ctx: &mut FrameworkWidgetContext<'_>, target: &BlockListTarget, labels: BlockListChromeLabels) {
     let theme = ctx.theme;
@@ -397,12 +470,14 @@ pub fn render_block_list(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut F
     let theme = ctx.theme;
     if scene.block_list.is_none() {
         stage_block_list_accessibility_controls(&scene.host_id, Vec::new());
-        return render_placeholder("block-list", bounds, ctx);
+        return render_placeholder(bounds, ctx);
     }
-    let plan = block_list_plan(scene, bounds, theme, driver_drag);
+    let mut plan = block_list_plan(scene, bounds, theme, driver_drag);
+    stage_block_list_accessibility_controls(&scene.host_id, block_list_accessibility_controls(&plan, bounds, labels));
+    let sorting = semio_renderer_wgpu_scene_state::SCENE_LIST_TRANSFER.with(|cell| cell.borrow().active.clone().filter(|session| session.promoted && session.source_host_id == scene.host_id && session.driver_drag == driver_drag));
+    let dragged = sorting.and_then(|session| block_list_displace_sorting(&mut plan, &session)).unwrap_or(0..0);
     let pad = theme.padding_standard;
     let row_h = theme.control_height;
-    stage_block_list_accessibility_controls(&scene.host_id, block_list_accessibility_controls(&plan, bounds, labels));
 
     draw_text(ctx, labels.steps, plan.header.x + pad, plan.header.y + row_h * 0.65, theme.font_size_small, theme.text_muted);
     for target in &plan.targets[..plan.body_range.start] {
@@ -412,12 +487,25 @@ pub fn render_block_list(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut F
     ctx.input.register_hit(HitTarget { rect: plan.body, event: None, control_id: Some(scroll_key(&scene.host_id, "blockList")), kind: HitKind::ScrollRegion, drag_axis: None, drag_data: None });
     ctx.draw.push_scissor(plan.body);
     reserve_list_rows(ctx, list_visible_row_capacity(plan.body, row_h));
-    for target in &plan.targets[plan.body_range.clone()] {
+    let mut fade = None;
+    for index in plan.body_range.clone() {
+        let target = &plan.targets[index];
         if target.rect.y + target.rect.h < plan.body.y || target.rect.y > plan.body.y + plan.body.h {
             continue;
         }
+        if index == dragged.start && !dragged.is_empty() {
+            let bounds = plan.targets[dragged.clone()].iter().map(|target| target.rect).reduce(|a, b| {
+                let (x, y) = (a.x.min(b.x), a.y.min(b.y));
+                Rect::new(x, y, (a.x + a.w).max(b.x + b.w) - x, (a.y + a.h).max(b.y + b.h) - y)
+            });
+            fade = bounds.map(|bounds| ctx.draw.begin_group_alpha(bounds, BLOCK_LIST_DRAG_ALPHA));
+        }
         paint_block_list_target(ctx, target, labels);
+        if index + 1 == dragged.end {
+            fade.take().into_iter().for_each(|mark| ctx.draw.end_group_alpha(mark));
+        }
     }
+    fade.into_iter().for_each(|mark| ctx.draw.end_group_alpha(mark));
     ctx.draw.pop_scissor();
 
     ctx.draw.push_line(plan.palette_rect.x, plan.palette_rect.y, plan.palette_rect.x, plan.palette_rect.y + plan.palette_rect.h, theme.separator, theme.stroke_hairline);
@@ -658,7 +746,7 @@ fn split_diff_rows<'a>(operations: &[DiffLine<'a>]) -> Vec<(Option<DiffLine<'a>>
 pub fn render_diff_view(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
     let theme = ctx.theme;
     let Some(diff) = &scene.diff_view else {
-        return render_placeholder("diff-view", bounds, ctx);
+        return render_placeholder(bounds, ctx);
     };
     let before_lines: Vec<&str> = diff.before.split('\n').collect();
     let after_lines: Vec<&str> = diff.after.split('\n').collect();

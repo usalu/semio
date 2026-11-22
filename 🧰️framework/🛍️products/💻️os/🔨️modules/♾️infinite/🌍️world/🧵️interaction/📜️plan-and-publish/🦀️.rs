@@ -215,7 +215,23 @@ pub(super) fn plan_world3d_terrain_edit(session: &WorldSessionState, generation:
     let action = WorldFlatAction {
         kind: WorldFlatActionKind::TerrainEdit,
         strings: [Some(controller), Some(action_id), Some(operation), Some(window), Some(surface), None, None, None],
-        numbers: [f64::from(column), f64::from(row), f64::from(brush.arguments.radius), f64::from(brush.arguments.value), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        numbers: [f64::from(column), f64::from(row), f64::from(brush.arguments.radius), brush.arguments.value, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+    };
+    plan.push_action(action).then_some(plan)
+}
+
+pub(super) fn plan_world3d_terrain_position_move(session: &WorldSessionState, generation: u64, action: &str, id: &str, [longitude, latitude]: [f64; 2], revision: [u64; 3]) -> Option<WorldInteractionPlan> {
+    let mut plan = WorldInteractionPlan::new(session.interaction_revision, generation);
+    let controller = plan.push_string(&session.controller_id)?;
+    let action_id = plan.push_string(action)?;
+    let id = plan.push_string(id)?;
+    let window = plan.push_string(session.window_instance_id.as_deref().unwrap_or(&session.surface_id))?;
+    let surface = plan.push_string(&session.surface_id)?;
+    plan.terrain_position_revision = Some(revision);
+    let action = WorldFlatAction {
+        kind: WorldFlatActionKind::TerrainMovePosition,
+        strings: [Some(controller), Some(action_id), Some(id), Some(window), Some(surface), None, None, None],
+        numbers: [longitude, latitude, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
     };
     plan.push_action(action).then_some(plan)
 }
@@ -275,6 +291,7 @@ pub fn publish_world3d_plan_step(
     if plan.cursor == plan.action_len {
         plan.byte_len = 0;
         plan.terrain_stroke = None;
+        plan.terrain_position_revision = None;
         return Ok(WorldInteractionStep::Complete);
     }
     let action = plan.actions[usize::from(plan.cursor)].expect("world interaction action cursor remains admitted");
@@ -401,6 +418,20 @@ pub fn publish_world3d_plan_step(
             reservation.publish()?;
         }
         WorldFlatActionKind::TerrainEdit => semio_os_infinite_world_cursors::publish_world3d_terrain_edit(plan, action, input)?,
+        WorldFlatActionKind::TerrainMovePosition => {
+            let [controller, action_id, id, window, surface] = std::array::from_fn(|index| plan.string(action.strings[index].expect("terrain position action span")));
+            let bytes = semio_ui_action::checked_action_string_bytes(&[controller, action_id, "id", id, "windowId", window, "surfaceId", surface, "longitude", "latitude"])?;
+            let mut reservation = input.reserve_action(controller, action_id, bytes)?;
+            let builder = reservation.builder();
+            builder.begin_object(None)?;
+            builder.string(Some("windowId"), window)?;
+            builder.string(Some("surfaceId"), surface)?;
+            builder.string(Some("id"), id)?;
+            builder.number(Some("longitude"), action.numbers[0])?;
+            builder.number(Some("latitude"), action.numbers[1])?;
+            builder.end_container()?;
+            reservation.publish()?;
+        }
         WorldFlatActionKind::EngagementPointerDown | WorldFlatActionKind::EngagementPointerMove => {
             if !publish_world3d_engagement_pointer(session_state, selection_state, plan, action, input)? {
                 return Ok(WorldInteractionStep::Stale);
@@ -606,6 +637,12 @@ pub fn world_interaction_active_census(active: &WorldInteractionActive) -> Strin
     }
 }
 
+pub(crate) struct TerrainPositionPress {
+    pub(super) id: String,
+    pub(super) point: [f32; 2],
+    pub(super) revision: [u64; 3],
+}
+
 pub struct WorldInteractionAuthority {
     pub queue: WorldInteractionIntentQueue,
     pub blocked: Option<WorldInteractionIntent>,
@@ -614,6 +651,7 @@ pub struct WorldInteractionAuthority {
     pub right_press: Option<[f32; 2]>,
     pub(crate) right_dragged: bool,
     pub(crate) terrain_press: Option<semio_os_infinite_world_model::WorldTerrainStroke>,
+    pub(crate) terrain_position_press: Option<TerrainPositionPress>,
     pub(crate) engagement_press: bool,
     pub marquee: Option<WorldMarqueeGesture>,
     pub gumball: Option<WorldGumballGesture>,
@@ -628,7 +666,7 @@ pub struct WorldInteractionAuthority {
 
 impl Default for WorldInteractionAuthority {
     fn default() -> Self {
-        Self { queue: WorldInteractionIntentQueue::default(), blocked: None, registry: None, active: None, right_press: None, right_dragged: false, terrain_press: None, engagement_press: false, marquee: None, gumball: None, handles: WorldHandleDrag::default(), gumball_swallow: false, next_generation: 1, faulted: false, closing: false }
+        Self { queue: WorldInteractionIntentQueue::default(), blocked: None, registry: None, active: None, right_press: None, right_dragged: false, terrain_press: None, terrain_position_press: None, engagement_press: false, marquee: None, gumball: None, handles: WorldHandleDrag::default(), gumball_swallow: false, next_generation: 1, faulted: false, closing: false }
     }
 }
 //#endregion 🧵️WorldInteractionTransaction

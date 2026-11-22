@@ -329,7 +329,7 @@ fn renderer_canvas_retirement_probe(replace: bool, close: bool, remount: bool) {
     }
     let mut actions = Vec::new();
     if close {
-        while !matches!(deadline.close_step(semio_renderer_wgpu_scene_state::camera_fixture_grant()), semio_framework_job::InteractiveJobCloseStep::Complete { .. }) {}
+        while !matches!(deadline.close_step(semio_renderer_wgpu_scene_state::camera_fixture_grant()), Ok(semio_framework_job::InteractiveJobCloseStep::Complete { .. })) {}
     } else {
         loop {
             match deadline.step(semio_renderer_wgpu_scene_state::camera_fixture_grant()).unwrap().0 {

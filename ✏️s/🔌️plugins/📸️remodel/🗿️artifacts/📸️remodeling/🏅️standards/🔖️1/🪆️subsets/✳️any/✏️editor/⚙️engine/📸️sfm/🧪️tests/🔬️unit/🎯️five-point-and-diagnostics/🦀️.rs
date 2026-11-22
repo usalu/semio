@@ -1,6 +1,7 @@
 //! 🎯️ Five-point, bundle adjustment and diagnostic tests of the structure from motion: the shared pose helpers, the eight-point and five-point essential estimation, the true-pose checks, the bundle convergence and the ignored cost diagnostic. See [`super`].
 
 use super::*;
+use semio_s_artifact_remodel_remodeling_sfm_geometry::editor::remodeling::engine::sfm::geometry::{essential_five_point_candidates, p3p_grunert, pose_graph_optimize};
 
 // #region 🔖️TwoViewFivePointTests
 pub(super) fn relative_pose(a: &CameraPose, b: &CameraPose) -> Se3 {
@@ -104,8 +105,8 @@ fn five_point_candidates_include_the_true_essential_matrix() {
     assert!(!candidates.is_empty(), "five-point solver should return at least one candidate on a clean, non-degenerate sample");
 
     let truth = relative_pose(pose0, pose1);
-    let r = mat3d_to_array(&truth.r.0);
-    let e_true = mat3_mul(&skew3(truth.t), &r);
+    let columns = truth.r.0.cols.map(|column| cross3(truth.t, column));
+    let e_true = mat3d_to_array(&Mat3d { cols: columns });
     let n_true = frob_norm(&e_true);
     let e_true_n: [[f64; 3]; 3] = std::array::from_fn(|r_| std::array::from_fn(|c_| e_true[r_][c_] / n_true));
 
@@ -315,7 +316,7 @@ fn bundle_adjustment_converges_near_noise_floor() {
         .map(|&pid| {
             let mut rng = Rng::from_seed(2000 + pid as u64);
             let jitter: [f64; 3] = std::array::from_fn(|_| (rng.next_f64() - 0.5) * 0.05);
-            VecD::from_vec(add3(scene.points_world[pid], jitter).to_vec())
+            VecD::from_vec(scene.points_world[pid].into_iter().zip(jitter).map(|(coordinate, offset)| coordinate + offset).collect())
         })
         .collect();
 

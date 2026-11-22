@@ -160,7 +160,7 @@ function puzzle3dHostileSources(source: string): Map<string, string> {
       "    (encoded <= PUZZLE3D_CONFIG_STORE_MAXIMUM_BYTES).then_some(encoded)\n",
       "    Some(0)\n",
     )],
-    ["stale publication authority", source.replaceAll("            || request.generation != request.authority.generation()\n", "")],
+    ["stale publication authority", source.replaceAll(" || request.generation != request.authority.generation()", "")],
     ["unbounded preparation progress", source.replaceAll("ArtifactStoreOneItemPreparationStep::Progress", "ArtifactStoreOneItemPreparationStep::Prepared")],
   ]);
 }
@@ -208,7 +208,7 @@ function ownerOracle(owner: PublicationOwner, source: string): boolean {
       && production.includes("fn puzzle3d_config_store_mutation_bytes(mutation: &Puzzle3dConfigMutation) -> Option<usize> {")
       && production.includes("(encoded <= PUZZLE3D_CONFIG_STORE_MAXIMUM_BYTES).then_some(encoded)")
       && !production.includes("_ => None,\n    }\n}\n\nfn puzzle3d_config_store_edit(")
-      && production.includes('return Err("Puzzle3d Config preparation rejected its exact mutation envelope".into());')
+      && production.includes('return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit, "Puzzle3d Config preparation rejected its exact mutation envelope"));')
       && production.includes("request.operation != request.authority.operation()")
       && production.includes("request.generation != request.authority.generation()")
       && production.includes("request.base_revision != request.authority.base_revision()")
@@ -217,7 +217,7 @@ function ownerOracle(owner: PublicationOwner, source: string): boolean {
       && production.includes("ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2")
       && production.includes("fn cancel(&mut self)")
       && production.includes("fn begin_close(&mut self)")
-      && production.includes("self.owners.close_step(grant.retained_grant())")
+      && production.includes("self.owners.close_step(effect)")
       && production.includes("fn terminal_is_empty(&self)")
       && production.includes("struct Puzzle3dArtifactStorePreparationFactory")
       && production.includes("impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Puzzle3dPlaySnapshot, Puzzle3dMutation> for Puzzle3dArtifactStorePreparationFactory")
@@ -243,18 +243,18 @@ function ownerOracle(owner: PublicationOwner, source: string): boolean {
       && production.includes("ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2")
       && production.includes("fn cancel(&mut self)")
       && production.includes("fn begin_close(&mut self)")
-      && production.includes("self.owners.close_step(grant.retained_grant())")
+      && production.includes("semio_framework_job::close_original_nested_step(cx,|cx,_|crate::puzzle_job::job_close_step(&mut self.outbox,&mut self.owners,cx))")
       && production.includes("fn terminal_is_empty(&self)")
-      && production.includes("fn puzzle2d_dispatch_emit(")
-      && production.includes("puzzle2d_dispatch_emit(command, snapshot, config, &window_config, &window_transient, window_kind, self.view_state.as_ref(), puzzle2d_active_utility(self.view_state.as_ref()), &selection, &self.authoring_seed, &self.base_revision, gesture, None)?")
-      && production.includes("puzzle2d_dispatch_emit(command, doc.snapshot, config, &window_config, &window_transient, window_kind, view_state, puzzle2d_active_utility(view_state), interaction.selection(PUZZLE2D_INTERACTION_DOMAIN), authoring_seed, &base_revision, &semio_plugin::app::GestureSlot::detached(), doc.operation_optional().cloned())")
+      && production.includes("pub fn puzzle2d_dispatch_emit<A: Puzzle2dEditor>(")
+      && production.includes("puzzle2d_dispatch_emit::<A>(command, snapshot, config, &window_config, &window_transient, window_kind, view_state, puzzle2d_active_utility(view_state), &selection, &input.operation.authoring_seed, base_revision, gesture, None)?")
+      && production.includes("puzzle2d_dispatch_emit::<Self>(command, doc.snapshot, config, &window_config, &window_transient, window_kind, view_state, puzzle2d_active_utility(view_state), interaction.selection(PUZZLE2D_INTERACTION_DOMAIN), authoring_seed, base_revision, &semio_plugin::app::GestureSlot::detached(), doc.operation_optional().cloned())")
       && production.includes("PUZZLE2D_SELECTION_BATCH_LIMIT: usize = 1_024")
       && production.includes("if addressed > PUZZLE2D_SELECTION_BATCH_LIMIT {\n        return None;\n    }")
       && production.includes("Some(addressed.saturating_add(connects).max(1))");
   }
   if (owner.owner !== "Puzzle5dPlayApp") return true;
-  const guard = production.indexOf('if !["copy", "cut", "paste", "import-media"].contains(&request.tool_id.as_str())');
-  const decode = production.indexOf("puzzle5d_preflight_reserved_wire", guard);
+  const guard = production.indexOf('["copy","cut","paste","import-media"].contains(&request.tool_id.as_str())');
+  const decode = production.indexOf("admit_reserved_work::<EditorApp<Self>,crate::editor::puzzle5d::session::Puzzle5dReservedWork>(request,body,construction,cx)", guard);
   return !production.includes("Puzzle5dCopyJobFactory")
     && !production.includes("puzzle5d_reserved_factory!")
     && production.includes("type Owner = EditorApp<Puzzle5dPlayApp>;")
@@ -305,7 +305,7 @@ export async function runPublicationAuthorityAuditScript(context: Readonly<{ roo
     if (owner.owner === "Puzzle5dPlayApp") {
       const missingReserved = `puzzle5d_reserved_factory!(Puzzle5dCutJobFactory, "cut", "puzzle.5d.reserved.cut.v1");\n${source}`;
       const missingPreparation = source.replace("Some(std::sync::Arc::new(Puzzle5dStorePreparationFactory))", "None");
-      const decodeBeforeAuthority = source.replace('        if !["copy", "cut", "paste", "import-media"].contains(&request.tool_id.as_str()) {\n            return Ok(None);\n        }\n', "");
+      const decodeBeforeAuthority = source.replace('        if body.is_none()&&!request.as_ref().is_some_and(|request|["copy","cut","paste","import-media"].contains(&request.tool_id.as_str())){return Ok(false)}\n', "");
       if (ownerOracle(owner, missingReserved) || ownerOracle(owner, missingPreparation) || ownerOracle(owner, decodeBeforeAuthority)) {
         throw new Error("Puzzle5d accepted an app-owned reserved factory, missing Store preparation, or decode before route authority");
       }

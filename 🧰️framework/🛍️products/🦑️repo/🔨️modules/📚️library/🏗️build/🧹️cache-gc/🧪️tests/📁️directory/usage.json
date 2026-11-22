@@ -1,0 +1,7 @@
+{
+  "mount": "/cache/rust/m",
+  "volume": { "blocks": 25165824, "bsize": 4096, "bfree": 1494220, "bavail": 1494220 },
+  "plist": { "MountPoint": "/cache/rust/m", "FilesystemType": "apfs", "CapacityInUse": 22548578304 },
+  "expected": { "usedBytes": 22548578304, "capacityBytes": 103079215104, "availableBytes": 6120325120 },
+  "quotaBytes": 34359738368
+}

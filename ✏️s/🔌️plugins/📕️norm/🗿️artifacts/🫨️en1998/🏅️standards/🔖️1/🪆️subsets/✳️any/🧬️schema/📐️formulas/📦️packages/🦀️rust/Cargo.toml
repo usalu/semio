@@ -17,6 +17,7 @@ path = "../../🦀️.rs"
 
 [dependencies]
 semio-s-artifact-norm-en1998-model = { workspace = true }
+semio-s-artifact-norm-en1998-schema-part4 = { workspace = true }
 semio-s-plugin-norm-compliance = { workspace = true }
 semio-s-plugin-norm-mechanics = { workspace = true }
 

@@ -122,7 +122,7 @@ function createKernelHandle(scope: PluginHandleScope, instances: ReturnType<type
         registry.touch(actorId);
         const opened = await submitPluginLifecycleTurn(
           lease,
-          { kind: "open", input: { appId, actor: currentPluginRuntimeActor, config: [], assets: [], capabilities: [], quotas: Array.from(encodePackValue({})) } },
+          { kind: "open", input: { appId, purpose: { tag: "ordinary" }, actor: currentPluginRuntimeActor, config: [], assets: [], capabilities: [], quotas: Array.from(encodePackValue({})) } },
           "Interactive",
         );
         const captureTurn = await continueOpeningTurns(opened.raw, () => {

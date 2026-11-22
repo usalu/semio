@@ -4,15 +4,7 @@ use super::*;
 
 // #region events
 //#region 🔖️Overlay
-// 🪟️ One first-class overlay mechanism serving Select popups, context menus, tooltips, dialogs, and
-// a command palette — not five bespoke implementations. `NodeFlags::OVERLAY` already gives a
-// flagged child hit-test priority over its normal siblings (see 🔖️HitTest above); `EventRouter`
-// layers open/close/anchor/placement/dismissal/focus-trap bookkeeping on top of that one existing
-// primitive. Building the popup CONTENTS (a `Select`'s item list, a context menu's entries, …) is
-// explicitly not this module's job — a caller (future `reconcile`/`paint`/`host` wiring) reconciles
-// that subtree in and hands this module its root `NodeId` plus a `kind`/`anchor`; from there this
-// module owns the subtree's lifecycle.
-
+// 🪟️ One overlay mechanism for Select popups, context menus, tooltips, dialogs and the command palette; the caller reconciles the content subtree and hands over its root, this module owns the lifecycle.
 /// ⚓️ What an overlay is positioned relative to: an existing node (a `Select`'s trigger, a hovered
 /// row) or a raw point (where a context menu was right-clicked, where the pointer was when a
 /// tooltip's hover-delay fired).
@@ -20,6 +12,14 @@ use super::*;
 pub enum OverlayAnchor {
     Node(NodeId),
     Point { x: f32, y: f32 },
+}
+
+/// 🛑️ The dismissals an owner prevented, React's `event.preventDefault()` inside `onEscapeKeyDown`, `onPointerDownOutside` and `onCloseAutoFocus`: a prevented dismissal leaves the overlay open (or focus where it is) and, for an outside press, does not swallow the press.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct OverlayVeto {
+    pub escape: bool,
+    pub outside_press: bool,
+    pub focus_return: bool,
 }
 
 /// 🪟️ One currently-open overlay's lifecycle state.
@@ -35,6 +35,9 @@ pub struct OpenOverlay {
     /// 🔒️ `Dialog`/`CommandPalette`: while `true`, Tab-order cycling is bounded to this overlay's
     /// subtree (see `EventRouter::dispatch`'s `Tab` handling).
     pub focus_trap: bool,
+    /// 🔙️ The node holding focus when the overlay opened — where focus returns on close when the anchor is not a focusable trigger (React's `restoreFocusRef`).
+    pub return_focus: Option<NodeId>,
+    pub veto: OverlayVeto,
 }
 
 /// 🥞️ Open overlays in z-order (last = topmost = painted last = hit-tested first, matching
@@ -134,14 +137,7 @@ pub fn disabled_row_action_reason(tree: &UiTree, row: NodeId, index: usize) -> O
     action.reason.as_ref().map(|reason| reason.as_str()).filter(|reason| action.disabled && !reason.is_empty())
 }
 
-// 💡️ React gets hover reveal from the DOM: `ChromeControlHint` arms a `setTimeout` on
-// `onPointerEnter`/`onFocusCapture` and opens a portalled `role="tooltip"` after
-// `CHROME_CONTROL_TOOLTIP_DELAY_MS`. An immediate-mode canvas has no such affordance, so the dwell
-// timer lives here: `update_hover` stamps when the hover chain's leaf last changed, and
-// `advance_clock` — fed one monotonic seconds value per frame by `engine::Ui::advance_clock` — is
-// what actually fires. The same clock debounces `DismissPolicy::hover_out_delay_seconds`, which was
-// previously documented as "not actually debounced yet".
-
+// 💡️ React's `ChromeControlHint` dwell timer lives here: `advance_clock`, fed one monotonic seconds value per frame, fires the reveal and the `hover_out_delay_seconds` close.
 /// 💡️ What a clock step asks the host to do about hover reveal this frame.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum TooltipStep {
@@ -187,12 +183,7 @@ pub struct RouterClockStep {
 //#endregion 🔖️Tooltip
 
 //#region 🔖️DragDrop
-// 🫳️ Generic drag-and-drop session lifecycle: start-drag (promoted from a `Press` capture once
-// pointer movement clears `DRAG_PROMOTE_THRESHOLD_SQ`), update-position/evaluate-drop-target
-// (`EventRouter::update_drag`, called from `PointerMove`), commit-or-cancel (`PointerUp`). Building
-// the specific CONSUMERS (tree reorder, dock retiling, …) is out of scope — this is wire-format
-// parity plumbing for whatever consumes `UiCommand::DropCommitted`.
-
+// 🫳️ Drag session lifecycle: promoted from a `Press` capture past `DRAG_PROMOTE_THRESHOLD_SQ`, updated on `PointerMove`, committed or cancelled on `PointerUp`.
 /// 🏷️ Drag payload: MIME-style keys, JSON-encoded string values — exactly the shape
 /// `framework/renderer/react/ui-interpreter.tsx`'s `handleDrop` reads off `DataTransfer` (`data:
 /// Record<string, string>`, matched by `application/x-semio-*` key prefix) and the shape
@@ -231,12 +222,7 @@ pub(super) const DRAG_PROMOTE_THRESHOLD_SQ: f32 = 16.0;
 //#endregion 🔖️DragDrop
 
 //#region 🔖️Scroll
-// 🖱️ Wheel events route to the nearest scrollable ancestor of the node under the pointer, walking
-// the bubble chain for `NodeFlags::SCROLLABLE` exactly like `nearest_accepting_drop_target` walks it
-// for `NodeFlags::DROP_TARGET`. Thumb-drag capture (`CaptureKind::ScrollThumb`) is a separate path:
-// `paint` paints the actual thumb node wherever it likes in the tree and registers it once via
-// `EventRouter::register_scroll_thumb`, decoupling thumb geometry from scrollable-content geometry.
-
+// 🖱️ Wheel events route to the nearest `NodeFlags::SCROLLABLE` ancestor; its scrollbar is derived from its own extent ([`scrollbar_for`]).
 /// ⛓️ Walks `from`'s bubble chain (inclusive) for the nearest `NodeFlags::SCROLLABLE` node.
 pub(super) fn nearest_scrollable_ancestor(tree: &UiTree, from: NodeId) -> Option<NodeId> {
     let mut found = None;
@@ -250,13 +236,18 @@ pub(super) fn nearest_scrollable_ancestor(tree: &UiTree, from: NodeId) -> Option
     });
     found
 }
+
+/// 📜️ The scrollbar of one axis `scrollable` shows: its viewport is its own placed rect, its content the furthest extent of its children, exactly the extent wheel scrolling clamps to; `None` when everything fits.
+pub fn scrollbar_for(tree: &UiTree, scrollable: NodeId, vertical: bool, rtl: bool) -> Option<semio_ui_wgpu_layout::layout::Scrollbar> {
+    let viewport = node_abs_rect(tree, scrollable)?;
+    let content = tree.children(scrollable).filter_map(|child| tree.accepted_layout(child)).fold(0.0_f32, |extent, child| extent.max(if vertical { child.y + child.height } else { child.x + child.width }));
+    let (x, y) = tree.node(scrollable)?.state.scroll_offset;
+    semio_ui_wgpu_layout::layout::scrollbar(viewport, content, if vertical { y } else { x }, vertical, rtl)
+}
 //#endregion 🔖️Scroll
 
 //#region 🔖️EditRouting
-// ✍️ Key routing for a focused editable node's `tree::EditState`. Byte-offset caret/anchor
-// throughout (see `EditState`'s own doc comment for why); `prev_char_boundary`/`next_char_boundary`
-// step one `char` at a time without re-deriving a full `char_indices` pass per keystroke.
-
+// ✍️ Key routing for a focused editable node's `tree::EditState` (byte-offset caret and anchor).
 pub(super) fn prev_char_boundary(text: &str, index: usize) -> usize {
     if index == 0 {
         return 0;
@@ -277,6 +268,87 @@ pub(super) fn next_char_boundary(text: &str, index: usize) -> usize {
         candidate += 1;
     }
     candidate
+}
+
+/// 🔠️ The class a scalar belongs to for word motion: blank, word or punctuation.
+fn word_class(ch: char) -> u8 {
+    if ch.is_whitespace() {
+        0
+    } else if ch.is_alphanumeric() || ch == '_' {
+        1
+    } else {
+        2
+    }
+}
+
+/// ⬅️ The start of the word at or before `index`: blanks are skipped backwards, then one run of a class.
+pub(super) fn word_start_before(text: &str, index: usize) -> usize {
+    let head = &text[..index];
+    let trimmed = head.trim_end_matches(|ch| word_class(ch) == 0);
+    match trimmed.chars().next_back().map(word_class) {
+        Some(class) => trimmed.trim_end_matches(|ch| word_class(ch) == class).len(),
+        None => 0,
+    }
+}
+
+/// ➡️ The end of the word at or after `index`: blanks are skipped forwards, then one run of a class.
+pub(super) fn word_end_after(text: &str, index: usize) -> usize {
+    let tail = &text[index..];
+    let trimmed = tail.trim_start_matches(|ch| word_class(ch) == 0);
+    let skipped = tail.len() - trimmed.len();
+    match trimmed.chars().next().map(word_class) {
+        Some(class) => index + skipped + trimmed.len() - trimmed.trim_start_matches(|ch| word_class(ch) == class).len(),
+        None => text.len(),
+    }
+}
+
+/// ⏩ The start of the next word after `index`: one run of a class, then the blanks that follow it.
+pub(super) fn word_start_after(text: &str, index: usize) -> usize {
+    let tail = &text[index..];
+    let run = match tail.chars().next().map(word_class) {
+        Some(0) | None => 0,
+        Some(class) => tail.len() - tail.trim_start_matches(|ch| word_class(ch) == class).len(),
+    };
+    let rest = &tail[run..];
+    index + run + rest.len() - rest.trim_start_matches(|ch| word_class(ch) == 0).len()
+}
+
+/// 🔤️ The word, blank run or punctuation run around `index` (a click's caret position).
+pub(super) fn word_range_at(text: &str, index: usize) -> (usize, usize) {
+    let class = text[index..].chars().next().map(word_class).or_else(|| text[..index].chars().next_back().map(word_class));
+    let Some(class) = class else { return (index, index) };
+    let start = text[..index].trim_end_matches(|ch| word_class(ch) == class).len();
+    let tail = &text[index..];
+    (start, index + tail.len() - tail.trim_start_matches(|ch| word_class(ch) == class).len())
+}
+
+/// 🏁️ The start of the logical line holding `index`.
+pub(super) fn line_start(text: &str, index: usize) -> usize {
+    text[..index].rfind('\n').map_or(0, |at| at + 1)
+}
+
+/// 🛑️ The end of the logical line holding `index`.
+pub(super) fn line_end(text: &str, index: usize) -> usize {
+    text[index..].find('\n').map_or(text.len(), |at| index + at)
+}
+
+/// ↕️ The caret one logical line up or down, keeping its column in scalars, `None` past the first or last line.
+pub(super) fn vertical_target(text: &str, index: usize, down: bool) -> Option<usize> {
+    let start = line_start(text, index);
+    let column = text[start..index].chars().count();
+    let (target_start, target_end) = if down {
+        let end = line_end(text, index);
+        if end >= text.len() {
+            return None;
+        }
+        (end + 1, line_end(text, end + 1))
+    } else {
+        if start == 0 {
+            return None;
+        }
+        (line_start(text, start - 1), start - 1)
+    };
+    Some(text[target_start..target_end].char_indices().nth(column).map_or(target_end, |(offset, _)| target_start + offset))
 }
 
 /// ↔ Selection bounds as `(start, end)` regardless of which of `anchor`/`caret` is smaller —
@@ -315,7 +387,7 @@ pub enum UiCommand {
     /// (outside-press swallow, `Escape`, tooltip hover-out).
     OverlayClosed { window_id: String, root: NodeId, kind: OverlayKind },
     /// 🏹️ A `DragSession` released over an accepting drop target.
-    DropCommitted { window_id: String, source: NodeId, target: NodeId, payload: DragPayload },
+    DropCommitted { window_id: String, source: NodeId, target: NodeId, y: f32, payload: DragPayload },
     /// 🗑️ A `DragSession` released with no accepting drop target under the pointer.
     DropCancelled { window_id: String, source: NodeId },
     /// 📋️ `Ctrl`/`Cmd`+`C` over a text selection — host copies `text` to the OS clipboard.
@@ -336,7 +408,7 @@ pub enum UiCommand {
     /// `hit_test_node` use) so a host doesn't need its own tree walk just to decide whether this
     /// surface already gets real OS-event-driven input through its own bespoke host (`world-3d`/
     /// `node-graph`/`tiled-map`/`board-2d`) before paying for the `node` lookup.
-    Scene { window_id: String, node: NodeId, surface_id: String, kind: SurfaceKind, rect: Rect, event: UiEvent },
+    Scene { window_id: String, node: NodeId, surface_id: String, kind: SurfaceKind, rect: Rect, event: UiEvent, click_count: u32 },
 }
 
 /// 🧭️ Owns capture + focus + overlay + drag + scroll-thumb state for one window's retained tree and
@@ -367,6 +439,40 @@ pub(super) const STEPPER_REPEAT_INTERVAL_SECONDS: f64 = 0.1;
 pub(super) const STEPPER_REPEAT_CLOCK_EPSILON_SECONDS: f64 = 0.000_001;
 
 pub(super) const SLIDER_DOUBLE_CLICK_SECONDS: f64 = 0.5;
+
+/// ⏱️ The interval within which a press continues the click chain of the one before: the OS double-click time every browser reads for DOM `MouseEvent.detail` (winit has no query for it, so its default).
+pub(super) const DOUBLE_CLICK_SECONDS: f64 = 0.5;
+
+/// 📏️ How far, per axis in logical pixels, a press may land from the one before and still continue its click chain: the OS double-click slop.
+pub(super) const DOUBLE_CLICK_SLOP_PX: f32 = 4.0;
+
+/// 🖱️ The latest primary or secondary press of a click chain: `count` is DOM `MouseEvent.detail` (1 single, 2 double, 3 triple, saturating), the number a `click` handler reads.
+#[derive(Clone, Copy, Debug)]
+pub(super) struct ClickChain {
+    pub(super) seconds: f64,
+    pub(super) x: f32,
+    pub(super) y: f32,
+    pub(super) button: PointerButton,
+    pub(super) count: u32,
+}
+
+/// ✋️ A held press that extends its text selection: `unit` is the click count that began it (1 by character, 2 by word, 3 by line) and `origin` the span that click selected.
+#[derive(Clone, Copy, Debug)]
+pub(super) struct TextDrag {
+    pub(super) node: NodeId,
+    pub(super) unit: u8,
+    pub(super) origin: (usize, usize),
+}
+
+/// ⏳️ A text press whose field had no laid-out text yet (no frame ran since it was first hovered or focused): the caret waits for the layout and then goes where the pointer was.
+#[derive(Clone, Copy, Debug)]
+pub(super) struct PendingTextPress {
+    pub(super) node: NodeId,
+    pub(super) x: f32,
+    pub(super) y: f32,
+    pub(super) extend: bool,
+    pub(super) unit: u8,
+}
 
 impl RetiringDragPayload {
     pub(super) fn new(payload: DragPayload) -> Self {
@@ -421,9 +527,6 @@ pub struct EventRouter {
     /// ✅️ Per-node accept predicate refining plain `NodeFlags::DROP_TARGET` membership, set via
     /// `set_drop_accept`. Absent from this map but flagged `DROP_TARGET` still accepts everything.
     pub(super) drop_accept: BTreeMap<NodeId, DropAcceptPredicate>,
-    /// 🏁️ Scrollbar-thumb node id → (its owning `NodeFlags::SCROLLABLE` node, drag axis), set via
-    /// `register_scroll_thumb`.
-    pub(super) scroll_thumbs: BTreeMap<NodeId, (NodeId, ScrollAxis)>,
     pub(super) retiring_payload: Option<RetiringDragPayload>,
     /// 🖱️ `(pointer_x, pointer_y, scroll_offset_x, scroll_offset_y)` captured at the start of a
     /// `ScrollThumb` drag, for `update_scroll_thumb`'s delta-computation baseline.
@@ -446,6 +549,12 @@ pub struct EventRouter {
     /// every other reveal deadline here uses, so a dropped frame cannot lose time.
     pub(super) select_typeahead: Option<(String, f64)>,
     pub(super) stepper_repeat: Option<StepperRepeat>,
+    /// 🖱️ The click chain of the latest press, for every double and triple click rule.
+    pub(super) click_chain: Option<ClickChain>,
+    /// ✋️ The text field whose selection a held primary press is dragging.
+    pub(super) text_drag: Option<TextDrag>,
+    /// ⏳️ The text press waiting for its field's first layout.
+    pub(super) text_pending: Option<PendingTextPress>,
     pub(super) caret: Option<CaretClock>,
     /// 🔢️ The per-surface monotonic `seq` every fired intent carries — this window's own twin of
     /// `UiDocumentStore`'s `seq` counter (`📃️UiDocumentStore/🟦️.tsx`'s `buildIntent`). Minted here,

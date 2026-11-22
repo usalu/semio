@@ -1,5 +1,51 @@
 # Readiness Report: Mit-Bestand Demonstrator CDN Redeploy
 
+## November 22, 01:00 PST
+
+The Demonstrator release build now compiles cleanly against the current tree and reached 2,186 of about 2,400 units, but every attempt stops on the native build's storage floor (about 2,000 of 2,048 MiB free). One Demonstrator build writes roughly 20 GiB while the host fluctuates between 2 and 25 GiB free because other agents' builds share the same disk. The silent `cargo exited with 1` was this watchdog: its reason was discarded by a shadowed `stop` and is now reported. Space work so far: a stale-statfs remount of the Rust image, image compaction, a fixed component-run collector that removed 30 superseded or failed runs, and removal of superseded diagnostics. The emitter staleness gate is handled by rebuilding the descriptor emitter before each root. The roster now runs one root at a time and starts only when the host has at least 22 GiB free (`roster-when-space.sh`). Confirmed modules remain 9 of 32. No new static matrix or archive exists.
+
+## November 21, 21:20 PST
+
+Process and Sourcing Windows gained release confirmations (10 of 32 confirmed, Procedural's prior receipt superseded). Every other root keeps failing on concurrent refactors rather than on Demonstrator defects: a split Process3d tool arm, a removed DWG workspace dependency, a PDF authoring dependency cycle, the Window layout API migration, plugin command and time-travel renames, a raw newline inside a format-stamps string, a missing SDK stamps module and, now, two incomplete taxonomy generator contracts that refuse plugin discovery. Each was fixed or verified fixed and the roots were requeued. The Generator preview fix (display writer batches its granted items per turn) and the Koordinator, Aussuchen and Bearbeiten fixes are in source but not yet in a linked guest. The Rust build image reports 2.3 GiB free and cannot be compacted while builds hold it. No new static matrix or archive exists.
+
+## November 21, 15:40 PST
+
+Demonstrator w0WRGLI and Process wGrjlOr failed to compile: the Process3d editor tools macro received a `"moveStep" | "dropStep"` arm, and the XLSX base mutations imported a moved operation-wire module. The macro arm is split into two literal arms; the import was already corrected concurrently. Retries for both roots are queued behind Sourcing. Generator against Procedural wmr64VB now boots in both languages but its procedural preview renders no meshes. Eight confirmed module receipts exist; the full matrix and archive remain outstanding.
+
+## November 21, 12:41 PST
+
+Both new guest investigations reproduced the remaining failures. Koordinator, Aussuchen and Bearbeiten timed out in both languages on wc3Mufm. An instrumented replay showed background typed-operation publication repeatedly relinquished the lease held or queued by the contribution command. The correction passed seven neutral fixture sequences in Rust and Python. The current Demonstrator build w0WRGLI re-admitted both corrected Rust bodies in its held lane. Generator’s wy17Kh3 build reached a Store root retirement refusal in both locales. Its corrected ToolRun now completes the sole and shared root cases in WASI. New browser checks are pending. The accepted static evidence remains eight targeted cases, with the full final matrix and archive still pending.
+
+## November 21, 11:54 PST
+
+On the November 21 static build with optimized Energy core d2999c14, all eight targeted boots across Aggregator, Energie, Statik and Verfolgen passed in English and German. The two single-worker runs served 577 GET requests, with 0 404 responses and 0 development bridge requests. The other eight cases still await rebuilt guest modules.
+
+## November 21, 11:33 PST
+
+The rebuilt static site served the verified 267,650,448-byte optimized Energy core. English and German Energie and Verfolgen passed all four official boots. The static origin recorded 310 GET requests, zero 404 responses and zero agent-bridge requests. Process linked a 206,203,176-byte component but its descriptor stage detected a repository profile policy edit during compilation and refused the old invocation. A fresh queue request is pending. Procedural wy17Kh3 and Demonstrator wc3Mufm are the two current release builds.
+
+## November 21, 10:53 PST
+
+Energy w2q3K5F completed 1,031 native units and 11 release stages with zero failures. Its optimized core is 267,650,448 bytes, SHA-256 d2999c1497b9233efd3d95441db3cd7b7bb5cb48915625bf7e399fc109192e3b. Its linked guest passed English and German in the official browser checks. A static Vite capture using those optimized bytes is in progress. Demonstrator wc3Mufm admitted the repaired action classifier and contribution parser.
+
+## November 21, 10:40 PST
+
+The latest full static matrix remains 7/16. Both localized Verfolgen tests passed on the subsequent static build. The Generator investigation isolated a synchronous loop in Flow publication. The linked WASI session producer now publishes and releases text at its own quoted budget. Bearbeiten’s host parser returned identical output in 2,550 turns for a fixture that previously needed 54,913. Both app fixes still require integration in new browser modules and the full release gate.
+
+## November 21, 10:28 PST
+
+The post-tile-change Vite invocation completed successfully through the native wrapper and published its own validated capture. All 85 world vector tiles at zoom 0 through 3 were nonempty in that output. Both official static Verfolgen boots passed (English 4.5 seconds, German 3.6 seconds). The static server recorded 261 requests, zero 404 responses and zero agent-bridge requests in that targeted run. The last full matrix on the preceding capture was 7/16. Generator, Koordinator, Aussuchen and Bearbeiten still require passing English and German boots before packaging.
+
+## November 21, 10:22 PST
+
+The latest complete static-origin matrix ran all 16 cases and passed seven. Aggregator, Energie and Statik passed in both languages. Verfolgen passed in English and reached a painted map in German, where missing vector tiles triggered the console-error assertion. The published low-zoom vector coverage has been corrected in source and its bounded cache populated. A new Vite build and localized retest are pending. Koordinator, Aussuchen, Bearbeiten and Generator still need passing boots. Two Demonstrator rebuilds failed on a missing mapped-boundary export in the shared solid-topology crate. The export was restored alongside the new wire-recipe API and a canonical retry is queued.
+
+## November 21, 09:18 PST
+
+The 10 official English and German pane checks against checksum-verified linked Demonstrator wakSUm7 passed four cases. Aggregator and Verfolgen passed in both languages, including the GIS map checks. Aussuchen reached the interface but failed its browser console assertion. Koordinator timed out and reported the same setContributions classification error. Bearbeiten timed out waiting for setContributions. The captured 62,925-byte actions source matches rustc BLAKE3 b9100abc412ac24343c7778ff586d0bd7ff8325cb272c9b56fb59239eb60e15d. It looks up an app-owned host command in the action registry after finish_host. The live 63,520-byte source brings the declared app/mode command kind into initial and resumed host dispatch. The next Demonstrator capture is requested. These results cover the linked guest. The most recent complete static matrix remains 6/16.
+
+Both official Generator boots against linked Procedural w5PGoij timed out at 120 seconds. A checksum-verified wire trace now shows setActiveExample completing with Effect, Ready and Terminal pages, followed by loadDocument and successful toolRunStart. The remaining flowEvalTick waits at document replacement initialization. Its quoted capacity is 25,088 bytes and the retained phase has more than 16 MiB. Source matching and diagnosis continue.
+
 ## November 21, 08:54 PST
 
 Procedural w5PGoij completed 11 release stages with zero failures. The new optimized core is 111,725,044 bytes, SHA-256 90f04dc1fd7e0c141ce732b840fc000499ccff69c2dfb22298d1f37082e20de1. The raw component and optimized browser bytes have a durable queue confirmation. The two official Generator boots and the refreshed static site are waiting for host memory. Demonstrator wakSUm7 is linking and Energy is compiling. CAD encountered a new BREP registry boundary violation (4,058/4,000 lines). Five current module confirmations exist. The latest complete boot matrix is still 6/16.

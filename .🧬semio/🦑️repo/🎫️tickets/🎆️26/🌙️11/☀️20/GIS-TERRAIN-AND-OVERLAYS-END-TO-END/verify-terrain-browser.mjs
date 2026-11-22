@@ -124,17 +124,22 @@ try {
   const { cursor: editedCursor } = JSON.parse(await history.getAttribute("data-history-json"));
   console.log(`[DEBUG] Terrain Store published the brush edit at history cursor ${editedCursor}.`);
   const modifier = process.platform === "darwin" ? "Meta" : "Control";
-  const waitForCursor = (cursor) => page.waitForFunction(({ selector, expected }) => {
+  const waitForReplay = (cursor, action) => page.waitForFunction(({ selector, cursor, action }) => {
     const raw = document.querySelector(selector)?.getAttribute("data-history-json");
-    return raw && JSON.parse(raw).cursor === expected;
-  }, { selector: shellSelector, expected: cursor });
+    const current = raw && JSON.parse(raw);
+    return current && current.cursor > cursor && current.actionIds.at(-1) === action;
+  }, { selector: shellSelector, cursor, action });
   await page.keyboard.press(`${modifier}+z`);
-  await waitForCursor(originalCursor);
-  assert(JSON.parse(await history.getAttribute("data-history-json")).canRedo);
+  await waitForReplay(editedCursor, "undo");
+  const undone = JSON.parse(await history.getAttribute("data-history-json"));
+  assert(undone.canRedo);
   await page.keyboard.press(`${modifier}+Shift+z`);
-  await waitForCursor(editedCursor);
+  await waitForReplay(undone.cursor, "redo");
+  const redone = JSON.parse(await history.getAttribute("data-history-json"));
+  assert(!redone.canRedo);
   await page.keyboard.press(`${modifier}+z`);
-  await waitForCursor(originalCursor);
+  await waitForReplay(redone.cursor, "undo");
+  const beforeNavigation = JSON.parse(await history.getAttribute("data-history-json"));
 
   const cameraBefore = await viewport.getAttribute("data-camera-json");
   assert(cameraBefore && JSON.parse(cameraBefore).position?.length === 3, "Terrain publishes its initial camera");
@@ -145,7 +150,9 @@ try {
     return camera && camera !== before;
   }, cameraBefore, { timeout: 20_000 });
   const cameraAfter = await viewport.getAttribute("data-camera-json");
-  assert.equal(JSON.parse(await history.getAttribute("data-history-json")).cursor, originalCursor, "Camera navigation uses WindowConfig");
+  const afterNavigation = JSON.parse(await history.getAttribute("data-history-json"));
+  assert.equal(afterNavigation.canUndo, beforeNavigation.canUndo, "Camera navigation leaves the artifact Undo branch intact");
+  assert.equal(afterNavigation.canRedo, beforeNavigation.canRedo, "Camera navigation leaves the artifact Redo branch intact");
 
   const terrainData = await readTerrainData(page);
 

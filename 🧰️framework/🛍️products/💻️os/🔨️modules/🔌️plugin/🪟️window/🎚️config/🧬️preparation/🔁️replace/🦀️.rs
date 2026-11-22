@@ -100,6 +100,7 @@ where S: RetainedClone + Copy + RetireOwned + ::semio_os_kernel::StoreState, M: 
     fn cancel(&mut self) { self.cancelled = true; }
     fn begin_close(&mut self) -> bool { self.custody.begin_close() }
     fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{self.custody.step(effect)}
+    fn close_work_demand(&self, body: usize) -> Result<u64, ValueError> { self.custody.work_demand(body) }
     fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.custody.demands(0)?.copy_bytes) }
     fn next_close_capacity_byte_demand(&self, body: usize) -> Result<usize, ValueError> { Ok(self.custody.demands(body)?.capacity_bytes) }
     fn next_close_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.custody.demands(0)?.release_bytes) }

@@ -70,6 +70,42 @@ pub fn chrome_item_text(theme: &Theme, active: bool, hovered: bool) -> Rgba {
     }
 }
 
+/// 🌗️ Premultiplied blend of two colours, the CSS transition interpolation of `transparent` towards a fill.
+pub fn mix_rgba(from: Rgba, to: Rgba, amount: f32) -> Rgba {
+    if amount <= 0.0 {
+        return from;
+    }
+    if amount >= 1.0 {
+        return to;
+    }
+    let alpha = from.a + (to.a - from.a) * amount;
+    if alpha <= 0.0 {
+        return Rgba::TRANSPARENT;
+    }
+    let channel = |a: f32, b: f32| (a * from.a + (b * to.a - a * from.a) * amount) / alpha;
+    Rgba::new(channel(from.r, to.r), channel(from.g, to.g), channel(from.b, to.b), alpha)
+}
+
+/// 🎞️ The eased hover amount `0..=1` of the control at `rect` (`transition-[color,background-color]`, token duration and easing, snapping under reduced motion); marks the frame as mid-transition while it moves.
+pub fn chrome_hover_amount(draw: &mut DrawList, theme: &Theme, rect: Rect, hovered: bool, now_seconds: f32) -> f32 {
+    let key = semio_ui_draw_contract::transition_key([rect.x, rect.y, rect.w, rect.h], 0x686f_7665);
+    let amount = semio_ui_draw_contract::chrome_transition(key, if hovered { 1.0 } else { 0.0 }, now_seconds, theme.transition_duration_seconds, theme.transition_easing, draw.reduced_motion());
+    if semio_ui_draw_contract::chrome_transition_pending(key, now_seconds, theme.transition_duration_seconds) {
+        draw.note_motion_pending();
+    }
+    amount
+}
+
+/// 🎨️ [`chrome_item_bg`] mid-transition: the resting fill blended towards the hover fill by `hover`.
+pub fn chrome_item_bg_at(theme: &Theme, active: bool, hover: f32) -> Rgba {
+    mix_rgba(chrome_item_bg(theme, active, false), chrome_item_bg(theme, active, true), hover)
+}
+
+/// 🔤️ [`chrome_item_text`] mid-transition.
+pub fn chrome_item_text_at(theme: &Theme, active: bool, hover: f32) -> Rgba {
+    mix_rgba(chrome_item_text(theme, active, false), chrome_item_text(theme, active, true), hover)
+}
+
 /// 🎨️ Secondary ink on a hover or active fill. Element gray and muted gray are the hover fill,
 /// so a label, icon, or description that keeps its resting color disappears.
 pub fn foreground_on_fill(theme: &Theme, resting: Rgba, active: bool, hovered: bool) -> Rgba {
@@ -271,5 +307,9 @@ impl UiDriverChrome {
 #[cfg(test)]
 #[path = "../../../🧪️tests/🎨️foreground-on-fill/🦀️.rs"]
 mod foreground_on_fill_tests;
+
+#[cfg(test)]
+#[path = "../../../🧪️tests/🎞️hover-motion/🦀️.rs"]
+mod hover_motion_tests;
 
 // #endregion chrome

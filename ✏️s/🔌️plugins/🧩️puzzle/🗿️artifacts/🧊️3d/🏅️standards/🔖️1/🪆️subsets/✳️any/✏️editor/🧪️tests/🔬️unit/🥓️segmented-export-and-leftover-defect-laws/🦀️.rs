@@ -16,8 +16,8 @@
 /// document — so a lane that publishes a handle but loses, reorders or truncates chunks fails here.
 #[semio_framework_async_macros::async_test]
 async fn export_over_the_inline_budget_streams_one_segmented_download_carrying_the_whole_fixture() {
-    use crate::editor::puzzle3d::commands::export_snapshot::puzzle3d_export_inline_budget_bytes;
-    use crate::editor::puzzle3d::commands::export_snapshot::puzzle3d_export_json;
+    use semio_s_artifact_puzzle_3d_commands_document::export_snapshot::puzzle3d_export_inline_budget_bytes;
+    use semio_s_artifact_puzzle_3d_commands_document::export_snapshot::puzzle3d_export_json;
     assert_eq!(
         puzzle3d_export_inline_budget_bytes(),
         semio_framework_trace::GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES,
@@ -160,12 +160,13 @@ fn leftover_copy_paste_clones_selected_object() {
         hovered: Vec::new(),
         referenced: Vec::new(),
     };
-    let objects = puzzle3d_selected_objects_from(&marks, &scene_snapshot);
+    let document = puzzle3d_snapshot_from_host_snapshot(&scene_snapshot).expect("fixture document");
+    let objects = puzzle3d_selected_objects_from(&marks, &document);
     assert_eq!(objects.len(), 1, "leftover selected object id must copy even when granularity is vortex: {objects:?}");
     assert_eq!(objects[0].id, "seed-left-001");
     assert_eq!(objects[0].origin, [1.0, 2.0, 3.0]);
-    let fragment = puzzle3d_copy_fragment_from(&scene_snapshot, objects).expect("copy fragment");
-    let mutations = puzzle3d_paste_operations(&fragment, &semio_plugin::kernel::PastePlacement::default()).expect("paste");
+    let fragment = puzzle3d_copy_fragment_from(&document, &objects).expect("copy fragment");
+    let mutations = puzzle3d_paste_operations(&Puzzle3dSnapshot::default(), &fragment, &semio_plugin::kernel::PastePlacement::default()).expect("paste");
     let created: Vec<_> = mutations
         .iter()
         .filter_map(|op| match op {
@@ -210,11 +211,12 @@ fn leftover_copy_paste_clones_object_from_selected_vortex_uuid() {
         hovered: Vec::new(),
         referenced: Vec::new(),
     };
-    let objects = puzzle3d_selected_objects_from(&marks, &scene_snapshot);
+    let document = puzzle3d_snapshot_from_host_snapshot(&scene_snapshot).expect("fixture document");
+    let objects = puzzle3d_selected_objects_from(&marks, &document);
     assert_eq!(objects.len(), 1, "leftover selected vortex uuid must resolve to the parent object: {objects:?}");
     assert_eq!(objects[0].id, "seed-left-001");
-    let fragment = puzzle3d_copy_fragment_from(&scene_snapshot, objects).expect("copy fragment");
-    let mutations = puzzle3d_paste_operations(&fragment, &semio_plugin::kernel::PastePlacement::default()).expect("paste");
+    let fragment = puzzle3d_copy_fragment_from(&document, &objects).expect("copy fragment");
+    let mutations = puzzle3d_paste_operations(&Puzzle3dSnapshot::default(), &fragment, &semio_plugin::kernel::PastePlacement::default()).expect("paste");
     let created: Vec<_> = mutations
         .iter()
         .filter_map(|op| match op {
@@ -283,10 +285,10 @@ async fn leftover_translate_selection_mesh_mode_commits_pose_delta() {
 /// approach `PUZZLE_COMMAND_WORK_ITEMS`, which is what keeps every per-page unit under the 8 ms law.
 #[test]
 fn one_brush_mesh_page_validates_inside_one_command_work_budget() {
-    let page = crate::editor::puzzle3d::precompute::PUZZLE3D_MESH_PAGE_BASE64_CHARS;
+    let page = semio_s_artifact_puzzle_3d_precompute::PUZZLE3D_MESH_PAGE_BASE64_CHARS;
     let steps = page.div_ceil(PUZZLE3D_MESH_PAGE_SCAN_CHARS).saturating_mul(2).saturating_add(1);
-    assert!(steps <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS, "a whole page validates in {steps} bounded steps, inside {}", crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS);
-    assert!(page + 8 < crate::retained_command::PUZZLE_COMMAND_RAW_BYTES, "a page's two payload streams — one page's values, split at most once and padded per stream — leave the JSON envelope room inside the raw wire");
+    assert!(steps <= semio_s_plugin_puzzle_retained::PUZZLE_COMMAND_WORK_ITEMS, "a whole page validates in {steps} bounded steps, inside {}", semio_s_plugin_puzzle_retained::PUZZLE_COMMAND_WORK_ITEMS);
+    assert!(page + 8 < semio_s_plugin_puzzle_retained::PUZZLE_COMMAND_RAW_BYTES, "a page's two payload streams — one page's values, split at most once and padded per stream — leave the JSON envelope room inside the raw wire");
 }
 
 /// 🚚️ Wave W-H: a client whose "already uploaded" bookkeeping outlived the guest that justified it
@@ -298,8 +300,8 @@ fn one_brush_mesh_page_validates_inside_one_command_work_budget() {
 #[semio_framework_async_macros::async_test]
 async fn an_id_only_announcement_this_guest_cannot_serve_asks_for_the_bytes() {
     let mut app = app().await;
-    let (positions, indices) = semio_s_artifact_puzzle_3d_model::standards::v1::subsets::any::schema::precompute_model_tests::context::seeded_cube_mesh_buffers(23.0);
-    let digest = crate::editor::puzzle3d::precompute::brush_mesh_digest(&positions, &indices);
+    let (positions, indices) = semio_s_artifact_puzzle_3d_model::precompute_model_tests::context::seeded_cube_mesh_buffers(23.0);
+    let digest = semio_s_artifact_puzzle_3d_precompute::brush_mesh_digest(&positions, &indices);
     let url = "/test/restarted-guest-reannounce.glb";
     let announcement = json!({ "surfaceId": "world-3d", "url": url, "digest": digest });
     let refused = dispatch(&mut app, "registerBrushMesh", Some(&announcement), None).await.expect("id-only announcement");

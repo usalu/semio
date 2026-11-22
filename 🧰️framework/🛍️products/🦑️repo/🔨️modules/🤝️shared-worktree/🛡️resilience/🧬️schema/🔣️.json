@@ -3,6 +3,10 @@
  "$id": "https://semio.tech/framework/repo/shared-worktree/resilience/v1",
  "title": "Shared worktree resilience: sealed code snapshots, the self-check report, the health file and the language-agnostic fixture",
  "definitions": {
+  "CodeSnapshotPublicationPolicy": {
+   "description": "When an eligible publication is refused, wait before trying again and keep the same locally authenticated release identity.",
+   "const": {"retryMaximumMilliseconds": 30000}
+  },
   "Sha256": {
    "type": "string",
    "pattern": "^[0-9a-f]{64}$"
@@ -148,6 +152,30 @@
     "lastMs": {
      "$ref": "#/definitions/Count"
     }
+   }
+  },
+  "TargetSharingKinds": {
+   "description": "Supplementary lifetime counts for native runtime error codes on terminal target mutations. The codes do not identify the underlying cause.",
+   "const": {
+    "EBUSY": "blocked-target-sharing-ebusy",
+    "EPERM": "blocked-target-sharing-eperm",
+    "EACCES": "blocked-target-sharing-eacces"
+   }
+  },
+  "TargetSharingOperationKinds": {
+   "description": "Supplementary lifetime counts for the unlink and rename operations that reported a native target sharing failure.",
+   "const": {
+    "unlink": "blocked-target-sharing-unlink",
+    "rename": "blocked-target-sharing-rename"
+   }
+  },
+  "RenameEpermTargetKinds": {
+   "description": "Last target metadata already sampled by a staged put that later received EPERM from rename. These counts carry no path or access verdict.",
+   "const": {
+    "unseen": "blocked-rename-eperm-target-unseen",
+    "no-owner-write": "blocked-rename-eperm-target-no-write",
+    "owner-write": "blocked-rename-eperm-target-write",
+    "other": "blocked-rename-eperm-target-other"
    }
   },
   "Pending": {
@@ -751,7 +779,7 @@
    }
   },
   "BlockedRestart": {
-   "description": "loop-blocked-restart.json: written by the boot stage just before it ends a daemon whose event loop stayed blocked (or whose watchdog fell silent) in the run phase: how often this happened on the machine, the process, the lag, what the main thread declared it was doing, and the file with a stack sample of the process taken before it ended (null where the platform has no sampler).",
+   "description": "loop-blocked-restart.json: written by the boot stage just before it ends a daemon whose event loop stayed blocked or whose last owned watchdog beat expired in the run phase, even when later reads return no beat or one from another process: how often this happened on the machine, the process, the lag, what the main thread declared it was doing, and the file with a stack sample of the process taken before it ended (null where the platform has no sampler).",
    "type": "object",
    "additionalProperties": false,
    "required": [
@@ -984,10 +1012,25 @@
        {
         "type": "integer",
         "minimum": 0
+       },
+       {
+        "enum": [
+         null,
+         "EBUSY",
+         "EPERM",
+         "EACCES"
+        ]
+       },
+       {
+        "enum": [
+         null,
+         "unlink",
+         "rename"
+        ]
        }
       ],
-      "minItems": 3,
-      "maxItems": 3
+      "minItems": 5,
+      "maxItems": 5
      }
     },
     "totals": {

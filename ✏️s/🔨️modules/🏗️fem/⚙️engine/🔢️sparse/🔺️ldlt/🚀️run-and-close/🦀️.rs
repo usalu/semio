@@ -6,8 +6,9 @@ impl LdltJob {
     fn run(&mut self, context: &mut StepContext<'_>) -> Result<NumericalRun, OriginalTurnFailure> {
         if context.is_cancelled() { return Ok(NumericalRun::Cancelled); }
         if context.should_yield() { return Ok(NumericalRun::Yield); }
+        let before = context.original_work_units_spent();
         let result = self.run_admitted(context);
-        context.consume_fuel(1);
+        if matches!(result, Ok(NumericalRun::Yield)) && context.original_work_units_spent() == before { context.consume_fuel(1); }
         result
     }
 

@@ -131,3 +131,7 @@ No change. The source equals the catalog; it is VALID.
 The insulation unit contains two 4 mm panes around a 16 mm sealed argon space. The 12 mm spacer follows a 6 mm inner bend radius. Its physical profile persists in every model, while the cavity outline uses fewer stations at smaller scales. A Three.js ray and bounding boxes independently checked the weather-side and room-side faces, pane and cavity dimensions, spacer, and thermal layer order. Measured external area, structural coverage, scale agreement, silhouette and mesh-count checks passed at all four scales. The twelve exported scenes occupy 2,222,780 bytes.
 
 A visual comparison then showed the coarse physical blind had only five of the eighteen slats. The 1:500 physical model, paper views and heat-transfer surfaces now retain all eighteen 1.13 m slats and their separate tilt axes. Three.js stock checks, the full document validator, measured scale checks and independent GLB readback passed. The updated GLB is 2,280,848 bytes.
+
+## Canonical component readback, 2026-11-21
+
+Canonical source `4c9da985f921f3c9`. Each force view now shows eighteen separately pivoted slats between the guides. Both 8 mm lift tapes connect to the head bearing. The reverse view also exposes the bottom rail and guide pins. All twelve exported scenes reopened (1,611,952 bytes). The strict catalog source readback passed.

@@ -247,7 +247,7 @@ impl LayoutRetainedProofs {
         artifact_schema: "layout.layout",
         factory: "LayoutRetainedCommandJobFactory",
         factory_type: LayoutRetainedCommandJobFactory,
-        contract: ToolExecutionContract::resumable(8_192, 131_072, 1, 33_554_432, 2_000, 64, 1),
+        contract: layout_retained_contract(),
         tools: ["setActivePage", "focusPreflightIssue", "engagementInput", "canvasPointerDown", "canvasPointerMove", "canvasPointerUp", "canvasDragOver", "canvasDragLeave", "setCamera", "addFrame", "addPage", "patchPage", "patchFrame", "deleteSelection", "engagementSubmit", "canvasDrop", "translateSelection", "rotateSelection", "scaleSelection", "patchDocument"]
     }
 }
@@ -262,14 +262,8 @@ impl LayoutExportProofs {
         artifact_schema: "layout.layout",
         factory: "LayoutExportJobFactory",
         factory_type: LayoutExportJobFactory,
-        tools: {
-            "exportPng" => ToolExecutionContract::resumable(4_096, 131_072, 1, 33_554_432, 2_000, 64, 1),
-            "exportSvg" => ToolExecutionContract::resumable(4_096, 131_072, 1, 33_554_432, 2_000, 64, 1),
-            "exportPdf" => ToolExecutionContract::resumable(4_096, 131_072, 1, 33_554_432, 2_000, 64, 1),
-            "exportPackage" => ToolExecutionContract::resumable(4_096, 131_072, 1, 33_554_432, 2_000, 64, 1),
-            "exportStep" => ToolExecutionContract::resumable(4_096, 131_072, 1, 33_554_432, 2_000, 64, 1),
-            "exportIdml" => ToolExecutionContract::resumable(4_096, 131_072, 1, 33_554_432, 2_000, 64, 1),
-        }
+        contract: LayoutExportJobFactory::layout_export_contract(),
+        tools: ["exportPng", "exportSvg", "exportPdf", "exportPackage", "exportStep", "exportIdml"]
     }
 }
 pub(super) fn layout_bounded_first_step_tool_proofs() -> Vec<semio_plugin::ArtifactBoundedFirstStepProof> {

@@ -100,15 +100,6 @@ pub fn sync_node_graph_scene(scene: &UiComponentSceneNode, window_id: &str, boun
     true
 }
 
-/// 🧩️ Records one attached surface for the shell's per-frame mirror. Every kind goes through it —
-/// including `World3d`, whose host lives in the shell's own `world3d_states` — so the shell has ONE
-/// drained witness of what the chrome walk actually painted this frame.
-pub fn register_engine_surface(scene: &UiComponentSceneNode, window_id: &str, bounds: Rect, detail: EngineSurfaceKindDetail, created: bool, engine_token: Option<EngineSurfaceToken>) {
-    ATTACHED_SURFACES.with(|cell| {
-        cell.borrow_mut().upsert(EngineSurfaceRegistration { host_id: scene.host_id.clone(), surface_id: scene.surface_id.clone(), engine_token, window_id: window_id.to_string(), bounds, controller_id: scene.controller_id.clone(), detail, created })
-    });
-}
-
 /// 🎨️ The map palette this shell theme implies, in the rgba8 document `MapHost::set_map_theme_from_json`
 /// reads — the wgpu twin of React's `serializeMapCanvasThemeJson`. Fields with no unambiguous shell
 /// counterpart are left out, so `MapPalette`'s own defaults stand for them exactly as they do in React.
@@ -198,6 +189,9 @@ pub fn sync_tiled_map_scene(scene: &UiComponentSceneNode, window_id: &str, bound
     };
     let width = bounds.w.max(1.0) as u32;
     let height = bounds.h.max(1.0) as u32;
+    if tiled_map_unavailable(&scene.host_id) {
+        return false;
+    }
     let Some(snapshot) = ensure_engine_surface(&scene.host_id, &scene.surface_id, width, height) else { return false };
     let created = ENGINE_SURFACES.with(|cell| {
         let mut map_registry = cell.borrow_mut();
@@ -207,7 +201,11 @@ pub fn sync_tiled_map_scene(scene: &UiComponentSceneNode, window_id: &str, bound
             entry.map_host = Some(MapHost::new());
         }
         let host = entry.map_host.as_mut()?;
-        if sync_map_engine(host, &mut entry.map_sync_cache, map, theme, width, height) || created {
+        let synced = sync_map_engine(host, &mut entry.map_sync_cache, map, theme, width, height);
+        if let Some(camera) = created.then(|| take_map_recovery_camera(&scene.host_id)).flatten() {
+            host.set_camera_silent(camera[0], camera[1], camera[2]);
+        }
+        if synced || created {
             entry.scene_revision = entry.scene_revision.wrapping_add(1);
         }
         let (host, cache) = (entry.map_host.as_ref()?, &mut entry.map_sync_cache);

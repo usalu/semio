@@ -207,7 +207,7 @@ impl PngIngress{
    return Ok(false);
   }
   if cx.fuel_remaining()==0{return Ok(false)}
-  let grant=cx.retained_grant();let grant=semio_framework_value::RetainedCloneGrant{maximum_items:grant.maximum_items.min(1),..grant};
+  let mut grant=cx.retained_grant();
   let job=self.job.as_ref().unwrap();
   let quoted:Result<RetirementDemand,PngDecodeError>=(||Ok(match self.phase{
    0=>RetirementDemand{copy_bytes:job.next_copy_byte_demand()?,capacity_bytes:job.next_capacity_byte_demand()?,depth:job.next_depth_demand()?,..Default::default()},
@@ -222,8 +222,20 @@ impl PngIngress{
     return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"Raster PNG decode allocation exceeds the capacity of any turn").into());
    }
    if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return Ok(false)}
+   let crc_bytes=job.crc_bytes_remaining();
+   if demand.capacity_bytes==0&&matches!(job.progress().phase,"inflating"|"pixels"){
+    grant.maximum_capacity_bytes=0;
+   }else if crc_bytes!=0{
+    grant.maximum_items=grant.maximum_items.min(crc_bytes);
+    grant.maximum_capacity_bytes=0;
+   }else{
+    grant.maximum_items=grant.maximum_items.min(1);
+   }
+   let cancel=cx.borrowed_original_cancel_token()?;
+   let now=cx.clock_source();
+   let deadline=cx.deadline_us();
    let job=self.job.as_mut().unwrap();
-   let Some((result,performed))=cx.with_original_source_effect(grant,|_,effect|job.advance(effect))? else{return Ok(false)};
+   let Some((result,performed))=cx.with_original_source_effect(grant,|_,effect|job.advance_while(effect,&mut ||!cancel.is_cancelled_now()&&now().is_some_and(|instant|instant<deadline)))? else{return Ok(false)};
    cx.consume_work(performed);
    match result{
     Ok((progress,receipt))=>{cx.consume_retained(receipt)?;if progress.done{self.phase=1;}},

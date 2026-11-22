@@ -1,7 +1,7 @@
 /** 🧬️ Puzzle5d direct-mutation discriminated union — TS mirror of `Puzzle5dMutation` (see the
  * sibling `🦀️.rs` union enum and each variant's `<slug>/🦠️mutation/🦀️.rs`
  * payload struct). */
-import type { Puzzle5dCompatSpecificity, Puzzle5dKindCatalogs, Puzzle5dPart, Puzzle5dPartAnchor, Puzzle5dTargetVolume, Puzzle5dGrip, Puzzle5dScale, Puzzle5dVector3, Puzzle5dVector4 } from "../📸️snapshot/🟦️.ts";
+import type { Puzzle5dCompatSpecificity, Puzzle5dKindCatalogs, Puzzle5dPart, Puzzle5dPartAnchor, Puzzle5dFastener, Puzzle5dKindCompatibility, Puzzle5dTargetVolume, Puzzle5dGrip, Puzzle5dScale, Puzzle5dVector3, Puzzle5dVector4 } from "../📸️snapshot/🟦️.ts";
 import type {Binary64} from "@semio-tech/framework/value/ieee754";
 export type { Puzzle5dGrip2d, Puzzle5dGrip3d, Puzzle5dGrip, Puzzle5dScale } from "../📸️snapshot/🟦️.ts";
 
@@ -288,7 +288,9 @@ export type Puzzle5dMutation =
   | ({ mutation: "dragSelection2d" } & DragSelection2d)
   | ({ mutation: "dragSelection3d" } & DragSelection3d)
   | ({ mutation: "rotateSelection3d" } & RotateSelection3d)
-  | ({ mutation: "scaleSelection3d" } & ScaleSelection3d);
+  | ({ mutation: "scaleSelection3d" } & ScaleSelection3d)
+  | ({ mutation: "spliceSceneRows" } & SpliceSceneRows)
+  | { mutation: "spliceSceneRowBatch"; edits: SpliceSceneRows[] };
 
 /** ✋️ `drag-selection2d` payload — part ids moved on the board by one relative flat offset. */
 export interface DragSelection2d {
@@ -315,3 +317,10 @@ export interface ScaleSelection3d {
   targets: string[];
   factors: Puzzle5dVector3;
 }
+
+/** 🔀️ A reversible edit to one bounded range in a scene table. */
+export type SpliceSceneRows = { start: bigint; deleteCount: bigint } & (
+  | { table: "parts"; parts?: Puzzle5dPart[] }
+  | { table: "fasteners"; fasteners?: Puzzle5dFastener[] }
+  | { table: "kindCompatibility"; kindCompatibility?: Puzzle5dKindCompatibility[] }
+);

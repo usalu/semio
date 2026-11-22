@@ -6,7 +6,7 @@ import {requireIssuedResourceControlRefinementV1,withIssuedResourceOperationV1} 
 import type {ResourceLeaseControl} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import continuationSchema from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/📥️inputs/🤲️continuations/🧬️schema/🔣️json/🟦️.ts";
 import {createHash,randomBytes} from "node:crypto";
-import {mkdir,writeFile,rename,rm,lstat} from "node:fs/promises";
+import {mkdir,writeFile,rename,rm,lstat,readFile} from "node:fs/promises";
 import {dirname,join,relative,resolve,isAbsolute,sep} from "node:path";
 import {acquireQueuedResourceLease,checkResourceLeaseControl} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {requireNativeStorageReservationV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
@@ -18,12 +18,15 @@ import {repositoryRustToolchainIdentityV1} from "../../../../../⚡️caching/�
 import {cargoRegistryReadyPathV1,cargoRegistryReadyResolutionV1,type CargoRegistryReadyResolutionV1} from "../🟦️.ts";
 import type {RepositoryCargoInputsV1} from "../../📋️contract/🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
-import {lstatSync,readdirSync} from "node:fs";
-import {captureFetchedV1,fetchedHoldsV1,readFetchedReceiptV1,fetchedEntryNameV1,type FetchedPortV1,type FetchedReceiptV1} from "../../🧾️fetched/🟦️.ts";
+import {openDigestMemoV1,type DigestMemoV1} from "../🧊️digest-memo/🟦️.ts";
+import digestMemoSchema from "../🧊️digest-memo/🧬️schema/🔣️.json" with {type:"json"};
+import {createReadStream,lstatSync,readdirSync} from "node:fs";
+import {installUnpackedV1} from "../../🧾️fetched/🧱️install/🟦️.ts";
+import {captureFetchedV1,fetchedHoldsV1,fetchedLockedOfV1,fetchedSourcesV1,readFetchedReceiptV1,fetchedEntryNameV1,type FetchedPortV1,type FetchedReceiptV1} from "../../🧾️fetched/🟦️.ts";
 import { runtimeSupportsV1 } from "../../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
 import { runtimeParseTomlV1 } from "../../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/📄️parse/🟦️.ts";
 import { runtimeWhichV1 } from "../../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🚀️process/🟦️.ts";
-const protocol=schema.definitions.Protocol.const,hash=(bytes:string|Uint8Array)=>createHash("sha256").update(bytes).digest("hex");
+const digestMemoPolicyV1=digestMemoSchema.definitions.Policy.const,protocol=schema.definitions.Protocol.const,hash=(bytes:string|Uint8Array)=>createHash("sha256").update(bytes).digest("hex");
 interface ReadyInput {readonly path:string;readonly digest:string|null;readonly bytes:number}
 interface ReadyReceipt {readonly version:1;readonly request:string;readonly resolutions:readonly CargoRegistryReadyResolutionV1[];readonly inputs:readonly ReadyInput[]}
 interface ReadySelection {readonly manifest:string;readonly cwd:string;readonly args:readonly string[]}
@@ -54,7 +57,7 @@ function ownedSource(root:string,path:string):string{const local=relative(root,r
 function firstPartyLock(value:Record<string,any>|undefined):boolean{return Boolean(value&&Array.isArray(value.package)&&value.package.every((row:any)=>row&&typeof row==="object"&&row.source===undefined));}
 async function sourceBytes(options:ReadyOptions,path:string,remainingFiles:number){return readPhysicalCargoSourceV1(join(options.workspace,path),{expectedBytes:null,version:1,root:options.workspace,maximumBytes:protocol.maximumInputBytes,remainingFiles},options.control);}
 function requestIdentity(options:ReadyOptions):string|undefined{
- if(!runtimeSupportsV1("which")||![{args:options.args},...(options.additionalManifests??[])].every(row=>row.args.some(value=>value==="--locked"||value==="--frozen"))||!options.environment.RUSTC||["RUSTC_WRAPPER","RUSTC_WORKSPACE_WRAPPER","CARGO_BUILD_RUSTC","CARGO_BUILD_RUSTC_WRAPPER","CARGO_BUILD_RUSTC_WORKSPACE_WRAPPER"].some(name=>Boolean(options.environment[name])))return;
+ if(!runtimeSupportsV1("which")||!options.requests.every(row=>row.args.some(value=>value==="--locked"||value==="--frozen"))||!options.environment.RUSTC||["RUSTC_WRAPPER","RUSTC_WORKSPACE_WRAPPER","CARGO_BUILD_RUSTC","CARGO_BUILD_RUSTC_WRAPPER","CARGO_BUILD_RUSTC_WORKSPACE_WRAPPER"].some(name=>Boolean(options.environment[name])))return;
  const program=runtimeWhichV1(options.environment.RUSTC,{PATH:options.environment.PATH,cwd:options.cwd});if(!program)return;let toolchain:string;try{toolchain=repositoryRustToolchainIdentityV1(program);}catch{return;}
  let configurations:unknown;try{configurations=JSON.parse(options.environment.SEMIO_CARGO_CONFIGURATION_DIGESTS??"null");}catch{return;}if(!Array.isArray(configurations)||configurations.length!==options.requests.length||configurations.some(value=>typeof value!=="string"||!/^[a-f0-9]{64}$/u.test(value)))return;
  try{return hash(JSON.stringify({version:protocol.version,toolchain,configurations,selections:options.requests.map(row=>{const cwd=relative(options.workspace,resolve(row.cwd)).split(sep).join("/");if(cwd&&!cargoRegistryReadyPathV1(cwd))throw new UnsupportedReadySource();return{manifest:ownedSource(options.workspace,row.manifest),cwd,offline:row.args.includes("--offline")};})}));}catch(error){if(error instanceof UnsupportedReadySource)return;throw error;}
@@ -105,8 +108,35 @@ async function publishReady(options:ReadyOptions,namespace:string,file:string,en
  let created=false;try{const previous=await lstat(temporary).catch(error=>{if((error as NodeJS.ErrnoException).code!=="ENOENT")throw error;});if(previous){if(!previous.isFile()||previous.isSymbolicLink()||previous.nlink!==1||previous.size>protocol.maximumReceiptBytes)throw Error("Original bounded Cargo ready stage required");await rm(temporary);}await writeFile(temporary,encoded,{flag:"wx"});created=true;checkResourceLeaseControl(options.control);await rename(temporary,file);}finally{if(created)await rm(temporary,{force:true});}
 }
 
+const archiveDigestsV1=new Map<string,string>(),digestMemosV1=new Map<string,DigestMemoV1>();
+/** 🧊️ The persisted digest memo of one store root, shared by every process of the store. */
+const digestMemoOfV1=(root:string):DigestMemoV1=>{let memo=digestMemosV1.get(root);if(!memo){memo=openDigestMemoV1(join(root,digestMemoPolicyV1.fileName));digestMemosV1.set(root,memo);}return memo;};
+/** 💾️ Persists the digests computed since the last flush; a failed write costs only the next hash. */
+const flushDigestMemoV1=(root:string):void=>{digestMemosV1.get(root)?.flush();};
+/** 🔐️ SHA-256 of one regular, non-symlink registry archive; memoized per path by device, inode, size and nanosecond mtime so an untouched archive is hashed once and a rewritten one never reuses a stale digest. */
+async function archiveDigestV1(root:string,path:string):Promise<string|undefined>{
+ try{requireNativeStoragePathV1(root,path);const row=lstatSync(path,{bigint:true});if(!row.isFile()||row.isSymbolicLink())return undefined;
+  const key=path+"\0"+row.dev+"\0"+row.ino+"\0"+row.size+"\0"+row.mtimeNs,memo=digestMemoOfV1(root),known=archiveDigestsV1.get(key)??memo.get(path,row);if(known)return known;
+  const hash=createHash("sha256");for await(const chunk of createReadStream(path))hash.update(chunk as Buffer);
+  const after=lstatSync(path,{bigint:true});if(after.ino!==row.ino||after.size!==row.size||after.mtimeNs!==row.mtimeNs)return undefined;
+  const digest=hash.digest("hex");if(archiveDigestsV1.size>=16384)archiveDigestsV1.clear();archiveDigestsV1.set(key,digest);memo.set(path,row,digest);return digest;
+ }catch{return undefined;}
+}
+/** 📥️ The bytes of one regular, non-symlink registry archive, bounded by 128 MiB. */
+async function archiveBytesV1(root:string,path:string):Promise<Uint8Array|undefined>{
+ try{requireNativeStoragePathV1(root,path);const row=lstatSync(path,{bigint:true});if(!row.isFile()||row.isSymbolicLink()||row.size>134217728n)return undefined;return new Uint8Array(await readFile(path));}catch{return undefined;}
+}
+/** 🗂️ The SHA-256 of every regular file below one extracted package directory keyed by relative path; symlinks are refused and an absent directory yields `undefined`. */
+async function unpackedDigestsV1(root:string,path:string):Promise<ReadonlyMap<string,string>|undefined>{
+ try{requireNativeStoragePathV1(root,path);if(!lstatSync(path).isDirectory())return undefined;const rows=new Map<string,string>();
+  for(const entry of readdirSync(path,{withFileTypes:true,recursive:true})){if(entry.isDirectory())continue;if(!entry.isFile())return undefined;const full=join(entry.parentPath,entry.name),digest=await archiveDigestV1(root,full);if(digest===undefined)return undefined;rows.set(relative(path,full).split(sep).join("/"),digest);}
+  return rows;
+ }catch{return undefined;}
+}
+/** ♻️ Completes one extracted package directory in place from the given files; it is never moved aside or removed, so concurrent Cargo extractions and readers never see a partial or missing package. */
+async function restoreUnpackedV1(root:string,path:string,files:ReadonlyMap<string,Uint8Array>):Promise<void>{requireNativeStoragePathV1(root,path);await installUnpackedV1(path,files);}
 /** 🧾️ Observes the registry directories of the image-resident Cargo home and the repository Source without granting any write. */
-function fetchedPortV1(options:ReadyOptions):FetchedPortV1{const root=options.storage.backing.root;return{read:async path=>(await sourceBytes(options,path,protocol.maximumFiles))??undefined,stamp:path=>{try{requireNativeStoragePathV1(root,path);const row=lstatSync(path,{bigint:true});return (row.isDirectory()||row.isFile())&&!row.isSymbolicLink()?{dev:String(row.dev),ino:String(row.ino),mtimeNs:String(row.mtimeNs)}:undefined;}catch{return undefined;}},list:path=>{try{requireNativeStoragePathV1(root,path);return readdirSync(path,{withFileTypes:true}).filter(entry=>entry.isDirectory()).map(entry=>entry.name);}catch{return undefined;}}};}
+function fetchedPortV1(options:ReadyOptions):FetchedPortV1{const root=options.storage.backing.root;return{read:async path=>(await sourceBytes(options,path,protocol.maximumFiles))??undefined,digest:path=>archiveDigestV1(root,path),archive:path=>archiveBytesV1(root,path),unpacked:path=>unpackedDigestsV1(root,path),restore:(path,files)=>restoreUnpackedV1(root,path,files),list:path=>{try{requireNativeStoragePathV1(root,path);return readdirSync(path,{withFileTypes:true}).filter(entry=>entry.isDirectory()).map(entry=>entry.name);}catch{return undefined;}}};}
 /** 🕰️ Reports a changed Cargo readiness snapshot to the layer that owns the retry. */
 function cargoInputsMovedV1(options:ReadyOptions,message:string):Error{return concurrentEditV1("generation",options.workspace,message,"snapshot");}
 /** 🟢️ Refreshes Cargo readiness before lending the retained registry to a one-shot consumer. */
@@ -118,11 +148,13 @@ export function withRepositoryCargoRegistryReadyV1<T>(options:ReadyOptions,custo
 async function withRepositoryCargoRegistryReadyOnceV1<T>(options:ReadyOptions,custody:(body:()=>Promise<void>)=>Promise<void>,fetch:()=>Promise<void>,body:()=>Promise<T>):Promise<T>{
  const {control,storage}=options;requireNativeStorageReservationV1(storage,control);const held=registryReadersV1.getStore();if(held)return registryReadOperationV1(held,options,body);if(storage.allocation.kind!=="compiler-workspace"||options.home!==options.environment.CARGO_HOME||options.requests.length<1||options.requests.length>64)throw Error("Original bounded Cargo ready storage and selection required");await storage.recheck();const directory=machinePathV1(options.workspace,".cache/b/l/m/data"),resource="cargo:registry:"+options.home,lease={directory,resource,signal:control.signal,control},identity=requestIdentity(options),fetchLease={directory,resource:"cargo:registry-fetch:"+options.home+":"+(identity??"-"),signal:control.signal,control},namespace=requireNativeStoragePathV1(storage.backing.root,join(options.home,protocol.namespace)),file=identity?requireNativeStoragePathV1(storage.backing.root,join(namespace,String(Number.parseInt(identity.slice(0,8),16)%protocol.slots)+protocol.entrySuffix)):undefined;
  const fetchedFile=identity?requireNativeStoragePathV1(storage.backing.root,join(namespace,fetchedEntryNameV1(Number.parseInt(identity.slice(0,8),16)%protocol.slots))):undefined,fetchedPort=fetchedPortV1(options);
+ const sourcesIntact=async(repair:boolean):Promise<boolean>=>{let rows;try{rows=await fetchedLockedOfV1(options.requests.map(row=>ownedSource(options.workspace,row.manifest)),fetchedPort.read);}catch(error){if(error instanceof UnsupportedReadySource)return true;throw error;}try{return rows===undefined||await fetchedSourcesV1(options.home,fetchedPort,rows,repair);}finally{flushDigestMemoV1(options.storage.backing.root);}};
  const readFetched=async():Promise<FetchedReceiptV1|undefined>=>{if(!identity||!fetchedFile)return;const bytes=await readPhysicalCargoSourceV1(fetchedFile,{expectedBytes:null,version:1,root:storage.backing.root,maximumBytes:protocol.maximumReceiptBytes,remainingFiles:1},options.control);if(!bytes)return;const receipt=readFetchedReceiptV1(Buffer.from(bytes).toString("utf8"),identity);return receipt&&await fetchedHoldsV1(receipt,options.home,fetchedPort)?receipt:undefined;};
- const consume=async()=>{const reader=await acquireQueuedResourceLease({...lease,owner:randomBytes(8).toString("base64url"),mode:"shared",sharedCohort:true});try{await storage.recheck();const receipt=identity&&file?await readReady(options,file,identity):undefined,fetched=receipt?undefined:await readFetched();if(receipt||fetched){const value=await withRegistryReadScopeV1(options,body);if(receipt&&!await readyInputs(options,receipt))throw cargoInputsMovedV1(options,"Original Cargo ready inputs changed during consumption");if(fetched&&!await fetchedHoldsV1(fetched,options.home,fetchedPort))throw cargoInputsMovedV1(options,"Original Cargo fetched registry changed during consumption");await storage.recheck();return{hit:true as const,value};}return{hit:false as const};}finally{reader.release();}};
+ const consume=async()=>{const reader=await acquireQueuedResourceLease({...lease,owner:randomBytes(8).toString("base64url"),mode:"shared",sharedCohort:true});try{await storage.recheck();const receipt=identity&&file?await readReady(options,file,identity):undefined,fetched=receipt?undefined:await readFetched();if((receipt||fetched)&&await sourcesIntact(false)){const value=await withRegistryReadScopeV1(options,body);if(receipt&&!await readyInputs(options,receipt))throw cargoInputsMovedV1(options,"Original Cargo ready inputs changed during consumption");if(fetched&&!await fetchedHoldsV1(fetched,options.home,fetchedPort))throw cargoInputsMovedV1(options,"Original Cargo fetched registry changed during consumption");await storage.recheck();return{hit:true as const,value};}return{hit:false as const};}finally{reader.release();}};
  if(identity){const ready=await consume();if(ready.hit)return ready.value;}
  let claimed:ReadyReceipt|undefined,fetchedClaim:FetchedReceiptV1|undefined;await custody(async()=>{const writer=await acquireQueuedResourceLease({...fetchLease,owner:randomBytes(8).toString("base64url"),mode:"exclusive"});try{
-  claimed=identity&&file?await readReady(options,file,identity):undefined;if(!claimed){fetchedClaim=await readFetched();if(!fetchedClaim)await fetch();if(!fetchedClaim&&identity&&file){let receipt:ReadyReceipt|undefined;try{receipt=await captureReady(options,identity);}catch(error){if(!(error instanceof UnsupportedReadySource))throw error;}if(receipt){const encoded=JSON.stringify(receipt)+"\n";await publishReady(options,namespace,file,encoded);claimed=await readReady(options,file,identity);if(!claimed)throw Error("Original Cargo ready publication changed");}}
+  await sourcesIntact(true);
+  claimed=identity&&file?await readReady(options,file,identity):undefined;if(!claimed){fetchedClaim=await readFetched();if(!fetchedClaim){await fetch();await sourcesIntact(true);}if(!fetchedClaim&&identity&&file){let receipt:ReadyReceipt|undefined;try{receipt=await captureReady(options,identity);}catch(error){if(!(error instanceof UnsupportedReadySource))throw error;}if(receipt){const encoded=JSON.stringify(receipt)+"\n";await publishReady(options,namespace,file,encoded);claimed=await readReady(options,file,identity);if(!claimed)throw Error("Original Cargo ready publication changed");}}
   if(!claimed&&!fetchedClaim&&identity&&fetchedFile){let manifests:string[]|undefined;try{manifests=options.requests.map(row=>ownedSource(options.workspace,row.manifest));}catch(error){if(!(error instanceof UnsupportedReadySource))throw error;}const captured=manifests&&await captureFetchedV1({request:identity,manifests,home:options.home},fetchedPort);if(captured){await publishReady(options,namespace,fetchedFile,JSON.stringify(captured)+"\n");fetchedClaim=await readFetched();}}}
  }finally{writer.release();}});
  const reader=await acquireQueuedResourceLease({...lease,owner:randomBytes(8).toString("base64url"),mode:"shared",sharedCohort:true});try{await storage.recheck();if(claimed&&!await readyInputs(options,claimed))throw cargoInputsMovedV1(options,"Original Cargo ready inputs changed before consumption");if(fetchedClaim&&!await fetchedHoldsV1(fetchedClaim,options.home,fetchedPort))throw cargoInputsMovedV1(options,"Original Cargo fetched registry changed before consumption");const value=await withRegistryReadScopeV1(options,body);if(claimed&&!await readyInputs(options,claimed))throw cargoInputsMovedV1(options,"Original Cargo ready inputs changed during consumption");if(fetchedClaim&&!await fetchedHoldsV1(fetchedClaim,options.home,fetchedPort))throw cargoInputsMovedV1(options,"Original Cargo fetched registry changed during consumption");await storage.recheck();return value;}finally{reader.release();}

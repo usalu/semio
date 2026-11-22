@@ -3,7 +3,7 @@
 //! render in its own file.
 
 use crate::editor::bitmap::modes::edit::windows::{input, output};
-use semio_plugin::create_default_layout;
+use semio_plugin::{create_default_layout, Axis};
 use semio_ui_locale::LocalizedLabel;
 use semio_plugin::ModeDefinition;
 use semio_plugin::WindowLayout;
@@ -18,6 +18,6 @@ pub fn definition() -> ModeDefinition {
 
 /// 🪟️ A row split, 50/50: the problem and its answer at the same scale.
 pub fn layout() -> WindowLayout {
-    create_default_layout(&[input::WFC_BITMAP_WINDOW_INPUT.into(), output::WFC_BITMAP_WINDOW_OUTPUT.into()], "row", Some(&[50.0, 50.0]), Some(&["Input".into(), "Output".into()]))
+    create_default_layout(&[input::WFC_BITMAP_WINDOW_INPUT.into(), output::WFC_BITMAP_WINDOW_OUTPUT.into()], Axis::Horizontal, Some(&[0.5, 0.5]), Some(&["Input".into(), "Output".into()]))
 }
 //#endregion 🔖️Definition

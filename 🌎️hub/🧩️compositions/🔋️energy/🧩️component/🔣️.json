@@ -55326,7 +55326,8 @@
         "namedLayouts": [],
         "defaultLayout": {
           "root": {
-            "kind": "row",
+            "kind": "split",
+            "axis": "horizontal",
             "children": [
               {
                 "kind": "stack",
@@ -55340,12 +55341,13 @@
                 ]
               },
               {
-                "kind": "column",
-                "size": 0.44999999999999996,
+                "kind": "split",
+                "axis": "vertical",
+                "size": 0.45,
                 "children": [
                   {
                     "kind": "stack",
-                    "size": 0.3333333333333333,
+                    "size": 0.333333,
                     "children": [
                       {
                         "kind": "window",
@@ -55356,7 +55358,7 @@
                   },
                   {
                     "kind": "stack",
-                    "size": 0.3333333333333333,
+                    "size": 0.333333,
                     "children": [
                       {
                         "kind": "window",
@@ -55367,7 +55369,7 @@
                   },
                   {
                     "kind": "stack",
-                    "size": 0.3333333333333333,
+                    "size": 0.333333,
                     "children": [
                       {
                         "kind": "window",
@@ -57206,7 +57208,8 @@
         "namedLayouts": [],
         "defaultLayout": {
           "root": {
-            "kind": "row",
+            "kind": "split",
+            "axis": "horizontal",
             "children": [
               {
                 "kind": "stack",
@@ -57220,12 +57223,13 @@
                 ]
               },
               {
-                "kind": "column",
-                "size": 0.44999999999999996,
+                "kind": "split",
+                "axis": "vertical",
+                "size": 0.45,
                 "children": [
                   {
                     "kind": "stack",
-                    "size": 0.3333333333333333,
+                    "size": 0.333333,
                     "children": [
                       {
                         "kind": "window",
@@ -57236,7 +57240,7 @@
                   },
                   {
                     "kind": "stack",
-                    "size": 0.3333333333333333,
+                    "size": 0.333333,
                     "children": [
                       {
                         "kind": "window",
@@ -57247,7 +57251,7 @@
                   },
                   {
                     "kind": "stack",
-                    "size": 0.3333333333333333,
+                    "size": 0.333333,
                     "children": [
                       {
                         "kind": "window",

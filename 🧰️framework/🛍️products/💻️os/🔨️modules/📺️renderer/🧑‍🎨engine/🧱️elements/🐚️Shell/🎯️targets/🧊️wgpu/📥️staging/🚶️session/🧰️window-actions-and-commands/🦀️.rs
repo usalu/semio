@@ -113,7 +113,16 @@ impl<'ctx> SessionCtx<'ctx> {
             FRAMEWORK_SETTINGS_CONFLICTS_TAB_ID => self.prefs.build_settings_conflicts_ui(),
             FRAMEWORK_MARKETPLACE_TAB_ID => self.build_marketplace_ui(),
             FRAMEWORK_SYNC_PANEL_TAB_ID => self.sync.build_sync_attach_ui(&self.prefs),
-            FRAMEWORK_TASK_MANAGER_PANEL_ID => self.opening.build_task_manager_ui(&self.prefs),
+            FRAMEWORK_TASK_MANAGER_PANEL_ID => {
+                let installing = self.plugins.plugin_install.as_ref().filter(|install| matches!(install.phase, semio_renderer_wgpu_shell_plugins::ShellPluginInstallPhase::Resolving | semio_renderer_wgpu_shell_plugins::ShellPluginInstallPhase::Loading)).map(|install| install.plugin_id.clone());
+                self.opening.sync_runtime_actors();
+                self.opening.sync_runtime_install_tasks(installing.as_deref(), chrome_now_ms() as u64);
+                self.opening.build_task_manager_ui(&self.prefs)
+            }
+            semio_renderer_wgpu_shell_doc_open::ROUTE_NOT_FOUND_PANEL_ID => match self.opening.route_not_found.clone() {
+                Some(path) => self.opening.build_route_not_found_ui(&path, &self.prefs),
+                None => return Ok(None),
+            },
             FRAMEWORK_CHAT_PANEL_ID => self.directory.build_agent_chat_ui(&self.chrome, &self.prefs),
             semio_renderer_wgpu_hub_workspace::hub_connection::FRAMEWORK_HUB_PANEL_ID => semio_renderer_wgpu_hub_workspace::hub_connection::build_hub_workspace_ui(&self.directory.hub_workspace, self.prefs.active_locale()),
             other => match other.strip_prefix(FRAMEWORK_TOOL_PANEL_TAB_PREFIX) {

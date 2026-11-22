@@ -1,0 +1,236 @@
+{
+  "cases": [
+    {
+      "id": "empty",
+      "raw": "",
+      "mode": "math",
+      "inner": ""
+    },
+    {
+      "id": "url-prefix",
+      "raw": "url:https://example.com/a.png",
+      "mode": "url",
+      "inner": "https://example.com/a.png"
+    },
+    {
+      "id": "bare-url",
+      "raw": "https://example.com/a.png",
+      "mode": "url",
+      "inner": "https://example.com/a.png"
+    },
+    {
+      "id": "shortcode",
+      "raw": ":smile:",
+      "mode": "shortcode",
+      "inner": "smile"
+    },
+    {
+      "id": "typst-prefix",
+      "raw": "typst:x^2",
+      "mode": "math",
+      "inner": "x^2"
+    },
+    {
+      "id": "typst-dollar",
+      "raw": "$x^2$",
+      "mode": "math",
+      "inner": "$x^2$"
+    },
+    {
+      "id": "emoji-prefix",
+      "raw": "emoji:🙂",
+      "mode": "emoji",
+      "inner": "🙂"
+    },
+    {
+      "id": "bare-emoji",
+      "raw": "🙂",
+      "mode": "emoji",
+      "inner": "🙂"
+    },
+    {
+      "id": "text-prefix",
+      "raw": "text:Hi",
+      "mode": "text",
+      "inner": "Hi"
+    },
+    {
+      "id": "short-bare-text",
+      "raw": "Hi",
+      "mode": "text",
+      "inner": "Hi"
+    },
+    {
+      "id": "data-url",
+      "raw": "data:image/png;base64,AAAA",
+      "mode": "data",
+      "inner": "data:image/png;base64,AAAA"
+    },
+    {
+      "id": "svg",
+      "raw": "<svg viewBox=\"0 0 1 1\"></svg>",
+      "mode": "vector",
+      "inner": "<svg viewBox=\"0 0 1 1\"></svg>"
+    },
+    {
+      "id": "catalog",
+      "raw": "folder-open",
+      "mode": "vector",
+      "inner": "folder-open"
+    },
+    {
+      "id": "catalog-ish-stem",
+      "raw": "not_an_icon.name",
+      "mode": "math",
+      "inner": ""
+    },
+    {
+      "id": "too-long-bare-text",
+      "raw": "this label is longer than sixteen",
+      "mode": "math",
+      "inner": ""
+    }
+  ],
+  "encode": [
+    {
+      "id": "url",
+      "mode": "url",
+      "inner": " https://x ",
+      "stored": "url:https://x"
+    },
+    {
+      "id": "shortcode-bare",
+      "mode": "shortcode",
+      "inner": "smile",
+      "stored": ":smile:"
+    },
+    {
+      "id": "shortcode-colons",
+      "mode": "shortcode",
+      "inner": ":smile:",
+      "stored": ":smile:"
+    },
+    {
+      "id": "math-typst",
+      "mode": "math",
+      "inner": "x^2",
+      "stored": "typst:x^2"
+    },
+    {
+      "id": "math-dollar",
+      "mode": "math",
+      "inner": "$x^2$",
+      "stored": "$x^2$"
+    },
+    {
+      "id": "emoji",
+      "mode": "emoji",
+      "inner": "🙂",
+      "stored": "emoji:🙂"
+    },
+    {
+      "id": "text",
+      "mode": "text",
+      "inner": "Hi",
+      "stored": "text:Hi"
+    },
+    {
+      "id": "data",
+      "mode": "data",
+      "inner": "data:image/png;base64,AAAA",
+      "stored": "data:image/png;base64,AAAA"
+    },
+    {
+      "id": "vector",
+      "mode": "vector",
+      "inner": "<svg></svg>",
+      "stored": "<svg></svg>"
+    },
+    {
+      "id": "blank-clears",
+      "mode": "url",
+      "inner": "   ",
+      "stored": ""
+    }
+  ],
+  "migrate": [
+    {
+      "id": "text-to-emoji",
+      "prev": "text:circle",
+      "mode": "emoji",
+      "stored": "emoji:text:circle"
+    },
+    {
+      "id": "text-to-math",
+      "prev": "text:circle",
+      "mode": "math",
+      "stored": "typst:text:circle"
+    },
+    {
+      "id": "same-mode-keeps-the-string",
+      "prev": "text:circle",
+      "mode": "text",
+      "stored": "text:circle"
+    },
+    {
+      "id": "text-to-url",
+      "prev": "text:circle",
+      "mode": "url",
+      "stored": ""
+    },
+    {
+      "id": "text-to-shortcode",
+      "prev": "text:circle",
+      "mode": "shortcode",
+      "stored": ""
+    },
+    {
+      "id": "text-to-data",
+      "prev": "text:circle",
+      "mode": "data",
+      "stored": ""
+    },
+    {
+      "id": "text-to-vector",
+      "prev": "text:circle",
+      "mode": "vector",
+      "stored": ""
+    },
+    {
+      "id": "emoji-to-text",
+      "prev": "emoji:😀",
+      "mode": "text",
+      "stored": "text:😀"
+    },
+    {
+      "id": "typst-to-emoji",
+      "prev": "typst:x^2",
+      "mode": "emoji",
+      "stored": "emoji:x^2"
+    },
+    {
+      "id": "math-to-text-keeps-the-markup",
+      "prev": "$x^2$",
+      "mode": "text",
+      "stored": "text:$x^2$"
+    },
+    {
+      "id": "empty-to-text",
+      "prev": "",
+      "mode": "text",
+      "stored": ""
+    },
+    {
+      "id": "url-to-emoji-keeps-the-address",
+      "prev": "https://a.b/i.png",
+      "mode": "emoji",
+      "stored": "emoji:https://a.b/i.png"
+    },
+    {
+      "id": "shortcode-to-text",
+      "prev": ":smile:",
+      "mode": "text",
+      "stored": "text::smile:"
+    }
+  ]
+}

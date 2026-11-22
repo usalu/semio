@@ -1,0 +1,6 @@
+{
+  "pluginId": "remodel",
+  "packageId": "semio:remodel",
+  "artifactKind": "3d.remodeling",
+  "artifactSchema": "remodeling.scene"
+}

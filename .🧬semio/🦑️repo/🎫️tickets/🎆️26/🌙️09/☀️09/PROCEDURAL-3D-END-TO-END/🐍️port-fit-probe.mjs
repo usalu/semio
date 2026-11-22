@@ -176,6 +176,7 @@ if (wgpu) {
   const censusBefore = censusLine();
   await page.mouse.move(graph.x + graph.w / 2, graph.y + graph.h / 2);
   await settle(300);
+  // the framework `fitGraph` action: the F chord (window-scoped to the focused Flow window), then the palette as the fallback
   await page.keyboard.press("f");
   await settle(2500);
   let fit = cameraLines().slice(fitBefore);

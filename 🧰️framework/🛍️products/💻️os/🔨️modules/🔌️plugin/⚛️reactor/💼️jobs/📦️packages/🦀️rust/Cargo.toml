@@ -21,6 +21,9 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
+[features]
+artifact-app-testing = ["semio-framework-job/testkit"]
+
 [dependencies]
 semio-plugin-abi = { path = "../../../../🚪️io/📦️packages/🦀️rust" }
 semio-plugin-actor-host = { path = "../../../../🌐host/📦️packages/🦀️rust" }

@@ -221,6 +221,7 @@ pub mod wire {
 
     pub mod command_ingress {
         pub use semio_framework_replication_command_ingress::{
+            NATURAL_SOURCE_COMMAND_KIND, ActorInstanceOpenPurpose, NaturalSourcePrepare, NaturalSourceControlEvent, NaturalSourceWireDeclaration, NaturalSourceWireLoan, NaturalSourceWireControl, NaturalSourceWirePhase, NaturalSourceWireResult, NaturalSourceWireAck,
             ORIGINAL_MEDIA_COMMAND_KIND, OriginalMediaControlEvent, OriginalMediaWireAck,
             OriginalMediaWireControl, OriginalMediaWireLoan, OriginalMediaWirePhase,
             OriginalMediaWireResult,

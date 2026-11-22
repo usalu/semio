@@ -21,6 +21,7 @@ import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, it } from "vitest";
+import type { WindowLayoutNode } from "@semio-tech/ui-layout";
 import { SHELL_KEYBINDINGS } from "@semio-tech/ui-react";
 import { decodeWorldProjectionTemplateId, worldProjectionSpecIconId } from "@semio-tech/infinite-world-r3f";
 import { TOOL_RUN_STEP_CHORD } from "@semio-tech/framework-tool-run-ts/actions";
@@ -34,11 +35,10 @@ import {
   resolveKeybindingTargetWindowV1,
   type WindowScopeInstanceV1,
   type WindowScopeKindV1,
-  type WindowScopeLayoutNodeV1,
   type WindowScopeStackV1,
 } from "../../🧱️elements/🏛️ShellHost/⌨️window-scope/🟦️.ts";
 
-type FixtureApp = { readonly kinds: readonly WindowScopeKindV1[]; readonly modes: Readonly<Record<string, WindowScopeLayoutNodeV1>> };
+type FixtureApp = { readonly kinds: readonly WindowScopeKindV1[]; readonly modes: Readonly<Record<string, WindowLayoutNode>> };
 type Fixture = {
   readonly note: string;
   readonly apps: Readonly<Record<string, FixtureApp>>;
@@ -62,25 +62,25 @@ const fixture = JSON.parse(readFileSync(fixturePath, "utf8")) as Fixture;
 
 
 const appOf = (id: string): FixtureApp => fixture.apps[id]!;
-const layoutOf = (app: string, mode: string): WindowScopeLayoutNodeV1 => appOf(app).modes[mode]!;
+const layoutOf = (app: string, mode: string): WindowLayoutNode => appOf(app).modes[mode]!;
 /** 🪟️ The active mode's live instances in layout order — instance id == kind id for every fixture app. */
 const mountedOf = (app: string, mode: string): readonly WindowScopeInstanceV1[] =>
   modeLayoutStacksV1(layoutOf(app, mode)).flatMap((stack) => stack.windowIds.map((id) => ({ id, windowKindId: id })));
 
 /** ⚖️ An independent walk of the same layout: collects window ids depth-first with a plain recursion
  * and picks the first stack's shown tab, written without reusing the shipped helpers. */
-function oracleStacks(node: WindowScopeLayoutNodeV1): { windowIds: string[]; activeWindowId: string | null }[] {
-  if (node.kind === "window") return [{ windowIds: [node.id], activeWindowId: node.id }];
+function oracleStacks(node: WindowLayoutNode): { windowIds: string[]; activeWindowId: string | null }[] {
+  if (node.kind === "window") return [{ windowIds: [node.windowKindId], activeWindowId: node.windowKindId }];
   if (node.kind === "stack") {
-    const windowIds = node.children.map((child) => child.id);
-    return [{ windowIds, activeWindowId: node.activeId ?? windowIds[0] ?? null }];
+    const windowIds = node.children.map((child) => child.windowKindId);
+    return [{ windowIds, activeWindowId: node.activeWindowId ?? windowIds[0] ?? null }];
   }
   const out: { windowIds: string[]; activeWindowId: string | null }[] = [];
   for (const child of node.children) out.push(...oracleStacks(child));
   return out;
 }
 
-function oracleSeed(node: WindowScopeLayoutNodeV1, activeWindowId: string | null): string | null {
+function oracleSeed(node: WindowLayoutNode, activeWindowId: string | null): string | null {
   const stacks = oracleStacks(node);
   const all = stacks.flatMap((stack) => stack.windowIds);
   if (all.length === 0) return null;

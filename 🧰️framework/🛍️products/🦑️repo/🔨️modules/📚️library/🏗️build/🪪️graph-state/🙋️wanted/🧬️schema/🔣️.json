@@ -485,6 +485,7 @@
           "dependencyCounterPattern": "^dependencies:(?<kind>workspace-edges|preservation-ownership):(?<done>[1-9][0-9]{0,15})$",
           "sourcePattern": "^build:parser-source:(?:state|list|readText|membership|frontier|selection|publication):(?<done>[1-9][0-9]{0,15})$",
           "phasePattern": "^build:graph-phase:(?<phase>[a-z]{1,32}):(?<done>[0-9]+):(?<total>[0-9]+)(?::[0-9]+:[0-9]+:(?<owners>[^:]*)(?::.*)?)?$",
+          "sharedClosuresPattern": "^shared%20closures%20(?<done>[0-9]+)%2F(?<total>[0-9]+)$",
           "ownerRowPattern": "^(?<name>[A-Za-z0-9.!~*'()%_-]+)\\|[A-Za-z0-9.!~*'()%_-]+\\|[0-9]+\\|(?<rows>[0-9]+)$",
           "ledgerPatterns": [
             "^\\[owners\\] owners (?<done>[0-9]+) of (?<total>[0-9]+) done: (?<present>[0-9]+) present, (?<fetched>[0-9]+) fetched from the fleet, (?<here>[0-9]+) inferred here \\([0-9]+ running\\), [0-9]+ wanted from the fleet, [0-9]+ stale in the fleet$",
@@ -498,7 +499,7 @@
         "yieldPollMilliseconds": 5000,
         "yieldNoticeMilliseconds": 60000,
         "yieldMaximumMilliseconds": 1200000,
-        "refreshHeadroomMegabytes": 9400,
+        "refreshHeadroomMegabytes": 8192,
         "requestHeadroomMegabytes": 6144,
         "serveTotalMegabytes": 24000,
         "costsMilliseconds": 60000,

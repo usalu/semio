@@ -257,6 +257,27 @@ fn query_ownership_shared_scene_clone_retires_while_source_remains_live() {
     drive_snapshot_retirement(source);
 }
 
+/// ⏱️ A snapshot names its interned manifest instead of owning a copy, so cloning and retiring a Nakagin document never walks the 42 kinds a retired snapshot used to carry.
+#[test]
+fn nakagin_snapshot_clone_and_retirement_do_not_walk_the_manifest() {
+    let manifest = crate::standards::v1::subsets::any::schema::manifest::Manifest::nakagin_default();
+    let started = std::time::Instant::now();
+    let manifest_steps = drive_owned_retirement(manifest);
+    let manifest_elapsed = started.elapsed();
+    let source = crate::standards::v1::subsets::any::schema::empty_jack_document::<crate::test_support::FixtureComposition>();
+    assert!(std::sync::Arc::ptr_eq(&source.manifest().unwrap(), &source.manifest().unwrap()));
+    let started = std::time::Instant::now();
+    let clone = drive_snapshot_clone(&source);
+    let clone_elapsed = started.elapsed();
+    assert!(std::sync::Arc::ptr_eq(&clone.manifest().unwrap(), &source.manifest().unwrap()));
+    let started = std::time::Instant::now();
+    let snapshot_steps = drive_snapshot_retirement(clone);
+    let snapshot_elapsed = started.elapsed();
+    eprintln!("[DEBUG] manifest retirement {manifest_steps} turns {manifest_elapsed:?}; snapshot clone {clone_elapsed:?}; snapshot retirement {snapshot_steps} turns {snapshot_elapsed:?}");
+    assert!(snapshot_steps * 8 < manifest_steps, "{snapshot_steps} snapshot turns against {manifest_steps} manifest turns");
+    drive_snapshot_retirement(source);
+}
+
 #[test]
 fn query_ownership_unique_scene_retirement_drains_entities_one_owner_per_grant() {
     let mut source = crate::standards::v1::subsets::any::schema::empty_jack_document::<crate::test_support::FixtureComposition>();

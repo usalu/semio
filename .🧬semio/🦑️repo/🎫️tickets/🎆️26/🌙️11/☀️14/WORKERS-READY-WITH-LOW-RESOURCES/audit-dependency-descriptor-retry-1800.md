@@ -1,0 +1,13 @@
+# Dependency Sync Retry After a Directory Changes
+
+At 18:00:04 UTC, the macOS worker `g1-m10` exited its dependency stage with `Current exact relative path descriptor changed`. The preceding log reported an obsolete-generation cleanup requirement and showed progress through dependency ownership discovery. The failure receipt recorded zero completed Source binding changes and no unresolved Source transition. That receipt identifies the descriptor check, while the specific directory and its role remain unknown. A later natural attempt advanced through dependency-input replay without another terminal error in the sampled window.
+
+The relative-path guard compares the exact captured parent and child observations with the opened filesystem descriptors. The sync command already has a three-attempt retry policy for a closed set of concurrent changes. The physical error was outside that set. The policy now recognizes the exact POSIX and Windows descriptor messages. Each retry takes a fresh observation with the original store custody. The existing limit, cancellation check, and unresolved-Source-transition guard continue to apply. The descriptor comparison and its rejection of a changed observation are intact.
+
+A private native reproduction changed a directory after capturing it and before opening it through the exact relative-path API. The API refused the stale observation without entering the body. The first regression run reproduced the production error and the retry policy declined it. After the policy change, the same decision allowed a fresh observation and the body ran once. The Python oracle agrees on the two exact messages and the cancellation, unresolved-transition, attempt-limit and lineage-refusal cases.
+
+Four focused native tests passed with 188 assertions, including the schema and source wiring laws. The wiring fixture now checks the final ownership-index write after the retry loop. Existing checkpoint writes during discovery are also allowed. The full light-wrapper run recorded 17 passes and two failures. The pinned Bun hardlink control observed one link instead of two. A separate scan test requires an Original Script process envelope, which that light invocation did not supply. Neither failing assertion uses the changed retry rule.
+
+The normal replica hint was submitted for all three changed files. The live dependency attempt had started before this change and provides no evidence of a retry under the new policy. Fleet and lab acceptance remain pending.
+
+[Preceding stage and readiness verification](verification-current-stage-and-readiness-2026-11-21.md)

@@ -56,60 +56,62 @@
       ],
       "modes": {
         "edit": {
-          "kind": "row",
+          "kind": "split",
+          "axis": "horizontal",
           "children": [
             {
               "kind": "stack",
-              "activeId": "procedural-main",
+              "activeWindowId": "procedural-main",
               "children": [
                 {
                   "kind": "window",
-                  "id": "procedural-main"
+                  "windowKindId": "procedural-main"
                 }
               ]
             },
             {
               "kind": "stack",
-              "activeId": "procedural-preview",
+              "activeWindowId": "procedural-preview",
               "children": [
                 {
                   "kind": "window",
-                  "id": "procedural-preview"
+                  "windowKindId": "procedural-preview"
                 }
               ]
             }
           ]
         },
         "generate": {
-          "kind": "row",
+          "kind": "split",
+          "axis": "horizontal",
           "children": [
             {
               "kind": "stack",
-              "activeId": "generation3d-generations",
+              "activeWindowId": "generation3d-generations",
               "children": [
                 {
                   "kind": "window",
-                  "id": "generation3d-generations"
+                  "windowKindId": "generation3d-generations"
                 }
               ]
             },
             {
               "kind": "stack",
-              "activeId": "generation3d-generate-form",
+              "activeWindowId": "generation3d-generate-form",
               "children": [
                 {
                   "kind": "window",
-                  "id": "generation3d-generate-form"
+                  "windowKindId": "generation3d-generate-form"
                 }
               ]
             },
             {
               "kind": "stack",
-              "activeId": "generation3d-generate-preview",
+              "activeWindowId": "generation3d-generate-preview",
               "children": [
                 {
                   "kind": "window",
-                  "id": "generation3d-generate-preview"
+                  "windowKindId": "generation3d-generate-preview"
                 }
               ]
             }
@@ -140,27 +142,22 @@
       ],
       "modes": {
         "stacked": {
-          "kind": "row",
+          "kind": "stack",
+          "activeWindowId": "right",
           "children": [
             {
-              "kind": "stack",
-              "activeId": "right",
-              "children": [
-                {
-                  "kind": "window",
-                  "id": "left"
-                },
-                {
-                  "kind": "window",
-                  "id": "right"
-                }
-              ]
+              "kind": "window",
+              "windowKindId": "left"
+            },
+            {
+              "kind": "window",
+              "windowKindId": "right"
             }
           ]
         },
         "bare": {
           "kind": "window",
-          "id": "left"
+          "windowKindId": "left"
         },
         "empty": {
           "kind": "stack",

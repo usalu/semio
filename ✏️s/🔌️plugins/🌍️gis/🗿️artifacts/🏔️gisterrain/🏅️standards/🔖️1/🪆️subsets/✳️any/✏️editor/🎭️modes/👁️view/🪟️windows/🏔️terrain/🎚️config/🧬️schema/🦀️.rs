@@ -23,6 +23,6 @@ pub struct GisTerrainWindowConfig {
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct TerrainBrushSettings {
     pub radius: u32,
-    pub elevation_step: u32,
+    pub elevation_step_millimetres: u32,
     pub smooth_strength: u32,
 }

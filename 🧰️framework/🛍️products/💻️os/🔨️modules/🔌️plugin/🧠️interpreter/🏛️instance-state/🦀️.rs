@@ -30,7 +30,7 @@ pub(super) struct TableState {
     pub(super) maximum: Option<u64>,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Copy, Debug)]
 pub(super) struct GlobalState {
     pub(super) value: Value,
     pub(super) mutable: bool,

@@ -39,13 +39,35 @@ impl OwnedSnapshotOperation {
     }
 }
 
-/// 🔀️ Serializes borrowed kernel inputs without an intermediate value tree.
+/// 🔀️ Serializes borrowed input in the tagged owned Core Poll envelope.
 #[derive(serde::Serialize)]
-pub(super) struct OwnedPollInput<'a> {
-    pub(super) events: &'a [&'a Event],
-    pub(super) command_page: Option<(&'a semio_framework::kernel::CommandPageCursor, &'a semio_framework::kernel::FixedCommandPage)>,
-    pub(super) cold_pair_page: Option<&'a semio_framework::kernel::ColdDocumentPairPage>,
-    pub(super) budget: Budget,
+pub(super) enum OwnedPollInput<'a> {
+    Poll {
+        events: &'a [&'a Event],
+        command_page: Option<(&'a semio_framework::kernel::CommandPageCursor, &'a semio_framework::kernel::FixedCommandPage)>,
+        cold_pair_page: Option<&'a semio_framework::kernel::ColdDocumentPairPage>,
+        limits: semio_framework::kernel::OwnedCorePollLimits,
+    },
+}
+
+impl<'a> OwnedPollInput<'a> {
+    pub(super) fn with_budget(
+        events: &'a [&'a Event],
+        command_page: Option<(&'a semio_framework::kernel::CommandPageCursor, &'a semio_framework::kernel::FixedCommandPage)>,
+        cold_pair_page: Option<&'a semio_framework::kernel::ColdDocumentPairPage>,
+        budget: Budget,
+    ) -> Result<Self, semio_framework_value::ValueError> {
+        let limits = semio_framework::kernel::OwnedCorePollLimits::try_from(semio_framework::kernel::PollRequestLimits {
+            retained_policy: budget.retained_policy,
+            work_fuel: budget.work_fuel,
+            fuel: budget.fuel,
+            deadline_us: budget.deadline_us,
+            max_effects: budget.max_effects,
+            max_patch_bytes: budget.max_patch_bytes,
+            max_frames: budget.max_frames,
+        })?;
+        Ok(Self::Poll { events, command_page, cold_pair_page, limits })
+    }
 }
 
 /// 📥️ The mirror of the guest's `owned_abi::StartJobInput`: the prepared source copy and the original job budget.

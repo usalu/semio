@@ -12,6 +12,21 @@ export function elasticCapacityV1(rule:ElasticRuleV1,minimumBytes:number,hostFre
  const wanted=Math.ceil(rule.needBytes*(100+rule.headroomPercent)/100),ceiling=Math.min(rule.maximumBytes,Math.floor(hostFreeBytes*(100-rule.hostFreeReservePercent)/100)),target=Math.min(wanted,Math.max(ceiling,minimumBytes));
  return Math.max(minimumBytes,Math.floor(target/rule.alignBytes)*rule.alignBytes);
 }
+/** 🧮️ The smallest image a host of `hostFreeBytes` can hold for a rule: the rule's absolute `minimumBytes` as an upper bound and the share the host may give (`100 - hostFreeReservePercent` of its free bytes, aligned down to the rule's alignment, or to 64 MiB below one alignment step) as the real one, never below 64 MiB, so that no absolute minimum exceeds what the host can create and the shares of all partitions add up to less than the host (see `hostSharePercentV1`). */
+export function elasticMinimumV1(rule:Pick<ElasticRuleV1,"alignBytes"|"hostFreeReservePercent">,minimumBytes:number,hostFreeBytes:number):number{
+ const share=Math.floor(hostFreeBytes*(100-rule.hostFreeReservePercent)/100),unit=share>=rule.alignBytes?rule.alignBytes:67108864;
+ return Math.max(67108864,Math.min(minimumBytes,Math.floor(share/unit)*unit));
+}
+/** 🥧️ The share of the host's free bytes one partition may be born with: an elastic one gets `100 - hostFreeReservePercent`, a fixed one its declared `hostSharePercent`; the shares of all partitions of the policy add up to at most 90 so that the images born one after the other can never promise more than the host has. */
+export function hostSharePercentV1(policy:Readonly<{partitions:Readonly<Record<string,Readonly<{hostSharePercent?:number}>>>;elastic?:Readonly<Record<string,Pick<ElasticRuleV1,"hostFreeReservePercent">>>}>,partition:string):number{
+ const rule=policy.elastic?.[partition];
+ return rule?100-rule.hostFreeReservePercent:policy.partitions[partition]?.hostSharePercent??0;
+}
+/** 📏️ The capacity a new fixed image gets: its declared capacity, cut down to the share of the host's free bytes (aligned down to whole MiB, never below 64 MiB or the declaration when that is smaller). */
+export function hostShareCapacityV1(declaredBytes:number,hostSharePercent:number,hostFreeBytes:number):number{
+ const share=Math.floor(hostFreeBytes*hostSharePercent/100/1048576)*1048576;
+ return Math.max(Math.min(declaredBytes,67108864),Math.min(declaredBytes,share));
+}
 /** 🧾️ The size an image receipt pins: a whole number of MiB of at least 32 MiB, else null for an unreadable or malformed receipt; `missing` marks an image that is not born yet. */
 export function readImageReceiptBytesV1(directory:string):number|null|"missing"{
  try{
@@ -42,13 +57,16 @@ export function effectiveCapacityV1(directory:string,minimumBytes:number,rule:El
  if(receipt===null)return minimumBytes;
  if(receipt!=="missing")return Math.min(receipt,rule.maximumBytes);
  const host=nativeFreeSpaceSyncV1(dirname(directory));if(!host)return minimumBytes;
- const base=elasticCapacityV1(rule,minimumBytes,host.availableBytes),grown=readElasticGrowthV1(directory);
+ const base=elasticCapacityV1(rule,elasticMinimumV1(rule,minimumBytes,host.availableBytes),host.availableBytes),grown=readElasticGrowthV1(directory);
  return Math.max(base,Math.min(grown,rule.maximumBytes,Math.floor(host.availableBytes*(100-rule.hostFreeReservePercent)/100/rule.alignBytes)*rule.alignBytes));
 }
-/** 📌️ The capacity of a partition without an elastic rule: the one its receipt pins when an image exists and fits the declared capacity (an image keeps the size it was born with, a larger declaration takes effect only through the explicit reset that births a new image), else the declared capacity; a larger or unreadable receipt keeps the declared capacity so the receiver refuses it as before. */
-export function pinnedCapacityV1(directory:string,declaredBytes:number):number{
+/** 📌️ The capacity of a partition without an elastic rule: the one its receipt pins when an image exists and fits the declared capacity (an image keeps the size it was born with, a larger declaration takes effect only through the explicit reset that births a new image), else the declared capacity cut down to the host share of a fixed partition (`hostSharePercent`) when the image is not born yet; a larger or unreadable receipt keeps the declared capacity so the receiver refuses it as before. */
+export function pinnedCapacityV1(directory:string,declaredBytes:number,hostSharePercent?:number):number{
  const receipt=readImageReceiptBytesV1(directory);
- return typeof receipt==="number"&&receipt<=declaredBytes?receipt:declaredBytes;
+ if(typeof receipt==="number"&&receipt<=declaredBytes)return receipt;
+ if(receipt!=="missing"||hostSharePercent===undefined)return declaredBytes;
+ const host=nativeFreeSpaceSyncV1(dirname(directory));
+ return host?hostShareCapacityV1(declaredBytes,hostSharePercent,host.availableBytes):declaredBytes;
 }
 
 /** 🧲️ Whether an image holds host blocks it no longer uses: the host allocation is compared with the bytes used inside (at least the ratio and at least the floor, an eighth of the floor while the host volume is nearly full). The decision is the framework's `nativeImageReclaimDueV1`; the rule only carries the three numbers. */

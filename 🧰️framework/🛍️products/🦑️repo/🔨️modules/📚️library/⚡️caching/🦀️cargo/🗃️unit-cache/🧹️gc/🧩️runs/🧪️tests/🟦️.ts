@@ -13,7 +13,7 @@ const python=(states:readonly unknown[]):unknown[]=>{const run=Bun.spawnSync(["p
 const run=(store:string,name:string,ageMs:number,components:readonly string[],bytes=65536):string=>{
  const path=join(store,policy.directory,name);for(const directory of["l","r","j"])mkdirSync(join(path,directory),{recursive:true});
  writeFileSync(join(path,"l","cargo.log"),"x".repeat(bytes));
- for(const component of components){mkdirSync(join(path,policy.materializedDirectory,component),{recursive:true});}
+ for(const component of components){const directory=join(path,policy.materializedDirectory,component);mkdirSync(directory,{recursive:true});if(!component.endsWith(policy.linkedSuffix)&&!component.startsWith("scratch-"))writeFileSync(join(directory,policy.artifactMarker),"{}");}
  const when=new Date(Date.now()-ageMs);for(const directory of["l","r","j",""])utimesSync(join(path,directory),when,when);utimesSync(join(path,"l","cargo.log"),when,when);utimesSync(path,when,when);
  return path;
 };
@@ -46,7 +46,7 @@ test("a collection measures real run folders, keeps runs a build still writes to
  const root=mkdtempSync(join(realpathSync(tmpdir()),"runs-")),store=join(root,"m");
  try{
   const old=run(store,"wold",30*hour,["wfc","wfc.linked"]),mid=run(store,"wmid",20*hour,["wfc"]),empty=run(store,"wnone",25*hour,[]),latest=run(store,"wlatest",10*hour,["wfc.linked"]),live=run(store,"wlive",60000,["wfc"]),fresh=run(store,"wfresh",0,[]);
-  expect(componentRunComponentsV1(old)).toEqual(["wfc"]);expect(Math.abs(Date.now()-componentRunRecencyV1(mid)-20*hour)).toBeLessThan(120000);
+  expect(componentRunComponentsV1(old)).toEqual(["wfc"]);const scratch=run(store,"wscratch",40*hour,["scratch-semio-hub-x"]);expect(componentRunComponentsV1(scratch)).toEqual([]);rmSync(scratch,{recursive:true,force:true});expect(Math.abs(Date.now()-componentRunRecencyV1(mid)-20*hour)).toBeLessThan(120000);
   const lines:string[]=[],dry=await collectComponentRunsV1(store,{dryRun:true,needBytes:()=>10**12,report:{language:"en",write:line=>lines.push(line)}});
   expect(dry.removed.map(row=>row.path)).toEqual([old,empty,mid]);expect([old,empty,mid,latest,live,fresh].every(existsSync)).toBe(true);expect(dry.held).toBe(2);expect(lines.some(line=>line.includes("would remove component run"))).toBe(true);
   const german:string[]=[],result=await collectComponentRunsV1(store,{dryRun:false,needBytes:()=>65536*2,report:{language:"de",write:line=>german.push(line)}});
@@ -71,7 +71,8 @@ test("targeted apply measures only eligible runs needed by the live target and r
   expect(oracle[0]!.map(row=>basename(row.path))).toEqual(law.removed);
   const dry=await collectComponentRunsV1(root,{dryRun:true,needBytes:()=>law.needBytes,nowMs:now});
   const log=lstatSync(join(rows[0]!.path,"l","cargo.log"));
-  expect(dry.freedBytes).toBe((log.blocks??Math.ceil(log.size/512))*512);
+  const marker=lstatSync(join(rows[0]!.path,policy.materializedDirectory,rows[0]!.components[0]!,policy.artifactMarker));
+  expect(dry.freedBytes).toBe(((log.blocks??Math.ceil(log.size/512))+(marker.blocks??Math.ceil(marker.size/512)))*512);
   expect(rows.every(row=>existsSync(row.path))).toBe(true);
   const measured=new Set<string>(),completed:string[]=[];
   let satisfied=false;

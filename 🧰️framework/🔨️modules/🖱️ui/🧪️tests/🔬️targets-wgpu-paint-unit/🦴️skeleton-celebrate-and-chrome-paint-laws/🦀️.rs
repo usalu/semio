@@ -78,7 +78,7 @@ fn the_celebrate_cycle_wraps_once_per_react_duration_and_never_divides_by_zero()
 #[test]
 fn introducing_and_celebrating_borders_remain_hairline_throughout_the_cycle() {
     let theme = Theme::default();
-    for state in [UiState::Introducing, UiState::Celebrating] {
+    for (state, kind) in [(UiState::Introducing, semio_ui_draw_contract::KIND_INTRODUCING_BORDER), (UiState::Celebrating, semio_ui_draw_contract::KIND_FINISHED_BORDER)] {
         for turns in [0.0, 0.25, 0.5, 0.75] {
             let mut draw = DrawList::default();
             draw.set_clock_seconds(turns * theme.celebrate_duration_seconds);
@@ -86,7 +86,7 @@ fn introducing_and_celebrating_borders_remain_hairline_throughout_the_cycle() {
             presence_overlay(&mut draw, Rect::new(0.0, 0.0, 40.0, 20.0), &theme, &presence, false);
             settle_borders(&mut draw);
             let instances: Vec<_> = draw.layers.iter().flat_map(|layer| &layer.ui_instances)
-                .filter(|item| item.params[2] == semio_ui_draw_contract::KIND_INTRODUCING_BORDER)
+                .filter(|item| item.params[2] == kind)
                 .collect();
             assert!(!instances.is_empty());
             assert!(instances.iter().all(|item| item.params[1] == theme.stroke_hairline));

@@ -1,0 +1,7 @@
+animals/horse
+animals/dairy-cow
+animals/goat
+animals/sheep
+animals/pig
+animals/roe-deer
+animals/red-fox

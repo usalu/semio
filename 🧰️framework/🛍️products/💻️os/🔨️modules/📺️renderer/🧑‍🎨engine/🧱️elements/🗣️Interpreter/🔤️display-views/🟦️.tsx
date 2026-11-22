@@ -220,7 +220,7 @@ export function ExtensionView({ record }: { readonly record: UiNodeRecord }) {
   return (
     <ShellFaultBoundary boundaryId={`extension-${component.extension}`} fallbackLabel={shellLabel("ui.common.renderError")}>
       <p className="text-muted-foreground text-xs" data-ui-node-id={record.id} data-ui-node-key={record.key}>
-        Extension unavailable: {component.extension}
+        {shellLabel("ui.common.extensionUnavailable")}: {component.extension}
       </p>
     </ShellFaultBoundary>
   );

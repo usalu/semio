@@ -45,6 +45,12 @@
       "forbidden": [
         "xxx"
       ]
+    },
+    {
+      "id": "mirror-188-byte-child-stderr",
+      "stderr": "Resolving dependencies\nResolved, downloaded and extracted\npackage package package package package package package package   \nerror: filesystem refused the requested link (fixture evidence)",
+      "expected": "error: filesystem refused the requested link (fixture evidence)",
+      "forbidden": []
     }
   ]
 }

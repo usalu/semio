@@ -1,0 +1,14 @@
+import {readFileSync,mkdtempSync,writeFileSync,readFileSync as rf,statSync,rmSync,readdirSync,lstatSync,existsSync} from "node:fs";
+import {randomUUID,createHash} from "node:crypto";
+import {join,dirname} from "node:path";
+import {tmpdir} from "node:os";
+import {concurrentEditV1,retryOnConcurrentEditSyncV1,publishFileDurablySyncV1} from "../../../../../../../🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
+const src=readFileSync(join(import.meta.dir,"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🟨️.mjs"),"utf8");
+const i=src.indexOf("function publishInputClosureV1"),j=src.indexOf("\n}\n",i)+3;
+const make=new Function("lstatSync","readFileSync","persistedExists","rmSync","randomUUID","join","dirname","retryOnConcurrentEditSyncV1","concurrentEditV1","publishFileDurablySyncV1","REVISION_POLICY_V1","noteBuildGraphStagedLeafV1","VERIFIED_CLOSURES_V1",src.slice(i,j)+";return publishInputClosureV1;");
+const publish=make(lstatSync,rf,existsSync,rmSync,randomUUID,join,dirname,retryOnConcurrentEditSyncV1,concurrentEditV1,publishFileDurablySyncV1,{maximumPathUnits:256},()=>{},new Map());
+const root=mkdtempSync(join(tmpdir(),"rep-")),text=JSON.stringify({version:1,files:["a"]}),key=createHash("sha256").update(text).digest("hex"),leaf=join(root,key+".json");
+publish(leaf,text);writeFileSync(leaf,Buffer.alloc(Buffer.byteLength(text)));publish(leaf,text);
+if(rf(leaf,"utf8")!==text||readdirSync(root).length!==1||statSync(leaf).nlink!==1)throw Error("not healed");
+writeFileSync(leaf,Buffer.alloc(3));publish(leaf,text);if(rf(leaf,"utf8")!==text)throw Error("short not healed");
+publish(leaf,text);rmSync(root,{recursive:true});console.log("OK");

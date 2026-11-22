@@ -5,11 +5,11 @@
 /// 📝️ Free-text scene description — the only field seen under the fixture's top-level `meta`.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle5dMeta {
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     pub description: String,
 }
@@ -18,38 +18,38 @@ pub struct Puzzle5dMeta {
 /// `text`/`icon_kind` label it.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_dsl_record_derive::DslReceiving)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle5dPart2d {
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     pub x: f64,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     pub y: f64,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub shape: Option<String>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub radius: Option<f64>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub width: Option<f64>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub height: Option<f64>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub text: Option<String>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub icon_kind: Option<String>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub hidden: Option<bool>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub locked: Option<bool>,
 }
@@ -123,7 +123,7 @@ impl semio_framework_pack_json::ArtifactCanonicalJsonTree for Puzzle5dScale {
 /// an `[x, y, z]` array) so every JSON-boundary consumer (the `puzzle_5d_ui` wasm crate's own
 /// mirror struct, which binds `scale` as `Option<serde_json::Value>` and is out of this derive's
 /// scope) keeps parsing it exactly as before.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 impl serde::Serialize for Puzzle5dScale {
     fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         match self {
@@ -133,7 +133,7 @@ impl serde::Serialize for Puzzle5dScale {
     }
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 impl<'de> serde::Deserialize<'de> for Puzzle5dScale {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         match <serde_json::Value as serde::Deserialize>::deserialize(deserializer)? {
@@ -240,24 +240,24 @@ impl semio_framework_dsl_record::DslField for Puzzle5dScale {
 /// resolves its geometry, `scale` is `Puzzle5dScale` (bare number = uniform, `x,y,z` = per-axis).
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_dsl_record_derive::DslReceiving)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle5dPart3d {
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     #[dsl(coord)]
     pub origin: [f64; 3],
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub mesh_url: Option<String>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub orientation: Option<[f64; 4]>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub scale: Option<Puzzle5dScale>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub label: Option<String>,
 }
@@ -266,19 +266,19 @@ pub struct Puzzle5dPart3d {
 /// `Puzzle5dGrip::grip_kind` in real fixtures (a per-projection override slot), not simplified away.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_dsl_record_derive::DslReceiving)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle5dGrip2d {
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     #[dsl(angle = "rad")]
     pub angle: f64,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     #[dsl(refs = "grip_kind")]
     pub grip_kind: Option<String>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub radius: Option<f64>,
 }
@@ -286,22 +286,22 @@ pub struct Puzzle5dGrip2d {
 /// 🔘️ A grip's 3D-projection presentation (world vortex).
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_dsl_record_derive::DslReceiving)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle5dGrip3d {
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     #[dsl(coord)]
     pub position: [f64; 3],
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     #[dsl(dir)]
     pub direction: Option<[f64; 3]>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub radius: Option<f64>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub label: Option<String>,
 }
@@ -309,19 +309,19 @@ pub struct Puzzle5dGrip3d {
 /// 🔘️ One rim grip on a part, unified across both projections.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_dsl_record_derive::DslReceiving)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle5dGrip {
     pub id: String,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     #[dsl(refs = "grip_kind")]
     pub grip_kind: Option<String>,
-    #[cfg_attr(test, serde(default, rename = "2d"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, rename = "2d"))]
     #[value(default, rename = "2d")]
     pub grip_2d: Puzzle5dGrip2d,
-    #[cfg_attr(test, serde(default, rename = "3d"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, rename = "3d"))]
     #[value(default, rename = "3d")]
     pub grip_3d: Puzzle5dGrip3d,
 }
@@ -329,8 +329,8 @@ pub struct Puzzle5dGrip {
 /// ⚓️ Whether a part keeps its stored plane at a BFS root (`Fixed`) or resets the plane to default XY (`Derived`).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_dsl_record_derive::DslReceiving)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub enum Puzzle5dPartAnchor {
     #[default]
@@ -347,25 +347,25 @@ impl Puzzle5dPartAnchor {
 /// 🧱️ One placed part, unified across both projections — `grips` are its rim attraction/link ports.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_dsl_record_derive::DslReceiving)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle5dPart {
     pub id: String,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     #[dsl(refs = "part_kind")]
     pub part_kind: Option<String>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Puzzle5dPartAnchor::is_fixed"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Puzzle5dPartAnchor::is_fixed"))]
     #[value(default, skip_serializing_if = "Puzzle5dPartAnchor::is_fixed")]
     pub anchor: Puzzle5dPartAnchor,
-    #[cfg_attr(test, serde(default, rename = "2d"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, rename = "2d"))]
     #[value(default, rename = "2d")]
     pub part_2d: Puzzle5dPart2d,
-    #[cfg_attr(test, serde(default, rename = "3d"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, rename = "3d"))]
     #[value(default, rename = "3d")]
     pub part_3d: Puzzle5dPart3d,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     pub grips: Vec<Puzzle5dGrip>,
 }
@@ -377,43 +377,43 @@ impl Default for Puzzle5dPart {
 }
 
 /// 🔗️ One fastener (2D edge / 3D attraction) between two full grip ids (`part_id:grip_id`).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_dsl_record_derive::DslReceiving)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle5dFastener {
     pub id: String,
     pub source: String,
     pub target: String,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     #[dsl(refs = "fastener_kind")]
     pub fastener_kind: Option<String>,
     /// 🔧️ Pose-solver offsets `compute_brush_placement_pose` / compose `geom::flatten` resolve into a world pose —
     /// mirrors `puzzle_3d::Puzzle3dAttraction` plus diagram offsets `x`/`y` (compose Connection `u`/`v`).
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     pub gap: f64,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     pub shift: f64,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     pub rise: f64,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     pub rotation: f64,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     pub turn: f64,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     pub tilt: f64,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     pub x: f64,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     pub y: f64,
 }
@@ -424,25 +424,25 @@ pub struct Puzzle5dFastener {
 /// never persisted (`💡️inferences/🎛️flat-position`'s `target_volume_flat_rect`).
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_dsl_record_derive::DslReceiving)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle5dTargetVolume {
     pub id: String,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     #[dsl(coord)]
     pub origin: [f64; 3],
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub orientation: Option<[f64; 4]>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub scale: Option<Puzzle5dScale>,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     pub hidden: bool,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     pub locked: bool,
 }
@@ -456,8 +456,8 @@ impl Default for Puzzle5dTargetVolume {
 /// 🔗️ How specifically two grip/rope kinds are allowed to fasten.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_dsl_record_derive::DslReceiving)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "lowercase"))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "lowercase"))]
 #[value(rename_all = "lowercase")]
 pub enum Puzzle5dCompatSpecificity {
     #[default]
@@ -469,23 +469,23 @@ pub enum Puzzle5dCompatSpecificity {
 }
 
 /// 🔗️ One allowed (or unidirectional) kind pair — unified with 2d/3d via `important` + `specificity`.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_dsl_record_derive::DslReceiving)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle5dKindCompatibility {
     #[dsl(refs = "grip_kind")]
     pub source: String,
     #[dsl(refs = "grip_kind")]
     pub target: String,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     pub bidirectional: bool,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     pub important: bool,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     pub specificity: Puzzle5dCompatSpecificity,
 }
@@ -493,20 +493,20 @@ pub struct Puzzle5dKindCompatibility {
 /// 🏷️ One freeform attribute on a part-kind (compose `Attribute` analogue).
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_dsl_record_derive::DslReceiving)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle5dAttribute {
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     pub id: String,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     pub key: String,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     pub value: String,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub definition: Option<String>,
 }
@@ -514,23 +514,23 @@ pub struct Puzzle5dAttribute {
 /// ✍️ One author credit on a part-kind (compose `Author` analogue).
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_dsl_record_derive::DslReceiving)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle5dAuthor {
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     pub id: String,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     pub name: String,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     pub email: String,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub role: Option<String>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub rank: Option<i32>,
 }
@@ -538,29 +538,29 @@ pub struct Puzzle5dAuthor {
 /// 🖼️ One tagged representation (mesh/image/…) on a part-kind.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_dsl_record_derive::DslReceiving)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle5dRepresentation {
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     pub id: String,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     pub name: String,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     pub url: String,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     pub mime: String,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     pub tags: Vec<String>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub lod: Option<String>,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     pub description: String,
 }
@@ -572,44 +572,44 @@ fn default_grip_direction() -> [f64; 3] {
 /// 🌱️ One rim-grip template on a `Puzzle5dCatalogPartKind` (compose Connector analogue).
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_dsl_record_derive::DslReceiving)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle5dGripTemplate {
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     pub id: String,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     pub name: String,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     pub label: String,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     pub description: String,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     pub icon: String,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     #[dsl(refs = "grip_kind")]
     pub grip_kind: Option<String>,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     #[dsl(coord)]
     pub point: [f64; 3],
-    #[cfg_attr(test, serde(default = "default_grip_direction"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default = "default_grip_direction"))]
     #[value(default = "default_grip_direction")]
     #[dsl(dir)]
     pub direction: [f64; 3],
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub t: Option<f64>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub mandatory: Option<bool>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub radius: Option<f64>,
 }
@@ -623,46 +623,46 @@ impl Default for Puzzle5dGripTemplate {
 /// 🧱️ One part-kind catalog row (compose Type analogue).
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_dsl_record_derive::DslReceiving)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle5dCatalogPartKind {
     #[dsl(defines = "part_kind")]
     pub id: String,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     pub name: String,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     pub label: String,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     pub description: String,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     pub icon: String,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     pub image: String,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     pub unit: String,
-    #[cfg_attr(test, serde(default, rename = "abstract"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, rename = "abstract"))]
     #[value(default, rename = "abstract")]
     pub is_abstract: bool,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     pub base_kinds: Vec<String>,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     pub representations: Vec<Puzzle5dRepresentation>,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     pub grips: Vec<Puzzle5dGripTemplate>,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     pub attributes: Vec<Puzzle5dAttribute>,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     pub authors: Vec<Puzzle5dAuthor>,
 }
@@ -670,34 +670,34 @@ pub struct Puzzle5dCatalogPartKind {
 /// 🔘️ One grip-kind catalog row (compose Port analogue).
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_dsl_record_derive::DslReceiving)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle5dCatalogGripKind {
     #[dsl(defines = "grip_kind")]
     pub id: String,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub code: Option<String>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub label: Option<String>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub order: Option<i32>,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     pub compatible_with: Vec<String>,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     pub description: String,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     pub icon: String,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     pub color: String,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     #[dsl(refs = "rope_kind")]
     pub default_rope_kind: String,
@@ -706,16 +706,16 @@ pub struct Puzzle5dCatalogGripKind {
 /// 🔗️ One fastener-kind catalog row.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_dsl_record_derive::DslReceiving)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle5dCatalogFastenerKind {
     #[dsl(defines = "fastener_kind")]
     pub id: String,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     pub name: String,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub label: Option<String>,
 }
@@ -723,19 +723,19 @@ pub struct Puzzle5dCatalogFastenerKind {
 /// 🧵️ One rope-kind catalog row.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_dsl_record_derive::DslReceiving)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle5dCatalogRopeKind {
     #[dsl(defines = "rope_kind")]
     pub id: String,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     pub name: String,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     pub label: String,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     #[dsl(refs = "fastener_kind")]
     pub default_fastener_kind: String,
@@ -745,23 +745,23 @@ pub struct Puzzle5dCatalogRopeKind {
 /// kind rows — see `puzzle/5d/manifest/*.manifest.json` for the same schema at the manifest layer.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_dsl_record_derive::DslReceiving)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle5dKindCatalogs {
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     #[dsl(table)]
     pub parts: Vec<Puzzle5dCatalogPartKind>,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     #[dsl(table)]
     pub grips: Vec<Puzzle5dCatalogGripKind>,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     #[dsl(table)]
     pub fasteners: Vec<Puzzle5dCatalogFastenerKind>,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     #[dsl(table)]
     pub ropes: Vec<Puzzle5dCatalogRopeKind>,

@@ -39,7 +39,7 @@ export function registerSourceAnalysisV1(declaration:Readonly<{id:string;revisio
 /** 🔬️ Returns an admitted JSON image; consumers must validate its defining parser result. */
 export function observedSourceAnalysisV1(provider:SourceAnalysisProviderV1,path:fs.PathLike):unknown;
 /** 👥️ Returns two ordered parser results from one source image, preserving each provider's original facts. */
-export function observedSourceAnalysisPairV1(first:SourceAnalysisProviderV1,second:SourceAnalysisProviderV1,path:fs.PathLike):readonly [unknown,unknown];
+export function observedSourceAnalysisPairV1(first:SourceAnalysisProviderV1,second:SourceAnalysisProviderV1,path:fs.PathLike,options?:Readonly<{recordSource?:boolean}>):readonly [unknown,unknown];
 /** 🌊️ Retains original parser and nested Source observations through asynchronous input. */
 export function observedSourceAnalysisAsyncV1(provider:SourceAnalysisProviderV1,path:fs.PathLike):Promise<unknown>;
 /** 🧿️ Seals and fingerprints the original module-load authority without issuing a grant. */
@@ -66,7 +66,7 @@ export function memoizedObservedComputationV1<T>(cache:Map<unknown,unknown>,key:
 export function memoizedObservedAsyncComputationV1<T>(cache:Map<unknown,unknown>,key:unknown,compute:()=>Promise<T>,checkpoint:()=>Promise<void>):Promise<T>;
 /** 🕸️ Preserves every Source fact even when a computation fails. */
 export function captureObservedSourceInputsV1<T>(compute:()=>T|PromiseLike<T>,onFailure?:((observations:SourceObservationV1[],authorityObservations:SourceObservationV1[])=>void)|undefined,includeAuthority?:boolean,spill?:undefined):Promise<CapturedSourceInputsV1<Awaited<T>>&{readonly observations:readonly SourceObservationV1[]}>;
-export function captureObservedSourceInputsV1<T>(compute:()=>T|PromiseLike<T>,onFailure?:((observations:SourceObservationV1[],authorityObservations:SourceObservationV1[])=>void)|undefined,includeAuthority?:boolean,spill?:{builder():{add(rows:Iterable<SourceObservationV1>):void;finish():Iterable<SourceObservationV1>&{readonly length:number}}}):Promise<CapturedSourceInputsV1<Awaited<T>>>;
+export function captureObservedSourceInputsV1<T,List extends Iterable<unknown>&{readonly length:number}>(compute:()=>T|PromiseLike<T>,onFailure:((observations:SourceObservationV1[],authorityObservations:SourceObservationV1[])=>void)|undefined,includeAuthority:boolean|undefined,spill:{builder():{add(rows:Iterable<SourceObservationV1>):void;finish():List}}):Promise<Readonly<{value:Awaited<T>;observations:List;authorityObservations:readonly SourceObservationV1[]}>>;
 /** ✍️ Records actual bounded bytes without accepting a caller-provided digest or file observation. */
 export function observedExactSourceFileV1(batch:ExactSourceReadBatchV1,root:string,name:string):Promise<ExactSourceFileV1|null>;
 /** 📍️ Records the actual system module resolver result or failure. */
@@ -90,6 +90,14 @@ export function releaseInferenceMemoryV1():void;
 /** 📏️ The entry counts of the in-process caches a graph construction fills. */
 export function observationCollectionsV1():{name:string;entries:number;sample?:()=>unknown[];bytes?:number}[];
 export function inferenceCacheSizesV1():{interned:number;rowStore:{rows:number;strings:number;characters:number;bytes:number};analysisImages:number;analysisBytes:number;settledReadBytes:number;fileRecordImageBytes:number;verifiedBlockRows:number;settledReads:number;projectImages:number;publications:number;registryFiles:number};
+/** 🗄️ Uses a machine store of source analyses (a directory shared by the processes of the machine), or none. */
+export function useSourceAnalysisStoreV1(store:{root:string;directory:string}|undefined):void;
+/** 🌐️ Registers the answer of one global fact a record may depend on. */
+export function registerGlobalFactV1(name:string,holds:(workspaceRoot:string,segments:readonly string[],fact:unknown)=>boolean):void;
+/** ✍️ Records what the running inference read of one global fact. */
+export function observeGlobalFactV1(name:string,workspaceRoot:string,segments:readonly string[],fact:unknown):void;
+/** 🔭️ The collection of rows the running inference records into. */
+export function observationScopeV1():object|undefined;
 export function recordRegistryOwnerV1(workspaceRoot:string,name:string,row:{root:string;manifest:string}|undefined|null):void;
 /** ❓️ Whether recorded rows still hold, sharing the checks of the running inference round. */
 export function observationRowsHoldV1(rows:readonly unknown[]):boolean;
@@ -120,7 +128,7 @@ export function memoizedFileRecord<T>(namespace:string,path:fs.PathLike,compute:
 /** 🪶️ Reads one observed file asynchronously without changing its parser or byte identity. */
 export function memoizedFileRecordAsyncV1<T>(namespace:string,path:fs.PathLike,compute:(bytes:Buffer)=>T):Promise<Awaited<T>>;
 /** 🪨️ Reports a current inference round through its original caller callback. */
-export type SourceSettlementRoundV1 = Readonly<{round:number;conflict?:string;failure?:unknown}>;
+export type SourceSettlementRoundV1 = Readonly<{round:number;settled?:true;conflict?:string;paths?:readonly string[];failure?:unknown}>;
 /** ⏳️ Settles mutually consistent original facts under the existing signal and finite round limit. */
 export function settleObservedComputationV1<T>(compute:()=>T|PromiseLike<T>,options?:Readonly<{signal?:AbortSignal;limit?:number;onRound?:(round:SourceSettlementRoundV1)=>void|Promise<void>}>):Promise<Awaited<T>>;
 /** 🗃️ Reuses an inference result only while its complete current facts hold. */
@@ -151,6 +159,7 @@ export function sourceObservationStatsV1():Readonly<{loadObservations:number;pro
 
 export function requireCurrentObservationV1():void;
 export function registerLoadedImplementationRowsV1(rows:readonly {kind:string;path:string;fact:{sha256:string;ignore?:unknown}}[]):void;
+export function requirePinnedImplementationFactsV1(observations:readonly SourceObservationV1[],signal?:AbortSignal):void;
 export function staleSourceFactsErrorV1(rows:readonly {kind:string;path:string}[]):Error;
 
 /** 🪡️ Projects finite aggregate observation budget admission DATA. */

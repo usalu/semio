@@ -1,5 +1,6 @@
 import { boundedServicePayloadV1 } from "../../../💡️inference/🔌️service/🟦️.ts";
-import type { ServiceOperationPayloadV1 } from "@semio-tech/framework";
+import type { Effect, ServiceOperationPayloadV1 } from "@semio-tech/framework";
+import { wireOptionValue } from "../../../🎭️actor/🖼️wire-turn/🟦️.ts";
 /** 📤️ Canonical guest publications and Shell-owned inference intent effects. */
 import { decodeAppFrame, encodeAppFrame } from "../../../🧾️app-channel/🎞️frame-codec/🟦️.ts";
 import { faultDisplayMessage } from "../../../🧾️app-channel/📋️report-decoders/🟦️.ts";
@@ -28,15 +29,23 @@ export type BrowserActorCommandBackboneEnvelopeV1 = Readonly<{
   inverse: Readonly<{ schema: string; payload: Readonly<Uint8Array> }>;
   timestamp: Readonly<{ actor: bigint; physical_ms: bigint; logical: bigint }>;
 }>;
-export type BrowserActorHostEffectV1 =
-  | { readonly requestServiceOperation: { readonly owner: string; readonly serviceId: string; readonly action: string; readonly payload: ServiceOperationPayloadV1 } }
-  | { readonly openExternalUrl: { readonly url: string } };
+type BrowserActorHostEffectKeyV1 = "requestServiceOperation" | "openExternalUrl" | "replayShellCommand" | "openPluginInstance"
+  | "setPanel" | "setActiveUtility" | "setActiveTool" | "notify" | "openDialog" | "requestFileOpen" | "downloadMediaExport";
+export type BrowserActorHostEffectV1 = {
+  [Key in BrowserActorHostEffectKeyV1]: Extract<Effect, Readonly<Record<Key, unknown>>>;
+}[BrowserActorHostEffectKeyV1];
 
-function exact(value: unknown, fields: readonly string[]): Readonly<Record<string, unknown>> {
+function record(value: unknown): Readonly<Record<string, unknown>> {
   if (value === null || typeof value !== "object" || Array.isArray(value) || Object.getPrototypeOf(value) !== Object.prototype) throw new Error("browser-actor-publication: invalid object");
-  const record = value as Readonly<Record<string, unknown>>;
-  if (Object.keys(record).length !== fields.length || fields.some((field) => !Object.hasOwn(record, field))) throw new Error("browser-actor-publication: invalid exact fields");
-  return record;
+  return value as Readonly<Record<string, unknown>>;
+}
+
+function exact(value: unknown, required: readonly string[], optional: readonly string[] = []): Readonly<Record<string, unknown>> {
+  const fields = record(value);
+  if (required.some(field => !Object.hasOwn(fields, field)) || Object.keys(fields).some(field => !required.includes(field) && !optional.includes(field))) {
+    throw new Error("browser-actor-publication: invalid exact fields");
+  }
+  return fields;
 }
 
 function canonical(bytes: Uint8Array, encoded: Uint8Array): void {
@@ -86,19 +95,92 @@ function decodeExactOpsVector(bytes: ArrayLike<number>): readonly Uint8Array[] {
   return operations;
 }
 
+function text(value: unknown): string {
+  if (typeof value !== "string" || new TextEncoder().encode(value).length > BROWSER_ACTOR_ACTION_PACK_MAXIMUM_BYTES) throw new Error("browser-actor-publication: invalid effect text");
+  return value;
+}
+
+function identity(value: unknown, maximum = 256): string {
+  const id = text(value);
+  if (!id || new TextEncoder().encode(id).length > maximum || /\p{Cc}/u.test(id)) throw new Error("browser-actor-publication: invalid effect identity");
+  return id;
+}
+
+function integer(value: unknown, maximum = Number.MAX_SAFE_INTEGER): number {
+  if (typeof value !== "number" || !Number.isSafeInteger(value) || value < 0 || value > maximum) throw new Error("browser-actor-publication: invalid effect integer");
+  return value;
+}
+
 function projection(value: unknown): BrowserActorHostEffectV1 {
-  if (value !== null && typeof value === "object" && Object.hasOwn(value, "openExternalUrl")) {
-    const effect = exact(value, ["openExternalUrl"]);
-    const target = exact(effect.openExternalUrl, ["url"]);
-    if (typeof target.url !== "string" || new TextEncoder().encode(target.url).length > 2048 || !/^https?:\/\//u.test(target.url) || /[\u0000-\u0020\u007f]/u.test(target.url)) throw new Error("browser-actor-publication: invalid external URL");
-    const url = new URL(target.url);
-    if (!url.hostname || url.username || url.password) throw new Error("browser-actor-publication: invalid external URL");
-    return { openExternalUrl: { url: target.url } };
+  const effect = record(value);
+  const [key] = Object.keys(effect);
+  if (key === undefined) throw new Error("browser-actor-publication: empty host effect");
+  const data = exact(effect, [key])[key];
+  switch (key) {
+    case "requestServiceOperation": {
+      const operation = exact(data, ["owner", "serviceId", "action", "payload"]);
+      return { requestServiceOperation: {
+        owner: identity(operation.owner, 128), serviceId: identity(operation.serviceId), action: identity(operation.action, 64),
+        payload: boundedServicePayloadV1(operation.payload) as ServiceOperationPayloadV1,
+      } };
+    }
+    case "openExternalUrl": {
+      const urlText = identity(exact(data, ["url"]).url, 2048);
+      if (!/^https?:\/\//u.test(urlText) || /[\u0000-\u0020\u007f]/u.test(urlText)) throw new Error("browser-actor-publication: invalid external URL");
+      const url = new URL(urlText);
+      if (!url.hostname || url.username || url.password) throw new Error("browser-actor-publication: invalid external URL");
+      return { openExternalUrl: { url: urlText } };
+    }
+    case "replayShellCommand": {
+      const { actionId, args } = exact(data, ["actionId"], ["args"]);
+      return { replayShellCommand: { actionId: identity(actionId), ...(args === undefined ? {} : { args }) } };
+    }
+    case "openPluginInstance": {
+      const { pluginId, appId, osInstanceId, document } = exact(data, ["pluginId", "appId"], ["osInstanceId", "document"]);
+      const target = document === undefined ? undefined : exact(document, ["documentId", "schema"], ["spaceId"]);
+      return { openPluginInstance: {
+        pluginId: identity(pluginId), appId: identity(appId),
+        ...(osInstanceId === undefined ? {} : { osInstanceId: identity(osInstanceId) }),
+        ...(target === undefined ? {} : { document: {
+          documentId: identity(target.documentId), schema: identity(target.schema),
+          ...(target.spaceId === undefined ? {} : { spaceId: identity(target.spaceId) }),
+        } }),
+      } };
+    }
+    case "setPanel":
+      return { setPanel: { panelJson: text(exact(data, ["panelJson"]).panelJson) } };
+    case "setActiveUtility": {
+      const { windowId, utilityId } = exact(data, ["windowId", "utilityId"]);
+      return { setActiveUtility: { windowId: identity(windowId), utilityId: text(utilityId) } };
+    }
+    case "setActiveTool":
+      return { setActiveTool: { toolId: text(exact(data, ["toolId"]).toolId) } };
+    case "notify":
+      return { notify: { message: text(exact(data, ["message"]).message) } };
+    case "openDialog": {
+      const { req, dialogId, args } = exact(data, ["req", "dialogId"], ["args"]);
+      return { openDialog: { req: integer(req), dialogId: identity(dialogId), ...(args === undefined ? {} : { args: record(args) }) } };
+    }
+    case "requestFileOpen": {
+      const { req, accept, readAs, importAction, args, multiple, maxFileBytes } = exact(data, ["req", "accept", "importAction", "multiple"], ["readAs", "args", "maxFileBytes"]);
+      if (typeof multiple !== "boolean") throw new Error("browser-actor-publication: invalid picker multiplicity");
+      return { requestFileOpen: {
+        req: integer(req), accept: text(accept), importAction: identity(importAction), multiple,
+        ...(readAs === undefined ? {} : { readAs: identity(readAs) }),
+        ...(args === undefined ? {} : { args }),
+        ...(maxFileBytes === undefined ? {} : { maxFileBytes: integer(maxFileBytes, 0xffffffff) }),
+      } };
+    }
+    case "downloadMediaExport": {
+      const { filename, mimeType, data: contents, encoding } = exact(data, ["filename", "mimeType", "data"], ["encoding"]);
+      return { downloadMediaExport: {
+        filename: identity(filename), mimeType: identity(mimeType), data: text(contents),
+        ...(encoding === undefined ? {} : { encoding: identity(encoding) }),
+      } };
+    }
+    default:
+      throw new Error(`browser-actor-publication: unsupported host effect ${key.slice(0, 64)}`);
   }
-  const effect = exact(value, ["requestServiceOperation"]);
-  const operation = exact(effect.requestServiceOperation, ["owner", "serviceId", "action", "payload"]);
-  const text = (value: unknown, maximum: number): string => { if (typeof value !== "string" || value.length === 0 || new TextEncoder().encode(value).length > maximum || /\p{Cc}/u.test(value)) throw new Error("browser-actor-publication: invalid service identity"); return value; };
-  return { requestServiceOperation: { owner: text(operation.owner, 128), serviceId: text(operation.serviceId, 256), action: text(operation.action, 64), payload: boundedServicePayloadV1(operation.payload) as ServiceOperationPayloadV1 } };
 }
 
 function ephemeralPublication(frame: Extract<ReturnType<typeof decodeAppFrame>, { readonly Ephemeral: unknown }>["Ephemeral"]): Extract<BrowserActorUnsolicitedPublicationV1, { readonly kind: "ephemeral" }> {
@@ -218,24 +300,81 @@ export function requireBrowserActorCommandBackboneProjectionV1(publication: Read
   }
 }
 
+function exactPack(value: unknown, maximum: number): unknown {
+  if (!(value instanceof Uint8Array) && !Array.isArray(value)) throw new Error("browser-actor-publication: invalid effect pack");
+  if (value.length === 0 || value.length > maximum || Array.from(value).some(byte => !Number.isInteger(byte) || byte < 0 || byte > 255)) throw new Error("browser-actor-publication: invalid effect pack");
+  const raw = Uint8Array.from(value);
+  const decoded = decodePackValue(raw);
+  canonical(raw, encodePackValue(decoded));
+  return packValueToExactJson(decoded);
+}
+
+function optionalPack(value: unknown): unknown {
+  const unpacked = wireOptionValue(value);
+  return unpacked === undefined ? undefined : exactPack(unpacked, BROWSER_ACTOR_ACTION_PACK_MAXIMUM_BYTES);
+}
+
+function wireRequestId(value: unknown): number {
+  return integer(typeof value === "bigint" ? Number(value) : value);
+}
+
+function projectWireEffect(value: unknown): unknown {
+  const { tag, val } = exact(value, ["tag", "val"]);
+  switch (tag) {
+    case "request-service-operation": {
+      const operation = exact(val, ["owner", "serviceId", "action", "payload"]);
+      return { requestServiceOperation: { ...operation, payload: exactPack(operation.payload, 16384) } };
+    }
+    case "open-external-url":
+      return { openExternalUrl: val };
+    case "replay-shell-command": {
+      const { actionId, args } = exact(val, ["actionId"], ["args"]);
+      return { replayShellCommand: { actionId, args: optionalPack(args) } };
+    }
+    case "open-plugin-instance": {
+      const { pluginId, appId, osInstanceId, document } = exact(val, ["pluginId", "appId"], ["osInstanceId", "document"]);
+      const target = wireOptionValue(document);
+      const bound = target === undefined ? undefined : exact(target, ["documentId", "schema"], ["spaceId"]);
+      return { openPluginInstance: {
+        pluginId, appId, osInstanceId: wireOptionValue(osInstanceId),
+        document: bound === undefined ? undefined : { ...bound, spaceId: wireOptionValue(bound.spaceId) },
+      } };
+    }
+    case "set-panel":
+      return { setPanel: val };
+    case "set-active-utility":
+      return { setActiveUtility: val };
+    case "set-active-tool":
+      return { setActiveTool: val };
+    case "notify":
+      return { notify: val };
+    case "open-dialog": {
+      const { req, params } = exact(val, ["req", "params"]);
+      const { dialogId, args } = exact(params, ["dialogId"], ["args"]);
+      return { openDialog: { req: wireRequestId(req), dialogId, args: optionalPack(args) } };
+    }
+    case "request-file-open": {
+      const { req, params } = exact(val, ["req", "params"]);
+      const { accept, readAs, importAction, args, multiple, maxFileBytes } = exact(params, ["accept", "importAction", "multiple"], ["readAs", "args", "maxFileBytes"]);
+      return { requestFileOpen: {
+        req: wireRequestId(req), accept, readAs: wireOptionValue(readAs), importAction,
+        args: optionalPack(args), multiple, maxFileBytes: wireOptionValue(maxFileBytes),
+      } };
+    }
+    case "download-media-export": {
+      const { filename, mimeType, data, encoding } = exact(val, ["filename", "mimeType", "data"], ["encoding"]);
+      return { downloadMediaExport: { filename, mimeType, data, encoding: wireOptionValue(encoding) } };
+    }
+    default:
+      throw new Error(`browser-actor-publication: unsupported host effect ${String(tag).slice(0, 64)}`);
+  }
+}
+
 /** 💡️ Converts exact WIT intents into host effects without guest callback or document authority. */
 export function encodeBrowserActorHostEffectV1(value: unknown): readonly number[] {
-  const effect = exact(value, ["tag", "val"]);
-  const serviceOperation = effect.tag === "request-service-operation" ? exact(effect.val, ["owner", "serviceId", "action", "payload"]) : null;
-  let payload: unknown = null;
-  if (serviceOperation !== null) {
-    const bytes = serviceOperation.payload;
-    if (!(bytes instanceof Uint8Array) && !Array.isArray(bytes)) throw new Error("browser-actor-publication: invalid service payload pack");
-    if (bytes.length === 0 || bytes.length > 16384 || Array.from(bytes).some((byte) => !Number.isInteger(byte) || byte < 0 || byte > 255)) throw new Error("browser-actor-publication: invalid service payload pack");
-    const raw = Uint8Array.from(bytes);
-    const decoded = decodePackValue(raw);
-    canonical(raw, encodePackValue(decoded));
-    payload = packValueToExactJson(decoded);
-  }
-  const projected = serviceOperation !== null ? projection({ requestServiceOperation: { ...serviceOperation, payload } })
-    : effect.tag === "open-external-url" ? projection({ openExternalUrl: effect.val }) : null;
-  if (projected === null) throw new Error(`browser-actor-publication: unsupported host effect ${String(effect.tag).slice(0, 64)}`);
-  return Array.from(encodePackValue(projected));
+  const encoded = encodePackValue(projection(projectWireEffect(value)));
+  if (encoded.length > BROWSER_ACTOR_ACTION_PACK_MAXIMUM_BYTES) throw new Error("browser-actor-publication: oversized host effect");
+  return Array.from(encoded);
 }
 
 /** 🛂️ Validates every effect before publishing any member of a retained action result. */

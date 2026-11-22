@@ -18,6 +18,26 @@ impl DrawList {
         }
     }
 
+    /// ♿️ Mirrors `prefers-reduced-motion: reduce`: animated borders paint their static ring instead (React's `animation: none; opacity: 1`).
+    pub fn set_reduced_motion(&mut self, reduced: bool) {
+        self.reduced_motion = reduced;
+    }
+
+    /// ♿️ Whether this list paints motionless.
+    pub fn reduced_motion(&self) -> bool {
+        self.reduced_motion
+    }
+
+    /// 🎞️ Marks this frame as mid-transition: a CPU-clock animation (hover fade, dialog enter, celebrate colour) needs the next frame like an animated border does.
+    pub fn note_motion_pending(&mut self) {
+        self.motion_pending = true;
+    }
+
+    /// 🎞️ Whether a CPU-clock animation was painted mid-flight since the last [`Self::clear`].
+    pub fn motion_pending(&self) -> bool {
+        self.motion_pending
+    }
+
     /// ⏰️ This list's frame clock in monotonic seconds.
     pub fn clock_seconds(&self) -> f32 {
         self.clock_seconds
@@ -30,7 +50,7 @@ impl DrawList {
         self.screen_h
     }
 
-    fn active_foreground_of(&self) -> Option<usize> {
+    pub(crate) fn active_foreground_of(&self) -> Option<usize> {
         self.glass_content_stack.last().copied()
     }
 
@@ -105,6 +125,8 @@ impl DrawList {
         self.scissor_stack.clear();
         self.clip_stack.clear();
         self.glass_content_stack.clear();
+        self.motion_pending = false;
+        self.active_group = None;
         self.retained_output = None;
     }
 
@@ -117,7 +139,7 @@ impl DrawList {
             scissor = parent.intersect(&scissor);
         }
         self.scissor_stack.push(scissor);
-        self.layers.push(DrawLayer { scissor: Some(scissor), clip: self.clip_stack.last().cloned(), foreground_of: self.active_foreground_of(), ..DrawLayer::default() });
+        self.layers.push(DrawLayer { scissor: Some(scissor), clip: self.clip_stack.last().cloned(), foreground_of: self.active_foreground_of(), group: self.active_group, ..DrawLayer::default() });
     }
 
     pub fn pop_scissor(&mut self) {
@@ -126,7 +148,7 @@ impl DrawList {
         }
         self.scissor_stack.pop();
         let parent = self.scissor_stack.last().copied();
-        self.layers.push(DrawLayer { scissor: parent, clip: self.clip_stack.last().cloned(), foreground_of: self.active_foreground_of(), ..DrawLayer::default() });
+        self.layers.push(DrawLayer { scissor: parent, clip: self.clip_stack.last().cloned(), foreground_of: self.active_foreground_of(), group: self.active_group, ..DrawLayer::default() });
     }
 
     /// ✂️ Clips subsequent draw content to an exact union of non-overlapping rectangles.
@@ -168,7 +190,7 @@ impl DrawList {
             clip = parent.intersect(&clip);
         }
         self.clip_stack.push(clip.clone());
-        self.layers.push(DrawLayer { scissor: self.scissor_stack.last().copied(), clip: Some(clip), foreground_of: self.active_foreground_of(), ..DrawLayer::default() });
+        self.layers.push(DrawLayer { scissor: self.scissor_stack.last().copied(), clip: Some(clip), foreground_of: self.active_foreground_of(), group: self.active_group, ..DrawLayer::default() });
         true
     }
 
@@ -177,7 +199,7 @@ impl DrawList {
             return;
         }
         self.clip_stack.pop();
-        self.layers.push(DrawLayer { scissor: self.scissor_stack.last().copied(), clip: self.clip_stack.last().cloned(), foreground_of: self.active_foreground_of(), ..DrawLayer::default() });
+        self.layers.push(DrawLayer { scissor: self.scissor_stack.last().copied(), clip: self.clip_stack.last().cloned(), foreground_of: self.active_foreground_of(), group: self.active_group, ..DrawLayer::default() });
     }
 
     pub fn push_scene_pass(&mut self, mut pass: ScenePass3d) {
@@ -201,7 +223,7 @@ impl DrawList {
         }
         let layer_index = self.layers.len() - 1;
         let layer = &self.layers[layer_index];
-        let following = DrawLayer { scissor: layer.scissor, clip: layer.clip.clone(), foreground_of: layer.foreground_of, ..DrawLayer::default() };
+        let following = DrawLayer { scissor: layer.scissor, clip: layer.clip.clone(), foreground_of: layer.foreground_of, group: layer.group.map(GroupAlpha::continued), ..DrawLayer::default() };
         pass.layer_index = layer_index;
         pass.ui_watermark = layer.ui_instances.len();
         pass.vector_watermark = layer.vector_vertices.len();
@@ -231,9 +253,10 @@ impl DrawList {
         let geometry = [rect.x, rect.y, rect.w, rect.h];
         let effect = match state {
             SharedBorderState::Normal => UiInstance::finished_border(geometry, color, radius, stroke),
-            SharedBorderState::Waiting => UiInstance::waiting_border(geometry, color, radius, stroke),
-            SharedBorderState::Loading => UiInstance::loading_border(geometry, color, radius, stroke),
-            SharedBorderState::Introduced | SharedBorderState::Celebrated => UiInstance::introducing_border(geometry, color, radius, stroke),
+            SharedBorderState::Waiting if !self.reduced_motion => UiInstance::waiting_border(geometry, color, radius, stroke),
+            SharedBorderState::Loading if !self.reduced_motion => UiInstance::loading_border(geometry, color, radius, stroke),
+            SharedBorderState::Introduced if !self.reduced_motion => UiInstance::introducing_border(geometry, color, radius, stroke),
+            SharedBorderState::Waiting | SharedBorderState::Loading | SharedBorderState::Introduced | SharedBorderState::Celebrated => UiInstance::finished_border(geometry, color, radius, stroke),
             _ => return,
         };
         self.push_shared_border_records(rect, stroke, color, state, [true; 4], Some(effect));
@@ -282,7 +305,8 @@ impl DrawList {
         if !self.claim_retained_output(1, size_of::<UiInstance>()) {
             return;
         }
-        self.active_ui_instances().push(UiInstance::loading_border(rect, color, radius, stroke));
+        let instance = if self.reduced_motion { UiInstance::finished_border(rect, color, radius, stroke) } else { UiInstance::loading_border(rect, color, radius, stroke) };
+        self.active_ui_instances().push(instance);
     }
 
     /// ⌛️ Dashed, slow-spinning + gently pulsing waiting ring around `rect`, in `color` (gray `theme.border_normal` at rest, `theme.selected` when the node is selected/active).
@@ -290,7 +314,8 @@ impl DrawList {
         if !self.claim_retained_output(1, size_of::<UiInstance>()) {
             return;
         }
-        self.active_ui_instances().push(UiInstance::waiting_border(rect, color, radius, stroke));
+        let instance = if self.reduced_motion { UiInstance::finished_border(rect, color, radius, stroke) } else { UiInstance::waiting_border(rect, color, radius, stroke) };
+        self.active_ui_instances().push(instance);
     }
 
     /// ✅️ Solid, static at-bounds ring around `rect`, in `color` — `UiStatus::Finished`.
@@ -306,7 +331,8 @@ impl DrawList {
         if !self.claim_retained_output(1, size_of::<UiInstance>()) {
             return;
         }
-        self.active_ui_instances().push(UiInstance::introducing_border(rect, color, radius, stroke));
+        let instance = if self.reduced_motion { UiInstance::finished_border(rect, color, radius, stroke) } else { UiInstance::introducing_border(rect, color, radius, stroke) };
+        self.active_ui_instances().push(instance);
     }
 
     /// 🧊️ Pushes a glass region rendered with an already-resolved `style` — callers derive `style`
@@ -319,7 +345,7 @@ impl DrawList {
         }
         let index = self.glass_regions.len();
         let layer_index = self.layers.len();
-        self.layers.push(DrawLayer { scissor: self.scissor_stack.last().copied(), clip: self.clip_stack.last().cloned(), foreground_of: self.active_foreground_of(), ..DrawLayer::default() });
+        self.layers.push(DrawLayer { scissor: self.scissor_stack.last().copied(), clip: self.clip_stack.last().cloned(), foreground_of: self.active_foreground_of(), group: self.active_group, ..DrawLayer::default() });
         self.glass_regions.push(GlassRegion { layer_index, rect, radius, tint: style.tint, alpha: style.alpha, blur_px: style.blur_px, saturate: style.saturate });
         index
     }
@@ -329,7 +355,7 @@ impl DrawList {
             return;
         }
         self.glass_content_stack.push(region);
-        self.layers.push(DrawLayer { scissor: self.scissor_stack.last().copied(), clip: self.clip_stack.last().cloned(), foreground_of: Some(region), ..DrawLayer::default() });
+        self.layers.push(DrawLayer { scissor: self.scissor_stack.last().copied(), clip: self.clip_stack.last().cloned(), foreground_of: Some(region), group: self.active_group, ..DrawLayer::default() });
     }
 
     pub fn end_glass_content(&mut self) {
@@ -337,7 +363,7 @@ impl DrawList {
             return;
         }
         self.glass_content_stack.pop();
-        self.layers.push(DrawLayer { scissor: self.scissor_stack.last().copied(), clip: self.clip_stack.last().cloned(), foreground_of: self.active_foreground_of(), ..DrawLayer::default() });
+        self.layers.push(DrawLayer { scissor: self.scissor_stack.last().copied(), clip: self.clip_stack.last().cloned(), foreground_of: self.active_foreground_of(), group: self.active_group, ..DrawLayer::default() });
     }
 
     pub fn push_glyph(&mut self, rect: [f32; 4], color: Rgba, uv_rect: [f32; 4]) {

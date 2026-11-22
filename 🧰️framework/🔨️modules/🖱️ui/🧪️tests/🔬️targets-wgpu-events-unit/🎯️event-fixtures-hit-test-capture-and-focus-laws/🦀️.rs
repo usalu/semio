@@ -5,7 +5,7 @@ fn action() -> ActionDescriptor {
 }
 
 fn select_ui(id: &str, value: &str) -> UiNode {
-    UiNode::Select(UiSelectNode {
+    UiNode::Select(UiSelectNode { appearance: Default::default(),
         id: id.into(),
         value: value.into(),
         items: vec![UiSelectItem { value: "a".into(), label: Label::data("A") }, UiSelectItem { value: "b".into(), label: Label::data("B") }],
@@ -222,6 +222,13 @@ fn wheel_over_an_escaped_select_popup_scrolls_its_accepted_viewport_only() {
     assert!((tree.node(select).unwrap().state.scroll_offset.1 - maximum).abs() < 0.001);
     router.dispatch(&mut tree, root, &UiEvent::Scroll { x: 20.0, y: 33.0, delta_x: 0.0, delta_y: -10_000.0, modifiers: Default::default() });
     assert_eq!(tree.node(select).unwrap().state.scroll_offset.1, 0.0);
+    router.dispatch(&mut tree, root, &UiEvent::Scroll { x: 20.0, y: 33.0, delta_x: 0.0, delta_y: law["delta"].as_f64().unwrap() as f32, modifiers: Default::default() });
+    router.toggle_select_popup(&mut tree, select);
+    assert!(!tree.node(select).unwrap().state.open);
+    assert!(tree.node(select).unwrap().state.select_popup.is_none(), "closing drops the accepted popup viewport");
+    assert_eq!(tree.node(select).unwrap().state.scroll_offset.1, 0.0, "closing resets the popup scroll");
+    router.dispatch(&mut tree, root, &UiEvent::Scroll { x: 20.0, y: 33.0, delta_x: 0.0, delta_y: law["delta"].as_f64().unwrap() as f32, modifiers: Default::default() });
+    assert_eq!(tree.node(select).unwrap().state.scroll_offset.1, 0.0, "a closed select owns no wheel");
 }
 
 #[test]
@@ -409,4 +416,17 @@ fn bubble_stops_when_a_handler_returns_true() {
     });
 
     assert_eq!(visited, vec![leaf_node, mid], "bubbling must stop at `mid` and never reach `root`");
+}
+
+#[test]
+fn a_ring_never_takes_tab_focus_because_react_s_ring_is_an_unfocusable_svg() {
+    let mut tree = UiTree::new();
+    let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 120.0));
+    let ring = semio_ui_declaration::ui::UiRingNode { id: "ring".into(), orb_id: "sun".into(), t: 0.0, on_change: action(), presence: Default::default(), menu: None };
+    leaf(&mut tree, Some(root), 1, UiNode::Ring(ring), (0.0, 0.0, 100.0, 100.0));
+    let mut router = EventRouter::new("main");
+    router.focus.focus_next(&mut tree, root);
+    assert_eq!(router.focus.focused, None);
+    router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 50.0, y: 10.0, button: PointerButton::Primary, modifiers: Default::default() });
+    assert_eq!(router.focus.focused, None, "a ring press scrubs without moving focus");
 }

@@ -37,12 +37,30 @@ clipping_deps = {
 clipping = output / "libsemio_framework_3d_mesh_clipping.rlib"
 compile("semio_framework_3d_mesh_clipping", mesh / "🛠️modeling/✂️clipping/🦀️.rs",
         clipping_deps, "--crate-type=rlib", clipping)
+native = output / "native-longitudinal-clipping"
+compile("longitudinal_clipping", mesh / "🛠️modeling/✂️clipping/🧪️tests/🧱️longitudinal.rs",
+        {**clipping_deps, "semio_framework_3d_mesh_clipping": clipping,
+         "serde_json": artifact("serde_json")}, "--test", native)
+subprocess.run([str(native)], check=True)
+
+document = output / "libsemio_framework_3d_mesh_document.rlib"
+derive = [path for path in inputs.glob("*semio_framework_value_derive-*")
+          if path.suffix in (".dylib", ".so", ".dll")]
+if len(derive) != 1:
+    raise RuntimeError("expected exactly one retained value derive library")
+compile("semio_framework_3d_mesh_document", mesh / "📄️document/🦀️.rs",
+        {**clipping_deps, "semio_framework_pack_json": artifact("semio_framework_pack_json"),
+         "semio_framework_value_derive": derive[0]}, "--crate-type=rlib", document)
+reconstruction = output / "libsemio_framework_3d_mesh_reconstruction.rlib"
+compile("semio_framework_3d_mesh_reconstruction", mesh / "🛠️modeling/🔁️reconstruction/🦀️.rs",
+        {**clipping_deps, "semio_framework_3d_mesh_document": document}, "--crate-type=rlib", reconstruction)
 facade_deps = {
     **clipping_deps,
     "semio_framework_3d_mesh_clipping": clipping,
+    "semio_framework_3d_mesh_document": document,
+    "semio_framework_3d_mesh_reconstruction": reconstruction,
     **{name: previous / f"lib{name}.rlib" for name in
-       ("semio_framework_3d_mesh_document", "semio_framework_3d_mesh_reconstruction",
-        "semio_framework_3d_brep_vector", "semio_framework_value_source_hold")},
+       ("semio_framework_3d_brep_vector", "semio_framework_value_source_hold")},
 }
 facade = output / "libsemio_bevel_modeling.rlib"
 compile("semio_bevel_modeling", mesh / "🦀️.rs", facade_deps, "--crate-type=rlib", facade)

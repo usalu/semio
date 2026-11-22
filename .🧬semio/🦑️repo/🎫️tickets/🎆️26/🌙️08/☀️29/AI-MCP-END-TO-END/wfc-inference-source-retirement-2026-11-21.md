@@ -1,0 +1,56 @@
+# Cold WFC inference Source retirement
+
+## Reproduction
+
+The combined native gateway passed 63 stdio tests. The official MCP SDK then resolved a fresh headless folder from its authenticated durable snapshot metadata. It reported schema `s.wfc.bitmap` before any editor open. The fixture was the WFC owner’s exact persisted Pack (405 bytes) and SPR (211 bytes). `inference_run` advertised payload validation, artifact binding, WFC routing and entry into the guest. The gateway closed its connection. The worker panicked in `GuestRelayOperation::drop` with `operation owner requires complete Source retirement`, then in `OriginalActorContextSlot::drop` with `original guest context slot reached Drop before funded context closure`. The process aborted. The independent durable reread still matched the seed bytes.
+
+The first async run observed `accepted` and `cancel-requested` for the exact submitted request. It remained running through 40 polls and about 37 seconds and its durable bytes also matched. Parent-side live native samples subsequently located that run upstream of the cold relay, within routed component hashing. The synchronous panic and the observed cancellation stall have different evidence.
+
+Reproduction command after linking the diagnostic gateway:
+
+```sh
+SEMIO_TRACE_RELAY_RETIREMENT=1 repo tools exec bun -- "$ticket/wfc-seeded-sdk.ts" solve --schema-probe --label=retirement-diagnostic
+```
+
+## Source diagnosis
+
+- The common plugin router reads a body failure, attempts close, retires the first recorded close refusal, then makes one additional close attempt and discards its status. The operation owner is dropped even if that attempt refused. The operation and original guest-context guards expose the still-live Source. The same router discards close status in its failed-admission branch.
+- The cold controller path contains conditional hard refusals for authenticated escrow that is unimplemented. When a successful non-page scalar reaches frozen Ready, `GuestRelayScalarFlow::advance` declares that the resident header awaits its authenticated escrow capture. `GuestRelayScalarFlow::close_step` also refuses while it owns that uncaptured resident header. The controller contains separate mandatory refusals for missing scalar and input escrow capture. Its `Receipt::Actor` and `Receipt::Job` alternatives have no constructors.
+- Canonical native Poll shows the existing path for legitimate continuation. It reserves and commits each issued loan to an actual Source-native History recipient, recognizes SAB1 bootstrap, validates the SBT1/SAC3/SJH2/SAF1 frame and SRE1 claims while the producer owns the frozen bytes, applies the ledger and commits the journal, resumes the exact result holder, authenticates the physical handback and resets capture. Retirement keeps the History until a witness proves the producer is gone and reconciles pending custody under the same Source.
+- The cold planner previously selected 144 bytes for both actor transitions. Native Poll selects 200 for SBT1 and requires the distinct SAB1 first-response reserve too. The cold planner now takes both requirements into account for both the enclosing and retained grants and the actual fuel. Input admission and actor output closure remain at 144. The neutral plan fixture, its JSON Schema, a Rust assertion, Ajv and the independent SQLite byte-width witness cover the transition classification. Bun passed 3 tests.
+
+## Pinned SDK diagnostic
+
+`SEMIO_TRACE_RELAY_RETIREMENT=1` printed the exact body and both retirement refusals in the diagnostic gateway (SHA prefix `9603c9ff`). Lines 492–494 in `🗑️generated/wfc-seeded-solve-relay-fault.log` record `resident header awaits its authenticated escrow capture`, then two independent instances of `resident header retains its uncaptured escrow`. The SDK saw the connection close after the owner asserted. All three refusal records show zero retained effects, and the durable pair reread remained exact. This confirms the first fault independently of model preparation and the physical deadline.
+
+## Authenticated History candidate
+
+The candidate shares the frozen SRE1 History progression between Cold and native Poll. A cold handle issues the actual History root and registers each guest loan before driving its export. A non-page Scalar and the Input unit retain the frozen header until the driver runs its bootstrap or escrow settlement. The controller accepts the journal-proven actor or job call under its exact issued identity. The Deallocate result gets its physical proof via the actual native producer and hands it to History before the controller finishes the receipt. Handle retirement takes the original producer close witness and then settles the matching History under the same Source. The owner guards are still active.
+
+Bun passed 9 neutral tests across the ABI plan, shared step fixture, and cold protocol frontier. The width oracle uses SQLite binary length, and the phase order oracle uses a recursive SQLite query with a zero-claim case and a two-claim case. The Rust tests consume those same fixture data. The first pinned build compiled the updated Wake, Relay and Poll crates. Two subsequent source changes await that build’s replay or a follow-up link. The cold frontier accepts the canonical Core-quiescent actor receipt, and the unit handback probes the returned header during the donor-release phase and at the repeat boundary.
+
+The `ColdJobFrontier` actor-failure capsule route still needs separate verification. Its pre-existing permit refusal cannot safely be bypassed with an ordinary job receipt. Native Poll's `ActorFailureFetch` establishes the actual reference, recipient acceptance, and final guest acknowledgment in Source custody.
+
+## Actual Input currency and closure
+
+The first authenticated History gateway linked in 5m22s. Exact SDK solve calls crossed the old uncaptured scalar refusal. At the first new failure, the ordinary semantic retained item count was zero. The physical treasury still reported 98,304 items. The guest ledger accounted for 65,536 items including the outstanding Infrastructure loan, and cleanup had a 32,768-item reserve. The body retained a typed `WorkLimit`. Both the initial 50-second SDK request and a 110-second observer expired with the durable pair unchanged.
+
+An exact raw Core symbol witness against the canonical WFC component identified the actor context export at function 171778 and the ActorInput export at 171779. The repeated `Host` leaf at 205534 crosses imported function 44, `semio:framework/pure@1.0.0/operation-clock-us`. It uses a real mutable host clock. No observation was cached or omitted.
+
+The SDK transport then captured the real gateway process after the live `WorkLimit` notification at +51.322 seconds, on executable SHA `d24d2a4d567650c8f105c609bdbf18278e948ce2e932dacbf9426efe2053385d`. The active inference stack had already reached `GuestRelayOperation::close_inner` → `retire_handle_step` → `ColdEscrow::retire_step` → `dispatch_execution_cleanup_step`. This confirms the body refusal had already been read and retired. The selected producer's close callback did not appear in the recorded samples.
+
+The canonical WFC module places 19,733 inline scalar globals in one backing. Core retirement previously performed one paid pop in a separate Source checkout for every scalar before returning that backing. The correction makes the scalar-only `GlobalState` property explicit and reuses the existing funded vector release at the same physical retirement frontier. It preserves all live globals when release is underfunded. Both the pinned Rust exact heap/retained-receipt test and the three-test Bun WebAssembly and SQLite suite passed.
+
+The following canonical-model SDK replay showed `closed captured refusal` before the operation owner started its remaining close. Over the first 512 iterations the remaining release stock fell by roughly 54.6 MiB. Afterwards each retry charged one item and 256 bytes with no release or capacity change. The last 65,536 treasury items were already accounted for in the guest ledger, and there was no further progress through the sampled 2,097,152th retry. The SDK timed out and the durable Pack/SPR pair remained exact. The backing correction alone did not achieve terminal WFC inference.
+
+Cold retirement now retains the producer-closed frontier before beginning the separate original ReturnBirth close. It only asks that closure driver for the producer witness until the exact proof is captured, matching Poll’s stage order. Previously every witness retry could also reenter an ordinary producer-close callback that is allowed to service a pending ReturnBirth. Gated logging distinguishes producer close, witness capture, ledger reconciliation and final History closure. Exact attribution of the repeated 256-byte receipt and a terminal WFC replay are still pending a fresh link.
+
+## Staged SourceClock and terminal projection
+
+`source-clock-eager-reply.patch` records the staged patch, subsequently applied for the next pinned link. It leaves the actual imported clock implementation in place and permits up to two additional funded phase calls under the same callback when the retained SourceClock reply progresses. It does not skip the existing per-phase deadline, cancellation, pointer, source, result shape or allocation checks. Lack of progress or stock preserves the existing partial reply for the next actual callback. Other import classes still execute through one phase per call.
+
+Bun passed 58 assertions against the separate neutral phase-model fixture. The independent Wasm oracle imports the same SourceClock signature and writes/reads the 16-byte reply. SQLite checks receipt sums over committed phases. The corpus distinguishes the actual guest-time observation from the callback's independent deadline guard reads and covers funded, unfunded, immediate and inter-phase cancellation, deferred delivery, and an unavailable observation. Fixture copy/fuel numbers model the scheduler. They are not measurements of native retained struct sizes or total deadline callback count.
+
+The live production source scan passed macOS arm64, Windows x86_64 and Linux x86_64. Each shape measured 22 files / 260,573 bytes / 3,719 active lines for Core, 1 / 21,460 / 119 for clock imports, 17 / 227,975 / 2,014 for interpreter runtime, and 19 / 195,563 / 1,496 for Relay. All fit the 32-file, 262,144-byte and 4,000-line budget. A separate cfg-test-only fixture drives the actual Owned startup import with one retained item versus an ample grant, changes the source clock between deferred callbacks, and compares the exact guest reply, native work and retained receipts. It is queued behind the existing Cargo owner for this target.
+
+The mapper remains independent of the timer and retirement changes. The router can copy the primary `ValueRefusalKind` alongside the already-paid message in its one refusal projection. The framework `Fault` already preserves `refusalKind` and decodes it through `value_refusal_kind()`. The MCP inference adapter can use that for `budget.exceeded` and `job.cancelled`, matching the canonical native Poll mapper, while leaving existing generic `app.command.rejected` routing for the other causes. No original retained failure needs to escape the original Source.

@@ -1,5 +1,5 @@
 import type { IconName } from "@semio-tech/assets";
-import type { WindowStackCorner, WindowLayoutStackNode, WindowLayoutAxisNode } from "../../../🔨️modules/🗺️window-layout/🟦️.ts";
+import { type WindowLayoutAxis, type WindowLayoutPanel, type WindowLayoutPath, type WindowLayoutStackNode, type WindowStackCorner, WINDOW_STACK_CORNERS, windowIdOf } from "@semio-tech/ui-layout";
 import * as React from "react";
 import { reactHostPort } from "../../🔌️Ports/⚛️react/🟦️.ts";
 import { useLabel } from "../../🏷️Label/🟦️.tsx";
@@ -14,10 +14,9 @@ import { Window } from "../../🪟️Window/🟦️.tsx";
 import { WindowChrome } from "../../🗂️WindowChrome/🟦️.tsx";
 import { type ResizableGroupHandle, type ResizableJoinCornerResizeHandler, ResizableHandle, ResizablePanel, ResizablePanelGroup } from "../../↔️Resizable/🟦️.tsx";
 import { type ModeDragState, type ModeTabInsertPreview, modeDockTabsWithInsertPreview } from "../🎯️drop/🟦️.ts";
-import { type ModeLayoutPath, modeJoinPath } from "../🗺️layout/🟦️.ts";
+import { modePathKey, modeStackTabsByCorner } from "../🗺️layout/🟦️.ts";
 import { modeDockTabInsertPreviewClass } from "../🧲️drag-preview/🟦️.tsx";
 import type { ModeWindowDescriptor } from "../🪟️template-drag/🟦️.ts";
-import { WINDOW_STACK_CORNERS, modeStackTabsByCorner } from "../📐️corners/🟦️.ts";
 import { modeJoinCornerSpecsForCrossSeparator, modeJoinCornerSpecsForSeparator } from "../🔗️join-corners/🟦️.ts";
 
 //#region 🧭️ModeDockTabBar
@@ -26,22 +25,22 @@ export interface ModeDockContextValue {
   dragState: ModeDragState | null;
   tabInsertPreview: ModeTabInsertPreview | null;
   draggedInsertTabs: readonly { id: string; title: string; iconId: IconName }[];
-  registerStackDropTargets: (path: ModeLayoutPath, corner: WindowStackCorner, tabBarElement: HTMLElement | null, bodyElement: HTMLElement | null) => void;
-  startTabDrag: (windowId: string, stackPath: ModeLayoutPath, tabIndex: number, label: string, event: React.PointerEvent<HTMLElement>) => void;
+  registerStackDropTargets: (path: WindowLayoutPath, corner: WindowStackCorner, tabBarElement: HTMLElement | null, bodyElement: HTMLElement | null) => void;
+  startTabDrag: (windowId: string, stackPath: WindowLayoutPath, tabIndex: number, label: string, event: React.PointerEvent<HTMLElement>) => void;
   clearPendingDrag: (pointerId: number) => void;
   closeWindow: (windowId: string) => void;
   activateWindow: (windowId: string) => void;
   deactivateActiveWindow: () => void;
-  maximizedStackPath: ModeLayoutPath | null;
+  maximizedStackPath: WindowLayoutPath | null;
   /** ⛶️ False when the canvas has only one window — Focus/Unfocus has nothing to enlarge against. */
   canMaximize: boolean;
-  toggleMaximize: (stackPath: ModeLayoutPath) => void;
+  toggleMaximize: (stackPath: WindowLayoutPath) => void;
 }
 
 export const ModeDockContext = reactHostPort.createContext<ModeDockContextValue | null>(null);
 
 interface ModeDockTabBarProps {
-  stackPath: ModeLayoutPath;
+  stackPath: WindowLayoutPath;
   corner: WindowStackCorner;
   tabs: readonly { id: string; title: string; iconId: IconName }[];
   activeId: string | undefined;
@@ -53,15 +52,15 @@ interface ModeDockTabBarProps {
   isMaximized?: boolean;
 }
 
-const modeDockTabDomId = (stackPath: ModeLayoutPath, windowId: string) => `mode-dock-tab-${encodeURIComponent(stackPath || "root")}-${encodeURIComponent(windowId)}`;
-const modeDockPanelDomId = (stackPath: ModeLayoutPath) => `mode-dock-panel-${encodeURIComponent(stackPath || "root")}`;
+const modeDockTabDomId = (stackPath: WindowLayoutPath, windowId: string) => `mode-dock-tab-${encodeURIComponent(modePathKey(stackPath) || "root")}-${encodeURIComponent(windowId)}`;
+const modeDockPanelDomId = (stackPath: WindowLayoutPath) => `mode-dock-panel-${encodeURIComponent(modePathKey(stackPath) || "root")}`;
 const modeDockTabActionClass = "flex h-medium w-medium shrink-0 items-center justify-center border-0 bg-transparent transition-colors";
 
 const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarProps>(({ stackPath, corner, tabs, activeId, activeWindowId, onSelectTab, mobile = false, showMaximize = false, isMaximized = false }, ref) => {
   const dock = reactHostPort.useContext(ModeDockContext);
   const modeDragActive = Boolean(dock?.dragState);
   const stackGloballyActive = Boolean(activeId && activeWindowId === activeId);
-  const displayTabs = reactHostPort.useMemo(() => modeDockTabsWithInsertPreview(tabs, dock?.tabInsertPreview ?? null, stackPath, corner, dock?.draggedInsertTabs ?? []), [tabs, dock?.tabInsertPreview, stackPath, corner, dock?.draggedInsertTabs]);
+  const displayTabs = reactHostPort.useMemo(() => modeDockTabsWithInsertPreview(tabs, dock?.tabInsertPreview ?? null, stackPath, corner, dock?.draggedInsertTabs ?? []), [tabs, dock?.tabInsertPreview, modePathKey(stackPath), corner, dock?.draggedInsertTabs]);
   const tabRefs = reactHostPort.useRef(new Map<string, HTMLButtonElement>());
   const focusLabel = useLabel("ui.window.focus");
   const unfocusLabel = useLabel("ui.window.unfocus");
@@ -114,7 +113,7 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
   const renderTab = (tab: (typeof tabs)[number], stackIndex: number) => {
     const tabActive = activeId === tab.id && stackGloballyActive;
     const tabWindowActive = activeWindowId === tab.id;
-    const controlPath = stackPath || "root";
+    const controlPath = modePathKey(stackPath) || "root";
     return (
       <div
         key={tab.id}
@@ -216,7 +215,7 @@ ModeDockTabBar.displayName = "ModeDockTabBar";
 //#region 🧭️ModeDockStack
 
 interface ModeDockStackProps {
-  stackPath: ModeLayoutPath;
+  stackPath: WindowLayoutPath;
   node: WindowLayoutStackNode;
   windowsById: ReadonlyMap<string, ModeWindowDescriptor>;
   activeWindowId: string | null;
@@ -238,18 +237,17 @@ export const ModeDockStack: React.FC<ModeDockStackProps> = ({ stackPath, node, w
     bottomRight: null,
   });
   const bodyRef = reactHostPort.useRef<HTMLDivElement>(null);
-  const activeId = node.activeId ?? node.children[0]?.id;
+  const activeId = node.activeWindowId ?? (node.children[0] && windowIdOf(node.children[0]));
   const byCorner = modeStackTabsByCorner(node.children);
   const dragActive = Boolean(dock?.dragState);
-  const isMaximized = dock?.maximizedStackPath === stackPath;
+  const isMaximized = dock?.maximizedStackPath != null && modePathKey(dock.maximizedStackPath) === modePathKey(stackPath);
   const showMaximize = !mobile && Boolean(dock?.canMaximize);
 
   const mapCornerTabs = (corner: WindowStackCorner) =>
-    byCorner[corner].map((child) => ({
-      id: child.id,
-      title: child.title ?? windowsById.get(child.id)?.title ?? child.id,
-      iconId: windowsById.get(child.id)?.iconId ?? "app-window",
-    }));
+    byCorner[corner].map((child) => {
+      const id = windowIdOf(child);
+      return { id, title: child.title ?? windowsById.get(id)?.title ?? id, iconId: windowsById.get(id)?.iconId ?? "app-window" };
+    });
 
   reactHostPort.useLayoutEffect(() => {
     for (const corner of WINDOW_STACK_CORNERS) {
@@ -260,7 +258,7 @@ export const ModeDockStack: React.FC<ModeDockStackProps> = ({ stackPath, node, w
         dock?.registerStackDropTargets(stackPath, corner, null, null);
       }
     };
-  }, [dock, stackPath, node.children.length, dragActive, byCorner.topLeft.length, byCorner.topRight.length, byCorner.bottomLeft.length, byCorner.bottomRight.length]);
+  }, [dock, modePathKey(stackPath), node.children.length, dragActive, byCorner.topLeft.length, byCorner.topRight.length, byCorner.bottomLeft.length, byCorner.bottomRight.length]);
 
   const activeDescriptor = activeId ? windowsById.get(activeId) : undefined;
 
@@ -323,7 +321,7 @@ export const ModeDockStack: React.FC<ModeDockStackProps> = ({ stackPath, node, w
         silhouetteSlot="mode-dock-silhouette-border"
         bodyRef={bodyRef}
         stackBindProps={surfaceActiveProps}
-        stackDataAttrs={{ "data-stack-path": stackPath }}
+        stackDataAttrs={{ "data-stack-path": modePathKey(stackPath) }}
         stackClassName="pointer-events-none relative z-window h-full min-h-0 w-full min-w-0 overflow-hidden bg-transparent"
         bodyClassName={cn("pointer-events-auto flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-0", windowBodyFrameClass)}
         bodySurfaceClassName={windowBodyFrameClass}
@@ -344,31 +342,31 @@ export const ModeDockStack: React.FC<ModeDockStackProps> = ({ stackPath, node, w
 export interface ModeRenderContext {
   windowsById: ReadonlyMap<string, ModeWindowDescriptor>;
   activeWindowId: string | null;
-  onAxisLayoutChanged: (axisPath: ModeLayoutPath, sizes: Record<string, number>) => void;
+  onAxisLayoutChanged: (axisPath: WindowLayoutPath, sizes: Record<string, number>) => void;
   onJoinCornerResize: ResizableJoinCornerResizeHandler;
-  registerAxisGroup: (axisPath: ModeLayoutPath, group: ResizableGroupHandle | null) => void;
-  registerAxisElement: (axisPath: ModeLayoutPath, element: HTMLDivElement | null) => void;
+  registerAxisGroup: (axisPath: WindowLayoutPath, group: ResizableGroupHandle | null) => void;
+  registerAxisElement: (axisPath: WindowLayoutPath, element: HTMLDivElement | null) => void;
 }
 
 interface ModeRenderParentAxis {
-  path: ModeLayoutPath;
-  kind: "row" | "column";
+  path: WindowLayoutPath;
+  axis: WindowLayoutAxis;
   panelIndex: number;
 }
 
-export function renderModeDockNode(node: WindowLayoutAxisNode | WindowLayoutStackNode, path: ModeLayoutPath, ctx: ModeRenderContext, parentAxis?: ModeRenderParentAxis): React.ReactNode {
+export function renderModeDockNode(node: WindowLayoutPanel, path: WindowLayoutPath, ctx: ModeRenderContext, parentAxis?: ModeRenderParentAxis): React.ReactNode {
   if (node.kind === "stack") {
-    return <ModeDockStack key={path || "root-stack"} stackPath={path} node={node} windowsById={ctx.windowsById} activeWindowId={ctx.activeWindowId} />;
+    return <ModeDockStack key={modePathKey(path) || "root-stack"} stackPath={path} node={node} windowsById={ctx.windowsById} activeWindowId={ctx.activeWindowId} />;
   }
-  const orientation = node.kind === "row" ? "horizontal" : "vertical";
+  const orientation = node.axis;
   const childCount = node.children.length;
   const rawSizes = node.children.map((child) => child.size);
   const hasAllDefinedSizes = rawSizes.length === childCount && rawSizes.every((s) => typeof s === "number" && s > 0);
   let sizeList: number[];
   if (hasAllDefinedSizes) {
     const sum = (rawSizes as number[]).reduce((a, b) => a + b, 0);
-    if (Math.abs(sum - 100) < 0.01 && sum > 0) {
-      sizeList = rawSizes as number[];
+    if (Math.abs(sum - 1) < 0.0001 && sum > 0) {
+      sizeList = (rawSizes as number[]).map((s) => s * 100);
     } else if (sum > 0) {
       sizeList = (rawSizes as number[]).map((s) => (s / sum) * 100);
     } else {
@@ -383,21 +381,22 @@ export function renderModeDockNode(node: WindowLayoutAxisNode | WindowLayoutStac
   const defaultLayout: Record<string, number> = {};
   const panels: React.ReactNode[] = [];
   node.children.forEach((child, index) => {
-    const childPath = modeJoinPath(path, index);
+    const childPath = [...path, index];
+    const childKey = modePathKey(childPath);
     const size = sizeList[index] ?? 100 / childCount;
-    defaultLayout[childPath] = size;
+    defaultLayout[childKey] = size;
     if (index > 0) {
       const prevChild = node.children[index - 1]!;
-      const joinCorners = [...modeJoinCornerSpecsForSeparator(path, node.kind, index, prevChild, child), ...(parentAxis ? modeJoinCornerSpecsForCrossSeparator(path, node.kind, index, parentAxis) : [])];
-      panels.push(<ResizableHandle key={`sep-${childPath}`} joinCorners={joinCorners} onJoinCornerResize={ctx.onJoinCornerResize} orientation={orientation} />);
+      const joinCorners = [...modeJoinCornerSpecsForSeparator(path, node.axis, index, prevChild, child), ...(parentAxis ? modeJoinCornerSpecsForCrossSeparator(path, node.axis, index, parentAxis) : [])];
+      panels.push(<ResizableHandle key={`sep-${childKey}`} joinCorners={joinCorners} onJoinCornerResize={ctx.onJoinCornerResize} orientation={orientation} />);
     }
     panels.push(
-      <ResizablePanel key={childPath} id={childPath} defaultSize={size} minSize={8} className="box-border min-h-0 min-w-0 overflow-hidden">
-        {renderModeDockNode(child, childPath, ctx, { path, kind: node.kind, panelIndex: index })}
+      <ResizablePanel key={childKey} id={childKey} defaultSize={size} minSize={8} className="box-border min-h-0 min-w-0 overflow-hidden">
+        {renderModeDockNode(child, childPath, ctx, { path, axis: node.axis, panelIndex: index })}
       </ResizablePanel>,
     );
   });
-  const axisIdentity = `${path || "root"}-n${childCount}-${sizeList.map((s) => Math.round(s)).join(".")}`;
+  const axisIdentity = `${modePathKey(path) || "root"}-n${childCount}-${sizeList.map((s) => Math.round(s)).join(".")}`;
   return (
     <ResizablePanelGroup
       key={`root-axis-${axisIdentity}`}

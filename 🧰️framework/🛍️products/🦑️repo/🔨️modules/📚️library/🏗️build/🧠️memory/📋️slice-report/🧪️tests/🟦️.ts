@@ -15,7 +15,7 @@ import{READY_CONTAINMENT_POLICY_V1,readyOwnerTokenV1}from"../../../🌐️remote
 import{ownedSliceReportSinkV1,ownedSliceReportV1,prepareOwnedSliceReportV1}from"../🏷️owner/🟦️.ts";
 import ownedFixture from"./owned.json"with{type:"json"};
 import collectionFixture from"./🧺️collections.json"with{type:"json"};
-import{captureObservedSourceInputsV1,observationCollectionsV1,recordClosureFactV1}from"../../../👁️observation/🟨️.mjs";
+import{OBSERVATION_LIMITS_V1,captureObservedSourceInputsV1,observationCollectionsV1,recordClosureFactV1}from"../../../👁️observation/🟨️.mjs";
 
 import{collectSliceCollectionsV1,describeCollectionV1,estimateCollectionBytesV1,registerSliceCollectionsV1}from"../🟨️.mjs";
 /** 📋️ The slice memory report: a machine nobody has a shell on tells what its slice worker holds, bounded, in the store next to ready.json. */
@@ -31,7 +31,7 @@ test("finished scopes release diagnostic WeakRefs even when no report samples th
  expect(JSON.parse(probe.stdout).retained).toBeLessThanOrEqual(Number(oracle.stdout)+vector.maximumUnrelatedReferences);
 });
 
-test("mixed observation scopes report the largest map and the full entry count",async()=>{
+test("mixed observation scopes report the largest map and the entry count of the tracked maps (from trackMinimumEntries entries)",async()=>{
  const scopes=()=>observationCollectionsV1().find(row=>row.name.startsWith("observation:scopes "));
  const previous=scopes()?.name.match(/largest of (\d+) maps, (\d+) entries total/u),database=new Database(":memory:");
  const unregister=registerSliceCollectionsV1("observation-fixture",observationCollectionsV1);
@@ -49,11 +49,11 @@ test("mixed observation scopes report the largest map and the full entry count",
    const row=scopes()!;
    const sample=row.sample?.()??[];
    const collected=collectSliceCollectionsV1({...P,collectionsTop:100}).find(item=>item.name===row.name);
-   const oracle=database.query<{entries:number;total:number;maps:number;sampleCount:number;estimatedBytes:number},[string,number,string]>(`
-    with sizes as (select max(value->>'entries') entries,sum(value->>'entries') total,count(*) maps from json_each(?1) where value->>'spilled' is null),
+   const oracle=database.query<{entries:number;total:number;maps:number;sampleCount:number;estimatedBytes:number},[string,number,string,number]>(`
+    with sizes as (select max(value->>'entries') entries,sum(value->>'entries') total,count(*) maps from json_each(?1) where value->>'spilled' is null and value->>'entries'>=?4),
     sampled as (select avg(length(value)) width from json_each(?3))
     select entries,total,maps,min(entries,?2) sampleCount,round(entries*width) estimatedBytes from sizes,sampled
-   `).get(JSON.stringify(collectionFixture),P.collectionSample,JSON.stringify(sample))!;
+   `).get(JSON.stringify(collectionFixture),P.collectionSample,JSON.stringify(sample),OBSERVATION_LIMITS_V1.trackMinimumEntries)!;
    const {entries,total,maps,sampleCount,estimatedBytes}=oracle,scopeCount=Number(previous?.[1]??0)+maps;
    expect(row.entries).toBe(entries);
    expect(row.name).toBe("observation:scopes (largest of "+scopeCount+" maps, "+(total+Number(previous?.[2]??0))+" entries total)");
@@ -273,3 +273,4 @@ test("the take counters are told as progress while they rise and not while they 
  const after=told.length;ledger={done:11,total:478};await new Promise(resolve=>setTimeout(resolve,40));expect(told.length,"stopped").toBe(after);
  expect(P.progressMilliseconds).toBeGreaterThan(0);expect(P.progressMilliseconds).toBeLessThanOrEqual(10000);
 });
+

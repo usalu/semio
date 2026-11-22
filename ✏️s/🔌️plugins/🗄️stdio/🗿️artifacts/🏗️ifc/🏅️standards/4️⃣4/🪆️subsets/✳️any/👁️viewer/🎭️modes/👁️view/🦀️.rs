@@ -4,9 +4,6 @@ use crate::viewer::ifc4_any::modes::view::windows::main;
 use semio_ui_locale::LocalizedLabel;
 use semio_plugin::ModeDefinition;
 use semio_plugin::WindowLayout;
-use semio_plugin::WindowLayoutRoot;
-use semio_plugin::WindowLayoutStackNode;
-use semio_plugin::WindowLayoutWindowNode;
 
 pub const IFC4_ANY_VIEW_MODE_ID: &str = "view";
 

@@ -3,8 +3,8 @@ scalar UInt32
 type En1997Artifact {
   structureId: String!
   geotechnicalCategory: Int!
-  designSituation: String!
-  designApproach: String!
+  designSituation: SituationChoice!
+  designApproach: ApproachChoice!
   annex: String!
   groundwaterLevel: Float!
   investigationDepth: Float!
@@ -321,4 +321,12 @@ type CharacteristicBasis {
   layerId: String!
   parameter: CharacteristicParameter!
   basis: ParameterBasis!
+}
+enum ApproachChoice {
+  da1Str
+  da1Geo
+  da2
+  da2Star
+  da3
+  geo3
 }

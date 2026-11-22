@@ -132,7 +132,7 @@ async fn exactly_one_add_object_row_is_menu_vocabulary_and_it_opens_the_dialog()
 /// verbs move the viewport's `selection.method`, and `clear` empties the framework-owned domain.
 #[semio_framework_async_macros::async_test]
 async fn every_advertised_engagement_verb_is_implemented() {
-    use crate::editor::puzzle3d::commands::engagement_submit::PUZZLE3D_ENGAGEMENT_VERBS;
+    use semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_ENGAGEMENT_VERBS;
     let mut app = app().await;
     let envelope = Puzzle3dScene { scene_snapshot: default_scene_snapshot(), runtime: Puzzle3dRuntime::default(), active_utility: PUZZLE3D_DEFAULT_UTILITY.into() };
     let placeholder = main::engagement(&envelope, &Puzzle3dLabels::NATIVE_EN, None).input.and_then(|input| input.placeholder).unwrap_or_default();
@@ -237,7 +237,7 @@ async fn the_engagement_brush_verb_arms_the_utility_of_a_pane_instance_never_the
         })
         .collect();
     assert!(
-        fallback.iter().all(|window_id| !crate::editor::puzzle3d::puzzle3d_window_id_is_kind(window_id)),
+        fallback.iter().all(|window_id| !semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_window_id_is_kind(window_id)),
         "a verb that carries no window of its own must still resolve a pane INSTANCE, never the bare kind: {fallback:?}",
     );
 }
@@ -505,7 +505,7 @@ async fn outliner_set_verbs_are_idempotent_by_value_and_refuse_a_missing_value()
         ("setSelectionHidden", "hidden", json!({ "entity": "object", "hidden": true, "ids": [object_id.clone()] })),
         ("setSelectionLocked", "locked", json!({ "entity": "object", "ids": [object_id.clone()], "locked": true })),
     ] {
-        assert!(Puzzle3dPlayApp::command_from_action(verb, Some(&semio_framework_pack_json::to_dsl_value(&bare))).is_err(), "{verb} without its {flag} value must be refused");
+        assert!(<Puzzle3dPlayApp as ArtifactEditor>::command_from_action(verb, &mut Some(semio_framework_pack_json::to_dsl_value(&bare)), &mut None).is_err(), "{verb} without its {flag} value must be refused");
         let (first, settled) = dispatch_reporting(&mut app, verb, Some(&args), None).await;
         first.unwrap_or_else(|fault| panic!("{verb}: {fault:?}"));
         let rows = history_row_labels(&settled);

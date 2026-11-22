@@ -38,7 +38,7 @@
   },
   "decoderBacking": {
     "capacityItems": 64,
-    "maximumAdvertisedTurns": 8,
+    "maximumAdvertisedTurns": 16,
     "queryEachDemand": true,
     "expectedTerminal": true
   }

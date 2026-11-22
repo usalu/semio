@@ -11,8 +11,17 @@ fn demo_example_declares_the_emblem_media() {
 #[test]
 fn demo_example_document_carries_its_media_in_the_pool() {
     let document = example_document(semio_s_artifact_raster_raster_examples::art_raster_demo::ID).expect("the demo example document");
-    assert!(semio_s_artifact_raster_raster_io::raster_asset(&document.assets, "semio-emblem").is_some(), "the load document resolves the emblem pixels");
+    let RasterLayerNode::Pixel { image_key: Some(key), width, height, .. } = &document.layers[0] else {
+        panic!("the demo backdrop references its authored image");
+    };
+    let reference = semio_s_artifact_raster_raster_io::raster_asset(&document.assets, key);
+    let expected_extent = (*width, *height);
     dismantle(document);
+    let asset = reference.expect("the authored backdrop reference resolves the emblem pixels");
+    assert_eq!(asset.mime, "image/png");
+    let width = u32::from_be_bytes(asset.data[16..20].try_into().unwrap());
+    let height = u32::from_be_bytes(asset.data[20..24].try_into().unwrap());
+    assert_eq!((Some(width), Some(height)), expected_extent);
 }
 
 /// ⚖️ LAW: switching examples is a load — the example becomes one load-document effect, never mutation rows.
@@ -20,8 +29,17 @@ fn demo_example_document_carries_its_media_in_the_pool() {
 fn switching_examples_builds_a_load_document_effect() {
     let document = example_document(semio_s_artifact_raster_raster_examples::art_raster_demo::ID).expect("the demo example document");
     let effect = crate::raster_reset_document_effect(&document);
-    assert!(matches!(effect, semio_plugin::Effect::LoadDocument { ref pack, .. } if !pack.is_empty()));
+    let semio_plugin::Effect::LoadDocument { pack, .. } = effect else {
+        panic!("example switching emits one document load");
+    };
+    let restored = semio_s_artifact_raster_raster_model::io::binary::snapshot::decode(&pack)
+        .expect("the replacement pack decodes");
+    let expected = semio_s_artifact_raster_raster_model::raster_image(&document.assets, "semio-emblem");
+    let actual = semio_s_artifact_raster_raster_model::raster_image(&restored.assets, "semio-emblem");
     dismantle(document);
+    dismantle(restored);
+    assert!(expected.is_some());
+    assert_eq!(actual, expected, "the replacement pack retains the emblem owner");
 }
 
 #[test]

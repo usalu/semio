@@ -23,12 +23,16 @@ impl StreamPrefixCursor {
 
     /// 📏️ After the dictionary, scan the introducer and its CR, LF, or CRLF delimiter.
     pub fn advance(&mut self, source: &[u8], grant: usize) -> (usize, StreamPrefixStep) {
+        self.advance_bytes(|position| source.get(position).copied(), grant)
+    }
+
+    pub(super) fn advance_bytes(&mut self, byte_at: impl Fn(usize) -> Option<u8>, grant: usize) -> (usize, StreamPrefixStep) {
         let mut work = 0;
         loop {
             if let Some(result) = self.result { return (work, StreamPrefixStep::Complete(result)); }
             if work == grant { return (work, StreamPrefixStep::More); }
             work += 1;
-            let byte = source.get(self.position).copied();
+            let byte = byte_at(self.position);
             match byte {
                 _ if self.matched == 6 => {
                     match byte {

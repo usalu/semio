@@ -156,6 +156,48 @@ fn an_editing_unit_slider_projects_its_live_spoken_value_and_numeric_spinbutton(
     assert!(closed.iter().all(|node| node.key != "gain::editor"), "a slider nothing is bound to offers no typed readout");
 }
 
+/// 🚨️ A number field whose kept draft is refused announces the refusal as an `alert` right after the field, as React's
+/// `<span role="alert" data-slot="input-refusal">`, and withdraws it once the draft is admitted or dropped.
+#[test]
+fn a_refused_number_draft_projects_an_alert_after_its_invalid_field() {
+    let record: UiNodeRecord = serde_json::from_value(serde_json::json!({
+        "id": 0,
+        "key": "width",
+        "component": { "type": "input", "kind": "number", "value": "4" },
+        "layout": { "kind": "leaf", "width": "fill", "height": "hug" },
+        "style": {},
+        "activity": "idle",
+        "accessibility": { "label": "Width" }
+    }))
+    .expect("number Input record");
+    let header = UiDocumentLeaseHeader { generation: FIXTURE_GENERATION, surface: SurfaceId::try_from("input.refusal").expect("surface"), revision: UiRevision(0), root: record.id, layout_epoch: 0, node_count: 1 };
+    let node_id = record.id;
+    let mut document = UiDocumentTree::new(header).expect("header");
+    document.try_upsert_record(record).expect("record");
+    let mut tree = UiTree::new();
+    tree.publish_document(document);
+    let mut cursor = UiDocumentReconcileCursor::default();
+    cursor.rearm(FIXTURE_GENERATION);
+    for _ in 0..64 {
+        if matches!(tree.step_document_reconcile(&mut cursor, "procedural-main", "generation3d"), UiDocumentReconcileStep::Complete) {
+            break;
+        }
+    }
+    let mounted = tree.document_node(node_id).expect("mounted Input");
+    let node = tree.node_mut(mounted).expect("live Input");
+    node.state.edit = Some(semio_ui_retained_tree::tree::EditState { text: "40".into(), caret: 2, anchor: 2, composition: None, scroll_x: 0.0 });
+    node.state.number_refusal = Some("Must be at most 10 mm".into());
+
+    let refused = accessibility_projection(&tree);
+    let at = refused.iter().position(|node| node.key == "width").expect("the field");
+    let alert = &refused[at + 1];
+    assert_eq!((alert.key.as_str(), alert.role.as_str(), alert.label.as_deref(), alert.live.as_str()), ("width::refusal", "alert", Some("Must be at most 10 mm"), "assertive"));
+    assert!(refused[at].invalid && !alert.focusable && !alert.actionable, "the field is invalid, the alert is only announced");
+
+    tree.node_mut(mounted).expect("live Input").state.number_refusal = None;
+    assert!(accessibility_projection(&tree).iter().all(|node| node.role != "alert"), "an admitted draft withdraws the alert");
+}
+
 /// 🔘️ A segmented select is a radio group: the group is no Tab stop and has no disclosure, its options are always
 /// projected as radios in order — the chosen one checked and the ONE Tab stop — and an option chosen through the mirror
 /// or by an arrow key dispatches its value without any popup.
@@ -401,6 +443,48 @@ fn a_row_with_an_activation_projects_actionable() {
     assert_eq!(actionable("action.gated"), ("treeitem", false), "a disabled row activates nothing");
 }
 
+/// 🌳️ LAW: a tree with an interaction domain is `aria-multiselectable`, its rows announce their nesting among rows as `aria-level`
+/// (a section is no level), their fold and selection state, and exactly ONE row is the tab stop — the focused row, else the first selected
+/// row, else the first row — as React's `applyRovingTabindexV1` leaves it.
+#[test]
+fn a_tree_projects_multiselectable_levels_and_one_roving_tab_stop() {
+    let record = |id: u64, key: &str, component: serde_json::Value, children: serde_json::Value| -> UiNodeRecord {
+        serde_json::from_value(serde_json::json!({ "id": id, "key": key, "component": component, "layout": { "kind": "leaf", "width": "fill", "height": "hug" }, "style": {}, "activity": "idle", "accessibility": {}, "children": children })).expect("tree record")
+    };
+    let item = |label: &str, extra: serde_json::Value| {
+        let mut component = serde_json::json!({ "type": "treeItem", "label": label });
+        for (name, value) in extra.as_object().expect("object") {
+            component[name] = value.clone();
+        }
+        component
+    };
+    let records = vec![
+        record(0, "objects", serde_json::json!({ "type": "tree", "interactionDomain": "outliner.objects" }), serde_json::json!([1])),
+        record(1, "objects.section", serde_json::json!({ "type": "treeSection", "label": "Objects" }), serde_json::json!([2, 3, 4])),
+        record(2, "row.a", item("A", serde_json::json!({ "defaultOpen": true })), serde_json::json!([5])),
+        record(3, "row.b", item("B", serde_json::json!({ "selected": true })), serde_json::json!([])),
+        record(4, "row.c", item("C", serde_json::json!({})), serde_json::json!([])),
+        record(5, "row.a1", item("A1", serde_json::json!({})), serde_json::json!([])),
+    ];
+    let header = UiDocumentLeaseHeader { generation: FIXTURE_GENERATION, surface: SurfaceId::try_from("pane.objects").expect("surface"), revision: UiRevision(0), root: UiNodeId(0), layout_epoch: 0, node_count: records.len() };
+    let mut document = UiDocumentTree::new(header).expect("header");
+    for record in records {
+        document.try_upsert_record(record).expect("record");
+    }
+    let mut tree = UiTree::new();
+    tree.publish_document(document);
+    let projection = accessibility_projection(&tree);
+    let node = |key: &str| projection.iter().find(|node| node.key == key).unwrap_or_else(|| panic!("{key} is projected"));
+    assert_eq!((node("objects").role.as_str(), node("objects").multiselectable), ("tree", true), "a domain-bound tree is a multiselectable tree");
+    let rows: Vec<_> = ["row.a", "row.a1", "row.b", "row.c"].iter().map(|key| (node(key).role.as_str(), node(key).level, node(key).expanded, node(key).selected.unwrap_or(false), node(key).tabbable)).collect();
+    assert_eq!(
+        rows,
+        [("treeitem", Some(1), Some(true), false, false), ("treeitem", Some(2), None, false, false), ("treeitem", Some(1), None, true, true), ("treeitem", Some(1), None, false, false)],
+        "level counts rows, the folded state rides the branch, and the selected row is the one tab stop"
+    );
+    assert_eq!(serde_json::to_value(&projection[0]).expect("serialises")["multiselectable"], serde_json::json!(true), "the wire spelling is camelCase");
+}
+
 /// 🔢️ LAW (live finding on the history editor's dx / dy): a number input projects the `spinbutton` React's
 /// `<input type="number">` is — with its value, bounds and step, so the mirror builds a number field that follows the
 /// number-control law — while a text input stays a `textbox`.
@@ -427,4 +511,17 @@ fn a_number_input_projects_a_spinbutton_with_its_value_bounds_and_step() {
     assert_eq!((dx.value_now, dx.value_min, dx.value_max, dx.value_step), (Some(60.0), Some(-500.0), Some(500.0), Some(1.0)), "with its value, bounds and step");
     assert!(dx.focusable && dx.tabbable, "and it takes focus");
     assert_eq!(projection.iter().find(|node| node.key == "editor.name").map(|node| node.role.as_str()), Some("textbox"), "a text input stays a textbox");
+}
+
+/// 🔒️ A modal's siblings are `aria-hidden` (React's Dialog isolation), its own subtree and its ancestors are not.
+#[test]
+fn nodes_outside_an_open_modal_are_hidden_from_assistive_tech() {
+    let at = |node_id: u64, depth: usize| ui_contract::AccessibilityProjectionNode { node_id, key: format!("n{node_id}"), depth, ..Default::default() };
+    let mut projection = vec![at(1, 0), at(2, 1), at(3, 1), at(4, 2), at(5, 3), at(6, 1)];
+    hide_outside_modal(&mut projection, 3);
+    let hidden: Vec<u64> = projection.iter().filter(|node| node.hidden).map(|node| node.node_id).collect();
+    assert_eq!(hidden, vec![2, 6], "the page siblings are hidden; the root, the modal and its content are not");
+    let mut untouched = vec![at(1, 0), at(2, 1)];
+    hide_outside_modal(&mut untouched, 99);
+    assert!(untouched.iter().all(|node| !node.hidden));
 }

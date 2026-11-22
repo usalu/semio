@@ -1,0 +1,16 @@
+{
+  "mediaSide": 216,
+  "imageSide": 3072,
+  "grayscale": [
+    30,
+    100,
+    170,
+    240
+  ],
+  "sourceBytes": 9437877,
+  "sourceSha256": "654f85dff8894a9eb8972a1bc8185ba60eefb67340a24a73147d631706fa621a",
+  "sourceFnv1a64": "a94b88cc45cd446e",
+  "imageBytes": 9437184,
+  "imageSha256": "bd7a3ff2839c399aee46ad902507846a0f579242a5645b3811bb5dd74bddbeae",
+  "pageCount": 1
+}

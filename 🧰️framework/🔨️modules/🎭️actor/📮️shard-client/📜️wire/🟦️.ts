@@ -35,6 +35,19 @@ export interface ShardCapabilityGrant {
   readonly expiresMs: number | null;
 }
 
+/** 🧾️ The WIT `events::natural-source-declaration` record: the closed format identity a natural source is opened for. */
+export interface ShardNaturalSourceDeclaration {
+  readonly formatKind: string;
+  readonly extension: string;
+  readonly mediaType: string;
+  readonly binary: boolean;
+}
+
+/** 🎯️ The WIT `events::actor-instance-open-purpose` variant on `instance-open`; the guest lift admits exactly these closed shapes. */
+export type ShardInstanceOpenPurpose =
+  | { readonly tag: "ordinary" }
+  | { readonly tag: "natural-source"; readonly val: { readonly declaration: ShardNaturalSourceDeclaration; readonly extent: number } };
+
 /** 🚧 Interim, package-agnostic event envelope `🟨️shard-worker.js` decodes into the guest's WIT
  * `event` variant — see this module's header doc for why this isn't the real pack-encoded `Envelope`
  * yet. `kind` mirrors the WIT `event` variant's own tag name (kebab-case, e.g. `"app-command"`,

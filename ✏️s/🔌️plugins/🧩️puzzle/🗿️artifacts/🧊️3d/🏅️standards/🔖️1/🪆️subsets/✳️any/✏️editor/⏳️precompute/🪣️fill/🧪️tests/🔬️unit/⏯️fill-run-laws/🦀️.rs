@@ -1,7 +1,7 @@
 /// ⏯️ Fill run laws: the language-neutral run fixture, the parry3d oracle, the trace delivery, the interactive ceilings, resume and checkpoint replay, the capacity danger step, revalidation and the own-mesh bodies.
 
 //#region ⏯️FillRunJob
-use crate::Puzzle3dPlaySnapshot;
+use semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dPlaySnapshot;
 use semio_s_artifact_puzzle_3d_mutations::Puzzle3dMutation;
 use semio_framework_tool_run::ToolRunId;
 use semio_framework_tool_run::ToolRunTraceCursor;
@@ -47,7 +47,11 @@ fn fill_run_job(roots: FillPreparationRoots, lane: Vec<String>, seed: u64, reque
 }
 
 fn fill_run_job_on_clock(roots: FillPreparationRoots, lane: Vec<String>, seed: u64, requested: usize, clock: fn() -> Option<u64>) -> FillRunFixture {
-    FillRunFixture::new(FillRunJob::new(FillBuilder::begin_preparation(roots, Operation::new(OperationId(71), RevisionId(1), Generation(1), seed), requested), fill_run_identity(), lane, [0; 32]), clock)
+    fill_run_job_on_stock(roots, lane, seed, requested, clock, semio_s_plugin_puzzle_jobs::testing::fixture_stock())
+}
+
+fn fill_run_job_on_stock(roots: FillPreparationRoots, lane: Vec<String>, seed: u64, requested: usize, clock: fn() -> Option<u64>, stock: semio_framework_value::RetainedCloneGrant) -> FillRunFixture {
+    FillRunFixture::on_stock(FillRunJob::new(FillBuilder::begin_preparation(roots, Operation::new(OperationId(71), RevisionId(1), Generation(1), seed), requested), fill_run_identity(), lane, [0; 32]), clock, stock)
 }
 
 /// 🚦️ What one run job turn handed its driver, with every retained page returned to its ledger.
@@ -83,8 +87,12 @@ struct FillRunFixture {
 
 impl FillRunFixture {
     fn new(job: FillRunJob, clock: fn() -> Option<u64>) -> Self {
+        Self::on_stock(job, clock, semio_s_plugin_puzzle_jobs::testing::fixture_stock())
+    }
+
+    fn on_stock(job: FillRunJob, clock: fn() -> Option<u64>, stock: semio_framework_value::RetainedCloneGrant) -> Self {
         let operation = job.operation();
-        Self { job: Some(job), original: Some(semio_s_plugin_puzzle_jobs::testing::OriginalFixture::new(operation.operation, operation.generation, semio_s_plugin_puzzle_jobs::testing::fixture_stock(), clock, u64::MAX, 1 << 48)) }
+        Self { job: Some(job), original: Some(semio_s_plugin_puzzle_jobs::testing::OriginalFixture::new(operation.operation, operation.generation, stock, clock, u64::MAX, 1 << 48)) }
     }
 
     fn advance(&mut self, fuel: u64, deadline: u64) -> JobTurn {
@@ -98,11 +106,8 @@ impl FillRunFixture {
 
     fn drive_outcome(&mut self, fuel: u64, deadline: u64, verdict: &mut Option<semio_framework_trace::CallbackVerdict>) -> Option<JobTurn> {
         let job = self.job.as_mut().expect("original fill run remains live");
-        self.original.as_mut().expect("original fill caller remains live").turn(semio_s_plugin_puzzle_jobs::testing::fixture_stock(), |cx| {
-            let mut output=None;
-            cx.with_original_work_loan(fuel,deadline,|cx|{output=semio_framework_job::drive_step(job,cx,"puzzle3d-fill-run",semio_framework_job::InteractiveStage::InteractiveStep,verdict)?.map(semio_s_plugin_puzzle_jobs::testing::owned_turn);Ok(())})?;
-            Ok(output)
-        }).expect("original fill run callback")
+        let budget = semio_framework_job::StepBudget::new(fuel, deadline, semio_s_plugin_puzzle_jobs::testing::fixture_stock());
+        self.original.as_mut().expect("original fill caller remains live").step_job_observed(job, budget, verdict).expect("original fill run callback").map(|(turn, _)| turn)
     }
 }
 
@@ -467,7 +472,7 @@ fn fill_run_job_delivers_every_trace_record_of_a_long_run() {
 /// running overlay, apply — `None` for an op the overlay no longer admits.
 fn fold_overlay_op(overlay: &Puzzle3dPlaySnapshot, bytes: &[u8]) -> Option<Puzzle3dPlaySnapshot> {
     let op = <Puzzle3dMutation as protocol::OpBinary>::decode_op(bytes).ok()?;
-    let outcome = protocol::Mutation::<Puzzle3dPlaySnapshot>::diff(&op, overlay);
+    let outcome = protocol::ColdMutation::<Puzzle3dPlaySnapshot>::diff(&op, overlay);
     if !outcome.is_applicable(protocol::MergePolicy::default()) {
         return None;
     }
@@ -488,7 +493,9 @@ fn fill_run_job_step_and_overlay_append_stay_below_the_interactive_ceiling_for_n
     let (budget, ceiling, append_ceiling, minimum_turns, seed) = (number("budgetWork"), number("stepWorkCeiling"), number("appendOpsCeiling") as usize, number("turns") as usize, number("seed"));
     let (roots, lane, _) = example_fill_roots(law["document"].as_str().expect("document"), seed as u32);
     let mut overlay = Puzzle3dPlaySnapshot::new(semio_framework_value::FromValue::from_value(semio_framework_value::ToValue::to_value(&semio_s_artifact_puzzle_3d_model::io::text::snapshot::parse_dsl(&std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../📚️examples/🏗️nakagin-capsule-tower/🖼️assets/🏢️tower/🗣️.dsl.semio")).expect("committed example reads")).expect("example parses"))).expect("typed fixture admits"));
-    let mut job = fill_run_job_on_clock(roots, lane, seed, number("requested") as usize,precompute_work_clock);
+    let stock = semio_s_plugin_puzzle_jobs::testing::fixture_stock();
+    let measured_run_stock = semio_framework_value::RetainedCloneGrant { maximum_items: stock.maximum_items * 4, maximum_copy_bytes: stock.maximum_copy_bytes * 4, ..stock };
+    let mut job = fill_run_job_on_stock(roots, lane, seed, number("requested") as usize, precompute_work_clock, measured_run_stock);
     let mut verdict=None;
     let (mut worst, mut worst_turn, mut turns, mut worst_append, mut appends) = (0_u64, 0_usize, 0_usize, 0_usize, 0_usize);
     loop {

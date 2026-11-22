@@ -35,7 +35,7 @@ test("whole graph publisher and source policies belong to the verified immutable
  expect(new Ajv({strict:true}).compile({...schema,$ref:"#/$defs/FrozenGraphAuthorizerV1"})(fixture.frozenGraph)).toBe(true);
  const frozen=await sdkRequire(sdkRequire.resolve("nx/src/utils/workspace-context")).loadSemioGraphAuthorizersV1();expect(frozen.toolingIdentity).toBe(tooling);
  for(const name of fixture.frozenGraph.exports)expect(typeof frozen.authorizers[name],name).toBe("function");
- const manifest=JSON.parse(readFileSync(join(dirname(dirname(sdkRequire.resolve("nx/package.json"))),"../.semio-authorizer-source.json"),"utf8"));
+ const manifest=JSON.parse(readFileSync(join(process.env.SEMIO_NX_AUTHORIZER_ROOT!,".semio-authorizer-source.json"),"utf8"));
  for(const path of fixture.frozenGraph.policies)expect(manifest.sources.map((row:any)=>row.path),path).toContain(path);
  const source=readFileSync(sdkRequire.resolve("nx/src/project-graph/nx-deps-cache"),"utf8"),ts=sdkRequire(sdkRequire.resolve("typescript")),ast=ts.createSourceFile("installed-publisher.js",source,ts.ScriptTarget.Latest,true),imports:string[]=[];
  const walk=(node:any)=>{if(ts.isCallExpression(node)&&node.expression.kind===ts.SyntaxKind.ImportKeyword)imports.push(node.getText(ast));ts.forEachChild(node,walk);};walk(ast);expect(imports.filter(value=>value.includes("workspace"))).toEqual([]);expect(source).toContain("frozen.authorizers.writeNxGraphSeal");

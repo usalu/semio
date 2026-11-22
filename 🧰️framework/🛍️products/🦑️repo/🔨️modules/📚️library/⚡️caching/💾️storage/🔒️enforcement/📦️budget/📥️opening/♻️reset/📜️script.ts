@@ -37,7 +37,7 @@ export function readImageReclaimArgumentsV1(args:readonly string[]):RepositoryCa
  if(args.length!==1||!(schema.$defs.Partition.enum as readonly string[]).includes(args[0]))throw Error("Exactly one declared repository cache partition required");
  return args[0] as RepositoryCachePartitionIdV1;
 }
-/** ♻️ Returns the blocks of one idle bloated image to the volume in place and prints one JSON line with the outcome (`reclaimed` with the host allocation before and after, `skipped` while the image is held, retiring or not bloated); the image is never recreated and never stays attached. */
+/** ♻️ Returns the blocks of one idle bloated image to the volume in place and prints one JSON line with the outcome (`reclaimed` with the host allocation before and after, `skipped` with the reason observed by the operation); the image is never recreated and never stays attached. */
 class ImageReclaimScript extends BundleScript {async run(args:string[]):Promise<void>{const profile=readImageReclaimArgumentsV1(args);await runRepositoryImageReclaimV1({repoRoot:this.repoRoot,invocation:this.invocation,control:createIssuedResourceControlV1(this.invocation,"cache:reclaim-"+profile,schema.$defs.Protocol.const.maximumMilliseconds)},profile);}}
 /** ♻️ Retains the same Original for the exact registered in-place reclaim target. */
 export function runRepositoryImageReclaimV1(context:ImageOwnerContextV1,profile:RepositoryCachePartitionIdV1):Promise<void>{
@@ -47,11 +47,8 @@ export function runRepositoryImageReclaimV1(context:ImageOwnerContextV1,profile:
  if(readNativeCallerAuthorityV1(invocation.capabilities).repositoryRoot!==context.repoRoot)throw Error("Exact repository cache reclaim owner required");
  return withRequestedIssuedResourceControlV1(control,schema.$defs.Protocol.const.maximumMilliseconds,async phase=>{
   const result=await reclaimImageIfQuiescentV1(invocation,phase,profile,undefined,readImageRecoveryVolumeV1(process.env[IMAGE_RECOVERY_VOLUME_ENV_V1]));
-  reportReclaimV1(profile,result);
+  console.log(JSON.stringify(result));
  });
-}
-function reportReclaimV1(profile:RepositoryCachePartitionIdV1,result:Awaited<ReturnType<typeof reclaimImageIfQuiescentV1>>):void{
- console.log(JSON.stringify({version:1,kind:"repository-cache-reclaim",partition:profile,outcome:result===null?"skipped":"reclaimed",beforeBytes:result?.beforeBytes??0,afterBytes:result?.afterBytes??0,settled:result?.settled??false}));
 }
 /** ⌛️ Routes a separately authored wait for the exact Rust partition. */
 class RustImageReclaimWaitScript extends BundleScript {async run(args:string[]):Promise<void>{

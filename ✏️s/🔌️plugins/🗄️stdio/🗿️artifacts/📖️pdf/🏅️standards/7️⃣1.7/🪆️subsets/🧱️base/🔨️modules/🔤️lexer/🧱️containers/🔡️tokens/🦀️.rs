@@ -25,13 +25,17 @@ enum Scan {
 pub(super) struct Reader {
     pub(super) position: usize,
     scan: Scan,
+    atom: [u8; MAX_SCALAR_BYTES],
 }
 
 impl Reader {
-    pub(super) fn new(position: usize) -> Self { Self { position, scan: Scan::Idle } }
+    pub(super) fn new(position: usize) -> Self { Self { position, scan: Scan::Idle, atom: [0; MAX_SCALAR_BYTES] } }
 
-    pub(super) fn step(&mut self, source: &[u8], scalar_limit: usize, string_limit: usize, turn: &mut Turn) -> Result<Option<Token>, &'static str> {
-        let byte = source.get(self.position).copied();
+    pub(super) fn step(&mut self, byte_at: &impl Fn(usize) -> Option<u8>, scalar_limit: usize, string_limit: usize, turn: &mut Turn) -> Result<Option<Token>, &'static str> {
+        let byte = match self.scan {
+            Scan::Angle(_) | Scan::Bytes { .. } => None,
+            _ => byte_at(self.position),
+        };
         match &mut self.scan {
             Scan::Idle => match byte {
                 None => Ok(Some(Token::End)),
@@ -39,12 +43,12 @@ impl Reader {
                 Some(b) if is_ws(b) => { self.position += 1; Ok(None) }
                 Some(b'[') => { self.position += 1; Ok(Some(Token::Open(Container::Array))) }
                 Some(b']') => { self.position += 1; Ok(Some(Token::Close(Container::Array))) }
-                Some(b'<') if source.get(self.position + 1) == Some(&b'<') => {
+                Some(b'<') if self.position.checked_add(1).and_then(byte_at) == Some(b'<') => {
                     self.position += 1;
                     self.scan = Scan::Angle(true);
                     Ok(None)
                 }
-                Some(b'>') if source.get(self.position + 1) == Some(&b'>') => {
+                Some(b'>') if self.position.checked_add(1).and_then(byte_at) == Some(b'>') => {
                     self.position += 1;
                     self.scan = Scan::Angle(false);
                     Ok(None)
@@ -76,12 +80,14 @@ impl Reader {
                 Ok(None)
             }
             Scan::Atom { start, name } => {
-                if byte.is_some_and(|b| !is_ws(b) && !is_delim(b)) {
-                    if self.position - *start >= scalar_limit { return Err("PDF COS scalar token limit exceeded"); }
+                let length = self.position - *start;
+                if let Some(byte) = byte.filter(|&byte| !is_ws(byte) && !is_delim(byte)) {
+                    if length >= scalar_limit { return Err("PDF COS scalar token limit exceeded"); }
+                    self.atom[length] = byte;
                     self.position += 1;
                     return Ok(None);
                 }
-                let raw = source.get(*start..self.position).ok_or("PDF COS source changed")?;
+                let raw = &self.atom[..length];
                 let token = if *name { parse_name(raw, turn)? } else { parse_regular(raw, turn)? };
                 if token.is_some() { self.scan = Scan::Idle; }
                 Ok(token)
@@ -95,7 +101,7 @@ impl Reader {
                     return Ok(None);
                 }
                 let mut scratch = [0];
-                let decoded = parser.advance(source, &mut scratch, 1);
+                let decoded = parser.advance_bytes(byte_at, &mut scratch, 1);
                 self.position = parser.position();
                 if decoded.written != 0 { *pending = Some(scratch[0]); }
                 match decoded.status {
@@ -110,8 +116,8 @@ impl Reader {
         }
     }
 
-    pub(super) fn ends_reference_lookahead(&self, source: &[u8]) -> bool {
-        matches!(self.scan, Scan::Idle) && source.get(self.position).is_none_or(|&byte| {
+    pub(super) fn ends_reference_lookahead(&self, byte_at: &impl Fn(usize) -> Option<u8>) -> bool {
+        matches!(self.scan, Scan::Idle) && byte_at(self.position).is_none_or(|byte| {
             !is_ws(byte) && !matches!(byte, b'%' | b'R' | b'+' | b'-' | b'0'..=b'9')
         })
     }

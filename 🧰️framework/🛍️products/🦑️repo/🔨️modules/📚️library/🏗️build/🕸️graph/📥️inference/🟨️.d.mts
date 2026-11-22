@@ -63,7 +63,7 @@ export interface BuildMetadataEntryV1{readonly metadata:Readonly<{semio:Readonly
 /** 🧩️ The serial, cached `component` task of a plugin or extension crate: one store receipt over its exact inputs. */
 export interface ComponentBuildTargetV1{readonly cache:boolean;readonly parallelism:boolean;readonly dependsOn:readonly string[];readonly inputs:readonly unknown[];readonly outputs:readonly string[];readonly options:Readonly<{command:string}>;readonly metadata:Readonly<{semio:Readonly<{execution:unknown;cache:Readonly<{class:string;reason:string}>}>}>}
 export interface BuildInferenceInternalsV1 extends Readonly<Record<string,unknown>>{
- targetPolicy<T extends object>(name:string,target:T,policy?:InferencePolicyV1):T&{cache:boolean;continuous?:boolean};
+ targetPolicy<T extends object>(name:string,target:T,policy?:InferencePolicyV1,identity?:string):T&{cache:boolean;continuous?:boolean};
  withWasmTooling<T extends Readonly<Record<string,GeneratedTargetV1>>>(targets:T,required:boolean):T;
  componentBuildTargets(root:string,workspaceRoot:string):Readonly<Record<string,ComponentBuildTargetV1>>;
  relativeScriptInputs(entries:readonly string[],workspaceRoot:string,cache?:ScriptInputCacheV1,requiredSources?:boolean,resourceEntries?:readonly string[],commands?:ReadonlyMap<string,readonly string[]>):Promise<string[]>;
@@ -115,4 +115,4 @@ export function unclassifiedImplementationCodeV1(rows:readonly ImplementationRow
 /** 📜️ The declared inference protocol of the loaded revision. */
 export function inferenceProtocolV1():InferenceProtocolV1;
 export const loadedImplementationRowsV1:readonly {readonly kind:"digest";readonly path:string;readonly fact:{readonly sha256:string;readonly size:number;readonly mtimeMs:number}}[];
-export function primeSharedClosuresOfWorkspaceV1(options:{workspaceRoot:string;signal?:AbortSignal}):Promise<void>;
+export { ownerBoundaryFailureV1 } from "./📦️project-nodes/🚧️source-failure/🟨️.mjs";

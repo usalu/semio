@@ -127,3 +127,13 @@ test("the ledger declares the remote cache home, the build policy points at it a
  expect(asked).toEqual(["remote-cache:remote-cache:true"]);expect(result.delegated).toEqual([{owner:"remote-cache",text:"would remove 0 of 8 entries (0 B)"}]);
  expect(await collectRemoteCacheForLedgerV1(join(workspace,"nowhere"),true,controller.signal)).toBe("absent");
 });
+
+test("the scan gives the same index at every width, and a narrow scan yields to the event loop between batches so a serving process is not starved of its file operations",async()=>{
+ const root=directory("width");
+ for(let index=0;index<300;index++){const key=sha(String(index)),folder=join(root,"main","ac",key.slice(0,2));mkdirSync(folder,{recursive:true});writeFileSync(join(folder,key),"x".repeat(index%7+1));}
+ const wide=await scanRemoteCacheDirectoryV1(root,{concurrency:64});
+ let turns=0;const ticker=setInterval(()=>{turns++;},0);
+ const narrow=await scanRemoteCacheDirectoryV1(root,{concurrency:4});clearInterval(ticker);
+ expect([...narrow].sort()).toEqual([...wide].sort());expect(narrow.size).toBe(300);
+ expect(turns,"timers ran between the batches").toBeGreaterThan(5);
+});

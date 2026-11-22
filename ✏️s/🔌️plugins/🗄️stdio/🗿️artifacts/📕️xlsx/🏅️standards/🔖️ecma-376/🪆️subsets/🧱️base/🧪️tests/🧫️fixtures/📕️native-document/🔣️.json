@@ -41,5 +41,35 @@
         "accepted": false
       }
     ]
+  },
+  "workbookSubsets": {
+    "part": "xl/workbook.xml",
+    "transitionalNamespace": "http://schemas.openxmlformats.org/spreadsheetml/2006/main",
+    "cases": [
+      {
+        "name": "transitional namespace and relationship type",
+        "namespace": "http://schemas.openxmlformats.org/spreadsheetml/2006/main",
+        "relationshipType": "http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument",
+        "subset": "transitional"
+      },
+      {
+        "name": "strict namespace and relationship type",
+        "namespace": "http://purl.oclc.org/ooxml/spreadsheetml/main",
+        "relationshipType": "http://purl.oclc.org/ooxml/officeDocument/relationships/officeDocument",
+        "subset": "strict"
+      },
+      {
+        "name": "strict namespace decides over a transitional relationship type",
+        "namespace": "http://purl.oclc.org/ooxml/spreadsheetml/main",
+        "relationshipType": "http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument",
+        "subset": "strict"
+      },
+      {
+        "name": "unknown namespace names no subset",
+        "namespace": "urn:example:spreadsheet",
+        "relationshipType": "http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument",
+        "subset": null
+      }
+    ]
   }
 }

@@ -124,7 +124,7 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
             }
             5 => RendererAssetDecodeTurnKind::Pending,
             6 => {
-                if matches!(job.retire_payload_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), NativeReferenceDecodeCloseStep::Complete) {
+                if matches!(job.retire_payload_step(1, semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES), NativeReferenceDecodeCloseStep::Complete) {
                     let next = if job.cancelled.load(Ordering::Acquire) { 3 } else { 2 };
                     let _ = job.phase.compare_exchange(6, next, Ordering::AcqRel, Ordering::Acquire);
                 }
@@ -147,34 +147,6 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
             handoff.fetch.as_mut().expect("native handoff owns its request").begin_close();
             handoff.seal = false;
             handoff.reject = None;
-        }
-        if let Some(payload) = handoff.payload.as_mut() {
-            let grant = RetainedCloneGrant {
-                maximum_items: 1,
-                maximum_copy_bytes: semio_framework_job::JOB_PAYLOAD_PAGE_BYTES,
-                maximum_capacity_bytes: 0,
-                maximum_release_bytes: 2 * semio_framework_job::JOB_PAYLOAD_PAGE_BYTES,
-                maximum_depth: 3,
-            };
-            let mut wallet = semio_framework_value::AuthoringWallet::new(grant, 1);
-            let retired = wallet.run(grant, 1, |effect| payload.close_step(effect)).and_then(|turn| {
-                let Some(turn) = turn else { return Ok(false) };
-                let progress = turn.output.result?.progress();
-                wallet.post(progress)?;
-                Ok(progress.copied_items != 0)
-            });
-            match retired {
-                Ok(_) if payload.terminal_is_empty() => {
-                    handoff.payload = None;
-                    return Some(true);
-                }
-                Ok(progressed) => return Some(progressed),
-                Err(_) => {
-                    drop(slot);
-                    self.record_frame_fault("native asset handoff payload retirement failed");
-                    return Some(false);
-                }
-            }
         }
         if let Some(retryable) = handoff.reject {
             let fetch = handoff.fetch.as_mut().expect("native handoff owns its rejected request");
@@ -218,10 +190,10 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    pub fn retain_native_asset_handoff(&self, fetch: RendererAssetFetchOwner, payload: Option<semio_framework_job::RetainedJobPayload>, seal: bool, reject: Option<bool>) {
+    pub fn retain_native_asset_handoff(&self, fetch: RendererAssetFetchOwner, seal: bool, reject: Option<bool>) {
         let mut slot = self.0.native_asset_handoff.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
         assert!(slot.is_none(), "one native asset fetch is admitted at a time");
-        *slot = Some(NativeAssetHandoff { fetch: Some(fetch), payload, seal, reject });
+        *slot = Some(NativeAssetHandoff { fetch: Some(fetch), seal, reject });
     }
 
     #[cfg(not(target_arch = "wasm32"))]
@@ -299,7 +271,7 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
                 if matches!(admission, RendererAssetSealStep::Refused(_)) {
                     fetch.begin_close();
                 }
-                self.retain_native_asset_handoff(fetch, None, false, None);
+                self.retain_native_asset_handoff(fetch, false, None);
                 self.0.native_asset_fetching.store(false, Ordering::Release);
                 if let Some(waker) = self.0.waker.lock().expect("runtime completion waker lock").as_ref() {
                     waker();
@@ -309,32 +281,32 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
         }
         let mailbox = self.clone();
         spawn_app_task(async move {
-            let (payload, seal, reject) = match stream_native_renderer_asset(&mailbox, &mut fetch).await {
-                Ok(()) => (None, true, None),
+            let (seal, reject) = match stream_native_renderer_asset(&mailbox, &mut fetch).await {
+                Ok(()) => (true, None),
                 Err(NativeAssetStreamFailure::Cancelled) => {
                     fetch.begin_close();
-                    (None, false, None)
+                    (false, None)
                 }
                 Err(NativeAssetStreamFailure::Original(error))=>{
                     log_debug(&format!("native renderer retained I/O refusal: {error}"));
                     match error.kind{
-                        RendererSourceIoFailureKind::NativeFault=>(None,false,Some(false)),
-                        RendererSourceIoFailureKind::Cancelled=>{fetch.begin_close();(None,false,None)},
-                        _=>{fetch.begin_close();mailbox.record_frame_fault("native renderer original I/O or response capacity refused");(None,false,None)}
+                        RendererSourceIoFailureKind::NativeFault=>(false,Some(false)),
+                        RendererSourceIoFailureKind::Cancelled=>{fetch.begin_close();(false,None)},
+                        _=>{fetch.begin_close();mailbox.record_frame_fault("native renderer original I/O or response capacity refused");(false,None)}
                     }
                 }
                 Err(NativeAssetStreamFailure::Unavailable { detail, retryable }) => {
                     log_debug(&format!("native renderer asset unavailable: {detail}"));
-                    (None, false, Some(retryable))
+                    (false, Some(retryable))
                 }
                 Err(NativeAssetStreamFailure::Fault(detail)) => {
                     fetch.begin_close();
                     log_debug(&format!("native renderer asset fetch failed: {detail}"));
                     mailbox.record_frame_fault("native renderer asset fetch failed");
-                    (None, false, None)
+                    (false, None)
                 }
             };
-            mailbox.retain_native_asset_handoff(fetch, payload, seal, reject);
+            mailbox.retain_native_asset_handoff(fetch, seal, reject);
             mailbox.0.native_asset_fetching.store(false, Ordering::Release);
             if let Some(waker) = mailbox.0.waker.lock().expect("runtime completion waker lock").as_ref() {
                 waker();

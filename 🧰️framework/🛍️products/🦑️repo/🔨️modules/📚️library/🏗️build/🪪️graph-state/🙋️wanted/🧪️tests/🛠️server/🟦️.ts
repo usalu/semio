@@ -310,3 +310,20 @@ test("R57 law: the line a stop writes names the verdict, the silence and the cou
  const schema=JSON.parse(readFileSync(new URL("../../🧬️schema/🔣️.json",import.meta.url),"utf8"));
  expect(new Ajv({strict:false}).compile(schema.definitions.ReadStop)(row)).toBe(true);
 });
+
+const sharedLine=(phase:string,shared:number,elapsed:number)=>`[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"build:graph-phase:${phase}:0:5189:1:${elapsed}:shared%20closures%20${shared}%2F49","mode":"shared","elapsedMs":0}}\n`;
+
+test("Law: the shared closures a first wave builds in process one by one keep the read alive; the same closure count repeated, or going back, does not, and a long first wave is not stopped",()=>{
+ const policy={...wantedServerPolicyV1,inferStallMilliseconds:25*60000,inferMaximumMilliseconds:12*3600000};let time=0;
+ const watch=createGraphReadWatchV1(policy,()=>time);
+ for(const phase of["inference","owners"]){
+  for(let closure=1;closure<=49;closure++){time+=90_000;watch.feed(sharedLine(phase,closure,closure*90));expect(watch.verdict(),phase+" closure "+closure).toBe("go");}
+  time+=24*60000;watch.feed(sharedLine(phase,49,4500));expect(watch.verdict()).toBe("go");
+  time+=60000;watch.feed(sharedLine(phase,49,4600));expect(watch.verdict(),"no further closure for the stall limit").toBe("stalled");
+  watch.feed(sharedLine(phase,3,4700));expect(watch.verdict(),"a count that went back is no progress").toBe("stalled");
+  const fresh=createGraphReadWatchV1(policy,()=>time);time+=0;fresh.feed(sharedLine(phase,1,10));
+  expect(fresh.verdict()).toBe("go");
+  time+=25*60000;expect(fresh.verdict(),"stalled after one closure and the limit").toBe("stalled");
+  time+=0;fresh.feed(sharedLine(phase,2,20));expect(fresh.verdict()).toBe("go");
+ }
+});

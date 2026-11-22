@@ -1,0 +1,12 @@
+{
+  "values": {
+    "pinned": "export const version=1;\n",
+    "current": "export const version=2;\n",
+    "changedAgain": "export const version=3;\n"
+  },
+  "sha256": {
+    "pinned": "63539a50243cfd4b220b8a73201ff64494146092e81d2aa5a9fe4668c82c54b8",
+    "current": "8c264c7a3fbd2f3abc0cd962e8102c76999a991716732cdbc9968a95a923a2c2",
+    "changedAgain": "5a97b446574353e5d62fe9396ce59bd425de32930d8dc4e3ec06d0752aef1b81"
+  }
+}

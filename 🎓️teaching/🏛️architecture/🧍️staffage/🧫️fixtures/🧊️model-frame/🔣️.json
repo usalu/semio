@@ -47,5 +47,18 @@
     "solid": "torso",
     "boundsBoneLocal": { "min": [0, -0.1552, -0.19], "max": [0.45, 0.1552, 0.19] },
     "toleranceM": 0.0006
+  },
+  "loftAxes": {
+    "base": "torso",
+    "path": [[0, 0, 0], [1, 0, 0]],
+    "rx": 0.3,
+    "ry": 0.1,
+    "toleranceM": 1e-9,
+    "cases": [
+      { "name": "no rotation, path exactly along u: rx along w, ry along v", "rotation": null, "rx": [0, 0, 1], "ry": [0, 1, 0], "boundsBoneLocal": { "min": [0, -0.1, -0.3], "max": [1, 0.1, 0.3] } },
+      { "name": "limb rotation [0.5, 0.5, 0.5, 0.5]: rx along v, ry along w", "rotation": [0.5, 0.5, 0.5, 0.5], "rx": [0, 1, 0], "ry": [0, 0, 1], "boundsBoneLocal": { "min": [0, -0.3, -0.1], "max": [1, 0.3, 0.1] } },
+      { "name": "rotation about v [0, 0.7071, 0, 0.7071]: rx along w, ry along v", "rotation": [0, 0.7071067811865476, 0, 0.7071067811865476], "rx": [0, 0, 1], "ry": [0, 1, 0], "boundsBoneLocal": { "min": [0, -0.1, -0.3], "max": [1, 0.1, 0.3] } },
+      { "name": "no rotation, path leaning one thousandth towards v: the semi-axes swap, rx along v, ry along w", "path": [[0, 0, 0], [1, 0.001, 0]], "toleranceM": 0.002, "rotation": null, "rx": [0, 1, 0], "ry": [0, 0, 1], "boundsBoneLocal": { "min": [0, -0.3, -0.1], "max": [1, 0.3, 0.1] } }
+    ]
   }
 }

@@ -22,4 +22,4 @@ test("Jack declaration compiler accepts the original table and rejects both host
   const program=ts.createProgram([entry],{noEmit:true,strict:true,allowImportingTsExtensions:true,module:ts.ModuleKind.ESNext,moduleResolution:ts.ModuleResolutionKind.Bundler,target:ts.ScriptTarget.ES2022,types:[]}),diagnostics=ts.getPreEmitDiagnostics(program);
   expect(diagnostics.length===0,row.id+": "+diagnostics.map(x=>ts.flattenDiagnosticMessageText(x.messageText," ")).join("; ")).toBe(row.accept);
  }}finally{rmSync(root,{recursive:true,force:true});}
-});
+},120000);

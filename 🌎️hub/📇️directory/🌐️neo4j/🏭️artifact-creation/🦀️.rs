@@ -154,6 +154,14 @@ impl Neo4jDirectory {
             return Err(DirectoryError::Conflict("genesis publication is outside its live server deadline".into()));
         }
         validate_document_genesis_append_v1(&operation, append)?;
+        if append.intent.is_space_studio() {
+            let mut matches = txn.execute(query("MATCH (d:DocumentDescriptor {spaceId: $space_id, artifactKind: $kind, artifactSchema: $schema}) RETURN d.documentId AS documentId LIMIT 1")
+                .param("space_id", append.intent.scope.space_id.clone()).param("kind", append.intent.request.kind_id.clone()).param("schema", append.intent.artifact_schema.clone()))
+                .await.map_err(backend)?;
+            if matches.next(txn.handle()).await.map_err(backend)?.is_some() {
+                return Err(DirectoryError::Conflict("a Studio workflow already exists in this Space".into()));
+            }
+        }
         let checkpoint = &append.checkpoint;
         let reservation = &append.reservation;
         let encoded = encode_artifact_cas_ownership_v1(&reservation.plan).map_err(|error| DirectoryError::Conflict(error.to_string()))?;

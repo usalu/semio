@@ -20,8 +20,14 @@ function source(path: string, facts: readonly RegExp[]): string {
 const root = join(target.ownerRoot, "..");
 const os = join(workspace, "🧰️framework/🛍️products/💻️os/🔨️modules");
 const neural = join(os, "🧠️neural/⚙️engine");
+const defeatureSource = source(join(root, "🧾️register-operators/🧮️booleans-transforms-and-solid-features/🦀️.rs"), [/"brep\.solid\.defeature"[\s\S]*?&q\("defeature", "[^"]+"\)/u]);
+source(join(workspace, "🧰️framework/🔨️modules/🧊️3d/📐️brep/📸️representation/🔖️contract/🦀️.rs"), [/\("defeature", OpQuality::ExactAnalytic\)/u]);
+const defeatureSummary = defeatureSource.match(/&q\("defeature", "([^"]+)"\)/u)?.[1];
+assert.ok(defeatureSummary);
 source(join(root, "🦀️.rs"), [
   /extension_manifest_json\(\)/u,
+  /format!\("\{summary\} \[quality:\{:\?\}\]", operation_quality\(method\)\)/u,
+  /\("brep\.solid\.defeature", "defeature"\)/u,
   /FLOW_APP_ID, EXTENSION_ID, EXTENSION_LABEL, "brep", &manifest_json/u,
   /PROCEDURAL3D_APP_ID, EXTENSION_ID, EXTENSION_LABEL, "brep", &manifest_json/u,
 ]);
@@ -103,6 +109,9 @@ const orientSummary = summaries.get("orient");
 assert.ok(orient && orientSummary);
 const replacements = new Map<string, Manifest["contributes"]["operators"][number]>(sourceOperators);
 replacements.set(orient.id, {...orient, summary: orientSummary + " [quality:PolygonMesh]"});
+const defeature = oldManifest.contributes.operators.find(row => row.id === "brep.solid.defeature");
+assert.ok(defeature);
+replacements.set(defeature.id, {...defeature, summary: defeatureSummary + " [quality:ExactAnalytic]"});
 const byId = <T extends {id: string}>(rows: T[]) => rows.toSorted((left, right) => packByteCompare(left.id, right.id));
 const project = {...oldManifest, contributes: {...oldManifest.contributes, schemas: byId(oldManifest.contributes.schemas), operators: byId([...oldManifest.contributes.operators.filter(row => !replacements.has(row.id)), ...replacements.values()])}};
 assert.deepStrictEqual(project, {...newManifest, contributes: {...newManifest.contributes, schemas: byId(newManifest.contributes.schemas), operators: byId(newManifest.contributes.operators)}}, "Every embedded manifest value outside the source-derived updates must agree");

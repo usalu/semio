@@ -39,13 +39,13 @@ export function draftCrates({ groups, carvable, unitsOf }: Pick<ReturnType<typeo
     const familyDir = isMutationCrateLabel(dominant) && familySlices.length > 1 ? lcaDirectory(familySlices.flatMap((slice) => slice.decls.map((decl) => decl.file ?? "")).filter(Boolean)) : "";
     const dirOf = familyDir || (anchorFile ? dirname(anchorFile) : lcaDirectory(slices.flatMap((slice) => slice.decls.map((decl) => decl.file ?? "")).filter(Boolean)));
     const named = biggest.attach[0]!.eff;
-    return { i, slices, attach, label: dominant, dir: dirOf, anchor, eff: named };
+    return { i, slices, attach, label: dominant, dir: dirOf, anchor, eff: named, pin: groups[i]!.pin ?? null };
   });
   const sharedLabels = new Map<string, number>();
   for (const entry of draft) sharedLabels.set(entry.label, (sharedLabels.get(entry.label) ?? 0) + 1);
   const labelSet = new Set(draft.map((entry) => entry.label));
   for (const entry of draft) {
-    if ((sharedLabels.get(entry.label) ?? 0) < 2 || isMutationCrateLabel(entry.label) || entry.eff[0] === "standards" || entry.eff.length < 2) continue;
+    if (entry.pin !== null || (sharedLabels.get(entry.label) ?? 0) < 2 || isMutationCrateLabel(entry.label) || entry.eff[0] === "standards" || entry.eff.length < 2) continue;
     const last = facetSlug(entry.eff.at(-1)!.replaceAll("_", "-"));
     const pair = facetSlug(entry.eff.slice(-2).join("-").replaceAll("_", "-"));
     entry.label = last && !labelSet.has(last) ? last : pair || entry.label;
@@ -56,16 +56,19 @@ export function draftCrates({ groups, carvable, unitsOf }: Pick<ReturnType<typeo
 
 /** 📛 Names every draft crate, picks its directory and plans its dependencies. */
 export function nameAndPlaceCrates({ repoRoot, packageDirRel, draft, lib, crateDeps, groups, edgesOf, hostedAt, crateOfSlice, infoOf, sliceOfDecl, referencing, rootNames, rootSource, cfgAttributeLines, movedPlaced, gatedUses, shims, innerAttributes }: { readonly repoRoot: string; readonly packageDirRel: string } & Pick<ReturnType<typeof draftCrates>, "draft"> & Pick<ReturnType<typeof readCrateSource>, "lib" | "rootSource"> & Pick<ReturnType<typeof findMovedRootItems>, "crateDeps" | "crateOfSlice" | "referencing"> & Pick<ReturnType<typeof prepareComponentPacking>, "groups"> & Pick<ReturnType<typeof mergeCoupledComponents>, "edgesOf"> & Pick<ReturnType<typeof hostMovedUnits>, "hostedAt" | "movedPlaced" | "innerAttributes"> & Pick<Awaited<ReturnType<typeof collectSliceInfos>>, "infoOf"> & Pick<ReturnType<typeof buildCarveSlices>, "sliceOfDecl" | "shims"> & Pick<ReturnType<typeof indexRootItems>, "rootNames" | "cfgAttributeLines" | "gatedUses">) {
-  const usedNames = new Set<string>();
-  const usedDirs = new Set<string>([dirname(dirname(resolve(repoRoot, packageDirRel)))]);
+  const pinDir = (pin: { packageDir: string }): string => dirname(dirname(resolve(repoRoot, pin.packageDir)));
+  const usedNames = new Set<string>(draft.flatMap((entry) => (entry.pin ? [entry.pin.name] : [])));
+  const usedDirs = new Set<string>([dirname(dirname(resolve(repoRoot, packageDirRel))), ...draft.flatMap((entry) => (entry.pin ? [pinDir(entry.pin)] : []))]);
   const crates: PlannedCrate[] = [];
   for (const entry of draft) {
-    let name = `${lib.name}-${entry.label}`;
-    for (let n = 2; usedNames.has(name); n += 1) name = `${lib.name}-${entry.label}-${n}`;
-    usedNames.add(name);
-    let dir = entry.dir;
-    for (const decl of entry.attach) { if (!usedDirs.has(dir)) break; if (decl.file && !usedDirs.has(dirname(decl.file))) dir = dirname(decl.file); }
-    if (usedDirs.has(dir)) dir = join(dir, `🧩️${entry.label}`);
+    let name = entry.pin?.name ?? `${lib.name}-${entry.label}`;
+    if (!entry.pin) {
+      for (let n = 2; usedNames.has(name); n += 1) name = `${lib.name}-${entry.label}-${n}`;
+      usedNames.add(name);
+    }
+    let dir = entry.pin ? pinDir(entry.pin) : entry.dir;
+    if (!entry.pin) for (const decl of entry.attach) { if (!usedDirs.has(dir)) break; if (decl.file && !usedDirs.has(dirname(decl.file))) dir = dirname(decl.file); }
+    if (!entry.pin && usedDirs.has(dir)) dir = join(dir, `🧩️${entry.label}`);
     void entry.anchor;
     usedDirs.add(dir);
     const imports: MirrorImport[] = [];
@@ -129,7 +132,7 @@ export function nameAndPlaceCrates({ repoRoot, packageDirRel, draft, lib, crateD
     const shimCopies = [...[...libShims].sort().map((name) => shims.get(name)!.text), ...[...testShims].sort().map((name) => `#[cfg(test)]\n${shims.get(name)!.text}`)];
     const takenNames = new Set<string>([...importedFrom.values()].flatMap((names) => [...names]).concat(hosted.flatMap((unit) => [...unit.exports])));
     const testOnlyUses = [...new Set(entry.slices.flatMap((slice) => [...infoOf.get(slice.id)!.testRootRefs]).filter((n) => !copiedNames.has(n) && !takenNames.has(n) && rootNames.get(n)?.kind === "use").map((n) => { const item = rootNames.get(n)!; return `#[cfg(test)]\n${prunedUse(rootSource.slice(item.declStart, item.end), [n])}`; }))];
-    crates.push({ id: String(entry.i), name, packageDir: relativePosix(repoRoot, join(dir, "📦️packages/🦀️rust")), description: `Component crate of ${lib.name}: ${entry.label}`, doc: "", slices: entry.slices, attach: entry.attach, dependsOn: [...deps].sort((a, b) => a - b).map(String), imports: pruned, itemImportLines: [...copiedUses, ...testOnlyUses, ...shimCopies, ...unitImports], externLines: [], innerAttributes, movedItemsText: "", lib: null, test: null });
+    crates.push({ id: String(entry.i), name, packageDir: relativePosix(repoRoot, join(dir, "📦️packages/🦀️rust")), description: entry.pin?.description || `Component crate of ${lib.name}: ${entry.label}`, doc: "", slices: entry.slices, attach: entry.attach, dependsOn: [...deps].sort((a, b) => a - b).map(String), imports: pruned, itemImportLines: [...copiedUses, ...testOnlyUses, ...shimCopies, ...unitImports], externLines: [], innerAttributes, movedItemsText: "", lib: null, test: null });
   }
   return { crates };
 }

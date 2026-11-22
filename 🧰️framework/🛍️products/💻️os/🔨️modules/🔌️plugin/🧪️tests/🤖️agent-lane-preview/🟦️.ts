@@ -44,8 +44,39 @@ function verdict(script: Entry[], cancelled: boolean): Verdict {
   return { fault: refusal((entry as Readonly<{ fault: string | TypedFault }>).fault) };
 }
 
+/** ♻️ A pending original source releases its catalog alias before the shared close selector lets the catalog retire. */
+function checkAgentPreviewCloseOrdering(): void {
+  const source = readFileSync(new URL("../../🧵️instance/📥️staging/🔒️close-ladder/🦀️.rs", import.meta.url), "utf8");
+  const selector = source.slice(source.indexOf("fn close_rung_now"), source.indexOf("fn uncovered_close_frontier"));
+  const override = /if matches!\(rung, CloseRung::(\w+)\) && self\.(original_typed_command)\.pending\(\) \{\s*return CloseRung::(\w+);/.exec(selector);
+  assert(override, "the instance exposes its pending typed source before catalog retirement");
+  assert(override.index < selector.indexOf("if !matches!"), "the original source precedes the late fallback");
+  const quoteStart = source.indexOf("fn close_ladder_demand");
+  const stepStart = source.indexOf("fn close_ladder_step");
+  const quotes = source.slice(quoteStart, stepStart);
+  const steps = source.slice(stepStart);
+  assert.match(quotes, /match self\.close_rung_now\(\)/);
+  assert.match(quotes, /self\.original_typed_command\.close_demands\(\)/);
+  assert.match(steps, /match self\.close_rung_now\(\)/);
+  assert.match(steps, /self\.original_typed_command\.close_step\(cx\)/);
+
+  const shouldReturnAlias = schemaKind({ type: "object", required: ["rung", "original_typed_command"], properties: {
+    rung: { const: override[1] }, [override[2]!]: { const: true },
+  } });
+  const cases = [
+    { rung: "RetainedFields", original_typed_command: true, expected: "TypedOperations" },
+    { rung: "RetainedFields", original_typed_command: false, expected: "RetainedFields" },
+    { rung: "AgentPreview", original_typed_command: true, expected: "AgentPreview" },
+  ];
+  for (const state of cases) assert.equal(shouldReturnAlias(state) ? override[3] : state.rung, state.expected);
+  const pending = { rung: "RetainedFields", original_typed_command: true };
+  assert.equal(shouldReturnAlias(pending) ? override[3] : pending.rung, "TypedOperations");
+  assert.equal(shouldReturnAlias({ ...pending, original_typed_command: false }) ? override[3] : pending.rung, "RetainedFields");
+}
+
 /** ⚖️ The AJV twin of the Rust law `app::agent_lane_preview_tests`: every case of the language-agnostic agent-lane preview fixture answered exactly as written. */
 export function agentLanePreviewVerdictOracle(): number {
+  checkAgentPreviewCloseOrdering();
   const fixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/🤖️agent-lane-preview-verdicts.json", import.meta.url), "utf8")) as Fixture;
   assert(fixture.cases.length >= 9, "the fixture keeps every verdict's case");
   for (const { name, script, cancelled, verdict: expected } of fixture.cases) {

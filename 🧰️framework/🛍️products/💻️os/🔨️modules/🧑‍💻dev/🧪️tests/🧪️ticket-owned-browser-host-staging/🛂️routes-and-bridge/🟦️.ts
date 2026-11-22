@@ -162,7 +162,7 @@ export async function registerRouteAndBridgeTests(vitest: NonNullable<ImportMeta
             continue;
           }
           const kind = value.kind === "open" ? "instance-open" : value.kind === "close" ? "instance-close" : "instance-lifecycle-ack";
-          const payload = value.kind === "open" ? { instance: value.instanceId, activationGeneration: value.activationGeneration, requestSequence: value.requestSequence, appId: "fixture", actor: "tester", config: [], assets: [], capabilities: [], quotas: [] } : value;
+          const payload = value.kind === "open" ? { instance: value.instanceId, purpose: { tag: "ordinary" }, activationGeneration: value.activationGeneration, requestSequence: value.requestSequence, appId: "fixture", actor: "tester", config: [], assets: [], capabilities: [], quotas: [] } : value;
           const before = delivered.length;
           await answer(generation, {}, [{ kind, payload }]);
           expect(delivered, value.kind).toHaveLength(before + 1);

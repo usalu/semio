@@ -88,7 +88,7 @@ test("the host view of the capacity gate maps to the pool's host: an idle farm w
 
 const unitsOf=(count:number,burn=400):OwnerPoolUnitV1[]=>Array.from({length:count},(_all,index)=>({name:`owner-${String(index).padStart(4,"0")}`,kind:"k",expectedMilliseconds:burn,json:{name:`owner-${index}`}}));
 const manifestOf=(units:readonly OwnerPoolUnitV1[],tag:string,config:object):OwnerPoolManifestV1=>{
- const partial={version:1 as const,identity:"identity-"+tag,globals:{projectAuthority:"a",registryDigest:"r",commandRevision:"c",late:false},publisher:"p:"+tag};
+ const partial={version:1 as const,identity:"identity-"+tag,globals:{registryDigest:"r",commandRevision:"c",late:false},publisher:"p:"+tag};
  return{head:{...partial,revision:"revision-a",id:ownerPoolIdV1(partial,units),createdMs:Date.now()},session:Buffer.from(JSON.stringify(config)),units};
 };
 async function world(){

@@ -608,3 +608,20 @@ test("the cache ledger declares the engine's area, sized as a share of the produ
 });
 
 test("the root of every temporary workspace is cleaned up",()=>{rmSync(root,{recursive:true,force:true});expect(existsSync(root)).toBe(false);});
+
+test("the contract's timeoutSeconds and retries bound every remote call of the semio engine and repeat a transport failure or a 5xx, and the rendering says so",async()=>{
+ let calls=0,mode:"hang"|"flaky"|"ok"="hang";
+ const server=Bun.serve({port:0,async fetch(request){calls++;if(mode==="hang")await Bun.sleep(3000);if(mode==="flaky"&&calls<3)return new Response("busy",{status:503});return request.method==="PUT"?new Response("ok"):new Response(new Uint8Array([7,7]));}});
+ try{
+  const base=`http://127.0.0.1:${server.port}/main`,started=Date.now();
+  expect(await semioHttpRemoteV1({url:base,timeoutMilliseconds:300,retries:0}).get("k1"),"a silent server is a miss within the contract's time").toBeUndefined();expect(Date.now()-started).toBeLessThan(1500);expect(calls).toBe(1);
+  calls=0;mode="flaky";
+  expect(await semioHttpRemoteV1({url:base,timeoutMilliseconds:1000,retries:3,backoffMilliseconds:5}).get("k2")).toEqual(new Uint8Array([7,7]));expect(calls,"two 503s repeated, the third answers").toBe(3);
+  calls=0;expect(await semioHttpRemoteV1({url:base,timeoutMilliseconds:1000,retries:1,backoffMilliseconds:5}).get("k3"),"one retry is not enough for two 503s").toBeUndefined();expect(calls).toBe(2);
+  calls=0;mode="ok";await semioHttpRemoteV1({url:base,retries:3}).put("k4",new Uint8Array([1]));expect(calls).toBe(1);
+  const controller=new AbortController();mode="hang";controller.abort();await expect(semioHttpRemoteV1({url:base,retries:3}).get("k5",controller.signal)).rejects.toThrow();
+  const {backend}=await import("../🔌️backend/🟦️.ts"),{resolveRemoteCacheContractV1}=await import("../../../🌐️remote-cache/🟦️.ts"),contract=resolveRemoteCacheContractV1({SEMIO_REMOTE_CACHE_ENDPOINT:`http://127.0.0.1:${server.port}`,SEMIO_REMOTE_CACHE_TIMEOUT_SECONDS:"7",SEMIO_REMOTE_CACHE_RETRIES:"2"})!;
+  const rendering=(await backend.remoteCache!()).render(contract,{});
+  expect(rendering.applied).toEqual(expect.arrayContaining(["timeoutSeconds=7","retries=2"]));expect(rendering.unsupported,"only what the engine really cannot do").toEqual(["compression","download"]);
+ }finally{server.stop(true);}
+},20000);

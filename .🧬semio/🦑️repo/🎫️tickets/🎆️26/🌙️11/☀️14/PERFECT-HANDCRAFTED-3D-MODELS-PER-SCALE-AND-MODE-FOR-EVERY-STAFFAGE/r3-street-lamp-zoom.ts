@@ -1,6 +1,6 @@
 /** 🔦️ One shaded panel of `objects/street-lamp` (source merged over the catalog) zoomed onto a world window, so the luminaire head, the arm joint and the base of a 6 m column can be judged.
  *
- * Usage: `bun r3-street-lamp-zoom.ts --scale N --list body|thermal|structure --turn DEG --tilt DEG --at X,Y,Z --span M [--pose ID] [--cut] [--name tag]`
+ * Usage: `bun r3-street-lamp-zoom.ts --scale N --list body|thermal|structure --turn DEG --tilt DEG --at X,Y,Z --span M [--pose ID] [--cut] [--name tag] [--width pixels]`
  * Output: `🗑️generated/r3-street-lamp/zoom/s<N>.<list>.<name>.png` (1600 x 1200 px), bar = 0.1 m
  * @see ./r3-lib.ts
  * @see ./r3-tower-crane-zoom.ts */
@@ -9,7 +9,7 @@ import { bodyItems, structureItems, thermalItems } from "./volumes-render.ts";
 import { Panel, cameraAt, cli, listsIn, load, queryOf, rigAt, savePng, toScreen, type Item, type Placement } from "./r3-lib.ts";
 import type { ListName } from "./volumes-lib.ts";
 
-const { flag, has } = cli(["--scale", "--list", "--turn", "--tilt", "--at", "--span", "--pose", "--name"]);
+const { flag, has } = cli(["--scale", "--list", "--turn", "--tilt", "--at", "--span", "--pose", "--name", "--width"]);
 const { asset } = load("objects/street-lamp", "r3-street-lamp-zoom.ts");
 const scale = Number(flag("--scale") ?? 50);
 const list = (flag("--list") ?? "body") as ListName;
@@ -21,7 +21,9 @@ for (const e of sm.errors) process.stderr.write(`NOT DRAWN ${e}\n`);
 const body: Item[] = bodyItems(asset, sm, scale).map(({ mesh, color }) => ({ mesh, color }));
 const items: Item[] = list === "body" ? body : (list === "thermal" ? thermalItems(asset, sm, scale) : structureItems(asset, sm, scale)).map(({ mesh, color }) => ({ mesh, color }));
 const cam = cameraAt(Number(flag("--turn") ?? 0), Number(flag("--tilt") ?? 0));
-const [W, H] = [1600, 1200];
+const W = Number(flag("--width") ?? 1600);
+if (!Number.isInteger(W) || W < 64 || W > 1600) throw new Error("Width must be between 64 and 1600 pixels.");
+const H = Math.round(W * 0.75);
 const dot = (a: readonly number[], b: readonly number[]) => a[0]! * b[0]! + a[1]! * b[1]! + a[2]! * b[2]!;
 const place: Placement = { cam, scale: W / span, cx: dot(at, cam.r), cy: dot(at, cam.u), ox: W / 2, oy: H / 2 };
 const panel = new Panel(W, H, [247, 247, 244], 2);

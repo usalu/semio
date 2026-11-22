@@ -1,0 +1,24 @@
+{
+  "dictionary": "Heating and ventilation",
+  "guid": "ce903d9a-a9dc-4158-8372-afb040b773fa",
+  "source": "Temperature probe",
+  "sharedInteger": 19,
+  "overrideInteger": 23,
+  "rawDecimal": 1.25,
+  "description": "Lüftung's Ventil",
+  "status": "A",
+  "invalidDictionaryId": "arbitrary-definition-name",
+  "values": {
+    "probe-a": {
+      "measurement": 1.25,
+      "enabled": false,
+      "sensors": 23,
+      "description": "Lüftung's Ventil",
+      "status": "A"
+    },
+    "probe-b": {
+      "enabled": true,
+      "sensors": 19
+    }
+  }
+}

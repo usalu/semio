@@ -74,5 +74,6 @@ winit = { version = "0.30.12", default-features = false, features = ["rwh_06"] }
 winit = { version = "0.30.12", default-features = false, features = ["rwh_06", "x11", "wayland", "wayland-dlopen"] }
 
 [dev-dependencies]
+semio-framework-test-original-snapshot-owners = { path = "../../../../../../../../../../🔨️modules/🧪️test/🛬️original-snapshot-owners/📦️packages/🦀️rust" }
 semio-framework-value-native-owned = { path = "../../../../../../../../../../🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true, features = ["testkit"] }

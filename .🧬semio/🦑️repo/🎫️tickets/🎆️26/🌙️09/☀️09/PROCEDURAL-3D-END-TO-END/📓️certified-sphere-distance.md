@@ -44,3 +44,11 @@ The retained Distance operator combines the finite axial interval gap with the d
 
 - [Aligned box native proof](./🗑️generated/sphere-cavity-distance-box-green.log)
 - [Aligned box Three.js oracle](./🗑️generated/cylinder-box-distance-oracle.log)
+
+## Orthogonal Boolean results and box shells
+
+The registered Flow Distance operator now measures separation between a spherical probe and finite material retained by an orthogonal Boolean or box Shell. For a sphere outside the material, the exact point-to-material distance at its center, reduced by its radius, gives the gap. A sphere touching or overlapping the material returns zero. The material certificate excludes internal cell seams from the boundary and preserves notch and cavity walls. Rigid placement maps the center into the shell frame before measuring the same Euclidean distance.
+
+The shared neutral fixture covers eleven probes across Fuse, a notched Cut, an enclosed orthogonal cavity, and a rotated and translated box Shell. It exercises corner and diagonal edge gaps, contact, overlap, internal seams and a spherical probe inside a cavity. The authoring-route test constructs each solid through the registered Flow operator and checks both operand orders. Its managed binary has not run during compiler storage reclaim.
+
+The [native source witness](sphere-material-distance-check.py) reproduced four unsupported-admission failures before the change. With the new dispatch, it passed all four geometry groups and both operand orders on all eleven probes, using the production material-cell Boolean, exposed-boundary distance, and sphere gap functions. Manifold independently constructs the Boolean or shell, and Three.js computes the point-to-triangle distance with Manifold ray parity for membership. The full oracle passed six tests and 171 assertions. Scoped whitespace and compiler-source preflight on WASI, Apple Silicon, Windows x64 and Linux x64 passed. The native registry uses 3,988 of 4,000 permitted source lines.

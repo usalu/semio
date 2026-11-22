@@ -188,6 +188,8 @@
     "./artifacts/native-build/storage/whole": "./📦️artifacts/🏗️native-build/💾️storage/🧹️whole/🟦️.ts",
     "./artifacts/native-build/storage/image/information": "./📦️artifacts/🏗️native-build/💾️storage/🍎️image/📥️information/🟦️.ts",
     "./artifacts/native-build/storage/platform/boot": "./📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🥾️boot/🟦️.ts",
+    "./artifacts/native-build/storage/image/stranded": "./📦️artifacts/🏗️native-build/💾️storage/🍎️image/🏚️stranded/🟦️.ts",
+    "./artifacts/native-build/storage/image/owners": "./📦️artifacts/🏗️native-build/💾️storage/🍎️image/👤️owners/🟦️.ts",
     "./artifacts/native-build/storage/image/roster": "./📦️artifacts/🏗️native-build/💾️storage/🍎️image/📡️roster/🟦️.ts",
     "./leases/retirement/sweep": "./🔒️leases/♻️retirement/🧹️sweep/🟦️.ts",
     "./owned-execution/capture/input": "./🎛️owned-execution/📥️capture/📥️input/🟦️.ts",

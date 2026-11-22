@@ -42,7 +42,7 @@ fn close_store(mut store: Process3dStore) {
     let mut disposer = semio_plugin::ArtifactDocumentStoreDisposer::<Process3dSnapshot, Process3dMutation>::new();
     for _ in 0..1_048_576 {
         let demand = disposer.retirement_demands(&store, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("Process3d fixture store close demand");
-        match disposer.close_step(&mut store, semio_s_artifact_process_process3d_host::process3d_demand_grant(demand)).expect("Process3d fixture store close step") {
+        match disposer.close_step_cold(&mut store, semio_s_artifact_process_process3d_host::process3d_demand_grant(demand)).expect("Process3d fixture store close step") {
             semio_plugin::PluginLifecycleStep::Complete(_) => {
                 assert!(disposer.terminal_is_empty(&store));
                 return;

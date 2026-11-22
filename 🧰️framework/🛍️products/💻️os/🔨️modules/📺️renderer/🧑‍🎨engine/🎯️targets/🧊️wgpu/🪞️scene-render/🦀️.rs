@@ -40,6 +40,10 @@ use semio_renderer_wgpu_icon_host::{render_icon_render};
 mod scene_input;
 pub use scene_input::*;
 
+#[path = "../../../🧱️elements/🎞️Scenes/🎯️targets/🧊️wgpu/🩹️map-unavailable/🦀️.rs"]
+mod map_unavailable;
+pub use map_unavailable::render_map_unavailable;
+
 #[path = "../../../🧱️elements/🎞️Scenes/🎯️targets/🧊️wgpu/🎨️scene-render-entry/🦀️.rs"]
 mod scene_render_entry;
 pub use scene_render_entry::*;

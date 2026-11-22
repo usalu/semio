@@ -18,6 +18,7 @@ import {toolchainsActivatedByV1} from "../🪛️toolchain-activation/🟨️.mj
 import {buildInputPathMatchesV1,compactSourceInputs} from "../🟨️.mjs";
 import fixture from "./🧫️fixtures/🔣️.json";
 import {readInferenceSourceV1} from "../../🕸️graph/📥️inference/🧪️tests/📖️source/🟦️.ts";
+import {INFERENCE_LIMITS_V1} from "../../🕸️graph/📥️inference/🧬️schema/🟨️.mjs";
 
 test("selected source discovery compiles each reached glob once per operation",async()=>{
  const source=readInferenceSourceV1("owner-discovery"),tree=ts.createSourceFile("inference.mjs",source,ts.ScriptTarget.Latest,true,ts.ScriptKind.JS),declaration=(name:string)=>tree.statements.find(node=>ts.isFunctionDeclaration(node)&&node.name?.text===name&&node.body!==undefined);
@@ -35,7 +36,7 @@ test("selected source discovery compiles each reached glob once per operation",a
   for(let attempt=0;attempt<2;attempt++){
    const original=globalThis.RegExp,compiled:string[]=[],directoriesRead:string[]=[];let result:unknown;
    globalThis.RegExp=new Proxy(original,{construct(target,args,newTarget){compiled.push(String(args[0]));return Reflect.construct(target,args,newTarget);}});
-   try{result=await runInNewContext(program,{patterns:row.patterns,workspaceRoot,context:{},loadedProjectInputs:inputModule,isOpaqueSourcePathV1,opaqueSourceInputExclusionsV1,POLICY:{generatedDirectories:[]},EXAMPLE_COLLECTIONS:[],WORKSPACE_OWNERSHIP:{collections:{moduleMember:"modules"}},buildPath:(path:string)=>path.replaceAll("\\","/"),join,dirname,yieldInferenceV1:async()=>{},addFile:()=>{},existsSync:(path:string)=>directories.has(path)||row.files.includes(relative(workspaceRoot,path).replaceAll("\\","/")),lstatSync:(path:string)=>({isDirectory:()=>directories.has(path)}),readdirSync:(path:string)=>{directoriesRead.push(relative(workspaceRoot,path).replaceAll("\\","/")||".");return [...(directories.get(path)??new Map())].map(([name,directory])=>({name,isSymbolicLink:()=>false,isDirectory:()=>directory,isFile:()=>!directory}));}});}finally{globalThis.RegExp=original;}
+   try{result=await runInNewContext(program,{INFERENCE_LIMITS_V1,patterns:row.patterns,workspaceRoot,context:{},loadedProjectInputs:inputModule,isOpaqueSourcePathV1,opaqueSourceInputExclusionsV1,POLICY:{generatedDirectories:[]},EXAMPLE_COLLECTIONS:[],WORKSPACE_OWNERSHIP:{collections:{moduleMember:"modules"}},buildPath:(path:string)=>path.replaceAll("\\","/"),join,dirname,yieldInferenceV1:async()=>{},addFile:()=>{},existsSync:(path:string)=>directories.has(path)||row.files.includes(relative(workspaceRoot,path).replaceAll("\\","/")),lstatSync:(path:string)=>({isDirectory:()=>directories.has(path)}),readdirSync:(path:string)=>{directoriesRead.push(relative(workspaceRoot,path).replaceAll("\\","/")||".");return [...(directories.get(path)??new Map())].map(([name,directory])=>({name,isSymbolicLink:()=>false,isDirectory:()=>directory,isFile:()=>!directory}));}});}finally{globalThis.RegExp=original;}
    expect(result,row.id).toEqual(row.expected);
    if("directoriesRead" in row)expect(directoriesRead.sort(),row.id).toEqual(row.directoriesRead);
    expect(compiled.length,row.id+":"+attempt).toBe(row.compilations);

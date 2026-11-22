@@ -471,6 +471,47 @@ pub fn select_open_index<'a>(intent: SelectOpenIntent, labels: impl IntoIterator
 //#endregion 🔖️Keyboard
 
 
+//#region 🔖️Segmented
+/// 🧱️ The rect of segment `index` of `count` equal segments across `bounds` — the `flex-1` cells of React's radio `ToggleGroup`
+/// (`🎛️ToggleGroup/🟦️.tsx` `ToggleGroupItem`), mirrored under `rtl`.
+pub fn select_segment_rect(bounds: Rect, count: usize, index: usize, rtl: bool) -> Rect {
+    if count == 0 || index >= count {
+        return Rect::new(bounds.x, bounds.y, 0.0, bounds.h);
+    }
+    let width = bounds.w / count as f32;
+    let slot = if rtl { count - 1 - index } else { index };
+    Rect::new(bounds.x + width * slot as f32, bounds.y, width, bounds.h)
+}
+
+/// 🎯️ The segment under horizontal position `x`, or `None` outside `bounds`.
+pub fn select_segment_at(bounds: Rect, count: usize, x: f32, rtl: bool) -> Option<usize> {
+    if count == 0 || bounds.w <= 0.0 || x < bounds.x || x >= bounds.x + bounds.w {
+        return None;
+    }
+    let slot = (((x - bounds.x) / bounds.w * count as f32) as usize).min(count - 1);
+    Some(if rtl { count - 1 - slot } else { slot })
+}
+
+/// 🔁️ The segment a key moves the radio choice to (`ToggleGroup`'s `moveFocus` with `loop` on): the inline arrows step and wrap,
+/// `Home`/`End` jump, vertical arrows are ignored, and a disabled segment is skipped.
+pub fn select_segment_key(current: Option<usize>, count: usize, key: &str, rtl: bool, disabled: impl Fn(usize) -> bool) -> Option<usize> {
+    let enabled: Vec<usize> = (0..count).filter(|index| !disabled(*index)).collect();
+    if enabled.is_empty() {
+        return None;
+    }
+    let (previous, next) = if rtl { ("ArrowRight", "ArrowLeft") } else { ("ArrowLeft", "ArrowRight") };
+    let position = current.and_then(|current| enabled.iter().position(|index| *index == current)).unwrap_or(0);
+    let target = match key {
+        "Home" => 0,
+        "End" => enabled.len() - 1,
+        key if key == previous => (position + enabled.len() - 1) % enabled.len(),
+        key if key == next => (position + 1) % enabled.len(),
+        _ => return None,
+    };
+    Some(enabled[target]).filter(|index| Some(*index) != current)
+}
+//#endregion 🔖️Segmented
+
 #[cfg(test)]
 #[path="../🧪️tests/🔬️wgpu-select-keyboard/🦀️.rs"]
 mod tests;

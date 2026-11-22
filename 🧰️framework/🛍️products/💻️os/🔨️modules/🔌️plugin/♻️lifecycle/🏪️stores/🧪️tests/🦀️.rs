@@ -33,7 +33,7 @@ impl ArtifactOwnedDisposer<String> for OriginalDisposer {
  }
  fn close_step(&mut self,source:&mut String,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<PluginLifecycleStep,Fault>{
   let grant=effect.grant();
-  if let Some(body)=self.body.as_mut(){let step=body.step(grant).map_err(|error|Fault::from(error.into_message()))?;if body.terminal_is_empty(){self.body=None;}return Ok(PluginLifecycleStep::retained(step,self.terminal_is_empty(source)));}
+  if let Some(body)=self.body.as_mut(){let semio_framework_value::RetainedWorkPoll::Complete(outcome)=body.step(grant.maximum_copy_bytes,effect)else{return Ok(PluginLifecycleStep::Progress(Default::default()))};let step=outcome.result.map_err(|_|Fault::from(String::from("stage law retirement refused")))?;if body.terminal_is_empty(){self.body=None;}return Ok(PluginLifecycleStep::retained(step,self.terminal_is_empty(source)));}
   let original=std::mem::take(source);self.body=Some(ControlledRetirement::new(original).unwrap_or_else(|_|panic!("String owns its physical field cursor")));self.started=true;Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:std::mem::size_of::<String>(),..Default::default()}))
  }
  fn terminal_is_empty(&self,source:&String)->bool{self.started&&self.body.is_none()&&source.capacity()==0}
@@ -62,4 +62,14 @@ fn original_transient_detach_allocates_no_replacement_and_retires_exact_frames()
  let mut allocated=birth.requested_bytes;let mut released=0;let mut denied_capacity=false;let mut denied_release=false;
  for _ in 0..4096{let demand=original_disposal_demands(&disposer,&store,7).unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:7.max(demand.copy_bytes),maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};if demand.capacity_bytes>0&&!denied_capacity{let (result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||original_disposal_step_cold(&mut disposer,&mut store,RetainedCloneGrant{maximum_capacity_bytes:demand.capacity_bytes-1,..grant}));assert!(!result.unwrap().1);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));denied_capacity=true;}if demand.release_bytes>0&&!denied_release{let (result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||original_disposal_step_cold(&mut disposer,&mut store,RetainedCloneGrant{maximum_release_bytes:demand.release_bytes-1,..grant}));assert!(!result.unwrap().1);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));denied_release=true;}let (result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||original_disposal_step_cold(&mut disposer,&mut store,grant));let (step,ready)=result.unwrap();let receipt=step.progress().unwrap();assert!(receipt.fits(grant));assert_eq!(receipt.retained_capacity_bytes,heap.requested_bytes);assert_eq!(receipt.released_bytes,heap.released_bytes);allocated+=heap.requested_bytes;released+=heap.released_bytes;if ready{break;}}
  assert!(denied_capacity&&denied_release&&disposer.is_none());assert_eq!(allocated,released);let (_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(store));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
+}
+
+/// 🧮️ Every store close receipt is charged the independent work the neutral corpus computes: unmetered physical moves and box releases cost one unit, idle turns and metered work keep their own.
+#[test]
+fn original_store_close_work_charges_every_unmetered_physical_receipt(){
+ let corpus:serde_json::Value=serde_json::from_str(fixture_text!("../../🧫️fixtures/🔣️.json")).unwrap();
+ for row in corpus["closeWork"].as_array().unwrap(){
+  let progress=semio_framework_value::retained_clone::RetainedCloneProgress{copied_items:row["copiedItems"].as_u64().unwrap() as usize,released_bytes:row["releasedBytes"].as_u64().unwrap() as usize,..Default::default()};
+  assert_eq!(semio_plugin_instance_ladders::ladders_lifecycle_stores::original_close_work(row["performed"].as_u64().unwrap().into(),&progress),row["spent"].as_u64().unwrap().into(),"{}",row["name"]);
+ }
 }

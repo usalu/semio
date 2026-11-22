@@ -37,6 +37,21 @@ pub struct SurfaceLineDraw {
     pub vertices: Vec<LineVertex3>,
 }
 
+/// ☁️ One point-cloud vertex.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct PointVertex3 {
+    pub position: [f32; 3],
+    pub color: [f32; 4],
+}
+
+/// ☁️ An unlit point-sprite layer within a [`SurfacePass`]: `size` pixels per point, perspective-shrunk when `size_attenuation`.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct SurfacePointDraw {
+    pub vertices: Vec<PointVertex3>,
+    pub size: f32,
+    pub size_attenuation: bool,
+}
+
 /// 🖼️ One textured-mesh instance within a [`SurfacePass`].
 #[derive(Clone, Debug)]
 pub struct TexturedMeshInstance {
@@ -113,6 +128,7 @@ pub struct SurfacePass {
     pub draws: Vec<SurfaceMeshDraw>,
     pub translucent_draws: Vec<SurfaceMeshDraw>,
     pub line_draws: Vec<SurfaceLineDraw>,
+    pub point_draws: Vec<SurfacePointDraw>,
     pub textured_draws: Vec<SurfaceTexturedDraw>,
     pub layer_index: usize,
     pub quad_watermark: usize,

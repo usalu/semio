@@ -5,7 +5,7 @@ import schema from "../🔣️.json";
 import fixture from "./🔣️.json";
 
 test("the World3d brush descriptor agrees with independent schema validation", () => {
-  const validate = new Ajv().compile(schema);
+  const validate = new Ajv({ multipleOfPrecision: 7 }).compile(schema);
   for (const input of fixture.accepted) {
     expect(validate(input)).toBe(true);
     expect(parseTerrainBrushAction(input)).toEqual(input);

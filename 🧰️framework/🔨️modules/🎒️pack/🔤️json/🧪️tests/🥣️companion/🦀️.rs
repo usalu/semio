@@ -1,1 +1,1 @@
-//! 🥣️ Companion tests of pack-json. The laws live in the test targets `retirement`, `tree` and `laws` of this package; each target mounts its own closure of test files over the shared vocabulary in `🧰️support`, so every closure keeps real margin under the Rust source boundary.
+//! 🥣️ Companion tests of pack-json. The `retirement`, `tree`, `tree-wire` and `laws` targets share `🧰️support` and mount only the laws they run.

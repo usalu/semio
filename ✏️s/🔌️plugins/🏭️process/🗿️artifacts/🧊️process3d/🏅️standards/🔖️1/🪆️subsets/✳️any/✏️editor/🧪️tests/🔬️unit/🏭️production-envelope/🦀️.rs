@@ -177,3 +177,44 @@ async fn vcs_artifact_app_production_maintenance_swap_publishes_the_deep_documen
     assert_eq!((capability.parameters.len(), capability.rules.len(), accepted_snapshot.stock_label.as_str()), (3, 2, "Beam"));
     assert!(accepted.acknowledge_artifact_store_replacement(accepted_handle).expect("accepted Process3d terminal ACK"));
 }
+
+/// 🧹️ Valid history arrays settle before an invalid genesis triggers terminal decode retirement.
+#[semio_framework_async_macros::async_test]
+async fn vcs_artifact_app_production_retires_history_before_faulting_on_genesis() {
+    let wire = include_bytes!("../../🧫️fixtures/production-envelope-history-fault/🔣️.json");
+    let fixture: serde_json::Value = serde_json::from_slice(wire).expect("production history fault fixture JSON");
+    let vcs = fixture["vcs"].as_object().expect("production history fault VCS object");
+    for key in ["alternatives", "changes", "checkpoints", "edits"] {
+        assert!(vcs[key].as_array().is_some_and(Vec::is_empty));
+    }
+    assert!(vcs.get("initialPack").is_some_and(serde_json::Value::is_null));
+
+    let mut app = super::context::unseeded_app_with_registry();
+    let base_generation = app.artifact_generation_now();
+    let handle = admit_production_envelope(&mut app, wire);
+    assert_eq!(drive_production_envelope(&mut app, handle).await, semio_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault);
+    assert!(app.0.artifact_envelope_decode_worker_owners_are_terminal(handle));
+    assert_eq!(app.artifact_generation_now(), base_generation);
+}
+
+#[test]
+fn process3d_archived_mutation_wire_matches_its_native_receiver() {
+    use ::semio_os_kernel::os_dsl::original_receiving::check_receiving_round_trip;
+    use ::semio_os_kernel::OpBinary;
+    use ::semio_framework_value::DslValue;
+
+    let wire = include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/❌delete-machine/➖️empties/🦠️mutation/🔣️.json");
+    let fixture: serde_json::Value = serde_json::from_str(wire).expect("Process3d archive operation fixture");
+    let mutation: Process3dMutation = semio_framework_pack_json::from_json_str(wire, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("Process3d archive operation");
+    let encoded = mutation.encode_op().expect("persisted DeleteMachine payload");
+    let packed = ::semio_os_kernel::pack_rt::decode_pack_value(&encoded).expect("one complete mutation Pack value");
+    for field in ["mutation", "id"] {
+        assert_eq!(packed.get(field).and_then(DslValue::as_str), fixture[field].as_str());
+    }
+    assert!(Process3dMutation::decode_op(&encoded[..encoded.len() - 1]).is_err());
+    assert!(Process3dMutation::decode_op(&[2, 8, 3, b's', b'a', b'w']).is_err());
+
+    let mut mutations = semio_s_artifact_process_process3d_mutations::standards::v1::subsets::any::io::binary::mutations::process3d_all_retained_mutation_fixtures_for_test();
+    mutations.push(mutation);
+    check_receiving_round_trip(&mutations).expect("persisted operation bytes must be accepted by the original native operation receiver");
+}

@@ -9,44 +9,7 @@ surface_law!(din16798_surface_laws_hold, semio_s_artifact_norm_din16798_editor::
 surface_law!(iso16757_surface_laws_hold, semio_s_artifact_norm_iso16757_editor::Iso16757PlayApp, semio_s_artifact_norm_iso16757_viewer::Iso16757Viewer);
 surface_law!(vdi3805_surface_laws_hold, semio_s_artifact_norm_vdi3805_editor::Vdi3805PlayApp, semio_s_artifact_norm_vdi3805_viewer::Vdi3805Viewer);
 
-set_active_example_case!(
-    din4108_set_active_example_loads_demo,
-    semio_s_artifact_norm_din4108_editor::create_din4108_app,
-    semio_s_artifact_norm_din4108_editor::Din4108Command,
-    semio_s_artifact_norm_din4108::editor::din4108::commands::set_active_example,
-    semio_s_artifact_norm_din4108_examples::demo::ID,
-    semio_s_artifact_norm_din4108_examples::demo::PRIMARY_TEXT,
-    semio_s_artifact_norm_din4108_model::Din4108Snapshot
-);
-set_active_example_case!(
-    din16798_set_active_example_loads_demo,
-    semio_s_artifact_norm_din16798_editor::create_din16798_app,
-    semio_s_artifact_norm_din16798_editor::Din16798Command,
-    semio_s_artifact_norm_din16798::editor::din16798::commands::set_active_example,
-    semio_s_artifact_norm_din16798_examples::demo::ID,
-    semio_s_artifact_norm_din16798_examples::demo::PRIMARY_TEXT,
-    semio_s_artifact_norm_din16798_model::Din16798Snapshot
-);
-set_active_example_case!(
-    iso16757_set_active_example_loads_demo,
-    semio_s_artifact_norm_iso16757_editor::create_iso16757_app,
-    semio_s_artifact_norm_iso16757_editor::Iso16757Command,
-    semio_s_artifact_norm_iso16757::editor::iso16757::commands::set_active_example,
-    semio_s_artifact_norm_iso16757_examples::demo::ID,
-    semio_s_artifact_norm_iso16757_examples::demo::PRIMARY_TEXT,
-    semio_s_artifact_norm_iso16757_model::Iso16757Snapshot
-);
-set_active_example_case!(
-    vdi3805_set_active_example_loads_demo,
-    semio_s_artifact_norm_vdi3805_editor::create_vdi3805_app,
-    semio_s_artifact_norm_vdi3805_editor::Vdi3805Command,
-    semio_s_artifact_norm_vdi3805::editor::vdi3805::commands::set_active_example,
-    semio_s_artifact_norm_vdi3805_examples::demo::ID,
-    semio_s_artifact_norm_vdi3805_examples::demo::PRIMARY_TEXT,
-    semio_s_artifact_norm_vdi3805_model::Vdi3805Snapshot
-);
-
-roster_examples_case!(din4108_roster_examples_all_load, semio_s_artifact_norm_din4108_editor::Din4108PlayApp, semio_s_artifact_norm_din4108::editor::din4108::commands::set_active_example, semio_s_artifact_norm_din4108_model::Din4108Snapshot, "🧱️din4108");
-roster_examples_case!(din16798_roster_examples_all_load, semio_s_artifact_norm_din16798_editor::Din16798PlayApp, semio_s_artifact_norm_din16798::editor::din16798::commands::set_active_example, semio_s_artifact_norm_din16798_model::Din16798Snapshot, "🌬️din16798");
-roster_examples_case!(iso16757_roster_examples_all_load, semio_s_artifact_norm_iso16757_editor::Iso16757PlayApp, semio_s_artifact_norm_iso16757::editor::iso16757::commands::set_active_example, semio_s_artifact_norm_iso16757_model::Iso16757Snapshot, "📇️iso16757");
-roster_examples_case!(vdi3805_roster_examples_all_load, semio_s_artifact_norm_vdi3805_editor::Vdi3805PlayApp, semio_s_artifact_norm_vdi3805::editor::vdi3805::commands::set_active_example, semio_s_artifact_norm_vdi3805_model::Vdi3805Snapshot, "🏭️vdi3805");
+roster_examples_case!(din4108_roster_examples_all_load, semio_s_artifact_norm_din4108_editor::Din4108PlayApp, semio_s_artifact_norm_din4108_model::Din4108Snapshot, "🧱️din4108");
+roster_examples_case!(din16798_roster_examples_all_load, semio_s_artifact_norm_din16798_editor::Din16798PlayApp, semio_s_artifact_norm_din16798_model::Din16798Snapshot, "🌬️din16798");
+roster_examples_case!(iso16757_roster_examples_all_load, semio_s_artifact_norm_iso16757_editor::Iso16757PlayApp, semio_s_artifact_norm_iso16757_model::Iso16757Snapshot, "📇️iso16757");
+roster_examples_case!(vdi3805_roster_examples_all_load, semio_s_artifact_norm_vdi3805_editor::Vdi3805PlayApp, semio_s_artifact_norm_vdi3805_model::Vdi3805Snapshot, "🏭️vdi3805");

@@ -5,7 +5,7 @@
 use crate::viewer::puzzle5d::modes::view::windows::board2d;
 
 use crate::viewer::puzzle5d::modes::view::windows::world3d;
-use semio_plugin::create_default_layout;
+use semio_plugin::{create_default_layout, Axis};
 use semio_ui_locale::LocalizedLabel;
 use semio_plugin::ModeDefinition;
 use semio_plugin::WindowLayout;
@@ -21,6 +21,6 @@ pub fn definition() -> ModeDefinition {
 /// 🪟️ The same paired 40/60 split the editor's `edit` mode opens with — board pane on the left,
 /// world pane on the right — so a read-only 5d document reads the way the edited one looks.
 pub fn layout() -> WindowLayout {
-    create_default_layout(&[board2d::WINDOW_KIND_ID.into(), world3d::WINDOW_KIND_ID.into()], "row", Some(&[40.0, 60.0]), Some(&["Puzzle 2D".into(), "Puzzle 3D".into()]))
+    create_default_layout(&[board2d::WINDOW_KIND_ID.into(), world3d::WINDOW_KIND_ID.into()], Axis::Horizontal, Some(&[0.4, 0.6]), Some(&["Puzzle 2D".into(), "Puzzle 3D".into()]))
 }
 //#endregion 🔖️Definition

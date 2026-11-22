@@ -17,6 +17,9 @@ pub(super) fn evaluate_zone(doc: &semio_s_artifact_norm_din16798_model::Din16798
     check_zone_temperatures(doc, zone, &mut out, cat, usage, &path);
     check_zone_clothing_insulation(doc, zone, &mut out, cat, &path);
     check_zone_air_quality(doc, zone, annex, &mut out, cat, usage, pollution, method, &path, linked_name, linked_type);
+    if let Some(result) = unoccupied_ventilation_report::check(zone, usage, doc.annex) {
+        out.push(result);
+    }
     check_zone_humidity(doc, zone, linked, &mut out, cat, &path);
     check_zone_light_noise_and_draught(doc, zone, &mut out, cat, usage, &path);
     out

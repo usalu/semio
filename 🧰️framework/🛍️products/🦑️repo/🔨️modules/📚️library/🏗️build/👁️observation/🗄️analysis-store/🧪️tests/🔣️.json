@@ -1,0 +1,10 @@
+{
+  "domain": "source-analysis-store/1",
+  "minimumSourceBytes": 16384,
+  "cases": [
+    { "root": "/Users/a/semio", "path": "/Users/a/semio/🧰️framework/x/📜️script.ts", "provider": "build:command-imports:v1:aa", "revision": "r1", "sha": "1111111111111111111111111111111111111111111111111111111111111111", "bytes": 20000 },
+    { "root": "/home/b/work/semio", "path": "/home/b/work/semio/🧰️framework/x/📜️script.ts", "provider": "build:command-imports:v1:aa", "revision": "r1", "sha": "1111111111111111111111111111111111111111111111111111111111111111", "bytes": 20000 },
+    { "root": "/Users/a/semio", "path": "/Users/a/semio/small.ts", "provider": "p", "revision": "r", "sha": "2222222222222222222222222222222222222222222222222222222222222222", "bytes": 100 },
+    { "root": "/Users/a/semio", "path": "/elsewhere/big.ts", "provider": "p", "revision": "r", "sha": "3333333333333333333333333333333333333333333333333333333333333333", "bytes": 99999 }
+  ]
+}

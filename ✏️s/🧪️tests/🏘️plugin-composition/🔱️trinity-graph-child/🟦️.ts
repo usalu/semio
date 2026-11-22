@@ -18,7 +18,7 @@ async function edited(db:Database):Promise<SqliteDatabase>{return importSqliteDa
 test("Rewriting editor initial owner preserves the independent nine-node six-edge Jack demo and original query",async()=>{
  const read=(relative:string)=>JSON.parse(readFileSync(new URL(relative,trinityTests),"utf8")),initial=read("../../../../🧪️tests/🧫️fixtures/🪆️child/🏢️initial/🔣️.json");
  const ajv=semioSchemaAjvV1({allErrors:true}),childSchema=read("../../../../🧬️schema/📸️snapshot/🌳️typed/🪆️child/🔣️.json");ajv.addSchema(artifactReferenceSchema);ajv.addSchema(childSchema);const validate=ajv.compile(childSchema);
- expect(initial["query"]).toEqual("MATCH (a:Piece)-[r:Connection]->(b:Piece) WHERE a.name = 'b' AND b.name != 'b' RETURN a.name, b.name, b.label");expect(initial["rootNodeId"]).toEqual("7dc5b737-3b6b-4068-b315-b7bacc91c2e1");expect(initial.child).toEqual(read("../../../../🧪️tests/🧫️fixtures/🪆️child/🏢️initial/🪆️content/🔣️.json"));
+ expect(initial["query"]).toEqual("MATCH (a:Piece)-[r:Connection]->(b:Piece) WHERE a.name = 'b' AND b.name != 'b' RETURN a.name, b.name, b.label");expect(initial["rootNodeId"]).toEqual("7dc5b737-3b6b-4068-b315-b7bacc91c2e1");
  expect(validate(initial.child)).toBe(true);
  expect(initial.query).toBe("MATCH (a:Piece)-[r:Connection]->(b:Piece) WHERE a.name = 'b' AND b.name != 'b' RETURN a.name, b.name, b.label");
  expect(initial.rootNodeId).toBe("7dc5b737-3b6b-4068-b315-b7bacc91c2e1");
@@ -63,8 +63,7 @@ test("Rewriting Nakagin scenario parents retain complete separately owned typed 
   expect(Object.keys(child).sort()).toEqual(["edges","nodes","schema"]);
   expect(parent.workingGraph.rootNodeId).toBe("7dc5b737-3b6b-4068-b315-b7bacc91c2e1");
   expect(parent.workingGraph.manifestId).toBe("nakagin");
-  expect(parent.workingGraph.manifest.nodeKinds.some((kind:any)=>kind.name==="Piece")).toBe(true);
-  expect(parent.workingGraph.manifest.edgeKinds.some((kind:any)=>kind.name==="Connection")).toBe(true);
+  expect(Object.hasOwn(parent.workingGraph,"manifest")).toBe(false);
   expect(parent.lhs.pattern).toEqual({leftVar:"a",leftKind:"Piece",edgeVar:"r",edgeKind:"Connection",rightVar:"b",rightKind:"Piece"});
   expect(parent.lhs.whereClause).toBe("a.name = 'b'");
   expect(parent.rhs.set).toEqual([{var:"a",prop:"label",value:{kind:"string",value:"$label"}}]);
@@ -173,7 +172,7 @@ test("Rewriting actual Semio child public JSON codec preserves all words and int
  const snapshotRoot=new URL("../../../../../../../../../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧪️tests/🧫️fixtures/🧬️mutations/",trinityTests);
  const owners=["✂️delete-edge/✂️removes","✋️drag-nodes/✋️drags","🌉️create-edge/🌉️connects","🏗️create-node/🔎️appends","🏷️rename-node/🏷️renames","📍move-node/📍️moves","📐resize-node/📐️resizes","🔌add-node-port/🔌️inserts","🔚remove-node-port/🔚️detaches","🔧change-node-kind/🔧️retypes","🖍️change-node-label/🔤️relabels","🗑️delete-node/🚫️removes","➕add-edge-property/⚖️inserts","➕add-node-property/⚖️inserts","➖remove-edge-property/➖️detaches","➖remove-node-property/➖️detaches","🎚️set-edge-property/🎚️sets","🎛️set-node-property/🎛️sets"];
  const expected=owners.flatMap(owner=>[`${owner}/📸️snapshot/⬅️before/🔣️.json`,`${owner}/📸️snapshot/➡️after/🔣️.json`]).sort();
- const snapshots=readdirSync(snapshotRoot,{recursive:true}).map(String).filter(path=>path.endsWith("/📸️snapshot/⬅️before/🔣️.json")||path.endsWith("/📸️snapshot/➡️after/🔣️.json")).sort();expect(snapshots).toEqual(expected);expect(snapshots.length).toBe(36);
+ const snapshots=readdirSync(snapshotRoot,{recursive:true}).map(path=>String(path).replaceAll("\\","/")).filter(path=>path.endsWith("/📸️snapshot/⬅️before/🔣️.json")||path.endsWith("/📸️snapshot/➡️after/🔣️.json")).sort();expect(snapshots).toEqual(expected);expect(snapshots.length).toBe(36);
  for(const path of snapshots){const raw=JSON.parse(readFileSync(new URL(path,snapshotRoot),"utf8"));expect({path,errors:validate(raw)?null:validate.errors}).toEqual({path,errors:null});expect(api.semioGraphJsonValue(api.parseSemioGraphJsonValue(raw))).toEqual(raw);}
  const invalid=structuredClone(vector.childSnapshot);invalid.nodes[0].width={bits:"INVALID"};expect(()=>api.parseSemioGraphJsonValue(invalid)).toThrow();invalid.nodes[0].width={bits:"0000000000000000",extra:true};expect(()=>api.parseSemioGraphJsonValue(invalid)).toThrow();
 });

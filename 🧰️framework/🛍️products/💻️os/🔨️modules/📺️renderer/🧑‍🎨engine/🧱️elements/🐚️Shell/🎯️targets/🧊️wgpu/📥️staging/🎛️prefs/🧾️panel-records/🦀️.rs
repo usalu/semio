@@ -40,7 +40,7 @@ pub fn settings_select_row_with(id: &str, label: &str, value: &str, options: Vec
         description: None,
         required: None,
         error: None,
-        child: Box::new(UiNode::Select(UiSelectNode {
+        child: Box::new(UiNode::Select(UiSelectNode { appearance: Default::default(),
             presence: UiPresence::default(),
             id: id.to_string(),
             value: value.to_string(),
@@ -59,7 +59,7 @@ pub fn settings_tree_select_item_with(id: &str, label: &str, value: &str, option
     UiTreeItemNode {
         id: id.to_string(),
         label: Label::data(label),
-        control: Some(UiControlNode::Select(UiSelectNode {
+        control: Some(UiControlNode::Select(UiSelectNode { appearance: Default::default(),
             presence: UiPresence::default(),
             id: id.to_string(),
             value: value.to_string(),

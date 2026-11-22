@@ -9,15 +9,22 @@
     {
       "name": "refuse-sourceBinding",
       "gate": "sourceBinding",
-      "needle": "OriginalToolSourceBinding::borrow(cx)",
-      "replacement": "OriginalToolSourceBinding::borrow(foreign)",
+      "needle": "let binding=semio_framework_job::OriginalSourceBinding::borrow(cx)",
+      "replacement": "let binding=semio_framework_job::OriginalSourceBinding::borrow(foreign)",
       "accepted": false
     },
     {
       "name": "refuse-missing-owner-mount",
       "gate": "sourceBinding",
-      "needle": "mount_original_reserved_owners(",
-      "replacement": "removed_original_reserved_owners(",
+      "needle": "MountedTypedCommandFullOperation::<A>::admit_original_reserved(",
+      "replacement": "MountedTypedCommandFullOperation::<A>::unfunded_mount(",
+      "accepted": false
+    },
+    {
+      "name": "refuse-foreign-wire-registry",
+      "gate": "sourceBinding",
+      "needle": "cursor.advance(&*self.tools.tool_jobs,cx,&mut owner.wire_construction,&mut owner.admission)",
+      "replacement": "cursor.advance(&foreign_registry,cx,&mut owner.wire_construction,&mut owner.admission)",
       "accepted": false
     },
     {
@@ -30,8 +37,8 @@
     {
       "name": "refuse-callerParent",
       "gate": "callerParent",
-      "needle": "cx.original_source_parent()?.admit_loan(cx)",
-      "replacement": "cx.recreated_source()",
+      "needle": "cx.original_source_parent()?.admit_loan(&mut *pending.source,cx)",
+      "replacement": "foreign.original_source_parent()?.admit_loan(&mut *pending.source,cx)",
       "accepted": false
     },
     {
@@ -44,8 +51,8 @@
     {
       "name": "refuse-producerContext",
       "gate": "producerContext",
-      "needle": "ArtifactReservedToolJob::admit_mounted(&mut self.reserved_producer,&mut candidate,&self.operation,cx)",
-      "replacement": "ArtifactReservedToolJob::admit_mounted(&mut self.reserved_producer,&mut candidate,&self.operation,foreign)",
+      "needle": "ArtifactReservedToolJob::admit_mounted(&mut self.reserved_producer,&mut self.reserved_construction,&self.operation,cx)",
+      "replacement": "ArtifactReservedToolJob::admit_mounted(&mut self.reserved_producer,&mut self.reserved_construction,&self.operation,foreign)",
       "accepted": false
     },
     {
@@ -58,21 +65,21 @@
     {
       "name": "refuse-workerBudget",
       "gate": "workerBudget",
-      "needle": "cx.with_original_work_loan(step_fuel,step_deadline_us,|same|session.pump_one_for_interactive_turn(same))",
-      "replacement": "session.pump_one_for_interactive_turn(foreign)",
+      "needle": "loaned.with_original_work_loan(step_fuel,step_deadline_us,|same|session.pump_one_for_interactive_turn(same))",
+      "replacement": "loaned.with_original_work_loan(step_fuel,step_deadline_us,|same|session.pump_one_for_interactive_turn(foreign))",
       "accepted": false
     },
     {
       "name": "refuse-pendingCustody",
       "gate": "pendingCustody",
-      "needle": "rejected.admit_pending(config,cx)",
-      "replacement": "rejected.admit_pending(config,foreign)",
+      "needle": "rejected.admit_pending(config,&mut self.session,cx)",
+      "replacement": "rejected.admit_pending(config,&mut foreign.session,cx)",
       "accepted": false
     },
     {
       "name": "refuse-outcomeAck",
       "gate": "outcomeAck",
-      "needle": "session.acknowledge_checked_out_outcome(grant)",
+      "needle": "session.acknowledge_checked_out_outcome(cx)",
       "replacement": "Default::default()",
       "accepted": false
     },

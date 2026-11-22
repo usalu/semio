@@ -4,7 +4,7 @@ import {createHash} from "node:crypto";
 import {join,resolve} from "node:path";
 import {fileURLToPath} from "node:url";
 import Ajv from "ajv";
-import {acquireResourceLease,acquireQueuedResourceLease,upgradeQueuedResourceLease,type ResourceLease,type ResourceLeaseControl} from "../../🟦️.ts";
+import {acquireResourceLease,acquireQueuedResourceLease,onLeaseQueueNoticeV1,upgradeQueuedResourceLease,type LeaseQueueNoticeV1,type ResourceLease,type ResourceLeaseControl} from "../../🟦️.ts";
 import fixture from "./🧫️fixtures/🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
 import {queueMayProceedV1,queueTicketDefersV1,writerPreferenceForResourceV1} from "../🟦️.ts";
@@ -144,6 +144,25 @@ test("a queued wait names the request it stands behind through the structured pr
 },60000);
 
 const held=async(directory:string,resource:string,owner:string,sharedCohort=true)=>acquireQueuedResourceLease({directory,resource,mode:"shared",owner,signal:none,sharedCohort,onWait:()=>{}});
+
+test("a queued wait reaches in-process listeners with the holder it stands behind",async()=>{
+  const directory=root(),resource="fair-listen",controller=new AbortController(),heard:LeaseQueueNoticeV1[]=[],stop=onLeaseQueueNoticeV1(notice=>{if(notice.resource===resource)heard.push(notice);});
+  try{
+    await withScriptProcessEnvelope(createScriptProcessEnvelope({version:1,owner:"fairness-listen",maximumElapsedMilliseconds:0},{},Date.now()),async invocation=>{
+      const holder=await acquireQueuedResourceLease({directory,resource,mode:"exclusive",owner:"holder",signal:none,onWait:()=>{}});
+      try{
+        const control=createRequestedIssuedResourceControlV1(createIssuedResourceControlV1(invocation,"lease:fairness-listen",0),0,controller.signal);
+        const waiting=acquireQueuedResourceLease({directory,resource,mode:"exclusive",owner:"listener",signal:control.signal,control}).then(()=>"acquired",error=>String(error));
+        await until(()=>heard.length>0,bounds.reapMaximumMilliseconds,"queue notice");
+        controller.abort(Error("heard"));
+        expect(await waiting).toMatch(/heard/);
+      }finally{holder.release();}
+    });
+  }finally{stop();controller.abort();await cleanup(directory);}
+  const notice=heard[0]!;
+  expect({position:notice.position,holderPid:notice.holderPid,holderMode:notice.holderMode,resource:notice.resource}).toEqual({position:2,holderPid:process.pid,holderMode:"exclusive",resource});
+  expect(notice.holderSeconds).toBeGreaterThanOrEqual(0);
+},60000);
 
 test("an upgrade keeps its arrival position and later exclusive requesters wait behind it",async()=>{
   const directory=root(),resource="fair-upgrade-position",order:string[]=[];

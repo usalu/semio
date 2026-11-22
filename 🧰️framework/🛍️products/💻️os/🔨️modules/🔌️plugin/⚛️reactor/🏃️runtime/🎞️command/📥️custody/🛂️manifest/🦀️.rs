@@ -224,6 +224,16 @@ fn step_slice(cx:&mut StepContext<'_>,mut step:impl FnMut(&mut StepContext<'_>)-
  }
 }
 
+/// ♻️ Continues a close only while the same original turn records paid progress.
+fn retirement_slice(cx:&mut StepContext<'_>,mut step:impl FnMut(&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>)->Result<bool,OriginalTurnFailure>{
+ while !cx.retirement_should_yield(){
+  let before=(cx.retained_progress(),cx.original_work_units_spent());
+  if step(cx)?{return Ok(true)}
+  if (cx.retained_progress(),cx.original_work_units_spent())==before{return Ok(false)}
+ }
+ Ok(false)
+}
+
 impl OriginalManifestCommandReceiving {
     async fn advance_surface_refresh<PA: PluginApp>(
         &mut self,
@@ -284,7 +294,9 @@ impl OriginalDecodedPluginCommand{
     }
    };if let Some(result)=result{receiving.finish_dispatch(result)}return Ok(None)
   }
-  if !self.receiving.as_mut().unwrap().close_step(cx)?{return Ok(None)}if !self.wire.terminal_is_empty(){self.wire.close_original_step(cx)?;return Ok(None)}
+  let receiving=self.receiving.as_mut().unwrap();
+  if !retirement_slice(cx,|cx|receiving.close_step(cx))?{return Ok(None)}
+  if !self.wire.terminal_is_empty()&&!retirement_slice(cx,|cx|self.wire.close_original_step(cx))?{return Ok(None)}
   let Some(result)=self.receiving.as_mut().unwrap().take_result(cx)?else{return Ok(None)};Ok(Some((seq,result)))
  }
 }

@@ -1,0 +1,9 @@
+components/sectional-garage-door
+components/sliding-door
+components/tilt-window
+components/external-venetian-blind
+components/curtain-wall-bay
+components/masonry-wall-with-lintel
+components/solid-brick-wall-1960
+components/etics-brick-wall-12
+components/etics-brick-wall-30

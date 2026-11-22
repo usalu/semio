@@ -16,6 +16,7 @@
     0.7
   ],
   "addedObjects": 1,
+  "clipboardOffset": [0.5, 0.5, 0.0],
   "dragPixels": 96,
   "minMovement": 0.001,
   "pickTimeoutMs": 1200,

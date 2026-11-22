@@ -20,8 +20,8 @@
   "yieldAfterMilliseconds": 5000,
   "minimumShareBasisPoints": 2500,
   "ownHoldShareBasisPoints": 1500,
-  "swapActiveMegabytesPerSecond": 1,
-  "swapOutMegabytesPerSecond": 64
+  "swapActiveBasisPointsPerSecond": 0.6,
+  "swapOutBasisPointsPerSecond": 40
  },
  "target": [
   {
@@ -1193,7 +1193,7 @@
     "reason": "waiting"
    },
    {
-    "children": 3,
+    "children": 4,
     "reason": "yielding"
    },
    {

@@ -2,6 +2,8 @@ import {appendFileSync,existsSync,mkdirSync,readFileSync,renameSync,rmdirSync,st
 import {homedir,totalmem} from "node:os";
 import {hostAvailableBytesV1} from "../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📡️sampling/🟦️.ts";
 import {isAbsolute,join} from "node:path";
+import {hostFloorMegabytesV1,readHostCapacityPolicyV1} from "../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📏️decision/🟦️.ts";
+import buildPolicy from "../../🔣️policy.json" with {type:"json"};
 import {applySchedulerEventV1,decideTickV1,emptySchedulerStateV1,schedulerSnapshotV1,schedulerTextV1,type SchedulerEventV1,type SchedulerHostV1,type SchedulerPolicyV1,type SchedulerSnapshotV1,type SchedulerStateV1} from "../🟦️.ts";
 
 /** 💾 Single-writer event store of the scheduler on the local disk: an atomic `mkdir` lock, a snapshot plus an append-only NDJSON log with sequence numbers (a crash between snapshot and log truncation replays nothing twice), lock-free reads. The host daemon hosts the same core in memory later; clients only see `SchedulerStoreV1`.
@@ -22,10 +24,11 @@ export function schedulerDirectoryV1(environment:Readonly<Record<string,string|u
  return join(base,"semio","scheduler");
 }
 
-/** 🌡️ Job budget of the host: the policy ceiling or what is left after system and daemon reserves, and the memory that is really available now. */
-export function defaultSchedulerHostV1(policy:SchedulerPolicyV1):SchedulerHostV1{
+/** 🌡️ Job budget of the host: the memory the host-capacity gate may give out at all (the memory above its free-memory floor, one rule for both gates), and the memory that is really available now.
+ * @see ../../🌡️host-capacity/🟦️.ts */
+export function defaultSchedulerHostV1():SchedulerHostV1{
  const totalMegabytes=Math.floor(totalmem()/2**20),available=hostAvailableBytesV1(),availableMegabytes=available===undefined?totalMegabytes:Math.floor(available/2**20);
- return{budgetMegabytes:Math.max(1,Math.min(policy.hostBudgetMegabytes,totalMegabytes-policy.systemReserveMegabytes-policy.daemonReserveMegabytes)),availableMegabytes};
+ return{budgetMegabytes:Math.max(1,totalMegabytes-hostFloorMegabytesV1(readHostCapacityPolicyV1(buildPolicy.hostCapacity),{totalMegabytes})),availableMegabytes};
 }
 
 type Persisted={n:number;state:SchedulerStateV1};
@@ -33,7 +36,7 @@ const pause=(milliseconds:number):Promise<void>=>new Promise(resolve=>setTimeout
 
 /** 🏗️ Opens (creating when needed) the store in `directory`; `transact` runs due expiries, the body, then admission, and appends the events of all three under the lock. */
 export function createFileSchedulerStoreV1(directory:string,policy:SchedulerPolicyV1,ports:SchedulerStorePortsV1={}):SchedulerStoreV1{
- const now=ports.now??Date.now,sleep=ports.sleep??pause,host=ports.host??(()=>defaultSchedulerHostV1(policy)),lock=join(directory,"lock"),snapshotFile=join(directory,"state.json"),logFile=join(directory,"log.ndjson");
+ const now=ports.now??Date.now,sleep=ports.sleep??pause,host=ports.host??defaultSchedulerHostV1,lock=join(directory,"lock"),snapshotFile=join(directory,"state.json"),logFile=join(directory,"log.ndjson");
  const readSnapshot=():Persisted=>existsSync(snapshotFile)?JSON.parse(readFileSync(snapshotFile,"utf8")) as Persisted:{n:0,state:emptySchedulerStateV1()};
  const readLog=():{n:number;event:SchedulerEventV1}[]=>{
   if(!existsSync(logFile))return[];

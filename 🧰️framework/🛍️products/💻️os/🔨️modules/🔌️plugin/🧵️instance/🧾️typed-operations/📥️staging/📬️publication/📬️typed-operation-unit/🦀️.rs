@@ -20,20 +20,6 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             return Ok(());
         }
         if mounted.advance_pending_result_page(cx)?{return Ok(())}
-        if mounted.granted_retirement_ready()
-            && mounted.pending_artifact_publication.as_ref().is_some_and(PendingArtifactStorePublication::is_closing)
-        {
-            cx.with_original_retirement(|cx| {
-                use semio_plugin_ownership::bounded_ownership::{PluginLifecycleStep, original_lifecycle_step};
-                let demand = mounted.granted_retirement_demands(retained.maximum_copy_bytes)?;
-                original_lifecycle_step(cx, retained, demand, |same, grant| {
-                    let step = mounted.granted_retirement_step(same, grant)?;
-                    Ok((PluginLifecycleStep::Progress(step.progress()), false))
-                })?;
-                Ok(())
-            })?;
-            return Ok(());
-        }
         if let Some((lane,receipt))=mounted.pending_artifact_publication.as_ref().and_then(|owner|owner.accepted_receipt().map(|receipt|(owner.lane().0,receipt))){
             if lane==TypedOperationResultLane::WindowConfig{if mounted.pending_window_config_receipt.is_none(){let d=semio_framework_value::RetirementDemand{copy_bytes:std::mem::size_of::<Option<store::os_store::presence::LaneItemReceipt>>(),depth:1,..Default::default()};cx.with_original_retirement(|cx|{semio_framework_job::close_original_retained_step(cx,d,|_|{mounted.pending_window_config_receipt=Some(receipt);semio_framework_value::RetainedWorkOutcome{work:1,result:Ok(semio_framework_value::RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))}})?;Ok(())})?;return Ok(())}return self.advance_mounted_window_config_refresh(mounted,retained,cx);}
             let revision=match mounted.pending_artifact_publication.as_ref(){Some(PendingArtifactStorePublication::Artifact(owner))=>{if owner.expected_generation!=receipt.generation_after{return Err(plugin_sdk_fault("accepted artifact receipt changed its retained generation").into())}Some(owner.expected_revision)},_=>None};
@@ -117,53 +103,75 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         }
         if mounted.pending_artifact_publication.is_none() && matches!(mounted.publication.as_ref(),Some(ArtifactToolCompletionValue::Emit(Ok(emit),_))if emit.has_artifact_mutations()||!emit.config_mutations.is_empty()||!emit.draft_mutations.is_empty()||!emit.window_config_mutations.is_empty()) && mounted.admit_actor_capture(retained,cx)? {return Ok(());}
         if let Some(pending) = mounted.pending_artifact_publication.as_mut() {
-            let batch = matches!(pending, PendingArtifactStorePublication::Artifact(_) | PendingArtifactStorePublication::Config(_) | PendingArtifactStorePublication::Draft(_));
-            let capture=if batch{2*std::mem::size_of::<Option<semio_plugin_retained_command::typed_operation::OriginalPublicationFailure>>()}else{0};
-            if retained.maximum_items==0||retained.maximum_depth==0||retained.maximum_copy_bytes<capture{return Ok(())}
-            let body_grant=RetainedCloneGrant{maximum_copy_bytes:retained.maximum_copy_bytes-capture,..retained};let grant=store::os_store::one_item::ArtifactStoreOneItemGrant::from_retained(body_grant);
+            let capture=if matches!(pending,PendingArtifactStorePublication::Artifact(_)|PendingArtifactStorePublication::Config(_)|PendingArtifactStorePublication::Draft(_)){2*std::mem::size_of::<Option<semio_plugin_retained_command::typed_operation::OriginalPublicationFailure>>()}else{0};
+            let (scope_items, scope_copy, scope_work) = semio_framework_job::original_receiving_scope_headroom();
+            let phase = cx.retained_grant();
+            let fuel = cx.fuel_remaining();
+            let receiving_quote = RetainedCloneGrant {
+                maximum_items: retained.maximum_items.min(phase.maximum_items.saturating_sub(scope_items)),
+                maximum_copy_bytes: retained.maximum_copy_bytes.min(phase.maximum_copy_bytes.saturating_sub(scope_copy)),
+                ..retained
+            };
+            if receiving_quote.maximum_items == 0 || receiving_quote.maximum_depth == 0 || receiving_quote.maximum_copy_bytes < capture || fuel <= scope_work {
+                return Ok(());
+            }
             let (pending_lane, _) = pending.lane();
             if pending.is_closing(){return Ok(());}
             if mounted.pending_window_config_receipt.is_some() { return self.advance_mounted_window_config_refresh(mounted, retained,cx); }
             let pending = mounted.pending_artifact_publication.as_mut().expect("pending publication checked above");
-            if matches!(pending, PendingArtifactStorePublication::Artifact(_))
-                && self.stores.store.returned_snapshot_read_count() > PUBLICATION_RETURNED_ROOT_ALLOWANCE
-                && !self.ingest.reclaim_document_snapshot_read_returns(&*self.stores)?
-            {
-                return Ok(());
+            if let PendingArtifactStorePublication::Artifact(publication) = pending {
+                if self.stores.store.returned_snapshot_read_count() > PUBLICATION_RETURNED_ROOT_ALLOWANCE {
+                    let checkpoint = publication.progress();
+                    let step = semio_plugin_ownership::bounded_ownership::plugin_effect_turn(cx, |effect| {
+                        self.ingest.advance_document_snapshot_read_return(&mut *self.stores, effect)
+                    })?;
+                    if step.progress() != RetainedCloneProgress::default() {
+                        mounted.note_publication_progress(checkpoint, step.progress());
+                    }
+                    return Ok(());
+                }
             }
-            let pending = mounted.pending_artifact_publication.as_mut().expect("pending publication checked above");
             if let PendingArtifactStorePublication::WindowConfig(publication) = pending {
                 if publication.store_batch_phase().is_none() {
                     if let Some(ownership) = self.stores.window_config_store.admit_store_batch(publication.as_mut(), retained)? {
-                        mounted.note_paid_publication_progress(ownership);
+                        mounted.publication_progress = mounted.publication_progress.saturating_add(1);
                         mounted.publication_ownership_progress = Some((retained, ownership));
                     }
                     return Ok(());
                 }
             }
-            let window_config_batch = matches!(pending, PendingArtifactStorePublication::WindowConfig(_));
-            let mut turn_ceiling = cx.original_turn_ceiling().0;
-            turn_ceiling.maximum_copy_bytes = turn_ceiling.maximum_copy_bytes.saturating_sub(capture);
-            let mut scope=None;let mut stepped=None;
-            if !cx.with_native_receiving(&mut scope,|receiving,_|{stepped=Some(match pending {
-                PendingArtifactStorePublication::Artifact(publication) => self.stores.store.advance_apply_batch_with_turn_ceiling(publication, body_grant.maximum_copy_bytes, grant, turn_ceiling, receiving).map_err(OriginalPublicationAdvanceFailure::Domain),
-                PendingArtifactStorePublication::Config(publication) => self.stores.config_store.advance_apply_batch_with_turn_ceiling(publication, body_grant.maximum_copy_bytes, grant, turn_ceiling, receiving).map_err(OriginalPublicationAdvanceFailure::Domain),
-                PendingArtifactStorePublication::Draft(publication) => self.stores.draft_store.advance_apply_batch_with_turn_ceiling(publication, body_grant.maximum_copy_bytes, grant, turn_ceiling, receiving).map_err(OriginalPublicationAdvanceFailure::Domain),
-                PendingArtifactStorePublication::Presence(publication) => self.stores.presence_store.advance_publish_one(publication, grant,receiving).map_err(|error|OriginalPublicationAdvanceFailure::Primary(error.into())),
-                PendingArtifactStorePublication::Transient(publication) => self.stores.transient_store.advance_publish_one(publication, grant,receiving).map_err(|error|OriginalPublicationAdvanceFailure::Primary(error.into())),
-                PendingArtifactStorePublication::WindowConfig(publication) => self.stores.window_config_store.advance(publication.as_mut(),body_grant.maximum_copy_bytes, grant, turn_ceiling, receiving).map_err(|error|OriginalPublicationAdvanceFailure::Primary(error.into())),
-                PendingArtifactStorePublication::WindowTransient(publication) => self.stores.window_transient_store.advance(publication.as_mut(), grant,receiving).map_err(OriginalPublicationAdvanceFailure::Primary),
-            });Ok(())})?{return Ok(())}
-            let scope=scope.ok_or_else(||semio_framework_value::ValueError::invariant("original receiving scope vanished"))?;let result=stepped.ok_or_else(||semio_framework_value::ValueError::invariant("original receiving step did not run"))?;
+            let mut turn_ceiling = semio_plugin_ownership::bounded_ownership::original_plugin_turn_grant(
+                self.mounted_policy.preparation,
+                cx.original_turn_ceiling().0,
+            );
+            turn_ceiling.maximum_items = turn_ceiling.maximum_items.saturating_sub(scope_items);
+            turn_ceiling.maximum_copy_bytes = turn_ceiling.maximum_copy_bytes.saturating_sub(scope_copy).saturating_sub(capture);
+            let mut scope = None;
+            let mut stepped = None;
+            let receiving_work = fuel.div_ceil(2).min(fuel - scope_work);
+            if !cx.with_native_receiving_quoted(&mut scope, (receiving_quote, receiving_work), |receiving, issued| {
+                let funded = receiving_quote.restricted_by(issued);
+                let body_grant = RetainedCloneGrant { maximum_copy_bytes: funded.maximum_copy_bytes.saturating_sub(capture), ..funded };
+                let grant=store::os_store::one_item::ArtifactStoreOneItemGrant::from_retained(body_grant);
+                stepped = Some((funded, grant, match pending {
+                    PendingArtifactStorePublication::Artifact(publication) => self.stores.store.advance_apply_batch_with_turn_ceiling(publication, body_grant.maximum_copy_bytes, grant, turn_ceiling, receiving).map_err(OriginalPublicationAdvanceFailure::Domain),
+                    PendingArtifactStorePublication::Config(publication) => self.stores.config_store.advance_apply_batch_with_turn_ceiling(publication, body_grant.maximum_copy_bytes, grant, turn_ceiling, receiving).map_err(OriginalPublicationAdvanceFailure::Domain),
+                    PendingArtifactStorePublication::Draft(publication) => self.stores.draft_store.advance_apply_batch_with_turn_ceiling(publication, body_grant.maximum_copy_bytes, grant, turn_ceiling, receiving).map_err(OriginalPublicationAdvanceFailure::Domain),
+                    PendingArtifactStorePublication::Presence(publication) => self.stores.presence_store.advance_publish_one(publication, grant,receiving).map_err(|error|OriginalPublicationAdvanceFailure::Primary(error.into())),
+                    PendingArtifactStorePublication::Transient(publication) => self.stores.transient_store.advance_publish_one(publication, grant,receiving).map_err(|error|OriginalPublicationAdvanceFailure::Primary(error.into())),
+                    PendingArtifactStorePublication::WindowConfig(publication) => self.stores.window_config_store.advance(publication.as_mut(),body_grant.maximum_copy_bytes, grant, turn_ceiling, receiving).map_err(|error|OriginalPublicationAdvanceFailure::Primary(error.into())),
+                    PendingArtifactStorePublication::WindowTransient(publication) => self.stores.window_transient_store.advance(publication.as_mut(), grant,receiving).map_err(OriginalPublicationAdvanceFailure::Primary),
+                }));
+                Ok(())
+            })? { return Ok(()); }
+            let scope = scope.ok_or_else(|| semio_framework_value::ValueError::invariant("original receiving scope vanished"))?;
+            let (funded, grant, result) = stepped.ok_or_else(|| semio_framework_value::ValueError::invariant("original receiving step did not run"))?;
             let work=match &*pending{PendingArtifactStorePublication::Artifact(publication)=>publication.last_turn_work(),PendingArtifactStorePublication::Config(publication)=>publication.last_turn_work(),PendingArtifactStorePublication::Draft(publication)=>publication.last_turn_work(),_=>0};
             cx.consume_fuel(work);
             let ownership=match &result{Ok(store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::PreparationProgress(_,receipt)|store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Published(_,receipt))=>*receipt,Ok(store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::PreparationRefused)=>pending.preparation_refusal_progress().ok_or_else(||plugin_sdk_fault("typed preparation refused without its original retained failure"))?,Err(OriginalPublicationAdvanceFailure::Primary(error))=>error.retained_progress(),Err(OriginalPublicationAdvanceFailure::Domain(error))=>{let mut progress=match error{store::VcsError::InverseRefused(error)|store::VcsError::NativeEncoding(error)=>error.retained_progress(),_=>Default::default()};progress.copied_items=progress.copied_items.max(1);progress.copied_bytes=progress.copied_bytes.checked_add(capture).ok_or_else(||semio_framework_value::ValueError::invariant("publication failure capture exceeds original receipt"))?;progress},_=>Default::default()};
-            let receipt=cx.consume_receiving_retained(retained,ownership);
+            let receipt = cx.consume_receiving_retained(funded, ownership);
             if scope.source_refusal.is_some()||scope.call.is_err(){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"original publication receiving scope refused").with_retained_progress(scope.retained_progress()).into())}
             let advance=match result{Err(OriginalPublicationAdvanceFailure::Primary(primary))=>return Err(primary.with_receiving_receipt(receipt)),Err(OriginalPublicationAdvanceFailure::Domain(source))=>{assert!(mounted.publication_failure.original.is_none());mounted.publication_failure.original=Some(semio_plugin_retained_command::typed_operation::OriginalPublicationFailure::new(source,ownership,receipt.err()));return Ok(())},Ok(advance)=>{receipt?;advance}};
-            if batch || window_config_batch {
-                mounted.note_paid_publication_progress(ownership);
-            }
             return match advance {
                 store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Published(receipt, _) => {
                     match pending_lane {
@@ -200,12 +208,12 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                     Ok(())
                 }
                 store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Progress(checkpoint) => {
-                    mounted.note_publication_checkpoint(checkpoint);
+                    mounted.note_publication_progress(checkpoint, RetainedCloneProgress::default());
                     Ok(())
                 }
                 store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::PreparationProgress(checkpoint, ownership) => {
                     if !ownership.fits(grant.retained_grant())||grant.maximum_depth==0&&ownership!=RetainedCloneProgress::default(){return Err(plugin_sdk_fault("typed preparation violated its original full grant").into());}
-                    mounted.note_publication_checkpoint(checkpoint);
+                    mounted.note_publication_progress(checkpoint, ownership);
                     Ok(())
                 }
                 store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::PreparationRefused => Ok(()),
@@ -517,8 +525,11 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             if cancelled { self.ingest.cancel_artifact_store_replacement(handle)?; }
             return Ok(());
         }
+        let natural = self.media.natural_source.as_ref().is_some_and(|owner|
+            owner.mount_id == Some(mounted.operation.operation) && owner.source.matches(cx));
+        let natural_receipt = if natural { size_of::<bool>() } else { 0 };
         let frontier=self.ingest.artifact_store_replacement_frontier(handle);
-        let demand=semio_framework_value::RetirementDemand{copy_bytes:std::mem::size_of::<Option<(u64,u64)>>() + 2*std::mem::size_of::<[u8;32]>() + 4*std::mem::size_of::<u64>() + 3*std::mem::size_of::<bool>() + std::mem::size_of::<Option<ArtifactBoundedToolFault>>(),depth:1,..Default::default()};
+        let demand=semio_framework_value::RetirementDemand{copy_bytes:std::mem::size_of::<Option<(u64,u64)>>() + 2*std::mem::size_of::<[u8;32]>() + 4*std::mem::size_of::<u64>() + 3*std::mem::size_of::<bool>() + natural_receipt + std::mem::size_of::<Option<ArtifactBoundedToolFault>>(),depth:1,..Default::default()};
         let settled=cx.with_original_retirement(|cx|->Result<_,semio_framework_job::OriginalTurnFailure>{
             if cx.retirement_should_yield() || !cx.retained_work_can_enter(demand) { return Ok(None); }
             let fault=if status==Poll::Fault {self.ingest.artifact_store_replacement_refusal(handle)} else {None};
@@ -541,6 +552,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             mounted.operation.base_revision=semio_framework_job::RevisionId(u64::from_be_bytes(revision[..8].try_into().unwrap()));
             mounted.operation.generation=semio_framework_job::Generation(generation);
             mounted.published_artifact=true;
+            if natural { self.media.natural_source.as_mut().expect("matched natural publication").committed = true; }
             mounted.ui_pending=true;
             mounted.command_logged=true;
         }

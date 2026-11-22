@@ -388,6 +388,17 @@ impl ArtifactEditor for RasterPlayApp {
         command.command_id()
     }
 
+    fn original_action_command_producer() -> Option<&'static dyn semio_plugin::ArtifactOriginalCommandProducerFactory<RasterCommand>> {
+        static PROVIDER: semio_plugin::OriginalActionCommandBridge<RasterCommand> = semio_plugin::OriginalActionCommandBridge(
+            <RasterPlayApp as ArtifactEditor>::command_from_action,
+            |command| match command {
+                RasterCommand::ImportPngFile(_) => file_import::RAW_BYTES,
+                _ => semio_plugin::RUNTIME_COMMAND_WIRE_MAXIMUM,
+            },
+        );
+        Some(&PROVIDER)
+    }
+
     /// 🎯️ See `args_bridge` — without this override the trait default refuses every shell action.
     fn command_from_action(action: &str, args: &mut Option<semio_framework_value::DslValue>, original_fault: &mut Option<Fault>) -> Result<Self::Command, Fault> {
         if let Some(fault) = original_fault.take() { return Err(fault); }

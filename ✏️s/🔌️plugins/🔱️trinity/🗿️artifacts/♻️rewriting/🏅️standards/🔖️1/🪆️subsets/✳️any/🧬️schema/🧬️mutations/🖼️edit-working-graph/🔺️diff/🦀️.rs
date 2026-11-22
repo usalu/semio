@@ -12,7 +12,6 @@ pub fn diff(payload: &super::EditWorkingGraph, base: &RewritingSnapshot) -> prot
         schema: (next.schema != current.schema).then(|| next.schema.clone()),
         name: (next.name != current.name).then(|| next.name.clone()),
         manifest_id: (next.manifest_id != current.manifest_id).then(|| next.manifest_id.clone()),
-        manifest: (next.manifest != current.manifest).then(|| next.manifest.clone()),
         camera: (next.camera != current.camera).then(|| next.camera.clone()),
         content: (next.content != current.content).then(|| next.content.clone()),
         root_node_id: (next.root_node_id != current.root_node_id).then(|| next.root_node_id.clone()),

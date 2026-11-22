@@ -1,0 +1,32 @@
+{
+  "parts": {
+    "inserted": [
+      {
+        "index": 1,
+        "row": {
+          "id": "x",
+          "2d": {
+            "x": 3,
+            "y": 0
+          },
+          "3d": {
+            "origin": [
+              3,
+              0,
+              0
+            ]
+          },
+          "grips": []
+        }
+      }
+    ],
+    "modified": [],
+    "moved": [],
+    "removed": [
+      {
+        "id": "b",
+        "index": 1
+      }
+    ]
+  }
+}

@@ -133,3 +133,31 @@ test("the shed units, the retired units and the remaining bytes of one group equ
  const file=join(process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir(),"lru-entries-"+process.pid+".json");writeFileSync(file,JSON.stringify({cases}));
  try{const run=runToolSyncV1("python",["-I",oracle,file,"entries"],{encoding:"utf8",maxBuffer:1<<26});expect(run.status,run.stderr).toBe(0);expect(actual).toEqual(JSON.parse(run.stdout));}finally{rmSync(file,{force:true});}
 },120000);
+
+test("the record headers of the newest generation (or of its parent while the pointer is a quarantine) and every unit of a live builder are never retired, whichever pass runs",async()=>{
+ const now=Date.now(),group="selections/"+"7".repeat(64),independent=(root:string)=>{const run=runToolSyncV1("python",["-I","-c","import hashlib,sys;print(hashlib.sha256(sys.argv[1].encode()).hexdigest()[:24])",root],{encoding:"utf8"});expect(run.status,run.stderr).toBe(0);return String(run.stdout).trim();};
+ const pinned="np/"+independent("pkg/pinned")+".json",loose="np/"+independent("pkg/loose")+".json",fresh="np/"+hex(77,24)+".json";
+ const rows=[{name:pinned,bytes:900,ageMs:50*HOUR},{name:loose,bytes:900,ageMs:49*HOUR},{name:fresh,bytes:900,ageMs:3*HOUR}],root=agedImage(group,rows,now),generations=join(root,"generations"),digest="a".repeat(64);
+ mkdirSync(join(generations,"m"),{recursive:true});mkdirSync(join(generations,"s"),{recursive:true});
+ writeFileSync(join(generations,"m",digest+".json"),JSON.stringify({owners:{"@x/pinned":{root:"pkg/pinned"}}}));
+ writeFileSync(join(generations,"current.json"),JSON.stringify({version:1,generation:9,manifest:null,parent:digest,reason:"closure-missing"}));
+ const pins=scan.pinnedOptionalUnitsV1(root);expect([...pins.keys]).toEqual([pinned]);expect(pins.sinceMs).toBeUndefined();
+ const own=await scan.retireBuildGraphOptionalEntriesLruV1(root,group,control(),{targetBytes:0,now});
+ expect(own).toMatchObject({retiredEntries:2,protected:1});
+ let left=files(root).filter(name=>name.startsWith("inference/")).map(name=>name.slice(("inference/"+group+"/").length));
+ expect(left).toContain(pinned);expect(left).not.toContain(loose);expect(left).not.toContain(fresh);
+ const groups=await scan.retireBuildGraphOptionalGroupsLruV1(root,leasePort(new Set(),[],{count:0}),control(),{targetBytes:0,now});
+ expect(groups).toMatchObject({retiredGroups:0,protected:1});
+ expect(files(root).some(name=>name.endsWith(pinned))).toBe(true);
+ writeFileSync(join(generations,"current.json"),JSON.stringify({version:1,generation:9,manifest:null,parent:null,reason:"closure-missing"}));
+ const started=now-2*HOUR;
+ writeFileSync(join(generations,"s","b".repeat(24)+".json"),JSON.stringify({state:"held",holder:{pid:process.pid,startedMs:started}}));
+ writeFileSync(join(generations,"s","c".repeat(24)+".json"),JSON.stringify({state:"held",holder:{pid:2147483000,startedMs:now-90*HOUR}}));
+ expect(scan.pinnedOptionalUnitsV1(root)).toEqual({keys:new Set(),sinceMs:started});
+ const live=agedImage(group,[{name:loose,bytes:900,ageMs:3*HOUR},{name:fresh,bytes:900,ageMs:HOUR},{name:record(5),bytes:900,ageMs:5*HOUR}],now);
+ mkdirSync(join(live,"generations","s"),{recursive:true});writeFileSync(join(live,"generations","s","b".repeat(24)+".json"),JSON.stringify({state:"held",holder:{pid:process.pid,startedMs:now-2*HOUR}}));
+ const cut=await scan.retireBuildGraphOptionalEntriesLruV1(live,group,control(),{targetBytes:0,now});
+ expect(cut).toMatchObject({retiredEntries:2,protected:1});
+ left=files(live).filter(name=>name.startsWith("inference/")).map(name=>name.slice(("inference/"+group+"/").length));
+ expect(left).toContain(fresh);expect(left).not.toContain(loose);expect(left).not.toContain(record(5));
+});

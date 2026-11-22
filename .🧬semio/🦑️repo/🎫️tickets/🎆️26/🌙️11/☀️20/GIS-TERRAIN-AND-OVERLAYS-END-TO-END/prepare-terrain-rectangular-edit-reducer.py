@@ -9,6 +9,7 @@ from pathlib import Path
 TICKET = Path(__file__).resolve().parent
 ARTIFACT = Path("✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any")
 changes = []
+proposed_sources = {}
 
 
 def edit(relative, replacements):
@@ -24,6 +25,7 @@ def edit_path(path, replacements):
         if old not in after:
             raise RuntimeError(f"{path}: missing {old!r}")
         after = after.replace(old, new, 1)
+    proposed_sources[path.as_posix()] = after
     changes.extend(unified_diff(before.splitlines(keepends=True), after.splitlines(keepends=True), "a/" + path.as_posix(), "b/" + path.as_posix()))
 
 

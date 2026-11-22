@@ -1,0 +1,82 @@
+{
+  "$comment": "🎞️ Language-agnostic chrome motion contract. Durations and easings are the React values: Tailwind `transition-[color,background-color]` (150ms, cubic-bezier(0.4,0,0.2,1)), dialog `animate-in fade-in-0 zoom-in-95 duration-200` (200ms, ease, scale 0.95 to 1), and the border phase clocks of `🎨️styling/🖌️ui/🎨️.css` (loading 1.6s, waiting 3.2s, introduced 1.6s, celebrate 1.2s). Curve samples were computed with an independent bisection solver of the CSS cubic-bezier definition.",
+  "tokens": {
+    "loadingBorderDurationSeconds": 1.6,
+    "waitingBorderDurationSeconds": 3.2,
+    "introducedBorderDurationSeconds": 1.6,
+    "celebrateBorderDurationSeconds": 1.2,
+    "transitionDurationMs": 150,
+    "transitionEasing": [0.4, 0, 0.2, 1],
+    "dialogEnterDurationMs": 200,
+    "dialogEnterEasing": [0.25, 0.1, 0.25, 1],
+    "dialogEnterScaleFrom": 0.95
+  },
+  "curves": {
+    "transition": { "points": [0.4, 0, 0.2, 1], "samples": [[0, 0.0], [0.1, 0.025863], [0.25, 0.236587], [0.5, 0.775561], [0.75, 0.959368], [0.9, 0.994354], [1, 1.0]] },
+    "dialogEnter": { "points": [0.25, 0.1, 0.25, 1], "samples": [[0, 0.0], [0.1, 0.094796], [0.25, 0.408511], [0.5, 0.802403], [0.75, 0.960459], [0.9, 0.994316], [1, 1.0]] },
+    "easeInOut": { "points": [0.42, 0, 0.58, 1], "samples": [[0, 0.0], [0.1, 0.019722], [0.25, 0.129162], [0.5, 0.5], [0.75, 0.870838], [0.9, 0.980278], [1, 1.0]] }
+  },
+  "transitions": [
+    {
+      "name": "a control fades to hover and back without jumping",
+      "durationSeconds": 0.15,
+      "easing": [0.4, 0, 0.2, 1],
+      "reduced": false,
+      "steps": [
+        { "at": 1.0, "target": 0, "expect": 0.0 },
+        { "at": 1.1, "target": 1, "expect": 0.0 },
+        { "at": 1.175, "target": 1, "expect": 0.775561 },
+        { "at": 1.25, "target": 1, "expect": 1.0 },
+        { "at": 2.0, "target": 0, "expect": 1.0 },
+        { "at": 2.075, "target": 0, "expect": 0.224439 },
+        { "at": 2.2, "target": 0, "expect": 0.0 }
+      ]
+    },
+    {
+      "name": "an interrupted fade restarts from the value it reached",
+      "durationSeconds": 0.15,
+      "easing": [0.4, 0, 0.2, 1],
+      "reduced": false,
+      "steps": [
+        { "at": 1.0, "target": 0, "expect": 0.0 },
+        { "at": 1.1, "target": 1, "expect": 0.0 },
+        { "at": 1.175, "target": 1, "expect": 0.775561 },
+        { "at": 1.175, "target": 0, "expect": 0.775561 },
+        { "at": 1.325, "target": 0, "expect": 0.0 }
+      ]
+    },
+    {
+      "name": "reduced motion snaps to the target",
+      "durationSeconds": 0.15,
+      "easing": [0.4, 0, 0.2, 1],
+      "reduced": true,
+      "steps": [
+        { "at": 1.0, "target": 0, "expect": 0.0 },
+        { "at": 1.1, "target": 1, "expect": 1.0 },
+        { "at": 1.2, "target": 0, "expect": 0.0 }
+      ]
+    },
+    {
+      "name": "an unstamped clock never animates",
+      "durationSeconds": 0.15,
+      "easing": [0.4, 0, 0.2, 1],
+      "reduced": false,
+      "steps": [
+        { "at": 0.0, "target": 0, "expect": 0.0 },
+        { "at": 0.0, "target": 1, "expect": 1.0 }
+      ]
+    }
+  ],
+  "enter": [
+    { "elapsedSeconds": 0.0, "durationSeconds": 0.2, "easing": [0.25, 0.1, 0.25, 1], "reduced": false, "expect": 0.0 },
+    { "elapsedSeconds": 0.1, "durationSeconds": 0.2, "easing": [0.25, 0.1, 0.25, 1], "reduced": false, "expect": 0.802403 },
+    { "elapsedSeconds": 0.2, "durationSeconds": 0.2, "easing": [0.25, 0.1, 0.25, 1], "reduced": false, "expect": 1.0 },
+    { "elapsedSeconds": 5.0, "durationSeconds": 0.2, "easing": [0.25, 0.1, 0.25, 1], "reduced": false, "expect": 1.0 },
+    { "elapsedSeconds": 0.0, "durationSeconds": 0.2, "easing": [0.25, 0.1, 0.25, 1], "reduced": true, "expect": 1.0 }
+  ],
+  "introducedPulse": [
+    { "phase": 0.0, "expect": 1.0 },
+    { "phase": 0.5, "expect": 0.7 },
+    { "phase": 1.0, "expect": 1.0 }
+  ]
+}

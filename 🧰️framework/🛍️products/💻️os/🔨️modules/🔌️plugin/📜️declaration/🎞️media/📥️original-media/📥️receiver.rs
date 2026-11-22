@@ -74,55 +74,108 @@ impl MediaOrigin {
 /// 🪪 Holds an already issued instance loan and the one unpublished original input.
 pub struct OriginalMediaPagedReceiver<const N: usize> {
     origin: MediaOrigin,
+    source: PagedMediaSource<N>,
+}
+
+impl<const N: usize> OriginalMediaPagedReceiver<N> {
+    /// 🎰️ Opens source storage within the already admitted picker authority.
+    pub fn new(loan: OriginalMediaLoan<'_>, declared: usize, maximum_file_bytes: usize) -> Result<Self, ValueError> {
+        let origin = MediaOrigin::capture(loan)?;
+        let source = PagedMediaSource::new(declared, maximum_file_bytes)?;
+        Ok(Self { origin, source })
+    }
+
+    pub(crate) fn admits_origin(&self, loan: OriginalMediaLoan<'_>) -> bool { self.origin.matches(loan) }
+    pub(crate) fn origin(&self) -> &MediaOrigin { &self.origin }
+    pub(crate) fn accepted_bytes(&self) -> usize { self.source.accepted_bytes() }
+
+    fn check_origin(&self, loan: OriginalMediaLoan<'_>) -> Result<(), ValueError> {
+        if !self.admits_origin(loan) {
+            return Err(ValueError::invariant("Original media no longer owns its captured loan"));
+        }
+        Ok(())
+    }
+
+    /// 🧮 Quotes bounded storage for the next authenticated picker page.
+    pub fn demand(&self, page: &OriginalMediaPage<'_>) -> Result<RetirementDemand, ValueError> {
+        self.check_origin(page.loan)?;
+        self.source.demand(page.index, page.bytes, page.copied)
+    }
+
+    /// 🪢 Copies the admitted range of an authenticated picker page.
+    pub fn append(&mut self, page: &mut OriginalMediaPage<'_>, effect: &mut RetainedAllocationEffect<'_>) -> Result<RetainedCloneProgress, ValueError> {
+        self.check_origin(page.loan)?;
+        self.source.append(page.index, page.bytes, &mut page.copied, effect)
+    }
+
+    pub fn cancel(&mut self) { self.source.cancel(); }
+    pub fn terminal_is_empty(&self) -> bool { self.source.terminal_is_empty() }
+
+    pub fn close_demand(&self, body: usize) -> Result<RetirementDemand, ValueError> {
+        self.source.close_demand(body)
+    }
+
+    pub fn close_step(&mut self, body: usize, effect: &mut RetainedAllocationEffect<'_>) -> Option<semio_framework_value::OriginalRetirementPoll> {
+        self.source.close_step(body, effect)
+    }
+
+    /// 🧺 Donates the complete source after authenticating the current revision.
+    pub fn take(&mut self, loan: OriginalMediaLoan<'_>, effect: &mut RetainedAllocationEffect<'_>) -> Result<Option<(ControlledRetirement<PagedBytes<N>>, RetainedCloneProgress)>, ValueError> {
+        self.take_with_output(loan, 0, effect)
+    }
+
+    pub(crate) fn take_with_output(&mut self, loan: OriginalMediaLoan<'_>, output: usize, effect: &mut RetainedAllocationEffect<'_>) -> Result<Option<(ControlledRetirement<PagedBytes<N>>, RetainedCloneProgress)>, ValueError> {
+        self.check_origin(loan)?;
+        self.source.take(output, effect)
+    }
+}
+
+/// 📦 Pays for the storage and retirement of an already authenticated source.
+pub(crate) struct PagedMediaSource<const N: usize> {
     declared: usize,
     next_page: u32,
     owner: Option<ControlledRetirement<PagedBytes<N>>>,
     cancelled: bool,
 }
 
-impl<const N: usize> OriginalMediaPagedReceiver<N> {
-    /// 🎟️ Opens the retained media owner after the Original operation has admitted this loan.
-    pub fn new(loan: OriginalMediaLoan<'_>, declared: usize, maximum_file_bytes: usize) -> Result<Self, ValueError> {
+impl<const N: usize> PagedMediaSource<N> {
+    pub(crate) fn new(declared: usize, maximum_file_bytes: usize) -> Result<Self, ValueError> {
         if declared == 0 || declared > maximum_file_bytes || declared > N || declared > 512 * 1024 * 1024 {
             return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit, "Original media exceeds its issued source extent"));
         }
-        Ok(Self { origin: MediaOrigin::capture(loan)?, declared, next_page: 0, owner: Some(ControlledRetirement::new(PagedBytes::default()).map_err(|(error, _)| error)?), cancelled: false })
+        Ok(Self { declared, next_page: 0, owner: Some(ControlledRetirement::new(PagedBytes::default()).map_err(|(error, _)| error)?), cancelled: false })
     }
-
-    pub(crate) fn admits_origin(&self, loan: OriginalMediaLoan<'_>) -> bool { self.origin.matches(loan) }
-
-    pub(crate) fn origin(&self) -> &MediaOrigin { &self.origin }
 
     pub(crate) fn accepted_bytes(&self) -> usize {
         self.owner.as_ref().and_then(ControlledRetirement::original).map_or(0, PagedBytes::len)
     }
 
     /// 📏 Quotes either the next destination backing or one bounded copied byte range.
-    pub fn demand(&self, page: &OriginalMediaPage<'_>) -> Result<RetirementDemand, ValueError> {
-        let bytes = self.check(page)?;
+    pub(crate) fn demand(&self, index: u32, page: &[u8], copied: usize) -> Result<RetirementDemand, ValueError> {
+        let bytes = self.check(index, page, copied)?;
         let backed = bytes.retained_bytes().capacity() - bytes.len();
         if backed == 0 { return bytes.byte_backing_demand(); }
-        let count = backed.min(page.bytes.len() - page.copied);
+        let count = backed.min(page.len() - copied);
         Ok(RetirementDemand { copy_bytes: count, depth: bytes.retained_bytes().next_push_depth_demand().map_err(ValueError::from)?.max(1), ..Default::default() })
     }
 
-    fn check(&self, page: &OriginalMediaPage<'_>) -> Result<&PagedBytes<N>, ValueError> {
-        if self.cancelled || !self.admits_origin(page.loan) || page.index != self.next_page {
-            return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "Original media page changed loan or order"));
+    fn check(&self, index: u32, page: &[u8], copied: usize) -> Result<&PagedBytes<N>, ValueError> {
+        if self.cancelled || index != self.next_page {
+            return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "Original media source is canceled or its page is out of order"));
         }
-        let start = (page.index as usize).checked_mul(ORIGINAL_MEDIA_PAGE_BYTES).filter(|offset| *offset < self.declared)
+        let start = (index as usize).checked_mul(ORIGINAL_MEDIA_PAGE_BYTES).filter(|offset| *offset < self.declared)
             .ok_or_else(|| ValueError::invariant("Original media page exceeds its declared extent"))?;
         let bytes = self.owner.as_ref().and_then(ControlledRetirement::original).ok_or_else(|| ValueError::invariant("Original media input is sealed"))?;
-        if page.bytes.len() != (self.declared - start).min(ORIGINAL_MEDIA_PAGE_BYTES) || page.copied >= page.bytes.len()
-            || bytes.len() != start + page.copied {
+        if page.len() != (self.declared - start).min(ORIGINAL_MEDIA_PAGE_BYTES) || copied >= page.len()
+            || bytes.len() != start + copied {
             return Err(ValueError::invariant("Original media page extent or continuation changed"));
         }
         Ok(bytes)
     }
 
     /// 🧵 Reserves one physical backing or copies the admitted range from its immutable page.
-    pub fn append(&mut self, page: &mut OriginalMediaPage<'_>, effect: &mut RetainedAllocationEffect<'_>) -> Result<RetainedCloneProgress, ValueError> {
-        let mut demand = self.demand(page)?;
+    pub(crate) fn append(&mut self, index: u32, page: &[u8], copied: &mut usize, effect: &mut RetainedAllocationEffect<'_>) -> Result<RetainedCloneProgress, ValueError> {
+        let mut demand = self.demand(index, page, *copied)?;
         let grant = effect.grant();
         let bytes = self.owner.as_mut().and_then(ControlledRetirement::original_mut).expect("verified original media source");
         if !bytes.retained_bytes().has_reserved_slot() {
@@ -138,14 +191,14 @@ impl<const N: usize> OriginalMediaPagedReceiver<N> {
         let copy = demand.copy_bytes.min(grant.maximum_copy_bytes).min(usize::try_from(effect.remaining_work_units()?).unwrap_or(usize::MAX));
         demand.copy_bytes = copy;
         if copy == 0 || !retained_clone_grant_admits(grant, demand) || !effect.performed(copy as u64)? { return Ok(Default::default()); }
-        let start = page.copied;
-        for byte in &page.bytes[start..start + copy] {
+        let start = *copied;
+        for byte in &page[start..start + copy] {
             bytes.push_reserved_byte(*byte).map_err(|error| error.with_retained_progress(RetainedCloneProgress {
-                copied_items: usize::from(page.copied != start), copied_bytes: page.copied - start, ..Default::default()
+                copied_items: usize::from(*copied != start), copied_bytes: *copied - start, ..Default::default()
             }))?;
-            page.copied += 1;
+            *copied += 1;
         }
-        if page.is_complete() { self.next_page += 1; }
+        if *copied == page.len() { self.next_page += 1; }
         Ok(RetainedCloneProgress { copied_items: 1, copied_bytes: copy, ..Default::default() })
     }
 
@@ -163,14 +216,10 @@ impl<const N: usize> OriginalMediaPagedReceiver<N> {
         self.owner.as_mut().map(|owner| owner.step(body, effect))
     }
 
-    /// 📦 Donates the original sealed input to the format job after checking the current revision.
-    pub fn take(&mut self, loan: OriginalMediaLoan<'_>, effect: &mut RetainedAllocationEffect<'_>) -> Result<Option<(ControlledRetirement<PagedBytes<N>>, RetainedCloneProgress)>, ValueError> {
-        self.take_with_output(loan, 0, effect)
-    }
-
-    pub(crate) fn take_with_output(&mut self, loan: OriginalMediaLoan<'_>, output: usize, effect: &mut RetainedAllocationEffect<'_>) -> Result<Option<(ControlledRetirement<PagedBytes<N>>, RetainedCloneProgress)>, ValueError> {
-        if self.cancelled || !self.admits_origin(loan) || self.owner.as_ref().and_then(ControlledRetirement::original).is_none_or(|bytes| bytes.len() != self.declared) {
-            return Err(ValueError::invariant("Original media publication needs the complete current captured loan"));
+    /// 🎟️ Donates the complete original to its already authenticated format owner.
+    pub(crate) fn take(&mut self, output: usize, effect: &mut RetainedAllocationEffect<'_>) -> Result<Option<(ControlledRetirement<PagedBytes<N>>, RetainedCloneProgress)>, ValueError> {
+        if self.cancelled || self.owner.as_ref().and_then(ControlledRetirement::original).is_none_or(|bytes| bytes.len() != self.declared) {
+            return Err(ValueError::invariant("Original media publication needs a complete source"));
         }
         let demand = RetirementDemand { copy_bytes: std::mem::size_of_val(&self.owner).checked_add(output)
             .ok_or_else(|| ValueError::invariant("Original media output quote exceeds its extent"))?, depth: 1, ..Default::default() };

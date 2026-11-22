@@ -8,6 +8,12 @@
     "selectionJson": "[\"text-a\"]",
     "hoveredId": "image-b"
   },
+  "utilityAuthority": [
+    { "id": "armed-before-scene", "scene": "selectDirect", "register": { "surfaceId": "note.play.composite", "utilityId": "pencil" }, "action": "inkApplyEvents" },
+    { "id": "cleared-before-scene", "scene": "pencil", "register": { "surfaceId": "note.play.composite", "utilityId": null }, "action": "interactionSelect" },
+    { "id": "foreign-surface", "scene": "selectDirect", "register": { "surfaceId": "other-surface", "utilityId": "pencil" }, "action": "interactionSelect" },
+    { "id": "unwritten-register", "scene": "pencil", "register": { "surfaceId": "note.play.composite" }, "action": "inkApplyEvents" }
+  ],
   "viewport": { "width": 320, "height": 240 },
   "wheel": {
     "event": { "bubbles": true, "cancelable": true, "clientX": 100, "clientY": 50, "deltaY": -120 },

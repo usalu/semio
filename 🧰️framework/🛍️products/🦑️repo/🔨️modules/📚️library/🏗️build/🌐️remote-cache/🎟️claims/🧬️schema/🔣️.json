@@ -20,6 +20,7 @@
         "cooloffMilliseconds": 30000,
         "journalFile": "claims.jsonl",
         "journalCompactEvents": 20000,
+        "journalFlushMilliseconds": 100,
         "restoreGraceMilliseconds": 20000
       }
     },

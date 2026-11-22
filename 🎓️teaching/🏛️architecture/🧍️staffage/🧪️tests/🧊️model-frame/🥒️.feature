@@ -36,3 +36,8 @@ Feature: The staffage world is carried into the neutral model frame by one refle
     Given the torso loft of the sample figure whose sections carry the rotation that turns their plane across the bone
     When it is tessellated through the pipeline with the sections passed unchanged
     Then the extent in the bone-local frame equals the hand-computed sections
+
+  Scenario: The semi-axes of a loft section lie along stated bone axes
+    Given a loft along u with rx 0.3 m and ry 0.1 m, without rotation, with the limb rotation [0.5, 0.5, 0.5, 0.5] and with the rotation about v
+    When it is tessellated through the pipeline
+    Then without rotation and about v rx lies along w and ry along v, with the limb rotation rx lies along v and ry along w, as three.js rotates the section axes

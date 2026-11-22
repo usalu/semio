@@ -1,11 +1,52 @@
 {
   "type": "object",
-  "required": ["folders", "filesPerKind", "scanCopies", "patterns"],
+  "required": ["folders", "filesPerKind", "scanCopies", "patterns", "shallow", "absent", "maximumCheckpoints", "directoryCadence", "nested"],
   "additionalProperties": false,
   "properties": {
     "folders": { "type": "array", "minItems": 2, "items": { "type": "string", "pattern": "^[a-z]+$" } },
     "filesPerKind": { "type": "integer", "minimum": 10 },
+    "shallow": { "type": "string", "minLength": 1 },
+    "absent": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+    "maximumCheckpoints": { "type": "integer", "minimum": 1 },
     "scanCopies": { "type": "integer", "minimum": 2 },
-    "patterns": { "type": "array", "minItems": 3, "items": { "type": "string", "minLength": 1 } }
+    "patterns": { "type": "array", "minItems": 3, "items": { "type": "string", "minLength": 1 } },
+    "directoryCadence": {
+      "type": "object",
+      "required": ["pattern", "directories", "maximumCheckpoints"],
+      "additionalProperties": false,
+      "properties": {
+        "pattern": { "type": "string", "minLength": 1 },
+        "directories": { "type": "integer", "minimum": 128 },
+        "maximumCheckpoints": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "nested": {
+      "type": "object",
+      "required": ["directories", "symlink", "opaque", "scans", "reads"],
+      "additionalProperties": false,
+      "properties": {
+        "directories": { "type": "object", "additionalProperties": { "$ref": "#/definitions/paths" } },
+        "symlink": { "type": "string" },
+        "opaque": { "type": "string" },
+        "scans": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["target", "compile", "patterns", "candidates"],
+            "additionalProperties": false,
+            "properties": {
+              "target": { "type": "string" },
+              "compile": { "type": "boolean" },
+              "patterns": { "$ref": "#/definitions/paths" },
+              "candidates": { "$ref": "#/definitions/paths" }
+            }
+          }
+        },
+        "reads": { "$ref": "#/definitions/paths" }
+      }
+    }
+  },
+  "definitions": {
+    "paths": { "type": "array", "items": { "type": "string", "minLength": 1 } }
   }
 }

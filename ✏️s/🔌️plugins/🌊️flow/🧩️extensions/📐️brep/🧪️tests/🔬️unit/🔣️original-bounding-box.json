@@ -48,5 +48,175 @@
         7.2
       ]
     ]
-  }
+  },
+  "annular": [
+    {
+      "name": "axial through bore",
+      "operator": "brep.bool.cut",
+      "a": {
+        "origin": [
+          1,
+          2,
+          3
+        ],
+        "radius": 2,
+        "height": 4
+      },
+      "b": {
+        "origin": [
+          1,
+          2,
+          2
+        ],
+        "radius": 0.75,
+        "height": 6
+      },
+      "bounds": [
+        [
+          -1,
+          0,
+          3
+        ],
+        [
+          3,
+          4,
+          7
+        ]
+      ]
+    },
+    {
+      "name": "tilted unequal shoulder extensions",
+      "operator": "brep.bool.fuse",
+      "a": {
+        "origin": [
+          0,
+          0,
+          0
+        ],
+        "radius": 2,
+        "height": 2
+      },
+      "b": {
+        "origin": [
+          0,
+          0,
+          -2
+        ],
+        "radius": 0.75,
+        "height": 7
+      },
+      "rotation": 0.4363323129985824,
+      "offset": [
+        2,
+        -1,
+        4
+      ],
+      "bounds": [
+        [
+          0.18738442592670013,
+          -3,
+          1.8704207296211757
+        ],
+        [
+          4.792822148980985,
+          1,
+          8.848502631488774
+        ]
+      ]
+    },
+    {
+      "name": "positive trimmed circular sector",
+      "operator": "brep.sweep.revolve",
+      "origin": [
+        1,
+        -2,
+        3
+      ],
+      "inner": 0.75,
+      "outer": 2,
+      "height": 1.5,
+      "angle": 2.0943951023931953,
+      "points": [
+        [
+          1.75,
+          -2,
+          3
+        ],
+        [
+          3,
+          -2,
+          3
+        ],
+        [
+          3,
+          -2,
+          4.5
+        ],
+        [
+          1.75,
+          -2,
+          4.5
+        ]
+      ],
+      "bounds": [
+        [
+          0,
+          -2,
+          3
+        ],
+        [
+          3,
+          0,
+          4.5
+        ]
+      ]
+    },
+    {
+      "name": "negative sector with a tight inner rim",
+      "operator": "brep.sweep.revolve",
+      "origin": [
+        1,
+        -2,
+        3
+      ],
+      "inner": 0.75,
+      "outer": 2,
+      "height": 1.5,
+      "angle": -1.0471975511965976,
+      "points": [
+        [
+          1.75,
+          -2,
+          3
+        ],
+        [
+          3,
+          -2,
+          3
+        ],
+        [
+          3,
+          -2,
+          4.5
+        ],
+        [
+          1.75,
+          -2,
+          4.5
+        ]
+      ],
+      "bounds": [
+        [
+          1.375,
+          -3.732050807568877,
+          3
+        ],
+        [
+          3,
+          -2,
+          4.5
+        ]
+      ]
+    }
+  ]
 }

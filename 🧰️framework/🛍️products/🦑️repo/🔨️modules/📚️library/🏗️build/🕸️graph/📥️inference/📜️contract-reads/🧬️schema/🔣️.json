@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "The dependency manifest of an owner record: the generator contracts are no file, so what the inference of one owner READ of them travels in its record as one `global` row (`path` = JSON [name, workspaceRoot], `fact` = a ReadsTree). Every other global fact (registry rows, command inputs, module sources) is already a row or part of the key. The key of an owner record holds the owner's own inputs only: [registryDigest, commandRevision (native owners), assemblyAuthority (native or pipeline owners), 'closure-references/4', root, json, selectedTargets, selectedInputs].",
+  "definitions": {
+    "Policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "keysMarker", "absentMarker", "hasPrefix", "referencesMarker"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "keysMarker": { "type": "string", "minLength": 1 },
+        "absentMarker": { "type": "string", "minLength": 1 },
+        "hasPrefix": { "type": "string", "minLength": 1 },
+        "referencesMarker": { "type": "string", "minLength": 1 }
+      },
+      "const": { "name": "generator-contracts", "keysMarker": "\u0000keys", "absentMarker": "\u0000absent", "hasPrefix": "\u0000has\u0000", "referencesMarker": "closure-references/4" }
+    },
+    "ReadsTree": {
+      "type": "object",
+      "description": "A node is a map from a property name to a primitive (the value that was read), to a child node, to {absentMarker: true} (the property was read and absent), and holds optionally keysMarker (the own keys that were listed) and hasPrefix+name (an `in` probe and its answer).",
+      "additionalProperties": true
+    },
+    "Head": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 4,
+      "items": { "type": ["string", "null"] }
+    }
+  }
+}

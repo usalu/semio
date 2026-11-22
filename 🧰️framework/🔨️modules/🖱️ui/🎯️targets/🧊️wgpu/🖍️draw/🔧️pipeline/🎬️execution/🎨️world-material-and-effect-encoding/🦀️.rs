@@ -307,6 +307,55 @@ impl UiPipelines {
         Ok(())
     }
 
+    /// ☁️ Encodes one bounded chunk of a retained world point-cloud layer as instanced unlit sprites under one scene-pass owner.
+    #[allow(clippy::too_many_arguments, reason = "one fixed owner per GPU boundary")]
+    pub fn encode_prepared_world_points<'a>(
+        &'a mut self,
+        device: &gpu_device::Device,
+        queue: &gpu_device::Queue,
+        encoder: &mut gpu_device::CommandEncoder,
+        color_view: &'a gpu_device::TextureView,
+        depth_view: &'a gpu_device::TextureView,
+        frame_buffers: &'a mut FrameBuffers,
+        pass_owner: &ScenePass3d,
+        point_owner: &crate::kernel_3d_scene::PointDraw3d,
+        vertices: &[crate::kernel_3d_scene::PointVertex3d],
+        scissor: ScissorRect,
+    ) -> Result<(), &'static str> {
+        if vertices.is_empty() {
+            return Ok(());
+        }
+        let scale = self.resources.surface_scale;
+        let viewport = pass_owner.viewport;
+        let extent = world3d_point_extent(point_owner.size, point_owner.size_attenuation, viewport[2] * scale, viewport[3] * scale);
+        let globals = World3dGlobals::from_pass(pass_owner);
+        self.resources.world_globals_ring.ensure_slots(device, &self.resources.world_bind_group_layout, 1);
+        self.resources.world_globals_ring.write_passes(queue, std::slice::from_ref(&globals));
+        let instances: Vec<WorldPointGpuInstance> = vertices.iter().map(|vertex| WorldPointGpuInstance { position: vertex.position, color: vertex.color, extent }).collect();
+        let Some(point_buffer) = frame_buffers.world_points.upload(device, queue, &instances, gpu_device::BufferUsages::VERTEX | gpu_device::BufferUsages::COPY_DST, "prepared_world_points") else {
+            return Err("prepared world point buffer admission failed");
+        };
+        let scene_scissor = self.physical_scissor(scissor);
+        if scene_scissor.w == 0 || scene_scissor.h == 0 {
+            return Ok(());
+        }
+        let mut pass = encoder.begin_render_pass(&gpu_device::RenderPassDescriptor {
+            label: Some("prepared_world_points"),
+            color_attachments: &[Some(gpu_device::RenderPassColorAttachment { view: color_view, resolve_target: None, ops: gpu_device::Operations { load: gpu_device::LoadOp::Load, store: gpu_device::StoreOp::Store }, depth_slice: None })],
+            depth_stencil_attachment: Some(stencil_attachment(depth_view, gpu_device::LoadOp::Load, gpu_device::LoadOp::Load)),
+            timestamp_writes: None,
+            occlusion_query_set: None,
+            multiview_mask: None,
+        });
+        pass.set_viewport(viewport[0] * scale, viewport[1] * scale, viewport[2] * scale, viewport[3] * scale, 0.0, 1.0);
+        pass.set_scissor_rect(scene_scissor.x, scene_scissor.y, scene_scissor.w, scene_scissor.h);
+        pass.set_pipeline(&self.resources.world_points_pipeline);
+        pass.set_bind_group(0, &self.resources.world_globals_ring.bind_group, &[self.resources.world_globals_ring.offset_for_slot(0)]);
+        pass.set_vertex_buffer(0, point_buffer);
+        pass.draw(0..6, 0..instances.len() as u32);
+        Ok(())
+    }
+
     /// 🎭️ Replays one completed World viewport through its image remap and physical viewport mask.
     pub fn encode_prepared_world_postprocess(
         &self,
@@ -486,6 +535,45 @@ impl UiPipelines {
         pass.set_vertex_buffer(1, buffer);
         pass.draw(0..6, 0..1);
         Ok(())
+    }
+
+    /// 🫥️ Starts a group: clears the pooled group target to transparent.
+    pub fn encode_prepared_group_clear(&self, encoder: &mut gpu_device::CommandEncoder, group: &PreparedGroupTarget) {
+        let _pass = encoder.begin_render_pass(&gpu_device::RenderPassDescriptor {
+            label: Some("prepared_group_clear"),
+            color_attachments: &[Some(gpu_device::RenderPassColorAttachment { view: &group.view, resolve_target: None, ops: gpu_device::Operations { load: gpu_device::LoadOp::Clear(gpu_device::Color::TRANSPARENT), store: gpu_device::StoreOp::Store }, depth_slice: None })],
+            depth_stencil_attachment: None,
+            timestamp_writes: None,
+            occlusion_query_set: None,
+            multiview_mask: None,
+        });
+    }
+
+    /// 🫥️ Ends a group: composites the group target over `target` inside the group's logical `scissor` at `alpha` (premultiplied source-over, so overlapping children were already merged and fade once).
+    #[allow(clippy::too_many_arguments, reason = "one fixed owner per GPU boundary")]
+    pub fn encode_prepared_group_composite<'a>(&'a self, device: &gpu_device::Device, queue: &gpu_device::Queue, encoder: &mut gpu_device::CommandEncoder, group: &'a PreparedGroupTarget, target: &'a gpu_device::TextureView, alpha: f32, scissor: ScissorRect, width: f32, height: f32) {
+        queue.write_buffer(&group.uniform, 0, bytemuck::bytes_of(&[alpha.clamp(0.0, 1.0), 0.0, 0.0, 0.0]));
+        let bind_group = device.create_bind_group(&gpu_device::BindGroupDescriptor {
+            label: Some("prepared_group_composite"),
+            layout: &group.layout,
+            entries: &[
+                gpu_device::BindGroupEntry { binding: 0, resource: gpu_device::BindingResource::TextureView(&group.view) },
+                gpu_device::BindGroupEntry { binding: 1, resource: gpu_device::BindingResource::Sampler(&group.sampler) },
+                gpu_device::BindGroupEntry { binding: 2, resource: group.uniform.as_entire_binding() },
+            ],
+        });
+        let mut pass = encoder.begin_render_pass(&gpu_device::RenderPassDescriptor {
+            label: Some("prepared_group_composite"),
+            color_attachments: &[Some(gpu_device::RenderPassColorAttachment { view: target, resolve_target: None, ops: gpu_device::Operations { load: gpu_device::LoadOp::Load, store: gpu_device::StoreOp::Store }, depth_slice: None })],
+            depth_stencil_attachment: None,
+            timestamp_writes: None,
+            occlusion_query_set: None,
+            multiview_mask: None,
+        });
+        set_pass_scissor(&mut pass, Some(scissor), self.resources.surface_scale, width, height);
+        pass.set_pipeline(&group.pipeline);
+        pass.set_bind_group(0, &bind_group, &[]);
+        pass.draw(0..6, 0..1);
     }
 
 }

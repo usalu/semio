@@ -150,12 +150,23 @@ pub(super) struct Generation3dFlowEvalWindowWork {
     pub(super) instance_owner: semio_plugin::ArtifactInstanceOperationOwnerHandle,
     pub(super) tessellate: preview_eval::PreviewTessellateReceive,
     pub(super) evaluation:preview_eval::PreviewEvalReceive,
+    tick: preview_eval::MountedPreviewTick,
     pub(super) complete: bool,
     pub(super) closing: bool,
 }
 
 impl Generation3dFlowEvalWindowWork {
-    pub(super) fn new(tool_id: &'static str, instance_owner: semio_plugin::ArtifactInstanceOperationOwnerHandle) -> Self { Self { tool_id, instance_owner, tessellate: preview_eval::PreviewTessellateReceive::new(),evaluation:preview_eval::PreviewEvalReceive::new(), complete: false, closing: false } }
+    pub(super) fn new(tool_id: &'static str, instance_owner: semio_plugin::ArtifactInstanceOperationOwnerHandle) -> Self { Self { tool_id, instance_owner, tessellate: preview_eval::PreviewTessellateReceive::new(),evaluation:preview_eval::PreviewEvalReceive::new(), tick: Default::default(), complete: false, closing: false } }
+
+    fn close_demands(&self, copy: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        if !self.tick.terminal_is_empty() {
+            return self.tick.close_demands(copy);
+        }
+        if !self.tessellate.terminal_is_empty() {
+            return self.tessellate.close_demands(copy);
+        }
+        self.evaluation.close_demands(copy)
+    }
 }
 
 /// 🪟️ The preview window one chain route addresses, or `None` for a route that addresses none.
@@ -205,7 +216,10 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dFlowEva
     fn work_demands(&self,input:&ArtifactCommandInputs<'_,EditorApp<Generation3dPlayApp>>,maximum_copy_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{
         if let Generation3dCommand::FlowTessellateResolve(payload)=input.command{return self.instance_owner.inspect_original::<Generation3dInstanceOperationOwner,_>(|owner|owner.eval_session.as_ref().map_or_else(||Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::Canceled,"original preview session is closing")),|session|self.tessellate.demands(payload,session,maximum_copy_bytes)))?.unwrap_or(Ok(Default::default()))}
         if let Generation3dCommand::FlowEvalResolve(payload)=input.command{return self.instance_owner.inspect_original::<Generation3dInstanceOperationOwner,_>(|owner|owner.eval_session.as_ref().map_or_else(||Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::Canceled,"original preview session is closing")),|session|self.evaluation.demands(payload,session,maximum_copy_bytes)))?.unwrap_or(Ok(Default::default()))}
-        command_work_step_demands::<EditorApp<Generation3dPlayApp>>()
+        self.instance_owner.inspect_original::<Generation3dInstanceOperationOwner, _>(|owner| {
+            let Some(session) = owner.eval_session.as_ref() else { return Ok(Default::default()) };
+            self.tick.demands(session, maximum_copy_bytes)
+        })?.unwrap_or(Ok(Default::default()))
     }
 
     fn terminal_frame_release_bytes(&self) -> Option<usize> {
@@ -223,15 +237,15 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dFlowEva
             if self.evaluation.is_folded(){if let Some(ui_scope)=self.evaluation.publish_scope(cx)?{self.complete=true;return Ok(ArtifactCommandWorkStep::Complete(Emit{ui_scope,..Default::default()}))}}else{self.instance_owner.with_mut::<Generation3dInstanceOperationOwner,_>(|owner|owner.with_session_waking(|session|self.evaluation.step(payload,session,cx)))??;}
             return Ok(ArtifactCommandWorkStep::Progress{stage:"previewReceive",preview:br#"{"en":"Receiving evaluation output","de":"Auswertungsergebnis wird empfangen"}"#})
         }
-        let mut turn_failure = None;
-        let original: Result<_, Fault> = (|| {
-        if self.complete || self.closing { return Err(Fault::from("generation3d-flow-eval-window-work-terminal")); }
+        let pending = || ArtifactCommandWorkStep::Pending{stage:"previewEvaluate",preview:br#"{"en":"Evaluating preview","de":"Vorschau wird ausgewertet"}"#};
+        if cx.is_cancelled() || cx.should_yield() { return Ok(pending()); }
+        if self.complete || self.closing { return Err(Fault::from("generation3d-flow-eval-window-work-terminal").into()); }
         let turn_started_us = semio_framework_job::default_now_us();
         let (payload_window_id, payload_window_kind_id) = generation3d_flow_eval_window_address(input.command).ok_or_else(|| Fault::from("generation3d-flow-eval-window-command-mismatch"))?;
         let context = input.context.ok_or_else(|| Fault::from("generation3d-flow-eval-window-context-required"))?;
         let window = context.window_transient.as_ref().ok_or_else(|| Fault::from("generation3d-flow-eval-window-transient-required"))?;
         if window.window_id() != payload_window_id || payload_window_kind_id != window.window_kind_id() || generation3d_preview_kind(window.window_kind_id()).is_none() {
-            return Err(Fault::from("generation3d-flow-eval-window-owner-mismatch"));
+            return Err(Fault::from("generation3d-flow-eval-window-owner-mismatch").into());
         }
         let generate = window.window_kind_id() == generate_preview::GENERATION_3D_PLAY_WINDOW_GENERATE_PREVIEW;
         let generation_id = generate.then_some(input.config.selected_generation_id.as_deref()).flatten();
@@ -242,29 +256,27 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dFlowEva
         let retained_eval = retained.evaluation_for(generation_id);
         let cfg = ConfigView { snapshot: input.config, window: context.window_config.as_ref() };
         let grant = cx.retained_grant();
-        let funded = cx.with_original_effect(grant, |_, effect| self.instance_owner.with_mut::<Generation3dInstanceOperationOwner, _>(|owner| {
-            let overlay = generation3d_provisional_snapshot(input.snapshot, context.provisional(), &owner.gumball);
-            let evaluated = {
-                let doc = ArtifactView::with_operation(overlay.as_ref().unwrap_or(input.snapshot), input.history, input.operation.clone());
-                owner.with_session_waking(|session| match input.command {
-                    Generation3dCommand::FlowEvalTick(_) => flow_eval_tick::evaluate(window.window_id(), window.window_kind_id(), &doc, &cfg, session, retained_eval, None, effect),
-                    Generation3dCommand::FlowEvalResolve(_) => unreachable!(),
-                    Generation3dCommand::FlowTessellateResolve(_) => unreachable!(),
-                    _ => Err(Fault::from("generation3d-flow-eval-window-command-mismatch")),
-                })
-            };
-            if let Some(overlay) = overlay {
-                overlay.retire_cold();
+        let funded = cx.with_original_effect(grant, |_, effect| {
+            if let Some(progress) = self.tick.advance_publication(effect) {
+                return Ok(progress.map(|progress| (None, progress)));
             }
-            evaluated?
-        }));
-        let (evaluated, performed) = match funded {
-            Ok(Some(funded)) => funded,
-            Ok(None) => return Ok(ArtifactCommandWorkStep::Progress{stage:"previewEvaluate",preview:br#"{"en":"Evaluating preview","de":"Vorschau wird ausgewertet"}"#}),
-            Err(refused) => { turn_failure = Some(refused); return Err(Fault::from("generation3d-flow-eval-window-turn-refused")) }
-        };
+            self.instance_owner.with_mut::<Generation3dInstanceOperationOwner, _>(|owner| {
+                let overlay = generation3d_provisional_snapshot(input.snapshot, context.provisional(), &owner.gumball);
+                let evaluated = {
+                    let doc = ArtifactView::with_operation(overlay.as_ref().unwrap_or(input.snapshot), input.history, input.operation.clone());
+                    owner.with_session_waking(|session| flow_eval_tick::evaluate(window.window_id(), window.window_kind_id(), &doc, &cfg, session, retained_eval, turn_started_us, effect, Some(&mut self.tick)))
+                };
+                if let Some(overlay) = overlay {
+                    overlay.retire_cold();
+                }
+                evaluated
+            })
+        })?;
+        let Some((evaluated, performed)) = funded else { return Ok(pending()); };
         cx.consume_work(performed);
-        let (emit, publication) = evaluated?;
+        let (outcome, progress) = evaluated?.map_err(|error| semio_framework_job::OriginalTurnFailure::debit_original(error, cx))?;
+        cx.consume_retained(progress)?;
+        let Some((emit, publication)) = outcome else { return Ok(pending()); };
         self.complete = true;
         let window_transient = match publication {
             semio_os_flow::FlowEvalPublication::Retained => Vec::new(),
@@ -277,19 +289,15 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dFlowEva
             emit,
             ephemeral: EphemeralEmit { presence: Vec::new(), transient: Vec::new(), window_transient },
         })
-    
-        })();
-        if let Some(refused) = turn_failure { return Err(refused.into()) }
-        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 
     fn begin_close(&mut self){self.closing=true;self.tessellate.begin_close();self.evaluation.begin_close();}
-    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{self.begin_close();if !self.tessellate.terminal_is_empty(){self.tessellate.close_step(cx)}else{self.evaluation.close_step(cx)}}
-    fn next_close_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(if !self.tessellate.terminal_is_empty(){self.tessellate.close_demands(0)?.copy_bytes}else{self.evaluation.close_demands(0)?.copy_bytes})}
-    fn next_close_capacity_byte_demand(&self,copy:usize)->Result<usize,semio_framework_value::ValueError>{Ok(if !self.tessellate.terminal_is_empty(){self.tessellate.close_demands(copy)?.capacity_bytes}else{self.evaluation.close_demands(copy)?.capacity_bytes})}
-    fn next_close_release_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(if !self.tessellate.terminal_is_empty(){self.tessellate.close_demands(0)?.release_bytes}else{self.evaluation.close_demands(0)?.release_bytes})}
-    fn next_close_depth_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(if !self.tessellate.terminal_is_empty(){self.tessellate.close_demands(0)?.depth}else{self.evaluation.close_demands(0)?.depth})}
-    fn terminal_is_empty(&self)->bool{self.closing&&self.tessellate.terminal_is_empty()&&self.evaluation.terminal_is_empty()}
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{self.begin_close();if !self.tick.terminal_is_empty(){self.tick.close_step(cx)}else if !self.tessellate.terminal_is_empty(){self.tessellate.close_step(cx)}else{self.evaluation.close_step(cx)}}
+    fn next_close_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(self.close_demands(0)?.copy_bytes)}
+    fn next_close_capacity_byte_demand(&self,copy:usize)->Result<usize,semio_framework_value::ValueError>{Ok(self.close_demands(copy)?.capacity_bytes)}
+    fn next_close_release_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(self.close_demands(0)?.release_bytes)}
+    fn next_close_depth_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(self.close_demands(0)?.depth)}
+    fn terminal_is_empty(&self)->bool{self.closing&&self.tick.terminal_is_empty()&&self.tessellate.terminal_is_empty()&&self.evaluation.terminal_is_empty()}
 }
 
 /// 🪄️ with every open press's and typing run's provisional leaves (the framework's, as of admission) and every open gumball

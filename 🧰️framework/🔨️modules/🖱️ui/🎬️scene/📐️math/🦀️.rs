@@ -32,7 +32,7 @@ pub use semio_ui_scene_mesh::{
     SceneSectionRole3d, MESH3D_AUTHORITY_CAPACITY, MESH3D_AUTHORITY_PAGE_CAPACITY, MESH3D_OWNER_BYTE_CAPACITY, MESH3D_OWNER_PAGE_CAPACITY, MESH3D_PAGE_BYTES, MESH3D_RESOURCE_COMPONENT_COUNT_CAPACITY,
 };
 pub use semio_ui_scene_pass::{
-    aabb_intersects_frustum, directional_shadow_frustum_planes, directional_shadow_texture_matrix, directional_shadow_view_projection, frustum_planes, transform_aabb, FrustumPlane, LineDraw3d, LineVertex3d, ProceduralGrid3d, SceneAuthoredMaterial3d,
+    aabb_intersects_frustum, directional_shadow_frustum_planes, directional_shadow_texture_matrix, directional_shadow_view_projection, frustum_planes, transform_aabb, FrustumPlane, LineDraw3d, LineVertex3d, PointDraw3d, PointVertex3d, POINT_CHUNK_VERTICES, ProceduralGrid3d, SceneAuthoredMaterial3d,
     SceneCurvilinear3d, SceneDraw3d, SceneLighting3d, SceneMaterial3d, SceneMaterialAlpha3d, SceneMaterialDraw3d, SceneMaterialKind3d, ScenePass3d, SceneRenderProfile3d, SceneShadow3d, SceneShadowRole3d, SceneTextureFilter3d, SceneTextureSampler3d,
     SceneTextureWrap3d, SceneViewportMask3d, TexturedDraw3d, TexturedInstance3d, ICON_SHADOW_MAP_SIZE, PROCEDURAL_GRID_CELL_THICKNESS, PROCEDURAL_GRID_FADE_STRENGTH, PROCEDURAL_GRID_SECTION_THICKNESS, WORLD_SHADOW_FAR, WORLD_SHADOW_HALF_EXTENT,
     WORLD_SHADOW_LIGHT_DISTANCE, WORLD_SHADOW_MAP_SIZE, WORLD_SHADOW_NEAR,

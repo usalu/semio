@@ -158,8 +158,8 @@ impl ProductPreparation {
         match self.phase {
             ProductPhase::Sparse => {
                 let chunk = engine.terminal_sparse_chunk(self.camera_cursor, self.point_cursor, TERMINAL_CAMERA_WORK, TERMINAL_POINT_WORK);
-                for (offset, pose) in chunk.camera_poses.iter().enumerate() {
-                    self.trajectory.push(camera_pose_preview((self.camera_cursor + offset) as u32, pose));
+                for (entity, pose) in &chunk.camera_poses {
+                    self.trajectory.push(camera_pose_preview(*entity, pose));
                 }
                 self.points_total += chunk.packed_points.len() / 3;
                 let room = (RemodelingContentKind::Sparse.max_bytes() - self.sparse_leaves.bytes) / 12 * 3;

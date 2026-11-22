@@ -37,7 +37,7 @@ export async function runSchedulerCliV1(_root:string,args:readonly string[],envi
   const outcome=await runScheduledV1(store,{id:randomUUID(),agent:session.agent.id,workspace:session.worktree,class:(flag(options,"class")??"compile") as "compile",priority:(flag(options,"priority")??"agent") as "agent",depth:Number(flag(options,"depth")??0),key,...flag(options,"lane")===undefined?{}:{lane:flag(options,"lane")!},weight:Math.max(1,Math.round(session.budget.weight)),estimate:{class:flag(options,"estimate-class")??"phase:compile",floorMegabytes:0,limitMegabytes:peak}},async context=>{
    const policy=jobPolicyV1(peak),outcome=await(ports.limited??runLimitedJobV1)({job:key,policy,limiter:selectJobLimiterV1(policy).limiter,command:command[0]!,args:command.slice(1),signal:context.signal,progressMilliseconds:1000,environment:{...environment,[SCHEDULED_JOB_V1]:context.jobId}});
    const text=renderJobOutcomeV1(outcome,key,language);if(text!==undefined)write(text);
-   return{exit:outcome.kind,observedPeakMegabytes:jobBreachLearnedPeakV1(outcome)};
+   return{exit:outcome.kind,observedPeakMegabytes:jobBreachLearnedPeakV1(outcome),...outcome.kind==="ok"?{}:{reason:`${key}: ${outcome.kind}, exit code ${outcome.exitCode??"none"}${outcome.signal===null?"":`, signal ${outcome.signal}`}, ${Math.round(outcome.durationMilliseconds/1000)} s, peak ${outcome.peakMegabytes} MB`}};
   },{signal:controller.signal,onQueued:position=>write(schedulerTextV1(language,"queuedAt",{position}))});
   process.off("SIGINT",forward);process.off("SIGTERM",forward);
   return outcome.exit==="ok"?0:1;

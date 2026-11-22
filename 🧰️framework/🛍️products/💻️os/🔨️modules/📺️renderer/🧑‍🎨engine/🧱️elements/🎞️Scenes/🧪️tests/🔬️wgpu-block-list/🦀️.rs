@@ -2,7 +2,7 @@ use semio_renderer_wgpu_contracts::framework_widget_context;
 use semio_renderer_wgpu_scene_feeds::{accepted_block_list_accessibility_controls, acknowledge_block_list_accessibility_candidates, seal_block_list_accessibility_candidates};
 use crate::{cancel_scene_list_transfer, passive_scene_pointer_button, passive_scene_pointer_move};
 use semio_renderer_wgpu_scene_state::{BlockListChromeLabels, SceneModifiers, draw_ink_rect_outline, remember_scene_theme};
-use semio_renderer_wgpu_scene_tables::{BlockListPlan, BlockListRole, block_list_accessibility_action_is_current, block_list_accessibility_activate, block_list_accessibility_controls, block_list_hit, block_list_plan, block_list_transfer_start, render_block_list};
+use semio_renderer_wgpu_scene_tables::{BlockListPlan, BlockListRole, block_list_accessibility_action_is_current, block_list_accessibility_activate, block_list_accessibility_controls, block_list_hit, block_list_plan, block_list_transfer_start, render_block_list, sortable_vertical_offsets};
 use serde_json::{Value, json};
 use std::collections::HashMap;
 use semio_ui_declaration::layout::ActionDescriptor;
@@ -315,4 +315,15 @@ fn shared_palette_target_contract_drives_pointer_drag_and_accessibility_from_the
     let controls = accepted_block_list_accessibility_controls(&successor.host_id);
     assert!(!controls.iter().any(|control| control.key.ends_with(".palette.filter")), "an empty list publishes no enabled virtual palette control");
     assert!(block_list_accessibility_activate(&successor, "presentation-block-list.palette.filter", &mut input).is_none(), "the accepted empty successor retires the old palette action");
+}
+
+/// ↕️ The sort drag's row displacement equals dnd-kit's `verticalListSortingStrategy` on the shared fixture.
+#[test]
+fn sortable_offsets_match_the_vertical_list_sorting_strategy() {
+    let fixture: Value = serde_json::from_str(include_str!("🧫️fixtures/↕️sortable-offsets/🔣️.json")).unwrap();
+    let rects: Vec<(f32, f32)> = fixture["rects"].as_array().unwrap().iter().map(|rect| (rect[0].as_f64().unwrap() as f32, rect[1].as_f64().unwrap() as f32)).collect();
+    for case in fixture["cases"].as_array().unwrap() {
+        let expected: Vec<f32> = case["expected"].as_array().unwrap().iter().map(|value| value.as_f64().unwrap() as f32).collect();
+        assert_eq!(sortable_vertical_offsets(&rects, case["active"].as_u64().unwrap() as usize, case["over"].as_u64().unwrap() as usize), expected, "{case}");
+    }
 }

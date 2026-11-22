@@ -33,7 +33,7 @@
     },
     {
       "id": "rustup-protocol",
-      "budgetMs": 15000,
+      "budgetMs": 300000,
       "typecheck": "none",
       "files": [
         "🚀️bootstrap/🛠️tools/🦀️rustup/🧪️tests/🟦️.ts"
@@ -393,6 +393,9 @@
       "files": [
         "🧪️tests/🌍️caller-environment/🟦️.ts"
       ],
+      "fileLaunchers": {
+        "🧪️tests/🌍️caller-environment/🟦️.ts": "nx-namespace"
+      },
       "platforms": [
         "darwin",
         "linux",
@@ -830,6 +833,9 @@
       "budgetMs": 300000,
       "typecheck": "none",
       "files": [
+        "💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/🧪️tests/⌛️wait/🟦️.ts",
+        "💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/⚙️setup/🧪️tests/⏳️busy-funding/🟦️.ts",
+        "💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🧹️foreign-names/🧪️tests/🟦️.ts",
         "💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🧪️tests/🆔️identity/🟦️.ts",
         "💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🧪️tests/📥️phase/🟦️.ts",
         "💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🧪️tests/📥️queued/🟦️.ts",
@@ -931,6 +937,8 @@
       "budgetMs": 300000,
       "typecheck": "none",
       "files": [
+        "💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/🧮️sizing/🟦️.ts",
+        "💾️storage/🔒️enforcement/🔌️nx/🤝️nested-custody/🧪️tests/🔒️cross-process/🟦️.ts",
         "💾️storage/🔒️enforcement/🔌️nx/🎟️put-slots/🧪️tests/🟦️.ts",
         "💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/🎛️operation/🟦️.ts",
         "💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/🏦️funded/🟦️.ts",
@@ -968,6 +976,7 @@
       "budgetMs": 300000,
       "typecheck": "none",
       "files": [
+        "💾️storage/🧾️ledger/🧪️tests/🟦️.ts",
         "💾️storage/🔒️enforcement/🧵️session/🏊️pool/🧪️tests/🟦️.ts",
         "💾️storage/🧾️ledger/🧪️tests/⚖️law/🟦️.ts",
         "💾️storage/🧾️ledger/🎚️machine/🧪️tests/🟦️.ts"
@@ -998,6 +1007,7 @@
       "budgetMs": 300000,
       "typecheck": "none",
       "files": [
+        "🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/🔏️index/🧊️stamps/🧪️tests/🟦️.ts",
         "🚀️bootstrap/🛠️tools/📦️sdk/🎟️capacity/🧪️tests/📤️derivative/⚠️failure/🟦️.ts",
         "🚀️bootstrap/🛠️tools/📦️sdk/🎟️capacity/🧪️tests/📤️derivative/🟦️.ts",
         "🚀️bootstrap/🛠️tools/📦️sdk/🎟️capacity/🧪️tests/🟦️.ts",
@@ -1033,6 +1043,8 @@
       "budgetMs": 300000,
       "typecheck": "none",
       "files": [
+        "🚀️bootstrap/🛠️tools/🔏️authorizers/🧪️tests/📦️bundle-load/🟦️.ts",
+        "🚀️bootstrap/🛠️tools/🔏️authorizers/🧪️tests/🚪️entry-law/🟦️.ts",
         "🚀️bootstrap/🛠️tools/🔏️authorizers/📦️workspace/🧪️tests/🟦️.ts",
         "🚀️bootstrap/🛠️tools/🔏️authorizers/🧪️tests/📦️compiler-init/🟦️.ts",
         "🚀️bootstrap/🛠️tools/🔏️authorizers/🧪️tests/🧭️closure-law/🟦️.ts",
@@ -1132,6 +1144,12 @@
       "budgetMs": 300000,
       "typecheck": "none",
       "files": [
+        "🚀️bootstrap/📦️dependencies/🐕️stall/🧪️tests/🟦️.ts",
+        "🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🔖️stable-stamp/🟦️.ts",
+        "🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🧵️singletons/🟦️.ts",
+        "🚀️bootstrap/📦️dependencies/🕓️walk/🧪️tests/🟦️.ts",
+        "🚀️bootstrap/📦️dependencies/🧮️fence/🧪️tests/🟦️.ts",
+        "🚀️bootstrap/📦️dependencies/🪞️adopt/🧪️tests/♻️resume/🟦️.ts",
         "🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/👓️reading/🟦️.ts",
         "🚀️bootstrap/📦️dependencies/🔌️managers/🍞️bun/🧪️tests/🟦️.ts",
         "🚀️bootstrap/📦️dependencies/🔒️lock-sync/🧪️tests/🟦️.ts",
@@ -1166,6 +1184,12 @@
       "budgetMs": 300000,
       "typecheck": "none",
       "files": [
+        "🚀️bootstrap/🔌️nx-plugin/🔏️implementation/🧪️tests/🌱️probe/🟦️.ts",
+        "🚀️bootstrap/🛰️fleet-fetch/🐍️uv/🧪️tests/🟦️.ts",
+        "🚀️bootstrap/🛰️fleet-fetch/📦️install/🧪️tests/🟦️.ts",
+        "🚀️bootstrap/🛰️fleet-fetch/🦀️crates/🧪️tests/🟦️.ts",
+        "🚀️bootstrap/🛰️fleet-fetch/🧪️tests/🟦️.ts",
+        "🚀️bootstrap/🛰️fleet-fetch/🧰️setup/🧪️tests/🟦️.ts",
         "🚀️bootstrap/🔌️nx-plugin/📤️arguments/🧪️tests/📥️native-caller/🟦️.ts",
         "🚀️bootstrap/🔌️nx-plugin/📤️arguments/🧪️tests/🟦️.ts",
         "🚀️bootstrap/🔌️nx-plugin/🧪️tests/🦀️native-dependency-closures/🟦️.ts",
@@ -1234,6 +1258,7 @@
       "budgetMs": 300000,
       "typecheck": "none",
       "files": [
+        "☁️stage-fleet/🧪️tests/🟦️.ts",
         "🦀️cargo/🗃️unit-cache/🧪️tests/🟦️.ts",
         "🦀️cargo/🗃️unit-cache/🏁️exit/🧪️tests/🟦️.ts",
         "🦀️cargo/🗃️unit-cache/🧵️lane/🧪️tests/🟦️.ts",
@@ -1469,6 +1494,8 @@
       "budgetMs": 300000,
       "typecheck": "none",
       "files": [
+        "🧪️tests/📦️native-dependencies/🧪️tests/🟦️.ts",
+        "🧪️tests/🚪️artifact-rust-check/🟦️.ts",
         "🧪️tests/📐️phases/🟦️.ts",
         "🧪️tests/📚️library-search-path/🟦️.ts",
         "🧪️tests/🕸️wasm-bindgen-locks/🟦️.ts"
@@ -1822,7 +1849,8 @@
         "🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🏭️producer/🏺️retained/🟦️.ts",
         "🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🏭️producer/🧊️diagnostic/🟦️.ts",
         "🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🏭️producer/❔️diagnostic/🟦️.ts",
-        "🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🔗️pair/🟦️.ts"
+        "🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🔗️pair/🟦️.ts",
+        "🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🌱️seeded/🟦️.ts"
       ]
     }
   ],

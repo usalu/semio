@@ -2,5 +2,38 @@
   "folders": ["keep", "omit"],
   "filesPerKind": 180,
   "scanCopies": 10,
-  "patterns": ["tree/**/*.ts", "!tree/omit/**/*.ts", "tree/literal.txt"]
+  "maximumCheckpoints": 140,
+  "shallow": "tree/*.txt",
+  "absent": ["tree/missing/**/*.txt", "tree/literal.txt/**/*.txt"],
+  "patterns": ["tree/**/*.ts", "!tree/omit/**/*.ts", "tree/literal.txt"],
+  "directoryCadence": {
+    "pattern": "tree/**/*.json",
+    "directories": 512,
+    "maximumCheckpoints": 34
+  },
+  "nested": {
+    "directories": {
+      "tree": ["side", "b.ts", "lib", "a.ts", "node_modules", "opaque", "linked"],
+      "tree/side": ["s.ts"],
+      "tree/lib": ["inner", "y.ts", "vacant", "x.ts"],
+      "tree/lib/inner": ["i.ts", "down"],
+      "tree/lib/inner/down": ["d.ts"],
+      "tree/lib/vacant": [],
+      "tree/node_modules": ["explicit.ts"],
+      "tree/opaque": ["hidden.ts"]
+    },
+    "symlink": "tree/linked",
+    "opaque": "tree/opaque",
+    "scans": [
+      { "target": "ancestor", "compile": false, "patterns": ["tree/**/*.ts", "!tree/lib/**/*.ts"], "candidates": ["tree/b.ts", "tree/a.ts", "tree/lib/y.ts", "tree/lib/x.ts", "tree/lib/inner/i.ts", "tree/lib/inner/down/d.ts", "tree/side/s.ts"] },
+      { "target": "nested", "compile": true, "patterns": ["tree/lib/**/*.ts", "!tree/lib/x.ts"], "candidates": ["tree/lib/y.ts", "tree/lib/x.ts", "tree/lib/inner/i.ts", "tree/lib/inner/down/d.ts"] },
+      { "target": "shallow-shared", "compile": true, "patterns": ["tree/lib/*.ts"], "candidates": ["tree/lib/y.ts", "tree/lib/x.ts"] },
+      { "target": "shallow-only", "compile": true, "patterns": ["tree/lib/inner/*.ts"], "candidates": ["tree/lib/inner/i.ts"] },
+      { "target": "vacant", "compile": true, "patterns": ["tree/lib/vacant/**/*.ts"], "candidates": [] },
+      { "target": "explicit-ignored", "compile": true, "patterns": ["tree/node_modules/**/*.ts"], "candidates": ["tree/node_modules/explicit.ts"] },
+      { "target": "explicit-opaque", "compile": true, "patterns": ["tree/opaque/**/*.ts"], "candidates": [] },
+      { "target": "explicit-link", "compile": true, "patterns": ["tree/linked/**/*.ts"], "candidates": [] }
+    ],
+    "reads": ["tree", "tree/lib", "tree/lib/vacant", "tree/lib/inner", "tree/lib/inner/down", "tree/side", "tree/node_modules"]
+  }
 }

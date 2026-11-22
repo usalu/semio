@@ -1,6 +1,7 @@
 import{expect,test}from"bun:test";
 import{churnProtocolV1,churnTextV1}from"../../../../../../📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
-import{nativeBuildJobStallV1,nativeBuildJobWaitSubjectV1,watchNativeBuildJobV1}from"../🟦️.ts";
+import{nativeBuildCompilerIdleStallV1,nativeBuildJobStallV1,nativeBuildJobWaitSubjectV1,watchNativeBuildJobV1}from"../🟦️.ts";
+import compilerIdle from "./🧫️fixtures/compiler-idle.json" with { type: "json" };
 
 const path="/w/🧵️job/⏱️context/🦀️.rs",retry=(language:string,attempt:number)=>churnTextV1(language,"retry",{path,reason:"one of its inputs changed",attempt,maximum:"∞",delay:30000});
 const lease=(resource:string,elapsedMs:number)=>`[script] ${JSON.stringify({owner:"repository:build",command:"descriptor:build",stage:"running",activity:{resource,mode:"shared",elapsedMs}})}`;
@@ -21,4 +22,11 @@ test("a job that never printed anything is not a waiter and a queued job names t
   const silent=watchNativeBuildJobV1(0);expect(nativeBuildJobStallV1("quiet",silent,10**9,1)).toBeUndefined();
   const queued=watchNativeBuildJobV1(0);queued.observe(lease("semio.compiler.cpu/v1",1000),1000);queued.observe(lease("semio.compiler.cpu/v1",2000),2000);
   expect(nativeBuildJobStallV1("describe-tool",queued,901000,900000)).toContain("only waited on semio.compiler.cpu/v1");
+});
+
+
+test("the compiler idle watchdog distinguishes compilation from Cargo planning", () => {
+  for (const { label, stalled, ...counts } of compilerIdle.cases) {
+    expect(nativeBuildCompilerIdleStallV1({ ...counts, stallMilliseconds: compilerIdle.stallMilliseconds }), label).toBe(stalled);
+  }
 });

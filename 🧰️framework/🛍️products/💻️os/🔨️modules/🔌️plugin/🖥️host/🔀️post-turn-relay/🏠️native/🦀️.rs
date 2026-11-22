@@ -1,7 +1,7 @@
 //! 🏠️ The admitting Source owns the real instance; immutable compiled/runtime parents are borrowed from their original cache.
 #[path="🌱️projection.rs"]
 mod projection;
-pub use projection::{with_bootstrap_history_parts,attest_bootstrap_header_return,with_frozen_history_parts,attest_header_return,attest_actor_failure_if_needed,FrozenReceiptFrontier};
+pub use projection::{with_bootstrap_history_parts,attest_bootstrap_header_return,with_frozen_history_parts,attest_header_return,attest_actor_failure_if_needed,FrozenReceiptFrontier,GuestFrozenHistoryCapture};
 use super::*;
 use semio_framework_job::{OriginalNativeRetirement,OriginalTurnFailure,StepContext};
 use semio_plugin_host_guest_runtime::CompiledHandle;

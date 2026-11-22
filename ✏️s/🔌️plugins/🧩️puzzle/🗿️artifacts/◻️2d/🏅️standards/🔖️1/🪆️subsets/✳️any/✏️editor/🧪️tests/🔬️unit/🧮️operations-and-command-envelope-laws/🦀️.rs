@@ -155,10 +155,10 @@ async fn created_and_edited_board_reopens_with_undo_and_redo() {
         let mut reopened = app_with_registry();
         if form == "text" {
             let saved = block_on(original.document_text()).expect("save text");
-            block_on(semio_plugin::app::artifact_app_laws::load_document_text(&mut *reopened.0, &saved, &mut semio_plugin::artifact_app_laws::fixture_identity(), reopened.1.cx())).expect("reopen text");
+            block_on(semio_plugin::app::artifact_app_laws::load_document_text(&mut reopened.0, &saved, &mut semio_plugin::artifact_app_laws::fixture_identity(), reopened.1.cx())).expect("reopen text");
         } else {
             let saved = block_on(original.document_pack()).expect("save pack");
-            block_on(semio_plugin::app::artifact_app_laws::load_document(&mut *reopened.0, &saved, &mut semio_plugin::artifact_app_laws::fixture_identity(), reopened.1.cx())).expect("reopen pack");
+            block_on(semio_plugin::app::artifact_app_laws::load_document(&mut reopened.0, &saved, &mut semio_plugin::artifact_app_laws::fixture_identity(), reopened.1.cx())).expect("reopen pack");
         }
         assert_eq!(board_snapshot_nodes(&fixture_of(&reopened)), edited, "{form} reopened the edited board");
         dispatch(&mut reopened, "undo", None, None).expect("undo reopened edit");

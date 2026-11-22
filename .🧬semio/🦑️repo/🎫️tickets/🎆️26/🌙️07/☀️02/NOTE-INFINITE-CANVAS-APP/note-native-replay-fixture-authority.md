@@ -1,0 +1,9 @@
+# Native Replay Fixture Authority
+
+The native replacement and supersession tests were still calling the old receiving callback and grant-only retirement interfaces. The fixtures now borrow the actual native control, retained grant, and work from the caller’s receiving scope. They reject both a foreign recipient and a foreign Source caller inside that authenticated scope. The probes retain the assertion that rejected access allocates and releases zero bytes.
+
+Controlled retirement now receives the caller’s original allocation effect. The shared fixture accounts for prerequisite and receiving scope costs in its turn grant and compares each turn’s physical heap activity with its Source receipt. The zero-grant checks and fixture expectations for pointer restoration and the JSON result remain in place.
+
+The shared-store Rust test build compiled and linked with the 13 stale API errors removed. Using a funded outer turn with a zero-grant replay loan bypassed the earlier Source clock panic while retaining the assertion of no heap activity in the unfunded replay itself.
+
+The two targeted tests still have runtime failures. Replacement repeatedly returns pending with no original payload retained and no receiver work pending. Its initial reported demand is 8,456 copy bytes. The caller reports Source origin refresh (five items and 809 copied bytes), with no retained payload admitted. Supersession advances after funding the original scope, then fails the existing foreign-refusal assertion. The fold can report active during an output handoff after its Source binding has been cleared, so activity alone cannot establish that the next caller must be refused. The foreign authority expectation remains in place pending a confirmed fixture boundary, and no runtime Rust implementation changed.

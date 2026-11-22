@@ -138,11 +138,11 @@ export {
   parseDagPreselectJson,
   parseDagSelectionUnionBoundsScreen,
   parseDagSliderOverlays,
-  resizeCanvasBackingStore,
   sceneToSyncJson,
   sceneToSyncPack,
   SelectionAlignChrome
 } from "./🖼️dag-overlays/🟦️.tsx";
+export { resizeCanvasBackingStore } from "../📐️Canvas2dHost/📏️backing-store/🟦️.ts";
 
 export {
   createFlowSharedPayloadCoalescer,

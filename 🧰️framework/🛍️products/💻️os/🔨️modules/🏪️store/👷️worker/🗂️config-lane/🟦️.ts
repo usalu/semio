@@ -122,13 +122,13 @@ export const CONFIG_FACETS: ReadonlyMap<string, ConfigFacetV1> = new Map<string,
 
 /** 🗃️ A facet's persisted form: its whole value as the archive's pack value, no history log. */
 export function configFacetArchiveV1(value: unknown): Uint8Array {
-  return encodeDocumentArchiveBytes({ parent_pack: Array.from(encodePackValue(value as PackValue)), parent_spr: [], members: [] });
+  return encodeDocumentArchiveBytes({ parent_pack: encodePackValue(value as PackValue), parent_spr: new Uint8Array(0), members: [] });
 }
 
 /** 🗃️ The value a facet archive holds, or `undefined` when the archive is not one of this facet. */
 function decodeConfigFacetArchive(facet: ConfigFacetV1, archive: Uint8Array): unknown {
   try {
-    return facet.decodeValue(decodePackValue(new Uint8Array(decodeDocumentArchiveBytes(archive).parent_pack)));
+    return facet.decodeValue(decodePackValue(decodeDocumentArchiveBytes(archive).parent_pack as Uint8Array));
   } catch {
     return undefined;
   }
@@ -177,9 +177,9 @@ export function foldConfigFacet(state: ArtifactState, envelopes: readonly Mutati
   state.facetValue = folded.value;
   const archive = configFacetArchiveV1(folded.value);
   if (folder !== null) {
-    void persistFolderArchive(state, folder, Array.from(archive));
+    void persistFolderArchive(state, folder, archive);
   }
-  emitEvent(state, { kind: "documentArchiveReplaced", archive: Array.from(archive) });
+  emitEvent(state, { kind: "documentArchiveReplaced", archive });
 }
 
 /** 🎚️ Folds the envelopes another tab's store admitted (they arrive on the document's channel) into the held value. That tab

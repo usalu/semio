@@ -135,6 +135,9 @@ pub fn semio_drawing_snapshot(canvas: (u32, u32), title: Option<String>, styles:
     }
 }
 
+#[path = "🧵️serializers/🎟️work/🦀️.rs"]
+mod writer_work;
+
 //#region 🪢️TaxonomyMounts
 #[path = "📦️owned/🦀️.rs"]
 pub mod owned;

@@ -87,10 +87,10 @@ function diagnosticHostLimit(flag: string, maximum: number): number | undefined 
   }
   return value === undefined ? undefined : Number(value);
 }
-const policyItems = diagnosticHostLimit("--host-driver-policy", 224_000_000);
-const policyCopyBytes = diagnosticHostLimit("--host-driver-copy-bytes", 12_000_000_000);
-const policyCapacityBytes = diagnosticHostLimit("--host-driver-capacity-bytes", 4_000_000_000);
-const policyReleaseBytes = diagnosticHostLimit("--host-driver-release-bytes", 4_000_000_000);
+const policyItems = diagnosticHostLimit("--host-driver-policy", 448_000_000);
+const policyCopyBytes = diagnosticHostLimit("--host-driver-copy-bytes", 24_000_000_000);
+const policyCapacityBytes = diagnosticHostLimit("--host-driver-capacity-bytes", 8_000_000_000);
+const policyReleaseBytes = diagnosticHostLimit("--host-driver-release-bytes", 8_000_000_000);
 const policyTurnItems = diagnosticHostLimit("--host-driver-turn-items", 4096);
 const journeyMilliseconds = diagnosticHostLimit("--journey-ms", 900_000) ?? 360_000;
 const publishedLaunch = flags.includes("--published-launch");

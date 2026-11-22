@@ -93,3 +93,20 @@ test("a unit that holds the root is shared among machines at the same root and b
  expect(rlibs(m3,"core"),"a unit installed from the fleet equals a clean local build").toEqual(rlibs(clean,"core"));expect(rlibs(m3,"core").length).toBe(1);
  expect(rlibs(m1,"core")).toEqual(rlibs(clean,"core"));
 },600000);
+
+test("a unit that holds the root and was compiled while the cache was unreachable is keyed locally, its hint and unit wait in the spool, and the other machine builds nothing once the cache answers",async()=>{
+ const server=await serve(),dead=await serve(),closed=dead.url;await dead.stop();
+ const home=directory("home-o"),checkout=join(home,"x","ws"),m1=machine("o1",checkout,true);
+ const first=await build(m1,remote({url:closed}));expect(first.code,first.output).toBe(0);
+ expect(readFallbacksV1(m1.cache)["root-keyed-deferred"],"the root key is computed without the cache").toBe(2);
+ expect(readFallbacksV1(m1.cache)["root-key-failed"],"no unit is given up").toBeUndefined();
+ const spool=join(m1.cache,fleet.layout.state,fleet.layout.spool),jobs=readdirSync(spool).filter(name=>name.endsWith(".json")).map(name=>JSON.parse(readFileSync(join(spool,name),"utf8")) as {hint?:{kinds:string[]}});
+ expect(jobs.filter(job=>job.hint!==undefined).length,"the units that hold the root carry their hint").toBe(2);
+ const live=remote(server);
+ for(const name of readdirSync(spool))if(name.endsWith(".json")){const path=join(spool,name),job=JSON.parse(readFileSync(path,"utf8"));writeFileSync(path,JSON.stringify({...job,notBeforeMs:0}));}
+ rmSync(join(m1.cache,fleet.layout.state,fleet.layout.down),{force:true});
+ const casBefore=process.env.SEMIO_CAS_ROOT;process.env.SEMIO_CAS_ROOT=m1.cas;
+ try{await settle(m1,live);}finally{if(casBefore===undefined)delete process.env.SEMIO_CAS_ROOT;else process.env.SEMIO_CAS_ROOT=casBefore;}
+ const m2=machine("o2",checkout,false),second=await build(m2,live);expect(second.code,second.output).toBe(0);
+ expect(compiled(m2),"same root: nothing is compiled").toEqual([]);expect(hits(m2).filter(name=>name==="leafr").length).toBe(1);
+},600000);

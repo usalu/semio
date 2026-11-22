@@ -19,7 +19,7 @@
     {
       "level": "error",
       "code": "terrain.elevation-source.invalid",
-      "message": "Elevation requires ordered WGS84 bounds and exactly 33 rows of 33 samples.",
+      "message": "Elevation requires ordered WGS84 bounds and a rectangular grid with 2 to 65 samples per axis.",
       "target": [
         "elevationSource"
       ]

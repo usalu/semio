@@ -228,6 +228,12 @@
             "pid"
           ]
         },
+        "pressure": {
+          "enum": [
+            "reclaimable",
+            "pinned"
+          ]
+        },
         "lease": {
           "type": "string",
           "minLength": 1,
@@ -427,6 +433,11 @@
         },
         "directory": {
           "$ref": "#/$defs/directory"
+        },
+        "within": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]{0,39}$",
+          "description": "Id of the control or tree area whose directory strictly contains this retired directory; the retirement then nests inside that area instead of claiming its own home."
         },
         "quietMs": {
           "$ref": "#/$defs/milliseconds"

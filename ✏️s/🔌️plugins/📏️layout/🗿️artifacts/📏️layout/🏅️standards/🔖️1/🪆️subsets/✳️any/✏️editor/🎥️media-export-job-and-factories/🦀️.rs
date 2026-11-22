@@ -188,6 +188,10 @@ impl semio_plugin::ArtifactOwnedToolJobFactory for LayoutMediaExportJobFactory {
 }
 
 impl LayoutExportJobFactory {
+    pub(super) fn layout_export_contract() -> ToolExecutionContract {
+        ToolExecutionContract::resumable(MAX_LAYOUT_EXPORT_COMMAND_RAW_BYTES, MAX_LAYOUT_EXPORT_DECODED_ITEMS, 1, MAX_LAYOUT_EXPORT_OUTPUT_BYTES, 2_000, 64, 1)
+    }
+
     pub fn new(controller_id: &str) -> Self {
         Self { keys: LAYOUT_EXPORT_TOOL_IDS.iter().map(|tool_id| ToolFactoryKey::new(controller_id, *tool_id)).collect() }
     }
@@ -210,7 +214,7 @@ impl ToolJobFactory for LayoutExportJobFactory {
     }
 
     fn execution_contract(&self) -> ToolExecutionContract {
-        ToolExecutionContract::resumable(MAX_LAYOUT_EXPORT_COMMAND_RAW_BYTES, MAX_LAYOUT_EXPORT_DECODED_ITEMS, 1, MAX_LAYOUT_EXPORT_OUTPUT_BYTES, 2_000, 64, 1)
+        Self::layout_export_contract()
     }
 
     semio_plugin::retained_command::typed_tool_job_factory_admission!(|operation, payload| Ok::<_, String>(LayoutExportToolJob::from_payload(operation, payload)));

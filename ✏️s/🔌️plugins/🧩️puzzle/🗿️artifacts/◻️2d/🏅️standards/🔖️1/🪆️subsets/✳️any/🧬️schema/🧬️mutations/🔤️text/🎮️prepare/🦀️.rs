@@ -62,6 +62,8 @@ impl<T:Puzzle2dTextIntent> Puzzle2dTextPreparationCursor<T>{
   let plan=Puzzle2dTextPlan{disposition:self.disposition,index:self.index};self.output=Some(plan);Ok(Puzzle2dTextPreparationStep::Complete{plan,progress:RetainedCloneProgress{copied_items:1,..Default::default()}})
  }
  pub fn take(&mut self)->Option<Puzzle2dTextPlan>{if self.closing{return None}let output=self.output.take();if output.is_some(){self.spent=true}output}
+ #[cfg(any(test,feature = "testkit"))]
+ pub fn child_cursors_terminal_is_empty(&self)->bool{self.lookup.terminal_is_empty()&&self.comparison.terminal_is_empty()}
  pub fn begin_close(&mut self){self.closing=true;self.lookup.begin_close();}
  pub fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{if self.output.is_some(){return Ok(size_of_val(&self.output))}if !self.comparison.terminal_is_empty(){return self.comparison.next_close_copy_byte_demand()}if !self.lookup.terminal_is_empty(){return self.lookup.next_close_copy_byte_demand()}RetainedCloneBinding::copy_demand(if self.source.is_some(){&self.source}else{&self.mutation})}
  pub fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{if self.output.is_some(){return Ok(0)}if !self.comparison.terminal_is_empty(){return self.comparison.next_close_capacity_byte_demand(body)}if !self.lookup.terminal_is_empty(){return self.lookup.next_close_capacity_byte_demand(body)}RetainedCloneBinding::capacity_demand(if self.source.is_some(){&self.source}else{&self.mutation},body)}

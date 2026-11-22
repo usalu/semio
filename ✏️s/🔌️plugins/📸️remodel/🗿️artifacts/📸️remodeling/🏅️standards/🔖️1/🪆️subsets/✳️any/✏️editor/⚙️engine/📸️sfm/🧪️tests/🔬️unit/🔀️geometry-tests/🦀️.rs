@@ -1,6 +1,9 @@
 //! 🔀️ Geometry tests of the incremental structure from motion: the two-view model estimation, the triangulation and the perspective-n-point solvers against planted ground truth. See [`super`].
 
 use super::*;
+use semio_s_artifact_remodel_remodeling_sfm_geometry::editor::remodeling::engine::sfm::geometry::{
+    epnp, estimate_fundamental, estimate_homography, p3p_grunert, refine_point_lm, refine_pose_lm, select_two_view_model, triangulate_dlt,
+};
 
 // #region 🔖️TwoViewTests
 #[test]
@@ -33,7 +36,12 @@ fn estimate_fundamental_recovers_planted_outliers_and_satisfies_epipolar_constra
     let TwoViewModel::Fundamental(f) = result.model else { panic!("expected a fundamental model") };
     let mut max_err = 0.0_f64;
     for &(a, b) in &inlier_corr {
-        max_err = max_err.max(sampson_distance(&f, a, b));
+        let x = [a[0], a[1], 1.0];
+        let y = [b[0], b[1], 1.0];
+        let fx = f.map(|row| dot3(row, x));
+        let fty: [f64; 2] = std::array::from_fn(|col| dot3(f.map(|row| row[col]), y));
+        let gradient = fx[0].hypot(fx[1]).hypot(fty[0]).hypot(fty[1]);
+        max_err = max_err.max(dot3(y, fx).abs() / gradient);
     }
     assert!(max_err < 2.0, "epipolar constraint violated: max sampson distance {max_err}");
 }
@@ -63,7 +71,8 @@ fn estimate_homography_recovers_planted_outliers_on_planar_scene() {
     let TwoViewModel::Homography(h) = result.model else { panic!("expected a homography model") };
     let mut max_err = 0.0_f64;
     for &(a, b) in &inlier_corr {
-        max_err = max_err.max(homography_residual(&h, a, b));
+        let [x, y, w] = h.map(|row| dot3(row, [a[0], a[1], 1.0]));
+        max_err = max_err.max((x / w - b[0]).hypot(y / w - b[1]));
     }
     assert!(max_err < 2.0, "homography point-transfer error too high: {max_err}");
 }

@@ -1,5 +1,6 @@
 //! 🏷️ Ids, window layout and labels of the norm app surface. See [`super`].
 
+use semio_plugin::WindowLayoutNode;
 use super::*;
 
 //#region 🔖️Ids
@@ -38,12 +39,10 @@ pub fn view_mode_definition() -> ModeDefinition {
 /// report table), so there is no quadrant/split layout to allocate.
 pub fn single_window_layout(window_kind_id: &str, title: &str) -> WindowLayout {
     WindowLayout {
-        root: WindowLayoutRoot::Stack(WindowLayoutStackNode {
-            kind: "stack".into(),
-            size: None,
-            active_window_kind_id: None,
-            children: vec![WindowLayoutWindowNode { kind: "window".into(), window_kind_id: window_kind_id.into(), title: Some(title.into()), instance_id: None, template_id: None, corner: None }],
-        }),
+        root: WindowLayoutNode::Stack { size: None,
+            active_window_id: None,
+            children: vec![WindowLayoutNode::Window { window_kind_id: window_kind_id.into(), title: Some(title.into()), instance_id: None, template_id: None, corner: None }],
+        },
     }
 }
 

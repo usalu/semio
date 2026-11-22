@@ -9,11 +9,10 @@
         let params = fill_config("puzzle2d.fill.field-cursors");
         let job = new_fill_job(&mut original, &host, 2, operation);
         let mut session = mount_fill_session(&mut original, job, params);
-        let pool = semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1));
         let mut seen = [false; 13];
         let mut checkpointed = false;
         for _ in 0..FILL_TEST_PUMP_LIMIT {
-            match pump_fill_session(&mut session, &pool) {
+            match pump_fill_session(&mut original, &mut session) {
                 WorkerJobPoll::Submitted | WorkerJobPoll::Rejected | WorkerJobPoll::Idle => std::thread::yield_now(),
                 WorkerJobPoll::Outcome | WorkerJobPoll::Terminal => {
                     match seen_fill_outcome(&mut original, &mut session) {
@@ -62,8 +61,6 @@
         assert!(checkpointed);
         assert!(seen.into_iter().all(|value| value));
         close_fill_session(&mut original, &mut session);
-        pool.shutdown().expect("bounded snapshot operation succeeds");
-        original.finish();
         original.finish();
     }
 

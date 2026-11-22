@@ -35,6 +35,7 @@ export default defineConfig({
       "../../../../🧱️elements/🥞️LayeredOverview/🔼️pan-promotion/pan-promotion.test.ts",
       "../../../../🧱️elements/🔲️WindowSilhouette/shared-border.test.ts",
       "../../../../🧱️elements/🎨️Canvas/🧪️tests/shared-border-dock.test.tsx",
+      "../../../../🧬️contract/🖼️presentation/📐️layout/🧪️tests/🪟️window-layout-corpus/🟦️.ts",
       "../../../../🧱️elements/🖱️ContextMenu/🧪️tests/🧩️component/placement.tsx",
       "../../../../🧱️elements/🗨️Popover/🧪️tests/🧩️component/placement.tsx",
       "../../../../🧱️elements/🔽️Select/🧪️tests/🧩️component/boundary.tsx",

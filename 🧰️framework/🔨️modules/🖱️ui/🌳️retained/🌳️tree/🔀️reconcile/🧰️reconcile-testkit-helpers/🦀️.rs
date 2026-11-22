@@ -28,6 +28,7 @@ fn variant_discriminant(node: &UiNode) -> u32 {
         UiNode::Group(_) => 19,
         UiNode::CardStack(_) => 21,
         UiNode::OverviewCard(_) => 22,
+        UiNode::Table(_) => 23,
     }
 }
 
@@ -49,6 +50,7 @@ fn explicit_id(node: &UiNode) -> Option<&str> {
         UiNode::Group(n) => Some(n.id.as_str()),
         UiNode::CardStack(n) => Some(n.id.as_str()),
         UiNode::OverviewCard(n) => Some(n.id.as_str()),
+        UiNode::Table(n) => n.id.as_deref(),
         UiNode::Image(n) => Some(n.id.as_str()),
         UiNode::ComponentScene(n) => Some(n.surface_id.as_str()),
         UiNode::ExternalSlot(n) => Some(n.body_key.as_str()),

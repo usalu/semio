@@ -1,0 +1,15 @@
+# Mac Worker G1 M13 Verification
+
+The macOS checkout at `/Users/ueli/Documents/semio` was adopted into group `g1` as `g1-m13`. The worker uses the group NFS export at `192.168.178.70:/Users/Shared/semio-store` and the signed cache at `http://192.168.178.70:6094`. The operator ran the privileged provisioning steps in Terminal.
+
+The adoption plan reported matching local and fleet Git tips, zero conflicts, and zero local files to publish. After joining, the replica reported synchronization enabled, a running daemon, a reachable store, and a fleet verdict of `ok` for this origin. The status retained historical refusal records for 35 ignored and 9 overlong paths. The remote-cache status reported reachable and authorized, with its endpoint from fleet facts and credentials from the fleet identity.
+
+The foreground provisioner exited 3 after a Rustup installation failure. The readiness supervisor subsequently recorded successful native toolchain, repo MCP, and dependency stages. The tools stage was still running at the first live check. Both the supervisor's readiness receipt and the provisioning completion marker must be checked before calling setup complete.
+
+Fleet preflight completed with no failed checks. It verified correct NFS mount options, a writable store, read access to Documents for the replica, the compaction schedule, and 0.1 s of clock skew. It warned about the absent provisioning marker, the privilege needed to read system time synchronization settings, and event visibility above the configured p95 limit (6.157 s observed, 5 s limit, 0.497 s median). All nine overlong refusal records were under the existing Fleet One Machine Shared Hot Cache and Remote Execution ticket.
+
+The tools stage exited successfully after 801 seconds. The supervisor advanced to the first workspace run and began checking the project graph inventory. The workspace stage still needs a successful exit receipt.
+
+The workspace plan then stopped making progress in the first owner-reading round. The graph worker's CPU time stayed flat for several minutes and `repo service host status` showed one request, the setup plan, with none queued. I ran `repo service host stop` on this Mac. The existing setup command started a replacement graph service automatically and resumed planning the selected targets. The readiness supervisor is configured to write `native-bootstrap.done` after a successful final stage.
+
+The replacement graph service completed more than 3,100 inventory owner checks, then stalled again while reading owners. At the last check, fleet status showed the replacement builder at 0 of 600 projects, with no graph computers or slots. The fleet readiness investigation also found no compatible complete graph receipt available for adoption. The worker's latest replica attestation showed synchronization enabled and zero incoming entries, while its readiness receipt still reported `ready: false` at workspace stage 5 of 5. The provisioning marker was absent. The readiness supervisor remains active. This ticket stays open pending a successful workspace exit and marker.

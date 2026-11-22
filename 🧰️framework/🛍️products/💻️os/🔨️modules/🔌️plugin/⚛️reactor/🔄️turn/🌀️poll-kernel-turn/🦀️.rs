@@ -34,7 +34,11 @@ pub(super) async fn poll_kernel_turn<PA: semio_plugin_reactor_app::PluginApp, T,
     semio_plugin_runtime_instances::inst_opening::plugin_resume_actor_openings(runtime,identity,cx).await?;
     PATCHES.with(|patches| redirty_acknowledged_deferred_surfaces(patches, &mut dirty,cx))?;
     redirty_arena_starved_surfaces(&mut dirty)?;
-    let selected_event = if prior_port_retired { select_turn_event(runtime, events, cx)? } else { None };
+    let folder_archive = events.as_ref().is_some_and(semio_plugin_runtime_ops::ops_raw_media::is_folder_archive_event);
+    if folder_archive && prior_port_retired {
+        semio_plugin_runtime_ops::ops_raw_media::drive_folder_archive(runtime, events, &mut effects, budget.max_effects as usize, cx)?;
+    }
+    let selected_event = if prior_port_retired && !folder_archive { select_turn_event(runtime, events, cx)? } else { None };
     dispatch_turn_event(runtime, selected_event, &mut dirty, &mut effects, identity, cx).await?;
     let extension_retirement_work = drive_extension_turn(runtime, &mut effects, cx).await?;
     let close_cleanup_work = close_cleanup_work || extension_retirement_work;
@@ -47,9 +51,13 @@ pub(super) async fn poll_kernel_turn<PA: semio_plugin_reactor_app::PluginApp, T,
             if ack.phase == semio_framework::kernel::OriginalMediaWirePhase::Cancel => Some(ack.loan.instance_id),
         _ => close_instances.first().copied(),
     };
-    let pending_media_control = matches!(events.as_ref(), Some(Event::OriginalMediaControl(_)));
+    let pending_media_control = matches!(events.as_ref(), Some(Event::OriginalMediaControl(_)))
+        || matches!(events.as_ref(), Some(Event::NaturalSourcePrepare(_) | Event::NaturalSourceControl(_) | Event::FolderArchiveLoad(_)));
+    let natural_format_runnable = command_page.is_none() && !pending_media_control
+        && semio_plugin_runtime_ops::ops_raw_media::drive_natural_source_format(runtime, &close_instances, cx).await?;
     let media_format_runnable = command_page.is_none() && !pending_media_control
         && semio_plugin_runtime_ops::ops_raw_media::drive_raw_media_format(runtime, &close_instances, media_priority, identity, cx).await?;
+    let media_format_runnable = media_format_runnable || natural_format_runnable;
     let command_ingress = match media_ingress {
         Some(status) => {
             drive_command_ingress(runtime, &mut None, close_instances, &mut effects, identity, cx).await?;

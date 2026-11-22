@@ -4,7 +4,7 @@ import {existsSync,mkdirSync,mkdtempSync,readFileSync,readdirSync,renameSync,rmS
 import {homedir,tmpdir} from "node:os";
 import {extname,join,posix,relative,win32} from "node:path";
 import {compileJsonSchemaSubset,type CompiledJsonSchemaSubset} from "../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
-import {bootModuleRelativeV1} from "../🛟️supervisor/🟦️.ts";
+import {bootModuleRelativeV1} from "../🧭️boot-path/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 
 /** 🧾️ The result of installing or refreshing the boot program: `installed`, `current` (nothing to do, `changed` when only the recorded worktree or store moved), or one of the refusals: `refused-downgrade` (the installed version is higher), `refused-same-version` (same version, other files), `refused-selftest` (the program failed its own self-test, `reason` says how), `refused-foreign` (the installed program belongs to another worktree that still holds a machine identity) and `refused-incomplete`. */

@@ -4,14 +4,17 @@ use semio_framework_pack_error::PackError;
 use crate::record::{EncodeOptions as PackEncodeOptions,DecodeOptions as PackDecodeOptions};
 use semio_framework_dsl_record::RecordSpecProducer;
 pub use semio_framework_dsl_record::BorrowedRecordSpecProducer;
-/// 🧬️ Native snapshot registration depends only on the authored Pack record specification, the single source of its schema hash.
+/// 🧬️ Native snapshot metadata is derived from the authored Pack schema.
 pub trait ArtifactPackMetadata:Sized{
     const EXTENSION:&'static str;
     fn native_pack_schema_hash()->Option<[u8;32]>;
 }
 impl<T:ArtifactPack+super::ArtifactDsl> ArtifactPackMetadata for T{
     const EXTENSION:&'static str=<T as super::ArtifactDsl>::EXTENSION;
-    fn native_pack_schema_hash()->Option<[u8;32]>{<T as ArtifactPack>::record_spec().map(|spec|crate::record::schema_hash(&spec))}
+    fn native_pack_schema_hash() -> Option<[u8; 32]> {
+        T::record_spec().map(|spec| crate::record::schema_hash(&spec))
+            .or_else(|| T::authored_pack_protocol().map(semio_framework_hash::Sha256::digest))
+    }
 }
 
 /// 📦️ A snapshot binary representation over first-party options, errors and authored record metadata.
@@ -30,7 +33,12 @@ pub trait ArtifactPack: Sized {
         Self::decode_pack_with(bytes, &PackDecodeOptions::default())
     }
 
-    /// 🧬️ The authored structural field specification, absent for a schema-less value.
+    /// 📜 The existing binary protocol that defines a handwritten Pack representation.
+    fn authored_pack_protocol() -> Option<&'static [u8]> {
+        None
+    }
+
+    /// 🧬️ The authored structural field specification, when present.
     fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
         None
     }

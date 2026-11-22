@@ -163,6 +163,23 @@ test("a stalled store is reported within the deadline, local work and the loop c
  void hang;
 });
 
+test("a store that stays stalled for the stuck limit makes the daemon end itself for the supervisor, a store that answers in time does not",async()=>{
+ const {store,who}=await seeded("a1");
+ let hung=false;
+ who.options={...who.options,storeDeadlineMilliseconds:200,storeStuckRestartMilliseconds:2500,storeProbe:async()=>{if(hung)return new Promise<boolean>(()=>{});return true;}};
+ let finished=false;
+ start(who);void who.done!.then(()=>{finished=true;});
+ await until(async()=>(await readAttestationV1(store,"a1"))!==undefined);
+ await Bun.sleep(3000);
+ expect(finished).toBe(false);
+ hung=true;
+ const hungAt=Date.now();
+ await until(()=>finished,20000);
+ expect(Date.now()-hungAt).toBeGreaterThanOrEqual(2500);expect(Date.now()-hungAt).toBeLessThan(15000);
+ expect(who.events.find(event=>event.event==="store-stuck")).toMatchObject({reason:"stalled",seconds:3});
+ expect(who.events.some(event=>event.event==="restarting")).toBe(true);
+});
+
 test("a recurring failure stays visible in the attestation and the health file with its count while rounds back off instead of spinning",async()=>{
  const {store,who}=await seeded("a1");
  let calls=0;

@@ -13,8 +13,8 @@ pub use viewport_drag_and_accessibility_controls::{
 
 #[path = "🧯️surface-state-and-retirement/🦀️.rs"]
 mod surface_state_and_retirement;
-pub use surface_state_and_retirement::{close_retired_scene_surface_one, SceneSurfaceState};
-pub(crate) use surface_state_and_retirement::{SceneSurfaceRetirement, SceneValueRetirement};
+pub use surface_state_and_retirement::{close_retired_scene_surface_one, SceneSurfaceRetirement, SceneSurfaceState};
+pub(crate) use surface_state_and_retirement::SceneValueRetirement;
 
 #[path = "🖱️canvas-gestures-input-kit-and-chrome/🦀️.rs"]
 mod canvas_gestures_input_kit_and_chrome;
@@ -22,9 +22,9 @@ pub use canvas_gestures_input_kit_and_chrome::{
     canvas_active_utility, render_placeholder, request_canvas_pointer_gesture_cancel_for_host,
     retire_tiled_map_scene_identity, write_scene_action_batch, BlockListChromeLabels,
     CanvasCatalogueHover, CanvasClick, CanvasGesture, CanvasGestureKind, CanvasGestureSlots,
-    IconRenderChromeLabels, SceneChromeLabels, SceneEngineHosts, SceneListHit,
+    IconRenderChromeLabels, MapChromeLabels, SceneChromeLabels, SceneEngineHosts, SceneListHit,
     SceneListTransferRelease, SceneListTransferStart, SceneModifiers, TableButtonAccessibilityCell,
-    TableEditableTextAccessibilityCell, TableEditableTextFocusTarget, TableStepperAccessibilityCell,
+    TableChromeLabels, TableEditableTextAccessibilityCell, TableEditableTextFocusTarget, TableStepperAccessibilityCell,
     TableStepperFocusTarget, VirtualFileSystemChromeLabels, BLOCK_LIST_PALETTE_DRAG_MIME,
     MAP_MARQUEE_THRESHOLD_PX,
 };
@@ -33,8 +33,8 @@ pub use canvas_gestures_input_kit_and_chrome::{
 mod editor_ink_gumball_and_canvas_layer_wire;
 pub use editor_ink_gumball_and_canvas_layer_wire::{
     draw_ink_rect_outline, pivot_screen, request_cancel, text_editor_ui, total, CanvasFillJson,
-    CanvasClipPathJson, CanvasGradientStopJson, CanvasImageFieldJson, CanvasLayer, CanvasStrokeJson,
-    CanvasTextFieldJson, GumballConfig, GumballGesture, GumballHandle,
+    CanvasGradientStopJson, CanvasImageFieldJson, CanvasLayer, CanvasStrokeJson, CanvasTextFieldJson,
+    GumballConfig, GumballGesture, GumballHandle,
     GumballMotion, GumballSlot, GumballView, InkBoundsF, ModelToLayer, TextEditorRenameDraft,
     TextEditorUiState, VfsAccessibilityFocusTarget, GUMBALL, MOVE_EPSILON, TURN_EPSILON,
 };

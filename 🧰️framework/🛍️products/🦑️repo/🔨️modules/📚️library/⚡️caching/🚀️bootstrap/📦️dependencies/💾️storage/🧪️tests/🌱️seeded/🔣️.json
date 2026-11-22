@@ -1,0 +1,334 @@
+[
+  {
+    "id": "already-admitted",
+    "startFree": 308700775,
+    "requiredBytes": 308700775,
+    "generationBytes": 268435456,
+    "aliased": false,
+    "strict": false,
+    "removed": [],
+    "finalFree": 308700775,
+    "generations": [
+      {
+        "role": "current",
+        "name": "aaaaaaaaaaaaaaaaaaaa",
+        "bytes": 900000000,
+        "eligible": false,
+        "tombstone": false
+      },
+      {
+        "role": "live",
+        "name": "bbbbbbbbbbbbbbbbbbbb",
+        "bytes": 900000000,
+        "eligible": false,
+        "tombstone": false
+      },
+      {
+        "role": "obsolete",
+        "name": "cccccccccccccccccccc",
+        "bytes": 280000000,
+        "eligible": true,
+        "tombstone": false
+      },
+      {
+        "role": "pinned",
+        "name": "dddddddddddddddddddd",
+        "bytes": 900000000,
+        "eligible": false,
+        "tombstone": false
+      }
+    ],
+    "freeAfterGate": 308700775,
+    "cancelled": false,
+    "normalMaintenance": false
+  },
+  {
+    "id": "mixed-binding-reclaimed",
+    "startFree": 33914880,
+    "requiredBytes": 308700775,
+    "generationBytes": 268435456,
+    "aliased": false,
+    "strict": false,
+    "removed": [
+      "obsolete"
+    ],
+    "finalFree": 313914880,
+    "generations": [
+      {
+        "role": "current",
+        "name": "aaaaaaaaaaaaaaaaaaaa",
+        "bytes": 900000000,
+        "eligible": false,
+        "tombstone": false
+      },
+      {
+        "role": "live",
+        "name": "bbbbbbbbbbbbbbbbbbbb",
+        "bytes": 900000000,
+        "eligible": false,
+        "tombstone": false
+      },
+      {
+        "role": "obsolete",
+        "name": "cccccccccccccccccccc",
+        "bytes": 280000000,
+        "eligible": true,
+        "tombstone": false
+      },
+      {
+        "role": "pinned",
+        "name": "dddddddddddddddddddd",
+        "bytes": 900000000,
+        "eligible": false,
+        "tombstone": false
+      },
+      {
+        "role": "untouched",
+        "name": "eeeeeeeeeeeeeeeeeeee",
+        "bytes": 110000000,
+        "eligible": true,
+        "tombstone": false
+      }
+    ],
+    "freeAfterGate": 33914880,
+    "cancelled": false,
+    "normalMaintenance": false
+  },
+  {
+    "id": "aliased-mixed-binding-insufficient",
+    "startFree": 33914880,
+    "requiredBytes": 308700775,
+    "generationBytes": 268435456,
+    "aliased": true,
+    "strict": true,
+    "removed": [
+      "obsolete"
+    ],
+    "finalFree": 303914880,
+    "generations": [
+      {
+        "role": "current",
+        "name": "aaaaaaaaaaaaaaaaaaaa",
+        "bytes": 900000000,
+        "eligible": false,
+        "tombstone": false
+      },
+      {
+        "role": "live",
+        "name": "bbbbbbbbbbbbbbbbbbbb",
+        "bytes": 900000000,
+        "eligible": false,
+        "tombstone": false
+      },
+      {
+        "role": "obsolete",
+        "name": "cccccccccccccccccccc",
+        "bytes": 270000000,
+        "eligible": true,
+        "tombstone": false
+      },
+      {
+        "role": "pinned",
+        "name": "dddddddddddddddddddd",
+        "bytes": 900000000,
+        "eligible": false,
+        "tombstone": false
+      }
+    ],
+    "freeAfterGate": 33914880,
+    "cancelled": false,
+    "normalMaintenance": false
+  },
+  {
+    "id": "pressure-cleared-while-waiting",
+    "startFree": 33914880,
+    "requiredBytes": 308700775,
+    "generationBytes": 268435456,
+    "aliased": false,
+    "strict": false,
+    "removed": [],
+    "finalFree": 308700775,
+    "generations": [
+      {
+        "role": "current",
+        "name": "aaaaaaaaaaaaaaaaaaaa",
+        "bytes": 900000000,
+        "eligible": false,
+        "tombstone": false
+      },
+      {
+        "role": "live",
+        "name": "bbbbbbbbbbbbbbbbbbbb",
+        "bytes": 900000000,
+        "eligible": false,
+        "tombstone": false
+      },
+      {
+        "role": "obsolete",
+        "name": "cccccccccccccccccccc",
+        "bytes": 280000000,
+        "eligible": true,
+        "tombstone": false
+      },
+      {
+        "role": "pinned",
+        "name": "dddddddddddddddddddd",
+        "bytes": 900000000,
+        "eligible": false,
+        "tombstone": false
+      }
+    ],
+    "freeAfterGate": 308700775,
+    "cancelled": false,
+    "normalMaintenance": false
+  },
+  {
+    "id": "cancelled-at-source-fence",
+    "startFree": 33914880,
+    "requiredBytes": 308700775,
+    "generationBytes": 268435456,
+    "aliased": false,
+    "strict": false,
+    "removed": [],
+    "finalFree": 33914880,
+    "generations": [
+      {
+        "role": "current",
+        "name": "aaaaaaaaaaaaaaaaaaaa",
+        "bytes": 900000000,
+        "eligible": false,
+        "tombstone": false
+      },
+      {
+        "role": "live",
+        "name": "bbbbbbbbbbbbbbbbbbbb",
+        "bytes": 900000000,
+        "eligible": false,
+        "tombstone": false
+      },
+      {
+        "role": "obsolete",
+        "name": "cccccccccccccccccccc",
+        "bytes": 280000000,
+        "eligible": true,
+        "tombstone": false
+      },
+      {
+        "role": "pinned",
+        "name": "dddddddddddddddddddd",
+        "bytes": 900000000,
+        "eligible": false,
+        "tombstone": false
+      }
+    ],
+    "freeAfterGate": 33914880,
+    "cancelled": true,
+    "normalMaintenance": false
+  },
+  {
+    "id": "resumed-tombstone-satisfies-pressure",
+    "startFree": 33914880,
+    "requiredBytes": 308700775,
+    "generationBytes": 268435456,
+    "aliased": false,
+    "strict": false,
+    "removed": [
+      "obsolete"
+    ],
+    "finalFree": 313914880,
+    "generations": [
+      {
+        "role": "current",
+        "name": "aaaaaaaaaaaaaaaaaaaa",
+        "bytes": 900000000,
+        "eligible": false,
+        "tombstone": false
+      },
+      {
+        "role": "live",
+        "name": "bbbbbbbbbbbbbbbbbbbb",
+        "bytes": 900000000,
+        "eligible": false,
+        "tombstone": false
+      },
+      {
+        "role": "obsolete",
+        "name": "cccccccccccccccccccc",
+        "bytes": 280000000,
+        "eligible": true,
+        "tombstone": true
+      },
+      {
+        "role": "pinned",
+        "name": "dddddddddddddddddddd",
+        "bytes": 900000000,
+        "eligible": false,
+        "tombstone": false
+      },
+      {
+        "role": "untouched",
+        "name": "eeeeeeeeeeeeeeeeeeee",
+        "bytes": 280000000,
+        "eligible": true,
+        "tombstone": true
+      }
+    ],
+    "freeAfterGate": 33914880,
+    "cancelled": false,
+    "normalMaintenance": false,
+    "skipSweep": true
+  },
+  {
+    "id": "normal-maintenance-collects-all-due",
+    "startFree": 400000000,
+    "requiredBytes": 308700775,
+    "generationBytes": 268435456,
+    "aliased": false,
+    "strict": false,
+    "removed": [
+      "obsolete",
+      "untouched"
+    ],
+    "finalFree": 790000000,
+    "generations": [
+      {
+        "role": "current",
+        "name": "aaaaaaaaaaaaaaaaaaaa",
+        "bytes": 900000000,
+        "eligible": false,
+        "tombstone": false
+      },
+      {
+        "role": "live",
+        "name": "bbbbbbbbbbbbbbbbbbbb",
+        "bytes": 900000000,
+        "eligible": false,
+        "tombstone": false
+      },
+      {
+        "role": "obsolete",
+        "name": "cccccccccccccccccccc",
+        "bytes": 280000000,
+        "eligible": true,
+        "tombstone": false
+      },
+      {
+        "role": "pinned",
+        "name": "dddddddddddddddddddd",
+        "bytes": 900000000,
+        "eligible": false,
+        "tombstone": false
+      },
+      {
+        "role": "untouched",
+        "name": "eeeeeeeeeeeeeeeeeeee",
+        "bytes": 110000000,
+        "eligible": true,
+        "tombstone": false
+      }
+    ],
+    "freeAfterGate": 400000000,
+    "cancelled": false,
+    "normalMaintenance": true
+  }
+]

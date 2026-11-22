@@ -220,7 +220,15 @@ impl MeshImportCursor {
             if self.cancelled || self.phase>=4 {
                 let copy=self.next_close_copy_byte_demand(body).map_err(|error|KernelError::Operation(error.to_string()))?;
                 let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:self.next_close_capacity_byte_demand(body,copy).map_err(|error|KernelError::Operation(error.to_string()))?,maximum_release_bytes:self.next_close_release_byte_demand(body).map_err(|error|KernelError::Operation(error.to_string()))?,maximum_depth:self.next_close_depth_demand(body).map_err(|error|KernelError::Operation(error.to_string()))?};
-                let mut wallet=semio_framework_value::AuthoringWallet::new(grant,1_000_000_000);match wallet.run(grant,1<<20,|effect|self.close_step(body,effect)).map_err(|error|KernelError::Operation(error.to_string()))?{Some(done)=>{done.output.map_err(|error|KernelError::Operation(error.to_string()))?;},None=>return Err(KernelError::Operation("mesh import close quote refused".into()))}
+                let work = self.retirement.as_ref().filter(|owner| !owner.owner().terminal_is_empty())
+                    .map_or(Ok(1), |owner| owner.owner().next_computational_work(copy))
+                    .map_err(|error| KernelError::Operation(error.to_string()))?;
+                let mut wallet = semio_framework_value::AuthoringWallet::new(grant, u128::from(work));
+                let turn = wallet.run_invoked(grant, work, |effect| {
+                    self.close_step(body, &mut effect.reborrow(grant, work)?)
+                }).map_err(|error| KernelError::Operation(error.to_string()))?
+                    .ok_or_else(|| KernelError::Operation("mesh import close quote refused".into()))?;
+                turn.output.map_err(|error| KernelError::Operation(error.to_string()))?;
                 if self.retired {if self.cancelled {return Ok(MeshImportStep::Cancelled);}let shell=self.shell.take();let solid=self.solid.take();return match (solid,shell) {(Some(solid),_)=>Ok(MeshImportStep::Done(EntityRef::Solid(solid))),(None,Some(shell))=>Ok(MeshImportStep::Done(EntityRef::Shell(shell))),(None,None)=>Err(KernelError::Operation("mesh import already published".into()))};}
             } else {if let Err(error)=self.advance(body) {self.cancelled=true;return Err(error);}}
             self.units=self.units.saturating_add(1);
@@ -634,8 +642,20 @@ pub fn import_mesh(data: &[u8], importer: &(impl MeshImporter + ?Sized)) -> Resu
 /// 📦 Imports a triangle soup as a single solid shell (one planar face per triangle).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn import_triangle_mesh_to_body(body: &mut Body, mesh: &TriangleMesh, tolerance: f64) -> Result<EntityRef, KernelError> {
-    let mut cursor=MeshImportCursor::from_triangle_mesh(mesh.clone(),tolerance)?;
-    loop {match cursor.step(body,4096)? {MeshImportStep::Done(entity)=>return Ok(entity),MeshImportStep::Working=>{},MeshImportStep::Cancelled=>return Err(KernelError::Operation("triangle import cancelled".into()))}}
+    let mut cursor = MeshImportCursor::from_triangle_mesh(mesh.clone(), tolerance)?;
+    let refusal = loop {
+        match cursor.step(body, 4096) {
+            Ok(MeshImportStep::Done(entity)) => return Ok(entity),
+            Ok(MeshImportStep::Working) => {}
+            Ok(MeshImportStep::Cancelled) => return Err(KernelError::Operation("triangle import cancelled".into())),
+            Err(error) if cursor.cancelled => break error,
+            Err(error) => return Err(error),
+        }
+    };
+    while !cursor.retirement_complete() {
+        cursor.step(body, 4096)?;
+    }
+    Err(refusal)
 }
 
 // #endregion 🔖️Api

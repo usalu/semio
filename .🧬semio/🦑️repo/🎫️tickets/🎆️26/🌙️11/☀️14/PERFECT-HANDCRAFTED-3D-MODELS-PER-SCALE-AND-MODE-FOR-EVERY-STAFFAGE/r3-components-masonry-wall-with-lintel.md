@@ -176,3 +176,7 @@ Body A / A / A / A; thermal A / A / A / A; structure A / A / A / A. Structure sh
 ### Remaining (with reason)
 
 - Unchanged from round 3: damp-proof courses (1 to 2 mm) below the feature; uniform brick tone; straight ties without drip kink; no window (not part of the asset).
+
+## Canonical component readback, 2026-11-21
+
+Canonical source `35fe483c43a57076`. Thirty-three courses of facing units and mortar run to the jambs. The insulating cavity, inner calcium-silicate blocks, internal plaster returns, separate lintel bearings and sloping sill remain visible in cut section. All twelve exported scenes reopened (1,625,444 bytes). The strict catalog source readback passed.

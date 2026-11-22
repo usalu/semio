@@ -29,9 +29,11 @@ use semio_framework_value::paged::PagedUtf8;
 /// `setCamera`'s `ActionKind::View`), never a VCS-tracked document edit. There is deliberately no
 /// whole-document mutation: import/reset/example-load goes through `store::ArtifactStore::reset`
 /// (non-history), never through this enum.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_dsl_record_derive::DslOwnedReceiving, dsl::Mutations, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
 #[value(tag = "mutation", rename_all = "camelCase")]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), serde(tag = "mutation", rename_all = "camelCase"))]
 #[mutations(snapshot = Puzzle2dSnapshot, diff = Puzzle2dDiff, schema = "puzzle.puzzle2d", reference = Puzzle2dSnapshot, reference_diff = Puzzle2dDiff)]
 pub enum Puzzle2dMutation {
     CreateNode(CreateNode),
@@ -70,6 +72,118 @@ pub enum Puzzle2dMutation {
     DragSelection(DragSelection),
     RotateSelection(RotateSelection),
     ScaleSelection(ScaleSelection),
+}
+
+use semio_framework_value::{ValueError, ValueRefusalKind};
+use semio_os_kernel::os_store::ArtifactOperationTargets;
+
+enum ConflictPath<'a> {
+    Document,
+    Entity(&'a PagedUtf8<{ usize::MAX }>),
+    Nested(&'a PagedUtf8<{ usize::MAX }>, &'a PagedUtf8<{ usize::MAX }>),
+    Selection(&'a PagedList<PagedUtf8<{ usize::MAX }>, { usize::MAX }>),
+}
+
+impl<'a> ConflictPath<'a> {
+    fn segment(self, index: usize) -> Result<&'a PagedUtf8<{ usize::MAX }>, ValueError> {
+        match (self, index) {
+            (Self::Entity(id) | Self::Nested(id, _), 0) => Some(id),
+            (Self::Nested(_, id), 1) => Some(id),
+            (Self::Selection(ids), index) => ids.get(index),
+            _ => None,
+        }
+        .ok_or_else(|| ValueError::literal(ValueRefusalKind::InvalidValue, "Puzzle2d conflict path segment is absent"))
+    }
+}
+
+impl Puzzle2dMutation {
+    fn conflict_path(&self) -> ConflictPath<'_> {
+        match self {
+            Self::CreateNode(payload) => ConflictPath::Entity(&payload.node.id),
+            Self::DeleteNode(payload) => ConflictPath::Entity(&payload.id),
+            Self::MoveNode(payload) => ConflictPath::Entity(&payload.id),
+            Self::ReplaceNodeGeometry(payload) => ConflictPath::Entity(&payload.id),
+            Self::ChangeNodeKind(payload) => ConflictPath::Entity(&payload.id),
+            Self::EditNodeText(payload) => ConflictPath::Entity(&payload.id),
+            Self::ChangeNodeIcon(payload) => ConflictPath::Entity(&payload.id),
+            Self::ScaleNode(payload) => ConflictPath::Entity(&payload.id),
+            Self::ChangeNodeVisible(payload) => ConflictPath::Entity(&payload.id),
+            Self::ChangeNodeLocked(payload) => ConflictPath::Entity(&payload.id),
+            Self::ChangeNodeRoot(payload) => ConflictPath::Entity(&payload.id),
+            Self::ChangeNodeAnchor(payload) => ConflictPath::Entity(&payload.id),
+            Self::AddNodeHandle(payload) => ConflictPath::Nested(&payload.node_id, &payload.handle.id),
+            Self::RemoveNodeHandle(payload) => ConflictPath::Nested(&payload.node_id, &payload.handle_id),
+            Self::ReplaceNodeHandle(payload) => ConflictPath::Nested(&payload.node_id, &payload.handle_id),
+            Self::ConnectHandles(payload) => ConflictPath::Entity(&payload.id),
+            Self::DisconnectHandles(payload) => ConflictPath::Entity(&payload.id),
+            Self::ReplaceEdgeGeometry(payload) => ConflictPath::Entity(&payload.id),
+            Self::ChangeEdgeKind(payload) => ConflictPath::Entity(&payload.id),
+            Self::ChangeEdgeTips(payload) => ConflictPath::Entity(&payload.id),
+            Self::ChangeEdgeVisible(payload) => ConflictPath::Entity(&payload.id),
+            Self::ChangeEdgeLocked(payload) => ConflictPath::Entity(&payload.id),
+            Self::ChangeManifestId(_) => ConflictPath::Document,
+            Self::ConnectKindCompatibility(payload) => ConflictPath::Nested(&payload.source, &payload.target),
+            Self::DisconnectKindCompatibility(payload) => ConflictPath::Nested(&payload.source, &payload.target),
+            Self::ReplaceKindCatalogs(_) => ConflictPath::Document,
+            Self::CreateTargetRegion(payload) => ConflictPath::Entity(&payload.target_region.id),
+            Self::DeleteTargetRegion(payload) => ConflictPath::Entity(&payload.id),
+            Self::MoveTargetRegion(payload) => ConflictPath::Entity(&payload.id),
+            Self::ResizeTargetRegion(payload) => ConflictPath::Entity(&payload.id),
+            Self::EditTargetRegionLabel(payload) => ConflictPath::Entity(&payload.id),
+            Self::ChangeTargetRegionHidden(payload) => ConflictPath::Entity(&payload.id),
+            Self::ChangeTargetRegionLocked(payload) => ConflictPath::Entity(&payload.id),
+            Self::DragSelection(payload) => ConflictPath::Selection(&payload.targets),
+            Self::RotateSelection(payload) => ConflictPath::Selection(&payload.targets),
+            Self::ScaleSelection(payload) => ConflictPath::Selection(&payload.targets),
+        }
+    }
+
+    /// 🎯️ Borrows the original document conflict path from the mutation's authored fields.
+    pub fn original_conflict_target(&self) -> Option<&dyn ArtifactOperationTargets> {
+        match self.conflict_path() {
+            ConflictPath::Document => None,
+            _ => Some(self),
+        }
+    }
+}
+
+impl ArtifactOperationTargets for Puzzle2dMutation {
+    fn len(&self) -> usize {
+        match self.conflict_path() {
+            ConflictPath::Document => 0,
+            ConflictPath::Entity(_) => 1,
+            ConflictPath::Nested(..) => 2,
+            ConflictPath::Selection(ids) => ids.len(),
+        }
+    }
+
+    fn segment_len(&self, index: usize) -> Result<usize, ValueError> {
+        Ok(self.conflict_path().segment(index)?.len())
+    }
+
+    fn read_segment(&self, index: usize, offset: usize, output: &mut [u8]) -> Result<usize, ValueError> {
+        let text = self.conflict_path().segment(index)?;
+        let count = text.len().checked_sub(offset)
+            .ok_or_else(|| ValueError::literal(ValueRefusalKind::InvalidValue, "Puzzle2d conflict path offset exceeds its segment"))?
+            .min(output.len());
+        let mut skipped = offset;
+        let mut written = 0;
+        for chunk in text.chunks() {
+            if skipped >= chunk.len() {
+                skipped -= chunk.len();
+                continue;
+            }
+            let bytes = &chunk.as_bytes()[skipped..];
+            let copied = bytes.len().min(count - written);
+            output[written..written + copied].copy_from_slice(&bytes[..copied]);
+            written += copied;
+            if written == count {
+                break;
+            }
+            skipped = 0;
+        }
+        Ok(written)
+    }
 }
 
 //#region 🏷️Kinds

@@ -5,6 +5,7 @@ from __future__ import annotations
 # region 🔖️Imports
 import base64
 import copy
+import hashlib
 import re
 
 from mutate_remodeling_1_vocabulary import (
@@ -70,12 +71,10 @@ def apply_replace_stream_source(doc, p):
 
 def durable_leaf(asset):
     """🧩️ The document-owned durable leaf one bounded raster becomes: its own base64 content cut into
-    4 KiB raw chunks, beside the mime and raster size the payload declares. Recomputed here in full —
-    only the content-address it is FILED under is adopted from the committed vector, because that key
-    is an unspecified `DefaultHasher` digest (see the module docstring)."""
+    4 KiB octet arrays, beside the MIME type and raster size the payload declares."""
     raw = base64.b64decode(asset["data"], validate=True)
     assert len(raw) <= RASTER_CONTENT_BYTES, "a durable raster leaf is bounded"
-    chunks = [base64.b64encode(raw[offset : offset + DURABLE_CHUNK_RAW_BYTES]).decode("ascii") for offset in range(0, len(raw), DURABLE_CHUNK_RAW_BYTES)]
+    chunks = [list(raw[offset : offset + DURABLE_CHUNK_RAW_BYTES]) for offset in range(0, len(raw), DURABLE_CHUNK_RAW_BYTES)]
     return {"kind": "image", "mime": asset["mime"], "width": asset["width"], "height": asset["height"], "chunks": chunks}
 
 
@@ -170,56 +169,50 @@ def content_complete(store, content_id, kind, leaf_count):
 
 
 def bound_asset_handle(asset_id, content_id):
-    """🖼️ The `assets` handle a reconstruction binding writes: the content id is the child id."""
+    """🖼️ The composed image handle for an asset key and its content ID."""
     return {"childId": content_id, "target": {"artifactId": f"{asset_id}-image", "dialect": {"artifactKind": "s.stdio.semio", "standard": "v1", "subset": "image"}}}
 
 
+def asset_content_id(asset):
+    """🔑 Addresses the durable leaf from the submitted MIME and Base64 text."""
+    identity_bytes = "\x1f".join((asset["mime"], asset["data"])).encode("utf-8")
+    return f"remodeling-asset-{hashlib.sha256(identity_bytes).hexdigest()[:16]}"
+
+
+def release_unbound_asset_content(doc, child_id):
+    """♻️ Releases a leaf after its last asset binding has been removed."""
+    if child_id is not None and all(handle["childId"] != child_id for handle in doc["assets"].values()):
+        doc["durableArtifacts"].pop(child_id, None)
+
+
 def apply_create_asset(doc, p):
-    """🔑 `childId` is an unspecified `DefaultHasher` digest — see the module docstring. It is left
-    `None` here and filled in by the comparison from the committed vector, after its shape is checked;
-    the durable leaf it keys is computed in full."""
+    """🖼️ Upserts the imported asset binding and its durable leaf."""
+    key, asset = p["key"], p["asset"]
+    child_id = asset_content_id(asset)
     after = copy.deepcopy(doc)
-    after["assets"][p["key"]] = {
-        "childId": None,
-        "target": {"artifactId": f"{p['key']}-image", "dialect": {"artifactKind": "s.stdio.semio", "standard": "v1", "subset": "image"}},
-    }
+    dropped = after["assets"].get(key, {}).get("childId")
+    after["assets"][key] = bound_asset_handle(key, child_id)
+    release_unbound_asset_content(after, dropped)
+    after["durableArtifacts"].setdefault(child_id, durable_leaf(asset))
     return after
 
 
 def apply_delete_asset(doc, p):
-    """🗞️ The durable leaf the handle owned goes with the entry — an asset key is the only address the
-    document has for that leaf, so keeping it would leave content nothing can ever reach again."""
+    """🗞️ Removes the asset binding and releases the leaf if it was the last binding."""
     after = copy.deepcopy(doc)
-    child_id = after["assets"][p["key"]]["childId"]
-    del after["assets"][p["key"]]
-    after["durableArtifacts"] = {key: value for key, value in after["durableArtifacts"].items() if key != child_id}
-    return after
-
-
-def _mint_asset(base, after, key, child_id, asset):
-    """🔑 What minting one asset does to BOTH lanes: the entry takes the content-address handle, the
-    durable store gains that address' leaf, and an overwritten entry's own leaf goes — an asset key is
-    the only address the document has for a leaf, so the store never keeps one nothing can reach."""
-    after = copy.deepcopy(after)
-    after["assets"][key]["childId"] = child_id
-    dropped = base["assets"].get(key, {}).get("childId")
-    durable = {name: value for name, value in after["durableArtifacts"].items() if name != dropped}
-    durable[child_id] = durable_leaf(asset)
-    after["durableArtifacts"] = {name: durable[name] for name in sorted(durable)}
+    child_id = after["assets"].pop(p["key"])["childId"]
+    release_unbound_asset_content(after, child_id)
     return after
 
 
 def apply_restore_asset_handle(doc, p):
-    """🔑 Inverse-only: restores a previously captured, ALREADY-COMPUTED handle and the durable leaf it
-    keys, verbatim — no hash is recomputed, because the captured value already carries a real,
-    committed `childId`. This is `create-asset` narrowed to the one thing this reference cannot state
-    independently (the `DefaultHasher` digest); every other lane it moves is stated in full."""
+    """↩️ Restores the handle and leaf captured before an overwrite or deletion."""
     after = copy.deepcopy(doc)
-    dropped = after["assets"].get(p["key"], {}).get("childId")
     after["assets"][p["key"]] = copy.deepcopy(p["handle"])
     after["assets"] = {key: after["assets"][key] for key in sorted(after["assets"])}
-    durable = {key: value for key, value in after["durableArtifacts"].items() if key != dropped}
-    durable[p["handle"]["childId"]] = copy.deepcopy(p["leaf"])
+    release_unbound_asset_content(after, p.get("releaseContent"))
+    durable = after["durableArtifacts"]
+    durable.setdefault(p["handle"]["childId"], copy.deepcopy(p["leaf"]))
     after["durableArtifacts"] = {key: durable[key] for key in sorted(durable)}
     return after
 

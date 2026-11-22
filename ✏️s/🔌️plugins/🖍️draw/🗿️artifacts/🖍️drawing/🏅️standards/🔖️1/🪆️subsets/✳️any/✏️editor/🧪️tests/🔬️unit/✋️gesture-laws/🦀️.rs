@@ -149,7 +149,7 @@ pub(super) async fn settled(app: &mut DrawingAppFixture, command: DrawingCommand
 }
 
 /// 📸️ Loads test geometry through the same retained envelope owner as the host.
-pub(super) fn load_drawing_fixture(app: &mut DrawingAppFixture, snapshot: &DrawingSnapshot) {
+pub(super) async fn load_drawing_fixture(app: &mut DrawingAppFixture, snapshot: &DrawingSnapshot) {
     use semio_os_kernel::os_pack::snapshot::ArtifactPack;
     let pack = snapshot.encode_pack().iter().map(|byte| format!("{byte:02x}")).collect::<String>();
     let wire = serde_json::to_vec(&serde_json::json!({
@@ -158,7 +158,7 @@ pub(super) fn load_drawing_fixture(app: &mut DrawingAppFixture, snapshot: &Drawi
         "editMessages": [], "conflicts": []
     })).unwrap();
     let handle = admit_drawing_envelope(app, &wire);
-    assert_eq!(drive_drawing_load(app, handle), semio_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready, "fixture admission: {:?}", app.artifact_store_replacement_refusal(handle));
+    assert_eq!(drive_drawing_load(app, handle).await, semio_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready, "fixture admission: {:?}", app.artifact_store_replacement_refusal(handle));
     assert!(app.acknowledge_artifact_store_replacement(handle).unwrap());
     assert_eq!(app.snapshot().unwrap(), *snapshot);
 }
@@ -182,7 +182,7 @@ async fn direct_drag_projects_without_editing_and_publishes_only_on_release() {
         semio_s_artifact_draw_drawing_model::layer_base_mut(&mut layer).attributes.fill=Some(semio_s_artifact_draw_drawing_model::FillStyle::Solid{color:[0.0,0.0,0.0,1.0]});
         let id = layer_id(&layer).to_string();
         let snapshot = DrawingSnapshot { id: "direct-drag".into(), layers: vec![layer].into(), ..Default::default() };
-        load_drawing_fixture(&mut app, &snapshot);
+        load_drawing_fixture(&mut app, &snapshot).await;
         settled(&mut app, DrawingCommand::SetCamera(set_camera::SetCamera { camera: store::Viewport2d { x: 0.0, y: 0.0, zoom: 1.0 } }), &meta).await;
         let before = app.snapshot().unwrap();
         let view = meta.view_state.as_ref().unwrap();

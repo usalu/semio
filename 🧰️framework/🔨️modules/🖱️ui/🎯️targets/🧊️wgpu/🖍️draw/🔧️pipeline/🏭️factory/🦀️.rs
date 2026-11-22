@@ -14,12 +14,13 @@ use semio_ui_theme::{geometry,Theme};
 use semio_ui_theme::Rgba;
 use semio_ui_wgpu_mesh::*;
 use semio_ui_render_prepared_shaders::*;
+pub use semio_ui_render_prepared_shaders::world3d_point_extent;
 
 #[path = "🎯️gpu-targets-and-pipeline-resources/🦀️.rs"]
 mod gpu_targets_and_pipeline_resources;
 pub use gpu_targets_and_pipeline_resources::{
-    content_stencil_state, BlurGlobals, GlassInstance, PipelineResources, PreparedCompositeTarget,
-    SceneColorTarget, WorldGlobalsRing, WorldLineGpuVertex, WorldPostprocessGlobals,
+    content_stencil_state, BlurGlobals, GlassInstance, PipelineResources, PreparedCompositeTarget, PreparedGroupTarget,
+    SceneColorTarget, WorldGlobalsRing, WorldLineGpuVertex, WorldPointGpuInstance, WorldPostprocessGlobals,
     WorldShadowTarget, SCENE_MIP_LEVELS, WORLD_GLOBALS_SLOT_SIZE,
 };
 #[cfg(any(test,feature="testkit"))]

@@ -46,6 +46,10 @@
           },
           "expected": {
             "type": "integer"
+          },
+          "expectedFuel": {
+            "type": "integer",
+            "minimum": 1
           }
         }
       }

@@ -28,6 +28,14 @@
       "plan": { "minX": -0.2, "maxX": 0.3, "minY": 0, "maxY": 0.05 }
     }
   ],
+  "lateralRest": {
+    "description": "The same slat on the same thigh, the thigh moved 0.1 m to the left in the rig (bone `z` 0.1). With sweep `w` the members `z0` / `z1` (and `zTip`) are lateral positions of the REST pose in asset coordinates (world z, left +), not offsets from the bone: the slat stays at -0.2..0.3 although its bone moved. With sweep `v` the span is measured from the bone origin along its normal v, and the second profile axis runs along w from the bone, so front and plan show it at 0.1..0.15.",
+    "boneZ": 0.1,
+    "cases": [
+      { "sweep": "w", "front": { "minX": -0.2, "maxX": 0.3, "minY": -0.45, "maxY": 0 }, "plan": { "minX": 0, "maxX": 0.05, "minY": -0.2, "maxY": 0.3 } },
+      { "sweep": "v", "front": { "minX": 0.1, "maxX": 0.15, "minY": -0.45, "maxY": 0 }, "plan": { "minX": -0.2, "maxX": 0.3, "minY": 0.1, "maxY": 0.15 } }
+    ]
+  },
   "refused": [
     { "name": "no sweep", "solid": { "kind": "extruded", "z0": -0.2, "z1": 0.3 } },
     { "name": "an unknown sweep axis", "solid": { "kind": "extruded", "sweep": "q", "z0": -0.2, "z1": 0.3 } }

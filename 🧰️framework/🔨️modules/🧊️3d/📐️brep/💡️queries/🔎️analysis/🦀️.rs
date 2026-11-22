@@ -185,7 +185,3 @@ fn keep<T>(unavailable: &mut Vec<String>, what: &str, outcome: Result<T, KernelE
         }
     }
 }
-
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

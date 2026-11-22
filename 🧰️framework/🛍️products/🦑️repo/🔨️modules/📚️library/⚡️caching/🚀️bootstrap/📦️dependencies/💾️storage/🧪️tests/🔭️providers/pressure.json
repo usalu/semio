@@ -47,10 +47,7 @@
     }
   ],
   "birth": {
-    "owner": "dependency-provider-pressure",
-    "maximumElapsedMilliseconds": 120000,
-    "capabilities": {
-      "artifacts": true
-    }
+    "suite": "bootstrap-dependencies",
+    "maximumElapsedMilliseconds": 120000
   }
 }

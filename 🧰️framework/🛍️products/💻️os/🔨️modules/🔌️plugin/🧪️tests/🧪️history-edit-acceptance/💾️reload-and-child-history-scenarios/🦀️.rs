@@ -28,8 +28,6 @@ where
     match loaded {
         Ok(()) => Ok(reloaded),
         Err(reason) => {
-            let stage = semio_plugin_reactor_app::LAST_MAINTENANCE_STAGE.load(std::sync::atomic::Ordering::Relaxed);
-            eprintln!("[DEBUG] Archive reload failed before fixture close at maintenance stage {stage}: {reason}");
             Box::pin(acceptance_close(&mut reloaded,cx)).await;
             Err(reason)
         }
@@ -136,7 +134,7 @@ where
             Err(reason) => panic!("{plugin}: the {name} document does not survive save and load: {reason}"),
         }
     }
-    let edit = match Box::pin(acceptance_search::<A, M>(plugin, manifest, fixtures, examples, true,cx)).await {
+    let edit = match Box::pin(acceptance_search::<A, M>(plugin, manifest, fixtures, examples, true)).await {
         AcceptanceSearch::Passed(summary) => summary,
         AcceptanceSearch::Failed(failure) => panic!("{failure} (on a reloaded document)"),
         AcceptanceSearch::Exhausted(report) if report.contains("none of the 0 committed and 0 derived") => format!("{plugin}: no parent-lane leaf to edit on a reloaded document"),

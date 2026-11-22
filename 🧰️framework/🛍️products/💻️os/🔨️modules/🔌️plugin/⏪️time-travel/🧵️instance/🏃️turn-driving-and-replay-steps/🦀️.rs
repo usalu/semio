@@ -11,15 +11,14 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
     /// session change prepares the history patch that rides the next unsolicited UI progress frame.
     pub(crate) async fn drive_time_travel_turn(&mut self, grant: RetainedCloneGrant, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<(), semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
         if grant.maximum_items==0{return Ok(());}
-        let mut preview_closing = false;
-        if let TimeTravelStoreOutput::OriginalProgress { progress, preview_closing: closing } = self.time_travel_run(TimeTravelStoreCommand::CloseOriginalSources { grant, terminal: false }, Some(cx)).await? {
+        if let TimeTravelStoreOutput::OriginalProgress(progress) = self.time_travel_run(TimeTravelStoreCommand::CloseOriginalSources { grant }, Some(cx)).await? {
             if progress != RetainedCloneProgress::default() {
                 assert!(self.time_travel.command_receipt.is_none());
                 self.time_travel.command_receipt = Some((grant, progress));
                 return Ok(());
             }
-            preview_closing = closing;
         }
+        let preview_closing = self.time_travel.owners().any(TimeTravelOwners::original_sources_close_pending);
         if self.time_travel.finalize_outcome.is_some(){self.drive_time_travel_finalize_outcome(cx)?;return Ok(())}
         if self.time_travel.owners().any(TimeTravelOwners::finalizing){match self.time_travel_run(TimeTravelStoreCommand::StepCommit,Some(cx)).await?{TimeTravelStoreOutput::Committed(outcome)=>if outcome!=TimeTravelCommit::Pending{self.time_travel.finalize_outcome=Some(outcome);},TimeTravelStoreOutput::CommitRefused(failure)=>return Err(failure.into()),_=>unreachable!("original finalize command output")};return Ok(())}
         if self.drive_original_discard_command_context(grant,cx)?{return Ok(())}
@@ -35,10 +34,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         }
         let moved = self.watch_time_travel_base(identity).await?;
         if !moved && self.time_travel.session.stage == TimeTravelStage::Editing {
-            if let Some(pending) = self.time_travel.session.pending.as_ref().filter(|_| self.time_travel.preview_due) {
-                let (target, replacement) = (pending.target.mutation.clone(), pending.replacement.clone());
-                self.show_time_travel_preview(target, replacement).await?;
-            } else if self.time_travel.preview_progress().is_some() {
+            if self.time_travel.preview_progress().is_some() {
                 if let TimeTravelStoreOutput::Previewed(step) = self.time_travel_run(TimeTravelStoreCommand::StepPreview { deadline_us, clock: self.time_travel.turn_clock,grant },Some(cx)).await? {
                     self.adopt_time_travel_preview_step(step,Some(grant)).await?;
                 }
@@ -98,7 +94,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                 if cursor.is_validating(){return cursor.validate(&time_travel.session,grant).map(|step|Some(step.progress()))}
                 if cursor.prepared_stage().is_some(){
                     let receipt=match time_travel.member.as_mut(){None=>time_travel.document.publish_discard(store,cursor,&mut time_travel.session,&mut time_travel.editor,grant)?,Some(member)=>{let entry=children.member(member.key.borrowed()).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"Discard original member is absent"))?;let owners=member.owners.as_deref_mut().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"Discard original member owners are absent"))?;entry.member.visit_member(semio_plugin_time_travel::discard_decision::DiscardMemberPublication{owners,cursor,session:&mut time_travel.session,editor:&mut time_travel.editor,review_children:&mut member.review_children,children:&mut member.children,retirements:child_content_retirements,child_generation:child_content_generation,view_copy_bytes:size_of::<TimeTravelReviewChildren>()+size_of::<ChildContentRetirement>()+size_of::<u64>(),grant})?}};
-                    if time_travel.session.stage!=TimeTravelStage::Editing{time_travel.preview_due=false;time_travel.ui_dirty=true;time_travel.document_dirty=true;time_travel.patch_due=true}return Ok(Some(receipt))
+                    if time_travel.session.stage!=TimeTravelStage::Editing{time_travel.ui_dirty=true;time_travel.document_dirty=true;time_travel.patch_due=true}return Ok(Some(receipt))
                 }
                 if grant.maximum_depth<time_travel.command_retirements.len()+1{return Ok(Some(Default::default()))}
                 return time_travel.command_retirements.admit_typed_retirement(&mut time_travel.discard_cursor,effect).result.map(|receipt|Some(receipt.unwrap_or_default()))

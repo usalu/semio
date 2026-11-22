@@ -12,7 +12,7 @@ const limits=OFFLOAD_POLICY_V1.limits;
 /** 🚦️ The machine's own answer to "may one more compiler unit start here now". */
 export type OffloadAdmissionV1=Readonly<{verdict:"admit"|"wait";reason:HostReasonV1;atMs:number}>;
 /** 🔌️ The seam of the host-capacity decision: tests hand in a probe that reports a pressured machine or a policy, production uses the machine and the authored policy. */
-export type OffloadAdmissionPortsV1=Readonly<{probe?:HostProbeV1;policy?:HostCapacityPolicyV1;now?:()=>number;signal?:AbortSignal}>;
+export type OffloadAdmissionPortsV1=Readonly<{probe?:HostProbeV1;policy?:HostCapacityPolicyV1;now?:()=>number;signal?:AbortSignal;doorRefused?:boolean;fleet?:Readonly<{fetch?:typeof fetch;timeoutMilliseconds?:number}>}>;
 
 /** 🚦️ Asks the single admission decision of the host (`evaluateHostCapacityV1`) about one more unit: a sample of the machine, an empty ledger (what is committed by other builds already shows in the sample's free memory, swap, pressure and load) and one waiting request for one job of the unit's size. `wait` means the unit would queue here. */
 export async function localUnitAdmissionV1(ports:OffloadAdmissionPortsV1={}):Promise<OffloadAdmissionV1>{
@@ -58,13 +58,31 @@ export function slotQueueMillisecondsV1(root:string,slots:number,now:number=Date
  return Math.max(1,oldest);
 }
 
-/** 🌊️ Returns the configured fleet fanout ceiling when a scheduler is published and a local unit would queue. The ceiling is separate from the Cargo launcher’s local compiler lease. */
+/** 🌡️ How many other machines could take a unit of this machine right now, asked of the scheduler itself (`/v1/fleet/idle?origin=`: signed like every fleet call, one request with a time limit): the answer is the counting the scheduler runs when a unit is submitted (platform key with toolchain and target, action format, headroom, slots, refusal cool-down, never the requester) over its live table at that moment, so the door and the submission cannot disagree about a table; only time can move between the two. `0` when no scheduler is published, it does not answer in time or nobody qualifies; never throws. */
+export async function fleetHeadroomV1(environment:Readonly<Record<string,string|undefined>>,ports:OffloadAdmissionPortsV1={}):Promise<number>{
+ try{
+  const fleet=await import("../../../🌐️remote-cache/🛰️fleet/🟦️.ts"),{resolveRemoteExecutionEndpointV1,resolveRemoteExecutionSchedulerV1}=await import("../../🧭️endpoint/🟦️.ts"),{remoteExecutionOriginV1}=await import("../../🌡️load/🟦️.ts");
+  const root=environment.SEMIO_WORKSPACE_ROOT??fleet.fleetCacheRootV1(environment)??workspaceRootFromV1(process.cwd());
+  const published=resolveRemoteExecutionEndpointV1({environment,...root===undefined?{}:{root}})?.endpoint;
+  if(!published)return 0;
+  const scheduler=await resolveRemoteExecutionSchedulerV1({environment,...root===undefined?{}:{root}},published);
+  if(scheduler===undefined)return 0;
+  const call=ports.fleet?.fetch??(root===undefined?fetch:fleet.remoteCacheFetchV1({...environment,SEMIO_WORKSPACE_ROOT:root},{root,audience:"execution",roleOf:()=>"submit"})),own=root===undefined?"":remoteExecutionOriginV1(root,environment);
+  const response=await call(scheduler.url.replace(/\/+$/u,"")+"/v1/fleet/idle?origin="+encodeURIComponent(own),{signal:AbortSignal.any([...ports.signal?[ports.signal]:[],AbortSignal.timeout(ports.fleet?.timeoutMilliseconds??limits.fleetStatusMilliseconds)])});
+  if(!response.ok){await response.body?.cancel();return 0;}
+  const answer=await response.json() as {candidates?:number};
+  return Number.isInteger(answer.candidates)&&answer.candidates!>0?answer.candidates!:0;
+ }catch{return 0;}
+}
+
+/** 🌊️ Returns the fleet fanout ceiling when offloading can relieve this machine: a scheduler is published, at least one other machine has headroom (`fleetHeadroomV1`), and either the door refused the whole build (`doorRefused`, the one verdict the build then hands to every compiler call through `SEMIO_OFFLOAD_PRESSURE`) or a local unit would queue. `undefined` keeps the caller waiting as before: no scheduler, nobody with headroom, or a calm machine. */
 export async function offloadFanOutJobsV1(environment:Readonly<Record<string,string|undefined>>,ports:OffloadAdmissionPortsV1={}):Promise<number|undefined>{
  if(offloadModeV1(environment)==="never")return undefined;
- const fleet=await import("../../../🌐️remote-cache/🛰️fleet/🟦️.ts"),root=environment.SEMIO_WORKSPACE_ROOT??fleet.fleetCacheRootV1(environment)??workspaceRootFromV1(process.cwd());
- const published=environment.SEMIO_REMOTE_EXECUTION_ENDPOINT||fleet.readFleetExecutionV1(environment,root===undefined?{}:{root})?.endpoint;
+ const fleet=await import("../../../🌐️remote-cache/🛰️fleet/🟦️.ts"),{resolveRemoteExecutionEndpointV1}=await import("../../🧭️endpoint/🟦️.ts"),root=environment.SEMIO_WORKSPACE_ROOT??fleet.fleetCacheRootV1(environment)??workspaceRootFromV1(process.cwd());
+ const published=resolveRemoteExecutionEndpointV1({environment,...root===undefined?{}:{root}})?.endpoint;
  if(!published)return undefined;
- return (await localUnitAdmissionV1(ports)).verdict==="wait"?Math.min(limits.fanOutJobs,availableParallelism()):undefined;
+ if(ports.doorRefused!==true&&(await localUnitAdmissionV1(ports)).verdict!=="wait")return undefined;
+ return await fleetHeadroomV1(environment,ports)>0?Math.min(limits.fanOutJobs,availableParallelism()):undefined;
 }
 
 /** 🧭️ The checkout that holds `cwd`: the nearest directory with the replica's `.cache/f/machine.json` (the build gate runs before the launcher states `SEMIO_WORKSPACE_ROOT`). */

@@ -15,7 +15,7 @@ const args = ["components", "describe", "layout", "--profile", "prototype", "--f
 
 class LayoutDescriptorScript extends Script {
   async run(): Promise<void> {
-    await runOwnedCommand("repo", [process.argv[1]!, ...args], workspace, "stage:layout-guest", 7_200_000, {
+    await runOwnedCommand("repo", [process.argv[1]!, ...args], workspace, "stage:layout-guest", 0, {
       env: scriptInvocationEnvironment(this.invocation, { ...process.env, SEMIO_BUILD_MODE: "prototype" }),
     });
   }

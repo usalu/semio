@@ -69,7 +69,7 @@ async fn drawing_window_status_tracks_live_selection_in_both_explicit_locales() 
                 let (mut app,mut meta)=inline_selection_app().await;
                 let view=std::sync::Arc::make_mut(meta.view_state.as_mut().unwrap());view.locale=locale;view.terminology=terminology;
                 let layers=(0..row["layers"].as_u64().unwrap()).map(|index|{let mut layer=semio_s_artifact_draw_drawing_model::create_drawing_shape_layer_rect(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Status")).to_string().into()).expect("nonempty authored identity"), "Status");semio_s_artifact_draw_drawing_model::layer_base_mut(&mut layer).id=format!("layer-{index}").into();layer}).collect::<Vec<_>>();
-                let snapshot=DrawingSnapshot{id:"selection-status".into(),layers:layers.into_iter().collect(),..Default::default()};load_drawing_fixture(&mut app,&snapshot);
+                let snapshot=DrawingSnapshot{id:"selection-status".into(),layers:layers.into_iter().collect(),..Default::default()};load_drawing_fixture(&mut app,&snapshot).await;
                 for (step,selection) in row["selections"].as_array().unwrap().iter().enumerate() {
                     let targets=selection.as_array().unwrap().iter().map(|index|serde_json::json!({"granularity":DRAWING_INTERACTION_GRANULARITY,"id":format!("layer-{}",index.as_u64().unwrap())})).collect::<Vec<_>>();
                     let args=semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({"domainId":DRAWING_INTERACTION_DOMAIN,"targets":serde_json::to_string(&targets).unwrap(),"merge":"replace","method":"pick"}));

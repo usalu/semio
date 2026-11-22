@@ -5,6 +5,10 @@ use std::mem::ManuallyDrop;
 mod command_source;
 pub use command_source::OriginalCommandOrigin;
 pub use semio_plugin_decl_media::original_media::runtime as raw_media;
+#[path = "📥️folder-load.rs"]
+mod folder_load;
+use semio_framework::kernel::{CommandPageCursor, FixedCommandPage};
+use semio_plugin_decl_media::original_media::{natural_source::{NaturalSourceGuest, NaturalSourceStatus}, natural_source_gate::{NATURAL_SOURCE_TRANSPORT_MAXIMUM_BYTES, NaturalSourceBegin, NaturalSourceDeclaration, NaturalSourceLoan, NaturalSourceOffer, NaturalSourceOperation}};
 pub use semio_framework_actor::retained_context::OriginalActorReturnSlot;
 
 /// 🔗️ Process-local descendant identity; its captured weak app lease keeps the allocation address reserved.
@@ -437,6 +441,9 @@ pub struct NativeLifetimeSlot<PA: semio_plugin_reactor_app::PluginApp> {
     pub cell: NativeCell<PA>,
     pub command_origin:OriginalCommandOrigin,
     pub raw_media: raw_media::OriginalMediaAdmission,
+    pub folder_archive: folder_load::MountedFolderArchiveLoad,
+    pub natural_source: Option<NaturalSourceGuest<{ NATURAL_SOURCE_TRANSPORT_MAXIMUM_BYTES as usize }>>,
+    natural_source_launch: Option<NaturalSourceLaunchGrant>,
     pub native_created: bool,
     pub pending_creation: ManuallyDrop<Option<crate::life_cleanup_pumps::PendingNativeCreation<PA>>>,
     pub patch_sequence: u64,
@@ -462,7 +469,7 @@ impl<PA:semio_plugin_reactor_app::PluginApp> NativeLifetimeSlot<PA>{
                 self.raw_media.picker.request_supersession(cx)?;
                 return Ok(false);
             }
-            if !self.raw_media.close(cx)? { return Ok(false); }
+            if !self.folder_archive.cancel(cx)? || !self.raw_media.close(cx)? { return Ok(false); }
         }
         self.raw_media.admit_issued(offered, current, cx)
     }
@@ -478,8 +485,92 @@ impl<PA:semio_plugin_reactor_app::PluginApp> NativeLifetimeSlot<PA>{
     }
 
  /// 📮️ The actual instance and every close peer prove retirement before their Source alias can return.
- pub fn close_command_origin<P:ClosePeers+?Sized>(&mut self,peers:&P,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{if self.command_origin.terminal_is_empty(){return Ok(true)}if !matches!(self.cell.phase,Phase::Closing|Phase::Retired){return Ok(false)}let Some(owner)=self.cell.owner()else{return Ok(false)};if !owner.terminal_is_empty(peers)?{return Ok(false)}self.command_origin.validate(cx)?;if !self.raw_media.close(cx)?{return Ok(false)}cx.with_original_retirement(|cx|self.command_origin.return_step(cx))}
+ pub fn close_command_origin<P:ClosePeers+?Sized>(&mut self,peers:&P,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{if self.command_origin.terminal_is_empty(){return Ok(true)}if !matches!(self.cell.phase,Phase::Closing|Phase::Retired){return Ok(false)}let Some(owner)=self.cell.owner()else{return Ok(false)};if !owner.terminal_is_empty(peers)?{return Ok(false)}self.command_origin.validate(cx)?;if !self.folder_archive.cancel(cx)?||!self.raw_media.close(cx)?{return Ok(false)}if let Some(source)=self.natural_source.as_mut(){if !source.retire(true,cx)?{return Ok(false)}}cx.with_original_retirement(|cx|self.command_origin.return_step(cx))}
 }
+
+/// 🧭 Routes an authenticated natural source turn within one unpublished native lifetime.
+impl<PA: semio_plugin_reactor_app::PluginApp> NativeLifetimeSlot<PA> {
+    fn natural_source_operation(key: NativeCloseKey) -> NaturalSourceOperation {
+        NaturalSourceOperation { operation: 1, generation: key.lifetime.guest_lifetime, instance: key.instance() }
+    }
+
+    /// 🧩 Installs the already paid creation projection before this exact slot is published.
+    pub fn install_natural_source_launch(&mut self, launch: NaturalSourceLaunchGrant) {
+        assert!(!self.native_created && self.natural_source_launch.is_none());
+        self.natural_source_launch = Some(launch);
+    }
+
+    pub fn prepare_natural_source(
+        &mut self, key: NativeCloseKey, seq: u64, selected: NaturalSourceOffer<'_>,
+        cx: &mut semio_framework_job::StepContext<'_>,
+    ) -> Result<(NaturalSourceStatus, Option<NaturalSourceLoan<'static>>), semio_framework_job::OriginalTurnFailure> {
+        let Some(launch) = self.natural_source_launch else { return Ok((NaturalSourceStatus::Stale, None)); };
+        if selected.extent != launch.extent || selected.declaration != launch.declaration {
+            return Ok((NaturalSourceStatus::Refused, None));
+        }
+        if !self.admit_command_origin(key, cx)? { return Ok((NaturalSourceStatus::Retry, None)); }
+        let current = Self::natural_source_operation(key);
+        let result = NaturalSourceGuest::prepare(current, true, launch.declaration, launch.maximum, seq, selected, &mut self.natural_source, cx)?;
+        let loan = self.natural_source.as_ref().filter(|_| result == NaturalSourceStatus::Accepted).map(NaturalSourceGuest::loan);
+        Ok((result, loan))
+    }
+
+    pub fn control_natural_source(
+        &mut self, key: NativeCloseKey, fresh: bool, format_closed: bool, control: NaturalSourceControl,
+        offer: NaturalSourceBegin<'_>, cx: &mut semio_framework_job::StepContext<'_>,
+    ) -> Result<NaturalSourceStatus, semio_framework_job::OriginalTurnFailure> {
+        if self.natural_source.is_none() { return Ok(NaturalSourceStatus::Stale); }
+        if !self.admit_command_origin(key, cx)? { return Ok(NaturalSourceStatus::Retry); }
+        let source = self.natural_source.as_mut().expect("admitted natural source");
+        let current = Self::natural_source_operation(key);
+        match control {
+            NaturalSourceControl::Begin => source.begin(offer, current, fresh, cx),
+            NaturalSourceControl::Complete => source.complete(offer, current, fresh, cx),
+            NaturalSourceControl::Cancel => source.cancel(offer, current, format_closed, cx),
+        }
+    }
+
+    pub fn receive_natural_source_page(
+        &mut self, key: NativeCloseKey, fresh: bool, incoming: &mut Option<(CommandPageCursor, FixedCommandPage)>,
+        cx: &mut semio_framework_job::StepContext<'_>,
+    ) -> Result<NaturalSourceStatus, semio_framework_job::OriginalTurnFailure> {
+        if self.natural_source.is_none() { return Ok(NaturalSourceStatus::Stale); }
+        if !self.admit_command_origin(key, cx)? { return Ok(NaturalSourceStatus::Retry); }
+        let current = Self::natural_source_operation(key);
+        self.natural_source.as_mut().expect("admitted natural source").stage_page(incoming, current, fresh, cx)
+    }
+
+    pub fn poll_natural_source_page(
+        &mut self, key: NativeCloseKey, fresh: bool, cx: &mut semio_framework_job::StepContext<'_>,
+    ) -> Result<Option<u32>, semio_framework_job::OriginalTurnFailure> {
+        if self.natural_source.is_none() || !self.admit_command_origin(key, cx)? { return Ok(None); }
+        let current = Self::natural_source_operation(key);
+        self.natural_source.as_mut().expect("admitted natural source").poll_page(current, fresh, cx)
+    }
+}
+
+#[derive(Clone, Copy)]
+pub struct NaturalSourceLaunchGrant {
+    declaration: NaturalSourceDeclaration<'static>,
+    maximum: u32,
+    extent: u32,
+}
+
+impl NaturalSourceLaunchGrant {
+    /// 📐 Projects the authenticated launch only when it exactly matches the mounted decoder capability.
+    pub fn project(
+        declaration: NaturalSourceDeclaration<'static>, maximum: u32,
+        offered: &semio_framework::kernel::NaturalSourceWireDeclaration, extent: u32,
+    ) -> Option<Self> {
+        (extent != 0 && extent <= maximum && maximum <= NATURAL_SOURCE_TRANSPORT_MAXIMUM_BYTES
+            && declaration.format_kind == offered.format_kind && declaration.extension == offered.extension
+            && declaration.media_type == offered.media_type && declaration.binary == offered.binary)
+            .then_some(Self { declaration, maximum, extent })
+    }
+}
+
+#[derive(Clone, Copy)]
+pub enum NaturalSourceControl { Begin, Complete, Cancel }
 
 /// 🗃️ Fixed allocation-bound ownership belongs to the typed runtime, never a copied thread-local key.
 #[doc(hidden)]
@@ -488,11 +579,13 @@ pub struct NativeLifecycleRegistry<PA: semio_plugin_reactor_app::PluginApp> {
     pub serial: GuestLifecycleSerial,
     pub cursor: usize,
     raw_media_cursor: usize,
+    natural_source_cursor: usize,
+    natural_format_cursor: usize,
 }
 
 impl<PA: semio_plugin_reactor_app::PluginApp> NativeLifecycleRegistry<PA> {
     pub fn new() -> Self {
-        Self { slots: semio_plugin_reactor_tasks::tasks_fixed_slots::ReactorFixedSlots::unallocated(), serial: GuestLifecycleSerial::new(0), cursor: 0, raw_media_cursor: 0 }
+        Self { slots: semio_plugin_reactor_tasks::tasks_fixed_slots::ReactorFixedSlots::unallocated(), serial: GuestLifecycleSerial::new(0), cursor: 0, raw_media_cursor: 0, natural_source_cursor: 0, natural_format_cursor: 0 }
     }
     pub fn index(instance: u32) -> usize {
         instance as usize % semio_plugin_reactor_tasks::tasks_fixed_slots::PLUGIN_REACTOR_INSTANCE_SLOTS
@@ -509,7 +602,7 @@ impl<PA: semio_plugin_reactor_app::PluginApp> NativeLifecycleRegistry<PA> {
             return Err("lifecycle backing unavailable");
         }
         let cell = NativeCell::admit(open, self.serial.next()?)?;
-        self.slots.insert_admitted(index, Box::new(NativeLifetimeSlot { cell, command_origin:OriginalCommandOrigin::empty(), raw_media:raw_media::OriginalMediaAdmission::empty(), native_created: false, pending_creation:ManuallyDrop::new(None), patch_sequence: 0 }));
+        self.slots.insert_admitted(index, Box::new(NativeLifetimeSlot { cell, command_origin:OriginalCommandOrigin::empty(), raw_media:raw_media::OriginalMediaAdmission::empty(), folder_archive:Default::default(), natural_source:None, natural_source_launch:None, native_created: false, pending_creation:ManuallyDrop::new(None), patch_sequence: 0 }));
         Ok(true)
     }
     pub fn get(&self, instance: u32) -> Option<&NativeLifetimeSlot<PA>> {
@@ -536,6 +629,40 @@ impl<PA: semio_plugin_reactor_app::PluginApp> NativeLifecycleRegistry<PA> {
             let instance = slot.cell.lifetime().instance_id;
             if slot.cell.is_live() && slot.raw_media.picker.receipt_due() && !closing.contains(&instance) {
                 self.raw_media_cursor = (index + 1) % count;
+                return Some(instance);
+            }
+        }
+        None
+    }
+
+    /// 🔁️ Selects one live natural source receipt that can progress without a host page.
+    pub fn next_natural_source_poll(&mut self, closing: &[u32]) -> Option<u32> {
+        let count = self.slots.values.len();
+        for offset in 0..count {
+            let index = (self.natural_source_cursor + offset) % count;
+            let Some(slot) = self.slots.get(index) else { continue; };
+            let instance = slot.cell.lifetime().instance_id;
+            if slot.cell.is_live() && !closing.contains(&instance) && slot.natural_source.as_ref().is_some_and(|source| {
+                source.page_pending() || source.cancellation_pending() || source.completion_pending()
+            }) {
+                self.natural_source_cursor = (index + 1) % count;
+                return Some(instance);
+            }
+        }
+        None
+    }
+
+    /// 🧮 Selects one sealed natural source or format shutdown for this bounded guest turn.
+    pub fn next_natural_format_poll(&mut self, closing: &[u32]) -> Option<u32> {
+        let count = self.slots.values.len();
+        for offset in 0..count {
+            let index = (self.natural_format_cursor + offset) % count;
+            let Some(slot) = self.slots.get(index) else { continue; };
+            let instance = slot.cell.lifetime().instance_id;
+            if slot.cell.is_live() && !closing.contains(&instance)
+                && slot.natural_source.as_ref().is_some_and(NaturalSourceGuest::format_runnable)
+            {
+                self.natural_format_cursor = (index + 1) % count;
                 return Some(instance);
             }
         }

@@ -30,6 +30,7 @@ use semio_renderer_wgpu_shell_dock::{NAMED_LAYOUT_STORE_FALLBACK_APP_ID, named_l
 use semio_renderer_wgpu_shell_docs::{FRAMEWORK_CHAT_PANEL_ID, command_host_platform, reserved_shell_chords_v1, resolve_theme_for_ids, should_auto_start_introduction};
 #[cfg(not(target_arch = "wasm32"))]
 use semio_renderer_wgpu_shell_history::FilePrefsStore;
+use semio_renderer_wgpu_shell_async::PrefsStore as _;
 use semio_renderer_wgpu_shell_history::{OS_SHELL_CONFIG_STORAGE_KEY, empty_os_shell_config, prefs_get_from, prefs_set_in};
 use semio_renderer_wgpu_shell_pointer::{ShellEditVerb, settle_pump_owes, shell_edit_verb_for};
 #[cfg(not(target_arch = "wasm32"))]

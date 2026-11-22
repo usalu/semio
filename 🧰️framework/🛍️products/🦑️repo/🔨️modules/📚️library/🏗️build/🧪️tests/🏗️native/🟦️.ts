@@ -45,8 +45,8 @@ test("CMake presets have explicit portable modes and matching configurations", (
 test("CMake owner loads independently of root audit code and owns direct Nx commands", async () => {
  const compiled = await build({absWorkingDir:root,entryPoints:[fixture.cmakeEntry],bundle:true,write:false,platform:"node",format:"esm",packages:"external",metafile:true,logLevel:"silent"});
  expect(Object.keys(compiled.metafile!.inputs)).not.toContain("📜️script.ts");
- expect(Object.keys(compiled.metafile!.inputs).some(input=>input.includes("/🔍️discovery/"))).toBe(false);
- const project = JSON.parse(readFileSync(resolve(root,"📋️project.json"),"utf8"));
+ expect(Object.keys(compiled.metafile!.inputs).some(input=>input.includes("/🔍️discovery/")&&!input.includes("/🔍️discovery/📂️source/"))).toBe(false);
+ const project = JSON.parse(readFileSync(resolve(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json"),"utf8"));
  for(const target of fixture.cppTargets) expect(project.targets[target].options.command).toBe(`repo ./${fixture.cmakeEntry} cpp ${target.slice(4)}`);
 });
 

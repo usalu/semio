@@ -1,3 +1,4 @@
+use semio_s_artifact_puzzle_2d_records::standards::v1::subsets::any::schema::testkit as test_source_custody;
 #[allow(unused_imports)]
 use crate::editor::puzzle2d::config::Puzzle2dSuggestionMenu;
 #[allow(unused_imports)]
@@ -19,7 +20,7 @@ use crate::editor::puzzle2d::window::*;
                 maximum_release_bytes: retirement.next_release_byte_demand().expect("window retirement release quote"),
                 maximum_depth: retirement.next_depth_demand().expect("window retirement depth quote").max(1),
             };
-            retirement.step(grant).expect("bounded window retirement turn");
+            test_source_custody::close_turn(grant, |effect| retirement.step(4096, effect)).expect("bounded window retirement turn");
         }
         panic!("window retirement exceeded its bounded cursor turns");
     }

@@ -165,3 +165,7 @@ No change was needed. The source equals the catalog; it is VALID.
 Remaining:
 - the support solids are hidden inside the track;
 - the cut-cap wedge in the thermal three-quarter view is a renderer artefact.
+
+## Canonical component readback, 2026-11-21
+
+Canonical source `39ef8909fe658091`. The 10 mm glass leaf remains framed. Each side has its own stand-off pull handle. Two four-wheel carriages, their hangers and the open overhead track remain visible from behind. The exterior thermal view follows the three exposed faces of the track. All twelve exported scenes reopened (1,192,992 bytes). The strict catalog source readback passed.

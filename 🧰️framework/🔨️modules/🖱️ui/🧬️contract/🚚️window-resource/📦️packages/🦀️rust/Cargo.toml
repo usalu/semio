@@ -1,0 +1,16 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-ui-contract-window-resource"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Exact text resources delivered through window-scoped page requests"
+
+[lints]
+workspace = true
+
+[package.metadata.semio]
+role = "framework"
+
+[lib]
+path = "../../🦀️.rs"

@@ -30,8 +30,10 @@
         "directory": "components/runs",
         "materializedDirectory": "w",
         "linkedSuffix": ".linked",
+        "artifactMarker": ".semio-artifact.json",
         "activityDirectories": ["l", "r", "j"],
         "heldMilliseconds": 1800000,
+        "retainedFailedRuns": 3,
         "reportedRemovals": 8,
         "yieldEvery": 8
       }

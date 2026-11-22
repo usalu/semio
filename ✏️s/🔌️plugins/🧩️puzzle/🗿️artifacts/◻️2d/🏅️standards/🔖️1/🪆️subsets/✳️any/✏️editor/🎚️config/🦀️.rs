@@ -486,6 +486,10 @@ pub enum Puzzle2dConfigMutation {
 impl protocol::Mutation<Puzzle2dConfig> for Puzzle2dConfigMutation {
     type Diff = Puzzle2dConfigDiff;
 
+    fn may_emit_foreign_steps(&self) -> bool {
+        false
+    }
+
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[
         protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config", semantic_kind: "set-node-kind-weights", display_name: "Set Puzzle 2D Node Kind Weights", emoji: "🎚️", aggregate_variant: "SetNodeKindWeights", payload_schema: "puzzle.2dconfig", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
         protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config", semantic_kind: "set-handle-kind-weights", display_name: "Set Puzzle 2D Handle Kind Weights", emoji: "🎚️", aggregate_variant: "SetHandleKindWeights", payload_schema: "puzzle.2dconfig", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },

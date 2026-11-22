@@ -193,6 +193,14 @@ impl BvhTree {
     /// 📏️ The inline extent one node occupies — what releasing its box returns.
     pub const NODE_BYTES: usize = size_of::<BvhNode>();
 
+    /// 📏️ The heap bytes [`Self::into_step`] returns: one box per child it moves out, none for a leaf.
+    pub fn step_release_bytes(&self) -> usize {
+        match self.0 {
+            BvhNode::Leaf { .. } => 0,
+            BvhNode::Branch { .. } => 2 * Self::NODE_BYTES,
+        }
+    }
+
     /// 🍃️ Consumes this node and answers its children, each moved out of its box, or that it was a leaf.
     pub fn into_step(self) -> BvhTreeStep {
         match self.0 {

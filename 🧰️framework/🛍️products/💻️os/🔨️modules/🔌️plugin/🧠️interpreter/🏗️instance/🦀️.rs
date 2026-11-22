@@ -1,7 +1,9 @@
 //! 🏗️ Original caller phases reserve, initialize and retire Core resource storage before any guest instruction starts.
 use super::*;
 use semio_framework_job::{OriginalCallerSourceLoan,OriginalTurnFailure,StepContext};
-use semio_framework_value::{RetainedCloneProgress,ValueError,ValueRefusalKind};
+#[cfg(test)]
+use semio_framework_value::RetainedCloneProgress;
+use semio_framework_value::{ValueError,ValueRefusalKind};
 use std::mem::{ManuallyDrop,size_of};
 use std::num::NonZeroUsize;
 use std::sync::atomic::{AtomicUsize,Ordering};
@@ -120,7 +122,6 @@ impl CoreInstanceOpening{
    if let Some(table)=core.tables.last(){let release=bytes_for::<Option<u64>>(table.values.capacity())?;if retirement_charge(cx,size_of::<TableState>(),0,release)?{core.tables.pop();}return Ok(false)}
    if let Some(segment)=core.data.last(){let release=segment.as_ref().map_or(0,Vec::capacity);if retirement_charge(cx,size_of::<Option<Vec<u8>>>(),0,release)?{core.data.pop();}return Ok(false)}
    if let Some(segment)=core.elements.last(){let release=bytes_for::<Option<u32>>(segment.as_ref().map_or(0,Vec::capacity))?;if retirement_charge(cx,size_of::<Option<Vec<Option<u32>>>>(),0,release)?{core.elements.pop();}return Ok(false)}
-   if !core.globals.is_empty(){if retirement_charge(cx,size_of::<GlobalState>(),0,0)?{core.globals.pop();}return Ok(false)}
    if release_vector(&mut core.memories,cx)?||release_vector(&mut core.tables,cx)?||release_vector(&mut core.globals,cx)?||release_vector(&mut core.data,cx)?||release_vector(&mut core.elements,cx)?{return Ok(false)}
    if !retirement_charge(cx,size_of::<CoreInstance>(),0,0)?{return Ok(false)}self.core.take();return Ok(false)
   }
@@ -134,8 +135,8 @@ pub use original_invocation::{CoreOriginalInvocationCall,CoreOriginalInvocationS
 impl Drop for CoreInstanceOpening{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original Core resources reached Drop before paid retirement or custody transfer")}}
 fn refused(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::UnsupportedOwner,message)}
 fn bytes_for<T>(count:usize)->Result<usize,ValueError>{count.checked_mul(size_of::<T>()).ok_or_else(||refused("Core resource byte count exceeds original host storage"))}
-fn charge(cx:&mut StepContext<'_>,copy:usize,capacity:usize,release:usize)->Result<bool,OriginalTurnFailure>{let grant=cx.retained_grant();if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<copy||grant.maximum_capacity_bytes<capacity||grant.maximum_release_bytes<release{return Ok(false)}cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:copy,retained_capacity_bytes:capacity,released_bytes:release})?;cx.consume_fuel(1);Ok(true)}
-fn retirement_charge(cx:&mut StepContext<'_>,copy:usize,capacity:usize,release:usize)->Result<bool,OriginalTurnFailure>{let grant=cx.retained_grant();if cx.retirement_should_yield()||grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<copy||grant.maximum_capacity_bytes<capacity||grant.maximum_release_bytes<release{return Ok(false)}cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:copy,retained_capacity_bytes:capacity,released_bytes:release})?;cx.consume_fuel(1);Ok(true)}
+fn charge(cx:&mut StepContext<'_>,copy:usize,capacity:usize,release:usize)->Result<bool,OriginalTurnFailure>{Ok(cx.charge_retained_item(copy,capacity,release)?)}
+fn retirement_charge(cx:&mut StepContext<'_>,copy:usize,capacity:usize,release:usize)->Result<bool,OriginalTurnFailure>{Ok(cx.charge_retirement_retained_item(copy,capacity,release)?)}
 fn reserve<T>(vector:&mut Vec<T>,length:usize,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{if vector.capacity()>=length{return Ok(true)}if !vector.is_empty()||vector.capacity()!=0{return Err(refused("Core resource capacity must be admitted once from its actual zero owner").into())}let capacity=bytes_for::<T>(length)?;if !charge(cx,size_of::<Vec<T>>(),capacity,0)?{return Ok(false)}*vector=Vec::with_capacity(length);Ok(true)}
 fn copy_count(cx:&StepContext<'_>,remaining:usize,width:usize)->usize{remaining.min(cx.retained_grant().maximum_copy_bytes/width)}
 fn constant(core:&CoreInstance,value:&ConstExpr)->Result<Value,ValueError>{match value{ConstExpr::Value(value)=>Ok(*value),ConstExpr::Global(index)=>core.globals.get(*index as usize).map(|state|state.value).ok_or_else(||refused("Core constant requires an initialized global")),ConstExpr::RefFunction(index)=>Ok(Value::FuncRef(Some(*index)))}}

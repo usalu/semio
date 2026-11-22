@@ -1,0 +1,26 @@
+{
+  "title": "Get FEM Plugin Working End to End",
+  "emoji": "🏗️",
+  "status": "open",
+  "description": "Get fem plugin (✏️s/🔌️plugins/🏗️fem) working end to end: Rust compiles and tests pass (engine, 2d/3d artifacts, receiving, sqlite, bridge), TS packages build/test, plugin loads in s and exposes its artifacts. Opus 5.5 coordinates, Sonnet 5.5 agents execute, Haiku 5.5 agents explore/audit. Fall back to native tools if the shared work fleet mechanism fails. Fix fundamental unrelated issues found along the way.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2792"
+  },
+  "goal": "🎯runningfem",
+  "sessions": [
+    "c426f746-f061-4b5a-9c35-18304e901dfd"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-22 00:41:29",
+      "author": "",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Get fem plugin (✏️s/🔌️plugins/🏗️fem) working end to end: Rust compiles and tests pass (engine, 2d/3d artifacts, receiving, sqlite, bridge), TS packages build/test, plugin loads in s and exposes its artifacts. Opus 5.5 coordinates, Sonnet 5.5 agents execute, Haiku 5.5 agents explore/audit. Fall back to native tools if the shared work fleet mechanism fails. Fix fundamental unrelated issues found along the way.",
+      "llm": "opus-4-7",
+      "effort": "medium"
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "agave": {
+    "members": 56,
+    "leaves": 28,
+    "maximumMemberDiameterM": 0.071,
+    "minimumDiameterVariationM": 0.016
+  },
+  "birch": {
+    "distributedStations": 27,
+    "maximumStationDiameterM": 0.18,
+    "maximumTotalStations": 40
+  },
+  "miscanthus": {
+    "minimumBlades": 70,
+    "maximumBladeWidthM": 0.02,
+    "minimumPanicleFingers": 12
+  },
+  "apple": {
+    "minimumCanopyJoints": 7,
+    "minimumApples": 6,
+    "minimumScaffolds": 8,
+    "minimumVisibleOpenings": 2
+  }
+}

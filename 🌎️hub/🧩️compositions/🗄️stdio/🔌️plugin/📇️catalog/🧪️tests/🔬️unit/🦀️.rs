@@ -22,9 +22,9 @@ fn full_catalog_preserves_definition_codec_and_ledger_counts() {
     assert_eq!(receipts.iter().map(|receipt| receipt.artifact_kind.as_str()).collect::<BTreeSet<_>>().len(), fixture["artifactKinds"].as_u64().unwrap() as usize);
     assert_eq!(fixture["artifactKinds"].as_u64().unwrap(), 29);
     let ledger = capability_ledger().expect("capability ledger");
-    assert_eq!(ledger.declared, CapabilityCounts { codecs: 36, mutations: 3, inferences: 67 });
+    assert_eq!(ledger.declared, CapabilityCounts { codecs: 36, mutations: 30, inferences: 68 });
     assert_eq!(ledger.registered, CapabilityCounts { codecs: 30, mutations: 3, inferences: 67 });
-    assert_eq!(ledger.implemented, CapabilityCounts { codecs: 30, mutations: 0, inferences: 0 });
+    assert_eq!(ledger.implemented, CapabilityCounts { codecs: 30, mutations: 27, inferences: 1 });
     assert_eq!(ledger.verified, CapabilityCounts::default());
 }
 

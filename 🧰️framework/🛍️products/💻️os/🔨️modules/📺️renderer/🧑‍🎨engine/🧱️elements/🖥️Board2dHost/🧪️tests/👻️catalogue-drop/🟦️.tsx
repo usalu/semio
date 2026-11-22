@@ -4,14 +4,15 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { afterEach, describe, expect, it } from "vitest";
-import { boardCatalogueDropHostContainsPoint, boardCatalogueDropPointOverRect, boardDropPreviewJson, registerBoardCatalogueDropHost } from "../../📍️drop-and-camera/🟦️.ts";
+import { describe, expect, it, vi } from "vitest";
+import { Matrix3, Vector2 } from "three";
+import { boardCatalogueDropHostContainsPoint, boardCatalogueDropPointOverRect, boardDropPreviewJson, boardScreenToWorld, registerBoardCatalogueDropHost } from "../../📍️drop-and-camera/🟦️.ts";
+import { pushBoardDropPreview, registerBoard2dPeer } from "../../🔄️session-sync/🟦️.ts";
+import { createBoardPeerScope, type Board2dPeer } from "../../../🪪️WasmSessionLoader/🟦️.tsx";
 // #endregion 🔌️Adapters
 
 // #region 👻️CatalogueDropLaws
 const DROP_PAYLOAD = { kindId: "seed", catalogSlice: "nodes", shape: "circle" as const, radius: 24 };
-
-afterEach(() => {});
 
 describe("👻️ board catalogue drop geometry", () => {
   it("boardCatalogueDropPointOverRect is inclusive on all four edges", () => {
@@ -43,6 +44,31 @@ describe("👻️ board catalogue drop geometry", () => {
       shape: "circle",
       radius: 24,
     });
+  });
+
+  it("maps through the inverse of the translated and zoomed viewport", () => {
+    const camera = { x: 180, y: 40, zoom: 2 };
+    const size = { w: 800, h: 600 };
+    const origin = { x: 120, y: 60 };
+    const client = { x: 260, y: 173 };
+    const worldToClient = new Matrix3().set(2, 0, 160, 0, 2, 280, 0, 0, 1);
+    const expected = new Vector2(client.x, client.y).applyMatrix3(worldToClient.invert());
+    expect(boardScreenToWorld(JSON.stringify(camera), size, { x: client.x - origin.x, y: client.y - origin.y })).toEqual({ x: expected.x, y: expected.y });
+  });
+
+  it("updates each peer once per distinct ghost and lets its frame scheduler paint", () => {
+    const scope = createBoardPeerScope();
+    const session = { setDropPreviewJson: vi.fn(), clearDropPreview: vi.fn(), renderFrame: vi.fn() };
+    const peer = { session: session as unknown as Board2dPeer["session"], onPeerGestureEnded: () => {} };
+    registerBoard2dPeer(scope, "controller", "source", peer);
+    const preview = boardDropPreviewJson(DROP_PAYLOAD, 100, 200);
+    pushBoardDropPreview(scope, "controller", preview);
+    pushBoardDropPreview(scope, "controller", preview);
+    pushBoardDropPreview(scope, "controller", null);
+    pushBoardDropPreview(scope, "controller", null);
+    expect(session.setDropPreviewJson).toHaveBeenCalledExactlyOnceWith(preview);
+    expect(session.clearDropPreview).toHaveBeenCalledTimes(1);
+    expect(session.renderFrame).not.toHaveBeenCalled();
   });
 });
 // #endregion 👻️CatalogueDropLaws

@@ -28,11 +28,8 @@ test("the machine default is the sum of the declared capacities and loose roots 
  expect(expected.total).toBeLessThanOrEqual(budgetPolicy.maximumBytes+loose);expect(machine.stores.reduce((sum,store)=>sum+store.floorBytes,0)).toBeLessThan(machine.defaultTotalBytes);
 });
 
-test("a logical limit never exceeds its image, except for the tools image whose hardlinked toolchains are counted once per name, and the control directory holds its headroom file",()=>{
- for(const[id,row]of Object.entries(partitions)){
-  if(id==="tools"){expect(row.maximumLogicalBytes).toBeGreaterThan(row.capacityBytes);expect(row.maximumLogicalBytes).toBeLessThanOrEqual(8*row.capacityBytes);}
-  else expect(row.maximumLogicalBytes,id).toBeLessThanOrEqual(row.capacityBytes);
- }
+test("a logical limit never exceeds its image, the tools image included, and the control directory holds its headroom file",()=>{
+ for(const[id,row]of Object.entries(partitions))expect(row.maximumLogicalBytes,id).toBeLessThanOrEqual(row.capacityBytes-1048576);
  expect(budgetPolicy.maximumControlBytes).toBeGreaterThanOrEqual(metadata.properties.capacityBytes.const+MIB);
 });
 

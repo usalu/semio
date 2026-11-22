@@ -32,11 +32,12 @@ fn mounted_results_frames_never_invoke_synchronous_solvers() {
     doc.analysis.modal_count = 1;
     for result_mode in [semio_s_fem_app_surface::ResultMode::Static, semio_s_fem_app_surface::ResultMode::Modal] {
         let cfg = Fem3dResultsWindowConfig { result_mode, ..Default::default() };
-        for _ in 0..3 { render(&doc, &cfg, &Fem3dInteractionSnapshot::default(), Some(operation), Some("fixture-results"), &semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::Fem3dMountedLive, &Fem3dLabels::NATIVE_EN).expect("mounted frame"); }
+        for _ in 0..3 { render(&doc, &cfg, &Fem3dInteractionSnapshot::default(), Some(operation), semio_plugin::WindowConfigAuthorityIdentity::issue(), &semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::Fem3dMountedLive, &Fem3dLabels::NATIVE_EN).expect("mounted frame"); }
     }
     assert_eq!(results_solve_count(), 0);
-    assert!(matches!(semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::close_step(operation.app_instance_id, grant), semio_plugin::PluginLifecycleStep::Progress(_)));
-    for _ in 0..64 { if semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::terminal_is_empty(operation.app_instance_id) { break; } semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::close_step(operation.app_instance_id, grant); }
+    let mut scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+    assert!(matches!(semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::close_step(operation.app_instance_id, scope.cx(), grant), Ok(semio_plugin::PluginLifecycleStep::Progress(_))));
+    for _ in 0..64 { if semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::terminal_is_empty(operation.app_instance_id) { break; } semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::close_step(operation.app_instance_id, scope.cx(), grant).expect("close step"); }
     assert!(semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::terminal_is_empty(operation.app_instance_id));
 }
 
@@ -81,12 +82,9 @@ async fn results_cache_solves_one_revision_once_and_evicts_the_previous() {
     let moved = Some((7_u32, [2_u8; 32]));
     with_static_results(&doc, moved, |(results, _)| results.len()).expect("static results");
     assert_eq!(results_solve_count(), 3, "a moved revision re-solves");
-    RESULTS_CACHE.with(|cache| {
-        let cache = cache.borrow();
-        let entry = cache.as_ref().expect("one resident entry");
-        assert_eq!(entry.key, moved.expect("key"));
-        assert!(entry.modes.is_empty(), "the previous revision's mode shapes are dropped, never kept alongside");
-    });
+    let (resident_key, resident_modes) = results_cache_resident().expect("one resident entry");
+    assert_eq!(resident_key, moved.expect("key"));
+    assert_eq!(resident_modes, 0, "the previous revision's mode shapes are dropped, never kept alongside");
     reset_results_cache();
     with_static_results(&doc, None, |(results, _)| results.len()).expect("static results");
     with_static_results(&doc, None, |(results, _)| results.len()).expect("static results");
@@ -183,12 +181,12 @@ async fn fem3d_model_extent_degenerate_model_returns_one() {
 /// 🧵️ Mounted rendering publishes pending scenes without executing a numerical solve.
 #[semio_framework_async_macros::async_test]
 async fn mounted_results_render_borrows_jobs_without_synchronous_solves() {
-    let doc = semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::text::snapshot::fem3d_demo_snapshot();
+    let doc = semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::text::snapshot::fem3d_demo_snapshot().expect("demo snapshot");
     reset_results_cache();
     let grant = semio_framework_value::RetainedCloneGrant { maximum_items: 64, maximum_copy_bytes: 32768, maximum_capacity_bytes: 262144, maximum_release_bytes: 1048576, maximum_depth: 4096 };
     let operation = semio_plugin::AppRenderOperationContext { app_instance_id: 107, base_revision: semio_framework_job::RevisionId(1), generation: semio_framework_job::Generation(1), canonical_base_revision: [1; 32], mounted_policy: semio_plugin::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } };
     for revision in [operation, semio_plugin::AppRenderOperationContext { canonical_base_revision: [2; 32], ..operation }] {
-        let node = render(&doc, &Fem3dResultsWindowConfig::default(), &Fem3dInteractionSnapshot::default(), Some(revision), Some("fixture-results"), &semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::Fem3dMountedLive, &Fem3dLabels::NATIVE_EN).unwrap();
+        let node = render(&doc, &Fem3dResultsWindowConfig::default(), &Fem3dInteractionSnapshot::default(), Some(revision), semio_plugin::WindowConfigAuthorityIdentity::issue(), &semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::Fem3dMountedLive, &Fem3dLabels::NATIVE_EN).unwrap();
         let json = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).unwrap();
         assert!(json.contains("Analysis queued") || json.contains("Preparing analysis"), "a pending frame names its stage: {json}");
     }

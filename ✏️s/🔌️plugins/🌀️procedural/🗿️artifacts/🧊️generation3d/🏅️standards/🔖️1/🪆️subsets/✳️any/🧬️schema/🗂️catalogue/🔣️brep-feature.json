@@ -912,12 +912,12 @@
       "category": "brep.feature",
       "emoji": "🧽️",
       "label": {
-        "en": "Remove faces",
+        "en": "Remove feature",
         "de": "Merkmale entfernen"
       },
       "description": {
-        "en": "Removes selected faces such as holes and bosses and heals the gap; the result is rebuilt from a mesh.",
-        "de": "Entfernt ausgewählte Flächen wie Bohrungen und Erhebungen und schließt die Lücke; das Ergebnis wird aus einem Netz neu aufgebaut."
+        "en": "Restores rectangular stock by filling one or two disjoint through bores, a single blind bore, or removing the complete rounded-box fillet.",
+        "de": "Stellt den rechteckigen Grundkörper wieder her, indem getrennte Durchgangsbohrungen oder eine Sackbohrung geschlossen werden oder die vollständige Verrundung entfernt wird."
       },
       "inputs": [
         {
@@ -942,8 +942,8 @@
             "de": "Flächen"
           },
           "description": {
-            "en": "The faces to remove.",
-            "de": "Die zu entfernenden Flächen."
+            "en": "Select every cylindrical bore wall and the floor of a blind bore, or all twenty fillet faces.",
+            "de": "Wähle alle zylindrischen Bohrungswände und bei einer Sackbohrung den Bohrungsgrund oder alle zwanzig Verrundungsflächen."
           },
           "type": "selection",
           "selection": {

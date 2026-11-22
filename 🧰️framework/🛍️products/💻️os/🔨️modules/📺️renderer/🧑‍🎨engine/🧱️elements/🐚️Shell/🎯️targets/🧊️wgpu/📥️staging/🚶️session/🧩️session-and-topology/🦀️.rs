@@ -9,18 +9,7 @@ impl<'ctx> SessionCtx<'ctx> {
     #[cfg(not(target_arch = "wasm32"))]
     pub fn poll_shell_io(&mut self) -> bool {
         const MAX_COMPLETIONS_PER_FRAME: usize = 8;
-        let (mut changed, completion) = self.opening.poll_media_save(&self.docs, &self.plugins);
-        if let Some((file, result)) = completion {
-            use semio_renderer_wgpu_program_bridge::NativeSaveOutcome;
-            let local = |en: &str, de: &str| if self.prefs.locale_id == "de" { de.to_owned() } else { en.to_owned() };
-            let (notice, severity, code) = match result {
-                Ok(NativeSaveOutcome::Delivered) => (local("Saved", "Gespeichert"), semio_framework::Severity::Info, "exported"),
-                Ok(NativeSaveOutcome::Cancelled) => (local("Save canceled", "Speichern abgebrochen"), semio_framework::Severity::Info, "export-cancelled"),
-                Ok(NativeSaveOutcome::ReferenceRequired) => (local("Save needs the reference exporter", "Speichern erfordert den Referenzexport"), semio_framework::Severity::Error, "export-failed"),
-                Err(why) => (why, semio_framework::Severity::Error, "export-failed"),
-            };
-            self.chrome.show_transient_notice(format!("{notice} · {file}"), severity, Some(code));
-        }
+        let mut changed = false;
         for _ in 0..MAX_COMPLETIONS_PER_FRAME {
             let result = match self.settle.shell_io_pending.front() {
                 Some(pending) => pending.receiver.try_recv(),

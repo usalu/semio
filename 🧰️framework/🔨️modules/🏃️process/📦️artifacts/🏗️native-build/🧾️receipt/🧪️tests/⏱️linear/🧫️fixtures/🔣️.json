@@ -1,0 +1,31 @@
+{
+  "description": "Language-agnostic vectors for the completed-compilation recheck: which asked directories lie beneath some claimed file (segments, joined by the platform separator), and the size ladder whose cost must grow linearly.",
+  "beneath": [
+    {
+      "claims": [["root", "src", "a.rs"], ["root", "src", "deep", "b.rs"], ["other", "c.rs"]],
+      "asked": [["root"], ["root", "src"], ["root", "src", "deep"], ["root", "sr"], ["root", "src", "a.rs"], ["other"], ["oth"], ["missing"], ["root", "src", "deep", "b.rs"]],
+      "expected": [true, true, true, false, false, true, false, false, false]
+    },
+    {
+      "claims": [["a", "b"], ["a", "bb", "c"]],
+      "asked": [["a"], ["a", "b"], ["a", "bb"], ["a", "bbb"]],
+      "expected": [true, false, true, false]
+    },
+    {
+      "claims": [],
+      "asked": [["a"]],
+      "expected": [false]
+    }
+  ],
+  "ladder": {
+    "sizes": [4000, 16000],
+    "depth": 12,
+    "maximumGrowthRatio": 9
+  },
+  "roster": {
+    "units": 60,
+    "sources": 25,
+    "rows": 1586,
+    "retained": 85
+  }
+}

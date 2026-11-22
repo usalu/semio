@@ -1,0 +1,518 @@
+diff --git a/🧰️framework/🔨️modules/🎠️kernel/🪪️identity/🦀️.rs b/🧰️framework/🔨️modules/🎠️kernel/🪪️identity/🦀️.rs
+--- a/🧰️framework/🔨️modules/🎠️kernel/🪪️identity/🦀️.rs
++++ b/🧰️framework/🔨️modules/🎠️kernel/🪪️identity/🦀️.rs
+@@ -435,6 +435,83 @@
+     }
+ }
+ 
++/** 🧮️ Fixed positional ceilings carried by the owned Core Poll input. */
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize, Serialize, semio_framework_value::NativeReceive, semio_framework_value::RetireOwned)]
++#[value(crate="::semio_framework_value")]
++pub struct OwnedCorePollLimits(u32, u32, u32, u32, u32, u64, u64, u64, u32, u32, u32);
++
++impl OwnedCorePollLimits {
++    pub const ARITY: usize = 11;
++
++    /// 🔢️ Reads one unsigned scalar in canonical wire order for the streamed JSON writer.
++    pub fn scalar_at(&self, index: usize) -> Option<u64> {
++        Some(match index {
++            0 => self.0.into(),
++            1 => self.1.into(),
++            2 => self.2.into(),
++            3 => self.3.into(),
++            4 => self.4.into(),
++            5 => self.5,
++            6 => self.6,
++            7 => self.7,
++            8 => self.8.into(),
++            9 => self.9.into(),
++            10 => self.10.into(),
++            _ => return None,
++        })
++    }
++
++    /// 🪪️ Applies the decoded ceilings to the live authenticated Poll authority.
++    pub fn narrow(self, authority: semio_framework_actor::OriginalJobBudget) -> Budget {
++        PollRequestLimits::from(self).narrow(authority)
++    }
++}
++
++impl TryFrom<PollRequestLimits> for OwnedCorePollLimits {
++    type Error = semio_framework_value::ValueError;
++
++    fn try_from(request: PollRequestLimits) -> Result<Self, Self::Error> {
++        let retained = request.retained_policy;
++        let extent = |value| u32::try_from(value).map_err(|_| semio_framework_value::ValueError::literal(
++            semio_framework_value::ValueRefusalKind::OwnershipLimit, "owned Core Poll limit exceeds the wasm32 extent",
++        ));
++        Ok(Self(
++            extent(retained.maximum_items)?,
++            extent(retained.maximum_copy_bytes)?,
++            extent(retained.maximum_capacity_bytes)?,
++            extent(retained.maximum_release_bytes)?,
++            extent(retained.maximum_depth)?,
++            request.work_fuel,
++            request.fuel,
++            request.deadline_us,
++            request.max_effects,
++            request.max_patch_bytes,
++            request.max_frames,
++        ))
++    }
++}
++
++impl From<OwnedCorePollLimits> for PollRequestLimits {
++    fn from(limits: OwnedCorePollLimits) -> Self {
++        let OwnedCorePollLimits(items, copy, capacity, release, depth, work_fuel, fuel, deadline_us, max_effects, max_patch_bytes, max_frames) = limits;
++        Self {
++            retained_policy: semio_framework_value::RetainedCloneGrant {
++                maximum_items: items as usize,
++                maximum_copy_bytes: copy as usize,
++                maximum_capacity_bytes: capacity as usize,
++                maximum_release_bytes: release as usize,
++                maximum_depth: depth as usize,
++            },
++            work_fuel,
++            fuel,
++            deadline_us,
++            max_effects,
++            max_patch_bytes,
++            max_frames,
++        }
++    }
++}
++
+ /// ⛽️ Per-turn resource ceiling handed to `reactor::poll` — `📜️wit/📜️reactor.wit`'s `budget`
+ /// record.
+ #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+diff --git a/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/🔁️persistent-local/🦀️.rs b/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/🔁️persistent-local/🦀️.rs
+--- a/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/🔁️persistent-local/🦀️.rs
++++ b/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/🔁️persistent-local/🦀️.rs
+@@ -84,10 +84,10 @@
+         pub events: Vec<semio_framework::kernel::Event>,
+         pub command_page: Option<(semio_framework::kernel::CommandPageCursor, semio_framework::kernel::FixedCommandPage)>,
+         pub cold_pair_page: Option<semio_framework::kernel::ColdDocumentPairPage>,
+-        pub limits: PollRequestLimits,
++        pub limits: OwnedCorePollLimits,
+     }
+ 
+-    pub use semio_framework_kernel_identity::PollRequestLimits;
++    pub use semio_framework_kernel_identity::{OwnedCorePollLimits, PollRequestLimits};
+ 
+     /// 🌉️ Hand-written, not derived — `events`/`command_page`/`budget` are foreign kernel types
+     /// (`semio_framework::kernel::*`, owned by the `semio-framework`/`semio-os-kernel`
+diff --git a/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔁️poll/📥️events/🦀️.rs b/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔁️poll/📥️events/🦀️.rs
+--- a/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔁️poll/📥️events/🦀️.rs
++++ b/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔁️poll/📥️events/🦀️.rs
+@@ -10,7 +10,8 @@
+ 
+ /// 🎛️ Poll request data narrows the authenticated scalar loan and carries no Source identity.
+ pub use semio_framework_kernel_identity::PollRequestLimits;
+-pub struct PollJsonSource<'a>{pub events:&'a[Event],pub limits:&'a PollRequestLimits}
++use semio_framework_kernel_identity::OwnedCorePollLimits;
++pub struct PollJsonSource<'a>{pub events:&'a[Event],pub limits:&'a OwnedCorePollLimits}
+ 
+ #[derive(Clone, Copy)]
+ pub(super) enum PollPage<'a> {
+@@ -43,7 +44,7 @@
+ }
+ 
+ #[derive(Clone,Copy)]
+-enum Node<'a>{Poll(&'a PollJsonSource<'a>),Limits(&'a PollRequestLimits),Policy(semio_framework_value::RetainedCloneGrant),Null,Events(&'a[Event]),Event(&'a Event),Body(&'a Event),Raw(&'a OriginalMediaControlEvent),RawLoan(&'a OriginalMediaWireLoan),RawControl(&'a OriginalMediaWireControl),RawBegin(&'a str,&'a str),Bytes(&'a[u8]),Text(&'a str),UInt(u64),Quoted(u128),Bool(bool),Assets(&'a[(String,Vec<u8>)]),Asset(&'a(String,Vec<u8>)),Grants(&'a[BrokerCapabilityGrant]),Grant(&'a BrokerCapabilityGrant),Quota(&'a QuotaSchema),Activation(&'a ActivationEvent),ActivationBody(&'a ActivationEvent),Change(&'a CapabilityChange),ChangeBody(&'a CapabilityChange),Endpoint(&'a MessageEndpoint),EndpointBody(&'a MessageEndpoint),Outcome(&'a RequestOutcome),Open(ActorInstanceOpenRequest),Close(ActorInstanceCloseRequest),Lifetime(ActorInstanceLifetime),Receipt(ActorInstanceLifecycleReceipt),Ack(ActorInstanceLifecycleAck),Patch(ActorUiPatchReceipt),Cursor(&'a CommandPageCursor),ColdPage(&'a ColdDocumentPairPage),ColdHeader(&'a ColdDocumentPairHeader),Frontier(&'a ColdDocumentPairFrontier)}
++enum Node<'a>{Poll(&'a PollJsonSource<'a>),Limits(&'a OwnedCorePollLimits),Null,Events(&'a[Event]),Event(&'a Event),Body(&'a Event),Raw(&'a OriginalMediaControlEvent),RawLoan(&'a OriginalMediaWireLoan),RawControl(&'a OriginalMediaWireControl),RawBegin(&'a str,&'a str),Bytes(&'a[u8]),Text(&'a str),UInt(u64),Quoted(u128),Bool(bool),Assets(&'a[(String,Vec<u8>)]),Asset(&'a(String,Vec<u8>)),Grants(&'a[BrokerCapabilityGrant]),Grant(&'a BrokerCapabilityGrant),Quota(&'a QuotaSchema),Activation(&'a ActivationEvent),ActivationBody(&'a ActivationEvent),Change(&'a CapabilityChange),ChangeBody(&'a CapabilityChange),Endpoint(&'a MessageEndpoint),EndpointBody(&'a MessageEndpoint),Outcome(&'a RequestOutcome),Open(ActorInstanceOpenRequest),Close(ActorInstanceCloseRequest),Lifetime(ActorInstanceLifetime),Receipt(ActorInstanceLifecycleReceipt),Ack(ActorInstanceLifecycleAck),Patch(ActorUiPatchReceipt),Cursor(&'a CommandPageCursor),ColdPage(&'a ColdDocumentPairPage),ColdHeader(&'a ColdDocumentPairHeader),Frontier(&'a ColdDocumentPairFrontier)}
+ 
+ fn absent()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"borrowed Event JSON path is absent")}
+ fn uint<'a,T:Into<u64>>(value:T)->Node<'a>{Node::UInt(value.into())}
+@@ -64,8 +65,6 @@
+   if let Some(tag)=self.tag(){if self.unit(){return None}return(index==0).then(||(tag,match self{Self::Event(Event::InstanceClose(v))=>Self::Close(*v),Self::Event(Event::InstanceLifecycleAck(v))=>Self::Ack(*v),Self::Event(Event::ColdDocumentPairPage(v))=>Self::ColdPage(v),Self::Event(Event::OriginalMediaControl(v))=>Self::Raw(v),Self::RawControl(OriginalMediaWireControl::Begin{name,media_type})=>Self::RawBegin(name,media_type),Self::Event(v)=>Self::Body(v),Self::Activation(v)=>Self::ActivationBody(v),Self::Change(v)=>Self::ChangeBody(v),Self::Endpoint(v)=>Self::EndpointBody(v),Self::Outcome(RequestOutcome::Ok(v)|RequestOutcome::Err(v))=>Self::Bytes(v),_=>unreachable!()}))}
+   match self{
+    Self::Poll(v)=>fields!(index;"events"=>Self::Events(v.events),"command_page"=>Self::Null,"cold_pair_page"=>Self::Null,"limits"=>Self::Limits(v.limits)),
+-   Self::Limits(v)=>fields!(index;"retainedPolicy"=>Self::Policy(v.retained_policy),"workFuel"=>uint(v.work_fuel),"fuel"=>uint(v.fuel),"deadlineUs"=>uint(v.deadline_us),"maxEffects"=>uint(v.max_effects),"maxPatchBytes"=>uint(v.max_patch_bytes),"maxFrames"=>uint(v.max_frames)),
+-   Self::Policy(v)=>fields!(index;"maximumItems"=>uint(v.maximum_items as u64),"maximumCopyBytes"=>uint(v.maximum_copy_bytes as u64),"maximumCapacityBytes"=>uint(v.maximum_capacity_bytes as u64),"maximumReleaseBytes"=>uint(v.maximum_release_bytes as u64),"maximumDepth"=>uint(v.maximum_depth as u64)),
+    Self::Body(v)=>match v{
+     Event::InstanceOpen{request,app_id,actor,config,assets,capabilities,quotas}=>fields!(index;"request"=>Self::Open(*request),"appId"=>Self::Text(&app_id.0),"actor"=>Self::Text(actor),"config"=>Self::Bytes(config),"assets"=>Self::Assets(assets),"capabilities"=>Self::Grants(capabilities),"quotas"=>Self::Quota(quotas)),
+     Event::Activate{reason}=>fields!(index;"reason"=>Self::Activation(reason)),Event::CapabilityChanged{change}=>fields!(index;"change"=>Self::Change(change)),Event::QuotaChanged{quotas}=>fields!(index;"quotas"=>Self::Quota(quotas)),
+@@ -98,8 +97,8 @@
+    Self::Frontier(v)=>fields!(index;"documentId"=>Self::Text(&v.document_id),"headEditOrdinal"=>uint(v.head_edit_ordinal),"headEditId"=>Self::Text(&v.head_edit_id),"lastCommitSeq"=>uint(v.last_commit_seq),"chainSha256"=>Self::Bytes(&v.chain_sha256)),_=>None,
+   }
+  }
+- fn child(self,index:usize)->Option<Self>{match self{Self::Events(v)=>v.get(index).map(Self::Event),Self::Bytes(v)=>v.get(index).map(|v|uint(*v)),Self::Assets(v)=>v.get(index).map(Self::Asset),Self::Asset(v)=>match index{0=>Some(Self::Text(&v.0)),1=>Some(Self::Bytes(&v.1)),_=>None},Self::Grants(v)=>v.get(index).map(Self::Grant),_=>self.field(index).map(|(_,value)|value)}}
+- fn view(self)->JsonWriteNode<'a>{match self{Self::Null=>JsonWriteNode::Null,Self::Text(v)=>JsonWriteNode::String(v),Self::UInt(v)=>JsonWriteNode::Number(Number::UInt(v)),Self::Quoted(v)=>JsonWriteNode::QuotedUnsigned(v),Self::Bool(v)=>JsonWriteNode::Bool(v),Self::Events(v)=>JsonWriteNode::Array(v.len()),Self::Bytes(v)=>JsonWriteNode::Array(v.len()),Self::Assets(v)=>JsonWriteNode::Array(v.len()),Self::Asset(_)=>JsonWriteNode::Array(2),Self::Grants(v)=>JsonWriteNode::Array(v.len()),_ if self.unit()=>JsonWriteNode::String(self.tag().expect("unit has canonical tag")),_=>JsonWriteNode::Object((0..=17).take_while(|index|self.field(*index).is_some()).count())}}
++ fn child(self,index:usize)->Option<Self>{match self{Self::Limits(v)=>v.scalar_at(index).map(uint),Self::Events(v)=>v.get(index).map(Self::Event),Self::Bytes(v)=>v.get(index).map(|v|uint(*v)),Self::Assets(v)=>v.get(index).map(Self::Asset),Self::Asset(v)=>match index{0=>Some(Self::Text(&v.0)),1=>Some(Self::Bytes(&v.1)),_=>None},Self::Grants(v)=>v.get(index).map(Self::Grant),_=>self.field(index).map(|(_,value)|value)}}
++ fn view(self)->JsonWriteNode<'a>{match self{Self::Limits(_)=>JsonWriteNode::Array(OwnedCorePollLimits::ARITY),Self::Null=>JsonWriteNode::Null,Self::Text(v)=>JsonWriteNode::String(v),Self::UInt(v)=>JsonWriteNode::Number(Number::UInt(v)),Self::Quoted(v)=>JsonWriteNode::QuotedUnsigned(v),Self::Bool(v)=>JsonWriteNode::Bool(v),Self::Events(v)=>JsonWriteNode::Array(v.len()),Self::Bytes(v)=>JsonWriteNode::Array(v.len()),Self::Assets(v)=>JsonWriteNode::Array(v.len()),Self::Asset(_)=>JsonWriteNode::Array(2),Self::Grants(v)=>JsonWriteNode::Array(v.len()),_ if self.unit()=>JsonWriteNode::String(self.tag().expect("unit has canonical tag")),_=>JsonWriteNode::Object((0..=17).take_while(|index|self.field(*index).is_some()).count())}}
+ }
+ impl EventJsonSource<'_>{fn at(&self,path:&[usize])->Result<Node<'_>,ValueError>{at(Node::Events(self.0),path)}}
+ impl JsonWriteSource for EventJsonSource<'_>{
+@@ -115,5 +114,4 @@
+ fn validate(node:Node<'_>)->Result<(),ValueError>{if match node{Node::Open(v)=>!v.is_valid(),Node::Close(v)=>!v.is_valid(),Node::Lifetime(v)=>!v.is_valid(),Node::Receipt(v)=>!v.is_valid(),Node::Patch(v)=>!v.is_valid(),_=>false}{Err(ValueError::literal(ValueRefusalKind::InvalidValue,"borrowed Event has invalid lifecycle authority"))}else{Ok(())}}
+ impl JsonWriteSource for PollJsonSource<'_>{fn node_at_path(&self,path:&[usize])->Result<JsonWriteNode<'_>,ValueError>{Ok(at(Node::Poll(self),path)?.view())}fn object_key_at_path(&self,path:&[usize],index:usize)->Result<&str,ValueError>{at(Node::Poll(self),path)?.field(index).map(|(key,_)|key).ok_or_else(absent)}}
+ 
+-pub(super) fn limits_node<'a>(limits:&'a PollRequestLimits,path:&[usize])->Result<JsonWriteNode<'a>,ValueError>{Ok(at(Node::Limits(limits),path)?.view())}
+-pub(super) fn limits_key<'a>(limits:&'a PollRequestLimits,path:&[usize],index:usize)->Result<&'a str,ValueError>{at(Node::Limits(limits),path)?.field(index).map(|(key,_)|key).ok_or_else(absent)}
++pub(super) fn limits_node<'a>(limits:&'a OwnedCorePollLimits,path:&[usize])->Result<JsonWriteNode<'a>,ValueError>{Ok(at(Node::Limits(limits),path)?.view())}
+diff --git a/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔁️poll/🎛️session/🦀️.rs b/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔁️poll/🎛️session/🦀️.rs
+--- a/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔁️poll/🎛️session/🦀️.rs
++++ b/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔁️poll/🎛️session/🦀️.rs
+@@ -14,7 +14,7 @@
+  driver:ManuallyDrop<GuestRelayWakeDriver>,admission:ManuallyDrop<Option<NativeHomeAdmission<GuestPoll<T,R>>>>,unopened:ManuallyDrop<Option<GuestPoll<T,R>>>,producer:ManuallyDrop<Option<OriginalNativeLease<NativeInstanceHome<GuestPoll<T,R>>>>>,history_input:ManuallyDrop<Option<GuestIssuedHistoryHome>>,history:ManuallyDrop<Option<OriginalNativeLease<GuestIssuedHistoryHome>>>,fault_input:ManuallyDrop<Option<semio_plugin_host_actor_failure::ActorFailureHome>>,fault:ManuallyDrop<Option<OriginalNativeLease<semio_plugin_host_actor_failure::ActorFailureHome>>>,fault_id:Option<OriginalNativeRecipientIdentity>,failure:ManuallyDrop<Option<GuestRelayAdmissionFailure>>,cleanup_failure:ManuallyDrop<Option<GuestRelayAdmissionFailure>>,
+  next_place:OriginalCallerReturnPlace,next_result:ManuallyDrop<Option<Result<bool,OriginalTurnFailure>>>,
+  diagnostic: GuestRelayFaultHome,
+- guest:Option<GuestRelayGuestSubloan>,request:Option<GuestPollGuestLoan>,frozen:Option<GuestPollFrozenKind>,producer_id:Option<OriginalNativeRecipientIdentity>,history_id:Option<OriginalNativeRecipientIdentity>,witness:Option<OriginalNativeRetiredWitness>,stage:u8,capture:GuestFrozenHistoryCapture,close_phase:u8,opened:bool,closing:bool,closed:bool,delivered:bool,limits:Option<PollRequestLimits>,
++ guest:Option<GuestRelayGuestSubloan>,request:Option<GuestPollGuestLoan>,frozen:Option<GuestPollFrozenKind>,producer_id:Option<OriginalNativeRecipientIdentity>,history_id:Option<OriginalNativeRecipientIdentity>,witness:Option<OriginalNativeRetiredWitness>,stage:u8,capture:GuestFrozenHistoryCapture,close_phase:u8,opened:bool,closing:bool,closed:bool,delivered:bool,limits:Option<semio_framework_kernel_identity::OwnedCorePollLimits>,
+  trace:Option<PollProgressTrace>,
+ }
+ #[derive(Default)]
+@@ -49,7 +49,7 @@
+   if self.producer.is_none(){let admission=self.admission.as_mut().unwrap();let producer=&mut*self.producer;let result=self.driver.dispatch_admission_step(admission.requires_execution(),|execution,cx|{let mut call=admission.advance(execution,cx);if call.result.is_ok(){call.result=admission.take_step(producer,cx).map(|_|());}call});self.retain(result,false);if self.producer.is_some(){self.producer_id=self.producer.as_ref().map(OriginalNativeLease::recipient_identity)}return if self.failure.is_some(){GuestPollSessionStatus::Refused}else{GuestPollSessionStatus::Pending}}
+   if self.history.is_none(){let input=&mut*self.history_input;let history=&mut*self.history;let result=self.driver.dispatch_admission_step(false,|_,cx|GuestRelayAdmissionCall{result:cx.admit_original_native(input,history).map(|_|()),execution:None});self.retain(result,false);if self.history.is_some(){self.history_id=self.history.as_ref().map(OriginalNativeLease::recipient_identity)}return if self.failure.is_some(){GuestPollSessionStatus::Refused}else{GuestPollSessionStatus::Pending}}
+   if self.fault.is_none(){let input=&mut*self.fault_input;let fault=&mut*self.fault;let result=self.driver.dispatch_admission_step(false,|_,cx|GuestRelayAdmissionCall{result:cx.admit_original_native(input,fault).map(|_|()),execution:None});self.retain(result,false);if self.fault.is_some(){self.fault_id=self.fault.as_ref().map(OriginalNativeLease::recipient_identity)}return if self.failure.is_some(){GuestPollSessionStatus::Refused}else{GuestPollSessionStatus::Pending}}
+-  let result=(||{let(request,deadline)=self.driver.operation_request_limits()?;let policy=self.driver.policy()?;self.limits=Some(PollRequestLimits{retained_policy:request.retained,work_fuel:request.work_units,fuel:policy.root.turn_execution_fuel,deadline_us:deadline,max_effects:policy.root.max_effects,max_patch_bytes:policy.root.max_patch_bytes,max_frames:policy.root.max_frames});Ok(true)})();if self.retain(result,false){self.opened=true;GuestPollSessionStatus::Ready}else{GuestPollSessionStatus::Refused}
++  let result=(||{let(request,deadline)=self.driver.operation_request_limits()?;let policy=self.driver.policy()?;self.limits=Some(semio_framework_kernel_identity::OwnedCorePollLimits::try_from(PollRequestLimits{retained_policy:request.retained,work_fuel:request.work_units,fuel:policy.root.turn_execution_fuel,deadline_us:deadline,max_effects:policy.root.max_effects,max_patch_bytes:policy.root.max_patch_bytes,max_frames:policy.root.max_frames})?);Ok(true)})();if self.retain(result,false){self.opened=true;GuestPollSessionStatus::Ready}else{GuestPollSessionStatus::Refused}
+  }
+  /// 🔎️ The constructor's immutable origin is lent only under the actual producer Source callback.
+  pub fn with_native_step(&mut self,receive:impl FnOnce(&GuestRuntimes,&mut GuestInstance,&CompiledHandle,&mut StepContext<'_>)->Result<(),OriginalTurnFailure>)->GuestPollSessionStatus{if !self.opened||self.closing||self.closed||self.failure.is_some()||self.cleanup_failure.is_some(){return GuestPollSessionStatus::Refused}let producer=self.producer.as_mut().unwrap();let result=self.driver.dispatch_operation_step(false,false,|cx|{producer.with_native(cx,|home,cx|{home.with_native(cx,|runtime,instance,compiled,_,cx|receive(runtime,instance,compiled,cx))?;Ok(())})?;Ok(())});if self.retain(result,false){GuestPollSessionStatus::Ready}else if self.failure.is_some(){GuestPollSessionStatus::Refused}else{GuestPollSessionStatus::Pending}}
+@@ -64,10 +64,10 @@
+ }
+ 
+ /// 📥️ The actual session constructs immutable request DATA; it is not a callback grant or Source identity.
+-pub struct GuestPollSessionInput<'a,S:JsonWriteSource+?Sized>{events:&'a S,pages:[PollPage<'a>;2],limits:PollRequestLimits,operation:(u64,u64),_pinned:std::marker::PhantomPinned}
++pub struct GuestPollSessionInput<'a,S:JsonWriteSource+?Sized>{events:&'a S,pages:[PollPage<'a>;2],limits:semio_framework_kernel_identity::OwnedCorePollLimits,operation:(u64,u64),_pinned:std::marker::PhantomPinned}
+ impl<S:JsonWriteSource+?Sized> JsonWriteSource for GuestPollSessionInput<'_,S>{
+  fn node_at_path(&self,path:&[usize])->Result<semio_framework_pack_json::JsonWriteNode<'_>,ValueError>{use semio_framework_pack_json::JsonWriteNode as N;if path.is_empty(){return Ok(N::Object(1))}if path[0]!=0{return Err(ValueError::invariant("Poll request tag path is absent"))}if path.len()==1{return Ok(N::Object(4))}match path[1]{0=>self.events.node_at_path(&path[2..]),1|2=>self.pages[path[1]-1].node(&path[2..]),3=>super::event_json::limits_node(&self.limits,&path[2..]),_=>Err(ValueError::invariant("Poll request field path is absent"))}}
+- fn object_key_at_path(&self,path:&[usize],index:usize)->Result<&str,ValueError>{if path.is_empty(){return if index==0{Ok("Poll")}else{Err(ValueError::invariant("Poll request tag is absent"))}}if path[0]!=0{return Err(ValueError::invariant("Poll request tag path is absent"))}if path.len()==1{return ["events","command_page","cold_pair_page","limits"].get(index).copied().ok_or_else(||ValueError::invariant("Poll request field is absent"))}match path[1]{0=>self.events.object_key_at_path(&path[2..],index),1|2=>self.pages[path[1]-1].key(&path[2..],index),3=>super::event_json::limits_key(&self.limits,&path[2..],index),_=>Err(ValueError::invariant("Poll request object path is absent"))}}
++ fn object_key_at_path(&self,path:&[usize],index:usize)->Result<&str,ValueError>{if path.is_empty(){return if index==0{Ok("Poll")}else{Err(ValueError::invariant("Poll request tag is absent"))}}if path[0]!=0{return Err(ValueError::invariant("Poll request tag path is absent"))}if path.len()==1{return ["events","command_page","cold_pair_page","limits"].get(index).copied().ok_or_else(||ValueError::invariant("Poll request field is absent"))}match path[1]{0=>self.events.object_key_at_path(&path[2..],index),1|2=>self.pages[path[1]-1].key(&path[2..],index),_=>Err(ValueError::invariant("Poll request object path is absent"))}}
+ }
+ 
+ impl<T:NativeReceive<DslValue>+RetireOwned+Send+Sync+'static,R:GuestPollFailureReceiving> GuestPollSession<T,R>{
+diff --git a/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔁️poll/📥️events/🧪️tests/🦀️.rs b/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔁️poll/📥️events/🧪️tests/🦀️.rs
+--- a/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔁️poll/📥️events/🧪️tests/🦀️.rs
++++ b/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔁️poll/📥️events/🧪️tests/🦀️.rs
+@@ -57,6 +57,13 @@
+ #[test]
+ fn borrowed_poll_limits_are_request_data_without_authenticated_scalar_identity(){
+  let events=[Event::Wake];let budget=semio_framework_kernel_identity::Budget::original(semio_framework_value::RetainedCloneGrant{maximum_items:9,maximum_copy_bytes:17,maximum_capacity_bytes:31,maximum_release_bytes:63,maximum_depth:7},100,1,1,2,3,4);
+- let limits=PollRequestLimits{retained_policy:budget.retained_policy,work_fuel:budget.work_fuel,fuel:budget.fuel,deadline_us:budget.deadline_us,max_effects:budget.max_effects,max_patch_bytes:budget.max_patch_bytes,max_frames:budget.max_frames};let source=PollJsonSource{events:&events,limits:&limits};let actual=oracle(&source,&mut Vec::new());let mut expected=serde_json::to_value(budget).unwrap();expected.as_object_mut().unwrap().remove("retained");assert_eq!(actual,serde_json::json!({"events":["wake"],"command_page":null,"cold_pair_page":null,"limits":expected}));assert!(actual["limits"].get("retained").is_none());
++ let request=PollRequestLimits{retained_policy:budget.retained_policy,work_fuel:budget.work_fuel,fuel:budget.fuel,deadline_us:budget.deadline_us,max_effects:budget.max_effects,max_patch_bytes:budget.max_patch_bytes,max_frames:budget.max_frames};
++ let limits=OwnedCorePollLimits::try_from(request).unwrap();
++ let source=PollJsonSource{events:&events,limits:&limits};
++ let expected=serde_json::json!([9,17,31,63,7,100,100,1001,2,3,4]);
++ assert_eq!(serde_json::to_value(limits).unwrap(),expected);
++ assert_eq!(oracle(&source,&mut Vec::new()),serde_json::json!({"events":["wake"],"command_page":null,"cold_pair_page":null,"limits":expected}));
++ assert!(source.object_key_at_path(&[3],0).is_err());
++ assert!(source.node_at_path(&[3,OwnedCorePollLimits::ARITY]).is_err());
+  let invalid=[Event::InstanceClose(ActorInstanceCloseRequest{lifetime:ActorInstanceLifetime{activation_generation:0,instance_id:0,guest_lifetime:1},request_sequence:1})];assert!(EventJsonSource(&invalid).node_at_path(&[0,0]).is_err());
+ }
+diff --git a/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/🔁️persistent-local/🧪️poll-limits/🦀️.rs b/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/🔁️persistent-local/🧪️poll-limits/🦀️.rs
+--- a/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/🔁️persistent-local/🧪️poll-limits/🦀️.rs
++++ b/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/🔁️persistent-local/🧪️poll-limits/🦀️.rs
+@@ -11,7 +11,10 @@
+         let grant = |v: &[u64]| semio_framework_value::RetainedCloneGrant { maximum_items:v[0] as usize, maximum_copy_bytes:v[1] as usize, maximum_capacity_bytes:v[2] as usize, maximum_release_bytes:v[3] as usize, maximum_depth:v[4] as usize };
+         let authority = semio_framework::kernel::OriginalJobBudget::from_scalar_arguments([1,2,3,4,authorized[7],authorized[5],authorized[0],authorized[1],authorized[2],authorized[3],authorized[4],authorized[0],authorized[1],authorized[2],authorized[3],authorized[4],authorized[5],authorized[7],0]).unwrap();
+         let limits = PollRequestLimits { retained_policy:grant(&requested), work_fuel:requested[5], fuel:requested[6], deadline_us:requested[7], max_effects:13, max_patch_bytes:14, max_frames:15 };
+-        let actual = limits.narrow(authority);
++        let tuple = OwnedCorePollLimits::try_from(limits).unwrap();
++        assert_eq!(PollRequestLimits::from(tuple), limits);
++        let actual = tuple.narrow(authority);
++        assert_eq!(actual, limits.narrow(authority));
+         let p = actual.retained_policy;
+         assert_eq!(&[p.maximum_items as u64,p.maximum_copy_bytes as u64,p.maximum_capacity_bytes as u64,p.maximum_release_bytes as u64,p.maximum_depth as u64,actual.work_fuel,actual.fuel,actual.deadline_us][..], expected.as_slice());
+         assert_eq!(actual.retained, authority.input);
+@@ -27,3 +30,24 @@
+         assert_eq!(serde_json::from_slice::<ActorInput>(&wire).is_ok(), vector["valid"].as_bool().unwrap());
+     }
+ }
++
++#[test]
++fn owned_poll_limits_tuple_matches_the_neutral_vectors() {
++    let fixture: serde_json::Value = serde_json::from_str(include_str!("tuple.json")).unwrap();
++    for row in fixture["cases"].as_array().unwrap() {
++        let wire = row["wire"].as_str().unwrap();
++        let tuple = serde_json::from_str::<OwnedCorePollLimits>(wire);
++        assert_eq!(tuple.is_ok(), row["valid"].as_bool().unwrap(), "{wire}");
++        if let Ok(tuple) = tuple {
++            assert_eq!(serde_json::to_string(&tuple).unwrap(), wire);
++            assert!(tuple.scalar_at(OwnedCorePollLimits::ARITY).is_none());
++        }
++    }
++    if let Some(too_wide) = (u32::MAX as usize).checked_add(1) {
++        let limits = PollRequestLimits {
++            retained_policy: semio_framework_value::RetainedCloneGrant { maximum_capacity_bytes: too_wide, ..Default::default() },
++            work_fuel: 0, fuel: 0, deadline_us: 0, max_effects: 0, max_patch_bytes: 0, max_frames: 0,
++        };
++        assert!(OwnedCorePollLimits::try_from(limits).is_err());
++    }
++}
+diff --git a/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/🔁️persistent-local/📊️actor-input.json b/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/🔁️persistent-local/📊️actor-input.json
+--- a/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/🔁️persistent-local/📊️actor-input.json
++++ b/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/🔁️persistent-local/📊️actor-input.json
+@@ -1,13 +1,19 @@
+ [
+   {"wire":{"Job":{"job":7,"kind":"example","input":[1,2],"checkpoint":null}},"valid":true},
+-  {"wire":{"Poll":{"events":[],"command_page":null,"cold_pair_page":null,"limits":{"retainedPolicy":{"maximumItems":1,"maximumCopyBytes":2,"maximumCapacityBytes":3,"maximumReleaseBytes":4,"maximumDepth":5},"workFuel":6,"fuel":7,"deadlineUs":8,"maxEffects":9,"maxPatchBytes":10,"maxFrames":11}}},"valid":true},
+-  {"wire":{"Poll":{"events":[{"instanceOpen":{"request":{"activationGeneration":"1","instanceId":0,"requestSequence":1},"appId":"s.note.note@1/*#editor","actor":"editor","config":[],"assets":[],"capabilities":[],"quotas":{}}}],"command_page":null,"cold_pair_page":null,"limits":{"retainedPolicy":{"maximumItems":1,"maximumCopyBytes":2,"maximumCapacityBytes":3,"maximumReleaseBytes":4,"maximumDepth":5},"workFuel":6,"fuel":7,"deadlineUs":8,"maxEffects":9,"maxPatchBytes":10,"maxFrames":11}}},"valid":true},
+-  {"wire":{"Poll":{"events":[{"instanceOpen":{"request":{"activationGeneration":"1","instanceId":0,"requestSequence":1},"appId":"s.note.note@1/*#editor","actor":"editor","config":[],"assets":[],"capabilities":[{"token":"0","id":"artifacts.write","scope":"plugin"}],"quotas":{}}}],"command_page":null,"cold_pair_page":null,"limits":{"retainedPolicy":{"maximumItems":48000000,"maximumCopyBytes":3000000000,"maximumCapacityBytes":2147483648,"maximumReleaseBytes":2147483648,"maximumDepth":64},"workFuel":1000000000,"fuel":1000000,"deadlineUs":86400000000,"maxEffects":256,"maxPatchBytes":1048576,"maxFrames":256}}},"valid":true},
+-  {"wire":{"Poll":{"events":[{"instanceOpen":{"request":{"activationGeneration":"1","instanceId":0,"requestSequence":1},"appId":"s.wfc.bitmap@1/*#editor","actor":"editor","config":[],"assets":[],"capabilities":[{"token":"0","id":"artifacts.write","scope":"plugin"}],"quotas":{}}}],"command_page":null,"cold_pair_page":null,"limits":{"retainedPolicy":{"maximumItems":48000000,"maximumCopyBytes":3000000000,"maximumCapacityBytes":2147483648,"maximumReleaseBytes":2147483648,"maximumDepth":64},"workFuel":1000000000,"fuel":1000000,"deadlineUs":86400000000,"maxEffects":256,"maxPatchBytes":1048576,"maxFrames":256}}},"valid":true},
++  {"wire":{"Poll":{"events":[],"command_page":null,"cold_pair_page":null,"limits":[1,2,3,4,5,6,7,8,9,10,11]}},"valid":true},
++  {"wire":{"Poll":{"events":[{"instanceOpen":{"request":{"activationGeneration":"1","instanceId":0,"requestSequence":1},"appId":"s.note.note@1/*#editor","actor":"editor","config":[],"assets":[],"capabilities":[],"quotas":{}}}],"command_page":null,"cold_pair_page":null,"limits":[1,2,3,4,5,6,7,8,9,10,11]}},"valid":true},
++  {"wire":{"Poll":{"events":[{"instanceOpen":{"request":{"activationGeneration":"1","instanceId":0,"requestSequence":1},"appId":"s.note.note@1/*#editor","actor":"editor","config":[],"assets":[],"capabilities":[{"token":"0","id":"artifacts.write","scope":"plugin"}],"quotas":{}}}],"command_page":null,"cold_pair_page":null,"limits":[48000000,3000000000,2147483648,2147483648,64,1000000000,1000000,86400000000,256,1048576,256]}},"valid":true},
++  {"wire":{"Poll":{"events":[{"instanceOpen":{"request":{"activationGeneration":"1","instanceId":0,"requestSequence":1},"appId":"s.wfc.bitmap@1/*#editor","actor":"editor","config":[],"assets":[],"capabilities":[{"token":"0","id":"artifacts.write","scope":"plugin"}],"quotas":{}}}],"command_page":null,"cold_pair_page":null,"limits":[48000000,3000000000,2147483648,2147483648,64,1000000000,1000000,86400000000,256,1048576,256]}},"valid":true},
+   {"wire":{"Codec":{"artifact_schema":"note","document_id":"doc","pack":[],"spr":[],"ops":[]}},"valid":true},
+   {"wire":{"Restore":{"state":[1,2]}},"valid":true},
+   {"wire":{"job":7,"kind":"example","input":null,"checkpoint":null},"valid":false},
+   {"wire":{"Codec":{"artifact_schema":"note"}},"valid":false},
+   {"wire":{"Restore":{"state":[],"extra":1}},"valid":false},
+-  {"wire":{"Restore":{"state":[]},"Job":{"job":7,"kind":"example","input":null,"checkpoint":null}},"valid":false}
++  {"wire":{"Restore":{"state":[]},"Job":{"job":7,"kind":"example","input":null,"checkpoint":null}},"valid":false},
++  {"wire":{"Poll":{"events":[],"command_page":null,"cold_pair_page":null,"limits":{"retainedPolicy":{"maximumItems":1,"maximumCopyBytes":2,"maximumCapacityBytes":3,"maximumReleaseBytes":4,"maximumDepth":5},"workFuel":6,"fuel":7,"deadlineUs":8,"maxEffects":9,"maxPatchBytes":10,"maxFrames":11}}},"valid":false},
++  {"wire":{"Poll":{"events":[],"command_page":null,"cold_pair_page":null,"limits":[1,2,3,4,5,6,7,8,9,10]}},"valid":false},
++  {"wire":{"Poll":{"events":[],"command_page":null,"cold_pair_page":null,"limits":[1,2,3,4,5,6,7,8,9,10,11,71]}},"valid":false},
++  {"wire":{"Poll":{"events":[],"command_page":null,"cold_pair_page":null,"limits":["1",2,3,4,5,6,7,8,9,10,11]}},"valid":false},
++  {"wire":{"Poll":{"events":[],"command_page":null,"cold_pair_page":null,"limits":[4294967296,2,3,4,5,6,7,8,9,10,11]}},"valid":false},
++  {"wire":{"Poll":{"events":[],"command_page":null,"cold_pair_page":null,"limits":[1.5,2,3,4,5,6,7,8,9,10,11]}},"valid":false}
+ ]
+diff --git a/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🎟️context/🌉️call/📥️input/🧪️tests/🦀️.rs b/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🎟️context/🌉️call/📥️input/🧪️tests/🦀️.rs
+--- a/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🎟️context/🌉️call/📥️input/🧪️tests/🦀️.rs
++++ b/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🎟️context/🌉️call/📥️input/🧪️tests/🦀️.rs
+@@ -127,9 +127,11 @@
+             let event = &wire["Poll"]["events"][0]["instanceOpen"];
+             event["appId"] == app && event["capabilities"].get(0).is_some()
+         }).unwrap();
++        assert_eq!(vector["Poll"]["limits"].as_array().unwrap().len(), semio_plugin_abi::owned_abi::OwnedCorePollLimits::ARITY);
+         let typed: ActorInput = serde_json::from_value(vector.clone()).unwrap();
+         assert_eq!(serde_json::to_value(&typed).unwrap(), *vector);
+         let wire = serde_json::to_vec(&typed).unwrap();
++        let wire_identity = (wire.as_ptr(), wire.len());
+         let profiles = [("infrastructure", infrastructure), ("bounded", bounded)].map(|(scope, grant)| {
+             let mut caller = OriginalJobFixtureCaller::admit(OperationId(948), Generation(2), stock, clock, 10_000_000, 100_000);
+             caller.retain_dispatch().unwrap();
+@@ -149,6 +151,10 @@
+             let ready_turn = (1..=1024).find(|turn| {
+                 let admission = funded(&mut caller, grant, |cx| receiver.advance_in_turn(&wire, cx));
+                 receipt = receipt.checked_add(caller.receipt()).unwrap();
++                assert_eq!((wire.as_ptr(), wire.len()), wire_identity);
++                if receiver.decoder.receiver().is_some() && !receiver.input_returned() {
++                    assert!(receiver.owns_wire(&wire));
++                }
+                 if let Some(decoder) = receiver.decoder.receiver() {
+                     assert!(decoder.bytes_read() >= position);
+                     position = decoder.bytes_read();
+diff --git a/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️29/AI-MCP-END-TO-END/actor-input-oracle.ts b/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️29/AI-MCP-END-TO-END/actor-input-oracle.ts
+--- a/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️29/AI-MCP-END-TO-END/actor-input-oracle.ts
++++ b/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️29/AI-MCP-END-TO-END/actor-input-oracle.ts
+@@ -7,8 +7,9 @@
+ const natural={type:"integer",minimum:0};
+ const text={type:"string"};
+ const decimal={type:"string",pattern:"^(0|[1-9][0-9]*)$"};
+-const grant=object({maximumItems:natural,maximumCopyBytes:natural,maximumCapacityBytes:natural,maximumReleaseBytes:natural,maximumDepth:natural});
+-const limits=object({retainedPolicy:grant,workFuel:natural,fuel:natural,deadlineUs:natural,maxEffects:natural,maxPatchBytes:natural,maxFrames:natural});
++const word={...natural,maximum:4294967295};
++const counter={...natural,maximum:18446744073709551615};
++const limits={type:"array",minItems:11,maxItems:11,items:[word,word,word,word,word,counter,counter,counter,word,word,word],additionalItems:false};
+ const capability={...object({token:{...decimal,maxLength:39},id:text,scope:text,expiresMs:natural}),required:["token","id","scope"]};
+ const instanceOpen=object({
+     request:object({activationGeneration:decimal,instanceId:natural,requestSequence:natural}),
+diff --git a/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️29/AI-MCP-END-TO-END/poll-limits-contract.cjs b/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️29/AI-MCP-END-TO-END/poll-limits-contract.cjs
+--- a/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️29/AI-MCP-END-TO-END/poll-limits-contract.cjs
++++ b/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️29/AI-MCP-END-TO-END/poll-limits-contract.cjs
+@@ -2,8 +2,14 @@
+ const assert = require('node:assert/strict');
+ const schema = fs.readFileSync('🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/🔁️persistent-local/🦀️.rs', 'utf8');
+ const macro = fs.readFileSync('🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📣️macros/⚛️wp4-reactor/🦀️.rs', 'utf8');
+-assert.match(schema, /pub struct PollRequestLimits\s*\{/);
+-assert.match(schema, /pub limits:\s*PollRequestLimits/);
++const kernel = fs.readFileSync('🧰️framework/🔨️modules/🎠️kernel/🪪️identity/🦀️.rs', 'utf8');
++const guest = fs.readFileSync('🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🎟️context/🌉️call/🎭️exports/🦀️.rs', 'utf8');
++const tuple = kernel.match(/pub struct OwnedCorePollLimits\(([^)]*)\);/);
++assert.ok(tuple);
++assert.deepEqual(tuple[1].split(',').map(type => type.trim()), ['u32','u32','u32','u32','u32','u64','u64','u64','u32','u32','u32']);
++assert.match(schema, /pub limits:\s*OwnedCorePollLimits/);
++assert.match(guest, /poll\.limits\.narrow\(authority\)/);
++assert.match(guest, /fuel:\s*cx\.fuel_remaining\(\),\s*deadline_us:\s*cx\.deadline_us\(\)/);
+ assert.doesNotMatch(schema, /pub unsafe fn take_actor_poll_input/);
+ const poll = macro.match(/fn semio_owned_poll_v1\(([^)]*)\)\s*->\s*u64/);
+ assert.ok(poll);
+diff --git a/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/🔁️persistent-local/🧪️poll-limits/tuple.json b/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/🔁️persistent-local/🧪️poll-limits/tuple.json
+new file mode 100644
+--- /dev/null
++++ b/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/🔁️persistent-local/🧪️poll-limits/tuple.json
+@@ -0,0 +1,180 @@
++{
++  "fields": [
++    "maximumItems",
++    "maximumCopyBytes",
++    "maximumCapacityBytes",
++    "maximumReleaseBytes",
++    "maximumDepth",
++    "workFuel",
++    "fuel",
++    "deadlineUs",
++    "maxEffects",
++    "maxPatchBytes",
++    "maxFrames"
++  ],
++  "cases": [
++    {
++      "name": "distinct positions",
++      "wire": "[1,2,3,4,5,6,7,8,9,10,11]",
++      "valid": true
++    },
++    {
++      "name": "zero requested ceilings",
++      "wire": "[0,0,0,0,0,0,0,0,0,0,0]",
++      "valid": true
++    },
++    {
++      "name": "maximum integer widths",
++      "wire": "[4294967295,4294967295,4294967295,4294967295,4294967295,18446744073709551615,18446744073709551615,18446744073709551615,4294967295,4294967295,4294967295]",
++      "valid": true
++    },
++    {
++      "name": "previous named object",
++      "wire": "{\"retainedPolicy\":{\"maximumItems\":1,\"maximumCopyBytes\":2,\"maximumCapacityBytes\":3,\"maximumReleaseBytes\":4,\"maximumDepth\":5},\"workFuel\":6,\"fuel\":7,\"deadlineUs\":8,\"maxEffects\":9,\"maxPatchBytes\":10,\"maxFrames\":11}",
++      "valid": false
++    },
++    {
++      "name": "missing position",
++      "wire": "[1,2,3,4,5,6,7,8,9,10]",
++      "valid": false
++    },
++    {
++      "name": "extra identity position",
++      "wire": "[1,2,3,4,5,6,7,8,9,10,11,123]",
++      "valid": false
++    },
++    {
++      "name": "retained extent above wasm32 range",
++      "wire": "[4294967296,2,3,4,5,6,7,8,9,10,11]",
++      "valid": false
++    },
++    {
++      "name": "work fuel above u64 range",
++      "wire": "[1,2,3,4,5,18446744073709551616,7,8,9,10,11]",
++      "valid": false
++    },
++    {
++      "name": "shape extent above u32 range",
++      "wire": "[1,2,3,4,5,6,7,8,9,10,4294967296]",
++      "valid": false
++    },
++    {
++      "name": "negative integer",
++      "wire": "[1,2,3,4,5,6,-1,8,9,10,11]",
++      "valid": false
++    },
++    {
++      "name": "fractional integer",
++      "wire": "[1,2,3,4,5,6,7,8,9,10.25,11]",
++      "valid": false
++    },
++    {
++      "name": "quoted integer",
++      "wire": "[1,2,3,4,5,6,7,\"8\",9,10,11]",
++      "valid": false
++    },
++    {
++      "name": "null mandatory field",
++      "wire": "[1,2,3,4,5,6,7,8,9,10,null]",
++      "valid": false
++    }
++  ],
++  "narrowing": [
++    {
++      "name": "independent ceilings with one authenticated fuel",
++      "wire": "[10,20,30,40,5,60,70,80,9,10,11]",
++      "authority": [
++        "8",
++        "22",
++        "21",
++        "42",
++        "4",
++        "65",
++        "85"
++      ],
++      "identity": [
++        "17",
++        "19",
++        "23",
++        "29"
++      ],
++      "expected": [
++        "8",
++        "20",
++        "21",
++        "40",
++        "4",
++        "60",
++        "65",
++        "80",
++        "9",
++        "10",
++        "11"
++      ]
++    },
++    {
++      "name": "unrounded u64 identities and counters",
++      "wire": "[4294967295,4294967295,4294967295,4294967295,4294967295,18446744073709551615,18446744073709551615,18446744073709551615,4294967295,4294967295,4294967295]",
++      "authority": [
++        "8",
++        "22",
++        "21",
++        "42",
++        "4",
++        "9223372036854775808",
++        "18446744073709551614"
++      ],
++      "identity": [
++        "18446744073709551613",
++        "19",
++        "23",
++        "29"
++      ],
++      "expected": [
++        "8",
++        "22",
++        "21",
++        "42",
++        "4",
++        "9223372036854775808",
++        "9223372036854775808",
++        "18446744073709551614",
++        "4294967295",
++        "4294967295",
++        "4294967295"
++      ]
++    },
++    {
++      "name": "zero requested ceilings never expand",
++      "wire": "[0,0,0,0,0,0,0,0,0,0,0]",
++      "authority": [
++        "8",
++        "22",
++        "21",
++        "42",
++        "4",
++        "65",
++        "85"
++      ],
++      "identity": [
++        "17",
++        "19",
++        "23",
++        "29"
++      ],
++      "expected": [
++        "0",
++        "0",
++        "0",
++        "0",
++        "0",
++        "0",
++        "0",
++        "0",
++        "0",
++        "0",
++        "0"
++      ]
++    }
++  ]
++}

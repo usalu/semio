@@ -1,0 +1,8 @@
+semio drawing.drawing.dsl v1
+schema=drawing.document id=blank
+layers {
+}
+assets={}
+artboard {
+  width=1024 height=1024
+}

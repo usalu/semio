@@ -228,7 +228,7 @@ describe("LayeredOverview", () => {
       const panes = [...root.querySelectorAll<HTMLElement>("[data-layered-pane]")];
       expect(panes.length).toBeGreaterThan(1);
       for (const pane of panes) expect(watched[0]!.targets.has(pane)).toBe(true);
-      act(() => watched[0]!.callback([{ target: panes[1]!, isIntersecting: false } as IntersectionObserverEntry], {} as IntersectionObserver));
+      act(() => watched[0]!.callback([{ target: panes[1]!, isIntersecting: false } as unknown as IntersectionObserverEntry], {} as IntersectionObserver));
       expect(panes[1]!.hasAttribute("data-offscreen")).toBe(true);
       expect(panes[0]!.hasAttribute("data-offscreen")).toBe(false);
       act(() => void vi.advanceTimersByTime(1000));

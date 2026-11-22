@@ -29,13 +29,15 @@ const mediaWireTest = process.argv.includes("--media-wire-test");
 const pagedPngTest = process.argv.includes("--paged-png-test");
 const pollRefusalTest = process.argv.includes("--poll-refusal-test");
 const interpreterScalarTest = process.argv.includes("--interpreter-scalar-test");
+const coreGlobalsTest = process.argv.includes("--core-globals-test");
+const sourceClockReplyTest = process.argv.includes("--source-clock-reply-test");
 const actorInputTest = process.argv.includes("--actor-input-test");
 const hostEscrowTest = process.argv.includes("--host-escrow-test");
 const hostWakeTest = process.argv.includes("--host-wake-test");
 const guardReclaimTest = process.argv.includes("--guard-reclaim-test");
 const packageName = process.argv.includes("--describe") ? "semio-plugin-describe" : "semio-os-mcp";
-const testing = catalogTest || folderTest || contextTest || responseReserveTest || dispatchReceiptTest || mediaWireTest || pagedPngTest || pollRefusalTest || interpreterScalarTest || actorInputTest || hostEscrowTest || hostWakeTest || guardReclaimTest;
-const args = [testing ? "test" : "build", "--locked", "--profile", profile, "-j", testing ? "1" : "2", "-p",
+const testing = catalogTest || folderTest || contextTest || responseReserveTest || dispatchReceiptTest || mediaWireTest || pagedPngTest || pollRefusalTest || interpreterScalarTest || coreGlobalsTest || sourceClockReplyTest || actorInputTest || hostEscrowTest || hostWakeTest || guardReclaimTest;
+const args = [testing ? "test" : "build", "--locked", "--profile", profile, "-j", testing || process.argv.includes("--serial") ? "1" : "2", "-p",
   ...(catalogTest ? ["semio-os-mcp-catalog", "--lib", "model_manifest_binds_the_exact_mode_crate_and_plugin"] :
     folderTest ? ["semio-os-store-sync-native", "--lib", "folder_durability_tests"] :
     contextTest ? ["semio-plugin-guest-contract", "--lib", "original_core_wire_publisher_is_ready_in_the_first_paid_bootstrap_borrow"] :
@@ -45,6 +47,8 @@ const args = [testing ? "test" : "build", "--locked", "--profile", profile, "-j"
     pagedPngTest ? ["semio-framework-pixels-tests", "--lib", "png_decode_moves_paged_original_across_chunk_seams_under_exact_grants"] :
     pollRefusalTest ? ["semio-plugin-host-poll", "--lib"] :
     interpreterScalarTest ? ["semio-plugin-interpreter-runtime", "--test", "original-scalar-call"] :
+    coreGlobalsTest ? ["semio-plugin-interpreter", "--lib", "inline_globals_require_the_actual_funded_backing_return"] :
+    sourceClockReplyTest ? ["semio-plugin-interpreter-runtime", "--lib", "original_source_clock_same_callback_matches_paid_staging"] :
     actorInputTest ? ["semio-plugin-actor-input", "--lib"] :
     hostEscrowTest ? ["semio-plugin-host-wake", "--lib", "escrow"] :
     hostWakeTest ? ["semio-plugin-host-wake", ...(process.argv.includes("--unit-only") ? ["--lib"] : [])] :
@@ -55,15 +59,20 @@ if (pagedPngTest || actorInputTest) args.push("--manifest-path", "🧰️framewo
 if (!process.argv.includes("--online")) args.push("--offline");
 if (process.argv.includes("--optimize-interpreter")) {
   const source = resolve(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🎚️mode/🦀️profile/📋️constraints/🔣️.json");
-  const row = JSON.parse(readFileSync(source, "utf8")).groups.repository.native.find((candidate: { package: string }) => candidate.package === "semio-plugin-interpreter");
-  if (!row) throw Error("Interpreter optimization policy required");
-  args.push("--config", `profile.${profile}.package.semio-plugin-interpreter.opt-level=${row.optLevel}`);
+  const native = JSON.parse(readFileSync(source, "utf8")).groups.repository.native;
+  for (const name of ["semio-plugin-interpreter", "semio-plugin-interpreter-numeric"]) {
+    const row = native.find((candidate: { package: string }) => candidate.package === name);
+    if (!row) throw Error(`Interpreter optimization policy required for ${name}`);
+    args.push("--config", `profile.${profile}.package.${name}.opt-level=${row.optLevel}`);
+  }
 }
 if (process.argv.includes("--optimize-poll-ledger")) {
   for (const name of ["semio-framework-job-context", "semio-framework-job-payload", "semio-framework-job-return-budget"]) {
     args.push("--config", `profile.${profile}.package.${name}.opt-level=2`);
   }
 }
+if (process.argv.includes("--physical-trace")) args.push("-p", "semio-plugin-interpreter", "--features", "semio-plugin-interpreter/testkit");
+if (process.argv.includes("--unit-graph")) args.push("-Zunstable-options", "--unit-graph");
 const testArguments = process.argv.indexOf("--");
 if (testing && testArguments >= 0) args.push(...process.argv.slice(testArguments));
 const child = Bun.spawn([rustup.command, "run", toolchain, "cargo", ...args], { cwd: root, stdout: "inherit", stderr: "inherit", env });

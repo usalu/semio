@@ -43,19 +43,31 @@ fn glass_region_batches_into_its_own_bucket_never_a_scene_phase() {
 
 #[test]
 fn gather_world_passes_is_empty_for_no_surface_passes() {
-    let (prepared, instances, lines, masks) = gather_world_passes(&[], 800.0, 600.0);
+    let (prepared, instances, lines, points, masks) = gather_world_passes(&[], 800.0, 600.0);
     assert!(prepared.is_empty());
     assert!(instances.is_empty());
     assert!(lines.is_empty());
+    assert!(points.is_empty());
     assert!(masks.is_empty());
 }
 
 #[test]
 fn gather_world_passes_emits_two_mask_quads_per_pass() {
     let pass = SurfacePass { viewport: [0.0, 0.0, 200.0, 150.0], ..SurfacePass::default() };
-    let (prepared, _, _, masks) = gather_world_passes(std::slice::from_ref(&pass), 800.0, 600.0);
+    let (prepared, _, _, _, masks) = gather_world_passes(std::slice::from_ref(&pass), 800.0, 600.0);
     assert_eq!(prepared.len(), 1);
     assert_eq!(masks.len(), 2);
     assert_eq!(masks[0].rect, [0.0, 0.0, 800.0, 600.0]);
     assert_eq!(masks[1].rect, [0.0, 0.0, 200.0, 150.0]);
+}
+
+#[test]
+fn gather_world_passes_packs_point_sprites_with_the_points_material_extent() {
+    let draw = ui_render::SurfacePointDraw { vertices: vec![ui_render::PointVertex3 { position: [1.0, 2.0, 3.0], color: [1.0, 0.0, 0.0, 1.0] }, ui_render::PointVertex3 { position: [0.0; 3], color: [1.0; 4] }], size: 2.0, size_attenuation: true };
+    let pass = SurfacePass { viewport: [0.0, 0.0, 200.0, 100.0], point_draws: vec![draw], ..SurfacePass::default() };
+    let (prepared, _, _, points, _) = gather_world_passes(std::slice::from_ref(&pass), 800.0, 600.0);
+    assert_eq!(prepared[0].point_range, (0, 2));
+    assert_eq!(points[0].position, [1.0, 2.0, 3.0]);
+    assert_eq!(points[0].extent, [0.5, 1.0, 0.0, 0.0]);
+    assert_eq!(std::mem::size_of::<crate::gpu_uniforms::WorldPointGpuInstance>(), 44);
 }

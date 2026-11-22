@@ -46,7 +46,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         let args=if source.assembled.is_some(){&mut source.assembled}else if source.prepared.is_some(){&mut source.prepared}else{&mut source.args};
         if !self.original_emission.admit_host(declaration,action,args,self.stores.store.content_revision_now(),cx)?{return Ok(None)}
         if let Some(meta)=metadata.as_ref(){if !self.original_emission.pin_host_metadata(meta,cx)?{return Ok(None)}}
-        if source.original_tool_dispatch.is_none(){
+        if source.original_tool_dispatch.is_none()||self.tools.original_scrub_dispatch.is_some(){
             let mut typed: semio_plugin_instance_typed_ops::typed_bundle::TypedCtx<'_,A,M,X> = semio_plugin_instance_typed_ops::typed_bundle::TypedCtx {app:&mut *self.app,mounted_policy:self.mounted_policy,stores:&mut *self.stores,roster:&mut *self.roster,interaction:&mut *self.interaction,history:&mut *self.history,host_events:&mut *self.host_events,txn:&mut *self.txn,child_composition:&mut *self.child_composition,pending:&mut *self.pending,tools:&mut *self.tools,media:&mut *self.media,ingest:&mut *self.ingest,tool_runs:&mut *self.tool_runs,time_travel:&mut *self.time_travel,tool_machines:&mut *self.tool_machines,extension:std::marker::PhantomData};
             if typed.prepare_original_tool_dispatch(action,self.original_emission.host_args(),metadata,&mut *self.original_typing,&mut source.original_typing_control_ready,&mut source.original_tool_tag,&mut source.original_tool_tag_ready,&mut source.original_tool_dispatch,identity,cx).await?.is_none(){return Ok(None)}
         }
@@ -186,14 +186,15 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         if source.original_tool_dispatch==Some(true){self.original_emission.admit_empty(action,source_meta,cx)?;return Ok(None)}
         let meta=source_meta.as_ref().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original typing restored no action metadata"))?;
         let args=source.assembled.as_ref().or(source.prepared.as_ref()).or(source.args.as_ref());
-        if matches!(action, semio_framework::EXPORT_ARTIFACT_DOCUMENT_ACTION_ID | semio_framework::IMPORT_ARTIFACT_DOCUMENT_ACTION_ID | semio_framework::EXPORT_MEDIA_FILE_ACTION_ID | semio_framework::EXPORT_SNAPSHOT_FILE_ACTION_ID) {
+        if matches!(action, semio_framework::EXPORT_ARTIFACT_DOCUMENT_ACTION_ID | semio_framework::IMPORT_ARTIFACT_DOCUMENT_ACTION_ID | semio_framework::EXPORT_MEDIA_FILE_ACTION_ID | semio_framework::EXPORT_SNAPSHOT_FILE_ACTION_ID | semio_framework::NODE_GRAPH_FIT_ACTION_ID) {
             return Err((Fault::new(FaultOrigin::Framework, FaultCode::new("framework.document-transfer.shell-owned"), format!("{action} is performed by the shell, never by the program"))).into());
         }
         if X::claims_action(action) {
             return Box::pin(X::dispatch_action(&mut self.as_extension(), action, args, meta, identity, cx)).await.map(Some).map_err(semio_framework_job::OriginalTurnFailure::from);
         }
         if is_framework_reserved_action_id(action) {
-            return self.dispatch_framework_reserved_action(action,args,meta,cx).await;
+            let slot=if source.assembled.is_some(){&mut source.assembled}else if source.prepared.is_some(){&mut source.prepared}else{&mut source.args};
+            return self.dispatch_framework_reserved_action(action,slot,meta,cx).await;
         }
         if action == CATALOGUE_EXAMPLE_ACTION_ID && self.tools.registry.get(action).is_none() {
             let example_id = args.and_then(|value| value.get("exampleId")).and_then(DslValue::as_str).unwrap_or("");
@@ -265,12 +266,13 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         let meta=source_meta.as_ref().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original command metadata source is absent"))?;
         let kind = self.manifest_command_kind(address, active_mode_id).await?;
         if A::original_host_configuration(command_id).is_some(){return self.drive_original_host_configuration(command_id,kind,&mut source,source_meta,identity,cx).await}
-        let args = source.args.as_ref();
-        match self.ingest.import_staging.admit_args(args).map_err(|refusal| Fault::new(FaultOrigin::Framework, FaultCode::new(refusal.code()), refusal.message()))? {
-            semio_framework::kernel::ImportArguments::Staged { .. } => return Ok(Some(ToolOperations::<A>::empty_result(command_id, meta, Vec::new(), Vec::new(), UiDirtyScope::None).await)),
-            semio_framework::kernel::ImportArguments::Whole(whole) => source.assembled=Some(whole),
-            semio_framework::kernel::ImportArguments::NotAnImport => (),
-        };
+        if source.assembled.is_none() {
+            match self.ingest.import_staging.admit_args(source.args.as_ref()).map_err(|refusal| Fault::new(FaultOrigin::Framework, FaultCode::new(refusal.code()), refusal.message()))? {
+                semio_framework::kernel::ImportArguments::Staged { .. } => return Ok(Some(ToolOperations::<A>::empty_result(command_id, meta, Vec::new(), Vec::new(), UiDirtyScope::None).await)),
+                semio_framework::kernel::ImportArguments::Whole(whole) => source.assembled=Some(whole),
+                semio_framework::kernel::ImportArguments::NotAnImport => (),
+            }
+        }
         let Some(settled)=self.prepare_action_tool_dispatch(command_id,&mut source,source_meta,identity,cx).await?else{return Ok(None)};
         if settled{self.original_emission.admit_empty(command_id,source_meta,cx)?;return Ok(None)}
         if !self.prepare_original_action_source(command_id,&mut source,cx).await?{return Ok(None)}

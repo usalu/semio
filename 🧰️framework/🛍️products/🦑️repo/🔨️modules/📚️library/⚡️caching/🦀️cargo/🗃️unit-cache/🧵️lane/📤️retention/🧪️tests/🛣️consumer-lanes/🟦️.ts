@@ -27,9 +27,9 @@ test("the crates of an artifact build are its packages, else its manifest's pack
 test("the build and target directories of a real pooled lane, and the recipe slot inside it, are owned by their cache root and by no other",async()=>{
  const root=mkdtempSync(join(base,"cl-")),cache=join(root,"u"),other=join(root,"v"),shared={build:join(root,"b","p"),target:join(root,"t","p")};
  try{
-  const lane=await acquirePooledLaneV1(cache,{crates:["a"],quotaBytes:Number.MAX_SAFE_INTEGER}),slot=join(lane.paths.build,"t","0123456789abcdef");
+  const lane=await acquirePooledLaneV1(cache,{crates:["a"],quotaBytes:Number.MAX_SAFE_INTEGER}),slot=join(lane.paths.target,"0123456789abcdef");
   try{
-   expect(lane.paths.build).toBe(lane.paths.base);expect(lane.paths.target).toBe(join(lane.paths.base,"t"));expect(laneBuildDirectoryOwnedV1(cache,join(lane.paths.base,"b"))).toBe(false);expect(laneBuildDirectoryOwnedV1(cache,lane.paths.build)).toBe(true);
+   expect(lane.paths.build).toBe(lane.paths.base);expect(lane.paths.target.startsWith(join(lane.paths.base,"t-"))).toBe(true);expect(lane.paths.target.slice(join(lane.paths.base,"t-").length)).toMatch(/^[0-9a-f]{8}$/u);expect(laneBuildDirectoryOwnedV1(cache,join(lane.paths.base,"b"))).toBe(false);expect(laneBuildDirectoryOwnedV1(cache,lane.paths.build)).toBe(true);
    expect(compilerOriginOwnedV1({cacheRoot:cache,shared,origin:{buildDirectory:lane.paths.build,targetDirectory:lane.paths.target}})).toBe(true);
    expect(compilerOriginOwnedV1({cacheRoot:cache,shared,origin:{buildDirectory:lane.paths.build,targetDirectory:slot}})).toBe(true);
    expect(compilerOriginOwnedV1({cacheRoot:other,shared,origin:{buildDirectory:lane.paths.build,targetDirectory:lane.paths.target}})).toBe(false);

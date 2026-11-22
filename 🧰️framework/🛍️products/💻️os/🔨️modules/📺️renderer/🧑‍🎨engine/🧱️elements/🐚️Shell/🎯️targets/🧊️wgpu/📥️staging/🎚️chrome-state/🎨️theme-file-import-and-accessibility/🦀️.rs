@@ -283,3 +283,59 @@ pub fn apply_theme_document_metrics(theme: &mut Theme, document: &ThemeDocument)
     }
 }
 //#endregion 🎨️ThemeDocumentModel
+
+//#region 📐️ChromeParityConstants
+/// 🎓️ The introduction info box's placement constants — [`ChromeParityConstants::introduction`].
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ChromeParityIntroduction {
+    pub info_box_gap_px: f32,
+    pub dock_reach_px: f32,
+    pub clear_range_px: f32,
+}
+
+/// 🫳️ The panel tab drop feedback constants — [`ChromeParityConstants::panel_drop`].
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ChromeParityPanelDrop {
+    pub insert_bar_width_px: f32,
+    pub nest_min_fraction: f32,
+    pub nest_max_fraction: f32,
+    pub nest_fill_alpha: f32,
+    pub empty_zone_min_width_rem: f32,
+}
+
+/// 🍞️ The transient notice sizing — [`ChromeParityConstants::toast`].
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ChromeParityToast {
+    pub max_width_fraction: f32,
+}
+
+/// 🧱️ The status notice stack sizing — [`ChromeParityConstants::status_stacks`].
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ChromeParityStatusStacks {
+    pub rem_px: f32,
+    pub artifact_creation_max_width_rem: f32,
+    pub route_admission_max_width_fraction: f32,
+    pub install_max_width_fraction: f32,
+}
+
+/// 📐️ The geometry constants React's chrome and this target both read from one file,
+/// `🖱️ui/🧬️schema/📐️chrome-parity-constants/🧮️values.json` (schema: the `🔣️.json` beside it).
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ChromeParityConstants {
+    pub introduction: ChromeParityIntroduction,
+    pub panel_drop: ChromeParityPanelDrop,
+    pub toast: ChromeParityToast,
+    pub status_stacks: ChromeParityStatusStacks,
+}
+
+/// 📐️ The parsed [`ChromeParityConstants`], read once from the shared values file.
+pub fn chrome_parity_constants() -> &'static ChromeParityConstants {
+    static CONSTANTS: std::sync::OnceLock<ChromeParityConstants> = std::sync::OnceLock::new();
+    CONSTANTS.get_or_init(|| serde_json::from_str(include_str!("../../../../../../../../../../../../🔨️modules/🖱️ui/🧬️schema/📐️chrome-parity-constants/🧮️values.json")).expect("chrome parity constants are valid"))
+}
+//#endregion 📐️ChromeParityConstants

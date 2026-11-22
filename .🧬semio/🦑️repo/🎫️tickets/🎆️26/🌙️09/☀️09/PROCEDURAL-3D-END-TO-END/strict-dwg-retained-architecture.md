@@ -1,0 +1,17 @@
+# Strict DWG Retained Architecture
+
+## Actual route
+
+The Flow brep.io.importDwg operator currently implements synchronous evaluate: decode_base64, import the complete DWG in the kernel, then publish a geometry dictionary (flow brep measure-utilities-and-io Rust lines 222–237). The strict original GeometryOperation has ImportObj and ImportStl but no ImportDwg (analytic-curves Rust lines 130–131 and 310–316). The new generation3d brep.interchange widget is a distinct cooperative route: it decodes whole base64 and opens the reader in one step, then runs one page/record at a time, but projects the entire completed drawing to mesh in one step (generation3d brep-interchange Rust lines 155–190). It does not itself prove the strict Flow route is funded.
+
+## Composition seam
+
+MeshDecode is the existing retained format interface: ready, step with RetainedAllocationEffect, exact demand, into_cursor, terminal_is_empty, close_demand and close (framework 3d brep engine mesh-io original-decoder Rust lines 6–24). The strict job calls its step and demand, then transfers to MeshPublication under an admitted grant (analytic-curves Rust lines 1231–1241 and 1628). MeshPublication holds a MeshImportCursor plus kernel identity and revision; step_mesh_preparation incrementally constructs topology, and later claim and publish are atomic with explicit rollback and close (engine mesh-publication Rust lines 8–35, 38–63, 65–105; analytic-curves lines 1573–1584, 1732–1737, 1779–1784 and 1870–1875). This is the reusable sustained topology owner. There is no identified sustained DWG drawing-to-mesh projection owner yet.
+
+The reusable base64 cursor is framework io base64 cursor Rust lines 4–9, 35–53, 67–82, 90–124 and 169–203. It quotes work, copy and retained allocation and reports actual effects; its input is borrowed or owned in the cursor, so retaining a borrow into a job-owned dictionary is self-referential. Either transfer source ownership under the real retained grant or add a source-on-each-step interface with stable source identity, as the existing StlDecode pattern uses. Its bounded work and cancellation are useful, but its Base64Control and receipt still need explicit RetainedAllocationEffect accounting and controlled close in the caller.
+
+## Remaining funding boundary and priority
+
+DwgDrawingRead open/step (DWG import Rust lines 73–135) and DwgDrawingSections (records container Rust lines 706–717, 727–748) do not accept effects or quote retained demand. Directory discovery, page decompression/allocation, record projection, final to_native/recompute_extents and dwg_drawing_to_mesh (DWG geometry Rust lines 198–253) can each process or allocate source-sized data. Page/record turns alone must not be declared funded.
+
+First slice: introduce an original-owned DWG source/decode owner with honest demand, receipt, cancellation, fault and close semantics, starting with base64 validation/reconstruction under small grants and a stable input owner; test zero/insufficient grants, source change, malformed input and cancellation/retirement against the base64 oracle. Next fund bounded directory/page decompression and record-to-mesh projection, including all intermediate allocations and cleanup. Only once each phase has an honest cursor and the resulting triangle buffers can transfer into MeshImportCursor should the strict operation route ImportDwg through MeshPublication and its existing session claim lifecycle. No source or builds were changed in this audit.

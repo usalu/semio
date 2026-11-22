@@ -9,3 +9,15 @@ for case in data["cases"]:
     if got!=case["fingerprint"] or manifest!=case["manifest"]:
         print("mismatch:",case["name"]);sys.exit(1)
 print("ok",len(data["cases"]))
+for case in data["classes"]:
+    names=data["advisory"]
+    hit=next((names[path] for path in case["paths"] if path in names),None)
+    sort=hit if hit else "unit" if case["manifest"] else "project-inference" if "record.br" in case["paths"] else "closure" if any(path.startswith("closure-") for path in case["paths"]) else "owner-pool" if any(path in ("head.br","units.br","session.br","pointer.br") for path in case["paths"]) else "other"
+    if sort!=case["sort"] or (hit is not None)!=case["advisory"]:
+        print("class mismatch:",case["name"]);sys.exit(1)
+for case in data["differing"]:
+    left={row["path"]:row["hash"] for row in case["kept"]};right={row["path"]:row["hash"] for row in case["refused"]}
+    got=sorted(name for name in set(left)|set(right) if left.get(name)!=right.get(name))[:16]
+    if got!=case["differing"]:
+        print("differing mismatch:",case["name"]);sys.exit(1)
+print("ok classes",len(data["classes"]),"differing",len(data["differing"]))

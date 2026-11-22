@@ -11,7 +11,7 @@ use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfDictEntry, PdfI
 
 #[path = "🎭️sampled-alpha/🦀️.rs"]
 mod sampled_alpha;
-pub use sampled_alpha::PdfImagePreviewSamples;
+pub use sampled_alpha::{ConvertColour, PdfImagePreviewSamples};
 
 #[path = "🎞️controlled/🦀️.rs"]
 mod controlled;

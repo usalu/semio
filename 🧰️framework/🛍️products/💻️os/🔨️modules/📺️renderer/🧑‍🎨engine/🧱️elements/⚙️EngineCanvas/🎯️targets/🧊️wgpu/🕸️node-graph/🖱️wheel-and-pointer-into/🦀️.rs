@@ -62,6 +62,23 @@ pub fn node_graph_wheel_into(surface_id: &str, controller_id: &str, inner: Rect,
     Ok(true)
 }
 
+/// 🔲️ The `fitGraph` action of one node-graph surface: frames the whole graph (`node_graph_fit_camera`, the one camera law) and answers the `nodeGraphViewport` action that persists the installed camera exactly the way a wheel zoom persists it, recording the viewport fingerprint so a later gesture that returns to the previous camera still publishes. `None` when the surface has no live graph or the camera did not move.
+///
+/// @see `node_graph_wheel_into` — the gesture this mirrors
+pub fn node_graph_fit_action(surface_id: &str, controller_id: &str) -> Result<Option<ActionDescriptor>, semio_ui_action::BoundedActionFault> {
+    let Some(camera) = node_graph_fit_camera(surface_id) else { return Ok(None) };
+    let Some(wire_surface_id) = engine_surface_wire_id(surface_id) else { return Ok(None) };
+    let Some(snapshot) = ENGINE_SURFACES.with(|cell| cell.borrow().get(surface_id).map(|entry| graph_interaction_snapshot(entry, Some(camera))).transpose())? else { return Ok(None) };
+    let published = published_graph_interaction(surface_id);
+    let dispatch = graph_interaction_dispatch(published, snapshot, node_graph_interaction_domain(surface_id).as_deref())?;
+    ENGINE_SURFACES.with(|cell| mark_engine_scene_repaint(&mut cell.borrow_mut(), surface_id));
+    if !dispatch.publish_viewport {
+        return Ok(None);
+    }
+    record_graph_interaction(surface_id, PublishedGraphInteraction { viewport: dispatch.digest.viewport, ..published });
+    Ok(Some(ActionDescriptor { controller_id: controller_id.to_string(), action: "nodeGraphViewport".into(), args: crate::action_args_json!({ "surfaceId": wire_surface_id.as_str(), "viewport": { "x": camera[0], "y": camera[1], "zoom": camera[2] } }) }))
+}
+
 pub fn node_graph_pointer_down_into(
     surface_id: &str,
     controller_id: &str,

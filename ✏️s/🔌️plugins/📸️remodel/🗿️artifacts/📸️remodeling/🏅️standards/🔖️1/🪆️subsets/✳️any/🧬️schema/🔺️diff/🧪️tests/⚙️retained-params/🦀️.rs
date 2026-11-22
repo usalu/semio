@@ -1,19 +1,12 @@
 use super::*;
-use super::retained_test_support::{grant, retire};
+use super::retained_test_support::{grant, receipt, retire};
 use protocol::{RetainedDone, RetainedPatchSource, RetainedReply, RetainedRowPatchFields};
 use semio_framework_value::{
-    retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef, RetainedCloneStep},
+    retained_clone::{RetainedCloneGrant, RetainedCloneRef, RetainedCloneStep},
     OriginalRetirementFailure, RetirementDemand, ValueError,
 };
 use semio_framework_value_clone_source_testing::{FixtureSource, drive::drive_reply};
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::ReconstructionParams;
-
-fn receipt(result: &Result<RetainedCloneStep, OriginalRetirementFailure>) -> RetainedCloneProgress {
-    match result {
-        Ok(step) => step.progress(),
-        Err(error) => error.retained_progress(),
-    }
-}
 
 fn advance(fields: &mut retained_params::Fields, patch: RetainedCloneRef<'_, RemodelingParamsDiff>, row: RetainedCloneRef<'_, ReconstructionParams>, maximum: u64, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<RetainedCloneStep, OriginalRetirementFailure> {
     drive_reply(grant, 64, receipt, |effect, reply: RetainedReply<'_>, recover| -> Result<RetainedDone<'_>, ValueError> {
@@ -58,6 +51,18 @@ fn prepare(case: &serde_json::Value, kind: RetainedPatchSource, cut: Option<usiz
     let authored = FixtureSource::from_owner(patch);
     let (mut fields, birth_work) = retained_params::Fields::new(kind);
     assert_eq!(birth_work, retained_params::Fields::new_work_demand().unwrap());
+    if cut.is_none() {
+        let patch = authored.borrow();
+        let row = original.borrow();
+        let demand = fields.demand(patch, row, 64, 64).unwrap();
+        let work = fields.advance_work_demand(patch, row, 64, 64).unwrap();
+        let attempt = drive_reply(grant(demand), work, receipt, |effect, reply: RetainedReply<'_>, _| -> Result<RetainedDone<'_>, ValueError> {
+            fields.advance_reply(patch, row, 64, 64, effect, reply, true)
+        });
+        assert_eq!(attempt.work, 0);
+        assert_eq!(attempt.result.unwrap_err().retained_progress(), Default::default());
+        assert_eq!(fields.demand(patch, row, 64, 64).unwrap(), demand);
+    }
     let mut turns = 0;
     let mut complete = false;
     while cut.is_none_or(|cut| turns < cut) {
@@ -73,7 +78,7 @@ fn prepare(case: &serde_json::Value, kind: RetainedPatchSource, cut: Option<usiz
         assert_eq!(denied_work.work, 0);
         assert_eq!(denied_work.result.unwrap().progress(), Default::default());
         let outcome = advance(&mut fields, authored.borrow(), original.borrow(), 64, selected);
-        assert!(outcome.work <= u128::from(work));
+        assert!(outcome.work <= u128::from(work), "{} {kind:?} turn {turns} quoted {work} but charged {}", case["field"], outcome.work);
         let step = outcome.result.unwrap();
         assert!(step.progress().fits(selected));
         turns += 1;
@@ -119,7 +124,7 @@ fn prepare(case: &serde_json::Value, kind: RetainedPatchSource, cut: Option<usiz
         assert_eq!(denied.work, 0);
         assert_eq!(denied.result.unwrap().progress(), Default::default());
         let outcome = close(&mut fields, selected);
-        assert!(outcome.work <= u128::from(work));
+        assert!(outcome.work <= u128::from(work), "{} {kind:?} close turn {close_turn} quoted {work} but charged {}", case["field"], outcome.work);
         assert!(outcome.result.unwrap().progress().fits(selected));
     }
     assert!(fields.terminal_is_empty());

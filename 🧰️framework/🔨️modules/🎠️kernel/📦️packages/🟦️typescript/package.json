@@ -36,6 +36,7 @@
     "@semio-tech/schema-ts": "workspace:*",
     "@semio-tech/schema-validator-ts": "workspace:*",
     "@semio-tech/ui-contract": "workspace:*",
+    "@semio-tech/ui-layout": "workspace:*",
     "@semio-tech/value-ts": "workspace:*"
   },
   "scripts": {

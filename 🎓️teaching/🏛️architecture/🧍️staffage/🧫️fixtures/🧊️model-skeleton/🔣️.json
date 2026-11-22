@@ -1,4 +1,18 @@
 {
+  "doeSuspension": {"asset":"goat","massKg":0.625,"skinAreaM2":0.0516,"poses":{"standing-alert":0,"climbing-ledge":8.8,"browsing-upright":24.8}},
+  "adultLongBones": {"subjects":["elderly-with-cane","person-on-crutches","person-with-rollator","person-with-umbrella","person-with-white-cane","standing-phone-user","tour-guide","worker-carrying-box"],"pairedShafts":["femur","tibia","humerus","radius","ulna"],"scales":[50,100,200,500],"toleranceM":0.0001},
+  "roadWheels": {"city-car":{"slots":5,"style":"cast","diameterM":0.6},"delivery-van":{"slots":8,"style":"pressed","diameterM":0.712},"vintage-car-1929":{"slots":12,"style":"spoked","diameterM":0.74}},
+  "scissorBearings": {"asset":"scissor-lift","stationsM":[0,0.73,1.46],"pinRadiusM":0.02,"boreRadiusM":0.02025,"sleeveRadiusM":0.0235},
+  "crawler": {"asset":"excavator","rollersPerSide":8,"idlerClearanceM":0.002},
+  "cycleWheels": {"city-bicycle": {"spokes": 36, "nippleM": 0.014}, "cargo-bike": {"spokes": 36, "nippleM": 0.012}},
+  "scooterCartridges": {"asset": "electric-kick-scooter", "boreM": 0.014, "outsideM": 0.032, "widthM": 0.009, "windows": 5},
+  "industrialTyres": {"forklift":4,"concrete-mixer-truck":12,"motor-scooter":2},
+  "squirrelBrush": {"asset":"red-squirrel","segments":6,"lengthM":0.175,"massKg":0.04,"centra":[4,4,3,4,4,4],"guardLocks":[36,28,18,12]},
+  "craneCarriage": {"asset":"tower-crane","treadRadiusM":0.125,"flangeRadiusM":0.14,"grooveDepthM":0.012,"wheelbaseM":1},
+  "skateboard": {"asset":"skateboarder","deckGaugeM":0.0115,"wheelRadiusM":0.027,"trackM":0.171},
+  "canineLumbar": {"asset":"labrador-dog","levels":7,"canalHeightM":0.014,"centrumHeightM":-0.004},
+  "goatBarrel": {"asset":"goat","parts":["pelvic-barrel","abdominal-barrel","costal-barrel"],"joints":["pelvis","lumbar","thorax"],"jointToleranceM":0.00001},
+  "hedgeClipping": {"asset":"hornbeam-hedge","plants":6,"blades":[480,384,144,36],"crosswindTipM":0.035},
   "gullWing": {"asset":"herring-gull","primaries":10,"secondaries":12,"minimumSpanM":1.23,"maximumSpanM":1.55,"foldDeg":0,"glideDeg":50},
   "description": "Language-agnostic vectors of the rig as a neutral node tree: `joints` are the hand-computed mechanism joints of the sample figure (angles in radians = degrees x pi/180; the pelvis, the rig root, is free because the evaluated root placement moves it; every other bone is revolute about its own +Z axis, the staffage lateral axis); `variants` patch the sample figure and name the joint the mapping must give: a bone that a pose spreads is spherical about its own bone axis +X with the twist limits (default a half turn each way) and an unrestricted swing, a bone whose joint limits twist is spherical, a prismatic joint slides along its axis in the parent frame (cos(axisDeg), sin(axisDeg), 0), a fixed joint is fixed; `clips` give per clip the sampling count the clip fps imposes, ceil(duration x fps) + 1.",
   "passengers": [

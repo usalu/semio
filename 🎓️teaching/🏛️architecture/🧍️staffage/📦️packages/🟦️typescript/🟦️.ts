@@ -55,3 +55,10 @@ export { exportCast } from "../../🔨️modules/📤️export/🎭️cast/🟦�
 export type { CastOptions } from "../../🔨️modules/📤️export/🎭️cast/🟦️.ts";
 export { CAMERAS, UNAVAILABLE_CODES, ViewMissingError, nearness, project, resolveDrawing, resolveViews } from "../../🔨️modules/🔭️multiview/🟦️.ts";
 export type { AlternativeOffer, Camera, DrawOptions, DrawingSource, DrawingUnavailable, MultiView, ResolvedDrawing } from "../../🔨️modules/🔭️multiview/🟦️.ts";
+export { DEFAULT_TURBULENCE, FLOW_MIN_SPEED_MS, TRACER_EXPOSURE_S, TRACER_PERIOD_S, developTransport, developedTimeS, dewPointC, flowAt, flowDetailOf, flowDomainOf, flowMarks, flowSampler, solveTransport, streamAt } from "../../🔨️modules/💨️transport/🟦️.ts";
+export type { DevelopOptions, FlowDetail, FlowDomain, FlowOptions, FlowSample, TransportOptions } from "../../🔨️modules/💨️transport/🟦️.ts";
+export { FLOW_STYLE, NEUTRAL_BAND, SHARED_FLOW_EXCESS_K, SHARED_FLOW_FOG_GKG, SHARED_FLOW_VAPOUR_GKG, flowLegends, flowPaint } from "../../🔨️modules/🎨️depiction/🌊️flow-view/🟦️.ts";
+export type { FlowPaint } from "../../🔨️modules/🎨️depiction/🌊️flow-view/🟦️.ts";
+export { axonometricCamera } from "../../🔨️modules/🎨️depiction/🔭️views/🟦️.ts";
+export type { AxonometricCamera } from "../../🔨️modules/🎨️depiction/🔭️views/🟦️.ts";
+export { transportOf } from "../../🔨️modules/🎨️depiction/🟦️.ts";

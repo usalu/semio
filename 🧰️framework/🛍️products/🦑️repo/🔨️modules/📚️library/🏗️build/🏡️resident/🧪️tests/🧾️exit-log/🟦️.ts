@@ -27,6 +27,11 @@ test("a loss is explained by the last exit row, by a kill without a record and i
   expect(explainServiceLossV1(root,{alive:dead,events:()=>({oom_kill:0})})).toContain("no oom kill in its cgroup");
   expect(explainServiceLossV1(root,{alive:dead,events:()=>undefined})).toContain("its cgroup is gone");
   expect(explainServiceLossV1(root,{alive:()=>true})).toBe("the service is still recorded as running");
+  appendServiceExitRowV1(root,{event:"start",at:5,via:"launchd",label:"semio.graph",placed:false});
+  expect(explainServiceLossV1(root,{alive:()=>true,events:()=>({oom_kill:3})})).toContain("killed without an exit record: its cgroup recorded 3 oom kills");
+  appendServiceExitRowV1(root,{event:"start",at:6,pid:4243});
+  expect(explainServiceLossV1(root,{alive:dead,events:()=>({oom_kill:0})})).toContain("no oom kill in its cgroup");
+  expect(explainServiceLossV1(root,{alive:()=>true})).toBe("the service is still recorded as running");
   appendServiceExitRowV1(root,{event:"exit",at:2,reason:"memory",code:75,rssMegabytes:3300});
   expect(explainServiceLossV1(root)).toBe("the service exited: memory (code 75), 3300 MB resident");
   appendServiceExitRowV1(root,{event:"exit",at:4,reason:"stop:SIGTERM",rssMegabytes:2980,workers:[{index:1,heapMb:900.4,extraMb:300.2,objectCount:1,objectTypes:[],ageMilliseconds:50}]});

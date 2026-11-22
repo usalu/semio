@@ -1,10 +1,10 @@
 {
   "area": [10, 4, 80, 40],
   "previews": [
-    { "placement": "left", "point": [11, 24], "rect": [10, 4, 40, 40] },
-    { "placement": "right", "point": [88, 24], "rect": [51, 4, 39, 40] },
-    { "placement": "top", "point": [50, 5], "rect": [10, 4, 80, 20] },
-    { "placement": "bottom", "point": [50, 42], "rect": [10, 25, 80, 19] },
+    { "placement": "left", "point": [11, 24], "rect": [10, 4, 41, 40] },
+    { "placement": "right", "point": [88, 24], "rect": [50, 4, 40, 40] },
+    { "placement": "top", "point": [50, 5], "rect": [10, 4, 80, 21] },
+    { "placement": "bottom", "point": [50, 42], "rect": [10, 24, 80, 20] },
     { "placement": "tabs", "rect": [10, 4, 80, 40] }
   ],
   "bodyZones": [

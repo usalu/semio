@@ -90,7 +90,7 @@ export async function compileUnitsForHostV1(options:Readonly<{environment?:Reado
 }
 
 /** 🖨️ Describes a plan, a wait or a grant in the given language (English first, German second); unknown placeholders stay visible. */
-export function describeCompileUnitsV1(language:"en"|"de",name:"planned"|"waiting"|"granted",values:Readonly<Record<string,string|number>>):string{
+export function describeCompileUnitsV1(language:"en"|"de",name:"planned"|"waiting"|"granted"|"leased",values:Readonly<Record<string,string|number>>):string{
  const catalogue=schema.definitions.Messages.const[language],reason=values.reason;
  return fill(catalogue[name],{...values,...typeof reason==="string"&&reason in catalogue.reasons?{reason:catalogue.reasons[reason as keyof typeof catalogue.reasons]}:{}});
 }

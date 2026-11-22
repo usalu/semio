@@ -1,7 +1,8 @@
 {
-  "schemaBytes": 4535,
+  "schemaBytes": 5478,
   "tableWidths": {
     "din16798_document": 23,
+    "din16798_unoccupied_ventilation": 17,
     "din16798_vent_system": 38,
     "din16798_zone": 48
   },

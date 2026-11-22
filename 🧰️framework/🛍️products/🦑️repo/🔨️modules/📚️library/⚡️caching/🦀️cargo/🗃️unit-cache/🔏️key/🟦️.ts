@@ -1,7 +1,7 @@
 import {createHash} from "node:crypto";
-import {mkdirSync,readFileSync,statSync,writeFileSync} from "node:fs";
+import {mkdirSync,readFileSync,realpathSync,statSync,writeFileSync} from "node:fs";
 import {spawnSync} from "node:child_process";
-import {isAbsolute,join,resolve} from "node:path";
+import {basename,isAbsolute,join,resolve} from "node:path";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import {machineNeutralRemapV1} from "../🧭️remap/🟦️.ts";
 
@@ -80,7 +80,7 @@ export function laneRestoreV1(text:string,laneRoot:string|undefined):string{
  return text.split(policy.key.laneToken).join(laneRoot);
 }
 
-/** ✂️ Rewrites a command line without the parts that differ between lanes or between terminals: the output directory, the incremental directory, `-L dependency` search paths, extern paths and `--diagnostic-width` (Cargo passes it only to a terminal, so every window size would otherwise be a unit of its own; it wraps the compiler's rendered messages and nothing else). */
+/** ✂️ Rewrites a command line without the parts that differ between lanes or between terminals: the output directory, the incremental directory, `-L dependency` search paths, extern paths, `--diagnostic-width` and `--color` and the rendering words of `--json` (`diagnostic-rendered-ansi`, `diagnostic-short`): Cargo sets them by terminal, colour and message format of the invocation, they change only the text of the compiler's rendered messages and nothing else, so each of their combinations would otherwise be a unit of its own on every machine that built it another way. */
 export function normalizeRustcArgumentsV1(args:readonly string[],externDigests:ReadonlyMap<string,string>,laneRoot:string|undefined):string[]{
  const result:string[]=[];
  for(let index=0;index<args.length;index++){
@@ -92,6 +92,12 @@ export function normalizeRustcArgumentsV1(args:readonly string[],externDigests:R
   if(argument==="-L"&&(args[index+1]??"").startsWith("dependency=")){index++;continue;}
   if(argument==="--diagnostic-width"){index++;continue;}
   if(argument.startsWith("--diagnostic-width="))continue;
+  if(argument==="--color"){index++;continue;}
+  if(argument.startsWith("--color="))continue;
+  if(argument==="--json"||argument.startsWith("--json=")){
+   const value=take("--json")!,words=value.split(",").filter(word=>word!=="diagnostic-rendered-ansi"&&word!=="diagnostic-short");
+   result.push("--json="+words.join(","));continue;
+  }
   if(argument.startsWith("-Ldependency="))continue;
   if(argument==="--extern"||argument.startsWith("--extern=")){const value=take("--extern")!,equals=value.indexOf("="),spec=equals<0?value:value.slice(0,equals),path=equals<0?"":value.slice(equals+1);result.push("--extern",path===""?spec:spec+"=#"+(externDigests.get(path)??"missing"));continue;}
   result.push(machineNeutralRemapV1(laneNeutralV1(argument,laneRoot)));
@@ -99,10 +105,36 @@ export function normalizeRustcArgumentsV1(args:readonly string[],externDigests:R
  return result;
 }
 
-/** 📥️ The selected environment the compilation can observe without declaring it in its dependency file. */
+/** 🍎️ The identity of a macOS SDK as the key sees it: the name of the SDK directory after its links are resolved (`MacOSX15.4.sdk`), never where it is installed (Xcode, the command line tools or a task's own copy), so two machines with the same SDK in different places compile alike. */
+export function sdkIdentityV1(path:string):string{
+ let real=path;try{real=realpathSync(path);}catch{}
+ return basename(real.replace(/[\\/]+$/u,""));
+}
+
+/** 🚩️ The Cargo-encoded compiler flags (separated by U+001F) with the machine-specific `FROM` of each path remapping replaced by the role it plays (see {@link machineNeutralRemapV1}), in the joined form and in the two-argument form. */
+export function neutralRustflagsV1(encoded:string):string{
+ const parts=encoded.split("\u001f");
+ return parts.map((part,index)=>parts[index-1]==="--remap-path-prefix"?machineNeutralRemapV1("--remap-path-prefix="+part).slice("--remap-path-prefix=".length):machineNeutralRemapV1(part)).join("\u001f");
+}
+
+const machineValueV1=(name:string,value:string):string=>name==="SDKROOT"?"⟨sdk⟩"+sdkIdentityV1(value):name==="CARGO_ENCODED_RUSTFLAGS"?neutralRustflagsV1(value):value;
+
+/** 🚫️ The command line without its incremental session (`-C incremental=DIR` in the three spellings): an incremental compilation names its object files with a name that differs on every run, so its rlib has other bytes every time and other bytes than a compilation without a session, while the key of the unit leaves the session out. A unit that is shared through the fleet is compiled without one. */
+export function withoutIncrementalV1(args:readonly string[]):readonly string[]{
+ const kept:string[]=[];
+ for(let index=0;index<args.length;index++){
+  const argument=args[index]!;
+  if(argument==="-C"&&(args[index+1]??"").startsWith("incremental=")){index++;continue;}
+  if(argument.startsWith("-Cincremental=")||argument.startsWith("-C=incremental="))continue;
+  kept.push(argument);
+ }
+ return kept;
+}
+
+/** 📥️ The selected environment the compilation can observe without declaring it in its dependency file; values that name a place of this machine (the SDK, the remapped roots of the compiler flags) are reduced to what they are. */
 export function keyEnvironmentV1(environment:Readonly<Record<string,string|undefined>>,laneRoot:string|undefined):Array<[string,string]>{
  const names=new Set(policy.key.environmentNames),rows:Array<[string,string]>=[];
- for(const name of Object.keys(environment).sort()){const value=environment[name];if(value===undefined)continue;if(names.has(name)||policy.key.environmentPrefixes.some(prefix=>name.startsWith(prefix)))rows.push([name,laneNeutralV1(value,laneRoot)]);}
+ for(const name of Object.keys(environment).sort()){const value=environment[name];if(value===undefined)continue;if(names.has(name)||policy.key.environmentPrefixes.some(prefix=>name.startsWith(prefix)))rows.push([name,machineValueV1(name,laneNeutralV1(value,laneRoot))]);}
  return rows;
 }
 
@@ -148,6 +180,15 @@ export function toolchainIdentityV1(root:string,inner:readonly string[],environm
  const result=spawnSync(inner[0]!,[...inner.slice(1),"-vV"],{encoding:"utf8",env:environment as NodeJS.ProcessEnv});
  if(result.status!==0)throw Error("Compiler identity probe failed");
  mkdirSync(root,{recursive:true});writeFileSync(memo,result.stdout);return result.stdout;
+}
+
+/** 📍️ The sysroot of the compiler behind `inner` (`--print sysroot`), memoised for one minute like {@link toolchainIdentityV1}; undefined when the probe fails. */
+export function rustSysrootV1(root:string,inner:readonly string[],environment:Readonly<Record<string,string|undefined>>):string|undefined{
+ const memo=join(root,"sr-"+sha256V1(inner.join("\0")+"\0"+(environment.RUSTUP_TOOLCHAIN??"")).slice(0,16));
+ try{if(Date.now()-statSync(memo).mtimeMs<60000)return readFileSync(memo,"utf8")||undefined;}catch{}
+ const result=spawnSync(inner[0]!,[...inner.slice(1),"--print","sysroot"],{encoding:"utf8",env:environment as NodeJS.ProcessEnv});
+ if(result.status!==0)return undefined;
+ const sysroot=result.stdout.trim();mkdirSync(root,{recursive:true});writeFileSync(memo,sysroot);return sysroot||undefined;
 }
 
 /** 📨️ What the build broker is told about a unit: exactly the fields of the scheduler's `AdmitRequestV1` (the Rust `parse_unit` is the reference), `undefined` for probes. */
@@ -202,6 +243,7 @@ export function argumentClassesV1(normalized:readonly string[]):ReadonlyMap<stri
  return rows;
 }
 
+const VALUE_ENVIRONMENT=new Set(["CARGO_ENCODED_RUSTFLAGS","RUSTFLAGS"]);
 /** 🧾️ The key of a lookup as named components, each an individual digest, so two keys of one crate can be diffed: `toolchain`, `source`, `platform`, `roots`, one `extern:<name>` per dependency artifact, one `env:<NAME>` per observed variable and one `args.<class>` per argument class (see {@link argumentClassesV1}). `values` carries the text of the small, path-free classes (diagnostics, codegen, features, cfg, lints, unstable, kind, edition, target, remap) cut to a bounded length.
  * @see ./🧪️tests/🧬️components/🟦️.ts */
 export function unitKeyComponentsV1(input:Parameters<typeof unitKeyV1>[0],extra:Readonly<{platform?:string;roots?:string}>={}):Readonly<{components:Record<string,string>;values:Record<string,string>}>{
@@ -210,7 +252,7 @@ export function unitKeyComponentsV1(input:Parameters<typeof unitKeyV1>[0],extra:
  if(extra.platform!==undefined)components.platform=part(extra.platform);
  if(extra.roots!==undefined)components.roots=part(extra.roots);
  for(const row of input.externs)components["extern:"+row.name]=/^[0-9a-f]{16,}$/u.test(row.sha256)?row.sha256.slice(0,width):part(row.sha256);
- for(const [name,value] of input.environment)components["env:"+name]=part(value);
+ for(const [name,value] of input.environment){components["env:"+name]=part(value);if(VALUE_ENVIRONMENT.has(name)&&Object.keys(values).length<policy.lookups.maximumValues)values["env:"+name]=value.slice(0,policy.lookups.valueCharacters);}
  const shown=new Set(["diagnostics","codegen","features","cfg","lints","unstable","kind","edition","target","remap"]);
  for(const [name,list] of argumentClassesV1(input.normalized)){
   components["args."+name]=part(list);

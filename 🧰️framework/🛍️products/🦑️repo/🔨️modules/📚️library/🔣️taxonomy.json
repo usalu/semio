@@ -30300,6 +30300,27 @@
       ],
       "reason": "Nx outputs and the typegen script identify the async TypeScript projection exactly"
     },
+    "cad-geometry-bindings": {
+      "ownership": "owned",
+      "ownerPath": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🦀️rust",
+      "target": "@semio-tech/s-cad-composition-rs:wasm",
+      "previewTarget": "@semio-tech/s-cad-composition-rs:preview-generated",
+      "inputPatterns": [
+        "✏️s/Cargo.lock",
+        "✏️s/Cargo.toml",
+        "✏️s/🧑‍💻dev/📐️cad/**/*.rs",
+        "✏️s/🧑‍💻dev/📐️cad/🏗️build/📜️script.ts",
+        "✏️s/🧑‍💻dev/📐️cad/📦️packages/🦀️rust/Cargo.toml",
+        "✏️s/🧑‍💻dev/📐️cad/📦️packages/🦀️rust/📋️project.json"
+      ],
+      "outputRoots": [
+        {
+          "path": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🦀️rust/🕸️bindings",
+          "inclusion": "ignored"
+        }
+      ],
+      "reason": "The CAD wasm route runs wasm-bindgen into the package bindings that the STEP composition imports"
+    },
     "dev-distribution-bundle": {
       "ownership": "owned",
       "ownerPath": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
@@ -31208,6 +31229,27 @@
         }
       ],
       "reason": "Nx outputs and the typegen script identify the shell TypeScript projection exactly"
+    },
+    "spatial-kernel-session-bindings": {
+      "ownership": "owned",
+      "ownerPath": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/📦️packages/🦀️rust",
+      "target": "@semio-tech/s-spatial-kernel-semio-session-rs:wasm",
+      "previewTarget": "@semio-tech/s-spatial-kernel-semio-session-rs:preview-generated",
+      "inputPatterns": [
+        "✏️s/Cargo.lock",
+        "✏️s/Cargo.toml",
+        "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/**/*.rs",
+        "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/🏗️build/📜️script.ts",
+        "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/📦️packages/🦀️rust/Cargo.toml",
+        "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/📦️packages/🦀️rust/📋️project.json"
+      ],
+      "outputRoots": [
+        {
+          "path": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/📦️packages/🦀️rust/🕸️bindings",
+          "inclusion": "ignored"
+        }
+      ],
+      "reason": "The session wasm route runs wasm-bindgen into the package bindings that the browser session law imports"
     },
     "styling-tokens": {
       "ownership": "owned",
@@ -33901,7 +33943,6 @@
           "🧰️framework/🔨️modules/🛂️manifest/🏷️ui-contract-and-canvas-types",
           "🧰️framework/🔨️modules/🛂️manifest/📋️context-menu",
           "🧰️framework/🔨️modules/🛂️manifest/🤖️generated",
-          "🧰️framework/🔨️modules/🎓️onboarding/🗺️window-layout",
           "🧰️framework/🔨️modules/🛂️manifest/🎬️action-types-and-semantics",
           "🧰️framework/🔨️modules/🛂️manifest/🔘️definitions-action-ids-and-shell-brand"
         ],

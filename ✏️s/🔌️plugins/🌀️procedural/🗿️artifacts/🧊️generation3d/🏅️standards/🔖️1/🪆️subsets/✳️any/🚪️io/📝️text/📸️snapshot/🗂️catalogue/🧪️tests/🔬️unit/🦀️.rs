@@ -121,7 +121,7 @@ fn catalogue_covers_every_exposed_kernel_method_and_mesh_operation_once() {
         assert!(claimed.insert(kind), "{kind} is claimed twice");
     }
     assert_eq!(fixture["kernelCoverage"].as_array().unwrap().len(), 93);
-    let packaged: Value = serde_json::from_str(include_str!("../../../../../../../../../../../../../🌊️flow/🧩️extensions/📐️brep/🧩️component/🔣️.json")).unwrap();
+    let packaged: Value = serde_json::from_str(fixture_text!("../../../../../../../../../../../🌊️flow/🧩️extensions/📐️brep/🧩️component/🔣️.json")).unwrap();
     let operations: std::collections::BTreeSet<_> = fixture["meshCoverage"].as_array().unwrap().iter()
         .map(|row| format!("brep.mesh.{}", row["operation"].as_str().unwrap())).collect();
     for topic in packaged["manifest"]["topicContributions"].as_array().unwrap() {

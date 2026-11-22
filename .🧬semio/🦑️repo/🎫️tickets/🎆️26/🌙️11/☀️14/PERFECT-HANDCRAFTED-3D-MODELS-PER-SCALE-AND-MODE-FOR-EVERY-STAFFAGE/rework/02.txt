@@ -1,0 +1,5 @@
+humans/jogger
+humans/running-child
+humans/runner-with-blade-prosthesis
+humans/skateboarder
+humans/child-on-kick-scooter

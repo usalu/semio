@@ -172,7 +172,7 @@ impl Puzzle5dPasteJob {
                 }
             }
             Puzzle5dPasteStage::TargetParts => {
-                let rows=request.snapshot.typed().parts.as_slice();
+                let rows = &request.snapshot.typed().parts;
                 if let Some(row) = rows.get(self.cursor) {
                     self.cursor += 1;
                     self.fresh_ids.observe_part(&row.id);

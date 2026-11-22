@@ -2,7 +2,7 @@ import {existsSync,readFileSync,unlinkSync,utimesSync,writeFileSync} from "node:
 import {join} from "node:path";
 import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../🔒️leases/🎛️control/🟦️.ts";
 import {beginAdmissionWaitV1,waitingDelayV1 as delay} from "../../../🧭️routing/📥️invocation/🏃️process/🐕️watchdog/🟦️.ts";
-import {describeHostBlockersV1,describeHostReasonV1,evaluateHostCapacityV1,hostBlockersV1,formatHostCapacityV1,isHostCapacityV1,requireHostCapacityV1,settleHostGrowthV1,type HostCapacityPolicyV1,type HostGrantV1,type HostGrowthSettleV1,type HostReasonV1,type HostRequestV1,type HostSampleV1,type HostWaiterV1} from "../📏️decision/🟦️.ts";
+import {describeHostBlockersV1,describeHostReasonV1,evaluateHostCapacityV1,hostBlockersV1,formatHostCapacityV1,hostWaitDeadlineMillisecondsV1,isHostCapacityV1,requireHostCapacityV1,settleHostGrowthV1,type HostCapacityPolicyV1,type HostGrantV1,type HostGrowthSettleV1,type HostReasonV1,type HostRequestV1,type HostSampleV1,type HostWaiterV1} from "../📏️decision/🟦️.ts";
 import {hostCapacityDirectoryV1,hostUpgradePathV1,readHostCapacityPlanV1,readLiveHostCapacityPlanV1} from "../🎫️gate/🟦️.ts";
 import type {HostLedgerPrimitivesV1} from "../🎫️gate/📋️contract/🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
@@ -87,6 +87,16 @@ export async function growHostGrantV1(context:HostGrowContextV1):Promise<number|
  }finally{ledger.releaseLock(directory,pid);}
 }
 
+/** ⏱️ The note a waiting upgrade appends once its deadline passed: the holders that keep it waiting, the grant of this very run named as such when it is the largest of them (an upgrade never waits on itself for memory, but its own reservation can be what the host has left to give).
+ * @see hostWaitDeadlineMillisecondsV1 */
+function hostUpgradeDeadlineNoteV1(language:"en"|"de",policy:HostCapacityPolicyV1,request:HostRequestV1,grants:readonly HostGrantV1[],waiters:readonly HostWaiterV1[],evaluation:ReturnType<typeof evaluateHostCapacityV1>,waitedMilliseconds:number,nowMs:number):string{
+ const limit=hostWaitDeadlineMillisecondsV1(policy,request.priority);
+ if(waitedMilliseconds<limit)return "";
+ const own=grants.find(grant=>grant.id===request.id),others=hostBlockersV1(policy,grants,waiters,evaluation,request.id,nowMs),largest=others[0]?.megabytes??0,ownMegabytes=own===undefined?0:Math.max(own.observedMegabytes??0,own.reservedMegabytes);
+ const text=others.length===0?describeHostBlockersV1(language,[]):describeHostBlockersV1(language,others);
+ return formatHostCapacityV1(language,"pastDeadline",{limit:Math.round(limit/1000),holders:ownMegabytes>largest?`${formatHostCapacityV1(language,"blockerSelf",{megabytes:ownMegabytes})}, ${text}`:text});
+}
+
 /** 🔼️ Grows a held quiet grant into its full request in the fair queue: the run waits as an upgrade request that keeps the queue position the run arrived with (so a forecast never costs it its turn and never gives it a better one than asking for the full grant at the door would have), the decision replaces the held reservation by the full one (only the difference has to fit, the freed small reservation counts) and the grant row is rewritten under the gate lock in one atomic replace, with a restarted ramp for the new reservation; so the reservation never drops to nothing and never counts twice. An upgrade is never refused for memory while every other live grant is a quiet grant that itself waits to grow (otherwise two such runs would wait for each other forever and, as a barrier head, hold the whole queue): the decision admits the first of them in queue order at the largest size that fits now (`upgradedPartly` says so in the language of the run). A growth whose memory fits but whose cores our other runs hold is admitted with the jobs those cores leave (at least one for an agent session with nothing else running), keeping the memory of the whole request (`upgradedReduced`), and the grower of the holder adds jobs once cores free up, instead of the run waiting for another run to end. Progress lines come in the language of the run and name what the growth stands behind (the runs of ours that hold the memory or cores it needs, or the requests served first); the wait ends when the asker cancelled (the request file vanished or the control fired), in which case the small grant is kept. A run that has waited `wait.bypassMilliseconds` for all its jobs stops insisting on them: its request is rewritten with `protocol.upgradeNarrowedMinimumJobs` and one spare job of memory (`protocol.growSpareJobs`, the margin a grow keeps for a footprint above its estimate), the decision admits the largest job count whose memory fits beside the busy peers (`upgradedReduced`) and the grower adds jobs once memory frees up, so no upgrade waits longer than that window for memory that carries even one job. */
 export async function upgradeHostGrantV1(context:HostUpgradeContextV1):Promise<"upgraded"|"withdrawn"|Readonly<{minimum:number;total:number;floor:number;capacity:number}>>{
  const {ledger,directory,policy,request,control,now,pid,language,write}=context,{takeLock,writeJson,remove}=ledger,started=now(),first=context.state(),rebuild=context.rebuildAskedAtMs!==undefined,arrivedAtMs=context.rebuildAskedAtMs??first.arrivedAtMs??first.admittedAtMs,waiterPath=ledger.queuePath(directory,arrivedAtMs,request.id);
@@ -108,7 +118,7 @@ export async function upgradeHostGrantV1(context:HostUpgradeContextV1):Promise<"
      if(rebuild&&!grants.some(grant=>grant.id===request.id&&grant.pid===pid&&grant.rebuildScope===first.rebuildScope))return "withdrawn";
      if(!waiters.some(row=>row.request.id===request.id&&row.upgrade===true&&row.rebuild===record.rebuild)){writeJson(waiterPath,record);waiters.push(record);}
      const evaluation=evaluateHostCapacityV1(policy,host,grants,waiters,at),mine=evaluation.decisions.find(row=>row.id===request.id)!,state=context.state();
-     if(rebuild&&mine.reason==="never")return{minimum:request.fixedMegabytes,total:host.totalMegabytes,floor:evaluation.floorMegabytes,capacity:Math.floor(Math.max(0,host.totalMegabytes-evaluation.floorMegabytes)*policy.memory.budgetBasisPoints/10000)};
+     if(rebuild&&mine.reason==="never")return{minimum:request.minimumMegabytes??request.fixedMegabytes,total:host.totalMegabytes,floor:evaluation.floorMegabytes,capacity:Math.floor(Math.max(0,host.totalMegabytes-evaluation.floorMegabytes)*policy.memory.budgetBasisPoints/10000)};
      if(mine.verdict==="admit"){
       if(!ledger.holdsLock(directory,pid)||context.stopped()||!context.requested())continue;
       const{quiet:_,lentSinceMs,...rest}=state;
@@ -121,7 +131,7 @@ export async function upgradeHostGrantV1(context:HostUpgradeContextV1):Promise<"
      if(at-lastProgress>=policy.wait.progressMilliseconds){
       lastProgress=at;
       const position=evaluation.decisions.findIndex(row=>row.id===request.id),before=evaluation.decisions.slice(0,position),spare=evaluation.headroomMegabytes-before.reduce((sum,row)=>sum+row.reservedMegabytes,0);
-      write(formatHostCapacityV1(language,"upgrading",{operation:request.operation,seconds:Math.round((at-started)/1000),from:state.reservedMegabytes,to:Math.min(asked.fixedMegabytes+asked.minimumJobs*request.perJobMegabytes,Math.max(0,host.totalMegabytes-evaluation.floorMegabytes)),reason:describeHostReasonV1(language,mine.reason as Exclude<HostReasonV1,"fits"|"reduced"|"override"|"shrunk"|"lent">),spare,floor:evaluation.floorMegabytes,running:grants.filter(row=>row.id!==request.id).length,ahead:position,behind:describeHostBlockersV1(language,hostBlockersV1(policy,grants,waiters,evaluation,request.id,at))}));
+      write(formatHostCapacityV1(language,"upgrading",{operation:request.operation,seconds:Math.round((at-started)/1000),from:state.reservedMegabytes,to:Math.min(asked.fixedMegabytes+asked.minimumJobs*request.perJobMegabytes,Math.max(0,host.totalMegabytes-evaluation.floorMegabytes)),reason:describeHostReasonV1(language,mine.reason as Exclude<HostReasonV1,"fits"|"reduced"|"override"|"shrunk"|"lent">),spare,floor:evaluation.floorMegabytes,running:grants.filter(row=>row.id!==request.id).length,ahead:position,behind:describeHostBlockersV1(language,hostBlockersV1(policy,grants,waiters,evaluation,request.id,at))})+hostUpgradeDeadlineNoteV1(language,policy,request,grants,waiters,evaluation,at-started,at));
       progressAt=at;
      }
     }finally{ledger.releaseLock(directory,pid);}

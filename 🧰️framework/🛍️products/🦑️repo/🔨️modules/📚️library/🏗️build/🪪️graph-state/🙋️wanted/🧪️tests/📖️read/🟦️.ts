@@ -89,6 +89,23 @@ test("an unreachable fleet refuses at once when the machine cannot run even the 
  }finally{await server.stop(true);}
 },60000);
 
+test("a breaker that one transient fault opened is waited out before the read decides the fleet cannot be reached: the fleet answering again is used, a breaker that stays open for longer than the patience is not waited for",async()=>{
+ const {server,client}=await world();
+ try{
+  const real=client("breaker");
+  const run=async(remaining:number)=>{
+   let closed=false;const slept:number[]=[],lines:string[]=[],controller=new AbortController();
+   const held={...real,usable:()=>closed,breakerRemainingMilliseconds:()=>closed?0:remaining};
+   await fleetReadV1({stale:names(4700),admittedMegabytes:4096,client:held,requester:"g1-m06",platform:PLATFORM,graphKey:KEY,language:"en",say:line=>lines.push(line),signal:controller.signal,sleep:async milliseconds=>{slept.push(milliseconds);if(slept.length===1)closed=true;else controller.abort();}}).catch(()=>undefined);
+   return{slept,unreachable:lines.some(line=>line.includes("cannot be reached"))};
+  };
+  const short=await run(9000);
+  expect(short.slept[0]).toBe(9050);expect(short.unreachable).toBe(false);
+  const long=await run(60000);
+  expect(long.slept).not.toContain(60050);expect(long.unreachable).toBe(true);
+ }finally{await server.stop(true);}
+},60000);
+
 const kindOf=(name:string)=>name==="workspace"?"root:language:cargo":undefined;
 const estimator=(extra:Record<string,number>={})=>{let table=emptyOwnerCostTableV1();for(const [name,megabytes] of Object.entries(extra))table=recordOwnerCostV1(table,{name,kind:"project",megabytes,seconds:1,rows:1,stopped:false,atMs:1});return(name:string)=>estimateOwnerCostV1(table,name,kindOf(name));};
 
@@ -168,7 +185,7 @@ test("an unreachable fleet refuses a single heavy project at once, while the sam
  const lines:string[]=[],dead=graphFleetClientV1(graphFleetSettingsV1(temp("dead-heavy"),{SEMIO_REMOTE_CACHE_ENDPOINT:"http://127.0.0.1:9",SEMIO_REMOTE_CACHE_ACCESS:"read-write",SEMIO_REMOTE_CACHE_TOKEN:"w",SEMIO_REMOTE_CACHE_INSTANCE:"main"})!);
  await expect(fleetReadV1({stale:["workspace"],admittedMegabytes:8192,client:dead,requester:"g1-m02",platform:PLATFORM,graphKey:KEY,language:"de",estimate:estimator(),say:line=>lines.push(line)})).rejects.toMatchObject({code:"unserved"});
  expect(lines.at(-1)).toContain("workspace");
- expect((await fleetReadV1({stale:["@semio-tech/light"],admittedMegabytes:8192,client:dead,requester:"g1-m02",platform:PLATFORM,graphKey:KEY,language:"de",estimate:estimator(),say:()=>{}})).outcome).toBe("local");
+ expect((await fleetReadV1({stale:["@semio-tech/light"],admittedMegabytes:8192,client:dead,requester:"g1-m02",platform:PLATFORM,graphKey:KEY,language:"de",estimate:estimator(),say:()=>{},sleep:clock().sleep})).outcome).toBe("local");
  expect(ownerCostPolicyV1.kindMegabytes["root:language:cargo"]).toBeGreaterThan(0);
 });
 

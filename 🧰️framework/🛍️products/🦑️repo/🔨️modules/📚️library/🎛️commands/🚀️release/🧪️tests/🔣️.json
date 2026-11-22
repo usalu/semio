@@ -1,0 +1,5 @@
+{
+  "request": ["describe", "raster", "--profile", "prototype", "--facet", "invalid"],
+  "refusal": "usage: components describe",
+  "runtimeProvider": "📥️source/🔏️closure/🚪️command/🔌️runtime/🟦️.ts"
+}

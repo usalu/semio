@@ -21,11 +21,12 @@ export async function acquireProductLaneV1(root:string,request:Readonly<{key:str
   if(!claim){if(!reported){reported=true;options.report?.("poolBusy",{live:lanes.filter(row=>row.claimed).length,maximum:bounds.maximumLiveLanes});}return undefined;}
   try{
    options.signal.throwIfAborted();const receipt=join(paths.base,policy.product.receipt);
-   if(existsSync(paths.base)){
+   if(existsSync(paths.base)&&!existsSync(receipt)){const directory=lstatSync(paths.base);if(!directory.isDirectory()||directory.isSymbolicLink())throw Error("Actual Cargo product namespace directory required");}
+   if(existsSync(receipt)){
     const directory=lstatSync(paths.base),before=lstatSync(receipt);if(!directory.isDirectory()||directory.isSymbolicLink()||!before.isFile()||before.isSymbolicLink()||before.nlink!==1||before.size>policy.product.maximumReceiptBytes)throw Error("Actual Cargo product namespace receipt required");
     const file=openSync(receipt,"r");try{const opened=fstatSync(file);if(opened.dev!==before.dev||opened.ino!==before.ino||opened.size!==before.size||!opened.isFile()||opened.nlink!==1)throw Error("Changed Cargo product namespace receipt");const bytes=Buffer.alloc(opened.size+1),count=readSync(file,bytes,0,bytes.byteLength,0);if(count!==opened.size)throw Error("Changed Cargo product namespace receipt");const row=JSON.parse(new TextDecoder("utf-8",{fatal:true}).decode(bytes.subarray(0,count))),after=fstatSync(file),named=lstatSync(receipt);if(after.dev!==opened.dev||after.ino!==opened.ino||after.size!==opened.size||after.mtimeMs!==opened.mtimeMs||after.ctimeMs!==opened.ctimeMs||named.dev!==opened.dev||named.ino!==opened.ino)throw Error("Changed Cargo product namespace receipt");if(!row||Object.keys(row).sort().join(",")!=="key,version"||row.version!==1||row.key!==request.key)throw Error("Cargo product namespace identity collision");}finally{closeSync(file);}
    }else{
-    mkdirSync(paths.base);const file=openSync(receipt,"wx");try{writeFileSync(file,JSON.stringify({version:1,key:request.key})+"\n");fsyncSync(file);}finally{closeSync(file);}
+    mkdirSync(paths.base,{recursive:true});const file=openSync(receipt,"wx");try{writeFileSync(file,JSON.stringify({version:1,key:request.key})+"\n");fsyncSync(file);}finally{closeSync(file);}
    }
    const entered=enterLaneV1(root,id,request.owner,request.crates);try{trimPoolV1(root,bounds,Date.now(),options.report);}catch(error){entered.release();throw error;}
    return Object.freeze({paths:entered.paths,release(){try{entered.release();}finally{claim.release();}}});

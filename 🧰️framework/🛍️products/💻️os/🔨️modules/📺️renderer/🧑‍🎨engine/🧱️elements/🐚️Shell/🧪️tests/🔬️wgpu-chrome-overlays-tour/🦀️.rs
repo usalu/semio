@@ -615,18 +615,25 @@ fn veil_bands_compose_multiple_cutouts() {
 
 //#region Pulse
 #[test]
-fn pulse_thickness_breathes_hairline_to_focus_and_back() {
-    let hairline = 1.0;
-    let focus = 3.0;
-    assert_eq!(introduced_pulse_thickness(0.0, hairline, focus), hairline);
-    assert!((introduced_pulse_thickness(INTRODUCED_PULSE_PERIOD_MS / 2.0, hairline, focus) - focus).abs() < 0.001);
-    assert!((introduced_pulse_thickness(INTRODUCED_PULSE_PERIOD_MS, hairline, focus) - hairline).abs() < 0.001);
+fn introduced_pulse_breathes_opacity_one_to_seven_tenths_and_back() {
+    let pulse = semio_ui_draw_contract::introduced_pulse_opacity;
+    assert!((pulse(0.0) - 1.0).abs() < 1e-6);
+    assert!((pulse(0.5) - 0.7).abs() < 1e-6);
+    assert!((pulse(1.0) - 1.0).abs() < 1e-6);
 }
 
 #[test]
-fn pulse_thickness_is_periodic() {
-    let (hairline, focus) = (1.0, 3.0);
-    assert_eq!(introduced_pulse_thickness(100.0, hairline, focus), introduced_pulse_thickness(100.0 + INTRODUCED_PULSE_PERIOD_MS, hairline, focus));
+fn the_motion_clock_starts_after_the_unstamped_sentinel_and_never_runs_backwards() {
+    let clock = semio_renderer_wgpu_shell_async::chrome_motion_seconds_since;
+    assert_eq!(clock(5000.0, 5000.0), 1.0);
+    assert!((clock(7500.0, 5000.0) - 3.5).abs() < 1e-6);
+    assert_eq!(clock(4000.0, 5000.0), 1.0);
+}
+
+#[test]
+fn introduced_pulse_is_periodic() {
+    let pulse = semio_ui_draw_contract::introduced_pulse_opacity;
+    assert!((pulse(0.125) - pulse(1.125)).abs() < 1e-5);
 }
 
 /// 🪟️ Gap baseline sits at y = bounds.y + cap_h - stroke
@@ -664,15 +671,40 @@ fn placement_center_variant_ignores_the_anchor() {
 fn placement_auto_picks_the_side_with_the_most_free_space() {
     let anchor = Rect::new(0.0, 0.0, 50.0, 20.0);
     let (x, y) = resolve_introduction_placement(semio_framework::onboarding::IntroductionPlacement::Auto, Some(anchor), (100.0, 50.0), (800.0, 600.0));
-    assert_eq!(x, anchor.x + anchor.w + INTRODUCTION_INFO_BOX_GAP);
-    assert!(y >= INTRODUCTION_INFO_BOX_GAP);
+    assert_eq!(x, anchor.x + anchor.w + introduction_info_box_gap());
+    assert!(y >= introduction_info_box_gap());
 }
 
 #[test]
 fn placement_explicit_side_is_honored_and_clamped_to_the_viewport() {
     let anchor = Rect::new(780.0, 10.0, 15.0, 15.0);
     let (x, _) = resolve_introduction_placement(semio_framework::onboarding::IntroductionPlacement::Right, Some(anchor), (100.0, 50.0), (800.0, 600.0));
-    assert!(x <= 800.0 - 100.0 - INTRODUCTION_INFO_BOX_GAP + 0.001);
+    assert!(x <= 800.0 - 100.0 - introduction_info_box_gap() + 0.001);
+}
+
+/// ⚖️ LAW: the shared schema, read by React and by this target, puts the info box flush (gap 0) and fixes the dock reach and clear range.
+#[test]
+fn the_introduction_constants_are_the_shared_schemas() {
+    let constants = &semio_renderer_wgpu_shell_chrome_state::chrome_parity_constants().introduction;
+    assert_eq!((constants.info_box_gap_px, constants.dock_reach_px, constants.clear_range_px), (0.0, 40.0, 120.0));
+    assert_eq!(introduction_info_box_gap(), 0.0);
+}
+
+/// ⚖️ LAW: `dock_introduction_info_box` and `clear_introduction_info_box_near_misses` answer every row of the fixture React's `docking.test.ts` reads.
+#[test]
+fn the_introduction_dock_and_near_miss_clearing_answer_the_shared_fixture_rows() {
+    let cases: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧬️schema/📐️chrome-parity-constants/🧫️introduction-docking.json")).expect("introduction docking fixture");
+    let lines = |value: &serde_json::Value, axis: &str| value[axis].as_array().expect("lines").iter().map(|line| line.as_f64().expect("line") as f32).collect::<Vec<f32>>();
+    let number = |value: &serde_json::Value, key: &str| value[key].as_f64().expect("number") as f32;
+    for row in cases["dock"].as_array().expect("dock rows") {
+        let docked = dock_introduction_info_box((number(&row["position"], "left"), number(&row["position"], "top")), (number(&row["box"], "width"), number(&row["box"], "height")), &lines(&row["lines"], "xs"), &lines(&row["lines"], "ys"), number(row, "reach"));
+        let expected = &row["expected"];
+        assert_eq!((docked.x, docked.y, docked.w, docked.h), (number(expected, "left"), number(expected, "top"), number(expected, "width"), number(expected, "height")), "dock row {}", row["id"]);
+    }
+    for row in cases["clear"].as_array().expect("clear rows") {
+        let moved = clear_introduction_info_box_near_misses((number(&row["position"], "left"), number(&row["position"], "top")), &lines(&row["own"], "xs"), &lines(&row["own"], "ys"), &lines(&row["lines"], "xs"), &lines(&row["lines"], "ys"), number(row, "reach"), number(row, "range"));
+        assert_eq!(moved, (number(&row["expected"], "left"), number(&row["expected"], "top")), "clear row {}", row["id"]);
+    }
 }
 //#endregion Placement
 

@@ -1,5 +1,6 @@
 //! ✏️ SpaceIndexEditor — the `edit` mode: the app's only mode, a single full-pane artifact table.
 
+use semio_plugin::Axis;
 use crate::editor::space_index::modes::edit::windows::main;
 use semio_ui_locale::LocalizedLabel;
 use semio_plugin::ModeDefinition;
@@ -13,7 +14,7 @@ pub fn definition() -> ModeDefinition {
 }
 
 pub fn layout() -> WindowLayout {
-    semio_plugin::create_default_layout(&[main::WINDOW_KIND_ID.into()], "row", Some(&[100.0]), Some(&["Artifacts".into()]))
+    semio_plugin::create_default_layout(&[main::WINDOW_KIND_ID.into()], Axis::Horizontal, Some(&[1.0]), Some(&["Artifacts".into()]))
 }
 //#endregion 🔖️Definition
 

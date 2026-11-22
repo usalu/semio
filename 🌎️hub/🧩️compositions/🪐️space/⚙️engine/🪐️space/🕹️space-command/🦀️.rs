@@ -4,6 +4,8 @@ use super::*;
 use semio_hub_space_commands_authoring::{add_parameter, bind_parameter_field, close_focused_instance, copy_app_instance, delete_selection, duplicate_app_instance, move_media_node, node_graph_edit, node_graph_viewport, open_instance, paste_app_instance, patch_app_instances, patch_parameter, remove_app_instance, remove_parameter, rename_app_instance, reorganize_workflow, spawn_app, unbind_parameter_field};
 use semio_hub_space_commands_media::{compiled_dag_engagement_input, compiled_dag_engagement_submit, connect_media_ports, disconnect_media_edge, export_media, export_studio_dsl, export_studio_pack, go_home, import_media, import_media_payload, import_space_pack, import_space_pack_payload, navigate_virtual_file_system_node, open_space, patch_media_nodes, presence_heartbeat, set_active_example, set_active_panel_tab, set_app_registrations, workflow_engagement_input, workflow_engagement_submit};
 
+use semio_hub_space_commands_authoring::spawn_app::finish_spawn_app;
+
 //#region 🔖️SpaceCommand
 app_commands! {
     /// 🎯️ `SpaceApp::Command` — the SOLE dispatch surface for the studio app's own behavior, one
@@ -13,6 +15,7 @@ app_commands! {
         "addParameter" as "add-parameter" => add_parameter::AddParameter,
         "removeParameter" as "remove-parameter" => remove_parameter::RemoveParameter,
         "spawnApp" as "spawn-app" => spawn_app::SpawnApp,
+        "finishSpawnApp" as "finish-spawn-app" => finish_spawn_app::FinishSpawnApp,
         "moveMediaNode" as "move-media-node" => move_media_node::MoveMediaNode,
         "connectMediaPorts" as "connect-media-ports" => connect_media_ports::ConnectMediaPorts,
         "disconnectMediaEdge" as "disconnect-media-edge" => disconnect_media_edge::DisconnectMediaEdge,

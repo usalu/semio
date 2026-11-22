@@ -80,7 +80,7 @@ impl<'ctx> PointerCtx<'ctx> {
                 semio_ui_declaration::ui::SurfaceKind::World3d => {
                     if let Some(state) = self.surfaces.world3d_states.get_mut(&cancelled.host_id) {
                         infinite_world::world::world3d_cancel_relocate_drag(&mut state.session, &mut state.camera, &mut state.gumball, &mut state.scene);
-                        if state.terrain.terrain_brush().is_some() && state.authority.terrain_stroke_armed()
+                        if state.terrain.terrain_pointer_utility_active() && state.authority.terrain_stroke_armed()
                             && infinite_world::world::enqueue_world3d_events(&mut state.authority, [
                                 infinite_world::world::WorldInteractionIntent::cancel(infinite_world::world::WorldCancelReason::CaptureLost)
                             ]).is_err()
@@ -237,6 +237,11 @@ impl<'ctx> PointerCtx<'ctx> {
                 let dx = x - input.drag.start_x;
                 let dy = y - input.drag.start_y;
                 match id {
+                    id if self.input.scroll_thumb_drag.as_ref().is_some_and(|(scroll_id, ..)| scroll_id == id) => {
+                        if let Some((scroll_id, start, ratio, max, vertical)) = self.input.scroll_thumb_drag.clone() {
+                            self.input.scroll_offsets.insert(scroll_id, (start + if vertical { dy } else { dx } * ratio).clamp(0.0, max));
+                        }
+                    }
                     id if id.starts_with("shell.measures.resize.") => {
                         if let Some(window_id) = self.windows.measures_resize_window_id.clone() {
                             let next = (self.windows.measures_resize_origin_width - dx).clamp(theme.panel_min_width, theme.panel_max_width);

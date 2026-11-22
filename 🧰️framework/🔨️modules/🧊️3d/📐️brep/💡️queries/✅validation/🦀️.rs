@@ -942,3 +942,7 @@ mod triangular_intersection;
 #[path = "🧾️diagnostic-text/🦀️.rs"]
 mod diagnostic_text;
 pub use diagnostic_text::{ValidationReportCursor,ValidationReportScalar};
+
+#[path = "🩹️solid-healing/🦀️.rs"]
+mod solid_healing;
+pub use solid_healing::SolidHealing;

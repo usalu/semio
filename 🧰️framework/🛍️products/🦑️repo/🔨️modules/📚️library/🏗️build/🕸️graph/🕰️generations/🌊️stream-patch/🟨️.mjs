@@ -1,4 +1,4 @@
-import{FACT_CODEC_POLICY_V1,collectFactStringsV1,compareCodePointsV1,createFactSinkV1,openFactIndexV1,encodeFactIndexV1,writeFactListV1,writeFactValueV1}from"../🧮️fact-codec/🟨️.mjs";
+import{FACT_CODEC_POLICY_V1,collectFactStringsV1,compareCodePointsV1,createFactSinkV1,factVarintBytesV1,openFactIndexV1,encodeFactIndexV1,writeFactListV1,writeFactValueV1}from"../🧮️fact-codec/🟨️.mjs";
 import{classesOfChunksV1,streamUpsertClassesV1}from"../🧱️chunk-classes/🟨️.mjs";
 import{INDEX_CHUNK_POLICY_V1}from"../🧱️chunk-classes/🟨️.mjs";
 import{rowKeyV1,sameFactV1}from"../🧮️fact-rows/🟨️.mjs";
@@ -139,6 +139,7 @@ export async function patchFactIndexBytesV1(view,{drop=[],upserts=new Map(),appe
   for await(const batch of batchesOf(append.get(name)))for(const row of batch)ids.add(idOfRow(row));
   classes.push({r:Uint32Array.from(ids).sort(),o:Uint32Array.of(owner)});
  }
+ added.clear();byObject.clear();decoded.clear();memos.clear();paths=undefined;
  runtimeCollectGarbageV1(true);
  const rowTotal=oldRows+fresh.length,live=new Uint8Array(owners.length),used=new Uint8Array(rowTotal);
  for(const cls of classes)for(const id of cls.o)if(!gone.has(id))live[id]=1;
@@ -157,7 +158,8 @@ export async function patchFactIndexBytesV1(view,{drop=[],upserts=new Map(),appe
  if(compact.length>P.compactionFactor*ownersOut.length+P.compactionFloor&&compact.length>P.compactionGrowth*D.classCount||ids>P.compactionFloor&&ids>P.compactionDuplication*rowsOut)compact=refineClassesV1(compact,ownersOut.length,rowsOut);
  runtimeCollectGarbageV1(true);
 
- const marked=new Uint8Array(D.stringCount),seenFacts=new Uint8Array(D.factCount),freshText=createTextArenaV1({validate:text=>{if(LONE_SURROGATE.test(text))throw fail("Well formed text required in a fact index: "+JSON.stringify(text.slice(0,64)));}}),freshFacts=new Set(),kindNo=new Uint32Array(fresh.length),pathNo=new Uint32Array(fresh.length),mark=rank=>{marked[rank]=1;};
+ let freshText=createTextArenaV1({validate:text=>{if(LONE_SURROGATE.test(text))throw fail("Well formed text required in a fact index: "+JSON.stringify(text.slice(0,64)));}});
+ const marked=new Uint8Array(D.stringCount),seenFacts=new Uint8Array(D.factCount),freshFacts=new Set(),kindNo=new Uint32Array(fresh.length),pathNo=new Uint32Array(fresh.length),mark=rank=>{marked[rank]=1;};
  for(const id of ownersOut)if(id<D.ownerString.length)marked[D.ownerString[id]]=1;else freshText.add(owners[id]);
  for(let id=0;id<rowTotal;id++){
   if(!used[id])continue;
@@ -169,6 +171,7 @@ export async function patchFactIndexBytesV1(view,{drop=[],upserts=new Map(),appe
    if(typeof row.fact!=="object"||row.fact===null||logged||!freshFacts.has(row.fact)){if(!logged&&typeof row.fact==="object"&&row.fact!==null)freshFacts.add(row.fact);collectFactStringsV1(row.fact,freshText);}
   }
  }
+ freshFacts.clear();
  const sortedFresh=freshText.sorted(),freshRank=new Uint32Array(freshText.count());
  const remap=new Uint32Array(D.stringCount),stringSink=createFactSinkV1(maximumBytes);
  let strings=0,previous=Buffer.allocUnsafe(256),previousLength=0,current=Buffer.allocUnsafe(256),next=0;
@@ -215,13 +218,24 @@ export async function patchFactIndexBytesV1(view,{drop=[],upserts=new Map(),appe
   let at=kindIds.get(kind);if(at===undefined){at=kindStrings.length;kindIds.set(kind,at);kindStrings.push(kindString);}
   rowSink.varint(at);rowSink.varint(path);rowSink.varint(fact);
  }
- const out=createFactSinkV1(maximumBytes);
- out.bytes(MAGIC);
- for(const count of[strings,kindStrings.length,ownersOut.length,spanCount,rowsOut,compact.length])out.varint(count);
- out.bytes(stringSink.result());
- for(const string of kindStrings)out.varint(string);
- for(const id of ownersOut)out.varint(id<D.ownerString.length?remap[D.ownerString[id]]:textId(owners[id]));
- out.bytes(factSink.result());out.bytes(rowSink.result());
- for(const cls of compact){writeFactListV1(out,cls.r);writeFactListV1(out,cls.o);}
+ const ownerStrings=Uint32Array.from(ownersOut,id=>id<D.ownerString.length?remap[D.ownerString[id]]:textId(owners[id]));
+ freshText=undefined;fresh.length=0;windowRows.length=0;refs=undefined;refLog=undefined;
+ byBytes.clear();newFact.clear();
+ runtimeCollectGarbageV1(true);
+ const write=async sink=>{
+  signal?.throwIfAborted();
+  sink.bytes(MAGIC);
+  for(const count of[strings,kindStrings.length,ownerStrings.length,spanCount,rowsOut,compact.length])sink.varint(count);
+  sink.bytes(stringSink.result());
+  for(const string of kindStrings)sink.varint(string);
+  for(const string of ownerStrings)sink.varint(string);
+  sink.bytes(factSink.result());sink.bytes(rowSink.result());
+  for(const cls of compact){signal?.throwIfAborted();await pause();writeFactListV1(sink,cls.r);writeFactListV1(sink,cls.o);}
+ };
+ let bytes=0;
+ await write({bytes:part=>{bytes+=part.length;},varint:value=>{bytes+=factVarintBytesV1(value);}});
+ if(bytes>maximumBytes)throw fail("Stored document exceeds its finite limit ("+bytes+" bytes expanded, limit "+maximumBytes+")");
+ const out=createFactSinkV1(maximumBytes,bytes);
+ await write(out);
  return out.result();
 }

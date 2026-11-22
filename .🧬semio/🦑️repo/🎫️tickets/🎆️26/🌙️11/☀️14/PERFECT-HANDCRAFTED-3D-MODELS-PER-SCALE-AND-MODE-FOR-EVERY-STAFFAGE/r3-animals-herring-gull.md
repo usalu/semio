@@ -247,3 +247,9 @@ Scripts: the asset's chain, extended in place (`r3-herring-gull-body.ts`: head, 
 - Spread wings stay grade C+: three rigid strips per wing on the folded-rest rig cannot open a feather fan; chord about 60 % of the real one with gaps at elbow and wrist. A widened tucked web (+22 mm) changed nothing visible and poked through the folded wing, so it was reverted. Fix needs feather bones in the rig (request in `tool-requests.md`).
 - A small dark sliver of the primaries shows between coverts and secondaries on the folded wing; hiding it moved the structure shafts out of the silhouette.
 - Back view busy around the vent (strip ends seen end-on); skull in the structure list without orbits.
+
+## Flight feathers and tucked limbs reviewed November 21
+
+Each wing has ten primary feathers inserted along the 135 mm hand and twelve secondary feathers inserted along the 140 mm ulna. Each feather has its own joint, tapered vane, structural shaft and heat-exchange surface at every scale. The outer two primaries carry the pale subterminal mirrors at 1:50. The hand and forearm retain the original folded sagittal centre of mass after the feather masses are distributed. Wrist, arm and leading-edge skin follow the wing at all scales. Splitting the two neck segments and the shank and tarsus at 1:500 lets the gull extend its head and tuck its legs in flight.
+
+Measured primary spreads are 0° standing, 50° gliding, 43° landing and 24.5° at touchdown. The left and right P9 tips are 1.394 m apart in steady glide. Body, surface-temperature and structural images were checked in the gliding pose at four scales. All thirteen volume rules passed at each scale. The independent twelve-scene GLB readback passed at 5,855,020 bytes. The maintained skeleton suite passed all thirteen tests. [Primary feather measurements](digital-gull-fan.json) and [secondary feather measurements](digital-gull-wing.json).

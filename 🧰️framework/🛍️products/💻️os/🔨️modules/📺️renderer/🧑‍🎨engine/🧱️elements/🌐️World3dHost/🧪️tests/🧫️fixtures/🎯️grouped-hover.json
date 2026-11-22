@@ -2,6 +2,7 @@
   "cases": [
     {
       "name": "coincident procedural input wins",
+      "expectedPaint": ["axis@!ivector#in-0", "axis@vector#0"],
       "defaultGranularity": "handle",
       "instance": {
         "id": "axis@!ivector#in-0",
@@ -31,6 +32,7 @@
     },
     {
       "name": "coincident procedural output wins",
+      "expectedPaint": ["axis@!ivector#in-0", "axis@vector#0"],
       "defaultGranularity": "handle",
       "instance": {
         "id": "axis@vector#0",
@@ -60,6 +62,7 @@
     },
     {
       "name": "independent instance reuses the mesh",
+      "expectedPaint": ["reference#0"],
       "defaultGranularity": "handle",
       "instance": {
         "id": "reference#0",

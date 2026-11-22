@@ -215,7 +215,7 @@ fn native_terrain_brush_journals_one_typed_edit_only_for_a_complete_stroke() {
         }).to_string();
         state.terrain.set_terrain_interaction(Some(&brush(law["value"].as_i64().unwrap())));
         let terrain = |height| serde_json::json!({
-            "elevationGrid": { "bounds": law["bounds"], "rows": vec![vec![height; 33]; 33] }
+            "elevationGrid": { "bounds": law["bounds"], "rowsMillimetres": vec![vec![i32::from(height) * 1000; 33]; 33] }
         }).to_string();
         state.terrain.set_terrain_json(Some(&terrain(0)));
         semio_os_infinite_world_scene::apply_terrain_style_if_changed_state(&mut state.session, &mut state.scene, &mut state.terrain);
@@ -269,6 +269,100 @@ fn native_terrain_brush_journals_one_typed_edit_only_for_a_complete_stroke() {
         assert_eq!(args["column"], case["start"][0]);
         assert_eq!(args["row"], case["start"][1]);
         assert_eq!(args["stroke"], case["stroke"]);
+    }
+}
+
+#[test]
+fn native_terrain_position_drag_reuses_the_editor_action() {
+    use semio_framework_test_fixtures::repo_text;
+    use ui_scene::math::{projection_spec_project_point, projection_spec_view_proj, Vec3};
+    let _gate = semio_os_infinite_world_host::world_test_gate();
+    let fixture: serde_json::Value = serde_json::from_str(repo_text!("🧰️framework/🔨️modules/🗺️surface/🏔️terrain/🗺️overlay/🧪️tests/🧫️fixtures/🖱️move-position.json")).unwrap();
+    let grid: serde_json::Value = serde_json::from_str(repo_text!("🧰️framework/🔨️modules/🗺️surface/🏔️terrain/🧪️tests/🧫️fixtures/📦️elevation-grid/🔣️.json")).unwrap();
+    let [west, south, east, north]: [f64; 4] = serde_json::from_value(grid["bounds"].clone()).unwrap();
+    let [lon0, lat0]: [f64; 2] = serde_json::from_value(grid["origin"].clone()).unwrap();
+    let size = grid["samples"]["size"].as_u64().unwrap() as usize;
+    let modifiers = PointerModifiers::default();
+    for case in fixture["cases"].as_array().unwrap() {
+        let mut state = journey_state();
+        state.session.bounds = Rect::new(0.0, 0.0, 1000.0, 1000.0);
+        state.session.pick_bounds = state.session.bounds;
+        let interaction = serde_json::json!({"terrainMovePosition": fixture["descriptor"], "activeUtility": "terrainMovePosition"});
+        state.terrain.set_terrain_interaction(Some(&interaction.to_string()));
+        let samples = &grid["samples"];
+        let number = |name: &str| samples[name].as_i64().unwrap();
+        let mut rows: Vec<Vec<i64>> = (0..size).map(|row| (0..size).map(|column|
+            1000 * (number("southwest") + number("northwardStep") * row as i64 + number("eastwardStep") * column as i64)
+        ).collect()).collect();
+        let raised = &grid["pick"]["raisedSample"];
+        rows[raised["row"].as_u64().unwrap() as usize][raised["column"].as_u64().unwrap() as usize] += 1000 * raised["meters"].as_i64().unwrap();
+        let mut elevation_grid = serde_json::json!({"bounds": grid["bounds"], "rowsMillimetres": rows});
+        if let Ok([column, row]) = serde_json::from_value::<[usize; 2]>(case["missingSample"].clone()) {
+            elevation_grid["rowsMillimetres"][row][column] = 0.into();
+            let ordinal = row * size + column;
+            let mut bytes = vec![0u8; (size * size).div_ceil(8)];
+            bytes[ordinal / 8] = 1 << (ordinal % 8);
+            elevation_grid["missingSamples"] = bytes.iter().map(|byte| format!("{byte:02x}")).collect::<String>().into();
+        }
+        let descriptor = serde_json::json!({
+            "projectOriginLon": lon0, "projectOriginLat": lat0, "exaggeration": grid["exaggeration"],
+            "elevationGrid": elevation_grid,
+            "overlays": {"positions": [
+                {"id": "rear", "name": "Rear", "coordinates": fixture["marker"]["coordinates"]},
+                {"id": fixture["marker"]["id"], "name": fixture["marker"]["label"], "coordinates": fixture["marker"]["coordinates"], "elevation": fixture["marker"]["elevation"]}
+            ], "routes": [], "regions": []}
+        });
+        state.terrain.set_terrain_json(Some(&descriptor.to_string()));
+        semio_os_infinite_world_scene::apply_terrain_style_if_changed_state(&mut state.session, &mut state.scene, &mut state.terrain);
+        state.terrain.terrain_built_tiles.insert((0, 0, 0));
+        state.terrain.terrain_visible_tiles.insert((0, 0, 0));
+        let marker = state.terrain.tile_overlays((0, 0, 0)).unwrap().positions[1].point;
+        let mut camera = state.camera.orbit.to_camera();
+        camera.position = Vec3::new(0.0, 0.0, 1000.0);
+        camera.target = Vec3::ZERO;
+        camera.up = Vec3::new(0.0, 1.0, 0.0);
+        camera.zoom = 0.35;
+        camera.projection = CameraProjection3d::Orthographic;
+        state.camera.orbit = ui_scene::math::OrbitController::from_camera(&camera);
+        state.camera.projection_spec = semio_ui_viewport::Viewport3dProjectionSpec {
+            mode: semio_ui_viewport::Viewport3dProjectionMode::Orthographic {},
+            orientation: semio_ui_viewport::Viewport3dProjectionOrientation::Cardinal { view: semio_ui_viewport::Viewport3dOrthographicView::Top },
+        };
+        let camera = state.camera.orbit.to_camera();
+        let spec = state.camera.projection_spec;
+        let view = projection_spec_view_proj(&camera, spec, 1000.0, 1000.0);
+        let project = |point| projection_spec_project_point(view, spec, point, 1000.0, 1000.0).unwrap();
+        let [down_x, down_y] = project(Vec3::new(marker[0], marker[1], marker[2] + 20.0));
+        let down = [down_x, down_y - 7.0];
+        let ray = &grid["pick"]["rays"][case["rayIndex"].as_u64().unwrap() as usize];
+        let [col, row, _]: [f64; 3] = serde_json::from_value(ray["originSample"].clone()).unwrap();
+        let lon = west + (east - west) * col / (size - 1) as f64;
+        let lat = south + (north - south) * row / (size - 1) as f64;
+        let up = if case["noTravel"] == true { down } else {
+            project(Vec3::new(((lon - lon0) * 111_320.0 * lat0.to_radians().cos()) as f32, ((lat - lat0) * 111_320.0) as f32, ray["height"].as_f64().unwrap_or(200.0) as f32))
+        };
+        enqueue(&mut state, WorldInteractionIntent::pointer_button(down[0], down[1], true, 0, &modifiers));
+        assert!(journal_actions(&mut state).is_empty());
+        if case["cancel"] == true {
+            enqueue(&mut state, WorldInteractionIntent::cancel(semio_os_infinite_world_model::WorldCancelReason::CaptureLost));
+        }
+        if case["stale"] == true {
+            state.terrain.set_terrain_json(Some(&format!("{} ", descriptor)));
+        }
+        enqueue(&mut state, WorldInteractionIntent::pointer_button(up[0], up[1], false, 0, &modifiers));
+        let actions = journal_actions(&mut state);
+        let expected = &case["action"];
+        if expected.is_null() {
+            assert!(actions.is_empty(), "{}", case["name"]);
+        } else {
+            let [action] = actions.as_slice() else { panic!("one terrain position action expected") };
+            assert_eq!(action.action, fixture["descriptor"]["action"].as_str().unwrap());
+            let args = serde_json::to_value(action.args.as_ref().unwrap()).unwrap();
+            assert_eq!(args["id"], expected["id"]);
+            for axis in ["longitude", "latitude"] {
+                assert!((args[axis].as_f64().unwrap() - expected[axis].as_f64().unwrap()).abs() < 1e-6, "{axis}");
+            }
+        }
     }
 }
 

@@ -79,6 +79,9 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 wasm-bindgen = { workspace = true }
 
+[features]
+testkit = []
+
 [dev-dependencies]
 rstar = "0.12"
 semio-framework-async-macros = { workspace = true }

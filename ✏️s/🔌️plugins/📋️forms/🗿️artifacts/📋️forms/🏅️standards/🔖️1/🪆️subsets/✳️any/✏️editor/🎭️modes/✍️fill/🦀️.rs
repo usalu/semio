@@ -1,6 +1,6 @@
 //! ✍️ Fill and submit a form in a dedicated window layout.
 use crate::editor::forms::support::FORMS_PLAY_WINDOW_TRY;
-use semio_plugin::create_default_layout;
+use semio_plugin::{create_default_layout, Axis};
 use semio_plugin::create_named_layout;
 use semio_ui_locale::LocalizedLabel;
 use semio_plugin::ModeDefinition;
@@ -14,5 +14,5 @@ pub fn definition() -> ModeDefinition {
 }
 
 pub fn layout() -> NamedLayout {
-    create_named_layout(LAYOUT, "Fill Form", create_default_layout(&[FORMS_PLAY_WINDOW_TRY.into()], "row", None, None), "builtin", Some("play".into()), None)
+    create_named_layout(LAYOUT, "Fill Form", create_default_layout(&[FORMS_PLAY_WINDOW_TRY.into()], Axis::Horizontal, None, None), "builtin", Some("play".into()), None)
 }

@@ -85,6 +85,27 @@ export function useOpenArtifactAppState({ shellStateRef, captureEffectOwner, cap
   const openReadySpaceArtifactCreation = useCallback((requestId: string): void => {
     const owner = spaceArtifactCreationOwnersRef.current.get(requestId);
     if (owner === undefined || owner.ready === null || owner.opening) return;
+    if (owner.workflow !== undefined) {
+      const workflow = owner.workflow;
+      const ready = owner.ready.ready;
+      if (ready === undefined) return;
+      const openingOwner: SpaceArtifactCreationOwnerV1 = { ...owner, opening: true };
+      spaceArtifactCreationOwnersRef.current.set(requestId, openingOwner);
+      setSpaceArtifactCreationUi((state) => reduceArtifactCreationProgressUiV1(state, { kind: "opening", requestId, spaceId: owner.spaceId }));
+      const settle = (opened: boolean): void => {
+        if (spaceArtifactCreationOwnersRef.current.get(requestId) !== openingOwner) return;
+        if (opened || !workflow.current()) {
+          spaceArtifactCreationOwnersRef.current.delete(requestId);
+          setSpaceArtifactCreationUi((state) => reduceArtifactCreationProgressUiV1(state, { kind: "cleared", requestId }));
+        } else {
+          spaceArtifactCreationOwnersRef.current.set(requestId, { ...openingOwner, opening: false });
+          setSpaceArtifactCreationUi((state) => reduceArtifactCreationProgressUiV1(state, { kind: "open-failed", requestId, spaceId: owner.spaceId }));
+        }
+      };
+      if (!workflow.current()) settle(false);
+      else void workflow.finish(ready).then(settle, () => settle(false));
+      return;
+    }
     const openingArgs = spaceArtifactCreationReadyOpening(owner.ready);
     const origin = openDocumentSessionsRef.current.get(owner.runtimeKey);
     if (openingArgs === null || origin === undefined) return;

@@ -97,6 +97,8 @@ pub const TRINITY_GRAPH_SCHEMA: &str = "trinity.graph";
 
 /// 🔎️ The Jack query a new document opens with — `JackSnapshot::query` is document content, undoable and shared like the graph.
 pub const TRINITY_JACK_DEFAULT_QUERY: &str = "MATCH (a:Piece)-[r:Connection]->(b:Piece) WHERE a.name = 'b' AND b.name != 'b' RETURN a.name, b.name, b.label";
+/// 🪪️ The manifest id of a new trinity document.
+pub const TRINITY_JACK_DEFAULT_MANIFEST_ID: &str = "nakagin";
 
 /// 📏️ Largest query text a jack document holds: one `set-query` stays inside the 4 KiB document-mutation admission
 /// (`TRINITY_JACK_ARTIFACT_MUTATION_MAXIMUM_BYTES`) and the store initializer's 4 KiB owned-field bound.

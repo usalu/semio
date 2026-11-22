@@ -4,18 +4,19 @@ import Ajv from "ajv";
 import { decodeBackboneWorkerRequest } from "@semio-tech/framework/backbone";
 import { EXPORT_MEDIA_FILE_ACTION_ID } from "@semio-tech/framework";
 import { encodePackValue } from "@semio-tech/framework/packs";
-import { encodeDocumentArchiveBytes } from "@semio-tech/framework/wire-contracts";
+import { DOCUMENT_ARCHIVE_MAXIMUM_BYTES, encodeDocumentArchiveBytes } from "@semio-tech/framework/wire-contracts";
+import { NATURAL_FILE_BROWSER_READ_CHUNK_BYTES_V1 } from "../../🧱️elements/🛠️ShellHelpers/🔩️plumbing/📥️downloads-and-file-requests/🟦️.ts";
 import { buildScopeState } from "../../🧱️elements/🏛️ShellHost/📤️document-transfer-tabs/🔶️scope/🟦️.tsx";
 import fixture from "./🔣️.json";
 
-const selection = vi.hoisted(() => ({ files: [] as File[], archiveFiles: [] as { name: string; contents: string }[], downloads: [] as string[], segmented: [] as number[][], aborted: false }));
-vi.mock("../../🧱️elements/🛠️ShellHelpers/🔩️plumbing/📥️downloads-and-file-requests/🟦️.ts", async importOriginal => ({ ...await importOriginal<object>(), downloadMediaExportBytes: (file: string) => { selection.downloads.push(file); }, shellSegmentedDownloadSinkFactory: async (file: string) => ({ write: async (bytes: Uint8Array) => { selection.segmented.push([...bytes]); }, close: async () => { selection.downloads.push(file); }, abort: async () => { selection.aborted = true; } }), requestFileSelectionV1: async () => selection.files, requestFileOpen: async () => selection.archiveFiles, readBlobBytesBoundedV1: async () => new Uint8Array([1, 2]) }));
+const selection = vi.hoisted(() => ({ files: [] as File[], downloads: [] as string[], segmented: [] as number[][], aborted: false }));
+vi.mock("../../🧱️elements/🛠️ShellHelpers/🔩️plumbing/📥️downloads-and-file-requests/🟦️.ts", async importOriginal => ({ ...await importOriginal<object>(), downloadMediaExportBytes: (file: string) => { selection.downloads.push(file); }, shellSegmentedDownloadSinkFactory: async (file: string) => ({ write: async (bytes: Uint8Array) => { selection.segmented.push([...bytes]); }, close: async () => { selection.downloads.push(file); }, abort: async () => { selection.aborted = true; } }), requestFileSelectionV1: async () => selection.files }));
 vi.mock("../../🧱️elements/🏛️ShellHost/📂️picked-file-opening/🟦️.ts", async importOriginal => ({ ...await importOriginal<object>(), routePickedFileV1: async () => ({ kind: "routed", artifactRef: "s.stdio.txt@utf-8/*" }) }));
 vi.mock("../../🧱️elements/🛠️ShellHelpers/🧾️transfer-checkin-tutorial/🟦️.ts", async importOriginal => ({ ...await importOriginal<object>(), naturalFileFormatV1: (app: { actions: unknown[] }) => app.actions.length ? ({ formatKind: "s.stdio.pdf@1.7", extension: ".pdf", mediaType: "application/pdf", binary: true }) : ({ formatKind: "txt", extension: ".txt", mediaType: "text/plain", binary: false }) }));
 vi.mock("../../🧱️elements/🛠️ShellHelpers/📌️panel/🟦️.ts", async importOriginal => ({ ...await importOriginal<object>(), studioPanelFocusingSpawned: (_latest: unknown, spawned: unknown) => spawned }));
 afterEach(() => vi.restoreAllMocks());
 const deferred = <T,>() => { let resolve!: (value: T) => void; const promise = new Promise<T>(done => { resolve = done; }); return { promise, resolve }; };
-const archive = { parent_pack: [1, 2], parent_spr: [3], members: [] };
+const archive = { parent_pack: new Uint8Array([1, 2]), parent_spr: new Uint8Array([3]), members: [] };
 const document = { documentId: "01900000-0000-7000-8000-000000000001", schema: "stdio.txt", name: "Chosen.txt", storage: "folder" as const, target: "/data/kept", admittedAtMs: 42, surface: { pluginId: "stdio-text", appId: "s.stdio.txt@utf-8/*#editor" } };
 function setup(segmented = false) {
   const calls: string[] = [];
@@ -57,7 +58,7 @@ function setup(segmented = false) {
     documentTransferFlightRef: { current: false }, documentTransfersRef: { current: new Map() }, documentTransferTasksRef: { current: [] }, taskManagerListenersRef: { current: new Set() },
     showTransientNoticeRef: { current: vi.fn((_text: string, _kind: string, code: string) => { calls.push(code); }) },
   };
-  selection.files = [new File(["hi"], document.name)]; selection.archiveFiles = []; selection.downloads = []; selection.segmented = []; selection.aborted = false;
+  selection.files = [new File(["hi"], document.name)]; selection.downloads = []; selection.segmented = []; selection.aborted = false;
   return { core, handle, calls, worker, target, state: buildScopeState({ core } as unknown as Parameters<typeof buildScopeState>[0]) };
 }
 it("validates neutral lifecycle cases using Ajv", () => { expect(new Ajv().validate(fixture.schema, fixture.cases)).toBe(true); });
@@ -107,7 +108,7 @@ for (const failure of ["load", "identity", "stale", "cancel"] as const) it("reti
 it("reports the archive failure while the imported instance is still retiring", async () => {
   const view = setup();
   const cleanup = deferred<void>();
-  selection.archiveFiles = [{ name: "fixture.semio-archive", contents: `data:application/octet-stream;base64,${Buffer.from(encodeDocumentArchiveBytes(archive)).toString("base64")}` }];
+  selection.files = [new File([encodeDocumentArchiveBytes(archive).slice().buffer], "fixture.semio-archive")];
   view.handle.loadAppDocumentArchive.mockRejectedValueOnce(new Error("archive initialization failed"));
   view.handle.destroyApp.mockImplementation(async () => {
     view.calls.push("destroy");
@@ -118,12 +119,52 @@ it("reports the archive failure while the imported instance is still retiring", 
   try {
     await vi.waitFor(() => expect(view.handle.destroyApp).toHaveBeenCalledWith(7));
     expect(view.calls).toEqual(fixture.archiveFailureBeforeRetirement);
+    expect(view.handle.loadAppDocumentArchive.mock.calls[0]?.[1]).toEqual(archive);
     expect(view.core.documentTransferFlightRef.current).toBe(true);
   } finally {
     cleanup.resolve();
     await importing;
   }
   expect(view.core.documentTransferFlightRef.current).toBe(false);
+});
+
+it("cancels an archive between file slices before creating a program", async () => {
+  const view = setup(), chunkBytes = NATURAL_FILE_BROWSER_READ_CHUNK_BYTES_V1;
+  const file = new File([new Uint8Array(chunkBytes + 1)], "cancelled.semio-archive");
+  const slice = vi.spyOn(file, "slice");
+  selection.files = [file];
+  const progress: number[] = [];
+  const transfers = view.core.documentTransfersRef.current as Map<string, { transfer: { progress: { completed: number } | null }; abort: AbortController }>;
+  (view.core.taskManagerListenersRef.current as Set<() => void>).add(() => {
+    for (const { transfer, abort } of transfers.values()) {
+      const completed = transfer.progress?.completed;
+      if (completed !== undefined && !abort.signal.aborted) {
+        progress.push(completed);
+        if (completed === chunkBytes) abort.abort();
+      }
+    }
+  });
+  vi.spyOn(console, "warn").mockImplementation(() => undefined);
+  await view.state.importDocumentArchive();
+  expect(progress).toEqual([0, chunkBytes]);
+  expect(slice).toHaveBeenCalledExactlyOnceWith(0, chunkBytes);
+  expect(view.handle.createApp).not.toHaveBeenCalled();
+  expect(view.calls).toContain("shell.documentTransfer.import-cancelled");
+  expect(transfers.size).toBe(0);
+});
+
+it("refuses archives above the wire limit before slicing or creating a program", async () => {
+  const view = setup();
+  const file = new File([], "oversized.semio-archive");
+  vi.spyOn(file, "size", "get").mockReturnValue(DOCUMENT_ARCHIVE_MAXIMUM_BYTES + 1);
+  const slice = vi.spyOn(file, "slice");
+  selection.files = [file];
+  vi.spyOn(console, "warn").mockImplementation(() => undefined);
+  await view.state.importDocumentArchive();
+  expect(slice).not.toHaveBeenCalled();
+  expect(view.handle.createApp).not.toHaveBeenCalled();
+  expect(view.calls).toContain("shell.documentTransfer.import-unreadable");
+  expect(view.core.documentTransfersRef.current.size).toBe(0);
 });
 
 it("awaits genuine native import acknowledgment before any persistence or opened notice", async () => {
@@ -338,4 +379,31 @@ for (const outcome of fixture.segmentedSave) it("Save delivers staged native out
   expect(selection.downloads).toHaveLength(outcome.delivered ? 1 : 0);
   expect(selection.aborted).toBe(!outcome.delivered);
   expect(view.calls.includes("shell.documentTransfer.file-saved")).toBe(outcome.delivered);
+});
+it("opens a dropped OS file through the same path as Open without asking the picker", async () => {
+  const view = setup();
+  selection.files = [];
+  await view.state.openNaturalFile(new File(["hi"], "Dropped.txt"));
+  expect(view.calls.filter(call => ["create", "import", "write", "attach", "catalog", "focus"].includes(call))).toEqual(["create", "import", "write", "attach", "catalog", "focus"]);
+  expect((view.core.writeLocalDocumentRef.current.mock.calls[0]![0] as unknown as { document: typeof document }).document.name).toBe("Dropped.txt");
+  expect(view.calls).toContain("shell.documentTransfer.file-opened");
+  expect(view.core.documentTransferFlightRef.current).toBe(false);
+});
+it("Save keeps the file name the document was opened from", async () => {
+  const view = setupSave();
+  view.core.localCatalogRef.current.documents = [{ ...document, name: "Budget 2026.TXT" }];
+  const saving = view.state.saveNaturalFile();
+  await vi.waitFor(() => expect(view.observer()).toBeDefined());
+  view.observer().archive(encodeDocumentArchiveBytes(archive));
+  await saving;
+  expect(selection.downloads).toEqual(["Budget 2026.TXT"]);
+});
+it("Save names a document that never came from a file by kind and time", async () => {
+  const view = setupSave();
+  const saving = view.state.saveNaturalFile();
+  await vi.waitFor(() => expect(view.observer()).toBeDefined());
+  view.observer().archive(encodeDocumentArchiveBytes(archive));
+  await saving;
+  expect(selection.downloads).toHaveLength(1);
+  expect(selection.downloads[0]).toMatch(/^txt-\d{8}T\d{6}Z\.txt$/u);
 });

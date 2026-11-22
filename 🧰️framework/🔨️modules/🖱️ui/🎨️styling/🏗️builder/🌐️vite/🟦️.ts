@@ -76,7 +76,7 @@ export function createWorkspaceViteResolveConfig(repoRoot: string, extraAliases:
 }
 
 /** 📁️ Connect middleware: serve one `static-dir` spec's files at `{route}/…`. */
-function createStaticDirMiddleware(repoRoot: string, spec: StaticDirectoryAssetSpecV1): OwnedBuildMiddleware {
+function createStaticDirMiddleware(repoRoot: string, spec: StaticDirectoryAssetSpecV1, openFile?: (path: string) => number | undefined): OwnedBuildMiddleware {
   const fixtureRoot = resolve(repoRoot, spec.root);
   const route = spec.route.endsWith("/") ? spec.route : `${spec.route}/`;
   return (req, res, next) => {
@@ -100,20 +100,20 @@ function createStaticDirMiddleware(repoRoot: string, spec: StaticDirectoryAssetS
       next();
       return;
     }
-    if (!existsSync(filePath) || !statSync(filePath).isFile()) {
+    if (!openFile && (!existsSync(filePath) || !statSync(filePath).isFile())) {
       res.statusCode = 404;
       res.end();
       return;
     }
-    serveFileWithValidatorsV1(req, res, filePath, contentTypeForStaticDirAsset(filePath));
+    serveFileWithValidatorsV1(req, res, filePath, contentTypeForStaticDirAsset(filePath), openFile);
   };
 }
 
 /** 🖼️ Generic dev/build Vite plugin pair for one `static-dir` asset spec: serves and copies
  * `spec.root` at `spec.route` — replaces the previous `cadFixtureVitePlugin`/`infiniteFixtureVitePlugin`
  * pair (byte-identical serving logic, now route/root-driven instead of hardcoded per fixture tree). */
-export function staticDirVitePlugin(repoRoot: string, spec: StaticDirectoryAssetSpecV1): OwnedBuildPlugin[] {
-  const serveFixture = createStaticDirMiddleware(repoRoot, spec);
+export function staticDirVitePlugin(repoRoot: string, spec: StaticDirectoryAssetSpecV1, openFile?: (path: string) => number | undefined): OwnedBuildPlugin[] {
+  const serveFixture = createStaticDirMiddleware(repoRoot, spec, openFile);
   const fixtureRoot = resolve(repoRoot, spec.root);
   const destName = spec.route.replace(/^\//, "");
   let outDir = resolve(process.cwd(), "dist");

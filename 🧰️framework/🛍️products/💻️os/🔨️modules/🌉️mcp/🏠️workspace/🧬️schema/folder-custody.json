@@ -4,7 +4,8 @@
   "required": [
     "version",
     "commits",
-    "owners"
+    "owners",
+    "schemaReads"
   ],
   "properties": {
     "version": {
@@ -59,6 +60,22 @@
               "type": "string"
             }
           }
+        }
+      }
+    },
+    "schemaReads": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "live", "storedAlias", "ownerSchema", "schema", "error"],
+        "properties": {
+          "id": {"type": "string"},
+          "live": {"type": ["string", "null"]},
+          "storedAlias": {"type": ["string", "null"]},
+          "ownerSchema": {"type": ["string", "null"]},
+          "schema": {"type": ["string", "null"]},
+          "error": {"enum": [null, "PLUGIN_UNAVAILABLE"]}
         }
       }
     },

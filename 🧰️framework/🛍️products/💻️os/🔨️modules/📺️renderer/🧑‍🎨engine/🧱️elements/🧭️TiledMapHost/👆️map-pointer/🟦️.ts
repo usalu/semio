@@ -8,7 +8,9 @@ import type { MapCore2 } from "../🎞️map-render-effects/🟦️.ts";
 
 const TOUCH_PAN_THRESHOLD_PX = 6;
 
-type TouchContact = { start: SelectionMarqueePoint; position: SelectionMarqueePoint; panning: boolean };
+type PanContact = { position: SelectionMarqueePoint };
+type MiddlePan = PanContact & { pointerId: number };
+type TouchContact = PanContact & { start: SelectionMarqueePoint; panning: boolean };
 
 // #region TiledMapHost
 /** 👆️ Wires the canvas pointer gestures, marquee selection, hover and context menu. */
@@ -16,7 +18,7 @@ export function useMapPointer(core: MapCore2) {
   const { canvasRef, clientToLocal, dispatch, mapTiledContextMenu, mirrorSessionCameraToReact, node, overlayIndex, panningRef, queryFeatureHits, queryHitFeature, renderAttempt, rendererRef, rendererUnavailable, requestContextMenu, scene, selectionMethod, setContextMenu, setMarqueeOverlay, shellContextMenuFallback, shellScope, userAdjustedCameraRef } = core;
   const pointer = useRef({
     leftDown: false,
-    middleDown: false,
+    middlePan: null as MiddlePan | null,
     marqueeTracking: false,
     marqueeActive: false,
     start: { x: 0, y: 0 } as SelectionMarqueePoint,
@@ -56,7 +58,7 @@ export function useMapPointer(core: MapCore2) {
       for (const contact of gestureRecognizer.pointers) gestureRecognizer.up(contact.pointerId);
       touchContact.current = null;
       pointer.current.leftDown = false;
-      pointer.current.middleDown = false;
+      pointer.current.middlePan = null;
       pointer.current.marqueeTracking = false;
       pointer.current.marqueeActive = false;
       return undefined;
@@ -67,18 +69,11 @@ export function useMapPointer(core: MapCore2) {
       panningRef.current = true;
       userAdjustedCameraRef.current = true;
       rendererRef.current?.session.pointerDownScreen(start.x, start.y, 1);
-      rendererRef.current?.beginContinuousInteraction("pan");
     };
-    const endTouchPan = (contact: TouchContact): void => {
+    const endPan = (contact: PanContact): void => {
       rendererRef.current?.session.pointerUpScreen(contact.position.x, contact.position.y);
-      rendererRef.current?.endContinuousInteraction("pan");
     };
-    const moveTouch = (contact: TouchContact, point: SelectionMarqueePoint): void => {
-      if (!contact.panning) {
-        if (Math.hypot(point.x - contact.start.x, point.y - contact.start.y) < TOUCH_PAN_THRESHOLD_PX) return;
-        contact.panning = true;
-        beginPan(contact.start);
-      }
+    const movePan = (contact: PanContact, point: SelectionMarqueePoint): void => {
       if (point.x === contact.position.x && point.y === contact.position.y) return;
       contact.position = point;
       const renderer = rendererRef.current;
@@ -86,7 +81,28 @@ export function useMapPointer(core: MapCore2) {
       renderer.session.pointerMoveScreen(point.x, point.y);
       const camera = renderer.readCameraFromSession();
       if (camera) renderer.camera = camera;
+      renderer.invalidate();
       renderer.scheduleRefreshTiles();
+    };
+    const moveTouch = (contact: TouchContact, point: SelectionMarqueePoint): void => {
+      if (!contact.panning) {
+        if (Math.hypot(point.x - contact.start.x, point.y - contact.start.y) < TOUCH_PAN_THRESHOLD_PX) return;
+        contact.panning = true;
+        beginPan(contact.start);
+      }
+      movePan(contact, point);
+    };
+    const publishFinishedCamera = (): void => {
+      panningRef.current = false;
+      mirrorSessionCameraToReact();
+      rendererRef.current?.scheduleRefreshTiles();
+    };
+    const finishMiddlePan = (event: PointerEvent, pan: MiddlePan): void => {
+      pointer.current.middlePan = null;
+      if (event.type === "pointerup") movePan(pan, clientToLocal(event.clientX, event.clientY));
+      endPan(pan);
+      if (canvas.hasPointerCapture?.(event.pointerId)) canvas.releasePointerCapture(event.pointerId);
+      publishFinishedCamera();
     };
     const finishTouch = (event: PointerEvent): void => {
       if (!gestureRecognizer.pointers.some(({ pointerId }) => pointerId === event.pointerId)) return;
@@ -94,10 +110,7 @@ export function useMapPointer(core: MapCore2) {
       const verdict = gestureRecognizer.up(event.pointerId);
       if (canvas.hasPointerCapture?.(event.pointerId)) canvas.releasePointerCapture(event.pointerId);
       if (verdict.kind === "pinchEnd") {
-        panningRef.current = false;
-        rendererRef.current?.endContinuousInteraction("pinch");
-        mirrorSessionCameraToReact();
-        rendererRef.current?.scheduleRefreshTiles();
+        publishFinishedCamera();
         return;
       }
       const contact = touchContact.current;
@@ -106,10 +119,8 @@ export function useMapPointer(core: MapCore2) {
       const point = event.type === "pointerup" ? clientToLocal(event.clientX, event.clientY) : null;
       if (point) moveTouch(contact, point);
       if (contact.panning) {
-        endTouchPan(contact);
-        panningRef.current = false;
-        mirrorSessionCameraToReact();
-        rendererRef.current?.scheduleRefreshTiles();
+        endPan(contact);
+        publishFinishedCamera();
       } else if (point) {
         const hit = queryHitFeature(point);
         emitFeatureSelection(hit ? [hit.id] : [], marqueeModeFromModifiers(event, shellScope?.selection.get()), "pick");
@@ -119,7 +130,7 @@ export function useMapPointer(core: MapCore2) {
       event.stopPropagation();
       const point = clientToLocal(event.clientX, event.clientY);
       if (event.pointerType === "touch") {
-        if (pointer.current.leftDown || pointer.current.middleDown) return;
+        if (pointer.current.leftDown || pointer.current.middlePan) return;
         event.preventDefault();
         const verdict = gestureRecognizer.down({ pointerId: event.pointerId, ...point });
         canvas.setPointerCapture?.(event.pointerId);
@@ -127,11 +138,10 @@ export function useMapPointer(core: MapCore2) {
           touchContact.current = { start: point, position: point, panning: false };
         } else if (verdict.kind === "pinchBegin") {
           const contact = touchContact.current;
-          if (contact?.panning) endTouchPan(contact);
+          if (contact?.panning) endPan(contact);
           touchContact.current = null;
           panningRef.current = true;
           userAdjustedCameraRef.current = true;
-          rendererRef.current?.beginContinuousInteraction("pinch");
         }
         return;
       }
@@ -147,7 +157,7 @@ export function useMapPointer(core: MapCore2) {
       }
       if (event.button === 1) {
         event.preventDefault();
-        pointer.current.middleDown = true;
+        pointer.current.middlePan = { pointerId: event.pointerId, position: point };
         canvas.setPointerCapture?.(event.pointerId);
         beginPan(point);
       }
@@ -171,11 +181,11 @@ export function useMapPointer(core: MapCore2) {
         return;
       }
       if (gestureRecognizer.pointers.length > 0) return;
-      if (pointer.current.middleDown) {
+      const pan = pointer.current.middlePan;
+      if (pan) {
+        if (pan.pointerId !== event.pointerId) return;
         event.stopPropagation();
-        rendererRef.current?.session.pointerMoveScreen(point.x, point.y);
-        mirrorSessionCameraToReact();
-        rendererRef.current?.scheduleRefreshTiles();
+        movePan(pan, point);
         return;
       }
       if (!pointer.current.marqueeTracking) {
@@ -209,18 +219,13 @@ export function useMapPointer(core: MapCore2) {
       if (event.pointerType === "touch") return finishTouch(event);
       if (gestureRecognizer.pointers.length > 0) return;
       event.stopPropagation();
-      const point = clientToLocal(event.clientX, event.clientY);
-      if (event.button === 1 && pointer.current.middleDown) {
-        pointer.current.middleDown = false;
-        panningRef.current = false;
-        rendererRef.current?.session.pointerUpScreen(point.x, point.y);
-        rendererRef.current?.endContinuousInteraction("pan");
-        if (canvas.hasPointerCapture?.(event.pointerId)) canvas.releasePointerCapture(event.pointerId);
-        mirrorSessionCameraToReact();
-        rendererRef.current?.scheduleRefreshTiles();
+      const pan = pointer.current.middlePan;
+      if (event.button === 1 && pan?.pointerId === event.pointerId) {
+        finishMiddlePan(event, pan);
         return;
       }
       if (event.button !== 0 || !pointer.current.leftDown) return;
+      const point = clientToLocal(event.clientX, event.clientY);
       pointer.current.leftDown = false;
       if (canvas.hasPointerCapture?.(event.pointerId)) canvas.releasePointerCapture(event.pointerId);
       const distance = Math.hypot(point.x - pointer.current.start.x, point.y - pointer.current.start.y);
@@ -244,15 +249,13 @@ export function useMapPointer(core: MapCore2) {
     const onPointerCancel = (event: PointerEvent): void => {
       if (event.pointerType === "touch") return finishTouch(event);
       if (gestureRecognizer.pointers.length > 0) return;
-      const point = clientToLocal(event.clientX, event.clientY);
-      rendererRef.current?.session.pointerUpScreen(point.x, point.y);
+      const pan = pointer.current.middlePan;
+      if (pan && pan.pointerId !== event.pointerId) return;
+      if (!pan && !pointer.current.leftDown) return;
       pointer.current.leftDown = false;
-      pointer.current.middleDown = false;
-      panningRef.current = false;
-      rendererRef.current?.endContinuousInteraction("pan");
       resetMarquee();
-      if (canvas.hasPointerCapture?.(event.pointerId)) canvas.releasePointerCapture(event.pointerId);
-      mirrorSessionCameraToReact();
+      if (pan) finishMiddlePan(event, pan);
+      else if (canvas.hasPointerCapture?.(event.pointerId)) canvas.releasePointerCapture(event.pointerId);
     };
     const onContextMenu = (event: globalThis.MouseEvent): void => {
       event.preventDefault();
@@ -281,14 +284,14 @@ export function useMapPointer(core: MapCore2) {
     window.addEventListener("pointermove", onPointerMove);
     window.addEventListener("pointerup", onPointerUp);
     window.addEventListener("pointercancel", onPointerCancel);
-    canvas.addEventListener("lostpointercapture", finishTouch);
+    canvas.addEventListener("lostpointercapture", onPointerCancel);
     canvas.addEventListener("contextmenu", onContextMenu);
     return () => {
       canvas.removeEventListener("pointerdown", onPointerDown);
       window.removeEventListener("pointermove", onPointerMove);
       window.removeEventListener("pointerup", onPointerUp);
       window.removeEventListener("pointercancel", onPointerCancel);
-      canvas.removeEventListener("lostpointercapture", finishTouch);
+      canvas.removeEventListener("lostpointercapture", onPointerCancel);
       canvas.removeEventListener("contextmenu", onContextMenu);
     };
   }, [clientToLocal, dispatch, emitFeatureSelection, gestureRecognizer, mapTiledContextMenu, mirrorSessionCameraToReact, overlayIndex, queryFeatureHits, queryHitFeature, renderAttempt, rendererUnavailable, requestContextMenu, resetMarquee, scene, selectionMethod, shellContextMenuFallback]);

@@ -25,6 +25,10 @@ path = "../../🦀️.rs"
 testkit = []
 
 [dependencies]
+semio-framework-hash = { workspace = true }
+semio-os-channel-archive = { path = "../../📦️archive/📦️packages/🦀️rust" }
+semio-os-channel-archive-ingress = { path = "../../📦️archive/🛬️ingress/📦️packages/🦀️rust" }
+semio-framework-value-persistent = { path = "../../../../../../../🔨️modules/🌱️value/📋️list/🔗️persistent/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-value-native-owned = { path = "../../../../../../../🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 protocol = { path = "../../../../../../../🔨️modules/📡️replication/📦️packages/🦀️rust", package = "semio-framework-replication" }
@@ -53,3 +57,7 @@ path = "../../🏛️ownership/🧪️tests/🪦️original/🦀️.rs"
 [[test]]
 name = "original-command-cursor"
 path = "../../🧩️command-decode/🎟️original/🧪️tests/🦀️.rs"
+
+[[test]]
+name = "large-document-archive"
+path = "../../🧪️tests/🔬️large-archive/🦀️.rs"

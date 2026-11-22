@@ -1,0 +1,11 @@
+{
+  "rasterRgba": [0, 0, 0, 255],
+  "rasterEncoding": "AAAA/w==",
+  "cases": [
+    { "mode": "combined", "raster": true, "vector": true, "commands": ["f", "i", "f"] },
+    { "mode": "combined", "raster": false, "vector": true, "commands": ["f", "f"] },
+    { "mode": "combined", "raster": true, "vector": false, "commands": ["i"] },
+    { "mode": "vector", "raster": true, "vector": true, "commands": ["f", "f"] },
+    { "mode": "image", "raster": true, "vector": true, "commands": ["i"] }
+  ]
+}

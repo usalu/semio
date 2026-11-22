@@ -74,13 +74,35 @@
         "maximum": 4294967295
       },
       "props": {
-        "$ref": "semio://framework/media-transport/v1"
+        "anyOf": [
+          { "$ref": "semio://framework/media-transport/v1" },
+          { "$ref": "#/$defs/shellTutorialVideoProps" }
+        ]
       },
       "occluded": {
         "type": "boolean"
       }
     },
     "allOf": [
+      {
+        "if": {
+          "properties": { "props": { "type": "object", "required": ["kind"], "properties": { "kind": { "const": "tutorialVideo" } } } },
+          "required": ["props"]
+        },
+        "then": {
+          "properties": {
+            "token": { "const": "shell.tutorial.video" },
+            "windowId": { "const": "shell" },
+            "nodeId": { "const": "0" },
+            "nodeKey": { "const": "ui.tutorial.video" },
+            "pluginId": { "const": "shell" },
+            "controllerId": { "const": "shell.tutorial" },
+            "appInstanceId": { "const": 0 },
+            "parentDocumentId": { "const": "shell" },
+            "props": { "$ref": "#/$defs/shellTutorialVideoProps" }
+          }
+        }
+      },
       {
         "if": {
           "properties": {
@@ -123,6 +145,19 @@
     ]
   },
   "$defs": {
+    "shellTutorialVideoProps": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "src", "muted", "playing", "rate", "localTimeMs"],
+      "properties": {
+        "kind": { "const": "tutorialVideo" },
+        "src": { "type": "string", "minLength": 1, "maxLength": 32768 },
+        "muted": { "type": "boolean" },
+        "playing": { "type": "boolean" },
+        "rate": { "type": "number", "exclusiveMinimum": 0 },
+        "localTimeMs": { "type": "number" }
+      }
+    },
     "rect": {
       "type": "object",
       "additionalProperties": false,

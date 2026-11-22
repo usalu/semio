@@ -1,0 +1,9 @@
+{
+  "rects": [[0, 10], [12, 10], [24, 10]],
+  "cases": [
+    { "active": 0, "over": 2, "expected": [24, -12, -12] },
+    { "active": 2, "over": 0, "expected": [12, 12, -24] },
+    { "active": 1, "over": 1, "expected": [0, 0, 0] },
+    { "active": 0, "over": 1, "expected": [12, -12, 0] }
+  ]
+}

@@ -8,9 +8,7 @@
 
 // #region 🔌️Adapters
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { defer, firstValueFrom, from, mergeMap, NEVER, of, retry, throwError, timeout } from "rxjs";
-import ts from "typescript";
-import { GestureRecognizer } from "@semio-tech/framework";
+import { auditTime, defer, firstValueFrom, from, mergeMap, NEVER, of, retry, Subject, throwError, timeout } from "rxjs";
 import { mapFeatureHoverActionArgs, mapFeatureSelectionActionArgs, parseMapOverlayIndex, resolveMapInteractionSync, TILE_REFRESH_DEBOUNCE_MS } from "../../📐️map-parsing/🟦️.ts";
 import { createByteLru, createBoundedSet, createLeadingTrailingDebounce } from "../../🗃️tile-cache/🟦️.ts";
 import { MapRenderer } from "../../🖼️map-renderer/🟦️.ts";
@@ -18,11 +16,6 @@ import type { MapWasmSession } from "../../../🪪️WasmSessionLoader/🟦️.t
 import repaintFixture from "../🧫️fixtures/🔁️repaint/🔣️.json";
 import tileRefreshFixture from "../🧫️fixtures/📡️tile-refresh/🔣️.json";
 import lifecycleFixture from "@semio-tech/framework-os/modules/renderer/engine/testing/fixtures/tiled-map-gesture-lifecycle.json";
-import { dirname, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
-import { readModuleTreeSource } from "@semio-tech/framework/compiler/syntax/module-tree";
-
-const rendererSource = readModuleTreeSource(resolve(dirname(fileURLToPath(import.meta.url)), "../../🟦️.tsx"));
 // #endregion 🔌️Adapters
 
 const bytes = (n: number): ArrayBuffer => new ArrayBuffer(n);
@@ -30,17 +23,20 @@ const bytes = (n: number): ArrayBuffer => new ArrayBuffer(n);
 describe("MapRenderer idle appearance updates", () => {
   afterEach(() => vi.useRealTimers());
 
-  it.each(repaintFixture.cases)("repaints $name after the frame loop becomes idle", async ({ method, args }) => {
+  it.each(repaintFixture.cases)("coalesces $name changes into one paint after the frame loop becomes idle", async ({ method, args }) => {
     vi.useFakeTimers();
     const renderFrame = vi.fn();
     const session = {
       renderFrame, visibleTilesRevision: () => 0, visibleVectorTilesRevision: () => 0,
       visibleTilesJson: () => "[]", visibleVectorTilesJson: () => "[]",
       prefetchTilesJson: () => "[]", prefetchVectorTilesJson: () => "[]",
-      setRenderMode: vi.fn(), setVectorStyle: vi.fn(), setLayerVisibilityJson: vi.fn(),
+      setRenderMode: vi.fn(), setVectorStyle: vi.fn(), setLayerVisibilityJson: vi.fn(), setLodMode: vi.fn(),
       setLayerStrokeScaleJson: vi.fn(), syncInteraction: vi.fn(), free: vi.fn(),
     } as unknown as MapWasmSession;
     const renderer = new MapRenderer("/osm/{z}/{x}/{y}.png", "/vt/{z}/{x}/{y}.pbf", session);
+    const updates = new Subject<void>();
+    const referenceFrame = vi.fn();
+    const subscription = updates.pipe(auditTime(0)).subscribe(referenceFrame);
     try {
       renderer.startLoop();
       await vi.advanceTimersByTimeAsync(repaintFixture.settleMs);
@@ -48,81 +44,18 @@ describe("MapRenderer idle appearance updates", () => {
       expect(initialFrames).toBeGreaterThan(0);
       await vi.advanceTimersByTimeAsync(repaintFixture.settleMs);
       expect(renderFrame).toHaveBeenCalledTimes(initialFrames);
-      Reflect.apply(Reflect.get(renderer, method), renderer, args);
+      for (let index = 0; index < repaintFixture.updatesPerBatch; index++) {
+        Reflect.apply(Reflect.get(renderer, method), renderer, args);
+        updates.next();
+      }
       await vi.advanceTimersByTimeAsync(repaintFixture.settleMs);
-      expect(renderFrame.mock.calls.length).toBeGreaterThan(initialFrames);
-      const updatedFrames = renderFrame.mock.calls.length;
+      expect(referenceFrame).toHaveBeenCalledTimes(repaintFixture.expectedFramesPerBatch);
+      const updatedFrames = initialFrames + referenceFrame.mock.calls.length;
+      expect(renderFrame).toHaveBeenCalledTimes(updatedFrames);
       await vi.advanceTimersByTimeAsync(repaintFixture.settleMs);
       expect(renderFrame).toHaveBeenCalledTimes(updatedFrames);
     } finally {
-      renderer.dispose();
-    }
-  });
-
-  it.each([
-    { name: "pan", leftDown: false, middleDown: true },
-    { name: "marquee", leftDown: true, middleDown: false },
-  ])("returns to idle without publishing feature selection when a $name pointer is cancelled", async ({ leftDown, middleDown }) => {
-    vi.useFakeTimers();
-    const renderFrame = vi.fn();
-    const pointerUpScreen = vi.fn();
-    const session = {
-      renderFrame, pointerUpScreen, visibleTilesRevision: () => 0, visibleVectorTilesRevision: () => 0,
-      visibleTilesJson: () => "[]", visibleVectorTilesJson: () => "[]",
-      prefetchTilesJson: () => "[]", prefetchVectorTilesJson: () => "[]", free: vi.fn(),
-    } as unknown as MapWasmSession;
-    const renderer = new MapRenderer("/osm/{z}/{x}/{y}.png", "/vt/{z}/{x}/{y}.pbf", session);
-    const source = ts.createSourceFile("map.tsx", rendererSource, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
-    let initializer = "";
-    const visit = (node: ts.Node): void => {
-      if (ts.isVariableDeclaration(node) && node.name.getText(source) === "onPointerCancel") initializer = node.initializer!.getText(source);
-      ts.forEachChild(node, visit);
-    };
-    visit(source);
-    expect(initializer).not.toBe("");
-    const callback = ts.transpileModule(`const callback = ${initializer};`, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
-    const pointer = { current: { leftDown, middleDown } };
-    const panningRef = { current: true };
-    const resetMarquee = vi.fn();
-    const releasePointerCapture = vi.fn();
-    const mirrorSessionCameraToReact = vi.fn();
-    const emitFeatureSelection = vi.fn();
-    const endPinch = vi.fn();
-    const cancel = new Function("rendererRef", "pointer", "panningRef", "resetMarquee", "canvas", "mirrorSessionCameraToReact", "clientToLocal", "emitFeatureSelection", "gestureRecognizer", "endPinch", `${callback}\nreturn callback;`)(
-      { current: renderer },
-      pointer,
-      panningRef,
-      resetMarquee,
-      { hasPointerCapture: () => true, releasePointerCapture },
-      mirrorSessionCameraToReact,
-      () => repaintFixture.cancelledPan.point,
-      emitFeatureSelection,
-      new GestureRecognizer(),
-      endPinch,
-    );
-    const target = new EventTarget();
-    target.addEventListener(repaintFixture.cancelledPan.event, cancel);
-    try {
-      renderer.startLoop();
-      renderer.beginContinuousInteraction(repaintFixture.cancelledPan.reason);
-      await vi.advanceTimersByTimeAsync(repaintFixture.settleMs);
-      const event = new Event(repaintFixture.cancelledPan.event);
-      Object.defineProperty(event, "pointerId", { value: repaintFixture.cancelledPan.pointerId });
-      target.dispatchEvent(event);
-      await vi.advanceTimersByTimeAsync(repaintFixture.settleMs);
-      expect(pointer.current.leftDown).toBe(false);
-      expect(pointer.current.middleDown).toBe(false);
-      expect(panningRef.current).toBe(false);
-      expect(pointerUpScreen).toHaveBeenCalledExactlyOnceWith(repaintFixture.cancelledPan.point.x, repaintFixture.cancelledPan.point.y);
-      expect(resetMarquee).toHaveBeenCalledOnce();
-      expect(releasePointerCapture).toHaveBeenCalledExactlyOnceWith(repaintFixture.cancelledPan.pointerId);
-      expect(mirrorSessionCameraToReact).toHaveBeenCalledOnce();
-      expect(emitFeatureSelection).not.toHaveBeenCalled();
-      expect(endPinch).not.toHaveBeenCalled();
-      const frames = renderFrame.mock.calls.length;
-      await vi.advanceTimersByTimeAsync(repaintFixture.settleMs);
-      expect(renderFrame).toHaveBeenCalledTimes(frames);
-    } finally {
+      subscription.unsubscribe();
       renderer.dispose();
     }
   });

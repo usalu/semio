@@ -40,7 +40,14 @@
   "VD-22-400",
   "VD-22-700",
   "VD-22-71009",
-  "VD-22-71010"
+  "VD-22-71010",
+  "VD-23-71003",
+  "VD-23-71017",
+  "VD-23-71011",
+  "VD-29-71022",
+  "VD-29-700",
+  "VD-29-71001",
+  "VD-29-71002"
  ],
  "items": [
   {
@@ -577,6 +584,111 @@
    "description": {
     "en": "Checks the climate-dependent space-heating class, including A+++ from November 2019.",
     "de": "Prüft die klimaabhängige Energieeffizienzklasse der Raumheizung einschließlich A+++ ab November 2019."
+   }
+  },
+  {
+   "id": "VD-23-71003",
+   "clause": "VDI 3805 Blatt 23:2019-03 §5.3.3, correction 23-0001",
+   "entity": "NativeRecord",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "vdi3805.23.record.710.03"
+    ]
+   },
+   "description": {
+    "en": "Fan drive codes and stage counts, including continuous control.",
+    "de": "Antriebskennungen und Stufenzahlen von Ventilatoren einschließlich stufenloser Regelung."
+   }
+  },
+  {
+   "id": "VD-23-71017",
+   "clause": "VDI 3805 Blatt 23:2019-03 §5.3.3, correction 23-0002",
+   "entity": "NativeRecord",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "vdi3805.23.record.710.17"
+    ]
+   },
+   "description": {
+    "en": "Decimal format and identity fields for nominal airflow.",
+    "de": "Dezimalformat und Identitätsfelder des Nenn-Luftvolumenstroms."
+   }
+  },
+  {
+   "id": "VD-23-71011",
+   "clause": "VDI 3805 Blatt 23:2019-03 §5.3.3, correction 23-0003",
+   "entity": "NativeRecord",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "vdi3805.23.record.710.11"
+    ]
+   },
+   "description": {
+    "en": "Corrected operating-point fields, octave-band format, connection-index withdrawal and curve codes.",
+    "de": "Berichtigte Betriebspunktfelder, Oktavbandformat, Entfall des Anschlussindexes und Kurvenkennungen."
+   }
+  },
+  {
+   "id": "VD-29-71022",
+   "clause": "VDI 3805 Blatt 29:2020-07 §5.2.3, correction 29-0007",
+   "entity": "NativeRecord",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "vdi3805.29.retired.71022."
+    ]
+   },
+   "description": {
+    "en": "Reports use of the withdrawn fitting-layer record from April 2026.",
+    "de": "Meldet die Verwendung der ab April 2026 zurückgezogenen Formstückschicht-Satzart."
+   }
+  },
+  {
+   "id": "VD-29-700",
+   "clause": "VDI 3805 Blatt 29:2020-07 §5.2.3, correction 29-0005",
+   "entity": "NativeRecord",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "vdi3805.29.record.700"
+    ]
+   },
+   "description": {
+    "en": "Format of the minimum service life and its explanation in product-element records.",
+    "de": "Format der Mindestlebensdauer und ihrer Erläuterung im Produktelementdatensatz."
+   }
+  },
+  {
+   "id": "VD-29-71001",
+   "clause": "VDI 3805 Blatt 29:2020-07 §5.2.3, correction 29-0008",
+   "entity": "NativeRecord",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "vdi3805.29.record.710.01"
+    ]
+   },
+   "description": {
+    "en": "Numeric limits for continuous service pressure, operating temperature and ambient temperatures.",
+    "de": "Numerische Grenzwerte für Dauerbetriebsdruck, Dauerbetriebstemperatur und Umgebungstemperaturen."
+   }
+  },
+  {
+   "id": "VD-29-71002",
+   "clause": "VDI 3805 Blatt 29:2020-07 §5.2.3, correction 29-0006",
+   "entity": "NativeRecord",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "vdi3805.29.record.710.02"
+    ]
+   },
+   "description": {
+    "en": "Continuous pressure and temperature formats and conductivity position in the published pipe connection table.",
+    "de": "Formate für Dauerbetriebsdruck und Dauerbetriebstemperatur sowie Position der Wärmeleitfähigkeit in der veröffentlichten Rohrtabelle."
    }
   }
  ]

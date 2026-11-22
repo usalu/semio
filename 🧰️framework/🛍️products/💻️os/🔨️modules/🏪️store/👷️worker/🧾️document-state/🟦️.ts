@@ -153,7 +153,8 @@ export function post(message: BackboneWorkerResponse): void {
     workerPostTestSink(message);
     return;
   }
-  workerScope?.postMessage({ wire: encodeBackboneWorkerResponse(message) });
+  const wire = encodeBackboneWorkerResponse(message);
+  workerScope?.postMessage({ wire }, [wire.buffer]);
 }
 
 export function artifactScope(state: ArtifactState): DocumentScope | undefined {

@@ -26,6 +26,10 @@ impl<K:Copy+PartialEq> Lease<K>{
  pub fn queued(&self,key:K)->bool{self.waiters.contains(&Some(key))}
  /// 🔓️ Releases the lease held by this key and drops its queue slot; returns whether anything changed.
  pub fn leave(&mut self,key:K)->bool{let mut changed=false;if self.holder==Some(key){self.holder=None;changed=true}if let Some(at)=self.waiters.iter().position(|waiter|*waiter==Some(key)){self.waiters.copy_within(at+1..,at);self.waiters[COMMAND_LEASE_WAITERS-1]=None;changed=true}changed}
+ /// 🛡️ Idle publication releases only a lane whose command source has settled.
+ pub fn leave_if_idle(&mut self,key:K,command_source_pending:bool)->bool{
+  !command_source_pending&&self.leave(key)
+ }
  /// 🔓️ Drops every holder and waiter.
  pub fn clear(&mut self){*self=Self::default()}
  /// 🎟️ True once this key holds the lease. A free lease is granted to the head of the queue only; every other key queues once. A grant or a queueing is committed only when `pay` affords it, and the granting turn itself answers false.
@@ -46,7 +50,11 @@ impl CommandLease{
  /// ⏳️ True while this caller is queued for the lease.
  pub fn waits(&self,cx:&semio_framework_job::StepContext<'_>)->bool{Self::key(cx).is_some_and(|key|self.queued(key))}
  /// 🔓️ Releases the lease held or awaited by this caller; returns whether anything changed.
- pub fn release(&mut self,cx:&semio_framework_job::StepContext<'_>)->bool{Self::key(cx).is_some_and(|key|self.leave(key))}
+ pub fn release(&mut self,cx:&semio_framework_job::StepContext<'_>)->bool{self.release_idle(cx,false)}
+ /// 🧯️ Retains the caller's lease or queue slot while its original command source is still pending.
+ pub fn release_idle(&mut self,cx:&semio_framework_job::StepContext<'_>,command_source_pending:bool)->bool{
+  Self::key(cx).is_some_and(|key|self.leave_if_idle(key,command_source_pending))
+ }
  /// 🎟️ True once this caller holds the lease; see [`Lease::arbitrate`].
  pub fn claim(&mut self,pending:bool,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
   let Some(key)=Self::key(cx)else{Self::pay(cx)?;return Ok(false)};

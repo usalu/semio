@@ -1,0 +1,25 @@
+# Rust Operator Reclaim Eligibility
+
+The Rust cache reported repeated out-of-space writes with roughly 1–2 GiB available inside its mounted volume. The host still had roughly 55 GiB free. The operation previously required host free space below 48 GiB and allocated backing of at least three times the internal used space. The observed 35 GiB allocation and 23 GiB used therefore returned `not-due`.
+
+The operator wait now also qualifies a mounted volume whose available space is below the authored 6 GiB pressure threshold and whose allocated backing exceeds its measured used space by at least the full 8 GiB reclaim floor. It uses the same current measurement for initial admission, each wait check, and the exclusive recheck. The host-pressure rule, original image and mount identity, exclusive lease, and exact mapping checks remain in the route. Automatic reclaim retains its existing eligibility policy. Reclaim returns backing blocks to the host, which may increase the budget for the existing mounted-volume growth path.
+
+Nine language-neutral pressure cases matched an independent SQLite predicate. The operator wait integration suite used the actual fair lease queue and simulated native commands. Its mounted-pressure case acquired the writer after its test reader released the mount and passed the exclusive recheck. Both tests passed with 183 assertions. No real image was detached or reclaimed during verification.
+
+## Native Reclaim Failure
+
+The operator reclaim-wait returned `skipped/reclaim-failed` after acquiring the exclusive Rust image lease. The current implementation sets this reason after lease acquisition and catches all later failures without retaining their cause, so the receipt cannot distinguish writer-proof, backing identity, inventory parsing or mapping, native detach/attach, or cleanup failures. The read-only `hdiutil info -plist` inventory currently identifies exactly one Rust image at `.cache/b/r/fixed.dmg`, with whole device `/dev/disk14` and its mounted volume at `.cache/b/r/m`; this observation matches the mapping shape the code expects, but does not establish what happened during the earlier attempt. The image is currently mounted. No native reclaim or mount operation was performed in this investigation.
+
+The supported operator path remains `SEMIO_LANGUAGE=en repo run repo-cache-reset:cache-reclaim-wait-rust`; its exclusive lease protects active owners, but retrying the same opaque operation cannot diagnose the cause. Preserve the phase and underlying bounded error in the owner receipt or diagnostic before a further attempt, with tests for each native step and cleanup. Do not manually detach or reset the shared Rust image.
+
+## Reclaim failure diagnostics
+
+The wait owner now emits localized stderr notices with the failing phase and native reason. The structured `repository-cache-reclaim-wait` receipt retains its existing shape and outcome reasons. Phases distinguish backing inspection and recheck, exclusive lease acquisition and release, writer proof, inventory and mount mapping, normal detach and attach, allocation observation, cleanup inventory and detach, and scratch removal. The owner retains up to three distinct causes so an attach error remains visible alongside a failed cleanup detach and a failed lease release. Each cause is rendered on one line with controls removed. Long native messages retain both the command context and final error detail under the 480-character reason bound. Routine timeouts and ended opportunities keep their original outcomes.
+
+Both focused Bun tests passed with 320 assertions. They use genuine private fair leases and the actual native reclaim sequence with simulated storage and command effects. Neutral cases and an independent SQLite oracle verify each outcome and the failure order, including the combined attach, cleanup and release failure. Ajv also validates unchanged receipt shape. No actual cache image was mounted, detached, or reclaimed for verification. A future authorized live attempt can now surface the precise failure that the earlier receipts discarded.
+
+## Live Native Detach Diagnosis
+
+The live operator wait acquired the sole repository lease, then `/usr/bin/hdiutil detach /dev/disk14` exited 16: disk15 could not unmount because its resource was busy. The captured diagnostic is `🗑️generated/raster-shared-reclaim-diagnostic.log`. A repository lease alone therefore did not establish the absence of native open handles.
+
+The native retirement contract owns a bounded `lsof` reader census scoped to a mounted root and exact files (`requireNativeSuccessfulChildReadersV1` in `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧹️cleanup/♻️retirement/📋️contract/🟦️.ts`). No public read-only command exposing that census for this mount was identified. Leave the image mounted; let native handle owners close voluntarily before retrying the supported operator reclaim. If the owner remains unknown, expose a scoped read-only census through the repository owner rather than force unmounting.

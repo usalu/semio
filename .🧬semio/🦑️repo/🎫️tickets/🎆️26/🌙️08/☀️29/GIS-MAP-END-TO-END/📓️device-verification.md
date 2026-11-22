@@ -2,6 +2,12 @@
 
 November 21, 2026
 
+## Current Verification
+
+The live React GIS2D playground on loopback port 6041 renders real tiles and supports desktop pan and zoom on Chromium, WebKit and Firefox. Emulated Android profiles pass trusted pan and pinch on WebGPU and Canvas2D. Emulated iPhone and iPad pass trusted taps and keyboard navigation. The React map schedules paints on changes, and all 59 focused tests pass. Firefox's latest prototype run reached a stable tiled frame after 56.813 s under concurrent builds. [Device measurements](#live-gis2d-device-results)
+
+The newest GIS artifact is still compiling for the edit and undo recheck. The corrected Surface passed the default Combined basemap check on WebGPU and Canvas2D in the live app with a test-owned package. Its shared publication is pending release of a reader held by a live GIS3D dev server. The native macOS host is retrying with the corrected facade and UI contract. Browser WGPU is rebuilding under a source watcher that caught a live revision change before linking. Physical mobile gestures and native Windows and Linux remain unverified. [Surface publication lease](./surface-publication-lease.md) [Native build recovery](./NATIVE-COMPILE-RECOVERY.md) [Browser WGPU acceptance](./WGPU-BROWSER-ACCEPTANCE.md)
+
 ## Public Launch
 
 The standalone GIS 2D app is `s.gis.gismap@1/*#editor`. The declared playground uses port 6040 for React and 6140 for browser WGPU. The full workspace graph command spent more than eight minutes behind another inventory load and was stopped. The graph-free development command is `SEMIO_LANGUAGE=en repo ./📜️script.ts dev playground gis2d react prototype`.
@@ -162,3 +168,85 @@ The first native retry reached more than 2,400 Cargo artifact announcements but 
 The staged browser and native GIS Wasm contain the older manifest diagnostic string and lack the current WindowConfig stall-witness marker. The current implementation's batch admission and refresh authority edits share a source timestamp from after the original component admission. Adjacent compiler dep-info was unavailable because managed storage collection had retired the old lane. The bytes and timestamps establish source divergence while leaving the precise operation transition to the fresh runtime check. [Example operation custody audit](./📓️example-operation-custody.md)
 
 The public `components iterate gis` command selects only the prototype GIS WASI component and uses the established managed stages. Its first attempt waited on image storage, with a 13 GiB estimated write against already outstanding compiler work. Since the old lane was unavailable and compilation had not begun, the replay was reissued with default compiler unit-cache and fleet behavior. The published model was preserved and the prior local browser server was stopped so it would release its read leases. [Managed iterate preflight](./component-iterate-preflight.md)
+
+The current-source prototype component pass was admitted after 213 seconds of compiler image storage checks. It passed source admission for all 928 selected units. At the next checkpoint it had announced 694 compiled units and remained in Cargo, with the GIS component publication still pending. The concurrent native application build had announced 1,392 Cargo artifacts. Both invocations remained active.
+
+The existing publication, retirement and WindowConfig refresh oracle suite passed under pinned Bun on current source. The device harness now includes bounded browser console and page failures in failed result output. Its pinned Node syntax check passed. The native host owner now transports proven terminal source custody drift to the root's bounded retry. Thirteen real owned-child cases and the thirteen dev birth tests passed. The running native caller predates that transport edit. [Native retry verification](./NATIVE-GRAPH-FREE.md)
+
+## Live GIS2D Device Results
+
+A concurrent managed component run published GIS Wasm receipt `125c04c15010f7bb6d961cfb0eed61f1bf887c3977b58bc985c05096bc26621f` to both the retained model and browser package. The bytes include the current WindowConfig diagnostic and lack the superseded manifest diagnostic. The fresh local-only GIS2D server on port 6041 served the matching 138,434,791-byte browser core. This component passed the previously stalled startup on real browser engines. The duplicate component build was cancelled after actual map interaction was established.
+
+| Browser profile | Verified behavior | First stable tiled frame | Tiles delivered |
+| --- | --- | ---: | ---: |
+| Chrome Pixel 7 emulation | WebGPU, trusted touch pan and pinch | 6.037 s | 210 |
+| Chrome Galaxy Tab S9 emulation | WebGPU, trusted touch pan and pinch | 5.930 s | 65 |
+| WebKit iPhone 15 emulation | WebGPU, trusted touch tap | 10.827 s | 65 |
+| WebKit iPad Mini emulation | WebGPU, trusted touch tap | 16.529 s | 65 |
+
+The Pixel and Galaxy gesture animation-frame P95 values were 17 ms for pan and 50 ms and 33 ms for pinch, respectively. The Pixel pinch took 1.867 seconds from gesture release to a changed screenshot in this run. The machine was also compiling native code, and these are emulated desktop-host runs.
+
+On the first pass, Desktop Chrome reached the canvas before a screenshot timed out. Desktop Firefox and WebKit did not meet an expected pixel transition. Firefox logged a five-second `setCamera` command stall and reported that its GPU backend was blocklisted.
+
+The third native build passed both packages that previously lacked the concurrently added methods, then ended after two distinct source-plan recoveries with a terminal ordinary Cargo error. Its exact compiler diagnostic is being traced in the retained native build output. This run staged its native runtime before the newer GIS model published.
+
+### Desktop Camera and Renderer Acceptance
+
+The desktop pointer now pans in the local map session and submits one durable camera command at gesture end. Wheel and keyboard input now schedule a local repaint without waiting for either tile delivery or a command echo. All 58 mounted map-host tests passed. [Desktop pan](./desktop-map-pan.md) [Desktop zoom](./desktop-map-zoom.md)
+
+| Browser profile | Verified behavior | First stable tiled frame | Tiles delivered |
+| --- | --- | ---: | ---: |
+| Desktop Chrome | WebGPU, middle-button pan, wheel zoom and keyboard pan | 7.123 s | 49 |
+| Desktop WebKit | WebGPU, middle-button pan, wheel zoom and keyboard pan | 10.377 s | 49 |
+| Desktop Firefox | Canvas2D, middle-button pan, wheel zoom and keyboard pan | 52.713 s | 49 |
+| Desktop Chrome, WebGPU object absent | Canvas2D, middle-button pan, wheel zoom and keyboard pan | 10.613 s | 49 |
+| Desktop Chrome, GPU adapter refused | Canvas2D, middle-button pan, wheel zoom and keyboard pan | 8.305 s | 49 |
+| Chrome Pixel 7 emulation | WebGPU, trusted touch pan and pinch | 7.065 s | 120 |
+| Chrome Galaxy Tab S9 emulation | WebGPU, trusted touch pan and pinch | 6.803 s | 65 |
+| WebKit iPhone 15 emulation | WebGPU, trusted tap and emulated hardware-keyboard pan and zoom | 8.033 s | 65 |
+| WebKit iPad Mini emulation | WebGPU, trusted tap and emulated hardware-keyboard pan and zoom | 9.612 s | 65 |
+
+Chrome's WebGPU pan and zoom frame P95 values were 33 ms and 33 ms. Canvas2D measured 17 ms and 17 ms with no GPU object, and 33 ms and 17 ms when adapter acquisition returned no adapter. Desktop WebKit measured 53 ms and 65 ms. The first Firefox startup after the repaint fix overlapped a Vite page reload. The guest refused `setActiveExample` as `instance-retired` and reported a zero-progress cleanup fault. The fresh run passed with the diagnostic option to ignore Vite reload messages, and it ignored zero updates. Firefox measured 67 ms and 150 ms for pan and zoom frame P95. All runs shared the host with compiler work.
+
+Both Android profiles measured 17 ms pan and 33 ms pinch frame P95. Pixel 7 pinch repainted 310 ms after release and Galaxy Tab S9 pinch repainted after 128 ms. WebKit's trusted touchscreen interface provides tap. The hardware-keyboard check does not cover Apple touch pan or pinch. [Apple input and fleet audit](./APPLE-INPUT-AVAILABILITY.md)
+
+A fresh fleet status reported macOS ARM workers and one Windows AMD64 machine. The Windows worker reported that this version requires a POSIX action runner for Rust offload, and it had no same-platform peer. The report did not show a Linux runner or establish interactive hardware testing on a phone or tablet.
+
+### Mobile Canvas2D Fallback
+
+The live app selected Canvas2D automatically when the browser probe removed the WebGPU API. Each emulated Android profile passed trusted touch pan and pinch. Emulated iPhone and iPad profiles passed trusted taps and keyboard-driven pan and zoom. Each run verified painted tiles, reported no console errors, and skipped zero Vite reloads.
+
+| Browser profile | First stable tiled frame | Pan frame P95 | Pinch frame P95 | Pinch repaint after release | Tiles delivered |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Chrome Pixel 7 emulation, serial rerun | 6.948 s | 17 ms | 50 ms | 768 ms | 168 |
+| Chrome Galaxy Tab S9 emulation | 23.355 s | 17 ms | 33 ms | 113 ms | 65 |
+| WebKit iPhone 15 emulation | 9.654 s | — | — | — | 65 |
+| WebKit iPad Mini emulation | 10.981 s | — | — | — | 65 |
+
+The first Pixel 7 run overlapped the Galaxy Tab S9 run and measured 15.653 s to the stable frame, 100 ms pinch frame P95 and 1.360 s from release to repaint. The serial Pixel 7 result removes the second browser run from the workload. Compiler jobs were active for both runs. Desktop WebKit in the same fallback pass reached a stable frame at 12.207 s and passed mouse pan, wheel zoom and keyboard pan.
+
+### Frame Scheduling
+
+The React map now paints after a local camera, tile, or appearance change. A stationary gesture holds no frame loop, and finishing a zoom leaves no timed tail of redundant draws. The frame fixture and independent RxJS comparison verify one paint per update batch. All 59 map-host tests passed. Live desktop WebGPU and emulated Pixel 7 WebGPU and Canvas2D retests passed. The Canvas2D trace attributed 582 ms across 25 pinch draws to the Surface render call, with visibility checks rounding to 0 ms. The two Canvas2D runs after the change measured 33–50 ms pinch frame P95 and 452 ms–1.518 s from release to changed pixels. [Frame scheduling and measurements](./map-render-demand.md)
+
+### Basemap Composition and Startup Timing
+
+Desktop Chrome verified Vector, Image, and Combined on live WebGPU. The three selections published within 2.487 s, 3.170 s, and 2.175 s respectively. With Land temporarily hidden, the Combined canvas differed from both source modes and the session delivered 48 vector tile paths and one raster tile path. The test restored Land. The default Colored backdrop at broad zoom covered the raster image with an opaque viewport fill. The shared scene now paints that backdrop before raster tiles and leaves vector features above the raster. A focused compiled check failed before the change and passed afterward. [Basemap verification](./desktop-basemap-modes.md) [Combined scene order](./combined-basemap-scene-order.md)
+
+The corrected Surface was compiled into a separate verified diagnostic pair. Desktop Chrome used both files in its live 6041 GIS2D session and confirmed the published default Colored style and Land enabled. Vector, Image, and Combined published in 3.071 s, 2.076 s, and 1.525 s on WebGPU and 4.577 s, 1.921 s, and 1.538 s on Canvas2D. Each canvas comparison passed on both backends. Both runs completed 48 vector tile paths and one raster path, and both passed pan, zoom, and keyboard checks. The canonical Surface still serves the prior bytes. [Isolated Surface evidence](./combined-basemap-scene-order.md)
+
+The same diagnostic Surface pair passed live Pixel 7 emulation on WebGPU and Canvas2D with trusted pan and pinch. The two profiles reached the stable frame at 9.279 s and 8.546 s, with 193 and 155 delivered tile paths. Pan frame P95 was 17 ms on either backend and pinch frame P95 was 50 ms and 33 ms. Emulated iPhone 15 on WebKit WebGPU reached the stable frame at 10.686 s, delivered 65 tiles and passed the trusted tap and keyboard checks. No console errors or skipped Vite reloads were reported in those three runs.
+
+A separate Firefox timing run reproduced the slow startup within 13 ms. The document reached DOM content loaded at 6.241 s, the GIS shell became ready at 50.211 s, the map canvas became visible at 50.217 s, and the first completed tile arrived at 50.921 s. The stable tiled frame appeared at 52.726 s. The measured delay falls before map and tile delivery in this prototype run.
+
+The continuation probe counted 2,427 cooperative host yields in a 49.712 s Firefox run. The yields took 264 ms in aggregate, with zero timed backoffs. A separate 38.910 s run recorded 25.190 s inside the GIS guest worker, 1.649 s in observed worker receive, 234 ms in decode, and 3.967 s in observed replies. The HTTP transfer of the GIS core ended at 4.218 s. Under this workload, guest execution is the leading measured startup cost. [Firefox startup audit](./📓️firefox-startup-audit.md)
+
+### Document Editing
+
+The browser probe now addresses the actual scoped Inspection row and visible window Actions pane. Both the full gesture journey and an isolated Add Feature invocation submitted the action and left the live inspection count at 152. The GIS component refused a terminal ticket without an explicit native header lifecycle. The typed document edit retires its preparation factory through `FactoryChildSlot`. The GIS stamp's terminal state is `None` after the controlled stamp owner is released, but its factory default rejected native header release. The stamp now declares that terminal state safe for header release. The editor's regression assertion failed with the declaration removed and passed with it present. This focused run extracted the actual factory and assertion, linked the current native value and store-protocol crates under pinned Rust, and used unit types for the generic factory's phantom marker. The managed rebuild and live Add Feature and undo recheck remain pending. [GIS retirement audit](./GIS-RETIREMENT-AUDIT.md)
+
+Two managed builds selected the same GIS prototype component and both repeatedly paused under compiler memory pressure. The GIS Terrain build had reached the final GIS component link after 983 compiled units. Its Cargo build began at 19:25:47 CET, after the terminal stamp release change at 19:09:27 CET. The duplicate edit build was cancelled through its owner after compiling 696 units. Its parent and Cargo child exited, and the owner reported that it released its leases. The other build continued linking and the local-only server stayed available.
+
+The GIS Terrain build linked and staged a 140,826,748-byte component with SHA-256 `e12a8a63193530ef1b1300304d510ca98117dc96b4dbb7195053509678489a02`. Its describe stage refused the captured Cargo profile policy after a concurrent source change. The canonical browser receipt stayed on `125c04c…`. The fresh managed iteration reads the current Cargo policy and the browser check is watching its publication. The linked component is retained in its original compiler run directory for the managed pipeline.
+
+The published browser prototype core is 138,434,791 bytes, including 126,739,158 bytes of executable code and 10,889,545 bytes of initial data. The release materializer runs size optimization. The current receipt does not expose its compiler flags, and physical mobile startup remains unmeasured. [Component size audit](./gis-component-size-audit.md)

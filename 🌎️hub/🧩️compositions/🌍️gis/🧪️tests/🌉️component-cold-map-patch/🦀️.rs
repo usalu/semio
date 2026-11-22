@@ -52,6 +52,7 @@ async fn open_live(bytes: &[u8]) -> (WasmtimeRuntime, GuestInstance, ActorInstan
     let compiled = runtime.compile(&package, bytes).await.expect("genuine GIS component compiles");
     let mut instance = runtime.instantiate(&compiled, ActorId(1), &[], &budget()).await.expect("genuine GIS component instantiates");
     let open = Event::InstanceOpen {
+        purpose: semio_framework::kernel::ActorInstanceOpenPurpose::Ordinary,
         request: ActorInstanceOpenRequest { activation_generation: ACTIVATION_GENERATION, instance_id: INSTANCE, request_sequence: OPEN_SEQUENCE },
         app_id: AppInstanceId("s.gis.gismap@1/*#editor".into()),
         actor: "component-cold-map-patch".into(),

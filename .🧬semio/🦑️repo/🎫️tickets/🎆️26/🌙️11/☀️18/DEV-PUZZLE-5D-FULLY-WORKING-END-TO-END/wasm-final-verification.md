@@ -1,0 +1,69 @@
+# Puzzle 5D WASM refresh
+
+The registered `@semio-tech/puzzle-plugin:wasm` target waited in graph planning. Two one-core `repo cargo` runs stalled after reporting Cargo workspace selection, without starting the component compiler. Invoking the package script directly required a planner-issued parent invocation, and the tool registry correctly held direct Cargo behind authenticated compiler ingress.
+
+The native fallback uses the repository-pinned Rust nightly, the live Hub component manifest, its locked dependencies, the prototype profile, and one compiler job. It runs under a repository host-capacity grant with build and target directories inside the ticket. The private build directory was seeded from prior prototype compiler output to reuse any units Cargo still considers current.
+
+The registered Playwright tool enumerated all four intended Storybook checks. The Node fixture check accepts a candidate directory so the generated bindings and WASM can be tested before publishing the package.
+
+Cargo started compiling 142 crates without a source error. It was interrupted with exit 130 when the shared home filesystem reached 6.1 GiB free. The private checkpoint remains available for a retry. The staged Storybook package and local Hub package still contain the previous build.
+
+The private build seed scan counted 8,036 unchanged copied files with 3,685,658,624 allocated bytes eligible for removal. The scan matched source file size and modification time, checked that the private file predated profile generation, and counted complete hardlink groups once. The result was below the requested 4 GiB and the scan left all files in place.
+
+As the disk fell to approximately 6 GiB free a second time, the same matching inventory was authorized for deletion. It removed the 8,036 seed files from the private build directory. Newly compiled units and prior package files were retained. The scheduled resume was cancelled while native editor tests had priority.
+
+The resume started when disk headroom recovered. A retained `serde_core` build-script wrapper tried to open its original executable in the old shared lane. The other copied wrappers with the same absolute lane reference were removed from the private directory. Cargo regenerated those executables and advanced past `serde_core` on the next one-job build.
+
+The build then reached Store one-item publication. The canonical-edit Source quote accepted a generic admission although its identity projection method is defined on same-type admissions. Its four callers already carry same-type admission. The helper signature now reflects that bound. Store one-item publication compiled successfully on the WASM retry, followed by its Store engine consumers.
+
+The fourth run log stopped at the Puzzle 3D retained document crate without a terminal Cargo record. A process census found no remaining Cargo or compiler child carrying the ticket’s private WASM lane. At 13.13 GiB available, the fifth run resumed the same checkpoint under a one-core, 4,096 MiB repo capacity grant. It reads the current live worktree and writes to `🗑️generated/wasm-final-native-fifth.log`.
+
+The registered wasm-bindgen tool resolves version 0.2.129. The Hub package and managed Storybook stage both still contain the previous 290,728,005-byte WASM. The candidate will be checked in its own directory before either package copy is replaced.
+
+During the fifth run, the private Cargo build held 17.73 GiB in incremental files. The read-only inventory found 861 completed incremental generations whose directory and contained files predated this run. It counted 29,003 files and 16.54 GiB reclaimable from complete hard-link groups. The inventory covers only this ticket’s private incremental directory. Compiled libraries and existing packages were excluded. No files were removed during the inventory.
+
+The fifth run recompiled Store one-item publication, snapshot clone and the Plugin WindowConfig dependencies. `wasm-source-provenance.mjs` compares live source lengths and BLAKE3 checksums with Rustc's WASM dep-info and checks for each output library. The first measurement matched the Store canonical Source, Plugin retained full operation, Plugin typed-operation unit and Plugin Store staging bytes exactly. The audit now covers 51 Rust files, including the 40 archive mutation leaves. It will require matches for every source before packaging.
+
+Shared disk headroom briefly reached 5.80 GiB and then recovered to 21.79 GiB during the authorized repository cache collection. The private Cargo run continued throughout. The earlier incremental inventory and pending source evidence remain in the ticket generated directory.
+
+The fifth run passed DWG snapshot objects with one compiler job. A private cache reclamation dry run identified 373 older incremental generations backed by fresh output libraries, Cargo receipts and newer incremental generations. It acquired both lock types and matched the stored directory timestamp and file count before counting 7.99985 GiB. `wasm-reclaim-incremental.py` will apply this bounded cleanup only if the filesystem has at most 8 GiB free. The dry run left these generations in place.
+
+The stable action key fix landed in Plugin instance command staging after its fifth-run compilation. The source checksum differed from the output recorded at 13:03 UTC. The audit now includes all 52 sources and requires the fresh command staging bytes before binding.
+
+After available disk fell to 7.78 GiB, the bounded cleanup removed 383 older private incremental generations. The locked census accounted for 7.99995 GiB and measured 15.74 GiB available after the operation. Recent generations, compiled libraries, generated dep-info, shared cache, and previous logs were retained. The fifth launcher exited 130 after interrupting its confirmed Cargo and compiler PIDs, so Puzzle 5D can compile against the corrected Plugin command dependency in the sixth run. The sixth run reuses the checkpoint under the same 4,096 MiB, one-core repo capacity grant and writes to `🗑️generated/wasm-final-native-sixth.log`.
+
+The sixth launch waited for swap pressure to ease, then Cargo resumed from the private checkpoint. A sixth-launch inventory used the new log creation timestamp to distinguish its active replacements. At 7.56 GiB available, the same locked cleanup removed 205 superseded generations totaling 3.872 GiB. Headroom recovered to 11.60 GiB, and the current Cargo process continued through Plugin WindowConfig and ABI throughout cleanup.
+
+The sixth run compiled `semio-plugin-instance-commands` at 13:57:29 UTC. Its Rustc dep-info checksum matches the current stable action key exactly. The other four audited Store and Plugin sources also match. A second sixth-generation cleanup reclaimed 1.497 GiB from 93 replaced generations after available disk reached 7.84 GiB. Sixth-run reclamation now totals 5.368 GiB under the 8 GiB bound.
+
+The remaining sixth-run cleanup used the same cutoff and counted every batch against a cumulative 8 GiB maximum. Across seven applied batches, 373 older generations were removed with 7.920 GiB in validated allocated bytes. Each was superseded by a current same-package library, receipt and incremental generation. The last batch found only 11 candidates, and free disk measured 8.13 GiB after it completed.
+
+Native verification found two upstream fixes after the sixth compiler had passed their packages. The dep-info records for `semio-framework-pack-record-retained` and `semio-plugin-job` still carry the older bytes. The provenance gate also covers the newly forwarded Puzzle 5D child and link slot declarations and the SpliceSceneRows label schema. The sixth run can verify these later 5D crates as a candidate while native fixes settle. The published package will require a fresh build of the stale upstream owners.
+
+A completed-snapshot reclamation dry run identified 59 private generations totaling 1.4999 GiB under a stricter predicate. It checked the readable library archive, dep-info checksum records and Cargo completion receipt, and ruled out an active same-package compiler and working generation while holding its locks. Disk recovered to 15.26 GiB without using that recovery mode. The sixth run later passed its predecessor’s Puzzle 3D editor cutoff, axial-face preview and BRep tessellation.
+
+The sixth launch exited 0 after 111 minutes and 25 seconds. Its linked raw component is 223,217,444 bytes and has the standard WASM magic and version header. The SHA-256 is `f855df7b4cb5cddb6ef8cdff85833fd1e4838e925698de68fc34f2eff6a8805f`. Free disk measured 8.38 GiB. This is a complete private compiler checkpoint.
+
+All 65 audited files have completed Rustc dep-info records. Fifty-two match the live bytes and 13 need a refresh. The mismatches cover Pack retained decoding, Store replay, Job worker retirement, Plugin job, document and command publication, and the latest 5D editor and schema inputs. No sixth-run bindings were generated. The existing Hub package and managed Storybook copy still have their previous artifacts.
+
+The sixth fingerprint graph resolved 18,044 of 18,050 dependency edges and found 1,342 units under the exact component receipt. The 13 mismatches sit in 11 owners. Their recorded reverse closure contains 546 WASM units and zero host units. This is a read-only estimate from the completed checkpoint. The seventh Cargo run will record its own dirty decisions against the live source tree.
+
+The registered bindgen tool remains version 0.2.129. The private candidate folder, Hub package and managed Storybook stage are on the same filesystem. The Hub module manifest still identifies `@semio-tech/puzzle-wasm`, and the installed Storybook dispatcher is readable. This permits packaging from a verified candidate without touching the previous package during bindgen or its initial Node fixture check.
+
+The seventh refresh reused the complete sixth checkpoint and quickly verified 61 of 65 live inputs. Native verification then added the shared World3d and Sun receiving declarations after their seventh-run compilation. The seventh process exited 130 at the PDF snapshot stage so the late Puzzle crates could compile against those owners. The eighth launch began its workspace preparation before the final archive initializer change and compiled that initializer only after it landed. Its dep-info verified the initializer and both WindowKit sources byte for byte before subsequent NativeReceive changes.
+
+The eighth private lane kept its completed libraries, dep-info, fingerprints, raw sixth module and published package counterparts. It reclaimed superseded incremental generations using a cutoff at the eighth launch. When old replacements could recover only 0.050 GiB and disk approached 6.04 GiB, two additional bounded batches recovered 1.696 GiB of completed eighth incremental cache. Each generation passed the readable library, dep-info, receipt and non-active compiler checks. Later shared headroom recovered above 8 GiB while Cargo continued.
+
+The later shared NativeReceive derives and Capsule paged snapshot work were staged together after the eighth Puzzle 3D diff completed. The ninth build verified the shared receiving declarations but found that Store publication still contained an older receiving API while the synchronized 3D caller used the new API. Native compilation confirmed this mismatch. Ninth finished the active large stdio compiler, then the private launcher exited 130 during a lighter Deflate unit. Tenth kept the completed checkpoint and verified the updated Store receiving source in the library built at 16:21:18 UTC.
+
+The audit now has 77 live source and schema paths. The complete gate follows dependency fingerprints from the linked Hub component and checks every linked owner for an exact source checksum. Older artifacts and unlinked library variants cannot satisfy this gate. Tenth briefly needed 0.351 GiB of validated completed incremental cleanup when shared disk fell near the pause threshold. Headroom later recovered above 13 GiB while Cargo remained active.
+
+Native camera receiving exposed an invalid expectation that the shared WorldProjectionConfig implement NativeDefault. The final fix lives in the 5D Config declaration and uses the existing cold default while requiring the canonical field at runtime. Cleanup of a transient shared draft had removed the World3d source’s trailing LF. I tested the EOF-only restoration against tenth’s exact dep-info and restored that one byte. The source is again 32,904 bytes with BLAKE3 `d38dbf3f997bb31e06bd578f64640a7adadecfb4043d03cfa41d4f1c112b4ee1`, so Cargo did not need another shared-owner refresh.
+
+## Interim compilation and example proof
+
+The eleventh native run linked a 226,652,965-byte prototype component successfully in 102 minutes. Pinned wasm-bindgen 0.2.129 generated a private interim package. Its bound WASM SHA-256 is `85933544a364894b0f92d2d552d349f668e30ea3559be624cd7dd06c39f3f46e`. Node loaded the real parser and checked Nakagin at 180 parts and 179 fasteners, Concrete Forest at one part and zero fasteners, and Capsule Dream at 2,880 parts and 2,864 fasteners. The newer replay and Window fixes entered the twelfth compiler run. The linked dependency checksum gate remains required before publishing the current package.
+
+`native-wasm-storybook.sh` isolates the candidate directory behind a private bind mount at the declared Storybook package path. This allows the actual browser suite to use a private WASM candidate during compiler verification.
+
+Playwright passed all four Puzzle 5D browser checks against the private eleventh package in two minutes. Nakagin mounted at the latest checkpoint, then scrubbed back to one visible part. The browser also loaded Concrete Forest, Nakagin and Capsule Dream from their real DSL files and verified the expected part and fastener counts.

@@ -376,3 +376,34 @@ for(const relocated of [false,true])test("shared "+(relocated?"relocated ":"")+"
   expect(await withObservationRoundV1(()=>observationsHoldWithinRoundV1(rows,64))).toBe(false);
  });}finally{if(relocated)forgetFormerRootsV1();}
 });
+
+test("typed admission shares one followed stat per path and the final seal probes afresh",async()=>{
+ const {observationsHoldWithinRoundV1,withObservationRoundV1}=await import("../🟨️.mjs"),fixture=admissionPass.typedProbes,db=new Database(":memory:");
+ const oracle=db.query<{kind:string;path:string;fact:string},[string,string]>(`select json_extract(question.value,'$.kind') kind,json_extract(question.value,'$.path') path,
+   case json_extract(question.value,'$.kind') when 'stat' then json_quote(state.value)
+   when 'fileExists' then iif(state.value='file','true','false')
+   when 'directoryExists' then iif(state.value='directory','true','false') end fact
+   from json_each(?1) question join json_each(?2) state on state.key=json_extract(question.value,'$.path') order by question.key`);
+ const rows=(owner:typeof fixture.owners[number],state:typeof fixture.before)=>oracle.all(JSON.stringify(owner),JSON.stringify(state)).map(({fact,...row})=>({...row,fact:JSON.parse(fact)}));
+ const before=fixture.owners.map(owner=>rows(owner,fixture.before)),after=fixture.owners.map(owner=>rows(owner,fixture.after));
+ let state:Readonly<Record<string,string>>=fixture.before,followed:string[]=[],unfollowed:string[]=[];
+ const info=(type:string)=>({isFile:()=>type==="file",isDirectory:()=>type==="directory",isSymbolicLink:()=>type==="symlink"}) as ReturnType<typeof rawFs.statSync>;
+ const world={...rawFs,
+   statSync(...args:Parameters<typeof rawFs.statSync>){const name=String(args[0]),type=state[name];if(type===undefined)return rawFs.statSync(...args);followed.push(name);if(type.startsWith("!"))throw Object.assign(Error(type),{code:type.slice(1)});return info(type);},
+   lstatSync(...args:Parameters<typeof rawFs.lstatSync>){const name=String(args[0]);if(name!==fixture.unfollowed.path)return rawFs.lstatSync(...args);unfollowed.push(name);return info("symlink");}
+ };
+ try{await withObservedWorldV1(world,async()=>{
+   await withObservationRoundV1(async()=>{
+     expect(await Promise.all([...before,[fixture.unfollowed]].map(owner=>observationsHoldWithinRoundV1(owner,4)))).toEqual([true,true,true,true]);
+     const paths=db.query<{path:string},[string]>("select distinct json_extract(question.value,'$.path') path from json_each(?1) owner,json_each(owner.value) question order by path").all(JSON.stringify(fixture.owners));
+     expect(followed.sort()).toEqual(paths.map(({path})=>path));
+     expect(unfollowed).toEqual([fixture.unfollowed.path]);
+     state=fixture.after;followed=[];
+     expect(await observationsHold(before[0]!)).toBe(false);
+     expect(followed).toContain(fixture.unfollowed.path);
+   });
+   followed=[];
+   expect(await withObservationRoundV1(()=>observationsHoldWithinRoundV1(after.flat(),4))).toBe(true);
+   expect(followed.sort()).toEqual(Object.keys(fixture.after).sort());
+ });}finally{db.close();}
+});

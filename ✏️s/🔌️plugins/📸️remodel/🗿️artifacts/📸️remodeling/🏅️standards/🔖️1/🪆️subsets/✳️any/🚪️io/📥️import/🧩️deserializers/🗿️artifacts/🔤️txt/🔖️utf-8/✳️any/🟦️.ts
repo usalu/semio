@@ -95,6 +95,7 @@ interface DslNode {
   line: number;
 }
 
+const ARTIFACT_REFERENCE_FIELDS = ["artifact-id", "artifact-kind", "standard", "subset"] as const;
 const emptyNode = (line: number): DslNode => ({ scalars: new Map(), blocks: new Map(), tables: new Map(), maps: new Map(), arrays:new Map(), statements:[], line });
 
 class Cursor {
@@ -163,6 +164,21 @@ function readNode(cursor: Cursor, line: number, terminated: boolean): DslNode {
     const key = cursor.expect("word").text;
     const follow = cursor.peek();
     if((key==="inline"||key==="content")&&follow?.kind!=="equals") {node.statements.push({name:key,node:readNode(cursor,head.line,true)});return node;}
+    if (key === "target") {
+      if (node.blocks.has(key)) throw new RemodelingDslError(head.line, "duplicate artifact reference target");
+      cursor.expect("equals");
+      const record = emptyNode(head.line);
+      for (let index = 0; index < ARTIFACT_REFERENCE_FIELDS.length; index++) {
+        const member = cursor.expect("word");
+        if (record.scalars.has(member.text)) throw new RemodelingDslError(member.line, "duplicate artifact reference " + member.text);
+        cursor.expect("equals");
+        const literal = cursor.next();
+        if (literal.kind !== "word" && literal.kind !== "string") throw new RemodelingDslError(literal.line, "artifact reference requires literal text");
+        record.scalars.set(member.text, literal);
+      }
+      node.blocks.set(key, record);
+      continue;
+    }
     if (follow?.kind === "equals") {
       cursor.next();
       const value = cursor.next();
@@ -242,9 +258,16 @@ const bindScalar = (token: Token, spec: ValueSpec, key: string): unknown => {
 
 const inner = (spec: ValueSpec): ValueSpec => (spec.k === "opt" ? spec.of : spec);
 
-const bindArtifactRef=(node:DslNode):Record<string,unknown>=>{
- const required=["artifact-id","artifact-kind","standard","subset"];if(node.blocks.size||node.maps.size||node.tables.size||node.arrays.size||node.statements.length||node.scalars.size!==4)throw new RemodelingDslError(node.line,"artifact reference requires exactly four literal text fields");
- const values=required.map(key=>{const value=node.scalars.get(key);if(!value)throw new RemodelingDslError(node.line,"missing artifact reference "+key);return value.text});return{artifactId:values[0],dialect:{artifactKind:values[1],standard:values[2],subset:values[3]}};
+const bindArtifactRef = (node: DslNode): Record<string, unknown> => {
+  if (node.scalars.size !== ARTIFACT_REFERENCE_FIELDS.length || node.blocks.size || node.maps.size || node.tables.size || node.arrays.size || node.statements.length) {
+    throw new RemodelingDslError(node.line, "artifact reference requires exactly four inline literal text fields");
+  }
+  const [artifactId, artifactKind, standard, subset] = ARTIFACT_REFERENCE_FIELDS.map((key) => {
+    const value = node.scalars.get(key);
+    if (!value) throw new RemodelingDslError(node.line, "missing artifact reference " + key);
+    return value.text;
+  });
+  return { artifactId, dialect: { artifactKind, standard, subset } };
 };
 const bindFloatBuffer=(node:DslNode):unknown=>{
  if(node.scalars.size||node.blocks.size||node.maps.size||node.tables.size||node.arrays.size||node.statements.length!==1)throw new RemodelingDslError(node.line,"float buffer requires one typed variant");

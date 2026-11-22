@@ -130,7 +130,7 @@ const sweepForHover = async (oracle, box) => {
     await page.waitForTimeout(260);
     const snap = await paneSnap(oracle.previewMeshId);
     const target = previewPane(snap)?.selection?.hoverTarget ?? null;
-    if (target?.id) return { point: [Math.round(x), Math.round(y)], target, snap, swept: swept + 1 };
+    if (target?.id) return { point: [x, y], target, snap, swept: swept + 1 };
   }
   return { point: null, target: null, snap: await paneSnap(oracle.previewMeshId), swept: points.length };
 };

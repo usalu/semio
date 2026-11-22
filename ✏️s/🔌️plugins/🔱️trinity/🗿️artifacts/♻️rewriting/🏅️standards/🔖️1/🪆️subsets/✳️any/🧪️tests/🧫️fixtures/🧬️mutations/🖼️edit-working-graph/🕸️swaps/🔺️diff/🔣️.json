@@ -2,7 +2,7 @@
   "workingGraph": {
     "schema": null,
     "name": null,
-    "manifest": null,
+    "manifestId": null,
     "camera": null,
     "content": {
       "childId": "rewriting-capsule-shaft-c",

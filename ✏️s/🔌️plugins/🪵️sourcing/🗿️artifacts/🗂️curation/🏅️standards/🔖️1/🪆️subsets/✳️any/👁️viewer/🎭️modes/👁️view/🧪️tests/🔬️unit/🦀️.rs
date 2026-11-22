@@ -6,15 +6,10 @@ use semio_plugin::ModeDefinition;
 #[allow(unused_imports)]
 use semio_plugin::WindowLayout;
 #[allow(unused_imports)]
-use semio_plugin::WindowLayoutAxisNode;
 #[allow(unused_imports)]
-use semio_plugin::WindowLayoutChild;
 #[allow(unused_imports)]
-use semio_plugin::WindowLayoutRoot;
 #[allow(unused_imports)]
-use semio_plugin::WindowLayoutStackNode;
 #[allow(unused_imports)]
-use semio_plugin::WindowLayoutWindowNode;
 
 use crate::viewer::sourcing::modes::view::*;
 

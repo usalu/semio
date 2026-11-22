@@ -10,7 +10,7 @@ TICKET = Path(__file__).resolve().parent
 OUT = TICKET / "🗑️generated/native-wgpu-save"
 STAGE = OUT / "open"
 RUSTC = ["repo", "tools", "exec", "--light", "rustup", "--", "run", "nightly-2026-07-20", "rustc"]
-if "--live" not in sys.argv:
+if "--live" not in sys.argv and "--wire-live" not in sys.argv:
     run_path(str(TICKET / "📜️native-wgpu-open-stage.py"), run_name="__main__")
 entries = json.loads((STAGE / "receipt.json").read_bytes())
 if "--live" in sys.argv:
@@ -24,23 +24,29 @@ for item in entries:
 def module(suffix):
     """🔍 Selects a reviewed source by live destination."""
     [item] = [row for row in entries if row["file"].endswith(suffix)]
+    if "--wire-live" in sys.argv:
+        return (TICKET.parents[6] / item["file"]).read_text(encoding="utf8")
     return (STAGE / item["source"]).read_text(encoding="utf8")
 
-command = module("💾️save/📂️open.rs").split("fn import_command")[1]
-reader = module("🎨️theme-file-import-and-accessibility/📂️open.rs").split("async fn read_selected_file")[1].split("pub fn native_local_documents")[0]
-fixture = (TICKET / "📜️native-wgpu-open-law.rs").read_text(encoding="utf8")
+command = "impl NativeMediaDeclaration {" + module("💾️save/📂️open.rs").split("impl NativeMediaDeclaration {", 1)[1]
+shell = module("🎨️theme-file-import-and-accessibility/📂️open.rs")
+reader = shell.split("async fn read_selected_file", 1)[1].split("pub fn native_local_documents", 1)[0]
+cancel_import = "async fn wait_native_file_import" + shell.split("async fn wait_native_file_import", 1)[1].split("async fn read_selected_file", 1)[0]
+contract = json.loads((TICKET.parents[6] / "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧫️fixtures/📄️natural-file-lifecycle/🔣️.json").read_bytes())["wireIngress"]
+fixture = (TICKET / "📜️native-wgpu-open-law.rs").read_text(encoding="utf8").replace("usize::MAX /* wire fixture */", str(contract["nativePayloadBytes"]))
 source = OUT / "open-law.rs"
-source.write_text(fixture.replace("/* import command */", "fn import_command" + command)
-    .replace("/* bounded reader */", "async fn read_selected_file" + reader), encoding="utf8")
+source.write_text(fixture.replace("/* import command */", command)
+    .replace("/* bounded reader */", "async fn read_selected_file" + reader)
+    .replace("/* cancellable import */", cancel_import), encoding="utf8")
 
 if "--reader-only" in sys.argv:
     abi = (TICKET.parents[6] / "🧰️framework/🔨️modules/⏳️async/🔀️combinators/🦀️.rs").read_text(encoding="utf8")
     yield_body = abi.split("pub async fn yield_once()", 1)[1].split("\n}\n", 1)[0]
     fixture = fixture.split("fn wait", 1)[1].split("#[test]", 1)
-    law = fixture[1].split("#[test]", 1)[1].split("#[cfg(", 1)[0]
+    law = fixture[1].split("#[test]", 1)[1].split("/* cancellable import */", 1)[0]
     source.write_text(
         "use std::{future::Future, io::Read, path::{Path, PathBuf}, task::{Context, Poll, Waker}};\n"
-        "const NATIVE_DOCUMENT_FILE_MAXIMUM: usize = 33_554_432;\n"
+        f"const EXPECTED_NATIVE_FILE_BYTES: usize = {contract['nativePayloadBytes']};\n"
         "mod semio_framework_async { use std::task::Poll; pub async fn yield_once()" + yield_body + "\n}}\n"
         "async fn read_selected_file" + reader + "fn wait" + fixture[0] + "#[test]" + law,
         encoding="utf8",
@@ -143,6 +149,8 @@ if mode:
             args.extend(("--extern", f"{name}={path.with_suffix('.rlib')}"))
     if mode != "--wasm-metadata":
         args.extend(f"-Ldependency={directory}" for directory in sorted({file.parent for file in artifacts if file.suffix == ".rlib"}))
+    if native:
+        args.extend(("--cfg", "native_open_import"))
     rsp = OUT / ("open-native.rsp" if native else "open-wasi.rsp")
     rsp.write_text("\n".join(args) + "\n", encoding="utf8")
     subprocess.run([*RUSTC, f"@{rsp}"], check=True)

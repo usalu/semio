@@ -1,0 +1,110 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio:repo/build/graph/owner-isolation/v1",
+  "title": "Owner isolation / Eigentümer-Isolation",
+  "$defs": {
+    "Policy": {
+      "description": "EN: How a graph read treats the failure of one owner whose inference rested on inputs that may have changed during the read. DE: Wie ein Graph-Lesen den Fehler eines einzelnen Eigentümers behandelt, dessen Ableitung auf Eingaben beruhte, die sich während des Lesens geändert haben können.",
+      "const": {
+        "version": 1,
+        "code": "BUILD_OWNER_FAILED",
+        "retryRounds": 4,
+        "settlePauseMilliseconds": 250,
+        "maximumPauseRounds": 8,
+        "causeCharacters": 300,
+        "revalidateCooldownMilliseconds": 300000,
+        "revalidateAttempts": 3,
+        "replyRows": 4000,
+        "finalCodes": ["BUILD_AUTHORITY_CHANGED", "BUILD_COLLECTED_ERRORS", "BUILD_SOURCE_UNPARSEABLE", "BUILD_MEMBERSHIP_CHANGED"]
+      }
+    },
+    "PolicyDescriptions": {
+      "const": {
+        "en": {
+          "retryRounds": "The most observations of one owner in a row while the rows it consumed keep changing; a failure that reproduces on rows that did not change stops at the first observation.",
+          "settlePauseMilliseconds": "The pause before the next observation of an owner whose consumed rows changed or were written within the racy window, multiplied by the round.",
+          "maximumPauseRounds": "The most rounds the pause grows with.",
+          "causeCharacters": "The most characters of the original failure a named owner failure carries.",
+          "revalidateCooldownMilliseconds": "The time a withheld owner stays withheld before a new read infers it once more, in case its failure came from a transient cause the failure classes did not name.",
+          "revalidateAttempts": "The most times one unchanged withholding is inferred again after its cool-down; a withholding that still reproduces then stays until one of its rows changes.",
+          "replyRows": "The most observed rows a farm child sends with the named failure of an owner, so the parent keeps the owner withheld exactly until one of them changes.",
+          "finalCodes": "The failures that are never an owner's own: a restart is demanded, the diagnostic run is over, a source withholds the owner or the membership moved (each has its own follow-up)."
+        },
+        "de": {
+          "retryRounds": "Die meisten Beobachtungen eines Eigentümers hintereinander, solange sich die von ihm gelesenen Zeilen weiter ändern; ein Fehler, der sich auf unveränderten Zeilen wiederholt, endet bei der ersten Beobachtung.",
+          "settlePauseMilliseconds": "Die Pause vor der nächsten Beobachtung eines Eigentümers, dessen gelesene Zeilen sich änderten oder innerhalb des Rennfensters geschrieben wurden, multipliziert mit der Runde.",
+          "maximumPauseRounds": "Die meisten Runden, mit denen die Pause wächst.",
+          "causeCharacters": "Die meisten Zeichen des ursprünglichen Fehlers, die ein benannter Eigentümerfehler trägt.",
+          "revalidateCooldownMilliseconds": "Die Zeit, die ein zurückgehaltener Eigentümer zurückgehalten bleibt, bevor ein neues Lesen ihn noch einmal ableitet, falls sein Fehler eine vorübergehende Ursache hatte, die die Fehlerklassen nicht benannten.",
+          "revalidateAttempts": "Die meisten Male, die eine unveränderte Zurückhaltung nach ihrer Abkühlzeit erneut abgeleitet wird; eine Zurückhaltung, die sich dann noch wiederholt, bleibt, bis sich eine ihrer Zeilen ändert.",
+          "replyRows": "Die meisten beobachteten Zeilen, die ein Farm-Kindprozess mit dem benannten Fehler eines Eigentümers sendet, damit der Elternprozess den Eigentümer genau so lange zurückhält, bis sich eine davon ändert.",
+          "finalCodes": "Die Fehler, die nie der eigene eines Eigentümers sind: ein Neustart wird verlangt, der Diagnoselauf ist beendet, eine Quelle hält den Eigentümer zurück oder die Mitgliedschaft hat sich bewegt (jeder hat seine eigene Folgerunde)."
+        }
+      }
+    },
+    "Texts": {
+      "const": {
+        "retry": {
+          "en": "Owner {owner}: inference failed in round {round} while the rows it read changed ({cause}); observing it again after {milliseconds} ms, every other owner keeps its record.",
+          "de": "Eigentümer {owner}: Ableitung in Runde {round} fehlgeschlagen, während sich die gelesenen Zeilen änderten ({cause}); beobachte ihn nach {milliseconds} ms erneut, jeder andere Eigentümer behält seinen Datensatz."
+        },
+        "stable": {
+          "en": "Build owner {owner} cannot be inferred: the failure reproduces on unchanged inputs ({cause}).",
+          "de": "Build-Eigentümer {owner} kann nicht abgeleitet werden: der Fehler wiederholt sich auf unveränderten Eingaben ({cause})."
+        },
+        "unsettled": {
+          "en": "Build owner {owner} cannot be inferred: its inputs kept changing during {rounds} observations ({cause}); read again once the edits have settled.",
+          "de": "Build-Eigentümer {owner} kann nicht abgeleitet werden: seine Eingaben änderten sich während {rounds} Beobachtungen weiter ({cause}); nach Abschluss der Änderungen erneut lesen."
+        },
+        "several": {
+          "en": "{count} build owners cannot be inferred, {roots} of them root causes: {owners}.",
+          "de": "{count} Build-Eigentümer können nicht abgeleitet werden, davon {roots} Ursachen: {owners}."
+        },
+        "owner": {
+          "en": "{owner} [{code}]: {reason} (rests on {path})",
+          "de": "{owner} [{code}]: {reason} (beruht auf {path})"
+        },
+        "cascaded": {
+          "en": "cascaded: {owners}",
+          "de": "kaskadiert: {owners}"
+        },
+        "unobserved": {
+          "en": "no observed path",
+          "de": "keinem beobachteten Pfad"
+        },
+        "revalidate": {
+          "en": "Owner {owner} has been withheld for {minutes} min ({attempt} of {attempts} re-validations): inferring it again in this read.",
+          "de": "Eigentümer {owner} wird seit {minutes} min zurückgehalten ({attempt} von {attempts} Neuprüfungen): leite ihn in diesem Lesen erneut ab."
+        },
+        "withheld": {
+          "en": "Owner {owner} is left out of this read: {cause} The selection does not need it, every other owner is sealed.",
+          "de": "Eigentümer {owner} bleibt in diesem Lesen außen vor: {cause} Die Auswahl braucht ihn nicht, jeder andere Eigentümer wird versiegelt."
+        }
+      }
+    },
+    "OwnerEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "code", "reason"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "code": {"type": "string", "minLength": 1},
+        "reason": {"type": "string"},
+        "path": {"type": "string", "minLength": 1},
+        "causedBy": {"type": "string", "minLength": 1}
+      }
+    },
+    "Failure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "owners", "rounds", "stable", "message"],
+      "properties": {
+        "code": {"const": "BUILD_OWNER_FAILED"},
+        "owners": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/OwnerEntry"}},
+        "rounds": {"type": "integer", "minimum": 1},
+        "stable": {"type": "boolean"},
+        "message": {"type": "string", "minLength": 1}
+      }
+    }
+  }
+}

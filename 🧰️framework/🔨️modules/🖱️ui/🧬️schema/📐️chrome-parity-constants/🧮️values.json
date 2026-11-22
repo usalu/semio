@@ -1,0 +1,7 @@
+{
+  "$schema": "./🔣️.json",
+  "introduction": { "infoBoxGapPx": 0, "dockReachPx": 40, "clearRangePx": 120 },
+  "panelDrop": { "insertBarWidthPx": 2, "nestMinFraction": 0.3, "nestMaxFraction": 0.7, "nestFillAlpha": 0.2, "emptyZoneMinWidthRem": 10 },
+  "toast": { "maxWidthFraction": 0.5 },
+  "statusStacks": { "remPx": 16, "artifactCreationMaxWidthRem": 28, "routeAdmissionMaxWidthFraction": 0.9, "installMaxWidthFraction": 0.9 }
+}

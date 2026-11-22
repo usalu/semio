@@ -176,3 +176,88 @@ fn part22_published_correction_fields_are_checked_in_the_report() {
         assert!(crate::evaluate(&document).checks.iter().all(|check| check.id != id), "{name}");
     }
 }
+
+#[test]
+fn part23_reports_confirmed_fields_and_retains_unverified_schema() {
+    use semio_s_artifact_norm_vdi3805_model::{conforming_blatt_dataset, EditionId, NativeRecord, RecordFamilyId};
+
+    let mut document = conforming_blatt_dataset(23);
+    document.correction_as_of = EditionId::new(2020, 1);
+    let product = &mut document.catalog.products[0];
+    let index = product.records.len();
+    let id = format!("vdi3805.23.record.710.03.{}.{index}", product.id);
+    product.records.push(NativeRecord {
+        family: RecordFamilyId("710.03".into()),
+        fields: ["710.03", "41", "EC", "0"].map(str::to_owned).to_vec(),
+        extensions: Default::default(),
+    });
+    document.catalog.file.record_count += 1;
+    let report = crate::evaluate(&document);
+    assert!(report.checks.iter().any(|check| check.id == id && check.status == CheckStatus::Pass));
+    assert!(report.unverified().any(|check| check.id.starts_with("vdi3805.23.recordSchema.")));
+
+    document.catalog.products[0].records[index].fields[3] = "-1".into();
+    let report = crate::evaluate(&document);
+    let check = report.checks.iter().find(|check| check.id == id).expect("published correction check");
+    assert_eq!(check.status, CheckStatus::Fail);
+    assert!(check.remedies.iter().any(|remedy| !remedy.applicable));
+
+    document.correction_as_of = EditionId::new(2019, 12);
+    assert!(crate::evaluate(&document).checks.iter().all(|check| check.id != id));
+}
+
+#[test]
+fn part29_rejects_the_withdrawn_record_from_the_correction_date() {
+    use semio_s_artifact_norm_vdi3805_model::{conforming_blatt_dataset, EditionId, NativeRecord, RecordFamilyId};
+
+    for line in include_str!("🧫️fixtures/part29-retired-record.tsv").lines().skip(1) {
+        let [case, sheet, date, record, withdrawn]: [&str; 5] = line.split('\t').collect::<Vec<_>>().try_into().unwrap();
+        let date: u32 = date.parse().unwrap();
+        let mut document = conforming_blatt_dataset(sheet.parse().unwrap());
+        document.correction_as_of = EditionId::new((date / 100) as u16, (date % 100) as u8);
+        document.catalog.products[0].records.push(NativeRecord {
+            family: RecordFamilyId(record.into()),
+            fields: vec![record.into(), "1".into()],
+            extensions: Default::default(),
+        });
+        document.catalog.file.record_count += 1;
+        let report = crate::evaluate(&document);
+        let check = report.checks.iter().find(|check| check.id.starts_with("vdi3805.29.retired.71022."));
+        assert_eq!(check.is_some(), withdrawn == "true", "{case}");
+        if let Some(check) = check {
+            assert_eq!(check.status, CheckStatus::Fail, "{case}");
+            assert!(check.remedies.iter().any(|remedy| !remedy.applicable), "{case}");
+        }
+    }
+}
+
+#[test]
+fn part29_applies_published_revised_field_formats() {
+    use semio_s_artifact_norm_vdi3805_model::{conforming_blatt_dataset, EditionId, NativeRecord, RecordFamilyId};
+
+    for line in include_str!("🧫️fixtures/part29-corrected-fields.tsv").lines().skip(1) {
+        let [case, family, date, count, edits, expected]: [&str; 6] = line.split('\t').collect::<Vec<_>>().try_into().unwrap();
+        let date: u32 = date.parse().unwrap();
+        let mut document = conforming_blatt_dataset(29);
+        document.correction_as_of = EditionId::new((date / 100) as u16, (date % 100) as u8);
+        let mut fields = vec![String::new(); count.parse().unwrap()];
+        fields[0] = family.into();
+        fields[1] = "1".into();
+        for edit in edits.split(';').filter(|edit| !edit.is_empty()) {
+            let (position, value) = edit.split_once('=').unwrap();
+            fields[position.parse::<usize>().unwrap() - 1] = value.into();
+        }
+        let product = &mut document.catalog.products[0];
+        let index = product.records.len();
+        let id = format!("vdi3805.29.record.{family}.{}.{index}", product.id);
+        product.records.push(NativeRecord { family: RecordFamilyId(family.into()), fields, extensions: Default::default() });
+        document.catalog.file.record_count += 1;
+        let report = crate::evaluate(&document);
+        let check = report.checks.iter().find(|check| check.id == id);
+        assert_eq!(check.is_some(), expected != "scope", "{case}");
+        if let Some(check) = check {
+            assert_eq!(check.status, if expected == "-" { CheckStatus::Pass } else { CheckStatus::Fail }, "{case}");
+        }
+        assert!(report.unverified().any(|check| check.id.starts_with("vdi3805.29.recordSchema.")), "{case}");
+    }
+}

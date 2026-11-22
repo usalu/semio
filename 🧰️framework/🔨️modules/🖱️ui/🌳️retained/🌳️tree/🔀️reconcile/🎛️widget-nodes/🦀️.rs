@@ -49,6 +49,7 @@ pub(super) fn input_node(document: &UiDocumentTree, record: &UiNodeRecord, contr
 pub(super) fn select_node(record: &UiNodeRecord, controller: &str) -> UiNode {
     let ui_contract::Component::Select(props) = &record.component else { return UiNode::Separator(UiSeparatorNode { presence: record_presence(record), menu: menu_ref(record) }) };
     UiNode::Select(UiSelectNode {
+        appearance: props.appearance,
         id: record.key.as_str().to_string(),
         value: props.value.as_str().to_string(),
         items: props.items.iter().map(|item| UiSelectItem { value: item.value.as_str().to_string(), label: contract_label(&item.label) }).collect(),

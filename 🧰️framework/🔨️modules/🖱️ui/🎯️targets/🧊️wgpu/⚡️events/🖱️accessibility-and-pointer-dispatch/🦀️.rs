@@ -29,14 +29,13 @@ impl EventRouter {
     }
     //#endregion 🔖️CursorApi
 
-    /// 🧹️ Drops registry entries (`drag_payloads`/`drop_accept`/`scroll_thumbs`) keyed by a `NodeId`
+    /// 🧹️ Drops registry entries (`drag_payloads`/`drop_accept`) keyed by a `NodeId`
     /// `reconcile` has since removed from `tree` — generation-tagged `NodeId`s (see `arena`'s own doc
     /// comment) make stale entries harmless to *use* (they simply never match a live node again), but
     /// this keeps the maps from growing unboundedly across a long session's worth of churn.
     fn prune_dead_registrations(&mut self, tree: &UiTree) {
         self.drag_payloads.retain(|id, _| tree.contains(*id));
         self.drop_accept.retain(|id, _| tree.contains(*id));
-        self.scroll_thumbs.retain(|thumb, (scrollable, _)| tree.contains(*thumb) && tree.contains(*scrollable));
         if self.stepper_repeat.is_some_and(|repeat| !tree.contains(repeat.node)) {
             self.stepper_repeat = None;
         }
@@ -104,7 +103,7 @@ impl EventRouter {
             }
             AccessibilityUiEvent::Value(value) => {
                 let mirrored = match tree.node(target).map(|node| &node.spec.0) {
-                    Some(UiNode::Input(_) | UiNode::IconSelect(_) | UiNode::NumberStepper(_)) => MirroredValue::Buffer,
+                    Some(UiNode::Input(_) | UiNode::NumberStepper(_)) => MirroredValue::Buffer,
                     Some(UiNode::Slider(_)) => MirroredValue::Readout,
                     Some(UiNode::Select(select)) => MirroredValue::Fired(fired_action(&select.on_change, Trigger::Change, DslValue::String(value.clone()))),
                     Some(UiNode::Toggle(toggle)) => MirroredValue::Fired(value.parse::<bool>().ok().and_then(|value| fired_action(&toggle.on_change, Trigger::Change, DslValue::Bool(value)))),
@@ -137,8 +136,9 @@ impl EventRouter {
             return Vec::new();
         }
         let on_change = select.on_change.clone();
+        let committed = semio_ui_retained_tree::reconcile::select_commit_value(tree, target, value);
         let mut commands = Vec::new();
-        if let Some(fired) = fired_action(&on_change, Trigger::Change, DslValue::String(value.to_string())) {
+        if let Some(fired) = fired_action(&on_change, Trigger::Change, DslValue::String(committed)) {
             self.push_app_command(tree, target, fired, &mut commands);
         }
         commands.extend(self.close_overlay(tree, target));
@@ -227,6 +227,8 @@ impl EventRouter {
         match event {
             UiEvent::PointerCancel => {
                 self.stepper_repeat = None;
+                self.text_drag = None;
+                self.text_pending = None;
                 if let Some((id, _)) = self.capture.release(pointer_id) {
                     if let Some(node) = tree.node_mut(id) {
                         node.flags.set(NodeFlags::ACTIVE, false);
@@ -247,6 +249,7 @@ impl EventRouter {
                 let _ = self.set_row_reason(tree, None);
             }
             UiEvent::PointerLeave => {
+                self.leave_tree_row_reorder_target();
                 self.update_stepper_hover_segment(tree, None, 0.0, 0.0);
                 commands.extend(self.update_hover(tree, None, None));
                 let _ = self.set_row_reason(tree, None);
@@ -260,8 +263,11 @@ impl EventRouter {
                     Some((_, _, CaptureKind::Drag)) => self.update_drag(tree, root, *x, *y),
                     Some((_, scrollable, CaptureKind::ScrollThumb(axis))) => self.update_scroll_thumb(tree, scrollable, axis, *x, *y),
                     Some((_, pressed, CaptureKind::Press)) => {
+                        if let Some(drag) = self.text_drag.filter(|drag| drag.node == pressed) {
+                            self.drag_text_pointer(tree, drag, *x, *y);
+                        }
                         if tree.node(pressed).is_some_and(|node| commits_while_dragging(&node.spec.0)) {
-                            commands.extend(self.pointer_commit(tree, pressed, *x, *y));
+                            commands.extend(self.pointer_commit(tree, pressed, *x, *y, false));
                         }
                     }
                     _ => {}
@@ -277,13 +283,14 @@ impl EventRouter {
                 self.hover_row_reason(tree, target, *x, *y);
                 commands.extend(self.maybe_dismiss_tooltip_on_hover_out(tree, *x, *y));
             }
-            UiEvent::PointerDown { x, y, button, .. } => {
+            UiEvent::PointerDown { x, y, button, modifiers } => {
                 self.focus_visible = false;
                 self.tree_drag_handle_press = None;
                 if let Some(dismissed) = self.dismiss_topmost_if_outside_press(tree, *x, *y) {
                     return dismissed;
                 }
                 self.press_origin = Some((*x, *y));
+                self.note_press(*x, *y, *button);
                 let scroll_target = self
                     .overlays
                     .topmost()
@@ -303,13 +310,11 @@ impl EventRouter {
                         let UiNode::NumberStepper(stepper) = &node.spec.0 else { return false };
                         absolute_rect(tree, id).and_then(|bounds| number_stepper_sign_at(bounds, *x, *y, self.flow.inline, self.control_border)).is_some_and(|sign| !number_stepper_can_step(node, stepper, sign))
                     });
-                    if disabled_stepper_side {
+                    let off_orb_ring = tree.node(id).is_some_and(|node| matches!(&node.spec.0, UiNode::Ring(ring) if absolute_rect(tree, id).is_none_or(|bounds| !semio_ui_wgpu_layout::layout::ring_orb_hit(bounds, ring.t, *x, *y))));
+                    if disabled_stepper_side || off_orb_ring {
                         return commands;
                     }
-                    if let Some(&(scrollable, axis)) = self.scroll_thumbs.get(&id) {
-                        let offset = tree.node(scrollable).map(|node| node.state.scroll_offset).unwrap_or_default();
-                        self.capture.target = Some((pointer_id, scrollable, CaptureKind::ScrollThumb(axis)));
-                        self.thumb_start = Some((*x, *y, offset.0, offset.1));
+                    if self.press_scrollbar(tree, id, *x, *y, pointer_id) {
                     } else {
                         if let Some(node) = tree.node_mut(id) {
                             node.flags.set(NodeFlags::ACTIVE, true);
@@ -328,6 +333,9 @@ impl EventRouter {
                             }
                             commands.push(UiCommand::FocusChanged { window_id: self.window_id.clone(), node: None });
                         }
+                        if matches!(button, PointerButton::Primary) {
+                            self.begin_text_pointer(tree, id, *x, *y, *modifiers);
+                        }
                         if let Some(item) = find_tree_item_spec(tree, id) {
                             let arms = self.tree_drag_press_arms(tree, id, *x, *y);
                             let payload = arms.then(|| item.drag_data.clone().unwrap_or_default());
@@ -342,7 +350,7 @@ impl EventRouter {
                         }
                         if tree.node(id).is_some_and(|node| (commits_while_dragging(&node.spec.0) || (*button == PointerButton::Primary && matches!(node.spec.0, UiNode::NumberStepper(_)))) && node.spec.0.presence().state != UiState::Disabled) {
                             self.arm_stepper_repeat(tree, id, *x, *y);
-                            commands.extend(self.pointer_commit(tree, id, *x, *y));
+                            commands.extend(self.pointer_commit(tree, id, *x, *y, true));
                         }
                     }
                 } else {
@@ -352,8 +360,9 @@ impl EventRouter {
                     commands.push(UiCommand::FocusChanged { window_id: self.window_id.clone(), node: None });
                 }
             }
-            UiEvent::PointerUp { x, y, button, .. } => {
+            UiEvent::PointerUp { x, y, button, modifiers } => {
                 self.stepper_repeat = None;
+                self.text_drag = None;
                 let captured_scene = self.capture.target.and_then(|(_, id, _)| self.scene_command(tree, id, event).map(|command| (id, command)));
                 if let Some((active_id, kind)) = self.capture.release(pointer_id) {
                     match kind {
@@ -378,14 +387,22 @@ impl EventRouter {
                                 let slider_readout = *button == PointerButton::Primary && self.note_slider_readout_click(tree, active_id, *x, *y);
                                 let is_select = tree.node(active_id).is_some_and(|node| matches!(node.spec.0, UiNode::Select(_)));
                                 let row_action = self.pointer_row_action(tree, active_id, *x, *y);
-                                let disclosed = row_action.is_none() && self.pointer_toggle_disclosure(tree, active_id, *x, *y);
+                                let tree_row = row_action.is_none() && !slider_readout && *button == PointerButton::Primary && tree_row_owner(tree, active_id).is_some();
+                                let table_row = row_action.is_none() && !slider_readout && *button == PointerButton::Primary && semio_ui_wgpu_mounted_layout::document_table_row(tree, active_id).is_some();
+                                let disclosed = row_action.is_none() && !tree_row && !table_row && self.pointer_toggle_disclosure(tree, active_id, *x, *y);
                                 let row_also_activates = disclosed && tree.authored_tree_item(active_id).is_some() && tree.node(active_id).is_some_and(|node| matches!(&node.spec.0, UiNode::Stack(stack) if stack.activate.is_some()));
                                 if slider_readout {
                                 } else if let Some(index) = row_action {
                                     commands.extend(self.row_action_command(tree, active_id, index));
+                                } else if tree_row {
+                                    self.route_tree_press(tree, active_id, *modifiers, &mut commands);
+                                } else if table_row {
+                                    self.route_table_row_click(tree, active_id, &mut commands);
                                 } else if disclosed && !row_also_activates {
                                 } else if is_select && select_scroll_release {
                                     let _ = select::arm_retained_select_scroll_at(tree, active_id, *x, *y);
+                                } else if is_select && select_is_segmented(tree, active_id) {
+                                    self.segmented_select_click(tree, active_id, *x, &mut commands);
                                 } else if is_select {
                                     commands.extend(self.toggle_select_popup(tree, active_id));
                                 } else {
@@ -403,24 +420,12 @@ impl EventRouter {
                                             }
                                         }
                                     } else if !tree.node(active_id).is_some_and(|node| matches!(node.spec.0, UiNode::NumberStepper(_) | UiNode::Slider(_) | UiNode::Ring(_))) {
-                                        commands.extend(self.pointer_commit(tree, active_id, *x, *y));
+                                        commands.extend(self.pointer_commit(tree, active_id, *x, *y, false));
                                     }
                                 }
                             }
                         }
-                        CaptureKind::Drag => {
-                            self.tree_drag_handle_press = None;
-                            if let Some(node) = tree.node_mut(active_id) {
-                                node.flags.set(NodeFlags::ACTIVE, false);
-                            }
-                            tree.mark_dirty(active_id, NodeFlags::DIRTY_PAINT);
-                            if let Some(drag) = self.drag.take() {
-                                commands.push(match drag.drop_target {
-                                    Some(target) => UiCommand::DropCommitted { window_id: self.window_id.clone(), source: drag.source, target, payload: drag.payload },
-                                    None => UiCommand::DropCancelled { window_id: self.window_id.clone(), source: drag.source },
-                                });
-                            }
-                        }
+                        CaptureKind::Drag => commands.extend(self.commit_drag(tree, root, active_id, *x, *y)),
                         CaptureKind::ScrollThumb(_) => {
                             self.thumb_start = None;
                         }
@@ -445,8 +450,10 @@ impl EventRouter {
                 let select_consumed = key != "Escape" && self.route_select_key(tree, key, *modifiers, &mut commands);
                 if key == "Escape" && self.set_row_reason(tree, None) {
                 } else if key == "Escape" {
-                    let over_overlay = self.overlays.topmost().is_some();
-                    commands.extend(self.close_topmost_overlay(tree));
+                    let over_overlay = self.overlays.topmost().is_some_and(|overlay| !overlay.veto.escape);
+                    if over_overlay {
+                        commands.extend(self.close_topmost_overlay(tree));
+                    }
                     if !over_overlay {
                         let numeric_editor_focused = self.focus.focused.is_some_and(|id| tree.node(id).is_some_and(|node| matches!(node.spec.0, UiNode::NumberStepper(_)) || matches!(node.spec.0, UiNode::Slider(_)) && node.state.edit.is_some()));
                         if numeric_editor_focused {
@@ -473,6 +480,8 @@ impl EventRouter {
                         self.push_app_command(tree, blurred, fired, &mut commands);
                     }
                     commands.push(UiCommand::FocusChanged { window_id: self.window_id.clone(), node: self.focus.focused });
+                } else if self.route_tree_key(tree, key, *modifiers, &mut commands) {
+                } else if self.focused_table_row_key(tree, key, *modifiers, &mut commands) {
                 } else if self.focused_disclosure_activation(tree, key) {
                 } else if let Some((activated, fired)) = self.focused_button_activation(tree, key) {
                     self.push_app_command(tree, activated, fired, &mut commands);

@@ -13,7 +13,7 @@ describe("Shell components", () => {
         <div className="h-layout-story w-layout-story-md">
           <Mode
             windows={[{ id: "main", title: uiDataLabel("Main"), iconId: "app-window", children: <div>Main Body</div> }]}
-            layout={{ kind: "stack", children: [{ kind: "window", id: "main" }], activeId: "main" }}
+            layout={{ kind: "stack", children: [{ kind: "window", windowKindId: "main" }], activeWindowId: "main" }}
             activeWindowId="main"
             onActiveWindowChange={() => {}}
           />
@@ -62,10 +62,10 @@ describe("Shell components", () => {
               { id: "right", title: uiDataLabel("Right"), iconId: "app-window", children: <div>Right Pane</div> },
             ]}
             layout={{
-              kind: "row",
+              kind: "split", axis: "horizontal",
               children: [
-                { kind: "stack", children: [{ kind: "window", id: "left" }], activeId: "left" },
-                { kind: "stack", children: [{ kind: "window", id: "right" }], activeId: "right" },
+                { kind: "stack", children: [{ kind: "window", windowKindId: "left" }], activeWindowId: "left" },
+                { kind: "stack", children: [{ kind: "window", windowKindId: "right" }], activeWindowId: "right" },
               ],
             }}
             activeWindowId="right"
@@ -147,10 +147,10 @@ describe("Shell components", () => {
             layout={{
               kind: "stack",
               children: [
-                { kind: "window", id: "left" },
-                { kind: "window", id: "right" },
+                { kind: "window", windowKindId: "left" },
+                { kind: "window", windowKindId: "right" },
               ],
-              activeId: "right",
+              activeWindowId: "right",
             }}
             activeWindowId={activeWindowId}
             onActiveWindowChange={setActiveWindowId}
@@ -185,7 +185,7 @@ describe("Shell components", () => {
             canvas={
               <Mode
                 windows={[{ id: "main", title: uiDataLabel("Main"), iconId: "app-window", children: <div>Main Body</div> }]}
-                layout={{ kind: "stack", children: [{ kind: "window", id: "main" }], activeId: "main" }}
+                layout={{ kind: "stack", children: [{ kind: "window", windowKindId: "main" }], activeWindowId: "main" }}
                 activeWindowId="main"
                 onActiveWindowChange={() => {}}
               />
@@ -223,23 +223,23 @@ describe("Shell components", () => {
               { id: "b2", title: uiDataLabel("B2"), iconId: "app-window", children: <div>B2 Body</div> },
             ]}
             layout={{
-              kind: "row",
+              kind: "split", axis: "horizontal",
               children: [
                 {
                   kind: "stack",
                   children: [
-                    { kind: "window", id: "a1" },
-                    { kind: "window", id: "a2" },
+                    { kind: "window", windowKindId: "a1" },
+                    { kind: "window", windowKindId: "a2" },
                   ],
-                  activeId: "a1",
+                  activeWindowId: "a1",
                 },
                 {
                   kind: "stack",
                   children: [
-                    { kind: "window", id: "b1" },
-                    { kind: "window", id: "b2" },
+                    { kind: "window", windowKindId: "b1" },
+                    { kind: "window", windowKindId: "b2" },
                   ],
-                  activeId: "b2",
+                  activeWindowId: "b2",
                 },
               ],
             }}
@@ -291,10 +291,10 @@ describe("Shell components", () => {
               { id: "right", title: uiDataLabel("Right"), iconId: "app-window", children: <div>Right Pane</div> },
             ]}
             layout={{
-              kind: "row",
+              kind: "split", axis: "horizontal",
               children: [
-                { kind: "stack", children: [{ kind: "window", id: "left" }], activeId: "left" },
-                { kind: "stack", children: [{ kind: "window", id: "right" }], activeId: "right" },
+                { kind: "stack", children: [{ kind: "window", windowKindId: "left" }], activeWindowId: "left" },
+                { kind: "stack", children: [{ kind: "window", windowKindId: "right" }], activeWindowId: "right" },
               ],
             }}
             activeWindowId="left"
@@ -328,10 +328,10 @@ describe("Shell components", () => {
               { id: "bottom", title: uiDataLabel("Bottom"), iconId: "app-window", children: <div>Bottom Pane</div> },
             ]}
             layout={{
-              kind: "column",
+              kind: "split", axis: "vertical",
               children: [
-                { kind: "stack", children: [{ kind: "window", id: "top" }], activeId: "top" },
-                { kind: "stack", children: [{ kind: "window", id: "bottom" }], activeId: "bottom" },
+                { kind: "stack", children: [{ kind: "window", windowKindId: "top" }], activeWindowId: "top" },
+                { kind: "stack", children: [{ kind: "window", windowKindId: "bottom" }], activeWindowId: "bottom" },
               ],
             }}
             activeWindowId="top"
@@ -362,20 +362,20 @@ describe("Shell components", () => {
               { id: "rb", title: uiDataLabel("Right Bottom"), iconId: "app-window", children: <div>Right Bottom</div> },
             ]}
             layout={{
-              kind: "row",
+              kind: "split", axis: "horizontal",
               children: [
                 {
-                  kind: "column",
+                  kind: "split", axis: "vertical",
                   children: [
-                    { kind: "stack", children: [{ kind: "window", id: "lt" }], activeId: "lt" },
-                    { kind: "stack", children: [{ kind: "window", id: "lb" }], activeId: "lb" },
+                    { kind: "stack", children: [{ kind: "window", windowKindId: "lt" }], activeWindowId: "lt" },
+                    { kind: "stack", children: [{ kind: "window", windowKindId: "lb" }], activeWindowId: "lb" },
                   ],
                 },
                 {
-                  kind: "column",
+                  kind: "split", axis: "vertical",
                   children: [
-                    { kind: "stack", children: [{ kind: "window", id: "rt" }], activeId: "rt" },
-                    { kind: "stack", children: [{ kind: "window", id: "rb" }], activeId: "rb" },
+                    { kind: "stack", children: [{ kind: "window", windowKindId: "rt" }], activeWindowId: "rt" },
+                    { kind: "stack", children: [{ kind: "window", windowKindId: "rb" }], activeWindowId: "rb" },
                   ],
                 },
               ],
@@ -406,10 +406,10 @@ describe("Shell components", () => {
             layout={{
               kind: "stack",
               children: [
-                { kind: "window", id: "a" },
-                { kind: "window", id: "b" },
+                { kind: "window", windowKindId: "a" },
+                { kind: "window", windowKindId: "b" },
               ],
-              activeId: "a",
+              activeWindowId: "a",
             }}
             activeWindowId="a"
             onActiveWindowChange={() => {}}

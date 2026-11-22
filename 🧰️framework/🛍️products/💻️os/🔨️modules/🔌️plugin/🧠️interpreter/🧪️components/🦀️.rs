@@ -20,6 +20,9 @@ pub fn owned_input_pending_guest(channel:u32)->Vec<u8>{owned_guest(channel,false
 /// 🔁️ Poll lends output and actual receipts.
 pub fn owned_poll_guest(channel:u32)->Vec<u8>{owned_guest(channel,false,5,None)}
 
+/// 🪃️ Poll calls a defined callee with independently sized local backing before publishing output.
+pub fn owned_poll_return_guest(channel:u32,callee_locals:u32)->Vec<u8>{owned_guest_with_poll_return(channel,false,5,None,Some(callee_locals))}
+
 /// 🕰️ The cleanup export uses its actual budget clock binding through the host import.
 pub fn owned_poll_clock_guest(channel:u32)->Vec<u8>{owned_guest(channel,false,6,None)}
 
@@ -27,6 +30,10 @@ pub fn owned_poll_clock_guest(channel:u32)->Vec<u8>{owned_guest(channel,false,6,
 pub fn owned_input_failure_guest(channel:u32)->Vec<u8>{owned_guest(channel,false,7,None)}
 
 fn owned_guest(channel:u32,input_echo:bool,input_receipt:u8,clock:Option<u64>)->Vec<u8>{
+    owned_guest_with_poll_return(channel,input_echo,input_receipt,clock,None)
+}
+
+fn owned_guest_with_poll_return(channel:u32,input_echo:bool,input_receipt:u8,clock:Option<u64>,callee_locals:Option<u32>)->Vec<u8>{
     fn uleb(mut value: u64, output: &mut Vec<u8>) {
         loop {
             let byte = (value & 0x7f) as u8;
@@ -107,7 +114,7 @@ fn owned_guest(channel:u32,input_echo:bool,input_receipt:u8,clock:Option<u64>)->
     }
 
     let answer = channel.to_string().into_bytes();
-    let (types, bodies): (Vec<u8>, Vec<Vec<u8>>) = OwnedSemioExport::ALL
+    let (mut types, mut bodies): (Vec<u8>, Vec<Vec<u8>>) = OwnedSemioExport::ALL
         .iter()
         .map(|export| match export {
             OwnedSemioExport::Allocate if input_echo||input_receipt!=0 => (0u8, vec![0x00,0x41,0xc0,0x00,0x0b]),
@@ -164,7 +171,7 @@ fn owned_guest(channel:u32,input_echo:bool,input_receipt:u8,clock:Option<u64>)->
             OwnedSemioExport::AdmitActorInput if input_receipt!=0=>{let mut body=vec![0];if input_receipt==7{body.extend([0x20,20,0x50,0x45,0x04,0x40,0x41]);sleb(2048,&mut body);body.extend([0x41,4,0x3a,0,4,0x41]);sleb(2048,&mut body);body.extend([0x41,2,0x3a,0,5,0x0b]);}for index in 0..11{body.push(0x41);sleb(2048,&mut body);body.extend([0x20,index+2,0x37,3,8+index*8]);}if input_receipt==5{publish_header(&mut body,2048,144);}packed(&mut body,2048,144);body.push(0x0b);(9,body)},
             OwnedSemioExport::AdmitActorInput if input_echo => (9,vec![0x00,0x20,0x01,0xad,0x42,0x20,0x86,0x20,0x00,0xad,0x84,0x0b]),
             OwnedSemioExport::AdmitActorInput=>(9,vec![0x00,0x42,0,0x0b]),
-            OwnedSemioExport::Poll if input_receipt>=5=>{let mut body=vec![0];for index in 0..11{body.push(0x41);sleb(2800,&mut body);body.extend([0x20,index,0x37,3,8+index*8]);}if input_receipt==5{publish_header(&mut body,2800,152);}packed(&mut body,2800,152);body.push(0x0b);(5,body)},
+            OwnedSemioExport::Poll if input_receipt>=5=>{let mut body=vec![0];if callee_locals.is_some(){body.push(0x10);uleb(OwnedSemioExport::ALL.len() as u64,&mut body);}for index in 0..11{body.push(0x41);sleb(2800,&mut body);body.extend([0x20,index,0x37,3,8+index*8]);}if input_receipt==5{publish_header(&mut body,2800,152);}packed(&mut body,2800,152);body.push(0x0b);(5,body)},
             OwnedSemioExport::CloseActorOutput if input_receipt>=5=>{let mut body=vec![0];if input_receipt==6{body.extend([0x20,3,0x41]);sleb(3008,&mut body);body.extend([0x10,0]);}for index in 0..11{body.push(0x41);sleb(2560,&mut body);body.extend([0x20,index,0x37,3,8+index*8]);}if input_receipt==5{publish_header(&mut body,2560,144);}packed(&mut body,2560,144);body.push(0x0b);(5,body)},
             
             OwnedSemioExport::AcknowledgeActorFailure if input_receipt==7=>{let mut body=vec![0];for index in 0..11{body.push(0x41);sleb(3600,&mut body);body.extend([0x20,index+2,0x37,3,16+index*8]);}for index in 0..2{body.push(0x41);sleb(3600,&mut body);body.extend([0x20,index,0x37,3]);uleb(152+u64::from(index)*8,&mut body);}body.push(0x42);sleb((184i64<<32)|3600,&mut body);body.push(0x0b);(10,body)},
@@ -190,6 +197,15 @@ fn owned_guest(channel:u32,input_echo:bool,input_receipt:u8,clock:Option<u64>)->
     for count in [20,19,5,22]{signatures.extend([0x60,count]);signatures.extend(std::iter::repeat_n(0x7e,count as usize));signatures.extend([1,0x7e]);}
     signatures.extend([0x60,2,0x7e,0x7f,0,0x60,21,0x7f,0x7f]);signatures.extend(std::iter::repeat_n(0x7e,19));signatures.extend([1,0x7e]);
     for count in [21,23,6]{signatures.extend([0x60,count]);signatures.extend(std::iter::repeat_n(0x7e,count as usize));signatures.extend([1,0x7e]);}
+    if let Some(locals)=callee_locals {
+        signatures[0]+=1;
+        signatures.extend([0x60,0,0]);
+        types.push(13);
+        let mut body=vec![1];
+        uleb(u64::from(locals),&mut body);
+        body.extend([0x7e,0x0b]);
+        bodies.push(body);
+    }
     section(1,signatures,&mut core);
     if clock.is_some()||input_receipt==6{let module="semio:framework/pure@1.0.0";let name="operation-clock-us";let mut imports=vec![1];uleb(module.len()as u64,&mut imports);imports.extend(module.as_bytes());uleb(name.len()as u64,&mut imports);imports.extend(name.as_bytes());imports.extend([0,8]);section(2,imports,&mut core);}
     let mut functions = Vec::new();

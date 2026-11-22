@@ -1,0 +1,104 @@
+diff --git a/🧰️framework/📦️packages/🦀️rust/🦀️.rs b/🧰️framework/📦️packages/🦀️rust/🦀️.rs
+--- a/🧰️framework/📦️packages/🦀️rust/🦀️.rs
++++ b/🧰️framework/📦️packages/🦀️rust/🦀️.rs
+@@ -8,7 +8,7 @@
+     };
+     pub use semio_framework_kernel::{ActionContext, ActionRequest, ActorInstanceCloseRequest, ActorInstanceLifecycleAck, ActorInstanceLifecycleReceipt, ActorInstanceLifetime, ActorInstanceOpenRequest, ActorUiPatchReceipt, ArtifactDiff, ArtifactMergeKind, BrokerHooks, CLIPBOARD_FRAGMENT_MAX_WIRE_BYTES, CLIPBOARD_METADATA_MAX_WIRE_BYTES, CLIPBOARD_PASTE_MAX_WIRE_BYTES, CLIPBOARD_TEXT_MAX_BYTES, COLD_PAIR_MAXIMUM_BYTES, COLD_PAIR_MAXIMUM_PAGES, COLD_PAIR_PAGE_MAXIMUM_BYTES, COMMAND_BATCH_MAXIMUM_ITEMS, COMMAND_MAXIMUM_BYTES, COMMAND_MAXIMUM_PAGES, COMMAND_PAGE_MAXIMUM_BYTES, ClipboardError, ClipboardFragment, ColdDocumentPairApplied, ColdDocumentPairCursor, ColdDocumentPairFrontier, ColdDocumentPairHeader, ColdDocumentPairPage, ColdPairIngressStatus, CommandBatch, CommandBatchDriver, CommandBatchProgress, CommandContext, PureCommandRequest, PureInvocation, CommandDriverRegistry, CommandEnvelope, CommandEnvelopeSet, CommandIngressStatus, CommandPageCursor, CommandPageSet, Diagnostic, Effect, Event, Fault, FaultCause, FaultCode, FaultFrom, FaultOrigin, FaultScope, FixedCommandPage, INVOCATION_RESULT_PACK_MAXIMUM_BYTES, InvocationResult, JobPlacement, MessageEndpoint, OriginalJobBudget, OriginalJobCallFailure, OriginalJobCancelReply, OriginalJobOutcome, OriginalJobOutputAckReply, OriginalJobOutputChunk, OriginalJobOutputReply, OriginalJobOutputState, OriginalJobSource, OriginalJobSourceCursor, OriginalJobStartReply, OriginalJobStepReply, OriginalActorTurnWork, OriginalJobTurnLoan, PagedCommand, PagedCommandReader, PasteAnchor, PastePlacement, PresenceHistoryEdit, PresenceHistoryEditStage, PresencePeer, PresenceToolRun, PresenceToolRunState, PresenceUi, PresenceViewKind, PresenceWindowView, RejectedCommandBuild, RejectedCommandBuildRegistry, RetainedTurnInput, RetainedTurnReceipt, Severity, TurnResult, UndoPolicy, WindowOutput, decode_presence_history_edit, decode_presence_peer, encode_presence_history_edit, encode_presence_peer, return_content, return_message, spawned_job_completed_event};
+     pub use semio_framework_kernel_history::{FRAMEWORK_FAULT_NOTICE_LABELS, FaultNotice, HISTORY_NOTICE_LABELS, HISTORY_REPROJECTION_LABELS, HistoryEntry, HistoryMutationEntry, HistoryMutationMessage, HistoryPatch, HistoryReprojection, HistoryReprojectionKind, HistoryReprojectionStatus, HistoryTimeTravel, HistoryTimeTravelProblem, HistoryTimeTravelReview, HistoryTimeTravelStage, HistoryTransaction, fault_notice, framework_fault_notice, history_notice, history_reprojection_status};
+-    pub use semio_framework_kernel_identity::{ActionDef, ActionId, ActionInvocation, ActivationEvent, ActorId, AppEvent, AppInstanceId, Appearance, ArtifactHandle, ArtifactId, ArtifactKind, ArtifactVersion, AssetHandle, BrokerCapabilityGrant, Budget, Capability, CapabilityChange, CapabilityGrant, CapabilityId, CapabilityRequest, CapabilityRequirement, CapabilityToken, CommandId, CommandInvocation, EditRef, ExtensionDescriptor, FailureAction, HybridLogicalTimestamp, InverseMutation, InvocationId, KernelMutation, MutationId, PhysicalSize, PluginInstanceId, QuotaBreach, QuotaSchema, QuotaTree, RequestId, RequestOutcome, Rights, SchemaId, SchemaVersion, Scope, TurnStatus, UndoGroup, Usage, WindowEvent, WindowHandle, WindowInput, WindowKindDef, WindowKindId, extensions_extending, scope_capabilities_to_parent};
++    pub use semio_framework_kernel_identity::{ActionDef, ActionId, ActionInvocation, ActivationEvent, ActorId, AppEvent, AppInstanceId, Appearance, ArtifactHandle, ArtifactId, ArtifactKind, ArtifactVersion, AssetHandle, BrokerCapabilityGrant, Budget, Capability, CapabilityChange, CapabilityGrant, CapabilityId, CapabilityRequest, CapabilityRequirement, CapabilityToken, CommandId, CommandInvocation, EditRef, ExtensionDescriptor, FailureAction, HybridLogicalTimestamp, InverseMutation, InvocationId, KernelMutation, MutationId, OwnedCorePollLimits, PhysicalSize, PluginInstanceId, PollRequestLimits, QuotaBreach, QuotaSchema, QuotaTree, RequestId, RequestOutcome, Rights, SchemaId, SchemaVersion, Scope, TurnStatus, UndoGroup, Usage, WindowEvent, WindowHandle, WindowInput, WindowKindDef, WindowKindId, extensions_extending, scope_capabilities_to_parent};
+     pub use semio_framework_kernel_media_jobs::{FRAMEWORK_RESERVED_JOB_KIND, IMPORT_ARGUMENT_CHUNK, IMPORT_ARGUMENT_CHUNK_COUNT, IMPORT_ARGUMENT_INDEX, IMPORT_ARGUMENT_NAME, IMPORT_ARGUMENT_PAYLOAD, IMPORT_ARGUMENT_TOTAL, IMPORT_CHUNK_BYTES, IMPORT_STAGING_MAXIMUM_BYTES, IMPORT_STAGING_MAXIMUM_CHUNKS, IMPORT_STAGING_RUNS, IconRenderExportItem, ImportArguments, ImportChunk, ImportStaging, ImportStagingRefusal, MEDIA_EXPORT_BASE64_ENCODING, MEDIA_EXPORT_UTF8_ENCODING, MEDIA_VIDEO_RENDER_CAPABILITY, MediaExportEncodingError, SPAWNED_JOB_DEADLINE_MS, SPAWNED_JOB_FUEL, SPAWNED_JOB_STEP_CEILING, SpawnedJobCompletion, SpawnedJobDriveError, SpawnedJobStep, VIDEO_RENDER_PROGRAM_MAXIMUM_EDGE, VIDEO_RENDER_PROGRAM_MAXIMUM_FPS, VIDEO_RENDER_PROGRAM_MAXIMUM_FRAMES, VIDEO_RENDER_PROGRAM_SCHEMA, VideoRenderEncoderTier, VideoRenderImage, VideoRenderJobEvent, VideoRenderJobEventError, VideoRenderJobLedger, VideoRenderJobOutcome, VideoRenderJobRow, VideoRenderOp, VideoRenderPath, VideoRenderProgram, VideoRenderProgramError, VideoRenderRun, VideoRenderScene, import_chunk_arguments, import_payload_chunks, media_export_bytes, spawned_job_completion, video_render_crop_is_admitted, video_render_image_url_is_admitted, video_render_path_is_well_formed};
+     pub use semio_framework_kernel_ui::{PresenceUpdate, UI_TURN_PATCHES_MAXIMUM, UI_TURN_PATCH_BUDGET_BYTES, UI_TURN_PATCH_OP_WIRE_ENVELOPE_BYTES, UI_TURN_PATCH_OWNER_BYTES, UI_TURN_PATCH_RETIRE_SLOTS, UI_TURN_PATCH_TRANSPORT_SLOTS, UI_TURN_PATCH_WIRE_ENVELOPE_BYTES, UiDirtyScope, UiDirtySection, UiPatch, UiPatchOp, UiTurnPatchTransfer, UiTurnPatchTransportLease, UiTurnPatchTransportProducer, UiTurnPatchTransportProgress, UiTurnPatchTransportStep, UiTurnPatches, UiTurnPatchesIntoIter, close_ui_turn_patch_owner_one, close_ui_turn_patch_owner_with_grant, close_ui_turn_patch_transport_one, close_ui_turn_patch_transport_session_one, close_ui_turn_patch_transport_with_grant, ui_patch_turn_bytes};
+ }
+diff --git a/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/🏃️runtime/📥️snapshot-operation-and-input-records/🦀️.rs b/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/🏃️runtime/📥️snapshot-operation-and-input-records/🦀️.rs
+--- a/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/🏃️runtime/📥️snapshot-operation-and-input-records/🦀️.rs
++++ b/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/🏃️runtime/📥️snapshot-operation-and-input-records/🦀️.rs
+@@ -39,15 +39,37 @@
+     }
+ }
+ 
+-/// 🔀️ Serializes borrowed kernel inputs without an intermediate value tree.
++/// 🔀️ Serializes borrowed input in the tagged owned Core Poll envelope.
+ #[derive(serde::Serialize)]
+-pub(super) struct OwnedPollInput<'a> {
+-    pub(super) events: &'a [&'a Event],
+-    pub(super) command_page: Option<(&'a semio_framework::kernel::CommandPageCursor, &'a semio_framework::kernel::FixedCommandPage)>,
+-    pub(super) cold_pair_page: Option<&'a semio_framework::kernel::ColdDocumentPairPage>,
+-    pub(super) budget: Budget,
++pub(super) enum OwnedPollInput<'a> {
++    Poll {
++        events: &'a [&'a Event],
++        command_page: Option<(&'a semio_framework::kernel::CommandPageCursor, &'a semio_framework::kernel::FixedCommandPage)>,
++        cold_pair_page: Option<&'a semio_framework::kernel::ColdDocumentPairPage>,
++        limits: semio_framework::kernel::OwnedCorePollLimits,
++    },
+ }
+ 
++impl<'a> OwnedPollInput<'a> {
++    pub(super) fn with_budget(
++        events: &'a [&'a Event],
++        command_page: Option<(&'a semio_framework::kernel::CommandPageCursor, &'a semio_framework::kernel::FixedCommandPage)>,
++        cold_pair_page: Option<&'a semio_framework::kernel::ColdDocumentPairPage>,
++        budget: Budget,
++    ) -> Result<Self, semio_framework_value::ValueError> {
++        let limits = semio_framework::kernel::OwnedCorePollLimits::try_from(semio_framework::kernel::PollRequestLimits {
++            retained_policy: budget.retained_policy,
++            work_fuel: budget.work_fuel,
++            fuel: budget.fuel,
++            deadline_us: budget.deadline_us,
++            max_effects: budget.max_effects,
++            max_patch_bytes: budget.max_patch_bytes,
++            max_frames: budget.max_frames,
++        })?;
++        Ok(Self::Poll { events, command_page, cold_pair_page, limits })
++    }
++}
++
+ /// 📥️ The mirror of the guest's `owned_abi::StartJobInput`: the prepared source copy and the original job budget.
+ #[derive(serde::Serialize)]
+ pub(super) struct OwnedStartJobInput<'a> {
+diff --git a/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/🏃️runtime/🎟️call/🔄️poll/🦀️.rs b/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/🏃️runtime/🎟️call/🔄️poll/🦀️.rs
+--- a/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/🏃️runtime/🎟️call/🔄️poll/🦀️.rs
++++ b/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/🏃️runtime/🎟️call/🔄️poll/🦀️.rs
+@@ -19,7 +19,7 @@
+             }
+         }
+         let events=ordinary.as_ref().map_or(&[][..],std::slice::from_ref);
+-        crate::operation::input::encode_json_input_into(&OwnedPollInput{events,command_page,cold_pair_page,budget},control,output)
++        crate::operation::input::encode_json_input_into(&OwnedPollInput::with_budget(events,command_page,cold_pair_page,budget)?,control,output)
+     }
+ }
+ 
+@@ -41,7 +41,7 @@
+         assert_eq!(result.is_ok(),row["valid"].as_bool().unwrap());
+         if result.is_ok(){let bytes=output.take().unwrap();
+             let actual:serde_json::Value=serde_json::from_slice(&bytes).unwrap();
+-            assert_eq!(actual,serde_json::json!({"events":row["events"],"command_page":null,"cold_pair_page":null,"budget":fixture["budget"]}));
++            assert_eq!(actual,serde_json::json!({"Poll":{"events":row["events"],"command_page":null,"cold_pair_page":null,"limits":fixture["limits"]}}));
+             assert_eq!(control.owned_bytes(),bytes.capacity());
+         }else{assert_eq!(control.owned_bytes(),0);}
+     }
+diff --git a/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/🏃️runtime/🔄️owned-runtime/🦀️.rs b/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/🏃️runtime/🔄️owned-runtime/🦀️.rs
+--- a/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/🏃️runtime/🔄️owned-runtime/🦀️.rs
++++ b/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/🏃️runtime/🔄️owned-runtime/🦀️.rs
+@@ -138,7 +138,8 @@
+                 event => ordinary_events.push(event),
+             }
+         }
+-        let input = identity.encode(|control|operation::input::encode_json_input(&OwnedPollInput { events: &ordinary_events, command_page, cold_pair_page, budget },control)).map_err(identity_turn_fault)?;
++        let poll = OwnedPollInput::with_budget(&ordinary_events, command_page, cold_pair_page, budget).map_err(identity_turn_fault)?;
++        let input = identity.encode(|control|operation::input::encode_json_input(&poll,control)).map_err(identity_turn_fault)?;
+         identity.encode(|control|control.charge(input.len())).map_err(identity_turn_fault)?;
+         begin_owned_operation(state, OwnedOperation::Poll, Some(input))?;
+         }
+diff --git a/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/🏃️runtime/🎟️call/🔄️poll/🧪️tests/🧫️fixtures/🔣️.json b/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/🏃️runtime/🎟️call/🔄️poll/🧪️tests/🧫️fixtures/🔣️.json
+--- a/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/🏃️runtime/🎟️call/🔄️poll/🧪️tests/🧫️fixtures/🔣️.json
++++ b/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/🏃️runtime/🎟️call/🔄️poll/🧪️tests/🧫️fixtures/🔣️.json
+@@ -31,6 +31,7 @@
+     "maxPatchBytes": 4096,
+     "maxFrames": 8
+   },
++  "limits": [8, 4096, 8192, 8192, 8, 100, 100, 1000000, 8, 4096, 8],
+   "cases": [
+     {
+       "events": [],

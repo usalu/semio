@@ -1,4 +1,5 @@
 import{test,expect}from"bun:test";
+import{nxGraphReleaseFailureV1}from"../../../../../🔌️nx/📦️graph/🧯️release-failure/🟦️.ts";
 import{readFileSync}from"node:fs";
 import{join}from"node:path";
 import{AsyncLocalStorage}from"node:async_hooks";
@@ -11,6 +12,8 @@ import{checkResourceLeaseControl}from"@semio-tech/process/leases";
 import schema from"./🧬️schema.json";
 import corpus from"./🔣️.json";
 import{createNxGraphReadLifetimeV1}from"../../../../../🔌️nx/📦️graph/👓️reading/🟦️.ts";
+import {declareLibraryBuildTestEnvelopeV1} from "../../../../../../../../🧪️testing/🪪️native-birth/🟦️.ts";
+declareLibraryBuildTestEnvelopeV1({suite:"storage-opening",maximumElapsedMilliseconds:15000});
 
 test("Graph reader shutdown refuses self-wait before mutation and drains externally accepted work",async()=>{
  const db=new Database(":memory:");try{for(const kind of corpus.readerLifetimes){const owner=createNxGraphReadLifetimeV1(),trace:string[]=[],primary=Object.freeze({primary:true});let release!:()=>void;const ready=new Promise<void>(done=>{release=done;});let accepted:Promise<void>;if(kind==="self-close"){accepted=owner.accept(async()=>{let refused:{error:unknown}|undefined;try{owner.close();}catch(error){refused={error};}expect(refused?.error).toBeInstanceOf(Error);expect((refused!.error as Error).message).toContain("own accepted reader");trace.push("body");});try{await accepted;}finally{await owner.close();}expect(trace).toEqual(["body"]);}else if(kind==="external-close"){accepted=owner.accept(async()=>{trace.push("body");await ready;trace.push("drained");});let closed=false;const closing=owner.close().then(()=>{closed=true;});expect(()=>owner.accept(async()=>{})).toThrow();await Promise.resolve();expect(closed).toBe(false);release();await accepted;await closing;expect(trace).toEqual(["body","drained"]);}else{await owner.accept(async()=>{throw primary;}).catch(error=>expect(error).toBe(primary));const failures=await owner.close();expect(failures).toEqual([primary]);}const expected=db.query("select ?='failure' count").get(kind)as{count:number};expect((await owner.close()).length).toBe(expected.count);}}
@@ -54,8 +57,8 @@ test("Graph acquisition owns all post-open failure paths until namespace transfe
 }));
 
 test("Graph cleanup drains every namespace and preserves immutable or undefined primary failures",async()=>{
- const path=new URL("../../../../../🔌️nx/📦️graph/🟦️.ts",import.meta.url),tree=ts.createSourceFile(path.pathname,readFileSync(path,"utf8"),ts.ScriptTarget.Latest,true),node=tree.statements.find(row=>ts.isFunctionDeclaration(row)&&row.name?.text==="releaseNxGraphNamespacesV1");if(!node)throw Error("Actual graph cleanup required");const code=ts.transpileModule(node.getText(tree).replace(/^export\s/u,""),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText,run=new Function(code+";return releaseNxGraphNamespacesV1;")(),db=new Database(":memory:");
- try{for(const kind of corpus.cleanup){const primary=kind==="frozen"?Object.freeze(Error("primary")):kind==="sealed"?Object.seal(Error("primary")):undefined,trace:number[]=[],fault=Object.freeze(Error("cleanup"));let result:{error:unknown}|undefined;try{await run([{release:async()=>{trace.push(1);throw fault;}},{release:async()=>{trace.push(2);}}],kind==="absent"?undefined:{error:primary});}catch(error){result={error};}expect(trace).toEqual([1,2]);const expected=db.query("select ?='absent' failed").get(kind)as{failed:number};expect(Boolean(result)).toBe(expected.failed===1);if(result)expect(result.error).toBeInstanceOf(AggregateError);}}
+ const path=new URL("../../../../../🔌️nx/📦️graph/🟦️.ts",import.meta.url),tree=ts.createSourceFile(path.pathname,readFileSync(path,"utf8"),ts.ScriptTarget.Latest,true),node=tree.statements.find(row=>ts.isFunctionDeclaration(row)&&row.name?.text==="releaseNxGraphNamespacesV1");if(!node)throw Error("Actual graph cleanup required");const code=ts.transpileModule(node.getText(tree).replace(/^export\s/u,""),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText,run=new Function("nxGraphReleaseFailureV1",code+";return releaseNxGraphNamespacesV1;")(nxGraphReleaseFailureV1),db=new Database(":memory:");
+ try{for(const kind of corpus.cleanup){const primary=kind==="frozen"?Object.freeze(Error("primary")):kind==="sealed"?Object.seal(Error("primary")):undefined,trace:number[]=[],fault=Object.freeze(Error("cleanup"));let result:{error:unknown}|undefined;try{await run([{release:async()=>{trace.push(1);throw fault;}},{release:async()=>{trace.push(2);}}],kind==="absent"?undefined:{error:primary});}catch(error){result={error};}expect(trace).toEqual([1,2]);const expected=db.query("select ?='absent' failed").get(kind)as{failed:number};expect(Boolean(result)).toBe(expected.failed===1);if(result)expect(result.error).toBe(fault);}}
  finally{db.close();}
 });
 

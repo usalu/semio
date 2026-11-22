@@ -153,6 +153,7 @@
           "planned": "[compile-units] {operation}: {preferred} of {cores} cores planned (at least {minimum} to start; {reason})",
           "waiting": "[compile-units] {operation}: waiting {seconds}s for at least {minimum} free cores of {cores}",
           "granted": "[compile-units] {operation}: {granted} of {cores} cores granted after {seconds}s; the build uses -j{granted}",
+          "leased": "[compile-units] {operation}: compiler lease granted {granted} of {cores} cores after {seconds}s",
           "reasons": {
             "share": "one compile may use half of the host so others run beside it",
             "needed": "the work cannot use more",
@@ -171,6 +172,7 @@
           "planned": "[compile-units] {operation}: {preferred} von {cores} Kernen geplant (mindestens {minimum} zum Start; {reason})",
           "waiting": "[compile-units] {operation}: wartet seit {seconds} s auf mindestens {minimum} freie Kerne von {cores}",
           "granted": "[compile-units] {operation}: {granted} von {cores} Kernen nach {seconds} s zugeteilt; der Build nutzt -j{granted}",
+          "leased": "[compile-units] {operation}: Compiler-Lease hat nach {seconds} s {granted} von {cores} Kernen zugeteilt",
           "reasons": {
             "share": "ein Kompilierlauf darf die Hälfte des Rechners nutzen, damit andere daneben laufen",
             "needed": "die Arbeit kann nicht mehr davon nutzen",

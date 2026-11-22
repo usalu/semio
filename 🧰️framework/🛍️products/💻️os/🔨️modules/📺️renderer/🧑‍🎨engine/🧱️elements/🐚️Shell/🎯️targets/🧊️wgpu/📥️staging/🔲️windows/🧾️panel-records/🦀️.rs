@@ -336,6 +336,7 @@ impl PanelProjection<'_> {
                     PanelRecord { children, activity, disabled, ..PanelRecord::default() },
                 )
             }
+            UiNode::Table(table) => self.table(table, activity, disabled),
             UiNode::ComponentScene(scene) => {
                 let key = self.key(Some(scene.surface_id.as_str()));
                 let id = self.reserve();
@@ -349,6 +350,41 @@ impl PanelProjection<'_> {
             }
             other => Err(format!("panel '{}' authored a {} node this assembler does not project", self.surface_id, panel_ui_node_tag(other))),
         }
+    }
+
+    /// 📊️ One `UiTableNode` as its `Component::Table` record, each row a `Component::TableRow` child: cells positional to the
+    /// columns, activation and row actions on the row's ONE target — the shape `reconcile::table_section` reads back.
+    fn table(&mut self, table: &UiTableNode, activity: ui_contract::Activity, disabled: bool) -> Result<ui_contract::UiNodeId, String> {
+        let key = self.key(table.id.as_deref());
+        let id = self.reserve();
+        let mut columns = UiFixedList::default();
+        for column in &table.columns {
+            columns.try_push(measure_label(column.as_str())).map_err(|_| format!("panel '{}' table exceeds the retained column bound", self.surface_id))?;
+        }
+        let mut children = ui_contract::UiNodeChildren::default();
+        for row in &table.rows {
+            let row_id = self.table_row(row)?;
+            children.try_push(row_id).map_err(|_| format!("panel '{}' packs more table rows than one record admits", self.surface_id))?;
+        }
+        let props = ui_contract::TableProps { label: measure_label(table.label.as_str()), columns, row_label: None, column_label: None, actions_label: table.actions_label.as_ref().map(|label| measure_label(label.as_str())), window: None, column_window: None };
+        self.place(id, key, ui_contract::Component::Table(props), Self::stack_layout(ui_contract::Axis::Vertical, ui_contract::SpaceToken::None), PanelRecord { children, activity, disabled, ..PanelRecord::default() })
+    }
+
+    fn table_row(&mut self, row: &UiTableRowNode) -> Result<ui_contract::UiNodeId, String> {
+        let key = self.key(Some(row.id.as_str()));
+        let id = self.reserve();
+        let mut cells = UiFixedList::default();
+        for cell in &row.cells {
+            cells.try_push(UiText::clipped(cell)).map_err(|_| format!("panel '{}' table row '{}' exceeds the retained cell bound", self.surface_id, row.id))?;
+        }
+        let (row_actions, target) = self.row_target(&row.id, row.action.as_ref(), &row.actions)?;
+        self.place(
+            id,
+            key,
+            ui_contract::Component::TableRow(ui_contract::TableRowProps { cells, row_actions, target }),
+            Self::stack_layout(ui_contract::Axis::Horizontal, ui_contract::SpaceToken::None),
+            PanelRecord { disabled: matches!(row.presence.state, semio_ui_declaration::ui::UiState::Disabled), ..PanelRecord::default() },
+        )
     }
 
     /// 🌲️ One `UiTreeSectionNode` as its `Component::TreeSection` record, its items as children —
@@ -448,7 +484,7 @@ impl PanelProjection<'_> {
             }
             None
         };
-        let (row_actions, target) = self.tree_item_row_target(item)?;
+        let (row_actions, target) = self.row_target(&item.id, item.action.as_ref(), item.actions.as_deref().unwrap_or_default())?;
         let props = ui_contract::TreeItemProps {
             label: measure_label(item.label.as_str()),
             description: item.description.as_deref().map(UiText::clipped),
@@ -487,25 +523,24 @@ impl PanelProjection<'_> {
     /// activation — or, for an action-only row, its first action's controller and argument map; every action must fire on that
     /// same controller and map and names only its verb, so N actions cost N verbs, never N argument maps.
     #[allow(clippy::type_complexity, reason = "the two halves of one row's projected action model")]
-    fn tree_item_row_target(&self, item: &UiTreeItemNode) -> Result<(ui_contract::UiFixedList<ui_contract::RowAction>, Option<ui_contract::RowTarget>), String> {
-        let actions = item.actions.as_deref().unwrap_or_default();
-        let Some(anchor) = item.action.as_ref().or_else(|| actions.first().map(|action| &action.action)) else { return Ok((ui_contract::UiFixedList::default(), None)) };
+    fn row_target(&self, row_id: &str, activation: Option<&ActionDescriptor>, actions: &[UiTreeItemAction]) -> Result<(ui_contract::UiFixedList<ui_contract::RowAction>, Option<ui_contract::RowTarget>), String> {
+        let Some(anchor) = activation.or_else(|| actions.first().map(|action| &action.action)) else { return Ok((ui_contract::UiFixedList::default(), None)) };
         let mut target = measure_row_target(anchor)?;
-        if item.action.is_none() {
+        if activation.is_none() {
             target.activation = None;
         }
         let mut row_actions = ui_contract::UiFixedList::default();
         for action in actions {
             if action.action.controller_id != anchor.controller_id || action.action.args != anchor.args {
-                return Err(format!("panel '{}' tree row '{}' action '{}' fires outside the row's one target", self.surface_id, item.id, action.action.action));
+                return Err(format!("panel '{}' row '{}' action '{}' fires outside the row's one target", self.surface_id, row_id, action.action.action));
             }
-            let verb = UiText::try_from_str(&action.action.action).ok_or_else(|| format!("panel '{}' tree row '{}' verb exceeds the retained contract", self.surface_id, item.id))?;
+            let verb = UiText::try_from_str(&action.action.action).ok_or_else(|| format!("panel '{}' row '{}' verb exceeds the retained contract", self.surface_id, row_id))?;
             let placement = match action.placement() {
                 semio_ui_declaration::ui::UiTreeActionPlacement::Row => ui_contract::RowActionPlacement::Row,
                 semio_ui_declaration::ui::UiTreeActionPlacement::Menu => ui_contract::RowActionPlacement::Menu,
             };
             let row_action = ui_contract::RowAction { icon: UiText::clipped(action.icon_id.as_str()), label: action.label.as_ref().map(|label| measure_label(label.as_str())), verb, placement, disabled: action.disabled, reason: action.reason.as_ref().filter(|_| action.disabled).map(|reason| measure_label(reason.as_str())) };
-            row_actions.try_push(row_action).map_err(|_| format!("panel '{}' tree row '{}' packs more row actions than one record admits", self.surface_id, item.id))?;
+            row_actions.try_push(row_action).map_err(|_| format!("panel '{}' row '{}' packs more row actions than one record admits", self.surface_id, row_id))?;
         }
         Ok((row_actions, Some(target)))
     }
@@ -563,7 +598,7 @@ pub fn window_measure_tree_rows(measures: &[WindowMeasure]) -> Vec<UiTreeItemNod
             WindowMeasure::Select { id, label, value, items, on_change } => UiTreeItemNode {
                 id: id.clone(),
                 label: Label::data(label.clone().unwrap_or_default()),
-                control: Some(UiControlNode::Select(UiSelectNode {
+                control: Some(UiControlNode::Select(UiSelectNode { appearance: Default::default(),
                     presence: UiPresence::default(),
                     id: id.clone(),
                     value: value.clone(),
@@ -676,6 +711,7 @@ pub fn panel_ui_node_tag(node: &UiNode) -> &'static str {
         UiNode::CardStack(_) => "cardStack",
         UiNode::OverviewCard(_) => "overviewCard",
         UiNode::Tree(_) => "tree",
+        UiNode::Table(_) => "table",
         UiNode::Image(_) => "image",
         UiNode::ComponentScene(_) => "componentScene",
         UiNode::ExternalSlot(_) => "externalSlot",

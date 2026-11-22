@@ -1701,17 +1701,14 @@
   {
    "id": "V-506",
    "clause": "EN 1993-1-9:2005 §3(2), §3(3), §3(7)",
-   "entity": "fatigueDetails",
+   "entity": "CaseRow",
    "realisation": {
-    "kind": "not-modelled",
-    "reason": {
-     "en": "The document records the assessment method and consequence class. It does not record the inspection and maintenance programme or the evidence supporting method eligibility.",
-     "de": "Das Dokument führt Nachweiskonzept und Schadensfolgeklasse. Inspektions- und Instandhaltungsprogramm sowie Nachweise zur Eignung des Konzepts werden nicht geführt."
-    }
+    "kind": "design-case",
+    "entry": "C93-32"
    },
    "description": {
-    "en": "Damage-tolerant assessment relies on planned inspection and maintenance throughout the design life. Assess load redistribution and inspectability. Use safe-life assessment where local cracking can rapidly lead to structural failure.",
-    "de": "Der schadenstolerante Nachweis setzt geplante Inspektion und Instandhaltung über die Nutzungsdauer voraus. Lastumlagerung und Inspizierbarkeit beurteilen. Bei möglichem raschem Tragwerksversagen durch lokale Risse das Konzept der sicheren Lebensdauer anwenden."
+    "en": "The method-selection case records the inspection and maintenance programme and either the demonstrated redistribution or the material-selection basis. It directs the assessment to safe life when local cracking can rapidly cause structural failure.",
+    "de": "Die Konzeptwahl erfasst das Inspektions- und Instandhaltungsprogramm mit nachgewiesener Lastumlagerung oder begründeter Werkstoffwahl. Bei möglichem raschem Tragwerksversagen durch lokale Rissbildung wird die sichere Lebensdauer verlangt."
    }
   },
   {

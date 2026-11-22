@@ -29,6 +29,16 @@ const ALLOWLIST: &[(&str, &str, &str)] = &[
         "let white = Rgba::new(1.0, 1.0, 1.0, 1.0);",
         "🎭️ Scissor-mask identity in a `#[cfg(test)]` helper — opaque white is the stencil's \"keep\" value, not a colour anybody sees.",
     ),
+    (
+        "🎯️targets/🧊️wgpu/🖍️draw/🏷️types/🫥️group-alpha-tests/🦀️.rs",
+        "draw.push_solid([0.0, 0.0, 4.0, 4.0], Rgba::new(1.0, 0.0, 0.0, 1.0));",
+        "🫥️ Group-alpha layer marks in a `#[cfg(test)]` module — the law counts layers, the hue is never painted.",
+    ),
+    (
+        "🎯️targets/🧊️wgpu/🖍️draw/🏷️types/🫥️group-alpha-tests/🦀️.rs",
+        "let region = draw.push_glass([0.0, 0.0, 8.0, 8.0], 2.0, GlassStyle { tint: Rgba::new(1.0, 1.0, 1.0, 0.5), alpha: 0.5, blur_px: 0.0, saturate: 1.0 });",
+        "🫥️ Glass region inside a `#[cfg(test)]` group-alpha law — the tint is never painted.",
+    ),
 ];
 
 /// 🔢️ True when the three COLOUR channels are plain numeric literals — i.e. the call writes a hue by

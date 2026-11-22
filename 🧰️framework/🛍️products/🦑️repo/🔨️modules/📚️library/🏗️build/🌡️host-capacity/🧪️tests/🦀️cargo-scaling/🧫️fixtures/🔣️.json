@@ -11,9 +11,9 @@
   {"name": "keeps an explicit local compilation limit", "parallelismArgs": ["--parallelism", "1"], "localParallelism": 1}
  ],
  "queuedFleetRuns": [
-  {"name": "hands a queued Cargo command to the fleet once the unit would wait", "hostAvailableMegabytes": 2400, "outcome": "fleet", "probeQueueLengths": [0, 1], "offloadMode": "auto", "ambientOffloadMode": "never"},
-  {"name": "allows the explicit always mode to use the existing fleet handoff", "hostAvailableMegabytes": 2400, "outcome": "fleet", "probeQueueLengths": [0, 1], "offloadMode": "always", "ambientOffloadMode": "never"},
-  {"name": "retains cancellation when fleet eligibility changes during a live probe", "hostAvailableMegabytes": 2400, "outcome": "cancelled", "probeQueueLengths": [0, 1]},
+  {"name": "hands a queued Cargo command to the fleet once the door refuses and the fleet has headroom", "hostAvailableMegabytes": 2400, "outcome": "fleet", "probeQueueLengths": [0], "offloadMode": "auto", "ambientOffloadMode": "never"},
+  {"name": "allows the explicit always mode to use the existing fleet handoff", "hostAvailableMegabytes": 2400, "outcome": "fleet", "probeQueueLengths": [0], "offloadMode": "always", "ambientOffloadMode": "never"},
+  {"name": "retains cancellation while the fleet table is being read", "hostAvailableMegabytes": 2400, "outcome": "cancelled", "probeQueueLengths": [0]},
   {"name": "keeps an admitted local grant even when the fleet becomes eligible", "hostAvailableMegabytes": 2400, "outcome": "local", "probeQueueLengths": [0]},
   {"name": "keeps the explicit never mode local without probing fleet eligibility", "hostAvailableMegabytes": 2400, "outcome": "local", "probeQueueLengths": [], "offloadMode": "never", "ambientOffloadMode": "auto"}
  ]

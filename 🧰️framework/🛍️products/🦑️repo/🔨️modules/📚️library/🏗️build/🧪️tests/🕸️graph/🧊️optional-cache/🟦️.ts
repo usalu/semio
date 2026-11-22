@@ -2,7 +2,8 @@ import{verifyInferencePublicationV1}from"../../../../⚡️caching/💾️storag
 /** 🧊️ The optional graph cache accounts peaks, denial, serialization and cleanup under original control. */
 import {testValueV1} from "../../../../⚡️caching/🧪️tests/📋️values/🟦️.ts";
 import {testPythonV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
-import {declareBuildTestEnvelopeV1,withBuildTestInvocationV1} from "@semio-tech/process/testing/invocation";
+import {withBuildTestInvocationV1} from "@semio-tech/process/testing/invocation";
+import {declareLibraryBuildTestEnvelopeV1} from "../../../../🧪️testing/🪪️native-birth/🟦️.ts";
 import storageSchema from "../../../📥️inputs/💾️storage/🧬️schema/🔣️.json";
 import {withRepositoryBuildGraphArtifactV1} from "../../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/🟦️.ts";
 import {repositoryBuildGraphDataDirectoryV1} from "../../../📥️inputs/💾️storage/🟨️.mjs";
@@ -18,7 +19,7 @@ import {readBuildGraphV1} from "../../../🕸️graph/🟦️.ts";
 import {createIssuedResourceControlV1,createRequestedIssuedResourceControlV1,createScriptProcessEnvelope,withScriptProcessEnvelope,withScriptInvocationSignalV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {graph,CommandSourceControlV1,privateGraphWorkspaceV1} from "../🧰️support/🟦️.ts";
 import {requirePrivateRepositoryWorkspaceV1,testToolchainDirectoryV1} from "../../../../🧪️testing/🧫️private-repository/🟦️.ts";
-declareBuildTestEnvelopeV1({owner:"test:build-graph-optional-cache",maximumElapsedMilliseconds:300000,capabilities:{artifacts:true}});
+declareLibraryBuildTestEnvelopeV1({suite:"build-workspace-graph-laws",scratch:"checkout"});
 
 const require=createRequire(import.meta.url),Ajv=require("ajv/dist/2020").default;
 beforeAll(async()=>{await privateGraphWorkspaceV1();},170000);

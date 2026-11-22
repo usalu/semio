@@ -14,6 +14,8 @@ import { evaluate } from "../../🔨️modules/🧮️evaluation/🟦️.ts";
 import { solveStructure } from "../../🔨️modules/🏗️structure/🟦️.ts";
 import { solveThermalAt } from "../../🔨️modules/🌡️thermal/🟦️.ts";
 import { modelOf, frameTimes, modeOf } from "../../🔨️modules/🧊️volume/🟦️.ts";
+import { frameDataOf, glyphOf, Slots, type FrameSetup } from "../../🔨️modules/🧊️volume/🧷️frames/🟦️.ts";
+import { HIDDEN, paperSizing } from "../../🔨️modules/🧊️volume/🪧️glyphs/🟦️.ts";
 import { scaledFigure } from "../🧰️support/🧊️volumes/🟦️.ts";
 
 const SCALE = 50;
@@ -214,6 +216,26 @@ describe("🧊️ the seven views as looks of one geometry", () => {
       compared += 1;
     }
     expect(compared).toBeGreaterThanOrEqual(2);
+  });
+
+  it("omits an unloaded joint arc while preserving activation and release over sampled frames", () => {
+    const state = evaluate(asset, { kind: "pose", pose: "carry-bag" }, selector);
+    const result = solveStructure(state);
+    const baseline = Object.values(result.joints)[0]!;
+    const slots = new Slots();
+    const setup: FrameSetup = { asset, slots, views: ["moments"], theme: "light", mm: MM, longestMm: 12, looks: { fixed: {}, thermal: undefined, forces: undefined, moments: undefined } };
+    const frames = [0, 5, 0].map((load) => {
+      const joint = (id: string, z: number) => ({ ...baseline, bone: id, mxNm: 0, myNm: 0, mzNm: z });
+      const structure = { ...result, joints: { unloaded: joint("unloaded", 0), loaded: joint("loaded", load) }, reactions: [], applied: [] };
+      return frameDataOf(setup, state, { structure });
+    });
+    expect(slots.order).toEqual(["arc-moment-joint-loaded"]);
+    const root = slots.order[0]!;
+    const geometry = glyphOf(root, slots.map.get(root)!, paperSizing(MM), frames[0]!.glyphs);
+    expect(geometry.nodes.find((n) => n.id === root)!.scale).toEqual(HIDDEN);
+    const lengths = frames.map((f) => new Vector3().fromArray(f.glyphs.get(root)?.scale ?? HIDDEN).length());
+    expect(lengths[1]).toBeGreaterThan(lengths[0]! * 100);
+    expect(lengths[2]).toBe(lengths[0]);
   });
 
   it("tags every glyph and hides it by default: glyph base materials are fully transparent, only their own view shows them", async () => {

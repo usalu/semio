@@ -1,0 +1,7 @@
+{
+  "byteCount": 17003,
+  "byteMultiplier": 73,
+  "leading": "\t\n  ",
+  "trailing": "  \r\n",
+  "invalid": ["A", "TQ=A", "TR==", "%%%="]
+}

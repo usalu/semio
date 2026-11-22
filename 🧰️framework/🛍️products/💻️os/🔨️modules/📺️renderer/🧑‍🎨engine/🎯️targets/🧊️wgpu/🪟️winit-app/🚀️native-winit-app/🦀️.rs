@@ -290,7 +290,7 @@ pub(super) mod native {
             }
             WindowEvent::KeyboardInput { event, .. } => {
                 let logical = logical_key_to_dispatch_string(&event.logical_key);
-                Some(ui_host::key_dispatch_event(logical, app.modifiers, event.state == ElementState::Pressed))
+                Some(ui_host::key_dispatch_event(logical, app.modifiers, event.state == ElementState::Pressed, event.repeat))
             }
             WindowEvent::Ime(ime) => Some(DispatchEvent::Ime(ime_event_from_winit(ime))),
             WindowEvent::ModifiersChanged(modifiers) => {

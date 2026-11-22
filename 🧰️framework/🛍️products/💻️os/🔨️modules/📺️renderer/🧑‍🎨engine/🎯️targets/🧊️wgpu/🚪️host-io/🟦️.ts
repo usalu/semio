@@ -28,6 +28,7 @@ const WGPU_EXTENSION_INSTALL_PATH = `${moduleRoutes.extension}/install`;
  * loudly rather than answered with an empty pick, which is indistinguishable from a cancelled dialog. */
 export type WgpuHostIoRequest =
   | { readonly op: "download-media-export"; readonly filename: string; readonly mimeType: string }
+  | { readonly op: "write-clipboard"; readonly text: string }
   | { readonly op: "request-file-open"; readonly accept: string; readonly readAs?: string; readonly multiple?: boolean; readonly maxFileBytes?: number }
   | { readonly op: "request-native-file-path"; readonly accept?: string }
   | { readonly op: "request-native-folder-path" }
@@ -546,6 +547,11 @@ export function createWgpuPageHostIo(): WgpuHostIo {
     if (request.op === "download-media-export") {
       if (!bytes) throw new Error("wgpu-host-io.download-media-export: no bytes");
       downloadBytes(request.filename, request.mimeType, bytes);
+      return "";
+    }
+    if (request.op === "write-clipboard") {
+      if (typeof navigator === "undefined" || navigator.clipboard === undefined) throw new Error("wgpu-host-io.write-clipboard: no clipboard");
+      await navigator.clipboard.writeText(request.text);
       return "";
     }
     if (request.op === "request-file-open") {

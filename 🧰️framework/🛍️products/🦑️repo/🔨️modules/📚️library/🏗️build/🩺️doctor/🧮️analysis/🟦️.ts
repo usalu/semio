@@ -1,4 +1,5 @@
 import {DOCTOR_POLICY_V1,DOCTOR_PROTOCOL_V1,DOCTOR_RULES_V1,clipResourceV1,commandLabelV1,commandRelevantV1,fillDoctorV1,type DoctorAreaV1,type DoctorDataV1,type DoctorFactsV1,type DoctorFindingV1,type HolderFactsV1,type WaiterFactsV1,type DoctorPartyV1,type DoctorPhaseV1,type DoctorPolicyV1,type DoctorProcessRowV1,type DoctorReportV1,type DoctorRepairResultV1,type DoctorRuleV1,type DoctorSeverityV1,type DoctorVerdictV1,type DoctorWaitV1,type ProcessFactsV1} from "../🟦️.ts";
+import budget from "../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🔣️policy.json" with {type:"json"};
 
 /** 🧮️ Everything the pure analysis derives from one facts document. */
 export type DoctorAnalysisV1=Readonly<{findings:readonly DoctorFindingV1[];waits:readonly DoctorWaitV1[];processes:readonly DoctorProcessRowV1[]}>;
@@ -9,6 +10,7 @@ const SEVERITY_RANK:Readonly<Record<DoctorSeverityV1,number>>={error:0,warn:1,in
 const PHASE_RANK:Readonly<Record<DoctorPhaseV1,number>>={"waiting-lease":0,"waiting-capacity":1,holding:2,admitted:3,orphan:4,running:5};
 const ownerPattern=/^[a-z][a-z0-9-]*$/u;
 const tenth=(value:number):number=>Math.round(value*10)/10;
+const directoryOf=(partition:string):string=>(budget.partitions as Record<string,{directory:string}>)[partition]?.directory??"";
 
 /** 🧱️ Builds one finding from the catalogue: severity must be one the rule allows, data exactly what the rule declares. */
 function finding(rules:Readonly<Record<string,DoctorRuleV1>>,id:string,severity:DoctorSeverityV1,subject:string,data:DoctorDataV1,owner?:string):DoctorFindingV1{
@@ -17,7 +19,7 @@ function finding(rules:Readonly<Record<string,DoctorRuleV1>>,id:string,severity:
  const declared=[...rule.data].sort().join(","),given=Object.keys(data).sort().join(",");
  if(declared!==given)throw Error("Doctor rule "+id+" needs data "+declared+" but got "+given);
  const text=(value:{en:string;de:string})=>({en:fillDoctorV1(value.en,data),de:fillDoctorV1(value.de,data)});
- const fix=Object.freeze({kind:rule.fix.kind,...rule.fix.command===undefined?{}:{command:fillDoctorV1(rule.fix.command,data)},...rule.fix.repair===undefined?{}:{repair:rule.fix.repair},note:rule.fix.note});
+ const fix=Object.freeze({kind:rule.fix.kind,...rule.fix.command===undefined?{}:{command:fillDoctorV1(rule.fix.command,data)},...rule.fix.repair===undefined?{}:{repair:rule.fix.repair},note:text(rule.fix.note)});
  return Object.freeze({id,area:rule.area,owner:owner!==undefined&&ownerPattern.test(owner)?owner:rule.owner,severity,subject:subject.slice(0,300),data,title:text(rule.title),detail:text(rule.detail),fix});
 }
 
@@ -100,7 +102,8 @@ export function analyzeDoctorV1(facts:DoctorFactsV1,options:DoctorAnalysisOption
   for(const part of storage.partitions){
    if(part.image==="damaged")add("storage.image-damaged","error",part.id,{partition:part.id});
    if(part.image==="ok"&&part.state==="absent"&&part.backing==="missing")add("storage.backing-missing","error",part.id,{partition:part.id});
-   if(part.state==="detached")add("storage.image-detached","info",part.id,{partition:part.id});
+   if(part.state==="misplaced")add("storage.image-misplaced","error",part.id,{partition:part.id,attachedAt:part.attachedAt??"-",device:part.device??"-",directory:directoryOf(part.id)});
+   if(part.state==="detached")storage.loaderBlocked===true?add("storage.image-detached-blocking","warn",part.id,{partition:part.id,directory:directoryOf(part.id)}):add("storage.image-detached","info",part.id,{partition:part.id});
    if(part.publication!=="none"){
     const age=part.publicationAgeSeconds??0;
     add("storage.publication-pending",age>=policy.storage.publicationErrorSeconds?"error":"info",part.id,{partition:part.id,which:part.publication,ageSeconds:age});
@@ -158,7 +161,7 @@ export function analyzeDoctorV1(facts:DoctorFactsV1,options:DoctorAnalysisOption
  if(capacity){
   for(const waiter of capacity.waiters){
    if(waiter.waitedSeconds<policy.capacity.waitWarnSeconds)continue;
-   add("capacity.wait-long",waiter.waitedSeconds>=policy.capacity.waitErrorSeconds?"error":"warn",waiter.operation,{operation:waiter.operation,pid:waiter.pid,command:commandOf(waiter.pid),waitedSeconds:waiter.waitedSeconds,reason:waiter.reason,needMegabytes:waiter.needMegabytes,headroomMegabytes:capacity.headroomMegabytes,floorMegabytes:host?.floorMegabytes??0});
+   add("capacity.wait-long",waiter.waitedSeconds>=policy.capacity.waitErrorSeconds?"error":"warn",waiter.operation,{operation:waiter.operation,pid:waiter.pid,command:commandOf(waiter.pid),waitedSeconds:waiter.waitedSeconds,reason:waiter.reason,blocker:waiter.blocker??"-",holder:waiter.holder??"none",needMegabytes:waiter.needMegabytes,headroomMegabytes:capacity.headroomMegabytes,floorMegabytes:host?.floorMegabytes??0});
   }
   if(capacity.waiters.length>0)for(const grant of capacity.grants){
    if(grant.heldSeconds>=policy.capacity.idleGrantSeconds&&grant.observedMegabytes!==null&&grant.reservedMegabytes>0&&grant.observedMegabytes*100<grant.reservedMegabytes*policy.capacity.idleObservedPercent)add("capacity.grant-idle","warn",grant.operation,{operation:grant.operation,pid:grant.pid,command:commandOf(grant.pid),heldSeconds:grant.heldSeconds,reservedMegabytes:grant.reservedMegabytes,observedMegabytes:grant.observedMegabytes});
@@ -217,7 +220,7 @@ function analyzeProcesses(facts:DoctorFactsV1,policy:DoctorPolicyV1,commandOf:(p
  for(const row of leases?.holders??[]){holding.add(row.pid);if(row.mode==="exclusive"&&!exclusive.has(row.pid))exclusive.set(row.pid,row.resource);}
  for(const row of capacity?.grants??[])admitted.set(row.pid,row.operation);
  const known=new Set<number>([...waitingLease,...waitingCapacity,...holding,...admitted.keys()]);
- const include=(pattern:string):RegExp=>new RegExp(pattern,"u"),patterns=policy.processes.patterns.map(include),excluded=policy.processes.exclude.map(include);
+ const include=(pattern:string):RegExp=>new RegExp(pattern,"u"),patterns=policy.processes.patterns.map(include),excluded=policy.processes.exclude.map(include),services=policy.processes.services.map(include);
  const matches=(row:ProcessFactsV1):boolean=>commandRelevantV1(row.command,patterns,excluded);
  const ancestor=(pid:number):number|undefined=>{
   const visited=new Set<number>();let current=table.get(pid)?.parent;
@@ -237,8 +240,8 @@ function analyzeProcesses(facts:DoctorFactsV1,policy:DoctorPolicyV1,commandOf:(p
   if(!matches(row)&&!known.has(row.pid)&&via===undefined)continue;
   const own=waitingLease.has(row.pid)?"waiting-lease":waitingCapacity.has(row.pid)?"waiting-capacity":holding.has(row.pid)?"holding":admitted.has(row.pid)?"admitted":undefined;
   let phase:DoctorPhaseV1=own??(via!==undefined?(waiting.has(via)?"running":"admitted"):"running");
-  const parentGone=row.parent<=1;
-  if(own===undefined&&via===undefined&&parentGone&&row.ageSeconds>=policy.processes.orphanAgeSeconds&&matches(row))phase="orphan";
+  const parentGone=row.parent<=1,service=services.some(pattern=>pattern.test(row.command));
+  if(own===undefined&&via===undefined&&parentGone&&!service&&row.ageSeconds>=policy.processes.orphanAgeSeconds&&matches(row))phase="orphan";
   rows.push(Object.freeze({pid:row.pid,parent:row.parent,ageSeconds:row.ageSeconds,rssMegabytes:row.rssMegabytes,cpuPercent:tenth(row.cpuPercent),phase,via:own===undefined?via??null:null,command:commandOf(row.pid)}));
   if(own!==undefined&&row.parent===1&&row.ageSeconds>=policy.processes.orphanAgeSeconds&&matches(row)){
    const holds=[...(leases?.holders??[])].filter(item=>item.pid===row.pid).length+(admitted.has(row.pid)?1:0);

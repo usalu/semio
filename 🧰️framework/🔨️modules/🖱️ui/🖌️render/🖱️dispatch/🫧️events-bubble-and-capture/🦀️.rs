@@ -88,7 +88,8 @@ pub enum DispatchEvent {
     PointerUp { pointer: PointerInfo, x: f32, y: f32, button: PointerButton, modifiers: EventModifiers },
     PointerMove { pointer: PointerInfo, x: f32, y: f32, modifiers: EventModifiers },
     Scroll { x: f32, y: f32, delta_x: f32, delta_y: f32, modifiers: EventModifiers },
-    KeyDown { key: String, modifiers: EventModifiers },
+    /// ⌨️ `repeat` is the OS auto-repeat of a held key (DOM `KeyboardEvent.repeat`, winit `KeyEvent::repeat`).
+    KeyDown { key: String, modifiers: EventModifiers, repeat: bool },
     KeyUp { key: String, modifiers: EventModifiers },
     TextInput { text: String },
     Paste { text: String },

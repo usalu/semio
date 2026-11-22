@@ -171,6 +171,19 @@ pub fn dispatch_accessibility_event(window_id: &str, window_generation: u64, nod
         }
         return Some(Vec::new());
     }
+    let map_retry = UI_ENGINE.with(|cell| {
+        let engine = cell.borrow();
+        if engine.surface_generation(window_id) != Some(window_generation) {
+            return None;
+        }
+        map_unavailable_accessibility_entries(engine.tree(window_id)?).into_iter().find(|entry| entry.key == node_key && scene_virtual_accessibility_node_id(&entry.key) == node_id)
+    });
+    if let Some(entry) = map_retry {
+        if entry.retry && matches!(event, semio_ui_wgpu_events::AccessibilityUiEvent::Activate) {
+            semio_renderer_wgpu_engine_board::tiled_map::retry_tiled_map(&entry.host_id);
+        }
+        return Some(Vec::new());
+    }
     let block_list_control = UI_ENGINE.with(|cell| {
         let engine = cell.borrow();
         if engine.surface_generation(window_id) != Some(window_generation) {
@@ -260,6 +273,11 @@ pub fn retained_node_is_select(window_id: &str, node_id: NodeId) -> bool {
     UI_ENGINE.with(|cell| cell.borrow().tree(window_id).and_then(|tree| tree.node(node_id)).is_some_and(|node| matches!(node.spec.0, UiNode::Select(_))))
 }
 
+/// 🌳️ Whether the node is a tree item row — the focus that reads printable characters and Space as keys (typeahead, selection) instead of text.
+pub fn retained_node_is_tree_row(window_id: &str, node_id: NodeId) -> bool {
+    UI_ENGINE.with(|cell| cell.borrow().tree(window_id).is_some_and(|tree| tree.authored_tree_item(node_id).is_some()))
+}
+
 /// 🧩️ Closed component kind retained with a focused reconciliation key.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum RetainedNodeFocusKind {
@@ -285,6 +303,7 @@ pub enum RetainedNodeFocusKind {
     Image,
     ComponentScene,
     ExternalSlot,
+    Table,
 }
 
 impl RetainedNodeFocusKind {
@@ -309,6 +328,7 @@ impl RetainedNodeFocusKind {
             UiNode::CardStack(_) => Self::CardStack,
             UiNode::OverviewCard(_) => Self::OverviewCard,
             UiNode::Tree(_) => Self::Tree,
+            UiNode::Table(_) => Self::Table,
             UiNode::Image(_) => Self::Image,
             UiNode::ComponentScene(_) => Self::ComponentScene,
             UiNode::ExternalSlot(_) => Self::ExternalSlot,

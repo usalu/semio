@@ -8807,6 +8807,7 @@ dependencies = [
  "semio-s-artifact-norm-en1998-mutations-text-tie-beams",
  "semio-s-artifact-norm-en1998-mutations-text-towers",
  "semio-s-artifact-norm-en1998-mutations-typescript",
+ "semio-s-artifact-norm-en1998-schema-formulas",
  "semio-s-mutation-vectors",
  "semio-s-plugin-norm-app-surface",
  "semio-ui-locale",
@@ -9026,9 +9027,17 @@ version = "0.1.0"
 dependencies = [
  "semio-os-kernel",
  "semio-s-artifact-norm-en1998-model",
+ "semio-s-artifact-norm-en1998-schema-part4",
  "semio-s-plugin-norm-compliance",
  "semio-s-plugin-norm-mechanics",
  "serde",
+]
+
+[[package]]
+name = "semio-s-artifact-norm-en1998-schema-part4"
+version = "0.1.0"
+dependencies = [
+ "semio-s-plugin-norm-compliance",
 ]
 
 [[package]]

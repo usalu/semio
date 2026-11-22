@@ -122,12 +122,12 @@ fn chrome_ancestor_emphasis_follows_descendants_and_clears_stale_lineages() {
     use semio_ui_tui_frame::chrome::shell;
     use semio_ui_tui_engine::Tui;
     use semio_ui_tui_core::event::{Event, MouseEvent, MouseKind};
-    use semio_ui_tui_frame::layout::{create_default_layout, Constraint, Dimension};
+    use semio_ui_tui_frame::layout::{create_default_layout, Axis, Constraint, Dimension};
     use semio_ui_tui_frame::scene::{Node, NodeContent};
     use semio_ui_tui_widgets::widget::{TabsState, WidgetState};
     let theme = Theme::new(AppearanceName::Dark);
     let mut tui = Tui::new(Size { width: 80, height: 24 }, theme);
-    let layout = create_default_layout(&["window".into()], "row", None, None);
+    let layout = create_default_layout(&["window".into()], Axis::Horizontal, None, None);
     let mut built = shell(&mut tui.scene, NavbarState { left: vec![], center: vec![], right: vec![] }, FooterState { hints: vec![], status: String::new() }, &layout);
     let window = built.windows[0].1;
     let mut children = Vec::new();

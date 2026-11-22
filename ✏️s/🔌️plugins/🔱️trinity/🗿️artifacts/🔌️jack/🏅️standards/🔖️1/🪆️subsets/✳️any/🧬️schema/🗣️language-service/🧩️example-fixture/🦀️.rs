@@ -14,7 +14,7 @@ pub fn example_graph() -> Graph {
 
 /// 🧩️ Typed example graph for language service and playground consumers.
 pub fn example_graph_snapshot()->crate::standards::v1::subsets::any::schema::ast::JackQueryGraphSnapshot {
-    crate::standards::v1::subsets::any::schema::ast::JackQueryGraphSnapshot{schema:JackSnapshot::SCHEMA.into(),name:"jack-example".into(),manifest_id:Some("nakagin".into()),manifest:Manifest::nakagin_default(),camera:Camera::default(),nodes:vec![
+    crate::standards::v1::subsets::any::schema::ast::JackQueryGraphSnapshot{schema:JackSnapshot::SCHEMA.into(),name:"jack-example".into(),manifest_id:crate::standards::v1::subsets::any::schema::graph::TRINITY_JACK_DEFAULT_MANIFEST_ID.into(),camera:Camera::default(),nodes:vec![
             Node {
                 id: "root".into(),
                 kind: "Piece".into(),

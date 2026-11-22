@@ -1,6 +1,5 @@
 //! 🔬️ Native socket probe: probe snapshots and diffs, the native runners, the smoke runner and the icon atlas upload.
 use super::*;
-use semio_os_store_testing_doubles::store;
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::{prelude::wasm_bindgen, JsValue};
 
@@ -135,118 +134,16 @@ impl semio_framework_value::FromValue for NativeSocketProbeDiff {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, semio_framework_value::RetireOwned)]
-pub enum NativeSocketProbeMutation {
-    Set(String),
-}
-
+#[path = "🧬️mutations/🦀️.rs"]
+pub mod mutations;
 #[cfg(not(target_arch = "wasm32"))]
-const NATIVE_SOCKET_PROBE_MUTATION_DESCRIPTOR: store::os_spr::command::MutationLeafDescriptor = store::os_spr::command::MutationLeafDescriptor {
-    schema_version: 1,
-    owner: "framework/os/renderer/wgpu/native-socket-probe",
-    semantic_kind: "set",
-    display_name: "Set",
-    emoji: "🧪",
-    aggregate_variant: "Set",
-    payload_schema: "native.socket-grant.probe/v1",
-    text_opcode: None,
-    binary_tag: None,
-    invertibility: store::os_spr::command::MutationInvertibility::ExplicitMutation,
-    diff_participation: store::os_spr::command::MutationDiffParticipation::Detect,
-    outcome_classes: &[store::os_spr::command::MutationOutcomeClass::Applied],
-    composition: store::os_spr::command::MutationComposition::Atomic,
-    required_language_surfaces: &[store::os_spr::command::MutationLanguageSurface::Rust],
-};
-
-#[cfg(not(target_arch = "wasm32"))]
-impl store::os_spr::command::Mutation<NativeSocketProbeSnapshot> for NativeSocketProbeMutation {
-    type Diff = NativeSocketProbeDiff;
-    const DESCRIPTORS: &'static [store::os_spr::command::MutationLeafDescriptor] = &[NATIVE_SOCKET_PROBE_MUTATION_DESCRIPTOR];
-
-    fn descriptor(&self) -> &'static store::os_spr::command::MutationLeafDescriptor {
-        &Self::DESCRIPTORS[0]
-    }
-
-
-
-
-}
-#[cfg(not(target_arch = "wasm32"))]
-impl store::os_spr::command::ColdMutation<NativeSocketProbeSnapshot> for NativeSocketProbeMutation {
-type ReferenceDiff= NativeSocketProbeDiff;
-fn diff(&self, _base: &NativeSocketProbeSnapshot) -> store::os_spr::command::MutationOutcome<NativeSocketProbeDiff> {
-        let Self::Set(value) = self;
-        store::os_spr::command::MutationOutcome::new(NativeSocketProbeDiff(value.clone()))
-    }
-fn inverse(&self, base: &NativeSocketProbeSnapshot) -> Result<Vec<Self>, semio_framework_value::ValueError> {
-    Ok((|| {
-        vec![Self::Set(base.0.clone())]
-    
-    })())
-}
-}
-
-/// 🌉️ Hand-written — externally tagged as `{"Set": "<payload>"}`, byte-identical to what
-/// `#[derive(ToValue)]` and `serde` emit for a tagless single-unnamed-field variant, and bound to
-/// the one descriptor's own `aggregate_variant` rather than a second copy of the string. Same
-/// no-`to_dsl_value` recursion rule as [`NativeSocketProbeSnapshot`]'s impl above.
-#[cfg(not(target_arch = "wasm32"))]
-impl semio_framework_value::ToValue for NativeSocketProbeMutation {
-    fn to_value(&self) -> semio_framework_value::DslValue {
-        let Self::Set(value) = self;
-        semio_framework_value::DslValue::object([(NATIVE_SOCKET_PROBE_MUTATION_DESCRIPTOR.aggregate_variant.to_string(), semio_framework_value::DslValue::String(value.clone()))])
-    }
-}
-
-#[cfg(not(target_arch = "wasm32"))]
-impl semio_framework_value::FromValue for NativeSocketProbeMutation {
-    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
-        let semio_framework_value::DslValue::Object(entries) = value else {
-            return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected a one-key `{}` object, found {value:?}", NATIVE_SOCKET_PROBE_MUTATION_DESCRIPTOR.aggregate_variant)));
-        };
-        match <[(String, semio_framework_value::DslValue); 1]>::try_from(entries) {
-            Ok([(key, semio_framework_value::DslValue::String(text))]) if key == NATIVE_SOCKET_PROBE_MUTATION_DESCRIPTOR.aggregate_variant => Ok(Self::Set(text)),
-            Ok([(key, payload)]) => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected variant `{}` with a string payload, found `{key}` with {payload:?}", NATIVE_SOCKET_PROBE_MUTATION_DESCRIPTOR.aggregate_variant))),
-            Err(entries) => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected exactly one variant key, found {}", entries.len()))),
-        }
-    }
-}
-
-/// 🪲️ Regression law for the two-frame `to_value` → `to_dsl_value` → `to_value` recursion that made
-/// every `NativeSocketProbe*` encode abort the process with `fatal runtime error: stack overflow`:
-/// reaching an assertion at all proves the cycle is gone, and the fixture pins the exact wire shape
-/// so the cure cannot silently change the encoding. `serde_json` is the independent third-party
-/// oracle — the first-party `ToValue` tree must equal what it serializes for the same values.
-
-#[cfg(not(target_arch = "wasm32"))]
-impl store::os_spr::OpText for NativeSocketProbeMutation {
-    fn print_op(&self) -> String {
-        let Self::Set(value) = self;
-        value.clone()
-    }
-
-    fn parse_op(line: &str) -> Result<Self, store::os_store::TextError> {
-        Ok(Self::Set(line.to_string()))
-    }
-}
-
-#[cfg(not(target_arch = "wasm32"))]
-impl store::os_spr::OpBinary for NativeSocketProbeMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, store::os_spr::ProtocolError> {
-        let Self::Set(value) = self;
-        Ok(value.as_bytes().to_vec())
-    }
-
-    fn decode_op(bytes: &[u8]) -> Result<Self, store::os_spr::ProtocolError> {
-        String::from_utf8(bytes.to_vec()).map(Self::Set).map_err(|error| store::os_spr::ProtocolError::Malformed { what: "native-socket-probe-op", offset: 0, detail: error.to_string() })
-    }
-}
+pub use mutations::{NativeSocketProbeMutation, SetProbe};
 
 #[cfg(not(target_arch = "wasm32"))]
 pub async fn run_socket_grant_probe() -> i32 {
     use dsl::os_directory::client::{native::NativeDirectoryTransport, DirectoryClient};
     use dsl::os_directory::identity::claimed_local_hub_credential;
-    use dsl::os_spr::{ActorId, ArtifactDiff, ArtifactId, HybridLogicalTimestamp, InverseMutation, MutationEnvelope, MutationId, SchemaId};
+    use dsl::os_spr::{ActorId, ArtifactDiff, CausalPayload, ArtifactId, HybridLogicalTimestamp, InverseMutation, MutationEnvelope, MutationId, SchemaId};
     use dsl::os_store::sync::{ArtifactActorConfig, ArtifactActorMsg, ArtifactDocumentKey, ArtifactEvent, ArtifactHost, CommandAckOutcome, PersistenceBinding};
     use semio_framework_actor::{ActorId as DirectoryActorId, PackageId as DirectoryPackageId};
     use semio_framework_async::ScopeOwner;
@@ -296,8 +193,8 @@ pub async fn run_socket_grant_probe() -> i32 {
         dependencies: Vec::new(),
         observed: None,
         target: Vec::new(),
-        diff: ArtifactDiff { schema: SchemaId(PROBE_SCHEMA.into()), payload: vec![sequence] },
-        inverse: InverseMutation { schema: SchemaId(PROBE_SCHEMA.into()), payload: Vec::new() },
+        diff: ArtifactDiff { schema: SchemaId(PROBE_SCHEMA.into()), payload: CausalPayload::try_from_slice(&[sequence]).expect("one byte fits the causal payload") },
+        inverse: InverseMutation { schema: SchemaId(PROBE_SCHEMA.into()), payload: CausalPayload::try_from_slice(&[]).expect("empty fits the causal payload") },
         timestamp: HybridLogicalTimestamp::new(0, 0),
         transaction: None,
         verb: None,

@@ -8,8 +8,8 @@ pub const PUZZLE_2D_SCHEMA: &str = "board.ports.directed.v1";
 /// 🎥️ The canvas camera (pan/zoom) for a puzzle 2d snapshot.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle2dCamera {
     pub x: f64,
@@ -24,35 +24,35 @@ impl Default for Puzzle2dCamera {
 }
 
 /// 🔘️ One port on a node's rim — `handle_kind` gates link compatibility, `angle`/`radius` place it.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_dsl_record_derive::DslOwnedReceiving)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle2dHandle {
     #[dsl(defines = "handle")]
     pub id: PagedUtf8<{ usize::MAX }>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub handle_kind: Option<PagedUtf8<{ usize::MAX }>>,
     #[dsl(angle = "rad")]
     pub angle: f64,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub radius: Option<f64>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub color: Option<PagedUtf8<{ usize::MAX }>>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub icon_kind: Option<PagedUtf8<{ usize::MAX }>>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub scale: Option<f64>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub visible: Option<bool>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub locked: Option<bool>,
 }
@@ -64,10 +64,10 @@ impl Default for Puzzle2dHandle {
 }
 
 /// ⚓️ Whether a node keeps its stored pose (`Fixed`) or derives it from edges (`Derived`).
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_dsl_record_derive::DslReceiving)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub enum Puzzle2dNodeAnchor {
     #[default]
@@ -78,52 +78,52 @@ pub enum Puzzle2dNodeAnchor {
 /// 🔵️ One node — `shape: "circle"` (default, radius-sized) or `"rectangle"` (width/height-sized);
 /// `🐙️handles` are its rim ports. Mirrors `semio_os_infinite::schema::BoardSnapshot`'s
 /// per-node fields, the canonical parser this snapshot format round-trips through.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_dsl_record_derive::DslOwnedReceiving)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle2dNode {
     pub id: PagedUtf8<{ usize::MAX }>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub node_kind: Option<PagedUtf8<{ usize::MAX }>>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub shape: Option<PagedUtf8<{ usize::MAX }>>,
     pub x: f64,
     pub y: f64,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub radius: Option<f64>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub width: Option<f64>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub height: Option<f64>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub text: Option<PagedUtf8<{ usize::MAX }>>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub icon_kind: Option<PagedUtf8<{ usize::MAX }>>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub root: Option<bool>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub scale: Option<f64>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub visible: Option<bool>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub locked: Option<bool>,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     pub anchor: Puzzle2dNodeAnchor,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     pub handles: PagedList<Puzzle2dHandle, { usize::MAX }>,
 }
@@ -154,8 +154,8 @@ impl Default for Puzzle2dNode {
 /// ➡️ One directed link between two handle ids, with compose-parity connection parameters.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle2dEdge {
     pub id: PagedUtf8<{ usize::MAX }>,
@@ -163,43 +163,43 @@ pub struct Puzzle2dEdge {
     pub source: PagedUtf8<{ usize::MAX }>,
     #[dsl(refs = "handle")]
     pub target: PagedUtf8<{ usize::MAX }>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub edge_kind: Option<PagedUtf8<{ usize::MAX }>>,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     pub gap: f64,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     pub shift: f64,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     pub rise: f64,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     pub rotation: f64,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     pub turn: f64,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     pub tilt: f64,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     pub x: f64,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     pub y: f64,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub source_tip: Option<PagedUtf8<{ usize::MAX }>>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub target_tip: Option<PagedUtf8<{ usize::MAX }>>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub visible: Option<bool>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub locked: Option<bool>,
 }
@@ -212,10 +212,10 @@ impl Default for Puzzle2dEdge {
 
 /// 🔗️ How specifically two handle/wire kinds are allowed to link — `vortex` is a ported-graph alias
 /// for `handle` (see `semio_os_infinite::parse_compat_specificity`).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_dsl_record_derive::DslReceiving)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "lowercase"))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "lowercase"))]
 #[value(rename_all = "lowercase")]
 pub enum Puzzle2dCompatSpecificity {
     General,
@@ -229,79 +229,79 @@ pub enum Puzzle2dCompatSpecificity {
 /// 🧩️ One allowed (or, unidirectional, one-way-allowed) link pair between two handle/wire kind ids.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle2dKindCompatibility {
     pub source: PagedUtf8<{ usize::MAX }>,
     pub target: PagedUtf8<{ usize::MAX }>,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     pub bidirectional: bool,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     pub important: bool,
     pub specificity: Puzzle2dCompatSpecificity,
 }
 
 /// 🏷️ Key/value attribute on a catalog kind (compose `Attribute` parity).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_dsl_record_derive::DslOwnedReceiving)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle2dAttribute {
     pub id: PagedUtf8<{ usize::MAX }>,
     pub key: PagedUtf8<{ usize::MAX }>,
     pub value: PagedUtf8<{ usize::MAX }>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub definition: Option<PagedUtf8<{ usize::MAX }>>,
 }
 
 /// ✍️ Author credit on a catalog kind (compose `Author` parity).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_dsl_record_derive::DslOwnedReceiving)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle2dAuthor {
     pub id: PagedUtf8<{ usize::MAX }>,
     pub name: PagedUtf8<{ usize::MAX }>,
     pub email: PagedUtf8<{ usize::MAX }>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub role: Option<PagedUtf8<{ usize::MAX }>>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub rank: Option<i32>,
 }
 
 /// 🖼️ Tagged representation / LOD asset on a node kind (compose `Representation` parity).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_dsl_record_derive::DslOwnedReceiving)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle2dRepresentation {
     pub id: PagedUtf8<{ usize::MAX }>,
     pub name: PagedUtf8<{ usize::MAX }>,
     pub url: PagedUtf8<{ usize::MAX }>,
     pub mime: PagedUtf8<{ usize::MAX }>,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     pub tags: PagedList<PagedUtf8<{ usize::MAX }>, { usize::MAX }>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub lod: Option<PagedUtf8<{ usize::MAX }>>,
     pub description: PagedUtf8<{ usize::MAX }>,
 }
 
 /// 🌱️ Handle template on a node kind — 2d uses `angle` instead of point/direction.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_dsl_record_derive::DslOwnedReceiving)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle2dHandleTemplate {
     pub id: PagedUtf8<{ usize::MAX }>,
@@ -309,20 +309,20 @@ pub struct Puzzle2dHandleTemplate {
     pub label: PagedUtf8<{ usize::MAX }>,
     pub description: PagedUtf8<{ usize::MAX }>,
     pub icon: PagedUtf8<{ usize::MAX }>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub handle_kind: Option<PagedUtf8<{ usize::MAX }>>,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     #[dsl(angle = "rad")]
     pub angle: f64,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub t: Option<f64>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub mandatory: Option<bool>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub radius: Option<f64>,
 }
@@ -334,10 +334,10 @@ impl Default for Puzzle2dHandleTemplate {
 }
 
 /// 🧩 Type-like node-kind catalog row (compose `Type` parity).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_dsl_record_derive::DslOwnedReceiving)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle2dCatalogNodeKind {
     #[dsl(defines = "node_kind")]
@@ -348,45 +348,45 @@ pub struct Puzzle2dCatalogNodeKind {
     pub icon: PagedUtf8<{ usize::MAX }>,
     pub image: PagedUtf8<{ usize::MAX }>,
     pub unit: PagedUtf8<{ usize::MAX }>,
-    #[cfg_attr(test, serde(default, rename = "abstract"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, rename = "abstract"))]
     #[value(default, rename = "abstract")]
     pub is_abstract: bool,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     pub base_kinds: PagedList<PagedUtf8<{ usize::MAX }>, { usize::MAX }>,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     pub representations: PagedList<Puzzle2dRepresentation, { usize::MAX }>,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     pub handles: PagedList<Puzzle2dHandleTemplate, { usize::MAX }>,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     pub attributes: PagedList<Puzzle2dAttribute, { usize::MAX }>,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     pub authors: PagedList<Puzzle2dAuthor, { usize::MAX }>,
 }
 
 /// 🔌️ Port-like handle-kind catalog row (compose `Port` parity).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_dsl_record_derive::DslOwnedReceiving)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle2dCatalogHandleKind {
     #[dsl(defines = "handle_kind")]
     pub id: PagedUtf8<{ usize::MAX }>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub code: Option<PagedUtf8<{ usize::MAX }>>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub label: Option<PagedUtf8<{ usize::MAX }>>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub order: Option<i32>,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     pub compatible_with: PagedList<PagedUtf8<{ usize::MAX }>, { usize::MAX }>,
     pub description: PagedUtf8<{ usize::MAX }>,
@@ -396,10 +396,10 @@ pub struct Puzzle2dCatalogHandleKind {
 }
 
 /// ➡️ Edge-kind catalog row.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_dsl_record_derive::DslOwnedReceiving)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle2dCatalogEdgeKind {
     #[dsl(defines = "edge_kind")]
@@ -412,10 +412,10 @@ pub struct Puzzle2dCatalogEdgeKind {
 }
 
 /// 🧵 Wire-kind catalog row.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_dsl_record_derive::DslOwnedReceiving)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle2dCatalogWireKind {
     #[dsl(defines = "wire_kind")]
@@ -430,25 +430,25 @@ pub struct Puzzle2dCatalogWireKind {
 }
 
 /// 🗂️ Typed kind-catalog bundle carried on snapshot meta.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_dsl_record_derive::DslOwnedReceiving)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle2dKindCatalogs {
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     #[dsl(table)]
     pub nodes: PagedList<Puzzle2dCatalogNodeKind, { usize::MAX }>,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     #[dsl(table)]
     pub handles: PagedList<Puzzle2dCatalogHandleKind, { usize::MAX }>,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     #[dsl(table)]
     pub edges: PagedList<Puzzle2dCatalogEdgeKind, { usize::MAX }>,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     #[dsl(table)]
     pub wires: PagedList<Puzzle2dCatalogWireKind, { usize::MAX }>,
@@ -458,32 +458,32 @@ pub struct Puzzle2dKindCatalogs {
 /// gumball relocated) — the flat analogue of puzzle3d's `Puzzle3dTargetVolume`. `width`/`height` are
 /// board units measured from `x`/`y` (the rectangle's minimum corner); a negative extent is
 /// normalized by every reader through [`Puzzle2dTargetRegion::bounds`].
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_dsl_record_derive::DslOwnedReceiving)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle2dTargetRegion {
     pub id: PagedUtf8<{ usize::MAX }>,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     pub x: f64,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     pub y: f64,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     pub width: f64,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     pub height: f64,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub label: Option<PagedUtf8<{ usize::MAX }>>,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     pub hidden: bool,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     pub locked: bool,
 }
@@ -517,18 +517,18 @@ pub fn puzzle2d_regions_contain_bounds(regions: &PagedList<Puzzle2dTargetRegion,
 /// 🗂️ Fixture-carried metadata: manifest id, link-compatibility table, and typed kind catalogs.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle2dMeta {
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub manifest_id: Option<PagedUtf8<{ usize::MAX }>>,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[value(default)]
     #[dsl(table)]
     pub kind_compatibility: PagedList<Puzzle2dKindCompatibility, { usize::MAX }>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub kind_catalogs: Option<Puzzle2dKindCatalogs>,
 }

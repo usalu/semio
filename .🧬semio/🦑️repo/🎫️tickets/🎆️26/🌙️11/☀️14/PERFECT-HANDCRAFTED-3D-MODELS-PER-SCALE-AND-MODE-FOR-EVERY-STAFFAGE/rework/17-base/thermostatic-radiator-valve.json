@@ -1,0 +1,1129 @@
+{
+ "volumes": {
+   "50": {
+     "status": "authored",
+     "denominator": 50,
+     "body": [
+       {
+         "id": "pipe",
+         "kind": "revolve",
+         "bone": "body",
+         "material": "brass",
+         "role": "body",
+         "tone": 0.55,
+         "profile": [[-0.052, 0.0], [-0.052, 0.0065], [-0.08, 0.0065], [-0.08, 0.0075], [-0.0335, 0.0075], [-0.0335, 0.0105], [-0.028, 0.0105], [-0.028, 0.0]],
+         "axis": [0, 1, 0],
+         "origin": [0, 0, -0.0],
+         "sectionFaces": ["-v"]
+       },
+       {
+         "id": "compression-nut",
+         "kind": "extrude",
+         "bone": "body",
+         "material": "brass",
+         "role": "body",
+         "tone": 0.6,
+         "profile": [[0.01386, 0.0], [0.00693, 0.012], [-0.00693, 0.012], [-0.01386, 0.0], [-0.00693, -0.012], [0.00693, -0.012]],
+         "plane": "zx",
+         "from": -0.046,
+         "to": -0.032
+       },
+       {
+         "id": "inlet-socket",
+         "kind": "extrude",
+         "bone": "body",
+         "material": "brass",
+         "role": "body",
+         "tone": 0.6,
+         "profile": [[0.01559, 0.0], [0.00779, 0.0135], [-0.00779, 0.0135], [-0.01559, 0.0], [-0.00779, -0.0135], [0.00779, -0.0135]],
+         "plane": "zx",
+         "from": -0.029,
+         "to": -0.019
+       },
+       {
+         "id": "inlet-neck",
+         "kind": "revolve",
+         "bone": "body",
+         "material": "brass",
+         "role": "body",
+         "tone": 0.6,
+         "profile": [[-0.02, 0.0], [-0.02, 0.011], [-0.007, 0.011], [-0.007, 0.0]],
+         "axis": [0, 1, 0],
+         "origin": [0, 0, -0.0]
+       },
+       {
+         "id": "valve-chamber",
+         "kind": "revolve",
+         "bone": "body",
+         "material": "brass",
+         "role": "body",
+         "tone": 0.6,
+         "profile": [[0.0155, 0.0], [0.0155, 0.009], [0.0147, 0.0124], [0.0132, 0.014], [-0.009, 0.014], [-0.0096, 0.015], [-0.0227, 0.015], [-0.0235, 0.0142], [-0.0235, 0.0]],
+         "axis": [0, 0, 1],
+         "origin": [0, 0, 0]
+       },
+       {
+         "id": "outlet-boss",
+         "kind": "revolve",
+         "bone": "body",
+         "material": "brass",
+         "role": "body",
+         "tone": 0.6,
+         "profile": [[0.004, 0.0], [0.004, 0.0132], [0.02, 0.0132], [0.02, 0.0]],
+         "axis": [1, 0, 0],
+         "origin": [0, 0, -0.0]
+       },
+       {
+         "id": "union-nut",
+         "kind": "extrude",
+         "bone": "body",
+         "material": "brass",
+         "role": "body",
+         "tone": 0.6,
+         "profile": [[0.015, 0.00866], [0.0, 0.01732], [-0.015, 0.00866], [-0.015, -0.00866], [-0.0, -0.01732], [0.015, -0.00866]],
+         "plane": "yz",
+         "from": 0.018,
+         "to": 0.032
+       },
+       {
+         "id": "tailpiece",
+         "kind": "revolve",
+         "bone": "body",
+         "material": "brass",
+         "role": "body",
+         "tone": 0.55,
+         "profile": [[0.028, 0.0], [0.028, 0.00925], [0.044, 0.00925], [0.044, 0.01045], [0.0568, 0.01045], [0.058, 0.0096], [0.058, 0.0065], [0.034, 0.0065], [0.034, 0.0]],
+         "axis": [1, 0, 0],
+         "origin": [0, 0, -0.0]
+       },
+       {
+         "id": "coupling-nut",
+         "kind": "revolve",
+         "bone": "head",
+         "material": "brass",
+         "role": "body",
+         "tone": 0.6,
+         "profile": [[-0.0125, 0.015], [-0.0125, 0.0162], [-0.0133, 0.017], [-0.0247, 0.017], [-0.0255, 0.0162], [-0.0255, 0.008], [-0.0235, 0.008], [-0.0235, 0.015], [-0.0125, 0.015]],
+         "axis": [0, 0, 1],
+         "origin": [0, 0, 0]
+       },
+       {
+         "id": "base-ring",
+         "kind": "revolve",
+         "bone": "head",
+         "material": "abs-plastic",
+         "role": "body",
+         "tone": 0.8,
+         "profile": [[-0.025, 0.0], [-0.025, 0.0205], [-0.0265, 0.022], [-0.041, 0.022], [-0.041, 0.0]],
+         "axis": [0, 0, 1],
+         "origin": [0, 0, 0]
+       },
+       {
+         "id": "index",
+         "kind": "extrude",
+         "bone": "head",
+         "material": "abs-plastic",
+         "role": "texture",
+         "tone": 0.12,
+         "profile": [[-0.0265, -0.003], [-0.0265, 0.003], [-0.0345, 0.0]],
+         "plane": "zx",
+         "from": 0.0215,
+         "to": 0.0236,
+         "texture": true
+       },
+       {
+         "id": "scale-band",
+         "kind": "revolve",
+         "bone": "knob",
+         "material": "abs-plastic",
+         "role": "body",
+         "tone": 0.95,
+         "profile": [[-0.035, 0.0], [-0.035, 0.025], [-0.0365, 0.0265], [-0.046, 0.0265], [-0.046, 0.0252], [-0.048, 0.0252], [-0.048, 0.0]],
+         "axis": [0, 0, 1],
+         "origin": [0, 0, 0]
+       },
+       {
+         "id": "grip",
+         "kind": "extrude",
+         "bone": "knob",
+         "material": "abs-plastic",
+         "role": "body",
+         "tone": 0.95,
+         "profile": [[0.0265, 0.0], [0.02556, 0.00269], [0.02436, 0.00518], [0.02444, 0.00794], [0.02421, 0.01078], [0.02295, 0.01325], [0.02144, 0.01558], [0.0191, 0.0172], [0.01666, 0.0185], [0.0151, 0.02079], [0.01325, 0.02295], [0.01078, 0.02421], [0.00819, 0.0252], [0.00534, 0.02514], [0.0026, 0.02476], [0.0, 0.0257], [-0.00277, 0.02635], [-0.00551, 0.02592], [-0.00819, 0.0252], [-0.01045, 0.02348], [-0.01245, 0.02156], [-0.0151, 0.02079], [-0.01773, 0.01969], [-0.01969, 0.01773], [-0.02144, 0.01558], [-0.02226, 0.01285], [-0.02275, 0.01013], [-0.02444, 0.00794], [-0.02592, 0.00551], [-0.02635, 0.00277], [-0.0265, 0.0], [-0.02556, -0.00269], [-0.02436, -0.00518], [-0.02444, -0.00794], [-0.02421, -0.01078], [-0.02295, -0.01325], [-0.02144, -0.01558], [-0.0191, -0.0172], [-0.01666, -0.0185], [-0.0151, -0.02079], [-0.01325, -0.02295], [-0.01078, -0.02421], [-0.00819, -0.0252], [-0.00534, -0.02514], [-0.0026, -0.02476], [-0.0, -0.0257], [0.00277, -0.02635], [0.00551, -0.02592], [0.00819, -0.0252], [0.01045, -0.02348], [0.01245, -0.02156], [0.0151, -0.02079], [0.01773, -0.01969], [0.01969, -0.01773], [0.02144, -0.01558], [0.02226, -0.01285], [0.02275, -0.01013], [0.02444, -0.00794], [0.02592, -0.00551], [0.02635, -0.00277]],
+         "plane": "xy",
+         "from": -0.072,
+         "to": -0.0475,
+         "taperTo": [0.955, 1]
+       },
+       {
+         "id": "sensor-cap",
+         "kind": "revolve",
+         "bone": "knob",
+         "material": "abs-plastic",
+         "role": "body",
+         "tone": 0.95,
+         "profile": [[-0.0715, 0.0], [-0.0715, 0.024], [-0.0755, 0.0233], [-0.0755, 0.0221], [-0.0775, 0.0221], [-0.0775, 0.0229], [-0.0805, 0.0224], [-0.0805, 0.0212], [-0.0825, 0.0212], [-0.0825, 0.022], [-0.0865, 0.0213], [-0.0898, 0.02], [-0.092, 0.0176], [-0.093, 0.0145], [-0.093, 0.0]],
+         "axis": [0, 0, 1],
+         "origin": [0, 0, 0]
+       },
+       {
+         "id": "pointer",
+         "kind": "box",
+         "bone": "knob",
+         "material": "abs-plastic",
+         "role": "texture",
+         "tone": 0.1,
+         "size": [0.011, 0.0045, 0.0012],
+         "texture": true,
+         "transform": {
+           "translation": [0.0, 0.00575, -0.093]
+         }
+       }
+     ],
+     "thermal": [
+       {
+         "id": "th-pipe",
+         "kind": "revolve",
+         "bone": "body",
+         "material": "brass",
+         "role": "body",
+         "tone": 0.55,
+         "profile": [[-0.08, 0.0], [-0.08, 0.0075], [-0.0335, 0.0075], [-0.0335, 0.0105], [-0.028, 0.0105], [-0.028, 0.0]],
+         "axis": [0, 1, 0],
+         "origin": [0, 0, -0.0],
+         "region": "body",
+         "layer": "wall",
+         "sectionFaces": ["-v"]
+       },
+       {
+         "id": "th-compression-nut",
+         "of": "compression-nut",
+         "region": "body",
+         "layer": "wall"
+       },
+       {
+         "id": "th-inlet-socket",
+         "of": "inlet-socket",
+         "region": "body",
+         "layer": "wall"
+       },
+       {
+         "id": "th-inlet-neck",
+         "of": "inlet-neck",
+         "region": "body",
+         "layer": "wall"
+       },
+       {
+         "id": "th-valve-chamber",
+         "of": "valve-chamber",
+         "region": "body",
+         "layer": "wall"
+       },
+       {
+         "id": "th-outlet-boss",
+         "of": "outlet-boss",
+         "region": "body",
+         "layer": "wall"
+       },
+       {
+         "id": "th-union-nut",
+         "of": "union-nut",
+         "region": "body",
+         "layer": "wall"
+       },
+       {
+         "id": "th-tailpiece",
+         "kind": "revolve",
+         "bone": "body",
+         "material": "brass",
+         "role": "body",
+         "tone": 0.55,
+         "profile": [[0.028, 0.0], [0.028, 0.00925], [0.044, 0.00925], [0.044, 0.01045], [0.0568, 0.01045], [0.058, 0.0096], [0.058, 0.0]],
+         "axis": [1, 0, 0],
+         "origin": [0, 0, -0.0],
+         "region": "body",
+         "layer": "wall",
+         "sectionFaces": ["+u"]
+       },
+       {
+         "id": "th-coupling-nut",
+         "of": "coupling-nut",
+         "region": "head",
+         "layer": "shell"
+       },
+       {
+         "id": "th-base-ring",
+         "of": "base-ring",
+         "region": "head",
+         "layer": "shell"
+       },
+       {
+         "id": "th-scale-band",
+         "of": "scale-band",
+         "region": "head",
+         "layer": "shell"
+       },
+       {
+         "id": "th-grip",
+         "of": "grip",
+         "region": "head",
+         "layer": "shell",
+         "sectionFaces": ["-w"]
+       },
+       {
+         "id": "th-sensor-cap",
+         "of": "sensor-cap",
+         "region": "knob",
+         "layer": "shell",
+         "sectionFaces": ["+w"]
+       }
+     ],
+     "structure": [
+       {
+         "id": "member-inlet",
+         "kind": "revolve",
+         "bone": "body",
+         "material": "brass",
+         "role": "body",
+         "tone": 0.6,
+         "profile": [[-0.08, 0.0065], [-0.08, 0.0075], [-0.031, 0.0075], [-0.031, 0.011], [-0.002, 0.011], [-0.002, 0.008], [-0.029, 0.008], [-0.029, 0.0065], [-0.08, 0.0065]],
+         "axis": [0, 1, 0],
+         "origin": [0, 0, -0.0],
+         "member": "body",
+         "part": "member"
+       },
+       {
+         "id": "member-outlet",
+         "kind": "revolve",
+         "bone": "body",
+         "material": "brass",
+         "role": "body",
+         "tone": 0.6,
+         "profile": [[0.002, 0.0065], [0.002, 0.0102], [0.03, 0.0102], [0.03, 0.00925], [0.058, 0.00925], [0.058, 0.0065], [0.002, 0.0065]],
+         "axis": [1, 0, 0],
+         "origin": [0, 0, -0.0],
+         "member": "body",
+         "part": "member"
+       },
+       {
+         "id": "member-chamber",
+         "kind": "revolve",
+         "bone": "body",
+         "material": "brass",
+         "role": "body",
+         "tone": 0.6,
+         "profile": [[0.012, 0.008], [0.012, 0.011], [-0.0235, 0.011], [-0.0235, 0.008], [0.012, 0.008]],
+         "axis": [0, 0, 1],
+         "origin": [0, 0, 0],
+         "member": "body",
+         "part": "member"
+       },
+       {
+         "id": "member-coupling-nut",
+         "of": "coupling-nut",
+         "member": "head",
+         "part": "member"
+       },
+       {
+         "id": "member-base-sleeve",
+         "kind": "revolve",
+         "bone": "head",
+         "material": "abs-plastic",
+         "role": "body",
+         "tone": 0.5,
+         "profile": [[-0.0255, 0.008], [-0.0255, 0.0115], [-0.052, 0.0115], [-0.052, 0.008], [-0.0255, 0.008]],
+         "axis": [0, 0, 1],
+         "origin": [0, 0, 0],
+         "member": "head",
+         "part": "member"
+       },
+       {
+         "id": "member-handwheel-hub",
+         "kind": "revolve",
+         "bone": "knob",
+         "material": "abs-plastic",
+         "role": "body",
+         "tone": 0.5,
+         "profile": [[-0.035, 0.0125], [-0.035, 0.0155], [-0.056, 0.0155], [-0.06, 0.0125], [-0.076, 0.0125], [-0.076, 0.004], [-0.072, 0.004], [-0.072, 0.0095], [-0.058, 0.0095], [-0.055, 0.0125], [-0.035, 0.0125]],
+         "axis": [0, 0, 1],
+         "origin": [0, 0, 0],
+         "member": "knob",
+         "part": "member"
+       },
+       {
+         "id": "member-pressure-pin",
+         "kind": "capsule",
+         "bone": "knob",
+         "material": "brass",
+         "role": "body",
+         "tone": 0.5,
+         "p0": [0.0, 0.0, -0.03],
+         "p1": [0.0, 0.0, -0.07],
+         "r0": 0.00225,
+         "r1": 0.00225,
+         "member": "knob",
+         "part": "member"
+       },
+       {
+         "id": "joint-compression",
+         "kind": "revolve",
+         "bone": "body",
+         "material": "brass",
+         "role": "body",
+         "tone": 0.4,
+         "profile": [[-0.044, 0.0075], [-0.044, 0.01], [-0.034, 0.01], [-0.034, 0.0075], [-0.044, 0.0075]],
+         "axis": [0, 1, 0],
+         "origin": [0, 0, -0.0],
+         "member": "body",
+         "part": "joint"
+       },
+       {
+         "id": "joint-union",
+         "kind": "revolve",
+         "bone": "body",
+         "material": "brass",
+         "role": "body",
+         "tone": 0.4,
+         "profile": [[0.021, 0.0102], [0.021, 0.013], [0.031, 0.013], [0.031, 0.00925], [0.021, 0.0102]],
+         "axis": [1, 0, 0],
+         "origin": [0, 0, -0.0],
+         "member": "body",
+         "part": "joint"
+       },
+       {
+         "id": "joint-setting-thread",
+         "kind": "revolve",
+         "bone": "knob",
+         "material": "abs-plastic",
+         "role": "body",
+         "tone": 0.4,
+         "profile": [[-0.035, 0.0115], [-0.035, 0.0125], [-0.052, 0.0125], [-0.052, 0.0115], [-0.035, 0.0115]],
+         "axis": [0, 0, 1],
+         "origin": [0, 0, 0],
+         "member": "knob",
+         "part": "joint"
+       },
+       {
+         "id": "support-pipe-joint",
+         "kind": "capsule",
+         "bone": "body",
+         "material": "brass",
+         "role": "ground",
+         "tone": 0.3,
+         "p0": [0.0, -0.039, -0.008],
+         "p1": [0.0, -0.039, 0.008],
+         "r0": 0.00375,
+         "r1": 0.00375,
+         "member": "body",
+         "part": "support",
+         "anchor": "pipe-joint"
+       },
+       {
+         "id": "support-radiator-union",
+         "kind": "capsule",
+         "bone": "body",
+         "material": "brass",
+         "role": "ground",
+         "tone": 0.3,
+         "p0": [0.051, 0.0, -0.006],
+         "p1": [0.051, 0.0, 0.006],
+         "r0": 0.00375,
+         "r1": 0.00375,
+         "member": "body",
+         "part": "support",
+         "anchor": "radiator-union"
+       },
+       {
+         "id": "mass-body",
+         "kind": "ellipsoid",
+         "bone": "body",
+         "material": "brass",
+         "role": "detail",
+         "tone": 0.3,
+         "radii": [0.006, 0.006, 0.006],
+         "transform": {
+           "translation": [0.009, -0.015, 0.0]
+         },
+         "member": "body",
+         "part": "mass"
+       },
+       {
+         "id": "mass-sensor",
+         "kind": "ellipsoid",
+         "bone": "knob",
+         "material": "abs-plastic",
+         "role": "detail",
+         "tone": 0.3,
+         "radii": [0.009, 0.009, 0.009],
+         "transform": {
+           "translation": [0.0, 0.0, -0.079]
+         },
+         "member": "knob",
+         "part": "mass"
+       }
+     ],
+     "decisions": [
+       {
+         "en": "Body: a corner angle valve DN 15 after the cited data sheet: 15 mm pipe with its cut end and bore, compression nut AF 24, hexagon inlet socket AF 27, inlet neck, valve chamber with the M30 x 1.5 collar, G 3/4 outlet boss, union nut AF 30 and the bored R 1/2 tailpiece 58 mm from the centre; the head is the knurled coupling nut, the fixed base ring with its index arrow, and the handwheel of 53 mm with scale band, ten finger flutes and the slotted sensor cap with the embossed front mark.",
+         "de": "Körper: ein Winkeleckventil DN 15 nach dem zitierten Datenblatt: 15-mm-Rohr mit Schnittende und Bohrung, Klemmmutter SW 24, Sechskant-Eingangsmuffe SW 27, Eingangshals, Ventilkammer mit dem Bund M30 x 1,5, Ausgangsstutzen G 3/4, Überwurfmutter SW 30 und der gebohrte Schraubnippel R 1/2 bis 58 mm von der Mitte; der Kopf ist die gerändelte Überwurfmutter, der feste Sockelring mit Indexpfeil und das Handrad von 53 mm mit Skalenband, zehn Griffmulden und der geschlitzten Fühlerkappe mit der geprägten Frontmarke."
+       },
+       {
+         "en": "Thermal: every region is the outer surface of its body solids: the brass region is the pipe, the fittings, the valve body and the union with the tailpiece (the cut end of the pipe and the end of the tailpiece inside the radiator are section faces, their bores carry water and count for no area), the head region the coupling nut, the base ring, the scale band and the fluted grip, the knob region the slotted sensor cap (the plane where grip and cap meet is a cut through the one handwheel and counts for neither); each region has one layer, so no nested shells are needed.",
+         "de": "Thermik: jede Region ist die Außenfläche ihrer Körper: die Messingregion ist Rohr, Verschraubungen, Ventilkörper und Verschraubung mit Schraubnippel (das Schnittende des Rohrs und das Ende des Schraubnippels im Heizkörper sind Schnittflächen, ihre Bohrungen führen Wasser und zählen nicht zur Fläche), die Kopfregion Überwurfmutter, Sockelring, Skalenband und Griffteil, die Knopfregion die geschlitzte Fühlerkappe (die Ebene, in der Griff und Kappe zusammentreffen, ist ein Schnitt durch das eine Handrad und zählt für keine von beiden); jede Region hat eine Schicht, daher braucht es keine verschachtelten Schalen."
+       },
+       {
+         "en": "Structure: three brass tubes meeting at the valve centre (inlet with the pipe, outlet with the tailpiece, chamber towards the head), the coupling nut and the base sleeve as the head member, the handwheel hub with the pressure pin as the knob member, joints at the compression fitting, the union and the setting thread, a pin at the pipe joint, a roller at the radiator union and the masses of the body and of the liquid sensor.",
+         "de": "Tragwerk: drei Messingrohre, die sich in der Ventilmitte treffen (Eingang mit Rohr, Ausgang mit Schraubnippel, Kammer zum Kopf), Überwurfmutter und Sockelhülse als Glied des Kopfes, die Handradnabe mit dem Druckstift als Glied des Knopfes, Gelenke an Klemmverschraubung, Verschraubung und Einstellgewinde, ein Festlager an der Rohrverschraubung, ein Rollenlager an der Heizkörperverschraubung und die Massen des Körpers und des Flüssigkeitsfühlers."
+       }
+     ]
+   },
+   "100": {
+     "status": "authored",
+     "denominator": 100,
+     "body": [
+       {
+         "id": "inlet",
+         "kind": "revolve",
+         "bone": "body",
+         "material": "brass",
+         "role": "body",
+         "tone": 0.6,
+         "profile": [[-0.08, 0.0], [-0.08, 0.0075], [-0.046, 0.0075], [-0.046, 0.0125], [-0.031, 0.0125], [-0.029, 0.014], [-0.019, 0.014], [-0.017, 0.011], [-0.006, 0.011], [-0.006, 0.0]],
+         "axis": [0, 1, 0],
+         "origin": [0, 0, -0.0]
+       },
+       {
+         "id": "chamber",
+         "kind": "revolve",
+         "bone": "body",
+         "material": "brass",
+         "role": "body",
+         "tone": 0.6,
+         "profile": [[0.0155, 0.0], [0.0155, 0.0095], [0.0132, 0.014], [-0.01, 0.014], [-0.012, 0.015], [-0.0235, 0.015], [-0.0235, 0.0]],
+         "axis": [0, 0, 1],
+         "origin": [0, 0, 0]
+       },
+       {
+         "id": "outlet",
+         "kind": "revolve",
+         "bone": "body",
+         "material": "brass",
+         "role": "body",
+         "tone": 0.6,
+         "profile": [[0.004, 0.0], [0.004, 0.0132], [0.018, 0.0132], [0.018, 0.016], [0.032, 0.016], [0.032, 0.01], [0.058, 0.01], [0.058, 0.0]],
+         "axis": [1, 0, 0],
+         "origin": [0, 0, -0.0]
+       },
+       {
+         "id": "head-base",
+         "kind": "revolve",
+         "bone": "head",
+         "material": "abs-plastic",
+         "role": "body",
+         "tone": 0.8,
+         "profile": [[-0.0125, 0.0], [-0.0125, 0.017], [-0.025, 0.017], [-0.0265, 0.022], [-0.038, 0.022], [-0.038, 0.0]],
+         "axis": [0, 0, 1],
+         "origin": [0, 0, 0]
+       },
+       {
+         "id": "handwheel",
+         "kind": "revolve",
+         "bone": "knob",
+         "material": "abs-plastic",
+         "role": "body",
+         "tone": 0.95,
+         "profile": [[-0.035, 0.0], [-0.035, 0.0265], [-0.07, 0.0255], [-0.072, 0.024], [-0.087, 0.0215], [-0.0915, 0.0185], [-0.093, 0.0145], [-0.093, 0.0]],
+         "axis": [0, 0, 1],
+         "origin": [0, 0, 0]
+       }
+     ],
+     "thermal": [
+       {
+         "id": "th-inlet",
+         "of": "inlet",
+         "region": "body",
+         "layer": "wall",
+         "sectionFaces": ["-v"]
+       },
+       {
+         "id": "th-chamber",
+         "of": "chamber",
+         "region": "body",
+         "layer": "wall"
+       },
+       {
+         "id": "th-outlet",
+         "of": "outlet",
+         "region": "body",
+         "layer": "wall",
+         "sectionFaces": ["+u"]
+       },
+       {
+         "id": "th-head-base",
+         "of": "head-base",
+         "region": "head",
+         "layer": "shell"
+       },
+       {
+         "id": "th-handwheel-barrel",
+         "kind": "revolve",
+         "bone": "knob",
+         "material": "abs-plastic",
+         "role": "body",
+         "tone": 0.95,
+         "profile": [[-0.035, 0.0], [-0.035, 0.0265], [-0.07, 0.0255], [-0.072, 0.024], [-0.072, 0.0]],
+         "axis": [0, 0, 1],
+         "origin": [0, 0, 0],
+         "region": "head",
+         "layer": "shell",
+         "sectionFaces": ["-w"]
+       },
+       {
+         "id": "th-sensor-cap",
+         "kind": "revolve",
+         "bone": "knob",
+         "material": "abs-plastic",
+         "role": "body",
+         "tone": 0.95,
+         "profile": [[-0.072, 0.0], [-0.072, 0.024], [-0.087, 0.0215], [-0.0915, 0.0185], [-0.093, 0.0145], [-0.093, 0.0]],
+         "axis": [0, 0, 1],
+         "origin": [0, 0, 0],
+         "region": "knob",
+         "layer": "shell",
+         "sectionFaces": ["+w"]
+       }
+     ],
+     "structure": [
+       {
+         "id": "member-inlet",
+         "kind": "revolve",
+         "bone": "body",
+         "material": "brass",
+         "role": "body",
+         "tone": 0.6,
+         "profile": [[-0.08, 0.0065], [-0.08, 0.0075], [-0.03, 0.0075], [-0.03, 0.011], [-0.002, 0.011], [-0.002, 0.0065], [-0.08, 0.0065]],
+         "axis": [0, 1, 0],
+         "origin": [0, 0, -0.0],
+         "member": "body",
+         "part": "member"
+       },
+       {
+         "id": "member-outlet",
+         "kind": "revolve",
+         "bone": "body",
+         "material": "brass",
+         "role": "body",
+         "tone": 0.6,
+         "profile": [[0.002, 0.0065], [0.002, 0.01], [0.058, 0.01], [0.058, 0.0065], [0.002, 0.0065]],
+         "axis": [1, 0, 0],
+         "origin": [0, 0, -0.0],
+         "member": "body",
+         "part": "member"
+       },
+       {
+         "id": "member-chamber",
+         "kind": "revolve",
+         "bone": "body",
+         "material": "brass",
+         "role": "body",
+         "tone": 0.6,
+         "profile": [[0.012, 0.0075], [0.012, 0.011], [-0.0235, 0.011], [-0.0235, 0.0075], [0.012, 0.0075]],
+         "axis": [0, 0, 1],
+         "origin": [0, 0, 0],
+         "member": "body",
+         "part": "member"
+       },
+       {
+         "id": "member-head-sleeve",
+         "kind": "revolve",
+         "bone": "head",
+         "material": "abs-plastic",
+         "role": "body",
+         "tone": 0.5,
+         "profile": [[-0.013, 0.008], [-0.013, 0.0165], [-0.025, 0.0165], [-0.025, 0.0115], [-0.05, 0.0115], [-0.05, 0.008], [-0.013, 0.008]],
+         "axis": [0, 0, 1],
+         "origin": [0, 0, 0],
+         "member": "head",
+         "part": "member"
+       },
+       {
+         "id": "member-handwheel-hub",
+         "kind": "revolve",
+         "bone": "knob",
+         "material": "abs-plastic",
+         "role": "body",
+         "tone": 0.5,
+         "profile": [[-0.035, 0.012], [-0.035, 0.0155], [-0.074, 0.0155], [-0.074, 0.012], [-0.035, 0.012]],
+         "axis": [0, 0, 1],
+         "origin": [0, 0, 0],
+         "member": "knob",
+         "part": "member"
+       },
+       {
+         "id": "support-pipe-joint",
+         "kind": "revolve",
+         "bone": "body",
+         "material": "brass",
+         "role": "ground",
+         "tone": 0.3,
+         "profile": [[-0.0465, 0.0075], [-0.0465, 0.013], [-0.0315, 0.013], [-0.0315, 0.0075], [-0.0465, 0.0075]],
+         "axis": [0, 1, 0],
+         "origin": [0, 0, -0.0],
+         "member": "body",
+         "part": "support",
+         "anchor": "pipe-joint"
+       },
+       {
+         "id": "support-radiator-union",
+         "kind": "revolve",
+         "bone": "body",
+         "material": "brass",
+         "role": "ground",
+         "tone": 0.3,
+         "profile": [[0.043, 0.01], [0.043, 0.013], [0.058, 0.013], [0.058, 0.01], [0.043, 0.01]],
+         "axis": [1, 0, 0],
+         "origin": [0, 0, -0.0],
+         "member": "body",
+         "part": "support",
+         "anchor": "radiator-union"
+       },
+       {
+         "id": "mass-body",
+         "kind": "ellipsoid",
+         "bone": "body",
+         "material": "brass",
+         "role": "detail",
+         "tone": 0.3,
+         "radii": [0.0075, 0.0075, 0.0075],
+         "transform": {
+           "translation": [0.009, -0.015, 0.0]
+         },
+         "member": "body",
+         "part": "mass"
+       },
+       {
+         "id": "mass-sensor",
+         "kind": "ellipsoid",
+         "bone": "knob",
+         "material": "abs-plastic",
+         "role": "detail",
+         "tone": 0.3,
+         "radii": [0.009, 0.009, 0.009],
+         "transform": {
+           "translation": [0.0, 0.0, -0.083]
+         },
+         "member": "knob",
+         "part": "mass"
+       }
+     ],
+     "decisions": [
+       {
+         "en": "Body: drawn anew for 15 mm: the inlet is one turned column (pipe, a round collar for compression nut and socket, neck), the chamber a plain barrel with its collar, the outlet one stepped arm with a round union collar and the tailpiece; the head is a base (coupling nut and base ring as one stepped ring) and a smooth tapered handwheel without flutes, slots, index or front mark.",
+         "de": "Körper: für 15 mm neu gezeichnet: der Eingang ist eine gedrehte Säule (Rohr, ein runder Bund für Klemmmutter und Muffe, Hals), die Kammer eine glatte Trommel mit Bund, der Ausgang ein gestufter Arm mit rundem Verschraubungsbund und Schraubnippel; der Kopf ist ein Sockel (Überwurfmutter und Sockelring als ein gestufter Ring) und ein glattes, verjüngtes Handrad ohne Griffmulden, Schlitze, Index und Frontmarke."
+       },
+       {
+         "en": "Thermal: the three brass masses and the head base reuse the body solids with the pipe and tail ends as section faces; the handwheel is cut at the cap shoulder into the barrel (head region) and the sensor cap (knob region), the cut faces count for no area.",
+         "de": "Thermik: die drei Messingmassen und der Kopfsockel verwenden die Körper mit Rohr- und Nippelende als Schnittflächen; das Handrad ist an der Kappenschulter in die Trommel (Kopfregion) und die Fühlerkappe (Knopfregion) geschnitten, die Schnittflächen zählen nicht zur Fläche."
+       },
+       {
+         "en": "Structure: the three brass tubes, one sleeve for nut and base, the handwheel hub, pin and roller as 15 mm rings round the pipe at the compression fitting and round the tailpiece at the union, and the two masses; the joints and the pressure pin are below the feature and merged into the members.",
+         "de": "Tragwerk: die drei Messingrohre, eine Hülse für Mutter und Sockel, die Handradnabe, Fest- und Rollenlager als 15-mm-Ringe um das Rohr an der Klemmverschraubung und um den Schraubnippel an der Verschraubung und die beiden Massen; Gelenke und Druckstift liegen unter der Strukturgröße und gehen in den Gliedern auf."
+       }
+     ]
+   },
+   "200": {
+     "status": "authored",
+     "denominator": 200,
+     "body": [
+       {
+         "id": "inlet",
+         "kind": "revolve",
+         "bone": "body",
+         "material": "brass",
+         "role": "body",
+         "tone": 0.6,
+         "profile": [[-0.08, 0.0], [-0.08, 0.008], [-0.047, 0.008], [-0.044, 0.0135], [-0.018, 0.0135], [-0.008, 0.0145], [0.01, 0.0145], [0.014, 0.01], [0.014, 0.0]],
+         "axis": [0, 1, 0],
+         "origin": [0, 0, -0.0]
+       },
+       {
+         "id": "outlet",
+         "kind": "revolve",
+         "bone": "body",
+         "material": "brass",
+         "role": "body",
+         "tone": 0.6,
+         "profile": [[0.006, 0.0], [0.006, 0.0125], [0.017, 0.0125], [0.02, 0.0155], [0.032, 0.0155], [0.036, 0.01], [0.058, 0.01], [0.058, 0.0]],
+         "axis": [1, 0, 0],
+         "origin": [0, 0, -0.0]
+       },
+       {
+         "id": "head",
+         "kind": "revolve",
+         "bone": "head",
+         "material": "abs-plastic",
+         "role": "body",
+         "tone": 0.85,
+         "profile": [[-0.009, 0.0], [-0.009, 0.017], [-0.025, 0.017], [-0.026, 0.022], [-0.0345, 0.022], [-0.036, 0.0265], [-0.071, 0.0256], [-0.086, 0.0225], [-0.0915, 0.0185], [-0.093, 0.014], [-0.093, 0.0]],
+         "axis": [0, 0, 1],
+         "origin": [0, 0, 0]
+       }
+     ],
+     "thermal": [
+       {
+         "id": "th-inlet",
+         "of": "inlet",
+         "region": "body",
+         "layer": "wall",
+         "sectionFaces": ["-v"]
+       },
+       {
+         "id": "th-outlet",
+         "of": "outlet",
+         "region": "body",
+         "layer": "wall",
+         "sectionFaces": ["+u"]
+       },
+       {
+         "id": "th-head",
+         "kind": "revolve",
+         "bone": "head",
+         "material": "abs-plastic",
+         "role": "body",
+         "tone": 0.85,
+         "profile": [[-0.009, 0.0], [-0.009, 0.017], [-0.025, 0.017], [-0.026, 0.022], [-0.0345, 0.022], [-0.036, 0.0265], [-0.071, 0.0256], [-0.071, 0.0]],
+         "axis": [0, 0, 1],
+         "origin": [0, 0, 0],
+         "region": "head",
+         "layer": "shell",
+         "sectionFaces": ["-w"]
+       },
+       {
+         "id": "th-sensor-cap",
+         "kind": "revolve",
+         "bone": "knob",
+         "material": "abs-plastic",
+         "role": "body",
+         "tone": 0.95,
+         "profile": [[-0.071, 0.0], [-0.071, 0.0256], [-0.086, 0.0225], [-0.0915, 0.0185], [-0.093, 0.014], [-0.093, 0.0]],
+         "axis": [0, 0, 1],
+         "origin": [0, 0, 0],
+         "region": "knob",
+         "layer": "shell",
+         "sectionFaces": ["+w"]
+       }
+     ],
+     "structure": [
+       {
+         "id": "member-inlet",
+         "kind": "revolve",
+         "bone": "body",
+         "material": "brass",
+         "role": "body",
+         "tone": 0.6,
+         "profile": [[-0.08, 0.0065], [-0.08, 0.009], [0.0, 0.009], [0.0, 0.0065], [-0.08, 0.0065]],
+         "axis": [0, 1, 0],
+         "origin": [0, 0, -0.0],
+         "member": "body",
+         "part": "member"
+       },
+       {
+         "id": "member-outlet",
+         "kind": "revolve",
+         "bone": "body",
+         "material": "brass",
+         "role": "body",
+         "tone": 0.6,
+         "profile": [[0.0, 0.0065], [0.0, 0.0095], [0.058, 0.0095], [0.058, 0.0065], [0.0, 0.0065]],
+         "axis": [1, 0, 0],
+         "origin": [0, 0, -0.0],
+         "member": "body",
+         "part": "member"
+       },
+       {
+         "id": "member-head-sleeve",
+         "kind": "revolve",
+         "bone": "head",
+         "material": "abs-plastic",
+         "role": "body",
+         "tone": 0.5,
+         "profile": [[-0.009, 0.008], [-0.009, 0.0115], [-0.048, 0.0115], [-0.048, 0.008], [-0.009, 0.008]],
+         "axis": [0, 0, 1],
+         "origin": [0, 0, 0],
+         "member": "head",
+         "part": "member"
+       },
+       {
+         "id": "member-handwheel-hub",
+         "kind": "revolve",
+         "bone": "knob",
+         "material": "abs-plastic",
+         "role": "body",
+         "tone": 0.5,
+         "profile": [[-0.036, 0.0125], [-0.036, 0.0155], [-0.076, 0.0155], [-0.076, 0.0125], [-0.036, 0.0125]],
+         "axis": [0, 0, 1],
+         "origin": [0, 0, 0],
+         "member": "knob",
+         "part": "member"
+       },
+       {
+         "id": "support-pipe-joint",
+         "kind": "box",
+         "bone": "body",
+         "material": "brass",
+         "role": "ground",
+         "tone": 0.3,
+         "size": [0.015, 0.015, 0.015],
+         "transform": {
+           "translation": [0.0, -0.039, 0.0]
+         },
+         "member": "body",
+         "part": "support",
+         "anchor": "pipe-joint"
+       },
+       {
+         "id": "support-radiator-union",
+         "kind": "box",
+         "bone": "body",
+         "material": "brass",
+         "role": "ground",
+         "tone": 0.3,
+         "size": [0.012, 0.015, 0.015],
+         "transform": {
+           "translation": [0.051, 0.0, 0.0]
+         },
+         "member": "body",
+         "part": "support",
+         "anchor": "radiator-union"
+       },
+       {
+         "id": "mass-valve",
+         "kind": "ellipsoid",
+         "bone": "body",
+         "material": "brass",
+         "role": "detail",
+         "tone": 0.3,
+         "radii": [0.008, 0.008, 0.008],
+         "transform": {
+           "translation": [0.005, -0.01, -0.02]
+         },
+         "member": "body",
+         "part": "mass"
+       }
+     ],
+     "decisions": [
+       {
+         "en": "Body: three turned masses for a digital model at 1:200 (no printed drawing exists at this scale): the inlet column with the pipe and one collar up through the chamber, the outlet arm with its union collar, and the head from the valve to the sensor cap as one turned body with the true steps of the reference (34 mm coupling nut, 44 mm base ring, 53 mm handwheel barrel tapering 2 mm, rounded sensor cap); nut, base ring, flutes and marks are merged.",
+         "de": "Körper: drei gedrehte Massen für ein digitales Modell 1:200 (eine gedruckte Zeichnung gibt es in diesem Maßstab nicht): die Eingangssäule mit Rohr und einem Bund bis durch die Kammer, der Ausgangsarm mit Verschraubungsbund und der Kopf vom Ventil bis zur Fühlerkappe als ein gedrehter Körper mit den wahren Stufen der Referenz (Überwurfmutter 34 mm, Sockelring 44 mm, Handradtrommel 53 mm mit 2 mm Verjüngung, gerundete Fühlerkappe); Mutter, Sockelring, Griffmulden und Marken sind zusammengefasst."
+       },
+       {
+         "en": "Thermal: inlet and outlet carry the brass region, the head body the head region up to the cap shoulder and the front cap the knob region; only the sum of the areas is compared at this scale.",
+         "de": "Thermik: Eingang und Ausgang tragen die Messingregion, der Kopfkörper die Kopfregion bis zur Kappenschulter und die Frontkappe die Knopfregion; in diesem Maßstab wird nur die Flächensumme verglichen."
+       },
+       {
+         "en": "Structure: two brass tubes along the pipe and the tail, one sleeve along the head axis, the handwheel hub, block supports at the pipe joint and the radiator union and one mass for the whole valve.",
+         "de": "Tragwerk: zwei Messingrohre entlang Rohr und Nippel, eine Hülse entlang der Kopfachse, die Handradnabe, Blocklager an Rohrverschraubung und Heizkörperverschraubung und eine Masse für das ganze Ventil."
+       }
+     ]
+   },
+   "500": {
+     "status": "authored",
+     "denominator": 500,
+     "body": [
+       {
+         "id": "inlet",
+         "kind": "revolve",
+         "bone": "body",
+         "material": "brass",
+         "role": "body",
+         "tone": 0.6,
+         "profile": [[-0.08, 0.0], [-0.08, 0.0075], [-0.046, 0.0075], [-0.044, 0.0145], [0.014, 0.0145], [0.014, 0.0]],
+         "axis": [0, 1, 0],
+         "origin": [0, 0, -0.0]
+       },
+       {
+         "id": "outlet",
+         "kind": "revolve",
+         "bone": "body",
+         "material": "brass",
+         "role": "body",
+         "tone": 0.6,
+         "profile": [[0.006, 0.0], [0.006, 0.014], [0.033, 0.014], [0.035, 0.01], [0.058, 0.01], [0.058, 0.0]],
+         "axis": [1, 0, 0],
+         "origin": [0, 0, -0.0]
+       },
+       {
+         "id": "head",
+         "kind": "revolve",
+         "bone": "head",
+         "material": "abs-plastic",
+         "role": "body",
+         "tone": 0.85,
+         "profile": [[-0.009, 0.0], [-0.009, 0.019], [-0.03, 0.019], [-0.034, 0.0265], [-0.084, 0.0265], [-0.093, 0.018], [-0.093, 0.0]],
+         "axis": [0, 0, 1],
+         "origin": [0, 0, 0]
+       }
+     ],
+     "thermal": [
+       {
+         "id": "th-inlet",
+         "of": "inlet",
+         "region": "body",
+         "layer": "wall",
+         "sectionFaces": ["-v"]
+       },
+       {
+         "id": "th-outlet",
+         "of": "outlet",
+         "region": "body",
+         "layer": "wall",
+         "sectionFaces": ["+u"]
+       },
+       {
+         "id": "th-head",
+         "kind": "revolve",
+         "bone": "head",
+         "material": "abs-plastic",
+         "role": "body",
+         "tone": 0.85,
+         "profile": [[-0.009, 0.0], [-0.009, 0.019], [-0.03, 0.019], [-0.034, 0.0265], [-0.074, 0.0265], [-0.074, 0.0]],
+         "axis": [0, 0, 1],
+         "origin": [0, 0, 0],
+         "region": "head",
+         "layer": "shell",
+         "sectionFaces": ["-w"]
+       },
+       {
+         "id": "th-sensor-cap",
+         "kind": "revolve",
+         "bone": "knob",
+         "material": "abs-plastic",
+         "role": "body",
+         "tone": 0.95,
+         "profile": [[-0.074, 0.0], [-0.074, 0.0265], [-0.084, 0.0265], [-0.093, 0.018], [-0.093, 0.0]],
+         "axis": [0, 0, 1],
+         "origin": [0, 0, 0],
+         "region": "knob",
+         "layer": "shell",
+         "sectionFaces": ["+w"]
+       }
+     ],
+     "structure": [
+       {
+         "id": "member-inlet",
+         "kind": "box",
+         "bone": "body",
+         "material": "brass",
+         "role": "body",
+         "tone": 0.6,
+         "size": [0.015, 0.08, 0.015],
+         "transform": {
+           "translation": [0.0, -0.04, 0.0]
+         },
+         "member": "body",
+         "part": "member"
+       },
+       {
+         "id": "member-outlet",
+         "kind": "box",
+         "bone": "body",
+         "material": "brass",
+         "role": "body",
+         "tone": 0.6,
+         "size": [0.0505, 0.013, 0.013],
+         "transform": {
+           "translation": [0.03275, 0.0, 0.0]
+         },
+         "member": "body",
+         "part": "member"
+       },
+       {
+         "id": "member-head-sleeve",
+         "kind": "box",
+         "bone": "head",
+         "material": "abs-plastic",
+         "role": "body",
+         "tone": 0.5,
+         "size": [0.018, 0.018, 0.0525],
+         "transform": {
+           "translation": [0.0, 0.0, -0.01875]
+         },
+         "member": "head",
+         "part": "member"
+       },
+       {
+         "id": "member-handwheel-hub",
+         "kind": "box",
+         "bone": "knob",
+         "material": "abs-plastic",
+         "role": "body",
+         "tone": 0.5,
+         "size": [0.024, 0.024, 0.036],
+         "transform": {
+           "translation": [0.0, 0.0, -0.063]
+         },
+         "member": "knob",
+         "part": "member"
+       },
+       {
+         "id": "support-pipe-joint",
+         "kind": "box",
+         "bone": "body",
+         "material": "brass",
+         "role": "ground",
+         "tone": 0.3,
+         "size": [0.016, 0.012, 0.016],
+         "transform": {
+           "translation": [0.0, -0.039, 0.0]
+         },
+         "member": "body",
+         "part": "support",
+         "anchor": "pipe-joint"
+       },
+       {
+         "id": "support-radiator-union",
+         "kind": "box",
+         "bone": "body",
+         "material": "brass",
+         "role": "ground",
+         "tone": 0.3,
+         "size": [0.012, 0.016, 0.016],
+         "transform": {
+           "translation": [0.051, 0.0, 0.0]
+         },
+         "member": "body",
+         "part": "support",
+         "anchor": "radiator-union"
+       },
+       {
+         "id": "mass-valve",
+         "kind": "ellipsoid",
+         "bone": "body",
+         "material": "brass",
+         "role": "detail",
+         "tone": 0.3,
+         "radii": [0.009, 0.009, 0.009],
+         "transform": {
+           "translation": [0.005, -0.01, -0.02]
+         },
+         "member": "body",
+         "part": "mass"
+       }
+     ],
+     "decisions": [
+       {
+         "en": "Body: the valve is smaller than two features of 1:500, so the digital model keeps only what makes a corner angle valve: the 15 mm pipe stepping into the valve column, the outlet arm stepping from the union to the tailpiece, and the head as a 38 mm neck with the 53 mm barrel and a chamfered cap on the third axis (no tapers: a cone would read as a horn or a bottle); the model is minimal, the solid count cannot drop further without losing an axis.",
+         "de": "Körper: das Ventil ist kleiner als zwei Strukturgrößen von 1:500, daher behält das digitale Modell nur, was ein Winkeleckventil ausmacht: das 15-mm-Rohr, das in die Ventilsäule übergeht, den Ausgangsarm mit der Stufe von der Verschraubung zum Nippel und den Kopf als 38-mm-Hals mit der 53-mm-Trommel und gefaster Kappe auf der dritten Achse (keine Kegel: ein Kegel läse sich als Horn oder Flasche); das Modell ist minimal, die Körperzahl kann nicht weiter sinken, ohne eine Achse zu verlieren."
+       },
+       {
+         "en": "Thermal: the same split as at 1:200 on the simplified steps; only the sum of the areas is compared.",
+         "de": "Thermik: dieselbe Teilung wie bei 1:200 auf den vereinfachten Stufen; nur die Flächensumme wird verglichen."
+       },
+       {
+         "en": "Structure: four square bars along the three axes (inlet, outlet, head sleeve, handwheel hub), two block supports and one mass.",
+         "de": "Tragwerk: vier Vierkantstäbe entlang der drei Achsen (Eingang, Ausgang, Kopfhülse, Handradnabe), zwei Blocklager und eine Masse."
+       }
+     ]
+   }
+ }
+}

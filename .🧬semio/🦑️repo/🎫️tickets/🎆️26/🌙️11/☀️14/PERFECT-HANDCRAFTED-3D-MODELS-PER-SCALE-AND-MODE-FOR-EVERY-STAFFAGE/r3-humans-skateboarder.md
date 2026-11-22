@@ -134,3 +134,9 @@ Defects seen before (sheets opened: 1:50 body six views and the right view alone
 - 1:200 and 1:500 not remodelled in this round: 1:500 board is a 75 mm slab from the ground to the deck top (the floor of 75 mm makes a 11.5 mm deck impossible; it reads as a board with kicks, not as wheels); torso and limbs at 1:200 are faceted lofts of 5-6 sections. Grade B+ / B.
 - The crotch seam of the seat still shows as a narrow U between the thighs (two solids meeting); the hoodie has no cloth folds.
 - Trouser and shoe areas (C18, area reviewer).
+
+## Street skateboard running gear
+
+The former 1:500 model replaced the wheels, trucks and deck with one block. The published board retains its 11.5 mm concave maple layup between kicked ends at each scale, with four 54 mm polyurethane wheels on a 171 mm track. The skin of each wheel is shared by its physical, thermal and structural representations. The Maple surface keeps 27, 21, 15 and 11 longitudinal stations per side. Coarse print contours show the wheelbase and the space under the centre of the board. The 1:500 office-print sign uses controlled ink expansion in elevation and front view, while the digital geometry retains the physical gauge.
+
+The independent underside and profile render shows both trucks below the deck and the four distinct wheels. Document and all-scale geometry checks passed, along with twelve GLB scene readbacks.

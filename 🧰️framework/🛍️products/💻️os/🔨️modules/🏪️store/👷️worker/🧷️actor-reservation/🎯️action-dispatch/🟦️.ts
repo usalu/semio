@@ -39,9 +39,11 @@ export class ReservationActionDispatch {
         if (this.session.pendingUiPatch !== null) await this.session.pendingUiPatch.settled;
         const fields = this.session.lease.fields();
         this.hub.backbone.assertDocumentOwnerCurrent();
-        const intent = request.payload.kind === "ui-intent" ? browserActorUiIntentV1(request) : null,
-          command = intent === null ? browserActorAppCommandV1(request, fields, this.session.windowKeys) : null;
-        const painted = request.surfaceRevision >= 1 && request.surfaceRevision <= (this.session.renderedSurfaceRevisions.get(intent?.surfaceKey ?? command!.surfaceKey) ?? 0);
+        const payload = request.payload;
+        const intent = payload.kind === "ui-intent" ? browserActorUiIntentV1(request) : null;
+        const command = payload.kind === "app-command" ? browserActorAppCommandV1(request, fields, this.session.windowKeys) : null;
+        const surfaceKey = intent?.surfaceKey ?? command?.surfaceKey ?? fields.surface.windowKindId;
+        const painted = request.surfaceRevision >= 1 && request.surfaceRevision <= (this.session.renderedSurfaceRevisions.get(surfaceKey) ?? 0);
         if (
           request.scope.spaceId !== fields.scope.spaceId ||
           request.scope.documentId !== fields.scope.documentId ||
@@ -53,7 +55,7 @@ export class ReservationActionDispatch {
           request.actionSequence <= this.session.lastActionSequence
         ) throw new Error("action-owner-mismatch");
         if (
-          documentCatchingUpV1({
+          payload.kind !== "segmented-download" && documentCatchingUpV1({
             bound: this.session.documentBinding !== null,
             backboneReady: this.session.documentBackboneReady,
             bootstrap: this.session.artifact.artifactBootstrap !== null,
@@ -66,7 +68,14 @@ export class ReservationActionDispatch {
         const child = this.session.child;
         if (child === null) throw new Error("action-child-unavailable");
         this.session.lastActionSequence = request.actionSequence;
-        const publication: BrowserActorActionPublication = { kind: request.payload.kind, sequence: request.actionSequence, frames: 0, commit: null, refusals: [], hostEffects: [], historyPatches: [] };
+        if (payload.kind === "segmented-download") {
+          const bytes = await this.hub.lanes.invokeSegmentedDownloadChunk(child, request.instanceId, BigInt(payload.operationId), () => this.hub.backbone.assertDocumentOwnerCurrent());
+          return {
+            ...browserActorActionDisposition(request, "guest-applied", 0, null),
+            downloadChunk: { operationId: payload.operationId, bytes: bytes === undefined ? null : Array.from(bytes) },
+          };
+        }
+        const publication: BrowserActorActionPublication = { kind: payload.kind, sequence: request.actionSequence, frames: 0, commit: null, refusals: [], hostEffects: [], historyPatches: [] };
         let mutationCount = 0;
         if (intent !== null) {
           invoked = true;

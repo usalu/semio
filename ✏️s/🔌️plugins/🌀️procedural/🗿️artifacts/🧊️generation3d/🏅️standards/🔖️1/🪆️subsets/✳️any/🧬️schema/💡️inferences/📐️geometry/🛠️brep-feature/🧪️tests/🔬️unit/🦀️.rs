@@ -112,3 +112,6 @@ fn a_missing_or_mistyped_input_is_a_localized_fault_at_that_port_and_never_a_pan
     let (_, mistyped) = run("brep.feature.fillet", vec![("shape", GeometryValue::Number(1.0)), ("radius", GeometryValue::Number(0.25))], 1);
     assert_eq!(mistyped.fault.expect("fault").code, "generation3d.geometry.input-type");
 }
+
+#[path = "🧹️defeature.rs"]
+mod defeature;

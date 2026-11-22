@@ -1,0 +1,5 @@
+humans/worker-carrying-box
+humans/courier-with-hand-truck
+humans/cyclist
+vehicles/city-bicycle
+vehicles/cargo-bike

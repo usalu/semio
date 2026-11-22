@@ -5,12 +5,12 @@
  * @see ../🥞️levels/🟦️.tsx — the layered grid
  * @see ../📍️placed/🟦️.tsx — figures on a ground line
  */
-import { useEffect, useId, useLayoutEffect, useMemo, useRef, type ReactElement, type ReactNode } from "react";
+import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type ReactElement, type ReactNode } from "react";
 import { CATEGORIES, CSS_PX_PER_MM } from "@teaching/staffage";
 import type { Asset, CategoryId, PlanarViewpoint } from "@teaching/staffage";
 import { APP_CONFIG } from "../⚙️config/🟦️.ts";
 import { useArchive, useLocal, useRows } from "../🧭️context/🟦️.tsx";
-import { ArchiveCard, CardButton, Icon, Notice, PageFrame, SharedBorderRow, Tag, cn, type IconName } from "../🪟️chrome/🟦️.tsx";
+import { ArchiveCard, Button, CardButton, Icon, Notice, PageFrame, SharedBorderRow, Tag, cn, type IconName } from "../🪟️chrome/🟦️.tsx";
 import { Level, PointerProvider, tracks, useSize, type Breakpoint, type LevelPage, type PaneView } from "../🥞️levels/🟦️.tsx";
 import { RowPreview, surfaceView, useDarkSurface } from "../🖼️previews/🟦️.tsx";
 import { usePreviewViewpoint } from "../🔭️viewpoints/🪝️preference/🟦️.tsx";
@@ -118,32 +118,35 @@ function useCategoryRows(category: CategoryId): readonly Row[] {
 
 const CATEGORY_ICONS: Readonly<Record<CategoryId, IconName>> = { humans: "user", vegetation: "sparkles", animals: "hand", furniture: "layout", appliances: "plug", objects: "box", vehicles: "wrench", machinery: "cpu", components: "building" };
 
-/** 🗂️ The card of a category: its description, how many assets it holds and a live frieze of the first of them. */
-function CategoryCard(props: { readonly category: CategoryId; readonly card: { readonly revealed: boolean; readonly open: () => void }; readonly compact: boolean }): ReactElement {
-  const { category, card, compact } = props;
+/** 🗂️ The card of a category: its description, how many assets it holds and a live frieze of the first of them. The manifest says which assets the frieze shows, and the card asks for those alone, never for its category; it asks only while the overview is the page the reader is on (`live`): behind an opened page it asks for nothing. */
+function CategoryCard(props: { readonly category: CategoryId; readonly card: { readonly revealed: boolean; readonly open: () => void }; readonly compact: boolean; readonly live: boolean }): ReactElement {
+  const { category, card, compact, live } = props;
   const { t, language, catalog } = useArchive();
-  const { manifest, categories } = useRows();
+  const { manifest } = useRows();
   const rows = useCategoryRows(category);
   const id = useId();
-  const warm = !compact || card.revealed;
+  const warm = live && (!compact || card.revealed);
+  const picks = useMemo(() => {
+    const authored = (manifest?.entries ?? []).filter((candidate) => candidate.category === category && candidate.completion !== "planned");
+    const heights = authored.map((candidate) => candidate.heightM).sort((a, b) => a - b);
+    const cap = Math.max(4, 2.5 * (heights[Math.floor(heights.length / 2)] ?? 0));
+    return authored.filter((candidate) => candidate.heightM <= cap).slice(0, compact ? 2 : 4);
+  }, [manifest, category, compact]);
+  const [asked, ask] = useState(0);
   useEffect(() => {
-    if (!warm) return;
+    if ((!warm && asked === 0) || picks.length === 0) return;
     const controller = new AbortController();
     const index = CATEGORIES.indexOf(category);
-    const timer = setTimeout(() => void catalog.loadCategory(category, { signal: controller.signal }), compact ? 1200 + index * 800 : 400 + index * 350);
+    const timer = setTimeout(() => { for (const pick of picks) void catalog.loadAsset(pick, controller.signal); }, asked > 0 ? 0 : compact ? 1200 + index * 800 : 400 + index * 350);
     return () => {
       clearTimeout(timer);
       controller.abort();
     };
-  }, [catalog, category, compact, warm]);
+  }, [catalog, category, compact, warm, picks, asked]);
   const entry = manifest?.categories.find((candidate) => candidate.id === category);
-  const progress = categories[category];
-  const ready = rows.filter((row) => row.status === "ready");
-  const preview = useMemo(() => {
-    const heights = ready.map((row) => row.asset!.dimensions.heightM).sort((a, b) => a - b);
-    const cap = Math.max(4, 2.5 * (heights[Math.floor(heights.length / 2)] ?? 0));
-    return ready.filter((row) => row.asset!.dimensions.heightM <= cap).slice(0, compact ? 2 : 4);
-  }, [ready.length, rows, compact]);
+  const shown = useMemo(() => picks.flatMap((pick) => rows.filter((row) => row.entry.id === pick.id)), [picks, rows]);
+  const preview = useMemo(() => shown.filter((row) => row.status === "ready"), [shown]);
+  const waiting = shown.some((row) => row.status === "pending");
   return (
     <ArchiveCard
       id={id}
@@ -159,38 +162,42 @@ function CategoryCard(props: { readonly category: CategoryId; readonly card: { r
     >
       {compact ? null : <p className="m-0 line-clamp-2 text-xs leading-normal text-muted-foreground">{entry?.description[language]}</p>}
       <div className="min-h-0 flex-1">
-        {progress.state === "idle" ? (
-          <div className="flex h-full min-h-12 items-center">
-            <button type="button" data-shared-border-frame="" data-shared-border-edges="" onClick={() => void catalog.loadCategory(category)} className="text-xs text-primary">{t("category.load")}</button>
-          </div>
-        ) : progress.state === "failed" ? (
-          <Notice kind="error" compact plain title={t("state.categoryFailed.title")}>{progress.failure?.[language]}</Notice>
-        ) : preview.length === 0 ? (
-          progress.state === "loading" ? <div role="status" aria-busy="true" aria-label={t("state.loading.title")} className="h-full min-h-12 animate-pulse bg-muted/60 motion-reduce:animate-none" /> : <Notice kind="unavailable" compact plain title={t("state.missing.title")}>{t("state.categoryEmpty.body")}</Notice>
-        ) : (
+        {preview.length > 0 ? (
           <Frieze rows={preview} label={t("category.previewLabel", { category: entry?.title[language] ?? category })} ticks={false} className="h-full" maxPxPerM={90} />
+        ) : waiting ? (
+          warm || asked > 0 ? (
+            <div role="status" aria-busy="true" aria-label={t("state.loading.title")} className="h-full min-h-12 animate-pulse bg-muted/60 motion-reduce:animate-none" />
+          ) : (
+            <div className="flex h-full min-h-12 items-center">
+              <button type="button" data-shared-border-frame="" data-shared-border-edges="" onClick={() => ask((count) => count + 1)} className="text-xs text-primary">{t("category.load")}</button>
+            </div>
+          )
+        ) : shown.some((row) => row.status === "failed") ? (
+          <Notice kind="error" compact plain title={t("state.categoryFailed.title")} actions={<Button icon="rotate-cw" onClick={() => ask((count) => count + 1)}>{t("action.retry")}</Button>} />
+        ) : (
+          <Notice kind="unavailable" compact plain title={t("state.missing.title")}>{t("state.categoryEmpty.body")}</Notice>
         )}
       </div>
     </ArchiveCard>
   );
 }
 
-/** 🌟️ The hero card: what the archive is, the live frieze and the way into the whole archive. */
-function HeroCard(props: { readonly card: { readonly revealed: boolean; readonly open: () => void } }): ReactElement {
-  const { card } = props;
+/** 🌟️ The hero card: what the archive is, the live frieze and the way into the whole archive. It asks for the featured assets alone, never for their categories, and only while the overview is the page the reader is on (`live`). */
+function HeroCard(props: { readonly card: { readonly revealed: boolean; readonly open: () => void }; readonly live: boolean }): ReactElement {
+  const { card, live } = props;
   const { t, catalog } = useArchive();
   const { rows, manifest, manifestState } = useRows();
   const id = useId();
   const featured = useMemo(() => manifest?.collections.find((collection) => collection.id === APP_CONFIG.featuredCollection)?.assets ?? [], [manifest]);
   const frieze = useMemo(() => featured.flatMap((asset) => rows.filter((row) => row.entry.id === asset && row.status === "ready")), [featured, rows]);
   const pending = featured.some((asset) => rows.some((row) => row.entry.id === asset && row.status === "pending"));
-  const needed = useMemo(() => [...new Set(featured.flatMap((asset) => (manifest?.entries ?? []).filter((entry) => entry.id === asset).map((entry) => entry.category)))], [featured, manifest]);
+  const needed = useMemo(() => featured.flatMap((asset) => (manifest?.entries ?? []).filter((entry) => entry.id === asset)), [featured, manifest]);
   useEffect(() => {
-    if (needed.length === 0) return;
+    if (!live || needed.length === 0) return;
     const controller = new AbortController();
-    for (const category of needed) void catalog.loadCategory(category, { signal: controller.signal });
+    for (const entry of needed) void catalog.loadAsset(entry, controller.signal);
     return () => controller.abort();
-  }, [needed, catalog]);
+  }, [needed, catalog, live]);
   return (
     <ArchiveCard
       id={id}
@@ -366,6 +373,7 @@ function LayeredPages({ breakpoint }: { readonly breakpoint: Exclude<Breakpoint,
   const [attach, size] = useSize({ width: 1280, height: 800 });
   const chain = openedChain(route);
   const depth = route.page === "category" || route.page === "asset" ? 1 : 0;
+  const live = chain.length === 0;
   const columns = COLUMNS[breakpoint];
   const weights = ROW_WEIGHTS[breakpoint];
   const compact = size.height < 760;
@@ -373,7 +381,7 @@ function LayeredPages({ breakpoint }: { readonly breakpoint: Exclude<Breakpoint,
   const pages: readonly LevelPage[] = useMemo(() => ROOT_PAGES.map((id): LevelPage => ({ id, label: labels[id] ?? id, render: (view) => <RootPageContent id={id} view={view} /> })), [labels]);
   const cells = useMemo(() => Object.fromEntries(ROOT_PAGES.map((id) => { const p = placementOf(id, columns); return [id, { column: p.column - 1, row: p.row - 1 }]; })), [columns]);
   const renderCard = (page: LevelPage, card: { readonly revealed: boolean; readonly opened: boolean; readonly open: () => void }): ReactNode => {
-    const content: ReactNode = isCategory(page.id) ? <CategoryCard category={page.id} card={card} compact={compact} /> : page.id === "all" ? <HeroCard card={card} /> : page.id === "collections" ? <CollectionsCard card={card} /> : page.id === "compare" ? <CompareCard card={card} /> : <PlaygroundCard card={card} />;
+    const content: ReactNode = isCategory(page.id) ? <CategoryCard category={page.id} card={card} compact={compact} live={live} /> : page.id === "all" ? <HeroCard card={card} live={live} /> : page.id === "collections" ? <CollectionsCard card={card} /> : page.id === "compare" ? <CompareCard card={card} /> : <PlaygroundCard card={card} />;
     const place = placementOf(page.id, columns);
     return (
       <div className="staffage-cell" data-card-grid-cell="" style={{ gridColumn: `${place.column} / span ${place.span}`, gridRow: place.row }}>

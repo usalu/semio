@@ -63,6 +63,7 @@ pub struct En1998Artifact {
     pub pier_bases: Vec<En1998PierBase>,
     #[state(artifact)]
     pub critical_regions: Vec<En1998CriticalRegion>,
+    #[dsl(table)]
     #[state(artifact)]
     pub cases: Vec<CaseRow>,
 }

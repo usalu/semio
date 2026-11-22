@@ -49,10 +49,14 @@ export async function retireObsoleteRepositoryDependencyGenerationsV1(invocation
    }
   }
  }catch(error){
+  if(rosterRefusalV1(error)){sayCachingV1("dependency-store.roster-unknown",{detail:String((error as Error).message).replace(/^.*?required:?\s*/u,"").slice(0,200),retired:retired.length},"warn");return Object.freeze(retired);}
   if(isRepoErrorV1(error)&&error.key==="caching.dependency-store.busy-timeout"){sayCachingV1("dependency-store.retirement-deferred",{seconds:Number(error.values.seconds),retired:retired.length},"warn");return Object.freeze(retired);}
   throw error;
  }
 }
+
+/** 🧾️ Whether a refusal says that the dependency store holds a name that is no generation or capsule: retiring obsolete generations is best effort, so it is told and left for a later setup instead of failing the whole stage. */
+export function rosterRefusalV1(error:unknown):boolean{return error instanceof AggregateError?error.errors.some(rosterRefusalV1):error instanceof Error&&/Exact known current dependency generation roster required/u.test(error.message);}
 
 /** 🌀️ Returns the stale binding refusal when every reported failure permits a fresh retirement plan. */
 export function bindingsMovedV1(error:unknown):RepoErrorV1|null{

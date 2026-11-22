@@ -1,0 +1,15 @@
+# Offload Metadata Across Cargo Search Roots
+
+The shared native renderer focus check failed in `petgraph 0.6.5` with Rust E0460. The resolved Cargo graph has `petgraph 0.6.5` depending directly on `indexmap 2.14.2`, which depends on registry `hashbrown 0.17.1`. The pooled lane metadata for `indexmap` internally records registry `hashbrown-1ddd3887212c7adf` with its correct hash, `8b14ba53ff9d14a3b385c4b14e1ee3f8`. Both the registry and sysroot hashbrown entries occur exactly once in the actual metadata bytes. The registry artifact was physically present in the lane with the expected metadata hash and a valid identity-sidecar digest.
+
+The unit-event stream shows successful remote metadata cache hits for indexmap and hashbrown. The petgraph unit missed the remote cache and executed remotely. Rust's failure listed the sysroot hashbrown metadata but missed the matching registry artifact. The absence is reproducible in the action planner using the actual retained compiler metadata. Cargo's managed build directory puts dependencies in separate per-unit output roots. The planner walks each root independently, starting from only the direct extern files located in that root. Indexmap's root therefore has no matching registry hashbrown artifact, and the hashbrown root has no direct extern with which to start its walk.
+
+The staged owner patch walks metadata suffixes across the original dependency-root set while keeping selected files in their original roots. It preserves search order, virtual path remapping, the existing closure cap, and the action input file and byte caps. The existing compiler-backed test now covers a direct metadata extern, a transitive dependency in the second search root, and an unrelated library in the same root that must stay outside the shipment.
+
+The installed Bun runtime used both the current and in-memory revised planners against the real indexmap and hashbrown metadata from the failed lane. The current planner did not include the registry artifact. The revised planner shipped it, excluded an unrelated hashbrown variant, and produced identical remapped compiler arguments and root mappings. The patch passed read-only applicability checking. No live repository build-tool code was changed, and remote worker verification remains pending.
+
+The reproducible draft generator is [fix-offload-dependency-search-roots.py](fix-offload-dependency-search-roots.py). The live-artifact verification is [offload-transitive-metadata-check.ts](offload-transitive-metadata-check.ts). Its metadata inputs are the retained compiler artifacts from the failed shared focus check.
+
+## Applied Owner Verification
+
+After the coordinated source application, the repository-mediated Bun invocation passed the new compiler-backed split-root regression and the existing same-root dependency closure and path-independence regressions. The new law compiled its actual Rust dependencies and verified six assertions, including the original search order and absence of the unrelated library. The combined test invocation passed all three selected laws. Cross-peer execution of the repaired action was outside this local verification.

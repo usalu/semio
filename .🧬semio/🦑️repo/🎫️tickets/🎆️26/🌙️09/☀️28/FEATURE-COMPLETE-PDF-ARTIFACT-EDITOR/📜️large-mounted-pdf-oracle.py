@@ -1,6 +1,6 @@
 """📄 Builds and checks the large natural-file fixture using an independent PDF implementation."""
 
-import sys
+import argparse
 from pathlib import Path
 
 import fitz
@@ -21,6 +21,7 @@ def write_fixture(destination):
             drawing.finish(width=0.5, color=(0.2, 0.25, 0.3), closePath=False)
             drawing.commit()
         document.set_metadata({"title": "Large PDF editor fixture"})
+        assert not destination.exists(), "generate never overwrites an existing target"
         document.save(destination, deflate=False)
 
 
@@ -43,7 +44,16 @@ def verify(destination, decoded=None):
         print(f"{destination.stat().st_size} bytes, {document.page_count} pages, xref size {document.xref_length()}")
 
 
+def main():
+    cli = argparse.ArgumentParser(description="generate refuses an existing target; verify only reads it")
+    cli.add_argument("mode", choices=["generate", "verify"])
+    cli.add_argument("file", type=Path)
+    cli.add_argument("decoded", type=Path, nargs="?")
+    args = cli.parse_args()
+    if args.mode == "generate":
+        write_fixture(args.file)
+    verify(args.file, args.decoded)
+
+
 if __name__ == "__main__":
-    target = Path(sys.argv[1])
-    write_fixture(target)
-    verify(target, Path(sys.argv[2]) if len(sys.argv) > 2 else None)
+    main()

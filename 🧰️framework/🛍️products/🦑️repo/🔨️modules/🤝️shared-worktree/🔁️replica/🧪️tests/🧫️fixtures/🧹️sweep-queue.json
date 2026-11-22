@@ -1,0 +1,44 @@
+[
+  {
+    "name": "queued live path",
+    "known": true,
+    "queued": true,
+    "present": true,
+    "settled": true
+  },
+  {
+    "name": "queued missing path",
+    "known": true,
+    "queued": true,
+    "present": false,
+    "settled": true
+  },
+  {
+    "name": "new file",
+    "known": false,
+    "queued": false,
+    "present": true,
+    "settled": false
+  },
+  {
+    "name": "settled file",
+    "known": true,
+    "queued": false,
+    "present": true,
+    "settled": true
+  },
+  {
+    "name": "new bytes in tracked file",
+    "known": true,
+    "queued": false,
+    "present": true,
+    "settled": false
+  },
+  {
+    "name": "removed tracked file",
+    "known": true,
+    "queued": false,
+    "present": false,
+    "settled": true
+  }
+]

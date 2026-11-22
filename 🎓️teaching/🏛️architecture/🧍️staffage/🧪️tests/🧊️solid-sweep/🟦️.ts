@@ -26,6 +26,7 @@ type Vectors = {
   span: { z0: number; z1: number };
   basis: { u: number[]; v: number[]; w: number[] };
   cases: { name: string; sweep: "u" | "v" | "w"; front: Extent; plan: Extent }[];
+  lateralRest: { boneZ: number; cases: { sweep: "v" | "w"; front: Extent; plan: Extent }[] };
   refused: { name: string; solid: Record<string, unknown> }[];
 };
 
@@ -50,13 +51,13 @@ function measured(asset: Asset): Record<"front" | "plan", Extent> {
   return { front: extent("front"), plan: extent("plan") };
 }
 
-function glMatrixExtent(sweep: "u" | "v" | "w"): Record<"front" | "plan", Extent> {
+function glMatrixExtent(sweep: "u" | "v" | "w", boneZ = 0): Record<"front" | "plan", Extent> {
   const { u, v, w } = vectors.basis;
-  const frame = mat4.fromValues(u[0]!, u[1]!, u[2]!, 0, v[0]!, v[1]!, v[2]!, 0, w[0]!, w[1]!, w[2]!, 0, 0, 0, 0, 1);
+  const frame = mat4.fromValues(u[0]!, u[1]!, u[2]!, 0, v[0]!, v[1]!, v[2]!, 0, w[0]!, w[1]!, w[2]!, 0, 0, 0, boneZ, 1);
   const { x, y, w: width, h: height } = vectors.profile;
   const corners = [[x, y], [x + width, y], [x + width, y + height], [x, y + height]] as const;
   const world = (a: number, b: number, c: number) => vec3.transformMat4(vec3.create(), sweep === "u" ? [c, a, b] : sweep === "w" ? [a, b, c] : [a, c, b], frame);
-  const points = [vectors.span.z0, vectors.span.z1].flatMap((c) => corners.map(([a, b]) => world(a, b, c)));
+  const points = [vectors.span.z0, vectors.span.z1].flatMap((c) => corners.map(([a, b]) => world(a, b, sweep === "w" ? c - boneZ : c)));
   const box = (xOf: (p: vec3) => number, yOf: (p: vec3) => number): Extent => ({ minX: Math.min(...points.map(xOf)), maxX: Math.max(...points.map(xOf)), minY: Math.min(...points.map(yOf)), maxY: Math.max(...points.map(yOf)) });
   return { front: box((p) => p[2]!, (p) => p[1]!), plan: box((p) => p[0]!, (p) => p[2]!) };
 }
@@ -79,6 +80,17 @@ describe("🧊️ the sweep axis of an extruded solid", () => {
       const found = measured(sweptAsset(c.sweep));
       expectExtent("front", found.front, reference.front);
       expectExtent("plan", found.plan, reference.plan);
+    });
+
+  for (const c of vectors.lateralRest.cases)
+    it(`reads z0 and z1 of sweep ${c.sweep} ${c.sweep === "w" ? "as lateral rest positions of the asset, not as offsets from a bone that sits off the centre plane" : "from the bone, which sits off the centre plane"}`, () => {
+      const moved = sweptAsset(c.sweep);
+      const found = measured({ ...moved, rig: { ...moved.rig, bones: moved.rig.bones.map((bone) => (bone.id === vectors.bone ? { ...bone, z: vectors.lateralRest.boneZ } : bone)) } } as Asset);
+      const reference = glMatrixExtent(c.sweep, vectors.lateralRest.boneZ);
+      for (const view of ["front", "plan"] as const) {
+        expectExtent(`${view} against the vector`, found[view], c[view]);
+        expectExtent(`${view} against gl-matrix`, found[view], reference[view]);
+      }
     });
 
   it("draws w and v differently, so a part is never transposed silently", () => {

@@ -114,19 +114,54 @@ test("a build cut off after a wave derives only the rest on the next try, publis
  }finally{rmSync(dir,{recursive:true,force:true});}
 });
 
-test("a journal of a build with other owners is not taken up",async()=>{
+const cutOff=async(dir:string)=>{
+ const controller=new AbortController();let calls=0;
+ const world=createWorld(dir,{computeWrap:compute=>async(spec,signal)=>{if(++calls===2)controller.abort(new Error("memory pressure"));return compute(spec,signal);}});
+ await world.refresh();calls=0;
+ const before=(await world.store.read())!.pointer.generation;
+ await edit(dir,COUNT);
+ world.log.length=0;
+ await expect(world.refresh({signal:controller.signal})).rejects.toThrow();
+ const finished=new Set(world.log.flatMap(entry=>entry.full).slice(0,GENERATION_POLICY_V1.ownerWave));
+ world.log.length=0;
+ return{world,before,finished};
+};
+
+test("a build cut off after a wave keeps that wave when other owners are edited meanwhile: only the owners not finished and the newly edited one are derived, and the result equals the oracle",async()=>{
  const dir=scratch();
  try{
   await seed(dir,ringFiles(COUNT+3));
-  const controller=new AbortController();let calls=0;
-  const world=createWorld(dir,{computeWrap:compute=>async(spec,signal)=>{if(++calls===2)controller.abort(new Error("memory pressure"));return compute(spec,signal);}});
-  await world.refresh();calls=0;
-  await edit(dir,COUNT);
-  await expect(world.refresh({signal:controller.signal})).rejects.toThrow();
-  await edit(dir,COUNT+1);
-  world.log.length=0;
-  const again=await world.refresh();
-  expect(again.computed).toBe(COUNT+1);
-  expect(world.log.flatMap(entry=>entry.full).length).toBe(COUNT+1);
+  const{world,before,finished}=await cutOff(dir);
+  await writeFile(join(dir,`pkg/p${COUNT+1}/src/index.ts`),`import "@syn/p${COUNT+2}";\nexport const waved=${COUNT+1};\n`);
+  const resumed=await world.refresh();
+  expect(resumed.published).toBe(true);
+  expect(resumed.computed).toBe(COUNT+1-GENERATION_POLICY_V1.ownerWave);
+  const again=world.log.flatMap(entry=>entry.full);
+  expect(again.some(name=>finished.has(name))).toBe(false);
+  expect(again).toContain("p"+(COUNT+1));
+  expect((await world.store.read())!.pointer.generation-before).toBe(1);
+  expect(journalFiles(dir)).toEqual([]);
+  const{generation:_g,membership:_m,...rest}=await world.store.assemble(resumed.current,{});
+  expect(JSON.parse(canonicalJsonV1(rest))).toEqual(pythonGraph(dir));
+ }finally{rmSync(dir,{recursive:true,force:true});}
+});
+
+test("a finished wave whose owner changed in the meantime is derived again, the others are kept, in one published generation",async()=>{
+ const dir=scratch();
+ try{
+  await seed(dir,ringFiles(COUNT+3));
+  const{world,before,finished}=await cutOff(dir);
+  const moved=[...finished][0];
+  await sleep(20);await writeFile(join(dir,`pkg/${moved}/src/index.ts`),`import "@syn/p1";\nexport const moved=1;\n`);
+  await writeFile(join(dir,`pkg/p${COUNT+1}/src/index.ts`),`import "@syn/p${COUNT+2}";\nexport const waved=${COUNT+1};\n`);
+  const resumed=await world.refresh();
+  expect(resumed.published).toBe(true);
+  const again=world.log.flatMap(entry=>entry.full);
+  expect(again).toContain(moved);
+  const redone=again.filter(name=>finished.has(name));
+  expect(redone.length).toBeGreaterThan(0);expect(redone.length).toBeLessThan(finished.size);
+  expect((await world.store.read())!.pointer.generation-before).toBe(1);
+  const{generation:_g,membership:_m,...rest}=await world.store.assemble(resumed.current,{});
+  expect(JSON.parse(canonicalJsonV1(rest))).toEqual(pythonGraph(dir));
  }finally{rmSync(dir,{recursive:true,force:true});}
 });

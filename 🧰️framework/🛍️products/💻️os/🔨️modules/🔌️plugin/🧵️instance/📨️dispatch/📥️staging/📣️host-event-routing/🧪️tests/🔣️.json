@@ -5,9 +5,24 @@
     "holds": "[holds, key, expected]",
     "queued": "[queued, key, expected]",
     "leave": "[leave, key, changed]: the lane releases or drops its queue slot",
+    "idlePublication": "[idlePublication, key, commandSourcePending, changed]: an idle publication may release a lane only after its retained command source settles",
     "idle": "[idle, expected]: no holder and no waiter"
   },
   "scripts": {
+    "idlePublicationKeepsThePendingCommandHolderAndWaiter": [
+      ["claim", "a", false, false],
+      ["claim", "b", true, false],
+      ["idlePublication", "a", true, false],
+      ["idlePublication", "b", true, false],
+      ["holds", "a", true],
+      ["queued", "b", true],
+      ["claim", "a", true, true],
+      ["idlePublication", "a", false, true],
+      ["claim", "b", false, false],
+      ["holds", "b", true],
+      ["idlePublication", "b", false, true],
+      ["idle", true]
+    ],
     "heldUntilReleased": [
       ["idle", true],
       ["claim", "a", false, false],

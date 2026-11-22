@@ -68,6 +68,17 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(document.activeElement).toBe(rows[1]);
     });
 
+    it("focuses a row on a single click and fires its own activation on a double click, once", () => {
+      const intents: any[] = [];
+      mount((intent) => intents.push(intent));
+      const rows = Array.from(screen.getByRole("grid", { name: "Spaces" }).querySelectorAll<HTMLElement>("[role='row']")).slice(1);
+      fireEvent.click(rows[1]!);
+      expect(intents).toEqual([]);
+      expect(document.activeElement).toBe(rows[1]);
+      fireEvent.doubleClick(rows[1]!);
+      expect(intents.map((intent) => intent.action.name)).toEqual(["openSpace"]);
+    });
+
     it("renders windowed cell children as accessible local drafts and commits the typed value", () => {
       const intents: any[] = [];
       mount((intent) => intents.push(intent));

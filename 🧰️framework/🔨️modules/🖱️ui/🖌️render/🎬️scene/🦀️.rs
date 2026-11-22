@@ -28,8 +28,8 @@ use rect_quad_glass_and_stencil_primitives::is_animated_kind;
 #[path = "🎭️surface-draws-and-pipeline-kinds/🦀️.rs"]
 mod surface_draws_and_pipeline_kinds;
 pub use surface_draws_and_pipeline_kinds::{
-    LineVertex3, MeshInstance, PipelineKind, SurfaceLighting, SurfaceLineDraw, SurfaceMaterial,
-    SurfaceMeshDraw, SurfacePass, SurfaceShadow, SurfaceTexturedDraw, TexturedMeshInstance,
+    LineVertex3, MeshInstance, PipelineKind, PointVertex3, SurfaceLighting, SurfaceLineDraw, SurfaceMaterial,
+    SurfaceMeshDraw, SurfacePass, SurfacePointDraw, SurfaceShadow, SurfaceTexturedDraw, TexturedMeshInstance,
 };
 
 #[path = "🏗️scene-builder/🦀️.rs"]

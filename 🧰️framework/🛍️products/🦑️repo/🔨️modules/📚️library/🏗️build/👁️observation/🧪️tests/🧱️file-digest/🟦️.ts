@@ -42,3 +42,22 @@ for(const event of ["growth","cancel"] as const)test(`a stamp-drift recheck obse
   expect(touched).toBe(true);
  }finally{chunks.mockRestore();fs.rmSync(directory,{recursive:true,force:true});}
 });
+
+test("a calm file whose stamp moved is read once however many recorded rows ask, and a rewrite is read again",async()=>{
+ const directory=fs.mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir(),"file-digest-memo-"));
+ const path=resolve(directory,"source"),{size,digest}=fixture.cases.at(-1)!,chunks=spyOn(fs.ReadStream.prototype,"push");
+ const read=()=>chunks.mock.calls.reduce((sum,[chunk])=>sum+(chunk?.byteLength??0),0);
+ try{
+  fs.writeFileSync(path,Buffer.alloc(size,120));
+  await Bun.sleep(2100);
+  const row=(sha256:string,mtimeMs:number)=>({kind:"file",path,fact:{size,mtimeMs,ctimeMs:-1,ino:-1,sha256}});
+  expect(await observationsHold([row(digest,-1)])).toBe(true);
+  expect(read()).toBe(size);
+  expect(await observationsHold([row(digest,-2),row(digest,-3)])).toBe(true);
+  expect(await observationsHold([row("0".repeat(64),-4)])).toBe(false);
+  expect(read()).toBe(size);
+  fs.writeFileSync(path,Buffer.alloc(size,121));
+  expect(await observationsHold([row(digest,-5)])).toBe(false);
+  expect(read()).toBe(2*size);
+ }finally{chunks.mockRestore();fs.rmSync(directory,{recursive:true,force:true});}
+});

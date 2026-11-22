@@ -292,5 +292,11 @@
         }
       }
     ]
+  },
+  "snowGuards": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
   }
 }

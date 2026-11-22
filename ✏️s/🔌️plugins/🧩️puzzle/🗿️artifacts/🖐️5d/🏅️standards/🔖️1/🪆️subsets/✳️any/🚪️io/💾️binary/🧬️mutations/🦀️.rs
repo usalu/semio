@@ -1,6 +1,5 @@
-//! 🧱️ `Puzzle5dMutation`'s binary wire form, plus the `ArtifactEnvelope`/`ArtifactStore` aliases every
-//! 📡️ Puzzle 5d artifact — the state-patch-representation codec: `encode_op`/`decode_op` for
-//! puzzle-5d host binds. The authored operation tags are declared in `📡️.protocol.semio`.
+//! 🧱️ Puzzle 5D mutations use the authored protocol tag and typed Pack record for archive replay,
+//! direct calls and mounted preparation.
 
 //#region 📡️SemioProtocol
 /// 📡️ Normative handcrafted binary protocol for this facet (`dialect protocol`).
@@ -138,17 +137,24 @@ use {semio_s_artifact_puzzle_3d_mutations_selection::puzzle3d_selection_items as
 }
 #[cfg(test)] pub use mutations_codec::*;
 
+mod native_codec {
+use super::*;
+use crate::standards::v1::subsets::any::schema::mutations::inverse_puzzle5d_mutation;
+use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
+use crate::mirror::standards::v1::subsets::any::schema::play_snapshot::Puzzle5dPlaySnapshot;
+pub use mutations_codec::*;
+
 impl OpBinary for Puzzle5dMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         dsl::variants_binary::encode_tagged_op(COMPONENT_PROTOCOL_SEMIO, self)
     }
-
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         dsl::variants_binary::decode_tagged_op(COMPONENT_PROTOCOL_SEMIO, bytes)
     }
 }
 
 dsl::original_tagged_operation_receiving!(Puzzle5dMutation, COMPONENT_PROTOCOL_SEMIO);
+}
 
 /// 🫳️ Borrows the original concrete leaf of a mutation and its canonical protocol tag before publication: the authoring wire source the artifact store requires.
 pub fn prepared_operation_wire_source(operation: &crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation) -> Option<store::ArtifactPreparedOperationSource<'_>> {
@@ -198,5 +204,7 @@ pub fn prepared_operation_wire_source(operation: &crate::standards::v1::subsets:
         crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation::DragSelection3d(value) => source(value),
         crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation::RotateSelection3d(value) => source(value),
         crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation::ScaleSelection3d(value) => source(value),
+        crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation::SpliceSceneRows(value) => source(value),
+        crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation::SpliceSceneRowBatch(value) => source(value),
     }
 }

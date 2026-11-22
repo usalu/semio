@@ -820,7 +820,16 @@ pub mod frame;
 pub struct PagedListRetirement<T: RetireOwned, const N: usize> {
     owner: ManuallyDrop<crate::list::PagedList<T, N>>,
     released: bool,
+    octet_pages: bool,
     pending:ManuallyDrop<Option<T>>,
+}
+
+impl<const N: usize> PagedListRetirement<u8, N> {
+    /// 🛡️ Preserves page-sized retirement for native octets without reclassifying any typed list.
+    #[doc(hidden)]
+    pub fn from_octets(owner: crate::list::PagedList<u8,N>) -> Self {
+        Self { owner: ManuallyDrop::new(owner), released: false, octet_pages: true, pending: ManuallyDrop::new(None) }
+    }
 }
 
 impl<T: RetireOwned, const N: usize> RetirementCursor for PagedListRetirement<T, N> {
@@ -871,7 +880,8 @@ impl<T: RetireOwned, const N: usize> PagedListRetirement<T, N> {
  fn close_step(&mut self,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>)->RetirementStep{let grant=effect.grant();
         if self.released{return RetirementStep::Complete(0)}if grant.maximum_items==0||effect.maximum_work_units()==0{return RetirementStep::BudgetExhausted}if self.pending.is_some(){return retirement_input_step(&mut self.pending,effect)}
         if !self.owner.is_empty()&&!std::mem::needs_drop::<T>()&&size_of::<T>()!=0&&T::retirement_element_copy_bytes()==size_of::<T>(){
-          let turn=self.owner.discard_plain_tail(effect);return match turn.result{Ok(p)if p!=Default::default()=>RetirementStep::Progress(p,turn.work),Ok(_)=>RetirementStep::BudgetExhausted,Err(error)=>RetirementStep::Failure(error.into(),turn.work)}
+          let turn=if self.octet_pages { self.owner.discard_plain_tail_page(effect) } else { self.owner.discard_plain_tail(effect) };
+          return match turn.result{Ok(p)if p!=Default::default()=>RetirementStep::Progress(p,turn.work),Ok(_)=>RetirementStep::BudgetExhausted,Err(error)=>RetirementStep::Failure(error.into(),turn.work)}
         }
         if !self.owner.is_empty(){let demand=match self.next_demand(body){Ok(demand)=>demand,Err(error)=>return RetirementStep::Failure(error.into(),0)};if !crate::retained_clone::retained_clone_grant_admits(grant,demand){return RetirementStep::BudgetExhausted}let work=match record_retirement_work(effect,1){Ok(work)=>work,Err((error,work))=>return RetirementStep::Failure(error.into(),work)};*self.pending=self.owner.pop();return RetirementStep::Progress(crate::RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()},work)}
         if self.owner.terminal_is_empty(){let demand=match self.next_demand(body){Ok(demand)=>demand,Err(error)=>return RetirementStep::Failure(error.into(),0)};if !crate::retained_clone::retained_clone_grant_admits(grant,demand){return RetirementStep::BudgetExhausted}let work=match record_retirement_work(effect,1){Ok(work)=>work,Err((error,work))=>return RetirementStep::Failure(error.into(),work)};unsafe{ManuallyDrop::drop(&mut self.owner)};self.released=true;return RetirementStep::Progress(crate::RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()},work)}
@@ -889,7 +899,7 @@ impl<T: RetireOwned, const N: usize> Drop for PagedListRetirement<T, N> {
 impl<T: RetireOwned, const N: usize> RetireOwned for crate::list::PagedList<T, N> {
     type RetirementCursor=PagedListRetirement<T, N>;
     fn retirement_seed(self)->Self::RetirementCursor{
-        PagedListRetirement { owner: ManuallyDrop::new(self), released: false, pending:ManuallyDrop::new(None) }}
+        PagedListRetirement { owner: ManuallyDrop::new(self), released: false, octet_pages: false, pending:ManuallyDrop::new(None) }}
     fn retirement_birth_bytes(&self) -> Option<usize> { Some(size_of::<PagedListRetirement<T, N>>()) }
     fn controlled_retirement_supported() -> bool { true }
 }

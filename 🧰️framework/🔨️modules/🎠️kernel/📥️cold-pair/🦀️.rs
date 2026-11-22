@@ -1,6 +1,6 @@
 //#region 🧊️ColdDocumentPairIngress
 pub const COLD_PAIR_PAGE_MAXIMUM_BYTES: usize = 64 * 1024;
-pub const COLD_PAIR_MAXIMUM_BYTES: usize = 4 * 1024 * 1024;
+pub const COLD_PAIR_MAXIMUM_BYTES: usize = 16 * 1024 * 1024;
 
 pub use semio_framework_actor::cold_pair::{ColdDocumentPairApplied, ColdDocumentPairCursor, ColdDocumentPairFrontier, ColdPairIngressStatus, COLD_PAIR_MAXIMUM_PAGES};
 

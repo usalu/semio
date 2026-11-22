@@ -7,13 +7,16 @@ import {validateJsonSchemaSubset} from "../../../../../../../../🔨️modules/�
 import {dependencyClosureV1,walkFilesV1} from "../🌳️inputs/🟦️.ts";
 import {includedSourcesV1,offloadRealTextV1,planOffloadV1,type OffloadPlanV1} from "../🗺️paths/🟦️.ts";
 import {OFFLOAD_POLICY_V1,extractOffloadFlagV1,offloadModeV1,offloadTextV1} from "../📐️policy/🟦️.ts";
-import {offloadPlatformV1,parseRustcIdentityV1} from "../📜️action/🟦️.ts";
+import {offloadCommandV1,offloadPlatformV1,parseRustcIdentityV1} from "../📜️action/🟦️.ts";
+import {placementIdleCountV1,RemoteExecutionLoadTableV1,type PlacementWorkerV1} from "../../🗓️scheduler/⚖️placement/🟦️.ts";
+import type {RemoteExecutionLoadReportV1} from "../../🌡️load/🟦️.ts";
+import {remoteExecutionMatchPropertiesV1,remoteExecutionPlatformMatchesV1} from "../../🟦️.ts";
 import {createTestCheckoutV1,externHash,testHostProbeV1,testRustEnvironmentV1} from "./🧰️workspace/🟦️.ts";
 import {spawnSync} from "node:child_process";
-import {mkdirSync,mkdtempSync,readFileSync,realpathSync,rmSync,writeFileSync} from "node:fs";
+import {mkdirSync,mkdtempSync,readFileSync,realpathSync,renameSync,rmSync,writeFileSync} from "node:fs";
 import {availableParallelism,tmpdir} from "node:os";
 import {BUILD_HOST_CAPACITY_POLICY_V1} from "../../../🌡️host-capacity/🎛️control/🟦️.ts";
-import {localUnitAdmissionV1,offloadFanOutJobsV1,readUnitCostV1,workspaceRootFromV1,worthARoundTripV1,writeUnitCostV1,readOffloadMemoV1,slotQueueMillisecondsV1,writeOffloadMemoV1} from "../🚦️admission/🟦️.ts";
+import {fleetHeadroomV1,localUnitAdmissionV1,offloadFanOutJobsV1,readUnitCostV1,workspaceRootFromV1,worthARoundTripV1,writeUnitCostV1,readOffloadMemoV1,slotQueueMillisecondsV1,writeOffloadMemoV1} from "../🚦️admission/🟦️.ts";
 import {releaseImplicitTokenV1} from "../🎟️token/🟦️.ts";
 import {bumpOffloadCountersV1,readOffloadCountersV1,readOffloadReasonCountersV1} from "../📊️counters/🟦️.ts";
 import {tryClaimV1} from "../../../../⚡️caching/🦀️cargo/🗃️unit-cache/🔒️lock/🟦️.ts";
@@ -55,17 +58,41 @@ test("the compiler identity is the commit, the host and the first 16 hex of the 
  expect(identity.digest).toBe(python);
  const rows=offloadPlatformV1([{name:"OSFamily",value:"macos"},{name:"Arch",value:"arm64"},{name:"semio-target",value:"stale"}],{...identity,targets:[]},"wasm32-wasip2","g1-m03");
  expect(rows.map(row=>row.name)).toEqual([...rows.map(row=>row.name)].sort());
- expect(Object.fromEntries(rows.map(row=>[row.name,row.value]))).toEqual({Arch:"arm64",OSFamily:"macos","semio-offload":"if-idle","semio-origin":"g1-m03","semio-rustc-target-wasm32-wasip2":"1","semio-target":identity.host,"semio-toolchain":identity.digest});
+ expect(Object.fromEntries(rows.map(row=>[row.name,row.value]))).toEqual({Arch:"arm64",OSFamily:"macos","semio-offload":"if-idle","semio-offload-format":"argv-1","semio-origin":"g1-m03","semio-rustc-target-wasm32-wasip2":"1","semio-target":identity.host,"semio-toolchain":identity.digest});
  expect(parseRustcIdentityV1("rustc nothing")).toBeUndefined();
 });
 
 test("the dependency closure follows the extra-filename each artifact records, so a direct extern brings its transitive dependencies and the rmeta beside an rlib",()=>{
  const checkout=chain("closure");
- const closure=dependencyClosureV1(checkout.deps,[join(checkout.deps,`libb-${externHash("b")}.rlib`)])!;
+ const closure=dependencyClosureV1([checkout.deps],[join(checkout.deps,`libb-${externHash("b")}.rlib`)])!.get(checkout.deps)!;
  expect(closure).toContain(`liba-${externHash("a")}.rlib`);expect(closure).toContain(`liba-${externHash("a")}.rmeta`);
  expect(closure).toContain(`libb-${externHash("b")}.rmeta`);
- expect(dependencyClosureV1(checkout.deps,[join(checkout.deps,`liba-${externHash("a")}.rlib`)])).not.toContain(`libb-${externHash("b")}.rlib`);
- expect(dependencyClosureV1(join(checkout.base,"missing"),[])).toBeUndefined();
+ expect(dependencyClosureV1([checkout.deps],[join(checkout.deps,`liba-${externHash("a")}.rlib`)])?.get(checkout.deps)).not.toContain(`libb-${externHash("b")}.rlib`);
+ expect(dependencyClosureV1([join(checkout.base,"missing")],[])).toBeUndefined();
+});
+
+test("offload preserves each Cargo search root and ships only metadata-reached artifacts across them",()=>{
+ const checkout=chain("split-dependency-roots");
+ try{
+  checkout.compile("unused","pub fn unused()->u32{0}\n");
+  const transitive=join(checkout.target,"transitive","out");mkdirSync(transitive,{recursive:true});
+  const artifact=(name:string,extension:string)=>`lib${name}-${externHash(name)}.${extension}`;
+  for(const name of ["a","unused"])for(const extension of ["rlib","rmeta"]){
+   const file=artifact(name,extension);renameSync(join(checkout.deps,file),join(transitive,file));
+  }
+  const args=checkout.arguments("c",["b"],["-L",`dependency=${transitive}`]).map(argument=>
+   argument.startsWith("b=")?argument.replace(/\.rlib$/u,".rmeta"):argument.startsWith("--emit=")?"--emit=metadata":argument,
+  );
+  const result=planOffloadV1({args,environment:checkout.environment("c"),cwd:checkout.root});
+  if("declined" in result)throw Error(result.declined+" "+result.detail);
+  const primary=OFFLOAD_POLICY_V1.virtual.deps,secondary=primary+"1";
+  expect(result.arguments.filter(argument=>argument.startsWith("dependency="))).toEqual([`dependency=${primary}`,`dependency=${secondary}`]);
+  expect(result.files.get(`${primary}/${artifact("b","rmeta")}`)).toBe(join(checkout.deps,artifact("b","rmeta")));
+  for(const extension of ["rlib","rmeta"]){
+   expect(result.files.get(`${secondary}/${artifact("a",extension)}`)).toBe(join(transitive,artifact("a",extension)));
+   expect(result.files.has(`${secondary}/${artifact("unused",extension)}`)).toBe(false);
+  }
+ }finally{rmSync(checkout.base,{recursive:true,force:true});}
 });
 
 test("walking a package is ordered, skips ignored directories and refuses beyond its bounds",()=>{
@@ -84,7 +111,7 @@ test("a plan is path-independent: two checkouts at different absolute paths yiel
  expect(a.arguments.some(argument=>argument.startsWith("dependency="+OFFLOAD_POLICY_V1.virtual.deps))||a.arguments.includes("dependency="+OFFLOAD_POLICY_V1.virtual.deps)).toBe(true);
  expect(a.arguments.filter(argument=>isAbsolute(argument))).toEqual([]);
  expect(a.arguments.join(" ")).not.toContain("-C incremental");
- expect(a.environment.PATH).toBe(OFFLOAD_POLICY_V1.environment.path);expect(a.environment.SEMIO_TOOL_RUSTC).toBe("@tool");
+ expect(a.environment.PATH).toBe(OFFLOAD_POLICY_V1.environment.path);expect(a.environment.SEMIO_TOOL_RUSTC).toBeUndefined();
  expect(a.environment.SEMIO_ABSOLUTE).toBe("CARGO_MANIFEST_DIR");expect(a.environment.SEMIO_REL_CARGO_MANIFEST_DIR).toBe("pk/c");
  for(const denied of ["HOME","SEMIO_UNIT_CACHE_ROOT","CARGO_MAKEFLAGS"])expect(a.environment[denied],denied).toBeUndefined();
  expect(a.environment.CARGO_PKG_NAME).toBe("c");expect(a.environment.RUST_MIN_STACK).toBe("8388608");
@@ -127,7 +154,7 @@ test("the machine's single admission decision says wait under critical pressure 
 });
 
 test("verdicts are shared within their window and expire after it",()=>{
- const root=realpathSync(mkdtempSync(join(tmpdir(),"offload-memo-")));
+ const root=realpathSync(mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir(),"offload-memo-")));
  writeOffloadMemoV1(root,"declined",{atMs:1000});
  expect(readOffloadMemoV1(root,"declined",1500,3000)).toEqual({atMs:1000});
  expect(readOffloadMemoV1(root,"declined",4001,3000)).toBeUndefined();expect(readOffloadMemoV1(root,"declined",500,3000)).toBeUndefined();expect(readOffloadMemoV1(root,"other",1500,3000)).toBeUndefined();
@@ -135,7 +162,7 @@ test("verdicts are shared within their window and expire after it",()=>{
 });
 
 test("a unit queues here when every slot is held: the estimate is the age of the oldest live waiter, and zero while a slot is free",()=>{
- const root=realpathSync(mkdtempSync(join(tmpdir(),"offload-slots-"))),slots=join(root,"s"),tickets=join(root,"q");
+ const root=realpathSync(mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir(),"offload-slots-"))),slots=join(root,"s"),tickets=join(root,"q");
  mkdirSync(tickets,{recursive:true});
  expect(slotQueueMillisecondsV1(root,2,5000)).toBe(0);expect(slotQueueMillisecondsV1(root,0,5000)).toBe(0);
  const first=tryClaimV1(slots,"0")!,second=tryClaimV1(slots,"1")!;
@@ -148,7 +175,7 @@ test("a unit queues here when every slot is held: the estimate is the age of the
 });
 
 test("the job token goes back to the build's named pool while the unit is away and is taken back afterwards, and pools that cannot be served keep the token",async()=>{
- const root=realpathSync(mkdtempSync(join(tmpdir(),"offload-token-"))),fifo=join(root,"pool");
+ const root=realpathSync(mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir(),"offload-token-"))),fifo=join(root,"pool");
  expect(spawnSync("mkfifo",[fifo]).status).toBe(0);
  const opened=await import("node:fs").then(fs=>fs.openSync(fifo,fs.constants.O_RDWR|fs.constants.O_NONBLOCK));
  const {writeSync,readSync,closeSync}=await import("node:fs");
@@ -170,7 +197,7 @@ test("the job token goes back to the build's named pool while the unit is away a
 });
 
 test("every decline and fall-back is counted under its reason beside the three totals, so the refusals can be told apart by cause",()=>{
- const root=realpathSync(mkdtempSync(join(tmpdir(),"offload-reasons-")));
+ const root=realpathSync(mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir(),"offload-reasons-")));
  for(const [add,reason,times] of [[{refused:1},"no-idle-machine",5],[{refused:1},"queue-timeout",2],[{fellBack:1},"worker-policy",3],[{fellBack:1},"incomplete-inputs",4],[{},"unmapped-path",6]] as const)for(let index=0;index<times;index++)bumpOffloadCountersV1(root,add,reason);
  bumpOffloadCountersV1(root,{out:1});bumpOffloadCountersV1(root,{refused:1},"../escape");bumpOffloadCountersV1(root,{},"Bad Reason");
  expect(readOffloadReasonCountersV1(root)).toEqual({"no-idle-machine":5,"queue-timeout":2,"worker-policy":3,"incomplete-inputs":4,"unmapped-path":6});
@@ -182,7 +209,7 @@ test("every decline and fall-back is counted under its reason beside the three t
 });
 
 test("counters add up concurrent events exactly and keep the unit cache fields of the shared file",async()=>{
- const root=realpathSync(mkdtempSync(join(tmpdir(),"offload-counters-"))),file=join(root,".cache","f","build-counters.json");
+ const root=realpathSync(mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir(),"offload-counters-"))),file=join(root,".cache","f","build-counters.json");
  mkdirSync(join(root,".cache","f"),{recursive:true});writeFileSync(file,JSON.stringify({version:1,wallMs:5,unit:{localHit:1,remoteHit:2,miss:3,stored:4},offload:{out:0,refused:0,fellBack:0}}));
  await Promise.all(Array.from({length:40},(_,index)=>Promise.resolve().then(()=>bumpOffloadCountersV1(root,index%4===0?{refused:1}:index%4===1?{fellBack:1}:{out:1}))));
  bumpOffloadCountersV1(root,{out:1});
@@ -288,6 +315,13 @@ test("a unit Cargo compiles in its package directory (absolute source, working d
  expect("declined" in declined&&declined.detail).toContain("source outside CARGO_MANIFEST_DIR");
 });
 
+test("environment variables the worker policy cannot carry (a name with a hyphen, a value with a line break or beyond the bound) stay on the requester instead of failing the whole action there",()=>{
+ const checkout=chain("names"),result=planOffloadV1({args:checkout.arguments("c",["b"]),environment:{...checkout.environment("c"),"SENTRY-TRACE":"00-abc-def-01",BROKEN_LINES:"a\nb",HUGE:"x".repeat(20000),KEPT_NAME:"fine"},cwd:checkout.root});
+ if("declined" in result)throw Error(JSON.stringify(result));
+ for(const name of ["SENTRY-TRACE","BROKEN_LINES","HUGE"])expect(result.environment[name],name).toBeUndefined();
+ expect(result.environment.KEPT_NAME).toBe("fine");expect(result.environment.CARGO_PKG_NAME).toBe("c");
+});
+
 test("the requester's own temporary directories and path remaps are left behind, not carried to the other machine",()=>{
  const checkout=chain("remap"),remap=`--remap-path-prefix=${checkout.root}/.cache/cargo=/cargo`,foreign=`--remap-path-prefix=/usr/lib=/lib`;
  const result=planOffloadV1({args:[...checkout.arguments("c",["b"]),remap,"--remap-path-prefix",`${checkout.root}/t=/t`,foreign],environment:{...checkout.environment("c"),TEMP:`${checkout.root}/.tmp`,TMP:`${checkout.root}/.tmp`},cwd:checkout.root});
@@ -298,7 +332,7 @@ test("the requester's own temporary directories and path remaps are left behind,
 
 test("an unreachable cache endpoint is a quick, silent decline and is remembered, never a hang",async()=>{
  const {offloadRustcUnitV1}=await import("../🟦️.ts");
- const checkout=chain("unreachable"),root=realpathSync(mkdtempSync(join(tmpdir(),"offload-unreachable-")));
+ const checkout=chain("unreachable"),root=realpathSync(mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir(),"offload-unreachable-")));
  const environment={...checkout.environment("c"),...testRustEnvironmentV1(),SEMIO_REMOTE_EXECUTION_ENDPOINT:"grpc://127.0.0.1:1",SEMIO_REMOTE_CACHE_ENDPOINT:"http://127.0.0.1:1",SEMIO_REMOTE_CACHE_INSTANCE:"main"};
  const started=Date.now(),first=await offloadRustcUnitV1({args:checkout.arguments("c",["b"]),environment,cwd:checkout.root,root,crate:"c",key:"a".repeat(64),compiler:["rustc"]});
  expect(first).toMatchObject({kind:"local",reason:"infrastructure"});expect(Date.now()-started).toBeLessThan(5000);
@@ -314,7 +348,7 @@ test("a cache endpoint that answered is remembered for a while: a build of many 
  let probes=0;
  const cache=Bun.serve({port:0,hostname:"127.0.0.1",fetch(request){if(new URL(request.url).pathname==="/healthz"){probes++;return new Response("{\"status\":\"ok\"}");}return new Response("no",{status:404});}});
  try{
-  const checkout=chain("reachable"),root=realpathSync(mkdtempSync(join(tmpdir(),"offload-reachable-")));
+  const checkout=chain("reachable"),root=realpathSync(mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir(),"offload-reachable-")));
   const environment={...checkout.environment("c"),...testRustEnvironmentV1(),SEMIO_REMOTE_EXECUTION_ENDPOINT:"grpc://127.0.0.1:1",SEMIO_REMOTE_CACHE_ENDPOINT:`http://127.0.0.1:${cache.port}`,SEMIO_REMOTE_CACHE_INSTANCE:"main"};
   for(let index=0;index<4;index++){
    await offloadRustcUnitV1({args:checkout.arguments("c",["b"]),environment,cwd:checkout.root,root,crate:"c",key:String(index).repeat(64),compiler:["rustc"]});
@@ -325,17 +359,31 @@ test("a cache endpoint that answered is remembered for a while: a build of many 
  }finally{cache.stop(true);}
 });
 
-test("the fleet fanout ceiling is available with offload enabled, a published scheduler, and a busy host",async()=>{
- const busy={probe:testHostProbeV1("critical-pressure-gigabyte-swap")},quiet={probe:testHostProbeV1("quiet-no-swap",true)},scheduler={SEMIO_WORKSPACE_ROOT:realpathSync(mkdtempSync(join(tmpdir(),"fanout-"))),SEMIO_REMOTE_EXECUTION_ENDPOINT:"grpc://192.0.2.1:8980"};
+const TOOLCHAIN="aaaaaaaaaaaaaaaa",host=process.platform==="darwin"?"macos":process.platform==="win32"?"windows":process.platform,cpu=process.arch==="x64"?"amd64":process.arch;
+const loadReport=(origin:string,toolchain:string,headroom=true,pressure:"normal"|"warn"|"critical"="normal"):RemoteExecutionLoadReportV1=>({version:1,origin,platform:{key:`${host}-${cpu}-${toolchain}`,os:host,arch:cpu,toolchain,target:"aarch64-apple-darwin"},capacity:{cores:8,memoryMegabytes:16384},running:0,queued:0,pressure,freeMegabytes:8000,load:1,headroom,wallMs:1_000_000,worker:{state:"idle",concurrency:4,running:0,sandbox:null,confinement:null,network:null},counters:{unit:{localHit:0,remoteHit:0,miss:0,stored:0},offload:{out:0,refused:0,fellBack:0}}});
+const peer=(extra:Partial<{origin:string;toolchain:string;running:number;draining:boolean;headroom:boolean;pressure:"normal"|"warn"|"critical";os:string;format:boolean;refusedUntilMs:number;silent:boolean}>={})=>({origin:"peer",toolchain:TOOLCHAIN,running:0,draining:false,headroom:true,pressure:"normal" as const,os:host,format:true,refusedUntilMs:0,silent:false,...extra});
+const schedulerOf=(rows:readonly ReturnType<typeof peer>[])=>({fetch:(async(url:string)=>{
+ const table=new RemoteExecutionLoadTableV1(60_000,()=>1_000_000),origin=new URL(url).searchParams.get("origin")!;
+ table.accept(loadReport(origin,TOOLCHAIN));
+ const workers:PlacementWorkerV1[]=rows.map((row,index)=>{if(!row.silent)table.accept(loadReport(row.origin,row.toolchain,row.headroom,row.pressure));return{id:`w${index}`,name:`n${index}`,origin:row.origin,properties:[{name:"Arch",value:cpu},{name:"OSFamily",value:row.os},{name:"semio-toolchain",value:row.toolchain},{name:"semio-target",value:"aarch64-apple-darwin"},...row.format?[{name:OFFLOAD_POLICY_V1.property.format,value:OFFLOAD_POLICY_V1.property.formatValue}]:[]],concurrency:4,running:row.running,waiting:true,draining:row.draining,refusedUntilMs:row.refusedUntilMs};});
+ const property=OFFLOAD_POLICY_V1.property;
+ return new Response(JSON.stringify(placementIdleCountV1({id:"probe",platform:[{name:property.format,value:property.formatValue}],tried:new Set<string>(),requester:origin},workers,table,1_000_000)));
+}) as unknown as typeof fetch});
+const tableOf=(rows:readonly ReturnType<typeof peer>[])=>schedulerOf(rows);
+test("the fleet fanout ceiling is available with offload enabled, a published scheduler with headroom, and a busy host or a door that refused",async()=>{
+ const busy={probe:testHostProbeV1("critical-pressure-gigabyte-swap"),fleet:tableOf([peer()])},quiet={probe:testHostProbeV1("quiet-no-swap",true)},scheduler={SEMIO_WORKSPACE_ROOT:realpathSync(mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir(),"fanout-"))),SEMIO_REMOTE_EXECUTION_ENDPOINT:"grpc://192.0.2.1:8980"};
  expect(await offloadFanOutJobsV1(scheduler,busy)).toBe(Math.min(OFFLOAD_POLICY_V1.limits.fanOutJobs,availableParallelism()));
  expect(await offloadFanOutJobsV1(scheduler,quiet),"a machine that admits one more unit queues normally").toBeUndefined();
+ expect(await offloadFanOutJobsV1(scheduler,{...quiet,doorRefused:true,fleet:busy.fleet}),"the door refused the whole build: that verdict counts, whatever one unit would do").toBeGreaterThan(0);
+ for(const [label,workers] of [["nobody",[]],["a draining machine",[peer({draining:true})]],["a full machine",[peer({running:4})]],["a machine without headroom",[peer({headroom:false})]],["a machine under critical pressure",[peer({pressure:"critical"})]],["a machine in its refusal cool-down",[peer({refusedUntilMs:2_000_000})]],["another operating system",[peer({os:"plan9"})]],["another toolchain build",[peer({toolchain:"bbbbbbbbbbbbbbbb"})]],["an older action format",[peer({format:false})]]] as const)expect(await offloadFanOutJobsV1(scheduler,{...busy,fleet:tableOf(workers)}),label+" is no headroom").toBeUndefined();
+ expect(await offloadFanOutJobsV1(scheduler,{...busy,fleet:{fetch:(async()=>{throw Error("down");}) as unknown as typeof fetch}}),"an unreachable scheduler keeps the caller waiting").toBeUndefined();
  expect(await offloadFanOutJobsV1({...scheduler,SEMIO_OFFLOAD:"never"},busy)).toBeUndefined();
  expect(await offloadFanOutJobsV1({...scheduler,SEMIO_REMOTE_EXECUTION_ENDPOINT:""},busy),"no scheduler published").toBeUndefined();
  expect(await offloadFanOutJobsV1({...scheduler,SEMIO_OFFLOAD:"always"},busy)).toBeGreaterThan(1);
 });
 
 test("a unit whose recorded local cost is below a round trip stays here in auto mode; unknown or costly units go; the workspace root is found from any directory below it",()=>{
- const root=realpathSync(mkdtempSync(join(tmpdir(),"cost-")));
+ const root=realpathSync(mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir(),"cost-")));
  expect(readUnitCostV1(root,"tiny")).toBeUndefined();expect(worthARoundTripV1(root,"tiny"),"no record: the first compile teaches the cost").toBe(true);
  writeUnitCostV1(root,"tiny",300);expect(readUnitCostV1(root,"tiny")).toBe(300);expect(worthARoundTripV1(root,"tiny")).toBe(false);
  writeUnitCostV1(root,"tiny",9300);expect(readUnitCostV1(root,"tiny"),"halfway to the new measurement").toBe(4800);expect(worthARoundTripV1(root,"tiny")).toBe(true);
@@ -354,4 +402,61 @@ test("an extern given as an rlib ships its rmeta beside it (with embed-metadata=
   const names=[...planned.files.keys()];
   expect(names.some(name=>name.endsWith(`${stem}.rlib`))&&names.some(name=>name.endsWith(`${stem}.rmeta`)),extension).toBe(true);
  }
+});
+
+test("a worker that runs an older action format is no candidate: the action asks for the format and only a worker that offers it matches",()=>{
+ const identity=parseRustcIdentityV1("commit-hash: "+"a".repeat(40)+"\nhost: aarch64-apple-darwin\n")!,host=[{name:"Arch",value:"arm64"},{name:"OSFamily",value:"macos"}];
+ const required=remoteExecutionMatchPropertiesV1(offloadPlatformV1(host,{...identity,targets:[]},undefined,"g1-m03")),base=[...host,{name:"semio-toolchain",value:identity.digest},{name:"semio-target",value:identity.host}];
+ expect(required.some(row=>row.name===OFFLOAD_POLICY_V1.property.format&&row.value===OFFLOAD_POLICY_V1.property.formatValue)).toBe(true);
+ expect(remoteExecutionPlatformMatchesV1(required,base),"an older worker offers no format").toBe(false);
+ expect(remoteExecutionPlatformMatchesV1(required,[...base,{name:OFFLOAD_POLICY_V1.property.format,value:OFFLOAD_POLICY_V1.property.formatValue}])).toBe(true);
+});
+
+test("the door and the submission check share one truth: the same machines are counted by the scheduler's own idle counting whether it is asked by the door or at submission, including a requester that is never its own candidate and a machine that has not reported yet",async()=>{
+ const environment={SEMIO_WORKSPACE_ROOT:realpathSync(mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir(),"truth-"))),SEMIO_REMOTE_EXECUTION_ENDPOINT:"grpc://192.0.2.1:8980"};
+ const rows=[peer({origin:"a"}),peer({origin:"b",headroom:false}),peer({origin:"c",silent:true}),peer({origin:"d",toolchain:"bbbbbbbbbbbbbbbb"})];
+ expect(await fleetHeadroomV1(environment,{fleet:schedulerOf(rows)}),"a, and c (no report counts as headroom); b has none, d has another toolchain").toBe(2);
+ expect(await fleetHeadroomV1(environment,{fleet:schedulerOf(rows.map(row=>({...row,origin:row.origin==="a"?"requester-is-a-worker":row.origin})))})).toBe(2);
+});
+
+test("the environment of an offload test never names the checkout that runs it: its fleet facts would supersede the test cluster's endpoint and the test would write the live fleet's cache and counters",()=>{
+ const named=testRustEnvironmentV1({SEMIO_WORKSPACE_ROOT:"/elsewhere"});
+ expect(named.SEMIO_WORKSPACE_ROOT).toBe("/elsewhere");
+ const previous=process.env.SEMIO_WORKSPACE_ROOT,previousUnit=process.env.SEMIO_UNIT_CACHE_WORKSPACE_ROOT;
+ process.env.SEMIO_WORKSPACE_ROOT="/checkout";process.env.SEMIO_UNIT_CACHE_WORKSPACE_ROOT="/checkout";
+ try{const environment=testRustEnvironmentV1();expect(environment.SEMIO_WORKSPACE_ROOT).toBeUndefined();expect(environment.SEMIO_UNIT_CACHE_WORKSPACE_ROOT).toBeUndefined();}
+ finally{if(previous===undefined)delete process.env.SEMIO_WORKSPACE_ROOT;else process.env.SEMIO_WORKSPACE_ROOT=previous;if(previousUnit===undefined)delete process.env.SEMIO_UNIT_CACHE_WORKSPACE_ROOT;else process.env.SEMIO_UNIT_CACHE_WORKSPACE_ROOT=previousUnit;}
+});
+
+test("a module file named by a cfg_attr path (mio, errno, memmap2) is shipped: the files that rustc itself reads for the unit are all reached",()=>{
+ const root=mkdtempSync(join(tmpdir(),"offload-cfg-attr-"));
+ try{
+  mkdirSync(join(root,"sel"));
+  writeFileSync(join(root,"lib.rs"),'#[cfg_attr(\n    any(target_os = "macos", target_os = "linux", target_os = "windows"),\n    path = "sel/native.rs"\n)]\n#[cfg_attr(not(any(target_os = "macos", target_os = "linux", target_os = "windows")), path = "sel/other.rs")]\nmod selector;\npub fn f() -> u32 { selector::v() }\n');
+  for(const name of ["native","other"])writeFileSync(join(root,"sel",`${name}.rs`),"pub fn v() -> u32 { 1 }\n");
+  const info=join(root,"lib.d"),done=spawnSync("rustc",["--crate-type=lib","--crate-name=lib",`--emit=dep-info=${info}`,join(root,"lib.rs")],{encoding:"utf8",env:testRustEnvironmentV1()});
+  expect(done.status,done.stderr).toBe(0);
+  const read=readFileSync(info,"utf8").split("\n")[0]!.split(": ")[1]!.split(" ").filter(path=>path!==""&&path!==join(root,"lib.rs"));
+  expect(read.length).toBe(1);
+  const reached=includedSourcesV1(join(root,"lib.rs"));
+  for(const path of read)expect(reached).toContain(path);
+  expect(reached).toContain(join(root,"sel","native.rs"));
+ }finally{rmSync(root,{recursive:true,force:true});}
+});
+
+test("an environment variable a build script points into OUT_DIR (cranelift's ISLE_DIR) travels as the virtual generated path, not as the requester's path, and the worker command spells it once",()=>{
+ const checkout=chain("generated-env"),generated=join(checkout.base,"gen"),virtual=OFFLOAD_POLICY_V1.virtual.generated;
+ mkdirSync(join(generated,"sub"),{recursive:true});writeFileSync(join(generated,"isle.rs"),"//\n");writeFileSync(join(generated,"sub","more.rs"),"//\n");
+ const planned=(extra:Record<string,string>)=>planOffloadV1({args:checkout.arguments("c",["b"]),environment:{...checkout.environment("c"),OUT_DIR:generated,...extra},cwd:checkout.root});
+ const result=planned({ISLE_DIR:generated,ISLE_FILE:join(generated,"sub","more.rs")});
+ if("declined" in result)throw Error(result.declined+" "+result.detail);
+ expect(result.environment.SEMIO_ABSOLUTE.split(" ")).toEqual(expect.arrayContaining(["ISLE_DIR","ISLE_FILE","OUT_DIR"]));
+ expect(result.environment.SEMIO_REL_ISLE_DIR).toBe(virtual);expect(result.environment.SEMIO_REL_ISLE_FILE).toBe(`${virtual}/sub/more.rs`);
+ expect([...result.files.keys()]).toEqual(expect.arrayContaining([`${virtual}/isle.rs`,`${virtual}/sub/more.rs`]));
+ const command=offloadCommandV1(result,"aarch64-apple-darwin");
+ for(const name of ["ISLE_DIR","ISLE_FILE","OUT_DIR"]){
+  const rows=command.environment.filter(([key])=>key===name);expect(rows.length,name).toBe(1);expect(rows[0]![1].includes(checkout.base),name).toBe(false);expect(rows[0]![1].startsWith("@root/")||rows[0]![1]==="@root","@root placeholder "+name).toBe(true);
+ }
+ const unmapped=planned({STRAY:generated+"-sibling"});
+ expect("declined" in unmapped?unmapped.declined:"planned").toBe("unmapped-path");
 });

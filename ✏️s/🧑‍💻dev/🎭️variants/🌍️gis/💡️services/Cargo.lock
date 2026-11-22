@@ -15686,10 +15686,7 @@ dependencies = [
  "semio-s-artifact-gis-gismap-tests",
  "semio-s-artifact-gis-gismap-tile-coordinates",
  "semio-s-artifact-gis-gismap-windows",
- "semio-s-artifact-stdio-dwg",
- "semio-s-artifact-stdio-dxf",
  "semio-s-artifact-stdio-json",
- "semio-s-artifact-stdio-pdf",
  "semio-s-artifact-stdio-png",
  "semio-s-artifact-stdio-semio-base",
  "semio-s-artifact-stdio-semio-drawing",
@@ -16809,27 +16806,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "semio-s-artifact-stdio-dwg"
-version = "0.1.0"
-dependencies = [
- "semio-framework-artifact-reference",
- "semio-framework-async",
- "semio-framework-dsl",
- "semio-framework-hash",
- "semio-framework-pack",
- "semio-os-command",
- "semio-os-kernel",
- "semio-plugin",
- "semio-s-artifact-stdio-contract",
- "semio-s-artifact-stdio-dwg-diff",
- "semio-s-artifact-stdio-dwg-inferences",
- "semio-s-artifact-stdio-dwg-model",
- "semio-s-artifact-stdio-dwg-mutations",
- "semio-s-artifact-stdio-dwg-snapshot",
- "semio-ui-locale",
-]
-
-[[package]]
 name = "semio-s-artifact-stdio-dwg-diff"
 version = "0.1.0"
 dependencies = [
@@ -16880,24 +16856,6 @@ dependencies = [
  "semio-framework-schema-state",
  "semio-framework-value-derive",
  "semio-os-kernel",
-]
-
-[[package]]
-name = "semio-s-artifact-stdio-dwg-inferences"
-version = "0.1.0"
-dependencies = [
- "semio-framework-dsl-record",
- "semio-framework-pack-json",
- "semio-framework-schema",
- "semio-framework-schema-composition",
- "semio-framework-schema-registry",
- "semio-framework-schema-state",
- "semio-framework-value",
- "semio-framework-value-derive",
- "semio-os-kernel",
- "semio-s-artifact-stdio-dwg-snapshot",
- "semio-s-artifact-stdio-dwg-snapshot-drawing",
- "semio-s-artifact-stdio-dwg-snapshot-objects",
 ]
 
 [[package]]
@@ -17791,6 +17749,30 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-s-artifact-stdio-pdf-base14-mono"
+version = "0.1.0"
+
+[[package]]
+name = "semio-s-artifact-stdio-pdf-base14-mono-italic"
+version = "0.1.0"
+
+[[package]]
+name = "semio-s-artifact-stdio-pdf-base14-sans"
+version = "0.1.0"
+
+[[package]]
+name = "semio-s-artifact-stdio-pdf-base14-serif"
+version = "0.1.0"
+
+[[package]]
+name = "semio-s-artifact-stdio-pdf-base14-serif-italic"
+version = "0.1.0"
+
+[[package]]
+name = "semio-s-artifact-stdio-pdf-base14-symbol"
+version = "0.1.0"
+
+[[package]]
 name = "semio-s-artifact-stdio-pdf-conformance-support"
 version = "0.1.0"
 dependencies = [
@@ -17914,6 +17896,12 @@ dependencies = [
  "semio-s-artifact-stdio-binary",
  "semio-s-artifact-stdio-contract",
  "semio-s-artifact-stdio-deflate",
+ "semio-s-artifact-stdio-pdf-base14-mono",
+ "semio-s-artifact-stdio-pdf-base14-mono-italic",
+ "semio-s-artifact-stdio-pdf-base14-sans",
+ "semio-s-artifact-stdio-pdf-base14-serif",
+ "semio-s-artifact-stdio-pdf-base14-serif-italic",
+ "semio-s-artifact-stdio-pdf-base14-symbol",
  "semio-s-artifact-stdio-pdf-glyph-list",
  "semio-s-artifact-stdio-pdf-inferences",
  "semio-s-artifact-stdio-pdf-model",
@@ -19219,9 +19207,17 @@ dependencies = [
  "semio-s-artifact-stdio-pdf-mut-base-4",
  "semio-s-artifact-stdio-pdf-mut-family-8",
  "semio-s-artifact-stdio-pdf-page-coordinates",
+ "semio-s-artifact-stdio-pdf-paint-codecs",
  "semio-s-artifact-stdio-pdf-snapshot-2",
  "semio-ui-contract",
  "semio-ui-locale",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-pdf-paint-codecs"
+version = "0.1.0"
+dependencies = [
  "serde_json",
 ]
 

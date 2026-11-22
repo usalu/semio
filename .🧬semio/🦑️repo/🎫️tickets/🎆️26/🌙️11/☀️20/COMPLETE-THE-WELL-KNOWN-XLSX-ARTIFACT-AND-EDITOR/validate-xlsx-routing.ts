@@ -11,7 +11,7 @@ const shell = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️
 const { stdioFormatClaimsTextV1 } = await load(`${source}/📇️registry/🧬️contract/🧭️format-claims/📜️generate.ts`);
 const { routePickedFileV1 } = await load(`${shell}/🧱️elements/🏛️ShellHost/📂️picked-file-opening/🟦️.ts`);
 const { formats } = JSON.parse(stdioFormatClaimsTextV1(root)) as {
-  formats: { kindId: string; shortId: string; artifactRef: string; mimes: string[]; extensions: string[] }[];
+  formats: { kindId: string; shortId: string; artifactRef: string; mimes: string[]; extensions: string[]; package?: { mainPartContentTypes: string[]; dialects: { artifactRef: string; namespace: string }[] } }[];
 };
 const xlsx = formats.find(row => row.shortId === "xlsx");
 assert.ok(xlsx);
@@ -29,6 +29,28 @@ for (const [picked, basis] of [[{ name: "Budget.XLSX", type: "application/zip" }
   assert.equal(route.resolution.basis, basis);
   assert.equal(route.resolution.format.kindId, xlsx.kindId);
 }
+const packageClaim = xlsx.package;
+assert.ok(packageClaim, "the generated xlsx claim must carry its package content check");
+const { strToU8, zipSync } = await import("fflate");
+const packaged = { ...catalog, packageOf: (kindId: string) => formats.find(row => row.kindId === kindId)?.package };
+const workbookZip = (part: string, contentType: string, namespace: string) => zipSync({
+  "[Content_Types].xml": strToU8(`<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Override PartName="/${part}" ContentType="${contentType}"/></Types>`),
+  [part]: strToU8(`<workbook xmlns="${namespace}"/>`),
+});
+const idle = new AbortController().signal;
+const content = (bytes: Uint8Array) => ({ source: { size: bytes.length, read: async (start: number, end: number) => bytes.slice(start, end) }, signal: idle });
+for (const dialect of packageClaim.dialects) {
+  assert.ok(apps?.find((app: { id: string }) => app.id === `${dialect.artifactRef}#editor`), `office component must publish the ${dialect.artifactRef} editor`);
+  const bytes = workbookZip("xl/workbook.xml", packageClaim.mainPartContentTypes[0]!, dialect.namespace);
+  const route = await routePickedFileV1(packaged, { name: "Budget.xlsx" }, noReads, content(bytes));
+  assert.equal(route.kind, "routed");
+  assert.equal(route.artifactRef, dialect.artifactRef);
+}
+assert.deepEqual(packageClaim.dialects.map(dialect => dialect.artifactRef).sort(), ["s.stdio.xlsx@ecma-376/strict", "s.stdio.xlsx@ecma-376/transitional"]);
+for (const bytes of [workbookZip("word/document.xml", "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml", "urn:w"), strToU8("not a zip")]) {
+  assert.deepEqual(await routePickedFileV1(packaged, { name: "Budget.xlsx" }, noReads, content(bytes)), { kind: "refused", reason: "content-mismatch" });
+}
+console.log("Strict and Transitional workbooks route to their subset editors; foreign content is refused");
 for (const [actionId, direction] of [["openArtifactFile", "importFormats"], ["saveArtifactFile", "exportFormats"]]) {
   const actions = [...(editor.actions ?? []), ...editor.windowKinds.flatMap((kind: { actions?: object[] }) => kind.actions ?? [])];
   const action = actions.find(candidate => candidate.id === actionId);

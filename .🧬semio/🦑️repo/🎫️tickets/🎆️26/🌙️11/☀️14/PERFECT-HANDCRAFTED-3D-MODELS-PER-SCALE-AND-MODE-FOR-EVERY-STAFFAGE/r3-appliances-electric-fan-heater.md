@@ -148,3 +148,9 @@ Opened: body 1:50, 1:100, 1:200, 1:500 before and after; thermal cut and structu
 
 - 1:500 thermal cut shows the coplanar seam faces of shell and cover as stripes (inside, renderer).
 - 1:100 end caps are chamfered (taper 0.9) where the real frames are rounded; within the 15 mm feature.
+
+## Four-scale front and rear review, 2026-11-21
+
+Source `bc0ee4103cc9bd16`. The medium and coarse casings now contain a real air passage. The outlet carries eight inclined louvres in a perimeter cassette, opposite seven intake slots. The heating element, fan, motor and shroud can be seen through the openings. Four rubber feet replace the coarse plinth. The 44 mm dial and rocker appear on the same side in the shaded operating pose and its temperature model. The 1:200 drawing carries the feet in the stepped outline and leaves the carry grip open. The 1:500 paper representation retains its existing unavailable status.
+
+The original candidate failed at 1:100 for a sealed outlet and at 1:200/500 for a filled carrying grip. The follow-up rear view also exposed a thermal dial without a corresponding body at those two scales. Three.js triangle ray casts now check finger clearance at three positions, eight distinct louvre bands, and the physical control radius across all four scales. The canonical product check reported zero schema, authoring and volumetric findings. All twelve exported GLB scenes reopened, 929,604 bytes in total. All 30 maintained model-bounds tests passed.

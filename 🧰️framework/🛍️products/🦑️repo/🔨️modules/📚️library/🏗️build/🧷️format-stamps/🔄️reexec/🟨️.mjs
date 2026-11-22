@@ -2,7 +2,7 @@ import{spawn}from"node:child_process";
 import{createHash}from"node:crypto";
 import{writeSync}from"node:fs";
 import{constants as osConstants}from"node:os";
-import{formatStampLanguagesV1,formatStampProtocolV1,formatStampTextV1,renderEditRestartV1,staleImplementationOfV1}from"../🟨️.mjs";
+import{DanglingDependencyStoreErrorV1,danglingDependencyStoreOfV1,formatStampLanguagesV1,formatStampProtocolV1,formatStampTextV1,renderEditRestartV1,staleImplementationOfV1}from"../🟨️.mjs";
 import{enterRestartScopeV1,offerRestartCustodiesV1,settleRestartCustodiesV1}from"../../../../../../../🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
 const protocol=formatStampProtocolV1();
 const writeStderr=text=>{try{writeSync(2,text);}catch{}};
@@ -33,7 +33,8 @@ export async function runWithStaleReexecV1(run,{environment=process.env,outermos
  const leave=enterRestartScopeV1(outermost===true);
  try{await run();return{status:"completed"};}
  catch(error){
-  const stale=staleImplementationOfV1(error);if(!stale)throw error;
+  const stale=staleImplementationOfV1(error);
+  if(!stale){const dangling=danglingDependencyStoreOfV1(error);throw dangling?new DanglingDependencyStoreErrorV1(dangling,formatStampLanguagesV1(environment),error):error;}
   if(outermost&&yielded&&stale.origin==="exit"){const extra=await yielded(environment);if(extra){const handover=await offerRestartCustodiesV1(environment);return{status:"reexecuted",code:await launch({execPath,args:[...execArgv,...argv.slice(1)],environment:{...environment,...handover,...extra}})};}}
   const signature=movedSignatureV1(stale),before=environment[protocol.movedLiveEnvironment],repeated=signature!==""&&before===signature,previous=ranMilliseconds>=protocol.progressMilliseconds&&!repeated?0:Number.parseInt(environment[protocol.reexecutionEnvironment]??"0",10)||0,since=Number.parseInt(environment[protocol.movedSinceEnvironment]??"",10)||now(),followed=signature!==""&&before!==undefined&&before!==""&&!repeated&&now()-since<protocol.movedPatienceMilliseconds,genuine=followed&&ranMilliseconds>=protocol.movedProgressMilliseconds,quick=genuine?0:(Number.parseInt(environment[protocol.movedFollowedEnvironment]??"0",10)||0)+(followed?1:0),attempt=followed?Math.max(0,previous-1):previous,languages=formatStampLanguagesV1(environment),say=(key,values)=>write(languages.map(language=>formatStampTextV1(language,key,values)).join("\n")+"\n");
   if((stale.origin==="error"||!outermost)&&stale.message)write(stale.message+"\n");

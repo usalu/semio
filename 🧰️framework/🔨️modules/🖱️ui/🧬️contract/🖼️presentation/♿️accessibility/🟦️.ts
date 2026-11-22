@@ -43,6 +43,8 @@ export type UiAccessibilityProjectionNodeV1 = {
   readonly controls: string | null;
   readonly activeDescendant: string | null;
   readonly level: number | null;
+  /** ☑️ A tree that picks more than one row at a time (`aria-multiselectable`): one that carries an interaction domain. */
+  readonly multiselectable: boolean;
   readonly valueMin: number | null;
   readonly valueMax: number | null;
   readonly valueNow: number | null;
@@ -273,6 +275,7 @@ export function uiAccessibilityProjectionNodeV1(record: UiNodeRecord, depth: num
     controls: null,
     activeDescendant: null,
     level: record.component.type === "treeItem" ? depth + 1 : null,
+    multiselectable: record.component.type === "tree" && record.component.interactionDomain != null,
     ...uiAccessibilityValueV1(record.component),
     invalid: false,
     setSize: null,

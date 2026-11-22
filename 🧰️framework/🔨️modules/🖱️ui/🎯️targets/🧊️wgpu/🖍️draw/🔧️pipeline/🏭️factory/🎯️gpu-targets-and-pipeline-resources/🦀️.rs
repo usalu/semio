@@ -13,6 +13,15 @@ pub struct WorldLineGpuVertex {
     pub color: [f32; 4],
 }
 
+/// ☁️ One point-cloud sprite instance for `WORLD3D_POINTS_SHADER`: world position, straight-alpha color and the clip-space `extent`.
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
+pub struct WorldPointGpuInstance {
+    pub position: [f32; 3],
+    pub color: [f32; 4],
+    pub extent: [f32; 4],
+}
+
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct BlurGlobals {
@@ -277,6 +286,69 @@ impl PreparedCompositeTarget {
     }
 }
 
+/// 🫥️ The pooled offscreen target one group-alpha group paints into before it is composited with its alpha: surface-sized (every scalar encoder draws in surface coordinates), cleared to transparent per group and touched only inside the group's clip. Format, usage and views mirror [`PreparedCompositeTarget`] so the same UI pipelines draw into it.
+pub struct PreparedGroupTarget {
+    pub texture: gpu_device::Texture,
+    pub view: gpu_device::TextureView,
+    pub sampler: gpu_device::Sampler,
+    pub layout: gpu_device::BindGroupLayout,
+    pub pipeline: gpu_device::RenderPipeline,
+    pub uniform: gpu_device::Buffer,
+    pub width: u32,
+    pub height: u32,
+}
+
+impl PreparedGroupTarget {
+    pub fn ensure(device: &gpu_device::Device, target: &mut Option<Self>, width: u32, height: u32, format: gpu_device::TextureFormat) {
+        let width = width.max(1);
+        let height = height.max(1);
+        if target.as_ref().is_some_and(|existing| existing.width == width && existing.height == height) {
+            return;
+        }
+        let world_encoded_format = format.remove_srgb_suffix();
+        let texture = device.create_texture(&gpu_device::TextureDescriptor {
+            label: Some("prepared_group_color"),
+            size: gpu_device::Extent3d { width, height, depth_or_array_layers: 1 },
+            mip_level_count: 1,
+            sample_count: 1,
+            dimension: gpu_device::TextureDimension::D2,
+            format: world_encoded_format,
+            usage: gpu_device::TextureUsages::RENDER_ATTACHMENT | gpu_device::TextureUsages::TEXTURE_BINDING,
+            view_formats: &[format, world_encoded_format],
+        });
+        let view = texture.create_view(&gpu_device::TextureViewDescriptor { label: Some("prepared_group_color_view"), format: Some(format), dimension: Some(gpu_device::TextureViewDimension::D2), ..Default::default() });
+        let sampler = device.create_sampler(&gpu_device::SamplerDescriptor { label: Some("prepared_group_sampler"), mag_filter: gpu_device::FilterMode::Nearest, min_filter: gpu_device::FilterMode::Nearest, ..Default::default() });
+        let layout = device.create_bind_group_layout(&gpu_device::BindGroupLayoutDescriptor {
+            label: Some("prepared_group_layout"),
+            entries: &[
+                gpu_device::BindGroupLayoutEntry { binding: 0, visibility: gpu_device::ShaderStages::FRAGMENT, ty: gpu_device::BindingType::Texture { sample_type: gpu_device::TextureSampleType::Float { filterable: true }, view_dimension: gpu_device::TextureViewDimension::D2, multisampled: false }, count: None },
+                gpu_device::BindGroupLayoutEntry { binding: 1, visibility: gpu_device::ShaderStages::FRAGMENT, ty: gpu_device::BindingType::Sampler(gpu_device::SamplerBindingType::Filtering), count: None },
+                gpu_device::BindGroupLayoutEntry { binding: 2, visibility: gpu_device::ShaderStages::FRAGMENT, ty: gpu_device::BindingType::Buffer { ty: gpu_device::BufferBindingType::Uniform, has_dynamic_offset: false, min_binding_size: std::num::NonZeroU64::new(16) }, count: None },
+            ],
+        });
+        let uniform = device.create_buffer_init(&gpu_device::util::BufferInitDescriptor { label: Some("prepared_group_alpha"), contents: bytemuck::bytes_of(&[1.0_f32, 0.0, 0.0, 0.0]), usage: gpu_device::BufferUsages::UNIFORM | gpu_device::BufferUsages::COPY_DST });
+        let shader = device.create_shader_module(gpu_device::ShaderModuleDescriptor { label: Some("prepared_group_composite_shader"), source: gpu_device::ShaderSource::Wgsl(GROUP_COMPOSITE_SHADER.into()) });
+        let pipeline_layout = device.create_pipeline_layout(&gpu_device::PipelineLayoutDescriptor { label: Some("prepared_group_pipeline_layout"), bind_group_layouts: &[Some(&layout)], immediate_size: 0 });
+        let pipeline = device.create_render_pipeline(&gpu_device::RenderPipelineDescriptor {
+            label: Some("prepared_group_composite_pipeline"),
+            layout: Some(&pipeline_layout),
+            vertex: gpu_device::VertexState { module: &shader, entry_point: Some("vs_main"), buffers: &[], compilation_options: Default::default() },
+            fragment: Some(gpu_device::FragmentState {
+                module: &shader,
+                entry_point: Some("fs_main"),
+                targets: &[Some(gpu_device::ColorTargetState { format, blend: Some(gpu_device::BlendState::PREMULTIPLIED_ALPHA_BLENDING), write_mask: gpu_device::ColorWrites::ALL })],
+                compilation_options: Default::default(),
+            }),
+            primitive: gpu_device::PrimitiveState::default(),
+            depth_stencil: None,
+            multisample: gpu_device::MultisampleState::default(),
+            multiview_mask: None,
+            cache: None,
+        });
+        *target = Some(Self { texture, view, sampler, layout, pipeline, uniform, width, height });
+    }
+}
+
 pub struct WorldGlobalsRing {
     pub buffer: gpu_device::Buffer,
     pub bind_group: gpu_device::BindGroup,
@@ -389,6 +461,7 @@ pub struct PipelineResources {
     pub world_celebration_pipeline_translucent: gpu_device::RenderPipeline,
     pub world_shadow_pipeline: gpu_device::RenderPipeline,
     pub world_line_pipeline: gpu_device::RenderPipeline,
+    pub world_points_pipeline: gpu_device::RenderPipeline,
     pub world_grid_pipeline: gpu_device::RenderPipeline,
     pub world_textured_pipeline: gpu_device::RenderPipeline,
     pub blur_downsample_pipeline: gpu_device::RenderPipeline,

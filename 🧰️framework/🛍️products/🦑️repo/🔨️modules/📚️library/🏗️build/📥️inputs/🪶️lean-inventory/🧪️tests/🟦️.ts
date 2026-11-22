@@ -7,7 +7,7 @@ import {join} from "node:path";
 import Ajv from "ajv";
 import fixture from "./🔣️.json";
 import fixtureSchema from "./🧬️schema/🔣️.json";
-import {forgetInventoryRecordsV1,inventoryRecordStillHoldsV1,readInventoryRecordLeanV1,rememberInventoryRecordV1} from "../🟨️.mjs";
+import {forgetInventoryRecordsV1,inventoryRecordCorruptV1,inventoryRecordStillHoldsV1,readInventoryRecordLeanV1,rememberInventoryRecordV1} from "../🟨️.mjs";
 
 const python=testPythonV1(),windows=process.platform==="win32";
 const scratch=()=>{const root=mkdtempSync(join(realpathSync(tmpdir()),"lean-inventory-")),directory=join(root,fixture.directories[0]!);mkdirSync(directory,{recursive:true});return {root,directory};};
@@ -23,7 +23,7 @@ for(const row of fixture.cases){
   const {root,directory}=scratch();
   try{
    const key=fixture.records[row.fileKey as keyof typeof fixture.records].sha256,path=join(directory,key+".json");
-   const text=row.record===null?undefined:row.record==="empty"?"":fixture.records[row.record as keyof typeof fixture.records].text;
+   const text=row.record===null?undefined:row.record==="empty"?"":"zeroBytes"in row?"\u0000".repeat(row.zeroBytes as number):fixture.records[row.record as keyof typeof fixture.records].text;
    if(text!==undefined){
     if(row.link==="symbolic"){const target=join(root,"target.json");writeFileSync(target,text);symlinkSync(target,path);}
     else{writeFileSync(path,text);if(row.link==="hard")linkSync(path,join(root,"second.json"));}
@@ -32,7 +32,11 @@ for(const row of fixture.cases){
    if(row.expect==="value"){
     const leaf=readInventoryRecordLeanV1(directory,key,bound);
     expect(leaf.sha256).toBe(key);expect(leaf.byteLength).toBe(Buffer.byteLength(text!));expect(leaf.value).toEqual(JSON.parse(text!));expect(leaf.stamp.split(":").length).toBe(5);
-   }else expect(()=>readInventoryRecordLeanV1(directory,key,bound)).toThrow(row.expect);
+   }else{
+    expect(()=>readInventoryRecordLeanV1(directory,key,bound)).toThrow(row.expect);
+    let caught:unknown;try{readInventoryRecordLeanV1(directory,key,bound);}catch(error){caught=error;}
+    expect(inventoryRecordCorruptV1(caught)).toBe("corrupt"in row&&row.corrupt===true);
+   }
   }finally{rmSync(root,{recursive:true,force:true});}
  });
 }

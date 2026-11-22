@@ -3,7 +3,7 @@
 use crate::mutations::{GisTerrainMutation, ReplaceElevationSource};
 use crate::schema::snapshot::ElevationSource;
 use crate::GisTerrainSnapshot;
-use semio_s_artifact_gis_gisterrain_inferences::elevation_edit::{ElevationEdit, ElevationEditMode as Operation, LAST_SAMPLE, MAX_ELEVATION, MAX_STROKE_SAMPLES, MIN_ELEVATION};
+use semio_s_artifact_gis_gisterrain_inferences::elevation_edit::{ElevationEdit, ElevationEditMode as Operation, LAST_SAMPLE, MAX_ELEVATION, MAX_STROKE_SAMPLES, MIN_ELEVATION, metres_to_millimetres};
 use semio_framework_value::DslValue;
 use semio_framework_value_derive::{FromValue, ToValue};
 use semio_plugin::{ActionArgDef, ActionArgOption, ArgSchema, ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
@@ -16,17 +16,19 @@ pub struct EditElevation {
     pub column: u32,
     pub row: u32,
     pub radius: u32,
+    /// 📐️ Carries canonical millimetres for heights and an integer percent for smoothing.
     pub value: i32,
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub stroke: Option<Vec<[u32; 2]>>,
 }
 
-const OPERATIONS: [(Operation, &str, &str, &str); 5] = [
+const OPERATIONS: [(Operation, &str, &str, &str); 6] = [
     (Operation::SetSample, "set-sample", "Set Sample Height", "Punkthöhe festlegen"),
     (Operation::RaiseLower, "raise-lower", "Raise or Lower Area", "Bereich anheben oder absenken"),
     (Operation::Flatten, "flatten", "Grade to Elevation", "Auf Zielhöhe nivellieren"),
     (Operation::Smooth, "smooth", "Smooth Area", "Bereich glätten"),
     (Operation::Offset, "offset", "Offset Entire Grid", "Gesamtes Raster verschieben"),
+    (Operation::FillMissing, "fill-missing", "Fill Missing Samples", "Fehlende Rasterpunkte füllen"),
 ];
 
 impl EditElevation {
@@ -55,12 +57,19 @@ impl EditElevation {
                 Ok([coordinate(column)?, coordinate(row)?])
             }).collect::<Result<Vec<_>, Fault>>()
         }).transpose()?;
+        let operation = args.get("operation").and_then(DslValue::as_str).ok_or_else(|| Fault::from("gis-terrain-elevation-operation-required"))?;
+        let value = if operation == "smooth" {
+            integer("value")?
+        } else {
+            args.get("value").and_then(DslValue::as_f64).and_then(metres_to_millimetres)
+                .ok_or_else(|| Fault::from("gis-terrain-elevation-edit-invalid-value"))?
+        };
         let command = Self {
-            operation: args.get("operation").and_then(DslValue::as_str).ok_or_else(|| Fault::from("gis-terrain-elevation-operation-required"))?.into(),
+            operation: operation.into(),
             column: index("column")?,
             row: index("row")?,
             radius: index("radius")?,
-            value: integer("value")?,
+            value,
             stroke,
         };
         command.validate()?;
@@ -106,7 +115,8 @@ pub fn action_arguments() -> Vec<ActionArgDef> {
         numbers("column", "Column from West", "Spalte ab Westen", 0.0, f64::from(LAST_SAMPLE), 16_i32),
         numbers("row", "Row from South", "Zeile ab Süden", 0.0, f64::from(LAST_SAMPLE), 16),
         numbers("radius", "Radius in Samples", "Radius in Rasterpunkten", 0.0, f64::from(LAST_SAMPLE), 4),
-        numbers("value", "Meters or Smoothing Percent", "Meter oder Glättungsprozent", f64::from(MIN_ELEVATION), f64::from(MAX_ELEVATION), 25),
+        ActionArgDef::with_schema("value", LocalizedLabel::native("Meters or Smoothing Percent", "Meter oder Glättungsprozent"),
+            ArgSchema::number(Some(f64::from(MIN_ELEVATION) / 1000.0), Some(f64::from(MAX_ELEVATION) / 1000.0), Some(0.001), false)).default_value(&25.0_f64),
         stroke,
     ]
 }
@@ -163,7 +173,7 @@ impl semio_plugin::retained_command::ArtifactCommandWork<Editor> for StrokeWork 
         let source = input.snapshot.elevation_source.as_ref().ok_or_else(|| Fault::from("gis-terrain-elevation-source-required"))?;
         let edit = payload.edit()?;
         let fault = |error: semio_framework_value::ValueError| Fault::from(error.message.into_owned());
-        let work = edit.stroke_work(samples).map_err(fault)?;
+        let work = edit.stroke_work(source, samples).map_err(fault)?;
         if work >= cx.original_turn_ceiling().1 || work >= cx.original_total_fuel_remaining() {
             return Err(Fault::from("gis-terrain-elevation-stroke-work-limit").into());
         }
@@ -194,33 +204,41 @@ mod tests {
     #[test]
     fn raster_edits_match_the_neutral_vectors() {
         let fixture: Value = serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../🎮️commands/📐️edit-elevation/🧪️tests/🔣️.json")).unwrap();
-        let size = fixture["size"].as_u64().unwrap() as usize;
-        let height = fixture["height"].as_i64().unwrap() as i16;
+        let columns = fixture["columns"].as_u64().unwrap() as usize;
+        let rows = fixture["rows"].as_u64().unwrap() as usize;
+        let height = fixture["initialHeightMillimetres"].as_i64().unwrap() as i32;
         let mut source = ElevationSource {
+            missing_samples: None,
             bounds: serde_json::from_value(fixture["bounds"].clone()).unwrap(),
-            rows: vec![vec![height; size]; size],
+            rows_millimetres: vec![vec![height; columns]; rows],
         };
         for seed in fixture["seed"].as_array().unwrap() {
             let [column, row, height] = serde_json::from_value::<[i32; 3]>(seed.clone()).unwrap();
-            source.rows[row as usize][column as usize] = height as i16;
+            source.rows_millimetres[row as usize][column as usize] = height;
         }
-        let decode = |value: &Value| semio_framework_pack_json::from_json_str::<EditElevation>(
-            &value.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject,
-        ).unwrap();
+        let decode = |value: &Value| {
+            let args = semio_framework_pack_json::parse(&value.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+            EditElevation::from_action(&semio_framework_pack_json::to_dsl_value(&args))
+        };
         for case in fixture["cases"].as_array().unwrap() {
-            let edited = apply(&source, &decode(&case["command"])).unwrap();
-            let changed = edited.rows.iter().flatten().zip(source.rows.iter().flatten()).filter(|(a, b)| a != b).count();
+            let edited = apply(&source, &decode(&case["command"]).unwrap()).unwrap();
+            let changed = edited.rows_millimetres.iter().flatten().zip(source.rows_millimetres.iter().flatten()).filter(|(a, b)| a != b).count();
             assert_eq!(changed, case["changed"].as_u64().unwrap() as usize, "{}", case["command"]);
             assert_eq!(edited.bounds, source.bounds);
             for sample in case["samples"].as_array().unwrap() {
                 let [column, row, height] = serde_json::from_value::<[i32; 3]>(sample.clone()).unwrap();
-                assert_eq!(i32::from(edited.rows[row as usize][column as usize]), height, "{}", case["command"]);
+                assert_eq!(edited.rows_millimetres[row as usize][column as usize], height, "{}", case["command"]);
             }
         }
-        for command in fixture["refused"].as_array().unwrap() {
-            assert!(apply(&source, &decode(command)).is_err(), "{command}");
+        for key in ["invalidActions", "invalidStrokePaths"] {
+            for command in fixture[key].as_array().unwrap() {
+                assert!(decode(command).is_err(), "{command}");
+            }
         }
-        assert_eq!(source.rows[16][16], 190);
+        for command in fixture["refusedEdits"].as_array().unwrap() {
+            assert!(apply(&source, &decode(command).unwrap()).is_err(), "{command}");
+        }
+        assert_eq!(source.rows_millimetres[16][16], 190_000);
         for case in fixture["strokeGestures"].as_array().unwrap() {
             if let Some(anchors) = case["anchors"].as_array() {
                 let samples: Vec<[u32; 2]> = serde_json::from_value(anchors.clone().into()).unwrap();
@@ -230,19 +248,14 @@ mod tests {
             }
         }
         for case in fixture["strokeEdits"].as_array().unwrap() {
-            let args = semio_framework_pack_json::parse(&case["command"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-            let command = EditElevation::from_action(&semio_framework_pack_json::to_dsl_value(&args)).unwrap();
+            let command = decode(&case["command"]).unwrap();
             let edited = apply(&source, &command).unwrap();
-            let changed = edited.rows.iter().flatten().zip(source.rows.iter().flatten()).filter(|(a, b)| a != b).count();
+            let changed = edited.rows_millimetres.iter().flatten().zip(source.rows_millimetres.iter().flatten()).filter(|(a, b)| a != b).count();
             assert_eq!(changed, case["changed"].as_u64().unwrap() as usize);
             for sample in case["samples"].as_array().unwrap() {
                 let [column, row, height] = serde_json::from_value::<[i32; 3]>(sample.clone()).unwrap();
-                assert_eq!(i32::from(edited.rows[row as usize][column as usize]), height);
+                assert_eq!(edited.rows_millimetres[row as usize][column as usize], height);
             }
-        }
-        for command in fixture["refusedStrokes"].as_array().unwrap() {
-            let parsed = semio_framework_pack_json::parse(&command.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-            assert!(EditElevation::from_action(&semio_framework_pack_json::to_dsl_value(&parsed)).is_err(), "{command}");
         }
         let float_wire = semio_framework_pack_json::parse(
             r#"{"operation":"smooth","column":8.0,"row":8.0,"radius":0.0,"value":100.0,"stroke":[[8.0,8.0],[10.0,8.0]]}"#,
@@ -256,17 +269,64 @@ mod tests {
 
         let edit = ElevationEdit { mode: Operation::Smooth, column: 0, row: 0, radius: 1, value: 100 };
         let entire_budget = [[0, 0], [32, 0], [1, 0]];
-        assert_eq!(edit.stroke_work(&entire_budget).unwrap(), semio_s_artifact_gis_gisterrain_inferences::elevation_edit::MAX_STROKE_WORK - 1);
+        assert_eq!(edit.stroke_work(&source, &entire_budget).unwrap(), 64 * ((columns * rows) as u64 + 9 * 9));
         let mut polls = 0;
         assert!(edit.apply_stroke_with(&source, &entire_budget, || { polls += 1; polls < 2 }).is_err());
         assert_eq!(polls, 2);
-        assert_eq!(source.rows[16][16], 190);
+        assert_eq!(source.rows_millimetres[16][16], 190_000);
         let overflow = &fixture["overflowStroke"][0];
         let [column, row, height] = serde_json::from_value::<[i32; 3]>(overflow["seed"].clone()).unwrap();
-        source.rows[row as usize][column as usize] = height as i16;
+        source.rows_millimetres[row as usize][column as usize] = height;
         let before = source.clone();
-        assert!(apply(&source, &decode(&overflow["command"])).is_err());
+        assert!(apply(&source, &decode(&overflow["command"]).unwrap()).is_err());
         assert_eq!(source, before);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn fill_missing_samples_restores_the_raster_and_mask_through_history() {
+        use crate::editor::gis3d::{Gis3dCommand, Gis3dPlayApp, commands::import_elevation::file::ImportElevationGridFile, unit_tests::context};
+        use semio_plugin::ArtifactEditor as _;
+
+        let fixture: Value = serde_json::from_str(include_str!("🧪️tests/🌫️fill-missing/🔣️.json")).unwrap();
+        let args = |value: &Value| semio_framework_pack_json::from_json_str::<DslValue>(&value.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+        let command = |value: &Value| Gis3dPlayApp::command_from_action("editElevation", &mut Some(args(value)), &mut None);
+        let check = |source: &ElevationSource, expected: &Value| {
+            let rows: Vec<Vec<i32>> = serde_json::from_value(expected["rowsMillimetres"].clone()).unwrap();
+            assert_eq!(source.rows_millimetres, rows);
+            assert_eq!(source.missing_samples.as_deref(), expected["missingSamples"].as_str());
+            assert!(source.is_valid());
+        };
+        for invalid in fixture["invalid"].as_array().unwrap() {
+            assert!(command(invalid).is_err());
+        }
+
+        let mut app = context::app().await;
+        let seed = ImportElevationGridFile { payload: fixture["sourceAscii"].as_str().unwrap().into() };
+        context::dispatch(&mut app, Gis3dCommand::ImportElevationGridFile(seed)).await;
+        let initial = app.snapshot().unwrap();
+        let source = initial.elevation_source.as_ref().unwrap();
+        check(source, &fixture["source"]);
+        assert!(apply(source, &EditElevation::from_action(&args(&fixture["outsideSource"])).unwrap()).is_err());
+
+        let cases = fixture["cases"].as_array().unwrap();
+        let mut revisions = vec![initial.clone()];
+        for case in &cases[..2] {
+            let receipt = context::dispatch(&mut app, command(&case["command"]).unwrap()).await;
+            assert_eq!(receipt.lanes.iter().filter(|lane| **lane == semio_plugin::app::TypedOperationResultLane::Artifact).count(), 1);
+            let edited = app.snapshot().unwrap();
+            let updated = edited.elevation_source.as_ref().unwrap();
+            check(updated, &case["expected"]);
+            assert_eq!(updated.bounds, source.bounds);
+            assert_eq!(edited.imported_map, initial.imported_map);
+            revisions.push(edited);
+        }
+        let fully_present = revisions.last().unwrap().elevation_source.as_ref().unwrap();
+        assert_eq!(apply(fully_present, &EditElevation::from_action(&args(&cases[2]["command"])).unwrap()).unwrap(), *fully_present);
+        for (verb, index) in [("undo", 1), ("undo", 0), ("redo", 1), ("redo", 2)] {
+            context::history_verb(&mut app, verb).await;
+            assert_eq!(app.snapshot().unwrap(), revisions[index]);
+        }
+        context::close(&mut app);
     }
 
     fn from_fixture_stroke() -> DslValue {
@@ -296,13 +356,13 @@ mod tests {
         assert!(receipt.lanes.contains(&semio_plugin::app::TypedOperationResultLane::Artifact));
         let edited = app.snapshot().expect("edited document");
         let updated = edited.elevation_source.as_ref().expect("edited grid");
-        assert_eq!(updated.rows[16][16], source.rows[16][16] + 25);
-        assert_eq!(updated.rows[0][0], source.rows[0][0]);
+        assert_eq!(updated.rows_millimetres[16][16], source.rows_millimetres[16][16] + 25_000);
+        assert_eq!(updated.rows_millimetres[0][0], source.rows_millimetres[0][0]);
         assert_eq!(edited.imported_map, original.imported_map);
         let body = context::render(&mut app, GIS3D_PLAY_BODY_COMPOSITE).await;
         let world = semio_plugin::artifact_app_laws::decode_fixture_scene_with_lanes::<semio_plugin::World3dScene>(&body).expect("updated viewport");
         let terrain: Value = serde_json::from_str(world.terrain_json.as_deref().expect("terrain lane")).unwrap();
-        assert_eq!(terrain["elevationGrid"]["rows"][16][16], updated.rows[16][16]);
+        assert_eq!(terrain["elevationGrid"]["rowsMillimetres"][16][16], updated.rows_millimetres[16][16]);
         context::history_verb(&mut app, "undo").await;
         assert_eq!(app.snapshot().expect("undone document"), original);
         context::history_verb(&mut app, "redo").await;
@@ -313,7 +373,7 @@ mod tests {
         assert_eq!(receipt.lanes.iter().filter(|lane| **lane == semio_plugin::app::TypedOperationResultLane::Artifact).count(), 1);
         let brushed = app.snapshot().expect("brushed terrain");
         for column in 8..=11 {
-            assert_eq!(brushed.elevation_source.as_ref().unwrap().rows[8][column], edited.elevation_source.as_ref().unwrap().rows[8][column] + 7);
+            assert_eq!(brushed.elevation_source.as_ref().unwrap().rows_millimetres[8][column], edited.elevation_source.as_ref().unwrap().rows_millimetres[8][column] + 7_000);
         }
         context::history_verb(&mut app, "undo").await;
         assert_eq!(app.snapshot().expect("one undo restores the entire stroke"), edited);

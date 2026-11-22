@@ -29,6 +29,7 @@ fn jit_budget() -> Budget {
 
 fn instance_open_event(app_id: &str, config: Vec<u8>) -> Event {
     Event::InstanceOpen {
+        purpose: semio_framework::kernel::ActorInstanceOpenPurpose::Ordinary,
         request: semio_framework::kernel::ActorInstanceOpenRequest { activation_generation: 1, instance_id: 1, request_sequence: 1 },
         app_id: semio_framework::kernel::AppInstanceId(app_id.to_string()),
         actor: "editor".to_string(),

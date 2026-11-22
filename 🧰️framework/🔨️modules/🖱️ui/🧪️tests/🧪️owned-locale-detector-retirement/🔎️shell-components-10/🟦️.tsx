@@ -1,8 +1,9 @@
+import { evenWindowLayout } from "@semio-tech/ui-layout";
 import * as ui from "@semio-tech/ui-react/source";
 import type { TestSource, Tests1Vitest, Tests1Dependencies } from "../🧰️harness/🟦️.ts";
 
 export async function registerShellComponents10Tests(vitest: Tests1Vitest, dependencies: Tests1Dependencies, testSource: TestSource): Promise<void> {
-  const { COMPACT_UI_DRIVER, Pane, PaneHost, Panel, UiDriverProvider, UiMobileProvider, createEvenWindowLayout, nearestAnchor, uiDataLabel, usePaneSlot } = dependencies;
+  const { COMPACT_UI_DRIVER, Pane, PaneHost, Panel, UiDriverProvider, UiMobileProvider, nearestAnchor, uiDataLabel, usePaneSlot } = dependencies;
   type Anchor = any;
   const { describe, expect, it, vi } = vitest;
   const { render, screen, fireEvent } = await import("@testing-library/react");
@@ -378,11 +379,13 @@ describe("Shell components", () => {
       });
     });
 
-    it("createEvenWindowLayout builds a row of stacks", () => {
-      const layout = createEvenWindowLayout(["a", "b"]);
-      expect(layout.kind).toBe("row");
-      if (layout.kind === "row") {
+    it("evenWindowLayout builds a horizontal split of sized stacks", () => {
+      const layout = evenWindowLayout(["a", "b"]);
+      expect(layout.kind).toBe("split");
+      if (layout.kind === "split") {
+        expect(layout.axis).toBe("horizontal");
         expect(layout.children).toHaveLength(2);
+        expect(layout.children.map((child) => child.size)).toEqual([0.5, 0.5]);
       }
     });
 });

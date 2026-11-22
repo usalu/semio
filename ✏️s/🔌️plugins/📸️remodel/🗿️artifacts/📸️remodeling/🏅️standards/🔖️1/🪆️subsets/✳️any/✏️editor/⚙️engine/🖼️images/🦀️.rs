@@ -419,15 +419,13 @@ enum BoundedDecodeState {
     PngRead { reader: ChunkRopeReader, buffer: Vec<u8> },
     PngDecode { buffer: Vec<u8> },
     PngRows { decoder: OpaqueOwner<semio_framework_pixels::PngScanlineDecoder>, width: u32, height: u32, pixels: Vec<u8> },
-    JpegProbe { rope: CompressedChunkRope, cursor: usize },
     Jpeg { rope: CompressedChunkRope, decoder: Option<OpaqueOwner<Box<semio_s_artifact_stdio_jpg::standards::v_jfif_1_01::subsets::document::io::JpgStepDecoder>>> },
     Finished,
 }
 
 /// 🧩️ Repository-owned decoder state over a persistent 4-KiB-leaf rope. PNG reads one leaf per
 /// call, then inflates at most `PNG_INFLATE_UNITS_PER_STEP` bytes per call (yielding each scanline
-/// as it completes). JPEG probing advances 4 KiB per call, then the shared baseline codec's
-/// resumable decoder reads the same rope directly (no whole-input join allocation): one call parses
+/// as it completes). The shared baseline JPEG decoder reads the rope directly: one call parses
 /// the marker segments, every later call decodes one MCU and then converts one output row.
 #[derive(semio_framework_value::RetireOwned)]
 pub struct BoundedStillDecoder {
@@ -459,7 +457,7 @@ impl BoundedStillDecoder {
                 if rope.len() > MAX_JPEG_COMPRESSED_BYTES {
                     return BoundedDecodeProgress::Failed(ImageError::Decode(format!("JPEG exceeds the bounded {MAX_JPEG_COMPRESSED_BYTES}-byte decoder envelope")));
                 }
-                self.state = BoundedDecodeState::JpegProbe { rope, cursor: 0 };
+                self.state = BoundedDecodeState::Jpeg { rope, decoder: None };
                 BoundedDecodeProgress::Working
             }
             BoundedDecodeState::Probe { mime, .. } => BoundedDecodeProgress::Failed(ImageError::Decode(format!("unsupported image mime {mime}"))),
@@ -500,38 +498,9 @@ impl BoundedStillDecoder {
                 Ok(semio_framework_pixels::PngScanlineStep::Done) => BoundedDecodeProgress::Complete(ImageRgba8 { width, height, data: pixels }),
                 Err(error) => BoundedDecodeProgress::Failed(ImageError::Decode(error.to_string())),
             },
-            BoundedDecodeState::JpegProbe { rope, cursor } => {
-                let end = cursor.checked_add(4_096).unwrap_or(rope.len()).min(rope.len());
-                let scan_start = cursor.saturating_sub(8);
-                for index in scan_start..end.saturating_sub(8) {
-                    if rope.byte(index) != Some(0xff) {
-                        continue;
-                    }
-                    let marker = index.checked_add(1).and_then(|at| rope.byte(at));
-                    if matches!(marker, Some(0xc1 | 0xc2 | 0xc3 | 0xc5 | 0xc6 | 0xc7 | 0xc9 | 0xca | 0xcb | 0xcd | 0xce | 0xcf)) {
-                        return BoundedDecodeProgress::Failed(ImageError::UnsupportedJpeg("non-baseline JPEG".into()));
-                    }
-                    if marker == Some(0xc0) {
-                        let byte = |offset| index.checked_add(offset).and_then(|at| rope.byte(at)).unwrap_or(0);
-                        let height = u64::from(u16::from_be_bytes([byte(5), byte(6)]));
-                        let width = u64::from(u16::from_be_bytes([byte(7), byte(8)]));
-                        if width == 0 || height == 0 || width.checked_mul(height).is_none_or(|pixels| pixels > MAX_STILL_PIXELS) {
-                            return BoundedDecodeProgress::Failed(ImageError::Decode(format!("JPEG exceeds the bounded {MAX_STILL_PIXELS}-pixel decoder envelope")));
-                        }
-                        self.state = BoundedDecodeState::Jpeg { rope, decoder: None };
-                        return BoundedDecodeProgress::Working;
-                    }
-                }
-                if end == rope.len() {
-                    BoundedDecodeProgress::Failed(ImageError::Decode("JPEG has no baseline frame header".into()))
-                } else {
-                    self.state = BoundedDecodeState::JpegProbe { rope, cursor: end };
-                    BoundedDecodeProgress::Working
-                }
-            }
             BoundedDecodeState::Jpeg { rope, decoder } => {
                 let outcome = match decoder {
-                    None => semio_s_artifact_stdio_jpg::standards::v_jfif_1_01::subsets::document::io::JpgStepDecoder::new(&rope).map(|decoder| Err(Box::new(decoder))),
+                    None => semio_s_artifact_stdio_jpg::standards::v_jfif_1_01::subsets::document::io::JpgStepDecoder::with_pixel_limit(&rope, MAX_STILL_PIXELS).map(|decoder| Err(Box::new(decoder))),
                     Some(OpaqueOwner(mut decoder)) => match decoder.step(&rope, JPEG_UNITS_PER_STEP) {
                         Ok(Some(snapshot)) => Ok(Ok(snapshot)),
                         Ok(None) => Ok(Err(decoder)),

@@ -44,7 +44,6 @@ semio-framework-value-native-owned = { path = "../../../../../../../../../../../
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-gis-gismap = { workspace = true }
 semio-s-artifact-gis-gisterrain-terrain-descriptor = { path = "../../../🧭️terrain-descriptor/📦️packages/🦀️rust" }
-semio-s-artifact-stdio-dwg = { workspace = true }
 semio-s-artifact-stdio-gltf = { workspace = true }
 semio-s-artifact-stdio-json = { workspace = true }
 semio-s-artifact-stdio-las = { workspace = true }

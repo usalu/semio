@@ -5,9 +5,10 @@
   "description": "Bring the wgpu renderer (ui 🎯️targets/🧊️wgpu, os renderer 🎯️targets/🧊️wgpu, element 🎯️targets/🧊️wgpu) to full visual and functional parity with the React renderer (ShellHost/Shell/ShellHelpers/Dock/ChromePanels/Interpreter + ui ⚛️react target): window system, chrome placement, panels, dock, utility bar, UiNode element coverage, scenes, input/action dispatch, boot. Supersedes 26/07/11/WGPU-RENDERER-FULL-PARITY whose paths no longer exist.",
   "goal": "🎯runningframework🎯runningproducts🎯runningos🎯runnings",
   "sessions": [
-    "⚪7cc2feab-6985-4a17-8854-1b756c22906d"
+    "⚪7cc2feab-6985-4a17-8854-1b756c22906d",
+    "⚪507cc364-7d13-4447-885b-7625e0d2ac58"
   ],
-  "note": "Ticket bookkeeping manual on disk: repo MCP failed to connect (2026-09-17). Coordinated from a Fable 5.1 main session with Opus 5 workers and Sonnet 5 auditors; other agents work concurrently on other logical parts of the same files.",
+  "note": "Ticket bookkeeping manual on disk: repo MCP failed to connect (2026-09-17). Coordinated from a Fable 5.1 main session with Opus 5 workers and Sonnet 5 auditors; other agents work concurrently on other logical parts of the same files. 2026-11-22: resumed by an Opus 5.5 coordinator session with Sonnet/Haiku workers; repo MCP not attached, bookkeeping manual.",
   "summary": "",
   "files": []
 }

@@ -114,7 +114,7 @@ export async function runInputPrecisionV1({ main, dialects, router }) {
     });
   }
   const managerRule = { id: "neutral-manager", description: "Selected manager configuration inputs", select: { project: "fixture", targets: ["check"] }, evidence: "static", replaces: [], reads: [{ manager: { ecosystem: "javascript", role: "scope" } }] };
-  const managerDocument = readInputPrecisionV1({ ...main.document, profiles: {}, rules: [managerRule] }), managerHost = { ...host, managerFiles: (_ecosystem, role) => (role === "locks" ? ["bun.lock", "bun.lockb"] : ["bunfig.toml"]) };
+  const managerDocument = readInputPrecisionV1({ ...main.document, profiles: {}, rules: [managerRule] }), managerHost = { ...host, managerFiles: (ecosystem, role) => { const manager = selectPackageManagerV1(ecosystem, {}); return role === "locks" ? [...manager.lockFileNames()] : [...manager.configurationNames("scope")]; } };
   cases["manager-read"] = await attempt(() => deriveInputsV1(managerDocument, managerRule, { project: "fixture", target: "check", command: "repo check" }, managerHost));
   readKindsOfV1(managerDocument, managerRule, covered);
   const routerHost = routerHostV1(router), routerRule = { id: "router-fixture", description: "fixture", select: { project: "p" }, evidence: "static", replaces: ["default", "^default", "reads"], reads: [{ router: { source: "rt/📜️script.ts" } }] };

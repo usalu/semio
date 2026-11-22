@@ -46,6 +46,8 @@ The group refusals verify the exact domain cause and independently compare the b
 
 All 96 runnable cases in the 13 declared files passed across the native suite and focused reruns. Four declared Darwin-only cases were skipped. The full target was split by file and case group when it reached the single invocation deadline. Verification of the standard project-graph entry point remains separate.
 
+The optional per-inventory native memo admission case also passed through the repository's Bun tool runner with 88 expectations. It compares the exact native root modes with Bun SQLite and verifies replay against the current Source observations.
+
 | Declared file or test area | Passed | Skipped |
 | --- | ---: | ---: |
 | Graph record encoding and Python oracle | 5 | 0 |

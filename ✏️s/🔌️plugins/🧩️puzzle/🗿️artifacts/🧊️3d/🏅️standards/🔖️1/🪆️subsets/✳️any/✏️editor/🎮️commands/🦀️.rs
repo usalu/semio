@@ -312,7 +312,7 @@ fn dispatch_puzzle3d_action(ctx: &mut Puzzle3dActionCtx<'_>, action: &str, args:
 /// clears them again. Seven serialized announcements each paid a whole document scene build plus that
 /// rebuild, which is where the 0.65 s → 2.85 s per call measured on 2026-09-09 lived — the arm itself
 /// is two `HashMap` lookups. The next scene-reading action re-syncs, so nothing downstream is stale.
-fn puzzle3d_action_uses_precompute(action: &str) -> bool {
+pub fn puzzle3d_action_uses_precompute(action: &str) -> bool {
     matches!(
         action,
         "setBrushPlacementContactTolerance"

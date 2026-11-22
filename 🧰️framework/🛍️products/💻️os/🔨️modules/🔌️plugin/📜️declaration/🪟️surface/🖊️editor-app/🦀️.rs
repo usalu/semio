@@ -93,6 +93,21 @@ impl<E: ArtifactEditor> ArtifactApp for EditorApp<E> {
         E::build_tool_job(request,output,construction,cx)
     }
     fn build_reserved_tool_job(request:&mut Option<ArtifactReservedToolJobRequest<Self>>,body:&mut Option<Box<dyn semio_plugin_decl_app::tool_contract::ArtifactReservedJob+Send>>,construction:&mut semio_framework_job::OriginalConstructionAdmission,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        if request.as_ref().is_some_and(|request| matches!(request.input.as_ref(), Some(ArtifactReservedToolInput::NaturalPaged { .. }))) {
+            use semio_plugin_decl_app::tool_contract::admits_paged_natural_request;
+            let original = request.as_ref().expect("paged request was observed");
+            if E::PAGED_NATURAL_SOURCE_MAXIMUM_BYTES == 0 || !admits_paged_natural_request(
+                &original.tool_id, &original.payload_schema_id, original.contract, original.raw_wire.len(),
+            ) {
+                return Err(semio_framework_value::ValueError::invariant("paged natural input requires its exact reserved factory contract").into());
+            }
+            return semio_plugin_decl_app::tool_contract::admit_reserved_work::<Self, crate::natural_file_import::NaturalFileImportWork<E>>(
+                request, body, construction, cx,
+            );
+        }
+        if request.as_ref().is_some_and(|request| request.tool_id == semio_plugin_decl_app::tool_contract::NATURAL_SOURCE_TOOL_ID) {
+            return Err(semio_framework_value::ValueError::invariant("paged natural factory requires its original source").into());
+        }
         E::build_reserved_tool_job(request,body,construction,cx)
     }
     fn build_original_picker_job(
@@ -367,6 +382,8 @@ impl<E: ArtifactEditor> ArtifactApp for EditorApp<E> {
     async fn natural_file_codec() -> Option<NaturalFileCodec> {
         E::natural_file_codec()
     }
+    fn natural_file_paged_maximum_bytes() -> u32 { E::PAGED_NATURAL_SOURCE_MAXIMUM_BYTES }
+
     async fn encode_natural_file(snapshot: &Self::Snapshot) -> Result<Vec<u8>, MediaError> {
         E::encode_natural_file(snapshot)
     }

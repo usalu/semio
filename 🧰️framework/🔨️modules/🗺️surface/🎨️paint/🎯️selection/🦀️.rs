@@ -31,6 +31,15 @@ impl RasterHost {
     }
 }
 
+impl RasterHost {
+    /// ⌨️ A selection intent whose `points` already are the selected layer's image pixels, as the keyboard marquee and wand produce them.
+    pub fn pixel_selection_intent_local(&self,points:&[[f64;2]])->Option<RasterSelectionIntent>{
+        if points.len()>4096{return None;}
+        let id=self.selected_ids.first()?;let (world,(width,height))=gesture::target(self,&self.document.layers,id,Affine::IDENTITY,true)?;
+        Some(RasterSelectionIntent {layer_id:id.clone(),target:if self.paint_target==PaintTarget::Pixels{"pixels"}else{"mask"},image_key:image_key(&self.document.layers,id,self.paint_target),width,height,points:points.to_vec(),world:world.as_coeffs()})
+    }
+}
+
 impl RasterSelectionIntent {
     pub fn matches(&self,host:&RasterHost)->bool{
         host.selected_ids.first()==Some(&self.layer_id)&&(if host.paint_target==PaintTarget::Pixels{"pixels"}else{"mask"})==self.target&&image_key(&host.document.layers,&self.layer_id,host.paint_target)==self.image_key&&gesture::target(host,&host.document.layers,&self.layer_id,Affine::IDENTITY,true).is_some_and(|(world,extent)|world.as_coeffs()==self.world&&extent==(self.width,self.height))

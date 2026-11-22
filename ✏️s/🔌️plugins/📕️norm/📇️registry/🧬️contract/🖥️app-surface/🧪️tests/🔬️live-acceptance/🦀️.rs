@@ -575,22 +575,11 @@ macro_rules! norm_live_acceptance {
                 use $crate::device_profiles::{device_profile, PRIORITY};
                 use $crate::direct_manipulation::{nudge, writes_for, Modifiers};
                 use $crate::viewport3d::config::DeviceClass;
-                use semio_plugin::{WindowLayoutChild, WindowLayoutRoot};
                 use semio_ui_locale::Locale;
                 use semio_framework_value::{DslValue, FromValue};
                 use semio_s_plugin_norm_structural_scene::EntityRef;
-                fn kinds(child: &WindowLayoutChild, out: &mut Vec<String>) {
-                    match child {
-                        WindowLayoutChild::Axis(axis) => axis.children.iter().for_each(|inner| kinds(inner, out)),
-                        WindowLayoutChild::Stack(stack) => out.extend(stack.children.iter().map(|window| window.window_kind_id.clone())),
-                    }
-                }
                 for device in [DeviceClass::Mobile, DeviceClass::Tablet] {
-                    let mut windows = Vec::new();
-                    match $crate::visual_layout(VARIANT, device).root {
-                        WindowLayoutRoot::Axis(axis) => axis.children.iter().for_each(|child| kinds(child, &mut windows)),
-                        WindowLayoutRoot::Stack(stack) => windows.extend(stack.children.iter().map(|window| window.window_kind_id.clone())),
-                    }
+                    let windows = semio_plugin::collect_window_kind_ids(&$crate::visual_layout(VARIANT, device).root);
                     for role in ["outliner", "viewport", "properties", "checks", "diagrams"] {
                         assert!(windows.contains(&$crate::visual_window_id(VARIANT, role)), "{device:?}: the {role} window is a tab of the touch layout, so the list selects and the Properties tab edits");
                     }

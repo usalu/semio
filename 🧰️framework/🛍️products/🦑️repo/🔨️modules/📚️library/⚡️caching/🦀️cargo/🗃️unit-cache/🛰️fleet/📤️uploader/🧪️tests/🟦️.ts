@@ -7,6 +7,7 @@ import {cargoScratchBaseV1} from "../../../🧪️tests/🏖️scratch/🟦️.t
 import {publishUnitV1} from "../../../💾️store/🟦️.ts";
 import {createFleetClientV1,readFleetSettingsV1} from "../../📡️client/🟦️.ts";
 import {FLEET_POLICY_V1} from "../../🪪️identity/🟦️.ts";
+import {readBuildCountersV1} from "../../📊️counters/🟦️.ts";
 import {drainUploadsV1,enqueueUploadV1,retryJobV1,spoolLengthV1,type SpoolJobV1} from "../🟦️.ts";
 import schema from "../../🧬️schema/🔣️.json" with {type:"json"};
 
@@ -60,4 +61,28 @@ test("a cache that refuses the upload (disk full on the server: PUT 500) gets th
  expect(enqueueUploadV1(root,job({key:lost,localKey,cwd:out,queuedMs:Date.now(),attempts:fleet.uploader.maximumAttempts-1}))).toBe(true);
  expect(await drainUploadsV1(root,environment,{idleMilliseconds:0})).toEqual({uploaded:0,failed:1,dropped:0});
  expect(spoolLengthV1(root),"given up, not queued again").toBe(0);
+},120000);
+
+test("while the cache is unreachable a queued unit waits untouched and is not counted as skipped; it is uploaded once the cache answers, and only a job past its age is given up, counted as expired",async()=>{
+ const server=await startRemoteCacheServerV1({directory:directory("srv2"),host:"127.0.0.1",port:0,maximumBytes:2**30,maximumEntryBytes:2**28,maximumAgeDays:30,defaultInstance:"main",tokens:{write:"w-token"}});servers.push(server);
+ const cas=directory("cas2"),root=directory("cache2"),out=directory("out2"),workspace=directory("work2");
+ const environment={SEMIO_REMOTE_CACHE_ENDPOINT:server.url,SEMIO_REMOTE_CACHE_INSTANCE:"main",SEMIO_REMOTE_CACHE_ACCESS:"read-write",SEMIO_REMOTE_CACHE_TOKEN:"w-token",SEMIO_CAS_ROOT:cas,SEMIO_UNIT_CACHE_WORKSPACE_ROOT:workspace};
+ process.env.SEMIO_CAS_ROOT=cas;
+ writeFileSync(join(out,"libcore-1.rlib"),"rlib bytes");writeFileSync(join(out,"core-1.d"),`${out}/core-1.d: ${out}/lib.rs\n`);writeFileSync(join(out,"lib.rs"),"pub fn id()->u32{1}\n");
+ const localKey="9".repeat(64),key="a".repeat(64);
+ expect(publishUnitV1(root,{key:localKey,crate:"core",cwd:out,outDir:out,laneRoot:undefined,outputs:[join(out,"libcore-1.rlib"),join(out,"core-1.d")],stdout:"",stderr:"",stampDirectory:undefined})).toBeDefined();
+ expect(enqueueUploadV1(root,job({key,localKey,cwd:out,queuedMs:Date.now(),claimed:false}))).toBe(true);
+ const downFile=join(root,fleet.layout.state,fleet.layout.down);mkdirSync(join(root,fleet.layout.state),{recursive:true});
+ writeFileSync(downFile,Array.from({length:fleet.breaker.downFaults},()=>String(Date.now())).join("\n")+"\n");
+ expect(await drainUploadsV1(root,environment,{idleMilliseconds:0})).toMatchObject({uploaded:0,failed:0,dropped:0,deferred:1});
+ expect(spoolLengthV1(root),"the job waits").toBe(1);
+ expect(readBuildCountersV1(workspace).unit.skipped,"waiting is no skip").toBe(0);
+ const waiting=join(root,fleet.layout.state,fleet.layout.spool),row=readdirSync(waiting).filter(name=>name.endsWith(".json"))[0]!,held=JSON.parse(readFileSync(join(waiting,row),"utf8")) as SpoolJobV1;
+ expect(held.notBeforeMs!,"it is due again after the retry delay").toBeGreaterThan(Date.now());expect(held.attempts,"waiting uses no attempt").toBeUndefined();
+ writeFileSync(join(waiting,row),JSON.stringify({...held,notBeforeMs:0}));rmSync(downFile,{force:true});
+ expect(await drainUploadsV1(root,environment,{idleMilliseconds:0})).toMatchObject({uploaded:1,failed:0});
+ expect(spoolLengthV1(root)).toBe(0);expect(await createFleetClientV1(readFleetSettingsV1(root,environment)!).hasResult(key)).toBe(true);
+ expect(enqueueUploadV1(root,job({key:"b".repeat(64),localKey,cwd:out,queuedMs:Date.now()-fleet.uploader.maximumJobAgeMilliseconds-1,claimed:false}))).toBe(true);
+ expect(await drainUploadsV1(root,environment,{idleMilliseconds:0})).toMatchObject({uploaded:0,dropped:1});
+ expect(readBuildCountersV1(workspace).skipReasons).toEqual({"upload-expired":1});
 },120000);

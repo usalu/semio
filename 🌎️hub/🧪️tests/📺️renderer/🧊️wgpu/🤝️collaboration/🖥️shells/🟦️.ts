@@ -156,7 +156,7 @@ export class Wasm32Shell {
     await this.page.waitForTimeout(3_000);
     const nodes = await this.projection();
     const chrome = nodes.filter((node) => node.windowId === "framework.hub" && node.role === "button").map((node) => String(node.label ?? "")).filter(Boolean).slice(0, 6);
-    await this.activate(nodes.find((node) => String(node.key).endsWith("framework.hub.close"))?.key, 1_500);
+    await this.activate(nodes.find((node) => String(node.key).endsWith("os.hub.signIn.cancel"))?.key, 1_500);
     return { minted: minted(), attempts, chrome };
   }
 

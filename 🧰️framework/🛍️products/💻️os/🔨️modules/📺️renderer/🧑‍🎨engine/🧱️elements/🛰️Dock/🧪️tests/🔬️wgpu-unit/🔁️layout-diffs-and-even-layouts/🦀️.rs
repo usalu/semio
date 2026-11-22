@@ -1,6 +1,6 @@
 /// 🔁️ Layout diffs and even layouts: layout diffs that keep focus and maximization, subtree reuse, even and default layouts, closing and reordering tabs and the split drop preview.
 
-/// 🗄️ A persisted `WindowLayout` snapshot whose `active_window_kind_id` predates the user's
+/// 🗄️ A persisted `WindowLayout` snapshot whose `active_window_id` predates the user's
 /// later in-session tab switch to `b` — a naive `self.dock.root = dock_from_window_layout(...)`
 /// teardown would silently revert focus back to `a`.
 #[test]
@@ -9,15 +9,14 @@ fn apply_layout_diff_keeps_current_tab_focused_over_stale_persisted_active() {
     dock.root = stack_tabs(&["a", "b"], "b");
     dock.active_window_id = Some("b".into());
     let stale_layout = WindowLayout {
-        root: WindowLayoutRoot::Stack(WindowLayoutStackNode {
-            kind: "stack".into(),
+        root: WindowLayoutNode::Stack {
             size: None,
-            active_window_kind_id: Some("a".into()),
+            active_window_id: Some("a".into()),
             children: vec![
-                WindowLayoutWindowNode { kind: "window".into(), window_kind_id: "a".into(), title: None, instance_id: None, template_id: None, corner: None },
-                WindowLayoutWindowNode { kind: "window".into(), window_kind_id: "b".into(), title: None, instance_id: None, template_id: None, corner: None },
+                WindowLayoutNode::Window { window_kind_id: "a".into(), title: None, instance_id: None, template_id: None, corner: None },
+                WindowLayoutNode::Window { window_kind_id: "b".into(), title: None, instance_id: None, template_id: None, corner: None },
             ],
-        }),
+        },
     };
     dock.apply_layout_diff(&stale_layout);
     assert_eq!(dock.root, stack_tabs(&["a", "b"], "b"), "same membership, reordered-or-not — the user's current tab stays focused");
@@ -35,24 +34,22 @@ fn apply_layout_diff_reanchors_active_and_maximized_stack_by_key() {
     dock.maximized_stack = Some(vec![1]);
     dock.split_resize_origin = vec![0.5, 0.5];
     let reversed = WindowLayout {
-        root: WindowLayoutRoot::Axis(semio_ui_layout::layout::WindowLayoutAxisNode {
-            kind: "row".into(),
+        root: semio_ui_layout::layout::WindowLayoutNode::Split {
+            axis: Axis::Horizontal,
             size: None,
             children: vec![
-                WindowLayoutChild::Stack(WindowLayoutStackNode {
-                    kind: "stack".into(),
+                WindowLayoutNode::Stack {
                     size: Some(0.5),
-                    active_window_kind_id: Some("b".into()),
-                    children: vec![WindowLayoutWindowNode { kind: "window".into(), window_kind_id: "b".into(), title: None, instance_id: None, template_id: None, corner: None }],
-                }),
-                WindowLayoutChild::Stack(WindowLayoutStackNode {
-                    kind: "stack".into(),
+                    active_window_id: Some("b".into()),
+                    children: vec![WindowLayoutNode::Window { window_kind_id: "b".into(), title: None, instance_id: None, template_id: None, corner: None }],
+                },
+                WindowLayoutNode::Stack {
                     size: Some(0.5),
-                    active_window_kind_id: Some("a".into()),
-                    children: vec![WindowLayoutWindowNode { kind: "window".into(), window_kind_id: "a".into(), title: None, instance_id: None, template_id: None, corner: None }],
-                }),
+                    active_window_id: Some("a".into()),
+                    children: vec![WindowLayoutNode::Window { window_kind_id: "a".into(), title: None, instance_id: None, template_id: None, corner: None }],
+                },
             ],
-        }),
+        },
     };
     dock.apply_layout_diff(&reversed);
     assert_eq!(dock.active_window_id.as_deref(), Some("b"));
@@ -68,12 +65,11 @@ fn apply_layout_diff_clears_maximized_stack_when_its_window_is_gone() {
     dock.active_window_id = Some("a".into());
     dock.maximized_stack = Some(vec![0]);
     let without_a = WindowLayout {
-        root: WindowLayoutRoot::Stack(WindowLayoutStackNode {
-            kind: "stack".into(),
+        root: WindowLayoutNode::Stack {
             size: None,
-            active_window_kind_id: Some("b".into()),
-            children: vec![WindowLayoutWindowNode { kind: "window".into(), window_kind_id: "b".into(), title: None, instance_id: None, template_id: None, corner: None }],
-        }),
+            active_window_id: Some("b".into()),
+            children: vec![WindowLayoutNode::Window { window_kind_id: "b".into(), title: None, instance_id: None, template_id: None, corner: None }],
+        },
     };
     dock.apply_layout_diff(&without_a);
     assert_eq!(dock.maximized_stack, None);
@@ -116,7 +112,7 @@ fn even_layout_multiple_windows() {
 
 #[test]
 fn parses_default_layout_row() {
-    let layout = create_default_layout(&["a".into(), "b".into()], "row", None, None);
+    let layout = create_default_layout(&["a".into(), "b".into()], Axis::Horizontal, None, None);
     let app = sample_app(&["a", "b"], Some(layout));
     let dock = DockState::from_app(&app, None);
     assert!(matches!(dock.root, DockNode::Row(_)));

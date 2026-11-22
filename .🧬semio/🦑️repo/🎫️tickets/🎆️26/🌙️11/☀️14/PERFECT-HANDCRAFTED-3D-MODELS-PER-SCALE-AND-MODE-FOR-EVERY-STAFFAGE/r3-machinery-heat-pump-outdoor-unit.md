@@ -131,3 +131,7 @@ Check: `r3-validate.ts machinery/heat-pump-outdoor-unit --volumes`: VALID (schem
 - The front panel of 1:50 to 1:500 shows soft triangular shading wedges in `r3-sheet` at some zooms; the corner normals of the cap are exactly (1, 0, 0) (`r5-m03-capprobe.ts`), so it is the sheet rasteriser, not the mesh (already filed for delivery-van and sorption-wheel).
 - The cover-to-casing contact of 1:200 still draws a faint grainy seam line (coplanar contact seen edge-on).
 - Sheet panels stay at the scale feature (7.5 / 15 mm) instead of 1.2 mm (round 3 reason).
+
+## Digital working-stock readback, 2026-11-21
+
+Canonical source `61f3a11eeab250a9`. Three pitched blades and their motor sit behind five guard wires and eight radial spokes. The side intake retains its inclined louvres. The temperature outlet uses the centre cap and spokes. The front shows the rotor behind the guard and the reverse shows the inclined intake blades in front of the coil. The force view retains the supported fan motor and compressor. All twelve GLB scenes reopened (1,877,960 bytes) and all strict checks passed.

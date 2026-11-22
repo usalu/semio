@@ -16,9 +16,12 @@ workspace = true
 path = "🦀️.rs"
 
 [features]
-testkit = []
+testkit = ["semio-os-infinite-board-normal-focus/testkit", "semio-os-infinite-board-normal-gestures/testkit", "semio-os-infinite-board-normal-scene/testkit", "semio-s-artifact-puzzle-2d-tambour-single-storey/testkit", "semio-s-artifact-puzzle-2d-tambour-end-storeys/testkit", "semio-s-artifact-puzzle-2d-engine/testkit", "semio-s-artifact-puzzle-2d-graph-manifest/testkit", "semio-s-artifact-puzzle-2d-records/testkit"]
 
 [dependencies]
+semio-os-infinite-board-normal-focus = { path = "../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🎯️focus/📦️packages/🦀️rust" }
+semio-os-infinite-board-normal-gestures = { path = "../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🕹️gestures/📦️packages/🦀️rust" }
+semio-os-infinite-board-normal-scene = { path = "../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🖼️scene/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-2d-tambour-single-storey = { path = "../../../🔣️icons/🌱️metabolism/🧩️tambour-single-storey/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-2d-tambour-end-storeys = { path = "../../../🔣️icons/🌱️metabolism/🧱️tambour-end-storeys/📦️packages/🦀️rust" }
 machine = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🔄️machine/📦️packages/🦀️rust", package = "semio-framework-machine" }
@@ -56,15 +59,11 @@ semio-ui-scene = { workspace = true }
 semio-s-artifact-puzzle-2d-engine = { path = "../../../📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-2d-graph-manifest = { path = "../../../../../../../../../🛂️manifest/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-2d-records = { path = "../../../../../🧬️schema/🧱️records/📦️packages/🦀️rust" }
-semio-s-artifact-puzzle-3d = { workspace = true }
 semio-s-artifact-puzzle-3d-inferences = { workspace = true }
-semio-s-artifact-stdio-dwg = { workspace = true }
 semio-s-artifact-stdio-dxf = { workspace = true }
 semio-s-artifact-stdio-json = { workspace = true }
-semio-s-artifact-stdio-pdf = { workspace = true }
 semio-s-artifact-stdio-png = { workspace = true }
 semio-s-artifact-stdio-semio-drawing = { workspace = true }
-semio-s-artifact-stdio-semio-drawing-export = { workspace = true }
 semio-s-artifact-stdio-svg = { workspace = true }
 semio-s-artifact-stdio-txt = { workspace = true }
 semio-s-plugin-puzzle-board-scene = { workspace = true }
@@ -75,6 +74,9 @@ serde_json = { workspace = true }
 wasm-bindgen = { workspace = true }
 
 [dev-dependencies]
+semio-os-infinite-board-normal-focus = { path = "../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🎯️focus/📦️packages/🦀️rust", features = ["testkit"] }
+semio-os-infinite-board-normal-gestures = { path = "../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🕹️gestures/📦️packages/🦀️rust", features = ["testkit"] }
+semio-os-infinite-board-normal-scene = { path = "../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🖼️scene/📦️packages/🦀️rust", features = ["testkit"] }
 geo = { version = "0.31.0", default-features = false }
 semio-framework-async-macros = { workspace = true }
 semio-framework-canvas = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🖼️canvas/📦️packages/🦀️rust", features = ["testkit"] }
@@ -89,6 +91,11 @@ semio-s-plugin-puzzle-jobs = { workspace = true, features = ["testing"] }
 semio-s-plugin-puzzle-retained = { workspace = true, features = ["testing"] }
 serde = { workspace = true }
 serde_json = { workspace = true }
+semio-s-artifact-puzzle-2d-tambour-single-storey = { path = "../../../🔣️icons/🌱️metabolism/🧩️tambour-single-storey/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-puzzle-2d-tambour-end-storeys = { path = "../../../🔣️icons/🌱️metabolism/🧱️tambour-end-storeys/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-puzzle-2d-engine = { path = "../../../📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-puzzle-2d-graph-manifest = { path = "../../../../../../../../../🛂️manifest/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-puzzle-2d-records = { path = "../../../../../🧬️schema/🧱️records/📦️packages/🦀️rust", features = ["testkit"] }
 
 [target.'cfg(all(target_arch = "wasm32", not(target_env = "p2")))'.dependencies]
 js-sys = { workspace = true }

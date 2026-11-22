@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["selectedMaximum", "naturalTool", "naturalSchema", "ordinaryTool", "ordinarySchema", "baseline", "cases"],
+  "properties": {
+    "selectedMaximum": { "$ref": "#/$defs/count" },
+    "naturalTool": { "type": "string" },
+    "naturalSchema": { "type": "string" },
+    "ordinaryTool": { "type": "string" },
+    "ordinarySchema": { "type": "string" },
+    "baseline": {
+      "type": "array",
+      "items": false,
+      "minItems": 12,
+      "prefixItems": [
+        { "type": "boolean" }, { "type": "boolean" }, { "type": "boolean" },
+        { "$ref": "#/$defs/count" }, { "$ref": "#/$defs/count" }, { "$ref": "#/$defs/count" },
+        { "$ref": "#/$defs/count" }, { "$ref": "#/$defs/count" }, { "$ref": "#/$defs/count" },
+        { "$ref": "#/$defs/count" }, { "type": "boolean" }, { "type": "boolean" }
+      ]
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 12,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "changes", "accepted"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "changes": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "paged": { "type": "boolean" },
+              "naturalKey": { "type": "boolean" },
+              "naturalContract": { "type": "boolean" },
+              "extent": { "$ref": "#/$defs/count" },
+              "raw": { "$ref": "#/$defs/count" },
+              "previous": { "$ref": "#/$defs/count" },
+              "consumed": { "$ref": "#/$defs/count" },
+              "output": { "$ref": "#/$defs/count" },
+              "items": { "$ref": "#/$defs/count" },
+              "work": { "$ref": "#/$defs/count" },
+              "complete": { "type": "boolean" },
+              "naturalSchema": { "type": "boolean" }
+            }
+          },
+          "accepted": { "type": "boolean" }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "count": { "type": "integer", "minimum": 0, "maximum": 536870912 }
+  }
+}

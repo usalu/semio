@@ -8,6 +8,17 @@ use semio_framework_value_testing_allocator as _;
 use semio_plugin_interpreter::{CoreInstanceOpening, CoreModule, CoreOriginalInvocationStatus as Status, Value};
 use std::sync::Arc;
 
+#[cfg(paid_labels)]
+#[path = "mcp-core-label-growth-law.rs"]
+mod paid_labels;
+#[cfg(paid_turns)]
+#[path = "mcp-core-returned-frame-law.rs"]
+mod returned_frame;
+
+#[cfg(paid_control)]
+#[path = "mcp-core-paid-control-law.rs"]
+mod paid_control;
+
 const PAGE: usize = 65_536;
 const TURN: RetainedCloneGrant = RetainedCloneGrant {
     maximum_items: 8_192, maximum_copy_bytes: 2_000_000,
@@ -107,6 +118,64 @@ fn step(owner: &mut CoreInstanceOpening, module: &Arc<CoreModule>, cx: &mut Step
     owner.advance_scalar(module, OriginalGuestExecutionBudget { input, fuel: 1, deadline_us: cx.deadline_us() }, cx)
 }
 
+#[cfg(paid_turns)]
+#[test]
+fn paid_small_memory_dispatch_matches_wasmtime_and_receipts() {
+    let bytes = include_bytes!(env!("SEMIO_LINKED_MEMORY_PAID_TURNS"));
+    let expected = env!("SEMIO_LINKED_MEMORY_PAID_RESULT").parse::<i32>().unwrap();
+    let fuel = env!("SEMIO_LINKED_MEMORY_PAID_FUEL").parse::<u64>().unwrap();
+    let engine = wasmtime::Engine::default();
+    let oracle = wasmtime::Module::new(&engine, bytes).unwrap();
+    let mut store = wasmtime::Store::new(&engine, ());
+    let instance = wasmtime::Instance::new(&mut store, &oracle, &[]).unwrap();
+    assert_eq!(instance.get_typed_func::<i32, i32>(&mut store, "run").unwrap().call(&mut store, 0).unwrap(), expected);
+    let module = Arc::new(CoreModule::parse(bytes).unwrap());
+    let run = |grant, fuel_per_turn, check_blocked| {
+        let mut caller = Caller::new();
+        let mut owner = start(&mut caller, &module, 0);
+        let mut turns = 0;
+        let mut spent = 0;
+        let mut physical = RetainedCloneProgress::default();
+        let mut blocked = false;
+        loop {
+            let (call, (_, _, effects)) = caller.turn(grant, |cx| {
+                let input = RetainedTurnInput { grant: cx.retained_grant(), ..RetainedTurnInput::borrow_original(cx)? };
+                owner.advance_scalar(&module, OriginalGuestExecutionBudget { input, fuel: fuel_per_turn, deadline_us: cx.deadline_us() }, cx)
+            });
+            let used = call.execution.spent_fuel.unwrap();
+            assert!(used <= fuel_per_turn && effects.fits(grant));
+            physical = physical.checked_add(effects).unwrap();
+            assert_ne!(effects, RetainedCloneProgress::default());
+            turns += 1;
+            spent += used;
+            if call.result.unwrap() == Status::Complete { break; }
+            if check_blocked && !blocked && spent == 3 && used == 0 {
+                assert_eq!(&memory(&owner)[..6], b"abcdef");
+                let denied = RetainedCloneGrant { maximum_copy_bytes: 0, ..TURN };
+                let (call, (_, _, effects)) = caller.turn(denied, |cx| step(&mut owner, &module, cx));
+                assert_eq!((call.result.unwrap(), call.execution.spent_fuel, effects), (Status::Pending, Some(0), RetainedCloneProgress::default()));
+                assert_eq!(&memory(&owner)[..6], b"abcdef");
+                blocked = true;
+            }
+            assert!(turns < 100);
+        }
+        assert_eq!(owner.invocation_values(), Some(&[Value::I32(expected)][..]));
+        assert_eq!(spent, fuel);
+        assert_eq!(blocked, check_blocked);
+        while !owner.terminal_is_empty() { caller.turn(TURN, |cx| owner.close_step(&module, cx)); }
+        caller.retire();
+        (turns, physical)
+    };
+    let (ample_turns, ample_paid) = run(TURN, fuel + 1, false);
+    let (narrow_turns, narrow_paid) = run(RetainedCloneGrant { maximum_items: 1, ..TURN }, fuel + 1, true);
+    let (fuel_turns, fuel_paid) = run(TURN, 4, false);
+    eprintln!("[DEBUG] paid Core memory: full={ample_turns}, one retained item={narrow_turns}, four VM fuel={fuel_turns}, VM fuel={fuel}, physical={ample_paid:?}");
+    assert_eq!(ample_turns, 1);
+    assert!(narrow_turns > ample_turns && fuel_turns > ample_turns);
+    assert_eq!(narrow_paid, ample_paid);
+    assert_eq!(fuel_paid, ample_paid);
+}
+
 #[test]
 fn zero_memory_growth_completes_with_no_capacity_or_release_budget() {
     let module = Arc::new(CoreModule::parse(include_bytes!(env!("SEMIO_LINKED_MEMORY_ZERO"))).unwrap());
@@ -154,7 +223,8 @@ fn original_memory_reuses_paid_pages_and_retires_exact_heap() {
         }
         assert_eq!(memory(&owner).len(), 3*PAGE);
         for _ in 0..2 { assert_eq!(scalar(&mut caller,&mut owner,TURN).1,1); }
-        let (status, used, (born, released, _)) = scalar(&mut caller, &mut owner, TURN);
+        let admission = RetainedCloneGrant { maximum_items: 1, ..TURN };
+        let (status, used, (born, released, _)) = scalar(&mut caller, &mut owner, admission);
         let (partial_status, partial_used, (part_born, part_released, partial)) = scalar(&mut caller, &mut owner,
             RetainedCloneGrant { maximum_copy_bytes: 1024, ..TURN });
         assert_eq!((status,used,partial_status,partial_used), (Status::Pending,0,Status::Pending,0));

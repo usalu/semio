@@ -416,7 +416,7 @@ async function probe(id) {
     await shell.locator('xpath=self::*[@data-shell-error or @data-shell-ready or @data-shell-not-found]').waitFor({timeout:shellWaitMs});
     await page.waitForTimeout(3000);
     const shellState = await shell.evaluate(el => ({ shell: { ...el.dataset }, shellErrorText: el.hasAttribute("data-shell-error") ? el.innerText.slice(0, 4000) : undefined }));
-    if (witnessInitialArchive && shellState.shell.shellReady !== id) throw Error("The shell did not publish its ready state");
+    if (shellState.shell.shellReady !== id) throw Error("The shell did not publish its ready state");
     const requireArchive = target => observeArchives && page.waitForFunction(
       count => (globalThis.__semioArchiveReceipts ?? 0) >= count, target, {timeout:pickerWaitMs});
     if (witnessInitialArchive) await requireArchive(1);
@@ -489,12 +489,13 @@ async function probe(id) {
         }
       }
     }
-    if (witnessInitialArchive && (archiveReceipts.length === 0 || faults.size > 0 || failedRequests.size > 0)) {
-      throw Error("The initial archive witness did not complete cleanly");
-    }
-    console.log(JSON.stringify({id,preview,bindings,worker,elapsedMs:Date.now()-started,cores:[...coreUrls],rendererStock:await Promise.all(stockResponses),operationCopyOverride,pickerRoundTrip,archiveReceipts,draw,...shellState,windows:await shell.locator('[data-slot="window-body"]').allInnerTexts(),faults:[...faults],failedRequests:[...failedRequests]}));
+    const windows = await shell.locator('[data-slot="window-body"]').allInnerTexts();
+    if (!windows.length) throw Error("The ready shell did not mount any app windows");
+    if (witnessInitialArchive && archiveReceipts.length === 0) throw Error("The curated archive did not acknowledge its load");
+    if (faults.size > 0 || failedRequests.size > 0) throw Error("The ready shell reported browser or guest failures");
+    console.log(JSON.stringify({id,preview,bindings,worker,elapsedMs:Date.now()-started,cores:[...coreUrls],rendererStock:await Promise.all(stockResponses),operationCopyOverride,pickerRoundTrip,archiveReceipts,draw,...shellState,windows,faults:[...faults],failedRequests:[...failedRequests]}));
   } catch(error) {
-    if (witnessInitialArchive) process.exitCode = 1;
+    process.exitCode = 1;
     const pageState = await page?.locator('body').evaluate(element => ({
       status: Array.from(element.querySelectorAll('[role="status"], [role="progressbar"]'), row => row.textContent?.trim()),
       body: element.innerText.slice(0, 1200),

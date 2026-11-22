@@ -1,0 +1,18 @@
+{
+  "axleSpacingM": 0.56,
+  "radiusM": 0.0725,
+  "treadWidthM": 0.03,
+  "nominalRunningClearanceM": 0.0045,
+  "permittedRoadErrorM": 0.0025,
+  "scales": [
+    50,
+    100,
+    200,
+    500
+  ],
+  "wheelPositions": [
+    "rear",
+    "front"
+  ],
+  "poseCount": 47
+}

@@ -53,6 +53,8 @@ pub(super) enum PreparationSection {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum DrawMeasureCursor {
     LayerHeader(usize),
+    GroupBegin(usize),
+    GroupEnd(usize),
     LayerUi { layer: usize, item: usize, overlay: bool },
     LayerVector { layer: usize, item: usize, overlay: bool },
     LayerRaster { layer: usize, raster: usize, overlay: bool },
@@ -68,6 +70,8 @@ pub enum DrawMeasureCursor {
     PassInstanceKey { pass: usize, draw: usize, instance: usize, byte: usize, translucent: bool },
     PassLine { pass: usize, draw: usize },
     PassLineVertex { pass: usize, draw: usize, vertex: usize },
+    PassPoint { pass: usize, draw: usize },
+    PassPointChunk { pass: usize, draw: usize, start: usize },
     PassTextured { pass: usize, draw: usize },
     PassTexturedInstance { pass: usize, draw: usize, instance: usize },
     PassTexturedKey { pass: usize, draw: usize, instance: usize, byte: usize },

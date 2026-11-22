@@ -33,3 +33,4 @@ semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-tes
 semio-plugin = { workspace = true, features = ["artifact-app-testing"] }
 semio-ui-locale = { workspace = true }
 serde_json = { workspace = true }
+semio-framework-value-clone-source-testing = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️testing/📦️packages/🦀️rust" }

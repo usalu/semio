@@ -20,8 +20,8 @@ const SYSTEM=["/usr/","/bin/","/sbin/","/Library/","/System/","/Applications/","
 const within=(parent:string,path:string):boolean=>path===parent||path.startsWith(parent.endsWith(sep)?parent:parent+sep);
 const commonAncestor=(left:string,right:string):string=>{let at=left;while(!within(at,right)){const up=dirname(at);if(up===at)return at;at=up;}return at;};
 const INLINE_MODULES=/^[ \t]*(?:pub(?:\([^)]*\))?[ \t]+)?mod[ \t]+([A-Za-z_][A-Za-z0-9_]*)[ \t]*\{/gmu;
-const INCLUDES=/#\s*\[\s*path\s*=\s*"([^"\n]{1,512})"\s*\]|include(?:_str|_bytes)?!\s*\(\s*"([^"\n]{1,512})"|include(?:_str|_bytes)?!\s*\(\s*concat!\s*\(\s*env!\s*\(\s*"CARGO_MANIFEST_DIR"\s*\)\s*,\s*"([^"\n]{1,512})"/gu,MODULES=/^[ \t]*(?:pub(?:\([^)]*\))?[ \t]+)?mod[ \t]+([A-Za-z_][A-Za-z0-9_]*)[ \t]*;/gmu;
-/** 🔗️ Every file that rustc reads for the root source, found without compiling: the files of `mod name;` declarations (`name.rs` or `name/mod.rs` below the directory the declaring file owns), the targets of `#[path = "..."]` (their children live beside them) and the literal paths of `include!`, `include_str!` and `include_bytes!` (relative to the file that names them), transitively through Rust files, existing files only, bounded; `undefined` beyond the bound. The module layout of this repository keeps the code of a crate in the module directory above its manifest and includes it from a one-line shim, so a directory walk would ship whole module trees (tests, generators, other crates) for a few source files. */
+const INCLUDES=/#\s*\[\s*path\s*=\s*"([^"\n]{1,512})"\s*\]|\bcfg_attr\s*\([^\]"]*(?:"[^"\n]*"[^\]"]*)*,\s*path\s*=\s*"([^"\n]{1,512})"|include(?:_str|_bytes)?!\s*\(\s*"([^"\n]{1,512})"|include(?:_str|_bytes)?!\s*\(\s*concat!\s*\(\s*env!\s*\(\s*"CARGO_MANIFEST_DIR"\s*\)\s*,\s*"([^"\n]{1,512})"/gu,MODULES=/^[ \t]*(?:pub(?:\([^)]*\))?[ \t]+)?mod[ \t]+([A-Za-z_][A-Za-z0-9_]*)[ \t]*;/gmu;
+/** 🔗️ Every file that rustc reads for the root source, found without compiling: the files of `mod name;` declarations (`name.rs` or `name/mod.rs` below the directory the declaring file owns), the targets of `#[path = "..."]` and of the `path = "..."` of a `#[cfg_attr(..., path = "...")]` (their children live beside them) and the literal paths of `include!`, `include_str!` and `include_bytes!` (relative to the file that names them), transitively through Rust files, existing files only, bounded; `undefined` beyond the bound. The module layout of this repository keeps the code of a crate in the module directory above its manifest and includes it from a one-line shim, so a directory walk would ship whole module trees (tests, generators, other crates) for a few source files. */
 export function reachedFilesV1(entry:string,read:(path:string)=>string|undefined=path=>{try{return readFileSync(path,"utf8");}catch{return undefined;}},maximumFiles:number=512,manifest?:string):readonly string[]|undefined{
  const seen=new Set<string>([entry]),queue:{file:string;children:string}[]=[{file:entry,children:dirname(entry)}],found:string[]=[];
  const take=(target:string,children:string):void=>{if(seen.has(target)||!existsSync(target))return;seen.add(target);found.push(target);if(target.endsWith(".rs"))queue.push({file:target,children});};
@@ -30,8 +30,8 @@ export function reachedFilesV1(entry:string,read:(path:string)=>string|undefined
   const {file,children}=queue.shift()!,text=read(file);
   if(text===undefined)continue;
   for(const match of text.matchAll(INCLUDES)){
-   if(match[3]!==undefined){if(manifest!==undefined){const target=resolve(manifest,"."+(match[3].startsWith("/")?"":"/")+match[3]);take(target,dirname(target));}continue;}
-   const target=resolve(dirname(file),match[1]??match[2]!);take(target,dirname(target));
+   if(match[4]!==undefined){if(manifest!==undefined){const target=resolve(manifest,"."+(match[4].startsWith("/")?"":"/")+match[4]);take(target,dirname(target));}continue;}
+   const target=resolve(dirname(file),match[1]??match[2]??match[3]!);take(target,dirname(target));
   }
   const inline=[...text.matchAll(INLINE_MODULES)].map(match=>match[1]!);
   for(const match of text.matchAll(MODULES)){
@@ -44,6 +44,7 @@ export function reachedFilesV1(entry:string,read:(path:string)=>string|undefined
 /** 🔗️ The files that the root source reaches beyond itself (see `reachedFilesV1`); the empty list beyond the bound. */
 export function includedSourcesV1(entry:string,read?:(path:string)=>string|undefined,maximumFiles?:number,manifest?:string):readonly string[]{return reachedFilesV1(entry,read,maximumFiles,manifest)??[];}
 const deniedName=(name:string):boolean=>policy.environment.deniedNames.includes(name)||policy.environment.deniedPrefixes.some(prefix=>name.startsWith(prefix));
+const carriable=(name:string,value:string):boolean=>/^[A-Za-z_][A-Za-z0-9_]{0,255}$/u.test(name)&&(name.startsWith("CARGO_PKG_")?!value.includes("\0")&&value.length<=65536:!/[\0\r\n]/u.test(value)&&value.length<=16384);
 const decline=(declined:OffloadReasonV1,detail:string):OffloadDeclineV1=>({declined,detail});
 
 /** 🪞️ Translates text the other machine produced (compiler messages, dependency files) back into the requester's paths: the other machine's root becomes the requester's working directory and every virtual directory its real one. One pass, longest names first, so `d1` never reads as `d`. */
@@ -55,6 +56,18 @@ export function offloadRealTextV1(text:string,mappings:readonly OffloadMappingV1
  if(names.length===0)return text;
  const pattern=new RegExp("(?:"+names.map(name=>name.replace(/[.*+?^${}()|[\]\\]/gu,"\\$&")).join("|")+")(?![A-Za-z0-9_.-])","gu");
  return text.replace(pattern,found=>forms.get(found)!);
+}
+
+/** 🧭️ The compiler arguments of a unit that Cargo compiles in its package directory while its code lives in the module directory above the manifest (a one-line shim includes it), when no remap covers that directory: the directory gets a remap of its own, named by its path below the checkout, placed before Cargo's remaps (the last matching one wins, so the package directory keeps Cargo's name), and a relative source becomes absolute so that every name the compiler records is remapped. A local compile and an offloaded one then record the same names and give the same crate hash on every machine and at every checkout path. `undefined` when the unit needs nothing. */
+export function moduleRemapArgumentsV1(args:readonly string[],environment:Environment,cwd:string,workspace:string|undefined):readonly string[]|undefined{
+ const manifest=environment.CARGO_MANIFEST_DIR,pass=scan(args);
+ if(workspace===undefined||manifest===undefined||!isAbsolute(manifest)||"declined" in pass||pass.source===undefined||!within(manifest,cwd))return undefined;
+ const sourceReal=resolve(cwd,pass.source),reached=reachedFilesV1(sourceReal,undefined,undefined,manifest);
+ if(reached===undefined)return undefined;
+ const shipped=[sourceReal,...reached].reduce((root,path)=>within(root,path)?root:commonAncestor(root,path),manifest);
+ if(within(cwd,shipped)||shipped===manifest||depthOf(shipped)<MINIMUM_SHIPPED_DEPTH||!within(workspace,shipped)||workspace===shipped||remappedNameV1(remapsOfV1(args),shipped)!==shipped)return undefined;
+ const first=args.findIndex(argument=>argument==="--remap-path-prefix"||argument.startsWith("--remap-path-prefix=")),rewritten=args.map(argument=>argument===pass.source&&!isAbsolute(argument)?sourceReal:argument),at=first<0?rewritten.length:first;
+ return Object.freeze([...rewritten.slice(0,at),`--remap-path-prefix=${shipped}=${relative(workspace,shipped).split(sep).join("/")}`,...rewritten.slice(at)]);
 }
 
 type Pass=Readonly<{outDir:string|undefined;depsDirs:readonly string[];source:string|undefined;extra:string;crate:string;target:string|undefined}>;
@@ -109,7 +122,7 @@ export function planOffloadV1(input:Readonly<{args:readonly string[];environment
  dependencies.forEach((directory,index)=>{directoryNames.set(directory,index===0?virtual.deps:virtual.deps+index);});
  let external=0;
  const virtualOf=(directory:string):string=>{let name=directoryNames.get(directory);if(name===undefined){name=virtual.external+external++;directoryNames.set(directory,name);}return name;};
- const rewritten:string[]=[],direct=new Map<string,string[]>();let sourceName:string|undefined;
+ const rewritten:string[]=[],direct=new Map<string,string[]>(),inside:string[]=[];let sourceName:string|undefined;
  for(let index=0;index<args.length;index++){
   const argument=args[index]!,take=(flag:string):string|undefined=>argument===flag?args[++index]??"":argument.startsWith(flag+"=")?argument.slice(flag.length+1):undefined,joined=argument.startsWith("--")&&argument.includes("=");
   let value:string|undefined;
@@ -129,30 +142,36 @@ export function planOffloadV1(input:Readonly<{args:readonly string[];environment
   if(argument.startsWith("-Cincremental="))continue;
   if(argument==="--remap-path-prefix"||argument.startsWith("--remap-path-prefix=")){
    const joinedRemap=argument.includes("="),spec=joinedRemap?argument.slice(argument.indexOf("=")+1):args[++index]??"",from=spec.slice(0,Math.max(0,spec.lastIndexOf("=")));
-   if(isAbsolute(from)&&!SYSTEM.some(prefix=>from.startsWith(prefix)))continue;
+   if(isAbsolute(from)&&!SYSTEM.some(prefix=>from.startsWith(prefix))){if(!anchored&&within(shipped,from)){const rest=relative(shipped,from).split(sep).join("/");inside.push(`${virtual.package}${rest===""?"":"/"+rest}=${spec.slice(from.length+1)}`);}continue;}
    rewritten.push(...joinedRemap?[argument]:[argument,spec]);continue;
   }
   if(argument===pass.source){const shown=anchored?relative(cwd,sourceReal).split(sep).join("/"):virtual.package+"/"+relative(shipped,sourceReal).split(sep).join("/");if(isAbsolute(pass.source))sourceName=shown;else rewritten.push(shown);continue;}
   rewritten.push(argument);
  }
  const names:string[]=[];
- if(!anchored)names.push(`${virtual.package}=${nameOf(shipped)}`);
+ if(!anchored)names.push(`${virtual.package}=${nameOf(shipped)}`,...inside);
+ const dependencyInputs=dependencyClosureV1([...directoryNames.keys()],[...direct.values()].flat());
+ if(dependencyInputs===undefined)return decline("inputs-too-large","dependency closure");
  for(const [directory,name] of directoryNames){
   mappings.push({real:directory,virtual:name});
-  const closure=dependencyClosureV1(directory,direct.get(directory)??[]);
-  if(closure===undefined)return decline("inputs-too-large","closure "+directory);
-  for(const file of closure)place(name+"/"+file,join(directory,file));
+  for(const file of dependencyInputs.get(directory)??[])place(name+"/"+file,join(directory,file));
   for(const real of direct.get(directory)??[])place(name+"/"+basename(real),real);
  }
  mappings.push({real:pass.outDir,virtual:virtual.out});
  const absolute:string[]=[],environmentOut:Record<string,string>={};
  for(const [name,value] of Object.entries(environment)){
   if(value===undefined||deniedName(name))continue;
+  if(!carriable(name,value))continue;
   if(value.includes(cwd))return decline("unmapped-path","environment "+name);
   environmentOut[name]=value;
  }
  const generated=environment.OUT_DIR;
  if(generated!==undefined){
+  for(const [name,value] of Object.entries(environmentOut)){
+   if(name==="OUT_DIR"||!value.includes(generated))continue;
+   if(value!==generated&&!value.startsWith(generated+sep))return decline("unmapped-path","environment "+name);
+   absolute.push(name);environmentOut["SEMIO_REL_"+name]=virtual.generated+value.slice(generated.length).split(sep).join("/");
+  }
   const walkedOut=walkFilesV1(generated,[]);
   if(walkedOut===undefined)return decline("inputs-too-large","OUT_DIR");
   for(const [path,real] of walkedOut)place(virtual.generated+"/"+path,real);
@@ -166,7 +185,7 @@ export function planOffloadV1(input:Readonly<{args:readonly string[];environment
   absolute.push("CARGO_MANIFEST_PATH");environmentOut.SEMIO_REL_CARGO_MANIFEST_PATH=(packageVirtual===""?"":packageVirtual+"/")+"Cargo.toml";
  }
  environmentOut.SEMIO_CWD_NAME=cwdName;if(sourceName!==undefined)environmentOut.SEMIO_SOURCE=sourceName;environmentOut.SEMIO_REMAPS=names.join("\n");
- environmentOut.SEMIO_ABSOLUTE=absolute.join(" ");environmentOut.PATH=policy.environment.path;environmentOut[policy.tool.environment]=policy.tool.placeholder;
+ environmentOut.SEMIO_ABSOLUTE=absolute.join(" ");environmentOut.PATH=policy.environment.path;
  const infoName=join(outDirReal,pass.crate+pass.extra+".d");
  if(existsSync(infoName)){
   try{

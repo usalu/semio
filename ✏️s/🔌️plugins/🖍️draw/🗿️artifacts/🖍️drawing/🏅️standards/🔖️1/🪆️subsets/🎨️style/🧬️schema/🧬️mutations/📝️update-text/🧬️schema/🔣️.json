@@ -81,7 +81,25 @@
           "de": "Schriftfamilie",
           "en": "Font Family"
         },
-        "widget": "select"
+        "widget": "select",
+        "options": {
+          "anta": {
+            "en": "Anta",
+            "de": "Anta"
+          },
+          "kellySlab": {
+            "en": "Kelly Slab",
+            "de": "Kelly Slab"
+          },
+          "shareTechMono": {
+            "en": "Share Tech Mono",
+            "de": "Share Tech Mono"
+          },
+          "notoEmoji": {
+            "en": "Noto Emoji",
+            "de": "Noto Emoji"
+          }
+        }
       }
     }
   }

@@ -1,0 +1,86 @@
+[
+  {
+    "id": "entry-bound",
+    "files": 6,
+    "mode": "slice",
+    "maximumEntries": 3,
+    "maximumMilliseconds": 100,
+    "stepMilliseconds": 1,
+    "fault": "none",
+    "faultAt": 0,
+    "removed": 3,
+    "outcome": "deferred"
+  },
+  {
+    "id": "clock-bound",
+    "files": 6,
+    "mode": "slice",
+    "maximumEntries": 10,
+    "maximumMilliseconds": 10,
+    "stepMilliseconds": 4,
+    "fault": "none",
+    "faultAt": 0,
+    "removed": 3,
+    "outcome": "deferred"
+  },
+  {
+    "id": "normal-full",
+    "files": 6,
+    "mode": "normal",
+    "maximumEntries": 3,
+    "maximumMilliseconds": 10,
+    "stepMilliseconds": 4,
+    "fault": "none",
+    "faultAt": 0,
+    "removed": 6,
+    "outcome": "complete"
+  },
+  {
+    "id": "pressure-full",
+    "files": 6,
+    "mode": "pressure",
+    "maximumEntries": 3,
+    "maximumMilliseconds": 10,
+    "stepMilliseconds": 4,
+    "fault": "none",
+    "faultAt": 0,
+    "removed": 6,
+    "outcome": "complete"
+  },
+  {
+    "id": "actual-cancellation",
+    "files": 6,
+    "mode": "slice",
+    "maximumEntries": 2,
+    "maximumMilliseconds": 100,
+    "stepMilliseconds": 1,
+    "fault": "cancel",
+    "faultAt": 2,
+    "removed": 2,
+    "outcome": "cancel"
+  },
+  {
+    "id": "actual-cleanup-failure",
+    "files": 6,
+    "mode": "slice",
+    "maximumEntries": 8,
+    "maximumMilliseconds": 100,
+    "stepMilliseconds": 1,
+    "fault": "cleanup",
+    "faultAt": 2,
+    "removed": 2,
+    "outcome": "failed"
+  },
+  {
+    "id": "pin-release-failure-at-expiry",
+    "files": 6,
+    "mode": "slice",
+    "maximumEntries": 2,
+    "maximumMilliseconds": 100,
+    "stepMilliseconds": 1,
+    "fault": "release",
+    "faultAt": 0,
+    "removed": 2,
+    "outcome": "failed"
+  }
+]

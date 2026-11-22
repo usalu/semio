@@ -48,12 +48,71 @@ impl DocumentState {
     /// 🏷️ React's `replayIntroductionOnLoad` brand flag ignores the device-local seen flag entirely,
     /// which is exactly what a kiosk brand needs. Carried by the brand ROW since this packet.
     pub fn auto_start_introduction(&mut self, seen_key: &str, seen: bool, chrome: &mut ChromeState, tutorial: &TutorialState) {
+        if seen_key == semio_renderer_wgpu_hub_workspace::hub_first_run::hub_first_run_introduction_id() {
+            return;
+        }
         let has_introduction = self.session.as_ref().is_some_and(|session| session.app.introduction.is_some());
         let replay_on_load = semio_renderer_wgpu_host_base::boot_brand().replays_introduction();
         if !should_auto_start_introduction(seen_key, has_introduction, tutorial.tutorial.is_some(), seen, replay_on_load, semio_renderer_wgpu_host_base::host_introduction_suppressed()) {
             return;
         }
         chrome.chrome_build.start_introduction();
+    }
+
+    /// 🎓️ Arms and tends the hub first-run tour, the wgpu twin of `HubWorkspace`'s `tour` state: opening the
+    /// hub surface reads the `os.hub` seen flag once and, when unseen and nothing else owns the overlay,
+    /// starts the tour at the step the live hub state derives; closing the surface ends a running tour
+    /// without answering it. A step completes by doing what it teaches, on the false-to-true edge.
+    pub fn reconcile_hub_first_run(&mut self, chrome: &mut ChromeState, directory: &DirectoryState, tutorial: &TutorialState) {
+        use semio_renderer_wgpu_hub_workspace::hub_first_run::{hub_first_run_introduction_id, hub_first_run_stage_done, hub_first_run_state_from, hub_first_run_step_index, HubFirstRunStage};
+        use semio_renderer_wgpu_shell_chrome_state::ChromeTourSource;
+        let workspace = &directory.hub_workspace;
+        let rows: Vec<(&str, &str)> = workspace.rows.iter().map(|row| (row.id.as_str(), row.access.as_str())).collect();
+        let state = hub_first_run_state_from(workspace.session.phase.as_str(), &rows, workspace.open_space_id.as_deref());
+        let hub_tour = chrome.chrome_build.tour_state.as_ref().is_some_and(|tour| tour.source == ChromeTourSource::HubFirstRun);
+        if !directory.hub_workspace_open {
+            chrome.chrome_build.hub_first_run_latch = false;
+            if hub_tour {
+                chrome.chrome_build.skip_introduction();
+            }
+            return;
+        }
+        if hub_tour {
+            let invite_ready = workspace.invite_capability.is_some();
+            let advance = chrome.chrome_build.tour_state.as_mut().and_then(|tour| {
+                let stage = *HubFirstRunStage::ALL.get(tour.step_index)?;
+                let done = hub_first_run_stage_done(stage, &state, invite_ready);
+                let edge = match tour.entry_done {
+                    Some((index, at_entry)) if index == tour.step_index => done && !at_entry,
+                    _ => {
+                        tour.entry_done = Some((tour.step_index, done));
+                        false
+                    }
+                };
+                edge.then_some(())
+            });
+            if advance.is_some() {
+                if let Some(step) = self.chrome_tour_active_step(chrome) {
+                    self.chrome_tour_advance_current_step(&step, chrome);
+                }
+            }
+            return;
+        }
+        if chrome.chrome_build.hub_first_run_latch {
+            return;
+        }
+        let id = hub_first_run_introduction_id();
+        let Some(seen) = chrome.chrome_build.introduction_seen.get(id).copied() else {
+            if chrome.chrome_present.maintenance.introduction_read.is_none() {
+                chrome.chrome_present.maintenance.introduction_read = Some(id.to_string());
+            }
+            return;
+        };
+        chrome.chrome_build.hub_first_run_latch = true;
+        if seen || chrome.chrome_build.tour_is_open() || tutorial.tutorial.is_some() || semio_renderer_wgpu_host_base::host_introduction_suppressed() {
+            return;
+        }
+        chrome.chrome_build.start_hub_first_run(hub_first_run_step_index(&state));
     }
 
     /// 🎓️ Reconciles a live host-policy transition without marking an unseen introduction as answered.
@@ -84,6 +143,7 @@ impl DocumentState {
                 prefs.driver_id = preferences.driver_id.unwrap_or_else(|| "default".to_string());
                 chrome.chrome_build.preferences.custom_drivers = preferences.custom_drivers;
                 chrome.chrome_build.driver = resolve_ui_driver_chrome(&prefs.driver_id, &chrome.chrome_build.preferences.custom_drivers);
+                semio_renderer_wgpu_ui_engine::retained_ui_engine::set_ui_engine_driver(chrome.chrome_build.driver);
                 chrome.chrome_build.preferences.ui_layout = match preferences.layout {
                     Some(OsUiChromeLayout::Tablet) => "tablet",
                     _ => "desktop",

@@ -1,4 +1,3 @@
-import type { WindowLayoutNode } from "../../../🔨️modules/🗺️window-layout/🟦️.ts";
 import * as ui from "@semio-tech/ui-react/source";
 import type { TestSource, Tests1Vitest, Tests1Dependencies } from "../🧰️harness/🟦️.ts";
 
@@ -24,10 +23,10 @@ describe("Shell components", () => {
               layout={{
                 kind: "stack",
                 children: [
-                  { kind: "window", id: "shape" },
-                  { kind: "window", id: "energy" },
+                  { kind: "window", windowKindId: "shape" },
+                  { kind: "window", windowKindId: "energy" },
                 ],
-                activeId: "energy",
+                activeWindowId: "energy",
               }}
               activeWindowId={activeWindowId}
               onActiveWindowChange={setActiveWindowId}
@@ -81,10 +80,10 @@ describe("Shell components", () => {
               { id: "peer", title: uiDataLabel("Peer"), iconId: "app-window", children: <div>Peer Body</div> },
             ]}
             layout={{
-              kind: "row",
+              kind: "split", axis: "horizontal",
               children: [
-                { kind: "stack", children: [{ kind: "window", id: "solo" }], activeId: "solo" },
-                { kind: "stack", children: [{ kind: "window", id: "peer" }], activeId: "peer" },
+                { kind: "stack", children: [{ kind: "window", windowKindId: "solo" }], activeWindowId: "solo" },
+                { kind: "stack", children: [{ kind: "window", windowKindId: "peer" }], activeWindowId: "peer" },
               ],
             }}
             activeWindowId="solo"
@@ -105,11 +104,11 @@ describe("Shell components", () => {
         { id: "b", title: "B", iconId: "app-window" as const },
       ];
       const ghost = [{ id: "drag", title: "Drag", iconId: "app-window" as const }];
-      const row = modeDockTabsWithInsertPreview(tabs, { stackPath: "1", corner: "topLeft", index: 1 }, "1", "topLeft", ghost);
+      const row = modeDockTabsWithInsertPreview(tabs, { stackPath: [1], corner: "topLeft", index: 1 }, [1], "topLeft", ghost);
       expect(row.map((tab) => tab.id)).toEqual(["a", "drag", "b"]);
       expect(row[1]?.preview).toBe("ghost");
-      expect(modeDockTabsWithInsertPreview(tabs, { stackPath: "2", corner: "topLeft", index: 1 }, "1", "topLeft", ghost).map((tab) => tab.id)).toEqual(["a", "b"]);
-      expect(modeDockTabsWithInsertPreview(tabs, { stackPath: "1", corner: "topRight", index: 1 }, "1", "topLeft", ghost).map((tab) => tab.id)).toEqual(["a", "b"]);
+      expect(modeDockTabsWithInsertPreview(tabs, { stackPath: [2], corner: "topLeft", index: 1 }, [1], "topLeft", ghost).map((tab) => tab.id)).toEqual(["a", "b"]);
+      expect(modeDockTabsWithInsertPreview(tabs, { stackPath: [1], corner: "topRight", index: 1 }, [1], "topLeft", ghost).map((tab) => tab.id)).toEqual(["a", "b"]);
     });
 
     it("modeDockTabsWithInsertPreview inserts ghost tabs for every window in a dragged stack", () => {
@@ -117,7 +116,7 @@ describe("Shell components", () => {
         { id: "a", title: "A", iconId: "app-window" as const },
         { id: "b", title: "B", iconId: "app-window" as const },
       ];
-      const row = modeDockTabsWithInsertPreview(tabs, { stackPath: "1", corner: "topLeft", index: 0 }, "1", "topLeft", [
+      const row = modeDockTabsWithInsertPreview(tabs, { stackPath: [1], corner: "topLeft", index: 0 }, [1], "topLeft", [
         { id: "x", title: "X", iconId: "app-window" as const },
         { id: "y", title: "Y", iconId: "app-window" as const },
       ]);
@@ -128,33 +127,33 @@ describe("Shell components", () => {
 
     it("applyModeDrop merges a dragged stack into another stack tab bar", () => {
       const layout: WindowLayoutNode = {
-        kind: "row",
+        kind: "split", axis: "horizontal",
         children: [
           {
             kind: "stack",
             children: [
-              { kind: "window", id: "a" },
-              { kind: "window", id: "b" },
+              { kind: "window", windowKindId: "a" },
+              { kind: "window", windowKindId: "b" },
             ],
-            activeId: "a",
+            activeWindowId: "a",
           },
-          { kind: "stack", children: [{ kind: "window", id: "c" }], activeId: "c" },
+          { kind: "stack", children: [{ kind: "window", windowKindId: "c" }], activeWindowId: "c" },
         ],
       };
       const drag = {
         dragKind: "stack" as const,
         windowId: "a",
-        stackPath: "0",
+        stackPath: [0],
         tabIndex: -1,
         pointerId: 1,
         ghostLabel: "Stack",
         x: 0,
         y: 0,
       };
-      const next = applyModeDrop(layout, drag, { kind: "tab", stackPath: "1", corner: "topLeft", index: 0 });
-      const merged = next.kind === "stack" ? next : next.kind === "row" || next.kind === "column" ? next.children.find((child) => child.kind === "stack" && child.children.some((window) => window.id === "c")) : null;
+      const next = applyModeDrop(layout, drag, { kind: "tab", stackPath: [1], corner: "topLeft", index: 0 });
+      const merged = next.kind === "stack" ? next : next.kind === "split" ? next.children.find((child) => child.kind === "stack" && child.children.some((window) => window.windowKindId === "c")) : null;
       expect(merged?.kind).toBe("stack");
-      if (merged?.kind === "stack") expect(merged.children.map((child) => child.id)).toEqual(["a", "b", "c"]);
+      if (merged?.kind === "stack") expect(merged.children.map((child) => child.windowKindId)).toEqual(["a", "b", "c"]);
     });
 
     it("computeTabInsertPreview resolves slot geometry at tab boundaries", () => {
@@ -193,57 +192,57 @@ describe("Shell components", () => {
 
     it("modeJoinCornerSpecsForSeparator wires perpendicular child splits to corner grabs", () => {
       const layout: WindowLayoutNode = {
-        kind: "row",
+        kind: "split", axis: "horizontal",
         children: [
           {
-            kind: "column",
+            kind: "split", axis: "vertical",
             children: [
-              { kind: "stack", children: [{ kind: "window", id: "lt" }], activeId: "lt" },
-              { kind: "stack", children: [{ kind: "window", id: "lb" }], activeId: "lb" },
+              { kind: "stack", children: [{ kind: "window", windowKindId: "lt" }], activeWindowId: "lt" },
+              { kind: "stack", children: [{ kind: "window", windowKindId: "lb" }], activeWindowId: "lb" },
             ],
           },
-          { kind: "stack", children: [{ kind: "window", id: "r" }], activeId: "r" },
+          { kind: "stack", children: [{ kind: "window", windowKindId: "r" }], activeWindowId: "r" },
         ],
       };
-      const specs = modeJoinCornerSpecsForSeparator("", layout.kind, 1, layout.children[0]!, layout.children[1]!);
+      const specs = modeJoinCornerSpecsForSeparator([], layout.axis, 1, layout.children[0]!, layout.children[1]!);
       expect(specs.some((spec) => spec.edgeSide === "leading" && spec.crossAxisPath === "0")).toBe(true);
       expect(specs).toHaveLength(1);
     });
 
     it("modeJoinCornerSpecsForCrossSeparator wires parent splits on inner separators", () => {
-      const specs = modeJoinCornerSpecsForCrossSeparator("0", "column", 1, { path: "", kind: "row", panelIndex: 0 });
+      const specs = modeJoinCornerSpecsForCrossSeparator([0], "vertical", 1, { path: [], axis: "horizontal", panelIndex: 0 });
       expect(specs).toHaveLength(1);
       expect(specs[0]?.edgeSide).toBe("trailing");
       expect(specs[0]?.alongFraction).toBe(1);
       expect(specs[0]?.mainAxisPath).toBe("");
       expect(specs[0]?.crossAxisPath).toBe("0");
-      const rightSpecs = modeJoinCornerSpecsForCrossSeparator("1", "column", 1, { path: "", kind: "row", panelIndex: 1 });
+      const rightSpecs = modeJoinCornerSpecsForCrossSeparator([1], "vertical", 1, { path: [], axis: "horizontal", panelIndex: 1 });
       expect(rightSpecs[0]?.edgeSide).toBe("leading");
       expect(rightSpecs[0]?.alongFraction).toBe(0);
     });
 
     it("resolveJoinCornerPeerCrossAxes includes every aligned perpendicular axis at a plus junction", () => {
       const layout: WindowLayoutNode = {
-        kind: "row",
+        kind: "split", axis: "horizontal",
         children: [
           {
-            kind: "column",
+            kind: "split", axis: "vertical",
             children: [
-              { kind: "stack", size: 50, children: [{ kind: "window", id: "lt" }], activeId: "lt" },
-              { kind: "stack", size: 50, children: [{ kind: "window", id: "lb" }], activeId: "lb" },
+              { kind: "stack", size: 0.5, children: [{ kind: "window", windowKindId: "lt" }], activeWindowId: "lt" },
+              { kind: "stack", size: 0.5, children: [{ kind: "window", windowKindId: "lb" }], activeWindowId: "lb" },
             ],
           },
           {
-            kind: "column",
+            kind: "split", axis: "vertical",
             children: [
-              { kind: "stack", size: 50, children: [{ kind: "window", id: "rt" }], activeId: "rt" },
-              { kind: "stack", size: 50, children: [{ kind: "window", id: "rb" }], activeId: "rb" },
+              { kind: "stack", size: 0.5, children: [{ kind: "window", windowKindId: "rt" }], activeWindowId: "rt" },
+              { kind: "stack", size: 0.5, children: [{ kind: "window", windowKindId: "rb" }], activeWindowId: "rb" },
             ],
           },
         ],
       };
       const spec: ResizableJoinCornerSpec = {
-        parentKind: "row",
+        parentAxis: "horizontal",
         mainAxisPath: "",
         mainSeparatorIndex: 1,
         crossAxisPath: "1",
@@ -252,34 +251,34 @@ describe("Shell components", () => {
         alongFraction: 0.5,
       };
       expect(resolveJoinCornerPeerCrossAxes(layout, spec)).toEqual([
-        { path: "0", separatorIndex: 1 },
-        { path: "1", separatorIndex: 1 },
+        { path: [0], separatorIndex: 1 },
+        { path: [1], separatorIndex: 1 },
       ]);
     });
 
     it("resolveJoinCornerPeerCrossAxes ignores perpendicular joins that no longer touch", () => {
       const layout: WindowLayoutNode = {
-        kind: "row",
+        kind: "split", axis: "horizontal",
         children: [
           {
-            kind: "column",
+            kind: "split", axis: "vertical",
             children: [
-              { kind: "stack", size: 30, children: [{ kind: "window", id: "lt" }], activeId: "lt" },
-              { kind: "stack", size: 70, children: [{ kind: "window", id: "lb" }], activeId: "lb" },
+              { kind: "stack", size: 0.3, children: [{ kind: "window", windowKindId: "lt" }], activeWindowId: "lt" },
+              { kind: "stack", size: 0.7, children: [{ kind: "window", windowKindId: "lb" }], activeWindowId: "lb" },
             ],
           },
           {
-            kind: "column",
+            kind: "split", axis: "vertical",
             children: [
-              { kind: "stack", size: 50, children: [{ kind: "window", id: "rt" }], activeId: "rt" },
-              { kind: "stack", size: 50, children: [{ kind: "window", id: "rb" }], activeId: "rb" },
+              { kind: "stack", size: 0.5, children: [{ kind: "window", windowKindId: "rt" }], activeWindowId: "rt" },
+              { kind: "stack", size: 0.5, children: [{ kind: "window", windowKindId: "rb" }], activeWindowId: "rb" },
             ],
           },
         ],
       };
       expect(
         resolveJoinCornerPeerCrossAxes(layout, {
-          parentKind: "row",
+          parentAxis: "horizontal",
           mainAxisPath: "",
           mainSeparatorIndex: 1,
           crossAxisPath: "1",
@@ -287,10 +286,10 @@ describe("Shell components", () => {
           edgeSide: "trailing",
           alongFraction: 0.5,
         }),
-      ).toEqual([{ path: "1", separatorIndex: 1 }]);
+      ).toEqual([{ path: [1], separatorIndex: 1 }]);
       expect(
         resolveJoinCornerPeerCrossAxes(layout, {
-          parentKind: "row",
+          parentAxis: "horizontal",
           mainAxisPath: "",
           mainSeparatorIndex: 1,
           crossAxisPath: "0",
@@ -298,29 +297,29 @@ describe("Shell components", () => {
           edgeSide: "leading",
           alongFraction: 0.3,
         }),
-      ).toEqual([{ path: "0", separatorIndex: 1 }]);
+      ).toEqual([{ path: [0], separatorIndex: 1 }]);
       expect(modePerpendicularJoinSeparators(layout.children[0]!)).toEqual([{ index: 1, fraction: 0.3 }]);
       expect(modePerpendicularJoinSeparators(layout.children[1]!)).toEqual([{ index: 1, fraction: 0.5 }]);
     });
 
     it("applyModeJoinCornerResize updates only touching cross axes when joins are misaligned", () => {
       const layout: WindowLayoutNode = {
-        kind: "row",
+        kind: "split", axis: "horizontal",
         children: [
           {
-            kind: "column",
-            size: 50,
+            kind: "split", axis: "vertical",
+            size: 0.5,
             children: [
-              { kind: "stack", size: 30, children: [{ kind: "window", id: "lt" }], activeId: "lt" },
-              { kind: "stack", size: 70, children: [{ kind: "window", id: "lb" }], activeId: "lb" },
+              { kind: "stack", size: 0.3, children: [{ kind: "window", windowKindId: "lt" }], activeWindowId: "lt" },
+              { kind: "stack", size: 0.7, children: [{ kind: "window", windowKindId: "lb" }], activeWindowId: "lb" },
             ],
           },
           {
-            kind: "column",
-            size: 50,
+            kind: "split", axis: "vertical",
+            size: 0.5,
             children: [
-              { kind: "stack", size: 50, children: [{ kind: "window", id: "rt" }], activeId: "rt" },
-              { kind: "stack", size: 50, children: [{ kind: "window", id: "rb" }], activeId: "rb" },
+              { kind: "stack", size: 0.5, children: [{ kind: "window", windowKindId: "rt" }], activeWindowId: "rt" },
+              { kind: "stack", size: 0.5, children: [{ kind: "window", windowKindId: "rb" }], activeWindowId: "rb" },
             ],
           },
         ],
@@ -328,7 +327,7 @@ describe("Shell components", () => {
       const next = applyModeJoinCornerResize(
         layout,
         {
-          parentKind: "row",
+          parentAxis: "horizontal",
           mainAxisPath: "",
           mainSeparatorIndex: 1,
           crossAxisPath: "1",
@@ -341,43 +340,43 @@ describe("Shell components", () => {
         400,
         300,
       );
-      expect(next.kind).toBe("row");
-      if (next.kind !== "row") return;
+      expect(next.kind).toBe("split");
+      if (next.kind !== "split") return;
       const left = next.children[0];
       const right = next.children[1];
-      expect(left?.kind).toBe("column");
-      expect(right?.kind).toBe("column");
-      if (left?.kind !== "column" || right?.kind !== "column") return;
-      expect(left.children[0]?.size).toBe(30);
-      expect(left.children[1]?.size).toBe(70);
-      expect(right.children[0]?.size).toBeGreaterThan(50);
-      expect(right.children[1]?.size).toBeLessThan(50);
+      expect(left?.kind).toBe("split");
+      expect(right?.kind).toBe("split");
+      if (left?.kind !== "split" || right?.kind !== "split") return;
+      expect(left.children[0]?.size).toBe(0.3);
+      expect(left.children[1]?.size).toBe(0.7);
+      expect(right.children[0]?.size).toBeGreaterThan(0.5);
+      expect(right.children[1]?.size).toBeLessThan(0.5);
     });
 
     it("applyModeJoinCornerResize updates both main and cross axis sizes", () => {
       const layout: WindowLayoutNode = {
-        kind: "row",
+        kind: "split", axis: "horizontal",
         children: [
           {
-            kind: "column",
-            size: 50,
+            kind: "split", axis: "vertical",
+            size: 0.5,
             children: [
-              { kind: "stack", size: 50, children: [{ kind: "window", id: "lt" }], activeId: "lt" },
-              { kind: "stack", size: 50, children: [{ kind: "window", id: "lb" }], activeId: "lb" },
+              { kind: "stack", size: 0.5, children: [{ kind: "window", windowKindId: "lt" }], activeWindowId: "lt" },
+              { kind: "stack", size: 0.5, children: [{ kind: "window", windowKindId: "lb" }], activeWindowId: "lb" },
             ],
           },
           {
-            kind: "column",
-            size: 50,
+            kind: "split", axis: "vertical",
+            size: 0.5,
             children: [
-              { kind: "stack", size: 50, children: [{ kind: "window", id: "rt" }], activeId: "rt" },
-              { kind: "stack", size: 50, children: [{ kind: "window", id: "rb" }], activeId: "rb" },
+              { kind: "stack", size: 0.5, children: [{ kind: "window", windowKindId: "rt" }], activeWindowId: "rt" },
+              { kind: "stack", size: 0.5, children: [{ kind: "window", windowKindId: "rb" }], activeWindowId: "rb" },
             ],
           },
         ],
       };
       const spec: ResizableJoinCornerSpec = {
-        parentKind: "row",
+        parentAxis: "horizontal",
         mainAxisPath: "",
         mainSeparatorIndex: 1,
         crossAxisPath: "1",
@@ -386,23 +385,23 @@ describe("Shell components", () => {
         alongFraction: 0.5,
       };
       const next = applyModeJoinCornerResize(layout, spec, 20, 10, 400, 300);
-      expect(next.kind).toBe("row");
-      if (next.kind === "row") {
-        expect(next.children[0]?.size).toBeGreaterThan(50);
-        expect(next.children[1]?.size).toBeLessThan(50);
+      expect(next.kind).toBe("split");
+      if (next.kind === "split") {
+        expect(next.children[0]?.size).toBeGreaterThan(0.5);
+        expect(next.children[1]?.size).toBeLessThan(0.5);
         for (const column of next.children) {
-          expect(column.kind).toBe("column");
-          if (column.kind !== "column") continue;
-          expect(column.children[0]?.size).toBeGreaterThan(50);
-          expect(column.children[1]?.size).toBeLessThan(50);
+          expect(column.kind).toBe("split");
+          if (column.kind !== "split") continue;
+          expect(column.children[0]?.size).toBeGreaterThan(0.5);
+          expect(column.children[1]?.size).toBeLessThan(0.5);
         }
       }
     });
 
     it("applyAxisGroupLayoutDelta resizes a live panel pair without changing its total", () => {
-      const next = applyAxisGroupLayoutDelta({ "0": 50, "1": 50 }, "", 1, 5);
+      const next = applyAxisGroupLayoutDelta({ "0": 50, "1": 50 }, [], 1, 5);
       expect(next).toEqual({ "0": 55, "1": 45 });
-      expect(applyAxisGroupLayoutDelta(next, "", 1, 100)).toEqual({ "0": 92, "1": 8 });
+      expect(applyAxisGroupLayoutDelta(next, [], 1, 100)).toEqual({ "0": 92, "1": 8 });
     });
 
     it("Mode corner pointer drag resizes both mounted panel groups", async () => {
@@ -417,20 +416,20 @@ describe("Shell components", () => {
               { id: "rb", title: uiDataLabel("Right Bottom"), iconId: "app-window", children: <div>Right Bottom</div> },
             ]}
             layout={{
-              kind: "row",
+              kind: "split", axis: "horizontal",
               children: [
                 {
-                  kind: "column",
+                  kind: "split", axis: "vertical",
                   children: [
-                    { kind: "stack", children: [{ kind: "window", id: "lt" }], activeId: "lt" },
-                    { kind: "stack", children: [{ kind: "window", id: "lb" }], activeId: "lb" },
+                    { kind: "stack", children: [{ kind: "window", windowKindId: "lt" }], activeWindowId: "lt" },
+                    { kind: "stack", children: [{ kind: "window", windowKindId: "lb" }], activeWindowId: "lb" },
                   ],
                 },
                 {
-                  kind: "column",
+                  kind: "split", axis: "vertical",
                   children: [
-                    { kind: "stack", children: [{ kind: "window", id: "rt" }], activeId: "rt" },
-                    { kind: "stack", children: [{ kind: "window", id: "rb" }], activeId: "rb" },
+                    { kind: "stack", children: [{ kind: "window", windowKindId: "rt" }], activeWindowId: "rt" },
+                    { kind: "stack", children: [{ kind: "window", windowKindId: "rb" }], activeWindowId: "rb" },
                   ],
                 },
               ],
@@ -456,15 +455,15 @@ describe("Shell components", () => {
       fireEvent(window, new MouseEvent("pointerup", { bubbles: true, clientX: 220, clientY: 165 }));
       await waitFor(() => expect(onLayoutChange).toHaveBeenCalled());
       const resized = onLayoutChange.mock.lastCall?.[0] as WindowLayoutNode;
-      expect(resized.kind).toBe("row");
-      if (resized.kind !== "row") return;
-      expect(resized.children[0]?.size).toBe(55);
-      expect(resized.children[1]?.size).toBe(45);
+      expect(resized.kind).toBe("split");
+      if (resized.kind !== "split") return;
+      expect(resized.children[0]?.size).toBeCloseTo(0.55);
+      expect(resized.children[1]?.size).toBeCloseTo(0.45);
       for (const column of resized.children) {
-        expect(column.kind).toBe("column");
-        if (column.kind !== "column") return;
-        expect(column.children[0]?.size).toBe(55);
-        expect(column.children[1]?.size).toBe(45);
+        expect(column.kind).toBe("split");
+        if (column.kind !== "split") return;
+        expect(column.children[0]?.size).toBeCloseTo(0.55);
+        expect(column.children[1]?.size).toBeCloseTo(0.45);
       }
     });
 });

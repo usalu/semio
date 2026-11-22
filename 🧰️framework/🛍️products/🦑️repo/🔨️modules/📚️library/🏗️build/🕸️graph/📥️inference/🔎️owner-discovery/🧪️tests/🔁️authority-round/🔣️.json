@@ -1,0 +1,1 @@
+{ "chain": 40, "fan": 2, "cycle": ["x", "y"], "devFrom": "c0", "devTo": "c5" }

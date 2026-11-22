@@ -8,6 +8,8 @@ import bunManifest from"../../../../⚡️caching/🚀️bootstrap/🛠️tools/
 import hermeticSchema from"../../../🏃️execution/🧬️schema/🔒️hermetic.json" with {type:"json"};
 import{HERMETIC_SERVICES_V1,HERMETIC_TABLE_V1,hermeticInputsV1,hermeticSelectV1,hermeticServiceV1,hermeticToolchainV1,hermeticStrategiesV1,type HermeticServiceV1}from"../../../🏃️execution/🔒️hermetic/🟦️.ts";
 import{hermeticDependenciesV1,type HermeticDependenciesV1,type HermeticModulesRowV1}from"../../../🏃️execution/🔒️hermetic/📦️dependencies/🟦️.ts";
+import{readRemoteCachePolicyV1}from"../../../🌐️remote-cache/🟦️.ts";
+import{resolveRemoteExecutionEndpointV1}from"../../../🌐️remote-execution/🧭️endpoint/🟦️.ts";
 import{BAZEL_PATH_PLAN_V1}from"../📐️path-plan/🟦️.ts";
 import schema from"./🧬️schema/🔣️.json" with {type:"json"};
 import type{BazelTaskV1}from"../📋️task-plan/🟦️.ts";
@@ -48,24 +50,31 @@ export function bazelExecutionPlatformByIdV1(id:string):BazelExecutionPlatformV1
 /** 📛️ Names a platform's bun executable file: Windows executables carry `.exe`. */
 export function bazelBunExecutableNameV1(platform:BazelExecutionPlatformV1):string{return contract.toolchain.executable+(platform.platform==="win32"?".exe":"");}
 
-/** ☁️ Reads the optional remote execution switch from the environment; unset or empty keeps every action local and a malformed value fails closed. */
-export function bazelRemoteExecutionV1(environment:Readonly<Record<string,string|undefined>>):BazelRemoteExecutionV1|undefined{
+/** ☁️ Reads the optional remote execution switch: the endpoint of the environment (a malformed value fails closed), else the endpoint the scheduler of the fleet publishes in the fleet facts of this checkout (`SEMIO_WORKSPACE_ROOT`; the one resolver of `🌐️remote-execution/🧭️endpoint`, `http` becomes `grpc`; an endpoint that does not fit the contract is ignored, never a failure), else nothing, which keeps every action local. The scheduler of the fleet accepts signed requests only and Bazel can only send a bearer token, so a fleet endpoint is adopted only while the environment carries that token (otherwise Bazel would be refused on every action and would also lose its HTTP cache). A fleet endpoint routes to the platform of `host`, so that the local fallback can run what the scheduler cannot; the environment's platform wins. */
+export function bazelRemoteExecutionV1(environment:Readonly<Record<string,string|undefined>>,host:Readonly<{platform:string;arch:string}>={platform:process.platform,arch:process.arch}):BazelRemoteExecutionV1|undefined{
  const names=contract.environment,selected:Record<string,string>={};
  for(const name of Object.values(names)){const value=environment[name];if(value!==undefined&&value!=="")selected[name]=value;}
  if(validateJsonSchemaSubset(schema.definitions.Environment,selected,schema).length)throw new Error("Closed Bazel remote execution environment required");
- const endpoint=selected[names.endpoint];if(endpoint===undefined)return undefined;
- const platform=bazelExecutionPlatformByIdV1(selected[names.platform]??contract.remote.defaultPlatform),properties:Record<string,string>={...platform.properties};
+ let endpoint=selected[names.endpoint],pooled:string|undefined;
+ if(endpoint===undefined){
+  const cache=readRemoteCachePolicyV1(),bearer=environment[environment[cache.environment.tokenEnvironment]||cache.defaults.tokenEnvironment],published=bearer?resolveRemoteExecutionEndpointV1({environment})?.endpoint.replace(/^http(s?):/u,"grpc$1:"):undefined;
+  if(published===undefined||validateJsonSchemaSubset(schema.definitions.Environment,{[names.endpoint]:published},schema).length)return undefined;
+  const row=contract.platforms.find(row=>row.platform===host.platform&&row.arch===host.arch);
+  if(row===undefined)return undefined;
+  endpoint=published;pooled=row.id;
+ }
+ const platform=bazelExecutionPlatformByIdV1(selected[names.platform]??pooled??contract.remote.defaultPlatform),properties:Record<string,string>={...platform.properties};
  for(const pair of (selected[names.properties]??"").split(",").filter(Boolean)){const cut=pair.indexOf("=");properties[pair.slice(0,cut)]=pair.slice(cut+1);}
  const jobs=Math.min(contract.remote.maximumJobs,selected[names.jobs]===undefined?contract.remote.defaultJobs:Number(selected[names.jobs]));
  return{endpoint,instance:selected[names.instance]??contract.remote.defaultInstance,platform:platform.id,properties:Object.freeze(Object.fromEntries(Object.entries(properties).sort(([left],[right])=>left<right?-1:left>right?1:0))),jobs};
 }
 
-/** 🧭️ Derives the closed Bazel flags that route hermetic actions: the platforms and toolchains to register and, only with a remote executor, the executor and no local fallback. Cache flags, including the output download mode that the snapshot restore needs, stay with the remote cache contract. */
+/** 🧭️ Derives the closed Bazel flags that route hermetic actions: the platforms and toolchains to register and, only with a remote executor, the executor and, unless it serves the platform of the host (then a failing executor falls back to local), no local fallback because the local toolchain could not run what the remote pool's platform needs. Cache flags, including the output download mode that the snapshot restore needs, stay with the remote cache contract. */
 export function bazelExecutionFlagsV1(options:Readonly<{host:{platform:string;arch:string};hermetic:boolean;jobs:number;environment?:Readonly<Record<string,string|undefined>>}>):Readonly<{command:readonly string[];remote:boolean;platform:string;jobs:number}>{
  const host=bazelExecutionPlatformV1(options.host.platform,options.host.arch);
  if(!options.hermetic)return Object.freeze({command:Object.freeze([]),remote:false,platform:host.id,jobs:options.jobs});
- const remote=bazelRemoteExecutionV1(options.environment??{}),ids=[...new Set([host.id,...(remote?[remote.platform]:[])])],command=[`--extra_execution_platforms=${[`//:exec_${host.id.replace("-","_")}`,...(remote?[`//:exec_remote_${remote.platform.replace("-","_")}`]:[])].join(",")}`,`--extra_toolchains=${ids.map(id=>`//:bun_toolchain_${id.replace("-","_")}`).join(",")}`];
- if(remote)command.push(`--remote_executor=${remote.endpoint}`,"--noremote_local_fallback",`--remote_instance_name=${remote.instance}`,"--noremote_cache_compression");
+ const remote=bazelRemoteExecutionV1(options.environment??{},options.host),ids=[...new Set([host.id,...(remote?[remote.platform]:[])])],command=[`--extra_execution_platforms=${[`//:exec_${host.id.replace("-","_")}`,...(remote?[`//:exec_remote_${remote.platform.replace("-","_")}`]:[])].join(",")}`,`--extra_toolchains=${ids.map(id=>`//:bun_toolchain_${id.replace("-","_")}`).join(",")}`];
+ if(remote)command.push(`--remote_executor=${remote.endpoint}`,...remote.platform===host.id?[]:["--noremote_local_fallback"],`--remote_instance_name=${remote.instance}`,"--noremote_cache_compression");
  command.push(`--strategy=${contract.toolchain.mnemonic}=${hermeticStrategiesV1(options.host.platform).filter(name=>remote!==undefined||name!=="remote").join(",")}`);
  const flags={command,remote:remote!==undefined,platform:remote?remote.platform:host.id,jobs:remote?remote.jobs:options.jobs};
  if(validateJsonSchemaSubset(schema.definitions.Flags,flags,schema).length)throw new Error("Closed Bazel execution flags required");

@@ -6,6 +6,13 @@ const NAMESPACES=Object.freeze(["build-input-closures","build-lock-closures"]),K
 const stampOf=row=>[row.dev,row.ino,row.size,row.mtimeNs,row.ctimeNs].join(":");
 const same=(left,right)=>["dev","ino","size","nlink","mtimeNs","ctimeNs"].every(name=>left[name]===right[name]);
 
+/** 🩹️ The code of a leaf whose stable bytes are not the bytes its name addresses (a torn write that survived a crash): a corrupt cache entry, never a concurrent change. */
+export const INVENTORY_CORRUPT_CODE_V1="BUILD_INVENTORY_CORRUPT";
+const corruptInventoryRecordV1=(text,path,cause)=>Object.assign(Error(text,cause===undefined?undefined:{cause}),{code:INVENTORY_CORRUPT_CODE_V1,path});
+
+/** ❓️ Answers whether an error says a stable leaf is corrupt. */
+export function inventoryRecordCorruptV1(error){return error?.code===INVENTORY_CORRUPT_CODE_V1;}
+
 /** 🪶️ Reads one content addressed closure inventory leaf with a no-follow descriptor, two identity checks and the leaf's own sha256, without the per-read storage and ancestry round trips of the managed batch; the caller keeps the storage consumer custody and validates the value. */
 export function readInventoryRecordLeanV1(directory,key,maximumBytes){
  if(typeof directory!=="string"||!NAMESPACES.includes(directory.split(/[\\/]/u).at(-1))||typeof key!=="string"||!KEY.test(key)||!Number.isSafeInteger(maximumBytes)||maximumBytes<1)throw Error("Closed inventory leaf identity required");
@@ -19,8 +26,9 @@ export function readInventoryRecordLeanV1(directory,key,maximumBytes){
   if(!same(before,fstatSync(fd,{bigint:true})))throw Error("Inventory record changed while reading");
  }catch(error){failed=true;throw error;}finally{try{closeSync(fd);}catch(error){if(!failed)throw error;}}
  const sha256=createHash("sha256").update(bytes).digest("hex");
- if(sha256!==key)throw Error("Inventory record content differs from its name");
- return Object.freeze({sha256,byteLength:size,value:JSON.parse(new TextDecoder("utf-8",{fatal:true,ignoreBOM:true}).decode(bytes)),stamp:stampOf(before)});
+ if(sha256!==key)throw corruptInventoryRecordV1("Inventory record content differs from its name",path);
+ let value;try{value=JSON.parse(new TextDecoder("utf-8",{fatal:true,ignoreBOM:true}).decode(bytes));}catch(error){throw corruptInventoryRecordV1("Inventory record is not valid JSON",path,error);}
+ return Object.freeze({sha256,byteLength:size,value,stamp:stampOf(before)});
 }
 
 /** 🧊️ Remembers that a leaf with exactly this identity was read, hashed and validated; a content addressed leaf with an unchanged identity cannot have changed. */

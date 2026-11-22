@@ -21,7 +21,7 @@ const readLog=(path:string):Spawn[]=>{const text=readFileSync(path,"utf8"),rows:
 test("planned-bytes corpus is closed",()=>{expect(new Ajv({strict:false}).validate(corpusSchema,corpus)).toBe(true);});
 
 test.skipIf(!binary)("law: an input edited, removed or added after planning does not reach a hermetic action; a re-plan captures the new bytes and prunes what vanished",async()=>{
- const directory=mkdtempSync(join(tmpdir(),"planned-bytes-")),checkout=join(directory,"checkout"),workspace=join(directory,"ws"),api=await import("../../../📜️script.ts");
+ const directory=mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir(),"planned-bytes-")),checkout=join(directory,"checkout"),workspace=join(directory,"ws"),api=await import("../../../📜️script.ts");
  const environment={...process.env,...(process.platform==="darwin"?{LANG:"en_US.UTF-8",LC_ALL:"en_US.UTF-8"}:{})};
  try{
   for(const[path,text]of Object.entries(corpus.files)){mkdirSync(join(checkout,path,".."),{recursive:true});writeFileSync(join(checkout,path),text);}

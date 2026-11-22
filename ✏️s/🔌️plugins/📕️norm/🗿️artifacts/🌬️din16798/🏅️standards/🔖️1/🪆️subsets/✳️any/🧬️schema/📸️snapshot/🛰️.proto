@@ -22,6 +22,16 @@ message Din16798Zone {
   string vent_system_id = 19;
   double turbulence_intensity_percent = 20;
   string vent_method = 21;
+  Din16798UnoccupiedVentilation unoccupied_ventilation = 22;
+}
+
+message Din16798UnoccupiedVentilation {
+  string operation = 1;
+  double assessed_area_m2 = 2;
+  double zone_volume_m3 = 3;
+  double minutes_before_occupancy = 4;
+  double residential_design_rate_l_per_s_m2 = 5;
+  double outdoor_air_m3_h = 6;
 }
 
 message Din16798VentSystem {

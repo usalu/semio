@@ -54,3 +54,9 @@ fn from_instance_packs_row_major_model_and_flags() {
     assert_eq!(gpu.flags, [1.0, 0.2, 0.63, 0.27]);
     assert_eq!(gpu.emissive_cutoff, [0.0, 0.0, 0.0, -1.0]);
 }
+
+#[test]
+fn point_extent_follows_the_points_material_law_shared_with_the_wgpu_target() {
+    assert_eq!(world3d_point_extent(2.0, true, 200.0, 100.0), [0.5, 1.0, 0.0, 0.0]);
+    assert_eq!(world3d_point_extent(4.0, false, 200.0, 100.0), [0.02, 0.04, 1.0, 0.0]);
+}

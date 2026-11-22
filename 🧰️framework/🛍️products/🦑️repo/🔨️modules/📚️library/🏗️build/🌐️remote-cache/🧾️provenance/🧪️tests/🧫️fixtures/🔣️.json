@@ -110,5 +110,249 @@
    "fingerprint": "310ca4f5383d9d870ee6c7312b244364d63aa31fd123f09e7eba69aea9b15229",
    "manifest": true
   }
+ ],
+ "advisory": {
+  "failure.br": "failure-note",
+  "costs.br": "costs"
+ },
+ "classes": [
+  {
+   "name": "unit manifest",
+   "paths": [
+    "unit.json",
+    "out/libx.rlib"
+   ],
+   "manifest": true,
+   "sort": "unit",
+   "advisory": false
+  },
+  {
+   "name": "graph owner record",
+   "paths": [
+    "record.br",
+    "leaf/l/a.json"
+   ],
+   "manifest": false,
+   "sort": "project-inference",
+   "advisory": false
+  },
+  {
+   "name": "closure bundle",
+   "paths": [
+    "closure-1.br"
+   ],
+   "manifest": false,
+   "sort": "closure",
+   "advisory": false
+  },
+  {
+   "name": "failure note",
+   "paths": [
+    "failure.br"
+   ],
+   "manifest": false,
+   "sort": "failure-note",
+   "advisory": true
+  },
+  {
+   "name": "owner pool wave",
+   "paths": [
+    "head.br",
+    "session.br",
+    "units.br"
+   ],
+   "manifest": false,
+   "sort": "owner-pool",
+   "advisory": false
+  },
+  {
+   "name": "cost sheet beats record",
+   "paths": [
+    "record.br",
+    "costs.br"
+   ],
+   "manifest": false,
+   "sort": "costs",
+   "advisory": true
+  },
+  {
+   "name": "anything else",
+   "paths": [
+    "out/o0"
+   ],
+   "manifest": false,
+   "sort": "other",
+   "advisory": false
+  }
+ ],
+ "differing": [
+  {
+   "name": "one output differs",
+   "kept": [
+    {
+     "path": "out/a.rmeta",
+     "hash": "1"
+    },
+    {
+     "path": "out/a.rlib",
+     "hash": "2"
+    }
+   ],
+   "refused": [
+    {
+     "path": "out/a.rmeta",
+     "hash": "1"
+    },
+    {
+     "path": "out/a.rlib",
+     "hash": "3"
+    }
+   ],
+   "differing": [
+    "out/a.rlib"
+   ]
+  },
+  {
+   "name": "a path only one side names",
+   "kept": [
+    {
+     "path": "x",
+     "hash": "1"
+    }
+   ],
+   "refused": [
+    {
+     "path": "x",
+     "hash": "1"
+    },
+    {
+     "path": "y",
+     "hash": "2"
+    }
+   ],
+   "differing": [
+    "y"
+   ]
+  },
+  {
+   "name": "identical",
+   "kept": [
+    {
+     "path": "x",
+     "hash": "1"
+    }
+   ],
+   "refused": [
+    {
+     "path": "x",
+     "hash": "1"
+    }
+   ],
+   "differing": []
+  },
+  {
+   "name": "cut at sixteen sorted",
+   "kept": [],
+   "refused": [
+    {
+     "path": "p00",
+     "hash": "1"
+    },
+    {
+     "path": "p01",
+     "hash": "1"
+    },
+    {
+     "path": "p02",
+     "hash": "1"
+    },
+    {
+     "path": "p03",
+     "hash": "1"
+    },
+    {
+     "path": "p04",
+     "hash": "1"
+    },
+    {
+     "path": "p05",
+     "hash": "1"
+    },
+    {
+     "path": "p06",
+     "hash": "1"
+    },
+    {
+     "path": "p07",
+     "hash": "1"
+    },
+    {
+     "path": "p08",
+     "hash": "1"
+    },
+    {
+     "path": "p09",
+     "hash": "1"
+    },
+    {
+     "path": "p10",
+     "hash": "1"
+    },
+    {
+     "path": "p11",
+     "hash": "1"
+    },
+    {
+     "path": "p12",
+     "hash": "1"
+    },
+    {
+     "path": "p13",
+     "hash": "1"
+    },
+    {
+     "path": "p14",
+     "hash": "1"
+    },
+    {
+     "path": "p15",
+     "hash": "1"
+    },
+    {
+     "path": "p16",
+     "hash": "1"
+    },
+    {
+     "path": "p17",
+     "hash": "1"
+    },
+    {
+     "path": "p18",
+     "hash": "1"
+    },
+    {
+     "path": "p19",
+     "hash": "1"
+    }
+   ],
+   "differing": [
+    "p00",
+    "p01",
+    "p02",
+    "p03",
+    "p04",
+    "p05",
+    "p06",
+    "p07",
+    "p08",
+    "p09",
+    "p10",
+    "p11",
+    "p12",
+    "p13",
+    "p14",
+    "p15"
+   ]
+  }
  ]
 }

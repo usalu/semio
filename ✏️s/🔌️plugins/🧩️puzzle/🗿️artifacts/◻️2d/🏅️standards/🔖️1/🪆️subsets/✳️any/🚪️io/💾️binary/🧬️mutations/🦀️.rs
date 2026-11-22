@@ -1,7 +1,5 @@
-//! 🧱️ `Puzzle2dMutation`'s binary wire form, plus the `ArtifactEnvelope`/`ArtifactStore` aliases every
-//! 📡️ Puzzle 2d artifact — the state-patch-representation codec: `encode_op`/`decode_op` for
-//! puzzle-2d host binds. Renamed from the pre-consolidation `📡️protocol` module; the wire format is
-//! unchanged (`dsl::DslOps`'s generated `OpBinary`).
+//! 📡️ Tagged Puzzle 2D mutation frames for host bindings and history replay. See the authored
+//! [binary protocol](📡️.protocol.semio).
 
 //#region 📡️SemioProtocol
 /// 📡️ Normative handcrafted binary protocol for this facet (`dialect protocol`).
@@ -140,16 +138,14 @@ pub use mutations_codec::*;
 
 impl OpBinary for Puzzle2dMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(protocol::os_pack::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(self)))
+        dsl::variants_binary::encode_tagged_op(COMPONENT_PROTOCOL_SEMIO, self)
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let malformed = |detail: String| protocol::ProtocolError::Malformed { what: "puzzle2d operation", offset: 0, detail };
-        let value = protocol::os_pack::pack_rt::decode_wire_value(bytes).map_err(|error| malformed(error.to_string()))?;
-        semio_framework_value::FromValue::from_value(value).map_err(|error: semio_framework_value::ValueError| malformed(error.to_string()))
+        dsl::variants_binary::decode_tagged_op(COMPONENT_PROTOCOL_SEMIO, bytes)
     }
 }
 
-protocol::original_pack_value_operation_receiving!(Puzzle2dMutation);
+dsl::original_tagged_operation_receiving!(Puzzle2dMutation, COMPONENT_PROTOCOL_SEMIO);
 }
 
 /// 🫳️ Borrows the original concrete leaf of a mutation and its canonical protocol tag before publication: the authoring wire source the artifact store requires.

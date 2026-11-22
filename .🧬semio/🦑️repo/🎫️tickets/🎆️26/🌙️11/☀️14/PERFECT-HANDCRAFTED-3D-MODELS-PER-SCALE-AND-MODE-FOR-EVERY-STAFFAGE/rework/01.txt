@@ -1,0 +1,5 @@
+humans/standing-adult
+humans/walking-commuter
+humans/standing-phone-user
+humans/tour-guide
+humans/leaning-person

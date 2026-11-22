@@ -34,7 +34,7 @@ fn fastener(id: &str, source: &str, target: &str, x: f64, y: f64) -> Puzzle5dFas
 }
 
 fn document(parts: Vec<Puzzle5dPart>, fasteners: Vec<Puzzle5dFastener>) -> Puzzle5dSnapshot {
-    Puzzle5dSnapshot { schema: crate::PUZZLE_5D_SCHEMA.to_string(), domain: "architecture".to_string(), parts, fasteners, ..Puzzle5dSnapshot::default() }
+    Puzzle5dSnapshot { schema: crate::PUZZLE_5D_SCHEMA.to_string(), domain: "architecture".to_string(), parts: parts.into(), fasteners, ..Puzzle5dSnapshot::default() }
 }
 
 fn react_oracle_document() -> Puzzle5dSnapshot {

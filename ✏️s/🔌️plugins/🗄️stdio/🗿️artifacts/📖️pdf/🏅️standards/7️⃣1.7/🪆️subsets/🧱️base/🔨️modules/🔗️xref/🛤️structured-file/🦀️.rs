@@ -1,5 +1,6 @@
 //! 🛤️ Locates and validates a structured PDF cross-reference table under a single pooled turn budget.
 
+use semio_framework_value::ByteReadSource;
 use super::{FooterCursor, FooterStep, XrefEntry, StructuredTrailer, XrefTrailerCursor, XrefAssemblyCursor, XrefAssemblyEvent, XrefIndex, XrefIndexStatus, XrefOffsetCursor, XrefOffsetStatus, XrefStreamError};
 use semio_s_artifact_stdio_pdf_lexer::{CosGrant, CosLimits, CosReceipt, CosStatus};
 use semio_s_artifact_stdio_pdf_model::standards::v1_7::subsets::base::io::error::PResult;
@@ -54,7 +55,7 @@ impl StructuredXrefCursor {
     }
 
     /// ▶️ Accepts the same stable source slice from the footer probe through the last object offset.
-    pub fn advance(&mut self, source: &[u8], grant: CosGrant, cancelled: bool) -> StructuredXrefReceipt {
+    pub fn advance(&mut self, source: &(impl ByteReadSource + ?Sized), grant: CosGrant, cancelled: bool) -> StructuredXrefReceipt {
         use StructuredXrefEvent as Event;
         if cancelled { self.begin_close(); }
         match &mut self.phase {
@@ -63,7 +64,7 @@ impl StructuredXrefCursor {
             Phase::Complete { offsets_valid } => step(Event::Complete { offsets_valid: *offsets_valid }, 0),
             _ if grant.work == 0 => step(Event::More, 0),
             Phase::Footer(cursor) => {
-                let (work, result) = cursor.advance_counted(source, grant.work);
+                let (work, result) = cursor.advance_counted(|position| source.byte_at(position), grant.work);
                 if let FooterStep::Complete(offset) = result {
                     self.revisions = XrefAssemblyCursor::new(offset, self.limits, self.maximum_stream_bytes);
                     self.phase = Phase::Revisions;
@@ -99,7 +100,7 @@ impl StructuredXrefCursor {
             }
             Phase::Validate(cursor) => {
                 let index = self.index.as_ref().expect("structured xref validation owns an index");
-                let (work, result) = cursor.advance(source, index, grant.work, false);
+                let (work, result) = cursor.advance(|position| source.byte_at(position), index, grant.work, false);
                 let offsets_valid = match result {
                     XrefOffsetStatus::More => return step(Event::More, work),
                     XrefOffsetStatus::Cancelled => return step(Event::Cancelled, work),
@@ -121,8 +122,7 @@ impl StructuredXrefCursor {
 
     /// 📤️ Transfers the directory and merged trailer to the importer or repair path.
     pub fn take(&mut self) -> Option<(XrefIndex, StructuredTrailer)> {
-        if !matches!(self.phase, Phase::Complete { .. }) { return None; }
-        let index = self.index.take()?;
+        let index = matches!(self.phase, Phase::Complete { .. }).then(|| self.index.take()).flatten()?;
         let trailer = self.trailers.take().expect("finished xref owns its settled primary trailers");
         Some((index, trailer))
     }

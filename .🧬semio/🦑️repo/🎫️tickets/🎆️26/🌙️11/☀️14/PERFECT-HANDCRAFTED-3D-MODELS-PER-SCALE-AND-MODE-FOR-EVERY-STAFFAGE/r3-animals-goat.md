@@ -132,3 +132,15 @@ The reference table of section 1 stands (withers 0.76 m, bone lengths and joint 
 - The body was not remodelled this round: the ribcage and abdomen meet in a visible seam, the hook bones and thighs stand out as pads in plan, the coarse scales are faceted at 1:500 and the croup is boxy at 1:200; the udder points backwards in `browsing-upright` (it is rigid to the pelvis).
 - Thermal cut sheets, 1:200 and 1:500 structure and the walk clip were not opened in this round.
 - Horn and hoof area shares wait for the area reviewers.
+
+## Hand-modelled torso and limb continuity reviewed November 21
+
+Twenty-two transverse stations define the sacrum, abdominal barrel, ribs, withers and brisket. Three closed sections travel with the pelvis, lumbar spine and thorax. Their touching rings have the same radius and centre throughout all fifteen named poses. The hindquarters taper continuously into the belly. The same coat material and tone continue onto the upper legs. At 1:200 and 1:500 the scapula, humerus, forearm, cannon, thigh, gaskin and hock again follow their own joints. Both front and hind limbs retain their source attachment and region in the thermal model.
+
+All four scales passed the full strict checks. Twelve GLB scenes reopened within 5,147,024 bytes. The drawing validator passed. The installed standing body, thermal field and structure were reviewed at all scales. The independent Three.js test checks both torso junctions in every pose. The udder’s attachment in upright browsing remains a separate visual issue. [Measured section profiles](digital-goat-barrel.json).
+
+## Mammary anatomy in the browsing doe
+
+The old pelvis-bound udder tilted 62° when the doe rose to browse. A compliant 0.625 kg suspension now carries two separately profiled gland lobes, two teats and the median supporting lamina at all four scales. The measured axis is vertical when standing, 8.8° from vertical on the ledge and 24.8° when browsing. Pelvic and suspended tissue retain their combined 4.387 kg and standing centre of mass.
+
+A 1 mm surface measurement gives 0.0516 m² of skin before occlusion by neighbouring flesh. Pose-specific exposure is 76.0% standing, 79.8% browsing and 80.4% on the ledge. The thermal model assigns bare skin to these surfaces, including the coarse views. Four complete scale checks, document validation and twelve GLB readbacks passed for the installed revision `ad18555ac0472c61`. The browsing pose was viewed in body, temperature and structure across the four scales.

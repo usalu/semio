@@ -1,15 +1,12 @@
 """🖼️ Builds a resource-free large natural-file PDF and independently inspects its page programs."""
-from pathlib import Path
+import argparse
 import json
-import sys
+from pathlib import Path
 
 import fitz
 
-spec = json.loads(Path(sys.argv[2]).read_text(encoding="utf-8"))["largeVector"]
-PAGE_COUNT = spec["pageCount"]
-LINES = spec["segmentCount"]
-
-def write_pdf(destination):
+def write_pdf(destination, spec):
+    PAGE_COUNT, LINES = spec["pageCount"], spec["segmentCount"]
     rows = [b"<< /Type /Catalog /Pages 2 0 R >>"]
     kids = " ".join(f"{3 + page * 2} 0 R" for page in range(PAGE_COUNT))
     rows.append(f"<< /Type /Pages /Kids [{kids}] /Count {PAGE_COUNT} >>".encode("ascii"))
@@ -33,9 +30,11 @@ def write_pdf(destination):
     for offset in positions:
         output.extend(f"{offset:010} 00000 n \n".encode("ascii"))
     output.extend(f"trailer\n<< /Size {size} /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF\n".encode("ascii"))
-    destination.write_bytes(output)
+    with destination.open("xb") as target:
+        target.write(output)
 
-def verify(destination):
+def verify(destination, spec):
+    PAGE_COUNT, LINES = spec["pageCount"], spec["segmentCount"]
     with fitz.open(destination) as pdf:
         assert not pdf.is_repaired
         assert pdf.page_count == PAGE_COUNT
@@ -52,7 +51,16 @@ def verify(destination):
         assert size == spec["byteLength"] and size > 32 * 1024
         print(f"{size} bytes, {pdf.page_count} pages, {pdf.xref_length() - 1} live objects, {LINES} stroked segments per page")
 
+def main():
+    cli = argparse.ArgumentParser(description="generate refuses an existing target; verify only reads it")
+    cli.add_argument("mode", choices=["generate", "verify"])
+    cli.add_argument("file", type=Path)
+    cli.add_argument("spec", type=Path)
+    args = cli.parse_args()
+    spec = json.loads(args.spec.read_text(encoding="utf-8"))["largeVector"]
+    if args.mode == "generate":
+        write_pdf(args.file, spec)
+    verify(args.file, spec)
+
 if __name__ == "__main__":
-    file = Path(sys.argv[1])
-    write_pdf(file)
-    verify(file)
+    main()

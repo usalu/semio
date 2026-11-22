@@ -1,0 +1,28 @@
+[
+  {
+    "id": "contained-relative",
+    "target": "pkg/index.js",
+    "bad": null
+  },
+  {
+    "id": "absolute-within-store",
+    "target": "{store}/index.js",
+    "bad": null
+  },
+  {
+    "id": "absolute-outside-store",
+    "target": "{outside}/index.js",
+    "bad": "node_modules/link"
+  },
+  {
+    "id": "relative-escape",
+    "target": "../../index.js",
+    "bad": "node_modules/link"
+  },
+  {
+    "id": "root-alias",
+    "target": "pkg/index.js",
+    "rootAlias": true,
+    "bad": "node_modules"
+  }
+]

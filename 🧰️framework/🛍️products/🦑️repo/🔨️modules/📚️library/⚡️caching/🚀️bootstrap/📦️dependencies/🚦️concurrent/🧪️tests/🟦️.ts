@@ -254,13 +254,18 @@ test("concurrent wiring laws: lock order build then bindings, shared image only,
  const receipt=slice(text,"export function withJavascriptDependencyReceiptStorageV1<T>(","/** 📜️");
  expect(receipt).toContain('acquireConcurrentLeaseV1("writer"');expect(receipt).not.toContain('"build"');expect(receipt).not.toContain('"bindings"');
  const orchestrator=slice(text,"async function runJavascriptDependencyStoreGenerationsV1(","/** 📌️ Pins the generations a producer is about to create");
- const order=['"build")','underJavascriptDependencyBindingsGateV1(','"publish")','retireJavascriptDependencyPreservationsInStoreV1('].map(part=>orchestrator.lastIndexOf(part));
- expect(order.every(index=>index>=0)).toBe(true);
- expect(order[0]).toBeLessThan(order[1]!);expect(order[1]).toBeLessThan(order[2]!);expect(order[2]).toBeLessThan(order[3]!);
+ expect(orchestrator.indexOf("withJavascriptDependencyBindingsGateReleaseV1(")).toBeLessThan(orchestrator.indexOf("runJavascriptDependencyStoreProducerV1("));
+ expect(orchestrator.indexOf("runJavascriptDependencyStoreProducerV1(")).toBeLessThan(orchestrator.indexOf("retireJavascriptDependencyPreservationsInStoreV1("));
  expect(text.match(/acquireConcurrentLeaseV1\("build"/gu)?.length).toBe(1);
- expect(text.match(/acquireConcurrentLeaseV1\("bindings"/gu)?.length).toBe(1);
+ expect(text.match(/acquireConcurrentLeaseV1\("bindings",[^,]+,"exclusive"/gu)?.length).toBe(2);
+ expect(text.match(/acquireConcurrentLeaseV1\("bindings",[^,]+,"shared"/gu)?.length).toBe(1);
  expect(text.match(/acquireConcurrentLeaseV1\("writer"/gu)?.length).toBe(2);
  const producer=slice(text,"async function runJavascriptDependencyStoreProducerV1(","/** 📗️ Matches an inactive candidate");
+ const transfer=producer.slice(producer.indexOf("const attempt=()=>withPublishedBunWorkspaceOwnershipV1("));
+ const order=['produce(custody,"build")','acquireJavascriptDependencyBindingsGateV1(frame)','produce(custody,"publish")'].map(part=>transfer.indexOf(part));
+ expect(order.every(index=>index>=0)).toBe(true);
+ expect(order[0]).toBeLessThan(order[1]!);expect(order[1]).toBeLessThan(order[2]!);
+ expect(transfer.slice(order[1],order[2])).toContain("await custody.recheck()");
  expect(producer).not.toContain("retire-obsolete");expect(producer).not.toContain("removeJavascriptDependencyTreeV1(join(container");
  expect(producer.indexOf('if(phase==="build")return;')).toBeGreaterThan(producer.indexOf("await verifyReady();"));
  expect(producer.indexOf('if(phase==="build")return;')).toBeLessThan(producer.indexOf("publishJavascriptDependencyPreservingSourceDescriptorV1(binding"));
@@ -281,9 +286,10 @@ test("concurrent wiring laws: lock order build then bindings, shared image only,
  expect(producer.indexOf("admitJavascriptDependencyGenerationV1(")).toBeLessThan(producer.indexOf("captureOwnedCommandResultV1("));
  expect(producer.indexOf("admitJavascriptDependencyGenerationV1(")).toBeGreaterThan(producer.indexOf("for(const row of fresh){"));
  expect(producer).toContain("sealConcurrentPointerV1(previous,scope,generation,switched,frame.built.get(scope)??previous?.bytes??0)");
- expect(orchestrator.indexOf("await collectJavascriptDependencyGenerationsV1(workspace")).toBeGreaterThan(orchestrator.lastIndexOf("underJavascriptDependencyBindingsGateV1("));
- const gateHelper=slice(text,"async function underJavascriptDependencyBindingsGateV1(","/** 🫙️");
- expect(gateHelper).toContain('acquireConcurrentLeaseV1("bindings"');expect(gateHelper.indexOf("await body()")).toBeLessThan(gateHelper.indexOf("gate.release()"));
+ expect(orchestrator.indexOf("await collectJavascriptDependencyGenerationsV1(workspace")).toBeGreaterThan(orchestrator.lastIndexOf("withJavascriptDependencyBindingsGateReleaseV1("));
+ const gateHelper=slice(text,"async function acquireJavascriptDependencyBindingsGateV1(","/** 🧯️");
+ const gateRelease=slice(text,"async function withJavascriptDependencyBindingsGateReleaseV1<T>(","/** 🫙️");
+ expect(gateHelper).toContain('acquireConcurrentLeaseV1("bindings"');expect(gateRelease.indexOf("await body()")).toBeLessThan(gateRelease.indexOf("gate.release()"));
  const admit=slice(text,"async function admitJavascriptDependencyGenerationV1(","/** 🏗️ Retires superseded gene");
  expect(admit.indexOf("concurrentAdmissionV1(")).toBeLessThan(admit.indexOf("collectJavascriptDependencyGenerationsV1("));
  expect(admit.lastIndexOf("concurrentAdmissionV1(")).toBeGreaterThan(admit.indexOf("collectJavascriptDependencyGenerationsV1("));
@@ -345,15 +351,16 @@ test("concurrent maintenance: collection is generation-scoped and never waits fo
 });
 
 /** 📐️ The declared dependencies partition must hold the current generation set plus one building set: derived from the measured sizes in the schema, checked against every declared platform backend, including Linux copying, with an independent Python arithmetic oracle. */
-test("concurrent reclaim: preservation capsules of interrupted synchronizations retire under pressure before any build",()=>{
+test("concurrent reclaim: a complete live Source fence protects generation collection before strict preservation retirement",()=>{
  const text=storage(),orchestrator=slice(text,"async function runJavascriptDependencyStoreGenerationsV1(","/** 📌️ Pins the generations a producer is about to create");
  expect(orchestrator.indexOf("await reclaimJavascriptDependencyPreservationsUnderPressureV1(")).toBeGreaterThanOrEqual(0);
- expect(orchestrator.indexOf("await reclaimJavascriptDependencyPreservationsUnderPressureV1(")).toBeLessThan(orchestrator.indexOf('"build")'));
+ expect(orchestrator.indexOf("await reclaimJavascriptDependencyPreservationsUnderPressureV1(")).toBeLessThan(orchestrator.indexOf("runJavascriptDependencyStoreProducerV1("));
  const reclaim=slice(text,"async function reclaimJavascriptDependencyPreservationsUnderPressureV1(","/** 🗄️ Runs one synchronization");
- expect(reclaim.indexOf("concurrentAdmissionV1(")).toBeLessThan(reclaim.indexOf("retireJavascriptDependencyPreservationsInStoreV1("));
- expect(reclaim).toContain("if(verdict.admitted)return;");expect(reclaim).toContain("underJavascriptDependencyBindingsGateV1(");expect(reclaim).toContain('event:"reclaiming"');
- const gate=slice(text,"async function underJavascriptDependencyBindingsGateV1(","/** 🫙️");
- expect(gate).toContain('acquireConcurrentLeaseV1("bindings"');expect(gate.indexOf("await body()")).toBeLessThan(gate.indexOf("gate.release()"));
+ const order=["concurrentAdmissionV1(","acquireJavascriptDependencyBindingsGateV1(","withCurrentBunWorkspaceOwnershipV1(","readJavascriptDependencyPreservationSourceV1(","collectJavascriptDependencyGenerationsV1(","if(!(await measure()).admitted)","retireJavascriptDependencyPreservationsInStoreV1("].map(part=>reclaim.indexOf(part));
+ expect(order.every((index,position)=>index>=0&&(position===0||index>order[position-1]!))).toBe(true);
+ expect(reclaim).toContain("if(verdict.admitted)return;");
+ expect(reclaim).toContain('event:"reclaiming"');
+ const gate=slice(text,"async function withJavascriptDependencyBindingsGateReleaseV1<T>(","/** 🫙️");
  expect(gate.indexOf("frame.gate=null")).toBeLessThan(gate.indexOf("gate.release()"));
 });
 test("concurrent budget: the declared partition funds every platform backend and both generation sets",()=>{

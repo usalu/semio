@@ -98,3 +98,23 @@ The [walking commuter](r3-humans-walking-commuter.md) now has open, curved eyeli
 [Child passenger anatomy and motion](digital-passenger-review.md) covers the toddler on the hip and the child in the stroller. Seven exported FBX animations were reopened and compared with the posed joints.
 
 The [seated domestic cat](r3-animals-domestic-cat.md) now wraps its five-part tail around the paw and retains correctly sized corneas in the thermal scene. The [tower crane](r3-machinery-tower-crane.md) passed the fine thermal exposure calculation. The [scale report](digital-volume-status.md) records strict checks for all 152 published sources. The [render index](digital-art-index.md) identifies the exact sources used in the four-scale body, temperature and structural review.
+
+The [herring gull](r3-animals-herring-gull.md) now folds and spreads 44 distinct flight feathers over a measured 1.394 m gliding span. A check against the physical mesh exposed missing [wheelchair axle plates](r3-humans-wheelchair-user.md), [bicycle cranks](r3-humans-cyclist.md) and an exposed [pollard heartwood core](r3-vegetation-london-plane-pollarded.md). Their corrected sources passed at all four scales.
+
+The [doe](r3-animals-goat.md) has a continuous articulated torso and separately posed lower-resolution limb segments. The [hornbeam hedge](r3-vegetation-hornbeam-hedge.md) now carries individually shaped leaves across six moving crowns and follows cross-row wind. The [crane heel](r3-machinery-tower-crane.md) now shows the actual tube and pin seats. The independent [mesh containment pass](digital-member-coverage.md) covers 608 current scales.
+
+## Browsing doe
+
+The published doe now carries a divided gland and teats on a compliant suspension. An independent probe measured the exposed skin in all 15 poses and the three scene types were checked across all four scales. [Measurements and reviewed revision](r3-animals-goat.md)
+
+## November 21 follow-up review
+
+The Labrador’s lumbar column and the rider’s running gear were inspected as separate engineering details as well as in context. The sheep’s profiled fleece and the patio heater’s mobile base were published after independent geometric checks. [Labrador](r3-animals-labrador-dog.md) · [skateboard](r3-humans-skateboarder.md) · [sheep](digital-sheep-fleece.md) · [heater](digital-patio-heater-wheels.md)
+
+## November 21 anatomical and mechanical corrections
+
+The [individual long-bone review](digital-human-long-bones.md) records actual shaft diameters. The [carried-child review](digital-toddler-proportions.md) measures the child independently from the adult. Individual reports cover the [umbrella and all human figures](digital-human-art-ledger.md), [animal poses and anatomy](animal-four-scale-audit.md), [road wheels and vehicle cabins](digital-road-wheel-review.md), [tower crane](r3-machinery-tower-crane.md) and [household objects and furniture](digital-equipment-art-ledger.md). Whole-catalog export, heat, structural and visual results are kept separately because different checks can be current on different source revisions.
+
+## November 21 running gear and skeleton poses
+
+The eight repaired adult skeletons were inspected on the installed files while walking, using a walking aid, gesturing or lifting a box. The coarse structures retain the separate, slender forearm and leg shafts where the former 75 mm capsules obscured them. The crane, mixer, forklift, crawler and scissor lift were inspected in physical, surface-temperature and structural views. [Adult dimensions](digital-human-long-bones.md) · [Moving joints](digital-running-gear.md) · [Per-model observations](digital-large-form-review.md)

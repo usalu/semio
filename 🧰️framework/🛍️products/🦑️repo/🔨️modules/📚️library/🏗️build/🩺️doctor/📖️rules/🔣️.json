@@ -271,6 +271,64 @@
       }
     }
   },
+  "storage.image-misplaced": {
+    "area": "storage",
+    "owner": "storage",
+    "severities": [
+      "error"
+    ],
+    "data": [
+      "partition",
+      "attachedAt",
+      "device",
+      "directory"
+    ],
+    "title": {
+      "en": "Image {partition} is attached at {attachedAt}, not at its mount point",
+      "de": "Image {partition} ist unter {attachedAt} eingehängt, nicht an seinem Einhängepunkt"
+    },
+    "detail": {
+      "en": "A reclaim cycle that was killed before it could clean up leaves the image attached at its private scratch mount point instead of its mount point. Every link into the image dangles, so commands that import packages from it cannot start; repo doctor itself starts without it and puts the image back.",
+      "de": "Ein Reclaim-Zyklus, der beendet wurde, bevor er aufräumen konnte, lässt das Image an seinem privaten Scratch-Einhängepunkt statt an seinem Einhängepunkt eingehängt. Jeder Link in das Image zeigt ins Leere, daher starten Befehle nicht, die Pakete daraus importieren; repo doctor selbst startet ohne es und stellt das Image wieder her."
+    },
+    "fix": {
+      "kind": "automatic",
+      "command": "repo doctor --fix --only=storage",
+      "repair": "storage-images",
+      "note": {
+        "en": "Detaches the stray mount without force and attaches the image at its mount point {directory}/m under its exclusive lease, so a running reclaim is never raced.",
+        "de": "Hängt den verirrten Einhängepunkt ohne Zwang aus und hängt das Image unter seiner exklusiven Lease an seinem Einhängepunkt {directory}/m ein, sodass ein laufender Reclaim nie überholt wird."
+      }
+    }
+  },
+  "storage.image-detached-blocking": {
+    "area": "storage",
+    "owner": "storage",
+    "severities": [
+      "warn"
+    ],
+    "data": [
+      "partition",
+      "directory"
+    ],
+    "title": {
+      "en": "Image {partition} is not attached while the dependency links dangle",
+      "de": "Image {partition} ist nicht eingehängt, während die Abhängigkeits-Links ins Leere zeigen"
+    },
+    "detail": {
+      "en": "The image file exists but is not mounted and node_modules points into the dependency store, so commands that import packages cannot start and so cannot attach the image themselves; repo doctor starts without it.",
+      "de": "Die Image-Datei existiert, ist aber nicht eingehängt, und node_modules zeigt in den Abhängigkeitsspeicher; Befehle, die Pakete importieren, starten daher nicht und können das Image nicht selbst einhängen; repo doctor startet ohne es."
+    },
+    "fix": {
+      "kind": "automatic",
+      "command": "repo doctor --fix --only=storage",
+      "repair": "storage-images",
+      "note": {
+        "en": "Attaches the image at its mount point {directory}/m with owners on under its exclusive lease.",
+        "de": "Hängt das Image unter seiner exklusiven Lease mit Besitzern an seinem Einhängepunkt {directory}/m ein."
+      }
+    }
+  },
   "storage.publication-pending": {
     "area": "storage",
     "owner": "storage",
@@ -607,6 +665,8 @@
       "command",
       "waitedSeconds",
       "reason",
+      "blocker",
+      "holder",
       "needMegabytes",
       "headroomMegabytes",
       "floorMegabytes"
@@ -616,8 +676,8 @@
       "de": "{operation} von Prozess {pid} wartet seit {waitedSeconds} s auf Rechnerkapazität"
     },
     "detail": {
-      "en": "{command} needs {needMegabytes} MB; the spare memory above the floor of {floorMegabytes} MB is {headroomMegabytes} MB. Reason: {reason}.",
-      "de": "{command} braucht {needMegabytes} MB; der freie Speicher oberhalb der Untergrenze von {floorMegabytes} MB beträgt {headroomMegabytes} MB. Grund: {reason}."
+      "en": "{command} needs {needMegabytes} MB; the spare memory above the floor of {floorMegabytes} MB is {headroomMegabytes} MB. Reason: {reason}. Largest holder: {blocker} ({holder}; self means this very run waits on its own grant).",
+      "de": "{command} braucht {needMegabytes} MB; der freie Speicher oberhalb der Untergrenze von {floorMegabytes} MB beträgt {headroomMegabytes} MB. Grund: {reason}. Größter Halter: {blocker} ({holder}; self heißt, dieser Lauf wartet auf seine eigene Zusage)."
     },
     "fix": {
       "kind": "command",
@@ -775,15 +835,15 @@
       "de": "Keine Generation des Projektgraphen ist veröffentlicht"
     },
     "detail": {
-      "en": "Without a published generation every command that needs the graph builds it itself, exclusively; other agents queue behind it.",
-      "de": "Ohne veröffentlichte Generation baut jeder Befehl, der den Graphen braucht, ihn selbst und exklusiv; andere Agenten stehen dahinter an."
+      "en": "Without a published generation no command can answer for the whole workspace from a sealed graph. Tasks and queries on a selection read their own selected graph and need no generation; only a question about every project does, and it never starts the hours of inference by itself (graph policy current).",
+      "de": "Ohne veröffentlichte Generation kann kein Befehl für den ganzen Arbeitsbereich aus einem versiegelten Graphen antworten. Aufgaben und Abfragen auf einer Auswahl lesen ihren eigenen ausgewählten Graphen und brauchen keine Generation; nur eine Frage über alle Projekte braucht sie, und sie startet die stundenlange Ableitung nie von selbst (Graph-Richtlinie current)."
     },
     "fix": {
       "kind": "command",
-      "command": "repo show projects",
+      "command": "repo graph --graph-policy fresh",
       "note": {
-        "en": "One run publishes the first generation; later reads need no build.",
-        "de": "Ein Lauf veröffentlicht die erste Generation; spätere Lesevorgänge brauchen keinen Build."
+        "en": "Starts the whole read on purpose and publishes the first generation when it ends; it takes hours on a cold checkout, so start it once, outside a task.",
+        "de": "Startet das ganze Lesen mit Absicht und veröffentlicht am Ende die erste Generation; es dauert auf einem kalten Arbeitsverzeichnis Stunden, also einmal und ausserhalb einer Aufgabe starten."
       }
     }
   },

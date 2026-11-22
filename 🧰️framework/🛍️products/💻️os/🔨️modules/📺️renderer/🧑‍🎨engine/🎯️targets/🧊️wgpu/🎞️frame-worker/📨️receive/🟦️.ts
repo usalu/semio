@@ -88,7 +88,7 @@ export async function receive(message: BrowserFrameUiMessage): Promise<void> {
     return;
   }
   try {
-    ownedStep("frame-ingress", () => runtime!.enqueueBatch(JSON.stringify({ replaceable: message.replaceable, lossless: message.lossless }), BigInt(message.generation)));
+    ownedStep("frame-ingress", () => runtime!.enqueueBatch(JSON.stringify({ events: message.events }), BigInt(message.generation)));
     setFrameInput({ timestampMs: message.timestampMs, generation: message.generation });
     post({ kind: "batch-accepted", lifecycle, inputSequence: message.inputSequence, generation: message.generation });
     frameTurns?.request();

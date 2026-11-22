@@ -1,0 +1,23 @@
+{
+  "standingMeanProtrusionMm": 13,
+  "standingP75ProtrusionMm": 19,
+  "seatedMaxWidthLossMmPer8Mm": 13,
+  "seatedInterval": [
+    16,
+    22
+  ],
+  "scaleDenominators": [
+    50,
+    100,
+    200,
+    500
+  ],
+  "poseCount": 19,
+  "fields": {
+    "neck": "coat-trunk",
+    "chest": "coat-trunk",
+    "shoulder": "coat-forelimbs",
+    "upper-arm": "coat-forelimbs",
+    "fore-upper": "coat-forelimbs"
+  }
+}

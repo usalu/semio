@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "generations": {
+    "retired": "aaaaaaaaaaaaaaaaaaaa",
+    "published": "bbbbbbbbbbbbbbbbbbbb"
+  },
+  "compiler": {
+    "version": "5.9.3",
+    "main": "lib/typescript.js",
+    "source": "module.exports = {};\n"
+  },
+  "cases": [
+    {
+      "name": "retired before capture with a warm module resolver",
+      "change": "before-capture",
+      "expected": "published"
+    },
+    {
+      "name": "retired during read",
+      "change": "during-read",
+      "expected": "published"
+    },
+    {
+      "name": "missing entry",
+      "change": "remove-entry",
+      "expected": "ENOENT"
+    }
+  ]
+}

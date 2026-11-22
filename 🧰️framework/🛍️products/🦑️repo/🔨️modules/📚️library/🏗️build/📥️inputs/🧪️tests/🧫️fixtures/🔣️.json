@@ -279,7 +279,12 @@
       "path": "src/a.ts",
       "pattern": "src/a?.ts",
       "expected": false
-    }
+    },
+    {"path": "src/lifecycle/a.ts", "pattern": "src/{lifecycle,tests/{lifecycle,fixtures/lifecycle}}/**/*", "expected": true},
+    {"path": "src/tests/fixtures/lifecycle/b/a.ts", "pattern": "src/{lifecycle,tests/{lifecycle,fixtures/lifecycle}}/**/*", "expected": true},
+    {"path": "src/tests/other/a.ts", "pattern": "src/{lifecycle,tests/{lifecycle,fixtures/lifecycle}}/**/*", "expected": false},
+    {"path": "d/p/pkg.json", "pattern": "d/{a.ts,p/{pkg.json,s.ts},q}", "expected": true},
+    {"path": "d/p/z.json", "pattern": "d/{a.ts,p/{pkg.json,s.ts},q}", "expected": false}
   ],
   "errors": [
     {

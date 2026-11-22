@@ -30,7 +30,7 @@ export type ArtifactActorConfig = {
 export type ArtifactActorMsg =
   | { readonly kind: "localMutations"; readonly envelopes: readonly MutationEnvelope[] }
   | { readonly kind: "documentBackbone"; readonly message: Uint8Array }
-  | { readonly kind: "localDocumentArchive"; readonly archive: readonly number[] }
+  | { readonly kind: "localDocumentArchive"; readonly archive: Uint8Array }
   | { readonly kind: "presenceHeartbeat"; readonly peer: ArtifactPresencePeer }
   | { readonly kind: "publishPreview"; readonly key: string; readonly seq: number; readonly payload: readonly number[] }
   | { readonly kind: "externalChanged" }
@@ -59,7 +59,7 @@ export type SyncConflict = { readonly message?: string } & Record<string, unknow
 export type ArtifactEvent =
   | { readonly kind: "remoteMutations"; readonly envelopes: readonly MutationEnvelope[] }
   | { readonly kind: "documentBackbone"; readonly message: Uint8Array }
-  | { readonly kind: "documentArchiveReplaced"; readonly archive: readonly number[] }
+  | { readonly kind: "documentArchiveReplaced"; readonly archive: Uint8Array }
   /** 🫙️ The bound folder holds no archive of this document: once per open, from the bootstrap folder read alone, never
    * after an archive was read or written — mirrors Rust `ArtifactEvent::DocumentArchiveAbsent`. */
   | { readonly kind: "documentArchiveAbsent" }
@@ -103,9 +103,8 @@ export function wireArtifactActorMsg(message: ArtifactActorMsg): unknown {
     return { kind: "localMutations", envelopes: encodeCausalEnvelopeBatch(message.envelopes, replicationPackCodec) };
   }
   if (message.kind === "localDocumentArchive") {
-    const archive = Uint8Array.from(message.archive);
-    decodeDocumentArchiveBytes(archive);
-    return { kind: "localDocumentArchive", archive: Array.from(archive) };
+    decodeDocumentArchiveBytes(message.archive);
+    return message;
   }
   return message;
 }
@@ -119,10 +118,9 @@ export function parseArtifactActorMsg(message: Record<string, unknown>): Artifac
     return { kind: "localMutations", envelopes: decodeCausalEnvelopeBatch(message.envelopes as readonly number[], replicationPackCodec) };
   }
   if (message.kind === "localDocumentArchive") {
-    if (Object.keys(message).sort().join(",") !== "archive,kind" || !Array.isArray(message.archive) || message.archive.length === 0 || message.archive.length > DOCUMENT_ARCHIVE_MAXIMUM_BYTES || !message.archive.every((entry) => Number.isInteger(entry) && entry >= 0 && entry <= 255)) throw new Error("backbone worker request: invalid document archive");
-    const archive = Uint8Array.from(message.archive as readonly number[]);
-    decodeDocumentArchiveBytes(archive);
-    return { kind: "localDocumentArchive", archive: Array.from(archive) };
+    if (Object.keys(message).sort().join(",") !== "archive,kind" || !(message.archive instanceof Uint8Array) || message.archive.length === 0 || message.archive.length > DOCUMENT_ARCHIVE_MAXIMUM_BYTES) throw new Error("backbone worker request: invalid document archive");
+    decodeDocumentArchiveBytes(message.archive);
+    return { kind: "localDocumentArchive", archive: message.archive };
   }
   return message as ArtifactActorMsg;
 }
@@ -135,9 +133,8 @@ export function wireArtifactEvent(event: ArtifactEvent): unknown {
     return { kind: "remoteMutations", envelopes: encodeCausalEnvelopeBatch(event.envelopes, replicationPackCodec) };
   }
   if (event.kind === "documentArchiveReplaced") {
-    const archive = Uint8Array.from(event.archive);
-    decodeDocumentArchiveBytes(archive);
-    return { kind: "documentArchiveReplaced", archive: Array.from(archive) };
+    decodeDocumentArchiveBytes(event.archive);
+    return event;
   }
   return event;
 }
@@ -151,10 +148,9 @@ export function parseArtifactEvent(event: Record<string, unknown>): ArtifactEven
     return { kind: "remoteMutations", envelopes: decodeCausalEnvelopeBatch(event.envelopes as readonly number[], replicationPackCodec) };
   }
   if (event.kind === "documentArchiveReplaced") {
-    if (Object.keys(event).sort().join(",") !== "archive,kind" || !Array.isArray(event.archive) || event.archive.length === 0 || event.archive.length > DOCUMENT_ARCHIVE_MAXIMUM_BYTES || !event.archive.every((entry) => Number.isInteger(entry) && entry >= 0 && entry <= 255)) throw new Error("backbone worker response: invalid document archive");
-    const archive = Uint8Array.from(event.archive as readonly number[]);
-    decodeDocumentArchiveBytes(archive);
-    return { kind: "documentArchiveReplaced", archive: Array.from(archive) };
+    if (Object.keys(event).sort().join(",") !== "archive,kind" || !(event.archive instanceof Uint8Array) || event.archive.length === 0 || event.archive.length > DOCUMENT_ARCHIVE_MAXIMUM_BYTES) throw new Error("backbone worker response: invalid document archive");
+    decodeDocumentArchiveBytes(event.archive);
+    return { kind: "documentArchiveReplaced", archive: event.archive };
   }
   if (event.kind === "documentArchiveAbsent") {
     if (Object.keys(event).join(",") !== "kind") throw new Error("backbone worker response: invalid document archive absence");

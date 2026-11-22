@@ -119,7 +119,37 @@ export function wgpuBackboneMessageEffect(effect: WireVariant): Effect | null {
 /** 🔀️ The ONE wire→host effect projection of this bridge: document-backbone messages cross as
  * {@link wgpuBackboneMessageEffect}, everything else through the shared `wireEffectToFriendly`. */
 export function wgpuHostEffect(effect: WireVariant): Effect | null {
+  if (effect.tag === "clipboard-write") {
+    const value = effect.val as { readonly fragment: unknown };
+    return { clipboardWrite: { fragment: decodePackWire(coerceWireBytes(value.fragment), "clipboard.fragment") } };
+  }
   return wgpuBackboneMessageEffect(effect) ?? wireEffectToFriendly(effect, decodePackWire);
+}
+
+const clipboardEffectReceivers = new Map<number, { readonly offer: (effect: WireVariant) => void; readonly released: Promise<void> }>();
+
+/** 📋️ Reserves an instance's clipboard writes for the copy or cut call that will return them to Rust. */
+export async function reserveWgpuClipboardEffects(instanceId: number, offer: (effect: WireVariant) => void): Promise<() => void> {
+  let previous = clipboardEffectReceivers.get(instanceId);
+  while (previous) {
+    await previous.released;
+    previous = clipboardEffectReceivers.get(instanceId);
+  }
+  const release = Promise.withResolvers<void>();
+  clipboardEffectReceivers.set(instanceId, { offer, released: release.promise });
+  return () => {
+    clipboardEffectReceivers.delete(instanceId);
+    release.resolve();
+  };
+}
+
+/** 📥️ Gives a reserved clipboard write to its caller before publishing the turn's completion frame. */
+export function offerWgpuClipboardEffect(instanceId: number, effect: WireVariant): boolean {
+  if (effect.tag !== "clipboard-write") return false;
+  const receiver = clipboardEffectReceivers.get(instanceId);
+  if (!receiver) return false;
+  receiver.offer(effect);
+  return true;
 }
 
 export function leftoverFriendlyEffects(instanceId: number, turns: readonly WireTurnResult[]): Effect[] {
@@ -152,6 +182,7 @@ export function stashLeftoverHostEffects(instanceId: number, effects: readonly W
   const leftover = pendingTurnEffects.get(instanceId) ?? [];
   const before = leftover.length;
   for (const effect of effects) {
+    if (offerWgpuClipboardEffect(instanceId, effect)) continue;
     if (admitSpawnedJob(instanceId, effect)) continue;
     const frame = shellFrameBytes(effect, instanceId);
     if (!frame || !shellFrameAnswersACaller(frame)) leftover.push(effect);

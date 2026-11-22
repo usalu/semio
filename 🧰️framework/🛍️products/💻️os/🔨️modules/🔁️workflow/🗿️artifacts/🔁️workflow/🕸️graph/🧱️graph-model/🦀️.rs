@@ -87,7 +87,7 @@ pub async fn workflow_node_for_app(app: &AppDefinition, plugin_id: &str, node_id
         app_id: app.id.clone(),
         label: label.to_string(),
         yields,
-        artifact_ref: format!("artifacts/{node_id}"),
+        artifact_ref: String::new(),
         config_ref: format!("config/{node_id}"),
         x: position.x,
         y: position.y,

@@ -138,10 +138,10 @@ async fn dwg_full_entity_set_round_trips() {
 #[semio_framework_async_macros::async_test]
 async fn dwg_mesh_bridge_round_trips_triangle_count_and_positions() {
     let mesh = semio_framework_mesh_engine::mesh_box(2.0, 2.0, 2.0);
-    let drawing = mesh_to_dwg_drawing(&mesh);
+    let drawing = mesh_to_dwg_drawing(&mesh).expect("project mesh to DWG");
     let bytes = dwg_to_bytes(&drawing).expect("encode");
     let decoded_drawing = dwg_from_bytes(&bytes).expect("decode");
-    let decoded_mesh = dwg_drawing_to_mesh(&decoded_drawing);
+    let decoded_mesh = dwg_drawing_to_mesh(&decoded_drawing).expect("project DWG faces");
     assert_eq!(decoded_mesh.triangle_count(), mesh.triangle_count());
     assert_eq!(decoded_mesh.vertex_count(), mesh.vertex_count());
 }

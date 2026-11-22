@@ -253,3 +253,14 @@ pub fn editor_source() -> String {
         .collect::<Vec<_>>()
         .join("\n")
 }
+
+/// 🔒️ Whether the `match` arm that lists `tool_id` in its pattern alternation routes to the one-grant `BoundedFirstStepCommandWork` reducer instead of its staged cursorized work.
+pub fn routes_to_one_grant_reducer(source: &str, tool_id: &str) -> bool {
+    let needle = format!("\"{tool_id}\"");
+    source.match_indices(&needle).any(|(start, _)| {
+        let rest = &source[start..];
+        rest.find("=>").is_some_and(|arrow| {
+            !rest[..arrow].contains([';', '{', '}', '(', ')', ',']) && rest[arrow..].lines().next().is_some_and(|line| line.contains("BoundedFirstStepCommandWork"))
+        })
+    })
+}

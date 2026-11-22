@@ -1,0 +1,257 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Natural PDF Source Admission Law",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "trusted",
+    "offer",
+    "begin",
+    "page",
+    "completion",
+    "cases"
+  ],
+  "properties": {
+    "trusted": {
+      "$ref": "#/definitions/trusted"
+    },
+    "offer": {
+      "$ref": "#/definitions/offer"
+    },
+    "begin": {
+      "$ref": "#/definitions/begin"
+    },
+    "page": {
+      "$ref": "#/definitions/page"
+    },
+    "completion": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "stage", "acknowledged", "pendingPage", "expected"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "stage": { "enum": ["Prepared", "Receive", "Sealed", "Lent", "Closing", "Cancelled", "Published", "Failed"] },
+          "acknowledged": { "$ref": "#/definitions/u32" },
+          "pendingPage": { "type": "boolean" },
+          "expected": { "enum": ["Accepted", "Pending", "Refused", "Stale"] }
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "expected"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "expected": {
+            "enum": [
+              "accepted",
+              "refused"
+            ]
+          },
+          "trusted": {
+            "type": "object"
+          },
+          "offer": {
+            "type": "object"
+          },
+          "begin": {
+            "type": "object"
+          },
+          "page": {
+            "type": "object"
+          },
+          "live": {
+            "type": "object"
+          },
+          "wireOnly": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "u32": { "type": "integer", "minimum": 0, "maximum": 4294967295 },
+    "page": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["owner", "generation", "commandIndex", "commandCount", "instance", "seq", "kind", "pageIndex", "pageCount", "itemCount", "metadata", "len", "nextPage"],
+      "properties": {
+        "owner": { "$ref": "#/definitions/instance" },
+        "generation": { "$ref": "#/definitions/token" },
+        "commandIndex": { "const": 0 },
+        "commandCount": { "const": 1 },
+        "instance": { "$ref": "#/definitions/instance" },
+        "seq": { "$ref": "#/definitions/token" },
+        "kind": { "const": 241 },
+        "pageIndex": { "$ref": "#/definitions/u32" },
+        "pageCount": { "$ref": "#/definitions/u32" },
+        "itemCount": { "const": 1 },
+        "metadata": { "$ref": "#/definitions/extent" },
+        "len": { "type": "integer", "minimum": 1, "maximum": 4096 },
+        "nextPage": { "$ref": "#/definitions/u32" }
+      }
+    },
+    "token": {
+      "type": "string",
+      "pattern": "^(?!0{16}$)[0-9a-f]{16}$"
+    },
+    "instance": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 4294967295
+    },
+    "extent": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 536870912
+    },
+    "declaration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "formatKind",
+        "extension",
+        "mediaType",
+        "binary"
+      ],
+      "properties": {
+        "formatKind": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "extension": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 16
+        },
+        "mediaType": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 128
+        },
+        "binary": {
+          "type": "boolean"
+        }
+      }
+    },
+    "trusted": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "operation",
+        "generation",
+        "instance",
+        "fresh",
+        "declaration",
+        "maximum"
+      ],
+      "properties": {
+        "operation": {
+          "$ref": "#/definitions/token"
+        },
+        "generation": {
+          "$ref": "#/definitions/token"
+        },
+        "instance": {
+          "$ref": "#/definitions/instance"
+        },
+        "fresh": {
+          "type": "boolean"
+        },
+        "declaration": {
+          "$ref": "#/definitions/declaration"
+        },
+        "maximum": {
+          "$ref": "#/definitions/extent"
+        }
+      }
+    },
+    "offer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "declaration",
+        "extent"
+      ],
+      "properties": {
+        "declaration": {
+          "$ref": "#/definitions/declaration"
+        },
+        "extent": {
+          "$ref": "#/definitions/extent"
+        }
+      }
+    },
+    "loan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "operation",
+        "generation",
+        "instance",
+        "declaration",
+        "extent"
+      ],
+      "properties": {
+        "operation": {
+          "$ref": "#/definitions/token"
+        },
+        "generation": {
+          "$ref": "#/definitions/token"
+        },
+        "instance": {
+          "$ref": "#/definitions/instance"
+        },
+        "declaration": {
+          "$ref": "#/definitions/declaration"
+        },
+        "extent": {
+          "$ref": "#/definitions/extent"
+        }
+      }
+    },
+    "begin": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "loan",
+        "owner",
+        "seq",
+        "kind",
+        "extent"
+      ],
+      "properties": {
+        "loan": {
+          "$ref": "#/definitions/loan"
+        },
+        "owner": {
+          "$ref": "#/definitions/instance"
+        },
+        "seq": {
+          "$ref": "#/definitions/token"
+        },
+        "kind": {
+          "const": 241
+        },
+        "extent": {
+          "$ref": "#/definitions/extent"
+        }
+      }
+    }
+  }
+}

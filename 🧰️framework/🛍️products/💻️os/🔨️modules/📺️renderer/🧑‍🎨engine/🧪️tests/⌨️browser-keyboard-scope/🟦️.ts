@@ -107,6 +107,15 @@ describe("browser keyboard scope", () => {
     expect(events).toHaveLength(disposedCount);
   });
 
+  it("carries the DOM auto-repeat flag of a held key on keydown only", () => {
+    const { canvas, events } = mount();
+    canvas.focus();
+    canvas.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true, cancelable: true }));
+    canvas.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", repeat: true, bubbles: true, cancelable: true }));
+    canvas.dispatchEvent(new KeyboardEvent("keyup", { key: "ArrowRight", bubbles: true, cancelable: true }));
+    expect(events.map(event => [event.type, "repeat" in event ? event.repeat : undefined])).toEqual([["keydown", false], ["keydown", true], ["keyup", undefined]]);
+  });
+
   for (const row of fixture.retirementCases) it(row.id, async () => {
     vi.useFakeTimers();
     const root = document.createElement("main");

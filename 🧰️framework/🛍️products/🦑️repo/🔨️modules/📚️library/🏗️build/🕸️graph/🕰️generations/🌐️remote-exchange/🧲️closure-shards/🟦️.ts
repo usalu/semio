@@ -132,7 +132,7 @@ export async function readClosureShardsV1(shards:readonly ClosureShardV1[],strea
   for(const {name,digest} of files){
    const key=name.slice(2,-5),size=Number(digest?.size_bytes),namespace=name[0]==="i"?"build-input-closures":"build-lock-closures";
    if(!entryName.test(name)||name<=previous||key!==digest?.hash||!validSize(size,CLOSURE_POLICY_V1.maximumLeafBytes))throw Error("Closed unique generation closure entry required");
-   const leaf={namespace,key,size};leaves.push(leaf);inventory.set(name,leaf);previous=name;
+   const leaf:ClosureLeafV1={namespace,key,size};leaves.push(leaf);inventory.set(name,leaf);previous=name;
   }
   if(!bytes.equals(encodeTree(leaves)))throw Error("Canonical generation closure shard required");
  }

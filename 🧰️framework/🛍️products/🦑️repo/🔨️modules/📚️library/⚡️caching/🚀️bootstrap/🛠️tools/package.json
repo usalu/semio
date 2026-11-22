@@ -15,6 +15,7 @@
     "./sdk/binary/testing/runtime": "./📦️sdk/🧊️binary/🧪️tests/📥️runtime/🟦️.ts",
     "./sdk/binary/schema.json": "./📦️sdk/🧊️binary/🧬️schema/🔣️.json",
     "./authorizers/receipt": "./🔏️authorizers/📤️receipt/🟦️.ts",
+    "./authorizers/bundle": "./🔏️authorizers/📦️bundle/🟦️.ts",
     "./authorizers/snapshot": "./🔏️authorizers/📦️snapshot/🟦️.ts",
     "./authorizers/workspace": "./🔏️authorizers/📦️workspace/🟦️.ts",
     "./authorizers": "./🔏️authorizers/🟦️.ts",

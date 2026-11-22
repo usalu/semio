@@ -84,3 +84,9 @@ Poses, clips, contact anchors and the wheel rolling rule (theta = -x / r) do not
 Scripts: `r3-vintage-car-1929.py` (driver), `-kit.py`, `-s50.py`, `-coarse.py`, `-decisions.py`, `-2d.py`, `-root.py`, `-suit.ts`, `-go.sh` (one iteration: source, candidate, validate, root apply, splice, suitability). Output under `🗑️generated/r3-vintage-car-1929/`.
 
 The finished 1:100 band uses a 0.20 mm contour around the front hubcaps. At 1:150 both original contours measured 0.1967 mm. Both corrected contours passed at denominators 75, 100 and 150. The revised model also passed the complete four-scale measurement and its 6,038,780-byte GLB reopened in all twelve scenes.
+
+## November 21 road wheels and body framing
+
+Twelve tapered spokes meet the narrow rim, with the brake drum inboard. Four pairs of coachwork pillars, the roof bows, sills and cant rails are retained. The thermal view distinguishes the tyre carcass, wheel metal and brake. The measured metal surface totals 1.8439 m² across the four wheels. The full model passed schema and paper endpoint checks, all 52 scale rules and a twelve-scene independent GLB readback of 6,377,472 bytes. The outer, oblique and inner wheel detail views were inspected in the 1:500 body.
+
+Published source `0d14a9330b0353dbaac1fcd167026098544b5682a88f8512d3963980162a503d`.

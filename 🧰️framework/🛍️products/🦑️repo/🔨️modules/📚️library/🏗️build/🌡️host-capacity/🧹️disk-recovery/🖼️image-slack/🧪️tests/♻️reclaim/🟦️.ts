@@ -1,12 +1,14 @@
 /** ♻️ Contract: the image-slack collector returns blocks in place first (UNMAP reclaim, nothing recreated), retires an elastic image only when the reclaim could not, never retires an image it just reclaimed, reclaims inelastic images too, names every outcome in both languages and stops at the target; on a real synthetic image the blocks come back and the unit cache content is intact. */
-import{afterAll,expect,test}from"bun:test";
+import{afterAll,expect,spyOn,test}from"bun:test";
 import{spawnSync}from"node:child_process";
 import{createHash}from"node:crypto";
 import{existsSync,lstatSync,mkdirSync,mkdtempSync,readFileSync,realpathSync,rmSync,truncateSync,writeFileSync}from"node:fs";
 import{tmpdir}from"node:os";
 import{basename,join,parse}from"node:path";
 import fixture from "./🔣️receipts.json" with{type:"json"};
-import{readImageReclaimReceiptV1}from"../../../🔌️real/🟦️.ts";
+import{readImageReclaimReceiptV1,realDiskWritersV1}from"../../../🔌️real/🟦️.ts";
+import{DISK_WRITERS_V1}from"../../../🟦️.ts";
+import*as imageSlack from"../../🟦️.ts";
 import project from"../../../../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/📋️project.json"with{type:"json"};
 import{IMAGE_SLACK_V1,collectImageSlackV1,describeImageSlackV1,type ImageOutcomeV1,type ImageReclaimOutcomeV1,type ImageRowV1}from"../../🟦️.ts";
 import{createNativeImageDarwinReclaimPortV1,nativeImageReclaimDueV1,nativeImageReclaimMechanismV1,reclaimNativeImageV1}from"../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🍎️image/♻️reclaim/🟦️.ts";
@@ -14,7 +16,8 @@ import{createNativeImageDarwinReclaimPortV1,nativeImageReclaimDueV1,nativeImageR
 import {Database} from "bun:sqlite";
 import {nativeImageVolumeUsedBytesSyncV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🍎️image/⚖️availability/🟦️.ts";
 import ts from "typescript";
-import {isImageRecoveryStillDueV1} from "../../../../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/🟦️.ts";
+import {ResourceLeaseTimeoutErrorV1} from "../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import {imageRecoverySkipReasonV1} from "../../../../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/🟦️.ts";
 import {repositoryPartitionReclaimRuleV1} from "../../../../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🟦️.ts";
 
 const GIB=1024**3,MIB=1024**2,roots:string[]=[];
@@ -57,18 +60,18 @@ test("the pressured planner and non-waiting executor agree on current mounted sl
  const body=tree.statements.find(node=>ts.isFunctionDeclaration(node)&&node.name?.text==="reclaimImageIfQuiescentV1")!.getText(tree).replace(/^export /u,"");
  const code=ts.transpileModule(body,{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
  using oracle=new Database(":memory:");
- const admissible=oracle.query("select case when ?1 then ?2 < 24 and ?3 - ?4 - 0.0625 >= max(1,?3/10.0) and not (?5 or ?6 or ?7 or ?8 or ?9) else ?3 >= 3*?4 end as yes");
+ const admissible=oracle.query("select case when ?1 then ?2 < 24 and ?3 - ?4 - 0.0625 >= max(1,?3/10.0) and not (?5 or ?6 or ?7 or ?8 or ?9 or ?10) else (?2 < 48 or ?3 >= 3*?4) and ?3 - ?4 >= (case when ?2 < 48 then 1 else 8 end) end as yes");
  const directory="/cache/r",root=directory+"/m",image=directory+"/fixed.dmg";
  for(const sample of fixture.pressureCases){
   const {pressure,allocated,used,free}=sample;
-  const expected=admissible.get(+pressure,free,allocated,used,+!!sample.busy,+!!sample.wrongDevice,+!!sample.detached,+!!sample.retiring,+!!sample.cancel) as {yes:number};
+  const expected=admissible.get(+pressure,free,allocated,used,+!!sample.busy,+!!sample.wrongDevice,+!!sample.detached,+!!sample.retiring,+!!sample.cancel,+!!(sample.leaseFailed||sample.occupancyUnavailable||sample.cycleFailed||sample.releaseFailed)) as {yes:number};
   expect(Boolean(expected.yes),sample.name).toBe(sample.effect);
   const stop=new AbortController(),control={signal:stop.signal};
   const backingDevice=sample.wrongDevice?7:4,mountDevice=sample.detached?backingDevice:9;
   const entry=(dev:number,file:boolean)=>({dev,nlink:1,blocks:allocated*GIB/512,isFile:()=>file,isDirectory:()=>!file,isSymbolicLink:()=>false});
   let effects=0,held=false,requests=0,released=0,routine=0,reported: number=14*GIB;
   const ports={
-   process:{platform:"darwin"},join,nativeImageReclaimMechanismV1,isImageRecoveryStillDueV1,
+   process:{platform:"darwin"},join,nativeImageReclaimMechanismV1,imageRecoverySkipReasonV1,ResourceLeaseTimeoutErrorV1,
    imageSlack:IMAGE_SLACK_V1,requireIssuedResourceControlInvocationV1:()=>undefined,checkResourceLeaseControl:()=>stop.signal.throwIfAborted(),
    callerRepositoryRootV1:()=>"/repo",repositoryCacheBudgetV1:()=>({partitions:{rust:{directory}}}),repositoryLeaseDirectoryV1:()=>"/leases",
    nativeRecomputableRetirementPendingV1:()=>held&&sample.retiring,repositoryPartitionReclaimDueV1:()=>{
@@ -76,33 +79,37 @@ test("the pressured planner and non-waiting executor agree on current mounted sl
    },
    acquireResourceLease:async(options:Record<string,unknown>)=>{
     requests++;expect(options).toMatchObject({resource:"native-fixed-image:"+directory,mode:"exclusive",timeoutMs:0,signal:stop.signal});
-    if(sample.busy)throw Error("busy");
+    if(sample.busy)throw new ResourceLeaseTimeoutErrorV1({directory:"/leases",resource:"native-fixed-image:"+directory},0);
+     if(sample.leaseFailed)throw Error("lease store could not be read");
     held=true;if(sample.cancel)stop.abort();
-    return{release(){held=false;released++;}};
+    return{release(){held=false;released++;if(sample.releaseFailed)throw Error("release failed");}};
    },
    nativeImageRootV1:()=>root,lstatSync:(name:string)=>name===image?entry(backingDevice,true):entry(name===root?mountDevice:backingDevice,false),
    statfsSync:(name:string)=>name===root?{blocks:100,bfree:free,bsize:GIB}:{blocks:100,bavail:free,bsize:GIB},
-   nativeImageVolumeUsedBytesSyncV1:(name:string,volume:{blocks:number;bfree:number;bsize:number})=>nativeImageVolumeUsedBytesSyncV1(name,volume,"darwin",()=>
+   nativeImageVolumeUsedBytesSyncV1:(name:string,volume:{blocks:number;bfree:number;bsize:number})=>nativeImageVolumeUsedBytesSyncV1(name,volume,"darwin",()=>sample.occupancyUnavailable?undefined:
     `<plist version="1.0"><dict><key>MountPoint</key><string>${root}</string><key>FilesystemType</key><string>apfs</string><key>CapacityInUse</key><integer>${used*GIB}</integer></dict></plist>`),
    existsSync:()=>true,createNativeImageReclaimPortV1:()=>({}),
    reclaimNativeImageV1:async()=>{
-    expect(held).toBe(true);effects++;reported=24*GIB;
+    expect(held).toBe(true);if(sample.cycleFailed)throw Error("cycle failed");effects++;if(!sample.releaseFailed)reported=24*GIB;
     return{beforeBytes:allocated*GIB,afterBytes:used*GIB,settled:true};
    },
   };
   const run=new Function(...Object.keys(ports),code+";return reclaimImageIfQuiescentV1;")(...Object.values(ports));
-  if(pressure){
+  const invoke=async(id:string)=>readImageReclaimReceiptV1(await run({},control,id,undefined,pressure?{version:1,device:4,requiredFreeBytes:24*GIB}:undefined),id);
+   const expectedOutcome=sample.effect?{kind:"reclaimed"}:{kind:"skipped",reason:sample.reason};
+   let observed:ImageReclaimOutcomeV1|undefined;
+   if(pressure){
    const result=collectImageSlackV1({
     rows:[{...row("rust",66,35),device:4}],pressureDevice:4,targetFreeBytes:24*GIB,freeBytes:()=>reported,language:"en",signal:stop.signal,
-    reclaim:async id=>await run({},control,id,undefined,{version:1,device:4,requiredFreeBytes:24*GIB})?{kind:"reclaimed"}:{kind:"skipped"},
+    reclaim:async id=>observed=await invoke(id),
     retire:async()=>({kind:"held"}),
    });
    if(sample.cancel)await expect(result).rejects.toThrow();
-   else expect((await result).reclaimed).toEqual(sample.effect?["rust"]:[]);
-  }else await run({},control,"rust");
-  expect(effects,sample.name).toBe(+sample.effect);
+   else{expect((await result).reclaimed).toEqual(sample.effect?["rust"]:[]);expect(observed,sample.name).toEqual(expectedOutcome);}
+  }else expect(await invoke("rust"),sample.name).toEqual(expectedOutcome);
+  expect(effects,sample.name).toBe(Number(sample.effect||!!sample.releaseFailed));
   expect(routine,sample.name).toBe(+!pressure);
-  expect(released,sample.name).toBe(requests-(sample.busy?1:0));
+  expect(released,sample.name).toBe(requests-(sample.busy||sample.leaseFailed?1:0));
   expect(held).toBe(false);
  }
 });
@@ -123,33 +130,36 @@ test("reclaim comes first for every bloated image, an inelastic image is reclaim
 
 test("when the reclaim cannot help, an elastic image is retired next, an inelastic one is skipped with the reason named, a failed reclaim is named and retire still follows",async()=>{
  const rows=[row("rust",22,10),row("dependencies",14,6),row("graph",9,2)],calls:string[]=[],lines:string[]=[];let free=0;
- const answers:Record<string,ImageReclaimOutcomeV1>={rust:{kind:"skipped"},dependencies:{kind:"skipped"},graph:{kind:"failed",message:"hdiutil busy"}};
- const result=await collectImageSlackV1({rows,targetFreeBytes:999*GIB,freeBytes:()=>free,language:"en",report:line=>lines.push(line),
+ const answers:Record<string,ImageReclaimOutcomeV1>={rust:{kind:"skipped",reason:"lease-timeout"},dependencies:{kind:"skipped",reason:"retirement-pending"},graph:{kind:"failed",message:"hdiutil busy"}};
+ const result=await collectImageSlackV1({rows,targetFreeBytes:999*GIB,freeBytes:()=>free,language:"both",report:line=>lines.push(line),
   reclaim:async id=>{calls.push("reclaim "+id);return answers[id]!;},
   retire:async id=>{calls.push("retire "+id);free+=id==="rust"?12*GIB:7*GIB;return{kind:"retired"} as ImageOutcomeV1;}});
  expect(calls).toEqual(["reclaim rust","retire rust","reclaim dependencies","reclaim graph","retire graph"]);
  expect(result.retired).toEqual(["rust","graph"]);expect(result.reclaimed).toEqual([]);
- expect(lines.some(line=>line.includes("dependencies")&&line.includes("in place"))).toBe(true);expect(lines.some(line=>line.includes("hdiutil busy"))).toBe(true);
+ const missed=lines.find(line=>line.includes("dependencies"))!.split(" / ");
+ expect(missed[0]).toContain("retirement is pending");expect(missed[1]).toContain("steht aus");
+ expect(lines.some(line=>line.includes("hdiutil busy"))).toBe(true);
 });
 
 test("settled zero block gain permits only the existing eligible fallback while still short",async()=>{
  const oracle=spawnSync("repo",["tools","exec","--light","python","--","-c",`import json,sys
-for row in json.load(sys.stdin)["cases"]:
+fixture=json.load(sys.stdin)
+for row in fixture["cases"]:
  receipt=row["receipt"]
  if receipt and receipt["outcome"]=="skipped":
-  print("skipped" if not receipt["settled"] and receipt["beforeBytes"]==0 and receipt["afterBytes"]==0 else "unconfirmed")
+  print("skipped:"+receipt["reason"] if receipt["partition"]=="rust" and receipt.get("reason") in fixture["reasons"] and not receipt["settled"] and receipt["beforeBytes"]==0 and receipt["afterBytes"]==0 else "unconfirmed")
   continue
- trustworthy=receipt and receipt["partition"]=="rust" and receipt["settled"] and receipt["beforeBytes"]>=receipt["afterBytes"]>=0
+ trustworthy=receipt and "reason" not in receipt and receipt["partition"]=="rust" and receipt["settled"] and receipt["beforeBytes"]>=receipt["afterBytes"]>=0
  if not trustworthy:
   print("unconfirmed")
  else:
   print("unchanged" if receipt["beforeBytes"]==receipt["afterBytes"] else "reclaimed")
 `],{input:JSON.stringify(fixture),encoding:"utf8"});
  expect(oracle.status).toBe(0);
- expect(oracle.stdout.trim().split("\n")).toEqual(fixture.cases.map(row=>row.kind));
+ expect(oracle.stdout.trim().split("\n")).toEqual(fixture.cases.map(row=>row.kind==="skipped"?row.kind+":"+row.receipt?.reason:row.kind));
  for(const sample of fixture.cases){
   const answer=readImageReclaimReceiptV1(sample.receipt,"rust");
-  expect(answer.kind).toBe(sample.kind);
+  expect(answer).toEqual(sample.kind==="skipped"?{kind:"skipped",reason:sample.receipt?.reason}:{kind:sample.kind});
   for(const [id,short,cancel] of [["rust",true,false],["rust",false,false],["dependencies",true,false],["rust",true,true]] as const){
    let free=0,retire=0;const controller=new AbortController();
    const collected=collectImageSlackV1({rows:[row(id,22,10)],targetFreeBytes:GIB,freeBytes:()=>free,language:"both",signal:controller.signal,
@@ -164,7 +174,7 @@ test("detached nomination is bounded to eligible registered backing files on the
  const incoming=[{...row("rust",22,10,false),device:4},{...row("graph",9,2,false),device:9},{...row("dependencies",20,1,false),device:4},{...row("products",0.5,0.2,false),device:4},{...row("tools",20,1,true),device:9}];
  for(const device of [undefined,4,9]){
   const calls:string[]=[];
-  await collectImageSlackV1({rows:incoming,targetFreeBytes:GIB,pressureDevice:device,freeBytes:()=>0,language:"both",reclaim:async id=>{calls.push("reclaim "+id);return{kind:"skipped"};},retire:async id=>{calls.push("inspect "+id);return{kind:"skipped"};}});
+  await collectImageSlackV1({rows:incoming,targetFreeBytes:GIB,pressureDevice:device,freeBytes:()=>0,language:"both",reclaim:async id=>{calls.push("reclaim "+id);return{kind:"skipped",reason:"not-due"};},retire:async id=>{calls.push("inspect "+id);return{kind:"skipped"};}});
   expect(calls).toEqual(device===undefined?["reclaim tools"]:device===4?["inspect rust"]:["reclaim tools","inspect graph"]);
  }
 });
@@ -177,7 +187,7 @@ test("the collector stops at the target, skips unmounted and small images, honou
  await collectImageSlackV1({rows:[row("rust",22,10,false),row("nx",0.5,0.45)],targetFreeBytes:99*GIB,freeBytes:()=>0,language:"en",reclaim:async id=>{none.push(id);return{kind:"reclaimed"};},retire:async()=>({kind:"retired"})});
  expect(none).toEqual([]);
  const controller=new AbortController();
- await expect(collectImageSlackV1({rows:[row("rust",22,10),row("graph",9,2)],targetFreeBytes:99*GIB,freeBytes:()=>0,language:"en",signal:controller.signal,reclaim:async()=>{controller.abort();return{kind:"skipped"};},retire:async()=>({kind:"retired"})})).rejects.toThrow();
+ await expect(collectImageSlackV1({rows:[row("rust",22,10),row("graph",9,2)],targetFreeBytes:99*GIB,freeBytes:()=>0,language:"en",signal:controller.signal,reclaim:async()=>{controller.abort();return{kind:"skipped",reason:"not-due"};},retire:async()=>({kind:"retired"})})).rejects.toThrow();
  const old:string[]=[];
  const legacy=await collectImageSlackV1({rows:[row("rust",22,10)],targetFreeBytes:99*GIB,freeBytes:()=>0,language:"en",retire:async id=>{old.push(id);return{kind:"retired"};}});
  expect(old).toEqual(["rust"]);expect(legacy.reclaimed).toEqual([]);
@@ -235,7 +245,7 @@ test.skipIf(process.platform!=="darwin")("a real synthetic image gives its delet
  const run=async(program:string,args:readonly string[])=>{const result=spawnSync(program,[...args],{encoding:"utf8"});if(result.status!==0)throw Error(program+": "+result.stderr);return result.stdout;};
  let reclaimedBytes=0;
  const result=await collectImageSlackV1({rows:[{id:"rust",directory,mounted:true,allocatedBytes:stale,usedBytes:10*MIB,slackBytes:stale-10*MIB-IMAGE_SLACK_V1.filesystemOverheadBytes}],targetFreeBytes:Number.MAX_SAFE_INTEGER,freeBytes:()=>reclaimedBytes,language:"en",policy:{...IMAGE_SLACK_V1,minimumSlackBytes:32*MIB,minimumSlackPercent:10},
-  reclaim:async()=>{const outcome=await reclaimNativeImageV1(createNativeImageDarwinReclaimPortV1({image,cwd:directory,run}),{check:()=>{}});reclaimedBytes=outcome.beforeBytes-outcome.afterBytes;return outcome.afterBytes<outcome.beforeBytes?{kind:"reclaimed"}:{kind:"skipped"};},
+  reclaim:async()=>{const outcome=await reclaimNativeImageV1(createNativeImageDarwinReclaimPortV1({image,cwd:directory,run}),{check:()=>{}});reclaimedBytes=outcome.beforeBytes-outcome.afterBytes;return outcome.afterBytes<outcome.beforeBytes?{kind:"reclaimed"}:{kind:"unchanged"};},
   retire:async()=>{throw Error("a reclaimed image must not be retired");}});
  expect(result.reclaimed).toEqual(["rust"]);expect(result.retired).toEqual([]);
  const after=lstatSync(image);expect(after.blocks*512).toBeLessThan(stale-100*MIB);expect(reclaimedBytes).toBeGreaterThan(100*MIB);
@@ -244,3 +254,47 @@ test.skipIf(process.platform!=="darwin")("a real synthetic image gives its delet
  attach();
  try{for(const [file,digest] of Object.entries(keep))expect(sha(file)).toBe(digest);}finally{hdiutil("detach",mount,"-quiet");}
 },240_000);
+
+
+test("build intake limits mounted reclaim and ordinary fallback to the pressured device, without detached inspection",async()=>{
+ const sample=fixture.buildIngress,calls:string[]=[],rows=sample.images.map(image=>({...row(image.id,image.allocatedGiB,image.usedGiB,image.mounted),device:image.device}));
+ using oracle=new Database(":memory:");
+ const expected=oracle.query(`with eligible as (
+  select key,json_extract(value,'$.id') id,json_extract(value,'$.busy') busy from json_each(?1)
+  where json_extract(value,'$.device')=?2 and json_extract(value,'$.mounted'))
+ select 'reclaim ' || id action,key*2 position from eligible union all
+ select 'retire ' || id,key*2+1 from eligible where busy order by position`).all(JSON.stringify(sample.images),sample.device) as {action:string}[];
+ await collectImageSlackV1({rows,pressureDevice:sample.device,inspectDetached:false,targetFreeBytes:30*GIB,freeBytes:()=>0,language:"en",
+  reclaim:async id=>{calls.push("reclaim "+id);return sample.images.some(image=>image.id===id&&image.busy)?{kind:"skipped",reason:"lease-timeout"}:{kind:"reclaimed"};},
+  retire:async id=>{calls.push("retire "+id);return{kind:"held"};}});
+ expect(calls).toEqual(expected.map(row=>row.action));
+});
+
+test.skipIf(process.platform!=="darwin")("the real image writer sends only the in-place child the measured device and pressure",async()=>{
+ const sample=fixture.buildIngress,workspace=mkdtempSync(join(tmpdir(),"image-pressure-"));roots.push(workspace);
+ const device=lstatSync(workspace).dev,target=30*GIB,calls:string[]=[];
+ let free=sample.startGiB*GIB;
+ const measure=spyOn(imageSlack,"measureImagesV1").mockReturnValue(sample.images.map(image=>({
+  ...row(image.id,image.allocatedGiB,image.usedGiB,image.mounted),device:image.device===sample.device?device:device+1,
+ })));
+ try{
+  const row=DISK_WRITERS_V1.find(item=>item.id==="image-slack")!;
+  const [writer]=realDiskWritersV1({workspace,home:workspace,tmp:workspace,uid:0,environment:{},
+   reclaimPressure:{path:workspace,requiredFreeBytes:target,freeBytes:()=>free},
+   reclaim:async(id,_signal,recovery)=>{
+    expect(recovery).toEqual({version:1,device,requiredFreeBytes:target});
+    calls.push("reclaim "+id);
+    if(sample.images.some(image=>image.id===id&&image.busy))return{kind:"skipped",reason:"lease-timeout"};
+    free=target;
+    return{kind:"reclaimed"};
+   },
+   retire:async(id,_signal,recovery)=>{
+    expect(recovery).toBeUndefined();
+    calls.push("retire "+id);
+    return{kind:"held"};
+   },
+  },[row]);
+  expect(await writer!.collect!({needBytes:target-free})).toBe(target-sample.startGiB*GIB);
+  expect(calls).toEqual(["reclaim rust","retire rust","reclaim dependencies"]);
+ }finally{measure.mockRestore();}
+});

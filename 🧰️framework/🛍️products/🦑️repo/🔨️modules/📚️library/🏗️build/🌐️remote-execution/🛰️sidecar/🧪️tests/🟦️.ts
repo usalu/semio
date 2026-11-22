@@ -88,7 +88,7 @@ test("the cache role is a supervised server of the current code: it binds the fl
  const factsPath=join(store,"v1","fleet","cache.json"),child=Bun.spawn([bun,sidecar,"cache"],{stdout:"ignore",stderr:"ignore",cwd:directory,env:environment});children.push(child);
  await eventuallyV1(()=>{try{return JSON.parse(readFileSync(factsPath,"utf8")).publisher.port===port;}catch{return false;}},30000,"the cache sidecar must publish the facts");
  const facts=JSON.parse(readFileSync(factsPath,"utf8"));
- expect(facts.publisher.directory).toBe(join(worktree,".cache","f","cache-server"));expect(facts.cache.endpoints).toEqual([`http://127.0.0.1:${port}`]);expect(readFileSync(factsPath,"utf8").toLowerCase()).not.toContain("token");
+ expect(facts.publisher.directory).toBe(join(worktree,".cache","b","p","m","fleet","cache-server"));expect(facts.cache.endpoints).toEqual([`http://127.0.0.1:${port}`]);expect(readFileSync(factsPath,"utf8").toLowerCase()).not.toContain("token");
  expect((await fetch(`http://127.0.0.1:${port}/status`)).status,"unsigned").toBe(401);
  await refreshFleetCacheFactsV1({root:member,force:true});
  const signed=remoteCacheFetchV1({SEMIO_WORKSPACE_ROOT:member},{root:member});
@@ -126,3 +126,41 @@ test("the cache role takes its port and the hosts it advertises from the topolog
  expect((await reader(`http://127.0.0.1:${port}/main/cas/${hash}`,{method:"PUT",body:"x"})).status,"but not write").toBe(403);
  child.kill("SIGTERM");expect(await child.exited).toBe(0);
 },120000);
+
+test("a stalled event loop is reported with its length and the open files, in both languages, and a loop that keeps its beat says nothing",async()=>{
+ const {createLoopLagWatchV1}=await import("../🧰️shared/🟦️.ts");
+ let clock=0;const lines:string[]=[],watch=createLoopLagWatchV1({intervalMilliseconds:1000,thresholdMilliseconds:1500,now:()=>clock,openFiles:()=>830,report:line=>lines.push(line)});
+ for(let beat=0;beat<5;beat++){clock+=1100;watch.tick();}
+ expect(lines).toEqual([]);
+ clock+=10_000;watch.tick();
+ expect(lines.length).toBe(1);expect(lines[0]).toContain("stalled for 9000 ms");expect(lines[0]).toContain("830 files open");expect(lines[0]).toContain("stand 9000 ms still");
+});
+
+test("a server that answers hundreds of requests a second wakes its restart check only when a restart waits for the last request, and at most once a second",async()=>{
+ const {createActivityWakeV1}=await import("../🧰️shared/🟦️.ts");
+ let clock=0,wakes=0;const work={busy:false,restartPending:false,wake:()=>{wakes++;}},activity=createActivityWakeV1(work,{now:()=>clock});
+ for(let request=0;request<500;request++){activity(1);clock+=2;activity(0);}
+ expect(wakes,"nothing waits for the server: the code is never scanned").toBe(0);expect(work.busy).toBe(false);
+ work.restartPending=true;
+ for(let request=0;request<500;request++){activity(1);expect(work.busy).toBe(true);clock+=2;activity(0);}
+ expect(wakes,"1000 ms of requests wake the check once, not 500 times").toBe(1);
+ clock+=1500;activity(1);activity(0);expect(wakes).toBe(2);
+ activity(2);activity(1);expect(wakes,"still busy: no wake").toBe(2);
+ expect(()=>createActivityWakeV1(undefined)(1)).not.toThrow();
+});
+
+test("a late event loop names what it was busy in: lines below the stall threshold are rate limited, a stall always says it, and the real sampling profiler sees the function that kept the loop",async()=>{
+ const {createLoopLagWatchV1,createStallProfilerV1}=await import("../🧰️shared/🟦️.ts");
+ let clock=0;const lines:string[]=[],watch=createLoopLagWatchV1({intervalMilliseconds:1000,thresholdMilliseconds:1500,attributeMilliseconds:400,attributeEveryMilliseconds:5000,now:()=>clock,openFiles:()=>12,profile:()=>()=>"7x spin@a/b.ts:3",report:line=>lines.push(line)});
+ clock+=1100;watch.tick();expect(lines).toEqual([]);
+ clock+=1600;watch.tick();expect(lines.length).toBe(1);expect(lines[0]).toContain("late");expect(lines[0]).toContain("busy in 7x spin@a/b.ts:3");expect(lines[0]).toContain("beschäftigt in 7x spin@a/b.ts:3");
+ clock+=1600;watch.tick();expect(lines.length,"rate limited").toBe(1);
+ clock+=6000;watch.tick();expect(lines.length).toBe(2);
+ clock+=3000;watch.tick();expect(lines.length).toBe(3);expect(lines[2]).toContain("stalled for 2000 ms");expect(lines[2]).toContain("12 files open");expect(lines[2]).toContain("busy in 7x spin@a/b.ts:3");
+ const profile=await createStallProfilerV1();
+ if(profile===undefined)return;
+ profile();
+ function keepTheLoopBusy():number{let sum=0;for(let index=0;index<8e7;index++)sum+=index%7;return sum;}
+ expect(keepTheLoopBusy()).toBeGreaterThan(0);
+ expect(profile()()).toContain("keepTheLoopBusy");
+});

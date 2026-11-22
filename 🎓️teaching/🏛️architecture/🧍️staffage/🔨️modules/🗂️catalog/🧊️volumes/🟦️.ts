@@ -3,7 +3,7 @@
  * Analytic rules (availability, bones, feature, presence of thermal and structural solids, the per-solid `volume-*` rules) come from {@link ../🧱️rules/🟦️.ts} and `../🧊️volume/🟦️.ts`; the geometric rules tessellate with the owned kernel and
  * measure with the owned raster ({@link ../🌓️silhouette/🟦️.ts}), the owned column union and the owned ray parity: `volumes-silhouette` (IoU and Hausdorff of the body against the filled 2D shapes of the same scale in every viewpoint),
  * `volumes-bounds`, `volumes-monotonic` (expanded solids and triangles per list), `volumes-cross-scale` (IoU, Hausdorff and union volume against the finer authored scale), the area and box part of `volumes-thermal-coverage`
- * and the containment and ground part of `volumes-structure-coverage`. A thermal solid that is or references an `envelope: true` solid gives its region coverage but stands for a porous lattice, so its hull surface is left out of the exposed-area sums (C22); a solid tagged `emitter` (a plume, a breath) gives coverage but is no surface either, so it is left out of the sums too, and only its centre has to lie in the body box. The outer area of a region counts the faces the air from outside reaches through the thermal solids of the scale or that a solid of another region covers; the faces of a cavity those solids close off do not count when they are the inside of its closure, and a region that is contents of a closed cavity counts its whole surface, which exchanges with the enclosed air (C31, E3, `outsideOf`, `outerOfShares`; the cell of the flood is the measurement `info:floodCellM`, the share of the contents `info:cavityAreaM2:<region>`). A region that is not `hidden` and lies wholly in a closed cavity fails unless a glazing region (`VOLUME_LIMITS.transparentRegionKinds`) lets one see it (`seenFromOutside`). Every limit is in {@link VOLUME_LIMITS}. Expensive work reports progress and stops on cancellation.
+ * and the containment and ground part of `volumes-structure-coverage`, and `volumes-connected` ({@link connectedRule}: the body is one object in the default pose and every load path of the structure reaches a support, by the exact distances between the triangles of the parts). A thermal solid that is or references an `envelope: true` solid gives its region coverage but stands for a porous lattice, so its hull surface is left out of the exposed-area sums (C22); a solid tagged `emitter` (a plume, a breath) gives coverage but is no surface either, so it is left out of the sums too, and only its centre has to lie in the body box. The outer area of a region counts the faces the air from outside reaches through the thermal solids of the scale or that a solid of another region covers; the faces of a cavity those solids close off do not count when they are the inside of its closure, and a region that is contents of a closed cavity counts its whole surface, which exchanges with the enclosed air (C31, E3, `outsideOf`, `outerOfShares`; a solid of another region covers a face only when it stands between the face and the air, so a part that passes through a closed shell covers nothing inside it; `thermal.minimumAirPassageM` declares the narrowest real air passage of the asset, the cell of the flood is then at most a third of it at every scale and a flood whose budget cannot keep that cell is a finding (`airPassageCellM`); the cell of the flood is the measurement `info:floodCellM`, the share of the contents `info:cavityAreaM2:<region>`). A region that is not `hidden` and lies wholly in a closed cavity fails unless a glazing region (`VOLUME_LIMITS.transparentRegionKinds`) lets one see it (`seenFromOutside`). Every limit is in {@link VOLUME_LIMITS}. Expensive work reports progress and stops on cancellation.
  *
  * THE REFERENCES are shapely and numpy (areas, silhouettes, Hausdorff) and trimesh (volumes) in `🧪️tests/🧊️volumes-rules`.
  *
@@ -17,6 +17,9 @@ import { volumeIssues } from "../🧊️volume/🟦️.ts";
 import { authoredVolumes, expandedCount, solidsOf } from "./🧱️lists/🟦️.ts";
 import { VOLUME_LIMITS, VOLUME_RULES, analyticRules, availabilityRule, bonesRule, collector, compareSolidLists, copiedRule, featureOf, featureRule, slenderRule, structureCoverageRule, thermalCoverageRule, type RuleResult, type VolumeFinding, type VolumeMeasurement, type VolumeRule } from "./🧱️rules/🟦️.ts";
 import { SEAM_FEATURES, bandVolumes, exposedArea, exposedShares, fixedTriangleCount, isContents, outerArea, outerOfShares, outsideOf, seenFromOutside, unionVolume, type ContactPlane, type Outside, type Reach } from "./🧮️measures/🟦️.ts";
+import { looseGroups, partGap, partsOf, type Loose, type Part } from "./🔗️connected/🟦️.ts";
+import { spanGap } from "./🧱️rules/🟦️.ts";
+import { insideAny, rememberedReach } from "./🧮️measures/🟦️.ts";
 import { GATE, Mask, bodyDimensions, drawnFor, TILE_CELLS, WINDOW_FEATURES, VIEWPOINTS, boundarySpread, distanceField, extentOf, nearWithin, hausdorff, measureBodyView, project, projectedBodyDistance, quantileOf, referenceOf, worldSolids, type Drawn, type Group, type Point, type Viewpoint, type World } from "./🌓️silhouette/🟦️.ts";
 
 export { VOLUME_LIMITS, VOLUME_RULES, analyticRules, compareSolidLists, featureOf };
@@ -25,6 +28,8 @@ export type { ContactPlane, Outside, Reach } from "./🧮️measures/🟦️.ts"
 export type { VolumeFinding, VolumeMeasurement, VolumeRule };
 export type { SolidSimilarity } from "./🧱️rules/🟦️.ts";
 export { authoredVolumes, expandedCount, solidsOf } from "./🧱️lists/🟦️.ts";
+export { groupGap, looseGroups, partGap, partsOf, touchingGroups, triangleDistance2 } from "./🔗️connected/🟦️.ts";
+export type { ConnectedOptions, Groups, Loose, Part, PartKind } from "./🔗️connected/🟦️.ts";
 
 /** 🎛️ What a volume check is asked: `scale` (only that scale; for the pair rules the pair ending at it), `rules`, the `profile` that sets the smallest feature, the `pose` (default `presentation.defaultPose`). */
 export type VolumeOptions = { readonly scale?: ScaleDenominator; readonly rules?: readonly VolumeRule[]; readonly profile?: Pick<PrintProfile, "minFeatureMm">; readonly pose?: Slug };
@@ -102,11 +107,12 @@ function hullRing(solids: readonly World[], view: Viewpoint): Group {
   return points.length < 3 ? [] : [[...build(points), ...build([...points].reverse())]];
 }
 
-/** 🪞️ {@link compareGroups} of the projections of two sets of closed meshes in one viewpoint; `hullBones` replaces the solids of `second` on those bones by their convex hull per bone (the lattice an envelope prism of `first` stands for). */
+/** 🪞️ {@link compareGroups} of the projections of two sets of closed meshes in one viewpoint; `hullBones` replaces the solids of `second` on those bones by their convex hull per bone (the lattice an envelope prism of `first` stands for) and the `envelope` solids of `first` on those bones by theirs, so a typified row (fewer, thicker posts for many thin rods) is compared with the row it stands for through their common envelope; a convex prism is its own hull. */
 export function silhouetteAgreement(first: readonly World[], second: readonly World[], view: Viewpoint, featureM: number, toleranceM = 0, options: { readonly hullBones?: ReadonlySet<string>; readonly tileCells?: number; readonly limitM?: number; readonly drawnFirst?: Drawn; readonly drawnSecond?: Drawn } = {}): Agreement {
   const hull = options.hullBones ?? new Set<string>();
   const kept = second.filter((solid) => !hull.has(solid.bone ?? ""));
-  const ga = referenceOf(view, first, undefined, options.drawnFirst).cut as readonly Group[];
+  const typified = first.filter((solid) => solid.envelope === true && hull.has(solid.bone ?? ""));
+  const ga = [...referenceOf(view, typified.length === 0 ? first : first.filter((solid) => !typified.includes(solid)), undefined, options.drawnFirst).cut, ...[...hull].map((bone) => hullRing(typified.filter((solid) => solid.bone === bone), view)).filter((ring) => ring.length > 0)] as readonly Group[];
   const gb = [...referenceOf(view, kept, undefined, options.drawnSecond).cut, ...[...hull].map((bone) => hullRing(second.filter((solid) => solid.bone === bone), view)).filter((ring) => ring.length > 0)] as readonly Group[];
   return compareGroups(ga, gb, featureM, toleranceM, options.tileCells, options.limitM);
 }
@@ -139,7 +145,7 @@ const iouOf = (a: Mask, b: Mask): number => {
   return either === 0 ? 1 : both / either;
 };
 
-/** 🪟️ `volumes-views-disagree` (amendments C8a, C11): the elevation, the front and the plan of one scale must give the whole asset the same extent along a shared axis (height: elevation and front, length: elevation and plan, width: front and plan) within max(one smallest feature, 2 % of the larger extent); a finding names the axis and the two extents, and the 2D drawing is to be repaired, no 3D model can agree with both. Open strokes and unfilled outlines take part widened by half their pen (as in the silhouette comparison). The per-bone differences are measurements named `info:extentDifferenceM:<bone>:<axis>` that never fail. */
+/** 🪟️ `volumes-views-disagree` (amendments C8a, C11): the elevation, the front and the plan of one scale must give the whole asset the same extent along a shared axis (height: elevation and front, length: elevation and plan, width: front and plan) and the same place (both ends of the interval it covers along that axis, `positionDifferenceM:<axis>`: a view drawn 50 mm aside has the right extent and the wrong place) within max(one smallest feature, 2 % of the larger extent); a finding names the axis and the two extents or intervals, and the 2D drawing is to be repaired, no 3D model can agree with both. Open strokes and unfilled outlines take part widened by half their pen (as in the silhouette comparison). The per-bone differences are measurements named `info:extentDifferenceM:<bone>:<axis>` and `info:positionDifferenceM:<bone>:<axis>` that never fail: a bone is legitimately drawn with other parts in another view (a tail in one shape of the last tail bone in the side view, the stair treads on the column), measured on twelve catalog assets (2026-11-22: 7 of 12 would fail per bone, 4 of 12 per shape id, none on the whole asset). */
 function viewsDisagreeRule(asset: Asset, volumes: readonly AuthoredVolume[], state: (d: ScaleDenominator) => ReturnType<typeof evaluate>, minFeatureMm: number): RuleResult {
   const c = collector("volumes-views-disagree");
   type Box = { lo: number; hi: number };
@@ -180,11 +186,15 @@ function viewsDisagreeRule(asset: Asset, volumes: readonly AuthoredVolume[], sta
       const limit = Math.max(VOLUME_LIMITS.viewsDisagreeFeatures * feature, VOLUME_LIMITS.boundsFraction * Math.max(e1, e2));
       const m = c.measure({ scale: d, list: "body", name: `extentDifferenceM:${axis}`, value: Math.abs(e1 - e2), limit, bound: "max" });
       if (!m.ok) c.fail(`representations.${d}`, `The ${first} and the ${second} of 1:${d} disagree on the ${names[axis]} of the asset: ${(e1 * 1000).toFixed(0)} mm against ${(e2 * 1000).toFixed(0)} mm (more than ${mm(m.limit)}); repair the 2D drawing, no 3D model can agree with both.`, `Die ${first} und die ${second} von 1:${d} widersprechen sich bei ${axis === "y" ? "der Höhe" : axis === "x" ? "der Länge" : "der Breite"} des Assets: ${(e1 * 1000).toFixed(0)} mm gegen ${(e2 * 1000).toFixed(0)} mm (mehr als ${mm(m.limit)}); die 2D-Zeichnung ist zu korrigieren, kein 3D-Modell kann beiden folgen.`, { scale: d, list: "body", code: "volumes-views-disagree", measurements: [m], data: { axis, first, second, firstExtentM: e1, secondExtentM: e2 } });
+      const shift = c.measure({ scale: d, list: "body", name: `positionDifferenceM:${axis}`, value: Math.max(Math.abs(p.lo - q.lo), Math.abs(p.hi - q.hi)), limit, bound: "max" });
+      if (m.ok && !shift.ok) c.fail(`representations.${d}`, `The ${first} and the ${second} of 1:${d} place the asset differently along its ${names[axis]}: ${(p.lo * 1000).toFixed(0)} to ${(p.hi * 1000).toFixed(0)} mm against ${(q.lo * 1000).toFixed(0)} to ${(q.hi * 1000).toFixed(0)} mm (an edge ${mm(shift.value)} apart, more than ${mm(shift.limit)}); repair the 2D drawing, no 3D model can agree with both.`, `Die ${first} und die ${second} von 1:${d} legen das Asset entlang ${axis === "y" ? "der Höhe" : axis === "x" ? "der Länge" : "der Breite"} verschieden: ${(p.lo * 1000).toFixed(0)} bis ${(p.hi * 1000).toFixed(0)} mm gegen ${(q.lo * 1000).toFixed(0)} bis ${(q.hi * 1000).toFixed(0)} mm (eine Kante ${mm(shift.value)} auseinander, mehr als ${mm(shift.limit)}); die 2D-Zeichnung ist zu korrigieren, kein 3D-Modell kann beiden folgen.`, { scale: d, list: "body", code: "volumes-views-disagree", measurements: [shift], data: { axis, first, second, firstM: [p.lo, p.hi], secondM: [q.lo, q.hi] } });
     }
     for (const bone of bones)
       for (const [axis, first, second] of pairs) {
         const [p, q] = [perBone.get(`${bone}/${first}/${axis}`), perBone.get(`${bone}/${second}/${axis}`)];
-        if (p !== undefined && q !== undefined) c.measure({ scale: d, list: "body", name: `info:extentDifferenceM:${bone}:${axis}`, value: Math.abs(p.hi - p.lo - (q.hi - q.lo)), limit: Number.MAX_VALUE, bound: "max" });
+        if (p === undefined || q === undefined) continue;
+        c.measure({ scale: d, list: "body", name: `info:extentDifferenceM:${bone}:${axis}`, value: Math.abs(p.hi - p.lo - (q.hi - q.lo)), limit: Number.MAX_VALUE, bound: "max" });
+        c.measure({ scale: d, list: "body", name: `info:positionDifferenceM:${bone}:${axis}`, value: Math.max(Math.abs(p.lo - q.lo), Math.abs(p.hi - q.hi)), limit: Number.MAX_VALUE, bound: "max" });
       }
   }
   return c;
@@ -214,6 +224,67 @@ const atCentre = (w: World): World => {
 
 const mm = (metres: number): string => `${(metres * 1000).toFixed(1)} mm`;
 
+/** 🦴️ The pairs of bones that a movable joint of the rig holds together, for the bones that carry solids: a bone and its nearest ancestor with solids when a joint on the way between them is not `fixed` (a hinge, a slide, a ball: a mechanical connection that the solids must show; a `fixed` joint only places a bone, so a second object standing beside the first is fixed to the root and is not tied). */
+export function jointTies(asset: Asset, carrying: ReadonlySet<string>): readonly (readonly [string, string])[] {
+  const bones = new Map(asset.rig.bones.map((bone) => [bone.id, bone as { readonly id: string; readonly parent?: string; readonly joint?: { readonly type?: string } }] as const));
+  const ties: (readonly [string, string])[] = [];
+  for (const id of carrying) {
+    let bone = bones.get(id);
+    let movable = false;
+    for (let guard = 0; bone !== undefined && guard < bones.size; guard++) {
+      movable ||= bone.joint?.type !== undefined && bone.joint.type !== "fixed";
+      const parent = bone.parent === undefined || bone.parent === null ? undefined : bones.get(bone.parent);
+      if (parent === undefined) break;
+      if (carrying.has(parent.id)) {
+        if (movable) ties.push([id, parent.id]);
+        break;
+      }
+      bone = parent;
+    }
+  }
+  return ties;
+}
+
+/** 🔗️ `volumes-connected` for one list of one scale in the evaluated pose. Parts are the copies of the solids ({@link partsOf}); two touch when their surfaces come within {@link VOLUME_LIMITS}.connectedToleranceFeatures smallest features of each other or one lies inside the other. Body: every group of touching parts apart from the largest must rest on something outside the list, the ground plane (y = 0) or a `contact` or `support` anchor of the pose, else it floats; a group that rests on its own is a separate object only when no movable joint of the rig ties its bones to bones whose solids all lie in other groups ({@link jointTies}: a wheel on its axle, a shoe on its shank; `bonesOf` gives the bones of a part) and when it clears every other group by more than {@link VOLUME_LIMITS}.connectedApartFeatures features, because no drawing of the scale shows a narrower gap, so it is a part that missed its joint. Structure: every group that is not only `mass` markers (they sit at centres of mass) must contain a `support` solid or rest on the ground or at such an anchor (many assets declare no `structure.supports` and stand on contact anchors), directly or through one solid of `body` that itself stands there and that the part touches or lies in (the sole under a foot bone, the tyre around a rim, the glide under a leg; one solid, never the body as a whole), else its load path is open; in a list without any `support` solid (an idealised skeleton in the sagittal plane) the largest group is the structure itself and every other group must join it; supported groups keep the same clearance. Nothing an author declares switches a part off: there is no flag, role or tag that the rule reads. The measurements are `looseGroups:<reason>` (limit 0) and the information `info:groups`; each finding names the worst groups by their first solid, the number of further solids, the gap and the nearest solid, which in the structure list is never a `mass` marker (a mass is no load path, so it is neither measured to nor named). */
+export function connectedRule(c: ReturnType<typeof collector>, d: ScaleDenominator, list: "body" | "structure", parts: readonly Part[], feature: number, anchors: readonly Vec[], kinds: ReadonlyMap<string, string>, tick: () => void = () => {}, ties: readonly (readonly [string, string])[] = [], bonesOf: (part: Part) => readonly string[] = () => [], body: readonly Part[] = []): void {
+  const tolerance = VOLUME_LIMITS.connectedToleranceFeatures * feature;
+  const [apart, cap] = [VOLUME_LIMITS.connectedApartFeatures * feature, VOLUME_LIMITS.connectedGapCapFeatures * feature];
+  const direct = (part: Part): boolean => part.min[1] <= tolerance || anchors.some((a) => [0, 1, 2].every((k) => a[k]! >= part.min[k]! - feature && a[k]! <= part.max[k]! + feature));
+  const carriers = list === "structure" ? body.filter(direct) : [];
+  const rests = (part: Part): boolean => direct(part) || carriers.some((carrier) => partGap(part, carrier, tolerance, true) <= tolerance);
+  const tie = list !== "body" || ties.length === 0 ? undefined : (own: readonly Part[], rest: readonly Part[], groupOf: (part: Part) => number): string | undefined => {
+    const [mine, theirs] = [new Set(own.flatMap(bonesOf)), new Map<string, Set<number>>()];
+    for (const part of rest) for (const bone of bonesOf(part)) theirs.set(bone, (theirs.get(bone) ?? new Set()).add(groupOf(part)));
+    const g = groupOf(own[0]!);
+    for (const [child, parent] of ties)
+      for (const [here, there] of [[child, parent], [parent, child]] as const) {
+        if (!mine.has(here) || mine.has(there) || !theirs.has(there)) continue;
+        const shared = [...(theirs.get(here) ?? [])].some((group) => theirs.get(there)!.has(group));
+        if (!shared && g !== 0) return `${child} — ${parent}`;
+      }
+    return undefined;
+  };
+  const { groups, loose } = looseGroups(parts, { toleranceM: tolerance, apartM: apart, capM: cap, rests, structure: list === "structure", kind: (part) => (kinds.get(part.id) === "mass" ? "mass" : kinds.get(part.id) === "support" ? "support" : undefined), tick, ...(tie === undefined ? {} : { tie }) });
+  c.measure({ scale: d, list, name: "info:groups", value: groups, limit: Number.MAX_VALUE, bound: "max" });
+  const named = (items: readonly Loose[], lang: "en" | "de"): string => items.slice(0, 4).map((x) => `"${x.ids[0]}"${x.ids.length > 1 ? ` (+${x.ids.length - 1})` : x.parts > 1 ? ` (${x.parts}×)` : ""} ${x.gapM >= cap ? (lang === "en" ? "at least " : "mindestens ") : ""}${mm(x.gapM)}${x.nearest === undefined ? "" : `${lang === "en" ? " from" : " von"} "${x.nearest}"`}${x.tie === undefined ? "" : `${lang === "en" ? ", joint" : ", Gelenk"} ${x.tie}`}`).join(", ") + (items.length > 4 ? (lang === "en" ? ` and ${items.length - 4} more` : ` und ${items.length - 4} weitere`) : "");
+  const s = (n: number): string => (n === 1 ? "" : "s");
+  const texts: Record<Loose["reason"], (n: number, items: readonly Loose[]) => readonly [string, string]> = {
+    floating: (n, items) => [`The body of 1:${d} is not one connected object: ${n} group${s(n)} of solids touch${n === 1 ? "es" : ""} neither the rest of the body nor the ground nor a contact or support anchor (contact tolerance ${mm(tolerance)}); worst: ${named(items, "en")}. Join every part to what carries it.`, `Der Body von 1:${d} ist kein zusammenhängender Gegenstand: ${n} Gruppe${n === 1 ? "" : "n"} von Körpern berühr${n === 1 ? "t" : "en"} weder den übrigen Body noch den Boden noch einen Kontakt- oder Auflageranker (Berührtoleranz ${mm(tolerance)}); am schlimmsten: ${named(items, "de")}. Jedes Teil ist mit dem zu verbinden, was es trägt.`],
+    unsupported: (n, items) => [`The structure of 1:${d} has an open load path: ${n} group${s(n)} of members and joints reach${n === 1 ? "es" : ""} neither a support solid nor the ground nor a contact or support anchor (directly or through one body solid that stands there) through touching solids, nor, in a list without support solids, the largest group (contact tolerance ${mm(tolerance)}); worst: ${named(items, "en")}. Members meet at their joints and the path ends in a support.`, `Das Tragwerk von 1:${d} hat einen offenen Lastpfad: ${n} Gruppe${n === 1 ? "" : "n"} von Stäben und Gelenken erreich${n === 1 ? "t" : "en"} über sich berührende Körper weder einen Auflagerkörper noch den Boden noch einen Kontakt- oder Auflageranker (direkt oder über einen dort stehenden Bodykörper) und, in einer Liste ohne Auflagerkörper, auch nicht die größte Gruppe (Berührtoleranz ${mm(tolerance)}); am schlimmsten: ${named(items, "de")}. Stäbe treffen sich an ihren Gelenken und der Pfad endet in einem Auflager.`],
+    detached: (n, items) => [`${n} group${s(n)} of body solids of 1:${d} stand${n === 1 ? "s" : ""} on the ground or at an anchor but do${n === 1 ? "es" : ""} not touch the solids of the bone that a movable joint of the rig ties ${n === 1 ? "it" : "them"} to (contact tolerance ${mm(tolerance)}): ${named(items, "en")}. What a joint holds together meets at that joint.`, `${n} Gruppe${n === 1 ? "" : "n"} von Bodykörpern von 1:${d} steh${n === 1 ? "t" : "en"} auf dem Boden oder an einem Anker, berühr${n === 1 ? "t" : "en"} aber nicht die Körper des Knochens, mit dem ein bewegliches Gelenk des Rigs sie verbindet (Berührtoleranz ${mm(tolerance)}): ${named(items, "de")}. Was ein Gelenk zusammenhält, trifft sich an diesem Gelenk.`],
+    near: (n, items) => list === "body"
+      ? [`${n} group${s(n)} of body solids of 1:${d} stand${n === 1 ? "s" : ""} on ${n === 1 ? "its" : "their"} own (on the ground or at an anchor) but within ${mm(apart)} (one smallest feature) of the rest without touching it (contact tolerance ${mm(tolerance)}), a gap no drawing of this scale shows: ${named(items, "en")}. Join them or set them clearly apart.`, `${n} Gruppe${n === 1 ? "" : "n"} von Bodykörpern von 1:${d} steh${n === 1 ? "t" : "en"} für sich (auf dem Boden oder an einem Anker), aber näher als ${mm(apart)} (ein kleinstes Merkmal) am Rest, ohne ihn zu berühren (Berührtoleranz ${mm(tolerance)}), ein Spalt, den keine Zeichnung dieses Maßstabs zeigt: ${named(items, "de")}. Sie sind zu verbinden oder deutlich abzusetzen.`]
+      : [`${n} group${s(n)} of members and joints of the structure of 1:${d} ${n === 1 ? "has its" : "have their"} own load path to a support solid, the ground or an anchor but pass${n === 1 ? "es" : ""} within ${mm(apart)} (one smallest feature) of the members, joints or supports of the rest of the structure without touching them (contact tolerance ${mm(tolerance)}), a gap no drawing of this scale shows: ${named(items, "en")}. Members that meet at a joint touch there; parts of the structure that do not meet stay clearly apart.`, `${n} Gruppe${n === 1 ? "" : "n"} von Stäben und Gelenken des Tragwerks von 1:${d} ha${n === 1 ? "t" : "ben"} einen eigenen Lastpfad zu einem Auflagerkörper, zum Boden oder zu einem Anker, komm${n === 1 ? "t" : "en"} aber den Stäben, Gelenken oder Auflagern des übrigen Tragwerks näher als ${mm(apart)} (ein kleinstes Merkmal), ohne sie zu berühren (Berührtoleranz ${mm(tolerance)}), ein Spalt, den keine Zeichnung dieses Maßstabs zeigt: ${named(items, "de")}. Stäbe, die sich an einem Gelenk treffen, berühren sich dort; Tragwerksteile, die sich nicht treffen, bleiben deutlich getrennt.`],
+  };
+  for (const reason of (list === "body" ? ["floating", "detached", "near"] : ["unsupported", "near"]) as readonly Loose["reason"][]) {
+    const items = loose.filter((x) => x.reason === reason);
+    const m = c.measure({ scale: d, list, name: `looseGroups:${reason}`, value: items.length, limit: 0, bound: "max" });
+    if (m.ok) continue;
+    const [en, de] = texts[reason](items.length, items);
+    c.fail(`volumes.${d}.${list}`, en, de, { scale: d, list, measurements: [m], data: { reason, solids: items.flatMap((x) => x.ids), gapsM: items.map((x) => x.gapM.toFixed(4)) } });
+  }
+}
+
 /** 📊️ Every measurement and finding of the requested rules at the requested scales. */
 function run(asset: Asset, options: VolumeOptions, operation: JobControl): { readonly measurements: readonly VolumeMeasurement[]; readonly findings: readonly VolumeFinding[] } {
   const rules = new Set<VolumeRule>(options.rules ?? VOLUME_RULES);
@@ -228,7 +299,7 @@ function run(asset: Asset, options: VolumeOptions, operation: JobControl): { rea
   if (rules.has("volumes-thermal-coverage")) results.push(thermalCoverageRule(asset, only));
   if (rules.has("volumes-structure-coverage")) results.push(structureCoverageRule(asset, only));
   if (rules.has("volumes-copied")) results.push(copiedRule(asset, only));
-  if (rules.has("volumes-slender")) results.push(slenderRule(asset, only));
+  if (rules.has("volumes-slender")) results.push(slenderRule(asset, only, minFeatureMm));
   if (rules.has("volumes-views-disagree")) results.push(viewsDisagreeRule(asset, authoredVolumes(asset).filter((v) => options.scale === undefined || v.denominator === options.scale), (d) => evaluate(asset, { kind: "pose", pose }, { kind: "scale", scale: { denominator: d } }), minFeatureMm));
   const issues = volumeIssues(asset) as readonly Issue[];
   for (const issue of issues) {
@@ -238,7 +309,7 @@ function run(asset: Asset, options: VolumeOptions, operation: JobControl): { rea
     const mapped: VolumeRule = issue.code === "volume-region" || issue.code === "volume-layer" ? "volumes-thermal-coverage" : issue.code === "volume-member" || issue.code === "volume-anchor" ? "volumes-structure-coverage" : issue.code === "volume-duplicate-id" || issue.code === "volume-of" ? "volumes-bones" : "volumes-solids";
     acc.findings.push({ ...issue, rule: mapped, ...(Number.isFinite(scale) ? { scale } : {}), ...(list === undefined ? {} : { list }), measurements: [] });
   }
-  const geometric = ["volumes-silhouette", "volumes-bounds", "volumes-monotonic", "volumes-cross-scale", "volumes-thermal-coverage", "volumes-structure-coverage"].some((rule) => rules.has(rule as VolumeRule));
+  const geometric = ["volumes-silhouette", "volumes-bounds", "volumes-monotonic", "volumes-cross-scale", "volumes-thermal-coverage", "volumes-structure-coverage", "volumes-connected"].some((rule) => rules.has(rule as VolumeRule));
   const volumes = authoredVolumes(asset);
   const targets = volumes.filter((volume) => options.scale === undefined || volume.denominator === options.scale);
   const soft = new Set(["volume-region", "volume-layer", "volume-member", "volume-anchor", "volume-of", "volume-duplicate-id", "volume-material", "volume-envelope"]);
@@ -252,6 +323,7 @@ function run(asset: Asset, options: VolumeOptions, operation: JobControl): { rea
     const cross = collector("volumes-cross-scale");
     const thermal = collector("volumes-thermal-coverage");
     const structure = collector("volumes-structure-coverage");
+    const connected = collector("volumes-connected");
     const total = targets.length * 4;
     let done = 0;
     const step = (label: Text): void => {
@@ -348,7 +420,7 @@ function run(asset: Asset, options: VolumeOptions, operation: JobControl): { rea
           const hidden = region.hidden !== undefined;
           const ownWorlds = new Set(own.map((s) => byId.get(s.id)).filter((w): w is World => w !== undefined));
           const against = hidden ? [] : (["body", "thermal", "structure"] as const).flatMap((list) => worldAt(volume, list)).filter((w) => !porous.has(w.id));
-          const reached = hidden ? undefined : (base: readonly [number, number, number], normal: readonly [number, number, number]): Reach | undefined => air().reach(base, normal, (solid) => ownWorlds.has(solid));
+          const reached = hidden ? undefined : rememberedReach((base, normal) => air().reach(base, normal, (solid) => ownWorlds.has(solid)));
           const shares = exposedShares(picked, hidden ? [] : picked, [], () => false, probe, seam, reached);
           const area = outerOfShares(shares);
           const contents = isContents(shares);
@@ -357,8 +429,8 @@ function run(asset: Asset, options: VolumeOptions, operation: JobControl): { rea
             if (seen < VOLUME_LIMITS.enclosedOuterFraction * area)
               thermal.fail(`volumes.${d}.thermal`, `Thermal region "${region.id}" at 1:${d} lies wholly in a closed cavity that no glazing lets one see into: declare it \`hidden\` (B4, C31, E3).`, `Die thermische Region "${region.id}" liegt bei 1:${d} ganz in einem geschlossenen Hohlraum, in den keine Verglasung blicken lässt: sie ist als \`hidden\` zu deklarieren (B4, C31, E3).`, { scale: d, list: "thermal", measurements: [], data: { region: region.id } });
           }
-          const exposed = exposedArea(picked, against, planes, (other) => ownWorlds.has(other), probe, seam, reached === undefined ? undefined : (base, normal) => {
-            const why = reached(base, normal);
+          const exposed = exposedArea(picked, against, planes, (other) => ownWorlds.has(other), probe, seam, reached === undefined ? undefined : (base, normal, sample) => {
+            const why = reached(base, normal, sample);
             return why === "cavity" && !contents ? undefined : why;
           });
           const binding = (asset.poses as readonly { readonly id: Slug; readonly thermal: { readonly regions: Readonly<Record<string, { readonly exposedFraction: number; readonly contact?: { readonly fraction: number } }>> } }[]).find((p) => p.id === pose)?.thermal.regions[region.id];
@@ -379,6 +451,11 @@ function run(asset: Asset, options: VolumeOptions, operation: JobControl): { rea
           if (!deviation.ok) thermal.fail(`volumes.${d}.thermal`, `The ${region.areaBasis === "total" ? "total component surface" : "outer surface"} of region "${region.id}" at 1:${d} is ${declaredSurface.toFixed(3)} m² against areaM2 ${region.areaM2} m² (deviation ${(deviation.value * 100).toFixed(0)} %, limit ${(deviation.limit * 100).toFixed(0)} %).`, `Die ${region.areaBasis === "total" ? "gesamte Bauteiloberfläche" : "Außenfläche"} der Region "${region.id}" bei 1:${d} beträgt ${declaredSurface.toFixed(3)} m² gegen areaM2 ${region.areaM2} m² (Abweichung ${(deviation.value * 100).toFixed(0)} %, Grenze ${(deviation.limit * 100).toFixed(0)} %).`, { scale: d, list: "thermal", measurements: [deviation], data: { region: region.id } });
         }
         if (flooded !== undefined) thermal.measure({ scale: d, list: "thermal", name: "info:floodCellM", value: flooded.cellM, limit: Number.MAX_VALUE, bound: "max" });
+        const passage = asset.thermal.minimumAirPassageM;
+        if (flooded !== undefined && passage !== undefined && passage > 0) {
+          const resolved = thermal.measure({ scale: d, list: "thermal", name: "airPassageCellM", value: flooded.cellM, limit: (passage / 3) * (1 + 1e-9), bound: "max" });
+          if (!resolved.ok) thermal.fail(`volumes.${d}.thermal`, `The flood of 1:${d} cannot resolve the declared thermal.minimumAirPassageM of ${mm(passage)}: its cell is ${mm(flooded.cellM)} (at most a third of the passage) because the asset is too large for a passage this narrow, so the outer areas of this scale are measured with that passage closed.`, `Die Flutung von 1:${d} kann die deklarierte thermal.minimumAirPassageM von ${mm(passage)} nicht auflösen: ihre Zelle misst ${mm(flooded.cellM)} (höchstens ein Drittel des Durchlasses), weil das Asset für einen so engen Durchlass zu groß ist; die Außenflächen dieses Maßstabs sind daher mit geschlossenem Durchlass gemessen.`, { scale: d, list: "thermal", measurements: [resolved] });
+        }
         if (perRegion && sumDeclared > 0) {
           const total = thermal.measure({ scale: d, list: "thermal", name: "areaDeviationTotal", value: Math.abs(sumArea / sumDeclared - 1), limit: VOLUME_LIMITS.thermalAreaCoarse, bound: "max" });
           if (!total.ok) thermal.fail(`volumes.${d}.thermal`, `The outer surface of all regions at 1:${d} is ${sumArea.toFixed(3)} m² against the sum of areaM2 ${sumDeclared.toFixed(3)} m² (deviation ${(total.value * 100).toFixed(0)} %, limit ${(total.limit * 100).toFixed(0)} %).`, `Die Außenfläche aller Regionen bei 1:${d} beträgt ${sumArea.toFixed(3)} m² gegen die Summe der areaM2 ${sumDeclared.toFixed(3)} m² (Abweichung ${(total.value * 100).toFixed(0)} %, Grenze ${(total.limit * 100).toFixed(0)} %).`, { scale: d, list: "thermal", measurements: [total] });
@@ -430,6 +507,17 @@ function run(asset: Asset, options: VolumeOptions, operation: JobControl): { rea
         }
         void members;
         for (const solid of volume.structure) {
+          const spanned = (solid as { members?: readonly Slug[] }).members;
+          const w = worlds.find((x) => x.id === solid.id);
+          if ((solid as { part: string }).part !== "member" || !Array.isArray(spanned) || w === undefined) continue;
+          for (const bone of spanned) {
+            const b = state.bones[bone];
+            if (b === undefined) continue;
+            const m = structure.measure({ scale: d, list: "structure", name: `spanGapM:${solid.id}:${bone}`, value: spanGap(w, [b.frame.o.x, b.frame.o.y, b.frame.o.z], [b.tip.x, b.tip.y, b.tip.z], (point) => insideAny([w], point)), limit: VOLUME_LIMITS.memberSpanFeatures * feature, bound: "max" });
+            if (!m.ok) structure.fail(`volumes.${d}.structure[${volume.structure.indexOf(solid)}].members`, `Member solid "${solid.id}" of 1:${d} names bone "${bone}" in \`members\` but does not hold it: the bone runs up to ${mm(m.value)} away from the solid (limit ${mm(m.limit)}, one smallest feature). A member solid spans only bones that lie in it or beside it from joint to tip; give this bone its own member solid or let the solid run along it.`, `Stabkörper "${solid.id}" von 1:${d} nennt den Knochen "${bone}" in \`members\`, fasst ihn aber nicht: der Knochen verläuft bis zu ${mm(m.value)} vom Körper entfernt (Grenze ${mm(m.limit)}, ein kleinstes Merkmal). Ein Stabkörper überspannt nur Knochen, die vom Gelenk bis zur Spitze in ihm oder an ihm liegen; dieser Knochen braucht einen eigenen Stabkörper, oder der Körper läuft an ihm entlang.`, { scale: d, list: "structure", measurements: [m], data: { solid: solid.id, bone } });
+          }
+        }
+        for (const solid of volume.structure) {
           if ((solid as { part: string }).part !== "support") continue;
           const w = worlds.find((x) => x.id === solid.id);
           if (w === undefined) continue;
@@ -439,6 +527,19 @@ function run(asset: Asset, options: VolumeOptions, operation: JobControl): { rea
           const atAnchor = anchor !== undefined && anchor.at.x >= box.min[0]! - feature && anchor.at.x <= box.max[0]! + feature && anchor.at.y >= box.min[1]! - feature && anchor.at.y <= box.max[1]! + feature && anchor.z >= box.min[2]! - feature && anchor.z <= box.max[2]! + feature;
           const m = structure.measure({ scale: d, list: "structure", name: `supportOffM:${solid.id}`, value: nearGround || atAnchor ? 0 : Math.abs(box.min[1]!), limit: feature, bound: "max" });
           if (!m.ok) structure.fail(`volumes.${d}.structure`, `Support solid "${solid.id}" of 1:${d} sits neither on the ground plane nor at its anchor (${mm(m.value)} off).`, `Auflagerkörper "${solid.id}" von 1:${d} liegt weder auf der Bodenebene noch an seinem Anker (${mm(m.value)} entfernt).`, { scale: d, list: "structure", measurements: [m] });
+        }
+      }
+      if (rules.has("volumes-connected")) {
+        const anchors = Object.values(stateOf(d).anchors).filter((entry) => entry.anchor.kind === "contact" || entry.anchor.kind === "support").map((entry) => [entry.at.x, entry.at.y, entry.z] as const);
+        const kinds = new Map(volume.structure.map((s) => [s.id, (s as { part: string }).part] as const));
+        let bodyParts: readonly Part[] = [];
+        for (const list of ["body", "structure"] as const) {
+          const solids = solidsOf(volume, list);
+          const bonesOf = (part: Part): readonly string[] => [solids[part.solid]!.bone, ...(solids[part.solid]!.weights ?? []).map((w) => w.bone)];
+          const ties = list === "body" ? jointTies(asset, new Set(solids.flatMap((solid) => [solid.bone, ...(solid.weights ?? []).map((w) => w.bone)]))) : [];
+          const parts = partsOf(worldAt(volume, list), solids.map((solid) => solid.repeat?.count ?? 1));
+          if (list === "body") bodyParts = parts;
+          connectedRule(connected, d, list, parts, feature, anchors, kinds, () => operation.signal?.throwIfAborted(), ties, bonesOf, bodyParts);
         }
       }
       step(PHASE(`1:${d} counts`, `1:${d} Zählung`));
@@ -468,7 +569,7 @@ function run(asset: Asset, options: VolumeOptions, operation: JobControl): { rea
       if (rules.has("volumes-cross-scale")) {
         const [coarseAll, fineAll] = [worldAt(volume, "body").filter((w) => w.texture !== true), worldAt(finer, "body").filter((w) => w.texture !== true)];
         const [coarseBody, fineBody] = [coarseAll.filter((w) => w.slender !== true), fineAll.filter((w) => w.slender !== true)];
-        const hullBones = new Set(coarseBody.filter((w) => w.envelope === true).map((w) => w.bone ?? ""));
+        const hullBones = new Set(coarseAll.filter((w) => w.envelope === true).map((w) => w.bone ?? ""));
         const compareDrawings = asset.representations[`${d}`]?.status === "authored" && asset.representations[`${finer.denominator}`]?.status === "authored";
         const physicalProjection = (solids: readonly World[]) => compareDrawings ? solids : solids.map(solid => solid.slender ? { ...solid, slender: false } : solid);
         const [projectedCoarse, projectedFine] = [physicalProjection(coarseAll), physicalProjection(fineAll)];
@@ -499,7 +600,7 @@ function run(asset: Asset, options: VolumeOptions, operation: JobControl): { rea
         if (!change.ok) cross.fail(`volumes.${d}.body`, `The union volume of 1:${d} (${band.coarse.toFixed(4)} m³) lies outside the band ${band.eroded.toFixed(4)} to ${band.dilated.toFixed(4)} m³ of 1:${finer.denominator} eroded and dilated by ${mm(VOLUME_LIMITS.crossVolumeBandFeatures * feature)}.`, `Das Vereinigungsvolumen von 1:${d} (${band.coarse.toFixed(4)} m³) liegt außerhalb des Bandes ${band.eroded.toFixed(4)} bis ${band.dilated.toFixed(4)} m³ von 1:${finer.denominator}, erodiert und gedehnt um ${mm(VOLUME_LIMITS.crossVolumeBandFeatures * feature)}.`, { scale: d, list: "body", measurements: [change] });
       }
     }
-    for (const result of [sil, bounds, mono, cross, thermal, structure]) results.push(result);
+    for (const result of [sil, bounds, mono, cross, thermal, structure, connected]) results.push(result);
     operation.progress?.(total, total, PHASE("Volumes checked", "Volumen geprüft"));
   }
   return { measurements: acc.measurements.filter((m) => rules.has(m.rule)), findings: acc.findings.filter((f) => rules.has(f.rule)) };

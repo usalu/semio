@@ -3,6 +3,10 @@
 //! 🧭️ The files WP3 staged for this crate (`wp3-tools/crate-map.json`) are mounted here from their place in the renderer tree; the renderer root re-exports this crate.
 
 extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_command;
+extern crate semio_framework_schema_state;
+extern crate semio_os_store_one_item;
 #[cfg(any(test, not(target_arch = "wasm32")))]
 extern crate semio_os_kernel as store;
 use semio_renderer_wgpu_app_runtime::ICON_ATLAS_RUNTIME;

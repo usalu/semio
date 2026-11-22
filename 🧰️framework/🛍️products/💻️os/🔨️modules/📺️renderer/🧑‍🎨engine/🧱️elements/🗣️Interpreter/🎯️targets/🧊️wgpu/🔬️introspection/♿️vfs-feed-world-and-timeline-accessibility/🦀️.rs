@@ -7,7 +7,7 @@ use super::*;
 pub struct VfsAccessibilityEntry {
     pub scene_node: NodeId,
     pub host_id: String,
-    depth: usize,
+    pub depth: usize,
     pub control: semio_renderer_wgpu_scene_state::VfsAccessibilityControl,
 }
 
@@ -69,13 +69,13 @@ pub(super) fn append_vfs_accessibility_nodes(window_id: &str, tree: &semio_ui_re
             multiline: false,
             controls: None,
             active_descendant: None,
-            level: None,
+            level: None, multiselectable: false,
             rect: Some([entry.control.rect.x, entry.control.rect.y, entry.control.rect.w, entry.control.rect.h]),
             value_min: None,
             value_max: None,
             value_now: None,
             value_text: None,
-            busy: false,
+            busy: false, sort: None,
         });
     }
 }
@@ -83,7 +83,7 @@ pub(super) fn append_vfs_accessibility_nodes(window_id: &str, tree: &semio_ui_re
 pub struct BlockListAccessibilityEntry {
     pub scene_node: NodeId,
     pub host_id: String,
-    depth: usize,
+    pub depth: usize,
     pub control: semio_renderer_wgpu_scene_state::BlockListAccessibilityControl,
 }
 
@@ -148,13 +148,13 @@ pub(super) fn append_block_list_accessibility_nodes(tree: &semio_ui_retained_tre
             multiline: false,
             controls: None,
             active_descendant: None,
-            level: None,
+            level: None, multiselectable: false,
             rect: Some([entry.control.rect.x, entry.control.rect.y, entry.control.rect.w, entry.control.rect.h]),
             value_min: None,
             value_max: None,
             value_now: None,
             value_text: None,
-            busy: false,
+            busy: false, sort: None,
         });
     }
 }
@@ -162,7 +162,7 @@ pub(super) fn append_block_list_accessibility_nodes(tree: &semio_ui_retained_tre
 pub struct EventFeedAccessibilityEntry {
     pub scene_node: NodeId,
     pub host_id: String,
-    depth: usize,
+    pub depth: usize,
     pub control: semio_renderer_wgpu_scene_state::EventFeedAccessibilityControl,
 }
 
@@ -248,13 +248,13 @@ pub(super) fn append_world3d_accessibility_nodes(tree: &semio_ui_retained_tree::
             multiline: false,
             controls: None,
             active_descendant: None,
-            level: None,
+            level: None, multiselectable: false,
             rect: None,
             value_min: None,
             value_max: None,
             value_now: None,
             value_text: None,
-            busy: false,
+            busy: false, sort: None,
         });
     }
 }
@@ -293,13 +293,13 @@ pub(super) fn append_event_feed_accessibility_nodes(tree: &semio_ui_retained_tre
             multiline: false,
             controls: None,
             active_descendant: None,
-            level: None,
+            level: None, multiselectable: false,
             rect: Some([entry.control.rect.x, entry.control.rect.y, entry.control.rect.w, entry.control.rect.h]),
             value_min: None,
             value_max: None,
             value_now: None,
             value_text: None,
-            busy: false,
+            busy: false, sort: None,
         });
     }
 }
@@ -307,7 +307,7 @@ pub(super) fn append_event_feed_accessibility_nodes(tree: &semio_ui_retained_tre
 pub struct GraphTimelineAccessibilityEntry {
     pub scene_node: NodeId,
     pub host_id: String,
-    depth: usize,
+    pub depth: usize,
     pub control: semio_renderer_wgpu_scene_state::GraphTimelineAccessibilityControl,
 }
 
@@ -372,13 +372,13 @@ pub(super) fn append_graph_timeline_accessibility_nodes(tree: &semio_ui_retained
             multiline: false,
             controls: None,
             active_descendant: None,
-            level: None,
+            level: None, multiselectable: false,
             rect: Some([entry.control.rect.x, entry.control.rect.y, entry.control.rect.w, entry.control.rect.h]),
             value_min: None,
             value_max: None,
             value_now: None,
             value_text: None,
-            busy: false,
+            busy: false, sort: None,
         });
     }
 }

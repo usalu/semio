@@ -1,0 +1,7 @@
+# Cold Lab Disk at 19:54 UTC
+
+Native fleet status at 19:54:01 UTC reported 38,519,144,448 host free bytes, 21,610,397,696 below the lab requirement of 60,129,542,144. The active lab last reported 38,442,934,272 in its before-grant wait. No lab grant or stage result follows from these samples.
+
+The Rust backing inode 686284559 allocated 26,556,735,488 bytes against 13,779,791,872 mounted used, approximately 1.93 times, and shared holder 98703 remained active. Nominal allocation minus use is 12,776,943,616 bytes, less than the gap and not a measured return. Graph backing allocated 14,259,085,312 versus 6,744,707,072 used, approximately 2.11 times, with shared holder 98821. Dependencies allocated 18,095,890,432 versus 7,760,523,264 used, approximately 2.33 times, with shared holder 24861. These ratios are below the earlier 3 times image-reclaim criterion and each requires fresh exact custody and identity validation. Products allocated 62,865,408 bytes. The machine ledger reported zero evictable bytes. None of this demonstrates a safe, presently eligible managed reclamation sufficient for the gap.
+
+The earlier [physical backing audit](audit-cold-lab-physical-preflight-1812.md) found no separate authorized backing volume. The next safe observation is the existing lab admission check and a fresh Native image and lease sample if natural custody or storage changes. No process, cache, image or backing was changed.

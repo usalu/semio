@@ -316,7 +316,7 @@ describe("package manager seam: neutrality laws",()=>{
    expect(importsOf(join(managersRoot,folder,"🟦️.ts")).filter(path=>!allowed.has(path))).toEqual([]);
   }
  });
- test("the bun descriptor materializes the pre-seam values at every manager-specific position of both schema bases, and its recipe keeps the hashed key order",()=>{
+ test("the bun descriptor materializes the declared values at every manager-specific position of both schema bases, and its recipe keeps the hashed key order",()=>{
   const bun=packageManagerRegistryV1.get("bun"),view=schemaViewV1(bun.descriptor),regions=(base:unknown)=>[...managerRegionsV1(base,view)];
   const pinnedInstall=originalInstall as unknown as (readonly [string,unknown])[],pinnedGeneration=originalGeneration as unknown as (readonly [string,unknown])[];
   const protocolPath="/$defs/ManagerProtocol/const",installRegions=regions(installBase),generationRegions=regions(generationBase);
@@ -384,11 +384,11 @@ describe("package manager seam: neutrality laws",()=>{
   expect(ratchet.files).toEqual({});
  });
  test("every adapter-owned module exists and every declared repository datum still names the selected manager's files",()=>{
-  const names=(ecosystem:string)=>{const manager=selectPackageManagerV1(ecosystem,{});return {lock:manager.primaryLockName(),scopeConfig:manager.configurationNames("scope")[0]!};};
+  const names=(ecosystem:string)=>{const manager=selectPackageManagerV1(ecosystem,{});return {lock:manager.primaryLockName(),scopeConfig:manager.configurationNames("scope")[0]!,cache:String(manager.descriptor.recipe.cache),home:manager.descriptor.runtime.hostEnvironment[0]!};};
   for(const manager of builtInPackageManagersV1)for(const module of manager.descriptor.ownedModules)expect(existsSync(join(libraryRoot,module)),module).toBe(true);
   for(const [file,row] of Object.entries(owned.data)){
    const text=readFileSync(join(libraryRoot,file),"utf8"),selected=names(row.ecosystem);
-   for(const key of row.names)expect(text.includes(selected[key as "lock"|"scopeConfig"]),file+" "+key).toBe(true);
+   for(const key of row.names)expect(text.includes(selected[key as "lock"|"scopeConfig"|"cache"|"home"]),file+" "+key).toBe(true);
   }
  });
  test("the CommonJS accessor and the catalog agree with the registry for every ecosystem and manager",()=>{

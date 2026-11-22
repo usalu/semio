@@ -1,3 +1,4 @@
+import {statSync} from "node:fs";
 import {isAbsolute,join,resolve} from "node:path";
 import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import native from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🧬️schema/🔣️json/🟦️.ts";
@@ -18,7 +19,7 @@ type Bilingual=Readonly<Record<CacheLanguageV1,string>>;
 /** 💰️ One declared budget: explicit bytes, a share of the partition, or whatever its siblings leave. */
 export type CacheBudgetV1=Readonly<{bytes:number}>|Readonly<{basisPoints:number}>|Readonly<{remainder:true}>;
 /** 🧹️ How an area is collected: how long it may stay unused, how long a unit must be quiet, what proves a unit is in use (`pid`: the unit name carries the process id, `(?<pid>…)` in `units`, and a live process holds it), whether a unit is a child (default) or a grandchild of the area directory, and which children of the directory are units at all (`units`, a nested area may then share its directory with the homes of other areas). */
-export type CacheCollectV1=Readonly<{unusedAgeMs:number|null;quietMs:number;custody:"quiet"|"sqlite"|"lease"|"pid";lease?:string;depth?:1|2;units?:string}>;
+export type CacheCollectV1=Readonly<{unusedAgeMs:number|null;quietMs:number;custody:"quiet"|"sqlite"|"lease"|"pid";lease?:string;depth?:1|2;units?:string;pressure?:"reclaimable"|"pinned"}>;
 /** 🚰️ The free space below which an owner is asked to reclaim in the background, and the free space it reclaims up to. */
 export type CacheReclaimV1=Readonly<{softAvailableBytes:number;targetAvailableBytes:number}>;
 /** 📏️ One part of a partition's measured need: its cap (an area's budget or explicit bytes) and what was measured. */
@@ -28,7 +29,7 @@ export type CacheNeedV1=Readonly<{partition:string;measuredOn:string;headroomPer
 /** 📍️ One declared home of cached bytes. */
 export type CacheAreaV1=Readonly<{id:string;root:CacheRootIdV1;kind:"partition"|"control"|"nested"|"tree";directory?:string;pattern?:string;partition?:string;budget?:CacheBudgetV1;managed?:Readonly<{owner:CacheOwnerV1}>;recreate?:"derived"|"carried";carry?:readonly string[];reclaim?:CacheReclaimV1;collect?:CacheCollectV1;writers:readonly string[];purpose:Bilingual}>;
 /** 🪦️ One root that no writer feeds any more and the collector removes once it has been quiet. */
-export type CacheRetirementV1=Readonly<{root:CacheRootIdV1;directory:string;quietMs:number;reason:Bilingual}>;
+export type CacheRetirementV1=Readonly<{root:CacheRootIdV1;directory:string;quietMs:number;reason:Bilingual;within?:string}>;
 /** 🗃️ One loose root with the budget of all its areas and the rule for entries nobody declared. */
 export type CacheRootV1=Readonly<{directory:string;maximumBytes:number;undeclaredUnusedAgeMs:number;undeclaredQuietMs:number;ignored:readonly string[]}>;
 /** 🧾️ The whole closed ledger of cache homes. */
@@ -80,8 +81,15 @@ export function readCacheLedgerV1(value:unknown,partitions:CachePartitionBudgets
   if(area.collect&&(area.collect.custody==="lease")!==(area.collect.lease!==undefined))refuse("lease custody needs a resource: "+area.id);
   if(area.directory!==undefined)claimed.get(area.root)!.push(segments(area.directory));
  }
+ const carvedOut:string[][][]=[];
  for(const retirement of ledger.retirements){
   if(segments(retirement.directory).some(part=>part==="."||part===".."))refuse("canonical retirement required: "+retirement.directory);
+  if(retirement.within!==undefined){
+   const home=ledger.areas.find(area=>area.id===retirement.within);
+   if(home===undefined||home.kind!=="control"||home.root!==retirement.root||home.directory===undefined||!inside(segments(home.directory),segments(retirement.directory))||segments(home.directory).length===segments(retirement.directory).length)refuse("a carved-out retirement lies strictly inside a control area of its root: "+retirement.directory);
+   if(carvedOut.some(other=>other.some(path=>inside(path,segments(retirement.directory))||inside(segments(retirement.directory),path))))refuse("overlapping carved-out retirements: "+retirement.directory);
+   carvedOut.push([segments(retirement.directory)]);continue;
+  }
   claimed.get(retirement.root)!.push(segments(retirement.directory));
  }
  for(const[root,paths]of claimed){
@@ -129,6 +137,17 @@ export function cacheAreaDirectoryV1(workspace:string,ledger:CacheLedgerV1,area:
  return area.directory===undefined?null:join(workspace,ledger.roots[area.root].directory,...segments(area.directory));
 }
 
+/** 🏠️ The home of one declared area for a long-running writer: its directory, its budget in bytes and, on macOS where a partition is an attached image, a refusal while that image is not attached (a write below an unattached mount point lands on the host volume and is hidden when the image attaches later). A workspace without the partition directory has no image at all and resolves to a plain directory. */
+export function cacheAreaHomeV1(workspace:string,id:string,ledger:CacheLedgerV1=cacheLedgerV1(),partitions:CachePartitionBudgetsV1=budgetPolicy.partitions):Readonly<{directory:string;budgetBytes:number|null}>{
+ const area=ledger.areas.find(row=>row.id===id);if(area===undefined)throw Error("Declared cache area required: "+id);
+ const directory=cacheAreaDirectoryV1(workspace,ledger,area,partitions);if(directory===null)throw Error("Directory of the cache area required: "+id);
+ if(process.platform==="darwin"&&area.partition!==undefined){
+  const parent=join(workspace,partitions[area.partition]!.directory),mount=join(parent,mountDirectory),device=(path:string)=>{try{return statSync(path).dev;}catch{return undefined;}};
+  if(device(parent)!==undefined&&(device(mount)===undefined||device(mount)===device(parent)))throw Error("The partition "+area.partition+" is not attached, so the area "+id+" has no home yet / Die Partition "+area.partition+" ist nicht angehängt, der Bereich "+id+" hat noch kein Zuhause");
+ }
+ return Object.freeze({directory,budgetBytes:cacheAreaBudgetBytesV1(ledger,area,partitions)});
+}
+
 /** 🗂️ Resolves a loose root to its absolute directory. */
 export function cacheRootDirectoryV1(workspace:string,ledger:CacheLedgerV1,root:CacheRootIdV1):string{return join(workspace,...segments(ledger.roots[root].directory));}
 
@@ -145,6 +164,7 @@ export type CacheClassV1=Readonly<{kind:"area"|"container"|"retired"|"ignored"|"
 /** 🧮️ Classifies one root-relative path against the ledger. */
 export function classifyCachePathV1(ledger:CacheLedgerV1,root:CacheRootIdV1,path:string):CacheClassV1{
  const parts=segments(path);if(parts.length===1&&ledger.roots[root].ignored.includes(parts[0]!))return{kind:"ignored"};
+ for(const retirement of ledger.retirements)if(retirement.within!==undefined&&retirement.root===root&&inside(segments(retirement.directory),parts))return{kind:"retired",id:retirement.directory};
  for(const area of ledger.areas){
   if(area.root!==root)continue;
   if(area.pattern!==undefined&&new RegExp(area.pattern,"u").test(parts[0]!))return{kind:"area",id:area.id};
@@ -178,9 +198,9 @@ export function cacheRecencyMsV1(times:Readonly<{mtimeMs:number;atimeMs:number;c
 /** 🧱️ One independently removable child of an area, with the newest file time inside it and the holder that proves it is in use. */
 export type CacheUnitV1=Readonly<{name:string;bytes:number;recencyMs:number;held?:string}>;
 /** 🎯️ One thing the collector may shrink: a declared area, a retired root or the undeclared entries of a root. */
-export type CacheTargetV1=Readonly<{id:string;kind:"area"|"retired"|"undeclared";budgetBytes:number|null;unusedAgeMs:number|null;quietMs:number;heldBy?:string;units:readonly CacheUnitV1[]}>;
+export type CacheTargetV1=Readonly<{id:string;kind:"area"|"retired"|"undeclared";budgetBytes:number|null;unusedAgeMs:number|null;quietMs:number;heldBy?:string;pinned?:true;units:readonly CacheUnitV1[]}>;
 /** 🗑️ One planned removal and why. */
-export type CacheRemovalV1=Readonly<{target:string;name:string;bytes:number;reason:"retired"|"undeclared"|"age"|"budget"}>;
+export type CacheRemovalV1=Readonly<{target:string;name:string;bytes:number;reason:"retired"|"undeclared"|"age"|"budget"|"pressure"}>;
 /** 🛡️ One unit the plan wanted to remove but its holder or its recent use forbids. */
 export type CacheKeptV1=Readonly<{target:string;name:string;bytes:number;reason:"held"|"quiet"}>;
 /** 📊️ The plan for one target. */
@@ -192,7 +212,11 @@ const byName=(left:string,right:string):number=>left<right?-1:left>right?1:0;
  * A unit is removed when it was unused for the target's age; if the target still exceeds its budget, the oldest remaining units go next.
  * A unit that is held, or touched within the target's quiet time, is never removed and is reported as kept instead.
  */
-export function planCacheCollectionV1(targets:readonly CacheTargetV1[],nowMs:number):readonly CacheTargetPlanV1[]{
+export function planCacheCollectionV1(targets:readonly CacheTargetV1[],nowMs:number,reclaimBytes:number=0):readonly CacheTargetPlanV1[]{
+ const plans=planCacheTargetsV1(targets,nowMs);
+ return reclaimBytes>0?planCachePressureV1(targets,plans,nowMs,reclaimBytes):plans;
+}
+const planCacheTargetsV1=(targets:readonly CacheTargetV1[],nowMs:number):readonly CacheTargetPlanV1[]=>{
  return targets.map(target=>{
   const base:CacheRemovalV1["reason"]=target.kind==="retired"?"retired":target.kind==="undeclared"?"undeclared":"age",units=[...target.units].sort((left,right)=>byName(left.name,right.name)),removals:CacheRemovalV1[]=[],kept=new Map<string,CacheKeptV1>(),removed=new Set<string>();
   const block=(unit:CacheUnitV1):"held"|"quiet"|null=>target.heldBy!==undefined||unit.held!==undefined?"held":nowMs-unit.recencyMs<target.quietMs?"quiet":null;
@@ -205,6 +229,25 @@ export function planCacheCollectionV1(targets:readonly CacheTargetV1[],nowMs:num
    removals.push({target:target.id,name:unit.name,bytes:unit.bytes,reason:"budget"});removed.add(unit.name);remaining-=unit.bytes;
   }
   return Object.freeze({id:target.id,kind:target.kind,totalBytes,retainedBytes:remaining,budgetBytes:target.budgetBytes,overBudgetBytes:target.budgetBytes===null?0:Math.max(0,remaining-target.budgetBytes),removals:Object.freeze(removals),kept:Object.freeze([...kept.values()].filter(row=>!removed.has(row.name)))});
+ });
+};
+/**
+ * 🗜️ Frees `reclaimBytes` more than the age and budget rules removed, oldest first across every declared area: a unit that is neither held nor touched within the quiet time of its area is stale or superseded and may go when the host disk is short, however young its age or however far below its budget the area is. Retired and undeclared targets were removed in full by the base plan already; held and quiet units stay, and so does every unit of a pinned target (`pressure: "pinned"`: a tool install that only a tool setup provisions and nothing recreates on demand, so pressure never takes it; its own age and budget still apply). Pure, so every language reproduces it from the same fixture.
+ * @see ./🧪️tests/🟦️.ts
+ */
+export function planCachePressureV1(targets:readonly CacheTargetV1[],plans:readonly CacheTargetPlanV1[],nowMs:number,reclaimBytes:number):readonly CacheTargetPlanV1[]{
+ let remaining=reclaimBytes-plans.reduce((sum,plan)=>sum+plan.removals.reduce((inner,removal)=>inner+removal.bytes,0),0);
+ if(remaining<=0)return plans;
+ const gone=new Set(plans.flatMap(plan=>plan.removals.map(removal=>plan.id+"\0"+removal.name))),extra=new Map<string,CacheRemovalV1[]>();
+ const candidates=targets.flatMap(target=>target.kind!=="area"||target.heldBy!==undefined||target.pinned?[]:target.units.filter(unit=>unit.held===undefined&&nowMs-unit.recencyMs>=target.quietMs&&!gone.has(target.id+"\0"+unit.name)).map(unit=>({target,unit}))).sort((left,right)=>left.unit.recencyMs-right.unit.recencyMs||byName(left.target.id,right.target.id)||byName(left.unit.name,right.unit.name));
+ for(const{target,unit}of candidates){
+  if(remaining<=0)break;
+  extra.set(target.id,[...extra.get(target.id)??[],{target:target.id,name:unit.name,bytes:unit.bytes,reason:"pressure"}]);remaining-=unit.bytes;
+ }
+ return plans.map(plan=>{
+  const added=extra.get(plan.id);if(added===undefined)return plan;
+  const names=new Set(added.map(row=>row.name)),bytes=added.reduce((sum,row)=>sum+row.bytes,0);
+  return Object.freeze({...plan,retainedBytes:plan.retainedBytes-bytes,overBudgetBytes:plan.budgetBytes===null?0:Math.max(0,plan.retainedBytes-bytes-plan.budgetBytes),removals:Object.freeze([...plan.removals,...added]),kept:Object.freeze(plan.kept.filter(row=>!names.has(row.name)))});
  });
 }
 

@@ -26,6 +26,7 @@ artifact-app-testing = []
 media-turn-testing = []
 
 [dependencies]
+semio-framework-hash = { workspace = true }
 semio-plugin-operation = { path = "../../../♻️cancellation/📦️packages/🦀️rust" }
 semio-plugin-decl-views = { path = "../../../📜️declaration/👁️view/📦️packages/🦀️rust" }
 semio-plugin-decl-media = { path = "../../../📜️declaration/🎞️media/📦️packages/🦀️rust" }

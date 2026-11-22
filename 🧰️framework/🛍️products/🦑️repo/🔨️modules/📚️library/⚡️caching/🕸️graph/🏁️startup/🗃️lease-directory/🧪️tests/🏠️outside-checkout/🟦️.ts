@@ -5,13 +5,14 @@ import {dirname,join} from "node:path";
 import {fileURLToPath,pathToFileURL} from "node:url";
 
 /** 🏠️ The Nx tooling of a machine with a declared state directory lives outside the checkout (`<state>/b/t/m/nx/<digest>`): the module that names the graph lease directory and the tooling store root must not look for a workspace above its own file there but take the declared workspace root. */
+const outsideTemporary=process.platform==="win32"?tmpdir():"/tmp";
 const source=readFileSync(new URL("../../🟦️.ts",import.meta.url),"utf8"),here=dirname(fileURLToPath(import.meta.url));
 const absolute=(text:string):string=>text.replace(/from\s*"((?:\.\.\/)+)([^"]+)"/gu,(_all,ups:string,rest:string)=>{
  let directory=join(here,"..","..");
  for(let up=0;up<ups.length/3;up++)directory=dirname(directory);
  return `from ${JSON.stringify(pathToFileURL(join(directory,rest)).href)}`;
 });
-const fakeCheckout=():string=>{const root=realpathSync(mkdtempSync(join(tmpdir(),"lease-root-")));writeFileSync(join(root,"📋️project.json"),"{}");writeFileSync(join(root,"package.json"),JSON.stringify({workspaces:["a"]}));mkdirSync(join(root,"a"));return root;};
+const fakeCheckout=():string=>{const root=realpathSync(mkdtempSync(join(outsideTemporary,"lease-root-")));writeFileSync(join(root,"📋️project.json"),"{}");writeFileSync(join(root,"package.json"),JSON.stringify({workspaces:["a"]}));mkdirSync(join(root,"a"));return root;};
 const load=async(place:string,declared:string)=>{
  mkdirSync(place,{recursive:true});
  const file=join(place,"🟦️.ts");
@@ -20,7 +21,7 @@ const load=async(place:string,declared:string)=>{
  try{return await import(pathToFileURL(file).href+"?"+Math.random());}finally{if(previous===undefined)delete process.env.SEMIO_WORKSPACE_ROOT;else process.env.SEMIO_WORKSPACE_ROOT=previous;}
 };
 test("a module loaded from outside every checkout takes the declared workspace root, a module in a checkout takes its own",async()=>{
- const declared=fakeCheckout(),other=fakeCheckout(),state=realpathSync(mkdtempSync(join(tmpdir(),"lease-state-")));
+ const declared=fakeCheckout(),other=fakeCheckout(),state=realpathSync(mkdtempSync(join(outsideTemporary,"lease-state-")));
  try{
   const outside=await load(join(state,"b","t","m","nx","d1"),declared),previous=process.env.SEMIO_WORKSPACE_ROOT;
   process.env.SEMIO_WORKSPACE_ROOT=declared;

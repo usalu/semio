@@ -1,7 +1,7 @@
 //! 🧾️ Admits a parsed PDF stream dictionary and its borrowed body to the controlled decoder.
 
 use super::*;
-use semio_framework_value::{ValueError, ValueRefusalKind};
+use semio_framework_value::{ByteReadSource, ValueError, ValueRefusalKind};
 use std::mem::size_of;
 
 /// 📬️ Validated bytes and typed declarations for the held stream.
@@ -61,7 +61,7 @@ impl PdfDecodedStreamCursor {
     }
 
     /// ▶️ Drives dictionary planning and the ordered filter stages over the stable borrowed body.
-    pub fn advance(&mut self, dict: &[PdfDictEntry], raw: &[u8], mut grant: StreamDataGrant, cancelled: bool) -> StreamDataReceipt {
+    pub fn advance(&mut self, dict: &[PdfDictEntry], raw: &(impl ByteReadSource + ?Sized), mut grant: StreamDataGrant, cancelled: bool) -> StreamDataReceipt {
         self.cancelled |= cancelled;
         if self.cancelled && !self.closing { return empty(Ok(StreamDataStatus::Cancelled), 0); }
         if self.closing { return empty(Ok(StreamDataStatus::More), 0); }
@@ -79,8 +79,10 @@ impl PdfDecodedStreamCursor {
         }
         let Some(decoder) = self.decoder.as_mut() else { return receipt };
         grant.allocation_bytes -= receipt.allocated_bytes;
-        let source = self.input.as_deref().unwrap_or(raw);
-        let mut decoded = decoder.advance(source, grant, false);
+        let mut decoded = match self.input.as_ref() {
+            Some(source) => decoder.advance(source, grant, false),
+            None => decoder.advance(raw, grant, false),
+        };
         decoded.work += receipt.work;
         decoded.allocated_bytes += receipt.allocated_bytes;
         if self.stage == 0 { self.consumed = decoder.progress().0; }

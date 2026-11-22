@@ -24,17 +24,16 @@
       2,
       -1,
       0,
-      3,
+      -3,
       30,
       86
     ],
-    "x": 0,
-    "y": -10,
     "text": {
       "content": "Hello",
-      "size": 10,
-      "fontFamily": "Anta"
-    }
+      "size": 10
+    },
+    "fillRule": "nonzero",
+    "contours": 7
   },
   "baseFont": "Helvetica",
   "textRise": 3

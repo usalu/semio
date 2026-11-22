@@ -8,6 +8,7 @@
   "cases": [
     { "name": "action in the lease window", "address": { "kind": "window", "windowKindId": "note-composite", "windowInstanceId": "note-composite" }, "view": { "activeWindowKindId": "note-composite", "windowId": "note-composite" }, "admitted": "note-composite" },
     { "name": "action in the second window (S15 b)", "address": { "kind": "window", "windowKindId": "note-navigator", "windowInstanceId": "note-navigator" }, "view": { "activeWindowKindId": "note-navigator", "windowId": "note-navigator" }, "admitted": "note-navigator" },
+    { "name": "workspace copy keeps its action identity", "address": { "kind": "window", "windowKindId": "note-composite", "windowInstanceId": "note-composite", "actionId": "copy" }, "view": { "activeWindowKindId": "note-composite", "windowId": "note-composite" }, "admitted": "note-composite" },
     { "name": "action in the second window with a windowless view", "address": { "kind": "window", "windowKindId": "note-navigator", "windowInstanceId": "note-navigator" }, "view": {}, "admitted": "note-navigator" },
     { "name": "command by id in the second window", "address": { "kind": "command" }, "view": { "activeWindowKindId": "note-navigator", "windowId": "note-navigator" }, "admitted": "note-navigator" },
     { "name": "command by id with a windowless view runs in the lease window", "address": { "kind": "command" }, "view": {}, "admitted": "note-composite" },

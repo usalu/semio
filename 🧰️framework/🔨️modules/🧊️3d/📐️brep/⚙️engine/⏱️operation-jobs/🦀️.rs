@@ -310,13 +310,10 @@ impl Brep {
                 Ok(Planned { extraction: x, stage: Box::new(stage) })
             }
             BrepOperation::Defeature { shape, faces } => {
-                let solid = self.native.solid_id(shape)?;
-                let selected = self.face_ids(faces)?;
-                let mut handles = vec![shape];
-                handles.extend(faces.iter());
-                let x = self.extraction(&handles)?;
-                let stage = kernel(DefeatureJob::new(&x.body, x.solid(solid)?, &x.faces(&selected)?))?;
-                Ok(Planned { extraction: x, stage: Box::new(stage) })
+                let selected = faces.iter().take(Self::DEFEATURE_FACE_COUNT + 1).map(GeometryHandle::as_str).collect::<Vec<_>>();
+                let stock = self.native.defeature_imported_stock(shape.as_str(), &selected).map_err(|error| BrepError::InvalidInput(error.to_string()))?;
+                let stage = kernel(DefeatureJob::restoring_stock(stock))?;
+                Ok(Planned { extraction: self.empty_extraction(), stage: Box::new(stage) })
             }
             BrepOperation::Extrude { face, direction, distance } => {
                 let id = self.native.face_id(face)?;

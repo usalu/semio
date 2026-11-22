@@ -3,9 +3,11 @@
   "emoji": "🧺",
   "status": "open",
   "description": "Get the mit-bestand demonstrator ready to be redeployed on a CDN as fast as possible: the static release build must succeed and every app (all eight panes) must run from the static bundle. Bugs are acceptable for this redeploy. Fall back to native tools if the shared work fleet mechanism does not work.",
+  "summary": "Freed 4.5 GiB in the Rust image by running the component run collector; fixed its planner (artifact-marker components, failed run retention) with tests; wrote 🔬️rust-image-space.md.",
   "goal": "runningdemonstrator",
   "sessions": [
-    "058433d9-45c4-4cd3-a90e-f80054e511e4"
+    "058433d9-45c4-4cd3-a90e-f80054e511e4",
+    "9f06210d-4265-49f6-9c6c-d141489a3344"
   ],
   "interactions": [
     {
@@ -16,6 +18,43 @@
       "client": "claude-code",
       "checkpoint": "",
       "prompt": "Get the mit-bestand demonstrator ready to be redeployed on a CDN as fast as possible: the static release build must succeed and every app (all eight panes) must run from the static bundle. Bugs are acceptable for this redeploy. Fall back to native tools if the shared work fleet mechanism does not work.",
+      "llm": "opus-5-5",
+      "effort": "medium"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-21 23:23:59",
+      "author": "ueli",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "b4927d2c311c372f9d5c7bb46b28a67fe36bb421",
+      "summary": "Freed 4.5 GiB in the Rust image by running the component run collector; fixed its planner (artifact-marker components, failed run retention) with tests; wrote 🔬️rust-image-space.md.",
+      "files": [
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️⚡️caching🗃️🦀️cargo🗃️🗃️unitcache🗃️🧹️gc🗃️🧩️runs🗃️🧬️schema⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️⚡️caching🗃️🦀️cargo🗃️🗃️unitcache🗃️🧹️gc🗃️🧩️runs💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️⚡️caching🗃️🦀️cargo🗃️🗃️unitcache🗃️🧹️gc🗃️🧩️runs🗃️🧪️tests💻🐍️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️⚡️caching🗃️🦀️cargo🗃️🗃️unitcache🗃️🧹️gc🗃️🧩️runs🗃️🧪️tests💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️⚡️caching🗃️🦀️cargo🗃️🗃️unitcache🗃️🧹️gc🗃️🧩️runs🗃️🧪️tests🗃️🧫️fixtures⚙️🔣️"
+        }
+      ]
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-21 23:24:17",
+      "author": "",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Reopen: the work is not done. Demonstrator, Procedural and the remaining roster modules still need release builds, then the static site, the 16-case matrix and the CDN archive. A subagent closed this ticket by mistake.",
       "llm": "opus-5-5",
       "effort": "medium"
     }

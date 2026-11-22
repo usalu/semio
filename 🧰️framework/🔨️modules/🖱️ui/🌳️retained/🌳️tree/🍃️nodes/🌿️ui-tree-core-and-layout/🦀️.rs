@@ -167,6 +167,14 @@ impl UiTree {
         Some(open)
     }
 
+    /// 📏️ Asks for a fresh layout pass because `id`'s own size changed (a refusal row appeared under a field).
+    pub fn request_layout(&mut self, id: NodeId) {
+        self.mark_dirty(id, NodeFlags::DIRTY_LAYOUT);
+        if let Some(root) = self.root.and_then(|root| self.node_mut(root)) {
+            root.flags.set(NodeFlags::DISCLOSURE_CHANGED, true);
+        }
+    }
+
     pub fn take_disclosure_changed(&mut self) -> bool {
         let Some(root) = self.root.and_then(|root| self.node_mut(root)) else { return false };
         let changed = root.flags.contains(NodeFlags::DISCLOSURE_CHANGED);

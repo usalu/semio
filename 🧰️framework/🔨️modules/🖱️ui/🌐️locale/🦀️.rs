@@ -16,6 +16,10 @@ pub use label::{AppLabels, Label, LabelText, LocalizedLabel};
 #[path = "🧩️labels/🦀️.rs"]
 mod labels;
 
+#[path = "🔠️common-labels/🦀️.rs"]
+mod common_labels;
+pub use common_labels::{UiCommonLabels, UiIconSelectorLabels};
+
 #[cfg(test)]
 #[path = "🧪️tests/🦀️.rs"]
 mod tests;

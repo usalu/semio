@@ -126,6 +126,7 @@ impl<'ctx> ChromeViewCtx<'ctx> {
                 let drag_target = input.drag.target_id.clone();
                 self.as_pointer().dispatch_widget_drag_values(input).await?;
                 input.end_drag();
+                self.input.scroll_thumb_drag = None;
                 if drag_target.as_deref().is_some_and(|id| id.starts_with("dock.split.") || id.starts_with("dock.corner.")) {
                     self.dock.persist_dock_layout();
                     if let Some(controller_id) = self.docs.shell_command_controller_id(&self.plugins) {
@@ -157,6 +158,13 @@ impl<'ctx> ChromeViewCtx<'ctx> {
         if button == 2 {
             let hit = input.hit_at(x, y).cloned();
             if input.modifiers.alt && self.input.claim_text_editor_alt_completions(x, y) {
+                self.input.right_click = RightClickState { pending: true, x, y };
+                return Ok(());
+            }
+            if let Some(suggestions) = self.input.world3d_suggestions_request(x, y, self.surfaces, input.modifiers.alt) {
+                if let Some(action) = suggestions {
+                    self.as_actions().dispatch_action(action).await?;
+                }
                 self.input.right_click = RightClickState { pending: true, x, y };
                 return Ok(());
             }
@@ -196,6 +204,16 @@ impl<'ctx> ChromeViewCtx<'ctx> {
                 let anchor = hit.control_id.as_deref().and_then(panel_resize_anchor).map(|(anchor, _)| anchor).unwrap_or(PanelAnchor::TopLeft);
                 self.dock.panel_resize_origin_width = floating_panel_width(self.dock.anchor_state(anchor).size, body, theme);
                 input.begin_drag(x, y, button, hit.control_id.clone(), Some(DragAxis::Horizontal), Some(hit.kind));
+                return Ok(());
+            }
+            if hit.kind == HitKind::ScrollThumb {
+                if !self.input.claim_chrome_pointer(pointer_id) {
+                    return Ok(());
+                }
+                let number = |key: &str| hit.drag_data.as_ref().and_then(|data| data.get(key)).and_then(|value| value.parse::<f32>().ok()).unwrap_or_default();
+                let vertical = hit.drag_axis == Some(DragAxis::Vertical);
+                self.input.scroll_thumb_drag = hit.control_id.clone().map(|id| (id, number("scrollOffset"), number("scrollRatio"), number("scrollMax"), vertical));
+                input.begin_drag(x, y, button, hit.control_id.clone(), hit.drag_axis, Some(hit.kind));
                 return Ok(());
             }
             if matches!(hit.kind, HitKind::DockSplit | HitKind::DockJoinCorner) {

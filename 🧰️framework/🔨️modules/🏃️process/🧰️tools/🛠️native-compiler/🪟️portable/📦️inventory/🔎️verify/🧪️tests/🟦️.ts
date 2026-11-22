@@ -74,6 +74,10 @@ test("physical tree validates bytes and membership and detects a concurrent edit
   for(const row of files)await writeFile(join(root,...row.path.split("/")),row.path.at(-1)!);
   const inventory={version:1,recipeSha256:"a".repeat(64),files},first=await inspectPortableMsvcTreeV1(root,inventory,control);expect(trace).toEqual(cases.progress);trace.length=0;const second=await inspectPortableMsvcTreeV1(root,inventory,control);
   expect(first.files).toBe(4);expect(first.bytes).toBe(4);expect(first.identitySha256).toBe(second.identitySha256);
+  const unreadable={...inventory,files:files.map(row=>row.path==="VC/a"?{...row,sha256:"0".repeat(64)}:row)};
+  await expect(inspectPortableMsvcTreeV1(root,unreadable,control)).rejects.toThrow();
+  expect((await inspectPortableMsvcTreeV1(root,unreadable,control,{contents:false})).identitySha256).toBe(first.identitySha256);
+  await writeFile(join(root,"VC","a"),"a");expect((await inspectPortableMsvcTreeV1(root,inventory,control,{contents:false})).identitySha256).not.toBe(first.identitySha256);
   await writeFile(join(root,"VC","extra"),"x");await expect(inspectPortableMsvcTreeV1(root,inventory,control)).rejects.toThrow();await rm(join(root,"VC","extra"));
   let edited=false;const racing={...control,yieldContinuation:async()=>{if(!edited){edited=true;await writeFile(join(root,"VC","a"),"z");}}};
   await expect(inspectPortableMsvcTreeV1(root,inventory,racing)).rejects.toThrow();expect(edited).toBe(true);

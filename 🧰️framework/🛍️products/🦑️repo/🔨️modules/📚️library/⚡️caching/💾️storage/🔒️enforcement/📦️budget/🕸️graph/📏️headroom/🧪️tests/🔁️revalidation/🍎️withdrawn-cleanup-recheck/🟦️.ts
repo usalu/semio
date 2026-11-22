@@ -15,6 +15,8 @@ import schema from"../../../🧬️schema/🔣️.json";
 import physical from"../../🔣️.json";
 import fixture from"../🧫️cases.json";
 import{privateRepositoryWorkspaceV1}from"../../../../../../../../../🧪️testing/🧫️private-repository/🟦️.ts";
+import {declareLibraryBuildTestEnvelopeV1} from "../../../../../../../../../🧪️testing/🪪️native-birth/🟦️.ts";
+declareLibraryBuildTestEnvelopeV1({suite:"storage-graph-processes"});
 const repository=await privateRepositoryWorkspaceV1();
 
 

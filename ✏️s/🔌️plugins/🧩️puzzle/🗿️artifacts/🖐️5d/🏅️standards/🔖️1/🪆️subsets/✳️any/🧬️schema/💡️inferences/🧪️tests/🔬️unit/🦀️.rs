@@ -54,7 +54,7 @@ fn chain_snapshot() -> Puzzle5dSnapshot {
         kind_catalogs: None,
         kind_catalogs_extra: None,
         kind_compatibility: Vec::new(),
-        parts: vec![parent, child],
+        parts: [parent, child].into_iter().collect(),
         fasteners: vec![fastener],
         target_volumes: Vec::new(),
     }

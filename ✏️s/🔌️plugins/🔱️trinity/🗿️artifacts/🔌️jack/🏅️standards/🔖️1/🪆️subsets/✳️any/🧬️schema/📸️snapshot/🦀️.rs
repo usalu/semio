@@ -7,8 +7,7 @@
 
 use crate::standards::v1::subsets::any::schema::content::{jack_working_scene_for_handle, JackContentChild, JackContentFactory, JackContentOwner, JackWorkingScene};
 use crate::standards::v1::subsets::any::schema::errors::TrinityRamError;
-use crate::standards::v1::subsets::any::schema::graph::{Camera, Edge, Node, TRINITY_GRAPH_SCHEMA, TRINITY_JACK_DEFAULT_QUERY};
-use crate::standards::v1::subsets::any::schema::graph_manifest::manifest_by_id;
+use crate::standards::v1::subsets::any::schema::graph::{Camera, Edge, Node, TRINITY_GRAPH_SCHEMA, TRINITY_JACK_DEFAULT_MANIFEST_ID, TRINITY_JACK_DEFAULT_QUERY};
 use crate::standards::v1::subsets::any::schema::manifest::Manifest;
 use ::semio_framework_schema::ArtifactSchema;
 
@@ -24,10 +23,7 @@ pub struct JackSnapshot {
     #[state(artifact)]
     pub name: String,
     #[state(artifact)]
-    #[value(skip_serializing_if = "Option::is_none")]
-    pub manifest_id: Option<String>,
-    #[state(artifact)]
-    pub manifest: Manifest,
+    pub manifest_id: String,
     #[state(artifact)]
     pub camera: Camera,
     #[state(artifact)]
@@ -59,15 +55,12 @@ impl JackSnapshot {
         Ok(semio_framework_pack_json::to_string_pretty(&semio_framework_pack_json::from_dsl_value(&value)))
     }
 
-    pub fn resolve_manifest(&mut self) -> Result<(), TrinityRamError> {
-        if let Some(id) = self.manifest_id.as_deref() {
-            self.manifest = Manifest::from_graph(&manifest_by_id(id).ok_or_else(|| TrinityRamError::UnknownManifestId(id.to_string()))?);
-            return Ok(());
-        }
-        if self.manifest.node_kinds.is_empty() && self.manifest.edge_kinds.is_empty() && self.manifest.port_kinds.is_empty() {
+    /// 🪪️ The interned manifest the document's `manifestId` names; shared by every snapshot, clone and graph of that id.
+    pub fn manifest(&self) -> Result<std::sync::Arc<Manifest>, TrinityRamError> {
+        if self.manifest_id.is_empty() {
             return Err(TrinityRamError::ManifestMissing);
         }
-        Ok(())
+        Manifest::shared(&self.manifest_id).ok_or_else(|| TrinityRamError::UnknownManifestId(self.manifest_id.clone()))
     }
 
     /// 📥️ Decodes the literal parent with its unresolved content address; the host supplies the exact child owner.
@@ -79,8 +72,8 @@ impl JackSnapshot {
 
     /// 🏗️ Transfers one working scene into the snapshot's exact composed content owner. The query starts empty: a document
     /// constructor names its own (`Self { query, ..Self::with_content(..) }`).
-    pub fn with_content<C:JackContentFactory>(schema: String, name: String, manifest_id: Option<String>, manifest: Manifest, camera: Camera, scene: JackWorkingScene, root_node_id: Option<String>) -> Self {
-        Self { schema, name, manifest_id, manifest, camera, content: C::child_from_working(scene.nodes,scene.edges), root_node_id, query: String::new() }
+    pub fn with_content<C:JackContentFactory>(schema: String, name: String, manifest_id: String, camera: Camera, scene: JackWorkingScene, root_node_id: Option<String>) -> Self {
+        Self { schema, name, manifest_id, camera, content: C::child_from_working(scene.nodes,scene.edges), root_node_id, query: String::new() }
     }
 
     /// 🔎 Live node list, read through the working-scene cache — replaces the old direct `.nodes`
@@ -98,17 +91,12 @@ impl JackSnapshot {
 
 //#region 🔖️ValueCodec
 /// 🔀️ Hand-written, not derived: `content` is a `store::os_store::artifact_child::ArtifactChild<S>` composed-artifact
-/// handle — see `JackArtifact`'s identical trap in the sibling `🦀️.rs` (this struct's
-/// non-child fields carried `#[serde(default, skip_serializing_if = "Option::is_none")]`
-/// before this wave; `manifest_id`/`root_node_id` are `Option<String>`, and the blanket
-/// `impl<T: FromValue> FromValue for Option<T>` already treats a missing key as `None` via the
-/// derive macro's own generated `missing` arm being unreachable here since every field is
-/// present below — no separate default handling needed in a hand-written impl).
+/// handle — see `JackArtifact`'s identical trap in the sibling `🦀️.rs`. `manifestId` is required and names the interned manifest; no manifest travels inline.
 impl semio_framework_value::ToValue for JackSnapshot {
     fn to_value_controlled(&self, c: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<semio_framework_value::DslValue, semio_framework_value::ValueError> {
         c.scoped_stage(|c| {
-            c.begin_stage(8)?;
-            let mut fields = semio_framework_value::DslValue::object_encoding_controlled(8, c)?;
+            c.begin_stage(7)?;
+            let mut fields = semio_framework_value::DslValue::object_encoding_controlled(7, c)?;
             macro_rules! field {
                 ($key:literal,$value:expr) => {{
                     let child = semio_framework_value::ToValue::to_value_controlled($value, c)?;
@@ -118,12 +106,7 @@ impl semio_framework_value::ToValue for JackSnapshot {
             }
             field!("schema", &self.schema);
             field!("name", &self.name);
-            if let Some(value) = &self.manifest_id {
-                field!("manifestId", value)
-            } else {
-                c.step()?;
-            }
-            field!("manifest", &self.manifest);
+            field!("manifestId", &self.manifest_id);
             field!("camera", &self.camera);
             field!("content", &self.content);
             if let Some(value) = &self.root_node_id {
@@ -136,17 +119,13 @@ impl semio_framework_value::ToValue for JackSnapshot {
         })
     }
 
-    /// 🕳️ `manifestId`/`rootNodeId` are SKIPPED while `None` (the old `skip_serializing_if` law the
-    /// committed `📸️snapshot` fixture vectors are written against): decode→encode of a committed
+    /// 🕳️ `rootNodeId` is SKIPPED while `None` (the committed `📸️snapshot` fixture vectors are written against it): decode→encode of a committed
     /// snapshot is a fixed point only if an absent id stays absent instead of surfacing as `null`.
     fn to_value(&self) -> semio_framework_value::DslValue {
-        let mut entries: Vec<(String, semio_framework_value::DslValue)> = Vec::with_capacity(8);
+        let mut entries: Vec<(String, semio_framework_value::DslValue)> = Vec::with_capacity(7);
         entries.push(("schema".to_string(), semio_framework_value::ToValue::to_value(&self.schema)));
         entries.push(("name".to_string(), semio_framework_value::ToValue::to_value(&self.name)));
-        if let Some(manifest_id) = self.manifest_id.as_ref() {
-            entries.push(("manifestId".to_string(), semio_framework_value::ToValue::to_value(manifest_id)));
-        }
-        entries.push(("manifest".to_string(), semio_framework_value::ToValue::to_value(&self.manifest)));
+        entries.push(("manifestId".to_string(), semio_framework_value::ToValue::to_value(&self.manifest_id)));
         entries.push(("camera".to_string(), semio_framework_value::ToValue::to_value(&self.camera)));
         entries.push(("content".to_string(), semio_framework_value::ToValue::to_value(&self.content)));
         if let Some(root_node_id) = self.root_node_id.as_ref() {
@@ -159,7 +138,7 @@ impl semio_framework_value::ToValue for JackSnapshot {
 impl semio_framework_value::FromValue for JackSnapshot {
     fn from_value_controlled(value: &semio_framework_value::DslValue, c: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<Self, semio_framework_value::ValueError> {
         c.scoped_stage(|c| {
-            c.begin_stage(8)?;
+            c.begin_stage(7)?;
             let fields = value.object_controlled(c)?;
             c.charge(size_of::<Self>())?;
             fn optional_field<T: semio_framework_value::FromValue + Default>(fields: &[(String, semio_framework_value::DslValue)], key: &str, c: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<T, semio_framework_value::ValueError> {
@@ -173,8 +152,9 @@ impl semio_framework_value::FromValue for JackSnapshot {
             }
             let schema = optional_field(fields, "schema", c)?;
             let name = optional_field(fields, "name", c)?;
-            let manifest_id = optional_field(fields, "manifestId", c)?;
-            let manifest = semio_framework_value::DecodedValue::new(optional_field::<Manifest>(fields, "manifest", c)?, <Manifest as semio_framework_value::FromValue>::retire_decoded);
+            let manifest_id = semio_framework_value::DslValue::field_controlled(fields, "manifestId", c)?.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "missing field manifestId"))?;
+            let manifest_id = <String as semio_framework_value::FromValue>::from_value_controlled(manifest_id, c)?;
+            c.step()?;
             let camera=match semio_framework_value::DslValue::field_controlled(fields,"camera",c)?{Some(value)=>crate::standards::v1::subsets::any::schema::json_transport::decode_camera(value,c)?,None=>Default::default()};c.step()?;
             let child = semio_framework_value::DslValue::field_controlled(fields, "content", c)?.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "missing field content"))?;
             let content = semio_framework_value::DecodedValue::new(<JackContentChild as semio_framework_value::FromValue>::from_value_controlled(child, c)?, <JackContentChild as semio_framework_value::FromValue>::retire_decoded);
@@ -182,7 +162,7 @@ impl semio_framework_value::FromValue for JackSnapshot {
             let root_node_id = optional_field(fields, "rootNodeId", c)?;
             let query = semio_framework_value::DslValue::field_controlled(fields, "query", c)?.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "missing field query"))?;
             let query = <String as semio_framework_value::FromValue>::from_value_controlled(query, c)?;
-            let output = semio_framework_value::DecodedValue::new(Self { schema, name, manifest_id, manifest: manifest.take(), camera, content: content.take(), root_node_id, query }, Self::retire_decoded);
+            let output = semio_framework_value::DecodedValue::new(Self { schema, name, manifest_id, camera, content: content.take(), root_node_id, query }, Self::retire_decoded);
             c.step()?;
             Ok(output.take())
         })
@@ -203,14 +183,7 @@ impl semio_framework_value::FromValue for JackSnapshot {
                 Some(v) => semio_framework_value::FromValue::from_value(v)?,
                 None => Default::default(),
             },
-            manifest_id: match get("manifestId") {
-                Some(v) => semio_framework_value::FromValue::from_value(v)?,
-                None => None,
-            },
-            manifest: match get("manifest") {
-                Some(v) => semio_framework_value::FromValue::from_value(v)?,
-                None => Default::default(),
-            },
+            manifest_id: semio_framework_value::FromValue::from_value(get("manifestId").ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "missing field `manifestId`"))?)?,
             camera: match get("camera") {
                 Some(v) => semio_framework_value::FromValue::from_value(v)?,
                 None => Default::default(),
@@ -231,8 +204,7 @@ impl Default for JackSnapshot {
         Self {
             schema: TRINITY_GRAPH_SCHEMA.into(),
             name: String::new(),
-            manifest_id: None,
-            manifest: Manifest::default(),
+            manifest_id: TRINITY_JACK_DEFAULT_MANIFEST_ID.into(),
             camera: Camera::default(),
             content: store::os_store::artifact_child::ArtifactChild::new(String::new(),semio_framework_artifact_reference::ArtifactRef{artifact_id:String::new(),dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind:String::new(),standard:String::new(),subset:String::new()}}),
             root_node_id: None,
@@ -276,7 +248,7 @@ pub fn jack_working_scene(snapshot:&JackSnapshot)->Result<JackWorkingScene,semio
 
 /// 📦️ An empty trinity graph fixture over the installation's content factory.
 pub fn empty_trinity_graph_snapshot<C:JackContentFactory>() -> JackSnapshot {
-    JackSnapshot { query: TRINITY_JACK_DEFAULT_QUERY.into(), ..JackSnapshot::with_content::<C>(JackSnapshot::SCHEMA.into(), "trinity".into(), Some("nakagin".into()), Manifest::nakagin_default(), Camera::default(), JackWorkingScene { nodes: Vec::new(), edges: Vec::new() }, None) }
+    JackSnapshot { query: TRINITY_JACK_DEFAULT_QUERY.into(), ..JackSnapshot::with_content::<C>(JackSnapshot::SCHEMA.into(), "trinity".into(), TRINITY_JACK_DEFAULT_MANIFEST_ID.into(), Camera::default(), JackWorkingScene { nodes: Vec::new(), edges: Vec::new() }, None) }
 }
 
 //#region 🧬️ChildRestoreProjection
@@ -299,8 +271,7 @@ use semio_framework_value::retirement::{arc_custody::ArcLease, RetireOwned};
 pub struct JackSnapshotSources {
     schema: String,
     name: String,
-    manifest_id: Option<String>,
-    manifest: Manifest,
+    manifest_id: String,
     camera: Camera,
     content: JackContentChild,
     owner: Option<ArcLease<JackContentOwner>>,
@@ -313,9 +284,9 @@ impl RetireOwned for JackSnapshot {
     type RetirementCursor = <JackSnapshotSources as RetireOwned>::RetirementCursor;
 
     fn retirement_seed(self) -> Self::RetirementCursor {
-        let Self { schema, name, manifest_id, manifest, camera, mut content, root_node_id, query } = self;
+        let Self { schema, name, manifest_id, camera, mut content, root_node_id, query } = self;
         let owner = content.take_local_owner::<JackContentOwner>().ok().flatten().map(ArcLease::new);
-        JackSnapshotSources { schema, name, manifest_id, manifest, camera, content, owner, root_node_id, query }.retirement_seed()
+        JackSnapshotSources { schema, name, manifest_id, camera, content, owner, root_node_id, query }.retirement_seed()
     }
 
     fn controlled_retirement_supported() -> bool {

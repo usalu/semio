@@ -54,6 +54,8 @@ export type SharedModelOptions = {
   readonly thermalQuantity?: ThermalQuantity;
   readonly forceQuantity?: ForceQuantity;
   readonly theme?: Theme;
+  /** 🔥️ Whether the thermal view carries a cone at every flowing emitter (default true); a viewer that draws the air flow itself asks for none. */
+  readonly emitterMarkers?: boolean;
 };
 
 /** ⚙️ What one model contains: the preset denominator `scale` (1:`scale`, a key of `asset.volumes`; it sizes the glyphs in paper millimetres) and the `view` whose mode, and with it whose list of solids, the model is made of; the model carries every view of that mode as a variant. */
@@ -116,7 +118,7 @@ async function instantsOf(asset: Asset, request: Resolved, options: SharedModelO
     const analytic: Analytic = {};
     if (wants.thermal) analytic.thermal = solveThermalAt(asset, query, options.environment, { session });
     if (wants.structure) analytic.structure = solveStructure(state);
-    if (wants.thermal && asset.thermal.emitters.length > 0) analytic.emitters = solveTransport(asset, query, analytic.thermal!.environment, { maxAgeS: 0.5, pathlines: false, streamlines: false }).emitters;
+    if (wants.thermal && options.emitterMarkers !== false && asset.thermal.emitters.length > 0) analytic.emitters = solveTransport(asset, query, analytic.thermal!.environment, { maxAgeS: 0.5, pathlines: false, streamlines: false }).emitters;
     return { query, state, analytic };
   };
   await step();

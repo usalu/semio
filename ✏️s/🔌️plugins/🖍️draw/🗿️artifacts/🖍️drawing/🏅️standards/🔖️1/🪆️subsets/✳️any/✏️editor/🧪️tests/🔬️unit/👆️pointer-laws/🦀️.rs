@@ -19,8 +19,9 @@ pub(super) fn pointer(utility: &str, world: [f64; 2]) -> canvas_pointer_down::Dr
 }
 
 /// 🧱️ The committed base a release yields against.
-fn tool_base(document: &DrawingSnapshot) -> canvas_pointer_down::DrawingToolBase {
-    canvas_pointer_down::DrawingToolBase { document: std::sync::Arc::new(document.clone()), operation: None }
+fn tool_base(document: &DrawingSnapshot, operation_id: u64) -> canvas_pointer_down::DrawingToolBase {
+    let operation = semio_plugin::AppOperationContext { operation_id, ..semio_s_artifact_draw_drawing_editor::identity_test::operation() };
+    canvas_pointer_down::DrawingToolBase { document: std::sync::Arc::new(document.clone()), operation: Some(operation) }
 }
 
 /// 🛠️ LAW (design §5): a shape drag previews from the tool context, publishes nothing per tick and commits ONE
@@ -42,7 +43,7 @@ async fn gesture_preview_reflects_live_shape_drag_and_clears_on_commit() {
     assert_eq!(preview.context.cursor, [40.0, 30.0], "preview tracks the live cursor, not the drag start");
     assert!(preview.sequence > seq_after_down, "seq is monotone per tick, for staleness detection on the receiving end");
 
-    let up = session.release("canvasPointerUp", pointer("shapeRect", [40.0, 30.0]), tool_base(&document)).expect("release").expect("a shape release commits");
+    let up = session.release("canvasPointerUp", pointer("shapeRect", [40.0, 30.0]), tool_base(&document, 11)).expect("release").expect("a shape release commits");
     assert_eq!(up.artifact_mutations.len(), 1, "pointer-up commits the shape as one real DrawingMutation");
     let transaction = up.transaction.as_ref().expect("the shape commits as one tool transaction");
     assert!(transaction.id.starts_with("tx-") && transaction.tool == "s.draw.drawing@1/*#editor#shapeRect", "{transaction:?}");
@@ -72,10 +73,10 @@ async fn two_gestures_are_two_transactions_and_a_cancel_is_zero_trace() {
     let document = default_drawing_document("empty", None);
     let mut session = semio_s_artifact_draw_drawing_editor::identity_test::session("shapeRect", "two-gestures");
     let mut transactions = Vec::new();
-    for (start, end) in [([0.0, 0.0], [20.0, 10.0]), ([30.0, 30.0], [60.0, 50.0])] {
+    for (ordinal, (start, end)) in [([0.0, 0.0], [20.0, 10.0]), ([30.0, 30.0], [60.0, 50.0])].into_iter().enumerate() {
         session.press(pointer("shapeRect", start)).expect("press");
         session.sample(end, false, false).expect("move");
-        let emit = session.release("canvasPointerUp", pointer("shapeRect", end), tool_base(&document)).expect("release").expect("commit");
+        let emit = session.release("canvasPointerUp", pointer("shapeRect", end), tool_base(&document, 11 + ordinal as u64)).expect("release").expect("commit");
         transactions.push(emit.transaction.expect("each gesture commits its own transaction"));
     }
     assert_ne!(transactions[0].id, transactions[1].id);

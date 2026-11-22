@@ -8,6 +8,7 @@ import {withBuildTestInvocationV1} from "../../../../../../🔨️modules/🏃�
 import {withRepositoryCompilerRuntimeEntriesV1} from "../../🏗️build/📥️source/🔏️closure/🚪️command/🔌️runtime/🟦️.ts";
 import {detachDiskImagesUnderV1} from "../../../../../../🔨️modules/🏃️process/🧪️testing/🏖️sandbox/🖼️images/🟦️.ts";
 import {sweepLeakedSandboxImagesV1,writeSandboxOwnerV1} from "../../../../../../🔨️modules/🏃️process/🧪️testing/🏖️sandbox/🧹️image-sweep/🟦️.ts";
+import {adoptInstalledRustToolchainForV1,adoptInstalledNxToolkitIdentityV1} from "./🧰️adoption/🟦️.ts";
 import {privateRepositoryStartDirectoryV1,testCheckoutRootV1,requirePrivateRepositoryWorkspaceV1,privateRepositoryParentsV1,privateRepositoryDeepestV1,privateRepositoryInvocationV1,withPrivateRepositoryWorkingDirectoryV1,type PrivateRepositoryProfileV1} from "./📥️invocation/🟦️.ts";
 export {testCheckoutRootV1,testToolchainDirectoryV1,testNxToolkitDirectoryV1,requirePrivateRepositoryWorkspaceV1,type PrivateRepositoryProfileV1} from "./📥️invocation/🟦️.ts";
 
@@ -37,7 +38,7 @@ async function openPrivateRepositoryWorkspaceV1(profile:PrivateRepositoryProfile
  if(adopted){root=realpathSync(resolve(adopted));owned=false;}
  else if(!testRunnerV1)throw Error("private-repository-needs-runner-or-parent");
  else{const parents=privateRepositoryParentsV1(repositoryCheckoutRootV1(privateRepositoryStartDirectoryV1)??testCheckoutRootV1(),profile),parent=parents.find(path=>privateRepositoryDeepestV1(join(path,"r000000"),profile)<=256);if(parent===undefined)throw Error("private-repository-parent-too-deep:"+parents.join(","));await mkdir(parent,{recursive:true});reapStalePrivateRootsV1(parent);root=realpathSync(await mkdtemp(join(parent,"r")));writeSandboxOwnerV1(root);releasePrivateRootAtExitV1(root);owned=true;process.env.SEMIO_PRIVATE_REPOSITORY=root;}
- requirePrivateRepositoryWorkspaceV1(root);
+ requirePrivateRepositoryWorkspaceV1(root);adoptInstalledRustToolchainForV1(root,testCheckoutRootV1());adoptInstalledNxToolkitIdentityV1(testCheckoutRootV1());
  const invoke=privateRepositoryInvocationV1(root);
  return Object.freeze({root,owned,invoke,within:<T,>(body:()=>Promise<T>)=>withPrivateRepositoryWorkingDirectoryV1(root,body),
   prepare:(...partitions:RepositoryCachePartitionIdV1[])=>invoke(async original=>{const control=createIssuedResourceControlV1(original,"repository:private-prepare",0);for(const id of partitions)await(await openRepositoryCachePartitionV1(root,id,control)).close();},{owner:"private-repository-provisioning",maximumElapsedMilliseconds:150000}),

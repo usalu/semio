@@ -2,8 +2,10 @@
 
 use super::*;
 use semio_renderer_wgpu_shell_state::ShellState;
+
 use {semio_framework::AppDefinition,semio_framework::AppRole,semio_framework_artifact_reference::ArtifactDialect,semio_framework::ModeDefinition,semio_framework::PanelGroup,semio_framework::PanelTabDefinition,semio_framework::PanelTabKind,semio_framework::WindowKindDefinition};
 use semio_ui_locale::LocalizedLabel;
+
 use semio_ui_layout::layout::{create_default_layout, WindowOptions};
 //#region WindowActionsAndUtilitiesTests
 use semio_framework::{ActionArgDef, ActionDefinition, ActionKind, UtilityDefinition, UtilityRef};
@@ -105,7 +107,7 @@ fn map_marquee_mode_matches_ui_react() {
 }
 
 fn mods(meta: bool, ctrl: bool, shift: bool, alt: bool) -> PointerModifiers {
-    PointerModifiers { meta, ctrl, shift, alt }
+    PointerModifiers { meta, ctrl, shift, alt, repeat: false }
 }
 
 /// 🧰️ Builds a two-window app: window `main` scopes `utility.a`, window `aux` scopes nothing; `utility.b`
@@ -157,10 +159,17 @@ fn resolve_window_utilities_scopes_explicit_and_orphans() {
 fn key_event_matches_chord_respects_modifiers() {
         use semio_renderer_wgpu_shell_docs::key_event_matches_chord;
     let z = KeyAction::Char("z".into());
-    assert!(key_event_matches_chord(&z, &mods(true, false, false, false), "mod+z"));
-    assert!(key_event_matches_chord(&z, &mods(false, true, false, false), "mod+z"));
-    assert!(!key_event_matches_chord(&z, &mods(true, false, true, false), "mod+z"));
-    assert!(key_event_matches_chord(&z, &mods(true, false, true, false), "mod+shift+z"));
+    let platform = semio_renderer_wgpu_host_base::host_platform_uses_meta();
+    for uses_meta in [false, true] {
+        semio_renderer_wgpu_host_base::set_host_platform_uses_meta(uses_meta);
+        let (accelerator, other) = if uses_meta { (mods(true, false, false, false), mods(false, true, false, false)) } else { (mods(false, true, false, false), mods(true, false, false, false)) };
+        assert!(key_event_matches_chord(&z, &accelerator, "mod+z"), "mod is {} on this platform", if uses_meta { "meta" } else { "ctrl" });
+        assert!(!key_event_matches_chord(&z, &other, "mod+z"), "the other accelerator never matches mod");
+        let with_shift = if uses_meta { mods(true, false, true, false) } else { mods(false, true, true, false) };
+        assert!(!key_event_matches_chord(&z, &with_shift, "mod+z"));
+        assert!(key_event_matches_chord(&z, &with_shift, "mod+shift+z"));
+    }
+    semio_renderer_wgpu_host_base::set_host_platform_uses_meta(platform);
     let k = KeyAction::Char("k".into());
     assert!(key_event_matches_chord(&k, &mods(false, false, false, false), "k"));
     assert!(!key_event_matches_chord(&k, &mods(true, false, false, false), "k"));

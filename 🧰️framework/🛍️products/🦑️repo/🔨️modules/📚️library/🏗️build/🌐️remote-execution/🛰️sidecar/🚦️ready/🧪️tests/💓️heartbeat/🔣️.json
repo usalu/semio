@@ -25,5 +25,46 @@
     "pauseMs": 960000,
     "expectedPublications": 32,
     "expectedLastMs": 930000
+  },
+  "diskRecovery": {
+    "stage": "dependencies",
+    "needed": 6144,
+    "free": 5127,
+    "intervalMs": 5000,
+    "heartbeatMs": 30000,
+    "events": [
+      {
+        "action": "beat",
+        "at": 1000
+      },
+      {
+        "action": "beat",
+        "at": 29999
+      },
+      {
+        "action": "beat",
+        "at": 30000
+      },
+      {
+        "action": "report",
+        "at": 35000,
+        "line": "Derivable cache pass: 512 MB reclaimed"
+      },
+      {
+        "action": "beat",
+        "at": 64999
+      },
+      {
+        "action": "beat",
+        "at": 65000
+      }
+    ],
+    "closedAt": 95000,
+    "expectedPublicationsMs": [
+      0,
+      30000,
+      35000,
+      65000
+    ]
   }
 }

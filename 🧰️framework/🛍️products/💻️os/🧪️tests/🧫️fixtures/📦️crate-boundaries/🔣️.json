@@ -1474,6 +1474,17 @@
       ]
     },
     {
+      "package": "semio-os-store-engine-derived",
+      "manifest": "🔨️modules/🏪️store/⚙️engine/🔭️derived-replay/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "🔨️modules/🏪️store/⚙️engine/🔭️derived-replay/🦀️.rs",
+      "maximumActiveLines": 1000,
+      "forbiddenDependencies": [
+        "semio-os-kernel",
+        "semio-plugin",
+        "semio-framework"
+      ]
+    },
+    {
       "package": "semio-os-store-engine-member-group",
       "manifest": "🔨️modules/🏪️store/🧩️composition/📬️publication/🤝️group/📦️packages/🦀️rust/Cargo.toml",
       "entry": "🔨️modules/🏪️store/🧩️composition/📬️publication/🤝️group/🦀️.rs",

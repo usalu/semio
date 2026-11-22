@@ -301,7 +301,7 @@ impl AppPresenter {
             return Ok(false);
         }
         if interaction.shell.surfaces.advance_world3d_retirement_step() {
-            if let Some(fault)=interaction.shell.surfaces.world3d_retirement_fault() {mailbox.record_frame_fault(&format!("retired terrain owner refused: {fault:?}"));}
+            if let Some(fault)=interaction.shell.surfaces.world3d_retirement_fault() {{ semio_renderer_wgpu_host_base::log_debug(&format!("[TRACE] retired terrain owner refused: {fault:?}")); mailbox.record_frame_fault("retired terrain owner refused"); };}
             return Ok(false);
         }
         let Ok(mut cursor) = mailbox.0.world3d_close_cursor.try_lock() else {
@@ -327,7 +327,7 @@ impl AppPresenter {
         match terrain.step {
             infinite_world::world::WorldTerrainMeshPublicationStep::Idle=>{},
             infinite_world::world::WorldTerrainMeshPublicationStep::Pending|infinite_world::world::WorldTerrainMeshPublicationStep::Complete=>return Ok(false),
-            infinite_world::world::WorldTerrainMeshPublicationStep::Fault(fault)=>{mailbox.record_frame_fault(&format!("world3d terrain retirement refused: {fault:?}"));return Ok(false);}
+            infinite_world::world::WorldTerrainMeshPublicationStep::Fault(fault)=>{{ semio_renderer_wgpu_host_base::log_debug(&format!("[TRACE] world3d terrain retirement refused: {fault:?}")); mailbox.record_frame_fault("world3d terrain retirement refused"); };return Ok(false);}
         }
         let gpu_return=infinite_world::world::world3d_return_native_mesh_gpu_step(&mut state.scene,cx.retained_grant(),|key,source|self.gpu.retire_original_mesh_source_step(key,source)).map_err(|_|semio_framework_job::OriginalTurnFailure::from(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original World GPU source return refused")))?;
         cx.consume_retained(gpu_return)?;if gpu_return.copied_items!=0{cx.consume_fuel(1);return Ok(false)}

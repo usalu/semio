@@ -9,7 +9,7 @@ type Sample = { name:string; identities:{app_instance_id:number;parent_document_
 test("document archive ownership schema", () => expect(new Ajv().compile(schema)(fixture)).toBe(true));
 for (const sample of fixture.cases as Sample[]) test(sample.name, async () => {
     let reads = 0, identities = 0;
-    const archive = { source: fixture.documentId };
+    const archive = { source: fixture.documentId } as unknown as Awaited<ReturnType<NonNullable<Parameters<typeof readOwnedDocumentArchiveV1>[0]["readAppDocumentArchive"]>>>;
     const sessions = new Map();
     const plugin = {
         readAppDocumentArchive: async (_instanceId:number) => {
@@ -19,10 +19,10 @@ for (const sample of fixture.cases as Sample[]) test(sample.name, async () => {
         },
         ...(sample.missingIdentity ? {} : { readAppDocumentIdentity:async (_instanceId:number) => sample.identities[Math.min(identities++, sample.identities.length - 1)]! }),
     };
-    const entry = {documentId:fixture.documentId,session:{instanceId:fixture.instanceId},plugin};
+    const entry = {documentId:fixture.documentId,session:{pluginId:"plugin",instanceId:fixture.instanceId},plugin};
     sessions.set("active",entry);
-    if (sample.duplicate) sessions.set("other",{documentId:sample.duplicate.documentId,session:{instanceId:fixture.instanceId},plugin:sample.duplicate.samePlugin?plugin:{}});
-    const result = await readOwnedDocumentArchiveV1(plugin,entry,"active",sessions);
+    if (sample.duplicate) sessions.set("other",{documentId:sample.duplicate.documentId,session:{pluginId:sample.duplicate.samePlugin?"plugin":"other",instanceId:fixture.instanceId},plugin:sample.duplicate.samePlugin?plugin:{}});
+    const result = await readOwnedDocumentArchiveV1(plugin as unknown as Parameters<typeof readOwnedDocumentArchiveV1>[0],entry,"active",sessions);
     expect(result).toEqual(sample.expectedArchive?archive:null);
     expect(reads).toBe(sample.expectedReads);
     const sql = new Database(":memory:");

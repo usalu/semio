@@ -119,6 +119,7 @@ pub(crate) struct FrameBuffers {
     pub glass_instances: GrowBuffer,
     pub world_instances: GrowBuffer,
     pub world_lines: GrowBuffer,
+    pub world_points: GrowBuffer,
     pub world_masks: GrowBuffer,
 }
 

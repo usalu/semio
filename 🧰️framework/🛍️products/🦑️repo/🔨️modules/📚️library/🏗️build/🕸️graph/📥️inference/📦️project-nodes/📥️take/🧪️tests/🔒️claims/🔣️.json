@@ -1,0 +1,17 @@
+{
+  "staleMilliseconds": 1000,
+  "pids": { "100": true, "200": true, "300": false },
+  "steps": [
+    { "who": "a", "pid": 100, "op": "claim", "stem": "s1", "at": 0 },
+    { "who": "b", "pid": 200, "op": "claim", "stem": "s1", "at": 10 },
+    { "who": "b", "pid": 200, "op": "claim", "stem": "s2", "at": 20 },
+    { "who": "a", "pid": 100, "op": "claim", "stem": "s1", "at": 30 },
+    { "who": "b", "pid": 200, "op": "release", "stem": "s1", "at": 40 },
+    { "who": "a", "pid": 100, "op": "release", "stem": "s1", "at": 50 },
+    { "who": "b", "pid": 200, "op": "claim", "stem": "s1", "at": 60 },
+    { "who": "a", "pid": 100, "op": "claim", "stem": "s2", "at": 70 },
+    { "who": "a", "pid": 100, "op": "claim", "stem": "s2", "at": 1100 },
+    { "who": "c", "pid": 300, "op": "claim", "stem": "s3", "at": 1200 },
+    { "who": "a", "pid": 100, "op": "claim", "stem": "s3", "at": 1210 }
+  ]
+}

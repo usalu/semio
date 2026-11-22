@@ -8,4 +8,4 @@ export interface ChangeFastenedJointCount {
   newCount: number;
 }
 
-export const parseChangeFastenedJointCount: NormWireReader<ChangeFastenedJointCount> = normWireObject<ChangeFastenedJointCount>({ id: normWireRequired(normWireString), newCount: normWireRequired(normWireRange(normWireInteger, {"minimum":0})) });
+export const parseChangeFastenedJointCount: NormWireReader<ChangeFastenedJointCount> = normWireObject<ChangeFastenedJointCount>({ id: normWireRequired(normWireString), newCount: normWireRequired(normWireRange(normWireInteger, {"minimum":0,"maximum":4294967295})) });

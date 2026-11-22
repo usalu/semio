@@ -10,7 +10,7 @@ import {startClusterV1,eventuallyV1,type ClusterV1} from "../../../🧪️tests/
 import {createTestCheckoutV1,externHash,testHostProbeV1,testRustEnvironmentV1,type TestCheckoutV1} from "../🧰️workspace/🟦️.ts";
 
 const here=fileURLToPath(new URL(".",import.meta.url)),entry=fileURLToPath(new URL("../../../🏃️entry/🟦️.ts",import.meta.url)),wrapper=fileURLToPath(new URL("../../../../../⚡️caching/🦀️cargo/🗃️unit-cache/📜️script.ts",import.meta.url));
-const scratch=realpathSync(mkdtempSync(join(tmpdir(),"offload-e2e-")));
+const scratch=realpathSync(mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir(),"offload-e2e-")));
 process.env.SEMIO_CAS_ROOT=join(scratch,"cas");
 const children=new Set<ChildProcess>();
 let cluster:ClusterV1;
@@ -27,6 +27,10 @@ function startWorker(name:string,directory:string):{child:ChildProcess;lines:str
  const row={child,lines};workers.set(name,row);return row;
 }
 
+const fleetReady=async(label:string):Promise<void>=>{
+ await eventuallyV1(async()=>{const status=await (await fetch(cluster.server.workerUrl+"/status")).json() as {workers?:unknown[]};return(status.workers?.length??0)>=2;},60000,label+": both workers present");
+ await eventuallyV1(async()=>{const response=await fetch(cluster.server.workerUrl+"/v1/fleet/load");if(!response.ok)return false;const table=await response.json() as {machines?:{origin:string;headroom?:boolean}[]};return["wA","wB"].every(name=>table.machines?.some(row=>row.origin===name&&row.headroom===true)===true);},60000,label+": both machines report their load");
+};
 beforeAll(async()=>{
  cluster=await startClusterV1({workers:0,root:scratch,scheduler:{leaseSeconds:5,lingerSeconds:1,unmatchedSeconds:30}});
  for(const name of ["wA","wB"])startWorker(name,join(scratch,"worker-"+name));
@@ -44,7 +48,7 @@ afterAll(async()=>{
 
 const countingRustc=(directory:string):{path:string;log:string}=>{
  const path=join(directory,"counting-rustc.sh"),log=join(directory,"rustc-calls.log");
- writeFileSync(path,`#!/bin/sh\ncase " $* " in *" -vV "*) ;; *) echo call >> '${log}';; esac\nexec rustc "$@"\n`);chmodSync(path,0o755);
+ writeFileSync(path,`#!/bin/sh\necho "$*" >> '${log}.all'\ncase " $* " in *" --crate-name "*) echo call >> '${log}';; esac\nexec rustc "$@"\n`);chmodSync(path,0o755);
  return{path,log};
 };
 const callsOf=(log:string):number=>existsSync(log)?readFileSync(log,"utf8").split("\n").filter(Boolean).length:0;
@@ -84,7 +88,7 @@ test("with the local host forced to wait, a crate compiles entirely on another m
  expect(status,JSON.stringify(events(root))+progress(root)).toBe(0);
  expect(callsOf(join(root,"rustc-calls.log")),"the local machine spawned no rustc "+JSON.stringify(events(root))+progress(root)+JSON.stringify(cluster.events.slice(-6))).toBe(0);
  const artifacts=readdirSync(checkout.deps).filter(name=>name.includes(`-${externHash("c")}`)).sort();
- expect(artifacts).toEqual([`c-${externHash("c")}.d`,`libc-${externHash("c")}.rlib`,`libc-${externHash("c")}.rmeta`]);
+ expect(artifacts).toEqual([`c-${externHash("c")}.d`,`libc-${externHash("c")}.rlib`,`libc-${externHash("c")}.rmeta`,`libc-${externHash("c")}.rmeta.semio-deps`]);
  expect(progress(root)).toMatch(/offloaded to w[AB]/u);expect(progress(root)).toMatch(/auf w[AB] ausgelagert/u);
  expect(events(root).map(row=>row.kind)).toEqual(["offload-run"]);
  const moved=events(root)[0]!;expect(moved.bytesShipped as number,"the input files of the action are counted").toBeGreaterThan(100);expect(moved.bytesUploaded as number).toBeLessThanOrEqual(moved.bytesShipped as number+4096);expect(moved.bytesReturned as number,"the outputs that came back are counted").toBeGreaterThan(500);
@@ -94,6 +98,24 @@ test("with the local host forced to wait, a crate compiles entirely on another m
  expect(entries.length,"exactly one entry was stored").toBe(1);
  const local=spawnSync("rustc",["--crate-name","d","--edition=2021","--crate-type","lib","--emit=metadata","--extern",`c=${join(checkout.deps,`libc-${externHash("c")}.rlib`)}`,"-L",`dependency=${checkout.deps}`,"-","--out-dir",join(scratch,"probe")],{input:"pub fn d()->u32{c::c()}\n",encoding:"utf8",env:testRustEnvironmentV1()});
  expect(local.status,local.stderr).toBe(0);
+},180000);
+
+test("the verdict of the door (the whole build was refused, SEMIO_OFFLOAD_PRESSURE=door) sends the unit away although this unit alone would be admitted, and a calm machine without that verdict keeps it",async()=>{
+ const calm=testHostProbeV1("quiet-no-swap",true);
+ const door=checkoutWith("door","pub fn c()->u32{b::b()+11}\n"),rootDoor=join(scratch,"unit-door"),outputs=door.arguments("c",["b"]);mkdirSync(rootDoor,{recursive:true});
+ const previous=process.cwd();process.chdir(door.root);
+ try{
+  const status=await wrapRustcV1(["rustc",...outputs],environmentOf(door,"c",rootDoor,{SEMIO_OFFLOAD:"auto",SEMIO_OFFLOAD_PRESSURE:"door"}),door.root,{admission:{probe:calm}});
+  expect(status,JSON.stringify(events(rootDoor))+progress(rootDoor)).toBe(0);
+  expect(callsOf(join(rootDoor,"rustc-calls.log")),"no local compiler "+JSON.stringify(events(rootDoor))).toBe(0);
+  expect(events(rootDoor).map(row=>row.kind)).toEqual(["offload-run"]);
+ }finally{process.chdir(previous);}
+ const quiet=checkoutWith("calm-door","pub fn c()->u32{b::b()+12}\n"),rootQuiet=join(scratch,"unit-calm-door");mkdirSync(rootQuiet,{recursive:true});
+ process.chdir(quiet.root);
+ try{
+  const status=await wrapRustcV1(["rustc",...quiet.arguments("c",["b"])],environmentOf(quiet,"c",rootQuiet,{SEMIO_OFFLOAD:"auto"}),quiet.root,{admission:{probe:calm}});
+  expect(status).toBe(0);expect(events(rootQuiet)).toEqual([]);expect(callsOf(join(rootQuiet,"rustc-calls.log"))).toBeGreaterThan(0);
+ }finally{process.chdir(previous);}
 },180000);
 
 test("a second checkout at another absolute path asks for the same unit and gets it without any compiler running: from the fleet unit cache or the action cache, never from a worker again",async()=>{
@@ -168,14 +190,16 @@ test("a result that embeds the other machine's path is never stored: the unit fa
  expect(rlib.includes(Buffer.from("/work/"))).toBe(false);
 },180000);
 
-const SLOW="#![allow(long_running_const_eval)]\nconst X:u64={let mut i=0u64;let mut s=0u64;while i<40_000_000{s=s.wrapping_add(i);i+=1;}s};\npub fn c()->u64{X}\n";
+const SLOW="#![allow(long_running_const_eval)]\nconst X:u64={let mut i=0u64;let mut s=0u64;while i<4_000_000{s=s.wrapping_add(i);i+=1;}s};\npub fn c()->u64{X}\n";
 
 test("killing the worker that runs the unit mid-compilation still completes the unit, elsewhere or locally",async()=>{
+ await fleetReady("before kill");
  const checkout=checkoutWith("kill",SLOW),root=join(scratch,"unit-kill");
  const started=cluster.events.length,running=runWrapper(checkout,"c",["b"],root,{SEMIO_OFFLOAD:"always"});
  const assigned=()=>cluster.events.slice(started).map(event=>/-> (\S+)$/u.exec(event)?.[1]).find(Boolean);
  await eventuallyV1(()=>assigned()!==undefined,60000,"a worker is assigned the unit");
- const victim=assigned()!;
+ const victim=assigned()!,compiling=():boolean=>spawnSync("ps",["-ax","-o","command="],{encoding:"utf8"}).stdout.split("\n").some(line=>line.includes("--crate-name c ")&&line.includes(scratch)&&line.includes(".semio-offload/o"));
+ await Promise.race([eventuallyV1(compiling,60000,"the remote compiler runs"),running]);
  workers.get(victim)!.child.kill("SIGKILL");
  const result=await running;
  expect(result.status,result.stderr).toBe(0);
@@ -185,12 +209,15 @@ test("killing the worker that runs the unit mid-compilation still completes the 
  if(text.includes("offloaded to"))expect(text).not.toContain(`offloaded to ${victim}`);
  expect(cluster.events.length).toBeGreaterThan(started);
  reap();
+ workers.delete(victim);
  startWorker(victim,join(scratch,"worker-"+victim+"-again"));
+ await fleetReady("after kill");
 },240000);
 
 test("cancelling the build (SIGTERM to the wrapper) cancels the remote action: the compiler on the other machine is killed",async()=>{
- await eventuallyV1(async()=>{const status=await (await fetch(cluster.server.workerUrl+"/status")).json() as {workers?:unknown[]};return(status.workers?.length??0)>=2;},60000,"both workers present");
- const checkout=checkoutWith("cancel",SLOW.replace("40_000_000","4_000_000_000"),"cx"),root=join(scratch,"unit-cancel");
+ reap();
+ await fleetReady("before cancel");
+ const checkout=checkoutWith("cancel",SLOW.replace("4_000_000","4_000_000_000"),"cx"),root=join(scratch,"unit-cancel");
  const running=runWrapper(checkout,"cx",["b"],root,{SEMIO_OFFLOAD:"always"}),child=lastWrapper!;
  const marker=`pk/cx/src/lib.rs`;
  const compilerRunning=():boolean=>spawnSync("ps",["-ax","-o","command="],{encoding:"utf8"}).stdout.split("\n").some(line=>line.includes("--crate-name cx")&&line.includes(marker)&&line.includes(".semio-offload/o"));

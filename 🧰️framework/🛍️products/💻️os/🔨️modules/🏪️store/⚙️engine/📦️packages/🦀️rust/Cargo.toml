@@ -23,7 +23,6 @@ path = "../../🦀️.rs"
 
 [dependencies]
 semio-framework-diagnostic = { path = "../../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
-semio-framework-value-snapshot-read = { path = "../../../../../../../🔨️modules/🌱️value/📸️snapshot/👁️read/📦️packages/🦀️rust" }
 
 semio-os-spr = { path = "../../../../📡️spr/📦️packages/🦀️rust" }
 semio-os-store-backbone = { path = "../../../🔗️backbone/📦️packages/🦀️rust" }
@@ -31,6 +30,7 @@ semio-os-store-durable-group-wire = { path = "../../../🧩️composition/🗄�
 semio-os-store-engine-bundle = { path = "../../🧳️bundle/📦️packages/🦀️rust" }
 semio-os-store-engine-close = { path = "../../🧯️close/📦️packages/🦀️rust" }
 semio-os-store-engine-core = { path = "../../🧱️store-components/📦️packages/🦀️rust" }
+semio-os-store-engine-derived = { path = "../../🔭️derived-replay/📦️packages/🦀️rust" }
 semio-os-store-engine-live = { path = "../../🎞️live/📦️packages/🦀️rust" }
 semio-os-store-engine-owners = { path = "../../../🏗️initialization/🏠️owners/📦️packages/🦀️rust" }
 semio-os-store-engine-stage = { path = "../../🗄️stage/📦️packages/🦀️rust" }

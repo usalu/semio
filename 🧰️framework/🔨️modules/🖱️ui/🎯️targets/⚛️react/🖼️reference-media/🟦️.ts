@@ -66,8 +66,8 @@ const referencePdfWorkerReady = ephemeralBox<Promise<void> | null>("framework.mo
 async function loadReferencePdfModule(): Promise<typeof import("pdfjs-dist")> {
   const pdfjs = await import("pdfjs-dist");
   if (!referencePdfWorkerReady.current) {
-    referencePdfWorkerReady.current = Promise.resolve().then(() => {
-      pdfjs.GlobalWorkerOptions.workerSrc = new URL("../pdfjs-dist/build/pdf.worker.min.mjs", import.meta.url).toString();
+    referencePdfWorkerReady.current = import("pdfjs-dist/build/pdf.worker.min.mjs?url").then(({ default: workerUrl }) => {
+      pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
     });
   }
   await referencePdfWorkerReady.current;

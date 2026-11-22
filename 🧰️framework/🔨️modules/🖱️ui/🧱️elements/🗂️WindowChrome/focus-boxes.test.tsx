@@ -160,7 +160,7 @@ describe("keyboard focus belongs to the compositor", () => {
     try {
       h.focus("b");
       expect(h.painted("focus")).toEqual(closed(50, 99, 1, 19));
-      expect(h.painted("active").every(d => !d.startsWith("M 50 1 L 50"))).toBe(true);
+      expect(h.painted("active").every(d => d === null || !d.startsWith("M 50 1 L 50"))).toBe(true);
     } finally { h.done(); }
   });
 

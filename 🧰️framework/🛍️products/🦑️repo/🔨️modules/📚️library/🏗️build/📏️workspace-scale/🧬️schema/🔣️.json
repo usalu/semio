@@ -327,6 +327,24 @@
               "en": "The fixed set of maintenance images of the Nx graph store, not workspace targets.",
               "de": "Die feste Menge der Wartungsabbilder des Nx-Graphspeichers, nicht Ziele des Arbeitsbereichs."
             }
+          },
+          {
+            "file": "🏗️build/🕸️graph/📥️load/🤝️selected-exchange/🧬️schema/🔣️.json",
+            "pointer": "definitions/Head/properties/documents",
+            "key": "maxItems",
+            "reason": {
+              "en": "The few named documents of one exchange head, not workspace owners.",
+              "de": "Die wenigen benannten Dokumente eines Austauschkopfs, nicht Eigentümer des Arbeitsbereichs."
+            }
+          },
+          {
+            "file": "🏗️build/🕸️graph/🕰️generations/🩹️closure-repair/🧬️schema/🔣️.json",
+            "pointer": "definitions/Receipt/properties/owners",
+            "key": "maxItems",
+            "reason": {
+              "en": "The owners one closure repair receipt names: a bounded repair batch, not the workspace owner roster.",
+              "de": "Die Eigentümer, die ein Abschluss-Reparaturbeleg nennt: ein begrenzter Reparaturstapel, nicht die Eigentümerliste des Arbeitsbereichs."
+            }
           }
         ]
       }

@@ -105,7 +105,7 @@ impl Operator for SewFaces {
     }
 }
 
-geo_operation!(HealSolid, "solid", |k, i| k.heal_solid(&read_geometry(i, "geometry")?, read_channel_number(i, "tolerance")?));
+geo_operation!(HealSolid, "solid", |k, i| k.heal_solid(&read_geometry(i, "geometry")?, read_channel_number(i, "tolerance")?), Heal);
 
 geo_operation!(ConvertToNurbs, "geometryOut", |k, i| k.convert_to_nurbs(&read_geometry(i, "geometry")?), ConvertToNurbs);
 // #endregion 🔖️Utilities

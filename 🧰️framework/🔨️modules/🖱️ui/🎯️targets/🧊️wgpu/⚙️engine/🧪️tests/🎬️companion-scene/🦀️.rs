@@ -5,7 +5,6 @@
 use std::collections::{HashMap, VecDeque};
 use semio_ui_arena::NodeId;
 use semio_ui_wgpu_layout::chrome::UiDriverDrag;
-use semio_ui_declaration::layout::WindowLayout;
 use semio_ui_declaration::ui::UiNode;
 use semio_ui_draw_contract::{DrawList, IconAtlas};
 use semio_ui_wgpu_events::{resolve_overlay_placement_side, AccessibilityUiEvent, CaretSource, DragPayload, EventRouter, OverlayAnchor, OverlayKind, TooltipStep, UiCommand, UiEvent};
@@ -19,7 +18,6 @@ use semio_ui_wgpu_paint::{paint_node_step_with_driver, paint_tooltip, retained_o
 use semio_ui_retained_tree::reconcile::{UiComponentSceneWitness, UiDocumentReconcileCursor, UiDocumentReconcileFault, UiDocumentReconcileStep, UiRetiredComponentScene};
 #[cfg(test)] use semio_ui_wgpu_hosting::scene_slots::collect_scene_slots;
 use semio_ui_wgpu_hosting::scene_slots::{scene_slot_for_node, SceneHost, ScenePaintCursor, ScenePaintStep};
-use semio_ui_wgpu_hosting::shell::{Shell, ShellEvent};
 use semio_ui_text::FontAtlas;
 use semio_ui_theme::Theme;
 use semio_ui_retained_tree::tree::{NodeFlags, UiDocumentPageRejection, UiDocumentTree, UiDocumentTreeFault, UiTree};
@@ -44,6 +42,9 @@ mod retained_document_hostile_fixtures;
 
 #[path = "../../../../../🧪️tests/🪗️retained-section-collapse/🦀️.rs"]
 mod retained_section_collapse_tests;
+
+#[path = "../../../../../🧪️tests/🌳️tree-keyboard-and-header/🦀️.rs"]
+mod tree_keyboard_and_header_tests;
 
 #[path = "../../../../../🧪️tests/🔽️retained-select-origin/🦀️.rs"]
 mod retained_select_origin_tests;

@@ -1,0 +1,41 @@
+import assert from "node:assert/strict";
+import Ajv2020 from "ajv/dist/2020.js";
+import { BoxGeometry, EdgesGeometry, Box3, Vector3 } from "three";
+
+const processRoot = "✏️s/🔌️plugins/🏭️process";
+const editor = processRoot + "/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor";
+const fixture = await Bun.file(editor + "/🧪️tests/🧫️fixtures/workpiece-placement.json").json();
+const chosen = fixture.chosenCapability;
+const descriptor = await Bun.file(processRoot + "/🧩️extensions/🤖️robotic/🧩️component/🔣️.json").json();
+const topic = descriptor.manifest.topicContributions.find((entry: { topic: string }) => entry.topic === "process.machines");
+assert.equal(topic.payload.moduleId, chosen.catalogId);
+const machine = JSON.parse(topic.payload.machinesJson).find((entry: { id: string }) => entry.id === chosen.machineId);
+const mill = machine.capabilities.find((entry: { id: string }) => entry.id === chosen.capabilityId);
+const bore = machine.capabilities.find((entry: { id: string }) => entry.id === chosen.siblingCapabilityId);
+assert.equal(mill.recipe.recipe, "pocketCut");
+assert.equal(bore.recipe.recipe, "boreDrill");
+const parameter = (name: string) => mill.parameters.find((entry: { id: string }) => entry.id === name).value;
+const maxDimension = mill.rules.find((rule: { quantity: string }) => rule.quantity === "maxDimension");
+assert.equal(maxDimension.kind, "max");
+const reach = parameter(maxDimension.parameter) - maxDimension.margin;
+assert.ok(chosen.validWidthMetres <= reach && chosen.tooLargeWidthMetres > reach);
+
+const side = parameter(mill.recipe.diameter);
+const tool = new BoxGeometry(side, side, parameter(mill.recipe.depth));
+const wire = new EdgesGeometry(tool);
+wire.translate(chosen.positionMetres[0], chosen.positionMetres[1], chosen.positionMetres[2]);
+assert.equal(wire.getAttribute("position").count / 2, chosen.segments);
+const bounds = new Box3().setFromBufferAttribute(wire.getAttribute("position"));
+const near = (actual: number[], expected: number[]) => actual.forEach((value, axis) => assert.ok(Math.abs(value - expected[axis]) < 1e-7));
+near(bounds.getSize(new Vector3()).toArray(), chosen.dimensionsMetres);
+near(bounds.getCenter(new Vector3()).toArray(), chosen.positionMetres);
+wire.dispose();
+tool.dispose();
+
+const schema = await Bun.file(editor + "/🫧️transient/👆️placement/🧬️schema/🔣️.json").json();
+const validate = new Ajv2020().compile(schema);
+assert.ok(validate({utility: chosen.utility, machineId: chosen.machineId, capabilityId: chosen.capabilityId, position: chosen.positionMetres}));
+assert.ok(!validate({utility: chosen.utility, machineId: 1, capabilityId: chosen.capabilityId, position: chosen.positionMetres}));
+assert.ok(!validate({utility: chosen.utility, machineId: chosen.machineId, capabilityId: chosen.capabilityId, position: [0, 0]}));
+assert.ok(!validate({utility: chosen.utility, machineId: chosen.machineId}));
+console.log("[DEBUG] Three.js verified the chosen Mill wireframe and descriptor reach; Ajv checked placement state");

@@ -66,7 +66,13 @@ export function rigAt(asset: Json, scale: number, query: Query): Rig {
   return { frames, bones, state, query };
 }
 
-export const queryOf = (asset: Json, pose: string | undefined, clip: string | undefined, t: string | undefined): Query => (clip !== undefined ? { kind: "clip", clip, timeS: Number(t ?? 0) } : { kind: "pose", pose: pose ?? asset.presentation.defaultPose });
+export function queryOf(asset: Json, pose: string | undefined, clip: string | undefined, t: string | undefined): Query {
+  const [poses, clips] = [((asset.poses ?? []) as Json[]).map((p) => p.id as string), ((asset.clips ?? []) as Json[]).map((c) => c.id as string)];
+  if (clip !== undefined && !clips.includes(clip)) throw new Error(`unknown clip "${clip}": the document has ${clips.join(", ") || "no clips"}`);
+  if (clip === undefined && pose !== undefined && !poses.includes(pose)) throw new Error(`unknown pose "${pose}": the document has ${poses.join(", ") || "no poses"}`);
+  if (clip !== undefined && t !== undefined && !Number.isFinite(Number(t))) throw new Error(`--t ${t} is no time in seconds`);
+  return clip !== undefined ? { kind: "clip", clip, timeS: Number(t ?? 0) } : { kind: "pose", pose: pose ?? asset.presentation.defaultPose };
+}
 
 /** 🧊️ Solids tessellated through the shared cache and carried to the world by the given bone frames, at the product's quality of 1:`scale` (what the viewer and the 3D exports show at that scale) or, without a scale, at the reference quality of the catalog validator. */
 export function meshesIn(asset: Json, frames: Record<string, Frame>, solids: readonly Json[], scale?: number): SolidMesh[] {

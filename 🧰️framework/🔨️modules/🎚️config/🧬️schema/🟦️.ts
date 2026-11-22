@@ -88,18 +88,30 @@ export const parseUiLocale = (value: unknown): UiLocale => parseEnum("UiLocale",
 export const parseUiDriver = (value: unknown): UiDriver => parseUiExtension("UiDriver", "driverId", value) as UiDriver;
 export const parseUiTheme = (value: unknown): UiTheme => parseUiExtension("UiTheme", "themeId", value) as UiTheme;
 
+const windowLayoutNodeKeys: Readonly<Record<string, readonly string[]>> = {
+  window: ["kind", "windowKindId", "title", "instanceId", "templateId", "corner"],
+  stack: ["kind", "size", "activeWindowId", "children"],
+  split: ["kind", "axis", "size", "children"],
+};
+
 function parseWindowLayoutNode(value: unknown, allowed: readonly string[]): void {
   if (!isRecord(value) || typeof value.kind !== "string" || !allowed.includes(value.kind)) throw new OsConfigSchemaError("WindowLayout", [`node must be one of ${JSON.stringify(allowed)}`]);
-  if (value.size !== undefined && typeof value.size !== "number") throw new OsConfigSchemaError("WindowLayout", ["node.size must be a number"]);
+  if (Object.keys(value).some((key) => !windowLayoutNodeKeys[value.kind as string]!.includes(key))) throw new OsConfigSchemaError("WindowLayout", [`${value.kind} node is invalid`]);
+  if (value.size !== undefined && (typeof value.size !== "number" || !(value.size > 0 && value.size <= 1))) throw new OsConfigSchemaError("WindowLayout", ["node.size must be a fraction in (0, 1]"]);
   if (value.kind === "window") {
-    const keys = new Set(["kind", "windowKindId", "title", "instanceId", "templateId", "corner"]);
-    if (Object.keys(value).some((key) => !keys.has(key)) || typeof value.windowKindId !== "string") throw new OsConfigSchemaError("WindowLayout", ["window node is invalid"]);
+    if (typeof value.windowKindId !== "string") throw new OsConfigSchemaError("WindowLayout", ["window node is invalid"]);
     for (const key of ["title", "instanceId", "templateId"] as const) if (value[key] !== undefined && typeof value[key] !== "string") throw new OsConfigSchemaError("WindowLayout", [`window node.${key} must be a string`]);
     if (value.corner !== undefined) parseEnum("WindowStackCorner", value.corner, ["topLeft", "topRight", "bottomLeft", "bottomRight"]);
     return;
   }
-  if (Object.keys(value).some((key) => !["kind", "size", "children"].includes(key)) || !Array.isArray(value.children)) throw new OsConfigSchemaError("WindowLayout", [`${value.kind} node is invalid`]);
-  for (const child of value.children) parseWindowLayoutNode(child, value.kind === "stack" ? ["window"] : ["row", "column", "stack"]);
+  if (!Array.isArray(value.children)) throw new OsConfigSchemaError("WindowLayout", [`${value.kind} node is invalid`]);
+  if (value.kind === "stack") {
+    if (value.activeWindowId !== undefined && typeof value.activeWindowId !== "string") throw new OsConfigSchemaError("WindowLayout", ["stack node.activeWindowId must be a string"]);
+  } else {
+    parseEnum("WindowLayoutAxis", value.axis, ["horizontal", "vertical"]);
+    if (value.children.length < 2) throw new OsConfigSchemaError("WindowLayout", ["split node needs at least 2 children"]);
+  }
+  for (const child of value.children) parseWindowLayoutNode(child, value.kind === "stack" ? ["window"] : ["stack", "split"]);
 }
 
 /** 🗂️ One saved layout, checked against `$defs.UserNamedLayout` (label 1..=256 characters, a well-formed window tree). */
@@ -107,7 +119,7 @@ export function parseUserNamedLayout(value: unknown): UserNamedLayout {
   if (!isRecord(value) || Object.keys(value).some((key) => key !== "label" && key !== "layout")) throw new OsConfigSchemaError("UserNamedLayout", ["value must be { label, layout }"]);
   if (typeof value.label !== "string" || value.label.length === 0 || value.label.length > 256) throw new OsConfigSchemaError("UserNamedLayout", ["value.label must be 1..=256 characters"]);
   if (!isRecord(value.layout) || Object.keys(value.layout).some((key) => key !== "root")) throw new OsConfigSchemaError("UserNamedLayout", ["value.layout must be { root }"]);
-  parseWindowLayoutNode(value.layout.root, ["row", "column", "stack"]);
+  parseWindowLayoutNode(value.layout.root, ["stack", "split"]);
   return value as unknown as UserNamedLayout;
 }
 

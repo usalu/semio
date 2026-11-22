@@ -1,0 +1,13 @@
+{
+  "interval": 10,
+  "busyPolls": [1, 2, 8, 9],
+  "cases": [
+    {"name":"compatible","sealed":true,"compatible":true,"withdrawn":false,"stale":false},
+    {"name":"different-implementation","sealed":true,"compatible":false,"withdrawn":false,"stale":false},
+    {"name":"quarantine","sealed":false,"compatible":true,"withdrawn":false,"stale":false},
+    {"name":"withdrawn","sealed":true,"compatible":true,"withdrawn":true,"stale":false},
+    {"name":"stale-facts","sealed":true,"compatible":true,"withdrawn":false,"stale":true},
+    {"name":"missing-closure","sealed":true,"compatible":true,"withdrawn":false,"stale":false,"missingClosure":true},
+    {"name":"recovered-closure","sealed":true,"compatible":true,"withdrawn":false,"stale":false,"missingClosure":true,"recover":true}
+  ]
+}

@@ -1,0 +1,72 @@
+[
+  {
+    "id": "cold-import-with-live-stores",
+    "steps": [
+      "open:runtime",
+      "open:dependencies",
+      "open:products",
+      "import",
+      "close:products",
+      "close:dependencies",
+      "serve",
+      "close:runtime"
+    ],
+    "valid": true
+  },
+  {
+    "id": "import-before-dependencies",
+    "steps": [
+      "open:runtime",
+      "import",
+      "open:dependencies",
+      "open:products",
+      "close:products",
+      "close:dependencies",
+      "serve",
+      "close:runtime"
+    ],
+    "valid": false
+  },
+  {
+    "id": "service-under-bootstrap-store",
+    "steps": [
+      "open:runtime",
+      "open:dependencies",
+      "open:products",
+      "import",
+      "serve",
+      "close:products",
+      "close:dependencies",
+      "close:runtime"
+    ],
+    "valid": false
+  },
+  {
+    "id": "runtime-released-before-serve",
+    "steps": [
+      "open:runtime",
+      "open:dependencies",
+      "open:products",
+      "import",
+      "close:products",
+      "close:dependencies",
+      "close:runtime",
+      "serve"
+    ],
+    "valid": false
+  },
+  {
+    "id": "dependency-opened-before-runtime",
+    "steps": [
+      "open:dependencies",
+      "open:runtime",
+      "open:products",
+      "import",
+      "close:products",
+      "close:dependencies",
+      "serve",
+      "close:runtime"
+    ],
+    "valid": false
+  }
+]

@@ -4,7 +4,7 @@
 use crate::editor::remodeling::modes::capture::windows::frames;
 use crate::editor::remodeling::modes::model::windows::model;
 use crate::editor::remodeling::modes::model::tools::reconstruction;
-use semio_plugin::create_default_layout;
+use semio_plugin::{create_default_layout, Axis};
 use semio_ui_locale::LocalizedLabel;
 use semio_plugin::ModeDefinition;
 use semio_plugin::WindowLayout;
@@ -19,7 +19,7 @@ pub fn definition() -> ModeDefinition {
 
 /// 🪟️ This mode is the app's `default_mode_id`, so its layout IS the app-level `default_layout`.
 pub fn layout() -> WindowLayout {
-    create_default_layout(&[model::REMODELING_PLAY_WINDOW_MAIN.into(), frames::REMODELING_PLAY_WINDOW_FRAMES.into()], "row", Some(&[70.0, 30.0]), Some(&["Model".into(), "Frames".into()]))
+    create_default_layout(&[model::REMODELING_PLAY_WINDOW_MAIN.into(), frames::REMODELING_PLAY_WINDOW_FRAMES.into()], Axis::Horizontal, Some(&[0.7, 0.3]), Some(&["Model".into(), "Frames".into()]))
 }
 //#endregion 🔖️Definition
 

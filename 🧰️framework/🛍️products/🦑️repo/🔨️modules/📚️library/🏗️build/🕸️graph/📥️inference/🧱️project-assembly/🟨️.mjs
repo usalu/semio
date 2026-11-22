@@ -19,7 +19,8 @@ import { assertNotReadParentV1 } from "../../../../🏗️build/👁️observati
 
 /** 🧭️ The workspace placeholder of an input path, compiled once. */
 const WORKSPACE_PLACEHOLDER_V1 = /^\{workspaceRoot\}\//u;
-import { lstatSync as rawLstatSync, mkdirSync as rawMkdirSync, readFileSync as rawReadFileSync, renameSync as rawRenameSync, writeFileSync as rawWriteFileSync } from "node:fs";
+import { lstatSync as rawLstatSync, mkdirSync as rawMkdirSync, readFileSync as rawReadFileSync } from "node:fs";
+import { publishFileDurablySyncV1 } from "../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
 import { brotliCompressSync, brotliDecompressSync, constants as zlibConstants } from "node:zlib";
 import { withBuildGraphOptionalPublicationV1 } from "../../../../🏗️build/📥️inputs/💾️storage/🟨️.mjs";
 import { observedTypeScriptHost } from "../../../../🏗️build/👁️observation/🟨️.mjs";
@@ -170,8 +171,7 @@ function precisionReceiptsV1(workspaceRoot) {
       withBuildGraphOptionalPublicationV1(target, { peakBytes: bytes.byteLength, retainedDeltaBytes: Math.min(bytes.byteLength, bytes.byteLength - previous) }, () => {
         const temporary = `${target}.${process.pid}.${Date.now()}.tmp`;
         rawMkdirSync(directory(), { recursive: true });
-        rawWriteFileSync(temporary, bytes, { flag: "wx" });
-        rawRenameSync(temporary, target);
+        publishFileDurablySyncV1(temporary, target, bytes);
       });
     },
   };
@@ -339,7 +339,7 @@ export async function projectInputs(json, root, workspaceRoot, facts, scripts=cr
  * @param {string} projectDir
  */
 export async function projectWithDefaults(json, root, projectDir, workspaceRoot, contracts = {}, facts, commandInputs, scripts=createScriptInputCache(), sourceGroups, sourceRepresentation = "hash", selectedTargets,inputNames=[]) {
-  requireCanonicalTestAggregateV1(json,root);
+  requireCanonicalTestAggregateV1(json,root,path=>observedFs.readFileSync(join(workspaceRoot,path),"utf8"));
   const ownsScript = existsSync(join(projectDir, SCRIPT_BASENAME));
   const nativeRoot = json.metadata?.nativeRoot ?? root;
   if (json.metadata?.nativeRoot && (typeof nativeRoot !== "string" || isAbsolute(nativeRoot) || nativeRoot.split(/[\\/]/).some(part => ["", ".", ".."].includes(part)) || !existsSync(join(workspaceRoot, nativeRoot, "Cargo.toml")))) throw new Error(`Invalid native package root for ${json.name}: ${nativeRoot}`);
@@ -455,13 +455,26 @@ export async function projectWithDefaults(json, root, projectDir, workspaceRoot,
     const extra = generatorOutputCouplingInputs(name, target, declared, root, workspaceRoot);
     if (extra.length) normalized[name] = { ...target, inputs: [...target.inputs, ...extra] };
   }
-  const providerGroups = json.metadata?.semio?.scriptProviders === undefined ? [] : await closures.sharedClosureGroups(root, json.metadata.semio.scriptProviders);
-  const namedInputs = await projectInputs({ ...json, targets: normalized }, root, workspaceRoot, facts, scripts,sourceRepresentation,sourceGroups,inputNames,{...Object.fromEntries(providerGroups.map(([name])=>[name,[]])),...Object.fromEntries([...commandSourceGroups.values()].map(({name,inputs})=>[name,inputs]))});
+  const providerDesignation = json.metadata?.semio?.scriptProviders;
+  const selectProviders = providerDesignation !== undefined && sourceRepresentation === "source" && selectedTargets !== undefined && !closures.late;
+  const providerReaders = selectProviders ? closures.sharedClosureGroupReaders(root, providerDesignation) : [];
+  const providerGroups = providerDesignation === undefined || selectProviders ? [] : await closures.sharedClosureGroups(root, providerDesignation);
+  const providerNames = Object.fromEntries((selectProviders ? providerReaders : providerGroups).map(([name]) => [name, []]));
+  const namedInputs = await projectInputs({ ...json, targets: normalized }, root, workspaceRoot, facts, scripts,sourceRepresentation,sourceGroups,inputNames,{...providerNames,...Object.fromEntries([...commandSourceGroups.values()].map(({name,inputs})=>[name,inputs]))});
   const symbolicGroups = Object.entries(namedInputs).filter(([, inputs]) => Array.isArray(inputs) && inputs.some(closureMarkerV1)).map(([name]) => [name, true]);
   for (const { name, inputs } of commandSourceGroups.values()) {
     if (Object.hasOwn(namedInputs, name)) throw new Error(`Duplicate command source group ${name}`);
     if (inputs.some(closureMarkerV1)) { namedInputs[name] = inputs; symbolicGroups.push([name, false]); continue; }
     namedInputs[name] = sourceRepresentation === "source" ? loaded.deduplicateProjectInputs(inputs, root) : loaded.compactSourceInputs(inputs, workspaceRoot, root);
+  }
+  if (selectProviders) {
+    const names = new Set();
+    for (const [name] of providerReaders) {
+      if (names.has(name) || Object.hasOwn(namedInputs, name)) throw refuseBuildV1("invalid","assembly.duplicate-script-provider-group",{name});
+      names.add(name);
+    }
+    const requested = new Set(buildSourceContractGroupsV1({ ...json, targets: normalized, namedInputs: { ...namedInputs, ...providerNames } }, WORKSPACE_POLICY.namedInputs, inputNames, names));
+    for (const [name, read] of providerReaders) if (requested.has(name)) providerGroups.push([name, await read()]);
   }
   for (const [name, inputs] of providerGroups) {
     if (Object.hasOwn(namedInputs, name)) throw refuseBuildV1("invalid","assembly.duplicate-script-provider-group",{name});

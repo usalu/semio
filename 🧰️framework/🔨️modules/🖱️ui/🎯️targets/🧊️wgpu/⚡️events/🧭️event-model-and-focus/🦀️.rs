@@ -1,6 +1,15 @@
 //! 🧭️ Event model and focus: the pointer, accessibility and IME events, the hit test with the tree item lookup, the capture state and the focus ring. See [`super`].
 
-use super::*;
+use std::collections::BTreeMap;
+
+use semio_ui_arena::NodeId;
+use semio_ui_declaration::ui::{UiNode, UiState, UiTreeItemNode, UiTreeSectionNode};
+use semio_ui_retained_tree::tree::{EditState, Node, NodeFlags, NodeKey, UiTree};
+use semio_ui_theme::geometry::Rect;
+use semio_ui_wgpu_events_commit::{commits_on_blur, edit_commit_action, edit_refusal, editable_value, press_cancel, press_release, FiredAction};
+use semio_ui_wgpu_layout::layout::{tree_section_header_band, tree_section_header_height, TreeRowMetrics};
+use semio_ui_wgpu_light::tree_roving::{tree_roving_stop, TreeNavRow};
+
 
 // #region events
 //#region 🔖️UiEvent
@@ -131,7 +140,7 @@ pub fn hit_test(tree: &UiTree, root: NodeId, x: f32, y: f32) -> Option<NodeId> {
 
 /// 🪟️ An OPEN floating overlay is tested at the placement it was painted at, never at its in-flow
 /// position — one origin rule shared with the retained paint/hit walk (`UiTree::overlay_origins`).
-pub(super) fn hit_test_node(tree: &UiTree, id: NodeId, origin_x: f32, origin_y: f32, x: f32, y: f32, reversed: bool, tree_metrics: Option<&TreeRowMetrics>) -> Option<NodeId> {
+pub fn hit_test_node(tree: &UiTree, id: NodeId, origin_x: f32, origin_y: f32, x: f32, y: f32, reversed: bool, tree_metrics: Option<&TreeRowMetrics>) -> Option<NodeId> {
     let node = tree.node(id)?;
     let layout = tree.accepted_layout(id)?;
     let (origin_x, origin_y) = tree.overlay_walk_origin(id).unwrap_or((origin_x, origin_y));
@@ -196,7 +205,9 @@ fn is_plain_stack_container(tree: &UiTree, id: NodeId, node: &Node) -> bool {
         && stack.drop_action.is_none()
         && !node.flags.contains(NodeFlags::DRAG_SOURCE)
         && !node.flags.contains(NodeFlags::DROP_TARGET)
+        && !node.flags.contains(NodeFlags::SCROLLABLE)
         && !tree.disclosure_is_interactive(id)
+        && tree_row_owner(tree, id).is_none()
         && !tree.authored_tree_item(id).and_then(|item| item.actions.as_deref()).is_some_and(|actions| actions.iter().any(|action| action.placement() == semio_ui_declaration::ui::UiTreeActionPlacement::Row))
 }
 
@@ -209,7 +220,7 @@ fn is_plain_stack_container(tree: &UiTree, id: NodeId, node: &Node) -> bool {
 /// item whose `id` matches this row's own stable key (`NodeKey::Explicit(item.id)`, exactly what
 /// `reconcile::tree_item_row` keys the row with). `None` for anything that isn't a keyed descendant
 /// of a `Tree` (ordinary `Stack`s, a `Tree`'s section rows, which are keyed by `section.id` instead).
-pub(super) fn find_tree_item_spec(tree: &UiTree, row: NodeId) -> Option<&UiTreeItemNode> {
+pub fn find_tree_item_spec(tree: &UiTree, row: NodeId) -> Option<&UiTreeItemNode> {
     let NodeKey::Explicit(row_id) = &tree.node(row)?.key else { return None };
     let mut ancestor = tree.node(row)?.parent;
     while let Some(candidate) = ancestor {
@@ -283,44 +294,50 @@ pub struct CaptureState {
 }
 
 impl CaptureState {
-    pub(super) fn release(&mut self, pointer_id: u64) -> Option<(NodeId, CaptureKind)> {
+    pub fn release(&mut self, pointer_id: u64) -> Option<(NodeId, CaptureKind)> {
         if !self.target.is_some_and(|(owner, _, _)| owner == pointer_id) {
             return None;
         }
         self.target.take().map(|(_, node, kind)| (node, kind))
     }
 
-    pub(super) fn release_any(&mut self) -> Option<(NodeId, CaptureKind)> {
+    pub fn release_any(&mut self) -> Option<(NodeId, CaptureKind)> {
         self.target.take().map(|(_, node, kind)| (node, kind))
     }
 }
 //#endregion 🔖️Capture
 
 //#region 🔖️Focus
-/// 🔄️ Which `UiNode` variants participate in Tab-order focus cycling.
+/// 🔄️ Which `UiNode` variants participate in Tab-order focus cycling — every interactive kind but `Ring`, whose React twin is an unfocusable SVG.
 fn is_focusable(node: &UiNode) -> bool {
-    is_interactive_kind(node) && node.presence().state != UiState::Disabled
+    is_interactive_kind(node) && !matches!(node, UiNode::Ring(_)) && node.presence().state != UiState::Disabled
 }
 
 fn is_interactive_kind(node: &UiNode) -> bool {
-    matches!(node, UiNode::Input(_) | UiNode::Button(_) | UiNode::Select(_) | UiNode::Toggle(_) | UiNode::Slider(_) | UiNode::NumberStepper(_) | UiNode::Ring(_) | UiNode::IconSelect(_))
+    matches!(node, UiNode::Input(_) | UiNode::Button(_) | UiNode::Select(_) | UiNode::Toggle(_) | UiNode::Slider(_) | UiNode::NumberStepper(_) | UiNode::Ring(_))
 }
 
 /// 📦️ The node as a box of the state tree: interactive when it is a control, an activatable stack or an interactive disclosure, disabled by its own presence.
-pub(super) fn node_state_box(tree: &UiTree, id: NodeId) -> Option<semio_ui_border_presentation::BoxStateInput<NodeId>> {
+pub fn node_state_box(tree: &UiTree, id: NodeId) -> Option<semio_ui_border_presentation::BoxStateInput<NodeId>> {
     let node = tree.node(id)?;
     let interactive = is_interactive_kind(&node.spec.0) || matches!(&node.spec.0, UiNode::Stack(stack) if stack.activate.is_some()) || tree.disclosure_is_interactive(id);
     let hover_within = matches!(&node.spec.0, UiNode::OverviewCard(_));
     Some(semio_ui_border_presentation::BoxStateInput { id, parent: node.parent, interactive, hover_within, disabled: node.spec.0.presence().state == UiState::Disabled, marks: semio_ui_border_presentation::BoxStateMarks::NONE })
 }
 
-pub(super) fn node_is_focusable(tree: &UiTree, id: NodeId) -> bool {
-    tree.node(id).is_some_and(|node| (is_focusable(&node.spec.0) || tree.disclosure_is_interactive(id)) && node.spec.0.presence().state != UiState::Disabled)
+pub fn node_is_focusable(tree: &UiTree, id: NodeId) -> bool {
+    tree.node(id).is_some_and(|node| (is_focusable(&node.spec.0) || tree.disclosure_is_interactive(id) || tree_row_owner(tree, id).is_some()) && node.spec.0.presence().state != UiState::Disabled)
 }
 
-fn collect_focusable(tree: &UiTree, id: NodeId, out: &mut Vec<NodeId>) {
+/// 🌳️ Whether `id` is a tab stop: every focusable node but a tree row, of which only the tree's roving stop is — one Tab stop per tree, as React's `applyRovingTabindexV1` leaves it.
+fn is_tab_stop(tree: &UiTree, id: NodeId, roving: &BTreeMap<NodeId, String>, stops: &mut BTreeMap<NodeId, Option<NodeId>>) -> bool {
+    let Some(owner) = tree_row_owner(tree, id) else { return true };
+    *stops.entry(owner).or_insert_with(|| FocusState::roving_stop(tree, owner, roving)) == Some(id)
+}
+
+fn collect_focusable(tree: &UiTree, id: NodeId, roving: &BTreeMap<NodeId, String>, stops: &mut BTreeMap<NodeId, Option<NodeId>>, out: &mut Vec<NodeId>) {
     if let Some(_node) = tree.node(id) {
-        if node_is_focusable(tree, id) {
+        if node_is_focusable(tree, id) && is_tab_stop(tree, id, roving, stops) {
             out.push(id);
         }
     }
@@ -328,19 +345,23 @@ fn collect_focusable(tree: &UiTree, id: NodeId, out: &mut Vec<NodeId>) {
         return;
     }
     for child in tree.children(id) {
-        collect_focusable(tree, child, out);
+        collect_focusable(tree, child, roving, stops, out);
     }
 }
 
 /// 🔦️ Currently-focused node plus a lazily-rebuilt document-order Tab cycle over focusable nodes.
 pub struct FocusState {
     pub focused: Option<NodeId>,
-    pub(super) tab_order: Vec<NodeId>,
+    pub tab_order: Vec<NodeId>,
+    /// 🎯️ Per mounted `Tree`, the key of the row that last held focus — its roving tab stop while it stays reachable.
+    pub tree_roving: BTreeMap<NodeId, String>,
+    /// ⚓️ Per mounted `Tree`, the key of the row a range selection extends from.
+    pub tree_anchor: BTreeMap<NodeId, String>,
 }
 
 impl FocusState {
     pub fn new() -> Self {
-        Self { focused: None, tab_order: Vec::new() }
+        Self { focused: None, tab_order: Vec::new(), tree_roving: BTreeMap::new(), tree_anchor: BTreeMap::new() }
     }
 
     /// 🎯️ Sets/clears focus, flipping `NodeFlags::FOCUSED` on the old and new targets and marking
@@ -385,6 +406,10 @@ impl FocusState {
             tree.mark_dirty(previous, NodeFlags::DIRTY_PAINT);
         }
         if let Some(next) = node {
+            if let (Some(owner), Some(item)) = (tree_row_owner(tree, next), tree.authored_tree_item(next)) {
+                let key = item.id.clone();
+                self.tree_roving.insert(owner, key);
+            }
             if let Some(next_node) = tree.node_mut(next) {
                 next_node.flags.set(NodeFlags::FOCUSED, true);
                 next_node.flags.set(NodeFlags::FOCUS_VISIBLE, focus_visible);
@@ -408,7 +433,13 @@ impl FocusState {
 
     fn rebuild_tab_order(&mut self, tree: &UiTree, root: NodeId) {
         self.tab_order.clear();
-        collect_focusable(tree, root, &mut self.tab_order);
+        collect_focusable(tree, root, &self.tree_roving, &mut BTreeMap::new(), &mut self.tab_order);
+    }
+
+    /// 🥇️ The first tab stop under `root`, what an opening Dialog or Popover moves focus to.
+    pub fn first_tab_stop(&mut self, tree: &UiTree, root: NodeId) -> Option<NodeId> {
+        self.rebuild_tab_order(tree, root);
+        self.tab_order.first().copied()
     }
 
     pub fn focus_next(&mut self, tree: &mut UiTree, root: NodeId) -> Option<(NodeId, FiredAction)> {
@@ -436,4 +467,82 @@ impl FocusState {
     }
 }
 //#endregion 🔖️Focus
+//#region 🔖️TreeRows
+pub const TREE_NAV_ROW_CAP: usize = 4096;
+
+pub const TREE_NAV_DEPTH_CAP: usize = 64;
+
+/// 🌳️ The mounted `Tree` that owns `id` when `id` is one of its item rows and the tree is not a document table.
+pub fn tree_row_owner(tree: &UiTree, id: NodeId) -> Option<NodeId> {
+    tree.authored_tree_item(id)?;
+    let owner = semio_ui_wgpu_mounted_layout::owning_tree_node(tree, id)?;
+    semio_ui_wgpu_mounted_layout::document_table(tree, owner).is_none().then_some(owner)
+}
+
+fn collect_visible_rows(tree: &UiTree, parent: NodeId, depth: usize, out: &mut Vec<(NodeId, TreeNavRow)>) {
+    if depth >= TREE_NAV_DEPTH_CAP {
+        return;
+    }
+    for child in tree.children(parent) {
+        let Some(item) = tree.authored_tree_item(child) else { continue };
+        if !item.presence.visible() || out.len() >= TREE_NAV_ROW_CAP {
+            continue;
+        }
+        let expanded = if tree.disclosure_is_interactive(child) { tree.disclosure_open(child) } else { None };
+        out.push((child, TreeNavRow { id: item.id.clone(), level: tree.tree_item_depth(child).unwrap_or(depth + 1), expanded, label: item.label.as_str().to_owned() }));
+        if expanded == Some(true) {
+            collect_visible_rows(tree, child, depth + 1, out);
+        }
+    }
+}
+
+/// 🌳️ The rows of `owner` a keyboard can reach, in order: the items of every open section, descending only into open rows.
+pub fn tree_visible_rows(tree: &UiTree, owner: NodeId) -> Vec<(NodeId, TreeNavRow)> {
+    let mut rows = Vec::new();
+    for section in tree.children(owner) {
+        if tree.authored_tree_section(section).is_some() && tree.disclosure_open(section).unwrap_or(true) {
+            collect_visible_rows(tree, section, 0, &mut rows);
+        }
+    }
+    rows
+}
+
+
+impl FocusState {
+    /// 🎯️ The row of `owner` that is its one tab stop: the remembered focus while it is still reachable, else the first selected row, else the first row.
+    pub fn roving_stop(tree: &UiTree, owner: NodeId, roving: &BTreeMap<NodeId, String>) -> Option<NodeId> {
+        let rows = tree_visible_rows(tree, owner);
+        let nav: Vec<TreeNavRow> = rows.iter().map(|(_, row)| row.clone()).collect();
+        let selected: Vec<String> = rows.iter().filter(|(id, _)| tree.authored_tree_item(*id).is_some_and(|item| item.presence.selected)).map(|(_, row)| row.id.clone()).collect();
+        tree_roving_stop(&nav, roving.get(&owner).map(String::as_str), &selected).map(|index| rows[index].0)
+    }
+}
+
+//#endregion 🔖️TreeRows
+
+//#region 🔖️TextKey
+/// 🧬️ The contract kind a retained input's kind name spells (`reconcile::input_kind`).
+fn text_input_kind(kind: &str) -> ui_contract::InputKind {
+    match kind {
+        "longText" => ui_contract::InputKind::LongText,
+        "number" => ui_contract::InputKind::Number,
+        "date" => ui_contract::InputKind::Date,
+        "color" => ui_contract::InputKind::Color,
+        "file" => ui_contract::InputKind::File,
+        _ => ui_contract::InputKind::Text,
+    }
+}
+
+/// 🖊️ What the shared text keyboard law (`ui_contract::text_input_key`, pinned by `🧫️text-controls`) makes of `key` on a
+/// retained text field of `kind`: `primary` is Ctrl or ⌘. `None` for a key that is not the field's.
+pub fn text_field_key(kind: &str, key: &str, modifiers: EventModifiers) -> Option<ui_contract::TextInputKeyAction> {
+    let key = match key {
+        "Enter" | "NumpadEnter" => ui_contract::TextInputKey::Enter,
+        "Escape" => ui_contract::TextInputKey::Escape,
+        _ => return None,
+    };
+    ui_contract::text_input_key(text_input_kind(kind), key, ui_contract::TextInputModifiers { primary: modifiers.ctrl || modifiers.meta, shift: modifiers.shift, alt: modifiers.alt })
+}
+
+//#endregion 🔖️TextKey
 // #endregion events

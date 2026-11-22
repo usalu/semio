@@ -1,0 +1,7 @@
+[
+  {"name": "successful transfer", "mode": "complete", "frames": ["begin", "page", "page", "complete"], "progress": [4096,4097], "finished": 1, "result": "complete"},
+  {"name": "ownership lost during selection", "mode": "stale-selection", "frames": ["cancel"], "progress": [], "finished": 0, "result": "cancelled"},
+  {"name": "selection dismissed", "mode": "empty-selection", "frames": ["cancel"], "progress": [], "finished": 0, "result": "cancelled"},
+  {"name": "cancellation after first page", "mode": "abort", "frames": ["begin", "page", "cancel"], "progress": [4096], "finished": 1, "result": "cancelled"},
+  {"name": "retirement fails after first page", "mode": "failed-retirement", "frames": ["begin", "page", "cancel"], "progress": [4096], "finished": 1, "result": "Original media transfer and retirement failed"}
+]

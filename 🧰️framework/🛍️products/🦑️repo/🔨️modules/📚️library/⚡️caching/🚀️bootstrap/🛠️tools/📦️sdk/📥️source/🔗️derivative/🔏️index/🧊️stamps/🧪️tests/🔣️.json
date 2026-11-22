@@ -1,0 +1,30 @@
+{
+  "now": 1795400000000,
+  "index": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+  "other": "fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210",
+  "keys": [
+    { "dev": "16777231", "ino": "123456", "size": "4096", "mtimeNs": "1763000000123456789", "mode": "33060" },
+    { "dev": "1", "ino": "2", "size": "0", "mtimeNs": "0", "mode": "33188" },
+    { "dev": "18446744073709551615", "ino": "9223372036854775807", "size": "197000000", "mtimeNs": "1795400000999999999", "mode": "33261" }
+  ],
+  "files": [
+    { "base": "/Users/dev/Library/Caches/semio-repo", "directory": "/Users/dev/repo/.cache/b/t/m/sdk/aa", "sourceIndex": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef" },
+    { "base": "/tmp/stamps", "directory": "/tmp/sdk/bb", "sourceIndex": "fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210" }
+  ],
+  "documents": [
+    { "name": "fresh", "sourceIndex": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef", "now": 1795400000000, "document": { "version": 1, "sourceIndex": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef", "verifiedAt": 1795399000000, "stamps": { "node_modules/a": "16777231:123456:4096:1763000000123456789:33060" } } },
+    { "name": "empty rows", "sourceIndex": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef", "now": 1795400000000, "document": { "version": 1, "sourceIndex": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef", "verifiedAt": 1795400000000, "stamps": {} } },
+    { "name": "just inside the age", "sourceIndex": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef", "now": 1795400000000, "document": { "version": 1, "sourceIndex": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef", "verifiedAt": 1795313600000, "stamps": { "node_modules/a": "16777231:123456:4096:1763000000123456789:33060" } } },
+    { "name": "one millisecond too old", "sourceIndex": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef", "now": 1795400000000, "document": { "version": 1, "sourceIndex": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef", "verifiedAt": 1795313599999, "stamps": { "node_modules/a": "16777231:123456:4096:1763000000123456789:33060" } } },
+    { "name": "verified in the future", "sourceIndex": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef", "now": 1795400000000, "document": { "version": 1, "sourceIndex": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef", "verifiedAt": 1795400000001, "stamps": { "node_modules/a": "16777231:123456:4096:1763000000123456789:33060" } } },
+    { "name": "another sealed index", "sourceIndex": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef", "now": 1795400000000, "document": { "version": 1, "sourceIndex": "fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210", "verifiedAt": 1795399000000, "stamps": { "node_modules/a": "16777231:123456:4096:1763000000123456789:33060" } } },
+    { "name": "version two", "sourceIndex": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef", "now": 1795400000000, "document": { "version": 2, "sourceIndex": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef", "verifiedAt": 1795399000000, "stamps": { "node_modules/a": "16777231:123456:4096:1763000000123456789:33060" } } },
+    { "name": "stamp with ctime column", "sourceIndex": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef", "now": 1795400000000, "document": { "version": 1, "sourceIndex": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef", "verifiedAt": 1795399000000, "stamps": { "node_modules/a": "16777231:123456:4096:1763000000123456789:33060:5" } } },
+    { "name": "stamp with letters", "sourceIndex": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef", "now": 1795400000000, "document": { "version": 1, "sourceIndex": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef", "verifiedAt": 1795399000000, "stamps": { "node_modules/a": "x:123456:4096:1763000000123456789:33060" } } },
+    { "name": "extra property", "sourceIndex": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef", "now": 1795400000000, "document": { "version": 1, "sourceIndex": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef", "verifiedAt": 1795399000000, "stamps": {}, "note": "x" } },
+    { "name": "stamps is a list", "sourceIndex": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef", "now": 1795400000000, "document": { "version": 1, "sourceIndex": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef", "verifiedAt": 1795399000000, "stamps": [] } },
+    { "name": "negative time", "sourceIndex": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef", "now": 1795400000000, "document": { "version": 1, "sourceIndex": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef", "verifiedAt": -1, "stamps": {} } },
+    { "name": "torn write", "sourceIndex": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef", "now": 1795400000000, "raw": "{\"version\":1,\"sourceIndex\":\"0123" },
+    { "name": "not an object", "sourceIndex": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef", "now": 1795400000000, "raw": "[1,2,3]" }
+  ]
+}

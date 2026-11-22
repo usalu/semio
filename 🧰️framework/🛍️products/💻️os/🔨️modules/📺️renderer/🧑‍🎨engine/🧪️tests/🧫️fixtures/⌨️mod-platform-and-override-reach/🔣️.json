@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "platforms": [
+    { "id": "mac", "platform": "MacIntel", "usesMeta": true },
+    { "id": "windows", "platform": "Win32", "usesMeta": false },
+    { "id": "linux", "platform": "Linux x86_64", "usesMeta": false }
+  ],
+  "modChords": [
+    { "id": "meta-fires-mod-on-apple-only", "chord": "mod+p", "event": { "key": "p", "ctrl": false, "meta": true, "shift": false, "alt": false }, "matches": { "mac": true, "windows": false, "linux": false } },
+    { "id": "ctrl-fires-mod-off-apple-only", "chord": "mod+p", "event": { "key": "p", "ctrl": true, "meta": false, "shift": false, "alt": false }, "matches": { "mac": false, "windows": true, "linux": true } },
+    { "id": "both-modifiers-never-fire-mod", "chord": "mod+p", "event": { "key": "p", "ctrl": true, "meta": true, "shift": false, "alt": false }, "matches": { "mac": false, "windows": false, "linux": false } },
+    { "id": "mod-shift-needs-shift", "chord": "mod+shift+z", "event": { "key": "z", "ctrl": false, "meta": true, "shift": false, "alt": false }, "matches": { "mac": false, "windows": false, "linux": false } },
+    { "id": "explicit-ctrl-ignores-platform", "chord": "ctrl+b", "event": { "key": "b", "ctrl": true, "meta": false, "shift": false, "alt": false }, "matches": { "mac": true, "windows": true, "linux": true } }
+  ],
+  "overrideReach": {
+    "stored": { "os.toggleFullscreen": "f10", "puzzle.deleteSelection": "mod+j", "ui.search.toggle": "  ", "Not An Id": "f1" },
+    "appDefaults": { "puzzle.deleteSelection": "delete,backspace" },
+    "resolved": { "os.toggleFullscreen": "f10", "puzzle.deleteSelection": "mod+j", "ui.search.toggle": "mod+p" },
+    "droppedByTheStorageGate": ["Not An Id"]
+  }
+}

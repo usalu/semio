@@ -393,5 +393,274 @@
         "idempotent": true
       }
     }
+  ],
+  "fitAction": {
+    "what": "The framework `fitGraph` action: ONE declared action every node-graph window kind offers (palette, window toolbar, the F chord), executed by both renderers through the same camera law as `rows`, and persisted like a wheel zoom through `nodeGraphViewport`.",
+    "id": "fitGraph",
+    "key": "f",
+    "labelKey": "nodeGraph.fitGraph",
+    "label": {
+      "en": "Fit graph",
+      "de": "Graph einpassen"
+    },
+    "kind": "view",
+    "inPalette": true,
+    "audience": "chrome",
+    "hostsOnWindowKindsDeclaring": "nodeGraphViewport",
+    "persistsAs": "nodeGraphViewport",
+    "law": "Unlike the opening camera, an explicit fit ignores the stored camera: it always installs fit_camera(content, viewport, paddingPx); an empty graph has nothing to frame and changes nothing.",
+    "implementations": [
+      "🧰️framework/🔨️modules/🛂️manifest/🕹️actions/🗃️utility-tool-and-document-actions/🦀️.rs — node_graph_fit_action_definition",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/⚙️EngineCanvas/🎯️targets/🧊️wgpu/🕸️node-graph/🖱️wheel-and-pointer-into/🦀️.rs — node_graph_fit_action (wgpu)",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/🎯️fit-graph/🟦️.ts — fitGraphCameraV1 (React)",
+      ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️09/PROCEDURAL-3D-END-TO-END/node-graph-fit-oracle.py — the independent Python oracle that recomputes every fitRows expectation"
+    ]
+  },
+  "fitRows": [
+    {
+      "name": "two-nodes-fill-a-narrow-pane-by-width",
+      "why": "The wider axis decides the zoom and the centre is the middle of the union of both node boxes.",
+      "nodes": [
+        {
+          "id": "a",
+          "x": 0,
+          "y": 0,
+          "width": 40,
+          "height": 20
+        },
+        {
+          "id": "b",
+          "x": 200,
+          "y": -100,
+          "width": 40,
+          "height": 20
+        }
+      ],
+      "viewport": {
+        "width": 483,
+        "height": 814
+      },
+      "expect": {
+        "camera": {
+          "x": 100.0,
+          "y": -50.0,
+          "zoom": 1.8125
+        }
+      }
+    },
+    {
+      "name": "a-single-node-is-centred-and-enlarged",
+      "why": "One node has extent on both axes; the tighter one decides.",
+      "nodes": [
+        {
+          "id": "a",
+          "x": 10,
+          "y": 20,
+          "width": 100,
+          "height": 50
+        }
+      ],
+      "viewport": {
+        "width": 400,
+        "height": 300
+      },
+      "expect": {
+        "camera": {
+          "x": 10.0,
+          "y": 20.0,
+          "zoom": 3.52
+        }
+      }
+    },
+    {
+      "name": "a-row-of-zero-height-nodes-is-framed-by-width-alone",
+      "why": "Degenerate content (no vertical extent) must not read as an infinite zoom.",
+      "nodes": [
+        {
+          "id": "a",
+          "x": -100,
+          "y": 50,
+          "width": 0,
+          "height": 0
+        },
+        {
+          "id": "b",
+          "x": 100,
+          "y": 50,
+          "width": 0,
+          "height": 0
+        }
+      ],
+      "viewport": {
+        "width": 424,
+        "height": 300
+      },
+      "expect": {
+        "camera": {
+          "x": 0.0,
+          "y": 50.0,
+          "zoom": 1.88
+        }
+      }
+    },
+    {
+      "name": "a-single-point-falls-back-to-unit-zoom",
+      "why": "No extent on either axis has no scale to frame: zoom 1, centred on the point.",
+      "nodes": [
+        {
+          "id": "a",
+          "x": 5,
+          "y": -5,
+          "width": 0,
+          "height": 0
+        }
+      ],
+      "viewport": {
+        "width": 400,
+        "height": 300
+      },
+      "expect": {
+        "camera": {
+          "x": 5.0,
+          "y": -5.0,
+          "zoom": 1.0
+        }
+      }
+    },
+    {
+      "name": "a-graph-past-the-zoom-out-floor-is-centred-not-over-zoomed",
+      "why": "The fit is clamped to the canvas camera range.",
+      "nodes": [
+        {
+          "id": "a",
+          "x": -100000,
+          "y": 0,
+          "width": 10,
+          "height": 10
+        },
+        {
+          "id": "b",
+          "x": 100000,
+          "y": 0,
+          "width": 10,
+          "height": 10
+        }
+      ],
+      "viewport": {
+        "width": 483,
+        "height": 814
+      },
+      "expect": {
+        "camera": {
+          "x": 0.0,
+          "y": 0.0,
+          "zoom": 0.05
+        }
+      }
+    },
+    {
+      "name": "a-tiny-graph-is-capped-at-the-zoom-in-ceiling",
+      "why": "The fit is clamped to the canvas camera range.",
+      "nodes": [
+        {
+          "id": "a",
+          "x": 0,
+          "y": 0,
+          "width": 1,
+          "height": 1
+        }
+      ],
+      "viewport": {
+        "width": 400,
+        "height": 300
+      },
+      "expect": {
+        "camera": {
+          "x": 0.0,
+          "y": 0.0,
+          "zoom": 32.0
+        }
+      }
+    },
+    {
+      "name": "a-pane-smaller-than-its-padding-still-answers-a-camera",
+      "why": "Usable pane size is floored at one pixel per axis, so a collapsed window never divides by zero.",
+      "nodes": [
+        {
+          "id": "a",
+          "x": 0,
+          "y": 0,
+          "width": 40,
+          "height": 20
+        },
+        {
+          "id": "b",
+          "x": 200,
+          "y": 100,
+          "width": 40,
+          "height": 20
+        }
+      ],
+      "viewport": {
+        "width": 30,
+        "height": 30
+      },
+      "expect": {
+        "camera": {
+          "x": 100.0,
+          "y": 50.0,
+          "zoom": 0.05
+        }
+      }
+    },
+    {
+      "name": "an-explicit-fit-ignores-a-stored-camera-that-already-frames-the-graph",
+      "why": "The opening-camera law adopts this stored camera; the Fit control must not.",
+      "nodes": [
+        {
+          "id": "a",
+          "x": -100,
+          "y": -50,
+          "width": 20,
+          "height": 20
+        },
+        {
+          "id": "b",
+          "x": 100,
+          "y": 50,
+          "width": 20,
+          "height": 20
+        }
+      ],
+      "viewport": {
+        "width": 400,
+        "height": 300
+      },
+      "stored": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      },
+      "storedAdoptedByStartup": true,
+      "expect": {
+        "camera": {
+          "x": 0.0,
+          "y": 0.0,
+          "zoom": 1.6
+        }
+      }
+    },
+    {
+      "name": "an-empty-graph-has-nothing-to-frame",
+      "why": "No nodes, no camera change, nothing to persist.",
+      "nodes": [],
+      "viewport": {
+        "width": 483,
+        "height": 814
+      },
+      "expect": {
+        "camera": null
+      }
+    }
   ]
 }

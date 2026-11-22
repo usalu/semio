@@ -106,7 +106,8 @@
     "openerId": "framework.hub.signIn",
     "route": "/hub",
     "controls": [
-      "framework.hub.close",
+      "os.hub.firstRun.replay",
+      "os.hub.signIn.cancel",
       "framework.hub.connection",
       "framework.hub.address",
       "framework.hub.add",

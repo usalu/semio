@@ -50,9 +50,9 @@ const HOST_CONTENT_DEFAULT_ROWS: f32 = 6.0;
 /// viewport could hold (the host scrolls inside its own rect instead).
 const HOST_CONTENT_MAX_HEIGHT_PX: f32 = 4096.0;
 
-/// 🌳️ The `UiTreeNode` spec that owns the row `id` mounts as — the nearest `UiNode::Tree`
-/// ancestor, the same walk `events::find_tree_item_spec` does to re-derive a row's authored item.
-pub fn owning_tree_spec(tree: &UiTree, id: NodeId) -> Option<&UiTreeNode> {
+/// 🌳️ The mounted `Tree` node that owns the row `id` — the nearest `UiNode::Tree` ancestor, the same walk
+/// `events::find_tree_item_spec` does to re-derive a row's authored item.
+pub fn owning_tree_node(tree: &UiTree, id: NodeId) -> Option<NodeId> {
     let mut ancestor = tree.node(id)?.parent;
     let mut hops = 0usize;
     while let Some(candidate) = ancestor {
@@ -61,12 +61,20 @@ pub fn owning_tree_spec(tree: &UiTree, id: NodeId) -> Option<&UiTreeNode> {
         }
         hops += 1;
         let node = tree.node(candidate)?;
-        if let UiNode::Tree(tree_node) = &node.spec.0 {
-            return Some(tree_node);
+        if matches!(&node.spec.0, UiNode::Tree(_)) {
+            return Some(candidate);
         }
         ancestor = node.parent;
     }
     None
+}
+
+/// 🌳️ The `UiTreeNode` spec that owns the row `id` mounts as ([`owning_tree_node`]).
+pub fn owning_tree_spec(tree: &UiTree, id: NodeId) -> Option<&UiTreeNode> {
+    match &tree.node(owning_tree_node(tree, id)?)?.spec.0 {
+        UiNode::Tree(tree_node) => Some(tree_node),
+        _ => None,
+    }
 }
 
 pub fn find_tree_item<'a>(items: &'a [UiTreeItemNode], id: &str, depth: usize) -> Option<&'a UiTreeItemNode> {
@@ -86,12 +94,15 @@ pub fn find_tree_item<'a>(items: &'a [UiTreeItemNode], id: &str, depth: usize) -
 
 /// 🌴️ Resolves the owning Tree's presentation and nearest authored item for one mounted node.
 pub fn retained_tree_row_metrics(tree: &UiTree, id: NodeId, metrics: &TreeRowMetrics) -> TreeRowMetrics {
-    let owner = match tree.node(id).map(|node| &node.spec.0) {
-        Some(UiNode::Tree(owner)) => Some(owner),
-        _ => owning_tree_spec(tree, id),
+    let owner_id = if matches!(tree.node(id).map(|node| &node.spec.0), Some(UiNode::Tree(_))) { Some(id) } else { owning_tree_node(tree, id) };
+    let Some(owner) = owner_id.and_then(|owner| tree.node(owner)).and_then(|node| match &node.spec.0 {
+        UiNode::Tree(owner) => Some(owner),
+        _ => None,
+    }) else {
+        return *metrics;
     };
-    let Some(owner) = owner else { return *metrics };
     let scoped = metrics.with_presentation(owner.presentation);
+    let scoped = if owner_id.is_some_and(|owner| document_table(tree, owner).is_some()) { scoped.with_table(true) } else { scoped.with_inline(ui_contract::FlowInline::Ltr) };
     let mut candidate = Some(id);
     let mut depth = 0usize;
     while let Some(current) = candidate {
@@ -143,7 +154,9 @@ pub(super) fn tree_row_kind(tree: &UiTree, id: NodeId, parent_kind: Option<Layou
             if document_table(tree, tree.node(id)?.parent?).is_some() {
                 let item = owner.sections.iter().find_map(|section| find_tree_item(&section.items, key, 0))?;
                 let lead = owner.sections.first().map_or(0.0, |section| window_lead(section.window.as_ref(), section.items.first(), key));
-                return Some(LayoutNodeKind::TableRow { height: live_tree_item_height(tree, id, item, &metrics, 0), actions: table_actions_width_of(owner, &metrics), lead });
+                let actions = table_actions_width_of(owner, &metrics);
+                let columns = document_table(tree, tree.node(id)?.parent?).map_or(0, |table| table.columns.len());
+                return Some(LayoutNodeKind::TableRow { height: live_tree_item_height(tree, id, item, &metrics, 0), actions, content: semio_ui_wgpu_layout::table::table_content_width(columns, actions), lead });
             }
             let section = owner.sections.iter().find(|section| &section.id == key)?;
             let expanded = tree.disclosure_open(id).unwrap_or_else(|| semio_ui_wgpu_layout::layout::tree_section_default_open(section));
@@ -250,7 +263,7 @@ pub fn document_row_action_id(tree: &UiTree, id: NodeId, index: usize) -> Option
 /// 📏️ A table's trailing actions column: one `layout::tree_row_action_rect` slot per action of its widest materialised row, as
 /// React sizes its actions track by the widest action strip.
 pub fn table_actions_width_of(node: &UiTreeNode, metrics: &TreeRowMetrics) -> f32 {
-    semio_ui_wgpu_layout::layout::table_actions_width(node.sections.iter().flat_map(|section| section.items.iter()).map(|item| item.actions.as_ref().map_or(0, Vec::len)).max().unwrap_or(0), metrics)
+    semio_ui_wgpu_layout::table::table_actions_track_px(node.sections.iter().flat_map(|section| section.items.iter()).map(|item| item.actions.as_ref().map_or(0, Vec::len)).max().unwrap_or(0), metrics.content_line_height(), metrics.gap)
 }
 
 pub fn live_tree_section_height(tree: &UiTree, id: NodeId, section: &semio_ui_declaration::ui::UiTreeSectionNode, metrics: &TreeRowMetrics) -> f32 {

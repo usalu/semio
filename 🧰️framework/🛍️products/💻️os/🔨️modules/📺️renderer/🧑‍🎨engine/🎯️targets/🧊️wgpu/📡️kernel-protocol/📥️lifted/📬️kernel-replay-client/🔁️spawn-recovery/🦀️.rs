@@ -255,9 +255,9 @@ struct MountedProductReplayRecoverySlot {
 }
 
 pub struct MountedProductReplayRecoveryRegistry {
-    pub(super) slots: Box<[MountedProductReplayRecoverySlot; JOB_PROGRESS_ACTIVE_CAPACITY]>,
+    pub slots: Box<[MountedProductReplayRecoverySlot; JOB_PROGRESS_ACTIVE_CAPACITY]>,
     pub(super) abandoned: Box<[Option<MountedProductReplayRecoveryOwner>; JOB_PROGRESS_ACTIVE_CAPACITY]>,
-    pub(super) cursor: usize,
+    pub cursor: usize,
     pub(super) abandoned_cursor: usize,
 }
 

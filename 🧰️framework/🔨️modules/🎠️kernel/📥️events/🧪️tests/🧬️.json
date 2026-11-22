@@ -298,6 +298,67 @@
                   ]
                 }
               }
+            },
+            "purpose": {
+              "oneOf": [
+                {
+                  "const": "ordinary"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "naturalSource": {
+                      "type": "object",
+                      "properties": {
+                        "declaration": {
+                          "type": "object",
+                          "properties": {
+                            "formatKind": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 128
+                            },
+                            "extension": {
+                              "type": "string",
+                              "minLength": 2,
+                              "maxLength": 16
+                            },
+                            "mediaType": {
+                              "type": "string",
+                              "minLength": 3,
+                              "maxLength": 128
+                            },
+                            "binary": {
+                              "type": "boolean"
+                            }
+                          },
+                          "required": [
+                            "formatKind",
+                            "extension",
+                            "mediaType",
+                            "binary"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "extent": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 536870912
+                        }
+                      },
+                      "required": [
+                        "declaration",
+                        "extent"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "naturalSource"
+                  ],
+                  "additionalProperties": false
+                }
+              ]
             }
           },
           "required": [
@@ -307,7 +368,8 @@
             "config",
             "assets",
             "capabilities",
-            "quotas"
+            "quotas",
+            "purpose"
           ],
           "additionalProperties": false
         }
@@ -1952,6 +2014,178 @@
       },
       "required": [
         "request"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "naturalSourcePrepare": {
+          "type": "object",
+          "properties": {
+            "instanceId": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 4294967295
+            },
+            "seq": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "declaration": {
+              "type": "object",
+              "properties": {
+                "formatKind": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128
+                },
+                "extension": {
+                  "type": "string",
+                  "minLength": 2,
+                  "maxLength": 16
+                },
+                "mediaType": {
+                  "type": "string",
+                  "minLength": 3,
+                  "maxLength": 128
+                },
+                "binary": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "formatKind",
+                "extension",
+                "mediaType",
+                "binary"
+              ],
+              "additionalProperties": false
+            },
+            "extent": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 536870912
+            }
+          },
+          "required": [
+            "instanceId",
+            "seq",
+            "declaration",
+            "extent"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "naturalSourcePrepare"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "naturalSourceControl": {
+          "type": "object",
+          "properties": {
+            "loan": {
+              "type": "object",
+              "properties": {
+                "operationId": {
+                  "type": "string",
+                  "pattern": "^(?!0{16}$)[0-9a-f]{16}$"
+                },
+                "generation": {
+                  "type": "string",
+                  "pattern": "^(?!0{16}$)[0-9a-f]{16}$"
+                },
+                "instanceId": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 4294967295
+                },
+                "declaration": {
+                  "type": "object",
+                  "properties": {
+                    "formatKind": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 128
+                    },
+                    "extension": {
+                      "type": "string",
+                      "minLength": 2,
+                      "maxLength": 16
+                    },
+                    "mediaType": {
+                      "type": "string",
+                      "minLength": 3,
+                      "maxLength": 128
+                    },
+                    "binary": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "formatKind",
+                    "extension",
+                    "mediaType",
+                    "binary"
+                  ],
+                  "additionalProperties": false
+                },
+                "extent": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 536870912
+                }
+              },
+              "required": [
+                "operationId",
+                "generation",
+                "instanceId",
+                "declaration",
+                "extent"
+              ],
+              "additionalProperties": false
+            },
+            "owner": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "seq": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "kind": {
+              "const": 241
+            },
+            "extent": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 536870912
+            },
+            "control": {
+              "enum": [
+                "begin",
+                "complete",
+                "cancel"
+              ]
+            }
+          },
+          "required": [
+            "loan",
+            "owner",
+            "seq",
+            "kind",
+            "extent",
+            "control"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "naturalSourceControl"
       ],
       "additionalProperties": false
     }

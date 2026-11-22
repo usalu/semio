@@ -1,11 +1,14 @@
 {
   "settleMs": 1000,
-  "cancelledPan": { "event": "pointercancel", "reason": "pan", "pointerId": 7, "point": { "x": 48, "y": 64 } },
+  "updatesPerBatch": 2,
+  "expectedFramesPerBatch": 1,
+  "cancelledPointer": { "event": "pointercancel", "pointerId": 7, "point": { "x": 48, "y": 64 } },
   "cases": [
     { "name": "render mode", "method": "setRenderMode", "args": ["image"] },
     { "name": "vector style", "method": "setVectorStyle", "args": ["silhouette"] },
     { "name": "layer visibility", "method": "setLayerVisibilityJson", "args": ["{\"pinLabels\":false}"] },
     { "name": "layer stroke scale", "method": "setLayerStrokeScaleJson", "args": ["{\"paths\":2}"] },
+    { "name": "level of detail", "method": "setLodMode", "args": ["local"] },
     { "name": "selection", "method": "syncInteraction", "args": ["{\"pins\":[\"station\"]}", "null"] }
   ]
 }

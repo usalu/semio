@@ -55,7 +55,7 @@ test("a real sidecar restarts for a change in the code it runs and for nothing e
  const root=directory(),copy=(path:string)=>join(root,relative(ancestor,path));
  for(const path of all){mkdirSync(dirname(copy(path)),{recursive:true});copyFileSync(path,copy(path));}
  const worktree=directory(),entry=copy(live.entries[0]!);
- const child=Bun.spawn([process.execPath,entry,"agent"],{stdout:"ignore",stderr:"pipe",cwd:worktree,env:{...process.env,SEMIO_FLEET_ROOT:worktree,SEMIO_WORKSPACE_ROOT:worktree,SEMIO_SIDECAR_WATCH_MILLISECONDS:"250",SEMIO_SIDECAR_QUIET_MILLISECONDS:"500",SEMIO_GRAPH_SERVER:"off",SEMIO_REMOTE_CACHE_ENDPOINT:"",SEMIO_REMOTE_EXECUTION_ENDPOINT:""}});
+ const child=Bun.spawn([process.execPath,entry,"agent"],{stdout:"ignore",stderr:"pipe",cwd:worktree,env:{...process.env,SEMIO_FLEET_ROOT:worktree,SEMIO_WORKSPACE_ROOT:worktree,SEMIO_SIDECAR_WATCH_MILLISECONDS:"250",SEMIO_SIDECAR_QUIET_MILLISECONDS:"500",SEMIO_SIDECAR_MINIMUM_INTERVAL_MILLISECONDS:"1",SEMIO_GRAPH_SERVER:"off",SEMIO_REMOTE_CACHE_ENDPOINT:"",SEMIO_REMOTE_EXECUTION_ENDPOINT:""}});
  let stderr="";void (async()=>{for await(const chunk of child.stderr as unknown as AsyncIterable<Uint8Array>)stderr+=new TextDecoder().decode(chunk);})();
  const alive=async(milliseconds:number)=>(await Promise.race([child.exited,Bun.sleep(milliseconds).then(()=>"alive" as const)]))==="alive";
  expect(await alive(2500),"started and waiting for the fleet facts").toBe(true);

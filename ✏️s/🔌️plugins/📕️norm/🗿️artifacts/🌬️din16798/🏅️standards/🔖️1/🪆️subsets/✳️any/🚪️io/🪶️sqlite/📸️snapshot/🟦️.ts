@@ -1,12 +1,13 @@
 /// <reference path="./🗄️.d.ts" />
 import sql from"./🗄️.sql"with{type:"text"};
-import type{Din16798Snapshot,Din16798Zone,Din16798VentSystem}from"../../../🧬️schema/📸️snapshot/🟦️.ts";
+import type{Din16798Snapshot,Din16798Zone,Din16798VentSystem,Din16798UnoccupiedVentilation}from"../../../🧬️schema/📸️snapshot/🟦️.ts";
 import{ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteCheckpoint,artifactSqliteInteger,artifactSqliteText,artifactSqliteOrderedRowsControlled,type ArtifactSqliteOptions}from"@semio-tech/framework/io/sqlite-snapshot/artifact";
 import {encodeIeee754Cells,readBinary64,type Ieee754Column,type Ieee754Cell} from "@semio-tech/framework/io/sqlite-snapshot/ieee754";
 import {type Binary64} from "@semio-tech/framework/value/ieee754";
 import type{SqliteDatabase,SqliteRow}from"@semio-tech/framework/io/sqlite-snapshot";
 
-export type Din16798SqliteZone=Omit<Din16798Zone,"floorAreaM2"|"tOpWinterC"|"tOpSummerC"|"airSpeedMS"|"clothingClo"|"metabolicRateMet"|"rhPercent"|"outdoorAirSuppliedM3H"|"co2Ppm"|"illuminanceLx"|"noiseDb"|"turbulenceIntensityPercent">&{floorAreaM2:Binary64;tOpWinterC:Binary64;tOpSummerC:Binary64;airSpeedMS:Binary64;clothingClo:Binary64;metabolicRateMet:Binary64;rhPercent:Binary64;outdoorAirSuppliedM3H:Binary64;co2Ppm:Binary64;illuminanceLx:Binary64;noiseDb:Binary64;turbulenceIntensityPercent:Binary64};
+export type Din16798SqliteZone=Omit<Din16798Zone,"unoccupiedVentilation"|"floorAreaM2"|"tOpWinterC"|"tOpSummerC"|"airSpeedMS"|"clothingClo"|"metabolicRateMet"|"rhPercent"|"outdoorAirSuppliedM3H"|"co2Ppm"|"illuminanceLx"|"noiseDb"|"turbulenceIntensityPercent">&{floorAreaM2:Binary64;tOpWinterC:Binary64;tOpSummerC:Binary64;airSpeedMS:Binary64;clothingClo:Binary64;metabolicRateMet:Binary64;rhPercent:Binary64;outdoorAirSuppliedM3H:Binary64;co2Ppm:Binary64;illuminanceLx:Binary64;noiseDb:Binary64;turbulenceIntensityPercent:Binary64;unoccupiedVentilation:Din16798SqliteUnoccupiedVentilation|null};
+export type Din16798SqliteUnoccupiedVentilation={operation:Din16798UnoccupiedVentilation["operation"];assessedAreaM2:Binary64;zoneVolumeM3:Binary64;minutesBeforeOccupancy:Binary64;residentialDesignRateLPerSM2:Binary64;outdoorAirM3H:Binary64};
 export type Din16798SqliteVentSystem=Omit<Din16798VentSystem,"sfpWM3S"|"heatRecoveryEta"|"humidificationRequiredKgH"|"humidificationProvidedKgH"|"fanQVM3S"|"fanTRunH"|"ductTestPressurePa"|"ductLeakageM3SM2"|"designAirflowM3H">&{sfpWM3S:Binary64;heatRecoveryEta:Binary64;humidificationRequiredKgH:Binary64;humidificationProvidedKgH:Binary64;fanQVM3S:Binary64;fanTRunH:Binary64;ductTestPressurePa:Binary64;ductLeakageM3SM2:Binary64;designAirflowM3H:Binary64};
 /** 🌬️ Complete building subject retaining exact words in all twenty-eight numeric domains. */
 export type Din16798SqliteSnapshot=Omit<Din16798Snapshot,"annex"|"thetaRmC"|"outdoorCo2Ppm"|"envelopeN50HInv"|"envelopeVolumeM3"|"cellarAreaM2"|"cellarVentilationM3H"|"nightSetbackK"|"zones"|"ventSystems">&{annex:"En"|"De";thetaRmC:Binary64;outdoorCo2Ppm:Binary64;envelopeN50HInv:Binary64;envelopeVolumeM3:Binary64;cellarAreaM2:Binary64;cellarVentilationM3H:Binary64;nightSetbackK:Binary64;zones:Din16798SqliteZone[];ventSystems:Din16798SqliteVentSystem[]};
@@ -14,9 +15,21 @@ export const DIN16798_SQLITE_SCHEMA:string=sql;
 const DOCUMENT_FLOATS:readonly Ieee754Column[]=[2,3,4,5,6,7,8].map(index=>({index,width:64}));
 const ZONE_FLOATS:readonly Ieee754Column[]=[6,11,12,13,14,15,16,17,18,19,20,21].map(index=>({index,width:64}));
 const SYSTEM_FLOATS:readonly Ieee754Column[]=[6,8,12,13,14,15,17,18,19].map(index=>({index,width:64}));
+const UNOCCUPIED_FLOATS:readonly Ieee754Column[]=[2,3,4,5,6].map(index=>({index,width:64}));
 type Entities=Map<bigint,SqliteRow>;
 
 function annex(value:string):Din16798SqliteSnapshot["annex"]{if(value!=="En"&&value!=="De")throw Error("DIN16798 unsupported annex");return value}
+function operation(value:string):Din16798SqliteUnoccupiedVentilation["operation"] {
+ switch(value) {
+  case "nonResidentialPurge": case "nonResidentialReduced": case "residentialReduced": case "residentialShutdown": return value;
+  default: throw Error("DIN16798 unsupported unoccupied ventilation operation");
+ }
+}
+function unoccupiedVentilation(row:SqliteRow):Din16798SqliteUnoccupiedVentilation {
+ return {operation:operation(artifactSqliteText(row,1)),assessedAreaM2:readBinary64(row,2,UNOCCUPIED_FLOATS),
+  zoneVolumeM3:readBinary64(row,3,UNOCCUPIED_FLOATS),minutesBeforeOccupancy:readBinary64(row,4,UNOCCUPIED_FLOATS),
+  residentialDesignRateLPerSM2:readBinary64(row,5,UNOCCUPIED_FLOATS),outdoorAirM3H:readBinary64(row,6,UNOCCUPIED_FLOATS)};
+}
 function unsigned(value:number,max:number):bigint{if(!Number.isInteger(value)||value<0||value>max)throw Error("DIN16798 field exceeds owned unsigned width");return BigInt(value)}
 function readUnsigned(row:SqliteRow,column:number,max:bigint):number{const value=artifactSqliteInteger(row,column);if(value<0n||value>max)throw Error("DIN16798 field exceeds owned unsigned width");return Number(value)}
 async function checkpoint(options:ArtifactSqliteOptions,position:number,total:number):Promise<void>{if(position%256===0)await artifactSqliteCheckpoint(options,"reconstructSnapshot",position,total,position>0)}
@@ -27,7 +40,11 @@ async function write(out:ArtifactSqliteProjection,table:string,cells:readonly Ie
 /** 📤️ Projects every building, comfort-zone and ventilation-system field into queryable semantic entities. */
 export async function din16798SnapshotToSqliteDatabase(snapshot:Din16798SqliteSnapshot,options:ArtifactSqliteOptions={}):Promise<SqliteDatabase>{
  const out=await ArtifactSqliteProjection.create(sql,options);await write(out,"din16798_document",[annex(snapshot.annex),snapshot.thetaRmC,snapshot.outdoorCo2Ppm,snapshot.envelopeN50HInv,snapshot.envelopeVolumeM3,snapshot.cellarAreaM2,snapshot.cellarVentilationM3H,snapshot.nightSetbackK],DOCUMENT_FLOATS,options,1n);
- for(let position=0;position<snapshot.zones.length;position++){const z=snapshot.zones[position]!;await write(out,"din16798_zone",[1n,BigInt(position),z.id,z.name,z.usageType,z.floorAreaM2,unsigned(z.occupants,4294967295),z.comfortCategory,z.pollutionClass,z.comfortModel,z.tOpWinterC,z.tOpSummerC,z.airSpeedMS,z.clothingClo,z.metabolicRateMet,z.rhPercent,z.outdoorAirSuppliedM3H,z.co2Ppm,z.illuminanceLx,z.noiseDb,z.turbulenceIntensityPercent,z.ventMethod,z.ventSystemId],ZONE_FLOATS,options)}
+ for(let position=0;position<snapshot.zones.length;position++){const z=snapshot.zones[position]!;const zoneId=await write(out,"din16798_zone",[1n,BigInt(position),z.id,z.name,z.usageType,z.floorAreaM2,unsigned(z.occupants,4294967295),z.comfortCategory,z.pollutionClass,z.comfortModel,z.tOpWinterC,z.tOpSummerC,z.airSpeedMS,z.clothingClo,z.metabolicRateMet,z.rhPercent,z.outdoorAirSuppliedM3H,z.co2Ppm,z.illuminanceLx,z.noiseDb,z.turbulenceIntensityPercent,z.ventMethod,z.ventSystemId],ZONE_FLOATS,options);if(z.unoccupiedVentilation){
+   const u=z.unoccupiedVentilation;
+   await write(out,"din16798_unoccupied_ventilation",[operation(u.operation),u.assessedAreaM2,u.zoneVolumeM3,u.minutesBeforeOccupancy,u.residentialDesignRateLPerSM2,u.outdoorAirM3H],UNOCCUPIED_FLOATS,options,zoneId);
+  }
+ }
  for(let position=0;position<snapshot.ventSystems.length;position++){const v=snapshot.ventSystems[position]!;await write(out,"din16798_vent_system",[1n,BigInt(position),v.id,v.name,v.systemType,v.sfpWM3S,unsigned(v.sfpRequiredClass,255),v.heatRecoveryEta,v.odaClass,v.filterSupClass,unsigned(v.yearsSinceInspection,4294967295),v.humidificationRequiredKgH,v.humidificationProvidedKgH,v.fanQVM3S,v.fanTRunH,v.ductClass,v.ductTestPressurePa,v.ductLeakageM3SM2,v.designAirflowM3H],SYSTEM_FLOATS,options)}
  return out.finish();
 }
@@ -35,7 +52,9 @@ export async function din16798SnapshotToSqliteDatabase(snapshot:Din16798SqliteSn
 /** 📥️ Reconstructs complete building subjects after exact word, width, ordinal and parent validation. */
 export async function din16798SnapshotFromSqliteDatabase(database:SqliteDatabase,options:ArtifactSqliteOptions={}):Promise<Din16798SqliteSnapshot>{
  const tables=await artifactSqliteTables(database,sql,options),documents=await entities(tables[0]!,9,DOCUMENT_FLOATS,options);if(documents.size!==1||!documents.has(1n))throw Error("DIN16798 requires exactly document identity one");const d=documents.get(1n)!;
- const zones:Din16798SqliteZone[]=[];for(const z of await ordered((await entities(tables[1]!,24,ZONE_FLOATS,options)).values(),options)){await checkpoint(options,zones.length,0);zones.push({id:artifactSqliteText(z,3),name:artifactSqliteText(z,4),usageType:artifactSqliteText(z,5),floorAreaM2:readBinary64(z,6,ZONE_FLOATS),occupants:readUnsigned(z,7,4294967295n),comfortCategory:artifactSqliteText(z,8),pollutionClass:artifactSqliteText(z,9),comfortModel:artifactSqliteText(z,10),tOpWinterC:readBinary64(z,11,ZONE_FLOATS),tOpSummerC:readBinary64(z,12,ZONE_FLOATS),airSpeedMS:readBinary64(z,13,ZONE_FLOATS),clothingClo:readBinary64(z,14,ZONE_FLOATS),metabolicRateMet:readBinary64(z,15,ZONE_FLOATS),rhPercent:readBinary64(z,16,ZONE_FLOATS),outdoorAirSuppliedM3H:readBinary64(z,17,ZONE_FLOATS),co2Ppm:readBinary64(z,18,ZONE_FLOATS),illuminanceLx:readBinary64(z,19,ZONE_FLOATS),noiseDb:readBinary64(z,20,ZONE_FLOATS),turbulenceIntensityPercent:readBinary64(z,21,ZONE_FLOATS),ventMethod:artifactSqliteText(z,22),ventSystemId:artifactSqliteText(z,23)})}
+ const unoccupied=await entities(tables[3]!,7,UNOCCUPIED_FLOATS,options);
+ const zones:Din16798SqliteZone[]=[];for(const z of await ordered((await entities(tables[1]!,24,ZONE_FLOATS,options)).values(),options)){await checkpoint(options,zones.length,0);const id=artifactSqliteInteger(z,0), evidence=unoccupied.get(id);unoccupied.delete(id);zones.push({id:artifactSqliteText(z,3),name:artifactSqliteText(z,4),usageType:artifactSqliteText(z,5),floorAreaM2:readBinary64(z,6,ZONE_FLOATS),occupants:readUnsigned(z,7,4294967295n),comfortCategory:artifactSqliteText(z,8),pollutionClass:artifactSqliteText(z,9),comfortModel:artifactSqliteText(z,10),tOpWinterC:readBinary64(z,11,ZONE_FLOATS),tOpSummerC:readBinary64(z,12,ZONE_FLOATS),airSpeedMS:readBinary64(z,13,ZONE_FLOATS),clothingClo:readBinary64(z,14,ZONE_FLOATS),metabolicRateMet:readBinary64(z,15,ZONE_FLOATS),rhPercent:readBinary64(z,16,ZONE_FLOATS),outdoorAirSuppliedM3H:readBinary64(z,17,ZONE_FLOATS),co2Ppm:readBinary64(z,18,ZONE_FLOATS),illuminanceLx:readBinary64(z,19,ZONE_FLOATS),noiseDb:readBinary64(z,20,ZONE_FLOATS),turbulenceIntensityPercent:readBinary64(z,21,ZONE_FLOATS),ventMethod:artifactSqliteText(z,22),ventSystemId:artifactSqliteText(z,23),unoccupiedVentilation:evidence?unoccupiedVentilation(evidence):null})}
+ if(unoccupied.size)throw Error("DIN16798 unoccupied ventilation has a foreign zone");
  const ventSystems:Din16798SqliteVentSystem[]=[];for(const v of await ordered((await entities(tables[2]!,20,SYSTEM_FLOATS,options)).values(),options)){await checkpoint(options,ventSystems.length,0);ventSystems.push({id:artifactSqliteText(v,3),name:artifactSqliteText(v,4),systemType:artifactSqliteText(v,5),sfpWM3S:readBinary64(v,6,SYSTEM_FLOATS),sfpRequiredClass:readUnsigned(v,7,255n),heatRecoveryEta:readBinary64(v,8,SYSTEM_FLOATS),odaClass:artifactSqliteText(v,9),filterSupClass:artifactSqliteText(v,10),yearsSinceInspection:readUnsigned(v,11,4294967295n),humidificationRequiredKgH:readBinary64(v,12,SYSTEM_FLOATS),humidificationProvidedKgH:readBinary64(v,13,SYSTEM_FLOATS),fanQVM3S:readBinary64(v,14,SYSTEM_FLOATS),fanTRunH:readBinary64(v,15,SYSTEM_FLOATS),ductClass:artifactSqliteText(v,16),ductTestPressurePa:readBinary64(v,17,SYSTEM_FLOATS),ductLeakageM3SM2:readBinary64(v,18,SYSTEM_FLOATS),designAirflowM3H:readBinary64(v,19,SYSTEM_FLOATS)})}
  const snapshot:Din16798SqliteSnapshot={annex:annex(artifactSqliteText(d,1)),thetaRmC:readBinary64(d,2,DOCUMENT_FLOATS),outdoorCo2Ppm:readBinary64(d,3,DOCUMENT_FLOATS),envelopeN50HInv:readBinary64(d,4,DOCUMENT_FLOATS),envelopeVolumeM3:readBinary64(d,5,DOCUMENT_FLOATS),cellarAreaM2:readBinary64(d,6,DOCUMENT_FLOATS),cellarVentilationM3H:readBinary64(d,7,DOCUMENT_FLOATS),nightSetbackK:readBinary64(d,8,DOCUMENT_FLOATS),zones,ventSystems};await artifactSqliteCheckpoint(options,"reconstructSnapshot",1,1);return snapshot;
 }

@@ -22,7 +22,7 @@ fn window_view() -> semio_plugin::ViewModel {
 macro_rules! window_meta {
     ($actor:expr) => {{
         let mut window_meta = meta($actor);
-        window_meta.view_state = Some(window_view());
+        window_meta.view_state = Some(std::sync::Arc::new(window_view()));
         window_meta
     }};
 }

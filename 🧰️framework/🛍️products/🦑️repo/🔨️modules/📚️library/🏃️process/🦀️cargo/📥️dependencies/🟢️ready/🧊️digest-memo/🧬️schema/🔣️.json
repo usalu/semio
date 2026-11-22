@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:cargo-registry-digest-memo:v1",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "version": 1,
+        "fileName": "cargo-digest-memo.json",
+        "maximumRows": 262144,
+        "maximumBytes": 67108864,
+        "stampFields": ["dev", "ino", "size", "mtimeNs"]
+      }
+    },
+    "Memo": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "rows"],
+      "properties": {
+        "version": {"const": 1},
+        "rows": {
+          "type": "object",
+          "additionalProperties": {"type": "string", "pattern": "^[0-9]+:[0-9]+:[0-9]+:[0-9]+:[a-f0-9]{64}$"}
+        }
+      }
+    }
+  }
+}

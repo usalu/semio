@@ -225,7 +225,7 @@ fn process_scene_interaction(intent: &mut SceneInteractionIntent, input: &mut se
             };
             let result = match intent.event {
                 SceneIntentEvent::PointerDown { x, y, button, modifiers } => semio_renderer_wgpu_engine_board::paint2d::paint2d_pointer_button_into(scene, rect, x, y, true, button, modifiers.shift, modifiers.ctrl || modifiers.meta, input),
-                SceneIntentEvent::PointerUp { x, y, button, modifiers } => semio_renderer_wgpu_engine_board::paint2d::paint2d_pointer_button_into(scene, rect, x, y, false, button, modifiers.shift, modifiers.ctrl || modifiers.meta, input),
+                SceneIntentEvent::PointerUp { x, y, button, modifiers, .. } => semio_renderer_wgpu_engine_board::paint2d::paint2d_pointer_button_into(scene, rect, x, y, false, button, modifiers.shift, modifiers.ctrl || modifiers.meta, input),
                 SceneIntentEvent::PointerMove { x, y, .. } => semio_renderer_wgpu_engine_board::paint2d::paint2d_pointer_move_into(scene, rect, x, y, input),
                 SceneIntentEvent::Scroll { x, y, delta_y, .. } if delta_y.abs() >= 0.01 => semio_renderer_wgpu_engine_board::paint2d::paint2d_wheel_into(scene, rect, x, y, delta_y, input),
                 SceneIntentEvent::Scroll { .. } | SceneIntentEvent::PointerLeave => Ok(false),
@@ -259,7 +259,7 @@ fn process_scene_interaction(intent: &mut SceneInteractionIntent, input: &mut se
                     semio_renderer_wgpu_scene_state::SceneModifiers::from(modifiers),
                     input,
                 ),
-                SceneIntentEvent::PointerUp { x, y, button, modifiers } => semio_renderer_wgpu_scene_render::canvas_pointer_button_into(
+                SceneIntentEvent::PointerUp { x, y, button, modifiers, .. } => semio_renderer_wgpu_scene_render::canvas_pointer_button_into(
                     scene,
                     rect,
                     intent.pointer_id.ok_or(semio_ui_action::BoundedActionFault::ItemCredits)?,
@@ -367,6 +367,8 @@ fn process_scene_interaction(intent: &mut SceneInteractionIntent, input: &mut se
                     if let Some(target) = semio_renderer_wgpu_scene_tables::table_stepper_focus_target(scene, rect, x, y, intent.driver_drag) {
                         focus_table_stepper(window_id, intent.surface_generation, node, &scene.host_id, target);
                     }
+                    let row_id = semio_renderer_wgpu_scene_tables::table_row_id_at(scene, rect, x, y);
+                    semio_renderer_wgpu_ui_engine_focus::text_and_table_focus::focus_table_row(window_id, intent.surface_generation, node, &scene.host_id, row_id);
                 }
                 if kind == semio_ui_declaration::ui::SurfaceKind::VirtualFileSystem && button == 0 {
                     if let Some(target) = semio_renderer_wgpu_scene_text_vfs::vfs_accessibility_focus_target(scene, x, y) {
@@ -376,9 +378,9 @@ fn process_scene_interaction(intent: &mut SceneInteractionIntent, input: &mut se
                 let pointer_id = intent.pointer_id.ok_or(semio_ui_action::BoundedActionFault::ItemCredits)?;
                 semio_renderer_wgpu_scene_render::passive_scene_pointer_button(scene, rect, pointer_id, x, y, true, button, semio_renderer_wgpu_scene_state::SceneModifiers::from(modifiers), window_id, intent.surface_generation, intent.driver_drag, input)?;
             }
-            SceneIntentEvent::PointerUp { x, y, button, modifiers } => {
+            SceneIntentEvent::PointerUp { x, y, button, modifiers, click_count } => {
                 let pointer_id = intent.pointer_id.ok_or(semio_ui_action::BoundedActionFault::ItemCredits)?;
-                semio_renderer_wgpu_scene_render::passive_scene_pointer_button(scene, rect, pointer_id, x, y, false, button, semio_renderer_wgpu_scene_state::SceneModifiers::from(modifiers), window_id, intent.surface_generation, intent.driver_drag, input)?;
+                semio_renderer_wgpu_scene_render::passive_scene_pointer_button(scene, rect, pointer_id, x, y, false, button, semio_renderer_wgpu_scene_state::SceneModifiers { click_count, ..semio_renderer_wgpu_scene_state::SceneModifiers::from(modifiers) }, window_id, intent.surface_generation, intent.driver_drag, input)?;
             }
             SceneIntentEvent::PointerMove { x, y, .. } => {
                 let pointer_id = intent.pointer_id.ok_or(semio_ui_action::BoundedActionFault::ItemCredits)?;

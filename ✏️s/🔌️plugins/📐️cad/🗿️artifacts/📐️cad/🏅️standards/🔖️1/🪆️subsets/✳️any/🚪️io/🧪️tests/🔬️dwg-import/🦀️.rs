@@ -11,7 +11,7 @@ async fn cad_document_from_dwg_creates_one_object_per_layer_with_geometry() {
         color: semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::schema::geometry::DwgColor::ByLayer,
         geometry: semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::schema::geometry::DwgGeometry::PolyfaceMesh { vertices: vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.0, 1.0, 0.0], [0.0, 1.0, 0.0]], faces: vec![[1, 2, 3, 4]] },
     });
-    let working = cad_working_scene_from_dwg(&drawing);
+    let working = cad_working_scene_from_dwg(&drawing).expect("import DWG layers");
     assert_eq!(working.objects.len(), 1, "the empty layer must not contribute an object");
     assert_eq!(working.objects[0].label, semio_s_artifact_cad_cad_model::geometry::CadObjectName::literal("outline"));
     let value = cad_document_from_dwg(&drawing).expect("cad document from dwg");
@@ -22,7 +22,7 @@ async fn cad_document_from_dwg_creates_one_object_per_layer_with_geometry() {
 #[semio_framework_async_macros::async_test]
 async fn cad_document_from_empty_dwg_preserves_the_empty_shape_model_child() {
     let drawing = semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::schema::geometry::DwgDrawing::default();
-    let working = cad_working_scene_from_dwg(&drawing);
+    let working = cad_working_scene_from_dwg(&drawing).expect("import DWG layers");
     assert!(working.objects.is_empty());
     let value = cad_document_from_dwg(&drawing).expect("cad document from empty dwg");
     let scene: CadSnapshot = semio_framework_value::FromValue::from_value(value).expect("valid cad scene");

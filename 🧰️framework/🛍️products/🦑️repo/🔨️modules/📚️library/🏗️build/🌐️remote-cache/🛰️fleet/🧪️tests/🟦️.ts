@@ -5,6 +5,7 @@ import {existsSync,mkdirSync,mkdtempSync,readdirSync,readFileSync,rmSync,statSyn
 import {tmpdir} from "node:os";
 import {join} from "node:path";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
+import contractSchema from "../../../🏃️execution/🧬️schema/🌐️remote-cache.json" with {type:"json"};
 import {fleetCacheFactsPathV1,fleetCacheLocalPathV1,parseFleetCacheFactsV1,readFleetExecutionV1,readLocalFleetCacheFactsV1,refreshFleetCacheFactsV1,remoteCacheFetchV1,requireFleetCacheShapeV1,resolveAuthorisedRemoteCacheV1,resolveRemoteCacheV1,type FleetCacheFactsV1} from "../🟦️.ts";
 import {fleetCacheEndpointsV1,publishFleetCacheFactsV1,setFleetExecutionV1} from "../📣️publication/🟦️.ts";
 import {syncFleetIdentityV1} from "../🪪️identity/🟦️.ts";
@@ -14,7 +15,7 @@ import {remoteCacheStatusV1,serveRemoteCacheV1,rotateRemoteCacheV1,type RemoteCa
 import {bazelRemoteCacheToolV1} from "../../../🔧️tools/🏗️bazel/🌐️remote-cache/🟦️.ts";
 import {startRemoteCacheServerV1,type RemoteCacheServerV1} from "../../🖥️server/🟦️.ts";
 
-const ajv=new Ajv({strict:true,allowUnionTypes:true}),validator=(definition:string)=>ajv.compile({$schema:schema.$schema,definitions:schema.definitions,$ref:`#/definitions/${definition}`}),scratch:string[]=[],servers:RemoteCacheServerV1[]=[];
+const ajv=new Ajv({strict:true,allowUnionTypes:true}),validator=(definition:string)=>ajv.compile({$schema:schema.$schema,definitions:schema.definitions,$ref:`#/definitions/${definition}`}),statusValidator=ajv.compile({$schema:contractSchema.$schema,definitions:contractSchema.definitions,$ref:"#/definitions/Status"}),scratch:string[]=[],servers:RemoteCacheServerV1[]=[];
 const directory=(label:string)=>{const path=mkdtempSync(join(tmpdir(),`fleet-${label}-`));scratch.push(path);return path;};
 afterAll(async()=>{for(const server of servers)await server.stop();for(const path of scratch)rmSync(path,{recursive:true,force:true});});
 
@@ -246,7 +247,7 @@ test("a refresh ignores facts whose endpoints all fail and keeps the previous go
  expect(resolveRemoteCacheV1({SEMIO_WORKSPACE_ROOT:root},{root})?.contract.endpoint,"the dead endpoint is not adopted").toBe(server.url);
 });
 
-test("round trip: facts written by the publisher are read by the cache resolver, the execution reader and the scheduler fact setter; a stale pointer to another port of the cache machine is superseded; `status` validates against its schema with the signed scheme and states why Bazel stays local",async()=>{
+test("round trip: facts written by the publisher are read by the cache resolver, the execution reader and the scheduler fact setter; a stale pointer to another port of the cache machine is superseded; `status` validates against its schema with the signed scheme reports the server's own numbers, and renders Bazel through the signing proxy",async()=>{
  const store=directory("store"),cache=directory("cache"),root=directory("client");machine(root,store);
  const server=await serving(cache,store),endpoint=server.url;
  await publishFleetCacheFactsV1(publication(store,cache,[endpoint]));
@@ -261,7 +262,48 @@ test("round trip: facts written by the publisher are read by the cache resolver,
  const resolved=resolveRemoteCacheV1(stale,{root})!;
  expect(resolved,"a leftover pointer on the same machine is superseded by the facts").toMatchObject({endpointFrom:"fleet-facts",tokenFrom:"fleet-identity"});expect(resolved.contract.endpoint).toBe(endpoint);
  const lines:string[]=[],context:RemoteCacheCommandContextV1={root,environment:{SEMIO_WORKSPACE_ROOT:root,...stale},signal:new AbortController().signal,progress:async()=>{},write:line=>lines.push(line),tools:async()=>[bazelRemoteCacheToolV1()]};
- const status=await remoteCacheStatusV1(["--lang","en"],context) as {remote:{authorised:boolean};resolution:{tokenFrom:string};renderings:{bazel:{localOnly?:string;applied:string[]}}};
+ const status=await remoteCacheStatusV1(["--lang","en"],context) as {remote:{authorised:boolean;entries:number|null;bytes:number|null;maximumBytes:number|null;hits:number|null;misses:number|null};server:{fleet:{transport:{inGroup:string}}}|null;serverFault:null;resolution:{tokenFrom:string};renderings:{bazel:{applied:string[]}}};
  expect(status.remote.authorised).toBe(true);expect(status.resolution.tokenFrom).toBe("fleet-identity");
- expect(status.renderings.bazel.applied).toEqual([]);expect(status.renderings.bazel.localOnly).toContain("Bazel stays local");
+ expect(statusValidator(status),JSON.stringify(statusValidator.errors)).toBe(true);
+ expect(status.serverFault).toBeNull();expect(status.server,"the signed /status request is answered").not.toBeNull();expect(status.server!.fleet.transport.inGroup).toBeDefined();
+ expect(status.remote).toMatchObject({entries:0,bytes:0,maximumBytes:2**26});expect(typeof status.remote.hits).toBe("number");expect(typeof status.remote.misses).toBe("number");
+ expect(status.renderings.bazel.applied).toContain("--remote_cache=http://127.0.0.1:<proxy>/semio");expect(JSON.stringify(status.renderings.bazel)).not.toContain("credential_helper");
+});
+
+test("status names why the server gave no numbers: an unsigned machine is denied, a dead endpoint is unreachable, a foreign document is malformed",async()=>{
+ const store=directory("store"),cache=directory("cache"),root=directory("client"),bare=directory("bare");machine(root,store);
+ const server=await serving(cache,store),endpoint=server.url;
+ await publishFleetCacheFactsV1(publication(store,cache,[endpoint]));
+ await refreshFleetCacheFactsV1({root,force:true,probeMilliseconds:300});
+ const context=(workspace:string,environment:Record<string,string>):RemoteCacheCommandContextV1=>({root:workspace,environment:{SEMIO_WORKSPACE_ROOT:workspace,...environment},signal:new AbortController().signal,progress:async()=>{},write:()=>{},tools:async()=>[bazelRemoteCacheToolV1()]});
+ type Row={server:unknown;serverFault:{reason:string;status:number|null;message:string}|null;remote:{entries:number|null;hits:number|null}};
+ const signed=await remoteCacheStatusV1([],context(root,{SEMIO_REMOTE_CACHE_ENDPOINT:endpoint})) as Row;
+ expect(signed.serverFault).toBeNull();expect(signed.remote.entries).toBe(0);
+ const denied=await remoteCacheStatusV1([],context(bare,{SEMIO_REMOTE_CACHE_ENDPOINT:endpoint})) as Row;
+ expect(statusValidator(denied),JSON.stringify(statusValidator.errors)).toBe(true);
+ expect(denied.server).toBeNull();expect(denied.serverFault).toMatchObject({reason:"denied",status:401});expect(denied.serverFault!.message).toContain("HTTP 401");expect(denied.serverFault!.message).toContain("HTTP 401");expect(denied.remote).toMatchObject({entries:null,hits:null});
+ expect(denied.serverFault!.message).toMatch(/refused[\s\S]*abgelehnt/u);
+ const dead=await remoteCacheStatusV1([],context(bare,{SEMIO_REMOTE_CACHE_ENDPOINT:"http://127.0.0.1:1",SEMIO_REMOTE_CACHE_TIMEOUT_SECONDS:"2"})) as Row;
+ expect(dead.serverFault).toMatchObject({reason:"unreachable",status:null});
+ const stub=Bun.serve({port:0,hostname:"127.0.0.1",fetch:request=>new URL(request.url).pathname==="/status"?Response.json({version:1,entries:"many"}):new Response("",{status:404})});
+ try{
+  const odd=await remoteCacheStatusV1([],context(bare,{SEMIO_REMOTE_CACHE_ENDPOINT:`http://127.0.0.1:${stub.port}`})) as Row;
+  expect(odd.server).toBeNull();expect(odd.serverFault).toMatchObject({reason:"malformed",status:200});
+ }finally{await stub.stop(true);}
+});
+
+test("a healthy verdict of the fleet facts routes Nx at once and the probe runs behind it, so a hanging cache host costs the build nothing",async()=>{
+ const hanging=Bun.serve({port:0,fetch:()=>new Promise<Response>(()=>{})}),url=`http://127.0.0.1:${hanging.port}`,root=directory("verdict-root"),warnings:string[]=[];
+ try{
+  mkdirSync(join(root,".cache","f"),{recursive:true});
+  const facts={...sample,cache:{...sample.cache,endpoints:[url],instance:"main"}},write=(checkedAtMs:number,selectedEndpoint:string|null)=>writeFileSync(fleetCacheLocalPathV1(root),JSON.stringify({version:1,fetchedAtMs:checkedAtMs,checkedAtMs,selectedEndpoint,facts}));
+  const {nxCachedVerdictV1,NX_VERDICT_MILLISECONDS_V1}=await import("../../🧶️nx/🟦️.ts"),now=Date.now();
+  expect(nxCachedVerdictV1(undefined,now)).toBe(false);expect(nxCachedVerdictV1({selectedEndpoint:null,checkedAtMs:now},now)).toBe(false);
+  expect(nxCachedVerdictV1({selectedEndpoint:url,checkedAtMs:now-NX_VERDICT_MILLISECONDS_V1-1},now)).toBe(false);expect(nxCachedVerdictV1({selectedEndpoint:url,checkedAtMs:now-1000},now)).toBe(true);
+  write(Date.now(),url);
+  const started=performance.now(),routed=await nxRemoteCacheEnvironmentV1({SEMIO_WORKSPACE_ROOT:root},{root,probeMilliseconds:5000,retries:1,warn:text=>warnings.push(text)});
+  expect(performance.now()-started,"no probe on the critical path").toBeLessThan(400);
+  expect(routed.NX_SELF_HOSTED_REMOTE_CACHE_SERVER).toBe(`${url}/main`);
+  const again=performance.now();expect(await nxRemoteCacheEnvironmentV1({SEMIO_WORKSPACE_ROOT:root},{root,probeMilliseconds:5000,retries:1})).toEqual(routed);expect(performance.now()-again).toBeLessThan(400);
+ }finally{await hanging.stop(true);}
 });

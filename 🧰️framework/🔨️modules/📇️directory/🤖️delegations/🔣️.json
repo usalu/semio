@@ -1,0 +1,200 @@
+{
+  "schema": "semio.os.agent-delegations/v1",
+  "paths": {
+    "delegations": "/auth/agent-delegations",
+    "install": "/__semio/agent-credentials"
+  },
+  "schemas": {
+    "create": "semio.hub.auth.agent-delegation-create/v1",
+    "receipt": "semio.hub.auth.agent-delegation-receipt/v1",
+    "list": "semio.hub.auth.agent-delegation-list/v1",
+    "credential": "semio.hub.agent-credential/v1",
+    "installRequest": "semio.os.agent-credential-install/v1",
+    "installReceipt": "semio.os.agent-credential-install-receipt/v1"
+  },
+  "bounds": {
+    "labelMaxBytes": 128,
+    "minTtlSecs": 60,
+    "maxTtlSecs": 7776000,
+    "pageMax": 256,
+    "identifierMax": 256
+  },
+  "ttlChoicesSecs": [
+    86400,
+    604800,
+    2592000
+  ],
+  "defaultTtlIndex": 1,
+  "audiences": [
+    "read",
+    "edit"
+  ],
+  "defaultAudience": "edit",
+  "controls": {
+    "create": {
+      "id": "os.hub.agent.create",
+      "icon": "cpu",
+      "variant": "outline"
+    },
+    "download": {
+      "id": "os.hub.agent.download",
+      "icon": "download",
+      "variant": "outline"
+    },
+    "dismiss": {
+      "id": "os.hub.agent.dismiss",
+      "icon": "x",
+      "variant": "outline"
+    },
+    "mcpInstall": {
+      "id": "os.hub.agent.mcpInstall",
+      "icon": "link",
+      "variant": "outline"
+    },
+    "mcpCopy": {
+      "id": "os.hub.agent.mcpCopy",
+      "icon": "copy",
+      "variant": "outline"
+    },
+    "refresh": {
+      "id": "os.hub.agent.refresh",
+      "icon": "rotate-cw",
+      "variant": "outline"
+    },
+    "revoke": {
+      "id": "os.hub.agent.revoke",
+      "icon": "lock",
+      "variant": "outline"
+    },
+    "revokeConfirm": {
+      "id": "os.hub.agent.revokeConfirm",
+      "icon": "lock",
+      "variant": "outline"
+    },
+    "revokeCancel": {
+      "id": "os.hub.agent.revokeCancel",
+      "icon": "x",
+      "variant": "outline"
+    }
+  },
+  "fields": {
+    "name": "os.hub.agent.name",
+    "audience": "os.hub.agent.audience",
+    "expiry": "os.hub.agent.expiry",
+    "list": "os.hub.agent.list"
+  },
+  "labels": {
+    "en": {
+      "title": "AI agents",
+      "description": "Give an AI agent its own access to this space. It acts under its own name, and you can withdraw it at any time.",
+      "signedOut": "Sign in to the hub to give an agent access.",
+      "noSpace": "Open a space to manage the agents that work in it.",
+      "notAuthor": "Only an author of this space can give an agent access to it.",
+      "createTitle": "Give an agent access",
+      "name": "Agent name",
+      "audience": "The agent may",
+      "audienceRead": "Read only",
+      "audienceEdit": "Read and edit",
+      "expiry": "Access expires after",
+      "expiryDay": "1 day",
+      "expiryWeek": "1 week",
+      "expiryMonth": "30 days",
+      "create": "Create delegation",
+      "ready": "The credential file is ready. It is shown once — download it now; it cannot be shown again.",
+      "download": "Download credential file",
+      "downloaded": "Credential file saved.",
+      "downloadFailed": "Could not save the file. Copy the text below into a file yourself.",
+      "dismiss": "Discard credential",
+      "permission": "Keep the file readable by you alone — run chmod 600 on it. The agent refuses a file anyone else can read.",
+      "command": "Start the agent with",
+      "principal": "Acts as {{principal}}",
+      "mcpTitle": "Connect an AI client",
+      "mcpInstall": "Set up MCP client",
+      "mcpInstalling": "Installing the credential for MCP clients…",
+      "mcpReady": "Add this entry to your MCP client's configuration (for example .mcp.json or claude_desktop_config.json). It names a credential file only you can read — the secret itself is not in it.",
+      "mcpCopy": "Copy MCP configuration",
+      "mcpCopied": "MCP configuration copied.",
+      "mcpUnavailable": "This app cannot install the credential for you. Download the file and start the agent with the command below.",
+      "mcpFailed": "The credential could not be installed. Nothing was written; download the file instead.",
+      "mcpRevocable": "Withdrawing this agent below stops the client at once and removes the installed credential.",
+      "list": "Agents with access",
+      "empty": "No agent has access to this space.",
+      "loading": "Loading agent delegations…",
+      "submitting": "Waiting for the hub…",
+      "failed": "The hub did not accept that. Nothing was changed.",
+      "refresh": "Refresh agent delegations",
+      "created": "Created {{when}}",
+      "expires": "Expires {{when}}",
+      "lastUsed": "Last used {{when}}",
+      "lastUsedNever": "Never used",
+      "stateLive": "Active",
+      "stateExpired": "Expired",
+      "stateRevoked": "Withdrawn",
+      "revoke": "Withdraw {{name}}",
+      "revokeConfirmTitle": "Withdraw access from {{name}}?",
+      "revokeConfirmBody": "Its open sessions end at once and its credential file stops working. This cannot be undone.",
+      "revokeConfirm": "Withdraw access",
+      "revokeCancel": "Keep access",
+      "errorForbidden": "You may not manage agents in this space.",
+      "errorRateLimited": "Too many attempts. Try again in a moment.",
+      "errorUnreachable": "The hub could not be reached. Try again in a moment.",
+      "errorRefused": "The hub refused that."
+    },
+    "de": {
+      "title": "KI-Agenten",
+      "description": "Gib einem KI-Agenten einen eigenen Zugang zu diesem Space. Er handelt unter eigenem Namen, und du kannst den Zugang jederzeit zurückziehen.",
+      "signedOut": "Melde dich beim Hub an, um einem Agenten Zugang zu geben.",
+      "noSpace": "Öffne einen Space, um seine Agenten zu verwalten.",
+      "notAuthor": "Nur ein Autor dieses Spaces kann einem Agenten Zugang geben.",
+      "createTitle": "Einem Agenten Zugang geben",
+      "name": "Name des Agenten",
+      "audience": "Der Agent darf",
+      "audienceRead": "Nur lesen",
+      "audienceEdit": "Lesen und bearbeiten",
+      "expiry": "Zugang läuft ab nach",
+      "expiryDay": "1 Tag",
+      "expiryWeek": "1 Woche",
+      "expiryMonth": "30 Tage",
+      "create": "Zugang erstellen",
+      "ready": "Die Zugangsdatei ist bereit. Sie wird nur einmal angezeigt — lade sie jetzt herunter; ein zweites Mal ist nicht möglich.",
+      "download": "Zugangsdatei herunterladen",
+      "downloaded": "Zugangsdatei gespeichert.",
+      "downloadFailed": "Die Datei konnte nicht gespeichert werden. Kopiere den Text unten selbst in eine Datei.",
+      "dismiss": "Zugangsdatei verwerfen",
+      "permission": "Nur du darfst die Datei lesen können — führe chmod 600 darauf aus. Der Agent verweigert eine Datei, die andere lesen können.",
+      "command": "Starte den Agenten mit",
+      "principal": "Handelt als {{principal}}",
+      "mcpTitle": "KI-Client verbinden",
+      "mcpInstall": "MCP-Client einrichten",
+      "mcpInstalling": "Zugangsdaten für MCP-Clients werden installiert…",
+      "mcpReady": "Füge diesen Eintrag in die Konfiguration deines MCP-Clients ein (zum Beispiel .mcp.json oder claude_desktop_config.json). Er nennt eine Zugangsdatei, die nur du lesen kannst — das Geheimnis selbst steht nicht darin.",
+      "mcpCopy": "MCP-Konfiguration kopieren",
+      "mcpCopied": "MCP-Konfiguration kopiert.",
+      "mcpUnavailable": "Diese App kann die Zugangsdaten nicht für dich installieren. Lade die Datei herunter und starte den Agenten mit dem Befehl unten.",
+      "mcpFailed": "Die Zugangsdaten konnten nicht installiert werden. Es wurde nichts geschrieben; lade stattdessen die Datei herunter.",
+      "mcpRevocable": "Ziehst du diesen Agenten unten zurück, stoppt der Client sofort und die installierten Zugangsdaten werden entfernt.",
+      "list": "Agenten mit Zugang",
+      "empty": "Kein Agent hat Zugang zu diesem Space.",
+      "loading": "Agenten-Zugänge werden geladen…",
+      "submitting": "Warten auf den Hub…",
+      "failed": "Der Hub hat das nicht angenommen. Es wurde nichts geändert.",
+      "refresh": "Agenten-Zugänge aktualisieren",
+      "created": "Erstellt {{when}}",
+      "expires": "Läuft ab {{when}}",
+      "lastUsed": "Zuletzt genutzt {{when}}",
+      "lastUsedNever": "Nie genutzt",
+      "stateLive": "Aktiv",
+      "stateExpired": "Abgelaufen",
+      "stateRevoked": "Zurückgezogen",
+      "revoke": "{{name}} zurückziehen",
+      "revokeConfirmTitle": "Zugang von {{name}} zurückziehen?",
+      "revokeConfirmBody": "Die offenen Sitzungen enden sofort und die Zugangsdatei funktioniert nicht mehr. Das lässt sich nicht rückgängig machen.",
+      "revokeConfirm": "Zugang zurückziehen",
+      "revokeCancel": "Zugang behalten",
+      "errorForbidden": "Du darfst die Agenten dieses Spaces nicht verwalten.",
+      "errorRateLimited": "Zu viele Versuche. Versuche es gleich erneut.",
+      "errorUnreachable": "Der Hub war nicht erreichbar. Versuche es gleich erneut.",
+      "errorRefused": "Der Hub hat das abgelehnt."
+    }
+  }
+}

@@ -78,3 +78,5 @@ pier-bases [id:TEXT bridge-id:TEXT pier-id:TEXT radius-m:NUM soil-vs-m-s:NUM soi
 }
 critical-regions [id:TEXT building-id:TEXT member-id:TEXT section-width-m:NUM section-depth-m:NUM clear-length-m:NUM hooped-length-m:NUM core-width-m:NUM core-depth-m:NUM axial-force-n:NUM concrete-design-strength-mpa:NUM steel-design-yield-mpa:NUM hoop-design-yield-mpa:NUM longitudinal-steel-area-m2:NUM longitudinal-bar-diameter-m:NUM longitudinal-bar-max-diameter-m:NUM hoop-diameter-m:NUM hoop-spacing-m:NUM hoop-legs-x:NUM hoop-legs-y:NUM restrained-bar-count:NUM restrained-bar-spacing-m:NUM] {
 }
+cases [id:TEXT label-en:TEXT label-de:TEXT entry-id:TEXT numbers:TABLE texts:TABLE] {
+}

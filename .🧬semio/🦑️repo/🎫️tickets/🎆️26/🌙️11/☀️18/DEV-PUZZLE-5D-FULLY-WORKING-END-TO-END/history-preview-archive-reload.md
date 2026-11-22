@@ -1,0 +1,35 @@
+# History preview and archive reload
+
+The exact native v6 history edit reached the first `change-part-anchor` case and compared the committed head before the retained preview job completed. The committed head includes a downstream fastener deletion. The fixture's original reactor pump now settles the preview before comparing canonical text and values with the independently folded as-of scene.
+
+The exact conflict law reproduced a separate shared archive reopen stall. After 1,000,000 turns it was still running at 414 of 416 records. Fixture close then recorded 131,029 consecutive idle turns on a closing StoreReplacement initializer. The compact board and world archive reached the same Store initialization path.
+
+Native stack samples showed the initializer repeatedly quoting its rejected envelope's metadata retirement. The observed typed birth quote was zero copied bytes, 1,872 retained bytes and depth two. The real controlled allocator requires 2,976 copied bytes for that metadata on this binary. The inline retirement selection clips the child to the quote, so admission could never allocate or move ownership. The shared typed retirement helper now quotes the allocator's complete physical demand and checks both copy and retained receipts.
+
+A debugger run corrected the metadata quote in the test process and replay cleanup advanced in 16.85 seconds to a precise failure in the original history read. A breakpoint on that guard located `NativeInitializationFold::physical_work` borrowing anonymous Work for the history read's first frame birth. That initializer now uses the existing Source-bearing effect for its physical work, including subsequent reader retirement.
+
+The native fixture and SQLite oracle share `value/snapshot/read/🧪️tests/🎟️typed-retirement/fixture.json`. The fixture checks that a one-byte copy shortfall preserves custody with zero Work and the exact quote moves custody with one Work. The SQLite comparator passed both fixture cases. The v6 debugger result verifies the retirement diagnosis. The production editor and conflict laws require the combined native rebuild before their revised status can be established.
+
+## Source custody across phase changes
+
+The v11 native debugger saw two independent replay mistakes after the read-header repair. The initializer first observed a staged history input as occupied while the lease was still being formed. It now enters semantic preparation only once the held projection can be taken. When replay then released the captured snapshot, the enclosing Store retirement effect supplied no original Source identity. The release now uses the original Source-bearing effect, including the controlled path which borrows the existing native decoder retirement authority. Retained history preview owner retirement supplies its actual Source as well. The handback invariants remain active.
+
+The v11 conflict history and ordinary history laws both exposed a retained reply refusal while closing native initialization replay. A debugger traced the conflict run to the same captured snapshot and initializer retirement path as the independent text reopen. The next combined native build exercises the real caller and archive route for these fixes.
+
+## Original Work and two-turn Source publication
+
+The v12 archive initializer passed history reading and its partial-alias boundary. GDB located the next refusal in `NativeSemanticPreparation::close_step`, which requested original failure storage from inside the live replay Work action. The derived replay step now finishes the original storage reservation ahead of the regular call, following the existing prepared-operation retirement path.
+
+The mounted Window trace captured the full Pack/SPR path through stage 14. The registered binary receiver stayed in admission at a million available Work units because its requested child budget, plus the original invocation, exceeded that loan by one. Lowering only that quote in the debugger progressed through the binary Pack, typed cursor close and typed Source construction. The typed Source then exposed the previously hard-coded output quote. Its actual first turn needs the destination shell and publication identity, after which a second independently paid turn transfers the owner and lease. The binary receiving and replacement paths now use the original admission's per-turn demands until it becomes empty. Their cancellation paths also discard a resident successful address projection before returning sealed ownership.
+
+The mounted history acceptance trace confirmed that the deadline remained open and that the actual decoder continued to supply a million Work units. The stalled replay was in native replacement receiving of an edited history row. It advanced the declaration to the same two-turn Source publication gap. The replacement now continues its admission while the destination only holds the first turn's shell and receives the decoder's actual Work ceiling.
+
+The Window debugger traced the hard-coded 2,864-byte transfer offer. Lending the additional 16 bytes needed by the first publication moved both the exact forward operation and exact inverse into the typed Window Store. The binary reached Window Store hydration at stage 19. Its saved command and initializer still require a complete mounted run.
+
+The independent operation wire and original custody suites exposed stale test inputs after the Source work moved to the staged API. The wire checks now load the declared Draft 7 dialect, and the custody fixture follows the active ordered-map and transfer owners. Bun passed all 12 operation wire cases with 205 expectations and all four custody cases with 72 expectations.
+
+The v12 debugger run with both receiving quotes corrected reached the native Window fold and retained the primary failure at the command boundary. The message was `clone cursor has no controlled close work demand`. The cloned snapshot adapter was calling individual optional getters on a generated cursor that supplies a combined close demand. The adapter now consumes the combined demand for the actual turn body. The cloned Config editor also delegates its close Work quote to the selected mutation clone or controlled resident edit owner.
+
+The v13 mounted archive test passed. It created a part, moved it through the board and world actions, reopened both text and Pack saves, compared each restored projection to the full edited scene, then verified undo and redo against the two exact projections. Both original and restored apps completed their fixture teardown.
+
+The v13 conflict sweep exhausted its cumulative release allowance across independent cases. The final close requested its real 175,776-byte backing release with only 163,347 release bytes left. Each acceptance case now opens and closes an original caller for its complete scenario. The related instances and archive reopens inside a scenario keep the same caller, and that caller settles its decoder after all those instances close. The scoped history test harness retains every original failure. Its independent AJV and SQLite checks passed all four cases and 92 expectations.

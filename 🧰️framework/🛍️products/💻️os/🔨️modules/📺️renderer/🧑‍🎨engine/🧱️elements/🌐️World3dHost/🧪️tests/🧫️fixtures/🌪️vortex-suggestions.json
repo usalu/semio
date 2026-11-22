@@ -1,0 +1,10 @@
+{
+  "why": "Alt-held secondary press, long-press or the context-menu key on a hovered vortex marker asks the host for suggestions: world3dSuggestionsGestureTarget + openVortexSuggestions in World3dHost.",
+  "action": "openVortexSuggestions",
+  "longPress": { "holdMs": 500, "slopPx": 10 },
+  "cases": [
+    { "id": "hovered", "hoveredVortexId": "vortex:7", "x": 120, "y": 64, "windowId": "w1", "expected": { "fullId": "vortex:7", "x": 120, "y": 64, "windowId": "w1" } },
+    { "id": "empty-id-is-no-target", "hoveredVortexId": "", "x": 1, "y": 2, "windowId": "w1", "expected": null },
+    { "id": "no-hover", "hoveredVortexId": null, "x": 1, "y": 2, "windowId": "w1", "expected": null }
+  ]
+}

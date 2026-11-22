@@ -2,8 +2,10 @@ import {mkdirSync,mkdtempSync,readFileSync,readdirSync,rmSync,statSync,writeFile
 import {tmpdir} from "node:os";
 import {dirname,join} from "node:path";
 
-/** 🧰️ A short scratch directory (views refuse long roots), removed by the caller. */
-export const scratchV1=(tag:string):string=>mkdtempSync(join(tmpdir(),tag+"-"));
+/** 🧰️ A short scratch directory (views refuse long roots) below the run's artifact sandbox, which lies outside the checkout so that no checkout `.cargo/config.toml` (compiler ingress) applies to the cargo builds of the tests; removed by the caller. */
+export const scratchV1=(tag:string):string=>mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir(),tag+"-"));
+/** 📏️ A scratch directory with the shortest root the platform offers (`/tmp`, the temporary directory on Windows) for the laws that bound the length of a view root (a state root below the artifact sandbox exceeds it); outside every checkout like the artifact sandbox. */
+export const shortScratchV1=(tag:string):string=>mkdtempSync(join(process.platform==="win32"?tmpdir():"/tmp",tag+"-"));
 export const removeV1=(path:string):void=>{rmSync(path,{recursive:true,force:true});};
 
 /** 🌳️ Writes a tree of `count` files of deterministic bytes below `root` and answers the relative paths. */

@@ -34,9 +34,18 @@ pub struct MountedOwnerJobReceiptV1 {
 impl MountedOwnerPolicyV1 {
     /// 🎛️ The interactive component embedding every hub composition grants per host turn: 64 one-item units batched within the turn, 16 MiB capacity so a whole-document clone fits one apply, 1 MiB release and 32 KiB copy (ticket 26/09/23 BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT, `📓️2026-10-12-publication-perf.md`).
     pub const INTERACTIVE_COMPONENT: Self = {
-        let grant = RetainedCloneGrant { maximum_items: 64, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 16_777_216, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let grant = RetainedCloneGrant { maximum_items: 64, maximum_copy_bytes: Self::covering_copy_bytes(Self::LARGEST_INDIVISIBLE_STEP_COPY_BYTES), maximum_capacity_bytes: 16_777_216, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         Self { preparation: grant, maintenance: grant, close: grant }
     };
+
+    /// 📐️ The largest indivisible per-step copy demand any retained owner posts: a history-replay preparation step (22,608 B birth + 11,368 B parent, measured). A host grant below it leaves undo and time travel unfundable forever.
+    pub const LARGEST_INDIVISIBLE_STEP_COPY_BYTES: usize = 33_976;
+
+    /// 🪜️ Smallest power-of-two copy grant (never below 32 KiB) that covers one indivisible step demand.
+    pub const fn covering_copy_bytes(demand: usize) -> usize {
+        let covering = demand.next_power_of_two();
+        if covering < 32_768 { 32_768 } else { covering }
+    }
 
     /// 📏️ Checks the schema's portable target-width bounds without granting omitted authority.
     pub fn validate(self) -> Result<Self, ValueError> {
@@ -172,6 +181,32 @@ impl<'turn, 'context> MountedOwnerTurnV1<'turn, 'context> {
             return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "original lifecycle receipt differs from its caller authority").with_retained_progress(actual).into());
         }
         Ok(if reported == actual { step } else { with_progress(step, actual) })
+    }
+
+
+    /// 🛞️ Advances funded close actions within this same caller's physical authority and deadline.
+    pub fn advance_close_batch<S: semio_framework_value::RetirementReceipt, E: From<ValueError>>(
+        &mut self,
+        with_progress: impl Fn(S, RetainedCloneProgress) -> S,
+        mut producer: impl FnMut(&mut StepContext<'context>, RetainedCloneGrant) -> Result<S, E>,
+    ) -> Result<S, E> {
+        if self.phase != MountedOwnerPhaseV1::Close {
+            return Err(ValueError::invariant("mounted close batch requires the close phase").into());
+        }
+        let before = self.progress;
+        let mut step = S::retirement_yield();
+        for _ in 0..self.grant().maximum_items {
+            step = self.advance_lifecycle(&with_progress, &mut producer)?;
+            if step.retirement_complete()
+                || step.retirement_progress().unwrap_or_default() == RetainedCloneProgress::default()
+                || self.grant().maximum_items == 0
+                || self.context.deadline_exceeded()
+            {
+                break;
+            }
+        }
+        let progress = receipt_delta(before, self.progress)?;
+        Ok(if step.retirement_progress().unwrap_or_default() == progress { step } else { with_progress(step, progress) })
     }
 
     fn receive_posted(&mut self, before: RetainedCloneProgress, reserved_before: RetainedCloneProgress) -> Result<(RetainedCloneProgress, RetainedCloneProgress), ValueError> {

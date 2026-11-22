@@ -229,13 +229,20 @@ export const PLAN_KEY_WAIT_V1=Object.freeze({maximum:30,milliseconds:1000});
  * @see ../../🧪️tests/🚪️client/🗝️key/🟦️.ts */
 export function planKeyRetryV1(error,waited){return error?.reason==="key"&&error.missing===true&&waited<PLAN_KEY_WAIT_V1.maximum;}
 
+/** 🛟 What a request does about an unreadable key: `wait` while the service may write it back (its next check does, see `keepRootKeyV1`), `restart` once when it did not (a service of an older generation that never heals the key: it is retired and the next start writes a new one), `fail` for every other failure.
+ * @see ../../🧪️tests/🛟️key-keeper/🟦️.ts */
+export function planKeyActionV1(error,waited,restarted){
+ if(planKeyRetryV1(error,waited))return"wait";
+ return error?.reason==="key"&&error.missing===true&&!restarted?"restart":"fail";
+}
+
 /** 🛰 Requests a plan and retries lost connections. Exact progress preserves an attempt up to `reattachMaximum`. After `silenceMilliseconds` without activity for this connection's plan, the request reports its last confirmed stage and retries like a lost connection. When a silent request received job progress, its connection stays open for at most one silence interval while the retry joins the existing job. Only the current connection may answer the request. Zero disables the silence timeout.
  * @see ../../🧪️tests/💓️keepalive/🟦️.ts */
 export async function requestPlanV1(options){
  const{root,implementation,targets,agent,priority=5,revision,parent,dirty,arguments:invocation,tool,graphPolicy,language,signal,onProgress=()=>{},environment=process.env,platform=process.platform,spawnService,attempts=3,deadlineMs,ignorePids,silenceMilliseconds,identify}=options;
  const canonical=canonicalRootV1(root),workspace=workspaceIdV1(canonical),languages=[language,...["en","de"].filter(other=>other!==language)],sliceReport=ownedSliceReportSinkV1(canonical,environment);
  const frame={t:"plan",id:1,workspace,root:canonical,targets:[...new Set(targets)],agent,priority,language,...(revision?{revision}:{}),...(parent?{parent}:{}),...(dirty?{dirty:{...dirty,paths:[...dirty.paths]}}:{}),...(invocation?{arguments:[...invocation]}:{}),...(tool?{tool}:{}),...(graphPolicy?{graphPolicy}:{}),...(deadlineMs?{deadlineMs}:{}),...sliceReport===undefined?{}:{sliceReport:true}};
- let last,reattached=0,keyWaits=0,previous;
+ let last,reattached=0,keyWaits=0,keyRestarted=false,previous;
  const releasePrevious=()=>previous?.release();
  const retainForRetry=(socket,endpoint,milliseconds)=>{
   releasePrevious();
@@ -260,7 +267,14 @@ export async function requestPlanV1(options){
    }catch(error){
     if(!(error instanceof HostUnavailableErrorV1)||error.reason==="protocol"&&attempt===attempts-1)throw error;
     last=error;
-    if(error.reason==="key"){if(!planKeyRetryV1(error,keyWaits))throw error;keyWaits++;attempt--;await new Promise(done=>setTimeout(done,PLAN_KEY_WAIT_V1.milliseconds));continue;}
+    if(error.reason==="key"){
+     const action=planKeyActionV1(error,keyWaits,keyRestarted);
+     if(action==="fail"||action==="restart"&&spawnService===undefined)throw error;
+     attempt--;
+     if(action==="wait"){keyWaits++;await new Promise(done=>setTimeout(done,PLAN_KEY_WAIT_V1.milliseconds));}
+     else{keyRestarted=true;await retireHostServiceV1({implementation,environment,platform,signal}).catch(()=>undefined);}
+     continue;
+    }
     if((error.reason==="lost"||error.reason==="silent")&&error.progressed===true&&reattached<HOST_POLICY_V1.reattachMaximum){reattached++;attempt--;}
    }
   }

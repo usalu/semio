@@ -5,4 +5,4 @@ export interface PresenceCoalescerV1{
  stats():PresenceCoalescerStatsV1;
 }
 /** 🧺️ The verdict of a presence check shared by every look that asks at the same time; `run(names)` answers the set of missing names and throws for a refusal. */
-export function createPresenceCoalescerV1(options:{run(names:readonly string[],signal?:AbortSignal):Promise<ReadonlySet<string>>;maximumNames?:number;pause?():Promise<unknown>}):PresenceCoalescerV1;
+export function createPresenceCoalescerV1(options:{run(names:readonly string[],signal?:AbortSignal):Promise<ReadonlySet<string>>;maximumNames?:number;pause?():Promise<unknown>;session?(work:()=>Promise<unknown>):Promise<unknown>;lingerMilliseconds?:number;maximumSessionMilliseconds?:number;sessionOverheadFactor?:number;sessionCeilingMilliseconds?:number;now?():number;linger?(milliseconds:number):Promise<unknown>}):PresenceCoalescerV1;

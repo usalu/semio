@@ -751,15 +751,15 @@
  
 --- a/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎛️host/🧪️tests/📜️journal-sequences/🦀️.rs
 +++ b/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎛️host/🧪️tests/📜️journal-sequences/🦀️.rs
-@@ -202,7 +202,7 @@
-     let mut state = journey_state();
-     state.terrain.set_terrain_interaction(Some(r#"{"terrainBrush":{"action":"sculptTerrain","arguments":{"operation":"lower-ground","radius":7,"value":-31}}}"#));
-     state.terrain.set_terrain_json(Some(&serde_json::json!({
--        "elevationGrid": { "bounds": [-0.01, -0.01, 0.01, 0.01], "rows": vec![vec![0; 33]; 33] }
-+        "elevationGrid": { "bounds": [-0.01, -0.01, 0.01, 0.01], "rowsMillimetres": vec![vec![0; 5]; 3] }
-     }).to_string()));
-     semio_os_infinite_world_scene::apply_terrain_style_if_changed_state(&mut state.session, &mut state.scene, &mut state.terrain);
-     let [x, y] = [280.0, 180.0];
+@@ -215,7 +215,7 @@
+         }).to_string();
+         state.terrain.set_terrain_interaction(Some(&brush(law["value"].as_i64().unwrap())));
+         let terrain = |height| serde_json::json!({
+-            "elevationGrid": { "bounds": law["bounds"], "rows": vec![vec![height; 33]; 33] }
++            "elevationGrid": { "bounds": law["bounds"], "rowsMillimetres": vec![vec![i32::from(height) * 1000; 33]; 33] }
+         }).to_string();
+         state.terrain.set_terrain_json(Some(&terrain(0)));
+         semio_os_infinite_world_scene::apply_terrain_style_if_changed_state(&mut state.session, &mut state.scene, &mut state.terrain);
 --- a/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧵️interaction/🌪️vortex-relocate-and-terrain/🦀️.rs
 +++ b/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧵️interaction/🌪️vortex-relocate-and-terrain/🦀️.rs
 @@ -539,8 +539,8 @@

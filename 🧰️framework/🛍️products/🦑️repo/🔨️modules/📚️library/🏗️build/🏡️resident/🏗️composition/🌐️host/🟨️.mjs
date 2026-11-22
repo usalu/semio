@@ -74,6 +74,7 @@ export async function runHostForegroundV1({implementation,loadGraph,loadSlice,id
  let responsibilityTimer;
  try{
   try{await service.start();}catch(error){if(error?.code==="running"){record({reason:"adopted",code:0});return 0;}throw error;}
+  appendServiceExitRowV1(runtime.directory,{event:"start",at:Date.now(),pid:process.pid,tag:runtime.tag});
   if(!seen.own&&seen.responsible!==undefined){
    responsibilityTimer=setInterval(()=>{void watch.tick().then(now=>{if(!now.lost||stopping!==undefined)return;log("responsible-gone","was="+now.was+" now="+now.now+" pid="+process.pid+": the app that held the file access of this service ended, so it is judged against its own runtime from now on; a client starts the next one under its own access / die App, deren Dateizugriff dieser Dienst trug, ist beendet, daher wird er ab jetzt als eigene Laufzeit beurteilt; ein Client startet den nächsten mit seinem eigenen Zugriff");stop("responsible-gone",{responsibleWas:now.was,responsibleNow:now.now});}).catch(()=>{});},Math.max(50,policy?.responsibilityCheckMilliseconds??HOST_POLICY_V1.responsibilityCheckMilliseconds));
    responsibilityTimer.unref?.();

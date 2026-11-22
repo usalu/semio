@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["archiveMaximum", "readPage", "cases"],
+  "properties": {
+    "archiveMaximum": {"const": 4194304},
+    "readPage": {"const": 4096},
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "result"],
+        "properties": {
+          "name": {"type": "string", "pattern": "^[a-z-]+$"},
+          "result": {"enum": ["equal", "different", "invalid", "cancelled"]}
+        }
+      },
+      "minItems": 8
+    }
+  }
+}

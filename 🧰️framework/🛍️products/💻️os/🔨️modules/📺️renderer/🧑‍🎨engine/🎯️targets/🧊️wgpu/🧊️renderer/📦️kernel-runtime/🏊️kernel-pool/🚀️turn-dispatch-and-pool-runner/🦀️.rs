@@ -461,7 +461,10 @@ async fn yield_kernel_maintenance_turn() {
 pub async fn run_kernel_pool(queue: Arc<KernelRequestQueue>,original_clock:fn()->Option<u64>) {
     let identity_policy=semio_framework_pack_json::from_json_str(include_str!("../../../../../../../../🔌️plugin/🖥️host/🧵️shard/🪪️identity/⚙️configuration/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).expect("authored native shard identity policy");
     let mut state = KernelPoolState::new(queue.clone(),identity_policy,original_clock).await;
+    let started = std::time::Instant::now();
+    let mut observed_at = None;
     loop {
+        state.serve_runtime_observation(started, &mut observed_at).await;
         if state.command_maintenance_pending() {
             let _ = state.command_maintenance_step();
             yield_kernel_maintenance_turn().await;
@@ -505,8 +508,8 @@ impl KernelPoolState {
 
     async fn serve_request(&mut self, request: KernelRequest) -> Option<KernelOutcome> {
         Some(match request {
-            KernelRequest::CreateApp { owner } => {
-                KernelOutcome::Created(self.create_app(owner).await)
+            KernelRequest::CreateApp { owner, purpose } => {
+                KernelOutcome::Created(self.create_app(owner, purpose).await)
             }
             KernelRequest::DestroyApp { owner } => {
                 if self.destroy_app_step(owner.instance).await {

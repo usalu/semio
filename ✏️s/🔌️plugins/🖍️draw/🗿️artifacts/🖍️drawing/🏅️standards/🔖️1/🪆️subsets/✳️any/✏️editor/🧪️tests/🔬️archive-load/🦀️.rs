@@ -66,7 +66,8 @@ async fn demo_example_load_settles_through_the_host_document_archive_door() {
     let loaded = app.document_pack().await.expect("live document pack");
     let initial = <DrawingSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&loaded.pack).expect("initial pack decodes");
     assert_eq!(initial, snapshot, "an edit-free load reads back its exact initial snapshot");
-    assert_eq!(initial.assets.values().map(|asset| asset.samples.len()).sum::<usize>(), 262_144, "the demo's emblem asset survives the paged initial clone");
+    let authored = semio_s_artifact_draw_drawing_model::io::text::snapshot::parse_dsl(semio_s_artifact_draw_drawing_examples::demo::PRIMARY_TEXT).expect("parse authored Demo");
+    assert_eq!(initial, authored, "the archive preserves the authored emblem and its artboard");
     for _ in 0..100_000 {
         if app.close_terminal_is_empty() {
             break;

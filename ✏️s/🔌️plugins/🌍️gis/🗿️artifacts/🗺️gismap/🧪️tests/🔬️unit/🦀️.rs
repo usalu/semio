@@ -3,12 +3,24 @@ use geo::BoundingRect;
 use semio_plugin::{ArtifactInferenceExecutionRequest, ArtifactInferenceServiceRegistry, WireArtifactInferenceBudget, WireArtifactInferenceCacheMode};
 use semio_framework_test_fixtures::fixture_text;
 
+fn feature_vector(value: &serde_json::Value) -> Vec<MapFeature> {
+    <Vec<MapFeature> as semio_framework_value::FromValue>::from_value(semio_framework_value::DslValue::from(value.clone())).expect("feature vector")
+}
+
+fn in_turn<T>(operation: impl FnOnce(&mut semio_framework_job::StepContext<'_>) -> T) -> T {
+    let stock = semio_framework_value::RetainedCloneGrant { maximum_items: 100_000, maximum_copy_bytes: 1 << 24, maximum_capacity_bytes: 1 << 24, maximum_release_bytes: 1 << 24, maximum_depth: 128 };
+    let mut caller = semio_framework_job::OriginalJobFixtureCaller::admit(semio_framework_job::OperationId(17), semio_framework_job::Generation(9), stock, || Some(12000), 1_000_000, 1_000_000);
+    let (mut operation, mut output) = (Some(operation), None);
+    caller.turn(stock, |cx| { output = Some((operation.take().expect("single turn"))(cx)); Ok(()) }).unwrap();
+    output.expect("turn ran")
+}
+
 fn vector_snapshot(case: &serde_json::Value) -> GisMapSnapshot {
     let snapshot = &case["snapshot"];
     gis_map_snapshot_with_derived_children(GisMapSnapshot {
-        positions: serde_json::from_value(snapshot["positions"].clone()).expect("positions vector"),
-        routes: serde_json::from_value(snapshot["routes"].clone()).expect("routes vector"),
-        regions: serde_json::from_value(snapshot["regions"].clone()).expect("regions vector"),
+        positions: feature_vector(&snapshot["positions"]),
+        routes: feature_vector(&snapshot["routes"]),
+        regions: feature_vector(&snapshot["regions"]),
         ..Default::default()
     })
 }
@@ -18,9 +30,9 @@ fn execute(
     budgets: &WireArtifactInferenceBudget,
     cancellation_id: &str,
     cache_mode: WireArtifactInferenceCacheMode,
-) -> Result<semio_plugin::ArtifactInferenceExecutionStep, semio_plugin::ArtifactInferenceExecutionError> {
+) -> Result<semio_plugin::ArtifactInferenceExecution, semio_plugin::ArtifactInferenceExecutionError> {
     let pack = <GisMapSnapshot as pack::snapshot::ArtifactPack>::encode_pack(snapshot);
-    gis_map_inference_service().infer(&ArtifactInferenceExecutionRequest { operation:17,generation:9,cancelled:false, retained:semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:1048576,maximum_release_bytes:1048576,maximum_depth:128}, policy: b"gis-map-v1", budgets, cancellation_id, previous_state: None, requested_cache_mode: cache_mode, canonical_payload: &pack, dependencies: &[] })
+    in_turn(|cx| gis_map_inference_service().infer(&ArtifactInferenceExecutionRequest { operation:17,generation:9,cancelled:false, retained:semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:1048576,maximum_release_bytes:1048576,maximum_depth:128}, policy: b"gis-map-v1", budgets, cancellation_id, previous_state: None, requested_cache_mode: cache_mode, canonical_payload: &pack, dependencies: &[] }, cx)).map(|step| step.execution.expect("terminal execution"))
 }
 
 #[semio_framework_async_macros::async_test]
@@ -72,7 +84,7 @@ async fn language_neutral_vectors_match_geo_bounding_rect_oracle_and_stable_payl
         assert_eq!(first.quality, "exact");
         assert!(first.complete);
         let inference =
-            <standards::v1::subsets::any::schema::inferences::GisMapInference as semio_framework_value::FromValue>::from_value(semio_os_kernel::pack_rt::decode_wire_value(&first.canonical_payload).expect("canonical inference payload"))
+            <standards::v1::subsets::any::schema::inferences::GisMapInference as semio_framework_value::FromValue>::from_value(semio_os_kernel::pack_rt::decode_wire_value(first.canonical_payload.as_ref().expect("payload")).expect("canonical inference payload"))
                 .expect("typed inference");
         let expected = &case["expected"];
         assert_eq!(inference.position_count as u64, expected["positionCount"].as_u64().expect("position count"));
@@ -100,7 +112,7 @@ async fn language_neutral_vectors_match_geo_bounding_rect_oracle_and_stable_payl
 #[semio_framework_async_macros::async_test]
 async fn malformed_snapshot_is_a_structured_execution_error() {
     let budgets = WireArtifactInferenceBudget { allocation_bytes: 1_000, work_units: 10, recursion_depth: 4 };
-    let error = gis_map_inference_service()
+    let error = in_turn(|cx| gis_map_inference_service()
         .infer(&ArtifactInferenceExecutionRequest { operation:17,generation:9,cancelled:false, retained:semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:1048576,maximum_release_bytes:1048576,maximum_depth:128},
             policy: &[],
             budgets: &budgets,
@@ -109,8 +121,8 @@ async fn malformed_snapshot_is_a_structured_execution_error() {
             requested_cache_mode: WireArtifactInferenceCacheMode::Cold,
             canonical_payload: b"not-a-gismap-pack",
             dependencies: &[],
-        })
-        .err()
+        }, cx)
+        .err())
         .expect("malformed snapshot must fail");
     assert_eq!(error.code, "gis.gismap.inference.snapshot-decode");
 }

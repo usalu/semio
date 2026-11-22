@@ -1,9 +1,9 @@
 import { createRequire } from "node:module";
 import { basename } from "node:path";
 import { readFileSync, writeFileSync } from "node:fs";
-import { pathToFileURL } from "node:url";
 
 const require = createRequire(process.cwd() + "/package.json");
+const workspace = new URL("../../../../../../../", import.meta.url);
 const { chromium } = require("playwright");
 const [url = "http://127.0.0.1:6033/#din4108", seconds = "1080"] = process.argv.slice(2);
 const transferOnly = process.env.TRANSFER_ONLY === "1";
@@ -47,7 +47,7 @@ if (process.env.TRACE_MODEL_DRAW) await page.addInitScript(() => {
 });
 const preview = process.env.PLAY_TEST_GUEST;
 const previewJs = process.env.PLAY_TEST_GUEST_JS;
-const previewImports = previewJs ? await import(pathToFileURL(`${process.cwd()}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🕸️imports/🟦️.ts`)) : null;
+const previewImports = previewJs ? await import(new URL("🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🕸️imports/🟦️.ts", workspace)) : null;
 let previewFetched = false;
 let previewJsFetched = false;
 if (preview) {
@@ -216,7 +216,7 @@ if (process.env.TRACE_JOB_BUDGET) await page.context().route((url) => decodeURIC
   const source = await response.text();
   let current = source;
   if (process.env.TRACE_JOB_BUDGET === "current") {
-    const fresh = await import(pathToFileURL(`${process.cwd()}/🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🟦️.ts`));
+    const fresh = await import(new URL("🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🟦️.ts", workspace));
     const start = current.indexOf("class OriginalJobFunds {");
     const end = current.indexOf("class OriginalSelfIssuedTurns {", start);
     if (start < 0 || end <= start) throw Error("Missing original job budgets in browser bridge");

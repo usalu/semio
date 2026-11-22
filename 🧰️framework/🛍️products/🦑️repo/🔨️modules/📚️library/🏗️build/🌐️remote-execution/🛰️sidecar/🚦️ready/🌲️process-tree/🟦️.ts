@@ -89,15 +89,23 @@ export function readyStallRestartV1(input:Readonly<{consecutive:number;policy?:t
  return{action:"restart",waitMilliseconds:Math.min(policy.stallRestartBackoffMaximumMilliseconds,policy.stallRestartBackoffMilliseconds*2**(count-1))};
 }
 
-/** ⏳️ What to do with a stage past its soft cap: it runs while inside the cap; between the soft and the hard cap (the configured stage multiplier times the soft cap) it goes on, `extended`, as long as a counter of its log changed within the stall limit; otherwise it is stopped, `stalled` when the counters stood still, `timeout` at the hard cap. A pure function.
+/** ⏳️ What to do with a stage past its soft cap: it runs while inside the cap; between the soft and the hard cap (the configured stage multiplier times the soft cap) it goes on, `extended`, as long as a counter of its log changed within the stall limit, and past the hard cap it goes on the same way up to `progressCeilingMultiplier` times the soft cap (a stage that makes progress is never killed by a clock, only by a stall or the ceiling); otherwise it is stopped, `stalled` when the counters stood still before the hard cap, `timeout` when they stood still past it or at the ceiling. A pure function.
  * @see ./🧪️tests/🐍️.py */
 export function readyDeadlineV1(input:Readonly<{stage?:string;elapsedMs:number;softMs:number;sinceProgressMs:number;policy?:typeof P}>):"run"|"extended"|"timeout"|"stalled"{
  const policy=input.policy??P;
  if(input.elapsedMs<=input.softMs)return"run";
  const overrides:Readonly<Record<string,number>>=policy.stageHardCapMultipliers;
  const multiplier=input.stage!==undefined&&Object.hasOwn(overrides,input.stage)?overrides[input.stage]!:policy.hardCapMultiplier;
- if(input.elapsedMs>input.softMs*multiplier)return"timeout";
+ if(input.elapsedMs>input.softMs*Math.max(multiplier,policy.progressCeilingMultiplier))return"timeout";
+ if(input.elapsedMs>input.softMs*multiplier)return input.sinceProgressMs<=policy.stallMilliseconds?"extended":"timeout";
  return input.sinceProgressMs<=policy.stallMilliseconds?"extended":"stalled";
+}
+
+/** 🗓️ The wall-clock moment at which a stage is ended whatever else is alive: its start plus its soft cap times the larger of the hard-cap multiplier of the stage and the progress ceiling plus `absoluteDeadlineExtraIntervals` (the room the tools grace may add). The detached wrapper enforces it without the sidecar, so a dead sidecar never leaves a stage without a deadline. A pure function.
+ * @see ./🧪️tests/🗓️absolute-deadline */
+export function readyAbsoluteDeadlineV1(input:Readonly<{stage:string;startedMs:number;softMs:number;policy?:typeof P}>):number{
+ const policy=input.policy??P,overrides:Readonly<Record<string,number>>=policy.stageHardCapMultipliers,multiplier=Object.hasOwn(overrides,input.stage)?overrides[input.stage]!:policy.hardCapMultiplier;
+ return input.startedMs+input.softMs*(Math.max(multiplier,policy.progressCeilingMultiplier)+policy.absoluteDeadlineExtraIntervals);
 }
 
 /** 🔢️ The progress of a stage as the last line of its log that carries a counter (the matching text, so the same counter is the same key and a counter that moved is another): `null` when no line does. A pure function.
@@ -138,18 +146,37 @@ export function readyStallTrackerV1(policy:typeof P=P,prior:readonly string[]=[]
 
 /** 🛑️ Whether a stage whose output showed nothing new for `sinceProgressMs` is stopped to be tried again: at `stallStopMilliseconds` and later. A pure function.
  * @see ./🧪️tests/🐍️.py */
-export function readyStalledV1(sinceProgressMs:number,policy:typeof P=P):boolean{return sinceProgressMs>=policy.stallStopMilliseconds;}
+export function readyStalledV1(sinceProgressMs:number,policy:typeof P=P,exempt:boolean=false):boolean{return!exempt&&sinceProgressMs>=policy.stallStopMilliseconds;}
+
+/** 🌱️ The graph counter tracker of one stage run: `observe` answers whether the newest counter of `graphCounterPatterns` (`taken 461 of 600`) is above the highest one seen, so a read whose text repeats after normalisation but whose server counter advanced is progress; a counter that repeats or falls back is none. A pure function of the lines seen so far.
+ * @see ./🧪️tests/🌱️graph-progress */
+export function readyGraphCounterTrackerV1(policy:typeof P=P,prior:number=-1):Readonly<{observe(lines:readonly string[]):boolean;snapshot():number}>{
+ const expressions=policy.graphCounterPatterns.map(pattern=>new RegExp(pattern,"u"));let highest=prior;
+ return Object.freeze({snapshot:()=>highest,observe(lines){
+  let advanced=false;
+  for(const line of lines)for(const expression of expressions){const done=expression.exec(line)?.groups?.done;if(done!==undefined&&Number(done)>highest){highest=Number(done);advanced=true;}}
+  return advanced;
+ }});
+}
+
+/** 🌱️ Whether the stage is in a read whose graph server is alive: the phase is `reading` and the read record names a runner that is not ended and still alive; such a read is bounded by the hard cap of its stage, not by the stall stop. A pure function.
+ * @see ./🧪️tests/🌱️graph-progress */
+export function readyReadingLiveV1(input:Readonly<{phase:ReadyPhaseV1;record:ReadyReadRecordV1|undefined;alive:(pid:number)=>boolean}>):boolean{return input.phase==="reading"&&input.record!==undefined&&input.record.endedMs===null&&input.alive(input.record.runner);}
+
+/** 🔁️ The number of stops in a row that count against the restart budget: a stall after which the attempt had made progress starts the count again at one, only silent attempts add up. A pure function.
+ * @see ./🧪️tests/🌱️graph-progress */
+export function readyStallCountV1(prior:number,progressed:boolean):number{return progressed?1:prior+1;}
 
 /** 🪜️ A step of the read as its progress line states it: the step in both languages (without the note that it passed its bound), the seconds it has run and the bound it declared. */
 export type ReadyStepV1=Readonly<{text:string;seconds:number;bound:number}>;
 
-/** 🪜️ The step the newest step line of `lines` names (`stepLinePatterns`: the progress line of the slice worker whose phase is `<English> / <German>` and whose counter is the seconds the step has run of the seconds it is bounded by), `undefined` when no line is one. The note `beyond the expected N s` is cut from the text, so the same step is the same text before and after its bound. A pure function.
+/** 🪜️ The step the newest step line of `lines` names (`stepLinePatterns`: the progress line of the slice worker whose phase is `<English> / <German>` and whose counter is the seconds the step has run of the seconds it is bounded by), `undefined` when no line is one. The seconds and the bound are in the parenthesis, not in the step text, so the same step is the same text before and after its bound. A pure function.
  * @see ./🧪️tests/🪜️step-overdue */
 export function readyStepOfV1(lines:readonly string[],policy:typeof P=P):ReadyStepV1|undefined{
- const expressions=policy.stepLinePatterns.map(pattern=>new RegExp(pattern,"u")),over=new RegExp(policy.stepOverBoundPattern,"gu");
+ const expressions=policy.stepLinePatterns.map(pattern=>new RegExp(pattern,"u"));
  for(let index=lines.length-1;index>=0;index--)for(const expression of expressions){
   const found=expression.exec(lines[index]!.replace(/\r/gu,"").trim());
-  if(found?.groups!==undefined)return{text:found.groups.step!.replace(over,""),seconds:Number(found.groups.done),bound:Number(found.groups.bound)};
+  if(found?.groups!==undefined)return{text:found.groups.step!,seconds:Number(found.groups.done),bound:Number(found.groups.bound)};
  }
  return undefined;
 }
@@ -162,7 +189,7 @@ export function readyStepOverdueSecondsV1(boundSeconds:number,policy:typeof P=P)
 
 export type ReadyStepWatchCheckpointV1=Readonly<{movedAt:number|null;identity:string|null;seen:readonly string[]}>;
 
-/** 🪜️ The step watch of one stage run: `observe` takes the last lines of the log and the clock and answers the newest step, whether it is overdue and for how long nothing else moved. Something else moved when a line that is no step line is new after normalisation (a counter such as `taken 8 of 590`, an owner finished, a message) or when the step is another step than before; the seconds counter of the step itself, the processor time of the tree and a repeated heartbeat are not progress, because a wait that re-reads the same thing for hours shows all of them. Overdue is the step past `readyStepOverdueSecondsV1` and nothing else moved for `stallStopMilliseconds`. A pure function of the lines and clocks seen so far.
+/** 🪜️ The step watch of one stage run: `observe` takes the last lines of the log and the clock and answers the newest step, whether it is overdue and for how long nothing else moved. Something else moved when a line that is no step line is new after normalisation (a counter such as `taken 8 of 590`, an owner finished, a message) or when the step is another step than before; the seconds counter of the step itself beyond its bound, the processor time of the tree and a repeated heartbeat are not progress (a step within its bound is alive by definition), because a wait that re-reads the same thing for hours shows all of them. Overdue is the step past `readyStepOverdueSecondsV1` and nothing else moved for `stallStopMilliseconds`. A pure function of the lines and clocks seen so far.
  * @see ./🧪️tests/🪜️step-overdue */
 export function readyStepWatchV1(policy:typeof P=P,prior?:ReadyStepWatchCheckpointV1):Readonly<{observe(lines:readonly string[],nowMs:number):Readonly<{step:ReadyStepV1|undefined;overdue:boolean;quietMs:number}>;snapshot():ReadyStepWatchCheckpointV1}>{
  const seen=new Set(prior?.seen),expressions=policy.stepLinePatterns.map(pattern=>new RegExp(pattern,"u"));let movedAt=prior?.movedAt??null,identity=prior?.identity??null;
@@ -179,6 +206,7 @@ export function readyStepWatchV1(policy:typeof P=P,prior?:ReadyStepWatchCheckpoi
   }
   const step=readyStepOfV1(lines,policy),key=step===undefined?null:watchdogDigestV1(readyNormaliseLineV1(step.text,policy.normalisePatterns));
   if(key!==null&&key!==identity){if(identity!==null)movedAt=nowMs;identity=key;}
+  if(step!==undefined&&step.seconds<=step.bound)movedAt=nowMs;
   const quietMs=nowMs-movedAt;
   return{step,overdue:step!==undefined&&step.seconds>=readyStepOverdueSecondsV1(step.bound,policy)&&quietMs>=policy.stallStopMilliseconds,quietMs};
  }});

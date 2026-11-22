@@ -33,3 +33,12 @@ fn foreign_actual_render_attachment_is_refused_before_a_pass_is_born(){
     assert!(matches!(encoder.try_begin_render_pass(&RenderPassDescriptor{label:None,color_attachments:&[Some(RenderPassColorAttachment{view:&view,depth_slice:None,resolve_target:None,ops:Operations{load:LoadOp::Clear(Color::TRANSPARENT),store:StoreOp::Store}})],depth_stencil_attachment:None,timestamp_writes:None,occlusion_query_set:None,multiview_mask:None}),Err(ResourceFault::ForeignSession)));
     assert!(Arc::ptr_eq(&texture.session.0,&view.session.0));
 }
+#[test]
+fn device_loss_is_drained_once_per_loss(){
+    let _=take_device_loss();
+    note_device_loss(DeviceLoss::Device);
+    assert_eq!(take_device_loss(),Some(DeviceLoss::Device));
+    assert_eq!(take_device_loss(),None);
+    note_device_loss(DeviceLoss::Surface);
+    assert_eq!(take_device_loss(),Some(DeviceLoss::Surface));
+}

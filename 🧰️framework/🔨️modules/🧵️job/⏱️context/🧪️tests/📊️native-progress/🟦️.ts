@@ -4,6 +4,28 @@ import groupBy from "lodash/groupBy";
 import {Database} from "bun:sqlite";
 import corpus from "./🧫️fixtures/🔣️.json";
 import schema from "./🧫️fixtures/🧬️.json";
+import chargeCases from "./🧫️fixtures/retained-charge.json";
+import chargeSchema from "./🧫️fixtures/retained-charge.schema.json";
+test("one retained item and one fuel are admitted together", () => {
+ expect(new Ajv().compile(chargeSchema)(chargeCases)).toBe(true);
+ using db = new Database(":memory:");
+ const rows = db.query(`
+   with cases as (
+     select value, json_extract(value, '$.fuel') > 0 as fuel,
+       json_extract(value, '$.retirement') and json_extract(value, '$.loan') as bypass
+     from json_each(?)
+   )
+   select fuel and not bypass as sampled,
+     fuel and (bypass or coalesce(json_extract(value, '$.clock') < 10, 0))
+       and json_extract(value, '$.grant[0]') > 0
+       and json_extract(value, '$.grant[4]') > 0
+       and json_extract(value, '$.grant[1]') >= json_extract(value, '$.quote[0]')
+       and json_extract(value, '$.grant[2]') >= json_extract(value, '$.quote[1]')
+       and json_extract(value, '$.grant[3]') >= json_extract(value, '$.quote[2]') as accepted
+     from cases
+ `).all(JSON.stringify(chargeCases));
+ expect(rows).toEqual(chargeCases.map(({sampled, accepted}) => ({sampled:+sampled, accepted:+accepted})));
+});
 test("scoped progress observation leaves original cancellation verdict and authority intact",()=>{
  expect(new Ajv({strict:false}).compile(schema)(corpus)).toBe(true);const groups=groupBy(corpus.events,"scope");expect(groups.outer.map(row=>row.completed)).toEqual(corpus.expected.outer);expect(groups.inner.map(row=>row.completed)).toEqual(corpus.expected.inner);
  const db=new Database(":memory:");try{const rows=db.query("select case json_extract(value,'$.cancelled') when 1 then 0 else 1 end as admitted from json_each(?)").all(JSON.stringify(corpus.events))as{admitted:number}[];expect(rows.map(row=>!!row.admitted)).toEqual(corpus.expected.verdicts);}finally{db.close();}

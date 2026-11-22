@@ -7,16 +7,16 @@ import {readChangeStateV1} from "../../../../../../../../../🔨️modules/📁�
 import {createChangeJournalClientV1} from "../../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📜️changes/🧭️client/🟦️.ts";
 import {liveChildPidsV1} from "../../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🐕️watchdog/🟦️.ts";
 import {observeTreeMegabytesV1} from "../../../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📡️sampling/🟦️.ts";
-import {residentWatcherV1,sleep,waitFor} from "../../../🧪️tests/🟦️.ts";
+import {nativeWatcherUsableV1,residentWatcherV1,sleep,waitFor} from "../../../🧪️tests/🟦️.ts";
 import {changeJournalDirectoryV1,changeJournalHostDirectoryV1,startChangeJournalServiceV1} from "../../🟦️.ts";
 
 const sandbox=realpathSync(mkdtempSync(join(tmpdir(),"journal-host-")));
-const binary=await residentWatcherV1();
+const binary=await residentWatcherV1();const native=await nativeWatcherUsableV1(binary);
 const environment={...process.env,XDG_RUNTIME_DIR:sandbox,SEMIO_REPO_CHANGES:"on"} as Record<string,string>;
 const roots:string[]=[];
 afterAll(async()=>{for(const root of roots){try{process.kill(readChangeStateV1(changeJournalDirectoryV1(root,environment))!.pid,"SIGTERM");}catch{}}await sleep(500);rmSync(sandbox,{recursive:true,force:true});});
 
-test("three workspaces, one host process, one watcher process; changes stay with their workspace; a killed host is replaced",async()=>{
+test.skipIf(!native)("three workspaces, one host process, one watcher process; changes stay with their workspace; a killed host is replaced",async()=>{
  const workspaces=["a","b","c"].map(name=>{const root=join(sandbox,name);mkdirSync(root,{recursive:true});roots.push(root);return{root,directory:changeJournalDirectoryV1(root,environment)};});
  const start=(workspace:{root:string;directory:string})=>startChangeJournalServiceV1({...workspace,environment,arguments:["--binary",binary]});
  await Promise.all(workspaces.map(start));

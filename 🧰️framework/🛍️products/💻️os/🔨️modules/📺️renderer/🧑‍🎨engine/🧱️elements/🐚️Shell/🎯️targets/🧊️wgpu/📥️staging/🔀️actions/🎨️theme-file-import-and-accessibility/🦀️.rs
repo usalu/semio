@@ -42,3 +42,43 @@ impl<'ctx> ActionsCtx<'ctx> {
 
 //#endregion ⚖️MergePolicyAndThemeCommits
 
+//#region 🖼️IconImport
+/// 🖼️ The change action a picked image answers on: the picked file as React's `IconSelector.onPickFiles` stores it (an SVG as its
+/// text, any other image as its data URL), merged over the authored args of the selector's own change action.
+fn icon_import_answer(import: &ActionDescriptor, opened: Vec<OpenedFile>) -> Option<ActionDescriptor> {
+    let file = opened.into_iter().next()?;
+    let value = icon_import_value(&file.name, &file.contents)?;
+    semio_ui_declaration::ui::UiIconSelectNode::imported_value_action(import, &value)
+}
+
+impl<'ctx> ActionsCtx<'ctx> {
+    /// 🖼️ The icon selector's Import button: opens the host's image picker (native dialog or the page's file input) and answers
+    /// the selector's change action with the picked file. In a browser the picker is parked for the gesture lane
+    /// (`drain_gesture_bound_work`), natively it runs as an I/O-lane future that settles as an action.
+    pub async fn framework_import_icon_file(&mut self, action: &ActionDescriptor) -> Result<(), String> {
+        #[cfg(target_arch = "wasm32")]
+        {
+            self.prefs.pending_icon_import = Some(action.clone());
+        }
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            let import = action.clone();
+            self.settle.submit_shell_io_future(async move {
+                ShellIoCompletion::Actions(icon_import_answer(&import, request_file_open(semio_ui_declaration::ui::UiIconSelectNode::IMPORT_ACCEPT, Some("dataUrl"), false, None).await).into_iter().collect())
+            });
+        }
+        Ok(())
+    }
+
+    /// 🖼️ The parked icon-import picker, opened inside the gesture that asked for it.
+    #[cfg(target_arch = "wasm32")]
+    pub async fn run_icon_import_request(&mut self, import: ActionDescriptor) {
+        let opened = request_file_open(semio_ui_declaration::ui::UiIconSelectNode::IMPORT_ACCEPT, Some("dataUrl"), false, None).await;
+        let Some(answer) = icon_import_answer(&import, opened) else { return };
+        if let Err(error) = self.dispatch_action(answer).await {
+            debug_log(&format!("[TRACE] wgpu-shell icon import failed: {error}"));
+        }
+    }
+}
+//#endregion 🖼️IconImport
+

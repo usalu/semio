@@ -160,6 +160,11 @@ impl Brep {
         self.native.box_finish_depth(shape, member)
     }
 
+    pub const DEFEATURE_FACE_COUNT: usize = BrepRegistry::DEFEATURE_FACE_COUNT;
+    /// 🧹️ Rebuilds the stock for a verified complete rounded-box fillet.
+    pub fn plan_defeature(&mut self, shape: &str, faces: &[&str]) -> Result<SolidPublication, ValueError> { let stock = self.native.defeature_stock(shape, faces)?; self.native.plan_solid_primitive(stock) }
+    pub fn defeature_depth(&self, shape: &str, faces: &[&str]) -> Result<usize, ValueError> { self.native.defeature_depth(shape, faces) }
+
     /// 📌️ Classifies one point against a live certified solid.
     pub fn original_solid_classification(&self, handle: &str, point: EVec3) -> Result<PointClassification, ValueError> {
         self.native.original_solid_classification(handle, point)
@@ -187,13 +192,13 @@ impl Brep {
     }
 
     /// 🎟️ Quotes the original face and path arenas for a straight sweep.
-    pub fn straight_sweep_depth(&self, profile: &str, path: &str) -> Result<usize, ValueError> {
-        self.native.straight_sweep_depth(profile, path)
+    pub fn straight_sweep_depth(&self, profile: &str, path: &str, guide: Option<&str>) -> Result<usize, ValueError> {
+        self.native.straight_sweep_depth(profile, path, guide)
     }
 
     /// 🛤️ Stages a certified cylinder or prism over an original directed line.
-    pub fn plan_straight_sweep(&mut self, profile: &str, path: &str) -> Result<PlanarExtrusion, ValueError> {
-        self.native.plan_straight_sweep(profile, path)
+    pub fn plan_straight_sweep(&mut self, profile: &str, path: &str, guide: Option<&str>) -> Result<PlanarExtrusion, ValueError> {
+        self.native.plan_straight_sweep(profile, path, guide)
     }
 
     /// 📦️ Stages a verified convex point boundary for original solid publication.

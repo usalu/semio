@@ -61,5 +61,12 @@ export function objectRootArgumentsV1(args:readonly string[],outDir:string,platf
  return argumentValues(args,"--crate-type").some(type=>["bin","proc-macro","dylib","cdylib"].includes(type))?["-Clink-arg=-Wl,-oso_prefix,"+outDir.replace(/\/+$/u,"")+"/"]:[];
 }
 
+/** 🦀️ The remap that keeps the standard library's source out of a unit: with the `rust-src` component installed rustc names the code of `core` that it inlines by its real path below the sysroot (`<sysroot>/lib/rustlib/src/rust/library/...`) in the debug information of the unit, without it by the virtual `/rustc/<commit>/library/...`, so the same unit gave other bytes (and a path of the machine in them) on the machines that have the component, and the leak check cannot see it where the sysroot is the default rustup home. Cargo's `trim-paths` gives this remap only for some profiles; this adds it when the command line has none for that directory. It is placed by the caller before Cargo's remaps (the last matching one wins) and names a path that does not exist where the component is missing, where it changes nothing. `[]` when the sysroot or the commit is unknown. */
+export function rustSourceRemapArgumentsV1(args:readonly string[],sysroot:string|undefined,commit:string|undefined):readonly string[]{
+ if(sysroot===undefined||sysroot===""||commit===undefined)return[];
+ const trimmed=sysroot.replace(/[\\/]+$/u,""),from=trimmed+(trimmed.includes("\\")?"\\":"/")+["lib","rustlib","src","rust"].join(trimmed.includes("\\")?"\\":"/");
+ return remapsOfV1(args).some(row=>row.from.replace(/[\\/]+$/u,"")===from)?[]:[`--remap-path-prefix=${from}=/rustc/${commit}`];
+}
+
 /** 🧷️ Everything the wrapper adds to a local link so that its output holds no path of this machine (`objectRootArgumentsV1`, `installNameArgumentsV1`). */
 export const linkRootArgumentsV1=(args:readonly string[],outDir:string,platform:NodeJS.Platform=process.platform):readonly string[]=>[...objectRootArgumentsV1(args,outDir,platform),...installNameArgumentsV1(args,platform)];

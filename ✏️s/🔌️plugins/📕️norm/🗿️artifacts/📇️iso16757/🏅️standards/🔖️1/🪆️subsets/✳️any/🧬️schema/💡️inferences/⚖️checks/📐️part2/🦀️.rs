@@ -3,6 +3,7 @@
 use semio_s_artifact_norm_iso16757_checks_common::{Section, ALL_FACETS, assess, copy, fail, na, pass, q_dim, q_len, q_vol, subject, controlled_ordinal};
 use semio_s_plugin_norm_compliance::{CheckReport, CheckStatus, Remedy, RemedyBound};
 use semio_s_artifact_norm_iso16757_model::part_2::{GeometryCatalogue, GeometryNode, GeometryObject, SpaceKind};
+use semio_s_artifact_norm_iso16757_model::part_2::space_envelopes::{contains_box, envelope_volume};
 use semio_s_artifact_norm_iso16757_checks_common::part_libraries::part_2 as helpers;
 use semio_s_artifact_norm_iso16757_model::Iso16757Snapshot;
 use std::collections::HashSet;
@@ -43,6 +44,7 @@ fn check_geometry_objects(doc: &Iso16757Snapshot, report: &mut CheckReport) {
 
     for (id, obj) in geometry.objects.iter() {
         check_geometry_graph_validity(geometry, id, obj, report, &mut graph_fail);
+        check_overall_space(geometry, id, obj, report);
         check_geometry_shape_and_volume(geometry, id, obj, report, &mut graph_fail, &mut volume_fail, &mut space_fail, &mut objects_ok);
         check_geometry_ports_and_bindings(doc, id, obj, report, &mut port_fail, &mut binding_fail);
     }
@@ -677,10 +679,7 @@ fn check_object_id_and_spaces(report: &mut CheckReport, id: &String, obj: &semio
                 }],
             ));
         }
-        let vol = (space.bounds.max[0] - space.bounds.min[0])
-            * (space.bounds.max[1] - space.bounds.min[1])
-            * (space.bounds.max[2] - space.bounds.min[2]);
-        if vol <= 0.0 {
+        let Some(vol) = envelope_volume(space.bounds.min, space.bounds.max) else {
             report.push(fail(
                 format!("iso16757.2.5.3.5.spaceVolume.{id}.{}", space.id),
                 "2",
@@ -688,34 +687,79 @@ fn check_object_id_and_spaces(report: &mut CheckReport, id: &String, obj: &semio
                 subject(id, format!("geometry.objects.{id}.spaces[id={}].bounds.max", space.id), id, id),
                 copy("Space envelope volume", "Raumhüllvolumen"),
                 copy(
-                    format!("Space '{}' on '{id}' has non-positive envelope volume {vol:.6} m³.", space.id),
-                    format!("Raum '{}' an '{id}' hat nicht-positives Hüllvolumen {vol:.6} m³.", space.id),
+                    format!("Space '{}' on '{id}' needs finite bounds and positive extent along all three axes.", space.id),
+                    format!("Raum '{}' an '{id}' benötigt endliche Grenzen und positive Ausdehnungen in allen drei Achsen.", space.id),
                 ),
-                vec![Remedy::at_least(
-                    subject(id, format!("geometry.objects.{id}.spaces[id={}].bounds.max[0]", space.id), id, id),
-                    q_len(space.bounds.max[0]),
-                    q_len(space.bounds.min[0] + 0.01),
-                    copy("Enlarge space max bounds so envelope volume > 0.", "Raum-max-Grenzen vergrößern, sodass Hüllvolumen > 0."),
-                )],
+                vec![Remedy {
+                    target: subject(id, format!("geometry.objects.{id}.spaces[id={}].bounds", space.id), id, id),
+                    current: q_dim(0.0),
+                    required: q_dim(1.0),
+                    bound: RemedyBound::Exactly,
+                    options: Vec::new(),
+                    action: copy("Set finite minimum and maximum coordinates with positive extent along each axis.", "Endliche Minimal- und Maximalkoordinaten mit positiver Ausdehnung in jeder Achse festlegen."),
+                    applicable: false,
+                }],
             ));
-        } else {
-            report.push(assess(
-                format!("iso16757.2.5.3.5.spaceVolume.{id}.{}", space.id),
-                "2",
-                "5.3.5",
-                subject(id, format!("geometry.objects.{id}.spaces[id={}].bounds.max", space.id), id, id),
-                copy("Space envelope volume", "Raumhüllvolumen"),
-                copy(
-                    format!("Space '{}' on '{id}' envelope volume is {vol:.6} m³.", space.id),
-                    format!("Raum '{}' an '{id}' Hüllvolumen ist {vol:.6} m³.", space.id),
-                ),
-                CheckStatus::Pass,
-                q_vol(vol),
-                q_vol(vol),
-                Vec::new(),
-            ));
-        }
+            continue;
+        };
+
+        report.push(assess(
+            format!("iso16757.2.5.3.5.spaceVolume.{id}.{}", space.id),
+            "2",
+            "5.3.5",
+            subject(id, format!("geometry.objects.{id}.spaces[id={}].bounds.max", space.id), id, id),
+            copy("Space envelope volume", "Raumhüllvolumen"),
+            copy(
+                format!("Space '{}' on '{id}' envelope volume is {vol:.6} m³.", space.id),
+                format!("Raum '{}' an '{id}' Hüllvolumen ist {vol:.6} m³.", space.id),
+            ),
+            CheckStatus::Pass,
+            q_vol(vol),
+            q_vol(vol),
+            Vec::new(),
+        ));
     }
+}
+
+/// 📦️ Verifies the declared overall space against the product shape and the other declared envelopes.
+fn check_overall_space(geometry: &GeometryCatalogue, id: &str, object: &GeometryObject, report: &mut CheckReport) {
+    let mut overall = object.spaces.iter().filter(|space| space.kind == SpaceKind::Overall);
+    let Some(space) = overall.next() else { return };
+    let key = format!("iso16757.2.5.3.1.overall.{id}");
+    let target = subject(id, format!("geometry.objects.{id}.spaces"), id, id);
+    let title = copy("Overall space covers the product and its clearance envelopes", "Gesamtraum umfasst das Produkt und seine Freiraumhüllen");
+    let outer = space.bounds;
+    let corrective_action = vec![Remedy {
+        target: target.clone(),
+        current: q_dim(0.0),
+        required: q_dim(1.0),
+        bound: RemedyBound::Exactly,
+        options: Vec::new(),
+        action: copy("Revise the single overall space so it covers the product and the declared envelopes.", "Den einzelnen Gesamtraum so anpassen, dass das Produkt und die erklärten Hüllen enthalten sind."),
+        applicable: false,
+    }];
+    let result = if overall.next().is_some() {
+        fail(key, "2", "5.3.1", target, title, copy("Model the overall space with one primitive.", "Den Gesamtraum mit einem Primitiv modellieren."), corrective_action)
+    } else if envelope_volume(outer.min, outer.max).is_none() {
+        fail(key, "2", "5.3.1", target, title, copy("The overall space has invalid bounds.", "Der Gesamtraum hat ungültige Grenzen."), corrective_action)
+    } else if let Some(outside) = object.spaces.iter().filter(|other| other.kind != SpaceKind::Overall)
+        .find(|other| !contains_box(outer.min, outer.max, other.bounds.min, other.bounds.max))
+    {
+        fail(key, "2", "5.3.1", target, title, copy(
+            format!("The envelope '{}' is invalid or extends outside the overall space.", outside.id),
+            format!("Die Hülle '{}' ist ungültig oder ragt über den Gesamtraum hinaus.", outside.id),
+        ), corrective_action)
+    } else {
+        let shape = object.shape.as_ref();
+        match shape.and_then(|node| helpers::evaluate_bounding_box(node, geometry).ok()) {
+            Some(bounds) if contains_box(outer.min, outer.max, bounds.min, bounds.max) =>
+                pass(key, "2", "5.3.1", target, title, copy("The modeled product and all declared envelopes fit.", "Das modellierte Produkt und alle erklärten Hüllen liegen innerhalb des Gesamtraums.")),
+            Some(_) if matches!(shape, Some(GeometryNode::Primitive { .. })) =>
+                fail(key, "2", "5.3.1", target, title, copy("The product primitive extends outside the overall space.", "Das Produktprimitiv ragt über den Gesamtraum hinaus."), corrective_action),
+            _ => na(key, "2", "5.3.1", target, title, copy("The declared child envelopes fit. The available shape bounds do not establish product containment.", "Die erklärten Teilhüllen passen. Die verfügbaren Formgrenzen belegen den Produkteinschluss nicht.")),
+        }
+    };
+    report.push(result);
 }
 
 /// 🧲️ Checks the media, types and primitive parameters of the ports of one geometry object.

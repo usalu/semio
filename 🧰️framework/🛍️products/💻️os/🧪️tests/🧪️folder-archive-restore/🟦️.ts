@@ -103,7 +103,7 @@ export async function registerFolderArchiveRestoreTests(
         const before = new FolderProgram(documentId, "actor-1");
         worker.handleTsRequest({ kind: "send", documentId, clientInstanceId: first, message: { kind: "documentBackbone", message: before.drag("A", [206, 81]) } });
         await settle(() => (worker.artifactState(documentId)?.pendingMutations.length ?? 0) === 1);
-        worker.handleTsRequest({ kind: "send", documentId, clientInstanceId: first, message: { kind: "localDocumentArchive", archive: Array.from(encodeDocumentArchiveBytes(before.archive())) } });
+        worker.handleTsRequest({ kind: "send", documentId, clientInstanceId: first, message: { kind: "localDocumentArchive", archive: encodeDocumentArchiveBytes(before.archive()) } });
         await settle(() => folder.size === 1 && worker.artifactState(documentId)?.pendingMutations.length === 0);
         await worker.artifactState(documentId)!.revalidateFolder();
         expect(reads.count).toBe(3);
@@ -116,7 +116,7 @@ export async function registerFolderArchiveRestoreTests(
         expect(after.positions.A).toEqual([86, 11]);
         worker.handleTsRequest(config(second));
         await settle(() => events(posted, "documentArchiveReplaced").length === 1);
-        const replaced = events(posted, "documentArchiveReplaced")[0] as { readonly archive: readonly number[] };
+        const replaced = events(posted, "documentArchiveReplaced")[0] as { readonly archive: Uint8Array };
         const painted: { positions: Record<string, Point> | null; rows: readonly string[] | null } = { positions: null, rows: null };
         const restored = await restoreDocumentArchiveV1(decodeDocumentArchiveBytes(Uint8Array.from(replaced.archive)), () => true, {
           load: async (archive) => { after.load(archive); return true; },
@@ -155,7 +155,7 @@ export async function registerFolderArchiveRestoreTests(
         commitLocalFoldersConfigMutationV1(device, attachLocalFolder({ ...identity, folder: { kind: "path", path: binding.path } }));
         const before = new FolderProgram(documentId, "actor-1");
         worker.handleTsRequest({ kind: "send", documentId, clientInstanceId: first, message: { kind: "documentBackbone", message: before.drag("A", [206, 81]) } });
-        worker.handleTsRequest({ kind: "send", documentId, clientInstanceId: first, message: { kind: "localDocumentArchive", archive: Array.from(encodeDocumentArchiveBytes(before.archive())) } });
+        worker.handleTsRequest({ kind: "send", documentId, clientInstanceId: first, message: { kind: "localDocumentArchive", archive: encodeDocumentArchiveBytes(before.archive()) } });
         await settle(() => folder.size === 1);
         worker.closeArtifact(documentId, undefined, first);
 
@@ -167,7 +167,7 @@ export async function registerFolderArchiveRestoreTests(
         expect(localFolderReconnectOfferV1(readLocalFolderBindingsV1(device), identity, new Set([documentId])), "an attached document is offered nothing").toBeNull();
         worker.handleTsRequest({ ...config(second), bindings: [{ kind: "folder", dataClass: "persistedLocalOnly", path: offer!.folder.path }] });
         await settle(() => events(posted, "documentArchiveReplaced").length === 1);
-        const replaced = events(posted, "documentArchiveReplaced")[0] as { readonly archive: readonly number[] };
+        const replaced = events(posted, "documentArchiveReplaced")[0] as { readonly archive: Uint8Array };
         const painted: { positions: Record<string, Point> | null; rows: readonly string[] | null } = { positions: null, rows: null };
         expect(await restoreDocumentArchiveV1(decodeDocumentArchiveBytes(Uint8Array.from(replaced.archive)), () => true, {
           load: async (archive) => { after.load(archive); return true; },
@@ -278,7 +278,7 @@ export async function registerFolderArchiveRestoreTests(
               }
               worker.handleTsRequest({ kind: "send", documentId, clientInstanceId: client, message: { kind: "documentBackbone", message: program.drag("A", [1, 1]) } });
               await settle(() => (worker.artifactState(documentId)?.pendingMutations.length ?? 0) === 1);
-              worker.handleTsRequest({ kind: "send", documentId, clientInstanceId: client, message: { kind: "localDocumentArchive", archive: Array.from(bytesOf(step.write)) } });
+              worker.handleTsRequest({ kind: "send", documentId, clientInstanceId: client, message: { kind: "localDocumentArchive", archive: bytesOf(step.write) } });
               await settle(() => worker.artifactState(documentId)?.pendingMutations.length === 0);
             }
             expect({ absent: events(posted, "documentArchiveAbsent").length, puts: counts.puts }, testCase.name).toEqual(testCase.expected);

@@ -39,13 +39,19 @@ def union_volume(meshes, cell):
     lo = np.min([m.bounds[0] for m in meshes], axis=0)
     hi = np.max([m.bounds[1] for m in meshes], axis=0)
     axes = [np.arange(lo[k] + cell / 2, hi[k], cell) for k in range(3)]
-    grid = np.stack(np.meshgrid(*axes, indexing="ij"), axis=-1).reshape(-1, 3)
-    inside = np.zeros(len(grid), dtype=bool)
-    for m in meshes:
-        near = np.all((grid >= m.bounds[0]) & (grid <= m.bounds[1]), axis=1)
-        if near.any():
-            inside[near] |= m.contains(grid[near])
-    return float(inside.sum() * cell**3)
+    return float(occupancy(meshes, axes).sum() * cell**3)
+
+
+def occupancy(meshes, axes):
+    shape = tuple(len(axis) for axis in axes)
+    inside = np.empty(shape, dtype=bool)
+    flat = inside.reshape(-1)
+    for start in range(0, len(flat), 2048):
+        stop = min(start + 2048, len(flat))
+        indices = np.unravel_index(np.arange(start, stop), shape)
+        points = np.column_stack(tuple(axis[index] for axis, index in zip(axes, indices)))
+        flat[start:stop] = contains_any(meshes, points)
+    return inside
 
 
 def outer_area(meshes):
@@ -93,14 +99,12 @@ def band_volumes(fine, coarse, distance, cell):
     lo = np.min([m.bounds[0] for m in fine + coarse], axis=0) - distance
     hi = np.max([m.bounds[1] for m in fine + coarse], axis=0) + distance
     axes = [np.arange(lo[k] + cell / 2, hi[k], cell) for k in range(3)]
-    grid = np.stack(np.meshgrid(*axes, indexing="ij"), axis=-1).reshape(-1, 3)
-    shape = tuple(len(a) for a in axes)
-    a = contains_any(fine, grid).reshape(shape)
-    b = contains_any(coarse, grid).reshape(shape)
-    near = ndimage.distance_transform_edt(~a) * cell
-    far = ndimage.distance_transform_edt(a) * cell
+    a = occupancy(fine, axes)
     cube = cell**3
-    return {"fine": float(a.sum() * cube), "coarse": float(b.sum() * cube), "dilated": float((near <= distance).sum() * cube), "eroded": float((a & (far > distance)).sum() * cube)}
+    coarse_volume = float(occupancy(coarse, axes).sum() * cube)
+    dilated = float((ndimage.distance_transform_edt(~a) * cell <= distance).sum() * cube)
+    eroded = float((ndimage.distance_transform_edt(a) * cell > distance).sum() * cube)
+    return {"fine": float(a.sum() * cube), "coarse": coarse_volume, "dilated": dilated, "eroded": eroded}
 
 
 def directed(a, b):
@@ -137,6 +141,13 @@ for case in data["cases"]:
         continue
     if "band" in case:
         out[case["name"]] = band_volumes([mesh_of(e) for e in case["band"]["fine"]], [mesh_of(e) for e in case["band"]["coarse"]], case["band"]["distance"], case["band"]["cell"])
+        continue
+    if "bounds" in case:
+        from shapely.geometry import MultiPoint
+        b = case["bounds"]
+        first, second = MultiPoint(b["first"]).bounds, MultiPoint(b["second"]).bounds
+        lo, hi = b["axis"], b["axis"] + 2
+        out[case["name"]] = {"shift": float(max(abs(first[lo] - second[lo]), abs(first[hi] - second[hi]))), "extentDifference": float(abs((first[hi] - first[lo]) - (second[hi] - second[lo])))}
         continue
     if "minrect" in case:
         box = Polygon(case["minrect"]).minimum_rotated_rectangle.exterior.coords
@@ -207,5 +218,7 @@ for case in data["cases"]:
                 lost = first.difference(second.buffer(tol)).area + second.difference(first.buffer(tol)).area
                 result["iouTolerant"] = float(1 - lost / first.union(second).area)
             result["hausdorff"] = float(max(directed(first, second), directed(second, first)))
+            if case.get("hull"):
+                result["iouHull"] = float(first.convex_hull.intersection(second.convex_hull).area / first.convex_hull.union(second.convex_hull).area)
     out[case["name"]] = result
 print(json.dumps(out))

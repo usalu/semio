@@ -110,3 +110,7 @@ Final check: `volumes-check.ts machinery/forklift --product`: **PASS** (65 s), e
 - At 1:500 the forks run inside the pallet block (fork openings are not drawn at 75 mm), and the 1:500 roof is a slab.
 - `chassis-paint` 12 and `brakes` 0.25 are area corrections for the reviewer (section 3); the chassis value contains the battery-facing faces until C31 is implemented in the product `outerArea`.
 - The tyre tread is drawn (texture strokes), not modelled; tessellation of the round parts is the tool's.
+
+## November 21 running gear and moving joints
+
+Four solid industrial tyres and their rims carry the mast and chassis at every scale. The hub retainers have individually chamfered wrench flats. The chassis and wheel-metal exchange area measured 14.921 m². See the [measurements and installed revision](digital-running-gear.md).

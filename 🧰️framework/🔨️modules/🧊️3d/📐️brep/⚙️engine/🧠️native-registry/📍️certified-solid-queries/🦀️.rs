@@ -50,6 +50,18 @@ impl BrepRegistry {
             else { PointClassification::Outside })
     }
 
+    /// 📌️ Projects onto exposed rectangles of an original orthogonal solid boundary.
+    pub fn original_orthogonal_nearest(&self, source: &SolidProvenance, target: Pnt3) -> Result<Pnt3, ValueError> {
+        let (cells, frame) = match source {
+            SolidProvenance::Orthogonal(cells) => (cells, Frame3::WORLD),
+            SolidProvenance::PlacedOrthogonal(cells, frame) => (cells, *frame),
+            _ => return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner, "geometry requires original closest-point traversal")),
+        };
+        let (nearest, distance) = cells.nearest_boundary(frame.to_local(target).to_array());
+        distance.is_finite().then(|| frame.to_world(Pnt3::from_array(nearest)))
+            .ok_or_else(|| ValueError::literal(ValueRefusalKind::InvalidValue, "closest-point distance exceeds finite numeric range"))
+    }
+
     /// 📏️ Computes minimum separation of supported certified solid pairs.
     pub fn original_solid_distance(&self, a: &str, b: &str) -> Result<f64, ValueError> {
         use semio_framework_3d_brep_analysis::{axial_cylinder_box_distance, parallel_cylinder_distance, separated_box_distance, sphere_boundary_gap, sphere_box_distance, sphere_pair_distance};
@@ -66,7 +78,7 @@ impl BrepRegistry {
                     primitive => return Ok(OrientedBox::from_primitive(primitive).map_or(Primitive(primitive), Box)),
                 },
                 SolidProvenance::PlanarBoundary(Some(source)) => source.rectangular(),
-                SolidProvenance::SphericalShell(..) => return Ok(Material(source)),
+                SolidProvenance::SphericalShell(..) | SolidProvenance::Orthogonal(_) | SolidProvenance::PlacedOrthogonal(..) => return Ok(Material(source)),
                 _ => None,
             };
             rectangular.map(Box).ok_or_else(unsupported)

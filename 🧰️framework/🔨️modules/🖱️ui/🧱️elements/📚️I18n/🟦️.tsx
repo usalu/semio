@@ -420,6 +420,7 @@ export type UiTranslationSchema = {
       readonly noExample: UiLabelValue;
       readonly loadingSurface: UiLabelValue;
       readonly unknownComponent: UiLabelValue;
+      readonly extensionUnavailable: UiLabelValue;
       readonly select: UiLabelValue;
       readonly commandPalette: UiLabelValue;
       readonly searchForCommand: UiLabelValue;

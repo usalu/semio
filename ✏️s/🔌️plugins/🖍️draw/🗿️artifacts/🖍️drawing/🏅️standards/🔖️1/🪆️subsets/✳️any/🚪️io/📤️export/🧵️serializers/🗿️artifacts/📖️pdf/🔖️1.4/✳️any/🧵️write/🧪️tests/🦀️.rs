@@ -8,6 +8,50 @@ use semio_s_artifact_draw_drawing_scene::{booleans::DocumentBooleanLimits, raste
 use semio_s_artifact_draw_drawing_io::byte_writer::physical_close as close;
 use serde_json::Value;
 use std::io::Write as _;
+use semio_framework_job::{Generation, OperationId, OriginalJobFixtureCaller};
+use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
+use semio_framework_value::RetainedCloneGrant;
+
+fn finish_original(job: &mut PdfWriteJob, law: &Value) -> Vec<u8> {
+ let fuel = law["fuel"].as_u64().unwrap();
+ let page_capacity = law["pageCapacity"].as_u64().unwrap() as usize;
+ let stock = RetainedCloneGrant { maximum_items: 1 << 17, maximum_copy_bytes: 1 << 24, maximum_capacity_bytes: 1 << 24, maximum_release_bytes: 1 << 24, maximum_depth: 256 };
+ let mut caller = OriginalJobFixtureCaller::admit(OperationId(31), Generation(1), stock, || Some(0), u64::MAX, 1 << 24);
+ let mut tested_page_denial = false;
+ for _ in 0..100000 {
+  let check_page_birth = job.next_demand().unwrap().capacity_bytes == page_capacity && !tested_page_denial;
+  let grant = if check_page_birth {
+   tested_page_denial = true;
+   let previous = job.progress();
+   caller.bare_turn(RetainedCloneGrant { maximum_capacity_bytes: page_capacity - 1, ..stock }, |cx| {
+    let before = cx.retained_progress();
+    let (result, heap) = observe(|| job.advance_original(cx));
+    let after = result.unwrap();
+    assert_eq!((after.phase, after.work, after.bytes), (previous.phase, previous.work, previous.bytes));
+    assert_eq!(cx.retained_progress(), before);
+    assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+    Ok(())
+   }).unwrap();
+   RetainedCloneGrant { maximum_capacity_bytes: page_capacity, ..stock }
+  } else { stock };
+  let done = caller.bare_turn(grant, |cx| cx.with_original_work_loan(fuel, u64::MAX, |cx| {
+   let before = cx.retained_progress();
+   let (result, heap) = observe(|| job.advance_original(cx));
+   let after = cx.retained_progress();
+   assert!(!heap.overflowed);
+   assert_eq!(heap.requested_bytes, after.retained_capacity_bytes - before.retained_capacity_bytes);
+   assert_eq!(heap.released_bytes, after.released_bytes - before.released_bytes);
+   if check_page_birth { assert_eq!(heap.requested_bytes, page_capacity); }
+   Ok(result.unwrap().done)
+  })).unwrap();
+  if done {
+   assert!(tested_page_denial);
+   caller.retire_exact();
+   return job.result().unwrap().iter().flatten().copied().collect();
+  }
+ }
+ panic!("Original PDF writer failed to terminate")
+}
 fn limits()->PdfWriteLimits{PdfWriteLimits{view_box:[0.0,0.0,2.0,1.0],max_output_bytes:65536,max_work:1000000000}}
 fn algorithms()->DocumentAlgorithmLimits{DocumentAlgorithmLimits{max_work:10000000,trace:DocumentTraceLimits{max_pixels:100000,max_admitted_pixels:100000,max_source_bytes:100000,max_edges:65536,max_segments:65536,max_retained_segments:65536,max_work:10000000},booleans:DocumentBooleanLimits{tolerance:0.005,epsilon:1e-8,max_depth:32,max_references:256,max_edges:65536,max_parameters:262144,max_atomic_edges:65536,max_segments:65536,max_retained_segments:262144,max_work:10000000}}}
 fn finish(job:&mut PdfWriteJob,grant:usize)->Vec<u8>{let mut work=0;for _ in 0..1000000{let p=job.advance(grant).unwrap();assert!(p.work-work<=grant as u64);work=p.work;if p.done{let mut bytes=Vec::new();for page in job.result().unwrap().iter(){assert!(page.len()<=PAGE);bytes.extend_from_slice(page);}return bytes;}assert!(job.result().is_err());}panic!("PDF writer failed to terminate")}
@@ -42,6 +86,7 @@ fn pdf_write_neutral_styles_match_pdfium_and_exact_physical_close(){
   }
   let document: crate::DrawingSnapshot = serde_json::from_value(raw).unwrap();
   let before = document.clone();
+  let row_start = documents.len();
   for grant in [1, 7, 4096] {
    let limits = &source["limits"];
    let (vector_close, plan) = original_vector::prepare(&document, DocumentSceneLimits {
@@ -52,7 +97,11 @@ fn pdf_write_neutral_styles_match_pdfium_and_exact_physical_close(){
     max_source_bytes: limits["maxSourceBytes"].as_u64().unwrap() as usize,
    }, algorithms());
    let mut job = PdfWriteJob::new(plan, self::limits());
-   documents.push(finish(&mut job, grant));
+   let bytes = if grant == 1 && row.get("originalFunding").is_some() {
+    finish_original(&mut job, &row["originalFunding"])
+   } else { finish(&mut job, grant) };
+   if grant != 1 { assert_eq!(&bytes, &documents[row_start]); }
+   documents.push(bytes);
    let (retired, pages) = job.into_retirement();
    close(retired);
    close(pages.unwrap());

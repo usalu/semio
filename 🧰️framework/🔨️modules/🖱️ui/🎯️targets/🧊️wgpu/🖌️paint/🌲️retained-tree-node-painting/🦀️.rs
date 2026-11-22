@@ -3,6 +3,37 @@
 use super::*;
 
 // #region paint
+/// 🧭️ The section header's fold chevron size — React's `size-small` (`treeSectionChevronClassName`).
+pub const TREE_SECTION_CHEVRON_SIZE: f32 = (ui_styling::metrics::chrome::UI_SPACING_COMPACT_PX * ui_styling::metrics::dom::ICON_SMALL_UI_SPACING) as f32;
+
+/// 🧭️ The inline offset of a tree indent guide inside its gutter — React's `treeIndentLineExtraUiSpacing`.
+pub const TREE_GUIDE_INSET: f32 = (ui_styling::metrics::chrome::UI_SPACING_COMPACT_PX * ui_styling::metrics::dom::TREE_INDENT_LINE_EXTRA_UI_SPACING) as f32;
+
+/// 🔽️ The fold chevron a group row paints — React's `treeFoldChevronIcon`: along the block axis when open, along the inline axis when closed.
+pub(super) fn retained_fold_chevron(open: bool, reversed: bool, inline: ui_contract::FlowInline) -> &'static str {
+    if open {
+        if reversed {
+            "chevron-up"
+        } else {
+            "chevron-down"
+        }
+    } else if reversed == inline.is_rtl() {
+        "chevron-right"
+    } else {
+        "chevron-left"
+    }
+}
+
+/// 🌿️ Whether the row on the cursor's path at zero-based `level` is the last of its siblings — the `isLastAtLevel` entry React's guides read.
+fn retained_tree_level_last(tree: &UiTreeNode, cursor: &RetainedNodePaintCursor, level: usize, reversed: bool) -> Option<bool> {
+    let mut items = retained_tree_section_at(tree, cursor.section, reversed)?.items.as_slice();
+    for step in 0..level {
+        let item = items.get(retained_tree_index(items.len(), cursor.path[step], reversed)?)?;
+        items = item.items.as_deref()?;
+    }
+    Some(cursor.path[level] + 1 == items.len())
+}
+
 pub(super) fn retained_tree_node_step(
     retained: &UiTree,
     tree_id: NodeId,
@@ -20,6 +51,7 @@ pub(super) fn retained_tree_node_step(
     if tree.sections.len() > RETAINED_NODE_COLLECTION_ITEMS {
         return RetainedNodePaintStep::Fault;
     }
+    let inline = if semio_ui_wgpu_mounted_layout::document_table(retained, tree_id).is_some() { inline } else { ui_contract::FlowInline::Ltr };
     let metrics = TreeRowMetrics::for_presentation(theme, tree.presentation).with_inline(inline);
     let font_size = if tree.presentation == ui_contract::TreePresentation::Compact { SIZE_TINY } else { theme.font_size_body };
     match cursor.phase {
@@ -56,37 +88,47 @@ pub(super) fn retained_tree_node_step(
             let header_y = if reversed { cursor.row_y + section_height - header_height } else { cursor.row_y };
             if !cursor.chrome {
                 cursor.chrome = true;
-                let Some(label) = section.label.as_ref() else { return RetainedNodePaintStep::Pending };
-                let color = if open { theme.text_element } else { theme.text_muted };
+                if section.label.is_none() {
+                    return RetainedNodePaintStep::Pending;
+                }
+                let color = theme.text_element;
                 let result = retained_fixed_output(draw, |draw| {
+                    if open && !section.items.is_empty() {
+                        let center = header_y + header_height * 0.5;
+                        let (y, h) = if reversed { (header_y, center - header_y) } else { (center, header_y + header_height - center) };
+                        draw.push_solid([bounds.x + TREE_GUIDE_INSET, y, theme.stroke_hairline, h], theme.text_muted.with_alpha(theme.text_muted.a * 0.4));
+                    }
                     if let Some(icons) = icons {
-                        let offset = TREE_TOGGLE_WIDTH + theme.gap_standard;
-                        let x = if inline.is_rtl() { bounds.x + bounds.w - offset - TREE_ICON_SIZE } else { bounds.x + offset };
+                        if !section.items.is_empty() {
+                            let size = TREE_SECTION_CHEVRON_SIZE;
+                            push_icon(draw, icons, retained_fold_chevron(open, reversed, inline), bounds.x, header_y + (header_height - size) * 0.5, size, color);
+                        }
+                        let x = bounds.x + TREE_TOGGLE_WIDTH + theme.gap_standard;
                         push_icon(draw, icons, "folder", x, header_y + (header_height - TREE_ICON_SIZE) * 0.5, TREE_ICON_SIZE, color);
                     }
                 });
-                let _ = label;
                 return if result.is_err() { RetainedNodePaintStep::Fault } else { RetainedNodePaintStep::Pending };
             }
             let Some(label) = section.label.as_ref() else {
                 cursor.advance(2);
                 return RetainedNodePaintStep::Pending;
             };
-            let color = if open { theme.text_element } else { theme.text_muted };
+            let color = theme.text_element;
             let offset = TREE_TOGGLE_WIDTH + TREE_ICON_SIZE + theme.gap_standard * 2.0;
             let toolbar_reserve = section.header_toolbar.as_ref().map_or(0.0, |_| metrics.control_width + theme.gap_standard);
-            let label_x = if inline.is_rtl() { bounds.x + toolbar_reserve } else { bounds.x + offset };
-            let label_bounds = Rect::new(label_x, header_y, (bounds.w - offset - toolbar_reserve).max(0.0), header_height);
             let header_font_size = if tree.presentation == ui_contract::TreePresentation::Compact { SIZE_TINY } else { theme.font_size_small };
-            match retained_tree_text_step(label.as_str(), label_bounds, header_font_size, color, inline, atlas, draw, cursor) {
-                RetainedNodePaintStep::Complete => {
+            let label_bounds = Rect::new(bounds.x + offset, header_y + (header_height - header_font_size) * 0.5, (bounds.w - offset - toolbar_reserve).max(0.0), header_font_size);
+            let shouted = label.as_str().to_uppercase();
+            match paint_retained_glyph_step_tracked(&shouted, label_bounds, header_font_size, color, RetainedTextFlow::Clip, semio_ui_text::TextWeight::Semibold, theme.tracking_wide * header_font_size, atlas, draw, &mut cursor.glyph) {
+                RetainedGlyphStep::Complete => {
                     if !reversed {
                         cursor.row_y += header_height;
                     }
                     cursor.advance(2);
                     RetainedNodePaintStep::Pending
                 }
-                step => step,
+                RetainedGlyphStep::Pending => RetainedNodePaintStep::Pending,
+                RetainedGlyphStep::Fault => RetainedNodePaintStep::Fault,
             }
         }
         2 => {
@@ -126,6 +168,7 @@ pub(super) fn retained_tree_node_step(
             let selected = item.presence.selected;
             let previewed = item.presence.state == UiState::Previewed;
             let on_hover_fill = previewed || item.presence.hover;
+            let focus_ring = retained_tree_item_node_at(retained, tree_id, tree, cursor, reversed).and_then(|id| retained.node(id)).is_some_and(|node| focus_ring_visible(node.flags));
             let result = retained_fixed_output(draw, |draw| {
                 if selected {
                     draw.push_rounded([row.x, row.y, row.w, row.h], theme.selected, theme.border_radius);
@@ -140,20 +183,13 @@ pub(super) fn retained_tree_node_step(
                     UiStatus::Idle => {}
                 }
                 paint_presence_accent_effect(draw, row, theme, item.presence.state);
-                let indent = bounds.x + (cursor.depth - 1) as f32 * TREE_INDENT_PER_LEVEL + TREE_TOGGLE_WIDTH;
+                if focus_ring {
+                    draw.push_shared_border_effect(row, theme.selected, theme.border_radius, theme.stroke_hairline, semio_ui_draw_contract::SharedBorderState::Focus);
+                }
+                let indent = bounds.x + cursor.depth as f32 * TREE_INDENT_PER_LEVEL + TREE_TOGGLE_WIDTH;
                 if item.items.as_ref().is_some_and(|items| !items.is_empty()) {
                     if let Some(icons) = icons {
-                        let chevron = if open {
-                            if reversed {
-                                "chevron-up"
-                            } else {
-                                "chevron-down"
-                            }
-                        } else if reversed == inline.is_rtl() {
-                            "chevron-right"
-                        } else {
-                            "chevron-left"
-                        };
+                        let chevron = retained_fold_chevron(open, reversed, inline);
                         let x = if inline.is_rtl() { bounds.x + bounds.w - (indent - bounds.x) } else { indent - TREE_TOGGLE_WIDTH };
                         push_icon(draw, icons, chevron, x, row.y + (row.h - SIZE_TINY) * 0.5, SIZE_TINY, foreground_on_fill(theme, theme.text_element, selected, on_hover_fill));
                     }
@@ -181,7 +217,7 @@ pub(super) fn retained_tree_node_step(
             if semio_ui_wgpu_mounted_layout::document_table(retained, tree_id).is_some() {
                 return retained_table_cells_step(retained, tree_id, tree, item, row, font_size, theme, inline, &metrics, reversed, atlas, draw, cursor);
             }
-            let indent = bounds.x + (cursor.depth - 1) as f32 * TREE_INDENT_PER_LEVEL + TREE_TOGGLE_WIDTH;
+            let indent = bounds.x + cursor.depth as f32 * TREE_INDENT_PER_LEVEL + TREE_TOGGLE_WIDTH;
             let label_x = indent + if item.icon_id.is_some() { TREE_ICON_SIZE + theme.gap_standard } else { 0.0 };
             let selected = item.presence.selected;
             let previewed = item.presence.state == UiState::Previewed;
@@ -215,7 +251,7 @@ pub(super) fn retained_tree_node_step(
                 }
             };
             let Some((row, _)) = retained_tree_item_row(retained, tree_id, tree, bounds, cursor, &metrics, reversed) else { return RetainedNodePaintStep::Fault };
-            let indent = bounds.x + (cursor.depth - 1) as f32 * TREE_INDENT_PER_LEVEL + TREE_TOGGLE_WIDTH;
+            let indent = bounds.x + cursor.depth as f32 * TREE_INDENT_PER_LEVEL + TREE_TOGGLE_WIDTH;
             let offset = item.label.as_str().len().min(RETAINED_NODE_COLLECTION_ITEMS) as f32 * theme.font_size_body * 0.5;
             let description_x = indent + TREE_ICON_SIZE + theme.gap_standard + offset;
             let trailing = if driver_drag == UiDriverDrag::Handle && tree_drag_role(item).is_some() { tree_drag_handle_reservation(&metrics) } else { 0.0 };
@@ -265,7 +301,8 @@ pub(super) fn retained_tree_node_step(
                     let on_hover_fill = item.presence.state == UiState::Previewed || item.presence.hover;
                     let color = foreground_on_fill(theme, theme.text_element, item.presence.selected, on_hover_fill);
                     let color = if action.disabled { color.with_alpha(color.a * 0.5) } else { color };
-                    push_icon(draw, icons, action.icon_id.as_str(), row.x + slot.x, row.y + slot.y, slot.w, color);
+                    let icon = if metrics.table { metrics.drag_handle_extent } else { slot.w };
+                    push_icon(draw, icons, action.icon_id.as_str(), row.x + slot.x + (slot.w - icon) * 0.5, row.y + slot.y + (slot.h - icon) * 0.5, icon, color);
                 }
             });
             if result.is_err() {
@@ -275,8 +312,50 @@ pub(super) fn retained_tree_node_step(
             }
         }
         7 => {
-            cursor.advance(8);
-            RetainedNodePaintStep::Pending
+            let Some(item) = retained_tree_item_at(tree, cursor, reversed) else { return RetainedNodePaintStep::Fault };
+            let depth = cursor.depth;
+            if cursor.item > depth || semio_ui_wgpu_mounted_layout::document_table(retained, tree_id).is_some() {
+                cursor.advance(8);
+                return RetainedNodePaintStep::Pending;
+            }
+            let Some((row, open)) = retained_tree_item_row(retained, tree_id, tree, bounds, cursor, &metrics, reversed) else { return RetainedNodePaintStep::Fault };
+            let part = cursor.item;
+            cursor.item += 1;
+            let emphasized = item.presence.selected || item.presence.state == UiState::Previewed || item.presence.hover;
+            let color = if emphasized { theme.border_emphasized } else { theme.text_muted.with_alpha(theme.text_muted.a * 0.4) };
+            let hair = theme.stroke_hairline;
+            let column_x = |column: usize| bounds.x + column as f32 * TREE_INDENT_PER_LEVEL + TREE_GUIDE_INSET;
+            let center = row.y + row.h * 0.5;
+            let toward_children = |draw: &mut DrawList, x: f32| {
+                let (y, h) = if reversed { (row.y, center - row.y) } else { (center, row.y + row.h - center) };
+                draw.push_solid([x, y, hair, h], color);
+            };
+            let result = retained_fixed_output(draw, |draw| {
+                if part + 1 < depth {
+                    if retained_tree_level_last(tree, cursor, part, reversed) == Some(false) {
+                        draw.push_solid([column_x(part), row.y, hair, row.h], color);
+                    }
+                } else if part + 1 == depth {
+                    let x = column_x(depth - 1);
+                    if retained_tree_level_last(tree, cursor, depth - 1, reversed) == Some(false) {
+                        draw.push_solid([x, row.y, hair, row.h], color);
+                    } else if reversed {
+                        draw.push_solid([x, center, hair, row.y + row.h - center], color);
+                    } else {
+                        draw.push_solid([x, row.y, hair, center - row.y], color);
+                    }
+                    let own_slot = bounds.x + depth as f32 * TREE_INDENT_PER_LEVEL;
+                    let end = if item.items.as_ref().is_some_and(|items| !items.is_empty()) { own_slot } else { column_x(depth) };
+                    draw.push_solid([x, center, (end - x).max(0.0), hair], color);
+                } else if open {
+                    toward_children(draw, column_x(depth));
+                }
+            });
+            if result.is_err() {
+                RetainedNodePaintStep::Fault
+            } else {
+                RetainedNodePaintStep::Pending
+            }
         }
         8 => {
             let Some(item) = retained_tree_item_at(tree, cursor, reversed) else { return RetainedNodePaintStep::Fault };
@@ -354,6 +433,6 @@ pub fn paint_node_step(
     draw: &mut DrawList,
     cursor: &mut RetainedNodePaintCursor,
 ) -> RetainedNodePaintStep {
-    paint_node_step_with_driver(tree, id, origin_x, origin_y, theme, atlas, icons, has_scene_host, UiDriverDrag::Handle, false, ui_contract::FlowInline::Ltr, None, draw, cursor)
+    paint_node_step_with_driver(tree, id, origin_x, origin_y, theme, atlas, icons, has_scene_host, RetainedPaintPresentation::default(), false, ui_contract::FlowInline::Ltr, None, draw, cursor)
 }
 // #endregion paint

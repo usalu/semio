@@ -128,19 +128,62 @@ fn icon_export_effect_publishes_an_accessible_cancel_control_and_drains_on_activ
 }
 
 #[test]
-fn icon_export_prepared_close_borrows_original_work_and_physical_receipt(){
+fn icon_export_prepared_close_borrows_original_work_and_physical_receipt() {
+    use semio_framework_job::{InteractiveJobCloseStep as Close, RetainedCloneGrant, RetainedCloneProgress};
     use semio_framework_trace::observe_heap_allocations_on_this_thread as observed;
-    use semio_framework_job::{InteractiveJobCloseStep as Close,RetainedCloneGrant,RetainedCloneProgress};
-    let law=fixture();let law=&law["originalClose"];let expected=&law["expected"];
-    let mut caller=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
-    let(mut text,birth)=observed(||law["text"].as_str().unwrap().to_owned());
-    let bytes=text.capacity();assert_eq!(birth.requested_bytes,expected["backingBytes"].as_u64().unwrap()as usize);
-    let demand=RetainedCloneGrant{maximum_items:1,maximum_release_bytes:bytes,maximum_depth:1,..Default::default()};
-    let(denied,heap)=observed(||caller.turn(|cx|{cx.consume_fuel(1);semio_renderer_wgpu_icon_host::icon_export::close_prepared(cx,Ok(demand),|_|panic!("zero work must preserve original backing"))}));
-    assert!(!denied.unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,expected["deniedBytes"].as_u64().unwrap()as usize));assert_eq!(text.capacity(),bytes);
-    let(done,heap)=observed(||caller.turn(|cx|{let done=semio_renderer_wgpu_icon_host::icon_export::close_prepared(cx,Ok(demand),|effect|{assert!(effect.performed(1)?);drop(std::mem::take(&mut text));Ok(Close::Complete{progress:RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()}})});assert_eq!(cx.retained_progress().released_bytes,bytes);done}));
-    assert!(done.unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,bytes));assert_eq!(observed(||drop(text)).1.released_bytes,expected["terminalDropBytes"].as_u64().unwrap()as usize);
-    let failure=caller.turn(|cx|semio_renderer_wgpu_icon_host::icon_export::close_prepared(cx,Ok(RetainedCloneGrant{maximum_items:1,maximum_depth:1,..Default::default()}),|_|Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"original icon producer refusal").into()))).unwrap_err();
-    let IconExportFault::Original(failure)=failure else{panic!("complete original producer failure retained")};assert_eq!(failure.primary.message(),"original icon producer refusal");assert!(failure.receipt_refusal.is_none());assert!(failure.context_refusal.is_none());
+    use semio_framework_value::{RetirementPollExit, ValueError, ValueRefusalKind};
+    use semio_renderer_wgpu_icon_host::icon_export::close_prepared;
+
+    let fixture = fixture();
+    let law = &fixture["originalClose"];
+    let expected = &law["expected"];
+    let mut caller = semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
+    let (mut text, birth) = observed(|| law["text"].as_str().unwrap().to_owned());
+    let bytes = text.capacity();
+    assert_eq!(birth.requested_bytes, expected["backingBytes"].as_u64().unwrap() as usize);
+    let demand = RetainedCloneGrant { maximum_items: 1, maximum_release_bytes: bytes, maximum_depth: 1, ..Default::default() };
+    let (denied, heap) = observed(|| caller.turn(|cx| {
+        cx.consume_fuel(1);
+        close_prepared(cx, Ok(demand), |_| panic!("zero work must preserve original backing"))
+    }));
+    assert!(!denied.unwrap());
+    assert_eq!((heap.requested_bytes, heap.released_bytes), (0, expected["deniedBytes"].as_u64().unwrap() as usize));
+    assert_eq!(text.capacity(), bytes);
+
+    caller.turn(|cx| {
+        let fuel = cx.fuel_remaining();
+        let pending = close_prepared(cx, Ok(demand), |effect| {
+            assert!(effect.performed(1).unwrap());
+            Err(RetirementPollExit::Pending(effect.performed_work()))
+        });
+        assert!(!pending.unwrap());
+        assert_eq!(fuel - cx.fuel_remaining(), 1);
+        assert_eq!(cx.retained_progress().released_bytes, 0);
+    });
+    assert_eq!(text.capacity(), bytes);
+
+    let (done, heap) = observed(|| caller.turn(|cx| {
+        let done = close_prepared(cx, Ok(demand), |effect| {
+            assert!(effect.performed(1).unwrap());
+            drop(std::mem::take(&mut text));
+            Ok(Close::Complete {
+                progress: RetainedCloneProgress { copied_items: 1, released_bytes: bytes, ..Default::default() },
+            })
+        });
+        assert_eq!(cx.retained_progress().released_bytes, bytes);
+        assert_eq!(cx.retained_progress().copied_items, expected["copiedItems"].as_u64().unwrap() as usize);
+        done
+    }));
+    assert!(done.unwrap());
+    assert_eq!((heap.requested_bytes, heap.released_bytes), (0, bytes));
+    assert_eq!(observed(|| drop(text)).1.released_bytes, expected["terminalDropBytes"].as_u64().unwrap() as usize);
+
+    let failure = caller.turn(|cx| close_prepared(cx, Ok(RetainedCloneGrant { maximum_items: 1, maximum_depth: 1, ..Default::default() }), |_| {
+        Err(ValueError::literal(ValueRefusalKind::InvalidValue, "original icon producer refusal").into())
+    })).unwrap_err();
+    let IconExportFault::Original(failure) = failure else { panic!("complete original producer failure retained") };
+    assert_eq!(failure.primary.message(), "original icon producer refusal");
+    assert!(failure.receipt_refusal.is_none());
+    assert!(failure.context_refusal.is_none());
     caller.finish();
 }

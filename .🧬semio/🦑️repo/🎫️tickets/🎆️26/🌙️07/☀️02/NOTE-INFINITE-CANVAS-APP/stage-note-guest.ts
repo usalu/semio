@@ -15,13 +15,16 @@ const command = JSON.stringify(args);
 const serveNote = command === '["serve-note"]';
 const verifyInk = command === '["verify-note-ink"]';
 const verifyTransfer = command === '["verify-note-transfer"]';
+const verifyTypecheck = command === '["verify-note-typecheck"]';
+const prepareUiContract = command === '["prepare-note-ui-contract"]';
+const prepareRendererContracts = command === '["prepare-note-renderer-contracts"]';
 const verifyWitnessRetry = command === '["verify-witness-retry"]';
 const prepareTranspiler = command === '["prepare-note-transpiler"]';
 const prepareDescriptor = command === '["prepare-note-descriptor"]';
 const verifyDescriptor = args[0] === "verify-note-descriptor" && args.length === 2;
 const mode = prepareTranspiler ? "release" : "prototype";
-if (command !== '["components","iterate","note"]' && command !== '["prepare-note-sources"]' && command !== '["prepare-note-assets"]' && !serveNote && !verifyInk && !verifyTransfer && !verifyWitnessRetry && !prepareTranspiler && !prepareDescriptor && !verifyDescriptor) {
-  throw Error("Expected components iterate note, prepare-note-sources, prepare-note-assets, prepare-note-transpiler, prepare-note-descriptor, serve-note, verify-note-ink, verify-note-descriptor <linked wasm> or verify-witness-retry");
+if (command !== '["components","iterate","note"]' && command !== '["prepare-note-sources"]' && command !== '["prepare-note-assets"]' && !serveNote && !verifyInk && !verifyTransfer && !verifyTypecheck && !prepareUiContract && !prepareRendererContracts && !verifyWitnessRetry && !prepareTranspiler && !prepareDescriptor && !verifyDescriptor) {
+  throw Error("Expected components iterate note, prepare-note-sources, prepare-note-assets, prepare-note-transpiler, prepare-note-descriptor, serve-note, verify-note-ink, verify-note-typecheck, verify-note-descriptor <linked wasm> or verify-witness-retry");
 }
 class ForwardComponentsScript extends Script {
   async run(): Promise<void> {
@@ -98,9 +101,30 @@ class ServeNoteScript extends Script {
 
 class VerifyNoteInkScript extends Script {
   async run(): Promise<void> {
+    if (prepareUiContract) {
+      const contract = join(workspace, "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust");
+      await runOwnedCommand("repo", ["./📜️script.ts", "generate"], contract, "generate:ui-contract", 1_200_000, {
+        env: scriptInvocationEnvironment(this.invocation, process.env),
+      });
+      return;
+    }
+    if (prepareRendererContracts) {
+      const framework = join(workspace, "🧰️framework");
+      const commands = [
+        { label: "generate:manifest", cwd: framework, args: ["./🔨️modules/🏃️process/📜️script.ts", "command", "--config", "./⚙️configuration/🏃️process/🔣️.json", "--cwd", "📦️packages/🦀️rust", "--manifest", "📦️packages/🦀️rust/Cargo.toml", "--", "repo", "./📜️script.ts", "generate"] },
+        { label: "generate:actor", cwd: join(framework, "🔨️modules/🎭️actor/📦️packages/🦀️rust"), args: ["./📜️script.ts", "typegen"] },
+        { label: "generate:shell", cwd: join(framework, "🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust"), args: ["./📜️script.ts", "typegen"] },
+      ];
+      const env = scriptInvocationEnvironment(this.invocation, { ...process.env, SEMIO_BUILD_MODE: mode });
+      const results = await Promise.allSettled(commands.map(({ label, cwd, args }) => runOwnedCommand("repo", args, cwd, label, 1_200_000, { env })));
+      const failures = results.flatMap(result => result.status === "rejected" ? [result.reason] : []);
+      if (failures.length) throw new AggregateError(failures, "Renderer contract generation failed");
+      return;
+    }
     const renderer = join(workspace, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript");
-    const filters = verifyTransfer ? ["natural-scope"] : ["ink-canvas-domain-interaction", "ink-canvas-editing", "ink-canvas-clipboard", "ink-and-marquee-hosts"];
-    await runOwnedCommand("repo", ["./📜️script.ts", "test", "long", "--maxWorkers=1", ...filters], renderer, "test:note-react", 120_000, {
+    const filters = verifyTransfer ? ["natural-scope"] : ["ink-canvas-domain-interaction", "ink-canvas-editing", "ink-canvas-clipboard", "ink-and-marquee-hosts", "plugin-runtime", "notice-bands"];
+    const args = verifyTypecheck ? ["typecheck"] : ["test", "long", "--maxWorkers=1", ...filters];
+    await runOwnedCommand("repo", ["./📜️script.ts", ...args], renderer, verifyTypecheck ? "typecheck:note-react" : "test:note-react", verifyTypecheck ? 150_000 : 300_000, {
       env: scriptInvocationEnvironment(this.invocation, process.env),
     });
   }
@@ -138,6 +162,9 @@ const router = new ScriptRouter(workspace, workspace)
   .register("serve-note", ServeNoteScript)
   .register("verify-note-ink", VerifyNoteInkScript)
   .register("verify-note-transfer", VerifyNoteInkScript)
+  .register("verify-note-typecheck", VerifyNoteInkScript)
+  .register("prepare-note-ui-contract", VerifyNoteInkScript)
+  .register("prepare-note-renderer-contracts", VerifyNoteInkScript)
   .register("verify-note-descriptor", VerifyNoteDescriptorScript)
   .register("verify-witness-retry", VerifyWitnessRetryScript);
 await runWorkspaceScriptMain(router, {

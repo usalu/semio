@@ -1,7 +1,9 @@
+use semio_plugin::WindowLayoutNode;
 /// 🌳️ Collection rows, table first paint, paging, derived schema controls and revisioned inputs.
 
 #[test]
 fn collection_rows_are_open_windowed_tree_item_descendants_with_edit_controls() {
+    let _arena = ui_arena();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪟️collection-tree-shape/🔣️.json")).expect("collection tree fixture");
     let source = serde_json::to_string(&fixture["snapshot"]).expect("third-party snapshot oracle");
     let schema = serde_json::to_string(&fixture["input"]["schema"]).expect("third-party schema oracle");
@@ -96,6 +98,7 @@ fn collection_rows_are_open_windowed_tree_item_descendants_with_edit_controls() 
 
 #[test]
 fn table_details_first_paint_keeps_fields_reachable_across_repeated_projection() {
+    let _arena = ui_arena();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪟️first-paint/🔣️.json")).unwrap();
     let source = serde_json::to_string(&fixture["snapshot"]).unwrap();
     let schema = serde_json::to_string(&fixture["input"]["schema"]).unwrap();
@@ -133,6 +136,7 @@ fn table_details_first_paint_keeps_fields_reachable_across_repeated_projection()
 
 #[test]
 fn nested_collection_honours_an_explicit_second_page_without_counting_controls_as_rows() {
+    let _arena = ui_arena();
     let provider = LazyPixels { count: 1_000 };
     let pixels_path = [SnapshotDetailPathSegment::Key("pixels".into())];
     let pixels_id = path_id(&pixels_path);
@@ -156,6 +160,7 @@ fn nested_collection_honours_an_explicit_second_page_without_counting_controls_a
 
 #[test]
 fn derived_schema_controls_render_only_the_requested_pages() {
+    let _arena = ui_arena();
     use std::cell::Cell;
     struct DerivedControls {
         variant_reads: Cell<usize>,
@@ -241,13 +246,21 @@ fn derived_schema_controls_render_only_the_requested_pages() {
 
 #[test]
 fn split_layout_keeps_canvas_and_details_visible() {
-    let layout = snapshot_details_split_layout("framework.window.tree", "Tree");
-    let WindowLayoutRoot::Axis(axis) = layout.root else { panic!("details layout must be split") };
-    assert_eq!(axis.children.len(), 2);
+    let layout = snapshot_details_split_layout("framework.window.tree");
+    let WindowLayoutNode::Split { children, .. } = layout.root else { panic!("details layout must be split") };
+    assert_eq!(children.len(), 2);
+    for child in &children {
+        let WindowLayoutNode::Stack { children: windows, .. } = child else { panic!("details layout children must be stacks") };
+        assert!(windows.iter().all(|window| matches!(window, WindowLayoutNode::Window { title: None, .. })), "titles must come from the localized window-kind labels");
+    }
+    let details = snapshot_details_window_definition();
+    assert_eq!(details.label.resolve(semio_ui_locale::Terminology::Native, Locale::En), "Details");
+    assert_eq!(details.label.resolve(semio_ui_locale::Terminology::Native, Locale::De), "Details");
 }
 
 #[test]
 fn numeric_controls_preserve_json_number_kinds_through_the_action_parser() {
+    let _arena = ui_arena();
     struct Numeric(Number);
     impl SnapshotDetailsProvider for Numeric {
         fn value(&self, path: &[SnapshotDetailPathSegment]) -> Option<SnapshotDetailValue> {
@@ -277,6 +290,7 @@ fn numeric_controls_preserve_json_number_kinds_through_the_action_parser() {
 
 #[test]
 fn revisioned_details_inputs_publish_the_exact_committed_document_revision() {
+    let _arena = ui_arena();
     struct Text;
     impl SnapshotDetailsProvider for Text {
         fn value(&self, path: &[SnapshotDetailPathSegment]) -> Option<SnapshotDetailValue> {

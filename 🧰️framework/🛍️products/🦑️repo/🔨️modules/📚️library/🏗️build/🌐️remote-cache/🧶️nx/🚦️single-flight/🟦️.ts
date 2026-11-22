@@ -1,6 +1,7 @@
 import {randomBytes} from "node:crypto";
 import {hostname} from "node:os";
-import {remoteCacheFetchV1} from "../../🛰️fleet/🟦️.ts";
+import {resolveRemoteCacheContractV1} from "../../🟦️.ts";
+import {remoteCacheFetchV1,resolveRemoteCacheV1} from "../../🛰️fleet/🟦️.ts";
 import {runtimeServeV1} from "../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🌍️serve/🟦️.ts";
 import {SLOT_HEADER_V1} from "../../../🪢️slots/🟦️.ts";
 import {registerNxSlotsV1,type NxTaskRowV1} from "../../🪢️nx-slots/🟦️.ts";
@@ -12,7 +13,7 @@ export const NX_FLIGHT_POLICY_V1=schema.definitions.Policy.const;
 const policy=NX_FLIGHT_POLICY_V1,HASH=/^[a-z0-9_-]{1,128}$/u,SLOT=/^[0-9a-f]{64}$/u,INSTANCE=/^[a-z0-9][a-z0-9._-]{0,63}$/u;
 
 /** ⏱️ The tunable durations in milliseconds and the breaker threshold of one front. */
-export type NxFlightTimingV1=Readonly<{claimTtlMilliseconds:number;expectedMilliseconds:number;heartbeatMilliseconds:number;awaitSliceMilliseconds:number;waitBudgetMilliseconds:number;maximumHoldMilliseconds:number;claimTimeoutMilliseconds:number;upstreamTimeoutMilliseconds:number;failureThreshold:number;breakerMilliseconds:number}>;
+export type NxFlightTimingV1=Readonly<{claimTtlMilliseconds:number;expectedMilliseconds:number;heartbeatMilliseconds:number;awaitSliceMilliseconds:number;waitBudgetMilliseconds:number;maximumHoldMilliseconds:number;claimTimeoutMilliseconds:number;upstreamTimeoutMilliseconds:number;requestTimeoutMilliseconds:number;probeTimeoutMilliseconds:number;failureThreshold:number;breakerMilliseconds:number}>;
 /** 📊️ What one front did.
  * @see ./🧬️schema/🔣️.json */
 export type NxFlightCountersV1=Readonly<{hits:number;misses:number;claimed:number;waited:number;served:number;taken:number;duplicated:number;unclaimed:number;puts:number;released:number;guarded:number}>;
@@ -47,23 +48,38 @@ export async function startNxFlightV1(options:NxFlightOptionsV1):Promise<NxFligh
  if(!INSTANCE.test(options.instance))throw Error("Valid cache instance required / Gültige Cache-Instanz erforderlich");
  const timing={...nxFlightTimingV1(),...options.timing},upstream=options.upstream.replace(/\/+$/u,""),base=`${upstream}/${options.instance}`,transport=options.fetch??fetch,owner=options.owner??ownerName(),local=randomBytes(24).toString("hex"),report=options.report??(()=>{});
  const owned=new Map<string,{timer:ReturnType<typeof setInterval>;since:number}>(),slots=new Map<string,string>(),blocked=new Set<string>(),count={hits:0,misses:0,claimed:0,waited:0,served:0,taken:0,duplicated:0,unclaimed:0,puts:0,released:0,guarded:0};
- let failures=0,openUntil=0,refused=false,announced=false,stopping=false;
+ let failures=0,openUntil=0,tripped=false,recovering:Promise<boolean>|undefined,refused=false,announced=false,stopping=false;
  const authorization=(token:string|undefined):Record<string,string>=>token===undefined||token===""?{}:{authorization:`Bearer ${token}`};
  const note=()=>{if(!announced){announced=true;report({kind:"unavailable",endpoint:upstream});}};
- const failed=()=>{if(++failures>=timing.failureThreshold){openUntil=Date.now()+timing.breakerMilliseconds;failures=0;note();}};
+ const trip=()=>{openUntil=Date.now()+timing.breakerMilliseconds;tripped=true;failures=0;note();};
+ const failed=()=>{if(++failures>=timing.failureThreshold)trip();};
+ const recover=():Promise<boolean>=>recovering??=(async()=>{
+  try{const answer=await transport(`${upstream}/healthz`,{signal:AbortSignal.timeout(timing.probeTimeoutMilliseconds)});await answer.body?.cancel();if(answer.status===200){tripped=false;openUntil=0;failures=0;announced=false;return true;}}catch{}
+  openUntil=Date.now()+timing.breakerMilliseconds;return false;
+ })().finally(()=>{recovering=undefined;});
+ const available=async():Promise<boolean>=>{
+  if(stopping||Date.now()<openUntil)return false;
+  return tripped?recover():true;
+ };
+ const guarded=async(url:string,init:RequestInit,milliseconds:number,signal?:AbortSignal):Promise<Response>=>{
+  const first=new AbortController(),timer=setTimeout(()=>first.abort(),milliseconds),overall=AbortSignal.timeout(timing.upstreamTimeoutMilliseconds);
+  try{return await transport(url,{...init,signal:AbortSignal.any([first.signal,overall,...(signal?[signal]:[])])});}
+  finally{clearTimeout(timer);}
+ };
+ const settled=(response:Response):Response=>{if(response.status>=500&&response.status!==507)trip();return response;};
  const call=async(method:string,path:string,body:unknown,milliseconds:number,signal?:AbortSignal):Promise<Response|undefined>=>{
   try{
    const deadline=AbortSignal.timeout(milliseconds);
    return await transport(`${base}/claim/nx/${path}`,{method,headers:{...authorization(options.token),...(body===undefined?{}:{"content-type":"application/json"})},...(body===undefined?{}:{body:JSON.stringify(body)}),signal:signal?AbortSignal.any([signal,deadline]):deadline});
   }catch{return undefined;}
  };
- const usable=()=>!refused&&!stopping&&Date.now()>=openUntil;
+ const usable=()=>!refused&&!stopping&&Date.now()>=openUntil&&!tripped;
  const answer=async(response:Response|undefined):Promise<Record<string,unknown>|undefined>=>{
   if(!response)return undefined;
   try{return await response.json() as Record<string,unknown>;}catch{return undefined;}
  };
  const claim=async(key:string):Promise<Outcome>=>{
-  if(!usable())return {state:"unavailable"};
+  if(refused||!await available())return {state:"unavailable"};
   const response=await call("POST",key,{owner,ttlMilliseconds:timing.claimTtlMilliseconds,expectedMilliseconds:timing.expectedMilliseconds},timing.claimTimeoutMilliseconds);
   if(!response){failed();return {state:"unavailable"};}
   if([401,403,404,405].includes(response.status)){await response.body?.cancel();refused=true;note();return {state:"unavailable"};}
@@ -88,9 +104,10 @@ export async function startNxFlightV1(options:NxFlightOptionsV1):Promise<NxFligh
   const previous=owned.get(key);if(previous)clearInterval(previous.timer);
   owned.set(key,{timer,since});
  };
- const forwardGet=(key:string,signal?:AbortSignal):Promise<Response>=>{
-  const deadline=AbortSignal.timeout(timing.upstreamTimeoutMilliseconds);
-  return transport(`${base}/v1/cache/${key}`,{headers:authorization(options.token),signal:signal?AbortSignal.any([signal,deadline]):deadline});
+ const forwardGet=async(key:string,signal?:AbortSignal):Promise<Response>=>{
+  if(!await available())throw Error("Fleet cache down");
+  try{return settled(await guarded(`${base}/v1/cache/${key}`,{headers:authorization(options.token)},timing.requestTimeoutMilliseconds,signal));}
+  catch(error){if(!signal?.aborted&&!stopping)trip();throw error;}
  };
  const wait=async(key:string,signal:AbortSignal):Promise<Response|undefined>=>{
   const started=Date.now();let holder="",told=false;
@@ -131,8 +148,12 @@ export async function startNxFlightV1(options:NxFlightOptionsV1):Promise<NxFligh
   for(const name of["content-type","content-length"]){const value=request.headers.get(name);if(value!==null)headers[name]=value;}
   if(slot!==undefined)headers[SLOT_HEADER_V1]=slot;
   let response:Response;
-  try{response=await transport(`${base}/v1/cache/${key}`,{method:"PUT",headers,body:new Uint8Array(await request.arrayBuffer()),signal:AbortSignal.timeout(timing.upstreamTimeoutMilliseconds)} as RequestInit);}
-  catch{await release(key);return new Response("Bad gateway\n",{status:502,headers:{"content-type":"text/plain"}});}
+  const bytes=new Uint8Array(await request.arrayBuffer());
+  try{
+   if(!await available())throw Error("Fleet cache down");
+   response=settled(await guarded(`${base}/v1/cache/${key}`,{method:"PUT",headers,body:bytes} as RequestInit,timing.requestTimeoutMilliseconds+Math.ceil(bytes.length/2097152*1000)));
+  }
+  catch(error){if(!stopping&&(error as Error).message!=="Fleet cache down")trip();await release(key);return new Response("Bad gateway\n",{status:502,headers:{"content-type":"text/plain"}});}
   count.puts++;slots.delete(key);await release(key);
   return new Response(response.body,{status:response.status,headers:{"content-type":response.headers.get("content-type")??"text/plain"}});
  };
@@ -141,9 +162,11 @@ export async function startNxFlightV1(options:NxFlightOptionsV1):Promise<NxFligh
   const headers:Record<string,string>={...authorization(options.token)};
   for(const name of["content-type","content-length"]){const value=request.headers.get(name);if(value!==null)headers[name]=value;}
   try{
-   const response=await transport(`${base}/cas/${digest}`,{method:request.method,headers,...(request.method==="PUT"?{body:request.body,duplex:"half"}:{}),signal:AbortSignal.timeout(timing.upstreamTimeoutMilliseconds*5)} as RequestInit);
+   if(!await available())throw Error("Fleet cache down");
+   const init={method:request.method,headers,...(request.method==="PUT"?{body:request.body,duplex:"half"}:{})} as RequestInit,response=request.method==="PUT"?await transport(`${base}/cas/${digest}`,{...init,signal:AbortSignal.timeout(timing.upstreamTimeoutMilliseconds*5)}):await guarded(`${base}/cas/${digest}`,init,timing.requestTimeoutMilliseconds);
+   if(response.status>=500&&response.status!==507)trip();
    return new Response(request.method==="HEAD"?null:response.body,{status:response.status,headers:{"content-type":response.headers.get("content-type")??"application/octet-stream",...(response.headers.get("content-length")?{"content-length":response.headers.get("content-length")!}:{})}});
-  }catch{return new Response("Bad gateway\n",{status:502,headers:{"content-type":"text/plain"}});}
+  }catch(error){if(!stopping&&(error as Error).message!=="Fleet cache down")trip();return new Response("Bad gateway\n",{status:502,headers:{"content-type":"text/plain"}});}
  };
  const finish=async(request:Request):Promise<Response>=>{
   let body:Record<string,unknown>;
@@ -186,7 +209,8 @@ export async function routeNxThroughFlightV1(environment:Readonly<Record<string,
  let parsed:URL;try{parsed=new URL(server);}catch{return undefined;}
  const segments=parsed.pathname.split("/").filter(Boolean);
  if(segments.length!==1||parsed.search!==""||parsed.hash!==""||!INSTANCE.test(segments[0]!)||parsed.username!==""||parsed.password!=="")return undefined;
- return startNxFlightV1({upstream:parsed.origin,instance:segments[0]!,token,timing:{...nxFlightTimingV1(environment),...options.timing},...(options.report?{report:options.report}:{}),fetch:options.fetch??remoteCacheFetchV1(environment)});
+ const contract=resolveRemoteCacheV1(environment)?.contract??resolveRemoteCacheContractV1(environment);
+ return startNxFlightV1({upstream:parsed.origin,instance:segments[0]!,token,timing:{...nxFlightTimingV1(environment),...(contract===undefined?{}:{requestTimeoutMilliseconds:contract.timeoutSeconds*1000}),...options.timing},...(options.report?{report:options.report}:{}),fetch:options.fetch??remoteCacheFetchV1(environment)});
 }
 
 /** 🏁 Tells the front of this Nx run that the task `hash` ended: releases its claim at once and hands over its slot so the upload carries it. Called by the executor of the task; it needs no failure handling because it never throws, never waits longer than two seconds and does nothing without a front. */

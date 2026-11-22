@@ -232,7 +232,7 @@ fn the_sync_pill_speaks_reacts_own_vocabulary() {
 /// same reason.
 #[test]
 fn a_shell_with_no_backbone_reads_remote_detached() {
-    let shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     assert_eq!(shell.sync.sync_pill(), ShellSyncPill::Remote(ShellSyncRemote::Detached));
     assert_eq!(shell_sync_pill_text(shell.sync.sync_pill(), false), "Remote: detached");
     assert!(PanelsViewCtx::of(&mut shell).footer_presence_rows().is_empty());
@@ -311,4 +311,40 @@ fn live_host_introduction_policy_preserves_the_unanswered_tour() {
     semio_renderer_wgpu_host_base::set_host_introduction_suppressed(false);
     shell.docs.reconcile_host_introduction_policy(&mut shell.chrome, &shell.tutorial);
     assert!(!shell.chrome.chrome_build.tour_is_open());
+}
+
+/// 🧪️ The hub first-run tour rides the shell's ONE introduction overlay (no second onboarding chrome): opening
+/// the hub surface reads the `os.hub` flag, an unseen profile starts it on the step the hub state derives,
+/// the overlay's own dismissal answers under `os.hub`, the answer holds across a reopening, and Replay
+/// restarts at step 0 whatever the state.
+#[test]
+fn the_hub_first_run_tour_auto_opens_once_answers_under_os_hub_and_replays_from_step_zero() {
+    use semio_renderer_wgpu_shell_chrome_state::ChromeTourSource;
+    let mut shell = tour_shell(None);
+    shell.directory.hub_workspace_open = true;
+    shell.docs.reconcile_hub_first_run(&mut shell.chrome, &shell.directory, &shell.tutorial);
+    assert_eq!(shell.chrome.chrome_present.maintenance.introduction_read.as_deref(), Some("os.hub"), "an unknown flag is read before the tour may start");
+    assert!(shell.chrome.chrome_build.tour_state.is_none());
+    shell.chrome.chrome_build.introduction_seen.insert("os.hub".into(), false);
+    shell.docs.reconcile_hub_first_run(&mut shell.chrome, &shell.directory, &shell.tutorial);
+    let tour = shell.chrome.chrome_build.tour_state.clone().expect("an unseen profile auto-opens the hub tour");
+    assert_eq!((tour.source, tour.step_index), (ChromeTourSource::HubFirstRun, 1), "signed out opens on the sign-in step");
+    assert_eq!(shell.docs.chrome_tour_active_step(&shell.chrome).map(|step| step.id), Some("hub.firstRun.signIn".to_string()));
+    assert_eq!(shell.docs.chrome_tour_seen_key(&shell.chrome).as_deref(), Some("os.hub"));
+    let seen_key = shell.docs.chrome_tour_seen_key(&shell.chrome).unwrap();
+    shell.chrome.chrome_build.dismiss_introduction(&seen_key);
+    assert!(shell.chrome.chrome_build.tour_state.is_none());
+    assert_eq!(shell.chrome.chrome_build.introduction_seen_writes, vec!["os.hub".to_string()], "the dismissal is queued under the shared introduction key");
+    shell.docs.reconcile_hub_first_run(&mut shell.chrome, &shell.directory, &shell.tutorial);
+    assert!(shell.chrome.chrome_build.tour_state.is_none(), "an answered tour does not come back while the surface stays open");
+    shell.directory.hub_workspace_open = false;
+    shell.docs.reconcile_hub_first_run(&mut shell.chrome, &shell.directory, &shell.tutorial);
+    shell.directory.hub_workspace_open = true;
+    shell.docs.reconcile_hub_first_run(&mut shell.chrome, &shell.directory, &shell.tutorial);
+    assert!(shell.chrome.chrome_build.tour_state.is_none(), "nor on the next opening");
+    shell.chrome.chrome_build.start_hub_first_run(semio_renderer_wgpu_hub_workspace::hub_first_run::hub_first_run_replay_step());
+    assert_eq!(shell.chrome.chrome_build.tour_state.as_ref().map(|tour| tour.step_index), Some(0), "replay restarts at the beginning");
+    shell.directory.hub_workspace_open = false;
+    shell.docs.reconcile_hub_first_run(&mut shell.chrome, &shell.directory, &shell.tutorial);
+    assert!(shell.chrome.chrome_build.tour_state.is_none(), "closing the hub surface ends a running tour");
 }

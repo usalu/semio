@@ -162,7 +162,7 @@ fn outliner_set_verbs_are_idempotent_by_value_and_refuse_a_missing_value() {
         ("setTargetRegionHidden", "hidden", json!({ "id": region.clone() })),
         ("setTargetRegionLocked", "locked", json!({ "id": region.clone() })),
     ] {
-        assert!(<Puzzle2dPlayApp as ArtifactEditor>::command_from_action(verb, Some(&semio_framework_value::ToValue::to_value(&args))).is_err(), "{verb} without its {flag} value must be refused");
+        assert!(<Puzzle2dPlayApp as ArtifactEditor>::command_from_action(verb, &mut Some(semio_framework_value::ToValue::to_value(&args)), &mut None).is_err(), "{verb} without its {flag} value must be refused");
         set_at(&mut args, flag, json!(true));
         let first = dispatch(&mut app, verb, Some(&args), None).unwrap_or_else(|fault| panic!("{verb}: {fault:?}"));
         assert_eq!(committed_edits(&first), 1, "{verb} commits exactly one document edit");

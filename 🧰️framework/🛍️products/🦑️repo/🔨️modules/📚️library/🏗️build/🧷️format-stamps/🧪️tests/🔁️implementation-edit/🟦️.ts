@@ -14,7 +14,7 @@ import {runWithStaleReexecV1} from "../../🔄️reexec/🟨️.mjs";
 import {SCRIPT_PROCESS_INVOCATION_ENV,createScriptProcessEnvelope,readScriptPolicy,scriptProcessEnvironment} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {concurrentEditV1,staleImplementationV1} from "../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
 
-type Wire={name?:string;code?:string;reason?:string;path?:string;rank?:number;message:string;outcome?:{status:number};cause?:Wire;errors?:Wire[]};
+type Wire={name?:string;code?:string;replicaUnsettled?:boolean;reason?:string;path?:string;rank?:number;message:string;outcome?:{status:number};cause?:Wire;errors?:Wire[]};
 type Policy={id:string;origin:"error"|"exit"|"load"|"edit";attempt:number;ranMilliseconds:number;outermost:boolean};
 const python=testPythonV1(),here=dirname(fileURLToPath(import.meta.url)),protocol=formatStampProtocolV1(),scratches:string[]=[];
 const framework=fileURLToPath(new URL("../../../../../../../../",import.meta.url));
@@ -24,7 +24,7 @@ const oracle=JSON.parse(Bun.spawnSync([python!,"-I",join(here,"🐍️.py"),join
 const errorOf=(wire:Wire):Error=>{
  const base=wire.errors?new AggregateError(wire.errors.map(errorOf),wire.message):new Error(wire.message,wire.cause?{cause:errorOf(wire.cause)}:undefined);
  if(wire.name)base.name=wire.name;
- return Object.assign(base,wire.code===undefined?{}:{code:wire.code},wire.reason===undefined?{}:{reason:wire.reason},wire.path===undefined?{}:{path:wire.path},wire.rank===undefined?{}:{rank:wire.rank},wire.outcome===undefined?{}:{outcome:wire.outcome});
+ return Object.assign(base,wire.code===undefined?{}:{code:wire.code},wire.replicaUnsettled===undefined?{}:{replicaUnsettled:wire.replicaUnsettled},wire.reason===undefined?{}:{reason:wire.reason},wire.path===undefined?{}:{path:wire.path},wire.rank===undefined?{}:{rank:wire.rank},wire.outcome===undefined?{}:{outcome:wire.outcome});
 };
 
 test("the vectors are closed under their schema and the oracle answers every one",()=>{

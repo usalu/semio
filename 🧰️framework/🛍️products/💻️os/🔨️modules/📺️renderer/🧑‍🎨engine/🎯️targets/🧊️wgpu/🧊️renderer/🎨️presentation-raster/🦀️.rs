@@ -108,6 +108,21 @@ struct RuntimeRasterOperationAuthorityInner {
 #[derive(Clone)]
 pub struct RuntimeRasterOperationAuthority(pub Arc<RuntimeRasterOperationAuthorityInner>);
 
+#[cfg(any(test, feature = "testkit"))]
+impl RuntimeRasterOperationAuthority {
+    /// 🧪️ Seeds the next operation generation so tests can reach exhaustion without 2^64 begins.
+    #[doc(hidden)]
+    pub fn testkit_seed_next_operation(&self, next: u64) {
+        self.0.next_operation.store(next, Ordering::Release);
+    }
+
+    /// 🧪️ Observes the permanent exhaustion latch and the generation counter.
+    #[doc(hidden)]
+    pub fn testkit_exhaustion(&self) -> (bool, u64) {
+        (self.0.exhausted.load(Ordering::Acquire), self.0.next_operation.load(Ordering::Acquire))
+    }
+}
+
 impl RuntimeRasterOperationAuthority {
     pub fn new() -> Self {
         Self(Arc::new(RuntimeRasterOperationAuthorityInner { next_operation: AtomicU64::new(1), exhausted: AtomicBool::new(false), current: Mutex::new(None) }))
@@ -531,7 +546,6 @@ impl NativeReferenceDecodeJob {
 
 pub struct NativeAssetHandoff {
     pub fetch: Option<RendererAssetFetchOwner>,
-    pub payload: Option<semio_framework_job::RetainedJobPayload>,
     pub seal: bool,
     pub reject: Option<bool>,
 }
@@ -684,12 +698,12 @@ impl<R> RuntimeMailboxInner<R> {
 
 /// 🔌️ Everything the runtime mailbox needs of the runtime it guards (plan section 5.3, inversion I2): the interaction checkout, the two pending
 /// frame cursors and the resize entry. The mailbox is generic over it so the transport crate never names the application runtime above it.
-pub trait MailboxRuntime: semio_framework_job::JobThreadTransfer + 'static {
+pub trait MailboxRuntime: Send + 'static {
     fn interaction(&self) -> Option<&AppInteractionState>;
     fn interaction_mut(&mut self) -> Option<&mut AppInteractionState>;
     fn interaction_available(&self) -> bool;
-    fn interaction_checkout(&self) -> &runtime_mailbox_core::InteractionCheckoutLedger;
-    fn interaction_checkout_mut(&mut self) -> &mut runtime_mailbox_core::InteractionCheckoutLedger;
+    fn admit_interaction_checkout(&mut self, requires_interaction: bool, available: bool, owner_outstanding: bool) -> runtime_mailbox_core::InteractionCheckoutStep;
+    fn interaction_checkout_site(&self) -> Option<&'static str>;
     fn check_out_interaction(&mut self, site: &'static str) -> Option<AppInteractionState>;
     fn return_interaction(&mut self, interaction: AppInteractionState);
     fn resize(&mut self, logical_width: f32, logical_height: f32, scale_factor: f32);
@@ -746,7 +760,7 @@ impl<R> Drop for FrameMaintenanceExecutionEnvelope<R> {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-struct FrameMaintenanceExecutionGuard<R> {
+pub struct FrameMaintenanceExecutionGuard<R> {
     mailbox: RuntimeMailbox<R>,
     registry: Arc<FrameExecutionRegistry<FrameMaintenanceOwner>>,
     owner_cell: Arc<FrameExecutionOwnerCell<FrameMaintenanceOwner>>,
@@ -758,11 +772,11 @@ struct FrameMaintenanceExecutionGuard<R> {
 
 #[cfg(not(target_arch = "wasm32"))]
 impl<R> FrameMaintenanceExecutionGuard<R> {
-    pub(crate) fn owner_mut(&mut self) -> Option<&mut FrameMaintenanceOwner> {
+    pub fn owner_mut(&mut self) -> Option<&mut FrameMaintenanceOwner> {
         self.owner.as_mut()
     }
 
-    pub(crate) fn finish(mut self) -> bool {
+    pub fn finish(mut self) -> bool {
         let Some(owner) = self.owner.take() else { return false; };
         self.owner_cell.restore_taken(owner);
         self.completed = true;
@@ -810,7 +824,7 @@ pub struct RuntimeDispatchReturn<R> {
     interaction: Option<AppInteractionState>,
 }
 impl<R> RuntimeDispatchReturn<R>{
-    pub(crate) fn new(mailbox: RuntimeMailbox<R>, revision: u64, cursor: RuntimeDispatchCursor, interaction: AppInteractionState) -> Self {
+    pub fn new(mailbox: RuntimeMailbox<R>, revision: u64, cursor: RuntimeDispatchCursor, interaction: AppInteractionState) -> Self {
         Self { mailbox, revision, cursor: Some(cursor), interaction: Some(interaction) }
     }
 
@@ -855,7 +869,7 @@ impl<R> Drop for FrameDeferredExecutionEnvelope<R> {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-struct FrameDeferredExecutionGuard<R> {
+pub struct FrameDeferredExecutionGuard<R> {
     mailbox: RuntimeMailbox<R>,
     registry: Arc<FrameExecutionRegistry<FrameDeferredExecutionOwner>>,
     owner_cell: Arc<FrameExecutionOwnerCell<FrameDeferredExecutionOwner>>,
@@ -867,11 +881,11 @@ struct FrameDeferredExecutionGuard<R> {
 
 #[cfg(not(target_arch = "wasm32"))]
 impl<R> FrameDeferredExecutionGuard<R> {
-    pub(crate) fn owner_mut(&mut self) -> Option<&mut FrameDeferredExecutionOwner> {
+    pub fn owner_mut(&mut self) -> Option<&mut FrameDeferredExecutionOwner> {
         self.owner.as_mut()
     }
 
-    pub(crate) fn finish(mut self) -> bool {
+    pub fn finish(mut self) -> bool {
         let Some(owner) = self.owner.take() else { return false; };
         self.owner_cell.restore_taken(owner);
         self.completed = true;

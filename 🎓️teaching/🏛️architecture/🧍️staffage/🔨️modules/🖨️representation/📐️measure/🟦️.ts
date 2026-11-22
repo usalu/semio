@@ -425,10 +425,19 @@ function measureFeatureWidthMm(rings: readonly Ring[], minFeatureMm: number, atL
       if (union === undefined) byPen.set(cover.penMm, (union = lease(`union:${byPen.size}`, Uint8Array, nx * ny)));
       rasterize(cover.rings, pitch, x0, y0, nx, ny, union);
     }
+    const cutFrom = lease("cut:from", Int32Array, ny).fill(nx);
+    const cutTo = lease("cut:to", Int32Array, ny).fill(-1);
+    for (let y = 0, i = 0; y < ny; y++)
+      for (let x = 0; x < nx; x++, i++)
+        if (mask[i] === 1) {
+          if (x < cutFrom[y]!) cutFrom[y] = x;
+          cutTo[y] = x;
+        }
     for (const [penMm, union] of byPen) {
-      const reach = penMm > 0 ? squaredDistanceTransform(union, nx, ny, cutScratch) : union;
+      const span = Math.ceil(penMm / 2 / pitch + 0.5) + 1;
+      const reach = penMm > 0 ? squaredDistanceTransform(union, nx, ny, cutScratch, { from: cutFrom, to: cutTo, margin: span, cap: span }) : union;
       const limit = penMm > 0 ? ((penMm / 2) / pitch + 0.5) ** 2 : 0;
-      for (let i = 0; i < mask.length; i++) if (penMm > 0 ? reach[i]! <= limit : union[i] === 1) mask[i] = 0;
+      for (let i = 0; i < mask.length; i++) if (mask[i] === 1 && (penMm > 0 ? reach[i]! <= limit : union[i] === 1)) mask[i] = 0;
     }
     dropSmallPieces(mask, nx, ny, Math.ceil((minFeatureMm / 2) ** 2 / (pitch * pitch)));
   }

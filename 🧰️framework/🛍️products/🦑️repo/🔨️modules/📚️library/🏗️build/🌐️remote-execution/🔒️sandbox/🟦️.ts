@@ -1,6 +1,8 @@
 import {spawnSync} from "node:child_process";
 import {accessSync,constants,lstatSync,readlinkSync,realpathSync} from "node:fs";
+import {cp,symlink} from "node:fs/promises";
 import {tmpdir} from "node:os";
+import {dirname,isAbsolute,posix,relative,resolve,sep,win32} from "node:path";
 import {HERMETIC_TABLE_V1} from "../../🏃️execution/🔒️hermetic/🟦️.ts";
 import type {RemoteExecutionSandboxV1} from "../🟦️.ts";
 
@@ -49,6 +51,28 @@ export function remoteExecutionBubblewrapArgumentsV1(spec:RemoteExecutionSandbox
 /** 🩺️ The command line that proves a Linux host can run the real sandbox: exactly the namespaces, devices and `/proc` mount of {@link remoteExecutionBubblewrapArgumentsV1} around `/bin/true`, so a container that allows a bare `bwrap --ro-bind / /` but refuses a new `/proc` or process namespace is not mistaken for a host that confines (the worker then takes the private root and says so). */
 export function remoteExecutionBubblewrapProbeArgumentsV1(root:string):string[]{
  return remoteExecutionBubblewrapArgumentsV1({argv:["/bin/true"],env:{},cwd:root,root,network:false}).slice(1);
+}
+
+/** 🧰️ The file operations that place one input link: a test injects a host that refuses symbolic links, as an unprivileged Windows account does. */
+export type RemoteExecutionLinkOperationsV1=Readonly<{symlink:(target:string,path:string)=>Promise<void>;copy:(from:string,to:string)=>Promise<void>}>;
+
+const LINK_OPERATIONS:RemoteExecutionLinkOperationsV1={symlink:(target,path)=>symlink(target,path),copy:(from,to)=>cp(from,to,{recursive:true,dereference:true,force:true})};
+
+/** 🧭️ The path functions that decide where a link leads; `path.posix` and `path.win32` qualify, so a test can run either on any host. */
+export type RemoteExecutionLinkFlavourV1=Pick<typeof posix,"resolve"|"relative"|"dirname"|"isAbsolute"|"sep">;
+
+/** 🚧️ Whether the symbolic link at `path` (below `root`) leads out of the input root: an absolute or drive-led target in either spelling, or one that resolves outside `root`. Input trees come from other machines, so a link never gets to name a host file. */
+export function remoteExecutionLinkEscapesV1(root:string,path:string,target:string,flavour:RemoteExecutionLinkFlavourV1={resolve,relative,dirname,isAbsolute,sep}):boolean{
+ if(target===""||posix.isAbsolute(target)||win32.isAbsolute(target)||target.startsWith("/")||target.startsWith("\\"))return true;
+ const inside=flavour.relative(root,flavour.resolve(flavour.dirname(path),target));
+ return inside===".."||inside.startsWith(".."+flavour.sep)||flavour.isAbsolute(inside);
+}
+
+/** 🔗️ Places one symbolic link of an input tree at `path` below `root`: a real link where the host allows it, otherwise a copy of what the link names (resolved against the link's own directory), so an input root never needs the privilege to create symbolic links. A link that leaves the root is refused before anything is placed. Answers which one it did. */
+export async function placeRemoteExecutionLinkV1(target:string,path:string,root:string,operations:RemoteExecutionLinkOperationsV1=LINK_OPERATIONS):Promise<"link"|"copy">{
+ if(remoteExecutionLinkEscapesV1(root,path,target))throw Error(`Input link leaves the input root: ${path} -> ${target}`);
+ try{await operations.symlink(target,path);return "link";}
+ catch{await operations.copy(resolve(dirname(path),target),path);return "copy";}
 }
 
 const probe=(command:string,args:readonly string[]):boolean=>{

@@ -59,7 +59,7 @@ describe("Shell components", () => {
                     children: <div data-testid="window-body">Body</div>,
                   },
                 ]}
-                layout={{ kind: "stack", children: [{ kind: "window", id: "engagement-window" }] }}
+                layout={{ kind: "stack", children: [{ kind: "window", windowKindId: "engagement-window" }] }}
               />
             </div>
           )}

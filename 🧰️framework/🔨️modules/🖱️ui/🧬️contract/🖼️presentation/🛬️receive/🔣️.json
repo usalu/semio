@@ -489,7 +489,7 @@
                 "size": {
                   "type": "number"
                 },
-                "activeWindowKindId": {
+                "activeWindowId": {
                   "type": "string"
                 },
                 "children": {
@@ -1502,7 +1502,7 @@
     },
     {
       "family": "WindowLayout",
-      "wire": "{\"root\":{\"kind\":\"split\",\"axis\":\"horizontal\",\"children\":[{\"kind\":\"window\",\"windowKindId\":\"editor\",\"instanceId\":\"w1\",\"title\":\"Editor\",\"corner\":\"topRight\"},{\"kind\":\"stack\",\"activeWindowKindId\":\"inspector\",\"children\":[{\"kind\":\"window\",\"windowKindId\":\"inspector\",\"templateId\":\"t\"}]}]}}",
+      "wire": "{\"root\":{\"kind\":\"split\",\"axis\":\"horizontal\",\"children\":[{\"kind\":\"window\",\"windowKindId\":\"editor\",\"instanceId\":\"w1\",\"title\":\"Editor\",\"corner\":\"topRight\"},{\"kind\":\"stack\",\"activeWindowId\":\"inspector\",\"children\":[{\"kind\":\"window\",\"windowKindId\":\"inspector\",\"templateId\":\"t\"}]}]}}",
       "accepted": true
     },
     {

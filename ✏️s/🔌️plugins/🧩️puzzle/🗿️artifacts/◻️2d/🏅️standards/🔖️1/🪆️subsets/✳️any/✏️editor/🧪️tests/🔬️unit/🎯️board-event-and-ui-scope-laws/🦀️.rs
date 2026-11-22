@@ -44,7 +44,8 @@ async fn exact_overview_window_cameras_isolate_render_and_reload_through_registe
     let packs = app.window_config_packs().await.expect("two exact window packs");
     assert_eq!(packs.len(), 2);
     for pack in packs {
-        reopened.load_window_config_pack(pack).await.expect("reload exact Puzzle 2D window pack");
+        let crate::editor::puzzle2d::testkit::Puzzle2dApp(app, scope) = reopened.as_mut();
+        semio_plugin::restore_fixture_window_config(app, pack, scope.cx()).await.expect("reload exact Puzzle 2D window pack");
     }
     assert_eq!(rendered_camera(&render_window(&mut reopened, overview::BODY_KEY, window_a)), (18.0, -4.0, 2.0));
     assert_eq!(rendered_camera(&render_window(&mut reopened, overview::BODY_KEY, window_b)), (-9.0, 6.0, 0.5));
@@ -153,7 +154,7 @@ async fn select_action_declares_partial_ui_scope() {
     let result = dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": json!([{ "name": "select", "payload": { "ids": [node_id] } }]).to_string() })), None).expect("select");
     match result.ui_scope {
         UiDirtyScope::Partial { window_bodies, panel_bodies, engagements, measures, utilities, tools, labels } => {
-            assert_eq!(window_bodies, vec![overview::BODY_KEY, detail::BODY_KEY, crate::standards::v1::subsets::any::schema::mutations::selection::BODY_KEY], "window_bodies must be body keys, not pane ids");
+            assert_eq!(window_bodies, vec![overview::BODY_KEY, detail::BODY_KEY, selection::BODY_KEY], "window_bodies must be body keys, not pane ids");
             assert!(panel_bodies.contains(&crate::editor::puzzle2d::config::PUZZLE2D_PLAY_BODY_LAYERS.to_string()));
             assert!(panel_bodies.contains(&crate::editor::puzzle2d::config::PUZZLE2D_PLAY_BODY_PROPERTIES.to_string()));
             assert!(engagements, "select must refresh the engagement bar");

@@ -1,7 +1,7 @@
 {
   "title": "Get Process Working End to End",
   "emoji": "🪚️",
-  "status": "closed",
+  "status": "open",
   "description": "Get process working end to end. Plugin build fails in process/plugin/rs/lib.rs around toggle_sun_round_trips_through_runtime_and_defaults_off (corrupted WindowMeasure match arm). Fix compile errors and verify process 3d app runs via framework OS playground (dev:process:3d).",
   "summary": "Fixed process plugin compile failure and verified process 3d end-to-end. Root cause: corrupted match arm in toggle_sun_round_trips_through_runtime_and_defaults_off (stray WindowMeasure field lines pasted into a match). Restored WindowMeasure::Group match. cargo build wasm32-wasip2 release ok; cargo test -p process-plugin --lib 34/34 passed; React playground (SEMIO_RENDERER=react) serves on :6022; Playwright e2e shows Process 3D chrome with Timber Beam Joinery, one canvas, no render/page errors.",
   "github": {
@@ -9,6 +9,20 @@
   },
   "goal": "🎯️r2602",
   "sessions": [
-    "⚪️99ddd831a7884a8a8c2f323895cc287f"
+    "⚪️99ddd831a7884a8a8c2f323895cc287f",
+    "efb50930-32ac-42b2-b5c0-1127cac7ed82"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-22 00:32:57",
+      "author": "",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Get process plugin working end to end again (2026-11-22): build wasm plugin, bridge, extensions (metal, wood, robotic, concrete), process3d artifact, TS package; all tests green; dev route serves Process 3D app without errors. Fall back to native tools if the shared work fleet is unavailable.",
+      "llm": "opus-5-5",
+      "effort": "medium"
+    }
   ]
 }

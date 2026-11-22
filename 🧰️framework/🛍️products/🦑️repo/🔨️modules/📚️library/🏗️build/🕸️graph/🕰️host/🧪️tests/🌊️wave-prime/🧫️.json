@@ -1,0 +1,43 @@
+[
+  {
+    "name": "preparing a cold generation performs only the required preflight",
+    "waves": [
+      "fresh"
+    ],
+    "outcomes": [
+      "prepared"
+    ],
+    "trace": [
+      "preflight"
+    ]
+  },
+  {
+    "name": "cancelling preparation leaves the following wave independent",
+    "waves": [
+      "cancelled",
+      "fresh"
+    ],
+    "outcomes": [
+      "cancelled",
+      "prepared"
+    ],
+    "trace": [
+      "preflight"
+    ]
+  },
+  {
+    "name": "a later wave can prepare after an earlier one succeeds",
+    "waves": [
+      "fresh",
+      "fresh"
+    ],
+    "outcomes": [
+      "prepared",
+      "prepared"
+    ],
+    "trace": [
+      "preflight",
+      "preflight"
+    ]
+  }
+]

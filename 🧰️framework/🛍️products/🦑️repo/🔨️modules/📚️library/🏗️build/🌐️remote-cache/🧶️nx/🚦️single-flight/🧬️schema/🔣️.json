@@ -22,6 +22,8 @@
         "maximumHoldMilliseconds": 1800000,
         "claimTimeoutMilliseconds": 3000,
         "upstreamTimeoutMilliseconds": 120000,
+        "requestTimeoutMilliseconds": 30000,
+        "probeTimeoutMilliseconds": 1500,
         "failureThreshold": 3,
         "breakerMilliseconds": 30000,
         "environment": {

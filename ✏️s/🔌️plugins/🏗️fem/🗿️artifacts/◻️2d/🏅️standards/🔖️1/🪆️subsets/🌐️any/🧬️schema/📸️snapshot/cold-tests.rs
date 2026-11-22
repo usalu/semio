@@ -25,7 +25,7 @@ fn cold_builder_crosses_page_boundaries_and_retires_its_roots(){
   value.nodes=(0..count).map(|i|FemNodeValue{id:format!("n{i}"),x:1.,y:2.,}).collect();
   let snapshot=Fem2dSnapshot::from_reference(value).unwrap();
   assert_eq!(snapshot.nodes.len(),count);
-  if count>0{assert_eq!(snapshot.nodes.get(count-1).unwrap().id.as_str(),format!("n{}",count-1));}
+  if count>0{assert_eq!(snapshot.nodes.get().get(count-1).unwrap().id.as_str(),format!("n{}",count-1));}
   <Fem2dSnapshot as semio_framework_value::FromValue>::retire_decoded(snapshot);
  }
 }
@@ -56,15 +56,15 @@ fn exclusive_cold_cleanup_refuses_aliases_and_allocates_nothing(){
 #[test]
 fn nested_string_alias_refuses_the_unchanged_cold_tree(){
  let mut nodes=semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::cold::nodes2d(vec![FemNodeValue{id:"alpha".into(),x:1.,y:2.}]).unwrap();
- let alias=nodes.get(0).unwrap().id.clone();
- let (ok,attempts)=semio_framework_value_testing_allocator::refuse_one_allocation_on_this_thread(||nodes.cold_dismantle());assert!(!ok);assert_eq!(attempts,0);assert_eq!(nodes.get(0).unwrap().id.as_str(),"alpha");drop(alias);
+ let alias=nodes.get().get(0).unwrap().id.clone();
+ let (ok,attempts)=semio_framework_value_testing_allocator::refuse_one_allocation_on_this_thread(||nodes.cold_dismantle());assert!(!ok);assert_eq!(attempts,0);assert_eq!(nodes.get().get(0).unwrap().id.as_str(),"alpha");drop(alias);
  let (ok,attempts)=semio_framework_value_testing_allocator::refuse_one_allocation_on_this_thread(||nodes.cold_dismantle());assert!(ok);assert_eq!(attempts,0);assert!(nodes.is_empty());
 }
 
 #[test]
 fn material_text_alias_refuses_unchanged_then_drains_without_allocation(){
  let mut materials=semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::cold::materials2d(vec![FemMaterialValue{id:"steel".into(),name:"Steel".into(),e:2.,nu:0.2,rho:1.}]).unwrap();
- let alias=materials.get(0).unwrap().name.clone();
- let (ok,attempts)=semio_framework_value_testing_allocator::refuse_one_allocation_on_this_thread(||materials.cold_dismantle());assert!(!ok);assert_eq!(attempts,0);assert_eq!(materials.get(0).unwrap().name.as_str(),"Steel");drop(alias);
+ let alias=materials.get().get(0).unwrap().name.clone();
+ let (ok,attempts)=semio_framework_value_testing_allocator::refuse_one_allocation_on_this_thread(||materials.cold_dismantle());assert!(!ok);assert_eq!(attempts,0);assert_eq!(materials.get().get(0).unwrap().name.as_str(),"Steel");drop(alias);
  let (ok,attempts)=semio_framework_value_testing_allocator::refuse_one_allocation_on_this_thread(||materials.cold_dismantle());assert!(ok);assert_eq!(attempts,0);assert!(materials.is_empty());
 }

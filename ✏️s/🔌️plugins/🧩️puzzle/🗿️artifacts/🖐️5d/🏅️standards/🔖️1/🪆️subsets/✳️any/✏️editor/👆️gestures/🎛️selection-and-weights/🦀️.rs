@@ -11,7 +11,7 @@ use semio_plugin::Emit;
 use semio_plugin::Fault;
 use semio_framework_pack_json::Value;
 use semio_framework_value::{RetainedCloneProgress, RetirementDemand, ValueError, ValueRefusalKind};
-use semio_framework_value::retained_clone::{OriginalEffectReply, RetainedCloneGrant, RetainedCloneStep, ordered_map::{BoundedOrdGrant, RetainedOrderedMapInsertCursor, RetainedOrderedMapInsertGrant}};
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneStep, ordered_map::{BoundedOrdGrant, RetainedOrderedMapInsertCursor, RetainedOrderedMapInsertGrant}};
 use semio_framework_action_bus::ToolJobAdmissionDemand;
 use crate::editor::puzzle5d::config::Puzzle5dKindWeights;
 use crate::editor::puzzle5d::interaction::Puzzle5dEditor;
@@ -234,7 +234,6 @@ enum Puzzle5dKindWeightStage {
 struct Puzzle5dKindWeightWorkOwners {
     pub ids: Vec<String>,
     pub result: Puzzle5dKindWeights,
-    pub insert: Option<semio_framework_value::retained_clone::ordered_map::RetainedOrderedMapInsertCursor<String, f64>>,
     pub refused_key: Option<String>,
     pub changed_id: Option<String>,
 }
@@ -294,14 +293,6 @@ impl Puzzle5dKindWeightWork {
         }
     }
 
-    fn section(&self) -> &'static str {
-        if self.tool_id == "setPartKindWeight" {
-            "parts"
-        } else {
-            "grips"
-        }
-    }
-
     pub fn weights<'a>(&self, config: &'a Puzzle5dConfig) -> &'a Puzzle5dKindWeights {
         if self.tool_id == "setPartKindWeight" {
             &config.object_kind_weights
@@ -310,9 +301,14 @@ impl Puzzle5dKindWeightWork {
         }
     }
 
-    fn catalog(&self, snapshot: &Puzzle5dPlaySnapshot) -> Vec<Value> {
-        let projection = puzzle5d_editor_projection(snapshot);
-        projection.get("kindCatalogs").and_then(|value| value.get(self.section())).and_then(Value::as_array).cloned().unwrap_or_default()
+    fn catalog_kind<'a>(&self, snapshot: &'a Puzzle5dSnapshot) -> Option<&'a str> {
+        snapshot.kind_catalogs.as_ref()?;
+        let catalog = snapshot.kind_catalogs_extra.as_ref()?;
+        if self.tool_id == "setPartKindWeight" {
+            catalog.parts.get(self.cursor).map(|row| row.id.as_str())
+        } else {
+            catalog.grips.get(self.cursor).map(|row| row.id.as_str())
+        }
     }
 
     fn push_id(&mut self, id: &str, inferred: bool) -> Result<(), Fault> {
@@ -358,40 +354,42 @@ impl Puzzle5dKindWeightWork {
         Ok(true)
     }
 
-    /// 🧵️ Advances the admitted insertion by one funded action under the turn's original effect, then closes its cursor; `true` once the dictionary is back in `result`.
+    fn result_insert_effect(
+        cx: &mut StepContext<'_>,
+        run: impl FnOnce(&mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<Option<RetainedCloneStep>, ValueError>,
+    ) -> Result<RetainedCloneProgress, semio_framework_job::OriginalTurnFailure> {
+        let grant = cx.retained_grant();
+        let debit = |error: ValueError, cx: &mut StepContext<'_>| semio_framework_job::OriginalTurnFailure::debit_original(error, cx);
+        let Some((step, work)) = cx.with_original_source_effect(grant, |_, effect| run(effect)).map_err(|error| debit(error, cx))? else {
+            return Ok(RetainedCloneProgress::default());
+        };
+        cx.consume_work(work);
+        let progress = step.map_err(|error| debit(error, cx))?.map_or_else(RetainedCloneProgress::default, |step| step.progress());
+        cx.consume_retained(progress).map_err(|error| semio_framework_job::OriginalTurnFailure::from(error.with_retained_progress(progress)))?;
+        Ok(progress)
+    }
+
+    /// 🧵️ Advances one funded insertion action and closes its original cursor when the dictionary is returned.
     fn advance_result_insert(&mut self, cx: &mut StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
         let grant = cx.retained_grant();
         let Some(cursor) = self.insert.as_mut() else { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "puzzle5d kind weight insertion cursor is missing").into()) };
-        let debit = |error: ValueError, cx: &mut StepContext<'_>| semio_framework_job::OriginalTurnFailure::debit_original(error, cx);
-        let step: Option<Result<Option<RetainedCloneStep>, ValueError>> = if self.insert_closing {
-            cx.with_original_effect(grant, |_, effect| cursor.close_turn(grant.maximum_copy_bytes, effect)).map_err(|error| debit(error, cx))?.map(|(step, _)| step)
+        if self.insert_closing {
+            Self::result_insert_effect(cx, |effect| cursor.close_turn(grant.maximum_copy_bytes, effect))?;
         } else if cursor.output_ready() {
             let mut output = None;
-            let taken = cx.with_original_effect(grant, |_, effect| cursor.take_turn(&mut output, effect)).map_err(|error| debit(error, cx))?.map(|(step, _)| step);
+            let taken = Self::result_insert_effect(cx, |effect| cursor.take_turn(&mut output, effect));
             if let Some(map) = output { self.result = map; self.insert_closing = true; }
-            taken
+            taken?;
         } else {
-            let insert = RetainedOrderedMapInsertGrant { retirement: grant, comparison: BoundedOrdGrant { maximum_items: 1, maximum_bytes: 1 }, maximum_moved_items: grant.maximum_items, maximum_moved_bytes: grant.maximum_copy_bytes, maximum_capacity_bytes: grant.maximum_capacity_bytes };
-            cx.with_original_effect(grant, |_, effect| cursor.advance_turn(grant.maximum_copy_bytes, insert, effect)).map_err(|error| debit(error, cx))?.map(|(step, _)| step)
-        };
-        let Some(step) = step else { return Ok(false) };
-        match step {
-            Ok(Some(step)) => {
-                let receipt = step.progress();
-                let result = cx.consume_retained(receipt);
-                cx.consume_fuel(1);
-                result.map_err(|error| semio_framework_job::OriginalTurnFailure::from(error.with_retained_progress(receipt)))?;
-            }
-            Ok(None) => {}
-            Err(error) => {
-                if cursor.refused_workspace_ready() {
-                    let mut output = None;
-                    let mut slot = None;
-                    let _ = cx.with_original_effect(grant, |_, effect| -> Result<(), ValueError> { let reply = OriginalEffectReply::borrow(&mut slot)?; drop(cursor.take_refused_workspace_into(&mut output, effect, reply)?); Ok(()) });
-                    if let Some(map) = output { self.result = map; self.insert_closing = true; }
-                }
-                return Err(debit(error, cx));
-            }
+            let body = grant.maximum_copy_bytes;
+            let insert = RetainedOrderedMapInsertGrant {
+                retirement: grant,
+                comparison: BoundedOrdGrant { maximum_items: 1, maximum_bytes: 1 },
+                maximum_moved_items: body / size_of::<(String, f64)>(),
+                maximum_moved_bytes: body,
+                maximum_capacity_bytes: grant.maximum_capacity_bytes,
+            };
+            Self::result_insert_effect(cx, |effect| cursor.advance_turn(body, insert, effect))?;
         }
         if self.insert_closing && self.insert.as_ref().is_some_and(|cursor| cursor.terminal_is_empty()) {
             self.insert = None;
@@ -400,6 +398,13 @@ impl Puzzle5dKindWeightWork {
             return Ok(true);
         }
         Ok(false)
+    }
+
+    fn close_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
+        match self.insert.as_ref() {
+            Some(cursor) => cursor.close_demands(body),
+            None => self.close_owners.demands(body),
+        }
     }
 }
 
@@ -414,6 +419,15 @@ impl<A: Puzzle5dEditor> semio_plugin::retained_command::ArtifactCommandWork<Edit
 
     fn work_demands(&self, _input: &semio_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
         crate::retained_command::step_demands::<EditorApp<A>>(size_of::<Self>())
+    }
+
+    fn reports_progress(&self) -> bool {
+        match self.stage {
+            Puzzle5dKindWeightStage::InferParts => self.part_cursor.is_multiple_of(16),
+            Puzzle5dKindWeightStage::InferGrips => self.grip_cursor == 0 && self.part_cursor.is_multiple_of(16),
+            Puzzle5dKindWeightStage::Changed | Puzzle5dKindWeightStage::Build => self.insert.is_none(),
+            _ => true,
+        }
     }
 
     fn step(&mut self, input: &semio_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, cx: &mut StepContext<'_>) -> Result<semio_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
@@ -452,18 +466,15 @@ impl<A: Puzzle5dEditor> semio_plugin::retained_command::ArtifactCommandWork<Edit
         }
         let original: Result<_, Fault> = (|| {
         let semio_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config, interaction: _interaction, hover: _hover, context: _context, .. } = *input;
-        let projection = puzzle5d_editor_projection(snapshot);
+        let snapshot = snapshot.typed();
         match self.stage {
             Puzzle5dKindWeightStage::Catalog => {
-                let entries = self.catalog(snapshot);
-                if let Some(entry) = entries.get(self.cursor) {
-                    if let Some(id) = entry.get("id").and_then(Value::as_str) {
-                        self.push_id(id, false)?;
-                    }
+                if let Some(id) = self.catalog_kind(snapshot) {
+                    self.push_id(id, false)?;
                     self.cursor += 1;
                     return Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-kind-weight-catalog", "Reading kind owner", "Artinhaber wird gelesen"));
                 }
-                self.stage = if entries.is_empty() {
+                self.stage = if self.cursor == 0 {
                     if self.tool_id == "setPartKindWeight" {
                         Puzzle5dKindWeightStage::InferParts
                     } else {
@@ -476,28 +487,28 @@ impl<A: Puzzle5dEditor> semio_plugin::retained_command::ArtifactCommandWork<Edit
                 Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-kind-weight-infer", "Preparing kind validation", "Artprüfung wird vorbereitet"))
             }
             Puzzle5dKindWeightStage::InferParts => {
-                let Some(part) = projection.get("parts").and_then(Value::as_array).and_then(|parts| parts.get(self.part_cursor)) else {
+                let Some(part) = snapshot.parts.get(self.part_cursor) else {
                     self.stage = Puzzle5dKindWeightStage::Validate;
                     return Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-kind-weight-validate", "Validating current weights", "Aktuelle Gewichte werden geprüft"));
                 };
                 self.part_cursor += 1;
-                if let Some(id) = part.get("partKind").and_then(Value::as_str) {
+                if let Some(id) = part.part_kind.as_deref() {
                     self.push_id(id, true)?;
                 }
                 Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-kind-weight-part", "Reading inferred part kind", "Abgeleitete Teileart wird gelesen"))
             }
             Puzzle5dKindWeightStage::InferGrips => {
-                let Some(part) = projection.get("parts").and_then(Value::as_array).and_then(|parts| parts.get(self.part_cursor)) else {
+                let Some(part) = snapshot.parts.get(self.part_cursor) else {
                     self.stage = Puzzle5dKindWeightStage::Validate;
                     return Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-kind-weight-validate", "Validating current weights", "Aktuelle Gewichte werden geprüft"));
                 };
-                let Some(grip) = part.get("grips").and_then(Value::as_array).and_then(|grips| grips.get(self.grip_cursor)) else {
+                let Some(grip) = part.grips.get(self.grip_cursor) else {
                     self.part_cursor += 1;
                     self.grip_cursor = 0;
                     return Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-kind-weight-part", "Advancing grip owner", "Griffinhaber wird gewechselt"));
                 };
                 self.grip_cursor += 1;
-                if let Some(id) = grip.get("gripKind").and_then(Value::as_str) {
+                if let Some(id) = grip.grip_kind.as_deref() {
                     self.push_id(id, true)?;
                 }
                 Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-kind-weight-grip", "Reading inferred grip kind", "Abgeleitete Griffart wird gelesen"))
@@ -553,33 +564,38 @@ impl<A: Puzzle5dEditor> semio_plugin::retained_command::ArtifactCommandWork<Edit
 
     fn begin_close(&mut self) {
         self.stage = Puzzle5dKindWeightStage::Closing;
-        self.close_owners.stage(Puzzle5dKindWeightWorkOwners { ids: std::mem::take(&mut self.ids), result: std::mem::take(&mut self.result), insert: self.insert.take(), refused_key: self.refused_key.take(), changed_id: std::mem::take(&mut self.changed_id) });
+        self.close_owners.stage(Puzzle5dKindWeightWorkOwners { ids: std::mem::take(&mut self.ids), result: std::mem::take(&mut self.result), refused_key: self.refused_key.take(), changed_id: std::mem::take(&mut self.changed_id) });
     }
 
     fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
-        semio_framework_job::close_original_nested_step(cx,|cx,_grant|{
+        semio_framework_job::close_original_nested_step(cx,|cx,grant|{
+            if let Some(cursor) = self.insert.as_mut() {
+                let progress = Self::result_insert_effect(cx, |effect| cursor.close_turn(grant.maximum_copy_bytes, effect))?;
+                if cursor.terminal_is_empty() { self.insert = None; }
+                return Ok(semio_framework_job::InteractiveJobCloseStep::Pending { progress });
+            }
             self.close_owners.close_step(cx)
         })
     }
 
     fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
-        Ok(self.close_owners.demands(0)?.copy_bytes)
+        Ok(self.close_demands(0)?.copy_bytes)
     }
 
     fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> {
-        Ok(self.close_owners.demands(maximum_copy_bytes)?.capacity_bytes)
+        Ok(self.close_demands(maximum_copy_bytes)?.capacity_bytes)
     }
 
     fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
-        Ok(self.close_owners.demands(0)?.release_bytes)
+        Ok(self.close_demands(0)?.release_bytes)
     }
 
     fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
-        Ok(self.close_owners.demands(0)?.depth)
+        Ok(self.close_demands(0)?.depth)
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.stage == Puzzle5dKindWeightStage::Closing && self.close_owners.is_empty()
+        self.stage == Puzzle5dKindWeightStage::Closing && self.insert.is_none() && self.close_owners.is_empty()
     }
 
     fn terminal_frame_release_bytes(&self) -> Option<usize> {

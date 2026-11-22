@@ -3,13 +3,14 @@ import Ajv from"ajv";
 import{Database}from"bun:sqlite";
 import{mkdtemp,mkdir,symlink,writeFile,rm,realpath,readFile,lstat}from"node:fs/promises";
 import{join}from"node:path";
-import{declareBuildTestEnvelopeV1,withBuildTestInvocationV1}from"@semio-tech/process/testing/invocation";
+import {withBuildTestInvocationV1} from "@semio-tech/process/testing/invocation";
+import {declareLibraryBuildTestEnvelopeV1} from "../../../../../../🧪️testing/🪪️native-birth/🟦️.ts";
 import{createIssuedResourceControlV1}from"@semio-tech/process/routing";
 import{checkResourceLeaseControl}from"@semio-tech/process/leases";
 import{javascriptDependencyBindingDiagnosticV1,observeJavascriptDependencyBindingsReadV1,type JavascriptDependencyReadContextV1}from"../🟦️.ts";
 import schema from"../📋️binding-diagnostic.json"with{type:"json"};
 import corpus from"./🔣️.json"with{type:"json"};
-declareBuildTestEnvelopeV1({owner:"test:javascript-binding-diagnostic",maximumElapsedMilliseconds:30000,capabilities:{artifacts:true}});
+declareLibraryBuildTestEnvelopeV1({suite:"bootstrap-dependencies",maximumElapsedMilliseconds:30000});
 test("real filesystem dependency binding refusal under genuine control includes bounded exact metadata and preserves links",()=>withBuildTestInvocationV1(async original=>{
  const control=createIssuedResourceControlV1(original,"test:binding-observation",0),root=await mkdtemp(join(process.env.SEMIO_TEST_ARTIFACT_DIR!,"bd-")),context:JavascriptDependencyReadContextV1=Object.freeze({root,invocation:original,control,check:actual=>checkResourceLeaseControl(actual),recheck:async actual=>{checkResourceLeaseControl(actual);}}),validate=new Ajv({strict:true}).compile(schema),db=new Database(":memory:");
  try{const target=join(root,"target"),other=join(root,"other");await mkdir(target);await mkdir(other);

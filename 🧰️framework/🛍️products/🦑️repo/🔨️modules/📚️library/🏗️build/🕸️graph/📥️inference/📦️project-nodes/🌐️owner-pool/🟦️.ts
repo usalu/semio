@@ -12,7 +12,7 @@ const P=OWNER_POOL_POLICY_V1,ZERO="0".repeat(64),sha=(text:string)=>createHash("
 /** 🏷️ One owner of the pool as every machine reads it: the name, the kind it is filed under, how long it is expected to run (the claim lives that long) and its project JSON. */
 export type OwnerPoolUnitV1=Readonly<{name:string;kind:string;expectedMilliseconds:number;megabytes?:number;admission?:Readonly<{targets?:readonly string[];inputs:readonly string[];generated?:unknown}>;json:Readonly<Record<string,unknown>>}>;
 /** 🧾️ What a puller needs besides the units: see the schema definition `Head`. */
-export type OwnerPoolHeadV1=Readonly<{version:1;revision?:string;id:string;createdMs:number;publisher:string;identity:string;globals:Readonly<{projectAuthority:string;registryDigest:string;commandRevision:string;late:boolean}>}>;
+export type OwnerPoolHeadV1=Readonly<{version:1;revision?:string;id:string;createdMs:number;publisher:string;identity:string;globals:Readonly<{registryDigest:string;commandRevision:string;late:boolean}>}>;
 /** 📦️ The published pool of one wave: the head, the session the units are inferred in (opaque bytes of the publisher's runtime) and the units in the order the publisher infers them. */
 export type OwnerPoolManifestV1=Readonly<{head:OwnerPoolHeadV1;session:Uint8Array;units:readonly OwnerPoolUnitV1[]}>;
 /** 📍️ One open wave as the pointer lists it. */
@@ -34,19 +34,24 @@ const encode=(value:unknown)=>Buffer.from(JSON.stringify(value));
 /** 🧮️ The state a failure note is stored under: one per record state of the owner (the digest the claim is made by). */
 export const ownerPoolFailureStateV1=(recordDigest:string):GraphStateV1=>stateOf(P.failureName,recordDigest);
 
-/** 🚫️ Tells the fleet that an owner failed with a deterministic cause on this machine, so the other pullers leave it to the machine that runs the wave. Never throws. */
+/** 🚫️ Tells the fleet that an owner failed with a deterministic cause on this machine, so the other pullers leave it to the machine that runs the wave. A live note of the same record state and revision is never written again: the same cause writes nothing, another cause is added to the note (`causes`, at most four, the first stays `cause`) while its origin and time stay those of the first failure, so the note neither flaps between machines nor outlives its first failure and every cause stays visible. Never throws. */
 export async function publishOwnerPoolFailureV1(input:Readonly<{client:GraphFleetClientV1;owner:string;origin:string;recordDigest:string;revision:string;cause:string;now?:()=>number}>):Promise<boolean>{
- try{return await publishGraphEntryV1({client:input.client,state:ownerPoolFailureStateV1(input.recordDigest),owner:input.owner,documents:[{name:P.failureName,bytes:encode({version:1,revision:input.revision,cause:input.cause.slice(0,300),origin:input.origin,atMs:(input.now??Date.now)()})}]});}catch{return false;}
+ try{
+  const now=input.now??Date.now,cause=input.cause.slice(0,300),live=await readOwnerPoolFailureV1(input.client,input.recordDigest,input.revision,now);
+  if(live!==undefined&&live.causes.includes(cause))return true;
+  const note=live===undefined?{cause,causes:[cause],origin:input.origin,atMs:now()}:{cause:live.cause,causes:[...live.causes,cause].slice(0,4),origin:live.origin,atMs:live.atMs};
+  return await publishGraphEntryV1({client:input.client,state:ownerPoolFailureStateV1(input.recordDigest),owner:input.owner,documents:[{name:P.failureName,bytes:encode({version:1,revision:input.revision,...note})}]});
+ }catch{return false;}
 }
 
 /** 🔎️ The failure note of a record state if it is younger than the policy's maximum age and of the same record-code revision. */
-export async function readOwnerPoolFailureV1(client:GraphFleetClientV1,recordDigest:string,revision:string,now:()=>number=Date.now):Promise<Readonly<{cause:string;origin:string;atMs:number}>|undefined>{
+export async function readOwnerPoolFailureV1(client:GraphFleetClientV1,recordDigest:string,revision:string,now:()=>number=Date.now):Promise<Readonly<{cause:string;causes:readonly string[];origin:string;atMs:number}>|undefined>{
  try{
   const entry=await fetchGraphEntryV1(client,ownerPoolFailureStateV1(recordDigest));
   if(entry===undefined||entry==="fault")return undefined;
   const bytes=documentOf(entry.documents,P.failureName);if(bytes===undefined)return undefined;
-  const note=JSON.parse(Buffer.from(bytes).toString("utf8")) as {version:number;revision:string;cause:string;origin:string;atMs:number};
-  return note.version===1&&note.revision===revision&&now()-note.atMs<=P.failureMaximumAgeMilliseconds?note:undefined;
+  const note=JSON.parse(Buffer.from(bytes).toString("utf8")) as {version:number;revision:string;cause:string;causes?:string[];origin:string;atMs:number};
+  return note.version===1&&note.revision===revision&&now()-note.atMs<=P.failureMaximumAgeMilliseconds?{cause:note.cause,causes:note.causes??[note.cause],origin:note.origin,atMs:note.atMs}:undefined;
  }catch{return undefined;}
 }
 
@@ -223,7 +228,7 @@ export function ownerPoolSizingV1(input:Readonly<{host:OwnerPoolHostV1;children:
  const held=hold+counted(foreground.waitingMegabytes??0)+counted(ask?.megabytes??0),spare=host.availableMegabytes-floor-held;
  const reserved=foreground.waiters>0?Math.ceil(host.cores*policy.foregroundCoreShareBasisPoints/10000):0,booked=Math.max(0,host.cores-foreground.cpu-reserved),idle=host.idleCores??null,waited=foreground.oldestWaitMilliseconds??0,swap=host.swapOutMegabytesPerSecond??0;
  const limit=(kind:OwnerPoolLimitV1["limit"],children:number):OwnerPoolLimitV1=>({limit:kind,needMegabytes:need,freeMegabytes:Math.max(0,spare-Math.max(0,children-input.children)*need),heldMegabytes:held,floorMegabytes:floor,children:input.children,cores:host.cores,bookedCores:Math.min(host.cores,foreground.cpu),idleCores:idle,swapOutMegabytesPerSecond:swap,waitedMilliseconds:waited});
- const swapShare=host.swapOutMegabytesPerSecond===null||swap<policy.swapActiveMegabytesPerSecond?1:Math.max(0,(policy.swapOutMegabytesPerSecond-swap)/(policy.swapOutMegabytesPerSecond-policy.swapActiveMegabytesPerSecond)),swapCap=Math.floor(input.children*swapShare);
+ const swapLow=host.totalMegabytes*policy.swapActiveBasisPointsPerSecond/10000,swapHigh=host.totalMegabytes*policy.swapOutBasisPointsPerSecond/10000,swapShare=host.swapOutMegabytesPerSecond===null||swap<swapLow?1:Math.max(0,(swapHigh-swap)/(swapHigh-swapLow)),swapCap=Math.floor(input.children*swapShare);
  if(host.pressure==="critical"||swapCap<1&&swapShare<1)return{children:0,reason:"pressure",limit:limit("pressure",0)};
  if(ask?.alone===true)return{children:0,reason:"waiting",limit:limit("waiting",0)};
  const coresHeld=idle===null||idle<1&&idle+input.children>=1,memoryHeld=foreground.waitingMegabytes===undefined||blocked(foreground.waitingMegabytes);

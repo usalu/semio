@@ -44,6 +44,7 @@
         "derived": {"$ref": "#/definitions/Names"},
         "rows": {"type": "array", "items": {"$ref": "#/definitions/RowsFile"}},
         "manifest": {"$ref": "#/definitions/Hex"},
+        "membership": {"$ref": "#/definitions/Hex"},
         "env": {"type": "object", "required": ["digest"], "properties": {"digest": {"$ref": "#/definitions/Hex"}, "parts": {"type": "object"}}}
       }
     }

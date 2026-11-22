@@ -2,11 +2,13 @@ import{test,expect}from"bun:test";
 import{execFileSync}from"node:child_process";
 import{existsSync,readdirSync,readFileSync,rmSync,writeFileSync}from"node:fs";
 import{dirname,join}from"node:path";
+import{createHash}from"node:crypto";
 import{createIssuedResourceControlV1}from"../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import{observeNativeStorageStateV1}from"@semio-tech/process/artifacts/native-build/storage";
 import{repositoryCacheBudgetV1}from"../../../../📦️budget/🟦️.ts";
-import schema from"../../🧬️schema/🔣️.json";
+import schema from"../../🧬️schema/🔣️.json"with{type:"json"};
 import*as owner from"../../🟦️.ts";
+import{nxGraphNativeFundingDigestV1}from"../../🪙️funding/🟦️.ts";
 import{privateRepositoryWorkspaceV1}from"../../../../../../../🧪️testing/🧫️private-repository/🟦️.ts";
 const repository=await privateRepositoryWorkspaceV1();
 /** 🏦️ Proves a namespace native image is a parent-funded child that passes parent rechecks and retires together with its charge. */
@@ -29,8 +31,8 @@ test("a namespace native image is funded by the nx partition journal and retires
  });
 },{maximumElapsedMilliseconds:170000}),180000);
 
-/** 🪦️ Proves a namespace whose birth died between its reservation and its commit retires with its charge, across a device renumbering remount, instead of refusing the recovered uncommitted child. */
-test("a namespace native image left reserved by an aborted birth retires with its charge",()=>repository.invoke(async original=>{
+/** 🪦️ Proves a namespace whose birth died between its reservation and its commit keeps its charge and its image, across a device renumbering remount: namespace retirement protects every uncommitted child (the contract of `♻️retirement`), it never retires it. */
+test("a namespace native image left reserved by an aborted birth is protected from namespace retirement and keeps its charge",()=>repository.invoke(async original=>{
  const root=repository.root,control=createIssuedResourceControlV1(original,"nx:funded-reserved-namespace",0),value={version:1 as const,toolingIdentity:"a".repeat(64),workspaceRoot:root,graphIdentity:null,implementationIdentity:"b".repeat(64)},nx=repositoryCacheBudgetV1(root).partitions.nx;
  await owner.prepareNxGraphCacheStorageV1(root,original,control,0);
  const shard=(root:string)=>owner.nxGraphNativeImageDirectoryV1(root,value),children=async(store:owner.NxGraphCacheStoreV1)=>(await observeNativeStorageStateV1({policy:{version:1 as const,root:store.root,leaseDirectory:join(root,".cache/b/l/m/data"),capacityBytes:nx.capacityBytes,maximumWorkspaceBytes:nx.filesystemBytes,maximumArtifactBytes:nx.maximumArtifactBytes},control,port:store.image.port})).allocations.filter(row=>row.child?.directory===shard(store.root));
@@ -42,13 +44,19 @@ test("a namespace native image left reserved by an aborted birth retires with it
  const text=readFileSync(journal,"utf8"),line=JSON.stringify({type:"committed",id})+"\n";expect(text.split(line)).toHaveLength(2);const rebound=(row:string)=>row.includes('"type":"namespace-created","id":"'+id+'"')?row.replace(/"dev":"(\d+)"/g,(_,dev)=>'"dev":"'+(Number(dev)+16)+'"'):row;writeFileSync(journal,text.replace(line,"").split("\n").map(rebound).join("\n"));
  await owner.withNxGraphCacheStoreV1(root,original,control,async store=>{
   expect((await children(store))[0]!.phase).toBe("reserved");
+  expect(await owner.retireNxGraphNamespaceV1(store,value)).toBe(false);
+  const rows=await children(store);expect(rows).toHaveLength(1);expect(rows[0]!.phase).toBe("reserved");expect(existsSync(shard(store.root))).toBe(true);
+ });
+ writeFileSync(journal,readFileSync(journal,"utf8")+line);
+ await owner.withNxGraphCacheStoreV1(root,original,control,async store=>{
+  expect((await children(store))[0]!.phase).toBe("committed");
   let retired=false;for(let attempt=0;attempt<40&&!retired;attempt++){retired=await owner.retireNxGraphNamespaceV1(store,value);if(!retired)await new Promise(done=>setTimeout(done,500));}expect(retired).toBe(true);
-  expect(await children(store)).toHaveLength(0);expect(existsSync(shard(store.root))).toBe(false);
+  expect(await children(store)).toHaveLength(0);
  });
 },{maximumElapsedMilliseconds:170000}),180000);
 
 /** 🕳️ Proves a funded namespace whose physical child an interrupted retirement already removed, whole or down to its creator sidecar, settles its remaining charge instead of failing on the missing directory. */
-for(const[title,letter,removal,retiring]of[["with its namespace","c",(shard:string)=>dirname(shard),false],["leaving only its creator sidecar","e",(shard:string)=>shard,false],["after its retirement began","f",(shard:string)=>dirname(shard),true]]as const)test("a funded namespace removed by an interrupted retirement settles its remaining charge, "+title,()=>repository.invoke(async original=>{
+for(const[title,letter,removal,retiring]of[["with its namespace","c",(shard:string)=>dirname(shard),false],["leaving only its creator sidecar","e",(shard:string)=>shard,false],["after its retirement began (protected, not retired)","f",(shard:string)=>dirname(shard),true]]as const)test("a funded namespace removed by an interrupted retirement settles its remaining charge, "+title,()=>repository.invoke(async original=>{
  const root=repository.root,control=createIssuedResourceControlV1(original,"nx:funded-removed-namespace",0),value={version:1 as const,toolingIdentity:letter.repeat(64),workspaceRoot:root,graphIdentity:null,implementationIdentity:"d".repeat(64)},nx=repositoryCacheBudgetV1(root).partitions.nx;
  await owner.prepareNxGraphCacheStorageV1(root,original,control,0);
  const shard=(root:string)=>owner.nxGraphNativeImageDirectoryV1(root,value),children=async(store:owner.NxGraphCacheStoreV1)=>(await observeNativeStorageStateV1({policy:{version:1 as const,root:store.root,leaseDirectory:join(root,".cache/b/l/m/data"),capacityBytes:nx.capacityBytes,maximumWorkspaceBytes:nx.filesystemBytes,maximumArtifactBytes:nx.maximumArtifactBytes},control,port:store.image.port})).allocations.filter(row=>row.child?.directory===shard(store.root));
@@ -63,8 +71,38 @@ for(const[title,letter,removal,retiring]of[["with its namespace","c",(shard:stri
   if(process.platform==="darwin")execFileSync("/usr/bin/hdiutil",["detach","-force",join(shard(store.root),"m")],{stdio:"ignore"});
   rmSync(removal(shard(store.root)),{recursive:true,force:true});
   expect(await children(store)).toHaveLength(1);
+  if(retiring){expect(await owner.retireNxGraphNamespaceV1(store,value)).toBe(false);expect(await children(store)).toHaveLength(1);return;}
   let retired=false;for(let attempt=0;attempt<40&&!retired;attempt++){retired=await owner.retireNxGraphNamespaceV1(store,value);if(!retired)await new Promise(done=>setTimeout(done,500));}expect(retired).toBe(true);
   expect(await children(store)).toHaveLength(0);expect(existsSync(dirname(shard(store.root)))).toBe(false);
+ });
+},{maximumElapsedMilliseconds:170000}),180000);
+
+/** 🧓️ Proves a committed shard born by the previous format (64 MiB funding digest and size) is retired and re-born when its namespace is opened by the current code, never refused. */
+test("an old-format committed shard is retired and re-born by the current opening path",()=>repository.invoke(async original=>{
+ const root=repository.root,control=createIssuedResourceControlV1(original,"nx:funded-old-format",0),value={version:1 as const,toolingIdentity:"7".repeat(64),workspaceRoot:root,graphIdentity:null,implementationIdentity:"6".repeat(64)},native=schema.definitions.NativePolicy.const,nx=repositoryCacheBudgetV1(root).partitions.nx;
+ await owner.prepareNxGraphCacheStorageV1(root,original,control,0);
+ const shard=(root:string)=>owner.nxGraphNativeImageDirectoryV1(root,value),children=async(store:owner.NxGraphCacheStoreV1)=>(await observeNativeStorageStateV1({policy:{version:1 as const,root:store.root,leaseDirectory:join(root,".cache/b/l/m/data"),capacityBytes:nx.capacityBytes,maximumWorkspaceBytes:nx.filesystemBytes,maximumArtifactBytes:nx.maximumArtifactBytes},control,port:store.image.port})).allocations.filter(row=>row.child?.directory===shard(store.root));
+ const current={maximumPhysicalBytes:native.maximumPhysicalBytes,filesystemBytes:native.filesystemBytes},previous={maximumPhysicalBytes:67108864,filesystemBytes:66060288,charge:67239936,digest:createHash("sha256").update(JSON.stringify({version:1,owner:native.fundingOwner,filesystemBytes:66060288,maximumPhysicalBytes:67108864,metadataBytes:native.fundingMetadataBytes})).digest("hex")};
+ let journal="",id="",partition="";
+
+ Object.assign(native,{maximumPhysicalBytes:previous.maximumPhysicalBytes,filesystemBytes:previous.filesystemBytes});
+ try{
+  await owner.withNxGraphCacheStoreV1(root,original,control,async store=>{
+   const lease=await owner.acquireNxGraphNamespaceV1(store,value);
+   try{await lease.recheck();const rows=await children(store);expect(rows).toHaveLength(1);id=rows[0]!.id;partition=store.root;journal=join(store.root,"storage-events.jsonl");}finally{await lease.release();}
+  });
+ }finally{Object.assign(native,current);}
+ const born=readFileSync(journal,"utf8"),oldDigest=previous.digest,newDigest=nxGraphNativeFundingDigestV1;
+ writeFileSync(journal,born.split("\n").map(row=>row.includes('"'+id+'"')?row.replaceAll(newDigest,oldDigest).replaceAll('"bytes":'+(native.maximumPhysicalBytes+native.fundingMetadataBytes),'"bytes":'+previous.charge).replaceAll('"filesystemBytes":'+native.filesystemBytes,'"filesystemBytes":'+previous.filesystemBytes).replaceAll('"maximumPhysicalBytes":'+native.maximumPhysicalBytes,'"maximumPhysicalBytes":'+previous.maximumPhysicalBytes):row).join("\n"));
+ const sidecar=readdirSync(dirname(shard(partition))).filter(name=>name.startsWith(".native-birth-"));expect(sidecar).toHaveLength(1);
+ const claim=join(dirname(shard(partition)),sidecar[0]!);writeFileSync(claim,readFileSync(claim,"utf8").replaceAll(newDigest,oldDigest));
+ await owner.withNxGraphCacheStoreV1(root,original,control,async store=>{
+  const before=(await children(store))[0]!;expect(before.child!.policySha256).toBe(oldDigest);expect(before.bytes).toBe(previous.charge);
+  const lease=await owner.acquireNxGraphNamespaceV1(store,value);
+  try{await lease.recheck();const rows=await children(store);expect(rows).toHaveLength(1);expect(rows[0]!.id).not.toBe(id);expect(rows[0]!.phase).toBe("committed");expect(rows[0]!.bytes).toBe(native.maximumPhysicalBytes+native.fundingMetadataBytes);expect(rows[0]!.child!.policySha256).toBe(newDigest);expect(rows[0]!.child!.maximumPhysicalBytes).toBe(native.maximumPhysicalBytes);}finally{await lease.release();}
+ });
+ await owner.withNxGraphCacheStoreV1(root,original,control,async store=>{
+  let retired=false;for(let attempt=0;attempt<40&&!retired;attempt++){retired=await owner.retireNxGraphNamespaceV1(store,value);if(!retired)await new Promise(done=>setTimeout(done,500));}expect(retired).toBe(true);expect(await children(store)).toHaveLength(0);
  });
 },{maximumElapsedMilliseconds:170000}),180000);
 

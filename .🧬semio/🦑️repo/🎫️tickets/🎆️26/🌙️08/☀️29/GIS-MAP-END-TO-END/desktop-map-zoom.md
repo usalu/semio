@@ -1,0 +1,7 @@
+# Desktop GIS2D Zoom Repaint
+
+Wheel and keyboard zoom changed the WebAssembly map camera and published `setCamera` immediately. The tile refresh only scheduled a frame after an upload. Once the frame loop was idle, a zoom within cached coverage needed a scene update from the actor or another source of invalidation before it became visible. The React camera mirror now invalidates the local renderer before dispatching the scene update.
+
+Before the change, both mounted regression cases moved the session from zoom 2 to 2.24 and emitted the expected camera action while all rendered frames remained at zoom 2. The wheel case uses an off-center cursor. Three.js vector math agrees with the language-neutral fixture on the anchored camera, and the keyboard case verifies the viewport center. The test leaves tile revisions fixed and records the action without feeding it back into the scene. After the change, all 58 tests from the three React TiledMapHost suites passed. The Git whitespace check passed.
+
+The earlier Firefox run logged a five-second camera command stall and exhausted its screenshot budget while Playwright waited for the canvas to settle. Pinned WebKit returned screenshots but did not reach the zoom comparison threshold in its allotted time. The CSS animation setting in the screenshot call does not exercise or restart the map's demand frame scheduler. The mounted test verifies the scheduling defect independently of both browser screenshot outcomes.

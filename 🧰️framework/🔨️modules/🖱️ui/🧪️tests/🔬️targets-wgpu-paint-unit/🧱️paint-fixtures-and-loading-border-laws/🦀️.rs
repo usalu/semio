@@ -46,6 +46,23 @@ fn setup(ui: &UiNode) -> (UiTree, NodeId, Theme, FontAtlas) {
     (tree, root, theme, atlas)
 }
 
+fn setup_flowed(ui: &UiNode) -> (UiTree, NodeId, Theme, FontAtlas) {
+    use semio_ui_retained_tree::tree::{Node, NodeKey, WidgetSpec};
+    use ui_contract::{Align, Axis, EdgeSpace, Justify, LayoutSpec, SpaceToken, StackLayout};
+    let mut tree = UiTree::new();
+    let mut top = Node::new(NodeKey::Positional(7, 0), WidgetSpec(stack(Vec::new())));
+    top.layout_spec = Some(LayoutSpec::Stack(StackLayout { axis: Axis::Vertical, gap: SpaceToken::None, padding: EdgeSpace::default(), align: Align::Stretch, justify: Justify::Start, grow: false, wrap: false }));
+    let top = tree.insert_child(None, top);
+    tree.root = Some(top);
+    let mut child = Node::new(NodeKey::Positional(7, 1), WidgetSpec(ui.clone()));
+    child.layout_spec = Some(LayoutSpec::default());
+    let child = tree.insert_child(Some(top), child);
+    let (theme, atlas) = (Theme::default(), FontAtlas::builtin());
+    tree.mark_dirty(top, semio_ui_retained_tree::tree::NodeFlags::DIRTY_LAYOUT);
+    assert!(semio_ui_wgpu_mounted_layout::layout_tree_now(&mut tree, top, theme, 400.0, 400.0), "layout pass");
+    (tree, child, theme, atlas)
+}
+
 fn settle_borders(draw: &mut DrawList) {
     while !draw.finalize_shared_borders_step().expect("shared border finalization") {}
 }
@@ -60,7 +77,7 @@ fn paint_retained_node_with_pointer_for_test(tree: &UiTree, node: NodeId, theme:
     let mut draw = DrawList::default();
     let mut cursor = RetainedNodePaintCursor::default();
     for _ in 0..16_384 {
-        match paint_node_step_with_driver(tree, node, absolute.x - layout.x, absolute.y - layout.y, theme, atlas, None, false, UiDriverDrag::Handle, false, ui_contract::FlowInline::Ltr, pointer, &mut draw, &mut cursor) {
+        match paint_node_step_with_driver(tree, node, absolute.x - layout.x, absolute.y - layout.y, theme, atlas, None, false, semio_ui_wgpu_paint::RetainedPaintPresentation::default(), false, ui_contract::FlowInline::Ltr, pointer, &mut draw, &mut cursor) {
             RetainedNodePaintStep::Pending => {}
             RetainedNodePaintStep::Complete => return draw,
             RetainedNodePaintStep::Fault => panic!("retained node paint fault"),

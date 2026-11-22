@@ -134,6 +134,8 @@ use crate::editor::puzzle2d::session::*;
 use crate::editor::puzzle2d::*;
 use crate::editor::puzzle2d::testkit::*;
 use protocol::{ColdMutation, Mutation};
+#[allow(unused_imports)]
+use crate::editor::puzzle2d::snapshot::Puzzle2dCommand;
 
 
 fn board() -> Value {
@@ -159,20 +161,20 @@ fn emit_for(snapshot: &Puzzle2dPlaySnapshot, action: &str, args: Value, selected
     let command = Puzzle2dCommand::from_action(action, Some(args), Some(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID.to_string()));
     let selection = protocol::DomainSelection { granularity: PUZZLE2D_GRANULARITY_NODE.into(), ids: selected.iter().map(|id| id.to_string()).collect(), anchor_id: None };
     let view = window_view(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID, crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID);
-    puzzle2d_dispatch_emit(&command, snapshot, &Puzzle2dConfig::default(), &Puzzle2dWindowConfig::default(), &Puzzle2dWindowTransient::default(), crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID, Some(&view), crate::editor::puzzle2d::config::PUZZLE2D_SELECT_UTILITY_ID, &selection, "seed", "rev-1", &semio_plugin::app::GestureSlot::detached(), None)
+    puzzle2d_dispatch_emit::<crate::editor::puzzle2d::Puzzle2dPlayApp>(&command, snapshot, &Puzzle2dConfig::default(), &Puzzle2dWindowConfig::default(), &Puzzle2dWindowTransient::default(), crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID, Some(&view), crate::editor::puzzle2d::config::PUZZLE2D_SELECT_UTILITY_ID, &selection, "seed", "rev-1", &semio_plugin::app::GestureSlot::detached(), None)
         .unwrap_or_else(|fault| panic!("{action} emits: {fault:?}"))
         .0
 }
 
 fn apply(state: &crate::Puzzle2dSnapshot, row: &Puzzle2dMutation) -> crate::Puzzle2dSnapshot {
-    protocol::apply_diff_cold(Mutation::<crate::Puzzle2dSnapshot>::diff(row, state).diff(), state).expect("the row applies")
+    protocol::apply_diff_cold(ColdMutation::<crate::Puzzle2dSnapshot>::diff(row, state).diff(), state).expect("the row applies")
 }
 
 fn assert_undo_restores(base: &Puzzle2dPlaySnapshot, rows: &[Puzzle2dMutation]) {
     let mut state = base.typed().clone();
     let mut inverses = Vec::new();
     for row in rows {
-        inverses.push(Mutation::<crate::Puzzle2dSnapshot>::inverse(row, &state).expect("the row inverts"));
+        inverses.push(ColdMutation::<crate::Puzzle2dSnapshot>::inverse(row, &state).expect("the row inverts"));
         state = apply(&state, row);
     }
     for inverse in inverses.iter().rev() {

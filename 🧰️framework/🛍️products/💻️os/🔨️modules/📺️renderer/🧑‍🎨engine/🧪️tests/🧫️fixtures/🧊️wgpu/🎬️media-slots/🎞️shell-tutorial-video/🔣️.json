@@ -1,0 +1,63 @@
+{
+  "owner": {
+    "token": "shell.tutorial.video",
+    "windowId": "shell",
+    "nodeId": "0",
+    "nodeKey": "ui.tutorial.video",
+    "pluginId": "shell",
+    "controllerId": "shell.tutorial",
+    "appInstanceId": 0,
+    "parentDocumentId": "shell"
+  },
+  "srcBytesMax": 32768,
+  "cases": [
+    {
+      "name": "a playing url cue rides one shell-owned slot",
+      "input": { "rect": [100.0, 50.0, 400.0, 225.0], "src": "https://example.test/clip.mp4", "muted": false, "playing": true, "rate": 1.0, "localTimeMs": 1500.0 },
+      "slot": {
+        "token": "shell.tutorial.video",
+        "windowId": "shell",
+        "nodeId": "0",
+        "nodeKey": "ui.tutorial.video",
+        "rect": { "x": 100.0, "y": 50.0, "width": 400.0, "height": 225.0 },
+        "clip": { "x": 100.0, "y": 50.0, "width": 400.0, "height": 225.0 },
+        "paintOrder": 0,
+        "occluded": false,
+        "pluginId": "shell",
+        "controllerId": "shell.tutorial",
+        "appInstanceId": 0,
+        "parentDocumentId": "shell",
+        "props": { "kind": "tutorialVideo", "src": "https://example.test/clip.mp4", "muted": false, "playing": true, "rate": 1.0, "localTimeMs": 1500.0 }
+      }
+    },
+    {
+      "name": "a muted paused cue keeps its rate and offset",
+      "input": { "rect": [0.0, 0.0, 320.0, 180.0], "src": "data:video/mp4;base64,AAAA", "muted": true, "playing": false, "rate": 0.5, "localTimeMs": 250.0 },
+      "slot": {
+        "token": "shell.tutorial.video",
+        "windowId": "shell",
+        "nodeId": "0",
+        "nodeKey": "ui.tutorial.video",
+        "rect": { "x": 0.0, "y": 0.0, "width": 320.0, "height": 180.0 },
+        "clip": { "x": 0.0, "y": 0.0, "width": 320.0, "height": 180.0 },
+        "paintOrder": 0,
+        "occluded": false,
+        "pluginId": "shell",
+        "controllerId": "shell.tutorial",
+        "appInstanceId": 0,
+        "parentDocumentId": "shell",
+        "props": { "kind": "tutorialVideo", "src": "data:video/mp4;base64,AAAA", "muted": true, "playing": false, "rate": 0.5, "localTimeMs": 250.0 }
+      }
+    },
+    {
+      "name": "an empty rect is refused",
+      "input": { "rect": [0.0, 0.0, 0.0, 180.0], "src": "https://example.test/clip.mp4", "muted": false, "playing": true, "rate": 1.0, "localTimeMs": 0.0 },
+      "slot": null
+    },
+    {
+      "name": "an oversized source is refused",
+      "input": { "rect": [0.0, 0.0, 320.0, 180.0], "srcRepeat": { "unit": "x", "times": 32769 }, "muted": false, "playing": true, "rate": 1.0, "localTimeMs": 0.0 },
+      "slot": null
+    }
+  ]
+}

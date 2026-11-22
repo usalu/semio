@@ -12,7 +12,7 @@ import traces from "./📋️traces/🔣️.json" with {type:"json"};
 import enforcement from "./📋️enforcement/🔣️.json" with {type:"json"};
 import {collectCasV1,createCasPlannerV1,formatCasCollectionV1} from "../🧹️collector/🟦️.ts";
 import {casEnforceTickV1,createCasGuardV1,resetCasGuardsV1} from "../🚦️guard/🟦️.ts";
-import {casPartitionNeedBytesV1,decideCasEnforcementV1,type CasPartitionV1} from "../🌡️partition/🟦️.ts";
+import {casEffectiveCapBytesV1,casPartitionNeedBytesV1,decideCasEnforcementV1,type CasPartitionV1} from "../🌡️partition/🟦️.ts";
 import {casUsageHintPathV1,readCasUsageHintV1,type CasCollectionV1} from "../🧹️collector/🟦️.ts";
 import {putCasObjectSyncV1} from "../🗃️store/🔁️sync/🟦️.ts";
 import {casLedgerShardV1,foldCasShardV1,openCasShardViewV1} from "../📒️ledger/🟦️.ts";
@@ -438,6 +438,19 @@ test("a partition at its critical share waits for one collection and is then ref
  await refusal(guard.admit(0));expect(collects).toBe(1);
 });
 
+test("a write that times out stops waiting but the collection it started is not cancelled and finishes, so the store is relieved for the next write",async()=>{
+ resetCasGuardsV1();
+ const root=hinted(scratch("guard-outlives"),0);let free=10*MIB,collects=0,finished=false,seen:AbortSignal|undefined,release:()=>void=()=>undefined;
+ const gate=new Promise<void>(done=>{release=done;});
+ const guard=createCasGuardV1({root,partition:()=>({...critical,freeBytes:free}),usage:async()=>0,collect:async request=>{collects++;seen=request.signal;await gate;free=400*MIB;finished=true;return stub;}});
+ const writer=new AbortController(),waiting=refusal(guard.admit(0,writer.signal));
+ await Bun.sleep(30);writer.abort(new Error("write budget"));
+ expect(((await waiting) as Error).message).toBe("write budget");
+ expect(finished).toBe(false);expect(seen).toBeUndefined();
+ release();await guard.settle();expect(finished).toBe(true);expect(collects).toBe(1);
+ expect((await guard.admit(0)).action).toBe("allow");expect(collects).toBe(1);
+});
+
 test("a critical partition that the collection relieved lets the write go on",async()=>{
  resetCasGuardsV1();
  const root=hinted(scratch("guard-relieved"),0);let free=10*MIB,collects=0;
@@ -579,7 +592,7 @@ await guard.settle();`;
   const reader=createCasGuardV1({root,home,policy:{...policy,capBytes:row.cap,minAgeMs:row.scope==="age"?policy.minAgeMs/2:policy.minAgeMs},now:()=>first.value+row.advance,partition:()=>row.critical==="transition"?++measures>1?critical:partition:row.critical?critical:partition,collect:async()=>{calls++;return stub;}});
   if(row.priorBytes<row.cap){await reader.admit(0);await reader.settle();reader.account(row.cap-row.priorBytes+50);}
   if(row.critical)expect((await refusal(reader.admit(0))).key,row.name).toBe("process.disk.low-space");
-  else expect((await reader.admit(0)).action,row.name).toBe("allow");
+  else expect((await reader.admit(0)).action,row.name).toBe(row.collects>0?"collect-background":"allow");
   await reader.settle();
   expect(calls,row.name).toBe(row.collects);
   if(row.name==="matching"){
@@ -666,4 +679,26 @@ test("direct CAS relief is applied at the current pressure after an unrelated au
   const done=mode==="explicit"?guard.enforce():(guard.relieve(Object.assign(Error("disk full"),{code:"ENOSPC"})),guard.settle());
   release();await done;expect(scans,mode).toEqual([80*MIB,10*MIB]);
  }
+});
+
+test("the cap in force is a host share bounded by the free disk above the host floor and shrinks as the disk fills; agrees with an independent Python model",()=>{
+ const GiB=2**30,rows:[number,number,number|null][]=[];
+ for(const total of[60*GiB,238*GiB,926*GiB,4096*GiB])for(const free of[GiB,10*GiB,16*GiB,33*GiB,62*GiB,400*GiB])for(const store of[null,0,13.9*GiB,36.3*GiB,41.6*GiB])if(free<=total)rows.push([total,free,store===null?null:Math.floor(store)]);
+ const model=`import json,sys
+policy,floor,rows=json.loads(sys.argv[1]),json.loads(sys.argv[2]),json.loads(sys.argv[3])
+out=[]
+for total,free,store in rows:
+    fl=min(floor["hostFreeFloorBytes"],max(floor["alignBytes"],(total*floor["hostFreeFloorPercent"]//100//floor["alignBytes"])*floor["alignBytes"]))
+    share=total*policy["capHostSharePercent"]//100
+    room=float("inf") if store is None else store+max(0,free-fl)
+    wanted=max(policy["minimumCapBytes"],min(share,room))
+    aligned=max(policy["minimumCapBytes"],int(wanted//floor["alignBytes"])*floor["alignBytes"])
+    out.append(min(policy["capBytes"],aligned))
+print(json.dumps(out))`;
+ const floor={hostFreeFloorBytes:16106127360,hostFreeFloorPercent:6,alignBytes:268435456},run=Bun.spawnSync(["python3","-I","-c",model,JSON.stringify(CAS_POLICY_V1),JSON.stringify(floor),JSON.stringify(rows)]);
+ expect(run.exitCode,run.stderr.toString()).toBe(0);
+ const independent=JSON.parse(run.stdout.toString()) as number[];
+ rows.forEach(([total,freeBytes,store],index)=>expect(casEffectiveCapBytesV1(CAS_POLICY_V1,{totalBytes:total,freeBytes},store??undefined),JSON.stringify([total,freeBytes,store])).toBe(independent[index]));
+ expect(casEffectiveCapBytesV1(CAS_POLICY_V1,{totalBytes:926*GiB,freeBytes:33*GiB},36.3*GiB)).toBeLessThan(32*GiB);
+ expect(casEffectiveCapBytesV1(CAS_POLICY_V1,{totalBytes:926*GiB,freeBytes:5*GiB},36.3*GiB)).toBeLessThanOrEqual(Math.ceil(36.3*GiB));
 });

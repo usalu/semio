@@ -6150,11 +6150,12 @@
         "namedLayouts": [],
         "defaultLayout": {
           "root": {
-            "kind": "row",
+            "kind": "split",
+            "axis": "horizontal",
             "children": [
               {
                 "kind": "stack",
-                "size": 72.0,
+                "size": 0.72,
                 "children": [
                   {
                     "kind": "window",
@@ -6165,7 +6166,7 @@
               },
               {
                 "kind": "stack",
-                "size": 28.0,
+                "size": 0.28,
                 "children": [
                   {
                     "kind": "window",
@@ -7580,11 +7581,12 @@
         "namedLayouts": [],
         "defaultLayout": {
           "root": {
-            "kind": "row",
+            "kind": "split",
+            "axis": "horizontal",
             "children": [
               {
                 "kind": "stack",
-                "size": 72.0,
+                "size": 0.72,
                 "children": [
                   {
                     "kind": "window",
@@ -7595,7 +7597,7 @@
               },
               {
                 "kind": "stack",
-                "size": 28.0,
+                "size": 0.28,
                 "children": [
                   {
                     "kind": "window",

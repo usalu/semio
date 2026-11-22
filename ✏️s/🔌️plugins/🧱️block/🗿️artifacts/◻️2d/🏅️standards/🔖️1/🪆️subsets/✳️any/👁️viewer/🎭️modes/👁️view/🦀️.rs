@@ -2,7 +2,7 @@
 //! counterpart of the editor's single `edit` mode.
 
 use crate::modes::view::windows::board;
-use semio_plugin::create_default_layout;
+use semio_plugin::{create_default_layout, Axis};
 use semio_ui_locale::LocalizedLabel;
 use semio_plugin::ModeDefinition;
 use semio_plugin::WindowLayout;
@@ -18,7 +18,7 @@ pub fn definition() -> ModeDefinition {
 /// 🪟️ The viewer's default window layout — a single full-width board window (the viewer has no
 /// quadrant/edit chrome to allocate).
 pub fn layout() -> WindowLayout {
-    create_default_layout(&[board::WINDOW_KIND_ID.into()], "row", Some(&[100.0]), Some(&["Node Kind".into()]))
+    create_default_layout(&[board::WINDOW_KIND_ID.into()], Axis::Horizontal, Some(&[1.0]), Some(&["Node Kind".into()]))
 }
 //#endregion 🔖️Definition
 

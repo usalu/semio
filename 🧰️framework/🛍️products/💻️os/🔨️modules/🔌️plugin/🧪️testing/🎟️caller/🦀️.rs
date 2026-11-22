@@ -4,7 +4,7 @@ use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,ValueError}
 
 #[derive(serde::Deserialize)]
 #[serde(rename_all="camelCase",deny_unknown_fields)]
-struct CallerPolicy{source_kind:String,operation:u64,generation:u64,fuel:u64,turn_fuel:u64,clock_us:u64,deadline_us:u64,maximum_turns:usize,maximum_idle_turns:usize,grant:RetainedCloneGrant,retirement_loan:RetainedCloneGrant}
+struct CallerPolicy{source_kind:String,operation:u64,generation:u64,fuel:u64,turn_fuel:u64,clock_us:u64,deadline_us:u64,maximum_turns:usize,maximum_close_turns:usize,maximum_idle_turns:usize,grant:RetainedCloneGrant,retirement_loan:RetainedCloneGrant}
 
 fn fixture_now_us()->Option<u64>{Some(1000)}
 
@@ -25,6 +25,8 @@ impl OriginalFixtureCaller{
  pub fn maximum_idle_turns()->usize{serde_json::from_str::<CallerPolicy>(include_str!("🧪️tests/🧫️fixtures/🎟️caller.json")).unwrap().maximum_idle_turns}
  /// 📏️ Bounds caller loops without deriving finance from an owner's descriptive demand.
  pub fn maximum_turns()->usize{serde_json::from_str::<CallerPolicy>(include_str!("🧪️tests/🧫️fixtures/🎟️caller.json")).unwrap().maximum_turns}
+ /// 🛟️ Bounds app retirement separately from action settlement under the same original stock.
+ pub fn maximum_close_turns()->usize{serde_json::from_str::<CallerPolicy>(include_str!("🧪️tests/🧫️fixtures/🎟️caller.json")).unwrap().maximum_close_turns}
  /// 🛬️ Retires the body decoder against the same already-issued caller stock before its three parent roots close.
  pub fn retire_decoder(&mut self,decoder:&mut semio_framework_job::OriginalJobDecodeOwner,fuel:u64)->Result<u64,OriginalTurnFailure>{
   self.caller.settle_lent_fuel(fuel);

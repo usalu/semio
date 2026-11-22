@@ -43,31 +43,8 @@ fn drawing_envelope_wire() -> Vec<u8> {
         "conflicts": []
     }))
     .expect("schema-first Drawing fixture envelope");
-    let envelope = store::os_store::document_materialize::create_document_envelope(DRAWING_DOCUMENT_SCHEMA, "drawing-retained-load", snapshot, None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
-    let mut retirement = semio_s_artifact_draw_drawing_host_arena::drawing_envelope_decode_owner_bundle().retire_envelope(envelope);
-    use semio_framework_job::OriginalRetirementPump;
-    use semio_framework_value::{RetainedCloneGrant, RetainedWorkPoll};
-    let pump = OriginalRetirementPump::new();
-    for _ in 0..100_000 {
-        if retirement.terminal_is_empty() {
-            return wire;
-        }
-        let body = retirement.next_copy_byte_demand().unwrap().max(retirement.next_release_byte_demand().unwrap());
-        let demand = retirement.next_demand(body).expect("Drawing fixture envelope retirement demand");
-        let grant = RetainedCloneGrant {
-            maximum_items: 1,
-            maximum_copy_bytes: demand.copy_bytes,
-            maximum_capacity_bytes: demand.capacity_bytes,
-            maximum_release_bytes: demand.release_bytes,
-            maximum_depth: demand.depth,
-        };
-        let mut turn = pump.turn(1 << 24, u64::MAX, || Some(0), grant).unwrap();
-        let (poll, _) = turn.with_effect(|effect| retirement.close_step(body, effect)).unwrap().unwrap();
-        if let RetainedWorkPoll::Complete(turn) = poll {
-            assert!(turn.result.unwrap().progress().fits(grant));
-        }
-    }
-    panic!("Drawing fixture envelope retirement did not reach terminal")
+    semio_s_artifact_draw_drawing_scene::preparation::testkit::scene_wallet().close_owned(snapshot);
+    wire
 }
 
 pub(super) fn admit_drawing_envelope(app: &mut DrawingAppFixture, wire: &[u8]) -> semio_plugin::ArtifactEnvelopeDecodeOperationHandle {
@@ -83,8 +60,10 @@ pub(super) fn admit_drawing_envelope(app: &mut DrawingAppFixture, wire: &[u8]) -
     handle
 }
 
-pub(super) fn drive_drawing_load(app: &mut DrawingAppFixture, handle: semio_plugin::ArtifactEnvelopeDecodeOperationHandle) -> semio_plugin::ArtifactEnvelopeDecodeOperationPoll {
+pub(super) async fn drive_drawing_load(app: &mut DrawingAppFixture, handle: semio_plugin::ArtifactEnvelopeDecodeOperationHandle) -> semio_plugin::ArtifactEnvelopeDecodeOperationPoll {
+    let mut identity = artifact_laws::fixture_identity();
     for _ in 0..100_000 {
+        app.0.advance_typed_operation_publication(&mut identity, app.1.cx()).await.expect("one Drawing original decode publication turn");
         app.0.maintenance_step(app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("one Drawing maintenance turn");
         let poll = app.0.advance_artifact_envelope_load(handle, app.1.cx()).expect("Drawing load advancement");
         if matches!(poll, semio_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready | semio_plugin::ArtifactEnvelopeDecodeOperationPoll::Cancelled | semio_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault) {
@@ -101,7 +80,7 @@ async fn drawing_live_envelope_submit_recursive_clone_swap_displaced_store_and_e
     let base_generation = app.artifact_generation_now();
     let handle = admit_drawing_envelope(&mut app, &drawing_envelope_wire());
     assert_eq!(handle.generation, base_generation);
-    let poll = drive_drawing_load(&mut app, handle);
+    let poll = drive_drawing_load(&mut app, handle).await;
     assert_eq!(poll, semio_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready, "valid retained Drawing load refusal: {:?}", app.artifact_store_replacement_refusal(handle));
     assert_eq!(app.artifact_generation_now().0, base_generation.0 + 1);
     let projection = app.snapshot().expect("Drawing retained mutation publication");
@@ -124,7 +103,7 @@ async fn drawing_live_envelope_cancel_closes_retained_pages_without_publication(
     let page = store::os_store::owned_schema_decode::ArtifactEnvelopeDecodePage::try_from_array(bytes, first.len()).expect("cancelled Drawing first page");
     app.admit_artifact_envelope_ingress_page(handle, page).unwrap_or_else(|(fault, _page)| panic!("cancelled Drawing page admission failed: {fault:?}"));
     app.cancel_artifact_envelope_load(handle).expect("cancel Drawing ingress");
-    assert_eq!(drive_drawing_load(&mut app, handle), semio_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault);
+    assert_eq!(drive_drawing_load(&mut app, handle).await, semio_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault);
     assert_eq!(app.artifact_generation_now(), base_generation);
 }
 
@@ -141,14 +120,14 @@ async fn drawing_live_initializer_candidate_container_commit_ack_cancel_stale_pr
         let stale = semio_plugin::ArtifactEnvelopeDecodeOperationHandle { operation: handle.operation, generation: semio_framework_job::Generation(handle.generation.0 + 1) };
         assert!(app.0.advance_artifact_envelope_load(stale, app.1.cx()).is_err(), "stale staged handle cannot consume the exact operation owner");
         app.cancel_artifact_envelope_load(handle).expect("exact Drawing staged cancellation");
-        assert!(matches!(drive_drawing_load(&mut app, handle), semio_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault | semio_plugin::ArtifactEnvelopeDecodeOperationPoll::Cancelled));
+        assert!(matches!(drive_drawing_load(&mut app, handle).await, semio_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault | semio_plugin::ArtifactEnvelopeDecodeOperationPoll::Cancelled));
         assert_eq!(app.artifact_generation_now(), base_generation);
         assert_eq!(app.snapshot().expect("Drawing last-valid survives staged cancel").id, base_id);
     }
 
     let mut app = drawing_app().await;
     let handle = admit_drawing_envelope(&mut app, &drawing_envelope_wire());
-    let poll = drive_drawing_load(&mut app, handle);
+    let poll = drive_drawing_load(&mut app, handle).await;
     assert_eq!(poll, semio_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready, "valid staged Drawing load refusal: {:?}", app.artifact_store_replacement_refusal(handle));
     let stale = semio_plugin::ArtifactEnvelopeDecodeOperationHandle { operation: handle.operation, generation: semio_framework_job::Generation(handle.generation.0 + 1) };
     assert!(!app.acknowledge_artifact_store_replacement(stale).expect("stale Drawing ACK is refused without retiring the exact owner"));
@@ -171,7 +150,7 @@ async fn drawing_live_envelope_rejects_single_and_final_edit_id_plus_one_before_
         let mut app = drawing_app().await;
         let generation = app.artifact_generation_now();
         let handle = admit_drawing_envelope(&mut app, &wire);
-        assert_eq!(drive_drawing_load(&mut app, handle), semio_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault);
+        assert_eq!(drive_drawing_load(&mut app, handle).await, semio_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault);
         assert_eq!(app.artifact_generation_now(), generation);
     }
 }

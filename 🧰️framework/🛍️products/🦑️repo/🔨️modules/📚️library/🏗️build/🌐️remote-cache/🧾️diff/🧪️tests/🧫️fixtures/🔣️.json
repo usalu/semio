@@ -1,0 +1,10 @@
+{
+ "version": 1,
+ "cases": [
+  { "name": "one byte differs", "kept": "abcdef", "refused": "abcXef", "firstDifferenceByte": 3, "differingBytes": 1, "lines": ["-abcdef", "+abcXef"] },
+  { "name": "identical text", "kept": "same\nlines", "refused": "same\nlines", "firstDifferenceByte": null, "differingBytes": 0, "lines": [] },
+  { "name": "different length", "kept": "ab\ncd", "refused": "ab\ncd\nef", "firstDifferenceByte": 5, "differingBytes": 3, "lines": ["+ef"] },
+  { "name": "json fields get their own line", "kept": "{\"a\":1,\"b\":[1,2],\"c\":\"x\"}", "refused": "{\"a\":1,\"b\":[1,3],\"c\":\"x\"}", "firstDifferenceByte": 14, "differingBytes": 1, "lines": ["-  2", "+  3"] },
+  { "name": "a repeated line counts as often as it appears", "kept": "x\nx\ny", "refused": "x\ny\ny", "firstDifferenceByte": 2, "differingBytes": 1, "lines": ["-x", "+y"] }
+ ]
+}

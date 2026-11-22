@@ -1,7 +1,7 @@
 {
   "title": "Get Norm Plugin Working End to End",
   "emoji": "📕",
-  "status": "closed",
+  "status": "open",
   "description": "Get norms plugin working end to end. Coordinate with Opus 5.5 main chat, Sonnet 5.5 agents for medium/high complexity execution, Haiku 5.5 agents for read-only exploration/audits/low complexity. Use a parallel fleet. Fix fundamental unrelated issues found along the way.",
   "summary": "All 15 Standards apps opened and rendered in native semio-tech Play on port 6034 at standard budgets using five verified signed component deliveries. Verified DIN 4108 archive loads and document transfers, EN 1990 and EN 1992 fixed-capacity startup, and five representative session, prepare and activate lanes. Signed DIN V 18599 Demo acknowledged its archive and rendered successfully. Its alternate example transfer still stalls, with the remaining interaction limitations recorded in play-resume-2026-11-20.md. Preserved the reports and input scripts and removed the ticket-generated directory.",
   "github": {
@@ -11,7 +11,8 @@
   "sessions": [
     "a86b4060-2c93-48b5-8b67-222227f9cde7",
     "f2cc5acb-455b-4f8e-a247-8f65e30743e4",
-    "55f9c547-7cc4-431f-b2c1-f2b46a86d25e"
+    "55f9c547-7cc4-431f-b2c1-f2b46a86d25e",
+    "fcfc4866-7d6d-4ee2-aed0-208d1491a4c7"
   ],
   "interactions": [
     {
@@ -415,6 +416,17 @@
           "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window-kits/🌳️tree/🦀️.rs"
         }
       ]
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-21 23:52:33",
+      "author": "",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Reopened 2026-11-21 by a new coordinator session (claude-code, Opus 5.5): later 2026-11-21 notes (norm-play-live-delivery-2026-11-21.md) record zero passing Norm routes on the live 6034 listener, missing lane receipts and pending signed rebuilds for DIN 4108 and the four extensions. Goal: all Norm apps working end to end in Play with current signed publications, DIN 18599 alternate example transfer fixed, all tests green.",
+      "llm": "opus-5-5",
+      "effort": "medium"
     }
   ]
 }

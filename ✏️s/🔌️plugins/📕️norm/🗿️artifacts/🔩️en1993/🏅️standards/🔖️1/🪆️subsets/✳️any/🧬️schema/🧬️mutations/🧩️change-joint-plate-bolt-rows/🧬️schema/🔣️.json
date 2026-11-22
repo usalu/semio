@@ -32,6 +32,7 @@
     "newBoltRows": {
       "type": "integer",
       "minimum": 0,
+      "maximum": 4294967295,
       "x-semio-ui": {
         "label": {
           "en": "Bolt rows n_1 along the line of action",

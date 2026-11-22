@@ -1,4 +1,7 @@
 use super::*;
+use semio_s_artifact_remodel_remodeling_mut_calib::standards::v1::subsets::any::schema::mutations::create_gcp::create_gcp;
+use semio_s_artifact_remodel_remodeling_mut_media::standards::v1::subsets::any::schema::mutations::add_stream_frame::add_stream_frame;
+use semio_s_artifact_remodel_remodeling_mut_media::standards::v1::subsets::any::schema::mutations::create_asset::create_asset;
 use semio_s_artifact_remodel_remodeling_editor_kit::editor::remodeling::kit::checker_data_url;
 use semio_s_artifact_remodel_remodeling_examples::examples::synthetic_orbit::frames;
 use semio_s_artifact_remodel_remodeling_examples::examples::synthetic_orbit::FRAME_MIME;
@@ -30,13 +33,12 @@ fn never() -> Option<u64> {
     Some(0)
 }
 
-/// 🎞️ Views of the committed orbit the short document keeps, and the long edge it ingests them at.
+/// 🎞️ Retained views in the short orbit document.
 const ORBIT_SHORT_FRAMES: usize = 8;
-const ORBIT_SHORT_LONG_EDGE_PX: u32 = 160;
 
 /// 📥️ The committed `synthetic-orbit` document (calibrated camera, parameters, frame table) with its
 /// thirty-six frames bound through `create-asset`; `orbit-short`, the same document cut to its first
-/// [`ORBIT_SHORT_FRAMES`] views and ingested at [`ORBIT_SHORT_LONG_EDGE_PX`] — a capture that
+/// [`ORBIT_SHORT_FRAMES`] views — a capture that
 /// reconstructs (cameras, points, a mesh) in a fraction of the full orbit's time, for the laws that
 /// need a published result; or four identical 24×24 checker frames on one stream sampled at stride 1
 /// — a capture no two-view geometry can be solved from (zero baseline), for the laws about a run
@@ -48,13 +50,12 @@ async fn imported_document(example: &str) -> Arc<RemodelingSnapshot> {
         for (asset_id, bytes) in frames().take(kept) {
             let image = semio_s_artifact_remodel_remodeling_editor_kit::editor::remodeling::kit::decode_still_image(FRAME_MIME, bytes).expect("frame decodes");
             let asset = semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::ImageAsset { mime: FRAME_MIME.into(), data: base64_codec::base64_standard_encode(bytes), width: image.width, height: image.height };
-            scene = semio_s_artifact_remodel_remodeling_mutations::standards::v1::subsets::any::schema::mutations::apply_remodeling_mutation(&scene, &semio_s_artifact_remodel_remodeling_mut_media::standards::v1::subsets::any::schema::mutations::create_asset((*asset_id).into(), asset)).expect("frame asset applies");
+            scene = semio_s_artifact_remodel_remodeling_mutations::standards::v1::subsets::any::schema::mutations::apply_remodeling_mutation(&scene, &create_asset((*asset_id).into(), asset)).expect("frame asset applies");
         }
         if example == "orbit-short" {
             for stream in &mut scene.streams {
                 stream.frames.truncate(kept);
             }
-            scene = semio_s_artifact_remodel_remodeling_mutations::standards::v1::subsets::any::schema::mutations::apply_remodeling_mutation(&scene, &semio_s_artifact_remodel_remodeling_mut_params::standards::v1::subsets::any::schema::mutations::update_ingest_params::update_ingest_params(semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::IngestParams { downscale_long_edge_px: ORBIT_SHORT_LONG_EDGE_PX, ..scene.params.ingest.clone() })).expect("ingest params apply");
         }
         return Arc::new(scene);
     }
@@ -68,9 +69,9 @@ async fn imported_document(example: &str) -> Arc<RemodelingSnapshot> {
         let stream = if index == 0 {
             semio_s_artifact_remodel_remodeling_mut_media::standards::v1::subsets::any::schema::mutations::create_stream::create_stream(semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::MediaStream { id: "checker".into(), name: "checker".into(), kind: semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::MediaKind::ImageSequence, camera_id: None, sync_offset_ms: 0.0, fps_hint: 2.0, frames: vec![frame], source: None })
         } else {
-            semio_s_artifact_remodel_remodeling_mut_media::standards::v1::subsets::any::schema::mutations::add_stream_frame("checker".into(), frame, semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::MediaKind::ImageSequence)
+            add_stream_frame("checker".into(), frame, semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::MediaKind::ImageSequence)
         };
-        for mutation in [semio_s_artifact_remodel_remodeling_mut_media::standards::v1::subsets::any::schema::mutations::create_asset(asset_id, semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::ImageAsset { mime: "image/png".into(), data: base64_codec::base64_standard_encode(&bytes), width: 24, height: 24 }), stream] {
+        for mutation in [create_asset(asset_id, semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::ImageAsset { mime: "image/png".into(), data: base64_codec::base64_standard_encode(&bytes), width: 24, height: 24 }), stream] {
             scene = semio_s_artifact_remodel_remodeling_mutations::standards::v1::subsets::any::schema::mutations::apply_remodeling_mutation(&scene, &mutation).expect("frame import applies");
         }
     }
@@ -96,6 +97,12 @@ fn whole_turns() -> StepBudget {
     budget(u64::MAX, u64::MAX)
 }
 
+/// 🧮️ Uses regular trace batching for the full orbit's numerical outcome.
+fn fixture_budget(document: &str) -> StepBudget {
+    let fuel = if document == "synthetic-orbit" { semio_framework_job::INTERACTIVE_LANE_FUEL } else { 1 };
+    budget(fuel, u64::MAX)
+}
+
 fn view_to_turn(view: JobOutcomeView<'_>) -> Turn {
     match view {
         JobOutcomeView::PreviewReady { payload, .. } => Turn::Tick(ToolRunTick::decode(payload.single_page().expect("a tick is one payload page")).expect("tick decodes")),
@@ -108,7 +115,7 @@ fn view_to_turn(view: JobOutcomeView<'_>) -> Turn {
 }
 
 
-const SOURCE_STOCK: RetainedCloneGrant = RetainedCloneGrant { maximum_items: 1_000_000_000, maximum_copy_bytes: 1_000_000_000, maximum_capacity_bytes: 1_000_000_000, maximum_release_bytes: 1_000_000_000, maximum_depth: 128 };
+const SOURCE_STOCK: RetainedCloneGrant = RetainedCloneGrant { maximum_items: 1_000_000_000, maximum_copy_bytes: usize::MAX, maximum_capacity_bytes: 1_000_000_000, maximum_release_bytes: 1_000_000_000, maximum_depth: 128 };
 
 struct RunDriver {
     caller: Option<OriginalJobFixtureCaller>,
@@ -117,28 +124,33 @@ struct RunDriver {
 
 impl RunDriver {
     fn new(clock: fn() -> Option<u64>) -> Self {
-        Self {
-            caller: Some(OriginalJobFixtureCaller::admit(semio_framework_job::OperationId(91), semio_framework_job::Generation(1), SOURCE_STOCK, clock, u64::MAX, 1_000_000_000)),
-            origin: OriginalJobReturnOrigin::empty(),
-        }
+        let mut caller = OriginalJobFixtureCaller::admit(semio_framework_job::OperationId(91), semio_framework_job::Generation(1), SOURCE_STOCK, clock, u64::MAX, 1_000_000_000);
+        caller.admit_return_table();
+        Self { caller: Some(caller), origin: OriginalJobReturnOrigin::empty() }
     }
 
     fn close_job(&mut self, job: &mut impl InteractiveJob) {
         for _ in 0..4096 {
             if self.origin.outcome().is_none() { break; }
-            self.caller.as_mut().expect("original caller").turn(FUNDED_GRANT, |cx| self.origin.acknowledge_outcome(cx)).expect("funded result acknowledgement");
+            self.caller.as_mut().expect("original caller").refreshed_turn(FUNDED_GRANT, |cx| self.origin.acknowledge_outcome(cx)).expect("funded result acknowledgement");
         }
         assert!(self.origin.outcome().is_none(), "original outcome acknowledged");
         let mut began = false;
-        self.caller.as_mut().expect("original caller").turn(FUNDED_GRANT, |cx| semio_framework_job::close_original_granted_step(cx, |_| {
+        self.caller.as_mut().expect("original caller").refreshed_turn(FUNDED_GRANT, |cx| semio_framework_job::close_original_granted_step(cx, |_| {
             job.begin_close();
             began = true;
-            semio_framework_value::RetainedWorkOutcome { result: Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, ..Default::default() } }), work: 1 }
+            semio_framework_value::RetainedWorkOutcome::<_, ValueError> { result: Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, ..Default::default() } }), work: 1 }
         })).expect("funded job close admission");
         assert!(began, "original caller funded close admission");
+        let mut stalled = 0;
         for _ in 0..10_000_000 {
-            let step = self.caller.as_mut().expect("original caller").turn(FUNDED_GRANT, |cx| job.close_step(cx)).expect("funded job close");
-            if matches!(step, InteractiveJobCloseStep::Complete { .. }) { assert!(job.terminal_is_empty(), "closed job has no retained owner"); return; }
+            let step = self.caller.as_mut().expect("original caller").refreshed_turn(FUNDED_GRANT, |cx| job.close_step(cx)).expect("funded job close");
+            if matches!(step, InteractiveJobCloseStep::Complete { .. }) {
+                assert!(job.terminal_is_empty(), "closed job has no retained owner");
+                return;
+            }
+            stalled = if step.progress() == RetainedCloneProgress::default() { stalled + 1 } else { 0 };
+            assert!(stalled < 4_096, "original job retirement stalled before reporting Complete");
         }
         panic!("job did not close");
     }
@@ -150,7 +162,7 @@ impl Drop for RunDriver {
         let caller = self.caller.as_mut().expect("original caller");
         for _ in 0..4096 {
             if self.origin.terminal_is_empty() { break; }
-            caller.turn(FUNDED_GRANT, |cx| self.origin.close_step(cx)).expect("funded return close");
+            caller.refreshed_turn(FUNDED_GRANT, |cx| self.origin.close_step(cx)).expect("funded return close");
         }
         assert!(self.origin.terminal_is_empty(), "original return closed");
         self.caller.take().expect("original caller").retire(SOURCE_STOCK);
@@ -180,15 +192,18 @@ impl<J: InteractiveJob> InteractiveJob for DeadlineUnitJob<'_, J> {
 /// 🚦️ One funded caller turn receives and acknowledges its actual returned ownership.
 fn step_once(job: &mut impl InteractiveJob, step_budget: StepBudget, driver: &mut RunDriver) -> Option<Turn> {
     let origin = &mut driver.origin;
-    driver.caller.as_mut().expect("original caller").turn(step_budget.retained, |cx| {
+    driver.caller.as_mut().expect("original caller").refreshed_turn(step_budget.retained, |cx| {
         if origin.outcome().is_some() {
             origin.acknowledge_outcome(cx)?;
+            return Ok(None);
+        }
+        cx.acknowledge_return_rows_locally();
+        if !origin.admit(cx)? {
             return Ok(None);
         }
         let deadline = if step_budget.deadline_us == 0 { unit_clock().expect("unit clock") + 1 } else { step_budget.deadline_us };
         let mut outcome = None;
         cx.with_original_work_loan(step_budget.fuel, deadline, |cx| {
-            if !origin.admit(cx)? { return Ok(()); }
             let mut verdict = None;
             let mut unit = DeadlineUnitJob(job, (step_budget.deadline_us == 0).then_some(deadline));
             let returned = semio_framework_job::drive_step(&mut unit, cx, origin.receiver()?, "remodeling.run", InteractiveStage::InteractiveStep, &mut verdict)?;
@@ -212,11 +227,15 @@ fn step_once(job: &mut impl InteractiveJob, step_budget: StepBudget, driver: &mu
     }).expect("original remodeling caller turn")
 }
 
-fn turn(job: &mut impl InteractiveJob, step_budget: StepBudget, driver: &mut RunDriver) -> Turn {
+fn try_turn(job: &mut impl InteractiveJob, step_budget: StepBudget, driver: &mut RunDriver) -> Option<Turn> {
     for _ in 0..1_000_000 {
-        if let Some(turn) = step_once(job, StepBudget::new(step_budget.fuel, step_budget.deadline_us, step_budget.retained), driver) { return turn; }
+        if let Some(turn) = step_once(job, StepBudget::new(step_budget.fuel, step_budget.deadline_us, step_budget.retained), driver) { return Some(turn); }
     }
-    panic!("the job never delivered an outcome");
+    None
+}
+
+fn turn(job: &mut impl InteractiveJob, step_budget: StepBudget, driver: &mut RunDriver) -> Turn {
+    try_turn(job, step_budget, driver).expect("the job never delivered an outcome")
 }
 
 /// 🪞️ Everything a run handed the ledger, folded the way the ledger folds it.
@@ -282,16 +301,19 @@ fn run_to_end(job: &mut ReconstructionRunJob, budget: StepBudget) -> Mirror {
     let mut mirror = Mirror::default();
     let mut sequence = RunDriver::new(never);
     for _ in 0..10_000_000 {
-        match turn(job, budget, &mut sequence) {
+        let turn = try_turn(job, budget, &mut sequence).unwrap_or_else(|| {
+            let caller = sequence.caller.as_ref().expect("original caller");
+            panic!(
+                "no outcome at {} after {} decisions: engine unit {:?}, publication {:?}, retained grant {:?}, source fuel {}",
+                job.stage.id(), job.decisions, job.engine.as_ref().map(|engine| engine.unit_label()), job.outbox.kind, caller.remaining_grant(), caller.fuel_remaining()
+            );
+        });
+        match turn {
             Turn::Tick(tick) => mirror.fold(tick),
             Turn::Checkpoint(bytes) => mirror.checkpoints.push(bytes),
-            Turn::Complete => {
-                mirror.completed = true;
-                sequence.close_job(job);
-                return mirror;
-            }
-            Turn::Fault => {
-                mirror.faulted = true;
+            terminal @ (Turn::Complete | Turn::Fault) => {
+                mirror.completed = matches!(terminal, Turn::Complete);
+                mirror.faulted = !mirror.completed;
                 sequence.close_job(job);
                 return mirror;
             }
@@ -381,13 +403,93 @@ fn fresh_run(document: Arc<RemodelingSnapshot>) -> ReconstructionRunJob {
     ReconstructionRunJob::new(identity(), document, None, 0)
 }
 
+#[test]
+fn bounded_resize_matches_shared_fixture_and_image_oracle() {
+    let case: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📐️resize.json")).unwrap();
+    for row in case["extents"].as_array().unwrap() {
+        let values: Vec<u32> = row.as_array().unwrap().iter().map(|value| value.as_u64().unwrap() as u32).collect();
+        assert_eq!(frame_extent(values[0], values[1], values[2]), [values[3], values[4]]);
+    }
+    let width = case["width"].as_u64().unwrap() as u32;
+    let height = case["height"].as_u64().unwrap() as u32;
+    let pixels: Vec<u8> = serde_json::from_value(case["pixels"].clone()).unwrap();
+    let expected: Vec<u8> = serde_json::from_value(case["expected"].clone()).unwrap();
+    let [target_width, target_height] = frame_extent(width, height, case["longEdge"].as_u64().unwrap() as u32);
+    let reference = image::RgbaImage::from_raw(width, height, pixels.clone()).unwrap();
+    let oracle = image::imageops::resize(&reference, target_width, target_height, image::imageops::FilterType::Triangle);
+    let mut job = semio_framework_pixels::editing::PixelEditJob::new(semio_framework_pixels::RasterImage { width, height, pixels }, semio_framework_pixels::editing::PixelOperation::Resize { width: target_width, height: target_height, bilinear: true }, None).unwrap();
+    while !job.advance_bounded(1, 4).unwrap().done {}
+    assert_eq!(job.result().unwrap().pixels, expected);
+    assert_eq!(oracle.into_raw(), expected);
+}
+
+
+#[semio_framework_async_macros::async_test]
+async fn ingest_binds_the_source_calibration_and_keeps_duplicate_frame_indices_distinct() {
+    use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::{CameraCalibration, ImageAsset, MediaKind, VideoSource};
+    use semio_s_artifact_remodel_remodeling_mutations::standards::v1::subsets::any::schema::mutations::apply_remodeling_mutation;
+
+    let mut document = Arc::unwrap_or_clone(imported_document("checker").await);
+    document.params.ingest.min_sharpness = 0.0;
+    document.params.ingest.downscale_long_edge_px = 16;
+    document.streams[0].frames.truncate(1);
+    document.streams[0].camera_id = Some("left".into());
+    let mut right = document.streams[0].clone();
+    right.id = "right-stream".into();
+    right.camera_id = Some("right".into());
+    right.kind = MediaKind::Video;
+    right.sync_offset_ms = -10.0;
+    right.source = Some(VideoSource { width: 640, height: 320, ..VideoSource::default() });
+    right.frames[0].asset_id = "right-frame-0".into();
+    document.streams.push(right);
+
+    let data_url = checker_data_url(32, 16, 3).await;
+    let (_, data) = data_url.split_once(',').expect("checker data URL");
+    document = apply_remodeling_mutation(&document, &create_asset("right-frame-0".into(), ImageAsset { mime: "image/png".into(), data: data.into(), width: 32, height: 16 })).expect("right frame asset");
+    document.calibration.cameras = vec![
+        CameraCalibration { id: "right".into(), model: "fisheye".into(), fx: 18.0, fy: 21.0, cx: 17.0, cy: 7.0, skew: -0.5, distortion: [0.0625, 0.0, 0.0, 0.25, 0.0], ..CameraCalibration::default() },
+        CameraCalibration { id: "left".into(), model: "brownConrady".into(), fx: 25.0, fy: 22.0, cx: 11.0, cy: 13.0, skew: 0.25, distortion: [0.03125, 0.0, 0.0, 0.125, -0.25], ..CameraCalibration::default() },
+    ];
+
+    let inputs = reconstruction_inputs(&document);
+    let mut changed = document.clone();
+    changed.streams[0].camera_id = Some("right".into());
+    assert_ne!(reconstruction_inputs(&changed), inputs);
+    changed.streams[0].camera_id = Some("left".into());
+    changed.streams[1].sync_offset_ms = 0.0;
+    assert_ne!(reconstruction_inputs(&changed), inputs);
+
+    let mut job = fresh_run(Arc::new(document));
+    let mut verdicts = Vec::new();
+    for _ in 0..1_000 {
+        if let Some(verdict) = job.ingest().expect("ingest step") {
+            verdicts.push(verdict);
+        }
+        if job.scene.is_none() {
+            break;
+        }
+    }
+    assert_eq!(verdicts, vec![(0, 0, ReconstructionRunReason::FrameAccepted), (1 << 32, 0, ReconstructionRunReason::FrameAccepted)]);
+    let engine = job.engine.as_mut().expect("reconstruction engine");
+    engine.start().expect("mixed-size captures");
+    let [right, left] = engine.frames.as_slice() else { panic!("two accepted frames") };
+    assert_eq!((right.image.width, right.image.height, right.capture.stream, right.timestamp_ms), (16, 8, 1, -10.0));
+    assert_eq!((left.image.width, left.image.height, left.capture.stream, left.timestamp_ms), (16, 16, 0, 0.0));
+    let right_intrinsics = right.capture.intrinsics.expect("right calibration");
+    let left_intrinsics = left.capture.intrinsics.expect("left calibration");
+    assert_eq!([right_intrinsics.fx, right_intrinsics.fy, right_intrinsics.cx, right_intrinsics.cy, right_intrinsics.skew], [9.0, 10.5, 8.25, 3.25, -0.25]);
+    let scale = 16.0 / 24.0;
+    assert_eq!([left_intrinsics.fx, left_intrinsics.fy, left_intrinsics.cx, left_intrinsics.cy, left_intrinsics.skew], [25.0 * scale, 22.0 * scale, 11.5 * scale - 0.5, 13.5 * scale - 0.5, 0.25 * scale]);
+    assert_eq!(right_intrinsics.project([0.0, 0.0, 1.0]), Some([8.25, 3.25]));
+    assert_eq!(left_intrinsics.project([0.0, 0.0, 1.0]), Some([11.5 * scale - 0.5, 13.5 * scale - 0.5]));
+}
 
 #[semio_framework_async_macros::async_test]
 async fn the_run_matches_the_language_neutral_fixture() {
     for case in fixture()["cases"].as_array().expect("cases") {
         let document = case["document"].as_str().expect("document");
         let mut job = fresh_run(imported_document(document).await);
-        let mirror = run_to_end(&mut job, budget(1, u64::MAX));
+        let mirror = run_to_end(&mut job, fixture_budget(document));
         assert_eq!(if mirror.completed { "complete" } else if mirror.faulted { "faulted" } else { "open" }, case["final"], "{document}: final outcome");
         let prefix: Vec<String> = mirror.verdicts.iter().map(|(_, verdict, reason)| format!("{}:{}", verdict_id(*verdict), reason_id(*reason))).collect();
         let expected_prefix: Vec<&str> = case["verdictPrefix"].as_array().expect("prefix").iter().map(|entry| entry.as_str().expect("verdict")).collect();
@@ -434,7 +536,7 @@ async fn prints_the_run_fixture_actuals() {
     for case in fixture()["cases"].as_array().expect("cases") {
         let document = case["document"].as_str().expect("document");
         let mut job = fresh_run(imported_document(document).await);
-        let mirror = run_to_end(&mut job, budget(1, u64::MAX));
+        let mirror = run_to_end(&mut job, fixture_budget(document));
         let counters: serde_json::Map<String, serde_json::Value> = ReconstructionRunCounter::ALL.iter().map(|counter| (counter.id().to_string(), serde_json::json!(mirror.counter(*counter)))).collect();
         let stages: Vec<&str> = mirror.stages.iter().map(|stage| ReconstructionRunStage::ALL[usize::from(*stage)].id()).collect();
         let appends = mirror.ops.iter().filter(|op| matches!(op, RemodelingMutation::AppendContent(_))).count();
@@ -450,9 +552,11 @@ async fn prints_the_run_fixture_actuals() {
 
 /// 🔬️ Recomputes one match candidate's verdict with `bitvec` Hamming distances over the descriptor words.
 fn oracle_match_verdict(descriptors: &[Vec<[u64; 4]>], frame_a: usize, frame_b: usize, query: usize, ratio: f32, mutual: bool) -> Option<ReconstructionRunReason> {
-    use bitvec::prelude::{BitVec, Lsb0};
-    let bits = |words: &[u64; 4]| BitVec::<u64, Lsb0>::from_vec(words.to_vec());
-    let distance = |left: &[u64; 4], right: &[u64; 4]| (bits(left) ^ bits(right)).count_ones() as u32;
+    use bitvec::{order::Lsb0, view::BitView};
+    let distance = |left: &[u64; 4], right: &[u64; 4]| {
+        let difference: [u64; 4] = std::array::from_fn(|word| left[word] ^ right[word]);
+        difference.view_bits::<Lsb0>().count_ones() as u32
+    };
     let (a, b) = (&descriptors[frame_a], &descriptors[frame_b]);
     let mut best = (u32::MAX, usize::MAX);
     let mut second = u32::MAX;
@@ -487,12 +591,23 @@ fn oracle_match_verdict(descriptors: &[Vec<[u64; 4]>], frame_a: usize, frame_b: 
 #[semio_framework_async_macros::async_test]
 async fn every_traced_match_verdict_agrees_with_the_bitvec_hamming_oracle() {
     let mut job = fresh_run(imported_document("synthetic-orbit").await);
-    let mirror = run_to_end(&mut job, whole_turns());
-    let (descriptors, pairs, ratio, mutual) = job.engine.as_ref().expect("the engine stays resident until close").match_oracle_inputs();
+    let mut sequence = RunDriver::new(never);
+    let mut mirror = Mirror::default();
+    let matching_finished = (0..10_000_000).any(|_| match turn(&mut job, whole_turns(), &mut sequence) {
+        Turn::Tick(tick) => {
+            mirror.fold(tick);
+            mirror.stages.last().is_some_and(|stage| *stage > ReconstructionRunStage::Matching.index())
+        }
+        Turn::Checkpoint(_) | Turn::Yield => false,
+        Turn::Complete | Turn::Fault => panic!("the orbit settled before publishing its matching results"),
+    });
+    assert!(matching_finished, "the full orbit published all matching decisions");
+    let engine = job.engine.as_ref().expect("the engine stays resident until close");
+    let descriptors: Vec<Vec<[u64; 4]>> = engine.descriptors_per_frame.iter().map(|frame| frame.iter().map(|descriptor| descriptor.0).collect()).collect();
     let mut decisive = [0usize; 3];
-    for (frame_a, frame_b) in pairs {
+    for &(frame_a, frame_b) in &engine.match_pairs {
         for query in 0..descriptors[frame_a].len() {
-            let expected = oracle_match_verdict(&descriptors, frame_a, frame_b, query, ratio, mutual);
+            let expected = oracle_match_verdict(&descriptors, frame_a, frame_b, query, engine.params.match_ratio, engine.params.match_mutual);
             let traced = mirror.resident.get(&match_trace_key(frame_a, frame_b, query as u32)).map(|(_, reason, _)| ReconstructionRunReason::from_code(*reason).expect("run reason"));
             assert_eq!(traced, expected, "pair {frame_a}-{frame_b} query {query}");
             match expected {
@@ -504,6 +619,7 @@ async fn every_traced_match_verdict_agrees_with_the_bitvec_hamming_oracle() {
         }
     }
     assert!(decisive.iter().all(|count| *count > 0), "the oracle saw accepted, ratio-rejected and cross-check-rejected candidates: {decisive:?}");
+    sequence.close_job(&mut job);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -574,7 +690,7 @@ async fn the_revalidate_job_keeps_the_result_on_an_unchanged_head_and_withdraws_
     let provisional = whole.ops.len() as u32;
     let mut unrelated = (*document).clone();
     unrelated.id.push_str("-renamed");
-    let added_gcp = Arc::new(semio_s_artifact_remodel_remodeling_mutations::standards::v1::subsets::any::schema::mutations::apply_remodeling_mutation(&document, &semio_s_artifact_remodel_remodeling_mut_calib::standards::v1::subsets::any::schema::mutations::create_gcp(semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::GroundControlPoint { id: "gcp-1".into(), name: "Corner".into(), world_position: [0.0, 0.0, 0.0], observations: Vec::new() })).expect("gcp applies"));
+    let added_gcp = Arc::new(semio_s_artifact_remodel_remodeling_mutations::standards::v1::subsets::any::schema::mutations::apply_remodeling_mutation(&document, &create_gcp(semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::GroundControlPoint { id: "gcp-1".into(), name: "Corner".into(), world_position: [0.0, 0.0, 0.0], observations: Vec::new() })).expect("gcp applies"));
     let changed = Arc::new(semio_s_artifact_remodel_remodeling_mutations::standards::v1::subsets::any::schema::mutations::apply_remodeling_mutation(&document, &semio_s_artifact_remodel_remodeling_mut_params::standards::v1::subsets::any::schema::mutations::update_ingest_params::update_ingest_params(semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::IngestParams { frame_sample_stride: 2, ..document.params.ingest.clone() })).expect("params apply"));
     for (edit, head) in [("documentIdentity", Arc::new(unrelated)), ("groundControlPresence", added_gcp), ("ingestStride", changed)] {
         let withdrawn = law["withdrawn"][edit].as_bool().expect("revalidation verdict");
@@ -670,9 +786,9 @@ async fn every_bounded_unit_stays_under_the_interactive_ceiling_on_every_example
 #[semio_framework_async_macros::async_test]
 #[ignore = "re-records the run fixture cases; run explicitly"]
 async fn print_run_fixture_cases() {
-    for document in ["checker", "orbit-short", "synthetic-orbit"] {
+    for document in ["synthetic-orbit", "checker", "orbit-short"] {
         let mut job = fresh_run(imported_document(document).await);
-        let mirror = run_to_end(&mut job, budget(1, u64::MAX));
+        let mirror = run_to_end(&mut job, fixture_budget(document));
         let prefix: Vec<String> = mirror.verdicts.iter().take(24).map(|(_, verdict, reason)| format!("{}:{}", verdict_id(*verdict), reason_id(*reason))).collect();
         let counters: serde_json::Map<String, serde_json::Value> = ReconstructionRunCounter::ALL.iter().map(|counter| (counter.id().to_string(), serde_json::json!(mirror.counter(*counter)))).collect();
         let stages: Vec<&str> = mirror.stages.iter().map(|stage| ReconstructionRunStage::ALL[usize::from(*stage)].id()).collect();

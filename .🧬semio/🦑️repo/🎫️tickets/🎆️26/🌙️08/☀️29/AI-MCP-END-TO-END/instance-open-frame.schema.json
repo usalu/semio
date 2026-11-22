@@ -1,0 +1,54 @@
+{
+  "contract": "actor.original-instance-open-poll/v1",
+  "magic": "SPO1",
+  "byteOrder": "little-endian",
+  "selection": {"events": ["InstanceOpen"], "commandPage": null, "coldPairPage": null},
+  "headerBytes": 244,
+  "header": [
+    {"name":"magic","offset":0,"length":4},
+    {"name":"totalBytes","offset":4,"length":4},
+    {"name":"activationGeneration","offset":8,"length":8},
+    {"name":"instanceId","offset":16,"length":4},
+    {"name":"requestSequence","offset":20,"length":8},
+    {"name":"maximumItems","offset":28,"length":4},
+    {"name":"maximumCopyBytes","offset":32,"length":4},
+    {"name":"maximumCapacityBytes","offset":36,"length":4},
+    {"name":"maximumReleaseBytes","offset":40,"length":4},
+    {"name":"maximumDepth","offset":44,"length":4},
+    {"name":"workFuel","offset":48,"length":8},
+    {"name":"fuel","offset":56,"length":8},
+    {"name":"deadlineUs","offset":64,"length":8},
+    {"name":"maxEffects","offset":72,"length":4},
+    {"name":"maxPatchBytes","offset":76,"length":4},
+    {"name":"maxFrames","offset":80,"length":4},
+    {"name":"quotaPresenceBits","offset":84,"length":4},
+    {"name":"appIdBytes","offset":88,"length":4},
+    {"name":"actorBytes","offset":92,"length":4},
+    {"name":"configBytes","offset":96,"length":4},
+    {"name":"assetCount","offset":100,"length":4},
+    {"name":"capabilityCount","offset":104,"length":4},
+    {"name":"quotaWords","offset":108,"length":136}
+  ],
+  "quotaWords": [
+    "memoryBytes", "fuelPerTurn", "turnDeadlineMs", "tables", "mailboxLen",
+    "messageBytes", "outstandingRequests", "timers", "storageBytes",
+    "networkBytesPerMin", "uiNodes", "patchBytes", "patchHz",
+    "blobResidentBytes", "gpuMsPerFrame", "backgroundMsPerMin", "logBytesPerMin"
+  ],
+  "body": [
+    {"name":"appId","encoding":"utf-8","extent":"appIdBytes"},
+    {"name":"actor","encoding":"utf-8","extent":"actorBytes"},
+    {"name":"config","encoding":"octets","extent":"configBytes"},
+    {"name":"assets","count":"assetCount","headerBytes":8,"header":[["nameBytes",4],["dataBytes",4]],"fields":[["name","utf-8"],["data","octets"]]},
+    {"name":"capabilities","count":"capabilityCount","headerBytes":36,"header":[["token",16],["expiresMs",8],["expiryPresence",4],["idBytes",4],["scopeBytes",4]],"fields":[["id","utf-8"],["scope","utf-8"]]}
+  ],
+  "rules": [
+    "Exactly one original InstanceOpen, with both dedicated pages absent.",
+    "The request uses the actor lifecycle validation, with nonzero generation and sequence and a sequence no greater than 9007199254740991.",
+    "The total size is exact, includes this header, and fits Core i32 extent.",
+    "Quota bits above bit 16 must be clear. A quota whose presence bit is clear must contain zero.",
+    "Expiry presence is 0 or 1. Absent expiry must contain zero. Present expiry may contain zero.",
+    "All field extents are checked before reserve, and all rows and fields consume exactly the total size.",
+    "Limits are immutable request data; the guest still narrows against the authenticated original loan."
+  ]
+}

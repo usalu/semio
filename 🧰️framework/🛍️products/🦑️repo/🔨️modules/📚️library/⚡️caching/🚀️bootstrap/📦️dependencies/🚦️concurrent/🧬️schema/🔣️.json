@@ -72,7 +72,9 @@
           "rollbackMilliseconds": 86400000,
           "pressureFreeFraction": 0.25,
           "pressureGraceMilliseconds": 0,
-          "maximumCollectedPerRun": 16
+          "maximumCollectedPerRun": 16,
+          "postPublicationCleanupMilliseconds": 2000,
+          "postPublicationCleanupEntries": 4096
         },
         "languages": [
           "en",

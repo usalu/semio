@@ -12,10 +12,11 @@ import imageCapacityCases from "./💽️image-recovery/🌡️capacity.json" wi
 import {validateJsonSchemaSubset} from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import * as routing from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {checkResourceLeaseControl} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
-import {declareBuildTestEnvelopeV1,withBuildTestInvocationV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/📥️invocation/🟦️.ts";
+import {withBuildTestInvocationV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/📥️invocation/🟦️.ts";
+import {declareLibraryBuildTestEnvelopeV1} from "../../../../🧪️testing/🪪️native-birth/🟦️.ts";
 import {BUILD_HOST_CAPACITY_POLICY_V1,withBuildCapacityV1} from "../../../🌡️host-capacity/🟦️.ts";
 import {recordHostPhasesV1,updateHostEstimateStoreV1,type HostSampleV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🌡️host-capacity/🟦️.ts";
-declareBuildTestEnvelopeV1({owner:"test:native-recovery-routing",maximumElapsedMilliseconds:180000,capabilities:{artifacts:true}});
+declareLibraryBuildTestEnvelopeV1({suite:"build-command-line",maximumElapsedMilliseconds:180000});
 const protocol=schema.$defs.Protocol.const;
 const actualOwner=()=>JSON.parse(readFileSync(join(process.cwd(),protocol.owner,"📋️project.json"),"utf8"));
 function actualRecovery(readOwner:(path:string)=>string){

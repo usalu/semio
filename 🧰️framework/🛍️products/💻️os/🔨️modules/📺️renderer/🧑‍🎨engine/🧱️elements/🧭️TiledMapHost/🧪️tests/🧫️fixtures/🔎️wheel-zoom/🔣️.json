@@ -1,0 +1,18 @@
+{
+  "initialCamera": { "x": 80, "y": 120, "zoom": 2 },
+  "zoomFactor": 1.12,
+  "cases": [
+    {
+      "input": "wheel",
+      "centerOffset": [56, -56],
+      "deltaY": -360,
+      "expectedCamera": { "x": 83, "y": 117, "zoom": 2.24 }
+    },
+    {
+      "input": "key",
+      "centerOffset": [0, 0],
+      "deltaY": -120,
+      "expectedCamera": { "x": 80, "y": 120, "zoom": 2.24 }
+    }
+  ]
+}

@@ -24,7 +24,7 @@ use semio_renderer_wgpu_shell_view_panels::PanelsViewCtx;
 use semio_renderer_wgpu_shell_windows::PanelProjection;
 use semio_renderer_wgpu_ui_engine::retained_document_consumer::{render_ui_document_step, UiDocumentFrameCursor};
 use semio_renderer_wgpu_ui_engine_tests::fixture_original_turn;
-use semio_ui_layout::layout::{WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode};
+use semio_ui_layout::layout::{Axis, WindowLayout, WindowLayoutNode};
 use semio_ui_locale::{Locale, LocalizedLabel, Terminology};
 use serde_json::Value;
 use std::collections::HashMap;
@@ -135,7 +135,7 @@ pub fn test_app(commands: Vec<CommandDefinition>, mode_commands: Vec<CommandDefi
         named_layouts: vec![],
         default_layout: None,
         terminologies: vec!["de".into()],
-        terminology_breadcrumbs: Default::default(),
+        terminology_breadcrumbs: std::collections::BTreeMap::new(),
         introduction: None,
         tutorials: Vec::new(),
         dialogs: Vec::new(),
@@ -159,15 +159,12 @@ pub fn split_pane_app() -> AppDefinition {
         UtilityDefinition { id: "pane.transform".into(), label: LocalizedLabel::data("Transform"), icon_id: "move".into(), group: None, keys: None, cursor: None, category: None, allows_actions_while_active: true, run: None },
         UtilityDefinition { id: "pane.brush".into(), label: LocalizedLabel::data("Brush"), icon_id: "brush".into(), group: None, keys: None, cursor: None, category: None, allows_actions_while_active: true, run: None },
     ];
-    let window = |instance: &str, title: &str, size: f64| {
-        WindowLayoutChild::Stack(WindowLayoutStackNode {
-            kind: "stack".into(),
-            size: Some(size),
-            active_window_kind_id: None,
-            children: vec![WindowLayoutWindowNode { kind: "window".into(), window_kind_id: "main".into(), title: Some(title.into()), instance_id: Some(instance.into()), template_id: None, corner: None }],
-        })
+    let window = |instance: &str, title: &str, size: f64| WindowLayoutNode::Stack {
+        size: Some(size),
+        active_window_id: None,
+        children: vec![WindowLayoutNode::Window { window_kind_id: "main".into(), title: Some(title.into()), instance_id: Some(instance.into()), template_id: None, corner: None }],
     };
-    app.default_layout = Some(WindowLayout { root: WindowLayoutRoot::Axis(WindowLayoutAxisNode { kind: "row".into(), size: None, children: vec![window("pane-top", "Top", 33.333), window("pane-perspective", "Perspective", 66.667)] }) });
+    app.default_layout = Some(WindowLayout { root: WindowLayoutNode::Split { axis: Axis::Horizontal, size: None, children: vec![window("pane-top", "Top", 0.33333), window("pane-perspective", "Perspective", 0.66667)] } });
     app
 }
 
@@ -424,7 +421,7 @@ pub fn paint_tree_pointer_documents(shell: &mut ShellState, documents: &[(&str, 
         shell.input.register_retained_body_hits(surface, *body, &mut input);
     }
     shell.surfaces.world3d_states = world3d_states;
-    PanelsViewCtx::of(&mut shell).publish_retained_hit_registry(&mut input);
+    PanelsViewCtx::of(shell).publish_retained_hit_registry(&mut input);
     caller.retire_world(&mut world_resources);
     caller.finish();
     input
@@ -463,7 +460,7 @@ pub fn paint_component_pointer_documents(shell: &mut ShellState, documents: &[(&
         assert!(complete, "the component pointer document painted within its opportunity ceiling");
         shell.input.register_retained_body_hits(window_id, *body, &mut input);
     }
-    PanelsViewCtx::of(&mut shell).publish_retained_hit_registry(&mut input);
+    PanelsViewCtx::of(shell).publish_retained_hit_registry(&mut input);
     caller.retire_world(&mut world_resources);
     caller.finish();
     input
@@ -513,7 +510,7 @@ pub fn boot_app(app_id: &str) -> AppDefinition {
         named_layouts: vec![],
         default_layout: None,
         terminologies: vec![],
-        terminology_breadcrumbs: Default::default(),
+        terminology_breadcrumbs: std::collections::BTreeMap::new(),
         introduction: None,
         tutorials: Vec::new(),
         dialogs: Vec::new(),
@@ -583,7 +580,7 @@ pub fn tour_app(introduction: Option<semio_framework::onboarding::IntroductionDe
         named_layouts: vec![],
         default_layout: None,
         terminologies: vec!["de".into()],
-        terminology_breadcrumbs: Default::default(),
+        terminology_breadcrumbs: std::collections::BTreeMap::new(),
         introduction,
         tutorials: Vec::new(),
         dialogs: Vec::new(),

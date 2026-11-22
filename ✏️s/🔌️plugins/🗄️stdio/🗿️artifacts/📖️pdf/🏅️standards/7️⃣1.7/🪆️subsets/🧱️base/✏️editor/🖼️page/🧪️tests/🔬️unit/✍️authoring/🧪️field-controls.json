@@ -1,0 +1,155 @@
+{
+  "derived": [
+    "schema",
+    "declaredVersion",
+    "objects",
+    "trailer",
+    "admittedStreamRoles"
+  ],
+  "controls": {
+    "pages": [
+      "insert-page",
+      "remove-page",
+      "move-page",
+      "replace-page",
+      "set-page-size",
+      "set-page-box",
+      "set-page-rotation",
+      "set-page-user-unit",
+      "set-page-extra",
+      "set-page-transition",
+      "create-annotation",
+      "set-annotation"
+    ],
+    "fonts": [
+      "set-font",
+      "set-font-size",
+      "set-font-reference",
+      "set-font-metrics",
+      "set-glyph"
+    ],
+    "images": [
+      "set-image",
+      "set-image-mask",
+      "insert-image"
+    ],
+    "forms": [
+      "set-form-content"
+    ],
+    "extGStates": [
+      "set-graphics-state"
+    ],
+    "shadings": [
+      "set-mesh-reference",
+      "set-pattern"
+    ],
+    "patterns": [
+      "set-pattern"
+    ],
+    "colorSpaces": [
+      "set-color-space"
+    ],
+    "properties": [
+      "set-properties"
+    ],
+    "outlines": [
+      "set-outline"
+    ],
+    "namedDestinations": [
+      "set-named-destination",
+      "remove-named-destination"
+    ],
+    "pageLabels": [
+      "set-page-label"
+    ],
+    "embeddedFiles": [
+      "set-embedded-file",
+      "remove-embedded-file"
+    ],
+    "outputIntents": [
+      "set-output-intent"
+    ],
+    "acroForm": [
+      "set-form-settings",
+      "set-field-data",
+      "set-form-field",
+      "fill-form-field"
+    ],
+    "optionalContent": [
+      "set-optional-content"
+    ],
+    "pageLayout": [
+      "set-page-layout"
+    ],
+    "pageMode": [
+      "set-page-mode"
+    ],
+    "viewerPreferences": [
+      "set-viewer-preferences"
+    ],
+    "openAction": [
+      "set-open-action"
+    ],
+    "language": [
+      "set-language"
+    ],
+    "markInfo": [
+      "set-mark-info"
+    ],
+    "metadata": [
+      "set-metadata"
+    ],
+    "documentId": [
+      "set-document-id"
+    ],
+    "encryption": [
+      "set-encryption"
+    ],
+    "info": [
+      "set-info",
+      "set-info-field",
+      "set-extra-entry"
+    ],
+    "catalogExtra": [
+      "set-catalog-entry"
+    ]
+  },
+  "pageInspectorBindings": {
+    "create-annotation": 6,
+    "merge-pick": 1,
+    "replace-page-pick": 1,
+    "replace-page": 1,
+    "extract-pages": 1,
+    "insert-page": 1,
+    "remove-page": 1,
+    "set-info-field": 9,
+    "set-language": 1,
+    "set-page-size": 2,
+    "set-page-rotation": 1,
+    "set-page-layout": 1,
+    "set-page-mode": 1,
+    "set-metadata": 1,
+    "set-mark-info": 3,
+    "set-document-id": 2,
+    "set-open-action": 1,
+    "set-outline": 1,
+    "set-named-destination": 1,
+    "set-page-label": 1
+  },
+  "paletteOnly": [
+    "fonts",
+    "images",
+    "forms",
+    "extGStates",
+    "shadings",
+    "patterns",
+    "colorSpaces",
+    "properties",
+    "embeddedFiles",
+    "outputIntents",
+    "optionalContent",
+    "viewerPreferences",
+    "encryption",
+    "catalogExtra"
+  ]
+}

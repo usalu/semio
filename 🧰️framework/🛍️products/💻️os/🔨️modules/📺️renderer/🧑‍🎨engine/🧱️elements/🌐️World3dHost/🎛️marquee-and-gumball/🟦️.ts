@@ -1,10 +1,10 @@
 /** 🎛️ World3dHost marquee and gumball: the marquee preview and its commit hold, the selection preview, the gumball gesture and handlers and the relocate drag. */
 import * as React from "../../⚛️react-port/🟦️.ts";
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from "../../⚛️react-port/🟦️.ts";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "../../⚛️react-port/🟦️.ts";
 import { type GumballHandleKind, type GumballPose, type SelectionMarqueePoint } from "@semio-tech/ui-react";
 import { type WorldGumballEvent, worldGumballStep } from "../🧮️gumball-math/🟦️.ts";
-import { mergeIdSet, raycastGroundPoint, resolveClickInstanceId, resolveMarqueeComponentIds, resolveMarqueeInstanceIds } from "../🎯️marquee-and-bridges/🟦️.tsx";
-import { clearWorldCatalogueDropPreview, clearWorldSelectionPreview, setWorldCatalogueDropPreview, setWorldSelectionPreview, world3dRelocateDispatchArgsV1, world3dRelocateDragTargetV1 } from "../🗂️catalogue-drop/🟦️.tsx";
+import { mergeIdSet, raycastWorldPlanePoint, resolveClickInstanceId, resolveMarqueeComponentIds, resolveMarqueeInstanceIds } from "../🎯️marquee-and-bridges/🟦️.tsx";
+import { clearWorldCatalogueDropPreview, clearWorldSelectionPreview, setWorldCatalogueDropPreview, setWorldSelectionPreview, world3dRelocateDispatchArgsV1, world3dRelocateDragTargetV1, type World3dRelocateSession } from "../🗂️catalogue-drop/🟦️.tsx";
 import type { WorldCore5 } from "../🔀️paint-and-projection/🟦️.ts";
 import { useWorldHandleDrag } from "../🧲️handle-drag/🪝️session/🟦️.ts";
 
@@ -15,7 +15,7 @@ import { useWorldHandleDrag } from "../🧲️handle-drag/🪝️session/🟦️
  * 🧯️ Host aborts of a live gesture whose ticks opened the app's tool transaction: window blur and unmount.
  */
 export function useWorldMarqueeAndGumball(core: WorldCore5) {
-  const { cameraRef, dispatch, dispatchSettled, gestureRecognizer, gridFactor, gridSnapEnabled, gumballDragChainRef, gumballGestureRef, gumballLiveDispatch, hostRef, instances, instancesRef, marqueeCommitHold, marqueeCoverage, marqueeDragActive, marqueeMergeMode, marqueePath, marqueeStartRef, meshes, meshesRef, method, node, relocateMode, relocateSessionRef, selection, selectionArgs, selectionMode, setFaceDragSession, setMarqueeCommitHold, setMarqueePath, sharedSelectionPreview, windowInstanceId } = core;
+  const { cameraRef, dispatchSettled, gestureRecognizer, gridFactor, gridSnapEnabled, gumballDragChainRef, gumballGestureRef, gumballLiveDispatch, hostRef, instances, instancesRef, marqueeCommitHold, marqueeCoverage, marqueeDragActive, marqueeMergeMode, marqueePath, marqueeStartRef, meshes, meshesRef, method, node, relocateMode, relocateSessionRef, selection, selectionArgs, selectionMode, setFaceDragSession, setMarqueeCommitHold, setMarqueePath, sharedSelectionPreview, windowInstanceId } = core;
   const marqueePreview = useMemo<{ readonly mergedComponentIds: readonly number[] | null; readonly mergedInstanceIds: readonly string[] | null }>(() => {
     if (!marqueeDragActive || !hostRef.current || !cameraRef.current) return { mergedComponentIds: null, mergedInstanceIds: null };
     const rect = hostRef.current.getBoundingClientRect();
@@ -130,82 +130,120 @@ export function useWorldMarqueeAndGumball(core: WorldCore5) {
     return { x: event.clientX - rect.left, y: event.clientY - rect.top };
   }, []);
 
-  /** 🚚️ Takes a Relocate-utility press: grabs the object under it (gated by the selection, see
-   * {@link world3dRelocateDragTargetV1}), pins the ground point the drag starts from and paints the shared
-   * world ghost at the object's own origin. Answers whether it took the press, so the marquee never opens
-   * underneath an in-progress relocate. A LOCKED object is grabbed on purpose — the guest answers the
-   * commit with its `selection_locked` notice, which is a visible refusal instead of a dead gesture.
-   * A press on empty ground with a live selection is the gesture's BASE POINT, not a miss — see
-   * {@link world3dRelocateDragTargetV1} for why the base point never had to be on the object. */
+  const relocatePreviewOwner = useRef<symbol | undefined>(undefined);
+  const [relocateDragActive, setRelocateDragActive] = useState(false);
+  const projectionOrientation = core.worldProjectionSpec.orientation;
+  const view = projectionOrientation.type === "cardinal" ? projectionOrientation.view : undefined;
+  const planeAxis = view === "left" || view === "right" ? 0 : view === "front" || view === "back" ? 1 : 2;
+  /** 🚚️ Starts a relative drag on the grabbed object's plane, or from a base point picked on the ground. */
   const beginRelocateDrag = useCallback(
     (event: React.PointerEvent<HTMLDivElement>): boolean => {
+      if (relocateSessionRef.current) return true;
       const host = hostRef.current;
       const camera = cameraRef.current;
       if (!host || !camera) return false;
       const rect = host.getBoundingClientRect();
-      const from = raycastGroundPoint(event.clientX, event.clientY, rect, camera);
-      if (!from) return false;
-      const pressed = resolveClickInstanceId(instancesRef.current, meshesRef.current, toLocalPoint(event), rect, camera);
+      const pressed = resolveClickInstanceId(instancesRef.current, meshesRef.current, { x: event.clientX - rect.left, y: event.clientY - rect.top }, rect, camera);
       const objectId = world3dRelocateDragTargetV1(pressed, selection.ids ?? []);
       const instance = objectId ? instancesRef.current.find((entry) => entry.id === objectId) : undefined;
       if (!objectId || !instance) return false;
-      const origin = instance.position ?? [instance.x ?? 0, instance.y ?? 0, instance.z ?? 0];
-      const objectKind = instance.objectKind ?? "";
-      const meshUrl = meshesRef.current.find((mesh) => mesh.id === (instance.meshId ?? instance.id))?.url;
-      relocateSessionRef.current = { objectId, origin, from, objectKind, meshUrl };
+      const origin = instance.position ?? [instance.x ?? 0, instance.y ?? 0, instance.z ?? 0] as const;
+      const from = raycastWorldPlanePoint(event.clientX, event.clientY, rect, camera, planeAxis, pressed || planeAxis !== 2 ? origin[planeAxis] : 0);
+      if (!from) return false;
+      const owner = Symbol();
+      const meshId = instance.meshId ?? instance.id;
+      const session: World3dRelocateSession = {
+        owner, objectId, origin, from, planeAxis, pointerId: event.pointerId,
+        objectKind: instance.objectKind ?? "",
+        meshId,
+        meshUrl: meshesRef.current.find((mesh) => mesh.id === meshId)?.url,
+        rotation: instance.rotation,
+        scale: instance.scale,
+      };
+      relocateSessionRef.current = session;
+      relocatePreviewOwner.current = owner;
+      setRelocateDragActive(true);
       event.currentTarget.setPointerCapture?.(event.pointerId);
-      setWorldCatalogueDropPreview(node.controllerId, { objectKind, meshUrl, origin });
+      setWorldCatalogueDropPreview(node.controllerId, session);
       return true;
     },
-    [node.controllerId, selection.ids, toLocalPoint],
+    [node.controllerId, planeAxis, selection.ids],
   );
 
-  /** 🚚️ Moves the live relocate ghost to the grabbed object's would-be origin — grid-snapped exactly like a
-   * catalogue drop, zero dispatches until release. */
+  const relocateArgsAt = useCallback((session: World3dRelocateSession, event: React.PointerEvent<HTMLDivElement>) => {
+    const host = hostRef.current;
+    const camera = cameraRef.current;
+    if (!host || !camera) return null;
+    const to = raycastWorldPlanePoint(event.clientX, event.clientY, host.getBoundingClientRect(), camera, session.planeAxis, session.from[session.planeAxis]);
+    return to ? world3dRelocateDispatchArgsV1(session.objectId, session.origin, session.from, to, { gridSnapEnabled, gridFactor, planeAxis: session.planeAxis }) : null;
+  }, [gridFactor, gridSnapEnabled]);
+
   const updateRelocateDrag = useCallback(
     (event: React.PointerEvent<HTMLDivElement>): boolean => {
       const session = relocateSessionRef.current;
-      const host = hostRef.current;
-      const camera = cameraRef.current;
-      if (!session || !host || !camera) return false;
-      const to = raycastGroundPoint(event.clientX, event.clientY, host.getBoundingClientRect(), camera);
-      if (!to) return true;
-      const args = world3dRelocateDispatchArgsV1(session.objectId, session.origin, session.from, to, { gridSnapEnabled, gridFactor });
-      setWorldCatalogueDropPreview(node.controllerId, { objectKind: session.objectKind, meshUrl: session.meshUrl, origin: args?.position ?? session.origin });
+      if (!session || session.pointerId !== event.pointerId) return false;
+      const args = relocateArgsAt(session, event);
+      setWorldCatalogueDropPreview(node.controllerId, { ...session, origin: args?.position ?? session.origin });
       return true;
     },
-    [gridFactor, gridSnapEnabled, node.controllerId],
+    [node.controllerId, relocateArgsAt],
   );
 
-  /** 🚚️ Closes the relocate drag. A pointer-UP event commits ONE absolute `worldRelocate`; `null` (Escape) and
-   * a `pointercancel` both drop the ghost and dispatch nothing — the host binds `onPointerCancel` to the same
-   * pointer-up handler, so the event kind is the only thing separating a commit from an abort. */
+  const clearRelocatePreview = useCallback((owner: symbol) => {
+    if (relocatePreviewOwner.current === owner) relocatePreviewOwner.current = undefined;
+    clearWorldCatalogueDropPreview(node.controllerId, owner);
+  }, [node.controllerId]);
+
+  const leaveRelocateDrag = useCallback((pointerId?: number) => {
+    const session = relocateSessionRef.current;
+    if (!session || (pointerId !== undefined && session.pointerId !== pointerId)) return null;
+    relocateSessionRef.current = null;
+    setRelocateDragActive(false);
+    const host = hostRef.current;
+    if (host?.hasPointerCapture?.(session.pointerId)) host.releasePointerCapture(session.pointerId);
+    return session;
+  }, [hostRef, relocateSessionRef]);
+
+  const abortRelocateDrag = useCallback(() => {
+    const session = leaveRelocateDrag();
+    if (!session) return false;
+    clearRelocatePreview(session.owner);
+    return true;
+  }, [clearRelocatePreview, leaveRelocateDrag]);
+
   const endRelocateDrag = useCallback(
-    (event: React.PointerEvent<HTMLDivElement> | null): boolean => {
-      const session = relocateSessionRef.current;
+    (event: React.PointerEvent<HTMLDivElement>): boolean => {
+      const session = leaveRelocateDrag(event.pointerId);
       if (!session) return false;
-      relocateSessionRef.current = null;
-      clearWorldCatalogueDropPreview(node.controllerId);
-      const host = hostRef.current;
-      const camera = cameraRef.current;
-      if (!event || event.type === "pointercancel" || !host || !camera) return true;
-      const to = raycastGroundPoint(event.clientX, event.clientY, host.getBoundingClientRect(), camera);
-      const args = to ? world3dRelocateDispatchArgsV1(session.objectId, session.origin, session.from, to, { gridSnapEnabled, gridFactor }) : null;
-      if (args) void Promise.resolve(dispatch("worldRelocate", args));
+      const args = event.type === "pointerup" ? relocateArgsAt(session, event) : null;
+      if (!args) {
+        clearRelocatePreview(session.owner);
+        return true;
+      }
+      setWorldCatalogueDropPreview(node.controllerId, { ...session, origin: args.position });
+      const clear = () => clearRelocatePreview(session.owner);
+      void dispatchSettled("worldRelocate", args).then(clear, clear);
       return true;
     },
-    [dispatch, gridFactor, gridSnapEnabled, node.controllerId],
+    [clearRelocatePreview, dispatchSettled, leaveRelocateDrag, node.controllerId, relocateArgsAt],
   );
 
   useEffect(() => {
     if (!relocateMode) return undefined;
     const onKeyDown = (event: KeyboardEvent): void => {
       if (event.key !== "Escape") return;
-      if (endRelocateDrag(null)) event.stopPropagation();
+      if (abortRelocateDrag()) event.stopPropagation();
     };
     window.addEventListener("keydown", onKeyDown, true);
-    return () => window.removeEventListener("keydown", onKeyDown, true);
-  }, [endRelocateDrag, relocateMode]);
+    window.addEventListener("blur", abortRelocateDrag);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown, true);
+      window.removeEventListener("blur", abortRelocateDrag);
+      abortRelocateDrag();
+      const pendingOwner = relocatePreviewOwner.current;
+      if (pendingOwner) clearRelocatePreview(pendingOwner);
+    };
+  }, [abortRelocateDrag, clearRelocatePreview, relocateMode]);
 
   /** 🤏️ Abandons whatever single-pointer gesture is in flight and releases its capture, so the
    * orbit rig owns the surface alone for the rest of a two-finger pinch/pan. */
@@ -214,15 +252,15 @@ export function useWorldMarqueeAndGumball(core: WorldCore5) {
       for (const tracked of gestureRecognizer.pointers) {
         if (event.currentTarget.hasPointerCapture?.(tracked.pointerId)) event.currentTarget.releasePointerCapture(tracked.pointerId);
       }
-      endRelocateDrag(null);
+      abortRelocateDrag();
       setMarqueePath([]);
       marqueeStartRef.current = null;
       marqueeFinalizeOnceRef.current = true;
     },
-    [endRelocateDrag, gestureRecognizer],
+    [abortRelocateDrag, gestureRecognizer],
   );
   const { beginHandleDrag, endHandleDrag, handleDragActive, updateHandleDrag } = useWorldHandleDrag(core);
-  return { beginHandleDrag, beginRelocateDrag, endHandleDrag, endRelocateDrag, handleFaceDragStart, handleGumballDrag, handleGumballDragEnd, handleGumballDragStart, handleDragActive, marqueeDragActiveRef, marqueeFinalizeOnceRef, marqueePreviewRef, toLocalPoint, updateHandleDrag, updateRelocateDrag, visibleSelectionPreview, yieldToPinch };
+  return { beginHandleDrag, beginRelocateDrag, endHandleDrag, endRelocateDrag, handleFaceDragStart, handleGumballDrag, handleGumballDragEnd, handleGumballDragStart, handleDragActive, marqueeDragActiveRef, marqueeFinalizeOnceRef, marqueePreviewRef, relocateDragActive, toLocalPoint, updateHandleDrag, updateRelocateDrag, visibleSelectionPreview, yieldToPinch };
 }
 
 export type WorldCore6 = WorldCore5 & ReturnType<typeof useWorldMarqueeAndGumball>;

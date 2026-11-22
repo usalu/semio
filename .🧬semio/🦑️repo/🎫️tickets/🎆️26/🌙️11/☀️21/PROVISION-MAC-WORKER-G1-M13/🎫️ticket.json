@@ -1,0 +1,21 @@
+{
+  "title": "Provision Mac Worker G1 M13",
+  "emoji": "🍎",
+  "status": "open",
+  "description": "Adopt the existing macOS checkout as group g1 origin g1-m13, verify replica and authenticated cache access, and follow native readiness through completion.",
+  "goal": "aioptimizedrepo",
+  "sessions": [
+    "1e350d59-2bf3-47ff-8fb3-5848b9e3babe"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-21 21:26:01",
+      "author": "",
+      "system": "mac",
+      "client": "codex",
+      "checkpoint": "",
+      "prompt": "Adopt the existing macOS checkout as group g1 origin g1-m13, verify replica and authenticated cache access, and follow native readiness through completion."
+    }
+  ]
+}

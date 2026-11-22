@@ -26,3 +26,6 @@ semio-framework-value-derive = { workspace = true }
 semio-s-artifact-puzzle-5d-diff = { path = "../../../../🔺️diff/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-5d-snapshot = { path = "../../../../📸️snapshot/📦️packages/🦀️rust" }
 serde = { workspace = true }
+
+[features]
+testkit = []

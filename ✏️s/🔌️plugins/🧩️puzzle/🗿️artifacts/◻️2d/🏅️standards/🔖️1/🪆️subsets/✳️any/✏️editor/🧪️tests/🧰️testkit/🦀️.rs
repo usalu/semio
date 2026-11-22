@@ -77,7 +77,7 @@ pub fn app() -> Puzzle2dApp {
 /// 🧾️ `assert_declared_actions_bridge_to_commands`/`new_app_with_registry` still take a `fn() ->
 /// App` manifest (framework test context gap, not this packet's to fix — see the sibling `w2-cad-report`
 /// "SDK gaps" §3); `create_puzzle2d_app` now returns `AppDefinition`, so this wraps it.
-fn puzzle2d_manifest_for_tests() -> App {
+pub fn puzzle2d_manifest_for_tests() -> App {
     App { definition: create_puzzle2d_app(), examples: Vec::new() }
 }
 
@@ -88,6 +88,10 @@ pub fn app_with_registry() -> Puzzle2dApp {
     let scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
     let mut app = block_on(semio_plugin::artifact_app_laws::new_app_with_registry::<EditorApp<Puzzle2dPlayApp>>(puzzle2d_manifest_for_tests, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::artifact_app_laws::fixture_mounted_policy(), &mut semio_plugin::artifact_app_laws::fixture_identity()));
     block_on(app.bind_instance_id(1));
+    let overview = crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID;
+    app.window_transient_generation(&window_view(overview, overview))
+        .expect("open the registered overview window")
+        .expect("the overview owns window transients");
     Puzzle2dApp(app, scope)
 }
 
@@ -102,7 +106,7 @@ pub fn window_view(kind: &str, id: &str) -> ViewModel {
     ViewModel { window_instances, ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) }.for_window_instance(id).expect("puzzle2d test window roster")
 }
 
-fn action_meta(args: Option<&Value>, window_id: Option<&str>) -> ActionMeta {
+fn action_meta(app: &mut Puzzle2dApp, args: Option<&Value>, window_id: Option<&str>) -> Result<ActionMeta, Fault> {
     let requested = args
         .and_then(|value| value.get("windowId").or_else(|| value.get("window_id")).or_else(|| value.get("pane")).or_else(|| value.get("window")))
         .and_then(Value::as_str);
@@ -111,7 +115,9 @@ fn action_meta(args: Option<&Value>, window_id: Option<&str>) -> ActionMeta {
         .or_else(|| window_id.filter(|kind| [crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID, crate::editor::puzzle2d::config::PUZZLE2D_DETAIL_WINDOW_KIND_ID, crate::editor::puzzle2d::config::PUZZLE2D_SELECTION_WINDOW_KIND_ID].contains(kind)))
         .unwrap_or(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID);
     let id = window_id.or(requested).unwrap_or(kind);
-    ActionMeta { view_state: Some(std::sync::Arc::new(window_view(kind, id))), ..meta("local") }
+    let view = window_view(kind, id);
+    let _ = app.window_transient_generation(&view)?;
+    Ok(ActionMeta { view_state: Some(std::sync::Arc::new(view)), ..meta("local") })
 }
 
 /// 📄️ Drains everything one settle turn can have left behind — presented pages, effects, events,
@@ -128,11 +134,17 @@ fn action_meta(args: Option<&Value>, window_id: Option<&str>) -> ActionMeta {
 /// operation has retired (`settle_registered_typed_operation`'s shape). Returning on it un-ACKed left the
 /// faulted operation awaiting its ACK for ever, so the NEXT dispatch never settled either.
 fn drain_settled(app: &mut Puzzle2dApp, result: &mut InvocationResult, fault: &mut Option<Fault>) -> Result<(), Fault> {
-    while let Some(page) = take_page(app)? {
+    use semio_plugin::artifact_app_laws;
+
+    let policy = artifact_app_laws::fixture_mounted_policy();
+    while let Some(mut page) = artifact_app_laws::take_fixture_result_page(&mut app.0, 1, policy.preparation)? {
         if page.lane == semio_plugin::app::TypedOperationResultLane::Fault {
             fault.get_or_insert_with(|| Fault::from(String::from_utf8_lossy(page.bytes()).into_owned()));
         }
-        app.acknowledge_typed_operation_result(page.token)?;
+        let token = artifact_app_laws::close_fixture_result_page(&mut page, policy.close);
+        if !app.acknowledge_typed_operation_result(token)? {
+            return Err(Fault::from("registered Puzzle 2D fixture rejected its exact result acknowledgment"));
+        }
     }
     result.requested_effects.extend(app.take_typed_operation_effect());
     result.events.extend(app.take_typed_operation_event());
@@ -164,15 +176,26 @@ fn drain_settled(app: &mut Puzzle2dApp, result: &mut InvocationResult, fault: &m
 }
 
 fn settle(app: &mut Puzzle2dApp, result: Result<InvocationResult, Fault>) -> Result<InvocationResult, Fault> {
+    use semio_plugin::artifact_app_laws;
+
     let mut result = result?;
     let mut fault = None;
+    let policy = artifact_app_laws::fixture_mounted_policy();
+    let fuel = artifact_app_laws::OriginalFixtureCaller::turn_fuel();
+    let (grant, _) = app.1.cx().original_turn_ceiling();
+    let mut receipts = Vec::new();
     for _ in 0..1_048_576 {
+        artifact_app_laws::retain_original_ownership_receipts(&mut app.0, policy, &mut receipts)?;
+        receipts.clear();
         if !app.has_pending_typed_operations() {
             drain_settled(app, &mut result, &mut fault)?;
             return fault.map_or(Ok(result), Err);
         }
+        artifact_app_laws::fixture_renew_turn(app.1.cx(), fuel, grant).map_err(|failure| Fault::from(format!("{failure:?}")))?;
         app.maintain(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(|failure| Fault::from(format!("{failure:?}")))?;
-        block_on(app.0.advance_typed_operation_publication(&mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx())).map_err(|failure| Fault::from(format!("{failure:?}")))?;
+        artifact_app_laws::fixture_renew_turn(app.1.cx(), fuel, grant).map_err(|failure| Fault::from(format!("{failure:?}")))?;
+        block_on(app.0.advance_typed_operation_publication(&mut artifact_app_laws::fixture_identity(), app.1.cx())).map_err(|failure| Fault::from(format!("{failure:?}")))?;
+        artifact_app_laws::retain_original_ownership_receipts(&mut app.0, policy, &mut receipts)?;
         drain_settled(app, &mut result, &mut fault)?;
     }
     Err(Fault::from("puzzle2d test operation did not settle"))
@@ -183,7 +206,7 @@ fn settle(app: &mut Puzzle2dApp, result: Result<InvocationResult, Fault>) -> Res
 /// `Self::Command` channel). Reconstructs the `Puzzle2dCommand` from the same
 /// `(action, args, window_id)` triple every pre-B1 test already passed.
 pub fn dispatch(app: &mut Puzzle2dApp, action: &str, args: Option<&Value>, window_id: Option<&str>) -> Result<InvocationResult, Fault> {
-    let action_meta = action_meta(args, window_id);
+    let action_meta = action_meta(app, args, window_id)?;
     if matches!(
         action,
         "undo"
@@ -225,14 +248,10 @@ fn action_args(args: Option<&Value>, window_id: Option<&str>) -> Option<semio_fr
     value.as_ref().map(semio_framework_value::ToValue::to_value)
 }
 
-/// 📤️ One fixed result page of the testkit's instance, borrowed under the mounted maintenance grant.
-fn take_page(app: &mut Puzzle2dApp) -> Result<Option<semio_plugin::app::TypedOperationResultPage>, Fault> {
-    Ok(semio_plugin::artifact_app_laws::take_fixture_result_turn(app, 1, semio_plugin::artifact_app_laws::fixture_mounted_policy().maintenance)?.0)
-}
-
 /// 🧰️ [`dispatch`] of an app verb from an explicit window view — for a law that needs what the view carries,
 /// such as the window's active utility.
 pub fn dispatch_in_view(app: &mut Puzzle2dApp, action: &str, args: Option<&Value>, window_id: Option<&str>, view_state: ViewModel) -> Result<InvocationResult, Fault> {
+    let _ = app.window_transient_generation(&view_state)?;
     let action_meta = ActionMeta { view_state: Some(std::sync::Arc::new(view_state)), ..meta("local") };
     let result = block_on(semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, action, action_args(args, window_id), &action_meta, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::artifact_app_laws::fixture_mounted_policy().close)).map_err(fault_of);
     settle(app, result)

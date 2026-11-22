@@ -20,9 +20,10 @@ type ProjectionAction = OriginalEffectAction<RetainedCloneStep, ValueError>;
 type ProjectionReply = Result<RetainedCloneStep, ValueError>;
 type ProjectionAuthority<S> = OriginalEffectAuthority<OriginalProjectionProducer<LayoutDrawingMember, LayoutDrawingBirth<S>>>;
 type Output<S> = (LayoutDrawingMember, LayoutDrawingBirth<S>);
+type ParentField = RetainedFieldPreparation<LayoutDrawingMember>;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
-enum Action { Source, SourceFailure, Clone, TakeField, StartFieldClose, FieldClose, Handback, Return, CloseParent, CloseBirth, Retire, Done }
+enum Action { Source, SourceFailure, BirthField, Clone, TakeField, StartFieldClose, FieldClose, Handback, Return, CloseParent, CloseBirth, Retire, Done }
 
 fn fault() -> ValueError { ValueError::invariant("Drawing import birth lost original custody") }
 
@@ -41,7 +42,7 @@ fn admits(effect: &RetainedAllocationEffect<'_>, demand: RetirementDemand, work:
 /// 🧳️ Holds one funded parent reference and the exact original typed Drawing birth.
 pub struct DrawingBirthPreparation<S: RetireOwned + Sync + 'static> {
     source: OriginalSourceOwner<LayoutDrawingMember, LayoutDrawingBirth<S>>,
-    field: RetainedFieldPreparation<LayoutDrawingMember>,
+    field: Option<ParentField>,
     parent: ManuallyDrop<Option<LayoutDrawingMember>>,
     birth: ManuallyDrop<Option<LayoutDrawingBirth<S>>>,
     retirement: RetainedCloneClose,
@@ -56,7 +57,7 @@ impl<S: RetireOwned + Sync + 'static> Default for DrawingBirthPreparation<S> {
     fn default() -> Self {
         Self {
             source: Default::default(),
-            field: Default::default(),
+            field: None,
             parent: Default::default(),
             birth: Default::default(),
             retirement: Default::default(),
@@ -84,29 +85,31 @@ impl<S: RetireOwned + Sync + 'static> DrawingBirthPreparation<S> {
     }
 
     pub fn ready(&self) -> bool {
-        !self.closing && self.parent.is_some() && self.birth.is_some() && self.field.terminal_is_empty() && self.source.terminal_is_empty() && self.route.is_none()
+        !self.closing && self.parent.is_some() && self.birth.is_some() && self.field.as_ref().is_none_or(ParentField::terminal_is_empty) && self.source.terminal_is_empty() && self.route.is_none()
     }
 
     fn select(&self, body: usize) -> Result<Action, ValueError> {
         if self.route.is_some() { return Err(fault()); }
         if self.source.failure().is_some() { return Ok(Action::SourceFailure); }
         if self.closing {
-            if !self.field.terminal_is_empty() {
-                return Ok(if self.field.close_started() { Action::FieldClose } else { Action::StartFieldClose });
-            }
+            if let Some(action) = self.field_close_action() { return Ok(action); }
             if !self.source.terminal_is_empty() { return self.handback(body); }
             return Ok(if !self.retirement.is_empty() { Action::Retire } else if self.parent.is_some() { Action::CloseParent } else if self.birth.is_some() { Action::CloseBirth } else { Action::Done });
         }
         if self.taken || self.terminal_is_empty() { return Err(fault()); }
         if self.parent.is_some() {
-            if !self.field.terminal_is_empty() {
-                return Ok(if self.field.close_started() { Action::FieldClose } else { Action::StartFieldClose });
-            }
+            if let Some(action) = self.field_close_action() { return Ok(action); }
             return if !self.source.terminal_is_empty() { self.handback(body) } else { Ok(Action::Done) };
         }
-        if self.field.value().is_some() { return Ok(Action::TakeField); }
+        if self.field.as_ref().and_then(ParentField::value).is_some() { return Ok(Action::TakeField); }
         if self.source.demand(OriginalSourceMode::Original, body)?.is_some() { return Ok(Action::Source); }
-        Ok(Action::Clone)
+        Ok(if self.field.is_some() { Action::Clone } else { Action::BirthField })
+    }
+
+    fn field_close_action(&self) -> Option<Action> {
+        self.field.as_ref().filter(|field| !field.terminal_is_empty()).map(|field| {
+            if field.close_started() { Action::FieldClose } else { Action::StartFieldClose }
+        })
     }
 
     fn handback(&self, body: usize) -> Result<Action, ValueError> {
@@ -127,11 +130,22 @@ impl<S: RetireOwned + Sync + 'static> DrawingBirthPreparation<S> {
                 }
                 (demand, work)
             }
-            Action::Clone => (self.field.demand(self.source.original()?, body, u64::MAX)?, self.field.advance_work_demand(self.source.original()?, body, u64::MAX)?),
+            Action::BirthField => (fixed(size_of::<ParentField>() + size_of::<Option<ParentField>>()), ParentField::embedded_birth_work()?),
+            Action::Clone => {
+                let field = self.field.as_ref().ok_or_else(fault)?;
+                let source = self.source.original()?;
+                (field.demand(source, body, u64::MAX)?, field.advance_work_demand(source, body, u64::MAX)?)
+            }
             Action::SourceFailure => (self.source.failure_demand(), 1),
-            Action::TakeField => (self.field.exchange_demand()?, 1),
-            Action::StartFieldClose => (self.field.begin_close_demand(), self.field.begin_close_work_demand()),
-            Action::FieldClose => (self.field.close_demand(body)?, self.field.close_work_demand(body)?),
+            Action::TakeField => (self.field.as_ref().ok_or_else(fault)?.exchange_demand()?, 1),
+            Action::StartFieldClose => {
+                let field = self.field.as_ref().ok_or_else(fault)?;
+                (field.begin_close_demand(), field.begin_close_work_demand())
+            }
+            Action::FieldClose => {
+                let field = self.field.as_ref().ok_or_else(fault)?;
+                (field.close_demand(body)?, field.close_work_demand(body)?)
+            }
             Action::Return => (self.source.return_demand(), 1),
             Action::CloseParent | Action::Retire => (
                 self.retirement.next_owner_demands::<LayoutDrawingMember>(self.parent.is_some(), &None, body)?,
@@ -151,7 +165,7 @@ impl<S: RetireOwned + Sync + 'static> DrawingBirthPreparation<S> {
     pub fn requires_original_birth(&self, body: usize) -> Result<bool, ValueError> {
         if self.route.is_some() { return Ok(false); }
         Ok(match self.select(body)? {
-            Action::FieldClose => self.field.requires_original_birth(),
+            Action::FieldClose => self.field.as_ref().ok_or_else(fault)?.requires_original_birth(),
             Action::Handback => self.source.requires_original_birth(),
             Action::Retire => self.retirement.requires_original_birth(),
             _ => false,
@@ -160,7 +174,9 @@ impl<S: RetireOwned + Sync + 'static> DrawingBirthPreparation<S> {
 
     pub fn original_birth_step(&mut self, loan: &mut OriginalRetirementCloseLoan<'_>, body: usize, grant: RetainedCloneGrant) -> Result<OriginalRetirementPoll, ValueError> {
         Ok(match self.select(body)? {
-            Action::FieldClose if self.field.requires_original_birth() => self.field.close_original_birth_step(loan, grant),
+            Action::FieldClose if self.field.as_ref().is_some_and(ParentField::requires_original_birth) => {
+                self.field.as_mut().ok_or_else(fault)?.close_original_birth_step(loan, grant)
+            }
             Action::Handback if self.source.requires_original_birth() => self.source.original_birth_step(loan, grant),
             Action::Retire if self.retirement.requires_original_birth() => self.retirement.step_original_birth(loan, grant),
             _ => return Err(fault()),
@@ -170,7 +186,7 @@ impl<S: RetireOwned + Sync + 'static> DrawingBirthPreparation<S> {
     pub fn requires_original_control(&self, body: usize) -> Result<bool, ValueError> {
         let action = match self.route { Some((_, action, selected)) if selected == body => action, _ => self.select(body)? };
         Ok(match action {
-            Action::FieldClose => self.field.requires_original_control(),
+            Action::FieldClose => self.field.as_ref().ok_or_else(fault)?.requires_original_control(),
             Action::Handback => self.source.requires_original_control(),
             Action::Retire => self.retirement.requires_original_control(),
             _ => false,
@@ -195,6 +211,12 @@ impl<S: RetireOwned + Sync + 'static> DrawingBirthPreparation<S> {
 
     fn step_selected<'r>(&mut self, action: Action, body: usize, loan: Option<&mut OriginalRetirementCloseLoan<'_>>, effect: &mut RetainedAllocationEffect<'_>, reply: Reply<'r>, recover: bool) -> Result<Complete<'r>, ValueError> {
         match action {
+            Action::BirthField => {
+                let (demand, work) = self.quote(action, body)?;
+                if !effect.performed(work)? { return Err(fault()); }
+                self.field = Some(ParentField::default());
+                return Ok(reply.complete(Ok(RetainedCloneStep::Progress(progress(demand)))));
+            }
             Action::SourceFailure => {
                 let (mut failure, mut result) = (None, None);
                 drop(self.source.take_failure_into(&mut failure, effect, OriginalEffectReply::borrow(&mut result)?)?);
@@ -208,7 +230,7 @@ impl<S: RetireOwned + Sync + 'static> DrawingBirthPreparation<S> {
                 let mut result = None;
                 let inner = OriginalEffectReply::borrow(&mut result)?;
                 drop(if action == Action::TakeField {
-                    self.field.take_into(&mut self.parent, effect, inner)?
+                    self.field.as_mut().ok_or_else(fault)?.take_into(&mut self.parent, effect, inner)?
                 } else {
                     self.source.return_into(&mut self.birth, effect, inner)?
                 });
@@ -216,7 +238,7 @@ impl<S: RetireOwned + Sync + 'static> DrawingBirthPreparation<S> {
                 return Ok(reply.complete(result.ok_or_else(fault)?.map_err(Into::into)));
             }
             Action::StartFieldClose => {
-                let turn = self.field.begin_close_paid(effect);
+                let turn = self.field.as_mut().ok_or_else(fault)?.begin_close_paid(effect);
                 return Ok(reply.complete(turn.result.map(RetainedCloneStep::Progress).map_err(Into::into)));
             }
             Action::CloseParent | Action::CloseBirth => {
@@ -266,12 +288,12 @@ impl<S: RetireOwned + Sync + 'static> DrawingBirthPreparation<S> {
         } else {
             let child = scope.borrow()?;
             drop(match (action, loan, recover) {
-                (Action::Clone, None, false) => state.field.advance_into(state.source.original()?, body, u64::MAX, effect, child)?,
-                (Action::Clone, None, true) => state.field.recover_advance_into(state.source.original()?, body, u64::MAX, effect, child)?,
-                (Action::FieldClose, None, false) => state.field.close_into(body, effect, child)?,
-                (Action::FieldClose, None, true) => state.field.recover_close_into(body, effect, child)?,
-                (Action::FieldClose, Some(loan), false) => state.field.close_original_into(loan, body, effect, child)?,
-                (Action::FieldClose, Some(loan), true) => state.field.recover_close_original_into(loan, body, effect, child)?,
+                (Action::Clone, None, false) => state.field.as_mut().ok_or_else(fault)?.advance_into(state.source.original()?, body, u64::MAX, effect, child)?,
+                (Action::Clone, None, true) => state.field.as_mut().ok_or_else(fault)?.recover_advance_into(state.source.original()?, body, u64::MAX, effect, child)?,
+                (Action::FieldClose, None, false) => state.field.as_mut().ok_or_else(fault)?.close_into(body, effect, child)?,
+                (Action::FieldClose, None, true) => state.field.as_mut().ok_or_else(fault)?.recover_close_into(body, effect, child)?,
+                (Action::FieldClose, Some(loan), false) => state.field.as_mut().ok_or_else(fault)?.close_original_into(loan, body, effect, child)?,
+                (Action::FieldClose, Some(loan), true) => state.field.as_mut().ok_or_else(fault)?.recover_close_original_into(loan, body, effect, child)?,
                 (Action::Retire, None, false) => state.retirement.step_into(body, effect, child)?,
                 (Action::Retire, None, true) => state.retirement.recover_step_into(body, effect, child)?,
                 (Action::Retire, Some(loan), false) => state.retirement.step_original_into(loan, body, effect, child)?,
@@ -312,7 +334,7 @@ impl<S: RetireOwned + Sync + 'static> DrawingBirthPreparation<S> {
     }
 
     pub fn terminal_is_empty(&self) -> bool {
-        self.field.terminal_is_empty() && self.source.terminal_is_empty() && self.parent.is_none() &&
+        self.field.as_ref().is_none_or(ParentField::terminal_is_empty) && self.source.terminal_is_empty() && self.parent.is_none() &&
             self.birth.is_none() && self.retirement.is_empty() && self.route.is_none() &&
             self.projection_action.is_none() && self.projection_reply.is_none()
     }

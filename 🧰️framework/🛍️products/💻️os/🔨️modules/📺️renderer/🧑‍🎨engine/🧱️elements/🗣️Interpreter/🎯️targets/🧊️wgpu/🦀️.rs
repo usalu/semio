@@ -21,7 +21,7 @@ pub use retained_ui_engine::{
     claim_scene_pointer_owner, dispatch_accessibility_event, dispatch_presented_ui_pointer_event,
     dispatch_ui_event, dispatch_ui_pointer_event, register_clipped_retained_hit_targets,
     register_retained_hit_targets, release_scene_pointer, retained_any_pointer_capture,
-    retained_content_height, retained_node_is_select, retained_pointer_capture_window,
+    retained_content_height, retained_node_is_select, retained_node_is_tree_row, retained_pointer_capture_window,
     retained_scene_target, retained_scene_target_at, scene_pointer_target_is_live,
 };
 pub(crate) use retained_ui_engine::{
@@ -72,7 +72,7 @@ pub(crate) use scene_interaction::{
 use semio_renderer_wgpu_ui_engine::retained_document_consumer;
 pub use retained_document_consumer::{begin_ui_document_opportunity, UiDocumentFrameCursor};
 pub(crate) use retained_document_consumer::{
-    render_ui_document_step, set_ui_document_flow, set_ui_presence_notes,
+    render_ui_document_step, set_ui_document_flow, set_ui_driver, set_ui_presence_notes,
     stamp_ui_document_tree_selected_item,
 };
 

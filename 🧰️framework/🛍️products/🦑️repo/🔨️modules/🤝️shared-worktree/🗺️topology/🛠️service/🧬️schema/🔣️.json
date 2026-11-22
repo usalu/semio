@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:shared-worktree:topology:service-definition:v1",
+  "title": "Keeping the installed service definition of the replica daemon equal to what the code renders",
+  "description": "The replica daemon renders its own service definition (LaunchAgent plist, systemd unit, Scheduled Task) from the topology and, when the installed definition differs from it, installs the rendered one at a safe point: the difference must persist for the quiet period (the same debounce as a code restart) and no sidecar may be in the middle of a restart. The previous definition is kept and restored when the platform cannot load the new one. `state.json` below `<entry>/service-definition` remembers the difference being waited for and the last applied digest (Windows cannot return the installed task byte for byte); `result.json` is written by the detached macOS helper once the reload is over.",
+  "type": "object",
+  "definitions": {
+    "State": {
+      "type": "object",
+      "required": ["version", "pendingDigest", "pendingMs", "appliedDigest", "appliedMs", "reportedMs"],
+      "additionalProperties": false,
+      "properties": {
+        "version": {"const": 1},
+        "pendingDigest": {"type": "string", "description": "sha256 of the rendered definitions that differ from the installed ones, empty when nothing is pending."},
+        "pendingMs": {"type": "integer", "minimum": 0, "description": "When that difference was first seen."},
+        "appliedDigest": {"type": "string"},
+        "appliedMs": {"type": "integer", "minimum": 0},
+        "reportedMs": {"type": "integer", "minimum": 0, "description": "The time of the last helper result that was reported."}
+      }
+    },
+    "Result": {
+      "type": "object",
+      "required": ["version", "atMs", "outcome"],
+      "additionalProperties": false,
+      "properties": {"version": {"const": 1}, "atMs": {"type": "integer", "minimum": 0}, "outcome": {"enum": ["applied", "restored", "failed"]}}
+    },
+    "Limits": {
+      "const": {"quietMilliseconds": 300000, "settleSeconds": 20, "helperDelaySeconds": 2}
+    },
+    "Texts": {
+      "const": {
+        "en": {"pending": "service definition differs from the code, installing it after {seconds} s without a further change", "reloading": "service definition installed, the service manager reloads {services} now", "applied": "service definition installed", "restored": "the service manager could not load the new service definition, the previous one is back ({reason})", "failed": "the service manager could not load either service definition ({reason}); log in again to start the service", "needsPrivilege": "service definition differs from the code but {path} cannot be written by this account; provision this machine again with the privileges of the service manager", "refused": "service definition not installed ({reason})"},
+        "de": {"pending": "Die Dienstdefinition weicht vom Code ab, sie wird nach {seconds} s ohne weitere Änderung installiert", "reloading": "Dienstdefinition installiert, der Dienstmanager lädt {services} jetzt neu", "applied": "Dienstdefinition installiert", "restored": "Der Dienstmanager konnte die neue Dienstdefinition nicht laden, die vorherige ist wieder da ({reason})", "failed": "Der Dienstmanager konnte keine der beiden Dienstdefinitionen laden ({reason}); neu anmelden, um den Dienst zu starten", "needsPrivilege": "Die Dienstdefinition weicht vom Code ab, aber {path} ist für dieses Konto nicht schreibbar; diese Maschine mit den Rechten des Dienstmanagers neu bereitstellen", "refused": "Dienstdefinition nicht installiert ({reason})"}
+      }
+    }
+  }
+}

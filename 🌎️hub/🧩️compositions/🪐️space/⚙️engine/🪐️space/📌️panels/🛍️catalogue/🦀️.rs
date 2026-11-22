@@ -8,7 +8,7 @@ use semio_plugin::plugin_app_close_prelude::{BuiltNode, HasBase};
 use semio_ui_locale::{Locale, Terminology};
 use semio_plugin::{tree_window_item, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, TreeWindows, UiFixedMap, UiText};
 use semio_ui_contract as ui;
-use std::collections::BTreeMap;
+use std::{borrow::Cow, collections::BTreeMap};
 
 //#region 🔖️Manifest
 pub async fn definition() -> PanelTabDefinition {
@@ -26,7 +26,7 @@ pub async fn definition() -> PanelTabDefinition {
 #[derive(Default)]
 struct AppCatalogueNode {
     children: BTreeMap<String, AppCatalogueNode>,
-    app: Option<CatalogueAppEntry>,
+    apps: Vec<CatalogueAppEntry>,
 }
 
 /// 🎨️ One catalogue leaf's presentation — a thin projection of `registry::AppPaletteEntry` (the
@@ -40,12 +40,20 @@ struct CatalogueAppEntry {
     yields: String,
 }
 
-/// 🌳️ One top-level catalogue branch — the first breadcrumb segment, or (for an app whose
-/// `registration.breadcrumb` is empty) that app's own id with its registry label.
-struct CatalogueRoot {
-    segment: String,
-    label: String,
-    node: AppCatalogueNode,
+/// 🍃️ A document breadcrumb or a distinct registered application within it.
+#[derive(Clone, Copy)]
+enum CatalogueItem<'a> {
+    Branch(&'a str, &'a AppCatalogueNode),
+    Application(&'a CatalogueAppEntry),
+}
+
+impl<'a> CatalogueItem<'a> {
+    fn segment(self) -> Cow<'a, str> {
+        match self {
+            Self::Branch(segment, _) => Cow::Borrowed(segment),
+            Self::Application(app) => Cow::Owned(format!("{}/{}", app.plugin_id, app.app_id)),
+        }
+    }
 }
 
 /// 🌳️ Builds a catalogue tree item on top of the SDK's windowed group row — only the per-app
@@ -57,13 +65,26 @@ struct CatalogueRoot {
 /// .is_empty())`) materialised the entire registry at every depth on every render. Closed now means a
 /// branch stamps its full `total` and materialises its children only once the HOST opens it — lazy
 /// expansion, host-owned, surviving refreshes.
-fn app_catalogue_item(windows: &TreeWindows<'_>, id_path: &str, label: &str, node: &AppCatalogueNode) -> semio_plugin::UiAssemblyResult<BuiltNode> {
+fn app_catalogue_item(windows: &TreeWindows<'_>, id_path: &str, row: CatalogueItem<'_>) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let node_key = format!("s-play-catalogue.document.{id_path}");
-    let children: Vec<(&String, &AppCatalogueNode)> = node.children.iter().collect();
+    let mut children = Vec::new();
+    let (label, app) = match row {
+        CatalogueItem::Branch(label, node) => {
+            children.extend(node.children.iter().map(|(segment, child)| CatalogueItem::Branch(segment, child)));
+            match node.apps.as_slice() {
+                [app] => (label, Some(app)),
+                apps => {
+                    children.extend(apps.iter().map(CatalogueItem::Application));
+                    (label, None)
+                }
+            }
+        }
+        CatalogueItem::Application(app) => (app.label.as_str(), Some(app)),
+    };
     let mut item = ui::tree_item(ui::Label::try_from(label).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "space catalogue row label admission failed"))?)
         .try_id(node_key.clone())
         .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "space catalogue row id admission failed"))?;
-    if let Some(app) = &node.app {
+    if let Some(app) = app {
         item = item.icon(UiText::try_from_str(&app.app_id).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "space catalogue icon admission failed"))?);
         if !app.yields.is_empty() {
             item = item.description(UiText::try_from_str(&app.yields).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "space catalogue description admission failed"))?);
@@ -75,7 +96,9 @@ fn app_catalogue_item(windows: &TreeWindows<'_>, id_path: &str, label: &str, nod
         drag_data.try_push(key, value).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "space catalogue drag map admission failed"))?;
         item = item.draggable(true).drag_data(drag_data);
     }
-    tree_window_item(windows, item, &node_key, false, &children, |(segment, child)| app_catalogue_item(windows, &format!("{id_path}.{segment}"), segment.as_str(), child))
+    tree_window_item(windows, item, &node_key, false, &children, |child| {
+        app_catalogue_item(windows, &format!("{id_path}.{}", child.segment()), *child)
+    })
 }
 
 /// 🎨️ Builds the app catalogue tree straight from the production registry — `workflow_palette()`
@@ -95,12 +118,10 @@ pub async fn build_catalogue_tree(labels: &SStudioLabels, locale: Locale, window
             node = node.children.entry(segment.clone()).or_default();
         }
         let label = entry.label.resolve(Terminology::Native, locale).to_string();
-        node.app = Some(CatalogueAppEntry { plugin_id: entry.plugin_id, app_id: entry.app_id, label, yields });
+        node.apps.push(CatalogueAppEntry { plugin_id: entry.plugin_id, app_id: entry.app_id, label, yields });
     }
-    let mut roots: Vec<CatalogueRoot> = document.children.into_iter().map(|(segment, node)| CatalogueRoot { label: segment.clone(), segment, node }).collect();
-    if let Some(app) = document.app {
-        roots.push(CatalogueRoot { segment: app.app_id.clone(), label: app.label.clone(), node: AppCatalogueNode { children: BTreeMap::new(), app: Some(app) } });
-    }
+    let roots: Vec<_> = document.children.iter().map(|(segment, node)| CatalogueItem::Branch(segment, node))
+        .chain(document.apps.iter().map(CatalogueItem::Application)).collect();
     PanelTreeBuilder::new(semio_hub_space_foundation::S_PLAY_CATALOGUE_TAB_ID)?
         .window_section(
             windows,
@@ -108,7 +129,7 @@ pub async fn build_catalogue_tree(labels: &SStudioLabels, locale: Locale, window
             Some(ui::Label::try_from(labels.apps_section.as_str()).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "space catalogue section label admission failed"))?),
             true,
             &roots,
-            |root| app_catalogue_item(windows, &root.segment, &root.label, &root.node),
+            |root| app_catalogue_item(windows, &root.segment(), *root),
         )?
         .build()
 }

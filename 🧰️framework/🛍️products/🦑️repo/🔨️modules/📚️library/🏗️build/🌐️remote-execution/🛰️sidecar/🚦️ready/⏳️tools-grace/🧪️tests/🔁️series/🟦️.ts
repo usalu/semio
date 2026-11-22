@@ -3,13 +3,14 @@ import {Database} from "bun:sqlite";
 import {join} from "node:path";
 import {mkdirSync,mkdtempSync} from "node:fs";
 import {recordToolsProgress,sampleToolsProgress,toolsGraceActive,type ToolsCheckpoint,type ToolsSample} from "../../🟦️.ts";
-import {declareBuildTestEnvelopeV1,withBuildTestInvocationV1} from "../../../../../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts";
+import {withBuildTestInvocationV1} from "../../../../../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts";
+import {declareLibraryBuildTestEnvelopeV1} from "../../../../../../../🧪️testing/🪪️native-birth/🟦️.ts";
 import {createIssuedResourceControlV1} from "../../../../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import {acquireResourceLease} from "../../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
 import {leaseProcessStartedAtMsV1,leaseRegistryFolderV1} from "../../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🧭️order/🗂️registry/🟦️.ts";
 import fixture from "./🔣️.json" with {type:"json"};
 
-declareBuildTestEnvelopeV1({owner:"test:ready-tools-series-rollover",maximumElapsedMilliseconds:30000,capabilities:{artifacts:true}});
+declareLibraryBuildTestEnvelopeV1({suite:"build-remote-execution",maximumElapsedMilliseconds:30000});
 
 test("only a newer authenticated capture series can rebuild grace with two advances",()=>{
  const db=new Database(":memory:"),proof={pid:5,birth:100,parentSince:110,sourceSince:115};

@@ -24,7 +24,7 @@ export type RemoteCacheFillV1=Readonly<{entries:number;bytes:number}>;
 export type RemoteCacheCollectionReportV1=Readonly<{version:1;dryRun:boolean;scanned:RemoteCacheFillV1;removed:RemoteCacheFillV1&Readonly<Record<RemoteCacheDropReasonV1,number>>;remaining:RemoteCacheFillV1;reclaimed:RemoteCacheFillV1;deferred:boolean}>;
 
 /** 🔌️ Progress and cancellation of one directory walk or collection. */
-export type RemoteCacheWalkHooksV1=Readonly<{signal?:AbortSignal;onProgress?:(stage:"scan"|"verify"|"remove",done:number,bytes:number)=>void;onStep?:(point:RemoteCacheStepV1)=>void}>;
+export type RemoteCacheWalkHooksV1=Readonly<{concurrency?:number;signal?:AbortSignal;onProgress?:(stage:"scan"|"verify"|"remove",done:number,bytes:number)=>void;onStep?:(point:RemoteCacheStepV1)=>void}>;
 
 /** 💥️ The points of one removal at which a crash can be simulated: before the value goes, after it went and after its sidecar went. */
 export type RemoteCacheStepV1="before-unlink"|"after-unlink"|"after-meta";
@@ -63,13 +63,17 @@ export async function scanRemoteCacheDirectoryV1(root:string,hooks:RemoteCacheWa
  const walk=async(directory:string,depth:number,prefix:readonly string[]):Promise<void>=>{
   hooks.signal?.throwIfAborted();
   let rows;try{rows=await readdir(directory,{withFileTypes:true});}catch(error){if((error as NodeJS.ErrnoException).code==="ENOENT")return;throw error;}
+  const files:string[]=[],width=hooks.concurrency??64;
   for(const row of rows){
    if(depth===0&&row.name.startsWith("."))continue;
    if(depth<3){if(row.isDirectory())await walk(join(directory,row.name),depth+1,[...prefix,row.name]);continue;}
-   if(!row.isFile())continue;
-   let info;try{info=await stat(join(directory,row.name));}catch(error){if((error as NodeJS.ErrnoException).code==="ENOENT")continue;throw error;}
-   index.set([...prefix,row.name].join("/"),{size:info.size,accessed:info.mtimeMs});bytes+=info.size;
-   if(index.size%CHECK_EVERY===0){hooks.signal?.throwIfAborted();hooks.onProgress?.("scan",index.size,bytes);}
+   if(row.isFile())files.push(row.name);
+  }
+  for(let at=0;at<files.length;at+=width){
+   if(at>0&&width<=16)await new Promise<void>(done=>{setImmediate(done);});
+   const batch=files.slice(at,at+width),infos=await Promise.all(batch.map(async name=>{try{return await stat(join(directory,name));}catch(error){if((error as NodeJS.ErrnoException).code==="ENOENT")return undefined;throw error;}}));
+   batch.forEach((name,offset)=>{const info=infos[offset];if(info===undefined)return;index.set([...prefix,name].join("/"),{size:info.size,accessed:info.mtimeMs});bytes+=info.size;});
+   hooks.signal?.throwIfAborted();hooks.onProgress?.("scan",index.size,bytes);
   }
  };
  await walk(root,0,[]);hooks.onProgress?.("scan",index.size,bytes);return index;

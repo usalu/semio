@@ -22,7 +22,7 @@ use ui_styling::appearance::AppearanceName;
 use semio_ui_tui_frame::chrome::{shell, ChromeLabels, ChromeState, FooterState, NavItem, NavbarState, Shell, WindowState};
 use semio_ui_tui_engine::Tui;
 use semio_ui_tui_core::geometry::Size;
-use semio_ui_tui_frame::layout::{activate_stack_tab, create_default_layout, push_window_to_stack, remove_window, split_window, Constraint, Dimension, Direction, WindowLayout, WindowLayoutChild, WindowLayoutRoot, WindowLayoutWindowNode};
+use semio_ui_tui_frame::layout::{activate_stack_tab, create_default_layout, layout_windows_mut, push_window_to_stack, remove_window, split_window, window_id, window_node, Axis, Constraint, Dimension, Direction, WindowLayout, WindowLayoutNode};
 use semio_ui_tui_frame::scene::{Node, NodeContent, NodeId};
 use semio_ui_tui_core::theme::{GlyphSet, Status};
 use semio_ui_tui_widgets::widget::{Align, InputState, LabelState, ListState, WidgetState};
@@ -50,7 +50,7 @@ pub enum Kind { Files, Document, Overview, Settings, Diagnostics, KeymapEditor, 
 
 /// 📍️ Where a new window goes among the others.
 #[derive(Clone, Copy)]
-pub enum Place<'a> { Preference, Split(&'a str), Stack(&'a str) }
+pub enum Place<'a> { Preference, Split(Axis), Stack(&'a str) }
 
 /// 🖼️ One window: its chrome, the node tree of its body and the state behind it.
 pub struct DashboardWindow {
@@ -143,7 +143,7 @@ impl Dashboard {
         let text = labels(locale);
         let navbar = NavbarState { left: vec![NavItem { id: "logo".into(), label: text.nav_brand.as_str().into(), active: true }], center: vec![NavItem { id: "mode".into(), label: text.nav_mode.as_str().into(), active: false }], right: vec![] };
         let footer = FooterState { hints: vec![], status: String::new() };
-        let layout = create_default_layout(&["w1".into()], "row", None, Some(&[text.title_tasks.as_str().into()]));
+        let layout = create_default_layout(&["w1".into()], Axis::Horizontal, None, Some(&[text.title_tasks.as_str().into()]));
         let shell = shell(&mut tui.scene, navbar, footer, &layout);
         let (keymap, _) = preferences.keymap();
         let light = preferences.appearance == "light";
@@ -267,9 +267,9 @@ impl Dashboard {
         let host = self.windows.get(self.focused_index(tui)).map(|window| window.id.clone());
         match (place, host) {
             (Place::Split(direction), Some(host)) => { split_window(&mut self.layout, &host, direction, &id, None); }
-            (Place::Stack(host), _) => { push_window_to_stack(&mut self.layout, host, WindowLayoutWindowNode { window_kind_id: id.clone(), title: None, corner: None }); }
+            (Place::Stack(host), _) => { push_window_to_stack(&mut self.layout, host, window_node(id.clone(), None, None)); }
             (Place::Preference, Some(host)) => self.place_window(&host, &id),
-            _ => { push_window_to_stack(&mut self.layout, "w1", WindowLayoutWindowNode { window_kind_id: id.clone(), title: None, corner: None }); }
+            _ => { push_window_to_stack(&mut self.layout, "w1", window_node(id.clone(), None, None)); }
         }
         let chrome = tui.scene.add(self.shell.canvas, Node::new(NodeContent::Chrome(ChromeState::Window(Box::new(WindowState::new(id.clone()).with_stack_tabs(vec![id.clone()], 0))))));
         tui.scene.node_mut(chrome).set_constraint(Constraint { width: Dimension::Weight(1), direction: Direction::Column, padding: [2, 1, 1, 1], gap: 1, ..Default::default() });
@@ -280,9 +280,9 @@ impl Dashboard {
 
     fn place_window(&mut self, host: &str, id: &str) {
         match self.preferences.layout.as_str() {
-            "columns" => { split_window(&mut self.layout, host, "row", id, None); }
-            "rows" => { split_window(&mut self.layout, host, "column", id, None); }
-            _ => { push_window_to_stack(&mut self.layout, host, WindowLayoutWindowNode { window_kind_id: id.into(), title: None, corner: None }); }
+            "columns" => { split_window(&mut self.layout, host, Axis::Horizontal, id, None); }
+            "rows" => { split_window(&mut self.layout, host, Axis::Vertical, id, None); }
+            _ => { push_window_to_stack(&mut self.layout, host, window_node(id.into(), None, None)); }
         }
     }
 
@@ -325,38 +325,21 @@ impl Dashboard {
     }
 
     /// 🧭️ The current visual order of groups and their tabs, independent of creation order.
-    pub fn window_order(&mut self) -> Vec<String> { layout_windows(&mut self.layout).into_iter().map(|node| node.window_kind_id.clone()).collect() }
+    pub fn window_order(&mut self) -> Vec<String> { layout_windows_mut(&mut self.layout).into_iter().map(|node| window_id(node).to_string()).collect() }
 }
 // #endregion 🔖️Bodies
 
 // #region 🔖️Tabs
 /// 🗂️ The window ids sharing a stack with `id`, in tab order.
 pub fn stack_of(layout: &WindowLayout, id: &str) -> Vec<String> {
-    fn find(child: &WindowLayoutChild, id: &str) -> Option<Vec<String>> {
-        match child {
-            WindowLayoutChild::Stack(stack) => stack.children.iter().any(|window| window.window_kind_id == id).then(|| stack.children.iter().map(|window| window.window_kind_id.clone()).collect()),
-            WindowLayoutChild::Axis(axis) => axis.children.iter().find_map(|child| find(child, id)),
-        }
-    }
-    match &layout.root {
-        WindowLayoutRoot::Stack(stack) => find(&WindowLayoutChild::Stack(stack.clone()), id),
-        WindowLayoutRoot::Axis(axis) => axis.children.iter().find_map(|child| find(child, id)),
-    }.unwrap_or_default()
-}
-
-fn layout_windows(layout: &mut WindowLayout) -> Vec<&mut WindowLayoutWindowNode> {
-    fn child<'a>(node: &'a mut WindowLayoutChild, out: &mut Vec<&'a mut WindowLayoutWindowNode>) {
+    fn find(node: &WindowLayoutNode, id: &str) -> Option<Vec<String>> {
         match node {
-            WindowLayoutChild::Stack(stack) => out.extend(stack.children.iter_mut()),
-            WindowLayoutChild::Axis(axis) => axis.children.iter_mut().for_each(|node| child(node, out)),
+            WindowLayoutNode::Stack { children, .. } => children.iter().any(|window| window_id(window) == id).then(|| children.iter().map(|window| window_id(window).to_string()).collect()),
+            WindowLayoutNode::Split { children, .. } => children.iter().find_map(|child| find(child, id)),
+            WindowLayoutNode::Window { .. } => None,
         }
     }
-    let mut out = Vec::new();
-    match &mut layout.root {
-        WindowLayoutRoot::Stack(stack) => out.extend(stack.children.iter_mut()),
-        WindowLayoutRoot::Axis(axis) => axis.children.iter_mut().for_each(|node| child(node, &mut out)),
-    }
-    out
+    find(&layout.root, id).unwrap_or_default()
 }
 
 impl Dashboard {
@@ -422,7 +405,10 @@ impl Dashboard {
     /// and rebuilds the tiled mount.
     pub fn remount(&mut self, tui: &mut Tui) {
         let tabs = self.tab_labels();
-        for node in layout_windows(&mut self.layout) { node.title = tabs.get(&node.window_kind_id).cloned(); }
+        for node in layout_windows_mut(&mut self.layout) {
+            let own = window_id(node).to_string();
+            if let WindowLayoutNode::Window { title, .. } = node { *title = tabs.get(&own).cloned(); }
+        }
         self.shell.windows = self.windows.iter().map(|window| (window.id.clone(), window.chrome)).collect();
         self.shell.remount(&mut tui.scene, &self.layout);
         for window in &self.windows { self.shell.set_status(&mut tui.scene, &window.id, window.session().map(Self::status_of)); }

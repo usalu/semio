@@ -61,7 +61,7 @@ const DOCUMENT_ARCHIVE_HISTORY_LIMITS: store::os_store::HistoryReadLimits = stor
 };
 
 /// 🧮️ The cumulative native allocation ceiling of one archive parent History decode.
-const DOCUMENT_ARCHIVE_HISTORY_ALLOCATION_BYTES: usize = 8_388_608;
+const DOCUMENT_ARCHIVE_HISTORY_ALLOCATION_BYTES: usize = 2 * protocol::DOCUMENT_ARCHIVE_MAXIMUM_BYTES;
 
 /// 📥️ Admits the retained parent History decoder over the whole of an archive's parent SPR bytes.
 pub fn document_archive_history_decoder(parent_spr_bytes: usize) -> Result<protocol::RetainedHistoryDecode, ValueError> {
@@ -245,6 +245,7 @@ where
 {
     pub operation: u64,
     pub archive: Option<Box<protocol::DocumentArchivePack>>,
+    pub paged_parent: Option<super::paged_parent::PagedArchiveParent<P>>,
     archive_retirement: Option<Box<dyn store::ErasedSnapshotRetirement>>,
     pub history: Option<protocol::RetainedHistoryDecode>,
     history_custody: Option<protocol::HistoryLog>,
@@ -281,6 +282,7 @@ where
         Self {
             operation,
             archive: Some(Box::new(archive)),
+            paged_parent: None,
             archive_retirement: None,
             history: Some(history),
             history_custody: None,
@@ -308,6 +310,16 @@ where
         }
     }
 
+    pub fn new_paged(
+        operation: u64,
+        archive: protocol::channel::archive_ingress::VerifiedDocumentArchiveParent,
+        history: protocol::RetainedHistoryDecode,
+    ) -> Self {
+        let mut load = Self::new(operation, protocol::DocumentArchivePack::default(), history);
+        load.paged_parent = Some(super::paged_parent::PagedArchiveParent::new(archive.into_pages()));
+        load
+    }
+
     pub fn status(&self) -> protocol::DocumentArchiveLoadStatus {
         let state = match self.state {
             ActiveDocumentArchiveLoadState::Pending => protocol::DocumentArchiveLoadState::Pending,
@@ -332,7 +344,7 @@ where
 
     /// 🫙️ Every original input owner is returned; only the encoded fault diagnostic the terminal Fault status carries may remain.
     pub fn inputs_are_empty(&self) -> bool {
-        self.archive.is_none() && self.archive_retirement.is_none() && self.history.is_none() && self.history_custody.is_none() && self.decoded_history.is_none() && self.member.is_none() && self.rejected_ingress.is_none() && self.retained.is_none() && self.hydration.is_none() && self.replacement.is_none() && !self.work.has_live_actions()
+        self.archive.is_none() && self.paged_parent.is_none() && self.archive_retirement.is_none() && self.history.is_none() && self.history_custody.is_none() && self.decoded_history.is_none() && self.member.is_none() && self.rejected_ingress.is_none() && self.retained.is_none() && self.hydration.is_none() && self.replacement.is_none() && !self.work.has_live_actions()
     }
 
     pub fn terminal_is_empty(&self) -> bool {
@@ -386,6 +398,13 @@ where
         if let Some(ingress)=self.rejected_ingress.as_ref(){return if ingress.terminal_is_empty(){Ok(RetirementDemand{depth:1,..Default::default()})}else{parent(ingress.retirement_demands(body)?)};}
         if let Some(member)=self.member.as_ref(){return if member.terminal_is_empty(){Ok(RetirementDemand{depth:1,..Default::default()})}else{parent(member.retirement_demands(body)?)};}
         if let Some(history)=self.history.as_ref(){return parent(history.demands(body)?);}
+        if let Some(parent)=self.paged_parent.as_ref(){
+            if parent.has_receiver(){return parent.receiver_close_demand(body);}
+            if parent.pages.is_some(){
+                return Ok(RetirementDemand { capacity_bytes: semio_framework_value::retirement::owned_retirement_birth_bytes::<protocol::channel::archive_ingress::DocumentArchiveParentPages>(), depth: 2, ..Default::default() });
+            }
+            return Ok(RetirementDemand { copy_bytes: std::mem::size_of::<super::paged_parent::PagedArchiveParent<P>>(), depth: 1, ..Default::default() });
+        }
         if self.history_custody.is_some()||self.decoded_history.is_some(){return Ok(RetirementDemand{capacity_bytes:semio_framework_value::retirement::owned_retirement_birth_bytes::<protocol::HistoryLog>(),depth:2,..Default::default()});}
         if self.archive.is_some(){return Ok(RetirementDemand{capacity_bytes:semio_framework_value::retirement::owned_retirement_birth_bytes::<Box<protocol::DocumentArchivePack>>(),depth:2,..Default::default()});}
         Ok(Default::default())
@@ -423,10 +442,29 @@ where
         }
         if let Some(history)=self.history.as_mut(){
             if history.terminal_is_empty(){drop(self.history.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}));}
-            let source=&self.archive.as_ref().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"archive history decoder lost its original source"))?.parent_spr;
+            let source: &dyn protocol::RetainedWireByteSource = match self.paged_parent.as_ref() {
+                Some(parent) => parent.spr().ok_or_else(|| ValueError::invariant("archive history lost its paged SPR"))?,
+                None => &self.archive.as_ref().ok_or_else(|| ValueError::invariant("archive history lost its original SPR"))?.parent_spr,
+            };
             let turn=match self.work.with_loan(&mut (work_turn as &dyn ArchiveWorkTurn),|loan|history.close_step(source,&protocol::RetainedHistoryUninterrupted,child,loan)){Ok(turn)=>turn,Err(error)=>semio_framework_value::RetainedWorkOutcome{work:0,result:Err(semio_framework_value::OriginalRetirementFailure::from_work_refusal(error))}};Exit::pay(effect,turn.work)?;self.last_native_work=history.last_turn_native_work();let step=turn.result?;
             semio_framework_value::retained_clone::admit_retained_clone_close(child,step,history.terminal_is_empty(),"original archive history decoder")?;
             return Ok(RetainedCloneStep::Progress(step.progress()));
+        }
+        if let Some(parent)=self.paged_parent.as_mut(){
+            if parent.has_receiver(){
+                let step=Exit::resume(parent.close_receiver(effect))?;
+                return Ok(RetainedCloneStep::Progress(step.progress()));
+            }
+            if parent.pages.is_some(){
+                return match semio_framework_value::retirement::admit_owned_retirement(&mut parent.pages,effect).result {
+                    Ok(Some((owner,progress)))=>{self.retained=Some(owner);Ok(RetainedCloneStep::Progress(progress))},
+                    Ok(None)=>Ok(RetainedCloneStep::Progress(empty)),
+                    Err(error)=>Err(error.into())
+                };
+            }
+            if !effect.performed(1)? { return Ok(RetainedCloneStep::Progress(empty)); }
+            self.paged_parent.take();
+            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..empty }));
         }
         if self.history_custody.is_none(){self.history_custody=self.decoded_history.take();}
         if self.history_custody.is_some(){
@@ -461,7 +499,7 @@ where
     fn drop(&mut self) {
         assert!(
             std::thread::panicking()
-                || (self.archive.is_none()
+                || (self.archive.is_none() && self.paged_parent.is_none()
                     && self.archive_retirement.is_none()
                     && self.history.is_none()
                     && self.history_custody.is_none()

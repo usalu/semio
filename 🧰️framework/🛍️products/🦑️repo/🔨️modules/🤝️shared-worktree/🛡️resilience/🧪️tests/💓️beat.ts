@@ -41,3 +41,49 @@ test("without any beat the guard abandons a turn at the deadline as before",asyn
  expect(turn).toEqual({status:"stalled"});
  expect(Date.now()-started).toBeLessThan(2000);
 });
+
+test("a store call that never returns does not wedge the guard: after the store answers a probe, later calls and turns run again", async () => {
+ const states: StoreStateV1[] = [];
+ let up = true;
+ const guard = createStoreGuardV1({deadlineMs: 60, now: Date.now, changed: state => states.push(state), probe: async () => up});
+ await expect(guard.call(() => new Promise<never>(() => {}))).rejects.toThrow("Store call refused");
+ expect(guard.state()).toBe("stalled");
+ expect(guard.outstanding()).toBe(0);
+ await Bun.sleep(5 * 60 + 40);
+ expect(await guard.reachable()).toBe(true);
+ expect(guard.state()).toBe("ok");
+ expect(await guard.call(async () => 5)).toBe(5);
+ expect(await guard.turn(async () => 6)).toEqual({status: "done", value: 6});
+ expect(states).toEqual(["stalled", "ok"]);
+});
+
+test("a turn that never returns is abandoned and the next turn is not reported busy once the store answers", async () => {
+ const states: StoreStateV1[] = [];
+ let hang = true;
+ const guard = createStoreGuardV1({deadlineMs: 60, now: Date.now, changed: state => states.push(state), probe: () => hang ? new Promise<boolean>(() => {}) : Promise.resolve(true)});
+ expect(await guard.turn(() => new Promise<never>(() => {}))).toEqual({status: "stalled"});
+ hang = false;
+ await Bun.sleep(5 * 60 + 40);
+ for (let round = 0; round < 40 && guard.state() !== "ok"; round++) {await guard.reachable();await Bun.sleep(20);}
+ expect(guard.state()).toBe("ok");
+ expect(await guard.turn(async () => 7)).toEqual({status: "done", value: 7});
+});
+
+test("a probe that never answers is orphaned after three deadlines and a new probe recovers the guard; four leaked calls keep it stalled", async () => {
+ let hang = true;
+ const guard = createStoreGuardV1({deadlineMs: 50, now: Date.now, changed: () => {}, probe: () => hang ? new Promise<boolean>(() => {}) : Promise.resolve(true)});
+ expect(await guard.reachable()).toBe(false);
+ hang = false;
+ await Bun.sleep(5 * 50 + 50);
+ for (let round = 0; round < 40 && guard.state() !== "ok"; round++) {await guard.reachable();await Bun.sleep(20);}
+ expect(guard.state()).toBe("ok");
+ const capped = createStoreGuardV1({deadlineMs: 30, now: Date.now, changed: () => {}, probe: async () => true});
+ for (let leak = 0; leak < 4; leak++) {
+  await Bun.sleep(5 * 30 + 20);
+  await capped.reachable();
+  await expect(capped.call(() => new Promise<never>(() => {}))).rejects.toThrow("Store call refused");
+ }
+ await Bun.sleep(5 * 30 + 20);
+ await capped.reachable();
+ await expect(capped.call(async () => 1)).rejects.toThrow("Store call refused");
+});

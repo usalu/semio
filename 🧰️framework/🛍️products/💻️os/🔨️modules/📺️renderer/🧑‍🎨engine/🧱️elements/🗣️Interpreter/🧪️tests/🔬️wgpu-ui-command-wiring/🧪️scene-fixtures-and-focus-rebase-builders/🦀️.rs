@@ -414,6 +414,7 @@ fn begin_pending_ink_intent(window_id: &str, node: NodeId, pointer: ui_render::P
         semio_ui_declaration::ui::SurfaceKind::InkCanvas,
         Rect::new(0.0, 0.0, 320.0, 240.0),
         &semio_ui_wgpu_events::UiEvent::PointerDown { x: 220.0, y: 190.0, button: semio_ui_wgpu_events::PointerButton::Primary, modifiers: Default::default() },
+        1,
         Some(pointer),
         input,
     );

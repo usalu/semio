@@ -111,3 +111,7 @@ Script: `r5-scroll-compressor-model.py` (edits the volumes source; splice with `
 
 - The window remains an authored didactic device (concept of the asset); real hermetic shells are closed.
 - 1:50 structure reads as the closed vessel from outside (it is the real pressure vessel; the frame, crankshaft and bearings are inside and show only in the cut).
+
+## Digital working-stock readback, 2026-11-21
+
+Canonical source `8dc34a0cd4cf8b7d`. Four 40 mm rubber feet on 190.5 mm centres have a genuine 13 mm bore. Separate steel sleeves surround the mounting bolts, and the four bored ears of the 7.5 mm pressed plate capture the rubber shoulders. The force view bears through four independent annular supports. All twelve GLB scenes reopened (1,228,372 bytes) and all strict checks passed.

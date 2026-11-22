@@ -1,0 +1,97 @@
+{
+  "schema": "semio.os.natural-file-save-name-fixture/v1",
+  "description": "Language-neutral cases of the file name a saved natural file carries; the clock is 2026-11-20T09:08:07Z.",
+  "cases": [
+    {
+      "id": "original name with the declared extension is kept as is",
+      "original": "Budget 2026.xlsx",
+      "appId": "s.stdio.xlsx@ecma-376/*#editor",
+      "extension": ".xlsx",
+      "expected": "Budget 2026.xlsx"
+    },
+    {
+      "id": "extension case of the original is kept",
+      "original": "Budget.XLSX",
+      "appId": "s.stdio.xlsx@ecma-376/*#editor",
+      "extension": ".xlsx",
+      "expected": "Budget.XLSX"
+    },
+    {
+      "id": "a name with another extension gets the declared one",
+      "original": "Budget.xls",
+      "appId": "s.stdio.xlsx@ecma-376/*#editor",
+      "extension": ".xlsx",
+      "expected": "Budget.xlsx"
+    },
+    {
+      "id": "a name without extension gets the declared one",
+      "original": "Budget",
+      "appId": "s.stdio.xlsx@ecma-376/*#editor",
+      "extension": ".xlsx",
+      "expected": "Budget.xlsx"
+    },
+    {
+      "id": "only the last extension is replaced",
+      "original": "Q1.final.csv",
+      "appId": "s.stdio.xlsx@ecma-376/*#editor",
+      "extension": ".xlsx",
+      "expected": "Q1.final.xlsx"
+    },
+    {
+      "id": "a leading dot name has no stem and falls back to kind and time",
+      "original": ".xlsx",
+      "appId": "s.stdio.xlsx@ecma-376/*#editor",
+      "extension": ".xlsx",
+      "expected": "xlsx-20261120T090807Z.xlsx"
+    },
+    {
+      "id": "path segments of the original are dropped",
+      "original": "C:\\Users\\me\\Budget.xlsx",
+      "appId": "s.stdio.xlsx@ecma-376/*#editor",
+      "extension": ".xlsx",
+      "expected": "Budget.xlsx"
+    },
+    {
+      "id": "posix path segments are dropped",
+      "original": "/home/me/Budget.xlsx",
+      "appId": "s.stdio.xlsx@ecma-376/*#editor",
+      "extension": ".xlsx",
+      "expected": "Budget.xlsx"
+    },
+    {
+      "id": "characters no file system accepts are removed",
+      "original": "Plan: A|B?.xlsx",
+      "appId": "s.stdio.xlsx@ecma-376/*#editor",
+      "extension": ".xlsx",
+      "expected": "Plan AB.xlsx"
+    },
+    {
+      "id": "umlauts and spaces survive",
+      "original": "Büro Übersicht.xlsx",
+      "appId": "s.stdio.xlsx@ecma-376/*#editor",
+      "extension": ".xlsx",
+      "expected": "Büro Übersicht.xlsx"
+    },
+    {
+      "id": "no original falls back to kind and time",
+      "original": null,
+      "appId": "s.stdio.xlsx@ecma-376/*#editor",
+      "extension": ".xlsx",
+      "expected": "xlsx-20261120T090807Z.xlsx"
+    },
+    {
+      "id": "an empty original falls back to kind and time",
+      "original": "",
+      "appId": "s.stdio.xlsx@ecma-376/*#editor",
+      "extension": ".xlsx",
+      "expected": "xlsx-20261120T090807Z.xlsx"
+    },
+    {
+      "id": "a blank original falls back to kind and time",
+      "original": "   ",
+      "appId": "s.stdio.xlsx@ecma-376/*#editor",
+      "extension": ".xlsx",
+      "expected": "xlsx-20261120T090807Z.xlsx"
+    }
+  ]
+}

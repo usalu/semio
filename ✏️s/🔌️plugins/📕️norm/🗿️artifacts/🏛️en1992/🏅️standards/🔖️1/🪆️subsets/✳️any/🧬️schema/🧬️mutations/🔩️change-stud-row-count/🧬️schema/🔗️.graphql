@@ -1,5 +1,7 @@
+scalar UInt32
+
 type ChangeStudRowCount {
   memberId: String!
   studRowId: String!
-  newCount: Int!
+  newCount: UInt32!
 }

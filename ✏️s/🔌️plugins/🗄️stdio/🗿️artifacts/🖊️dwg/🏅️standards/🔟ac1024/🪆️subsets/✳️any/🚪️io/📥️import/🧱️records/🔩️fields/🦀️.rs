@@ -7,54 +7,90 @@ pub type DwgObjectRelations = (Option<u64>, Vec<u64>, Option<u64>);
 //#region 🔖️DwgStructuralCodec
 //#region DwgRead
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn read_r2004_modular_char(bytes: &[u8], position: &mut usize, signed: bool) -> Result<i64, String> {
-    let mut value = 0i64;
-    let mut shift = 0u32;
-    loop {
-        let byte = *bytes.get(*position).ok_or("R2004 modular-char underflow")?;
-        *position += 1;
-        let negative = signed && byte & 0x80 == 0 && byte & 0x40 != 0;
-        value |= ((byte & if negative { 0x3f } else { 0x7f }) as i64) << shift;
-        if byte & 0x80 == 0 {
-            if negative {
-                value = -value;
-            }
-            return Ok(value);
-        }
-        shift += 7;
-        if shift > 56 {
+fn read_r2004_modular_char(bytes: &mut &[u8], signed: bool) -> Result<(u64, bool), String> {
+    let mut magnitude = 0;
+    for shift in (0..=63).step_by(7) {
+        let (byte, remaining) = bytes.split_first().ok_or("R2004 modular-char underflow")?;
+        *bytes = remaining;
+        let terminal = byte & 0x80 == 0;
+        let digit = u64::from(byte & if signed && terminal { 0x3f } else { 0x7f });
+        if digit > u64::MAX >> shift {
             return Err("R2004 modular-char overflow".into());
+        }
+        magnitude |= digit << shift;
+        if terminal {
+            return Ok((magnitude, signed && byte & 0x40 != 0));
+        }
+    }
+    Err("R2004 modular-char overflow".into())
+}
+
+/// 🗂️ Yields checked object locations from the borrowed Handles section one row at a time.
+pub struct HandleMapRows<Bytes> {
+    bytes: Bytes,
+    block: std::ops::Range<usize>,
+    next_block: usize,
+    handle: u64,
+    address: usize,
+    terminal: bool,
+}
+
+impl<Bytes: AsRef<[u8]>> HandleMapRows<Bytes> {
+    /// 📥️ Opens the ordered blocks without decoding or copying their contents.
+    pub fn new(bytes: Bytes) -> Self {
+        Self { bytes, block: 0..0, next_block: 0, handle: 0, address: 0, terminal: false }
+    }
+
+    /// 📊️ Reports the current physical byte position and total map size.
+    pub fn progress(&self) -> (usize, usize) {
+        let position = if self.block.is_empty() { self.next_block } else { self.block.start };
+        (position, self.bytes.as_ref().len())
+    }
+
+    fn row(&mut self) -> Result<Option<(u64, usize)>, String> {
+        let bytes = self.bytes.as_ref();
+        if self.block.is_empty() {
+            let input = &bytes[self.next_block..];
+            let Some(header) = input.first_chunk::<2>() else { return Ok(None) };
+            let size = usize::from(u16::from_be_bytes(*header));
+            if size <= 2 { return Ok(None); }
+            if size > input.len() {
+                return Err(format!("R2004 handle-map block {size} exceeds {} bytes", input.len()));
+            }
+            self.block = self.next_block + 2..self.next_block + size;
+            self.next_block = self.block.end.saturating_add(2).min(bytes.len());
+            self.handle = 0;
+            self.address = 0;
+        }
+        let mut block = &bytes[self.block.clone()];
+        let (delta, _) = read_r2004_modular_char(&mut block, false)?;
+        let (distance, negative) = read_r2004_modular_char(&mut block, true)?;
+        let distance = usize::try_from(distance).map_err(|_| "R2004 object address exceeds usize")?;
+        self.handle = self.handle.checked_add(delta).ok_or("R2004 object handle overflow")?;
+        self.address = if negative { self.address.checked_sub(distance) } else { self.address.checked_add(distance) }
+            .ok_or("R2004 object address overflow")?;
+        self.block.start = self.block.end - block.len();
+        Ok(Some((self.handle, self.address)))
+    }
+}
+
+impl<Bytes: AsRef<[u8]>> Iterator for HandleMapRows<Bytes> {
+    type Item = Result<(u64, usize), String>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.terminal { return None; }
+        match self.row() {
+            Ok(Some(row)) => Some(Ok(row)),
+            Ok(None) => { self.terminal = true; None }
+            Err(error) => { self.terminal = true; Some(Err(error)) }
         }
     }
 }
+
+/// 🔗️ Collects the decoded object locations for consumers that require a full map.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_r2004_handle_map(bytes: &[u8]) -> Result<Vec<(u64, usize)>, String> {
-    let mut position = 0usize;
-    let mut entries = Vec::new();
-    while position + 2 <= bytes.len() {
-        let block_start = position;
-        let block_size = u16::from_be_bytes([bytes[position], bytes[position + 1]]) as usize;
-        position += 2;
-        if block_size <= 2 {
-            break;
-        }
-        let block_end = block_start.checked_add(block_size).ok_or("R2004 handle-map block overflow")?;
-        if block_end > bytes.len() {
-            return Err(format!("R2004 handle-map block {block_size} exceeds {} bytes", bytes.len() - block_start));
-        }
-        let mut handle = 0i64;
-        let mut address = 0i64;
-        while position < block_end {
-            handle += read_r2004_modular_char(bytes, &mut position, false)?;
-            address += read_r2004_modular_char(bytes, &mut position, true)?;
-            if handle < 0 || address < 0 {
-                return Err("R2004 handle-map produced a negative handle or object address".into());
-            }
-            entries.push((handle as u64, address as usize));
-        }
-        position = block_end.saturating_add(2).min(bytes.len());
-    }
-    Ok(entries)
+    HandleMapRows::new(bytes).collect()
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_r2010_eed(reader: &mut DwgBitReader<'_>, _base: u64) -> Result<Vec<semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::xrecord::DwgExtendedEntityData>, String> {

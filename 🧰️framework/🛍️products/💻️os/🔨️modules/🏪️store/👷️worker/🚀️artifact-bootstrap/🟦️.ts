@@ -318,8 +318,8 @@ export async function installArtifactBootstrap(state: ArtifactState, owner: Docu
       coldOwner.assertCurrent();
     }
     if (coldOwner === null) {
-      const archive = encodeDocumentArchiveBytes({ parent_pack: Array.from(pair.pack), parent_spr: Array.from(pair.spr), members: [] });
-      emitEvent(state, { kind: "documentArchiveReplaced", archive: Array.from(archive) });
+      const archive = encodeDocumentArchiveBytes({ parent_pack: pair.pack, parent_spr: pair.spr, members: [] });
+      emitEvent(state, { kind: "documentArchiveReplaced", archive });
     }
     owner.assertCurrent();
     if (state.outbox.length > 0 && coldOwner === null) {

@@ -3,7 +3,8 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { Mode, createEvenWindowLayout, reactHostPort, uiDataLabel, type WindowLayoutAxisNode, type WindowLayoutStackNode } from "@semio-tech/ui-react";
+import { Mode, reactHostPort, uiDataLabel } from "@semio-tech/ui-react";
+import { type WindowLayoutPanel, evenWindowLayout } from "@semio-tech/ui-layout";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { contentThroughGlassPlay, maximizeStackPlay, quadLayoutPlay } from "../../🧪️tests/🎯️mode-story-interaction/🟦️.ts";
 // #endregion 🔌️Adapters
@@ -17,11 +18,11 @@ const Pane = ({ label }: { label: string }) => (
   </div>
 );
 
-type GeometryNode = { kind: "stack"; id: string } | { kind: "row" | "column"; children: Array<{ weight: number; node: GeometryNode }> };
+type GeometryNode = { kind: "stack"; id: string } | { kind: "split"; axis: "horizontal" | "vertical"; children: Array<{ weight: number; node: GeometryNode }> };
 
-function geometryModeNode(node: GeometryNode, size?: number): WindowLayoutAxisNode | WindowLayoutStackNode {
-  if (node.kind === "stack") return { kind: "stack", size, activeId: node.id, children: [{ kind: "window", id: node.id }] };
-  return { kind: node.kind, size, children: node.children.map((child) => geometryModeNode(child.node, child.weight)) };
+function geometryModeNode(node: GeometryNode, size?: number): WindowLayoutPanel {
+  if (node.kind === "stack") return { kind: "stack", size, activeWindowId: node.id, children: [{ kind: "window", windowKindId: node.id }] };
+  return { kind: "split", axis: node.axis, size, children: node.children.map((child) => geometryModeNode(child.node, child.weight / 100)) };
 }
 
 /** 📐️ The story's own three-stack scene — an 800 × 500 canvas split 35 : 65 across, the right side 70 : 30 down. The
@@ -29,10 +30,11 @@ function geometryModeNode(node: GeometryNode, size?: number): WindowLayoutAxisNo
  * committed oracle, so the story carries its scene and the test carries the judgement. */
 const GEOMETRY_VIEWPORT = { width: 800, height: 500 } as const;
 const GEOMETRY_LAYOUT: GeometryNode = {
-  kind: "row",
+  kind: "split",
+  axis: "horizontal",
   children: [
     { weight: 35, node: { kind: "stack", id: "left" } },
-    { weight: 65, node: { kind: "column", children: [{ weight: 70, node: { kind: "stack", id: "right-top" } }, { weight: 30, node: { kind: "stack", id: "right-bottom" } }] } },
+    { weight: 65, node: { kind: "split", axis: "vertical", children: [{ weight: 70, node: { kind: "stack", id: "right-top" } }, { weight: 30, node: { kind: "stack", id: "right-bottom" } }] } },
   ],
 };
 
@@ -83,22 +85,25 @@ export const QuadLayout: Story = {
             { id: "context", title: uiDataLabel("Context"), iconId: "app-window", children: <Pane label="Context" /> },
           ]}
           layout={{
-            kind: "row",
+            kind: "split",
+            axis: "horizontal",
             children: [
               {
-                kind: "column",
-                size: 50,
+                kind: "split",
+                axis: "vertical",
+                size: 0.5,
                 children: [
-                  { kind: "stack", children: [{ kind: "window", id: "overview" }], activeId: "overview" },
-                  { kind: "stack", children: [{ kind: "window", id: "detail" }], activeId: "detail" },
+                  { kind: "stack", children: [{ kind: "window", windowKindId: "overview" }], activeWindowId: "overview" },
+                  { kind: "stack", children: [{ kind: "window", windowKindId: "detail" }], activeWindowId: "detail" },
                 ],
               },
               {
-                kind: "column",
-                size: 50,
+                kind: "split",
+                axis: "vertical",
+                size: 0.5,
                 children: [
-                  { kind: "stack", children: [{ kind: "window", id: "selection" }], activeId: "selection" },
-                  { kind: "stack", children: [{ kind: "window", id: "context" }], activeId: "context" },
+                  { kind: "stack", children: [{ kind: "window", windowKindId: "selection" }], activeWindowId: "selection" },
+                  { kind: "stack", children: [{ kind: "window", windowKindId: "context" }], activeWindowId: "context" },
                 ],
               },
             ],
@@ -125,11 +130,11 @@ export const TabStack: Story = {
           ]}
           layout={{
             kind: "stack",
-            activeId: "design",
+            activeWindowId: "design",
             children: [
-              { kind: "window", id: "design" },
-              { kind: "window", id: "review" },
-              { kind: "window", id: "notes" },
+              { kind: "window", windowKindId: "design" },
+              { kind: "window", windowKindId: "review" },
+              { kind: "window", windowKindId: "notes" },
             ],
           }}
           activeWindowId={activeWindowId}
@@ -149,10 +154,11 @@ export const MaximizeStack: Story = {
           { id: "b", title: uiDataLabel("Beta"), iconId: "app-window", children: <Pane label="Beta" /> },
         ]}
         layout={{
-          kind: "row",
+          kind: "split",
+            axis: "horizontal",
           children: [
-            { kind: "stack", children: [{ kind: "window", id: "a" }], activeId: "a" },
-            { kind: "stack", children: [{ kind: "window", id: "b" }], activeId: "b" },
+            { kind: "stack", children: [{ kind: "window", windowKindId: "a" }], activeWindowId: "a" },
+            { kind: "stack", children: [{ kind: "window", windowKindId: "b" }], activeWindowId: "b" },
           ],
         }}
         activeWindowId="a"
@@ -170,7 +176,7 @@ export const EvenSplit: Story = {
           { id: "a", title: uiDataLabel("A"), iconId: "app-window", children: <Pane label="A" /> },
           { id: "b", title: uiDataLabel("B"), iconId: "app-window", children: <Pane label="B" /> },
         ]}
-        layout={createEvenWindowLayout(["a", "b"])}
+        layout={evenWindowLayout(["a", "b"])}
         activeWindowId="a"
       />
     </div>
@@ -216,10 +222,10 @@ export const ContentThroughGlass: Story = {
           ]}
           layout={{
             kind: "stack",
-            activeId: "flow",
+            activeWindowId: "flow",
             children: [
-              { kind: "window", id: "flow" },
-              { kind: "window", id: "reference" },
+              { kind: "window", windowKindId: "flow" },
+              { kind: "window", windowKindId: "reference" },
             ],
           }}
           activeWindowId={activeWindowId}

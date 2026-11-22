@@ -9,7 +9,7 @@ use super::original_pack_failure::OriginalCommandPackFailure;
 use crate::original_steps::{covering_child,settled_grant,receiving_units,widened,admission_demand,admission_return_demand,admission_settle,admission_step,adopted,begun,built,built_with,construction,fixed,funded,receipt,receiver_close,receiving,receiving_primary,retired,retired_native,retired_poll,unbuilt,unit};
 use std::mem::{ManuallyDrop,size_of};
 fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"original Pack receiving requires its retained source and caller")}
-fn addressable_allocation_limit(bytes:u64)->usize{usize::try_from(bytes).unwrap_or(usize::MAX)}
+fn addressable_allocation_limit(bytes:u64)->usize{bytes.min(isize::MAX as u64) as usize}
 /// 🧷️ Every parser, original tree, typed child and caller loan stays in its defining owner until paid closure.
 pub struct OriginalPackReceiving<T:NativeReceive<DslValue>+Sync>{
  binding:OriginalSourceBinding,decoder:(NativeAllocationIdentity,u64),body:usize,loan:ManuallyDrop<Option<OriginalCallerSourceLoan>>,returning:bool,bytes:ManuallyDrop<Option<Vec<u8>>>,limits:store::os_pack::PackLimits,maximum:usize,units:Option<u64>,

@@ -132,3 +132,20 @@ The mounted acceptance suite now also opens a known-good PDF, selects a malforme
 
 - [Malformed PDF fixture](🔣️mounted-invalid-pdf.json)
 - [Independent malformed PDF oracle](📜️pdf-invalid-open-oracle.py)
+
+### Compiler Storage and Native Module Publication
+
+The fixed 40 GiB compiler image fell below 200 MiB free while the corrected Browser PDF, the native host and a separate build held compiler lanes. I cancelled the ticket-owned native host wrapper while preserving both other builds. The repository dry run identified superseded component runs and protected the two active component runs. The owner-controlled collection removed 58 superseded runs accounting for 6.0 GiB. The compiler image reported 13.3 GiB free after collection and native lane release. The corrected Browser compile continued on its existing lane.
+
+A native module publication preflight reached the verified Browser session reader and stopped because a referenced component directory was missing. The package needs to be republished from the exact rebuilt components and refreshed session receipt. Diff whitespace checks passed.
+
+- [Compiler storage owner output](🗑️generated/pdf-compiler-storage-gc.log)
+- [Native module publication preflight](🗑️generated/native-wgpu-save/wgpu-modules-live.log)
+
+### Rebuilt Browser Component and Mounted Open
+
+The corrected PDF component completed 761 compiler units and 11 publication stages with no failed stages. The 18:04:05 UTC Browser receipt records 188,407,274 WASI bytes and SHA-256 183152ba555aa63093e8476f8510267ab1707a04e6bb10f5d6af834d87498726. Session and asset verification completed. Chromium loaded that session and delivered the fixture as MediaIn to a fresh PDF actor. The prior early Pack refusal did not recur. The later guest turn panicked in the controlled retirement owner because it was dropped before terminal-empty. The subsequent close also trapped. Open and the remaining edit, Save and reopen path are still incomplete.
+
+- [Browser stage and receipt output](🗑️generated/pdf-browser-wasm-limits-live-components-pdf-2.log)
+- [Mounted Open console](🗑️generated/mounted-wasm-limits-rotation/pdf-mounted-console.json)
+- [Mounted actor work receipts](🗑️generated/mounted-wasm-limits-rotation/pdf-mounted-actor-traffic.json)

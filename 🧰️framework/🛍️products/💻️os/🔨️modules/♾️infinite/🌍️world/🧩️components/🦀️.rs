@@ -210,9 +210,7 @@ pub struct WorldGumballState {
 
     pub catalogue_drop_preview: Option<WorldCatalogueDropPreviewRecord>,
 
-    /// 🚚️ The live relocate drag, or `None`. Armed by a primary press under the `worldRelocate`
-    /// utility, previewed as a catalogue-drop ghost on every move, and closed by the release (commit)
-    /// or by Escape (abort) — React's `relocateSessionRef` (`🌐️World3dHost/🟦️.tsx:6845`).
+    /// 🚚️ The live relocate drag and its own preview, closed by release or cancellation.
     pub relocate: Option<World3dRelocateSession>,
 
     /// 🎯️ The Guest Scene's exact source-bound component interaction targets.
@@ -269,6 +267,8 @@ pub struct WorldSceneState {
     pub target_volumes: Vec<WorldTargetVolumeRecord>,
 
     pub references: Vec<WorldReferenceRecord>,
+
+    pub point_draws: Vec<ui_scene::math::PointDraw3d>,
 
     pub engagement_preview: Vec<WorldEngagementPreviewRecord>,
 
@@ -494,6 +494,7 @@ impl WorldSceneState {
             attractions: Vec::new(),
             target_volumes: Vec::new(),
             references: Vec::new(),
+            point_draws: Vec::new(),
             engagement_preview: Vec::new(),
             reference_pixels: WorldDynamicRegistry::default(),
             mesh_paint_textures: WorldDynamicRegistry::default(),

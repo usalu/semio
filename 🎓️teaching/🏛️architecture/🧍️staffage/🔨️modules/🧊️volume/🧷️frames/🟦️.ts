@@ -100,12 +100,13 @@ export function frameDataOf(setup: FrameSetup, state: EvaluatedState, analytic: 
     if (wantsMoments) {
       const arcs = momentList(state, result);
       const max = Math.max(0, ...arcs.map((a) => magnitude(a.m)));
+      const threshold = Math.max(1e-9, max * MOMENT_MIN_SHOWN);
       for (const arc of arcs) {
+        const total = magnitude(arc.m);
+        if (total < threshold) continue;
         const id = slugOf(arc.id);
         slots.add(`arc-${id}`, { kind: "arc", material: `glyph-arc-${arc.kind}`, detail: arc.kind });
-        const total = magnitude(arc.m);
-        const shown = total >= Math.max(1e-9, max * MOMENT_MIN_SHOWN);
-        put(arcPatch(id, shown ? toNeutral([arc.at.x, arc.at.y, arc.at.z]) : null, pseudoToNeutral([arc.m.x, arc.m.y, arc.m.z]), shown ? Math.min(momentRadiusMm(total, max) * mm, sizing.arcCapM) : 0));
+        put(arcPatch(id, toNeutral([arc.at.x, arc.at.y, arc.at.z]), pseudoToNeutral([arc.m.x, arc.m.y, arc.m.z]), Math.min(momentRadiusMm(total, max) * mm, sizing.arcCapM)));
       }
     }
   }

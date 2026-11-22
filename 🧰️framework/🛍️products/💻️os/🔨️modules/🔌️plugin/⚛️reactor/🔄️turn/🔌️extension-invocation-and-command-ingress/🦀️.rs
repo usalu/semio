@@ -75,6 +75,14 @@ pub enum CommandIngressOwner {
     Generic { cursor:semio_framework::kernel::CommandPageCursor,command:Option<(u64,semio_plugin_runtime_ops::ops_ingress::PluginCommandIngress)>,exchange:Option<semio_plugin_runtime_ops::ops_ingress::OriginalCommandExchangeState>,exchange_close:Option<semio_framework_value::retirement::controlled::ControlledRetirement<semio_plugin_runtime_ops::ops_ingress::OriginalCommandExchangeState>>,output:Option<semio_plugin_runtime_ops::ops_ingress::PluginExchangeOutput>,output_close:Option<semio_framework_value::retirement::controlled::ControlledRetirement<semio_plugin_runtime_ops::ops_ingress::PluginExchangeOutput>> },
 }
 
+impl CommandIngressOwner {
+    /// 🛑️ Whether a retained generic command may still run its exchange: never once its instance closes or its output retirement has begun, because the retirement ladder then owns every member and replacing the state would drop a live controlled retirement before terminal emptiness. See [`retire_command_ingress`].
+    #[doc(hidden)]
+    pub fn exchange_may_run(&self,closing_instances:&[u32])->bool{
+        matches!(self,Self::Generic{cursor,output_close:None,..} if !closing_instances.contains(&cursor.instance))
+    }
+}
+
 #[doc(hidden)]
 pub struct RetainedCommandIngress {
     pub key: instance_lifetime::NativeCloseKey,

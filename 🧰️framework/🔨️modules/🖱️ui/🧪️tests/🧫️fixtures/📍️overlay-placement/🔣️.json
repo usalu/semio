@@ -1,0 +1,469 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "name": "popover default below anchor",
+      "anchor": {
+        "x": 100,
+        "y": 200,
+        "width": 60,
+        "height": 20
+      },
+      "content": {
+        "width": 80,
+        "height": 40
+      },
+      "viewport": {
+        "width": 1000,
+        "height": 1000
+      },
+      "side": "bottom",
+      "align": "center",
+      "sideOffset": 4,
+      "alignOffset": 0,
+      "collisionPadding": 8,
+      "rtl": false,
+      "avoidCollisions": true,
+      "expected": {
+        "side": "bottom",
+        "left": 90,
+        "top": 224
+      }
+    },
+    {
+      "name": "tooltip above anchor",
+      "anchor": {
+        "x": 100,
+        "y": 200,
+        "width": 60,
+        "height": 20
+      },
+      "content": {
+        "width": 80,
+        "height": 40
+      },
+      "viewport": {
+        "width": 1000,
+        "height": 1000
+      },
+      "side": "top",
+      "align": "center",
+      "sideOffset": 8,
+      "alignOffset": 0,
+      "collisionPadding": 8,
+      "rtl": false,
+      "avoidCollisions": true,
+      "expected": {
+        "side": "top",
+        "left": 90,
+        "top": 152
+      }
+    },
+    {
+      "name": "flips above when below overflows",
+      "anchor": {
+        "x": 0,
+        "y": 180,
+        "width": 40,
+        "height": 20
+      },
+      "content": {
+        "width": 40,
+        "height": 100
+      },
+      "viewport": {
+        "width": 400,
+        "height": 240
+      },
+      "side": "bottom",
+      "align": "center",
+      "sideOffset": 4,
+      "alignOffset": 0,
+      "collisionPadding": 8,
+      "rtl": false,
+      "avoidCollisions": true,
+      "expected": {
+        "side": "top",
+        "left": 8,
+        "top": 76
+      }
+    },
+    {
+      "name": "keeps requested side when flip also overflows",
+      "anchor": {
+        "x": 0,
+        "y": 60,
+        "width": 40,
+        "height": 20
+      },
+      "content": {
+        "width": 40,
+        "height": 100
+      },
+      "viewport": {
+        "width": 400,
+        "height": 130
+      },
+      "side": "bottom",
+      "align": "center",
+      "sideOffset": 4,
+      "alignOffset": 0,
+      "collisionPadding": 8,
+      "rtl": false,
+      "avoidCollisions": true,
+      "expected": {
+        "side": "bottom",
+        "left": 8,
+        "top": 22
+      }
+    },
+    {
+      "name": "menu start aligned ltr",
+      "anchor": {
+        "x": 100,
+        "y": 200,
+        "width": 60,
+        "height": 20
+      },
+      "content": {
+        "width": 30,
+        "height": 40
+      },
+      "viewport": {
+        "width": 1000,
+        "height": 1000
+      },
+      "side": "bottom",
+      "align": "start",
+      "sideOffset": 0,
+      "alignOffset": 0,
+      "collisionPadding": 0,
+      "rtl": false,
+      "avoidCollisions": true,
+      "expected": {
+        "side": "bottom",
+        "left": 100,
+        "top": 220
+      }
+    },
+    {
+      "name": "menu start aligned rtl",
+      "anchor": {
+        "x": 100,
+        "y": 200,
+        "width": 60,
+        "height": 20
+      },
+      "content": {
+        "width": 30,
+        "height": 40
+      },
+      "viewport": {
+        "width": 1000,
+        "height": 1000
+      },
+      "side": "bottom",
+      "align": "start",
+      "sideOffset": 0,
+      "alignOffset": 0,
+      "collisionPadding": 0,
+      "rtl": true,
+      "avoidCollisions": true,
+      "expected": {
+        "side": "bottom",
+        "left": 130,
+        "top": 220
+      }
+    },
+    {
+      "name": "end aligned ltr",
+      "anchor": {
+        "x": 100,
+        "y": 200,
+        "width": 60,
+        "height": 20
+      },
+      "content": {
+        "width": 30,
+        "height": 40
+      },
+      "viewport": {
+        "width": 1000,
+        "height": 1000
+      },
+      "side": "bottom",
+      "align": "end",
+      "sideOffset": 0,
+      "alignOffset": 0,
+      "collisionPadding": 0,
+      "rtl": false,
+      "avoidCollisions": true,
+      "expected": {
+        "side": "bottom",
+        "left": 130,
+        "top": 220
+      }
+    },
+    {
+      "name": "end aligned rtl",
+      "anchor": {
+        "x": 100,
+        "y": 200,
+        "width": 60,
+        "height": 20
+      },
+      "content": {
+        "width": 30,
+        "height": 40
+      },
+      "viewport": {
+        "width": 1000,
+        "height": 1000
+      },
+      "side": "bottom",
+      "align": "end",
+      "sideOffset": 0,
+      "alignOffset": 0,
+      "collisionPadding": 0,
+      "rtl": true,
+      "avoidCollisions": true,
+      "expected": {
+        "side": "bottom",
+        "left": 100,
+        "top": 220
+      }
+    },
+    {
+      "name": "right side start aligned",
+      "anchor": {
+        "x": 100,
+        "y": 200,
+        "width": 60,
+        "height": 20
+      },
+      "content": {
+        "width": 30,
+        "height": 40
+      },
+      "viewport": {
+        "width": 1000,
+        "height": 1000
+      },
+      "side": "right",
+      "align": "start",
+      "sideOffset": 4,
+      "alignOffset": 0,
+      "collisionPadding": 8,
+      "rtl": false,
+      "avoidCollisions": true,
+      "expected": {
+        "side": "right",
+        "left": 164,
+        "top": 200
+      }
+    },
+    {
+      "name": "right side overflows and flips left",
+      "anchor": {
+        "x": 950,
+        "y": 200,
+        "width": 40,
+        "height": 20
+      },
+      "content": {
+        "width": 80,
+        "height": 40
+      },
+      "viewport": {
+        "width": 1000,
+        "height": 1000
+      },
+      "side": "right",
+      "align": "center",
+      "sideOffset": 4,
+      "alignOffset": 0,
+      "collisionPadding": 8,
+      "rtl": false,
+      "avoidCollisions": true,
+      "expected": {
+        "side": "left",
+        "left": 866,
+        "top": 190
+      }
+    },
+    {
+      "name": "left side end aligned",
+      "anchor": {
+        "x": 300,
+        "y": 200,
+        "width": 60,
+        "height": 20
+      },
+      "content": {
+        "width": 30,
+        "height": 40
+      },
+      "viewport": {
+        "width": 1000,
+        "height": 1000
+      },
+      "side": "left",
+      "align": "end",
+      "sideOffset": 4,
+      "alignOffset": 3,
+      "collisionPadding": 8,
+      "rtl": false,
+      "avoidCollisions": true,
+      "expected": {
+        "side": "left",
+        "left": 266,
+        "top": 183
+      }
+    },
+    {
+      "name": "clamps left edge",
+      "anchor": {
+        "x": -40,
+        "y": 10,
+        "width": 20,
+        "height": 20
+      },
+      "content": {
+        "width": 60,
+        "height": 30
+      },
+      "viewport": {
+        "width": 200,
+        "height": 200
+      },
+      "side": "bottom",
+      "align": "center",
+      "sideOffset": 4,
+      "alignOffset": 0,
+      "collisionPadding": 8,
+      "rtl": false,
+      "avoidCollisions": true,
+      "expected": {
+        "side": "bottom",
+        "left": 8,
+        "top": 34
+      }
+    },
+    {
+      "name": "clamps right edge",
+      "anchor": {
+        "x": 400,
+        "y": 10,
+        "width": 20,
+        "height": 20
+      },
+      "content": {
+        "width": 60,
+        "height": 30
+      },
+      "viewport": {
+        "width": 200,
+        "height": 200
+      },
+      "side": "bottom",
+      "align": "center",
+      "sideOffset": 4,
+      "alignOffset": 0,
+      "collisionPadding": 8,
+      "rtl": false,
+      "avoidCollisions": true,
+      "expected": {
+        "side": "bottom",
+        "left": 132,
+        "top": 34
+      }
+    },
+    {
+      "name": "collisions off leaves position",
+      "anchor": {
+        "x": -40,
+        "y": 190,
+        "width": 20,
+        "height": 20
+      },
+      "content": {
+        "width": 60,
+        "height": 30
+      },
+      "viewport": {
+        "width": 200,
+        "height": 200
+      },
+      "side": "bottom",
+      "align": "center",
+      "sideOffset": 4,
+      "alignOffset": 0,
+      "collisionPadding": 8,
+      "rtl": false,
+      "avoidCollisions": false,
+      "expected": {
+        "side": "bottom",
+        "left": -60,
+        "top": 214
+      }
+    },
+    {
+      "name": "content larger than viewport pins to padding",
+      "anchor": {
+        "x": 50,
+        "y": 50,
+        "width": 20,
+        "height": 20
+      },
+      "content": {
+        "width": 500,
+        "height": 500
+      },
+      "viewport": {
+        "width": 200,
+        "height": 200
+      },
+      "side": "bottom",
+      "align": "center",
+      "sideOffset": 4,
+      "alignOffset": 0,
+      "collisionPadding": 8,
+      "rtl": false,
+      "avoidCollisions": true,
+      "expected": {
+        "side": "bottom",
+        "left": 8,
+        "top": 8
+      }
+    },
+    {
+      "name": "offsets applied",
+      "anchor": {
+        "x": 100,
+        "y": 100,
+        "width": 40,
+        "height": 20
+      },
+      "content": {
+        "width": 80,
+        "height": 50
+      },
+      "viewport": {
+        "width": 300,
+        "height": 220
+      },
+      "side": "bottom",
+      "align": "start",
+      "sideOffset": 6,
+      "alignOffset": 5,
+      "collisionPadding": 8,
+      "rtl": false,
+      "avoidCollisions": true,
+      "expected": {
+        "side": "bottom",
+        "left": 105,
+        "top": 126
+      }
+    }
+  ]
+}

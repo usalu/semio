@@ -1,6 +1,7 @@
 import {validateJsonSchemaSubset} from "../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 import topologyJson from "./🔣️.json" with {type:"json"};
+import {launchdPriorityKeysV1,servicePriorityOfServiceV1,systemdPriorityLinesV1,taskPriorityXmlV1} from "../../📚️library/🏗️build/🌐️remote-execution/🛰️sidecar/🪜️priority/🟦️.ts";
 import buildPolicy from "../../📚️library/🏗️build/🔣️policy.json" with {type:"json"};
 import type {SidecarSettingsV1} from "../🔁️replica/🧷️sidecars/🟦️.ts";
 
@@ -243,10 +244,11 @@ export function mountPlanV1(topology:FleetTopologyV1,groupId:string,platform:Fle
 }
 
 const environmentOf=`<key>EnvironmentVariables</key><dict><key>HOME</key><string>${FLEET_WORKER_HOME_PLACEHOLDER_V1}</string><key>PATH</key><string>/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string></dict>`;
-const agentOf=(label:string,directory:string,program:readonly string[],schedule:readonly string[],log:string):string=>[
+const agentOf=(label:string,service:string,directory:string,program:readonly string[],schedule:readonly string[],log:string):string=>[
  ...PLIST_HEAD,
  `<key>Label</key><string>${label}</string>`,
  "<key>LimitLoadToSessionType</key><string>Aqua</string>",
+ ...launchdPriorityKeysV1(servicePriorityOfServiceV1(service)),
  ...directory===""?[]:[`<key>WorkingDirectory</key><string>${directory}</string>`],
  `<key>ProgramArguments</key><array>${program.map(item=>`<string>${xml(item)}</string>`).join("")}</array>`,
  environmentOf,...schedule,
@@ -267,6 +269,7 @@ const taskOf=(description:string,trigger:string,settings:string,directory:string
  '<Actions Context="Author"><Exec>',"<Command>conhost.exe</Command>",`<Arguments>${xml(`--headless ${executable} ${args}`)}</Arguments>`,...directory===""?[]:[`<WorkingDirectory>${directory}</WorkingDirectory>`],"</Exec></Actions>",
  "</Task>"
 ].join("\n");
+const priorityOf=(service:string):string=>taskPriorityXmlV1(servicePriorityOfServiceV1(service));
 const MOUNT_LIMIT="<ExecutionTimeLimit>PT5M</ExecutionTimeLimit>";
 const LOGON="<LogonTrigger><Enabled>true</Enabled></LogonTrigger>",
  REVIVE="<TimeTrigger><Enabled>true</Enabled><StartBoundary>2026-01-01T00:00:00</StartBoundary><Repetition><Interval>PT1M</Interval><StopAtDurationEnd>false</StopAtDurationEnd></Repetition></TimeTrigger>",
@@ -278,22 +281,22 @@ export function workerPartsV1(topology:FleetTopologyV1,groupId:string,platform:F
  if(server&&group.server.platform!==platform)throw Error(`Server platform required: ${group.id} runs its server on ${group.server.platform}, not ${platform}`);
  if(platform==="linux")return Object.freeze({target:LINUX_REPLICA_UNIT,definition:[
   "[Unit]",`Description=semio fleet replica daemon (${group.id}) for %i`,"After=network-online.target remote-fs.target",`RequiresMountsFor=${topology.storeMount.linux}`,UNLIMITED_STARTS,"",
-  "[Service]","User=%i",`ExecStart=/bin/sh ${entry}/boot.sh run`,...STOP_BOUND,
+  "[Service]","User=%i",`ExecStart=/bin/sh ${entry}/boot.sh run`,...STOP_BOUND,...systemdPriorityLinesV1(servicePriorityOfServiceV1("replica")),
   "Restart=always","RestartSec=2","LimitNOFILE=65536","",
   "[Install]","WantedBy=multi-user.target"
  ].join("\n"),"compact-target":LINUX_COMPACT_UNIT,"compact-definition":[
   "[Unit]",`Description=semio fleet journal compaction (${group.id}) for %i`,"After=network-online.target remote-fs.target",`RequiresMountsFor=${topology.storeMount.linux}`,"",
-  "[Service]","Type=oneshot","User=%i",`WorkingDirectory=${directory}`,`ExecStart=${REPO} ${SCRIPT} compact${collect.map(flag=>` ${flag}`).join("")}`
+  "[Service]","Type=oneshot","User=%i",...systemdPriorityLinesV1(servicePriorityOfServiceV1("compact")),`WorkingDirectory=${directory}`,`ExecStart=${REPO} ${SCRIPT} compact${collect.map(flag=>` ${flag}`).join("")}`
  ].join("\n"),"timer-target":LINUX_COMPACT_TIMER,"timer-definition":[
   "[Unit]",`Description=daily semio fleet journal compaction (${group.id}) for %i`,"",
   "[Timer]","OnCalendar=daily","RandomizedDelaySec=3h","Persistent=true","",
   "[Install]","WantedBy=timers.target"
  ].join("\n")});
- if(platform==="macos")return Object.freeze({target:MACOS_REPLICA_PLIST,definition:agentOf(MACOS_REPLICA_LABEL,"",["/bin/sh",`${entry}/boot.sh`,"run"],KEEP_ALIVE,`${MACOS_LOGS}/semio-fleet-replica.log`),
-  "compact-target":MACOS_COMPACT_PLIST,"compact-definition":agentOf(MACOS_COMPACT_LABEL,directory,[REPO,SCRIPT,"compact",...collect],["<key>StartCalendarInterval</key><dict><key>Hour</key><integer>3</integer><key>Minute</key><integer>30</integer></dict>"],`${MACOS_LOGS}/semio-fleet-compact.log`)});
+ if(platform==="macos")return Object.freeze({target:MACOS_REPLICA_PLIST,definition:agentOf(MACOS_REPLICA_LABEL,"replica","",["/bin/sh",`${entry}/boot.sh`,"run"],KEEP_ALIVE,`${MACOS_LOGS}/semio-fleet-replica.log`),
+  "compact-target":MACOS_COMPACT_PLIST,"compact-definition":agentOf(MACOS_COMPACT_LABEL,"compact",directory,[REPO,SCRIPT,"compact",...collect],["<key>StartCalendarInterval</key><dict><key>Hour</key><integer>3</integer><key>Minute</key><integer>30</integer></dict>"],`${MACOS_LOGS}/semio-fleet-compact.log`)});
  const drive=topology.storeMount.windows.slice(0,2),protocol=clientProtocolV1(group,"windows"),remote=source("windows",group.nfs),mounting=protocol==="smb"?`net.exe use ${drive} ${remote} /persistent:yes`:`mount.exe ${windowsMountFlags(optionsOf(group,"windows"))} ${remote} ${drive}`;
- return Object.freeze({"mount-target":WINDOWS_MOUNT_TASK,"mount-definition":taskOf(`semio fleet store mount (${group.id})`,LOGON+REVIVE,MOUNT_LIMIT,topology.worktree.windows,"cmd.exe",`/d /c if not exist ${drive}\\ ${mounting}`),target:WINDOWS_REPLICA_TASK,definition:taskOf(`semio fleet replica daemon (${group.id})`,LOGON+REVIVE,FOREVER,"","powershell.exe",`-NoProfile -ExecutionPolicy Bypass -File "${entry}\\boot.ps1" run`),
-  "compact-target":WINDOWS_COMPACT_TASK,"compact-definition":taskOf(`semio fleet journal compaction (${group.id})`,"<CalendarTrigger><Enabled>true</Enabled><StartBoundary>2026-01-01T03:30:00</StartBoundary><ScheduleByDay><DaysInterval>1</DaysInterval></ScheduleByDay></CalendarTrigger>","<ExecutionTimeLimit>PT6H</ExecutionTimeLimit>",directory,"repo",`${SCRIPT} compact${collect.map(flag=>` ${flag}`).join("")}`)});
+ return Object.freeze({"mount-target":WINDOWS_MOUNT_TASK,"mount-definition":taskOf(`semio fleet store mount (${group.id})`,LOGON+REVIVE,MOUNT_LIMIT,topology.worktree.windows,"cmd.exe",`/d /c if not exist ${drive}\\ ${mounting}`),target:WINDOWS_REPLICA_TASK,definition:taskOf(`semio fleet replica daemon (${group.id})`,LOGON+REVIVE,FOREVER+priorityOf("replica"),"","powershell.exe",`-NoProfile -ExecutionPolicy Bypass -File "${entry}\\boot.ps1" run`),
+  "compact-target":WINDOWS_COMPACT_TASK,"compact-definition":taskOf(`semio fleet journal compaction (${group.id})`,"<CalendarTrigger><Enabled>true</Enabled><StartBoundary>2026-01-01T03:30:00</StartBoundary><ScheduleByDay><DaysInterval>1</DaysInterval></ScheduleByDay></CalendarTrigger>","<ExecutionTimeLimit>PT6H</ExecutionTimeLimit>"+priorityOf("compact"),directory,"repo",`${SCRIPT} compact${collect.map(flag=>` ${flag}`).join("")}`)});
 }
 
 const linuxServerV1=(topology:FleetTopologyV1,group:FleetGroupV1):Record<string,string>=>{
@@ -327,7 +330,7 @@ const linuxServerV1=(topology:FleetTopologyV1,group:FleetGroupV1):Record<string,
   "cache-target":"/etc/systemd/system/semio-fleet-cache.service",
   "cache-unit":[
    "[Unit]",`Description=semio fleet remote cache (${group.id})`,"After=network-online.target","Wants=network-online.target",UNLIMITED_STARTS,"",
-   "[Service]",`User=${STORE_USER}`,`Group=${STORE_USER}`,`WorkingDirectory=${worktree}`,`EnvironmentFile=${TOKENS}`,"Environment=SEMIO_LANGUAGE=en",`Environment=SEMIO_FLEET_NETWORK=${group.server.network}`,
+   "[Service]",`User=${STORE_USER}`,`Group=${STORE_USER}`,...systemdPriorityLinesV1(servicePriorityOfServiceV1("cache")),`WorkingDirectory=${worktree}`,`EnvironmentFile=${TOKENS}`,"Environment=SEMIO_LANGUAGE=en",`Environment=SEMIO_FLEET_NETWORK=${group.server.network}`,
    `ExecStart=${REPO} remote-cache serve --host fleet --port ${port} --directory ${CACHE_DIRECTORY} --max-bytes ${CACHE_BYTES}`,
    "Restart=always","RestartSec=2","LimitNOFILE=65536","",
    "[Install]","WantedBy=multi-user.target"
@@ -336,7 +339,7 @@ const linuxServerV1=(topology:FleetTopologyV1,group:FleetGroupV1):Record<string,
   "relay-target":"/etc/systemd/system/semio-fleet-relay.service",
   "relay-unit":[
    "[Unit]",`Description=semio fleet relay (${group.id})`,`After=network-online.target remote-fs.target ${replica}`,"Wants=network-online.target",`RequiresMountsFor=${mount}`,`ConditionPathExists=${worktree}/.cache/f/machine.json`,UNLIMITED_STARTS,"",
-   "[Service]",`User=${STORE_USER}`,`Group=${STORE_USER}`,`WorkingDirectory=${directory}`,
+   "[Service]",`User=${STORE_USER}`,`Group=${STORE_USER}`,...systemdPriorityLinesV1(servicePriorityOfServiceV1("relay")),`WorkingDirectory=${directory}`,
    `ExecStart=${REPO} ${SCRIPT} relay`,
    "Restart=always","RestartSec=2","LimitNOFILE=65536","",
    "[Install]","WantedBy=multi-user.target"
@@ -374,10 +377,10 @@ const macosServerV1=(topology:FleetTopologyV1,group:FleetGroupV1):Record<string,
   "cache-environment-target":TOKENS,
   "cache-environment":`${names.read}=<read-token>\n${names.write}=<write-token>`,
   "cache-target":`${MACOS_AGENTS}/${MACOS_CACHE_LABEL}.plist`,
-  "cache-unit":agentOf(MACOS_CACHE_LABEL,worktree,["/bin/sh","-c",`set -a; . ${TOKENS}; set +a; export SEMIO_FLEET_NETWORK=${group.server.network}; exec ${REPO} remote-cache serve --host fleet --port ${port} --directory ${CACHE_DIRECTORY} --max-bytes ${CACHE_BYTES}`],KEEP_ALIVE,`${MACOS_LOGS}/semio-fleet-cache.log`),
+  "cache-unit":agentOf(MACOS_CACHE_LABEL,"cache",worktree,["/bin/sh","-c",`set -a; . ${TOKENS}; set +a; export SEMIO_FLEET_NETWORK=${group.server.network}; exec ${REPO} remote-cache serve --host fleet --port ${port} --directory ${CACHE_DIRECTORY} --max-bytes ${CACHE_BYTES}`],KEEP_ALIVE,`${MACOS_LOGS}/semio-fleet-cache.log`),
   "replica-unit":workerPartsV1(topology,group.id,"macos")["definition"]!,
   "relay-target":`${MACOS_AGENTS}/${MACOS_RELAY_LABEL}.plist`,
-  "relay-unit":agentOf(MACOS_RELAY_LABEL,directory,[REPO,SCRIPT,"relay",...peers.length>0?["--peers",peerList(peers)]:[]],KEEP_ALIVE,`${MACOS_LOGS}/semio-fleet-relay.log`)
+  "relay-unit":agentOf(MACOS_RELAY_LABEL,"relay",directory,[REPO,SCRIPT,"relay",...peers.length>0?["--peers",peerList(peers)]:[]],KEEP_ALIVE,`${MACOS_LOGS}/semio-fleet-relay.log`)
  };
 };
 
@@ -412,10 +415,10 @@ const windowsServerV1=(topology:FleetTopologyV1,group:FleetGroupV1):Record<strin
   "cache-environment-target":WINDOWS_TOKENS,
   "cache-environment":`${names.read}=<read-token>\n${names.write}=<write-token>`,
   "cache-target":WINDOWS_CACHE_TASK,
-  "cache-unit":taskOf(`semio fleet remote cache (${group.id})`,LOGON,FOREVER,worktree,"powershell.exe",`-NoProfile -ExecutionPolicy Bypass -Command "Get-Content ${WINDOWS_TOKENS} | ForEach-Object { $n,$v = $_ -split '=',2; Set-Item -Path ('Env:'+$n) -Value $v }; $env:SEMIO_FLEET_NETWORK='${group.server.network}'; & repo remote-cache serve --host fleet --port ${port} --directory ${WINDOWS_CACHE_DIRECTORY} --max-bytes ${CACHE_BYTES}"`),
+  "cache-unit":taskOf(`semio fleet remote cache (${group.id})`,LOGON,FOREVER+priorityOf("cache"),worktree,"powershell.exe",`-NoProfile -ExecutionPolicy Bypass -Command "Get-Content ${WINDOWS_TOKENS} | ForEach-Object { $n,$v = $_ -split '=',2; Set-Item -Path ('Env:'+$n) -Value $v }; $env:SEMIO_FLEET_NETWORK='${group.server.network}'; & repo remote-cache serve --host fleet --port ${port} --directory ${WINDOWS_CACHE_DIRECTORY} --max-bytes ${CACHE_BYTES}"`),
   "replica-unit":workerPartsV1(topology,group.id,"windows")["definition"]!,
   "relay-target":WINDOWS_RELAY_TASK,
-  "relay-unit":taskOf(`semio fleet relay (${group.id})`,LOGON,FOREVER,workdir,"repo",`${SCRIPT} relay${relayArguments(peers)}`)
+  "relay-unit":taskOf(`semio fleet relay (${group.id})`,LOGON,FOREVER+priorityOf("relay"),workdir,"repo",`${SCRIPT} relay${relayArguments(peers)}`)
  };
 };
 

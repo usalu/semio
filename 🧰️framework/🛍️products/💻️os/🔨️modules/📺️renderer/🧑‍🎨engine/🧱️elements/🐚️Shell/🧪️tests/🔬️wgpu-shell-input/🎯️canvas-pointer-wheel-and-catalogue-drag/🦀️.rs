@@ -19,7 +19,7 @@ fn published_canvas_pointer_capture_preserves_modifiers_and_cancels_exactly_once
     let down = &fixture["pointer"]["down"];
     let x = body.x + down["x"].as_f64().expect("pointer x") as f32;
     let y = body.y + down["y"].as_f64().expect("pointer y") as f32;
-    input.modifiers = PointerModifiers { shift: true, ctrl: true, alt: true, meta: true };
+    input.modifiers = PointerModifiers { shift: true, ctrl: true, alt: true, meta: true, repeat: false };
     let theme = Theme::default();
 
     semio_framework_async::block_on(ChromeViewCtx::of(&mut shell).handle_pointer_button(x, y, true, 0, &mut input, &theme)).expect("Shell routes Canvas2d down");

@@ -1,0 +1,14 @@
+case	pipe_fault_basis	pipe_fault_soil	pipe_fault_wall_a	pipe_fault_wall_b	pipe_fault_backfill_a	pipe_fault_backfill_b	pipe_fault_trench_a	pipe_fault_trench_b	statuses
+boundary	confirmed	suitable	50	50	50	50			1111
+both-sides-not-summed	confirmed	suitable	70	30	70	30			1010
+opposite-sides	confirmed	suitable	49.9999	80	49.9	90			0101
+absent-thick-wall	confirmed	suitable	0	0	50	50			0011
+missing-and-negative	confirmed	suitable		-1	50	50			UU11
+nonfinite	confirmed	suitable	inf	50	nan	50			U1U1
+unknown-scope	unconfirmed	suitable	65	65	65	65			U
+soil-unconfirmed	confirmed	unconfirmed	50	50	50	50			1111U
+soil-no-trench	confirmed	different	55	51	50	49			1110UU
+asymmetric-trench	confirmed	different	59	50	50	50	12	16	1111II
+exact-guidance	confirmed	different	50	50	50	50	15	15	1111II
+trench-one-unknown	confirmed	different	50	50	50	50	15	-1	1111IU
+trench-not-applicable	confirmed	suitable	50	50	50	50	-1	-1	1111

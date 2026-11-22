@@ -8,7 +8,7 @@ import {GRPC_CODES_V1,GrpcErrorV1} from "../📡️wire/🚪️grpc/🟦️.ts";
 import {decodeProtobufV1,encodeProtobufV1,REAPI_V1} from "../📡️wire/📦️protobuf/🟦️.ts";
 import {createHash} from "node:crypto";
 import {testScratchRootV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
-import {requireRemoteExecutionShapeV1,remoteExecutionHostPropertiesV1} from "../🟦️.ts";
+import {readRemoteExecutionPolicyV1,requireRemoteExecutionShapeV1,remoteExecutionHostPropertiesV1} from "../🟦️.ts";
 import {eventuallyV1,NAMESPACE_V1,startClusterV1,textOfV1,writeHostViewV1,type ClusterV1} from "./🧰️cluster/🟦️.ts";
 import {selectRemoteExecutionSandboxV1} from "../🔒️sandbox/🟦️.ts";
 
@@ -179,7 +179,7 @@ test("tokens: no token is refused, a read token may look but not write, a write 
 });
 
 test("ByteStream moves large blobs both ways with offsets, FindMissingBlobs and batches agree with the store, and empty blobs always exist",async()=>{
- const cluster=await start({workers:0}),size=24*1048576+17,data=new Uint8Array(size);for(let index=0;index<size;index++)data[index]=(index*31+7)&255;
+ const cluster=await start({workers:0}),size=readRemoteExecutionPolicyV1().server.maximumBatchBytes+1048576+17,data=new Uint8Array(size);for(let index=0;index<size;index++)data[index]=(index*31+7)&255;
  const digest={hash:sha(data),size_bytes:size},resource=`main/uploads/u1/blobs/${digest.hash}/${size}`;
  const absent=await cluster.client.unary(`${NAMESPACE_V1}.ContentAddressableStorage/FindMissingBlobs`,{instance_name:"main",blob_digests:[digest,{hash:sha(""),size_bytes:0}]});expect(absent.missing_blob_digests).toEqual([digest]);
  const pieces=function*(){for(let offset=0;offset<size;offset+=65536)yield {resource_name:offset===0?resource:"",write_offset:offset,data:data.subarray(offset,offset+65536),finish_write:offset+65536>=size};};

@@ -21,7 +21,21 @@ mod composition;
 /// 📥️ The host delivers both roster updates through the editor's addressed command registry.
 #[semio_framework_async_macros::async_test]
 async fn host_delivered_set_contributions_dispatches_through_the_command_registry() {
+    use semio_plugin::app::TypedOperationResultLane;
+
+    let law: serde_json::Value = serde_json::from_str(include_str!("config-publication.json")).expect("config publication law");
+    let contributions = law["contributions"].to_string();
     let mut app = crate::context::app_with_registry();
-    crate::context::install_contributions(&mut app, "[]".into());
+    assert_ne!(app.rendered_config().contributions_json, contributions);
+    let receipt = crate::context::install_contributions(&mut app, contributions.clone());
+    assert_eq!(app.rendered_config().contributions_json, contributions);
+    let config_pages = receipt.lanes.iter().filter(|lane| **lane == TypedOperationResultLane::Config).count();
+    assert_eq!(law["configPages"].as_u64(), Some(config_pages as u64));
+    assert_eq!(receipt.lanes.last(), Some(&TypedOperationResultLane::Terminal));
+    assert_eq!(law["terminalCompletions"].as_u64(), Some(receipt.completions as u64));
+    assert!(!app.has_pending_typed_operations());
+    assert!(app.maintenance_terminal_is_empty());
     app.snapshot().expect("the app keeps a readable snapshot after the delivery");
+    app.close_fixture();
+    assert!(app.close_terminal_is_empty());
 }

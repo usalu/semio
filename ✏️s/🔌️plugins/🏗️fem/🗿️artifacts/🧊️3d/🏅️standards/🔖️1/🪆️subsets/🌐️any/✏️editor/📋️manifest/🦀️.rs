@@ -1,5 +1,6 @@
 //! 📋️ Manifest of the FEM 3D editor: the inspector patch action and the app manifest stitch of `create_fem3d_app`. See [`super`].
 
+use semio_plugin::Axis;
 use super::*;
 
 //#region 🔖️Manifest
@@ -36,11 +37,9 @@ pub fn create_fem3d_app() -> AppDefinition {
             .window_kind(window_model::FEM3D_WINDOW_MODEL, LocalizedLabel::native("Model", "Modell"), window_model::FEM3D_BODY_MODEL, semio_ui_contract::SurfaceKind::World3d, "fem-model")
             .window_kind(window_results::FEM3D_WINDOW_RESULTS, LocalizedLabel::native("Results", "Ergebnisse"), window_results::FEM3D_BODY_RESULTS, semio_ui_contract::SurfaceKind::World3d, "bar-chart-3")
             .default_layout(create_default_layout(
-                &[window_model::FEM3D_WINDOW_MODEL.into(), window_results::FEM3D_WINDOW_RESULTS.into()],
-                "row",
-                Some(&[50.0, 50.0]),
-                Some(&["Model".into(), "Results".into()]),
-            ))
+                &[window_model::FEM3D_WINDOW_MODEL.into(), window_results::FEM3D_WINDOW_RESULTS.into()], Axis::Horizontal,
+                Some(&[0.5, 0.5]),
+                Some(&["Model".into(), "Results".into()])))
             .mutation("addNode", LocalizedLabel::native("Add Node", "Knoten hinzufügen"))
             .action_args("addNode", vec![
                 ActionArgDef::number("x", LocalizedLabel::data("X")).required(),

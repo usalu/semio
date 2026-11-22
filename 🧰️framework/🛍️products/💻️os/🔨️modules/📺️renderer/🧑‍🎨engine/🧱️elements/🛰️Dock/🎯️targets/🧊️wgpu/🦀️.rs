@@ -18,7 +18,7 @@ use semio_framework::AppDefinition;
 use std::collections::HashMap;
 use semio_ui_wgpu_layout::chrome::chrome_item_text;
 use semio_ui_wgpu_widget_kit::draw_text;
-use semio_ui_declaration::layout::{even_window_layout, ActionDescriptor, WindowLayout, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode, WindowStackCorner};
+use semio_ui_declaration::layout::{collect_instance_titles, ActionDescriptor, Axis, WindowLayout, WindowLayoutNode, WindowStackCorner};
 use semio_ui_wgpu_input::{DragAxis, HitKind, HitTarget, InputState};
 use semio_ui_draw_contract::{DrawList, IconAtlas};
 use semio_ui_text::FontAtlas;
@@ -68,7 +68,7 @@ use axis_solving_and_stack_rendering::{
     axis_distributable_extent, dock_axis_slots, render_node, render_stack, solve_node_bounds,
     walk_resize_hits,
 };
-pub use axis_solving_and_stack_rendering::dock_tab_content_width;
+pub use axis_solving_and_stack_rendering::{dock_tab_content_width, split_hit_extent, SPLIT_HIT_MIN_COARSE_PX, SPLIT_HIT_MIN_FINE_PX};
 
 #[path = "🔲️window-silhouette-and-stack-geometry/🦀️.rs"]
 mod window_silhouette_and_stack_geometry;

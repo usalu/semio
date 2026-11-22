@@ -129,6 +129,12 @@ fn axes(names: impl IntoIterator<Item = String>) -> BTreeSet<&'static str> {
 /// 🧊️ The embeddable wgpu door: `surfaceSessionFactories` is React-only (see above);
 /// `brokerProof` is read from the page's own `location.hash`, like React's, never passed in.
 ///
+/// 📚️ The two supplied catalogs: `catalog` (plugin rows) and `nativeCatalog` (the wasm/native plugin
+/// rows) are DATA a host hands the mount beside the resolved descriptor, never part of it, so the
+/// descriptor carries neither. React has only the JS rows (`catalog`); a native catalog has no JS
+/// door. The native CLI takes the native catalog as `run_native_entrypoint`'s `catalog` argument
+/// and discovers plugin modules through `SEMIO_PLUGIN_MODULES`, so it has no `catalog` flag.
+///
 /// ⌨️ The native CLI: `rootId`/`plugins`/`rendererModuleUrl`/`surfaceSessionFactories` are
 /// browser-mount concepts a winit window has no counterpart for; `brokerProof` is a browser
 /// hash hand-off (native claims its local credential through the inherited fd instead);
@@ -137,10 +143,10 @@ fn axes(names: impl IntoIterator<Item = String>) -> BTreeSet<&'static str> {
 /// NOT per-invocation flags.
 fn allowed_absences(door: &str) -> BTreeSet<&'static str> {
     match door {
-        "descriptor" => ["rootId", "plugins", "rendererModuleUrl", "surfaceSessionFactories"].into_iter().collect(),
-        "react" => ["appMode", "appExample", "hub", "hubUser", "hubDataDir", "brokerProof", "rendererModuleUrl"].into_iter().collect(),
+        "descriptor" => ["rootId", "plugins", "rendererModuleUrl", "surfaceSessionFactories", "catalog", "nativeCatalog"].into_iter().collect(),
+        "react" => ["appMode", "appExample", "hub", "hubUser", "hubDataDir", "brokerProof", "rendererModuleUrl", "nativeCatalog"].into_iter().collect(),
         "wgpu-library" => ["surfaceSessionFactories", "brokerProof"].into_iter().collect(),
-        "native" => ["rootId", "plugins", "rendererModuleUrl", "surfaceSessionFactories", "brokerProof", "locks", "defaults"].into_iter().collect(),
+        "native" => ["rootId", "plugins", "rendererModuleUrl", "surfaceSessionFactories", "brokerProof", "locks", "defaults", "catalog", "nativeCatalog"].into_iter().collect(),
         other => panic!("unknown door {other}"),
     }
 }
@@ -182,9 +188,9 @@ fn every_boot_door_names_the_same_axes() {
 #[test]
 fn the_descriptor_rust_twin_matches_the_typescript_shape() {
     let typescript: BTreeSet<String> = typescript_type_fields(&read("🎯️targets/🧊️wgpu/🧭️boot-descriptor/🟦️.ts"), "WgpuBootDescriptor").into_iter().collect();
-    let renderer = read("🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs");
+    let renderer = read("🎯️targets/🧊️wgpu/🏛️host-base/🦀️.rs");
     let rust: BTreeSet<String> = rust_struct_fields(&renderer, "WgpuBootDescriptor").into_iter().collect();
-    assert_eq!(typescript, rust, "`WgpuBootDescriptor` must carry the same fields in 🧭️boot-descriptor/🟦️.ts and 🧊️renderer/🦀️.rs");
+    assert_eq!(typescript, rust, "`WgpuBootDescriptor` must carry the same fields in 🧭️boot-descriptor/🟦️.ts and 🏛️host-base/🦀️.rs");
     for nested in ["WgpuBootLocks", "WgpuBootDefaults", "WgpuBootHub", "WgpuBootBrand"] {
         let typescript: BTreeSet<String> = typescript_type_fields(&read("🎯️targets/🧊️wgpu/🧭️boot-descriptor/🟦️.ts"), nested).into_iter().collect();
         let rust: BTreeSet<String> = rust_struct_fields(&renderer, nested).into_iter().collect();
@@ -199,6 +205,6 @@ fn every_door_bounds_a_field_at_the_same_capacity() {
     let descriptor_ts = read("🎯️targets/🧊️wgpu/🧭️boot-descriptor/🟦️.ts");
     assert!(descriptor_ts.contains("export const WGPU_BOOT_FIELD_CAPACITY = 2048;"), "the TypeScript field cap is 2048");
     assert!(descriptor_ts.contains("export const WGPU_BOOT_LOCATION_CAPACITY = 8192;"), "the TypeScript location cap is 8192");
-    assert!(read("🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs").contains("pub const WGPU_BOOT_FIELD_CAPACITY: usize = 2048;"), "the Rust field cap is the same 2048");
+    assert!(read("🎯️targets/🧊️wgpu/🏛️host-base/🦀️.rs").contains("pub const WGPU_BOOT_FIELD_CAPACITY: usize = 2048;"), "the Rust field cap is the same 2048");
     assert!(read("../../🧑‍💻dev/🔗️boot-query/🟦️.ts").contains("export const BOOT_QUERY_CAPACITY = 8192;"), "React's own query cap is the same 8192");
 }

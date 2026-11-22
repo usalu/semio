@@ -303,8 +303,9 @@
   },
   "swap": {
    "ceilingBasisPoints": 2500,
-   "activeMegabytesPerSecond": 1,
-   "outMegabytesPerSecond": 64
+   "activeBasisPointsPerSecond": 0.3052,
+   "outBasisPointsPerSecond": 19.53125,
+   "shortBasisPoints": 10000
   },
   "pressure": {
    "psiWarnPercent": 10,

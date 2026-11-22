@@ -290,7 +290,7 @@ impl PendingRasterUploadCursor {
     }
 }
 
-pub(crate) struct PendingRasterSurfaceRetirement {
+pub struct PendingRasterSurfaceRetirement {
     pub(crate) id: String,
     pub(crate) surface: PendingRasterSurface,
     producer: Option<PreparedRasterProducer>,

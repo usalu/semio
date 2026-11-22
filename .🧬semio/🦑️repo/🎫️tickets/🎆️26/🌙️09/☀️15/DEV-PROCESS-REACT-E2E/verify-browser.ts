@@ -124,6 +124,34 @@ try {
   const status = page.locator('[data-slot="engagement-status-item"]').filter({ hasText: "m³" });
   const drillLabel = "Drill Dowel Hole";
   const visibleDowelSteps = async () => (await documentLabels.allTextContents()).filter(label => label === attachment.label || label === drillLabel);
+  const dragTimelineStep = async (source: ReturnType<typeof treeRow>, target: ReturnType<typeof treeRow>, position: "before" | "after") => {
+    await expect(source).toHaveAttribute("data-draggable", "true");
+    await source.scrollIntoViewIfNeeded();
+    await target.scrollIntoViewIfNeeded();
+    const handle = source.locator('[data-slot="drag-handle"]').first();
+    const dragSource = (await handle.isVisible()) ? handle : source;
+    const start = await dragSource.boundingBox();
+    const finish = await target.boundingBox();
+    expect(start).not.toBeNull();
+    expect(finish).not.toBeNull();
+    const x = finish!.x + finish!.width / 2;
+    const y = finish!.y + finish!.height * (position === "before" ? 0.15 : 0.85);
+    await page.mouse.move(start!.x + start!.width / 2, start!.y + start!.height / 2);
+    await page.mouse.down();
+    try {
+      await page.mouse.move(x, y, { steps: 12 });
+      await page.mouse.move(x + 1, y);
+    } finally {
+      await page.mouse.up();
+    }
+  };
+  const drillStep = treeRow("dowel-drill");
+  await dragTimelineStep(dowel, drillStep, "before");
+  await expect.poll(visibleDowelSteps).toEqual([attachment.label, drillLabel]);
+  await expectChangedMesh(previous);
+  await dragTimelineStep(dowel, drillStep, "after");
+  await expect.poll(visibleDowelSteps).toEqual([drillLabel, attachment.label]);
+  await expect.poll(readProcessMesh).toBe(previous);
   await page.getByText("Move Earlier", { exact: true }).click();
   await expect.poll(visibleDowelSteps).toEqual([attachment.label, drillLabel]);
   await expectChangedMesh(previous);
@@ -205,47 +233,52 @@ try {
   await cutTool.click();
   const activeUtility = async () => JSON.parse((await mesh.getAttribute("data-selection-json")) ?? "{}").activeUtility;
   await expect.poll(activeUtility).toBe(placement.tool);
-  const hostBounds = (await mesh.boundingBox())!;
-  const liveCanvasBounds = (await canvas.boundingBox())!;
-  const liveCamera = JSON.parse((await mesh.getAttribute("data-viewport-camera-json"))!);
-  expect(liveCamera.projection).toBe("perspective");
-  const camera = new PerspectiveCamera(liveCamera.fov, hostBounds.width / hostBounds.height);
-  camera.position.fromArray(liveCamera.position);
-  camera.up.fromArray(liveCamera.up ?? [0, 0, 1]);
-  camera.zoom = liveCamera.zoom;
-  camera.lookAt(new Vector3().fromArray(liveCamera.target));
-  camera.updateProjectionMatrix();
-  camera.updateMatrixWorld();
-  const clientPoint = (position: readonly number[]) => {
+  const clientPoint = async (position: readonly number[]) => {
+    const hostBounds = (await mesh.boundingBox())!;
+    const liveCamera = JSON.parse((await mesh.getAttribute("data-viewport-camera-json"))!);
+    expect(liveCamera.projection).toBe("perspective");
+    const camera = new PerspectiveCamera(liveCamera.fov, hostBounds.width / hostBounds.height);
+    camera.position.fromArray(liveCamera.position);
+    camera.up.fromArray(liveCamera.up ?? [0, 0, 1]);
+    camera.zoom = liveCamera.zoom;
+    camera.lookAt(new Vector3().fromArray(liveCamera.target));
+    camera.updateProjectionMatrix();
+    camera.updateMatrixWorld();
     const point = new Vector3().fromArray(position).project(camera);
     return { x: hostBounds.x + (point.x + 1) * hostBounds.width / 2, y: hostBounds.y + (1 - point.y) * hostBounds.height / 2 };
   };
   const readPlacementPreview = async (): Promise<{ kind: string; role: string; from: number[]; to: number[] }[]> =>
     JSON.parse((await mesh.getAttribute("data-engagement-preview-json")) ?? "[]");
-  const previewBounds = async () => {
-    const segments = (await readPlacementPreview()).filter(item => item.kind === "segment" && item.role === placement.tool);
+  const previewBounds = async (role?: string) => {
+    const segments = (await readPlacementPreview()).filter(item => item.kind === "segment" && (!role || item.role === role));
     return new Box3().setFromPoints(segments.flatMap(({ from, to }) => [new Vector3().fromArray(from), new Vector3().fromArray(to)]));
   };
   const start = [...placement.positionMetres];
   start[0] = start[0]! - 0.3;
-  const startPoint = clientPoint(start);
+  const startPoint = await clientPoint(start);
   await page.mouse.move(startPoint.x, startPoint.y);
   await expect.poll(async () => {
-    const bounds = await previewBounds();
+    const bounds = await previewBounds(placement.tool);
     return bounds.isEmpty() ? Number.NaN : bounds.getCenter(new Vector3()).x;
   }).toBeCloseTo(start[0], 1);
-  const point = clientPoint(placement.positionMetres);
+  await cutTool.focus();
+  await page.keyboard.press("Escape");
+  await expect.poll(activeUtility).toBe("select");
+  await expect.poll(readPlacementPreview).toEqual([]);
+  await expect(cursor).toHaveValue("0");
+  await expect(timelineRows).toHaveCount(0);
+  await expect.poll(readProcessMesh).toBe(rawStockMesh);
+  await cutTool.click();
+  await expect.poll(activeUtility).toBe(placement.tool);
+  const point = await clientPoint(placement.positionMetres);
   await page.mouse.move(point.x, point.y);
-  await expect.poll(async () => (await previewBounds()).getCenter(new Vector3()).x).toBeCloseTo(placement.positionMetres[0]!, 1);
-  const previewSize = (await previewBounds()).getSize(new Vector3()).toArray();
+  await expect.poll(async () => (await previewBounds(placement.tool)).getCenter(new Vector3()).x).toBeCloseTo(placement.positionMetres[0]!, 1);
+  const previewSize = (await previewBounds(placement.tool)).getSize(new Vector3()).toArray();
   for (const [axis, size] of previewSize.entries()) expect(size).toBeCloseTo(placement.toolSizeMetres[axis]!, 4);
   await expect(cursor).toHaveValue("0");
   await expect(timelineRows).toHaveCount(0);
   await expect.poll(readProcessMesh).toBe(rawStockMesh);
-  await canvas.click({ position: {
-    x: point.x - liveCanvasBounds.x,
-    y: point.y - liveCanvasBounds.y,
-  } });
+  await page.mouse.click(point.x, point.y);
   await expect(cursor).toHaveValue("1");
   await expect(timelineRows).toHaveCount(1);
   await expect(status).toContainText(placement.remainingVolumeMetresCubed.toFixed(4) + " m³");
@@ -258,6 +291,64 @@ try {
     await page.getByRole("tab", { name: /^(Inspection|Inspector)$/i }).click();
   }
   await expect.poll(async () => Number(await placedX.inputValue())).toBeCloseTo(placement.positionMetres[0]!, 1);
+
+
+  const chosen = fixture.chosenPlacement;
+  const contributor = fixture.workshop.find(row => row.catalog === chosen.catalog)!;
+  await addMachine(contributor);
+  const catalogueTab = page.getByRole("tab", { name: /^Catalog(?:ue)?$/i });
+  await catalogueTab.click();
+  const capability = treeRow(`process3d-catalogue.${contributor.machine}.${contributor.capability}`);
+  const placeCapability = capability.getByRole("button", { name: /^Place capability(?:$|: )/ });
+  const revealCapability = async () => {
+    if (!(await capability.isVisible())) {
+      await treeRow(`process3d-play-catalogue.${contributor.catalog}`).getByText(contributor.catalogLabel, { exact: true }).click();
+    }
+  };
+  await revealCapability();
+  await expect(capability).toBeVisible();
+  await expect(placeCapability).toHaveCount(0);
+  await artifactTab.click();
+  await treeRow("beam").getByText("Timber Beam", { exact: true }).click();
+  if (!(await width.isVisible())) await page.getByRole("tab", { name: /^(Inspection|Inspector)$/i }).click();
+  const preResize = await readProcessMesh();
+  await width.fill(String(chosen.stockWidthMetres));
+  await width.press("Tab");
+  await expectChangedMesh(preResize);
+  await catalogueTab.click();
+  await revealCapability();
+  await expect(placeCapability).toBeVisible();
+  const precedingMesh = await readProcessMesh();
+  const chosenPoint = await clientPoint(chosen.positionMetres);
+  const previewChosen = async () => {
+    await placeCapability.click();
+    await expect.poll(activeUtility).toBe("placeCapability");
+    await page.mouse.move(chosenPoint.x, chosenPoint.y);
+    await expect.poll(async () => (await previewBounds()).getCenter(new Vector3()).x).toBeCloseTo(chosen.positionMetres[0]!, 1);
+    const dimensions = (await previewBounds()).getSize(new Vector3()).toArray();
+    for (const [axis, size] of dimensions.entries()) expect(size).toBeCloseTo(contributor.toolSizeMetres[axis]!, 4);
+    await expect(cursor).toHaveValue("1");
+    await expect.poll(readProcessMesh).toBe(precedingMesh);
+  };
+  await previewChosen();
+  await page.keyboard.press("Escape");
+  await expect.poll(activeUtility).toBe("select");
+  await expect.poll(readPlacementPreview).toEqual([]);
+  await expect(cursor).toHaveValue("1");
+  await previewChosen();
+  await page.mouse.click(chosenPoint.x, chosenPoint.y);
+  await expect(cursor).toHaveValue("2");
+  await expect.poll(activeUtility).toBe("select");
+  await expect.poll(readPlacementPreview).toEqual([]);
+  await expectChangedMesh(precedingMesh);
+  await artifactTab.click();
+  await expect(timelineRows).toHaveCount(2);
+  await timelineRows.last().getByText(contributor.stepLabel, { exact: true }).click();
+  if (!(await placedX.isVisible())) await page.getByRole("tab", { name: /^(Inspection|Inspector)$/i }).click();
+  await expect.poll(async () => Number(await placedX.inputValue())).toBeCloseTo(chosen.positionMetres[0]!, 1);
+  await expect(treeRow("process3d-play-inspector.step.machine")).toContainText(contributor.machine);
+  await expect(treeRow("process3d-play-inspector.step.capability")).toContainText(contributor.capability);
+  await expect.poll(async () => Number(await width.inputValue())).toBeCloseTo(contributor.toolSizeMetres[0]!, 5);
 
   const concrete = new URL(target);
   concrete.searchParams.set("example", "concrete-forest");
@@ -314,7 +405,6 @@ try {
     expect(Math.max(...values) - Math.min(...values)).toBeCloseTo(expected, 5);
   }
   for (const machine of fixture.workshop) await addMachine(machine);
-  const catalogueTab = page.getByRole("tab", { name: /^Catalog(?:ue)?$/i });
   for (const [index, { catalog, catalogLabel, machine, capability, stepLabel, remainingVolumeMetresCubed, edit }] of fixture.workshop.entries()) {
     await catalogueTab.click();
     const action = treeRow(`process3d-catalogue.${machine}.${capability}`).locator('[data-slot="tree-label"]');
@@ -347,6 +437,25 @@ try {
   }
   await expectChangedMesh(stepMesh);
   const composedMesh = await readProcessMesh();
+  await artifactTab.click();
+  const stepIds = () => timelineRows.evaluateAll(rows => rows.map(row => row.id));
+  const originalIds = await stepIds();
+  expect(originalIds).toHaveLength(fixture.workshop.length);
+  const movedIndex = fixture.workshop.findIndex(row => row.catalog === fixture.reorder.catalog);
+  expect(movedIndex).toBeGreaterThan(0);
+  const movedId = originalIds[movedIndex]!;
+  const stepById = (id: string) => documentTree.locator(`[id=${JSON.stringify(id)}]`);
+  await dragTimelineStep(stepById(movedId), stepById(originalIds[0]!), "before");
+  await expect.poll(stepIds).toEqual([movedId, ...originalIds.filter(id => id !== movedId)]);
+  await cursor.fill("1");
+  await cursor.press("Enter");
+  await expect(status).toContainText(`1/${fixture.workshop.length}`);
+  await expect(status).toContainText(`${fixture.reorder.firstStepVolumeMetresCubed.toExponential(4)} m³`);
+  await dragTimelineStep(stepById(movedId), stepById(originalIds[movedIndex - 1]!), "after");
+  await expect.poll(stepIds).toEqual(originalIds);
+  await cursor.fill(String(fixture.workshop.length));
+  await cursor.press("Enter");
+  await expect.poll(readProcessMesh).toBe(composedMesh);
   const exportVolume = fixture.workshop.at(-1)!.remainingVolumeMetresCubed;
   await canvas.click();
   await page.keyboard.press("ControlOrMeta+p");

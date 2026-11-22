@@ -17,7 +17,7 @@ fn terrain_validation_refuses_invalid_fields_with_diagnostics() {
             new_imported_map: Some(ImportedMap { positions: vec![DslValue::Null], ..Default::default() }),
         }),
         GisTerrainMutation::ReplaceElevationSource(ReplaceElevationSource {
-            new_elevation_source: Some(ElevationSource { bounds: [7.1, 46.0, 7.2, 46.1], rows: vec![] }),
+            new_elevation_source: Some(ElevationSource { missing_samples: None, bounds: [7.1, 46.0, 7.2, 46.1], rows_millimetres: vec![] }),
         }),
     ];
     let base = GisTerrainSnapshot::default();
@@ -41,17 +41,18 @@ fn terrain_validation_projects_authored_elevation_into_canonical_json() {
     assert!(matches!(source.canonical_tree_node().unwrap(), Node::Object(2)));
     let oracle: Value = serde_json::from_str(fixture).unwrap();
     let expected = &oracle["ReplaceElevationSource"]["newElevationSource"];
-    let bounds = source.canonical_tree_child(0).unwrap();
+    let bounds = source.canonical_tree_child(1).unwrap();
     assert!(matches!(bounds.canonical_tree_node().unwrap(), Node::Array(4)));
     for (index, bound) in expected["bounds"].as_array().unwrap().iter().enumerate() {
         let Node::F64(actual) = bounds.canonical_tree_child(index).unwrap().canonical_tree_node().unwrap() else { panic!("expected floating-point bound") };
         assert_eq!(json!(actual), *bound);
     }
-    let rows = source.canonical_tree_child(1).unwrap();
-    assert!(matches!(rows.canonical_tree_node().unwrap(), Node::Array(33)));
-    for (index, row) in expected["rows"].as_array().unwrap().iter().enumerate() {
+    let rows = source.canonical_tree_child(0).unwrap();
+    let expected_rows = expected["rowsMillimetres"].as_array().unwrap();
+    assert!(matches!(rows.canonical_tree_node().unwrap(), Node::Array(count) if count == expected_rows.len()));
+    for (index, row) in expected_rows.iter().enumerate() {
         let samples = rows.canonical_tree_child(index).unwrap();
-        assert!(matches!(samples.canonical_tree_node().unwrap(), Node::Array(33)));
+        assert!(matches!(samples.canonical_tree_node().unwrap(), Node::Array(count) if count == row.as_array().unwrap().len()));
         for (sample_index, sample) in row.as_array().unwrap().iter().enumerate() {
             let Node::I64(actual) = samples.canonical_tree_child(sample_index).unwrap().canonical_tree_node().unwrap() else { panic!("expected integer sample") };
             assert_eq!(json!(actual), *sample);

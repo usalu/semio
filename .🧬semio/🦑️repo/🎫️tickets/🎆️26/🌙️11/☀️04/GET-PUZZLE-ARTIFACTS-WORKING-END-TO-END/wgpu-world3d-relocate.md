@@ -1,0 +1,11 @@
+# WGPU World3D Relocate Parity
+
+Relocate chooses its fixed coordinate from the projection on press. Front and back use Y, left and right use X, and horizontal and free views use Z. The gesture intersects the camera ray with that retained plane. Travel is relative to the press intersection, grid rounding applies within the plane, and the grabbed object keeps its original transverse coordinate.
+
+The press captures the mesh key and the full model matrix. Pointer movement mutates only the preview’s translation, using the captured mesh identity and without searching scene instances or cloning either identifier at input cadence. Release computes the commit from its own pointer coordinates. Cancellation discards the relocate preview and leaves the source model and any catalogue placement preview intact. Catalogue placement retains its existing ground-plane rule.
+
+The shared relocate fixture now defines separate front and right view cases with nonzero grab offsets, distinct preview and release samples, negative grid rounding, and an off-grid fixed coordinate. The native host test checks the full seeded transform, retained plane after projection orientation changes, stable identifier storage, final release coordinates, and cancellation. The React tests project the same rows with Three.js and exercise the actual ray and dispatch helpers.
+
+Seven isolated Rust position cases and eight focused React tests passed. The React run includes the Three.js ray fixture and the mounted relocate release and cancellation cases. Rustfmt parsed all edited Rust files and the scoped diff whitespace check passed. The shared native WGPU shell check completed after rebuilding the updated World3D libraries.
+
+The cardinal relocate test from `scene-input-residency` also passed against the rebuilt production crates. `verify-wgpu-relocate-warm.py` rebuilt only the components, cursors, scene, bridge, interaction, and host units. It linked the exact cached dependencies by their Rust metadata fingerprints. The single-test wrapper runs the authored assertions with an explicit draw registry teardown and omits the shared suite lock. Rebuilding and linking used 57 MiB and stayed above the requested 12 GiB free-space threshold.

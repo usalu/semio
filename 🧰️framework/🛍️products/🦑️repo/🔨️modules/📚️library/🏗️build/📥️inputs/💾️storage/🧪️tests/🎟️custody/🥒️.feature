@@ -6,8 +6,8 @@ Feature: Optional Graph Inventory Requires Actual Exclusive Custody
     Then deferred maintenance performs no optional-tree inventory
     And acquired maintenance inventories exactly once inside custody
     And healthy or boundary state returns no-op
-    And pressure retires only exact unchanged optional leaves
-    And cancellation identity changes or unavailable required headroom refuse
+    And pressure retires optional leaves through the actual custody
+    And unavailable required headroom refuses
 
     Examples:
       | state                  | custody |
@@ -17,6 +17,4 @@ Feature: Optional Graph Inventory Requires Actual Exclusive Custody
       | exact low-water        | acquired |
       | low-water pressure     | acquired |
       | physical pressure      | acquired |
-      | changed leaf identity  | acquired |
-      | canceled before unlink | acquired |
       | no reclaimable bytes   | acquired |

@@ -166,9 +166,34 @@ test.skipIf(nativeModule===undefined||process.platform!=="darwin"||process.arch!
  mkdirSync(join(outputs,"outputs"),{recursive:true});writeFileSync(join(cache,`${id}.commit`),"0");writeFileSync(join(outputs,"terminalOutput"),"built\n");writeFileSync(join(outputs,"outputs","artifact.txt"),"x".repeat(5000));
  const holder=await nativeClient("retrieve",one,id,directory("native-miss"));
  expect(holder).toMatchObject({ok:true,found:false});
- const pending=nativeClient("retrieve",two,id,directory("native-wait"));await sleep(900);
+ const began=performance.now(),pending=nativeClient("retrieve",two,id,directory("native-wait"));await sleep(900);
  expect(server.claims.summary().active).toBe(1);
  const stored=await nativeClient("store",one,id,cache);expect(stored).toMatchObject({ok:true,stored:true});
- const received=await pending;expect(received).toMatchObject({ok:true,found:true});expect(received.milliseconds).toBeGreaterThan(800);
+ const received=await pending;expect(received).toMatchObject({ok:true,found:true});expect(performance.now()-began).toBeGreaterThanOrEqual(900);expect(received.milliseconds).toBeGreaterThan(400);
  expect(two.counters()).toMatchObject({served:1,claimed:0});expect(one.counters().puts).toBe(1);
+});
+
+test("a hanging cache costs one request timeout in total and every later task goes local at once until the server answers its health check again",async()=>{
+ let mode:"hang"|"ok"="hang",cacheRequests=0,health=0;
+ const upstream=Bun.serve({port:0,fetch:request=>{
+  const path=new URL(request.url).pathname;
+  if(path==="/healthz"){health++;return mode==="ok"?new Response('{"status":"ok"}'):new Promise<Response>(()=>{});}
+  cacheRequests++;return mode==="ok"?new Response("Not found",{status:404}):new Promise<Response>(()=>{});
+ }});
+ stops.push(async()=>{await upstream.stop(true);});
+ const flight=await front(`http://127.0.0.1:${upstream.port}`,{timing:{requestTimeoutMilliseconds:300,probeTimeoutMilliseconds:200,breakerMilliseconds:600,claimTimeoutMilliseconds:100}});
+ const started=performance.now(),first=await get(flight,key("down-0"));
+ expect(first.status).toBe(404);expect(performance.now()-started).toBeGreaterThanOrEqual(250);
+ const later=performance.now();
+ for(let task=1;task<=8;task++)expect((await get(flight,key("down-"+task))).status).toBe(404);
+ expect(performance.now()-later,"eight more tasks pay nothing").toBeLessThan(250);
+ expect(cacheRequests,"only the first request reached the hanging server").toBe(1);
+ expect((await put(flight,key("down-put"),"x")).status,"an upload does not wait either").toBe(502);
+ await sleep(700);mode="ok";
+ const recovered=await get(flight,key("up-0"));
+ expect(recovered.status).toBe(404);expect(health).toBeGreaterThanOrEqual(1);expect(cacheRequests,"after the health check answered, requests reach the server again").toBeGreaterThan(1);
+ const fresh=await front(`http://127.0.0.1:${upstream.port}`,{timing:{requestTimeoutMilliseconds:300,probeTimeoutMilliseconds:200,breakerMilliseconds:600,claimTimeoutMilliseconds:100}});
+ mode="hang";
+ const burst=performance.now(),answers=await Promise.all(Array.from({length:8},(_,task)=>get(fresh,key("burst-"+task))));
+ expect(answers.every(answer=>answer.status===404)).toBe(true);expect(performance.now()-burst,"eight simultaneous tasks pay one timeout together").toBeLessThan(900);
 });

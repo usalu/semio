@@ -2,6 +2,8 @@
 import {afterAll,expect,test} from "bun:test";
 import {Database} from "bun:sqlite";
 import verdictCases from "./🧬️verdict-bounds.json" with {type:"json"};
+import collectorStarts from "./🧰️collector-starts.json" with {type:"json"};
+import consumerCensus from "./📊️consumer-census.json" with {type:"json"};
 import {mkdirSync,mkdtempSync,existsSync,rmSync,symlinkSync,utimesSync,writeFileSync,readdirSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
@@ -15,7 +17,7 @@ import type {CasCollectionV1} from "../../../🗄️cas/🧹️collector/🟦️
 import {casPartitionBudgetV1,casPartitionPolicyForV1,decideCasEnforcementV1} from "../../../🗄️cas/🌡️partition/🟦️.ts";
 import {CAS_BUDGET_V1,CAS_POLICY_V1,CAS_RESERVE_FACTOR_V1} from "../../../🗄️cas/🧬️schema/🟦️.ts";
 import {admitBuildDiskV1,expectedDiskGrowthBytesV1} from "../../💽️disk/🟦️.ts";
-import {DISK_WRITERS_V1,consumersOfV1,judgeDiskV1,machineDiskBudgetV1,recoverDiskV1,refuseDiskRecoveryV1,requireDiskWritersV1,type DiskFactsV1,type DiskWriterRowV1,type DiskWriterV1} from "../🟦️.ts";
+import {DISK_WRITERS_V1,consumersOfV1,judgeDiskV1,machineDiskBudgetV1,recoverDiskV1,recoverNeedV1,refuseDiskRecoveryV1,requireDiskWritersV1,type DiskFactsV1,type DiskWriterRowV1,type DiskWriterV1} from "../🟦️.ts";
 import {applyBoundV1,DISK_BOUNDS_V1,finishedReadVerdictV1,selectExpiredV1,selectRotatedV1,selectTemporaryV1} from "../🧺️bounds/🟦️.ts";
 import {collectMachineBoundsV1,realDiskWritersV1} from "../🔌️real/🟦️.ts";
 import {CACHE_SIZE_FILE_V1,readCacheLedgerV1} from "../../../../⚡️caching/💾️storage/🧾️ledger/🟦️.ts";
@@ -72,7 +74,7 @@ test("a disk of 256 GB and a disk of 4 TB keep the same bytes free for a stage, 
  const fixedSmall=1-CAS_POLICY_V1.partition.criticalUsedFraction;
  expect(small.cushionBytes/(238*GIB)).toBeLessThan(fixedSmall);
  expect(casPartitionBudgetV1(10*GIB).derivable).toBe(false);
- expect(casPartitionPolicyForV1(CAS_POLICY_V1,{totalBytes:10*GIB})).toBe(CAS_POLICY_V1);
+ expect(casPartitionPolicyForV1(CAS_POLICY_V1,{totalBytes:10*GIB}).partition).toBe(CAS_POLICY_V1.partition);
  expect(casPartitionPolicyForV1(CAS_POLICY_V1,undefined)).toBe(CAS_POLICY_V1);
  const derived=casPartitionPolicyForV1(CAS_POLICY_V1,{totalBytes:238*GIB}).partition;
  expect(derived.lowUsedFraction).toBeLessThan(derived.highUsedFraction);expect(derived.highUsedFraction).toBeLessThan(derived.criticalUsedFraction);
@@ -108,6 +110,78 @@ test("law: a machine at 97.1% used with collectable artefacts admits the command
  expect(volume.free).toBeGreaterThanOrEqual(outcome.targetFreeBytes);
  expect(outcome.steps.map(step=>step.id)).toEqual(log);
  expect(lines[0]).toContain("Partition / has");expect(lines[lines.length-1]).toContain("the command starts");
+});
+
+test("disk recovery names the current writer before awaiting it and stops reporting at measured admission",async()=>{
+ const MIB=1024**2,{initialMiB,requiredMiB,writers,starts}=collectorStarts;
+ const oracle=new Database(":memory:");
+ const expected=oracle.query(`WITH ordered AS (
+  SELECT json_extract(value,'$.id') AS id,json_extract(value,'$.priority') AS priority,
+   coalesce(sum(json_extract(value,'$.measuredMiB')) OVER (ORDER BY json_extract(value,'$.priority')
+    ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING),0) AS prior
+  FROM json_each(?1) WHERE json_extract(value,'$.relief')='host'
+ ) SELECT id FROM ordered WHERE (?2+prior)<?3 ORDER BY priority`)
+  .all(JSON.stringify(writers),initialMiB,requiredMiB).map(value=>(value as {id:string}).id);
+ oracle.close();
+ expect(expected).toEqual(["leaked-images","compile-caches","cas-lru"]);
+ for(const language of ["en","de"] as const){
+  const volume=new Volume(238*GIB,initialMiB*MIB),lines:string[]=[],called:string[]=[],waiting=Promise.withResolvers<void>(),release=Promise.withResolvers<void>();
+  const message=(id:string)=>starts[language].replace("{id}",id);
+  const ports:DiskWriterV1[]=writers.map(writer=>({...fake(volume,writer.id,writer.priority,0,called,{relief:writer.relief as DiskWriterRowV1["relief"]}),collect:async()=>{
+   called.push(writer.id);
+   if(writer.id==="compile-caches"){waiting.resolve();await release.promise;}
+   volume.free+=writer.measuredMiB*MIB;return 0;
+  }}));
+  const recover=()=>recoverNeedV1({facts:volume.facts,needBytes:requiredMiB*MIB,writers:ports,language,report:line=>lines.push(line)});
+  const pending=recover();
+  await waiting.promise;
+  const beforeCompletion=lines.at(-1);
+  release.resolve();
+  const outcome=await pending;
+  expect(beforeCompletion).toBe(message("compile-caches"));
+  expect(outcome.verdict).toBe("admit");expect(volume.free).toBe((initialMiB+1000)*MIB);
+  expect(called).toEqual(expected);
+  expect(lines.filter(line=>writers.some(writer=>line===message(writer.id)))).toEqual(expected.map(message));
+  const cancelled=new AbortController();volume.free=initialMiB*MIB;called.length=0;
+  const stopAtStart=recoverNeedV1({facts:volume.facts,needBytes:requiredMiB*MIB,writers:ports,language,report:line=>{if(line===message("compile-caches"))cancelled.abort();},signal:cancelled.signal});
+  await expect(stopAtStart).rejects.toBeDefined();
+  expect(called).toEqual(["leaked-images"]);
+ }
+});
+
+test("a Ready disk refusal bounds the post-collection census using the last physical measure",async()=>{
+ const MIB=1024**2,{freeMiB,requiredMiB,budgetMs,writers}=consumerCensus;
+ const db=new Database(":memory:");
+ const expected=db.query(`with steps as (
+  select json_extract(value,'$.id') as id,json_extract(value,'$.elapsedMs') as elapsed,
+   coalesce(sum(json_extract(value,'$.elapsedMs')) over (order by key rows between unbounded preceding and 1 preceding),0) as prior
+  from json_each(?1)
+ ) select id, (prior+elapsed<=?2) as complete from steps where prior<?2`)
+  .all(JSON.stringify(writers),budgetMs) as {id:string;complete:number}[];
+ db.close();
+ const volume=new Volume(238*GIB,freeMiB*MIB),progress:string[]=[],visited:string[]=[],control=new AbortController();
+ const ports=(cancel:boolean):DiskWriterV1[]=>writers.map((item,index)=>({
+  row:row(item.id,index),root:"/"+item.id,
+  async measure(signal){
+   visited.push(item.id);
+   if(item.elapsedMs>budgetMs){
+    if(cancel){control.abort();signal?.throwIfAborted();}
+    if(!signal?.aborted)await new Promise<void>(resolve=>signal?.addEventListener("abort",()=>resolve(),{once:true}));
+   }
+   return item.bytes;
+  }
+ }));
+ const options={facts:volume.facts,needBytes:requiredMiB*MIB,language:"en" as const,consumerBudgetMilliseconds:budgetMs};
+ const outcome=await recoverNeedV1({...options,writers:ports(false),signal:AbortSignal.timeout(1_000),report:line=>progress.push(line)});
+ expect(outcome.verdict).toBe("refuse");
+ expect(outcome.facts?.freeBytes).toBe(freeMiB*MIB);
+ expect(visited).toEqual(expected.map(item=>item.id));
+ expect(outcome.consumers.map(row=>row.id)).toEqual(expected.filter(item=>item.complete).map(item=>item.id));
+ expect(progress.at(-2)).toBe("Measuring disk consumer slow.");
+ expect(progress.at(-1)).toContain("Stopped measuring disk consumers");
+ visited.length=0;
+ await expect(recoverNeedV1({...options,writers:ports(true),signal:control.signal})).rejects.toBeDefined();
+ expect(visited).toEqual(["small","slow"]);
 });
 
 test("law: the least recently used cache objects go last and only when the derivable writers did not free enough, image-internal writers never run for the host and manual ones are never run",async()=>{

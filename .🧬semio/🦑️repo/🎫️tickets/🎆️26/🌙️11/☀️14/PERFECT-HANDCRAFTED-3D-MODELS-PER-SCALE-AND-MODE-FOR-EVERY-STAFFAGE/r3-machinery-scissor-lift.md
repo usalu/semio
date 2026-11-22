@@ -145,3 +145,7 @@ Reference: Genie GS-1932 metric specification sheet (S1, table in section 1). Th
 - Number of stages, arm section, cylinder mounting and the platform mass marker in the deck remain class knowledge (round 3, section 7). 1:500 wheels are discs without tyre shoulders (75 mm feature).
 
 The extension deck’s outer edge remains printable across the 1:200 representation’s range through 1:350. The whole-model paper check passed.
+
+## November 21 running gear and moving joints
+
+All eight lifting arms have opposing 6 mm walls, three transverse bores and a 40.5 mm bore in each sleeve for a 40 mm pin. The physical and structural crossing links stay separate throughout the lift. The closed arm and sleeve area measured 14.681–14.727 m² in the four poses. Air reaches 13.907–13.946 m². The working platform and the extension deck retain their separate posts, perimeter rails and gate in the load-path view. See the [measurements and installed revision](digital-running-gear.md).

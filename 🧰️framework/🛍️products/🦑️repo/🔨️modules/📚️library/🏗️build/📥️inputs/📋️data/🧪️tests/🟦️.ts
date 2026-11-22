@@ -1,13 +1,14 @@
 /** 🧪️ Data: 10 tests covering neutral actual graph inventory producers admit closed DATA before writer effects; neutral shared Source and lock inventory capture agrees with Ajv and SQLite; neutral shared inventory capture refuses hos… */
 import {graphSourceV1} from "../../../🕸️graph/🧪️tests/📖️source/🟦️.ts";
-import{declareBuildTestEnvelopeV1,withBuildTestInvocationV1}from"@semio-tech/process/testing/invocation";
+import {withBuildTestInvocationV1} from "@semio-tech/process/testing/invocation";
+import {declareLibraryBuildTestEnvelopeV1} from "../../../../🧪️testing/🪪️native-birth/🟦️.ts";
 import{inferenceImportPortsV1,readInferenceGraphSourceV1,readInferenceSourceV1}from"../../../🕸️graph/📥️inference/🧪️tests/📖️source/🟦️.ts";
 import{buildModesV1}from"@semio-tech/process/build-mode";
 import{test,expect}from"bun:test";
 import{readFileSync,realpathSync}from"node:fs";
 import ts from"typescript";
 import{compactSourceInputs,cargoLockInput,splitInputClosureV1}from"../../🟨️.mjs";
-declareBuildTestEnvelopeV1({owner:"test:build-inputs-data",maximumElapsedMilliseconds:300000,capabilities:{artifacts:true}});
+declareLibraryBuildTestEnvelopeV1({suite:"build-inputs-selected"});
 /** 📥️ Requires actual compact producers to admit complete DATA before writer-directory or publication effects. */
 test("neutral actual graph inventory producers admit closed DATA before writer effects",()=>{const path=new URL("../../🟨️.mjs",import.meta.url),source=ts.createSourceFile(path.pathname,readFileSync(path,"utf8"),ts.ScriptTarget.Latest,true);for(const[name,capture]of[["compactSourceInputs","capturedInventoryV1"],["cargoLockInput","captureCargoLockInventoryV1"]]){const entry=source.statements.find((row):row is ts.FunctionDeclaration=>ts.isFunctionDeclaration(row)&&row.name?.text===name);if(!entry?.body)throw Error("Actual producer body required");const body=entry.body.getText(source);expect(body.indexOf(capture+"(")).toBeGreaterThanOrEqual(0);expect(body.indexOf(capture+"(")).toBeLessThan(body.indexOf("repositoryBuildGraphWriterDirectoryV1("));expect(body.indexOf(capture+"(")).toBeLessThan(body.indexOf("publishInputClosureV1("));}const shared=source.statements.find((row):row is ts.FunctionDeclaration=>ts.isFunctionDeclaration(row)&&row.name?.text==="capturedInventoryV1");if(!shared?.body)throw Error("Actual shared capture body required");expect(shared.body.getText(source)).toContain("captureSourceInputInventoryV1(");expect(()=>cargoLockInput("../Cargo.toml",process.cwd())).toThrow("Source input must be repository relative");expect(()=>compactSourceInputs(["{workspaceRoot}/../escape"],process.cwd())).toThrow("Source input must be repository relative");});
 

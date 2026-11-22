@@ -55,6 +55,9 @@ export function nxDaemonRetireV1(state:Readonly<{kind:NxDaemonKindV1;openRequest
 /** 🤝️ True when a finite daemon with no open request must drain because an eviction asks for its namespace; watch daemons serve a developer and never yield. */
 export function nxDaemonYieldV1(state:Readonly<{kind:NxDaemonKindV1;openRequests:number;requested:boolean}>):boolean{return state.kind==="finite"&&state.openRequests===0&&state.requested;}
 
+/** 🔄️ True when a finite daemon with no open request was born with an authorizer bundle that a later landing superseded: it drains so the next run starts one with the current bundle, while a request in flight always finishes with the bundle it began with. Watch daemons serve a developer and are restarted by that developer. */
+export function nxDaemonSupersededV1(state:Readonly<{kind:NxDaemonKindV1;openRequests:number;superseded:boolean}>):boolean{return state.kind==="finite"&&state.openRequests===0&&state.superseded;}
+
 /** 📬️ True while an eviction holds the yield resource of this namespace (probed with a shared try-lock released at once, so daemons never exclude each other). */
 export async function nxDaemonYieldRequestedV1(directory:string,namespaceDirectory:string,signal:AbortSignal):Promise<boolean>{
  const resource=nxGraphYieldResourceV1(namespaceDirectory);

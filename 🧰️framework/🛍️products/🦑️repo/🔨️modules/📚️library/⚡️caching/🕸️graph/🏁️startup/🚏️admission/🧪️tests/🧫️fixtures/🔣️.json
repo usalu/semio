@@ -62,5 +62,11 @@
     {"name": "finite quiet and not requested stays", "state": {"kind": "finite", "openRequests": 0, "requested": false}, "expected": false},
     {"name": "finite with an open request keeps its namespace", "state": {"kind": "finite", "openRequests": 1, "requested": true}, "expected": false},
     {"name": "watch daemons never yield", "state": {"kind": "watch", "openRequests": 0, "requested": true}, "expected": false}
+  ],
+  "superseded": [
+    {"name": "finite quiet and superseded drains", "state": {"kind": "finite", "openRequests": 0, "superseded": true}, "expected": true},
+    {"name": "finite quiet and current stays", "state": {"kind": "finite", "openRequests": 0, "superseded": false}, "expected": false},
+    {"name": "a request in flight finishes with its bundle", "state": {"kind": "finite", "openRequests": 2, "superseded": true}, "expected": false},
+    {"name": "watch daemons are restarted by their developer", "state": {"kind": "watch", "openRequests": 0, "superseded": true}, "expected": false}
   ]
 }

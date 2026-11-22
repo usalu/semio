@@ -1,5 +1,5 @@
 import buildPolicy from "../🔣️policy.json" with {type:"json"};
-import {adoptUpgradedHostPlanV1,attachHostCapacityProcessV1,currentHostProbeV1,observeTreeMegabytesV1,readHostSampleV1,wholeHostProbeV1,hostClassBoundV1,hostProfileV1,createHostPhaseResizerV1,estimateHostPhasesV1,forecastHostQuietV1,formatHostCapacityV1,hostCapacityDirectoryV1,hostEstimateLineageV1,hostFloorMegabytesV1,hostRebuildSlotsV1,hostRequestPriorityV1,learnableHostRunV1,newHostCapacityIdV1,quietHostRequestV1,rampHostRequestV1,readHostEstimateStoreV1,recordHostForecastV1,recordHostPhasesV1,requestHostCapacityUpgradeV1,resolveHostCapacityLanguageV1,scaleHostRequestV1,sizeHostRequestV1,updateHostEstimateStoreV1,withHostCapacityV1,type HostActionKindV1,type HostRunV1,type HostCapacityHandleV1,type HostCapacityPolicyV1,type HostCapacityPortsV1,type HostRequestV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🌡️host-capacity/🟦️.ts";
+import {adoptUpgradedHostPlanV1,attachHostCapacityProcessV1,currentHostProbeV1,observeTreeMegabytesV1,readHostSampleV1,wholeHostProbeV1,hostClassBoundV1,hostClassCeilingV1,hostLearnCeilingV1,hostProfileV1,createHostPhaseResizerV1,estimateHostPhasesV1,forecastHostQuietV1,formatHostCapacityV1,hostCapacityDirectoryV1,hostEstimateLineageV1,hostFloorMegabytesV1,hostRebuildSlotsV1,hostRequestPriorityV1,learnableHostRunV1,newHostCapacityIdV1,quietHostRequestV1,rampHostRequestV1,readHostEstimateStoreV1,recordHostForecastV1,recordHostPhasesV1,requestHostCapacityUpgradeV1,resolveHostCapacityLanguageV1,scaleHostRequestV1,sizeHostRequestV1,updateHostEstimateStoreV1,withHostCapacityV1,type HostActionKindV1,type HostRunV1,type HostCapacityHandleV1,type HostCapacityPolicyV1,type HostCapacityPortsV1,type HostRequestV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🌡️host-capacity/🟦️.ts";
 import type {ResourceLeaseControl} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import type {HostUpgradeOutcomeV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🌡️host-capacity/🟦️.ts";
 import {leasePriorityClassV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/📈️standing/⚖️priority/🟦️.ts";
@@ -58,10 +58,23 @@ export function buildCapacityAskV1(args:readonly string[],environment:Readonly<R
  if(command===undefined||!policy.operations.some(row=>row.name===command))return undefined;
  const head=args.slice(0,args.indexOf("--")<0?undefined:args.indexOf("--"));
  if(head.some(argument=>argument==="--help"||argument==="-h"))return undefined;
+ if(sealedCurrentReadV1(head,environment))return undefined;
  const requested=command==="cargo"?option(head,"parallelism"):option(head,"parallel"),fromEnvironment=command==="cargo"?undefined:environment.SEMIO_BUILD_PARALLEL,parsed=Number(requested??fromEnvironment);
  const preferred=Number.isSafeInteger(parsed)&&parsed>0?parsed:command==="cargo"?availableParallelism():planWorkersV1(readWorkerPolicyV1((buildPolicy as unknown as {workers:unknown}).workers),currentWorkerHostV1()).localJobs;
  const targets=command==="cargo"?[]:requestedTargets(head),dry=command!=="cargo"&&head.some(argument=>argument==="--dry-run"||argument==="--graph"||argument.startsWith("--graph=")),kinds=dry?[]:requestedKinds(targets);
  return Object.freeze({operation:command,preferredJobs:dry?1:preferred,kinds:Object.freeze(kinds),targets:Object.freeze(targets),lineage:dry?buildCapacityLineageV1(args,kinds).map(name=>name+":dry"):buildCapacityLineageV1(args,kinds)});
+}
+
+/** 🔓️ Whether a `show` query is a sealed read under the explicit graph policy `current`: it only reads a store, never infers or builds, so it asks the machine-wide gate for nothing and a busy host never queues it. The flag is read here by the same rule as `extractGraphPolicyV1` of the graph (an invalid value is no seal), so the capacity module pulls no graph code into a process that only asks for admission; the sealed-read test cross-checks the two.
+ * @see ./🧪️tests/🔓️sealed-read/🟦️.ts */
+export function sealedCurrentReadV1(args:readonly string[],environment:Readonly<Record<string,string|undefined>>):boolean{
+ if(args[0]!=="show")return false;
+ let policy=environment.SEMIO_BUILD_GRAPH_POLICY,explicit=policy!==undefined;
+ for(let index=0;index<args.length&&args[index]!=="--";index++){
+  if(args[index]==="--graph-policy"){policy=args[++index]??"";explicit=true;}
+  else if(args[index]!.startsWith("--graph-policy=")){policy=args[index]!.slice("--graph-policy=".length);explicit=true;}
+ }
+ return explicit&&policy==="current";
 }
 
 /** 🎟️ How many graph computers the compute slots of a rebuild may run at once on this host: what the rebuild measurably took on earlier runs against the memory above the floor (the prior until it has learned), within the authored bounds; a store that cannot be read answers with the prior. */
@@ -144,7 +157,7 @@ export function reserveGraphPlanCapacityV1(input:HostCapacityPortsV1&Readonly<{m
 
 /** 🚪️ Runs an invocation under the machine-wide capacity grant when its command is heavy: first admits it to the cache partition (`disk.low-space` refusal before anything is written, see `admitBuildDiskV1`), then waits fairly with progress lines that name what it stands behind (its request is labelled with what it builds, e.g. the target of `repo run`, without control characters), then hands the body the arguments rewritten to the granted jobs and sets the environment the children inherit; light commands pass untouched. A run of a forecast-aware tool is learned as one that executed work when an executor asked for it or when its peak exceeded the quiet size of its class, so the quiet class learns only what quiet runs hold and the next forecast follows the run's own last outcome. */
 export async function withBuildCapacityV1<T>(args:readonly string[],environment:NodeJS.ProcessEnv,body:(granted:Readonly<{args:readonly string[];handle:HostCapacityHandleV1|undefined;limit:JobLimitPolicyV1|undefined;report:(outcome:JobOutcomeV1)=>void}>)=>Promise<T>,ports:HostCapacityPortsV1&Readonly<{offloadAdmission?:import("../🌐️remote-execution/🚀️offload/🚦️admission/🟦️.ts").OffloadAdmissionPortsV1;directory?:string;policy?:HostCapacityPolicyV1;write?:(line:string)=>void;control?:ResourceLeaseControl;admitDeferred?:boolean;tool?:string;forecast?:boolean;exitCode?:()=>number|string|null|undefined;park?:(error:unknown)=>boolean|Promise<boolean>;strip?:(args:readonly string[],environment:NodeJS.ProcessEnv)=>readonly string[];plannedByService?:boolean;repositoryRoot?:string;disk?:import("./💽️disk/🟦️.ts").BuildDiskPortsV1}>={}):Promise<T>{
- const policy=ports.policy??BUILD_HOST_CAPACITY_POLICY_V1,parsed=ports.strip?undefined:(await import("../🧭️invocation/🟦️.ts")).parseBuildInvocationV1(args,environment),stripped=ports.strip?ports.strip(args,environment):parsed!.args,tool=ports.tool??parsed?.tool??environment.SEMIO_BUILD_TOOL,requested=buildCapacityAskV1(stripped,environment,policy);
+ const policy=ports.policy??BUILD_HOST_CAPACITY_POLICY_V1,parsed=ports.strip?undefined:(await import("../🧭️invocation/🟦️.ts")).parseBuildInvocationV1(args,environment),stripped=ports.strip?ports.strip(args,environment):parsed!.args,tool=ports.tool??parsed?.tool??environment.SEMIO_BUILD_TOOL,requested=buildCapacityAskV1(stripped,parsed?.graphPolicy===undefined?environment:{...environment,SEMIO_BUILD_GRAPH_POLICY:parsed.graphPolicy},policy);
  if(!requested||buildCapacityDeferredV1(stripped)&&ports.admitDeferred!==true||await nativeDashboardLaunchV1(stripped))return body({args,handle:undefined,limit:undefined,report:()=>undefined});
  if(ports.plannedByService===true&&requested.lineage[requested.lineage.length-1]!.endsWith(":dry"))return body({args,handle:undefined,limit:undefined,report:()=>undefined});
  let ask=requested,nativeImageRecovery=false;
@@ -153,7 +166,7 @@ export async function withBuildCapacityV1<T>(args:readonly string[],environment:
   nativeImageRecovery=recovery.admitsNativeImageDiskRecoveryV1(root,plan,environment);
   if(plan?.kind==="cache-image"&&(plan.target.operation==="reclaim"||plan.target.operation==="reclaim-wait"))ask={operation:"command",preferredJobs:1,kinds:[],targets:[],lineage:hostEstimateLineageV1("command",stripped[1])};
  }
- const sized=sizeHostRequestV1(policy,{id:newHostCapacityIdV1(),operation:ask.operation,preferredJobs:ask.preferredJobs,kinds:ask.kinds,targets:ask.targets}),base:HostRequestV1|undefined=sized&&Object.freeze({...sized,label:(ask.lineage.length<2?"":ask.lineage[ask.lineage.length-1]!.slice(ask.lineage[ask.lineage.length-2]!.length+1)).replace(/\p{Cc}/gu,"").slice(0,120)||ask.operation});
+ const sized=sizeHostRequestV1(policy,{id:newHostCapacityIdV1(),operation:ask.operation,preferredJobs:ask.preferredJobs,kinds:ask.kinds,targets:ask.targets,host:hostProfileV1(environment)}),base:HostRequestV1|undefined=sized&&Object.freeze({...sized,label:(ask.lineage.length<2?"":ask.lineage[ask.lineage.length-1]!.slice(ask.lineage[ask.lineage.length-2]!.length+1)).replace(/\p{Cc}/gu,"").slice(0,120)||ask.operation});
  if(!base)return body({args,handle:undefined,limit:undefined,report:()=>undefined});
  if(stripped[0]!=="preflight"&&!nativeImageRecovery){
   const disk=await import("./💽️disk/🟦️.ts");
@@ -165,7 +178,9 @@ export async function withBuildCapacityV1<T>(args:readonly string[],environment:
  const runWithFleet=()=>{
   const language=resolveHostCapacityLanguageV1(environment),write=ports.write??(line=>process.stderr.write(line+"\n"));
   write(language==="de"?"[capacity] Cargo ermittelt lokale Compilerplätze. Die Flotte kann einzelne Einheiten übernehmen.":"[capacity] Cargo admits local compiler slots. The fleet can take individual units.");
-  return body({args,handle:undefined,limit:undefined,report:()=>undefined});
+  const pressure={SEMIO_UNIT_CACHE_SLOTS:"1",SEMIO_OFFLOAD_PRESSURE:"door"},before=Object.fromEntries(Object.keys(pressure).map(key=>[key,environment[key]]));
+  Object.assign(environment,pressure);
+  return body({args,handle:undefined,limit:undefined,report:()=>undefined}).finally(()=>{for(const [key,value] of Object.entries(before))if(value===undefined)delete environment[key];else environment[key]=value;});
  };
  if(fleetAdmission!==undefined&&await fleetAdmission(fleetEnvironment,ports.offloadAdmission)!==undefined)return runWithFleet();
  const directory=ports.directory??hostCapacityDirectoryV1(environment),session=currentAgentSessionV1({environment}),now=ports.now??Date.now,write=ports.write??(line=>process.stderr.write(line+"\n")),stored=readHostEstimateStoreV1(directory),client=ports.plannedByService===true,phaseless=client||PHASELESS_COMMANDS_V1.includes(ask.operation),learned=phaseless?Object.freeze({...stored,classes:Object.fromEntries(Object.entries(stored.classes).filter(([name])=>!PLANNER_PHASE_CLASSES_V1.includes(name)))}) as typeof stored:stored,estimate=estimateHostPhasesV1(policy,learned,ask.lineage,base,now());
@@ -180,9 +195,8 @@ export async function withBuildCapacityV1<T>(args:readonly string[],environment:
   const code=(ports.exitCode??(()=>process.exitCode))(),status=run.status==="ok"&&code!==undefined&&code!==null&&Number(code)!==0?"failed" as const:run.status,defaultMegabytes=Math.max(1,base.fixedMegabytes+run.jobs*base.perJobMegabytes);
   const forecasted=run.executed===undefined?undefined:{executed:run.executed||!client&&forecast!==undefined&&run.peakMegabytes>forecast.megabytes,peakMegabytes:run.peakMegabytes,activeMilliseconds:run.activeMilliseconds,peakAtMilliseconds:run.peakAtMilliseconds,endedAtMs:run.endedAtMs};
   if(forecasted!==undefined&&!forecasted.executed){if(status==="ok")await updateHostEstimateStoreV1(directory,policy,store=>recordHostForecastV1(policy,store,leaf,forecasted),{now});return;}
-  const own=run.phases===undefined?run.peakMegabytes:Math.max(0,...run.phases.filter(row=>row.phase!=="rebuild").map(row=>row.peakMegabytes));
-  if(!learnableHostRunV1(status,Math.max(1,Math.floor(own*10000/defaultMegabytes+0.5)),estimate))return;
-  await updateHostEstimateStoreV1(directory,policy,store=>{const next=recordHostPhasesV1(policy,store,ask.lineage,ask.operation,defaultMegabytes,{...run,...phaseless&&run.phases?{phases:run.phases.filter(row=>!PLANNER_PHASE_CLASSES_V1.includes("phase:"+row.phase))}:{},keepPeak:true,ceilingMegabytes:capacity});return forecasted!==undefined&&status==="ok"?recordHostForecastV1(policy,next,leaf,forecasted):next;},{now});
+  if(!learnableHostRunV1(status,{limited:run.limited===true,pressured:run.pressured===true}))return;
+  await updateHostEstimateStoreV1(directory,policy,store=>{const next=recordHostPhasesV1(policy,store,ask.lineage,ask.operation,defaultMegabytes,{...run,...phaseless&&run.phases?{phases:run.phases.filter(row=>!PLANNER_PHASE_CLASSES_V1.includes("phase:"+row.phase))}:{},keepPeak:true,ceilingMegabytes:hostLearnCeilingV1(policy,capacity,hostClassCeilingV1(policy,leaf)),rebuildCeilingMegabytes:Math.floor(capacity*policy.estimates.rebuildShareBasisPoints/10000)});return forecasted!==undefined&&status==="ok"?recordHostForecastV1(policy,next,leaf,forecasted):next;},{now});
  };
  const waiting=ports.control?undefined:createCapacityControlV1(),tasks=request.perJobMegabytes>0,deferring=quiet&&client;
  try{
@@ -193,7 +207,7 @@ export async function withBuildCapacityV1<T>(args:readonly string[],environment:
    try{return await body({args:tasks&&!deferring?grantedBuildArgumentsV1(args,ask.operation,handle.jobs):args,handle,limit:grantJobLimitV1(handle),report:outcome=>{breached=outcome;}});}
    finally{for(const [key,value] of Object.entries(previous))if(value===undefined)delete environment[key];else environment[key]=value;}
   },fleetAdmission===undefined?undefined:async signal=>{
-   const fan=await fleetAdmission(fleetEnvironment,{...ports.offloadAdmission,signal}).catch(()=>undefined);
+   const fan=await fleetAdmission(fleetEnvironment,{...ports.offloadAdmission,signal,doorRefused:true}).catch(()=>undefined);
    return fan===undefined?undefined:()=>{waiting?.dispose();return runWithFleet();};
   });
  }finally{waiting?.dispose();}

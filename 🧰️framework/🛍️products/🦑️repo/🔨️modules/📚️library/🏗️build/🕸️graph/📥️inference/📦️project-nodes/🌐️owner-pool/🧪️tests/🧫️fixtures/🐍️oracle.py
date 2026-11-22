@@ -23,7 +23,7 @@ def sizing(case, p):
     swap = h["swapOutMegabytesPerSecond"] if h["swapOutMegabytesPerSecond"] is not None else 0
     def limit(kind, children):
         return {"limit": kind, "needMegabytes": cm, "freeMegabytes": max(0, spare - max(0, children - case["children"]) * cm), "heldMegabytes": held, "floorMegabytes": floor}
-    lo, hi = p["swapActiveMegabytesPerSecond"], p["swapOutMegabytesPerSecond"]
+    lo, hi = h["totalMegabytes"] * p["swapActiveBasisPointsPerSecond"] / 10000, h["totalMegabytes"] * p["swapOutBasisPointsPerSecond"] / 10000
     share = 1 if h["swapOutMegabytesPerSecond"] is None or swap < lo else max(0, (hi - swap) / (hi - lo))
     cap = math.floor(case["children"] * share)
     if h["pressure"] == "critical" or (share < 1 and cap < 1):

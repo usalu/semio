@@ -29,3 +29,7 @@ pub mod classic_graph_writer;
 
 #[path = "🗜️stored-flate.rs"]
 pub mod classic_stored_flate;
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️original-save/🦀️.rs"]
+mod original_save_tests;

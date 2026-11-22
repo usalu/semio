@@ -1,9 +1,9 @@
 /** 🧬️ Registers the structural Source parsers (taxonomy projection, command and module imports, script requirements, Rust references) under this revision's identity. */
 import { createBoundedCacheV1 } from "../../../🧊️bounded/🟨️.mjs";
 import { createHash } from "node:crypto";
-import { fileURLToPath } from "node:url";
 import { join } from "node:path";
-import { memoizedObservedComputationV1, observedSourceAnalysisV1, observedRequireResolve } from "../../../../🏗️build/👁️observation/🟨️.mjs";
+import { memoizedObservedComputationV1, observeDetachedSyncV1, observedSourceAnalysisV1, retainObservedRowsV1 } from "../../../../🏗️build/👁️observation/🟨️.mjs";
+import { typescriptCompilerFileV1 } from "../../../../🏗️build/🚀️bootstrap/🔷️typescript-compiler/🟨️.mjs";
 import { INFERENCE_LIMITS_V1 } from "../🧬️schema/🟨️.mjs";
 
 /** 🏷️ Names this component as its roster entry does. */
@@ -178,13 +178,32 @@ let sourceAnalysesV1;
 export function sourceAnalysisOwnerIdentityV1(url,revision){return createHash("sha256").update(JSON.stringify([url,revision])).digest("hex");}
 
 const compilerRevisionsV1=createBoundedCacheV1({name:"inference:compiler-revisions",maxEntries:64,maxBytes:64});
-/** 🔩️ The revision the module parsers carry, bound to the bytes of the TypeScript compiler they use, as every caller records it: resolved and read once per process, and the facts of that read are replayed into each receiving project, so the rows of a project never depend on which project of the same process asked first (a farm worker infers in a fresh process). */
-function compilerRevisionV1(stamp){return memoizedObservedComputationV1(compilerRevisionsV1,stamp,()=>createHash("sha256").update(stamp).update(readPhysicalSource(observedRequireResolve(fileURLToPath(revisionIdentity.url),"typescript"))).digest("hex"));}
+/** 🔄️ Captures the declared compiler from the live install binding and repeats the read once when publication retires the selected physical source. */
+export function readCurrentCompilerSourceV1(select, read) {
+  let selected, capture;
+  try {
+    selected = select();
+    capture = observeDetachedSyncV1(() => read(selected));
+  } catch (error) {
+    if (error.code !== "ENOENT" && error.code !== "ENOTDIR") throw error;
+    const current = select();
+    if (current === selected) throw error;
+    capture = observeDetachedSyncV1(() => read(current));
+  }
+  retainObservedRowsV1(capture.rows);
+  for (const layer of capture.layers) retainObservedRowsV1(layer);
+  return capture.value;
+}
+
+/** 🔩️ Binds the module parser revision to the declared compiler bytes and replays the facts of that read into every receiving project. */
+function compilerRevisionV1(stamp) {
+  return memoizedObservedComputationV1(compilerRevisionsV1, stamp, () => createHash("sha256").update(stamp).update(readCurrentCompilerSourceV1(typescriptCompilerFileV1, readPhysicalSource)).digest("hex"));
+}
 
 /** 📖️ Binds structural parsers to their evaluated implementation and compiler bytes. */
 export function prepareSourceAnalysesV1(){
   const stamp=inferrerStampV1("source-analyses"),revision=compilerRevisionV1(stamp);
-  if(!sourceAnalysesV1){
+  if(sourceAnalysesV1?.command.revision!==revision){
     const commandParser=loaded.commandSourceImports,urlParser=loaded.commandUrlReferences,runtimeParser=loaded.runtimeModuleSourceImports,runtimeReferenceParser=loaded.runtimeModuleSourceReferences,moduleParser=loaded.moduleSourceImports,productionParser=loaded.productionModuleSourceImports,stampRevision=createHash("sha256").update(stamp).digest("hex");
     const owner=sourceAnalysisOwnerIdentityV1(revisionIdentity.url,stamp),identity=role=>`build:${role}:v1:${owner}`;
     sourceAnalysesV1={

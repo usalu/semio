@@ -144,6 +144,41 @@ fn folder_declared_kinds(row: &serde_json::Value) -> Vec<semio_os_mcp_routing::h
     }).collect()
 }
 
+#[tokio::test]
+async fn folder_schema_resource_reads_durable_owner_without_opening_an_artifact() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/folder-custody.json")).expect("neutral folder vectors");
+    let dir = store::test_support::tempdir().expect("tempdir");
+    let path = dir.path().to_path_buf();
+    let workspace = folder_test_workspace(path.clone(), Vec::new());
+    workspace.ensure_probe_artifact("source", serde_json::json!({}).into()).await.expect("seed");
+    let (pack, spr) = workspace.read_artifact_bytes("source").expect("read source").expect("pair");
+    drop(workspace);
+
+    let storage = store::sync::FolderEventLogStorage::new(path.clone());
+    let fresh = folder_test_workspace(path, Vec::new());
+    for row in fixture["schemaReads"].as_array().expect("schema reads") {
+        let id = row["id"].as_str().unwrap();
+        if row["live"].is_string() {
+            fresh.ensure_probe_artifact(id, serde_json::json!({}).into()).await.expect("live probe");
+        } else if let Some(alias) = row["storedAlias"].as_str() {
+            let owner_spr = if row["ownerSchema"].is_string() { &spr[..] } else { b"invalid SPR" };
+            assert!(storage.write_if_current(id, alias, None, &pack, owner_spr).await.expect("persist snapshot"));
+        }
+        let result = fresh.read_resource(&format!("semio://artifact/{id}/schema"));
+        if let Some(schema) = row["schema"].as_str() {
+            let contents = result.expect("schema resource");
+            let body: serde_json::Value = serde_json::from_str(contents[0].text.as_deref().unwrap()).unwrap();
+            assert_eq!(body, serde_json::json!({ "artifactId": id, "schema": schema }));
+        } else {
+            let error = result.expect_err("unavailable schema");
+            assert_eq!(error.to_tool_error_payload()["code"], row["error"]);
+            assert!(error.retryable);
+        }
+        assert!(fresh.plugin_artifact_binding(id).is_none());
+        assert_eq!(fresh.open_probes.lock().unwrap().contains_key(id), row["live"].is_string());
+    }
+}
+
 
 fn folder_test_workspace(path: std::path::PathBuf, scopes: Vec<String>) -> HeadlessWorkspace {
     HeadlessWorkspace::open_folder(path, "agent:test".into(), scopes, empty_catalog(), serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/host-driver-policy.json")).expect("policy"), serde_json::from_str(include_str!("../../../../🎚️config/💡️host-operation-policy.json")).expect("explicit host funding policy")).expect("folder workspace")

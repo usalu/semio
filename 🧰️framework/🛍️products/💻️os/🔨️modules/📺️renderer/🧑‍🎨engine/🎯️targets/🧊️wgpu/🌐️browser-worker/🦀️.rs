@@ -461,16 +461,18 @@ impl BrowserRendererWorker {
         self.latest_generation = generation;
         let mut latency = semio_renderer_wgpu_host_base::frame_latency::FrameLatencyTimer::start(semio_renderer_wgpu_host_base::frame_latency::FrameLatencyAuthority::browser_input_batch(generation), semio_renderer_wgpu_host_base::frame_latency::FrameLatencyStage::WireApply, 1);
         let batch: BrowserBatch = serde_json::from_str(events_json).map_err(|error| js_error("message-decode", &error.to_string()))?;
-        latency.set_work_items(batch.replaceable.len().saturating_add(batch.lossless.len()));
-        if batch.replaceable.len() > 18 || batch.lossless.len() > 16 {
+        latency.set_work_items(batch.events.len());
+        if !batch.within_item_credits() {
             return Err(js_error("message-items", "frame message exceeds hard item credits"));
         }
-        let discrete_commits = self.preflight_host_events(batch.replaceable.iter().chain(&batch.lossless))?;
-        let pending_discrete = self.host.as_ref().ok_or_else(|| js_error("worker-closed", "renderer host is unavailable"))?.events.pending_discrete_len();
-        if pending_discrete.saturating_add(discrete_commits) > ui_host::DISCRETE_QUEUE_CAPACITY {
+        let discrete_commits = self.preflight_host_events(batch.events.iter())?;
+        let metrics = batch.events.iter().filter(|event| matches!(event, BrowserWireEvent::Resize { .. })).count();
+        let events = discrete_commits.saturating_add(batch.events.iter().filter(|event| matches!(event, BrowserWireEvent::PointerMove { .. } | BrowserWireEvent::Wheel { .. })).count());
+        let host = self.host.as_mut().ok_or_else(|| js_error("worker-closed", "renderer host is unavailable"))?;
+        if !host.prepare_browser_events(events, metrics) {
             return Err(js_error("downstream-credits", "frame message cannot be admitted atomically into the host mailbox"));
         }
-        for event in batch.replaceable.into_iter().chain(batch.lossless) {
+        for event in batch.events {
             self.apply_wire_event(event)?;
         }
         if let Some(host) = self.host.as_mut() {
@@ -670,8 +672,11 @@ impl BrowserRendererWorker {
     }
 
     fn dispatch(&mut self, event: DispatchEvent) -> Result<(), JsValue> {
-        self.host.as_mut().ok_or_else(|| js_error("worker-closed", "renderer host is unavailable"))?.handle_event(event);
-        Ok(())
+        let host = self.host.as_mut().ok_or_else(|| js_error("worker-closed", "renderer host is unavailable"))?;
+        match host.enqueue_browser_event(event) {
+            ui_host::EnqueueOutcome::Accepted => Ok(()),
+            _ => Err(js_error("downstream-credits", "host mailbox refused an admitted browser event")),
+        }
     }
 
     fn abort_text_stream(&mut self, slot: usize, stream_id: u64) -> Result<(), JsValue> {

@@ -1,18 +1,24 @@
 use super::*;
-use semio_framework_job::{OriginalJobFixtureCaller,OperationId,Generation};
+use semio_framework_job::{OriginalJobFixtureCaller,OperationId,Generation,close_original_effect_step};
 use semio_framework_value::retained_clone::RetainedCloneGrant;
 use semio_s_artifact_procedural_3d_geometry_inputs::WidgetInputsConstruction;
-use super::super::GeometryComputeContext;
-use semio_s_artifact_procedural_3d_io_geometry::NativeGeometryComputeContext;
+#[cfg(test)]
 fn clock()->Option<u64>{Some(1)}
 pub fn grant(c:&serde_json::Value)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:c["items"].as_u64().unwrap()as usize,maximum_copy_bytes:c["copyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:c["capacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:c["releaseBytes"].as_u64().unwrap()as usize,maximum_depth:c["depth"].as_u64().unwrap()as usize}}
+#[cfg(test)]
 fn vector(value:&serde_json::Value)->[f64;3]{std::array::from_fn(|i|value[i].as_f64().unwrap())}
+#[cfg(test)]
 fn value(kind:&str,input:&serde_json::Value)->GeometryValue{match kind{"math.integer"=>GeometryValue::Integer(input.as_i64().unwrap()),"math.boolean"=>GeometryValue::Boolean(input.as_bool().unwrap()),"math.vector"=>GeometryValue::Vector(vector(input)),"math.point"=>GeometryValue::Point(vector(input)),"math.plane"=>GeometryValue::Plane(semio_s_artifact_procedural_3d_geometry_value::PlaneValue{origin:vector(&input["origin"]),normal:vector(&input["normal"])}),_=>GeometryValue::Number(input.as_f64().unwrap())}}
 pub fn accounted<T>(caller:&mut OriginalJobFixtureCaller,policy:RetainedCloneGrant,born:&mut usize,released:&mut usize,turn:impl FnOnce(&mut StepContext<'_>)->Result<T,OriginalTurnFailure>)->T{
  let before=caller.cumulative_receipt();let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.turn(policy,turn));let after=caller.cumulative_receipt();assert_eq!((heap.requested_bytes,heap.released_bytes),(after.retained_capacity_bytes-before.retained_capacity_bytes,after.released_bytes-before.released_bytes));*born+=heap.requested_bytes;*released+=heap.released_bytes;result.unwrap()
 }
-pub fn close<T:RetireOwned>(original:T,caller:&mut OriginalJobFixtureCaller,stock:RetainedCloneGrant,born:&mut usize,released:&mut usize){let mut owner=ControlledRetirement::new(original).ok().unwrap();for _ in 0..100000{if owner.terminal_is_empty(){break}accounted(caller,stock,born,released,|cx|{let receipt=owner.step(cx.retained_grant()).map_err(|error|OriginalTurnFailure::debit_original(error,cx))?.progress();post(cx,receipt)})}assert!(owner.terminal_is_empty());let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));}
+pub fn close<T:RetireOwned>(original:T,caller:&mut OriginalJobFixtureCaller,stock:RetainedCloneGrant,born:&mut usize,released:&mut usize){let mut owner=ControlledRetirement::new(original).ok().unwrap();for _ in 0..100000{if owner.terminal_is_empty(){break}accounted(caller,stock,born,released,|cx|{let body=cx.retained_grant().maximum_copy_bytes;let demand=owner.selected_demand(body).map_err(OriginalTurnFailure::from)?;close_original_effect_step(cx,demand,|effect|owner.step(body,effect))?;Ok(())})}assert!(owner.terminal_is_empty());let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));}
 
+#[cfg(test)]
+mod laws{
+use super::*;
+use crate::GeometryComputeContext;
+use semio_s_artifact_procedural_3d_io_geometry::NativeGeometryComputeContext;
 #[test]
 fn original_math_values_construct_actual_outputs_close_inputs_and_conserve_system(){
  let law:serde_json::Value=serde_json::from_str(include_str!("🧫️.json")).unwrap();let c=&law["originalCaller"];let stock=grant(c);let mut caller=OriginalJobFixtureCaller::admit(OperationId(c["operation"].as_u64().unwrap()),Generation(c["generation"].as_u64().unwrap()),stock,clock,c["deadlineMicros"].as_u64().unwrap(),c["fuel"].as_u64().unwrap());let catalogue=semio_s_artifact_procedural_3d_io_text::snapshot::catalogue::catalogue();let mut born=0;let mut released=0;let mut original_bytes=0;
@@ -134,3 +140,5 @@ fn translation_law(cancel_after:u8){
 fn original_geometry_mesh_translation_copies_seven_owners_and_preserves_metadata_on_same_caller(){translation_law(1)}
 #[test]
 fn original_geometry_mesh_translation_cancel_closes_all_seven_copied_owners_on_same_caller(){translation_law(2)}
+
+}

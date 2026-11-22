@@ -8,7 +8,7 @@ import {readWorldWitnessSwitchV1,readWorldWitnessV1,summarizeWorldWitnessV1,veri
 
 const old=new Date(Date.now()-3600_000);
 function world(){
- const base=realpathSync(mkdtempSync(join(tmpdir(),"witness-"))),root=join(base,"root");
+ const base=realpathSync(mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir(),"witness-"))),root=join(base,"root");
  mkdirSync(join(root,"src/deep"),{recursive:true});mkdirSync(join(root,".cache"),{recursive:true});mkdirSync(join(base,"ws"));mkdirSync(join(root,"unrelated"));
  for(const[path,text]of Object.entries({"src/a.txt":"one","src/deep/b.txt":"two","unrelated/c.txt":"three"})){writeFileSync(join(root,path),text);utimesSync(join(root,path),old,old);}
  symlinkSync("a.txt",join(root,"src/link"));

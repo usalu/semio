@@ -13,6 +13,7 @@ assert(!preview || isAbsolute(preview), "PLAY_TEST_GUEST must be an absolute pat
 assert(base, "PLAYWRIGHT_BASE_URL is required");
 
 const examples = {
+  din16798: ["Compliant office", "Non-compliant office"],
   iso16757: ["Conforming catalogue", "Broken catalogue"],
   vdi3805: ["Demo", "Nonconforming Valve Dataset"],
 };
@@ -95,16 +96,26 @@ try {
 
     try {
       const picker = shell.locator('[id="playground.navbar.fixture"]');
-      const summaryText = () => shell.locator('[data-slot="window-body"]').filter({hasText: /^\s*summary/i}).innerText({timeout: 20_000});
-      const pick = async label => {
+      const reportOverview = value => value.split(/\nCHECKS\b/i, 1)[0].trim();
+      const summaryText = () => shell.locator('[data-slot="window-body"]').filter({hasText: /^\s*summary/i}).innerText({timeout: 20_000}).then(reportOverview);
+      const pick = async (label, value) => {
         await picker.click();
-        await page.getByRole("option", {name: label, exact: true}).click();
+        const options = page.getByRole("option", {name: label, exact: true});
+        if (id === "din16798") assert.equal(await options.count(), 1, "Each example label must identify one option");
+        const initial = page.getByRole("option", {selected: true});
+        const priorValue = await initial.getAttribute("data-value", {timeout: 5_000});
+        assert(priorValue, "The selected example has no stable value");
+        await (value ? options.and(page.locator(`[data-value="${value}"]`)) : options).click();
+        return priorValue;
       };
-      const waitForSummary = async (reference, same) => page.waitForFunction(({app, prior, same}) => {
-        const frames = document.querySelectorAll(`[data-shell-id="${app}"] [data-slot="window-body"]`);
+      const waitForExample = async (label, reference, same) => page.waitForFunction(({app, label, prior, same}) => {
+        const pane = document.querySelector('[data-shell-id="' + app + '"]');
+        if (pane?.querySelector('[id="playground.navbar.fixture"]')?.innerText.trim() !== label) return false;
+        const frames = pane.querySelectorAll('[data-slot="window-body"]');
         const text = Array.from(frames, frame => frame.innerText).find(value => /^\s*summary/i.test(value));
-        return text && ((text === prior) === same) ? text : false;
-      }, {app: id, prior: reference, same}, {timeout: 20_000}).then(result => result.jsonValue());
+        const overview = text?.split(/\nCHECKS\b/i, 1)[0].trim();
+        return overview && ((overview === prior) === same) ? overview : false;
+      }, {app: id, label, prior: reference, same}, {timeout: 45_000}).then(result => result.jsonValue());
 
       await page.goto(new URL("#" + id, base).href, {waitUntil: "commit"});
       await shell.locator('xpath=self::*[@data-shell-ready or @data-shell-error or @data-shell-not-found]').waitFor({timeout: 120_000});
@@ -116,13 +127,13 @@ try {
       const initialSummary = await summaryText();
 
       step = nonconforming;
-      await pick(nonconforming);
-      const changedSummary = await waitForSummary(initialSummary, false);
+      const originalValue = await pick(nonconforming);
+      const changedSummary = await waitForExample(nonconforming, initialSummary, false);
       assert.equal((await picker.innerText()).trim(), nonconforming);
 
       step = demo;
-      await pick(demo);
-      await waitForSummary(initialSummary, true);
+      await pick(demo, originalValue);
+      await waitForExample(demo, initialSummary, true);
       assert.equal((await picker.innerText()).trim(), demo);
       assert.deepEqual([...faults], []);
       if (preview) assert(previewRequested, "The browser did not request the preview core");
@@ -135,6 +146,8 @@ try {
       const outcome = await shell.evaluate(el => ({...el.dataset}), undefined, {timeout: 250}).catch(() => ({}));
       console.error(`[DEBUG] FAIL ${id} during ${step}`, JSON.stringify({
         message: error.message, outcome, previewRequested, bridgeRequested, coreResponses, faults: [...faults],
+        picker: await shell.locator('[id="playground.navbar.fixture"]').innerText({timeout: 500}).catch(() => ""),
+        report: await shell.locator('[data-slot="window-body"]').filter({hasText: /^\s*summary/i}).innerText({timeout: 500}).then(text => text.split(/\nCHECKS\b/i, 1)[0]).catch(() => ""),
         causes: (await Promise.all(failureCauses)).flat(), diagnostics,
       }));
     } finally {

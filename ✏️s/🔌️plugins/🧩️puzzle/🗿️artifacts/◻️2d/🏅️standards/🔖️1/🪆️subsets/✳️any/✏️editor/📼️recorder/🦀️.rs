@@ -14,6 +14,7 @@ use semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::puzzle2d_
 use semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::set_member;
 use semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::unique_edge_id;
 use semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::unique_node_id;
+use semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::Puzzle2dNodeLabels;
 use semio_s_artifact_puzzle_2d_mut_any_10::Puzzle2dPlaySnapshot;
 use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
 use crate::standards::v1::subsets::any::schema::mutations as kinds;
@@ -316,35 +317,71 @@ impl Puzzle2dRecorder {
     /// 👯️ Records clones of `nodes` (host records) offset by `offset`, each under a fresh id with fresh handle ids and the
     /// next free label of its kind, and of every `edges` record whose two endpoints were cloned. Answers the new node ids.
     pub fn clone_fragment(&mut self, nodes: &[Value], edges: &[Value], offset: (f64, f64)) -> Vec<String> {
+        let initial = self.value();
+        let destination_nodes = board_snapshot_nodes(initial);
+        let mut occupied: HashSet<String> = destination_nodes.iter()
+            .flat_map(|node| std::iter::once(node).chain(node.get("handles").and_then(Value::as_array).into_iter().flatten()))
+            .filter_map(|endpoint| endpoint.get("id").and_then(Value::as_str).map(str::to_owned))
+            .collect();
+        let mut occupied_edges: HashSet<String> = board_snapshot_edges(initial).iter()
+            .filter_map(|edge| edge.get("id").and_then(Value::as_str).map(str::to_owned))
+            .collect();
+        let mut labels = HashMap::new();
+        for kind in nodes.iter().filter_map(|node| node.get("nodeKind").and_then(Value::as_str)) {
+            labels.entry(kind).or_insert_with(|| Puzzle2dNodeLabels::new(initial, kind));
+        }
+        for node in destination_nodes {
+            if let Some(sequence) = node.get("nodeKind").and_then(Value::as_str).and_then(|kind| labels.get_mut(kind)) {
+                sequence.include_node(node);
+            }
+        }
         let mut remap: HashMap<String, String> = HashMap::new();
         let mut cloned = Vec::new();
         for source in nodes {
+            let Some(old_id) = source.get("id").and_then(Value::as_str) else { continue };
+            let handle_count = source.get("handles").and_then(Value::as_array).map_or(0, |handles| handles.len());
+            let (new_id, new_handles) = loop {
+                let candidate = new_node_id("node");
+                if occupied.contains(&candidate) {
+                    continue;
+                }
+                let handles: Vec<_> = (0..handle_count).map(|index| format!("{candidate}:v{index}")).collect();
+                if handles.iter().all(|id| !occupied.contains(id)) {
+                    break (candidate, handles);
+                }
+            };
             let mut clone = source.clone();
-            let old_id = source.get("id").and_then(Value::as_str).unwrap_or_default().to_string();
-            let new_id = unique_node_id(self.value(), new_node_id("node"));
-            remap.insert(old_id, new_id.clone());
-            let label = source.get("nodeKind").and_then(Value::as_str).map(|kind| puzzle2d_next_node_label(board_snapshot_nodes(self.value()), self.value(), kind));
+            let mut handles_remap = Vec::new();
+            let sequence = source.get("nodeKind").and_then(Value::as_str).and_then(|kind| labels.get_mut(kind));
+            let label = sequence.as_ref().map(|sequence| sequence.next_label());
             if let Some(object) = clone.as_object_mut() {
                 object.insert("id", json!(new_id));
                 object.insert("x", json!(source.get("x").and_then(Value::as_f64).unwrap_or(0.0) + offset.0));
                 object.insert("y", json!(source.get("y").and_then(Value::as_f64).unwrap_or(0.0) + offset.1));
                 if let Some(handles) = object.get_mut("handles").and_then(Value::as_array_mut) {
-                    for handle in handles.iter_mut() {
-                        let old_handle_id = handle.get("id").and_then(Value::as_str).unwrap_or_default().to_string();
-                        let suffix = old_handle_id.rsplit(':').next().unwrap_or(old_handle_id.as_str()).to_string();
-                        let new_handle_id = format!("{new_id}:{suffix}");
-                        remap.insert(old_handle_id, new_handle_id.clone());
+                    for (handle, new_handle_id) in handles.iter_mut().zip(&new_handles) {
+                        let old_handle_id = handle.get("id").and_then(Value::as_str).map(str::to_string);
+                        if let Some(old_handle_id) = old_handle_id {
+                            handles_remap.push((old_handle_id, new_handle_id.clone()));
+                        }
                         if let Some(handle) = handle.as_object_mut() {
                             handle.insert("id", json!(new_handle_id));
                         }
                     }
                 }
-                if let Some(label) = label {
+                if let Some(label) = &label {
                     object.remove("label");
                     object.insert("text", json!(label));
                 }
             }
             if let Some(id) = self.create(&clone) {
+                if let Some((sequence, label)) = sequence.zip(label) {
+                    sequence.include_label(&label);
+                }
+                occupied.insert(id.clone());
+                occupied.extend(new_handles);
+                remap.insert(old_id.to_string(), id.clone());
+                remap.extend(handles_remap);
                 cloned.push(id);
             }
         }
@@ -353,14 +390,17 @@ impl Puzzle2dRecorder {
                 continue;
             };
             let mut clone = edge.clone();
-            let id = new_edge_id(self.value());
+            let mut id = new_node_id("edge");
+            while occupied_edges.contains(&id) {
+                id = new_node_id("edge");
+            }
             if let Some(object) = clone.as_object_mut() {
                 object.insert("id", json!(id));
                 object.insert("source", json!(source));
                 object.insert("target", json!(target));
             }
-            if let Some(edge) = decode::<Puzzle2dEdge>(&clone) {
-                self.connect_edge(edge);
+            if decode::<Puzzle2dEdge>(&clone).is_some_and(|edge| self.connect_edge(edge)) {
+                occupied_edges.insert(id);
             }
         }
         cloned
@@ -521,7 +561,11 @@ pub fn puzzle2d_paste_operations_on(snapshot: &Puzzle2dPlaySnapshot, fragment: &
     if nodes.is_empty() {
         return Err(ClipboardError::EmptySelection);
     }
-    let [offset_x, offset_y] = placement.position.map_or([PUZZLE2D_PASTE_OFFSET, PUZZLE2D_PASTE_OFFSET], |position| [position[0], position[1]]);
+    let points = nodes.iter().map(|node| {
+        let position = |axis| node.get(axis).and_then(Value::as_f64).unwrap_or_default();
+        [position("x"), position("y"), 0.0]
+    });
+    let [offset_x, offset_y, _] = placement.point_translation(points, [PUZZLE2D_PASTE_OFFSET, PUZZLE2D_PASTE_OFFSET, 0.0]);
     let mut recorder = Puzzle2dRecorder::new(snapshot);
     let pasted = recorder.clone_fragment(nodes, board_snapshot_edges(&clip), (offset_x, offset_y));
     Ok((recorder.into_rows(), pasted))

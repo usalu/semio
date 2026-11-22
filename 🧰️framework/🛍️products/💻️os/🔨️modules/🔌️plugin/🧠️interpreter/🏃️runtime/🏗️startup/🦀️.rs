@@ -143,4 +143,9 @@ mod host_clock_tests{
   assert!(owner.ready());assert_eq!(vm,row["expectedInstructions"].as_u64().unwrap());let pointer=row["pointer"].as_u64().unwrap()as usize;let actual=&owner.original_resources().unwrap().memory(0).unwrap()[pointer..pointer+16];let expected:Vec<u8>=row["expectedHex"].as_str().unwrap().as_bytes().chunks_exact(2).map(|pair|u8::from_str_radix(std::str::from_utf8(pair).unwrap(),16).unwrap()).collect();assert_eq!(actual,expected.as_slice());caller.cancel().cancel_now();
   for _ in 0..200{if owner.terminal_is_empty(){break}epoch+=1;let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.turn(stock,|cx|{cx.bind_original_source_epoch(epoch)?;owner.close_step(&compiled,cx)}).unwrap());assert_eq!((caller.receipt().retained_capacity_bytes,caller.receipt().released_bytes),(heap.requested_bytes,heap.released_bytes));released+=heap.released_bytes;}assert!(owner.terminal_is_empty());assert_eq!(born,released);caller.retire(stock);
  }
+
 }
+
+#[cfg(test)]
+#[path="🧪️tests/source-clock-reply.rs"]
+mod source_clock_reply_tests;

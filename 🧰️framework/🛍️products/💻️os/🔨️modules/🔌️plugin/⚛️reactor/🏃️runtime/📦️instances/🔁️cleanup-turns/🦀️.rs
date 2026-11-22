@@ -82,7 +82,8 @@ fn runtime_live_cleanup_pump_one<PA: PluginApp + 'static>(cell: &std::sync::Arc<
         let Some(job) = session.checked_out_job_mut() else { return Ok(RuntimeMaintenanceStatus::Fault(RuntimeCleanupFault::CheckedOutJob)) };
         pump.pending_status = runtime_live_cleanup_nonterminal_status(job.contended, job.progress, &cell.maintenance_stalled_steps);
         if matches!(pump.pending_status, RuntimeMaintenanceStatus::Fault(RuntimeCleanupFault::ZeroProgress)) {
-            eprintln!("[DEBUG] FEM cleanup semantic failure instance={} stage={} progress={:?}", cell.id, semio_plugin_reactor_app::app_runtime_helpers::LAST_MAINTENANCE_STAGE.load(Ordering::Relaxed), job.progress);
+            let archive = cell.background_instance().map_or_else(|refusal| format!("unavailable {refusal:?}"), |instance| instance.app.document_load_diagnostic(cell.mounted_policy.maintenance));
+            eprintln!("[DEBUG] FEM cleanup semantic failure instance={} stage={} progress={:?} archive-load: {archive}", cell.id, semio_plugin_reactor_app::app_runtime_helpers::LAST_MAINTENANCE_STAGE.load(Ordering::Relaxed), job.progress);
         }
         #[cfg(test)]
         if matches!(job.progress, Some(semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::AwaitingInput { .. })) {

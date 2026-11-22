@@ -9,6 +9,7 @@ import {join} from "node:path";
 import {spawnSync} from "node:child_process";
 import {HERE,sleep} from "../🟦️.ts";
 import {createHostServiceV1} from "../../🏛️service/🌐️host/🟨️.mjs";
+import {createSlicePoolV1} from "../../🏗️composition/🌐️host/👷️slice-pool/🟨️.mjs";
 import {createGraphPlannerPortV1} from "../../🔌️ports/🧭️plan/🟨️.mjs";
 import {createHostReloadV1,replaceHostServiceV1} from "../../🔄️reload/🟨️.mjs";
 import {requestHostStatusV1,requestPlanV1} from "../../🚪️client/🛰️plan/🟨️.mjs";
@@ -80,6 +81,28 @@ describe("a running host service reloads onto a newer implementation",()=>{
   const plan=requestPlanV1({root:workspace("w-stall"),implementation,targets:["app:test"],agent:"a",language:"en",environment:env,arguments:["run"],attempts:1,spawnService:async()=>{await service.start();}}).then(()=>"answered",()=>"cut"),began=Date.now();
   expect(await service.closed).toBe("reload");expect(Date.now()-began).toBeLessThan(3500);
   expect(await plan).toBe("cut");
+ },30000);
+ test("resident drain renews from a new worker observation while replayed detail only keeps the client connected",async()=>{
+  const spec=JSON.parse(readFileSync(CASES,"utf8")),model=JSON.parse(spawnSync(process.env.SEMIO_PYTHON??"python3",["-I",ORACLE,CASES],{encoding:"utf8"}).stdout).drain as Record<string,string>;
+  for(const row of spec.drain.cases){
+   let wanted="",loads=0,frames=0;const env=environment(row.name),implementation=digestOf("old-"+row.name),runtime=hostEndpointsV1(implementation,env),graph=JSON.parse(readFileSync(GRAPH,"utf8"));
+   const pool=createSlicePoolV1({workerUrl:new URL(import.meta.url),heartbeatMilliseconds:row.beatMs,planLimitMegabytes:Infinity,reaper:{reap:async()=>0,killNow:()=>undefined},
+    createWorker:(()=>{
+     loads++;const worker=new EventEmitter(),emit=(done:number)=>worker.emit("message",{type:"progress",phase:"taken",done,total:row.durationMs});
+     const started=performance.now(),updates=row.advances?setInterval(()=>emit(Math.round(performance.now()-started)),row.beatMs):undefined;
+     const first=setTimeout(()=>emit(1),0),last=setTimeout(()=>worker.emit("message",{type:"done",graph}),row.durationMs);
+     return Object.assign(worker,{terminate:()=>{clearTimeout(first);clearTimeout(last);clearInterval(updates);}});
+    }) as never});
+   const planner=createGraphPlannerPortV1({identify:async()=>"k".repeat(64),loadGraph:async()=>graph,loadSlice:async({root,signal,onProgress})=>pool.run({root},{signal,onProgress})});
+   const service=createHostServiceV1({runtime,implementation,ports:{planner,reload:{identify:async()=>({implementation:wanted||implementation}),replace:async()=>({started:true})}},policy:{residentCheckMilliseconds:5000,reload:{...reloadPolicy,drainStallMilliseconds:spec.drain.stallMs}}});
+   try{
+    await service.start();
+    const answer=await requestPlanV1({root:workspace("w-"+row.name),implementation,targets:["app:test"],agent:"a",language:"en",environment:env,arguments:["run"],attempts:1,spawnService:async()=>{await service.start();},
+     onProgress:frame=>{if(frame.phase==="slice"){frames++;wanted=digestOf("new-"+row.name);}}}).then(()=>"answered",()=>"cut");
+    expect(answer,row.name).toBe(model[row.name]);
+    expect(await service.closed).toBe("reload");expect(loads).toBe(1);expect(frames).toBeGreaterThan(2);
+   }finally{await service.stop("test");await pool.close();}
+  }
  },30000);
  test("newer code that cannot be sealed keeps the service answering and is reported in its status",async()=>{
   let replaced=0;

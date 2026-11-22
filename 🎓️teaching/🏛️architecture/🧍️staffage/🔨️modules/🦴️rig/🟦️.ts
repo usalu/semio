@@ -1,7 +1,8 @@
-/** 🦴️ Forward kinematics of an elevation rig: 2D affine helpers, joint limits and the parent-first world solve.
+/** 🦴️ Forward kinematics of a rig: 2D affine helpers, joint limits and the parent-first world solve in three dimensions with the side elevation as its orthographic projection.
  *
- * Matrices follow `[a, b, c, d, e, f]` with `x' = a·x + c·y + e`, `y' = b·x + d·y + f`. A bone's local frame has its origin at the joint and +x along the bone;
- * its local transform is `translate(rest + prismatic) · rotate(restAngle + clampedOffset)` in the parent frame. Angles are degrees, counter-clockwise.
+ * Matrices follow `[a, b, c, d, e, f]` with `x' = a·x + c·y + e`, `y' = b·x + d·y + f`. A bone's local frame has its origin at the joint, `u` (+x) along the bone, `v` (+y) its normal and `w` its joint axis;
+ * its local transform is `translate(rest + prismatic) · R(rest) · R(clampedOffset)` in the parent frame with `R(angle, abduction, twist) = Rw(angle) · Rv(abduction) · Ru(twist)`: the rest placement orients the bone in its parent
+ * (`Bone.angleDeg`, `Bone.abductionDeg`, `Bone.twistDeg`) and a pose or clip offset turns it about its own rest axes. Angles are degrees, counter-clockwise.
  *
  * @see ../../🧬️schema/🟦️.ts — `Rig`, `Bone`, `Joint`, `BoneOffset`
  * @see ../🔗️contracts/🟦️.ts — `Affine`, `Point`
@@ -115,7 +116,7 @@ export function parentFirstOrder(rig: Rig): readonly Bone[] {
   return ordered;
 }
 
-/** 🦴️ The world affine of every bone for the offsets and the root placement (`root.x`, `root.y`, `root.angleDeg`), parents first: the orthographic side projection of the 3D chain. A lateral offset (`Bone.z`) never changes an affine, so the plain 2D solve is exact unless a bone is spread or twisted, and then the chain of {@link solveFrames} is projected. The lateral position of every bone, `Bone.z` included, is read from {@link solveChain}. Revolute offsets are clamped to the joint limits, prismatic offsets to their travel, fixed joints ignore offsets. */
+/** 🦴️ The world affine of every bone for the offsets and the root placement (`root.x`, `root.y`, `root.angleDeg`), parents first: the orthographic side projection of the 3D chain. A lateral offset (`Bone.z`) never changes an affine, so the plain 2D solve is exact while every rest placement and every offset stays in the sagittal plane; as soon as a bone is spread or twisted, at rest or by an offset, the chain of {@link solveFrames} is projected. The lateral position of every bone, `Bone.z` included, is read from {@link solveChain}. Revolute offsets are clamped to the joint limits, prismatic offsets to their travel, fixed joints ignore offsets. */
 export function solveRig(rig: Rig, offsets: Readonly<Record<Slug, BoneOffset>>, root: { readonly x: number; readonly y: number; readonly angleDeg: number }): Record<Slug, Affine> {
   const spread = solveFrames(rig, offsets, root);
   if (spread !== null) return Object.fromEntries(Object.entries(spread).map(([id, frame]) => [id, frame.affine]));
@@ -134,10 +135,10 @@ export type BoneSpread = { readonly originZ: number; readonly tipZ: number };
 
 type Vec3 = readonly [number, number, number];
 
-/** 🧊️ A bone frame in three dimensions: origin `o` and the axes `u` (along the bone), `v` (its normal in the sagittal plane at rest) and `w` (lateral, left is +), each as `[ahead, up, left]`. */
+/** 🧊️ A bone frame in three dimensions: origin `o` and the axes `u` (along the bone), `v` (its normal, in the sagittal plane for a sagittal rest placement) and `w` (its joint axis, lateral with left as + for a sagittal rest placement), each as `[ahead, up, left]`. */
 export type Frame3 = { readonly o: Vec3; readonly u: Vec3; readonly v: Vec3; readonly w: Vec3 };
 
-/** 🪽️ The solved frame of a bone: the projected side affine, the lateral position of origin and tip, the 3D frame and whether the bone or an ancestor is spread or twisted. */
+/** 🪽️ The solved frame of a bone: the projected side affine, the lateral position of origin and tip, the 3D frame and whether the bone or an ancestor is spread or twisted, at rest or by an offset. */
 export type SolvedFrame = { readonly affine: Affine; readonly frame: Frame3; readonly affected: boolean } & BoneSpread;
 
 const combine = (a: Vec3, s: number, b: Vec3, t: number): Vec3 => [a[0] * s + b[0] * t, a[1] * s + b[1] * t, a[2] * s + b[2] * t];
@@ -177,6 +178,31 @@ function placeRadialFold(fold: RadialFold, frames: Record<Slug, SolvedFrame>, bo
   }
 }
 
+type Axes = { readonly u: Vec3; readonly v: Vec3; readonly w: Vec3 };
+
+/** 🔄️ The axes turned by `angleDeg` about `w`, then by `abductionDeg` about the turned `v` (`u` towards `w`), then by `twistDeg` about the turned `u` (`v` away from `w`). */
+function turned(axes: Axes, angleDeg: number, abductionDeg: number, twistDeg: number): Axes {
+  const { sin: ts, cos: tc } = sinCosDeg(angleDeg);
+  const u1 = combine(axes.u, tc, axes.v, ts);
+  const v1 = combine(axes.u, -ts, axes.v, tc);
+  const { sin: ps, cos: pc } = sinCosDeg(abductionDeg);
+  const u2 = combine(u1, pc, axes.w, ps);
+  const w2 = combine(u1, -ps, axes.w, pc);
+  const { sin: ws, cos: wc } = sinCosDeg(twistDeg);
+  return { u: u2, v: combine(v1, wc, w2, -ws), w: combine(v1, ws, w2, wc) };
+}
+
+/** 🧭️ The axes of a bone in its parent: the rest placement followed by the offset about the bone's own rest axes. Rotations about one axis are added before they are applied, so angles that sum to a multiple of 90° stay exact. */
+function oriented(parent: Axes, bone: Bone, offset: { readonly angleDeg: number; readonly abductionDeg: number; readonly twistDeg: number }): Axes {
+  const abductionDeg = bone.abductionDeg ?? 0, twistDeg = bone.twistDeg ?? 0;
+  if (abductionDeg === 0 && twistDeg === 0) return turned(parent, bone.angleDeg + offset.angleDeg, offset.abductionDeg, offset.twistDeg);
+  if (twistDeg === 0 && offset.angleDeg === 0) return turned(parent, bone.angleDeg, abductionDeg + offset.abductionDeg, offset.twistDeg);
+  if (offset.angleDeg === 0 && offset.abductionDeg === 0) return turned(parent, bone.angleDeg, abductionDeg, twistDeg + offset.twistDeg);
+  return turned(turned(parent, bone.angleDeg, abductionDeg, twistDeg), offset.angleDeg, offset.abductionDeg, offset.twistDeg);
+}
+
+const leavesPlane = (bone: Bone, offset: { readonly abductionDeg: number; readonly twistDeg: number }): boolean => (bone.abductionDeg ?? 0) !== 0 || (bone.twistDeg ?? 0) !== 0 || offset.abductionDeg !== 0 || offset.twistDeg !== 0;
+
 function chain(rig: Rig, offsets: Readonly<Record<Slug, BoneOffset>>, root: { readonly x: number; readonly y: number; readonly angleDeg: number }): Record<Slug, SolvedFrame> {
   const { sin: rs, cos: rc } = sinCosDeg(root.angleDeg);
   const base: Frame3 = { o: [root.x, root.y, 0], u: [rc, rs, 0], v: [-rs, rc, 0], w: [0, 0, 1] };
@@ -188,15 +214,8 @@ function chain(rig: Rig, offsets: Readonly<Record<Slug, BoneOffset>>, root: { re
     const along = combine(parent.u, bone.x + effective.dx, parent.v, bone.y + effective.dy);
     const side = bone.z ?? 0;
     const origin: Vec3 = [parent.o[0] + along[0] + parent.w[0] * side, parent.o[1] + along[1] + parent.w[1] * side, parent.o[2] + along[2] + parent.w[2] * side];
-    const { sin: ts, cos: tc } = sinCosDeg(bone.angleDeg + effective.angleDeg);
-    const u1 = combine(parent.u, tc, parent.v, ts);
-    const v1 = combine(parent.u, -ts, parent.v, tc);
-    const { sin: ps, cos: pc } = sinCosDeg((bone.abductionDeg ?? 0) + effective.abductionDeg);
-    const u2 = combine(u1, pc, parent.w, ps);
-    const w2 = combine(u1, -ps, parent.w, pc);
-    const { sin: ws, cos: wc } = sinCosDeg(effective.twistDeg);
-    const frame: Frame3 = { o: origin, u: u2, v: combine(v1, wc, w2, -ws), w: combine(v1, ws, w2, wc) };
-    result[bone.id] = { affine: [frame.u[0], frame.u[1], frame.v[0], frame.v[1], origin[0], origin[1]], frame, originZ: origin[2], tipZ: origin[2] + frame.u[2] * bone.lengthM, affected: (parentSolved?.affected ?? false) || (bone.abductionDeg ?? 0) + effective.abductionDeg !== 0 || effective.twistDeg !== 0 };
+    const frame: Frame3 = { o: origin, ...oriented(parent, bone, effective) };
+    result[bone.id] = { affine: [frame.u[0], frame.u[1], frame.v[0], frame.v[1], origin[0], origin[1]], frame, originZ: origin[2], tipZ: origin[2] + frame.u[2] * bone.lengthM, affected: (parentSolved?.affected ?? false) || leavesPlane(bone, effective) };
   }
   if (rig.radialFolds?.length) {
     const bones = new Map(rig.bones.map(bone => [bone.id, bone]));
@@ -205,20 +224,18 @@ function chain(rig: Rig, offsets: Readonly<Record<Slug, BoneOffset>>, root: { re
   return result;
 }
 
-/** 🪽️ The three-dimensional chain of a spread or twisted rig, or `null` when no bone is spread or twisted.
+/** 🪽️ The three-dimensional chain of a rig that leaves the sagittal plane, or `null` when no bone is spread or twisted at rest or by an offset.
  *
- * After its own sagittal rotation about the lateral axis `w` a bone turns about its normal `v` by `abductionDeg` and then about its own axis `u` by `twistDeg` (revolute joints only; positive twist turns the `y` axis of the bone towards the right of the asset, so a vertical bone turns counter-clockwise seen from above),
- * so a point at distance `s` along it is `s·sin φ` to the left (+z) and keeps `s·cos φ` of its reach; children are placed in the spread and twisted frame of the parent (a bone may also sit beside the symmetry plane: `Bone.z`). The side view (elevation) is the orthographic projection of that chain:
+ * The rest placement orients a bone in its parent: `Bone.angleDeg` about the parent's joint axis `w`, then `Bone.abductionDeg` about the bone's own normal `v`, then `Bone.twistDeg` about its own axis `u` (a clavicle, a pelvis half, an axle or a handlebar runs laterally at rest; the roll sets the joint axis of the bone and of its children).
+ * A pose or clip offset then turns the bone about its own rest axes in the same order (revolute joints only): `angleDeg` about its joint axis `w`, `abductionDeg` about its normal `v`, `twistDeg` about its axis `u` (positive twist turns the `y` axis of the bone towards the right of the asset, so a vertical bone turns counter-clockwise seen from above),
+ * so a point at distance `s` along a sagittal bone spread by `φ` is `s·sin φ` to the left (+z) and keeps `s·cos φ` of its reach; children are placed in the frame of the parent (a bone may also sit beside the symmetry plane: `Bone.z`). The side view (elevation) is the orthographic projection of that chain:
  * the affine of a bone carries the projected axes `u` and `v` and the projected origin, so elevation shapes foreshorten and every consumer of {@link solveRig} (placement, mass, thermal, structure, kinematics, grounding) reads the same chain.
  * Front and plan shapes of an affected bone are carried by the full 3D transform from the rest frame ({@link restFrames}) to the current frame ({@link carry}) and projected to the view.
  *
- * @see ../../🧬️schema/🟦️.ts — `BoneOffset.abductionDeg`, `BoneOffset.twistDeg`, `Bone.z`
+ * @see ../../🧬️schema/🟦️.ts — `Bone.abductionDeg`, `Bone.twistDeg`, `Bone.z`, `BoneOffset.abductionDeg`, `BoneOffset.twistDeg`
  */
 export function solveFrames(rig: Rig, offsets: Readonly<Record<Slug, BoneOffset>>, root: { readonly x: number; readonly y: number; readonly angleDeg: number }): Record<Slug, SolvedFrame> | null {
-  const moved = parentFirstOrder(rig).some((bone) => {
-    const e = effectiveOffset(bone, offsets[bone.id]);
-    return (bone.abductionDeg ?? 0) + e.abductionDeg !== 0 || e.twistDeg !== 0;
-  });
+  const moved = parentFirstOrder(rig).some((bone) => leavesPlane(bone, effectiveOffset(bone, offsets[bone.id])));
   return moved || rig.radialFolds?.length ? chain(rig, offsets, root) : null;
 }
 

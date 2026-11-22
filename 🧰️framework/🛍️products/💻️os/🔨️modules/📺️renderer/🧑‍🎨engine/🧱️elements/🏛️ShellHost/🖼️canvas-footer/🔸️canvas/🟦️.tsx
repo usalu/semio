@@ -2,9 +2,10 @@
 import type { ProgramRetirementLeaseV1 } from "../../🚪️program-retirement/🟦️.ts";
 import { useEffect, useMemo, useRef } from "../../../⚛️react-port/🟦️.ts";
 import { type LocalizedLabel } from "@semio-tech/framework";
-import { modeLayoutStacksV1, type WindowScopeLayoutNodeV1 } from "../../⌨️window-scope/🟦️.ts";
+import { dropWindow, stackPathOf } from "@semio-tech/ui-layout";
+import { modeLayoutStacksV1 } from "../../⌨️window-scope/🟦️.ts";
 import { spawnedIdOfWindowInstanceV1, spawnedProgramWindowInstancesV1 } from "../../🪟️spawned-program/🟦️.ts";
-import { App, borderNormalBottomClass, CanvasSkeleton, cn, insertWindowAtDropZone, resolveStackPathForWindowId, splitWithWindow, loadingBorderClass, Mode, uiDataLabel, sharedBorderlessBoxProps } from "@semio-tech/ui-react";
+import { App, borderNormalBottomClass, CanvasSkeleton, cn, loadingBorderClass, Mode, uiDataLabel, sharedBorderlessBoxProps } from "@semio-tech/ui-react";
 import { ShellFaultBoundary } from "../../../🐚️Shell/🧯️fault-boundary/🟦️.tsx";
 import { clearPendingWorldProjection } from "../../../🌐️World3dHost/🪟️window-view-store/🟦️.tsx";
 import { wireLabel } from "../../../🗣️Interpreter/🌉️scene-host-contract/🟦️.ts";
@@ -24,7 +25,7 @@ export function useCanvas({ hostMode, notFoundPath, navigateShellUri, primaryPlu
   const closeOrderRef = useRef<Promise<void>>(Promise.resolve());
   const statuses = shellStateRef.current.sync.syncStatusByDocumentId;
   useEffect(() => {
-    const mounted = new Set(modeLayoutStacksV1(effectiveModeLayout as WindowScopeLayoutNodeV1 | null).flatMap((stack) => [...stack.windowIds]));
+    const mounted = new Set(modeLayoutStacksV1(effectiveModeLayout).flatMap((stack) => [...stack.windowIds]));
     for (const id of closingWindowIdsRef.current) if (!mounted.has(id)) closingWindowIdsRef.current.delete(id);
   }, [effectiveModeLayout]);
   const canvas = useMemo(() => {
@@ -110,7 +111,7 @@ export function useCanvas({ hostMode, notFoundPath, navigateShellUri, primaryPlu
                 const closedSpawnedId = hostMode && panel ? spawnedIdOfWindowInstanceV1(windowId, panel.spawnedApps.map((entry) => entry.id)) : null;
                 const closedSpawned = panel?.spawnedApps.find((entry) => entry.id === closedSpawnedId);
                   const closedApp = closedSpawned ? loadedPlugins.find((entry) => entry.handle.pluginId === closedSpawned.pluginId)?.manifest.apps.find((candidate) => candidate.id === closedSpawned.appId) : undefined;
-                  const mountedWindowIds = modeLayoutStacksV1(effectiveModeLayoutRef.current as WindowScopeLayoutNodeV1 | null).flatMap((stack) => [...stack.windowIds]);
+                  const mountedWindowIds = modeLayoutStacksV1(effectiveModeLayoutRef.current).flatMap((stack) => [...stack.windowIds]);
                   const closedInstances = closedApp && closedSpawnedId !== null ? spawnedProgramWindowInstancesV1(closedSpawnedId, closedApp.windowKinds, frameworkLayoutDeclaredInstances(closedApp.defaultLayout, closedApp.windowKinds)) : [];
                   const remaining = closedInstances.map((instance) => instance.id).filter((id) => !closingWindowIdsRef.current.has(id) && mountedWindowIds.includes(id));
                   const ownsProgram = (): boolean => {
@@ -183,11 +184,9 @@ export function useCanvas({ hostMode, notFoundPath, navigateShellUri, primaryPlu
                     const base =
                       current ??
                       resolveFrameworkLayoutSeed(session.app.defaultLayout, withLocalizedWindowKindLabels(session.app.windowKinds), appLabelsOverlay, uiTerminology, uiLocale).modeLayout;
-                    const stackPath = resolveStackPathForWindowId(base, windowId);
-                    if (stackPath === null) {
-                      return insertWindowAtDropZone(base, instanceId, { kind: "root-split", side: "right" });
-                    }
-                    return splitWithWindow(base, stackPath, instanceId, "right");
+                    const incoming = { kind: "window" as const, windowKindId, instanceId };
+                    const stackPath = stackPathOf(base, windowId);
+                    return dropWindow(base, incoming, stackPath === null ? { kind: "rootSplit", side: "right" } : { kind: "split", stackPath, side: "right" });
                   },
                 });
                 dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: instanceId });

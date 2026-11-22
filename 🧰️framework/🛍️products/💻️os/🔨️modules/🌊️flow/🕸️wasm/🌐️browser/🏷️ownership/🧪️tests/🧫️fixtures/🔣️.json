@@ -19,6 +19,7 @@
         "FLOW_MAX_PAGE_BYTES",
         "FLOW_MAX_REQUEST_BYTES",
         "FLOW_MAX_TRANSFER_BYTES",
+        "FLOW_RETAINED_GRANT",
         "FlowFeatureGroups",
         "FlowOperation",
         "FlowOperationFields",

@@ -1,7 +1,27 @@
 import { test, expect } from "bun:test";
 import { readFileSync } from "node:fs";
 import Ajv from "ajv";
+import { concat, difference, isEqual, slice } from "lodash";
 import { frameworkSourceUrl } from "@semio-tech/framework/test/source-text";
+
+test("timeline drops conform to the schema and produce the expected stable order", () => {
+  const fixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/🪜️timeline-drop.json", import.meta.url), "utf8"));
+  const schema = JSON.parse(readFileSync(new URL("../../🎮️commands/🪜️step/🧬️drop.json", import.meta.url), "utf8"));
+  const validate = new Ajv({ strict: true }).compile(schema);
+  for (const { order, schemaAccepted = true, ...fields } of fixture.cases) {
+    const args = { documentId: fixture.documentId, ...fields };
+    expect(validate(args)).toBe(schemaAccepted);
+    const remaining = difference(fixture.steps, [args.stepId]);
+    const target = remaining.indexOf(args.targetId);
+    if (!schemaAccepted || args.documentId !== fixture.documentId || target < 0 || remaining.length === fixture.steps.length) {
+      expect(order).toBeNull();
+      continue;
+    }
+    const index = target + Number(args.dropPosition === "after");
+    const actual = concat(slice(remaining, 0, index), args.stepId, slice(remaining, index));
+    expect(isEqual(actual, fixture.steps) ? null : actual).toEqual(order);
+  }
+});
 
 test("production maintenance edit carries explicit schema branch provenance", () => {
   const fixtures = new URL("../🧫️fixtures/production-envelope-edit/", import.meta.url);

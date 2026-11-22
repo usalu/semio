@@ -50,8 +50,7 @@ impl QueryExecutionPreparation {
             }
             let graph = Graph {
                 name: std::mem::take(&mut metadata.name),
-                manifest_id: metadata.manifest_id.take(),
-                manifest: std::mem::take(&mut metadata.manifest),
+                manifest_id: std::mem::take(&mut metadata.manifest_id),
                 camera: metadata.camera.clone(),
                 nodes: BTreeMap::new(),
                 edges: BTreeMap::new(),

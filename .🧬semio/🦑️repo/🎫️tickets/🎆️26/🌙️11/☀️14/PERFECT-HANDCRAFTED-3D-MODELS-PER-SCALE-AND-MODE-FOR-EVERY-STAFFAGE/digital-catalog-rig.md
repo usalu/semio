@@ -1,6 +1,6 @@
 # Staffage rig and structural verification
 
-152 of 152 current model documents passed. The passing runs cover 936 named poses, 16,669 posed bone frames, 16,169 member diagrams and 22,452 free-body forces and support reactions.
+152 of 152 current model documents passed. The passing runs cover 937 named poses, 19,056 posed bone frames, 18,556 member diagrams and 23,096 free-body forces and support reactions.
 
 Three.js independently reconstructs parent-to-child rigid transforms and authored mass centres, then sums world forces and lever-arm moments. The checks cover segment endpoints, member diagram station positions and moment components. Folded cloth uses the solved crease basis for endpoint and mass calculations. Flight and deliberately unbalanced poses retain the physical residual in the comparison. Named poses are measured once because all four render scales share the same rig.
 
@@ -40,16 +40,16 @@ Three.js independently reconstructs parent-to-child rigid transforms and authore
 | wheel-loader | 5 | 60 | 60 | Pass |
 | dairy-cow | 13 | 390 | 390 | Pass |
 | domestic-cat | 21 | 672 | 672 | Pass |
-| goat | 15 | 420 | 420 | Pass |
+| goat | 15 | 435 | 435 | Pass |
 | hedgehog | 12 | 240 | 240 | Pass |
-| herring-gull | 9 | 171 | 171 | Pass |
+| herring-gull | 9 | 567 | 567 | Pass |
 | horse | 11 | 396 | 396 | Pass |
 | labrador-dog | 19 | 551 | 551 | Pass |
-| mallard-duck | 19 | 380 | 380 | Pass |
+| mallard-duck | 20 | 400 | 400 | Pass |
 | pig | 15 | 420 | 420 | Pass |
 | pigeon | 23 | 529 | 529 | Pass |
 | red-fox | 15 | 435 | 435 | Pass |
-| red-squirrel | 14 | 252 | 252 | Pass |
+| red-squirrel | 14 | 308 | 308 | Pass |
 | roe-deer | 21 | 546 | 546 | Pass |
 | sheep | 15 | 420 | 420 | Pass |
 | child-on-kick-scooter | 47 | 1081 | 987 | Pass |
@@ -64,7 +64,7 @@ Three.js independently reconstructs parent-to-child rigid transforms and authore
 | person-cooking | 3 | 66 | 66 | Pass |
 | person-on-crutches | 3 | 60 | 60 | Pass |
 | person-with-rollator | 4 | 96 | 84 | Pass |
-| person-with-umbrella | 5 | 180 | 180 | Pass |
+| person-with-umbrella | 5 | 340 | 340 | Pass |
 | person-with-white-cane | 4 | 76 | 76 | Pass |
 | pregnant-person | 4 | 76 | 76 | Pass |
 | runner-with-blade-prosthesis | 27 | 486 | 486 | Pass |
@@ -73,8 +73,8 @@ Three.js independently reconstructs parent-to-child rigid transforms and authore
 | seated-office-worker | 3 | 120 | 120 | Pass |
 | seated-reader | 6 | 168 | 162 | Pass |
 | skateboarder | 10 | 260 | 260 | Pass |
-| sleeping-person | 3 | 69 | 69 | Pass |
-| standing-adult | 4 | 72 | 72 | Pass |
+| sleeping-person | 3 | 1749 | 1749 | Pass |
+| standing-adult | 4 | 132 | 132 | Pass |
 | standing-phone-user | 3 | 60 | 60 | Pass |
 | tour-guide | 7 | 147 | 147 | Pass |
 | walking-commuter | 8 | 152 | 152 | Pass |

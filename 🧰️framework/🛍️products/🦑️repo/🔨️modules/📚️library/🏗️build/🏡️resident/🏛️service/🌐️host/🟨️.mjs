@@ -9,6 +9,7 @@ import {join} from "node:path";
 import {createFrameDecoderV1,encodeFrameV1} from "../../📨️protocol/🟨️.mjs";
 import {HOST_POLICY_V1,renderBothV1,renderTextV1,SUPPORTED_LANGUAGES_V1,validatorV1} from "../../📨️protocol/🎚️policy/🟨️.mjs";
 import {authorizeCapabilityV1,createRootKeyV1,verifyCapabilityV1} from "../../📨️protocol/🔑️capability/🟨️.mjs";
+import {keepRootKeyV1} from "../../📨️protocol/🔑️capability/🛟️keeper/🟨️.mjs";
 import {workspaceIdV1} from "../../📨️protocol/📍️endpoint/🏠️host/🟨️.mjs";
 import {BusyErrorV1,createGovernorV1} from "../🚦️governor/🟨️.mjs";
 import {failureRefusalV1,serviceRouteV1} from "../🧯️failure/🟨️.mjs";
@@ -41,6 +42,8 @@ const validateReply=validatorV1("PlanReply");
 export class HostRunningErrorV1 extends Error{constructor(endpoint){super("A host graph service already listens on "+endpoint);this.name="HostRunningErrorV1";this.code="running";}}
 
 const MiB=1024*1024;
+/** 🧭️ The decisions of a slice read that end or restart a worker or start a pass again, and how long the line that names the last one stays in every progress line after it (the next progress frame would otherwise replace it before anyone reads it). */
+const NOTICE_KEYS_V1=new Set(["recycled","cut","handoff","restarted","restarted-cause","round"]),NOTICE_MILLISECONDS_V1=300000;
 /** 🔑 What makes two plan requests the same job: the digest of the index, the content scope (the digest of the captured inputs where the planner can bind a reply to each workspace, else the one workspace), revision, parent, tool, graph policy, arguments, targets and the dirty set. */
 const jobKeyV1=(indexKey,scope,frame)=>sha(JSON.stringify([indexKey,scope,frame.revision??null,frame.parent??null,frame.tool??null,frame.graphPolicy??null,frame.arguments??null,[...new Set(frame.targets)].sort(),frame.dirty??null]));
 const sha=text=>createHash("sha256").update(text).digest("hex");
@@ -83,6 +86,17 @@ export function renderSliceReservationV1({requested,wait,granted},seconds,langua
  return output;
 }
 
+/** 🔒️ Renders in each language of the connection why a slice load waits for a graph writer lock: which lock, its place in line, and who holds it (process, agent, how long, what it is doing), so the wait never reads as a silent stall. The lock may belong to a load of another selection that hashes to the same fact shard.
+ * @see ../../../📥️inputs/💾️storage/🔒️writer/🟨️.mjs */
+export function renderLeaseWaitV1(wait,seconds,languages=SUPPORTED_LANGUAGES_V1){
+ const output={},minutes=Math.floor(wait.seconds/60);
+ for(const language of languages)if(SUPPORTED_LANGUAGES_V1.includes(language)){
+  const say=(key,fields)=>renderTextV1(key,fields,[language])[language],lock=say("host-lease-lock-"+wait.lock.kind,{number:wait.lock.number??0,resource:wait.resource}),held=minutes>0?say("host-lease-held-minutes",{minutes}):say("host-lease-held-seconds",{seconds:wait.seconds}),agent=wait.agent===undefined?"":say("host-lease-agent",{agent:wait.agent}),state=wait.state===undefined?"":say("host-lease-state-"+wait.state,{}),progress=wait.phase===undefined?"":wait.done===undefined?say("host-lease-phase",{phase:wait.phase}):say("host-lease-progress",{phase:wait.phase,done:wait.done,total:wait.total}),eta=wait.etaMinutes===undefined?"":say("host-lease-eta",{minutes:wait.etaMinutes});
+  Object.assign(output,renderTextV1("host-lease-wait",{seconds,lock,position:wait.position,queued:wait.queued,pid:wait.pid,agent,held,holder:state+progress+eta},[language]));
+ }
+ return output;
+}
+
 /** 🌐 Creates the service; call `start()`, then wait for `closed`. `access` (`{root,platform,home}`, default the working directory and the running system) names the checkout whose refusal by macOS is the missing file access consent: after answering such a request the service closes itself with the reason `access-denied` instead of staying alive without the consent. `ports.planner` is `{identify?,load,plan,contentDigest?,bind?}` (`contentDigest` and `bind` together let workspaces with equal captured inputs share one job, `bind` answering each client's own pin, manifest and revision) (see `createGraphPlannerPortV1`); `ports.admission` defaults to the fair governor. */
 export function createHostServiceV1(options){
  const{runtime,ports,implementation,log=()=>{},now=()=>Date.now(),requireCapability=true,onExit=()=>{},environment=process.env}=options;
@@ -94,7 +108,7 @@ export function createHostServiceV1(options){
  const pool=createIndexPoolV1({maximumBytes:policy.maximumIndexBytes,maximumEntries:policy.maximumWorkspaces,now,onEvict:key=>{for(const memoKey of[...memo.keys()])if(memoKey.startsWith(key))memo.delete(memoKey);}});
  const memo=new Map(),workspaces=new Map(),connections=new Set(),spills=join(runtime.directory,"plans-"+runtime.tag);
  const counters={plans:0,hits:0,refused:0,evictedWorkspaces:0,jobs:0,coalesced:0,abandoned:0},jobs=new Map(),planned={budgetRefusals:0,load:undefined,computed:0,milliseconds:0,lastMilliseconds:0,captureFiles:0,captureProbes:0,unstaged:0};
- let server,rootKey,closeResolve,closing=false,lastActivity=now(),idleTimer,residentTimer,cacheTimer,sweepTimer,reloadTimer,supersededSince,lastProgressAt=0;
+ let server,rootKey,keeper,closeResolve,closing=false,lastActivity=now(),idleTimer,residentTimer,cacheTimer,sweepTimer,reloadTimer,supersededSince,lastProgressAt=0;
  const closed=new Promise(resolve=>{closeResolve=resolve;});
  const touch=()=>{lastActivity=now();};
 
@@ -233,13 +247,20 @@ export function createHostServiceV1(options){
  }
 
  const ownerLine=row=>row.name+" ("+(row.kind??"-")+", "+Math.round(row.seconds)+", "+(row.rows??0)+")";
- const sendProgress=(client,{phase,done,total,key,fields})=>{lastProgressAt=now();const{running,decision,reservation,...rest}=fields,owners=running===undefined?undefined:running.slice(0,3).map(ownerLine).join(", ");return send(client.connection,{t:"progress",id:client.frame.id,phase,done,total,message:reservation===undefined?text(client.connection,owners===undefined?key:decision===undefined?"host-slice-owners":"host-slice-owners-"+decision.key,{...rest,...owners===undefined?{}:{owners},...decision===undefined?{}:{used:decision.used,budget:decision.budget,kind:decision.kind??"",minimum:decision.minimum??0,floor:decision.floor??0,limit:decision.limit??0,cause:decision.cause??""}}):renderSliceReservationV1(reservation,rest.seconds,client.connection.languages)});};
+ const withNoticeV1=(connection,notice,rest,message)=>{
+  if(notice===undefined)return message;
+  const extra=text(connection,"host-slice-owners-"+notice.key,{...rest,owners:"",used:notice.used,budget:notice.budget,kind:notice.kind??"",minimum:notice.minimum??0,floor:notice.floor??0,limit:notice.limit??0,cause:notice.cause??""});
+  if(typeof message!=="object"||message===null||typeof extra!=="object"||extra===null)return message;
+  return Object.fromEntries(Object.entries(message).map(([language,line])=>[language,extra[language]===undefined?line:line+" | "+extra[language]]));
+ };
+ const sendProgress=(client,{phase,done,total,key,fields})=>{const{running,decision,reservation,leaseWait,notice,...rest}=fields,owners=running===undefined?undefined:running.slice(0,3).map(ownerLine).join(", ");return send(client.connection,{t:"progress",id:client.frame.id,phase,done,total,message:withNoticeV1(client.connection,notice,rest,leaseWait!==undefined?renderLeaseWaitV1(leaseWait,rest.seconds,client.connection.languages):reservation===undefined?text(client.connection,owners===undefined?key:decision===undefined?"host-slice-owners":"host-slice-owners-"+decision.key,{...rest,...owners===undefined?{}:{owners},...decision===undefined?{}:{used:decision.used,budget:decision.budget,kind:decision.kind??"",minimum:decision.minimum??0,floor:decision.floor??0,limit:decision.limit??0,cause:decision.cause??""}}):renderSliceReservationV1(reservation,rest.seconds,client.connection.languages))});};
 
  const settleAfterJobV1=async()=>{if(jobs.size>0||governor.inFlight>0)return;try{await ports.settle?.();}catch{}};
  function startJob(key,workspace,frame,indexKey){
   const controller=new AbortController(),job={key,controller,clients:new Set(),answered:new Set(),progress:new Map()};
   jobs.set(key,job);counters.jobs++;
-  const progress=(phase,done,total,messageKey,fields)=>{
+  const progress=(phase,done,total,messageKey,fields,observed=true)=>{
+   if(observed)lastProgressAt=now();
    const row={phase,done,total,key:messageKey,fields};job.progress.set(phase,row);
    return Promise.all([...job.clients].map(client=>sendProgress(client,row)));
   };
@@ -252,7 +273,7 @@ export function createHostServiceV1(options){
   const phases=[],releaseWorkspace=retainWorkspace(workspace);let release;
   try{
    const queued=performance.now();
-   release=await governor.enter(frame.agent+"/"+frame.priority,job.controller.signal,position=>{void progress("queued",0,0,"queued",{position});});
+   release=await governor.enter(frame.agent+"/"+frame.priority,job.controller.signal,position=>{void progress("queued",0,0,"queued",{position},false);});
    job.progress.delete("queued");
    phases.push({phase:"queued",ms:Math.round((performance.now()-queued)*1000)/1000});
    job.controller.signal.throwIfAborted();
@@ -266,7 +287,8 @@ export function createHostServiceV1(options){
    else{
     await progress("plan",0,frame.targets.length,frame.targets.includes("*:*")?"host-plan-roster":"host-plan",{targets:frame.targets.length});
      const subscribers=()=>[...job.clients].filter(client=>client.frame.sliceReport===true&&!client.controller.signal.aborted&&!client.reportPending);
-     const reportProgress=(milliseconds,detail)=>{
+     const reportProgress=(milliseconds,detail,observed)=>{
+      if(detail?.decision!==undefined&&NOTICE_KEYS_V1.has(detail.decision.key))job.notice={decision:detail.decision,atMs:Date.now()};
       if(detail?.sliceReport!==undefined){
        const report=detail.sliceReport;
        if(typeof report==="string"&&Buffer.byteLength(report)<=READY_SLICE_REPORT_POLICY_V1.fileBytes)return Promise.all(subscribers().map(client=>{
@@ -275,9 +297,9 @@ export function createHostServiceV1(options){
        }));
        return;
       }
-      return progress("slice",milliseconds,0,detail?"host-slice-detail":"host-slice",{seconds:Math.round(milliseconds/1000),...detail?{phase:detail.phase,done:detail.done,total:detail.total,...detail.reservation===undefined?{}:{reservation:detail.reservation},...detail.running===undefined?{}:{running:detail.running,...detail.decision===undefined?{}:{decision:detail.decision}}}:{}});
+      return progress("slice",milliseconds,0,detail===undefined?"host-slice":detail.step===true?(detail.done>detail.total?"host-slice-step-over":"host-slice-step"):"host-slice-detail",{seconds:detail?.step===true?detail.done:Math.round(milliseconds/1000),...detail?{bound:detail.total,phase:detail.phase,done:detail.done,total:detail.total,...detail.reservation===undefined?{}:{reservation:detail.reservation},...detail.leaseWait===undefined?{}:{leaseWait:detail.leaseWait},...detail.running===undefined?{}:{running:detail.running,...detail.decision===undefined?{}:{decision:detail.decision}}}:{},...detail?.decision===undefined&&job.notice!==undefined&&Date.now()-job.notice.atMs<NOTICE_MILLISECONDS_V1?{notice:job.notice.decision}:{}},observed);
      };
-     const answer=await ports.planner.plan({index:workspace.handle,targets:frame.targets,revision:frame.revision,parent:frame.parent,dirty:frame.dirty,cursor,agent:frame.agent,workspace:workspace.id,root:workspace.root,arguments:frame.arguments,tool:frame.tool,graphPolicy:frame.graphPolicy,signal:job.controller.signal,progress:reportProgress,wantsReport:()=>subscribers().length>0});
+     const answer=await ports.planner.plan({index:workspace.handle,targets:frame.targets,revision:frame.revision,parent:frame.parent,dirty:frame.dirty,cursor,agent:frame.agent,priority:frame.priority,workspace:workspace.id,root:workspace.root,arguments:frame.arguments,tool:frame.tool,graphPolicy:frame.graphPolicy,signal:job.controller.signal,progress:reportProgress,wantsReport:()=>subscribers().length>0});
     planned.computed++;planned.lastMilliseconds=Math.round(performance.now()-started);planned.milliseconds+=planned.lastMilliseconds;planned.captureFiles=answer.stats?.captureFiles??0;planned.captureProbes=answer.stats?.captureProbes??0;planned.unstaged=answer.stats?.unstaged??0;planned.load=answer.stats?.load;
     plan={revision:answer.revision,tasks:answer.tasks,...answer.slice?{slice:spill(answer.slice).ref}:{},...answer.manifest?{manifest:answer.manifest}:{},...answer.pin?{pin:answer.pin}:{}};
     if(!live&&!answer.pin){memo.set(memoKey,plan);while(memo.size>policy.planMemoEntries)memo.delete(memo.keys().next().value);}
@@ -376,6 +398,7 @@ export function createHostServiceV1(options){
 
  const sweep=()=>{
   const at=now();
+  if(keeper!==undefined&&!closing){const kept=keeper.tick();if(kept==="restored")log("key-restored",runtime.key);if(listening&&!existsSync(runtime.descriptor))writeDescriptor();}
   for(const workspace of[...workspaces.values()])if(workspace.active===0&&at-workspace.lastUsedAt>policy.workspaceIdleMilliseconds)closeWorkspace(workspace.id);
   const rss=(ports.resident?.rss??(()=>process.memoryUsage().rss))(),governed=(ports.workers?.active?.()??0)>0||governor.inFlight>0||[...workspaces.values()].some(workspace=>workspace.active>0)||[...connections].some(connection=>connection.requests.size>0);
   if(!governed&&rss>policy.maximumResidentBytes){
@@ -388,7 +411,7 @@ export function createHostServiceV1(options){
  };
 
  const cacheStop=new AbortController();let cacheRunning=false;
- /** 🔄 The reload of this service onto a newer implementation (`ports.reload` = `{identify,replace}`, see `createHostReloadV1`): the replacement starts first, then this service drains: it refuses new plans, lets every plan in flight run to completion (it is cut only after `policy.reload.drainStallMilliseconds` without a progress frame) and ends with the reason `reload`. */
+ /** 🔄 The reload of this service onto a newer implementation (`ports.reload` = `{identify,replace}`, see `createHostReloadV1`): the replacement starts first, then this service drains: it refuses new plans, lets every plan in flight run to completion (it is cut only after `policy.reload.drainStallMilliseconds` without an original work observation) and ends with the reason `reload`. */
  const reload=ports.reload?createHostReloadV1({implementation,identify:ports.reload.identify,replace:ports.reload.replace,drain:()=>drainAndExit("reload"),policy:policy.reload,now,log}):undefined;
  /** 🗄 One tick of the host cache upkeep (`ports.cache.tick`): single-flight, cancelled with the service, a failure is logged and never reaches a client. */
  const cacheTick=()=>{
@@ -419,6 +442,7 @@ export function createHostServiceV1(options){
    preparePrivateDirectoryV1(runtime.directory);
    if(existsSync(runtime.key))rootKey=readFileSync(runtime.key);
    else{rootKey=createRootKeyV1();try{writeFileSync(runtime.key,rootKey,{flag:"wx",mode:0o600});}catch{rootKey=readFileSync(runtime.key);}}
+   keeper=keepRootKeyV1({path:runtime.key,key:rootKey,touch:[runtime.descriptor],refreshMilliseconds:policy.keyRefreshMilliseconds,now});
    await listen();writeDescriptor();
    sweepPlans();sweepTimer=setInterval(sweepPlans,Math.max(50,policy.planSweepMilliseconds));sweepTimer.unref?.();
    idleTimer=setInterval(()=>{if(connections.size===0&&governor.inFlight===0&&now()-lastActivity>idleLimit)void (ports.runInFlight??runInFlightV1)().then(running=>{if(running)lastActivity=now();else if(connections.size===0&&governor.inFlight===0)void drainAndExit("idle");});},Math.max(250,Math.min(idleLimit/4,30000)));idleTimer.unref?.();

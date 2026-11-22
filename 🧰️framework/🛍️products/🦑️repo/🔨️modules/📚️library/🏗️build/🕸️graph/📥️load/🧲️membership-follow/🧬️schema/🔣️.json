@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Membership follow texts / Texte des Mitgliedschaftsfolgens",
+  "$defs": {
+    "Texts": {
+      "const": {
+        "retry": {
+          "en": "Following the tree: round {round} found {paths} member(s) changed (first: {path}); {evicted} owner memo(s) forgotten; this attempt answered {memo} owner(s) from memory, {checkpoint} from the checkpoint and observed {discovery} anew in {seconds} s.",
+          "de": "Dem Baum folgen: Runde {round} fand {paths} geänderte Mitglieder (zuerst: {path}); {evicted} Eigentümer-Merkzettel vergessen; dieser Versuch beantwortete {memo} Eigentümer aus dem Gedächtnis, {checkpoint} aus dem Prüfpunkt und beobachtete {discovery} neu in {seconds} s."
+        },
+        "contradiction": {
+          "en": "Owner round {round} repeats: {count} path(s) were read in two states inside one owner (first: {first}); {evicted} owner memo(s) forgotten and observed again, all others stay.",
+          "de": "Eigentümerrunde {round} wird wiederholt: {count} Pfad(e) wurden innerhalb eines Eigentümers in zwei Zuständen gelesen (zuerst: {first}); {evicted} Eigentümer-Merkzettel vergessen und neu beobachtet, alle anderen bleiben."
+        },
+        "churn": {
+          "en": "Owner round {round} settled while {count} path(s) changed between owners (first: {first}); every owner keeps its own consistent snapshot and a later read re-checks only the owners of the newer state.",
+          "de": "Eigentümerrunde {round} wurde stabil, obwohl sich {count} Pfad(e) zwischen Eigentümern änderten (zuerst: {first}); jeder Eigentümer behält seinen eigenen konsistenten Stand und ein späteres Lesen prüft nur die Eigentümer des neueren Zustands neu."
+        },
+        "settled": {
+          "en": "The file inventory settled in round {round} after {seconds} s: {memo} owner(s) from memory, {checkpoint} from the checkpoint, {discovery} observed anew in the last attempt.",
+          "de": "Das Dateiverzeichnis wurde in Runde {round} nach {seconds} s stabil: {memo} Eigentümer aus dem Gedächtnis, {checkpoint} aus dem Prüfpunkt, {discovery} im letzten Versuch neu beobachtet."
+        }
+      }
+    }
+  }
+}

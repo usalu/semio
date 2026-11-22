@@ -2330,7 +2330,7 @@ type ChangeJointPlatePlateThickness {
 }
 type ChangeJointPlatePlateCount {
   id: String!
-  newPlateCount: Int!
+  newPlateCount: UInt32!
 }
 type ChangeJointPlatePlateFy {
   id: String!
@@ -2354,11 +2354,11 @@ type ChangeJointPlateHoleDiameter {
 }
 type ChangeJointPlateBoltRows {
   id: String!
-  newBoltRows: Int!
+  newBoltRows: UInt32!
 }
 type ChangeJointPlateBoltsPerRow {
   id: String!
-  newBoltsPerRow: Int!
+  newBoltsPerRow: UInt32!
 }
 type ChangeJointPlatePitch {
   id: String!
@@ -2378,7 +2378,7 @@ type ChangeJointPlateEdgeDistance {
 }
 type ChangeJointPlateShearPlanes {
   id: String!
-  newShearPlanes: Int!
+  newShearPlanes: UInt32!
 }
 type ChangeJointPlateEccentricity {
   id: String!
@@ -2430,7 +2430,7 @@ type ChangeFoundationGroutThickness {
 }
 type ChangeFoundationAnchorCount {
   id: String!
-  newAnchorCount: Int!
+  newAnchorCount: UInt32!
 }
 type ChangeFoundationAnchorClass {
   id: String!
@@ -2502,7 +2502,7 @@ type ChangeFastenedJointBaseThickness {
 }
 type ChangeFastenedJointCount {
   id: String!
-  newCount: Int!
+  newCount: UInt32!
 }
 type ChangeFastenedJointDiameter {
   id: String!
@@ -2538,7 +2538,7 @@ type ChangeFastenedJointMemberId {
 }
 type ChangeFastenedJointPerRow {
   id: String!
-  newPerRow: Int!
+  newPerRow: UInt32!
 }
 type ChangeFastenedJointPitch {
   id: String!
@@ -2606,7 +2606,7 @@ type ChangeFatigueStressThickness {
 }
 type ChangeFormingGainBends {
   id: String!
-  newBends: Int!
+  newBends: UInt32!
 }
 type ChangeFormingGainForming {
   id: String!

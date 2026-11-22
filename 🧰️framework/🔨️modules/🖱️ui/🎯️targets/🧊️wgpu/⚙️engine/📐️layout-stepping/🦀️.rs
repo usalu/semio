@@ -1,7 +1,6 @@
 //! 📐️ Layout stepping: the surface lane, the layout steps, the theme propagation, the layout queue and the shell settings. See [`super`].
 
 use super::*;
-use semio_framework_job_worker::AdmittedWorkerJobSession as _;
 
 // #region engine
 //#region 🔖️Ui
@@ -293,7 +292,7 @@ impl Ui {
         window.layout_job = MountedLayoutJob::try_new(
             &window.tree,
             root,
-            MountedLayoutIdentity { surface: token, generation: window.layout_generation, revision: window.revision, theme_revision: window.theme_revision, viewport_revision: window.viewport_revision },
+            MountedLayoutIdentity { surface: token, generation: window.layout_generation, revision: window.revision, theme_revision: window.theme_revision, viewport_revision: window.viewport_revision, icons_only: self.driver.labels == semio_ui_wgpu_layout::chrome::UiDriverLabels::Icons },
             theme,
             window.viewport.0,
             window.viewport.1,
@@ -432,25 +431,6 @@ impl Ui {
             return Some((entry.token, id, lane, entry.reason));
         }
         None
-    }
-
-    pub fn set_window_kind_icons(&mut self, icons: HashMap<String, IconName>) {
-        self.shell.set_window_kind_icons(icons);
-    }
-
-    /// 🪟️ Rebuilds the shared `🐚️Shell`'s retained dock/split/tab chrome from a declarative
-    /// `WindowLayout` (independent of any window's `apply_tree`d content — see `shell`'s doc comment).
-    pub fn set_window_layout(&mut self, layout: WindowLayout) {
-        self.shell.set_window_layout(layout);
-    }
-
-    /// 🧭️ Forwards to `Shell::set_navbar` (stub — see that method's doc comment).
-    pub fn set_navbar(&mut self, items: Vec<String>) {
-        self.shell.set_navbar(items);
-    }
-
-    pub fn shell(&self) -> &Shell {
-        &self.shell
     }
 
     /// 🖼️ True when any window's retained tree still carries `DIRTY_LAYOUT`/`DIRTY_PAINT`/

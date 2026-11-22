@@ -9,7 +9,7 @@ import { prepareChord } from "@semio-tech/framework/time-travel/testing/band";
 import { DESKTOP, onFreshPages, waitUntil } from "@semio-tech/framework/time-travel/testing/page";
 import { verdict } from "@semio-tech/framework/time-travel/testing/report";
 
-const fixture = JSON.parse(readFileSync(new URL("./🔣️.json", import.meta.url), "utf8")) as { schema: string; variant: string; world: string; canvas: string; selection: string; palette: Record<"en" | "de", string>; grid: number[]; addedObjects: number; dragPixels: number; minMovement: number; pickTimeoutMs: number; clearTimeoutMs: number; clearExample: Record<"en" | "de", string>; clearPoints: [number, number][] };
+const fixture = JSON.parse(readFileSync(new URL("./🔣️.json", import.meta.url), "utf8")) as { schema: string; variant: string; world: string; canvas: string; selection: string; palette: Record<"en" | "de", string>; grid: number[]; addedObjects: number; clipboardOffset: [number, number, number]; dragPixels: number; minMovement: number; pickTimeoutMs: number; clearTimeoutMs: number; clearExample: Record<"en" | "de", string>; clearPoints: [number, number][] };
 type Instance = { id: string; position?: number[]; rotation?: number[]; scale?: number[] };
 const instances = async (): Promise<Instance[]> => page.evaluate((selector) => {
   const value = document.querySelector(selector)?.getAttribute("data-instances-json");
@@ -20,8 +20,8 @@ const instances = async (): Promise<Instance[]> => page.evaluate((selector) => {
 const selection = async (): Promise<string[]> => page.evaluate((selector) => {
   const value = document.querySelector(selector)?.getAttribute("data-selection-json");
   if (!value) return [];
-  const parsed = JSON.parse(value) as { selectedIds?: string[]; activeObjectId?: string };
-  return [...(parsed.selectedIds ?? []), ...(parsed.activeObjectId ? [parsed.activeObjectId] : [])];
+  const parsed = JSON.parse(value) as { ids?: string[] };
+  return parsed.ids ?? [];
 }, fixture.selection);
 const same = (left: Instance[], right: Instance[]) => JSON.stringify(left) === JSON.stringify(right);
 
@@ -68,12 +68,12 @@ const lifecycle = async () => {
   const created = await waitUntil(instances, (rows) => rows.length === blank.value.length + fixture.addedObjects, 90000, 500);
   const priorIds = new Set(blank.value.map((row) => row.id));
   const added = created.value.filter((row) => !priorIds.has(row.id));
-  const createdId = added.length === 1 ? added[0].id : undefined;
+  const createdId = added.length === 1 ? added[0]?.id : undefined;
   verdict("puzzle3d-created", created.ok && !!createdId, { before: blank.value.length, after: created.value.length, createdId });
   if (!created.ok || !createdId) return;
   await closePanels();
   const canvas = page.locator(fixture.canvas).first(), box = await canvas.boundingBox();
-  let picked = false;
+  let pickedAt: { x: number; y: number } | undefined;
   if (box) for (const y of fixture.grid) { for (const x of fixture.grid) {
     let cleared = false;
     for (const [cx, cy] of fixture.clearPoints) {
@@ -81,12 +81,45 @@ const lifecycle = async () => {
       if ((await waitUntil(selection, (ids) => ids.length === 0, fixture.clearTimeoutMs, 200)).ok) { cleared = true; break; }
     }
     if (!cleared) { verdict("puzzle3d-clear-selection", false, { selected: await selection() }); return; }
-    await page.mouse.click(box.x + box.width * x, box.y + box.height * y);
+    const point = { x: box.x + box.width * x, y: box.y + box.height * y };
+    await page.mouse.click(point.x, point.y);
     const result = await waitUntil(selection, (ids) => ids.includes(createdId), fixture.pickTimeoutMs, 200);
-    if (result.ok) { picked = true; break; }
-  } if (picked) break; }
-  verdict("puzzle3d-spatial-pick", picked, { createdId, selected: await selection() });
-  if (!picked || !box) return;
+    if (result.ok) { pickedAt = point; break; }
+  } if (pickedAt) break; }
+  verdict("puzzle3d-spatial-pick", pickedAt !== undefined, { createdId, selected: await selection() });
+  if (!pickedAt || !box) return;
+  await prepareChord();
+  await page.keyboard.press(mod + "+c");
+  await page.keyboard.press(mod + "+v");
+  const pasted = await waitUntil(instances, (rows) => rows.length === created.value.length + 1, 15000, 200);
+  const original = created.value.find((row) => row.id === createdId);
+  const clone = pasted.value.find((row) => row.id !== createdId);
+  const expectedPosition = original?.position?.map((value, index) => value + fixture.clipboardOffset[index]!);
+  verdict("puzzle3d-copy-paste-relative-position", pasted.ok && !!expectedPosition && clone?.position?.every((value, index) => Math.abs(value - expectedPosition[index]!) < fixture.minMovement) === true, { original, clone, expectedPosition });
+  if (!pasted.ok) return;
+  const selectedClone = await waitUntil(selection, (ids) => clone !== undefined && ids.includes(clone.id), 10000, 200);
+  verdict("puzzle3d-pasted-object-selected", selectedClone.ok, { selected: selectedClone.value, clone: clone?.id });
+  await prepareChord();
+  await page.keyboard.press(mod + "+z");
+  const restoredClipboard = await waitUntil(instances, (rows) => same(rows, created.value), 15000, 200);
+  verdict("puzzle3d-paste-undo", restoredClipboard.ok, { count: restoredClipboard.value.length });
+  if (!restoredClipboard.ok) return;
+  await page.mouse.click(pickedAt.x, pickedAt.y);
+  const selectedOriginal = await waitUntil(selection, (ids) => ids.includes(createdId), fixture.pickTimeoutMs, 200);
+  if (!selectedOriginal.ok) { verdict("puzzle3d-reselect-after-paste-undo", false, { selected: selectedOriginal.value }); return; }
+  await prepareChord();
+  await page.keyboard.press(mod + "+x");
+  const cut = await waitUntil(instances, (rows) => rows.length === blank.value.length && rows.every((row) => row.id !== createdId), 15000, 200);
+  verdict("puzzle3d-cut-removes-object", cut.ok, { createdId, count: cut.value.length });
+  if (!cut.ok) return;
+  await prepareChord();
+  await page.keyboard.press(mod + "+z");
+  const restoredCut = await waitUntil(instances, (rows) => same(rows, created.value), 15000, 200);
+  verdict("puzzle3d-cut-undo", restoredCut.ok, { count: restoredCut.value.length });
+  if (!restoredCut.ok) return;
+  await page.mouse.click(pickedAt.x, pickedAt.y);
+  const selectedAfterCut = await waitUntil(selection, (ids) => ids.includes(createdId), fixture.pickTimeoutMs, 200);
+  if (!selectedAfterCut.ok) { verdict("puzzle3d-reselect-after-cut-undo", false, { selected: selectedAfterCut.value }); return; }
   const unfold = page.locator('[id="framework.window.puzzle3dMainPerspective.utilityBar.unfold"]').first();
   if (await unfold.isVisible()) await unfold.click();
   const transform = page.locator('[id="puzzle3d-main-perspective"] #transform').first();
@@ -103,12 +136,21 @@ const lifecycle = async () => {
   if (length < 1) { verdict("puzzle3d-edit", false, { reason: "degenerate projected axis" }); return; }
   await page.mouse.move(box.x + origin.sx + dx * 0.6, box.y + origin.sy + dy * 0.6);
   await page.mouse.down();
+  const beforePreview = await canvas.screenshot();
   await page.mouse.move(box.x + origin.sx + dx * 0.6 + dx / length * fixture.dragPixels, box.y + origin.sy + dy * 0.6 + dy / length * fixture.dragPixels, { steps: 16 });
+  await page.evaluate(() => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
+  const duringPreview = await canvas.screenshot();
+  const committedDuringPreview = await instances();
   await page.mouse.up();
+  const changedPixels = !beforePreview.equals(duringPreview);
+  const documentStable = same(committedDuringPreview, created.value);
+  verdict("puzzle3d-transform-preview-before-release", changedPixels && documentStable, { changedPixels, documentStable });
   const prior = created.value.find((row) => row.id === createdId);
   const edited = await waitUntil(instances, (rows) => {
-    const after = rows.find((row) => row.id === createdId);
-    return !!prior?.position && !!after?.position && after.position.some((value, index) => Math.abs(value - prior.position![index]) > fixture.minMovement);
+    const from = prior?.position;
+    const to = rows.find((row) => row.id === createdId)?.position;
+    return !!from && !!to && to[0]! - from[0]! > fixture.minMovement
+      && Math.abs(to[1]! - from[1]!) < fixture.minMovement && Math.abs(to[2]! - from[2]!) < fixture.minMovement;
   }, 90000, 500);
   verdict("puzzle3d-edit", edited.ok, { createdId, before: prior?.position, after: edited.value.find((row) => row.id === createdId)?.position });
   if (!edited.ok) return;

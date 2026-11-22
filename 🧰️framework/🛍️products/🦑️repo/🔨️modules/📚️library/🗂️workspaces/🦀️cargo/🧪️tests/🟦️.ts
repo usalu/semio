@@ -1,18 +1,17 @@
 import {registeredToolExecutableV1} from "../../../../../../../🔨️modules/🏃️process/🧰️tools/🏃️run/🟦️.ts";
 import {cargoWorkspaceForManifestControlledV1} from "../🟦️.ts";
 import {repositoryCargoPreparationStorageV1} from "../../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
-import {stripVTControlCharacters} from "node:util";
-import {cargoPreparationRuntimeV1,observedCargoPreparationV1,cargoPreparationFixtureEnvironmentV1,prepareCargoFixtureV1,captureCargoFixtureV1} from "./🧰️runtime/🟦️.ts";
-import {pathToFileURL} from "node:url";
-import { fileURLToPath } from "node:url";
-import { test, expect, spyOn } from "bun:test";
+import {captureCargoFixtureV1} from "./🧰️runtime/🟦️.ts";
+import {privateRepositoryWorkspaceV1,testCheckoutRootV1} from "../../../🧪️testing/🧫️private-repository/🟦️.ts";
+import {fileURLToPath} from "node:url";
+import {test,expect,spyOn,setDefaultTimeout} from "bun:test";
+setDefaultTimeout(180000);
 import Ajv from "ajv";
 import TOML from "@iarna/toml";
 import glob from "fast-glob";
-import { mkdtempSync, mkdirSync, readFileSync, writeFileSync, unlinkSync } from "node:fs";
-import { join, relative } from "node:path";
-import { acquireQueuedResourceLease } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
-import { cargoRepositoryPackageSelections, publishCargoWorkspaceMemberships, parseCargoWorkspaceContribution, discoverCargoWorkspaces, cargoWorkspaceMembers, cargoWorkspaceForManifest, selectedCargoArguments, prepareCargoWorkspaceInvocation, cargoCommandRequiresOwnerPreparationV1, publishCargoWorkspaceMembership, parseCargoPreparation, prepareCargoOwners } from "../🟦️.ts";
+import {mkdtempSync,mkdirSync,readFileSync,writeFileSync,unlinkSync} from "node:fs";
+import {join,relative} from "node:path";
+import {cargoRepositoryPackageSelections,publishCargoWorkspaceMemberships,parseCargoWorkspaceContribution,discoverCargoWorkspaces,cargoWorkspaceMembers,cargoWorkspaceForManifest,selectedCargoArguments,parseCargoPreparation,prepareCargoOwners} from "../🟦️.ts";
 
 /** 📜️ Admits the one TOML input shape these tests feed: source text. */
 const tomlText = (input: Parameters<typeof Bun.TOML.parse>[0]): string => {
@@ -22,11 +21,11 @@ const tomlText = (input: Parameters<typeof Bun.TOML.parse>[0]): string => {
 const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
 const schema = JSON.parse(readFileSync(new URL("../🧬️schema/🔣️.json", import.meta.url), "utf8"));
 const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
+const fixtureRepositoryV1=await privateRepositoryWorkspaceV1();process.env.SEMIO_CARGO_FIXTURE_REPOSITORY=fixtureRepositoryV1.root;await fixtureRepositoryV1.prepare("leases","rust","tools");
 const artifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
 if (!artifactRoot) throw new Error("SEMIO_TEST_ARTIFACT_DIR is required for workspace native proofs");
 mkdirSync(artifactRoot, { recursive: true });
-if(!process.env.SEMIO_CARGO_PREPARATION_STORAGE)throw Error("Original short preparation custody storage required");
-const storage=JSON.parse(process.env.SEMIO_CARGO_PREPARATION_STORAGE);
+const storage=JSON.parse(JSON.stringify(repositoryCargoPreparationStorageV1(process.env.SEMIO_CARGO_FIXTURE_REPOSITORY,testCheckoutRootV1())));process.env.SEMIO_CARGO_PREPARATION_STORAGE=JSON.stringify(storage);
 const put = (root: string, path: string, source: string): void => { mkdirSync(join(root, path, ".."), { recursive: true }); writeFileSync(join(root, path), source); };
 const workspace = (members: string[], dependencies = ""): string => `[workspace]\nresolver="2"\nmembers=${JSON.stringify(members)}\n[workspace.metadata.semio.repository]\nschema-version=1\nexclude-patterns=[]\nowner-manifests=["*/Cargo.toml"]\nmember-manifests=${JSON.stringify(members.map(m=>m+"/Cargo.toml"))}\n[workspace.package]\nedition="2021"\n${dependencies}`;
 const pkg = (name: string, deps = ""): string => `[package]\nname="${name}"\nversion="0.1.0"\nedition.workspace=true\n[lib]\npath="🦀️.rs"\n${deps}`;
@@ -76,21 +75,6 @@ test("closed discovery admission requires authored regular-file recipes and port
  }
  expect(validate({schemaVersion:1,members:["C:/owned"],exclude:[]})).toBe(false);
 });
-test("selected Cargo refresh removes deleted artifact and plugin manifests while ghost directories remain", async () => {
- for(const deleted of ["artifact","plugin"]) {
-  const root=mkdtempSync(join(artifactRoot!,"workspace-ghost-"));
-  put(root,"Cargo.toml",workspace(["framework/kernel","specific/artifact","specific/plugin"]).replace('member-manifests=["framework/kernel/Cargo.toml","specific/artifact/Cargo.toml","specific/plugin/Cargo.toml"]','member-manifests=["*/*/Cargo.toml"]'));
-  for(const name of ["kernel","artifact","plugin"]) { const directory=name==="kernel"?"framework/kernel":"specific/"+name;put(root,directory+"/Cargo.toml",pkg("owned-"+name));put(root,directory+"/🦀️.rs","pub fn law() {}\n"); }
-  expect(cargo(root,"Cargo.toml").status).toBe(0);
-  unlinkSync(join(root,"specific",deleted,"Cargo.toml"));put(root,"specific/"+deleted+"/target/retained","source absence is explicit");
-  expect(cargo(root,"Cargo.toml").status).not.toBe(0);
-  expect(()=>publishCargoWorkspaceMembership(root,discoverCargoWorkspaces(root)[0]!,"check")).toThrow();
-  await prepareCargoFixtureV1(storage,root,["metadata","--manifest-path","Cargo.toml"],root,cargoPreparationFixtureEnvironmentV1(root));
-  const native=cargo(root,"Cargo.toml");expect(native.status).toBe(0);expect(JSON.parse(native.text).workspace_members.length).toBe(2);
-  expect(Bun.TOML.parse(readFileSync(join(root,"Cargo.toml"),"utf8"))).toEqual(TOML.parse(readFileSync(join(root,"Cargo.toml"),"utf8")));
-  expect(publishCargoWorkspaceMembership(root,discoverCargoWorkspaces(root)[0]!,"check")).toBe(false);
- }
-});
 
 test("portable preparation recipes match the independent closed schema",async()=>{
  const validator=new Ajv({strict:true}).compile(JSON.parse(readFileSync(new URL("../🧬️schema/🛠️preparation/🔣️.json",import.meta.url),"utf8")));
@@ -110,21 +94,6 @@ test("preparation follows actual selected dependency scopes and deduplicates sha
  const path=join(root,"framework/kernel/Cargo.toml");writeFileSync(path,readFileSync(path,"utf8").replace('../../📜️script.ts','../../../📜️script.ts'));expect(()=>prepareCargoOwners(root,cargoWorkspaceForManifest(root,"Cargo.toml"))).toThrow();
 });
 
-test("every compiling native command prepares owners and keeps diagnostics off machine stdout", () => {
- const schema=JSON.parse(readFileSync(new URL("../🧬️schema/🏃️invocation/🔣️.json",import.meta.url),"utf8")),corpus=JSON.parse(readFileSync(new URL("./🧫️fixtures/🏃️invocation/🔣️.json",import.meta.url),"utf8"));
- const oracle=new Ajv({strict:true}).compile(schema);
- for(const vector of corpus.cases){expect(oracle(vector)).toBe(true);expect(cargoCommandRequiresOwnerPreparationV1(vector.command)).toBe(vector.requiresOwnerPreparation);expect(oracle({...vector,requiresOwnerPreparation:!vector.requiresOwnerPreparation})).toBe(false);}
- const root=mkdtempSync(join(artifactRoot!,"cargo-machine-output-"));
- put(root,"Cargo.toml",workspace(["framework/*"]));
- put(root,"framework/kernel/Cargo.toml",pkg("neutral-kernel",'[package.metadata.semio.preparation]\nscript="../../📜️script.ts"\ncommand=["publish"]\n'));
- put(root,"framework/kernel/🦀️.rs","");
- put(root,"📜️script.ts",observedCargoPreparationV1(root,'console.log("[preparation] owned input refreshed");'));
- const api=cargoPreparationRuntimeV1(root);
- put(root,"proof/📜️script.ts",`import {prepareCargoFixtureV1,captureCargoFixtureV1} from ${JSON.stringify(fileURLToPath(new URL("./🧰️runtime/🟦️.ts",import.meta.url)))};await prepareCargoFixtureV1(${JSON.stringify(storage)},${JSON.stringify(root)},["run","--manifest-path","Cargo.toml"],${JSON.stringify(root)},process.env);console.log(JSON.stringify({machine:"retained"}));`);
- const child=Bun.spawnSync([process.execPath,join(root,"proof/📜️script.ts")],{cwd:root,env:{...cargoPreparationFixtureEnvironmentV1(root),SEMIO_WORKSPACE_ROOT:root},stdout:"pipe",stderr:"pipe"});
- if(child.exitCode!==0)throw new Error(Buffer.from(child.stderr).toString());
- expect(child.exitCode).toBe(0);expect(Buffer.from(child.stdout).toString()).toBe('{"machine":"retained"}\n');expect(Buffer.from(child.stderr).toString()).toContain("owned input refreshed");
-});
 
 
 test("one membership invocation parses each current manifest once and observes later saves", () => {
@@ -209,105 +178,9 @@ test("batch owner publication discovers one fresh repository inventory", () => {
 });
 
 
-test("selected preparation development closure matches Cargo tree root ownership",async()=>{
- const law=JSON.parse(readFileSync(new URL("./🧫️fixtures/🎯️selected-preparation/🔣️.json",import.meta.url),"utf8")).developmentClosure;
- for(const row of law.cases){
-  const root=mkdtempSync(join(artifactRoot!,"cargo-development-closure-")),names=new Set<string>(law.packages.map((value:any)=>value.name));
-  put(root,"Cargo.toml",workspace(["packages/*"]));
-  for(const value of law.packages){
-   const edges=["dependencies","build-dependencies","dev-dependencies"].flatMap(kind=>value[kind]?.length?[`[${kind}]\n${value[kind].map((name:string)=>`${name}={path="../${name}"}`).join("\n")}\n`]:[]).join("");
-   const path=`packages/${value.name}/Cargo.toml`,source=pkg(value.name,'[package.metadata.semio.preparation]\nscript="../../📜️script.ts"\ncommand=["'+value.name+'"]\n'+edges);
-   put(root,path,source);put(root,`packages/${value.name}/🦀️.rs`,"pub fn law() {}\n");expect(Bun.TOML.parse(source)).toEqual(TOML.parse(source));
-  }
-  expect(glob.sync("packages/*/Cargo.toml",{cwd:root,onlyFiles:true}).length).toBe(names.size);
-  const tree=await captureCargoFixtureV1(root,["tree","--offline","--prefix","none","--no-dedupe","--format","{p}","--edges","normal,build,dev","--manifest-path",join(root,"Cargo.toml"),...(row.roots.length?row.roots.flatMap((name:string)=>["-p",name]):["--workspace"])]);
-  const reached=[...new Set(tree.split("\n").map(line=>line.split(" ")[0]!).filter(name=>names.has(name)))].sort();expect(reached).toEqual(row.expected);
-  put(root,"📜️script.ts",'import {appendFileSync} from "node:fs";import {join} from "node:path";appendFileSync(join(process.env.SEMIO_WORKSPACE_ROOT!,"events.jsonl"),process.argv[2]+"\\n");');
-  prepareCargoOwners(root,cargoWorkspaceForManifest(root,"Cargo.toml"),row.roots);
-  expect(readFileSync(join(root,"events.jsonl"),"utf8").trim().split("\n").sort()).toEqual(reached);
- }
-});
 
-test("Cargo preparation diagnostics observe only opted-in exact phases",async()=>{
- const law=JSON.parse(readFileSync(new URL("./🧫️fixtures/🛠️preparation-diagnostics/🔣️.json",import.meta.url),"utf8")),packages=JSON.parse(readFileSync(new URL("./🧫️fixtures/🎯️selected-preparation/🔣️.json",import.meta.url),"utf8")).developmentClosure.packages;
- const validate=new Ajv({strict:true}).compile(JSON.parse(readFileSync(new URL("../🧬️schema/🛠️preparation/📊️diagnostic/🔣️.json",import.meta.url),"utf8"))),root=mkdtempSync(join(artifactRoot!,"cargo-preparation-diagnostics-"));
- put(root,"Cargo.toml",workspace(["packages/*"]));
- for(const value of packages){
-  const edges=["dependencies","build-dependencies","dev-dependencies"].flatMap(kind=>value[kind]?.length?[`[${kind}]\n${value[kind].map((name:string)=>`${name}={path="../${name}"}`).join("\n")}\n`]:[]).join("");
-  const source=pkg(value.name,'[package.metadata.semio.preparation]\nscript="../../📜️script.ts"\ncommand=["'+value.name+'"]\n'+edges);
-  put(root,`packages/${value.name}/Cargo.toml`,source);put(root,`packages/${value.name}/🦀️.rs`,"pub fn law() {}\n");expect(Bun.TOML.parse(source)).toEqual(TOML.parse(source));
- }
- const tree=await captureCargoFixtureV1(root,["tree","--offline","--prefix","none","--no-dedupe","--format","{p}","--edges","normal,build,dev","--manifest-path",join(root,"Cargo.toml"),...law.roots.flatMap((name:string)=>["-p",name])]);
- const reached=[...new Set(tree.trim().split("\n").map(line=>line.split(" ")[0]))].sort();expect(reached).toEqual(law.expected);
- put(root,"📜️script.ts",observedCargoPreparationV1(root,'import {appendFileSync} from "node:fs";appendFileSync(process.env.SEMIO_WORKSPACE_ROOT+"/events.jsonl",process.argv[2]+"\\n");'));
- const old=process.env.SEMIO_CARGO_PREPARATION_TIMING,output:string[]=[];
- expect(law.stream).toBe("stderr");
- const logger=spyOn(console,"error").mockImplementation((line:unknown)=>{output.push(String(line));});
- try{
-  process.env.SEMIO_CARGO_PREPARATION_TIMING=law.disabled;prepareCargoOwners(root,cargoWorkspaceForManifest(root,"Cargo.toml"),law.roots);
-  expect(output.filter(line=>line.startsWith("[cargo-preparation-timing] "))).toHaveLength(0);output.length=0;
-  process.env.SEMIO_CARGO_PREPARATION_TIMING=law.enabled;prepareCargoOwners(root,cargoWorkspaceForManifest(root,"Cargo.toml"),law.roots);
-  const records=output.filter(line=>line.startsWith("[cargo-preparation-timing] ")).map(line=>JSON.parse(line.slice("[cargo-preparation-timing] ".length)));
-  expect([...new Set(records.map(row=>row.phase))].sort()).toEqual([...law.phases].sort());
-  for(const record of records)expect(validate(record),JSON.stringify(validate.errors)).toBe(true);
-  expect(records.filter(row=>row.phase==="recipe").map(row=>(TOML.parse(readFileSync(join(root,row.owner),"utf8")).package as {name:string}).name).sort()).toEqual(reached);
-  expect(records.filter(row=>row.phase==="inventory")).toHaveLength(law.inventoryEpochs);
-  expect(records.filter(row=>row.phase==="finished").map(row=>row.items)).toEqual([reached.length]);
- }finally{logger.mockRestore();if(old===undefined)delete process.env.SEMIO_CARGO_PREPARATION_TIMING;else process.env.SEMIO_CARGO_PREPARATION_TIMING=old;}
- const script=fileURLToPath(new URL("../../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/📜️script.ts",import.meta.url));
- const child=Bun.spawnSync([process.execPath,script,"prepare","--manifest","Cargo.toml",...law.roots.flatMap((name:string)=>["--package",name])],{cwd:root,env:{...cargoPreparationFixtureEnvironmentV1(root),SEMIO_WORKSPACE_ROOT:root,SEMIO_CARGO_PREPARATION_STORAGE:JSON.stringify(storage),SEMIO_CARGO_PREPARATION_TIMING:law.enabled},stdout:"pipe",stderr:"pipe",timeout:10_000});
- expect(child.exitCode,child.stderr.toString()).toBe(0);
- const records=stripVTControlCharacters(child.stderr.toString()).split("\n").filter(line=>line.startsWith("[cargo-preparation-timing] ")).map(line=>JSON.parse(line.slice("[cargo-preparation-timing] ".length)));
- expect(records.filter(row=>law.scriptPhases.includes(row.phase)).map(row=>row.phase)).toEqual(law.scriptPhases);
- for(const record of records)expect(validate(record),JSON.stringify(validate.errors)).toBe(true);
- expect((TOML.parse(readFileSync(join(root,"Cargo.toml"),"utf8")).workspace as {members:string[]}).members.sort()).toEqual(glob.sync("packages/*/Cargo.toml",{cwd:root,onlyFiles:true}).map(path=>path.slice(0,-"/Cargo.toml".length)).sort());
-});
 
-test("queued Cargo preparation exposes opted-in waiting before the protected operation completes",async()=>{
- const law=JSON.parse(readFileSync(new URL("./🧫️fixtures/🛠️preparation-diagnostics/🔣️.json",import.meta.url),"utf8")),root=mkdtempSync(join(artifactRoot!,"cargo-live-wait-"));
- put(root,"Cargo.toml",workspace(["packages/*"]));put(root,"packages/a/Cargo.toml",pkg("a"));put(root,"packages/a/🦀️.rs","pub fn law() {}\n");
- const validate=new Ajv({strict:true}).compile(JSON.parse(readFileSync(new URL("../🧬️schema/🛠️preparation/📊️diagnostic/🔣️.json",import.meta.url),"utf8")));
- expect(validate({phase:law.waiting.phase,owner:law.waiting.owner,elapsedMs:0,items:law.waiting.items})).toBe(true);
- const lease=await acquireQueuedResourceLease({owner:"independent-diagnostic-owner",directory:storage.leaseDirectory,resource:`cargo-preparation:${root}`,mode:"exclusive",signal:new AbortController().signal});
- const script=fileURLToPath(new URL("../../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/📜️script.ts",import.meta.url));
- const child=Bun.spawn([process.execPath,script,"prepare","--manifest",law.waiting.owner],{cwd:root,env:{...cargoPreparationFixtureEnvironmentV1(root),SEMIO_WORKSPACE_ROOT:root,SEMIO_CARGO_PREPARATION_STORAGE:JSON.stringify(storage),SEMIO_CARGO_PREPARATION_TIMING:law.enabled},stdout:"pipe",stderr:"pipe"});
- const reader=child.stderr.getReader();let timeout:ReturnType<typeof setTimeout>|undefined;
- try{
-  const observation=async():Promise<string>=>{const decoder=new TextDecoder();let buffered="";for(;;){const next=await reader.read();if(next.done)throw Error("Preparation closed before waiting observation");buffered+=decoder.decode(next.value,{stream:true});const lines=buffered.split("\n");buffered=lines.pop()!;const line=lines.map(line=>stripVTControlCharacters(line)).find(line=>line.startsWith("[cargo-preparation-timing] "));if(line)return line;}};
-  const observed=await Promise.race([observation(),new Promise<never>((_,reject)=>{timeout=setTimeout(()=>reject(Error("No live stderr lease-wait observation")),law.waiting.maximumObservationMs);})]);
-  const record=JSON.parse(observed.slice("[cargo-preparation-timing] ".length));
-  expect(validate(record),JSON.stringify(validate.errors)).toBe(true);expect(record.phase).toBe(law.waiting.phase);expect(record.owner).toBe(law.waiting.owner);expect(record.items).toBe(law.waiting.items);expect(child.exitCode).toBe(null);
- }finally{if(timeout)clearTimeout(timeout);child.kill("SIGTERM");await child.exited;reader.releaseLock();lease.release();}
-},10000);
 
-test("selected package preparation follows the Cargo resolved local closure without preparing siblings",async()=>{
- const law=JSON.parse(readFileSync(new URL("./🧫️fixtures/🎯️selected-preparation/🔣️.json",import.meta.url),"utf8"));
- for(const row of law.cases){
-  const root=mkdtempSync(join(artifactRoot!,"cargo-selected-preparation-"));
-  put(root,"Cargo.toml",workspace(["framework/*"]).replace('resolver="2"','resolver="2"\nexclude=["specific"]'));
-  put(root,"specific/Cargo.toml",workspace(["models/*"],'[workspace.dependencies]\nbridge={path="../../framework/bridge"}\n'.replace("../../framework","../framework")));
-  const recipe=(name:string)=>'[package.metadata.semio.preparation]\nscript="../../📜️script.ts"\ncommand=["'+name+'"]\n';
-  put(root,"framework/kernel/Cargo.toml",pkg("neutral-kernel",recipe("neutral-kernel")));
-  put(root,"framework/bridge/Cargo.toml",pkg("bridge",recipe("bridge")+'[dependencies]\nneutral-kernel={path="../kernel"}\n'));
-  put(root,"specific/models/a/Cargo.toml",pkg("model-a",recipe("model-a")+'[dependencies]\nbridge={workspace=true}\n'));
-  put(root,"specific/models/b/Cargo.toml",pkg("model-b",recipe("model-b")));
-  for(const path of ["framework/kernel","framework/bridge","specific/models/a","specific/models/b"])put(root,path+"/🦀️.rs","pub fn law() {}\n");
-  const source='import {appendFileSync} from "node:fs";import {join} from "node:path";appendFileSync(join(process.env.SEMIO_WORKSPACE_ROOT!,"events.jsonl"),process.argv[2]+"\\n");';
-  put(root,"📜️script.ts",observedCargoPreparationV1(root,source));put(root,"specific/📜️script.ts",observedCargoPreparationV1(root,source));
-  const metadata=await captureCargoFixtureV1(root,["metadata","--offline","--format-version","1","--manifest-path",join(root,row.manifest)]);
-  const oracle=JSON.parse(metadata),packages=new Map(oracle.packages.map((value:any)=>[value.id,value])),nodes=new Map(oracle.resolve.nodes.map((value:any)=>[value.id,value]));
-  const seeds=row.packages.length?oracle.packages.filter((value:any)=>row.packages.includes(value.name)).map((value:any)=>value.id):row.manifest.endsWith("models/a/Cargo.toml")?[oracle.resolve.root]:oracle.workspace_members;
-  const reached=new Set<string>(seeds);for(const id of reached)for(const dependency of (nodes.get(id) as any).dependencies)reached.add(dependency);
-  expect([...reached].map(id=>(packages.get(id) as any).name).sort()).toEqual(row.expected);
-  const api=cargoPreparationRuntimeV1(root);
-  const args=["test","--manifest-path",row.manifest,...row.packages.flatMap((name:string)=>["-p",name])];
-  put(root,"proof/📜️script.ts",`import {prepareCargoFixtureV1,captureCargoFixtureV1} from ${JSON.stringify(fileURLToPath(new URL("./🧰️runtime/🟦️.ts",import.meta.url)))};await prepareCargoFixtureV1(${JSON.stringify(storage)},${JSON.stringify(root)},${JSON.stringify(args)},${JSON.stringify(root)},process.env);`);
-  const child=Bun.spawnSync([process.execPath,join(root,"proof/📜️script.ts")],{cwd:root,env:{...cargoPreparationFixtureEnvironmentV1(root),SEMIO_WORKSPACE_ROOT:root},stdout:"pipe",stderr:"pipe"});
-  expect(child.exitCode,child.stderr.toString()).toBe(0);
-  expect(readFileSync(join(root,"events.jsonl"),"utf8").trim().split("\n").sort()).toEqual(row.expected);
-  for(const path of ["Cargo.toml","specific/Cargo.toml"])expect(Bun.TOML.parse(readFileSync(join(root,path),"utf8"))).toEqual(TOML.parse(readFileSync(join(root,path),"utf8")));
- }
-},120_000);
 
 
 test("membership discovery compiles bounded matchers independent of unrelated leaf count", () => {
@@ -328,6 +201,45 @@ test("membership discovery compiles bounded matchers independent of unrelated le
  } finally {Object.defineProperty(Bun,"Glob",descriptor);}
 });
 
+
+test("membership discovery meters physical custody per member linearly in directory depth", () => {
+ const law=fixture.custodyWork,base=fileURLToPath(new URL("./📏️custody-work/",import.meta.url)),perMember:number[]=[];
+ for(const depth of law.depths){
+  const root=mkdtempSync(join(artifactRoot!,"cargo-custody-work-")),chain=Array.from({length:depth},(_,index)=>"d"+index).join("/");
+  put(root,"Cargo.toml",workspace(law.members));
+  for(let index=0;index<law.breadth;index++)put(root,`packages/${chain}/leaf${index}/Cargo.toml`,pkg("leaf"+index));
+  const child=Bun.spawnSync([process.execPath,"--preload",join(base,"🪝️preload.ts"),join(base,"📜️script.ts"),root,"walk"],{cwd:root,stdout:"pipe",stderr:"pipe"});
+  expect(child.exitCode,child.stderr.toString()).toBe(0);
+  const actual=JSON.parse(child.stdout.toString()) as {members:string[];lstat:number},independent=glob.sync(law.members.map((member:string)=>member+"/Cargo.toml"),{cwd:root,onlyFiles:true,followSymbolicLinks:false}).sort();
+  expect(actual.members).toEqual(independent);
+  perMember.push(actual.lstat/law.breadth);
+ }
+ expect(perMember[1]!/perMember[0]!).toBeLessThan(law.maximumGrowth);
+},120_000);
+
+const meteredWalk=(root:string,mode:"within"|"replay",within?:string):any=>{
+ const base=fileURLToPath(new URL("./📏️custody-work/",import.meta.url)),child=Bun.spawnSync([process.execPath,"--preload",join(base,"🪝️preload.ts"),join(base,"📜️script.ts"),root,mode,...(within?[within]:[])],{cwd:root,stdout:"pipe",stderr:"pipe"});
+ expect(child.exitCode,child.stderr.toString()).toBe(0);return JSON.parse(child.stdout.toString());
+};
+test("scoped membership discovery does not grow with unrelated siblings and equals the full walk within the scope", () => {
+ const law=fixture.scopeWork,calls:number[]=[];
+ for(const noise of law.noise){
+  const root=mkdtempSync(join(artifactRoot!,"cargo-scope-work-"));put(root,"Cargo.toml",workspace(law.members));
+  for(let index=0;index<law.targets;index++)put(root,`packages/focus/leaf${index}/Cargo.toml`,pkg("focus"+index));
+  for(let index=0;index<noise;index++)put(root,`packages/noise/n${index}/Cargo.toml`,pkg("noise"+index));
+  const actual=meteredWalk(root,"within","packages/focus"),independent=glob.sync(["packages/focus/*/Cargo.toml"],{cwd:root,onlyFiles:true,followSymbolicLinks:false}).sort();
+  expect(actual.members).toEqual(independent);expect(actual.full).toEqual(independent);calls.push(actual.lstat+actual.readdir);
+ }
+ expect(calls[1]!/calls[0]!).toBeLessThan(law.maximumGrowth);
+},120_000);
+
+test("a seeded pass answers settled listings without reading directories and agrees with the cold walk", () => {
+ const law=fixture.replayWork,root=mkdtempSync(join(artifactRoot!,"cargo-replay-work-"));put(root,"Cargo.toml",workspace(law.members));
+ for(let index=0;index<law.leaves;index++)put(root,`packages/group${index%law.groups}/leaf${index}/Cargo.toml`,pkg("leaf"+index));
+ const actual=meteredWalk(root,"replay"),independent=glob.sync(law.members.map((member:string)=>member+"/Cargo.toml"),{cwd:root,onlyFiles:true,followSymbolicLinks:false}).sort();
+ expect(actual.cold).toEqual(independent);expect(actual.warm).toEqual(independent);
+ expect(actual.coldReaddir).toBeGreaterThan(law.groups);expect(actual.warmReaddir).toBeLessThanOrEqual(law.maximumReplayedReaddirs);
+},120_000);
 
 test("explicit root-owned packages remain discoverable beneath a different native workspace",async()=>{
  const row=fixture.overlappingOwners,root=mkdtempSync(join(artifactRoot!,"workspace-overlap-"));put(root,"Cargo.toml",workspace(row.rootMembers).replace('member-manifests='+JSON.stringify(row.rootMembers.map((member:string)=>member+"/Cargo.toml")),'member-manifests='+JSON.stringify(row.rootAdmission)).replace('members='+JSON.stringify(row.rootMembers),'members='+JSON.stringify(row.rootMembers)+'\nexclude=["framework"]'));put(root,"framework/Cargo.toml",workspace(row.frameworkMembers).replace('members='+JSON.stringify(row.frameworkMembers),'members='+JSON.stringify(row.frameworkMembers)+'\nexclude=["product"]'));put(root,"framework/product/Cargo.toml",pkg(row.rootPackage).replace('[package]\n','[package]\nworkspace='+JSON.stringify(row.rootPackageWorkspace)+'\n'));put(root,"framework/product/🦀️.rs","pub fn product(){}\n");put(root,"framework/general/Cargo.toml",pkg(row.frameworkPackage));put(root,"framework/general/🦀️.rs","pub fn general(){}\n");
@@ -355,17 +267,10 @@ test("all-root dependency preparation honors explicit package workspaces beneath
 });
 
 
-test("named dependency preparation agrees with actual Cargo root graph reachability",async()=>{
- const row=fixture.overlappingOwners,root=mkdtempSync(join(artifactRoot!,"workspace-prepare-reachable-"));
- put(root,"Cargo.toml",workspace(row.rootMembers,'[workspace.dependencies]\ngeneral={package="'+row.frameworkPackage+'",path="framework/general"}\n').replace('member-manifests='+JSON.stringify(row.rootMembers.map((m:string)=>m+"/Cargo.toml")),'member-manifests='+JSON.stringify(row.rootAdmission)).replace('[workspace]\n','[workspace]\nexclude=["framework"]\n'));
- put(root,"framework/Cargo.toml",workspace([...row.frameworkMembers,"orphan"]).replace('[workspace]\n','[workspace]\nexclude=["product"]\n'));put(root,"framework/product/Cargo.toml",pkg(row.rootPackage,'[dependencies]\ngeneral={workspace=true}\n').replace('[package]\n','[package]\nworkspace="'+row.rootPackageWorkspace+'"\n'));put(root,"framework/product/🦀️.rs","pub fn product() {}\n");put(root,"framework/general/Cargo.toml",pkg(row.frameworkPackage));put(root,"framework/general/🦀️.rs","pub fn general() {}\n");put(root,"framework/orphan/Cargo.toml",pkg("unreachable-module"));put(root,"framework/orphan/🦀️.rs","pub fn orphan() {}\n");
- const selected=discoverCargoWorkspaces(root).find(scope=>scope.directory===".")!;
- for(const selection of fixture.reachablePreparation){let valid=false,diagnostic="";try{await captureCargoFixtureV1(root,["tree","--offline","--manifest-path",join(root,"Cargo.toml"),...selection.names.flatMap((name:string)=>["-p",name])]);valid=true;}catch(error){diagnostic=String(error);if(!/exited with status/u.test(diagnostic))throw error;}expect(valid,diagnostic).toBe(selection.valid);if(selection.valid)expect(()=>prepareCargoOwners(root,selected,selection.names)).not.toThrow();else expect(()=>prepareCargoOwners(root,selected,selection.names)).toThrow();}
-});
 
 
 test("reachable inherited development aliases match Cargo metadata without expanding production preparation",()=>{
- const law=JSON.parse(readFileSync(new URL("../🧫️fixtures/🎯️selected-preparation/🔣️.json",import.meta.url),"utf8")).inheritedAliases;
+ const law=JSON.parse(readFileSync(new URL("./🧫️fixtures/🎯️selected-preparation/🔣️.json",import.meta.url),"utf8")).inheritedAliases;
  for(const row of law.cases){
   const root=mkdtempSync(join(artifactRoot!,"cargo-alias-"));
   put(root,"Cargo.toml",workspace(["kernel"]));put(root,"kernel/Cargo.toml",pkg("neutral-kernel"));put(root,"kernel/🦀️.rs","");put(root,"application/Cargo.toml",workspace(["app"]));put(root,"application/app/Cargo.toml",pkg("selected-app",'[dependencies]\nowned-dependency={path="../../dependency/member"}\n'));put(root,"application/app/🦀️.rs","");

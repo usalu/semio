@@ -1,0 +1,12 @@
+{
+  "pageBytes": 97,
+  "pdfPages": 1,
+  "streamObject": 4,
+  "streamBytes": 2688,
+  "streamSha256": "645c3306721145aca142509fbc4a292689254c15f61c48129c1d64ce6ff5c54d",
+  "cancellationCuts": [
+    1,
+    40,
+    1000
+  ]
+}

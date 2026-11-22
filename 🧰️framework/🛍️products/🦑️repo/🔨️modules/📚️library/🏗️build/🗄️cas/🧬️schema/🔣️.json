@@ -22,6 +22,9 @@
       "const": {
         "version": 1,
         "capBytes": 34359738368,
+        "capHostSharePercent": 3,
+        "minimumCapBytes": 1073741824,
+        "enforceTickMilliseconds": 30000,
         "highWatermark": 0.9,
         "lowWatermark": 0.75,
         "partition": {

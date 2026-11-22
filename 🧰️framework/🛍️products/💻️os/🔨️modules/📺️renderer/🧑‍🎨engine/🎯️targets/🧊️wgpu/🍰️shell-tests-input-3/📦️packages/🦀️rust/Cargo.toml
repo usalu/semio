@@ -46,6 +46,7 @@ semio-renderer-wgpu-shell-state = { path = "../../../🐙️shell-state/📦️p
 semio-renderer-wgpu-shell-surfaces = { path = "../../../🫧️shell-surfaces/📦️packages/🦀️rust", features = ["testkit"] }
 semio-renderer-wgpu-shell-sync = { path = "../../../🔃️shell-sync/📦️packages/🦀️rust", features = ["testkit"] }
 semio-renderer-wgpu-shell-view-chrome = { path = "../../../🍱️shell-view-chrome/📦️packages/🦀️rust", features = ["testkit"] }
+semio-renderer-wgpu-shell-view-chrome-overlays = { path = "../../../🪧️shell-view-chrome-overlays/📦️packages/🦀️rust", features = ["testkit"] }
 semio-renderer-wgpu-shell-view-overlays = { path = "../../../🗨️shell-view-overlays/📦️packages/🦀️rust", features = ["testkit"] }
 semio-renderer-wgpu-shell-view-paint = { path = "../../../🖍️shell-view-paint/📦️packages/🦀️rust" }
 semio-renderer-wgpu-shell-view-panels = { path = "../../../🪀️shell-view-panels/📦️packages/🦀️rust", features = ["testkit"] }

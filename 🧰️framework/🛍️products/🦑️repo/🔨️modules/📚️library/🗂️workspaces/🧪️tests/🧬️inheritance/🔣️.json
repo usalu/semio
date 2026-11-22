@@ -1,8 +1,8 @@
 {
   "version": 1,
   "dependency": {
-    "name": "semio-framework-diagnostic",
-    "path": "🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust",
+    "name": "semio-framework-artifact-reference",
+    "path": "🧰️framework/🔨️modules/🗿️artifact-reference/📦️packages/🦀️rust",
     "workspace": "🧰️framework/Cargo.toml"
   },
   "chain": [
@@ -14,7 +14,7 @@
     {
       "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/📦️packages/🦀️rust/Cargo.toml",
       "workspace": "Cargo.toml",
-      "inherited": 4
+      "inherited": 3
     },
     {
       "manifest": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/📦️packages/🦀️rust/Cargo.toml",
@@ -24,9 +24,14 @@
   ],
   "baselineMissing": [
     {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/Cargo.toml",
+      "table": "dependencies",
+      "name": "semio-framework-artifact-reference"
+    },
+    {
       "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/📦️packages/🦀️rust/Cargo.toml",
       "table": "dependencies",
-      "name": "semio-framework-diagnostic"
+      "name": "semio-framework-artifact-reference"
     }
   ]
 }

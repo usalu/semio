@@ -1,5 +1,6 @@
 //! 🪙️ Original physical loans keep their same caller and exact actual effects across failure and unwind.
 use semio_framework_job::*;
+use semio_framework_job_testing_caller::OriginalJobFixtureCaller;
 use semio_framework_value_testing_allocator as _;
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use semio_framework_value::retirement::controlled::ControlledRetirement;

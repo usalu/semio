@@ -58,7 +58,7 @@ fn split_axis_extent_uses_row_width_not_canvas_max() {
 
 #[test]
 fn row_layout_stack_content_rects_match_per_window() {
-    let layout = create_default_layout(&["flow".into(), "preview".into()], "row", Some(&[68.0, 32.0]), Some(&["Flow".into(), "Preview".into()]));
+    let layout = create_default_layout(&["flow".into(), "preview".into()], Axis::Horizontal, Some(&[0.68, 0.32]), Some(&["Flow".into(), "Preview".into()]));
     let app = sample_app(&["flow", "preview"], Some(layout));
     let dock = DockState::from_app(&app, Some("flow"));
     let canvas = Rect::new(0.0, 0.0, 1200.0, 800.0);

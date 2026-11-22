@@ -131,7 +131,8 @@
         "stamp",
         "closure",
         "registry",
-        "field"
+        "field",
+        "global"
       ]
     },
     "Observation": {

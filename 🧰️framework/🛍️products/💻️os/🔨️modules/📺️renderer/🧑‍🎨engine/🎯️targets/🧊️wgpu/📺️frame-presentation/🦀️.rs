@@ -8,7 +8,7 @@ use semio_renderer_wgpu_frame_actions::AppInteractionState;
 use semio_renderer_wgpu_runtime_mailbox::{MailboxRuntime, PresenterInteractionStep, RuntimePresentationAuthority, RuntimeRasterOperationAuthority};
 use semio_renderer_wgpu_shell_view_panels::PanelsViewCtx;
 use infinite_world::world::{begin_world3d_dynamic_retirement, step_world3d_dynamic_retirement, world3d_dynamic_retirement_terminal_is_empty};
-use semio_framework_job::{InteractiveJobCloseStep, RetainedCloneProgress};
+use semio_framework_job::RetainedCloneProgress;
 use semio_renderer_wgpu_host_base::{app_now_ms, frame_latency, log_debug, log_debug_once_per_transition};
 #[cfg(not(target_arch = "wasm32"))]
 use semio_renderer_wgpu_host_base::{RENDERER_IO_WAKE, pump_renderer_io_sessions};

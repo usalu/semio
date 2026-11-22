@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://repo.disk-recovery/NativeShardsV1",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "version": 1,
+        "directory": ".cache/b/n/m",
+        "shardPattern": "^[a-f0-9]{40}$",
+        "child": "native/m",
+        "regenerableFiles": ["nx_files.nxt"],
+        "rewriteMarginBytes": 4194304,
+        "nearFullPercent": 90,
+        "namespaceGraphs": "nx/graphs",
+        "namespaceResourcePrefix": "nx:graph-namespace:",
+        "leaseDirectory": ".cache/b/l/m/data",
+        "namespaceKeyCharacters": 20
+      }
+    },
+    "Fact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "path", "totalBytes", "freeBytes", "files"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[a-f0-9]{40}$"},
+        "path": {"type": "string", "minLength": 1},
+        "totalBytes": {"type": "integer", "minimum": 0},
+        "freeBytes": {"type": "integer", "minimum": 0},
+        "files": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "bytes"],
+            "properties": {"name": {"type": "string", "minLength": 1}, "bytes": {"type": "integer", "minimum": 0}}
+          }
+        }
+      }
+    },
+    "Messages": {
+      "const": {
+        "en": {
+          "consumer": "The Nx native workspace data of shard {id} ({path}) holds {used} MB of {total} MB; its file map {file} takes {map} MB and Nx rewrites it next to the old copy, so {free} MB free is not enough.",
+          "freed": "Nx native workspace data: removed {file} ({map} MB) of shard {id}; Nx rebuilds it on its next run.",
+          "held": "Nx native workspace data of shard {id} is in use; it is left as it is."
+        },
+        "de": {
+          "consumer": "Die nativen Nx-Arbeitsbereichsdaten des Shards {id} ({path}) belegen {used} MB von {total} MB; ihre Dateikarte {file} braucht {map} MB und Nx schreibt sie neben die alte Kopie neu, daher reichen {free} MB frei nicht.",
+          "freed": "Native Nx-Arbeitsbereichsdaten: {file} ({map} MB) des Shards {id} entfernt; Nx baut sie beim nächsten Lauf neu auf.",
+          "held": "Die nativen Nx-Arbeitsbereichsdaten des Shards {id} sind in Benutzung; sie bleiben unverändert."
+        }
+      }
+    }
+  }
+}

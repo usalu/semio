@@ -458,7 +458,7 @@ fn jsonschema_validates_compliant_and_noncompliant_snapshots() {
 
 #[test]
 fn bundled_dsl_examples_decode_and_evaluate() {
-    let demo = include_str!("../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
+    let demo = include_str!("../../../🖼️assets/🏢️compliant-office/🗣️.dsl.semio");
     let failing = include_str!("../../../🖼️assets/⚠️noncompliant-office/🗣️.dsl.semio");
     let compliant = semio_s_artifact_norm_din16798_io::text::snapshot::decode_din16798_dsl(demo).expect("demo dsl");
     let noncompliant = semio_s_artifact_norm_din16798_io::text::snapshot::decode_din16798_dsl(failing).expect("failing dsl");

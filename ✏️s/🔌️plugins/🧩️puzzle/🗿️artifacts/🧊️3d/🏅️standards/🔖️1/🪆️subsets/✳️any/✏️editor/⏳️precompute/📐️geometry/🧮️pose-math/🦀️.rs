@@ -154,6 +154,18 @@ impl CollisionMeshRetirement {
     fn birth_bytes() -> usize {
         size_of::<Self>()
     }
+
+    /// 📏️ The heap block `Arc::try_unwrap` returns when the last share hands over its mesh: two counters then the mesh.
+    fn shared_block_bytes() -> usize {
+        std::alloc::Layout::new::<[usize; 2]>().extend(std::alloc::Layout::new::<collision::TriMesh>()).map_or(0, |(layout, _)| layout.pad_to_align().size())
+    }
+
+    fn last_share_release_bytes(&self) -> usize {
+        match self.shared.as_ref() {
+            Some(shared) if std::sync::Arc::strong_count(shared) == 1 && self.tree.capacity() != 0 => Self::shared_block_bytes(),
+            _ => 0,
+        }
+    }
 }
 
 impl semio_framework_value::retirement::RetirementCursor for CollisionMeshRetirement {
@@ -162,20 +174,18 @@ impl semio_framework_value::retirement::RetirementCursor for CollisionMeshRetire
 
 
     fn terminal_is_empty(&self) -> bool {
-        self.shared.is_none() && self.vertices.capacity() == 0 && self.triangles.capacity() == 0 && self.tree.is_empty()
+        self.shared.is_none() && self.vertices.capacity() == 0 && self.triangles.capacity() == 0 && self.tree.is_empty() && self.tree.capacity() == 0
     }
 
     fn next_close_byte_demand(&self) -> Option<usize> {
         Some(if self.shared.is_some() {
-            0
+            self.last_share_release_bytes()
         } else if self.vertices.capacity() != 0 {
             self.vertices.capacity() * size_of::<rigid::Point3>()
         } else if self.triangles.capacity() != 0 {
             self.triangles.capacity() * size_of::<[u32; 3]>()
-        } else if self.tree.is_empty() {
-            0
         } else {
-            collision::BvhTree::NODE_BYTES
+            self.tree.last().map_or(self.tree.capacity() * size_of::<collision::BvhTree>(), collision::BvhTree::step_release_bytes)
         })
     }
 
@@ -211,12 +221,14 @@ impl CollisionMeshRetirement {
             return RetirementStep::Advanced;
         }
         if let Some(shared) = self.shared.take() {
+            let released = if std::sync::Arc::strong_count(&shared) == 1 { Self::shared_block_bytes() } else { 0 };
             match std::sync::Arc::try_unwrap(shared) {
                 Ok(mesh) => {
                     let parts = mesh.into_parts();
                     *self.vertices = parts.vertices;
                     *self.triangles = parts.triangles;
                     self.tree.extend(parts.bvh);
+                    return RetirementStep::Bytes(released);
                 }
                 Err(handle) => drop(handle),
             }
@@ -234,7 +246,15 @@ impl CollisionMeshRetirement {
             drop(std::mem::take(&mut *self.triangles));
             return RetirementStep::Bytes(demand);
         }
-        let Some(node) = self.tree.pop() else { return RetirementStep::Complete(1) };
+        let Some(node) = self.tree.pop() else {
+            let stack_bytes = self.tree.capacity() * size_of::<collision::BvhTree>();
+            if stack_bytes > grant.maximum_release_bytes {
+                return RetirementStep::BudgetExhausted;
+            }
+            drop(std::mem::take(&mut *self.tree));
+            return RetirementStep::Bytes(stack_bytes);
+        };
+        let released = node.step_release_bytes();
         match node.into_step() {
             collision::BvhTreeStep::Leaf => {}
             collision::BvhTreeStep::Branch(left, right) => {
@@ -245,7 +265,7 @@ impl CollisionMeshRetirement {
                 self.tree.push(left);
             }
         }
-        RetirementStep::Bytes(demand)
+        RetirementStep::Bytes(released)
     }
 }
 

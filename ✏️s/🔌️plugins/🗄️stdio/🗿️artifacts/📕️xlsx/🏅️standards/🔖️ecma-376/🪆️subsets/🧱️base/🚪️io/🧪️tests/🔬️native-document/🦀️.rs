@@ -4,7 +4,7 @@ use calamine::Reader;
 use semio_plugin::{io::{AnalyzeSource, ComposeSource, Confidence}, ArtifactAnalysis, ArtifactBuilder, ArtifactComposition};
 use crate::standards::v_ecma_376::subsets::base::io::{
     export::serializers::encode_xlsx,
-    import::deserializers::decode_xlsx,
+    import::deserializers::{decode_xlsx, sniff_xlsx_subset},
     XlsxAnalyzer, XlsxBuilder, XlsxComposerComposition,
 };
 use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxXmlPart;
@@ -37,6 +37,37 @@ fn physical_workbook_requires_its_registered_media_type() {
         output.xml_part_mut(part).unwrap().content_type = content_type.into();
         assert_eq!(encode_xlsx(&output).is_ok(), accepted, "{content_type}");
     }
+}
+
+#[test]
+fn analyzer_stamps_the_subset_the_workbook_part_declares() {
+    use semio_s_artifact_stdio_zip::opc::{decode_opc, encode_opc};
+
+    let fixtures: serde_json::Value = serde_json::from_str(NATIVE_DOCUMENT_FIXTURES).unwrap();
+    let fixture = &fixtures["workbookSubsets"];
+    let part = fixture["part"].as_str().unwrap();
+    let transitional = fixture["transitionalNamespace"].as_str().unwrap();
+    let package = decode_opc(WORKBOOK).unwrap();
+    for case in fixture["cases"].as_array().unwrap() {
+        let name = case["name"].as_str().unwrap();
+        let mut input = package.clone();
+        let text = String::from_utf8(package.part_bytes(part).unwrap().to_vec()).unwrap();
+        input.set_part(part, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml", text.replace(transitional, case["namespace"].as_str().unwrap()).into_bytes());
+        for (_, relationships) in input.relationships.groups_mut() {
+            for relationship in relationships.iter_mut().filter(|relationship| relationship.rel_type.ends_with("/officeDocument")) {
+                relationship.rel_type = case["relationshipType"].as_str().unwrap().into();
+            }
+        }
+        let bytes = encode_opc(&input).unwrap();
+        let expected = case["subset"].as_str().unwrap_or("*");
+        assert_eq!(XlsxAnalyzer::analyze(&[AnalyzeSource::Binary(&bytes)]).dialect.subset.0, expected, "{name}");
+        assert_eq!(sniff_xlsx_subset(&bytes), case["subset"].as_str(), "{name}");
+    }
+    let reference: calamine::Xlsx<_> = calamine::open_workbook_from_rs(std::io::Cursor::new(WORKBOOK)).unwrap();
+    assert!(!reference.sheet_names().is_empty());
+    assert_eq!(sniff_xlsx_subset(WORKBOOK), Some("transitional"));
+    assert_eq!(XlsxAnalyzer::analyze(&[AnalyzeSource::Binary(WORKBOOK)]).dialect.subset.0, "transitional");
+    assert_eq!(sniff_xlsx_subset(b"not a package"), None);
 }
 
 #[test]

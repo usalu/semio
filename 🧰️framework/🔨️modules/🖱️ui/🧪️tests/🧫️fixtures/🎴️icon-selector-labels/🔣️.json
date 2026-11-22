@@ -1,0 +1,15 @@
+{
+  "modes": {
+    "url": { "en": "URL", "de": "URL" },
+    "shortcode": { "en": "Shortcode", "de": "Kurzcode" },
+    "math": { "en": "Math / Typst", "de": "Mathe / Typst" },
+    "data": { "en": "Data URL", "de": "Daten-URL" },
+    "emoji": { "en": "Emoji", "de": "Emoji" },
+    "text": { "en": "Text", "de": "Text" },
+    "vector": { "en": "Catalog / SVG", "de": "Katalog / SVG" }
+  },
+  "common": {
+    "importFile": { "en": "Import file…", "de": "Datei importieren…" },
+    "clear": { "en": "Clear", "de": "Leeren" }
+  }
+}

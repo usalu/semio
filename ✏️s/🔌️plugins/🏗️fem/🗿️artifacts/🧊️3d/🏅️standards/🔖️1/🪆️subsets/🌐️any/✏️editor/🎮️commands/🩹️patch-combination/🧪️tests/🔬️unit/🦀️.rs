@@ -1,4 +1,5 @@
 use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::patch_combination::*;
+use semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::change_combination_term::ChangeCombinationTerm;
 use semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::replace_combination;
 use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
 use semio_plugin::ArtifactView;

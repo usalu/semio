@@ -48,6 +48,14 @@ export function browserDocumentMountIsCurrentV1(opening: BrowserDocumentMountOpe
 
 export type DocumentOpeningOwnerV1<Plugin> = Readonly<{ plugin: Plugin; session: Readonly<{ instanceId: number }>; clientInstanceId: string }>;
 
+type DocumentOpeningReplacementV1<Plugin> = Readonly<{
+  runtimeKey: string;
+  plugin: Plugin;
+  instanceId: number;
+  background: boolean;
+  predecessorClientInstanceId?: string | null;
+}>;
+
 export type DocumentOpeningParkV1<Owner> = Readonly<{
   key: string;
   next: Owner;
@@ -65,15 +73,16 @@ export function documentOpeningPredecessorsV1<Plugin, Owner extends DocumentOpen
 
 /** 🚦️ Background openings never replace a live document or app instance. */
 export function admitDocumentOpeningV1<Plugin>(
-  opening: Readonly<{ runtimeKey: string; plugin: Plugin; instanceId: number; background: boolean }>,
+  opening: DocumentOpeningReplacementV1<Plugin>,
   owners: ReadonlyMap<string, DocumentOpeningOwnerV1<Plugin>>,
 ): boolean {
+  if (opening.predecessorClientInstanceId !== undefined && (owners.get(opening.runtimeKey)?.clientInstanceId ?? null) !== opening.predecessorClientInstanceId) return false;
   return !(opening.background && documentOpeningPredecessorsV1(opening, owners).length > 0);
 }
 
 /** 🧵️ Parks the successor in the owner map without retiring the predecessor until commit. */
 export function parkDocumentOpeningReplacementV1<Owner extends DocumentOpeningOwnerV1<Owner["plugin"]>>(
-  opening: Readonly<{ runtimeKey: string; plugin: Owner["plugin"]; instanceId: number; background: boolean }>,
+  opening: DocumentOpeningReplacementV1<Owner["plugin"]>,
   owners: Map<string, Owner>,
   next: Owner,
 ): DocumentOpeningParkV1<Owner> | null {

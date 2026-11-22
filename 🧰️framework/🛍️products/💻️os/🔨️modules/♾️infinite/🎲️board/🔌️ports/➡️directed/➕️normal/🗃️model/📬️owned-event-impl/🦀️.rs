@@ -163,7 +163,7 @@ impl BoardOwnedEvent {
         payload.finish(BoardEventKind::NodeMove, Some(id))
     }
 
-    /// 🔄️ The live rotate-ring frame as resolved positions — a TRANSIENT row hosts mirror into
+    /// 🔄️ Resolved positions during a drag or rotation — a TRANSIENT row hosts mirror into
     /// sibling panes and drop before dispatch, so a drag previews everywhere and still commits once.
     pub fn transform_preview<'a>(moves: impl IntoIterator<Item = (&'a str, f64, f64)>) -> Result<Self, BoardEventFault> {
         Self::moves_row(BoardEventKind::TransformPreview, moves)

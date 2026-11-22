@@ -131,7 +131,7 @@ impl DocumentState {
     pub async fn write_host_route_archive(&self, uri: &str, document_id: &str, schema: &str, plugins: &PluginState) -> Result<u64, String> {
         let session = self.session.as_ref().ok_or("session missing")?;
         let plugin = plugins.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id).ok_or("plugin missing")?;
-        let archive = plugin.read_app_document_archive(session.instance_id).await.map_err(|fault| fault.to_string())?;
+        let archive = plugin.read_app_document_archive(session.instance_id).await.map_err(|error| error.to_string())?;
         let bytes = protocol::encode_document_archive_bytes(&archive).map_err(|error| error.to_string())?;
         backbone_folder_write_answer(&backbone_folder_call(&backbone_folder_request(BackboneFolderVerb::Write, uri, document_id, Some(schema)), Some(&bytes)).await?)?;
         Ok(archive_digest(&bytes))

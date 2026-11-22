@@ -20,7 +20,13 @@ import { BrowserActorActionMailboxV1 } from "@semio-tech/framework/browser-bundl
  * temporal-dead-zone violation at the point `useCallback` evaluates that array. Same ref-forwarding
  * idiom `onActionRef`/`dispatchDirectoryEventsRef` already use: assigned as a plain statement right
  * after each real declaration, read only from inside a later callback body, never from a deps array. */
-export type OpenDocumentSessionTarget = DocumentOpeningTarget<ActiveSession, PluginWasmHandle> & { readonly background?: boolean; readonly expectedCatalogGenerationId?: string };
+export type OpenDocumentSessionTarget = DocumentOpeningTarget<ActiveSession, PluginWasmHandle> & {
+  readonly background?: boolean;
+  readonly expectedCatalogGenerationId?: string;
+  readonly current?: () => boolean;
+  /** 🪪 A client ID requires that exact predecessor. Null reserves an unowned document. */
+  readonly predecessorClientInstanceId?: string | null;
+};
 
 export type PreparedArtifactOpeningTarget = OpenDocumentSessionTarget & Readonly<{ dialect: ArtifactDialect; role: AppRole }>;
 

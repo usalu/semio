@@ -105,16 +105,21 @@ import type { ShellState } from "../../🐚️Shell/🗃️state-shapes/🟦️.
 import type { SpaceArtifactCreationCatalogAuthorityV1 } from "../🧾️space-artifact-creation/🟦️.ts";
 import { type AppSurfaceSessionFactory } from "@semio-tech/framework/canvas/react-renderer";
 
-type ShellEffectOwnerForward = {
+export type ShellEffectOwnerForward = {
   presentation: ShellDialogOriginV1 | null;
   source: ShellDialogOriginV1 | null;
   session: ActiveSession;
   plugin: PluginWasmHandle | null;
   creationCatalog: SpaceArtifactCreationCatalogAuthorityV1 | null;
   inputSeq: number | null;
+  browserActor?: {
+    readonly current: () => boolean;
+    readonly refresh: (session: ActiveSession) => void;
+    readonly takeSegmentedDownloadChunk: (operationId: bigint) => Promise<Uint8Array | undefined>;
+  };
 };
 
-type ApplyHostEffectsForward = (effects: readonly Effect[], baseSession: ActiveSession, uiScope: UiDirtyScope | undefined, effectOwner: ShellEffectOwnerForward) => Promise<void>;
+type ApplyHostEffectsForward = (effects: readonly Effect[], baseSession: ActiveSession, uiScope: UiDirtyScope | undefined, effectOwner: ShellEffectOwnerForward, windowViewInputBody?: string) => Promise<void>;
 
 type OnActionForward = (requested: ShellInputActionV1, submittedOrigin?: ShellDialogOriginV1, propagateFailure?: boolean, lifecycle?: ActionDispatchLifecycleV1, requiredOperationOwner?: ShellEffectOwnerForward) => Promise<InputOutcomeV1>;
 
@@ -134,7 +139,7 @@ export type ShellForwardSlots = {
     importDocumentArchive: () => Promise<void>;
     saveNaturalFile: () => Promise<void>;
     exportMediaFile: (target: ActiveSession, current: () => boolean, actionId: import("../../../🎬️media/📤️file/🟦️.ts").MediaFileExportActionIdV1) => Promise<void>;
-    openNaturalFile: () => Promise<void>;
+    openNaturalFile: (dropped?: File) => Promise<void>;
     trackDocumentTransfer: (file: string, pluginId: string) => { readonly signal: AbortSignal; readonly progress: (completed: number, total: number | null) => void; readonly finish: () => void };
     notifyDocumentTransfer: (notice: DocumentTransferNoticeV1, file: string, kind: Severity) => void;
   }>;
@@ -546,6 +551,7 @@ export function useShellCoreState({
   const spawnedUiRefreshCacheRef = useRef<UiRefreshCache>(new Map());
   const spawnedLayoutSeedRef = useRef<string | null>(null);
   const openSpaceIdRef = useRef<string | null>(null);
+  const openSpaceEpochRef = useRef(0);
   /** 🪐️ The space the user is in, as state for what renders it (the hub workspace's active space): the ref is what
    * the async route and session code reads mid-flight, this is what a render reads. The hub pane used to read the ref
    * during render, so a space re-opened after an identity re-establishment never reached an already-open pane — it kept
@@ -553,6 +559,7 @@ export function useShellCoreState({
    * S4 relay). Every write goes through {@link rememberOpenSpaceId}. */
   const [openSpaceId, setOpenSpaceId] = useState<string | null>(null);
   const rememberOpenSpaceId = useCallback((spaceId: string | null): void => {
+    if (openSpaceIdRef.current !== spaceId) openSpaceEpochRef.current += 1;
     openSpaceIdRef.current = spaceId;
     setOpenSpaceId(spaceId);
   }, []);
@@ -674,7 +681,7 @@ export function useShellCoreState({
     extraWindowCounterRef, shellContextMenu, setShellContextMenu, extraWindowInstancesRef, settleOperation,
     awaitOperationSettle, sessionWorkRef, sealedInstancesRef, sessionSwitchGateRef, surfaceSwitchBusy,
     setSurfaceSwitchBusy, dropForSealedInstance, dropForRetiredInstance, setWindowTitle, setWindowIcon,
-    uiRefreshCacheRef, spawnedUiRefreshCacheRef, spawnedLayoutSeedRef, openSpaceIdRef, openSpaceId, rememberOpenSpaceId,
+    uiRefreshCacheRef, spawnedUiRefreshCacheRef, spawnedLayoutSeedRef, openSpaceIdRef, openSpaceEpochRef, openSpaceId, rememberOpenSpaceId,
     openInstanceIdRef, sessionRef, treeWindowSchedulerRef, refreshUiRef, panelTreeConfigCacheRef, treeWindowGeneration,
     treeWindowHost, windowTreeContext, applyShellUriRef, shellRouteLedgerRef, shellSessionLaneRef,
     builtNodeStoreCacheRef, builtNodeStoreFor

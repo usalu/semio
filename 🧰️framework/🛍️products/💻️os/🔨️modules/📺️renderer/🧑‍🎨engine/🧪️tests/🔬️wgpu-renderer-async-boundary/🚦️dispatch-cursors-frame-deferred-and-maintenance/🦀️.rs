@@ -49,7 +49,7 @@ fn original_mailbox_apply_and_removal_progress_with_one_unit_loans() {
 fn original_recovery_returns_the_same_interaction_and_cursor_before_unique_cell_release() {
     let runtime = native_reference_runtime();
     let owner = frame_maintenance_test_owner(241, 1);
-    let identity = owner.interaction.as_ref().unwrap().shell.plugin_filter.as_ptr();
+    let identity = owner.interaction.as_ref().unwrap().shell.plugins.plugin_filter.as_ptr();
     let cell = Arc::new(FrameExecutionOwnerCell::new(owner));
     let witness = cell.clone();
     *runtime.0.original_recovery.lock().unwrap() = Some(FrameOriginalRecovery::Maintenance(FrameMaintenanceRefusal { owner: cell, reservation_live: false }));
@@ -58,7 +58,7 @@ fn original_recovery_returns_the_same_interaction_and_cursor_before_unique_cell_
     assert!(!original.limited(semio_framework_value::RetainedCloneGrant { maximum_items: 0, ..renderer_law_stock() }, |cx| { let mut owner = runtime.try_lock().unwrap(); runtime.recover_original_frame_step(&mut owner, cx) }).unwrap());
     assert_eq!(original.receipt(), before);
     assert!(original.turn(|cx| { let mut owner = runtime.try_lock().unwrap(); runtime.recover_original_frame_step(&mut owner, cx) }).unwrap());
-    assert_eq!(runtime.try_lock().unwrap().interaction.as_ref().unwrap().shell.plugin_filter.as_ptr(), identity);
+    assert_eq!(runtime.try_lock().unwrap().interaction.as_ref().unwrap().shell.plugins.plugin_filter.as_ptr(), identity);
     assert!(original.turn(|cx| { let mut owner = runtime.try_lock().unwrap(); runtime.recover_original_frame_step(&mut owner, cx) }).unwrap());
     assert!(runtime.try_lock().unwrap().pending_frame_deferred.is_some());
     let (_, denied_heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| original.turn(|cx| { let mut owner = runtime.try_lock().unwrap(); runtime.recover_original_frame_step(&mut owner, cx) }).unwrap());
@@ -101,11 +101,11 @@ fn runtime_dispatch_cursor_merges_retained_pointer_by_input_generation() {
         generation: ui_host::InputGeneration(2),
     };
     let scroll = ui_host::DiscreteEvent { event: ui_render::DispatchEvent::Scroll { x: 3.0, y: 4.0, delta_x: 5.0, delta_y: 6.0, modifiers: ui_render::EventModifiers { ctrl: true, ..Default::default() } }, generation: ui_host::InputGeneration(1) };
-    let key = ui_host::DiscreteEvent { event: ui_render::DispatchEvent::KeyDown { key: "A".to_string(), modifiers: ui_render::EventModifiers::default() }, generation: ui_host::InputGeneration(3) };
+    let key = ui_host::DiscreteEvent { event: ui_render::DispatchEvent::KeyDown { key: "A".to_string(), modifiers: ui_render::EventModifiers::default(), repeat: false }, generation: ui_host::InputGeneration(3) };
     let mut events = ui_host::DrainedEvents { pointer_move: Some(pointer), ..Default::default() };
     events.discrete[0] = Some(scroll);
     events.discrete[1] = Some(key);
-    let mut caller=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);let original=caller.turn(super::RuntimeDispatchSource::admit).unwrap().unwrap();
+    let mut caller=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(semio_framework_job::RetainedCloneGrant { maximum_items: 1 << 24, maximum_copy_bytes: 1 << 30, maximum_capacity_bytes: 1 << 30, maximum_release_bytes: 1 << 30, maximum_depth: 4096 });let mut source=None;for _ in 0..16{if caller.turn_funded(64,|cx|super::RuntimeDispatchSource::admit(&mut source,cx)).unwrap(){break}}let original=source.expect("the original dispatch source admits within bounded turns");
     let mut cursor = RuntimeDispatchCursor::new(events,original);
 
     assert!(matches!(cursor.take_next(), Some(ui_render::DispatchEvent::Scroll { .. })));
@@ -122,7 +122,7 @@ fn runtime_dispatch_cursor_retires_one_owned_event_per_step() {
     for (index, slot) in events.discrete.iter_mut().enumerate() {
         *slot = Some(ui_host::DiscreteEvent { event: ui_render::DispatchEvent::Paste { text: "x".repeat(4096) }, generation: ui_host::InputGeneration(index as u64) });
     }
-    let mut caller=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);let original=caller.turn(super::RuntimeDispatchSource::admit).unwrap().unwrap();
+    let mut caller=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(semio_framework_job::RetainedCloneGrant { maximum_items: 1 << 24, maximum_copy_bytes: 1 << 30, maximum_capacity_bytes: 1 << 30, maximum_release_bytes: 1 << 30, maximum_depth: 4096 });let mut source=None;for _ in 0..16{if caller.turn_funded(64,|cx|super::RuntimeDispatchSource::admit(&mut source,cx)).unwrap(){break}}let original=source.expect("the original dispatch source admits within bounded turns");
     let mut cursor = RuntimeDispatchCursor::new(events,original);
     for _ in 0..cursor.events.discrete.len() {
         assert!(!caller.turn(|cx|cursor.close_step(cx)).unwrap());
@@ -321,7 +321,7 @@ fn frame_deferred_cancel_token_closes_one_exact_owner_per_grant() {
     let mut actions = FrameActionOwners::default();
     assert!(actions.try_push(ActionDescriptor { controller_id: "cancel-owner".to_string(), action: "one".to_string(), args: None }).is_ok());
     let mut cursor = FrameDeferredCursor::new(actions, true, true, true, false, 17, caller.alias());
-    caller.turn(|cx| { cx.original_cancel_token().cancel_now(); Ok(()) }).unwrap();
+    caller.turn(|cx| cx.original_cancel_token().cancel_now());
     assert!(cursor.cancel.as_ref().is_some_and(|cancel| cancel.is_cancelled_now()));
     cursor.begin_close();
     let mut turns = 0;
@@ -368,7 +368,7 @@ fn frame_maintenance_cancel_and_stale_each_close_one_populated_owner_per_grant()
     let mut cancelled_actions = FrameActionOwners::default();
     assert!(cancelled_actions.try_push(ActionDescriptor { controller_id: "cancelled".to_string(), action: "one".to_string(), args: None }).is_ok());
     let mut cancelled = FrameDeferredCursor::new(cancelled_actions, false, false, false, false, 81, caller.alias());
-    caller.turn(|cx| { cx.original_cancel_token().cancel_now(); Ok(()) }).unwrap();
+    caller.turn(|cx| cx.original_cancel_token().cancel_now());
     assert_eq!(frame_maintenance_terminal_fault(cancelled.cancel.as_ref().is_some_and(|cancel| cancel.is_cancelled_now()), false, false), Some("frame maintenance cancelled"));
     cancelled.begin_close();
     let before = cancelled.actions.len;

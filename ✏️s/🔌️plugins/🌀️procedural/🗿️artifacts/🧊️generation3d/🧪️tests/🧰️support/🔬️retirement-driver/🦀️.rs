@@ -49,7 +49,8 @@ pub fn drive_erased_released(owner: &mut dyn store::ErasedSnapshotRetirement, la
 
 /// 🪙️ Runs one effect-shaped retirement step inside a finite wallet of exactly `grant`; a pending or unaffordable step paid nothing.
 fn paid(grant: RetainedCloneGrant, run: impl FnOnce(&mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::RetainedWorkPoll<RetainedCloneStep, semio_framework_value::OriginalRetirementFailure>, label: &str) -> RetainedCloneStep {
-    match semio_plugin::artifact_app_laws::run_fixture_effect(grant, run) {
+    let polled = semio_framework_job::OriginalRetirementPump::new().turn(semio_plugin::artifact_app_laws::FIXTURE_EFFECT_WORK, u64::MAX, semio_framework_job::logical_now_us, grant).and_then(|mut turn| turn.with_effect(run)).expect("driven retirement has a finite original Source turn").map(|(polled, _)| polled);
+    match polled {
         Some(semio_framework_value::RetainedWorkPoll::Complete(turn)) => turn.result.unwrap_or_else(|error| panic!("{label} retirement faulted: {error:?}")),
         Some(semio_framework_value::RetainedWorkPoll::Pending { .. }) | None => RetainedCloneStep::Progress(Default::default()),
     }

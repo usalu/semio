@@ -1,0 +1,19 @@
+{
+  "scales": [
+    50,
+    100,
+    200,
+    500
+  ],
+  "sides": [
+    "near",
+    "far"
+  ],
+  "wingBones": {
+    "primaries": "hand",
+    "shoulder": "humerus",
+    "coverts": "forearm"
+  },
+  "tipToleranceM": 0.014,
+  "featherRegion": "plumage-wings"
+}

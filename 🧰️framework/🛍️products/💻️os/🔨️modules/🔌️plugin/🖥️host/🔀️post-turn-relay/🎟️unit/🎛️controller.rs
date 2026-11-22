@@ -1,13 +1,13 @@
 //! 🎛️ Source-owned inference continuation; its caller settles each actual guest receipt before advancing.
 use super::{GuestRelayInferenceInput,GuestRelayScalarFlow,ColdJobCallPlan,GuestRelayUnitStatus,GuestRelayOutputHome};
 use crate::actor_failure::ActorFailureHome;
-use semio_framework_actor::{OriginalGuestExecutionBudget,OriginalGuestExecutionReceipt,OriginalJobBudget,RetainedTurnInput};
+use semio_framework_actor::{OriginalGuestExecutionBudget,OriginalGuestExecutionReceipt,OriginalJobBudget};
 use semio_framework_job::{OriginalNativeRecipientIdentity,OriginalSourceBinding,OriginalTurnFailure,StepContext};
 use semio_framework_pack_json::JsonWriteSource;
 use semio_framework_value::{RetainedCloneProgress,ValueError,ValueRefusalKind};
-use semio_plugin_guest_contract::original_actor_context::{ColdJobAction,ColdJobFrontier,OriginalActorFixedCall,OriginalActorFixedReceipt,OriginalOwnedJobCall};
-use semio_plugin_host_guest_runtime::{GuestInstance,GuestRuntimes};
-use semio_plugin_host_wake::{GuestRelayGuestPurpose,GuestRelayGuestSubloan,GuestRelayGuestSettlement};
+use semio_plugin_guest_contract::original_actor_context::{ColdJobAction,ColdJobFrontier,OriginalActorBootstrapCall,OriginalActorBootstrapStatus,OriginalActorFixedCall,OriginalActorFixedReceipt,OriginalOwnedJobCall};
+use semio_plugin_host_guest_runtime::{GuestBootstrapHeaderDeallocateReturned,GuestBootstrapHeaderIdentity,GuestFrozenEscrowIdentity,GuestHeaderDeallocateReturned,GuestInstance,GuestRuntimes};
+use semio_plugin_host_wake::{GuestJournaledReceipt,GuestRelayGuestPurpose,GuestRelayGuestSubloan};
 use std::mem::size_of;
 pub(crate) use semio_plugin_host_actor_failure::ActorFailurePermit;
 
@@ -28,17 +28,59 @@ impl FaultOrOutputSink for FaultSink<'_>{
  fn seal(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{self.home.seal(self.permit.as_ref().ok_or_else(refused)?,cx)}
 }
 #[derive(Clone,Copy,PartialEq,Eq)]
-enum Stage{Encode,NeedLoan,Scalar,Input,InputDrain,Receipt,Page,Done,Fault,Closing}
+enum Stage{Encode,NeedLoan,Scalar,Input,InputDrain,Page,Done,Fault,Closing}
 #[derive(Clone,Copy)]
-enum Receipt{Actor(OriginalActorFixedCall),Job(OriginalOwnedJobCall)}
+enum Receipt{Bootstrap(OriginalActorBootstrapStatus),Actor(OriginalActorFixedCall),Job(OriginalOwnedJobCall)}
+#[derive(Clone,Copy,PartialEq,Eq)]
+pub(crate) enum ColdHeader{Bootstrap(GuestBootstrapHeaderIdentity),Journal(GuestFrozenEscrowIdentity)}
 /// 🧳️ One native parent owns the donor, current scalar and actual returned receipt until handback.
-pub struct GuestRelayColdController{job:u64,kind:&'static str,input:GuestRelayInferenceInput,frontier:Option<ColdJobFrontier>,stage:Stage,loan:Option<GuestRelayGuestSubloan>,budget:Option<OriginalJobBudget>,scalar:Option<GuestRelayScalarFlow>,receipt:Option<Receipt>,retry:bool,page_cursor:usize,last_execution:Option<OriginalGuestExecutionReceipt>,failure:Option<OriginalTurnFailure>,failure_verified:bool,producer:Option<OriginalNativeRecipientIdentity>,failure_reference:Option<semio_plugin_host_guest_runtime::GuestActorFailureCallReference>}
+pub struct GuestRelayColdController{job:u64,kind:&'static str,input:GuestRelayInferenceInput,frontier:Option<ColdJobFrontier>,stage:Stage,loan:Option<GuestRelayGuestSubloan>,budget:Option<OriginalJobBudget>,scalar:Option<GuestRelayScalarFlow>,receipt:Option<Receipt>,header:Option<ColdHeader>,header_length:usize,pub(crate) header_returned:Option<GuestHeaderDeallocateReturned>,pub(crate) bootstrap_returned:Option<GuestBootstrapHeaderDeallocateReturned>,retry:bool,page_cursor:usize,last_execution:Option<OriginalGuestExecutionReceipt>,failure:Option<OriginalTurnFailure>,failure_verified:bool,producer:Option<OriginalNativeRecipientIdentity>,failure_reference:Option<semio_plugin_host_guest_runtime::GuestActorFailureCallReference>}
 impl GuestRelayColdController{
- pub fn new(job:u64,kind:&'static str)->Result<Self,ValueError>{Ok(Self{job,kind,input:GuestRelayInferenceInput::new(job,kind)?,frontier:None,stage:Stage::Encode,loan:None,budget:None,scalar:None,receipt:None,retry:false,page_cursor:0,last_execution:None,failure:None,failure_verified:false,producer:None,failure_reference:None})}
+ pub fn new(job:u64,kind:&'static str)->Result<Self,ValueError>{Ok(Self{job,kind,input:GuestRelayInferenceInput::new(job,kind)?,frontier:None,stage:Stage::Encode,loan:None,budget:None,scalar:None,receipt:None,header:None,header_length:0,header_returned:None,bootstrap_returned:None,retry:false,page_cursor:0,last_execution:None,failure:None,failure_verified:false,producer:None,failure_reference:None})}
  pub(crate) fn failure_permit_step(&self,recipient:OriginalNativeRecipientIdentity,cx:&mut StepContext<'_>)->Result<Option<ActorFailurePermit>,OriginalTurnFailure>{cx.original_source_parent()?.validate_borrowed_context(cx)?;let _=recipient;Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"actor failure descriptor has no authenticated cross-boundary witness").into())}
  pub(crate) fn failure_reference_slot(&mut self)->&mut Option<semio_plugin_host_guest_runtime::GuestActorFailureCallReference>{&mut self.failure_reference}
  fn failure_selector(&self,cx:&StepContext<'_>)->Result<Option<semio_framework_actor::ActorFailureCallReference>,OriginalTurnFailure>{if matches!(self.action(),ColdJobAction::PublishFailure|ColdJobAction::ReadFailure|ColdJobAction::BorrowFailureChunk|ColdJobAction::AcknowledgeFailureChunk|ColdJobAction::AcknowledgeFailure){let producer=self.producer.ok_or_else(refused)?;Ok(Some(self.failure_reference.as_ref().ok_or_else(refused)?.reference_for(producer,cx)?))}else{Ok(None)}}
  pub fn kind(&self)->&'static str{self.kind}
+ pub(crate) fn frozen(&self)->Option<crate::FrozenReceiptFrontier>{
+  if self.header.is_some(){return None}
+  if self.scalar.as_ref().is_some_and(GuestRelayScalarFlow::frozen){return Some(crate::FrozenReceiptFrontier::Scalar)}
+  (self.stage==Stage::Input&&self.input.unit().frozen()).then_some(crate::FrozenReceiptFrontier::Unit)
+ }
+ pub(crate) fn loan(&self)->Option<GuestRelayGuestSubloan>{self.loan}
+ pub(crate) fn header(&self)->Option<ColdHeader>{self.header}
+ pub(crate) fn scalar_receipt(&self)->bool{self.scalar.is_some()}
+ pub(crate) fn draining_receipt(&self)->bool{self.header.is_some()||self.receipt.is_some()}
+ pub(crate) fn return_ready(&self)->bool{
+  self.scalar.as_ref().is_some_and(GuestRelayScalarFlow::release_ready)||self.stage==Stage::InputDrain&&self.input.unit().header_return_possible()
+ }
+ pub(crate) fn return_required(&self)->bool{self.scalar_receipt()||self.input.unit().header_return_required()}
+ pub(crate) fn accept_bootstrap_step(&mut self,call:&OriginalActorBootstrapCall,identity:GuestBootstrapHeaderIdentity,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
+  let header=ColdHeader::Bootstrap(identity);
+  if let Some(held)=self.header{return if held==header{Ok(true)}else{Err(refused().into())}}
+  if !matches!(self.action(),ColdJobAction::AdmitActor|ColdJobAction::CloseActor)||Some(call.budget)!=self.budget||self.scalar.as_ref().is_none_or(|scalar|!scalar.frozen()){return Err(refused().into())}
+  self.store_header(header,304,Receipt::Bootstrap(call.status),cx)
+ }
+ pub(crate) fn accept_journaled_step(&mut self,view:&GuestJournaledReceipt<'_>,length:usize,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
+  let header=ColdHeader::Journal(view.identity());
+  if let Some(held)=self.header{return if held==header{Ok(true)}else{Err(refused().into())}}
+  if self.frozen().is_none(){return Err(refused().into())}
+  let(receipt,input)=match self.action(){
+   ColdJobAction::AdmitActor|ColdJobAction::AdmitInput|ColdJobAction::CloseActorOutput|ColdJobAction::CloseActor=>{let call=view.actor_call()?;(Receipt::Actor(call),call.input)},
+   _=>{let call=view.job_call()?;(Receipt::Job(call),call.input)},
+  };
+  if self.budget.is_none_or(|budget|budget.input!=input){return Err(refused().into())}
+  self.store_header(header,length,receipt,cx)
+ }
+ fn store_header(&mut self,header:ColdHeader,length:usize,receipt:Receipt,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
+  if !pay(cx,size_of::<Option<ColdHeader>>()+size_of::<Option<Receipt>>()+size_of::<usize>(),false)?{return Ok(false)}
+  self.header=Some(header);self.receipt=Some(receipt);self.header_length=length;Ok(true)
+ }
+ pub(crate) fn finish_header_return_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
+  if self.header.is_none(){return Ok(true)}
+  if self.header_returned.is_some()||self.bootstrap_returned.is_some(){return Ok(false)}
+  if !pay(cx,size_of::<Option<ColdHeader>>()+size_of::<usize>(),true)?{return Ok(false)}
+  self.header=None;self.header_length=0;Ok(true)
+ }
  pub fn action(&self)->ColdJobAction{self.frontier.as_ref().map_or(ColdJobAction::AdmitActor,ColdJobFrontier::action)}
  pub fn required_wire_header(&self)->Option<usize>{super::plan::core_wire_header(&self.action())}
  pub fn needs_loan(&self)->Option<GuestRelayGuestPurpose>{if self.stage!=Stage::NeedLoan{return None}match self.action(){ColdJobAction::AdmitActor|ColdJobAction::AdmitInput|ColdJobAction::CloseJobs|ColdJobAction::CloseActorOutput|ColdJobAction::CloseActor|ColdJobAction::PublishFailure|ColdJobAction::ReadFailure|ColdJobAction::AcknowledgeFailure|ColdJobAction::AcknowledgeFailureChunk=>Some(GuestRelayGuestPurpose::Infrastructure),ColdJobAction::BorrowChunk|ColdJobAction::BorrowFailureChunk|ColdJobAction::Complete=>None,_=>Some(GuestRelayGuestPurpose::Semantic)}}
@@ -62,24 +104,83 @@ impl GuestRelayColdController{
  /// 📄️ Borrowing a frozen guest page uses physical VM currency but admits no guest logical subloan.
  pub fn begin_page_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{if self.stage!=Stage::NeedLoan||!matches!(self.action(),ColdJobAction::BorrowChunk|ColdJobAction::BorrowFailureChunk){return Err(refused().into())}let budget=self.budget.ok_or_else(refused)?;let(offset,length)=self.frontier.as_ref().unwrap().chunk();let plan=ColdJobCallPlan::new(self.action(),self.job,self.failure_selector(cx)?,offset,length,budget)?;if !pay(cx,size_of::<GuestRelayScalarFlow>(),false)?{return Ok(false)}self.scalar=Some(GuestRelayScalarFlow::page(plan.export,plan.arguments())?);self.stage=Stage::Scalar;Ok(true)}
  pub fn requires_execution(&self,runtime:&GuestRuntimes,instance:&GuestInstance)->Result<bool,OriginalTurnFailure>{match self.stage{Stage::Scalar=>self.scalar.as_ref().ok_or_else(refused)?.requires_execution(runtime,instance),Stage::Input|Stage::InputDrain=>self.input.unit().requires_execution(runtime,instance),_=>Ok(false)}}
- pub fn prepare_execution_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{if cx.original_retirement_active()&&!self.failure_route(){return Err(refused().into())}if !pay(cx,size_of::<Option<OriginalGuestExecutionReceipt>>(),false)?{return Ok(false)}self.last_execution=None;match self.stage{Stage::Scalar=>self.scalar.as_mut().ok_or_else(refused)?.prepare_execution_step(cx),Stage::Input|Stage::InputDrain=>self.input.unit_mut().prepare_execution_step(cx),_=>Err(refused().into())}}
+ pub fn prepare_execution_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{if cx.original_retirement_active()&&!self.failure_route()&&!self.draining_receipt(){return Err(refused().into())}if !pay(cx,size_of::<Option<OriginalGuestExecutionReceipt>>(),false)?{return Ok(false)}self.last_execution=None;match self.stage{Stage::Scalar=>self.scalar.as_mut().ok_or_else(refused)?.prepare_execution_step(cx),Stage::Input|Stage::InputDrain=>self.input.unit_mut().prepare_execution_step(cx),_=>Err(refused().into())}}
  pub fn execution_receipt(&self)->Option<OriginalGuestExecutionReceipt>{self.last_execution}
  /// ▶️ One slice retains the actual frozen result before exposing its receipt to the issuer.
  pub fn advance_step(&mut self,runtime:&GuestRuntimes,instance:&mut GuestInstance,output:&mut GuestRelayOutputHome,execution:Option<OriginalGuestExecutionBudget>,cx:&mut StepContext<'_>)->Result<(),OriginalTurnFailure>{if cx.original_retirement_active(){return Err(refused().into())}self.advance_inner(runtime,instance,output,execution,cx)}
+ pub(crate) fn retire_receipt_step(&mut self,runtime:&GuestRuntimes,instance:&mut GuestInstance,output:&mut GuestRelayOutputHome,execution:Option<OriginalGuestExecutionBudget>,cx:&mut StepContext<'_>)->Result<(),OriginalTurnFailure>{
+  if !cx.original_retirement_active()||!self.draining_receipt()||!matches!(self.stage,Stage::Scalar|Stage::Input|Stage::InputDrain){return Err(refused().into())}
+  self.advance_inner(runtime,instance,output,execution,cx)
+ }
  pub(crate) fn advance_failure_step(&mut self,runtime:&GuestRuntimes,instance:&mut GuestInstance,output:&mut ActorFailureHome,recipient:OriginalNativeRecipientIdentity,execution:Option<OriginalGuestExecutionBudget>,cx:&mut StepContext<'_>)->Result<(),OriginalTurnFailure>{if !self.failure_route()||!cx.original_retirement_active()||execution.is_some()&&!matches!(self.stage,Stage::Scalar|Stage::Input|Stage::InputDrain){return Err(refused().into())}let permit=if self.failure_verified&&execution.is_none(){let Some(permit)=self.failure_permit_step(recipient,cx)?else{return Ok(())};if !output.bind_step(recipient,&permit,cx)?{return Ok(())}Some(permit)}else{None};let mut sink=FaultSink{home:output,permit};self.advance_inner(runtime,instance,&mut sink,execution,cx)}
  fn advance_inner(&mut self,runtime:&GuestRuntimes,instance:&mut GuestInstance,output:&mut dyn FaultOrOutputSink,execution:Option<OriginalGuestExecutionBudget>,cx:&mut StepContext<'_>)->Result<(),OriginalTurnFailure>{
   if execution.is_none(){if !pay(cx,size_of::<Option<OriginalGuestExecutionReceipt>>(),false)?{return Ok(())}self.last_execution=None;}match self.stage{
-   Stage::Scalar=>{let scalar=self.scalar.as_mut().ok_or_else(refused)?;if scalar.failure().is_some(){let mut captured=None;scalar.take_failure_step(cx,|error,_|{captured=error.take();Ok(())})?;if let Some(error)=captured{self.failure=Some(error);self.stage=Stage::Fault;}return Ok(())}let done=scalar.advance(runtime,instance,execution,cx)?;self.last_execution=scalar.execution_receipt();if scalar.failure().is_some(){let mut captured=None;scalar.take_failure_step(cx,|error,_|{captured=error.take();Ok(())})?;if let Some(error)=captured{self.failure=Some(error);self.stage=Stage::Fault;}return Ok(())}if !done{return Ok(())}if scalar.page_extent().is_some(){if !pay(cx,size_of::<Stage>(),false)?{return Ok(())}self.stage=Stage::Page;return Ok(())}let _bytes=scalar.bytes().ok_or_else(refused)?;return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"scalar receipt requires its authenticated escrow capture").into())},
-   Stage::Input|Stage::InputDrain=>{let budget=self.budget.ok_or_else(refused)?;if self.retry{if execution.is_some(){return Err(refused().into())}if self.input.unit_mut().repeat_step(runtime,instance,budget,cx)?{self.retry=false}return Ok(())}let status=self.input.unit_mut().advance_step(runtime,instance,budget,execution,cx)?;self.last_execution=self.input.unit().execution_receipt();match status{GuestRelayUnitStatus::Output=>{let mut observed=false;self.input.unit_mut().receive_output_step(runtime,instance,cx,|bytes,_|{let _header=OriginalActorFixedReceipt::read(bytes)?;observed=true;Ok(false)})?;if observed{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"unit receipt requires its authenticated escrow capture").into())}},GuestRelayUnitStatus::AwaitBudget=>{self.retry=true;self.stage=Stage::NeedLoan},GuestRelayUnitStatus::Complete=>self.stage=Stage::NeedLoan,GuestRelayUnitStatus::Refused=>{let mut captured=None;self.input.unit_mut().take_failure_step(cx,|error,_|{captured=error.take();Ok(())})?;if let Some(error)=captured{self.failure=Some(error);self.stage=Stage::Fault}},_=>{}}},
+   Stage::Scalar=>{
+    let scalar=self.scalar.as_mut().ok_or_else(refused)?;
+    if scalar.frozen(){
+     if self.header.is_some(){scalar.resume_frozen_step(self.header_length,cx)?;}
+     return Ok(())
+    }
+    if scalar.failure().is_none(){
+     let done=scalar.advance(runtime,instance,execution,cx)?;
+     self.last_execution=scalar.execution_receipt();
+     if done{
+      if scalar.page_extent().is_some(){if pay(cx,size_of::<Stage>(),false)?{self.stage=Stage::Page}}
+      else{self.finish_receipt_step(cx)?;}
+      return Ok(())
+     }
+    }
+    if scalar.failure().is_some(){
+     let mut captured=None;
+     scalar.take_failure_step(cx,|error,_|{captured=error.take();Ok(())})?;
+     if let Some(error)=captured{self.failure=Some(error);self.stage=Stage::Fault;}
+    }
+   },
+   Stage::Input|Stage::InputDrain=>{
+    let budget=self.budget.ok_or_else(refused)?;
+    if self.retry{
+     if execution.is_some(){return Err(refused().into())}
+     if self.input.unit_mut().repeat_step(runtime,instance,budget,cx)?{self.retry=false}
+     return Ok(())
+    }
+    if self.input.unit().frozen()&&self.header.is_some(){
+     if self.input.unit_mut().receive_output_step(runtime,instance,cx,|bytes,_|{OriginalActorFixedReceipt::read(bytes)?;Ok(true)})?{self.stage=Stage::InputDrain}
+     return Ok(())
+    }
+    let status=self.input.unit_mut().advance_step(runtime,instance,budget,execution,cx)?;
+    self.last_execution=self.input.unit().execution_receipt();
+    match status{
+     GuestRelayUnitStatus::AwaitBudget=>{if self.finish_receipt_step(cx)?{self.retry=true}},
+     GuestRelayUnitStatus::Complete=>{self.finish_receipt_step(cx)?;},
+     GuestRelayUnitStatus::Refused=>{
+      let mut captured=None;
+      self.input.unit_mut().take_failure_step(cx,|error,_|{captured=error.take();Ok(())})?;
+      if let Some(error)=captured{self.failure=Some(error);self.stage=Stage::Fault;}
+     },
+     _=>{},
+    }
+   },
    Stage::Page=>{let(pointer,length)=self.scalar.as_ref().ok_or_else(refused)?.page_extent().ok_or_else(refused)?;let(offset,expected)=self.frontier.as_ref().unwrap().chunk();if length!=expected{return Err(refused().into())}let total=self.frontier.as_ref().unwrap().output_length();let mut copied=false;if output.prepare(total,cx)?{runtime.with_original_scalar_bytes(instance,pointer,length,cx,|bytes,cx|{copied=output.append_page(offset,bytes,&mut self.page_cursor,cx)?;Ok(())})?}if copied&&pay(cx,size_of::<GuestRelayScalarFlow>()+size_of::<Stage>(),false)?{self.frontier.as_mut().unwrap().copied().map_err(|_|refused())?;self.scalar.take();self.page_cursor=0;self.stage=Stage::NeedLoan}},
    Stage::NeedLoan if self.action()==ColdJobAction::Complete=>{let length=self.frontier.as_ref().ok_or_else(refused)?.output_length();if output.prepare(length,cx)?&&output.seal(cx)?&&pay(cx,size_of::<Stage>(),false)?{self.stage=Stage::Done}},
    _=>return Err(refused().into())
   }Ok(())
  }
- /// 🧾️ These values are the exact fixed receipt and sealed loan retained by the native owner.
- pub fn receipt(&self)->Option<(GuestRelayGuestSubloan,RetainedTurnInput,RetainedCloneProgress,u64)>{let loan=self.loan?;match self.receipt?{Receipt::Actor(call)=>Some((loan,call.input,call.spent,call.work_units_spent)),Receipt::Job(call)=>Some((loan,call.input,call.spent,call.work_units_spent))}}
- /// ✅️ Invoked only after the issuing driver accepted this exact receipt.
- pub fn settled_step(&mut self,proof:GuestRelayGuestSettlement,producer:OriginalNativeRecipientIdentity,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{if self.stage!=Stage::Receipt{return Err(refused().into())}let loan=self.loan.ok_or_else(refused)?;let receipt=self.receipt.ok_or_else(refused)?;let(input,spent,work)=match receipt{Receipt::Actor(call)=>(call.input,call.spent,call.work_units_spent),Receipt::Job(call)=>(call.input,call.spent,call.work_units_spent)};if !proof.proves(loan,input,spent,work,producer){return Err(refused().into())}let retirement=cx.original_retirement_active();if !pay(cx,size_of::<Receipt>()+size_of::<GuestRelayScalarFlow>()+size_of::<Stage>()+size_of::<bool>(),retirement)?{return Ok(false)}let input=self.action()==ColdJobAction::AdmitInput;let frontier=self.frontier.as_mut().ok_or_else(refused)?;match receipt{Receipt::Actor(call)=>frontier.receive_actor(call).map_err(|_|refused())?,Receipt::Job(call)=>frontier.receive_job(call).map_err(|_|refused())?}if frontier.failure_route()&&frontier.action()==ColdJobAction::ReadFailure{self.failure_verified=true}self.receipt=None;self.loan=None;if let Some(scalar)=self.scalar.take(){drop(scalar)}self.stage=if input{Stage::InputDrain}else{Stage::NeedLoan};Ok(true)}
+ /// ✅️ Advances the logical frontier only after the committed header physically returned.
+ fn finish_receipt_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
+  if self.header.is_some(){return Ok(false)}
+  let receipt=self.receipt.ok_or_else(refused)?;
+  if !pay(cx,size_of::<Receipt>()+size_of::<Option<GuestRelayScalarFlow>>()+size_of::<Stage>()+size_of::<Option<GuestRelayGuestSubloan>>(),false)?{return Ok(false)}
+  if !cx.original_retirement_active(){
+   let frontier=self.frontier.as_mut().ok_or_else(refused)?;
+   match receipt{
+    Receipt::Bootstrap(OriginalActorBootstrapStatus::Failed(kind))=>return Err(ValueError::literal(kind,"cold actor retained its pre-Source bootstrap failure").into()),
+    Receipt::Bootstrap(_)=>{},
+    Receipt::Actor(call)=>frontier.receive_actor(call).map_err(|_|refused())?,
+    Receipt::Job(call)=>frontier.receive_job(call).map_err(|_|refused())?,
+   }
+  }
+  self.receipt=None;self.loan=None;self.scalar.take();self.stage=Stage::NeedLoan;Ok(true)
+ }
  /// 📥️ Transfers the complete captured Original failure into its caller-owned receiving slot.
  pub fn take_failure_step(&mut self,cx:&mut StepContext<'_>,receive:impl FnOnce(&mut Option<OriginalTurnFailure>,&mut StepContext<'_>)->Result<(),OriginalTurnFailure>)->Result<bool,OriginalTurnFailure>{if self.stage!=Stage::Fault||self.failure.is_none(){return Err(refused().into())}if !pay(cx,size_of::<Option<OriginalTurnFailure>>(),true)?{return Ok(false)}receive(&mut self.failure,cx)?;Ok(self.failure.is_none())}
  /// 🧹️ Partial guest state is aborted only while its parent proceeds to full native instance retirement.

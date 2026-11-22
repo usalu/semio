@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Read-only adoption of an installed Rust toolchain generation by a private repository",
+  "definitions": {
+    "Protocol": {
+      "const": {
+        "version": 1,
+        "intentDirectory": "g",
+        "intentFile": "intent.json",
+        "maximumIntentBytes": 4096,
+        "texts": {
+          "outside": {
+            "en": "An adopted Rust toolchain must lie outside the private repository: {directory}",
+            "de": "Ein übernommener Rust-Toolchain muss außerhalb des privaten Repositorys liegen: {directory}"
+          },
+          "pin": {
+            "en": "The pinned Rust channel {pinned} differs from the adopted generation {adopted}",
+            "de": "Der festgelegte Rust-Kanal {pinned} weicht von der übernommenen Generation {adopted} ab"
+          },
+          "changed": {
+            "en": "The adopted Rust compiler changed under read-only adoption: {program}",
+            "de": "Der übernommene Rust-Compiler hat sich während der schreibgeschützten Übernahme geändert: {program}"
+          }
+        }
+      }
+    },
+    "AdoptedToolchain": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "storeRoot", "directory", "identity", "request", "host", "channel"],
+      "properties": {
+        "version": { "const": 1 },
+        "storeRoot": { "type": "string", "minLength": 1 },
+        "directory": { "type": "string", "minLength": 1 },
+        "identity": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "request": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "host": { "type": "string", "minLength": 1 },
+        "channel": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

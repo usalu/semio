@@ -1,0 +1,9 @@
+{
+  "breadcrumb": ["semio", "gis", "3d"],
+  "pluginId": "gis-catalogue-law",
+  "artifactSchema": "gis.gisterrain",
+  "apps": [
+    { "appId": "s.gis.gisterrain@1/*#editor", "label": "Editor" },
+    { "appId": "s.gis.gisterrain@1/*#viewer", "label": "Viewer" }
+  ]
+}

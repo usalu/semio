@@ -9,7 +9,7 @@ import {createTestSandboxV1} from "../../../../../../../../🔨️modules/🏃�
 import {attachAgentSessionV1} from "../../🟦️.ts";
 import {runSessionCommandV1,type SessionCommandContextV1} from "../🟦️.ts";
 
-const scratch=mkdtempSync(join(resolve(process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir()),"sc-"));
+const scratch=mkdtempSync(join(process.platform==="win32"?tmpdir():"/tmp","sc-"));
 afterAll(()=>rmSync(scratch,{recursive:true,force:true}));
 const ajv=new Ajv({strict:true});ajv.addSchema(schema,"s");
 const fresh=(name:string)=>{const directory=join(scratch,name.slice(0,2));mkdirSync(join(directory,"r"),{recursive:true});mkdirSync(join(directory,"t"),{recursive:true});return {directory,registry:join(directory,"r"),parent:join(directory,"t"),root:join(directory,"w")};};

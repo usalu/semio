@@ -94,7 +94,7 @@
     },
     {
      "path": "mod/b/🟦️.ts",
-     "text": "export {y} from \"../../shared/y.ts\";\nexport const b=1;\n"
+     "text": "export {y} from \"../../shared/y.ts\";\nexport {x} from \"../../shared/x.ts\";\nexport const b=1;\n"
     },
     {
      "path": "mod/a/data.json",
@@ -385,27 +385,37 @@
     [
      "blocked:one",
      "EPERM",
-     100
+     100,
+     null,
+     null
     ],
     [
      "blocked:one",
      "EPERM",
-     102
+     102,
+     null,
+     null
     ],
     [
      "blocked:one",
      "sharing-violation",
-     103
+     103,
+     null,
+     null
     ],
     [
      "blocked:two",
      "non-schema reason containing a private path",
-     104
+     104,
+     null,
+     null
     ],
     [
      "error:round",
      "EPERM",
-     105
+     105,
+     null,
+     null
     ]
    ],
    "totals": [
@@ -455,17 +465,23 @@
     [
      "blocked:one",
      "directory-in-the-way",
-     110
+     110,
+     null,
+     null
     ],
     [
      "blocked:two",
      "parent-is-a-file",
-     111
+     111,
+     null,
+     null
     ],
     [
      "round:store",
      "EPERM",
-     112
+     112,
+     null,
+     null
     ]
    ],
    "totals": [
@@ -505,12 +521,16 @@
     [
      "blocked:one",
      "EACCES",
-     120
+     120,
+     null,
+     null
     ],
     [
      "round:one",
      "EPERM",
-     121
+     121,
+     null,
+     null
     ]
    ],
    "totals": [
@@ -535,6 +555,289 @@
      "kind": "blocked",
      "count": 1,
      "lastMs": 120
+    }
+   ]
+  },
+  {
+   "name": "terminal target codes follow only sharing reasons and survive recurrence key eviction",
+   "limit": 8,
+   "events": [
+    [
+     "blocked:a",
+     "sharing-violation",
+     130,
+     "EBUSY",
+     "rename"
+    ],
+    [
+     "blocked:a",
+     "sharing-violation",
+     131,
+     "EPERM",
+     "unlink"
+    ],
+    [
+     "blocked:b",
+     "sharing-violation",
+     132,
+     "EACCES",
+     "rename"
+    ],
+    [
+     "blocked:c",
+     "EPERM",
+     133,
+     "EPERM",
+     "unlink"
+    ],
+    [
+     "blocked:d",
+     "sharing-violation",
+     134,
+     null,
+     "rename"
+    ],
+    [
+     "blocked:a",
+     "sharing-violation",
+     135,
+     "EBUSY",
+     "rename"
+    ],
+    [
+     "error:round",
+     "sharing-violation",
+     136,
+     "EACCES",
+     "unlink"
+    ]
+   ],
+   "totals": [
+    {
+     "kind": "error",
+     "count": 1,
+     "lastMs": 136
+    },
+    {
+     "kind": "blocked",
+     "count": 6,
+     "lastMs": 135
+    }
+   ],
+   "results": [
+    {
+     "kind": "error",
+     "count": 1,
+     "lastMs": 136
+    },
+    {
+     "kind": "blocked",
+     "count": 6,
+     "lastMs": 135
+    },
+    {
+     "kind": "blocked-sharing-violation",
+     "count": 5,
+     "lastMs": 135
+    },
+    {
+     "kind": "blocked-eperm",
+     "count": 1,
+     "lastMs": 133
+    },
+    {
+     "kind": "blocked-target-sharing-ebusy",
+     "count": 2,
+     "lastMs": 135
+    },
+    {
+     "kind": "blocked-target-sharing-eacces",
+     "count": 1,
+     "lastMs": 132
+    },
+    {
+     "kind": "blocked-target-sharing-eperm",
+     "count": 1,
+     "lastMs": 131
+    },
+    {
+     "kind": "blocked-target-sharing-rename",
+     "count": 3,
+     "lastMs": 135
+    }
+   ]
+  },
+  {
+   "name": "native target sharing rows only use unclaimed report slots",
+   "limit": 5,
+   "events": [
+    [
+     "blocked:a",
+     "sharing-violation",
+     130,
+     "EBUSY",
+     "rename"
+    ],
+    [
+     "blocked:a",
+     "sharing-violation",
+     131,
+     "EPERM",
+     "unlink"
+    ],
+    [
+     "blocked:b",
+     "sharing-violation",
+     132,
+     "EACCES",
+     "rename"
+    ],
+    [
+     "blocked:c",
+     "EPERM",
+     133,
+     "EPERM",
+     "unlink"
+    ],
+    [
+     "blocked:d",
+     "sharing-violation",
+     134,
+     null,
+     "rename"
+    ],
+    [
+     "blocked:a",
+     "sharing-violation",
+     135,
+     "EBUSY",
+     "rename"
+    ],
+    [
+     "error:round",
+     "sharing-violation",
+     136,
+     "EACCES",
+     "unlink"
+    ]
+   ],
+   "totals": [
+    {
+     "kind": "error",
+     "count": 1,
+     "lastMs": 136
+    },
+    {
+     "kind": "blocked",
+     "count": 6,
+     "lastMs": 135
+    }
+   ],
+   "results": [
+    {
+     "kind": "error",
+     "count": 1,
+     "lastMs": 136
+    },
+    {
+     "kind": "blocked",
+     "count": 6,
+     "lastMs": 135
+    },
+    {
+     "kind": "blocked-sharing-violation",
+     "count": 5,
+     "lastMs": 135
+    },
+    {
+     "kind": "blocked-eperm",
+     "count": 1,
+     "lastMs": 133
+    },
+    {
+     "kind": "blocked-target-sharing-ebusy",
+     "count": 2,
+     "lastMs": 135
+    }
+   ]
+  },
+  {
+   "name": "unlink and rename remain separate when they encounter the same native code",
+   "limit": 8,
+   "events": [
+    [
+     "blocked:a",
+     "sharing-violation",
+     201,
+     "EPERM",
+     "unlink"
+    ],
+    [
+     "blocked:b",
+     "sharing-violation",
+     201,
+     "EPERM",
+     "rename"
+    ],
+    [
+     "blocked:c",
+     "sharing-violation",
+     202,
+     "EPERM",
+     "rename"
+    ],
+    [
+     "blocked:d",
+     "parent-is-a-file",
+     203,
+     "EPERM",
+     "unlink"
+    ],
+    [
+     "blocked:e",
+     "sharing-violation",
+     204,
+     null,
+     "rename"
+    ]
+   ],
+   "totals": [
+    {
+     "kind": "blocked",
+     "count": 5,
+     "lastMs": 204
+    }
+   ],
+   "results": [
+    {
+     "kind": "blocked",
+     "count": 5,
+     "lastMs": 204
+    },
+    {
+     "kind": "blocked-sharing-violation",
+     "count": 4,
+     "lastMs": 204
+    },
+    {
+     "kind": "blocked-parent-is-a-file",
+     "count": 1,
+     "lastMs": 203
+    },
+    {
+     "kind": "blocked-target-sharing-eperm",
+     "count": 3,
+     "lastMs": 202
+    },
+    {
+     "kind": "blocked-target-sharing-rename",
+     "count": 2,
+     "lastMs": 202
+    },
+    {
+     "kind": "blocked-target-sharing-unlink",
+     "count": 1,
+     "lastMs": 201
     }
    ]
   }

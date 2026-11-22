@@ -18,6 +18,14 @@ pub enum ArtifactGenesisPack {
     Paged(ArtifactGenesisPackPages),
 }
 
+impl From<Vec<u8>> for ArtifactGenesisPack {
+    fn from(bytes: Vec<u8>) -> Self { Self::Contiguous(bytes) }
+}
+
+impl From<ArtifactGenesisPackPages> for ArtifactGenesisPack {
+    fn from(bytes: ArtifactGenesisPackPages) -> Self { Self::Paged(bytes) }
+}
+
 impl ArtifactGenesisPack {
     /// 🫳️ Borrows a contiguous wire source when it supplied the actual backing.
     pub fn contiguous(&self) -> Option<&[u8]> {
@@ -77,21 +85,34 @@ impl<P> AdmittedArtifactGenesis<P>{
  }
  /// 🫴️ Admits original verified payloads while returning both exact inputs on refusal.
  pub fn admit_verified_pack(snapshot:P,pack:Vec<u8>,digest:[u8;32],grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<(Self,semio_framework_value::retained_clone::RetainedCloneProgress),(ValueError,P,Vec<u8>)>{
-  let demand=match Self::verified_pack_birth_demand(){Ok(demand)=>demand,Err(error)=>return Err((error,snapshot,pack))};
-  if let Err(error)=demand.admit(grant){return Err((error, snapshot, pack));}
-  Ok((Self::from_verified_pack(snapshot, pack, digest),semio_framework_value::retained_clone::RetainedCloneProgress{copied_items:1,retained_capacity_bytes:demand.capacity_bytes,..Default::default()}))
+  Self::admit_verified_physical_pack(snapshot, ArtifactGenesisPack::Contiguous(pack), digest, grant)
+    .map_err(|(error, snapshot, pack)| match pack {
+      ArtifactGenesisPack::Contiguous(pack) => (error, snapshot, pack),
+      ArtifactGenesisPack::Paged(_) => unreachable!("verified contiguous Pack admission changed representation"),
+    })
  }
 
  /// 🫴️ Transfers original verified pages and typed state without copying either payload.
  pub fn admit_verified_paged_pack(snapshot: P, pack: ArtifactGenesisPackPages, digest: [u8; 32], grant: semio_framework_value::RetainedCloneGrant)
      -> Result<(Self, semio_framework_value::RetainedCloneProgress), (ValueError, P, ArtifactGenesisPackPages)>
  {
+    Self::admit_verified_physical_pack(snapshot, ArtifactGenesisPack::Paged(pack), digest, grant)
+        .map_err(|(error, snapshot, pack)| match pack {
+            ArtifactGenesisPack::Paged(pack) => (error, snapshot, pack),
+            ArtifactGenesisPack::Contiguous(_) => unreachable!("verified paged Pack admission changed representation"),
+        })
+ }
+
+ /// 📥 Admits an already verified physical Pack without flattening its backing.
+ pub fn admit_verified_physical_pack(snapshot: P, pack: ArtifactGenesisPack, digest: [u8; 32], grant: semio_framework_value::RetainedCloneGrant)
+     -> Result<(Self, semio_framework_value::RetainedCloneProgress), (ValueError, P, ArtifactGenesisPack)>
+ {
      let demand = match Self::verified_pack_birth_demand() {
          Ok(demand) => demand,
          Err(error) => return Err((error, snapshot, pack)),
      };
      if let Err(error) = demand.admit(grant) { return Err((error, snapshot, pack)); }
-     let genesis = Self { facts: ArtifactGenesis::admitted(snapshot, digest), pack: Arc::new(ArtifactGenesisPack::Paged(pack)) };
+     let genesis = Self { facts: ArtifactGenesis::admitted(snapshot, digest), pack: Arc::new(pack) };
      let receipt = semio_framework_value::RetainedCloneProgress { copied_items: 1, retained_capacity_bytes: demand.capacity_bytes, ..Default::default() };
      Ok((genesis, receipt))
  }

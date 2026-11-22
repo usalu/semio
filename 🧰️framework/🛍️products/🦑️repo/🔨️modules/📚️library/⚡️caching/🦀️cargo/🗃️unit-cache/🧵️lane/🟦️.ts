@@ -87,7 +87,7 @@ export function laneIdsV1(root:string):string[]{try{return readdirSync(join(root
 
 /** 🔭️ Measures every lane of a cache root for the garbage collector (logical bytes; reflinked files count in full, which only makes collection earlier) and records each size beside the lane, where the pool reads it. */
 export function listLanesV1(root:string,nowMs:number):{id:string;bytes:number;incrementalBytes:number;lastUsedMs:number;live:boolean}[]{
- const base=join(root,layout.lanes);let ids:string[];try{ids=readdirSync(base).filter(name=>idPattern.test(name));}catch{return[];}
+ const base=join(root,layout.lanes);let ids:string[];try{ids=readdirSync(base).filter(name=>idPattern.test(name)&&!policy.pool.reserved.includes(name));}catch{return[];}
  return ids.map(id=>{const paths=lanePathsV1(root,id),limit={files:2_000_000};let lastUsedMs=0;try{lastUsedMs=Math.floor(statSync(paths.metadata).mtimeMs);}catch{}
   const incrementalBytes=incrementalDirectoriesV1(paths.build).reduce((sum,path)=>sum+treeBytes(path,limit),0),bytes=treeBytes(paths.base,limit);recordLaneSizeV1(root,id,bytes,incrementalBytes,nowMs);
   return{id,bytes,incrementalBytes,lastUsedMs,live:laneLiveV1(paths,nowMs)};});

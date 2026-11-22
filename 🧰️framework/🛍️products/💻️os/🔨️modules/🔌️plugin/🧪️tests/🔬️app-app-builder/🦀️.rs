@@ -2,7 +2,7 @@ mod app_builder_tests {
     use super::*;
     use semio_ui_locale::{Locale,LocalizedLabel,Terminology};
     use semio_framework::InteractiveJobClassification;
-    use semio_ui_layout::layout::create_default_layout;
+    use semio_ui_layout::layout::{create_default_layout, Axis};
 
     include!("🎛️descriptor-owner-layouts-terminology-and-history/🦀️.rs");
     include!("📋️clipboard-history-panel-actions-and-tools/🦀️.rs");

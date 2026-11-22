@@ -28,36 +28,36 @@ use ::semio_framework_schema::ArtifactSchema;
 /// snapshot corpus remains canonical.
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, ArtifactSchema, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 #[dsl(id = "puzzle.puzzle2d", layout = "lines")]
 #[artifact_schema(id = "s.puzzle.puzzle2d")]
 pub struct Puzzle2dSnapshot {
     #[state(artifact)]
     pub schema: PagedUtf8<{ usize::MAX }>,
     #[value(default)]
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[dsl(block)]
     #[state(artifact)]
     pub camera: Puzzle2dCamera,
     #[value(default)]
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[dsl(table)]
     #[state(artifact)]
     pub nodes: PagedList<Puzzle2dNode, { usize::MAX }>,
     #[value(default)]
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[dsl(table)]
     #[state(artifact)]
     pub edges: PagedList<Puzzle2dEdge, { usize::MAX }>,
     #[value(default, skip_serializing_if = "PagedList::is_empty")]
-    #[cfg_attr(test, serde(default, skip_serializing_if = "PagedList::is_empty"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "PagedList::is_empty"))]
     #[dsl(table)]
     #[state(artifact)]
     pub target_regions: PagedList<Puzzle2dTargetRegion, { usize::MAX }>,
     #[value(default)]
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[dsl(block)]
     #[state(artifact)]
     pub meta: Puzzle2dMeta,

@@ -189,8 +189,8 @@ it("projects the complete renderer hover roster into one ABI call", () => {
     const port = { id: id + (index % 2 === 0 ? "@!i" : "@") + capacity.port, code: capacity.port };
     return { id, ...(index % 2 === 0 ? {inputs: [port]} : {outputs: [port]}) };
   });
-  const ids = nodes.map(node => (node.inputs ?? node.outputs)![0].id);
-  applyFlowSceneHover(session, { nodes, edges: [] } as Parameters<typeof applyFlowSceneHover>[1], {
+  const ids = nodes.map(node => (("inputs" in node ? node.inputs : node.outputs) as readonly { readonly id: string }[])[0]!.id);
+  applyFlowSceneHover(session, { nodes, edges: [] } as unknown as Parameters<typeof applyFlowSceneHover>[1], {
     hoveredId: nodes[0].id, portId: "!i" + capacity.port, portIds: ids,
   });
   expect(setHoverChannel).toHaveBeenCalledTimes(1);

@@ -22,7 +22,7 @@ export function graphMemoSuspectsV1(index:FactIndexV1,stale:readonly number[],de
 /** 🔁️ Asks the suspect questions again through the node graph (`createClosureSettlerV1`): a held answer is kept only when its new support reads no entry (kind and path) the old support did not read, because the sealed relevance watches only the old support; such a question is `uncovered`. */
 export async function deriveGraphMemoSuspectsV1(input:Readonly<{index:FactIndexV1;suspects:ReadonlySet<string>;derive:MemoDeriverV1;signal?:AbortSignal}>):Promise<MemoDeriveAnswerV1>{
  const settled=await createClosureSettlerV1().settle({pseudoRows:suspectRowsV1(input.index,input.suspects),derive:input.derive,...(input.signal?{signal:input.signal}:{})}),identity=(row:MemoRowV1)=>row.kind+"\u0000"+row.path,held:string[]=[],uncovered:string[]=[];
- for(const [name,rows] of settled.held){const old=new Set(selectFactClassesV1(input.index,new Set([name])).ids.map(id=>identity(input.index.rows[id] as MemoRowV1)));(rows.slice(1).every(row=>old.has(identity(row as MemoRowV1)))?held:uncovered).push(name);}
+ for(const [name,rows] of settled.held){const old=new Set(selectFactClassesV1(input.index,new Set([name])).ids.map(id=>identity(input.index.rows[id] as MemoRowV1)));let covered=true,first=true;for(const row of rows as Iterable<unknown>){if(first){first=false;continue;}if(!old.has(identity(row as MemoRowV1))){covered=false;break;}}(covered?held:uncovered).push(name);}
  return{version:1,held,changed:[...settled.changed.keys()],failed:settled.failed,uncovered,missing:false};
 }
 

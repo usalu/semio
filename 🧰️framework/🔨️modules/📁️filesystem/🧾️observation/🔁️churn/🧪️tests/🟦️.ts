@@ -1,4 +1,5 @@
 /** 🔁️ Contract: a step that reads inputs other processes edit takes a new snapshot and runs again, bounded by the schema, with EN/DE progress; only an edit that persists through every attempt of the widest layer fails, naming the path. */
+import "./💾️durable/🟦️.ts";
 import {afterAll,beforeAll,expect,test} from "bun:test";
 import {mkdirSync,mkdtempSync,realpathSync,rmSync,utimesSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";

@@ -13,8 +13,8 @@ import { createCargoReceiptWriterV1 } from "./🦀️resolution/💾️receipt/�
 import resolutionDocument from "./🦀️resolution/🔣️.json" with { type: "json" };
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { sha256DelimitedHexV1, sha256FirstByteV1, sha256HexV1 } from "../🧂️text-bytes/🟨️.mjs";
-import { mkdirSync, writeFileSync, readFileSync, lstatSync, rmSync, existsSync as persistedExists } from "node:fs";
-import { concurrentEditV1, retryOnConcurrentEditSyncV1, renameOverBusyFileSyncV1 } from "../../../../../../🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
+import { mkdirSync, readFileSync, lstatSync, rmSync, existsSync as persistedExists } from "node:fs";
+import { concurrentEditV1, retryOnConcurrentEditSyncV1, publishFileDurablySyncV1 } from "../../../../../../🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
 import { fileURLToPath } from "node:url";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { adoptVerifiedBlockV1, observedFs } from "../👁️observation/🟨️.mjs";
@@ -44,7 +44,7 @@ function compileBuildInputPatternV1(pattern) {
         index=end-1;continue;
       }
       if(character==="{"){
-        const end=source.indexOf("}",index+1);if(end<0)throw Error("Unclosed source input alternatives");result+="(?:"+source.slice(index+1,end).split(",").map(compile).join("|")+")";index=end;continue;
+        let depth=1,end=index+1;const parts=[];let from=index+1;for(;end<source.length&&depth;end++){const mark=source[end];if(mark==="{")depth++;else if(mark==="}"){depth--;if(!depth)break;}else if(mark===","&&depth===1){parts.push(source.slice(from,end));from=end+1;}}if(depth)throw Error("Unclosed source input alternatives");parts.push(source.slice(from,end));result+="(?:"+parts.map(compile).join("|")+")";index=end;continue;
       }
       if(character==="["){
         const end=source.indexOf("]",index+1);if(end<0)throw Error("Unclosed source input class");result+="["+(source[index+1]==="!"?"^"+source.slice(index+2,end):source.slice(index+1,end))+"]";index=end;continue;
@@ -79,11 +79,11 @@ export function deduplicateProjectInputs(inputs, root) {
 /** 🧾️ Publishes identical content-addressed closure bytes atomically across independent graph writers. */
 const VERIFIED_CLOSURES_V1=new Map();
 
-/** 📤️ Publishes identical closure bytes atomically; a replaced directory entry uses the bounded read retry, while stable identity violations fail. An unchanged verified stamp avoids reading bytes again. */
+/** 📤️ Publishes identical closure bytes crash-safely (synced temporary file, rename, synced directory); a replaced directory entry uses the bounded read retry, while stable identity violations fail. An unchanged verified stamp avoids reading bytes again. A stable leaf whose bytes differ from the content addressed bytes is a torn or corrupt cache entry and is retired by atomically replacing it with the correct bytes under this writer's custody. */
 function publishInputClosureV1(path,contract){
- const verify=()=>retryOnConcurrentEditSyncV1("read",()=>{const row=lstatSync(path);if(!row.isFile()||row.isSymbolicLink()||row.nlink!==1||row.size!==Buffer.byteLength(contract)){const current=lstatSync(path);if(current.dev!==row.dev||current.ino!==row.ino)throw concurrentEditV1("identity",path);throw Error("Original immutable input closure bytes required");}const known=VERIFIED_CLOSURES_V1.get(path);if(known&&known.ino===row.ino&&known.size===row.size&&known.mtimeMs===row.mtimeMs&&known.ctimeMs===row.ctimeMs)return;if(!readFileSync(path).equals(Buffer.from(contract)))throw Error("Original immutable input closure bytes required");VERIFIED_CLOSURES_V1.set(path,{ino:row.ino,size:row.size,mtimeMs:row.mtimeMs,ctimeMs:row.ctimeMs});});
- if(persistedExists(path)){verify();return;}
- const temporary=join(dirname(path),"~"+randomUUID());if([path,temporary].some(value=>value.length>REVISION_POLICY_V1.maximumPathUnits||[...value].length>REVISION_POLICY_V1.maximumPathUnits))throw Error("Input closure staging path exceeds "+REVISION_POLICY_V1.maximumPathUnits+" characters");try{writeFileSync(temporary,contract,{flag:"wx"});renameOverBusyFileSyncV1(temporary,path);verify();noteBuildGraphStagedLeafV1(path);}finally{rmSync(temporary,{force:true});}
+ const verify=()=>retryOnConcurrentEditSyncV1("read",()=>{const row=lstatSync(path);if(!row.isFile()||row.isSymbolicLink()||row.nlink!==1){const current=lstatSync(path);if(current.dev!==row.dev||current.ino!==row.ino)throw concurrentEditV1("identity",path);throw Error("Original immutable input closure bytes required");}if(row.size!==Buffer.byteLength(contract)){const current=lstatSync(path);if(current.dev!==row.dev||current.ino!==row.ino)throw concurrentEditV1("identity",path);return false;}const known=VERIFIED_CLOSURES_V1.get(path);if(known&&known.ino===row.ino&&known.size===row.size&&known.mtimeMs===row.mtimeMs&&known.ctimeMs===row.ctimeMs)return true;if(!readFileSync(path).equals(Buffer.from(contract)))return false;VERIFIED_CLOSURES_V1.set(path,{ino:row.ino,size:row.size,mtimeMs:row.mtimeMs,ctimeMs:row.ctimeMs});return true;});
+ if(persistedExists(path)&&verify())return;
+ const temporary=join(dirname(path),"~"+randomUUID());if([path,temporary].some(value=>value.length>REVISION_POLICY_V1.maximumPathUnits||[...value].length>REVISION_POLICY_V1.maximumPathUnits))throw Error("Input closure staging path exceeds "+REVISION_POLICY_V1.maximumPathUnits+" characters");try{VERIFIED_CLOSURES_V1.delete(path);publishFileDurablySyncV1(temporary,path,Buffer.from(contract));if(!verify())throw Error("Original immutable input closure bytes required");noteBuildGraphStagedLeafV1(path);}finally{rmSync(temporary,{force:true});}
 }
 
 /** 🛰️ Adopts the leaves a farm worker staged into the graph under this process's writer custody, in the order that keeps every reference satisfied: content-addressed closures and blocks first (the first writer wins and every later copy is verified against it), the record that names them last. A receipt or pack that stands is the first writer's and keeps standing (receipts are sealed and checked when they are used); the optional leaves of one call are one batched publication. A block the adoption verified is registered as verified, so its first reader does not validate it again. Answers how many leaves were published, how many already stood and the reason for a publication refusal. */
@@ -120,8 +120,7 @@ export function adoptStagedGraphLeavesV1(workspaceRoot, stagingRoot, names) {
     for (const { target, bytes } of optional) {
       const temporary = /\.(?:pack|idx)$/u.test(target) ? `${target}.${randomBytes(4).toString("hex")}.tmp` : `${target}.${process.pid}.${Date.now()}.tmp`;
       mkdirSync(dirname(target), { recursive: true });
-      writeFileSync(temporary, bytes, { flag: "wx" });
-      renameOverBusyFileSyncV1(temporary, target);
+      publishFileDurablySyncV1(temporary, target, bytes);
     }
   }, reason => { plan.reason = reason; });
   if (!plan.declined) { plan.published = optional.length; for (const row of optional) if (row.text !== undefined) adoptVerifiedBlockV1(row.target, row.text); }

@@ -1,0 +1,7 @@
+{"cases":[
+ {"id":"healthy","busyAttempts":0,"leaseTimeout":false,"error":"none","limitMs":2000,"outcome":"ledger","opens":1},
+ {"id":"busy-then-ready","busyAttempts":2,"leaseTimeout":false,"error":"none","limitMs":2000,"outcome":"ledger","opens":3},
+ {"id":"busy-forever","busyAttempts":1000000,"leaseTimeout":false,"error":"none","limitMs":200,"outcome":"unavailable","opens":null},
+ {"id":"queue-held-by-peer","busyAttempts":0,"leaseTimeout":true,"error":"none","limitMs":200,"outcome":"unavailable","opens":0},
+ {"id":"other-error","busyAttempts":0,"leaseTimeout":false,"error":"boom","limitMs":2000,"outcome":"throws","opens":1}
+]}

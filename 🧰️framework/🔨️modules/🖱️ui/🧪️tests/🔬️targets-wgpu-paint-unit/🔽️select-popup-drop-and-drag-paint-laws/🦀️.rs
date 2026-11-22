@@ -7,7 +7,7 @@
 // + `DRAG_SOURCE` sync (`sync_tree_row_layout`/`sync_tree_item_layout`).
 
 fn select(id: &str, value: &str) -> UiNode {
-    UiNode::Select(UiSelectNode {
+    UiNode::Select(UiSelectNode { appearance: Default::default(),
         id: id.into(),
         value: value.into(),
         items: vec![UiSelectItem { value: "a".into(), label: Label::data("Alpha") }, UiSelectItem { value: "b".into(), label: Label::data("Beta") }],
@@ -46,7 +46,7 @@ fn retained_select_popup_is_viewport_clamped_scrolled_and_glass_foreground() {
     assert_eq!(fixture["schema"].as_str(), Some("semio.ui.retained-select-overlay-raster.v1"));
     let select_fixture = &fixture["select"];
     let item_count = usize::try_from(select_fixture["itemCount"].as_u64().expect("item count")).expect("item count fits");
-    let authored = UiNode::Select(UiSelectNode {
+    let authored = UiNode::Select(UiSelectNode { appearance: Default::default(),
         id: "long-select".into(),
         value: "0".into(),
         items: (0..item_count).map(|index| UiSelectItem { value: index.to_string(), label: Label::data(index.to_string()) }).collect(),
@@ -78,7 +78,7 @@ fn retained_select_popup_is_viewport_clamped_scrolled_and_glass_foreground() {
     }
     let mut sync = RetainedInteractiveSyncCursor::default();
     for _ in 0..4_096 {
-        if sync_interactive_state_node_step(&mut tree, root, &theme, &mut sync) == RetainedInteractiveSyncStep::Complete {
+        if sync_interactive_state_node_step(&mut tree, root, &theme, None, &mut sync) == RetainedInteractiveSyncStep::Complete {
             break;
         }
     }
@@ -138,7 +138,7 @@ fn retained_select_popup_is_viewport_clamped_scrolled_and_glass_foreground() {
     assert!(arm_retained_select_scroll_at(&mut tree, root, down.x + down.w * 0.5, down.y + down.h * 0.5));
     let mut sync = RetainedInteractiveSyncCursor::default();
     for _ in 0..4_096 {
-        if sync_interactive_state_node_step(&mut tree, root, &theme, &mut sync) == RetainedInteractiveSyncStep::Complete {
+        if sync_interactive_state_node_step(&mut tree, root, &theme, None, &mut sync) == RetainedInteractiveSyncStep::Complete {
             break;
         }
     }
@@ -201,7 +201,7 @@ fn the_production_sync_pass_materialises_an_open_selects_option_rows_and_unmount
     let drive = |tree: &mut UiTree, theme: &Theme| {
         let mut cursor = RetainedInteractiveSyncCursor::default();
         for _ in 0..4_096 {
-            match sync_interactive_state_node_step(tree, root, theme, &mut cursor) {
+            match sync_interactive_state_node_step(tree, root, theme, None, &mut cursor) {
                 RetainedInteractiveSyncStep::Pending => {}
                 RetainedInteractiveSyncStep::Complete => return,
                 RetainedInteractiveSyncStep::Fault => panic!("the production sync pass faulted at line {}", cursor.fault_line),

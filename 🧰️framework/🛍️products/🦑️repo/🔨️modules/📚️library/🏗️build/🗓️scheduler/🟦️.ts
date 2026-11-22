@@ -19,11 +19,11 @@ export type SchedulerEventV1=
  |Readonly<{type:"cancelled";at:number;ticket:string}>
  |Readonly<{type:"lost";at:number;ticket:string}>
  |Readonly<{type:"expired";at:number;jobId:string}>
- |Readonly<{type:"completed";at:number;jobId:string;exit:SchedulerExitV1;observedPeakMegabytes?:number}>
+ |Readonly<{type:"completed";at:number;jobId:string;exit:SchedulerExitV1;observedPeakMegabytes?:number;reason?:string}>
  |Readonly<{type:"pruned";at:number}>;
 type TicketV1={agent:string;workspace:string;priority:SchedulerPriorityV1;depth:number;lastSeen:number;order:number;state:"live"|"cancelled"|"lost"};
 export type SchedulerJobV1={id:string;key:string;class:JobRequestV1["class"];estimateClass:string;lane?:string;owner:string;weight:number;priority:SchedulerPriorityV1;depth:number;reserveMegabytes:number;submittedAt:number;seq:number;deadlineMs?:number;status:"queued"|"running";tickets:Record<string,TicketV1>;runner?:string;startedAt?:number;progress?:SchedulerProgressV1;stopping?:boolean};
-export type SchedulerFinishedV1=Readonly<{jobId:string;key:string;exit:SchedulerExitV1;atMs:number;tickets:readonly string[];estimateClass:string;observedPeakMegabytes?:number}>;
+export type SchedulerFinishedV1=Readonly<{jobId:string;key:string;exit:SchedulerExitV1;atMs:number;tickets:readonly string[];estimateClass:string;observedPeakMegabytes?:number;reason?:string}>;
 export type SchedulerStateV1={version:1;seq:number;virtualTime:number;jobs:Record<string,SchedulerJobV1>;ticketJob:Record<string,string>;keyJob:Record<string,string>;agents:Record<string,{vt:number;served:number;lastActive:number}>;finished:SchedulerFinishedV1[]};
 export type SchedulerHostV1=Readonly<{budgetMegabytes:number;availableMegabytes?:number}>;
 export type SchedulerSubmitOutcomeV1=Readonly<{kind:"queued"|"attached"|"busy"|"duplicate"|"invalid";jobId?:string;details?:string}>;
@@ -46,10 +46,10 @@ const live=(job:SchedulerJobV1):[string,TicketV1][]=>Object.entries(job.tickets)
 const rank=(policy:SchedulerPolicyV1,priority:SchedulerPriorityV1):number=>policy.priorityBands.indexOf(priority);
 const cost=(policy:SchedulerPolicyV1,reserveMegabytes:number):number=>Math.max(policy.minimumCostMilli,Math.floor(reserveMegabytes*1000/policy.referenceMegabytes));
 
-function finish(policy:SchedulerPolicyV1,state:SchedulerStateV1,job:SchedulerJobV1,exit:SchedulerExitV1,at:number,observedPeakMegabytes?:number):void{
+function finish(policy:SchedulerPolicyV1,state:SchedulerStateV1,job:SchedulerJobV1,exit:SchedulerExitV1,at:number,observedPeakMegabytes?:number,reason?:string):void{
  for(const ticket of Object.keys(job.tickets))delete state.ticketJob[ticket];
  delete state.keyJob[job.key];delete state.jobs[job.id];
- state.finished.push({jobId:job.id,key:job.key,exit,atMs:at,tickets:Object.keys(job.tickets),estimateClass:job.estimateClass,...observedPeakMegabytes===undefined?{}:{observedPeakMegabytes}});
+ state.finished.push({jobId:job.id,key:job.key,exit,atMs:at,tickets:Object.keys(job.tickets),estimateClass:job.estimateClass,...observedPeakMegabytes===undefined?{}:{observedPeakMegabytes},...reason===undefined||exit==="ok"?{}:{reason}});
  if(state.finished.length>policy.maxFinished)state.finished.splice(0,state.finished.length-policy.maxFinished);
  const agent=state.agents[job.owner];if(agent)agent.lastActive=at;
 }
@@ -92,7 +92,7 @@ export function applySchedulerEventV1(policy:SchedulerPolicyV1,state:SchedulerSt
    ticket.state=event.type==="lost"?"lost":"cancelled";settle(policy,state,job,event.at,event.type==="lost"?event.ticket:undefined);return;
   }
   case"expired":{const job=state.jobs[event.jobId];if(job)finish(policy,state,job,"expired",event.at);return;}
-  case"completed":{const job=state.jobs[event.jobId];if(job)finish(policy,state,job,event.exit,event.at,event.observedPeakMegabytes);return;}
+  case"completed":{const job=state.jobs[event.jobId];if(job)finish(policy,state,job,event.exit,event.at,event.observedPeakMegabytes,event.reason);return;}
   case"pruned":{
    const busy=new Set(Object.values(state.jobs).map(job=>job.owner)),idle=Object.entries(state.agents).filter(([name])=>!busy.has(name)).sort((a,b)=>a[1].lastActive-b[1].lastActive||(a[0]<b[0]?-1:1));
    let excess=Math.max(0,Object.keys(state.agents).length-policy.maxAgents);

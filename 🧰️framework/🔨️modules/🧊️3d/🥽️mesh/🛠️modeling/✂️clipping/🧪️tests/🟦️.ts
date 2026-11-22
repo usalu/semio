@@ -27,6 +27,8 @@ import loadManifold from "manifold-3d";
 import disconnectedDifference from "../../../🧪️tests/🧫️fixtures/🛠️modeling/🧩️disconnected-difference.json";
 import placedUnion from "../../../🧪️tests/🧫️fixtures/🛠️modeling/🧩️placed-union.json";
 import nestedPrismaticDifference from "../../../🧪️tests/🧫️fixtures/🛠️modeling/🕳️nested-prismatic-difference.json";
+import convexIntersection from "../../../🧪️tests/🧫️fixtures/🛠️modeling/⚗️convex-intersection.json";
+import bevel from "../../../🧪️tests/🧫️fixtures/🛠️modeling/🪚️bevel.json";
 
 function manifoldMesh(wasm: Awaited<ReturnType<typeof loadManifold>>, points: number[][], faces: number[][], reflected: boolean) {
   const triangles = faces.flatMap(source => {
@@ -97,10 +99,13 @@ test("Manifold independently measures a contained concave Mesh cutter", async ()
  enclosure.delete();
  blank.delete();
  const lateral = nestedPrismaticDifference.lateral;
- for (const lateral of [nestedPrismaticDifference.lateral, nestedPrismaticDifference.longitudinalSlab, nestedPrismaticDifference.mixedSlab, nestedPrismaticDifference.mixedOpenSlab, nestedPrismaticDifference.independentWalls, nestedPrismaticDifference.fourArmWalls, nestedPrismaticDifference.cornerSlab]) {
+ for (const lateral of [nestedPrismaticDifference.lateral, nestedPrismaticDifference.longitudinalSlab, nestedPrismaticDifference.mixedSlab, nestedPrismaticDifference.mixedOpenSlab, nestedPrismaticDifference.independentWalls, nestedPrismaticDifference.fourArmWalls, nestedPrismaticDifference.disjointSupport, nestedPrismaticDifference.disjointSupportInverse, nestedPrismaticDifference.disjointSupportWithCaps, nestedPrismaticDifference.disjointAndSingleSupports, nestedPrismaticDifference.grazingSupport, nestedPrismaticDifference.grazingEdge, nestedPrismaticDifference.reflexSupport, nestedPrismaticDifference.reflexSupportInverse, nestedPrismaticDifference.reflexSupportWithCaps, nestedPrismaticDifference.reflexSupportOpenTail, nestedPrismaticDifference.reflexJoinsBothTails, nestedPrismaticDifference.reflexJoinsOneTail, nestedPrismaticDifference.multipleReflexContacts, nestedPrismaticDifference.reflexOpposedBaseBand, nestedPrismaticDifference.reflexOpposedTipBand, nestedPrismaticDifference.reflexOpposedBaseTails, nestedPrismaticDifference.reflexOpposedTipTails, nestedPrismaticDifference.reflexNonparallelSupports, nestedPrismaticDifference.reflexOnBothSupports, nestedPrismaticDifference.reflexOnBothSupportsWithTails, nestedPrismaticDifference.joinedReflexRight, nestedPrismaticDifference.joinedReflexLeft, nestedPrismaticDifference.joinedReflexDiagonal, nestedPrismaticDifference.joinedReflexRightSlab, nestedPrismaticDifference.joinedReflexDiagonalTail, nestedPrismaticDifference.joinedReflexLeftTail, nestedPrismaticDifference.joinedInteriorSlab, nestedPrismaticDifference.joinedInteriorDiagonalSlab, nestedPrismaticDifference.joinedInteriorStationaryCap, nestedPrismaticDifference.joinedInteriorStockCaps, nestedPrismaticDifference.joinedThreeSupportSlab, nestedPrismaticDifference.joinedThreeSupportStockCaps, nestedPrismaticDifference.threeNonparallelSlab, nestedPrismaticDifference.threeNonparallelStockCaps, nestedPrismaticDifference.threeNonparallelStationaryCap, nestedPrismaticDifference.fourInteriorSupportsSlab, nestedPrismaticDifference.fourInteriorSupportsStockCaps, nestedPrismaticDifference.fourInteriorSupportsRotatedPocket, nestedPrismaticDifference.pentagonalInteriorSlab, nestedPrismaticDifference.pentagonalInteriorStockCaps, nestedPrismaticDifference.hexagonalInteriorPocket, nestedPrismaticDifference.maskedReflexHexagonalPocket, nestedPrismaticDifference.maskedCoincidentTriangle, nestedPrismaticDifference.cornerSlab]) {
   const [lateralLow,lateralHigh] = lateral.bounds;
-  const lateralSeed = wasm.Manifold.cube([lateralHigh[0]-lateralLow[0], lateralHigh[1]-lateralLow[1], lateralHigh[2]-lateralLow[2]]);
-  const placedTool = lateralSeed.translate(lateralLow as [number, number, number]);
+  const cutterProfile = "cutterProfile" in lateral ? new wasm.CrossSection([lateral.cutterProfile], "Positive") : undefined;
+  const height = lateralHigh[2]-lateralLow[2];
+  const lateralSeed = cutterProfile?.extrude(height)
+   ?? wasm.Manifold.cube([lateralHigh[0]-lateralLow[0], lateralHigh[1]-lateralLow[1], height]);
+  const placedTool = lateralSeed.translate(cutterProfile ? [0,0,lateralLow[2]] : lateralLow as [number, number, number]);
   const diagonal = "frame" in lateral;
   const diagonalScale = diagonal ? placedTool.scale([Math.SQRT1_2, Math.SQRT1_2, 1]) : undefined;
   const lateralTool = diagonalScale?.rotate([0, 0, -45]) ?? placedTool;
@@ -109,12 +114,35 @@ test("Manifold independently measures a contained concave Mesh cutter", async ()
   const source = cross?.translate([0, 0, floor]) ?? tool;
   const cases = [source.intersect(lateralTool), lateralTool.intersect(source)].map(result => ({ result, expected: lateral.intersection }));
   if ("difference" in lateral) cases.push({result: source.subtract(lateralTool), expected: lateral.difference});
-  for (const {result,expected} of cases) {
+  for (const [order,{result,expected}] of cases.entries()) {
    expect(result.status()).toBe("NoError");
    const pieces = result.decompose();
-   expect(pieces).toHaveLength(expected.components);
+   const splitCap = !diagonal && "contactHeights" in expected && expected.contactCopies === 2;
+   if (order !== 0 || !splitCap) expect(pieces).toHaveLength(expected.components);
+   if ("separatingOffset" in expected) {
+    const [low, high] = lateral.bounds.map(point => [...point] as [number, number, number]);
+    const faces = "separatingFaces" in expected ? expected.separatingFaces : [lateral.walls[0].face];
+    for (const wall of lateral.walls.filter(wall => faces.includes(wall.face))) {
+     const axis = "axis" in wall ? wall.axis ?? 0 : 0;
+     (wall.normalSign > 0 ? high : low)[axis] += wall.normalSign * expected.separatingOffset;
+    }
+    const seed = wasm.Manifold.cube(high.map((value, i) => value - low[i]) as [number, number, number]);
+    const separatedTool = seed.translate(low);
+    const separated = source.subtract(separatedTool);
+    const shells = separated.decompose();
+    expect(shells).toHaveLength(expected.components);
+    for (const shell of shells) {
+     expect(shell.genus()).toBe(expected.genus);
+     shell.delete();
+    }
+    expect(separated.volume()).toBeCloseTo(expected.volume, 2);
+    expect(separated.surfaceArea()).toBeCloseTo(expected.area, 2);
+    separated.delete();
+    separatedTool.delete();
+    seed.delete();
+   }
    for (const piece of pieces) {
-    expect(piece.genus()).toBe("genus" in expected ? expected.genus : 0);
+    if (!("separatingOffset" in expected)) expect(piece.genus()).toBe("genus" in expected ? expected.genus : 0);
     piece.delete();
    }
    expect(result.volume()).toBeCloseTo(expected.volume,8);
@@ -130,6 +158,7 @@ test("Manifold independently measures a contained concave Mesh cutter", async ()
    placedTool.delete();
   }
   lateralSeed.delete();
+  cutterProfile?.delete();
  }
  const splitLaw = nestedPrismaticDifference.split;
  for (const {endpoints:[a,b],parameter,uv} of [...splitLaw.edgeSamples,...nestedPrismaticDifference.lateral.edgeSamples,...nestedPrismaticDifference.longitudinalSlab.edgeSamples,...nestedPrismaticDifference.cornerSlab.edgeSamples]) {
@@ -152,6 +181,77 @@ test("Manifold independently measures a contained concave Mesh cutter", async ()
  expect(carved.volume()).toBeCloseTo(nestedPrismaticDifference.volume, 8);
  expect(carved.surfaceArea()).toBeCloseTo(nestedPrismaticDifference.area, 8);
  for (const shape of [carved, placed, rotated, centered, result, stock, tool, extrusion, profile]) shape.delete();
+});
+test("Manifold independently measures an interior support crossing in an L profile", async () => {
+ const wasm = await loadManifold();
+ wasm.setup();
+ const {positions,faces} = bevel.concave;
+ const profile = new wasm.CrossSection([faces[1].map(id => positions[id].slice(0, 2))], "Positive");
+ const stock = profile.extrude(positions[faces[1][0]][2]-positions[faces[0][0]][2]);
+ const expected = convexIntersection.overlappingWallCutter;
+ const [low,high] = expected.bounds;
+ const seed = wasm.Manifold.cube(high.map((value, i) => value - low[i]) as [number,number,number]);
+ const cutter = seed.translate(low as [number,number,number]);
+ for (const result of [stock.intersect(cutter),cutter.intersect(stock)]) {
+  expect(result.status()).toBe("NoError");
+  const pieces = result.decompose();
+  expect(pieces).toHaveLength(expected.components);
+  expect(pieces[0].genus()).toBe(0);
+  expect(result.volume()).toBeCloseTo(expected.volume,8);
+  expect(result.surfaceArea()).toBeCloseTo(expected.area,8);
+  for (const piece of pieces) piece.delete();
+  result.delete();
+ }
+ for (const shape of [cutter,seed,stock,profile]) shape.delete();
+});
+test("Manifold independently measures orthogonal concave prism booleans", async () => {
+ const wasm = await loadManifold();
+ wasm.setup();
+ const profile = new wasm.CrossSection([nestedPrismaticDifference.footprint], "Positive");
+ for (const row of [...nestedPrismaticDifference.axialPairs,...nestedPrismaticDifference.nestedConcavePairs,
+  ...nestedPrismaticDifference.separatedConcavePairs,...nestedPrismaticDifference.capCoincidentConcavePairs]) {
+  const inner = "cutterProfile" in row ? new wasm.CrossSection([row.cutterProfile],"Positive") : undefined;
+  const solid = ([low,high]: number[], section: typeof profile) => {
+   const shape = section.extrude(high-low);
+   const moved = shape.translate([0,0,low]);
+   shape.delete();
+   return moved;
+  };
+  const outside="stockProfile" in row ? new wasm.CrossSection([row.stockProfile],"Positive") : undefined;
+  const stock = solid(row.stock,outside ?? profile), cutter = solid(row.cutter,inner ?? profile);
+  if ("crossingProfile" in row) {
+   const crossingProfile = new wasm.CrossSection([row.crossingProfile.footprint],"Positive");
+   const crossing = solid(row.cutter,crossingProfile);
+   const result = stock.intersect(crossing);
+   expect(result.volume()).toBeCloseTo(row.crossingProfile.intersectionVolume,8);
+   expect(result.volume()).toBeLessThan(crossing.volume());
+   for (const shape of [result,crossing,crossingProfile]) shape.delete();
+  }
+  const cases = [[stock.intersect(cutter),row.intersection],[cutter.intersect(stock),row.reversedIntersection],
+   [stock.subtract(cutter),row.difference],[stock.add(cutter),row.union],[cutter.add(stock),row.reversedUnion]] as const;
+  const tests = "reversedDifference" in row ? [...cases,[cutter.subtract(stock),row.reversedDifference] as const] : cases;
+  for (const [result,expected] of tests) {
+   const pieces = result.decompose().filter(piece => {
+    if (Math.abs(piece.volume()) > 1e-12) return true;
+    piece.delete();
+    return false;
+   });
+   expect(result.status()).toBe("NoError");
+   expect(pieces).toHaveLength(expected.components);
+   for (const piece of pieces) {
+    expect(piece.genus()).toBe("genus" in expected ? expected.genus : 0);
+    piece.delete();
+   }
+   expect(result.volume()).toBeCloseTo(expected.volume,8);
+   if (expected.components > 0) expect(result.surfaceArea()).toBeCloseTo(expected.area,8);
+   result.delete();
+  }
+  stock.delete();
+  cutter.delete();
+  inner?.delete();
+  outside?.delete();
+ }
+ profile.delete();
 });
 test("Manifold independently measures positive-overlap placed Mesh Union", async () => {
  const wasm = await loadManifold();

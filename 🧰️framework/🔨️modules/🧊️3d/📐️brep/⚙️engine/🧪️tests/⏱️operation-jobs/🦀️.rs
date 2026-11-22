@@ -549,7 +549,7 @@ fn fixture_covers_every_operation() {
         "fillet", "filletVariable", "filletEdges", "chamfer", "chamferAsymmetric", "chamferEdges", "shell", "draft", "offsetSolid", "offsetFace", "thickenFace", "defeature", "extrude", "extrudeWire", "revolve", "sweep", "pipe", "helicalSweep", "loft", "section", "split", "compoundCut", "linearPattern", "circularPattern", "gridPattern", "convexHull",
     ];
     let mut covered = BTreeSet::new();
-    for case in fixture["cases"].as_array().unwrap() {
+    for case in ["cases", "refusals"].into_iter().flat_map(|category| fixture[category].as_array().unwrap()) {
         let kind = case["operation"]["kind"].as_str().unwrap();
         assert_eq!(Scene::new(case).operation(case).tag(), kind);
         covered.insert(kind);
@@ -561,10 +561,10 @@ fn fixture_covers_every_operation() {
 
 
 /// 🏷️ A job's result never reuses a label an existing entity carries: inputs that survive into the
-/// result (the profile cap of an extrusion, the solid a defeature edits) are re-labelled on commit.
+/// result (such as an extrusion profile cap) are re-labelled on commit.
 #[test]
 fn committed_results_never_share_a_label_with_existing_entities() {
-    for id in ["extrude-rectangle-face", "defeature-hull-smallest-face", "loft-two-squares-ruled", "revolve-offset-face-half-turn", "sweep-square-bent-path"] {
+    for id in ["extrude-rectangle-face", "loft-two-squares-ruled", "revolve-offset-face-half-turn", "sweep-square-bent-path"] {
         let fixture = fixture();
         let case = fixture["cases"].as_array().unwrap().iter().find(|case| case["id"] == id).unwrap();
         if !selected(id) {

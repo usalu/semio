@@ -8,6 +8,7 @@ import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
 import schema from "../🧬️schema/🔣️.json";
 import fixture from "./🔣️.json";
 import{implementationProcessEnvironmentV1}from"../../../🏛️sealed/📥️execution/🟦️.ts";
+import{graphChildEnvironmentV1}from"../../../🧠️memory/🐏️child-environment/🟨️.mjs";
 import{existsSync as existsRootV1}from"node:fs";import{dirname as dirnameRootV1,join as joinRootV1}from"node:path";
 const repositoryRootV1=(()=>{let directory=import.meta.dir;while(!existsRootV1(joinRootV1(directory,"MODULE.bazel"))&&dirnameRootV1(directory)!==directory)directory=dirnameRootV1(directory);return directory;})();
 
@@ -43,7 +44,7 @@ test("both launcher ports retain exact custody and add only the closed profiler 
  const ts=await import("typescript"),path=await import("node:path"),url=await import("node:url");
  const fixture={text:"fixture",sha256:"a".repeat(64)},original=Object.freeze({identity:"original"}),control={signal:new AbortController().signal};
  for(const mode of ["live","sealed"])for(const enabled of [false,true]){
-  const environment:Record<string,string>={SEMIO_LANGUAGE:"en",...(enabled?{SEMIO_REPO_CPU_PROFILE:'{"version":1,"directory":"/tmp/generated"}'}:{})},calls:{command:string;args:readonly string[];options:Record<string,unknown>;budget:number}[]=[];
+  const environment:Record<string,string>={SEMIO_LANGUAGE:"en",SEMIO_SEALED_PARTITION_PIN:"pin",SEMIO_SEALED_DOOR_DIGEST:"door",...(enabled?{SEMIO_REPO_CPU_PROFILE:'{"version":1,"directory":"/tmp/generated"}'}:{})},calls:{command:string;args:readonly string[];options:Record<string,unknown>;budget:number}[]=[];
   const profile=(env:Readonly<Record<string,string|undefined>>)=>{expect(env).toBe(environment);return repoCpuProfileArgumentsV1(env,{platform:"linux",pid:123,sequence:1});};
   const ports={
    requireIssuedScriptInvocationV1:(value:unknown)=>expect(value).toBe(original),
@@ -61,7 +62,7 @@ test("both launcher ports retain exact custody and add only the closed profiler 
    writeOwnedCommandOutputV1:()=>{},
    implementationModeV1:()=>"sealed",
    sealedEntryOfV1:()=>({}),
-   readSealedPointerV1:()=>({digest:fixture.sha256}),
+   readPartitionPinV1:(_root:unknown,token:unknown)=>{expect(token).toBe("pin");return {door:{digest:"door"},kernels:[{entry:"entry.ts",digest:fixture.sha256}]};},
    readSealedSnapshotV1:()=>fixture.text,
    readSealedLoaderV1:()=>"loader",
    sealedPolicyV1:{maximumCommandLineCharacters:32767},
@@ -81,7 +82,7 @@ test("both launcher ports retain exact custody and add only the closed profiler 
   expect(call.args).toEqual([...repoCpuProfileArgumentsV1(environment,{platform:"linux",pid:123,sequence:1}),"--eval","loader","--",fixture.sha256,"run","target"]);
   expect(call.options.control).toBe(control);expect(call.options.signal).toBe(control.signal);
   expect(call.options.auxiliaryInput).toEqual({version:1,text:fixture.text});
-  expect(call.options.env).toEqual({FORWARDED:"unchanged",BUN_RUNTIME_TRANSPILER_CACHE_PATH:"0"});
+  expect(call.options.env).toEqual({FORWARDED:"unchanged",...graphChildEnvironmentV1(),BUN_RUNTIME_TRANSPILER_CACHE_PATH:"0"});
  }
 });
 

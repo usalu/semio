@@ -38,6 +38,7 @@ export interface ClaimTableV1{
  sweep():void;
  summary():ClaimSummaryV1;
  snapshot():ClaimSnapshotV1;
+ flush():Promise<void>;
  close():void;
 }
 
@@ -111,6 +112,7 @@ export function createClaimTableV1(options:ClaimTableOptionsV1={}):ClaimTableV1{
    for(const claim of claims.values()){if(claim.untilMs<=at)continue;active++;oldest=Math.max(oldest,at-claim.grantedMs);}
    return {active,waiting,oldestSeconds:Math.floor(oldest/1000)};
   },
+  flush:()=>journal?.flush()??Promise.resolve(),
   close(){if(timer)clearInterval(timer);for(const address of[...waiters.keys()])wake(address,"timeout");claims.clear();},
  });
  journal?.bind(()=>table.snapshot());
@@ -166,5 +168,6 @@ export async function answerClaimRequestV1(input:ClaimRouteInputV1):Promise<Resp
  if(action==="renew"){const outcome=input.table.renew(namespace,kind,key,{owner,ttlMilliseconds:ttl});return json(outcome.state==="granted"?200:409,view(outcome));}
  const expected=body.expectedMilliseconds;if(expected!==undefined&&(typeof expected!=="number"||!Number.isFinite(expected)||expected<0))return bad("expectedMilliseconds invalid");
  const outcome=input.table.claim(namespace,kind,key,{owner,ttlMilliseconds:ttl,...(expected===undefined?{}:{expectedMilliseconds:Math.floor(expected as number)})},await input.has(namespace,kind,key));
+ if(outcome.state==="granted")await input.table.flush();
  return json(outcome.state==="held"?409:outcome.state==="full"?503:200,view(outcome));
 }

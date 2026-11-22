@@ -35,8 +35,10 @@ test("the identity schema agrees with an independent JSON-schema implementation"
  for(const value of broken){expect(validator("Registration")(value),JSON.stringify(value).slice(0,80)).toBe(false);expect(()=>requireFleetIdentityShapeV1("Registration",value,"x")).toThrow();}
  const pins={version:1,pins:{"g1-m01":{publicKey:sample.origin,pinnedAtMs:1}}};
  expect(validator("Pins")(pins)).toBe(true);expect(()=>requireFleetIdentityShapeV1("Pins",pins,"x")).not.toThrow();expect(validator("Pins")({...pins,pins:{a:{publicKey:"x",pinnedAtMs:1}}})).toBe(false);
- const rows={version:1,rows:[{namespace:"semio",kind:"ac",key:"a".repeat(64),keptOrigin:"g1-m01",keptSha256:"b".repeat(64),refusedOrigin:"g1-m02",refusedSha256:"c".repeat(64),atMs:5}]};
+ const rows={version:1,since:1,total:1,classes:{unit:1},rows:[{namespace:"semio",kind:"ac",key:"a".repeat(64),keptOrigin:"g1-m01",keptSha256:"b".repeat(64),refusedOrigin:"g1-m02",refusedSha256:"c".repeat(64),sort:"unit",differing:["a.rlib"],atMs:5}]};
  expect(validator("Divergences")(rows)).toBe(true);expect(()=>requireFleetIdentityShapeV1("Divergences",rows,"x")).not.toThrow();expect(validator("Divergences")({...rows,rows:[{...rows.rows[0],kind:"x"}]})).toBe(false);
+ const tally={version:1,since:1,total:3,pairs:{"g1-m01>g1-m02":{hits:3,units:2}}};
+ expect(validator("Consumption")(tally)).toBe(true);expect(()=>requireFleetIdentityShapeV1("Consumption",tally,"x")).not.toThrow();expect(validator("Consumption")({...tally,pairs:{"bad":{hits:1,units:1}}})).toBe(false);expect(()=>requireFleetIdentityShapeV1("Consumption",{...tally,total:-1},"x")).toThrow();
 });
 
 test("the identity is created once, one private key per role in its own 0600 file, and only public keys reach the store",async()=>{

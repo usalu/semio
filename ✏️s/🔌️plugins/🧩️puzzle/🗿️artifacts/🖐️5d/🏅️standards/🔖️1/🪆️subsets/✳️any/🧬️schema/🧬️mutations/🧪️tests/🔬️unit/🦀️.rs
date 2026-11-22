@@ -60,7 +60,7 @@ async fn move_part_2d_diff_absorb_law() {
     use crate::standards::v1::subsets::any::schema::document_records::Puzzle5dPart;
     let base = empty();
     let part = Puzzle5dPart { id: "p1".into(), ..Default::default() };
-    let with_part = protocol::apply_diff_cold(create_part(part, None).diff(&base).diff(), &base).expect("valid mutation diff");
+    let with_part = protocol::apply_diff_cold(create_part::<Puzzle5dMutation>(part, None).diff(&base).diff(), &base).expect("valid mutation diff");
     let d1 = move_part_2d("p1".into(), 10.0, 10.0).diff(&with_part).into_parts().0;
     let mid = protocol::apply_diff_cold(&d1, &with_part).expect("valid mutation diff");
     let d2 = move_part_2d("p1".into(), 20.0, 30.0).diff(&mid).into_parts().0;
@@ -76,8 +76,8 @@ async fn create_delete_part_inverse_law() {
     use crate::standards::v1::subsets::any::schema::document_records::Puzzle5dPart;
     let base = empty();
     let part = Puzzle5dPart { id: "p1".into(), ..Default::default() };
-    (assert_mutation_inverse_law(&base, &create_part(part.clone(), None))).await;
-    let with_part = protocol::apply_diff_cold(create_part(part, None).diff(&base).diff(), &base).expect("valid mutation diff");
+    (assert_mutation_inverse_law(&base, &create_part::<Puzzle5dMutation>(part.clone(), None))).await;
+    let with_part = protocol::apply_diff_cold(create_part::<Puzzle5dMutation>(part, None).diff(&base).diff(), &base).expect("valid mutation diff");
     (assert_mutation_inverse_law(&with_part, &delete_part("p1".into()))).await;
 }
 
@@ -89,7 +89,7 @@ async fn part_field_mutations_inverse_law() {
     use semio_s_artifact_puzzle_5d_document_records::standards::v1::subsets::any::schema::document_records::Puzzle5dScale;
     let base = empty();
     let part = Puzzle5dPart { id: "p1".into(), grips: vec![Puzzle5dGrip { id: "g1".into(), grip_kind: None, grip_2d: Default::default(), grip_3d: Default::default() }], ..Default::default() };
-    let with_part = protocol::apply_diff_cold(create_part(part, None).diff(&base).diff(), &base).expect("valid mutation diff");
+    let with_part = protocol::apply_diff_cold(create_part::<Puzzle5dMutation>(part, None).diff(&base).diff(), &base).expect("valid mutation diff");
     (assert_mutation_inverse_law(&with_part, &move_part_2d("p1".into(), 5.0, 6.0))).await;
     (assert_mutation_inverse_law(&with_part, &replace_part_2d_geometry("p1".into(), Some("rectangle".into()), None, Some(4.0), Some(2.0)))).await;
     (assert_mutation_inverse_law(&with_part, &edit_part_2d_text("p1".into(), Some("hi".into())))).await;
@@ -103,7 +103,7 @@ async fn part_field_mutations_inverse_law() {
     (assert_mutation_inverse_law(&with_part, &edit_part_3d_label("p1".into(), Some("Label".into())))).await;
     (assert_mutation_inverse_law(&with_part, &change_part_kind("p1".into(), Some("core.capsule".into())))).await;
     (assert_mutation_inverse_law(&with_part, &change_part_anchor("p1".into(), Puzzle5dPartAnchor::Derived))).await;
-    (assert_mutation_inverse_law(&with_part, &add_part_grip("p1".into(), Puzzle5dGrip { id: "g2".into(), grip_kind: None, grip_2d: Default::default(), grip_3d: Default::default() }, None))).await;
+    (assert_mutation_inverse_law(&with_part, &add_part_grip::<Puzzle5dMutation>("p1".into(), Puzzle5dGrip { id: "g2".into(), grip_kind: None, grip_2d: Default::default(), grip_3d: Default::default() }, None))).await;
     (assert_mutation_inverse_law(&with_part, &remove_part_grip("p1".into(), "g1".into()))).await;
     (assert_mutation_inverse_law(&with_part, &replace_part_grip("p1".into(), "g1".into(), Puzzle5dGrip { id: "g1".into(), grip_kind: Some("k".into()), grip_2d: Default::default(), grip_3d: Default::default() }))).await;
 }
@@ -116,8 +116,8 @@ async fn connect_disconnect_grips_inverse_law_and_cascade() {
     let part_a = Puzzle5dPart { id: "a".into(), grips: vec![Puzzle5dGrip { id: "ga".into(), grip_kind: None, grip_2d: Default::default(), grip_3d: Default::default() }], ..Default::default() };
     let part_b = Puzzle5dPart { id: "b".into(), grips: vec![Puzzle5dGrip { id: "gb".into(), grip_kind: None, grip_2d: Default::default(), grip_3d: Default::default() }], ..Default::default() };
     let mut projection = base;
-    projection = protocol::apply_diff_cold(create_part(part_a, None).diff(&projection).diff(), &projection).expect("valid mutation diff");
-    projection = protocol::apply_diff_cold(create_part(part_b, None).diff(&projection).diff(), &projection).expect("valid mutation diff");
+    projection = protocol::apply_diff_cold(create_part::<Puzzle5dMutation>(part_a, None).diff(&projection).diff(), &projection).expect("valid mutation diff");
+    projection = protocol::apply_diff_cold(create_part::<Puzzle5dMutation>(part_b, None).diff(&projection).diff(), &projection).expect("valid mutation diff");
     (assert_mutation_inverse_law(&projection, &connect_grips("f1".into(), "a:ga".into(), "b:gb".into(), None, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, None))).await;
     let connected = protocol::apply_diff_cold(connect_grips("f1".into(), "a:ga".into(), "b:gb".into(), None, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, None).diff(&projection).diff(), &projection).expect("valid mutation diff");
     (assert_mutation_inverse_law(&connected, &disconnect_grips("f1".into()))).await;
@@ -140,8 +140,8 @@ async fn document_scalar_mutations_inverse_law() {
     (assert_mutation_inverse_law(&base, &rename_puzzle5d(Some("Nakagin".into())))).await;
     (assert_mutation_inverse_law(&base, &change_domain("mechanical".into()))).await;
     (assert_mutation_inverse_law(&base, &change_description("a scene".into()))).await;
-    (assert_mutation_inverse_law(&base, &connect_kind_compatibility("a".into(), "b".into(), true, false, Puzzle5dCompatSpecificity::Grip, None))).await;
-    let connected = protocol::apply_diff_cold(connect_kind_compatibility("a".into(), "b".into(), true, false, Puzzle5dCompatSpecificity::Grip, None).diff(&base).diff(), &base).expect("valid mutation diff");
+    (assert_mutation_inverse_law(&base, &connect_kind_compatibility::<Puzzle5dMutation>("a".into(), "b".into(), true, false, Puzzle5dCompatSpecificity::Grip, None))).await;
+    let connected = protocol::apply_diff_cold(connect_kind_compatibility::<Puzzle5dMutation>("a".into(), "b".into(), true, false, Puzzle5dCompatSpecificity::Grip, None).diff(&base).diff(), &base).expect("valid mutation diff");
     (assert_mutation_inverse_law(&connected, &disconnect_kind_compatibility("a".into(), "b".into()))).await;
     (assert_mutation_inverse_law(&base, &replace_kind_catalogs(Some(Puzzle5dKindCatalogs::default())))).await;
 }
@@ -179,7 +179,7 @@ async fn create_duplicate_id_is_fatal_and_never_applies() {
     let mut base = empty();
     let part = Puzzle5dPart { id: "p0".into(), ..Default::default() };
     base.parts.push(part.clone());
-    let outcome = create_part(part, None).diff(&base);
+    let outcome = create_part::<Puzzle5dMutation>(part, None).diff(&base);
     (assert_fatal_never_applies(&outcome)).await;
     assert_eq!(outcome.worst_level(), Some(semio_framework_diagnostic::Severity::Fatal));
     assert!(outcome.messages().iter().any(|message| message.code.0 == "mutation.duplicate-id"));

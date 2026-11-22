@@ -8,7 +8,7 @@
 
 import { describe, expect, it } from "vitest";
 import corpus from "../🧫️fixtures/🧫️board-event-coalescing/🔣️.json" with { type: "json" };
-import { coalesceBoard2dEvents } from "../../📡️board-events/🟦️.ts";
+import { bufferBoard2dEvents, coalesceBoard2dEvents } from "../../📡️board-events/🟦️.ts";
 // #endregion 🔌️Adapters
 
 //#region 🧫️Corpus
@@ -27,7 +27,19 @@ describe("board event coalescing corpus", () => {
       expect(JSON.parse(eventsJson)).toEqual(entry.expect.events);
       expect(camera).toEqual(entry.expect.camera);
       expect(flushNow).toBe(entry.expect.flushNow);
+      const buffer: Parameters<typeof bufferBoard2dEvents>[0] = [];
+      for (const row of entry.rows) bufferBoard2dEvents(buffer, [row]);
+      expect(coalesceBoard2dEvents(buffer)).toEqual({ eventsJson, camera, flushNow });
     });
   }
+
+  it("keeps a long preview and camera gesture buffer bounded", () => {
+    const buffer: Parameters<typeof bufferBoard2dEvents>[0] = [];
+    for (let frame = 0; frame < 2_000; frame++) {
+      expect(bufferBoard2dEvents(buffer, [{ name: "nodeMove", payload: { id: "node", x: frame, y: 0 } }, { name: "hover", payload: { id: "node" } }])).toBe(false);
+      bufferBoard2dEvents(buffer, [{ name: "camera", payload: { x: frame, y: 0, zoom: 1 } }]);
+    }
+    expect(buffer).toEqual([{ name: "camera", payload: { x: 1_999, y: 0, zoom: 1 } }]);
+  });
 });
 //#endregion 🧫️Corpus

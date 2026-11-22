@@ -1,0 +1,76 @@
+{
+  "version": 1,
+  "hostCores": 10,
+  "freeCores": 1,
+  "cases": [
+    {
+      "policy": "projected-no-optimizer",
+      "captured": true,
+      "request": {
+        "kind": "exact",
+        "parallelism": 1
+      },
+      "admitted": true
+    },
+    {
+      "policy": null,
+      "captured": false,
+      "request": {
+        "kind": "available",
+        "maximumParallelism": 5,
+        "minimumParallelism": 3
+      },
+      "admitted": false
+    },
+    {
+      "policy": null,
+      "captured": true,
+      "request": {
+        "kind": "available",
+        "maximumParallelism": 5,
+        "minimumParallelism": 3
+      },
+      "admitted": false
+    },
+    {
+      "policy": "projected-no-optimizer",
+      "captured": false,
+      "request": null,
+      "admitted": false
+    }
+  ],
+  "resolvedCases": [
+    {
+      "change": "none",
+      "accepted": true
+    },
+    {
+      "change": "config-file",
+      "accepted": false
+    },
+    {
+      "change": "watcher",
+      "accepted": false
+    },
+    {
+      "change": "dependency-discovery",
+      "accepted": false
+    },
+    {
+      "change": "ssr-dependency-discovery",
+      "accepted": false
+    },
+    {
+      "change": "explicit-optimizer-include",
+      "accepted": false
+    },
+    {
+      "change": "pretransform",
+      "accepted": false
+    },
+    {
+      "change": "warmup",
+      "accepted": false
+    }
+  ]
+}

@@ -30,5 +30,5 @@ export async function runScriptProgram(): Promise<void> {
    await runRepositoryCommand(original,"rustfmt",["--edition","2021","--emit","stdout","--config","skip_children=true",...files.sort()],findWorkspaceRoot(),"mp3-metadata-rust-syntax",{version:1,maximumElapsedMilliseconds:120000,output:{maximumBytes:134217728,maximumLines:65536}},{stdout:"ignore"});
   
    });
-  }else await runArtifactTypeScriptPackageMain(SCRIPT_DIR, "@semio-tech/stdio-mp3",{suites:["🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🏷️metadata/🟦️.ts","🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"]});
+  }else await runArtifactTypeScriptPackageMain(SCRIPT_DIR, "@semio-tech/stdio-mp3",{bundleRuntime:"runtime",suites:["🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🏷️metadata/🟦️.ts","🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"]});
 }

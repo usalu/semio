@@ -92,7 +92,7 @@ export function PlaygroundPage(props: { readonly view: PaneView }): ReactElement
   const assets = useMemo(() => new Map<string, Asset | undefined>(pg.placements.map((placement) => [placement.asset, byId.get(placement.asset)?.asset])), [pg.placements, byId]);
   const readyAssets = useMemo(() => new Map(pg.placements.flatMap((placement) => (assets.get(placement.asset) === undefined ? [] : [[placement.asset, assets.get(placement.asset)!] as const]))), [pg.placements, assets]);
   const categories = useMemo(() => [...new Set(pg.placements.flatMap((placement) => (byId.get(placement.asset) === undefined ? [] : [byId.get(placement.asset)!.entry.category])))], [pg.placements, byId]);
-  useAssetLoading(catalog, true, categories, categories.join());
+  useAssetLoading(catalog, view.opened || view.revealed || address.route.page === "overview", categories, categories.join());
   const everything = useAssetLoading(catalog, view.opened, "all");
   const timelineS = useMemo(() => timelineLengthS(pg.placements.map((placement) => ({ ...placement, clipS: readyAssets.has(placement.asset) ? clipDurationS(readyAssets.get(placement.asset)!, placement.pick) : 0 })), pg.timelineS), [pg.placements, pg.timelineS, readyAssets]);
   const clock = useMemo(() => new StaffageClock({ fps: 30, durationS: 1, loop: true, playing: false, reducedMotion }), []);

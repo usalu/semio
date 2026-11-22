@@ -15,6 +15,10 @@ use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedClonePro
 use semio_framework_value::{RetirementDemand, ValueError};
 use semio_ui_contract::*;
 
+/// 🧮️ The work a store close rung charges its caller: the metered work, and at least one unit when the rung physically moved or released anything the child did not meter, because the mounted owner refuses fresh physical progress without a work debit (`original lifecycle receipt differs from its caller authority`).
+#[doc(hidden)]
+pub fn original_close_work(performed:u128,progress:&RetainedCloneProgress)->u128{performed.max(u128::from(*progress!=RetainedCloneProgress::default()))}
+
 /// 🏪️ Original store disposal keeps body, concrete frame and stage advance on separate grants.
 #[doc(hidden)]
 pub const ORIGINAL_STORE_LANES:[&str;8]=["document","config","draft","presence","transient","interaction","windowConfig","windowTransient"];

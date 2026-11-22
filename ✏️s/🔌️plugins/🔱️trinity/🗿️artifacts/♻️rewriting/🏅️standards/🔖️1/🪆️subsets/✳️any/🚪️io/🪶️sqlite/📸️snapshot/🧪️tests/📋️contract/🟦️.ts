@@ -57,36 +57,17 @@ function independent(hex: string): Database {
   for(const[ordinal,a]of document.rhs.set.entries())db.query("INSERT INTO rewriting_assignment VALUES(?,1,?,?,?,?)").run(ordinal+1,ordinal,a.var,a.prop,insert(property(a.value)));
   for(const[ordinal,p]of document.rhs.parameters.entries())db.query("INSERT INTO rewriting_parameter VALUES(?,1,?,?,?,?)").run(ordinal+1,ordinal,p.name,p.kind,insert(property(p.default)));
   const graph=document.workingGraph;
-  db.query("INSERT INTO jack_document VALUES(1,?,?,?,?,?)").run(graph.schema,graph.name,null,null,graph.query);
+  db.query("INSERT INTO jack_document VALUES(1,?,?,?,?,?)").run(graph.schema,graph.name,graph.manifestId,null,graph.query);
   const camera=[graph.camera.x,graph.camera.y,graph.camera.zoom].map(v=>scalar(v.bits));
   db.query("INSERT INTO jack_camera VALUES(1,1,?,?,?,?,?,?,?,?,?)").run(...camera.map(v=>v[0]),...camera.flatMap(v=>[v[1],v[2]]));
   const child=graph.content;
   db.query("INSERT INTO jack_content_child VALUES(1,1,?,?,?,?,?)").run(child.childId,child.target.artifactId,child.target.dialect.artifactKind,child.target.dialect.standard,child.target.dialect.subset);
-  let types=0,lists=0,schemas=0;
-  function valueType(v:any):number{
-    const id=++types;db.query("INSERT INTO jack_value_type VALUES(?,?)").run(id,v.kind);
-    if(v.kind==="list")db.query("INSERT INTO jack_value_type_list VALUES(?,?,?)").run(++lists,id,valueType(v.of));
-    if(v.kind==="schema")db.query("INSERT INTO jack_value_type_schema VALUES(?,?,?)").run(++schemas,id,v.of);
-    return id;
-  }
-  type KindRow={readonly name:string;readonly direction?:string;readonly portKinds?:readonly string[];readonly properties:readonly {readonly name:string;readonly kind:string;readonly expr?:string;readonly valueType:unknown}[]};
-  const kindRows:Record<"node"|"edge"|"port",readonly KindRow[]>={node:graph.manifest.nodeKinds,edge:graph.manifest.edgeKinds,port:graph.manifest.portKinds};
-  for(const family of ["node","edge","port"] as const){
-    let properties=0,ports=0;
-    for(const[ordinal,kind]of kindRows[family].entries()){
-      const id=ordinal+1;
-      if(family==="port")db.query("INSERT INTO jack_port_kind VALUES(?,1,?,?,?)").run(id,ordinal,kind.name,kind.direction??null);
-      else db.query("INSERT INTO jack_"+family+"_kind VALUES(?,1,?,?)").run(id,ordinal,kind.name);
-      if(family==="node")for(const[index,name]of (kind.portKinds??[]).entries())db.query("INSERT INTO jack_node_kind_port VALUES(?,?,?,?)").run(++ports,id,index,name);
-      for(const[index,p]of kind.properties.entries())db.query("INSERT INTO jack_"+family+"_property VALUES(?,?,?,?,?,?,?)").run(++properties,id,index,p.name,p.kind,p.expr??null,valueType(p.valueType));
-    }
-  }
   return db;
 }
-test("Rewriting thirty authored tables preserve every persisted domain relationship", () => {
+test("Rewriting twenty authored tables preserve every persisted domain relationship", () => {
   const db = independent(corpus.binary64Bits[0]!);
   try {
-    expect(db.query("SELECT name FROM sqlite_schema WHERE type='table'").all().length).toBe(30);
+    expect(db.query("SELECT name FROM sqlite_schema WHERE type='table'").all().length).toBe(20);
     for (const [table, width] of Object.entries(corpus.tableWidths)) expect(db.query("PRAGMA table_info(" + table + ")").all().length).toBe(width);
     for (const [table, count] of Object.entries(corpus.tableRowCounts)) expect((db.query("SELECT count(*) AS n FROM " + table).get() as { n: bigint }).n).toBe(BigInt(count));
     expect(db.query("PRAGMA foreign_key_check").all()).toEqual([]);

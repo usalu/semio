@@ -25,7 +25,7 @@ async fn open_instance_emits_open_plugin_instance_effect_matching_instance() {
         .effects
         .iter()
         .find_map(|effect| match effect {
-            Effect::OpenPluginInstance { plugin_id, app_id, os_instance_id } => Some((plugin_id.clone(), app_id.clone(), os_instance_id.clone())),
+            Effect::OpenPluginInstance { plugin_id, app_id, os_instance_id, .. } => Some((plugin_id.clone(), app_id.clone(), os_instance_id.clone())),
             _ => None,
         })
         .expect("OpenPluginInstance effect");

@@ -1,5 +1,6 @@
 //! 🗂️ Resumable traversal of the newest PDF cross-reference revision and its ancestors.
 
+use semio_framework_value::ByteReadSource;
 use super::{ClassicSectionCursor, ClassicSectionEvent, ClassicSectionReceipt, XrefEntry, XrefRow, XrefStreamError, XrefStreamEvent, XrefStreamReceipt, XrefStreamSectionCursor};
 use semio_s_artifact_stdio_pdf_lexer::{
     CosGrant, CosLimits, CosStatus, XrefLinkCursor, XrefRevisionSchedule, XrefSectionKind, XrefSectionProbe, XrefTarget,
@@ -60,7 +61,7 @@ impl XrefRevisionCursor {
         true
     }
 
-    pub fn advance(&mut self, source: &[u8], grant: CosGrant, cancelled: bool) -> XrefRevisionReceipt {
+    pub fn advance(&mut self, source: &(impl ByteReadSource + ?Sized), grant: CosGrant, cancelled: bool) -> XrefRevisionReceipt {
         use XrefRevisionEvent as Event;
         let mut receipt = response(Event::More);
         if cancelled { self.begin_close(); }
@@ -78,7 +79,7 @@ impl XrefRevisionCursor {
                 Ok(self.target.map_or(Event::Complete, Event::Visit))
             }
             Stage::Probe(probe) => {
-                let (work, kind) = probe.advance(source, grant.work);
+                let (work, kind) = probe.advance(|position| source.byte_at(position), grant.work);
                 receipt.work = work;
                 if let Some(kind) = kind {
                     let Some(XrefTarget::Primary(offset)) = self.target else { unreachable!() };
@@ -159,9 +160,9 @@ impl Section {
         match self { Self::Table(cursor) => cursor.ready_trailer(), Self::Stream(cursor) => cursor.ready_trailer() }
     }
 
-    fn advance(&mut self, source: &[u8], grant: CosGrant, target: XrefTarget) -> XrefRevisionReceipt {
+    fn advance(&mut self, source: &(impl ByteReadSource + ?Sized), grant: CosGrant, target: XrefTarget) -> XrefRevisionReceipt {
         match self {
-            Self::Table(cursor) => table(cursor.advance(source, grant, false), target),
+            Self::Table(cursor) => table(cursor.advance(|position| source.byte_at(position), grant, false), target),
             Self::Stream(cursor) => stream(cursor.advance(source, grant, false), target),
         }
     }
@@ -222,7 +223,7 @@ mod tests {
         let grant = CosGrant { work: 1, allocation_bytes: 256 * 1024, release_bytes: 256 * 1024 };
         let mut footer = crate::FooterCursor::new(pdf.len());
         let offset = loop {
-            if let crate::FooterStep::Complete(offset) = footer.advance(pdf, 1) { break offset; }
+            if let crate::FooterStep::Complete(offset) = footer.advance(|position| pdf.get(position).copied(), 1) { break offset; }
         };
         let mut cursor = XrefRevisionCursor::new(offset, CosLimits::default(), 4096);
         let mut orders = Vec::new();

@@ -214,6 +214,12 @@ export type SpaceArtifactCreationOwnerV1 = ArtifactCreationProgressOwnerV1 & Rea
   opening: boolean;
   cancelRequested: boolean;
   ready: Extract<BackboneWorkerResponse, { readonly kind: "space-artifact-creation-status" }> | null;
+  workflow?: Readonly<{
+    current: () => boolean;
+    expectedSchema: string;
+    expectedDialect: string;
+    finish: (ready: NonNullable<Extract<BackboneWorkerResponse, { readonly kind: "space-artifact-creation-status" }>["ready"]>) => Promise<boolean>;
+  }>;
 }>;
 
 export function spaceArtifactCreationOwnerAcceptsStatus(
@@ -221,6 +227,9 @@ export function spaceArtifactCreationOwnerAcceptsStatus(
   message: Extract<BackboneWorkerResponse, { readonly kind: "space-artifact-creation-status" }>,
 ): boolean {
   if (owner.requestId !== message.requestId || owner.spaceId !== message.spaceId || owner.expectedCatalogGenerationId !== message.catalogGenerationId || (message.ready !== undefined && message.ready.kindId !== owner.kindId)) return false;
+  if (owner.workflow !== undefined && message.ready !== undefined
+    && (message.ready.artifactSchema !== owner.workflow.expectedSchema
+      || dialectCoordinate(message.ready.parentDialect) !== owner.workflow.expectedDialect)) return false;
   if (owner.ready === null) return true;
   const retained = owner.ready.ready;
   return message.phase === "ready" && retained !== undefined && message.ready !== undefined

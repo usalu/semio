@@ -34,6 +34,16 @@ pub struct RetainedTurnReceipt{pub input:RetainedTurnInput,pub spent:RetainedClo
 }
 semio_framework_value::native_json_codec!{
 #[borrowed_json(protocol="crate::projection::KernelJson")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct PluginDocumentTarget {
+    pub document_id: String,
+    pub schema: String,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub space_id: Option<String>,
+}
+}
+semio_framework_value::native_json_codec!{
+#[borrowed_json(protocol="crate::projection::KernelJson")]
 #[value(rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum Effect {
     OpenWindow {
@@ -126,6 +136,8 @@ pub enum Effect {
         app_id: String,
         #[value(default, skip_serializing_if = "Option::is_none")]
         os_instance_id: Option<String>,
+        #[value(default, skip_serializing_if = "Option::is_none")]
+        document: Option<PluginDocumentTarget>,
     },
     SetActiveUtility {
         window_id: String,
@@ -323,8 +335,54 @@ pub struct OriginalMediaWireAck {
 semio_framework_value::native_json_codec!{
 #[borrowed_json(protocol="crate::projection::KernelJson")]
 #[value(rename_all = "camelCase")]
+pub struct NaturalSourceWireDeclaration {
+    pub format_kind: String,
+    pub extension: String,
+    pub media_type: String,
+    pub binary: bool,
+}
+}
+semio_framework_value::native_json_codec!{
+#[borrowed_json(protocol="crate::projection::KernelJson")]
+#[value(rename_all = "camelCase")]
+pub struct NaturalSourceWireLoan {
+    pub operation_id: String,
+    pub generation: String,
+    pub instance_id: u32,
+    pub declaration: NaturalSourceWireDeclaration,
+    pub extent: u32,
+}
+}
+semio_framework_value::native_json_codec!{
+#[borrowed_json(protocol="crate::projection::KernelJson")]
+#[value(rename_all = "camelCase")]
+pub struct NaturalSourceWireAck {
+    pub loan: Option<NaturalSourceWireLoan>,
+    pub owner: u64,
+    pub seq: u64,
+    pub kind: u8,
+    pub extent: u32,
+    pub phase: NaturalSourceWirePhase,
+    pub page_index: Option<u32>,
+    pub result: NaturalSourceWireResult,
+}
+}
+semio_framework_value::native_json_codec!{
+#[borrowed_json(protocol="crate::projection::KernelJson")]
+#[value(rename_all = "camelCase")]
+pub enum NaturalSourceWirePhase { Prepare, Begin, Page, Complete, Cancel }
+}
+semio_framework_value::native_json_codec!{
+#[borrowed_json(protocol="crate::projection::KernelJson")]
+#[value(rename_all = "camelCase")]
+pub enum NaturalSourceWireResult { Retry, Pending, Accepted, Stale, Refused }
+}
+semio_framework_value::native_json_codec!{
+#[borrowed_json(protocol="crate::projection::KernelJson")]
+#[value(rename_all = "camelCase")]
 pub enum CommandIngressStatus {
     OriginalMediaAck(OriginalMediaWireAck),
+    NaturalSourceAck(NaturalSourceWireAck),
     Idle,
     PageAccepted(CommandPageCursor),
     Backpressure(CommandPageCursor),

@@ -81,6 +81,8 @@ fn drive_frame(ui: &mut Ui, atlas: &mut FontAtlas) {
 }
 
 fn click(ui: &mut Ui, rect: Rect) {
+    static SECONDS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+    ui.advance_window_clock("fixture", SECONDS.fetch_add(1, std::sync::atomic::Ordering::Relaxed) as f64 + 1.0);
     let x = rect.x + rect.w * 0.5;
     let y = rect.y + rect.h * 0.5;
     ui.dispatch_event("fixture", UiEvent::PointerDown { x, y, button: PointerButton::Primary, modifiers: EventModifiers::default() });

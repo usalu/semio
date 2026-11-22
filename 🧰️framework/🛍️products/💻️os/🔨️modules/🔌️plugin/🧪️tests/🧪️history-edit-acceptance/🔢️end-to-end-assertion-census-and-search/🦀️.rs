@@ -2,6 +2,80 @@
 
 use super::*;
 
+/// 🚪️ Closes the registered app while the original editor, preview or Report still owns its source.
+pub async fn assert_closes_live_history_session<A, M>(manifest: fn() -> App, fixtures: &std::path::Path, directory: &str)
+where
+    A: ArtifactApp + Default,
+    M: ReferenceSpaceMember + MemberFactory + Send + 'static,
+    <A as ArtifactApp>::Snapshot: pack::snapshot::ArtifactDsl,
+{
+    let mut selected = None;
+    for case in acceptance_cases::<A>(fixtures) {
+        if std::path::Path::new(&case.directory).ends_with(directory) {
+            assert!(selected.is_none());
+            selected = Some(case);
+        } else {
+            ::protocol::Mutation::<A::Snapshot>::retire_cold(case.op);
+        }
+    }
+    let case = selected.expect("authored live history close fixture");
+    let mut caller = artifact_app_laws::OriginalFixtureCaller::admit().expect("history close caller");
+    let mut cx = acceptance_context(&mut caller);
+    for (settle_preview, replay, step_replacement) in [
+        (false, false, false),
+        (true, false, false),
+        (true, true, false),
+        (true, true, true),
+    ] {
+        let mut app = Box::pin(acceptance_seeded::<A, M>(manifest, &case.base, &[&case.op], true, &mut cx)).await
+            .unwrap_or_else(|_| panic!("history close fixture could not seed {}", case.directory));
+        let operations = app.stores.store.mutation_ops().unwrap();
+        assert_eq!(operations.len(), 1, "the Report must prepare only the fixture replacement");
+        let target = operations[0].mutation_id.0.clone();
+        Box::pin(acceptance_verb(&mut app, HISTORY_EDIT_BEGIN_ACTION_ID, vec![
+            (HISTORY_EDIT_ARG_MUTATION_ID, DslValue::String(target)),
+        ], &mut cx)).await.unwrap();
+        assert!(app.time_travel.editor().is_some());
+        if settle_preview {
+            Box::pin(acceptance_pump(&mut app, |app| !app.time_travel.has_pending_work(), &mut cx)).await.unwrap();
+        } else {
+            assert!(app.time_travel.preview_progress().is_some());
+        }
+        if replay {
+            let editor = app.time_travel.editor().unwrap();
+            let (path, value) = acceptance_changes(&editor.inputs, &editor.value).into_iter().next().expect("editable fixture value");
+            Box::pin(acceptance_verb(&mut app, HISTORY_EDIT_INPUT_ACTION_ID, vec![
+                ("path", DslValue::String(path)), ("value", value),
+            ], &mut cx)).await.unwrap();
+            Box::pin(acceptance_verb(&mut app, HISTORY_EDIT_ACCEPT_ACTION_ID, Vec::new(), &mut cx)).await.unwrap();
+            assert!(app.time_travel.replaying());
+            if step_replacement {
+                Box::pin(acceptance_pump(&mut app, |app| {
+                    !app.time_travel.replaying() || app.time_travel.processed().is_some()
+                }, &mut cx)).await.unwrap();
+                assert!(app.time_travel.replaying(), "the original Report must still own the replacement");
+                assert!(app.time_travel.processed().is_some(), "the replacement must have entered semantic preparation");
+            }
+        }
+        let stage = Some(if replay { HistoryTimeTravelStage::Replaying } else { HistoryTimeTravelStage::Editing });
+        assert_eq!(app.time_travel.status().map(|status| status.stage), stage);
+        let quote = app.time_travel.begin_close_demand();
+        let underfunded = RetainedCloneGrant { maximum_copy_bytes: quote.copy_bytes - 1, ..acceptance_policy().close };
+        let idle = app.time_travel_ctx().time_travel_close_step_context(underfunded, &mut cx).unwrap();
+        assert_eq!(idle.progress(), RetainedCloneProgress::default());
+        assert!(!app.time_travel.closing);
+        assert_eq!(app.time_travel.status().map(|status| status.stage), stage);
+        artifact_app_laws::close_registered_fixture_app(&mut app, acceptance_policy(), &mut cx)
+            .unwrap_or_else(|failure| panic!("original history close failed at {stage:?}: {failure:?}"));
+        assert!(app.time_travel.terminal_is_empty());
+        assert!(app.close_terminal_is_empty());
+    }
+    ::protocol::Mutation::<A::Snapshot>::retire_cold(case.op);
+    let fuel = cx.fuel_remaining();
+    drop(cx);
+    caller.retire(fuel).expect("original history close caller retirement");
+}
+
 /// 🧑‍⚖️ LAW (design §16.3): a representative editable leaf of the app is edited in history end to end through the generic
 /// mechanism — overwrite and new alternative, each head (value and document text) a fresh fold of the edited log, the row
 /// labelled in every locale. The committed fixture cases under `fixtures` are tried first ([`acceptance_cases`]); when none
@@ -17,7 +91,6 @@ where
     M: ReferenceSpaceMember + MemberFactory + Send + 'static,
     <A as ArtifactApp>::Snapshot: pack::snapshot::ArtifactDsl,
 {
-    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original acceptance caller admission");let mut original_context=acceptance_context(&mut original_caller);let cx=&mut original_context;let result=async{
     let descriptors = <A::Mutation as ::protocol::Mutation<A::Snapshot>>::DESCRIPTORS;
     if descriptors.is_empty() {
         return format!("{plugin}: no parent-lane leaf (a composed parent edits its content on the child lane)");
@@ -26,13 +99,11 @@ where
     if descriptors.iter().all(|descriptor| withdraw_only.contains(descriptor.semantic_kind)) {
         return format!("{plugin}: withdraw-only artifact (all {} leaves declare editable: false, design §22.20)", descriptors.len());
     }
-    match Box::pin(acceptance_search::<A, M>(plugin, manifest, fixtures, examples, false,cx)).await {
-        AcceptanceSearch::Passed(summary) => format!("{summary}\n[history-edit-census] {}", Box::pin(acceptance_census::<A, M>(plugin, manifest, fixtures, examples, &withdraw_only,cx)).await),
+    match Box::pin(acceptance_search::<A, M>(plugin, manifest, fixtures, examples, false)).await {
+        AcceptanceSearch::Passed(summary) => format!("{summary}\n[history-edit-census] {}", Box::pin(acceptance_census::<A, M>(plugin, manifest, fixtures, examples, &withdraw_only)).await),
         AcceptanceSearch::Failed(failure) => panic!("{failure}"),
         AcceptanceSearch::Exhausted(report) => panic!("{report}"),
     }
-
-    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original acceptance caller paid retirement");result
 }
 
 /// 🔭️ Which input-control kinds ([`ACCEPTANCE_CONTROL_KINDS`]) the draft editor of `case`'s operation offers a change for: the case
@@ -78,7 +149,7 @@ where
 /// scenario drafting an input of that kind, and no case breaks the generic mechanism — it panics naming `plugin`, the kind or every
 /// broken case otherwise. Census, never failing: the leaves exercised of the editable ones, those without a committed editable
 /// case, and the leaf that proved each kind — the line it answers.
-async fn acceptance_census<A, M>(plugin: &str, manifest: fn() -> App, fixtures: &std::path::Path, examples: &[ExampleSource], withdraw_only: &BTreeSet<String>,cx:&mut semio_framework_job::StepContext<'_>) -> String
+async fn acceptance_census<A, M>(plugin: &str, manifest: fn() -> App, fixtures: &std::path::Path, examples: &[ExampleSource], withdraw_only: &BTreeSet<String>) -> String
 where
     A: ArtifactApp + Default,
     M: ReferenceSpaceMember + MemberFactory + Send + 'static,
@@ -106,7 +177,7 @@ where
         }
         for index in own {
             let case = &cases[index];
-            let offered = match Box::pin(acceptance_offered::<A, M>(manifest, case,cx)).await {
+            let offered = match Box::pin(with_acceptance_caller(async |cx| Box::pin(acceptance_offered::<A, M>(manifest, case, cx)).await)).await {
                 Ok(offered) => offered,
                 Err(AcceptanceVerdict::Fail(reason)) => {
                     broken.push(reason.context(format!("{leaf} ({})", case.directory)));
@@ -130,7 +201,7 @@ where
             }
             for kind in wanted {
                 attempted.insert((index, kind));
-                match Box::pin(acceptance_scenario::<A, M>(manifest, case, None, false, Some(kind),cx)).await {
+                match Box::pin(acceptance_scenario::<A, M>(manifest, case, None, false, Some(kind))).await {
                     AcceptanceVerdict::Pass(_) => {
                         exercised.insert(leaf);
                         proven[kind].get_or_insert(leaf);
@@ -151,7 +222,7 @@ where
                 break;
             }
             let (case, leaf) = (&cases[index], leaf_of(&cases[index]));
-            match Box::pin(acceptance_scenario::<A, M>(manifest, case, None, false, Some(kind),cx)).await {
+            match Box::pin(acceptance_scenario::<A, M>(manifest, case, None, false, Some(kind))).await {
                 AcceptanceVerdict::Pass(_) => {
                     exercised.insert(leaf);
                     proven[kind] = Some(leaf);
@@ -211,7 +282,7 @@ pub(super) enum AcceptanceSearch {
 
 /// 🔎️ The search behind [`assert_history_edits_end_to_end`] and [`assert_documents_reload_identically`]: committed cases first, then
 /// derived ones, each scenario on a reloaded document when `reload`.
-pub(super) async fn acceptance_search<A, M>(plugin: &str, manifest: fn() -> App, fixtures: &std::path::Path, examples: &[ExampleSource], reload: bool,cx:&mut semio_framework_job::StepContext<'_>) -> AcceptanceSearch
+pub(super) async fn acceptance_search<A, M>(plugin: &str, manifest: fn() -> App, fixtures: &std::path::Path, examples: &[ExampleSource], reload: bool) -> AcceptanceSearch
 where
     A: ArtifactApp + Default,
     M: ReferenceSpaceMember + MemberFactory + Send + 'static,
@@ -220,14 +291,14 @@ where
     let mut skipped = Vec::new();
     let committed = acceptance_cases::<A>(fixtures);
     let mut counts = vec![committed.len()];
-    let mut outcome = Box::pin(acceptance_first_pass::<A, M>(plugin, manifest, &committed, &mut skipped, reload,cx)).await;
+    let mut outcome = Box::pin(acceptance_first_pass::<A, M>(plugin, manifest, &committed, &mut skipped, reload)).await;
     for case in committed {
         ::protocol::Mutation::<A::Snapshot>::retire_cold(case.op);
     }
     if matches!(outcome, Ok(None)) {
         let derived = Box::pin(acceptance_example_cases::<A>(fixtures, examples)).await;
         counts.push(derived.len());
-        outcome = Box::pin(acceptance_first_pass::<A, M>(plugin, manifest, &derived, &mut skipped, reload,cx)).await;
+        outcome = Box::pin(acceptance_first_pass::<A, M>(plugin, manifest, &derived, &mut skipped, reload)).await;
         for case in derived {
             ::protocol::Mutation::<A::Snapshot>::retire_cold(case.op);
         }

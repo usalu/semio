@@ -76,8 +76,8 @@ pub fn natural_file_input_bytes<'a>(port: &str, codec: NaturalFileCodec, media: 
     Ok(bytes)
 }
 
-fn natural_file_action_arg(id: &str, value: &impl semio_framework_value::ToValue) -> ActionArgDef {
-    let mut argument = ActionArgDef::text(id, LocalizedLabel::native(id, id)).default_value(value);
+fn natural_file_action_arg(id: &str, label_en: &str, label_de: &str, value: &impl semio_framework_value::ToValue) -> ActionArgDef {
+    let mut argument = ActionArgDef::text(id, LocalizedLabel::native(label_en, label_de)).default_value(value);
     argument.presentation = Some(ArgPresentation::Hidden);
     argument
 }
@@ -85,10 +85,10 @@ fn natural_file_action_arg(id: &str, value: &impl semio_framework_value::ToValue
 pub fn natural_file_action_definitions(codec: NaturalFileCodec) -> [ActionDefinition; 2] {
     let args = || {
         vec![
-            natural_file_action_arg("formatKind", &codec.format_kind),
-            natural_file_action_arg("extension", &codec.extension),
-            natural_file_action_arg("mediaType", &codec.media_type),
-            natural_file_action_arg("binary", &codec.binary),
+            natural_file_action_arg("formatKind", "Format kind", "Formatart", &codec.format_kind),
+            natural_file_action_arg("extension", "File extension", "Dateiendung", &codec.extension),
+            natural_file_action_arg("mediaType", "Media type", "Medientyp", &codec.media_type),
+            natural_file_action_arg("binary", "Binary", "Binär", &codec.binary),
         ]
     };
     [

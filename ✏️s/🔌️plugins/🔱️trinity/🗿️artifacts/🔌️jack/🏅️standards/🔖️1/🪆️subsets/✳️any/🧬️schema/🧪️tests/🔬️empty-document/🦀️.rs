@@ -5,7 +5,6 @@ use ::semio_framework_schema::ArtifactSchema;
 #[allow(unused_imports)]
 use crate::standards::v1::subsets::any::schema::graph::Camera;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::manifest::Manifest;
 use crate::standards::v1::subsets::any::schema::*;
 
 #[semio_framework_async_macros::async_test]

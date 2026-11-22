@@ -114,15 +114,16 @@ where
             units.retire_unscheduled().map_err(|error| VcsError::ValidationFailed(error.into_message()))?;
         }
         let content_revision = revision_accumulator.revision(current_checkpoint_id.as_deref());
+        let generation = 0;
         let local_actor_id = actor;
-        let snapshot_read_leases = SnapshotReadLeaseRegistryOwner::new();
-        assert!(snapshot_read_leases.publish_authority(0, content_revision), "a fresh Store must publish its exact genesis read authority");
         let (dag, edit_sequence, clock, rejected_seed_identities) = Self::seed_runtime_state(envelope, fresh_replica_clock().actor)?;
         C::publish_native_snapshot().map_err(|error| VcsError::ValidationFailed(error.to_string()))?;
         let mut displaced_retirements = ArtifactStoreDisplacedRetirements::new();
         if !rejected_seed_identities.is_empty() {
             displaced_retirements.push_reserved(Box::new(ArtifactStoreStringVectorRetirement::new(rejected_seed_identities)));
         }
+        let snapshot_read_leases = SnapshotReadLeaseRegistryOwner::new();
+        assert!(snapshot_read_leases.publish_authority(generation, content_revision), "new Store must publish its exact snapshot authority");
         let envelope = candidate.take().expect("an accepted construction takes its validated envelope exactly once");
         Ok(Self {
             log: StoreLog {
@@ -160,7 +161,7 @@ where
                 durable_group_root: std::mem::ManuallyDrop::new(None),
             },
             cursor: StoreCursor {
-                generation: 0,
+                generation,
                 last_projection_cause: None,
                 content_revision,
                 revision_accumulator: std::mem::ManuallyDrop::new(revision_accumulator),

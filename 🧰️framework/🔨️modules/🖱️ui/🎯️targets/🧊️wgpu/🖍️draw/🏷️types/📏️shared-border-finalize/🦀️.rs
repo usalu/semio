@@ -151,7 +151,7 @@ impl BorderFinalize {
                 } else if let Some(index) = self.selected_index.take() {
                     let selected = self.generated.get_mut(index).and_then(Option::take).ok_or(RetainedOutputError::Capacity)?;
                     let owner = &draw.layers[selected.owner];
-                    self.insertion = Some(DrawLayer { scissor: owner.scissor, clip: owner.clip.as_ref().map(|_| ClipRegion { scissors: BorderPages::new() }), foreground_of: owner.foreground_of, ..DrawLayer::default() });
+                    self.insertion = Some(DrawLayer { scissor: owner.scissor, clip: owner.clip.as_ref().map(|_| ClipRegion { scissors: BorderPages::new() }), foreground_of: owner.foreground_of, group: owner.group.map(GroupAlpha::continued), ..DrawLayer::default() });
                     self.selected = Some(selected); copied::<GeneratedBorder>(&mut self.progress); self.insertion_clip = 0; self.insertion_scan = 0; self.insertion_phase = 1;
                 } else if retire_page(&mut self.generated, &mut self.progress)? { return Ok(true); }
             }
@@ -272,7 +272,7 @@ impl BorderFinalize {
                 let target = &draw.layers[self.layer];
                 let source_epoch = (draw.scene_passes.partition_point(|pass| pass.layer_index < self.seed_layer), draw.glass_regions.partition_point(|region| region.layer_index <= self.seed_layer));
                 let target_epoch = (draw.scene_passes.partition_point(|pass| pass.layer_index < self.layer), draw.glass_regions.partition_point(|region| region.layer_index <= self.layer));
-                if source_epoch != target_epoch || source.foreground_of != target.foreground_of {
+                if source_epoch != target_epoch || source.foreground_of != target.foreground_of || source.group != target.group {
                     self.seed += 1;
                 } else {
                     if record.overlay == self.overlay {
@@ -356,7 +356,7 @@ impl BorderFinalize {
                 let target = &draw.layers[self.layer];
                 let mark_epoch = (draw.scene_passes.partition_point(|pass| pass.layer_index < record.layer), draw.glass_regions.partition_point(|region| region.layer_index <= record.layer));
                 let target_epoch = (draw.scene_passes.partition_point(|pass| pass.layer_index < self.layer), draw.glass_regions.partition_point(|region| region.layer_index <= self.layer));
-                if mark_epoch == target_epoch && mark.foreground_of == target.foreground_of {
+                if mark_epoch == target_epoch && mark.foreground_of == target.foreground_of && mark.group == target.group {
                     let layer = &mut draw.layers[record.layer];
                     let lane = if self.overlay { &mut layer.overlay_ui_instances } else { &mut layer.ui_instances };
                     *lane.get_mut(record.slot).ok_or(RetainedOutputError::Capacity)? = UiInstance::solid([0.0; 4], Rgba::TRANSPARENT);
@@ -368,7 +368,7 @@ impl BorderFinalize {
                 let target = &draw.layers[self.layer];
                 let mark_epoch = (draw.scene_passes.partition_point(|pass| pass.layer_index < self.mark_layer), draw.glass_regions.partition_point(|region| region.layer_index <= self.mark_layer));
                 let target_epoch = (draw.scene_passes.partition_point(|pass| pass.layer_index < self.layer), draw.glass_regions.partition_point(|region| region.layer_index <= self.layer));
-                if mark_epoch == target_epoch && mark.foreground_of == target.foreground_of {
+                if mark_epoch == target_epoch && mark.foreground_of == target.foreground_of && mark.group == target.group {
                     let layer = &mut draw.layers[self.mark_layer];
                     if self.overlay { layer.shared_overlay_finalized = true; } else { layer.shared_normal_finalized = true; }
                 }

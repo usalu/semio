@@ -3,9 +3,9 @@
   "owners": [
     {
       "manifest": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/🧩️json/📦️packages/🦀️rust/Cargo.toml",
@@ -21,165 +21,165 @@
     },
     {
       "manifest": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🀄️wfc/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🌀️procedural/🫀️foundation/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🏗️bim/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📃️list/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📖️dictionary/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📝️text/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🔤️primitive/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🖍️draw/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧠️logic/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧮️math/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/🧩️json/📦️packages/🦀️rust/Cargo.toml",
@@ -189,9 +189,9 @@
     },
     {
       "manifest": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/🧩️json/📦️packages/🦀️rust/Cargo.toml",
@@ -201,279 +201,279 @@
     },
     {
       "manifest": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🏗️fem/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🏭️process/🧩️extensions/🔩️metal/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🏭️process/🧩️extensions/🤖️robotic/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🏭️process/🧩️extensions/🧱️concrete/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🏭️process/🧩️extensions/🪵️wood/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/📕️norm/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/📜️imperative/🧩️extensions/🎮️control/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/📜️imperative/🧩️extensions/📝️text/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/📜️imperative/🧩️extensions/📣️effect/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧠️logic/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧮️math/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🔋️energy/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🪆️graph-query/📦️packages/🦀️rust/Cargo.toml",
@@ -483,15 +483,15 @@
     },
     {
       "manifest": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/🧩️json/📦️packages/🦀️rust/Cargo.toml",
@@ -507,15 +507,15 @@
     },
     {
       "manifest": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/🎒️archive/📦️packages/🦀️rust/Cargo.toml",
@@ -585,9 +585,9 @@
     },
     {
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🔮️oracles/📦️packages/🦀️rust/Cargo.toml",
@@ -597,9 +597,9 @@
     },
     {
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 4,
-      "digest": "1e13f80005679e2fabc9cfaa46643adfce65a709a7b822f7f2087df941dfefc8"
+      "digest": "90b1f22798d91d49c5905b0ae4e186055b8cd7c62b21a5d8c8c0e643881eaab7"
     },
     {
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🔮️oracles/📦️packages/🦀️rust/Cargo.toml",
@@ -609,9 +609,9 @@
     },
     {
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🔮️oracles/📦️packages/🦀️rust/Cargo.toml",
@@ -621,9 +621,9 @@
     },
     {
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/7️⃣87a/🪆️subsets/✳️any/🔬️probes/📖️reader/📦️packages/🦀️rust/Cargo.toml",
@@ -651,9 +651,9 @@
     },
     {
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🔮️oracles/📦️packages/🦀️rust/Cargo.toml",
@@ -663,9 +663,9 @@
     },
     {
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🏭️generator/🔁️codec/📦️packages/🦀️rust/Cargo.toml",
@@ -681,9 +681,9 @@
     },
     {
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🔮️oracles/📦️packages/🦀️rust/Cargo.toml",
@@ -693,9 +693,9 @@
     },
     {
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🔮️oracles/📦️packages/🦀️rust/Cargo.toml",
@@ -705,9 +705,9 @@
     },
     {
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🔮️oracles/📦️packages/🦀️rust/Cargo.toml",
@@ -717,9 +717,9 @@
     },
     {
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🔮️oracles/📦️packages/🦀️rust/Cargo.toml",
@@ -729,9 +729,9 @@
     },
     {
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 4,
-      "digest": "1e13f80005679e2fabc9cfaa46643adfce65a709a7b822f7f2087df941dfefc8"
+      "digest": "90b1f22798d91d49c5905b0ae4e186055b8cd7c62b21a5d8c8c0e643881eaab7"
     },
     {
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🔮️oracles/📦️packages/🦀️rust/Cargo.toml",
@@ -741,9 +741,9 @@
     },
     {
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 4,
-      "digest": "1e13f80005679e2fabc9cfaa46643adfce65a709a7b822f7f2087df941dfefc8"
+      "digest": "90b1f22798d91d49c5905b0ae4e186055b8cd7c62b21a5d8c8c0e643881eaab7"
     },
     {
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🔮️oracles/📦️packages/🦀️rust/Cargo.toml",
@@ -753,9 +753,9 @@
     },
     {
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🔮️oracles/📦️packages/🦀️rust/Cargo.toml",
@@ -765,9 +765,9 @@
     },
     {
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 4,
-      "digest": "1e13f80005679e2fabc9cfaa46643adfce65a709a7b822f7f2087df941dfefc8"
+      "digest": "90b1f22798d91d49c5905b0ae4e186055b8cd7c62b21a5d8c8c0e643881eaab7"
     },
     {
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🔮️oracles/📦️packages/🦀️rust/Cargo.toml",
@@ -777,9 +777,9 @@
     },
     {
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🖨️x/🏭️generator/🔁️codec/📦️packages/🦀️rust/Cargo.toml",
@@ -855,9 +855,9 @@
     },
     {
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🔮️oracles/📦️packages/🦀️rust/Cargo.toml",
@@ -867,9 +867,9 @@
     },
     {
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🔮️oracles/📦️packages/🦀️rust/Cargo.toml",
@@ -879,9 +879,9 @@
     },
     {
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🏭️generator/🔁️codec/📦️packages/🦀️rust/Cargo.toml",
@@ -897,9 +897,9 @@
     },
     {
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🏭️generator/🔁️codec/📦️packages/🦀️rust/Cargo.toml",
@@ -915,9 +915,9 @@
     },
     {
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🏭️generator/🔁️codec/📦️packages/🦀️rust/Cargo.toml",
@@ -933,9 +933,9 @@
     },
     {
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🏭️generator/🔁️codec/📦️packages/🦀️rust/Cargo.toml",
@@ -951,9 +951,9 @@
     },
     {
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🔮️oracles/📦️packages/🦀️rust/Cargo.toml",
@@ -963,9 +963,9 @@
     },
     {
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🔮️oracles/📦️packages/🦀️rust/Cargo.toml",
@@ -975,9 +975,9 @@
     },
     {
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🔮️oracles/📦️packages/🦀️rust/Cargo.toml",
@@ -987,9 +987,9 @@
     },
     {
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/🔮️oracles/📦️packages/🦀️rust/Cargo.toml",
@@ -999,9 +999,9 @@
     },
     {
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 4,
-      "digest": "1e13f80005679e2fabc9cfaa46643adfce65a709a7b822f7f2087df941dfefc8"
+      "digest": "90b1f22798d91d49c5905b0ae4e186055b8cd7c62b21a5d8c8c0e643881eaab7"
     },
     {
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🔮️oracles/📦️packages/🦀️rust/Cargo.toml",
@@ -1011,9 +1011,9 @@
     },
     {
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🏭️generator/🧪️tests/🧰️support/📦️packages/🦀️rust/Cargo.toml",
@@ -1029,9 +1029,9 @@
     },
     {
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🏭️generator/🔁️codec/📦️packages/🦀️rust/Cargo.toml",
@@ -1053,9 +1053,9 @@
     },
     {
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🔮️oracles/📦️packages/🦀️rust/Cargo.toml",
@@ -1065,9 +1065,9 @@
     },
     {
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📖️reader/📦️packages/🦀️rust/Cargo.toml",
@@ -1089,9 +1089,9 @@
     },
     {
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🔬️probes/📖️reader/📦️packages/🦀️rust/Cargo.toml",
@@ -1107,9 +1107,9 @@
     },
     {
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/🔮️oracles/📦️packages/🦀️rust/Cargo.toml",
@@ -1119,9 +1119,9 @@
     },
     {
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 4,
-      "digest": "1e13f80005679e2fabc9cfaa46643adfce65a709a7b822f7f2087df941dfefc8"
+      "digest": "90b1f22798d91d49c5905b0ae4e186055b8cd7c62b21a5d8c8c0e643881eaab7"
     },
     {
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🏭️generator/🧩️json/📦️packages/🦀️rust/Cargo.toml",
@@ -1137,9 +1137,9 @@
     },
     {
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🏭️generator/🧩️json/📦️packages/🦀️rust/Cargo.toml",
@@ -1197,9 +1197,9 @@
     },
     {
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🏭️generator/🔁️codec/📦️packages/🦀️rust/Cargo.toml",
@@ -1215,15 +1215,15 @@
     },
     {
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🗄️stdio/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/🔁️codec/📦️packages/🦀️rust/Cargo.toml",
@@ -1239,123 +1239,123 @@
     },
     {
       "manifest": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🧩️puzzle/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🧱️block/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🪐️space/🫀️catalog-documents/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🧱️slabs/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪟️windows/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪵️beams/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🧑‍💻dev/🌊️flow/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🧑‍💻dev/💡️services/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🧑‍💻dev/📐️cad/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🧑‍💻dev/🔱️trinity/🪆️graph/📦️packages/🦀️rust/Cargo.toml",
@@ -1365,21 +1365,21 @@
     },
     {
       "manifest": "✏️s/🧑‍💻dev/🧩️composition/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/🧑‍💻dev/🧹️fixture-sweep/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "✏️s/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "🌎️hub/🧩️compositions/🗄️stdio/🔮️oracles/📦️packages/🦀️rust/Cargo.toml",
@@ -1389,15 +1389,15 @@
     },
     {
       "manifest": "🌎️hub/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "🎓️teaching/Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 38,
-      "digest": "933dfc73da564cf28ea3b3a8a7980e97a4a7ddcd2351c5328ebd9859f3f6bb74"
+      "digest": "cad9e155707c63ab66e76c1f5c72c281ea2a5494a457f019e574508db8e3741f"
     },
     {
       "manifest": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/📦️packages/🦀️rust/Cargo.toml",
@@ -1425,9 +1425,9 @@
     },
     {
       "manifest": "Cargo.toml",
-      "native": 29,
+      "native": 30,
       "wasm": 52,
-      "digest": "74839da12c8ad2ab264c90a4e98488bfa4411f918f70ac108d1a99da9aa4ee8e"
+      "digest": "9b30c56563797e5b0fcf55301e8bc02dd255f52d36c7cdf83b2ed08a30662166"
     }
   ],
   "rendering": [
@@ -1864,6 +1864,22 @@
         "--profile",
         "release"
       ]
+    }
+  ],
+  "nativeInterpreterProfiles": [
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust/Cargo.toml",
+      "packageName": "semio-plugin-describe",
+      "producer": "descriptor-emitter",
+      "role": "descriptor",
+      "workspaceOwner": "Cargo.toml"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/Cargo.toml",
+      "packageName": "semio-os-mcp",
+      "producer": "artifact",
+      "role": "native",
+      "workspaceOwner": "Cargo.toml"
     }
   ],
   "targetRoles": [

@@ -193,6 +193,13 @@ impl ArtifactCreationDirectory for SqliteDirectory {
             return Err(DirectoryError::Conflict("genesis publication is outside its live server deadline".into()));
         }
         semio_hub_directory::validate_document_genesis_append_v1(&operation, append)?;
+        if append.intent.is_space_studio() {
+            let exists: bool = tx.query_row("SELECT EXISTS(SELECT 1 FROM hub_document_descriptor WHERE space_id = ?1 AND artifact_kind = ?2 AND artifact_schema = ?3)",
+                rusqlite::params![append.intent.scope.space_id, append.intent.request.kind_id, append.intent.artifact_schema], |row| row.get(0)).map_err(backend)?;
+            if exists {
+                return Err(DirectoryError::Conflict("a Studio workflow already exists in this Space".into()));
+            }
+        }
         let checkpoint = &append.checkpoint;
         let reservation = &append.reservation;
         let occupied: i64 = tx.query_row("SELECT EXISTS(SELECT 1 FROM hub_document_descriptor WHERE space_id = ?1 AND document_id = ?2 UNION ALL SELECT 1 FROM hub_document_index WHERE space_id = ?1 AND document_id = ?2 UNION ALL SELECT 1 FROM hub_artifact_checkpoint WHERE space_id = ?1 AND document_id = ?2)", rusqlite::params![checkpoint.scope.space_id, checkpoint.scope.document_id], |row| row.get(0)).map_err(backend)?;

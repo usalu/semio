@@ -9,6 +9,9 @@ pub use super::change_imported_features::ChangeImportedFeatures;
 pub use super::replace_elevation_source::ReplaceElevationSource;
 pub use crate::schema::operations::*;
 
+#[path = "🎯️history-target/🦀️.rs"]
+mod history_target;
+
 //#region 🔖️Aggregate
 /// 🗺️ Typed terrain mutation vocabulary backed by direct semantic owners.
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::NativeReceive)]

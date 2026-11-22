@@ -340,6 +340,7 @@ impl PrefsState {
         self.driver_id = preferences.driver_id.unwrap_or_else(|| "default".to_string());
         chrome.chrome_build.preferences = with_chrome_prefs(|preferences| preferences.clone());
         chrome.chrome_build.driver = resolve_ui_driver_chrome(&self.driver_id, &chrome.chrome_build.preferences.custom_drivers);
+        semio_renderer_wgpu_ui_engine::retained_ui_engine::set_ui_engine_driver(chrome.chrome_build.driver);
         if let Some(locked_theme) = &locks.theme_id {
             set_active_theme_id(locked_theme);
             chrome.chrome_build.preferences.theme_id = locked_theme.clone();

@@ -409,7 +409,8 @@
         "shift": false,
         "ctrl": false,
         "alt": false,
-        "meta": false
+        "meta": false,
+        "repeat": false
       },
       "wire": {
         "kind": "key-down",
@@ -417,7 +418,8 @@
         "shift": false,
         "ctrl": false,
         "alt": false,
-        "meta": false
+        "meta": false,
+        "repeat": false
       },
       "dispatch": {
         "kind": "key-down",
@@ -425,7 +427,39 @@
         "shift": false,
         "ctrl": false,
         "alt": false,
-        "meta": false
+        "meta": false,
+        "repeat": false
+      }
+    },
+    {
+      "id": "key-down-held-arrow-repeats",
+      "why": "A held key reaches the shell as repeats of one key: the DOM KeyboardEvent.repeat flag rides the wire and the dispatch, so Paint2d keyboard strides see it.",
+      "dom": {
+        "type": "keydown",
+        "key": "ArrowRight",
+        "shift": false,
+        "ctrl": false,
+        "alt": false,
+        "meta": false,
+        "repeat": true
+      },
+      "wire": {
+        "kind": "key-down",
+        "key": "ArrowRight",
+        "shift": false,
+        "ctrl": false,
+        "alt": false,
+        "meta": false,
+        "repeat": true
+      },
+      "dispatch": {
+        "kind": "key-down",
+        "key": "ArrowRight",
+        "shift": false,
+        "ctrl": false,
+        "alt": false,
+        "meta": false,
+        "repeat": true
       }
     },
     {
@@ -437,7 +471,8 @@
         "shift": false,
         "ctrl": false,
         "alt": false,
-        "meta": true
+        "meta": true,
+        "repeat": false
       },
       "wire": {
         "kind": "key-down",
@@ -445,7 +480,8 @@
         "shift": false,
         "ctrl": false,
         "alt": false,
-        "meta": true
+        "meta": true,
+        "repeat": false
       },
       "dispatch": {
         "kind": "key-down",
@@ -453,7 +489,8 @@
         "shift": false,
         "ctrl": false,
         "alt": false,
-        "meta": true
+        "meta": true,
+        "repeat": false
       }
     },
     {
@@ -465,7 +502,8 @@
         "shift": false,
         "ctrl": false,
         "alt": false,
-        "meta": false
+        "meta": false,
+        "repeat": false
       },
       "wire": {
         "kind": "key-down",
@@ -473,7 +511,8 @@
         "shift": false,
         "ctrl": false,
         "alt": false,
-        "meta": false
+        "meta": false,
+        "repeat": false
       },
       "dispatch": {
         "kind": "key-down",
@@ -481,7 +520,8 @@
         "shift": false,
         "ctrl": false,
         "alt": false,
-        "meta": false
+        "meta": false,
+        "repeat": false
       }
     },
     {

@@ -1,0 +1,59 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-s-artifact-stdio-pdf-io-export"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Production io layer of the stdio.pdf 1.7 base subset: the byte writer and the mutation bridge, below the page editor"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+pack = { workspace = true }
+semio-framework-2d = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust" }
+semio-framework-artifact-reference = { workspace = true }
+semio-framework-async = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust" }
+semio-framework-diagnostic = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
+semio-framework-dsl = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/📦️packages/🦀️rust" }
+semio-framework-dsl-record = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
+semio-framework-dsl-record-derive = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }
+semio-framework-hash = { workspace = true }
+semio-os-kernel = { workspace = true }
+semio-framework-pack-json = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-plugin = { workspace = true }
+semio-framework-schema = { workspace = true }
+semio-framework-schema-composition = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust" }
+semio-framework-schema-registry = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust" }
+semio-framework-schema-state = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
+semio-ui-contract = { workspace = true }
+semio-ui-locale = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-binary = { workspace = true }
+semio-s-artifact-stdio-contract = { workspace = true }
+semio-s-artifact-stdio-deflate = { workspace = true }
+semio-s-artifact-stdio-pdf-conformance-support = { path = "../../../../🧬️schema/🏅️conformance-support/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-pdf-diff = { path = "../../../../../../../4️⃣1.4/🪆️subsets/🧱️base/🧬️schema/🔺️diff/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-pdf-fonts = { path = "../../../../🔨️modules/🔤️fonts/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-pdf-graph-projection = { path = "../../../../🧬️schema/🔎️graph-projection/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-pdf-inferences = { path = "../../../../🧬️schema/💡️inferences/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-pdf-lift = { path = "../../../../🔨️modules/⬇️lift/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-pdf-lower = { path = "../../../../🔨️modules/⬆️lower/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-pdf-model = { path = "../../../../🧬️schema/📸️snapshot/📐️model/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-pdf-mut-base-2 = { path = "../../../../../../../📦️packages/🦀️rust" }
+semio-s-artifact-stdio-pdf-mut-base-3 = { path = "../../../../🧬️schema/🧬️mutations/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-pdf-mut-base-4 = { path = "../../../../📦️packages/🦀️rust" }
+semio-s-artifact-stdio-pdf-mut-family-10 = { path = "../../../../../🖨️x/🚪️io/💾️binary/🧬️mutations/🧪️tests/🔬️unit/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-pdf-mut-family-11 = { path = "../../../../🧬️schema/🧬️mutations/🪄️replace-page/🧪️tests/🔬️unit/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-pdf-mut-family-5 = { path = "../../../../🔨️modules/🖋️content/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-pdf-mut-family-8 = { path = "../../../../🔨️modules/🖋️content/🧪️tests/🔬️unit/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-pdf-mut-family-9 = { path = "../../../../../🖨️x/🚪️io/📝️text/🧬️mutations/🚀️insert-launch-action/🧪️tests/🔬️unit/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-pdf-snapshot-2 = { path = "../../../../🧬️schema/📸️snapshot/📦️packages/🦀️rust" }
+serde_json = { workspace = true }
+semio-framework-test-fixtures = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }

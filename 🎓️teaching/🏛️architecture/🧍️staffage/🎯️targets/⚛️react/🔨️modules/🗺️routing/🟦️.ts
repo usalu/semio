@@ -2,7 +2,7 @@
  *
  * Route: `#/` overview · `#/all` · `#/<category>` · `#/<category>/<asset>` · `#/collections[/<id>]` · `#/compare` · `#/playground` (the section playground) · `#/playground/plan` (the floor plan playground) · `#/playground/3d` (the 3D playground).
  * Parameters carry only what differs from the default, in a stable order, so `format(parse(x))` is canonical and a link reproduces the state: filters (`q cat an h root done sort dir`),
- * the viewer (`view vp cam vl scale pose|clip t zoom pan bg th tq fq range pat dg air mrt rh wind sun`; `vp` is `elevation`, `front`, `plan`, `axonometric` or `model`, `cam` the camera preset of the 3D model), the comparison (`p` per pane) and the playground (`p` per placement, `len`, `dep`, `tl`, `cam`, `vp` of its section tab).
+ * the viewer (`view vp cam vl scale pose|clip t zoom pan bg th tq fq range pat fl dg air mrt rh wind sun`; `fl` lists the air flow layers of the thermal view, `s` streams, `t` tracers, `m` moisture, `f` fog, `0` none; `vp` is `elevation`, `front`, `plan`, `axonometric` or `model`, `cam` the camera preset of the 3D model), the comparison (`p` per pane) and the playground (`p` per placement, `len`, `dep`, `tl`, `cam`, `vp` of its section tab).
  * The reader's own preferences — language, theme — are never part of a link.
  *
  * @see ../🔎️search/🟦️.ts — filter parameters
@@ -10,7 +10,8 @@
  */
 import { useCallback, useMemo, useSyncExternalStore } from "react";
 import { CATEGORIES, FORCE_QUANTITIES, THERMAL_QUANTITIES, PLANAR_VIEWPOINTS, VIEWS } from "@teaching/staffage";
-import type { CategoryId, DisplayRange, ForceQuantity, Slug, Text, ThermalQuantity, View, PlanarViewpoint } from "@teaching/staffage";
+import type { CategoryId, DisplayRange, FlowLayer, ForceQuantity, Slug, Text, ThermalQuantity, View, PlanarViewpoint } from "@teaching/staffage";
+import { ALL_FLOW_LAYERS, flowLayersCode, flowLayersFrom } from "../🌊️flow/🟦️.ts";
 import { CAMERA_PRESETS, DEFAULT_CAMERA, isCameraPreset, type CameraPresetName } from "../🧊️spatial/🟦️.ts";
 import { isViewpointKey, type ViewpointKey } from "../🔭️viewpoints/🟦️.ts";
 import { BACKGROUNDS, DEFAULT_DEPTH_M, DEFAULT_LENGTH_M, SECTION_VIEWPOINTS, TRACK_DEFAULTS, clampTimeline, clampTrack, type Background, type Placement, type Playground, type SectionViewpoint, type Selection } from "../💾️persistence/🟦️.ts";
@@ -148,6 +149,7 @@ export type ViewerState = {
   readonly patterns: boolean;
   readonly diagrams: DiagramToggles;
   readonly environment: EnvironmentOverride;
+  readonly flow: readonly FlowLayer[];
   readonly rate: number;
   readonly loop: boolean;
   readonly sheet: "single" | "all-views";
@@ -174,6 +176,7 @@ export const DEFAULT_VIEWER: ViewerState = {
   patterns: true,
   diagrams: { axial: false, shear: false, moment: true, freeBody: true },
   environment: {},
+  flow: ALL_FLOW_LAYERS,
   rate: 1,
   loop: true,
   sheet: "single",
@@ -229,6 +232,7 @@ export function viewerFromParams(params: URLSearchParams): ViewerState {
     forceQuantity: (FORCE_QUANTITIES as readonly string[]).includes(fq ?? "") ? (fq as ForceQuantity) : base.forceQuantity,
     range: low !== undefined && low !== null && high !== undefined && high !== null && high > low ? { mode: "fixed", min: low, max: high } : spanK !== null && spanK > 0 ? { mode: "span", spanK } : base.range,
     patterns: params.get("pat") !== "0",
+    flow: flowLayersFrom(params.get("fl")),
     diagrams: diagrams === null ? base.diagrams : { axial: false, shear: false, moment: false, freeBody: false, ...Object.fromEntries(diagrams.split(",").flatMap((code) => (code in DIAGRAM_CODES ? [[DIAGRAM_CODES[code as keyof typeof DIAGRAM_CODES], true]] : []))) },
     rate: number(params.get("rate")) !== null && [0.1, 0.25, 0.5, 1, 2].includes(number(params.get("rate"))!) ? number(params.get("rate"))! : 1,
     loop: params.get("loop") !== "0",
@@ -265,6 +269,8 @@ export function viewerToParams(viewer: ViewerState, into: URLSearchParams = new 
   if (viewer.range.mode === "fixed") into.set("range", `${round(viewer.range.min, 3)}:${round(viewer.range.max, 3)}`);
   if (viewer.range.mode === "span") into.set("span", String(round(viewer.range.spanK, 3)));
   if (!viewer.patterns) into.set("pat", "0");
+  const flow = flowLayersCode(viewer.flow);
+  if (flow !== null) into.set("fl", flow);
   const codes = Object.entries(DIAGRAM_CODES).flatMap(([code, key]) => (viewer.diagrams[key] ? [code] : []));
   if (codes.join() !== "m,fb") into.set("dg", codes.join(","));
   if (viewer.rate !== 1) into.set("rate", String(viewer.rate));

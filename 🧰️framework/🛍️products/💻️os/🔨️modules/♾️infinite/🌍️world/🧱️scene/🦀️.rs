@@ -17,6 +17,7 @@ use std::sync::{LazyLock, Mutex};
 use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress};
 use semio_framework_surface_terrain::{TerrainElevationGrid, TerrainSessionCore};
 pub use semio_framework_surface_terrain::TerrainBrushAction;
+use semio_framework_surface_terrain::pick::TerrainGridHit;
 use semio_framework_surface_terrain::overlay::{TerrainOverlays, TerrainOverlayTile};
 use serde_json::json;
 #[cfg(any(test, feature = "testkit"))] use ui_scene::math::pick_closest_mesh_url;
@@ -53,6 +54,13 @@ struct TerrainAttribution {
 #[value(rename_all = "camelCase")]
 struct TerrainInteraction {
     terrain_brush: Option<TerrainBrushAction>,
+    terrain_move_position: Option<TerrainMovePositionAction>,
+}
+
+#[derive(semio_framework_value::FromValue)]
+#[value(deny_unknown_fields)]
+struct TerrainMovePositionAction {
+    action: String,
 }
 
 #[derive(Deserialize)]
@@ -89,6 +97,10 @@ pub struct WorldTerrainState {
     terrain_interaction_digest: Option<u64>,
 
     terrain_brush: Option<TerrainBrushAction>,
+
+    terrain_move_position: Option<TerrainMovePositionAction>,
+
+    terrain_source_revision: u64,
 
     terrain_applied_signature: Option<(String, f64, f64, f64, Option<TerrainElevationGrid>)>,
 
@@ -146,6 +158,8 @@ impl WorldTerrainState {
             terrain_camera_frame: None,
             terrain_interaction_digest: None,
             terrain_brush: None,
+            terrain_move_position: None,
+            terrain_source_revision: 0,
             terrain_applied_signature: None,
             terrain_session: TerrainSessionCore::default(),
             terrain_visible_tiles: HashSet::new(),
@@ -171,6 +185,7 @@ impl WorldTerrainState {
         if self.terrain_style.as_ref().map(WorldTerrainStyle::signature) != style.as_ref().map(WorldTerrainStyle::signature) {
             self.terrain_camera_frame = None;
         }
+        self.terrain_source_revision = self.terrain_source_revision.wrapping_add(1);
         self.terrain_source_json = json.map(str::to_owned);
         self.terrain_style = style;
     }
@@ -198,9 +213,14 @@ impl WorldTerrainState {
             return;
         }
         self.terrain_interaction_digest = digest;
-        self.terrain_brush = json.and_then(|json| semio_framework_pack_json::from_json_str::<TerrainInteraction>(json, semio_framework_pack_json::JsonMemberPolicy::Reject).ok())
-            .and_then(|interaction| interaction.terrain_brush)
-            .filter(TerrainBrushAction::is_valid);
+        let interaction = json.and_then(|json| semio_framework_pack_json::from_json_str::<TerrainInteraction>(json, semio_framework_pack_json::JsonMemberPolicy::Reject).ok());
+        let (brush, move_position) = interaction.map_or((None, None), |interaction| (interaction.terrain_brush, interaction.terrain_move_position));
+        self.terrain_brush = brush.filter(TerrainBrushAction::is_valid);
+        self.terrain_move_position = move_position.filter(|descriptor| {
+            let action = &descriptor.action;
+            self.terrain_brush.is_none() && !action.is_empty() && action.len() <= 64
+                && action.bytes().all(|byte| byte.is_ascii_alphanumeric() || b"_.-".contains(&byte))
+        });
     }
 
     /// ⛏️ Returns the active brush only for an editable elevation source.
@@ -209,12 +229,38 @@ impl WorldTerrainState {
         Some((self.terrain_brush.as_ref()?, self.terrain_interaction_digest?))
     }
 
+    /// 👆️ Reports whether the editor reserves a primary gesture for its embedded terrain.
+    pub fn terrain_pointer_utility_active(&self) -> bool {
+        self.terrain_brush().is_some() || self.terrain_move_position().is_some()
+    }
+
+    /// 🧷️ Returns the editor's action and the source and utility revisions that own it.
+    pub fn terrain_move_position(&self) -> Option<(&str, [u64; 3])> {
+        self.terrain_style.as_ref()?.elevation_grid.as_ref()?;
+        Some((&self.terrain_move_position.as_ref()?.action, [self.terrain_revision, self.terrain_source_revision, self.terrain_interaction_digest?]))
+    }
+
+    pub fn terrain_move_position_current(&self, revision: [u64; 3]) -> bool {
+        !self.terrain_style_pending() && self.terrain_move_position().is_some_and(|(_, current)| current == revision)
+    }
+
+    /// 📌️ Iterates only marker geometry prepared for rendering.
+    pub fn visible_overlay_tiles(&self) -> impl Iterator<Item = ((u32, u32, u32), &TerrainOverlayTile)> {
+        self.terrain_overlay_tiles.iter()
+            .filter(|&(tile, _)| self.terrain_visible_tiles.contains(tile))
+            .map(|(&tile, overlays)| (tile, overlays))
+    }
+
     /// 🎯 Finds the nearest editable grid sample under the scene ray.
     pub fn pick_terrain_sample(&self, origin: [f64; 3], direction: [f64; 3]) -> Option<[u32; 2]> {
+        self.pick_terrain_grid(origin, direction).map(|hit| hit.sample)
+    }
+
+    pub fn pick_terrain_grid(&self, origin: [f64; 3], direction: [f64; 3]) -> Option<TerrainGridHit> {
         if self.terrain_style_pending() {
             return None;
         }
-        self.terrain_session.pick_elevation_grid(origin, direction).map(|hit| hit.sample)
+        self.terrain_session.pick_elevation_grid(origin, direction)
     }
 
     pub fn sync_terrain_camera_frame(&mut self, camera_json: &str) {

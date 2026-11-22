@@ -8,11 +8,12 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { useMemo, useState, type ReactElement } from "../⚛️react-port/🟦️.ts";
+import { useEffect, useMemo, useRef, useState, type ReactElement } from "../⚛️react-port/🟦️.ts";
 import { UIIntroduction } from "@semio-tech/ui-react";
 import {
   HUB_FIRST_RUN_STAGES_V1,
   hubFirstRunIntroductionV1,
+  hubFirstRunStageDoneV1,
   hubFirstRunStepIndexV1,
   type HubFirstRunStageV1,
   type HubFirstRunStateV1
@@ -31,6 +32,8 @@ export interface HubFirstRunProps {
   /** 🔢️ Overrides the derived entry step — used by stories and by a replay that should restart at
    * the beginning regardless of state. */
   readonly initialStepIndex?: number;
+  /** 🎟️ Whether an invite was just created and is ready to hand over — the `invite` stage's own completion. */
+  readonly inviteReady?: boolean;
 }
 //#endregion 🔖️Types
 
@@ -38,10 +41,21 @@ export interface HubFirstRunProps {
 /** 🎓️ Renders the walkthrough. The step index is local component state seeded from the hub state, so
  * a background change (a peer's invite landing, a session expiring) never yanks the person to a
  * different step mid-read. */
-export function HubFirstRun({ locale, state, onDismiss, initialStepIndex }: HubFirstRunProps): ReactElement {
+export function HubFirstRun({ locale, state, onDismiss, initialStepIndex, inviteReady = false }: HubFirstRunProps): ReactElement {
   const introduction = useMemo(() => hubFirstRunIntroductionV1(locale), [locale]);
   const [stepIndex, setStepIndex] = useState(() => initialStepIndex ?? hubFirstRunStepIndexV1(state));
-  return <UIIntroduction introduction={introduction} stepIndex={stepIndex} onStepIndexChange={setStepIndex} onDismiss={onDismiss} />;
+  const stage = HUB_FIRST_RUN_STAGES_V1[stepIndex] ?? "done";
+  const done = hubFirstRunStageDoneV1(stage, state, inviteReady);
+  const entry = useRef<{ readonly index: number; readonly done: boolean } | null>(null);
+  useEffect(() => {
+    if (entry.current === null || entry.current.index !== stepIndex) {
+      entry.current = { index: stepIndex, done };
+      return;
+    }
+    if (done && !entry.current.done) setStepIndex(Math.min(stepIndex + 1, introduction.steps.length - 1));
+  }, [done, stepIndex, introduction]);
+  const completed = done && entry.current?.index === stepIndex && !entry.current.done ? (introduction.steps[stepIndex]?.interactions ?? []).map((_, index) => index) : [];
+  return <UIIntroduction introduction={introduction} stepIndex={stepIndex} completedInteractionIndices={completed} onStepIndexChange={setStepIndex} onDismiss={onDismiss} />;
 }
 
 /** 🪜️ The stage a rendered step index belongs to — the inverse of `hubFirstRunStepIndexV1`, for a

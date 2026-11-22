@@ -1,0 +1,55 @@
+{
+  "image": "/w/.cache/b/d/fixed.dmg",
+  "root": "/w/.cache/b/d/m",
+  "cases": [
+    {
+      "name": "attached at the private scratch mount of a reclaim cycle (the incident)",
+      "plist": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\"><plist version=\"1.0\"><dict><key>images</key><array><dict><key>image-path</key><string>/w/.cache/b/d/fixed.dmg</string><key>system-entities</key><array><dict><key>dev-entry</key><string>/dev/disk4</string></dict><dict><key>dev-entry</key><string>/dev/disk4s1</string><key>mount-point</key><string>/private/var/folders/x/T/semio-reclaim-b6Twxt</string></dict></array></dict></array></dict></plist>",
+      "expected": {
+        "device": "/dev/disk4",
+        "mountPoints": [
+          "/private/var/folders/x/T/semio-reclaim-b6Twxt"
+        ]
+      }
+    },
+    {
+      "name": "attached at its canonical mount point",
+      "plist": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\"><plist version=\"1.0\"><dict><key>images</key><array><dict><key>image-path</key><string>/w/.cache/b/d/fixed.dmg</string><key>system-entities</key><array><dict><key>dev-entry</key><string>/dev/disk4</string></dict><dict><key>dev-entry</key><string>/dev/disk4s1</string><key>mount-point</key><string>/w/.cache/b/d/m</string></dict></array></dict></array></dict></plist>",
+      "expected": null
+    },
+    {
+      "name": "attached without any mount",
+      "plist": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\"><plist version=\"1.0\"><dict><key>images</key><array><dict><key>image-path</key><string>/w/.cache/b/d/fixed.dmg</string><key>system-entities</key><array><dict><key>dev-entry</key><string>/dev/disk5</string></dict></array></dict></array></dict></plist>",
+      "expected": {
+        "device": "/dev/disk5",
+        "mountPoints": []
+      }
+    },
+    {
+      "name": "not attached while another image is",
+      "plist": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\"><plist version=\"1.0\"><dict><key>images</key><array><dict><key>image-path</key><string>/w/.cache/b/r/fixed.dmg</string><key>system-entities</key><array><dict><key>dev-entry</key><string>/dev/disk6</string></dict><dict><key>dev-entry</key><string>/dev/disk6s1</string><key>mount-point</key><string>/w/.cache/b/r/m</string></dict></array></dict></array></dict></plist>",
+      "expected": null
+    },
+    {
+      "name": "an empty inventory",
+      "plist": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\"><plist version=\"1.0\"><dict><key>images</key><array></array></dict></plist>",
+      "expected": null
+    },
+    {
+      "name": "a similar path is not the image",
+      "plist": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\"><plist version=\"1.0\"><dict><key>images</key><array><dict><key>image-path</key><string>/w/.cache/b/d/fixed.dmg.bak</string><key>system-entities</key><array><dict><key>dev-entry</key><string>/dev/disk7</string></dict><dict><key>dev-entry</key><string>/dev/disk7s1</string><key>mount-point</key><string>/private/var/folders/x/T/semio-reclaim-b6Twxt</string></dict></array></dict></array></dict></plist>",
+      "expected": null
+    },
+    {
+      "name": "two mounts, none canonical",
+      "plist": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\"><plist version=\"1.0\"><dict><key>images</key><array><dict><key>image-path</key><string>/w/.cache/b/d/fixed.dmg</string><key>system-entities</key><array><dict><key>dev-entry</key><string>/dev/disk8</string></dict><dict><key>dev-entry</key><string>/dev/disk8s1</string><key>mount-point</key><string>/private/var/folders/x/T/semio-reclaim-b6Twxt</string></dict><dict><key>dev-entry</key><string>/dev/disk8s2</string><key>mount-point</key><string>/Volumes/x</string></dict></array></dict></array></dict></plist>",
+      "expected": {
+        "device": "/dev/disk8",
+        "mountPoints": [
+          "/private/var/folders/x/T/semio-reclaim-b6Twxt",
+          "/Volumes/x"
+        ]
+      }
+    }
+  ]
+}

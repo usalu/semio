@@ -1,4 +1,5 @@
-import {posix} from "node:path";
+import {readFileSync} from "node:fs";
+import {posix,resolve} from "node:path";
 import {isDeepStrictEqual} from "node:util";
 import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import {literalCommandTokensV1} from "../../../🏗️build/📤️arguments/🟨️.mjs";
@@ -15,8 +16,20 @@ export interface CanonicalTestProjectV1 {readonly name:string;readonly root:stri
 /** 📜️ The schema-owned aggregate identity and route entries. */
 export const canonicalTestAggregatePolicyV1=schema.$defs.Policy.const;
 
-/** 🗂️ Derives executable route identities from both closed tables, including deliberate function proofs. */
-export function canonicalTestRoutesV1(cache=readCachingTestTableV1(),build=readBuildTestTableV1()):readonly CanonicalTestRouteV1[]{
+/** 📖️ Reads one workspace-relative file as text: the live disk by default, or the observed read of a graph inference so the file becomes an input of the owner that consumes it. */
+export type CanonicalTestReadV1=(workspacePath:string)=>string;
+const liveWorkspaceRootV1=resolve(import.meta.dirname,...canonicalTestAggregatePolicyV1.implementation.split("/").map(()=>".."));
+/** 🔄️ Reads the file from the disk at every call; a long-lived process never answers a route table from a module imported before an edit. */
+const liveReadV1:CanonicalTestReadV1=workspacePath=>readFileSync(resolve(liveWorkspaceRootV1,workspacePath),"utf8");
+
+/** 🧾️ Derives the routes of both route tables as the caller reads them right now. */
+export function readCanonicalTestRoutesV1(read:CanonicalTestReadV1=liveReadV1):readonly CanonicalTestRouteV1[]{
+ const policy=canonicalTestAggregatePolicyV1;
+ return canonicalTestRoutesV1(readCachingTestTableV1(JSON.parse(read(policy.cacheTable))),readBuildTestTableV1(JSON.parse(read(policy.buildTable))));
+}
+
+/** 🗂️ Derives executable route identities from both closed tables, including deliberate function proofs; without arguments both tables are read live from disk. */
+export function canonicalTestRoutesV1(cache=readCachingTestTableV1(JSON.parse(liveReadV1(canonicalTestAggregatePolicyV1.cacheTable))),build=readBuildTestTableV1(JSON.parse(liveReadV1(canonicalTestAggregatePolicyV1.buildTable)))):readonly CanonicalTestRouteV1[]{
  const policy=canonicalTestAggregatePolicyV1,command=(entry:string,arguments_:readonly string[])=>({entry,arguments:arguments_});
  return [...cache.suites.map(row=>({id:row.id,commands:[command(policy.cacheEntry,["test",row.id])]})),...build.suites.map(row=>({id:row.id,commands:[command(policy.buildEntry,["test",row.id])]})),...cache.codeSuites.map(id=>({id,commands:[command(policy.cacheEntry,["test",id]),command(policy.publicEntry,["test","cache",id])]}))];
 }
@@ -47,16 +60,16 @@ export function resolveCanonicalTestTargetsV1(project:CanonicalTestProjectV1,rou
 }
 
 /** 🧮️ Derives the no-op declaration without changing any independently issued test leaf. */
-export function deriveCanonicalTestAggregateV1(project:CanonicalTestProjectV1):Record<string,any>{
+export function deriveCanonicalTestAggregateV1(project:CanonicalTestProjectV1,read:CanonicalTestReadV1=liveReadV1):Record<string,any>{
  const policy=canonicalTestAggregatePolicyV1,inputs=[policy.manifest,policy.cacheTable,policy.buildTable,policy.implementation+"/**/*"].map(path=>"{workspaceRoot}/"+path);
- return {executor:"repo:noop",cache:false,dependsOn:resolveCanonicalTestTargetsV1(project),inputs,outputs:[],metadata:{semio:{cache:{version:1,class:"aggregate",reason:"orders-prerequisites"},arguments:{maximum:0}}}};
+ return {executor:"repo:noop",cache:false,dependsOn:resolveCanonicalTestTargetsV1(project,readCanonicalTestRoutesV1(read)),inputs,outputs:[],metadata:{semio:{cache:{version:1,class:"aggregate",reason:"orders-prerequisites"},arguments:{maximum:0}}}};
 }
 
-/** 🛡️ Refuses stale canonical dependencies before graph publication. */
-export function requireCanonicalTestAggregateV1(project:Record<string,any>,root:string):void{
+/** 🛡️ Refuses stale canonical dependencies before graph publication; the tables are read through `read`. */
+export function requireCanonicalTestAggregateV1(project:Record<string,any>,root:string,read:CanonicalTestReadV1=liveReadV1):void{
  const policy=canonicalTestAggregatePolicyV1;if(root!==policy.root)return;
  if(project.name!==policy.owner)throw refuseBuildV1("invalid","test.aggregate-refused",{owner:project.name,reason:"owner"});
- const expected=deriveCanonicalTestAggregateV1({...project,root} as CanonicalTestProjectV1),actual=project.targets?.[policy.target];
+ const expected=deriveCanonicalTestAggregateV1({...project,root} as CanonicalTestProjectV1,read),actual=project.targets?.[policy.target];
  if(!isDeepStrictEqual(actual,expected))throw refuseBuildV1("invalid","test.aggregate-stale",{owner:project.name});
 }
 

@@ -198,6 +198,7 @@ export type ManifestSpec = Readonly<{
   devDependencyRows: readonly string[];
   targetSections: readonly string[];
   featureRows?: readonly string[];
+  ownedEffs?: readonly string[];
 }>;
 
 /** 📝️ Renders the manifest of a carved library crate. */
@@ -214,6 +215,7 @@ export function renderCrateManifest(spec: ManifestSpec): string {
     "[package.metadata.semio]",
     'role = "library"',
     "",
+    ...(spec.ownedEffs?.length ? ["[package.metadata.semio.carve]", `owned = [\n${spec.ownedEffs.map((eff) => `  ${JSON.stringify(eff)},`).join("\n")}\n]`, ""] : []),
     "[lints]",
     "workspace = true",
     "",
@@ -284,6 +286,16 @@ export function addWorkspaceMembers(manifestText: string, additions: readonly st
   return dropArrayEntries(dropArrayEntries(widened, "exclude", (entry) => lifted.includes(entry)), "exclude-patterns", (entry) => lifted.includes(entry));
 }
 
+/** 🗑️ Removes members from the `[workspace] members` array, keeping the order and the rest of the manifest untouched. */
+export function removeWorkspaceMembers(manifestText: string, removals: readonly string[]): string {
+  if (!removals.length) return manifestText;
+  const match = /(\[workspace\][\s\S]*?\nmembers\s*=\s*)\[([\s\S]*?)\]/u.exec(manifestText);
+  if (!match) return manifestText;
+  const gone = new Set(removals);
+  const kept = [...match[2]!.matchAll(/"((?:[^"\\]|\\.)*)"/gu)].map((entry) => entry[1]!).filter((entry) => !gone.has(entry));
+  return manifestText.slice(0, match.index) + match[1] + `[\n${kept.map((entry) => `  "${entry}",`).join("\n")}\n]` + manifestText.slice(match.index + match[0].length);
+}
+
 /** 🔒️ Adds carved crates to a lockfile and extends the dependency list of the crate they were carved from. Blocks of other crates, including several versions of one name, stay byte-identical and in place. */
 export function patchCargoLock(lockText: string, artifactCrate: string, carved: readonly { name: string; dependsOn: readonly string[] }[], memberNames?: ReadonlySet<string>): string {
   const blocks = lockText.split(/\n(?=\[\[package\]\]\n)/u);
@@ -315,16 +327,17 @@ export function patchCargoLock(lockText: string, artifactCrate: string, carved: 
 }
 
 /** 📜️ Extends the package router's `packages` option (or the package list of an extension router's `runRepositoryCargoTests` call) so check and test cover every carved crate. */
-export function patchRouterPackages(scriptText: string, artifactCrate: string, additions: readonly string[]): string {
+export function patchRouterPackages(scriptText: string, artifactCrate: string, additions: readonly string[], removals: readonly string[] = []): string {
+  const dropped = new Set(removals);
   const extension = new RegExp(`(runRepositoryCargoTests\\(\\[)([^\\]]*"${artifactCrate.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&")}"[^\\]]*)(\\])`, "u").exec(scriptText);
   if (extension) {
-    const list = [...new Set([...[...extension[2]!.matchAll(/"([^"]+)"/gu)].map((entry) => entry[1]!), ...additions])].sort(compareBytes);
+    const list = [...new Set([...[...extension[2]!.matchAll(/"([^"]+)"/gu)].map((entry) => entry[1]!), ...additions])].filter((name) => !dropped.has(name)).sort(compareBytes);
     return scriptText.slice(0, extension.index) + extension[1] + list.map((name) => `"${name}"`).join(", ") + extension[3] + scriptText.slice(extension.index + extension[0].length);
   }
   const call = new RegExp(`(runArtifactRustPackageMain\\([^,]+,\\s*"${artifactCrate.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&")}")\\s*(?:,\\s*(\\{))?`, "u").exec(scriptText);
   if (!call) throw new Error(`Router call for ${artifactCrate} not found`);
   const existing = /packages\s*:\s*\[([^\]]*)\]/u.exec(scriptText);
-  const list = [...new Set([artifactCrate, ...(existing ? [...existing[1]!.matchAll(/"([^"]+)"/gu)].map((entry) => entry[1]!) : []), ...additions])].sort(compareBytes);
+  const list = [...new Set([artifactCrate, ...(existing ? [...existing[1]!.matchAll(/"([^"]+)"/gu)].map((entry) => entry[1]!) : []), ...additions])].filter((name) => !dropped.has(name)).sort(compareBytes);
   const rendered = `packages: [${list.map((name) => `"${name}"`).join(", ")}]`;
   if (existing) return scriptText.replace(/packages\s*:\s*\[[^\]]*\]/u, rendered);
   if (call[2]) return scriptText.slice(0, call.index + call[0].length) + ` ${rendered},` + scriptText.slice(call.index + call[0].length);

@@ -163,15 +163,18 @@ function createHost(slot: PresentedMediaSlot, port: MediaTransportPort, apply?: 
   if (props.capability.status !== "ready" || !props.resource) status(props.capability.status, props.capability.reason ?? (props.capability.status === "loading" ? props.labels.loading : props.labels.unsupported));
   else {
     status("loading", props.labels.loading);
+    const detail = element.firstChild as Text;
     const progress = document.createElement("progress");
     progress.setAttribute("aria-label", props.labels.progress);
     const cancel = document.createElement("button");
     cancel.type = "button";
     cancel.textContent = props.labels.cancel;
-    cancel.addEventListener("click", () => { cancelled = true; cancel.disabled = true; });
+    cancel.addEventListener("click", () => { cancelled = true; cancel.disabled = true; status("cancelled", props.labels.cancelled); });
     element.append(progress, cancel);
     void collectMediaTransportBytes({ instanceId: slot.appInstanceId, parentDocumentId: slot.parentDocumentId, revision: BigInt(props.resource.revision), generation: BigInt(props.resource.generation), mediaType: props.mediaType, port, cancelled: () => cancelled || !active, progress: (value) => {
-      if (active) progress.dataset.appliedProgress = String(value.applied_progress);
+      if (!active || cancelled) return;
+      progress.dataset.appliedProgress = String(value.applied_progress);
+      detail.data = value.detail || props.labels.loading;
     } }).then((bytes) => {
       if (!active || cancelled || !bytes) { if (active) status("cancelled", props.labels.cancelled); return; }
       url = URL.createObjectURL(new Blob(bytes.chunks.map((chunk) => chunk.slice().buffer as ArrayBuffer), { type: bytes.mediaType }));

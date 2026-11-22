@@ -106,7 +106,6 @@ pub mod page_projection {
     use super::LayoutSnapshot;
     use crate::Frame;
     use semio_framework_io_ports::{VectorCanvas, VectorLayer, VectorNode, VectorPoint2, VectorPoint3, VectorRgba, VectorScene, VectorSegment, VectorStyle, VectorTransform};
-    use semio_os_kernel as store;
 
     /// 📐️ A closed axis-aligned rectangle as `MoveTo` + three `LineTo`s + `Close`, the "rects-as-paths" primitive the page and frame rects build on.
     pub fn rect_path_segments(x: f64, y: f64, width: f64, height: f64) -> Vec<VectorSegment> {
@@ -168,7 +167,7 @@ pub mod page_projection {
                         let data = link.proxy_data_url.as_deref().ok_or_else(|| format!("layout export: unresolved image {link_id}"))?;
                         let (header, data) = data.split_once(",").ok_or("layout export: image data URL")?;
                         let mime = header.strip_prefix("data:").and_then(|header| header.strip_suffix(";base64")).filter(|mime| matches!(*mime, "image/png" | "image/jpeg" | "image/gif" | "image/svg+xml")).ok_or("layout export: unsupported image data URL")?;
-                        let bytes = store::pack_rt::pack_value_from_base64(data).map_err(|error| error.to_string())?;
+                        let bytes = semio_framework_io_base64::base64_standard_decode(data).map_err(|error| error.to_string())?;
                         nodes.push(VectorNode::Image { at: VectorPoint2 { x: -bounds.width * 0.5, y: -bounds.height * 0.5 }, width: bounds.width, height: bounds.height, mime: mime.into(), bytes });
                     },
                 }

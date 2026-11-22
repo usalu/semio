@@ -1,0 +1,169 @@
+{
+  "schema": "semio.os.package-routing-fixture/v1",
+  "description": "Language-neutral cases of the bounded package content check: zip entries (text) in, verdict out. Every case runs against a stored and a deflated archive written by the fflate reference library. `padPart` appends that many bytes of XML comment padding inside the named part; `cutTail` removes that many trailing bytes of the archive.",
+  "claim": {
+    "mainPartContentTypes": [
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"
+    ],
+    "dialects": [
+      {
+        "artifactRef": "s.stdio.xlsx@ecma-376/strict",
+        "namespace": "http://purl.oclc.org/ooxml/spreadsheetml/main"
+      },
+      {
+        "artifactRef": "s.stdio.xlsx@ecma-376/transitional",
+        "namespace": "http://schemas.openxmlformats.org/spreadsheetml/2006/main"
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "transitional workbook",
+      "entries": {
+        "[Content_Types].xml": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><Types xmlns=\"http://schemas.openxmlformats.org/package/2006/content-types\"><Default Extension=\"xml\" ContentType=\"application/xml\"/><Override PartName=\"/xl/workbook.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml\"/></Types>",
+        "xl/workbook.xml": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><workbook xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"/>"
+      },
+      "verdict": {
+        "kind": "match",
+        "artifactRef": "s.stdio.xlsx@ecma-376/transitional"
+      }
+    },
+    {
+      "id": "strict workbook",
+      "entries": {
+        "[Content_Types].xml": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><Types xmlns=\"http://schemas.openxmlformats.org/package/2006/content-types\"><Default Extension=\"xml\" ContentType=\"application/xml\"/><Override PartName=\"/xl/workbook.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml\"/></Types>",
+        "xl/workbook.xml": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><workbook xmlns=\"http://purl.oclc.org/ooxml/spreadsheetml/main\"/>"
+      },
+      "verdict": {
+        "kind": "match",
+        "artifactRef": "s.stdio.xlsx@ecma-376/strict"
+      }
+    },
+    {
+      "id": "strict workbook with a namespace prefix",
+      "entries": {
+        "[Content_Types].xml": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><Types xmlns=\"http://schemas.openxmlformats.org/package/2006/content-types\"><Default Extension=\"xml\" ContentType=\"application/xml\"/><Override PartName=\"/xl/workbook.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml\"/></Types>",
+        "xl/workbook.xml": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><x:workbook xmlns:x=\"http://purl.oclc.org/ooxml/spreadsheetml/main\"/>"
+      },
+      "verdict": {
+        "kind": "match",
+        "artifactRef": "s.stdio.xlsx@ecma-376/strict"
+      }
+    },
+    {
+      "id": "workbook in an undeclared namespace is still a workbook",
+      "entries": {
+        "[Content_Types].xml": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><Types xmlns=\"http://schemas.openxmlformats.org/package/2006/content-types\"><Default Extension=\"xml\" ContentType=\"application/xml\"/><Override PartName=\"/xl/workbook.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml\"/></Types>",
+        "xl/workbook.xml": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><workbook xmlns=\"urn:example:spreadsheet\"/>"
+      },
+      "verdict": {
+        "kind": "match",
+        "artifactRef": null
+      }
+    },
+    {
+      "id": "attribute order, quotes, case and part path spelling are free",
+      "entries": {
+        "[Content_Types].xml": "<Types xmlns='http://schemas.openxmlformats.org/package/2006/content-types'><Override ContentType='APPLICATION/VND.OPENXMLFORMATS-OFFICEDOCUMENT.SPREADSHEETML.SHEET.MAIN+XML' PartName='/XL/Workbook.xml'/></Types>",
+        "xl/workbook.xml": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><workbook xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"/>"
+      },
+      "verdict": {
+        "kind": "match",
+        "artifactRef": "s.stdio.xlsx@ecma-376/transitional"
+      }
+    },
+    {
+      "id": "workbook head is read without the rest of a large part",
+      "entries": {
+        "[Content_Types].xml": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><Types xmlns=\"http://schemas.openxmlformats.org/package/2006/content-types\"><Default Extension=\"xml\" ContentType=\"application/xml\"/><Override PartName=\"/xl/workbook.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml\"/></Types>",
+        "xl/workbook.xml": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><workbook xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"/>"
+      },
+      "verdict": {
+        "kind": "match",
+        "artifactRef": "s.stdio.xlsx@ecma-376/transitional"
+      },
+      "padPart": {
+        "path": "xl/workbook.xml",
+        "bytes": 200000
+      }
+    },
+    {
+      "id": "a word processing package is no workbook",
+      "entries": {
+        "[Content_Types].xml": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><Types xmlns=\"http://schemas.openxmlformats.org/package/2006/content-types\"><Default Extension=\"xml\" ContentType=\"application/xml\"/><Override PartName=\"/word/document.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml\"/></Types>",
+        "word/document.xml": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><workbook xmlns=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"/>"
+      },
+      "verdict": {
+        "kind": "mismatch"
+      }
+    },
+    {
+      "id": "content types without a main part override",
+      "entries": {
+        "[Content_Types].xml": "<Types xmlns=\"http://schemas.openxmlformats.org/package/2006/content-types\"><Default Extension=\"xml\" ContentType=\"application/xml\"/></Types>",
+        "xl/workbook.xml": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><workbook xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"/>"
+      },
+      "verdict": {
+        "kind": "mismatch"
+      }
+    },
+    {
+      "id": "declared main part is absent from the archive",
+      "entries": {
+        "[Content_Types].xml": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><Types xmlns=\"http://schemas.openxmlformats.org/package/2006/content-types\"><Default Extension=\"xml\" ContentType=\"application/xml\"/><Override PartName=\"/xl/workbook.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml\"/></Types>",
+        "xl/other.xml": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><workbook xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"/>"
+      },
+      "verdict": {
+        "kind": "mismatch"
+      }
+    },
+    {
+      "id": "zip without content types",
+      "entries": {
+        "xl/workbook.xml": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><workbook xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"/>"
+      },
+      "verdict": {
+        "kind": "mismatch"
+      }
+    },
+    {
+      "id": "zip with no entries",
+      "entries": {},
+      "verdict": {
+        "kind": "mismatch"
+      }
+    },
+    {
+      "id": "plain text is no zip",
+      "raw": "name,amount\nrent,1200\n",
+      "verdict": {
+        "kind": "mismatch"
+      }
+    },
+    {
+      "id": "empty file",
+      "raw": "",
+      "verdict": {
+        "kind": "mismatch"
+      }
+    },
+    {
+      "id": "zip signature without a directory",
+      "raw": "PK\u0003\u0004 truncated local header",
+      "verdict": {
+        "kind": "mismatch"
+      }
+    },
+    {
+      "id": "archive cut inside its central directory",
+      "entries": {
+        "[Content_Types].xml": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><Types xmlns=\"http://schemas.openxmlformats.org/package/2006/content-types\"><Default Extension=\"xml\" ContentType=\"application/xml\"/><Override PartName=\"/xl/workbook.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml\"/></Types>",
+        "xl/workbook.xml": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><workbook xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"/>"
+      },
+      "cutTail": 30,
+      "verdict": {
+        "kind": "mismatch"
+      }
+    }
+  ]
+}

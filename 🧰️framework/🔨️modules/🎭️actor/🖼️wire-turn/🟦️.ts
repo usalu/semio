@@ -204,8 +204,17 @@ export function wireEffectToFriendly(effect: WireVariant, decodePackValue: (byte
       return {
         spawnPluginInstance: { req: num("req"), pluginId: pstr("pluginId"), appId: pstr("appId"), osInstanceId: poptstr("osInstanceId"), label: poptstr("label"), artifactJson: poptstr("artifactJson") },
       };
-    case "open-plugin-instance":
-      return { openPluginInstance: { pluginId: str("pluginId"), appId: str("appId"), osInstanceId: val.osInstanceId as string | undefined } };
+    case "open-plugin-instance": {
+      const osInstanceId = some(val.osInstanceId) as string | undefined;
+      const target = some(val.document);
+      if (target === undefined) return { openPluginInstance: { pluginId: str("pluginId"), appId: str("appId"), osInstanceId } };
+      if (target === null || typeof target !== "object") return null;
+      const { documentId, schema, spaceId: wireSpaceId } = target as Record<string, unknown>;
+      const spaceId = some(wireSpaceId);
+      if (typeof documentId !== "string" || !documentId || typeof schema !== "string" || !schema) return null;
+      if (spaceId !== undefined && (typeof spaceId !== "string" || !spaceId)) return null;
+      return { openPluginInstance: { pluginId: str("pluginId"), appId: str("appId"), osInstanceId, document: { documentId, schema, spaceId } } };
+    }
     case "request-file-open": {
       const readAs = poptstr("readAs") ?? poptstr("read-as");
       const maxFileBytes = some(params.maxFileBytes ?? params["max-file-bytes"]);

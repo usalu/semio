@@ -82,6 +82,10 @@ impl BodyValidationJob {
 
  /// 📍️ Advances validation only for the original topology selected by the caller.
  pub fn step_funded_for(&mut self,body:&Body,scope:Option<&ReachSet>,units:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<(RetainedCloneProgress,usize),ValueError>{
+  self.step_funded_with_positions(body,scope,units,effect,&|_,position|position)
+ }
+
+ pub(super) fn step_funded_with_positions(&mut self,body:&Body,scope:Option<&ReachSet>,units:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,positions:&impl Fn(VertexId,Pnt3)->Pnt3)->Result<(RetainedCloneProgress,usize),ValueError>{
   let grant=effect.grant();
   let demand=self.funded_demands_for(body,scope)?;
   if self.is_complete()||units==0||grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok((Default::default(),0))}
@@ -107,7 +111,7 @@ impl BodyValidationJob {
   else if self.phase==BodyValidationPhase::SolidOrientation{self.probe_orientation_funded(body,scope)?;}
   else if self.phase==BodyValidationPhase::DegenerateEdges{self.probe_degenerate_edge_funded(body)?;}
   else if self.phase==BodyValidationPhase::DegenerateFaces{self.probe_degenerate_face_funded(body,scope)?;}
-  else if self.phase==BodyValidationPhase::SelfIntersection{self.probe_triangle_pair(body);}
+  else if self.phase==BodyValidationPhase::SelfIntersection{self.probe_triangle_pair(body,positions);}
   else if self.phase==BodyValidationPhase::ShellClosure{receipt=self.probe_shell_closure_funded(body,scope)?;}
   else if self.phase==BodyValidationPhase::SameParameter{receipt=self.probe_same_parameter_funded(body,scope,grant)?;}
   else if self.phase==BodyValidationPhase::EdgeValence{self.probe_valence_funded(body,scope);}

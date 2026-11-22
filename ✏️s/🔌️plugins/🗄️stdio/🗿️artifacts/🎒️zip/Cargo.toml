@@ -3,20 +3,20 @@ cargo-features = [ "trim-paths" ]
 [workspace]
 resolver = "2"
 members = [
-  "✏️editor/📦️packages/🦀️rust",
-  "🏅️standards/🔖️2.0/🪆️subsets/🌐️iso21320/🧬️schema/📦️packages/🦀️rust",
-  "🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🧬️schema/💡️inferences/📦️packages/🦀️rust",
-  "🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🧬️schema/📦️packages/🦀️rust",
-  "🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
-  "📦️opc/📦️packages/🦀️rust",
-  "📦️opc/🧪️tests/🔬️unit/📦️packages/🦀️rust",
-  "📦️packages/🦀️rust",
+    "✏️editor/📦️packages/🦀️rust",
+    "🏅️standards/🔖️2.0/🪆️subsets/🌐️iso21320/🧬️schema/📦️packages/🦀️rust",
+    "🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🧬️schema/💡️inferences/📦️packages/🦀️rust",
+    "🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🧬️schema/📦️packages/🦀️rust",
+    "🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+    "📦️opc/📦️packages/🦀️rust",
+    "📦️opc/🧪️tests/🔬️unit/📦️packages/🦀️rust",
+    "📦️packages/🦀️rust",
 ]
 exclude = [
-  "**/👽️guest/**",
-  "**/🔮️oracles/**",
-  "**/🏭️bridge/**",
-  "🔮️oracles/📦️packages/🦀️rust",
+    "**/🏭️bridge/**",
+    "**/👽️guest/**",
+    "**/🔮️oracles/**",
+    "🔮️oracles/📦️packages/🦀️rust",
 ]
 
 [workspace.metadata.semio.repository]

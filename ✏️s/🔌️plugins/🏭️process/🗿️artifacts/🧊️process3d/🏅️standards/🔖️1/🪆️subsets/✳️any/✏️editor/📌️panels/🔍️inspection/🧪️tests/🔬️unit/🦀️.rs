@@ -124,6 +124,7 @@ async fn selected_machine_id_renders_its_capabilities() {
 /// not the framework's selection admission (which its four neighbours above already exercise).
 #[semio_framework_async_macros::async_test]
 async fn a_capability_section_stamps_its_total_closed_and_materialises_it_open() {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     use semio_s_artifact_process_process3d_model::{snapshot::Capability, snapshot::CapabilityParameter, snapshot::MeasureRecipe, snapshot::Workshop, snapshot::WorkshopMachine};
     use semio_plugin::{TreeWindowRequest, TreeWindows, ViewModel};
     let mut fixture = semio_s_artifact_process_process3d_model::snapshot::empty_process3d_snapshot();

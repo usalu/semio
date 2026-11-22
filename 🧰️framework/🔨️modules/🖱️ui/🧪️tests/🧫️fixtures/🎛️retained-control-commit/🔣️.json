@@ -17,7 +17,7 @@
     "inputNumberIsNumeric": "An Input of kind 'number' commits a NUMBER, every other kind commits the raw string (InputView: kind === 'number' ? Number(raw) : raw).",
     "toggleCommitsTheFlip": "A Toggle commits the value it is moving TO, not the one it is leaving — the pressed state after the press.",
     "sliderReadsItsOwnTrack": "A Slider's press/drag value is read off the same track cell paint draws, excluding its fixed readout cell, snapped onto step and clamped into min..=max.",
-    "ringReadsItsOwnCircle": "A Ring's press/drag t is the turn fraction of the angle from the centre of its own bounds, normalised into [0, 1).",
+    "ringReadsItsOwnCircle": "A Ring's press/drag t is the turn fraction of the angle from the centre of its own bounds, zero at 12 o'clock and clockwise like React's Ring (atan2 + π/2), normalised into [0, 1).",
     "stepperThirds": "A NumberStepper's box is three equal segments — decrement, value, increment. The outer two step by 'step'; a press on the value segment commits nothing.",
     "continuousPress": "A continuous control (Slider, Ring, a NumberStepper's absolute value, a number Input without a commit policy) dispatches PRESSES (scrub protocol, 📓️api-scrub-machine.md): every dispatch of one gesture carries the same non-empty 'gesture' and a 'commit' flag that is true on the release only; 'press' names whether the gesture released ('released': the last dispatch commits) or left its press open ('open': a field still being typed). A keyboard step or a stepper click is a one-shot press: one dispatch that is its own release. Every other dispatch carries neither key.",
     "dragReportsEveryValue": "A Slider and a Ring report every intermediate value while the pointer is down, not only the release. Every other kind commits on release inside its own bounds."
@@ -26,138 +26,572 @@
     {
       "name": "input-change-per-keystroke",
       "why": "The generation3d Form field the whole gap was measured on: ui::input(...).try_on_with(Trigger::Change, 'updateGenerationValues', {generationId, questionId}).",
-      "node": { "kind": "input", "id": "generate.form.width.input", "inputKind": "text", "value": "12", "commit": null },
-      "binding": { "trigger": "change", "action": "updateGenerationValues", "args": { "generationId": "g1", "questionId": "width" } },
-      "bounds": [0.0, 0.0, 160.0, 24.0],
-      "gesture": { "kind": "type", "at": [0.5, 0.5], "text": "5" },
-      "expected": { "action": "updateGenerationValues", "args": { "generationId": "g1", "questionId": "width", "value": "125" } }
+      "node": {
+        "kind": "input",
+        "id": "generate.form.width.input",
+        "inputKind": "text",
+        "value": "12",
+        "commit": null
+      },
+      "binding": {
+        "trigger": "change",
+        "action": "updateGenerationValues",
+        "args": {
+          "generationId": "g1",
+          "questionId": "width"
+        }
+      },
+      "bounds": [
+        0.0,
+        0.0,
+        160.0,
+        24.0
+      ],
+      "gesture": {
+        "kind": "type",
+        "at": [
+          0.5,
+          0.5
+        ],
+        "text": "5"
+      },
+      "expected": {
+        "action": "updateGenerationValues",
+        "args": {
+          "generationId": "g1",
+          "questionId": "width",
+          "value": "125"
+        }
+      }
     },
     {
       "name": "input-number-commits-a-number",
       "why": "A numeric field must not hand the guest a string — dsl::DslValue::Number, never String.",
-      "node": { "kind": "input", "id": "generate.form.count.input", "inputKind": "number", "value": "3", "commit": null },
-      "binding": { "trigger": "change", "action": "updateGenerationValues", "args": { "generationId": "g1", "questionId": "count" } },
-      "bounds": [0.0, 0.0, 160.0, 24.0],
-      "gesture": { "kind": "type", "at": [0.5, 0.5], "text": "7" },
-      "expected": { "action": "updateGenerationValues", "args": { "generationId": "g1", "questionId": "count", "value": 37.0 }, "press": "open" }
+      "node": {
+        "kind": "input",
+        "id": "generate.form.count.input",
+        "inputKind": "number",
+        "value": "3",
+        "commit": null
+      },
+      "binding": {
+        "trigger": "change",
+        "action": "updateGenerationValues",
+        "args": {
+          "generationId": "g1",
+          "questionId": "count"
+        }
+      },
+      "bounds": [
+        0.0,
+        0.0,
+        160.0,
+        24.0
+      ],
+      "gesture": {
+        "kind": "type",
+        "at": [
+          0.5,
+          0.5
+        ],
+        "text": "7"
+      },
+      "expected": {
+        "action": "updateGenerationValues",
+        "args": {
+          "generationId": "g1",
+          "questionId": "count",
+          "value": 37.0
+        },
+        "press": "open"
+      }
     },
     {
       "name": "input-blur-policy-is-silent-while-typing",
       "why": "generation3d's inline rename editor binds Trigger::Commit ('Enter / blur'); a keystroke must not dispatch a half-typed name.",
-      "node": { "kind": "input", "id": "generation.rename.input", "inputKind": "text", "value": "Gen", "commit": "blur" },
-      "binding": { "trigger": "commit", "action": "renameGeneration", "args": { "generationId": "g1" } },
-      "bounds": [0.0, 0.0, 160.0, 24.0],
-      "gesture": { "kind": "type", "at": [0.5, 0.5], "text": "A" },
+      "node": {
+        "kind": "input",
+        "id": "generation.rename.input",
+        "inputKind": "text",
+        "value": "Gen",
+        "commit": "blur"
+      },
+      "binding": {
+        "trigger": "commit",
+        "action": "renameGeneration",
+        "args": {
+          "generationId": "g1"
+        }
+      },
+      "bounds": [
+        0.0,
+        0.0,
+        160.0,
+        24.0
+      ],
+      "gesture": {
+        "kind": "type",
+        "at": [
+          0.5,
+          0.5
+        ],
+        "text": "A"
+      },
       "expected": null
     },
     {
       "name": "input-blur-policy-commits-on-enter",
       "why": "The other half of the same control — Enter is the gesture that ends an inline rename.",
-      "node": { "kind": "input", "id": "generation.rename.input", "inputKind": "text", "value": "Gen", "commit": "blur" },
-      "binding": { "trigger": "commit", "action": "renameGeneration", "args": { "generationId": "g1" } },
-      "bounds": [0.0, 0.0, 160.0, 24.0],
-      "gesture": { "kind": "typeThenEnter", "at": [0.5, 0.5], "text": "A" },
-      "expected": { "action": "renameGeneration", "args": { "generationId": "g1", "value": "GenA" } }
+      "node": {
+        "kind": "input",
+        "id": "generation.rename.input",
+        "inputKind": "text",
+        "value": "Gen",
+        "commit": "blur"
+      },
+      "binding": {
+        "trigger": "commit",
+        "action": "renameGeneration",
+        "args": {
+          "generationId": "g1"
+        }
+      },
+      "bounds": [
+        0.0,
+        0.0,
+        160.0,
+        24.0
+      ],
+      "gesture": {
+        "kind": "typeThenEnter",
+        "at": [
+          0.5,
+          0.5
+        ],
+        "text": "A"
+      },
+      "expected": {
+        "action": "renameGeneration",
+        "args": {
+          "generationId": "g1",
+          "value": "GenA"
+        }
+      }
     },
     {
       "name": "input-blur-policy-commits-on-blur",
       "why": "Losing focus is the only OTHER moment a blur-committing field's value is ever dispatched.",
-      "node": { "kind": "input", "id": "generation.rename.input", "inputKind": "text", "value": "Gen", "commit": "blur" },
-      "binding": { "trigger": "commit", "action": "renameGeneration", "args": { "generationId": "g1" } },
-      "bounds": [0.0, 0.0, 160.0, 24.0],
-      "gesture": { "kind": "typeThenBlur", "at": [0.5, 0.5], "text": "A" },
-      "expected": { "action": "renameGeneration", "args": { "generationId": "g1", "value": "GenA" } }
+      "node": {
+        "kind": "input",
+        "id": "generation.rename.input",
+        "inputKind": "text",
+        "value": "Gen",
+        "commit": "blur"
+      },
+      "binding": {
+        "trigger": "commit",
+        "action": "renameGeneration",
+        "args": {
+          "generationId": "g1"
+        }
+      },
+      "bounds": [
+        0.0,
+        0.0,
+        160.0,
+        24.0
+      ],
+      "gesture": {
+        "kind": "typeThenBlur",
+        "at": [
+          0.5,
+          0.5
+        ],
+        "text": "A"
+      },
+      "expected": {
+        "action": "renameGeneration",
+        "args": {
+          "generationId": "g1",
+          "value": "GenA"
+        }
+      }
     },
     {
       "name": "input-unbound-is-silent",
       "why": "emitIntent answers undefined for a node with no binding — the retained node carries that as an empty action name.",
-      "node": { "kind": "input", "id": "orphan.input", "inputKind": "text", "value": "", "commit": null },
+      "node": {
+        "kind": "input",
+        "id": "orphan.input",
+        "inputKind": "text",
+        "value": "",
+        "commit": null
+      },
       "binding": null,
-      "bounds": [0.0, 0.0, 160.0, 24.0],
-      "gesture": { "kind": "type", "at": [0.5, 0.5], "text": "x" },
+      "bounds": [
+        0.0,
+        0.0,
+        160.0,
+        24.0
+      ],
+      "gesture": {
+        "kind": "type",
+        "at": [
+          0.5,
+          0.5
+        ],
+        "text": "x"
+      },
       "expected": null
     },
     {
       "name": "toggle-commits-the-flip",
       "why": "A press reports the state it moves TO — React's onPressedChange(pressed).",
-      "node": { "kind": "toggle", "id": "preview.grid", "on": false },
-      "binding": { "trigger": "change", "action": "setGridVisible", "args": { "windowId": "w1" } },
-      "bounds": [0.0, 0.0, 32.0, 24.0],
-      "gesture": { "kind": "press", "at": [0.5, 0.5] },
-      "expected": { "action": "setGridVisible", "args": { "windowId": "w1", "value": true } }
+      "node": {
+        "kind": "toggle",
+        "id": "preview.grid",
+        "on": false
+      },
+      "binding": {
+        "trigger": "change",
+        "action": "setGridVisible",
+        "args": {
+          "windowId": "w1"
+        }
+      },
+      "bounds": [
+        0.0,
+        0.0,
+        32.0,
+        24.0
+      ],
+      "gesture": {
+        "kind": "press",
+        "at": [
+          0.5,
+          0.5
+        ]
+      },
+      "expected": {
+        "action": "setGridVisible",
+        "args": {
+          "windowId": "w1",
+          "value": true
+        }
+      }
     },
     {
       "name": "toggle-already-on-commits-false",
       "why": "The symmetric half — a pressed toggle reports false, so the guest is never told to re-apply what it already has.",
-      "node": { "kind": "toggle", "id": "preview.grid", "on": true },
-      "binding": { "trigger": "change", "action": "setGridVisible", "args": { "windowId": "w1" } },
-      "bounds": [0.0, 0.0, 32.0, 24.0],
-      "gesture": { "kind": "press", "at": [0.5, 0.5] },
-      "expected": { "action": "setGridVisible", "args": { "windowId": "w1", "value": false } }
+      "node": {
+        "kind": "toggle",
+        "id": "preview.grid",
+        "on": true
+      },
+      "binding": {
+        "trigger": "change",
+        "action": "setGridVisible",
+        "args": {
+          "windowId": "w1"
+        }
+      },
+      "bounds": [
+        0.0,
+        0.0,
+        32.0,
+        24.0
+      ],
+      "gesture": {
+        "kind": "press",
+        "at": [
+          0.5,
+          0.5
+        ]
+      },
+      "expected": {
+        "action": "setGridVisible",
+        "args": {
+          "windowId": "w1",
+          "value": false
+        }
+      }
     },
     {
       "name": "slider-reads-its-own-track",
       "why": "A press 55 pixels into the 71.2-pixel track is inside the interval that snaps to 8, excluding the fixed readout and avoiding a half-step precision tie.",
-      "node": { "kind": "slider", "id": "generate.form.radius.slider", "value": 0.0, "min": 0.0, "max": 10.0, "step": 1.0 },
-      "binding": { "trigger": "change", "action": "updateGenerationValues", "args": { "generationId": "g1", "questionId": "radius" } },
-      "bounds": [20.0, 0.0, 100.0, 24.0],
-      "gesture": { "kind": "press", "at": [0.55, 0.5] },
-      "expected": { "action": "updateGenerationValues", "args": { "generationId": "g1", "questionId": "radius", "value": 8.0 }, "press": "released" }
+      "node": {
+        "kind": "slider",
+        "id": "generate.form.radius.slider",
+        "value": 0.0,
+        "min": 0.0,
+        "max": 10.0,
+        "step": 1.0
+      },
+      "binding": {
+        "trigger": "change",
+        "action": "updateGenerationValues",
+        "args": {
+          "generationId": "g1",
+          "questionId": "radius"
+        }
+      },
+      "bounds": [
+        20.0,
+        0.0,
+        100.0,
+        24.0
+      ],
+      "gesture": {
+        "kind": "press",
+        "at": [
+          0.55,
+          0.5
+        ]
+      },
+      "expected": {
+        "action": "updateGenerationValues",
+        "args": {
+          "generationId": "g1",
+          "questionId": "radius",
+          "value": 8.0
+        },
+        "press": "released"
+      }
     },
     {
       "name": "slider-clamps-past-its-end",
       "why": "A drag that leaves the track still reports a legal value, never one outside min..=max — and the pointer keeps its capture while it is off the control, exactly as it does in a browser.",
-      "node": { "kind": "slider", "id": "generate.form.radius.slider", "value": 0.0, "min": 2.0, "max": 6.0, "step": 2.0 },
-      "binding": { "trigger": "change", "action": "updateGenerationValues", "args": { "generationId": "g1", "questionId": "radius" } },
-      "bounds": [20.0, 0.0, 100.0, 24.0],
-      "gesture": { "kind": "drag", "at": [0.6408, 0.5], "to": [1.4, 0.5] },
-      "expected": { "action": "updateGenerationValues", "args": { "generationId": "g1", "questionId": "radius", "value": 6.0 }, "press": "released" }
+      "node": {
+        "kind": "slider",
+        "id": "generate.form.radius.slider",
+        "value": 0.0,
+        "min": 2.0,
+        "max": 6.0,
+        "step": 2.0
+      },
+      "binding": {
+        "trigger": "change",
+        "action": "updateGenerationValues",
+        "args": {
+          "generationId": "g1",
+          "questionId": "radius"
+        }
+      },
+      "bounds": [
+        20.0,
+        0.0,
+        100.0,
+        24.0
+      ],
+      "gesture": {
+        "kind": "drag",
+        "at": [
+          0.6408,
+          0.5
+        ],
+        "to": [
+          1.4,
+          0.5
+        ]
+      },
+      "expected": {
+        "action": "updateGenerationValues",
+        "args": {
+          "generationId": "g1",
+          "questionId": "radius",
+          "value": 6.0
+        },
+        "press": "released"
+      }
     },
     {
       "name": "stepper-increment-falls-back-to-absolute",
       "why": "No 'delta' binding, so the increment third commits the ABSOLUTE next value — React's NumberStepperView supplies onDelta only when that binding exists.",
-      "node": { "kind": "numberStepper", "id": "settings.spacing", "value": 2.0, "step": 0.5, "uniform": true },
-      "binding": { "trigger": "change", "action": "setGridSpacing", "args": { "windowId": "w1" } },
-      "bounds": [0.0, 0.0, 90.0, 24.0],
-      "gesture": { "kind": "press", "at": [0.85, 0.5] },
-      "expected": { "action": "setGridSpacing", "args": { "windowId": "w1", "value": 2.5 }, "press": "released" }
+      "node": {
+        "kind": "numberStepper",
+        "id": "settings.spacing",
+        "value": 2.0,
+        "step": 0.5,
+        "uniform": true
+      },
+      "binding": {
+        "trigger": "change",
+        "action": "setGridSpacing",
+        "args": {
+          "windowId": "w1"
+        }
+      },
+      "bounds": [
+        0.0,
+        0.0,
+        90.0,
+        24.0
+      ],
+      "gesture": {
+        "kind": "press",
+        "at": [
+          0.85,
+          0.5
+        ]
+      },
+      "expected": {
+        "action": "setGridSpacing",
+        "args": {
+          "windowId": "w1",
+          "value": 2.5
+        },
+        "press": "released"
+      }
     },
     {
       "name": "stepper-decrement-prefers-the-delta-binding",
       "why": "With a 'delta' binding the outer thirds report a RELATIVE step, named 'delta' — the one trigger whose payload field is not 'value'.",
-      "node": { "kind": "numberStepper", "id": "settings.spacing", "value": 2.0, "step": 0.5, "uniform": true },
-      "binding": { "trigger": "change", "action": "setGridSpacing", "args": { "windowId": "w1" } },
-      "deltaBinding": { "trigger": "delta", "action": "bumpGridSpacing", "args": { "windowId": "w1" } },
-      "bounds": [0.0, 0.0, 90.0, 24.0],
-      "gesture": { "kind": "press", "at": [0.15, 0.5] },
-      "expected": { "action": "bumpGridSpacing", "args": { "windowId": "w1", "delta": -0.5 } }
+      "node": {
+        "kind": "numberStepper",
+        "id": "settings.spacing",
+        "value": 2.0,
+        "step": 0.5,
+        "uniform": true
+      },
+      "binding": {
+        "trigger": "change",
+        "action": "setGridSpacing",
+        "args": {
+          "windowId": "w1"
+        }
+      },
+      "deltaBinding": {
+        "trigger": "delta",
+        "action": "bumpGridSpacing",
+        "args": {
+          "windowId": "w1"
+        }
+      },
+      "bounds": [
+        0.0,
+        0.0,
+        90.0,
+        24.0
+      ],
+      "gesture": {
+        "kind": "press",
+        "at": [
+          0.15,
+          0.5
+        ]
+      },
+      "expected": {
+        "action": "bumpGridSpacing",
+        "args": {
+          "windowId": "w1",
+          "delta": -0.5
+        }
+      }
     },
     {
       "name": "stepper-value-segment-commits-nothing",
       "why": "The middle third is the value readout, not a button — pressing it must not step.",
-      "node": { "kind": "numberStepper", "id": "settings.spacing", "value": 2.0, "step": 0.5, "uniform": true },
-      "binding": { "trigger": "change", "action": "setGridSpacing", "args": { "windowId": "w1" } },
-      "bounds": [0.0, 0.0, 90.0, 24.0],
-      "gesture": { "kind": "press", "at": [0.5, 0.5] },
+      "node": {
+        "kind": "numberStepper",
+        "id": "settings.spacing",
+        "value": 2.0,
+        "step": 0.5,
+        "uniform": true
+      },
+      "binding": {
+        "trigger": "change",
+        "action": "setGridSpacing",
+        "args": {
+          "windowId": "w1"
+        }
+      },
+      "bounds": [
+        0.0,
+        0.0,
+        90.0,
+        24.0
+      ],
+      "gesture": {
+        "kind": "press",
+        "at": [
+          0.5,
+          0.5
+        ]
+      },
       "expected": null
     },
     {
       "name": "ring-reads-its-own-circle",
-      "why": "Straight below the centre is a quarter turn — the same angle paint puts the knob at. The point stops just short of the bottom edge because a rect owns its top-left edges and not its bottom-right ones.",
-      "node": { "kind": "ring", "id": "sun.orbit", "orbId": "sun", "t": 0.0 },
-      "binding": { "trigger": "change", "action": "setSunOrbit", "args": { "windowId": "w1" } },
-      "bounds": [0.0, 0.0, 100.0, 100.0],
-      "gesture": { "kind": "press", "at": [0.5, 0.99] },
-      "expected": { "action": "setSunOrbit", "args": { "windowId": "w1", "value": 0.25 }, "press": "released" }
+      "why": "A drag from the orb (React starts a drag only on the orb circle) to straight below the centre is half a turn: 12 o'clock is zero and the angle runs clockwise, the same angle paint puts the knob at. The point stops just short of the bottom edge because a rect owns its top-left edges and not its bottom-right ones.",
+      "node": {
+        "kind": "ring",
+        "id": "sun.orbit",
+        "orbId": "sun",
+        "t": 0.0
+      },
+      "binding": {
+        "trigger": "change",
+        "action": "setSunOrbit",
+        "args": {
+          "windowId": "w1"
+        }
+      },
+      "bounds": [
+        0.0,
+        0.0,
+        100.0,
+        100.0
+      ],
+      "gesture": {
+        "kind": "drag",
+        "at": [
+          0.5,
+          0.1
+        ],
+        "to": [
+          0.5,
+          0.99
+        ]
+      },
+      "expected": {
+        "action": "setSunOrbit",
+        "args": {
+          "windowId": "w1",
+          "value": 0.5
+        },
+        "press": "released"
+      }
     },
     {
-      "name": "icon-select-edits-its-icon-string",
-      "why": "An IconSelect's value IS its icon string, which React edits as text in the IconSelector's own editor.",
-      "node": { "kind": "iconSelect", "id": "widget.icon", "value": "circle", "uniform": true, "classifierKind": "icon" },
-      "binding": { "trigger": "change", "action": "setWidgetIcon", "args": { "widgetId": "n1" } },
-      "bounds": [0.0, 0.0, 80.0, 24.0],
-      "gesture": { "kind": "type", "at": [0.5, 0.5], "text": "-dot" },
-      "expected": { "action": "setWidgetIcon", "args": { "widgetId": "n1", "value": "circle-dot" } }
+      "name": "ring-ignores-a-press-off-its-orb",
+      "why": "React's Ring only starts a drag from its orb circle (RingMarker), never from the bare SVG.",
+      "node": {
+        "kind": "ring",
+        "id": "sun.orbit",
+        "orbId": "sun",
+        "t": 0.0
+      },
+      "binding": {
+        "trigger": "change",
+        "action": "setSunOrbit",
+        "args": {
+          "windowId": "w1"
+        }
+      },
+      "bounds": [
+        0.0,
+        0.0,
+        100.0,
+        100.0
+      ],
+      "gesture": {
+        "kind": "press",
+        "at": [
+          0.9,
+          0.9
+        ]
+      },
+      "expected": null
     }
   ]
 }

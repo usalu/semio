@@ -1,5 +1,6 @@
 import {randomBytes} from "node:crypto";
-import {chmod,mkdir,readdir,readFile,realpath,rename,rm,stat,unlink,writeFile} from "node:fs/promises";
+import {constants,type BigIntStats,type Dirent} from "node:fs";
+import {chmod,lstat,mkdir,open,readdir,realpath,rename,rm,unlink,writeFile} from "node:fs/promises";
 import {basename,dirname,isAbsolute,join,relative,resolve,sep} from "node:path";
 
 /** 🎣 The path book a `DirectoryTableV1` shares with its replica: paths in, small integer ids out. */
@@ -33,7 +34,7 @@ export class TierClocksV1{
 /** 🤫 The latency report of a replica that has measured nothing yet. */
 export function silentLatencyV1():LatencyReportV1{return new LatencyV1().report();}
 
-/** 🔢 The most hint paths one take returns. */
+/** 🔢 The usual path budget for one hint read, with the first receipt always kept whole. */
 export const hintPathLimitV1=5000;
 
 /** 📏 The largest hint file that is read; larger ones are deleted unread. */
@@ -86,24 +87,68 @@ export async function normaliseHintPathV1(worktree:string,raw:string):Promise<st
  try{return insideV1(await realpath(root),join(await realpath(dirname(target)),basename(target)));}catch{return undefined;}
 }
 
-/** 🪣 Consumes the hint files of a worktree: reads every finished file (name not starting with a dot; a name ending `.hook` holds a hook payload that is parsed like `touch --hook`) in name order up to `limit` paths, removes it, and returns the distinct normalised paths in first-seen order; unfinished files older than a minute are removed; a missing directory or a failing file yields nothing and never throws. */
-export async function takeHintsV1(worktree:string,limit:number=hintPathLimitV1,now:number=Date.now()):Promise<readonly string[]>{
- const directory=hintsPathV1(worktree),found=new Set<string>();
- let names:string[];
- try{names=await readdir(directory);}catch{return [];}
- for(const name of names.sort()){
+/** 🧾 A finished hint and its distinct normalised paths. Acknowledge after processing. Returns true when the observed file was removed or superseded, and false on an I/O failure. */
+export type HintReceiptV1=Readonly<{name:string;paths:readonly string[];acknowledge():Promise<boolean>}>;
+
+/** 🧭 Caller-owned position for successive bounded reads. Each pass resumes after the last inspected file and wraps at the end. */
+export type HintReadCursorV1={after?:string};
+
+const hintStampV1=(info:BigIntStats):string=>[info.dev,info.ino,info.mode,info.nlink,info.size,info.mtimeNs,info.ctimeNs].join(":");
+
+async function readHintTextV1(path:string,bytes:number,stamp:string):Promise<string|undefined>{
+ const file=await open(path,constants.O_RDONLY|constants.O_NOFOLLOW|constants.O_NONBLOCK);
+ try{
+  if(hintStampV1(await file.stat({bigint:true}))!==stamp)return undefined;
+  const data=Buffer.alloc(bytes);
+  for(let offset=0;offset<bytes;){
+   const {bytesRead}=await file.read(data,offset,bytes-offset,offset);
+   if(bytesRead===0)return undefined;
+   offset+=bytesRead;
+  }
+  if(hintStampV1(await file.stat({bigint:true}))!==stamp||hintStampV1(await lstat(path,{bigint:true}))!==stamp)return undefined;
+  return data.toString("utf8");
+ }finally{await file.close();}
+}
+
+/** 🪣 Reads finished hints in name order under per-file, aggregate-byte and file-count bounds. Returns complete receipts and leaves their files on disk until acknowledgement. Removes obsolete temporary files and stable files with no usable paths. */
+export async function readHintsV1(worktree:string,limit:number=hintPathLimitV1,now:number=Date.now(),deferred?:Pick<ReadonlySet<string>,"has">,cursor?:HintReadCursorV1):Promise<readonly HintReceiptV1[]>{
+ const directory=hintsPathV1(worktree),receipts:HintReceiptV1[]=[];
+ let files=0,paths=0,bytes=0;
+ const fileLimit=Math.min(64,limit);
+ let entries:Dirent[];
+ try{entries=await readdir(directory,{withFileTypes:true});}catch{return [];}
+ entries.sort((a,b)=>a.name<b.name?-1:a.name>b.name?1:0);
+ const after=cursor?.after,start=after===undefined?0:Math.max(0,entries.findIndex(entry=>entry.name>after));
+ for(let offset=0;offset<entries.length;offset++){
+  if(paths>=limit||files>=fileLimit)break;
+  const entry=entries[(start+offset)%entries.length]!,name=entry.name;
+  if(!entry.isFile()||deferred?.has(name))continue;
+  files++;
   const file=join(directory,name);
+  let advance=true;
   try{
-   const info=await stat(file);
-   if(name.startsWith(".")){if(now-info.mtimeMs>staleTemporaryMilliseconds)await rm(file,{force:true});continue;}
-   if(found.size>=limit)break;
+   const info=await lstat(file,{bigint:true}),stamp=hintStampV1(info);
    if(!info.isFile())continue;
-   const hook=name.endsWith(".hook"),text=info.size<=(hook?hookBytesLimitV1:hintBytesLimitV1)?await readFile(file,"utf8"):"";
-   await unlink(file);
-   for(const raw of hook?parseHookInputV1(text):parseHintTextV1(text)){const path=await normaliseHintPathV1(worktree,raw);if(path!==undefined)found.add(path);}
-  }catch{}
+   const acknowledge=async():Promise<boolean>=>{
+    try{if(hintStampV1(await lstat(file,{bigint:true}))===stamp)await unlink(file);return true;}
+    catch(error){const code=(error as NodeJS.ErrnoException).code;return code==="ENOENT"||code==="ENOTDIR";}
+   };
+   if(name.startsWith(".")){if(now-Number(info.mtimeMs)>staleTemporaryMilliseconds)await acknowledge();continue;}
+   const hook=name.endsWith(".hook"),size=Number(info.size);
+   if(size>(hook?hookBytesLimitV1:hintBytesLimitV1)){await acknowledge();continue;}
+   if(bytes+size>hookBytesLimitV1){advance=false;break;}
+   bytes+=size;
+   const text=await readHintTextV1(file,size,stamp);
+   if(text===undefined)continue;
+   const found=new Set<string>();
+   for(const raw of new Set(hook?parseHookInputV1(text):parseHintTextV1(text))){const path=await normaliseHintPathV1(worktree,raw);if(path!==undefined)found.add(path);}
+   if(found.size===0){await acknowledge();continue;}
+   if(paths>0&&paths+found.size>limit){advance=false;break;}
+   paths+=found.size;
+   receipts.push({name,paths:[...found],acknowledge});
+  }catch{}finally{if(advance&&cursor!==undefined)cursor.after=name;}
  }
- return [...found];
+ return receipts;
 }
 
 /** 🖋️ Drops one hint file into the drop directory: NUL-separated paths written to a temporary name and renamed inside the directory, so the daemon never reads half a file; returns the final file name. Nothing is normalised here. */

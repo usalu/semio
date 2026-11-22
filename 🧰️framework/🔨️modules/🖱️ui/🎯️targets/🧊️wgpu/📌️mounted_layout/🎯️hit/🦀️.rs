@@ -137,7 +137,6 @@ pub fn retained_hit_registration(
         UiNode::Slider(slider) => Some(RetainedHitRegistration { node: id, rect, overlay: false, scene: None, kind: HitKind::Slider, control_id: slider.id.clone(), action: None, drag_axis: Some(DragAxis::Horizontal), drag_data: None }),
         UiNode::NumberStepper(stepper) => entry(HitKind::NumberStepper, stepper.id.clone(), None, rect),
         UiNode::Ring(ring) => Some(RetainedHitRegistration { node: id, rect, overlay: false, scene: None, kind: HitKind::Ring, control_id: ring.id.clone(), action: None, drag_axis: Some(DragAxis::Both), drag_data: None }),
-        UiNode::IconSelect(select) => entry(HitKind::IconSelect, select.id.clone(), None, rect),
         UiNode::ComponentScene(scene) => {
             let (kind, control_id) = retained_scene_hit(scene);
             let mut registration = entry(kind, control_id, None, rect)?;

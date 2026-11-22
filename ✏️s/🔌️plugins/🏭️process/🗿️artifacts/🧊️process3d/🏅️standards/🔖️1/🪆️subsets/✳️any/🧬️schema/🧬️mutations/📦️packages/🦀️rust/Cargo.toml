@@ -40,6 +40,10 @@ name = "process3d_move_stock"
 path = "../../📍move-stock/🧪️tests/🎈️lifts/🦀️.rs"
 
 [[test]]
+name = "process3d_resize_stock"
+path = "../../📏resize-stock/🧪️tests/🟰️keeps-width/🦀️.rs"
+
+[[test]]
 name = "process3d_change_stock_label"
 path = "../../🔤change-stock-label/🧪️tests/🔤️relabels/🦀️.rs"
 

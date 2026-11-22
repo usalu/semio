@@ -16,7 +16,6 @@ use semio_plugin::ArtifactViewer;
 use semio_plugin::ConfigView;
 use {semio_framework_artifact_reference::Dialect};
 use semio_plugin::Fault;
-use semio_ui_locale::Label;
 use semio_plugin::NoConfig;
 use semio_plugin::NoConfigMutation;
 use semio_plugin::NoPresence;
@@ -91,7 +90,7 @@ impl ArtifactViewer for XlsxTransitionalViewer {
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         match body_key {
             main::BODY_KEY => main::render(doc.snapshot, view_state.locale, &semio_plugin::TreeWindows::for_body(view_state, main::BODY_KEY)).map(semio_plugin::built_to_component_tree),
-            _ => semio_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
+            _ => semio_plugin::built_text_to_component_tree(semio_s_artifact_stdio_xlsx_base::viewer::xlsx::standards::v_ecma_376::subsets::base::xlsx_viewer_labels(view_state.locale).unknown_body.fill(&[("body", body_key)])),
         }
     }
 }

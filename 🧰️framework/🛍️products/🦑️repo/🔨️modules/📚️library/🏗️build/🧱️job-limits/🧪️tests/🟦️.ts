@@ -181,7 +181,7 @@ test("the job object limiter speaks the helper frames and reports a breach",asyn
 test("admission and limit are one number and a killed job raises the next reservation",()=>{
  expect(grantJobLimitV1({reservedMegabytes:3000}).memoryMegabytes).toBe(3000);
  const killed:JobOutcomeV1={kind:"memory-exceeded",enforcement:"cgroup-v2",limitMegabytes:1000,peakMegabytes:1000,exitCode:null,signal:"SIGKILL",durationMilliseconds:1};
- expect(learnedRunAfterOutcomeV1({peakMegabytes:900,status:"ok"},killed)).toEqual({peakMegabytes:1250,status:"failed"});
+ expect(learnedRunAfterOutcomeV1({peakMegabytes:900,status:"ok"},killed)).toEqual({peakMegabytes:1250,status:"failed",limited:true});
  expect(learnedRunAfterOutcomeV1({peakMegabytes:900,status:"ok"},{...killed,kind:"ok"})).toEqual({peakMegabytes:900,status:"ok"});
  expect(learnedRunAfterOutcomeV1({peakMegabytes:900,status:"cancelled"},killed).status).toBe("cancelled");
  expect(learnedRunAfterOutcomeV1({peakMegabytes:900,status:"ok"},undefined).peakMegabytes).toBe(900);

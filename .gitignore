@@ -96,6 +96,8 @@ test-results
 🎓️teaching/🏛️architecture/⚡️energy/**/⏱️timing/
 **/🤖️generated/
 **/🤖️generated.*
+# 📝️ The Flow browser declaration is an authored-declaration projection checked in as source; its ownership test is the drift check.
+!/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/📝️declaration/🤖️generated/
 /🧰️framework/🔨️modules/🖱️ui/🎨️styling/🔤️tokens/🦀️.rs
 /🧰️framework/🔨️modules/🖱️ui/🎨️styling/🔤️tokens/🐍️.py
 /🧰️framework/🔨️modules/🖱️ui/🎨️styling/🎨️palette/🔷️.cs
@@ -329,6 +331,8 @@ htmlcov/
 .coverage
 .coverage.*
 .cache
+# Per-run source trees of tests that need a tree inside the checkout (scratch kind `checkout-test`); never replicated, never source.
+/.test-scratch/
 nosetests.xml
 coverage.xml
 *.cover

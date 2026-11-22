@@ -16,7 +16,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [features]
-testkit = []
+testkit = ["dep:semio-framework-job"]
 
 [dependencies]
 base64_codec = { workspace = true }
@@ -26,6 +26,7 @@ semio-framework-diagnostic = { workspace = true }
 semio-framework-dsl-record = { workspace = true }
 semio-framework-dsl-record-derive = { workspace = true }
 semio-framework-hash = { workspace = true }
+semio-framework-job = { workspace = true, optional = true }
 semio-os-kernel = { workspace = true }
 semio-framework-pack-json = { workspace = true }
 semio-framework-pixels = { workspace = true }

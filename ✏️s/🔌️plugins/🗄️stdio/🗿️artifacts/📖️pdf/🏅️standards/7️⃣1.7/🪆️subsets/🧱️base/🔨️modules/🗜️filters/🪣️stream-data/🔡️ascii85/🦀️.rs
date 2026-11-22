@@ -1,5 +1,7 @@
 //! 📦️ Bounded ASCII85 groups with one input or output byte per unit.
 
+use semio_framework_value::ByteReadSource;
+
 #[derive(Clone, Copy)]
 enum Phase { Start, Prefix, Digits, Terminator, Complete, Failed }
 
@@ -18,6 +20,7 @@ pub(super) struct Ascii85Receipt {
     pub(super) written: usize,
     pub(super) work: usize,
     pub(super) done: Result<bool, &'static str>,
+    pub(super) source_changed: bool,
 }
 
 impl Ascii85Cursor {
@@ -25,7 +28,7 @@ impl Ascii85Cursor {
         Self { phase: Phase::Start, input: 0, digits: 0, value: 0, block: [0; 4], read: 0, written: 0 }
     }
 
-    pub(super) fn advance(&mut self, source: &[u8], output: &mut [u8], limit: usize) -> Ascii85Receipt {
+    pub(super) fn advance(&mut self, source: &(impl ByteReadSource + ?Sized), output: &mut [u8], limit: usize) -> Ascii85Receipt {
         let mut work = 0;
         let mut written = 0;
         while work < limit {
@@ -38,8 +41,11 @@ impl Ascii85Cursor {
                 continue;
             }
             if matches!(self.phase, Phase::Complete | Phase::Failed) { break; }
-            let byte = source.get(self.input).copied();
+            let byte = source.byte_at(self.input);
             work += 1;
+            if byte.is_none() && self.input < source.byte_len() {
+                return Ascii85Receipt { input: self.input, written, work, done: Ok(false), source_changed: true };
+            }
             if matches!(self.phase, Phase::Terminator) {
                 if byte == Some(b'>') { self.input += 1; }
                 self.finish();
@@ -67,7 +73,7 @@ impl Ascii85Cursor {
             Phase::Complete => Ok(self.read == self.written),
             _ => Ok(false),
         };
-        Ascii85Receipt { input: self.input, written, work, done }
+        Ascii85Receipt { input: self.input, written, work, done, source_changed: false }
     }
 
     fn push(&mut self, digit: u8) {

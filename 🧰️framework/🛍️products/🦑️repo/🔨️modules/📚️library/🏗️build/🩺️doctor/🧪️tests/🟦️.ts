@@ -9,10 +9,11 @@ import {DOCTOR_POLICY_V1,DOCTOR_PROTOCOL_V1,DOCTOR_RULES_V1,clipResourceV1,redac
 import {analyzeDoctorV1,buildDoctorReportV1,summarizeDoctorV1} from "../🧮️analysis/🟦️.ts";
 import {parseElapsedSecondsV1,parsePosixProcessListingV1,parseWindowsProcessListingV1} from "../🔌️ports/🟦️.ts";
 import {DOCTOR_REPAIRS_V1} from "../🔎️probes/🟦️.ts";
+import {imageRepairPlanV1} from "../🔎️probes/💾️storage/🟦️.ts";
 import {formatDoctorReportInV1,formatDoctorReportV1} from "../🖨️report/🟦️.ts";
 import fixture from "./🧫️fixtures/🔣️.json";
 
-type Case={name:string;ordered:boolean;facts:DoctorFactsV1;expect:{findings:[string,string,string][];waits:[string,number,number|null,string|null][];processes:[number,string,number|null][];verdict:string;counts:Record<string,number>}};
+type Case={name:string;ordered:boolean;facts:DoctorFactsV1;expect:{findings:[string,string,string][];waits:[string,number,number|null,string|null][];processes:[number,string,number|null][];verdict:string;counts:Record<string,number>;imageRepairs?:[string,string[]][]}};
 const cases=fixture.cases as unknown as Case[];
 const ajv=new Ajv({strict:true,allowUnionTypes:true}),compile=(definition:string)=>ajv.compile({definitions:schema.definitions,$ref:`#/definitions/${definition}`});
 const key=(row:readonly [string,string,string]):string=>row.join("\u0000");
@@ -104,7 +105,7 @@ test("the analysis reproduces the hand-stated findings, waits and processes of e
 test("an independent Python implementation reproduces every case",()=>{
  const run=Bun.spawnSync(["python3",join(import.meta.dir,"🐍️.py")],{stdin:new TextEncoder().encode(JSON.stringify({policy:policyDocument,cases:cases.map(item=>item.facts)})),stdout:"pipe",stderr:"pipe"});
  expect(run.exitCode,new TextDecoder().decode(run.stderr)).toBe(0);
- const results=JSON.parse(new TextDecoder().decode(run.stdout)) as {findings:[string,string,string][];waits:[string,number,number|null,string|null][];processes:[number,string,number|null][];verdict:string;counts:Record<string,number>}[];
+ const results=JSON.parse(new TextDecoder().decode(run.stdout)) as {imageRepairs:[string,string[]][];findings:[string,string,string][];waits:[string,number,number|null,string|null][];processes:[number,string,number|null][];verdict:string;counts:Record<string,number>}[];
  expect(results.length).toBe(cases.length);
  cases.forEach((item,index)=>{
   const python=results[index]!,actual=rows(analyzeDoctorV1(item.facts));
@@ -113,6 +114,9 @@ test("an independent Python implementation reproduces every case",()=>{
   expect(python.processes as unknown[][],item.name).toEqual(actual.processes);
   expect(python.verdict,item.name).toBe(item.expect.verdict);
   expect(python.counts,item.name).toEqual(item.expect.counts);
+  const plan=imageRepairPlanV1(item.facts.storage).map(row=>[row.id,[...row.steps]]);
+  expect(python.imageRepairs,item.name+" image repairs").toEqual(plan);
+  expect(plan,item.name+" image repairs stated by hand").toEqual(item.expect.imageRepairs??[]);
  });
 });
 

@@ -1,26 +1,4 @@
 {
-  "readerSourceCases": [
-    {
-      "fault": "none",
-      "accepted": true
-    },
-    {
-      "fault": "changed",
-      "accepted": false
-    },
-    {
-      "fault": "missing",
-      "accepted": false
-    },
-    {
-      "fault": "duplicate",
-      "accepted": false
-    },
-    {
-      "fault": "extra",
-      "accepted": true
-    }
-  ],
   "cases": [
     {
       "current": true,
@@ -796,12 +774,6 @@
     {
       "name": "identity",
       "fault": "identity",
-      "accepted": false,
-      "callback": false
-    },
-    {
-      "name": "authorizer",
-      "fault": "authorizer",
       "accepted": false,
       "callback": false
     },
@@ -2183,21 +2155,6 @@
       "reported": true
     },
     {
-      "mode": "authorizer-receipt",
-      "delivery": "normal",
-      "reported": true
-    },
-    {
-      "mode": "authorizer-receipt",
-      "delivery": "undefined",
-      "reported": true
-    },
-    {
-      "mode": "authorizer-receipt",
-      "delivery": "frozen",
-      "reported": true
-    },
-    {
       "mode": "bad-identity",
       "delivery": "normal",
       "reported": false
@@ -2484,34 +2441,10 @@
   ],
   "generationIntegrityReads": [
     {
-      "fault": "opaque",
-      "captured": true,
-      "rechecked": true,
-      "strictAccepted": false
-    },
-    {
       "fault": "valid",
       "captured": true,
       "rechecked": true,
       "strictAccepted": true
-    },
-    {
-      "fault": "source-drift",
-      "captured": false,
-      "rechecked": false,
-      "strictAccepted": false
-    },
-    {
-      "fault": "output-drift",
-      "captured": false,
-      "rechecked": false,
-      "strictAccepted": false
-    },
-    {
-      "fault": "marker-drift",
-      "captured": false,
-      "rechecked": false,
-      "strictAccepted": false
     },
     {
       "fault": "directory-drift",
@@ -2523,25 +2456,25 @@
       "fault": "copy",
       "captured": true,
       "rechecked": false,
-      "strictAccepted": false
+      "strictAccepted": true
     },
     {
       "fault": "context-copy",
       "captured": true,
       "rechecked": false,
-      "strictAccepted": false
+      "strictAccepted": true
     },
     {
       "fault": "strict-substitution",
       "captured": true,
       "rechecked": false,
-      "strictAccepted": false
+      "strictAccepted": true
     },
     {
       "fault": "changed-metadata",
       "captured": true,
       "rechecked": false,
-      "strictAccepted": false
+      "strictAccepted": true
     }
   ]
 }

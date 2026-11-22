@@ -37,6 +37,12 @@
     }
   },
   "definitions": {
+    "ReleaseWorkUnitsV1": {
+      "description": "The number of selected component packages plus declared prerequisite jobs in the admitted release plan. Shared and parallel work counts once per selected package or job.",
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
     "Policy": {
       "const": {
         "version": 1,

@@ -53,11 +53,11 @@ async function rowHoldsOfV1():Promise<((row:ObservationRowV1)=>boolean)|undefine
 /** 🚪️ The answer of the gate: whether the record was taken from the fleet, and how to store the computed one or give the claim back. */
 export type ProjectGateV1=Readonly<{seeded:boolean;deferred?:boolean;publish():void;abandon():Promise<void>}>;
 /** 🎯️ The answer of a pulled claim: the record is stored or held by another machine (leave it), or this machine holds it and `publish` stores the finished record (true when stored) or `abandon` gives the claim back. */
-export type ProjectClaimV1=Readonly<{state:"stored"|"fault"|"refused"}>|Readonly<{state:"held";by:string}>|Readonly<{state:"granted";publish():Promise<boolean>;abandon():Promise<void>;why():string;code():string;deterministic():boolean;digest:string}>;
+export type ProjectClaimV1=Readonly<{state:"stored"}>|Readonly<{state:"fault"}>|Readonly<{state:"refused"}>|Readonly<{state:"held";by:string}>|Readonly<{state:"granted";publish():Promise<boolean>;abandon():Promise<void>;why():string;code():string;deterministic():boolean;digest:string}>;
 type GatePhaseV1=keyof typeof schema.definitions.GateTimings.properties;
 type GateTimingV1={started:number;active:number;milliseconds:number};
 type GateTimingsV1=Record<GatePhaseV1,GateTimingV1>;
-export type ProjectFleetPortV1=Readonly<{producers():Readonly<Record<string,number>>;claim(info:ProjectRecordInfoV1):Promise<ProjectClaimV1>;gate(info:ProjectRecordInfoV1):Promise<ProjectGateV1>;offer(info:ProjectRecordInfoV1):Promise<void>;resend(options?:Readonly<{force?:boolean}>):Promise<number>;flush():Promise<string>;stats():Readonly<Record<"seeded"|"published"|"offered"|"waited"|"computed"|"closures"|"refused"|"reinferred"|"diverged"|"resent"|"kept"|"shed"|"refreshed"|"retried"|"leaves"|"incomplete",number>&{gateTimings:GateTimingsV1}>}>;
+export type ProjectFleetPortV1=Readonly<{producers():Readonly<Record<string,number>>;claim(info:ProjectRecordInfoV1):Promise<ProjectClaimV1>;gate(info:ProjectRecordInfoV1):Promise<ProjectGateV1>;offer(info:ProjectRecordInfoV1):Promise<void>;resend(options?:Readonly<{force?:boolean}>):Promise<number>;flush():Promise<string>;stats():Readonly<Record<"seeded"|"published"|"offered"|"waited"|"computed"|"closures"|"refused"|"reinferred"|"diverged"|"resent"|"kept"|"shed"|"refreshed"|"retried"|"leaves"|"incomplete",number>&{gateTimings:GateTimingsV1;refusals:Readonly<Record<string,number>>}>}>;
 
 /** 🔍️ What a look of a reader found for one owner in the fleet cache: `fetched` (the record was taken into the local store, the reader checks it against its tree), `miss` (nothing is stored), `fault` (the cache did not answer). */
 export type TakeLookV1={outcome?:"fetched"|"miss"|"fault"|"incomplete";fault?:GraphLookupFaultV1;readonly signal?:AbortSignal};
@@ -143,10 +143,11 @@ export function createProjectFleetPortV1(input:Readonly<{root:string;environment
    return documents.sort((left,right)=>left.name<right.name?-1:1);
   }catch{return[];}
  };
+ const refusals:Record<string,number>={},refuse=(reason:string)=>{const key=reason.replace(/\s+/gu," ").slice(0,80);if(key in refusals||Object.keys(refusals).length<16)refusals[key]=(refusals[key]??0)+1;};
  const documentsOf=async(info:ProjectRecordInfoV1)=>{
-  const portable=info.exportRecord() as PortableRecordV1|undefined;if(portable===undefined)return undefined;
+  const portable=info.exportRecord() as PortableRecordV1|undefined;if(portable===undefined){refuse("no record to export");return undefined;}
   let neutral:ReturnType<typeof neutralRecordV1>;
-  try{neutral=neutralRecordV1(portable,host);}catch{counts.refused++;return undefined;}
+  try{neutral=neutralRecordV1(portable,host);}catch(error){counts.refused++;refuse(String((error as Error)?.message??error));return undefined;}
   return[{name:"record",bytes:Buffer.from(JSON.stringify(packRecordV1(neutral.record)))},...await closureDocsOf(info,portable.image,neutral.keys)];
  };
  const heldOf=(info:ProjectRecordInfoV1,held:Map<string,string>)=>async(entry:Readonly<{path:string;hash:string}>)=>{
@@ -344,10 +345,14 @@ export function createProjectFleetPortV1(input:Readonly<{root:string;environment
     look.outcome="fetched";
      return{seeded:await timedGate("seed",()=>seedFrom(info,state,{documents:found.documents,deferred:found.deferred,note:found.note,via:"cache"},held,look.signal)),...nothing};
    }
-    const decide=():Promise<Awaited<ReturnType<typeof decideGraphEntryV1>>|Readonly<{outcome:"skip"}>>=>decideGraphEntryV1({client:gateClient,state,owner,skip:heldOf(info,held),...input.busy===undefined?{}:{busy:input.busy},...input.strong===undefined?{}:{strong:input.strong},...info.closures===undefined?{}:{defer:isClosureDocument}});
+    let lookupFault:GraphLookupFaultV1|undefined;
+    const decide=():Promise<Awaited<ReturnType<typeof decideGraphEntryV1>>|Readonly<{outcome:"skip"}>>=>{
+     lookupFault=undefined;
+     return decideGraphEntryV1({onLookupFault:reason=>{lookupFault=reason;},client:gateClient,state,owner,skip:heldOf(info,held),...input.busy===undefined?{}:{busy:input.busy},...input.strong===undefined?{}:{strong:input.strong},...info.closures===undefined?{}:{defer:isClosureDocument}});
+    };
    let decision=await decide();
+    for(let attempt=0;attempt<2&&decision.outcome==="compute"&&decision.reason==="fault"&&lookupFault!=="unavailable";attempt++){counts.retried++;await timedGate("retry",()=>pause(projectPublishWaitV1(attempt,client.breakerRemainingMilliseconds?.()??0,draw(),retry)));decision=await decide();}
    if(decision.outcome==="skip")return{seeded:false,deferred:true,...nothing};
-    for(let attempt=0;attempt<2&&decision.outcome==="compute"&&decision.reason==="fault";attempt++){counts.retried++;await timedGate("retry",()=>pause(projectPublishWaitV1(attempt,client.breakerRemainingMilliseconds?.()??0,draw(),retry)));decision=await decide();}
     if(decision.outcome==="hit"){const hit=decision,seeded=await timedGate("seed",()=>seedFrom(info,state,hit,held));return{seeded,...publisher(info,state,undefined,seeded||incompleteDigests.delete(state.digest))};}
    counts.computed++;decided();
    return{seeded:false,...publisher(info,state,decision.hold)};
@@ -382,6 +387,6 @@ export function createProjectFleetPortV1(input:Readonly<{root:string;environment
    return sent;
   },
   async flush(){await Promise.allSettled([...pending]);const texts=schema.definitions.Texts.const;return(["en","de"] as const).map(language=>texts[language].summary.replace(/\{(\w+)\}/gu,(_all,name:string)=>String((counts as Record<string,number>)[name]??0))).join(" | ");},
-   stats:()=>Object.freeze({...counts,gateTimings:Object.fromEntries(gatePhases.map(phase=>[phase,{...gateTiming[phase],milliseconds:Math.round(gateTiming[phase].milliseconds)}])) as GateTimingsV1}),
+   stats:()=>Object.freeze({...counts,refusals:{...refusals},gateTimings:Object.fromEntries(gatePhases.map(phase=>[phase,{...gateTiming[phase],milliseconds:Math.round(gateTiming[phase].milliseconds)}])) as GateTimingsV1}),
  });
 }

@@ -4,7 +4,8 @@ import{expect,test}from"bun:test";
 import{mkdirSync,mkdtempSync,utimesSync,writeFileSync}from"node:fs";
 import{tmpdir}from"node:os";
 import{join}from"node:path";
-import{TAKE_POLICY_V1,fleetPublishedNamesV1,takePollV1}from"../../🟨️.mjs";
+import{spawnSync}from"node:child_process";
+import{TAKE_POLICY_V1,fleetGlobalsKeyV1,fleetPublishedNamesV1,takePollV1}from"../../🟨️.mjs";
 import childSource from"../../../🌐️owner-pool/🧒️child/🟨️.mjs"with{type:"text"};
 
 const store=()=>mkdtempSync(join(tmpdir(),"r194-"));
@@ -27,5 +28,16 @@ test("the poll looks at the listed owners first, again after the retry time only
 });
 
 test("a pool child that stored an owner appends its name to the shared published file of its wave",()=>{
- expect(childSource).toContain('"pool-published-"');expect(childSource).toContain("appendFileSync(published, unit.name");
+ expect(childSource).toContain('"pool-published-"');expect(childSource).toContain("fleetGlobalsKeyV1(head.globals)");expect(childSource).toContain("appendFileSync(published, unit.name");
+});
+
+test("a reader lists only the owners of waves keyed with its own globals, and the key equals an independent digest",()=>{
+ const mine={registryDigest:"bb",commandRevision:"cc",late:true},other={...mine,commandRevision:"dd"};
+ const python=spawnSync("python3",["-I","-c","import hashlib,json,sys;print(hashlib.sha256(json.dumps(json.loads(sys.argv[1]),separators=(',',':')).encode()).hexdigest()[:8])",JSON.stringify(mine)],{encoding:"utf8"});
+ expect(python.status,python.stderr).toBe(0);expect(fleetGlobalsKeyV1(mine)).toBe(python.stdout.trim());expect(fleetGlobalsKeyV1(other)).not.toBe(fleetGlobalsKeyV1(mine));
+ const root=store();
+ publish(root,"g1-m01",`a1-${fleetGlobalsKeyV1(mine)}`,["a","b"]);publish(root,"g1-m02",`b2-${fleetGlobalsKeyV1(other)}`,["c"]);publish(root,"g1-m03","c3",["d"]);
+ expect([...fleetPublishedNamesV1(root,Date.now(),TAKE_POLICY_V1,mine)].sort()).toEqual(["a","b"]);
+ expect([...fleetPublishedNamesV1(root,Date.now(),TAKE_POLICY_V1,other)]).toEqual(["c"]);
+ expect([...fleetPublishedNamesV1(root)].sort()).toEqual(["a","b","c","d"]);
 });

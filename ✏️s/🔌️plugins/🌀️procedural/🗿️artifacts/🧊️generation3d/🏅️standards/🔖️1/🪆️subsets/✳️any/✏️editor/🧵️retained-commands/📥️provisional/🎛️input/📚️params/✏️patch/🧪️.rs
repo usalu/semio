@@ -5,9 +5,11 @@ use super::*;
 use super::super::retained_scratch_testing::ScratchCaller;
 use semio_framework_artifact_flow_flow::neural::Atom;
 use semio_framework_value::retirement::RetireOwned;
+use semio_framework_value::RetainedCloneGrant;
+use semio_framework_value_testing_effect_bank::{EffectBank,Wallet};
 fn policy()->serde_json::Value{serde_json::from_str(include_str!("../../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🎟️caller/🧪️tests/🧫️fixtures/🎟️caller.json")).unwrap()}
 fn stamp(value:&Value)->(u8,u64,usize){match value{Value::Dictionary(value)=>(0,value.original_root_identity().unwrap_or(0)as u64,value.len()),Value::Atom(Atom::String(value))=>(1,value.as_ptr()as u64,value.len()),Value::Atom(Atom::Decimal(value))=>(2,value.to_bits(),0),Value::Atom(Atom::Integer(value))=>(3,*value as u64,0),Value::Atom(Atom::Boolean(value))=>(4,u64::from(*value),0),Value::Atom(Atom::Null)=>(5,0,0)}}
-fn close(work:&mut NativeParamPatchWork,caller:&mut ScratchCaller){work.begin_close();for _ in 0..32768{if work.terminal_is_empty(){return}caller.turn(|cx|cx.with_original_retirement(|same|{let d=work.next_close_demands(same.retained_grant().maximum_copy_bytes)?;semio_framework_job::close_original_retained_step(same,d,|g|work.close_step(g))?;Ok(())}));}panic!("original native patch did not physically close")}
+fn close(work:&mut NativeParamPatchWork,caller:&mut ScratchCaller){work.begin_close();for _ in 0..32768{if work.terminal_is_empty(){return}caller.turn(|cx|cx.with_original_retirement(|same|{let body=same.retained_grant().maximum_copy_bytes;let d=work.next_close_demands(body)?;semio_framework_job::close_original_effect_step(same,d,|effect|work.close_step(body,effect))?;Ok(())}));}panic!("original native patch did not physically close")}
 #[test]
 fn original_native_param_patch_matches_cold_upsert_with_one_fuel_and_full_prefix_close(){
  let corpus:serde_json::Value=serde_json::from_str(include_str!("🔣️.json")).unwrap();let policy=policy();let stock:RetainedCloneGrant=serde_json::from_value(policy["grant"].clone()).unwrap();
@@ -19,7 +21,7 @@ fn original_native_param_patch_matches_cold_upsert_with_one_fuel_and_full_prefix
    if cut==Some(count){caller.cancel();break}
    let d=work.next_demands(&params,&key,stock.maximum_copy_bytes).unwrap();let g=RetainedCloneGrant{maximum_items:items,..stock};
    for denied in [Some(RetainedCloneGrant{maximum_items:0,..g}),(d.depth>0).then_some(RetainedCloneGrant{maximum_depth:d.depth.saturating_sub(1),..g}),(d.copy_bytes>0).then_some(RetainedCloneGrant{maximum_copy_bytes:d.copy_bytes.saturating_sub(1),..g}),(d.capacity_bytes>0).then_some(RetainedCloneGrant{maximum_capacity_bytes:d.capacity_bytes.saturating_sub(1),..g}),(d.release_bytes>0).then_some(RetainedCloneGrant{maximum_release_bytes:d.release_bytes.saturating_sub(1),..g})].into_iter().flatten(){
-    let before=(work.phase,params.original_root_identity());let(turn,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||work.advance(&mut params,&key,denied));assert!(!heap.overflowed);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(turn.work,0);assert!(!turn.result.unwrap());assert_eq!(work.step_progress(),Default::default());assert!(before==(work.phase,params.original_root_identity()));
+    let before=(work.phase,params.original_root_identity());let(turn,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||EffectBank::new(Wallet::new(g,1)).run_outcome(denied,1,|effect|work.advance(&mut params,&key,effect)));assert!(!heap.overflowed);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(turn.work,0);assert!(!turn.result.unwrap());assert_eq!(work.step_progress(),Default::default());assert!(before==(work.phase,params.original_root_identity()));
    }
    let ready=caller.turn(|cx|work.step(&mut params,&key,cx));count+=1;if ready{break}assert!(count<32768);
   }

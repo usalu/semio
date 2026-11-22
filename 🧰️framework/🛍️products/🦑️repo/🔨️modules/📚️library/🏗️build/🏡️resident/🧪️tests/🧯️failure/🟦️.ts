@@ -226,3 +226,13 @@ test("a lease wait that ran out, of any lease class, is a typed refusal in both 
   for(const key of ["host-lease-timeout","host-lease-timeout-unregistered"])expect(text.match(new RegExp('"'+key+'":"[^"]*\\{seconds\\}[^"]*\\{requested\\}',"gu"))).toHaveLength(2);
   expect(text.match(/"host-lease-timeout":"[^"]*\{holderPid\}[^"]*\{holderCommand\}[^"]*\{holderSeconds\}/gu)).toHaveLength(2);
 });
+
+test("a mirrored service failure carries the free-bytes facts of the host volume and the partition mounts when the root is known, and the bare block when it is not",()=>{
+  const store=mkdtempSync(join(tmpdir(),"fail-facts-")),root=mkdtempSync(join(tmpdir(),"fail-root-"));
+  try{
+    const environment={SEMIO_FLEET_STORE_ROOT:store,SEMIO_FLEET_ORIGIN:"g1-facts"},file=join(store,"v1","origins","g1-facts","service-failure.txt");
+    mirrorFailureV1("block A","aaaaaaaa",{environment,root});
+    const text=readFileSync(file,"utf8");expect(text.startsWith("block A\n")).toBe(true);expect(text).toContain("disk facts (free of total, MB) / Plattenfakten (frei von gesamt, MB)");expect(text).toContain(root+": ");
+    mirrorFailureV1("block B","bbbbbbbb",{environment});expect(readFileSync(file,"utf8")).toBe("block B");
+  }finally{rmSync(store,{recursive:true,force:true});rmSync(root,{recursive:true,force:true});}
+});

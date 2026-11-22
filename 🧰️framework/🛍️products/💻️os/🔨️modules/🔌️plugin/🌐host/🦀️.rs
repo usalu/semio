@@ -452,7 +452,7 @@ impl Host {
     }
 
     pub async fn open_plugin_instance(&self, plugin_id: impl Into<String>, app_id: impl Into<String>, os_instance_id: Option<String>) {
-        self.emit(Effect::OpenPluginInstance { plugin_id: plugin_id.into(), app_id: app_id.into(), os_instance_id }).await;
+        self.emit(Effect::OpenPluginInstance { plugin_id: plugin_id.into(), app_id: app_id.into(), os_instance_id, document: None }).await;
     }
 
     /// 🕹️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (sdk-async): NEW — `effects.wit`'s `dispatch-

@@ -191,11 +191,43 @@ pub async fn add_workflow_node_operation(plugin_id: &str, app_id: &str, label: O
     let app = resolve_os_app_definition(plugin_id, app_id)?;
     let node_id = create_os_id("node");
     let position = WorkflowPosition { x, y, width: 0.0, height: 0.0 };
-    let mut node = workflow_node_for_app(&app, plugin_id, &node_id, &position).await;
-    if let Some(label) = label {
-        node.label = label.into();
-    }
+    let label = label.unwrap_or(&app.io.artifact.name);
+    let node = workflow_node_for_app(&app, plugin_id, &node_id, &position, label).await;
     Some((WorkflowMutation::AddNode(AddNode { node }), node_id))
+}
+
+/// 🗂️ Encodes a Workflow node's document target in the artifact-reference field.
+pub fn workflow_artifact_reference(node_id: &str, document: &semio_plugin::kernel::PluginDocumentTarget) -> Result<String, semio_plugin::Fault> {
+    if !workflow_artifact_identity(node_id)
+        || !workflow_artifact_identity(&document.document_id)
+        || !workflow_artifact_identity(&document.schema)
+        || document.space_id.as_deref().is_some_and(|value| !workflow_artifact_identity(value))
+        || node_id == document.document_id
+    {
+        return Err(semio_plugin::Fault::from("s.space.invalid-workflow-artifact-reference"));
+    }
+    Ok(semio_framework_pack_json::to_json_string(document))
+}
+
+/// 📎️ Reads the exact typed target persisted with a Workflow node.
+pub fn workflow_artifact_target(node: &semio_os::WorkflowNode) -> Result<Option<semio_plugin::kernel::PluginDocumentTarget>, semio_plugin::Fault> {
+    if node.artifact_ref.is_empty() {
+        return Ok(None);
+    }
+    if node.artifact_ref.len() > 1600 {
+        return Err(semio_plugin::Fault::from("s.space.invalid-workflow-artifact-reference"));
+    }
+    let document = semio_framework_pack_json::from_json_str(&node.artifact_ref, semio_framework_pack_json::JsonMemberPolicy::Reject)
+        .map_err(|_| semio_plugin::Fault::from("s.space.invalid-workflow-artifact-reference"))?;
+    if workflow_artifact_reference(&node.id, &document)? != node.artifact_ref {
+        return Err(semio_plugin::Fault::from("s.space.invalid-workflow-artifact-reference"));
+    }
+    Ok(Some(document))
+}
+
+/// 🪪️ Matches the Backbone worker's admission for a scoped document identity.
+pub fn workflow_artifact_identity(value: &str) -> bool {
+    !value.is_empty() && value.len() <= 256 && !value.bytes().any(|byte| byte.is_ascii_control())
 }
 //#endregion 🔖️WorkflowNodes
 

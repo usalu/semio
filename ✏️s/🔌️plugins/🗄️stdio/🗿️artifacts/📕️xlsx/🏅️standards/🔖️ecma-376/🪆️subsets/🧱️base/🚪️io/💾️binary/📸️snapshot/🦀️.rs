@@ -10,7 +10,10 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 pub(in crate::standards::v_ecma_376::subsets::base::io) mod native;
 
 impl pack::snapshot::ArtifactPack for XlsxSnapshot {
-    
+    fn authored_pack_protocol() -> Option<&'static [u8]> {
+        Some(COMPONENT_PROTOCOL_SEMIO.as_bytes())
+    }
+
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         match encode_standalone(self, semio_os_kernel::sqlite_snapshot::SnapshotEncoding::Binary, &mut semio_os_kernel::sqlite_snapshot::SqliteSnapshotControl::new(&mut |_| true, pack_limits(&options.limits)))
             .map_err(store::PackError::from)?

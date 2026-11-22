@@ -1,0 +1,4 @@
+{
+  "concrete-mixer-truck": {"sheetM":0.0015,"glassM":0.006,"clearHeightM":[2.09,2.81],"grilleSlats":5,"frontSightline":[3.65,2.44,0],"sideSightline":[3.87,2.44,0],"seatWidthM":0.49},
+  "excavator": {"teeth":5,"cheeks":["bucket-cheek-left","bucket-cheek-right"],"cuttingLip":"bucket-lip","shell":"bucket-shell"}
+}

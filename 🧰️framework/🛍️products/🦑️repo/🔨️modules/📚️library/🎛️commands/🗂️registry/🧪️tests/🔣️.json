@@ -364,6 +364,24 @@
       },
       "provisions": false
     },
+      {
+        "name": "an owned workspace reprovisions a missing dependency generation",
+        "requires": "dependencies",
+        "capabilities": {
+          "workspaceRoot": "@root"
+        },
+        "available": false,
+        "provisions": true
+      },
+      {
+        "name": "an owned repository reprovisions a missing dependency generation",
+        "requires": "dependencies",
+        "capabilities": {
+          "repositoryRoot": "@root"
+        },
+        "available": false,
+        "provisions": true
+      },
     {
       "name": "a foreign workspace root does not count",
       "requires": "dependencies",

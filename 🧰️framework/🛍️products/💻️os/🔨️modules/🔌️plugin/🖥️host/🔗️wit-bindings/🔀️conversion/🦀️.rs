@@ -130,6 +130,12 @@ fn kernel_command_cursor_to_wit(cursor: &semio_framework::kernel::CommandPageCur
 }
 
 pub fn wit_command_ingress_to_kernel(status: wit_reactor::CommandIngressStatus) -> semio_framework::kernel::CommandIngressStatus {
+    if status.natural_source_ack.is_some() && status.original_media_ack.is_some() {
+        return semio_framework::kernel::CommandIngressStatus::Fault { cursor: wit_command_cursor_to_kernel(status.cursor), fault: b"plugin.multiple-command-receipts".to_vec() };
+    }
+    if let Some(ack) = status.natural_source_ack {
+        return semio_framework::kernel::CommandIngressStatus::NaturalSourceAck(semio_framework::kernel::NaturalSourceWireAck { loan: ack.loan.map(|loan| semio_framework::kernel::NaturalSourceWireLoan { operation_id: loan.operation_id, generation: loan.generation, instance_id: loan.instance_id, declaration: semio_framework::kernel::NaturalSourceWireDeclaration { format_kind: loan.declaration.format_kind, extension: loan.declaration.extension, media_type: loan.declaration.media_type, binary: loan.declaration.binary }, extent: loan.extent }), owner: ack.owner, seq: ack.seq, kind: ack.kind, extent: ack.extent, phase: match ack.phase { wit_reactor::NaturalSourcePhase::Prepare => semio_framework::kernel::NaturalSourceWirePhase::Prepare, wit_reactor::NaturalSourcePhase::Begin => semio_framework::kernel::NaturalSourceWirePhase::Begin, wit_reactor::NaturalSourcePhase::Page => semio_framework::kernel::NaturalSourceWirePhase::Page, wit_reactor::NaturalSourcePhase::Complete => semio_framework::kernel::NaturalSourceWirePhase::Complete, wit_reactor::NaturalSourcePhase::Cancel => semio_framework::kernel::NaturalSourceWirePhase::Cancel }, page_index: ack.page_index, result: match ack.result { wit_reactor::NaturalSourceResult::Retry => semio_framework::kernel::NaturalSourceWireResult::Retry, wit_reactor::NaturalSourceResult::Pending => semio_framework::kernel::NaturalSourceWireResult::Pending, wit_reactor::NaturalSourceResult::Accepted => semio_framework::kernel::NaturalSourceWireResult::Accepted, wit_reactor::NaturalSourceResult::Stale => semio_framework::kernel::NaturalSourceWireResult::Stale, wit_reactor::NaturalSourceResult::Refused => semio_framework::kernel::NaturalSourceWireResult::Refused } });
+    }
     if let Some(ack) = status.original_media_ack {
         return semio_framework::kernel::CommandIngressStatus::OriginalMediaAck(semio_framework::kernel::OriginalMediaWireAck {
             loan: semio_framework::kernel::OriginalMediaWireLoan {
@@ -198,7 +204,10 @@ pub async fn wit_effect_to_kernel(effect: wit_effects::Effect) -> Result<Effect,
         E::SpawnPluginInstance(inner) => {
             Effect::SpawnPluginInstance { req: RequestId(inner.req), plugin_id: inner.params.plugin_id, app_id: inner.params.app_id, os_instance_id: inner.params.os_instance_id, label: inner.params.label, document_json: inner.params.artifact_json }
         }
-        E::OpenPluginInstance(inner) => Effect::OpenPluginInstance { plugin_id: inner.plugin_id, app_id: inner.app_id, os_instance_id: inner.os_instance_id },
+        E::OpenPluginInstance(inner) => Effect::OpenPluginInstance {
+            plugin_id: inner.plugin_id, app_id: inner.app_id, os_instance_id: inner.os_instance_id,
+            document: inner.document.map(|target| semio_framework::kernel::PluginDocumentTarget { document_id: target.document_id, schema: target.schema, space_id: target.space_id }),
+        },
         E::OpenDialog(inner) => {
             let args = match inner.params.args {
                 Some(bytes) => decode_dsl(&bytes).await,
@@ -354,12 +363,13 @@ pub async fn kernel_turn_inputs_to_wit(events: &mut [Event], instance_id: u32) -
 pub async fn kernel_event_to_wit(event: &mut Event, instance_id: u32) -> Result<wit_events::Event,TurnFault> {
     if matches!(event,Event::StagedFormRequested{..}){return staged_form_event_to_wit(event,instance_id);}
     Ok(match event {
-        Event::InstanceOpen { request, app_id, actor, config, assets, capabilities, quotas } => {
+        Event::InstanceOpen { request, app_id, actor, config, assets, capabilities, quotas, purpose } => {
             let mut wit_capabilities = Vec::with_capacity(capabilities.len());
             for capability in capabilities {
                 wit_capabilities.push(kernel_broker_grant_to_wit(capability).await);
             }
             wit_events::Event::InstanceOpen(wit_events::InstanceOpenEvent {
+                purpose: match purpose { semio_framework::kernel::ActorInstanceOpenPurpose::Ordinary => wit_events::ActorInstanceOpenPurpose::Ordinary, semio_framework::kernel::ActorInstanceOpenPurpose::NaturalSource { declaration, extent } => wit_events::ActorInstanceOpenPurpose::NaturalSource(wit_events::NaturalSourceLaunch { declaration: wit_events::NaturalSourceDeclaration { format_kind: declaration.format_kind.clone(), extension: declaration.extension.clone(), media_type: declaration.media_type.clone(), binary: declaration.binary }, extent: *extent }) },
                 instance: request.instance_id,
                 activation_generation: request.activation_generation,
                 request_sequence: request.request_sequence,
@@ -407,6 +417,9 @@ pub async fn kernel_event_to_wit(event: &mut Event, instance_id: u32) -> Result<
                 semio_framework::kernel::OriginalMediaWireControl::Cancel => wit_events::OriginalMediaControl::Cancel,
             },
         }),
+        Event::NaturalSourcePrepare(event) => wit_events::Event::NaturalSourcePrepare(wit_events::NaturalSourcePrepare { instance_id: event.instance_id, seq: event.seq, declaration: wit_events::NaturalSourceDeclaration { format_kind: event.declaration.format_kind.clone(), extension: event.declaration.extension.clone(), media_type: event.declaration.media_type.clone(), binary: event.declaration.binary }, extent: event.extent }),
+        Event::NaturalSourceControl(event) => wit_events::Event::NaturalSourceControl(wit_events::NaturalSourceControlEvent { loan: wit_events::NaturalSourceLoan { operation_id: event.loan.operation_id.clone(), generation: event.loan.generation.clone(), instance_id: event.loan.instance_id, declaration: wit_events::NaturalSourceDeclaration { format_kind: event.loan.declaration.format_kind.clone(), extension: event.loan.declaration.extension.clone(), media_type: event.loan.declaration.media_type.clone(), binary: event.loan.declaration.binary }, extent: event.loan.extent }, owner: event.owner, seq: event.seq, kind: event.kind, extent: event.extent, control: match event.control { semio_framework::kernel::NaturalSourceWireControl::Begin => wit_events::NaturalSourceControl::Begin, semio_framework::kernel::NaturalSourceWireControl::Complete => wit_events::NaturalSourceControl::Complete, semio_framework::kernel::NaturalSourceWireControl::Cancel => wit_events::NaturalSourceControl::Cancel } }),
+        Event::FolderArchiveLoad(event) => wit_events::Event::FolderArchiveLoad(wit_events::FolderArchiveLoadEvent { instance: event.instance, request: event.request.clone() }),
         Event::Wake => wit_events::Event::Wake,
         Event::Request { req, from, capability, payload } => {
             wit_events::Event::Request(wit_events::RequestEvent { req: req.0, params: wit_events::RequestParams { origin: kernel_message_endpoint_to_wit(from).await, capability: capability.clone(), payload: payload.clone() } })

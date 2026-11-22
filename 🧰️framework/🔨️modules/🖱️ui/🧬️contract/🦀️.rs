@@ -10,8 +10,7 @@ pub use semio_ui_contract_identity::*;
 #[path="📃️document/🦀️.rs"]
 mod document;
 pub use document::*;
-#[path="🚚️window-resource/🦀️.rs"]
-pub mod window_resource;
+pub use semio_ui_contract_window_resource as window_resource;
 #[path="🧾️fields/🦀️.rs"]
 mod fields;
 #[path="♻️retirement/🌳️typed/📋️fields/🦀️.rs"]

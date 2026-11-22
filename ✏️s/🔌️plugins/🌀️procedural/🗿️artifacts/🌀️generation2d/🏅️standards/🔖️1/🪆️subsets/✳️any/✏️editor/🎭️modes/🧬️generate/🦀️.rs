@@ -5,7 +5,7 @@ extern crate semio_os_kernel as store;
 use crate::windows::form;
 use crate::windows::generations;
 use crate::windows::preview;
-use semio_plugin::create_default_layout;
+use semio_plugin::{create_default_layout, Axis};
 use semio_plugin::create_named_layout;
 use semio_ui_locale::LocalizedLabel;
 use semio_plugin::ModeDefinition;
@@ -34,11 +34,9 @@ pub fn layout() -> NamedLayout {
         GENERATION2D_PLAY_LAYOUT_GENERATE,
         "Generate",
         create_default_layout(
-            &[generations::GENERATION2D_PLAY_WINDOW_GENERATIONS.into(), form::GENERATION2D_PLAY_WINDOW_GENERATE_FORM.into(), preview::GENERATION2D_PLAY_WINDOW_GENERATE_PREVIEW.into()],
-            "row",
-            Some(&[22.0, 43.0, 35.0]),
-            Some(&["Generations".into(), "Form".into(), "Preview".into()]),
-        ),
+            &[generations::GENERATION2D_PLAY_WINDOW_GENERATIONS.into(), form::GENERATION2D_PLAY_WINDOW_GENERATE_FORM.into(), preview::GENERATION2D_PLAY_WINDOW_GENERATE_PREVIEW.into()], Axis::Horizontal,
+            Some(&[0.22, 0.43, 0.35]),
+            Some(&["Generations".into(), "Form".into(), "Preview".into()])),
         "builtin",
         Some("sparkles".into()),
         None,

@@ -1,0 +1,41 @@
+{
+  "owner": {
+    "scope": {
+      "spaceId": "survey",
+      "documentId": "terrain-grid"
+    },
+    "verifiedSurfaceId": "terrain",
+    "appChannelVersion": 25,
+    "activationGeneration": "12",
+    "instanceId": 0,
+    "surfaceRevision": 3
+  },
+  "clientInstanceId": "2ed849c7-6e0c-44be-9acf-3b2dc555bbfa",
+  "operationId": "18446744073709551615",
+  "chunks": [
+    [
+      65,
+      83,
+      67
+    ],
+    [
+      73,
+      73
+    ],
+    null
+  ],
+  "replaySequence": 1,
+  "invalidOperationIds": [
+    "0",
+    "01",
+    "18446744073709551616"
+  ],
+  "staleCases": [
+    "documentId",
+    "activationGeneration",
+    "instanceId",
+    "surfaceRevision",
+    "retire-before",
+    "retire-after"
+  ]
+}

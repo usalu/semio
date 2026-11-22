@@ -1,0 +1,7 @@
+# Terrain Edit and Grading Action Contracts
+
+The two JSON Schema contracts now describe authored metre values in exact millimetre increments across the signed 32-bit sample range. The edit action keeps smoothing as integer percent and accepts column, row and radius values from 0 through 64. Optional strokes accept 1–64 sample pairs and apply to raise/lower and smoothing. Rust validates the first anchor, expanded stamp count, actual rectangular grid bounds and sample overflow when it admits or applies a command.
+
+The shared edit fixture uses a 41-by-19 raster with canonical signed millimetre seeds and expected elevations. It covers editing beyond column 32, the full radius limit, maximum and minimum sample values, stroke interpolation, smoothing, negative changes, and overflow that must leave the source intact. The grading fixture covers 33-by-17 sample placement, inclusion of the outer boundary, exclusion of the hole boundary, a fractional negative height, and both signed millimetre endpoints.
+
+The two TypeScript test files passed all four Bun tests and 106 assertions. Ajv checked action structure, mathjs checked raster edits, and Three.js checked region grading. Ajv's multipleOf precision option accommodates binary representation of decimal millimetres. The native tests exercise the exact metre conversion and dynamic action validation with the same fixtures. Native execution is tracked by the parent task.

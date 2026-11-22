@@ -1,0 +1,96 @@
+{
+  "source": "actor/41/generation/7/clock/5",
+  "wire": "event/instance-open/lease/9",
+  "currencies": ["items", "copyBytes", "capacityBytes", "releaseBytes", "logicalWork", "vmFuel"],
+  "stock": [12, 600, 1200, 1200, 100, 1000],
+  "cases": [
+    {
+      "name": "denial and resumed Input keep the original donor",
+      "events": [
+        ["issue", 30],
+        ["deny", "actor/41/generation/7/clock/5", "event/instance-open/lease/9"],
+        ["return", 30],
+        ["issue", 31],
+        ["checkout", "actor/41/generation/7/clock/5", "event/instance-open/lease/9", 501],
+        ["spend", "host", [2, 16, 24, 0, 3, 0]],
+        ["spend", "vm", [0, 0, 0, 0, 0, 110]],
+        ["return", 31],
+        ["issue", 32],
+        ["capture", 501],
+        ["receive", 501, [1, 68, 144, 0, 13, 0]],
+        ["acknowledge", 501],
+        ["finish", "output"],
+        ["return", 32]
+      ],
+      "remaining": [9, 516, 1032, 1200, 84, 890]
+    },
+    {
+      "name": "different source preserves actual denied frontier",
+      "events": [
+        ["issue", 30],
+        ["checkout", "actor/41/generation/8/clock/5", "event/instance-open/lease/9", 501]
+      ],
+      "refusalAt": 1,
+      "remaining": [12, 600, 1200, 1200, 100, 1000]
+    },
+    {
+      "name": "same bytes under a different wire lease are refused",
+      "events": [
+        ["issue", 30],
+        ["checkout", "actor/41/generation/7/clock/5", "event/instance-open/lease/10", 501]
+      ],
+      "refusalAt": 1,
+      "remaining": [12, 600, 1200, 1200, 100, 1000]
+    },
+    {
+      "name": "duplicate fixed receipt cannot debit again",
+      "events": [
+        ["issue", 30],
+        ["checkout", "actor/41/generation/7/clock/5", "event/instance-open/lease/9", 501],
+        ["capture", 501],
+        ["receive", 501, [1, 68, 144, 0, 13, 0]],
+        ["acknowledge", 501],
+        ["receive", 501, [1, 68, 144, 0, 13, 0]]
+      ],
+      "refusalAt": 5,
+      "remaining": [11, 532, 1056, 1200, 87, 1000]
+    },
+    {
+      "name": "cancellation receives frozen handback and pays retirement",
+      "events": [
+        ["issue", 30],
+        ["checkout", "actor/41/generation/7/clock/5", "event/instance-open/lease/9", 501],
+        ["spend", "vm", [0, 0, 0, 0, 0, 7]],
+        ["cancel"],
+        ["capture", 501],
+        ["receive", 501, [1, 68, 144, 0, 13, 0]],
+        ["acknowledge", 501],
+        ["spend", "host", [2, 32, 0, 144, 10, 0]],
+        ["finish", "cleanup"],
+        ["return", 30]
+      ],
+      "remaining": [9, 500, 1056, 1056, 77, 993]
+    },
+    {
+      "name": "failure cannot release actor with frozen escrow",
+      "events": [
+        ["issue", 30],
+        ["checkout", "actor/41/generation/7/clock/5", "event/instance-open/lease/9", 501],
+        ["capture", 501],
+        ["fail"],
+        ["finish", "cleanup"]
+      ],
+      "refusalAt": 4,
+      "remaining": [12, 600, 1200, 1200, 100, 1000]
+    },
+    {
+      "name": "VM spend cannot be booked as logical work",
+      "events": [
+        ["issue", 30],
+        ["spend", "vm", [0, 0, 0, 0, 1, 8]]
+      ],
+      "refusalAt": 1,
+      "remaining": [12, 600, 1200, 1200, 100, 1000]
+    }
+  ]
+}

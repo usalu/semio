@@ -7,7 +7,7 @@ The play site of semio-tech (`@semio-tech/semio-tech-play`): every semio app liv
 | `📋️project.json` | the neutral manifest: the targets below, their dependencies, ports, cache flags and dashboard metadata (`build` carries the release job graph) |
 | `📜️script.ts` | the router of `test` (vitest, `🧪️tests/🎚️config/🟦️.ts`) |
 | `🔨️modules/🧩️runtime/` | the pane catalog (`🔣️.json`), `prepare`, `activate`, `serve`, `prepare-test` and `serve-test` (`📜️script.ts`) and the activation reader (`♻️activation`) |
-| `🔨️modules/📦️site/` | the release: `build`, `map-tiles`, `bundle`, `pages`, `verify` (`📜️script.ts`) and the page publication (`📄pages`) |
+| `🔨️modules/📦️site/` | the release: `build`, `map-tiles`, `bundle`, `pages`, `verify`, `export` (`📜️script.ts`) and the page publication (`📄pages`) |
 | `🔨️modules/🧪️e2e/` | the Playwright runner and its configuration (`🎚️config/🟦️.ts`), the release check (`📦️release`) |
 | `🏗️builder/🌐️vite/`, `🟦️.tsx`, `🌐️.html` | the Vite configuration and the browser entry |
 | `🧪️tests/` | unit and law tests, and `🎭️acceptance/🟦️.ts`, the one spec Playwright runs |
@@ -47,6 +47,7 @@ Play needs neither Docker nor a Linux host.
 | `@semio-tech/semio-tech-play:test-e2e-forms`, `test-e2e-standards` | Playwright against an isolated service of one scope (`prepare-<scope>-e2e`, `serve-<scope>-e2e`), each depending only on its own lane or lanes (Standards: the five norm lanes); a scope is a pane variant or a group id (`🧪️tests/🧪️playscopes`) | never | `0` |
 | `@semio-tech/semio-tech-play:test-release` | Playwright against the published release pages served statically, with fresh browser contexts and no dev server | never | |
 | `@semio-tech/semio-tech-play:test-release-routing`, `release-verify` | the language-neutral release path and origin routing contracts; the release gate over the published pages | never | |
+| `@semio-tech/semio-tech-play:release-export` | after `build`, no dependency on it: copies the verified release cohort byte for byte into a plain CDN folder (default `dist/cdn`, or one folder argument after `--`): `play/`, `map/`, `media/`, `modules/`, each the root of its own host, plus `🔣️cohort.json` and `🔣️cdn.json` (hosts, headers, content types, rules: every family at the root of its host, a missing file answers 404, no SPA fallback, no COOP/COEP, upload all four families of one generation together); rechecks every copied file against the cohort digests, refuses on a mismatch, a missing cohort or a non-empty folder, reports progress and stops cleanly on SIGINT/SIGTERM | never | |
 
 The 44 lane tasks are inferred from the playground registry: `prepare-<variant>-react-<profile>` is driver-owned and never cached (the native build driver decides freshness itself), `activate-<variant>-react-<profile>` is cached (`deterministic`) with the outputs `.cache/b/p/m/browser/<profile>/runtime/react/<variant>`. Only `prepare-prototype` and `activate-prototype` of play are cached; `activate-prototype` hashes the sources of the project and of its workspace dependencies without tests (`activationSources`) together with the outputs of its dependencies. Under Bazel a cached target is an action with its declared inputs and outputs and uses Bazel's action cache; a target whose manifest does not allow replay is executed every time.
 
@@ -61,6 +62,7 @@ repo run workspace:deps-browsers                                      # Chromium
 repo run @semio-tech/semio-tech-play:test-e2e                         # serve-e2e, then Playwright; independent of the dev server on 6033
 repo --tool=bazel run @semio-tech/semio-tech-play:serve               # the same chain under Bazel
 repo run @semio-tech/semio-tech-play:build --configuration=release    # the release pages
+repo run @semio-tech/semio-tech-play:release-export -- ./dist/cdn   # the verified pages as a plain CDN folder
 ```
 
 `test-e2e` runs its own server on a free port; the dev server on `6033` does not have to run. Reports land in `dist/reports/e2e/<session id>`, or in `🗑️generated/play-e2e/<session id>` of the ticket named by `SEMIO_TICKET_DIR`.
@@ -114,6 +116,7 @@ Play braucht weder Docker noch einen Linux-Host.
 | `@semio-tech/semio-tech-play:test-e2e-forms`, `test-e2e-standards` | Playwright gegen einen isolierten Dienst eines Bereichs (`prepare-<scope>-e2e`, `serve-<scope>-e2e`), jeder nur von seiner eigenen Lane bzw. seinen eigenen Lanes abhängig (Standards: die fünf Norm-Lanes); ein Bereich ist eine Pane-Variante oder eine Gruppen-ID (`🧪️tests/🧪️playscopes`) | nie | `0` |
 | `@semio-tech/semio-tech-play:test-release` | Playwright gegen die veröffentlichten Release-Seiten, statisch bedient, mit frischen Browser-Kontexten und ohne Dev-Server | nie | |
 | `@semio-tech/semio-tech-play:test-release-routing`, `release-verify` | die sprachneutralen Verträge für Release-Pfad und Origin-Routing; das Release-Tor über den veröffentlichten Seiten | nie | |
+| `@semio-tech/semio-tech-play:release-export` | nach `build`: kopiert die verifizierte Release-Kohorte byte-genau in einen reinen CDN-Ordner (Standard `dist/cdn`, oder ein Ordnerargument nach `--`): `play/`, `map/`, `media/`, `modules/` je ein Host-Stamm, dazu `🔣️cohort.json` und `🔣️cdn.json` (Hosts, Header, Content-Types, Regeln: Familie im Stamm ihres Hosts, fehlende Datei 404, kein SPA-Fallback, kein COOP/COEP, alle vier Familien einer Generation zusammen hochladen); prüft jede Datei nach dem Kopieren gegen die Digests der Kohorte, verweigert bei Abweichung, fehlender Kohorte oder nicht leerem Ordner, meldet Fortschritt, bricht bei SIGINT/SIGTERM sauber ab | nie | |
 
 Die 44 Lane-Tasks werden aus der Playground-Registry abgeleitet: `prepare-<Variante>-react-<Profil>` gehört dem Treiber und ist nie gecacht (der native Build-Treiber entscheidet selbst über Frische), `activate-<Variante>-react-<Profil>` ist gecacht (`deterministic`) mit den Ausgaben `.cache/b/p/m/browser/<Profil>/runtime/react/<Variante>`. Bei Play sind nur `prepare-prototype` und `activate-prototype` gecacht; `activate-prototype` hasht die Quellen des Projekts und seiner Workspace-Abhängigkeiten ohne Tests (`activationSources`) zusammen mit den Ausgaben seiner Abhängigkeiten. Unter Bazel ist ein gecachtes Target eine Aktion mit ihren deklarierten Ein- und Ausgaben und nutzt Bazels Aktions-Cache; ein Target, dessen Manifest keine Wiedergabe erlaubt, wird jedes Mal ausgeführt.
 

@@ -1469,5 +1469,185 @@
         "manifest-count"
       ]
     }
-  ]
+  ],
+  "lateralAmbiguous": {
+    "description": "`lateral-ambiguous` on the side elevation. A flat elevation shape lies in the (u, v) plane of its bone and the rest placement of the rig says where that plane stands, so the rest drawing is exact at any inclination; a pose carries the drawing by A = [u1 v1]·[u0 v0]^-1 (paper projections of the bone axes at rest and now) and a point c beside the plane by c·(w1 - A·w0) more. `lean` is the largest length of that vector over the poses (sin of the tilt for a bone resting in the paper, 1 for a plane resting edge-on), `thetaDeg` the largest tilt of the plane against the paper; the paper error is min(extent of the shape, largest |w| of the body solids of the bone at that scale)·lean·1000/denominator and is a finding above the 0.2 mm print minimum. Hand values: the arm hangs (u down, v ahead, w left); resting 12 degrees out and swung 25 degrees about its own axis, w1 - A·w0 = (tan 12°·sin 25°, sin 12°·(1 - cos 25°)) = (0.089831, 0.019480), length 0.091918; the capsule shape is 0.6 + 0.04365 + 0.03395 = 0.6776 m long and the capsule solid reaches 0.04365 m beside the plane (the tessellated solid at most that).",
+    "bone": "arm-l",
+    "extentM": 0.6776,
+    "reachM": 0.04365,
+    "beside": [
+      {
+        "op": "add",
+        "path": "/rig/bones/id=arm-l/z",
+        "value": 0.225
+      },
+      {
+        "op": "replace",
+        "path": "/volumes/50/body/id=arm-l/p0",
+        "value": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "op": "replace",
+        "path": "/volumes/50/body/id=arm-l/p1",
+        "value": [
+          0.6,
+          0,
+          0
+        ]
+      },
+      {
+        "op": "replace",
+        "path": "/volumes/100/body/id=arm-l/p0",
+        "value": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "op": "replace",
+        "path": "/volumes/100/body/id=arm-l/p1",
+        "value": [
+          0.6,
+          0,
+          0
+        ]
+      },
+      {
+        "op": "replace",
+        "path": "/volumes/200/body/id=arm-l/p0",
+        "value": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "op": "replace",
+        "path": "/volumes/200/body/id=arm-l/p1",
+        "value": [
+          0.6,
+          0,
+          0
+        ]
+      },
+      {
+        "op": "replace",
+        "path": "/volumes/500/body/id=arm-l/p0",
+        "value": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "op": "replace",
+        "path": "/volumes/500/body/id=arm-l/p1",
+        "value": [
+          0.6,
+          0,
+          0
+        ]
+      }
+    ],
+    "cases": [
+      {
+        "name": "an arm resting 12 degrees out of the paper and swung about its own inclined axis is placed by the rig (the scapula of the rig note)",
+        "patch": [
+          {
+            "op": "add",
+            "path": "/rig/bones/id=arm-l/abductionDeg",
+            "value": 12
+          }
+        ],
+        "thetaDeg": 12,
+        "lean": 0.091918,
+        "findings": []
+      },
+      {
+        "name": "the same arm without a 3D model at 1:50 is ambiguous there: nothing bounds how far the part stands beside its plate",
+        "patch": [
+          {
+            "op": "add",
+            "path": "/rig/bones/id=arm-l/abductionDeg",
+            "value": 12
+          },
+          {
+            "op": "replace",
+            "path": "/volumes/50",
+            "value": {
+              "status": "unavailable",
+              "denominator": 50
+            }
+          }
+        ],
+        "thetaDeg": 12,
+        "lean": 0.091918,
+        "findings": [
+          {
+            "bone": "arm-l",
+            "bands": [
+              "1:50 elevation"
+            ],
+            "thetaMaxDeg": 12,
+            "errorMm": 1.246
+          }
+        ]
+      },
+      {
+        "name": "an arm resting edge-on cannot be drawn flat at all",
+        "patch": [
+          {
+            "op": "add",
+            "path": "/rig/bones/id=arm-l/abductionDeg",
+            "value": 90
+          }
+        ],
+        "thetaDeg": 90,
+        "lean": 1,
+        "findings": [
+          {
+            "bone": "arm-l",
+            "bands": [
+              "1:50 elevation",
+              "1:100 elevation",
+              "1:200 elevation"
+            ],
+            "thetaMaxDeg": 90,
+            "reachLimited": 0.873
+          }
+        ]
+      },
+      {
+        "name": "an arm resting in the paper and spread 30 degrees by a pose leaves its flat shape by sin 30 of the reach of its solid",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/poses/id=carry-bag/bones/arm-l",
+            "value": {
+              "angleDeg": 6,
+              "abductionDeg": 30
+            }
+          }
+        ],
+        "thetaDeg": 30,
+        "lean": 0.5,
+        "findings": [
+          {
+            "bone": "arm-l",
+            "bands": [
+              "1:50 elevation",
+              "1:100 elevation"
+            ],
+            "thetaMaxDeg": 30.38,
+            "note": "the largest tilt over the three views: the plan drawing turns by acos(cos 5°·cos 30°) = 30.38° (pelvis 2 - torso 3 + arm 6 degrees in the plane, then the spread)"
+          }
+        ]
+      }
+    ]
+  }
 }

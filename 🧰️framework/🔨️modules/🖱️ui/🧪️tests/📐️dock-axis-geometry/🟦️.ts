@@ -53,14 +53,14 @@ describe("📐️ dock axis geometry", () => {
 
   test("React moves a percentage-weighted split by the physical pointer delta", () => {
     const oracle = fixture.resizeOracle;
-    const children = oracle.beforeWeights.map((size, index) => ({ kind: "stack" as const, children: [{ kind: "window" as const, id: `window-${index}` }], size }));
-    const layout = { kind: "row" as const, children };
+    const children = oracle.beforeWeights.map((size, index) => ({ kind: "stack" as const, children: [{ kind: "window" as const, windowKindId: `window-${index}` }], size: size / 100 }));
+    const layout = { kind: "split" as const, axis: "horizontal" as const, children };
     const deltaPercent = (oracle.deltaPixels / oracle.axisExtentPixels) * 100;
-    const resized = applyAxisResizeDelta(layout, "", oracle.separatorIndex, deltaPercent, oracle.minimumPercent);
-    expect(resized.kind).toBe("row");
-    if (resized.kind !== "row") throw new Error("resize oracle must remain a row");
-    const actualWeights = resized.children.map((child) => child.size ?? Number.NaN);
-    expect(actualWeights).toEqual(oracle.afterWeights);
+    const resized = applyAxisResizeDelta(layout, [], oracle.separatorIndex, deltaPercent, oracle.minimumPercent);
+    expect(resized.kind).toBe("split");
+    if (resized.kind !== "split") throw new Error("resize oracle must remain a split");
+    const actualWeights = resized.children.map((child) => (child.size ?? Number.NaN) * 100);
+    actualWeights.forEach((weight, index) => expect(weight).toBeCloseTo(oracle.afterWeights[index]!, 9));
     const beforeSeparator = (oracle.beforeWeights[0]! / oracle.beforeWeights.reduce((sum, weight) => sum + weight, 0)) * oracle.axisExtentPixels;
     const afterSeparator = (actualWeights[0]! / actualWeights.reduce((sum, weight) => sum + weight, 0)) * oracle.axisExtentPixels;
     expect(afterSeparator - beforeSeparator).toBeCloseTo(oracle.expectedSeparatorDeltaPixels, 6);

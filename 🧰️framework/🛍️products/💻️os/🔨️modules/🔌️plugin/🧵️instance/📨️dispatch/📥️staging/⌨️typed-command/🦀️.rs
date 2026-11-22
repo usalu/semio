@@ -49,7 +49,6 @@ impl<'ctx, A: ArtifactApp, M: store::ReferenceSpaceMember + MemberFactory + 'sta
         let admission=source.admission.as_ref().ok_or_else(||plugin_sdk_fault("typed source has no exact admitted wire"))?;
         self.media.require_complete_tool_operation_pipeline(admission)?;
         let command=source.command.as_ref().ok_or_else(||plugin_sdk_fault("typed source has no original command"))?;
-        Self::resolve_typed_window_transient_target(command.as_ref(), meta)?;
         let verb=A::command_id(command).await;
         if admission.verb!=verb{return Err(plugin_sdk_fault("typed source changed its admitted command identity").into())}
         if let Some(fault)=self.ingest.document_loading_refusal(&*self.tools,verb,X::admitted_while_loading(verb)){return Err(fault.into())}
@@ -73,33 +72,26 @@ impl<'ctx, A: ArtifactApp, M: store::ReferenceSpaceMember + MemberFactory + 'sta
         Ok(None)
     }
 
-    fn resolve_typed_window_transient_target<'a>(command: &'a A::Command, meta: &'a ActionMeta) -> Result<Option<&'a str>, Fault> {
-        let Some((window_id, expected_kind)) = A::retained_window_transient_target(command, meta.view_state.as_deref())? else {
-            return Ok(None);
-        };
-        let view = meta.view_state.as_deref().ok_or_else(|| plugin_sdk_fault("targeted window transient capture requires an exact ViewModel roster"))?;
-        let window = view.window_instances.iter().find(|window| window.id == window_id).ok_or_else(|| plugin_sdk_fault("targeted window transient capture requires an attached window instance"))?;
-        if window.window_kind_id != expected_kind {
-            return Err(plugin_sdk_fault("targeted window transient capture does not match the command owner's expected window kind"));
-        }
-        Ok(Some(window_id))
-    }
-
-    /// 📸️ Captures the same command roots for worker mount and addressed-action preview.
+    /// 📸️ The roots one typed command runs against, captured once and identically for the shell lane
+    /// that mounts the operation ([`Self::start_typed_command_operation`]) and for the agent lane's prepare
+    /// phase that only previews it ([`Self::preview_addressed_action`]) — so the two lanes can never run
+    /// the same verb against different state.
     pub async fn capture_typed_command_roots(&mut self, command: &A::Command, meta: &ActionMeta) -> Result<TypedCommandRoots<A>, Fault> {
-        let target = Self::resolve_typed_window_transient_target(command, meta)?;
-        self.capture_typed_command_roots_for_window(meta, target).await
-    }
-
-    async fn capture_typed_command_roots_for_window(&mut self, meta: &ActionMeta, target: Option<&str>) -> Result<TypedCommandRoots<A>, Fault> {
         self.as_render().refresh_cache().await?;
         let (snapshot, config, history) = self.history.command_cache_inputs();
         let canonical_base_revision = self.stores.store.content_revision();
         let window_config_authority = self.stores.window_config_store.capture(meta.view_state.as_deref()).await?;
-        let targeted_window_transient_view = target.map(|window_id| {
-            meta.view_state.as_deref().and_then(|view| view.for_window_instance(window_id))
-                .ok_or_else(|| plugin_sdk_fault("targeted window transient capture lost its attached window instance"))
-        }).transpose()?;
+        let targeted_window_transient_view = match A::retained_window_transient_target(command, meta.view_state.as_deref())? {
+            Some((window_id, expected_kind)) => {
+                let view = meta.view_state.as_deref().ok_or_else(|| plugin_sdk_fault("targeted window transient capture requires an exact ViewModel roster"))?;
+                let window = view.window_instances.iter().find(|window| window.id == window_id).ok_or_else(|| plugin_sdk_fault("targeted window transient capture requires an attached window instance"))?;
+                if window.window_kind_id != expected_kind {
+                    return Err(plugin_sdk_fault("targeted window transient capture does not match the command owner's expected window kind"));
+                }
+                Some(view.for_window_instance(window_id).ok_or_else(|| plugin_sdk_fault("targeted window transient capture lost its attached window instance"))?)
+            }
+            None => None,
+        };
         let window_transient_authority = self.stores.window_transient_store.capture(targeted_window_transient_view.as_ref().or(meta.view_state.as_deref()))?;
         Ok(TypedCommandRoots {
             snapshot,
@@ -142,8 +134,6 @@ impl<'ctx, A: ArtifactApp, M: store::ReferenceSpaceMember + MemberFactory + 'sta
         assert!(self.tools.tool_operations.can_insert(operation_id.0), "typed worker handoff retains its exact empty operation slot");
         assert_eq!(self.tools.typed_operation_reservations[operation_id.0 as usize % ARTIFACT_LIVE_OUTPUT_SLOTS], Some(operation_id.0), "worker handoff owns its exact pending reservation");
         if !pending.admission.as_ref().is_some_and(|admission|matches!(&admission.proof,QualifiedToolProof::AppOwned(_))){return Err(plugin_sdk_fault("typed worker handoff requires its exact registered application producer"));}
-        let command = pending.command.as_ref().ok_or_else(|| plugin_sdk_fault("typed mount lost its original command"))?;
-        let target = Self::resolve_typed_window_transient_target(command.as_ref(), meta)?;
         if pending.children.is_none(){
             *pending.children=crate::original_emission::admit_child_content(&self.child_composition.child_content_root,cx).map_err(|_|plugin_sdk_fault("typed mount child content capture was refused"))?;
             pending.children_generation=self.child_composition.child_content_generation;
@@ -156,6 +146,11 @@ impl<'ctx, A: ArtifactApp, M: store::ReferenceSpaceMember + MemberFactory + 'sta
         let (gesture,gesture_progress)=admitted?;
         cx.consume_retained(gesture_progress).map_err(FaultFrom::into_fault)?;
         cx.consume_fuel(u64::try_from(performed).unwrap_or(u64::MAX));
+        let command=pending.command.take().ok_or_else(||plugin_sdk_fault("typed mount lost its original command"))?;
+        let admission=pending.admission.take().ok_or_else(||plugin_sdk_fault("typed mount lost its exact admitted wire"))?;
+        let cancellation_lease=pending.lease.take().ok_or_else(||plugin_sdk_fault("typed mount lost its cancellation lease"))?;
+        let captured_children=pending.children.take().ok_or_else(||plugin_sdk_fault("typed mount lost its captured child content"))?;
+        let verb = admission.verb.clone();
         let TypedCommandRoots {
             snapshot,
             config,
@@ -176,12 +171,7 @@ impl<'ctx, A: ArtifactApp, M: store::ReferenceSpaceMember + MemberFactory + 'sta
             transient_generation,
             window_config_authority,
             window_transient_authority,
-        } = self.capture_typed_command_roots_for_window(meta, target).await?;
-        let command=pending.command.take().ok_or_else(||plugin_sdk_fault("typed mount lost its original command"))?;
-        let admission=pending.admission.take().ok_or_else(||plugin_sdk_fault("typed mount lost its exact admitted wire"))?;
-        let cancellation_lease=pending.lease.take().ok_or_else(||plugin_sdk_fault("typed mount lost its cancellation lease"))?;
-        let captured_children=pending.children.take().ok_or_else(||plugin_sdk_fault("typed mount lost its captured child content"))?;
-        let verb = admission.verb.clone();
+        } = self.capture_typed_command_roots(command.as_ref(), meta).await?;
         let parent_document_id = self.stores.store.envelope().id.clone();
         let seed_handle = artifact_handle_of(&format!("{}/{}/{verb}/{}", meta.instance_id, self.tools.tool_controller_id(), base_revision.0)).await;
         let operation = semio_framework_job::Operation::new(operation_id, base_revision, generation, (seed_handle.0 as u64) ^ ((seed_handle.0 >> 64) as u64));
@@ -308,7 +298,7 @@ impl<'ctx, A: ArtifactApp, M: store::ReferenceSpaceMember + MemberFactory + 'sta
                 publication_ownership_progress: None,
                 original_retirement_receipt:None,
                 actor_capture: None,actor_capture_pending:semio_plugin_mounted_owner::actor_capture::ActorCapture::new(),
-                publication_attempt: 0,
+                publication_stall_streak: 0,
                 ui_pending: false,
                 progress: None,
                 progress_pending: false,

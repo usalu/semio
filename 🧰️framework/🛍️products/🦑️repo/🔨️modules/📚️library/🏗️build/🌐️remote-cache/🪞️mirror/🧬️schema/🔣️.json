@@ -14,7 +14,6 @@
         "upstreamIdleMilliseconds": 30000,
         "lowWaterPercent": 90,
         "pruneIntervalSeconds": 60,
-        "maximumMetadataBytes": 67108864,
         "probePath": "/mirror/healthz",
         "probeTimeoutMilliseconds": 1500,
         "stateTtlSeconds": 60,

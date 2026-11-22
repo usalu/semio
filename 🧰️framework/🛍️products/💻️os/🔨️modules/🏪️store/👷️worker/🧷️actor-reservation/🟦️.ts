@@ -95,6 +95,7 @@ export class DocumentBrowserActorReservation {
   suspendLink(): boolean { return this.hub.link.suspendLink(); }
   adoptGrant(grant: DocumentBrowserActorGrant): void { return this.hub.link.adoptGrant(grant); }
   resumeLink(socket: WebSocket): boolean { return this.hub.link.resumeLink(socket); }
+  readDocumentArchive(current: () => boolean) { return this.hub.snapshots.readArchive(current); }
   readSnapshotHead(control: import("./📖️snapshot-read/🟦️.ts").SnapshotPackControl): Promise<Uint8Array> { return this.hub.snapshots.readHead(control); }
   readSnapshotCheckpoint(id:string,control:import("./📖️snapshot-read/🟦️.ts").SnapshotPackControl):Promise<Uint8Array>{return this.hub.snapshots.readSelection(control,id); }
   close(): void { return this.hub.retirement.close(); }

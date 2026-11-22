@@ -71,7 +71,7 @@ fn session_shell() -> ShellState {
 }
 
 /// 🖌️ Walks the band's retained step to completion and answers the hits it staged.
-fn paint_band(shell: &mut ShellState) -> Vec<HitTarget<ActionDescriptor>> {
+fn paint_band(mut shell: &mut ShellState) -> Vec<HitTarget<ActionDescriptor>> {
     let mut cursor = ShellChromeChildCursor::default();
     let (mut overlay, mut atlas, mut input, theme) = (DrawList::default(), FontAtlas::builtin(), InputState::<ActionDescriptor>::default(), Theme::light());
     for _ in 0..100_000 {
@@ -111,7 +111,7 @@ fn dispatched() -> Vec<String> {
 
 /// 🎨️ Paints `document` in `surface` to completion with the stepped paint every retained body uses, then registers and
 /// publishes its hits, so the surface's accessibility projection is the one the mirror reads; answers the staged input.
-fn paint_retained_body(shell: &mut ShellState, surface: &str, document: &UiDocumentLease, body: Rect) -> InputState<ActionDescriptor> {
+fn paint_retained_body(mut shell: &mut ShellState, surface: &str, document: &UiDocumentLease, body: Rect) -> InputState<ActionDescriptor> {
     let mut caller=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
     let (mut draw, mut atlas, icons, theme) = (DrawList::default(), FontAtlas::builtin(), IconAtlas::default(), Theme::default());
     let mut input = InputState::<ActionDescriptor>::default();

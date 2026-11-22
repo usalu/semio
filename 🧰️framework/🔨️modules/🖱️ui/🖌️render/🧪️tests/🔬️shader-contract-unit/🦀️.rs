@@ -190,6 +190,8 @@ fn world3d_wgsl_is_byte_identical_in_the_wgpu_target_and_the_shader_contract() {
     assert_eq!(target, WORLD3D_SHADER, "WORLD3D_SHADER drifted between 🎯️targets/🧊️wgpu/🖍️draw/🎨️shaders and ✨️shader-contract");
     let target_lines = wgpu_target_const("WORLD3D_LINES_SHADER").expect("wgpu target declares WORLD3D_LINES_SHADER as a raw string const");
     assert_eq!(target_lines, WORLD3D_LINES_SHADER, "WORLD3D_LINES_SHADER drifted between 🎯️targets/🧊️wgpu/🖍️draw/🎨️shaders and ✨️shader-contract");
+    let target_points = wgpu_target_const("WORLD3D_POINTS_SHADER").expect("wgpu target declares WORLD3D_POINTS_SHADER as a raw string const");
+    assert_eq!(target_points, WORLD3D_POINTS_SHADER, "WORLD3D_POINTS_SHADER drifted between 🎯️targets/🧊️wgpu/🖍️draw/🎨️shaders and ✨️shader-contract");
     let target_grid = wgpu_target_const("WORLD3D_GRID_SHADER").expect("wgpu target declares WORLD3D_GRID_SHADER as a raw string const");
     assert_eq!(target_grid, WORLD3D_GRID_SHADER, "WORLD3D_GRID_SHADER drifted between 🎯️targets/🧊️wgpu/🖍️draw/🎨️shaders and ✨️shader-contract");
     let target_textured = wgpu_target_const("WORLD3D_TEXTURED_SHADER").expect("wgpu target declares WORLD3D_TEXTURED_SHADER as a raw string const");
@@ -348,7 +350,7 @@ fn world3d_wgpu_shadow_consumer_matches_current_three_pcf() {
 
 #[test]
 fn every_world3d_wgsl_variant_parses_and_validates_with_naga() {
-    for (label, name, canonical) in [("mesh", "WORLD3D_SHADER", WORLD3D_SHADER), ("lines", "WORLD3D_LINES_SHADER", WORLD3D_LINES_SHADER), ("textured", "WORLD3D_TEXTURED_SHADER", WORLD3D_TEXTURED_SHADER)] {
+    for (label, name, canonical) in [("mesh", "WORLD3D_SHADER", WORLD3D_SHADER), ("lines", "WORLD3D_LINES_SHADER", WORLD3D_LINES_SHADER), ("textured", "WORLD3D_TEXTURED_SHADER", WORLD3D_TEXTURED_SHADER), ("points", "WORLD3D_POINTS_SHADER", WORLD3D_POINTS_SHADER)] {
         let target = wgpu_target_const(name).unwrap_or_else(|| panic!("wgpu target is missing {name}"));
         for (owner, source) in [("contract", canonical), ("target", target.as_str())] {
             let module = naga::front::wgsl::parse_str(source).unwrap_or_else(|error| panic!("{owner} {label} WGSL parse failed: {error}"));
@@ -360,5 +362,25 @@ fn every_world3d_wgsl_variant_parses_and_validates_with_naga() {
     naga::valid::Validator::new(naga::valid::ValidationFlags::all(), naga::valid::Capabilities::all())
         .validate(&module)
         .unwrap_or_else(|error| panic!("target World postprocess WGSL validation failed: {error}"));
+    let group = wgpu_target_const("GROUP_COMPOSITE_SHADER").expect("wgpu target is missing GROUP_COMPOSITE_SHADER");
+    let module = naga::front::wgsl::parse_str(&group).unwrap_or_else(|error| panic!("target group composite WGSL parse failed: {error}"));
+    naga::valid::Validator::new(naga::valid::ValidationFlags::all(), naga::valid::Capabilities::all())
+        .validate(&module)
+        .unwrap_or_else(|error| panic!("target group composite WGSL validation failed: {error}"));
+    assert!(group.contains("* group_globals.alpha.x") && !group.contains("world3d_output_transform"), "the group composite scales premultiplied output by the group alpha and is not tone mapped");
 }
 //#endregion ⚖️WgpuTargetShaderAgreement
+
+//#region 🎞️BorderPhaseClocks
+#[test]
+fn the_border_phase_clocks_and_introduced_pulse_match_the_chrome_motion_fixture() {
+    let fixture = include_str!("../../../🎨️styling/🧪️tests/🧫️fixtures/🎞️chrome-motion/🔣️.json");
+    for (kind, token, seconds) in [("kind == 6", "loadingBorderDurationSeconds", "1.6"), ("kind == 7", "waitingBorderDurationSeconds", "3.2"), ("kind == 9", "introducedBorderDurationSeconds", "1.6")] {
+        assert!(fixture.contains(&format!("\"{token}\": {seconds}")), "{token}");
+        let branch = &UI_SHADER[UI_SHADER.find(&format!("if ({kind})")).unwrap()..];
+        assert!(branch.contains(&format!("let duration = {seconds};")), "{kind}");
+    }
+    let introduced = &UI_SHADER[UI_SHADER.find("if (kind == 9)").unwrap()..];
+    assert!(introduced.contains("let pulse = 0.85 + 0.15 * cos(two_pi * phase);"), "introduced-border-pulse is opacity 1 -> 0.7 -> 1");
+}
+//#endregion 🎞️BorderPhaseClocks

@@ -1,0 +1,8 @@
+machinery/excavator
+machinery/wheel-loader
+machinery/forklift
+machinery/concrete-mixer-truck
+machinery/scissor-lift
+machinery/tower-crane
+machinery/oil-pumpjack
+machinery/diesel-generator

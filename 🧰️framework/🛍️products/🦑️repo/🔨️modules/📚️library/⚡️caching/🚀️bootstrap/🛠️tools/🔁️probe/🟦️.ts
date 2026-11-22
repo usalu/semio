@@ -1,7 +1,8 @@
 import{machinePathV1}from"../../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import {readFileSync} from "node:fs";
-import {join} from "node:path";
+import {basename,dirname,join} from "node:path";
 import {openNxSdkV1} from "../🔌️sdk/🟦️.ts";
+import {newestNxAuthorizerBundleV1} from "../🔏️authorizers/📦️bundle/🟦️.ts";
 import type {CacheProbeInputV1,CacheProbeToolV1} from "../../../../📦️packages/🟦️typescript/🏗️build/⚙️operations/🟦️.ts";
 
 /** 🧭️ Maps one neutral probe input onto its Nx `inputs` spelling. */
@@ -28,6 +29,7 @@ export function nxCacheProbeV1(repositoryRoot:string):CacheProbeToolV1{
    const nx:Record<string,string|undefined>={...environment,NX_DAEMON:"false",NX_ISOLATE_PLUGINS:"false",NX_TUI:"false",NX_NATIVE_COMMAND_RUNNER:"false",NX_WORKSPACE_DATA_DIRECTORY:join(fixture,".nx","workspace-data")};
    for(const key of Object.keys(nx))if(key.startsWith("NX_TASK_")||["NX_SKIP_NX_CACHE","NX_SKIP_REMOTE_CACHE"].includes(key))delete nx[key];
    delete nx.NX_FORCE_REUSE_CACHED_GRAPH;
+   const generation=dirname(dirname(sdk.packageDirectory())),bundle=nx.SEMIO_NX_AUTHORIZER_ROOT??newestNxAuthorizerBundleV1(dirname(dirname(generation)),basename(generation));if(bundle!==undefined)nx.SEMIO_NX_AUTHORIZER_ROOT=bundle;
    return {command:"node",arguments:[sdk.cli(),"run",`${specification.project}:${task}`,"--output-style=static"],environment:nx};
   }
  });

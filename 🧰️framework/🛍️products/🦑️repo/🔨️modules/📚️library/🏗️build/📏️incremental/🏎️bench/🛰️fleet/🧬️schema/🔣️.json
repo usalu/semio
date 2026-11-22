@@ -1,0 +1,252 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Fleet Probes of the Bench",
+  "description": "The single-machine probes that measure the fleet as one machine: the hit ratio of a warm second workspace, output identity of one unit built in two directories, offload under forced local pressure and its fallback, and the capacity gates of a simulated 16 GB host. The same document drives the runner, the validators of every language and the oracle.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    }
+  },
+  "definitions": {
+    "Policy": {
+      "const": {
+        "version": 1,
+        "id": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$",
+        "metrics": [
+          "hitRatio",
+          "executedActions",
+          "divergentWrites",
+          "offloadMs",
+          "fallbackMs",
+          "offloadedUnits",
+          "capacityBreaches",
+          "reservedBytes",
+          "storeBytes",
+          "firstTaskMs",
+          "readyRatio",
+          "wallMs"
+        ],
+        "units": 6,
+        "controls": 2,
+        "failedMilliseconds": 600000,
+        "scenarioTimeoutSeconds": 600,
+        "host": {
+          "totalMegabytes": 16384,
+          "cores": 8,
+          "freeDiskBytes": 60129542144,
+          "freeFractions": [
+            0.5,
+            0.75
+          ],
+          "requests": 4,
+          "operation": "cargo",
+          "diskSharePercent": 90,
+          "mebibyte": 1048576
+        },
+        "offload": {
+          "wallTimeoutMilliseconds": 240000,
+          "workers": 1
+        },
+        "fallback": {
+          "wallTimeoutMilliseconds": 240000,
+          "deadEndpoint": "grpc://127.0.0.1:1"
+        },
+        "live": {
+          "statusTimeoutMilliseconds": 15000,
+          "unitTimeoutMilliseconds": 240000,
+          "nxTimeoutMilliseconds": 240000,
+          "bazelTimeoutMilliseconds": 240000,
+          "offloadTimeoutMilliseconds": 240000,
+          "runTarget": "@teaching/proctor:build",
+          "runTimeoutMilliseconds": 240000
+        },
+        "ready": {
+          "origins": "/Users/Shared/semio-store/v1/origins",
+          "maximumAgeMilliseconds": 600000
+        }
+      }
+    },
+    "Id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$"
+    },
+    "LocalizedText": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "en",
+        "de"
+      ],
+      "properties": {
+        "en": {
+          "type": "string",
+          "minLength": 1
+        },
+        "de": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "Metric": {
+      "enum": [
+        "hitRatio",
+        "executedActions",
+        "divergentWrites",
+        "offloadMs",
+        "fallbackMs",
+        "offloadedUnits",
+        "capacityBreaches",
+        "reservedBytes",
+        "storeBytes",
+        "firstTaskMs",
+        "readyRatio",
+        "wallMs"
+      ]
+    },
+    "Scenario": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "title",
+        "metrics"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/Id"
+        },
+        "title": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "metrics": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/definitions/Metric"
+          }
+        },
+        "optional": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/definitions/Metric"
+          }
+        }
+      }
+    },
+    "Scenarios": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "scenarios"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "scenarios": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/Scenario"
+          }
+        }
+      }
+    },
+    "Values": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "hitRatio": {
+          "type": "number",
+          "minimum": 0
+        },
+        "executedActions": {
+          "type": "number",
+          "minimum": 0
+        },
+        "divergentWrites": {
+          "type": "number",
+          "minimum": 0
+        },
+        "offloadMs": {
+          "type": "number",
+          "minimum": 0
+        },
+        "fallbackMs": {
+          "type": "number",
+          "minimum": 0
+        },
+        "offloadedUnits": {
+          "type": "number",
+          "minimum": 0
+        },
+        "capacityBreaches": {
+          "type": "number",
+          "minimum": 0
+        },
+        "reservedBytes": {
+          "type": "number",
+          "minimum": 0
+        },
+        "storeBytes": {
+          "type": "number",
+          "minimum": 0
+        },
+        "firstTaskMs": {
+          "type": "number",
+          "minimum": 0
+        },
+        "readyRatio": {
+          "type": "number",
+          "minimum": 0
+        },
+        "wallMs": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "Outcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "scenario",
+        "values"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "scenario": {
+          "$ref": "#/definitions/Id"
+        },
+        "values": {
+          "$ref": "#/definitions/Values"
+        }
+      }
+    },
+    "Fixture": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "version"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        }
+      }
+    }
+  }
+}

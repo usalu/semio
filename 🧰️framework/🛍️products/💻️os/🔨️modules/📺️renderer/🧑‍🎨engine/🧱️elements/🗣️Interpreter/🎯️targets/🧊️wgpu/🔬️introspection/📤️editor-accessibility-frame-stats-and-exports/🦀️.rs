@@ -8,10 +8,10 @@ pub struct TextEditorAccessibilityEntry {
     pub scene_node: NodeId,
     pub host_id: String,
     pub key: String,
-    label: String,
-    depth: usize,
-    rect: Rect,
-    value: String,
+    pub label: String,
+    pub depth: usize,
+    pub rect: Rect,
+    pub value: String,
     read_only: bool,
 }
 
@@ -86,13 +86,13 @@ fn append_text_editor_accessibility_nodes(window_id: &str, tree: &semio_ui_retai
             multiline: true,
             controls: None,
             active_descendant: None,
-            level: None,
+            level: None, multiselectable: false,
             rect: Some([entry.rect.x, entry.rect.y, entry.rect.w, entry.rect.h]),
             value_min: None,
             value_max: None,
             value_now: None,
             value_text: Some(entry.value),
-            busy: false,
+            busy: false, sort: None,
         });
     }
 }
@@ -124,10 +124,14 @@ pub fn build_accessibility_dump(engine: &semio_ui_wgpu_engine::Ui, requested: Op
                 append_table_button_accessibility_nodes(tree, &mut nodes);
                 append_vfs_accessibility_nodes(&window_id, tree, &mut nodes);
                 append_block_list_accessibility_nodes(tree, &mut nodes);
+                append_map_unavailable_accessibility_nodes(tree, &mut nodes);
                 append_event_feed_accessibility_nodes(tree, &mut nodes);
                 append_world3d_accessibility_nodes(tree, &mut nodes);
                 append_graph_timeline_accessibility_nodes(tree, &mut nodes);
                 append_text_editor_accessibility_nodes(&window_id, tree, &mut nodes);
+            }
+            if let Some(modal) = engine.modal_overlay_document_id(&window_id) {
+                semio_ui_wgpu_hosting::accessibility::hide_outside_modal(&mut nodes, modal.0);
             }
             let window_generation = engine.surface_generation(&window_id).unwrap_or_default();
             DumpAccessibilityWindow { window_id, window_generation, nodes }
@@ -183,7 +187,7 @@ pub fn build_frame_stats(engine: &semio_ui_wgpu_engine::Ui, requested: Option<&s
         }
     }
     let scene_passes = draw.scene_passes.len();
-    let scene_draws = draw.scene_passes.iter().map(|pass| pass.draws.len() + pass.translucent_draws.len() + pass.material_draws.len() + pass.textured_draws.len() + pass.line_draws.len()).sum();
+    let scene_draws = draw.scene_passes.iter().map(|pass| pass.draws.len() + pass.translucent_draws.len() + pass.material_draws.len() + pass.textured_draws.len() + pass.line_draws.len() + pass.point_draws.len()).sum();
     let scene_instances = draw
         .scene_passes
         .iter()

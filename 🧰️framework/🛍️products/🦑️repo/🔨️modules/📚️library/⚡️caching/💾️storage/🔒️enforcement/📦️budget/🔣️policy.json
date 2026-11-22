@@ -6,7 +6,7 @@
     "graph": {
       "needBytes": 3221225472,
       "headroomPercent": 300,
-      "hostFreeReservePercent": 50,
+      "hostFreeReservePercent": 92,
       "alignBytes": 1073741824,
       "automatic": true,
       "pressureFreeBytes": 1073741824,
@@ -19,7 +19,7 @@
     "products": {
       "needBytes": 22548578304,
       "headroomPercent": 50,
-      "hostFreeReservePercent": 50,
+      "hostFreeReservePercent": 88,
       "alignBytes": 1073741824,
       "automatic": true,
       "pressureFreeBytes": 2147483648,
@@ -32,7 +32,7 @@
     "rust": {
       "needBytes": 34359738368,
       "headroomPercent": 25,
-      "hostFreeReservePercent": 50,
+      "hostFreeReservePercent": 66,
       "alignBytes": 1073741824,
       "automatic": true,
       "pressureFreeBytes": 6442450944,
@@ -57,7 +57,8 @@
     "tools": {
       "directory": ".cache/b/t",
       "capacityBytes": 8589934592,
-      "maximumLogicalBytes": 68719476736
+      "maximumLogicalBytes": 8588886016,
+      "hostSharePercent": 10
     },
     "graph": {
       "directory": ".cache/b/g",
@@ -67,7 +68,8 @@
     "dependencies": {
       "directory": ".cache/b/d",
       "capacityBytes": 38654705664,
-      "maximumLogicalBytes": 38653657088
+      "maximumLogicalBytes": 38653657088,
+      "hostSharePercent": 20
     },
     "products": {
       "directory": ".cache/b/p",
@@ -77,18 +79,21 @@
     "diagnostics": {
       "directory": ".cache/b/o",
       "capacityBytes": 2147483648,
-      "maximumLogicalBytes": 2146435072
+      "maximumLogicalBytes": 2146435072,
+      "hostSharePercent": 2
     },
     "nx": {
       "directory": ".cache/b/n",
       "capacityBytes": 1610612736,
       "maximumArtifactBytes": 536870912,
-      "maximumLogicalBytes": 1609564160
+      "maximumLogicalBytes": 1609564160,
+      "hostSharePercent": 3
     },
     "leases": {
       "directory": ".cache/b/l",
       "capacityBytes": 67108864,
-      "maximumLogicalBytes": 62914560
+      "maximumLogicalBytes": 62914560,
+      "hostSharePercent": 1
     }
   }
 }

@@ -14,6 +14,26 @@ use crate::editor::puzzle5d::entities::{Puzzle5dFastener, Puzzle5dGrip, Puzzle5d
 use semio_framework_job::StepContext;
 use crate::editor::puzzle5d::interaction::{Puzzle5dCommand, puzzle5d_notice_emit};
 
+fn patch_output_demand(count: usize) -> semio_framework_value::RetirementDemand {
+    let count = count.min(crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS);
+    semio_framework_value::RetirementDemand { capacity_bytes: count * size_of::<Puzzle5dMutation>(), depth: 1, ..Default::default() }
+}
+
+fn patch_output_buffer(demand: semio_framework_value::RetirementDemand, scope: &mut semio_framework_action_bus::OriginalToolConstructionScope<'_>) -> Result<(Vec<Puzzle5dMutation>, semio_framework_value::RetainedCloneProgress), semio_framework_value::ValueError> {
+    scope.admit_owner(demand)?;
+    let mutations = Vec::with_capacity(demand.capacity_bytes / size_of::<Puzzle5dMutation>());
+    let retained_capacity_bytes = mutations.capacity() * size_of::<Puzzle5dMutation>();
+    Ok((mutations, semio_framework_value::RetainedCloneProgress { retained_capacity_bytes, ..Default::default() }))
+}
+
+fn append_patch(mutations: &mut Vec<Puzzle5dMutation>, mutation: Puzzle5dMutation) -> Result<(), Fault> {
+    if mutations.len() == mutations.capacity() {
+        return Err(Fault::from("puzzle5d-patch-output-capacity"));
+    }
+    mutations.push(mutation);
+    Ok(())
+}
+
 //#region 🔖️PlayApp
 //#region 🧵️RetainedCommands
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -50,19 +70,15 @@ impl Default for Puzzle5dPatchPartWork {
 }
 
 impl Puzzle5dPatchPartWork {
-    /// 🪙️ The original construction quote owns the exact typed mutation buffer.
-    pub fn original_birth_demands() -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        let capacity = (crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS as usize).checked_mul(size_of::<Puzzle5dMutation>())
-            .ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "Puzzle5D Puzzle5dPatchPartWork backing extent overflow"))?;
-        Ok(semio_framework_value::RetirementDemand { capacity_bytes: capacity, depth: 1, ..Default::default() })
+    /// 🪙️ The original output buffer has one slot per admitted target.
+    pub fn original_birth_demands(command: &Puzzle5dCommand) -> semio_framework_value::RetirementDemand {
+        patch_output_demand(Self::source_len(command))
     }
 
     /// 🏭️ Original scope custody precedes allocation and receives the actual native capacity.
-    pub fn from_original_construction(scope: &mut semio_framework_action_bus::OriginalToolConstructionScope<'_>) -> Result<(Self, semio_framework_value::RetainedCloneProgress), semio_framework_value::ValueError> {
-        scope.admit_owner(Self::original_birth_demands()?)?;
-        let work = Self { mutations: Vec::with_capacity(crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS), ..Self::default() };
-        let capacity = work.mutations.capacity() * size_of::<Puzzle5dMutation>();
-        Ok((work, semio_framework_value::RetainedCloneProgress { retained_capacity_bytes: capacity, ..Default::default() }))
+    pub fn from_original_construction(command: &Puzzle5dCommand, scope: &mut semio_framework_action_bus::OriginalToolConstructionScope<'_>) -> Result<(Self, semio_framework_value::RetainedCloneProgress), semio_framework_value::ValueError> {
+        let (mutations, progress) = patch_output_buffer(Self::original_birth_demands(command), scope)?;
+        Ok((Self { mutations, ..Self::default() }, progress))
     }
 
     fn targets(&self, command: &Puzzle5dCommand, id: &str) -> bool {
@@ -122,7 +138,7 @@ impl<A: Puzzle5dEditor> semio_plugin::retained_command::ArtifactCommandWork<Edit
 
     fn extent(&self, command: &Puzzle5dCommand, snapshot: &Puzzle5dPlaySnapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<A>>>) -> Option<usize> {
         let projection = puzzle5d_editor_projection(snapshot);
-        let items = Self::source_len(command).checked_add(projection.get("parts").and_then(Value::as_array).map_or(0, Vec::len))?;
+        let items = Self::source_len(command).checked_add(projection.get("parts").and_then(Value::as_array).map_or(0, Vec::len))?.max(1);
         (items <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS).then_some(items)
     }
 
@@ -160,7 +176,7 @@ impl<A: Puzzle5dEditor> semio_plugin::retained_command::ArtifactCommandWork<Edit
                 let part: Puzzle5dPart = puzzle5d_record_from_projection(row).map_err(|_| Fault::from("puzzle5d-patch-part-malformed"))?;
                 if self.targets(command, &part.id) {
                     if let Some(mutation) = Self::mutation(command, &part) {
-                        self.mutations.push(mutation);
+                        append_patch(&mut self.mutations, mutation)?;
                     }
                 }
                 Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-patch-part", "Patching part", "Teil wird geändert"))
@@ -237,19 +253,15 @@ impl Default for Puzzle5dPatchFastenerWork {
 }
 
 impl Puzzle5dPatchFastenerWork {
-    /// 🪙️ The original construction quote owns the exact typed mutation buffer.
-    pub fn original_birth_demands() -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        let capacity = (crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS as usize).checked_mul(size_of::<Puzzle5dMutation>())
-            .ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "Puzzle5D Puzzle5dPatchFastenerWork backing extent overflow"))?;
-        Ok(semio_framework_value::RetirementDemand { capacity_bytes: capacity, depth: 1, ..Default::default() })
+    /// 🪙️ The original output buffer has one slot per admitted target.
+    pub fn original_birth_demands(command: &Puzzle5dCommand) -> semio_framework_value::RetirementDemand {
+        patch_output_demand(Self::source_len(command))
     }
 
     /// 🏭️ Original scope custody precedes allocation and receives the actual native capacity.
-    pub fn from_original_construction(scope: &mut semio_framework_action_bus::OriginalToolConstructionScope<'_>) -> Result<(Self, semio_framework_value::RetainedCloneProgress), semio_framework_value::ValueError> {
-        scope.admit_owner(Self::original_birth_demands()?)?;
-        let work = Self { mutations: Vec::with_capacity(crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS), ..Self::default() };
-        let capacity = work.mutations.capacity() * size_of::<Puzzle5dMutation>();
-        Ok((work, semio_framework_value::RetainedCloneProgress { retained_capacity_bytes: capacity, ..Default::default() }))
+    pub fn from_original_construction(command: &Puzzle5dCommand, scope: &mut semio_framework_action_bus::OriginalToolConstructionScope<'_>) -> Result<(Self, semio_framework_value::RetainedCloneProgress), semio_framework_value::ValueError> {
+        let (mutations, progress) = patch_output_buffer(Self::original_birth_demands(command), scope)?;
+        Ok((Self { mutations, ..Self::default() }, progress))
     }
 
     fn targets(&self, command: &Puzzle5dCommand, id: &str) -> bool {
@@ -302,7 +314,7 @@ impl<A: Puzzle5dEditor> semio_plugin::retained_command::ArtifactCommandWork<Edit
 
     fn extent(&self, command: &Puzzle5dCommand, snapshot: &Puzzle5dPlaySnapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<A>>>) -> Option<usize> {
         let projection = puzzle5d_editor_projection(snapshot);
-        let items = Self::source_len(command).checked_add(projection.get("fasteners").and_then(Value::as_array).map_or(0, Vec::len))?;
+        let items = Self::source_len(command).checked_add(projection.get("fasteners").and_then(Value::as_array).map_or(0, Vec::len))?.max(1);
         (items <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS).then_some(items)
     }
 
@@ -336,7 +348,7 @@ impl<A: Puzzle5dEditor> semio_plugin::retained_command::ArtifactCommandWork<Edit
                 let fastener: Puzzle5dFastener = puzzle5d_record_from_projection(row).map_err(|_| Fault::from("puzzle5d-patch-fastener-malformed"))?;
                 if self.targets(command, &fastener.id) {
                     if let Some(mutation) = Self::mutation(command, &fastener) {
-                        self.mutations.push(mutation);
+                        append_patch(&mut self.mutations, mutation)?;
                     }
                 }
                 Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-patch-fastener", "Patching fastener", "Verbindung wird geändert"))
@@ -417,19 +429,15 @@ impl Default for Puzzle5dPatchGripWork {
 }
 
 impl Puzzle5dPatchGripWork {
-    /// 🪙️ The original construction quote owns the exact typed mutation buffer.
-    pub fn original_birth_demands() -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        let capacity = (crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS as usize).checked_mul(size_of::<Puzzle5dMutation>())
-            .ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "Puzzle5D Puzzle5dPatchGripWork backing extent overflow"))?;
-        Ok(semio_framework_value::RetirementDemand { capacity_bytes: capacity, depth: 1, ..Default::default() })
+    /// 🪙️ The original output buffer has one slot per admitted target.
+    pub fn original_birth_demands(command: &Puzzle5dCommand) -> semio_framework_value::RetirementDemand {
+        patch_output_demand(Self::source_len(command))
     }
 
     /// 🏭️ Original scope custody precedes allocation and receives the actual native capacity.
-    pub fn from_original_construction(scope: &mut semio_framework_action_bus::OriginalToolConstructionScope<'_>) -> Result<(Self, semio_framework_value::RetainedCloneProgress), semio_framework_value::ValueError> {
-        scope.admit_owner(Self::original_birth_demands()?)?;
-        let work = Self { mutations: Vec::with_capacity(crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS), ..Self::default() };
-        let capacity = work.mutations.capacity() * size_of::<Puzzle5dMutation>();
-        Ok((work, semio_framework_value::RetainedCloneProgress { retained_capacity_bytes: capacity, ..Default::default() }))
+    pub fn from_original_construction(command: &Puzzle5dCommand, scope: &mut semio_framework_action_bus::OriginalToolConstructionScope<'_>) -> Result<(Self, semio_framework_value::RetainedCloneProgress), semio_framework_value::ValueError> {
+        let (mutations, progress) = patch_output_buffer(Self::original_birth_demands(command), scope)?;
+        Ok((Self { mutations, ..Self::default() }, progress))
     }
 
     fn targets(&self, command: &Puzzle5dCommand, part: &str, grip: &str) -> bool {
@@ -499,7 +507,7 @@ impl<A: Puzzle5dEditor> semio_plugin::retained_command::ArtifactCommandWork<Edit
 
     fn extent(&self, command: &Puzzle5dCommand, snapshot: &Puzzle5dPlaySnapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<A>>>) -> Option<usize> {
         let projection = puzzle5d_editor_projection(snapshot);
-        let items = Self::source_len(command).checked_add(projection.get("parts").and_then(Value::as_array).map_or(0, Vec::len))?;
+        let items = Self::source_len(command).checked_add(projection.get("parts").and_then(Value::as_array).map_or(0, Vec::len))?.max(1);
         (items <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS).then_some(items)
     }
 
@@ -543,7 +551,8 @@ impl<A: Puzzle5dEditor> semio_plugin::retained_command::ArtifactCommandWork<Edit
                 let mut grip: crate::standards::v1::subsets::any::schema::document_records::Puzzle5dGrip = <crate::standards::v1::subsets::any::schema::document_records::Puzzle5dGrip as FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&grip_value)).map_err(|_| Fault::from("puzzle5d-patch-grip-malformed"))?;
                 if self.targets(command, part_id, &grip.id) && Self::patch(command, &mut grip) {
                     let grip_id = grip.id.clone();
-                    self.mutations.push(crate::standards::v1::subsets::any::schema::mutations::replace_part_grip(part_id.to_string(), grip_id, grip));
+                    let mutation = crate::standards::v1::subsets::any::schema::mutations::replace_part_grip(part_id.to_string(), grip_id, grip);
+                    append_patch(&mut self.mutations, mutation)?;
                 }
                 Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-patch-grip", "Patching grip", "Griff wird geändert"))
             }

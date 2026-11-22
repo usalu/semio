@@ -1,6 +1,7 @@
 import{machinePathV1}from"../../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import{createIssuedResourceControlV1,requireIssuedResourceControlInvocationV1}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import{withNxSdkDerivativeReaderV1}from"../📦️sdk/📥️source/🔗️derivative/📥️reader/🟦️.ts";
+import{nxAuthorizerBundlePolicyV1,nxAuthorizerBundleToolkitV1}from"../🔏️authorizers/📦️bundle/🟦️.ts";
 import {repositoryCachePartitionRootV1} from "../../../../📦️packages/🟦️typescript/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
 import {withRepositoryToolingStoreV1} from "../../../../📦️packages/🟦️typescript/💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
 import {callerRepositoryRootV1} from "../../../../📦️packages/🟦️typescript/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
@@ -16,18 +17,18 @@ import {validateJsonSchemaSubset} from "../../../../../../../../🔨️modules/�
 import witnessSchema from "./🧬️schema/📥️witness.json" with {type:"json"};
 
 export type NxToolingUseStorageV1={readonly directory:string;readonly witnessDirectory:string};
-export type NxToolingUseAuthorityV1={readonly identity:string;readonly toolkitRoot:string;readonly invocation:ScriptInvocation;readonly reader?:(token:string)=>Promise<object|undefined>};
+export type NxToolingUseAuthorityV1={readonly identity:string;readonly toolkitRoot:string;readonly authorizer?:string;readonly invocation:ScriptInvocation;readonly reader?:(token:string)=>Promise<object|undefined>};
 export type NxToolingUseWitnessV1={readonly version:1;readonly identity:string;readonly toolkitRoot:string;readonly processId:number;readonly nonce:string;readonly startedAt:number;readonly original:ScriptProcessEnvelope;readonly endpoint:{readonly host:"127.0.0.1";readonly port:number}};
 
 /** 🗂️ Names the shared physical toolkit lifetime namespace for one workspace. */
 export function nxToolingUseStorageV1(root:string):NxToolingUseStorageV1{return {directory:machinePathV1(root,".cache/b/l/m/data"),witnessDirectory:join(repositoryCachePartitionRootV1(root,"tools"),"use")};}
 
-/** 🎟️ Keeps one exact immutable toolkit in use through its original owned operation. */
+/** 🎟️ Keeps one exact immutable toolkit, and the authorizer bundle that runs beside it, in use through its original owned operation. */
 export async function withNxToolingUseV1<T>(storage:NxToolingUseStorageV1,authority:NxToolingUseAuthorityV1,phaseControl:ResourceLeaseControl,run:(witness:NxToolingUseWitnessV1,actualPhase:ResourceLeaseControl)=>Promise<T>):Promise<T>{
  const {identity,invocation}=authority,toolkitRoot=resolve(authority.toolkitRoot),control=phaseControl;requireIssuedResourceControlInvocationV1(control,invocation);checkResourceLeaseControl(control);
- if(!/^[a-f0-9]{64}$/u.test(identity)||!isAbsolute(authority.toolkitRoot)||basename(toolkitRoot)!==identity||realpathSync(toolkitRoot)!==toolkitRoot||JSON.parse(readFileSync(join(toolkitRoot,".semio-nx-tooling.json"),"utf8")).digest!==identity)throw Error("Exact loaded immutable toolkit receipt required");
+ if(!/^[a-f0-9]{64}$/u.test(identity)||authority.authorizer!==undefined&&!/^[a-f0-9]{64}$/u.test(authority.authorizer)||!isAbsolute(authority.toolkitRoot)||basename(toolkitRoot)!==identity||realpathSync(toolkitRoot)!==toolkitRoot||JSON.parse(readFileSync(join(toolkitRoot,".semio-nx-tooling.json"),"utf8")).digest!==identity)throw Error("Exact loaded immutable toolkit receipt required");
  const directory=requireMaterializedPathV1(storage.witnessDirectory),nonce=randomUUID(),path=requireMaterializedPathV1(join(directory,nonce+".json"));
- return withResourceLeases({directory:storage.directory,signal:control.signal,control,resources:[{resource:"nx-tooling:"+identity,mode:"shared"}]},async()=>{const root=callerRepositoryRootV1(invocation.capabilities);return withRepositoryToolingStoreV1(root,invocation,control,(store,actualPhase)=>withNxSdkDerivativeReaderV1(root,store,toolkitRoot,identity,actualPhase,async()=>{
+ return withResourceLeases({directory:storage.directory,signal:control.signal,control,resources:[{resource:"nx-tooling:"+identity,mode:"shared"},...(authority.authorizer===undefined?[]:[{resource:nxAuthorizerBundlePolicyV1.lease+authority.authorizer,mode:"shared" as const}])]},async()=>{const root=callerRepositoryRootV1(invocation.capabilities);return withRepositoryToolingStoreV1(root,invocation,control,(store,actualPhase)=>withNxSdkDerivativeReaderV1(root,store,toolkitRoot,identity,actualPhase,async()=>{
   const sockets=new Set<Socket>();let witness:NxToolingUseWitnessV1|undefined,active=false;
   const server=createServer({allowHalfOpen:true},socket=>{
    sockets.add(socket);socket.once("close",()=>sockets.delete(socket));socket.on("error",()=>{});socket.setTimeout(10000,()=>socket.destroy());let input="";
@@ -47,10 +48,10 @@ export async function withNxToolingUseV1<T>(storage:NxToolingUseStorageV1,author
  }));});
 }
 
-/** 🧷️ The actual immutable module owns its independent process use until the original task body closes. */
+/** 🧷️ The actual immutable module owns its independent process use, of its own bundle directory and of the dependency generation beside it, until the original task body closes. */
 export async function withNxLoadedToolingUseV1<T>(environment:Readonly<Record<string,string|undefined>>,run:()=>Promise<T>):Promise<T>{
- const toolkitRoot=dirname(fileURLToPath(import.meta.url)),identity=basename(toolkitRoot);
- return receiveScriptProcessInvocation(environment,original=>{const root=callerRepositoryRootV1(original.capabilities);return withRepositoryToolingStoreV1(root,original,createIssuedResourceControlV1(original,"cache:entry",0),(_store,actualPhase)=>withNxToolingUseV1(nxToolingUseStorageV1(root),{identity,toolkitRoot,invocation:original},actualPhase,async()=>{
+ const{identity,toolkitRoot,authorizer}=nxAuthorizerBundleToolkitV1(dirname(fileURLToPath(import.meta.url)));
+ return receiveScriptProcessInvocation(environment,original=>{const root=callerRepositoryRootV1(original.capabilities);return withRepositoryToolingStoreV1(root,original,createIssuedResourceControlV1(original,"cache:entry",0),(_store,actualPhase)=>withNxToolingUseV1(nxToolingUseStorageV1(root),{identity,toolkitRoot,authorizer,invocation:original},actualPhase,async()=>{
   const key="SEMIO_NX_TASK_USE_OWNER_PID",previous=process.env[key];process.env[key]=String(process.pid);
   try{return await run()}finally{if(previous===undefined)delete process.env[key];else process.env[key]=previous;}
  }));});

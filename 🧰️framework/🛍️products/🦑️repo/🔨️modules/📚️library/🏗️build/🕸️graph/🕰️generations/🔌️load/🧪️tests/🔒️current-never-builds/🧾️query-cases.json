@@ -1,0 +1,15 @@
+{
+  "targets": ["build"],
+  "cases": [
+    {"name":"current-projects","args":["show","projects","--graph-policy=current","--json"],"environment":{},"pinned":false},
+    {"name":"current-targets","args":["show","targets","--graph-policy=current","--json"],"environment":{},"pinned":false},
+    {"name":"current-graph","args":["graph","--graph-policy=current","--json"],"environment":{},"pinned":false},
+    {"name":"current-targets-with-verify","args":["show","targets","--graph-policy=current","--json"],"environment":{"SEMIO_BUILD_GRAPH_VERIFY":"1"},"pinned":false},
+    {"name":"implicit-current","args":["show","projects","--json"],"environment":{},"pinned":false},
+    {"name":"explicit-current-from-environment","args":["show","projects","--json"],"environment":{"SEMIO_BUILD_GRAPH_POLICY":"current"},"pinned":false},
+    {"name":"explicit-fresh","args":["show","projects","--graph-policy=fresh","--json"],"environment":{},"pinned":false},
+    {"name":"reused","args":["show","projects","--graph-policy=current","--json"],"environment":{"SEMIO_BUILD_REUSE_GRAPH":"true"},"pinned":false},
+    {"name":"pinned","args":["show","targets","--graph-policy=current","--json"],"environment":{},"pinned":true},
+    {"name":"graph-with-verify","args":["graph","--graph-policy=current","--json"],"environment":{"SEMIO_BUILD_GRAPH_VERIFY":"1"},"pinned":false}
+  ]
+}

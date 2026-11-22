@@ -9,11 +9,12 @@ use semio_framework_pack_json::{JsonMemberPolicy, Value};
 pub struct JackEngine {
     graph: BoardQueryableGraph,
     loaded: bool,
+    manifests: std::collections::BTreeMap<String, GraphManifest>,
 }
 
 impl Default for JackEngine {
     fn default() -> Self {
-        Self { graph: BoardQueryableGraph::from_host_snapshot_json("{}", None).expect("an empty snapshot is a valid graph"), loaded: false }
+        Self { graph: BoardQueryableGraph::from_host_snapshot_json("{}", None).expect("an empty snapshot is a valid graph"), loaded: false, manifests: Default::default() }
     }
 }
 
@@ -29,19 +30,15 @@ fn kinds(manifest: &Value, list: &str) -> Result<Vec<KindDef>, String> {
         .collect()
 }
 
-/// 📜️ The kinds a Jack snapshot declares, as the graph manifest the shared language service checks queries against.
-fn graph_manifest(raw: &Value) -> Result<Option<GraphManifest>, String> {
-    let Some(manifest) = raw.get("manifest").filter(|row| !row.is_null()) else { return Ok(None) };
+/// 📜️ The graph manifest of one interned manifest definition: its kinds under the id every snapshot names it by.
+fn graph_manifest(id: &str, manifest: &Value) -> Result<GraphManifest, String> {
     if manifest.as_object().is_none() {
         return Err("invalid snapshot manifest: an object is required".to_string());
     }
-    let id = manifest.get("id").or_else(|| raw.get("manifestId")).and_then(Value::as_str).unwrap_or("snapshot").to_string();
-    let schema = manifest.get("schema").and_then(Value::as_str).unwrap_or("s.trinity.manifest").to_string();
-    let name = manifest.get("name").and_then(Value::as_str).unwrap_or(&id).to_string();
-    Ok(Some(GraphManifest {
-        schema,
-        id,
-        name,
+    Ok(GraphManifest {
+        schema: "s.trinity.manifest".to_string(),
+        id: id.to_string(),
+        name: id.to_string(),
         axes: Default::default(),
         node_kinds: kinds(manifest, "nodeKinds")?,
         edge_kinds: kinds(manifest, "edgeKinds")?,
@@ -55,14 +52,27 @@ fn graph_manifest(raw: &Value) -> Result<Option<GraphManifest>, String> {
         descriptor_kinds: Vec::new(),
         edge_tips: Vec::new(),
         kind_compatibility: Vec::new(),
-    }))
+    })
 }
 
 impl JackEngine {
-    /// 📸️ Replaces the graph with the manifest kinds, nodes and edges of one Jack snapshot document.
+    /// 🪪️ Interns one manifest definition under its id once; every snapshot then names it by `manifestId` and carries no copy.
+    pub fn register_manifest(&mut self, id: &str, json: &str) -> Result<(), String> {
+        let raw = semio_framework_pack_json::parse(json, JsonMemberPolicy::Reject).map_err(|error| format!("invalid manifest json: {error}"))?;
+        self.manifests.insert(id.to_string(), graph_manifest(id, &raw)?);
+        Ok(())
+    }
+
+    /// 📸️ Replaces the graph with the nodes and edges of one Jack snapshot document, checked against the interned manifest its `manifestId` names.
     pub fn load_snapshot(&mut self, json: &str) -> Result<(), String> {
         let raw = semio_framework_pack_json::parse(json, JsonMemberPolicy::Reject).map_err(|error| format!("invalid snapshot json: {error}"))?;
-        let manifest = graph_manifest(&raw)?;
+        let manifest = match raw.get("manifestId").filter(|row| !row.is_null()) {
+            None => None,
+            Some(id) => {
+                let id = id.as_str().ok_or_else(|| "invalid snapshot manifest: manifestId must be text".to_string())?;
+                Some(self.manifests.get(id).cloned().ok_or_else(|| format!("unknown manifest id {id}"))?)
+            }
+        };
         self.graph = BoardQueryableGraph::from_host_snapshot_json(json, manifest).map_err(|error| error.to_string())?;
         self.loaded = true;
         Ok(())

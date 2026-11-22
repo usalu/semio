@@ -564,16 +564,6 @@ initialUtilityId?: UtilityRef,
  */
 interactions: Array<InteractionRef>, paramsSchema?: string, artifactSnapshotSchema?: string, inputEventSchema?: string, outputSchema?: string, capabilities: Array<CapabilityRequirement>, };"####,
         },
-        SchemaMetadata { name: "WindowLayout", version: 1, typescript: r####"export type WindowLayout = { root: WindowLayoutRoot, };"#### },
-        SchemaMetadata { name: "WindowLayoutAxisNode", version: 1, typescript: r####"export type WindowLayoutAxisNode = { kind: string, size?: number, children: Array<WindowLayoutChild>, };"#### },
-        SchemaMetadata { name: "WindowLayoutChild", version: 1, typescript: r####"export type WindowLayoutChild = WindowLayoutAxisNode | WindowLayoutStackNode;"#### },
-        SchemaMetadata { name: "WindowLayoutRoot", version: 1, typescript: r####"export type WindowLayoutRoot = WindowLayoutAxisNode | WindowLayoutStackNode;"#### },
-        SchemaMetadata { name: "WindowLayoutStackNode", version: 1, typescript: r####"export type WindowLayoutStackNode = { kind: string, size?: number, activeWindowKindId?: string, children: Array<WindowLayoutWindowNode>, };"#### },
-        SchemaMetadata {
-            name: "WindowLayoutWindowNode",
-            version: 1,
-            typescript: r####"export type WindowLayoutWindowNode = { kind: string, windowKindId: string, title?: string, instanceId?: string, templateId?: string, corner?: WindowStackCorner, };"####,
-        },
         SchemaMetadata {
             name: "WindowMeasure",
             version: 1,

@@ -62,10 +62,10 @@ fn window_layout_node_tagged_roundtrips() {
         children: vec![
             WindowLayoutNode::Stack {
                 size: Some(0.5),
-                active_window_kind_id: Some("editor".into()),
+                active_window_id: Some("editor".into()),
                 children: vec![WindowLayoutNode::Window { window_kind_id: "editor".into(), title: Some("Editor".into()), instance_id: None, template_id: None, corner: Some(WindowStackCorner::TopRight) }],
             },
-            WindowLayoutNode::Stack { size: None, active_window_kind_id: None, children: vec![] },
+            WindowLayoutNode::Stack { size: None, active_window_id: None, children: vec![] },
         ],
     };
     roundtrip(&tree);
@@ -75,5 +75,5 @@ fn window_layout_node_tagged_roundtrips() {
 
 #[test]
 fn window_layout_roundtrips() {
-    roundtrip(&WindowLayout { root: WindowLayoutNode::Stack { size: None, active_window_kind_id: None, children: vec![] } });
+    roundtrip(&WindowLayout { root: WindowLayoutNode::Stack { size: None, active_window_id: None, children: vec![] } });
 }

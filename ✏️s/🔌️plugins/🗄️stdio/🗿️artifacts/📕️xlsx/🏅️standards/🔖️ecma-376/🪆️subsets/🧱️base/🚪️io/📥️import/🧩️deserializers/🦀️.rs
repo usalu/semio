@@ -46,4 +46,19 @@ pub fn sniff_xlsx_bytes(data: &[u8]) -> bool {
     let path = opc.resolve_relationship("", REL_TYPE_OFFICE_DOCUMENT).or_else(|| opc.resolve_relationship("", REL_TYPE_OFFICE_DOCUMENT_STRICT));
     path.and_then(|path| opc.content_types.resolve(&path)).is_some_and(workbook_media_type_matches)
 }
+/// 🧭️ ECMA-376 subsets told apart by the root namespace of the workbook part: Strict declares `purl.oclc.org/ooxml`, Transitional declares `schemas.openxmlformats.org`.
+const SUBSET_NAMESPACES: [(&str, &str); 2] = [
+    ("strict", "http://purl.oclc.org/ooxml/spreadsheetml/main"),
+    ("transitional", "http://schemas.openxmlformats.org/spreadsheetml/2006/main"),
+];
+
+/// 🧭️ Names the ECMA-376 subset a physical workbook is written in, from the namespace of its main workbook part (`None` for bytes that are no OPC package, have no workbook part or declare neither namespace).
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn sniff_xlsx_subset(data: &[u8]) -> Option<&'static str> {
+    let opc = opc::decode_opc(data).ok()?;
+    let path = opc.resolve_relationship("", REL_TYPE_OFFICE_DOCUMENT).or_else(|| opc.resolve_relationship("", REL_TYPE_OFFICE_DOCUMENT_STRICT))?;
+    let part = opc.parts.iter().find(|part| part.path.trim_start_matches('/') == path.trim_start_matches('/'))?;
+    let head = &part.bytes[..part.bytes.len().min(4096)];
+    SUBSET_NAMESPACES.iter().find(|(_, namespace)| head.windows(namespace.len()).any(|window| window == namespace.as_bytes())).map(|(subset, _)| *subset)
+}
 //#endregion 🔖️Sniff

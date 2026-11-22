@@ -24,9 +24,6 @@
     "referenceMegabytes": 1024,
     "fairnessSlack": 1,
     "defaultWeight": 1,
-    "hostBudgetMegabytes": 12288,
-    "daemonReserveMegabytes": 3072,
-    "systemReserveMegabytes": 2048,
     "availableHeadroomMegabytes": 512,
     "sharedCompilerLanes": {
      "rustc": 2,
@@ -56,9 +53,6 @@
     "referenceMegabytes",
     "fairnessSlack",
     "defaultWeight",
-    "hostBudgetMegabytes",
-    "daemonReserveMegabytes",
-    "systemReserveMegabytes",
     "availableHeadroomMegabytes",
     "sharedCompilerLanes",
     "compactEveryEvents",
@@ -127,18 +121,6 @@
     "defaultWeight": {
      "type": "integer",
      "minimum": 1
-    },
-    "hostBudgetMegabytes": {
-     "type": "integer",
-     "minimum": 1
-    },
-    "daemonReserveMegabytes": {
-     "type": "integer",
-     "minimum": 0
-    },
-    "systemReserveMegabytes": {
-     "type": "integer",
-     "minimum": 0
     },
     "availableHeadroomMegabytes": {
      "type": "integer",
@@ -540,6 +522,10 @@
       "observedPeakMegabytes": {
        "type": "integer",
        "minimum": 0
+      },
+      "reason": {
+       "type": "string",
+       "maxLength": 300
       }
      }
     },
@@ -645,6 +631,10 @@
        "observedPeakMegabytes": {
         "type": "integer",
         "minimum": 0
+       },
+       "reason": {
+        "type": "string",
+        "maxLength": 300
        }
       }
      }

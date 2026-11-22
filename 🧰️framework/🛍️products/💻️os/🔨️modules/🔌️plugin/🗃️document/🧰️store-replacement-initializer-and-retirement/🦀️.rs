@@ -127,12 +127,7 @@ where
             }
 
             let demand=rejected.retirement_demands(grant.maximum_copy_bytes)?;
-            let before = cx.retained_progress();
-            let step = original_rejection_lifecycle(cx,demand,grant,"store initializer rejection awaits its original worker",|cx|{let step=rejected.close_step(cx)?;Ok((step,rejected.terminal_is_empty()))})?;
-            return match step {
-                PluginLifecycleStep::Progress(_) => Ok(PluginLifecycleStep::Progress(semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before, cx.retained_progress())?)),
-                other => Ok(other),
-            };
+            return original_rejection_lifecycle(cx,demand,grant,"store initializer rejection awaits its original worker",|cx|{let step=rejected.close_step(cx)?;Ok((step,rejected.terminal_is_empty()))});
         }
         if self.outcome_pending{
             let before=cx.retained_progress();
@@ -207,17 +202,16 @@ where
                 return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()}));
             }
             use semio_framework_job_worker_authority::WorkerJobCloseStep;
-            let reserved_before = cx.reserved_return_progress();
+            let before = cx.retained_progress();
             let step = session.close_step(cx)?;
             let progress = step.progress();
             if !progress.fits(grant) || matches!(step, WorkerJobCloseStep::Complete { .. }) && !session.terminal_is_empty() {
                 return Err(ValueError::invariant("store initializer retirement violated its phase grant or terminal witness").with_retained_progress(progress).into());
             }
             return Ok(match step {
-                WorkerJobCloseStep::Pending { .. } | WorkerJobCloseStep::Complete { .. } => {
-                    let reserved = semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(reserved_before, cx.reserved_return_progress())?;
-                    PluginLifecycleStep::Progress(progress.checked_add(reserved)?)
-                }
+                WorkerJobCloseStep::Pending { .. } | WorkerJobCloseStep::Complete { .. } => PluginLifecycleStep::Progress(
+                    semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before, cx.retained_progress())?,
+                ),
                 WorkerJobCloseStep::Blocked => PluginLifecycleStep::AwaitingInput { reason: "store initializer original terminal worker remains contended" },
             });
         }

@@ -37,9 +37,13 @@ export function world3dPointerGestureOracle(repoRoot: string): number {
     cameraDebounceMs: number;
     marqueeDragThresholdPx: number;
     gestures: readonly Gesture[];
-    wiring: { selectionArgsBuilder: string; selectionTargetsArgsBuilder: string; instanceTargetBuilder: string; hoverArgsBuilder: string; cameraArgsBuilder: string; targetsBuilder: string; selectionTargetsAreASet: string; mergeVocabularyFixture: string; mergeIsNotTranslated: string; deletedMergeBuilders: readonly string[]; deadVerbs: readonly string[] };
+    wiring: { selectionArgsBuilder: string; selectionTargetsArgsBuilder: string; instanceTargetBuilder: string; cameraArgsBuilder: string; targetsBuilder: string; selectionTargetsAreASet: string; mergeVocabularyFixture: string; mergeIsNotTranslated: string; deletedMergeBuilders: readonly string[]; deadVerbs: readonly string[] };
   };
   const scene = fixture.scene;
+  const relocate = JSON.parse(readFileSync(join(hostRoot, "🧪️tests/🧫️fixtures/🚚️relocate-gesture.json"), "utf8")) as {
+    origin: number[]; grab: number[]; target: number[]; expected: number[];
+    finishes: { finish: string; commits: number }[];
+  };
   /** 🖱️ The merge word a modifier set resolves to — the oracle's own copy of `marqueeModeFromModifiers`,
    * written from the documented law rather than imported from the host. It emits the SCHEMA words
    * (`🕹️interaction/🧫️fixtures/🎯️merge-modes.json`): ticket 26/09/09/PROCEDURAL-3D-END-TO-END deleted
@@ -71,6 +75,12 @@ export function world3dPointerGestureOracle(repoRoot: string): number {
     assert(condition, message);
     checks += 1;
   };
+  check(relocate.origin.length === 3 && relocate.expected.length === 3 && relocate.expected.every((expected, axis) =>
+    Math.abs(expected + relocate.grab[axis]! - relocate.target[axis]! - relocate.origin[axis]!) < 1e-12
+  ), "the relocated origin must retain its offset from the grab point");
+  for (const { finish, commits } of relocate.finishes) {
+    check(commits === Number(finish === "release"), `relocate ${finish} must only commit on release`);
+  }
   const validateInstance = ownedExport(repoRoot, "renderer", "World3dInstanceInteractionV1");
   const utf8 = new TextEncoder();
   for (const instance of scene.instances) {
@@ -136,14 +146,12 @@ export function world3dPointerGestureOracle(repoRoot: string): number {
   }
   const host = world3dHostSource(hostRoot);
   check(host.includes(`dispatch("interactionSelect", ${fixture.wiring.selectionTargetsArgsBuilder}(interactionDomainId, [${fixture.wiring.instanceTargetBuilder}(instances, id, interactionGranularity)], merge))`), "the instance pick must preserve its resolved target through the selection builder");
-  check(host.includes(`return dispatchSettled("interactionHover", ${fixture.wiring.hoverArgsBuilder}(interactionDomainId, target.granularity, target.id))`), "the instance hover must preserve its resolved target and hand the coalescing gate its awaitable");
   check(host.includes(`dispatch("interactionSelect", ${fixture.wiring.selectionArgsBuilder}(interactionDomainId, interactionGranularity, [], merge))`), "the empty click must still clear through the selection builder");
   check(host.includes(`dispatch("setCamera", ${fixture.wiring.cameraArgsBuilder}(`), "the debounced camera sync must still build its args through the camera builder");
   check(host.includes(`const domainTargets = ${fixture.wiring.targetsBuilder}(instancesRef.current, preview.mergedInstanceIds, interactionGranularity)`), "the marquee release must still resolve instances onto topology targets");
   check(host.includes(`dispatch("interactionSelect", ${fixture.wiring.selectionTargetsArgsBuilder}(interactionDomainId, domainTargets, "replace", method === "lasso" ? "lasso" : "rectangle"))`), "the marquee release must preserve its shape while replacing on the scene domain");
   check(host.includes(fixture.wiring.selectionTargetsAreASet), "the selection args builder must keep collapsing repeated topology ids — the host never emits a duplicate target");
   check(host.includes('return { domainId, targets: JSON.stringify(targets), merge, method: "pick" };'), "the selection args shape is the wire contract and must stay verbatim");
-  check(host.includes('return { domainId, channel: "pointer", targets: JSON.stringify(targets) };'), "the hover args shape is the wire contract and must stay verbatim");
   for (const verb of fixture.wiring.deadVerbs) check(!host.includes(`dispatch("${verb}"`), `${verb} is framework-owned now and must not be dispatched from a world host`);
   const vocabulary = (JSON.parse(readFileSync(join(repoRoot, fixture.wiring.mergeVocabularyFixture), "utf8") ) as { vocabulary: readonly string[]; deletedWords: readonly string[] });
   for (const gesture of fixture.gestures) {

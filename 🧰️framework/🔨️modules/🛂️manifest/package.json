@@ -31,7 +31,8 @@
   },
   "dependencies": {
     "@semio-tech/framework-effect": "workspace:*",
-    "@semio-tech/framework-onboarding": "workspace:*"
+    "@semio-tech/framework-onboarding": "workspace:*",
+    "@semio-tech/ui-layout": "workspace:*"
   },
   "license": "LGPL-3.0-or-later",
   "bundleKind": "library",

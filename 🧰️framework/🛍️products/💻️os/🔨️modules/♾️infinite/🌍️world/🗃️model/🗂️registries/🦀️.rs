@@ -788,6 +788,20 @@ pub struct WorldSubElementPaint {
     pub vertex_mark_px: Option<f32>,
 }
 
+/// 🚫️ Why one scene mesh was refused instead of published.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum WorldMeshRefusalReason {
+    /// Vertices without indices, edges or topological vertex ids: the mesh authority admits no unlabelled point mesh, so such points belong in the `pointsJson` lane.
+    UnlabelledPointsOnly,
+}
+
+/// 🚫️ A typed refusal naming the refused scene mesh.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct WorldMeshRefusal {
+    pub mesh_id: String,
+    pub reason: WorldMeshRefusalReason,
+}
+
 /// 🧩️ World3d session component: surface identity, bounds, domain binding, utilities and presentation of one 3D surface.
 pub struct WorldSessionState {
 
@@ -831,6 +845,9 @@ pub struct WorldSessionState {
 
     pub snapshot_fault: Option<World3dSnapshotFault>,
 
+    /// 🚫️ Meshes the last scene parse refused, each named with its typed reason; replaced on every parse and never silent.
+    pub mesh_refusals: Vec<WorldMeshRefusal>,
+
     pub modelling_locale: &'static str,
 }
 
@@ -868,6 +885,7 @@ impl WorldSessionState {
             presentation: World3dPresentation::default(),
             interaction_revision: 0,
             snapshot_fault: None,
+            mesh_refusals: Vec::new(),
             modelling_locale: "en",
         }
     }

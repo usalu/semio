@@ -36,6 +36,7 @@ pub struct PrismDraft {
     normal: NativeVec3,
     vector: NativeVec3,
     plane: Option<Frame3>,
+    placement: Option<Frame3>,
     phase: DraftPhase,
 }
 
@@ -50,6 +51,10 @@ fn unsupported() -> ValueError {
 impl BrepRegistry {
     /// 🌱️ Starts a bound, allocation-free extrusion recipe from one planar face.
     pub fn plan_prism(&self, source: &str, vector: EVec3) -> Result<Option<PrismDraft>, ValueError> {
+        self.plan_prism_with_placement(source, vector, None)
+    }
+
+    pub(super) fn plan_prism_with_placement(&self, source: &str, vector: EVec3, placement: Option<Frame3>) -> Result<Option<PrismDraft>, ValueError> {
         let (source, plane) = match self.original_query_entity(source)? {
             Entity::Face(id) => {
                 let face = self.body.faces.get(*id).ok_or_else(invalid)?;
@@ -59,7 +64,7 @@ impl BrepRegistry {
                 let first = self.body.loops.get(ring).ok_or_else(invalid)?.first;
                 (Source::Face { id: *id, ring, first, current: first }, Some(*frame))
             }
-            Entity::Wire(wire, label) if wire.closed && (3..=MAX_CORNERS).contains(&wire.members.len()) => {
+            Entity::Wire(wire, label) if placement.is_none() && wire.closed && (3..=MAX_CORNERS).contains(&wire.members.len()) => {
                 (Source::Wire { label: *label, edges: wire.members.len() }, None)
             }
             _ => return Ok(None),
@@ -67,13 +72,13 @@ impl BrepRegistry {
         let vector = vec3(vector);
         if !vector.x.is_finite() || !vector.y.is_finite() || !vector.z.is_finite()
             || vector.norm() <= Tol::DEFAULT.value()
-            || plane.is_some_and(|frame| frame.z.dot(vector).abs() <= Tol::DEFAULT.value()) {
+            || placement.or(plane).is_some_and(|frame| frame.z.dot(vector).abs() <= Tol::DEFAULT.value()) {
             return Err(invalid());
         }
         Ok(Some(PrismDraft {
             owner: std::ptr::from_ref(self) as usize, revision: self.shape_mutation_revision, source,
             expected_vertex: None, first_vertex: None, corners: [ZERO; MAX_CORNERS], count: 0, normal: NativeVec3::ZERO,
-            vector, plane, phase: DraftPhase::Gather,
+            vector, plane, placement, phase: DraftPhase::Gather,
         }))
     }
 
@@ -159,8 +164,12 @@ impl BrepRegistry {
         if !matches!(self.body.curves3.get(edge.curve), Some(Curve3::Line { .. })) { return Err(unsupported()); }
         let (start, end) = if forward { (edge.v0, edge.v1) } else { (edge.v1, edge.v0) };
         if draft.expected_vertex.is_some_and(|expected| start != expected) { return Err(invalid()); }
-        let a = self.body.vertices.get(start).ok_or_else(invalid)?.position;
-        let b = self.body.vertices.get(end).ok_or_else(invalid)?.position;
+        let point = |id| self.body.vertices.get(id).map(|vertex| vertex.position).ok_or_else(invalid);
+        let (mut a, mut b) = (point(start)?, point(end)?);
+        if let Some((from, to)) = draft.plane.zip(draft.placement) {
+            a = to.to_world(from.to_local(a));
+            b = to.to_world(from.to_local(b));
+        }
         let tol = Tol::DEFAULT.value();
         if (a-b).norm() <= tol || (b-a).cross(draft.vector).normalized().is_none()
             || [a, b, a+draft.vector, b+draft.vector].into_iter().any(|point| [point.x,point.y,point.z].into_iter().any(|value| !value.is_finite())) {

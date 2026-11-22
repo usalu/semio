@@ -1,6 +1,6 @@
 import {createHash} from "node:crypto";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
-import {validateJsonSchemaSubset} from "../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
+import {compileJsonSchemaSubset,type CompiledJsonSchemaSubset} from "../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 
 /** 🪢️ The request header that carries the slot of a stored entry.
  * @see ./🧬️schema/🔣️.json */
@@ -21,9 +21,11 @@ export function slotIdV1(domain:SlotDomainV1,parts:readonly string[]):string{
 /** 🔎️ Tells whether a value is a well-formed slot id. */
 export function isSlotIdV1(value:unknown):value is string{return typeof value==="string"&&/^[0-9a-f]{64}$/u.test(value);}
 
+const shapes=new Map<string,CompiledJsonSchemaSubset>(),shapeOf=(definition:string):CompiledJsonSchemaSubset=>{let check=shapes.get(definition);if(!check){check=compileJsonSchemaSubset({$ref:`#/definitions/${definition}`},schema);shapes.set(definition,check);}return check;};
+
 /** 🛡️ Validates a document against a named definition of the slot schema and names the first problem. */
 export function requireSlotShapeV1(definition:"Retention"|"Meta"|"Claim"|"AuditReport",value:unknown,message:string):void{
- const errors=validateJsonSchemaSubset({$ref:`#/definitions/${definition}`},value,schema);
+ const errors=shapeOf(definition).validate(value);
  if(errors.length)throw Error(`${message}: ${errors[0]}`);
 }
 

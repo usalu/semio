@@ -1,5 +1,5 @@
 import{machinePathV1}from"../../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
-import{cpus,setPriority}from"node:os";
+import{cpus}from"node:os";
 import{join}from"node:path";
 import{runOwnerPoolV1}from"../../../🕸️graph/📥️inference/📦️project-nodes/🌐️owner-pool/🏃️runner/🟨️.mjs";
 import{acquireOwnerPoolGuardV1}from"../../../🕸️graph/📥️inference/📦️project-nodes/🌐️owner-pool/🔒️guard/🟦️.ts";
@@ -17,7 +17,6 @@ export function ownerPoolHostOfV1(view:RemoteExecutionHostViewV1,nowMs:number=Da
 
 /** 🏊️ Runs the owner puller of this machine until the signal aborts: one pool process per machine (a pid file; an old process that is still alive is waited for and, when it stays, this one does not pull), at a low priority, with the cache the fleet announces (the explicit overrides of the cache are dropped, as for the graph server), as the supervisor of child processes: it runs as many children (one process, one owner at a time) as the cores and the free memory of the machine allow after its own work (`ownerPoolTargetV1` on the host view of the capacity gate: its grants book cores and untouched reservations, a waiting request keeps a share of the cores free, one child always runs unless the pressure is critical), and a child returns its memory to the system by ending itself when it passed its limit. Joins every wave of the owner pool that another machine publishes. */
 export async function runPool(context:RemoteExecutionSidecarContextV1):Promise<void>{
- try{setPriority(10);}catch{}
  const environment={...context.environment} as Record<string,string|undefined>;
  for(const name of["SEMIO_REMOTE_CACHE_ENDPOINT","SEMIO_REMOTE_CACHE_ACCESS","SEMIO_REMOTE_CACHE_INSTANCE","SEMIO_REMOTE_CACHE_TOKEN","SEMIO_FLEET_CACHE_ENDPOINT"])delete environment[name];
  const origin=remoteExecutionOriginV1(context.root,context.environment),status=createOwnerPoolStatusV1({store:context.environment.SEMIO_FLEET_STORE_ROOT,origin,role:"puller"});

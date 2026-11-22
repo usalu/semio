@@ -1,0 +1,14 @@
+# Process3d archive replacement publication
+
+The two forest tests use a direct fixture driver that renews its original caller before every maintenance turn. The authored fixture ceiling gives each renewed turn 2,000,000 fuel, 16,777,216 retained items, 128 MiB of copy, 256 MiB of capacity, 512 MiB of releases and depth 4096. The fixture's own host lifetime can stop the command-driven variant independently of the turn grants.
+
+## State boundaries
+
+- The parent hydration handoff increments the outer completed count to match the admitted parent's contribution to the total. The separate replacement starts in `Initializing`. Before genesis admission, equal counters cannot tell whether the initializer is still running, returning an outcome, or retiring its worker.
+- The checked-in forest DSL names a stock solid, the steps flow and five tool solids. `complete_document_archive_genesis` can add more than the stock child. Each minted child increments the total immediately, and each archive member admission increments completed. Subject to the initializer fold counters, a new equal-counter plateau can recur after all member ingress has been admitted, before any member has finished opening.
+- Maintenance stage 14 skips `AwaitingMembers` for the exact archive-owned replacement so it cannot race the archive's roster admission. `seal_members` changes the replacement to `OpeningMembers`, which is eligible at stage 14 during every subsequent archive wait. Opening, closure validation, candidate view preparation, publication, and displaced-owner retirement remain eligible until `Complete`.
+- `AwaitReplacement` returns empty progress for pending candidates and candidates retiring their owners. Its acknowledgment checks operation, generation, and the same terminal-empty ownership witness used by the replacement. There is no independent page acknowledgment at this polling boundary.
+- The active member-open quote delegates to the open owner's `next_*_demand` methods, which in the generated `SemioMembers` delegate to `InitialMemberStoreOpen::retirement_demands`. The composed lane still passes the full remaining loan to its concrete driver, even though the outer lifecycle funding check uses a one-item probe. The retirement quote alone does not establish that the fixture cannot fund the forward step.
+- Candidate publication must obtain a paid window reset and renew the issuer's publication scope. Renewal can wait for pending leases, registry aliases, or occupied slots. Stage 18 can retire finished scopes, and the mounted command close lanes can return retained leases. The source audit alone has not established which of these owners, if any, remained resident in both forest failures.
+
+The original failing log does not locate the plateau on this state graph. A fresh terminal diagnostic should identify the archive phase and candidate state before any production patch targets a specific stage.

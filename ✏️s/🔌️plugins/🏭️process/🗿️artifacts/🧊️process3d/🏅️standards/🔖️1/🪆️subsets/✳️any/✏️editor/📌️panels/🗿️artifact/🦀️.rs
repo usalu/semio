@@ -1,7 +1,7 @@
 //! 📄️ Process 3d play app panel — the document tree: stock + ordered process steps.
 
 use semio_s_artifact_process_process3d_kit::{editor::process3d::terminology::process3d_measure_icon, editor::process3d::terminology::Process3dLabels};
-use semio_s_artifact_process_process3d_kit::{PROCESS3D_GRANULARITY_OBJECT, PROCESS3D_INTERACTION_DOMAIN, PROCESS_3D_PLAY_CONTROLLER_ID};
+use semio_s_artifact_process_process3d_kit::{process3d_step_drag_payload, PROCESS3D_GRANULARITY_OBJECT, PROCESS3D_INTERACTION_DOMAIN, PROCESS_3D_PLAY_CONTROLLER_ID, TREE_ROW_REORDER_MIME};
 use semio_s_artifact_process_process3d_model::{snapshot::Process3dSnapshot, snapshot::ProcessStep};
 use semio_plugin::row_action;
 use semio_plugin::row_target;
@@ -59,7 +59,7 @@ fn stock_row(snapshot: &Process3dSnapshot) -> UiAssemblyResult<BuiltNode> {
 /// `setStepEnabled` sets a value and never flips one, and the menu's `removeStep` reads `id` alone — and its verbs stay ROW
 /// ACTIONS naming only a verb, while selection is the tree's: the row declares its granularity and the tree carries the
 /// single `interactionSelect` binding both it and the canvas pick through.
-fn step_row(index: usize, step: &ProcessStep, cursor: usize, labels: &Process3dLabels) -> UiAssemblyResult<BuiltNode> {
+fn step_row(index: usize, step: &ProcessStep, cursor: usize, labels: &Process3dLabels, drop: Option<(&str, &semio_plugin::ActionId)>) -> UiAssemblyResult<BuiltNode> {
     let mut item = tree_item(&step.id, semio_s_artifact_process_process3d_kit::ui_label(&step.label)?)?;
     let args = semio_s_artifact_process_process3d_kit::ui_value_map([("enabled", semio_s_artifact_process_process3d_kit::ui_value_bool(!step.enabled)), ("id", semio_s_artifact_process_process3d_kit::ui_value_text(&step.id)?)])?;
     let target = row_target(PROCESS_3D_PLAY_CONTROLLER_ID, Some(args), None)?;
@@ -73,6 +73,13 @@ fn step_row(index: usize, step: &ProcessStep, cursor: usize, labels: &Process3dL
         props.granularity = Some(ui_text(PROCESS3D_GRANULARITY_OBJECT)?);
         props.row_actions = row_actions;
         props.target = Some(target);
+        if let Some((document_id, action)) = drop {
+            let mut data = semio_plugin::UiFixedMap::default();
+            data.try_insert(ui_text(TREE_ROW_REORDER_MIME)?, ui_text(&process3d_step_drag_payload(document_id, &step.id))?).map_err(|_| document_error("step-drag-data"))?;
+            props.draggable = Some(true);
+            props.drag_data = Some(data);
+            item.bindings.try_push(semio_plugin::ActionBinding { trigger: semio_plugin::Trigger::Drop, action: action.clone(), args: None, capability: None }).map_err(|_| document_error("step-drop-action"))?;
+        }
     }
     Ok(item)
 }
@@ -92,15 +99,19 @@ fn step_row(index: usize, step: &ProcessStep, cursor: usize, labels: &Process3dL
 /// step id) are the SAME canonical targets the framework-owned `"geometry"` interaction domain
 /// selects — the tree binds `.interaction_domain` and each row declares its `granularity`, so a click
 /// becomes an `interactionSelect` with no per-row argument map (mirrors `🧱️block`'s `📌️panels/🗿️artifact`).
-pub fn render(snapshot: &Process3dSnapshot, resolved_up_to: Option<usize>, labels: &Process3dLabels, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
+pub fn render(snapshot: &Process3dSnapshot, resolved_up_to: Option<usize>, labels: &Process3dLabels, windows: &TreeWindows<'_>, document_id: Option<&str>) -> UiAssemblyResult<BuiltNode> {
     let cursor = resolved_up_to.unwrap_or(snapshot.step_payloads.len()).min(snapshot.step_payloads.len());
     let stock = [()];
     let steps: Vec<(usize, &ProcessStep)> = snapshot.step_payloads.iter().enumerate().collect();
-    PanelTreeBuilder::new("process3d-play-document")?
+    let drop_action = document_id.map(|_| semio_s_artifact_process_process3d_kit::process3d_action("dropStep", None)).transpose()?.map(|(action, _)| action);
+    let tree = PanelTreeBuilder::new("process3d-play-document")?
         .window_section(windows, PROCESS_3D_PLAY_DOCUMENT_STOCK, Some(semio_s_artifact_process_process3d_kit::ui_label(labels.stock.as_str())?), true, &stock, |_| stock_row(snapshot))?
-        .window_section(windows, PROCESS_3D_PLAY_DOCUMENT_STEPS, Some(semio_s_artifact_process_process3d_kit::ui_label(labels.steps.as_str())?), true, &steps, |(index, step)| step_row(*index, step, cursor, labels))?
-        .interaction_domain(PROCESS_3D_PLAY_CONTROLLER_ID, PROCESS3D_INTERACTION_DOMAIN)?
-        .build()
+        .window_section(windows, PROCESS_3D_PLAY_DOCUMENT_STEPS, Some(semio_s_artifact_process_process3d_kit::ui_label(labels.steps.as_str())?), true, &steps, |(index, step)| step_row(*index, step, cursor, labels, document_id.zip(drop_action.as_ref())))?
+        .interaction_domain(PROCESS_3D_PLAY_CONTROLLER_ID, PROCESS3D_INTERACTION_DOMAIN)?;
+    match drop_action {
+        Some(action) => tree.drop_action(action).build(),
+        None => tree.build(),
+    }
 }
 //#endregion 🔖️Render
 

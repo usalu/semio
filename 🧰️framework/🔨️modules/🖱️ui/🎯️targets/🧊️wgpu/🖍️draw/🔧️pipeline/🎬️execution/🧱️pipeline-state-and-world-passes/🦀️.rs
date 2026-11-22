@@ -37,6 +37,7 @@ pub struct FrameBuffers {
     pub world_celebration_instances: GrowBuffer,
     pub world_textured_instances: GrowBuffer,
     pub world_lines: GrowBuffer,
+    pub world_points: GrowBuffer,
     pub ui_instances: GrowBuffer,
     pub mask_instances: GrowBuffer,
     pub vector_vertices: GrowBuffer,

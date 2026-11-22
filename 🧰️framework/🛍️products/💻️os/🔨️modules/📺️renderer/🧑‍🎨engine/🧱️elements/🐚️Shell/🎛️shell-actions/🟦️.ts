@@ -1,5 +1,6 @@
 /** 🎛️ Shell actions: the closed union of every action the shell reducers accept. */
-import { type Anchor, type ElementsSurfaceAppearance, type IconName, type UiChromeLayout, type UiDriver, type UiLocale, type UiTheme, type WindowLayoutNode } from "@semio-tech/ui-react";
+import { type Anchor, type ElementsSurfaceAppearance, type IconName, type UiChromeLayout, type UiDriver, type UiLocale, type UiTheme } from "@semio-tech/ui-react";
+import type { WindowLayoutNode } from "@semio-tech/ui-layout";
 import { type AppRole, type Conflict, type ConflictId, type DockSkeleton, type DockUiState, type MergePolicy, type AppCatalogue, type PluginAppLabelsOverlay, type BuiltNode, type WindowEngagement, type WindowMeasure } from "@semio-tech/framework";
 import { type ArtifactSyncStatus } from "@semio-tech/framework/backbone";
 import { type InstalledServiceStatusV1 } from "@semio-tech/framework/inference/service";

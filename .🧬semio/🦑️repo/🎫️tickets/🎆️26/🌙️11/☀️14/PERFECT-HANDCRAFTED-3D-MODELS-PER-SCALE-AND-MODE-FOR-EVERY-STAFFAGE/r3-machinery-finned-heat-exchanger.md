@@ -152,3 +152,7 @@ Check: `r3-validate.ts machinery/finned-heat-exchanger --volumes`: VALID (schema
 ### Remaining
 
 - Round 3 open points stay: no tube holes in the tube sheets, fin pack a core with edge texture, structure fin plates at the feature floor.
+
+## Digital working-stock readback, 2026-11-21
+
+Canonical source `555c7de5b65493e5`. Two staggered rows of twelve tubes, two 28 mm headers and twelve hairpins cross 134 individual 0.2 mm fins at 3 mm pitch. The 133 air gaps persist at every scale. Exposed end fins and the reduced structural sample have 24 actual tube apertures. The interior foils overlap copper only at the hidden tube intersections. Both reverse views expose the return bends past the folded end channels. All twelve GLB scenes reopened (1,925,748 bytes) and all strict checks passed.

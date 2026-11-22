@@ -2616,6 +2616,15 @@
           "storage-events.jsonl"
         ],
         "service": ".fseventsd",
+        "foreignNames": {
+          "generation": "^(?:[a-f0-9]{20}|\\.p[a-f0-9]{8})$",
+          "tombstone": "^\\.x(?:[a-f0-9]{20}|\\.p[a-f0-9]{8})$",
+          "quarantine": ".q",
+          "ignorable": ["^\\.DS_Store$", "^\\._", "^Thumbs\\.db$", "^desktop\\.ini$", "^\\.Spotlight-", "^\\.fseventsd$", "^\\.Trashes$"],
+          "graceMilliseconds": 600000,
+          "maximum": 64,
+          "retentionMilliseconds": 604800000
+        },
         "partitionRoles": [
           {
             "name": "generation",
@@ -2668,6 +2677,15 @@
             "writer": {
               "en": "NuGet package cache of the .NET dependency task.",
               "de": "NuGet-Paketcache der .NET-Abhängigkeitsaufgabe."
+            },
+            "retention": "self-managed"
+          },
+          {
+            "name": "remote-execution",
+            "kind": "directory",
+            "writer": {
+              "en": "Private action roots of the remote-execution worker (ledger area remote-execution-worker); each action gets a fresh root that the worker removes after the action.",
+              "de": "Private Aktionswurzeln des Remote-Execution-Workers (Bilanzbereich remote-execution-worker); jede Aktion erhält eine frische Wurzel, die der Worker nach der Aktion entfernt."
             },
             "retention": "self-managed"
           },
@@ -6186,7 +6204,9 @@
       "const": {
         "maximumBytes": 4096,
         "maximumLines": 16,
-        "minimumRedactedTokenLength": 24
+        "minimumRedactedTokenLength": 24,
+        "mirroredMaximumBytes": 400,
+        "mirroredPrefix": "[DATA] Store dependency installer stderr "
       }
     },
     "InstallerFailureDiagnostic": {
@@ -6258,7 +6278,7 @@
     "CacheLinkRefusalProtocol": {
       "const": {
         "version": 1,
-        "pattern": "^EPERM: Operation not permitted: failed to link package: ",
+        "pattern": "^(?:EPERM: Operation not permitted: failed to link package: |error: InstallFailed extracting tarball from |Unexpected: failed copying files from cache to destination for package )",
         "flags": "mu",
         "maximumPurgesPerSync": 1,
         "progressEntries": 256

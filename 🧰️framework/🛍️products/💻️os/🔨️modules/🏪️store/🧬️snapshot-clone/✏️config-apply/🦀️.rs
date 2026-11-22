@@ -67,6 +67,12 @@ where S: RetainedClone, M: ConfigApplyMutation<S> {
 }
 
 impl<S, M: ConfigApplyMutation<S>> ConfigApplyCursor<S, M> {
+    fn clone_close_work_demand(cursor: &CloneCursor<M>, body: usize) -> Result<u64, ValueError> {
+        if !cursor.close_started() { return cursor.begin_close_work_demand(); }
+        if cursor.terminal_is_empty() { return Ok(1); }
+        cursor.close_work_demand(body)
+    }
+
     fn clone_close_demand(cursor: &CloneCursor<M>, body: usize) -> Result<RetirementDemand, ValueError> {
         if cursor.terminal_is_empty() { return Ok(RetirementDemand { copy_bytes: size_of::<CloneCursor<M>>(), depth: 1, ..Default::default() }); }
         if !cursor.close_started() {
@@ -127,8 +133,7 @@ where S: RetainedClone, M: ConfigApplyMutation<S> {
                 match self.stage{
                     ApplyStage::Clone=>cursor.advance_work_demand(mutation,body,u64::MAX),
                     ApplyStage::Take=>cursor.take_work_demand(),
-                    ApplyStage::CloseClone if !cursor.close_started()=>cursor.begin_close_work_demand(),
-                    ApplyStage::CloseClone if !cursor.terminal_is_empty()=>cursor.close_work_demand(body),
+                    ApplyStage::CloseClone=>Self::clone_close_work_demand(cursor,body),
                     _=>Ok(1),
                 }
             }
@@ -229,6 +234,12 @@ where S: RetainedClone, M: ConfigApplyMutation<S> {
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }
         if self.clone.is_none() { return self.custody.step(effect); }
         self.close_clone(effect.grant().maximum_copy_bytes,effect).map(RetainedCloneStep::Progress)
+    }
+    fn close_work_demand(&self, body: usize) -> Result<u64, ValueError> {
+        match self.clone.as_ref() {
+            Some(cursor) => Self::clone_close_work_demand(cursor, body),
+            None => self.custody.work_demand(body),
+        }
     }
     fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.close_demand(0)?.copy_bytes) }
     fn next_close_capacity_byte_demand(&self, body: usize) -> Result<usize, ValueError> { Ok(self.close_demand(body)?.capacity_bytes) }

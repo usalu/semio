@@ -113,7 +113,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     it("keeps a saved layout too large for one hub record on this device only, and shares one that fits", () => {
       const lane = uiPreferenceLaneKeyV1("http://127.0.0.1:7800/", "u1");
       const window = (index: number) => ({ kind: "window" as const, windowKindId: `draw-window-${index}`, title: `Window ${index}` });
-      const huge: UserNamedLayout = { label: "Huge", layout: { root: { kind: "row", children: [{ kind: "stack", children: Array.from({ length: fixture.namedLayouts.oversizeWindows }, (_, index) => window(index)) }] } } };
+      const huge: UserNamedLayout = { label: "Huge", layout: { root: { kind: "stack", children: Array.from({ length: fixture.namedLayouts.oversizeWindows }, (_, index) => window(index)) } } };
       const small = fixture.namedLayouts.valid[0] as unknown as UserNamedLayout;
       const oversized: UiPreferencesConfigMutation = { mutation: "setNamedLayout", appId: "s.draw.2d@1/*#editor", layoutId: "user-2", layout: huge };
       const fitting: UiPreferencesConfigMutation = { mutation: "setNamedLayout", appId: "s.draw.2d@1/*#editor", layoutId: "user-1", layout: small };

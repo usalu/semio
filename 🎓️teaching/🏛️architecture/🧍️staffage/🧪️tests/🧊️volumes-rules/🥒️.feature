@@ -1,11 +1,11 @@
 @capability-staffage-volumes-rules
-Feature: The volumes of an asset are judged per scale and per mode by ten rules with measurements
+Feature: The volumes of an asset are judged per scale and per mode by fourteen rules with measurements
   Every preset scale of an asset has its own handcrafted volume (`volumes[scale]`: `body`, `thermal`, `structure`, `decisions`, or `unavailable` exactly where the representation is). `checkVolumes(asset, { scale?, rules? }, operation)`
-  returns findings with the rule, the scale, the list and the failing measurements; `measureVolumes` returns every measurement with its limit. The ten rules: `volumes-availability`, `volumes-silhouette` (IoU at least 0.92 and
+  returns findings with the rule, the scale, the list and the failing measurements; `measureVolumes` returns every measurement with its limit. The rules: `volumes-availability`, `volumes-silhouette` (IoU at least 0.92 and
   Hausdorff at most two smallest features against the filled 2D shapes of the same scale in the elevation, the front and the plan), `volumes-bounds` (the bounding box within one feature of `dimensions`), `volumes-feature` (no solid
-  thinner than the smallest feature of the scale, except thin sheets), `volumes-monotonic` (solids and triangles never grow towards coarser scales and one of them drops), `volumes-cross-scale` (IoU at least 0.85, Hausdorff
+  thinner than the smallest feature of the scale, each scale judged on its own, except declared thin sheets (`sheet: true`, or a thermal layer gauge), which are judged by their two large extents), `volumes-monotonic` (solids and triangles never grow towards coarser scales and one of them drops), `volumes-cross-scale` (IoU at least 0.85, Hausdorff
   at most two features of the coarser scale, union volume within 15 %), `volumes-thermal-coverage` (every region, layer shell and emitter has a solid, outer area within 15 % at 1:50 and 30 % coarser, inside the body box grown by
-  one feature), `volumes-structure-coverage` (every eligible bone, member shape and support has a solid, members inside the silhouette, supports on the ground or at their anchor), `volumes-bones` and `volumes-solids`.
+  one feature), `volumes-structure-coverage` (every eligible bone, member shape and support has a solid, members inside the silhouette, supports on the ground or at their anchor), `volumes-bones`, `volumes-solids`, `volumes-copied`, `volumes-slender`, `volumes-views-disagree` and `volumes-connected` (one connected body, closed load paths; scenarios in `../🧊️volumes-connected`).
   Expensive rules report progress and stop when cancelled.
 
   THE REFERENCES are the hand-computed cuboids of the fixture, shapely (unions and Hausdorff distances of the projected triangles) and trimesh (volumes and outer areas by point containment), fed with the very triangles of the kernel.
@@ -63,3 +63,36 @@ Feature: The volumes of an asset are judged per scale and per mode by ten rules 
     And touching copies use the topology of the assembled mesh
     And a section projects each full-body face once across all disconnected pieces
     And both forms preserve the 2.28 square metres of triangle surface and match explicit expansion
+
+  Scenario: An internal structural member has a measured elliptical section
+    Given a narrow loft whose section area, extreme fibre and second moment agree with the mechanical member
+    Then the rendered member retains its physical gauge and conflicting section data fail the feature check
+
+  Scenario: A tapered twig shares a bone with adjacent foliage
+    Given a slender bark solid and a broad leaf strip on the same bone
+    Then the leaf material does not supply the width of the twig
+    And a remote bark strip does not supply its width
+    And a bark stroke following the twig supplies its printed width
+    And an off-centre folded cleat retains its gauge behind a broad panel of the same material
+
+  Scenario: A typified row is compared with the row it stands for through their common envelope
+    Given 13 rods of 12 mm at 75 mm pitch at the finer scale and 4 posts of 75 mm at 0.275 m pitch on the same bone at the coarser scale
+    When the posts are declared `envelope` and the two scales are compared
+    Then the convex hull of the posts is compared with the convex hull of the rods (IoU 0.9 / 0.912 = 0.986842, as shapely finds)
+    And without the declaration the posts fail against the rods
+
+  Scenario: The centre line of the outline of a body is the body edge
+    Given a plate of 1 m x 0.6 m with a rim wire of 10 mm along its edge and a closed unfilled outline of 80 mm pen around both
+    When the slender wire is drawn for the comparison
+    Then it keeps its 10 mm (0.6051 m² with the plate, as shapely finds) instead of the pen (0.6464 m²), because the solids fill what the outline encloses
+    And around the wire alone the outline encloses a void and the wire is drawn at the pen (0.0864 m²)
+
+  Scenario Outline: Two views must place the asset alike, not only give it the same extent
+    Given the sample at 1:100 whose plan is one rectangle of the length of the side elevation, moved ahead by <shift>
+    When the views are compared
+    Then the extents agree and the place differs by <shift> against a limit of 15 mm, as the bounds of shapely say, and it is <verdict>
+
+    Examples:
+      | shift | verdict   |
+      | 10 mm | accepted  |
+      | 50 mm | a finding |

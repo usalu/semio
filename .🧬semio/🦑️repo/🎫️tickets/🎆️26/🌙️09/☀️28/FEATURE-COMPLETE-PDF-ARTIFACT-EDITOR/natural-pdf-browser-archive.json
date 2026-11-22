@@ -1,0 +1,92 @@
+[
+  {
+    "name": "complete",
+    "expected": "accepted",
+    "writes": 521,
+    "acks": 521,
+    "closed": 1,
+    "cancelled": 0,
+    "localRetired": 1
+  },
+  {
+    "name": "foreign-document",
+    "expected": "natural-archive.foreign-document",
+    "writes": 0,
+    "acks": 0,
+    "closed": 0,
+    "cancelled": 1,
+    "localRetired": 0
+  },
+  {
+    "name": "oversized-archive",
+    "expected": "natural-archive.invalid-extent",
+    "writes": 0,
+    "acks": 0,
+    "closed": 0,
+    "cancelled": 1,
+    "localRetired": 0
+  },
+  {
+    "name": "foreign-page-receipt",
+    "expected": "natural-archive.foreign-receipt",
+    "writes": 0,
+    "acks": 0,
+    "closed": 0,
+    "cancelled": 1,
+    "localRetired": 1
+  },
+  {
+    "name": "foreign-write-receipt",
+    "expected": "natural-archive.foreign-write",
+    "writes": 1,
+    "acks": 0,
+    "closed": 0,
+    "cancelled": 1,
+    "localRetired": 1
+  },
+  {
+    "name": "cancel-first-write",
+    "expected": "archive cancelled",
+    "writes": 1,
+    "acks": 0,
+    "closed": 0,
+    "cancelled": 1,
+    "localRetired": 1
+  },
+  {
+    "name": "foreign-seal-readback",
+    "expected": "natural-archive.foreign-persistence",
+    "writes": 521,
+    "acks": 521,
+    "closed": 0,
+    "cancelled": 1,
+    "localRetired": 1
+  },
+  {
+    "name": "frontier-changed-after-write",
+    "expected": "natural-archive.frontier-changed",
+    "writes": 521,
+    "acks": 521,
+    "closed": 0,
+    "cancelled": 1,
+    "localRetired": 1
+  },
+  {
+    "name": "close-refused",
+    "expected": "natural-archive.refused",
+    "writes": 521,
+    "acks": 521,
+    "closed": 0,
+    "cancelled": 1,
+    "localRetired": 1
+  },
+  {
+    "name": "owner-lost-after-close",
+    "expected": "natural-archive.stale-owner",
+    "writes": 521,
+    "acks": 521,
+    "closed": 1,
+    "cancelled": 0,
+    "localRetired": 1
+  }
+]

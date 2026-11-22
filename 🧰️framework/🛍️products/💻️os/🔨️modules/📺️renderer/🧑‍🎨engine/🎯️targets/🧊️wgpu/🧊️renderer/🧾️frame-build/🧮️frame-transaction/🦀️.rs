@@ -276,12 +276,12 @@ impl FrameTransaction {
                 }
             },
             AppFrameTransactionPhase::BrushMesh => {
-                let Some(surface) = app.shell.surfaces.world3d_states.keys().nth(self.brush_mesh_cursor).cloned() else {
+                let Some(world) = app.shell.surfaces.world3d_states.get_mut_at(self.brush_mesh_cursor) else {
                     self.phase = AppFrameTransactionPhase::Build;
                     return AppFrameTransactionStep::Pending;
                 };
                 self.brush_mesh_cursor = self.brush_mesh_cursor.saturating_add(1);
-                let action = app.shell.surfaces.world3d_states.get_mut(surface.as_str()).and_then(|world| infinite_world::world::step_world3d_brush_mesh_announce(&mut world.session, &mut world.scene, &mut world.assets));
+                let action = infinite_world::world::step_world3d_brush_mesh_announce(&mut world.session, &mut world.scene, &mut world.assets);
                 if let Some(action) = action {
                     if let Err(_action) = app.frame_actions.try_push(action) {
                         runtime.record_frame_fault("frame brush mesh action credits exceeded");
@@ -542,7 +542,8 @@ impl FrameTransaction {
                         return AppFrameTransactionStep::Fault;
                     }
                     if let infinite_world::world::WorldTerrainMeshPublicationStep::Fault(fault) = terrain.step {
-                        runtime.record_frame_fault(&format!("world3d terrain ownership faulted: {fault:?}"));
+                        log_debug(&format!("world3d terrain ownership faulted: {fault:?}"));
+                        runtime.record_frame_fault("world3d terrain ownership faulted");
                         self.phase = AppFrameTransactionPhase::Terminal;
                         return AppFrameTransactionStep::Fault;
                     }

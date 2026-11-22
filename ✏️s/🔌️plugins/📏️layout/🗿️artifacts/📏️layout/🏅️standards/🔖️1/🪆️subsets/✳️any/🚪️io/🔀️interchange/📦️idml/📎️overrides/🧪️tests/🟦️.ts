@@ -4,9 +4,9 @@ import { binary64, binary64Value, binary32 } from "../../../../../../../../../..
 import fixture from "../🧪️fixtures/🔣️.json";
 import * as mapping from "../🟦️.ts";
 export interface OverrideXmlOracle { read(source: string): mapping.XmlNode; write(node: mapping.XmlNode): string }
-const bounds = (box: { x: number; y: number; width: number; height: number; rotation: number }): mapping.LayoutBounds => ({ x: binary64(box.x), y: binary64(box.y), w: binary64(box.width), h: binary64(box.height), rotation: binary64(box.rotation) });
+const bounds = (box: { x: number; y: number; w: number; h: number; rotation: number }): mapping.LayoutBounds => ({ x: binary64(box.x), y: binary64(box.y), w: binary64(box.w), h: binary64(box.h), rotation: binary64(box.rotation) });
 function source(kind: string): mapping.Frame {
-  const common = { id: "master-" + kind, layerId: "master-layer", bounds: bounds({ x: 5, y: 8, width: 50, height: 30, rotation: 0 }), visible: null, locked: null };
+  const common = { id: "master-" + kind, layerId: "master-layer", bounds: bounds({ x: 5, y: 8, w: 50, h: 30, rotation: 0 }), visible: null, locked: null };
   if (kind === "text") return { ...common, kind, storyId: "shared-story", threadNext: null, columns: 1, inset: { x: binary64(0), y: binary64(0), w: binary64(0), h: binary64(0) }, wrapMode: "none" };
   if (kind === "image") return { ...common, kind, linkId: "embedded-image" };
   return { ...common, kind: "rect", fill: [binary32(0.2), binary32(0.3), binary32(0.4), binary32(0.5)], stroke: null };
@@ -19,7 +19,7 @@ function copyNode(frame: mapping.Frame): mapping.XmlNode {
 }
 function fromNode(node: mapping.XmlNode, source: mapping.Frame): mapping.Frame {
   const [a, b, , , tx, ty] = attr(node, "ItemTransform").split(" ").map(Number); const [top, left, bottom, right] = attr(node, "GeometricBounds").split(" ").map(Number); const w = right - left, h = bottom - top;
-  return { ...structuredClone(source), id: attr(node, "Self"), bounds: bounds({ x: a * w / 2 - b * h / 2 + tx - w / 2, y: b * w / 2 + a * h / 2 + ty - h / 2, width: w, height: h, rotation: Math.atan2(b, a) }), visible: attr(node, "Visible") === "true", locked: attr(node, "Locked") === "true" };
+  return { ...structuredClone(source), id: attr(node, "Self"), bounds: bounds({ x: a * w / 2 - b * h / 2 + tx - w / 2, y: b * w / 2 + a * h / 2 + ty - h / 2, w, h, rotation: Math.atan2(b, a) }), visible: attr(node, "Visible") === "true", locked: attr(node, "Locked") === "true" };
 }
 /** ⚖️ Compares sparse native overrides with actual independently rewritten OverrideList and body-copy markup. */
 export function verifyIdmlOverrides(oracle: OverrideXmlOracle): { cases: number } {

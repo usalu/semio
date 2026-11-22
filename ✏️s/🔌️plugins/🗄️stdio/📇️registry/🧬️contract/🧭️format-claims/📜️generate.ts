@@ -3,7 +3,8 @@ import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
 
 type Claim = { namespace: string; value: string };
-type Representation = { id: string; standard: string; mimes: string[]; extensions: string[]; aliases: string[]; owner?: boolean; sniff?: { window: number; contains: string[] } };
+type PackageCheck = { main_part_content_types: string[]; dialects: { subset: string; namespace: string }[] };
+type Representation = { id: string; standard: string; mimes: string[]; extensions: string[]; aliases: string[]; owner?: boolean; sniff?: { window: number; contains: string[] }; package?: PackageCheck };
 type Definition = { artifact: string; id: string; standards: { id: string; revision: string }[]; representations: Representation[]; runtime_capabilities: { category: string; claims: Claim[] }[] };
 
 /** 📍 Repository-relative path of the generated claims. */
@@ -44,7 +45,17 @@ export function stdioFormatClaimsTextV1(root: string): string {
         const coordinate = coordinateOf(item);
         return coordinate === undefined ? [] : [{ kindId: item.id, artifactRef: coordinate, sniff: item.sniff ?? null }];
       });
-      rows.push({ kindId: owner.id, shortId: shortIdOf(owner), aliases: [...owner.aliases].sort(), mimes: [...owner.mimes].sort(), extensions: owner.extensions, artifactRef, ...(members.length > 1 ? { revisions } : {}) });
+      const packageOf = (check: PackageCheck | undefined): Record<string, unknown> | undefined => {
+        if (check === undefined) return undefined;
+        const dialects = check.dialects.map((dialect) => {
+          const coordinate = `${artifactRef.slice(0, -1)}${dialect.subset}`;
+          if (!editors.has(`${coordinate}#editor`)) throw new Error(`${owner.id}: package dialect ${coordinate} has no editor in the editor-catalog fixture`);
+          return { artifactRef: coordinate, namespace: dialect.namespace };
+        });
+        return { mainPartContentTypes: check.main_part_content_types, dialects };
+      };
+      const packageCheck = packageOf(owner.package);
+      rows.push({ kindId: owner.id, shortId: shortIdOf(owner), aliases: [...owner.aliases].sort(), mimes: [...owner.mimes].sort(), extensions: owner.extensions, artifactRef, ...(members.length > 1 ? { revisions } : {}), ...(packageCheck === undefined ? {} : { package: packageCheck }) });
     }
   }
   const roster = (JSON.parse(readFileSync(join(root, "🌎️hub/🧩️compositions/🗄️stdio/📇️catalog/🧪️tests/🧫️fixtures/📜️definition-roster/🔣️.json"), "utf8")) as { identities: string[] }).identities;

@@ -45,3 +45,6 @@ pub fn schedule_frame(window: &NativeWindow, _callback: impl FnMut() + 'static) 
 
 #[cfg(not(target_os="wasi"))]
 pub use semio_ui_wgpu_device::platform::NativeWindow;
+
+/// 🩹️ The backend's device-loss reason, drained once per loss by the frame loop that owns scene hosts.
+pub use semio_ui_wgpu_device::{take_device_loss, DeviceLoss};

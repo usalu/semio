@@ -1,0 +1,14 @@
+{
+  "spaceId": "space-789",
+  "pluginId": "draw",
+  "schema": "draw.document",
+  "artifactId": "artifact-987",
+  "name": "First drawing",
+  "x": 112.5,
+  "y": 66.0,
+  "document": {
+    "documentId": "artifact-987",
+    "schema": "draw.document",
+    "spaceId": "space-789"
+  }
+}

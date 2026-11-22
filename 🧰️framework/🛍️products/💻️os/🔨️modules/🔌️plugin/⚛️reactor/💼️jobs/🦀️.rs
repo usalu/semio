@@ -31,6 +31,7 @@ pub mod mutation_plan;
 #[path = "🏛️reserved/🦀️.rs"]
 pub mod reserved;
 #[doc(hidden)]
+#[cfg(any(test, feature = "artifact-app-testing"))]
 #[path = "🎛️registry-driver/🦀️.rs"]
 pub mod registry_driver;
 

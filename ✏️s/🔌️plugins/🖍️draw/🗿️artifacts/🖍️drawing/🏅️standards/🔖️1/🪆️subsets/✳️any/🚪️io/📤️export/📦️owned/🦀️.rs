@@ -3,6 +3,8 @@ use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 use semio_s_artifact_draw_drawing_scene::preparation::{DocumentRasterJob, DocumentRasterRetirement, DocumentSceneViewport, DocumentVectorJob, DocumentVectorRetirement, DocumentScenePlan, DocumentSceneLimits, DocumentAlgorithmLimits};
 use semio_plugin::Fault;
 use semio_framework_job::OriginalDomainFailure;
+use semio_framework_pixels::{RasterImage, png_encoding::PngEncodeJob};
+use semio_framework_value::RetirementDemand;
 use semio_os_kernel::io::io_mechanism::OwnedSerializerOutput;
 use semio_framework_value::{OriginalRetirementFailure, OriginalRetirementPoll, RetainedAllocationEffect, RetainedCloneStep, RetainedWorkOutcome, RetainedWorkPoll, retirement::controlled::ControlledRetirement,retained_clone::{RetainedCloneGrant,RetainedCloneProgress},ValueError};
 use crate::serializers::artifacts::svg::v1_1::any::write::{SvgWriteJob, SvgWriteRetirement, SvgWriteLimits};
@@ -13,9 +15,49 @@ pub const RAW_OUTPUT_LIMIT:usize=25_165_824;
 pub struct ExportOptions{pub format:&'static str,pub width:Option<u32>,pub height:Option<u32>,pub transparent:bool}
 #[derive(semio_framework_value::RetireOwned)]
 #[value(send_only)]
-struct OutputOwners{semio_styles:Vec<semio_s_artifact_stdio_semio_drawing::schema::snapshot::DrawStyle>,semio_nodes:Vec<semio_s_artifact_stdio_semio_drawing::schema::snapshot::DrawNode>,semio_drawing:Option<semio_s_artifact_stdio_semio_drawing::schema::snapshot::SemioDrawingSnapshot>,pdf:Option<PdfWriteJob>,pdf_close:Option<PdfWriteRetirement>,svg:Option<SvgWriteJob>,svg_close:Option<SvgWriteRetirement>,paint:Option<ScenePaintJob>,paint_close:Option<ScenePaintRetirement>,painted:Option<PreparedScene>,plan:Option<DocumentScenePlan>,image:Option<semio_framework_pixels::RasterImage>,encoder:Option<semio_framework_pixels::png_encoding::PngEncodeJob>,raw:Option<OwnedSerializerOutput>,failure:Option<String>}
+struct OutputOwners{semio_styles:Vec<semio_s_artifact_stdio_semio_drawing::schema::snapshot::DrawStyle>,semio_nodes:Vec<semio_s_artifact_stdio_semio_drawing::schema::snapshot::DrawNode>,semio_drawing:Option<semio_s_artifact_stdio_semio_drawing::schema::snapshot::SemioDrawingSnapshot>,pdf:Option<PdfWriteJob>,pdf_close:Option<PdfWriteRetirement>,svg:Option<SvgWriteJob>,svg_close:Option<SvgWriteRetirement>,paint:Option<ScenePaintJob>,paint_close:Option<ScenePaintRetirement>,painted:Option<PreparedScene>,plan:Option<DocumentScenePlan>,image:Option<RasterImage>,encoder:Option<PngEncodeJob>,raw:Option<OwnedSerializerOutput>,failure:Option<String>}
 pub struct ExportProducer{canvas:(u32,u32),title:Option<String>,project_at:usize,vector:Option<DocumentVectorJob<'static>>,vector_close:Option<DocumentVectorRetirement<'static>>,view_box:Option<[f64;4]>,bounds:Option<[f64;4]>,bound_at:usize,raster:Option<DocumentRasterJob<'static>>,raster_close:Option<DocumentRasterRetirement<'static>>,read:Option<store::os_store::snapshot_read::SnapshotRead<DrawingSnapshot>>,read_close:Option<Box<dyn semio_framework_value::ErasedSnapshotRetirement>>,output:ControlledRetirement<OutputOwners>,pub phase:&'static str,pixel:usize,options:ExportOptions,transparent:bool,complete:bool,closing:bool}
 fn held()->Fault{Fault::from("Drawing export lost its working state")}
+fn admit_png_encoder(cx: &mut StepContext<'_>, image: &mut Option<RasterImage>, encoder: &mut Option<PngEncodeJob>) -> Result<bool, Fault> {
+    let demand = PngEncodeJob::<RasterImage>::birth_demand(image.as_ref().ok_or_else(held)?, RAW_OUTPUT_LIMIT)
+        .map_err(|error| Fault::from(error.to_string()))?;
+    if !cx.admit_work_step(demand).map_err(|error| Fault::from(error.to_string()))? {
+        return Ok(false);
+    }
+    let candidate = match PngEncodeJob::with_maximum_bytes(image.take().unwrap(), RAW_OUTPUT_LIMIT) {
+        Ok(candidate) => candidate,
+        Err((error, source)) => {
+            *image = Some(source);
+            return Err(Fault::from(error.to_string()));
+        }
+    };
+    let progress = RetainedCloneProgress {
+        copied_items: 1,
+        copied_bytes: candidate.bytes.len(),
+        retained_capacity_bytes: candidate.bytes.capacity(),
+        ..Default::default()
+    };
+    *encoder = Some(candidate);
+    cx.consume_fuel(1);
+    cx.consume_retained(progress).map_err(|error| Fault::from(error.to_string()))?;
+    Ok(true)
+}
+fn advance_png_encoder(cx: &mut StepContext<'_>, encoder: &mut PngEncodeJob) -> Result<Option<bool>, Fault> {
+    let demand = RetirementDemand { copy_bytes: encoder.next_copy_byte_demand(), depth: 1, ..Default::default() };
+    if !cx.admit_work_step(demand).map_err(|error| Fault::from(error.to_string()))? {
+        return Ok(None);
+    }
+    let input_at = encoder.progress().completed;
+    let output_at = encoder.bytes.len();
+    let progress = encoder.advance().map_err(|error| Fault::from(error.to_string()))?;
+    cx.consume_fuel(1);
+    cx.consume_retained(RetainedCloneProgress {
+        copied_items: 1,
+        copied_bytes: progress.completed - input_at + encoder.bytes.len() - output_at,
+        ..Default::default()
+    }).map_err(|error| Fault::from(error.to_string()))?;
+    Ok(Some(progress.done))
+}
 fn extent(document:&DrawingSnapshot,options:ExportOptions)->Result<(u32,u32,f64,f64),Fault>{let(world_width,world_height)=document.artboard.as_ref().map_or((1024.0,1024.0),|board|(board.width,board.height));if ![world_width,world_height].into_iter().all(|n|n.is_finite()&&n>0.0&&n<=1e9){return Err(Fault::from("Invalid PNG artboard extent"));}let width=options.width.unwrap_or(world_width.ceil()as u32);let height=options.height.unwrap_or(world_height.ceil()as u32);if !(1..=16384).contains(&width)||!(1..=16384).contains(&height)||u64::from(width)*u64::from(height)>67108864{return Err(Fault::from("PNG requested pixel extent exceeds capacity"));}Ok((width,height,f64::from(width)/world_width,f64::from(height)/world_height))}
 impl ExportProducer{
  pub fn new(read:store::os_store::snapshot_read::SnapshotRead<DrawingSnapshot>,options:ExportOptions)->Self{let output=ControlledRetirement::new(OutputOwners{semio_styles:Vec::new(),semio_nodes:Vec::new(),semio_drawing:None,pdf:None,pdf_close:None,svg:None,svg_close:None,paint:None,paint_close:None,painted:None,plan:None,image:None,encoder:None,raw:Some(OwnedSerializerOutput::empty()),failure:None}).unwrap_or_else(|_|unreachable!());Self{canvas:(1,1),title:None,project_at:0,vector:None,vector_close:None,view_box:None,bounds:None,bound_at:0,raster:None,raster_close:None,read:Some(read),read_close:None,output,phase:"prepare",pixel:0,options,transparent:options.transparent,complete:false,closing:false}}
@@ -46,11 +88,11 @@ impl ExportProducer{
     "vector-bounds"=>{let painted=owners.painted.as_mut().unwrap();if self.bound_at<painted.geometry.len(){if painted.plan.nodes[self.bound_at].visible{if let Some(b)=painted.geometry[self.bound_at].bounds.or(painted.geometry[self.bound_at].geometry_bounds){self.bounds=Some(self.bounds.map_or(b,|a|[a[0].min(b[0]),a[1].min(b[1]),a[2].max(b[2]),a[3].max(b[3])]));}}self.bound_at+=1;cx.consume_fuel(1);continue;}let[x1,y1,x2,y2]=self.bounds.unwrap_or([0.0,0.0,1024.0,768.0]);let plan=std::mem::take(&mut painted.plan);let view_box=[x1,y1,(x2-x1).max(1.0),(y2-y1).max(1.0)];if self.options.format=="pdf"{owners.pdf=Some(PdfWriteJob::new(plan,PdfWriteLimits{view_box,max_output_bytes:RAW_OUTPUT_LIMIT,max_work:1000000000}));self.phase="pdf-write";}else{owners.svg=Some(SvgWriteJob::new(plan,SvgWriteLimits{view_box,max_output_bytes:RAW_OUTPUT_LIMIT,max_work:1000000000}));self.phase="svg-write";}cx.consume_fuel(1);},
     "semio-project"=>{let plan=owners.plan.as_ref().ok_or_else(held)?;if let Some(node)=plan.nodes.get(self.project_at){if let Some(child)=crate::semio_drawing_node_from_plan_node(node,&mut owners.semio_styles){owners.semio_nodes.push(child);}self.project_at+=1;cx.consume_fuel(1);continue;}owners.semio_drawing=Some(crate::semio_drawing_snapshot(self.canvas,self.title.take(),std::mem::take(&mut owners.semio_styles),std::mem::take(&mut owners.semio_nodes)));self.phase="semio-encode";cx.consume_fuel(1);},
     "semio-encode"=>{let drawing=owners.semio_drawing.as_ref().ok_or_else(held)?;let format=if self.options.format=="dxf"{semio_s_artifact_stdio_semio_drawing::io::SemioDrawingFormat::Dxf}else{semio_s_artifact_stdio_semio_drawing::io::SemioDrawingFormat::Dwg};owners.raw.as_mut().ok_or_else(held)?.contiguous=semio_s_artifact_stdio_semio_drawing_export::encode_drawing(drawing,format).map_err(Fault::from)?;cx.consume_fuel(1);self.phase="output";},
-    "pdf-write"=>{let progress=owners.pdf.as_mut().unwrap().advance(1).map_err(Fault::from)?;cx.consume_fuel(1);if progress.done{let(close,pages)=owners.pdf.take().unwrap().into_retirement();owners.pdf_close=Some(close);owners.raw.as_mut().unwrap().pages=pages.unwrap();self.phase="output";}},
-    "svg-write"=>{let progress=owners.svg.as_mut().unwrap().advance(1).map_err(Fault::from)?;cx.consume_fuel(1);if progress.done{let(close,pages)=owners.svg.take().unwrap().into_retirement();owners.svg_close=Some(close);owners.raw.as_mut().unwrap().pages=pages.unwrap();self.phase="output";}},
+    "pdf-write"=>{let progress=owners.pdf.as_mut().unwrap().advance_original(cx).map_err(|error|Fault::from(error.domain_message()))?;if !progress.done{return Ok(false);}let(close,pages)=owners.pdf.take().unwrap().into_retirement();owners.pdf_close=Some(close);owners.raw.as_mut().unwrap().pages=pages.unwrap();self.phase="output";},
+    "svg-write"=>{let progress=owners.svg.as_mut().unwrap().advance_original(cx).map_err(|error|Fault::from(error.domain_message()))?;if !progress.done{return Ok(false);}let(close,pages)=owners.svg.take().unwrap().into_retirement();owners.svg_close=Some(close);owners.raw.as_mut().unwrap().pages=pages.unwrap();self.phase="output";},
     "raster"=>{let progress=self.raster.as_mut().ok_or_else(held)?.advance_original(cx).map_err(|error|Fault::from(error.domain_message()))?;if !progress.done{return Ok(false);}let(close,image)=self.raster.take().ok_or_else(held)?.into_retirement();self.raster_close=Some(close);owners.image=image;self.phase="background";},
-    "background"=>{if !self.transparent&&self.pixel<owners.image.as_ref().unwrap().pixels.len(){let image=owners.image.as_mut().unwrap();let at=self.pixel;let alpha=f64::from(image.pixels[at+3]);for channel in 0..3{image.pixels[at+channel]=(f64::from(image.pixels[at+channel])*alpha/255.0+255.0-alpha).round()as u8;}image.pixels[at+3]=255;self.pixel+=4;cx.consume_fuel(1);continue;}owners.encoder=Some(match semio_framework_pixels::png_encoding::PngEncodeJob::with_maximum_bytes(owners.image.take().unwrap(),RAW_OUTPUT_LIMIT){Ok(encoder)=>encoder,Err((error,image))=>{owners.image=Some(image);return Err(Fault::from(error.to_string()));}});self.phase="encode";cx.consume_fuel(1);},
-    "encode"=>{let encoder=owners.encoder.as_mut().unwrap();let progress=encoder.advance().map_err(|error|Fault::from(error.to_string()))?;cx.consume_fuel(1);if progress.done{owners.raw.as_mut().unwrap().contiguous=encoder.take_result().map_err(|error|Fault::from(error.to_string()))?.data;self.phase="output";}},
+    "background"=>{if !self.transparent&&self.pixel<owners.image.as_ref().unwrap().pixels.len(){let image=owners.image.as_mut().unwrap();let at=self.pixel;let alpha=f64::from(image.pixels[at+3]);for channel in 0..3{image.pixels[at+channel]=(f64::from(image.pixels[at+channel])*alpha/255.0+255.0-alpha).round()as u8;}image.pixels[at+3]=255;self.pixel+=4;cx.consume_fuel(1);continue;}if !admit_png_encoder(cx,&mut owners.image,&mut owners.encoder)?{return Ok(false);}self.phase="encode";},
+    "encode"=>{let encoder=owners.encoder.as_mut().unwrap();let Some(done)=advance_png_encoder(cx,encoder)? else{return Ok(false);};if done{owners.raw.as_mut().unwrap().contiguous=encoder.take_result().map_err(|error|Fault::from(error.to_string()))?.data;self.phase="output";}},
     "output"=>{self.complete=true;cx.consume_fuel(1);return Ok(true);},
     _=>return Err(Fault::from("Drawing export stage is invalid")),
    }

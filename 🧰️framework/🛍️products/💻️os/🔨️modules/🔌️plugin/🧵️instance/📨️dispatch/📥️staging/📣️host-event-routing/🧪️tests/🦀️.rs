@@ -21,6 +21,7 @@ fn every_scripted_lease_sequence_follows_the_law() {
                 "holds" => assert_eq!(lease.holds(lane(&op[1])), op[2].as_bool().unwrap(), "{at}"),
                 "queued" => assert_eq!(lease.queued(lane(&op[1])), op[2].as_bool().unwrap(), "{at}"),
                 "leave" => assert_eq!(lease.leave(lane(&op[1])), op[2].as_bool().unwrap(), "{at}"),
+                "idlePublication" => assert_eq!(lease.leave_if_idle(lane(&op[1]), op[2].as_bool().unwrap()), op[3].as_bool().unwrap(), "{at}"),
                 "idle" => assert_eq!(lease.is_idle(), op[1].as_bool().unwrap(), "{at}"),
                 other => panic!("unknown lease op {other}"),
             }

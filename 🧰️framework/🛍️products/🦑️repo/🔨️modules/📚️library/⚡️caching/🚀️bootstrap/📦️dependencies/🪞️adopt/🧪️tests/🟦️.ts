@@ -1,4 +1,3 @@
-import "./♻️resume/🟦️.ts";
 import {test,expect} from "bun:test";
 import Ajv from "ajv";
 import {spawnSync} from "node:child_process";

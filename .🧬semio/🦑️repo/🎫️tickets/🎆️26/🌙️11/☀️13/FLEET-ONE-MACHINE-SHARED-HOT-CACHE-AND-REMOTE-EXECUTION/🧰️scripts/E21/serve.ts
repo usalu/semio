@@ -1,0 +1,16 @@
+import {monitorEventLoopDelay} from "node:perf_hooks";
+import {join} from "node:path";
+import {startRemoteCacheServerV1} from "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-cache/🖥️server/🟦️.ts";
+import {createCasStoreV1} from "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🗄️cas/🗃️store/🟦️.ts";
+import {CAS_POLICY_V1} from "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🗄️cas/🧬️schema/🟦️.ts";
+const base=process.argv[2]!,port=Number(process.argv[3]),seconds=Number(process.argv[4]);
+const policy={...CAS_POLICY_V1,capBytes:1<<20,minimumCapBytes:1,enforceTickMilliseconds:3000,minAgeMs:1};
+const host=createCasStoreV1({root:join(base,"cas"),policy});
+const gaps:number[]=[];let last=performance.now();const timer=setInterval(()=>{const at=performance.now();gaps.push(at-last-5);last=at;},5);
+const t0=Date.now(),events:string[]=[];
+const server=await startRemoteCacheServerV1({directory:join(base,"dir"),host:"127.0.0.1",port,maximumBytes:2**30,maximumEntryBytes:2**24,maximumAgeDays:30,defaultInstance:"main",tokens:{write:"t"},validation:"off",hostStore:host,maintenanceSeconds:Number(process.env.MAINT??10),startupScan:"background",onEvent:e=>{if(e.stage!=="request")events.push(`${Date.now()-t0} ${JSON.stringify(e)}`);}});
+console.log("listening",server.url);
+const report=()=>{const s=gaps.slice().sort((a,b)=>a-b);return {n:s.length,p50:s[Math.floor(s.length/2)],p99:s[Math.floor(s.length*0.99)],max:s[s.length-1],over100:s.filter(x=>x>100).length,over1000:s.filter(x=>x>1000).length};};
+const every=setInterval(()=>{console.log(Date.now()-t0,JSON.stringify(report()),JSON.stringify(server.store.usage()));gaps.length=0;},5000);
+await new Promise(r=>setTimeout(r,seconds*1000));
+clearInterval(every);clearInterval(timer);console.log(events.slice(-20).join("\n"));await server.stop();process.exit(0);

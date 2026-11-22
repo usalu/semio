@@ -1,5 +1,5 @@
 {
- "description": "C31: the outer area of a region is the surface the air from outside reaches. Every case lists solids in one frame in metres (a `tube` is a regular prism around the z axis from `from` to `to` with `segments` sides, a disc when `innerRadiusM` is 0; a `box` spans `min` to `max`), the region whose outer area is measured against all solids as walls, the hand value `areaM2` (circles, not polygons) and, where C31 changes it, the value without the flood `unfloodedM2`. E3 (glazed cavities): a region whose faces looking into a closed cavity, with no wall of its own between them and the air, outweigh its faces that the air reaches or another region covers is contents of the cavity and counts its whole surface; `transparent` names the regions that are glazing, `seenM2` is the area of the target that can be seen from outside through them (`opaqueSeenM2` with no region transparent). The glazed box is the casing of six panels whose lid is glass (region g). Tube: CHS 48.3 x 3.2, 0.669 m long; caps: discs of 52 mm, 6 mm thick, 3 mm into the tube. The smallest feature is that of 1:50; the flood cell is a quarter of it. The oracle (`🧪️tests/🧊️volumes-flood/🐍️.py`: trimesh voxelisation, scipy connected components) measures the same triangles.",
+ "description": "C31: the outer area of a region is the surface the air from outside reaches. Every case lists solids in one frame in metres (a `tube` is a regular prism around the z axis from `from` to `to` with `segments` sides, a disc when `innerRadiusM` is 0; a `box` spans `min` to `max`), the region whose outer area is measured against all solids as walls, the hand value `areaM2` (circles, not polygons) and, where C31 changes it, the value without the flood `unfloodedM2`. A solid of another region covers a face (C29) only when it stands between the face and the air: beyond it along the normal the first free space is reached by the air. E3 (glazed cavities): a region whose faces looking into a closed cavity, with no wall of its own between them and the air, outweigh its faces that the air reaches or another region covers is contents of the cavity and counts its whole surface; `transparent` names the regions that are glazing, `seenM2` is the area of the target that can be seen from outside through them (`opaqueSeenM2` with no region transparent). The glazed box is the casing of six panels whose lid is glass (region g). Tube: CHS 48.3 x 3.2, 0.669 m long; caps: discs of 52 mm, 6 mm thick, 3 mm into the tube. The smallest feature is that of 1:50; the flood cell is a quarter of it. The oracle (`🧪️tests/🧊️volumes-flood/🐍️.py`: trimesh voxelisation, scipy connected components) measures the same triangles.",
  "featureM": 0.0075,
  "cellM": 0.001875,
  "probeM": 0.00015,
@@ -723,6 +723,113 @@
    "unfloodedM2": 0.06,
    "transparent": [],
    "seenM2": 0
+  },
+  {
+   "name": "a casing with a bar of another region reaching in over its floor",
+   "hand": "the casing of six panels; a bar of another region, 200 x 18 mm, comes from 0.4 m outside through the left panel and ends 0.29 m inside, 2 mm above the floor: the bar has surface the air reaches, but beyond it lies the closed cavity, so it covers nothing of the floor (0.29 x 0.2 = 0.058) nor of the inside of the panel it passes through; where it leaves the panel outside it covers 0.2 x 0.018 of the outer face, which counts: the casing stays 0.52 (0.5786 if the bar covered the inside)",
+   "solids": [
+    {
+     "region": "a",
+     "kind": "box",
+     "min": [
+      -0.2,
+      -0.15,
+      -0.1
+     ],
+     "max": [
+      0.2,
+      0.15,
+      -0.09
+     ]
+    },
+    {
+     "region": "a",
+     "kind": "box",
+     "min": [
+      -0.2,
+      -0.15,
+      0.09
+     ],
+     "max": [
+      0.2,
+      0.15,
+      0.1
+     ]
+    },
+    {
+     "region": "a",
+     "kind": "box",
+     "min": [
+      -0.2,
+      -0.15,
+      -0.09
+     ],
+     "max": [
+      0.2,
+      -0.14,
+      0.09
+     ]
+    },
+    {
+     "region": "a",
+     "kind": "box",
+     "min": [
+      -0.2,
+      0.14,
+      -0.09
+     ],
+     "max": [
+      0.2,
+      0.15,
+      0.09
+     ]
+    },
+    {
+     "region": "a",
+     "kind": "box",
+     "min": [
+      -0.2,
+      -0.14,
+      -0.09
+     ],
+     "max": [
+      -0.19,
+      0.14,
+      0.09
+     ]
+    },
+    {
+     "region": "a",
+     "kind": "box",
+     "min": [
+      0.19,
+      -0.14,
+      -0.09
+     ],
+     "max": [
+      0.2,
+      0.14,
+      0.09
+     ]
+    },
+    {
+     "region": "b",
+     "kind": "box",
+     "min": [
+      -0.6,
+      -0.1,
+      -0.088
+     ],
+     "max": [
+      0.1,
+      0.1,
+      -0.07
+     ]
+    }
+   ],
+   "target": "a",
+   "areaM2": 0.52,
+   "unfloodedM2": 0.9704
   },
   {
    "name": "an absorber plate under a glass lid",
@@ -1494,6 +1601,8 @@
   ],
   "toleranceFraction": 0.02,
   "openGainM2": 0.134743,
-  "open": "arm-l-cap-1"
+  "open": "arm-l-cap-1",
+  "unresolvedPassageM": 0.00012,
+  "resolvedPassageM": 0.003
  }
 }

@@ -148,25 +148,23 @@
         println!("[STATS] app action registry indexed {} actions, {} migrated", registry.actions.len(), migrated.len());
     }
 
-    /// 🪟️ `stack` is the tabbed LEAF container, never an axis direction. `create_default_layout`
-    /// used to answer `"stack"` with `Axis { kind: "stack", children: [Stack[window]] }`, and every
-    /// consumer that walks a stack node's children as window leaves — the React seed resolver
-    /// `convertFrameworkLayoutNodeToModeLayout` among them — then read the inner stack AS a window
-    /// and minted a pane with no id, which is how `🎞️animate` booted with zero panes
-    /// (ticket 26/09/18, slice F1).
+    /// 🪟️ A stack is the tabbed LEAF container, never an axis: `create_default_layout` takes a typed
+    /// `Axis`, a lone window is the stack itself and `create_stack_layout` mints one stack root of window
+    /// leaves. A node that read the inner stack AS a window once minted a pane with no id, which is how
+    /// `🎞️animate` booted with zero panes (ticket 26/09/18, slice F1).
     #[semio_framework_async_macros::async_test]
-    async fn a_stack_default_layout_is_one_stack_root_of_window_leaves() {
-        use semio_ui_layout::layout::{WindowLayoutRoot, create_stack_layout};
-        let layout = create_default_layout(&["tile-editor".into()], "stack", None, Some(&["Tile editor".into()]));
-        let WindowLayoutRoot::Stack(root) = &layout.root else {
-            panic!("a stack request must mint a stack ROOT, not an axis wearing the stack discriminator");
+    async fn a_stack_layout_is_one_stack_root_of_window_leaves() {
+        use semio_ui_layout::layout::{create_stack_layout, Axis, WindowLayoutNode};
+        let layout = create_stack_layout(&["tile-editor".into()], Some(&["Tile editor".into()]));
+        let WindowLayoutNode::Stack { children, .. } = &layout.root else {
+            panic!("a stack layout must be a stack ROOT of window leaves");
         };
-        assert_eq!(root.children.len(), 1);
-        assert_eq!(root.children[0].window_kind_id, "tile-editor");
-        assert_eq!(root.children[0].title.as_deref(), Some("Tile editor"));
-        assert_eq!(&layout, &create_stack_layout(&["tile-editor".into()], Some(&["Tile editor".into()])));
-        let row = create_default_layout(&["a".into(), "b".into()], "row", Some(&[60.0, 40.0]), None);
-        assert!(matches!(row.root, WindowLayoutRoot::Axis(_)), "a row direction is still an axis root");
+        assert_eq!(children.len(), 1);
+        assert!(matches!(&children[0], WindowLayoutNode::Window { window_kind_id, title, .. } if window_kind_id == "tile-editor" && title.as_deref() == Some("Tile editor")));
+        let lone = create_default_layout(&["tile-editor".into()], Axis::Horizontal, None, Some(&["Tile editor".into()]));
+        assert!(matches!(&lone.root, WindowLayoutNode::Stack { children, .. } if children.len() == 1), "a lone window is the stack itself, not a one-child split");
+        let row = create_default_layout(&["a".into(), "b".into()], Axis::Horizontal, Some(&[0.6, 0.4]), None);
+        assert!(matches!(row.root, WindowLayoutNode::Split { axis: Axis::Horizontal, .. }), "a row direction is a horizontal split root");
     }
 
     #[semio_framework_async_macros::async_test]

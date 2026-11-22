@@ -54,9 +54,9 @@
     },
     "dimensions": {
       "heightM": 1,
-      "widthM": 0.7,
+      "widthM": 0.71,
       "depthM": 1,
-      "massKg": 730
+      "massKg": 745.0
     },
     "materials": [
       {
@@ -142,6 +142,20 @@
         "conductivityWmK": 50,
         "specificHeatJKgK": 450,
         "reference": "en-iso-10456"
+      },
+      {
+        "id": "etics-adhesive",
+        "title": {
+          "en": "Cementitious ETICS adhesive mortar",
+          "de": "Zementärer WDVS-Klebemörtel"
+        },
+        "emissivity": 0.9,
+        "source": "literature",
+        "solarAbsorptivity": 0.6,
+        "densityKgM3": 1500,
+        "conductivityWmK": 0.87,
+        "specificHeatJKgK": 1000,
+        "reference": "en-iso-10456"
       }
     ],
     "rig": {
@@ -158,13 +172,13 @@
           "x": 0,
           "y": 0,
           "angleDeg": 0,
-          "lengthM": 0.7,
+          "lengthM": 0.71,
           "joint": {
             "type": "fixed"
           },
           "mass": {
-            "kg": 730,
-            "comX": 0.22317,
+            "kg": 745.0,
+            "comX": 0.22713,
             "comY": 0.5,
             "distribution": "point",
             "source": "literature",
@@ -274,7 +288,7 @@
               "kind": "rect",
               "x": 0.38,
               "y": 0,
-              "w": 0.3,
+              "w": 0.31,
               "h": 1
             },
             {
@@ -287,7 +301,7 @@
               "region": "wall-field",
               "material": "mineral-render",
               "kind": "rect",
-              "x": 0.68,
+              "x": 0.69,
               "y": 0,
               "w": 0.02,
               "h": 1
@@ -302,16 +316,7 @@
               "region": "wall-field",
               "material": "masonry-mortar",
               "kind": "poly",
-              "points": [
-                [
-                  0.015,
-                  0.0895
-                ],
-                [
-                  0.38,
-                  0.0895
-                ]
-              ],
+              "points": [[0.015, 0.0895], [0.38, 0.0895]],
               "closed": false
             },
             {
@@ -324,16 +329,7 @@
               "region": "wall-field",
               "material": "masonry-mortar",
               "kind": "poly",
-              "points": [
-                [
-                  0.015,
-                  0.17283
-                ],
-                [
-                  0.38,
-                  0.17283
-                ]
-              ],
+              "points": [[0.015, 0.17283], [0.38, 0.17283]],
               "closed": false
             },
             {
@@ -346,16 +342,7 @@
               "region": "wall-field",
               "material": "masonry-mortar",
               "kind": "poly",
-              "points": [
-                [
-                  0.015,
-                  0.25617
-                ],
-                [
-                  0.38,
-                  0.25617
-                ]
-              ],
+              "points": [[0.015, 0.25617], [0.38, 0.25617]],
               "closed": false
             },
             {
@@ -368,16 +355,7 @@
               "region": "wall-field",
               "material": "masonry-mortar",
               "kind": "poly",
-              "points": [
-                [
-                  0.015,
-                  0.3395
-                ],
-                [
-                  0.38,
-                  0.3395
-                ]
-              ],
+              "points": [[0.015, 0.3395], [0.38, 0.3395]],
               "closed": false
             },
             {
@@ -390,16 +368,7 @@
               "region": "wall-field",
               "material": "masonry-mortar",
               "kind": "poly",
-              "points": [
-                [
-                  0.015,
-                  0.42283
-                ],
-                [
-                  0.38,
-                  0.42283
-                ]
-              ],
+              "points": [[0.015, 0.42283], [0.38, 0.42283]],
               "closed": false
             },
             {
@@ -412,16 +381,7 @@
               "region": "wall-field",
               "material": "masonry-mortar",
               "kind": "poly",
-              "points": [
-                [
-                  0.015,
-                  0.50617
-                ],
-                [
-                  0.38,
-                  0.50617
-                ]
-              ],
+              "points": [[0.015, 0.50617], [0.38, 0.50617]],
               "closed": false
             },
             {
@@ -434,16 +394,7 @@
               "region": "wall-field",
               "material": "masonry-mortar",
               "kind": "poly",
-              "points": [
-                [
-                  0.015,
-                  0.5895
-                ],
-                [
-                  0.38,
-                  0.5895
-                ]
-              ],
+              "points": [[0.015, 0.5895], [0.38, 0.5895]],
               "closed": false
             },
             {
@@ -456,16 +407,7 @@
               "region": "wall-field",
               "material": "masonry-mortar",
               "kind": "poly",
-              "points": [
-                [
-                  0.015,
-                  0.67283
-                ],
-                [
-                  0.38,
-                  0.67283
-                ]
-              ],
+              "points": [[0.015, 0.67283], [0.38, 0.67283]],
               "closed": false
             },
             {
@@ -478,16 +420,7 @@
               "region": "wall-field",
               "material": "masonry-mortar",
               "kind": "poly",
-              "points": [
-                [
-                  0.015,
-                  0.75617
-                ],
-                [
-                  0.38,
-                  0.75617
-                ]
-              ],
+              "points": [[0.015, 0.75617], [0.38, 0.75617]],
               "closed": false
             },
             {
@@ -500,16 +433,7 @@
               "region": "wall-field",
               "material": "masonry-mortar",
               "kind": "poly",
-              "points": [
-                [
-                  0.015,
-                  0.8395
-                ],
-                [
-                  0.38,
-                  0.8395
-                ]
-              ],
+              "points": [[0.015, 0.8395], [0.38, 0.8395]],
               "closed": false
             },
             {
@@ -522,16 +446,7 @@
               "region": "wall-field",
               "material": "masonry-mortar",
               "kind": "poly",
-              "points": [
-                [
-                  0.015,
-                  0.92283
-                ],
-                [
-                  0.38,
-                  0.92283
-                ]
-              ],
+              "points": [[0.015, 0.92283], [0.38, 0.92283]],
               "closed": false
             },
             {
@@ -544,16 +459,7 @@
               "region": "wall-field",
               "material": "masonry-mortar",
               "kind": "poly",
-              "points": [
-                [
-                  0.135,
-                  0.01233
-                ],
-                [
-                  0.135,
-                  0.08333
-                ]
-              ],
+              "points": [[0.135, 0.01233], [0.135, 0.08333]],
               "closed": false
             },
             {
@@ -566,16 +472,7 @@
               "region": "wall-field",
               "material": "masonry-mortar",
               "kind": "poly",
-              "points": [
-                [
-                  0.26,
-                  0.09567
-                ],
-                [
-                  0.26,
-                  0.16667
-                ]
-              ],
+              "points": [[0.26, 0.09567], [0.26, 0.16667]],
               "closed": false
             },
             {
@@ -588,16 +485,7 @@
               "region": "wall-field",
               "material": "masonry-mortar",
               "kind": "poly",
-              "points": [
-                [
-                  0.135,
-                  0.179
-                ],
-                [
-                  0.135,
-                  0.25
-                ]
-              ],
+              "points": [[0.135, 0.179], [0.135, 0.25]],
               "closed": false
             },
             {
@@ -610,16 +498,7 @@
               "region": "wall-field",
               "material": "masonry-mortar",
               "kind": "poly",
-              "points": [
-                [
-                  0.26,
-                  0.26233
-                ],
-                [
-                  0.26,
-                  0.33333
-                ]
-              ],
+              "points": [[0.26, 0.26233], [0.26, 0.33333]],
               "closed": false
             },
             {
@@ -632,16 +511,7 @@
               "region": "wall-field",
               "material": "masonry-mortar",
               "kind": "poly",
-              "points": [
-                [
-                  0.135,
-                  0.34567
-                ],
-                [
-                  0.135,
-                  0.41667
-                ]
-              ],
+              "points": [[0.135, 0.34567], [0.135, 0.41667]],
               "closed": false
             },
             {
@@ -654,16 +524,7 @@
               "region": "wall-field",
               "material": "masonry-mortar",
               "kind": "poly",
-              "points": [
-                [
-                  0.26,
-                  0.429
-                ],
-                [
-                  0.26,
-                  0.5
-                ]
-              ],
+              "points": [[0.26, 0.429], [0.26, 0.5]],
               "closed": false
             },
             {
@@ -676,16 +537,7 @@
               "region": "wall-field",
               "material": "masonry-mortar",
               "kind": "poly",
-              "points": [
-                [
-                  0.135,
-                  0.51233
-                ],
-                [
-                  0.135,
-                  0.58333
-                ]
-              ],
+              "points": [[0.135, 0.51233], [0.135, 0.58333]],
               "closed": false
             },
             {
@@ -698,16 +550,7 @@
               "region": "wall-field",
               "material": "masonry-mortar",
               "kind": "poly",
-              "points": [
-                [
-                  0.26,
-                  0.59567
-                ],
-                [
-                  0.26,
-                  0.66667
-                ]
-              ],
+              "points": [[0.26, 0.59567], [0.26, 0.66667]],
               "closed": false
             },
             {
@@ -720,16 +563,7 @@
               "region": "wall-field",
               "material": "masonry-mortar",
               "kind": "poly",
-              "points": [
-                [
-                  0.135,
-                  0.679
-                ],
-                [
-                  0.135,
-                  0.75
-                ]
-              ],
+              "points": [[0.135, 0.679], [0.135, 0.75]],
               "closed": false
             },
             {
@@ -742,16 +576,7 @@
               "region": "wall-field",
               "material": "masonry-mortar",
               "kind": "poly",
-              "points": [
-                [
-                  0.26,
-                  0.76233
-                ],
-                [
-                  0.26,
-                  0.83333
-                ]
-              ],
+              "points": [[0.26, 0.76233], [0.26, 0.83333]],
               "closed": false
             },
             {
@@ -764,16 +589,7 @@
               "region": "wall-field",
               "material": "masonry-mortar",
               "kind": "poly",
-              "points": [
-                [
-                  0.135,
-                  0.84567
-                ],
-                [
-                  0.135,
-                  0.91667
-                ]
-              ],
+              "points": [[0.135, 0.84567], [0.135, 0.91667]],
               "closed": false
             },
             {
@@ -786,16 +602,7 @@
               "region": "wall-field",
               "material": "masonry-mortar",
               "kind": "poly",
-              "points": [
-                [
-                  0.26,
-                  0.929
-                ],
-                [
-                  0.26,
-                  0.9955
-                ]
-              ],
+              "points": [[0.26, 0.929], [0.26, 0.9955]],
               "closed": false
             },
             {
@@ -808,16 +615,7 @@
               "region": "wall-field",
               "material": "mineral-wool",
               "kind": "poly",
-              "points": [
-                [
-                  0.38,
-                  0.4
-                ],
-                [
-                  0.68,
-                  0.4
-                ]
-              ],
+              "points": [[0.39, 0.4], [0.69, 0.4]],
               "closed": false
             }
           ],
@@ -883,7 +681,7 @@
               "kind": "rect",
               "x": 0.38,
               "y": -0.5,
-              "w": 0.3,
+              "w": 0.31,
               "h": 1
             },
             {
@@ -896,7 +694,7 @@
               "region": "wall-field",
               "material": "mineral-render",
               "kind": "rect",
-              "x": 0.68,
+              "x": 0.69,
               "y": -0.5,
               "w": 0.02,
               "h": 1
@@ -911,16 +709,7 @@
               "region": "wall-field",
               "material": "masonry-mortar",
               "kind": "poly",
-              "points": [
-                [
-                  0.26,
-                  -0.4955
-                ],
-                [
-                  0.26,
-                  0.4955
-                ]
-              ],
+              "points": [[0.26, -0.4955], [0.26, 0.4955]],
               "closed": false
             },
             {
@@ -933,16 +722,7 @@
               "region": "wall-field",
               "material": "masonry-mortar",
               "kind": "poly",
-              "points": [
-                [
-                  0.015,
-                  -0.47
-                ],
-                [
-                  0.255,
-                  -0.47
-                ]
-              ],
+              "points": [[0.015, -0.47], [0.255, -0.47]],
               "closed": false
             },
             {
@@ -955,16 +735,7 @@
               "region": "wall-field",
               "material": "masonry-mortar",
               "kind": "poly",
-              "points": [
-                [
-                  0.015,
-                  -0.345
-                ],
-                [
-                  0.255,
-                  -0.345
-                ]
-              ],
+              "points": [[0.015, -0.345], [0.255, -0.345]],
               "closed": false
             },
             {
@@ -977,16 +748,7 @@
               "region": "wall-field",
               "material": "masonry-mortar",
               "kind": "poly",
-              "points": [
-                [
-                  0.015,
-                  -0.22
-                ],
-                [
-                  0.255,
-                  -0.22
-                ]
-              ],
+              "points": [[0.015, -0.22], [0.255, -0.22]],
               "closed": false
             },
             {
@@ -999,16 +761,7 @@
               "region": "wall-field",
               "material": "masonry-mortar",
               "kind": "poly",
-              "points": [
-                [
-                  0.015,
-                  -0.095
-                ],
-                [
-                  0.255,
-                  -0.095
-                ]
-              ],
+              "points": [[0.015, -0.095], [0.255, -0.095]],
               "closed": false
             },
             {
@@ -1021,16 +774,7 @@
               "region": "wall-field",
               "material": "masonry-mortar",
               "kind": "poly",
-              "points": [
-                [
-                  0.015,
-                  0.03
-                ],
-                [
-                  0.255,
-                  0.03
-                ]
-              ],
+              "points": [[0.015, 0.03], [0.255, 0.03]],
               "closed": false
             },
             {
@@ -1043,16 +787,7 @@
               "region": "wall-field",
               "material": "masonry-mortar",
               "kind": "poly",
-              "points": [
-                [
-                  0.015,
-                  0.155
-                ],
-                [
-                  0.255,
-                  0.155
-                ]
-              ],
+              "points": [[0.015, 0.155], [0.255, 0.155]],
               "closed": false
             },
             {
@@ -1065,16 +800,7 @@
               "region": "wall-field",
               "material": "masonry-mortar",
               "kind": "poly",
-              "points": [
-                [
-                  0.015,
-                  0.28
-                ],
-                [
-                  0.255,
-                  0.28
-                ]
-              ],
+              "points": [[0.015, 0.28], [0.255, 0.28]],
               "closed": false
             },
             {
@@ -1087,16 +813,7 @@
               "region": "wall-field",
               "material": "masonry-mortar",
               "kind": "poly",
-              "points": [
-                [
-                  0.015,
-                  0.405
-                ],
-                [
-                  0.255,
-                  0.405
-                ]
-              ],
+              "points": [[0.015, 0.405], [0.255, 0.405]],
               "closed": false
             },
             {
@@ -1109,16 +826,7 @@
               "region": "wall-field",
               "material": "masonry-mortar",
               "kind": "poly",
-              "points": [
-                [
-                  0.265,
-                  -0.2825
-                ],
-                [
-                  0.38,
-                  -0.2825
-                ]
-              ],
+              "points": [[0.265, -0.2825], [0.38, -0.2825]],
               "closed": false
             },
             {
@@ -1131,16 +839,7 @@
               "region": "wall-field",
               "material": "masonry-mortar",
               "kind": "poly",
-              "points": [
-                [
-                  0.265,
-                  -0.0325
-                ],
-                [
-                  0.38,
-                  -0.0325
-                ]
-              ],
+              "points": [[0.265, -0.0325], [0.38, -0.0325]],
               "closed": false
             },
             {
@@ -1153,16 +852,7 @@
               "region": "wall-field",
               "material": "masonry-mortar",
               "kind": "poly",
-              "points": [
-                [
-                  0.265,
-                  0.2175
-                ],
-                [
-                  0.38,
-                  0.2175
-                ]
-              ],
+              "points": [[0.265, 0.2175], [0.38, 0.2175]],
               "closed": false
             },
             {
@@ -1175,16 +865,7 @@
               "region": "wall-field",
               "material": "masonry-mortar",
               "kind": "poly",
-              "points": [
-                [
-                  0.265,
-                  0.4675
-                ],
-                [
-                  0.38,
-                  0.4675
-                ]
-              ],
+              "points": [[0.265, 0.4675], [0.38, 0.4675]],
               "closed": false
             },
             {
@@ -1197,36 +878,27 @@
               "region": "wall-field",
               "material": "mineral-wool",
               "kind": "poly",
-              "points": [
-                [
-                  0.38,
-                  -0.25
-                ],
-                [
-                  0.68,
-                  -0.25
-                ]
-              ],
+              "points": [[0.39, -0.25], [0.69, -0.25]],
               "closed": false
             }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "The 30 cm ETICS wall in vertical section, a sample 1 m high and 1 m long: room side on the left, outside on the right, 700 mm in total.",
-            "de": "Die Wand mit 30 cm WDVS im Vertikalschnitt, eine Probe 1 m hoch und 1 m lang: Raumseite links, außen rechts, insgesamt 700 mm."
+            "en": "The 30 cm ETICS wall in vertical section, a sample 1 m high and 1 m long: room side on the left, outside on the right, 710 mm in total.",
+            "de": "Die Wand mit 30 cm WDVS im Vertikalschnitt, eine Probe 1 m hoch und 1 m lang: Raumseite links, außen rechts, insgesamt 710 mm."
           },
           "retained": {
-            "en": "All four layers at their real thickness: 15 mm lime plaster, the 365 mm solid brick leaf in its block bond (twelve NF courses of 83.3 mm, each with its bed joint and its longitudinal joint, which changes side from course to course), the 300 mm mineral wool boards with their horizontal board joint at 0.40 m and the 20 mm render. The plan shows the cut top course: headers on the room side, stretchers outside, their head joints and the vertical board joint of the wool.",
-            "de": "Alle vier Schichten in wirklicher Dicke: 15 mm Kalkputz, die 365-mm-Vollziegelschale im Blockverband (zwölf NF-Schichten zu 83,3 mm, jede mit Lagerfuge und Längsfuge, die von Schicht zu Schicht die Seite wechselt), die 300-mm-Mineralwolleplatten mit ihrer waagrechten Plattenfuge bei 0,40 m und der 20-mm-Außenputz. Der Grundriss zeigt die geschnittene oberste Schicht: Binder raumseitig, Läufer außen, ihre Stoßfugen und die senkrechte Plattenfuge der Wolle."
+            "en": "The layers at their real thickness: 15 mm lime plaster, the 365 mm solid brick leaf in its block bond (twelve NF courses of 83.3 mm, each with its bed joint and its longitudinal joint, which changes side from course to course), the 300 mm mineral wool boards with their horizontal board joint at 0.40 m and the 20 mm render. The plan shows the cut top course: headers on the room side, stretchers outside, their head joints and the vertical board joint of the wool.",
+            "de": "Die Schichten in wirklicher Dicke: 15 mm Kalkputz, die 365-mm-Vollziegelschale im Blockverband (zwölf NF-Schichten zu 83,3 mm, jede mit Lagerfuge und Längsfuge, die von Schicht zu Schicht die Seite wechselt), die 300-mm-Mineralwolleplatten mit ihrer waagrechten Plattenfuge bei 0,40 m und der 20-mm-Außenputz. Der Grundriss zeigt die geschnittene oberste Schicht: Binder raumseitig, Läufer außen, ihre Stoßfugen und die senkrechte Plattenfuge der Wolle."
           },
           "merged": {
             "en": "None.",
             "de": "Keine."
           },
           "omitted": {
-            "en": "The 12 mm mortar bed under the first course lies on the ground line and is drawn by it; the plate anchors and the reinforcing mesh lie inside the wool and the render and are not cut by this section; the board adhesive is not a declared layer of this build-up.",
-            "de": "Das 12-mm-Mörtelbett unter der ersten Schicht liegt auf der Bodenlinie und wird von ihr gezeichnet; die Tellerdübel und das Armierungsgewebe liegen in Wolle und Putz und werden von diesem Schnitt nicht getroffen; der Plattenkleber ist keine erklärte Schicht dieses Aufbaus."
+            "en": "The 12 mm mortar bed under the first course lies on the ground line and is drawn by it; the plate anchors and the reinforcing mesh lie inside the wool and the render and are not cut by this section; the 10 mm adhesive bed is drawn with the wool, the 8 mm base coat with the render.",
+            "de": "Das 12-mm-Mörtelbett unter der ersten Schicht liegt auf der Bodenlinie und wird von ihr gezeichnet; die Tellerdübel und das Armierungsgewebe liegen in Wolle und Putz und werden von diesem Schnitt nicht getroffen; das 10-mm-Kleberbett ist mit der Wolle gezeichnet, der 8-mm-Unterputz mit dem Außenputz."
           },
           "thinElements": {
             "en": "The 15 mm plaster is 0.3 mm and the 20 mm render 0.4 mm on paper; the 10 mm head and longitudinal joints and the 12.3 mm bed joints are single detail lines on their centre lines.",
@@ -1315,7 +987,7 @@
               "kind": "rect",
               "x": 0.38,
               "y": 0,
-              "w": 0.3,
+              "w": 0.31,
               "h": 1
             },
             {
@@ -1328,7 +1000,7 @@
               "region": "wall-field",
               "material": "mineral-render",
               "kind": "rect",
-              "x": 0.68,
+              "x": 0.69,
               "y": 0,
               "w": 0.02,
               "h": 1
@@ -1381,7 +1053,7 @@
               "kind": "rect",
               "x": 0.38,
               "y": -0.5,
-              "w": 0.3,
+              "w": 0.31,
               "h": 1
             },
             {
@@ -1394,7 +1066,7 @@
               "region": "wall-field",
               "material": "mineral-render",
               "kind": "rect",
-              "x": 0.68,
+              "x": 0.69,
               "y": -0.5,
               "w": 0.02,
               "h": 1
@@ -1403,8 +1075,8 @@
         },
         "decisions": {
           "silhouette": {
-            "en": "The 30 cm ETICS wall in vertical section, a sample 1 m high and 1 m long: room side on the left, outside on the right, 700 mm in total.",
-            "de": "Die Wand mit 30 cm WDVS im Vertikalschnitt, eine Probe 1 m hoch und 1 m lang: Raumseite links, außen rechts, insgesamt 700 mm."
+            "en": "The 30 cm ETICS wall in vertical section, a sample 1 m high and 1 m long: room side on the left, outside on the right, 710 mm in total.",
+            "de": "Die Wand mit 30 cm WDVS im Vertikalschnitt, eine Probe 1 m hoch und 1 m lang: Raumseite links, außen rechts, insgesamt 710 mm."
           },
           "retained": {
             "en": "The masonry leaf, the 300 mm insulation and the render strip.",
@@ -1480,7 +1152,7 @@
               "kind": "rect",
               "x": 0.38,
               "y": 0,
-              "w": 0.32,
+              "w": 0.33,
               "h": 1
             }
           ],
@@ -1529,15 +1201,15 @@
               "kind": "rect",
               "x": 0.38,
               "y": -0.5,
-              "w": 0.32,
+              "w": 0.33,
               "h": 1
             }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "The 30 cm ETICS wall in vertical section, a sample 1 m high and 1 m long: room side on the left, outside on the right, 700 mm in total.",
-            "de": "Die Wand mit 30 cm WDVS im Vertikalschnitt, eine Probe 1 m hoch und 1 m lang: Raumseite links, außen rechts, insgesamt 700 mm."
+            "en": "The 30 cm ETICS wall in vertical section, a sample 1 m high and 1 m long: room side on the left, outside on the right, 710 mm in total.",
+            "de": "Die Wand mit 30 cm WDVS im Vertikalschnitt, eine Probe 1 m hoch und 1 m lang: Raumseite links, außen rechts, insgesamt 710 mm."
           },
           "retained": {
             "en": "The masonry leaf (380 mm with its plaster) and the ETICS (320 mm of wool and render).",
@@ -1598,7 +1270,7 @@
               "kind": "rect",
               "x": 0,
               "y": 0,
-              "w": 0.7,
+              "w": 0.71,
               "h": 1
             }
           ],
@@ -1632,15 +1304,15 @@
               "kind": "rect",
               "x": 0,
               "y": -0.5,
-              "w": 0.7,
+              "w": 0.71,
               "h": 1
             }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "The 700 mm wall as one cut field, 1 m high and 1 m long.",
-            "de": "Die 700 mm dicke Wand als ein geschnittenes Feld, 1 m hoch und 1 m lang."
+            "en": "The 710 mm wall as one cut field, 1 m high and 1 m long.",
+            "de": "Die 710 mm dicke Wand als ein geschnittenes Feld, 1 m hoch und 1 m lang."
           },
           "retained": {
             "en": "The outline of the wall.",
@@ -1961,6 +1633,20 @@
               "reference": "en-iso-10456"
             },
             {
+              "id": "adhesive",
+              "title": {
+                "en": "Cementitious adhesive bed 10 mm",
+                "de": "Zementäres Kleberbett 10 mm"
+              },
+              "kind": "masonry",
+              "material": "etics-adhesive",
+              "thicknessM": 0.01,
+              "resistanceM2KW": 0.01149,
+              "heatCapacityJM2K": 15000,
+              "source": "literature",
+              "reference": "en-iso-10456"
+            },
+            {
               "id": "insulation",
               "title": {
                 "en": "ETICS mineral wool 300 mm",
@@ -1975,21 +1661,35 @@
               "reference": "en-iso-10456"
             },
             {
-              "id": "render",
+              "id": "base-coat",
               "title": {
-                "en": "Mineral render 20 mm",
-                "de": "Mineralputz 20 mm"
+                "en": "Base coat with glass-fibre mesh 8 mm",
+                "de": "Unterputz mit Glasfasergewebe 8 mm"
               },
               "kind": "masonry",
               "material": "mineral-render",
-              "thicknessM": 0.02,
-              "resistanceM2KW": 0.02299,
-              "heatCapacityJM2K": 34000,
+              "thicknessM": 0.008,
+              "resistanceM2KW": 0.0092,
+              "heatCapacityJM2K": 13600,
+              "source": "literature",
+              "reference": "en-iso-10456"
+            },
+            {
+              "id": "render",
+              "title": {
+                "en": "Mineral finish coat 12 mm",
+                "de": "Mineralischer Oberputz 12 mm"
+              },
+              "kind": "masonry",
+              "material": "mineral-render",
+              "thicknessM": 0.012,
+              "resistanceM2KW": 0.01379,
+              "heatCapacityJM2K": 20400,
               "source": "literature",
               "reference": "en-iso-10456"
             }
           ],
-          "heatCapacityJM2K": 730540,
+          "heatCapacityJM2K": 745540,
           "conditioned": {
             "interiorTempC": 20,
             "interiorFilmM2KW": 0.13
@@ -2013,9 +1713,7 @@
     "structure": {
       "gravityMS2": 9.81,
       "dynamics": "quasi-static",
-      "supports": [
-        "base"
-      ],
+      "supports": ["base"],
       "assumptions": [
         {
           "en": "The 1 m strip is one rigid body on a fixed base; the self-weight acts at its centre. No imposed load is applied.",
@@ -2960,6 +2658,19 @@
             }
           },
           {
+            "id": "adhesive",
+            "kind": "box",
+            "bone": "root",
+            "material": "etics-adhesive",
+            "role": "body",
+            "tone": 0.6,
+            "size": [0.01, 1.0, 1.0],
+            "transform": {
+              "translation": [0.385, 0.5, 0.0]
+            },
+            "sectionFaces": ["-v", "+v", "-w", "+w"]
+          },
+          {
             "id": "wool-board-low-left",
             "kind": "box",
             "bone": "root",
@@ -2968,7 +2679,7 @@
             "tone": 0.88,
             "size": [0.3, 0.4, 0.65],
             "transform": {
-              "translation": [0.53, 0.2, -0.175]
+              "translation": [0.54, 0.2, -0.175]
             },
             "sectionFaces": ["-v", "-w"]
           },
@@ -2981,7 +2692,7 @@
             "tone": 0.88,
             "size": [0.3, 0.4, 0.35],
             "transform": {
-              "translation": [0.53, 0.2, 0.325]
+              "translation": [0.54, 0.2, 0.325]
             },
             "sectionFaces": ["-v", "+w"]
           },
@@ -2994,7 +2705,7 @@
             "tone": 0.88,
             "size": [0.3, 0.6, 0.25],
             "transform": {
-              "translation": [0.53, 0.7, -0.375]
+              "translation": [0.54, 0.7, -0.375]
             },
             "sectionFaces": ["+v", "-w"]
           },
@@ -3007,22 +2718,79 @@
             "tone": 0.88,
             "size": [0.3, 0.6, 0.75],
             "transform": {
-              "translation": [0.53, 0.7, 0.125]
+              "translation": [0.54, 0.7, 0.125]
             },
             "sectionFaces": ["+v", "+w"]
           },
           {
-            "id": "render",
+            "id": "render-base-coat",
+            "kind": "box",
+            "bone": "root",
+            "material": "mineral-render",
+            "role": "body",
+            "tone": 0.72,
+            "size": [0.008, 1.0, 1.0],
+            "transform": {
+              "translation": [0.694, 0.5, 0.0]
+            },
+            "sectionFaces": ["-v", "+v", "-w", "+w"]
+          },
+          {
+            "id": "render-finish",
             "kind": "box",
             "bone": "root",
             "material": "mineral-render",
             "role": "body",
             "tone": 0.8,
-            "size": [0.02, 1.0, 1.0],
+            "size": [0.012, 1.0, 1.0],
             "transform": {
-              "translation": [0.69, 0.5, 0.0]
+              "translation": [0.704, 0.5, 0.0]
             },
             "sectionFaces": ["-v", "+v", "-w", "+w"]
+          },
+          {
+            "id": "plate-anchor-1",
+            "kind": "revolve",
+            "bone": "root",
+            "material": "etics-anchor",
+            "role": "detail",
+            "tone": 0.3,
+            "profile": [[0.33, 0.0], [0.33, 0.004], [0.682, 0.004], [0.682, 0.03], [0.69, 0.03], [0.69, 0.0]],
+            "axis": [1, 0, 0],
+            "origin": [0.0, 0.4, 0.15]
+          },
+          {
+            "id": "plate-anchor-2",
+            "kind": "revolve",
+            "bone": "root",
+            "material": "etics-anchor",
+            "role": "detail",
+            "tone": 0.3,
+            "profile": [[0.33, 0.0], [0.33, 0.004], [0.682, 0.004], [0.682, 0.03], [0.69, 0.03], [0.69, 0.0]],
+            "axis": [1, 0, 0],
+            "origin": [0.0, 0.4, -0.25]
+          },
+          {
+            "id": "plate-anchor-3",
+            "kind": "revolve",
+            "bone": "root",
+            "material": "etics-anchor",
+            "role": "detail",
+            "tone": 0.3,
+            "profile": [[0.33, 0.0], [0.33, 0.004], [0.682, 0.004], [0.682, 0.03], [0.69, 0.03], [0.69, 0.0]],
+            "axis": [1, 0, 0],
+            "origin": [0.0, 0.0875, -0.25]
+          },
+          {
+            "id": "plate-anchor-4",
+            "kind": "revolve",
+            "bone": "root",
+            "material": "etics-anchor",
+            "role": "detail",
+            "tone": 0.3,
+            "profile": [[0.33, 0.0], [0.33, 0.004], [0.682, 0.004], [0.682, 0.03], [0.69, 0.03], [0.69, 0.0]],
+            "axis": [1, 0, 0],
+            "origin": [0.0, 0.7125, 0.15]
           }
         ],
         "thermal": [
@@ -3049,23 +2817,82 @@
             "layer": "brick"
           },
           {
-            "id": "th-insulation",
+            "id": "th-adhesive",
+            "of": "adhesive",
+            "region": "wall-field",
+            "layer": "adhesive",
+            "sectionFaces": ["-v", "+v", "-w", "+w"]
+          },
+          {
+            "id": "th-wool-board-low-left",
             "kind": "box",
             "bone": "root",
             "material": "mineral-wool",
             "role": "body",
             "tone": 0.88,
-            "size": [0.3, 1.0, 1.0],
+            "size": [0.3, 0.4, 0.65],
             "transform": {
-              "translation": [0.53, 0.5, 0.0]
+              "translation": [0.54, 0.2, -0.175]
             },
             "sectionFaces": ["-v", "+v", "-w", "+w"],
             "region": "wall-field",
             "layer": "insulation"
           },
           {
-            "id": "th-render",
-            "of": "render",
+            "id": "th-wool-board-low-right",
+            "kind": "box",
+            "bone": "root",
+            "material": "mineral-wool",
+            "role": "body",
+            "tone": 0.88,
+            "size": [0.3, 0.4, 0.35],
+            "transform": {
+              "translation": [0.54, 0.2, 0.325]
+            },
+            "sectionFaces": ["-v", "+v", "-w", "+w"],
+            "region": "wall-field",
+            "layer": "insulation"
+          },
+          {
+            "id": "th-wool-board-high-left",
+            "kind": "box",
+            "bone": "root",
+            "material": "mineral-wool",
+            "role": "body",
+            "tone": 0.88,
+            "size": [0.3, 0.6, 0.25],
+            "transform": {
+              "translation": [0.54, 0.7, -0.375]
+            },
+            "sectionFaces": ["-v", "+v", "-w", "+w"],
+            "region": "wall-field",
+            "layer": "insulation"
+          },
+          {
+            "id": "th-wool-board-high-right",
+            "kind": "box",
+            "bone": "root",
+            "material": "mineral-wool",
+            "role": "body",
+            "tone": 0.88,
+            "size": [0.3, 0.6, 0.75],
+            "transform": {
+              "translation": [0.54, 0.7, 0.125]
+            },
+            "sectionFaces": ["-v", "+v", "-w", "+w"],
+            "region": "wall-field",
+            "layer": "insulation"
+          },
+          {
+            "id": "th-render-base-coat",
+            "of": "render-base-coat",
+            "region": "wall-field",
+            "layer": "base-coat",
+            "sectionFaces": ["-v", "+v", "-w", "+w"]
+          },
+          {
+            "id": "th-face-render",
+            "of": "render-finish",
             "region": "wall-field",
             "layer": "render",
             "sectionFaces": ["-u", "-v", "+v", "-w", "+w"]
@@ -3110,7 +2937,7 @@
             "tone": 0.3,
             "radii": [0.04, 0.04, 0.04],
             "transform": {
-              "translation": [0.22317, 0.5, 0.0]
+              "translation": [0.22713, 0.5, 0.0]
             },
             "member": "root",
             "part": "mass"
@@ -3122,7 +2949,7 @@
             "material": "etics-anchor",
             "role": "detail",
             "tone": 0.3,
-            "profile": [[0.33, 0.0], [0.33, 0.004], [0.672, 0.004], [0.672, 0.03], [0.68, 0.03], [0.68, 0.0]],
+            "profile": [[0.33, 0.0], [0.33, 0.004], [0.682, 0.004], [0.682, 0.03], [0.69, 0.03], [0.69, 0.0]],
             "axis": [1, 0, 0],
             "origin": [0.0, 0.4, 0.15],
             "member": "root",
@@ -3135,7 +2962,7 @@
             "material": "etics-anchor",
             "role": "detail",
             "tone": 0.3,
-            "profile": [[0.33, 0.0], [0.33, 0.004], [0.672, 0.004], [0.672, 0.03], [0.68, 0.03], [0.68, 0.0]],
+            "profile": [[0.33, 0.0], [0.33, 0.004], [0.682, 0.004], [0.682, 0.03], [0.69, 0.03], [0.69, 0.0]],
             "axis": [1, 0, 0],
             "origin": [0.0, 0.4, -0.25],
             "member": "root",
@@ -3148,7 +2975,7 @@
             "material": "etics-anchor",
             "role": "detail",
             "tone": 0.3,
-            "profile": [[0.33, 0.0], [0.33, 0.004], [0.672, 0.004], [0.672, 0.03], [0.68, 0.03], [0.68, 0.0]],
+            "profile": [[0.33, 0.0], [0.33, 0.004], [0.682, 0.004], [0.682, 0.03], [0.69, 0.03], [0.69, 0.0]],
             "axis": [1, 0, 0],
             "origin": [0.0, 0.0875, -0.25],
             "member": "root",
@@ -3161,7 +2988,7 @@
             "material": "etics-anchor",
             "role": "detail",
             "tone": 0.3,
-            "profile": [[0.33, 0.0], [0.33, 0.004], [0.672, 0.004], [0.672, 0.03], [0.68, 0.03], [0.68, 0.0]],
+            "profile": [[0.33, 0.0], [0.33, 0.004], [0.682, 0.004], [0.682, 0.03], [0.69, 0.03], [0.69, 0.0]],
             "axis": [1, 0, 0],
             "origin": [0.0, 0.7125, 0.15],
             "member": "root",
@@ -3170,16 +2997,20 @@
         ],
         "decisions": [
           {
-            "en": "Body: the wall as built in a 1 m x 1 m sample, 700 mm thick. 15 mm lime plaster; the 365 mm solid brick leaf of 1960 in the NF block bond (240 x 115 x 71 mm bricks, twelve courses of 1/12 m with 12.3 mm bed joints and 10 mm head joints): one course has the stretchers on the room side and the headers outside, the next the reverse, so the 10 mm longitudinal joint changes side from course to course and the head joints of neighbouring courses are offset by a quarter brick; the bricks at both ends of the sample are cut. The first course stands on its mortar bed. Then four 300 mm mineral wool boards of 800 x 625 mm in stretcher bond (row joint at 0.40 m, vertical joints 400 mm apart) and the 20 mm mineral render. Cut faces are flush, as a saw cut leaves them: the joints show by their lighter mortar tone.",
-            "de": "Körper: die Wand wie gebaut als Probe von 1 m x 1 m, 700 mm dick. 15 mm Kalkputz; die 365-mm-Vollziegelschale von 1960 im NF-Blockverband (Steine 240 x 115 x 71 mm, zwölf Schichten zu 1/12 m mit 12,3-mm-Lagerfugen und 10-mm-Stoßfugen): eine Schicht hat die Läufer raumseitig und die Binder außen, die nächste umgekehrt, so dass die 10-mm-Längsfuge von Schicht zu Schicht die Seite wechselt und die Stoßfugen benachbarter Schichten um einen Viertelstein versetzt sind; die Steine an beiden Enden der Probe sind geschnitten. Die erste Schicht steht auf ihrem Mörtelbett. Dann vier 300-mm-Mineralwolleplatten von 800 x 625 mm im Läuferverband (Reihenfuge bei 0,40 m, senkrechte Fugen 400 mm versetzt) und der 20-mm-Mineralputz. Die Schnittflächen sind eben, wie ein Sägeschnitt sie hinterlässt: die Fugen zeigen sich durch den helleren Mörtelton."
+            "en": "The system is modelled in the order it is applied: a full bed of cementitious adhesive 10 mm on the brick, the mineral wool boards, the plate anchors through wool and adhesive into the brick, an 8 mm base coat that embeds the glass-fibre mesh and a 12 mm mineral finish coat. Adhesive, base coat and finish are layers of their own in the body and in the thermal list.",
+            "de": "Das System ist in der Reihenfolge seines Auftrags modelliert: ein vollflächiges Bett aus zementärem Kleber 10 mm auf dem Ziegel, die Mineralwolleplatten, die Tellerdübel durch Wolle und Kleber in den Ziegel, ein 8 mm starker Unterputz, der das Glasfasergewebe einbettet, und 12 mm mineralischer Oberputz. Kleber, Unterputz und Oberputz sind eigene Schichten im Körper und in der thermischen Liste."
           },
           {
-            "en": "Thermal: the region wall-field is four nested shells at their real thickness, innermost first: plaster (reference to the body slab, its room face marked as the conditioned interior face, C25 c), brick (one homogeneous 365 mm shell: the declared layer has no joints), the 300 mm wool (one shell over the four boards, which are butt-jointed without a gap) and the render (reference to the body slab). The top, bottom and end faces are cuts through the continuing wall.",
-            "de": "Thermik: die Region wall-field besteht aus vier verschachtelten Schalen in wirklicher Dicke, innen zuerst: Putz (Verweis auf die Körperplatte, ihre Raumseite als konditionierte Innenfläche markiert, C25 c), Ziegel (eine homogene 365-mm-Schale: die erklärte Schicht hat keine Fugen), die 300-mm-Wolle (eine Schale über den vier stumpf gestoßenen Platten) und der Außenputz (Verweis auf die Körperplatte). Ober-, Unter- und Stirnflächen sind Schnitte durch die weiterlaufende Wand."
+            "en": "The cut sample contains actual 15 mm room plaster, a 365 mm bonded brick leaf with mortar courses, mineral wool and 20 mm outside render. Larger digital scales consolidate adjacent wool boards within one material; each physical interface stays at its measured depth.",
+            "de": "Der Schnitt zeigt 15 mm Innenputz, 365 mm im Verband gemauertes Ziegelmauerwerk mit Mörtelfugen, Mineralwolle und 20 mm Außenputz. In kleineren Darstellungen werden benachbarte Dämmplatten desselben Materials zusammengefasst; jede Materialgrenze bleibt in ihrer gemessenen Tiefe."
           },
           {
-            "en": "Structure: the 365 mm brick leaf with its mortar is the only member and carries the 730 kg of the strip down to the fixed bearing, a 7.5 mm bed under the leaf at the base anchor; the mass sits at the real centre of mass 223 mm from the room face (inside the leaf, because the wool weighs 18 of the 730 kg). The ETICS carries nothing but hangs on the leaf: its fixing is shown by the four plate anchors of the T scheme that fall into this sample (60 mm plate flush with the wool face, 8 mm shank reaching 50 mm into the brick), the joints of the cladding to the member.",
-            "de": "Tragwerk: die 365-mm-Ziegelschale mit ihrem Mörtel ist der einzige Stab und trägt die 730 kg des Streifens zum eingespannten Auflager, einem 7,5-mm-Bett unter der Schale am Fußanker; die Masse sitzt im wirklichen Schwerpunkt 223 mm von der Raumseite (in der Schale, denn die Wolle wiegt 18 der 730 kg). Das WDVS trägt nichts, sondern hängt an der Schale: seine Befestigung zeigen die vier Tellerdübel des T-Schemas, die in diese Probe fallen (60-mm-Teller bündig mit der Wollfläche, 8-mm-Schaft 50 mm tief im Ziegel), die Gelenke der Bekleidung zum Stab."
+            "en": "Four 8 mm anchor shafts embed 50 mm into the masonry. Their 60 mm heads retain the insulation beneath the render. The brick leaf carries the gravity load.",
+            "de": "Vier 8-mm-Dübel verankern sich 50 mm tief im Ziegel. Die 60-mm-Teller halten die Dämmung unter dem Putz. Die Ziegelschale trägt die Eigenlast."
+          },
+          {
+            "en": "Minimal: all four insulation anchors, the masonry and the bearing and mass indicators are required at every scale.",
+            "de": "Minimal: Alle vier Dämmstoffdübel, das Mauerwerk sowie die Auflager- und Massensymbole werden in jedem Maßstab benötigt."
           }
         ]
       },
@@ -3188,66 +3019,1142 @@
         "denominator": 100,
         "body": [
           {
-            "id": "masonry",
+            "id": "plaster",
+            "kind": "box",
+            "bone": "root",
+            "material": "lime-plaster",
+            "role": "body",
+            "tone": 0.9,
+            "size": [0.015, 1.0, 1.0],
+            "transform": {
+              "translation": [0.0075, 0.5, 0.0]
+            },
+            "sectionFaces": ["-v", "+v", "-w", "+w"]
+          },
+          {
+            "id": "bed-joint",
+            "kind": "box",
+            "bone": "root",
+            "material": "masonry-mortar",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.365, 0.01233, 1.0],
+            "transform": {
+              "translation": [0.1975, 0.00617, 0.0]
+            },
+            "sectionFaces": ["-v", "-w", "+w"],
+            "repeat": {
+              "count": 12,
+              "translation": [0.0, 0.08333, 0.0]
+            }
+          },
+          {
+            "id": "longitudinal-joint-a",
+            "kind": "box",
+            "bone": "root",
+            "material": "masonry-mortar",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.01, 0.071, 1.0],
+            "transform": {
+              "translation": [0.135, 0.04783, 0.0]
+            },
+            "sectionFaces": ["-w", "+w"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-a-01",
             "kind": "box",
             "bone": "root",
             "material": "solid-brick",
             "role": "body",
             "tone": 0.5,
-            "size": [0.38, 1.0, 1.0],
+            "size": [0.24, 0.071, 0.025],
             "transform": {
-              "translation": [0.19, 0.5, 0.0]
+              "translation": [0.26, 0.04783, -0.4875]
+            },
+            "sectionFaces": ["-w"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-a-02",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.24, 0.071, 0.115],
+            "transform": {
+              "translation": [0.26, 0.04783, -0.4075]
+            },
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-a-03",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.24, 0.071, 0.115],
+            "transform": {
+              "translation": [0.26, 0.04783, -0.2825]
+            },
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-a-04",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.24, 0.071, 0.115],
+            "transform": {
+              "translation": [0.26, 0.04783, -0.1575]
+            },
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-a-05",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.24, 0.071, 0.115],
+            "transform": {
+              "translation": [0.26, 0.04783, -0.0325]
+            },
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-a-06",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.24, 0.071, 0.115],
+            "transform": {
+              "translation": [0.26, 0.04783, 0.0925]
+            },
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-a-07",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.24, 0.071, 0.115],
+            "transform": {
+              "translation": [0.26, 0.04783, 0.2175]
+            },
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-a-08",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.24, 0.071, 0.115],
+            "transform": {
+              "translation": [0.26, 0.04783, 0.3425]
+            },
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-a-09",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.24, 0.071, 0.09],
+            "transform": {
+              "translation": [0.26, 0.04783, 0.455]
+            },
+            "sectionFaces": ["+w"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-joint-a-01",
+            "kind": "box",
+            "bone": "root",
+            "material": "masonry-mortar",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.24, 0.071, 0.01],
+            "transform": {
+              "translation": [0.26, 0.04783, -0.47]
+            },
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-joint-a-02",
+            "kind": "box",
+            "bone": "root",
+            "material": "masonry-mortar",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.24, 0.071, 0.01],
+            "transform": {
+              "translation": [0.26, 0.04783, -0.345]
+            },
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-joint-a-03",
+            "kind": "box",
+            "bone": "root",
+            "material": "masonry-mortar",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.24, 0.071, 0.01],
+            "transform": {
+              "translation": [0.26, 0.04783, -0.22]
+            },
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-joint-a-04",
+            "kind": "box",
+            "bone": "root",
+            "material": "masonry-mortar",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.24, 0.071, 0.01],
+            "transform": {
+              "translation": [0.26, 0.04783, -0.095]
+            },
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-joint-a-05",
+            "kind": "box",
+            "bone": "root",
+            "material": "masonry-mortar",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.24, 0.071, 0.01],
+            "transform": {
+              "translation": [0.26, 0.04783, 0.03]
+            },
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-joint-a-06",
+            "kind": "box",
+            "bone": "root",
+            "material": "masonry-mortar",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.24, 0.071, 0.01],
+            "transform": {
+              "translation": [0.26, 0.04783, 0.155]
+            },
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-joint-a-07",
+            "kind": "box",
+            "bone": "root",
+            "material": "masonry-mortar",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.24, 0.071, 0.01],
+            "transform": {
+              "translation": [0.26, 0.04783, 0.28]
+            },
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-joint-a-08",
+            "kind": "box",
+            "bone": "root",
+            "material": "masonry-mortar",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.24, 0.071, 0.01],
+            "transform": {
+              "translation": [0.26, 0.04783, 0.405]
+            },
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "stretcher-a-01",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.115, 0.071, 0.0875],
+            "transform": {
+              "translation": [0.0725, 0.04783, -0.45625]
+            },
+            "sectionFaces": ["-w"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "stretcher-a-02",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.115, 0.071, 0.24],
+            "transform": {
+              "translation": [0.0725, 0.04783, -0.2825]
+            },
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "stretcher-a-03",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.115, 0.071, 0.24],
+            "transform": {
+              "translation": [0.0725, 0.04783, -0.0325]
+            },
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "stretcher-a-04",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.115, 0.071, 0.24],
+            "transform": {
+              "translation": [0.0725, 0.04783, 0.2175]
+            },
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "stretcher-a-05",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.115, 0.071, 0.1525],
+            "transform": {
+              "translation": [0.0725, 0.04783, 0.42375]
+            },
+            "sectionFaces": ["+w"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "stretcher-joint-a-01",
+            "kind": "box",
+            "bone": "root",
+            "material": "masonry-mortar",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.115, 0.071, 0.01],
+            "transform": {
+              "translation": [0.0725, 0.04783, -0.4075]
+            },
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "stretcher-joint-a-02",
+            "kind": "box",
+            "bone": "root",
+            "material": "masonry-mortar",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.115, 0.071, 0.01],
+            "transform": {
+              "translation": [0.0725, 0.04783, -0.1575]
+            },
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "stretcher-joint-a-03",
+            "kind": "box",
+            "bone": "root",
+            "material": "masonry-mortar",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.115, 0.071, 0.01],
+            "transform": {
+              "translation": [0.0725, 0.04783, 0.0925]
+            },
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "stretcher-joint-a-04",
+            "kind": "box",
+            "bone": "root",
+            "material": "masonry-mortar",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.115, 0.071, 0.01],
+            "transform": {
+              "translation": [0.0725, 0.04783, 0.3425]
+            },
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "longitudinal-joint-b",
+            "kind": "box",
+            "bone": "root",
+            "material": "masonry-mortar",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.01, 0.071, 1.0],
+            "transform": {
+              "translation": [0.26, 0.13117, 0.0]
+            },
+            "sectionFaces": ["+v", "-w", "+w"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-b-01",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.24, 0.071, 0.025],
+            "transform": {
+              "translation": [0.135, 0.13117, -0.4875]
+            },
+            "sectionFaces": ["+v", "-w"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-b-02",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.24, 0.071, 0.115],
+            "transform": {
+              "translation": [0.135, 0.13117, -0.4075]
+            },
+            "sectionFaces": ["+v"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-b-03",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.24, 0.071, 0.115],
+            "transform": {
+              "translation": [0.135, 0.13117, -0.2825]
+            },
+            "sectionFaces": ["+v"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-b-04",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.24, 0.071, 0.115],
+            "transform": {
+              "translation": [0.135, 0.13117, -0.1575]
+            },
+            "sectionFaces": ["+v"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-b-05",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.24, 0.071, 0.115],
+            "transform": {
+              "translation": [0.135, 0.13117, -0.0325]
+            },
+            "sectionFaces": ["+v"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-b-06",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.24, 0.071, 0.115],
+            "transform": {
+              "translation": [0.135, 0.13117, 0.0925]
+            },
+            "sectionFaces": ["+v"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-b-07",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.24, 0.071, 0.115],
+            "transform": {
+              "translation": [0.135, 0.13117, 0.2175]
+            },
+            "sectionFaces": ["+v"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-b-08",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.24, 0.071, 0.115],
+            "transform": {
+              "translation": [0.135, 0.13117, 0.3425]
+            },
+            "sectionFaces": ["+v"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-b-09",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.24, 0.071, 0.09],
+            "transform": {
+              "translation": [0.135, 0.13117, 0.455]
+            },
+            "sectionFaces": ["+v", "+w"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-joint-b-01",
+            "kind": "box",
+            "bone": "root",
+            "material": "masonry-mortar",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.24, 0.071, 0.01],
+            "transform": {
+              "translation": [0.135, 0.13117, -0.47]
+            },
+            "sectionFaces": ["+v"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-joint-b-02",
+            "kind": "box",
+            "bone": "root",
+            "material": "masonry-mortar",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.24, 0.071, 0.01],
+            "transform": {
+              "translation": [0.135, 0.13117, -0.345]
+            },
+            "sectionFaces": ["+v"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-joint-b-03",
+            "kind": "box",
+            "bone": "root",
+            "material": "masonry-mortar",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.24, 0.071, 0.01],
+            "transform": {
+              "translation": [0.135, 0.13117, -0.22]
+            },
+            "sectionFaces": ["+v"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-joint-b-04",
+            "kind": "box",
+            "bone": "root",
+            "material": "masonry-mortar",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.24, 0.071, 0.01],
+            "transform": {
+              "translation": [0.135, 0.13117, -0.095]
+            },
+            "sectionFaces": ["+v"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-joint-b-05",
+            "kind": "box",
+            "bone": "root",
+            "material": "masonry-mortar",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.24, 0.071, 0.01],
+            "transform": {
+              "translation": [0.135, 0.13117, 0.03]
+            },
+            "sectionFaces": ["+v"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-joint-b-06",
+            "kind": "box",
+            "bone": "root",
+            "material": "masonry-mortar",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.24, 0.071, 0.01],
+            "transform": {
+              "translation": [0.135, 0.13117, 0.155]
+            },
+            "sectionFaces": ["+v"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-joint-b-07",
+            "kind": "box",
+            "bone": "root",
+            "material": "masonry-mortar",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.24, 0.071, 0.01],
+            "transform": {
+              "translation": [0.135, 0.13117, 0.28]
+            },
+            "sectionFaces": ["+v"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-joint-b-08",
+            "kind": "box",
+            "bone": "root",
+            "material": "masonry-mortar",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.24, 0.071, 0.01],
+            "transform": {
+              "translation": [0.135, 0.13117, 0.405]
+            },
+            "sectionFaces": ["+v"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "stretcher-b-01",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.115, 0.071, 0.2125],
+            "transform": {
+              "translation": [0.3225, 0.13117, -0.39375]
+            },
+            "sectionFaces": ["+v", "-w"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "stretcher-b-02",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.115, 0.071, 0.24],
+            "transform": {
+              "translation": [0.3225, 0.13117, -0.1575]
+            },
+            "sectionFaces": ["+v"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "stretcher-b-03",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.115, 0.071, 0.24],
+            "transform": {
+              "translation": [0.3225, 0.13117, 0.0925]
+            },
+            "sectionFaces": ["+v"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "stretcher-b-04",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.115, 0.071, 0.24],
+            "transform": {
+              "translation": [0.3225, 0.13117, 0.3425]
+            },
+            "sectionFaces": ["+v"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "stretcher-b-05",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.115, 0.071, 0.0275],
+            "transform": {
+              "translation": [0.3225, 0.13117, 0.48625]
+            },
+            "sectionFaces": ["+v", "+w"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "stretcher-joint-b-01",
+            "kind": "box",
+            "bone": "root",
+            "material": "masonry-mortar",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.115, 0.071, 0.01],
+            "transform": {
+              "translation": [0.3225, 0.13117, -0.2825]
+            },
+            "sectionFaces": ["+v"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "stretcher-joint-b-02",
+            "kind": "box",
+            "bone": "root",
+            "material": "masonry-mortar",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.115, 0.071, 0.01],
+            "transform": {
+              "translation": [0.3225, 0.13117, -0.0325]
+            },
+            "sectionFaces": ["+v"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "stretcher-joint-b-03",
+            "kind": "box",
+            "bone": "root",
+            "material": "masonry-mortar",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.115, 0.071, 0.01],
+            "transform": {
+              "translation": [0.3225, 0.13117, 0.2175]
+            },
+            "sectionFaces": ["+v"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "stretcher-joint-b-04",
+            "kind": "box",
+            "bone": "root",
+            "material": "masonry-mortar",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.115, 0.071, 0.01],
+            "transform": {
+              "translation": [0.3225, 0.13117, 0.4675]
+            },
+            "sectionFaces": ["+v"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "adhesive",
+            "kind": "box",
+            "bone": "root",
+            "material": "etics-adhesive",
+            "role": "body",
+            "tone": 0.6,
+            "size": [0.01, 1.0, 1.0],
+            "transform": {
+              "translation": [0.385, 0.5, 0.0]
             },
             "sectionFaces": ["-v", "+v", "-w", "+w"]
           },
           {
-            "id": "insulation",
+            "id": "wool-board-low-left",
             "kind": "box",
             "bone": "root",
             "material": "mineral-wool",
             "role": "body",
             "tone": 0.88,
-            "size": [0.3, 1.0, 1.0],
+            "size": [0.3, 0.4, 0.65],
             "transform": {
-              "translation": [0.53, 0.5, 0.0]
+              "translation": [0.54, 0.2, -0.175]
+            },
+            "sectionFaces": ["-v", "-w"]
+          },
+          {
+            "id": "wool-board-low-right",
+            "kind": "box",
+            "bone": "root",
+            "material": "mineral-wool",
+            "role": "body",
+            "tone": 0.88,
+            "size": [0.3, 0.4, 0.35],
+            "transform": {
+              "translation": [0.54, 0.2, 0.325]
+            },
+            "sectionFaces": ["-v", "+w"]
+          },
+          {
+            "id": "insulation-upper-course",
+            "kind": "box",
+            "bone": "root",
+            "material": "mineral-wool",
+            "role": "body",
+            "tone": 0.88,
+            "size": [0.3, 0.6, 1.0],
+            "transform": {
+              "translation": [0.54, 0.7, 0]
+            },
+            "sectionFaces": ["-v", "-w"]
+          },
+          {
+            "id": "render-base-coat",
+            "kind": "box",
+            "bone": "root",
+            "material": "mineral-render",
+            "role": "body",
+            "tone": 0.72,
+            "size": [0.008, 1.0, 1.0],
+            "transform": {
+              "translation": [0.694, 0.5, 0.0]
             },
             "sectionFaces": ["-v", "+v", "-w", "+w"]
           },
           {
-            "id": "render",
+            "id": "render-finish",
             "kind": "box",
             "bone": "root",
             "material": "mineral-render",
             "role": "body",
             "tone": 0.8,
-            "size": [0.02, 1.0, 1.0],
+            "size": [0.012, 1.0, 1.0],
             "transform": {
-              "translation": [0.69, 0.5, 0.0]
+              "translation": [0.704, 0.5, 0.0]
             },
             "sectionFaces": ["-v", "+v", "-w", "+w"]
+          },
+          {
+            "id": "plate-anchor-1",
+            "kind": "revolve",
+            "bone": "root",
+            "material": "etics-anchor",
+            "role": "detail",
+            "tone": 0.3,
+            "profile": [[0.33, 0.0], [0.33, 0.004], [0.682, 0.004], [0.682, 0.03], [0.69, 0.03], [0.69, 0.0]],
+            "axis": [1, 0, 0],
+            "origin": [0.0, 0.4, 0.15]
+          },
+          {
+            "id": "plate-anchor-2",
+            "kind": "revolve",
+            "bone": "root",
+            "material": "etics-anchor",
+            "role": "detail",
+            "tone": 0.3,
+            "profile": [[0.33, 0.0], [0.33, 0.004], [0.682, 0.004], [0.682, 0.03], [0.69, 0.03], [0.69, 0.0]],
+            "axis": [1, 0, 0],
+            "origin": [0.0, 0.4, -0.25]
+          },
+          {
+            "id": "plate-anchor-3",
+            "kind": "revolve",
+            "bone": "root",
+            "material": "etics-anchor",
+            "role": "detail",
+            "tone": 0.3,
+            "profile": [[0.33, 0.0], [0.33, 0.004], [0.682, 0.004], [0.682, 0.03], [0.69, 0.03], [0.69, 0.0]],
+            "axis": [1, 0, 0],
+            "origin": [0.0, 0.0875, -0.25]
+          },
+          {
+            "id": "plate-anchor-4",
+            "kind": "revolve",
+            "bone": "root",
+            "material": "etics-anchor",
+            "role": "detail",
+            "tone": 0.3,
+            "profile": [[0.33, 0.0], [0.33, 0.004], [0.682, 0.004], [0.682, 0.03], [0.69, 0.03], [0.69, 0.0]],
+            "axis": [1, 0, 0],
+            "origin": [0.0, 0.7125, 0.15]
           }
         ],
         "thermal": [
           {
-            "id": "th-masonry",
-            "of": "masonry",
+            "id": "th-plaster",
+            "of": "plaster",
             "region": "wall-field",
-            "layer": "brick",
+            "layer": "plaster",
             "sectionFaces": ["-u", "-v", "+v", "-w", "+w"]
           },
           {
-            "id": "th-insulation",
-            "of": "insulation",
+            "id": "th-brick",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.365, 1.0, 1.0],
+            "transform": {
+              "translation": [0.1975, 0.5, 0.0]
+            },
+            "sectionFaces": ["-v", "+v", "-w", "+w"],
             "region": "wall-field",
-            "layer": "insulation",
+            "layer": "brick"
+          },
+          {
+            "id": "th-adhesive",
+            "of": "adhesive",
+            "region": "wall-field",
+            "layer": "adhesive",
             "sectionFaces": ["-v", "+v", "-w", "+w"]
           },
           {
-            "id": "th-render",
-            "of": "render",
+            "id": "th-wool-board-low-left",
+            "kind": "box",
+            "bone": "root",
+            "material": "mineral-wool",
+            "role": "body",
+            "tone": 0.88,
+            "size": [0.3, 0.4, 0.65],
+            "transform": {
+              "translation": [0.54, 0.2, -0.175]
+            },
+            "sectionFaces": ["-v", "+v", "-w", "+w"],
+            "region": "wall-field",
+            "layer": "insulation"
+          },
+          {
+            "id": "th-wool-board-low-right",
+            "kind": "box",
+            "bone": "root",
+            "material": "mineral-wool",
+            "role": "body",
+            "tone": 0.88,
+            "size": [0.3, 0.4, 0.35],
+            "transform": {
+              "translation": [0.54, 0.2, 0.325]
+            },
+            "sectionFaces": ["-v", "+v", "-w", "+w"],
+            "region": "wall-field",
+            "layer": "insulation"
+          },
+          {
+            "id": "th-insulation-upper-course",
+            "kind": "box",
+            "bone": "root",
+            "material": "mineral-wool",
+            "role": "body",
+            "tone": 0.88,
+            "size": [0.3, 0.6, 1.0],
+            "transform": {
+              "translation": [0.54, 0.7, 0]
+            },
+            "sectionFaces": ["-v", "+v", "-w", "+w"],
+            "region": "wall-field",
+            "layer": "insulation"
+          },
+          {
+            "id": "th-render-base-coat",
+            "of": "render-base-coat",
+            "region": "wall-field",
+            "layer": "base-coat",
+            "sectionFaces": ["-v", "+v", "-w", "+w"]
+          },
+          {
+            "id": "th-face-render",
+            "of": "render-finish",
             "region": "wall-field",
             "layer": "render",
-            "sectionFaces": ["-v", "+v", "-w", "+w"]
+            "sectionFaces": ["-u", "-v", "+v", "-w", "+w"]
           }
         ],
         "structure": [
@@ -3289,7 +4196,7 @@
             "tone": 0.3,
             "radii": [0.05, 0.05, 0.05],
             "transform": {
-              "translation": [0.22317, 0.5, 0.0]
+              "translation": [0.22713, 0.5, 0.0]
             },
             "member": "root",
             "part": "mass"
@@ -3301,12 +4208,11 @@
             "material": "etics-anchor",
             "role": "detail",
             "tone": 0.3,
-            "profile": [[0.33, 0.0], [0.33, 0.004], [0.68, 0.004], [0.68, 0.0]],
+            "profile": [[0.33, 0.0], [0.33, 0.004], [0.682, 0.004], [0.682, 0.03], [0.69, 0.03], [0.69, 0.0]],
             "axis": [1, 0, 0],
             "origin": [0.0, 0.4, 0.15],
             "member": "root",
-            "part": "joint",
-            "slender": true
+            "part": "joint"
           },
           {
             "id": "joint-anchor-2",
@@ -3315,12 +4221,11 @@
             "material": "etics-anchor",
             "role": "detail",
             "tone": 0.3,
-            "profile": [[0.33, 0.0], [0.33, 0.004], [0.68, 0.004], [0.68, 0.0]],
+            "profile": [[0.33, 0.0], [0.33, 0.004], [0.682, 0.004], [0.682, 0.03], [0.69, 0.03], [0.69, 0.0]],
             "axis": [1, 0, 0],
             "origin": [0.0, 0.4, -0.25],
             "member": "root",
-            "part": "joint",
-            "slender": true
+            "part": "joint"
           },
           {
             "id": "joint-anchor-3",
@@ -3329,12 +4234,11 @@
             "material": "etics-anchor",
             "role": "detail",
             "tone": 0.3,
-            "profile": [[0.33, 0.0], [0.33, 0.004], [0.68, 0.004], [0.68, 0.0]],
+            "profile": [[0.33, 0.0], [0.33, 0.004], [0.682, 0.004], [0.682, 0.03], [0.69, 0.03], [0.69, 0.0]],
             "axis": [1, 0, 0],
             "origin": [0.0, 0.0875, -0.25],
             "member": "root",
-            "part": "joint",
-            "slender": true
+            "part": "joint"
           },
           {
             "id": "joint-anchor-4",
@@ -3343,26 +4247,29 @@
             "material": "etics-anchor",
             "role": "detail",
             "tone": 0.3,
-            "profile": [[0.33, 0.0], [0.33, 0.004], [0.68, 0.004], [0.68, 0.0]],
+            "profile": [[0.33, 0.0], [0.33, 0.004], [0.682, 0.004], [0.682, 0.03], [0.69, 0.03], [0.69, 0.0]],
             "axis": [1, 0, 0],
             "origin": [0.0, 0.7125, 0.15],
             "member": "root",
-            "part": "joint",
-            "slender": true
+            "part": "joint"
           }
         ],
         "decisions": [
           {
-            "en": "Body: three slabs. The 15 mm plaster joins the brick into one 380 mm masonry slab, as the 1:100 section draws it under the room-face pen; the courses and joints (10 to 12 mm) and the board joints are below the 15 mm smallest feature and the leaf is one slab; the 300 mm wool and the 20 mm render stay apart.",
-            "de": "Körper: drei Platten. Der 15-mm-Innenputz geht mit dem Ziegel in einer 380-mm-Mauerwerksplatte auf, wie der Schnitt 1:100 ihn unter dem Stift der Raumseite zeichnet; Schichten und Fugen (10 bis 12 mm) und die Plattenfugen liegen unter der kleinsten Einzelheit von 15 mm, die Schale ist eine Platte; die 300-mm-Wolle und der 20-mm-Putz bleiben getrennt."
+            "en": "The system is modelled in the order it is applied: a full bed of cementitious adhesive 10 mm on the brick, the mineral wool boards, the plate anchors through wool and adhesive into the brick, an 8 mm base coat that embeds the glass-fibre mesh and a 12 mm mineral finish coat. Adhesive, base coat and finish are layers of their own in the body and in the thermal list.",
+            "de": "Das System ist in der Reihenfolge seines Auftrags modelliert: ein vollflächiges Bett aus zementärem Kleber 10 mm auf dem Ziegel, die Mineralwolleplatten, die Tellerdübel durch Wolle und Kleber in den Ziegel, ein 8 mm starker Unterputz, der das Glasfasergewebe einbettet, und 12 mm mineralischer Oberputz. Kleber, Unterputz und Oberputz sind eigene Schichten im Körper und in der thermischen Liste."
           },
           {
-            "en": "Thermal: three shells as references to the body slabs, masonry (carrying the merged plaster, room face marked as the conditioned interior face), wool and render; cut faces top, bottom and at both ends.",
-            "de": "Thermik: drei Schalen als Verweise auf die Körperplatten, Mauerwerk (mit dem eingeschlossenen Putz, Raumseite als konditionierte Innenfläche markiert), Wolle und Putz; Schnittflächen oben, unten und an beiden Enden."
+            "en": "The cut sample contains actual 15 mm room plaster, a 365 mm bonded brick leaf with mortar courses, mineral wool and 20 mm outside render. Larger digital scales consolidate adjacent wool boards within one material; each physical interface stays at its measured depth.",
+            "de": "Der Schnitt zeigt 15 mm Innenputz, 365 mm im Verband gemauertes Ziegelmauerwerk mit Mörtelfugen, Mineralwolle und 20 mm Außenputz. In kleineren Darstellungen werden benachbarte Dämmplatten desselben Materials zusammengefasst; jede Materialgrenze bleibt in ihrer gemessenen Tiefe."
           },
           {
-            "en": "Structure: the 365 mm leaf member on a 15 mm fixed bed at the base anchor, the mass at the centre of mass 223 mm from the room face, and the four anchors as 8 mm shanks (slender, at true size; the 60 mm plates are thinner than the 15 mm feature).",
-            "de": "Tragwerk: der 365-mm-Schalenstab auf einem 15-mm-Festbett am Fußanker, die Masse im Schwerpunkt 223 mm von der Raumseite und die vier Dübel als 8-mm-Schäfte (schlank, in wirklicher Größe; die 60-mm-Teller sind dünner als die Einzelheit 15 mm)."
+            "en": "Four 8 mm anchor shafts embed 50 mm into the masonry. Their 60 mm heads retain the insulation beneath the render. The brick leaf carries the gravity load.",
+            "de": "Vier 8-mm-Dübel verankern sich 50 mm tief im Ziegel. Die 60-mm-Teller halten die Dämmung unter dem Putz. Die Ziegelschale trägt die Eigenlast."
+          },
+          {
+            "en": "Minimal: all four insulation anchors, the masonry and the bearing and mass indicators are required at every scale.",
+            "de": "Minimal: Alle vier Dämmstoffdübel, das Mauerwerk sowie die Auflager- und Massensymbole werden in jedem Maßstab benötigt."
           }
         ]
       },
@@ -3371,46 +4278,1070 @@
         "denominator": 200,
         "body": [
           {
-            "id": "masonry",
+            "id": "plaster",
+            "kind": "box",
+            "bone": "root",
+            "material": "lime-plaster",
+            "role": "body",
+            "tone": 0.9,
+            "size": [0.015, 1.0, 1.0],
+            "transform": {
+              "translation": [0.0075, 0.5, 0.0]
+            },
+            "sectionFaces": ["-v", "+v", "-w", "+w"]
+          },
+          {
+            "id": "bed-joint",
+            "kind": "box",
+            "bone": "root",
+            "material": "masonry-mortar",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.365, 0.01233, 1.0],
+            "transform": {
+              "translation": [0.1975, 0.00617, 0.0]
+            },
+            "sectionFaces": ["-v", "-w", "+w"],
+            "repeat": {
+              "count": 12,
+              "translation": [0.0, 0.08333, 0.0]
+            }
+          },
+          {
+            "id": "longitudinal-joint-a",
+            "kind": "box",
+            "bone": "root",
+            "material": "masonry-mortar",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.01, 0.071, 1.0],
+            "transform": {
+              "translation": [0.135, 0.04783, 0.0]
+            },
+            "sectionFaces": ["-w", "+w"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-a-01",
             "kind": "box",
             "bone": "root",
             "material": "solid-brick",
             "role": "body",
             "tone": 0.5,
-            "size": [0.38, 1.0, 1.0],
+            "size": [0.24, 0.071, 0.025],
             "transform": {
-              "translation": [0.19, 0.5, 0.0]
+              "translation": [0.26, 0.04783, -0.4875]
+            },
+            "sectionFaces": ["-w"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-a-02",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.24, 0.071, 0.115],
+            "transform": {
+              "translation": [0.26, 0.04783, -0.4075]
+            },
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-a-03",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.24, 0.071, 0.115],
+            "transform": {
+              "translation": [0.26, 0.04783, -0.2825]
+            },
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-a-04",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.24, 0.071, 0.115],
+            "transform": {
+              "translation": [0.26, 0.04783, -0.1575]
+            },
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-a-05",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.24, 0.071, 0.115],
+            "transform": {
+              "translation": [0.26, 0.04783, -0.0325]
+            },
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-a-06",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.24, 0.071, 0.115],
+            "transform": {
+              "translation": [0.26, 0.04783, 0.0925]
+            },
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-a-07",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.24, 0.071, 0.115],
+            "transform": {
+              "translation": [0.26, 0.04783, 0.2175]
+            },
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-a-08",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.24, 0.071, 0.115],
+            "transform": {
+              "translation": [0.26, 0.04783, 0.3425]
+            },
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-a-09",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.24, 0.071, 0.09],
+            "transform": {
+              "translation": [0.26, 0.04783, 0.455]
+            },
+            "sectionFaces": ["+w"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-joint-a-01",
+            "kind": "box",
+            "bone": "root",
+            "material": "masonry-mortar",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.24, 0.071, 0.01],
+            "transform": {
+              "translation": [0.26, 0.04783, -0.47]
+            },
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-joint-a-02",
+            "kind": "box",
+            "bone": "root",
+            "material": "masonry-mortar",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.24, 0.071, 0.01],
+            "transform": {
+              "translation": [0.26, 0.04783, -0.345]
+            },
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-joint-a-03",
+            "kind": "box",
+            "bone": "root",
+            "material": "masonry-mortar",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.24, 0.071, 0.01],
+            "transform": {
+              "translation": [0.26, 0.04783, -0.22]
+            },
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-joint-a-04",
+            "kind": "box",
+            "bone": "root",
+            "material": "masonry-mortar",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.24, 0.071, 0.01],
+            "transform": {
+              "translation": [0.26, 0.04783, -0.095]
+            },
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-joint-a-05",
+            "kind": "box",
+            "bone": "root",
+            "material": "masonry-mortar",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.24, 0.071, 0.01],
+            "transform": {
+              "translation": [0.26, 0.04783, 0.03]
+            },
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-joint-a-06",
+            "kind": "box",
+            "bone": "root",
+            "material": "masonry-mortar",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.24, 0.071, 0.01],
+            "transform": {
+              "translation": [0.26, 0.04783, 0.155]
+            },
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-joint-a-07",
+            "kind": "box",
+            "bone": "root",
+            "material": "masonry-mortar",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.24, 0.071, 0.01],
+            "transform": {
+              "translation": [0.26, 0.04783, 0.28]
+            },
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-joint-a-08",
+            "kind": "box",
+            "bone": "root",
+            "material": "masonry-mortar",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.24, 0.071, 0.01],
+            "transform": {
+              "translation": [0.26, 0.04783, 0.405]
+            },
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "stretcher-a-01",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.115, 0.071, 0.0875],
+            "transform": {
+              "translation": [0.0725, 0.04783, -0.45625]
+            },
+            "sectionFaces": ["-w"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "stretcher-a-02",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.115, 0.071, 0.24],
+            "transform": {
+              "translation": [0.0725, 0.04783, -0.2825]
+            },
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "stretcher-a-03",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.115, 0.071, 0.24],
+            "transform": {
+              "translation": [0.0725, 0.04783, -0.0325]
+            },
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "stretcher-a-04",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.115, 0.071, 0.24],
+            "transform": {
+              "translation": [0.0725, 0.04783, 0.2175]
+            },
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "stretcher-a-05",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.115, 0.071, 0.1525],
+            "transform": {
+              "translation": [0.0725, 0.04783, 0.42375]
+            },
+            "sectionFaces": ["+w"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "stretcher-joint-a-01",
+            "kind": "box",
+            "bone": "root",
+            "material": "masonry-mortar",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.115, 0.071, 0.01],
+            "transform": {
+              "translation": [0.0725, 0.04783, -0.4075]
+            },
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "stretcher-joint-a-02",
+            "kind": "box",
+            "bone": "root",
+            "material": "masonry-mortar",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.115, 0.071, 0.01],
+            "transform": {
+              "translation": [0.0725, 0.04783, -0.1575]
+            },
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "stretcher-joint-a-03",
+            "kind": "box",
+            "bone": "root",
+            "material": "masonry-mortar",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.115, 0.071, 0.01],
+            "transform": {
+              "translation": [0.0725, 0.04783, 0.0925]
+            },
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "stretcher-joint-a-04",
+            "kind": "box",
+            "bone": "root",
+            "material": "masonry-mortar",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.115, 0.071, 0.01],
+            "transform": {
+              "translation": [0.0725, 0.04783, 0.3425]
+            },
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "longitudinal-joint-b",
+            "kind": "box",
+            "bone": "root",
+            "material": "masonry-mortar",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.01, 0.071, 1.0],
+            "transform": {
+              "translation": [0.26, 0.13117, 0.0]
+            },
+            "sectionFaces": ["+v", "-w", "+w"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-b-01",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.24, 0.071, 0.025],
+            "transform": {
+              "translation": [0.135, 0.13117, -0.4875]
+            },
+            "sectionFaces": ["+v", "-w"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-b-02",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.24, 0.071, 0.115],
+            "transform": {
+              "translation": [0.135, 0.13117, -0.4075]
+            },
+            "sectionFaces": ["+v"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-b-03",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.24, 0.071, 0.115],
+            "transform": {
+              "translation": [0.135, 0.13117, -0.2825]
+            },
+            "sectionFaces": ["+v"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-b-04",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.24, 0.071, 0.115],
+            "transform": {
+              "translation": [0.135, 0.13117, -0.1575]
+            },
+            "sectionFaces": ["+v"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-b-05",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.24, 0.071, 0.115],
+            "transform": {
+              "translation": [0.135, 0.13117, -0.0325]
+            },
+            "sectionFaces": ["+v"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-b-06",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.24, 0.071, 0.115],
+            "transform": {
+              "translation": [0.135, 0.13117, 0.0925]
+            },
+            "sectionFaces": ["+v"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-b-07",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.24, 0.071, 0.115],
+            "transform": {
+              "translation": [0.135, 0.13117, 0.2175]
+            },
+            "sectionFaces": ["+v"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-b-08",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.24, 0.071, 0.115],
+            "transform": {
+              "translation": [0.135, 0.13117, 0.3425]
+            },
+            "sectionFaces": ["+v"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-b-09",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.24, 0.071, 0.09],
+            "transform": {
+              "translation": [0.135, 0.13117, 0.455]
+            },
+            "sectionFaces": ["+v", "+w"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-joint-b-01",
+            "kind": "box",
+            "bone": "root",
+            "material": "masonry-mortar",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.24, 0.071, 0.01],
+            "transform": {
+              "translation": [0.135, 0.13117, -0.47]
+            },
+            "sectionFaces": ["+v"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-joint-b-02",
+            "kind": "box",
+            "bone": "root",
+            "material": "masonry-mortar",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.24, 0.071, 0.01],
+            "transform": {
+              "translation": [0.135, 0.13117, -0.345]
+            },
+            "sectionFaces": ["+v"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-joint-b-03",
+            "kind": "box",
+            "bone": "root",
+            "material": "masonry-mortar",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.24, 0.071, 0.01],
+            "transform": {
+              "translation": [0.135, 0.13117, -0.22]
+            },
+            "sectionFaces": ["+v"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-joint-b-04",
+            "kind": "box",
+            "bone": "root",
+            "material": "masonry-mortar",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.24, 0.071, 0.01],
+            "transform": {
+              "translation": [0.135, 0.13117, -0.095]
+            },
+            "sectionFaces": ["+v"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-joint-b-05",
+            "kind": "box",
+            "bone": "root",
+            "material": "masonry-mortar",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.24, 0.071, 0.01],
+            "transform": {
+              "translation": [0.135, 0.13117, 0.03]
+            },
+            "sectionFaces": ["+v"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-joint-b-06",
+            "kind": "box",
+            "bone": "root",
+            "material": "masonry-mortar",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.24, 0.071, 0.01],
+            "transform": {
+              "translation": [0.135, 0.13117, 0.155]
+            },
+            "sectionFaces": ["+v"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-joint-b-07",
+            "kind": "box",
+            "bone": "root",
+            "material": "masonry-mortar",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.24, 0.071, 0.01],
+            "transform": {
+              "translation": [0.135, 0.13117, 0.28]
+            },
+            "sectionFaces": ["+v"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-joint-b-08",
+            "kind": "box",
+            "bone": "root",
+            "material": "masonry-mortar",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.24, 0.071, 0.01],
+            "transform": {
+              "translation": [0.135, 0.13117, 0.405]
+            },
+            "sectionFaces": ["+v"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "stretcher-b-01",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.115, 0.071, 0.2125],
+            "transform": {
+              "translation": [0.3225, 0.13117, -0.39375]
+            },
+            "sectionFaces": ["+v", "-w"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "stretcher-b-02",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.115, 0.071, 0.24],
+            "transform": {
+              "translation": [0.3225, 0.13117, -0.1575]
+            },
+            "sectionFaces": ["+v"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "stretcher-b-03",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.115, 0.071, 0.24],
+            "transform": {
+              "translation": [0.3225, 0.13117, 0.0925]
+            },
+            "sectionFaces": ["+v"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "stretcher-b-04",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.115, 0.071, 0.24],
+            "transform": {
+              "translation": [0.3225, 0.13117, 0.3425]
+            },
+            "sectionFaces": ["+v"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "stretcher-b-05",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.115, 0.071, 0.0275],
+            "transform": {
+              "translation": [0.3225, 0.13117, 0.48625]
+            },
+            "sectionFaces": ["+v", "+w"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "stretcher-joint-b-01",
+            "kind": "box",
+            "bone": "root",
+            "material": "masonry-mortar",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.115, 0.071, 0.01],
+            "transform": {
+              "translation": [0.3225, 0.13117, -0.2825]
+            },
+            "sectionFaces": ["+v"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "stretcher-joint-b-02",
+            "kind": "box",
+            "bone": "root",
+            "material": "masonry-mortar",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.115, 0.071, 0.01],
+            "transform": {
+              "translation": [0.3225, 0.13117, -0.0325]
+            },
+            "sectionFaces": ["+v"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "stretcher-joint-b-03",
+            "kind": "box",
+            "bone": "root",
+            "material": "masonry-mortar",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.115, 0.071, 0.01],
+            "transform": {
+              "translation": [0.3225, 0.13117, 0.2175]
+            },
+            "sectionFaces": ["+v"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "stretcher-joint-b-04",
+            "kind": "box",
+            "bone": "root",
+            "material": "masonry-mortar",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.115, 0.071, 0.01],
+            "transform": {
+              "translation": [0.3225, 0.13117, 0.4675]
+            },
+            "sectionFaces": ["+v"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "adhesive",
+            "kind": "box",
+            "bone": "root",
+            "material": "etics-adhesive",
+            "role": "body",
+            "tone": 0.6,
+            "size": [0.01, 1.0, 1.0],
+            "transform": {
+              "translation": [0.385, 0.5, 0.0]
             },
             "sectionFaces": ["-v", "+v", "-w", "+w"]
           },
           {
-            "id": "etics",
+            "id": "insulation-lower-course",
             "kind": "box",
             "bone": "root",
             "material": "mineral-wool",
             "role": "body",
             "tone": 0.88,
-            "size": [0.32, 1.0, 1.0],
+            "size": [0.3, 0.4, 1.0],
             "transform": {
-              "translation": [0.54, 0.5, 0.0]
+              "translation": [0.54, 0.2, 0]
+            },
+            "sectionFaces": ["-v", "-w"]
+          },
+          {
+            "id": "insulation-upper-course",
+            "kind": "box",
+            "bone": "root",
+            "material": "mineral-wool",
+            "role": "body",
+            "tone": 0.88,
+            "size": [0.3, 0.6, 1.0],
+            "transform": {
+              "translation": [0.54, 0.7, 0]
+            },
+            "sectionFaces": ["-v", "-w"]
+          },
+          {
+            "id": "render-base-coat",
+            "kind": "box",
+            "bone": "root",
+            "material": "mineral-render",
+            "role": "body",
+            "tone": 0.72,
+            "size": [0.008, 1.0, 1.0],
+            "transform": {
+              "translation": [0.694, 0.5, 0.0]
+            },
+            "sectionFaces": ["-v", "+v", "-w", "+w"]
+          },
+          {
+            "id": "render-finish",
+            "kind": "box",
+            "bone": "root",
+            "material": "mineral-render",
+            "role": "body",
+            "tone": 0.8,
+            "size": [0.012, 1.0, 1.0],
+            "transform": {
+              "translation": [0.704, 0.5, 0.0]
             },
             "sectionFaces": ["-v", "+v", "-w", "+w"]
           }
         ],
         "thermal": [
           {
-            "id": "th-masonry",
-            "of": "masonry",
+            "id": "th-plaster",
+            "of": "plaster",
             "region": "wall-field",
-            "layer": "brick",
+            "layer": "plaster",
             "sectionFaces": ["-u", "-v", "+v", "-w", "+w"]
           },
           {
-            "id": "th-etics",
-            "of": "etics",
+            "id": "th-brick",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.365, 1.0, 1.0],
+            "transform": {
+              "translation": [0.1975, 0.5, 0.0]
+            },
+            "sectionFaces": ["-v", "+v", "-w", "+w"],
             "region": "wall-field",
-            "layer": "insulation",
+            "layer": "brick"
+          },
+          {
+            "id": "th-adhesive",
+            "of": "adhesive",
+            "region": "wall-field",
+            "layer": "adhesive",
             "sectionFaces": ["-v", "+v", "-w", "+w"]
+          },
+          {
+            "id": "th-insulation-lower-course",
+            "kind": "box",
+            "bone": "root",
+            "material": "mineral-wool",
+            "role": "body",
+            "tone": 0.88,
+            "size": [0.3, 0.4, 1.0],
+            "transform": {
+              "translation": [0.54, 0.2, 0]
+            },
+            "sectionFaces": ["-v", "+v", "-w", "+w"],
+            "region": "wall-field",
+            "layer": "insulation"
+          },
+          {
+            "id": "th-insulation-upper-course",
+            "kind": "box",
+            "bone": "root",
+            "material": "mineral-wool",
+            "role": "body",
+            "tone": 0.88,
+            "size": [0.3, 0.6, 1.0],
+            "transform": {
+              "translation": [0.54, 0.7, 0]
+            },
+            "sectionFaces": ["-v", "+v", "-w", "+w"],
+            "region": "wall-field",
+            "layer": "insulation"
+          },
+          {
+            "id": "th-render-base-coat",
+            "of": "render-base-coat",
+            "region": "wall-field",
+            "layer": "base-coat",
+            "sectionFaces": ["-v", "+v", "-w", "+w"]
+          },
+          {
+            "id": "th-face-render",
+            "of": "render-finish",
+            "region": "wall-field",
+            "layer": "render",
+            "sectionFaces": ["-u", "-v", "+v", "-w", "+w"]
           }
         ],
         "structure": [
@@ -3452,24 +5383,80 @@
             "tone": 0.3,
             "radii": [0.06, 0.06, 0.06],
             "transform": {
-              "translation": [0.22317, 0.5, 0.0]
+              "translation": [0.22713, 0.5, 0.0]
             },
             "member": "root",
             "part": "mass"
+          },
+          {
+            "id": "joint-anchor-1",
+            "kind": "revolve",
+            "bone": "root",
+            "material": "etics-anchor",
+            "role": "detail",
+            "tone": 0.3,
+            "profile": [[0.33, 0.0], [0.33, 0.004], [0.682, 0.004], [0.682, 0.03], [0.69, 0.03], [0.69, 0.0]],
+            "axis": [1, 0, 0],
+            "origin": [0.0, 0.4, 0.15],
+            "member": "root",
+            "part": "joint"
+          },
+          {
+            "id": "joint-anchor-2",
+            "kind": "revolve",
+            "bone": "root",
+            "material": "etics-anchor",
+            "role": "detail",
+            "tone": 0.3,
+            "profile": [[0.33, 0.0], [0.33, 0.004], [0.682, 0.004], [0.682, 0.03], [0.69, 0.03], [0.69, 0.0]],
+            "axis": [1, 0, 0],
+            "origin": [0.0, 0.4, -0.25],
+            "member": "root",
+            "part": "joint"
+          },
+          {
+            "id": "joint-anchor-3",
+            "kind": "revolve",
+            "bone": "root",
+            "material": "etics-anchor",
+            "role": "detail",
+            "tone": 0.3,
+            "profile": [[0.33, 0.0], [0.33, 0.004], [0.682, 0.004], [0.682, 0.03], [0.69, 0.03], [0.69, 0.0]],
+            "axis": [1, 0, 0],
+            "origin": [0.0, 0.0875, -0.25],
+            "member": "root",
+            "part": "joint"
+          },
+          {
+            "id": "joint-anchor-4",
+            "kind": "revolve",
+            "bone": "root",
+            "material": "etics-anchor",
+            "role": "detail",
+            "tone": 0.3,
+            "profile": [[0.33, 0.0], [0.33, 0.004], [0.682, 0.004], [0.682, 0.03], [0.69, 0.03], [0.69, 0.0]],
+            "axis": [1, 0, 0],
+            "origin": [0.0, 0.7125, 0.15],
+            "member": "root",
+            "part": "joint"
           }
         ],
         "decisions": [
           {
-            "en": "Body: two slabs, the 380 mm masonry with its plaster and the 320 mm ETICS of wool and render; the render (20 mm) and the plaster (15 mm) are under the 30 mm feature and join their neighbours, as the 1:200 section draws two fields.",
-            "de": "Körper: zwei Platten, das 380-mm-Mauerwerk mit seinem Putz und das 320-mm-WDVS aus Wolle und Putz; Außenputz (20 mm) und Innenputz (15 mm) liegen unter der Einzelheit 30 mm und gehen in ihren Nachbarn auf, wie der Schnitt 1:200 zwei Felder zeichnet."
+            "en": "The system is modelled in the order it is applied: a full bed of cementitious adhesive 10 mm on the brick, the mineral wool boards, the plate anchors through wool and adhesive into the brick, an 8 mm base coat that embeds the glass-fibre mesh and a 12 mm mineral finish coat. Adhesive, base coat and finish are layers of their own in the body and in the thermal list.",
+            "de": "Das System ist in der Reihenfolge seines Auftrags modelliert: ein vollflächiges Bett aus zementärem Kleber 10 mm auf dem Ziegel, die Mineralwolleplatten, die Tellerdübel durch Wolle und Kleber in den Ziegel, ein 8 mm starker Unterputz, der das Glasfasergewebe einbettet, und 12 mm mineralischer Oberputz. Kleber, Unterputz und Oberputz sind eigene Schichten im Körper und in der thermischen Liste."
           },
           {
-            "en": "Thermal: the two body slabs as shells by reference, masonry (room face marked as the conditioned interior face) and ETICS; the region keeps all four layers in its data.",
-            "de": "Thermik: die zwei Körperplatten als Schalen per Verweis, Mauerwerk (Raumseite als konditionierte Innenfläche markiert) und WDVS; die Region behält in ihren Daten alle vier Schichten."
+            "en": "The cut sample contains actual 15 mm room plaster, a 365 mm bonded brick leaf with mortar courses, mineral wool and 20 mm outside render. Larger digital scales consolidate adjacent wool boards within one material; each physical interface stays at its measured depth.",
+            "de": "Der Schnitt zeigt 15 mm Innenputz, 365 mm im Verband gemauertes Ziegelmauerwerk mit Mörtelfugen, Mineralwolle und 20 mm Außenputz. In kleineren Darstellungen werden benachbarte Dämmplatten desselben Materials zusammengefasst; jede Materialgrenze bleibt in ihrer gemessenen Tiefe."
           },
           {
-            "en": "Structure: the 365 mm leaf member on a 30 mm fixed bed at the base anchor and the mass at the centre of mass; the anchors (8 mm) are dropped below the 30 mm feature, the weight of the ETICS is in the mass.",
-            "de": "Tragwerk: der 365-mm-Schalenstab auf einem 30-mm-Festbett am Fußanker und die Masse im Schwerpunkt; die Dübel (8 mm) entfallen unter der Einzelheit 30 mm, das Gewicht des WDVS steckt in der Masse."
+            "en": "Four 8 mm anchor shafts embed 50 mm into the masonry. Their 60 mm heads retain the insulation beneath the render. The brick leaf carries the gravity load.",
+            "de": "Vier 8-mm-Dübel verankern sich 50 mm tief im Ziegel. Die 60-mm-Teller halten die Dämmung unter dem Putz. Die Ziegelschale trägt die Eigenlast."
+          },
+          {
+            "en": "Minimal: all four insulation anchors, the masonry and the bearing and mass indicators are required at every scale.",
+            "de": "Minimal: Alle vier Dämmstoffdübel, das Mauerwerk sowie die Auflager- und Massensymbole werden in jedem Maßstab benötigt."
           }
         ]
       },
@@ -3478,49 +5465,1042 @@
         "denominator": 500,
         "body": [
           {
-            "id": "wall",
+            "id": "plaster",
+            "kind": "box",
+            "bone": "root",
+            "material": "lime-plaster",
+            "role": "body",
+            "tone": 0.9,
+            "size": [0.015, 1.0, 1.0],
+            "transform": {
+              "translation": [0.0075, 0.5, 0.0]
+            },
+            "sectionFaces": ["-v", "+v", "-w", "+w"]
+          },
+          {
+            "id": "bed-joint",
+            "kind": "box",
+            "bone": "root",
+            "material": "masonry-mortar",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.365, 0.01233, 1.0],
+            "transform": {
+              "translation": [0.1975, 0.00617, 0.0]
+            },
+            "sectionFaces": ["-v", "-w", "+w"],
+            "repeat": {
+              "count": 12,
+              "translation": [0.0, 0.08333, 0.0]
+            }
+          },
+          {
+            "id": "longitudinal-joint-a",
+            "kind": "box",
+            "bone": "root",
+            "material": "masonry-mortar",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.01, 0.071, 1.0],
+            "transform": {
+              "translation": [0.135, 0.04783, 0.0]
+            },
+            "sectionFaces": ["-w", "+w"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-a-01",
             "kind": "box",
             "bone": "root",
             "material": "solid-brick",
             "role": "body",
-            "tone": 0.6,
-            "size": [0.7, 1.0, 1.0],
+            "tone": 0.5,
+            "size": [0.24, 0.071, 0.025],
             "transform": {
-              "translation": [0.35, 0.5, 0.0]
+              "translation": [0.26, 0.04783, -0.4875]
+            },
+            "sectionFaces": ["-w"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-a-02",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.24, 0.071, 0.115],
+            "transform": {
+              "translation": [0.26, 0.04783, -0.4075]
+            },
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-a-03",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.24, 0.071, 0.115],
+            "transform": {
+              "translation": [0.26, 0.04783, -0.2825]
+            },
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-a-04",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.24, 0.071, 0.115],
+            "transform": {
+              "translation": [0.26, 0.04783, -0.1575]
+            },
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-a-05",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.24, 0.071, 0.115],
+            "transform": {
+              "translation": [0.26, 0.04783, -0.0325]
+            },
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-a-06",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.24, 0.071, 0.115],
+            "transform": {
+              "translation": [0.26, 0.04783, 0.0925]
+            },
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-a-07",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.24, 0.071, 0.115],
+            "transform": {
+              "translation": [0.26, 0.04783, 0.2175]
+            },
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-a-08",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.24, 0.071, 0.115],
+            "transform": {
+              "translation": [0.26, 0.04783, 0.3425]
+            },
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-a-09",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.24, 0.071, 0.09],
+            "transform": {
+              "translation": [0.26, 0.04783, 0.455]
+            },
+            "sectionFaces": ["+w"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-joint-a-01",
+            "kind": "box",
+            "bone": "root",
+            "material": "masonry-mortar",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.24, 0.071, 0.01],
+            "transform": {
+              "translation": [0.26, 0.04783, -0.47]
+            },
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-joint-a-02",
+            "kind": "box",
+            "bone": "root",
+            "material": "masonry-mortar",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.24, 0.071, 0.01],
+            "transform": {
+              "translation": [0.26, 0.04783, -0.345]
+            },
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-joint-a-03",
+            "kind": "box",
+            "bone": "root",
+            "material": "masonry-mortar",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.24, 0.071, 0.01],
+            "transform": {
+              "translation": [0.26, 0.04783, -0.22]
+            },
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-joint-a-04",
+            "kind": "box",
+            "bone": "root",
+            "material": "masonry-mortar",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.24, 0.071, 0.01],
+            "transform": {
+              "translation": [0.26, 0.04783, -0.095]
+            },
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-joint-a-05",
+            "kind": "box",
+            "bone": "root",
+            "material": "masonry-mortar",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.24, 0.071, 0.01],
+            "transform": {
+              "translation": [0.26, 0.04783, 0.03]
+            },
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-joint-a-06",
+            "kind": "box",
+            "bone": "root",
+            "material": "masonry-mortar",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.24, 0.071, 0.01],
+            "transform": {
+              "translation": [0.26, 0.04783, 0.155]
+            },
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-joint-a-07",
+            "kind": "box",
+            "bone": "root",
+            "material": "masonry-mortar",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.24, 0.071, 0.01],
+            "transform": {
+              "translation": [0.26, 0.04783, 0.28]
+            },
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-joint-a-08",
+            "kind": "box",
+            "bone": "root",
+            "material": "masonry-mortar",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.24, 0.071, 0.01],
+            "transform": {
+              "translation": [0.26, 0.04783, 0.405]
+            },
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "stretcher-a-01",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.115, 0.071, 0.0875],
+            "transform": {
+              "translation": [0.0725, 0.04783, -0.45625]
+            },
+            "sectionFaces": ["-w"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "stretcher-a-02",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.115, 0.071, 0.24],
+            "transform": {
+              "translation": [0.0725, 0.04783, -0.2825]
+            },
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "stretcher-a-03",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.115, 0.071, 0.24],
+            "transform": {
+              "translation": [0.0725, 0.04783, -0.0325]
+            },
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "stretcher-a-04",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.115, 0.071, 0.24],
+            "transform": {
+              "translation": [0.0725, 0.04783, 0.2175]
+            },
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "stretcher-a-05",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.115, 0.071, 0.1525],
+            "transform": {
+              "translation": [0.0725, 0.04783, 0.42375]
+            },
+            "sectionFaces": ["+w"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "stretcher-joint-a-01",
+            "kind": "box",
+            "bone": "root",
+            "material": "masonry-mortar",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.115, 0.071, 0.01],
+            "transform": {
+              "translation": [0.0725, 0.04783, -0.4075]
+            },
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "stretcher-joint-a-02",
+            "kind": "box",
+            "bone": "root",
+            "material": "masonry-mortar",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.115, 0.071, 0.01],
+            "transform": {
+              "translation": [0.0725, 0.04783, -0.1575]
+            },
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "stretcher-joint-a-03",
+            "kind": "box",
+            "bone": "root",
+            "material": "masonry-mortar",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.115, 0.071, 0.01],
+            "transform": {
+              "translation": [0.0725, 0.04783, 0.0925]
+            },
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "stretcher-joint-a-04",
+            "kind": "box",
+            "bone": "root",
+            "material": "masonry-mortar",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.115, 0.071, 0.01],
+            "transform": {
+              "translation": [0.0725, 0.04783, 0.3425]
+            },
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "longitudinal-joint-b",
+            "kind": "box",
+            "bone": "root",
+            "material": "masonry-mortar",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.01, 0.071, 1.0],
+            "transform": {
+              "translation": [0.26, 0.13117, 0.0]
+            },
+            "sectionFaces": ["+v", "-w", "+w"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-b-01",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.24, 0.071, 0.025],
+            "transform": {
+              "translation": [0.135, 0.13117, -0.4875]
+            },
+            "sectionFaces": ["+v", "-w"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-b-02",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.24, 0.071, 0.115],
+            "transform": {
+              "translation": [0.135, 0.13117, -0.4075]
+            },
+            "sectionFaces": ["+v"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-b-03",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.24, 0.071, 0.115],
+            "transform": {
+              "translation": [0.135, 0.13117, -0.2825]
+            },
+            "sectionFaces": ["+v"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-b-04",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.24, 0.071, 0.115],
+            "transform": {
+              "translation": [0.135, 0.13117, -0.1575]
+            },
+            "sectionFaces": ["+v"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-b-05",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.24, 0.071, 0.115],
+            "transform": {
+              "translation": [0.135, 0.13117, -0.0325]
+            },
+            "sectionFaces": ["+v"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-b-06",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.24, 0.071, 0.115],
+            "transform": {
+              "translation": [0.135, 0.13117, 0.0925]
+            },
+            "sectionFaces": ["+v"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-b-07",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.24, 0.071, 0.115],
+            "transform": {
+              "translation": [0.135, 0.13117, 0.2175]
+            },
+            "sectionFaces": ["+v"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-b-08",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.24, 0.071, 0.115],
+            "transform": {
+              "translation": [0.135, 0.13117, 0.3425]
+            },
+            "sectionFaces": ["+v"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-b-09",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.24, 0.071, 0.09],
+            "transform": {
+              "translation": [0.135, 0.13117, 0.455]
+            },
+            "sectionFaces": ["+v", "+w"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-joint-b-01",
+            "kind": "box",
+            "bone": "root",
+            "material": "masonry-mortar",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.24, 0.071, 0.01],
+            "transform": {
+              "translation": [0.135, 0.13117, -0.47]
+            },
+            "sectionFaces": ["+v"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-joint-b-02",
+            "kind": "box",
+            "bone": "root",
+            "material": "masonry-mortar",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.24, 0.071, 0.01],
+            "transform": {
+              "translation": [0.135, 0.13117, -0.345]
+            },
+            "sectionFaces": ["+v"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-joint-b-03",
+            "kind": "box",
+            "bone": "root",
+            "material": "masonry-mortar",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.24, 0.071, 0.01],
+            "transform": {
+              "translation": [0.135, 0.13117, -0.22]
+            },
+            "sectionFaces": ["+v"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-joint-b-04",
+            "kind": "box",
+            "bone": "root",
+            "material": "masonry-mortar",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.24, 0.071, 0.01],
+            "transform": {
+              "translation": [0.135, 0.13117, -0.095]
+            },
+            "sectionFaces": ["+v"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-joint-b-05",
+            "kind": "box",
+            "bone": "root",
+            "material": "masonry-mortar",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.24, 0.071, 0.01],
+            "transform": {
+              "translation": [0.135, 0.13117, 0.03]
+            },
+            "sectionFaces": ["+v"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-joint-b-06",
+            "kind": "box",
+            "bone": "root",
+            "material": "masonry-mortar",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.24, 0.071, 0.01],
+            "transform": {
+              "translation": [0.135, 0.13117, 0.155]
+            },
+            "sectionFaces": ["+v"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-joint-b-07",
+            "kind": "box",
+            "bone": "root",
+            "material": "masonry-mortar",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.24, 0.071, 0.01],
+            "transform": {
+              "translation": [0.135, 0.13117, 0.28]
+            },
+            "sectionFaces": ["+v"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "header-joint-b-08",
+            "kind": "box",
+            "bone": "root",
+            "material": "masonry-mortar",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.24, 0.071, 0.01],
+            "transform": {
+              "translation": [0.135, 0.13117, 0.405]
+            },
+            "sectionFaces": ["+v"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "stretcher-b-01",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.115, 0.071, 0.2125],
+            "transform": {
+              "translation": [0.3225, 0.13117, -0.39375]
+            },
+            "sectionFaces": ["+v", "-w"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "stretcher-b-02",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.115, 0.071, 0.24],
+            "transform": {
+              "translation": [0.3225, 0.13117, -0.1575]
+            },
+            "sectionFaces": ["+v"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "stretcher-b-03",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.115, 0.071, 0.24],
+            "transform": {
+              "translation": [0.3225, 0.13117, 0.0925]
+            },
+            "sectionFaces": ["+v"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "stretcher-b-04",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.115, 0.071, 0.24],
+            "transform": {
+              "translation": [0.3225, 0.13117, 0.3425]
+            },
+            "sectionFaces": ["+v"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "stretcher-b-05",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.115, 0.071, 0.0275],
+            "transform": {
+              "translation": [0.3225, 0.13117, 0.48625]
+            },
+            "sectionFaces": ["+v", "+w"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "stretcher-joint-b-01",
+            "kind": "box",
+            "bone": "root",
+            "material": "masonry-mortar",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.115, 0.071, 0.01],
+            "transform": {
+              "translation": [0.3225, 0.13117, -0.2825]
+            },
+            "sectionFaces": ["+v"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "stretcher-joint-b-02",
+            "kind": "box",
+            "bone": "root",
+            "material": "masonry-mortar",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.115, 0.071, 0.01],
+            "transform": {
+              "translation": [0.3225, 0.13117, -0.0325]
+            },
+            "sectionFaces": ["+v"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "stretcher-joint-b-03",
+            "kind": "box",
+            "bone": "root",
+            "material": "masonry-mortar",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.115, 0.071, 0.01],
+            "transform": {
+              "translation": [0.3225, 0.13117, 0.2175]
+            },
+            "sectionFaces": ["+v"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "stretcher-joint-b-04",
+            "kind": "box",
+            "bone": "root",
+            "material": "masonry-mortar",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.115, 0.071, 0.01],
+            "transform": {
+              "translation": [0.3225, 0.13117, 0.4675]
+            },
+            "sectionFaces": ["+v"],
+            "repeat": {
+              "count": 6,
+              "translation": [0.0, 0.16667, 0.0]
+            }
+          },
+          {
+            "id": "adhesive",
+            "kind": "box",
+            "bone": "root",
+            "material": "etics-adhesive",
+            "role": "body",
+            "tone": 0.6,
+            "size": [0.01, 1.0, 1.0],
+            "transform": {
+              "translation": [0.385, 0.5, 0.0]
+            },
+            "sectionFaces": ["-v", "+v", "-w", "+w"]
+          },
+          {
+            "id": "insulation",
+            "kind": "box",
+            "bone": "root",
+            "material": "mineral-wool",
+            "role": "body",
+            "tone": 0.88,
+            "size": [0.3, 1, 1.0],
+            "transform": {
+              "translation": [0.54, 0.5, 0]
+            },
+            "sectionFaces": ["-v", "-w"]
+          },
+          {
+            "id": "render-base-coat",
+            "kind": "box",
+            "bone": "root",
+            "material": "mineral-render",
+            "role": "body",
+            "tone": 0.72,
+            "size": [0.008, 1.0, 1.0],
+            "transform": {
+              "translation": [0.694, 0.5, 0.0]
+            },
+            "sectionFaces": ["-v", "+v", "-w", "+w"]
+          },
+          {
+            "id": "render-finish",
+            "kind": "box",
+            "bone": "root",
+            "material": "mineral-render",
+            "role": "body",
+            "tone": 0.8,
+            "size": [0.012, 1.0, 1.0],
+            "transform": {
+              "translation": [0.704, 0.5, 0.0]
             },
             "sectionFaces": ["-v", "+v", "-w", "+w"]
           }
         ],
         "thermal": [
           {
-            "id": "th-masonry",
+            "id": "th-plaster",
+            "of": "plaster",
+            "region": "wall-field",
+            "layer": "plaster",
+            "sectionFaces": ["-u", "-v", "+v", "-w", "+w"]
+          },
+          {
+            "id": "th-brick",
             "kind": "box",
             "bone": "root",
             "material": "solid-brick",
             "role": "body",
             "tone": 0.5,
-            "size": [0.38, 1.0, 1.0],
+            "size": [0.365, 1.0, 1.0],
             "transform": {
-              "translation": [0.19, 0.5, 0.0]
+              "translation": [0.1975, 0.5, 0.0]
             },
-            "sectionFaces": ["-u", "-v", "+v", "-w", "+w"],
+            "sectionFaces": ["-v", "+v", "-w", "+w"],
             "region": "wall-field",
             "layer": "brick"
           },
           {
-            "id": "th-etics",
+            "id": "th-adhesive",
+            "of": "adhesive",
+            "region": "wall-field",
+            "layer": "adhesive",
+            "sectionFaces": ["-v", "+v", "-w", "+w"]
+          },
+          {
+            "id": "th-insulation",
             "kind": "box",
             "bone": "root",
             "material": "mineral-wool",
             "role": "body",
             "tone": 0.88,
-            "size": [0.32, 1.0, 1.0],
+            "size": [0.3, 1, 1.0],
             "transform": {
-              "translation": [0.54, 0.5, 0.0]
+              "translation": [0.54, 0.5, 0]
             },
             "sectionFaces": ["-v", "+v", "-w", "+w"],
             "region": "wall-field",
             "layer": "insulation"
+          },
+          {
+            "id": "th-render-base-coat",
+            "of": "render-base-coat",
+            "region": "wall-field",
+            "layer": "base-coat",
+            "sectionFaces": ["-v", "+v", "-w", "+w"]
+          },
+          {
+            "id": "th-face-render",
+            "of": "render-finish",
+            "region": "wall-field",
+            "layer": "render",
+            "sectionFaces": ["-u", "-v", "+v", "-w", "+w"]
           }
         ],
         "structure": [
@@ -3562,28 +6542,80 @@
             "tone": 0.3,
             "radii": [0.075, 0.075, 0.075],
             "transform": {
-              "translation": [0.22317, 0.5, 0.0]
+              "translation": [0.22713, 0.5, 0.0]
             },
             "member": "root",
             "part": "mass"
+          },
+          {
+            "id": "joint-anchor-1",
+            "kind": "revolve",
+            "bone": "root",
+            "material": "etics-anchor",
+            "role": "detail",
+            "tone": 0.3,
+            "profile": [[0.33, 0.0], [0.33, 0.004], [0.682, 0.004], [0.682, 0.03], [0.69, 0.03], [0.69, 0.0]],
+            "axis": [1, 0, 0],
+            "origin": [0.0, 0.4, 0.15],
+            "member": "root",
+            "part": "joint"
+          },
+          {
+            "id": "joint-anchor-2",
+            "kind": "revolve",
+            "bone": "root",
+            "material": "etics-anchor",
+            "role": "detail",
+            "tone": 0.3,
+            "profile": [[0.33, 0.0], [0.33, 0.004], [0.682, 0.004], [0.682, 0.03], [0.69, 0.03], [0.69, 0.0]],
+            "axis": [1, 0, 0],
+            "origin": [0.0, 0.4, -0.25],
+            "member": "root",
+            "part": "joint"
+          },
+          {
+            "id": "joint-anchor-3",
+            "kind": "revolve",
+            "bone": "root",
+            "material": "etics-anchor",
+            "role": "detail",
+            "tone": 0.3,
+            "profile": [[0.33, 0.0], [0.33, 0.004], [0.682, 0.004], [0.682, 0.03], [0.69, 0.03], [0.69, 0.0]],
+            "axis": [1, 0, 0],
+            "origin": [0.0, 0.0875, -0.25],
+            "member": "root",
+            "part": "joint"
+          },
+          {
+            "id": "joint-anchor-4",
+            "kind": "revolve",
+            "bone": "root",
+            "material": "etics-anchor",
+            "role": "detail",
+            "tone": 0.3,
+            "profile": [[0.33, 0.0], [0.33, 0.004], [0.682, 0.004], [0.682, 0.03], [0.69, 0.03], [0.69, 0.0]],
+            "axis": [1, 0, 0],
+            "origin": [0.0, 0.7125, 0.15],
+            "member": "root",
+            "part": "joint"
           }
         ],
         "decisions": [
           {
-            "en": "Body: the 700 mm wall is one block, as the 1:500 section draws it as one poché field (1.4 mm on paper).",
-            "de": "Körper: die 700 mm dicke Wand ist ein Block, wie der Schnitt 1:500 sie als ein gefülltes Feld zeichnet (1,4 mm auf dem Papier)."
+            "en": "The system is modelled in the order it is applied: a full bed of cementitious adhesive 10 mm on the brick, the mineral wool boards, the plate anchors through wool and adhesive into the brick, an 8 mm base coat that embeds the glass-fibre mesh and a 12 mm mineral finish coat. Adhesive, base coat and finish are layers of their own in the body and in the thermal list.",
+            "de": "Das System ist in der Reihenfolge seines Auftrags modelliert: ein vollflächiges Bett aus zementärem Kleber 10 mm auf dem Ziegel, die Mineralwolleplatten, die Tellerdübel durch Wolle und Kleber in den Ziegel, ein 8 mm starker Unterputz, der das Glasfasergewebe einbettet, und 12 mm mineralischer Oberputz. Kleber, Unterputz und Oberputz sind eigene Schichten im Körper und in der thermischen Liste."
           },
           {
-            "en": "Thermal: two shells inside the block, the 380 mm masonry with its plaster (room face marked as the conditioned interior face) and the 320 mm ETICS: the 300 mm wool is four times the 75 mm feature and is the layer that makes this wall, so the thermal model keeps it although the body does not draw it apart.",
-            "de": "Thermik: zwei Schalen im Block, das 380-mm-Mauerwerk mit seinem Putz (Raumseite als konditionierte Innenfläche markiert) und das 320-mm-WDVS: die 300-mm-Wolle ist viermal die Einzelheit 75 mm und ist die Schicht, die diese Wand ausmacht, daher behält das Wärmemodell sie, obwohl der Körper sie nicht abtrennt."
+            "en": "The cut sample contains actual 15 mm room plaster, a 365 mm bonded brick leaf with mortar courses, mineral wool and 20 mm outside render. Larger digital scales consolidate adjacent wool boards within one material; each physical interface stays at its measured depth.",
+            "de": "Der Schnitt zeigt 15 mm Innenputz, 365 mm im Verband gemauertes Ziegelmauerwerk mit Mörtelfugen, Mineralwolle und 20 mm Außenputz. In kleineren Darstellungen werden benachbarte Dämmplatten desselben Materials zusammengefasst; jede Materialgrenze bleibt in ihrer gemessenen Tiefe."
           },
           {
-            "en": "Structure: the 365 mm leaf member, its 75 mm fixed bed at the base anchor and the mass at the centre of mass.",
-            "de": "Tragwerk: der 365-mm-Schalenstab, sein 75-mm-Festbett am Fußanker und die Masse im Schwerpunkt."
+            "en": "Four 8 mm anchor shafts embed 50 mm into the masonry. Their 60 mm heads retain the insulation beneath the render. The brick leaf carries the gravity load.",
+            "de": "Vier 8-mm-Dübel verankern sich 50 mm tief im Ziegel. Die 60-mm-Teller halten die Dämmung unter dem Putz. Die Ziegelschale trägt die Eigenlast."
           },
           {
-            "en": "Minimal: one block, two thermal shells, one member, one support and one mass; the thermal and structural lists cannot lose a part without losing the insulation or the load path.",
-            "de": "Minimal: ein Block, zwei Wärmeschalen, ein Stab, ein Auflager und eine Masse; Wärme- und Tragwerksliste können keinen Teil verlieren, ohne die Dämmung oder den Lastpfad zu verlieren."
+            "en": "Minimal: all four insulation anchors, the masonry and the bearing and mass indicators are required at every scale.",
+            "de": "Minimal: Alle vier Dämmstoffdübel, das Mauerwerk sowie die Auflager- und Massensymbole werden in jedem Maßstab benötigt."
           }
         ]
       }

@@ -1,14 +1,14 @@
 /** 🌐️ Drives the mounted PDF editor using the shell file chooser and page inspector. */
 import assert from "node:assert/strict";
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import type { Locator, Page } from "playwright";
 import { awaitBeacon, clickUncovered, dismissIntroduction, seatLocale, unfoldActionsRail, windowIds } from "@semio-tech/framework-os-dev/testing/program-matrix";
 
 const [base, source, generated, mode] = process.argv.slice(2);
 assert(base && source && generated, "Expected shell URL, PDF fixture and generated output directory");
-assert(mode === undefined || mode === "large-vector" || mode === "large-text" || mode === "large-images" || mode === "edit-content" || mode === "cancel-large" || mode === "page-history" || mode === "style-properties" || mode === "reject-invalid",
-  "Expected optional large-vector, large-text, large-images, edit-content, cancel-large page-history, style-properties or reject-invalid case");
+assert(mode === undefined || mode === "starter" || mode === "large-vector" || mode === "large-text" || mode === "large-images" || mode === "edit-content" || mode === "cancel-large" || mode === "page-history" || mode === "style-properties" || mode === "reject-invalid" || mode === "segmented-source",
+  "Expected optional large-vector, large-text, large-images, edit-content, cancel-large page-history, style-properties, reject-invalid or segmented-source case");
 type CancelLarge = { readonly fileName: string; readonly baselinePath: string; readonly baselinePages: number; readonly taskLane: string; readonly expectedNotice: string; readonly slowCpuRate: number };
 const cancelLarge: CancelLarge | undefined = mode === "cancel-large"
   ? JSON.parse(readFileSync(new URL("./🧪️mounted-cancel.json", import.meta.url), "utf8"))
@@ -42,7 +42,10 @@ const styleProperties: StyleProperties | undefined = mode === "style-properties"
   ? JSON.parse(readFileSync(new URL("./🔣️mounted-style-properties.json", import.meta.url), "utf8")) : undefined;
 const invalidPdf: { expectedNotice: string; pageCount: number } | undefined = mode === "reject-invalid"
   ? JSON.parse(readFileSync(new URL("./🔣️mounted-invalid-pdf.json", import.meta.url), "utf8")) : undefined;
-const reportName = invalidPdf ? "pdf-mounted-reject-invalid" : styleProperties ? "pdf-mounted-style-properties" : pageHistory ? "pdf-mounted-page-history" : cancelLarge ? "pdf-mounted-cancel" : contentEdit ? "pdf-mounted-content" :
+const segmentedSource: {sourceBytes: number; rotation: number} | undefined = mode === "segmented-source"
+  ? JSON.parse(readFileSync(new URL("./🔣️segmented-pdf-source.json", import.meta.url), "utf8")) : undefined;
+if (segmentedSource) assert.equal(statSync(source).size, segmentedSource.sourceBytes);
+const reportName = mode === "starter" ? "pdf-mounted-starter" : segmentedSource ? "pdf-mounted-segmented-source" : invalidPdf ? "pdf-mounted-reject-invalid" : styleProperties ? "pdf-mounted-style-properties" : pageHistory ? "pdf-mounted-page-history" : cancelLarge ? "pdf-mounted-cancel" : contentEdit ? "pdf-mounted-content" :
   mode === "large-text" ? "pdf-mounted-large-text" : controlledImages ? "pdf-mounted-large-images" :
   large ? "pdf-mounted-large" : "pdf-mounted";
 if (large) assert.equal(readFileSync(source).byteLength, large.byteLength, "Expected the independently verified large PDF fixture");
@@ -76,14 +79,17 @@ await page.addInitScript(() => {
 });
 
 const traceOpen = process.env.SEMIO_PDF_TRACE_OPEN === "1";
+if (traceOpen && process.env.SEMIO_PDF_TRACE_GUEST === "1") await page.addInitScript(() => localStorage.setItem("SEMIO_RUNTIME_DIAGNOSTICS","1"));
+if (traceOpen && process.env.SEMIO_PDF_TRACE_FLOW === "1") await (await import("./📜️pdf-trace-mounted-flow.ts")).traceMountedPdfFlow(page);
 if (traceOpen) await page.addInitScript(() => {
   const trace: unknown[] = [];
-  const workers = new WeakSet<Worker>();
+  const peers = new WeakSet<Worker | MessagePort>();
   const recent = new Map<string, unknown>();
   const replies: unknown[] = [];
   const controls: {actor: unknown}[] = [];
-  const receipts: unknown[] = [];
-  const post = Worker.prototype.postMessage;
+  const receipts: {actor: unknown; [field: string]: unknown}[] = [];
+  const portSend = MessagePort.prototype.postMessage;
+  const workerSend = Worker.prototype.postMessage;
   Object.defineProperty(window, "__pdfActorTraffic", {value: {trace, replies, controls, receipts}});
   const record = (row: unknown) => {
     trace.push(row);
@@ -103,24 +109,25 @@ if (traceOpen) await page.addInitScript(() => {
     ]);
     return Object.fromEntries(entries);
   };
-  Worker.prototype.postMessage = function(this: Worker, message: unknown, ...rest: unknown[]) {
+  const observe = (peer: Worker | MessagePort, message: unknown, channel: string) => {
     const data = message as Record<string, unknown> | null;
     if (data && typeof data.requestId === "string") {
-      if (!workers.has(this)) {
-        workers.add(this);
-        this.addEventListener("message", event => {
+      if (!peers.has(peer)) {
+        peers.add(peer);
+        peer.addEventListener("message", (event: MessageEvent) => {
           const answer = event.data;
           if (answer?.kind === "original-turn-receipt" || answer?.kind === "original-producer-held") {
-            receipts.push({kind: answer.kind, actor: answer.actorId, input: shape(answer.receipt?.input), spent: Object.fromEntries(Object.entries(answer.receipt?.spent ?? {}).map(([key, value]) => [key, typeof value === "bigint" ? value.toString() : value])), work: String(answer.receipt?.workUnitsSpent ?? ""), refusal: shape(answer.refusal)});
-            if (receipts.length > 64) receipts.shift();
+            receipts.push({kind: answer.kind, actor: answer.actorId, input: shape(answer.receipt?.input), spent: Object.fromEntries(Object.entries(answer.receipt?.spent ?? {}).map(([key, value]) => [key, typeof value === "bigint" ? value.toString() : value])), work: String(answer.receipt?.workUnitsSpent ?? ""), refusal: answer.refusal instanceof Error ? {name: answer.refusal.name, message: answer.refusal.message.slice(0, 900), stack: answer.refusal.stack?.slice(0, 8000)} : shape(answer.refusal)});
+            if (receipts.filter(receipt => receipt.actor === answer.actorId).length > 64) receipts.splice(receipts.findIndex(receipt => receipt.actor === answer.actorId), 1);
+            if (receipts.length > 384) receipts.shift();
           }
           if (answer?.kind === "result" && answer.ok === false) {
-            replies.push({requestId: answer.requestId, request: recent.get(answer.requestId), error: String(answer.error).slice(0, 350), recent: trace.slice(-32)});
+            replies.push({requestId: answer.requestId, request: recent.get(answer.requestId), error: String(answer.error).slice(0, 350), type: String(answer.type ?? ""), stack: String(answer.stack ?? "").slice(0, 16_000), recent: trace.slice(-32)});
             if (replies.length > 8) replies.shift();
           }
         });
       }
-      const row = {requestId: data.requestId, type: data.kind, actor: data.actorId,
+      const row = {requestId: data.requestId, time: Math.round(performance.now()), channel, type: data.kind, actor: data.actorId,
         events: shape(data.events), page: shape((data.commandPage as {cursor?: unknown} | undefined)?.cursor),
         request: shape(data.request), frame: shape(data.frame)};
       recent.set(data.requestId, row);
@@ -132,12 +139,81 @@ if (traceOpen) await page.addInitScript(() => {
         if (controls.length > 512) controls.shift();
       }
     }
-    Reflect.apply(post, this, [message, ...rest]);
+  };
+  Worker.prototype.postMessage = function(this: Worker, message: unknown, ...rest: unknown[]) {
+    observe(this,message,"worker");
+    Reflect.apply(workerSend,this,[message,...rest]);
+  };
+  MessagePort.prototype.postMessage = function(this: MessagePort, message: unknown, ...rest: unknown[]) {
+    observe(this,message,"port");
+    Reflect.apply(portSend,this,[message,...rest]);
   };
 });
 
 if (traceOpen) page.on("worker", worker => {
-  void worker.evaluate(() => {
+  void worker.evaluate(({ captureOriginalCommandFault, sampleWasm }) => {
+    if (sampleWasm) {
+      const clock = performance.now.bind(performance);
+      let actor: string | undefined, calls = 0, samples = 0;
+      Error.stackTraceLimit = Math.max(Error.stackTraceLimit, 26);
+      self.addEventListener("message", (event: MessageEvent) => {
+        if (event.data?.commandPage?.cursor?.kind === 10) actor = event.data.actorId;
+      });
+      Object.defineProperty(performance,"now",{configurable:true,value:()=>{
+        const before=clock();
+        if (actor !== undefined && samples < 24 && ++calls % 8191 === 0) {
+          const stack = new Error().stack;
+          if (stack?.includes("wasm-function")) {
+            samples++;
+            console.warn("[DEBUG] pdf-wasm-sample " + actor + " " + stack.slice(0,9000));
+          }
+        }
+        return before;
+      }});
+    }
+    if (captureOriginalCommandFault) {
+    const instantiate = WebAssembly.instantiate;
+    const memories: WebAssembly.Memory[] = [];
+    WebAssembly.instantiate = (async (...args: unknown[]) => {
+      const result = await Reflect.apply(instantiate, WebAssembly, args);
+      const instance = result instanceof WebAssembly.Instance ? result : result.instance;
+      for (const value of Object.values(instance.exports)) {
+        if (value instanceof WebAssembly.Memory && !memories.includes(value)) memories.push(value);
+      }
+      return result;
+    }) as typeof WebAssembly.instantiate;
+    const token = new TextEncoder().encode('"plugin.command-failed"');
+    const decoder = new TextDecoder();
+    const inspect = () => {
+      const memory = memories.at(-1);
+      if (!memory) return;
+      const bytes = new Uint8Array(memory.buffer);
+      const fields = new Set<string>();
+      const limit = Math.min(bytes.length, 256 * 1024 * 1024);
+      for (let start = 0, hits = 0; start < limit && hits < 64;) {
+        const index = bytes.indexOf(token[0]!, start);
+        if (index < 0 || index >= limit) break;
+        start = index + 1;
+        if (!token.every((byte, offset) => bytes[index + offset] === byte)) continue;
+        hits++;
+        const window = decoder.decode(bytes.subarray(Math.max(0,index - 768),Math.min(bytes.length,index + 768)));
+        const code = window.indexOf('"plugin.command-failed"');
+        if (!window.slice(0, code).endsWith('"code":')) continue;
+        const field = /"message":("(?:[^"\\]|\\.)*")/u.exec(window.slice(code));
+        if (field) try { fields.add((JSON.parse(field[1]!) as string).slice(0, 350)); } catch {}
+      }
+      console.warn("[DEBUG] PDF command failure before guest drop " + JSON.stringify([...fields]));
+    };
+    for (const channel of ["error", "warn"] as const) {
+      const previous = console[channel];
+      console[channel] = function(...values: unknown[]) {
+        if (values.some(value => typeof value === "string" && value.includes("controlled retirement abandoned before terminal-empty"))) {
+          try { inspect(); } catch {}
+        }
+        return Reflect.apply(previous, this, values);
+      };
+    }
+    }
     const original = globalThis.Error;
     globalThis.Error = new Proxy(original, {
       construct(target, args, receiver) {
@@ -157,11 +233,26 @@ if (traceOpen) page.on("worker", worker => {
         return Reflect.construct(target, args, receiver);
       },
     });
-  }).catch(() => undefined);
+  }, {captureOriginalCommandFault:process.env.SEMIO_PDF_TRACE_COMMAND_FAULT === "1", sampleWasm:process.env.SEMIO_PDF_SAMPLE_WASM === "1"}).catch(() => undefined);
 });
+if (traceOpen) {
+  page.on("requestfailed", request => diagnostics.push("[DEBUG] request failed " + new URL(request.url()).pathname + " " + request.failure()?.errorText));
+  page.on("response", response => { if (response.status() >= 400) diagnostics.push("[DEBUG] response " + response.status() + " " + new URL(response.url()).pathname); });
+}
 page.on("pageerror", error => diagnostics.push(error.message));
+const slotSamples = new Set<string>();
 page.on("console", message => {
-  if (message.type() === "error" || message.type() === "warning") diagnostics.push(message.text());
+  const line = message.text();
+  if (line.includes("[TRACE] typed-operation slots ")) {
+    if (slotSamples.has(line)) return;
+    slotSamples.add(line);
+  }
+  if (line.startsWith("[DEBUG] pdf-flow ") || line.startsWith("[DEBUG] pdf-wasm-sample ")) console.log(line);
+  if (/typed-operation .*advanced|typed-operation slots|runtime close cleanup faulted/u.test(line)) console.log(line.slice(0,1400));
+  if (message.type() === "error" || message.type() === "warning") {
+    diagnostics.push(message.text());
+    if(diagnostics.length>192) diagnostics.shift();
+  }
 });
 
 async function windowAction(page: Page, id: string) {
@@ -360,7 +451,7 @@ async function verifyControlledImages(owned: Locator, spec: ControlledImages) {
   }
 }
 
-async function saveAndReopen(page: Page, pageCount = 2) {
+async function savePdf(page: Page) {
   const save = await windowAction(page, "saveArtifactFile");
   const cursor = await page.evaluate(() => ((window as Window & {__pdfBrowserNotices?: string[]}).__pdfBrowserNotices ?? []).length);
   const refusal = page.waitForFunction(from => {
@@ -375,6 +466,11 @@ async function saveAndReopen(page: Page, pageCount = 2) {
   await download.saveAs(saved);
   assert.equal(await download.failure(), null);
   assert.equal(readFileSync(saved).subarray(0, 5).toString("ascii"), "%PDF-");
+  return saved;
+}
+
+async function saveAndReopen(page: Page, pageCount = 2) {
+  const saved = await savePdf(page);
   return openFile(page, await windowAction(page, "openArtifactFile"), saved, pageCount);
 }
 
@@ -431,7 +527,17 @@ async function selectSecondPage(page: Page, owned: Locator) {
 
 try {
   await page.goto(base, {waitUntil: "commit", timeout: 300_000});
-  const beacon = await awaitBeacon(page, Date.now() + 300_000);
+  const deadline = Date.now() + 300_000;
+  let beacon: string | null;
+  for (;;) {
+    try {
+      beacon = await awaitBeacon(page, deadline);
+      break;
+    } catch (error) {
+      if (!(error instanceof Error) || !error.message.includes("Execution context was destroyed") || Date.now() >= deadline) throw error;
+      await page.waitForLoadState("domcontentloaded", {timeout: Math.max(1, deadline - Date.now())});
+    }
+  }
   assert(beacon?.startsWith("ready"), `The shell did not boot: ${beacon}`);
   await dismissIntroduction(page);
   assert.equal(await seatLocale(page, "en"), "en=en", "Could not select English in the shell");
@@ -443,7 +549,15 @@ try {
     await page.locator("[data-command-item-id=\"spawn.stdio-pdf.s.stdio.pdf@1.7/*#editor\"]").click();
     await windowAction(page, "openArtifactFile");
   }
-  if (invalidPdf) {
+  if (mode === "starter") {
+    const windows = page.locator('[data-slot="window"]');
+    await windows.getByRole("button",{name:"Insert page after",exact:true}).press("Enter",{timeout:60_000});
+    await selectInspector(windows,"Page 1 / 1","Page 1");
+    await commitInspectorField(windows,"pdf-page-rotation","0","90");
+    await savePdf(page);
+    await page.screenshot({path:join(output,reportName+".png")});
+    console.log("[DEBUG] Edited the starter PDF and downloaded its saved bytes");
+  } else if (invalidPdf) {
     const baseline = await openFile(page, open,
       "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/✏️edit-existing-pdf/2️⃣two-pages.pdf",
       invalidPdf.pageCount);
@@ -471,9 +585,17 @@ try {
     await page.screenshot({path: join(output, `${reportName}.png`)});
     console.log("[DEBUG] Original editor stayed intact and the cancelled large PDF opened successfully on retry");
   } else {
-    const owned = await openFile(page, open, source, large?.pageCount ?? 2);
+    const owned = await openFile(page, open, source, large?.pageCount ?? (segmentedSource ? 1 : 2));
     await verifyRotation(owned, "Page 1", "0");
-    if (styleProperties) {
+    if (segmentedSource) {
+      const rotation = await verifyRotation(owned, "Page 1", "0");
+      const degrees = String(segmentedSource.rotation);
+      await rotation.fill(degrees);
+      await rotation.blur();
+      const reopened = await saveAndReopen(page, 1);
+      await verifyRotation(reopened, "Page 1", degrees);
+      console.log("[DEBUG] Mounted, saved and reopened the rotated PDF beyond the single-command extent");
+    } else if (styleProperties) {
       await verifyOrEditStyles(owned, styleProperties, true);
       const reopened = await saveAndReopen(page);
       await verifyOrEditStyles(reopened, styleProperties, false);

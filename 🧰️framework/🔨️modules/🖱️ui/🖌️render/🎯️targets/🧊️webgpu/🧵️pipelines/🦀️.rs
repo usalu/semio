@@ -80,6 +80,7 @@ pub(crate) struct Pipelines {
     pub world_opaque_pipeline: wgpu::RenderPipeline,
     pub world_translucent_pipeline: wgpu::RenderPipeline,
     pub world_line_pipeline: wgpu::RenderPipeline,
+    pub world_points_pipeline: wgpu::RenderPipeline,
     pub blur_downsample_pipeline: wgpu::RenderPipeline,
     pub scene_blit_pipeline: wgpu::RenderPipeline,
     pub glass_pipeline: wgpu::RenderPipeline,
@@ -111,6 +112,7 @@ impl Pipelines {
         let vector_module = shader_module(device, "vector_shader", VECTOR_FAMILY.variants[0].wgsl);
         let world_module = shader_module(device, "world3d_shader", WORLD3D_FAMILY.variants[0].wgsl);
         let world_lines_module = shader_module(device, "world3d_lines_shader", WORLD3D_FAMILY.variants[1].wgsl);
+        let world_points_module = shader_module(device, "world3d_points_shader", WORLD3D_FAMILY.variants[4].wgsl);
         let blur_module = shader_module(device, "blur_downsample_shader", BLUR_FAMILY.variants[0].wgsl);
         let scene_blit_module = shader_module(device, "scene_blit_shader", BLUR_FAMILY.variants[1].wgsl);
         let glass_module = shader_module(device, "glass_shader", GLASS_FAMILY.variants[0].wgsl);
@@ -125,6 +127,7 @@ impl Pipelines {
         let world_opaque_pipeline = build_pipeline(device, &world_module, &WORLD3D_FAMILY.variants[0].pipelines[0], &world_mesh_layout, surface_format);
         let world_translucent_pipeline = build_pipeline(device, &world_module, &WORLD3D_FAMILY.variants[0].pipelines[1], &world_mesh_layout, surface_format);
         let world_line_pipeline = build_pipeline(device, &world_lines_module, &WORLD3D_FAMILY.variants[1].pipelines[0], &world_layout, surface_format);
+        let world_points_pipeline = build_pipeline(device, &world_points_module, &WORLD3D_FAMILY.variants[4].pipelines[0], &world_layout, surface_format);
 
         let blur_pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor { label: Some("blur_downsample_pipeline_layout"), bind_group_layouts: &[Some(&blur_layout)], immediate_size: 0 });
         let blur_downsample_pipeline = build_pipeline(device, &blur_module, &BLUR_FAMILY.variants[0].pipelines[0], &blur_pipeline_layout, surface_format);
@@ -168,6 +171,7 @@ impl Pipelines {
             world_opaque_pipeline,
             world_translucent_pipeline,
             world_line_pipeline,
+            world_points_pipeline,
             blur_downsample_pipeline,
             scene_blit_pipeline,
             glass_pipeline,

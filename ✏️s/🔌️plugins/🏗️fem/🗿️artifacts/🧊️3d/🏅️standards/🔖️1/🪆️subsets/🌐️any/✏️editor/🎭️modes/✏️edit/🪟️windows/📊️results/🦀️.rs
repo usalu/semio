@@ -134,6 +134,11 @@ pub fn reset_results_cache() {
     RESULTS_SOLVES.with(|count| count.set(0));
 }
 
+/// 🧪️ The resident revision key and how many mode shapes ride along with it, or `None` while nothing is cached.
+pub fn results_cache_resident() -> Option<(ResultsCacheKey, usize)> {
+    RESULTS_CACHE.with(|cache| cache.borrow().as_ref().map(|entry| (entry.key, entry.modes.len())))
+}
+
 fn note_solve() {
     RESULTS_SOLVES.with(|count| count.set(count.get().saturating_add(1)));
 }

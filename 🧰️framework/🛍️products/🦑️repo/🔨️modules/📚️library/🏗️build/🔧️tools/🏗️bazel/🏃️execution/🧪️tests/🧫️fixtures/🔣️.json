@@ -188,7 +188,7 @@
    }
   },
   {
-   "name": "hermetic remote routes to the pool without local fallback",
+   "name": "hermetic remote routes to a pool of another platform without local fallback",
    "host": {
     "platform": "darwin",
     "arch": "arm64"
@@ -214,7 +214,7 @@
    }
   },
   {
-   "name": "linux host with a linux pool shares one toolchain",
+   "name": "linux host with a linux pool shares one toolchain and falls back to local",
    "host": {
     "platform": "linux",
     "arch": "x64"
@@ -229,7 +229,6 @@
      "--extra_execution_platforms=//:exec_linux_x64,//:exec_remote_linux_x64",
      "--extra_toolchains=//:bun_toolchain_linux_x64",
      "--remote_executor=grpc://h:1",
-     "--noremote_local_fallback",
      "--remote_instance_name=main",
      "--noremote_cache_compression",
      "--strategy=RepoHermetic=remote,sandboxed,local"

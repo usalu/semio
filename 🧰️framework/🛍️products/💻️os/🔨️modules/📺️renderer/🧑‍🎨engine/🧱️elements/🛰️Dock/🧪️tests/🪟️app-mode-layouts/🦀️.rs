@@ -170,8 +170,8 @@ fn fixture() -> LayoutFixture {
 
 fn axis_name(node: &DockNode) -> &'static str {
     match node {
-        DockNode::Row(_) => "row",
-        DockNode::Column(_) => "column",
+        DockNode::Row(_) => "horizontal",
+        DockNode::Column(_) => "vertical",
         DockNode::Stack { .. } => "stack",
     }
 }

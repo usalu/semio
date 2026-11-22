@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Chrome Parity Constants",
+  "description": "Geometry constants the React chrome and the wgpu chrome both read, so the two targets cannot drift.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["introduction", "panelDrop", "toast", "statusStacks"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "introduction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["infoBoxGapPx", "dockReachPx", "clearRangePx"],
+      "properties": {
+        "infoBoxGapPx": { "type": "number", "minimum": 0 },
+        "dockReachPx": { "type": "number", "exclusiveMinimum": 0 },
+        "clearRangePx": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    },
+    "panelDrop": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["insertBarWidthPx", "nestMinFraction", "nestMaxFraction", "nestFillAlpha", "emptyZoneMinWidthRem"],
+      "properties": {
+        "insertBarWidthPx": { "type": "number", "exclusiveMinimum": 0 },
+        "nestMinFraction": { "type": "number", "minimum": 0, "maximum": 1 },
+        "nestMaxFraction": { "type": "number", "minimum": 0, "maximum": 1 },
+        "nestFillAlpha": { "type": "number", "minimum": 0, "maximum": 1 },
+        "emptyZoneMinWidthRem": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    },
+    "toast": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["maxWidthFraction"],
+      "properties": {
+        "maxWidthFraction": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 }
+      }
+    },
+    "statusStacks": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["remPx", "artifactCreationMaxWidthRem", "routeAdmissionMaxWidthFraction", "installMaxWidthFraction"],
+      "properties": {
+        "remPx": { "type": "number", "exclusiveMinimum": 0 },
+        "artifactCreationMaxWidthRem": { "type": "number", "exclusiveMinimum": 0 },
+        "routeAdmissionMaxWidthFraction": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 },
+        "installMaxWidthFraction": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 }
+      }
+    }
+  }
+}

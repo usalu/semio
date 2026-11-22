@@ -1,0 +1,14 @@
+method	rapid	inspection	basis	result
+unknown	unknown	unknown	unknown	Unverified
+safeLife	yes	no	none	Pass
+safeLife	unknown	unknown	unknown	Pass
+damageTolerant	yes	yes	redistribution	SafeLifeRequired
+damageTolerant	yes	yes	steel	SafeLifeRequired
+damageTolerant	yes	no	none	SafeLifeRequired
+damageTolerant	no	no	redistribution	MaintenanceRequired
+damageTolerant	no	unknown	steel	Unverified
+damageTolerant	unknown	yes	steel	Unverified
+damageTolerant	no	yes	redistribution	Pass
+damageTolerant	no	yes	steel	Pass
+damageTolerant	no	yes	none	Unverified
+damageTolerant	no	yes	unknown	Unverified

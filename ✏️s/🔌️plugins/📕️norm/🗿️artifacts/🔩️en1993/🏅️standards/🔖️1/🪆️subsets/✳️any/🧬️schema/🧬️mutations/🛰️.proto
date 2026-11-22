@@ -3027,7 +3027,7 @@ message ChangeJointPlatePlateThickness {
 }
 message ChangeJointPlatePlateCount {
   string id = 1;
-  uint64 new_plate_count = 2;
+  uint32 new_plate_count = 2;
 }
 message ChangeJointPlatePlateFy {
   string id = 1;
@@ -3051,11 +3051,11 @@ message ChangeJointPlateHoleDiameter {
 }
 message ChangeJointPlateBoltRows {
   string id = 1;
-  uint64 new_bolt_rows = 2;
+  uint32 new_bolt_rows = 2;
 }
 message ChangeJointPlateBoltsPerRow {
   string id = 1;
-  uint64 new_bolts_per_row = 2;
+  uint32 new_bolts_per_row = 2;
 }
 message ChangeJointPlatePitch {
   string id = 1;
@@ -3075,7 +3075,7 @@ message ChangeJointPlateEdgeDistance {
 }
 message ChangeJointPlateShearPlanes {
   string id = 1;
-  uint64 new_shear_planes = 2;
+  uint32 new_shear_planes = 2;
 }
 message ChangeJointPlateEccentricity {
   string id = 1;
@@ -3127,7 +3127,7 @@ message ChangeFoundationGroutThickness {
 }
 message ChangeFoundationAnchorCount {
   string id = 1;
-  uint64 new_anchor_count = 2;
+  uint32 new_anchor_count = 2;
 }
 message ChangeFoundationAnchorClass {
   string id = 1;
@@ -3199,7 +3199,7 @@ message ChangeFastenedJointBaseThickness {
 }
 message ChangeFastenedJointCount {
   string id = 1;
-  uint64 new_count = 2;
+  uint32 new_count = 2;
 }
 message ChangeFastenedJointDiameter {
   string id = 1;
@@ -3235,7 +3235,7 @@ message ChangeFastenedJointMemberId {
 }
 message ChangeFastenedJointPerRow {
   string id = 1;
-  uint64 new_per_row = 2;
+  uint32 new_per_row = 2;
 }
 message ChangeFastenedJointPitch {
   string id = 1;
@@ -3303,7 +3303,7 @@ message ChangeFatigueStressThickness {
 }
 message ChangeFormingGainBends {
   string id = 1;
-  uint64 new_bends = 2;
+  uint32 new_bends = 2;
 }
 message ChangeFormingGainForming {
   string id = 1;

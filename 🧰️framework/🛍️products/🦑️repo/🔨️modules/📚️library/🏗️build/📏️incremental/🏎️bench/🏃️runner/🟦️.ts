@@ -33,6 +33,7 @@ export type BenchPortsV1=Readonly<{
  spawn(spec:BenchSpawnSpecV1,signal:AbortSignal):Promise<BenchRunV1>;
  cache(tool:BenchToolV1,target:string):Promise<BenchCacheRunV1>;
  concurrency(tool:BenchToolV1,workload:string,sessions:number):Promise<BenchConcurrencyRunV1>;
+ fleet?(scenario:string):Promise<Readonly<Partial<Record<BenchMetricV1,number>>>>;
  service:BenchServicePortV1;
  resources?():Readonly<{end():Record<string,number>}>;
  host():BenchHostV1;
@@ -152,6 +153,13 @@ export async function benchRunProbeV1(set:BenchSloSetV1,probe:BenchProbeV1,tool:
   });
   return series();
  }
+ if(probe.kind==="fleet"){
+  for(let at=0;at<total;at++)await step(at,async()=>{
+   const done=await attempt(ports,()=>ports.fleet?ports.fleet(probe.scenario!):Promise.reject(Error(both("The fleet scenarios are not available","Die Flottenszenarien sind nicht verfügbar"))));
+   if(at>=warmup)samples.push(done instanceof Error?failed(samples.length,load()):Object.freeze({index:samples.length,ok:true,exit:null,values:done,startKind:null,loadPerCore:load()}));
+  });
+  return series();
+ }
  if(probe.kind==="concurrency"){
   for(let at=0;at<runs;at++)await step(at,async()=>{
    const done=await attempt(ports,()=>ports.concurrency(tool as BenchToolV1,probe.workload!,probe.sessions!));
@@ -222,6 +230,7 @@ export type BenchHostPortsV1=IncrementalHostV1&Readonly<{
  cache?:BenchPortsV1["cache"];
  concurrency?:BenchPortsV1["concurrency"];
  concurrencyCommand?:typeof runConcurrencyCommandV1;
+ fleet?:BenchPortsV1["fleet"];
  service?:BenchServicePortV1;
  sample?:()=>BenchHostV1;
  clock?:()=>string;
@@ -257,6 +266,7 @@ export function benchCliPortsV1(host:BenchHostPortsV1,signal:AbortSignal):BenchP
    catch(error){if(!out.length)throw error;}
    return benchConcurrencyFromReportV1(JSON.parse(out.join("\n")) as ConcurrentReportV1);
   }),
+  fleet:host.fleet??(async scenario=>(await (await import("../🛰️fleet/🏃️runner/🟦️.ts")).runFleetScenarioChildV1(scenario,signal,host.environment,host.live)).values),
   service,
   resources:()=>planningResourcesV1(host.root),
   host:host.sample??(()=>benchHostV1({platform:platform(),arch:arch(),cpus:Math.max(1,cpus().length),memoryBytes:totalmem(),load1:platform()==="win32"?null:loadavg()[0]!})),

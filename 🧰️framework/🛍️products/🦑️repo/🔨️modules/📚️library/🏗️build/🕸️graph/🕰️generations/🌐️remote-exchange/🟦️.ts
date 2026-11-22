@@ -141,10 +141,21 @@ async function remoteNote(location:Location,reader:Readonly<{implementation?:str
  return rankGenerationHeadsV1(candidates,now,{implementation:reader.implementation,changed})[0];
 }
 
-/** 🛡️ Whether a store keeps its own generation instead of taking the head `note` of `from`: it already holds that state (same signature from its own head, or a head that is not newer than its pointer by the margin), or it holds a generation of the reader's own code and the head was built by other code, which would leave every owner stale. */
+/** 🔑️ The key under which implementation digests are compared: the digest under the platform, so one digest on two platforms is two implementations. */
+export const generationImplementationKeyV1=(platform:string,implementation:string):string=>sha(Buffer.from(JSON.stringify([policy.domain,platform,implementation])));
+
+/** 🧾️ What the keep decision knows: the state of the local store, the head note and the code of the reader, implementations already under the platform key. */
+export type GenerationKeepFactsV1=Readonly<{sameSignatureFromOwnHead:boolean;headStateMs:number;headPublishedMs:number;headStale?:number;headImplementation:string;localModifiedMs:number;localImplementation:string;readerImplementation?:string;marginMilliseconds:number}>;
+
+/** 🛡️ Whether a store keeps its own generation instead of taking a head: it already holds that state (same signature from its own head), or the head is not newer than its pointer by the margin and is not a complete head of the reader's code published after the pointer was last written (a worker seals a pointer with every wave of a slice read, so its pointer says nothing of completeness; it takes such a head once per publication), or it holds a generation of the reader's own code and the head was built by other code, which would leave every owner stale. */
+export function generationKeepsLocalV1(facts:GenerationKeepFactsV1):boolean{
+ const complete=facts.headStale===0&&facts.headPublishedMs>facts.localModifiedMs&&(facts.readerImplementation===undefined||facts.headImplementation===facts.readerImplementation);
+ return facts.sameSignatureFromOwnHead||facts.headStateMs<=facts.localModifiedMs+facts.marginMilliseconds&&!complete||facts.readerImplementation!==undefined&&facts.headImplementation!==facts.readerImplementation&&facts.localImplementation===facts.readerImplementation;
+}
+
 function keepsLocalV1(local:NonNullable<Awaited<ReturnType<typeof localState>>>,note:GenerationNoteV1,from:string,location:Location&Readonly<{marginMilliseconds?:number}>):boolean{
- if(generationSignatureV1(local.manifest)===note.signature&&from===location.key||note.stateMs<=local.modifiedMs+(location.marginMilliseconds??policy.restoreMarginMilliseconds))return true;
- return location.implementation!==undefined&&note.implementation!==location.implementation&&local.manifest.implementation===location.implementation;
+ const key=(implementation:string)=>generationImplementationKeyV1(location.platform,implementation);
+ return generationKeepsLocalV1({sameSignatureFromOwnHead:generationSignatureV1(local.manifest)===note.signature&&from===location.key,headStateMs:note.stateMs,headPublishedMs:note.publishedMs,...note.stale===undefined?{}:{headStale:note.stale},headImplementation:key(note.implementation),localModifiedMs:local.modifiedMs,localImplementation:key(local.manifest.implementation),...location.implementation===undefined?{}:{readerImplementation:key(location.implementation)},marginMilliseconds:location.marginMilliseconds??policy.restoreMarginMilliseconds});
 }
 
 function matchingHeadV1(location:Location&Readonly<{identity:string}>,note:GenerationNoteV1):boolean{
@@ -153,7 +164,7 @@ function matchingHeadV1(location:Location&Readonly<{identity:string}>,note:Gener
 
 function completeAheadHeadV1(location:Location&Readonly<{identity:string;marginMilliseconds?:number}>,local:Awaited<ReturnType<typeof localState>>,head:RankedV1):boolean{
  const {note,from}=head;
- return note.stale===0&&note.implementation===location.implementation&&matchingHeadV1(location,note)
+ return note.stale===0&&location.implementation!==undefined&&generationImplementationKeyV1(location.platform,note.implementation)===generationImplementationKeyV1(location.platform,location.implementation)&&matchingHeadV1(location,note)
   &&generationHeadEvidenceV1(note,from)!==undefined&&!(local&&keepsLocalV1(local,note,from,location));
 }
 
@@ -352,7 +363,7 @@ export async function publishGenerationV1(location:Location&Readonly<{ifAbsent?:
  const stateMs=Math.floor(local.modifiedMs),current=remote?.note?.signature===signature&&(local.restored||remote.note.stateMs>=stateMs);
  const completing=current&&!local.restored&&location.stale===0&&remote?.from===key&&remote.note?.stateMs===stateMs&&remote.note.stale!==0;
  if(current&&!completing)return{status:"current",generation:local.generation,owners};
- const mine=Math.min(owners,location.stale??policy.unmeasuredStale)+(location.serving===false?policy.shadowMarginOwners:0);
+ const mine=Math.min(owners,location.stale??policy.unmeasuredStale)+(location.serving===false&&!(location.stale===0&&remote?.note!==undefined&&remote.note.stale!==0)?policy.shadowMarginOwners:0);
  if(!completing&&remote&&(location.ifAbsent||remote.note!==undefined&&remote.from!==location.key&&generationHeadScoreV1(remote.note,(location.now??Date.now)(),{implementation:local.manifest.implementation})<=mine))return{status:"remote-better",generation:local.generation,owners};
  const paths=generationDocumentPathsV1(local.digest,local.manifest);if(paths.length>policy.maximumDocuments)return{status:"oversized",reason:String(paths.length)+" documents"};
  const snapshot=await location.cursors?.snapshotFor(local.generation).catch(()=>undefined),shipped=snapshot!==undefined&&snapshot.bytes.length<=policy.maximumSnapshotBytes?snapshot:undefined;

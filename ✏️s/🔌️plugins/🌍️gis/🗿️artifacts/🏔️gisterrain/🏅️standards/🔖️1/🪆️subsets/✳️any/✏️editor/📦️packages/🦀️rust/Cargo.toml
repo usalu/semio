@@ -53,7 +53,6 @@ semio-s-artifact-gis-gisterrain-operations = { path = "../../../🧬️schema/�
 semio-s-artifact-gis-gisterrain-relocated-engine-tests = { path = "../../../🧬️schema/🧪️tests/🔬️relocated-engine/📦️packages/🦀️rust" }
 semio-s-artifact-gis-gisterrain-schema = { path = "../../../🧬️schema/📦️packages/🦀️rust" }
 semio-s-artifact-gis-gisterrain-terrain-descriptor = { path = "../../../🧬️schema/🧭️terrain-descriptor/📦️packages/🦀️rust" }
-semio-s-artifact-stdio-dwg = { workspace = true }
 semio-s-artifact-stdio-gltf = { workspace = true }
 semio-s-artifact-stdio-json = { workspace = true }
 semio-s-artifact-stdio-las = { workspace = true }

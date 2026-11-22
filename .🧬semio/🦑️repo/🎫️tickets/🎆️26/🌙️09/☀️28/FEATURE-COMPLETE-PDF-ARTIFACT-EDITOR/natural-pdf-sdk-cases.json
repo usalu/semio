@@ -1,0 +1,77 @@
+{
+  "naturalPort": "artifact:native",
+  "cases": [
+    {
+      "name": "Authentic PDF above assembled command cap",
+      "port": "artifact:native",
+      "binary": true,
+      "extent": 9437877,
+      "maximum": 16777216,
+      "rawWireBytes": 0,
+      "accepted": true
+    },
+    {
+      "name": "Exact mounted source ceiling",
+      "port": "artifact:native",
+      "binary": true,
+      "extent": 16777216,
+      "maximum": 16777216,
+      "rawWireBytes": 0,
+      "accepted": true
+    },
+    {
+      "name": "One byte above mounted source ceiling",
+      "port": "artifact:native",
+      "binary": true,
+      "extent": 16777217,
+      "maximum": 16777216,
+      "rawWireBytes": 0,
+      "accepted": false
+    },
+    {
+      "name": "Unregistered paged decoder",
+      "port": "artifact:native",
+      "binary": true,
+      "extent": 9437877,
+      "maximum": 0,
+      "rawWireBytes": 0,
+      "accepted": false
+    },
+    {
+      "name": "Text declaration",
+      "port": "artifact:native",
+      "binary": false,
+      "extent": 9437877,
+      "maximum": 16777216,
+      "rawWireBytes": 0,
+      "accepted": false
+    },
+    {
+      "name": "Empty paged source",
+      "port": "artifact:native",
+      "binary": true,
+      "extent": 0,
+      "maximum": 16777216,
+      "rawWireBytes": 0,
+      "accepted": false
+    },
+    {
+      "name": "Wrong reserved media port",
+      "port": "artifact:file",
+      "binary": true,
+      "extent": 9437877,
+      "maximum": 16777216,
+      "rawWireBytes": 0,
+      "accepted": false
+    },
+    {
+      "name": "Duplicated assembled body",
+      "port": "artifact:native",
+      "binary": true,
+      "extent": 9437877,
+      "maximum": 16777216,
+      "rawWireBytes": 1,
+      "accepted": false
+    }
+  ]
+}

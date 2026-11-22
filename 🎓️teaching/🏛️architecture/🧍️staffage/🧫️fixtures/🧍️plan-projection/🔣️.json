@@ -124,7 +124,11 @@
         "standing-adult": "relaxed",
         "walking-commuter": "standing",
         "seated-office-worker": "typing"
-      }
+      },
+      "bones": [
+        "arm-l",
+        "arm-r"
+      ]
     },
     "car": {
       "pose": "parked",
@@ -148,7 +152,7 @@
       "asset": "seated-office-worker",
       "from": "typing",
       "to": "leaning-back",
-      "shape": "shoulders",
+      "bone": "torso",
       "minTravelM": 0.04
     }
   },

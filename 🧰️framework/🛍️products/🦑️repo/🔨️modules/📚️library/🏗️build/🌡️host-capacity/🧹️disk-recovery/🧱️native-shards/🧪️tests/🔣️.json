@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "cases": [
+    {"id": "coordinator-shard-cannot-rewrite", "facts": [{"id": "3410c86e36cbdfb40e22aa01a6d35b2124eae49d", "path": "/w/a", "totalBytes": 66060288, "freeBytes": 26501120, "files": [{"name": "nx_files.nxt", "bytes": 38657268}, {"name": "0B594BC0-v3.db", "bytes": 53248}, {"name": "0B594BC0-v3.lock", "bytes": 0}]}]},
+    {"id": "roomy-shard-is-left-alone", "facts": [{"id": "10c40813fc69c86911893f3fd7ee43c365e6f85d", "path": "/w/b", "totalBytes": 201326592, "freeBytes": 125829120, "files": [{"name": "nx_files.nxt", "bytes": 38242468}]}]},
+    {"id": "near-full-with-a-small-map", "facts": [{"id": "520c1763fad37b0cfdc0507d1b510c8134af6ddd", "path": "/w/c", "totalBytes": 67108864, "freeBytes": 5242880, "files": [{"name": "nx_files.nxt", "bytes": 1048576}]}]},
+    {"id": "full-without-a-regenerable-file", "facts": [{"id": "908c92234cb1df4cdb4b2eaed55f5f4e1f6c55e7", "path": "/w/d", "totalBytes": 67108864, "freeBytes": 1048576, "files": [{"name": "other.bin", "bytes": 60000000}]}]},
+    {"id": "ids-in-order-and-fullest-named", "facts": [{"id": "f0797d0fc5b6e3e6445776aef6e1539e6beb9738", "path": "/w/z", "totalBytes": 66060288, "freeBytes": 30000000, "files": [{"name": "nx_files.nxt", "bytes": 36000000}]}, {"id": "21ff94dc4d63aba6596930a7e4dd621fb0c922bf", "path": "/w/y", "totalBytes": 66060288, "freeBytes": 20000000, "files": [{"name": "nx_files.nxt", "bytes": 38000000}]}]},
+    {"id": "empty-machine", "facts": []}
+  ]
+}

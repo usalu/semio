@@ -1,5 +1,5 @@
 /** ✒️ Actual public Writer package and neutral independent SQLite boundary. */
-import { writerSnapshotToSqliteDatabase,writerSnapshotFromSqliteDatabase,validateWriterSnapshotSqliteDialect,WRITER_SQLITE_SCHEMA,type WriterSnapshot } from "@semio-tech/writer-writer";
+import { writerSnapshotToSqliteDatabase,writerSnapshotFromSqliteDatabase,validateWriterSnapshotSqliteDialect,WRITER_SQLITE_SCHEMA,type WriterSnapshot } from "../../../../🟦️.ts";
 import { exportSqliteDatabase,importSqliteDatabase } from "@semio-tech/framework";
 import { Database } from "bun:sqlite";
 import { expect,test } from "bun:test";

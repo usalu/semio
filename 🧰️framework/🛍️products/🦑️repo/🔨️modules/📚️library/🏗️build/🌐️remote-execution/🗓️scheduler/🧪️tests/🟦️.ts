@@ -156,3 +156,55 @@ test("an offloaded action that one worker's policy refuses runs on another worke
  plain.scheduler.report(one.id,taken.task!.id,{version:1,outcome:"failed",status:{code:9,message:"Action refused by the worker policy: -o is not allowed"},actionResult:null});
  await runPlain.done;expect(runPlain.rows.at(-1)!.outcome!.status).toEqual({code:9,message:"Action refused by the worker policy: -o is not allowed"});
 });
+
+test("the idle answer the build door asks for is the answer the scheduler gives at submission: with a compatible worker that has headroom both say yes, and without one (no headroom, another toolchain build) both say no and the submission is declined with the counting in its event",async()=>{
+ const T="aaaaaaaaaaaaaaaa",properties=(toolchain:string)=>[{name:"Arch",value:"arm64"},{name:"OSFamily",value:"macos"},{name:"semio-toolchain",value:toolchain},{name:"semio-target",value:"aarch64-apple-darwin"},{name:"semio-offload-format",value:"argv-1"}];
+ const report=(origin:string,toolchain:string,headroom:boolean):Parameters<RemoteExecutionSchedulerV1["acceptLoad"]>[0]=>({version:1,origin,platform:{key:`macos-arm64-${toolchain}`,os:"macos",arch:"arm64",toolchain,target:"aarch64-apple-darwin"},capacity:{cores:8,memoryMegabytes:16384},running:0,queued:0,pressure:"normal",freeMegabytes:8000,load:1,headroom,wallMs:1_000_000,worker:{state:"idle",concurrency:2,running:0,sandbox:null,confinement:null,network:null},counters:{unit:{localHit:0,remoteHit:0,miss:0,stored:0},offload:{out:0,refused:0,fellBack:0}}});
+ const control=[{name:"semio-offload",value:"if-idle"},{name:"semio-origin",value:"requester"},{name:"semio-offload-format",value:"argv-1"}];
+ const answers:Record<string,{idle:number;declined:boolean;event:string}>={};
+ for(const [label,workerToolchain,headroom] of [["ready",T,true],["no headroom",T,false],["other toolchain","bbbbbbbbbbbbbbbb",true]] as const){
+  const {memory,scheduler,events}=harness();
+  scheduler.acceptLoad(report("requester",T,true));scheduler.acceptLoad(report("worker-a",workerToolchain,headroom));
+  scheduler.register({...profile("a",properties(workerToolchain),2),origin:"worker-a"} as RemoteExecutionWorkerRegistrationV1);
+  const run=submit(scheduler,memory.action([...control],"truth-"+label));await Bun.sleep(30);
+  const declined=run.rows.at(-1)?.outcome?.status.code===8;
+  answers[label]={idle:scheduler.idleFor("requester").candidates,declined,event:events.find(line=>line.startsWith("declined"))??""};
+  run.abort.abort();await run.done.catch(()=>undefined);
+ }
+ expect(answers.ready).toMatchObject({idle:1,declined:false});
+ expect(answers["no headroom"]).toMatchObject({idle:0,declined:true});expect(answers["other toolchain"]).toMatchObject({idle:0,declined:true});
+ expect(answers["no headroom"]!.event).toContain("1 workers, 1 compatible, 0 with headroom");expect(answers["other toolchain"]!.event).toContain("1 workers, 0 compatible, 1 with headroom");
+});
+
+test("an idle answer given to the door holds for 20 s: the units of that machine are queued, not declined, when the promised headroom was taken in between, while a machine that was never told is declined at once",async()=>{
+ const T="aaaaaaaaaaaaaaaa",properties=[{name:"Arch",value:"arm64"},{name:"OSFamily",value:"macos"},{name:"semio-toolchain",value:T},{name:"semio-target",value:"aarch64-apple-darwin"},{name:"semio-offload-format",value:"argv-1"}];
+ const report=(origin:string,headroom:boolean):Parameters<RemoteExecutionSchedulerV1["acceptLoad"]>[0]=>({version:1,origin,platform:{key:`macos-arm64-${T}`,os:"macos",arch:"arm64",toolchain:T,target:"aarch64-apple-darwin"},capacity:{cores:8,memoryMegabytes:16384},running:0,queued:0,pressure:"normal",freeMegabytes:8000,load:1,headroom,wallMs:1_000_000,worker:{state:"idle",concurrency:2,running:0,sandbox:null,confinement:null,network:null},counters:{unit:{localHit:0,remoteHit:0,miss:0,stored:0},offload:{out:0,refused:0,fellBack:0}}});
+ const control=(origin:string)=>[{name:"semio-offload",value:"if-idle"},{name:"semio-origin",value:origin},{name:"semio-offload-format",value:"argv-1"}];
+ const {memory,scheduler,advance}=harness();
+ scheduler.acceptLoad(report("told",true));scheduler.acceptLoad(report("untold",true));scheduler.acceptLoad(report("worker-a",true));
+ scheduler.register({...profile("a",properties,2),origin:"worker-a"} as RemoteExecutionWorkerRegistrationV1);
+ expect(scheduler.idleFor("told").candidates).toBe(1);
+ scheduler.acceptLoad(report("worker-a",false));
+ const outcome=async(origin:string,salt:string)=>{const run=submit(scheduler,memory.action(control(origin),salt));await Bun.sleep(30);const code=run.rows.at(-1)?.outcome?.status.code;run.abort.abort();await run.done.catch(()=>undefined);return code;};
+ expect(await outcome("untold","u1"),"declined").toBe(8);
+ expect(await outcome("told","t1"),"queued, no outcome yet").toBeUndefined();
+ advance(25);scheduler.acceptLoad(report("worker-a",false));
+ expect(await outcome("told","t2"),"the hold ended").toBe(8);
+});
+
+test("an offloaded action that a worker refuses for lack of headroom goes to another machine that has some, and is declined only when nobody else qualifies",async()=>{
+ const T="aaaaaaaaaaaaaaaa",properties=[{name:"Arch",value:"arm64"},{name:"OSFamily",value:"macos"},{name:"semio-toolchain",value:T},{name:"semio-target",value:"aarch64-apple-darwin"},{name:"semio-offload-format",value:"argv-1"}];
+ const report=(origin:string):Parameters<RemoteExecutionSchedulerV1["acceptLoad"]>[0]=>({version:1,origin,platform:{key:`macos-arm64-${T}`,os:"macos",arch:"arm64",toolchain:T,target:"aarch64-apple-darwin"},capacity:{cores:8,memoryMegabytes:16384},running:0,queued:0,pressure:"normal",freeMegabytes:8000,load:1,headroom:true,wallMs:1_000_000,worker:{state:"idle",concurrency:2,running:0,sandbox:null,confinement:null,network:null},counters:{unit:{localHit:0,remoteHit:0,miss:0,stored:0},offload:{out:0,refused:0,fellBack:0}}});
+ const control=[{name:"semio-offload",value:"if-idle"},{name:"semio-origin",value:"requester"},{name:"semio-offload-format",value:"argv-1"}];
+ const {memory,scheduler}=harness();
+ for(const origin of ["requester","one","two"])scheduler.acceptLoad(report(origin));
+ const one=scheduler.register({...profile("one",properties,2),origin:"one"} as RemoteExecutionWorkerRegistrationV1),two=scheduler.register({...profile("two",properties,2),origin:"two"} as RemoteExecutionWorkerRegistrationV1);
+ const run=submit(scheduler,memory.action(control,"refused-1"));await Bun.sleep(30);
+ const first=await Promise.race([polled(scheduler,one.id,300),polled(scheduler,two.id,300)]),taker=first.task===null?undefined:(await polled(scheduler,one.id,10).then(()=>undefined)),given=first.task;
+ expect(given).not.toBeNull();
+ const holder=[one,two].find(worker=>scheduler.status().workers.find(row=>row.id===worker.id)!.running>0)!,other=holder.id===one.id?two:one;
+ scheduler.report(holder.id,given!.id,{version:1,outcome:"refused",refusal:"memory",status:{code:0,message:""},actionResult:null} as never);
+ const next=await polled(scheduler,other.id,2000);expect(next.task,"the other machine got it").not.toBeNull();expect(taker).toBeUndefined();
+ scheduler.report(other.id,next.task!.id,{version:1,outcome:"refused",refusal:"memory",status:{code:0,message:""},actionResult:null} as never);
+ await run.done;expect(run.rows.at(-1)!.outcome!.status.code,"nobody else: declined").toBe(8);
+});

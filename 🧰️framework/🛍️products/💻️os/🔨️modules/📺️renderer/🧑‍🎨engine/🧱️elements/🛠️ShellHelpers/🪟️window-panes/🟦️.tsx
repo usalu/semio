@@ -11,7 +11,7 @@ import { type ActionPaneState, actionStageKey } from "../../🐚️Shell/🗃️
 import { type ShellAction } from "../../🐚️Shell/🎛️shell-actions/🟦️.ts";
 import { EMPTY_APP_LABELS_OVERLAY, resolveActionArgDef, resolveAppLabel, type ResolvedActionDefinition, resolveManifestLabel, ribbonParentLabel, shellLabel } from "../🏷️labels/🟦️.tsx";
 import { FRAMEWORK_RESERVED_ACTION_IDS } from "../🔩️plumbing/🆔️action-ids/🟦️.ts";
-import { actionRequiresStagedForm, renderStagedArgControl } from "./📝️staged-args/🟦️.tsx";
+import { actionRequiresStagedForm, stagedArgTreeItem } from "./📝️staged-args/🟦️.tsx";
 
 //#region ShellHelpers
 //#region 🧰️WindowActionPane
@@ -92,14 +92,11 @@ export function buildActionCategoryTree(
         id: `action.category.${category.id}.form`,
         label: expandedAction.label,
         defaultOpen: true,
-        items: expandedAction.args.map(
-          (def): TreeDataItem => ({
-            id: `action.${expandedAction.id}.arg.${def.id}`,
-            label: def.label,
-            description: def.description,
-            control: renderStagedArgControl(def, effective[def.id], (value) => onStageArg(expandedAction.id, def.id, value), disabled),
-          }),
-        ),
+        items: expandedAction.args.map((def) => stagedArgTreeItem(
+          `action.${expandedAction.id}.arg.${def.id}`,
+          def, effective[def.id], (value) => onStageArg(expandedAction.id, def.id, value), disabled,
+          childElementId("framework.window", windowId, "action", expandedAction.id, "arg", def.id),
+        )),
         actions: [
           {
             id: childElementId("framework.window", windowId, "action", expandedAction.id, "execute"),

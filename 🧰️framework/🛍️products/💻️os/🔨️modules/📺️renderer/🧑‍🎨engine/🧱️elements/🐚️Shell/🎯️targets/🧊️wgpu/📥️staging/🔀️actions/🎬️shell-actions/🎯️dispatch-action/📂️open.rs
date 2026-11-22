@@ -23,7 +23,7 @@ impl<'ctx> ActionsCtx<'ctx> {
         Ok(())
     }
 
-    pub(crate) async fn finish_native_open(&mut self, app_id: &str, imported: NativeOpenedFile) -> Result<(), String> {
+    pub async fn finish_native_open(&mut self, app_id: &str, imported: NativeOpenedFile) -> Result<(), String> {
         let previous = self.docs.session.clone().filter(|session| session.plugin_id == imported.program.plugin_id &&
             session.app.id == app_id && session.instance_id == imported.source_instance).ok_or("Open File's source editor closed")?;
         if !self.plugins.plugins.iter().any(|entry| entry.plugin_id == imported.program.plugin_id

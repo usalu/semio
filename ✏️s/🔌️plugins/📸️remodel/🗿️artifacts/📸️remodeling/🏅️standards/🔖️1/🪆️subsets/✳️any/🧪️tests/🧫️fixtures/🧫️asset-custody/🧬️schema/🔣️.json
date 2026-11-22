@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["payloads", "contentIds", "cases"],
+  "properties": {
+    "payloads": { "type": "object", "additionalProperties": { "$ref": "#/$defs/payload" } },
+    "contentIds": { "type": "object", "additionalProperties": { "type": "string", "pattern": "^remodeling-asset-[a-f0-9]{16}$" } },
+    "cases": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/case" } }
+  },
+  "$defs": {
+    "payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mime", "data", "width", "height"],
+      "properties": {
+        "mime": { "type": "string" },
+        "data": { "type": "string", "contentEncoding": "base64" },
+        "width": { "type": "integer", "minimum": 1 },
+        "height": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "names": { "type": "array", "uniqueItems": true, "items": { "type": "string" } },
+    "case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "steps"],
+      "properties": {
+        "id": { "type": "string" },
+        "unbound": { "$ref": "#/$defs/names" },
+        "steps": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/step" } }
+      }
+    },
+    "step": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["op", "key", "bindings", "leaves"],
+      "properties": {
+        "op": { "enum": ["createAsset", "deleteAsset"] },
+        "key": { "type": "string" },
+        "asset": { "type": "string" },
+        "diagnostic": { "const": "mutation.target-mismatch" },
+        "bindings": { "type": "object", "additionalProperties": { "type": "string" } },
+        "leaves": { "$ref": "#/$defs/names" }
+      },
+      "if": { "properties": { "op": { "const": "createAsset" } }, "required": ["op"] },
+      "then": { "properties": { "asset": { "type": "string" } }, "required": ["asset"] },
+      "else": { "not": { "properties": { "asset": { "type": "string" } }, "required": ["asset"] } }
+    }
+  }
+}

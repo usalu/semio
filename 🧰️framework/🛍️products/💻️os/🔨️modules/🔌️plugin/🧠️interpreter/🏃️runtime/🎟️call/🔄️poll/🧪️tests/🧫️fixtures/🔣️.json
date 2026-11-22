@@ -31,6 +31,7 @@
     "maxPatchBytes": 4096,
     "maxFrames": 8
   },
+  "limits": [8, 4096, 8192, 8192, 8, 100, 100, 1000000, 8, 4096, 8],
   "cases": [
     {
       "events": [],

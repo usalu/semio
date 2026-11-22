@@ -1,0 +1,164 @@
+{
+ "replace": [
+  [
+   "6 mm wide and 1.8 mm tall on paper",
+   "6 mm wide and 2.3 mm tall on paper"
+  ],
+  [
+   "10.4 mm by 1.8 mm",
+   "10.4 mm by 2.3 mm"
+  ],
+  [
+   "6 mm breit und 1,8 mm hoch",
+   "6 mm breit und 2,3 mm hoch"
+  ],
+  [
+   "10,4 mm auf 1,8 mm",
+   "10,4 mm auf 2,3 mm"
+  ],
+  [
+   "5.2 mm by 0.9 mm",
+   "5.2 mm by 1.1 mm"
+  ],
+  [
+   "5,2 mm auf 0,9 mm",
+   "5,2 mm auf 1,1 mm"
+  ],
+  [
+   "2.6 mm by 0.45 mm",
+   "2.6 mm by 0.57 mm"
+  ],
+  [
+   "2,6 mm auf 0,45 mm",
+   "2,6 mm auf 0,57 mm"
+  ],
+  [
+   "the 23 mm knob in front of it",
+   "the 25 mm knob in front of it"
+  ],
+  [
+   "der 23 mm tiefe Knebel",
+   "der 25 mm tiefe Knebel"
+  ],
+  [
+   "a bakelite knob at the right of the front fascia that turns the gas tap behind it.",
+   "a bakelite knob of 37 mm on a 42 mm skirt at the right of the 50 mm front fascia that turns the gas tap behind it; a gas rail runs inside the housing from the R 1/2 inlet at the back to the tap and on to the injector under the burner, and the pan support stands 0.114 m above the table."
+  ],
+  [
+   "ein Bakelit-Knebel rechts an der Frontblende, der den Gashahn dahinter dreht.",
+   "ein Bakelit-Knebel von 37 mm auf einer 42-mm-Rosette rechts an der 50 mm hohen Frontblende, der den Gashahn dahinter dreht; ein Gasrohr läuft im Gehäuse vom R-1/2-Anschluss an der Rückseite zum Hahn und weiter zur Düse unter dem Brenner, und der Pfannenträger steht 0,114 m über dem Tisch."
+  ],
+  [
+   "the bakelite knob of 26 mm with its grip ridge and pointer turns on the fascia.",
+   "the bakelite knob of 37 mm on its 42 mm skirt with grip ridge and pointer turns on the 50 mm fascia, which is as tall as a real table-top cooker needs to hold the tap; the R 1/2 gas inlet sits on the back wall under the overhang of the top, and a spark electrode and a thermocouple stand in the well beside the crown."
+  ],
+  [
+   "der Bakelit-Knebel von 26 mm mit Griffsteg und Zeiger dreht sich an der Blende.",
+   "der Bakelit-Knebel von 37 mm auf seiner 42-mm-Rosette mit Griffsteg und Zeiger dreht sich an der 50 mm hohen Blende, die so hoch ist, wie ein echter Tischkocher für den Hahn braucht; der R-1/2-Gasanschluss sitzt an der Rückwand unter dem Überstand der Platte, und eine Zündelektrode und ein Thermoelement stehen in der Mulde neben der Krone."
+  ],
+  [
+   "the knob is a 26 mm turned stub without ridge",
+   "the knob is a 40 mm turned stub without ridge"
+  ],
+  [
+   "ein gedrehter Stumpf von 26 mm ohne Steg",
+   "ein gedrehter Stumpf von 40 mm ohne Steg"
+  ],
+  [
+   "0.30 m by 0.497 m by 40 mm with the knob as a 30 mm stub",
+   "0.30 m by 0.497 m by 66 mm with the knob as a 40 mm stub"
+  ],
+  [
+   "0,30 m mal 0,497 m mal 40 mm mit dem Knebel als 30-mm-Stumpf",
+   "0,30 m mal 0,497 m mal 66 mm mit dem Knebel als 40-mm-Stumpf"
+  ],
+  [
+   "are one 40 mm slab of 0.30 m by 0.497 m; the knob is a 30 mm turned stub",
+   "are one 66 mm slab of 0.30 m by 0.497 m; the knob is a 40 mm turned stub"
+  ],
+  [
+   "eine 40-mm-Scheibe von 0,30 m mal 0,497 m; der Knebel ist ein gedrehter 30-mm-Stumpf",
+   "eine 66-mm-Scheibe von 0,30 m mal 0,497 m; der Knebel ist ein gedrehter 40-mm-Stumpf"
+  ],
+  [
+   "a ring of 40 mm walls",
+   "a ring of 66 mm walls"
+  ],
+  [
+   "The housing is not a thermal region of this asset and stays a ghost.",
+   "Housing: the pressed tray below the top as its own passive region, its top under the plate marked."
+  ],
+  [
+   "Das Gehäuse ist keine Thermikregion dieses Assets und bleibt Geist.",
+   "Gehäuse: die gepresste Wanne unter der Platte als eigene passive Region, ihre Oberseite unter der Platte markiert."
+  ],
+  [
+   "the plate is the top 15 mm of the block with its underside on the housing marked;",
+   "the plate is the top 15 mm of the block with its underside on the housing marked; the housing is the 51 mm of the block below it as its own passive region;"
+  ],
+  [
+   "die Platte sind die oberen 15 mm des Blocks, ihre Unterseite auf dem Gehäuse markiert;",
+   "die Platte sind die oberen 15 mm des Blocks, ihre Unterseite auf dem Gehäuse markiert; das Gehäuse sind die 51 mm des Blocks darunter als eigene passive Region;"
+  ],
+  [
+   "(underside on the housing marked), the knob",
+   "(underside on the housing marked), the housing the 36 mm below it as its own passive region, the knob"
+  ],
+  [
+   "(Unterseite auf dem Gehäuse markiert), der Knebel",
+   "(Unterseite auf dem Gehäuse markiert), das Gehäuse die 36 mm darunter als eigene passive Region, der Knebel"
+  ],
+  [
+   "the plate is the top 20 mm of the slab (underside marked), the knob",
+   "the plate is the top 20 mm of the slab (underside marked), the housing the 46 mm below it as its own passive region, the knob"
+  ],
+  [
+   "die Platte sind die oberen 20 mm der Scheibe (Unterseite markiert), der Knebel",
+   "die Platte sind die oberen 20 mm der Scheibe (Unterseite markiert), das Gehäuse die 46 mm darunter als eigene passive Region, der Knebel"
+  ],
+  [
+   "Ring aus 40-mm-Wänden",
+   "Ring aus 66-mm-Wänden"
+  ],
+  [
+   "the gas pipe from the tap to the burner",
+   "the gas rail from the R 1/2 inlet on the back wall to the tap and the gas pipe from the tap to the injector under the burner"
+  ],
+  [
+   "die Gasleitung vom Hahn zum Brenner",
+   "das Gasrohr vom R-1/2-Anschluss an der Rückwand zum Hahn und die Gasleitung vom Hahn zur Düse unter dem Brenner"
+  ],
+  [
+   "A pressed housing of 0.28 m by 0.484 m with",
+   "A pressed housing of 0.28 m by 0.484 m and 50 mm height with"
+  ],
+  [
+   "Ein gepresstes Gehäuse von 0,28 m mal 0,484 m mit",
+   "Ein gepresstes Gehäuse von 0,28 m mal 0,484 m und 50 mm Höhe mit"
+  ],
+  [
+   "the support ring of 15 mm at the anchor",
+   "the support ring of 15 mm at the anchor showing in the 8 mm gap under the tray"
+  ],
+  [
+   "der Auflagering von 15 mm am Anker",
+   "der Auflagering von 15 mm am Anker, sichtbar in der 8-mm-Fuge unter der Wanne"
+  ],
+  [
+   "so that its area stays the real grate's,",
+   "so that its area stays close to the real grate's, standing on the four body posts so that it does not float,"
+  ],
+  [
+   "damit seine Fläche die des wirklichen Rosts bleibt,",
+   "damit seine Fläche nahe an der des wirklichen Rosts bleibt, auf den vier Körperpfosten stehend, damit er nicht schwebt,"
+  ],
+  [
+   "inside the 20 mm body frame.",
+   "inside the 20 mm body frame, standing on the four body posts."
+  ],
+  [
+   "im 20-mm-Körperrahmen.",
+   "im 20-mm-Körperrahmen, auf den vier Körperpfosten stehend."
+  ]
+ ]
+}

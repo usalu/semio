@@ -321,10 +321,7 @@ impl MapHost {
         z
     }
 
-    /// 🖌️ The viewport-covering wash `append_vector_tiles_colored`/`append_vector_tiles_figure` used
-    /// to paint themselves. It approximates "everything visible is backdrop-colored" rather than
-    /// tracking any world position, so it MUST stay screen-pinned — [`Self::append_vector_tiles_cached`]
-    /// draws it fresh every frame outside the translate-cached tile content, never inside it.
+    /// 🖌️ The viewport-covering wash stays screen-pinned and is painted fresh below both tile layers.
     fn vector_tile_backdrop_fill(&self, span: f64, render_z: u32, pinned: Option<&str>) -> Option<Color> {
         let policy = self.policy();
         let preset = self.style_preset();
@@ -351,14 +348,8 @@ impl MapHost {
         }
     }
 
-    /// 🧊️ Vector-tile-layer entry point behind the frame cache: a pure pan (only `camera.x`/`camera.y`
-    /// moved) reuses the last built `Scene` translated in screen space instead of re-walking decoded
-    /// MVT geometry; any other change rebuilds via [`Self::append_vector_tiles`]. See
-    /// `map_viewport::world_to_screen` — screen x and y both scale as `-camera.zoom * delta`, so the
-    /// translate needs no extra axis flip beyond that shared sign. The screen-pinned backdrop wash is
-    /// drawn fresh below, outside the cached/translated content, for the reason on
-    /// [`Self::vector_tile_backdrop_fill`].
-    fn append_vector_tiles_cached(&self, out: &mut Scene) {
+    /// 🎨️ Paints the screen-pinned backdrop for the visible vector tiles, including raster gaps.
+    fn append_vector_tile_backdrop(&self, out: &mut Scene) {
         if vector_tiles_available_at_camera_zoom(self.camera.zoom) {
             if let Some(render_z) = self.vector_tile_render_z() {
                 let span = viewport_lon_span_degrees(&self.camera, &self.viewport);
@@ -367,6 +358,11 @@ impl MapHost {
                 }
             }
         }
+    }
+
+    /// 🧊️ Translates the cached vector feature scene for a pure pan and rebuilds it for other changes.
+    /// In `map_viewport::world_to_screen` both screen axes scale as `-camera.zoom * delta`.
+    fn append_vector_tiles_cached(&self, out: &mut Scene) {
         let key = self.vector_scene_cache_key();
         {
             let cache = self.vector_scene_cache.borrow();
@@ -809,13 +805,15 @@ impl MapHost {
 
     pub fn build_vector_scene(&self) -> Scene {
         let mut scene = Scene::new();
-        match self.render_mode {
-            MapTileMode::Image | MapTileMode::Combined => self.append_tiles(&mut scene),
-            MapTileMode::Vector => {}
+        let draw_vectors = matches!(self.render_mode, MapTileMode::Vector | MapTileMode::Combined);
+        if draw_vectors {
+            self.append_vector_tile_backdrop(&mut scene);
         }
-        match self.render_mode {
-            MapTileMode::Vector | MapTileMode::Combined => self.append_vector_tiles_cached(&mut scene),
-            MapTileMode::Image => {}
+        if matches!(self.render_mode, MapTileMode::Image | MapTileMode::Combined) {
+            self.append_tiles(&mut scene);
+        }
+        if draw_vectors {
+            self.append_vector_tiles_cached(&mut scene);
         }
         self.append_overlays(&mut scene);
         scene

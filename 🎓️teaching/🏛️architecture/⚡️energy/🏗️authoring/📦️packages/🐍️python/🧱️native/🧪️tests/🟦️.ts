@@ -6,7 +6,7 @@ import { createHash } from "node:crypto";
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { buildEnvironment, fetchVerified, fingerprint, hostSubdir, provisionNative, readManifest, sha256File } from "../🟦️.ts";
+import { buildEnvironment, fetchVerified, fingerprint, hostSubdir, micromambaLocation, provisionMicromamba, provisionNative, readManifest, sha256File, verifyMicromamba } from "../🟦️.ts";
 
 const manifest = readManifest();
 const hosts = ["osx-arm64", "osx-64"];
@@ -62,6 +62,24 @@ try {
   await fetchVerified("https://example.invalid/kept", join(directory, "kept"), digest, bytes.length, { fetcher: (async () => { throw new Error("network used"); }) as unknown as typeof fetch });
 } finally {
   rmSync(directory, { recursive: true, force: true });
+}
+const tools = mkdtempSync(join(tmpdir(), "semio-micromamba-test-"));
+try {
+  const payload = Buffer.from("pinned micromamba");
+  const pinnedManifest = { ...manifest, micromamba: { ...manifest.micromamba, assets: manifest.micromamba.assets.map(asset => ({ ...asset, sha256: createHash("sha256").update(payload).digest("hex"), bytes: payload.length })) } };
+  const target = { manifest: pinnedManifest, toolsRoot: tools, platform: "darwin" as const, architecture: "arm64" };
+  assert.equal(await verifyMicromamba(target), false);
+  const binary = await provisionMicromamba({ ...target, fetcher: (async () => new Response(payload)) as unknown as typeof fetch });
+  assert.equal(binary, micromambaLocation(target)!.binary);
+  assert.equal(await verifyMicromamba(target), true);
+  writeFileSync(binary!, "tampered");
+  assert.equal(await verifyMicromamba(target), false);
+  for (const platform of ["linux", "win32"] as const) {
+    assert.equal(await provisionMicromamba({ ...target, platform }), undefined);
+    assert.equal(await verifyMicromamba({ ...target, platform }), true);
+  }
+} finally {
+  rmSync(tools, { recursive: true, force: true });
 }
 const projectDirectory = join(import.meta.dir, "..", "..");
 const constraints = readFileSync(join(projectDirectory, "build-constraints.txt"), "utf8").split(/\n(?=[A-Za-z])/).filter(block => !block.startsWith("#"));

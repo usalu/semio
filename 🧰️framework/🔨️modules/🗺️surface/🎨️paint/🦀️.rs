@@ -30,6 +30,10 @@ use std::collections::HashMap;
 mod gesture;
 pub use gesture::{PaintEditCommand,PaintTarget,RASTER_STROKE_STREAM_BATCH};
 
+#[path = "⌨️keyboard/🦀️.rs"]
+mod keyboard;
+pub use keyboard::*;
+
 #[path = "🎯️selection/🦀️.rs"]
 mod pixel_selection;
 pub use pixel_selection::RasterSelectionIntent;

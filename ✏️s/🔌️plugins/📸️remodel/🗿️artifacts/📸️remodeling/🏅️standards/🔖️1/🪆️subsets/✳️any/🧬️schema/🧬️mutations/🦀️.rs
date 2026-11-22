@@ -108,13 +108,11 @@ use semio_s_artifact_remodel_remodeling_mut_params::standards::v1::subsets::any:
 mod apply_boundary;
 pub use apply_boundary::{apply_remodeling_mutation, bridge_step};
 
-/// ↩️ Computes the inverse mutations from pre-state — kept as a free-function wrapper (matching
-/// `🎬️sequence`'s `inverse_sequence_mutation`).
+/// ↩️ Computes inverse mutations in replay order from pre-state.
 pub fn inverse_remodeling_mutation(base: &RemodelingSnapshot, mutation: &RemodelingMutation) -> Result<Vec<RemodelingMutation>, semio_framework_value::ValueError> {
-    Ok({
-    mutation.inverse(base)?
-
-    })
+    let mut inverse = mutation.inverse(base)?;
+    inverse.reverse();
+    Ok(inverse)
 }
 //#endregion 🔖️ApplyInverse
 

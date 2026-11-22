@@ -1,6 +1,6 @@
 //! ☀️ Potsdam reference irradiance and orientation and tilt selection, DIN V 18599-10 Annex E.
 
-use semio_s_artifact_norm_din18599_model::schema::snapshot::POTSDAM_HORIZONTAL_IRRADIANCE_W_M2;
+use semio_s_artifact_norm_din18599_model::POTSDAM_HORIZONTAL_IRRADIANCE_W_M2;
 
 const TILTS_DEG: [f64; 5] = [0.0, 30.0, 45.0, 60.0, 90.0];
 

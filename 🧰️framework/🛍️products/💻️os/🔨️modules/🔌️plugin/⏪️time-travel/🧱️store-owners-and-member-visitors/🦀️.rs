@@ -13,13 +13,16 @@ where
     }
 
     fn preview_progress(&self) -> Option<store::os_store::replay::ReplayProgress> {
-        if self.preview_cancelled { return None; }
-        self.preview_job.as_ref().map(store::os_store::snapshot_read::ArtifactDerivedHistoryPreview::progress).or_else(|| {
-            self.preview_base.as_ref().map(|_| store::os_store::replay::ReplayProgress {
-                done: self.preview_derived.as_ref().map_or(0, |owner| u32::try_from(owner.progress().items).unwrap_or(u32::MAX)),
-                total: 0,
-            })
-        })
+        if let Some(job) = self.preview_job.as_ref() {
+            return Some(job.progress());
+        }
+        if self.preview_cancelled || self.preview_base.is_none() {
+            return None;
+        }
+        let done = self.preview_derived.as_ref().map_or(0, |owner| {
+            u32::try_from(owner.progress().items).unwrap_or(u32::MAX)
+        });
+        Some(store::os_store::replay::ReplayProgress { done, total: 0 })
     }
 
     fn processed(&self) -> Option<u32> {
@@ -27,7 +30,7 @@ where
     }
 
     fn has_pending_work(&self) -> bool {
-        self.finalizing()||self.finished_cancelled&&self.finished.is_some()||self.snapshot_aliases.iter().any(Option::is_some) || self.snapshot_close.is_some() || self.snapshot_issuers.is_some() || self.snapshot_issuer_close.iter().any(Option::is_some) || self.discard_effects.as_ref().is_some_and(|owner|owner.closing) || self.preview_job.is_some()||self.preview_base.is_some()||self.preview_derived.as_ref().is_some_and(|owner|owner.is_closing())||self.preview_cancelled&&(self.preview_original.is_some()||self.preview_input.is_some()||self.preview_source.is_some()||self.preview_native_input.is_some())||self.preview_input_close.is_some()||self.preview_original_close.is_some() || self.retirements.capacity()!=0 || !self.discarded.is_empty() || self.discarded_has_physical_capacity() || self.discarded_pending.is_some() || self.discarded_active.is_some() || self.discarded_factory.is_some() || self.discarded_factory_close.is_some()
+        self.finalizing()||self.finished_cancelled&&self.finished.is_some()||self.snapshot_aliases.iter().any(Option::is_some) || self.snapshot_close.is_some() || self.snapshot_issuers.is_some() || self.snapshot_issuer_close.iter().any(Option::is_some) || self.discard_effects.as_ref().is_some_and(|owner|owner.closing) || self.preview_progress().is_some()||self.preview_derived.as_ref().is_some_and(|owner|owner.is_closing())||self.preview_cancelled&&(self.preview_original.is_some()||self.preview_input.is_some()||self.preview_source.is_some()||self.preview_native_input.is_some())||self.preview_input_close.is_some()||self.preview_original_close.is_some() || self.retirements.capacity()!=0 || !self.discarded.is_empty() || self.discarded_has_physical_capacity() || self.discarded_pending.is_some() || self.discarded_active.is_some() || self.discarded_factory.is_some() || self.discarded_factory_close.is_some()
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -35,15 +38,43 @@ where
     }
 
     fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> { self.original_retirement_demands(body) }
-    fn close_handoff_demand(&self) -> Option<RetirementDemand> { self.original_close_handoff_demand() }
-    fn has_selected_preview_source_return(&self) -> bool {
-        self.preview_cancelled && self.preview_source.is_some() && self.preview_native_input.is_none()
-            && !self.preview_derived.as_ref().is_some_and(|owner| owner.is_closing())
-            && !self.discard_effects.as_ref().is_some_and(|owner| owner.closing)
-    }
     fn command_pending(&self)->bool{self.discard_effects.is_some()||self.finalizing()}
     fn finalizing(&self)->bool{TimeTravelStoreState::finalizing(self)}
-    fn cancel_prepared_command(&mut self){self.commit_closing=self.finalizing();if let Some(owner)=self.discard_effects.as_mut(){owner.closing=true}}
+    fn close_session_begin_bytes(&self) -> usize {
+        (4 + usize::from(self.discard_effects.is_some()) + 2 * usize::from(self.preview_derived.is_some())) * size_of::<bool>()
+    }
+    fn begin_session_close(&mut self) {
+        self.commit_closing = self.finalizing();
+        if let Some(owner) = self.discard_effects.as_mut() { owner.closing = true; }
+        self.preview_cancelled = true;
+        self.replay_cancelled = true;
+        self.finished_cancelled = self.finished.is_some();
+        if let Some(owner) = self.preview_derived.as_mut() { owner.cancel(); }
+    }
+    fn original_sources_close_pending(&self) -> bool {
+        (self.preview_cancelled || self.preview_job_closing) && self.preview_job.is_some()
+            || self.replay_cancelled && self.replay.is_some()
+            || self.finished_cancelled && self.finished.is_some()
+    }
+    fn close_session_handoff_demand(&self) -> Option<RetirementDemand> {
+        let issuer = size_of::<Arc<dyn semio_framework_value::FactoryRetirement>>();
+        let copy_bytes = if self.discard_issuer_missing() {
+            issuer
+        } else if self.snapshot_issuer_close.iter().all(Option::is_none)
+            && self.snapshot_aliases.iter().any(Option::is_none)
+            && (self.preview.is_some() || self.head.is_some())
+        {
+            2 * size_of::<Option<store::os_store::snapshot_read::ArtifactDerivedSnapshot<P>>>()
+                + if self.snapshot_issuers.is_none() { 2 * issuer } else { 0 }
+        } else if self.discarded_pending.is_none() && self.discarded_factory_close.is_none()
+            && (self.staged.is_some() || self.kind.is_some())
+        {
+            2 * size_of::<Option<Mu>>() + if self.discarded_factory.is_none() { issuer } else { 0 }
+        } else {
+            return None;
+        };
+        Some(RetirementDemand { copy_bytes, depth: 1, ..Default::default() })
+    }
     fn requires_original_control(&self)->bool{self.preview_derived.as_ref().is_some_and(|owner|owner.is_closing()&&owner.requires_original_control())||self.retirements.iter().any(|owner|owner.requires_original_control())}
     fn retire_step_controlled(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,control:&mut dyn semio_framework_value::OriginalRetirementControl)->Result<Option<RetainedCloneStep>,Fault>{self.original_retirement_step_controlled(effect,control).map_err(ValueError::into_fault)}
     fn retire_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<Option<RetainedCloneStep>, Fault> { self.original_retirement_step(effect).map_err(ValueError::into_fault) }

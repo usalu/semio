@@ -1,6 +1,6 @@
 //! 🎯️ Every norm editor publishes the arguments its value-tree verbs read, typed as the handlers decode them
 //! (`app_surface::{path_arg, index_arg, value_arg_json, check_id_arg}`): an agent that follows the published input schema
-//! must be able to call `setField`/`insertItem`/`removeItem`/`applyRemedy`/`setSnapshot`. Ticket 26/09/23 slice S19.
+//! must be able to call `setField`/`insertItem`/`removeItem`/`applyRemedy`. Ticket 26/09/23 slice S19.
 
 include!("../../../../🧪️tests/🧰️laws/🎯️action-args/🦀️.rs");
 

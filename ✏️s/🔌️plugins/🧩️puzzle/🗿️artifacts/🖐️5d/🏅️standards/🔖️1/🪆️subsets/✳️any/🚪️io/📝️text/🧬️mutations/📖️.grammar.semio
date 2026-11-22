@@ -10,7 +10,7 @@ line = create-part / delete-part / move-part2d / replace-part2d-geometry / edit-
      / replace-part-grip / connect-grips / disconnect-grips / replace-fastener-geometry
      / change-fastener-kind / rename-puzzle5d / change-domain / change-description
      / connect-kind-compatibility / disconnect-kind-compatibility / replace-kind-catalogs
-     / drag-selection2d / drag-selection3d / rotate-selection3d / scale-selection3d
+     / drag-selection2d / drag-selection3d / rotate-selection3d / scale-selection3d / splice-scene-rows / splice-scene-row-batch
 
 create-part = "create-part" SP part-block SP index-opt
 delete-part = "delete-part" SP id
@@ -63,3 +63,7 @@ id = OCTET+
 number = OCTET+
 text = OCTET+
 boolean = "true" / "false"
+splice-scene-rows = "splice-scene-rows" SP scene-table SP number SP number SP scene-row-list SP scene-row-list SP scene-row-list
+scene-table = "parts" / "fasteners" / "kindCompatibility"
+scene-row-list = "[" OCTET* "]"
+splice-scene-row-batch = "splice-scene-row-batch" SP scene-row-list

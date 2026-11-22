@@ -17,8 +17,11 @@
  */
 import { act, cleanup, fireEvent, render } from "@semio-tech/ui-react/test";
 import { createElement, type ReactNode } from "react";
+import { PerspectiveCamera, Vector3 } from "three";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import fixture from "../../🧱️elements/🌐️World3dHost/🧪️tests/🧫️fixtures/🖱️pointer-gestures.json" with { type: "json" };
+import relocate from "../../🧱️elements/🌐️World3dHost/🧪️tests/🧫️fixtures/🚚️relocate-gesture.json" with { type: "json" };
+import cataloguePlacement from "../../🧱️elements/🌐️World3dHost/🧪️tests/🧫️fixtures/🗂️catalogue-placement.json" with { type: "json" };
 import hoverTargets from "../../🧱️elements/🌐️World3dHost/🧪️tests/🧫️fixtures/🎯️hover-targets.json";
 import { interactionMergeModesFixture as mergeModes } from "@semio-tech/framework-interaction/testing/fixtures";
 import type { MergeMode } from "@semio-tech/framework-interaction";
@@ -37,6 +40,23 @@ function vector3(values: readonly number[]): Vector3Tuple {
   return [values[0]!, values[1]!, values[2]!];
 }
 
+/** 📍️ Projects an authored world point into the mounted host's offset viewport using Three. */
+function fixturePointerProjection() {
+  const camera = new PerspectiveCamera(fixture.scene.camera.fov, fixture.viewport.width / fixture.viewport.height, 0.1, 1000);
+  camera.up.set(0, 0, 1);
+  camera.position.set(...vector3(fixture.scene.camera.position));
+  camera.lookAt(...vector3(fixture.scene.camera.target));
+  camera.updateMatrixWorld();
+  return (point: readonly number[]) => {
+    const ndc = new Vector3(...vector3(point)).project(camera);
+    return {
+      pointerId: 1, button: 0,
+      clientX: fixture.viewport.left + (ndc.x + 1) * fixture.viewport.width / 2,
+      clientY: fixture.viewport.top + (1 - ndc.y) * fixture.viewport.height / 2,
+    };
+  };
+}
+
 /** 🧭️ A fixture camera as the pose a real gizmo snap reports, carrying the projection spec it resolved to. */
 function gizmoPose(camera: { readonly position: readonly number[]; readonly target: readonly number[]; readonly zoom: number }, projectionSpec: WorldProjectionSpec): CameraPose & { projectionSpec: WorldProjectionSpec } {
   return { ...camera, position: vector3(camera.position), target: vector3(camera.target), projectionSpec };
@@ -45,6 +65,7 @@ function gizmoPose(camera: { readonly position: readonly number[]; readonly targ
 /** 🎛️ The two canvas-owned callbacks a real `WorldCanvas`/`WorldOrbitGated` would invoke — captured on
  * render so a test can play a background click or a completed orbit without a WebGL context. */
 const seams: { resetCamera: (() => void) | null; onPointerMissed: ((event: MouseEvent) => void) | null; onCamera: ((camera: CameraPose) => void) | null; onGizmo: ((camera: CameraPose & { projectionSpec: WorldProjectionSpec }) => void) | null; onPendingProjectionClear: (() => void) | null; externalPendingProjection: WorldProjectionSpec | null; projectionSpec: WorldProjectionSpec | null; rigState: (CameraPose & { readonly fov: number; readonly projection: string; readonly projectionSpec?: WorldProjectionSpec }) | null } = { resetCamera: null, onPointerMissed: null, onCamera: null, onGizmo: null, onPendingProjectionClear: null, externalPendingProjection: null, projectionSpec: null, rigState: null };
+let canvasRenders = 0;
 
 vi.mock("@react-three/fiber", async (importOriginal) => {
   const actual = (await importOriginal()) as Record<string, unknown>;
@@ -66,6 +87,7 @@ vi.mock("@semio-tech/infinite-world-r3f", async (importOriginal) => {
   return {
     ...actual,
     WorldCanvas: ({ children, overlay, onPointerMissed }: { children?: ReactNode; overlay?: ReactNode; onPointerMissed?: (event: MouseEvent) => void }) => {
+      canvasRenders += 1;
       seams.onPointerMissed = onPointerMissed ?? null;
       return createElement("div", { "data-testid": "world-canvas" }, overlay, children);
     },
@@ -93,6 +115,7 @@ vi.mock("@semio-tech/infinite-world-r3f", async (importOriginal) => {
 });
 
 import { World3dHost } from "../../🧱️elements/🌐️World3dHost/🟦️.tsx";
+import { getWorldCatalogueDropPreview } from "../../🧱️elements/🌐️World3dHost/🗂️catalogue-drop/🟦️.tsx";
 import { componentPickMergeMode } from "../../🧱️elements/🌐️World3dHost/🎯️marquee-and-bridges/🟦️.tsx";
 import { leftoverBrushRetainGuestHoverV1 } from "../../🧱️elements/🌐️World3dHost/🔗️instance-selection/🟦️.ts";
 import { clearPendingWorldProjection, clearPendingWorldProjections, registerPendingWorldProjection, World3dWindowViewRegistryV1, World3dWindowViewStoreContext, World3dWindowViewStoreV1 } from "../../🧱️elements/🌐️World3dHost/🪟️window-view-store/🟦️.tsx";
@@ -118,7 +141,7 @@ const gesture = (id: string): Gesture => {
   return found;
 };
 
-function mountHost(pane?: { readonly runtimeKey?: string; readonly surfaceId: string; readonly windowInstanceId: string; readonly onTitle?: (windowId: string, title: string) => void; readonly onIcon?: (windowId: string, iconId: string) => void; readonly viewStore?: World3dWindowViewStoreV1 }, scene: Omit<typeof fixture.scene, "instances"> & { readonly instances: readonly Record<string, unknown>[] } = fixture.scene): { readonly dispatched: readonly Dispatched[]; readonly host: HTMLElement; readonly meshes: readonly HTMLElement[]; readonly unmount: () => void } {
+function mountHost(pane?: { readonly runtimeKey?: string; readonly surfaceId: string; readonly windowInstanceId: string; readonly onTitle?: (windowId: string, title: string) => void; readonly onIcon?: (windowId: string, iconId: string) => void; readonly viewStore?: World3dWindowViewStoreV1 }, scene: Omit<typeof fixture.scene, "instances"> & { readonly instances: readonly Record<string, unknown>[]; readonly vorticesJson?: string } = fixture.scene, onAction?: (action: Dispatched) => Promise<void>): { readonly dispatched: readonly Dispatched[]; readonly host: HTMLElement; readonly meshes: readonly HTMLElement[]; readonly unmount: () => void } {
   const dispatched: Dispatched[] = [];
   const runtimeKey = pane?.runtimeKey ?? "world-fixture";
   const owner = presenceOwners.acquire({ pluginId: "fem", appId: "fem3d", sessionInstanceId: 1, runtimeKey, clientInstanceId: runtimeKey });
@@ -137,7 +160,7 @@ function mountHost(pane?: { readonly runtimeKey?: string; readonly surfaceId: st
             meshesJson: JSON.stringify(scene.meshes),
             instancesJson: JSON.stringify(scene.instances),
             selectionJson: scene.selectionJson,
-            vorticesJson: "[]",
+            vorticesJson: scene.vorticesJson ?? "[]",
             attractionsJson: "[]",
             interactionJson: scene.interactionJson,
             domainId: scene.domainId,
@@ -146,7 +169,7 @@ function mountHost(pane?: { readonly runtimeKey?: string; readonly surfaceId: st
         },
         onAction: (action: Dispatched) => {
           dispatched.push(action);
-          return Promise.resolve();
+          return onAction?.(action) ?? Promise.resolve();
         },
       }),
     ),
@@ -206,6 +229,131 @@ export function testWorld3dInteraction(): void {
     it("renders exactly one pickable mesh per scene instance", () => {
       const { meshes } = mountHost();
       expect(meshes.length).toBe(fixture.scene.instances.length);
+    });
+
+    it.each(cataloguePlacement.finishes)("clears catalogue placement on $finish without a stray placement", async ({ finish, placements }) => {
+      const { CATALOGUE_DRAG_MIME, catalogueTreeDragController } = await import("@semio-tech/ui-react");
+      const { host, dispatched } = mountHost();
+      const source = catalogueTreeDragController().pointerPaletteDrag!;
+      const pointer = fixturePointerProjection()(cataloguePlacement.position);
+      const preview = () => getWorldCatalogueDropPreview(fixture.scene.controllerId);
+      source.begin(JSON.stringify(cataloguePlacement.payload), [CATALOGUE_DRAG_MIME]);
+      try {
+        fireEvent.pointerMove(window, pointer);
+        expect(preview()?.origin).toEqual(cataloguePlacement.position.map((value) => expect.closeTo(value)));
+        expect(host.hasAttribute("data-puzzle3d-fixture-drag-active")).toBe(true);
+        source.cancel();
+        if (finish === "cancel") {
+          fireEvent.pointerCancel(window, pointer);
+          expect(preview()).toBeNull();
+        }
+        fireEvent.pointerUp(window, pointer);
+        fireEvent.pointerUp(window, pointer);
+        expect(preview()).toBeNull();
+        expect(host.hasAttribute("data-puzzle3d-fixture-drag-active")).toBe(false);
+        const actions = only(dispatched, "addObjectKind");
+        expect(actions).toHaveLength(placements);
+        if (placements) expect(actions[0]!.args).toMatchObject({
+          ...cataloguePlacement.payload,
+          origin: cataloguePlacement.position.map((value) => expect.closeTo(value)),
+        });
+      } finally {
+        source.cancel();
+      }
+    });
+
+    it("keeps native catalogue placement separate from pointer release and clears a departing ghost", async () => {
+      const { CATALOGUE_DRAG_MIME, catalogueTreeDragController } = await import("@semio-tech/ui-react");
+      const { host, dispatched } = mountHost();
+      const controller = catalogueTreeDragController();
+      const item = { id: cataloguePlacement.payload.objectKind, label: cataloguePlacement.payload.objectKind, dragData: { [CATALOGUE_DRAG_MIME]: JSON.stringify(cataloguePlacement.payload) } };
+      const source = { sourceItem: item, items: [item], section: { id: "catalogue", items: [item] } };
+      const pointer = fixturePointerProjection()(cataloguePlacement.position);
+      controller.onDragStart?.(source);
+      try {
+        const enter = new MouseEvent("dragenter", { ...pointer, bubbles: true, cancelable: true });
+        Object.defineProperty(enter, "dataTransfer", { value: { types: [CATALOGUE_DRAG_MIME] } });
+        act(() => { host.dispatchEvent(enter); });
+        expect(host.hasAttribute("data-puzzle3d-fixture-drag-active")).toBe(true);
+        fireEvent.pointerUp(window, pointer);
+        expect(only(dispatched, "addObjectKind")).toHaveLength(0);
+        act(() => {
+          host.dispatchEvent(new MouseEvent("dragleave", { clientX: fixture.viewport.left - 1, clientY: pointer.clientY, bubbles: true }));
+        });
+        expect(host.hasAttribute("data-puzzle3d-fixture-drag-active")).toBe(false);
+      } finally {
+        controller.onDragEnd?.(source);
+      }
+    });
+
+    it("coalesces the unbound vortex hover to the latest marker until the guest settles", async () => {
+      const settleFirst = Promise.withResolvers<void>();
+      const { markers, held, settled } = fixture.vortexHover;
+      const { dispatched, meshes } = mountHost(undefined, {
+        ...fixture.scene,
+        domainId: "",
+        instances: [],
+        vorticesJson: JSON.stringify(markers),
+      }, (action) => action.action === "worldVortexHover" && action.args.fullId === held[0] ? settleFirst.promise : Promise.resolve());
+      const proxies = meshes.filter((mesh) => mesh.querySelector("meshBasicMaterial"));
+      expect(proxies).toHaveLength(markers.length);
+      const sent = () => only(dispatched, "worldVortexHover").map((action) => action.args.fullId);
+      act(() => {
+        for (const proxy of proxies) proxy.dispatchEvent(new PointerEvent("pointerover", { bubbles: true }));
+      });
+      expect(sent()).toEqual(held);
+      await act(async () => { settleFirst.resolve(); });
+      expect(sent()).toEqual(settled);
+    });
+
+    it.each(relocate.finishes)("keeps a relative relocate preview through pointermove and $finish", async ({ finish, commits }) => {
+      const [instance] = fixture.scene.instances;
+      const settled = Promise.withResolvers<void>();
+      const { host, dispatched, unmount } = mountHost(undefined, {
+        ...fixture.scene,
+        instances: [{ ...instance, position: relocate.origin, rotation: relocate.rotation, scale: relocate.scale }],
+        interactionJson: JSON.stringify({ activeUtility: "worldRelocate" }),
+      }, (action) => action.action === "worldRelocate" ? settled.promise : Promise.resolve());
+      const pointer = fixturePointerProjection();
+      const preview = () => getWorldCatalogueDropPreview(fixture.scene.controllerId);
+      fireEvent.pointerDown(host, pointer(relocate.grab));
+      expect(preview()?.origin).toEqual(relocate.origin);
+      expect(host.hasAttribute("data-puzzle3d-fixture-drag-active")).toBe(true);
+      const rendersAtStart = canvasRenders;
+      for (let step = 1; step <= relocate.moves; step += 1) {
+        const point = relocate.grab.map((start, axis) => start + (relocate.target[axis]! - start) * step / relocate.moves);
+        fireEvent.pointerMove(host, pointer(point));
+      }
+      const live = preview();
+      expect(live?.origin).toEqual(relocate.expected.map((value) => expect.closeTo(value)));
+      expect(live).toMatchObject({ rotation: relocate.rotation, scale: relocate.scale });
+      expect(canvasRenders).toBe(rendersAtStart);
+      expect(only(dispatched, "worldRelocate")).toHaveLength(0);
+      if (finish === "release") {
+        fireEvent.pointerUp(host, pointer(relocate.target));
+        expect(preview()?.origin).toEqual(live?.origin);
+      }
+      await act(async () => {
+        settled.resolve();
+        if (finish === "cancel") fireEvent.pointerCancel(host, pointer(relocate.target));
+        if (finish === "escape") {
+          fireEvent.keyDown(window, { key: "Escape" });
+          fireEvent.pointerUp(host, pointer(relocate.target));
+        }
+        if (finish === "pinch") {
+          const second = { ...pointer(relocate.target), pointerId: 2, pointerType: "touch" };
+          fireEvent.pointerDown(host, second);
+          fireEvent.pointerUp(host, second);
+          fireEvent.pointerUp(host, pointer(relocate.target));
+        }
+        if (finish === "blur") fireEvent.blur(window);
+        if (finish === "unmount") unmount();
+      });
+      expect(preview()).toBeNull();
+      expect(host.hasAttribute("data-puzzle3d-fixture-drag-active")).toBe(false);
+      const actions = only(dispatched, "worldRelocate");
+      expect(actions).toHaveLength(commits);
+      if (commits) expect(actions[0]!.args).toMatchObject({ objectId: instance!.id, position: live?.origin });
     });
 
     it.each(instanceTitles.instances)("preserves the authored $title title while applying its initial projection", (pane) => {

@@ -1,0 +1,12 @@
+furniture/office-swivel-chair
+furniture/cafe-chair
+furniture/bar-stool
+furniture/three-seat-sofa
+furniture/single-bed
+furniture/dining-table
+furniture/height-adjustable-desk
+furniture/bookshelf
+furniture/folding-deck-chair
+furniture/park-bench
+furniture/picnic-table
+furniture/operating-table

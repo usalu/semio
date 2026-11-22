@@ -94,3 +94,7 @@ Opened: `🗑️generated/r3-sheet/vegetation/london-plane-pollarded.s{50,100,20
 - Single leaves and the fruit balls are not modelled at any scale.
 
 The five-headed pollard has a 6.80 m measured crown. Its 171 leaf clusters retain their attachment points. Young shoots use their real tapered centrelines in elevation, and the structural cores sit inside the bark. The 1:50 elevation reached 0.9984 intersection over union and a 3.75 mm 95th-percentile boundary distance. The presentation GLB contains twelve scenes and occupies 4,583,016 bytes.
+
+## Heartwood of the central pollard head reviewed November 21
+
+At 1:50 the straight structural core emerged 12 mm beyond the irregular pollard head in front view. The 1:50, 1:100 and 1:200 central cores now follow each section centre of the actual knuckle, with a continuous woody core spanning 62 percent of the outside radius. The outer bark and its pruning scars retain their authored shape. The scale proofs, drawing and twelve-scene export passed.

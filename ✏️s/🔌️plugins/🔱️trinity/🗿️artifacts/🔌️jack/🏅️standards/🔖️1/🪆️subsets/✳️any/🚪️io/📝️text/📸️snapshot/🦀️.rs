@@ -1,4 +1,4 @@
-//! 🔌️ Jack native document preserves inline manifests and literal composed Graph handles.
+//! 🔌️ Jack native document names its interned manifest by id and preserves literal composed Graph handles.
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -79,7 +79,6 @@ use super::*;
 use crate::standards::v1::subsets::any::schema::snapshot::*;
 use crate::standards::v1::subsets::any::schema::graph::Camera;
 use crate::standards::v1::subsets::any::schema::content::JackContentChild;
-use crate::standards::v1::subsets::any::schema::manifest::Manifest;
 use ::semio_framework_schema::ArtifactSchema;
 
 /// 📤️ Renders a [`JackSnapshot`] as this facet's own camelCase JSON projection — the comparison

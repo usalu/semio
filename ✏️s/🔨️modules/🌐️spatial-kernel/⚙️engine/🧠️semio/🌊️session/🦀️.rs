@@ -88,7 +88,7 @@ mod original_capture_close_laws;
 
 #[path="🩺️validation-report/🦀️.rs"]
 mod validation_report;
-pub use semio_framework_3d_brep_engine::NativeValidationReport;
+pub use semio_framework_3d_brep_engine::{NativeValidationReport, SolidHealing};
 
 #[path = "🧾️topology-reach/🦀️.rs"]
 mod topology_reach;

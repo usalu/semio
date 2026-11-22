@@ -50,8 +50,7 @@ export function registerRefreshScopeAndExamplePickerTests(): void {
       labels: false,
     });
     expect(hostEffectRefreshScopeV1([{ setActiveTool: { toolId: "fill" } }], { kind: "none" }, bodyKeys), "a programmatic tool switch is the same shape as a utility arm").toEqual(earned);
-    expect(hostEffectRefreshScopeV1([], { kind: "none" }, bodyKeys, true), "a toolbar utility change refreshes its guest body even without a returned effect").toEqual(earned);
-    expect(hostEffectRefreshScopeV1([], { kind: "none" }, bodyKeys, false)).toEqual({ kind: "none" });
+    expect(hostEffectRefreshScopeV1([], { kind: "none" }, bodyKeys)).toEqual({ kind: "none" });
     expect(hostEffectRefreshScopeV1([{ setPanel: { panelJson: "{}" } }], { kind: "none" }, bodyKeys), "`setPanel` names no body of its own — `panelJson` feeds every section").toEqual({ kind: "full" });
 
     expect(hostEffectRefreshScopeV1([{ notify: { message: "refused" } }], { kind: "none" }, bodyKeys)).toEqual({ kind: "none" });
@@ -67,6 +66,17 @@ export function registerRefreshScopeAndExamplePickerTests(): void {
       engagements: false,
       measures: true,
       labels: false,
+    });
+  });
+  it("refreshes the addressed body and tools when a toolbar utility changes", () => {
+    const body = "puzzle.3d.play.viewport";
+    const bodyKeys = [body, "puzzle.3d.play.inspector"];
+    const scope = hostEffectRefreshScopeV1([], { kind: "none" }, bodyKeys, body);
+    expect(scope).toEqual({ kind: "partial", windowBodies: [body], utilities: true, tools: true });
+
+    const command = { kind: "partial", panelBodies: ["puzzle.3d.play.history"], measures: true } as const;
+    expect(hostEffectRefreshScopeV1([], command, bodyKeys, body)).toEqual({
+      ...scope, panelBodies: ["puzzle.3d.play.history"], engagements: false, measures: true, labels: false,
     });
   });
   /** 🔁️ A pass's OWED effects are applied under the scope that pass declared — never a wider one.

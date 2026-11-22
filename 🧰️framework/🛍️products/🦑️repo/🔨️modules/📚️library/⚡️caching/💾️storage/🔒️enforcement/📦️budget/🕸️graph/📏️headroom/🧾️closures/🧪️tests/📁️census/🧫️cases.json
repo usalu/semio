@@ -81,5 +81,12 @@
       "omitted": false,
       "accepted": false
     }
+  ],
+  "changes": [
+    {"directory": "derived-nodes", "change": "write", "result": "accepted"},
+    {"directory": "derived-nodes/n", "change": "write", "result": "accepted"},
+    {"directory": "derived-nodes", "change": "replace", "result": "ancestor"},
+    {"directory": "build-input-closures", "change": "write", "result": "directory"},
+    {"directory": "other/derived-nodes", "change": "write", "result": "directory"}
   ]
 }

@@ -10,6 +10,11 @@ impl<T:RetireOwned> RetainedEditCustody<T>{
  pub fn is_closing(&self)->bool{self.closing}
  pub fn begin_close(&mut self)->bool{let started=!self.closing;self.closing=true;started}
  pub fn terminal_is_empty(&self)->bool{self.closing&&self.original.is_none()&&self.close.is_none()}
+ /// ⛽️ Quotes the controlled child or the move of its actual resident owner.
+ pub fn work_demand(&self,body:usize)->Result<u64,ValueError>{
+  if let Some(owner)=self.close.as_ref(){return if owner.terminal_is_empty(){Ok(1)}else{owner.next_computational_work(body)}}
+  Ok(u64::from(self.original.is_some()))
+ }
  pub fn demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
   if let Some(owner)=self.close.as_ref(){if owner.terminal_is_empty(){return Ok(RetirementDemand{copy_bytes:size_of::<Option<ControlledRetirement<T>>>(),depth:1,..Default::default()});}return Ok(RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(body)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"original domain field close depth overflow"))?});}
   Ok(if self.original.is_some(){RetirementDemand{copy_bytes:size_of::<T>()+size_of::<ControlledRetirement<T>>(),depth:1,..Default::default()}}else{Default::default()})

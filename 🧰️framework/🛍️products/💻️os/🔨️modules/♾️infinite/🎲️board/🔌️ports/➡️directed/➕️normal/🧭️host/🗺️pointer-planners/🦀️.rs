@@ -56,8 +56,7 @@ pub(super) fn plan_selection_pointer(
         next_screen_points[len - 1] = screen;
     }
     let merge_mode = pick_merge_mode_for_modifiers(intent.ctrl_or_meta, intent.shift, focus.selection_options.mode.as_str());
-    let end_screen = next_screen_points[len.saturating_sub(1)];
-    let click_only = intent.phase == BoardPointerPhase::Up && distance_between(start_screen, end_screen) < SELECTION_CLICK_MAX_DISTANCE_PX;
+    let click_only = intent.phase == BoardPointerPhase::Up && next_screen_points[..len].iter().all(|point| distance_between(start_screen, *point) < SELECTION_CLICK_MAX_DISTANCE_PX);
     let next = if click_only { BTreeSet::new() } else { resolve_area_selection_with_initial(scene, focus, style, initial_ids, start, &next_points[..len], merge_mode.as_str()) };
     let gesture = (intent.ctrl_or_meta || intent.shift).then_some(merge_mode.as_str());
     let kind = if intent.phase == BoardPointerPhase::Up { BoardPointerPlanKind::SelectionCommit } else { BoardPointerPlanKind::SelectionPreview { start, start_screen } };

@@ -66,7 +66,7 @@ mod media_export;
 pub const GIS3D_PLAY_APP_ID: &str = "gis3d-play";
 const GIS_ELEVATION_GRID_SCHEMA: &str = "gis.elevation-grid";
 const GIS_ELEVATION_MEDIA_TYPE: MediaType = MediaType { class: MediaClass::Data, form: MediaForm::Value };
-const GIS_ELEVATION_JSON_MAX_BYTES: usize = 8_192;
+const GIS_ELEVATION_JSON_MAX_BYTES: usize = 64 * 1024;
 const GIS_MAP_MEDIA_TYPE: MediaType = MediaType { class: MediaClass::TwoD, form: MediaForm::Vector };
 //#endregion 🔖️Constants
 
@@ -218,7 +218,7 @@ pub const GIS3D_EXAGGERATION_STAGED_DEFAULT: f64 = 2.5;
 pub const GIS3D_RETAINED_TOOL_IDS: &[&str] = &[
     "setExaggeration", "setCamera", "setActiveExample", "clearElevationSource", "editElevation",
     "addOverlayPosition", "removeOverlayFeature", "clearOverlays",
-    "importElevationGrid", "editOverlayShape", "moveOverlayPosition", "createElevationGrid", "exportElevationGrid", "gradeTerrainRegion",
+    "importElevationGrid", "editOverlayShape", "moveOverlayPosition", "createElevationGrid", "gradeTerrainRegion",
     "importGeoJson", "generateTerrainContours", "configureTerrainBrush",
 ];
 const GIS3D_RETAINED_PAYLOAD_SCHEMA: &str = "gis.terrain.tool-command.v1";
@@ -254,8 +254,8 @@ pub fn gis3d_retained_extent(command: &Gis3dCommand, _snapshot: &GisTerrainSnaps
         Gis3dCommand::ImportElevationGrid(_) => 0,
         Gis3dCommand::ExportElevationGrid(_) => 0,
         Gis3dCommand::ImportGeoJson(_) | Gis3dCommand::ExportGeoJson(_) => 0,
-        Gis3dCommand::ImportElevationGridFile(file) => return local_file::valid_length(&file.payload).then_some(GIS3D_RETAINED_WORK_ITEMS),
-        Gis3dCommand::ImportGeoJsonFile(file) => return local_file::valid_length(&file.payload).then_some(GIS3D_RETAINED_WORK_ITEMS),
+        Gis3dCommand::ImportElevationGridFile(file) => return local_file::valid_length(&file.payload, import_elevation::MAX_FILE_BYTES).then_some(GIS3D_RETAINED_WORK_ITEMS),
+        Gis3dCommand::ImportGeoJsonFile(file) => return local_file::valid_length(&file.payload, local_file::MAX_FILE_BYTES).then_some(GIS3D_RETAINED_WORK_ITEMS),
         Gis3dCommand::EditElevation(payload) if payload.is_valid() => {
             payload.operation.len() + payload.stroke.as_ref().map_or(0, |samples| samples.len() * std::mem::size_of::<[u32; 2]>())
         }
@@ -314,7 +314,7 @@ impl Gis3dCommandJobFactory {
         tools: [
             "setExaggeration", "setCamera", "setActiveExample", "clearElevationSource", "editElevation",
             "addOverlayPosition", "removeOverlayFeature", "clearOverlays", "editOverlayShape",
-            "moveOverlayPosition", "importElevationGrid", "createElevationGrid", "exportElevationGrid", "gradeTerrainRegion",
+            "moveOverlayPosition", "importElevationGrid", "createElevationGrid", "gradeTerrainRegion",
             "importGeoJson", "generateTerrainContours", "configureTerrainBrush",
         ]
     }
@@ -363,8 +363,7 @@ impl semio_plugin::ArtifactOwnedToolJobFactory for Gis3dCommandJobFactory {
             ArtifactToolPublicationContract { tool_id: "moveOverlayPosition", lanes: &[ArtifactToolPublicationLane::Artifact] },
             ArtifactToolPublicationContract { tool_id: "editElevation", lanes: &[ArtifactToolPublicationLane::Artifact] },
             ArtifactToolPublicationContract { tool_id: "importElevationGrid", lanes: &[ArtifactToolPublicationLane::HostOnly] },
-            ArtifactToolPublicationContract { tool_id: "exportElevationGrid", lanes: &[ArtifactToolPublicationLane::HostOnly] },
-            ArtifactToolPublicationContract { tool_id: "importGeoJson", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+                ArtifactToolPublicationContract { tool_id: "importGeoJson", lanes: &[ArtifactToolPublicationLane::HostOnly] },
             ArtifactToolPublicationContract { tool_id: "generateTerrainContours", lanes: &[ArtifactToolPublicationLane::Artifact] },
             ArtifactToolPublicationContract { tool_id: "configureTerrainBrush", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
         ];
@@ -429,6 +428,20 @@ impl ArtifactEditor for Gis3dPlayApp {
     const DIALECT: Dialect = crate::GISTERRAIN_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = GIS_3D_TERRAIN_SCHEMA;
 
+    fn document_store_owners_source_demands() -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        semio_plugin::cold_replay_document_store_owners_source_demands::<Self::Snapshot, Self::Mutation>()
+    }
+
+    fn build_document_store_owners(grant: semio_framework_value::RetainedCloneGrant) -> Option<Result<(
+        store::os_store::document_store_owners::DocumentStoreOwners<Self::Snapshot, Self::Mutation>,
+        semio_framework_value::RetainedCloneProgress,
+    ), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::Snapshot, Self::Mutation>>> {
+        Some(semio_plugin::cold_replay_document_store_owners::<Self::Snapshot, Self::Mutation>(grant).map(|(mut owners, progress)| {
+            owners.operation_wire = owners.operation_wire.with_original_target(|operation| Some(operation)).with_original_receiving();
+            (owners, progress)
+        }))
+    }
+
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
         Some(store::os_store::cold_mutation_apply_preparation_factory())
     }
@@ -444,7 +457,7 @@ impl ArtifactEditor for Gis3dPlayApp {
     fn bounded_first_step_tool_proofs() -> Vec<semio_plugin::ArtifactBoundedFirstStepProof> {
         let mut proofs = Gis3dCommandJobFactory::bounded_first_step_tool_proofs();
         proofs.extend(local_file::LocalFileImportJobFactory::proofs());
-        proofs.extend(export_geojson::GeoJsonExportFactory::proofs());
+        proofs.extend(export_geojson::LocalFileExportJobFactory::proofs());
         proofs
     }
 
@@ -452,7 +465,7 @@ impl ArtifactEditor for Gis3dPlayApp {
         let controller = registry.controller_id().to_string();
         registry.register(Gis3dCommandJobFactory::new(&controller))?;
         registry.register(local_file::LocalFileImportJobFactory::new(&controller))?;
-        registry.register(export_geojson::GeoJsonExportFactory::new(&controller))?;
+        registry.register(export_geojson::LocalFileExportJobFactory::new(&controller))?;
         registry.register(media_export::Factory::new(&controller))
     }
 
@@ -478,8 +491,8 @@ impl ArtifactEditor for Gis3dPlayApp {
     fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_plugin::ErasedToolJob>, _construction:&mut semio_plugin::__job::OriginalConstructionAdmission,cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
         let original = request.as_ref().ok_or_else(|| semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
         let file_import = local_file::FILE_ACTIONS.contains(&original.tool_id.as_str());
-        let geojson_export = original.tool_id == export_geojson::ACTION;
-        if !file_import && !geojson_export && !GIS3D_RETAINED_TOOL_IDS.contains(&original.tool_id.as_str()) {
+        let file_export = matches!(original.tool_id.as_str(), export_geojson::ACTION | export_elevation_grid::ACTION);
+        if !file_import && !file_export && !GIS3D_RETAINED_TOOL_IDS.contains(&original.tool_id.as_str()) {
             return Ok(false);
         }
         if original.command.command_id() != original.tool_id {
@@ -489,13 +502,16 @@ impl ArtifactEditor for Gis3dPlayApp {
             return Err(Fault::from("gis3d-command-payload-too-large").into());
         }
         let tool_id = original.command.command_id();
-        if geojson_export {
-            return semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, Gis3dCommand::command_id, GIS3D_RETAINED_RAW_BYTES, GIS3D_RETAINED_WORK_ITEMS, false, |_| export_geojson::Work::default());
+        if file_export {
+            return semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, Gis3dCommand::command_id, GIS3D_RETAINED_RAW_BYTES, GIS3D_RETAINED_WORK_ITEMS, false, move |_| export_geojson::Work::for_action(tool_id));
         }
         if matches!(&*original.command, Gis3dCommand::EditElevation(payload) if payload.stroke.is_some()) {
             return semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, Gis3dCommand::command_id, GIS3D_RETAINED_RAW_BYTES, GIS3D_RETAINED_WORK_ITEMS, false, |_| edit_elevation::StrokeWork::default());
         }
         let maximum_raw_bytes = if file_import { local_file::MAX_WIRE_BYTES } else { GIS3D_RETAINED_RAW_BYTES };
+        if tool_id == import_elevation::FILE_ACTION {
+            return semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, Gis3dCommand::command_id, maximum_raw_bytes, GIS3D_RETAINED_WORK_ITEMS, false, |_| import_elevation::work::Work::default());
+        }
         if tool_id == contours::ACTION {
             return semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, Gis3dCommand::command_id, maximum_raw_bytes, GIS3D_RETAINED_WORK_ITEMS, false, |_| contours::Work::default());
         }
@@ -540,6 +556,10 @@ impl ArtifactEditor for Gis3dPlayApp {
 
     fn command_id(command: &Gis3dCommand) -> &'static str {
         command.command_id()
+    }
+
+    fn original_action_command_producer() -> Option<&'static dyn semio_plugin::ArtifactOriginalCommandProducerFactory<Self::Command>> {
+        Some(&semio_plugin::OriginalActionCommandBridge(Self::command_from_action, local_file::command_wire_maximum))
     }
 
     /// 🏠️ Maps host action id + JSON args onto `Gis3dCommand` — React/wgpu still speak the stringly
@@ -762,7 +782,7 @@ pub fn create_gis3d_app() -> semio_plugin::AppDefinition {
             .action_describe("gradeTerrainRegion", LocalizedLabel::native("Sets terrain samples inside an existing GIS region to one height and preserves the holes.", "Setzt Rasterpunkte in einer vorhandenen GIS-Region auf eine Höhe und erhält die Aussparungen."))
             .action_describe("generateTerrainContours", LocalizedLabel::native("Replaces generated contours with lines at multiples of the interval in metres, using the saved elevation grid.", "Ersetzt erzeugte Höhenlinien durch Linien in Vielfachen des Höhenabstands in Metern, anhand des gespeicherten Höhenrasters."))
             .action_describe("configureTerrainBrush", LocalizedLabel::native("Sets the radius, elevation step and smoothing strength for this terrain window.", "Legt Radius, Höhenänderung und Glättungsstärke für dieses Geländefenster fest."))
-            .action_describe(import_elevation::REQUEST_ACTION, LocalizedLabel::native("Imports a WGS84 Esri ASCII Grid (.asc, up to 24 KiB) with elevations in metres. Replaces the current elevation grid.", "Importiert ein WGS84-Esri-ASCII-Raster (.asc, bis zu 24 KiB) mit Höhen in Metern. Ersetzt das aktuelle Höhenraster."))
+            .action_describe(import_elevation::REQUEST_ACTION, LocalizedLabel::native("Imports a WGS84 Esri ASCII Grid (.asc, up to 64 KiB) with elevations in metres. Replaces the current elevation grid.", "Importiert ein WGS84-Esri-ASCII-Raster (.asc, bis zu 64 KiB) mit Höhen in Metern. Ersetzt das aktuelle Höhenraster."))
             .action_describe(export_elevation_grid::ACTION, LocalizedLabel::native("Downloads the saved heights as a WGS84 Esri ASCII Grid (.asc). Requires equal latitude and longitude spacing.", "Lädt die gespeicherten Höhen als WGS84-Esri-ASCII-Raster (.asc) herunter. Die Abstände in Längen- und Breitengraden müssen gleich sein."))
             .action_describe(geojson::REQUEST_ACTION, LocalizedLabel::native("Replaces the current overlays with points, lines, and polygons from a GeoJSON FeatureCollection (up to 24 KiB).", "Ersetzt die aktuellen Overlays durch Punkte, Linien und Polygone aus einer GeoJSON-FeatureCollection mit höchstens 24 KiB."))
             .action_describe(export_geojson::ACTION, LocalizedLabel::native("Downloads the current overlay features and their properties as GeoJSON.", "Lädt die aktuellen Overlay-Objekte und ihre Eigenschaften als GeoJSON herunter."))

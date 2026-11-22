@@ -1,5 +1,5 @@
 //! 🔒️ Actual backend resources retain their issuing device and reject foreign sessions before execution.
-use std::sync::{Arc,atomic::{AtomicBool,Ordering}};
+use std::sync::{Arc,atomic::{AtomicBool,AtomicU8,Ordering}};
 pub use semio_ui_render_device::*;
 
 #[path="🗺️conversion/🦀️.rs"]
@@ -13,6 +13,15 @@ pub use commands::{CommandEncoder,CommandBuffer,RenderPass,Submission};
 #[path="📥️platform/🦀️.rs"]
 pub mod platform;
 pub use platform::{Surface,SurfaceTexture,CurrentSurfaceTexture};
+
+/// 🩹️ Why the render device or its surface stopped being usable: the backend's loss reason, forwarded to every consumer that owns state derived from the device (scene hosts re-attach or show their unavailable notice).
+#[derive(Clone,Copy,Debug,PartialEq,Eq)]
+pub enum DeviceLoss{Surface,Device}
+static PENDING_LOSS:AtomicU8=AtomicU8::new(0);
+/// 🩹️ Records a loss from the backend callback or the surface acquisition; the single frame-loop consumer drains it with [`take_device_loss`].
+pub fn note_device_loss(loss:DeviceLoss){PENDING_LOSS.store(match loss{DeviceLoss::Surface=>1,DeviceLoss::Device=>2},Ordering::SeqCst);}
+/// 🩹️ Drains the pending loss once, so one loss fires one recovery step.
+pub fn take_device_loss()->Option<DeviceLoss>{match PENDING_LOSS.swap(0,Ordering::SeqCst){1=>Some(DeviceLoss::Surface),2=>Some(DeviceLoss::Device),_=>None}}
 
 #[derive(Debug)]
 struct SessionRoots{device:wgpu::Device,queue:wgpu::Queue}
@@ -45,7 +54,7 @@ resource!(RenderPipeline,wgpu::RenderPipeline);
 resource!(ShaderModule,wgpu::ShaderModule);
 
 impl Device{
-    fn issued(device:wgpu::Device,queue:wgpu::Queue)->(Self,Queue){let session=Session(Arc::new(SessionRoots{device,queue}));(Self{session:session.clone()},Queue{session})}
+    fn issued(device:wgpu::Device,queue:wgpu::Queue)->(Self,Queue){device.set_device_lost_callback(|reason,_|if !matches!(reason,wgpu::DeviceLostReason::Destroyed){note_device_loss(DeviceLoss::Device)});let session=Session(Arc::new(SessionRoots{device,queue}));(Self{session:session.clone()},Queue{session})}
     pub fn limits(&self)->DeviceLimits{let limits=self.session.0.device.limits();DeviceLimits{max_buffer_size:limits.max_buffer_size,max_texture_dimension_2d:limits.max_texture_dimension_2d}}
     pub fn same_session(&self,other:&Self)->bool{self.session.check(&other.session).is_ok()}
     pub fn push_error_scope(&self,_filter:ErrorFilter)->ErrorScopeGuard{ErrorScopeGuard{raw:self.session.0.device.push_error_scope(wgpu::ErrorFilter::Validation),session:self.session.clone()}}

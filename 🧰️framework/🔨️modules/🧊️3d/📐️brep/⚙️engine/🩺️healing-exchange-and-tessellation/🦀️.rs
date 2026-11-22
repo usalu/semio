@@ -1,20 +1,23 @@
 //! 🩺️ Healing, exchange and tessellation: the solid healing and NURBS conversion, the deconstruction, the mesh import and export, the kind lookup, the solid face loops and the tessellation jobs. See [`super`].
 
 use super::*;
-use semio_framework_value::ValueError;
+use semio_framework_value::{RetainedAllocationEffect, RetainedCloneProgress, ValueError};
 
 // #region 🔖️SyncApi
 impl Brep {
+    pub fn healing_revision(&self) -> (u64, u64, u64) { (self.native.shape_mutation_revision, self.native.live_revision, self.native.body.labels.next()) }
+    pub fn plan_healing(&self, handle: &str, tolerance: f64) -> Result<SolidHealing, ValueError> { let Entity::Solid(id, proof) = self.native.original_query_entity(handle)? else { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "healing requires one solid")); }; SolidHealing::new(&self.native.body, *id, self.healing_revision(), proof.is_some(), tolerance) }
+    pub fn commit_healing(&mut self, handle: &str, job: &mut SolidHealing, effect: &mut RetainedAllocationEffect<'_>) -> Result<(bool, bool, RetainedCloneProgress), ValueError> { if !matches!(self.native.original_query_entity(handle)?, Entity::Solid(id, _) if job.targets(*id)) { return Err(ValueError::invariant("healing publication source changed")); } let revision = self.healing_revision(); let result = job.commit(&mut self.native.body, revision, effect)?; if result.1 { self.native.invalidate_solid_primitive(handle); } Ok(result) }
     pub fn heal_solid_sync(&mut self, shape: &GeometryHandle, tolerance: f64) -> Result<GeometryHandle, BrepError> {
         let solid = self.native.solid_id(shape)?;
         let mut rec = OpRecorder::new();
         let report = heal_solid(&mut self.native.body, solid, tolerance, &mut rec).map_err(|error| map_err(&error))?;
-        if report.total_repairs() != 0 { self.native.invalidate_solid_primitive(shape); }
+        if report.total_repairs() != 0 { self.native.invalidate_solid_primitive(shape.as_str()); }
         Ok(shape.clone())
     }
     pub fn convert_to_nurbs_sync(&mut self, shape: &GeometryHandle) -> Result<GeometryHandle, BrepError> {
         let solid = self.native.solid_id(shape)?;
-        self.native.invalidate_solid_primitive(shape);
+        self.native.invalidate_solid_primitive(shape.as_str());
         let mut rec = OpRecorder::new();
         let _ = convert_to_nurbs(&mut self.native.body, solid, &mut rec).map_err(|error| map_err(&error))?;
         Ok(shape.clone())

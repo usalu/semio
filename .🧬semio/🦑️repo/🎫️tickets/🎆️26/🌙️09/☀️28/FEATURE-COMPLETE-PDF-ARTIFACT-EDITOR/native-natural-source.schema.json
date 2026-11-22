@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["pageBytes", "pageCount", "tailBytes", "instance", "sequence", "generation", "operation"],
+  "properties": {
+    "pageBytes": { "type": "integer", "minimum": 1, "maximum": 4096 },
+    "pageCount": { "type": "integer", "minimum": 1 },
+    "tailBytes": { "type": "integer", "minimum": 1, "maximum": 4096 },
+    "instance": { "type": "integer", "minimum": 1, "maximum": 4294967295 },
+    "sequence": { "$ref": "#/$defs/identity" },
+    "generation": { "$ref": "#/$defs/identity" },
+    "operation": { "$ref": "#/$defs/identity" }
+  },
+  "$defs": {"identity": { "type": "string", "pattern": "^[0-9a-f]{16}$", "not": { "const": "0000000000000000" } }}
+}

@@ -50,7 +50,7 @@ fn latest_classic_section_yields_free_entry_and_trailer_using_single_work_grants
     let mut rows = Vec::new();
     let grant = CosGrant { work: 1, allocation_bytes: 8192, release_bytes: 8192 };
     loop {
-        let turn = cursor.advance(source, grant, false);
+        let turn = cursor.advance(|position| source.get(position).copied(), grant, false);
         assert!(turn.work <= 1);
         match turn.event.unwrap() {
             ClassicSectionEvent::Row { number, live, .. } => rows.push((number, live)),

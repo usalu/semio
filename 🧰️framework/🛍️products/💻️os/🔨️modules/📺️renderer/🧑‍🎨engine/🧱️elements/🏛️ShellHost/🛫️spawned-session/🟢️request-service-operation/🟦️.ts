@@ -1,7 +1,6 @@
 /** 🟢️ The request service operation phase of useSpawnedSession. */
 import { DOCUMENT_SERVICE_TOPIC_V1 } from "@semio-tech/framework/inference/service";
 import { admitDocumentServiceWireDeclarationV1 } from "@semio-tech/framework/inference/service/io";
-import { shellDialogSessionIsCurrentV1 } from "../../🗨️dialog-origin/🟦️.ts";
 import { directorySessionAuthorityIsCurrentV1 } from "@semio-tech/framework/directory/session-refresh";
 import { useCallback } from "../../../⚛️react-port/🟦️.ts";
 import { type ActionInvocation, type CommandInvocation, type Effect, type HistoryPatch } from "@semio-tech/framework";
@@ -11,12 +10,16 @@ import { type ActiveSession } from "../../../🐚️Shell/📦️program-session
 import type { ViewModel } from "../../../🔌️PluginRuntime/🧷️handle-contract/🟦️.ts";
 import { browserActorWindowConfigDispatchUiScopeV1 } from "../../../🛠️ShellHelpers/🔄️ui-refresh/🟦️.ts";
 import { BROWSER_ACTOR_ACTION_APP_CHANNEL_VERSION } from "@semio-tech/framework/browser-bundle/action-handoff";
-import { publishBrowserActorHostEffectsV1 } from "@semio-tech/framework/browser-bundle/action-handoff/publication";
+import { decodeBrowserActorHostEffectsV1 } from "@semio-tech/framework/browser-bundle/action-handoff/publication";
 import { InferencePortOpeningMailboxV1 } from "@semio-tech/framework/inference/opening";
+import { browserActorProgramIsFocusedV1, browserActorProgramIsPublishedV1, browserActorSpawnedRowV1, browserDocumentActorIdentityV1, sameBrowserActorProgramV1 } from "./🪪️owner/🟦️.ts";
+import { spawnedProgramViewStateV1 } from "../../🪟️spawned-program/🟦️.ts";
+import type { BrowserActorActionResultV1 } from "@semio-tech/framework/browser-bundle/action-handoff";
+import type { ShellCoreAfterContributionsAndRefresh } from "../../🔁️contributions-refresh/🟦️.ts";
 import type { useDocumentServicesState } from "../🔶️document-services/🟦️.ts";
 
 /** 🔵 Builds requestServiceOperation, directBrowserActorForSession, dispatchDirectBrowserActorCommand of useSpawnedSession. */
-export function useRequestServiceOperationState({ documentServices, loadedPluginsRef, inferencePortOwnerRef, inferencePortOpeningRef, openDocumentSessionsRef, verifiedSessionAuthorityRef, identityRef, retiredSessionDocumentOwnersRef, inferencePortEpochRef, ensureBackboneWorker, inferencePortAuthorityRef, dispatch, browserActorUiByRuntimeKeyRef, shellStateRef, applyHistoryPatch, applyLeftoverInteractionView, refreshUi, leftoverReplaceRefreshBodiesV1 }: Pick<ReturnType<typeof useDocumentServicesState>, "documentServices" | "loadedPluginsRef" | "inferencePortOwnerRef" | "inferencePortOpeningRef" | "openDocumentSessionsRef" | "verifiedSessionAuthorityRef" | "identityRef" | "retiredSessionDocumentOwnersRef" | "inferencePortEpochRef" | "ensureBackboneWorker" | "inferencePortAuthorityRef" | "dispatch" | "browserActorUiByRuntimeKeyRef" | "shellStateRef" | "applyHistoryPatch" | "applyLeftoverInteractionView" | "refreshUi" | "leftoverReplaceRefreshBodiesV1">) {
+export function useRequestServiceOperationState({ documentServices, loadedPluginsRef, inferencePortOwnerRef, inferencePortOpeningRef, openDocumentSessionsRef, verifiedSessionAuthorityRef, identityRef, retiredSessionDocumentOwnersRef, inferencePortEpochRef, ensureBackboneWorker, inferencePortAuthorityRef, dispatch, browserActorUiByRuntimeKeyRef, shellStateRef, applyHistoryPatch, core }: Pick<ReturnType<typeof useDocumentServicesState>, "documentServices" | "loadedPluginsRef" | "inferencePortOwnerRef" | "inferencePortOpeningRef" | "openDocumentSessionsRef" | "verifiedSessionAuthorityRef" | "identityRef" | "retiredSessionDocumentOwnersRef" | "inferencePortEpochRef" | "ensureBackboneWorker" | "inferencePortAuthorityRef" | "dispatch" | "browserActorUiByRuntimeKeyRef" | "shellStateRef" | "applyHistoryPatch"> & { readonly core: ShellCoreAfterContributionsAndRefresh }) {
   const requestServiceOperation = useCallback(async (baseSession: ActiveSession, operation: Extract<Effect, { readonly requestServiceOperation: unknown }>["requestServiceOperation"], admit: () => boolean) => {
     if (!admit()) throw new Error("inference-opening: owner retired");
     if (operation.owner !== baseSession.pluginId) throw new Error("installed-service.foreign-owner");
@@ -57,50 +60,109 @@ export function useRequestServiceOperationState({ documentServices, loadedPlugin
   }, [ensureBackboneWorker]);
 
   const directBrowserActorForSession = useCallback((baseSession: ActiveSession) => {
-    const matches = [...browserActorUiByRuntimeKeyRef.current.entries()].flatMap(([runtimeKey, retained]) => {
-      const entry = openDocumentSessionsRef.current.get(runtimeKey);
-      return retained.identity !== null && entry?.clientInstanceId === retained.clientInstanceId && entry.session.pluginId === baseSession.pluginId && entry.session.instanceId === baseSession.instanceId && retained.sessionInstanceId === baseSession.instanceId && shellDialogSessionIsCurrentV1(shellStateRef.current.pluginRuntime.session, entry.session)
-        ? [{ runtimeKey, retained, entry, identity: retained.identity }]
-        : [];
-    });
-    if (matches.length > 1) throw new Error("browser-actor-action: ambiguous document owner");
-    return matches.at(0) ?? null;
+    const matches = [...openDocumentSessionsRef.current.entries()].filter(([, entry]) =>
+      entry.scope !== undefined && sameBrowserActorProgramV1(entry.session, baseSession));
+    if (matches.length > 1) throw new Error("action-owner-mismatch: ambiguous document owner");
+    const match = matches[0];
+    if (!match) return null;
+    const [runtimeKey, entry] = match;
+    if (retiredSessionDocumentOwnersRef.current.has(entry) || !browserActorProgramIsPublishedV1(shellStateRef.current.pluginRuntime.session, baseSession)) {
+      throw new Error("action-owner-mismatch: signed document owner retired");
+    }
+    const retained = browserActorUiByRuntimeKeyRef.current.get(runtimeKey);
+    const identity = browserDocumentActorIdentityV1(entry, retained);
+    if (!retained || identity === null) throw new Error("action-catching-up: signed document actor is not ready");
+    const row = shellStateRef.current.pluginRuntime.session;
+    const spawnedId = row === null ? undefined : browserActorSpawnedRowV1(row, baseSession)?.id;
+    const plugin = entry.plugin;
+    const current = (): boolean => {
+      const primary = shellStateRef.current.pluginRuntime.session;
+      const live = browserActorUiByRuntimeKeyRef.current.get(runtimeKey);
+      return openDocumentSessionsRef.current.get(runtimeKey) === entry && !retiredSessionDocumentOwnersRef.current.has(entry)
+        && loadedPluginsRef.current.find(candidate => candidate.handle.pluginId === baseSession.pluginId)?.handle === plugin
+        && sameBrowserActorProgramV1(entry.session, baseSession) && browserActorProgramIsPublishedV1(primary, baseSession)
+        && (primary === null ? undefined : browserActorSpawnedRowV1(primary, baseSession)?.id) === spawnedId
+        && live?.actions === retained.actions && browserDocumentActorIdentityV1(entry, live) === identity;
+    };
+    if (!current()) throw new Error("action-owner-mismatch: signed document owner retired");
+    return { runtimeKey, retained, entry, identity, current };
   }, []);
+  type Actor = NonNullable<ReturnType<typeof directBrowserActorForSession>>;
+
+  const captureBrowserActorEffectOwner = useCallback((actor: Actor, inputSeq: number | null = null) => {
+    const { entry, current, retained, identity } = actor;
+    const captured = core.captureEffectOwner(entry.session, core.captureDialogOrigin(shellStateRef.current.pluginRuntime.session), inputSeq);
+    return {
+      ...captured,
+      browserActor: {
+        current,
+        takeSegmentedDownloadChunk: async (operationId: bigint) => {
+          const store = retained.windows.get(identity.windowKindId);
+          if (!current() || store === undefined) throw new Error("segmented-download-owner-retired");
+          const chunk = await retained.actions.takeSegmentedDownloadChunk({
+            scope: retained.scope,
+            verifiedSurfaceId: retained.verifiedSurfaceId,
+            activationGeneration: retained.activationGeneration,
+            appChannelVersion: BROWSER_ACTOR_ACTION_APP_CHANNEL_VERSION,
+            instanceId: identity.instanceId,
+            surfaceRevision: store.getRevisionSnapshot(),
+          }, operationId);
+          if (!current()) throw new Error("segmented-download-owner-retired");
+          return chunk;
+        },
+        refresh: (session: ActiveSession) => {
+          if (current() && browserActorProgramIsFocusedV1(shellStateRef.current.pluginRuntime.session, session)) {
+            core.postBrowserActorViewState(ensureBackboneWorker(), entry, session);
+          }
+        },
+      },
+    };
+  }, [core.captureEffectOwner, core.captureDialogOrigin, core.postBrowserActorViewState, ensureBackboneWorker]);
+
+  const publishBrowserActorResult = useCallback(async (actor: Actor, result: BrowserActorActionResultV1, effectOwner: ReturnType<typeof captureBrowserActorEffectOwner>, actionId?: string) => {
+    const { entry, current } = actor;
+    if (!current() || !core.isCurrentEffectOwner(effectOwner)) throw new Error("action-owner-mismatch: signed document owner retired");
+    const effects = decodeBrowserActorHostEffectsV1(result.hostEffects);
+    for (const patch of result.historyPatches) {
+      if (!core.isCurrentEffectOwner(effectOwner)) return;
+      applyHistoryPatch(decodePackWire(Uint8Array.from(patch), "$.historyPatch") as HistoryPatch, false, { pluginId: entry.session.pluginId, instanceId: entry.session.instanceId });
+    }
+    const primary = shellStateRef.current.pluginRuntime.session;
+    if (!primary || !current()) return;
+    const source = entry.session;
+    const live = sameBrowserActorProgramV1(primary, source) ? primary : { ...source, viewState: spawnedProgramViewStateV1(primary.viewState, source.app) };
+    const dirty = browserActorWindowConfigDispatchUiScopeV1(result, actionId);
+    if (effects.length > 0 || dirty.kind !== "none") await core.applyHostEffectsRef.current(effects, live, dirty, effectOwner);
+  }, [applyHistoryPatch, core.isCurrentEffectOwner]);
 
   const dispatchDirectBrowserActorCommand = useCallback(async (
-    owned: NonNullable<ReturnType<typeof directBrowserActorForSession>>,
+    actor: Actor,
     invocation: ActionInvocation | CommandInvocation,
     viewState: ViewModel,
+    inputSeq: number | null = null,
   ) => {
-    const { runtimeKey, retained, entry, identity } = owned;
-    const current = (): boolean => {
-      const live = browserActorUiByRuntimeKeyRef.current.get(runtimeKey);
-      return live?.actions === retained.actions && live.identity === identity && openDocumentSessionsRef.current.get(runtimeKey) === entry && shellDialogSessionIsCurrentV1(shellStateRef.current.pluginRuntime.session, entry.session);
-    };
-    if (!current()) throw new Error("browser-actor-action: owner retired");
+    const { retained, entry, identity, current } = actor;
+    if (!current() || core.sealedInstancesRef.current.sealed(entry.plugin, entry.session.pluginId, entry.session.instanceId)) throw new Error("action-owner-mismatch: signed document owner retired");
+    const effectOwner = captureBrowserActorEffectOwner(actor, inputSeq);
     const windowKindId = "windowKindId" in invocation.address ? invocation.address.windowKindId : typeof viewState.activeWindowKindId === "string" ? viewState.activeWindowKindId : identity.windowKindId;
     const store = retained.windows.get(windowKindId);
-    if (store === undefined) throw new Error("browser-actor-action: window unpainted");
-    const result = await retained.actions.dispatchCommand({
-      scope: retained.scope,
-      verifiedSurfaceId: retained.verifiedSurfaceId,
-      activationGeneration: retained.activationGeneration,
-      appChannelVersion: BROWSER_ACTOR_ACTION_APP_CHANNEL_VERSION,
-      instanceId: identity.instanceId,
-      surfaceRevision: store.getRevisionSnapshot(),
-    }, invocation, viewState);
-    for (const patch of result.historyPatches) if (current()) applyHistoryPatch(decodePackWire(Uint8Array.from(patch), "$.historyPatch") as HistoryPatch, false, { pluginId: entry.session.pluginId, instanceId: entry.session.instanceId });
-    await publishBrowserActorHostEffectsV1(result.hostEffects, current, async (effect) => {
-      if ("requestServiceOperation" in effect) await requestServiceOperation(entry.session, effect.requestServiceOperation, current);
-      else window.open(effect.openExternalUrl.url, "_blank", "noopener,noreferrer");
-    });
-    const actionId = "actionId" in invocation.address ? invocation.address.actionId : undefined;
-    applyLeftoverInteractionView(("output" in result ? (result as { output?: unknown }).output : undefined) ?? null);
-    const dirty = browserActorWindowConfigDispatchUiScopeV1(result, actionId);
-    if (dirty.kind !== "none" && current()) {
-      await refreshUi({ ...entry.session, viewState }, dirty, undefined, leftoverReplaceRefreshBodiesV1());
+    if (store === undefined) throw new Error("action-catching-up: signed document window is unpainted");
+    const release = core.sessionWorkRef.current.begin(entry.session.pluginId, entry.session.instanceId, "typed-operation");
+    let result: BrowserActorActionResultV1;
+    try {
+      result = await retained.actions.dispatchCommand({
+        scope: retained.scope,
+        verifiedSurfaceId: retained.verifiedSurfaceId,
+        activationGeneration: retained.activationGeneration,
+        appChannelVersion: BROWSER_ACTOR_ACTION_APP_CHANNEL_VERSION,
+        instanceId: identity.instanceId,
+        surfaceRevision: store.getRevisionSnapshot(),
+      }, invocation, viewState);
+    } finally {
+      release();
     }
+    await publishBrowserActorResult(actor, result, effectOwner, "actionId" in invocation.address ? invocation.address.actionId : undefined);
     return result;
-  }, [applyHistoryPatch, directBrowserActorForSession, refreshUi, requestServiceOperation]);
-  return { requestServiceOperation, directBrowserActorForSession, dispatchDirectBrowserActorCommand };
+  }, [captureBrowserActorEffectOwner, publishBrowserActorResult]);
+  return { requestServiceOperation, directBrowserActorForSession, dispatchDirectBrowserActorCommand, captureBrowserActorEffectOwner, publishBrowserActorResult };
 }

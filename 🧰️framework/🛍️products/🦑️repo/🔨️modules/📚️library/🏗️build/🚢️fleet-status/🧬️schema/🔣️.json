@@ -36,6 +36,7 @@
     },
     "findings": {
      "maximum": 30,
+     "maximumKeyDiffsShown": 8,
      "underReservedBasisPoints": 15000,
      "capacityWaitSeconds": 600,
      "sampleStaleSeconds": 30,
@@ -174,11 +175,16 @@
       "imageShownBasisPoints",
       "leaseWaitSeconds",
       "maximum",
+      "maximumKeyDiffsShown",
       "sampleStaleSeconds",
       "underReservedBasisPoints"
      ],
      "properties": {
       "maximum": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "maximumKeyDiffsShown": {
        "type": "integer",
        "minimum": 0
       },
@@ -508,9 +514,83 @@
      "en": "The live tree changed after snapshot {entry} ({changed} change(s))",
      "de": "Der Arbeitsbaum änderte sich nach dem Image {entry} ({changed} Änderung(en))"
     },
+    "finding.unit-cache-denied": {
+     "en": "{origin} is refused by the fleet cache ({count} unit(s) expired in the upload queue unshared): its credential is missing or wrong, a provisioning error, and nothing it builds seeds or uses the fleet",
+     "de": "{origin} wird vom Flotten-Cache abgewiesen ({count} Einheit(en) unverteilt in der Upload-Warteschlange verfallen): sein Zugangsschlüssel fehlt oder ist falsch, ein Einrichtungsfehler, und nichts, was es baut, speist oder nutzt die Flotte"
+    },
+    "finding.unit-key-machine-dependent": {
+     "en": "{crate} has different unit keys on {origins} although the source is the same: differing key components {components}; the machines do not share this unit",
+     "de": "{crate} hat auf {origins} verschiedene Einheitenschlüssel bei gleichem Quelltext: abweichende Schlüsselbestandteile {components}; die Maschinen teilen diese Einheit nicht"
+    },
+    "fleet.keys": {
+     "en": "    unit keys of recent misses: {origins} origin(s) sampled, {units} unit(s) seen on several, {differing} with different keys ({dependent} with the same source); differing components: {components}",
+     "de": "    Einheitenschlüssel der letzten Fehlgriffe: {origins} Ursprung/Ursprünge, {units} Einheit(en) auf mehreren gesehen, {differing} mit verschiedenen Schlüsseln ({dependent} bei gleichem Quelltext); abweichende Bestandteile: {components}"
+    },
+    "fleet.keydiff": {
+     "en": "      {crate} on {origins}: {components} ({source})",
+     "de": "      {crate} auf {origins}: {components} ({source})"
+    },
+    "fleet.keyvalue": {
+     "en": "        {component}: {texts}",
+     "de": "        {component}: {texts}"
+    },
+    "fleet.keysame": {"en": "same source", "de": "gleicher Quelltext"},
+    "fleet.keyedit": {"en": "source differs", "de": "Quelltext verschieden"},
+    "finding.unit-cache-read-only": {
+     "en": "{origin} may only read the fleet cache ({count} unit(s) compiled without sharing): everything it compiles stays local and never seeds the other machines",
+     "de": "{origin} darf den Flotten-Cache nur lesen ({count} Einheit(en) ohne Teilen kompiliert): alles, was es kompiliert, bleibt lokal und speist die anderen Maschinen nie"
+    },
     "finding.source-failed": {
      "en": "The {section} reader failed: {reason}",
      "de": "Der Leser {section} schlug fehl: {reason}"
+    },
+    "workers": {
+     "en": "Workers: {ready} ready, {working} working, {idle} idle, {silent} silent, {offline} offline, {absent} without a record",
+     "de": "Worker: {ready} bereit, {working} arbeiten, {idle} untätig, {silent} still, {offline} offline, {absent} ohne Eintrag"
+    },
+    "workers.row": {
+     "en": "  {origin} {platform}: {state}, stage {stage} ({index}/{count}), attempt {attempts}, record {record}, machine {machine}{refusal}",
+     "de": "  {origin} {platform}: {state}, Stufe {stage} ({index}/{count}), Versuch {attempts}, Eintrag {record}, Maschine {machine}{refusal}"
+    },
+    "workers.refusal": {
+     "en": ", {reason}",
+     "de": ", {reason}"
+    },
+    "workers.state.absent": {
+     "en": "no record",
+     "de": "ohne Eintrag"
+    },
+    "workers.state.offline": {
+     "en": "offline",
+     "de": "offline"
+    },
+    "workers.state.silent": {
+     "en": "silent",
+     "de": "still"
+    },
+    "workers.state.working": {
+     "en": "working",
+     "de": "arbeitet"
+    },
+    "workers.state.ready": {
+     "en": "ready",
+     "de": "bereit"
+    },
+    "workers.state.idle": {
+     "en": "idle",
+     "de": "untätig"
+    },
+    "finding.worker-offline": {
+     "en": "worker {origin} showed no sign of life for {age}; its record still says {recorded} in stage {stage} and is stale",
+     "de": "Worker {origin} zeigte {age} lang kein Lebenszeichen; sein Eintrag sagt noch {recorded} in Stufe {stage} und ist veraltet"
+    },
+    "finding.worker-silent": {
+     "en": "worker {origin} lives but wrote no readiness record for {age} although it is {recorded} in stage {stage}",
+     "de": "Worker {origin} lebt, schrieb aber {age} lang keinen Bereitschaftseintrag, obwohl er {recorded} in Stufe {stage} ist"
+    },
+    "finding.worker-absent": {
+     "en": "worker {origin} is enrolled but showed no sign of life and never wrote a readiness record",
+     "de": "Worker {origin} ist eingetragen, zeigte aber kein Lebenszeichen und schrieb nie einen Bereitschaftseintrag"
     },
     "error.syntax": {
      "en": "Usage: repo fleet status [--json] [--limit=<n>]",
@@ -559,6 +639,10 @@
     "fleet.machine": {
      "en": "  {origin} {platform}: pressure {pressure}, load {load}/{cores} cores, {running} running, {queued} queued, worker {worker}{headroom}, in {offloadedIn} out {offloadedOut} refused {refused}, units {cacheHit} hit {cacheMiss} miss {cacheSkipped} skipped, report {age}",
      "de": "  {origin} {platform}: Druck {pressure}, Last {load}/{cores} Kerne, {running} laufen, {queued} warten, Worker {worker}{headroom}, ein {offloadedIn} aus {offloadedOut} abgelehnt {refused}, Einheiten {cacheHit} Treffer {cacheMiss} Fehlgriffe {cacheSkipped} übersprungen, Meldung {age}"
+    },
+    "fleet.skips": {
+     "en": "    {origin} compiled but did not share, by reason: {reasons}",
+     "de": "    {origin} kompilierte, ohne zu teilen, nach Grund: {reasons}"
     },
     "fleet.why": {
      "en": "    {origin} worker {worker}: {reason}",
@@ -897,7 +981,8 @@
       "sealed",
       "generation",
       "scheduler",
-      "fleet"
+      "fleet",
+      "workers"
      ]
     },
     "ok": {
@@ -1531,6 +1616,9 @@
     },
     "fleet": {
      "$ref": "#/definitions/FleetFact"
+    },
+    "workers": {
+     "$ref": "#/definitions/WorkersFact"
     }
    }
   },
@@ -2832,6 +2920,9 @@
     },
     "fleet": {
      "$ref": "#/definitions/FleetSection"
+    },
+    "workers": {
+     "$ref": "#/definitions/WorkersSection"
     }
    }
   },
@@ -3108,6 +3199,7 @@
     "cacheHit": {"type": "integer", "minimum": 0},
     "cacheMiss": {"type": "integer", "minimum": 0},
     "cacheSkipped": {"type": "integer", "minimum": 0},
+    "cacheSkipReasons": {"type": "object", "propertyNames": {"pattern": "^[a-z][a-z0-9-]{0,40}$"}, "additionalProperties": {"type": "integer", "minimum": 1}},
     "why": {"type": "object", "additionalProperties": false, "required": ["code", "en", "de"], "properties": {"code": {"type": "string"}, "en": {"type": "string"}, "de": {"type": "string"}}}
    }
   },
@@ -3126,7 +3218,20 @@
     "refused": {"type": "integer", "minimum": 0},
     "retried": {"type": "integer", "minimum": 0},
     "cache": {"type": "object", "additionalProperties": false, "required": ["hits", "misses", "puts"], "properties": {"hits": {"type": "integer", "minimum": 0}, "misses": {"type": "integer", "minimum": 0}, "puts": {"type": "integer", "minimum": 0}}},
-    "claims": {"type": "object", "additionalProperties": false, "required": ["active", "waiting", "oldestSeconds"], "properties": {"active": {"type": "integer", "minimum": 0}, "waiting": {"type": "integer", "minimum": 0}, "oldestSeconds": {"type": "integer", "minimum": 0}}}
+    "claims": {"type": "object", "additionalProperties": false, "required": ["active", "waiting", "oldestSeconds"], "properties": {"active": {"type": "integer", "minimum": 0}, "waiting": {"type": "integer", "minimum": 0}, "oldestSeconds": {"type": "integer", "minimum": 0}}},
+    "keys": {"$ref": "#/definitions/KeyComparison"}
+   }
+  },
+  "KeyComparison": {
+   "description": "The key inputs of recent unit misses compared across origins (digests only): how many origins published a sample, how many units at least two of them sampled, the units whose key components differ (crate, slot, origins, differing component names, whether the source was the same everywhere) and how many units each component differs in.",
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["origins", "units", "diffs", "byComponent"],
+   "properties": {
+    "origins": {"type": "integer", "minimum": 0},
+    "units": {"type": "integer", "minimum": 0},
+    "diffs": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["crate", "slot", "origins", "differs", "sameSource"], "properties": {"crate": {"type": "string"}, "slot": {"type": "string"}, "origins": {"type": "array", "items": {"type": "string"}}, "differs": {"type": "array", "items": {"type": "string"}}, "sameSource": {"type": "boolean"}, "values": {"type": "object", "additionalProperties": {"type": "object", "additionalProperties": {"type": "string"}}}}}},
+    "byComponent": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 1}}
    }
   },
   "FleetSection": {
@@ -3146,7 +3251,46 @@
     "cacheHit": {"type": "integer", "minimum": 0},
     "cacheMiss": {"type": "integer", "minimum": 0},
     "cache": {"type": "object", "additionalProperties": false, "required": ["hits", "misses", "puts"], "properties": {"hits": {"type": "integer", "minimum": 0}, "misses": {"type": "integer", "minimum": 0}, "puts": {"type": "integer", "minimum": 0}}},
-    "claims": {"type": "object", "additionalProperties": false, "required": ["active", "waiting", "oldestSeconds"], "properties": {"active": {"type": "integer", "minimum": 0}, "waiting": {"type": "integer", "minimum": 0}, "oldestSeconds": {"type": "integer", "minimum": 0}}}
+    "claims": {"type": "object", "additionalProperties": false, "required": ["active", "waiting", "oldestSeconds"], "properties": {"active": {"type": "integer", "minimum": 0}, "waiting": {"type": "integer", "minimum": 0}, "oldestSeconds": {"type": "integer", "minimum": 0}}},
+    "keys": {"$ref": "#/definitions/KeyComparison"}
+   }
+  },
+  "WorkerRow": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["origin", "platform", "liveness", "recorded", "stage", "stageIndex", "stageCount", "attempts", "recordAgeSeconds", "heartbeatAgeSeconds", "refusal"],
+   "properties": {
+    "origin": {"type": "string"},
+    "platform": {"type": ["string", "null"]},
+    "liveness": {"enum": ["absent", "offline", "silent", "working", "ready", "idle"]},
+    "recorded": {"type": ["string", "null"]},
+    "stage": {"type": ["string", "null"]},
+    "stageIndex": {"type": "integer", "minimum": 0},
+    "stageCount": {"type": "integer", "minimum": 0},
+    "attempts": {"type": "integer", "minimum": 0},
+    "recordAgeSeconds": {"type": ["integer", "null"], "minimum": 0},
+    "heartbeatAgeSeconds": {"type": ["integer", "null"], "minimum": 0},
+    "refusal": {"anyOf": [{"type": "null"}, {"type": "object", "additionalProperties": false, "required": ["code", "en", "de"], "properties": {"code": {"type": "string"}, "en": {"type": "string"}, "de": {"type": "string"}}}]}
+   }
+  },
+  "WorkersFact": {
+   "description": "The workers of the fleet as their readiness records and the heartbeats of their machines say, judged by the age rule of the readiness schema: a record alone never proves a worker lives.",
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["offlineSeconds", "rows"],
+   "properties": {
+    "offlineSeconds": {"type": "integer", "minimum": 0},
+    "rows": {"type": "array", "items": {"$ref": "#/definitions/WorkerRow"}}
+   }
+  },
+  "WorkersSection": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["offlineSeconds", "counts", "rows"],
+   "properties": {
+    "offlineSeconds": {"type": "integer", "minimum": 0},
+    "counts": {"type": "object", "additionalProperties": false, "required": ["ready", "working", "idle", "silent", "offline", "absent"], "properties": {"ready": {"type": "integer", "minimum": 0}, "working": {"type": "integer", "minimum": 0}, "idle": {"type": "integer", "minimum": 0}, "silent": {"type": "integer", "minimum": 0}, "offline": {"type": "integer", "minimum": 0}, "absent": {"type": "integer", "minimum": 0}}},
+    "rows": {"type": "array", "items": {"$ref": "#/definitions/WorkerRow"}}
    }
   }
  }

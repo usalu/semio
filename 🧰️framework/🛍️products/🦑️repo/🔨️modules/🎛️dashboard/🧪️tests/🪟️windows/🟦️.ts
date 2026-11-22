@@ -42,16 +42,16 @@ test("body zones follow the regular UI dominant axis under an independent lodash
   }
 });
 
-test("shared preview vectors partition the available canvas with exactly one divider", () => {
+test("shared preview vectors partition the available canvas around exactly one shared divider cell", () => {
   const [x, y, width, height] = vectors.area;
   const byPlacement = new Map(vectors.previews.map((vector: any) => [vector.placement, vector.rect]));
   const left = byPlacement.get("left") as number[];
   const right = byPlacement.get("right") as number[];
   const top = byPlacement.get("top") as number[];
   const bottom = byPlacement.get("bottom") as number[];
-  expect(left[2]! + right[2]! + 1).toBe(width);
-  expect(top[3]! + bottom[3]! + 1).toBe(height);
-  expect(right[0]).toBe(x + left[2]! + 1);
-  expect(bottom[1]).toBe(y + top[3]! + 1);
+  expect(left[2]! + right[2]! - 1).toBe(width);
+  expect(top[3]! + bottom[3]! - 1).toBe(height);
+  expect(right[0]).toBe(x + left[2]! - 1);
+  expect(bottom[1]).toBe(y + top[3]! - 1);
   expect(byPlacement.get("tabs")).toEqual(vectors.area);
 });

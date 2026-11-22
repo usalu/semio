@@ -199,7 +199,7 @@
     {
      "id": "castor-front-neck",
      "kind": "revolve",
-     "bone": "castor-front",
+     "bone": "swivel-front",
      "material": "steel-painted",
      "role": "detail",
      "tone": 0.2,
@@ -222,20 +222,20 @@
       ]
      ],
      "axis": [
+      -1.0,
       0.0,
-      1.0,
       0.0
      ],
      "origin": [
-      0.02,
-      -0.025,
+      0.045,
+      0.0,
       0.0
      ]
     },
     {
      "id": "castor-front-head",
      "kind": "revolve",
-     "bone": "castor-front",
+     "bone": "swivel-front",
      "material": "pa-plastic",
      "role": "body",
      "tone": 0.25,
@@ -266,67 +266,67 @@
       ]
      ],
      "axis": [
+      -1.0,
       0.0,
-      1.0,
       0.0
      ],
      "origin": [
-      0.02,
-      -0.025,
+      0.045,
+      0.0,
       0.0
      ]
     },
     {
      "id": "castor-front-web",
      "kind": "extrude",
-     "bone": "castor-front",
+     "bone": "swivel-front",
      "material": "pa-plastic",
      "role": "body",
      "tone": 0.25,
      "profile": [
       [
-       0.033,
-       0.027
+       -0.007,
+       0.013
       ],
       [
-       0.034,
-       0.015
+       0.005,
+       0.014
       ],
       [
-       0.022,
-       0.001
+       0.019,
+       0.002
       ],
       [
-       0.011,
+       0.029,
        -0.009
       ],
       [
-       0.0,
-       -0.0125
+       0.0325,
+       -0.02
       ],
       [
-       -0.01,
-       -0.009
+       0.029,
+       -0.03
       ],
       [
-       -0.022,
-       0.005
+       0.015,
+       -0.042
       ],
       [
-       -0.0235,
-       0.015
-      ],
-      [
-       -0.016,
-       0.024
+       0.005,
+       -0.0435
       ],
       [
        -0.004,
-       0.0285
+       -0.036
       ],
       [
-       0.012,
-       0.0295
+       -0.0085,
+       -0.024
+      ],
+      [
+       -0.0095,
+       -0.008
       ]
      ],
      "plane": "xy",
@@ -336,66 +336,66 @@
     {
      "id": "castor-front-hood",
      "kind": "extrude",
-     "bone": "castor-front",
+     "bone": "swivel-front",
      "material": "pa-plastic",
      "role": "body",
      "tone": 0.27,
      "profile": [
       [
-       0.02886,
-       0.00613
+       0.01387,
+       0.00886
       ],
       [
-       0.02416,
-       0.01692
+       0.00308,
+       0.00416
       ],
       [
-       0.01475,
-       0.02555
+       -0.00555,
+       -0.00525
       ],
       [
-       0.0,
-       0.0295
+       -0.0095,
+       -0.02
       ],
       [
-       -0.01475,
-       0.02555
+       -0.00555,
+       -0.03475
       ],
       [
-       -0.02416,
-       0.01692
+       0.00308,
+       -0.04416
       ],
       [
-       -0.02886,
-       0.00613
+       0.01387,
+       -0.04886
       ],
       [
-       -0.02592,
-       0.00551
+       0.01449,
+       -0.04592
       ],
       [
-       -0.02171,
-       0.0152
+       0.0048,
+       -0.04171
       ],
       [
-       -0.01325,
-       0.02295
+       -0.00295,
+       -0.03325
       ],
       [
-       0.0,
-       0.0265
+       -0.0065,
+       -0.02
       ],
       [
-       0.01325,
-       0.02295
+       -0.00295,
+       -0.00675
       ],
       [
-       0.02171,
-       0.0152
+       0.0048,
+       0.00171
       ],
       [
-       0.02592,
-       0.00551
+       0.01449,
+       0.00592
       ]
      ],
      "plane": "xy",
@@ -721,7 +721,7 @@
     {
      "id": "castor-side-a-neck",
      "kind": "revolve",
-     "bone": "castor-side-a",
+     "bone": "swivel-side-a",
      "material": "steel-painted",
      "role": "detail",
      "tone": 0.2,
@@ -744,20 +744,20 @@
       ]
      ],
      "axis": [
+      -1.0,
       0.0,
-      1.0,
       0.0
      ],
      "origin": [
-      0.02001,
-      -0.025,
+      0.045,
+      1e-05,
       2e-05
      ]
     },
     {
      "id": "castor-side-a-head",
      "kind": "revolve",
-     "bone": "castor-side-a",
+     "bone": "swivel-side-a",
      "material": "pa-plastic",
      "role": "body",
      "tone": 0.25,
@@ -788,67 +788,67 @@
       ]
      ],
      "axis": [
+      -1.0,
       0.0,
-      1.0,
       0.0
      ],
      "origin": [
-      0.02001,
-      -0.025,
+      0.045,
+      1e-05,
       2e-05
      ]
     },
     {
      "id": "castor-side-a-web",
      "kind": "extrude",
-     "bone": "castor-side-a",
+     "bone": "swivel-side-a",
      "material": "pa-plastic",
      "role": "body",
      "tone": 0.25,
      "profile": [
       [
-       0.03301,
-       0.027
+       -0.007,
+       0.01301
       ],
       [
-       0.03401,
-       0.015
+       0.005,
+       0.01401
       ],
       [
-       0.02201,
-       0.001
+       0.019,
+       0.00201
       ],
       [
-       0.01101,
-       -0.009
+       0.029,
+       -0.00899
       ],
       [
-       1e-05,
-       -0.0125
+       0.0325,
+       -0.01999
       ],
       [
-       -0.00999,
-       -0.009
+       0.029,
+       -0.02999
       ],
       [
-       -0.02199,
-       0.005
+       0.015,
+       -0.04199
       ],
       [
-       -0.02349,
-       0.015
+       0.005,
+       -0.04349
       ],
       [
-       -0.01599,
-       0.024
+       -0.004,
+       -0.03599
       ],
       [
-       -0.00399,
-       0.0285
+       -0.0085,
+       -0.02399
       ],
       [
-       0.01201,
-       0.0295
+       -0.0095,
+       -0.00799
       ]
      ],
      "plane": "xy",
@@ -858,66 +858,66 @@
     {
      "id": "castor-side-a-hood",
      "kind": "extrude",
-     "bone": "castor-side-a",
+     "bone": "swivel-side-a",
      "material": "pa-plastic",
      "role": "body",
      "tone": 0.27,
      "profile": [
       [
-       0.02886,
-       0.00613
+       0.01387,
+       0.00886
       ],
       [
-       0.02417,
-       0.01692
+       0.00308,
+       0.00417
       ],
       [
-       0.01476,
-       0.02555
+       -0.00555,
+       -0.00524
       ],
       [
-       1e-05,
-       0.0295
+       -0.0095,
+       -0.01999
       ],
       [
-       -0.01474,
-       0.02555
+       -0.00555,
+       -0.03474
       ],
       [
-       -0.02416,
-       0.01692
+       0.00308,
+       -0.04416
       ],
       [
-       -0.02885,
-       0.00613
+       0.01387,
+       -0.04885
       ],
       [
-       -0.02592,
-       0.00551
+       0.01449,
+       -0.04592
       ],
       [
-       -0.0217,
-       0.0152
+       0.0048,
+       -0.0417
       ],
       [
-       -0.01324,
-       0.02295
+       -0.00295,
+       -0.03324
       ],
       [
-       1e-05,
-       0.0265
+       -0.0065,
+       -0.01999
       ],
       [
-       0.01326,
-       0.02295
+       -0.00295,
+       -0.00674
       ],
       [
-       0.02171,
-       0.0152
+       0.0048,
+       0.00171
       ],
       [
-       0.02593,
-       0.00551
+       0.01449,
+       0.00593
       ]
      ],
      "plane": "xy",
@@ -1243,7 +1243,7 @@
     {
      "id": "castor-side-b-neck",
      "kind": "revolve",
-     "bone": "castor-side-b",
+     "bone": "swivel-side-b",
      "material": "steel-painted",
      "role": "detail",
      "tone": 0.2,
@@ -1266,20 +1266,20 @@
       ]
      ],
      "axis": [
+      -1.0,
       0.0,
-      1.0,
       0.0
      ],
      "origin": [
-      0.02001,
-      -0.025,
+      0.045,
+      1e-05,
       -2e-05
      ]
     },
     {
      "id": "castor-side-b-head",
      "kind": "revolve",
-     "bone": "castor-side-b",
+     "bone": "swivel-side-b",
      "material": "pa-plastic",
      "role": "body",
      "tone": 0.25,
@@ -1310,67 +1310,67 @@
       ]
      ],
      "axis": [
+      -1.0,
       0.0,
-      1.0,
       0.0
      ],
      "origin": [
-      0.02001,
-      -0.025,
+      0.045,
+      1e-05,
       -2e-05
      ]
     },
     {
      "id": "castor-side-b-web",
      "kind": "extrude",
-     "bone": "castor-side-b",
+     "bone": "swivel-side-b",
      "material": "pa-plastic",
      "role": "body",
      "tone": 0.25,
      "profile": [
       [
-       0.03301,
-       0.027
+       -0.007,
+       0.01301
       ],
       [
-       0.03401,
-       0.015
+       0.005,
+       0.01401
       ],
       [
-       0.02201,
-       0.001
+       0.019,
+       0.00201
       ],
       [
-       0.01101,
-       -0.009
+       0.029,
+       -0.00899
       ],
       [
-       1e-05,
-       -0.0125
+       0.0325,
+       -0.01999
       ],
       [
-       -0.00999,
-       -0.009
+       0.029,
+       -0.02999
       ],
       [
-       -0.02199,
-       0.005
+       0.015,
+       -0.04199
       ],
       [
-       -0.02349,
-       0.015
+       0.005,
+       -0.04349
       ],
       [
-       -0.01599,
-       0.024
+       -0.004,
+       -0.03599
       ],
       [
-       -0.00399,
-       0.0285
+       -0.0085,
+       -0.02399
       ],
       [
-       0.01201,
-       0.0295
+       -0.0095,
+       -0.00799
       ]
      ],
      "plane": "xy",
@@ -1380,66 +1380,66 @@
     {
      "id": "castor-side-b-hood",
      "kind": "extrude",
-     "bone": "castor-side-b",
+     "bone": "swivel-side-b",
      "material": "pa-plastic",
      "role": "body",
      "tone": 0.27,
      "profile": [
       [
-       0.02886,
-       0.00613
+       0.01387,
+       0.00886
       ],
       [
-       0.02417,
-       0.01692
+       0.00308,
+       0.00417
       ],
       [
-       0.01476,
-       0.02555
+       -0.00555,
+       -0.00524
       ],
       [
-       1e-05,
-       0.0295
+       -0.0095,
+       -0.01999
       ],
       [
-       -0.01474,
-       0.02555
+       -0.00555,
+       -0.03474
       ],
       [
-       -0.02416,
-       0.01692
+       0.00308,
+       -0.04416
       ],
       [
-       -0.02885,
-       0.00613
+       0.01387,
+       -0.04885
       ],
       [
-       -0.02592,
-       0.00551
+       0.01449,
+       -0.04592
       ],
       [
-       -0.0217,
-       0.0152
+       0.0048,
+       -0.0417
       ],
       [
-       -0.01324,
-       0.02295
+       -0.00295,
+       -0.03324
       ],
       [
-       1e-05,
-       0.0265
+       -0.0065,
+       -0.01999
       ],
       [
-       0.01326,
-       0.02295
+       -0.00295,
+       -0.00674
       ],
       [
-       0.02171,
-       0.0152
+       0.0048,
+       0.00171
       ],
       [
-       0.02593,
-       0.00551
+       0.01449,
+       0.00593
       ]
      ],
      "plane": "xy",
@@ -1765,7 +1765,7 @@
     {
      "id": "castor-back-a-neck",
      "kind": "revolve",
-     "bone": "castor-back-a",
+     "bone": "swivel-back-a",
      "material": "steel-painted",
      "role": "detail",
      "tone": 0.2,
@@ -1788,20 +1788,20 @@
       ]
      ],
      "axis": [
+      -1.0,
       0.0,
-      1.0,
       0.0
      ],
      "origin": [
-      0.01999,
-      -0.025,
+      0.045,
+      -1e-05,
       4e-05
      ]
     },
     {
      "id": "castor-back-a-head",
      "kind": "revolve",
-     "bone": "castor-back-a",
+     "bone": "swivel-back-a",
      "material": "pa-plastic",
      "role": "body",
      "tone": 0.25,
@@ -1832,67 +1832,67 @@
       ]
      ],
      "axis": [
+      -1.0,
       0.0,
-      1.0,
       0.0
      ],
      "origin": [
-      0.01999,
-      -0.025,
+      0.045,
+      -1e-05,
       4e-05
      ]
     },
     {
      "id": "castor-back-a-web",
      "kind": "extrude",
-     "bone": "castor-back-a",
+     "bone": "swivel-back-a",
      "material": "pa-plastic",
      "role": "body",
      "tone": 0.25,
      "profile": [
       [
-       0.03299,
-       0.027
+       -0.007,
+       0.01299
       ],
       [
-       0.03399,
-       0.015
+       0.005,
+       0.01399
       ],
       [
-       0.02199,
-       0.001
+       0.019,
+       0.00199
       ],
       [
-       0.01099,
-       -0.009
+       0.029,
+       -0.00901
       ],
       [
-       -1e-05,
-       -0.0125
+       0.0325,
+       -0.02001
       ],
       [
-       -0.01001,
-       -0.009
+       0.029,
+       -0.03001
       ],
       [
-       -0.02201,
-       0.005
+       0.015,
+       -0.04201
       ],
       [
-       -0.02351,
-       0.015
+       0.005,
+       -0.04351
       ],
       [
-       -0.01601,
-       0.024
+       -0.004,
+       -0.03601
       ],
       [
-       -0.00401,
-       0.0285
+       -0.0085,
+       -0.02401
       ],
       [
-       0.01199,
-       0.0295
+       -0.0095,
+       -0.00801
       ]
      ],
      "plane": "xy",
@@ -1902,66 +1902,66 @@
     {
      "id": "castor-back-a-hood",
      "kind": "extrude",
-     "bone": "castor-back-a",
+     "bone": "swivel-back-a",
      "material": "pa-plastic",
      "role": "body",
      "tone": 0.27,
      "profile": [
       [
-       0.02885,
-       0.00613
+       0.01387,
+       0.00885
       ],
       [
-       0.02416,
-       0.01692
+       0.00308,
+       0.00416
       ],
       [
-       0.01474,
-       0.02555
+       -0.00555,
+       -0.00526
       ],
       [
-       -1e-05,
-       0.0295
+       -0.0095,
+       -0.02001
       ],
       [
-       -0.01476,
-       0.02555
+       -0.00555,
+       -0.03476
       ],
       [
-       -0.02417,
-       0.01692
+       0.00308,
+       -0.04417
       ],
       [
-       -0.02886,
-       0.00613
+       0.01387,
+       -0.04886
       ],
       [
-       -0.02593,
-       0.00551
+       0.01449,
+       -0.04593
       ],
       [
-       -0.02171,
-       0.0152
+       0.0048,
+       -0.04171
       ],
       [
-       -0.01326,
-       0.02295
+       -0.00295,
+       -0.03326
       ],
       [
-       -1e-05,
-       0.0265
+       -0.0065,
+       -0.02001
       ],
       [
-       0.01324,
-       0.02295
+       -0.00295,
+       -0.00676
       ],
       [
-       0.0217,
-       0.0152
+       0.0048,
+       0.0017
       ],
       [
-       0.02592,
-       0.00551
+       0.01449,
+       0.00592
       ]
      ],
      "plane": "xy",
@@ -2287,7 +2287,7 @@
     {
      "id": "castor-back-b-neck",
      "kind": "revolve",
-     "bone": "castor-back-b",
+     "bone": "swivel-back-b",
      "material": "steel-painted",
      "role": "detail",
      "tone": 0.2,
@@ -2310,20 +2310,20 @@
       ]
      ],
      "axis": [
+      -1.0,
       0.0,
-      1.0,
       0.0
      ],
      "origin": [
-      0.01999,
-      -0.025,
+      0.045,
+      -1e-05,
       -4e-05
      ]
     },
     {
      "id": "castor-back-b-head",
      "kind": "revolve",
-     "bone": "castor-back-b",
+     "bone": "swivel-back-b",
      "material": "pa-plastic",
      "role": "body",
      "tone": 0.25,
@@ -2354,67 +2354,67 @@
       ]
      ],
      "axis": [
+      -1.0,
       0.0,
-      1.0,
       0.0
      ],
      "origin": [
-      0.01999,
-      -0.025,
+      0.045,
+      -1e-05,
       -4e-05
      ]
     },
     {
      "id": "castor-back-b-web",
      "kind": "extrude",
-     "bone": "castor-back-b",
+     "bone": "swivel-back-b",
      "material": "pa-plastic",
      "role": "body",
      "tone": 0.25,
      "profile": [
       [
-       0.03299,
-       0.027
+       -0.007,
+       0.01299
       ],
       [
-       0.03399,
-       0.015
+       0.005,
+       0.01399
       ],
       [
-       0.02199,
-       0.001
+       0.019,
+       0.00199
       ],
       [
-       0.01099,
-       -0.009
+       0.029,
+       -0.00901
       ],
       [
-       -1e-05,
-       -0.0125
+       0.0325,
+       -0.02001
       ],
       [
-       -0.01001,
-       -0.009
+       0.029,
+       -0.03001
       ],
       [
-       -0.02201,
-       0.005
+       0.015,
+       -0.04201
       ],
       [
-       -0.02351,
-       0.015
+       0.005,
+       -0.04351
       ],
       [
-       -0.01601,
-       0.024
+       -0.004,
+       -0.03601
       ],
       [
-       -0.00401,
-       0.0285
+       -0.0085,
+       -0.02401
       ],
       [
-       0.01199,
-       0.0295
+       -0.0095,
+       -0.00801
       ]
      ],
      "plane": "xy",
@@ -2424,66 +2424,66 @@
     {
      "id": "castor-back-b-hood",
      "kind": "extrude",
-     "bone": "castor-back-b",
+     "bone": "swivel-back-b",
      "material": "pa-plastic",
      "role": "body",
      "tone": 0.27,
      "profile": [
       [
-       0.02885,
-       0.00613
+       0.01387,
+       0.00885
       ],
       [
-       0.02416,
-       0.01692
+       0.00308,
+       0.00416
       ],
       [
-       0.01474,
-       0.02555
+       -0.00555,
+       -0.00526
       ],
       [
-       -1e-05,
-       0.0295
+       -0.0095,
+       -0.02001
       ],
       [
-       -0.01476,
-       0.02555
+       -0.00555,
+       -0.03476
       ],
       [
-       -0.02417,
-       0.01692
+       0.00308,
+       -0.04417
       ],
       [
-       -0.02886,
-       0.00613
+       0.01387,
+       -0.04886
       ],
       [
-       -0.02593,
-       0.00551
+       0.01449,
+       -0.04593
       ],
       [
-       -0.02171,
-       0.0152
+       0.0048,
+       -0.04171
       ],
       [
-       -0.01326,
-       0.02295
+       -0.00295,
+       -0.03326
       ],
       [
-       -1e-05,
-       0.0265
+       -0.0065,
+       -0.02001
       ],
       [
-       0.01324,
-       0.02295
+       -0.00295,
+       -0.00676
       ],
       [
-       0.0217,
-       0.0152
+       0.0048,
+       0.0017
       ],
       [
-       0.02592,
-       0.00551
+       0.01449,
+       0.00592
       ]
      ],
      "plane": "xy",
@@ -3410,9 +3410,25 @@
      "sections": [
       {
        "at": [
-        0.037,
+        0.0415,
         0.02,
-        0.17
+        0.13
+       ],
+       "rx": 0.03,
+       "ry": 0.006,
+       "exponent": 4.0,
+       "rotation": [
+        0.0,
+        0.0,
+        -0.707107,
+        0.707107
+       ]
+      },
+      {
+       "at": [
+        0.0415,
+        0.02,
+        0.19
        ],
        "rx": 0.03,
        "ry": 0.006,
@@ -3790,9 +3806,25 @@
      "sections": [
       {
        "at": [
-        0.037,
+        0.0415,
         0.02,
-        -0.17
+        -0.13
+       ],
+       "rx": 0.03,
+       "ry": 0.006,
+       "exponent": 4.0,
+       "rotation": [
+        0.0,
+        0.0,
+        -0.707107,
+        0.707107
+       ]
+      },
+      {
+       "at": [
+        0.0415,
+        0.02,
+        -0.19
        ],
        "rx": 0.03,
        "ry": 0.006,
@@ -7395,9 +7427,51 @@
      "part": "member"
     },
     {
+     "id": "member-castor-front-neck",
+     "of": "castor-front-neck",
+     "member": "castor-front",
+     "part": "member"
+    },
+    {
+     "id": "member-castor-front-head",
+     "of": "castor-front-head",
+     "member": "castor-front",
+     "part": "member"
+    },
+    {
+     "id": "member-castor-front-web",
+     "of": "castor-front-web",
+     "member": "castor-front",
+     "part": "member"
+    },
+    {
+     "id": "member-castor-front-rim-l",
+     "of": "castor-front-rim-l",
+     "member": "castor-front",
+     "part": "member"
+    },
+    {
+     "id": "member-castor-front-tyre-l",
+     "of": "castor-front-tyre-l",
+     "member": "castor-front",
+     "part": "member"
+    },
+    {
+     "id": "member-castor-front-rim-r",
+     "of": "castor-front-rim-r",
+     "member": "castor-front",
+     "part": "member"
+    },
+    {
+     "id": "member-castor-front-tyre-r",
+     "of": "castor-front-tyre-r",
+     "member": "castor-front",
+     "part": "member"
+    },
+    {
      "id": "joint-castor-front-stem",
      "kind": "revolve",
-     "bone": "castor-front",
+     "bone": "swivel-front",
      "material": "steel-painted",
      "role": "detail",
      "tone": 0.15,
@@ -7420,13 +7494,13 @@
       ]
      ],
      "axis": [
+      -1.0,
       0.0,
-      1.0,
       0.0
      ],
      "origin": [
-      0.02,
-      -0.025,
+      0.045,
+      0.0,
       0.0
      ],
      "member": "castor-front",
@@ -7471,9 +7545,51 @@
      "part": "joint"
     },
     {
+     "id": "member-castor-side-a-neck",
+     "of": "castor-side-a-neck",
+     "member": "castor-side-a",
+     "part": "member"
+    },
+    {
+     "id": "member-castor-side-a-head",
+     "of": "castor-side-a-head",
+     "member": "castor-side-a",
+     "part": "member"
+    },
+    {
+     "id": "member-castor-side-a-web",
+     "of": "castor-side-a-web",
+     "member": "castor-side-a",
+     "part": "member"
+    },
+    {
+     "id": "member-castor-side-a-rim-l",
+     "of": "castor-side-a-rim-l",
+     "member": "castor-side-a",
+     "part": "member"
+    },
+    {
+     "id": "member-castor-side-a-tyre-l",
+     "of": "castor-side-a-tyre-l",
+     "member": "castor-side-a",
+     "part": "member"
+    },
+    {
+     "id": "member-castor-side-a-rim-r",
+     "of": "castor-side-a-rim-r",
+     "member": "castor-side-a",
+     "part": "member"
+    },
+    {
+     "id": "member-castor-side-a-tyre-r",
+     "of": "castor-side-a-tyre-r",
+     "member": "castor-side-a",
+     "part": "member"
+    },
+    {
      "id": "joint-castor-side-a-stem",
      "kind": "revolve",
-     "bone": "castor-side-a",
+     "bone": "swivel-side-a",
      "material": "steel-painted",
      "role": "detail",
      "tone": 0.15,
@@ -7496,13 +7612,13 @@
       ]
      ],
      "axis": [
+      -1.0,
       0.0,
-      1.0,
       0.0
      ],
      "origin": [
-      0.02001,
-      -0.025,
+      0.045,
+      1e-05,
       2e-05
      ],
      "member": "castor-side-a",
@@ -7547,9 +7663,51 @@
      "part": "joint"
     },
     {
+     "id": "member-castor-side-b-neck",
+     "of": "castor-side-b-neck",
+     "member": "castor-side-b",
+     "part": "member"
+    },
+    {
+     "id": "member-castor-side-b-head",
+     "of": "castor-side-b-head",
+     "member": "castor-side-b",
+     "part": "member"
+    },
+    {
+     "id": "member-castor-side-b-web",
+     "of": "castor-side-b-web",
+     "member": "castor-side-b",
+     "part": "member"
+    },
+    {
+     "id": "member-castor-side-b-rim-l",
+     "of": "castor-side-b-rim-l",
+     "member": "castor-side-b",
+     "part": "member"
+    },
+    {
+     "id": "member-castor-side-b-tyre-l",
+     "of": "castor-side-b-tyre-l",
+     "member": "castor-side-b",
+     "part": "member"
+    },
+    {
+     "id": "member-castor-side-b-rim-r",
+     "of": "castor-side-b-rim-r",
+     "member": "castor-side-b",
+     "part": "member"
+    },
+    {
+     "id": "member-castor-side-b-tyre-r",
+     "of": "castor-side-b-tyre-r",
+     "member": "castor-side-b",
+     "part": "member"
+    },
+    {
      "id": "joint-castor-side-b-stem",
      "kind": "revolve",
-     "bone": "castor-side-b",
+     "bone": "swivel-side-b",
      "material": "steel-painted",
      "role": "detail",
      "tone": 0.15,
@@ -7572,13 +7730,13 @@
       ]
      ],
      "axis": [
+      -1.0,
       0.0,
-      1.0,
       0.0
      ],
      "origin": [
-      0.02001,
-      -0.025,
+      0.045,
+      1e-05,
       -2e-05
      ],
      "member": "castor-side-b",
@@ -7623,9 +7781,51 @@
      "part": "joint"
     },
     {
+     "id": "member-castor-back-a-neck",
+     "of": "castor-back-a-neck",
+     "member": "castor-back-a",
+     "part": "member"
+    },
+    {
+     "id": "member-castor-back-a-head",
+     "of": "castor-back-a-head",
+     "member": "castor-back-a",
+     "part": "member"
+    },
+    {
+     "id": "member-castor-back-a-web",
+     "of": "castor-back-a-web",
+     "member": "castor-back-a",
+     "part": "member"
+    },
+    {
+     "id": "member-castor-back-a-rim-l",
+     "of": "castor-back-a-rim-l",
+     "member": "castor-back-a",
+     "part": "member"
+    },
+    {
+     "id": "member-castor-back-a-tyre-l",
+     "of": "castor-back-a-tyre-l",
+     "member": "castor-back-a",
+     "part": "member"
+    },
+    {
+     "id": "member-castor-back-a-rim-r",
+     "of": "castor-back-a-rim-r",
+     "member": "castor-back-a",
+     "part": "member"
+    },
+    {
+     "id": "member-castor-back-a-tyre-r",
+     "of": "castor-back-a-tyre-r",
+     "member": "castor-back-a",
+     "part": "member"
+    },
+    {
      "id": "joint-castor-back-a-stem",
      "kind": "revolve",
-     "bone": "castor-back-a",
+     "bone": "swivel-back-a",
      "material": "steel-painted",
      "role": "detail",
      "tone": 0.15,
@@ -7648,13 +7848,13 @@
       ]
      ],
      "axis": [
+      -1.0,
       0.0,
-      1.0,
       0.0
      ],
      "origin": [
-      0.01999,
-      -0.025,
+      0.045,
+      -1e-05,
       4e-05
      ],
      "member": "castor-back-a",
@@ -7699,9 +7899,51 @@
      "part": "joint"
     },
     {
+     "id": "member-castor-back-b-neck",
+     "of": "castor-back-b-neck",
+     "member": "castor-back-b",
+     "part": "member"
+    },
+    {
+     "id": "member-castor-back-b-head",
+     "of": "castor-back-b-head",
+     "member": "castor-back-b",
+     "part": "member"
+    },
+    {
+     "id": "member-castor-back-b-web",
+     "of": "castor-back-b-web",
+     "member": "castor-back-b",
+     "part": "member"
+    },
+    {
+     "id": "member-castor-back-b-rim-l",
+     "of": "castor-back-b-rim-l",
+     "member": "castor-back-b",
+     "part": "member"
+    },
+    {
+     "id": "member-castor-back-b-tyre-l",
+     "of": "castor-back-b-tyre-l",
+     "member": "castor-back-b",
+     "part": "member"
+    },
+    {
+     "id": "member-castor-back-b-rim-r",
+     "of": "castor-back-b-rim-r",
+     "member": "castor-back-b",
+     "part": "member"
+    },
+    {
+     "id": "member-castor-back-b-tyre-r",
+     "of": "castor-back-b-tyre-r",
+     "member": "castor-back-b",
+     "part": "member"
+    },
+    {
      "id": "joint-castor-back-b-stem",
      "kind": "revolve",
-     "bone": "castor-back-b",
+     "bone": "swivel-back-b",
      "material": "steel-painted",
      "role": "detail",
      "tone": 0.15,
@@ -7724,13 +7966,13 @@
       ]
      ],
      "axis": [
+      -1.0,
       0.0,
-      1.0,
       0.0
      ],
      "origin": [
-      0.01999,
-      -0.025,
+      0.045,
+      -1e-05,
       -4e-05
      ],
      "member": "castor-back-b",
@@ -8156,8 +8398,12 @@
      "de": "Körper, nach dem wirklichen Stuhl modelliert: Nabe mit Konusbohrung, fünf geloftete Polyamidarme, die von der Nabe zu runden Stiftaugen abfallen, Doppelrollen mit Haube von 50 mm (Drehkopf, Hals, Mittelsteg, Haube, je zwei Gummireifen auf Kunststofffelgen), 20 mm hinter ihren Stiften nachlaufend, das Standrohr von 50 mm mit Führungsbuchse, das Kolbenrohr von 28 mm mit Konusaufnahme, die Stahlblechmechanik mit Sitzplatte, Gelenk und Bolzen, Höhen- und Arretierhebel mit Griffen und das Spannrad, die Kunststoffsitzschale unter dem Polster mit abgerundeter Vorderkante, die T-Armlehnen (Lasche unter dem Sitz, gebogene Stütze, Innenrohr, Auflage und Polster) und die Rückenlehne, doppelt gekrümmt als eine Drehfläche um eine Achse vor der sitzenden Person (Lordosekurve als Profil, Umgriff als Drehwinkel) mit gelofteten Seitenbändern, die den Umriss runden, als Schale und Polster auf dem gebogenen Flachstahlträger mit seiner Abdeckung."
     },
     {
-     "en": "Thermal: every body solid is the surface of the region of its material; the upholstery is two nested shells, the foam core (cushion, pad and its side bands inset by 1 mm) inside the fabric, innermost first; the tyre region is the rubber treads alone, the rims belong to the plastic. Structure: its own load path, hub and arms (the mouldings are the members), standpipe and piston as tubes with their real walls, mechanism, plate, hinge and seat pan, armrest straps and stems, carrier, bracket and shell of the backrest; joints are the castor stems and axles, the guide bush, the taper and the hinge pin; one contact pad under each castor; masses at the centres of hub, gas spring, seat and backrest. Cushion, pad, hoods, levers and knob carry nothing and are absent.",
-     "de": "Thermik: jeder Körper ist die Oberfläche der Region seines Materials; das Polster besteht aus zwei geschachtelten Schalen, dem Schaumkern (Sitzpolster, Lehnenpolster und dessen Seitenbänder um 1 mm eingerückt) im Stoff, innerste zuerst; die Reifenregion sind allein die Gummilaufflächen, die Felgen gehören zum Kunststoff. Tragwerk: eigener Lastpfad, Nabe und Arme (die Formteile sind die Stäbe), Standrohr und Kolben als Rohre mit ihren wirklichen Wänden, Mechanik, Platte, Gelenk und Sitzschale, Armlehnenlaschen und -rohre, Träger, Halter und Schale der Lehne; Gelenke sind die Rollenstifte und Achsen, die Führungsbuchse, der Konus und der Gelenkbolzen; je ein Kontaktpolster unter jeder Rolle; Massen in den Schwerpunkten von Nabe, Gasfeder, Sitz und Lehne. Polster, Hauben, Hebel und Spannrad tragen nichts und fehlen."
+     "en": "Thermal: every body solid is the surface of the region of its material; the upholstery is two nested shells, the foam core (cushion, pad and its side bands inset by 1 mm) inside the fabric, innermost first; the tyre region is the rubber treads alone, the rims belong to the plastic. Structure: its own load path, hub and arms (the mouldings are the members), standpipe and piston as tubes with their real walls, mechanism, plate, hinge and seat pan, armrest straps and stems, carrier, bracket and shell of the backrest; joints are the castor stems and axles, the guide bush, the taper and the hinge pin; between stem and floor every castor carries with its neck, swivel head, centre web and both wheels (rim and tyre), so the path from the arm to the contact pad under each castor is closed; masses at the centres of hub, gas spring, seat and backrest. Cushion, pad, castor hoods, levers and knob carry nothing and are absent.",
+     "de": "Thermik: jeder Körper ist die Oberfläche der Region seines Materials; das Polster besteht aus zwei geschachtelten Schalen, dem Schaumkern (Sitzpolster, Lehnenpolster und dessen Seitenbänder um 1 mm eingerückt) im Stoff, innerste zuerst; die Reifenregion sind allein die Gummilaufflächen, die Felgen gehören zum Kunststoff. Tragwerk: eigener Lastpfad, Nabe und Arme (die Formteile sind die Stäbe), Standrohr und Kolben als Rohre mit ihren wirklichen Wänden, Mechanik, Platte, Gelenk und Sitzschale, Armlehnenlaschen und -rohre, Träger, Halter und Schale der Lehne; Gelenke sind die Rollenstifte und Achsen, die Führungsbuchse, der Konus und der Gelenkbolzen; zwischen Stift und Boden trägt jede Rolle mit Hals, Drehkopf, Mittelsteg und beiden Rädern (Felge und Reifen), sodass der Pfad vom Arm bis zum Kontaktpolster unter jeder Rolle geschlossen ist; Massen in den Schwerpunkten von Nabe, Gasfeder, Sitz und Lehne. Polster, Rollenhauben, Hebel und Spannrad tragen nichts und fehlen."
+    },
+    {
+     "en": "Rig and joinery: every castor has its two real pivots, a swivel stem bone that hangs from the arm boss (axial twist is the castor swivel) and below it the wheel bone on the axle, 20 mm behind and 20 mm under the stem joint. Neck, swivel head, centre web, hood and the stem joint of the structure ride on the stem bone, tyres, rims, axle and floor contact on the wheel bone, so a swivelled castor keeps its housing over its wheels. The armrest straps run 40 mm further under the seat and lie against the underside of the seat pan, where they are screwed; before they hung 3 mm below it.",
+     "de": "Rig und Fügung: Jede Rolle hat ihre zwei wirklichen Drehpunkte, einen Schwenkzapfen-Knochen, der im Armauge hängt (die Achsdrehung ist das Schwenken der Rolle), und darunter den Rad-Knochen auf der Achse, 20 mm hinter und 20 mm unter dem Zapfengelenk. Hals, Drehkopf, Mittelsteg, Haube und das Zapfengelenk des Tragwerks sitzen auf dem Zapfen-Knochen, Reifen, Felgen, Achse und Bodenkontakt auf dem Rad-Knochen, sodass eine geschwenkte Rolle ihr Gehäuse über den Rädern behält. Die Armlehnenlaschen laufen 40 mm weiter unter den Sitz und liegen an der Unterseite der Sitzschale an, wo sie verschraubt sind; zuvor hingen sie 3 mm darunter."
     }
    ]
   },
@@ -8312,7 +8558,7 @@
     {
      "id": "castor-front-head",
      "kind": "revolve",
-     "bone": "castor-front",
+     "bone": "swivel-front",
      "material": "pa-plastic",
      "role": "body",
      "tone": 0.25,
@@ -8335,55 +8581,55 @@
       ]
      ],
      "axis": [
+      -1.0,
       0.0,
-      1.0,
       0.0
      ],
      "origin": [
-      0.02,
-      -0.025,
+      0.045,
+      0.0,
       0.0
      ]
     },
     {
      "id": "castor-front-hood",
      "kind": "extrude",
-     "bone": "castor-front",
+     "bone": "swivel-front",
      "material": "pa-plastic",
      "role": "body",
      "tone": 0.27,
      "profile": [
       [
-       0.02886,
-       0.00613
+       0.01387,
+       0.00886
       ],
       [
-       0.01896,
-       0.0226
+       -0.0026,
+       -0.00104
       ],
       [
-       0.0,
-       0.0295
+       -0.0095,
+       -0.02
       ],
       [
-       -0.01896,
-       0.0226
+       -0.0026,
+       -0.03896
       ],
       [
-       -0.02886,
-       0.00613
+       0.01387,
+       -0.04886
       ],
       [
-       -0.01369,
-       0.00291
+       0.01709,
+       -0.03369
       ],
       [
-       0.0,
-       0.014
+       0.006,
+       -0.02
       ],
       [
-       0.01369,
-       0.00291
+       0.01709,
+       -0.00631
       ]
      ],
      "plane": "xy",
@@ -8581,7 +8827,7 @@
     {
      "id": "castor-side-a-head",
      "kind": "revolve",
-     "bone": "castor-side-a",
+     "bone": "swivel-side-a",
      "material": "pa-plastic",
      "role": "body",
      "tone": 0.25,
@@ -8604,55 +8850,55 @@
       ]
      ],
      "axis": [
+      -1.0,
       0.0,
-      1.0,
       0.0
      ],
      "origin": [
-      0.02001,
-      -0.025,
+      0.045,
+      1e-05,
       2e-05
      ]
     },
     {
      "id": "castor-side-a-hood",
      "kind": "extrude",
-     "bone": "castor-side-a",
+     "bone": "swivel-side-a",
      "material": "pa-plastic",
      "role": "body",
      "tone": 0.27,
      "profile": [
       [
-       0.02886,
-       0.00613
+       0.01387,
+       0.00886
       ],
       [
-       0.01897,
-       0.0226
+       -0.0026,
+       -0.00103
       ],
       [
-       1e-05,
-       0.0295
+       -0.0095,
+       -0.01999
       ],
       [
-       -0.01896,
-       0.0226
+       -0.0026,
+       -0.03896
       ],
       [
-       -0.02885,
-       0.00613
+       0.01387,
+       -0.04885
       ],
       [
-       -0.01369,
-       0.00291
+       0.01709,
+       -0.03369
       ],
       [
-       1e-05,
-       0.014
+       0.006,
+       -0.01999
       ],
       [
-       0.0137,
-       0.00291
+       0.01709,
+       -0.0063
       ]
      ],
      "plane": "xy",
@@ -8850,7 +9096,7 @@
     {
      "id": "castor-side-b-head",
      "kind": "revolve",
-     "bone": "castor-side-b",
+     "bone": "swivel-side-b",
      "material": "pa-plastic",
      "role": "body",
      "tone": 0.25,
@@ -8873,55 +9119,55 @@
       ]
      ],
      "axis": [
+      -1.0,
       0.0,
-      1.0,
       0.0
      ],
      "origin": [
-      0.02001,
-      -0.025,
+      0.045,
+      1e-05,
       -2e-05
      ]
     },
     {
      "id": "castor-side-b-hood",
      "kind": "extrude",
-     "bone": "castor-side-b",
+     "bone": "swivel-side-b",
      "material": "pa-plastic",
      "role": "body",
      "tone": 0.27,
      "profile": [
       [
-       0.02886,
-       0.00613
+       0.01387,
+       0.00886
       ],
       [
-       0.01897,
-       0.0226
+       -0.0026,
+       -0.00103
       ],
       [
-       1e-05,
-       0.0295
+       -0.0095,
+       -0.01999
       ],
       [
-       -0.01896,
-       0.0226
+       -0.0026,
+       -0.03896
       ],
       [
-       -0.02885,
-       0.00613
+       0.01387,
+       -0.04885
       ],
       [
-       -0.01369,
-       0.00291
+       0.01709,
+       -0.03369
       ],
       [
-       1e-05,
-       0.014
+       0.006,
+       -0.01999
       ],
       [
-       0.0137,
-       0.00291
+       0.01709,
+       -0.0063
       ]
      ],
      "plane": "xy",
@@ -9119,7 +9365,7 @@
     {
      "id": "castor-back-a-head",
      "kind": "revolve",
-     "bone": "castor-back-a",
+     "bone": "swivel-back-a",
      "material": "pa-plastic",
      "role": "body",
      "tone": 0.25,
@@ -9142,55 +9388,55 @@
       ]
      ],
      "axis": [
+      -1.0,
       0.0,
-      1.0,
       0.0
      ],
      "origin": [
-      0.01999,
-      -0.025,
+      0.045,
+      -1e-05,
       4e-05
      ]
     },
     {
      "id": "castor-back-a-hood",
      "kind": "extrude",
-     "bone": "castor-back-a",
+     "bone": "swivel-back-a",
      "material": "pa-plastic",
      "role": "body",
      "tone": 0.27,
      "profile": [
       [
-       0.02885,
-       0.00613
+       0.01387,
+       0.00885
       ],
       [
-       0.01896,
-       0.0226
+       -0.0026,
+       -0.00104
       ],
       [
-       -1e-05,
-       0.0295
+       -0.0095,
+       -0.02001
       ],
       [
-       -0.01897,
-       0.0226
+       -0.0026,
+       -0.03897
       ],
       [
-       -0.02886,
-       0.00613
+       0.01387,
+       -0.04886
       ],
       [
-       -0.0137,
-       0.00291
+       0.01709,
+       -0.0337
       ],
       [
-       -1e-05,
-       0.014
+       0.006,
+       -0.02001
       ],
       [
-       0.01369,
-       0.00291
+       0.01709,
+       -0.00631
       ]
      ],
      "plane": "xy",
@@ -9388,7 +9634,7 @@
     {
      "id": "castor-back-b-head",
      "kind": "revolve",
-     "bone": "castor-back-b",
+     "bone": "swivel-back-b",
      "material": "pa-plastic",
      "role": "body",
      "tone": 0.25,
@@ -9411,55 +9657,55 @@
       ]
      ],
      "axis": [
+      -1.0,
       0.0,
-      1.0,
       0.0
      ],
      "origin": [
-      0.01999,
-      -0.025,
+      0.045,
+      -1e-05,
       -4e-05
      ]
     },
     {
      "id": "castor-back-b-hood",
      "kind": "extrude",
-     "bone": "castor-back-b",
+     "bone": "swivel-back-b",
      "material": "pa-plastic",
      "role": "body",
      "tone": 0.27,
      "profile": [
       [
-       0.02885,
-       0.00613
+       0.01387,
+       0.00885
       ],
       [
-       0.01896,
-       0.0226
+       -0.0026,
+       -0.00104
       ],
       [
-       -1e-05,
-       0.0295
+       -0.0095,
+       -0.02001
       ],
       [
-       -0.01897,
-       0.0226
+       -0.0026,
+       -0.03897
       ],
       [
-       -0.02886,
-       0.00613
+       0.01387,
+       -0.04886
       ],
       [
-       -0.0137,
-       0.00291
+       0.01709,
+       -0.0337
       ],
       [
-       -1e-05,
-       0.014
+       0.006,
+       -0.02001
       ],
       [
-       0.01369,
-       0.00291
+       0.01709,
+       -0.00631
       ]
      ],
      "plane": "xy",
@@ -11882,9 +12128,27 @@
      "part": "member"
     },
     {
+     "id": "member-castor-front-head",
+     "of": "castor-front-head",
+     "member": "castor-front",
+     "part": "member"
+    },
+    {
+     "id": "member-castor-front-wheel-l",
+     "of": "castor-front-wheel-l",
+     "member": "castor-front",
+     "part": "member"
+    },
+    {
+     "id": "member-castor-front-wheel-r",
+     "of": "castor-front-wheel-r",
+     "member": "castor-front",
+     "part": "member"
+    },
+    {
      "id": "joint-castor-front-stem",
      "kind": "revolve",
-     "bone": "castor-front",
+     "bone": "swivel-front",
      "material": "steel-painted",
      "role": "detail",
      "tone": 0.15,
@@ -11907,13 +12171,13 @@
       ]
      ],
      "axis": [
+      -1.0,
       0.0,
-      1.0,
       0.0
      ],
      "origin": [
-      0.02,
-      -0.025,
+      0.045,
+      0.0,
       0.0
      ],
      "member": "castor-front",
@@ -11958,9 +12222,27 @@
      "part": "joint"
     },
     {
+     "id": "member-castor-side-a-head",
+     "of": "castor-side-a-head",
+     "member": "castor-side-a",
+     "part": "member"
+    },
+    {
+     "id": "member-castor-side-a-wheel-l",
+     "of": "castor-side-a-wheel-l",
+     "member": "castor-side-a",
+     "part": "member"
+    },
+    {
+     "id": "member-castor-side-a-wheel-r",
+     "of": "castor-side-a-wheel-r",
+     "member": "castor-side-a",
+     "part": "member"
+    },
+    {
      "id": "joint-castor-side-a-stem",
      "kind": "revolve",
-     "bone": "castor-side-a",
+     "bone": "swivel-side-a",
      "material": "steel-painted",
      "role": "detail",
      "tone": 0.15,
@@ -11983,13 +12265,13 @@
       ]
      ],
      "axis": [
+      -1.0,
       0.0,
-      1.0,
       0.0
      ],
      "origin": [
-      0.02001,
-      -0.025,
+      0.045,
+      1e-05,
       2e-05
      ],
      "member": "castor-side-a",
@@ -12034,9 +12316,27 @@
      "part": "joint"
     },
     {
+     "id": "member-castor-side-b-head",
+     "of": "castor-side-b-head",
+     "member": "castor-side-b",
+     "part": "member"
+    },
+    {
+     "id": "member-castor-side-b-wheel-l",
+     "of": "castor-side-b-wheel-l",
+     "member": "castor-side-b",
+     "part": "member"
+    },
+    {
+     "id": "member-castor-side-b-wheel-r",
+     "of": "castor-side-b-wheel-r",
+     "member": "castor-side-b",
+     "part": "member"
+    },
+    {
      "id": "joint-castor-side-b-stem",
      "kind": "revolve",
-     "bone": "castor-side-b",
+     "bone": "swivel-side-b",
      "material": "steel-painted",
      "role": "detail",
      "tone": 0.15,
@@ -12059,13 +12359,13 @@
       ]
      ],
      "axis": [
+      -1.0,
       0.0,
-      1.0,
       0.0
      ],
      "origin": [
-      0.02001,
-      -0.025,
+      0.045,
+      1e-05,
       -2e-05
      ],
      "member": "castor-side-b",
@@ -12110,9 +12410,27 @@
      "part": "joint"
     },
     {
+     "id": "member-castor-back-a-head",
+     "of": "castor-back-a-head",
+     "member": "castor-back-a",
+     "part": "member"
+    },
+    {
+     "id": "member-castor-back-a-wheel-l",
+     "of": "castor-back-a-wheel-l",
+     "member": "castor-back-a",
+     "part": "member"
+    },
+    {
+     "id": "member-castor-back-a-wheel-r",
+     "of": "castor-back-a-wheel-r",
+     "member": "castor-back-a",
+     "part": "member"
+    },
+    {
      "id": "joint-castor-back-a-stem",
      "kind": "revolve",
-     "bone": "castor-back-a",
+     "bone": "swivel-back-a",
      "material": "steel-painted",
      "role": "detail",
      "tone": 0.15,
@@ -12135,13 +12453,13 @@
       ]
      ],
      "axis": [
+      -1.0,
       0.0,
-      1.0,
       0.0
      ],
      "origin": [
-      0.01999,
-      -0.025,
+      0.045,
+      -1e-05,
       4e-05
      ],
      "member": "castor-back-a",
@@ -12186,9 +12504,27 @@
      "part": "joint"
     },
     {
+     "id": "member-castor-back-b-head",
+     "of": "castor-back-b-head",
+     "member": "castor-back-b",
+     "part": "member"
+    },
+    {
+     "id": "member-castor-back-b-wheel-l",
+     "of": "castor-back-b-wheel-l",
+     "member": "castor-back-b",
+     "part": "member"
+    },
+    {
+     "id": "member-castor-back-b-wheel-r",
+     "of": "castor-back-b-wheel-r",
+     "member": "castor-back-b",
+     "part": "member"
+    },
+    {
      "id": "joint-castor-back-b-stem",
      "kind": "revolve",
-     "bone": "castor-back-b",
+     "bone": "swivel-back-b",
      "material": "steel-painted",
      "role": "detail",
      "tone": 0.15,
@@ -12211,13 +12547,13 @@
       ]
      ],
      "axis": [
+      -1.0,
       0.0,
-      1.0,
       0.0
      ],
      "origin": [
-      0.01999,
-      -0.025,
+      0.045,
+      -1e-05,
       -4e-05
      ],
      "member": "castor-back-b",
@@ -12643,8 +12979,12 @@
      "de": "Neu für 15 mm modelliert: Arme mit drei Schnitten, schlichte Stiftaugen, jede Rolle als Drehkopf, ein Mittelkörper und zwei schlichte Räder (Reifen und Felge vereint, Hals und dünne Haube entfallen), Standrohr mit Buchse und Kolben mit Aufnahme je als ein Drehkörper, Mechanik als eine verjüngte Wanne mit Gelenkblock und Spannrad, Hebel entfallen (8 mm), Sitzschale und Polster mit weniger Schnitten, Armlehnen als eine gebogene Stütze mit Polster, Lehnenschale und -polster mit je sechs Profilstationen und ihren Seitenbändern, Träger und Abdeckung."
     },
     {
-     "en": "Thermal: references by material, the upholstery as one surface. Structure: the same load path with thicker stems, axles and hinge pin, tubes for standpipe and piston, pads and masses sized for the scale.",
-     "de": "Thermik: Verweise nach Material, das Polster als eine Oberfläche. Tragwerk: derselbe Lastpfad mit dickeren Stiften, Achsen und Gelenkbolzen, Rohre für Standrohr und Kolben, Auflager und Massen für den Maßstab bemessen."
+     "en": "Thermal: references by material, the upholstery as one surface. Structure: the same load path with thicker stems, axles and hinge pin, the swivel head and the two wheels of every castor as members down to its contact pad, tubes for standpipe and piston, pads and masses sized for the scale.",
+     "de": "Thermik: Verweise nach Material, das Polster als eine Oberfläche. Tragwerk: derselbe Lastpfad mit dickeren Stiften, Achsen und Gelenkbolzen, Drehkopf und beide Räder jeder Rolle als Stäbe bis zu ihrem Auflager, Rohre für Standrohr und Kolben, Auflager und Massen für den Maßstab bemessen."
+    },
+    {
+     "en": "Rig: the swivel head and the centre body of every castor ride on its swivel stem bone, the two wheels on the wheel bone below it, so the castor swivels about its stem as at 1:50.",
+     "de": "Rig: Drehkopf und Mittelkörper jeder Rolle sitzen auf ihrem Schwenkzapfen-Knochen, die zwei Räder auf dem Rad-Knochen darunter, sodass die Rolle wie in 1:50 um ihren Zapfen schwenkt."
     }
    ]
   },
@@ -13670,9 +14010,25 @@
      "sections": [
       {
        "at": [
-        0.038,
+        0.04,
         0.02,
         0.17
+       ],
+       "rx": 0.03,
+       "ry": 0.008,
+       "exponent": 4.0,
+       "rotation": [
+        0.0,
+        0.0,
+        -0.707107,
+        0.707107
+       ]
+      },
+      {
+       "at": [
+        0.04,
+        0.02,
+        0.22
        ],
        "rx": 0.03,
        "ry": 0.008,
@@ -13850,9 +14206,25 @@
      "sections": [
       {
        "at": [
-        0.038,
+        0.04,
         0.02,
         -0.17
+       ],
+       "rx": 0.03,
+       "ry": 0.008,
+       "exponent": 4.0,
+       "rotation": [
+        0.0,
+        0.0,
+        -0.707107,
+        0.707107
+       ]
+      },
+      {
+       "at": [
+        0.04,
+        0.02,
+        -0.22
        ],
        "rx": 0.03,
        "ry": 0.008,
@@ -15046,6 +15418,12 @@
      "part": "member"
     },
     {
+     "id": "member-castor-front-wheel",
+     "of": "castor-front-wheel",
+     "member": "castor-front",
+     "part": "member"
+    },
+    {
      "id": "support-contact-castor-front",
      "kind": "box",
      "bone": "castor-front",
@@ -15073,6 +15451,12 @@
      "member": "castor-front",
      "part": "support",
      "anchor": "contact-castor-front"
+    },
+    {
+     "id": "member-castor-side-a-wheel",
+     "of": "castor-side-a-wheel",
+     "member": "castor-side-a",
+     "part": "member"
     },
     {
      "id": "support-contact-castor-side-a",
@@ -15104,6 +15488,12 @@
      "anchor": "contact-castor-side-a"
     },
     {
+     "id": "member-castor-side-b-wheel",
+     "of": "castor-side-b-wheel",
+     "member": "castor-side-b",
+     "part": "member"
+    },
+    {
      "id": "support-contact-castor-side-b",
      "kind": "box",
      "bone": "castor-side-b",
@@ -15133,6 +15523,12 @@
      "anchor": "contact-castor-side-b"
     },
     {
+     "id": "member-castor-back-a-wheel",
+     "of": "castor-back-a-wheel",
+     "member": "castor-back-a",
+     "part": "member"
+    },
+    {
      "id": "support-contact-castor-back-a",
      "kind": "box",
      "bone": "castor-back-a",
@@ -15160,6 +15556,12 @@
      "member": "castor-back-a",
      "part": "support",
      "anchor": "contact-castor-back-a"
+    },
+    {
+     "id": "member-castor-back-b-wheel",
+     "of": "castor-back-b-wheel",
+     "member": "castor-back-b",
+     "part": "member"
     },
     {
      "id": "support-contact-castor-back-b",
@@ -15309,8 +15711,12 @@
      "de": "Neu für 30 mm modelliert: Arme laufen bis zu gerundeten Spitzen durch, das Stiftauge reicht als Rollenkopf hinab, jede Rolle ist ein Radkörper, Nabe voll, Standrohr und Kolben schlicht, Mechanik eine Wanne, Sitzschale und Polster eine Masse, Armlehnen Stütze und Polster, Schale und Polster der Lehne eine gekrümmte Masse mit zwei Seitenbändern; Spannrad, Gelenk, Hebel und Abdeckung sind aufgegangen. Der 10 mm starke Träger behält seine wahre Dicke, weil die Lehne ohne ihn schwebte."
     },
     {
-     "en": "Thermal: references by material; the pad of the backrest, merged into the shell in the body, is its own thin surface on the shell so the fabric region keeps its area. Structure: hub, arms and bosses, the two tubes, mechanism and a seat pan of its own, armrest posts, carrier and shell; supports and masses, no joint solids at this scale.",
-     "de": "Thermik: Verweise nach Material; das Lehnenpolster, im Körper in der Schale aufgegangen, ist eine eigene dünne Fläche auf der Schale, damit die Stoffregion ihre Fläche behält. Tragwerk: Nabe, Arme und Augen, die zwei Rohre, Mechanik und eine eigene Sitzschale, Armlehnenstützen, Träger und Schale; Auflager und Massen, keine Gelenkkörper in diesem Maßstab."
+     "en": "Thermal: references by material; the pad of the backrest, merged into the shell in the body, is its own thin surface on the shell so the fabric region keeps its area. Structure: hub, arms and bosses, the wheel body of every castor under its boss, the two tubes, mechanism and a seat pan of its own, armrest posts, carrier and shell; supports and masses, no joint solids at this scale.",
+     "de": "Thermik: Verweise nach Material; das Lehnenpolster, im Körper in der Schale aufgegangen, ist eine eigene dünne Fläche auf der Schale, damit die Stoffregion ihre Fläche behält. Tragwerk: Nabe, Arme und Augen, der Radkörper jeder Rolle unter seinem Auge, die zwei Rohre, Mechanik und eine eigene Sitzschale, Armlehnenstützen, Träger und Schale; Auflager und Massen, keine Gelenkkörper in diesem Maßstab."
+    },
+    {
+     "en": "Rig: the one wheel body of every castor hangs on the wheel bone under the swivel stem bone and trails 20 mm behind the stem, so it swings about the boss when the castor swivels. The armrest straps reach under the seat mass and touch it.",
+     "de": "Rig: Der eine Radkörper jeder Rolle hängt am Rad-Knochen unter dem Schwenkzapfen-Knochen und läuft 20 mm hinter dem Zapfen nach, sodass er beim Schwenken um das Auge wandert. Die Armlehnenlaschen reichen unter die Sitzmasse und berühren sie."
     }
    ]
   },
@@ -16136,7 +16542,7 @@
      "sections": [
       {
        "at": [
-        0.039,
+        0.0415,
         0.02,
         0.2
        ],
@@ -16300,7 +16706,7 @@
      "sections": [
       {
        "at": [
-        0.039,
+        0.0415,
         0.02,
         -0.2
        ],
@@ -17422,6 +17828,10 @@
     {
      "en": "Thermal: references by material plus the pad surface of the backrest. Structure: hub, arms, the column tubes, mechanism, seat pan, posts, carrier and back panel, one support per castor and four masses.",
      "de": "Thermik: Verweise nach Material und die Polsterfläche der Lehne. Tragwerk: Nabe, Arme, die Säulenrohre, Mechanik, Sitzschale, Stützen, Träger und Lehnenfläche, ein Auflager je Rolle und vier Massen."
+    },
+    {
+     "en": "Rig: the wheel body of every castor hangs on the wheel bone under the swivel stem bone, as at the finer scales; the armrest straps touch the seat mass.",
+     "de": "Rig: Der Radkörper jeder Rolle hängt am Rad-Knochen unter dem Schwenkzapfen-Knochen wie in den feineren Massstäben; die Armlehnenlaschen berühren die Sitzmasse."
     }
    ]
   }

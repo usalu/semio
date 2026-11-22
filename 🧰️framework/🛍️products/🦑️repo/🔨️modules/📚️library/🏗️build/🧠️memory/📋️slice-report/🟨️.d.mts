@@ -3,7 +3,7 @@ export const SLICE_REPORT_POLICY_V1:Readonly<{version:1;directory:string;name:st
 export function registerSliceReportSourceV1(name:string,read:()=>unknown):()=>void;
 export function readSliceReportSourceV1(name:string):unknown;
 export function readFinalSliceReportSourceV1(name:string):unknown;
-export function startSliceProgressV1(input:{emit:(event:{phase:string;done:number;total:number})=>void;read?:(name:string)=>unknown;final?:(name:string)=>unknown;milliseconds?:number}):()=>void;
+export function startSliceProgressV1(input:{emit:(event:{phase:string;done:number;total:number;step?:boolean})=>void;read?:(name:string)=>unknown;final?:(name:string)=>unknown;milliseconds?:number}):()=>void;
 export type SliceCollectionV1={name:string;entries:number;sample?:()=>unknown[];bytes?:number};
 export function describeCollectionV1(name:string,collection:unknown):SliceCollectionV1;
 export function registerSliceCollectionsV1(name:string,read:()=>SliceCollectionV1[]):()=>void;

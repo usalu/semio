@@ -7,6 +7,14 @@ use super::*;
 //#region ShellInput
 impl<'ctx> PanelsViewCtx<'ctx> {
     pub fn render_tree_drag_overlay_node(&self, overlay: &mut DrawList, input: &InputState<ActionDescriptor>, theme: &Theme) {
+        if !self.input.pointer_input_is_modal() {
+            let retained = input.hit_at(input.pointer_x, input.pointer_y).and_then(|hit| self.input.retained_hit_window(hit));
+            if let Some((window_id, body)) = retained {
+                if let Some(marker) = semio_renderer_wgpu_ui_engine::retained_ui_engine::retained_tree_row_reorder_marker(&window_id) {
+                    overlay.push_solid([body.x + marker.x, body.y + marker.y, marker.w, marker.h], theme.accent);
+                }
+            }
+        }
         let Some(drag) = &self.input.tree_drag else {
             return;
         };

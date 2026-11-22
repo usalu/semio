@@ -1,0 +1,56 @@
+{
+  "cases": [
+    {
+      "shape": "Story",
+      "xml": "<pkg:Story xmlns:pkg=\"http://ns.adobe.com/AdobeInDesign/idml/1.0/packaging\"><Story Self=\"retained\"/></pkg:Story>",
+      "identities": [
+        "retained"
+      ]
+    },
+    {
+      "shape": "Spread",
+      "xml": "<pkg:Spread xmlns:pkg=\"http://ns.adobe.com/AdobeInDesign/idml/1.0/packaging\"><Spread Self=\"retained\"/></pkg:Spread>",
+      "identities": [
+        "retained"
+      ]
+    },
+    {
+      "shape": "MasterSpread",
+      "xml": "<pkg:MasterSpread xmlns:pkg=\"http://ns.adobe.com/AdobeInDesign/idml/1.0/packaging\"><MasterSpread Self=\"retained\"/></pkg:MasterSpread>",
+      "identities": [
+        "retained"
+      ]
+    },
+    {
+      "shape": "Story",
+      "xml": "<Story Self=\"bare\"/>",
+      "identities": [
+        "bare"
+      ]
+    },
+    {
+      "shape": "Story",
+      "xml": "<pkg:Story xmlns:pkg=\"http://ns.adobe.com/AdobeInDesign/idml/1.0/packaging\"><Story/></pkg:Story>",
+      "error": "layout.idml.missing-identity"
+    },
+    {
+      "shape": "Spread",
+      "xml": "<pkg:Spread xmlns:pkg=\"http://ns.adobe.com/AdobeInDesign/idml/1.0/packaging\"><Other><Spread Self=\"nested\"/></Other></pkg:Spread>",
+      "identities": []
+    },
+    {
+      "shape": "Story",
+      "xml": "<pkg:Story xmlns:pkg=\"http://ns.adobe.com/AdobeInDesign/idml/1.0/packaging\" Self=\"wrapper\"><Story Self=\"child\"/></pkg:Story>",
+      "identities": [
+        "child"
+      ]
+    },
+    {
+      "shape": "Spread",
+      "xml": "<Spread xmlns=\"http://ns.adobe.com/AdobeInDesign/idml/1.0/packaging\"><Spread xmlns=\"\" Self=\"default-namespace-child\"/></Spread>",
+      "identities": [
+        "default-namespace-child"
+      ]
+    }
+  ]
+}

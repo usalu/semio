@@ -243,7 +243,7 @@ fn removing_a_child_frees_its_arena_slot() { let _arena = UiArenaFixture::new();
 
 //#region 🔖️CompositeExpansionTests
 fn select(id: &str, value: &str, items: Vec<(&str, &str)>) -> UiNode {
-    UiNode::Select(UiSelectNode {
+    UiNode::Select(UiSelectNode { appearance: Default::default(),
         id: id.into(),
         value: value.into(),
         items: items.into_iter().map(|(value, label)| UiSelectItem { value: value.into(), label: Label::data(label) }).collect(),

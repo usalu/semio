@@ -23,6 +23,8 @@ impl PluginArtifactChannel {
 
     /// 🧠️ Runs the declared router with caller freshness data and a fresh finite native operation source.
     pub(crate) async fn infer_real(&mut self, command: &InferCommand) -> Result<ArtifactInferenceResultV1, Fault> {
+        let activation = command.cancel.activation();
+        activation.enter(ActivationPhase::OpeningGuest)?;
         let declared = self
             .descriptor
             .contributions
@@ -72,7 +74,7 @@ impl PluginArtifactChannel {
         let caps=self.operation_caps();
         let requested=semio_plugin_host::GuestRelayOperationRequest{work_units:command.work_units,maximum_elapsed_microseconds:command.maximum_elapsed_milliseconds.saturating_mul(1000),retained:command.retained_policy};
         let request_bytes=semio_framework_pack_json::to_json_string(&request).into_bytes();
-        let cancel=command.cancel.0.clone();
+        let cancel=activation.cancel().clone();
         let drivers=move||caps.issue(requested,semio_framework_job::default_now_us,{let cancel=cancel.clone();Box::new(move||cancel.is_cancelled_now())});
         let actor = ::semio_framework_async::poll::resolve_ready(semio_framework_actor::ActorId::new(INFERENCE_ACTOR_ORDINAL, 0, 1, 0));
         let identity=semio_plugin_host::origin_registry::next_identity();
@@ -81,7 +83,10 @@ impl PluginArtifactChannel {
         self.drive_origin("inference origin registration",|cx|semio_plugin_host::origin_registry::register_step(identity,&runtime,&compiled,&mut origin,cx)).await?;
         let origin=origin.ok_or_else(||Self::not_wired("inference origin registration","settled without an origin"))?;
         let router=semio_plugin_host::ArtifactInferenceRouter::new();
-        let registered=router.register_plugin(&self.plugin_id,&self.descriptor.manifest.dependencies,semio_plugin_host::PluginRegistration{actor,origin},&roster_bytes).await.map_err(|error|Self::not_wired("inference route registration",error));
+        let registered = match activation.checkpoint() {
+            Ok(()) => router.register_plugin(&self.plugin_id, &self.descriptor.manifest.dependencies, semio_plugin_host::PluginRegistration { actor, origin }, &roster_bytes).await.map_err(|error| Self::not_wired("inference route registration", error)),
+            Err(fault) => Err(fault),
+        };
         let result=match registered{
             Ok(())=>router.infer(&request_bytes,&drivers).await.map_err(|error|Fault{code:"app.command.rejected".into(),message:format!("inference refused: {error}")}),
             Err(fault)=>Err(fault),

@@ -1,8 +1,10 @@
 //! 👆️ Wireframe of the next capability-sized placement.
 
 use semio_framework::DslValue;
-use semio_s_artifact_process_process3d_inferences::{capability_for_measure_kind, measure_for_capability};
-use semio_s_artifact_process_process3d_model::snapshot::{MeasureKind, Process3dSnapshot, ProcessMeasure, WorkingSolid};
+use semio_s_artifact_process_process3d_inferences::{capability_for_measure_kind, find_capability, measure_for_capability, stock_extent, validate_capability, validation_context_for_stock};
+use semio_s_artifact_process_process3d_model::snapshot::{Capability, MeasureKind, Process3dSnapshot, ProcessMeasure, WorkingSolid, WorkshopMachine};
+
+pub const PLACE_CAPABILITY_UTILITY: &str = "placeCapability";
 
 /// 🎯️ The utility ids participating in click placement and its preview.
 pub fn placement_kind(utility: &str) -> Option<MeasureKind> {
@@ -14,13 +16,43 @@ pub fn placement_kind(utility: &str) -> Option<MeasureKind> {
     }
 }
 
+/// 🎛️ A window utility with pointer-based placement.
+pub fn is_placement_utility(utility: &str) -> bool {
+    utility == PLACE_CAPABILITY_UTILITY || placement_kind(utility).is_some()
+}
+
+/// 🔍️ Resolves a chosen capability from authored workshop machines and the current stock.
+fn available_workshop_capability<'a>(snapshot: &'a Process3dSnapshot, machine_id: &str, capability_id: &str) -> Option<(&'a WorkshopMachine, &'a Capability)> {
+    let (machine, capability) = find_capability(&snapshot.workshop, machine_id, capability_id)?;
+    let stock = validation_context_for_stock(&snapshot.stock_payload)?;
+    validate_capability(capability, &stock).is_empty().then_some((machine, capability))
+}
+
+/// 🧰️ Builds the same positioned measure for the preview and the committed step.
+pub fn resolve_placement<T>(snapshot: &Process3dSnapshot, utility: &str, chosen: Option<(&str, &str)>, position: [f64; 3], use_measure: impl FnOnce(&str, &Capability, ProcessMeasure) -> T) -> Option<T> {
+    if utility == PLACE_CAPABILITY_UTILITY {
+        let (machine, capability) = chosen.and_then(|(machine, capability)| available_workshop_capability(snapshot, machine, capability))?;
+        let measure = measure_for_capability(capability, Some(position));
+        let dimensions = match &measure {
+            ProcessMeasure::Cut { tool, .. } | ProcessMeasure::Attach { component: tool, .. } => stock_extent(tool)?,
+            ProcessMeasure::Drill { radius, depth, .. } => [*radius, *radius, *depth],
+        };
+        dimensions.into_iter().all(|dimension| dimension.is_finite() && dimension > 0.0)
+            .then(|| use_measure(&machine.id, capability, measure))
+    } else {
+        let (machine, capability) = capability_for_measure_kind(&snapshot.workshop, placement_kind(utility)?);
+        Some(use_measure(&machine.id, &capability, measure_for_capability(&capability, Some(position))))
+    }
+}
+
 /// 📐️ The preview uses the upcoming measure's own dimensions without evaluating a Boolean.
-pub fn preview_json(snapshot: &Process3dSnapshot, utility: &str, position: [f64; 3]) -> Option<String> {
+pub fn preview_json(snapshot: &Process3dSnapshot, utility: &str, chosen: Option<(&str, &str)>, position: [f64; 3]) -> Option<String> {
     if !position.into_iter().all(f64::is_finite) || matches!(snapshot.stock_payload.solid, WorkingSolid::ImportedMesh { .. }) {
         return None;
     }
-    let (_, capability) = capability_for_measure_kind(&snapshot.workshop, placement_kind(utility)?);
-    let solid = match measure_for_capability(&capability, Some(position)) {
+    let measure = resolve_placement(snapshot, utility, chosen, position, |_, _, measure| measure)?;
+    let role = measure.kind_slug();
+    let solid = match measure {
         ProcessMeasure::Cut { tool, .. } => tool,
         ProcessMeasure::Attach { component, .. } => component,
         ProcessMeasure::Drill { radius, depth, .. } => WorkingSolid::Cylinder { radius, height: depth },
@@ -34,7 +66,7 @@ pub fn preview_json(snapshot: &Process3dSnapshot, utility: &str, position: [f64;
             let point = |value: [f64; 3]| DslValue::Array(value.into_iter().map(DslValue::float).collect());
             items.push(DslValue::object([
                 ("kind".into(), DslValue::String("segment".into())),
-                ("role".into(), DslValue::String(utility.into())),
+                ("role".into(), DslValue::String(role.into())),
                 ("from".into(), point(from)),
                 ("to".into(), point(to)),
             ]));

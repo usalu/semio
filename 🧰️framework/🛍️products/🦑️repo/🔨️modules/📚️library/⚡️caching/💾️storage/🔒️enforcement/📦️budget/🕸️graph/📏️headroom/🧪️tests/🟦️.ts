@@ -20,6 +20,8 @@ import {withRepositoryTestArtifactsV1,repositoryTestArtifactRootV1} from "@semio
 import schema from "../🧬️schema/🔣️.json";
 import fixture from "./🔣️.json";
 import{privateRepositoryWorkspaceV1}from"../../../../../../../🧪️testing/🧫️private-repository/🟦️.ts";
+import {declareLibraryBuildTestEnvelopeV1} from "../../../../../../../🧪️testing/🪪️native-birth/🟦️.ts";
+declareLibraryBuildTestEnvelopeV1({suite:"storage-graph-processes"});
 const repository=await privateRepositoryWorkspaceV1();
 const sha=(bytes:Uint8Array)=>createHash("sha256").update(bytes).digest("hex");
 

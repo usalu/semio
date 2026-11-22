@@ -3917,18 +3917,12 @@
         "namedLayouts": [],
         "defaultLayout": {
           "root": {
-            "kind": "row",
+            "kind": "stack",
             "children": [
               {
-                "kind": "stack",
-                "size": 100.0,
-                "children": [
-                  {
-                    "kind": "window",
-                    "windowKindId": "block2d-board",
-                    "title": "Node Kind"
-                  }
-                ]
+                "kind": "window",
+                "windowKindId": "block2d-board",
+                "title": "Node Kind"
               }
             ]
           }
@@ -4849,18 +4843,12 @@
         "namedLayouts": [],
         "defaultLayout": {
           "root": {
-            "kind": "row",
+            "kind": "stack",
             "children": [
               {
-                "kind": "stack",
-                "size": 100.0,
-                "children": [
-                  {
-                    "kind": "window",
-                    "windowKindId": "block2d-view-board",
-                    "title": "Node Kind"
-                  }
-                ]
+                "kind": "window",
+                "windowKindId": "block2d-view-board",
+                "title": "Node Kind"
               }
             ]
           }
@@ -9597,18 +9585,12 @@
         "namedLayouts": [],
         "defaultLayout": {
           "root": {
-            "kind": "row",
+            "kind": "stack",
             "children": [
               {
-                "kind": "stack",
-                "size": 100.0,
-                "children": [
-                  {
-                    "kind": "window",
-                    "windowKindId": "block3d-world",
-                    "title": "Object Kind"
-                  }
-                ]
+                "kind": "window",
+                "windowKindId": "block3d-world",
+                "title": "Object Kind"
               }
             ]
           }
@@ -15295,11 +15277,12 @@
         "namedLayouts": [],
         "defaultLayout": {
           "root": {
-            "kind": "row",
+            "kind": "split",
+            "axis": "horizontal",
             "children": [
               {
                 "kind": "stack",
-                "size": 50.0,
+                "size": 0.5,
                 "children": [
                   {
                     "kind": "window",
@@ -15310,7 +15293,7 @@
               },
               {
                 "kind": "stack",
-                "size": 50.0,
+                "size": 0.5,
                 "children": [
                   {
                     "kind": "window",

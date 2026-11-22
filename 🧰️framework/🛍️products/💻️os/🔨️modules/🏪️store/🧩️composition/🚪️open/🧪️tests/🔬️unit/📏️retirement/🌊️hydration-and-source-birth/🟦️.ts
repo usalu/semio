@@ -1,4 +1,5 @@
 import { test, expect } from "bun:test";
+import { Database } from "bun:sqlite";
 import { Buffer } from "node:buffer";
 import fixture from "../../../../📏️retirement/🧪️tests/🧫️fixtures/🔣️.json" with { type: "json" };
 import { applyPatch } from "fast-json-patch";
@@ -370,34 +371,45 @@ test("hydration target decoder preserves original supplied physical authority", 
 });
 
 test("history fold terminal output retains actual physical cleanup receipt", async () => {
+  const fixture = await Bun.file(new URL("../../../../../../../../../../🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🧪️tests/🧫️fixtures/🔣️.json", import.meta.url)).json();
+  const law = fixture.terminalReceipts;
   const oracle = new Ajv({ strict: false });
   const valid = oracle.compile({ ...orderedRetirement, $ref: "#/$defs/Progress" });
-  for (const outcome of ["Ready", "Rejected"]) {
-    const backing = Buffer.allocUnsafeSlow(73);
-    const result = applyPatch({ outcome, progress: { copiedItems: 1, copiedBytes: 0, retainedCapacityBytes: 0, releasedBytes: 0, complete: false } }, [{ op: "replace", path: "/progress/releasedBytes", value: backing.buffer.byteLength }, { op: "replace", path: "/progress/complete", value: outcome === "Ready" }], true).newDocument;
-    expect(valid(result.progress)).toBe(true);
-    expect(result.progress.releasedBytes).toBe(73);
-    expect(result.outcome).toBe(outcome);
+  using database = new Database(":memory:");
+  const receipts = database.query(`
+    WITH backing(outcome, control, rejection) AS (VALUES (?1, ?2, ?3))
+    SELECT CASE WHEN outcome = 'Ready' THEN 'Pending' ELSE outcome END AS turn,
+      control AS releasedBytes, CASE WHEN outcome = 'Rejected' THEN rejection ELSE 0 END AS retainedRejectionBytes
+    FROM backing
+    UNION ALL
+    SELECT outcome, 0, 0 FROM backing WHERE outcome = 'Ready'
+  `);
+  const close = database.query(`SELECT CASE WHEN ?2 >= ?1 THEN ?1 ELSE 0 END AS releasedBytes`);
+  const controlBytes = Buffer.allocUnsafeSlow(law.controlBackingBytes).buffer.byteLength;
+  const rejectionBytes = Buffer.allocUnsafeSlow(law.rejectionBackingBytes).buffer.byteLength;
+  for (const row of law.cases) {
+    const released = { turn: row.controlReleaseTurn, releasedBytes: controlBytes, retainedRejectionBytes: row.retainedRejectionBytes };
+    const turns = receipts.all(row.outcome, controlBytes, rejectionBytes) as typeof released[];
+    expect(turns).toEqual(row.outcome === "Ready" ? [released, { ...released, turn: "Ready", releasedBytes: 0 }] : [released]);
+    for (const turn of turns) {
+      expect(valid({ copiedItems: 1, copiedBytes: 0, retainedCapacityBytes: 0, releasedBytes: turn.releasedBytes, complete: turn.turn === "Ready" })).toBe(true);
+    }
+    if (row.retainedRejectionBytes > 0) {
+      expect(close.get(row.retainedRejectionBytes, rejectionBytes - 1)).toEqual({ releasedBytes: 0 });
+      expect(close.get(row.retainedRejectionBytes, rejectionBytes)).toEqual({ releasedBytes: rejectionBytes });
+    }
   }
-  const source = readModuleTreeSource(new URL("../../../../../../../../../../🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🦀️.rs",import.meta.url));
-  const start = source.indexOf("pub enum HistoryFoldJobStep");
-  const declaration = source.slice(start, source.indexOf("pub struct HistoryFoldJob", start));
-  expect(declaration.includes("Ready { value: T, progress: RetainedCloneProgress }")).toBe(true);
-  expect(declaration.includes("Rejected { progress: RetainedCloneProgress }")).toBe(true);
-  expect(source.includes("HistoryFoldJobStep::Ready { value, progress }")).toBe(true);
-  expect(source.includes("HistoryFoldJobStep::Rejected { progress }")).toBe(true);
-  expect(source.includes("pub fn rejection(&self) -> Option<&semio_framework_replication_error::ProtocolError>")).toBe(true);
-  expect(source.includes("pub fn take_rejection(&mut self) -> Option<semio_framework_replication_error::ProtocolError>")).toBe(true);
-  const closed = source.slice(source.indexOf("fn cleanup_one("), source.indexOf("pub fn finish_cold("));
-  expect(source).not.toContain("fn error_demand(");
-  expect(source).toContain("semio_framework_replication_error::protocol_cause_retirement_demand(error)");
-  expect(closed).toContain("semio_framework_replication_error::close_protocol_cause_one(error, grant)");
-  expect(closed).toContain("drop(self.result.take())");
-  for (const currency of ["copy_bytes", "capacity_bytes", "release_bytes", "depth"]) expect(source).toContain("demand." + currency);
-  const original = Buffer.allocUnsafeSlow(37);
-  const retained = applyPatch({ output: "Rejected", originalCapacity: original.byteLength, released: 0 }, [], true).newDocument;
-  expect(retained.originalCapacity).toBe(original.buffer.byteLength);
-  expect(retained.released).toBe(0);
+});
+
+test("history fold original Work quote funds the body and reply handoff", async () => {
+  const fixture = await Bun.file(new URL("../../../../../../../../../../🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🧪️tests/🧫️fixtures/🔣️.json", import.meta.url)).json();
+  const { bodyLimit, replyHandoff, cases } = fixture.originalStepWork;
+  using database = new Database(":memory:");
+  const quote = database.query(`
+    WITH quote(admitted) AS (VALUES (?1 >= ?2 + ?3))
+    SELECT ?1 AS available, admitted AS bodyPerformed, admitted * (1 + ?3) AS nativePerformed FROM quote
+  `);
+  for (const row of cases) expect(quote.get(row.available, bodyLimit, replyHandoff)).toEqual(row);
 });
 
 test("original document Store disposer forwards full grants and terminal receipt", async () => {

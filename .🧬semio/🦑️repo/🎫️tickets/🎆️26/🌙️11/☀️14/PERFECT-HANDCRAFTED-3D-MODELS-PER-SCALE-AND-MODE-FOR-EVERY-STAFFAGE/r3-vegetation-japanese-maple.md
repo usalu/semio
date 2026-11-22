@@ -199,3 +199,7 @@ All images are under `🗑️generated/r3-sheet/vegetation/` and `🗑️generat
 5. **Drawing details.** The 1:200 drawing keeps the original line weights, so some foliage shapes are heavier. In the front views the end-on tier limbs show as small discs where a gap reveals them; that is true to the view.
 6. **Not opened.** Thermal at 1:100 and 1:200, and structure at 1:200 and 1:500, were rendered or checked but not opened. The check and the containment probe cover them.
 7. **Debug lines.** The scripts print `[DEBUG]` lines for outlet burial and for tips that cannot be seated. At the final state the only ones are two hidden 1:500 limbs whose tips are pulled into the coarse tier masses.
+
+## November 21 terminal sprays
+
+The installed tree uses 107 individual branch pads on nine animated crown bones. Its opposite palmate leaves have seven lobes and independent petioles. The fine woody terminals keep the proximal and distal segments of their actual bend. The printed outlines follow the crowns in every view. All four scales passed 13 geometry rules, the full document and print checks passed, and twelve independently reopened scenes totalled 7,726,424 bytes. The inspected default view retains a faceted surface to the foliage pads.

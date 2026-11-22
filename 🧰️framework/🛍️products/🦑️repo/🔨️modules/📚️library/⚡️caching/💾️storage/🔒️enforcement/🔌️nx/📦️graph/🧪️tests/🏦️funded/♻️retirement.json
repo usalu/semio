@@ -60,8 +60,8 @@
         "allocation": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
         "parentIdentity": "original-parent-binding",
         "directory": "/workspace/nx/shard/native",
-        "filesystemBytes": 66060288,
-        "maximumPhysicalBytes": 67108864,
+        "filesystemBytes": 166723584,
+        "maximumPhysicalBytes": 167772160,
         "policySha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
       },
       "stage": "declared",
@@ -80,8 +80,8 @@
         "allocation": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
         "parentIdentity": "original-parent-binding",
         "directory": "/workspace/nx/shard/native",
-        "filesystemBytes": 66060288,
-        "maximumPhysicalBytes": 67108864,
+        "filesystemBytes": 166723584,
+        "maximumPhysicalBytes": 167772160,
         "policySha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
       },
       "stage": "directory",
@@ -104,8 +104,8 @@
         "allocation": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
         "parentIdentity": "original-parent-binding",
         "directory": "/workspace/nx/shard/native",
-        "filesystemBytes": 66060288,
-        "maximumPhysicalBytes": 67108864,
+        "filesystemBytes": 166723584,
+        "maximumPhysicalBytes": 167772160,
         "policySha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
       },
       "stage": "root",

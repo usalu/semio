@@ -1,0 +1,4 @@
+export interface WithheldLedgerEntryV1{readonly fragment:string;readonly attempts:number;readonly at:number}
+export function withheldRevalidationV1(input:{readonly entry?:WithheldLedgerEntryV1;readonly fragment:string;readonly now:number}):{readonly revalidate:boolean;readonly entry:WithheldLedgerEntryV1};
+export function withheldRevalidationTextV1(owner:string,entry:WithheldLedgerEntryV1,previousAt:number):{readonly en:string;readonly de:string};
+export function revalidatedWithheldOwnersV1(owners:Readonly<Record<string,{readonly kind:string;readonly tag?:string;readonly config?:string;readonly fragment:string}>>,port:{readonly ledger:{read():Promise<unknown>;write(book:Record<string,WithheldLedgerEntryV1>):Promise<unknown>};readonly now:()=>number;readonly include?:(name:string)=>boolean;readonly say?:(text:{readonly en:string;readonly de:string})=>void}):Promise<string[]>;

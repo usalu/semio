@@ -521,4 +521,51 @@ pub struct WorldEnvironmentRecord {
 }
 //#endregion Environment
 
+//#region PointCloud
+/// ☁️ Total decoded point sprites one scene retains across all its layers (a 10^6-point cloud fits the prepared 64 MiB draw budget, a hostile payload does not).
+pub const WORLD_POINT_CLOUD_VERTEX_CAP: usize = 1_048_576;
+
+/// ☁️ One `pointsJson` layer as React's `WorldPointCloudLayer` reads it: base64 little-endian `f32` xyz, optional base64 `u8` rgb, `size` and `sizeAttenuation`.
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorldPointCloudRecord {
+    pub positions_b64: String,
+    #[serde(default)]
+    pub colors_b64: Option<String>,
+    pub size: f32,
+    pub size_attenuation: bool,
+}
+
+impl WorldPointCloudRecord {
+    /// ☁️ Decodes the layer into a draw; colors are `u8 / 255` and default to white (three's `PointsMaterial` colour) when absent or short, trailing partial triples are dropped.
+    pub fn point_draw(&self, budget: usize) -> Option<ui_scene::math::PointDraw3d> {
+        let positions = base64_codec::base64_standard_decode(self.positions_b64.as_bytes()).ok()?;
+        let colors = self.colors_b64.as_deref().and_then(|text| base64_codec::base64_standard_decode(text.as_bytes()).ok()).unwrap_or_default();
+        let count = (positions.len() / 12).min(budget);
+        let colored = colors.len() >= count * 3;
+        let vertices = (0..count)
+            .map(|index| {
+                let at = |axis: usize| f32::from_le_bytes([positions[index * 12 + axis * 4], positions[index * 12 + axis * 4 + 1], positions[index * 12 + axis * 4 + 2], positions[index * 12 + axis * 4 + 3]]);
+                let channel = |axis: usize| if colored { f32::from(colors[index * 3 + axis]) / 255.0 } else { 1.0 };
+                ui_scene::math::PointVertex3d { position: [at(0), at(1), at(2)], color: [channel(0), channel(1), channel(2), 1.0] }
+            })
+            .collect();
+        Some(ui_scene::math::PointDraw3d { vertices, size: self.size, size_attenuation: self.size_attenuation })
+    }
+}
+
+/// ☁️ Decodes a whole `pointsJson` lane; a malformed lane or layer paints nothing, like React's `parseJsonArray` fallback.
+pub fn world_point_cloud_draws(json: Option<&str>) -> Vec<ui_scene::math::PointDraw3d> {
+    let records: Vec<WorldPointCloudRecord> = json.and_then(|json| serde_json::from_str(json).ok()).unwrap_or_default();
+    let mut budget = WORLD_POINT_CLOUD_VERTEX_CAP;
+    let mut draws = Vec::new();
+    for record in &records {
+        let Some(draw) = record.point_draw(budget) else { continue };
+        budget -= draw.vertices.len();
+        draws.push(draw);
+    }
+    draws
+}
+//#endregion PointCloud
+
 //#endregion SceneRecords

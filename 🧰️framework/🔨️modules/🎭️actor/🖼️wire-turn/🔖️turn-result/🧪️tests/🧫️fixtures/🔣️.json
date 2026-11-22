@@ -1,0 +1,74 @@
+{
+  "cases": [
+    {
+      "name": "continues the same owner across two exhausted batches",
+      "budget": 2,
+      "closeAfter": null,
+      "turns": [
+        "more-work",
+        "more-work",
+        "more-work",
+        "more-work",
+        "idle"
+      ],
+      "nextWake": 31,
+      "expected": {
+        "polls": 5,
+        "stopped": "idle",
+        "nextWake": 31,
+        "yields": 4
+      }
+    },
+    {
+      "name": "retires between batches without another actor turn",
+      "budget": 2,
+      "closeAfter": 2,
+      "turns": [
+        "more-work",
+        "more-work",
+        "more-work",
+        "idle"
+      ],
+      "nextWake": null,
+      "expected": {
+        "polls": 2,
+        "stopped": "closed",
+        "nextWake": null,
+        "yields": 2
+      }
+    },
+    {
+      "name": "stops at the first idle result with no wake",
+      "budget": 3,
+      "closeAfter": null,
+      "turns": [
+        "more-work",
+        "idle",
+        "more-work"
+      ],
+      "nextWake": null,
+      "expected": {
+        "polls": 2,
+        "stopped": "idle",
+        "nextWake": null,
+        "yields": 1
+      }
+    },
+    {
+      "name": "returns immediately with zero admitted polls",
+      "budget": 0,
+      "closeAfter": null,
+      "turns": [
+        "more-work",
+        "idle"
+      ],
+      "nextWake": null,
+      "expected": {
+        "polls": 0,
+        "stopped": "budget",
+        "nextWake": null,
+        "yields": 0
+      }
+    }
+  ]
+}

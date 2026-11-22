@@ -32,6 +32,7 @@ semio-renderer-wgpu-program-bridge = { path = "../../../🪢️program-bridge/�
 semio-renderer-wgpu-scene-canvas2d = { path = "../../../🎨️scene-canvas2d/📦️packages/🦀️rust" }
 semio-renderer-wgpu-scene-state = { path = "../../../🎭️scene-state/📦️packages/🦀️rust", features = ["testkit"] }
 semio-renderer-wgpu-shell-actions = { path = "../../../🔀️shell-actions/📦️packages/🦀️rust" }
+semio-renderer-wgpu-shell-frame-pumps = { path = "../../../🚰️shell-frame-pumps/📦️packages/🦀️rust" }
 semio-renderer-wgpu-shell-async = { path = "../../../⏳️shell-async/📦️packages/🦀️rust", features = ["testkit"] }
 semio-renderer-wgpu-shell-chrome-state = { path = "../../../🎚️shell-chrome-state/📦️packages/🦀️rust", features = ["testkit"] }
 semio-renderer-wgpu-shell-commands = { path = "../../../🎹️shell-commands/📦️packages/🦀️rust" }

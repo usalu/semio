@@ -3805,6 +3805,124 @@
       "min": 0.0,
       "max": 2000.0,
       "example": 105.0
+    },
+    {
+      "key": "fatigue_method",
+      "scope": "C93-32",
+      "en": "Fatigue assessment method",
+      "de": "Verfahren für den Ermüdungsnachweis",
+      "confidence": "high",
+      "example": "damageTolerant",
+      "kind": "choice",
+      "choices": [
+        {
+          "value": "unknown",
+          "en": "Undecided",
+          "de": "Nicht festgelegt"
+        },
+        {
+          "value": "damageTolerant",
+          "en": "Damage-tolerant method",
+          "de": "Schadenstolerantes Verfahren"
+        },
+        {
+          "value": "safeLife",
+          "en": "Safe-life method",
+          "de": "Sichere Lebensdauer"
+        }
+      ]
+    },
+    {
+      "key": "fatigue_rapid_failure",
+      "scope": "C93-32",
+      "en": "Rapid structural failure from local cracking",
+      "de": "Rasches Tragwerksversagen bei lokaler Rissbildung",
+      "confidence": "high",
+      "example": "no",
+      "kind": "choice",
+      "choices": [
+        {
+          "value": "unknown",
+          "en": "Unassessed",
+          "de": "Nicht beurteilt"
+        },
+        {
+          "value": "yes",
+          "en": "Possible",
+          "de": "Möglich"
+        },
+        {
+          "value": "no",
+          "en": "Ruled out by the assessment",
+          "de": "Nach Bewertung ausgeschlossen"
+        }
+      ]
+    },
+    {
+      "key": "fatigue_lifetime_maintenance",
+      "scope": "C93-32",
+      "en": "Prescribed inspection and maintenance throughout the design life",
+      "de": "Vorgeschriebene Inspektion und Instandhaltung über die gesamte Nutzungsdauer",
+      "confidence": "high",
+      "example": "yes",
+      "kind": "choice",
+      "choices": [
+        {
+          "value": "unknown",
+          "en": "Unconfirmed",
+          "de": "Unbestätigt"
+        },
+        {
+          "value": "yes",
+          "en": "Prescribed and documented",
+          "de": "Vorgeschrieben und dokumentiert"
+        },
+        {
+          "value": "no",
+          "en": "Programme absent or incomplete",
+          "de": "Programm fehlt oder ist unvollständig"
+        }
+      ]
+    },
+    {
+      "key": "fatigue_tolerance_basis",
+      "scope": "C93-32",
+      "en": "Evidence supporting damage tolerance",
+      "de": "Begründung der Schadenstoleranz",
+      "confidence": "high",
+      "example": "redistribution",
+      "kind": "choice",
+      "choices": [
+        {
+          "value": "unknown",
+          "en": "Unconfirmed",
+          "de": "Unbestätigt"
+        },
+        {
+          "value": "redistribution",
+          "en": "Load redistribution demonstrated",
+          "de": "Lastumlagerung nachgewiesen"
+        },
+        {
+          "value": "steel",
+          "en": "EN 1993-1-10 material selection assessed and regular maintenance prescribed",
+          "de": "Werkstoffwahl nach EN 1993-1-10 beurteilt und regelmäßige Instandhaltung vorgesehen"
+        },
+        {
+          "value": "none",
+          "en": "Neither basis established",
+          "de": "Keine der Grundlagen nachgewiesen"
+        }
+      ]
+    },
+    {
+      "key": "fatigue_maintenance_record",
+      "scope": "C93-32",
+      "en": "Inspection and maintenance programme reference",
+      "de": "Referenz des Inspektions- und Instandhaltungsprogramms",
+      "confidence": "high",
+      "example": "Inspection plan IP-01, schedule revision C",
+      "kind": "text"
     }
   ]
 }

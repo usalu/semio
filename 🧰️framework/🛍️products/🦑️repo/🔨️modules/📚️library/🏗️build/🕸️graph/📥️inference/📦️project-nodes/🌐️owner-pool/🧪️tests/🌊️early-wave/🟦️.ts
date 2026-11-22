@@ -30,7 +30,7 @@ async function world(){
 }
 const unitsOf=(count:number,burn=400):OwnerPoolUnitV1[]=>Array.from({length:count},(_all,index)=>({name:`owner-${String(index).padStart(4,"0")}`,kind:"k",expectedMilliseconds:burn,json:{name:`owner-${index}`}}));
 const manifestOf=(units:readonly OwnerPoolUnitV1[],tag:string,revision:string,config:object):OwnerPoolManifestV1=>{
- const partial={version:1 as const,revision,identity:"identity-"+tag,globals:{projectAuthority:"a",registryDigest:"r",commandRevision:"c",late:false},publisher:"p:"+tag};
+ const partial={version:1 as const,revision,identity:"identity-"+tag,globals:{registryDigest:"r",commandRevision:"c",late:false},publisher:"p:"+tag};
  return{head:{...partial,id:ownerPoolIdV1(partial,units),createdMs:Date.now()},session:Buffer.from(JSON.stringify(config)),units};
 };
 
@@ -46,7 +46,7 @@ test("a reader publishes its wave when the unit list is known, before any owner 
   const root=temp("pub"),published:OwnerPoolManifestV1[]=[],clock={at:1000000};
   let open=OwnerPoolUnitOf(500);
   function OwnerPoolUnitOf(count:number){return unitsOf(count);}
-  const publisher=createOwnerPoolPublisherV1({workspaceRoot:root,environment:{...process.env,...environment},identity:"id",globals:{projectAuthority:"a",registryDigest:"r",commandRevision:"c",late:false},session:()=>({tag:"s"}),units:()=>open,now:()=>clock.at,publish:async input=>{published.push(input.manifest);return true;}});
+  const publisher=createOwnerPoolPublisherV1({workspaceRoot:root,environment:{...process.env,...environment},identity:"id",globals:{registryDigest:"r",commandRevision:"c",late:false},session:()=>({tag:"s"}),units:()=>open,now:()=>clock.at,publish:async input=>{published.push(input.manifest);return true;}});
   publisher.announce(3);await pause(30);
   expect(published.length,"below the threshold nothing is announced").toBe(0);
   publisher.announce(500);await pause(50);
@@ -93,7 +93,7 @@ test("a refused fleet offer records the bounded cache failure without response t
   for(const row of fixture.publishRefusals){
    const said:string[]=[],privateText="Private response body must stay local";
    const publisher=createOwnerPoolPublisherV1({
-    workspaceRoot:root,environment,identity:row.stage,globals:{projectAuthority:"a",registryDigest:"r",commandRevision:"c",late:false},
+    workspaceRoot:root,environment,identity:row.stage,globals:{registryDigest:"r",commandRevision:"c",late:false},
     session:()=>({}),units:()=>unitsOf(1),threshold:1,say:line=>said.push(line),
     publish:input=>publishOwnerPoolV1({...input,client:{...input.client,async putResult(key,bytes,slot,expected){
      if((expected===undefined)===(row.stage==="manifest"))return {stored:false,refusal:graphRefusalOfV1(row.status,privateText)};
@@ -121,7 +121,7 @@ test("a transient first offer is retried during discovery after one cooldown",as
   for(const status of rule.statuses){
    const clock={at:0};let offers=0;
    const publisher=createOwnerPoolPublisherV1({
-    workspaceRoot:root,environment,identity:"early-"+status,globals:{projectAuthority:"a",registryDigest:"r",commandRevision:"c",late:false},
+    workspaceRoot:root,environment,identity:"early-"+status,globals:{registryDigest:"r",commandRevision:"c",late:false},
     session:()=>({}),units:()=>unitsOf(8),threshold:1,now:()=>clock.at,
     publish:input=>{
      if(++offers>1)return Promise.resolve(true);
@@ -180,7 +180,7 @@ test("manifest timeout log identifies the required write and its effective deadl
    }
    return new Response(null,{status:method==="PUT"?200:404});
   }) as typeof fetch});
-  const units=unitsOf(1),publisher=createOwnerPoolPublisherV1({workspaceRoot:directory,environment,identity:row.id,globals:{projectAuthority:"a",registryDigest:"b",commandRevision:"c",late:false},session:()=>({fixture:true}),units:()=>units,say:line=>lines.push(line),publish:input=>publishOwnerPoolV1({...input,client})});
+  const units=unitsOf(1),publisher=createOwnerPoolPublisherV1({workspaceRoot:directory,environment,identity:row.id,globals:{registryDigest:"b",commandRevision:"c",late:false},session:()=>({fixture:true}),units:()=>units,say:line=>lines.push(line),publish:input=>publishOwnerPoolV1({...input,client})});
   expect(await publisher.ask(units,true)).toBe(row.requiredTimeout===null);
   const refusals=lines.filter(line=>line.startsWith(prefix));
   if(row.requiredTimeout===null){expect(headTimedOut).toBe(true);expect(refusals).toEqual([]);continue;}

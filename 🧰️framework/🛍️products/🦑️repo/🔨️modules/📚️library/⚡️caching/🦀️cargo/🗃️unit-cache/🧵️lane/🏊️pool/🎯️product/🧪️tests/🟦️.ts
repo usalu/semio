@@ -73,3 +73,12 @@ test("ordinary acquisition cannot repurpose product paths and idle product bytes
  }finally{rmSync(root,{recursive:true,force:true});}
 });
 
+
+test("a product namespace created by a sibling writer before its receipt is completed under the lane claim",async()=>{
+ const root=scratch(),signal=new AbortController().signal;
+ try{
+  const first=await acquireProductLaneV1(root,request(key),{signal}),receipt=join(first.paths.base,"product.json"),before=readFileSync(receipt,"utf8");first.release();
+  rmSync(receipt);mkdirSync(join(first.paths.base,"semio-digest-memo"),{recursive:true});
+  const recovered=await acquireProductLaneV1(root,request(key),{signal});expect(recovered.paths).toEqual(first.paths);expect(readFileSync(receipt,"utf8")).toBe(before);expect(existsSync(join(first.paths.base,"semio-digest-memo"))).toBe(true);recovered.release();
+ }finally{rmSync(root,{recursive:true,force:true});}
+});

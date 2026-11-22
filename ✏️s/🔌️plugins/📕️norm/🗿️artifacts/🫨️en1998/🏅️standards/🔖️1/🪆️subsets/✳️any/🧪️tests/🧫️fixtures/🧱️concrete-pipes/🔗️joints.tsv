@@ -1,0 +1,10 @@
+id	basis	pipe_joint_displacement	pipe_joint_rotation	pipe_joint_rotation_limit	results
+opening	confirmed	0.008	0.02	0.03	1
+closing	confirmed	-0.008	0.02	0.03	1
+exact	confirmed	0.008	0.03	0.03	1
+over	confirmed	0.008	0.031	0.03	0
+unconfirmed	unconfirmed	0.008	0.02	0.03	U
+no-axial-evidence	confirmed		0.02	0.03	U
+zero-capacity	confirmed	0.008	0.02	0	U
+negative-demand	confirmed	0.008	-0.02	0.03	U
+nonfinite	confirmed	inf	0.02	0.03	U

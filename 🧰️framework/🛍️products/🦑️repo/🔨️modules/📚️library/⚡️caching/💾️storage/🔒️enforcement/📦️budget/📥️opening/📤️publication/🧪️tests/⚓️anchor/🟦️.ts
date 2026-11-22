@@ -5,7 +5,7 @@ import {mkdir,mkdtemp,readFile,writeFile} from "node:fs/promises";
 import {lstatSync} from "node:fs";
 import {join,resolve} from "node:path";
 import {declareLibraryBuildTestEnvelopeV1} from "../../../../../../../../🧪️testing/🪪️native-birth/🟦️.ts";
-import {withBuildTestInvocationV1} from "@semio-tech/process/testing/invocation";
+import {privateRepositoryWorkspaceV1} from "../../../../../../../../🧪️testing/🧫️private-repository/🟦️.ts";
 import {createIssuedResourceControlV1} from "@semio-tech/process/routing";
 import {openNativeFixedPlatformV1} from "@semio-tech/process/artifacts/native-build/storage/fixed";
 import {publishObservedNativePlatformImageV1} from "@semio-tech/process/artifacts/native-build/storage/publication/platform";
@@ -17,9 +17,10 @@ import cuts from "./🔣️.json" with {type:"json"};
 import fixtureSchema from "./🧬️schema.json" with {type:"json"};
 
 declareLibraryBuildTestEnvelopeV1({suite:"storage-opening-processes",maximumElapsedMilliseconds:300000});
+const repository=await privateRepositoryWorkspaceV1();
 
 /** 🧪️ Exercises actual private directory Source and fresh owner recovery without sharing any live repository image. */
-test("directory envelope actual owner preserves funded payload through durable interruption cuts",()=>withBuildTestInvocationV1(async original=>{
+test("directory envelope actual owner preserves funded payload through durable interruption cuts",()=>repository.invoke(async original=>{
  expect(new Ajv({strict:true}).validate(fixtureSchema,cuts)).toBe(true);
  const artifacts=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!artifacts)throw Error("Actual issued test artifact directory required");
  const base=await mkdtemp(join(resolve(artifacts),"a-"));let index=0;

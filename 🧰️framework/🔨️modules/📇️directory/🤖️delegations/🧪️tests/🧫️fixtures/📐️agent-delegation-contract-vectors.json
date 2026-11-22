@@ -1,0 +1,339 @@
+{
+  "schema": "semio.os.agent-delegations-vectors/v1",
+  "instants": [
+    {
+      "ms": 0,
+      "text": "1970-01-01 00:00 UTC"
+    },
+    {
+      "ms": 1790000000000,
+      "text": "2026-09-21 14:13 UTC"
+    },
+    {
+      "ms": 86399999,
+      "text": "1970-01-01 23:59 UTC"
+    },
+    {
+      "ms": 1.5,
+      "text": "—"
+    }
+  ],
+  "ordering": {
+    "nowMs": 1000,
+    "summaries": [
+      {
+        "delegationId": "d-a",
+        "agentPrincipalId": "agent:d-a",
+        "agentLabel": "A",
+        "spaceId": "space-a",
+        "audience": "edit",
+        "createdAtMs": 100,
+        "expiresAtMs": 5000,
+        "revoked": true,
+        "lastUsedAtMs": null
+      },
+      {
+        "delegationId": "d-b",
+        "agentPrincipalId": "agent:d-b",
+        "agentLabel": "B",
+        "spaceId": "space-a",
+        "audience": "read",
+        "createdAtMs": 300,
+        "expiresAtMs": 500,
+        "revoked": false,
+        "lastUsedAtMs": null
+      },
+      {
+        "delegationId": "d-c",
+        "agentPrincipalId": "agent:d-c",
+        "agentLabel": "C",
+        "spaceId": "space-a",
+        "audience": "edit",
+        "createdAtMs": 200,
+        "expiresAtMs": 9000,
+        "revoked": false,
+        "lastUsedAtMs": 150
+      },
+      {
+        "delegationId": "d-d",
+        "agentPrincipalId": "agent:d-d",
+        "agentLabel": "D",
+        "spaceId": "space-a",
+        "audience": "read",
+        "createdAtMs": 200,
+        "expiresAtMs": 9000,
+        "revoked": false,
+        "lastUsedAtMs": null
+      },
+      {
+        "delegationId": "d-e",
+        "agentPrincipalId": "agent:d-e",
+        "agentLabel": "E",
+        "spaceId": "space-a",
+        "audience": "edit",
+        "createdAtMs": 400,
+        "expiresAtMs": 9000,
+        "revoked": false,
+        "lastUsedAtMs": null
+      }
+    ],
+    "order": [
+      {
+        "delegationId": "d-e",
+        "state": "live",
+        "revocable": true
+      },
+      {
+        "delegationId": "d-c",
+        "state": "live",
+        "revocable": true
+      },
+      {
+        "delegationId": "d-d",
+        "state": "live",
+        "revocable": true
+      },
+      {
+        "delegationId": "d-b",
+        "state": "expired",
+        "revocable": true
+      },
+      {
+        "delegationId": "d-a",
+        "state": "revoked",
+        "revocable": false
+      }
+    ]
+  },
+  "createBodies": [
+    {
+      "id": "valid-edit-week",
+      "spaceId": "space-a",
+      "agentLabel": "  Claude  ",
+      "audience": "edit",
+      "ttlSecs": 604800,
+      "body": "{\"schema\":\"semio.hub.auth.agent-delegation-create/v1\",\"spaceId\":\"space-a\",\"agentLabel\":\"Claude\",\"audience\":\"edit\",\"ttlSecs\":604800}",
+      "error": null
+    },
+    {
+      "id": "valid-read-day",
+      "spaceId": "space-a",
+      "agentLabel": "Ada",
+      "audience": "read",
+      "ttlSecs": 86400,
+      "body": "{\"schema\":\"semio.hub.auth.agent-delegation-create/v1\",\"spaceId\":\"space-a\",\"agentLabel\":\"Ada\",\"audience\":\"read\",\"ttlSecs\":86400}",
+      "error": null
+    },
+    {
+      "id": "empty-label",
+      "spaceId": "space-a",
+      "agentLabel": "   ",
+      "audience": "edit",
+      "ttlSecs": 604800,
+      "body": null,
+      "error": "directory.delegations.invalid-label"
+    },
+    {
+      "id": "control-in-label",
+      "spaceId": "space-a",
+      "agentLabel": "a\u0007b",
+      "audience": "edit",
+      "ttlSecs": 604800,
+      "body": null,
+      "error": "directory.delegations.invalid-label"
+    },
+    {
+      "id": "label-too-long",
+      "spaceId": "space-a",
+      "agentLabel": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "audience": "edit",
+      "ttlSecs": 604800,
+      "body": null,
+      "error": "directory.delegations.invalid-label"
+    },
+    {
+      "id": "ttl-too-short",
+      "spaceId": "space-a",
+      "agentLabel": "A",
+      "audience": "edit",
+      "ttlSecs": 59,
+      "body": null,
+      "error": "directory.delegations.invalid-ttl"
+    },
+    {
+      "id": "ttl-too-long",
+      "spaceId": "space-a",
+      "agentLabel": "A",
+      "audience": "edit",
+      "ttlSecs": 7776001,
+      "body": null,
+      "error": "directory.delegations.invalid-ttl"
+    },
+    {
+      "id": "empty-space",
+      "spaceId": "",
+      "agentLabel": "A",
+      "audience": "edit",
+      "ttlSecs": 604800,
+      "body": null,
+      "error": "directory.delegations.invalid-space"
+    }
+  ],
+  "receipts": [
+    {
+      "id": "valid",
+      "body": "{\"schema\": \"semio.hub.auth.agent-delegation-receipt/v1\", \"delegationId\": \"01a0d5ae-9ae4-7072-b721-4869feec1cd7\", \"agentPrincipalId\": \"agent:01a0d5ae-9ae4-7072-b721-4869feec1cd7\", \"agentLabel\": \"Claude — Drafting\", \"spaceId\": \"01a0d5b0-0000-7000-8000-000000000001\", \"audience\": \"edit\", \"expiresAtMs\": 1790000000000, \"token\": \"delegation.v1.0123456789abcdef0123456789abcdef.fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210\"}",
+      "receipt": {
+        "delegationId": "01a0d5ae-9ae4-7072-b721-4869feec1cd7",
+        "agentPrincipalId": "agent:01a0d5ae-9ae4-7072-b721-4869feec1cd7",
+        "agentLabel": "Claude — Drafting",
+        "spaceId": "01a0d5b0-0000-7000-8000-000000000001",
+        "audience": "edit",
+        "expiresAtMs": 1790000000000,
+        "token": "delegation.v1.0123456789abcdef0123456789abcdef.fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210"
+      }
+    },
+    {
+      "id": "wrong-schema",
+      "body": "{\"schema\": \"x\", \"delegationId\": \"01a0d5ae-9ae4-7072-b721-4869feec1cd7\", \"agentPrincipalId\": \"agent:01a0d5ae-9ae4-7072-b721-4869feec1cd7\", \"agentLabel\": \"Claude — Drafting\", \"spaceId\": \"01a0d5b0-0000-7000-8000-000000000001\", \"audience\": \"edit\", \"expiresAtMs\": 1790000000000, \"token\": \"delegation.v1.0123456789abcdef0123456789abcdef.fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210\"}",
+      "receipt": null
+    },
+    {
+      "id": "token-not-a-capability",
+      "body": "{\"schema\": \"semio.hub.auth.agent-delegation-receipt/v1\", \"delegationId\": \"01a0d5ae-9ae4-7072-b721-4869feec1cd7\", \"agentPrincipalId\": \"agent:01a0d5ae-9ae4-7072-b721-4869feec1cd7\", \"agentLabel\": \"Claude — Drafting\", \"spaceId\": \"01a0d5b0-0000-7000-8000-000000000001\", \"audience\": \"edit\", \"expiresAtMs\": 1790000000000, \"token\": \"<html>proxy error</html>\"}",
+      "receipt": null
+    },
+    {
+      "id": "principal-mismatch",
+      "body": "{\"schema\": \"semio.hub.auth.agent-delegation-receipt/v1\", \"delegationId\": \"01a0d5ae-9ae4-7072-b721-4869feec1cd7\", \"agentPrincipalId\": \"agent:other\", \"agentLabel\": \"Claude — Drafting\", \"spaceId\": \"01a0d5b0-0000-7000-8000-000000000001\", \"audience\": \"edit\", \"expiresAtMs\": 1790000000000, \"token\": \"delegation.v1.0123456789abcdef0123456789abcdef.fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210\"}",
+      "receipt": null
+    },
+    {
+      "id": "bad-audience",
+      "body": "{\"schema\": \"semio.hub.auth.agent-delegation-receipt/v1\", \"delegationId\": \"01a0d5ae-9ae4-7072-b721-4869feec1cd7\", \"agentPrincipalId\": \"agent:01a0d5ae-9ae4-7072-b721-4869feec1cd7\", \"agentLabel\": \"Claude — Drafting\", \"spaceId\": \"01a0d5b0-0000-7000-8000-000000000001\", \"audience\": \"admin\", \"expiresAtMs\": 1790000000000, \"token\": \"delegation.v1.0123456789abcdef0123456789abcdef.fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210\"}",
+      "receipt": null
+    },
+    {
+      "id": "not-json",
+      "body": "nope",
+      "receipt": null
+    }
+  ],
+  "credential": {
+    "receipt": {
+      "delegationId": "01a0d5ae-9ae4-7072-b721-4869feec1cd7",
+      "agentPrincipalId": "agent:01a0d5ae-9ae4-7072-b721-4869feec1cd7",
+      "agentLabel": "Claude — Drafting",
+      "spaceId": "01a0d5b0-0000-7000-8000-000000000001",
+      "audience": "edit",
+      "expiresAtMs": 1790000000000,
+      "token": "delegation.v1.0123456789abcdef0123456789abcdef.fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210"
+    },
+    "hubOrigin": "http://127.0.0.1:7800",
+    "fileName": "semio-agent-claude-drafting.json",
+    "contents": "{\n  \"schema\": \"semio.hub.agent-credential/v1\",\n  \"hubOrigin\": \"http://127.0.0.1:7800\",\n  \"spaceId\": \"01a0d5b0-0000-7000-8000-000000000001\",\n  \"audience\": \"edit\",\n  \"token\": \"delegation.v1.0123456789abcdef0123456789abcdef.fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210\"\n}\n",
+    "mediaType": "application/json",
+    "command": "semio-os-mcp stdio --hub http://127.0.0.1:7800 --space 01a0d5b0-0000-7000-8000-000000000001 --credential-file <path>",
+    "emptySlugFileName": {
+      "agentLabel": "—",
+      "fileName": "semio-agent-delegation.json"
+    }
+  },
+  "errors": [
+    {
+      "status": 400,
+      "body": "",
+      "code": "malformed-request"
+    },
+    {
+      "status": 401,
+      "body": "",
+      "code": "invalid-delegation"
+    },
+    {
+      "status": 403,
+      "body": "",
+      "code": "forbidden"
+    },
+    {
+      "status": 429,
+      "body": "",
+      "code": "rate-limited"
+    },
+    {
+      "status": 503,
+      "body": "",
+      "code": "directory-unavailable"
+    },
+    {
+      "status": 500,
+      "body": "",
+      "code": "unreachable"
+    },
+    {
+      "status": 403,
+      "body": "{\"schema\": \"semio.hub.auth.agent-error/v1\", \"error\": \"delegation-revoked\"}",
+      "code": "delegation-revoked"
+    },
+    {
+      "status": 403,
+      "body": "{\"schema\": \"semio.hub.auth.agent-error/v1\", \"error\": \"bogus\"}",
+      "code": "forbidden"
+    },
+    {
+      "status": 403,
+      "body": "{\"schema\": \"other\", \"error\": \"delegation-revoked\"}",
+      "code": "forbidden"
+    }
+  ],
+  "lists": [
+    {
+      "id": "malformed-row-dropped",
+      "body": "{\"schema\": \"semio.hub.auth.agent-delegation-list/v1\", \"delegations\": [{\"delegationId\": \"d-1\", \"agentLabel\": \"L\", \"spaceId\": \"space-a\", \"audience\": \"edit\", \"createdAtMs\": 1, \"expiresAtMs\": 2, \"revoked\": false}, {\"delegationId\": \"d-2\"}, {\"delegationId\": \"d-3\", \"agentLabel\": \"L\", \"spaceId\": \"space-a\", \"audience\": \"admin\", \"createdAtMs\": 1, \"expiresAtMs\": 2, \"revoked\": false}, {\"delegationId\": \"d-4\", \"agentLabel\": \"L\", \"spaceId\": \"space-a\", \"audience\": \"edit\", \"createdAtMs\": 1, \"expiresAtMs\": 2, \"revoked\": true, \"lastUsedAtMs\": 7}]}",
+      "delegations": [
+        {
+          "delegationId": "d-1",
+          "revoked": false,
+          "lastUsedAtMs": null
+        },
+        {
+          "delegationId": "d-4",
+          "revoked": true,
+          "lastUsedAtMs": 7
+        }
+      ]
+    },
+    {
+      "id": "not-json",
+      "body": "nope",
+      "delegations": []
+    },
+    {
+      "id": "no-array",
+      "body": "{}",
+      "delegations": []
+    }
+  ],
+  "paths": {
+    "list": [
+      {
+        "spaceId": "space-a",
+        "path": "/auth/agent-delegations?space=space-a"
+      },
+      {
+        "spaceId": "a b/c",
+        "path": "/auth/agent-delegations?space=a%20b%2Fc"
+      }
+    ],
+    "revoke": [
+      {
+        "delegationId": "d-1",
+        "path": "/auth/agent-delegations/d-1/revoke"
+      },
+      {
+        "delegationId": "a/b",
+        "path": "/auth/agent-delegations/a%2Fb/revoke"
+      }
+    ]
+  }
+}

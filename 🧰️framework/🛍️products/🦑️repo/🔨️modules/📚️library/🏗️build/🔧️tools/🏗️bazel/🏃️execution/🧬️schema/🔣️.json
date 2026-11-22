@@ -115,7 +115,7 @@
           "defaultInstance": "main",
           "defaultJobs": 128,
           "maximumJobs": 512,
-          "localFallback": false
+          "localFallback": "same-platform"
         },
         "actionEnvironment": {
           "LC_ALL": "C",
@@ -281,7 +281,7 @@
               "maximum": 4096
             },
             "localFallback": {
-              "const": false
+              "const": "same-platform"
             }
           }
         },

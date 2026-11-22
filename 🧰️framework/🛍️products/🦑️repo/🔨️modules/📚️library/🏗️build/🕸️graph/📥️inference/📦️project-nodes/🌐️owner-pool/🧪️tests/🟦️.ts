@@ -176,7 +176,7 @@ test("the machine that runs the wave takes the record another machine stored and
 });
 
 const manifestOf=(units:Unit[],tag:string,createdMs:number):OwnerPoolManifestV1=>{
- const partial={version:1 as const,identity:"identity-"+tag,globals:{projectAuthority:"a",registryDigest:"r",commandRevision:"c",late:false},publisher:"p:"+tag};
+ const partial={version:1 as const,identity:"identity-"+tag,globals:{registryDigest:"r",commandRevision:"c",late:false},publisher:"p:"+tag};
  return{head:{...partial,id:ownerPoolIdV1(partial,units),createdMs},session:Buffer.from(JSON.stringify({tag})),units};
 };
 test("waves accumulate in the pointer: a newer wave never replaces an open one, equal ids once, old ones and surplus ones leave",async()=>{
@@ -222,6 +222,22 @@ test("a failure note keeps the other pullers away until it is old or the revisio
   expect((await readOwnerPoolFailureV1(client,digest,"rev1"))?.cause).toBe("deterministic");
   expect(await readOwnerPoolFailureV1(client,digest,"rev2")).toBeUndefined();
   expect(await readOwnerPoolFailureV1(client,digest,"rev1",()=>Date.now()+P.failureMaximumAgeMilliseconds+1000)).toBeUndefined();
+ }finally{await server.stop();}
+});
+
+test("a live failure note is not written again: the same cause writes nothing, another cause is added to it, the first origin and time stay and at most four causes are kept",async()=>{
+ const {server,environment}=await world();
+ try{
+  const root=temp("n"),client=graphFleetClientV1(graphFleetSettingsV1(root,environment)!,{fetch:remoteCacheFetchV1(environment,{root})}),digest=sha("n");let clock=1000;
+  const publish=(origin:string,cause:string,revision="rev1")=>publishOwnerPoolFailureV1({client,owner:origin,origin,recordDigest:digest,revision,cause,now:()=>clock});
+  const puts=async()=>((await (await fetch(server.url+"/status",{headers:{authorization:"Bearer w"}})).json()) as {counters:{ac:{puts:number}}}).counters.ac.puts;
+  expect(await publish("g1-m01","boom A")).toBe(true);const first=await puts();
+  clock=2000;expect(await publish("g1-m02","boom A")).toBe(true);expect(await puts(),"the same cause writes nothing").toBe(first);
+  clock=3000;expect(await publish("g1-m02","boom B")).toBe(true);expect(await puts()).toBe(first+1);
+  expect(await readOwnerPoolFailureV1(client,digest,"rev1",()=>3000)).toEqual({cause:"boom A",causes:["boom A","boom B"],origin:"g1-m01",atMs:1000});
+  for(const cause of["boom C","boom D","boom E"]){clock+=10;expect(await publish("g1-m03",cause)).toBe(true);}
+  expect((await readOwnerPoolFailureV1(client,digest,"rev1",()=>3100))?.causes).toEqual(["boom A","boom B","boom C","boom D"]);
+  expect(await publish("g1-m01","other revision","rev2")).toBe(true);expect((await readOwnerPoolFailureV1(client,digest,"rev2",()=>3100))?.causes).toEqual(["other revision"]);
  }finally{await server.stop();}
 });
 
@@ -343,7 +359,7 @@ const aliveOf=(pid:number)=>{try{process.kill(pid,0);return true;}catch{return f
 const until=async(test:()=>boolean,limit:number)=>{const began=Date.now();while(!test()&&Date.now()-began<limit)await pause(50);return Date.now()-began;};
 
 test("the id of a wave is the set of its owners: order, re-sorting and the publisher change nothing, one changed owner changes the id, another identity changes it",()=>{
- const head={version:1 as const,identity:"i",globals:{projectAuthority:"a",registryDigest:"r",commandRevision:"c",late:false}},units=unitsOf(30).map(unit=>({...unit,megabytes:100}));
+ const head={version:1 as const,identity:"i",globals:{registryDigest:"r",commandRevision:"c",late:false}},units=unitsOf(30).map(unit=>({...unit,megabytes:100}));
  const id=ownerPoolIdV1(head,units);
  expect(ownerPoolIdV1(head,[...units].reverse())).toBe(id);
  expect(ownerPoolIdV1(head,[...units].sort((a,b)=>(b.megabytes??0)-(a.megabytes??0)||b.name.localeCompare(a.name)).map(unit=>({...unit,megabytes:9000,expectedMilliseconds:1})))).toBe(id);
@@ -450,3 +466,12 @@ test("real process: a pool whose pointer has no wave (expired or never republish
   expect(existsSync(directory),"the kept wave is still on disk").toBe(true);
  }finally{await server.stop();}
 },120000);
+
+test("a deterministic failure is published only when no live note for the record digest and revision exists, so machines that fail the same owner write one note and not one each",async()=>{
+ const{readFileSync}=await import("node:fs"),text=readFileSync(new URL("../🔬️inference/🟨️.mjs",import.meta.url),"utf8"),at=text.indexOf("fail(name, message, deterministic)");
+ expect(at).toBeGreaterThan(-1);
+ const body=text.slice(at,text.indexOf("resend:",at));
+ expect(body.indexOf("readOwnerPoolFailureV1(client, recordDigest, revision)")).toBeGreaterThan(-1);
+ expect(body.indexOf("readOwnerPoolFailureV1(")).toBeLessThan(body.indexOf("publishOwnerPoolFailureV1("));
+ expect(body).toContain("live === undefined");
+});

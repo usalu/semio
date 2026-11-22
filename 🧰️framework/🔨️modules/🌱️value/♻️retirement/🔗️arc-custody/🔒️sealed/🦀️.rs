@@ -126,6 +126,8 @@ impl<T:Send+Sync+'static> SealedShared<T>{
  pub fn terminal_is_empty(&self)->bool{self.source.is_none()}
  /// 🕊️ Observes the genuine strong source after all issued aliases have returned.
  pub fn original_aliases_are_returned(&self)->bool{self.source.as_ref().is_none_or(|source|source.aliases()==1)}
+ /// 🕊️ Like [`Self::original_aliases_are_returned`] while `resident` aliases stay deliberately held by their long-lived owner.
+ pub fn original_aliases_are_returned_beyond(&self,resident:usize)->bool{self.source.as_ref().is_none_or(|source|source.aliases()==1+resident)}
  /// 🔍️ A live original is exclusive only when logical and physical strong counts both equal one.
  pub fn original_is_exclusive(&self)->bool{self.source.as_ref().is_some_and(|source|source.physically_unique())}
  pub fn return_slot(&self,grant:RetainedCloneGrant)->Result<(SharedAliasReturn<T>,RetainedCloneProgress),ValueError>{

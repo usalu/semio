@@ -5858,6 +5858,64 @@
                   },
                   "audience": "chrome"
                 }
+              },
+              {
+                "id": "fitGraph",
+                "label": {
+                  "native": {
+                    "en": "Fit graph",
+                    "de": "Graph einpassen"
+                  },
+                  "reuse": {
+                    "en": "Fit graph",
+                    "de": "Graph einpassen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "maximize-2",
+                "args": [],
+                "keys": "f",
+                "inPalette": true,
+                "category": "view",
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Frames the whole node graph of the window in its view; only the view changes.",
+                      "de": "Zeigt den gesamten Knotengraphen des Fensters formatfüllend; nur die Ansicht ändert sich."
+                    },
+                    "reuse": {
+                      "en": "Frames the whole node graph of the window in its view; only the view changes.",
+                      "de": "Zeigt den gesamten Knotengraphen des Fensters formatfüllend; nur die Ansicht ändert sich."
+                    }
+                  },
+                  "audience": "chrome"
+                }
               }
             ],
             "utilities": [],
@@ -18320,6 +18378,13 @@
               "controllerId": "s.procedural.generation3d@1/*#editor",
               "action": "toolRunFinalize"
             }
+          },
+          {
+            "keys": "f",
+            "action": {
+              "controllerId": "s.procedural.generation3d@1/*#editor",
+              "action": "fitGraph"
+            }
           }
         ],
         "utilities": [
@@ -19250,11 +19315,12 @@
             "iconId": "sparkles",
             "layout": {
               "root": {
-                "kind": "row",
+                "kind": "split",
+                "axis": "horizontal",
                 "children": [
                   {
                     "kind": "stack",
-                    "size": 22.0,
+                    "size": 0.22,
                     "children": [
                       {
                         "kind": "window",
@@ -19265,7 +19331,7 @@
                   },
                   {
                     "kind": "stack",
-                    "size": 43.0,
+                    "size": 0.43,
                     "children": [
                       {
                         "kind": "window",
@@ -19276,7 +19342,7 @@
                   },
                   {
                     "kind": "stack",
-                    "size": 35.0,
+                    "size": 0.35,
                     "children": [
                       {
                         "kind": "window",
@@ -19293,11 +19359,12 @@
         ],
         "defaultLayout": {
           "root": {
-            "kind": "row",
+            "kind": "split",
+            "axis": "horizontal",
             "children": [
               {
                 "kind": "stack",
-                "size": 68.0,
+                "size": 0.68,
                 "children": [
                   {
                     "kind": "window",
@@ -19308,7 +19375,7 @@
               },
               {
                 "kind": "stack",
-                "size": 32.0,
+                "size": 0.32,
                 "children": [
                   {
                     "kind": "window",
@@ -28320,10 +28387,12 @@
         "namedLayouts": [],
         "defaultLayout": {
           "root": {
-            "kind": "row",
+            "kind": "split",
+            "axis": "horizontal",
             "children": [
               {
-                "kind": "column",
+                "kind": "split",
+                "axis": "vertical",
                 "size": 0.5,
                 "children": [
                   {
@@ -28351,7 +28420,8 @@
                 ]
               },
               {
-                "kind": "column",
+                "kind": "split",
+                "axis": "vertical",
                 "size": 0.5,
                 "children": [
                   {
@@ -37609,11 +37679,12 @@
         "namedLayouts": [],
         "defaultLayout": {
           "root": {
-            "kind": "row",
+            "kind": "split",
+            "axis": "horizontal",
             "children": [
               {
                 "kind": "stack",
-                "size": 33.333333333333336,
+                "size": 0.3333333333333333,
                 "children": [
                   {
                     "kind": "window",
@@ -37626,7 +37697,7 @@
               },
               {
                 "kind": "stack",
-                "size": 66.66666666666667,
+                "size": 0.6666666666666666,
                 "children": [
                   {
                     "kind": "window",
@@ -45385,26 +45456,22 @@
         "namedLayouts": [],
         "defaultLayout": {
           "root": {
-            "kind": "row",
+            "kind": "split",
+            "axis": "horizontal",
             "children": [
               {
-                "kind": "column",
-                "size": 0.34,
+                "kind": "stack",
                 "children": [
                   {
-                    "kind": "stack",
-                    "children": [
-                      {
-                        "kind": "window",
-                        "windowKindId": "sourcing-pool",
-                        "title": "Pool"
-                      }
-                    ]
+                    "kind": "window",
+                    "windowKindId": "sourcing-pool",
+                    "title": "Pool"
                   }
                 ]
               },
               {
-                "kind": "column",
+                "kind": "split",
+                "axis": "vertical",
                 "size": 0.33,
                 "children": [
                   {
@@ -45432,18 +45499,12 @@
                 ]
               },
               {
-                "kind": "column",
-                "size": 0.33,
+                "kind": "stack",
                 "children": [
                   {
-                    "kind": "stack",
-                    "children": [
-                      {
-                        "kind": "window",
-                        "windowKindId": "sourcing-grid",
-                        "title": "Grid"
-                      }
-                    ]
+                    "kind": "window",
+                    "windowKindId": "sourcing-grid",
+                    "title": "Grid"
                   }
                 ]
               }
@@ -46330,17 +46391,12 @@
         "namedLayouts": [],
         "defaultLayout": {
           "root": {
-            "kind": "row",
+            "kind": "stack",
             "children": [
               {
-                "kind": "stack",
-                "children": [
-                  {
-                    "kind": "window",
-                    "windowKindId": "framework.window.table",
-                    "title": "Pool"
-                  }
-                ]
+                "kind": "window",
+                "windowKindId": "framework.window.table",
+                "title": "Pool"
               }
             ]
           }
@@ -47466,6 +47522,86 @@
             }
           },
           {
+            "id": "placeCapability",
+            "label": {
+              "native": {
+                "en": "Place capability",
+                "de": "Fähigkeit platzieren"
+              },
+              "reuse": {
+                "en": "Place capability",
+                "de": "Fähigkeit platzieren"
+              }
+            },
+            "kind": "view",
+            "iconId": "eye",
+            "args": [
+              {
+                "id": "machineId",
+                "label": {
+                  "native": {
+                    "en": "Machine",
+                    "de": "Maschine"
+                  },
+                  "reuse": {
+                    "en": "Machine",
+                    "de": "Maschine"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": true
+              },
+              {
+                "id": "capabilityId",
+                "label": {
+                  "native": {
+                    "en": "Capability",
+                    "de": "Fähigkeit"
+                  },
+                  "reuse": {
+                    "en": "Capability",
+                    "de": "Fähigkeit"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": true
+              }
+            ],
+            "inPalette": false,
+            "semantics": {
+              "effects": {
+                "reads": [
+                  "config:{self}"
+                ],
+                "external": false,
+                "destructive": false,
+                "reversible": false
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.read",
+                  "shell.observe"
+                ],
+                "approval": "never"
+              },
+              "execution": {
+                "preview": "none",
+                "undo": {
+                  "kind": "none"
+                },
+                "idempotency": "none",
+                "expectedRevision": false,
+                "cancellable": true,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              }
+            }
+          },
+          {
             "id": "setStock",
             "label": {
               "native": {
@@ -48301,6 +48437,60 @@
             }
           },
           {
+            "id": "dropStep",
+            "label": {
+              "native": {
+                "en": "Drop Step",
+                "de": "Schritt ablegen"
+              },
+              "reuse": {
+                "en": "Drop Step",
+                "de": "Schritt ablegen"
+              }
+            },
+            "kind": "mutation",
+            "iconId": "sparkles",
+            "args": [],
+            "inPalette": false,
+            "semantics": {
+              "effects": {
+                "writes": [
+                  "artifact:{self}"
+                ],
+                "external": false,
+                "destructive": false,
+                "reversible": true
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "diff",
+                "undo": {
+                  "kind": "inverse"
+                },
+                "idempotency": "none",
+                "expectedRevision": true,
+                "cancellable": true,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Moves a dragged step before or after another step in the same timeline.",
+                  "de": "Verschiebt einen gezogenen Schritt vor oder hinter einen anderen Schritt derselben Zeitleiste."
+                },
+                "reuse": {
+                  "en": "Moves a dragged step before or after another step in the same timeline.",
+                  "de": "Verschiebt einen gezogenen Schritt vor oder hinter einen anderen Schritt derselben Zeitleiste."
+                }
+              }
+            }
+          },
+          {
             "id": "updateStep",
             "label": {
               "native": {
@@ -48511,7 +48701,26 @@
             },
             "kind": "mutation",
             "iconId": "mouse-pointer",
-            "args": [],
+            "args": [
+              {
+                "id": "position",
+                "label": {
+                  "native": {
+                    "en": "Position",
+                    "de": "Position"
+                  },
+                  "reuse": {
+                    "en": "Position",
+                    "de": "Position"
+                  }
+                },
+                "schema": {
+                  "kind": "vector",
+                  "dims": 3
+                },
+                "required": true
+              }
+            ],
             "inPalette": false,
             "semantics": {
               "effects": {
@@ -48535,6 +48744,71 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
+                "cancellable": true,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "audience": "input"
+            }
+          },
+          {
+            "id": "worldPointerMove",
+            "label": {
+              "native": {
+                "en": "World Pointer Move",
+                "de": "Welt-Zeiger bewegt"
+              },
+              "reuse": {
+                "en": "World Pointer Move",
+                "de": "Welt-Zeiger bewegt"
+              }
+            },
+            "kind": "view",
+            "iconId": "eye",
+            "args": [
+              {
+                "id": "position",
+                "label": {
+                  "native": {
+                    "en": "Position",
+                    "de": "Position"
+                  },
+                  "reuse": {
+                    "en": "Position",
+                    "de": "Position"
+                  }
+                },
+                "schema": {
+                  "kind": "vector",
+                  "dims": 3
+                },
+                "required": true
+              }
+            ],
+            "inPalette": false,
+            "semantics": {
+              "effects": {
+                "reads": [
+                  "config:{self}"
+                ],
+                "external": false,
+                "destructive": false,
+                "reversible": false
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.read",
+                  "shell.observe"
+                ],
+                "approval": "never"
+              },
+              "execution": {
+                "preview": "none",
+                "undo": {
+                  "kind": "none"
+                },
+                "idempotency": "none",
+                "expectedRevision": false,
                 "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
@@ -48957,7 +49231,117 @@
             },
             "kind": "view",
             "iconId": "camera",
-            "args": [],
+            "args": [
+              {
+                "id": "camera",
+                "label": {
+                  "native": {
+                    "en": "Camera",
+                    "de": "Kamera"
+                  },
+                  "reuse": {
+                    "en": "Camera",
+                    "de": "Kamera"
+                  }
+                },
+                "schema": {
+                  "kind": "object",
+                  "fields": [
+                    {
+                      "id": "position",
+                      "label": {
+                        "native": {
+                          "en": "Position",
+                          "de": "Position"
+                        },
+                        "reuse": {
+                          "en": "Position",
+                          "de": "Position"
+                        }
+                      },
+                      "schema": {
+                        "kind": "vector",
+                        "dims": 3
+                      },
+                      "required": true
+                    },
+                    {
+                      "id": "target",
+                      "label": {
+                        "native": {
+                          "en": "Target",
+                          "de": "Ziel"
+                        },
+                        "reuse": {
+                          "en": "Target",
+                          "de": "Ziel"
+                        }
+                      },
+                      "schema": {
+                        "kind": "vector",
+                        "dims": 3
+                      },
+                      "required": true
+                    },
+                    {
+                      "id": "up",
+                      "label": {
+                        "native": {
+                          "en": "Up",
+                          "de": "Oben"
+                        },
+                        "reuse": {
+                          "en": "Up",
+                          "de": "Oben"
+                        }
+                      },
+                      "schema": {
+                        "kind": "vector",
+                        "dims": 3
+                      },
+                      "required": false
+                    },
+                    {
+                      "id": "zoom",
+                      "label": {
+                        "native": {
+                          "en": "Zoom",
+                          "de": "Zoom"
+                        },
+                        "reuse": {
+                          "en": "Zoom",
+                          "de": "Zoom"
+                        }
+                      },
+                      "schema": {
+                        "kind": "number",
+                        "integer": false
+                      },
+                      "required": false
+                    },
+                    {
+                      "id": "fov",
+                      "label": {
+                        "native": {
+                          "en": "Field of View",
+                          "de": "Sichtfeld"
+                        },
+                        "reuse": {
+                          "en": "Field of View",
+                          "de": "Sichtfeld"
+                        }
+                      },
+                      "schema": {
+                        "kind": "number",
+                        "integer": false
+                      },
+                      "required": false
+                    }
+                  ]
+                },
+                "required": true
+              }
+            ],
             "inPalette": false,
             "semantics": {
               "effects": {
@@ -51897,17 +52281,12 @@
         "namedLayouts": [],
         "defaultLayout": {
           "root": {
-            "kind": "row",
+            "kind": "stack",
             "children": [
               {
-                "kind": "stack",
-                "children": [
-                  {
-                    "kind": "window",
-                    "windowKindId": "process-workpiece",
-                    "title": "Workpiece"
-                  }
-                ]
+                "kind": "window",
+                "windowKindId": "process-workpiece",
+                "title": "Workpiece"
               }
             ]
           }
@@ -52839,17 +53218,12 @@
         "namedLayouts": [],
         "defaultLayout": {
           "root": {
-            "kind": "row",
+            "kind": "stack",
             "children": [
               {
-                "kind": "stack",
-                "children": [
-                  {
-                    "kind": "window",
-                    "windowKindId": "process-workpiece-view",
-                    "title": "Workpiece"
-                  }
-                ]
+                "kind": "window",
+                "windowKindId": "process-workpiece-view",
+                "title": "Workpiece"
               }
             ]
           }
@@ -58307,18 +58681,12 @@
         "namedLayouts": [],
         "defaultLayout": {
           "root": {
-            "kind": "row",
+            "kind": "stack",
             "children": [
               {
-                "kind": "stack",
-                "size": 100.0,
-                "children": [
-                  {
-                    "kind": "window",
-                    "windowKindId": "gis2d-main",
-                    "title": "Map"
-                  }
-                ]
+                "kind": "window",
+                "windowKindId": "gis2d-main",
+                "title": "Map"
               }
             ]
           }

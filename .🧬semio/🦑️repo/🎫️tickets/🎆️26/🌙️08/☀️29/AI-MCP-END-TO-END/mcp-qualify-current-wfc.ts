@@ -24,7 +24,8 @@ const maximum = 512 * 1024 ** 2;
 const removed = (await stat(raw)).size > maximum ? await stripCoreNamesV1(raw, wasm, maximum) : 0;
 if (!removed) await Bun.write(wasm, Bun.file(raw));
 console.log("[DEBUG] removed", removed, "verified optional WFC names");
-const image = Bun.spawn([join(generated, "mcp-core-preparation-law"), "--ignored", "--nocapture"], {
+const preparation = "mcp-core-preparation-law" + (process.platform === "win32" ? ".exe" : "");
+const image = Bun.spawn([join(generated, preparation), "--ignored", "--nocapture"], {
   env: { ...process.env, SEMIO_PREPARATION_COMPONENT: wasm, SEMIO_PREPARATION_IMAGE: join(componentFolder, "📦️actor.semio") },
   stdout: "inherit", stderr: "inherit",
 });

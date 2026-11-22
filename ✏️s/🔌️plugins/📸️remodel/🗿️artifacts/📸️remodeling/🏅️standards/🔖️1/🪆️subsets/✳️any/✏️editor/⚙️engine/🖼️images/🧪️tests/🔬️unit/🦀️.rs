@@ -4,7 +4,7 @@ use super::*;
 fn compressed_rope(bytes: &[u8], max_bytes: usize) -> CompressedChunkRope {
     let mut rope = CompressedChunkRope::default();
     for chunk in bytes.chunks(3_072) {
-        rope.push(std::sync::Arc::<[u8]>::from(chunk), max_bytes).expect("bounded compressed fixture");
+        rope.push(chunk.to_vec(), max_bytes).expect("bounded compressed fixture");
     }
     rope
 }
@@ -16,8 +16,8 @@ fn jpeg_access_evidence_accepts(input_len: usize, metrics: CompressedRopeReadMet
 fn jpeg_fixture_access_ceiling(bytes: &[u8]) -> Option<usize> {
     let baseline_frame = bytes.windows(2).position(|window| window == [0xff, 0xc0])?;
     let probed_positions = baseline_frame.checked_add(1)?;
-    let safety_probe = probed_positions.checked_mul(2)?.checked_add(4)?;
-    bytes.len().checked_add(safety_probe)
+    let header_reread_allowance = probed_positions.checked_mul(2)?.checked_add(4)?;
+    bytes.len().checked_add(header_reread_allowance)
 }
 
 fn lcg_next(state: &mut u32) -> f32 {
@@ -543,6 +543,28 @@ fn oversized_jpeg_is_rejected_without_an_unbounded_codec_step() {
 }
 
 #[test]
+fn jpeg_frame_admission_ignores_marker_bytes_inside_app_segment() {
+    let hex = include_str!("../🧫️fixtures/📥️app-marker.hex").trim();
+    let bytes: Vec<_> = (0..hex.len()).step_by(2).map(|index| u8::from_str_radix(&hex[index..index + 2], 16).unwrap()).collect();
+    let rope = compressed_rope(&bytes, MAX_JPEG_COMPRESSED_BYTES);
+    use semio_s_artifact_stdio_jpg::standards::v_jfif_1_01::subsets::document::io::{JpgError, JpgStepDecoder};
+    assert!(matches!(JpgStepDecoder::with_pixel_limit(&rope, 63), Err(JpgError::Malformed(message)) if message.contains("63-pixel")));
+    let mut decoder = BoundedStillDecoder::new("image/jpeg", rope);
+    for _ in 0..64 {
+        match decoder.advance() {
+            BoundedDecodeProgress::Working => {}
+            BoundedDecodeProgress::Complete(image) => {
+                assert_eq!((image.width, image.height), (8, 8));
+                assert_eq!(image.data, [128, 128, 128, 255].repeat(64));
+                return;
+            }
+            BoundedDecodeProgress::Failed(error) => panic!("metadata altered JPEG frame admission: {error}"),
+        }
+    }
+    panic!("the JPEG fixture did not settle");
+}
+
+#[test]
 fn admitted_jpeg_reads_the_chunk_rope_without_a_join_allocation() {
     let bytes = encode_jpeg(&checkerboard_rgba8(64, 64, 4), 90);
     assert!(!bytes.windows(2).any(|window| window == [0xff, 0xdd]), "real JPEG fixture must retain the owned decoder's monotone no-restart source path");
@@ -563,8 +585,8 @@ fn admitted_jpeg_reads_the_chunk_rope_without_a_join_allocation() {
     let metrics = observed_reads.read_metrics();
     let fixture_ceiling = jpeg_fixture_access_ceiling(&bytes).expect("real baseline JPEG fixture has a checked source-access ceiling");
     let duplicate_pass = bytes.len().checked_mul(2).expect("bounded JPEG fixture supports a checked duplicate-pass ceiling");
-    assert!(fixture_ceiling < duplicate_pass, "owned decoder plus bounded SOF0 probe ceiling must exclude a second complete pass");
-    assert!(metrics.random_byte_reads <= fixture_ceiling, "JPEG source accesses exceed the monotone owned decoder plus bounded SOF0 probe ceiling");
+    assert!(fixture_ceiling < duplicate_pass, "the decoder's header reread allowance must exclude a second complete pass");
+    assert!(metrics.random_byte_reads <= fixture_ceiling, "JPEG source accesses exceed the decoder's read ceiling");
     assert!(jpeg_access_evidence_accepts(bytes.len(), metrics), "JPEG evidence must be strict, overflow-safe, one-byte-unit, and below a second complete input pass");
 }
 
@@ -589,8 +611,7 @@ fn accepted_worst_envelope_jpeg_and_malformed_entropy_steps_are_timed() {
         let value = (((index % width as usize) / 16 + (index / width as usize) / 16) % 2 * 223) as u8;
         pixels[index * 4..index * 4 + 4].copy_from_slice(&[value, 255 - value, value.rotate_left(2), 255]);
     }
-    let snapshot = semio_s_artifact_stdio_jpg::JpgSnapshot { width, height, pixels, ..Default::default() };
-    let encoded = semio_s_artifact_stdio_jpg::standards::v_jfif_1_01::subsets::document::io::encode_jpg(&snapshot, &semio_s_artifact_stdio_jpg::standards::v_jfif_1_01::subsets::document::io::JpgEncodeOptions{quality:85,..Default::default()}).expect("JPEG fixture");
+    let encoded = encode_jpeg(&ImageRgba8 { width, height, data: pixels }, 85);
     assert!(encoded.len() <= MAX_JPEG_COMPRESSED_BYTES);
     let chunks = compressed_rope(&encoded, MAX_JPEG_COMPRESSED_BYTES);
     std::thread::spawn(move || {

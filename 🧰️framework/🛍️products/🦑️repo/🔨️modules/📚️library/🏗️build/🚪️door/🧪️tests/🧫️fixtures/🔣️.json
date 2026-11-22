@@ -244,6 +244,27 @@
       }
     },
     {
+      "name": "test-file is light and keeps its files after the separator",
+      "args": [
+        "repo",
+        "test-file",
+        "--json",
+        "--",
+        "a.ts"
+      ],
+      "language": "en",
+      "route": {
+        "kind": "light",
+        "operation": "test-file",
+        "args": [
+          "test-file",
+          "--json",
+          "--",
+          "a.ts"
+        ]
+      }
+    },
+    {
       "name": "capacity status is light",
       "args": [
         "repo",

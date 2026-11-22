@@ -43,7 +43,7 @@ test("a newly settled owner count reaches Ready while the enclosing owner round 
   expect(final).toEqual([{phase:"owners done",done:fixture.settled,total:fixture.total}]);
   expect(told.at(-1)?.phase).toContain("reading the owners (round 1)");
   const phase=told.at(-1)!.phase;
-  const step=(age:number)=>`Reading the project graph slice (${age} s): ${phase} ${fixture.receiptSeconds+age} of 3600.`;
+  const step=(age:number)=>`Reading the project graph slice (${fixture.receiptSeconds+age} s, expected 3600 s): ${phase}.`;
   const finalLine=`Reading the project graph slice (22 s): owners done ${final[0]!.done} of ${final[0]!.total}.`;
   const watch=readyStepWatchV1();
   const quiet=fixture.quietMilliseconds;
@@ -61,7 +61,7 @@ test("certified owner progress distinguishes two passes with identical numeric c
  const remove=registerSliceReportSourceV1("owners",()=>({pass,ledger})),stop=startSliceProgressV1({emit:event=>told.push(event),milliseconds:5});
  const change=async(next:number,done:number)=>{pass=next;ledger={done,total:row.total};await pause(35);return told.at(-1)!;};
  const render=(value:typeof told[number],outer:number)=>`Reading the project graph slice (${outer} s): ${value.phase} ${value.done} of ${value.total}.`;
- const step=`Reading the project graph slice (${row.elapsed+5} s): reading the owners (round 2) / Lese die Projekte (Runde 2) ${row.elapsed} of 3600.`;
+ const step=`Reading the project graph slice (${row.elapsed} s, expected 3600 s): reading the owners (round 2) / Lese die Projekte (Runde 2).`;
  try{
   const first=await change(row.first,row.counters[0]!),second=await change(row.first,row.counters[1]!);
   const old=[render(first,row.elapsed),render(second,row.elapsed+1)];

@@ -57,6 +57,7 @@
     "../🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript",
     "../🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript",
     "../🧰️framework/🔨️modules/🖱️ui/🧬️contract",
+    "../🧰️framework/🔨️modules/🖱️ui/🧬️contract/🖼️presentation/📐️layout",
     "../🧰️framework/🔨️modules/🖱️ui/🪟️viewport/📦️packages/🟦️typescript",
     "../🧰️framework/🔨️modules/🖱️ui/🪟️viewport/📦️packages/🦀️rust",
     "../🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript",

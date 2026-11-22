@@ -60,7 +60,6 @@ pub mod examples {
 pub mod editor {
     #[path = "."]
     pub mod equation {
-        pub use semio_s_artifact_mathematical_equation_editor::editor::equation::*;
         #[path = "../../../../✏️editor/📚️examples/🎬️demo-session/🦀️.rs"]
         pub mod demo_session;
         #[cfg(test)]

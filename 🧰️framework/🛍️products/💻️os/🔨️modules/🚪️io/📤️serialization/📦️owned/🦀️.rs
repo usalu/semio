@@ -91,14 +91,25 @@ pub(super) fn same_owned_serializer(left:Option<OwnedSerializerFactory>,right:Op
 }
 
 impl IoEntry {
+ fn owned_serializer_quote(&self, request: &OwnedSerializerRequest) -> Result<(OwnedSerializerFactory, RetainedCloneBirthDemand), ValueError> {
+  let factory = self.owned_serializer.filter(|_| self.direction == IoEntryDirection::Export && coordinate_matches(self.from, &request.route.0) && coordinate_matches(self.into, &request.route.1))
+   .ok_or_else(|| ValueError::literal(ValueRefusalKind::UnsupportedOwner, "registered IO entry has no matching captured serializer"))?;
+  if !request.source.commit_authority_matches(request.generation, request.revision) || request.children.as_ref().is_some_and(|children| !children.authority_matches(request.generation, request.revision)) {
+   return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "captured serializer source authority changed"));
+  }
+  Ok((factory, (factory.demand)(request)?))
+ }
+
  /// 🔐️ Revalidates exact live authority and admission before invoking this registered native factory.
- pub fn begin_owned_serialization(&self,request:OwnedSerializerRequest,grant:RetainedCloneGrant)->Result<OwnedSerializerAdmission,OwnedSerializerRefusal>{
-  let refusal=|error,request|OwnedSerializerRefusal{error,request,progress:Default::default()};
-  let Some(factory)=self.owned_serializer.filter(|_|self.direction==IoEntryDirection::Export&&coordinate_matches(self.from,&request.route.0)&&coordinate_matches(self.into,&request.route.1))else{return Err(OwnedSerializerRefusal{error:ValueError::literal(ValueRefusalKind::UnsupportedOwner,"registered IO entry has no matching captured serializer"),request,progress:Default::default()});};
-  if !request.source.commit_authority_matches(request.generation,request.revision)||request.children.as_ref().is_some_and(|children|!children.authority_matches(request.generation,request.revision)){return Err(refusal(ValueError::literal(ValueRefusalKind::InvariantViolated,"captured serializer source authority changed"),request));}
-  let demand=match(factory.demand)(&request){Ok(demand)=>demand,Err(error)=>return Err(refusal(error,request))};
-  if let Err(error)=demand.admit(grant){return Err(refusal(error,request));}
-  (factory.admit)(request,grant)
+ pub fn begin_owned_serialization(&self, request: OwnedSerializerRequest, grant: RetainedCloneGrant) -> Result<OwnedSerializerAdmission, OwnedSerializerRefusal> {
+  let admit = self.owned_serializer_quote(&request).and_then(|(factory, demand)| {
+   demand.admit(grant)?;
+   Ok(factory.admit)
+  });
+  match admit {
+   Ok(admit) => admit(request, grant),
+   Err(error) => Err(OwnedSerializerRefusal { error, request, progress: Default::default() }),
+  }
  }
 }
 
@@ -106,9 +117,22 @@ fn coordinate_matches(declared:semio_framework_artifact_reference::Dialect,captu
  declared.artifact_kind==captured.artifact_kind&&declared.standard.0==captured.standard&&declared.subset.0==captured.subset
 }
 
+fn registered_owned_serializer(request: &OwnedSerializerRequest) -> Result<&'static IoEntry, ValueError> {
+ let registry = super::io_mechanism_registry().try_read()
+  .map_err(|_| ValueError::literal(ValueRefusalKind::WorkLimit, "owned serializer registry is busy"))?;
+ registry.get(&request.route).copied()
+  .ok_or_else(|| ValueError::literal(ValueRefusalKind::UnsupportedOwner, "captured serializer entry is not registered"))
+}
+
+/// 📏️ Quotes the exact registered serializer frame under the same source authority used for admission.
+pub fn io_owned_serialization_demand(request: &OwnedSerializerRequest) -> Result<RetainedCloneBirthDemand, ValueError> {
+ registered_owned_serializer(request)?.owned_serializer_quote(request).map(|(_, demand)| demand)
+}
+
 /// 🗂️ Selects the actual registered native factory without allocating lookup keys or holding the registry during work.
-pub fn io_begin_owned_serialization(request:OwnedSerializerRequest,grant:RetainedCloneGrant)->Result<OwnedSerializerAdmission,OwnedSerializerRefusal>{
- let entry={let registry=match super::io_mechanism_registry().try_read(){Ok(registry)=>registry,Err(_)=>return Err(OwnedSerializerRefusal{error:ValueError::literal(ValueRefusalKind::WorkLimit,"owned serializer registry is busy"),request,progress:Default::default()})};registry.get(&request.route).copied()};
- let Some(entry)=entry else{return Err(OwnedSerializerRefusal{error:ValueError::literal(ValueRefusalKind::UnsupportedOwner,"captured serializer entry is not registered"),request,progress:Default::default()});};
- entry.begin_owned_serialization(request,grant)
+pub fn io_begin_owned_serialization(request: OwnedSerializerRequest, grant: RetainedCloneGrant) -> Result<OwnedSerializerAdmission, OwnedSerializerRefusal> {
+ match registered_owned_serializer(&request) {
+  Ok(entry) => entry.begin_owned_serialization(request, grant),
+  Err(error) => Err(OwnedSerializerRefusal { error, request, progress: Default::default() }),
+ }
 }

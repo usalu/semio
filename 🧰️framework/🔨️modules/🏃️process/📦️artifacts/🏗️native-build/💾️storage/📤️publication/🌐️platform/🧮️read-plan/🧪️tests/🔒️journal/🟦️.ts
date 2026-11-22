@@ -3,7 +3,7 @@ import {Database} from "bun:sqlite";
 import ts from "typescript";
 import {mkdirSync,mkdtempSync,readFileSync,rmSync} from "node:fs";
 import {join} from "node:path";
-import {acquireFreshResourceLeaseV1,acquireResourceLease,checkResourceLeaseControl,resourceLeasePathV1,type ResourceLease} from "../../../../../../../../🔒️leases/🟦️.ts";
+import {acquireFreshResourceLeaseRetryingV1,acquireResourceLease,checkResourceLeaseControl,resourceLeasePathV1,type ResourceLease} from "../../../../../../../../🔒️leases/🟦️.ts";
 import {createIssuedResourceControlV1,createRequestedIssuedResourceControlV1} from "../../../../../../../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import {declareBuildTestEnvelopeV1,withBuildTestInvocationV1} from "../../../../../../../../🧪️testing/📥️invocation/🟦️.ts";
 import fixture from "./🔣️.json" with {type:"json"};
@@ -46,7 +46,7 @@ test("the protected input journal tolerates bounded catalog contention and never
      protectedArtifactInputMappingsV1:new WeakSet(),
      acquireProtectedMaintenanceMappingsV1:async()=>{checkResourceLeaseControl(control);},
      acquireResourceLease,
-     acquireFreshResourceLeaseV1:(request:Parameters<typeof acquireFreshResourceLeaseV1>[0])=>acquireFreshResourceLeaseV1({...request,onWait:progress=>{
+     acquireFreshResourceLeaseRetryingV1:(request:Parameters<typeof acquireFreshResourceLeaseRetryingV1>[0])=>acquireFreshResourceLeaseRetryingV1({...request,onWait:progress=>{
       waits.push(progress.resource);
       if(sample.action==="release")release();
       if(sample.action==="cancel")abort.abort(stop);

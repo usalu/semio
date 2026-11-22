@@ -74,9 +74,9 @@ export function resolveToolV1(entry: ToolEntryV1, host: ToolHostV1, registry: To
     } else if (locator.kind === "provisioned") {
       const partition = machinePathV1(host.root, registry.partitions[locator.partition] ?? locator.partition);
       const digest = toolDigestForHostV1(pin, host.platform, host.architecture, entry.pin.digests?.hostExtras ?? {});
-      const segments = locator.segments.map(segment => segment.replace(/\{sha256(?::(\d+))?\}/gu, (_, length?: string) => digest === undefined ? "" : length ? digest.sha256.slice(0, Number(length)) : digest.sha256).replace("{version}", pin.version ?? "").replace("{host}", `${host.platform}-${host.architecture}`));
+      const segments = locator.segments.map(segment => segment.replace(/\{sha256(?::(\d+))?\}/gu, (_, length?: string) => digest === undefined ? "" : length ? digest.sha256.slice(0, Number(length)) : digest.sha256).replace(/\{extra:([A-Za-z0-9]+)\}/gu, (_, key: string) => String(digest?.extras[key] ?? "")).replace("{version}", pin.version ?? "").replace("{host}", `${host.platform}-${host.architecture}`));
       tried.push(join(partition, ...segments, locator.executable));
-      const needsDigest = locator.segments.some(segment => segment.includes("{sha256"));
+      const needsDigest = locator.segments.some(segment => segment.includes("{sha256") || segment.includes("{extra:"));
       if (digest !== undefined || !needsDigest) {
         const hit = withSuffix(join(partition, ...segments, locator.executable), host);
         if (hit !== undefined) return found(hit, "provisioned");

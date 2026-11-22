@@ -1,3 +1,4 @@
+import type {ImageReclaimSkipReasonV1} from "../../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/🟦️.ts";
 import {nativeImageVolumeUsedBytesSyncV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🍎️image/⚖️availability/🟦️.ts";
 import {lstatSync,statfsSync} from "node:fs";
 import {join} from "node:path";
@@ -13,8 +14,8 @@ export const IMAGE_SLACK_V1:ImageSlackPolicyV1=Object.freeze(JSON.parse(JSON.str
 
 /** 📏️ One fixed image of the machine: the bytes it holds on the host volume, the bytes its filesystem uses inside, their difference less the filesystem overhead (the slack no collector inside the image can return) and whether it is attached. */
 export type ImageRowV1=Readonly<{id:string;directory:string;device?:number;mounted:boolean;allocatedBytes:number;usedBytes?:number;slackBytes:number}>;
-/** 🏁️ What the in-place reclaim of one image answered: `reclaimed` (the cycle reduced backing allocation), `skipped` (the image is held, retiring, not bloated or the platform has no such mechanism), `unchanged` (settled without reducing backing allocation), `unconfirmed` (no settled allocation evidence) or `failed`. */
-export type ImageReclaimOutcomeV1=Readonly<{kind:"reclaimed"|"skipped"|"unchanged"|"unconfirmed"|"failed";message?:string}>;
+/** 🏁️ What the in-place reclaim of one image answered: `reclaimed` (the cycle reduced backing allocation), `skipped` (the terminal receipt names why the cycle could not complete), `unchanged` (settled without reducing backing allocation), `unconfirmed` (no settled allocation evidence) or `failed`. */
+export type ImageReclaimOutcomeV1=Readonly<{kind:"reclaimed"|"unchanged"|"unconfirmed"|"failed";message?:string}|{kind:"skipped";reason:ImageReclaimSkipReasonV1}>;
 /** 📏️ The slack below which an image is not worth a cycle: the larger of the bytes floor and the percentage of its allocation. */
 export function slackFloorV1(row:ImageRowV1,policy:ImageSlackPolicyV1=IMAGE_SLACK_V1):number{return Math.max(policy.minimumSlackBytes,Math.ceil(row.allocatedBytes*policy.minimumSlackPercent/100));}
 /** 🧭️ What the gate does with one image and why: `retire` it, or skip it because it is not an elastic recomputable partition (`not-elastic`), its slack is below the floor (`below-floor`), the volume is already served by larger ones (`not-needed`) or it is not attached so its inside is unknown (`unmounted`). */
@@ -57,24 +58,26 @@ export function decideImageSlackV1(rows:readonly ImageRowV1[],needBytes:number,p
 }
 
 /** 🧹️ Retires the chosen images one at a time through the port (the product's exclusive non-waiting regrow), reads the volume again after each one because the claim of a collector is not trusted, stops as soon as the volume has the free bytes it was asked for, names every skip with its reason in the language asked for, and stops between images when cancelled. A killed or failing retirement leaves the image it did not finish as it was: the port retires whole images or none. */
-export async function collectImageSlackV1(input:Readonly<{rows:readonly ImageRowV1[];targetFreeBytes:number;pressureDevice?:number;freeBytes():number|undefined;retire(id:string,signal?:AbortSignal):Promise<ImageOutcomeV1>;reclaim?(id:string,signal?:AbortSignal):Promise<ImageReclaimOutcomeV1>;language:DiskLanguageV1;report?(line:string):void;signal?:AbortSignal;policy?:ImageSlackPolicyV1}>):Promise<Readonly<{reclaimed:readonly string[];retired:readonly string[];held:readonly string[];freedBytes:number}>>{
+export async function collectImageSlackV1(input:Readonly<{rows:readonly ImageRowV1[];targetFreeBytes:number;pressureDevice?:number;inspectDetached?:boolean;freeBytes():number|undefined;retire(id:string,signal?:AbortSignal):Promise<ImageOutcomeV1>;reclaim?(id:string,signal?:AbortSignal):Promise<ImageReclaimOutcomeV1>;language:DiskLanguageV1;report?(line:string):void;signal?:AbortSignal;policy?:ImageSlackPolicyV1}>):Promise<Readonly<{reclaimed:readonly string[];retired:readonly string[];held:readonly string[];freedBytes:number}>>{
  const write=input.report??(()=>undefined),text=(key:string,values:Record<string,string|number>)=>diskTextV1(key,input.language,values),retired:string[]=[],held:string[]=[],reclaimed:string[]=[];
  const start=input.freeBytes();let free=start;
  const policy=input.policy??IMAGE_SLACK_V1;
  const rows=input.pressureDevice===undefined?input.rows:input.rows.filter(row=>row.device===input.pressureDevice);
  for(const row of [...rows].sort((first,second)=>second.slackBytes-first.slackBytes||(!first.mounted&&!second.mounted?second.allocatedBytes-first.allocatedBytes:0)||(first.id<second.id?-1:1))){
   input.signal?.throwIfAborted();
-  if(input.reclaim!==undefined&&row.mounted&&(input.policy??IMAGE_SLACK_V1).reclaimProfiles.includes(row.id)&&row.slackBytes>=slackFloorV1(row,input.policy)&&(free===undefined||free<input.targetFreeBytes)){
+  if(input.reclaim!==undefined&&row.mounted&&policy.reclaimProfiles.includes(row.id)&&row.slackBytes>=slackFloorV1(row,policy)&&(free===undefined||free<input.targetFreeBytes)){
    const earlier=free??0,answer=await input.reclaim(row.id,input.signal).catch(error=>{if(input.signal?.aborted)throw error;return{kind:"failed",message:String((error as Error)?.message??error).slice(0,200)} as ImageReclaimOutcomeV1;});
    free=input.freeBytes()??free;input.signal?.throwIfAborted();
    if(answer.kind==="reclaimed"){reclaimed.push(row.id);write(text("image.reclaimed",{id:row.id,slack:formatDiskBytesV1(row.slackBytes),freed:formatDiskBytesV1(Math.max(0,(free??0)-earlier))}));if(free!==undefined&&free>=input.targetFreeBytes)break;continue;}
-   const context:Record<string,string>=answer.kind==="failed"?{message:answer.message??""}:answer.kind==="skipped"?{slack:formatDiskBytesV1(row.slackBytes)}:{};
-   write(text("image.reclaim-"+answer.kind,{id:row.id,...context}));
+   if(answer.kind==="skipped"){
+    const render=(language:"en"|"de")=>diskTextV1("image.reclaim-skipped",language,{id:row.id,slack:formatDiskBytesV1(row.slackBytes),reason:diskTextV1("image.reclaim-reason-"+answer.reason,language,{})});
+    write(input.language==="both"?render("en")+" / "+render("de"):render(input.language));
+   }else write(text("image.reclaim-"+answer.kind,{id:row.id,...answer.kind==="failed"?{message:answer.message??""}:{}}));
    if(answer.kind==="unconfirmed"){if(free!==undefined&&free>=input.targetFreeBytes)break;continue;}
   }
   const need=Math.max(0,input.targetFreeBytes-(free??0)),verdict=decideImageSlackV1([row],need,input.policy)[0];
-  const inspectDetached=input.pressureDevice!==undefined&&free!==undefined&&need>0&&!row.mounted&&policy.regrowProfiles.includes(row.id)&&row.allocatedBytes>=policy.filesystemOverheadBytes+slackFloorV1(row,policy);
-  if(verdict.action!=="retire"&&!inspectDetached)continue;
+  const inspectDetached=input.inspectDetached!==false&&input.pressureDevice!==undefined&&free!==undefined&&need>0&&!row.mounted&&policy.regrowProfiles.includes(row.id)&&row.allocatedBytes>=policy.filesystemOverheadBytes+slackFloorV1(row,policy);
+  if(verdict===undefined||verdict.action!=="retire"&&!inspectDetached)continue;
   const before=free??0,outcome=await input.retire(row.id,input.signal).catch(error=>{if(input.signal?.aborted)throw error;return{kind:"failed",message:String((error as Error)?.message??error).slice(0,200)} as ImageOutcomeV1;});
   free=input.freeBytes()??free;
   const slack=formatDiskBytesV1(row.slackBytes);

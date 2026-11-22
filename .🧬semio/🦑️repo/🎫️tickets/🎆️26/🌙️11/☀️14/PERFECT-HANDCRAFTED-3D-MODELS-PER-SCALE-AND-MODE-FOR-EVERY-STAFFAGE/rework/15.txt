@@ -1,0 +1,15 @@
+objects/shopping-trolley
+objects/playground-swing
+objects/market-parasol
+objects/charcoal-grill
+objects/patio-heater
+objects/stepladder
+objects/street-lamp
+objects/drinking-fountain
+objects/waste-bin
+objects/bicycle-stand
+objects/retractable-bollard
+objects/storage-crate-stack
+objects/chalkboard
+objects/cooking-pot
+objects/tealight

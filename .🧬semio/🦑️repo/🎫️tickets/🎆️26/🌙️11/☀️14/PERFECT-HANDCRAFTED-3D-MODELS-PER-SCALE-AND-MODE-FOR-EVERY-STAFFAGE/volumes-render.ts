@@ -6,12 +6,13 @@
 import { writeFileSync, mkdirSync } from "node:fs";
 import { dirname } from "node:path";
 
+import { shadedTriangle } from "./digital-shaded-triangle.ts";
 import { Canvas, hashHue, hsl, type RGB } from "./volumes-raster.ts";
 import { drawnSet, addSectioned } from "./volumes-silhouette.ts";
 import { addMeshes, emptySet, rasterize } from "./volumes-tiles.ts";
 import { Mask, SCALES, poseState, VIEWS, entryOf, extentOf, featureM, loadSource, merged, outPath, poseOf, scaleMeshes, type Json, type ListName, type SolidMesh } from "./volumes-lib.ts";
 
-type Item = { mesh: SolidMesh; color: RGB; cutAxes?: [number, number, number][]; slender?: boolean };
+type Item = { mesh: SolidMesh & {normals?: Float32Array}; color: RGB; cutAxes?: [number, number, number][]; slender?: boolean };
 const clamp = (c: number) => Math.max(0, Math.min(255, c));
 
 const AX: Record<string, [number, number]> = { "-u": [0, -1], "+u": [0, 1], "-v": [1, -1], "+v": [1, 1], "-w": [2, -1], "+w": [2, 1] };
@@ -105,6 +106,11 @@ export function drawAxon(c: Canvas, ax: Axon, items: readonly Item[], opts: { cu
   for (const { mesh, color, cutAxes } of items) {
     const w = mesh.world;
     const n = w.length / 3;
+    const intensities = mesh.normals && !opts.unlit ? new Float32Array(n) : undefined;
+    if (intensities && mesh.normals) for (let i=0; i<n; i++) {
+      const normals=mesh.normals, j=i*3;
+      intensities[i]=0.43+0.57*Math.max(0,normals[j]!*light[0]!+normals[j+1]!*light[1]!+normals[j+2]!*light[2]!);
+    }
     const sx = new Float64Array(n);
     const sy = new Float64Array(n);
     const sd = new Float64Array(n);
@@ -124,8 +130,13 @@ export function drawAxon(c: Canvas, ax: Axon, items: readonly Item[], opts: { cu
       const facing = nx * cam.e[0] + ny * cam.e[1] + nz * cam.e[2];
       const lam = Math.abs(nx * light[0]! + ny * light[1]! + nz * light[2]!);
       const k = opts.unlit ? 1 : (0.4 + 0.6 * lam) * (facing >= 0 ? 1 : 0.62);
-      const col: RGB = [clamp(color[0] * k), clamp(color[1] * k), clamp(color[2] * k)];
-      c.triangle([sx[a]!, sy[a]!, sd[a]!, w[a * 3 + 2]!], [sx[b]!, sy[b]!, sd[b]!, w[b * 3 + 2]!], [sx[d]!, sy[d]!, sd[d]!, w[d * 3 + 2]!], col, opts.cut ? ax.zc : Infinity, 0.06 / ax.scale, cutAxes !== undefined && cutAxes.some((q) => nx * q[0] + ny * q[1] + nz * q[2] >= Math.SQRT1_2) ? ([255, 255, 255] as RGB) : null);
+      const col: RGB = intensities ? color : [clamp(color[0] * k), clamp(color[1] * k), clamp(color[2] * k)];
+      const corners=[a,b,d].map(i=>[sx[i]!,sy[i]!,sd[i]!,w[i*3+2]!]);
+      if (intensities) {
+        shadedTriangle(c,corners,color,[intensities[a]!,intensities[b]!,intensities[d]!],.06/ax.scale);
+      } else {
+        c.triangle(corners[0]!,corners[1]!,corners[2]!,col,opts.cut ? ax.zc : Infinity,0.06/ax.scale,cutAxes !== undefined && cutAxes.some((q) => nx*q[0]+ny*q[1]+nz*q[2]>=Math.SQRT1_2) ? [255,255,255] : null);
+      }
     }
   }
 }

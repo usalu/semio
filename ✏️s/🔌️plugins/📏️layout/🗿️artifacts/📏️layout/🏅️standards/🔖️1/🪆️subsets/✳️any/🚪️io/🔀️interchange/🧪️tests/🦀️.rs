@@ -1,6 +1,5 @@
 //! 🧪️ Language-neutral interchange laws with independent file readers and writers.
 use semio_framework_test_fixtures::{fixture_bytes, fixture_text};
-use semio_os_kernel as store;
 use semio_s_artifact_draw_drawing_model::{
     DrawingAttributes, DrawingImageAsset, DrawingImageBody, DrawingLayerBase, DrawingLayerNode,
     DrawingTextBody, DrawingTransform, default_drawing_transform, font_family::DrawingFontFamily,
@@ -146,12 +145,51 @@ fn idml_unicode_story_survives_independent_zip_and_xml_writers() {
     assert_eq!(draft(&imported.value).pages[0].width,doc.pages[0].width);
 }
 #[test]
+fn idml_requires_self_on_the_story_record_inside_a_package() {
+    use semio_s_artifact_stdio_xml::{
+        schema::snapshot::XmlNode,
+        standards::v1_0::subsets::base::io::text::snapshot::{xml_document_from_text, xml_document_to_text_checked},
+    };
+    use semio_s_artifact_stdio_zip::standards::v2_0::subsets::base::io::{decode_zip, encode_zip};
+    let doc = seed(&fixtures()["cases"][2]);
+    let output = export_document("idml", &doc, &mut |_| true).unwrap().value;
+    let original = import_document("idml", &output, "Story identity", &mut |_| true).unwrap();
+    assert_eq!(draft(&original.value).stories[0].id, doc.stories[0].id);
+    let mut archive = decode_zip(&output).unwrap();
+    let story = archive.entries.iter_mut().find(|entry| entry.name.starts_with("Stories/")).unwrap();
+    let mut xml = xml_document_from_text(std::str::from_utf8(&story.data).unwrap()).unwrap();
+    let Some(XmlNode::Element { children, .. }) = &mut xml.root else { panic!("story package wrapper") };
+    let record = children.iter_mut().find(|node| matches!(node, XmlNode::Element { name, .. } if name == "Story")).unwrap();
+    let XmlNode::Element { attrs, .. } = record else { unreachable!() };
+    let before = attrs.len();
+    attrs.retain(|attr| attr.name != "Self");
+    assert_eq!(attrs.len() + 1, before);
+    story.data = xml_document_to_text_checked(&xml).unwrap().into_bytes();
+    assert_eq!(
+        import_document("idml", &encode_zip(&archive).unwrap(), "Missing story identity", &mut |_| true).unwrap_err(),
+        "layout.idml.missing-identity",
+    );
+}
+
+#[test]
 fn idml_refuses_archive_member_traversal() {
-    use semio_s_artifact_stdio_zip::{ZipSnapshot,schema::snapshot::ZipEntry,standards::v2_0::subsets::base::io::encode_zip};
-    let cases=fixtures();let case=&cases["cases"][3];let mut archive=ZipSnapshot::default();
-    archive.entries.push(ZipEntry{name:case["member"].as_str().unwrap().into(),data:Vec::new(),..ZipEntry::default()});
-    let error=import_document("idml",&encode_zip(&archive).unwrap(),"Unsafe IDML",&mut |_|true).unwrap_err();
-    assert_eq!(error,case["expectedError"].as_str().unwrap());
+    use semio_repo_test_host::parse_json;
+    use semio_s_artifact_stdio_zip::{ZipSnapshot, schema::snapshot::ZipEntry, standards::v2_0::subsets::base::io::encode_zip};
+    use semio_s_artifact_stdio_zip_test_oracle::standards::v2_0::subsets::base::oracle_apply_mutation;
+
+    let cases = fixtures();
+    let case = &cases["cases"][3];
+    let member = case["member"].as_str().unwrap();
+    let mut archive = ZipSnapshot::default();
+    archive.entries.push(ZipEntry { name: member.into(), ..ZipEntry::default() });
+    assert!(encode_zip(&archive).is_err());
+
+    let mutation = serde_json::json!({ "kind": "add-entry", "params": { "entry": { "name": member, "data": [] } } });
+    let mutation = parse_json(&mutation.to_string()).unwrap();
+    let empty = encode_zip(&ZipSnapshot::default()).unwrap();
+    let external = oracle_apply_mutation(&empty, &mutation).unwrap();
+    let error = import_document("idml", &external, "Unsafe IDML", &mut |_| true).unwrap_err();
+    assert_eq!(error, case["expectedError"].as_str().unwrap());
 }
 #[test]
 fn cancellation_precedes_decoding_and_encoding() {
@@ -181,7 +219,7 @@ fn printable_scene_preserves_content_and_center_rotation() {
     let b=&expected["frame"];let bounds=LayoutBounds{x:b["x"].as_f64().unwrap(),y:b["y"].as_f64().unwrap(),width:b["width"].as_f64().unwrap(),height:b["height"].as_f64().unwrap(),rotation:b["rotation"].as_f64().unwrap()};
     let layer=doc.pages[0].layer_ids[0].clone();
     doc.pages[0].frames.push(Frame::Rect{id:"shape".into(),layer_id:layer.clone(),bounds,fill:Some([0.25,0.5,0.75,0.5]),stroke:None,locked:None,visible:None});
-    doc.links.push(ImageLink{id:"image".into(),path:"image.png".into(),hash:String::new(),width:1,height:1,dpi:72,color_profile:None,state:None,proxy_data_url:Some("data:image/png;base64,AQID".into()),artifact_kind:"s.stdio.png".into(),artifact_ref:String::new()});
+    doc.links.push(ImageLink{id:"image".into(),path:"image.png".into(),hash:String::new(),width:1,height:1,dpi:72,color_profile:None,state:None,proxy_data_url:Some(expected["imageDataUrl"].as_str().unwrap().into()),artifact_kind:"s.stdio.png".into(),artifact_ref:String::new()});
     doc.pages[0].frames.push(Frame::Image{id:"image-frame".into(),layer_id:layer,bounds:LayoutBounds{x:0.0,y:0.0,width:10.0,height:10.0,rotation:0.0},link_id:"image".into(),locked:None,visible:None});
     let scene=layout_snapshot_to_scene(&doc).unwrap();
     assert_eq!(scene.texts(),vec![expected["expected"]["text"].as_str().unwrap()]);
@@ -192,7 +230,8 @@ fn printable_scene_preserves_content_and_center_rotation() {
     assert!((transform.rotation.w-expected["expected"]["quaternion"]["w"].as_f64().unwrap()).abs()<1e-12);
     assert!(matches!(rect[0],VectorNode::Path{..}));
     let VectorNode::Group{children:images,..}=&children[2]else{panic!("image group")};
-    assert!(matches!(&images[0],VectorNode::Image{bytes,..} if bytes==&vec![1,2,3]));
+    let image_bytes: Vec<u8> = serde_json::from_value(expected["expected"]["imageBytes"].clone()).unwrap();
+    assert!(matches!(&images[0], VectorNode::Image { bytes, .. } if bytes == &image_bytes));
     assert_eq!(scene.styles[1].fill.unwrap().a,0.5);
 }
 #[test]
@@ -208,13 +247,14 @@ fn idml_center_rotation_round_trips_without_changing_native_units() {
 
 #[test]
 fn pdf_paint_transform_and_alpha_images_match_the_independent_reader() {
+    use semio_framework_io_base64::{base64_standard_decode, base64_standard_encode};
     use semio_s_artifact_stdio_png::{PngSnapshot,standards::v1_2::subsets::any::io::{encode_png,project_png}};
     use semio_s_artifact_layout_layout_model::ImageLink;
     use semio_s_artifact_stdio_pdf_test_oracle::standards::v1_7::subsets::base::reference_image_sample_streams;
     let cases=fixtures();let case=&cases["cases"][7];let mut doc=seed(case);let layer=doc.pages[0].layer_ids[0].clone();
     let r=&case["rect"];doc.pages[0].frames.push(Frame::Rect{id:"rect".into(),layer_id:layer.clone(),bounds:LayoutBounds{x:r["x"].as_f64().unwrap(),y:r["y"].as_f64().unwrap(),width:r["width"].as_f64().unwrap(),height:r["height"].as_f64().unwrap(),rotation:r["rotation"].as_f64().unwrap()},fill:Some([0.25,0.5,0.75,1.0]),stroke:None,locked:None,visible:None});
     let mut png=PngSnapshot::default();png.image.width=2;png.image.height=1;png.image.samples=case["image"]["pixels"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap()as u16).collect();
-    let source=encode_png(&png).unwrap();doc.links.push(ImageLink{id:"link".into(),path:"fixture.png".into(),hash:String::new(),width:2,height:1,dpi:72,color_profile:None,state:Some("ok".into()),proxy_data_url:Some(format!("data:image/png;base64,{}",store::pack_rt::pack_value_to_base64(&source))),artifact_kind:"s.stdio.png".into(),artifact_ref:String::new()});
+    let source=encode_png(&png).unwrap();doc.links.push(ImageLink{id:"link".into(),path:"fixture.png".into(),hash:String::new(),width:2,height:1,dpi:72,color_profile:None,state:Some("ok".into()),proxy_data_url:Some(format!("data:image/png;base64,{}",base64_standard_encode(&source))),artifact_kind:"s.stdio.png".into(),artifact_ref:String::new()});
     doc.pages[0].frames.push(Frame::Image{id:"image".into(),layer_id:layer,bounds:LayoutBounds{x:70.0,y:40.0,width:20.0,height:10.0,rotation:0.0},link_id:"link".into(),locked:None,visible:None});
     let output=export_document("pdf",&doc,&mut |_|true).unwrap();
     let independent=reference_image_sample_streams(&output.value).unwrap();
@@ -222,7 +262,7 @@ fn pdf_paint_transform_and_alpha_images_match_the_independent_reader() {
     let imported=import_document("pdf",&output.value,"Paint",&mut |_|true).unwrap();assert_eq!(draft(&imported.value).pages[0].frames.len(),2);
     let rect=draft(&imported.value).pages[0].frames.iter().find(|frame|matches!(frame,Frame::Rect{..})).unwrap();
     let b=rect.bounds();assert!((b.rotation-std::f64::consts::FRAC_PI_2).abs()<1e-10);assert!((b.x-10.0).abs()<1e-10);assert!((b.y-20.0).abs()<1e-10);
-    let proxy=draft(&imported.value).links[0].proxy_data_url.as_ref().unwrap().strip_prefix("data:image/png;base64,").unwrap();let pixels=project_png(&store::pack_rt::pack_value_from_base64(proxy).unwrap()).unwrap().pixels;
+    let proxy=draft(&imported.value).links[0].proxy_data_url.as_ref().unwrap().strip_prefix("data:image/png;base64,").unwrap();let pixels=project_png(&base64_standard_decode(proxy).unwrap()).unwrap().pixels;
     assert_eq!(pixels,case["expected"]["imagePixels"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap()as u8).collect::<Vec<_>>());
 }
 
@@ -314,7 +354,7 @@ fn idml_typography_and_utf8_style_ranges_survive_independent_markup_rewriting(){
 fn idml_embedded_png_and_editable_parent_pages_round_trip(){
     use semio_s_artifact_stdio_png::{PngSnapshot,standards::v1_2::subsets::any::io::encode_png};
     use semio_s_artifact_layout_layout_model::{ImageLink,ParentPage};
-    let cases=fixtures();let case=cases["cases"].as_array().unwrap().iter().find(|case|case["id"]=="idml-image-and-parent").unwrap();let mut doc=seed(&cases["cases"][2]);let source=&case["image"];let mut png=PngSnapshot::default();png.image.width=2;png.image.height=1;png.image.samples=source["pixels"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap()as u16).collect();let bytes=encode_png(&png).unwrap();let payload=store::pack_rt::pack_value_to_base64(&bytes);
+    let cases=fixtures();let case=cases["cases"].as_array().unwrap().iter().find(|case|case["id"]=="idml-image-and-parent").unwrap();let mut doc=seed(&cases["cases"][2]);let source=&case["image"];let mut png=PngSnapshot::default();png.image.width=2;png.image.height=1;png.image.samples=source["pixels"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap()as u16).collect();let bytes=encode_png(&png).unwrap();let payload=semio_framework_io_base64::base64_standard_encode(&bytes);
     doc.links.push(ImageLink{id:"placed-image".into(),path:"image.png".into(),hash:String::new(),width:2,height:1,dpi:72,color_profile:None,state:Some("ok".into()),proxy_data_url:Some(format!("data:image/png;base64,{payload}")),artifact_kind:"s.stdio.png".into(),artifact_ref:String::new()});let layer=doc.pages[0].layer_ids[0].clone();doc.pages[0].frames.push(Frame::Image{id:"image-frame".into(),layer_id:layer,bounds:LayoutBounds{x:20.0,y:30.0,width:40.0,height:20.0,rotation:0.1},link_id:"placed-image".into(),locked:None,visible:None});
     let master_layer=Layer{id:"master-layer".into(),name:"Master".into(),visible:true,locked:false,object_ids:vec!["master-rect".into()]};doc.parent_pages.push(ParentPage{id:"master-body".into(),name:"Header".into(),width:200.0,height:300.0,layer_ids:vec![master_layer.id.clone()],layers:vec![master_layer],frames:vec![Frame::Rect{id:"master-rect".into(),layer_id:"master-layer".into(),bounds:LayoutBounds{x:5.0,y:5.0,width:50.0,height:10.0,rotation:0.0},fill:Some([0.2,0.3,0.4,0.5]),stroke:None,locked:None,visible:None}]});doc.pages[0].parent_page_id=Some("master-body".into());
     let one=export_document("idml",&doc,&mut |_|true).unwrap().value;let mut stream=InterchangeExportSession::new("idml").unwrap();let mut two=Vec::new();loop{match stream.advance(&doc).unwrap(){InterchangeExportAdvance::Chunk(bytes)=>two.extend(bytes),InterchangeExportAdvance::Progress{..}=>{},InterchangeExportAdvance::Done=>break,}}
@@ -340,7 +380,7 @@ fn idml_page_overrides_keep_the_master_and_preserve_sparse_changes_in_both_expor
     use semio_s_artifact_stdio_xml_test_oracle::standards::v1_0::subsets::base::oracle_round_trip;
     let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../🔀️interchange/📦️idml/📎️overrides/🧪️fixtures/🔣️.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap().iter().filter(|case|case.get("override").is_some()&&case.get("error").is_none()){let mut doc=seed(&fixtures()["cases"][2]);let object=case["override"]["objectId"].as_str().unwrap();let layer=Layer{id:"master-content".into(),name:"Parent content".into(),visible:true,locked:false,object_ids:vec![object.into()]};let bounds=LayoutBounds{x:5.0,y:8.0,width:50.0,height:30.0,rotation:0.0};
-        let frame=match case["kind"].as_str().unwrap(){"text"=>Frame::Text{id:object.into(),layer_id:layer.id.clone(),bounds,story_id:doc.stories[0].id.clone(),thread_next:None,columns:1,inset:LayoutRect{x:0.0,y:0.0,width:0.0,height:0.0},wrap_mode:"none".into(),visible:None,locked:None},"image"=>{use semio_s_artifact_stdio_png::{PngSnapshot,standards::v1_2::subsets::any::io::encode_png};let mut png=PngSnapshot::default();png.image.width=1;png.image.height=1;png.image.samples=vec![255,0,0,128];let bytes=encode_png(&png).unwrap();doc.links.push(semio_s_artifact_layout_layout_model::ImageLink{id:"override-image".into(),path:"placed.png".into(),hash:String::new(),width:1,height:1,dpi:72,color_profile:None,state:Some("ok".into()),proxy_data_url:Some(format!("data:image/png;base64,{}",store::pack_rt::pack_value_to_base64(&bytes))),artifact_kind:"s.stdio.png".into(),artifact_ref:String::new()});Frame::Image{id:object.into(),layer_id:layer.id.clone(),bounds,link_id:"override-image".into(),visible:None,locked:None}},_=>Frame::Rect{id:object.into(),layer_id:layer.id.clone(),bounds,fill:Some([0.2,0.3,0.4,0.5]),stroke:None,visible:None,locked:None}};
+        let frame=match case["kind"].as_str().unwrap(){"text"=>Frame::Text{id:object.into(),layer_id:layer.id.clone(),bounds,story_id:doc.stories[0].id.clone(),thread_next:None,columns:1,inset:LayoutRect{x:0.0,y:0.0,width:0.0,height:0.0},wrap_mode:"none".into(),visible:None,locked:None},"image"=>{use semio_s_artifact_stdio_png::{PngSnapshot,standards::v1_2::subsets::any::io::encode_png};let mut png=PngSnapshot::default();png.image.width=1;png.image.height=1;png.image.samples=vec![255,0,0,128];let bytes=encode_png(&png).unwrap();doc.links.push(semio_s_artifact_layout_layout_model::ImageLink{id:"override-image".into(),path:"placed.png".into(),hash:String::new(),width:1,height:1,dpi:72,color_profile:None,state:Some("ok".into()),proxy_data_url:Some(format!("data:image/png;base64,{}",semio_framework_io_base64::base64_standard_encode(&bytes))),artifact_kind:"s.stdio.png".into(),artifact_ref:String::new()});Frame::Image{id:object.into(),layer_id:layer.id.clone(),bounds,link_id:"override-image".into(),visible:None,locked:None}},_=>Frame::Rect{id:object.into(),layer_id:layer.id.clone(),bounds,fill:Some([0.2,0.3,0.4,0.5]),stroke:None,visible:None,locked:None}};
         doc.parent_pages.push(ParentPage{id:"master".into(),name:"Parent".into(),width:200.0,height:300.0,layer_ids:vec![layer.id.clone()],layers:vec![layer],frames:vec![frame]});doc.pages[0].parent_page_id=Some("master".into());let change:PageOverride=semio_framework_pack_json::from_json_str(&case["override"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();doc.pages[0].overrides=vec![change.clone()];let mut second=page("unaffected".into(),200.0,300.0);second.parent_page_id=Some("master".into());second.spread_id=doc.spreads[0].id.clone();doc.spreads[0].page_ids.push(second.id.clone());doc.pages.push(second);
         let direct=export_document("idml",&doc,&mut |_|true).unwrap().value;let mut session=InterchangeExportSession::new("idml").unwrap();let mut streamed=Vec::new();loop{match session.advance(&doc).unwrap(){InterchangeExportAdvance::Chunk(bytes)=>{assert!(bytes.len()<=4096);streamed.extend(bytes)},InterchangeExportAdvance::Progress{..}=>{},InterchangeExportAdvance::Done=>break,}}
         for bytes in[direct,streamed]{let mut archive=decode_zip(&bytes).unwrap();let mut ids=std::collections::HashSet::new();fn visit(node:&semio_s_artifact_stdio_xml::schema::snapshot::XmlNode,ids:&mut std::collections::HashSet<String>){if let semio_s_artifact_stdio_xml::schema::snapshot::XmlNode::Element{attrs,children,..}=node{if let Some(id)=attrs.iter().find(|attr|attr.name=="Self"){assert!(ids.insert(id.value.clone()),"duplicate IDML Self {}",id.value);}for child in children{visit(child,ids);}}}for entry in &archive.entries{if entry.name.ends_with(".xml"){let xml=semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::xml_document_from_text(std::str::from_utf8(&entry.data).unwrap()).unwrap();visit(xml.root.as_ref().unwrap(),&mut ids);}}let spread=archive.entries.iter().find(|entry|entry.name=="Spreads/Spread_0.xml").unwrap();let text=std::str::from_utf8(&spread.data).unwrap();assert!(text.contains(&format!("OverrideList=\"{object}\"")));for entry in &mut archive.entries{if entry.name.ends_with(".xml"){entry.data=oracle_round_trip(&entry.data).unwrap();}}let imported=import_document("idml",&encode_zip(&archive).unwrap(),"Override",&mut |_|true).unwrap();assert_eq!(draft(&imported.value).parent_pages.len(),1);assert_eq!(draft(&imported.value).parent_pages[0].frames[0].bounds(),doc.parent_pages[0].frames[0].bounds());let actual=&draft(&imported.value).pages[0].overrides[0];assert_eq!(actual.object_id,change.object_id);assert_eq!(actual.visible,change.visible);assert_eq!(actual.locked,change.locked);match(&actual.bounds,&change.bounds){(Some(a),Some(b))=>{assert!((a.x-b.x).abs()<1e-8);assert!((a.y-b.y).abs()<1e-8);assert!((a.rotation-b.rotation).abs()<1e-8);},(None,None)=>{},_=>panic!("sparse bounds presence")};assert!(draft(&imported.value).pages[1].overrides.is_empty());assert_eq!(draft(&imported.value).pages[0].frames.len(),doc.pages[0].frames.len());if case["kind"]=="image"{assert_eq!(draft(&imported.value).links[0].proxy_data_url,doc.links[0].proxy_data_url);}}
@@ -461,10 +501,16 @@ fn step_background_borrows_typed_originals_and_emits_real_geometry(){
  let graph=semio_s_artifact_stdio_contract::part21::parse_part21(std::str::from_utf8(&rewritten).unwrap()).unwrap();
  assert!(graph.by_type("POLYLINE").count()>=4);
  let projected=semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::io::projection::project_edges(&graph).unwrap();
- let expected=fixture["expected"]["rectanglePointsMm"].as_array().unwrap();
- for(point,expected)in projected.curves[0].points.iter().zip(expected){
-  for(axis,value)in point.iter().enumerate(){assert!((value*25.4/72.0-expected[axis].as_f64().unwrap()).abs()<1e-9);}
- }
+ let expected: Vec<[f64; 3]> = serde_json::from_value(fixture["expected"]["rectanglePointsMm"].clone()).unwrap();
+ let polylines: std::collections::HashSet<_> = graph.by_type("POLYLINE").map(|entity| entity.id).collect();
+ let matching_rectangles = projected.curves.iter().filter(|curve| {
+  polylines.contains(&curve.source_id) && curve.points.len() == expected.len() &&
+   curve.points.iter().zip(&expected).all(|(point, expected)| {
+    point.iter().zip(expected).all(|(value, expected)| (value * 25.4 / 72.0 - expected).abs() < 1e-9)
+   })
+ }).count();
+ let expected_rectangles = fixture["expected"]["minimumPolylines"].as_u64().unwrap() as usize;
+ assert!(matching_rectangles >= expected_rectangles, "projected {matching_rectangles} matching background rectangles; expected {expected_rectangles}: {:?}", projected.curves);
  let output=semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::io::draughting::read_draughting(&graph).unwrap();
  assert_eq!(output.texts.iter().filter(|row|row.literal.contains(fixture["expected"]["text"].as_str().unwrap())).count(),2);
  assert_eq!(output.texts.iter().filter(|row|row.literal==fixture["expected"]["imageReference"].as_str().unwrap()).count(),2);

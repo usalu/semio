@@ -1,4 +1,4 @@
-import {objSnapshotToSqliteDatabase,objSnapshotFromSqliteDatabase,objSnapshotValidateSqliteSubset,OBJ_SQLITE_SCHEMA,type ObjSnapshot} from "@semio-tech/stdio-obj";
+import {objSnapshotToSqliteDatabase,objSnapshotFromSqliteDatabase,objSnapshotValidateSqliteSubset,OBJ_SQLITE_SCHEMA,type ObjSnapshot} from "../../../../🟦️.ts";
 import {exportSqliteDatabase,importSqliteDatabase} from "@semio-tech/framework";
 import {Database} from "bun:sqlite";
 import {expect,test} from "bun:test";

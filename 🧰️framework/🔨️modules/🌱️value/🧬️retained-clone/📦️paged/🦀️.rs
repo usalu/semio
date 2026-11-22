@@ -203,7 +203,7 @@ fn close_started(&self) -> bool { self.closing }
 impl<const N: usize> RetireOwned for PagedBytes<N> {
     type RetirementCursor=<PagedList<u8,N> as RetireOwned>::RetirementCursor;
     fn retirement_seed(self)->Self::RetirementCursor{
-        self.into_retained_bytes().retirement_seed()
+        crate::retirement::PagedListRetirement::from_octets(self.into_retained_bytes())
     }
     fn retirement_birth_bytes(&self) -> Option<usize> { Some(size_of::<crate::retirement::PagedListRetirement<u8, N>>()) }
     fn controlled_retirement_supported() -> bool { true }

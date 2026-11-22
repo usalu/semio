@@ -1,0 +1,26 @@
+# Result E11 (scheduler-failures), Wave 1122
+
+Landing log: `T/landings.md`, section "Wave 1122 E11". Process note: my first edits landed before the per-area lock addendum (00:56); I took the locks doctor, scheduler, tool-setup, tools afterwards, re-ran the tests and released them. Peers overwrote some of my doctor edits once (last writer wins) and I re-applied them; all markers verified intact at the end.
+
+## 1. Scheduler failures (U5)
+Findings from `repo scheduler status` / `~/Library/Caches/semio/scheduler/log.ndjson`:
+- "failed" means the wrapped command (`repo run ...`) exited non-zero, or the work threw. The record kept only `exit`, no reason, and the caller's output is gone. So the 6 `workspace:components` failures (2026-11-12 19:35 to 22:19, `📋️project.json` target `components`, `repo ./📜️script.ts components`, depends on describe/native-transpile/plugin-web builds, i.e. iterative plugin-compile work) and the energy-oracle `deps` failure (2026-11-14 11:59, ok 30 min later, transient) have NO recoverable root cause: not verified. I did not rerun `workspace:components` (long build, brief rule 7).
+- Product gap fixed so this never recurs: finished jobs now keep a bounded one-line `reason` (max 300 chars). Thrown error: first non-empty line. CLI `scheduler run`: `<key>: failed, exit code N[, signal S], T s, peak M MB`. Ok jobs keep none.
+- Files (B = build lib): `🗓️scheduler/🟦️.ts` (event, finished type, `finish`), `🗓️scheduler/🎟️ticket/🟦️.ts` (`reasonOfV1`, `SCHEDULER_REASON_CHARACTERS_V1`), `🗓️scheduler/⌨️command/🟦️.ts`, `🗓️scheduler/🧬️schema/🔣️.json` (completed event + snapshot finished row, schema first).
+- Tests: scheduler `🧪️tests/🟦️.ts` new test "a failed job keeps a bounded one-line reason..." plus CLI assertion on `bad-run`; 26/26 pass, learn 2/2.
+
+## 2. micromamba and tectonic missing (U1)
+Two causes:
+- tectonic: `repo tools verify` said ok (hook), but the process tool registry (`🧰️framework/🔨️modules/🏃️process/🧰️tools/🔣️.json`, read by doctor and `tools list`) looked for `tools/tectonic/<sha256>/tectonic` while the print pipeline retains it at `tools/print/tectonic/<rust target>/tectonic`. Fix: locator segments `print/tectonic/{extra:target}`, digests export the `target` extra, resolver (`🔎️resolve/🟦️.ts`) supports `{extra:<name>}`. Test: new case in `🧪️tests/🔎️resolve/🟦️.ts` (35/35).
+- micromamba: no row in the tool-setup table, so `repo tools setup` never provisioned it (only the Python course env did as a side effect). Fix: tool-setup row (`platforms: ["darwin"]`, hook verify, script prepare) in `B/🧰️tool-setup/🔣️.json`, optional row `platforms` in its schema, `toolRowsV1("all")` filters by platform, and the teaching installer got `provisionMicromamba`, `verifyMicromamba`, `micromambaLocation` plus CLI modes `prepare-micromamba` / `verify-micromamba` (binary only, no conda prefix). Tests: native provisioner script (fake fetcher, tamper, non-darwin), tool-setup 24/24 (fixture + python oracle updated), command 5/5.
+- Live: `mcp__repo__tools_setup which=toolchains` provisioned micromamba 2.10.0 (15.6 MB, digest verified); `mcp__repo__tools_verify` reports 22 of 22 ok including micromamba; doctor no longer reports `tools.missing`. The 8 GiB tools image was not the cause.
+
+## 3. Relay and sessions (U3, U4)
+- pid 75460 is NOT an orphan: it is the launchd KeepAlive unit `tech.semio.fleet.relay` (ppid 1 is its normal state; `/Volumes/semio-peers/g2..g5` exist and are mounted; started 11-15 16:01). Doctor only labelled the display phase `orphan` for any ppid 1 process. Fix: new policy list `processes.services` (`doctor/🔣️policy.json`, schema, `🧮️analysis`, python oracle) exempts relay units; new fixture case proves relay -> running while an old unowned build process stays orphan. Doctor 17/17 before the peer break below. Not killed.
+- Sessions: 17 "live" with 12 older than 7 days were all `default` origin sessions of other worktrees. Cause: `agentSessionStateV1` treated every default session as live forever and `collectAgentSessionsV1` never collected them, so they also kept a live budget share. Fix: default sessions age like any other (live 10 min, idle 1 h, gone after) and are collected; the next use reopens them (open is idempotent). Files: `🪪️agent-sessions/🪪️identity`, `🗄️store`, `🧬️schema` (Facts without isDefault), fixture, python oracle, tests (14/14, adapters 7/7, command 9/9). The existing stale ones are collected by the next due collection (`collectAgentSessionsIfDueV1`) or `repo session` gc; I did not close any.
+
+## Not verified / for others
+- Root causes of the Nov 12 `workspace:components` failures and the Nov 14 energy-oracle failure: unrecoverable from retained data.
+- Live effect of the doctor and session changes: doctor currently fails to load because of a peer's edit in `doctor/📖️rules/🔣️.json` (`storage.image-misplaced` and `storage.image-detached-blocking` fix commands must match `^repo [a-z]`); not mine, whoever owns storage must fix it. Until then the doctor main test file and `repo doctor` fail.
+- `⚖️laws/🧰️direct-tool-declarations` repository test fails on docs and the node-native schema (pre-existing, untouched files).
+- Linux/Windows paths of the new tool-setup row filter tested only through the table logic on darwin.

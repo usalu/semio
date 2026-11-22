@@ -65,12 +65,12 @@ async function expectBoardStory(page: Page, name: string, locale?: string): Prom
   try {
     await expect(host).toHaveAttribute("data-board-snapshot-parsed", "true");
     await expect(host).toHaveAttribute("data-board-nodes", "2");
-    await expect(host.locator("canvas")).toBeVisible();
+    await expect(host.locator(`canvas:not([aria-hidden="true"])`)).toBeVisible();
   } catch (error) {
     writeFileSync(test.info().outputPath("errors.json"), JSON.stringify({ pageErrors: pageErrors.map(error => ({ message: error.message, stack: error.stack })), consoleErrors }, null, 2));
     throw error;
   }
-  const canvas = page.locator(".semio-board-2d-host canvas");
+  const canvas = page.locator(".semio-board-2d-host canvas:not([aria-hidden=\"true\"])");
 
   expect(pageErrors.map((error) => error.message)).toEqual([]);
   expect(significantConsoleErrors(consoleErrors)).toEqual([]);

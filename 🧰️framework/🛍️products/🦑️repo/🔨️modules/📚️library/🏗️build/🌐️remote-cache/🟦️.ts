@@ -1,4 +1,4 @@
-import {validateJsonSchemaSubset} from "../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
+import {compileJsonSchemaSubset,type CompiledJsonSchemaSubset} from "../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from "../🏃️execution/🧬️schema/🌐️remote-cache.json" with {type:"json"};
 import buildPolicy from "../🔣️policy.json" with {type:"json"};
 
@@ -9,13 +9,15 @@ export type RemoteCacheContractV1=Readonly<{version:1;endpoint:string;instance:s
 export type RemoteCachePolicyV1=Readonly<typeof buildPolicy.remoteCache>;
 
 /** 🧾️ Names which tools render the contract and what the selected one could not honour. */
-export type RemoteCacheRenderingV1=Readonly<{mechanism:string;applied:readonly string[];unsupported:readonly ("compression"|"download"|"timeoutSeconds"|"retries")[];uploadEnforcedBy:"client"|"server"|"none";localOnly?:string}>;
+export type RemoteCacheRenderingV1=Readonly<{mechanism:string;applied:readonly string[];unsupported:readonly ("compression"|"download"|"timeoutSeconds"|"retries")[];uploadEnforcedBy:"client"|"server"|"none"}>;
 
 const definitions=schema.definitions;
 
+const shapes=new Map<string,CompiledJsonSchemaSubset>(),shapeOf=(definition:string):CompiledJsonSchemaSubset=>{let check=shapes.get(definition);if(!check){check=compileJsonSchemaSubset({$ref:`#/definitions/${definition}`},schema);shapes.set(definition,check);}return check;};
+
 /** 🛡️ Validates one value against a named definition of the contract schema and names the first problem. */
 export function requireRemoteCacheShapeV1(definition:keyof typeof definitions,value:unknown,message:string):void{
- const errors=validateJsonSchemaSubset({$ref:`#/definitions/${definition}`},value,schema);
+ const errors=shapeOf(definition).validate(value);
  if(errors.length)throw Error(`${message}: ${errors[0]}`);
 }
 

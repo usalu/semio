@@ -3,6 +3,7 @@
 
 
 use super::*;
+use semio_os_vcs::io::binary::genesis::ArtifactGenesisPack;
 
 /// 🪪️ A constructor declares the exact identity and optional artifact dialect; absence is compared, never inferred.
 #[derive(Clone,Debug,PartialEq,Eq,semio_framework_value::RetireOwned)]
@@ -170,7 +171,7 @@ where
     pub(super) mutation_output:OwnedSlot<M>,
     pub original_failure:ManuallyDrop<Option<semio_framework_job::OriginalTurnFailure>>,
     pub original_context_failure:ManuallyDrop<Option<semio_framework_job::OriginalTurnFailure>>,
-    pub pack: ManuallyDrop<Option<Vec<u8>>>,
+    pub pack: ManuallyDrop<Option<ArtifactGenesisPack>>,
     pub initial: ManuallyDrop<Option<P>>,
     pub history: ManuallyDrop<Option<std::sync::Arc<semio_os_spr::HistoryLog>>>,
     pub fold_job: ManuallyDrop<Option<semio_os_spr::HistoryFoldJob<'static, semio_os_spr::history::RetainedHistoryFold>>>,
@@ -226,7 +227,7 @@ where
 {
     pub fn from_decoded_pack(
         initial: P,
-        pack: Vec<u8>,
+        pack: impl Into<ArtifactGenesisPack>,
         digest: [u8; 32],
         history: semio_os_spr::HistoryLog,
         expected: PersistedDocumentHydrationIdentity,
@@ -239,7 +240,7 @@ where
         target: PersistedDocumentHydrationTarget,
         actor: semio_os_spr::ActorId,
     ) -> Self where M:protocol::OpBinaryReceiving {
-        let mut hydration = Self::new(Some(pack), Some(initial), history, expected, owner, schema, owners, operation, generation, expires_at_us, target, Phase::Begin, actor);
+        let mut hydration = Self::new(Some(pack.into()), Some(initial), history, expected, owner, schema, owners, operation, generation, expires_at_us, target, Phase::Begin, actor);
         hydration.pack_digest = Some(digest);
         hydration
     }
@@ -257,11 +258,11 @@ where
         target: PersistedDocumentHydrationTarget,
         actor: semio_os_spr::ActorId,
     ) -> Self where M:protocol::OpBinaryReceiving {
-        Self::new(Some(pack), None, history, expected, owner, schema, owners, operation, generation, expires_at_us, target, Phase::ScanPack, actor)
+        Self::new(Some(pack.into()), None, history, expected, owner, schema, owners, operation, generation, expires_at_us, target, Phase::ScanPack, actor)
     }
 
     pub fn new(
-        pack: Option<Vec<u8>>,
+        pack: Option<ArtifactGenesisPack>,
         initial: Option<P>,
         history: semio_os_spr::HistoryLog,
         expected: PersistedDocumentHydrationIdentity,

@@ -14,17 +14,18 @@ export type FailedPassInputsV1=Readonly<{startedMs:number;files:readonly string[
 const defaultModifiedMs=(path:string):number|undefined=>{try{return statSync(path).mtimeMs;}catch{return undefined;}};
 
 /** 📍️ Resolve Cargo's package-version remapping against the package manifest, and ordinary source names against the Cargo workspace. */
-export function failedCompilerMessageFilesV1(message:Readonly<{package_id?:unknown;manifest_path?:unknown;target?:Readonly<{src_path?:unknown}>;message?:Readonly<{spans?:readonly Readonly<{file_name?:unknown}>[]}>}>,cwd:string,cargoWorkspace:string):readonly string[]{
+export function failedCompilerMessageFilesV1(message:Readonly<{package_id?:unknown;manifest_path?:unknown;target?:Readonly<{src_path?:unknown}>;message?:Readonly<{spans?:readonly Readonly<{file_name?:unknown;is_primary?:unknown}>[]}>}>,cwd:string,cargoWorkspace:string,primarySpansOnly=false):readonly string[]{
  const root=resolve(cwd),manifest=typeof message.manifest_path==="string"&&message.manifest_path?resolve(root,message.manifest_path):undefined;
  const repositoryFile=(path:string)=>{const distance=relative(root,path);return distance!==""&&distance!==".."&&!distance.startsWith(".."+sep)&&!isAbsolute(distance);};
  const files=new Set<string>();
- if(manifest&&repositoryFile(manifest))files.add(manifest);
+ if(!primarySpansOnly&&manifest&&repositoryFile(manifest))files.add(manifest);
  const target=typeof message.target?.src_path==="string"&&message.target.src_path?resolve(root,message.target.src_path):undefined;
- if(target&&repositoryFile(target))files.add(target);
+ if(!primarySpansOnly&&target&&repositoryFile(target))files.add(target);
  const identity=typeof message.package_id==="string"?message.package_id.split("#")[1]:undefined;
  const pkg=manifest&&dirname(manifest);
  const prefix=pkg&&identity?(identity.includes("@")?identity.replace("@","-"):basename(pkg)+"-"+identity)+"/":undefined;
- for(const {file_name:name} of message.message?.spans??[]){
+ for(const {file_name:name,is_primary:primary} of message.message?.spans??[]){
+  if(primarySpansOnly&&primary!==true)continue;
   if(typeof name!=="string"||!name||/^<.*>$/u.test(name))continue;
   const remapped=pkg&&prefix&&name.startsWith(prefix);
   if(manifest&&!repositoryFile(manifest)&&!remapped&&!isAbsolute(name))continue;

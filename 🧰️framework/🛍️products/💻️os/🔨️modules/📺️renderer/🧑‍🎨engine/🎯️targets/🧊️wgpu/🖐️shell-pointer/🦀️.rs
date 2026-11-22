@@ -5,6 +5,7 @@
 extern crate infinite_canvas as infinite_world;
 extern crate semio_os_kernel as protocol;
 extern crate semio_os_kernel as store_sync;
+use semio_renderer_wgpu_shell_frame_pumps::FramePumpsCtx;
 use semio_renderer_wgpu_shell_actions::{ActionsCtx, command_rejection_notice, keybinding_unowned_text_v1, resolve_keybinding_target_window_v1, settle_watch_verdict};
 use semio_renderer_wgpu_shell_async::{chrome_now_ms, debug_log};
 use semio_renderer_wgpu_shell_chrome_state::{ChromeState, format_keybinding_shortcut, shell_shortcut_table, window_pane_owner};

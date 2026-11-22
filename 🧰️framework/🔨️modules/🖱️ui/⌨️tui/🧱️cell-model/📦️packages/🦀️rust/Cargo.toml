@@ -22,6 +22,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-ui-contract-presentation = { path = "../../../../🧬️contract/🖼️presentation/📦️packages/🦀️rust" }
 ui_styling = { path = "../../../../🎨️styling/📦️packages/🦀️rust", package = "semio-ui-styling" }
 
 [dev-dependencies]

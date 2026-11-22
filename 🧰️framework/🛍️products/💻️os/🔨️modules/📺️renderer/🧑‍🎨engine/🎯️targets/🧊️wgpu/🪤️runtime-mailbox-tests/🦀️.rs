@@ -28,7 +28,7 @@ use semio_renderer_wgpu_icon_host::icon_export;
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 use semio_renderer_wgpu_runtime_mailbox::StagedReferenceImageAuthority;
 #[cfg(not(target_arch = "wasm32"))]
-use semio_renderer_wgpu_runtime_mailbox::{FrameDeferredExecutionOwner, FrameMaintenanceOwner, NativeReferenceDecodeCloseStep, NativeReferenceDecodeJob, NativeReferenceDecodeOutput, push_renderer_asset_page};
+use semio_renderer_wgpu_runtime_mailbox::{FrameDeferredExecutionOwner, FrameMaintenanceOwner, NativeReferenceDecodeCloseStep, NativeReferenceDecodeJob, NativeReferenceDecodeOutput, FrameMaintenanceRefusal};
 use semio_renderer_wgpu_runtime_mailbox::{
     PresenterInteractionStep, RUNTIME_COMPLETION_CAPACITY, RuntimeApply, RuntimeCompletion, RuntimeCompletionQueue, RuntimeDispatchReturn, RuntimeHostWaker, RuntimeMailbox, RuntimePresentationAuthority, RuntimePresentationWitness, RuntimeRasterOperationAuthority,
     returned_completion,

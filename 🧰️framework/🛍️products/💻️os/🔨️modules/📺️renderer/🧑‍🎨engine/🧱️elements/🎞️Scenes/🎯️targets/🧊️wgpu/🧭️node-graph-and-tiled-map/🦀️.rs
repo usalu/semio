@@ -16,6 +16,8 @@ pub struct NodeGraphSurface {
 //#endregion NodeGraph
 
 //#region TiledMap
+
+pub use semio_renderer_wgpu_engine_board::tiled_map::{map_unavailable_notice, MapUnavailableNotice};
 #[derive(Clone, Debug)]
 pub struct TiledMapSurface {
     pub surface_id: String,
@@ -176,6 +178,14 @@ pub fn pinch_camera(current: [f64; 3], step: semio_framework::interaction::gestu
 /// 👆️ Starts a possible map tap or transfers the gesture to pinch when contact two lands.
 pub fn tiled_map_touch_pointer_down(owner: &crate::element_contracts::ScenePointerTarget, inner: Rect, pointer_id: ui_render::PointerId, x: f32, y: f32, modifiers: &semio_ui_wgpu_input::PointerModifiers) -> bool {
     let host_id = owner.host_id.as_str();
+    if semio_renderer_wgpu_engine_board::tiled_map::tiled_map_unavailable(host_id) {
+        if semio_renderer_wgpu_engine_board::tiled_map::map_retry_contains(host_id, x, y) {
+            let (sx, sy) = map_local_pointer(inner, x, y);
+            let merge_mode = map_marquee_mode(modifiers.shift, modifiers.ctrl_or_meta());
+            mutate_scene_state(host_id, |state| state.drag = Some(SceneDrag { mode: SceneDragMode::MapTouch { pointer_id, origin: [sx, sy], panning: false, merge_mode } }));
+        }
+        return true;
+    }
     if tiled_map_camera(host_id).is_none() {
         return false;
     }
@@ -251,6 +261,10 @@ pub fn tiled_map_touch_pointer_up_into(
     release: Option<(Rect, f32, f32)>,
     input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>,
 ) -> Result<bool, semio_ui_action::BoundedActionFault> {
+    if semio_renderer_wgpu_engine_board::tiled_map::tiled_map_unavailable(host_id) {
+        mutate_scene_state(host_id, |state| state.drag = None);
+        return Ok(release.is_some_and(|(_, x, y)| semio_renderer_wgpu_engine_board::tiled_map::map_retry_contains(host_id, x, y)) && semio_renderer_wgpu_engine_board::tiled_map::retry_tiled_map(host_id));
+    }
     match touch_pointer_up(host_id, pointer_id) {
         GestureVerdict::Single => {
             let Some((inner, x, y)) = release else {
@@ -314,6 +328,9 @@ pub fn tiled_map_pointer_down_into(
     input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>,
 ) -> Result<bool, semio_ui_action::BoundedActionFault> {
     let host_id = owner.host_id.as_str();
+    if semio_renderer_wgpu_engine_board::tiled_map::tiled_map_unavailable(host_id) {
+        return Ok(false);
+    }
     let (sx, sy) = semio_renderer_wgpu_engine_board::tiled_map::map_local_pointer(inner, x, y);
     if button == 0 {
         if selection_method.len() > SCENE_SURFACE_ID_BYTE_CAPACITY {
@@ -455,6 +472,9 @@ pub fn tiled_map_pointer_leave_into(host_id: &str, surface_id: &str, controller_
 /// 🎯️ `method` is `"pick"` for a click and the marquee's own method for a drag — the exact
 /// split `emitFeatureSelection`'s two call sites make in `🧭️TiledMapHost/🟦️.tsx`.
 pub fn tiled_map_pointer_up_into(host_id: &str, surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_ui_action::BoundedActionFault> {
+    if semio_renderer_wgpu_engine_board::tiled_map::tiled_map_unavailable(host_id) {
+        return Ok(semio_renderer_wgpu_engine_board::tiled_map::map_retry_contains(host_id, x, y) && semio_renderer_wgpu_engine_board::tiled_map::retry_tiled_map(host_id));
+    }
     let (sx, sy) = semio_renderer_wgpu_engine_board::tiled_map::map_local_pointer(inner, x, y);
     let state = scene_state(host_id);
     let Some(drag) = state.drag.as_ref() else {

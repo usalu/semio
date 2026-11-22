@@ -48,7 +48,7 @@ export type Point = { readonly x: number; readonly y: number };
 /** 🧊️ A world point or vector in all three axes `(ahead, up, left)`: x forward, y up, z the lateral position (left of the asset is +z). */
 export type Vec3 = { readonly x: number; readonly y: number; readonly z: number };
 
-/** 🗺️ The rigid frame of a bone in world space: origin `o` and the orthonormal axes `u` (along the bone, ahead-up-left), `v` (its normal in the sagittal plane at zero spread) and `w` (the lateral axis), as solved by `solveChain`. */
+/** 🗺️ The rigid frame of a bone in world space: origin `o` and the orthonormal axes `u` (along the bone, ahead-up-left), `v` (its normal, in the sagittal plane for a sagittal rest placement at zero spread) and `w` (its joint axis, lateral for a sagittal rest placement), as solved by `solveChain`. */
 export type BoneFrame = { readonly o: Vec3; readonly u: Vec3; readonly v: Vec3; readonly w: Vec3 };
 
 /** ✏️ One evaluated shape: flattened world outline (closed rings or open polylines) plus its authored metadata. */
@@ -183,13 +183,45 @@ export type TransportField = {
   readonly pathlines: readonly Pathline[];
   readonly streamlines: readonly Streamline[];
   readonly condensation: readonly { readonly at: Vec3; readonly radiusM: number; readonly condensateKgPerKg: number }[];
+  readonly flow: FlowField | null;
   readonly respiration: RespirationState | null;
   readonly model: { readonly stepS: number; readonly maxAgeS: number; readonly seed: number };
   readonly notes: readonly Text[];
 };
 
-/** 🖍️ What the transport overlay draws. */
+/** 🌊️ One stream of the flow field: an instantaneous streamline of the reconstructed velocity field with, per point, the travel time from its first point (s), the speed (m/s) and the local temperature excess (K), vapour excess and condensate (kg/kg moist air).
+ * `role` says what seeded it: the outflow of an emitter (`source`), ambient air drawn into a jet or plume (`entrained`), the moving ambient air (`ambient`) or air drawn to an inhaling nose or mouth (`inhaled`). */
+export type FlowStream = { readonly seed: Vec3; readonly role: "source" | "entrained" | "ambient" | "inhaled"; readonly emitter: Slug | null; readonly points: readonly Vec3[]; readonly travelS: readonly number[]; readonly speedMS: readonly number[]; readonly excessK: readonly number[]; readonly vapourExcessKgPerKg: readonly number[]; readonly condensateKgPerKg: readonly number[] };
+
+/** ☁️ One puff of the flow field: a parcel with its entrained radius and what it carries. */
+export type FlowPuff = { readonly at: Vec3; readonly radiusM: number; readonly excessK: number; readonly vapourExcessKgPerKg: number; readonly condensateKgPerKg: number; readonly carries: "airflow" | "vapour" };
+
+/** 🌊️ The thermodynamic flow field at the evaluated instant (world metres): streams, puffs, the ambient air they are read against (`dewPointC` is the temperature below which that air condenses) and the tracer model (`stepM` arc-length step of the streams, a tracer every `periodS` seconds whose streak covers `exposureS` seconds of travel). */
+export type FlowField = {
+  readonly timeS: number;
+  readonly streams: readonly FlowStream[];
+  readonly puffs: readonly FlowPuff[];
+  readonly ambient: { readonly airTempC: number; readonly relativeHumidity: number; readonly dewPointC: number; readonly windMS: number; readonly windDirectionDeg: number; readonly pressurePa: number };
+  readonly model: { readonly stepM: number; readonly periodS: number; readonly exposureS: number };
+};
+
+/** 🎗️ A drawn stream: its points with their state and the places and directions of its arrow heads. */
+export type FlowRibbon = { readonly stream: number; readonly role: FlowStream["role"]; readonly emitter: Slug | null; readonly points: readonly Vec3[]; readonly speedMS: readonly number[]; readonly excessK: readonly number[]; readonly vapourExcessKgPerKg: readonly number[]; readonly condensateKgPerKg: readonly number[]; readonly arrows: readonly { readonly at: Vec3; readonly direction: Vec3 }[] };
+
+/** ☄️ A tracer of the instant: the path it covered during the exposure (tail first, head last), the state at its head and its fade (0…1). */
+export type FlowStreak = { readonly stream: number; readonly role: FlowStream["role"]; readonly points: readonly Vec3[]; readonly speedMS: number; readonly excessK: number; readonly vapourExcessKgPerKg: number; readonly condensateKgPerKg: number; readonly opacity: number };
+
+/** ✨️ The generalised, view-neutral marks of a flow field at one time: what every drawing of the flow (paper, screen, 3D) projects. */
+export type FlowMarks = { readonly timeS: number; readonly ribbons: readonly FlowRibbon[]; readonly streaks: readonly FlowStreak[]; readonly puffs: readonly FlowPuff[] };
+
+/** 🖍️ What the transport overlay draws: the analytical layers of the parcel model. */
 export const TRANSPORT_LAYERS = ["parcels", "pathlines", "streamlines", "condensation"] as const;
+
+/** 🌊️ The layers of the thermodynamic flow view: `streams` (stream ribbons with arrow heads), `tracers` (advected particles as streaks), `moisture` (vapour clouds) and `fog` (condensed droplets where the dew point is crossed). */
+export const FLOW_LAYERS = ["streams", "tracers", "moisture", "fog"] as const;
+
+/** 📤️ One of {@link FLOW_LAYERS}. */
+export type FlowLayer = (typeof FLOW_LAYERS)[number];
 
 /** 🪧️ One of {@link TRANSPORT_LAYERS}. */
 export type TransportLayer = (typeof TRANSPORT_LAYERS)[number];
@@ -317,6 +349,10 @@ export type DepictionCommon = {
   readonly marginMm: number;
   readonly thermalQuantity: ThermalQuantity;
   readonly transport: readonly TransportLayer[];
+  /** 🌊️ The layers of the thermodynamic flow view drawn over the figure; absent or empty draws none. */
+  readonly flow?: readonly FlowLayer[];
+  /** ⏱️ Seconds the flow has developed before the query time when the depiction solves the transport itself (a pose at time 0 has emitted nothing yet); absent is 0. */
+  readonly flowDevelopS?: number;
   readonly transportStrokeMm?: number;
   readonly transportTrailS?: number;
   readonly profile: PrintProfile;

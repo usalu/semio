@@ -6,31 +6,6 @@
       "schema": "s.trinity.jack",
       "name": "mini",
       "manifestId": "mini",
-      "manifest": {
-        "nodeKinds": [
-          {
-            "name": "Piece",
-            "properties": [],
-            "portKinds": []
-          },
-          {
-            "name": "Wall",
-            "properties": [],
-            "portKinds": []
-          }
-        ],
-        "edgeKinds": [
-          {
-            "name": "Connection",
-            "properties": []
-          }
-        ],
-        "portKinds": [
-          {
-            "name": "Connector"
-          }
-        ]
-      },
       "nodes": [
         {
           "id": "root",
@@ -44,24 +19,51 @@
       "schema": "s.trinity.jack",
       "name": "gizmo",
       "manifestId": "gizmo",
-      "manifest": {
-        "nodeKinds": [
-          {
-            "name": "Piece",
-            "properties": [],
-            "portKinds": []
-          },
-          {
-            "name": "Gizmo",
-            "properties": [],
-            "portKinds": []
-          }
-        ],
-        "edgeKinds": [],
-        "portKinds": []
-      },
       "nodes": [],
       "edges": []
+    }
+  },
+  "manifests": {
+    "mini": {
+      "nodeKinds": [
+        {
+          "name": "Piece",
+          "properties": [],
+          "portKinds": []
+        },
+        {
+          "name": "Wall",
+          "properties": [],
+          "portKinds": []
+        }
+      ],
+      "edgeKinds": [
+        {
+          "name": "Connection",
+          "properties": []
+        }
+      ],
+      "portKinds": [
+        {
+          "name": "Connector"
+        }
+      ]
+    },
+    "gizmo": {
+      "nodeKinds": [
+        {
+          "name": "Piece",
+          "properties": [],
+          "portKinds": []
+        },
+        {
+          "name": "Gizmo",
+          "properties": [],
+          "portKinds": []
+        }
+      ],
+      "edgeKinds": [],
+      "portKinds": []
     }
   },
   "sessions": [
@@ -835,5 +837,5 @@
       ]
     }
   ],
-  "snapshotShape": "A snapshot carries the Jack manifest rows (nodeKinds, edgeKinds, portKinds; each row named by name) and optionally nodes and edges inline."
+  "snapshotShape": "A snapshot names its manifest by manifestId and carries nodes and edges inline; the host interns each manifest definition once (nodeKinds, edgeKinds, portKinds; each row named by name) before any snapshot names it."
 }

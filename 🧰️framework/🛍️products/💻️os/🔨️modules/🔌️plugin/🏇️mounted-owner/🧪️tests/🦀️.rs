@@ -407,3 +407,67 @@ pub(crate) fn close_actor(
     match bank.take_admitted() { Some(admitted) => assert!(admitted), None => assert_eq!(turn.work, 0) }
     turn.result.unwrap()
 }
+
+#[test]
+fn mounted_close_batches_exact_paid_actions() {
+    use semio_framework_value::RetainedCloneStep;
+    let laws: Vec<Value> = serde_json::from_str(include_str!("🧫️fixtures/close-batch.json")).unwrap();
+    for row in laws {
+        CLOCK.with(|clock| clock.set(Some(10)));
+        let grant = RetainedCloneGrant {
+            maximum_items: row.word("items").unwrap(),
+            maximum_copy_bytes: 64,
+            maximum_capacity_bytes: 64,
+            maximum_release_bytes: 64,
+            maximum_depth: 4,
+        };
+        let identity = MountedOwnerIdentityV1 { instance_id: 7, operation: OperationId(1), generation: Generation(1) };
+        let policy = MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant };
+        let mut sequence = 0;
+        let mut retained = RetainedCloneProgress::default();
+        let budget = StepBudget::new(16, row.word("deadline").unwrap() as u64, grant);
+        let mut context = StepContext::new(identity.operation, identity.generation, budget, CancelToken::root_now(), now_us, &mut sequence, &mut retained);
+        let mut turn = MountedOwnerTurnV1::admit(identity.instance_id, identity, MountedOwnerPhaseV1::Close, policy, &mut context).unwrap().unwrap();
+        let mut calls = 0;
+        let step = turn.advance_close_batch(
+            |step, progress| match step {
+                RetainedCloneStep::Complete(_) => RetainedCloneStep::Complete(progress),
+                RetainedCloneStep::Progress(_) => RetainedCloneStep::Progress(progress),
+            },
+            |cx, _| -> Result<_, ValueError> {
+                let action = &row["actions"][calls];
+                calls += 1;
+                let progress = RetainedCloneProgress {
+                    copied_items: action.word("items").unwrap(),
+                    copied_bytes: action.word("copy").unwrap(),
+                    retained_capacity_bytes: action.word("capacity").unwrap(),
+                    released_bytes: action.word("release").unwrap(),
+                };
+                cx.consume_retained(progress)?;
+                cx.consume_fuel(1);
+                CLOCK.with(|clock| clock.set(Some(action.word("now").unwrap() as u64)));
+                Ok(if action["kind"] == "complete" { RetainedCloneStep::Complete(progress) } else { RetainedCloneStep::Progress(progress) })
+            },
+        ).unwrap();
+        let kind = if matches!(step, RetainedCloneStep::Complete(_)) { "complete" } else { "progress" };
+        let receipt = step.progress();
+        assert_eq!(turn.progress(), receipt);
+        assert_eq!(serde_json::json!({
+            "kind": kind, "calls": calls, "items": receipt.copied_items, "copy": receipt.copied_bytes,
+            "capacity": receipt.retained_capacity_bytes, "release": receipt.released_bytes
+        }), row["expected"], "{}", row["id"]);
+    }
+}
+
+/// 🪜️ LAW: the interactive host grant is derived from the largest indivisible step demand with power-of-two headroom, so no retained owner (history replay, undo, time travel) can deadlock on an unfundable step.
+#[test]
+fn the_interactive_copy_grant_covers_the_largest_indivisible_step_with_power_of_two_headroom() {
+    let demand = MountedOwnerPolicyV1::LARGEST_INDIVISIBLE_STEP_COPY_BYTES;
+    let grant = MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance.maximum_copy_bytes;
+    assert!(grant >= demand && grant.is_power_of_two(), "grant {grant} must cover demand {demand}");
+    assert_eq!(MountedOwnerPolicyV1::covering_copy_bytes(1), 32_768);
+    assert_eq!(MountedOwnerPolicyV1::covering_copy_bytes(32_769), 65_536);
+    for phase in [MountedOwnerPhaseV1::Preparation, MountedOwnerPhaseV1::Maintenance, MountedOwnerPhaseV1::Close] {
+        assert_eq!(MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.grant(phase).maximum_copy_bytes, grant);
+    }
+}

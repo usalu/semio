@@ -99,3 +99,31 @@ export function cargoPreparationWitnessHoldsV1(storage:CargoPreparationStorageV1
   return cargoPhysicalObservationsHoldV1(root,witness.observations);
  }catch{return false;}
 }
+export type CargoPriorListingV1=Readonly<{stat:string;entries:readonly string[]}>;
+const priorListings=new WeakMap<CargoPhysicalObservationsV1,ReadonlyMap<string,CargoPriorListingV1>>();
+const listingsSuffix="-listings.json",maximumListingBytes=protocol.maximumBytes;
+/** 🔢️ Names a stat the way observations record it, so a later pass can compare it. */
+export const cargoStatTextV1=statText;
+/** 🌱️ Lets one observation set answer listings from a prior pass whose recorded stat is still the directory's stat. */
+export function seedCargoPriorListingsV1(observations:CargoPhysicalObservationsV1,rows:ReadonlyMap<string,CargoPriorListingV1>):void{priorListings.set(observations,rows);}
+/** 🔎️ Answers the prior listing of one directory, if the seed holds it. */
+export function cargoPriorListingV1(observations:CargoPhysicalObservationsV1,path:string):CargoPriorListingV1|undefined{return priorListings.get(observations)?.get(path);}
+const listingsPath=(storage:CargoPreparationStorageV1,root:string):string=>join(storage.directory,sha256(JSON.stringify(["listings",root]))+listingsSuffix);
+/** 📥️ Reads the settled directory listings a previous synchronization of this checkout left; a missing, torn or oversized file is an empty seed. */
+export function readCargoListingSnapshotV1(storage:CargoPreparationStorageV1,root:string):ReadonlyMap<string,CargoPriorListingV1>{
+ const rows=new Map<string,CargoPriorListingV1>();
+ try{
+  const path=listingsPath(storage,root),info=lstatSync(path);if(!info.isFile()||info.size>maximumListingBytes)return rows;
+  const value=JSON.parse(readFileSync(path,"utf8")) as unknown;if(!Array.isArray(value))return rows;
+  for(const row of value)if(Array.isArray(row)&&row.length===3&&typeof row[0]==="string"&&typeof row[1]==="string"&&Array.isArray(row[2])&&row[2].every((name:unknown)=>typeof name==="string"))rows.set(row[0],{stat:row[1],entries:row[2]});
+ }catch{}
+ return rows;
+}
+/** 📤️ Keeps the settled listings this pass observed for the next one; a failure to store costs only the next walk. */
+export function writeCargoListingSnapshotV1(storage:CargoPreparationStorageV1,root:string,scratch:string,observations:CargoPhysicalObservationsV1):boolean{
+ try{
+  const text=JSON.stringify([...observations.values()].filter(row=>row.operation==="list"&&row.stamp&&row.stat&&row.entries).map(row=>[row.path,row.stat,row.entries]));
+  if(Buffer.byteLength(text)>maximumListingBytes)return false;
+  const temporary=join(scratch,"listings.json");writeFileSync(temporary,text);renameSync(temporary,listingsPath(storage,root));return true;
+ }catch{return false;}
+}

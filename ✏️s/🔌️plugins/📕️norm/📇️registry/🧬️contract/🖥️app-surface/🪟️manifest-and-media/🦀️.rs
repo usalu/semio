@@ -1,7 +1,7 @@
 //! 🪟️ Manifest and media of the norm app surface: the mode, window and panel definitions, the artifact kind spec and the media export and import. See [`super`].
 
 use super::*;
-use semio_plugin::{ActionArgDef, WindowLayoutAxisNode, WindowLayoutChild};
+use semio_plugin::{ActionArgDef, WindowLayoutNode, Axis};
 
 //#region 🔖️Manifest
 /// ✏️ The `edit` mode definition — identical for all fifteen apps.
@@ -99,12 +99,20 @@ pub fn diagram_window_definition(variant: &str, label: LocalizedLabel, body_key:
     }
 }
 
-fn layout_window(variant: &str, role: &str) -> WindowLayoutWindowNode {
-    WindowLayoutWindowNode { kind: "window".into(), window_kind_id: visual_window_id(variant, role), title: None, instance_id: None, template_id: None, corner: None }
+fn resize_to_root(node: WindowLayoutNode) -> WindowLayoutNode {
+    match node {
+        WindowLayoutNode::Split { axis, children, .. } => WindowLayoutNode::Split { axis, size: None, children },
+        WindowLayoutNode::Stack { active_window_id, children, .. } => WindowLayoutNode::Stack { size: None, active_window_id, children },
+        window => window,
+    }
 }
 
-fn layout_stack(variant: &str, roles: &[&str], size: Option<f64>) -> WindowLayoutStackNode {
-    WindowLayoutStackNode { kind: "stack".into(), size, active_window_kind_id: None, children: roles.iter().map(|role| layout_window(variant, role)).collect() }
+fn layout_window(variant: &str, role: &str) -> WindowLayoutNode {
+    WindowLayoutNode::Window { window_kind_id: visual_window_id(variant, role), title: None, instance_id: None, template_id: None, corner: None }
+}
+
+fn layout_stack(variant: &str, roles: &[&str], size: Option<f64>, active: Option<&str>) -> WindowLayoutNode {
+    WindowLayoutNode::Stack { size, active_window_id: active.map(|role| visual_window_id(variant, role)), children: roles.iter().map(|role| layout_window(variant, role)).collect() }
 }
 
 /// 🧩️ The visual window layout of one device class at the default preferences, see [`visual_layout_with`].
@@ -148,8 +156,8 @@ pub fn view_named_layout(variant: &str, device: &str) -> semio_plugin::NamedLayo
 pub fn visual_layout_roles(variant: &str, device: crate::viewport3d::config::DeviceClass, prefs: &crate::device_profiles::LayoutPrefs, available: &[&str]) -> WindowLayout {
     use crate::viewport3d::config::DeviceClass;
     let prefs = crate::device_profiles::sanitised(prefs);
-    let axis = |kind: &str, size: Option<f64>, children: Vec<WindowLayoutChild>| WindowLayoutChild::Axis(WindowLayoutAxisNode { kind: kind.into(), size, children });
-    let stack = |roles: &[&str], size: Option<f64>| WindowLayoutChild::Stack(layout_stack(variant, roles, size));
+    let axis = |axis: Axis, size: Option<f64>, children: Vec<WindowLayoutNode>| WindowLayoutNode::Split { axis, size, children };
+    let stack = |roles: &[&str], size: Option<f64>| layout_stack(variant, roles, size, None);
     let root = match device {
         DeviceClass::Desktop => {
             let dock = &prefs.dock;
@@ -157,26 +165,35 @@ pub fn visual_layout_roles(variant: &str, device: crate::viewport3d::config::Dev
             let column = |pair: [&str; 2], split: f64, size: f64| {
                 let parts: Vec<(&str, f64)> = [(pair[0], split), (pair[1], 1.0 - split)].into_iter().filter(|(role, _)| shown(*role)).collect();
                 let total: f64 = parts.iter().map(|(_, weight)| weight).sum();
-                (!parts.is_empty()).then(|| (size, axis("column", Some(size), parts.iter().map(|(role, weight)| stack(&[*role], Some(weight / total))).collect())))
+                (!parts.is_empty()).then(|| {
+                    let stacks: Vec<WindowLayoutNode> = parts.iter().map(|(role, weight)| stack(&[*role], Some(weight / total))).collect();
+                    (size, if stacks.len() == 1 { stacks.into_iter().next().expect("one stack") } else { axis(Axis::Vertical, Some(size), stacks) })
+                })
             };
-            let columns: Vec<(f64, WindowLayoutChild)> = [column(["outliner", "properties"], dock.left_split, dock.left), Some((dock.centre, stack(&["viewport"], Some(dock.centre)))), column(["checks", "diagrams"], dock.right_split, dock.right)].into_iter().flatten().collect();
+            let columns: Vec<(f64, WindowLayoutNode)> = [column(["outliner", "properties"], dock.left_split, dock.left), Some((dock.centre, stack(&["viewport"], Some(dock.centre)))), column(["checks", "diagrams"], dock.right_split, dock.right)].into_iter().flatten().collect();
             let total: f64 = columns.iter().map(|(size, _)| size).sum();
-            let resize = |share: f64, child: WindowLayoutChild| match child {
-                WindowLayoutChild::Axis(node) => WindowLayoutChild::Axis(WindowLayoutAxisNode { size: Some(share), ..node }),
-                WindowLayoutChild::Stack(node) => WindowLayoutChild::Stack(WindowLayoutStackNode { size: Some(share), ..node }),
+            let resize = |share: f64, child: WindowLayoutNode| match child {
+                WindowLayoutNode::Split { axis, children, .. } => WindowLayoutNode::Split { axis, size: Some(share), children },
+                WindowLayoutNode::Stack { active_window_id, children, .. } => WindowLayoutNode::Stack { size: Some(share), active_window_id, children },
+                window => window,
             };
-            WindowLayoutRoot::Axis(WindowLayoutAxisNode { kind: "row".into(), size: None, children: columns.into_iter().map(|(size, child)| resize(size / total, child)).collect() })
+            let mut shares: Vec<WindowLayoutNode> = columns.into_iter().map(|(size, child)| resize(size / total, child)).collect();
+            if shares.len() == 1 {
+                resize_to_root(shares.remove(0))
+            } else {
+                WindowLayoutNode::Split { axis: Axis::Horizontal, size: None, children: shares }
+            }
         }
         DeviceClass::Mobile => {
             let tabs: Vec<&str> = prefs.mobile.tabs.iter().map(String::as_str).filter(|tab| available.contains(tab)).collect();
             let active = if tabs.contains(&prefs.mobile.active.as_str()) { prefs.mobile.active.as_str() } else { "viewport" };
-            WindowLayoutRoot::Stack(WindowLayoutStackNode { active_window_kind_id: Some(visual_window_id(variant, active)), ..layout_stack(variant, &tabs, None) })
+            layout_stack(variant, &tabs, None, Some(active))
         }
         DeviceClass::Tablet => {
             let tabs: Vec<&str> = prefs.tablet.side_tabs.iter().map(String::as_str).filter(|tab| available.contains(tab)).collect();
             let active = if tabs.contains(&prefs.tablet.side_active.as_str()) { prefs.tablet.side_active.as_str() } else { tabs.first().copied().unwrap_or("checks") };
-            let side = WindowLayoutStackNode { active_window_kind_id: Some(visual_window_id(variant, active)), ..layout_stack(variant, &tabs, Some(1.0 - prefs.tablet.viewport)) };
-            WindowLayoutRoot::Axis(WindowLayoutAxisNode { kind: "row".into(), size: None, children: vec![stack(&["viewport"], Some(prefs.tablet.viewport)), WindowLayoutChild::Stack(side)] })
+            let side = layout_stack(variant, &tabs, Some(1.0 - prefs.tablet.viewport), Some(active));
+            WindowLayoutNode::Split { axis: Axis::Horizontal, size: None, children: vec![stack(&["viewport"], Some(prefs.tablet.viewport)), side] }
         }
     };
     WindowLayout { root }

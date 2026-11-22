@@ -180,7 +180,6 @@ export const SHELL_KEYBINDINGS: Readonly<Record<string, string>> = {
   "ui.dialog.submit": "enter",
   "ui.search.toggle": "mod+p",
   "ui.find.toggle": "mod+f",
-  "os.toggleFullscreen": "mod+shift+f",
   "ui.nav.back": "mod+[",
   "ui.nav.forward": "mod+]",
   "ui.nav.up": "mod+up",

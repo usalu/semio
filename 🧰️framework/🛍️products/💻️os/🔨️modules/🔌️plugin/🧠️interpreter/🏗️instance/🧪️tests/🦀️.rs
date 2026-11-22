@@ -17,6 +17,47 @@ fn scalar_input(cx:&StepContext<'_>)->Result<semio_framework_actor::RetainedTurn
 fn observed_turn<T>(caller:&mut OriginalJobFixtureCaller,epoch:&mut u64,grant:RetainedCloneGrant,run:impl FnOnce(&mut semio_framework_job::StepContext<'_>)->Result<T,semio_framework_job::OriginalTurnFailure>)->(T,(usize,usize)){*epoch+=1;observed(||caller.turn(grant,|cx|{cx.bind_original_source_epoch(*epoch)?;run(cx)}).unwrap())}
 
 #[test]
+fn inline_globals_require_the_actual_funded_backing_return(){
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/globals-close.json")).unwrap();
+ let count=usize::try_from(fixture["globals"].as_u64().unwrap()).unwrap();
+ let value=u8::try_from(fixture["value"].as_u64().unwrap()).unwrap();
+ let mut bytes=b"\0asm\x01\0\0\0".to_vec();
+ bytes.extend([6,u8::try_from(1+5*count).unwrap(),u8::try_from(count).unwrap()]);
+ for _ in 0..count{bytes.extend([0x7f,0,0x41,value,0x0b]);}
+ bytes.extend([7,9,1,5,b'v',b'a',b'l',b'u',b'e',3,0]);
+ let (mut store,instance)=oracle(&bytes);
+ let expected=instance.get_global(&mut store,"value").unwrap().get(&mut store).i32().unwrap();
+ let module=Arc::new(CoreModule::parse(&bytes).unwrap());let stock=grant();
+ let mut caller=OriginalJobFixtureCaller::admit(OperationId(796),Generation(1),stock,clock,100_000_000,1_000_000);
+ let mut epoch=0;
+ let(owner,_)=observed_turn(&mut caller,&mut epoch,stock,|cx|CoreInstanceOpening::begin(&module,cx));
+ let mut owner=owner.unwrap();
+ for _ in 0..256{
+  if observed_turn(&mut caller,&mut epoch,stock,|cx|owner.advance(&module,cx)).0{break}
+ }
+ let core=owner.resources().unwrap();
+ assert_eq!(core.globals.len(),count);
+ assert!(core.globals.iter().all(|global|global.value==Value::I32(expected)));
+ let backing=bytes_for::<GlobalState>(core.globals.capacity()).unwrap();
+ let items=usize::try_from(fixture["returnItems"].as_u64().unwrap()).unwrap();
+ caller.cancel().cancel_now();
+ let denied=RetainedCloneGrant{maximum_items:items,maximum_release_bytes:backing-1,..stock};
+ assert_eq!(observed_turn(&mut caller,&mut epoch,denied,|cx|owner.close_step(&module,cx)),(false,(0,0)));
+ assert_eq!(caller.receipt(),Default::default());
+ assert_eq!(owner.core.as_ref().unwrap().globals.len(),count);
+ let funded=RetainedCloneGrant{maximum_release_bytes:backing,..denied};
+ assert_eq!(observed_turn(&mut caller,&mut epoch,funded,|cx|owner.close_step(&module,cx)),(false,(0,backing)));
+ assert_eq!(caller.receipt().copied_items,items);
+ assert_eq!(caller.receipt().released_bytes,backing);
+ assert_eq!(owner.core.as_ref().unwrap().globals.capacity(),0);
+ for _ in 0..32{
+  if observed_turn(&mut caller,&mut epoch,stock,|cx|owner.close_step(&module,cx)).0{break}
+ }
+ assert!(owner.terminal_is_empty());
+ caller.retire(stock);
+}
+
+#[test]
 fn prepared_original_core_opening_uses_exact_image_and_private_paid_storage(){
  let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/prepared-instance.json")).unwrap();
  let mut bytes=b"\0asm\x01\0\0\0".to_vec();

@@ -7,6 +7,7 @@ type WorldInstanceChromeSnapshot = {
   readonly selectedIds: ReadonlySet<string>;
   readonly hoveredId: string | null;
   readonly hoveredIds: ReadonlySet<string> | null;
+  readonly localHoverGroups?: ReadonlyMap<string, ReadonlySet<string>>;
   readonly hoverSourceWindowId?: string | null;
   readonly hoveredKindId: string | null;
   readonly previewInstanceIds: ReadonlySet<string> | null;
@@ -76,19 +77,22 @@ export function createWorldInstanceChromeStore(windowInstanceId?: string | null)
     },
     setSnapshot(next) {
       const sameHover = sameAuthoredHover(snapshot, next);
-      if (sameHover && snapshot.hoveredId === next.hoveredId && snapshot.hoveredKindId === next.hoveredKindId
-        && sameIds(snapshot.selectedIds, next.selectedIds) && sameIds(snapshot.previewInstanceIds, next.previewInstanceIds)) return;
+      const sameLocalGroup = localHover == null
+        || sameIds(snapshot.localHoverGroups?.get(localHover) ?? null, next.localHoverGroups?.get(localHover) ?? null);
+      const changed = !sameHover || !sameLocalGroup || snapshot.hoveredId !== next.hoveredId || snapshot.hoveredKindId !== next.hoveredKindId
+        || !sameIds(snapshot.selectedIds, next.selectedIds) || !sameIds(snapshot.previewInstanceIds, next.previewInstanceIds);
       const source = next.hoverSourceWindowId;
       if (!sameHover && (source === null || (typeof source === "string" && source !== windowInstanceId))) {
         localHover = undefined;
       }
       snapshot = next;
-      notify();
+      if (changed) notify();
     },
     setLocalHover(local) {
       if (local === localHover) return;
       const paintedBefore = worldHoverPaintIdV1(localHover, snapshot.hoveredId);
-      const projectionChanged = snapshot.hoveredIds !== null && (localHover === undefined) !== (local === undefined);
+      const projectionChanged = (localHover === undefined) !== (local === undefined)
+        && (snapshot.hoveredIds !== null || (typeof paintedBefore === "string" && snapshot.localHoverGroups?.has(paintedBefore)));
       localHover = local;
       if (!projectionChanged && worldHoverPaintIdV1(localHover, snapshot.hoveredId) === paintedBefore) return;
       notify();
@@ -100,7 +104,8 @@ export function createWorldInstanceChromeStore(windowInstanceId?: string | null)
       return snapshot.selectedIds.has(instanceId);
     },
     isHovered(instanceId) {
-      if (localHover !== undefined) return localHover === instanceId;
+      if (localHover !== undefined) return localHover === instanceId
+        || (localHover !== null && snapshot.localHoverGroups?.get(localHover)?.has(instanceId) === true);
       return snapshot.hoveredIds?.has(instanceId) ?? (snapshot.hoveredId === instanceId);
     },
     isHighlighted(objectKind) {

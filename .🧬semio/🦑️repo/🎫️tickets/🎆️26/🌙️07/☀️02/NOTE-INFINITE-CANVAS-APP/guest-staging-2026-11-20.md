@@ -222,3 +222,13 @@ Attempt 54 started as wjymwNY using the supported SEMIO_NATIVE_TRANSPILE_BIN ove
 The isolated diagnostic transpiled the exact linked artifact to the ticket generated directory with the repository's production transpile helper. Its core measures 99,269,501 bytes. The current binding has different Wasm trampoline numbering from attempt 52. The isolated browser route therefore serves the generated binding together with its core and applies the same preview2 import rewrite as browser publication. The live Vite publication is untouched by this diagnostic.
 
 Attempt 54 caught a mixed-source error when the first pass compiled instance rendering against earlier ViewModel APIs. The driver reran in the held lane and compiler dep-info for all three Pencil projection files matched the live source. The same retry observed earlier versions of the five archive maintenance wake files, which landed later. The managed source-witness check has two additional retry suffixes available.
+
+Attempt 54 installed a fresh real browser receipt with source digest c1da6ae189d9851334d8ecbbca29dfa2b6baf80862597ecbf8adf82c08a10b7b, component SHA-256 ef4ed9a41879dab2812e696cef67af18a8968053428ae40f75888e2004c0dc0d, and 99,348,606 component bytes. Vite served the new 99,263,539-byte core. The command returned status 75 after ten stages because pass reclamation had removed the claimed host unicode-ident rmeta before final provenance recheck. The direct browser camera test passed against the new served bytes. The linked snapshot predates the archive maintenance wake, initializer receiving-scope fix and later shared close-stall accounting.
+
+Attempt 55 started in warm run wpl13R0 with the latest archive wake, receiving scope, cleanup and compiler claim retention sources. The latest driver keeps observed original compiler outputs through provenance seal unless an exact retained output witness has already replaced the original. The custody suite passed eight tests and 52 checks. The long-lived owned Note Vite route is available on port 6080.
+
+## Managed Attempt 55
+
+The managed build published Note after 880 Rust units and all 11 staging steps, with zero reported failures. It sealed 4,977 provenance files and finished in 2,180 seconds. Driver report: `.cache/b/r/m/components/runs/wpl13R0/r/report.md`.
+
+The browser receipt identified component SHA-256 `a6b57e42c9836f6201473bb3d34a5f715b8435f6ac2df2350bb416e2eba34485` and source tree digest `43af9d03688f26ca1ad2cfbf81c4eaea91ae29d8de821d51204b2adabc80b341`. The real development server returned HTTP 200 for the staged core and reported its expected 99,276,774-byte length. The earlier provenance failure from losing the observed host metadata artifact did not recur.

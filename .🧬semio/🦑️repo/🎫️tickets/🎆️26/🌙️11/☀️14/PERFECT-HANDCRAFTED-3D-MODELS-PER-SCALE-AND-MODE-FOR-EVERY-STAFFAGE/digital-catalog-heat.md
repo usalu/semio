@@ -1,6 +1,6 @@
 # Staffage thermal field verification
 
-152 of 152 current assets passed for all their named poses in the authored environment and at 14 °C in shade. These runs cover 936 poses, 1872 pose and climate combinations, and 14,522 surface fields.
+152 of 152 current assets passed for all their named poses in the authored environment and at 14 °C in shade. These runs cover 937 poses, 1874 pose and climate combinations, and 14,698 surface fields.
 
 The product solver supplies surface temperatures and heat fluxes. Decimal.js independently computes blackbody emission from the SI defining constants and the emissivity of the outer material. The comparisons also check radiation to sky, ground and surroundings and the exposed area used for convection and radiation. The heat solver is shared across display scales. Digital geometry at each scale is verified separately.
 
@@ -22,7 +22,7 @@ The product solver supplies surface temperatures and heat fluxes. Decimal.js ind
 | circulation-pump | 3 | 24 | Pass |
 | city-bicycle | 10 | 180 | Pass |
 | city-bus | 7 | 126 | Pass |
-| city-car | 9 | 180 | Pass |
+| city-car | 9 | 198 | Pass |
 | concrete-mixer-truck | 5 | 130 | Pass |
 | cooking-pot | 3 | 24 | Pass |
 | courier-with-hand-truck | 4 | 72 | Pass |
@@ -31,7 +31,7 @@ The product solver supplies surface temperatures and heat fluxes. Decimal.js ind
 | dairy-cow | 13 | 338 | Pass |
 | date-palm | 3 | 18 | Pass |
 | decentralised-hrv-fan | 3 | 24 | Pass |
-| delivery-van | 10 | 200 | Pass |
+| delivery-van | 10 | 220 | Pass |
 | desktop-monitor | 3 | 18 | Pass |
 | diesel-generator | 5 | 90 | Pass |
 | dining-table | 5 | 50 | Pass |
@@ -58,7 +58,7 @@ The product solver supplies surface temperatures and heat fluxes. Decimal.js ind
 | gas-meter | 3 | 24 | Pass |
 | glass-balustrade | 4 | 24 | Pass |
 | glulam-beam | 3 | 24 | Pass |
-| goat | 15 | 270 | Pass |
+| goat | 15 | 300 | Pass |
 | heat-pump-outdoor-unit | 5 | 70 | Pass |
 | hedgehog | 12 | 168 | Pass |
 | height-adjustable-desk | 3 | 48 | Pass |
@@ -72,12 +72,12 @@ The product solver supplies surface temperatures and heat fluxes. Decimal.js ind
 | jogger | 15 | 330 | Pass |
 | kitchen-extractor-hood | 4 | 32 | Pass |
 | kneeling-gardener | 6 | 132 | Pass |
-| labrador-dog | 19 | 342 | Pass |
+| labrador-dog | 19 | 380 | Pass |
 | laptop | 3 | 18 | Pass |
 | leaning-person | 5 | 100 | Pass |
 | lombardy-poplar | 3 | 18 | Pass |
 | london-plane-pollarded | 5 | 50 | Pass |
-| mallard-duck | 19 | 304 | Pass |
+| mallard-duck | 20 | 320 | Pass |
 | market-parasol | 3 | 24 | Pass |
 | masonry-wall-with-lintel | 4 | 24 | Pass |
 | miscanthus-grass | 4 | 24 | Pass |
@@ -105,7 +105,7 @@ The product solver supplies surface temperatures and heat fluxes. Decimal.js ind
 | playground-swing | 3 | 18 | Pass |
 | pregnant-person | 4 | 56 | Pass |
 | red-fox | 15 | 180 | Pass |
-| red-squirrel | 14 | 280 | Pass |
+| red-squirrel | 14 | 308 | Pass |
 | retractable-bollard | 4 | 48 | Pass |
 | roe-deer | 21 | 378 | Pass |
 | room-thermostat | 3 | 24 | Pass |
@@ -124,7 +124,7 @@ The product solver supplies surface temperatures and heat fluxes. Decimal.js ind
 | shower-head | 3 | 36 | Pass |
 | single-bed | 5 | 30 | Pass |
 | skateboarder | 10 | 200 | Pass |
-| sleeping-person | 3 | 48 | Pass |
+| sleeping-person | 3 | 60 | Pass |
 | sliding-door | 3 | 24 | Pass |
 | small-leaved-lime | 6 | 72 | Pass |
 | solar-thermal-collector | 3 | 36 | Pass |
@@ -150,7 +150,7 @@ The product solver supplies surface temperatures and heat fluxes. Decimal.js ind
 | tower-server | 4 | 48 | Pass |
 | tram | 9 | 198 | Pass |
 | vacuum-cleaner | 3 | 54 | Pass |
-| vintage-car-1929 | 7 | 154 | Pass |
+| vintage-car-1929 | 7 | 168 | Pass |
 | walking-commuter | 8 | 128 | Pass |
 | waste-bin | 3 | 24 | Pass |
 | weeping-willow | 3 | 18 | Pass |

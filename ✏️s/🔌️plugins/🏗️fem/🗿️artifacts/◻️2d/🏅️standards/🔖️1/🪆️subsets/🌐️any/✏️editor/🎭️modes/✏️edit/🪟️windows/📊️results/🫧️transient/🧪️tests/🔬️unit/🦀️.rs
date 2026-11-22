@@ -107,7 +107,9 @@ fn clock_publication_and_retirement_obey_tiny_grants() {
             if publication.terminal_is_empty() { break; }
             let demand = publication.retirement_demands(4096).expect("quoted clock publication close");
             let close = store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
-            match publication.close_step(close).expect("an unaliased clock publication must close") {
+            let poll = semio_s_fem_receiving::testkit::granted(close.retained_grant(), |effect| publication.close_step(4096, effect));
+            let semio_framework_value::RetainedWorkPoll::Complete(turn) = poll else { panic!("a clock publication close turn stayed pending") };
+            match turn.result.expect("an unaliased clock publication must close") {
                 semio_framework_value::retained_clone::RetainedCloneStep::Complete(progress) => { assert!(progress.fits(close.retained_grant())); break; }
                 semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress) => assert!(progress.fits(close.retained_grant()) && progress.copied_items <= 1),
             }

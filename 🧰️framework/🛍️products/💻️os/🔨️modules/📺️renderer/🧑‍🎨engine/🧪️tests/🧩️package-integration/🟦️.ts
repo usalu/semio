@@ -322,7 +322,7 @@ describe("framework renderer wgpu plugin bridge", () => {
     await client.activate(actorId, "/fixture.js", [], DEFAULT_SHARD_BUDGET);
     const lifecycle = client.captureInstanceLifecycle(actorId, 1);
     const execute = <T>(work: () => Promise<T>): Promise<T> => work();
-    const opened = coerceTurnResult(await lifecycle.open({ appId: "fixture", actor: "local", config: [], assets: [], capabilities: [], quotas: [] }, DEFAULT_SHARD_BUDGET));
+    const opened = coerceTurnResult(await lifecycle.open({ appId: "fixture", purpose: { tag: "ordinary" }, actor: "local", config: [], assets: [], capabilities: [], quotas: [] }, DEFAULT_SHARD_BUDGET));
     const route = new WgpuOwnedUiInstanceRoute(lifecycle);
     await route.accept(opened, execute);
     const captured = lifecycle.pendingReceipt;
@@ -353,7 +353,7 @@ describe("framework renderer wgpu plugin bridge", () => {
     const cancelledActorId = "wgpu-owned-ui-cancelled#2";
     await client.activate(cancelledActorId, "/fixture.js", [], DEFAULT_SHARD_BUDGET);
     const cancelledLifecycle = client.captureInstanceLifecycle(cancelledActorId, 2);
-    const cancelledOpen = coerceTurnResult(await cancelledLifecycle.open({ appId: "fixture", actor: "local", config: [], assets: [], capabilities: [], quotas: [] }, DEFAULT_SHARD_BUDGET));
+    const cancelledOpen = coerceTurnResult(await cancelledLifecycle.open({ appId: "fixture", purpose: { tag: "ordinary" }, actor: "local", config: [], assets: [], capabilities: [], quotas: [] }, DEFAULT_SHARD_BUDGET));
     const cancelledRoute = new WgpuOwnedUiInstanceRoute(cancelledLifecycle);
     await cancelledRoute.accept(cancelledOpen, execute);
     expect(cancelledLifecycle.pendingReceipt?.kind).toBe("captured");

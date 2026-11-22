@@ -93,7 +93,7 @@ export function hubBinaryPath(repoRoot: string): string {
 /** 🔏️ The one trusted-catalog package list every loopback DEVELOPMENT hub publishes into a data root that holds none —
  * the hub's own bootstrap closure (stdio, gis) plus the collaboration editors — shared by `os-hub:dev` and the `dev s`
  * local hub owner so whichever dashboard command reaches a clean `hub-dev` root first publishes the same catalog. */
-export const LOCAL_HUB_DEVELOPMENT_CATALOG_PACKAGES = "stdio,gis,note,writer,draw,puzzle";
+export const LOCAL_HUB_DEVELOPMENT_CATALOG_PACKAGES = "stdio,gis,note,writer,draw,puzzle,space";
 
 /** 👥️ The local-bootstrap profiles a development hub declares: the developer every single-user row signs in as, and the
  * two humans the two-user rows (`👤️1`, `👤️2`) sign in as — each a distinct hub user reached through the session broker. */

@@ -222,7 +222,10 @@ impl VerifiedTrustedCatalog {
                 && selection.surface.role == role
                 && requested_surface_id.is_none_or(|requested| selection.surface.surface_id == requested)
         });
-        most_general_dialect(matches.collect(), |selection| &selection.parent_dialect).one().cloned()
+        most_general_dialect(matches.collect(), |selection| {
+            let dialect = &selection.parent_dialect;
+            (&dialect.artifact_kind, &dialect.standard, &dialect.subset)
+        }).one().cloned()
     }
 }
 

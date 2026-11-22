@@ -108,15 +108,15 @@ export function useBrandState({ core }: { readonly core: ShellCoreAfterDockAssem
   //#endregion 🎛️PanelTabBarHosting
 
   const navbarItems = useMemo((): NavbarItem[] => {
-    if (!session) return [];
+    if (!session || !focusedApp) return [];
     const logoAndTitle = (
       <div key="logoAndTitle" className="flex min-w-0 shrink-0 items-center gap-single">
         {brand?.logoSvg ? <ShellBrandLogo svg={brand.logoSvg} className="size-workbench shrink-0" /> : <SemioLogo className="size-workbench shrink-0" />}
         <span data-slot="app-name" className={cn("px-single", shellChromeTitleClassName)}>
-          <ResponsiveLabel full={brand?.windowTitle ?? appBreadcrumb(resolveAppBreadcrumb(session.app, uiTerminology, uiLocale))} short={brand?.shortWindowTitle} />
+          <ResponsiveLabel full={brand?.windowTitle ?? appBreadcrumb(resolveAppBreadcrumb(focusedApp, uiTerminology, uiLocale))} short={brand?.shortWindowTitle} />
         </span>
-        <span data-slot="surface-role-chip" data-role={session.app.role} data-app-id={session.app.id} title={session.app.role === "viewer" ? viewerReadOnlyNoticeText(uiLocale) : undefined} className="rounded-sm border border-border px-single text-xs text-muted-foreground">
-          {surfaceRoleChipText(session.app.role, uiLocale)}
+        <span data-slot="surface-role-chip" data-role={focusedApp.role} data-app-id={focusedApp.id} title={focusedApp.role === "viewer" ? viewerReadOnlyNoticeText(uiLocale) : undefined} className="rounded-sm border border-border px-single text-xs text-muted-foreground">
+          {surfaceRoleChipText(focusedApp.role, uiLocale)}
         </span>
       </div>
     );
@@ -152,6 +152,6 @@ export function useBrandState({ core }: { readonly core: ShellCoreAfterDockAssem
       },
       ...(navbarTrailingItems ?? []),
     ];
-  }, [brand, navbarTrailingItems, buildPanelSelectionProps, exampleOptions, exampleSelectElement, locks.exampleId, mobile, mobilePanelVisible, modeSwitcherElement, roleSwitcherElement, session, focusedApp?.id, uiLocale, uiTerminology, hostMode, landingAppId]);
+  }, [brand, navbarTrailingItems, buildPanelSelectionProps, exampleOptions, exampleSelectElement, locks.exampleId, mobile, mobilePanelVisible, modeSwitcherElement, roleSwitcherElement, session, focusedApp, uiLocale, uiTerminology, hostMode, landingAppId]);
   return { session, appLabelsOverlay, uiTerminology, uiLocale, onAction, dispatch, resolvedCommands, mobile, onCommand, hostMode, panel, spacePrograms, loadedPlugins, spawnProgram, hostControllerId, activeWindowId, actionPaneExpandedByWindowId, actionPaneStagedArgsByKey, activeUtilityByWindowId, introductionActionWindowSegment, actionPaneFoldedByWindowId, introductionUtilityWindowId, introductionMeasureWindowId, activeSpawnedEntry, activeSpawnedApp, focusedSpawnedId, localDocumentOwnerRegistry, world3dWindowViewRegistry, spawnedWindowEngagements, spawnedWindowMeasures, onActionStable, utilityGenerationFor, spawnedWindowActivityByWindowId, builtNodeStoreCacheRef, windowIconsById, timeTravelIndicator, introductionUtilityId, localPrograms, selectedSpaceArtifactKinds, onIntentStable, spawnedWindowFault, currentBrowserActorUi, builtNodeStoreFor, windowMeasuresByWindowId, windowEngagementsByWindowId, windowTitlesById, windowUiByWindowId, primaryWorld3dOwner, world3dWindowViews, instanceFault, windowTreeContext, currentLocalDocumentOwner, currentDocumentRuntimeKey, onBrowserActorIntent, extraWindowInstances, registerRevision, browserActorUiVersion, shellLayout, effectiveModeLayoutRef, mountedWindowIdsRef, sessionRef, unmountedSkippedWindowBodiesRef, refreshUi, dropForRetiredInstance, noteShellCommand, mobilePanel, initialExampleReady, buildPanelSelectionProps, navbarItems };
 }

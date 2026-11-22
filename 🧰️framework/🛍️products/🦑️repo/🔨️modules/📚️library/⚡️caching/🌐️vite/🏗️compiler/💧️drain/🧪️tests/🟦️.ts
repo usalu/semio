@@ -41,7 +41,7 @@ test("Vite admission isolates request errors, retains capacity through drain, an
  expect(admission).toBeDefined();
  const phase={signal:new AbortController().signal},events:string[]=[],pending=new Set<Promise<unknown>>(),failures:unknown[]=[];
  let processing:Promise<unknown>|undefined;
- const admitted=new Function("control","pending","storageSchema","failures","withRequestedIssuedResourceControlV1","withCompilerCapacityScopeV1","withViteOptimizerDrainV1","countedCompilerCapacityRequestV1","readNativeStorageReservationPolicyV1","checkResourceLeaseControl","store","environment","interrupt",`
+ const admitted=new Function("control","pending","storageSchema","failures","withRequestedIssuedResourceControlV1","withCompilerCapacityScopeV1","withViteOptimizerDrainV1","countedCompilerCapacityRequestV1","readNativeStorageReservationPolicyV1","checkResourceLeaseControl","store","environment","interrupt","capacity",`
   let accepting=true;
   return ${admission!.getText(syntax)};
  `)(
@@ -51,6 +51,7 @@ test("Vite admission isolates request errors, retains capacity through drain, an
   withViteOptimizerDrainV1,()=>({}),()=>({}),()=>events.push("lease checked"),
   {},{depsOptimizer:{metadata:{discovered:{fixture:{get processing(){return processing;}}}}}},
   ()=>events.push("service interrupted"),
+  {},
  ) as <T>(operation:()=>Promise<T>)=>Promise<T>;
 
  const requestError=new Error("request failed"),drainError=new Error("optimizer drain failed");

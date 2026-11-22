@@ -127,141 +127,59 @@ impl<P: Send + Sync + 'static, Mutation: Send + Sync + 'static> ArtifactEnvelope
         OwnedSchemaDecodeDiagnostic { code, offset: 0, line: 0, column: 0, path: OwnedSchemaPath::field("vcs").unwrap_or(OwnedSchemaPath::ROOT) , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: RetainedCloneProgress::default() }
     }
 
-    /// 🎯️ Routes one cursor-attributed token into the exact live nested owner. The owner is taken
-    /// so the borrow checker admits the sibling-field writes, and EVERY exit restores it — an
-    /// abandoned `?` here dropped a live history array and aborted the process
-    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-    pub(super) fn accept_active_token(&mut self, token: OwnedSchemaToken, _terminal: bool, source: &OwnedSchemaRecordCursor, cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactEnvelopeFieldDecodeStep, OwnedSchemaDecodeDiagnostic> {
-        let Some(mut active) = self.active.take() else {
+    /// 🎯️ Routes each cursor-attributed token through its resident owner until publication or retirement.
+    pub(super) fn accept_active_token(&mut self, token: OwnedSchemaToken, terminal: bool, source: &OwnedSchemaRecordCursor, cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactEnvelopeFieldDecodeStep, OwnedSchemaDecodeDiagnostic> {
+        use ArtifactEnvelopeFieldDecodeStep::{FieldComplete, Pending, RecordComplete, TokenComplete};
+        let Some(active) = self.active.as_mut() else {
             return Err(Self::diagnostic("artifact-envelope.fresh-vcs-field"));
         };
-        return match &mut active {
+        let (step, settled) = match active {
             ArtifactEnvelopeFreshVcsActive::Snapshot { reservation, publishing } => {
-                if cx.is_cancelled() { self.active = Some(active); return Err(Self::diagnostic("artifact-envelope.genesis-pack-cancelled")); }
-                if cx.should_yield() { self.active = Some(active); return Ok(ArtifactEnvelopeFieldDecodeStep::Pending); }
+                if cx.is_cancelled() {
+                    return Err(Self::diagnostic("artifact-envelope.genesis-pack-cancelled"));
+                }
+                if cx.should_yield() {
+                    return Ok(Pending);
+                }
                 if !*publishing {
                     if self.genesis_pack.is_none() {
-                        match ArtifactGenesisPackCapture::new(token, cx) { Ok(capture) => self.genesis_pack = Some(capture), Err(error) => { self.active = Some(active); return Err(error); } }
+                        self.genesis_pack = Some(ArtifactGenesisPackCapture::new(token, cx)?);
                     }
-                    match self.genesis_pack.as_mut().expect("genesis capture remains retained").step(source, cx) {
-                        Ok(true) => {},
-                        Ok(false) => { self.active = Some(active); return Ok(ArtifactEnvelopeFieldDecodeStep::Pending); },
-                        Err(error) => { self.active = Some(active); return Err(error); },
+                    if !self.genesis_pack.as_mut().expect("genesis capture remains retained").step(source, cx)? {
+                        return Ok(Pending);
                     }
                 }
-                let Some(snapshot) = self.snapshot.as_mut() else {
-                    self.active = Some(active);
-                    return Err(Self::diagnostic("artifact-envelope.fresh-vcs-snapshot-owner"));
+                let snapshot = self.snapshot.as_mut().ok_or_else(|| Self::diagnostic("artifact-envelope.fresh-vcs-snapshot-owner"))?;
+                let step = if *publishing {
+                    snapshot.publish_reserved(&mut self.snapshot_target, *reservation, cx)?
+                } else {
+                    snapshot.accept_token(token, terminal, source, cx)?
                 };
-                let step = if *publishing { snapshot.publish_reserved(&mut self.snapshot_target, *reservation, cx) } else { snapshot.accept_token(token, _terminal, source, cx) };
-                let publishing_now = *publishing;
                 match step {
-                    Ok(ArtifactEnvelopeFieldDecodeStep::Pending) => {
-                        self.active = Some(active);
-                        Ok(ArtifactEnvelopeFieldDecodeStep::Pending)
-                    }
-                    Ok(ArtifactEnvelopeFieldDecodeStep::TokenComplete) if publishing_now => Ok(ArtifactEnvelopeFieldDecodeStep::TokenComplete),
-                    Ok(ArtifactEnvelopeFieldDecodeStep::TokenComplete) => {
-                        self.active = Some(active);
-                        Ok(ArtifactEnvelopeFieldDecodeStep::TokenComplete)
-                    }
-                    Ok(ArtifactEnvelopeFieldDecodeStep::FieldComplete) if publishing_now => Ok(ArtifactEnvelopeFieldDecodeStep::TokenComplete),
-                    Ok(ArtifactEnvelopeFieldDecodeStep::FieldComplete) => {
+                    FieldComplete | TokenComplete if *publishing => (TokenComplete, true),
+                    FieldComplete => {
                         *publishing = true;
-                        self.active = Some(active);
-                        Ok(ArtifactEnvelopeFieldDecodeStep::Pending)
+                        (Pending, false)
                     }
-                    Ok(ArtifactEnvelopeFieldDecodeStep::RecordComplete) => {
-                        self.active = Some(active);
-                        Err(Self::diagnostic("artifact-envelope.snapshot-published-record"))
-                    }
-                    Err(diagnostic) => {
-                        self.active = Some(active);
-                        Err(diagnostic)
-                    }
+                    RecordComplete => return Err(Self::diagnostic("artifact-envelope.snapshot-published-record")),
+                    step => (step, false),
                 }
             }
-            ArtifactEnvelopeFreshVcsActive::Edits(authority) => match authority.accept(token, _terminal, source, cx) {
-                Ok(ArtifactEnvelopeFieldDecodeStep::FieldComplete) => match authority.take_values() {
-                    Some(values) => {
-                        self.edits = Some(values);
-                        Ok(ArtifactEnvelopeFieldDecodeStep::TokenComplete)
-                    }
-                    None => {
-                        self.active = Some(active);
-                        Err(Self::diagnostic("artifact-envelope.vcs-history-not-taken"))
-                    }
-                },
-                Ok(step) => {
-                    self.active = Some(active);
-                    Ok(step)
-                }
-                Err(diagnostic) => {
-                    self.active = Some(active);
-                    Err(diagnostic)
-                }
-            },
-            ArtifactEnvelopeFreshVcsActive::Changes(authority) => match authority.accept(token, _terminal, source, cx) {
-                Ok(ArtifactEnvelopeFieldDecodeStep::FieldComplete) => match authority.take_values() {
-                    Some(values) => {
-                        self.changes = Some(values);
-                        Ok(ArtifactEnvelopeFieldDecodeStep::TokenComplete)
-                    }
-                    None => {
-                        self.active = Some(active);
-                        Err(Self::diagnostic("artifact-envelope.vcs-history-not-taken"))
-                    }
-                },
-                Ok(step) => {
-                    self.active = Some(active);
-                    Ok(step)
-                }
-                Err(diagnostic) => {
-                    self.active = Some(active);
-                    Err(diagnostic)
-                }
-            },
-            ArtifactEnvelopeFreshVcsActive::Checkpoints(authority) => match authority.accept(token, _terminal, source, cx) {
-                Ok(ArtifactEnvelopeFieldDecodeStep::FieldComplete) => match authority.take_values() {
-                    Some(values) => {
-                        self.checkpoints = Some(values);
-                        Ok(ArtifactEnvelopeFieldDecodeStep::TokenComplete)
-                    }
-                    None => {
-                        self.active = Some(active);
-                        Err(Self::diagnostic("artifact-envelope.vcs-history-not-taken"))
-                    }
-                },
-                Ok(step) => {
-                    self.active = Some(active);
-                    Ok(step)
-                }
-                Err(diagnostic) => {
-                    self.active = Some(active);
-                    Err(diagnostic)
-                }
-            },
-            ArtifactEnvelopeFreshVcsActive::Alternatives(authority) => match authority.accept(token, _terminal, source, cx) {
-                Ok(ArtifactEnvelopeFieldDecodeStep::FieldComplete) => match authority.take_values() {
-                    Some(values) => {
-                        self.alternatives = Some(values);
-                        Ok(ArtifactEnvelopeFieldDecodeStep::TokenComplete)
-                    }
-                    None => {
-                        self.active = Some(active);
-                        Err(Self::diagnostic("artifact-envelope.vcs-history-not-taken"))
-                    }
-                },
-                Ok(step) => {
-                    self.active = Some(active);
-                    Ok(step)
-                }
-                Err(diagnostic) => {
-                    self.active = Some(active);
-                    Err(diagnostic)
-                }
-            },
+            history => {
+                let step = match history {
+                    ArtifactEnvelopeFreshVcsActive::Edits(authority) => authority.accept_into(&mut self.edits, token, terminal, source, cx),
+                    ArtifactEnvelopeFreshVcsActive::Changes(authority) => authority.accept_into(&mut self.changes, token, terminal, source, cx),
+                    ArtifactEnvelopeFreshVcsActive::Checkpoints(authority) => authority.accept_into(&mut self.checkpoints, token, terminal, source, cx),
+                    ArtifactEnvelopeFreshVcsActive::Alternatives(authority) => authority.accept_into(&mut self.alternatives, token, terminal, source, cx),
+                    ArtifactEnvelopeFreshVcsActive::Snapshot { .. } => unreachable!("snapshot handled before history"),
+                }?;
+                (step, history.terminal_is_empty())
+            }
         };
+        if settled {
+            self.active = None;
+        }
+        Ok(step)
     }
 
     /// 🌱️ Installs the exact owner for one vcs field the moment its own nested cursor attributes a

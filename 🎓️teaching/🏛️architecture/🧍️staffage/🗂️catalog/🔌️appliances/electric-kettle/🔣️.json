@@ -44,13 +44,13 @@
         }
       ],
       "notes": {
-        "en": "A 1.7 L stainless jug kettle of 2 kW on a 0.18 m wide, 30 mm high 360-degree power base (dimensions of the class after the retail data). The jug is a 0.7 mm stainless cone of 0.15 m tapering to 0.14 m over 0.175 m with a rolled rim and a seat collar, a 16 mm black polypropylene foot skirt that sits in the recess of the base, the concealed element bonded under the floor, a covered spout rising from two thirds of the height to 0.19 m at the left, a water window on the side and a C handle at the right whose rocker switch sits on the back of the grip; the loose domed lid with its knob rests on the seat collar and rattles in the steam. The asset mass massKg of 1.22 kg is the dry mass (base 0.55, body 0.45, handle 0.12, lid 0.1); the 1 L of water is the separate fluid bone of 1.0 kg, 60 mm deep in the jug, so the filled kettle weighs 2.22 kg. Heating 1 kg by 85 K from about 15 degC to 100 degC needs 356 kJ, which takes about 3 minutes at 2 kW; the element heats the water region directly (almost all of the 2 kW), so the boil clip follows the energy balance in real time. The water carries its phase change (boiling at 100 degC, 2.257 MJ/kg): at 100 degC the temperature holds and the surplus power evaporates the water at about 0.83 g/s, which the steam emitter follows. The origin is the centre of the base on the surface.",
-        "de": "Ein 1,7-l-Edelstahl-Wasserkocher von 2 kW auf einem 0,18 m breiten, 30 mm hohen 360-Grad-Sockel (Maße der Geräteklasse nach den Handelsdaten). Der Krug ist ein 0,7 mm starker Edelstahlkegel von 0,15 m, der sich über 0,175 m auf 0,14 m verjüngt, mit gerolltem Rand und Sitzkragen, einer 16 mm hohen schwarzen Polypropylen-Fußschürze, die in der Mulde des Sockels sitzt, dem unter den Boden gebondeten verdeckten Heizelement, einem geschlossenen Ausguss, der von zwei Dritteln der Höhe links auf 0,19 m steigt, einem Wasserfenster an der Seite und einem C-Griff rechts, dessen Wippschalter am Rücken des Griffs sitzt; der lose gewölbte Deckel mit Knopf liegt auf dem Sitzkragen und klappert im Dampf. Die Assetmasse massKg von 1,22 kg ist die Trockenmasse (Sockel 0,55, Körper 0,45, Griff 0,12, Deckel 0,1); der 1 l Wasser ist der getrennte Fluidknochen von 1,0 kg, 60 mm tief im Krug, der gefüllte Kocher wiegt also 2,22 kg. Das Erwärmen von 1 kg um 85 K von etwa 15 °C auf 100 °C braucht 356 kJ, bei 2 kW sind das etwa 3 Minuten; das Heizelement heizt die Wasserregion direkt (fast die vollen 2 kW), der Aufkoch-Clip folgt also in Echtzeit der Energiebilanz. Das Wasser trägt seine Phasenumwandlung (Sieden bei 100 °C, 2,257 MJ/kg): bei 100 °C bleibt die Temperatur stehen und die überschüssige Leistung verdampft das Wasser mit etwa 0,83 g/s, dem der Dampfemitter folgt. Der Ursprung ist die Mitte des Sockels auf der Unterlage."
+        "en": "A 1.7 L stainless jug kettle of 2 kW on a 0.18 m wide, 30 mm high 360-degree power base (dimensions of the class after the retail data). The jug is a 0.7 mm stainless cone of 0.15 m tapering to 0.14 m over 0.175 m with a rolled rim and a seat collar, a 16 mm black polypropylene foot skirt that sits in the recess of the base, the concealed element bonded under the floor, a short covered pouring beak pressed out of the wall just under the rim at the left, a water window on each side and a C handle at the right that carries the lid hinge and its release button on top and the rocker switch low on the back of the grip; the domed lid turns on that hinge, rests on the seat collar and rattles in the steam; the cord leaves the base under the handle. The asset mass massKg of 1.22 kg is the dry mass (base 0.55, body 0.45, handle 0.115, switch 0.005, lid 0.1); the 1 L of water is the separate fluid bone of 1.0 kg, 60 mm deep in the jug, so the filled kettle weighs 2.22 kg. Heating 1 kg by 85 K from about 15 degC to 100 degC needs 356 kJ, which takes about 3 minutes at 2 kW; the element heats the water region directly (almost all of the 2 kW), so the boil clip follows the energy balance in real time. The water carries its phase change (boiling at 100 degC, 2.257 MJ/kg): at 100 degC the temperature holds and the surplus power evaporates the water at about 0.83 g/s, which the steam emitter follows. The origin is the centre of the base on the surface.",
+        "de": "Ein 1,7-l-Edelstahl-Wasserkocher von 2 kW auf einem 0,18 m breiten, 30 mm hohen 360-Grad-Sockel (Maße der Geräteklasse nach den Handelsdaten). Der Krug ist ein 0,7 mm starker Edelstahlkegel von 0,15 m, der sich über 0,175 m auf 0,14 m verjüngt, mit gerolltem Rand und Sitzkragen, einer 16 mm hohen schwarzen Polypropylen-Fußschürze, die in der Mulde des Sockels sitzt, dem unter den Boden gebondeten verdeckten Heizelement, einer kurzen geschlossenen Ausgussschnaupe, links knapp unter dem Rand aus der Wand gepresst, einem Wasserfenster auf jeder Seite und einem C-Griff rechts, der oben das Deckelscharnier mit seiner Taste und unten am Griffrücken den Wippschalter trägt; der gewölbte Deckel dreht an diesem Scharnier, liegt auf dem Sitzkragen und klappert im Dampf; das Kabel verlässt den Sockel unter dem Griff. Die Assetmasse massKg von 1,22 kg ist die Trockenmasse (Sockel 0,55, Körper 0,45, Griff 0,115, Schalter 0,005, Deckel 0,1); der 1 l Wasser ist der getrennte Fluidknochen von 1,0 kg, 60 mm tief im Krug, der gefüllte Kocher wiegt also 2,22 kg. Das Erwärmen von 1 kg um 85 K von etwa 15 °C auf 100 °C braucht 356 kJ, bei 2 kW sind das etwa 3 Minuten; das Heizelement heizt die Wasserregion direkt (fast die vollen 2 kW), der Aufkoch-Clip folgt also in Echtzeit der Energiebilanz. Das Wasser trägt seine Phasenumwandlung (Sieden bei 100 °C, 2,257 MJ/kg): bei 100 °C bleibt die Temperatur stehen und die überschüssige Leistung verdampft das Wasser mit etwa 0,83 g/s, dem der Dampfemitter folgt. Der Ursprung ist die Mitte des Sockels auf der Unterlage."
       }
     },
     "dimensions": {
-      "heightM": 0.24,
-      "widthM": 0.245,
+      "heightM": 0.223,
+      "widthM": 0.23,
       "depthM": 0.18,
       "massKg": 1.22
     },
@@ -158,16 +158,40 @@
           "y": 0.09,
           "angleDeg": 0,
           "title": {
-            "en": "Handle with switch",
-            "de": "Griff mit Schalter"
+            "en": "Handle with hinge housing and release button",
+            "de": "Griff mit Scharniergehäuse und Deckeltaste"
           },
           "lengthM": 0.057,
           "joint": {
             "type": "fixed"
           },
           "mass": {
-            "kg": 0.12,
+            "kg": 0.115,
             "comX": 0.035,
+            "comY": 0,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "switch",
+          "parent": "handle",
+          "x": 0.0535,
+          "y": -0.022,
+          "angleDeg": -80,
+          "title": {
+            "en": "Rocker switch",
+            "de": "Wippschalter"
+          },
+          "lengthM": 0.022,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -20,
+            "maxDeg": 0
+          },
+          "mass": {
+            "kg": 0.005,
+            "comX": 0.011,
             "comY": 0,
             "distribution": "point",
             "source": "authored-estimate"
@@ -198,24 +222,23 @@
         {
           "id": "lid",
           "parent": "body",
-          "x": 0,
-          "y": 0.175,
-          "angleDeg": 0,
+          "x": 0.066,
+          "y": 0.179,
+          "angleDeg": 180,
           "title": {
-            "en": "Lid, rattles when boiling",
-            "de": "Deckel, klappert beim Kochen"
+            "en": "Lid on its hinge at the handle, rattles when boiling",
+            "de": "Deckel an seinem Scharnier am Griff, klappert beim Kochen"
           },
-          "lengthM": 0.03,
+          "lengthM": 0.132,
           "joint": {
-            "type": "prismatic",
-            "axisDeg": 90,
-            "minM": 0,
-            "maxM": 0.005
+            "type": "revolute",
+            "minDeg": -85,
+            "maxDeg": 0
           },
           "mass": {
             "kg": 0.1,
-            "comX": 0,
-            "comY": 0.01,
+            "comX": 0.066,
+            "comY": 0.0,
             "distribution": "point",
             "source": "authored-estimate"
           }
@@ -241,8 +264,8 @@
       {
         "id": "spout-tip",
         "bone": "body",
-        "x": -0.116,
-        "y": 0.19,
+        "x": -0.0965,
+        "y": 0.1735,
         "kind": "emitter",
         "title": {
           "en": "Spout opening",
@@ -291,7 +314,18 @@
               "region": "shell",
               "material": "stainless",
               "kind": "poly",
-              "points": [[-0.0711, 0.1382], [-0.0725, 0.1391], [-0.0784, 0.143], [-0.0918, 0.1572], [-0.1048, 0.1718], [-0.1146, 0.1817], [-0.1178, 0.186], [-0.1176, 0.1909], [-0.1132, 0.193], [-0.1074, 0.1913], [-0.0952, 0.1842], [-0.0782, 0.1758], [-0.0701, 0.1725]],
+              "points": [
+                [-0.03529, 0.17415],
+                [-0.0554, 0.17628],
+                [-0.07333, 0.17681],
+                [-0.08624, 0.17706],
+                [-0.09321, 0.17608],
+                [-0.09679, 0.16892],
+                [-0.09376, 0.16294],
+                [-0.08667, 0.15219],
+                [-0.0766, 0.13772],
+                [-0.06471, 0.12185]
+              ],
               "closed": true
             },
             {
@@ -304,7 +338,22 @@
               "region": "shell",
               "material": "stainless",
               "kind": "poly",
-              "points": [[0.0752, 0.0], [0.0752, 0.0145], [0.0746, 0.016], [0.0702, 0.167], [0.0699, 0.1705], [0.069, 0.1732], [0.0672, 0.175], [-0.0672, 0.175], [-0.069, 0.1732], [-0.0699, 0.1705], [-0.0702, 0.167], [-0.0746, 0.016], [-0.0752, 0.0145], [-0.0752, 0.0]],
+              "points": [
+                [0.0752, 0.0],
+                [0.0752, 0.0145],
+                [0.0746, 0.016],
+                [0.0702, 0.167],
+                [0.0699, 0.1705],
+                [0.069, 0.1732],
+                [0.0672, 0.175],
+                [-0.0672, 0.175],
+                [-0.069, 0.1732],
+                [-0.0699, 0.1705],
+                [-0.0702, 0.167],
+                [-0.0746, 0.016],
+                [-0.0752, 0.0145],
+                [-0.0752, 0.0]
+              ],
               "closed": true
             },
             {
@@ -314,11 +363,11 @@
               "z": 3.45,
               "filled": false,
               "tone": 0.3,
+              "region": "shell",
+              "material": "pp-plastic",
               "kind": "poly",
               "points": [[-0.0746, 0.016], [0.0746, 0.016]],
-              "closed": false,
-              "region": "shell",
-              "material": "pp-plastic"
+              "closed": false
             },
             {
               "id": "gauge",
@@ -346,21 +395,104 @@
               "region": "handle",
               "material": "pp-plastic",
               "kind": "poly",
-              "points": [[-0.004, 0.078], [0.0121, 0.0777], [0.028, 0.078], [0.041, 0.0747], [0.0517, 0.0648], [0.0559, 0.0518], [0.0575, 0.0304], [0.058, 0.0], [0.057, -0.0254], [0.0559, -0.0416], [0.0515, -0.0542], [0.0408, -0.064], [0.0288, -0.0668], [0.0147, -0.0689], [0.0, -0.0704], [-0.002, -0.0516], [0.0123, -0.0501], [0.0252, -0.0482], [0.0307, -0.0464], [0.0328, -0.0433], [0.0331, -0.0384], [0.034, -0.0246], [0.034, 0.0], [0.0335, 0.0296], [0.0331, 0.0492], [0.0326, 0.0538], [0.0305, 0.0566], [0.026, 0.058], [0.0121, 0.0583], [-0.004, 0.058]],
+              "points": [
+                [-0.00441, 0.09849],
+                [0.01, 0.099],
+                [0.0262, 0.09778],
+                [0.04336, 0.09035],
+                [0.05426, 0.07477],
+                [0.05798, 0.05559],
+                [0.0585, 0.01985],
+                [0.05697, -0.01583],
+                [0.05253, -0.04302],
+                [0.04136, -0.06277],
+                [0.02332, -0.07496],
+                [-0.00051, -0.0789],
+                [-0.00349, -0.0571],
+                [0.01668, -0.05504],
+                [0.02664, -0.04923],
+                [0.03347, -0.03698],
+                [0.03703, -0.01417],
+                [0.0375, 0.02015],
+                [0.03802, 0.05441],
+                [0.03574, 0.06723],
+                [0.03064, 0.07365],
+                [0.0218, 0.07622],
+                [0.01, 0.076],
+                [-0.00359, 0.07551]
+              ],
               "closed": true
             },
             {
-              "id": "switch",
+              "id": "lid-release",
               "bone": "handle",
+              "role": "detail",
+              "z": 3.45,
+              "filled": true,
+              "tone": 0.65,
+              "region": "handle",
+              "material": "pp-plastic",
+              "kind": "rect",
+              "x": 0.014,
+              "y": 0.091,
+              "w": 0.016,
+              "h": 0.012
+            },
+            {
+              "id": "switch",
+              "bone": "switch",
               "role": "detail",
               "z": 3.55,
               "filled": true,
               "tone": 0.65,
-              "kind": "poly",
-              "points": [[0.0485, -0.039], [0.0585, -0.039], [0.0585, -0.021], [0.0485, -0.021]],
-              "closed": true,
               "region": "handle",
-              "material": "pp-plastic"
+              "material": "pp-plastic",
+              "kind": "rect",
+              "x": 0.0,
+              "y": -0.00375,
+              "w": 0.022,
+              "h": 0.0075,
+              "r": 0.002
+            },
+            {
+              "id": "lid-hinge",
+              "bone": "lid",
+              "role": "body",
+              "z": 3.65,
+              "filled": true,
+              "tone": 0.2,
+              "region": "lid",
+              "material": "pp-plastic",
+              "kind": "rect",
+              "x": -0.005,
+              "y": -0.005,
+              "w": 0.021,
+              "h": 0.01,
+              "r": 0.004
+            },
+            {
+              "id": "cord",
+              "bone": "base",
+              "role": "detail",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.2,
+              "region": "plate",
+              "material": "pp-plastic",
+              "kind": "poly",
+              "points": [
+                [0.086, 0.004],
+                [0.097, 0.004],
+                [0.103, 0.0055],
+                [0.111, 0.0],
+                [0.13075, 0.0],
+                [0.13075, 0.0075],
+                [0.114, 0.0075],
+                [0.104, 0.0145],
+                [0.097, 0.016],
+                [0.086, 0.016]
+              ],
+              "closed": true
             },
             {
               "id": "lid",
@@ -372,21 +504,29 @@
               "region": "lid",
               "material": "stainless",
               "kind": "poly",
-              "points": [[0.063, 0.0], [0.0652, 0.0], [0.066, 0.0012], [0.066, 0.0035], [0.0642, 0.0052], [0.057, 0.0075], [0.045, 0.0102], [0.031, 0.0124], [0.018, 0.0136], [0.008, 0.0141], [-0.008, 0.0141], [-0.018, 0.0136], [-0.031, 0.0124], [-0.045, 0.0102], [-0.057, 0.0075], [-0.0642, 0.0052], [-0.066, 0.0035], [-0.066, 0.0012], [-0.0652, 0.0], [-0.063, 0.0]],
-              "closed": true
-            },
-            {
-              "id": "lid-button",
-              "bone": "lid",
-              "role": "body",
-              "z": 3.7,
-              "filled": true,
-              "tone": 0.2,
-              "region": "lid",
-              "material": "pp-plastic",
-              "kind": "poly",
-              "points": [[0.0085, 0.0135], [0.012, 0.0205], [0.0125, 0.0265], [0.0115, 0.0295], [0.0085, 0.0315], [0.004, 0.032], [-0.004, 0.032], [-0.0085, 0.0315], [-0.0115, 0.0295], [-0.0125, 0.0265], [-0.012, 0.0205], [-0.0085, 0.0135]],
-              "closed": true
+              "points": [
+                [0.066, 0.004],
+                [0.129, 0.004],
+                [0.1312, 0.004],
+                [0.132, 0.0028],
+                [0.132, 0.0005],
+                [0.1302, -0.0012],
+                [0.123, -0.0035],
+                [0.111, -0.0062],
+                [0.097, -0.0084],
+                [0.084, -0.0096],
+                [0.074, -0.0101],
+                [0.066, -0.0102]
+              ],
+              "closed": true,
+              "solid": {
+                "kind": "revolved",
+                "axisBone": "lid",
+                "axis": "v",
+                "axisX": -0.066,
+                "axisZ": 0,
+                "mirror": true
+              }
             },
             {
               "id": "base",
@@ -398,7 +538,22 @@
               "region": "plate",
               "material": "pp-plastic",
               "kind": "poly",
-              "points": [[0.0855, 0.0], [0.0885, 0.0015], [0.09, 0.004], [0.09, 0.021], [0.0889, 0.0255], [0.0858, 0.0285], [0.0815, 0.03], [0.0785, 0.03], [-0.0785, 0.03], [-0.0815, 0.03], [-0.0858, 0.0285], [-0.0889, 0.0255], [-0.09, 0.021], [-0.09, 0.004], [-0.0885, 0.0015], [-0.0855, 0.0]],
+              "points": [
+                [0.0855, 0.0],
+                [0.0885, 0.0015],
+                [0.09, 0.004],
+                [0.09, 0.021],
+                [0.0889, 0.0255],
+                [0.0858, 0.0285],
+                [0.0815, 0.03],
+                [-0.0815, 0.03],
+                [-0.0858, 0.0285],
+                [-0.0889, 0.0255],
+                [-0.09, 0.021],
+                [-0.09, 0.004],
+                [-0.0885, 0.0015],
+                [-0.0855, 0.0]
+              ],
               "closed": true
             }
           ],
@@ -410,13 +565,29 @@
               "z": 1,
               "filled": true,
               "tone": 0.5,
+              "region": "plate",
+              "material": "pp-plastic",
               "kind": "ellipse",
               "cx": 0,
               "cy": 0,
               "rx": 0.09,
-              "ry": 0.09,
+              "ry": 0.09
+            },
+            {
+              "id": "cord",
+              "bone": "base",
+              "role": "detail",
+              "z": 1.5,
+              "filled": true,
+              "tone": 0.2,
               "region": "plate",
-              "material": "pp-plastic"
+              "material": "pp-plastic",
+              "kind": "rect",
+              "x": 0.086,
+              "y": -0.006,
+              "w": 0.04475,
+              "h": 0.012,
+              "r": 0.00375
             },
             {
               "id": "body",
@@ -425,13 +596,13 @@
               "z": 2,
               "filled": true,
               "tone": 0.4,
+              "region": "shell",
+              "material": "stainless",
               "kind": "ellipse",
               "cx": 0,
               "cy": 0,
-              "rx": 0.075,
-              "ry": 0.075,
-              "region": "shell",
-              "material": "stainless"
+              "rx": 0.0752,
+              "ry": 0.0752
             },
             {
               "id": "body-shoulder",
@@ -458,7 +629,18 @@
               "region": "shell",
               "material": "stainless",
               "kind": "poly",
-              "points": [[-0.066, -0.0285], [-0.07, -0.0275], [-0.085, -0.0235], [-0.1, -0.0195], [-0.111, -0.0165], [-0.1155, -0.0135], [-0.118, -0.0067], [-0.118, 0.0067], [-0.1155, 0.0135], [-0.111, 0.0165], [-0.1, 0.0195], [-0.085, 0.0235], [-0.07, 0.0275], [-0.066, 0.0285]],
+              "points": [
+                [-0.05, -0.034],
+                [-0.066, -0.027],
+                [-0.08, -0.019],
+                [-0.09, -0.012],
+                [-0.095, -0.007],
+                [-0.095, 0.007],
+                [-0.09, 0.012],
+                [-0.08, 0.019],
+                [-0.066, 0.027],
+                [-0.05, 0.034]
+              ],
               "closed": true
             },
             {
@@ -470,12 +652,25 @@
               "tone": 0.2,
               "region": "handle",
               "material": "pp-plastic",
+              "kind": "poly",
+              "points": [[0.068, -0.019], [0.1, -0.0171], [0.1305, -0.01425], [0.1305, 0.01425], [0.1, 0.0171], [0.068, 0.019]],
+              "closed": true
+            },
+            {
+              "id": "switch",
+              "bone": "switch",
+              "role": "detail",
+              "z": 2.7,
+              "filled": true,
+              "tone": 0.65,
+              "region": "handle",
+              "material": "pp-plastic",
               "kind": "rect",
-              "x": 0.068,
-              "y": -0.016,
-              "w": 0.062,
-              "h": 0.032,
-              "r": 0.012
+              "x": 0.1255,
+              "y": -0.009,
+              "w": 0.0085,
+              "h": 0.018,
+              "r": 0.002
             },
             {
               "id": "lid",
@@ -484,28 +679,47 @@
               "z": 3,
               "filled": true,
               "tone": 0.45,
-              "kind": "ellipse",
-              "cx": 0,
-              "cy": 0,
-              "rx": 0.066,
-              "ry": 0.066,
               "region": "lid",
-              "material": "stainless"
+              "material": "stainless",
+              "kind": "poly",
+              "points": [
+                [0.066, 0.004],
+                [0.129, 0.004],
+                [0.1312, 0.004],
+                [0.132, 0.0028],
+                [0.132, 0.0005],
+                [0.1302, -0.0012],
+                [0.123, -0.0035],
+                [0.111, -0.0062],
+                [0.097, -0.0084],
+                [0.084, -0.0096],
+                [0.074, -0.0101],
+                [0.066, -0.0102]
+              ],
+              "closed": true,
+              "solid": {
+                "kind": "revolved",
+                "axisBone": "lid",
+                "axis": "v",
+                "axisX": -0.066,
+                "axisZ": 0,
+                "mirror": true
+              }
             },
             {
-              "id": "lid-button",
-              "bone": "lid",
-              "role": "body",
+              "id": "lid-release",
+              "bone": "handle",
+              "role": "detail",
               "z": 3.1,
               "filled": true,
-              "tone": 0.2,
-              "region": "lid",
+              "tone": 0.65,
+              "region": "handle",
               "material": "pp-plastic",
               "kind": "ellipse",
-              "cx": 0,
+              "cx": 0.094,
               "cy": 0,
-              "rx": 0.0125,
-              "ry": 0.0125
+              "rx": 0.008,
+              "ry": 0.008
             }
           ],
           "front": [
@@ -519,7 +733,22 @@
               "region": "plate",
               "material": "pp-plastic",
               "kind": "poly",
-              "points": [[0.0855, 0.0], [0.0885, 0.0015], [0.09, 0.004], [0.09, 0.021], [0.0889, 0.0255], [0.0858, 0.0285], [0.0815, 0.03], [0.0785, 0.03], [-0.0785, 0.03], [-0.0815, 0.03], [-0.0858, 0.0285], [-0.0889, 0.0255], [-0.09, 0.021], [-0.09, 0.004], [-0.0885, 0.0015], [-0.0855, 0.0]],
+              "points": [
+                [0.0855, 0.0],
+                [0.0885, 0.0015],
+                [0.09, 0.004],
+                [0.09, 0.021],
+                [0.0889, 0.0255],
+                [0.0858, 0.0285],
+                [0.0815, 0.03],
+                [-0.0815, 0.03],
+                [-0.0858, 0.0285],
+                [-0.0889, 0.0255],
+                [-0.09, 0.021],
+                [-0.09, 0.004],
+                [-0.0885, 0.0015],
+                [-0.0855, 0.0]
+              ],
               "closed": true
             },
             {
@@ -532,20 +761,22 @@
               "region": "shell",
               "material": "stainless",
               "kind": "poly",
-              "points": [[0.0752, 0.03], [0.0752, 0.0445], [0.0746, 0.046], [0.0702, 0.197], [0.0699, 0.2005], [0.069, 0.2032], [0.0672, 0.205], [-0.0672, 0.205], [-0.069, 0.2032], [-0.0699, 0.2005], [-0.0702, 0.197], [-0.0746, 0.046], [-0.0752, 0.0445], [-0.0752, 0.03]],
-              "closed": true
-            },
-            {
-              "id": "spout",
-              "bone": "body",
-              "role": "body",
-              "z": 3.35,
-              "filled": true,
-              "tone": 0.4,
-              "region": "shell",
-              "material": "stainless",
-              "kind": "poly",
-              "points": [[-0.0285, 0.1843], [-0.0275, 0.1804], [-0.0247, 0.1767], [-0.0202, 0.1736], [-0.0143, 0.1711], [-0.0074, 0.1696], [0.0, 0.1691], [0.0074, 0.1696], [0.0143, 0.1711], [0.0202, 0.1736], [0.0247, 0.1767], [0.0275, 0.1804], [0.0285, 0.1843], [0.0275, 0.1882], [0.0165, 0.2165], [0.0159, 0.2177], [0.013, 0.2204], [0.0117, 0.2213], [0.0095, 0.222], [0.0067, 0.2225], [0.0035, 0.2229], [0.0, 0.223], [-0.0035, 0.2229], [-0.0067, 0.2225], [-0.0095, 0.222], [-0.0117, 0.2213], [-0.013, 0.2204], [-0.0159, 0.2177], [-0.0165, 0.2165], [-0.0275, 0.1882]],
+              "points": [
+                [0.0752, 0.03],
+                [0.0752, 0.0445],
+                [0.0746, 0.046],
+                [0.0702, 0.197],
+                [0.0699, 0.2005],
+                [0.069, 0.2032],
+                [0.0672, 0.205],
+                [-0.0672, 0.205],
+                [-0.069, 0.2032],
+                [-0.0699, 0.2005],
+                [-0.0702, 0.197],
+                [-0.0746, 0.046],
+                [-0.0752, 0.0445],
+                [-0.0752, 0.03]
+              ],
               "closed": true
             },
             {
@@ -555,11 +786,45 @@
               "z": 3.45,
               "filled": false,
               "tone": 0.3,
+              "region": "shell",
+              "material": "pp-plastic",
               "kind": "poly",
               "points": [[-0.0746, 0.046], [0.0746, 0.046]],
-              "closed": false,
-              "region": "shell",
-              "material": "pp-plastic"
+              "closed": false
+            },
+            {
+              "id": "lid",
+              "bone": "lid",
+              "role": "body",
+              "z": 3.45,
+              "filled": true,
+              "tone": 0.45,
+              "region": "lid",
+              "material": "stainless",
+              "kind": "poly",
+              "points": [
+                [0.066, 0.004],
+                [0.129, 0.004],
+                [0.1312, 0.004],
+                [0.132, 0.0028],
+                [0.132, 0.0005],
+                [0.1302, -0.0012],
+                [0.123, -0.0035],
+                [0.111, -0.0062],
+                [0.097, -0.0084],
+                [0.084, -0.0096],
+                [0.074, -0.0101],
+                [0.066, -0.0102]
+              ],
+              "closed": true,
+              "solid": {
+                "kind": "revolved",
+                "axisBone": "lid",
+                "axis": "v",
+                "axisX": -0.066,
+                "axisZ": 0,
+                "mirror": true
+              }
             },
             {
               "id": "handle",
@@ -571,10 +836,10 @@
               "region": "handle",
               "material": "pp-plastic",
               "kind": "rect",
-              "x": -0.016,
-              "y": 0.0496,
-              "w": 0.032,
-              "h": 0.1484,
+              "x": -0.019,
+              "y": 0.041,
+              "w": 0.038,
+              "h": 0.178,
               "r": 0.01
             },
             {
@@ -587,11 +852,11 @@
               "region": "handle",
               "material": "pp-plastic",
               "kind": "poly",
-              "points": [[0.0, 0.0656], [0.0, 0.182]],
+              "points": [[0.0, 0.11], [0.0, 0.19]],
               "closed": false
             },
             {
-              "id": "switch",
+              "id": "lid-release",
               "bone": "handle",
               "role": "detail",
               "z": 3.56,
@@ -601,59 +866,48 @@
               "material": "pp-plastic",
               "kind": "rect",
               "x": -0.008,
-              "y": 0.081,
+              "y": 0.211,
               "w": 0.016,
-              "h": 0.018,
-              "r": 0.002
+              "h": 0.012
             },
             {
-              "id": "lid",
-              "bone": "lid",
-              "role": "body",
-              "z": 3.6,
+              "id": "switch",
+              "bone": "switch",
+              "role": "detail",
+              "z": 3.56,
               "filled": true,
-              "tone": 0.45,
-              "region": "lid",
-              "material": "stainless",
-              "kind": "poly",
-              "points": [[0.063, 0.205], [0.0652, 0.205], [0.066, 0.2062], [0.066, 0.2085], [0.0642, 0.2102], [0.057, 0.2125], [0.045, 0.2152], [0.031, 0.2174], [0.018, 0.2186], [0.008, 0.2191], [-0.008, 0.2191], [-0.018, 0.2186], [-0.031, 0.2174], [-0.045, 0.2152], [-0.057, 0.2125], [-0.0642, 0.2102], [-0.066, 0.2085], [-0.066, 0.2062], [-0.0652, 0.205], [-0.063, 0.205]],
-              "closed": true
-            },
-            {
-              "id": "lid-button",
-              "bone": "lid",
-              "role": "body",
-              "z": 3.7,
-              "filled": true,
-              "tone": 0.2,
-              "region": "lid",
+              "tone": 0.65,
+              "region": "handle",
               "material": "pp-plastic",
-              "kind": "poly",
-              "points": [[0.0085, 0.2185], [0.012, 0.2255], [0.0125, 0.2315], [0.0115, 0.2345], [0.0085, 0.2365], [0.004, 0.237], [-0.004, 0.237], [-0.0085, 0.2365], [-0.0115, 0.2345], [-0.0125, 0.2315], [-0.012, 0.2255], [-0.0085, 0.2185]],
-              "closed": true
+              "kind": "rect",
+              "x": -0.009,
+              "y": 0.076,
+              "w": 0.018,
+              "h": 0.022,
+              "r": 0.002
             }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "A 0.245 m wide jug kettle on its power base, 4.9 mm by 4.8 mm on paper: the base with its rounded top edge, the tapered stainless jug with its black foot skirt and rolled rim, the covered spout rising at the left, the C handle at the right with the rocker switch on the back of the grip, the water window, the 1 L fill behind the outline and the domed lid with its knob on the seat. Front, 3.6 mm by 4.8 mm: the jug seen from the handle side, the grip with its grip line and the switch in front of the body, the skirt line, the lid and knob. Plan, 4.9 mm by 3.6 mm: the base disc, the jug with its rim ring, the spout wedge, the handle and the lid with its knob.",
-            "de": "Ein 0,245 m breiter Wasserkocher auf seinem Sockel, auf Papier 4,9 mm mal 4,8 mm: der Sockel mit gerundeter Oberkante, der sich verjüngende Edelstahlkrug mit schwarzer Fußschürze und gerolltem Rand, der links steigende geschlossene Ausguss, rechts der C-Griff mit dem Wippschalter am Rücken des Griffs, das Wasserfenster, die 1-l-Füllung hinter der Kontur und der gewölbte Deckel mit Knopf auf dem Sitz. Vorderansicht, 3,6 mm auf 4,8 mm: der Krug von der Griffseite, Griff mit Grifflinie und Schalter vor dem Körper, die Schürzenlinie, Deckel und Knopf. Grundriss, 4,9 mm auf 3,6 mm: die Sockelscheibe, der Krug mit Randring, der Ausgusskeil, der Griff und der Deckel mit Knopf."
+            "en": "A 0.23 m wide jug kettle on its power base, 4.6 mm by 4.5 mm on paper: the base with its rounded top edge and the cord leaving under the handle, the tapered stainless jug with its black foot skirt and rolled rim, the short pouring beak under the rim at the left, the C handle at the right running from the hinge housing over the rim down into the wall, with the release button on top and the rocker switch low on the back of the grip, the water window, the 1 L fill behind the outline and the domed lid hanging on its hinge at the handle. Front, 3.6 mm by 4.5 mm: the jug seen from the handle side, the grip with its grip line, the release button and the switch in front of the body, the skirt line and the lid. Plan, 4.6 mm by 3.6 mm: the base disc with the cord, the jug with its rim ring, the beak wedge, the handle with the release button and the lid.",
+            "de": "Ein 0,23 m breiter Wasserkocher auf seinem Sockel, 4,6 mm mal 4,5 mm auf dem Papier: der Sockel mit gerundeter Oberkante und dem Kabel unter dem Griff, der konische Edelstahlkrug mit schwarzer Fußschürze und gerolltem Rand, links die kurze Ausgussschnaupe unter dem Rand, rechts der C-Griff vom Scharniergehäuse über dem Rand hinunter in die Wand, mit der Deckeltaste oben und dem Wippschalter unten am Griffrücken, das Wasserfenster, die 1-l-Füllung hinter dem Umriss und der gewölbte Deckel an seinem Scharnier am Griff. Vorderansicht, 3,6 mm mal 4,5 mm: der Krug von der Griffseite, das Griffstück mit Grifflinie, Deckeltaste und Schalter vor dem Körper, die Schürzenlinie und der Deckel. Draufsicht, 4,6 mm mal 3,6 mm: die Sockelscheibe mit dem Kabel, der Krug mit Randring, der Schnaupenkeil, der Griff mit der Deckeltaste und der Deckel."
           },
           "retained": {
-            "en": "Base, foot skirt, jug, spout, window, water fill, handle with switch, lid with skirt and knob.",
-            "de": "Sockel, Fußschürze, Krug, Ausguss, Fenster, Wasserfüllung, Griff mit Schalter, Deckel mit Schürze und Knopf."
+            "en": "Base with cord, foot skirt, jug, beak, window, water fill, handle with release button and switch, lid with its hinge knuckle.",
+            "de": "Sockel mit Kabel, Fußschürze, Krug, Schnaupe, Fenster, Wasserfüllung, Griff mit Deckeltaste und Schalter, Deckel mit Scharnierauge."
           },
           "merged": {
             "en": "Nothing is merged.",
             "de": "Nichts ist zusammengeführt."
           },
           "omitted": {
-            "en": "The limescale filter behind the spout, the cord and the rubber feet. The spout is hidden behind the body in front; water and window are not visible from the front or from above.",
-            "de": "Der Kalkfilter hinter dem Ausguss, das Kabel und die Gummifüße. Der Ausguss ist in der Vorderansicht vom Körper verdeckt; Wasser und Fenster sind von vorn und von oben nicht zu sehen."
+            "en": "The limescale filter behind the beak, the cord beyond the handle with its plug and the rubber feet. The beak is hidden behind the body in front; water and window are not visible from the front or from above.",
+            "de": "Der Kalkfilter hinter der Schnaupe, das Kabel jenseits des Griffs mit seinem Stecker und die Gummifüße. Die Schnaupe ist vorn hinter dem Körper verborgen; Wasser und Fenster sind von vorn und von oben nicht sichtbar."
           },
           "thinElements": {
-            "en": "The window is 28 mm wide, the handle arms 19 to 20 mm, the switch 10 mm deep, all above the 7.5 mm feature.",
-            "de": "Das Fenster ist 28 mm breit, die Griffarme 19 bis 20 mm, der Schalter 10 mm tief, alles über dem Merkmal von 7,5 mm."
+            "en": "The window is 28 mm wide, the handle 20 mm thick, the switch paddle and the cord 7.5 mm, the hinge knuckle 10 mm, all at or above the 7.5 mm feature.",
+            "de": "Das Fenster ist 28 mm breit, der Griff 20 mm stark, Schalterwippe und Kabel 7,5 mm, das Scharnierauge 10 mm, alle auf oder über dem 7,5-mm-Merkmal."
           },
           "hatching": {
             "en": "None.",
@@ -700,19 +954,29 @@
               "closed": true
             },
             {
+              "id": "spout",
+              "bone": "body",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.4,
+              "region": "shell",
+              "material": "stainless",
+              "kind": "poly",
+              "points": [[-0.03571, 0.17438], [-0.06538, 0.1768], [-0.09039, 0.17857], [-0.09761, 0.16543], [-0.08262, 0.1452], [-0.06429, 0.12162]],
+              "closed": true
+            },
+            {
               "id": "body",
               "bone": "body",
               "role": "body",
               "z": 3.4,
               "filled": true,
               "tone": 0.4,
-              "regions": [
-                "shell",
-                "water"
-              ],
+              "regions": ["shell", "water"],
               "material": "stainless",
               "kind": "poly",
-              "points": [[0.075, 0.0], [0.0701, 0.17], [0.0685, 0.175], [-0.0685, 0.175], [-0.0701, 0.1729], [-0.0783, 0.1758], [-0.1095, 0.1926], [-0.1158, 0.1901], [-0.1165, 0.1834], [-0.0917, 0.1572], [-0.0749, 0.1404], [-0.0711, 0.1366], [-0.075, 0.0]],
+              "points": [[0.0752, 0.0], [0.0701, 0.17], [0.0672, 0.175], [-0.0672, 0.175], [-0.0701, 0.17], [-0.0752, 0.0]],
               "closed": true
             },
             {
@@ -725,8 +989,70 @@
               "region": "handle",
               "material": "pp-plastic",
               "kind": "poly",
-              "points": [[-0.004, 0.078], [0.0121, 0.0777], [0.0318, 0.0768], [0.0548, 0.0555], [0.0575, 0.0304], [0.058, 0.0], [0.057, -0.0254], [0.0545, -0.0457], [0.0321, -0.0655], [0.0147, -0.0689], [0.0, -0.0704], [-0.002, -0.0516], [0.0123, -0.0501], [0.0219, -0.0495], [0.0345, -0.0343], [0.034, -0.0246], [0.034, 0.0], [0.0335, 0.0296], [0.0342, 0.0455], [0.0222, 0.0592], [0.0121, 0.0583], [-0.004, 0.058]],
+              "points": [
+                [-0.004, 0.0985],
+                [0.02808, 0.09756],
+                [0.05346, 0.07625],
+                [0.0585, 0.02],
+                [0.05372, -0.04037],
+                [0.03374, -0.07079],
+                [0.00016, -0.07879],
+                [-0.00416, -0.05721],
+                [0.02226, -0.05321],
+                [0.03428, -0.03563],
+                [0.0375, 0.02],
+                [0.03454, 0.06975],
+                [0.02192, 0.07644],
+                [-0.004, 0.0755]
+              ],
               "closed": true
+            },
+            {
+              "id": "switch",
+              "bone": "switch",
+              "role": "body",
+              "z": 3.55,
+              "filled": true,
+              "tone": 0.65,
+              "region": "handle",
+              "material": "pp-plastic",
+              "kind": "rect",
+              "x": 0.0,
+              "y": -0.00375,
+              "w": 0.022,
+              "h": 0.0075,
+              "r": 0.002
+            },
+            {
+              "id": "lid-hinge",
+              "bone": "lid",
+              "role": "body",
+              "z": 3.65,
+              "filled": true,
+              "tone": 0.2,
+              "region": "lid",
+              "material": "pp-plastic",
+              "kind": "rect",
+              "x": -0.005,
+              "y": -0.005,
+              "w": 0.021,
+              "h": 0.01,
+              "r": 0.004
+            },
+            {
+              "id": "cord",
+              "bone": "base",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.2,
+              "region": "plate",
+              "material": "pp-plastic",
+              "kind": "rect",
+              "x": 0.086,
+              "y": 0.004,
+              "w": 0.017,
+              "h": 0.012
             },
             {
               "id": "lid",
@@ -738,8 +1064,16 @@
               "region": "lid",
               "material": "stainless",
               "kind": "poly",
-              "points": [[0.063, 0.0], [0.066, 0.0], [0.066, 0.004], [0.058, 0.008], [0.04, 0.0125], [0.022, 0.0145], [0.0125, 0.016], [0.0125, 0.0275], [0.009, 0.03], [-0.009, 0.03], [-0.0125, 0.0275], [-0.0125, 0.016], [-0.022, 0.0145], [-0.04, 0.0125], [-0.058, 0.008], [-0.066, 0.004], [-0.066, 0.0], [-0.063, 0.0]],
-              "closed": true
+              "points": [[0.066, 0.004], [0.128, 0.004], [0.132, 0.004], [0.132, 0.0005], [0.123, -0.0035], [0.097, -0.0084], [0.066, -0.0102]],
+              "closed": true,
+              "solid": {
+                "kind": "revolved",
+                "axisBone": "lid",
+                "axis": "v",
+                "axisX": -0.066,
+                "axisZ": 0,
+                "mirror": true
+              }
             },
             {
               "id": "base",
@@ -763,13 +1097,28 @@
               "z": 1,
               "filled": true,
               "tone": 0.5,
+              "region": "plate",
+              "material": "pp-plastic",
               "kind": "ellipse",
               "cx": 0,
               "cy": 0,
               "rx": 0.09,
-              "ry": 0.09,
+              "ry": 0.09
+            },
+            {
+              "id": "cord",
+              "bone": "base",
+              "role": "body",
+              "z": 1.5,
+              "filled": true,
+              "tone": 0.2,
               "region": "plate",
-              "material": "pp-plastic"
+              "material": "pp-plastic",
+              "kind": "rect",
+              "x": 0.086,
+              "y": -0.006,
+              "w": 0.017,
+              "h": 0.012
             },
             {
               "id": "body",
@@ -778,16 +1127,13 @@
               "z": 2,
               "filled": true,
               "tone": 0.4,
-              "regions": [
-                "shell",
-                "water"
-              ],
+              "regions": ["shell", "water"],
               "material": "stainless",
               "kind": "ellipse",
               "cx": 0,
               "cy": 0,
-              "rx": 0.075,
-              "ry": 0.075
+              "rx": 0.0752,
+              "ry": 0.0752
             },
             {
               "id": "spout",
@@ -799,7 +1145,7 @@
               "region": "shell",
               "material": "stainless",
               "kind": "poly",
-              "points": [[-0.066, -0.0285], [-0.085, -0.0235], [-0.113, -0.016], [-0.1165, -0.008], [-0.1165, 0.008], [-0.113, 0.016], [-0.085, 0.0235], [-0.066, 0.0285]],
+              "points": [[-0.05, -0.034], [-0.074, -0.023], [-0.094, -0.0085], [-0.094, 0.0085], [-0.074, 0.023], [-0.05, 0.034]],
               "closed": true
             },
             {
@@ -811,12 +1157,25 @@
               "tone": 0.2,
               "region": "handle",
               "material": "pp-plastic",
+              "kind": "poly",
+              "points": [[0.068, -0.019], [0.1, -0.0171], [0.1305, -0.01425], [0.1305, 0.01425], [0.1, 0.0171], [0.068, 0.019]],
+              "closed": true
+            },
+            {
+              "id": "switch",
+              "bone": "switch",
+              "role": "body",
+              "z": 2.7,
+              "filled": true,
+              "tone": 0.65,
+              "region": "handle",
+              "material": "pp-plastic",
               "kind": "rect",
-              "x": 0.068,
-              "y": -0.016,
-              "w": 0.062,
-              "h": 0.032,
-              "r": 0.012
+              "x": 0.1255,
+              "y": -0.009,
+              "w": 0.0085,
+              "h": 0.018,
+              "r": 0.002
             },
             {
               "id": "lid",
@@ -827,11 +1186,17 @@
               "tone": 0.45,
               "region": "lid",
               "material": "stainless",
-              "kind": "ellipse",
-              "cx": 0,
-              "cy": 0,
-              "rx": 0.066,
-              "ry": 0.066
+              "kind": "poly",
+              "points": [[0.066, 0.004], [0.128, 0.004], [0.132, 0.004], [0.132, 0.0005], [0.123, -0.0035], [0.097, -0.0084], [0.066, -0.0102]],
+              "closed": true,
+              "solid": {
+                "kind": "revolved",
+                "axisBone": "lid",
+                "axis": "v",
+                "axisX": -0.066,
+                "axisZ": 0,
+                "mirror": true
+              }
             }
           ],
           "front": [
@@ -855,30 +1220,11 @@
               "z": 3.4,
               "filled": true,
               "tone": 0.4,
-              "regions": [
-                "shell",
-                "water"
-              ],
+              "regions": ["shell", "water"],
               "material": "stainless",
               "kind": "poly",
-              "points": [[0.075, 0.03], [0.0701, 0.2], [0.0685, 0.205], [-0.0685, 0.205], [-0.0701, 0.2], [-0.075, 0.03]],
+              "points": [[0.0752, 0.03], [0.0701, 0.2], [0.0672, 0.205], [-0.0672, 0.205], [-0.0701, 0.2], [-0.0752, 0.03]],
               "closed": true
-            },
-            {
-              "id": "handle",
-              "bone": "handle",
-              "role": "body",
-              "z": 3.5,
-              "filled": true,
-              "tone": 0.2,
-              "region": "handle",
-              "material": "pp-plastic",
-              "kind": "rect",
-              "x": -0.016,
-              "y": 0.0496,
-              "w": 0.032,
-              "h": 0.1484,
-              "r": 0.01
             },
             {
               "id": "lid",
@@ -890,31 +1236,71 @@
               "region": "lid",
               "material": "stainless",
               "kind": "poly",
-              "points": [[0.063, 0.205], [0.066, 0.205], [0.066, 0.209], [0.058, 0.213], [0.04, 0.2175], [0.022, 0.2195], [0.0125, 0.221], [0.0125, 0.2325], [0.009, 0.235], [-0.009, 0.235], [-0.0125, 0.2325], [-0.0125, 0.221], [-0.022, 0.2195], [-0.04, 0.2175], [-0.058, 0.213], [-0.066, 0.209], [-0.066, 0.205], [-0.063, 0.205]],
-              "closed": true
+              "points": [[0.066, 0.004], [0.128, 0.004], [0.132, 0.004], [0.132, 0.0005], [0.123, -0.0035], [0.097, -0.0084], [0.066, -0.0102]],
+              "closed": true,
+              "solid": {
+                "kind": "revolved",
+                "axisBone": "lid",
+                "axis": "v",
+                "axisX": -0.066,
+                "axisZ": 0,
+                "mirror": true
+              }
+            },
+            {
+              "id": "handle",
+              "bone": "handle",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.2,
+              "region": "handle",
+              "material": "pp-plastic",
+              "kind": "rect",
+              "x": -0.019,
+              "y": 0.041,
+              "w": 0.038,
+              "h": 0.1775,
+              "r": 0.01
+            },
+            {
+              "id": "switch",
+              "bone": "switch",
+              "role": "body",
+              "z": 3.56,
+              "filled": true,
+              "tone": 0.65,
+              "region": "handle",
+              "material": "pp-plastic",
+              "kind": "rect",
+              "x": -0.009,
+              "y": 0.076,
+              "w": 0.018,
+              "h": 0.022,
+              "r": 0.002
             }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "A 2.45 mm wide jug: body with spout in one outline, handle, lid with knob as one 30 mm mass and the base with its round-over; the 1 L fill lies behind the body. Front, 1.8 mm by 2.4 mm: base, body, handle bar and lid. Plan, 2.45 mm by 1.8 mm: base disc, body disc, spout, handle and lid disc.",
-            "de": "Ein 2,45 mm breiter Krug: Körper mit Ausguss in einer Kontur, Griff, Deckel mit Knopf als eine 30 mm hohe Masse und der Sockel mit seiner Rundung; die 1-l-Füllung liegt hinter dem Körper. Vorderansicht, 1,8 mm auf 2,4 mm: Sockel, Körper, Griffbügel und Deckel. Grundriss, 2,45 mm auf 1,8 mm: Sockelscheibe, Körperscheibe, Ausguss, Griff und Deckelscheibe."
+            "en": "A 2.3 mm wide jug: body, the short beak under the rim, the handle with its switch stub, the domed lid on its hinge and the base with its round-over and the cord sleeve; the 1 L fill lies behind the body. Front, 1.8 mm by 2.25 mm: base, body, handle bar and lid. Plan, 2.3 mm by 1.8 mm: base disc with sleeve, body disc, beak, handle and lid disc.",
+            "de": "Ein 2,3 mm breiter Krug: Körper, die kurze Schnaupe unter dem Rand, der Griff mit seinem Schalterstummel, der gewölbte Deckel an seinem Scharnier und der Sockel mit Rundung und Kabeltülle; die 1-l-Füllung liegt hinter dem Körper. Vorderansicht, 1,8 mm mal 2,25 mm: Sockel, Körper, Griffbalken und Deckel. Draufsicht, 2,3 mm mal 1,8 mm: Sockelscheibe mit Tülle, Körperscheibe, Schnaupe, Griff und Deckelscheibe."
           },
           "retained": {
-            "en": "Body with spout in one outline, handle, lid with knob, base and the water fill.",
-            "de": "Körper mit Ausguss in einer Kontur, Griff, Deckel mit Knopf, Sockel und die Wasserfüllung."
+            "en": "Body, beak, handle with switch, lid with hinge knuckle, base with cord sleeve and the water fill.",
+            "de": "Körper, Schnaupe, Griff mit Schalter, Deckel mit Scharnierauge, Sockel mit Kabeltülle und die Wasserfüllung."
           },
           "merged": {
-            "en": "Spout and body are one outline that carries shell and water; the foot skirt is part of the body; lid and knob are one shape.",
-            "de": "Ausguss und Körper sind eine Kontur, die Hülle und Wasser trägt; die Fußschürze gehört zum Körper; Deckel und Knopf sind eine Form."
+            "en": "The body outline carries shell and water; the foot skirt is part of the body.",
+            "de": "Der Körperumriss trägt Hülle und Wasser; die Fußschürze ist Teil des Körpers."
           },
           "omitted": {
-            "en": "Window, switch, skirt line, rim ring and the grip line.",
-            "de": "Fenster, Schalter, Schürzenlinie, Randring und die Grifflinie."
+            "en": "Window, release button, the cord beyond its sleeve, skirt line, rim ring and the grip line.",
+            "de": "Fenster, Deckeltaste, das Kabel jenseits der Tülle, Schürzenlinie, Randring und die Grifflinie."
           },
           "thinElements": {
-            "en": "The lid with its knob is one 30 mm mass so that it keeps 0.3 mm on paper.",
-            "de": "Der Deckel mit Knopf ist eine 30 mm hohe Masse, damit er 0,3 mm auf Papier behält."
+            "en": "The lid dome rises 14 mm (0.14 mm) and stays true; the switch paddle is 7.5 mm and the sleeve 12 mm and stay true.",
+            "de": "Die Deckelwölbung steigt 14 mm (0,14 mm) und bleibt wahr; die Schalterwippe ist 7,5 mm und die Tülle 12 mm und bleiben wahr."
           },
           "hatching": {
             "en": "None.",
@@ -948,19 +1334,29 @@
         "geometry": {
           "elevation": [
             {
+              "id": "spout",
+              "bone": "body",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.4,
+              "region": "shell",
+              "material": "stainless",
+              "kind": "poly",
+              "points": [[-0.03072, 0.17412], [-0.08484, 0.18418], [-0.09916, 0.15782], [-0.06128, 0.11788]],
+              "closed": true
+            },
+            {
               "id": "body",
               "bone": "body",
               "role": "body",
               "z": 3.4,
               "filled": true,
               "tone": 0.4,
-              "regions": [
-                "shell",
-                "water"
-              ],
+              "regions": ["shell", "water"],
               "material": "stainless",
               "kind": "poly",
-              "points": [[0.078, 0.0], [0.0722, 0.17], [0.068, 0.175], [-0.068, 0.175], [-0.07, 0.1755], [-0.0783, 0.1794], [-0.1096, 0.1951], [-0.1177, 0.1916], [-0.1184, 0.1829], [-0.0937, 0.1586], [-0.0712, 0.1322], [-0.078, 0.0]],
+              "points": [[0.0752, 0.0], [0.0701, 0.17], [0.0672, 0.175], [-0.0672, 0.175], [-0.0701, 0.17], [-0.0752, 0.0]],
               "closed": true
             },
             {
@@ -973,7 +1369,24 @@
               "region": "handle",
               "material": "pp-plastic",
               "kind": "poly",
-              "points": [[-0.006, 0.081], [0.0117, 0.0805], [0.0332, 0.0792], [0.0564, 0.0557], [0.0595, 0.0305], [0.06, 0.0], [0.059, -0.0255], [0.0562, -0.0482], [0.034, -0.0707], [0.0147, -0.0749], [-0.0027, -0.0764], [-0.0053, -0.0466], [0.0113, -0.0451], [0.018, -0.0453], [0.0298, -0.0338], [0.029, -0.0245], [0.029, 0.0], [0.0285, 0.0295], [0.0296, 0.0423], [0.0188, 0.0528], [0.0117, 0.0515], [-0.006, 0.051]],
+              "points": [
+                [-0.004, 0.098],
+                [0.02712, 0.09785],
+                [0.04887, 0.08733],
+                [0.05898, 0.06384],
+                [0.05898, -0.0308],
+                [0.05035, -0.05752],
+                [0.02864, -0.07327],
+                [-0.00028, -0.0769],
+                [-0.00372, -0.0471],
+                [0.01936, -0.04473],
+                [0.02565, -0.04048],
+                [0.02902, -0.0292],
+                [0.02902, 0.06216],
+                [0.02713, 0.06667],
+                [0.02288, 0.06815],
+                [-0.004, 0.068]
+              ],
               "closed": true
             },
             {
@@ -986,8 +1399,16 @@
               "region": "lid",
               "material": "stainless",
               "kind": "poly",
-              "points": [[0.064, 0.0], [0.07, 0.0], [0.07, 0.006], [0.054, 0.014], [0.032, 0.021], [0.016, 0.024], [0.016, 0.04], [-0.016, 0.04], [-0.016, 0.024], [-0.032, 0.021], [-0.054, 0.014], [-0.07, 0.006], [-0.07, 0.0], [-0.064, 0.0]],
-              "closed": true
+              "points": [[0.066, 0.004], [0.126, 0.004], [0.132, 0.004], [0.13, -0.004], [0.096, -0.021], [0.066, -0.021]],
+              "closed": true,
+              "solid": {
+                "kind": "revolved",
+                "axisBone": "lid",
+                "axis": "v",
+                "axisX": -0.066,
+                "axisZ": 0,
+                "mirror": true
+              }
             },
             {
               "id": "base",
@@ -999,7 +1420,7 @@
               "region": "plate",
               "material": "pp-plastic",
               "kind": "poly",
-              "points": [[0.091, 0.0], [0.095, 0.004], [0.095, 0.036], [0.091, 0.04], [-0.091, 0.04], [-0.095, 0.036], [-0.095, 0.004], [-0.091, 0.0]],
+              "points": [[0.086, 0.0], [0.09, 0.004], [0.09, 0.025], [0.085, 0.03], [-0.085, 0.03], [-0.09, 0.025], [-0.09, 0.004], [-0.086, 0.0]],
               "closed": true
             }
           ],
@@ -1011,65 +1432,103 @@
               "z": 1,
               "filled": true,
               "tone": 0.5,
+              "region": "plate",
+              "material": "pp-plastic",
               "kind": "ellipse",
               "cx": 0,
               "cy": 0,
-              "rx": 0.095,
-              "ry": 0.095,
-              "region": "plate",
-              "material": "pp-plastic"
+              "rx": 0.09,
+              "ry": 0.09
             },
             {
-              "id": "jug",
+              "id": "body",
               "bone": "body",
               "role": "body",
               "z": 2,
               "filled": true,
               "tone": 0.4,
-              "regions": [
-                "shell",
-                "lid",
-                "handle"
-              ],
+              "regions": ["shell", "water"],
               "material": "stainless",
-              "kind": "poly",
-              "points": [[0.0, -0.078], [0.0135, -0.0768], [0.0267, -0.0733], [0.039, -0.0675], [0.0501, -0.0598], [0.0598, -0.0501], [0.0675, -0.039], [0.0733, -0.0267], [0.0759, -0.018], [0.132, -0.018], [0.132, 0.018], [0.0759, 0.018], [0.0733, 0.0267], [0.0675, 0.039], [0.0598, 0.0501], [0.0501, 0.0598], [0.039, 0.0675], [0.0267, 0.0733], [0.0135, 0.0768], [0.0, 0.078], [-0.0135, 0.0768], [-0.0267, 0.0733], [-0.039, 0.0675], [-0.0501, 0.0598], [-0.0598, 0.0501], [-0.0675, 0.039], [-0.0728, 0.0279], [-0.086, 0.021], [-0.114, 0.015], [-0.1185, 0.0075], [-0.1185, -0.0075], [-0.114, -0.015], [-0.086, -0.021], [-0.0728, -0.0279], [-0.0675, -0.039], [-0.0598, -0.0501], [-0.0501, -0.0598], [-0.039, -0.0675], [-0.0267, -0.0733], [-0.0135, -0.0768]],
-              "closed": true
-            }
-          ],
-          "front": [
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.0752,
+              "ry": 0.0752
+            },
             {
-              "id": "kettle",
+              "id": "spout",
               "bone": "body",
               "role": "body",
-              "z": 3.4,
+              "z": 2.5,
               "filled": true,
-              "tone": 0.45,
-              "regions": [
-                "plate",
-                "shell",
-                "water"
-              ],
+              "tone": 0.4,
+              "region": "shell",
               "material": "stainless",
               "kind": "poly",
-              "points": [[0.091, 0.0], [0.095, 0.004], [0.095, 0.036], [0.0778, 0.04], [0.0722, 0.2], [0.068, 0.205], [-0.068, 0.205], [-0.0722, 0.2], [-0.0778, 0.04], [-0.095, 0.036], [-0.095, 0.004], [-0.091, 0.0]],
+              "points": [[-0.046, -0.036], [-0.092, -0.015], [-0.092, 0.015], [-0.046, 0.036]],
               "closed": true
             },
             {
               "id": "handle",
               "bone": "handle",
               "role": "body",
-              "z": 3.5,
+              "z": 2.6,
               "filled": true,
               "tone": 0.2,
               "region": "handle",
               "material": "pp-plastic",
-              "kind": "rect",
-              "x": -0.018,
-              "y": 0.0436,
-              "w": 0.036,
-              "h": 0.1574,
-              "r": 0.01
+              "kind": "poly",
+              "points": [[0.068, -0.015], [0.1, -0.0135], [0.131, -0.01125], [0.131, 0.01125], [0.1, 0.0135], [0.068, 0.015]],
+              "closed": true
+            },
+            {
+              "id": "lid",
+              "bone": "lid",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.45,
+              "region": "lid",
+              "material": "stainless",
+              "kind": "poly",
+              "points": [[0.066, 0.004], [0.126, 0.004], [0.132, 0.004], [0.13, -0.004], [0.096, -0.021], [0.066, -0.021]],
+              "closed": true,
+              "solid": {
+                "kind": "revolved",
+                "axisBone": "lid",
+                "axis": "v",
+                "axisX": -0.066,
+                "axisZ": 0,
+                "mirror": true
+              }
+            }
+          ],
+          "front": [
+            {
+              "id": "base",
+              "bone": "base",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.5,
+              "region": "plate",
+              "material": "pp-plastic",
+              "kind": "poly",
+              "points": [[0.086, 0.0], [0.09, 0.004], [0.09, 0.025], [0.085, 0.03], [-0.085, 0.03], [-0.09, 0.025], [-0.09, 0.004], [-0.086, 0.0]],
+              "closed": true
+            },
+            {
+              "id": "body",
+              "bone": "body",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.4,
+              "regions": ["shell", "water"],
+              "material": "stainless",
+              "kind": "poly",
+              "points": [[0.0752, 0.03], [0.0701, 0.2], [0.0672, 0.205], [-0.0672, 0.205], [-0.0701, 0.2], [-0.0752, 0.03]],
+              "closed": true
             },
             {
               "id": "lid",
@@ -1081,31 +1540,55 @@
               "region": "lid",
               "material": "stainless",
               "kind": "poly",
-              "points": [[0.064, 0.205], [0.07, 0.205], [0.07, 0.211], [0.054, 0.219], [0.032, 0.226], [0.016, 0.229], [0.016, 0.245], [-0.016, 0.245], [-0.016, 0.229], [-0.032, 0.226], [-0.054, 0.219], [-0.07, 0.211], [-0.07, 0.205], [-0.064, 0.205]],
-              "closed": true
+              "points": [[0.066, 0.004], [0.126, 0.004], [0.132, 0.004], [0.13, -0.004], [0.096, -0.021], [0.066, -0.021]],
+              "closed": true,
+              "solid": {
+                "kind": "revolved",
+                "axisBone": "lid",
+                "axis": "v",
+                "axisX": -0.066,
+                "axisZ": 0,
+                "mirror": true
+              }
+            },
+            {
+              "id": "handle",
+              "bone": "handle",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.2,
+              "region": "handle",
+              "material": "pp-plastic",
+              "kind": "rect",
+              "x": -0.015,
+              "y": 0.043,
+              "w": 0.03,
+              "h": 0.175,
+              "r": 0.01
             }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "A 1.2 mm wide jug of four shapes: body with spout, handle, lid and base. Front, 0.9 mm by 1.2 mm: base and body merged into one tapered mass with the lid on top and the handle bar in front. Plan, 1.2 mm by 0.9 mm: the base disc under one jug outline in which body, lid, spout and handle are merged.",
-            "de": "Ein 1,2 mm breiter Krug aus vier Formen: Körper mit Ausguss, Griff, Deckel und Sockel. Vorderansicht, 0,9 mm auf 1,2 mm: Sockel und Körper zu einer sich verjüngenden Masse verschmolzen, darauf der Deckel, davor der Griffbügel. Grundriss, 1,2 mm auf 0,9 mm: die Sockelscheibe unter einem Kocherumriss, in dem Körper, Deckel, Ausguss und Griff verschmolzen sind."
+            "en": "A 1.15 mm wide jug of five shapes: body, beak, handle, lid and base. Front, 0.9 mm by 1.1 mm: base and body with the lid on top and the handle bar in front. Plan, 1.15 mm by 0.9 mm: the base disc under the jug disc with the beak wedge, the handle and the lid.",
+            "de": "Ein 1,15 mm breiter Krug aus fünf Formen: Körper, Schnaupe, Griff, Deckel und Sockel. Vorderansicht, 0,9 mm mal 1,1 mm: Sockel und Körper mit dem Deckel darauf und dem Griffbalken davor. Draufsicht, 1,15 mm mal 0,9 mm: die Sockelscheibe unter der Krugscheibe mit Schnaupenkeil, Griff und Deckel."
           },
           "retained": {
-            "en": "The four masses.",
-            "de": "Die vier Massen."
+            "en": "The five masses.",
+            "de": "Die fünf Massen."
           },
           "merged": {
-            "en": "Body, spout, window and water share one outline; in front base and body, in plan body, lid, spout and handle are one shape.",
-            "de": "Körper, Ausguss, Fenster und Wasser teilen eine Kontur; in der Vorderansicht sind Sockel und Körper, im Grundriss Körper, Deckel, Ausguss und Griff eine Form."
+            "en": "Body, window and water share one outline.",
+            "de": "Körper, Fenster und Wasser teilen einen Umriss."
           },
           "omitted": {
-            "en": "Water, window, knob as its own shape, switch and every detail line; handle and spout are drawn slightly thicker than real.",
-            "de": "Wasser, Fenster, Knopf als eigene Form, Schalter und alle Detaillinien; Griff und Ausguss sind etwas dicker als in Wirklichkeit gezeichnet."
+            "en": "Water, window, switch, release button, hinge knuckle, cord and every detail line; the handle is drawn 30 mm thick.",
+            "de": "Wasser, Fenster, Schalter, Deckeltaste, Scharnierauge, Kabel und jede Detaillinie; der Griff ist 30 mm stark gezeichnet."
           },
           "thinElements": {
-            "en": "Lid and base are 40 mm tall (0.2 mm), the handle 30 mm thick.",
-            "de": "Deckel und Sockel sind 40 mm hoch (0,2 mm), der Griff 30 mm stark."
+            "en": "The base is 30 mm tall (0.15 mm), the handle 30 mm thick; the lid dome is raised from 14 mm to 25 mm (0.125 mm) so that it prints down to 1:350.",
+            "de": "Der Sockel ist 30 mm hoch (0,15 mm), der Griff 30 mm stark; die Deckelwölbung ist von 14 mm auf 25 mm (0,125 mm) erhöht, damit sie bis 1:350 druckt."
           },
           "hatching": {
             "en": "None.",
@@ -1160,9 +1643,61 @@
         },
         "bones": {},
         "ground": "auto",
-        "contacts": [
-          "base-contact"
-        ],
+        "contacts": ["base-contact"],
+        "thermal": {
+          "regions": {
+            "plate": {
+              "sunlitFraction": 0,
+              "exposedFraction": 0.8,
+              "contact": {
+                "fraction": 0.2,
+                "tempC": 21
+              }
+            },
+            "shell": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1
+            },
+            "water": {
+              "sunlitFraction": 0,
+              "exposedFraction": 0.05
+            },
+            "lid": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1
+            },
+            "handle": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1
+            }
+          },
+          "emitters": {
+            "steam": 0,
+            "steam-plume": 0
+          },
+          "operating": {
+            "power": 0
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "filling",
+        "title": {
+          "en": "Lid open for filling",
+          "de": "Deckel zum Füllen offen"
+        },
+        "description": {
+          "en": "The kettle is off and the lid stands open on its hinge at 80 degrees.",
+          "de": "Der Wasserkocher ist aus, der Deckel steht an seinem Scharnier 80 Grad offen."
+        },
+        "bones": {
+          "lid": {
+            "angleDeg": -80
+          }
+        },
+        "ground": "auto",
+        "contacts": ["base-contact"],
         "thermal": {
           "regions": {
             "plate": {
@@ -1210,11 +1745,13 @@
           "en": "The 2 kW element heats the water directly; the shell warms through and the vapour rises with the water temperature.",
           "de": "Das 2-kW-Heizelement erwärmt das Wasser direkt; die Hülle erwärmt sich durch und der Dampf nimmt mit der Wassertemperatur zu."
         },
-        "bones": {},
+        "bones": {
+          "switch": {
+            "angleDeg": -20
+          }
+        },
         "ground": "auto",
-        "contacts": [
-          "base-contact"
-        ],
+        "contacts": ["base-contact"],
         "thermal": {
           "regions": {
             "plate": {
@@ -1263,14 +1800,15 @@
           "de": "Das Wasser kocht: Dampf tritt am Ausguss aus und der Deckel klappert."
         },
         "bones": {
+          "switch": {
+            "angleDeg": -20
+          },
           "lid": {
-            "dy": 0.003
+            "angleDeg": -1.4
           }
         },
         "ground": "auto",
-        "contacts": [
-          "base-contact"
-        ],
+        "contacts": ["base-contact"],
         "thermal": {
           "regions": {
             "plate": {
@@ -1463,7 +2001,7 @@
             "ease": "smooth",
             "bones": {
               "lid": {
-                "dy": 0.005
+                "angleDeg": -2.3
               }
             }
           },
@@ -1473,7 +2011,7 @@
             "ease": "smooth",
             "bones": {
               "lid": {
-                "dy": 0.001
+                "angleDeg": -0.5
               }
             }
           },
@@ -1483,7 +2021,7 @@
             "ease": "smooth",
             "bones": {
               "lid": {
-                "dy": 0.004
+                "angleDeg": -1.8
               }
             }
           },
@@ -1832,9 +2370,57 @@
             "material": "pp-plastic",
             "role": "body",
             "tone": 0.2,
-            "profile": [[0.0, 0.0], [0.0, 0.0855], [0.0015, 0.0885], [0.004, 0.09], [0.021, 0.09], [0.0255, 0.0889], [0.0285, 0.0858], [0.03, 0.0815], [0.03, 0.0785], [0.0272, 0.0775], [0.026, 0.0762], [0.026, 0.0]],
+            "profile": [
+              [0.0, 0.0],
+              [0.0, 0.0855],
+              [0.0015, 0.0885],
+              [0.004, 0.09],
+              [0.021, 0.09],
+              [0.0255, 0.0889],
+              [0.0285, 0.0858],
+              [0.03, 0.0815],
+              [0.03, 0.0785],
+              [0.0272, 0.0775],
+              [0.026, 0.0762],
+              [0.026, 0.0]
+            ],
             "axis": [0, 1, 0],
             "origin": [0.0, 0.0, 0.0]
+          },
+          {
+            "id": "cord-sleeve",
+            "kind": "revolve",
+            "bone": "base",
+            "material": "pp-plastic",
+            "role": "detail",
+            "tone": 0.2,
+            "profile": [[0.086, 0.0], [0.086, 0.006], [0.097, 0.006], [0.103, 0.0045], [0.103, 0.0]],
+            "axis": [1, 0, 0],
+            "origin": [0.0, 0.01, 0.0]
+          },
+          {
+            "id": "cord-drop",
+            "kind": "capsule",
+            "bone": "base",
+            "material": "pp-plastic",
+            "role": "detail",
+            "tone": 0.2,
+            "p0": [0.1, 0.01, 0.0],
+            "p1": [0.111, 0.00375, 0.0],
+            "r0": 0.00375,
+            "r1": 0.00375
+          },
+          {
+            "id": "cord-run",
+            "kind": "capsule",
+            "bone": "base",
+            "material": "pp-plastic",
+            "role": "detail",
+            "tone": 0.2,
+            "p0": [0.111, 0.00375, 0.0],
+            "p1": [0.127, 0.00375, 0.0],
+            "r0": 0.00375,
+            "r1": 0.00375
           },
           {
             "id": "skirt",
@@ -1854,7 +2440,21 @@
             "material": "stainless",
             "role": "body",
             "tone": 0.55,
-            "profile": [[0.0105, 0.0], [0.0105, 0.074], [0.166, 0.06956], [0.1712, 0.0688], [0.1736, 0.0668], [0.1741, 0.0625], [0.175, 0.0625], [0.175, 0.0672], [0.1732, 0.069], [0.1705, 0.0699], [0.167, 0.07023], [0.0085, 0.07476], [0.0085, 0.0]],
+            "profile": [
+              [0.0105, 0.0],
+              [0.0105, 0.074],
+              [0.166, 0.06956],
+              [0.1712, 0.0688],
+              [0.1736, 0.0668],
+              [0.1741, 0.0625],
+              [0.175, 0.0625],
+              [0.175, 0.0672],
+              [0.1732, 0.069],
+              [0.1705, 0.0699],
+              [0.167, 0.07023],
+              [0.0085, 0.07476],
+              [0.0085, 0.0]
+            ],
             "axis": [0, 1, 0],
             "origin": [0.0, 0.0, 0.0]
           },
@@ -1867,53 +2467,46 @@
             "tone": 0.55,
             "sections": [
               {
-                "at": [-0.066, 0.1543, 0.0],
-                "rx": 0.0165,
-                "ry": 0.0285,
+                "at": [-0.05, 0.148, 0.0],
+                "rx": 0.03,
+                "ry": 0.034,
                 "exponent": 2.4,
-                "rotation": [-0.390147, 0.589733, 0.589733, -0.390147]
+                "rotation": [-0.35698, 0.610381, 0.610381, -0.35698]
               },
               {
-                "at": [-0.07, 0.156, 0.0],
-                "rx": 0.0155,
-                "ry": 0.0275,
+                "at": [-0.066, 0.157, 0.0],
+                "rx": 0.022,
+                "ry": 0.027,
                 "exponent": 2.4,
-                "rotation": [-0.339002, 0.620546, 0.620546, -0.339002]
+                "rotation": [-0.359889, 0.60867, 0.60867, -0.359889]
               },
               {
-                "at": [-0.085, 0.1665, 0.0],
-                "rx": 0.0115,
-                "ry": 0.0235,
+                "at": [-0.08, 0.1645, 0.0],
+                "rx": 0.014,
+                "ry": 0.019,
                 "exponent": 2.4,
-                "rotation": [-0.319623, 0.630746, 0.630746, -0.319623]
+                "rotation": [-0.361841, 0.607512, 0.607512, -0.361841]
               },
               {
-                "at": [-0.1, 0.178, 0.0],
-                "rx": 0.0078,
-                "ry": 0.0195,
+                "at": [-0.09, 0.17, 0.0],
+                "rx": 0.008,
+                "ry": 0.012,
                 "exponent": 2.4,
-                "rotation": [-0.312366, 0.634372, 0.634372, -0.312366]
+                "rotation": [-0.363803, 0.606339, 0.606339, -0.363803]
               },
               {
-                "at": [-0.111, 0.1865, 0.0],
-                "rx": 0.006,
-                "ry": 0.0165,
+                "at": [-0.095, 0.1725, 0.0],
+                "rx": 0.004,
+                "ry": 0.007,
                 "exponent": 2.4,
-                "rotation": [-0.317865, 0.631634, 0.631634, -0.317865]
-              },
-              {
-                "at": [-0.1155, 0.1895, 0.0],
-                "rx": 0.0042,
-                "ry": 0.0135,
-                "exponent": 2.4,
-                "rotation": [-0.333654, 0.623438, 0.623438, -0.333654]
+                "rotation": [-0.371748, 0.601501, 0.601501, -0.371748]
               }
             ],
             "capStart": true,
             "capEnd": true
           },
           {
-            "id": "gauge",
+            "id": "gauge-right",
             "kind": "loft",
             "bone": "body",
             "material": "water",
@@ -1967,6 +2560,60 @@
             "capEnd": true
           },
           {
+            "id": "gauge-left",
+            "kind": "loft",
+            "bone": "body",
+            "material": "water",
+            "role": "glazing",
+            "tone": 0.8,
+            "sections": [
+              {
+                "at": [0.0, 0.02, 0.07343],
+                "rx": 0.0075,
+                "ry": 0.0022,
+                "exponent": 5,
+                "rotation": [-0.707107, 0.0, 0.0, 0.707107]
+              },
+              {
+                "at": [0.0, 0.0235, 0.07333],
+                "rx": 0.0125,
+                "ry": 0.0022,
+                "exponent": 5,
+                "rotation": [-0.707107, 0.0, 0.0, 0.707107]
+              },
+              {
+                "at": [0.0, 0.0295, 0.07316],
+                "rx": 0.014,
+                "ry": 0.0022,
+                "exponent": 5,
+                "rotation": [-0.707107, 0.0, 0.0, 0.707107]
+              },
+              {
+                "at": [0.0, 0.1305, 0.07027],
+                "rx": 0.014,
+                "ry": 0.0022,
+                "exponent": 5,
+                "rotation": [-0.707107, 0.0, 0.0, 0.707107]
+              },
+              {
+                "at": [0.0, 0.1365, 0.0701],
+                "rx": 0.0125,
+                "ry": 0.0022,
+                "exponent": 5,
+                "rotation": [-0.707107, 0.0, 0.0, 0.707107]
+              },
+              {
+                "at": [0.0, 0.14, 0.07],
+                "rx": 0.0075,
+                "ry": 0.0022,
+                "exponent": 5,
+                "rotation": [-0.707107, 0.0, 0.0, 0.707107]
+              }
+            ],
+            "capStart": true,
+            "capEnd": true
+          },
+          {
             "id": "water",
             "kind": "revolve",
             "bone": "water",
@@ -1986,126 +2633,143 @@
             "tone": 0.2,
             "sections": [
               {
-                "at": [-0.004, 0.068, 0.0],
-                "rx": 0.01,
-                "ry": 0.0145,
+                "at": [-0.004, 0.087, 0.0],
+                "rx": 0.0115,
+                "ry": 0.019,
+                "exponent": 2.3,
+                "rotation": [0.490996, 0.508845, 0.508845, 0.490996]
+              },
+              {
+                "at": [0.01, 0.0875, 0.0],
+                "rx": 0.0115,
+                "ry": 0.019,
                 "exponent": 2.3,
                 "rotation": [0.5, 0.5, 0.5, 0.5]
               },
               {
-                "at": [0.01215, 0.068, 0.0],
-                "rx": 0.0097,
-                "ry": 0.015,
+                "at": [0.024, 0.087, 0.0],
+                "rx": 0.011,
+                "ry": 0.017,
                 "exponent": 2.3,
-                "rotation": [0.5, 0.5, 0.5, 0.5]
+                "rotation": [0.547632, 0.447324, 0.447324, 0.547632]
               },
               {
-                "at": [0.027, 0.068, 0.0],
+                "at": [0.037, 0.082, 0.0],
+                "rx": 0.0105,
+                "ry": 0.0155,
+                "exponent": 2.3,
+                "rotation": [0.633649, 0.31383, 0.31383, 0.633649]
+              },
+              {
+                "at": [0.045, 0.071, 0.0],
                 "rx": 0.01,
                 "ry": 0.0145,
                 "exponent": 2.3,
-                "rotation": [0.524132, 0.474642, 0.474642, 0.524132]
+                "rotation": [0.693919, 0.13593, 0.13593, 0.693919]
               },
               {
-                "at": [0.03575, 0.06566, 0.0],
+                "at": [0.048, 0.055, 0.0],
+                "rx": 0.01,
+                "ry": 0.014,
+                "exponent": 2.3,
+                "rotation": [0.706802, 0.02077, 0.02077, 0.706802]
+              },
+              {
+                "at": [0.048, 0.02, 0.0],
+                "rx": 0.0105,
+                "ry": 0.0145,
+                "exponent": 2.3,
+                "rotation": [0.707089, -0.00505, -0.00505, 0.707089]
+              },
+              {
+                "at": [0.047, -0.015, 0.0],
+                "rx": 0.01,
+                "ry": 0.014,
+                "exponent": 2.3,
+                "rotation": [0.706496, -0.029386, -0.029386, 0.706496]
+              },
+              {
+                "at": [0.043, -0.04, 0.0],
+                "rx": 0.01,
+                "ry": 0.014,
+                "exponent": 2.3,
+                "rotation": [0.69879, -0.108131, -0.108131, 0.69879]
+              },
+              {
+                "at": [0.034, -0.056, 0.0],
+                "rx": 0.01,
+                "ry": 0.0145,
+                "exponent": 2.3,
+                "rotation": [0.658774, -0.256938, -0.256938, 0.658774]
+              },
+              {
+                "at": [0.02, -0.065, 0.0],
                 "rx": 0.0105,
                 "ry": 0.015,
                 "exponent": 2.3,
-                "rotation": [0.612372, 0.353553, 0.353553, 0.612372]
+                "rotation": [0.573635, -0.413453, -0.413453, 0.573635]
               },
               {
-                "at": [0.04216, 0.05925, 0.0],
+                "at": [-0.002, -0.068, 0.0],
                 "rx": 0.011,
-                "ry": 0.0155,
-                "exponent": 2.3,
-                "rotation": [0.683013, 0.183013, 0.183013, 0.683013]
-              },
-              {
-                "at": [0.0445, 0.0505, 0.0],
-                "rx": 0.0115,
                 "ry": 0.016,
                 "exponent": 2.3,
-                "rotation": [0.705961, 0.04023, 0.04023, 0.705961]
-              },
-              {
-                "at": [0.0455, 0.03, 0.0],
-                "rx": 0.012,
-                "ry": 0.016,
-                "exponent": 2.3,
-                "rotation": [0.707029, 0.010498, 0.010498, 0.707029]
-              },
-              {
-                "at": [0.046, 0.0, 0.0],
-                "rx": 0.012,
-                "ry": 0.016,
-                "exponent": 2.3,
-                "rotation": [0.707107, 0.0, 0.0, 0.707107]
-              },
-              {
-                "at": [0.0455, -0.025, 0.0],
-                "rx": 0.0115,
-                "ry": 0.016,
-                "exponent": 2.3,
-                "rotation": [0.706983, -0.013251, -0.013251, 0.706983]
-              },
-              {
-                "at": [0.0445, -0.04, 0.0],
-                "rx": 0.0115,
-                "ry": 0.016,
-                "exponent": 2.3,
-                "rotation": [0.705377, -0.049423, -0.049423, 0.705377]
-              },
-              {
-                "at": [0.04216, -0.04875, 0.0],
-                "rx": 0.01083,
-                "ry": 0.0155,
-                "exponent": 2.3,
-                "rotation": [0.683013, -0.183013, -0.183013, 0.683013]
-              },
-              {
-                "at": [0.03575, -0.05516, 0.0],
-                "rx": 0.01017,
-                "ry": 0.015,
-                "exponent": 2.3,
-                "rotation": [0.612372, -0.353553, -0.353553, 0.612372]
-              },
-              {
-                "at": [0.027, -0.0575, 0.0],
-                "rx": 0.0095,
-                "ry": 0.0145,
-                "exponent": 2.3,
-                "rotation": [0.545812, -0.449544, -0.449544, 0.545812]
-              },
-              {
-                "at": [0.0135, -0.0595, 0.0],
-                "rx": 0.0095,
-                "ry": 0.0145,
-                "exponent": 2.3,
-                "rotation": [0.530103, -0.467965, -0.467965, 0.530103]
-              },
-              {
-                "at": [-0.001, -0.061, 0.0],
-                "rx": 0.0095,
-                "ry": 0.0145,
-                "exponent": 2.3,
-                "rotation": [0.525095, -0.473577, -0.473577, 0.525095]
+                "rotation": [0.532708, -0.464996, -0.464996, 0.532708]
               }
             ],
             "capStart": true,
             "capEnd": true
           },
           {
-            "id": "switch",
-            "kind": "box",
+            "id": "lid-release",
+            "kind": "revolve",
             "bone": "handle",
             "material": "pp-plastic",
             "role": "detail",
-            "tone": 0.75,
-            "size": [0.01, 0.018, 0.016],
-            "transform": {
-              "translation": [0.0535, -0.03, 0.0]
-            },
-            "cornerRadius": 0.002
+            "tone": 0.65,
+            "profile": [[0.091, 0.0], [0.091, 0.008], [0.1018, 0.008], [0.103, 0.0068], [0.103, 0.0]],
+            "axis": [0, 1, 0],
+            "origin": [0.022, 0.0, 0.0]
+          },
+          {
+            "id": "switch",
+            "kind": "loft",
+            "bone": "switch",
+            "material": "pp-plastic",
+            "role": "detail",
+            "tone": 0.7,
+            "sections": [
+              {
+                "at": [0.0, 0.0, 0.0],
+                "rx": 0.004,
+                "ry": 0.007,
+                "exponent": 3,
+                "rotation": [0.5, 0.5, 0.5, 0.5]
+              },
+              {
+                "at": [0.006, 0.0, 0.0],
+                "rx": 0.00375,
+                "ry": 0.008,
+                "exponent": 3,
+                "rotation": [0.5, 0.5, 0.5, 0.5]
+              },
+              {
+                "at": [0.02, 0.0, 0.0],
+                "rx": 0.00375,
+                "ry": 0.009,
+                "exponent": 3,
+                "rotation": [0.5, 0.5, 0.5, 0.5]
+              },
+              {
+                "at": [0.022, 0.0, 0.0],
+                "rx": 0.003,
+                "ry": 0.008,
+                "exponent": 3,
+                "rotation": [0.5, 0.5, 0.5, 0.5]
+              }
+            ],
+            "capStart": true,
+            "capEnd": true
           },
           {
             "id": "lid",
@@ -2114,26 +2778,81 @@
             "material": "stainless",
             "role": "body",
             "tone": 0.6,
-            "profile": [[-0.01, 0.0], [-0.01, 0.0605], [-0.0075, 0.063], [0.0, 0.063], [0.0, 0.0652], [0.0012, 0.066], [0.0035, 0.066], [0.0052, 0.0642], [0.0075, 0.057], [0.0102, 0.045], [0.0124, 0.031], [0.0136, 0.018], [0.0141, 0.008], [0.0142, 0.0]],
+            "profile": [
+              [0.012, 0.0],
+              [0.012, 0.0605],
+              [0.0095, 0.063],
+              [0.004, 0.063],
+              [0.004, 0.0652],
+              [0.0028, 0.066],
+              [0.0005, 0.066],
+              [-0.0012, 0.0642],
+              [-0.0035, 0.057],
+              [-0.0062, 0.045],
+              [-0.0084, 0.031],
+              [-0.0096, 0.018],
+              [-0.0101, 0.008],
+              [-0.0102, 0.0]
+            ],
             "axis": [0, 1, 0],
-            "origin": [0.0, 0.0, 0.0]
+            "origin": [0.066, 0.0, 0.0]
           },
           {
-            "id": "knob",
-            "kind": "revolve",
+            "id": "lid-hinge",
+            "kind": "loft",
             "bone": "lid",
             "material": "pp-plastic",
             "role": "body",
             "tone": 0.2,
-            "profile": [[0.01, 0.0], [0.01, 0.0085], [0.0185, 0.0085], [0.0205, 0.012], [0.0265, 0.0125], [0.0295, 0.0115], [0.0315, 0.0085], [0.032, 0.004], [0.032, 0.0]],
-            "axis": [0, 1, 0],
-            "origin": [0.0, 0.0, 0.0]
+            "sections": [
+              {
+                "at": [-0.005, 0.0, 0.0],
+                "rx": 0.005,
+                "ry": 0.016,
+                "exponent": 3,
+                "rotation": [0.5, 0.5, 0.5, 0.5]
+              },
+              {
+                "at": [0.004, 0.0, 0.0],
+                "rx": 0.005,
+                "ry": 0.016,
+                "exponent": 3,
+                "rotation": [0.5, 0.5, 0.5, 0.5]
+              },
+              {
+                "at": [0.016, 0.0, 0.0],
+                "rx": 0.004,
+                "ry": 0.014,
+                "exponent": 3,
+                "rotation": [0.5, 0.5, 0.5, 0.5]
+              }
+            ],
+            "capStart": true,
+            "capEnd": true
           }
         ],
         "thermal": [
           {
             "id": "th-base",
             "of": "base",
+            "region": "plate",
+            "layer": "plate-skin"
+          },
+          {
+            "id": "th-cord-sleeve",
+            "of": "cord-sleeve",
+            "region": "plate",
+            "layer": "plate-skin"
+          },
+          {
+            "id": "th-cord-drop",
+            "of": "cord-drop",
+            "region": "plate",
+            "layer": "plate-skin"
+          },
+          {
+            "id": "th-cord-run",
+            "of": "cord-run",
             "region": "plate",
             "layer": "plate-skin"
           },
@@ -2158,7 +2877,18 @@
             "material": "stainless",
             "role": "body",
             "tone": 0.55,
-            "profile": [[-0.004, 0.0], [-0.004, 0.0737], [-0.0025, 0.0752], [0.0145, 0.0752], [0.016, 0.0746], [0.167, 0.07023], [0.1705, 0.0699], [0.1732, 0.069], [0.175, 0.0672], [0.175, 0.0]],
+            "profile": [
+              [-0.004, 0.0],
+              [-0.004, 0.0737],
+              [-0.0025, 0.0752],
+              [0.0145, 0.0752],
+              [0.016, 0.0746],
+              [0.167, 0.07023],
+              [0.1705, 0.0699],
+              [0.1732, 0.069],
+              [0.175, 0.0672],
+              [0.175, 0.0]
+            ],
             "axis": [0, 1, 0],
             "origin": [0.0, 0.0, 0.0],
             "sectionFaces": ["+v"],
@@ -2178,8 +2908,14 @@
             "layer": "water-skin"
           },
           {
-            "id": "th-gauge",
-            "of": "gauge",
+            "id": "th-gauge-right",
+            "of": "gauge-right",
+            "region": "water",
+            "layer": "water-skin"
+          },
+          {
+            "id": "th-gauge-left",
+            "of": "gauge-left",
             "region": "water",
             "layer": "water-skin"
           },
@@ -2190,22 +2926,40 @@
             "material": "stainless",
             "role": "body",
             "tone": 0.6,
-            "profile": [[-0.0055, 0.0], [-0.0055, 0.063], [0.0, 0.063], [0.0, 0.0652], [0.0012, 0.066], [0.0035, 0.066], [0.0052, 0.0642], [0.0075, 0.057], [0.0102, 0.045], [0.0124, 0.031], [0.0136, 0.018], [0.0141, 0.008], [0.0141, 0.0]],
+            "profile": [
+              [0.004, 0.0],
+              [0.004, 0.0652],
+              [0.0028, 0.066],
+              [0.0005, 0.066],
+              [-0.0012, 0.0642],
+              [-0.0035, 0.057],
+              [-0.0062, 0.045],
+              [-0.0084, 0.031],
+              [-0.0096, 0.018],
+              [-0.0101, 0.008],
+              [-0.0102, 0.0]
+            ],
             "axis": [0, 1, 0],
-            "origin": [0.0, 0.0, 0.0],
-            "sectionFaces": ["-v"],
+            "origin": [0.066, 0.0, 0.0],
+            "sectionFaces": ["+v"],
             "region": "lid",
             "layer": "lid-skin"
           },
           {
-            "id": "th-knob",
-            "of": "knob",
+            "id": "th-lid-hinge",
+            "of": "lid-hinge",
             "region": "lid",
             "layer": "lid-skin"
           },
           {
             "id": "th-handle",
             "of": "handle",
+            "region": "handle",
+            "layer": "handle-skin"
+          },
+          {
+            "id": "th-lid-release",
+            "of": "lid-release",
             "region": "handle",
             "layer": "handle-skin"
           },
@@ -2224,18 +2978,18 @@
             "tone": 0.45,
             "sections": [
               {
-                "at": [-0.11425, 0.18867, 0.0],
-                "rx": 0.0054,
-                "ry": 0.0147,
+                "at": [-0.09393, 0.17196, 0.0],
+                "rx": 0.0052,
+                "ry": 0.0082,
                 "exponent": 2.0,
-                "rotation": [-0.333654, 0.623438, 0.623438, -0.333654]
+                "rotation": [-0.371748, 0.601501, 0.601501, -0.371748]
               },
               {
-                "at": [-0.1165, 0.19017, 0.0],
-                "rx": 0.0054,
-                "ry": 0.0147,
+                "at": [-0.09589, 0.17295, 0.0],
+                "rx": 0.0052,
+                "ry": 0.0082,
                 "exponent": 2.0,
-                "rotation": [-0.333654, 0.623438, 0.623438, -0.333654]
+                "rotation": [-0.371748, 0.601501, 0.601501, -0.371748]
               }
             ],
             "capStart": false,
@@ -2253,32 +3007,32 @@
             "tone": 0.55,
             "sections": [
               {
-                "at": [-0.1, 0.178, 0.0],
-                "rx": 0.009,
-                "ry": 0.0207,
+                "at": [-0.08, 0.1645, 0.0],
+                "rx": 0.0152,
+                "ry": 0.0202,
                 "exponent": 2.0,
-                "rotation": [-0.31167, 0.634714, 0.634714, -0.31167]
+                "rotation": [-0.359889, 0.60867, 0.60867, -0.359889]
               },
               {
-                "at": [-0.111, 0.1865, 0.0],
-                "rx": 0.0072,
-                "ry": 0.0177,
+                "at": [-0.09, 0.17, 0.0],
+                "rx": 0.0092,
+                "ry": 0.0132,
                 "exponent": 2.0,
-                "rotation": [-0.317865, 0.631634, 0.631634, -0.317865]
+                "rotation": [-0.363803, 0.606339, 0.606339, -0.363803]
               },
               {
-                "at": [-0.1155, 0.1895, 0.0],
-                "rx": 0.0054,
-                "ry": 0.0147,
+                "at": [-0.095, 0.1725, 0.0],
+                "rx": 0.0052,
+                "ry": 0.0082,
                 "exponent": 2.0,
-                "rotation": [-0.333654, 0.623438, 0.623438, -0.333654]
+                "rotation": [-0.371748, 0.601501, 0.601501, -0.371748]
               },
               {
-                "at": [-0.11683, 0.19039, 0.0],
-                "rx": 0.0058,
-                "ry": 0.0151,
+                "at": [-0.09625, 0.17313, 0.0],
+                "rx": 0.0056,
+                "ry": 0.0086,
                 "exponent": 2.0,
-                "rotation": [-0.333654, 0.623438, 0.623438, -0.333654]
+                "rotation": [-0.371748, 0.601501, 0.601501, -0.371748]
               }
             ],
             "capStart": false,
@@ -2367,28 +3121,34 @@
             "part": "member"
           },
           {
-            "id": "joint-lid",
-            "kind": "revolve",
-            "bone": "body",
-            "material": "stainless",
-            "role": "detail",
-            "tone": 0.3,
-            "profile": [[0.168, 0.0612], [0.168, 0.07], [0.1755, 0.07], [0.1755, 0.0612], [0.168, 0.0612]],
-            "axis": [0, 1, 0],
-            "origin": [0.0, 0.0, 0.0],
-            "member": "lid",
-            "part": "joint"
+            "id": "member-spout",
+            "of": "spout",
+            "member": "body",
+            "part": "member"
           },
           {
-            "id": "member-lid",
-            "kind": "revolve",
+            "id": "joint-lid",
+            "kind": "capsule",
             "bone": "lid",
             "material": "stainless",
             "role": "detail",
             "tone": 0.3,
-            "profile": [[0.0, 0.0], [0.0, 0.063], [0.0, 0.0652], [0.0012, 0.066], [0.0035, 0.066], [0.0052, 0.0642], [0.0075, 0.057], [0.0102, 0.045], [0.0124, 0.031], [0.0136, 0.018], [0.0141, 0.008], [0.0141, 0.0]],
-            "axis": [0, 1, 0],
-            "origin": [0.0, 0.0, 0.0],
+            "p0": [0.0, 0.0, -0.017],
+            "p1": [0.0, 0.0, 0.017],
+            "r0": 0.00375,
+            "r1": 0.00375,
+            "member": "lid",
+            "part": "joint"
+          },
+          {
+            "id": "member-lid-hinge",
+            "of": "lid-hinge",
+            "member": "lid",
+            "part": "member"
+          },
+          {
+            "id": "member-lid",
+            "of": "lid",
             "member": "lid",
             "part": "member"
           },
@@ -2401,109 +3161,88 @@
             "tone": 0.3,
             "sections": [
               {
-                "at": [-0.004, 0.068, 0.0],
-                "rx": 0.0055,
-                "ry": 0.00798,
+                "at": [-0.004, 0.087, 0.0],
+                "rx": 0.00633,
+                "ry": 0.01045,
+                "exponent": 2.0,
+                "rotation": [0.490996, 0.508845, 0.508845, 0.490996]
+              },
+              {
+                "at": [0.01, 0.0875, 0.0],
+                "rx": 0.00633,
+                "ry": 0.01045,
                 "exponent": 2.0,
                 "rotation": [0.5, 0.5, 0.5, 0.5]
               },
               {
-                "at": [0.01215, 0.068, 0.0],
-                "rx": 0.00534,
-                "ry": 0.00825,
+                "at": [0.024, 0.087, 0.0],
+                "rx": 0.00605,
+                "ry": 0.00935,
                 "exponent": 2.0,
-                "rotation": [0.5, 0.5, 0.5, 0.5]
+                "rotation": [0.547632, 0.447324, 0.447324, 0.547632]
               },
               {
-                "at": [0.027, 0.068, 0.0],
+                "at": [0.037, 0.082, 0.0],
+                "rx": 0.00578,
+                "ry": 0.00853,
+                "exponent": 2.0,
+                "rotation": [0.633649, 0.31383, 0.31383, 0.633649]
+              },
+              {
+                "at": [0.045, 0.071, 0.0],
                 "rx": 0.0055,
                 "ry": 0.00798,
                 "exponent": 2.0,
-                "rotation": [0.524132, 0.474642, 0.474642, 0.524132]
+                "rotation": [0.693919, 0.13593, 0.13593, 0.693919]
               },
               {
-                "at": [0.03575, 0.06566, 0.0],
+                "at": [0.048, 0.055, 0.0],
+                "rx": 0.0055,
+                "ry": 0.0077,
+                "exponent": 2.0,
+                "rotation": [0.706802, 0.02077, 0.02077, 0.706802]
+              },
+              {
+                "at": [0.048, 0.02, 0.0],
+                "rx": 0.00578,
+                "ry": 0.00798,
+                "exponent": 2.0,
+                "rotation": [0.707089, -0.00505, -0.00505, 0.707089]
+              },
+              {
+                "at": [0.047, -0.015, 0.0],
+                "rx": 0.0055,
+                "ry": 0.0077,
+                "exponent": 2.0,
+                "rotation": [0.706496, -0.029386, -0.029386, 0.706496]
+              },
+              {
+                "at": [0.043, -0.04, 0.0],
+                "rx": 0.0055,
+                "ry": 0.0077,
+                "exponent": 2.0,
+                "rotation": [0.69879, -0.108131, -0.108131, 0.69879]
+              },
+              {
+                "at": [0.034, -0.056, 0.0],
+                "rx": 0.0055,
+                "ry": 0.00798,
+                "exponent": 2.0,
+                "rotation": [0.658774, -0.256938, -0.256938, 0.658774]
+              },
+              {
+                "at": [0.02, -0.065, 0.0],
                 "rx": 0.00578,
                 "ry": 0.00825,
                 "exponent": 2.0,
-                "rotation": [0.612372, 0.353553, 0.353553, 0.612372]
+                "rotation": [0.573635, -0.413453, -0.413453, 0.573635]
               },
               {
-                "at": [0.04216, 0.05925, 0.0],
+                "at": [-0.002, -0.068, 0.0],
                 "rx": 0.00605,
-                "ry": 0.00853,
-                "exponent": 2.0,
-                "rotation": [0.683013, 0.183013, 0.183013, 0.683013]
-              },
-              {
-                "at": [0.0445, 0.0505, 0.0],
-                "rx": 0.00633,
                 "ry": 0.0088,
                 "exponent": 2.0,
-                "rotation": [0.705961, 0.04023, 0.04023, 0.705961]
-              },
-              {
-                "at": [0.0455, 0.03, 0.0],
-                "rx": 0.0066,
-                "ry": 0.0088,
-                "exponent": 2.0,
-                "rotation": [0.707029, 0.010498, 0.010498, 0.707029]
-              },
-              {
-                "at": [0.046, 0.0, 0.0],
-                "rx": 0.0066,
-                "ry": 0.0088,
-                "exponent": 2.0,
-                "rotation": [0.707107, 0.0, 0.0, 0.707107]
-              },
-              {
-                "at": [0.0455, -0.025, 0.0],
-                "rx": 0.00633,
-                "ry": 0.0088,
-                "exponent": 2.0,
-                "rotation": [0.706983, -0.013251, -0.013251, 0.706983]
-              },
-              {
-                "at": [0.0445, -0.04, 0.0],
-                "rx": 0.00633,
-                "ry": 0.0088,
-                "exponent": 2.0,
-                "rotation": [0.705377, -0.049423, -0.049423, 0.705377]
-              },
-              {
-                "at": [0.04216, -0.04875, 0.0],
-                "rx": 0.00596,
-                "ry": 0.00853,
-                "exponent": 2.0,
-                "rotation": [0.683013, -0.183013, -0.183013, 0.683013]
-              },
-              {
-                "at": [0.03575, -0.05516, 0.0],
-                "rx": 0.00559,
-                "ry": 0.00825,
-                "exponent": 2.0,
-                "rotation": [0.612372, -0.353553, -0.353553, 0.612372]
-              },
-              {
-                "at": [0.027, -0.0575, 0.0],
-                "rx": 0.00523,
-                "ry": 0.00798,
-                "exponent": 2.0,
-                "rotation": [0.545812, -0.449544, -0.449544, 0.545812]
-              },
-              {
-                "at": [0.0135, -0.0595, 0.0],
-                "rx": 0.00523,
-                "ry": 0.00798,
-                "exponent": 2.0,
-                "rotation": [0.530103, -0.467965, -0.467965, 0.530103]
-              },
-              {
-                "at": [-0.001, -0.061, 0.0],
-                "rx": 0.00523,
-                "ry": 0.00798,
-                "exponent": 2.0,
-                "rotation": [0.525095, -0.473577, -0.473577, 0.525095]
+                "rotation": [0.532708, -0.464996, -0.464996, 0.532708]
               }
             ],
             "capStart": true,
@@ -2518,8 +3257,8 @@
             "material": "stainless",
             "role": "detail",
             "tone": 0.3,
-            "p0": [-0.009, 0.068, 0.0],
-            "p1": [0.007, 0.068, 0.0],
+            "p0": [-0.011999999999999997, 0.087, 0.0],
+            "p1": [0.0040000000000000036, 0.087, 0.0],
             "r0": 0.0045,
             "r1": 0.0045,
             "member": "handle",
@@ -2532,11 +3271,31 @@
             "material": "stainless",
             "role": "detail",
             "tone": 0.3,
-            "p0": [-0.006, -0.0605, 0.0],
-            "p1": [0.01, -0.0605, 0.0],
+            "p0": [-0.009999999999999995, -0.068, 0.0],
+            "p1": [0.006000000000000005, -0.068, 0.0],
             "r0": 0.0045,
             "r1": 0.0045,
             "member": "handle",
+            "part": "joint"
+          },
+          {
+            "id": "member-switch",
+            "of": "switch",
+            "member": "switch",
+            "part": "member"
+          },
+          {
+            "id": "joint-switch",
+            "kind": "ellipsoid",
+            "bone": "switch",
+            "material": "stainless",
+            "role": "detail",
+            "tone": 0.3,
+            "radii": [0.004, 0.004, 0.008],
+            "transform": {
+              "translation": [0.0, 0.0, 0.0]
+            },
+            "member": "switch",
             "part": "joint"
           },
           {
@@ -2612,12 +3371,16 @@
         ],
         "decisions": [
           {
-            "en": "Own 1:50 model of a 1.7 L stainless jug kettle (7.5 mm feature): the power base turned from its real section (30 mm, rounded top edge, a 4 mm recess that takes the jug's foot skirt), the jug as a hollow 0.7 mm stainless cone with its floor, rolled rim and seat collar, the 16 mm black foot skirt, the covered spout lofted through six sections square to its rising centre line out of the wall, the water window as a proud rounded glazing strip, the 1 L water fill 60 mm deep against the inner wall, the C handle lofted along its centre line with rounded corners and a bellied grip (23 mm deep, 32 mm wide, 34 mm finger clearance), the rocker switch on the back of the grip, and the loose domed lid with its 10 mm skirt in the seat collar (so the rattle never opens a gap) and a mushroom knob.",
-            "de": "Eigenes 1:50-Modell eines 1,7-l-Edelstahl-Wasserkochers (Merkmal 7,5 mm): der Sockel nach seinem echten Schnitt gedreht (30 mm, gerundete Oberkante, 4 mm Mulde, die die Fußschürze des Krugs aufnimmt), der Krug als hohler Edelstahlkegel von 0,7 mm mit Boden, gerolltem Rand und Sitzkragen, die 16 mm hohe schwarze Fußschürze, der geschlossene Ausguss aus sechs Schnitten quer zu seiner steigenden Mittellinie aus der Wand gelofted, das Wasserfenster als vorstehender gerundeter Glasstreifen, die 1-l-Füllung 60 mm tief an der Innenwand, der C-Griff entlang seiner Mittellinie mit gerundeten Ecken und bauchigem Griffstück gelofted (23 mm tief, 32 mm breit, 34 mm Fingerfreiheit), der Wippschalter am Rücken des Griffs und der lose gewölbte Deckel mit 10 mm Schürze im Sitzkragen (damit das Klappern nie einen Spalt öffnet) und einem Pilzknopf."
+            "en": "Body: the power base is turned from its real section (30 mm, rounded top edge, a 4 mm recess for the foot skirt) and carries the strain-relief sleeve and the 7.5 mm cord under the handle; the jug is a hollow 0.7 mm stainless cone with floor, rolled rim and seat collar on a 16 mm black foot skirt; the pouring beak is a short pressed cone of five sections square to its rising centre line, 26 mm proud of the wall just under the rim, not a teapot spout; water windows as proud glazing strips on both sides; the C handle is swept through twelve sections from the hinge housing over the rim along the grip (20 x 28 mm, 37 mm finger clearance) back into the wall above the skirt, with the lid release button on its top and the rocker switch as a paddle on its own pivot low on the back of the grip; the domed lid with its skirt in the seat collar is turned about its own centre in the frame of the lid bone and hangs on a knuckle on the hinge axis at the handle.",
+            "de": "Körper: Der Sockel ist nach seinem echten Schnitt gedreht (30 mm, gerundete Oberkante, 4 mm Mulde für die Fußschürze) und trägt unter dem Griff die Knickschutztülle und das 7,5-mm-Kabel; der Krug ist ein hohler Edelstahlkegel von 0,7 mm mit Boden, gerolltem Rand und Sitzkragen auf einer 16 mm hohen schwarzen Fußschürze; die Ausgussschnaupe ist ein kurzer gepresster Kegel aus fünf Schnitten quer zu seiner steigenden Mittellinie, 26 mm vor der Wand knapp unter dem Rand, kein Teekannenausguss; Wasserfenster als vorstehende Glasstreifen auf beiden Seiten; der C-Griff ist über zwölf Schnitte vom Scharniergehäuse über dem Rand entlang des Griffstücks (20 x 28 mm, 37 mm Fingerfreiheit) zurück in die Wand über der Schürze geführt, mit der Deckeltaste auf seiner Oberseite und dem Wippschalter als Wippe an eigenem Drehpunkt unten am Griffrücken; der gewölbte Deckel mit seiner Schürze im Sitzkragen ist im System des Deckelknochens um seine eigene Mitte gedreht und hängt an einem Scharnierauge auf der Scharnierachse am Griff."
           },
           {
-            "en": "Thermal: plate = the power base and the concealed element bonded under the jug floor (its bonded top and its face into the closed skirt cavity are marked); shell = the closed outer envelope of skin, skirt and rim plus the spout, its rim disc under the lid marked; the inward faces of the sealed jug do not count (C31, stand-in until the product floods cavities); water = the fill and the window; lid = dome and flange above the seat (underside into the sealed jug marked) and the knob; handle = handle and switch. Emitters are outlet patches: steam over the spout mouth, the plume as a sleeve over the last 30 mm of the spout. Structure: the base housing (deck and wall, open below) on its rim support ring, the 360-degree connector as the joint to the jug, the stainless wall, skirt and spout as the body members, the handle with its two screw bosses as joints, the lid on its seat ring, the water's footprint on the floor, masses of base, jug and water at their centres.",
-            "de": "Thermik: Platte = Sockel und das unter den Krugboden gebondete verdeckte Heizelement (seine gebondete Oberseite und seine Fläche zur geschlossenen Schürzenkammer sind markiert); Hülle = die geschlossene Außenhülle aus Mantel, Schürze und Rand samt Ausguss, die Randscheibe unter dem Deckel markiert; die Innenflächen des dichten Krugs zählen nicht (C31, Ersatz, bis das Produkt Hohlräume flutet); Wasser = Füllung und Fenster; Deckel = Wölbung und Krempe über dem Sitz (Unterseite zum dichten Krug markiert) und Knopf; Griff = Griff und Schalter. Emitter sind Austrittsflächen: Dampf über der Ausgussmündung, die Fahne als Hülse über den letzten 30 mm des Ausgusses. Tragwerk: das Sockelgehäuse (Deck und Wand, unten offen) auf seinem Randauflager, der 360-Grad-Stecker als Gelenk zum Krug, Edelstahlwand, Schürze und Ausguss als Stäbe des Körpers, der Griff mit seinen zwei Schraubdomen als Gelenke, der Deckel auf seinem Sitzring, die Aufstandsfläche des Wassers auf dem Boden, Massen von Sockel, Krug und Wasser in ihren Schwerpunkten."
+            "en": "Thermal: plate = the power base with sleeve and cord and the concealed element bonded under the jug floor; shell = the closed outer envelope of skin, skirt and rim plus the beak, its rim disc under the lid marked; water = the fill and both windows; lid = dome and flange above the seat (underside into the sealed jug marked) and the hinge knuckle; handle = handle, release button and switch. Emitters are outlet patches: steam over the beak mouth, the plume as a sleeve over the end of the beak.",
+            "de": "Thermik: Platte = Sockel mit Tülle und Kabel und das unter den Krugboden gebondete verdeckte Heizelement; Hülle = die geschlossene Außenhülle aus Mantel, Schürze und Rand samt Schnaupe, die Randscheibe unter dem Deckel markiert; Wasser = Füllung und beide Fenster; Deckel = Wölbung und Krempe über dem Sitz (Unterseite zum dichten Krug markiert) und das Scharnierauge; Griff = Griff, Deckeltaste und Schalter. Emitter sind Austrittsflächen: Dampf über der Schnaupenmündung, die Fahne als Hülse über dem Ende der Schnaupe."
+          },
+          {
+            "en": "Structure: the base housing (deck, wall and four ribs, open below) on its rim support ring, the 360-degree connector as the joint to the jug, stainless wall, skirt and beak as the body members, the handle core with its two screw bosses as joints, the lid with its knuckle on the hinge pin, the switch paddle on its pivot, the water's footprint on the floor, masses of base, jug and water at their centres.",
+            "de": "Tragwerk: das Sockelgehäuse (Deck, Wand und vier Rippen, unten offen) auf seinem Randauflager, der 360-Grad-Stecker als Gelenk zum Krug, Edelstahlwand, Schürze und Schnaupe als Stäbe des Körpers, der Griffkern mit seinen zwei Schraubdomen als Gelenke, der Deckel mit seinem Auge auf dem Scharnierstift, die Schalterwippe an ihrem Drehpunkt, die Aufstandsfläche des Wassers auf dem Boden, Massen von Sockel, Krug und Wasser in ihren Schwerpunkten."
           }
         ]
       },
@@ -2637,13 +3400,24 @@
             "origin": [0.0, 0.0, 0.0]
           },
           {
+            "id": "cord-sleeve",
+            "kind": "revolve",
+            "bone": "base",
+            "material": "pp-plastic",
+            "role": "detail",
+            "tone": 0.2,
+            "profile": [[0.086, 0.0], [0.086, 0.006], [0.097, 0.006], [0.103, 0.0045], [0.103, 0.0]],
+            "axis": [1, 0, 0],
+            "origin": [0.0, 0.01, 0.0]
+          },
+          {
             "id": "shell",
             "kind": "revolve",
             "bone": "body",
             "material": "stainless",
             "role": "body",
             "tone": 0.55,
-            "profile": [[0.01, 0.0], [0.01, 0.07401], [0.172, 0.06939], [0.1735, 0.0625], [0.175, 0.0625], [0.175, 0.0685], [0.17, 0.07014], [0.0, 0.075], [0.0, 0.0]],
+            "profile": [[0.0, 0.0], [0.0, 0.0752], [0.016, 0.0746], [0.17, 0.0701], [0.175, 0.0672], [0.175, 0.0625], [0.172, 0.0625], [0.172, 0.066], [0.0105, 0.0705], [0.0105, 0.0]],
             "axis": [0, 1, 0],
             "origin": [0.0, 0.0, 0.0]
           },
@@ -2656,25 +3430,25 @@
             "tone": 0.55,
             "sections": [
               {
-                "at": [-0.066, 0.1543, 0.0],
-                "rx": 0.0165,
-                "ry": 0.0285,
+                "at": [-0.05, 0.148, 0.0],
+                "rx": 0.03,
+                "ry": 0.034,
                 "exponent": 2.4,
-                "rotation": [-0.339002, 0.620546, 0.620546, -0.339002]
+                "rotation": [-0.361841, 0.607512, 0.607512, -0.361841]
               },
               {
-                "at": [-0.085, 0.1665, 0.0],
-                "rx": 0.0115,
-                "ry": 0.0235,
+                "at": [-0.074, 0.161, 0.0],
+                "rx": 0.018,
+                "ry": 0.023,
                 "exponent": 2.4,
-                "rotation": [-0.32299, 0.629029, 0.629029, -0.32299]
+                "rotation": [-0.360953, 0.60804, 0.60804, -0.360953]
               },
               {
-                "at": [-0.113, 0.188, 0.0],
-                "rx": 0.0058,
-                "ry": 0.016,
+                "at": [-0.094, 0.172, 0.0],
+                "rx": 0.0075,
+                "ry": 0.0085,
                 "exponent": 2.4,
-                "rotation": [-0.31264, 0.634237, 0.634237, -0.31264]
+                "rotation": [-0.359889, 0.60867, 0.60867, -0.359889]
               }
             ],
             "capStart": true,
@@ -2687,7 +3461,7 @@
             "material": "water",
             "role": "body",
             "tone": 0.45,
-            "profile": [[0.0005, 0.0], [0.0005, 0.0739], [0.05999, 0.0722], [0.05999, 0.0]],
+            "profile": [[0.0005, 0.0], [0.0005, 0.073], [0.06, 0.0715], [0.06, 0.0]],
             "axis": [0, 1, 0],
             "origin": [0.0, 0.0, 0.0]
           },
@@ -2700,81 +3474,93 @@
             "tone": 0.2,
             "sections": [
               {
-                "at": [-0.004, 0.068, 0.0],
-                "rx": 0.01,
-                "ry": 0.0145,
-                "exponent": 2.3,
-                "rotation": [0.5, 0.5, 0.5, 0.5]
-              },
-              {
-                "at": [0.01215, 0.068, 0.0],
-                "rx": 0.0097,
-                "ry": 0.015,
-                "exponent": 2.3,
-                "rotation": [0.5, 0.5, 0.5, 0.5]
-              },
-              {
-                "at": [0.027, 0.068, 0.0],
-                "rx": 0.01,
-                "ry": 0.0145,
-                "exponent": 2.3,
-                "rotation": [0.607413, 0.362008, 0.362008, 0.607413]
-              },
-              {
-                "at": [0.0445, 0.0505, 0.0],
+                "at": [-0.004, 0.087, 0.0],
                 "rx": 0.0115,
-                "ry": 0.016,
+                "ry": 0.019,
                 "exponent": 2.3,
-                "rotation": [0.689041, 0.158817, 0.158817, 0.689041]
+                "rotation": [0.5, 0.5, 0.5, 0.5]
               },
               {
-                "at": [0.0455, 0.03, 0.0],
-                "rx": 0.012,
-                "ry": 0.016,
+                "at": [0.025, 0.087, 0.0],
+                "rx": 0.011,
+                "ry": 0.017,
                 "exponent": 2.3,
-                "rotation": [0.707029, 0.010498, 0.010498, 0.707029]
+                "rotation": [0.565685, 0.424264, 0.424264, 0.565685]
               },
               {
-                "at": [0.046, 0.0, 0.0],
-                "rx": 0.012,
-                "ry": 0.016,
+                "at": [0.044, 0.073, 0.0],
+                "rx": 0.01,
+                "ry": 0.0145,
+                "exponent": 2.3,
+                "rotation": [0.697464, 0.116381, 0.116381, 0.697464]
+              },
+              {
+                "at": [0.048, 0.02, 0.0],
+                "rx": 0.0105,
+                "ry": 0.0145,
                 "exponent": 2.3,
                 "rotation": [0.707107, 0.0, 0.0, 0.707107]
               },
               {
-                "at": [0.0455, -0.025, 0.0],
-                "rx": 0.0115,
+                "at": [0.044, -0.038, 0.0],
+                "rx": 0.01,
+                "ry": 0.014,
+                "exponent": 2.3,
+                "rotation": [0.702054, -0.08438, -0.08438, 0.702054]
+              },
+              {
+                "at": [0.028, -0.062, 0.0],
+                "rx": 0.0105,
+                "ry": 0.015,
+                "exponent": 2.3,
+                "rotation": [0.621745, -0.336798, -0.336798, 0.621745]
+              },
+              {
+                "at": [-0.002, -0.068, 0.0],
+                "rx": 0.011,
                 "ry": 0.016,
                 "exponent": 2.3,
-                "rotation": [0.706983, -0.013251, -0.013251, 0.706983]
+                "rotation": [0.546835, -0.448298, -0.448298, 0.546835]
+              }
+            ],
+            "capStart": true,
+            "capEnd": true
+          },
+          {
+            "id": "switch",
+            "kind": "loft",
+            "bone": "switch",
+            "material": "pp-plastic",
+            "role": "detail",
+            "tone": 0.7,
+            "sections": [
+              {
+                "at": [0.0, 0.0, 0.0],
+                "rx": 0.004,
+                "ry": 0.007,
+                "exponent": 3,
+                "rotation": [0.5, 0.5, 0.5, 0.5]
               },
               {
-                "at": [0.0445, -0.04, 0.0],
-                "rx": 0.0115,
-                "ry": 0.016,
-                "exponent": 2.3,
-                "rotation": [0.683569, -0.180925, -0.180925, 0.683569]
+                "at": [0.006, 0.0, 0.0],
+                "rx": 0.00375,
+                "ry": 0.008,
+                "exponent": 3,
+                "rotation": [0.5, 0.5, 0.5, 0.5]
               },
               {
-                "at": [0.027, -0.0575, 0.0],
-                "rx": 0.0095,
-                "ry": 0.0145,
-                "exponent": 2.3,
-                "rotation": [0.618961, -0.341888, -0.341888, 0.618961]
+                "at": [0.02, 0.0, 0.0],
+                "rx": 0.00375,
+                "ry": 0.009,
+                "exponent": 3,
+                "rotation": [0.5, 0.5, 0.5, 0.5]
               },
               {
-                "at": [0.0135, -0.0595, 0.0],
-                "rx": 0.0095,
-                "ry": 0.0145,
-                "exponent": 2.3,
-                "rotation": [0.530103, -0.467965, -0.467965, 0.530103]
-              },
-              {
-                "at": [-0.001, -0.061, 0.0],
-                "rx": 0.0095,
-                "ry": 0.0145,
-                "exponent": 2.3,
-                "rotation": [0.525095, -0.473577, -0.473577, 0.525095]
+                "at": [0.022, 0.0, 0.0],
+                "rx": 0.003,
+                "ry": 0.008,
+                "exponent": 3,
+                "rotation": [0.5, 0.5, 0.5, 0.5]
               }
             ],
             "capStart": true,
@@ -2787,9 +3573,42 @@
             "material": "stainless",
             "role": "body",
             "tone": 0.6,
-            "profile": [[-0.008, 0.0], [-0.008, 0.063], [0.0, 0.063], [0.0, 0.066], [0.004, 0.066], [0.008, 0.058], [0.0125, 0.04], [0.0145, 0.022], [0.016, 0.0125], [0.0275, 0.0125], [0.03, 0.009], [0.03, 0.0]],
+            "profile": [[0.012, 0.0], [0.012, 0.062], [0.004, 0.062], [0.004, 0.066], [0.0005, 0.066], [-0.0035, 0.057], [-0.0084, 0.031], [-0.0102, 0.0]],
             "axis": [0, 1, 0],
-            "origin": [0.0, 0.0, 0.0]
+            "origin": [0.066, 0.0, 0.0]
+          },
+          {
+            "id": "lid-hinge",
+            "kind": "loft",
+            "bone": "lid",
+            "material": "pp-plastic",
+            "role": "body",
+            "tone": 0.2,
+            "sections": [
+              {
+                "at": [-0.005, 0.0, 0.0],
+                "rx": 0.005,
+                "ry": 0.016,
+                "exponent": 3,
+                "rotation": [0.5, 0.5, 0.5, 0.5]
+              },
+              {
+                "at": [0.004, 0.0, 0.0],
+                "rx": 0.005,
+                "ry": 0.016,
+                "exponent": 3,
+                "rotation": [0.5, 0.5, 0.5, 0.5]
+              },
+              {
+                "at": [0.016, 0.0, 0.0],
+                "rx": 0.004,
+                "ry": 0.014,
+                "exponent": 3,
+                "rotation": [0.5, 0.5, 0.5, 0.5]
+              }
+            ],
+            "capStart": true,
+            "capEnd": true
           }
         ],
         "thermal": [
@@ -2800,13 +3619,33 @@
             "layer": "plate-skin"
           },
           {
+            "id": "th-cord-sleeve",
+            "of": "cord-sleeve",
+            "region": "plate",
+            "layer": "plate-skin"
+          },
+          {
+            "id": "th-element",
+            "kind": "revolve",
+            "bone": "body",
+            "material": "stainless",
+            "role": "detail",
+            "tone": 0.3,
+            "profile": [[-0.006, 0.0], [-0.006, 0.062], [0.009, 0.062], [0.009, 0.0]],
+            "axis": [0, 1, 0],
+            "origin": [0.0, 0.0, 0.0],
+            "sectionFaces": ["+v", "-v"],
+            "region": "plate",
+            "layer": "plate-skin"
+          },
+          {
             "id": "th-shell",
             "kind": "revolve",
             "bone": "body",
             "material": "stainless",
             "role": "body",
             "tone": 0.55,
-            "profile": [[0.0, 0.0], [0.0, 0.075], [0.17, 0.07014], [0.175, 0.0685], [0.175, 0.0]],
+            "profile": [[0.0, 0.0], [0.0, 0.0752], [0.016, 0.0746], [0.17, 0.0701], [0.175, 0.0672], [0.175, 0.0]],
             "axis": [0, 1, 0],
             "origin": [0.0, 0.0, 0.0],
             "sectionFaces": ["+v"],
@@ -2832,16 +3671,28 @@
             "material": "stainless",
             "role": "body",
             "tone": 0.6,
-            "profile": [[-0.0055, 0.0], [-0.0055, 0.063], [0.0, 0.063], [0.0, 0.066], [0.004, 0.066], [0.008, 0.058], [0.0125, 0.04], [0.0145, 0.022], [0.016, 0.0125], [0.0275, 0.0125], [0.03, 0.009], [0.03, 0.0]],
+            "profile": [[0.004, 0.0], [0.004, 0.066], [0.0005, 0.066], [-0.0035, 0.057], [-0.0084, 0.031], [-0.0102, 0.0]],
             "axis": [0, 1, 0],
-            "origin": [0.0, 0.0, 0.0],
-            "sectionFaces": ["-v"],
+            "origin": [0.066, 0.0, 0.0],
+            "sectionFaces": ["+v"],
+            "region": "lid",
+            "layer": "lid-skin"
+          },
+          {
+            "id": "th-lid-hinge",
+            "of": "lid-hinge",
             "region": "lid",
             "layer": "lid-skin"
           },
           {
             "id": "th-handle",
             "of": "handle",
+            "region": "handle",
+            "layer": "handle-skin"
+          },
+          {
+            "id": "th-switch",
+            "of": "switch",
             "region": "handle",
             "layer": "handle-skin"
           },
@@ -2854,18 +3705,18 @@
             "tone": 0.45,
             "sections": [
               {
-                "at": [-0.11181, 0.18709, 0.0],
-                "rx": 0.0073,
-                "ry": 0.0175,
+                "at": [-0.09295, 0.17142, 0.0],
+                "rx": 0.0087,
+                "ry": 0.0097,
                 "exponent": 2.0,
-                "rotation": [-0.31264, 0.634237, 0.634237, -0.31264]
+                "rotation": [-0.359889, 0.60867, 0.60867, -0.359889]
               },
               {
-                "at": [-0.11395, 0.18873, 0.0],
-                "rx": 0.0073,
-                "ry": 0.0175,
+                "at": [-0.09488, 0.17248, 0.0],
+                "rx": 0.0087,
+                "ry": 0.0097,
                 "exponent": 2.0,
-                "rotation": [-0.31264, 0.634237, 0.634237, -0.31264]
+                "rotation": [-0.359889, 0.60867, 0.60867, -0.359889]
               }
             ],
             "capStart": false,
@@ -2883,32 +3734,32 @@
             "tone": 0.55,
             "sections": [
               {
-                "at": [-0.066, 0.1543, 0.0],
-                "rx": 0.018,
-                "ry": 0.03,
+                "at": [-0.05, 0.148, 0.0],
+                "rx": 0.0312,
+                "ry": 0.0352,
                 "exponent": 2.0,
-                "rotation": [-0.339002, 0.620546, 0.620546, -0.339002]
+                "rotation": [-0.361841, 0.607512, 0.607512, -0.361841]
               },
               {
-                "at": [-0.085, 0.1665, 0.0],
-                "rx": 0.013,
-                "ry": 0.025,
+                "at": [-0.074, 0.161, 0.0],
+                "rx": 0.0192,
+                "ry": 0.0242,
                 "exponent": 2.0,
-                "rotation": [-0.32299, 0.629029, 0.629029, -0.32299]
+                "rotation": [-0.360953, 0.60804, 0.60804, -0.360953]
               },
               {
-                "at": [-0.113, 0.188, 0.0],
-                "rx": 0.0073,
-                "ry": 0.0175,
+                "at": [-0.094, 0.172, 0.0],
+                "rx": 0.0087,
+                "ry": 0.0097,
                 "exponent": 2.0,
-                "rotation": [-0.31264, 0.634237, 0.634237, -0.31264]
+                "rotation": [-0.359889, 0.60867, 0.60867, -0.359889]
               },
               {
-                "at": [-0.11427, 0.18897, 0.0],
-                "rx": 0.0077,
-                "ry": 0.0179,
+                "at": [-0.09523, 0.17267, 0.0],
+                "rx": 0.0091,
+                "ry": 0.0101,
                 "exponent": 2.0,
-                "rotation": [-0.31264, 0.634237, 0.634237, -0.31264]
+                "rotation": [-0.359889, 0.60867, 0.60867, -0.359889]
               }
             ],
             "capStart": false,
@@ -2939,7 +3790,7 @@
             "material": "stainless",
             "role": "detail",
             "tone": 0.3,
-            "profile": [[-0.008, 0.0], [-0.008, 0.02], [0.0105, 0.02], [0.0105, 0.0]],
+            "profile": [[-0.015, 0.0], [-0.015, 0.016], [0.0, 0.016], [0.0, 0.0]],
             "axis": [0, 1, 0],
             "origin": [0.0, 0.0, 0.0],
             "member": "body",
@@ -2952,10 +3803,36 @@
             "material": "stainless",
             "role": "detail",
             "tone": 0.3,
-            "profile": [[0.0, 0.0], [0.0, 0.075], [0.161, 0.0704], [0.161, 0.0697], [0.015, 0.07387], [0.015, 0.0]],
+            "profile": [[0.015, 0.0], [0.015, 0.06], [0.175, 0.0572], [0.175, 0.0672], [0.17, 0.0701], [0.0, 0.0752], [0.0, 0.0]],
             "axis": [0, 1, 0],
             "origin": [0.0, 0.0, 0.0],
             "member": "body",
+            "part": "member"
+          },
+          {
+            "id": "member-spout",
+            "of": "spout",
+            "member": "body",
+            "part": "member"
+          },
+          {
+            "id": "joint-lid",
+            "kind": "capsule",
+            "bone": "lid",
+            "material": "stainless",
+            "role": "detail",
+            "tone": 0.3,
+            "p0": [0.0, 0.0, -0.017],
+            "p1": [0.0, 0.0, 0.017],
+            "r0": 0.0075,
+            "r1": 0.0075,
+            "member": "lid",
+            "part": "joint"
+          },
+          {
+            "id": "member-lid",
+            "of": "lid",
+            "member": "lid",
             "part": "member"
           },
           {
@@ -2967,81 +3844,53 @@
             "tone": 0.3,
             "sections": [
               {
-                "at": [-0.004, 0.068, 0.0],
-                "rx": 0.007,
-                "ry": 0.01015,
+                "at": [-0.004, 0.087, 0.0],
+                "rx": 0.00863,
+                "ry": 0.01425,
                 "exponent": 2.0,
                 "rotation": [0.5, 0.5, 0.5, 0.5]
               },
               {
-                "at": [0.01215, 0.068, 0.0],
-                "rx": 0.00679,
-                "ry": 0.0105,
+                "at": [0.025, 0.087, 0.0],
+                "rx": 0.00825,
+                "ry": 0.01275,
                 "exponent": 2.0,
-                "rotation": [0.5, 0.5, 0.5, 0.5]
+                "rotation": [0.565685, 0.424264, 0.424264, 0.565685]
               },
               {
-                "at": [0.027, 0.068, 0.0],
-                "rx": 0.007,
-                "ry": 0.01015,
+                "at": [0.044, 0.073, 0.0],
+                "rx": 0.0075,
+                "ry": 0.01088,
                 "exponent": 2.0,
-                "rotation": [0.607413, 0.362008, 0.362008, 0.607413]
+                "rotation": [0.697464, 0.116381, 0.116381, 0.697464]
               },
               {
-                "at": [0.0445, 0.0505, 0.0],
-                "rx": 0.00805,
-                "ry": 0.0112,
-                "exponent": 2.0,
-                "rotation": [0.689041, 0.158817, 0.158817, 0.689041]
-              },
-              {
-                "at": [0.0455, 0.03, 0.0],
-                "rx": 0.0084,
-                "ry": 0.0112,
-                "exponent": 2.0,
-                "rotation": [0.707029, 0.010498, 0.010498, 0.707029]
-              },
-              {
-                "at": [0.046, 0.0, 0.0],
-                "rx": 0.0084,
-                "ry": 0.0112,
+                "at": [0.048, 0.02, 0.0],
+                "rx": 0.00788,
+                "ry": 0.01088,
                 "exponent": 2.0,
                 "rotation": [0.707107, 0.0, 0.0, 0.707107]
               },
               {
-                "at": [0.0455, -0.025, 0.0],
-                "rx": 0.00805,
-                "ry": 0.0112,
+                "at": [0.044, -0.038, 0.0],
+                "rx": 0.0075,
+                "ry": 0.0105,
                 "exponent": 2.0,
-                "rotation": [0.706983, -0.013251, -0.013251, 0.706983]
+                "rotation": [0.702054, -0.08438, -0.08438, 0.702054]
               },
               {
-                "at": [0.0445, -0.04, 0.0],
-                "rx": 0.00805,
-                "ry": 0.0112,
+                "at": [0.028, -0.062, 0.0],
+                "rx": 0.00788,
+                "ry": 0.01125,
                 "exponent": 2.0,
-                "rotation": [0.683569, -0.180925, -0.180925, 0.683569]
+                "rotation": [0.621745, -0.336798, -0.336798, 0.621745]
               },
               {
-                "at": [0.027, -0.0575, 0.0],
-                "rx": 0.00665,
-                "ry": 0.01015,
+                "at": [-0.002, -0.068, 0.0],
+                "rx": 0.00825,
+                "ry": 0.012,
                 "exponent": 2.0,
-                "rotation": [0.618961, -0.341888, -0.341888, 0.618961]
-              },
-              {
-                "at": [0.0135, -0.0595, 0.0],
-                "rx": 0.00665,
-                "ry": 0.01015,
-                "exponent": 2.0,
-                "rotation": [0.530103, -0.467965, -0.467965, 0.530103]
-              },
-              {
-                "at": [-0.001, -0.061, 0.0],
-                "rx": 0.00665,
-                "ry": 0.01015,
-                "exponent": 2.0,
-                "rotation": [0.525095, -0.473577, -0.473577, 0.525095]
+                "rotation": [0.546835, -0.448298, -0.448298, 0.546835]
               }
             ],
             "capStart": true,
@@ -3056,38 +3905,18 @@
             "material": "stainless",
             "role": "detail",
             "tone": 0.3,
-            "p0": [-0.011, 0.068, 0.0],
-            "p1": [0.011, 0.068, 0.0],
-            "r0": 0.0078,
-            "r1": 0.0078,
+            "p0": [-0.012, 0.087, 0.0],
+            "p1": [0.004, 0.087, 0.0],
+            "r0": 0.0075,
+            "r1": 0.0075,
             "member": "handle",
             "part": "joint"
           },
           {
-            "id": "member-lid",
-            "kind": "revolve",
-            "bone": "lid",
-            "material": "stainless",
-            "role": "detail",
-            "tone": 0.3,
-            "profile": [[0.0, 0.0], [0.0, 0.063], [0.0, 0.066], [0.004, 0.066], [0.008, 0.058], [0.0125, 0.04], [0.0145, 0.022], [0.016, 0.0125], [0.016, 0.0]],
-            "axis": [0, 1, 0],
-            "origin": [0.0, 0.0, 0.0],
-            "member": "lid",
+            "id": "member-switch",
+            "of": "switch",
+            "member": "switch",
             "part": "member"
-          },
-          {
-            "id": "joint-lid",
-            "kind": "revolve",
-            "bone": "body",
-            "material": "stainless",
-            "role": "detail",
-            "tone": 0.3,
-            "profile": [[0.161, 0.06], [0.161, 0.0705], [0.176, 0.0705], [0.176, 0.06], [0.161, 0.06]],
-            "axis": [0, 1, 0],
-            "origin": [0.0, 0.0, 0.0],
-            "member": "lid",
-            "part": "joint"
           },
           {
             "id": "member-water",
@@ -3096,7 +3925,7 @@
             "material": "water",
             "role": "detail",
             "tone": 0.45,
-            "profile": [[0.0005, 0.0], [0.0005, 0.0715], [0.0155, 0.0715], [0.0155, 0.0]],
+            "profile": [[0.0005, 0.0], [0.0005, 0.072], [0.0155, 0.072], [0.0155, 0.0]],
             "axis": [0, 1, 0],
             "origin": [0.0, 0.0, 0.0],
             "member": "water",
@@ -3109,9 +3938,9 @@
             "material": "stainless",
             "role": "detail",
             "tone": 0.15,
-            "radii": [0.03, 0.0078, 0.03],
+            "radii": [0.03, 0.0075, 0.03],
             "transform": {
-              "translation": [0.0, 0.012, 0.0]
+              "translation": [0.0, 0.0095, 0.0]
             },
             "member": "base",
             "part": "mass"
@@ -3137,7 +3966,7 @@
             "material": "stainless",
             "role": "detail",
             "tone": 0.3,
-            "profile": [[0.0, 0.07], [0.0, 0.086], [0.015, 0.086], [0.015, 0.07], [0.0, 0.07]],
+            "profile": [[0.0, 0.071], [0.0, 0.086], [0.015, 0.086], [0.015, 0.071], [0.0, 0.071]],
             "axis": [0, 1, 0],
             "origin": [0.0, 0.0, 0.0],
             "member": "base",
@@ -3148,12 +3977,16 @@
         ],
         "decisions": [
           {
-            "en": "Own 1:100 model (15 mm feature): the base as a plain turned disc with a 4 mm round-over, the jug as one hollow cone with a 10 mm foot in which skirt and floor are merged and a flat seat collar, the spout from three sections, the handle from seven sections with a single-step corner, the lid with flange, dome and knob as one 30 mm turned mass as the 1:100 drawing gives it; window, switch, rolled rim and the lid skirt beyond 8 mm are below the scale and merged.",
-            "de": "Eigenes 1:100-Modell (Merkmal 15 mm): der Sockel als glatt gedrehte Scheibe mit 4-mm-Rundung, der Krug als ein hohler Kegel mit 10 mm Fuß, in dem Schürze und Boden aufgehen, und flachem Sitzkragen, der Ausguss aus drei Schnitten, der Griff aus sieben Schnitten mit einstufigen Ecken, der Deckel mit Krempe, Wölbung und Knopf als eine 30 mm hohe Drehmasse wie in der 1:100-Zeichnung; Fenster, Schalter, gerollter Rand und die Deckelschürze über 8 mm hinaus liegen unter dem Maßstab und sind zusammengefasst."
+            "en": "Body for a 15 mm feature: base with one chamfer, the jug as a thick-walled cup with skirt and rim in one profile, the beak with three sections, the handle swept through seven sections, the lid with a simplified dome; hinge knuckle, switch paddle and cord sleeve keep their true size; windows, release button and the cord itself are left out.",
+            "de": "Körper für ein 15-mm-Merkmal: Sockel mit einer Fase, der Krug als dickwandiger Becher mit Schürze und Rand in einem Profil, die Schnaupe mit drei Schnitten, der Griff über sieben Schnitte geführt, der Deckel mit vereinfachter Wölbung; Scharnierauge, Schalterwippe und Kabeltülle behalten ihre wahre Größe; Fenster, Deckeltaste und das Kabel selbst entfallen."
           },
           {
-            "en": "Thermal: base; the closed jug envelope and the spout; the water; the lid above its seat; the handle; steam patch and plume sleeve at the spout (the element is merged into the base). Structure: base housing with 15 mm deck and wall on a 15 mm rim ring, connector joint, jug wall and spout, handle with one top boss, lid on a 15 mm seat ring, water footprint, masses of base and water.",
-            "de": "Thermik: Sockel; die geschlossene Krughülle und der Ausguss; das Wasser; der Deckel über seinem Sitz; der Griff; Dampffläche und Fahnenhülse am Ausguss (das Heizelement geht im Sockel auf). Tragwerk: Sockelgehäuse mit 15 mm Deck und Wand auf einem 15-mm-Randring, Steckergelenk, Krugwand und Ausguss, Griff mit einem oberen Dom, Deckel auf einem 15-mm-Sitzring, Aufstandsfläche des Wassers, Massen von Sockel und Wasser."
+            "en": "Thermal: base with sleeve, a 15 mm element disc, the closed jug envelope with the beak, the fill, the lid skin with its knuckle, handle and switch, steam patch and plume sleeve at the beak.",
+            "de": "Thermik: Sockel mit Tülle, eine 15 mm starke Heizscheibe, die geschlossene Krughülle mit Schnaupe, die Füllung, die Deckelhaut mit ihrem Auge, Griff und Schalter, Dampffläche und Fahnenhülse an der Schnaupe."
+          },
+          {
+            "en": "Structure: base ring, connector joint, jug wall, beak, hinge pin, lid, handle core with one boss joint, switch, water footprint, masses and the support ring.",
+            "de": "Tragwerk: Sockelring, Steckergelenk, Krugwand, Schnaupe, Scharnierstift, Deckel, Griffkern mit einem Domgelenk, Schalter, Aufstandsfläche des Wassers, Massen und der Auflagerring."
           }
         ]
       },
@@ -3168,7 +4001,7 @@
             "material": "pp-plastic",
             "role": "body",
             "tone": 0.2,
-            "profile": [[0.0, 0.0], [0.0, 0.091], [0.004, 0.095], [0.036, 0.095], [0.04, 0.091], [0.04, 0.0]],
+            "profile": [[0.0, 0.0], [0.0, 0.086], [0.004, 0.09], [0.026, 0.09], [0.03, 0.086], [0.03, 0.0]],
             "axis": [0, 1, 0],
             "origin": [0.0, 0.0, 0.0]
           },
@@ -3179,7 +4012,7 @@
             "material": "stainless",
             "role": "body",
             "tone": 0.55,
-            "profile": [[0.0, 0.0], [0.0, 0.078], [0.17, 0.0722], [0.175, 0.068], [0.175, 0.0]],
+            "profile": [[0.0, 0.0], [0.0, 0.0752], [0.016, 0.0746], [0.17, 0.0701], [0.175, 0.067], [0.175, 0.0]],
             "axis": [0, 1, 0],
             "origin": [0.0, 0.0, 0.0]
           },
@@ -3192,25 +4025,18 @@
             "tone": 0.55,
             "sections": [
               {
-                "at": [-0.056, 0.146, 0.0],
-                "rx": 0.021,
-                "ry": 0.029,
+                "at": [-0.046, 0.146, 0.0],
+                "rx": 0.032,
+                "ry": 0.036,
                 "exponent": 2.4,
-                "rotation": [-0.312877, 0.63412, 0.63412, -0.312877]
+                "rotation": [-0.361416, 0.607765, 0.607765, -0.361416]
               },
               {
-                "at": [-0.086, 0.169, 0.0],
-                "rx": 0.013,
-                "ry": 0.021,
-                "exponent": 2.4,
-                "rotation": [-0.317978, 0.631577, 0.631577, -0.317978]
-              },
-              {
-                "at": [-0.114, 0.189, 0.0],
-                "rx": 0.0075,
+                "at": [-0.092, 0.171, 0.0],
+                "rx": 0.015,
                 "ry": 0.015,
                 "exponent": 2.4,
-                "rotation": [-0.323559, 0.628736, 0.628736, -0.323559]
+                "rotation": [-0.361416, 0.607765, 0.607765, -0.361416]
               }
             ],
             "capStart": true,
@@ -3225,81 +4051,60 @@
             "tone": 0.2,
             "sections": [
               {
-                "at": [-0.006, 0.066, 0.0],
+                "at": [-0.004, 0.083, 0.0],
                 "rx": 0.015,
-                "ry": 0.017,
+                "ry": 0.015,
                 "exponent": 2.3,
                 "rotation": [0.5, 0.5, 0.5, 0.5]
               },
               {
-                "at": [0.0117, 0.066, 0.0],
-                "rx": 0.01455,
-                "ry": 0.0175,
-                "exponent": 2.3,
-                "rotation": [0.5, 0.5, 0.5, 0.5]
-              },
-              {
-                "at": [0.026, 0.066, 0.0],
+                "at": [0.025, 0.083, 0.0],
                 "rx": 0.015,
-                "ry": 0.017,
+                "ry": 0.015,
                 "exponent": 2.3,
-                "rotation": [0.607717, 0.361498, 0.361498, 0.607717]
+                "rotation": [0.534187, 0.463298, 0.463298, 0.534187]
               },
               {
-                "at": [0.043, 0.049, 0.0],
+                "at": [0.038, 0.077, 0.0],
                 "rx": 0.015,
-                "ry": 0.018,
+                "ry": 0.015,
                 "exponent": 2.3,
-                "rotation": [0.688191, 0.16246, 0.16246, 0.688191]
+                "rotation": [0.656696, 0.262202, 0.262202, 0.656696]
               },
               {
-                "at": [0.044, 0.03, 0.0],
-                "rx": 0.0155,
-                "ry": 0.018,
-                "exponent": 2.3,
-                "rotation": [0.707024, 0.010819, 0.010819, 0.707024]
-              },
-              {
-                "at": [0.0445, 0.0, 0.0],
-                "rx": 0.0155,
-                "ry": 0.018,
-                "exponent": 2.3,
-                "rotation": [0.707107, 0.0, 0.0, 0.707107]
-              },
-              {
-                "at": [0.044, -0.025, 0.0],
+                "at": [0.044, 0.063, 0.0],
                 "rx": 0.015,
-                "ry": 0.018,
+                "ry": 0.015,
                 "exponent": 2.3,
-                "rotation": [0.706989, -0.012928, -0.012928, 0.706989]
+                "rotation": [0.706829, 0.019802, 0.019802, 0.706829]
               },
               {
-                "at": [0.043, -0.041, 0.0],
+                "at": [0.044, -0.03, 0.0],
                 "rx": 0.015,
-                "ry": 0.018,
+                "ry": 0.015,
                 "exponent": 2.3,
-                "rotation": [0.685182, -0.174717, -0.174717, 0.685182]
+                "rotation": [0.706854, -0.01892, -0.01892, 0.706854]
               },
               {
-                "at": [0.026, -0.058, 0.0],
+                "at": [0.038, -0.049, 0.0],
                 "rx": 0.015,
-                "ry": 0.017,
+                "ry": 0.015,
                 "exponent": 2.3,
-                "rotation": [0.619486, -0.340935, -0.340935, 0.619486]
+                "rotation": [0.675132, -0.21023, -0.21023, 0.675132]
               },
               {
-                "at": [0.013, -0.06, 0.0],
+                "at": [0.024, -0.059, 0.0],
                 "rx": 0.015,
-                "ry": 0.017,
+                "ry": 0.015,
                 "exponent": 2.3,
-                "rotation": [0.528176, -0.470138, -0.470138, 0.528176]
+                "rotation": [0.572076, -0.415606, -0.415606, 0.572076]
               },
               {
-                "at": [-0.004, -0.0615, 0.0],
+                "at": [-0.002, -0.062, 0.0],
                 "rx": 0.015,
-                "ry": 0.017,
+                "ry": 0.015,
                 "exponent": 2.3,
-                "rotation": [0.521511, -0.477521, -0.477521, 0.521511]
+                "rotation": [0.527879, -0.470472, -0.470472, 0.527879]
               }
             ],
             "capStart": true,
@@ -3312,9 +4117,9 @@
             "material": "stainless",
             "role": "body",
             "tone": 0.6,
-            "profile": [[-0.006, 0.0], [-0.006, 0.064], [0.0, 0.064], [0.0, 0.07], [0.006, 0.07], [0.014, 0.054], [0.021, 0.032], [0.024, 0.016], [0.04, 0.016], [0.04, 0.0]],
+            "profile": [[0.009, 0.0], [0.009, 0.06], [0.004, 0.06], [0.004, 0.066], [-0.004, 0.064], [-0.021, 0.03], [-0.021, 0.0]],
             "axis": [0, 1, 0],
-            "origin": [0.0, 0.0, 0.0]
+            "origin": [0.066, 0.0, 0.0]
           }
         ],
         "thermal": [
@@ -3362,6 +4167,34 @@
             "layer": "handle-skin"
           },
           {
+            "id": "th-switch",
+            "kind": "loft",
+            "bone": "switch",
+            "material": "pp-plastic",
+            "role": "detail",
+            "tone": 0.7,
+            "sections": [
+              {
+                "at": [0.0, 0.0, 0.0],
+                "rx": 0.00375,
+                "ry": 0.008,
+                "exponent": 3,
+                "rotation": [0.5, 0.5, 0.5, 0.5]
+              },
+              {
+                "at": [0.022, 0.0, 0.0],
+                "rx": 0.00375,
+                "ry": 0.008,
+                "exponent": 3,
+                "rotation": [0.5, 0.5, 0.5, 0.5]
+              }
+            ],
+            "capStart": true,
+            "capEnd": true,
+            "region": "handle",
+            "layer": "handle-skin"
+          },
+          {
             "id": "th-steam",
             "kind": "loft",
             "bone": "body",
@@ -3370,18 +4203,18 @@
             "tone": 0.45,
             "sections": [
               {
-                "at": [-0.11278, 0.18813, 0.0],
-                "rx": 0.0095,
-                "ry": 0.017,
+                "at": [-0.09095, 0.17043, 0.0],
+                "rx": 0.0162,
+                "ry": 0.0162,
                 "exponent": 2.0,
-                "rotation": [-0.323559, 0.628736, 0.628736, -0.323559]
+                "rotation": [-0.361416, 0.607765, 0.607765, -0.361416]
               },
               {
-                "at": [-0.11498, 0.1897, 0.0],
-                "rx": 0.0095,
-                "ry": 0.017,
+                "at": [-0.09288, 0.17148, 0.0],
+                "rx": 0.0162,
+                "ry": 0.0162,
                 "exponent": 2.0,
-                "rotation": [-0.323559, 0.628736, 0.628736, -0.323559]
+                "rotation": [-0.361416, 0.607765, 0.607765, -0.361416]
               }
             ],
             "capStart": false,
@@ -3399,32 +4232,25 @@
             "tone": 0.55,
             "sections": [
               {
-                "at": [-0.056, 0.146, 0.0],
-                "rx": 0.023,
-                "ry": 0.031,
+                "at": [-0.046, 0.146, 0.0],
+                "rx": 0.0332,
+                "ry": 0.0372,
                 "exponent": 2.0,
-                "rotation": [-0.312877, 0.63412, 0.63412, -0.312877]
+                "rotation": [-0.361416, 0.607765, 0.607765, -0.361416]
               },
               {
-                "at": [-0.086, 0.169, 0.0],
-                "rx": 0.015,
-                "ry": 0.023,
+                "at": [-0.092, 0.171, 0.0],
+                "rx": 0.0162,
+                "ry": 0.0162,
                 "exponent": 2.0,
-                "rotation": [-0.317978, 0.631577, 0.631577, -0.317978]
+                "rotation": [-0.361416, 0.607765, 0.607765, -0.361416]
               },
               {
-                "at": [-0.114, 0.189, 0.0],
-                "rx": 0.0095,
-                "ry": 0.017,
+                "at": [-0.09323, 0.17167, 0.0],
+                "rx": 0.0166,
+                "ry": 0.0166,
                 "exponent": 2.0,
-                "rotation": [-0.323559, 0.628736, 0.628736, -0.323559]
-              },
-              {
-                "at": [-0.1153, 0.18993, 0.0],
-                "rx": 0.0099,
-                "ry": 0.0174,
-                "exponent": 2.0,
-                "rotation": [-0.323559, 0.628736, 0.628736, -0.323559]
+                "rotation": [-0.361416, 0.607765, 0.607765, -0.361416]
               }
             ],
             "capStart": false,
@@ -3442,7 +4268,7 @@
             "material": "pp-plastic",
             "role": "detail",
             "tone": 0.3,
-            "profile": [[0.04, 0.0], [0.04, 0.091], [0.036, 0.095], [0.004, 0.095], [0.0, 0.091], [0.0, 0.061], [0.01, 0.061], [0.01, 0.0]],
+            "profile": [[0.03, 0.0], [0.03, 0.086], [0.026, 0.09], [0.004, 0.09], [0.0, 0.086], [0.0, 0.056], [0.01, 0.056], [0.01, 0.0]],
             "axis": [0, 1, 0],
             "origin": [0.0, 0.0, 0.0],
             "member": "base",
@@ -3455,7 +4281,7 @@
             "material": "stainless",
             "role": "detail",
             "tone": 0.3,
-            "profile": [[0.03, 0.0], [0.03, 0.0705], [0.175, 0.0655], [0.175, 0.0705], [0.0, 0.0775], [0.0, 0.0]],
+            "profile": [[0.03, 0.0], [0.03, 0.0592], [0.175, 0.052000000000000005], [0.175, 0.067], [0.17, 0.0701], [0.0, 0.0752], [0.0, 0.0]],
             "axis": [0, 1, 0],
             "origin": [0.0, 0.0, 0.0],
             "member": "body",
@@ -3470,81 +4296,60 @@
             "tone": 0.3,
             "sections": [
               {
-                "at": [-0.006, 0.066, 0.0],
+                "at": [-0.004, 0.083, 0.0],
                 "rx": 0.015,
-                "ry": 0.017,
+                "ry": 0.015,
                 "exponent": 2.0,
                 "rotation": [0.5, 0.5, 0.5, 0.5]
               },
               {
-                "at": [0.0117, 0.066, 0.0],
-                "rx": 0.01455,
-                "ry": 0.0175,
-                "exponent": 2.0,
-                "rotation": [0.5, 0.5, 0.5, 0.5]
-              },
-              {
-                "at": [0.026, 0.066, 0.0],
+                "at": [0.025, 0.083, 0.0],
                 "rx": 0.015,
-                "ry": 0.017,
+                "ry": 0.015,
                 "exponent": 2.0,
-                "rotation": [0.607717, 0.361498, 0.361498, 0.607717]
+                "rotation": [0.534187, 0.463298, 0.463298, 0.534187]
               },
               {
-                "at": [0.043, 0.049, 0.0],
+                "at": [0.038, 0.077, 0.0],
                 "rx": 0.015,
-                "ry": 0.018,
+                "ry": 0.015,
                 "exponent": 2.0,
-                "rotation": [0.688191, 0.16246, 0.16246, 0.688191]
+                "rotation": [0.656696, 0.262202, 0.262202, 0.656696]
               },
               {
-                "at": [0.044, 0.03, 0.0],
-                "rx": 0.0155,
-                "ry": 0.018,
-                "exponent": 2.0,
-                "rotation": [0.707024, 0.010819, 0.010819, 0.707024]
-              },
-              {
-                "at": [0.0445, 0.0, 0.0],
-                "rx": 0.0155,
-                "ry": 0.018,
-                "exponent": 2.0,
-                "rotation": [0.707107, 0.0, 0.0, 0.707107]
-              },
-              {
-                "at": [0.044, -0.025, 0.0],
+                "at": [0.044, 0.063, 0.0],
                 "rx": 0.015,
-                "ry": 0.018,
+                "ry": 0.015,
                 "exponent": 2.0,
-                "rotation": [0.706989, -0.012928, -0.012928, 0.706989]
+                "rotation": [0.706829, 0.019802, 0.019802, 0.706829]
               },
               {
-                "at": [0.043, -0.041, 0.0],
+                "at": [0.044, -0.03, 0.0],
                 "rx": 0.015,
-                "ry": 0.018,
+                "ry": 0.015,
                 "exponent": 2.0,
-                "rotation": [0.685182, -0.174717, -0.174717, 0.685182]
+                "rotation": [0.706854, -0.01892, -0.01892, 0.706854]
               },
               {
-                "at": [0.026, -0.058, 0.0],
+                "at": [0.038, -0.049, 0.0],
                 "rx": 0.015,
-                "ry": 0.017,
+                "ry": 0.015,
                 "exponent": 2.0,
-                "rotation": [0.619486, -0.340935, -0.340935, 0.619486]
+                "rotation": [0.675132, -0.21023, -0.21023, 0.675132]
               },
               {
-                "at": [0.013, -0.06, 0.0],
+                "at": [0.024, -0.059, 0.0],
                 "rx": 0.015,
-                "ry": 0.017,
+                "ry": 0.015,
                 "exponent": 2.0,
-                "rotation": [0.528176, -0.470138, -0.470138, 0.528176]
+                "rotation": [0.572076, -0.415606, -0.415606, 0.572076]
               },
               {
-                "at": [-0.004, -0.0615, 0.0],
+                "at": [-0.002, -0.062, 0.0],
                 "rx": 0.015,
-                "ry": 0.017,
+                "ry": 0.015,
                 "exponent": 2.0,
-                "rotation": [0.521511, -0.477521, -0.477521, 0.521511]
+                "rotation": [0.527879, -0.470472, -0.470472, 0.527879]
               }
             ],
             "capStart": true,
@@ -3554,15 +4359,22 @@
           },
           {
             "id": "member-lid",
-            "kind": "revolve",
-            "bone": "lid",
-            "material": "stainless",
+            "of": "lid",
+            "member": "lid",
+            "part": "member"
+          },
+          {
+            "id": "member-switch",
+            "kind": "box",
+            "bone": "switch",
+            "material": "pp-plastic",
             "role": "detail",
             "tone": 0.3,
-            "profile": [[0.0, 0.0], [0.0, 0.064], [0.0, 0.07], [0.006, 0.07], [0.014, 0.054], [0.021, 0.032], [0.024, 0.016], [0.04, 0.016], [0.04, 0.0]],
-            "axis": [0, 1, 0],
-            "origin": [0.0, 0.0, 0.0],
-            "member": "lid",
+            "size": [0.03, 0.03, 0.03],
+            "transform": {
+              "translation": [0.004, 0.011, 0.0]
+            },
+            "member": "switch",
             "part": "member"
           },
           {
@@ -3599,7 +4411,7 @@
             "material": "stainless",
             "role": "detail",
             "tone": 0.3,
-            "profile": [[0.0, 0.055], [0.0, 0.091], [0.03, 0.091], [0.03, 0.055], [0.0, 0.055]],
+            "profile": [[0.0, 0.056], [0.0, 0.086], [0.03, 0.086], [0.03, 0.056], [0.0, 0.056]],
             "axis": [0, 1, 0],
             "origin": [0.0, 0.0, 0.0],
             "member": "base",
@@ -3610,12 +4422,16 @@
         ],
         "decisions": [
           {
-            "en": "Own 1:200 model (30 mm feature): a 40 mm base disc with chamfered edges, the jug as one solid tapered mass with a rounded rim (its cavity is not shown at this scale), a chunky spout from three sections, the handle 30 mm thick in every section as the 1:200 drawing thickens it, and the lid with knob as one 40 mm stepped dome.",
-            "de": "Eigenes 1:200-Modell (Merkmal 30 mm): eine 40 mm hohe Sockelscheibe mit gefasten Kanten, der Krug als eine volle konische Masse mit gerundetem Rand (sein Hohlraum wird in diesem Maßstab nicht gezeigt), ein kräftiger Ausguss aus drei Schnitten, der Griff in jedem Schnitt 30 mm stark, wie ihn die 1:200-Zeichnung verstärkt, und der Deckel mit Knopf als eine 40 mm hohe gestufte Wölbung."
+            "en": "Body for a 30 mm feature: base, the jug as one solid cone, the beak with two sections, the handle 30 mm thick through eight sections and the lid, whose dome is raised from 14 to 25 mm so that it still prints at the end of the band (1:350).",
+            "de": "Körper für ein 30-mm-Merkmal: Sockel, der Krug als ein voller Kegel, die Schnaupe mit zwei Schnitten, der Griff 30 mm stark über acht Schnitte und der Deckel, dessen Wölbung von 14 auf 25 mm erhöht ist, damit er am Ende des Bandes (1:350) noch druckt."
           },
           {
-            "en": "Thermal: base, jug, spout, lid and handle by reference, the water as its own turned volume inside the solid jug, steam patch and plume sleeve. Structure: base housing on a 30 mm rim ring, the jug wall as a 5 mm cup on a 30 mm foot, handle and lid as members, a 30 mm water footprint and the water mass; joints and the base and jug masses are merged into the members.",
-            "de": "Thermik: Sockel, Krug, Ausguss, Deckel und Griff als Verweis, das Wasser als eigenes Drehvolumen im vollen Krug, Dampffläche und Fahnenhülse. Tragwerk: Sockelgehäuse auf einem 30-mm-Randring, die Krugwand als 5-mm-Becher auf einem 30-mm-Fuß, Griff und Deckel als Stäbe, eine 30 mm starke Aufstandsfläche des Wassers und die Wassermasse; Gelenke sowie Sockel- und Krugmasse gehen in den Stäben auf."
+            "en": "Thermal: base, jug, beak, water, lid, handle, a switch patch and the two steam patches.",
+            "de": "Thermik: Sockel, Krug, Schnaupe, Wasser, Deckel, Griff, eine Schalterfläche und die zwei Dampfflächen."
+          },
+          {
+            "en": "Structure: base ring, jug wall 15 mm, handle, lid, switch block, water footprint, mass and support ring.",
+            "de": "Tragwerk: Sockelring, Krugwand 15 mm, Griff, Deckel, Schalterblock, Aufstandsfläche des Wassers, Masse und Auflagerring."
           }
         ]
       },
@@ -3630,7 +4446,7 @@
             "material": "pp-plastic",
             "role": "body",
             "tone": 0.2,
-            "profile": [[0.0, 0.0], [0.0, 0.086], [0.006, 0.09], [0.03, 0.089], [0.03, 0.0]],
+            "profile": [[0.0, 0.0], [0.0, 0.09], [0.03, 0.09], [0.03, 0.0]],
             "axis": [0, 1, 0],
             "origin": [0.0, 0.0, 0.0]
           },
@@ -3641,7 +4457,7 @@
             "material": "stainless",
             "role": "body",
             "tone": 0.55,
-            "profile": [[0.0, 0.0], [0.0, 0.079], [0.15, 0.0732], [0.172, 0.0712], [0.175, 0.067], [0.175, 0.0]],
+            "profile": [[0.0, 0.0], [0.0, 0.075], [0.175, 0.069], [0.175, 0.0]],
             "axis": [0, 1, 0],
             "origin": [0.0, 0.0, 0.0]
           },
@@ -3654,18 +4470,18 @@
             "tone": 0.55,
             "sections": [
               {
-                "at": [-0.056, 0.146, 0.0],
-                "rx": 0.022,
-                "ry": 0.03,
-                "exponent": 2.2,
-                "rotation": [-0.312877, 0.63412, 0.63412, -0.312877]
+                "at": [-0.04, 0.14, 0.0],
+                "rx": 0.0375,
+                "ry": 0.0375,
+                "exponent": 2.4,
+                "rotation": [-0.362595, 0.607063, 0.607063, -0.362595]
               },
               {
-                "at": [-0.114, 0.189, 0.0],
-                "rx": 0.009,
-                "ry": 0.016,
-                "exponent": 2.2,
-                "rotation": [-0.323559, 0.628736, 0.628736, -0.323559]
+                "at": [-0.092, 0.168, 0.0],
+                "rx": 0.0375,
+                "ry": 0.0375,
+                "exponent": 2.4,
+                "rotation": [-0.362595, 0.607063, 0.607063, -0.362595]
               }
             ],
             "capStart": true,
@@ -3680,39 +4496,32 @@
             "tone": 0.2,
             "sections": [
               {
-                "at": [-0.006, 0.066, 0.0],
-                "rx": 0.016,
-                "ry": 0.019,
-                "exponent": 2.2,
-                "rotation": [0.5, 0.5, 0.5, 0.5]
+                "at": [-0.004, 0.07, 0.0],
+                "rx": 0.015,
+                "ry": 0.02,
+                "exponent": 2.3,
+                "rotation": [0.530103, 0.467965, 0.467965, 0.530103]
               },
               {
-                "at": [0.026, 0.066, 0.0],
-                "rx": 0.016,
-                "ry": 0.019,
-                "exponent": 2.2,
-                "rotation": [0.607717, 0.361498, 0.361498, 0.607717]
+                "at": [0.036, 0.065, 0.0],
+                "rx": 0.015,
+                "ry": 0.02,
+                "exponent": 2.3,
+                "rotation": [0.696382, 0.122685, 0.122685, 0.696382]
               },
               {
-                "at": [0.0445, 0.0, 0.0],
-                "rx": 0.016,
-                "ry": 0.019,
-                "exponent": 2.2,
-                "rotation": [0.707107, 0.0, 0.0, 0.707107]
+                "at": [0.036, -0.04, 0.0],
+                "rx": 0.015,
+                "ry": 0.02,
+                "exponent": 2.3,
+                "rotation": [0.696901, -0.119706, -0.119706, 0.696901]
               },
               {
-                "at": [0.026, -0.058, 0.0],
-                "rx": 0.016,
-                "ry": 0.019,
-                "exponent": 2.2,
-                "rotation": [0.619486, -0.340935, -0.340935, 0.619486]
-              },
-              {
-                "at": [-0.004, -0.0615, 0.0],
-                "rx": 0.016,
-                "ry": 0.019,
-                "exponent": 2.2,
-                "rotation": [0.521511, -0.477521, -0.477521, 0.521511]
+                "at": [-0.004, -0.048, 0.0],
+                "rx": 0.015,
+                "ry": 0.02,
+                "exponent": 2.3,
+                "rotation": [0.546835, -0.448298, -0.448298, 0.546835]
               }
             ],
             "capStart": true,
@@ -3725,9 +4534,9 @@
             "material": "stainless",
             "role": "body",
             "tone": 0.6,
-            "profile": [[-0.006, 0.0], [-0.006, 0.064], [0.0, 0.064], [0.0, 0.07], [0.006, 0.07], [0.016, 0.046], [0.019, 0.018], [0.032, 0.018], [0.032, 0.0]],
+            "profile": [[0.03, 0.0], [0.03, 0.058], [0.004, 0.058], [0.004, 0.066], [-0.0102, 0.02], [-0.0102, 0.0]],
             "axis": [0, 1, 0],
-            "origin": [0.0, 0.0, 0.0]
+            "origin": [0.066, 0.0, 0.0]
           }
         ],
         "thermal": [
@@ -3756,7 +4565,7 @@
             "material": "water",
             "role": "body",
             "tone": 0.45,
-            "profile": [[0.0, 0.0], [0.0, 0.0725], [0.06, 0.0705], [0.06, 0.0]],
+            "profile": [[0.0, 0.0], [0.0, 0.066], [0.075, 0.064], [0.075, 0.0]],
             "axis": [0, 1, 0],
             "origin": [0.0, 0.0, 0.0],
             "region": "water",
@@ -3775,6 +4584,34 @@
             "layer": "handle-skin"
           },
           {
+            "id": "th-switch",
+            "kind": "loft",
+            "bone": "switch",
+            "material": "pp-plastic",
+            "role": "detail",
+            "tone": 0.7,
+            "sections": [
+              {
+                "at": [0.0, 0.0, 0.0],
+                "rx": 0.00375,
+                "ry": 0.008,
+                "exponent": 3,
+                "rotation": [0.5, 0.5, 0.5, 0.5]
+              },
+              {
+                "at": [0.022, 0.0, 0.0],
+                "rx": 0.00375,
+                "ry": 0.008,
+                "exponent": 3,
+                "rotation": [0.5, 0.5, 0.5, 0.5]
+              }
+            ],
+            "capStart": true,
+            "capEnd": true,
+            "region": "handle",
+            "layer": "handle-skin"
+          },
+          {
             "id": "th-steam",
             "kind": "loft",
             "bone": "body",
@@ -3783,18 +4620,18 @@
             "tone": 0.45,
             "sections": [
               {
-                "at": [-0.11278, 0.18813, 0.0],
-                "rx": 0.0095,
-                "ry": 0.0165,
+                "at": [-0.09094, 0.16743, 0.0],
+                "rx": 0.0387,
+                "ry": 0.0387,
                 "exponent": 2.0,
-                "rotation": [-0.323559, 0.628736, 0.628736, -0.323559]
+                "rotation": [-0.362595, 0.607063, 0.607063, -0.362595]
               },
               {
-                "at": [-0.11498, 0.1897, 0.0],
-                "rx": 0.0095,
-                "ry": 0.0165,
+                "at": [-0.09288, 0.16847, 0.0],
+                "rx": 0.0387,
+                "ry": 0.0387,
                 "exponent": 2.0,
-                "rotation": [-0.323559, 0.628736, 0.628736, -0.323559]
+                "rotation": [-0.362595, 0.607063, 0.607063, -0.362595]
               }
             ],
             "capStart": false,
@@ -3812,18 +4649,25 @@
             "tone": 0.55,
             "sections": [
               {
-                "at": [-0.056, 0.146, 0.0],
-                "rx": 0.024,
-                "ry": 0.032,
-                "exponent": 2.2,
-                "rotation": [-0.312877, 0.63412, 0.63412, -0.312877]
+                "at": [-0.04, 0.14, 0.0],
+                "rx": 0.0387,
+                "ry": 0.0387,
+                "exponent": 2.0,
+                "rotation": [-0.362595, 0.607063, 0.607063, -0.362595]
               },
               {
-                "at": [-0.114, 0.189, 0.0],
-                "rx": 0.011,
-                "ry": 0.018000000000000002,
-                "exponent": 2.2,
-                "rotation": [-0.323559, 0.628736, 0.628736, -0.323559]
+                "at": [-0.092, 0.168, 0.0],
+                "rx": 0.0387,
+                "ry": 0.0387,
+                "exponent": 2.0,
+                "rotation": [-0.362595, 0.607063, 0.607063, -0.362595]
+              },
+              {
+                "at": [-0.09323, 0.16866, 0.0],
+                "rx": 0.0391,
+                "ry": 0.0391,
+                "exponent": 2.0,
+                "rotation": [-0.362595, 0.607063, 0.607063, -0.362595]
               }
             ],
             "capStart": false,
@@ -3841,7 +4685,7 @@
             "material": "pp-plastic",
             "role": "detail",
             "tone": 0.3,
-            "profile": [[0.0, 0.07], [0.0, 0.088], [0.028, 0.088], [0.03, 0.084], [0.03, 0.0], [0.022, 0.0], [0.022, 0.07], [0.0, 0.07]],
+            "profile": [[0.03, 0.0], [0.03, 0.086], [0.026, 0.09], [0.004, 0.09], [0.0, 0.086], [0.0, 0.056], [0.02, 0.056], [0.02, 0.0]],
             "axis": [0, 1, 0],
             "origin": [0.0, 0.0, 0.0],
             "member": "base",
@@ -3854,7 +4698,7 @@
             "material": "stainless",
             "role": "detail",
             "tone": 0.3,
-            "profile": [[0.0, 0.0], [0.0, 0.078], [0.175, 0.0705], [0.175, 0.0645], [0.008, 0.0715], [0.008, 0.0]],
+            "profile": [[0.03, 0.0], [0.03, 0.0442], [0.175, 0.037000000000000005], [0.175, 0.067], [0.17, 0.0701], [0.0, 0.0752], [0.0, 0.0]],
             "axis": [0, 1, 0],
             "origin": [0.0, 0.0, 0.0],
             "member": "body",
@@ -3862,21 +4706,64 @@
           },
           {
             "id": "member-handle",
-            "of": "handle",
+            "kind": "loft",
+            "bone": "handle",
+            "material": "pp-plastic",
+            "role": "detail",
+            "tone": 0.3,
+            "sections": [
+              {
+                "at": [-0.004, 0.07, 0.0],
+                "rx": 0.015,
+                "ry": 0.02,
+                "exponent": 2.0,
+                "rotation": [0.530103, 0.467965, 0.467965, 0.530103]
+              },
+              {
+                "at": [0.036, 0.065, 0.0],
+                "rx": 0.015,
+                "ry": 0.02,
+                "exponent": 2.0,
+                "rotation": [0.696382, 0.122685, 0.122685, 0.696382]
+              },
+              {
+                "at": [0.036, -0.04, 0.0],
+                "rx": 0.015,
+                "ry": 0.02,
+                "exponent": 2.0,
+                "rotation": [0.696901, -0.119706, -0.119706, 0.696901]
+              },
+              {
+                "at": [-0.004, -0.048, 0.0],
+                "rx": 0.015,
+                "ry": 0.02,
+                "exponent": 2.0,
+                "rotation": [0.546835, -0.448298, -0.448298, 0.546835]
+              }
+            ],
+            "capStart": true,
+            "capEnd": true,
             "member": "handle",
             "part": "member"
           },
           {
             "id": "member-lid",
-            "kind": "revolve",
-            "bone": "lid",
-            "material": "stainless",
+            "of": "lid",
+            "member": "lid",
+            "part": "member"
+          },
+          {
+            "id": "member-switch",
+            "kind": "box",
+            "bone": "switch",
+            "material": "pp-plastic",
             "role": "detail",
             "tone": 0.3,
-            "profile": [[0.0, 0.0], [0.0, 0.066], [0.006, 0.066], [0.006, 0.0]],
-            "axis": [0, 1, 0],
-            "origin": [0.0, 0.0, 0.0],
-            "member": "lid",
+            "size": [0.03, 0.03, 0.03],
+            "transform": {
+              "translation": [0.004, 0.011, 0.0]
+            },
+            "member": "switch",
             "part": "member"
           },
           {
@@ -3886,7 +4773,7 @@
             "material": "water",
             "role": "detail",
             "tone": 0.45,
-            "profile": [[0.0, 0.0], [0.0, 0.06], [0.008, 0.06], [0.008, 0.0]],
+            "profile": [[0.021, 0.0], [0.021, 0.06], [0.051, 0.06], [0.051, 0.0]],
             "axis": [0, 1, 0],
             "origin": [0.0, 0.0, 0.0],
             "member": "water",
@@ -3896,12 +4783,12 @@
             "id": "mass-water",
             "kind": "ellipsoid",
             "bone": "water",
-            "material": "water",
+            "material": "stainless",
             "role": "detail",
             "tone": 0.15,
-            "radii": [0.035, 0.012, 0.035],
+            "radii": [0.0375, 0.0375, 0.0375],
             "transform": {
-              "translation": [0.0, 0.03, 0.0]
+              "translation": [0.0, 0.065, 0.0]
             },
             "member": "water",
             "part": "mass"
@@ -3910,10 +4797,10 @@
             "id": "support-base-contact",
             "kind": "revolve",
             "bone": "base",
-            "material": "pp-plastic",
+            "material": "stainless",
             "role": "detail",
             "tone": 0.3,
-            "profile": [[0.0, 0.066], [0.0, 0.09], [0.006, 0.09], [0.006, 0.066]],
+            "profile": [[0.0, 0.056], [0.0, 0.086], [0.03, 0.086], [0.03, 0.056], [0.0, 0.056]],
             "axis": [0, 1, 0],
             "origin": [0.0, 0.0, 0.0],
             "member": "base",
@@ -3924,16 +4811,16 @@
         ],
         "decisions": [
           {
-            "en": "Body: a digital model only, the drawing is unavailable at 1:500 (the kettle is 3 x 3 x 2.4 smallest features). Five masses keep the silhouette of every finer scale: the 30 mm power base, the jug as the true cone from r 79 mm at the foot to r 71 mm under the rolled rim (skirt, gauge and rim merged), the spout as one taper from its 60 mm root on the shoulder to the 18 mm mouth, the C handle as a round-section bow through its two fixings, the lid with its dome and knob turned in one piece, its knob ending at the 0.24 m overall height.",
-            "de": "Körper: nur ein digitales Modell, die Zeichnung ist bei 1:500 nicht verfügbar (der Wasserkocher misst 3 x 3 x 2,4 kleinste Merkmale). Fünf Massen bewahren den Umriss aller feineren Maßstäbe: der 30 mm hohe Sockel, die Kanne als der wahre Kegel von r 79 mm am Fuß bis r 71 mm unter dem gerollten Rand (Schürze, Wasserstandsanzeige und Rand darin aufgegangen), der Ausguss als eine Verjüngung von seiner 60 mm breiten Wurzel an der Schulter zur 18 mm Mündung, der C-Griff als Bogen mit rundem Querschnitt durch seine beiden Befestigungen, der Deckel mit Kuppel und Knauf in einem Stück gedreht, der Knauf endet bei der Gesamthöhe von 0,24 m."
+            "en": "Body for a 75 mm feature: base disc, jug cone, a stub beak, a square handle loop and the lid as a plug with its dome.",
+            "de": "Körper für ein 75-mm-Merkmal: Sockelscheibe, Krugkegel, eine Stummelschnaupe, eine eckige Griffschlaufe und der Deckel als Stopfen mit seiner Wölbung."
           },
           {
-            "en": "Thermal: base, jug, spout, lid and handle by reference, the 1 L fill as its own turned volume 60 mm deep inside the jug, the steam outlet flush in the mouth and the plume sleeve 2 mm over the spout.",
-            "de": "Thermisch: Sockel, Kanne, Ausguss, Deckel und Griff per Verweis, die 1-L-Füllung als eigener Drehkörper von 60 mm Tiefe in der Kanne, der Dampfauslass bündig in der Mündung und die Fahnenhülse 2 mm über dem Ausguss."
+            "en": "Thermal: the five regions as their bodies, a full-width water disc, a switch patch and the steam patches.",
+            "de": "Thermik: die fünf Regionen als ihre Körper, eine Wasserscheibe über die ganze Breite, eine Schalterfläche und die Dampfflächen."
           },
           {
-            "en": "Structure: the base housing as its rim wall with the top deck the jug stands on, the jug as a cup of 6 mm wall on an 8 mm floor, the handle as its own member, the lid as a plate, the water as a slab on the floor with its mass at the centre of the fill, and the contact ring under the base rim.",
-            "de": "Tragwerk: das Sockelgehäuse als Randwand mit der Deckplatte, auf der die Kanne steht, die Kanne als Becher mit 6 mm Wand auf 8 mm Boden, der Griff als eigener Stab, der Deckel als Platte, das Wasser als Scheibe auf dem Boden mit seiner Masse im Schwerpunkt der Füllung und der Kontaktring unter dem Sockelrand."
+            "en": "Structure: base ring, jug wall, handle, lid, switch block, water footprint, mass and support ring.",
+            "de": "Tragwerk: Sockelring, Krugwand, Griff, Deckel, Schalterblock, Aufstandsfläche des Wassers, Masse und Auflagerring."
           }
         ]
       }

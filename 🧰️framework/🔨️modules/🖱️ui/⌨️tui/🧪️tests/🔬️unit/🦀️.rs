@@ -8,7 +8,7 @@ use semio_ui_tui_core::cell::{Cell, CellBuffer, DiffRun, attr, diff};
 use semio_ui_tui_frame::chrome::{ChromeState, FooterState, KeyHint, NavItem, NavbarState, WindowState, mount_window_layout, shell, window_chip_layout, window_content_padding};
 use semio_ui_tui_core::event::{Event, Key, KeyEvent, MouseButton, MouseEvent, MouseKind};
 use semio_ui_tui_core::geometry::{Pos, Rect, Size};
-use semio_ui_tui_frame::layout::{Constraint, Dimension, Direction, WindowLayout, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode, create_default_layout, even_window_layout, solve, solve_window_layout};
+use semio_ui_tui_frame::layout::{Constraint, Dimension, Direction, WindowLayout, Axis, stack_node, window_node, create_default_layout, even_window_layout, solve, solve_window_layout};
 use semio_ui_tui_frame::scene::{Node, NodeContent, Scene};
 use semio_ui_tui_core::text::{display_width, truncate_to};
 use semio_ui_tui_core::theme::{Role, Surface, Theme};

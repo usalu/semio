@@ -383,7 +383,7 @@ pub fn parse_indirect_at(data: &[u8], offset: usize) -> PResult<(ObjRef, PdfObje
 pub fn indirect_header_at(data: &[u8], offset: usize) -> PResult<(ObjRef, Lexer<'_>)> {
     let mut cursor = IndirectHeaderCursor::new(offset);
     loop {
-        let (_, step) = cursor.advance(data, 4096).map_err(|reason| PdfEngineError::Malformed(reason.into()))?;
+        let (_, step) = cursor.advance(|position| data.get(position).copied(), 4096).map_err(|reason| PdfEngineError::Malformed(reason.into()))?;
         if let HeaderStep::Complete { id, body_offset } = step {
             return Ok((id, Lexer::new(data).at(body_offset)));
         }

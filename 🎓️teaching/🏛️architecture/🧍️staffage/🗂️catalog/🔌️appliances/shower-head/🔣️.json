@@ -167,15 +167,15 @@
           "z": -0.1,
           "angleDeg": -90,
           "title": {
-            "en": "Wall elbow with shut-off valve and hose",
-            "de": "Wandanschlussbogen mit Absperrventil und Schlauch"
+            "en": "Wall elbow with shut-off valve and falling hose leg",
+            "de": "Wandanschlussbogen mit Absperrventil und fallendem Schlauchstrang"
           },
           "lengthM": 0.06,
           "joint": {
             "type": "fixed"
           },
           "mass": {
-            "kg": 0.55,
+            "kg": 0.4,
             "comX": 0.0545,
             "comY": 0.0168,
             "distribution": "point",
@@ -256,6 +256,30 @@
           }
         },
         {
+          "id": "hose",
+          "parent": "shower",
+          "x": -0.036,
+          "y": 0,
+          "angleDeg": -163.012,
+          "title": {
+            "en": "Rising hose leg, hinged in the conical nut",
+            "de": "Steigender Schlauchstrang, in der Konusmutter gelenkig"
+          },
+          "lengthM": 0.786,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -12,
+            "maxDeg": 42
+          },
+          "mass": {
+            "kg": 0.15,
+            "comX": 0.39,
+            "comY": 0,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
           "id": "head",
           "parent": "shower",
           "x": 0.188,
@@ -303,6 +327,21 @@
         "footprintLengthM": 0.044,
         "footprintWidthM": 0.044,
         "frictionCoefficient": 0.4
+      },
+      {
+        "id": "wall-elbow",
+        "bone": "elbow",
+        "x": 0,
+        "y": 0,
+        "kind": "support",
+        "title": {
+          "en": "Wall elbow screwed into the wall fitting",
+          "de": "Wandanschluss, in die Wandscheibe geschraubt"
+        },
+        "support": "pin",
+        "normalDeg": 0,
+        "footprintLengthM": 0.06,
+        "footprintWidthM": 0.06
       },
       {
         "id": "nozzle",
@@ -4292,7 +4331,8 @@
         "ground": "authored",
         "contacts": [
           "wall-low",
-          "wall-top"
+          "wall-top",
+          "wall-elbow"
         ],
         "thermal": {
           "regions": {
@@ -4355,12 +4395,16 @@
           },
           "shower": {
             "angleDeg": -8
+          },
+          "hose": {
+            "angleDeg": 8.341
           }
         },
         "ground": "authored",
         "contacts": [
           "wall-low",
-          "wall-top"
+          "wall-top",
+          "wall-elbow"
         ],
         "thermal": {
           "regions": {
@@ -4440,12 +4484,16 @@
           },
           "shower": {
             "angleDeg": -4
+          },
+          "hose": {
+            "angleDeg": 4.173
           }
         },
         "ground": "authored",
         "contacts": [
           "wall-low",
-          "wall-top"
+          "wall-top",
+          "wall-elbow"
         ],
         "thermal": {
           "regions": {
@@ -4550,6 +4598,11 @@
           },
           {
             "anchor": "wall-top",
+            "fromS": 0,
+            "toS": 300
+          },
+          {
+            "anchor": "wall-elbow",
             "fromS": 0,
             "toS": 300
           }
@@ -4674,6 +4727,11 @@
           },
           {
             "anchor": "wall-top",
+            "fromS": 0,
+            "toS": 420
+          },
+          {
+            "anchor": "wall-elbow",
             "fromS": 0,
             "toS": 420
           }
@@ -5080,12 +5138,13 @@
       "dynamics": "quasi-static",
       "supports": [
         "wall-low",
-        "wall-top"
+        "wall-top",
+        "wall-elbow"
       ],
       "assumptions": [
         {
-          "en": "The 2.3 kg set hangs on the lower bracket (pin) and is held at the upper bracket (roller): the pair, 0.686 m apart, resists the overturning moment of the hand shower, whose disc stands 0.2 m from the wall.",
-          "de": "Die 2,3 kg schwere Garnitur hängt am unteren Halter (Festlager) und wird am oberen Halter gehalten (Rollenlager): das Paar, 0,686 m auseinander, nimmt das Kippmoment der Handbrause auf, deren Scheibe 0,2 m vor der Wand steht."
+          "en": "The rail with holder and hand shower hangs on the lower bracket (pin) and is held at the upper bracket (roller): the pair, 0.686 m apart, resists the overturning moment of the hand shower, whose disc stands 0.2 m from the wall. The wall elbow is screwed into its own wall fitting (pin) and carries the falling hose leg and the bight; the rising hose leg of 0.15 kg hangs from the hose nut of the hand shower.",
+          "de": "Die Stange mit Halter und Handbrause hängt am unteren Halter (Festlager) und wird am oberen Halter gehalten (Rollenlager): das Paar, 0,686 m auseinander, nimmt das Kippmoment der Handbrause auf, deren Scheibe 0,2 m vor der Wand steht. Der Wandanschluss ist in seine eigene Wandscheibe geschraubt (Festlager) und trägt den fallenden Schlauchstrang und den Bogen; der steigende Schlauchstrang von 0,15 kg hängt an der Schlauchmutter der Handbrause."
         }
       ],
       "clinical": false
@@ -5213,6 +5272,17 @@
             "role": "detail",
             "tone": 0.75,
             "profile": [[0.014, 0.0], [0.014, 0.0125], [0.03, 0.0125], [0.04, 0.009], [0.04, 0.0]],
+            "axis": [0, -1, 0],
+            "origin": [0.04, 0.0, 0.0]
+          },
+          {
+            "id": "ferrule-elbow",
+            "kind": "revolve",
+            "bone": "elbow",
+            "material": "chrome",
+            "role": "detail",
+            "tone": 0.75,
+            "profile": [[0.038, 0.0], [0.038, 0.0086], [0.054, 0.0086], [0.056, 0.0078], [0.056, 0.0]],
             "axis": [0, -1, 0],
             "origin": [0.04, 0.0, 0.0]
           },
@@ -5395,6 +5465,17 @@
             "origin": [0.0, 0.0, 0.0]
           },
           {
+            "id": "ferrule-shower",
+            "kind": "revolve",
+            "bone": "shower",
+            "material": "chrome",
+            "role": "detail",
+            "tone": 0.75,
+            "profile": [[-0.052, 0.0], [-0.052, 0.0078], [-0.05, 0.0086], [-0.034, 0.0086], [-0.034, 0.0]],
+            "axis": [1, 0, 0],
+            "origin": [0.0, 0.0, 0.0]
+          },
+          {
             "id": "handle",
             "kind": "revolve",
             "bone": "shower",
@@ -5404,6 +5485,17 @@
             "profile": [[-0.01, 0.0], [-0.01, 0.0122], [0.016, 0.0135], [0.03, 0.0125], [0.07, 0.0145], [0.105, 0.0135], [0.125, 0.0124], [0.125, 0.0]],
             "axis": [1, 0, 0],
             "origin": [0.0, 0.0, 0.0]
+          },
+          {
+            "id": "select-button",
+            "kind": "revolve",
+            "bone": "shower",
+            "material": "abs-chrome",
+            "role": "detail",
+            "tone": 0.92,
+            "profile": [[0.008, 0.0], [0.008, 0.008], [0.0152, 0.008], [0.016, 0.0066], [0.016, 0.0]],
+            "axis": [0, -1, 0],
+            "origin": [0.1, 0.0, 0.0]
           },
           {
             "id": "neck",
@@ -5477,6 +5569,30 @@
             "texture": true
           },
           {
+            "id": "face-zone-ring",
+            "kind": "revolve",
+            "bone": "head",
+            "material": "abs-chrome",
+            "role": "detail",
+            "tone": 0.85,
+            "profile": [[0.011, 0.027], [0.0128, 0.0275], [0.0128, 0.0305], [0.011, 0.031]],
+            "axis": [1, 0, 0],
+            "origin": [0.0, 0.0, 0.0],
+            "texture": true
+          },
+          {
+            "id": "face-centre",
+            "kind": "revolve",
+            "bone": "head",
+            "material": "abs-chrome",
+            "role": "detail",
+            "tone": 0.85,
+            "profile": [[0.011, 0.0], [0.011, 0.0125], [0.0128, 0.0115], [0.0133, 0.0]],
+            "axis": [1, 0, 0],
+            "origin": [0.0, 0.0, 0.0],
+            "texture": true
+          },
+          {
             "id": "hose",
             "kind": "loft",
             "bone": "elbow",
@@ -5485,104 +5601,9 @@
             "tone": 0.55,
             "sections": [
               {
-                "at": [0.09388, 0.54576, 0.1],
-                "rx": 0.0065,
-                "ry": 0.0065
-              },
-              {
-                "at": [0.08778, 0.52262, 0.09992],
-                "rx": 0.0065,
-                "ry": 0.0065
-              },
-              {
-                "at": [0.08449, 0.50017, 0.09967],
-                "rx": 0.0065,
-                "ry": 0.0065
-              },
-              {
-                "at": [0.08327, 0.47755, 0.09925],
-                "rx": 0.0065,
-                "ry": 0.0065
-              },
-              {
-                "at": [0.08342, 0.45389, 0.09867],
-                "rx": 0.0065,
-                "ry": 0.0065
-              },
-              {
-                "at": [0.08424, 0.42833, 0.09792],
-                "rx": 0.0065,
-                "ry": 0.0065
-              },
-              {
-                "at": [0.085, 0.4, 0.097],
-                "rx": 0.0065,
-                "ry": 0.0065
-              },
-              {
-                "at": [0.08525, 0.36352, 0.09539],
-                "rx": 0.0065,
-                "ry": 0.0065
-              },
-              {
-                "at": [0.08545, 0.32309, 0.09397],
-                "rx": 0.0065,
-                "ry": 0.0065
-              },
-              {
-                "at": [0.08557, 0.27933, 0.0927],
-                "rx": 0.0065,
-                "ry": 0.0065
-              },
-              {
-                "at": [0.08563, 0.23289, 0.09158],
-                "rx": 0.0065,
-                "ry": 0.0065
-              },
-              {
-                "at": [0.08559, 0.18438, 0.09056],
-                "rx": 0.0065,
-                "ry": 0.0065
-              },
-              {
-                "at": [0.08547, 0.13446, 0.08963],
-                "rx": 0.0065,
-                "ry": 0.0065
-              },
-              {
-                "at": [0.08524, 0.08375, 0.08875],
-                "rx": 0.0065,
-                "ry": 0.0065
-              },
-              {
-                "at": [0.0849, 0.03289, 0.0879],
-                "rx": 0.0065,
-                "ry": 0.0065
-              },
-              {
-                "at": [0.08443, -0.0175, 0.08706],
-                "rx": 0.0065,
-                "ry": 0.0065
-              },
-              {
-                "at": [0.08384, -0.06676, 0.0862],
-                "rx": 0.0065,
-                "ry": 0.0065
-              },
-              {
-                "at": [0.08311, -0.11428, 0.08529],
-                "rx": 0.0065,
-                "ry": 0.0065
-              },
-              {
-                "at": [0.08223, -0.15942, 0.0843],
-                "rx": 0.0065,
-                "ry": 0.0065
-              },
-              {
                 "at": [0.0812, -0.20153, 0.08321],
-                "rx": 0.0065,
-                "ry": 0.0065
+                "rx": 0.00487,
+                "ry": 0.00487
               },
               {
                 "at": [0.08, -0.24, 0.082],
@@ -5693,6 +5714,150 @@
                 "at": [0.04, -0.04, 0.0],
                 "rx": 0.0065,
                 "ry": 0.0065
+              }
+            ],
+            "capStart": true,
+            "capEnd": true
+          },
+          {
+            "id": "hose-rise",
+            "kind": "loft",
+            "bone": "hose",
+            "material": "epdm-hose",
+            "role": "body",
+            "tone": 0.55,
+            "sections": [
+              {
+                "at": [0.0, 0.0, 0.0],
+                "rx": 0.0065,
+                "ry": 0.0065,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.02325, -0.00569, -8e-05],
+                "rx": 0.0065,
+                "ry": 0.0065,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.04575, -0.00858, -0.00033],
+                "rx": 0.0065,
+                "ry": 0.0065,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.06839, -0.0094, -0.00075],
+                "rx": 0.0065,
+                "ry": 0.0065,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.09204, -0.00883, -0.00133],
+                "rx": 0.0065,
+                "ry": 0.0065,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.11758, -0.00756, -0.00208],
+                "rx": 0.0065,
+                "ry": 0.0065,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.1459, -0.0063, -0.003],
+                "rx": 0.0065,
+                "ry": 0.0065,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.18237, -0.00541, -0.00461],
+                "rx": 0.0065,
+                "ry": 0.0065,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.22279, -0.00449, -0.00603],
+                "rx": 0.0065,
+                "ry": 0.0065,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.26654, -0.0036, -0.0073],
+                "rx": 0.0065,
+                "ry": 0.0065,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.31297, -0.00272, -0.00842],
+                "rx": 0.0065,
+                "ry": 0.0065,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.36147, -0.0019, -0.00944],
+                "rx": 0.0065,
+                "ry": 0.0065,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.41139, -0.00114, -0.01037],
+                "rx": 0.0065,
+                "ry": 0.0065,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.46209, -0.00048, -0.01125],
+                "rx": 0.0065,
+                "ry": 0.0065,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.51295, 8e-05, -0.0121],
+                "rx": 0.0065,
+                "ry": 0.0065,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.56334, 0.0005, -0.01294],
+                "rx": 0.0065,
+                "ry": 0.0065,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.6126, 0.00078, -0.0138],
+                "rx": 0.0065,
+                "ry": 0.0065,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.66013, 0.00089, -0.01471],
+                "rx": 0.0065,
+                "ry": 0.0065,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.70528, 0.00081, -0.0157],
+                "rx": 0.0065,
+                "ry": 0.0065,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.7474, 0.00052, -0.01679],
+                "rx": 0.0065,
+                "ry": 0.0065,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.78588, -0.0, -0.018],
+                "rx": 0.0065,
+                "ry": 0.0065,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.80978, -0.00087, -0.01991],
+                "rx": 0.00487,
+                "ry": 0.00487,
+                "rotation": [0, -0.70711, 0, 0.70711]
               }
             ],
             "capStart": true,
@@ -5803,6 +5968,12 @@
             "layer": "body"
           },
           {
+            "id": "th-ferrule-elbow",
+            "of": "ferrule-elbow",
+            "region": "valve",
+            "layer": "body"
+          },
+          {
             "id": "th-lever-boss",
             "of": "lever-boss",
             "region": "valve",
@@ -5827,14 +5998,32 @@
             "layer": "rubber"
           },
           {
+            "id": "th-hose-rise",
+            "of": "hose-rise",
+            "region": "hose",
+            "layer": "rubber"
+          },
+          {
             "id": "th-nut",
             "of": "nut",
             "region": "handle",
             "layer": "shell"
           },
           {
+            "id": "th-ferrule-shower",
+            "of": "ferrule-shower",
+            "region": "handle",
+            "layer": "shell"
+          },
+          {
             "id": "th-handle",
             "of": "handle",
+            "region": "handle",
+            "layer": "shell"
+          },
+          {
+            "id": "th-select-button",
+            "of": "select-button",
             "region": "handle",
             "layer": "shell"
           },
@@ -5853,6 +6042,18 @@
           {
             "id": "th-face",
             "of": "face",
+            "region": "head",
+            "layer": "shell"
+          },
+          {
+            "id": "th-face-centre",
+            "of": "face-centre",
+            "region": "head",
+            "layer": "shell"
+          },
+          {
+            "id": "th-face-zone-ring",
+            "of": "face-zone-ring",
             "region": "head",
             "layer": "shell"
           },
@@ -5889,104 +6090,9 @@
             "tone": 0.5,
             "sections": [
               {
-                "at": [0.09388, 0.54576, 0.1],
-                "rx": 0.0045,
-                "ry": 0.0045
-              },
-              {
-                "at": [0.08778, 0.52262, 0.09992],
-                "rx": 0.0045,
-                "ry": 0.0045
-              },
-              {
-                "at": [0.08449, 0.50017, 0.09967],
-                "rx": 0.0045,
-                "ry": 0.0045
-              },
-              {
-                "at": [0.08327, 0.47755, 0.09925],
-                "rx": 0.0045,
-                "ry": 0.0045
-              },
-              {
-                "at": [0.08342, 0.45389, 0.09867],
-                "rx": 0.0045,
-                "ry": 0.0045
-              },
-              {
-                "at": [0.08424, 0.42833, 0.09792],
-                "rx": 0.0045,
-                "ry": 0.0045
-              },
-              {
-                "at": [0.085, 0.4, 0.097],
-                "rx": 0.0045,
-                "ry": 0.0045
-              },
-              {
-                "at": [0.08525, 0.36352, 0.09539],
-                "rx": 0.0045,
-                "ry": 0.0045
-              },
-              {
-                "at": [0.08545, 0.32309, 0.09397],
-                "rx": 0.0045,
-                "ry": 0.0045
-              },
-              {
-                "at": [0.08557, 0.27933, 0.0927],
-                "rx": 0.0045,
-                "ry": 0.0045
-              },
-              {
-                "at": [0.08563, 0.23289, 0.09158],
-                "rx": 0.0045,
-                "ry": 0.0045
-              },
-              {
-                "at": [0.08559, 0.18438, 0.09056],
-                "rx": 0.0045,
-                "ry": 0.0045
-              },
-              {
-                "at": [0.08547, 0.13446, 0.08963],
-                "rx": 0.0045,
-                "ry": 0.0045
-              },
-              {
-                "at": [0.08524, 0.08375, 0.08875],
-                "rx": 0.0045,
-                "ry": 0.0045
-              },
-              {
-                "at": [0.0849, 0.03289, 0.0879],
-                "rx": 0.0045,
-                "ry": 0.0045
-              },
-              {
-                "at": [0.08443, -0.0175, 0.08706],
-                "rx": 0.0045,
-                "ry": 0.0045
-              },
-              {
-                "at": [0.08384, -0.06676, 0.0862],
-                "rx": 0.0045,
-                "ry": 0.0045
-              },
-              {
-                "at": [0.08311, -0.11428, 0.08529],
-                "rx": 0.0045,
-                "ry": 0.0045
-              },
-              {
-                "at": [0.08223, -0.15942, 0.0843],
-                "rx": 0.0045,
-                "ry": 0.0045
-              },
-              {
                 "at": [0.0812, -0.20153, 0.08321],
-                "rx": 0.0045,
-                "ry": 0.0045
+                "rx": 0.00337,
+                "ry": 0.00337
               },
               {
                 "at": [0.08, -0.24, 0.082],
@@ -6097,6 +6203,151 @@
                 "at": [0.04, -0.04, 0.0],
                 "rx": 0.0045,
                 "ry": 0.0045
+              }
+            ],
+            "capStart": true,
+            "capEnd": true,
+            "region": "spray"
+          },
+          {
+            "id": "th-water-hose-rise",
+            "kind": "loft",
+            "bone": "hose",
+            "material": "water",
+            "role": "body",
+            "tone": 0.5,
+            "sections": [
+              {
+                "at": [0.0, 0.0, 0.0],
+                "rx": 0.0045,
+                "ry": 0.0045,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.02325, -0.00569, -8e-05],
+                "rx": 0.0045,
+                "ry": 0.0045,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.04575, -0.00858, -0.00033],
+                "rx": 0.0045,
+                "ry": 0.0045,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.06839, -0.0094, -0.00075],
+                "rx": 0.0045,
+                "ry": 0.0045,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.09204, -0.00883, -0.00133],
+                "rx": 0.0045,
+                "ry": 0.0045,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.11758, -0.00756, -0.00208],
+                "rx": 0.0045,
+                "ry": 0.0045,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.1459, -0.0063, -0.003],
+                "rx": 0.0045,
+                "ry": 0.0045,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.18237, -0.00541, -0.00461],
+                "rx": 0.0045,
+                "ry": 0.0045,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.22279, -0.00449, -0.00603],
+                "rx": 0.0045,
+                "ry": 0.0045,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.26654, -0.0036, -0.0073],
+                "rx": 0.0045,
+                "ry": 0.0045,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.31297, -0.00272, -0.00842],
+                "rx": 0.0045,
+                "ry": 0.0045,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.36147, -0.0019, -0.00944],
+                "rx": 0.0045,
+                "ry": 0.0045,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.41139, -0.00114, -0.01037],
+                "rx": 0.0045,
+                "ry": 0.0045,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.46209, -0.00048, -0.01125],
+                "rx": 0.0045,
+                "ry": 0.0045,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.51295, 8e-05, -0.0121],
+                "rx": 0.0045,
+                "ry": 0.0045,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.56334, 0.0005, -0.01294],
+                "rx": 0.0045,
+                "ry": 0.0045,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.6126, 0.00078, -0.0138],
+                "rx": 0.0045,
+                "ry": 0.0045,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.66013, 0.00089, -0.01471],
+                "rx": 0.0045,
+                "ry": 0.0045,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.70528, 0.00081, -0.0157],
+                "rx": 0.0045,
+                "ry": 0.0045,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.7474, 0.00052, -0.01679],
+                "rx": 0.0045,
+                "ry": 0.0045,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.78588, -0.0, -0.018],
+                "rx": 0.0045,
+                "ry": 0.0045,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.80978, -0.00087, -0.01991],
+                "rx": 0.00337,
+                "ry": 0.00337,
+                "rotation": [0, -0.70711, 0, 0.70711]
               }
             ],
             "capStart": true,
@@ -6215,7 +6466,7 @@
             "material": "chrome",
             "role": "body",
             "tone": 0.7,
-            "profile": [[0.0, 0.006], [0.0, 0.0105], [0.026, 0.0105], [0.026, 0.006], [0.0, 0.006]],
+            "profile": [[0.0, 0.006], [0.0, 0.0105], [0.042, 0.0105], [0.042, 0.006], [0.0, 0.006]],
             "axis": [0, -1, 0],
             "origin": [0.04, 0.0, 0.0],
             "member": "elbow",
@@ -6225,6 +6476,12 @@
             "id": "member-hose",
             "of": "hose",
             "member": "elbow",
+            "part": "member"
+          },
+          {
+            "id": "member-hose-rise",
+            "of": "hose-rise",
+            "member": "hose",
             "part": "member"
           },
           {
@@ -6257,6 +6514,18 @@
             "axis": [1, 0, 0],
             "origin": [0.0, 0.0, 0.0],
             "member": "shower",
+            "part": "member"
+          },
+          {
+            "id": "member-nut",
+            "of": "nut",
+            "member": "shower",
+            "part": "member"
+          },
+          {
+            "id": "member-lever",
+            "of": "lever",
+            "member": "lever",
             "part": "member"
           },
           {
@@ -6378,6 +6647,20 @@
             "anchor": "wall-top"
           },
           {
+            "id": "support-wall-elbow",
+            "kind": "revolve",
+            "bone": "elbow",
+            "material": "chrome",
+            "role": "ground",
+            "tone": 0.3,
+            "profile": [[0.0, 0.0], [0.0, 0.016], [0.01, 0.0064], [0.01, 0.0]],
+            "axis": [1, 0, 0],
+            "origin": [0.0, 0.0, 0.0],
+            "member": "elbow",
+            "part": "support",
+            "anchor": "wall-elbow"
+          },
+          {
             "id": "mass-rail",
             "kind": "ellipsoid",
             "bone": "rail",
@@ -6418,20 +6701,48 @@
             },
             "member": "shower",
             "part": "mass"
+          },
+          {
+            "id": "mass-holder",
+            "kind": "ellipsoid",
+            "bone": "holder",
+            "material": "chrome",
+            "role": "detail",
+            "tone": 0.7,
+            "radii": [0.007, 0.006, 0.006],
+            "transform": {
+              "translation": [0.015, 0.0, 0.0]
+            },
+            "member": "holder",
+            "part": "mass"
+          },
+          {
+            "id": "mass-hose",
+            "kind": "ellipsoid",
+            "bone": "hose",
+            "material": "epdm-hose",
+            "role": "detail",
+            "tone": 0.55,
+            "radii": [0.014, 0.005, 0.005],
+            "transform": {
+              "translation": [0.39, 0.0, 0.0]
+            },
+            "member": "hose",
+            "part": "mass"
           }
         ],
         "decisions": [
           {
-            "en": "Body: a 22 mm chrome rail between two end brackets, each a wall rosette of 44 mm, a round arm and a 30 mm end socket with a domed cap. The sliding holder is a 34 mm sleeve around the rail with a clamp button on the left and a forked arm of 55 by 20 mm; between its two cheeks the socket turns on two pivot pins: a conical clip of 34 to 38 mm with a slot of 14 mm at the front, through which the hose slips in. The hand shower sits with the cone of its handle in that clip, the conical hose nut hanging under it: a round handle of 25 to 29 mm, a neck that flattens and widens from 26 to 31 mm as it runs onto the lower back of the spray disc and sinks into its dome, and the disc of 110 mm, 26 mm thick, with a domed back, a rounded rim and the rubber nozzle field of 90 mm as a texture plate. The wall elbow is a 60 mm escutcheon, a 34 mm valve body with a domed end, the G 1/2 outlet pointing down with the conical hose nut, and a quarter-turn lever with its boss on the right side. The hose of 13 mm hangs as one bight of 1.2 m between the two nuts, lofted through 42 circles.",
-            "de": "Körper: eine verchromte Stange von 22 mm zwischen zwei Endhaltern, jeder mit Wandrosette von 44 mm, rundem Arm und Endhülse von 30 mm mit gewölbter Kappe. Der Gleithalter ist eine Hülse von 34 mm um die Stange mit Klemmknopf links und einem Gabelarm von 55 mal 20 mm; zwischen dessen zwei Wangen dreht die Aufnahme auf zwei Gelenkzapfen: eine konische Klammer von 34 bis 38 mm mit einem Schlitz von 14 mm an der Vorderseite, durch den der Schlauch eingelegt wird. Die Handbrause sitzt mit dem Konus ihres Griffs in dieser Klammer, die konische Schlauchmutter hängt darunter: ein runder Griff von 25 bis 29 mm, ein Hals, der sich von 26 auf 31 mm abflacht und verbreitert, auf den unteren Rücken der Brausescheibe läuft und in ihrer Wölbung aufgeht, und die Scheibe von 110 mm, 26 mm dick, mit gewölbtem Rücken, gerundetem Rand und dem Gummidüsenfeld von 90 mm als Texturplatte. Der Wandanschluss ist eine Rosette von 60 mm, ein Ventilkörper von 34 mm mit gewölbtem Ende, der Abgang G 1/2 nach unten mit der konischen Schlauchmutter und ein Vierteldrehhebel mit Nabe auf der rechten Seite. Der Schlauch von 13 mm hängt als ein Bogen von 1,2 m zwischen den beiden Muttern, durch 42 Kreise geloftet."
+            "en": "Body: a 22 mm chrome rail between two end brackets, each a wall rosette of 44 mm, a round arm and a 30 mm end socket with a domed cap. The sliding holder is a 34 mm sleeve around the rail with a clamp button on the left and a forked arm of 55 by 20 mm; between its two cheeks the socket turns on two pivot pins: a conical clip of 34 to 38 mm with a slot of 14 mm at the front, through which the hose slips in. The hand shower sits with the cone of its handle in that clip, the conical hose nut hanging under it: a round handle of 25 to 29 mm, a neck that flattens and widens from 26 to 31 mm as it runs onto the lower back of the spray disc and sinks into its dome, and the disc of 110 mm, 26 mm thick, with a domed back, a rounded rim and the rubber nozzle field of 90 mm as a texture plate. The wall elbow is a 60 mm escutcheon, a 34 mm valve body with a domed end, the G 1/2 outlet pointing down with the conical hose nut, and a quarter-turn lever with its boss on the right side. The hose of 13 mm hangs as one bight of 1.2 m between the two nuts, lofted through 42 circles. Pass 1 of the rework: the hose is two lofts that meet in one seam at the top of the bight, each ending in a plug of three quarters of the hose diameter inside the other, the falling leg with the bight on the elbow and the rising leg on its own bone hinged in the conical nut, so that the hose stays centred in the nut when the hand shower is tilted. Added at 7.5 mm: the crimp ferrules of 17 mm at both hose ends, the 16 mm spray selector button on the front of the handle under the disc, and the relief of the spray face (centre cap of 25 mm and the ring of 6 mm between the inner and the outer nozzle zone) as texture.",
+            "de": "Körper: eine verchromte Stange von 22 mm zwischen zwei Endhaltern, jeder mit Wandrosette von 44 mm, rundem Arm und Endhülse von 30 mm mit gewölbter Kappe. Der Gleithalter ist eine Hülse von 34 mm um die Stange mit Klemmknopf links und einem Gabelarm von 55 mal 20 mm; zwischen dessen zwei Wangen dreht die Aufnahme auf zwei Gelenkzapfen: eine konische Klammer von 34 bis 38 mm mit einem Schlitz von 14 mm an der Vorderseite, durch den der Schlauch eingelegt wird. Die Handbrause sitzt mit dem Konus ihres Griffs in dieser Klammer, die konische Schlauchmutter hängt darunter: ein runder Griff von 25 bis 29 mm, ein Hals, der sich von 26 auf 31 mm abflacht und verbreitert, auf den unteren Rücken der Brausescheibe läuft und in ihrer Wölbung aufgeht, und die Scheibe von 110 mm, 26 mm dick, mit gewölbtem Rücken, gerundetem Rand und dem Gummidüsenfeld von 90 mm als Texturplatte. Der Wandanschluss ist eine Rosette von 60 mm, ein Ventilkörper von 34 mm mit gewölbtem Ende, der Abgang G 1/2 nach unten mit der konischen Schlauchmutter und ein Vierteldrehhebel mit Nabe auf der rechten Seite. Der Schlauch von 13 mm hängt als ein Bogen von 1,2 m zwischen den beiden Muttern, durch 42 Kreise geloftet. Überarbeitung, Durchgang 1: der Schlauch besteht aus zwei Lofts, die sich am oberen Ende des Bogens in einer Fuge treffen und je mit einem Zapfen von drei Vierteln des Schlauchdurchmessers im anderen stecken, der fallende Strang mit dem Bogen am Wandanschluss und der steigende Strang an einem eigenen, in der Konusmutter gelenkig gelagerten Knochen, damit der Schlauch beim Neigen der Handbrause mittig in der Mutter bleibt. Für 7,5 mm ergänzt: die Presshülsen von 17 mm an beiden Schlauchenden, die 16 mm grosse Strahlwahltaste vorn am Griff unter der Scheibe und das Relief der Düsenfläche (Mittelkappe von 25 mm und der 6 mm breite Ring zwischen innerer und äusserer Düsenzone) als Textur."
           },
           {
-            "en": "Thermal: every region has one layer, so each surface is its body solid: the rail with brackets and holder, the valve with its outlet nut and lever, the hose, the handle with its hose nut, and the head with the neck that runs into its back. The rail tube is dry; its 1.2 mm wall is the hollow tube of the structure list. The water path of the hidden spray region runs as a core through the valve bore, the outlet, the hose (9 mm bore in the 13 mm hose), the handle and neck, and the chamber behind the nozzle plate. The spray-mist emitter is the nozzle field as a plate 1 mm proud of the face; the vapour plume leaves from a patch on the upper rim of the head.",
-            "de": "Thermik: jede Region hat eine Schicht, daher ist jede Oberfläche ihr Körpervolumen: die Stange mit Haltern und Gleithalter, das Ventil mit Abgangsmutter und Hebel, der Schlauch, der Griff mit seiner Schlauchmutter und der Kopf mit dem Hals, der in seinen Rücken läuft. Das Stangenrohr ist trocken; seine Wand von 1,2 mm ist das Hohlrohr der Tragwerksliste. Der Wasserweg der verdeckten Region Strahl läuft als Kern durch Ventilbohrung, Abgang, Schlauch (9 mm Bohrung im 13-mm-Schlauch), Griff und Hals und die Kammer hinter der Düsenplatte. Der Emitter spray-mist ist das Düsenfeld als Platte 1 mm vor der Fläche; die Dampffahne verlässt den Kopf an einem Fleck am oberen Rand."
+            "en": "Thermal: every region has one layer, so each surface is its body solid: the rail with brackets and holder, the valve with its outlet nut and lever, the hose, the handle with its hose nut, and the head with the neck that runs into its back. The rail tube is dry; its 1.2 mm wall is the hollow tube of the structure list. The water path of the hidden spray region runs as a core through the valve bore, the outlet, the hose (9 mm bore in the 13 mm hose), the handle and neck, and the chamber behind the nozzle plate. The spray-mist emitter is the nozzle field as a plate 1 mm proud of the face; the vapour plume leaves from a patch on the upper rim of the head. Pass 1 of the rework: hose wall and water column follow the split of the hose into the leg on the elbow and the leg on the hose bone, so the warm water stays inside the hose in every pose.",
+            "de": "Thermik: jede Region hat eine Schicht, daher ist jede Oberfläche ihr Körpervolumen: die Stange mit Haltern und Gleithalter, das Ventil mit Abgangsmutter und Hebel, der Schlauch, der Griff mit seiner Schlauchmutter und der Kopf mit dem Hals, der in seinen Rücken läuft. Das Stangenrohr ist trocken; seine Wand von 1,2 mm ist das Hohlrohr der Tragwerksliste. Der Wasserweg der verdeckten Region Strahl läuft als Kern durch Ventilbohrung, Abgang, Schlauch (9 mm Bohrung im 13-mm-Schlauch), Griff und Hals und die Kammer hinter der Düsenplatte. Der Emitter spray-mist ist das Düsenfeld als Platte 1 mm vor der Fläche; die Dampffahne verlässt den Kopf an einem Fleck am oberen Rand. Überarbeitung, Durchgang 1: Schlauchwand und Wassersäule folgen der Teilung des Schlauchs in den Strang am Wandanschluss und den Strang am Schlauchknochen, sodass das warme Wasser in jeder Pose im Schlauch bleibt."
           },
           {
-            "en": "Structure: the load path is the rail tube of 22 by 1.2 mm between the bracket axes, the two bracket studs into the wall with the pin at the lower and the roller at the upper bracket, the clamp ring and the forked arm of the holder, the pivot pin, the handle tube of 21 by 2 mm, the neck spine and the nozzle plate of the hand shower, the brass elbow with its outlet, and the hose hanging from both nuts as a tension member; joints at the lever axis, the sliding ring and the tilt axis; masses in the rail, in the valve body and in the neck of the hand shower.",
-            "de": "Tragwerk: der Lastpfad ist das Stangenrohr 22 mal 1,2 mm zwischen den Halterachsen, die zwei Halterbolzen in die Wand mit dem Festlager am unteren und dem Rollenlager am oberen Halter, Klemmring und Gabelarm des Gleithalters, der Gelenkzapfen, das Griffrohr 21 mal 2 mm, der Halsgrat und die Düsenplatte der Handbrause, der Messingbogen mit seinem Abgang und der Schlauch, der als Zugglied an beiden Muttern hängt; Gelenke an Hebelachse, Gleitring und Schwenkachse; Massen in der Stange, im Ventilkörper und im Hals der Handbrause."
+            "en": "Structure: the load path is the rail tube of 22 by 1.2 mm between the bracket axes, the two bracket studs into the wall with the pin at the lower and the roller at the upper bracket, the clamp ring and the forked arm of the holder, the pivot pin, the handle tube of 21 by 2 mm, the neck spine and the nozzle plate of the hand shower, the brass elbow with its outlet, and the hose hanging from both nuts as a tension member; joints at the lever axis, the sliding ring and the tilt axis; masses in the rail, in the valve body and in the neck of the hand shower. Pass 1 of the rework: the wall elbow is carried by the wall itself (third support), the rising hose leg hangs as its own member with its mass from the hose nut of the hand shower, and the falling leg hangs from the elbow.",
+            "de": "Tragwerk: der Lastpfad ist das Stangenrohr 22 mal 1,2 mm zwischen den Halterachsen, die zwei Halterbolzen in die Wand mit dem Festlager am unteren und dem Rollenlager am oberen Halter, Klemmring und Gabelarm des Gleithalters, der Gelenkzapfen, das Griffrohr 21 mal 2 mm, der Halsgrat und die Düsenplatte der Handbrause, der Messingbogen mit seinem Abgang und der Schlauch, der als Zugglied an beiden Muttern hängt; Gelenke an Hebelachse, Gleitring und Schwenkachse; Massen in der Stange, im Ventilkörper und im Hals der Handbrause. Überarbeitung, Durchgang 1: der Wandanschluss wird von der Wand selbst getragen (drittes Auflager), der steigende Schlauchstrang hängt als eigenes Glied mit seiner Masse an der Schlauchmutter der Handbrause, und der fallende Strang hängt am Wandanschluss."
           }
         ]
       },
@@ -6599,69 +6910,9 @@
             "tone": 0.55,
             "sections": [
               {
-                "at": [0.09388, 0.54576, 0.1],
-                "rx": 0.0075,
-                "ry": 0.0075
-              },
-              {
-                "at": [0.08583, 0.51136, 0.09981],
-                "rx": 0.0075,
-                "ry": 0.0075
-              },
-              {
-                "at": [0.08327, 0.47755, 0.09925],
-                "rx": 0.0075,
-                "ry": 0.0075
-              },
-              {
-                "at": [0.08379, 0.4414, 0.09831],
-                "rx": 0.0075,
-                "ry": 0.0075
-              },
-              {
-                "at": [0.085, 0.4, 0.097],
-                "rx": 0.0075,
-                "ry": 0.0075
-              },
-              {
-                "at": [0.08537, 0.34151, 0.09458],
-                "rx": 0.0075,
-                "ry": 0.0075
-              },
-              {
-                "at": [0.08558, 0.27429, 0.09257],
-                "rx": 0.0075,
-                "ry": 0.0075
-              },
-              {
-                "at": [0.08561, 0.20074, 0.09089],
-                "rx": 0.0075,
-                "ry": 0.0075
-              },
-              {
-                "at": [0.08543, 0.12324, 0.08943],
-                "rx": 0.0075,
-                "ry": 0.0075
-              },
-              {
-                "at": [0.08498, 0.04417, 0.08809],
-                "rx": 0.0075,
-                "ry": 0.0075
-              },
-              {
-                "at": [0.08425, -0.03407, 0.08678],
-                "rx": 0.0075,
-                "ry": 0.0075
-              },
-              {
-                "at": [0.0832, -0.10911, 0.08539],
-                "rx": 0.0075,
-                "ry": 0.0075
-              },
-              {
                 "at": [0.08179, -0.17855, 0.08383],
-                "rx": 0.0075,
-                "ry": 0.0075
+                "rx": 0.00562,
+                "ry": 0.00562
               },
               {
                 "at": [0.08, -0.24, 0.082],
@@ -6741,6 +6992,108 @@
             ],
             "capStart": true,
             "capEnd": true
+          },
+          {
+            "id": "hose-rise",
+            "kind": "loft",
+            "bone": "hose",
+            "material": "epdm-hose",
+            "role": "body",
+            "tone": 0.55,
+            "sections": [
+              {
+                "at": [0.0, 0.0, 0.0],
+                "rx": 0.0075,
+                "ry": 0.0075,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.03454, -0.00744, -0.00019],
+                "rx": 0.0075,
+                "ry": 0.0075,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.06839, -0.0094, -0.00075],
+                "rx": 0.0075,
+                "ry": 0.0075,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.10452, -0.00824, -0.00169],
+                "rx": 0.0075,
+                "ry": 0.0075,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.1459, -0.0063, -0.003],
+                "rx": 0.0075,
+                "ry": 0.0075,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.20437, -0.0049, -0.00542],
+                "rx": 0.0075,
+                "ry": 0.0075,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.27158, -0.0035, -0.00743],
+                "rx": 0.0075,
+                "ry": 0.0075,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.34511, -0.00217, -0.00911],
+                "rx": 0.0075,
+                "ry": 0.0075,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.42261, -0.00098, -0.01057],
+                "rx": 0.0075,
+                "ry": 0.0075,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.50167, -4e-05, -0.01191],
+                "rx": 0.0075,
+                "ry": 0.0075,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.57991, 0.00061, -0.01322],
+                "rx": 0.0075,
+                "ry": 0.0075,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.65496, 0.00089, -0.01461],
+                "rx": 0.0075,
+                "ry": 0.0075,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.72441, 0.0007, -0.01617],
+                "rx": 0.0075,
+                "ry": 0.0075,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.78588, -0.0, -0.018],
+                "rx": 0.0075,
+                "ry": 0.0075,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.81832, -0.00147, -0.02121],
+                "rx": 0.00562,
+                "ry": 0.00562,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              }
+            ],
+            "capStart": true,
+            "capEnd": true
           }
         ],
         "thermal": [
@@ -6800,6 +7153,11 @@
             "region": "hose"
           },
           {
+            "id": "th-hose-rise",
+            "of": "hose-rise",
+            "region": "hose"
+          },
+          {
             "id": "th-handle",
             "of": "handle",
             "region": "handle"
@@ -6818,69 +7176,9 @@
             "tone": 0.5,
             "sections": [
               {
-                "at": [0.09388, 0.54576, 0.1],
-                "rx": 0.0045,
-                "ry": 0.0045
-              },
-              {
-                "at": [0.08583, 0.51136, 0.09981],
-                "rx": 0.0045,
-                "ry": 0.0045
-              },
-              {
-                "at": [0.08327, 0.47755, 0.09925],
-                "rx": 0.0045,
-                "ry": 0.0045
-              },
-              {
-                "at": [0.08379, 0.4414, 0.09831],
-                "rx": 0.0045,
-                "ry": 0.0045
-              },
-              {
-                "at": [0.085, 0.4, 0.097],
-                "rx": 0.0045,
-                "ry": 0.0045
-              },
-              {
-                "at": [0.08537, 0.34151, 0.09458],
-                "rx": 0.0045,
-                "ry": 0.0045
-              },
-              {
-                "at": [0.08558, 0.27429, 0.09257],
-                "rx": 0.0045,
-                "ry": 0.0045
-              },
-              {
-                "at": [0.08561, 0.20074, 0.09089],
-                "rx": 0.0045,
-                "ry": 0.0045
-              },
-              {
-                "at": [0.08543, 0.12324, 0.08943],
-                "rx": 0.0045,
-                "ry": 0.0045
-              },
-              {
-                "at": [0.08498, 0.04417, 0.08809],
-                "rx": 0.0045,
-                "ry": 0.0045
-              },
-              {
-                "at": [0.08425, -0.03407, 0.08678],
-                "rx": 0.0045,
-                "ry": 0.0045
-              },
-              {
-                "at": [0.0832, -0.10911, 0.08539],
-                "rx": 0.0045,
-                "ry": 0.0045
-              },
-              {
                 "at": [0.08179, -0.17855, 0.08383],
-                "rx": 0.0045,
-                "ry": 0.0045
+                "rx": 0.00337,
+                "ry": 0.00337
               },
               {
                 "at": [0.08, -0.24, 0.082],
@@ -6956,6 +7254,110 @@
                 "at": [0.04, -0.04, 0.0],
                 "rx": 0.0045,
                 "ry": 0.0045
+              }
+            ],
+            "capStart": true,
+            "capEnd": true,
+            "region": "spray",
+            "slender": true
+          },
+          {
+            "id": "th-water-hose-rise",
+            "kind": "loft",
+            "bone": "hose",
+            "material": "water",
+            "role": "body",
+            "tone": 0.5,
+            "sections": [
+              {
+                "at": [0.0, 0.0, 0.0],
+                "rx": 0.0045,
+                "ry": 0.0045,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.03454, -0.00744, -0.00019],
+                "rx": 0.0045,
+                "ry": 0.0045,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.06839, -0.0094, -0.00075],
+                "rx": 0.0045,
+                "ry": 0.0045,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.10452, -0.00824, -0.00169],
+                "rx": 0.0045,
+                "ry": 0.0045,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.1459, -0.0063, -0.003],
+                "rx": 0.0045,
+                "ry": 0.0045,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.20437, -0.0049, -0.00542],
+                "rx": 0.0045,
+                "ry": 0.0045,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.27158, -0.0035, -0.00743],
+                "rx": 0.0045,
+                "ry": 0.0045,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.34511, -0.00217, -0.00911],
+                "rx": 0.0045,
+                "ry": 0.0045,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.42261, -0.00098, -0.01057],
+                "rx": 0.0045,
+                "ry": 0.0045,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.50167, -4e-05, -0.01191],
+                "rx": 0.0045,
+                "ry": 0.0045,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.57991, 0.00061, -0.01322],
+                "rx": 0.0045,
+                "ry": 0.0045,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.65496, 0.00089, -0.01461],
+                "rx": 0.0045,
+                "ry": 0.0045,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.72441, 0.0007, -0.01617],
+                "rx": 0.0045,
+                "ry": 0.0045,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.78588, -0.0, -0.018],
+                "rx": 0.0045,
+                "ry": 0.0045,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.81832, -0.00147, -0.02121],
+                "rx": 0.00337,
+                "ry": 0.00337,
+                "rotation": [0, -0.70711, 0, 0.70711]
               }
             ],
             "capStart": true,
@@ -7057,9 +7459,28 @@
             "part": "member"
           },
           {
+            "id": "member-outlet",
+            "kind": "revolve",
+            "bone": "elbow",
+            "material": "chrome",
+            "role": "body",
+            "tone": 0.7,
+            "profile": [[0.0, 0.0], [0.0, 0.009], [0.042, 0.009], [0.042, 0.0]],
+            "axis": [0, -1, 0],
+            "origin": [0.04, 0.0, 0.0],
+            "member": "elbow",
+            "part": "member"
+          },
+          {
             "id": "member-hose",
             "of": "hose",
             "member": "elbow",
+            "part": "member"
+          },
+          {
+            "id": "member-hose-rise",
+            "of": "hose-rise",
+            "member": "hose",
             "part": "member"
           },
           {
@@ -7095,7 +7516,7 @@
             "material": "abs-chrome",
             "role": "body",
             "tone": 0.82,
-            "profile": [[-0.01, 0.0], [-0.01, 0.008], [0.164, 0.008], [0.164, 0.0]],
+            "profile": [[-0.04, 0.0], [-0.04, 0.008], [0.164, 0.008], [0.164, 0.0]],
             "axis": [1, 0, 0],
             "origin": [0.0, 0.0, 0.0],
             "member": "shower",
@@ -7157,6 +7578,20 @@
             "anchor": "wall-top"
           },
           {
+            "id": "support-wall-elbow",
+            "kind": "revolve",
+            "bone": "elbow",
+            "material": "chrome",
+            "role": "ground",
+            "tone": 0.3,
+            "profile": [[0.0, 0.0], [0.0, 0.018], [0.016, 0.0072], [0.016, 0.0]],
+            "axis": [1, 0, 0],
+            "origin": [0.0, 0.0, 0.0],
+            "member": "elbow",
+            "part": "support",
+            "anchor": "wall-elbow"
+          },
+          {
             "id": "mass-rail",
             "kind": "ellipsoid",
             "bone": "rail",
@@ -7197,20 +7632,48 @@
             },
             "member": "shower",
             "part": "mass"
+          },
+          {
+            "id": "mass-holder",
+            "kind": "ellipsoid",
+            "bone": "holder",
+            "material": "chrome",
+            "role": "detail",
+            "tone": 0.7,
+            "radii": [0.009, 0.0075, 0.0075],
+            "transform": {
+              "translation": [0.015, 0.0, 0.0]
+            },
+            "member": "holder",
+            "part": "mass"
+          },
+          {
+            "id": "mass-hose",
+            "kind": "ellipsoid",
+            "bone": "hose",
+            "material": "epdm-hose",
+            "role": "detail",
+            "tone": 0.55,
+            "radii": [0.016, 0.0075, 0.0075],
+            "transform": {
+              "translation": [0.39, 0.0, 0.0]
+            },
+            "member": "hose",
+            "part": "mass"
           }
         ],
         "decisions": [
           {
-            "en": "Body, authored for 15 mm: the rail tube stays at its 22 mm; each bracket is one turned piece (rosette running into the arm) and a plain end socket; the wall elbow is one turned body from the escutcheon to the rounded valve end with the outlet and its nut as one 25 mm cylinder; the holder is the sleeve, the clamp button and one block for arm and hinge; the hand shower is one turned handle that takes in the socket and the hose nut, and a plain lens for the spray disc. The handle ends as a dome in the lower back of the disc; the lever (10 mm), the neck tongue and the nozzle plate are below the feature and left out; the hose is drawn at the feature, 15 mm for its true 13 mm.",
-            "de": "Körper, für 15 mm entworfen: das Stangenrohr bleibt bei seinen 22 mm; jeder Halter ist ein Drehteil (Rosette läuft in den Arm) und eine glatte Endhülse; der Wandanschluss ist ein Drehkörper von der Rosette bis zum gerundeten Ventilende mit Abgang und Mutter als ein Zylinder von 25 mm; der Gleithalter besteht aus Hülse, Klemmknopf und einem Block für Arm und Gelenk; die Handbrause ist ein gedrehter Griff, der Aufnahme und Schlauchmutter einschließt, und eine schlichte Linse für die Brausescheibe. Der Griff endet als Kuppe im unteren Rücken der Scheibe; Hebel (10 mm), Halszunge und Düsenplatte liegen unter dem kleinsten Merkmal und entfallen; der Schlauch ist im kleinsten Merkmal gezeichnet, 15 mm für wahre 13 mm."
+            "en": "Body, authored for 15 mm: the rail tube stays at its 22 mm; each bracket is one turned piece (rosette running into the arm) and a plain end socket; the wall elbow is one turned body from the escutcheon to the rounded valve end with the outlet and its nut as one 25 mm cylinder; the holder is the sleeve, the clamp button and one block for arm and hinge; the hand shower is one turned handle that takes in the socket and the hose nut, and a plain lens for the spray disc. The handle ends as a dome in the lower back of the disc; the lever (10 mm), the neck tongue and the nozzle plate are below the feature and left out; the hose is drawn at the feature, 15 mm for its true 13 mm. Pass 1 of the rework: the hose is two lofts that meet in one seam at the top of the bight, each ending in a plug of three quarters of the hose diameter inside the other, the falling leg with the bight on the elbow and the rising leg on its own bone hinged in the conical nut, so that the hose stays centred in the nut when the hand shower is tilted.",
+            "de": "Körper, für 15 mm entworfen: das Stangenrohr bleibt bei seinen 22 mm; jeder Halter ist ein Drehteil (Rosette läuft in den Arm) und eine glatte Endhülse; der Wandanschluss ist ein Drehkörper von der Rosette bis zum gerundeten Ventilende mit Abgang und Mutter als ein Zylinder von 25 mm; der Gleithalter besteht aus Hülse, Klemmknopf und einem Block für Arm und Gelenk; die Handbrause ist ein gedrehter Griff, der Aufnahme und Schlauchmutter einschließt, und eine schlichte Linse für die Brausescheibe. Der Griff endet als Kuppe im unteren Rücken der Scheibe; Hebel (10 mm), Halszunge und Düsenplatte liegen unter dem kleinsten Merkmal und entfallen; der Schlauch ist im kleinsten Merkmal gezeichnet, 15 mm für wahre 13 mm. Überarbeitung, Durchgang 1: der Schlauch besteht aus zwei Lofts, die sich am oberen Ende des Bogens in einer Fuge treffen und je mit einem Zapfen von drei Vierteln des Schlauchdurchmessers im anderen stecken, der fallende Strang mit dem Bogen am Wandanschluss und der steigende Strang an einem eigenen, in der Konusmutter gelenkig gelagerten Knochen, damit der Schlauch beim Neigen der Handbrause mittig in der Mutter bleibt."
           },
           {
-            "en": "Thermal: the five surface regions are their body solids, the layers are merged into them; the hidden spray region is the water core of the hose and the chamber in the head; the nozzle field is the spray-mist outlet plate and the plume leaves from the upper rim.",
-            "de": "Thermik: die fünf Oberflächenregionen sind ihre Körpervolumen, die Schichten gehen darin auf; die verdeckte Region Strahl ist der Wasserkern des Schlauchs und die Kammer im Kopf; das Düsenfeld ist die Austrittsplatte von spray-mist, die Fahne verlässt den Kopf am oberen Rand."
+            "en": "Thermal: the five surface regions are their body solids, the layers are merged into them; the hidden spray region is the water core of the hose and the chamber in the head; the nozzle field is the spray-mist outlet plate and the plume leaves from the upper rim. Pass 1 of the rework: hose wall and water column follow the split of the hose into the leg on the elbow and the leg on the hose bone, so the warm water stays inside the hose in every pose.",
+            "de": "Thermik: die fünf Oberflächenregionen sind ihre Körpervolumen, die Schichten gehen darin auf; die verdeckte Region Strahl ist der Wasserkern des Schlauchs und die Kammer im Kopf; das Düsenfeld ist die Austrittsplatte von spray-mist, die Fahne verlässt den Kopf am oberen Rand. Überarbeitung, Durchgang 1: Schlauchwand und Wassersäule folgen der Teilung des Schlauchs in den Strang am Wandanschluss und den Strang am Schlauchknochen, sodass das warme Wasser in jeder Pose im Schlauch bleibt."
           },
           {
-            "en": "Structure: rail as a 22 mm rod between the bracket studs, pin below and roller above, the holder as one bar from the rail to the tilt axis, the handle as a 16 mm rod, the elbow stub and the hanging hose; joints at the sliding ring and the tilt axis; three masses.",
-            "de": "Tragwerk: die Stange als Stab von 22 mm zwischen den Halterbolzen, Festlager unten und Rollenlager oben, der Gleithalter als ein Stab von der Stange zur Schwenkachse, der Griff als Stab von 16 mm, der Anschlussstutzen und der hängende Schlauch; Gelenke an Gleitring und Schwenkachse; drei Massen."
+            "en": "Structure: rail as a 22 mm rod between the bracket studs, pin below and roller above, the holder as one bar from the rail to the tilt axis, the handle as a 16 mm rod, the elbow stub and the hanging hose; joints at the sliding ring and the tilt axis; three masses. Pass 1 of the rework: the wall elbow is carried by the wall itself (third support), the rising hose leg hangs as its own member with its mass from the hose nut of the hand shower, and the falling leg hangs from the elbow.",
+            "de": "Tragwerk: die Stange als Stab von 22 mm zwischen den Halterbolzen, Festlager unten und Rollenlager oben, der Gleithalter als ein Stab von der Stange zur Schwenkachse, der Griff als Stab von 16 mm, der Anschlussstutzen und der hängende Schlauch; Gelenke an Gleitring und Schwenkachse; drei Massen. Überarbeitung, Durchgang 1: der Wandanschluss wird von der Wand selbst getragen (drittes Auflager), der steigende Schlauchstrang hängt als eigenes Glied mit seiner Masse an der Schlauchmutter der Handbrause, und der fallende Strang hängt am Wandanschluss."
           }
         ]
       },
@@ -7323,49 +7786,9 @@
             "tone": 0.55,
             "sections": [
               {
-                "at": [0.09388, 0.54576, 0.1],
-                "rx": 0.015,
-                "ry": 0.015
-              },
-              {
-                "at": [0.08449, 0.50017, 0.09967],
-                "rx": 0.015,
-                "ry": 0.015
-              },
-              {
-                "at": [0.08342, 0.45389, 0.09867],
-                "rx": 0.015,
-                "ry": 0.015
-              },
-              {
-                "at": [0.085, 0.4, 0.097],
-                "rx": 0.015,
-                "ry": 0.015
-              },
-              {
-                "at": [0.0855, 0.30884, 0.09353],
-                "rx": 0.015,
-                "ry": 0.015
-              },
-              {
-                "at": [0.08561, 0.20074, 0.09089],
-                "rx": 0.015,
-                "ry": 0.015
-              },
-              {
-                "at": [0.08524, 0.08375, 0.08875],
-                "rx": 0.015,
-                "ry": 0.015
-              },
-              {
-                "at": [0.08425, -0.03407, 0.08678],
-                "rx": 0.015,
-                "ry": 0.015
-              },
-              {
-                "at": [0.08254, -0.14468, 0.08464],
-                "rx": 0.015,
-                "ry": 0.015
+                "at": [0.0855, -0.145, 0.0846],
+                "rx": 0.01125,
+                "ry": 0.01125
               },
               {
                 "at": [0.08, -0.24, 0.082],
@@ -7435,6 +7858,90 @@
             ],
             "capStart": true,
             "capEnd": true
+          },
+          {
+            "id": "hose-rise",
+            "kind": "loft",
+            "bone": "hose",
+            "material": "epdm-hose",
+            "role": "body",
+            "tone": 0.55,
+            "sections": [
+              {
+                "at": [-0.00956, 0.00293, 0.0],
+                "rx": 0.00825,
+                "ry": 0.00825,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.0, 0.0, 0.0],
+                "rx": 0.015,
+                "ry": 0.015,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.0458, -0.00157, -0.0003],
+                "rx": 0.015,
+                "ry": 0.015,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.0958, -0.00118, -0.0013],
+                "rx": 0.015,
+                "ry": 0.015,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.14579, -0.0003, -0.003],
+                "rx": 0.015,
+                "ry": 0.015,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.23678, 0.00131, -0.0065],
+                "rx": 0.015,
+                "ry": 0.015,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.34576, 0.00323, -0.0091],
+                "rx": 0.015,
+                "ry": 0.015,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.46175, 0.00478, -0.01125],
+                "rx": 0.015,
+                "ry": 0.015,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.57976, 0.00536, -0.0132],
+                "rx": 0.015,
+                "ry": 0.015,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.6908, 0.00382, -0.0154],
+                "rx": 0.015,
+                "ry": 0.015,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.78588, -0.0, -0.018],
+                "rx": 0.015,
+                "ry": 0.015,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.82531, -0.00209, -0.02259],
+                "rx": 0.01125,
+                "ry": 0.01125,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              }
+            ],
+            "capStart": true,
+            "capEnd": true
           }
         ],
         "thermal": [
@@ -7472,49 +7979,9 @@
             "tone": 0.55,
             "sections": [
               {
-                "at": [0.09388, 0.54576, 0.1],
-                "rx": 0.0065,
-                "ry": 0.0065
-              },
-              {
-                "at": [0.08449, 0.50017, 0.09967],
-                "rx": 0.0065,
-                "ry": 0.0065
-              },
-              {
-                "at": [0.08342, 0.45389, 0.09867],
-                "rx": 0.0065,
-                "ry": 0.0065
-              },
-              {
-                "at": [0.085, 0.4, 0.097],
-                "rx": 0.0065,
-                "ry": 0.0065
-              },
-              {
-                "at": [0.0855, 0.30884, 0.09353],
-                "rx": 0.0065,
-                "ry": 0.0065
-              },
-              {
-                "at": [0.08561, 0.20074, 0.09089],
-                "rx": 0.0065,
-                "ry": 0.0065
-              },
-              {
-                "at": [0.08524, 0.08375, 0.08875],
-                "rx": 0.0065,
-                "ry": 0.0065
-              },
-              {
-                "at": [0.08425, -0.03407, 0.08678],
-                "rx": 0.0065,
-                "ry": 0.0065
-              },
-              {
-                "at": [0.08254, -0.14468, 0.08464],
-                "rx": 0.0065,
-                "ry": 0.0065
+                "at": [0.0855, -0.145, 0.0846],
+                "rx": 0.00487,
+                "ry": 0.00487
               },
               {
                 "at": [0.08, -0.24, 0.082],
@@ -7580,6 +8047,92 @@
                 "at": [0.04, 0.0, 0.0],
                 "rx": 0.0065,
                 "ry": 0.0065
+              }
+            ],
+            "capStart": true,
+            "capEnd": true,
+            "region": "hose",
+            "slender": true
+          },
+          {
+            "id": "th-hose-rise",
+            "kind": "loft",
+            "bone": "hose",
+            "material": "epdm-hose",
+            "role": "body",
+            "tone": 0.55,
+            "sections": [
+              {
+                "at": [-0.00956, 0.00293, 0.0],
+                "rx": 0.003575,
+                "ry": 0.003575,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.0, 0.0, 0.0],
+                "rx": 0.0065,
+                "ry": 0.0065,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.0458, -0.00157, -0.0003],
+                "rx": 0.0065,
+                "ry": 0.0065,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.0958, -0.00118, -0.0013],
+                "rx": 0.0065,
+                "ry": 0.0065,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.14579, -0.0003, -0.003],
+                "rx": 0.0065,
+                "ry": 0.0065,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.23678, 0.00131, -0.0065],
+                "rx": 0.0065,
+                "ry": 0.0065,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.34576, 0.00323, -0.0091],
+                "rx": 0.0065,
+                "ry": 0.0065,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.46175, 0.00478, -0.01125],
+                "rx": 0.0065,
+                "ry": 0.0065,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.57976, 0.00536, -0.0132],
+                "rx": 0.0065,
+                "ry": 0.0065,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.6908, 0.00382, -0.0154],
+                "rx": 0.0065,
+                "ry": 0.0065,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.78588, -0.0, -0.018],
+                "rx": 0.0065,
+                "ry": 0.0065,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.82531, -0.00209, -0.02259],
+                "rx": 0.00487,
+                "ry": 0.00487,
+                "rotation": [0, -0.70711, 0, 0.70711]
               }
             ],
             "capStart": true,
@@ -7698,7 +8251,7 @@
             "material": "abs-chrome",
             "role": "body",
             "tone": 0.82,
-            "profile": [[-0.01, 0.0], [-0.01, 0.004], [0.158, 0.004], [0.158, 0.0]],
+            "profile": [[-0.04, 0.0], [-0.04, 0.004], [0.158, 0.004], [0.158, 0.0]],
             "axis": [1, 0, 0],
             "origin": [0.0, 0.0, 0.0],
             "slender": true,
@@ -7732,6 +8285,18 @@
             "part": "member"
           },
           {
+            "id": "member-hose",
+            "of": "hose",
+            "member": "elbow",
+            "part": "member"
+          },
+          {
+            "id": "member-hose-rise",
+            "of": "hose-rise",
+            "member": "hose",
+            "part": "member"
+          },
+          {
             "id": "support-wall-low",
             "kind": "revolve",
             "bone": "rail",
@@ -7758,6 +8323,20 @@
             "member": "rail",
             "part": "support",
             "anchor": "wall-top"
+          },
+          {
+            "id": "support-wall-elbow",
+            "kind": "revolve",
+            "bone": "elbow",
+            "material": "chrome",
+            "role": "ground",
+            "tone": 0.3,
+            "profile": [[0.0, 0.0], [0.0, 0.015], [0.03, 0.006], [0.03, 0.0]],
+            "axis": [1, 0, 0],
+            "origin": [0.0, 0.0, 0.0],
+            "member": "elbow",
+            "part": "support",
+            "anchor": "wall-elbow"
           },
           {
             "id": "mass-rail",
@@ -7800,20 +8379,34 @@
             },
             "member": "shower",
             "part": "mass"
+          },
+          {
+            "id": "mass-hose",
+            "kind": "ellipsoid",
+            "bone": "hose",
+            "material": "epdm-hose",
+            "role": "detail",
+            "tone": 0.55,
+            "radii": [0.02, 0.015, 0.015],
+            "transform": {
+              "translation": [0.39, 0.0, 0.0]
+            },
+            "member": "hose",
+            "part": "mass"
           }
         ],
         "decisions": [
           {
-            "en": "Body, authored for 30 mm: rail, sockets and caps are one pole of 30 mm with two wall stubs; the wall elbow is one stepped turned block (escutcheon, valve and outlet); the holder is one block from the rail to the socket; the hand shower is a 30 mm handle rod with a domed end and a plain disc of 110 by 30 mm; lever, clamp button, nuts and nozzle plate are left out. The hose is drawn at the feature of 30 mm, as the rail is, and keeps its bight.",
-            "de": "Körper, für 30 mm entworfen: Stange, Hülsen und Kappen sind ein Stab von 30 mm mit zwei Wandstutzen; der Wandanschluss ist ein gestufter Drehblock (Rosette, Ventil und Abgang); der Gleithalter ist ein Block von der Stange bis zur Aufnahme; die Handbrause ist ein Griffstab von 30 mm mit gewölbtem Ende und eine schlichte Scheibe von 110 mal 30 mm; Hebel, Klemmknopf, Muttern und Düsenplatte entfallen. Der Schlauch ist wie die Stange im kleinsten Merkmal von 30 mm gezeichnet und behält seinen Bogen."
+            "en": "Body, authored for 30 mm: rail, sockets and caps are one pole of 30 mm with two wall stubs; the wall elbow is one stepped turned block (escutcheon, valve and outlet); the holder is one block from the rail to the socket; the hand shower is a 30 mm handle rod with a domed end and a plain disc of 110 by 30 mm; lever, clamp button, nuts and nozzle plate are left out. The hose is drawn at the feature of 30 mm, as the rail is, and keeps its bight; its rising leg runs 91 mm from the wall, clear of the 30 mm pole, and starts with a rounded end inside the handle rod. Pass 1 of the rework: the hose is two lofts that meet in one seam at the top of the bight, each ending in a plug of three quarters of the hose diameter inside the other, the falling leg with the bight on the elbow and the rising leg on its own bone hinged in the conical nut, so that the hose stays centred in the nut when the hand shower is tilted.",
+            "de": "Körper, für 30 mm entworfen: Stange, Hülsen und Kappen sind ein Stab von 30 mm mit zwei Wandstutzen; der Wandanschluss ist ein gestufter Drehblock (Rosette, Ventil und Abgang); der Gleithalter ist ein Block von der Stange bis zur Aufnahme; die Handbrause ist ein Griffstab von 30 mm mit gewölbtem Ende und eine schlichte Scheibe von 110 mal 30 mm; Hebel, Klemmknopf, Muttern und Düsenplatte entfallen. Der Schlauch ist wie die Stange im kleinsten Merkmal von 30 mm gezeichnet und behält seinen Bogen; sein steigender Strang läuft 91 mm vor der Wand, frei vom 30-mm-Stab, und beginnt mit gerundetem Ende im Griffstab. Überarbeitung, Durchgang 1: der Schlauch besteht aus zwei Lofts, die sich am oberen Ende des Bogens in einer Fuge treffen und je mit einem Zapfen von drei Vierteln des Schlauchdurchmessers im anderen stecken, der fallende Strang mit dem Bogen am Wandanschluss und der steigende Strang an einem eigenen, in der Konusmutter gelenkig gelagerten Knochen, damit der Schlauch beim Neigen der Handbrause mittig in der Mutter bleibt."
           },
           {
-            "en": "Thermal: each surface region is its body solid; the hose surface is the hose at its true 13 mm inside the 30 mm body hose; the spray region is the water chamber inside the head; the spray-mist outlet is the face plate and the plume patch sits on the upper rim.",
-            "de": "Thermik: jede Oberflächenregion ist ihr Körpervolumen; die Schlauchoberfläche ist der Schlauch in seinen wahren 13 mm im 30-mm-Körperschlauch; die Region Strahl ist die Wasserkammer im Kopf; der Austritt von spray-mist ist die Stirnplatte, der Fahnenfleck sitzt am oberen Rand."
+            "en": "Thermal: each surface region is its body solid; the hose surface is the hose at its true 13 mm inside the 30 mm body hose; the spray region is the water chamber inside the head; the spray-mist outlet is the face plate and the plume patch sits on the upper rim. Pass 1 of the rework: hose wall and water column follow the split of the hose into the leg on the elbow and the leg on the hose bone, so the warm water stays inside the hose in every pose.",
+            "de": "Thermik: jede Oberflächenregion ist ihr Körpervolumen; die Schlauchoberfläche ist der Schlauch in seinen wahren 13 mm im 30-mm-Körperschlauch; die Region Strahl ist die Wasserkammer im Kopf; der Austritt von spray-mist ist die Stirnplatte, der Fahnenfleck sitzt am oberen Rand. Überarbeitung, Durchgang 1: Schlauchwand und Wassersäule folgen der Teilung des Schlauchs in den Strang am Wandanschluss und den Strang am Schlauchknochen, sodass das warme Wasser in jeder Pose im Schlauch bleibt."
           },
           {
-            "en": "Structure: the rail as a slender rod of its true 22 mm on its two wall stubs, pin below and roller above, the elbow stub, the holder bar and the handle as a slender rod, with three masses; joints are below the feature.",
-            "de": "Tragwerk: die Stange als schlanker Stab ihrer wahren 22 mm auf ihren zwei Wandstutzen, Festlager unten und Rollenlager oben, der Anschlussstutzen, der Halterstab und der Griff als schlanker Stab, mit drei Massen; Gelenke liegen unter dem kleinsten Merkmal."
+            "en": "Structure: the rail as a slender rod of its true 22 mm on its two wall stubs, pin below and roller above, the elbow stub, the holder bar and the handle as a slender rod, with three masses; joints are below the feature. Pass 1 of the rework: the wall elbow is carried by the wall itself (third support), the rising hose leg hangs as its own member with its mass from the hose nut of the hand shower, and the falling leg hangs from the elbow.",
+            "de": "Tragwerk: die Stange als schlanker Stab ihrer wahren 22 mm auf ihren zwei Wandstutzen, Festlager unten und Rollenlager oben, der Anschlussstutzen, der Halterstab und der Griff als schlanker Stab, mit drei Massen; Gelenke liegen unter dem kleinsten Merkmal. Überarbeitung, Durchgang 1: der Wandanschluss wird von der Wand selbst getragen (drittes Auflager), der steigende Schlauchstrang hängt als eigenes Glied mit seiner Masse an der Schlauchmutter der Handbrause, und der fallende Strang hängt am Wandanschluss."
           }
         ]
       },
@@ -7936,34 +8529,9 @@
             "tone": 0.55,
             "sections": [
               {
-                "at": [0.09388, 0.54576, 0.1],
-                "rx": 0.0065,
-                "ry": 0.0065
-              },
-              {
-                "at": [0.08327, 0.47755, 0.09925],
-                "rx": 0.0065,
-                "ry": 0.0065
-              },
-              {
-                "at": [0.085, 0.4, 0.097],
-                "rx": 0.0065,
-                "ry": 0.0065
-              },
-              {
-                "at": [0.08561, 0.25641, 0.09213],
-                "rx": 0.0065,
-                "ry": 0.0065
-              },
-              {
-                "at": [0.08524, 0.08375, 0.08875],
-                "rx": 0.0065,
-                "ry": 0.0065
-              },
-              {
                 "at": [0.0835, -0.09078, 0.08575],
-                "rx": 0.0065,
-                "ry": 0.0065
+                "rx": 0.00487,
+                "ry": 0.00487
               },
               {
                 "at": [0.08, -0.24, 0.082],
@@ -8034,6 +8602,73 @@
             "capStart": true,
             "capEnd": true,
             "slender": true
+          },
+          {
+            "id": "hose-rise",
+            "kind": "loft",
+            "bone": "hose",
+            "material": "epdm-hose",
+            "role": "body",
+            "tone": 0.55,
+            "sections": [
+              {
+                "at": [0.0, 0.0, 0.0],
+                "rx": 0.0065,
+                "ry": 0.0065,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.04575, -0.00858, -0.00033],
+                "rx": 0.0065,
+                "ry": 0.0065,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.09204, -0.00883, -0.00133],
+                "rx": 0.0065,
+                "ry": 0.0065,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.1459, -0.0063, -0.003],
+                "rx": 0.0065,
+                "ry": 0.0065,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.28945, -0.00316, -0.00787],
+                "rx": 0.0065,
+                "ry": 0.0065,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.46209, -0.00048, -0.01125],
+                "rx": 0.0065,
+                "ry": 0.0065,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.63663, 0.00086, -0.01425],
+                "rx": 0.0065,
+                "ry": 0.0065,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.78588, -0.0, -0.018],
+                "rx": 0.0065,
+                "ry": 0.0065,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.82148, -0.00173, -0.0218],
+                "rx": 0.00487,
+                "ry": 0.00487,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              }
+            ],
+            "capStart": true,
+            "capEnd": true,
+            "slender": true
           }
         ],
         "thermal": [
@@ -8055,6 +8690,11 @@
           {
             "id": "th-hose",
             "of": "hose",
+            "region": "hose"
+          },
+          {
+            "id": "th-hose-rise",
+            "of": "hose-rise",
             "region": "hose"
           },
           {
@@ -8140,11 +8780,23 @@
             "material": "abs-chrome",
             "role": "body",
             "tone": 0.82,
-            "profile": [[0.0, 0.0], [0.0, 0.004], [0.165, 0.004], [0.165, 0.0]],
+            "profile": [[-0.04, 0.0], [-0.04, 0.004], [0.165, 0.004], [0.165, 0.0]],
             "axis": [1, 0, 0],
             "origin": [0.0, 0.0, 0.0],
             "slender": true,
             "member": "shower",
+            "part": "member"
+          },
+          {
+            "id": "member-hose",
+            "of": "hose",
+            "member": "elbow",
+            "part": "member"
+          },
+          {
+            "id": "member-hose-rise",
+            "of": "hose-rise",
+            "member": "hose",
             "part": "member"
           },
           {
@@ -8174,6 +8826,20 @@
             "member": "rail",
             "part": "support",
             "anchor": "wall-top"
+          },
+          {
+            "id": "support-wall-elbow",
+            "kind": "revolve",
+            "bone": "elbow",
+            "material": "chrome",
+            "role": "ground",
+            "tone": 0.3,
+            "profile": [[0.0, 0.0], [0.0, 0.014], [0.024, 0.0056], [0.024, 0.0]],
+            "axis": [1, 0, 0],
+            "origin": [0.0, 0.0, 0.0],
+            "member": "elbow",
+            "part": "support",
+            "anchor": "wall-elbow"
           },
           {
             "id": "mass-rail",
@@ -8206,16 +8872,16 @@
         ],
         "decisions": [
           {
-            "en": "Body, a digital miniature below the printable drawing (no part of the set reaches 75 mm across): six solids. Rail and both brackets are one bent bar of the true 22 mm that leaves the wall, runs up 0.69 m and returns to the wall; the wall elbow is one turned cone stump of 60 to 38 mm; the holder is one block from the rail to the socket; the hand shower is a plain handle of 30 mm and a flat disc of 110 by 30 mm on the spray axis; the hose keeps its bight as a slender line of its true 13 mm. End sockets, clamp button, lever, nuts, neck and nozzle plate are left out.",
-            "de": "Körper, eine digitale Miniatur unterhalb der druckbaren Zeichnung (kein Teil der Garnitur erreicht 75 mm): sechs Körper. Stange und beide Halter sind ein gebogener Stab der wahren 22 mm, der die Wand verlässt, 0,69 m hinaufläuft und zur Wand zurückkehrt; der Wandanschluss ist ein gedrehter Kegelstumpf von 60 auf 38 mm; der Gleithalter ist ein Block von der Stange bis zur Aufnahme; die Handbrause ist ein schlichter Griff von 30 mm und eine flache Scheibe von 110 mal 30 mm auf der Strahlachse; der Schlauch behält seinen Bogen als schlanke Linie seiner wahren 13 mm. Endhülsen, Klemmknopf, Hebel, Muttern, Hals und Düsenplatte entfallen."
+            "en": "Body, a digital miniature below the printable drawing (no part of the set reaches 75 mm across): six solids. Rail and both brackets are one bent bar of the true 22 mm that leaves the wall, runs up 0.69 m and returns to the wall; the wall elbow is one turned cone stump of 60 to 38 mm; the holder is one block from the rail to the socket; the hand shower is a plain handle of 30 mm and a flat disc of 110 by 30 mm on the spray axis; the hose keeps its bight as a slender line of its true 13 mm. End sockets, clamp button, lever, nuts, neck and nozzle plate are left out. Pass 1 of the rework: the hose is two lofts that meet in one seam at the top of the bight, each ending in a plug of three quarters of the hose diameter inside the other, the falling leg with the bight on the elbow and the rising leg on its own bone hinged in the conical nut, so that the hose stays centred in the nut when the hand shower is tilted.",
+            "de": "Körper, eine digitale Miniatur unterhalb der druckbaren Zeichnung (kein Teil der Garnitur erreicht 75 mm): sechs Körper. Stange und beide Halter sind ein gebogener Stab der wahren 22 mm, der die Wand verlässt, 0,69 m hinaufläuft und zur Wand zurückkehrt; der Wandanschluss ist ein gedrehter Kegelstumpf von 60 auf 38 mm; der Gleithalter ist ein Block von der Stange bis zur Aufnahme; die Handbrause ist ein schlichter Griff von 30 mm und eine flache Scheibe von 110 mal 30 mm auf der Strahlachse; der Schlauch behält seinen Bogen als schlanke Linie seiner wahren 13 mm. Endhülsen, Klemmknopf, Hebel, Muttern, Hals und Düsenplatte entfallen. Überarbeitung, Durchgang 1: der Schlauch besteht aus zwei Lofts, die sich am oberen Ende des Bogens in einer Fuge treffen und je mit einem Zapfen von drei Vierteln des Schlauchdurchmessers im anderen stecken, der fallende Strang mit dem Bogen am Wandanschluss und der steigende Strang an einem eigenen, in der Konusmutter gelenkig gelagerten Knochen, damit der Schlauch beim Neigen der Handbrause mittig in der Mutter bleibt."
           },
           {
-            "en": "Thermal: the five surface regions are these body solids (the holder counts to the rail); the spray region is the water chamber inside the disc; the spray-mist outlet is the face plate and the plume patch sits on the upper rim.",
-            "de": "Thermik: die fünf Oberflächenregionen sind diese Körper (der Gleithalter zählt zur Stange); die Region Strahl ist die Wasserkammer in der Scheibe; der Austritt von spray-mist ist die Stirnplatte, der Fahnenfleck sitzt am oberen Rand."
+            "en": "Thermal: the five surface regions are these body solids (the holder counts to the rail); the spray region is the water chamber inside the disc; the spray-mist outlet is the face plate and the plume patch sits on the upper rim. Pass 1 of the rework: hose wall and water column follow the split of the hose into the leg on the elbow and the leg on the hose bone, so the warm water stays inside the hose in every pose.",
+            "de": "Thermik: die fünf Oberflächenregionen sind diese Körper (der Gleithalter zählt zur Stange); die Region Strahl ist die Wasserkammer in der Scheibe; der Austritt von spray-mist ist die Stirnplatte, der Fahnenfleck sitzt am oberen Rand. Überarbeitung, Durchgang 1: Schlauchwand und Wassersäule folgen der Teilung des Schlauchs in den Strang am Wandanschluss und den Strang am Schlauchknochen, sodass das warme Wasser in jeder Pose im Schlauch bleibt."
           },
           {
-            "en": "Structure: the bent rail bar itself between pin and roller, the holder block, the elbow stub, the hand shower as one slender rod from the tilt axis to the back of the disc, and two masses: rail with elbow, and hand shower.",
-            "de": "Tragwerk: der gebogene Stangenstab selbst zwischen Festlager und Rollenlager, der Halterblock, der Anschlussstutzen, die Handbrause als ein schlanker Stab von der Schwenkachse zum Rücken der Scheibe und zwei Massen: Stange mit Anschluss sowie Handbrause."
+            "en": "Structure: the bent rail bar itself between pin and roller, the holder block, the elbow stub, the hand shower as one slender rod from the tilt axis to the back of the disc, and two masses: rail with elbow, and hand shower. Pass 1 of the rework: the wall elbow is carried by the wall itself (third support), the rising hose leg hangs as its own member with its mass from the hose nut of the hand shower, and the falling leg hangs from the elbow.",
+            "de": "Tragwerk: der gebogene Stangenstab selbst zwischen Festlager und Rollenlager, der Halterblock, der Anschlussstutzen, die Handbrause als ein schlanker Stab von der Schwenkachse zum Rücken der Scheibe und zwei Massen: Stange mit Anschluss sowie Handbrause. Überarbeitung, Durchgang 1: der Wandanschluss wird von der Wand selbst getragen (drittes Auflager), der steigende Schlauchstrang hängt als eigenes Glied mit seiner Masse an der Schlauchmutter der Handbrause, und der fallende Strang hängt am Wandanschluss."
           }
         ]
       }

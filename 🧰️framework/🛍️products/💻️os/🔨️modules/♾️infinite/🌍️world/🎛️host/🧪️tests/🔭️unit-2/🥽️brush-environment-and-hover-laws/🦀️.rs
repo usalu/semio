@@ -645,11 +645,11 @@ fn inline_terrain_publishes_and_retires_without_tile_requests() {
     let mut state = World3dState::new("surface-1".into(), "controller-1".into());
     let mut scene = scene_with_selection("[]");
     let origin = [9.7382, 52.3759];
-    let rows: Vec<_> = (99..=131).map(|height| vec![height; 33]).collect();
+    let rows_millimetres: Vec<_> = [99_125, 115_375, 131_625].into_iter().map(|height| vec![height; 5]).collect();
     scene.world_3d.as_mut().unwrap().terrain_json = Some(serde_json::json!({
         "projectOriginLon": origin[0],
         "projectOriginLat": origin[1],
-        "elevationGrid": { "bounds": [9.7282, 52.3659, 9.7482, 52.3859], "rows": rows },
+        "elevationGrid": { "bounds": [9.7282, 52.3659, 9.7482, 52.3859], "rowsMillimetres": rows_millimetres },
         "overlays": {
             "positions": [{ "id": "center", "name": "Center", "coordinates": origin }],
             "routes": [],
@@ -658,10 +658,10 @@ fn inline_terrain_publishes_and_retires_without_tile_requests() {
     }).to_string());
     let viewport = Rect { x: 0.0, y: 0.0, w: 400.0, h: 400.0 };
     let camera = Camera3d { position: Vec3::new(0.0, 0.0, 300.0), target: Vec3::ZERO, up: Vec3::new(0.0, 1.0, 0.0), fov_y: 45.0_f32.to_radians(), near: 0.1, far: 1000.0, projection: ui_scene::math::CameraProjection3d::Perspective, zoom: 1.0 };
-    scene.world_3d.as_mut().unwrap().interaction_json = Some(r#"{"terrainBrush":{"action":"editElevation","arguments":{"operation":"smooth","radius":4,"value":50}}}"#.into());
+    scene.world_3d.as_mut().unwrap().interaction_json = Some(r#"{"terrainBrush":{"action":"editElevation","arguments":{"operation":"raise-lower","radius":4,"value":-0.031}}}"#.into());
     sync_world3d_state(&mut state, &scene, viewport);
     let (brush, _) = state.terrain.terrain_brush().expect("scene projects a validated terrain brush");
-    assert_eq!((brush.action.as_str(), brush.arguments.operation.as_str(), brush.arguments.radius, brush.arguments.value), ("editElevation", "smooth", 4, 50));
+    assert_eq!((brush.action.as_str(), brush.arguments.operation.as_str(), brush.arguments.radius, brush.arguments.value), ("editElevation", "raise-lower", 4, -0.031));
     assert!(apply_terrain_style_if_changed_state(&mut state.session, &mut state.scene, &mut state.terrain).is_empty());
     let (draws, evicted) = sync_terrain_state(&mut state.session, &mut state.authority, &mut state.scene, &mut state.terrain, &mut state.assets, &camera);
     assert!(draws.is_empty() && evicted.is_empty());
@@ -683,7 +683,8 @@ fn inline_terrain_publishes_and_retires_without_tile_requests() {
     assert!(evicted.is_empty());
     assert!(state.scene.meshes.contains_key(&draw.mesh_key));
     let overlays = state.terrain.tile_overlays(draw.tile).expect("overlays sample the embedded grid");
-    assert!((overlays.positions[0].point[2] - 115.0).abs() < 0.01);
+    assert!((overlays.positions[0].point[2] - 115.375).abs() < 0.01);
+    assert_eq!(state.terrain.pick_terrain_sample([0.0, 0.0, 300.0], [0.0, 0.0, -1.0]), Some([2, 1]));
     assert!(state.terrain.pending_terrain_tile_urls.is_empty());
     assert!(take_next_world3d_asset(&mut state.assets).is_none());
 

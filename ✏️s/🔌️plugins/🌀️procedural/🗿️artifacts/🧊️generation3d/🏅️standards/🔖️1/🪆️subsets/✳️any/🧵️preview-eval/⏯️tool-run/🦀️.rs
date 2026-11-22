@@ -298,10 +298,26 @@ pub struct PreviewEvalRunLink {
     /// closing job compares its own run id against this before touching anything
     /// (`📓️preview-rearm-after-inspector-edit-2026-09-14.md`).
     pub(crate) job_run: Option<u64>,
-    /// 🧾️ The applied document-edit stack this link last owed the previews for
-    /// ([`super::applied_document_edits_digest`]). `None` until the first poll, so a boot owes nothing
-    /// extra; a move owes every attached window exactly one fresh evaluation, whichever route moved it.
-    pub(crate) applied_edits: Option<u64>,
+    /// 🧾️ The document the previews were last owed for. `None` until the first poll, so a boot owes
+    /// nothing extra; a move owes every attached window exactly one fresh evaluation, whichever route
+    /// moved it.
+    pub(crate) document: Option<PreviewEvalDocumentStamp>,
+}
+
+/// 🧾️ What an evaluation is computed from, read off the poll's committed inputs and independent of the
+/// route that changed them: the content revision of the applied document-edit stack, and the
+/// provisional (scrub) generation.
+///
+/// 🐛️ `undo` and `redo` are FRAMEWORK-RESERVED, intercepted before `dispatch_action` reaches the app,
+/// so the emit route ([`owe_attached_previews_for_mutations`](super::owe_attached_previews_for_mutations))
+/// never sees them: `mod+z` rewound the document and the preview kept the undone geometry
+/// (`📓️react-final-sweep-2026-09-15.md` §7.1). The content revision folds exactly the applied edit
+/// ids and the checkpoint, so a gesture's edit, an undo, a redo, `revertToCommand` and a checkpoint
+/// checkout all move it, and a poll — which carries no history projection — can still read it.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct PreviewEvalDocumentStamp {
+    pub content_revision: [u8; 32],
+    pub provisional_generation: u64,
 }
 
 /// ⏯️ A run action a surface has asked the host for, and the reading of the document's `ToolRunView`
@@ -364,7 +380,7 @@ pub(crate) fn run_action_effect(action: &str, args: semio_framework_value::DslVa
 /// window owes an evaluation, finalize a complete run whose document, settings or contributions moved
 /// on (the next poll then starts the fresh one), and wake a live run so it sees a changed roster. An
 /// aborted run stays down until a gesture owes its windows again.
-pub fn preview_eval_run_effects(session: &mut FlowEvalSession, link: &mut PreviewEvalRunLink, windows: &[(&str, &'static str)], run: Option<semio_plugin::ToolRunPollView<'_>>, servable: bool, applied_edits: u64) -> Vec<Effect> {
+pub fn preview_eval_run_effects(session: &mut FlowEvalSession, link: &mut PreviewEvalRunLink, windows: &[(&str, &'static str)], run: Option<semio_plugin::ToolRunPollView<'_>>, servable: bool, document: PreviewEvalDocumentStamp) -> Vec<Effect> {
     let identifiers = windows.iter().map(|(window_id, _)| *window_id).collect::<Vec<_>>();
     let mut cursor = 0;
     let mut retained = false;
@@ -384,10 +400,10 @@ pub fn preview_eval_run_effects(session: &mut FlowEvalSession, link: &mut Previe
     link.attach_windows(windows);
     link.wake();
     if windows.is_empty() || !servable {
-        link.applied_edits = Some(applied_edits);
+        link.document = Some(document);
         return Vec::new();
     }
-    if link.applied_edits.is_some_and(|held| held != applied_edits) {
+    if link.document.is_some_and(|held| held != document) {
         for (window_id, _) in windows {
             if session.note_window_tick_outcome(window_id, true, PREVIEW_EVAL_BOOKKEEPING_GRANT).is_err() {
                 return Vec::new();
@@ -395,7 +411,7 @@ pub fn preview_eval_run_effects(session: &mut FlowEvalSession, link: &mut Previe
         }
         link.wake();
     }
-    link.applied_edits = Some(applied_edits);
+    link.document = Some(document);
     let owed = windows.iter().any(|(window_id, _)| session.window_tick_owed(window_id));
     let run = run.filter(|run| run.tool_id == PREVIEW_EVAL_TOOL_ID);
     let state = run.map(|run| run.state);

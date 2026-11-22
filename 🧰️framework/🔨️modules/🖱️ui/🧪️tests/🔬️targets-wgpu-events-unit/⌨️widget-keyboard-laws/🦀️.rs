@@ -367,3 +367,55 @@ fn a_focused_toggle_flips_on_enter_and_space() {
     }
 }
 //#endregion ⌨️WidgetKeyboardTests
+
+//#region 🖼️IconSelectorCellLaws
+// 🖼️ An icon selector is one retained node that synthesizes four real cells (mode Select, editor Input, Import and Clear Buttons) — React's four tab stops.
+fn icon_selector_with_cells(value: &str) -> (UiTree, NodeId, NodeId, [NodeId; 4]) {
+    use semio_ui_declaration::ui::UiIconSelectNode;
+    let mut tree = UiTree::new();
+    let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 300.0, 300.0));
+    let select = UiIconSelectNode { id: "icon".into(), value: value.into(), uniform: true, classifier_kind: "icon".into(), on_change: action(), presence: UiPresence::default(), menu: None };
+    let icon = leaf(&mut tree, Some(root), 1, UiNode::IconSelect(select.clone()), (0.0, 0.0, 200.0, 200.0));
+    let cells = std::array::from_fn(|index| {
+        let (key, spec) = semio_ui_retained_tree::reconcile::icon_select_cell(&select, index, None);
+        let cell = tree.mint_composite_row(icon, Node::new(NodeKey::Explicit(key), WidgetSpec(spec))).expect("a cell mints");
+        let bucket = tree.node_mut(cell).unwrap();
+        (bucket.layout.x, bucket.layout.y, bucket.layout.width, bucket.layout.height) = (0.0, 40.0 * index as f32, 200.0, 36.0);
+        cell
+    });
+    (tree, root, icon, cells)
+}
+
+#[test]
+fn an_icon_selector_has_four_tab_stops_and_is_not_one_itself() {
+    let (tree, root, icon, cells) = icon_selector_with_cells("text:Hi");
+    let mut router = EventRouter::new("main");
+    assert_eq!(router.focus.first_tab_stop(&tree, root), Some(cells[0]), "the mode select comes first");
+    assert_eq!(router.focus.tab_order, cells.to_vec(), "mode select, editor, import, clear — and never the selector node");
+    assert!(!router.focus.tab_order.contains(&icon));
+    assert!(matches!(tree.node(cells[0]).unwrap().spec.0, UiNode::Select(_)) && matches!(tree.node(cells[3]).unwrap().spec.0, UiNode::Button(_)));
+}
+
+#[test]
+fn focusing_the_selector_itself_starts_no_edit_and_only_the_editor_cell_owns_a_buffer() {
+    let (mut tree, _root, icon, cells) = icon_selector_with_cells("text:Hi");
+    let mut router = EventRouter::new("main");
+    router.focus.set_focus(&mut tree, Some(icon), true);
+    assert!(tree.node(icon).unwrap().state.edit.is_none(), "a press on the frame or preview never begins an edit");
+    router.focus.set_focus(&mut tree, Some(cells[1]), true);
+    assert_eq!(tree.node(cells[1]).unwrap().state.edit.as_ref().map(|edit| edit.text.as_str()), Some("Hi"), "the editor's buffer holds the inner text");
+}
+
+#[test]
+fn the_editor_commit_encodes_under_the_stored_icons_mode_and_a_popup_row_commits_the_migrated_icon() {
+    let (tree, _root, _icon, cells) = icon_selector_with_cells("text:circle");
+    let editor = tree.node(cells[1]).unwrap();
+    let fired = semio_ui_wgpu_events_commit::edit_commit_action(editor, "circle-dot").expect("the editor commits");
+    assert_eq!(fired.input.and_then(|value| value.as_str().map(str::to_string)).as_deref(), Some("text:circle-dot"));
+    let commit = |value: &str| semio_ui_retained_tree::reconcile::select_commit_value(&tree, cells[0], value);
+    assert_eq!(commit("emoji"), "emoji:text:circle", "React strips only the typst and emoji prefixes, so a text prefix stays");
+    assert_eq!(commit("math"), "typst:text:circle");
+    assert_eq!(commit("text"), "text:circle", "the current mode keeps the stored string");
+    assert_eq!((commit("url"), commit("data"), commit("vector")), (String::new(), String::new(), String::new()), "modes that cannot be derived clear the icon");
+}
+//#endregion 🖼️IconSelectorCellLaws

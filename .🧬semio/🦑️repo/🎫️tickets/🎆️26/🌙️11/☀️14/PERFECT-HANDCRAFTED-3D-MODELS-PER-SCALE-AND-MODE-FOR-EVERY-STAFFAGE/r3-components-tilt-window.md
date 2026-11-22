@@ -208,3 +208,7 @@ Script: `r5-tilt-window-volumes.py`. Renders (opened with Read) under `🗑️ge
 - The 1:200 front 2D still draws the clearance as a double line. The true outline of the stop lies 18 mm inside it, below the 30 mm feature.
 - Moiré on the thermal glass faces is a coincident-face artefact of the renderer.
 - The remaining points of round 3 (idealised stay roller, 8 mm hardware) stand.
+
+## Canonical component readback, 2026-11-21
+
+Canonical source `315c6ca893481216`. Two separate 4 mm panes surround a clear 16 mm gas cavity and a perimeter seal. The glass and handle travel with the tilting sash. The stay, hinges, sill and stops remain distinct. All twelve exported scenes reopened (572,504 bytes). The strict catalog source readback passed.

@@ -127,10 +127,10 @@ fn settle_hub_workspace(shell: &mut ShellState) {
         #[cfg(not(target_arch = "wasm32"))]
         {
             let _ = semio_renderer_wgpu_host_base::pump_renderer_io_sessions(1);
-            drive(ActionsCtx::of(&mut shell).pump_directory_events());
+            drive(FramePumpsCtx::of(&mut shell).pump_directory_events());
         }
         #[cfg(target_arch = "wasm32")]
-        semio_framework_async::block_on(ActionsCtx::of(&mut shell).pump_directory_events());
+        semio_framework_async::block_on(FramePumpsCtx::of(&mut shell).pump_directory_events());
         std::thread::sleep(std::time::Duration::from_millis(5));
     }
 }

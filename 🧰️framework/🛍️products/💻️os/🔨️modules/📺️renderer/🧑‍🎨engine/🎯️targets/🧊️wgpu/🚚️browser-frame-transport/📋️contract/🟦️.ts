@@ -6,6 +6,7 @@ import type { WgpuPluginModule, WgpuPluginRegistrySelection } from "../../🧩�
 import type { WgpuBootDescriptor, WgpuHostAppearance, WgpuHostPlatform, WgpuHostPlatformPrefs, WgpuHostStorageSnapshot } from "../../🧭️boot-descriptor/🟦️.ts";
 import type { OriginalBootstrapRequest, OriginalBootstrapResponse } from "@semio-tech/framework-actor/retained-turn/bootstrap/port";
 import type { BrowserMediaCommand, BrowserMediaRelease, BrowserMediaResult, PresentedMediaSlot } from "@semio-tech/framework-os/modules/renderer/engine/media/browser";
+import type { TutorialVideoOverlayPlan } from "@semio-tech/framework-os/modules/renderer/engine/media/browser/tutorial-video";
 import type { InteractiveJobUiMessage, InteractiveJobWorkerMessage } from "../../🔌️browser-interactive-job-port/🟦️.ts";
 import type { ReferenceImageDimensions } from "../../🖼️reference-image-decode/🟦️.ts";
 import type { OriginalBootstrapOwner } from "../../../../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/🏛️bootstrap/🟦️.ts";
@@ -24,6 +25,10 @@ export const FRAME_WORKER_BYTE_CAPACITY = 256 * 1024;
 export const FRAME_WORKER_BOOT_STALL_TIMEOUT_MS = FRAME_WORKER_BOOT_LIVENESS_POLICY.silenceTimeoutMs;
 
 export const FRAME_WORKER_POINTER_CAPACITY = 16;
+/** 🧾️ The Rust page decoder counts pointer moves, wheel samples, and resizes against this shared wire limit. */
+export const FRAME_WORKER_CONTINUOUS_PAGE_CAPACITY = FRAME_WORKER_POINTER_CAPACITY + 2;
+export const FRAME_WORKER_LOSSLESS_PAGE_CAPACITY = 16;
+export const FRAME_WORKER_PENDING_REPLACEABLE_CAPACITY = FRAME_WORKER_LOSSLESS_ITEM_CAPACITY + FRAME_WORKER_CONTINUOUS_PAGE_CAPACITY;
 
 export const FRAME_WORKER_MESSAGE_BYTE_CAPACITY = 4 * 1024;
 
@@ -107,8 +112,6 @@ export type BrowserFramePointer = BrowserFrameModifiers & {
 
 export type BrowserFrameReplaceableEvent =
   | ({ readonly kind: "pointer-move" } & BrowserFramePointer)
-  | ({ readonly kind: "pointer-leave" } & BrowserFramePointer)
-  | ({ readonly kind: "wheel"; readonly x: number; readonly y: number; readonly deltaX: number; readonly deltaY: number } & BrowserFrameModifiers)
   | { readonly kind: "resize"; readonly width: number; readonly height: number; readonly dpr: number };
 
 export type BrowserHubDocumentRemote =
@@ -125,16 +128,18 @@ export type BrowserFrameAccessibilityAddress = {
 };
 
 export type BrowserFrameLosslessEvent =
-  | ({ readonly kind: "pointer-cancel" } & BrowserFramePointer)
+  | ({ readonly kind: "wheel"; readonly x: number; readonly y: number; readonly deltaX: number; readonly deltaY: number } & BrowserFrameModifiers)
+  | ({ readonly kind: "pointer-cancel" | "pointer-leave" } & BrowserFramePointer)
   | ({ readonly kind: "pointer-down" | "pointer-up"; readonly button: "primary" | "secondary" | "middle" } & BrowserFramePointer)
-  | { readonly kind: "key-down" | "key-up"; readonly key: string; readonly shift: boolean; readonly ctrl: boolean; readonly alt: boolean; readonly meta: boolean }
+  | { readonly kind: "key-down"; readonly key: string; readonly shift: boolean; readonly ctrl: boolean; readonly alt: boolean; readonly meta: boolean; readonly repeat: boolean }
+  | { readonly kind: "key-up"; readonly key: string; readonly shift: boolean; readonly ctrl: boolean; readonly alt: boolean; readonly meta: boolean }
   | { readonly kind: "text" | "paste" | "paste-image-data-url"; readonly text: string }
   | { readonly kind: "ime-start" | "ime-cancel" }
   | { readonly kind: "ime-update"; readonly text: string; readonly cursor: number }
   | { readonly kind: "ime-commit"; readonly text: string }
   | ({ readonly kind: "accessibility-focus" | "accessibility-blur" | "accessibility-activate" } & BrowserFrameAccessibilityAddress)
   | ({ readonly kind: "accessibility-value"; readonly value: string } & BrowserFrameAccessibilityAddress)
-  // ⏱️ These two are minted straight into a wire batch by `takeLosslessWireBatch` rather than enqueued
+  // ⏱️ These two are minted straight into a wire batch by `takeWireBatch` rather than enqueued
   // as input, so unlike every other member they carry the batch stamp on the type instead of
   // acquiring it at flush.
   | { readonly kind: "hub-document-status"; readonly documentKey: string; readonly remote: BrowserHubDocumentRemote; readonly timestampMs: number }
@@ -210,13 +215,15 @@ export type BrowserFrameWorkerBatch = {
   readonly inputSequence: number;
   readonly generation: number;
   readonly timestampMs: number;
-  readonly replaceable: readonly BrowserFrameReplaceableEvent[];
-  readonly lossless: readonly BrowserFrameWireLosslessEvent[];
+  readonly events: readonly BrowserFrameWireEvent[];
 };
 
 export type BrowserFrameWireLosslessEvent =
   | (Exclude<BrowserFrameLosslessEvent, { readonly kind: "text" | "paste" | "paste-image-data-url" | "ime-update" | "ime-commit" }> & { readonly timestampMs: number })
   | { readonly kind: "text-chunk"; readonly streamId: number; readonly target: "text" | "paste" | "paste-image-data-url" | "ime-update" | "ime-commit"; readonly text: string; readonly totalBytes: number; readonly final: boolean; readonly timestampMs: number; readonly cursor?: number };
+
+export type BrowserFrameWireReplaceableEvent = BrowserFrameReplaceableEvent & { readonly timestampMs: number };
+export type BrowserFrameWireEvent = BrowserFrameWireReplaceableEvent | BrowserFrameWireLosslessEvent;
 
 /** 🔬️ The renderer's `#[wasm_bindgen]` introspection exports (`🗣️Interpreter/🎯️targets/🧊️wgpu/🦀️.rs`
  * region `🔬️IntrospectionExports`) read `UI_ENGINE`, a thread-local that lives inside `semio-frame-worker`.
@@ -277,6 +284,8 @@ export type BrowserFrameWorkerMessage =
   | {
       readonly kind: "frame";
       readonly mediaSlots: readonly PresentedMediaSlot[];
+      /** 📹️ The shell-owned tutorial video plan the worker split off the presented slots; absent means none. */
+      readonly tutorialVideo?: TutorialVideoOverlayPlan | null;
       readonly lifecycle: number;
       readonly frameSequence: number;
       readonly generation: number;
@@ -318,6 +327,7 @@ export interface BrowserFrameWorkerPort {
 
 export type BrowserFrameDirectives = {
   readonly mediaSlots: readonly PresentedMediaSlot[];
+  readonly tutorialVideo: TutorialVideoOverlayPlan | null;
   readonly cursor: string;
   readonly fullscreen: boolean | null;
   readonly generation: number;

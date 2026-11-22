@@ -84,10 +84,10 @@ pub mod owned_abi {
         pub events: Vec<semio_framework::kernel::Event>,
         pub command_page: Option<(semio_framework::kernel::CommandPageCursor, semio_framework::kernel::FixedCommandPage)>,
         pub cold_pair_page: Option<semio_framework::kernel::ColdDocumentPairPage>,
-        pub limits: PollRequestLimits,
+        pub limits: OwnedCorePollLimits,
     }
 
-    pub use semio_framework_kernel_identity::PollRequestLimits;
+    pub use semio_framework_kernel_identity::{OwnedCorePollLimits, PollRequestLimits};
 
     /// 🌉️ Hand-written, not derived — `events`/`command_page`/`budget` are foreign kernel types
     /// (`semio_framework::kernel::*`, owned by the `semio-framework`/`semio-os-kernel`

@@ -5,6 +5,7 @@ use semio_framework_value::NativeEncodeControl;
 use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use crate::layer_model::RasterTransform;
+use semio_s_artifact_stdio_semio_image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry, SemioImageSnapshot};
 fn invalid(message:impl Into<String>)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,message)}
 fn limit(kind:ValueRefusalKind,message:&str)->ValueError{ValueError::new(kind,message)}
 #[derive(semio_framework_dsl_record_derive::DslRecord)]
@@ -20,7 +21,102 @@ pub struct RasterNativeDocument{
  members:Vec<RasterNativeMember>,
 }
 #[derive(semio_framework_dsl_record_derive::DslRecord)]
-struct RasterNativeAsset{key:String,child:RasterAssetChild}
+struct RasterNativeAsset {
+    key: String,
+    child: RasterAssetChild,
+    #[dsl(block)]
+    image: Option<RasterNativeImage>,
+}
+
+#[derive(semio_framework_dsl_record_derive::DslRecord)]
+struct RasterNativeImage {
+    schema: String,
+    width: u32,
+    height: u32,
+    colorspace: SemioColorspace,
+    bit_depth: u8,
+    frames: Vec<RasterNativeImageFrame>,
+    #[dsl(block)]
+    icc: Option<RasterNativeColorProfile>,
+    metadata: Vec<SemioImageMetadataEntry>,
+}
+
+#[derive(semio_framework_dsl_record_derive::DslRecord)]
+struct RasterNativeImageFrame {
+    delay_ms: u32,
+    #[dsl(base64)]
+    rgba8: Vec<u8>,
+}
+
+#[derive(semio_framework_dsl_record_derive::DslRecord)]
+struct RasterNativeColorProfile {
+    #[dsl(base64)]
+    bytes: Vec<u8>,
+}
+
+impl RasterNativeImage {
+    fn from_snapshot(image: &SemioImageSnapshot, control: &mut NativeEncodeControl<'_>) -> Result<Self, ValueError> {
+        let mut frames = control.allocate_vec(image.frames.len())?;
+        for frame in &image.frames {
+            frames.push(RasterNativeImageFrame { delay_ms: frame.delay_ms, rgba8: control.copy_bytes(&frame.rgba8)? });
+            control.checkpoint()?;
+        }
+        let mut metadata = control.allocate_vec(image.metadata.len())?;
+        for entry in &image.metadata {
+            metadata.push(SemioImageMetadataEntry { key: control.copy_text(&entry.key)?, value: control.copy_text(&entry.value)? });
+            control.checkpoint()?;
+        }
+        let icc = image.icc.as_deref().map(|bytes| control.copy_bytes(bytes).map(|bytes| RasterNativeColorProfile { bytes })).transpose()?;
+        Ok(Self {
+            schema: control.copy_text(&image.schema)?,
+            width: image.width,
+            height: image.height,
+            colorspace: image.colorspace,
+            bit_depth: image.bit_depth,
+            frames,
+            icc,
+            metadata,
+        })
+    }
+
+    fn into_snapshot(self, control: &mut NativeDecodeControl<'_>) -> Result<SemioImageSnapshot, ValueError> {
+        let mut frames = control.allocate_vec(self.frames.len())?;
+        for frame in self.frames {
+            frames.push(SemioImageFrame { delay_ms: frame.delay_ms, rgba8: frame.rgba8 });
+            control.checkpoint()?;
+        }
+        Ok(SemioImageSnapshot {
+            schema: self.schema,
+            width: self.width,
+            height: self.height,
+            colorspace: self.colorspace,
+            bit_depth: self.bit_depth,
+            frames,
+            icc: self.icc.map(|profile| profile.bytes),
+            metadata: self.metadata,
+        })
+    }
+}
+
+fn validate_image_child_id(child_id: &str, image: &SemioImageSnapshot, control: &mut NativeDecodeControl<'_>) -> Result<(), ValueError> {
+    let mut hash = crate::RasterImageContentHash::new();
+    control.scoped_stage(|control| {
+        control.begin_stage(0)?;
+        loop {
+            let progress = hash.advance(image, 32_768).map_err(invalid)?;
+            control.advance(progress.processed_bytes)?;
+            if progress.done {
+                return Ok::<_, ValueError>(());
+            }
+        }
+    })?;
+    let digest = hash.finish().ok_or_else(|| invalid("Raster image content digest did not finish"))?;
+    control.charge(crate::RASTER_IMAGE_CHILD_ID_BYTES)?;
+    if crate::raster_image_child_id(digest) != child_id {
+        return Err(invalid("Raster image body does not match its child ID"));
+    }
+    Ok(())
+}
 #[derive(semio_framework_dsl_record_derive::DslRecord)]
 struct RasterNativeLayer{
  parent:Option<u64>,
@@ -86,7 +182,24 @@ impl RasterNativeDocument{
  pub fn from_snapshot(s:&RasterSnapshot,maximum_rows:usize,control:&mut NativeEncodeControl<'_>)->Result<Self,ValueError>{
  let plan=forecast(s,maximum_rows,control)?;control.begin_stage(plan.units(s.assets.len())?)?;
  let mut output=Self{schema:control.copy_text(&s.schema)?,id:control.copy_text(&s.id)?,title:s.title.as_deref().map(|v|control.copy_text(v)).transpose()?,layers:control.allocate_vec(plan.layers)?,assets:control.allocate_vec(s.assets.len())?,values:control.allocate_vec(plan.values)?,items:control.allocate_vec(plan.items)?,members:control.allocate_vec(plan.members)?};
- for(key,child)in s.assets.iter(){let d=&child.target.dialect;output.assets.push(RasterNativeAsset{key:control.copy_text(key)?,child:store::os_store::artifact_child::ArtifactChild::new(control.copy_text(&child.child_id)?,semio_framework_artifact_reference::ArtifactRef{dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind:control.copy_text(&d.artifact_kind)?,standard:control.copy_text(&d.standard)?,subset:control.copy_text(&d.subset)?},artifact_id:control.copy_text(&child.target.artifact_id)?})});control.step()?;}
+ for(key,child)in s.assets.iter(){
+     let dialect = &child.target.dialect;
+     let target = semio_framework_artifact_reference::ArtifactRef {
+         dialect: semio_framework_artifact_reference::ArtifactDialect {
+             artifact_kind: control.copy_text(&dialect.artifact_kind)?,
+             standard: control.copy_text(&dialect.standard)?,
+             subset: control.copy_text(&dialect.subset)?,
+         },
+         artifact_id: control.copy_text(&child.target.artifact_id)?,
+     };
+     let image = child.local_owner::<SemioImageSnapshot>().map(|image| RasterNativeImage::from_snapshot(&image, control)).transpose()?;
+     output.assets.push(RasterNativeAsset {
+         key: control.copy_text(key)?,
+         child: RasterAssetChild::new(control.copy_text(&child.child_id)?, target),
+         image,
+     });
+     control.step()?;
+ }
  let mut pending=control.allocate_vec(plan.layers)?;for(i,node)in s.layers.iter().enumerate().rev(){pending.push((node,None,i));}
  while let Some((node,parent,ordinal))=pending.pop(){let(kind,id,name,visible,locked,opacity,blend,transform,mask)=match node{
  RasterLayerNode::Pixel{id,name,visible,locked,opacity,blend_mode,transform,mask,..}=>("pixel",id,name,visible,locked,opacity,blend_mode,transform,mask.as_ref()),
@@ -153,7 +266,25 @@ impl RasterNativeDocument{
  "adjustment"=>{if row.width.is_some()||row.height.is_some()||row.image.is_some()||row.mask.is_some()||row.parameters.len()>crate::RASTER_OWNED_MAP_CAPACITY{return Err(invalid("Raster adjustment variant fields"))}let mut params=Parameters(RasterOwnedMap::new());for parameter in row.parameters{if let Some((previous,_))=params.0.entry_at(params.0.len().saturating_sub(1)){if !keys_before(previous,&parameter.key,control)?{return Err(invalid("Raster parameter native key order"))}}if params.0.page_required_for_insert(&parameter.key){control.charge(RasterOwnedMap::<semio_framework_value::DslValue>::conservative_page_credit_bytes())?;params.0.admit_one_page().map_err(|reason|limit(ValueRefusalKind::OwnershipLimit,reason))?;}let value=values.0[index(parameter.root,value_count)?].take().ok_or_else(||invalid("Raster multiply owned parameter"))?;if let Err(rejected)=params.0.insert_pre_admitted(parameter.key,value){<semio_framework_value::DslValue as semio_framework_value::FromValue>::retire_decoded(rejected.value);return Err(invalid(rejected.reason))}control.checkpoint()?;}RasterLayerNode::Adjustment{id:row.id,name:row.name,visible:row.visible,locked:row.locked,opacity:row.opacity,blend_mode:row.blend,transform:row.transform,adjustment_kind:row.adjustment.ok_or_else(||invalid("Raster adjustment kind"))?,params:std::mem::take(&mut params.0)}},_=>return Err(invalid("Raster layer native variant"))};layers.0[i]=Some(node);control.step()?;
  }
  let mut snapshot=Snapshot(Some(RasterSnapshot{schema:self.schema,id:self.id,title:self.title,layers:control.allocate_vec(root_ids.len())?,assets:RasterOwnedMap::new()}));for id in root_ids{snapshot.0.as_mut().unwrap().layers.push(layers.0[id].take().ok_or_else(||invalid("Raster root layer"))?);control.checkpoint()?;}
- if self.assets.len()>crate::RASTER_OWNED_MAP_CAPACITY{return Err(limit(ValueRefusalKind::OwnershipLimit,"Raster asset native map capacity"))}for asset in self.assets{let map=&mut snapshot.0.as_mut().unwrap().assets;if let Some((previous,_))=map.entry_at(map.len().saturating_sub(1)){if !keys_before(previous,&asset.key,control)?{return Err(invalid("Raster asset native key order"))}}if map.page_required_for_insert(&asset.key){control.charge(RasterOwnedMap::<RasterAssetChild>::conservative_page_credit_bytes())?;map.admit_one_page().map_err(|reason|limit(ValueRefusalKind::OwnershipLimit,reason))?;}map.insert_pre_admitted(asset.key,asset.child).map_err(|e|invalid(e.reason))?;control.step()?;}
+ if self.assets.len()>crate::RASTER_OWNED_MAP_CAPACITY{return Err(limit(ValueRefusalKind::OwnershipLimit,"Raster asset native map capacity"))}
+ for RasterNativeAsset { key, mut child, image } in self.assets {
+     let map=&mut snapshot.0.as_mut().unwrap().assets;
+     if let Some((previous,_))=map.entry_at(map.len().saturating_sub(1)){
+         if !keys_before(previous,&key,control)?{return Err(invalid("Raster asset native key order"))}
+     }
+     if map.page_required_for_insert(&key){
+         control.charge(RasterOwnedMap::<RasterAssetChild>::conservative_page_credit_bytes())?;
+         map.admit_one_page().map_err(|reason|limit(ValueRefusalKind::OwnershipLimit,reason))?;
+     }
+     if let Some(image) = image {
+         let image = image.into_snapshot(control)?;
+         validate_image_child_id(&child.child_id, &image, control)?;
+         control.charge(semio_framework_value::shared_retirement_allocation_bytes::<SemioImageSnapshot>())?;
+         child.set_local_owner(std::sync::Arc::new(image));
+     }
+     map.insert_pre_admitted(key,child).map_err(|error|invalid(error.reason))?;
+     control.step()?;
+ }
  if values.0.iter().any(Option::is_some)||layers.0.iter().any(Option::is_some){return Err(invalid("Raster orphan native entity"))}Ok(snapshot.0.take().unwrap())
  }
  pub fn ordinary(s:&RasterSnapshot)->Self{Self::from_snapshot(s,usize::MAX,&mut NativeEncodeControl::new(usize::MAX,&mut |_|true)).expect("literal Raster native projection")}

@@ -230,7 +230,7 @@ fn pointer_down_on_a_component_scene_leaf_emits_a_scene_command() {
     let commands = router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 20.0, y: 20.0, button: PointerButton::Secondary, modifiers: Default::default() });
 
     let scene_cmd = commands.iter().find_map(|cmd| match cmd {
-        UiCommand::Scene { window_id, node, surface_id, kind, rect, event } => Some((window_id, node, surface_id, kind, rect, event)),
+        UiCommand::Scene { window_id, node, surface_id, kind, rect, event, .. } => Some((window_id, node, surface_id, kind, rect, event)),
         _ => None,
     });
     let (window_id, node, surface_id, kind, rect, event) = scene_cmd.expect("pointer-down over a ComponentScene leaf should emit UiCommand::Scene");

@@ -435,6 +435,83 @@ impl PollRequestLimits {
     }
 }
 
+/** 🧮️ Fixed positional ceilings carried by the owned Core Poll input. */
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize, Serialize, semio_framework_value::NativeReceive, semio_framework_value::RetireOwned)]
+#[value(crate="::semio_framework_value")]
+pub struct OwnedCorePollLimits(u32, u32, u32, u32, u32, u64, u64, u64, u32, u32, u32);
+
+impl OwnedCorePollLimits {
+    pub const ARITY: usize = 11;
+
+    /// 🔢️ Reads one unsigned scalar in canonical wire order for the streamed JSON writer.
+    pub fn scalar_at(&self, index: usize) -> Option<u64> {
+        Some(match index {
+            0 => self.0.into(),
+            1 => self.1.into(),
+            2 => self.2.into(),
+            3 => self.3.into(),
+            4 => self.4.into(),
+            5 => self.5,
+            6 => self.6,
+            7 => self.7,
+            8 => self.8.into(),
+            9 => self.9.into(),
+            10 => self.10.into(),
+            _ => return None,
+        })
+    }
+
+    /// 🪪️ Applies the decoded ceilings to the live authenticated Poll authority.
+    pub fn narrow(self, authority: semio_framework_actor::OriginalJobBudget) -> Budget {
+        PollRequestLimits::from(self).narrow(authority)
+    }
+}
+
+impl TryFrom<PollRequestLimits> for OwnedCorePollLimits {
+    type Error = semio_framework_value::ValueError;
+
+    fn try_from(request: PollRequestLimits) -> Result<Self, Self::Error> {
+        let retained = request.retained_policy;
+        let extent = |value| u32::try_from(value).map_err(|_| semio_framework_value::ValueError::literal(
+            semio_framework_value::ValueRefusalKind::OwnershipLimit, "owned Core Poll limit exceeds the wasm32 extent",
+        ));
+        Ok(Self(
+            extent(retained.maximum_items)?,
+            extent(retained.maximum_copy_bytes)?,
+            extent(retained.maximum_capacity_bytes)?,
+            extent(retained.maximum_release_bytes)?,
+            extent(retained.maximum_depth)?,
+            request.work_fuel,
+            request.fuel,
+            request.deadline_us,
+            request.max_effects,
+            request.max_patch_bytes,
+            request.max_frames,
+        ))
+    }
+}
+
+impl From<OwnedCorePollLimits> for PollRequestLimits {
+    fn from(limits: OwnedCorePollLimits) -> Self {
+        let OwnedCorePollLimits(items, copy, capacity, release, depth, work_fuel, fuel, deadline_us, max_effects, max_patch_bytes, max_frames) = limits;
+        Self {
+            retained_policy: semio_framework_value::RetainedCloneGrant {
+                maximum_items: items as usize,
+                maximum_copy_bytes: copy as usize,
+                maximum_capacity_bytes: capacity as usize,
+                maximum_release_bytes: release as usize,
+                maximum_depth: depth as usize,
+            },
+            work_fuel,
+            fuel,
+            deadline_us,
+            max_effects,
+            max_patch_bytes,
+            max_frames,
+        }
+    }
+}
+
 /// ⛽️ Per-turn resource ceiling handed to `reactor::poll` — `📜️wit/📜️reactor.wit`'s `budget`
 /// record.
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]

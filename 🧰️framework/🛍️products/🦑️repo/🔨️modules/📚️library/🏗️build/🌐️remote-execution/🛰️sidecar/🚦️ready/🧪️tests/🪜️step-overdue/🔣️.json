@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "line": "Reading the project graph slice (2303 s): checking the file inventory of the tree (333961 distinct source observations) (elapsed seconds of expected seconds) (beyond the expected 600 s) / Prüfe das Dateiverzeichnis des Baums (333961 verschiedene Quellbeobachtungen) (verstrichene Sekunden von erwarteten Sekunden) (über den erwarteten 600 s) 2093 of 600.",
+  "line": "Reading the project graph slice (2093 s, beyond the expected 600 s): checking the file inventory of the tree (333961 distinct source observations) / Prüfe das Dateiverzeichnis des Baums (333961 verschiedene Quellbeobachtungen).",
   "step": {
     "seconds": 2093,
     "bound": 600

@@ -59,3 +59,13 @@ Work in progress: checks running, areas to be set, renders to be judged.
 ## Full fine-scale thermal verification on November 21
 
 The four-scale strict run completed locally in 937.78 seconds with zero findings. The heat solver now bounds probes against individual, demonstrably separated copies before testing triangles. The 125 ladder rungs on the 38.6 m rail exercise this path. [Independent repeated-solid fixtures](digital-thermal-bounds.ts) check containment and masking. [Catalog rule status](digital-volume-status.md).
+
+## Lower heel connection and pin seats reviewed November 21
+
+The detailed structural mesh previously extended a box beyond the lower heel stock. The lower joint now marks both ends of the 60 mm cross tube. The upper joint collar is on the 80 mm transverse pin where that pin is individually represented. The long main members retain their own bindings. The exact published crane passed all thirteen rules at all four scales, the document checks and twelve GLB scenes at 7,903,284 bytes. [Catalogue structural coverage](digital-member-coverage.md).
+
+## November 21 carriage and open truss
+
+Published `ee9104e032eb463250971a14faa7aec4d2fbbb5bf4d4a5a0bb71dd8f5a97eb6a`. The 1:500 mast and two jibs now have visible space between their chords. The trolley runs on four wheels with 125 mm tread radii on two bottom rails. Separate 16 mm cheek plates support the two grooved sheaves and the reeving passes along two rope falls. All four scales use the actual steel for the temperature surfaces and structural connections. The detail views show the cheeks, roller positions and shared carriage frame. The Gherkin regression measures tread contact, wheelbase and sheave groove depth.
+
+All 52 volume checks, both ends of each paper band, schema validation and independent readback of twelve scenes passed. The exported GLB is 8,246,056 bytes. [Buffer measurements](digital-crane-export.md)

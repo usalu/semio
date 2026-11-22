@@ -9,7 +9,7 @@ pub mod native_actor;
 pub mod lifted_sync;
 #[cfg(not(target_arch = "wasm32"))]
 pub use native_actor::{ArtifactActorRunnerHandle, ArtifactActorRunnerTicket, ArtifactActorTerminalJob, ArtifactActorTerminalReason, ArtifactActorTerminalState, ArtifactChannels, ArtifactHost, DocumentSocketReactor, DocumentSocketReactorError, DocumentSocketReactorScope};
-pub use lifted_sync::{FOLDER_EVENT_MAGIC, FolderEventLogStorage, FolderTextStorage};
+pub use lifted_sync::{FOLDER_EVENT_MAGIC, FolderEventLogStorage, FolderTextStorage, NativeFolderArchiveSource, NativeFolderArchiveSeal, FOLDER_ARCHIVE_PAGE_BYTES};
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod unit_tests;

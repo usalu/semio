@@ -97,7 +97,7 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
     /// [`Self::has_pending_applies`] already owes the frame.
     #[cfg(target_arch = "wasm32")]
     pub fn has_pending_settle(&self) -> bool {
-        self.try_lock().ok().and_then(|mut runtime| runtime.interaction_mut().map(|interaction| semio_renderer_wgpu_shell_pointer::PointerCtx::of(&mut interaction.shell).settle_pump_pending())).unwrap_or(false)
+        self.try_lock().ok().and_then(|runtime| runtime.interaction().map(|interaction| semio_renderer_wgpu_shell_pointer::PointerCtx::of(&mut interaction.shell).settle_pump_pending())).unwrap_or(false)
     }
 
     #[cfg(target_arch = "wasm32")]
@@ -113,7 +113,7 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
         self.try_lock().ok()?.interaction_mut()?.frame_fault.take()
     }
 
-    pub fn record_frame_fault(&self, fault: &str) {
+    pub fn record_frame_fault(&self, fault: &'static str) {
         log_debug(&format!("[TRACE] frame fault recorded: {fault}"));
         let mut slot = self.0.frame_fault.lock().expect("runtime frame fault lock");
         if slot.is_none() {
@@ -194,10 +194,7 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
 
     #[cfg(not(target_arch = "wasm32"))]
     pub fn spawn_dispatch_reserved(&self,cursor:RuntimeDispatchCursor,interaction:AppInteractionState){
-        let mailbox = self.clone();
-        let revision = mailbox.0.next_revision.fetch_add(1, Ordering::Relaxed);
-        let owner = RuntimeDispatchReturn::new(mailbox, revision, cursor, interaction);
-        spawn_app_task(owner.run());
+        let mailbox=self.clone();let revision=mailbox.0.next_revision.fetch_add(1,Ordering::Relaxed);let owner=RuntimeDispatchReturn::new(mailbox, revision, cursor, interaction);spawn_app_task(owner.run());
     }
 
     #[cfg(not(target_arch = "wasm32"))]
@@ -364,10 +361,7 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
 
     #[cfg(target_arch = "wasm32")]
     pub fn spawn_dispatch_reserved(&self,cursor:RuntimeDispatchCursor,interaction:AppInteractionState){
-        let mailbox = self.clone();
-        let revision = mailbox.0.next_revision.fetch_add(1, Ordering::Relaxed);
-        let owner = RuntimeDispatchReturn::new(mailbox, revision, cursor, interaction);
-        spawn_app_task(owner.run());
+        let mailbox=self.clone();let revision=mailbox.0.next_revision.fetch_add(1,Ordering::Relaxed);let owner=RuntimeDispatchReturn::new(mailbox, revision, cursor, interaction);spawn_app_task(owner.run());
     }
 
 }

@@ -44,6 +44,12 @@
       "advance": true
     }
   ],
+  "retirement": {
+    "narrowItems": 0,
+    "wideItems": 32,
+    "minimumPaidItemsPerBatch": 2,
+    "maximumTurns": 128
+  },
   "invocation": {
     "address": {
       "owner": {

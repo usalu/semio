@@ -4,7 +4,7 @@
 use crate::editor::remodeling::modes::capture::windows::frames;
 use crate::editor::remodeling::modes::model::windows::model;
 use crate::editor::remodeling::modes::model::tools::reconstruction;
-use semio_plugin::create_default_layout;
+use semio_plugin::{create_default_layout, Axis};
 use semio_plugin::create_named_layout;
 use semio_ui_locale::LocalizedLabel;
 use semio_plugin::ModeDefinition;
@@ -22,7 +22,7 @@ pub fn layout() -> NamedLayout {
     create_named_layout(
         REMODELING_PLAY_LAYOUT_CAPTURE,
         "Capture",
-        create_default_layout(&[frames::REMODELING_PLAY_WINDOW_FRAMES.into(), model::REMODELING_PLAY_WINDOW_MAIN.into()], "row", Some(&[60.0, 40.0]), Some(&["Frames".into(), "Model".into()])),
+        create_default_layout(&[frames::REMODELING_PLAY_WINDOW_FRAMES.into(), model::REMODELING_PLAY_WINDOW_MAIN.into()], Axis::Horizontal, Some(&[0.6, 0.4]), Some(&["Frames".into(), "Model".into()])),
         "builtin",
         Some("video".into()),
         None,

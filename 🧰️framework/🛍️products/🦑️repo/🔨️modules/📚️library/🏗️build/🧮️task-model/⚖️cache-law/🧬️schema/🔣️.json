@@ -13,7 +13,7 @@
         "machineIdentity": ["/Users/", "/home/", "/private/var/", "/var/folders/", "[A-Za-z]:\\\\Users", "\\$\\{?(HOSTNAME|HOME|USER|USERNAME|TMPDIR)\\b"],
         "machineEnvironment": ["HOSTNAME", "HOME", "USER", "USERNAME", "TMPDIR", "PWD", "SEMIO_WORKSPACE_ROOT"],
         "tokens": ["{projectRoot}", "{workspaceRoot}", "{projectName}"],
-        "ignoredInputDirectories": ["🤖️generated", "node_modules", ".cache", ".nx", "dist", "target", "🗑️generated"],
+        "ignoredInputDirectories": ["🤖️generated", "node_modules", ".cache", ".test-scratch", ".nx", "dist", "target", "🗑️generated"],
         "ignoredInputExceptions": ["{projectRoot}/.🧾️store"],
         "findings": ["outputs-missing", "output-absolute", "output-machine-identity", "output-escapes-workspace", "output-not-restorable", "input-uninterpretable", "input-gitignored-without-digest", "input-machine-environment", "command-machine-identity"]
       }

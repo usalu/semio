@@ -1,5 +1,5 @@
 /** 🔌️ Named Wires package exposes complete exact intrinsic state to independent SQL. */
-import{wiresSnapshotToSqliteDatabase,wiresSnapshotFromSqliteDatabase,validateWiresSnapshotSqliteDialect,decodeWiresJsonValue,type WiresSnapshot}from"@semio-tech/reasoning-wires";
+import{wiresSnapshotToSqliteDatabase,wiresSnapshotFromSqliteDatabase,validateWiresSnapshotSqliteDialect,decodeWiresJsonValue,type WiresSnapshot}from"../../../../🟦️.ts";
 import{exportSqliteDatabase,importSqliteDatabase}from"@semio-tech/framework";
 import{Database}from"bun:sqlite";import{expect,test}from"bun:test";
 import fixture from"../../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json";

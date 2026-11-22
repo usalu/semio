@@ -1,5 +1,13 @@
 {
   "version": 1,
+  "openingCases": [
+    { "id": "cold-darwin-directory", "platform": "darwin", "selection": "directory-partition", "backing": null, "recover": false },
+    { "id": "darwin-directory-wins-over-default", "platform": "darwin", "selection": "mounted-image", "backing": "fixed.dir", "recover": false },
+    { "id": "darwin-physical-image-wins-over-default", "platform": "darwin", "selection": "directory-partition", "backing": "fixed.dmg", "recover": true },
+    { "id": "cold-darwin-image", "platform": "darwin", "selection": "mounted-image", "backing": null, "recover": true },
+    { "id": "linux-directory", "platform": "linux", "selection": "directory-partition", "backing": "fixed.dir", "recover": false },
+    { "id": "windows-directory", "platform": "win32", "selection": "directory-partition", "backing": "fixed.dir", "recover": false }
+  ],
   "cases": [
     {
       "id": "exact-inactive-old-receipt-data",

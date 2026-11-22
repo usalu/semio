@@ -361,6 +361,19 @@ function releaseUnderAdmission(lease:ResourceLease|undefined,gate:ResourceLease)
 export function acquireResourceLease(options:LeaseOptions):Promise<ResourceLease>{return traceLeaseV1(options,()=>acquireOrderedResourceLeaseV1(options));}
 /** 🆕️ Tries a fresh claim without waiting for a holder, allowing only the declared bounded directory admission under its original control. */
 export function acquireFreshResourceLeaseV1(options:Omit<LeaseOptions,"timeoutMs"|"admissionPatienceMs">):Promise<ResourceLease>{return acquireResourceLease({...options,timeoutMs:0,admissionPatienceMs:leaseOrderPolicyV1().gate.admissionPatienceMilliseconds});}
+/** 🔁️ Tries a fresh claim again when the directory admission gate, not the resource, was what it waited for: a fresh claim never waits for a holder, but it waits up to the admission patience for the gate, and a gate kept busy for the whole patience by sweeps or openers used to fail a whole stage. A try that ended sooner met a real holder and is final at once (a fresh claim never waits for a real writer). Every try is a fresh claim (nothing is held between tries), the pause grows linearly and cancellation ends it at once. The bounds are the gate policy `freshRetryAttempts` and `freshRetryPauseMilliseconds`.
+ * @see ./🧭️order/🧬️schema/🔣️.json the gate policy */
+export async function acquireFreshResourceLeaseRetryingV1(options:Omit<LeaseOptions,"timeoutMs"|"admissionPatienceMs">):Promise<ResourceLease>{
+  const gate=leaseOrderPolicyV1().gate,attempts=Math.max(1,gate.freshRetryAttempts??1),pause=gate.freshRetryPauseMilliseconds??0;
+  for(let attempt=1;;attempt++){
+    try{return await acquireFreshResourceLeaseV1(options);}
+    catch(error){
+      if(!(error instanceof ResourceLeaseTimeoutErrorV1)||error.waitedMilliseconds<gate.admissionPatienceMilliseconds||attempt>=attempts)throw error;
+      options.signal.throwIfAborted();
+      await delay(pause*attempt,undefined,{signal:options.signal}).catch(failure=>{options.signal.throwIfAborted();throw failure;});
+    }
+  }
+}
 const trackedAcquisition=new AsyncLocalStorage<{readonly guard:LeaseOrderGuardV1;readonly directory:string;readonly resource:string}>();
 const untrackedTask:object={};
 const internalLeaseResource=(resource:string):boolean=>resource===admissionResource||resource===retentionSchema.properties.resource.const||resource.startsWith(custodySchema.properties.resourcePrefix.const)||resource==="resource-retirement";
@@ -584,6 +597,11 @@ const waitPolicy=waitPolicySchema.definitions.Policy.const;
 type QueuedTurn={readonly options:QueuedLeaseOptions;readonly queue:string;readonly ticket:string;readonly claim:ResourceLease;inner?:ResourceLease;consumed:boolean};
 const queuedTurns=new WeakMap<ResourceLease,QueuedTurn>();
 type QueueWaitInfo={version:1;position:number;queued:number;holderMode:"shared"|"exclusive";holderPid:number;holderSeconds:number;resource:string}&Partial<LeaseHolderNoticeV1>;
+/** 📣️ What a waiter in a lease queue learns about the holder ahead of it, as the progress notice carries it plus the agent of the holder. */
+export type LeaseQueueNoticeV1=Readonly<QueueWaitInfo>;
+const queueNoticeListeners:Set<(notice:LeaseQueueNoticeV1)=>void>=((globalThis as Record<symbol,Set<(notice:LeaseQueueNoticeV1)=>void>|undefined>)[Symbol.for("semio.process.lease-queue-notice-listeners.v1")]??=new Set());
+/** 👂️ Lets a process that renders its own progress (the slice worker) hear every queue notice of this process, on every renewal of a wait; returns the function that stops listening. */
+export function onLeaseQueueNoticeV1(listener:(notice:LeaseQueueNoticeV1)=>void):()=>void{queueNoticeListeners.add(listener);return()=>{queueNoticeListeners.delete(listener);};}
 type QueueRow={pid:number;mode:"shared"|"exclusive";sharedCohort:boolean;yielding:boolean;priority:LeasePriorityV1};
 
 function parseQueueTicketRow(name:string,text:string):QueueRow|undefined{
@@ -764,7 +782,7 @@ async function awaitQueuedTurn(options:QueuedLeaseOptions,started:number,queue:s
         runAdmissionGuardsV1(options,"waiting");
         const progress = { resource: options.resource, mode: options.mode, elapsedMs },waitInfo=queueWaitInfo(options,queue,live,ticket,names.length),info=waitInfo?await observedQueueWait(options,queue,live[0]!,waitInfo):undefined,control=options.control;
         await waitProgress(options, progress, started);
-        if(info&&control)await waitForLeaseContinuation(options,started,()=>control.publish({resource:"lease-queue:"+JSON.stringify(info),mode:options.mode,elapsedMs:0}));
+        if(info){const{holderAgent:_agent,...published}=info;for(const listener of queueNoticeListeners)try{listener(info);}catch{}if(control)await waitForLeaseContinuation(options,started,()=>control.publish({resource:"lease-queue:"+JSON.stringify(published),mode:options.mode,elapsedMs:0}));}
         nextProgress = elapsedMs + waitPolicy.progressIntervalMilliseconds;
       }
       await delay(Math.max(1, Math.min(poll, remaining(options, started))), undefined, { signal: options.signal }).catch(error=>{options.signal.throwIfAborted();throw error;});

@@ -1,4 +1,5 @@
 //! 🧪️ Native topology lookup follows independent SQLite results without ownership copies.
+use crate::standards::v1::subsets::any::schema::testkit as test_source_custody;
 
 use crate::Puzzle2dSnapshot;
 use semio_framework_value::paged::PagedUtf8;
@@ -6,7 +7,8 @@ use semio_framework_value::retained_clone::RetainedCloneGrant;
 #[allow(unused_imports)]
 use semio_framework_value::{ValueError, ValueRefusalKind};
 #[allow(unused_imports)]
-use semio_framework_value::retained_clone::{RetainedCloneBinding, RetainedCloneProgress, RetainedCloneRef, RetainedCloneStep, paged::PagedUtf8BoundedOrdCursor, ordered_map::BoundedOrdCursor, ordered_map::BoundedOrdGrant, ordered_map::BoundedOrdStep};
+use semio_framework_value::paged::retained_clone::cursors::PagedUtf8BoundedOrdCursor;
+use semio_framework_value::retained_clone::{RetainedCloneBinding, RetainedCloneProgress, RetainedCloneRef, RetainedCloneStep, ordered_map::BoundedOrdCursor, ordered_map::BoundedOrdGrant, ordered_map::BoundedOrdStep};
 use crate::standards::v1::subsets::any::schema::lookup::*;
 use semio_framework_test_fixtures::fixture_text;
 fn close(cursor: &mut Puzzle2dLookupCursor) {
@@ -19,7 +21,7 @@ fn close(cursor: &mut Puzzle2dLookupCursor) {
         let depth=cursor.next_close_depth_demand().unwrap();
         assert!(copy+capacity+release<=4096);
         let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:capacity,maximum_release_bytes:release,maximum_depth:depth};
-        let (step, allocation) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| cursor.close_step(grant));
+        let (step, allocation) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| test_source_custody::close_turn(grant, |effect| cursor.close_step(effect)));
         let progress=step.unwrap().progress();
         assert!(progress.fits(grant));
         assert_eq!(allocation.requested_bytes, progress.retained_capacity_bytes);
@@ -53,14 +55,14 @@ fn history_edit_puzzle2d_native_lookup_follows_sqlite_first_match_and_exact_alia
         let mut source = crate::standards::v1::subsets::any::schema::testkit::admit();
         let mut query = crate::standards::v1::subsets::any::schema::testkit::admit();
         let mut cursor = Puzzle2dLookupCursor::new(scope);
-        let (zero, allocation) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| cursor.advance(source.borrow(&snapshot), query.borrow(&target), RetainedCloneGrant::default()));
+        let (zero, allocation) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| test_source_custody::run(RetainedCloneGrant::default(), |effect| cursor.advance(source.borrow(&snapshot), query.borrow(&target), effect)));
         assert_eq!(zero.unwrap(), Puzzle2dLookupStep::Pending(Default::default()));
         assert_eq!(allocation.requested_bytes, 0);
         assert_eq!(allocation.released_bytes, 0);
         let mut found = None;
         for turn in 0..100_000 {
             let grant=if turn%2==0{grant}else{RetainedCloneGrant::one_release_turn(4096,1)};
-            let (step, allocation) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| cursor.advance(source.borrow(&snapshot), query.borrow(&target), grant));
+            let (step, allocation) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| test_source_custody::run(grant, |effect| cursor.advance(source.borrow(&snapshot), query.borrow(&target), effect)));
             assert_eq!(allocation.requested_bytes, 0);
             assert_eq!(allocation.released_bytes, 0);
             assert!(!allocation.overflowed);
@@ -77,14 +79,14 @@ fn history_edit_puzzle2d_native_lookup_follows_sqlite_first_match_and_exact_alia
         close(&mut cursor);
         assert_eq!(serde_json::to_value(&snapshot).unwrap(), original);
         let mut cancelled = Puzzle2dLookupCursor::new(scope);
-        cancelled.advance(source.borrow(&snapshot), query.borrow(&target), grant).unwrap();
+        test_source_custody::run(grant, |effect| cancelled.advance(source.borrow(&snapshot), query.borrow(&target), effect)).unwrap();
         let swapped = snapshot.clone();
-        assert!(cancelled.advance(source.borrow(&swapped), query.borrow(&target), grant).is_err());
+        assert!(test_source_custody::run(grant, |effect| cancelled.advance(source.borrow(&swapped), query.borrow(&target), effect)).is_err());
         close(&mut cancelled);
         assert_eq!(cancelled.take(), None);
         if case["id"] == "large-prefix" {
             let mut cancelled = Puzzle2dLookupCursor::new(scope);
-            for _ in 0..12 { assert!(matches!(cancelled.advance(source.borrow(&snapshot), query.borrow(&target), grant).unwrap(), Puzzle2dLookupStep::Pending(_))); }
+            for _ in 0..12 { assert!(matches!(test_source_custody::run(grant, |effect| cancelled.advance(source.borrow(&snapshot), query.borrow(&target), effect)).unwrap(), Puzzle2dLookupStep::Pending(_))); }
             close(&mut cancelled);
             assert_eq!(cancelled.take(), None);
         }

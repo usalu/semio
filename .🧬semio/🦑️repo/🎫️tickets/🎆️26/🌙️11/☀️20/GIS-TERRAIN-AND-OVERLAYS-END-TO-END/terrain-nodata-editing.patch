@@ -1,0 +1,190 @@
+--- a/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️elevation-edit/🦀️.rs
++++ b/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️elevation-edit/🦀️.rs
+@@ -1,6 +1,7 @@
+ //! 📐️ Operations on the authored elevation samples of a GIS Terrain artifact.
+ 
+ use crate::schema::snapshot::{ELEVATION_MAX_SIDE, ElevationSource};
++use semio_framework_surface::terrain::missing_samples::is_missing;
+ use semio_framework_value::{ValueError, ValueRefusalKind};
+ 
+ /// 📏️ Converts an authored metre value when its binary representation identifies an exact millimetre.
+@@ -62,6 +63,11 @@
+         let (width, height) = source.dimensions().ok_or_else(|| invalid("gis-terrain-elevation-edit-out-of-range"))?;
+         if edit.mode != ElevationEditMode::Offset && (edit.column as usize >= width || edit.row as usize >= height) {
+             return Err(invalid("gis-terrain-elevation-edit-out-of-range"));
++        }
++        if edit.mode == ElevationEditMode::SetSample
++            && is_missing(source.missing_samples.as_deref(), edit.row as usize * width + edit.column as usize)
++        {
++            return Err(invalid("gis-terrain-elevation-sample-is-missing"));
+         }
+         let mut next = source.clone();
+         edit.write(source, &mut next)?;
+@@ -159,8 +165,13 @@
+         let edit = self;
+         let limit = i64::from((edit.radius + 1) * (edit.radius + 1));
+         let value = i64::from(edit.value);
++        let mask = source.missing_samples.as_deref();
+         for (y, row) in next.rows_millimetres.iter_mut().enumerate() {
++            let row_start = y * row.len();
+             for (x, height) in row.iter_mut().enumerate() {
++                if is_missing(mask, row_start + x) {
++                    continue;
++                }
+                 let dx = x as i64 - i64::from(edit.column);
+                 let dy = y as i64 - i64::from(edit.row);
+                 let distance = dx * dx + dy * dy;
+@@ -171,7 +182,7 @@
+                     ElevationEditMode::Offset => current + value,
+                     ElevationEditMode::RaiseLower if weight > 0 => current + rounded_ratio(value * weight, limit),
+                     ElevationEditMode::Flatten if weight > 0 => current + rounded_ratio((value - current) * weight, limit),
+-                    ElevationEditMode::Smooth if weight > 0 => current + smooth_delta(&source.rows_millimetres, x, y, current, value * weight, limit),
++                    ElevationEditMode::Smooth if weight > 0 => current + smooth_delta(&source.rows_millimetres, mask, x, y, current, value * weight, limit),
+                     _ => current,
+                 };
+                 *height = i32::try_from(updated).map_err(|_| invalid("gis-terrain-elevation-sample-overflow"))?;
+@@ -185,13 +196,16 @@
+     (numerator.abs() + denominator / 2) / denominator * numerator.signum()
+ }
+ 
+-fn smooth_delta(rows: &[Vec<i32>], x: usize, y: usize, current: i64, weight: i64, limit: i64) -> i64 {
++fn smooth_delta(rows: &[Vec<i32>], mask: Option<&str>, x: usize, y: usize, current: i64, weight: i64, limit: i64) -> i64 {
+     let mut sum = 0;
+     let mut count = 0;
+-    for row in &rows[y.saturating_sub(1)..=(y + 1).min(rows.len() - 1)] {
+-        for &height in &row[x.saturating_sub(1)..=(x + 1).min(row.len() - 1)] {
+-            sum += i64::from(height);
+-            count += 1;
++    for neighbor_y in y.saturating_sub(1)..=(y + 1).min(rows.len() - 1) {
++        let row = &rows[neighbor_y];
++        for neighbor_x in x.saturating_sub(1)..=(x + 1).min(row.len() - 1) {
++            if !is_missing(mask, neighbor_y * row.len() + neighbor_x) {
++                sum += i64::from(row[neighbor_x]);
++                count += 1;
++            }
+         }
+     }
+     rounded_ratio((sum - count * current) * weight, count * limit * 100)
+--- a/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📏️grade-region/🦀️.rs
++++ b/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📏️grade-region/🦀️.rs
+@@ -48,12 +48,17 @@
+     let bounds = world_box_from_points(&outer).ok_or_else(|| Fault::from("gis-terrain-grading-region-empty"))?;
+     let holes = rings.collect::<Vec<_>>();
+     let [west, south, east, north] = source.bounds;
+-    let x_segments = (source.rows_millimetres[0].len() - 1) as f64;
++    let width = source.rows_millimetres[0].len();
++    let mask = source.missing_samples.as_deref();
++    let x_segments = (width - 1) as f64;
+     let y_segments = (source.rows_millimetres.len() - 1) as f64;
+     let mut result = source.clone();
+     for (row_index, row) in result.rows_millimetres.iter_mut().enumerate() {
+         let latitude = south + (north - south) * (row_index as f64 / y_segments);
+         for (column, sample) in row.iter_mut().enumerate() {
++            if semio_framework_surface::terrain::missing_samples::is_missing(mask, row_index * width + column) {
++                continue;
++            }
+             let point = Point::new(west + (east - west) * (column as f64 / x_segments), latitude);
+             if world_box_contains_point(bounds, point) && polygon_covers_point(&outer, point)
+                 && !holes.iter().any(|hole| polygon_covers_point(hole, point)) {
+--- a/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📉️contours/🦀️.rs
++++ b/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📉️contours/🦀️.rs
+@@ -4,9 +4,10 @@
+ 
+ use crate::editor::gis3d::{Gis3dCommand, Gis3dPlayApp};
+ use crate::mutations::{ChangeImportedFeatures, GisTerrainMutation};
+-use crate::schema::imported_map::{ImportedMap, terrain_grid_origin};
++use crate::schema::imported_map::ImportedMap;
+ use crate::schema::snapshot::ElevationSource;
+ use crate::GisTerrainSnapshot;
++use semio_framework_surface::terrain::TerrainGridTopology;
+ use semio_framework_value::{DslValue, ToValue};
+ use semio_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
+ use semio_plugin::{ActionArgDef, ArgSchema, ArtifactView, ConfigView, EditorApp, Emit, Fault, FaultCode, FaultOrigin, NoConfig, NoConfigMutation};
+@@ -153,17 +154,17 @@
+ 
+ fn contours(source: &ElevationSource, interval: f64, canceled: impl Fn() -> bool) -> Result<Vec<DslValue>, Fault> {
+     if !source.is_valid() { return Err(ContourFault::InvalidSource.fault()); }
+-    let grid = source.grid();
+-    let origin = terrain_grid_origin(grid.bounds);
+-    let mesh = grid.mesh(origin.lon, origin.lat, 1.0).ok_or_else(|| ContourFault::InvalidSource.fault())?;
++    let (width, height) = source.dimensions().ok_or_else(|| ContourFault::InvalidSource.fault())?;
++    let topology = TerrainGridTopology::new([width as u32, height as u32], source.missing_samples.as_deref());
+     let heights = source.rows_millimetres.iter().rev().flatten().map(|&sample| f64::from(sample) / 1000.0).collect::<Vec<_>>();
+-    let (minimum, maximum) = heights.iter().fold((f64::INFINITY, f64::NEG_INFINITY), |(low, high), &height| (low.min(height), high.max(height)));
++    let mut surface_heights = topology.faces().flat_map(|face| face.vertices.map(|vertex| heights[vertex as usize]));
++    let Some(first_height) = surface_heights.next() else { return Ok(Vec::new()); };
++    let (minimum, maximum) = surface_heights.fold((first_height, first_height), |(low, high), height| (low.min(height), high.max(height)));
+     let first = (minimum / interval).floor() as i64 + 1;
+     let last = (maximum / interval).ceil() as i64 - 1;
+     if last - first + 1 > MAXIMUM_LEVELS {
+         return Err(ContourFault::Density.fault());
+     }
+-    let (width, height) = source.dimensions().ok_or_else(|| ContourFault::InvalidSource.fault())?;
+     let [west, south, east, north] = source.bounds;
+     let coordinate = |vertex: usize| {
+         let column = (vertex % width) as f64 / (width - 1) as f64;
+@@ -177,9 +178,8 @@
+         let level = index as f64 * interval;
+         if !(minimum < level && level < maximum) { continue; }
+         let mut segments = BTreeSet::new();
+-        for triangle in mesh.indices.chunks_exact(3) {
+-            let vertices = [triangle[0] as usize, triangle[1] as usize, triangle[2] as usize];
+-            if let Some(segment) = contour_segment(vertices, level, &heights) {
++        for face in topology.faces() {
++            if let Some(segment) = contour_segment(face.vertices.map(|vertex| vertex as usize), level, &heights) {
+                 segments.insert(segment);
+             }
+         }
+--- a/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️terrain-data/🦀️.rs
++++ b/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️terrain-data/🦀️.rs
+@@ -1,6 +1,7 @@
+ //! 🔍️ Terrain data inspection for the mounted GIS editor.
+ 
+ use crate::GisTerrainSnapshot;
++use semio_framework_surface::terrain::missing_samples::is_missing;
+ use semio_framework_value::DslValue;
+ use semio_plugin::{BuiltNode, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiAssemblyResult, ViewModel, tree_item_desc, ui_node_list};
+ use semio_ui_locale::LocalizedLabel;
+@@ -30,20 +31,31 @@
+     let mut data = PanelTreeBuilder::new(BODY)?;
+     if let Some(grid) = document.elevation_source.as_ref().filter(|grid| grid.is_valid()) {
+         let [west, south, east, north] = grid.bounds;
+-        let (minimum, maximum, sum) = grid.rows_millimetres.iter().flatten().copied().fold((i32::MAX, i32::MIN, 0_i64), |(low, high, sum), height| {
+-            (low.min(height), high.max(height), sum + i64::from(height))
+-        });
++        let mask = grid.missing_samples.as_deref();
++        let (minimum, maximum, sum, present) = grid.rows_millimetres.iter().flatten().copied().enumerate()
++            .filter(|(ordinal, _)| !is_missing(mask, *ordinal))
++            .fold((i32::MAX, i32::MIN, 0_i64, 0_usize), |(low, high, sum, present), (_, height)| {
++                (low.min(height), high.max(height), sum + i64::from(height), present + 1)
++            });
+         let dimensions = (grid.rows_millimetres[0].len(), grid.rows_millimetres.len());
+-        let minimum = f64::from(minimum) / 1000.0;
+-        let maximum = f64::from(maximum) / 1000.0;
+-        let samples = dimensions.0 * dimensions.1;
+-        let items = ui_node_list([
+-            item("grid-size", "Grid Size", "Rastergröße", format!("{} × {}", dimensions.0, dimensions.1)),
+-            item("grid-range", "Elevation Range", "Höhenbereich", format!("{minimum}–{maximum} m")),
+-            item("grid-mean", "Mean Elevation", "Mittlere Höhe", format!("{:.1} m", sum as f64 / (1000.0 * samples as f64))),
++        let absent = dimensions.0 * dimensions.1 - present;
++        let mut items = Vec::with_capacity(6);
++        items.push(item("grid-size", "Grid Size", "Rastergröße", format!("{} × {}", dimensions.0, dimensions.1)));
++        if present > 0 {
++            let minimum = f64::from(minimum) / 1000.0;
++            let maximum = f64::from(maximum) / 1000.0;
++            let mean = sum as f64 / (1000.0 * present as f64);
++            items.push(item("grid-range", "Elevation Range", "Höhenbereich", format!("{minimum}–{maximum} m")));
++            items.push(item("grid-mean", "Mean Elevation", "Mittlere Höhe", format!("{mean:.3} m")));
++        }
++        if absent > 0 {
++            items.push(item("grid-missing-count", "Missing Samples", "Fehlende Rasterpunkte", absent.to_string()));
++        }
++        items.extend([
+             item("grid-longitude", "Longitude Bounds", "Längengrade", format!("{west:.6}° → {east:.6}°")),
+             item("grid-latitude", "Latitude Bounds", "Breitengrade", format!("{south:.6}° → {north:.6}°")),
+-        ])?;
++        ]);
++        let items = ui_node_list(items)?;
+         data = data.section("elevation", Some(label(localize("Elevation", "Höhe"))?), true, items)?;
+     } else {
+         let items = ui_node_list([item("grid-empty", "Elevation Grid", "Höhenraster", localize("No grid loaded", "Kein Raster geladen"))])?;

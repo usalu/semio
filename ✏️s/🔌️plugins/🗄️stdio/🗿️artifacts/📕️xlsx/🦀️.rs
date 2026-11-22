@@ -34,10 +34,7 @@ pub fn formats() -> Result<Vec<semio_plugin::io::FormatDescriptor>, semio_plugin
 }
 
 fn native_codec() -> store::os_store::serialization::ArtifactCodec {
-    let mut codec = store::bare_artifact_codec::<XlsxSnapshot, XlsxMutation>(semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::STDIO_XLSX_DOCUMENT_SCHEMA);
-    codec.extension = "xlsx";
-    codec.pack_schema_hash = semio_framework_hash::Sha256::digest(include_bytes!("🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio"));
-    codec
+    store::bare_artifact_codec::<XlsxSnapshot, XlsxMutation>(semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::STDIO_XLSX_DOCUMENT_SCHEMA)
 }
 
 pub fn native_codecs() -> Vec<semio_s_artifact_stdio_contract::NativeCodecFactory> {

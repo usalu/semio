@@ -59,7 +59,7 @@ Get mit-bestand demonstrator ready to be redeployed on a CDN as fast as you can.
 
 ## Finish
 
-1. Once 16/16 boot tests pass, run `package-site.sh`.
+1. Once the final queue-verified 16/16 boot tests pass, run `package-site.sh <site> <durable-output> <ticket>/🗑️generated/static-accepted.sha256`.
 2. Update `📋️readiness-report.md` with the verdict, and list every changed file in `🗂️changed-files.md`.
 3. Remove the temporary `[DEBUG]` lines added by this ticket.
 4. Delete `🗑️generated`.

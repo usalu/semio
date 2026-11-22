@@ -3,7 +3,7 @@
 //! pixels through `ImageWindowKit` (contract §2.6) — no editing chrome, no utilities.
 
 use crate::modes::view::windows::{composite, navigator};
-use semio_plugin::create_default_layout;
+use semio_plugin::{create_default_layout, Axis};
 use semio_ui_locale::LocalizedLabel;
 use semio_plugin::ModeDefinition;
 use semio_plugin::WindowLayout;
@@ -18,7 +18,7 @@ pub fn definition() -> ModeDefinition {
 
 /// 🪟️ Composite dominant, Navigator a minimap strip — mirrors the editor's own `edit::layout()` ratio.
 pub fn layout() -> WindowLayout {
-    create_default_layout(&[composite::RASTER_VIEW_WINDOW_COMPOSITE.into(), navigator::RASTER_VIEW_WINDOW_NAVIGATOR.into()], "row", Some(&[72.0, 28.0]), Some(&["Composite".into(), "Navigator".into()]))
+    create_default_layout(&[composite::RASTER_VIEW_WINDOW_COMPOSITE.into(), navigator::RASTER_VIEW_WINDOW_NAVIGATOR.into()], Axis::Horizontal, Some(&[0.72, 0.28]), Some(&["Composite".into(), "Navigator".into()]))
 }
 //#endregion 🔖️Definition
 

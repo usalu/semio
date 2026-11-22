@@ -2,15 +2,23 @@
   "version": 1,
   "pressureCases": [
     {"name":"pressured idle image under routine ratio","pressure":true,"allocated":66,"used":35,"free":14,"effect":true},
-    {"name":"routine image under routine ratio","pressure":false,"allocated":66,"used":35,"free":14,"effect":false},
+    {"name":"routine image under routine ratio on a tight host is due","pressure":false,"allocated":66,"used":35,"free":14,"effect":true},
+    {"name":"routine image under routine ratio on a roomy host","pressure":false,"allocated":66,"used":35,"free":60,"effect":false,"reason":"not-due"},
     {"name":"routine image over routine ratio","pressure":false,"allocated":66,"used":20,"free":14,"effect":true},
-    {"name":"busy image","pressure":true,"allocated":66,"used":35,"free":14,"busy":true,"effect":false},
-    {"name":"pressure clears before ownership","pressure":true,"allocated":66,"used":35,"free":27,"effect":false},
-    {"name":"slack shrinks below safe margin","pressure":true,"allocated":66,"used":60,"free":14,"effect":false},
-    {"name":"backing device changed","pressure":true,"allocated":66,"used":35,"free":14,"wrongDevice":true,"effect":false},
-    {"name":"image is detached before execution","pressure":true,"allocated":66,"used":35,"free":14,"detached":true,"effect":false},
-    {"name":"retirement starts before ownership","pressure":true,"allocated":66,"used":35,"free":14,"retiring":true,"effect":false},
-    {"name":"cancelled while taking ownership","pressure":true,"allocated":66,"used":35,"free":14,"cancel":true,"effect":false}
+    {"name":"busy image","pressure":true,"allocated":66,"used":35,"free":14,"busy":true,"effect":false,"reason":"lease-timeout"},
+    {"name":"pressure clears before ownership","pressure":true,"allocated":66,"used":35,"free":27,"effect":false,"reason":"recovery-pressure-unconfirmed"},
+    {"name":"slack shrinks below safe margin","pressure":true,"allocated":66,"used":60,"free":14,"effect":false,"reason":"recovery-slack-insufficient"},
+    {"name":"backing device changed","pressure":true,"allocated":66,"used":35,"free":14,"wrongDevice":true,"effect":false,"reason":"recovery-device-mismatch"},
+    {"name":"image is detached before execution","pressure":true,"allocated":66,"used":35,"free":14,"detached":true,"effect":false,"reason":"backing-unavailable"},
+    {"name":"retirement starts before ownership","pressure":true,"allocated":66,"used":35,"free":14,"retiring":true,"effect":false,"reason":"retirement-pending"},
+    {"name":"cancelled while taking ownership","pressure":true,"allocated":66,"used":35,"free":14,"cancel":true,"effect":false},
+    {"name":"routine over waiting threshold","pressure":false,"allocated":18,"used":2,"free":50,"effect":true},
+    {"name":"routine above threshold needs full slack","pressure":false,"allocated":10,"used":3,"free":50,"effect":false,"reason":"not-due"},
+    {"name":"routine below threshold needs reduced slack","pressure":false,"allocated":10,"used":3,"free":47,"effect":true},
+    {"name":"untyped lease failure","pressure":true,"allocated":66,"used":35,"free":14,"effect":false,"leaseFailed":true,"reason":"lease-failed"},
+    {"name":"occupancy unavailable","pressure":true,"allocated":66,"used":35,"free":14,"effect":false,"occupancyUnavailable":true,"reason":"measurement-unavailable"},
+    {"name":"native cycle throws","pressure":true,"allocated":66,"used":35,"free":14,"effect":false,"cycleFailed":true,"reason":"reclaim-failed"},
+    {"name":"lease release throws","pressure":true,"allocated":66,"used":35,"free":14,"effect":false,"releaseFailed":true,"reason":"lease-release-failed"}
   ],
   "cases": [
     {
@@ -112,7 +120,8 @@
         "outcome": "skipped",
         "beforeBytes": 0,
         "afterBytes": 0,
-        "settled": false
+        "settled": false,
+        "reason": "lease-timeout"
       },
       "kind": "skipped",
       "retire": true
@@ -126,7 +135,52 @@
         "outcome": "skipped",
         "beforeBytes": 200,
         "afterBytes": 0,
+        "settled": false,
+        "reason": "lease-failed"
+      },
+      "kind": "unconfirmed",
+      "retire": false
+    },
+    {
+      "id": "generic-unproved-skip",
+      "receipt": {
+        "version": 1,
+        "kind": "repository-cache-reclaim",
+        "partition": "rust",
+        "outcome": "skipped",
+        "beforeBytes": 0,
+        "afterBytes": 0,
         "settled": false
+      },
+      "kind": "unconfirmed",
+      "retire": false
+    },
+    {
+      "id": "unknown-skip-reason",
+      "receipt": {
+        "version": 1,
+        "kind": "repository-cache-reclaim",
+        "partition": "rust",
+        "outcome": "skipped",
+        "beforeBytes": 0,
+        "afterBytes": 0,
+        "settled": false,
+        "reason": "known-holder"
+      },
+      "kind": "unconfirmed",
+      "retire": false
+    },
+    {
+      "id": "reason-on-success",
+      "receipt": {
+        "version": 1,
+        "kind": "repository-cache-reclaim",
+        "partition": "rust",
+        "outcome": "reclaimed",
+        "beforeBytes": 200,
+        "afterBytes": 150,
+        "settled": true,
+        "reason": "lease-timeout"
       },
       "kind": "unconfirmed",
       "retire": false
@@ -169,5 +223,60 @@
         "expected": false
       }
     ]
-  }
+  },
+  "reasons": [
+    "platform",
+    "retirement-pending",
+    "not-due",
+    "recovery-profile",
+    "backing-unavailable",
+    "measurement-unavailable",
+    "recovery-device-mismatch",
+    "recovery-pressure-unconfirmed",
+    "recovery-slack-insufficient",
+    "inspection-failed",
+    "lease-timeout",
+    "lease-failed",
+    "lease-release-failed",
+    "reclaim-failed"
+  ],
+ "buildIngress": {
+  "totalGiB": 256,
+  "startGiB": 1,
+  "needGiB": 7,
+  "otherGiB": 180,
+  "device": 4,
+  "elsewhere": 7,
+  "images": [
+   {
+    "id": "graph",
+    "allocatedGiB": 34,
+    "usedGiB": 10,
+    "device": 7,
+    "mounted": true
+   },
+   {
+    "id": "rust",
+    "allocatedGiB": 26,
+    "usedGiB": 12,
+    "device": 4,
+    "mounted": true,
+    "busy": true
+   },
+   {
+    "id": "dependencies",
+    "allocatedGiB": 20,
+    "usedGiB": 10,
+    "device": 4,
+    "mounted": true
+   },
+   {
+    "id": "products",
+    "allocatedGiB": 10,
+    "usedGiB": 0,
+    "device": 4,
+    "mounted": false
+   }
+  ]
+ }
 }

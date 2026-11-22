@@ -24,7 +24,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(pipeline.jobs.some((row: any) => row.id === "pages" || row.after.some((dependency: string) => !dependency.startsWith("job:")))).toBe(false);
       expect(pipeline.jobs.filter((row: any) => row.lane !== undefined).map((row: any) => row.id)).toEqual(fixture.release.laneJobs);
     });
-    it("plans the Stdio catalog definition as a source-only prerequisite for the Play release", async () => {
+    it("plans the Stdio catalog as a source-only prerequisite and budgets the selected Play release", async () => {
       const project = JSON.parse(readFileSync(new URL("../../📋️project.json", import.meta.url), "utf8"));
       const pipeline = project.targets[fixture.release.target].metadata.semio.release;
       const { root, policies, ...job } = fixture.release.stdioCatalogJob;
@@ -35,10 +35,12 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(declared).toEqual([fixture.release.stdioCatalogJob]);
       expect(validate(declared[0])).toBe(true);
       expect(policies).toEqual(["process"]);
-      const [{ nativeBuildPipelinePlanV1 }, { nativeBuildPrerequisiteOrderV1 }, { playRuntimeComponentIds }] = await Promise.all([
+      const [{ nativeBuildPipelinePlanV1 }, { nativeBuildPrerequisiteOrderV1 }, { playRuntimeComponentIds }, { nativeReleaseWorkUnitsV1 }, { progressDeadlinePolicyV1 }] = await Promise.all([
         import(new URL("🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts", repository).href),
         import(new URL(`${driver}/📋️prerequisites/🟦️.ts`, repository).href),
         import("../../🔨️modules/🧩️runtime/🟦️.ts"),
+        import(new URL(`${driver}/📋️contract/🟦️.ts`, repository).href),
+        import(new URL("🧰️framework/🔨️modules/🏃️process/⏱️budget/🟦️.ts", repository).href),
       ]);
       const workspace = fileURLToPath(repository);
       const { plan } = nativeBuildPipelinePlanV1(workspace, pipeline, "release", new Set(playRuntimeComponentIds()));
@@ -46,6 +48,10 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(nativeBuildPrerequisiteOrderV1(plan.jobs)).toContain(job.id);
       const packages = new Set(plan.passes.flatMap((pass: { packages: readonly { name: string }[] }) => pass.packages.map(row => row.name)));
       expect(fixture.release.stdioCatalogConsumers.every((name: string) => packages.has(name))).toBe(true);
+      const units = nativeReleaseWorkUnitsV1(plan);
+      expect(new (require("ajv"))().validate(driverSchema.definitions.ReleaseWorkUnitsV1, units)).toBe(true);
+      expect(units).toBe(plan.passes.flatMap((pass: { packages: readonly unknown[] }) => pass.packages).length + pipeline.jobs.length);
+      expect(progressDeadlinePolicyV1("native-release", units, {}).maximumMilliseconds).toBeGreaterThanOrEqual(fixture.driver.minimumReleaseDeadlineMilliseconds);
     }, 90_000);
     it("refuses stale catalog owners in the release gate instead of rewriting the catalog during a build", () => {
       const ts = require("typescript");

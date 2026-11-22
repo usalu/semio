@@ -33,9 +33,7 @@
       },
       "failAt": {
         "enum": [
-          "none",
-          "identity",
-          "cancel"
+          "none"
         ]
       },
       "inventoryCalls": {
@@ -59,8 +57,6 @@
       "failure": {
         "enum": [
           null,
-          "identity",
-          "cancel",
           "headroom"
         ]
       }
@@ -132,28 +128,6 @@
       "deleted": 1,
       "result": true,
       "failure": null
-    },
-    {
-      "id": "changed-identity-refuses",
-      "acquired": true,
-      "usedBytes": 536870913,
-      "availableBytes": 1073741824,
-      "failAt": "identity",
-      "inventoryCalls": 1,
-      "deleted": 0,
-      "result": null,
-      "failure": "identity"
-    },
-    {
-      "id": "cancel-before-unlink",
-      "acquired": true,
-      "usedBytes": 536870913,
-      "availableBytes": 1073741824,
-      "failAt": "cancel",
-      "inventoryCalls": 1,
-      "deleted": 0,
-      "result": null,
-      "failure": "cancel"
     },
     {
       "id": "required-headroom-unavailable",

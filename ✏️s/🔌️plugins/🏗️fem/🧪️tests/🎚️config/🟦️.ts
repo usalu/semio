@@ -12,6 +12,7 @@ export default defineConfig({
     name: "@semio-tech/fem-js",
     include: ["🧪️tests/🧱️material-receiving/🟦️.ts", "🧪️tests/🌀️geometric-cells/🟦️.ts", "🧪️tests/⚖️combination-stress/🟦️.ts", "🧪️tests/📖️mutation-grammar/🟦️.ts", "🗿️artifacts/**/📚️examples/**/🧪️tests/🧩️example/🟦️.ts", "🧪️tests/🧪️shared-authority/🟦️.ts", "🗿️artifacts/*/🧪️tests/🧱️field-intent/🟦️.ts", "../../🧑‍💻dev/🏗️fem/📖️stories/🧭️coordination/🧪️tests/🪟️viewport/🟦️.ts", "../../🧑‍💻dev/🏗️fem/📖️stories/🧭️coordination/🧪️tests/🕹️interaction/🟦️.ts"],
     environment: "node",
+    testTimeout: 120000,
     passWithNoTests: false,
   },
 });

@@ -81,6 +81,14 @@ impl Din16798Snapshot {
         z.occupants = 3;
         z.vent_method = "method_3_predefined_rates".into();
         z.outdoor_air_supplied_m3_h = 363.6;
+        z.unoccupied_ventilation = Some(UnoccupiedVentilation {
+            operation: UnoccupiedVentilationOperation::ResidentialReduced,
+            assessed_area_m2: 80.0,
+            zone_volume_m3: 0.0,
+            minutes_before_occupancy: 0.0,
+            residential_design_rate_l_per_s_m2: 0.12,
+            outdoor_air_m3_h: 40.0,
+        });
         z.co2_ppm = 850.0;
         z.noise_db = 24.0;
         let mut v = VentSystemDocument::default();
@@ -150,6 +158,34 @@ pub const SNAPSHOT_LEAVES: semio_framework_schema_registry::FacetLeaves = semio_
 
 use semio_s_plugin_norm_app_surface as app_surface;
 
+/// 🌙️ The documented Annex B operating regime during an unoccupied period.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_dsl_record_derive::DslScalar, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub enum UnoccupiedVentilationOperation {
+    NonResidentialPurge,
+    NonResidentialReduced,
+    ResidentialReduced,
+    ResidentialShutdown,
+}
+
+/// 📋️ Evidence for one zone purge, one reduced-flow room or one dwelling.
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct UnoccupiedVentilation {
+    pub operation: UnoccupiedVentilationOperation,
+    pub assessed_area_m2: f64,
+    pub zone_volume_m3: f64,
+    pub minutes_before_occupancy: f64,
+    pub residential_design_rate_l_per_s_m2: f64,
+    pub outdoor_air_m3_h: f64,
+}
+
 /// 🚪 Assessed room/zone for DIN EN 16798-1 indoor environment.
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
@@ -181,6 +217,8 @@ pub struct ZoneDocument {
     pub turbulence_intensity_percent: f64,
     pub vent_method: String,
     pub vent_system_id: String,
+    #[cfg_attr(any(test, feature = "test-support"), serde(skip_serializing_if = "Option::is_none"))]
+    pub unoccupied_ventilation: Option<UnoccupiedVentilation>,
 }
 
 impl Default for ZoneDocument {
@@ -207,6 +245,7 @@ impl Default for ZoneDocument {
             turbulence_intensity_percent: 40.0,
             vent_method: "method_1_perceived_air_quality".into(),
             vent_system_id: "vent-central".into(),
+            unoccupied_ventilation: None,
         }
     }
 }

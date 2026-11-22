@@ -1,5 +1,5 @@
-import {test} from "bun:test";
-import {resolve} from "node:path";
-import {receiveScriptProcessInvocation} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {privateRepositoryWorkspaceV1} from "../../../../../../🧪️testing/🧫️private-repository/🟦️.ts";
+import {registerIsolatedBuildTestV1,withBuildTestInvocationV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/📥️invocation/🟦️.ts";
 import {detachedCompactLaw} from "../📦️compact/🟦️.ts";
-test.skipIf(process.platform!=="darwin")("actual compact custody emits exact recensus refusal without deleting changed data",async()=>{await receiveScriptProcessInvocation(process.env,invocation=>detachedCompactLaw(invocation,resolve(import.meta.dir,"../../../../../../../../../../..")));},120000);
+const repository=await privateRepositoryWorkspaceV1();
+if(process.platform==="darwin")registerIsolatedBuildTestV1(import.meta.path,"actual compact custody emits exact recensus refusal without deleting changed data",{bodyMilliseconds:200000,scope:{kind:"body"}},checkpoint=>withBuildTestInvocationV1(invocation=>detachedCompactLaw(invocation,repository.root,checkpoint)),/Inactive Cargo unit changed under physical custody/u);

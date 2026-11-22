@@ -158,6 +158,7 @@ pub fn step_world3d_scene_bridge(state: &mut World3dState, context: &mut semio_f
                     }
                 }
             }
+            state.session.mesh_refusals = cursor.meshes.iter().filter(|mesh| !mesh.names_a_mesh() && mesh.data.vertex_count() > 0).take(WORLD_DYNAMIC_MESH_CAPACITY).map(|mesh| WorldMeshRefusal { mesh_id: mesh.id.clone(), reason: WorldMeshRefusalReason::UnlabelledPointsOnly }).collect();
             cursor.meshes.retain(World3dSceneMeshEntry::names_a_mesh);
             for mesh in &mut cursor.meshes {
                 if mesh.data.normals.len() != mesh.data.positions.len() && !mesh.data.attributes.values().any(|attribute| attribute.semantic == semio_framework::MeshAttributeSemantic::Normal) {
@@ -402,9 +403,10 @@ pub fn apply_runtime_draw_flags(selection_state: &mut WorldSelectionState, inter
     let component_ids: HashSet<String> = selection_state.component_ids.iter().cloned().collect();
     let projected_hover_ids = selection_state.projected_instance_hovers();
     let local_hover_id = selection_state.local_hover_id.as_deref();
+    let local_hover_group = selection_state.local_hover_targets.as_deref().filter(|_| selection_state.local_instance_hover);
     let hovered_component_object_id = selection_state.hovered_component_object_id.clone();
     let selected_ids: HashSet<String> = selection_state.selected_ids.iter().cloned().collect();
-    let interaction_ids = interaction_state.instance_interaction_ids.clone();
+    let interaction_ids = &interaction_state.instance_interaction_ids;
     let mut object_index_map = HashMap::new();
     let mut index = 0u32;
     for draw in &scene_state.draws {
@@ -419,7 +421,9 @@ pub fn apply_runtime_draw_flags(selection_state: &mut WorldSelectionState, inter
             let mesh_selected = granularity == "mesh" && object_index_map.get(&instance.id).is_some_and(|object_index| component_ids.contains(&object_index.to_string()));
             let target_id = interaction_ids.get(&instance.id).map_or(instance.id.as_str(), String::as_str);
             let instance_hovered = projected_hover_ids.map_or_else(
-                || local_hover_id == Some(instance.id.as_str()) || local_hover_id == Some(target_id) || hovered_component_object_id.as_deref() == Some(instance.id.as_str()),
+                || local_hover_id == Some(instance.id.as_str()) || local_hover_id == Some(target_id)
+                    || hovered_component_object_id.as_deref() == Some(instance.id.as_str())
+                    || local_hover_group.is_some_and(|group| interaction_state.instance_hover_targets.get(&instance.id).is_some_and(|targets| targets == group)),
                 |ids| ids.contains(&instance.id),
             );
             let local_selected = selected_ids.contains(&instance.id) || selected_ids.contains(target_id) || mesh_selected;

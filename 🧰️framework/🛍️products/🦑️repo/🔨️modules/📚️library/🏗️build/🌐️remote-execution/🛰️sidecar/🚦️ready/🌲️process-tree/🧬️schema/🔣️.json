@@ -13,8 +13,10 @@
         "sharedSystemProcesses": ["diskimages-helper"],
         "hardCapMultiplier": 4,
         "stageHardCapMultipliers": {"workspace": 8},
+        "progressCeilingMultiplier": 24,
         "stallMilliseconds": 600000,
         "stallStopMilliseconds": 600000,
+        "absoluteDeadlineExtraIntervals": 1,
         "stallRestartMaximum": 5,
         "stallRestartBackoffMilliseconds": 30000,
         "stallRestartBackoffMaximumMilliseconds": 600000,
@@ -38,16 +40,16 @@
           {"file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️load/🤝️selected-exchange/🧬️schema/🔣️.json", "pointer": "/definitions/Policy/const/revision"},
           {"file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧬️schema/🔣️.json", "pointer": "/$defs/record/const/stamp"}
         ],
+        "graphCounterPatterns": ["\\btaken (?<done>\\d+) (?:of|von) (?<total>\\d+)"],
         "readingPatterns": ["Reading the project graph", "Loading the project graph", "Planning every target", "Lese den Projektgraph", "Lade den Projektgraph"],
         "executingPatterns": ["Running target \\S+ for (?:project|\\d+ projects)", "^\\s*> nx run \\S+", "graph: plan answered", "Graph: Plan beantwortet"],
         "speedFactor": 1,
         "stepLinePatterns": [
-          "^Reading the project graph slice \\(\\d+ s\\): (?<step>.+? / .+?) (?<done>\\d+) of (?<bound>\\d+)\\.$",
-          "^Lese den Projektgraph-Ausschnitt \\(\\d+ s\\): (?<step>.+? / .+?) (?<done>\\d+) von (?<bound>\\d+)\\.$",
+          "^Reading the project graph slice \\((?<done>\\d+) s, (?:beyond the expected|expected) (?<bound>\\d+) s\\): (?<step>.+? / .+?)\\.$",
+          "^Lese den Projektgraph-Ausschnitt \\((?<done>\\d+) s, (?:über den erwarteten|erwartet) (?<bound>\\d+) s\\): (?<step>.+? / .+?)\\.$",
           "^\\[tools\\] [^:]+: (?<step>.+? / .+?) \\(.*\\): (?<done>\\d+) of (?<bound>\\d+) s;",
           "^\\[tools\\] [^:]+: (?<step>.+? / .+?) \\(.*\\): (?<done>\\d+) von (?<bound>\\d+) s;"
         ],
-        "stepOverBoundPattern": "\\s*\\((?:beyond the expected|über den erwarteten) \\d+ s\\)",
         "progressPatterns": ["store-ownership:[a-zA-Z]+:\\d+", "Checking declared package providers: \\d+ edges", "\"completedOperations\":\\d+", "native-artifact-input-(?:stage|read|verification):\\d+", "nx:source-(?:index|verification):[1-9][0-9]*","javascript-selected-payload:[1-9][0-9]*", "dependencies:(?:workspace-edges|Source-aliases|selected-postorder):[1-9][0-9]*", "dependencies:sync-bindings:[1-9][0-9]{0,3}/[1-9][0-9]{0,3}:canonical:(?:0|[1-9][0-9]{0,3}):changed:(?:0|[1-9][0-9]{0,3})(?=\")"]
       }
     },

@@ -28,6 +28,7 @@ members = [
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧱️details/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📐️formulas/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📐️formulas/🫙️part-4/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔗️graphql-twin/📦️packages/🦀️rust",
@@ -459,6 +460,9 @@ path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️
 
 [workspace.dependencies.semio-s-artifact-norm-en1998-schema-formulas]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📐️formulas/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-schema-part4]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📐️formulas/🫙️part-4/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-artifact-norm-en1998-mut-buildings-storey-more]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢️buildings-storey-more/📦️packages/🦀️rust"

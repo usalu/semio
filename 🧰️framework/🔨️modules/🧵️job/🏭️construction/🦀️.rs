@@ -81,6 +81,8 @@ impl OriginalConstructionAdmission{
   let progress=RetainedCloneProgress{copied_items:after.copied_items-before.copied_items,copied_bytes:after.copied_bytes-before.copied_bytes,retained_capacity_bytes:after.retained_capacity_bytes-before.retained_capacity_bytes,released_bytes:after.released_bytes-before.released_bytes};
   Ok(if settled{crate::InteractiveJobCloseStep::Complete{progress}}else{crate::InteractiveJobCloseStep::Pending{progress}})
  }
+ /// 🧾️ Retires one slot of a born candidate whose unsettled Source outcome is no longer wanted, returning true once the admission is terminal.
+ pub fn retire_born_candidate_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{self.close_step(cx)}
  pub fn terminal_is_empty(&self)->bool{self.binding.is_none()&&self.authority.is_none()&&self.source.is_none()&&self.child.is_none()&&!self.complete&&!self.failed_taken&&self.frame.phase()==semio_framework_value_native_owned::native_decoding::NativeReceivingEffectPhase::Empty}
  /// 📏️ Quotes the next single metadata slot, leaving a producer refusal in its original receiver.
  pub fn close_demand(&self) -> RetirementDemand {

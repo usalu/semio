@@ -16,11 +16,11 @@ impl XrefSectionProbe {
     pub fn new(offset: usize) -> Self { Self { position: offset, matched: 0, comment: false, kind: None } }
 
     /// 🔎️ Reads the first lexical word with at most one source byte inspection per unit.
-    pub fn advance(&mut self, source: &[u8], grant: usize) -> (usize, Option<XrefSectionKind>) {
+    pub fn advance(&mut self, byte_at: impl Fn(usize) -> Option<u8>, grant: usize) -> (usize, Option<XrefSectionKind>) {
         const XREF: &[u8] = b"xref";
         let mut work = 0;
         while self.kind.is_none() && work < grant {
-            let byte = source.get(self.position).copied();
+            let byte = byte_at(self.position);
             work += 1;
             match byte {
                 _ if self.matched == XREF.len() => {
@@ -51,7 +51,7 @@ mod tests {
         ] {
             let mut cursor = XrefSectionProbe::new(1002);
             loop {
-                let (work, result) = cursor.advance(source, 1);
+                let (work, result) = cursor.advance(|position| source.get(position).copied(), 1);
                 assert_eq!(work, 1);
                 if let Some(actual) = result { assert_eq!(actual, expected); break }
             }

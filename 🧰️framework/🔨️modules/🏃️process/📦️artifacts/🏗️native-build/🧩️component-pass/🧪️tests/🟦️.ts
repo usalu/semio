@@ -81,7 +81,8 @@ const packages = args.flatMap((arg, index) => args[index - 1] === "-p" ? [arg] :
 const observing = process.env.STUB_MODE.startsWith("observe-") || process.env.STUB_MODE === "reclaim-error";
 const announced = process.env.STUB_MODE === "observe-announced";
 const beforeAnnouncement = process.env.STUB_MODE.startsWith("observe-before-announcement");
-const consumed = announced || beforeAnnouncement || process.env.STUB_MODE === "observe-consumed";
+const failedSpan = process.env.STUB_MODE.startsWith("observe-failed-span:");
+const consumed = announced || beforeAnnouncement || failedSpan || process.env.STUB_MODE === "observe-consumed";
 if (args.includes("--unit-graph")) {
   if(process.env.STUB_MODE==="unit-hang"){appendFileSync(${JSON.stringify(join(root,"unit-calls.jsonl"))},JSON.stringify({pid:process.pid})+"\\n");await new Promise(()=>setInterval(()=>{},1000));}
   const units = observing ? packages.map(name=>({pkg_id:"path+"+pathToFileURL(join(root,name)).href+"#"+name+"@0.1.0",target:{name,kind:["cdylib"],crate_types:["cdylib"],src_path:join(root,name,"lib.rs")},platform:"wasm32-wasip2",mode:"build",features:[],dependencies:[]})) : [];
@@ -95,6 +96,14 @@ for (const name of linked) {
   await new Promise((accept) => setTimeout(accept, ${fixture.stub.delayMs} / packages.length));
   const directory = join(process.env.CARGO_TARGET_DIR, "wasm32-wasip2", profile), wasm = join(directory, name.replaceAll("-", "_") + ".wasm"), source = join(root, name, "lib.rs");
   const original = readFileSync(source, "utf8") === ${JSON.stringify(fixture.provenanceSeal.originalSource)};
+  if (failedSpan && original) {
+    const scenario = ${JSON.stringify(fixture.provenanceSeal.failedSpan.cases)}.find(row=>process.env.STUB_MODE.endsWith(":"+row.name));
+    if (scenario.changed) writeFileSync(source, ${JSON.stringify(fixture.provenanceSeal.editedSource)});
+    process.stdout.write(JSON.stringify({reason:"compiler-message", package_id:"path+"+pathToFileURL(join(root,name)).href+"#"+name+"@0.1.0", manifest_path:join(root,name,"Cargo.toml"),target:{name,src_path:source},message:{level:"error",code:{code:"E0407"},message:"method is not a member of trait",spans:[{file_name:name+"-0.1.0/lib.rs",is_primary:scenario.primary}]}}) + "\\n");
+    await new Promise(accept=>setTimeout(accept, ${fixture.provenanceSeal.failedSpan.keepGoingMilliseconds}));
+    appendFileSync(${JSON.stringify(calls)}, JSON.stringify({keepGoing: true}) + "\\n");
+    process.exit(101);
+  }
   if (beforeAnnouncement && !original && process.env.STUB_MODE.endsWith("-unbacked")) {
     process.stderr.write("retry stopped by the fixture after the unbacked source edit\\n");
     process.exit(101);
@@ -565,6 +574,29 @@ for (const scenario of fixture.provenanceSeal.beforeAnnouncement.cases) {
     expect(readFileSync(source,"utf8")).toBe(expected.editedSource);
     checkpoint();
   },scenario.retained?undefined:refusal);
+}
+
+for (const scenario of fixture.provenanceSeal.failedSpan.cases) {
+  registerIsolatedBuildTestV1(import.meta.path,"the driver recaptures an authenticated failed span ("+scenario.name+")",{bodyMilliseconds:120_000,scope:{kind:"body"}},async checkpoint=>{
+    const root=mkdtempSync(join(artifacts,"e-")),cargo=stubCargo(root),pass=stubWorkspace(root,"app",["seal-a"],"release");
+    const source=join(dirname(pass.packages[0]!.manifest),"lib.rs"),expected=fixture.provenanceSeal;
+    writeFileSync(source,expected.originalSource);
+    const run=runStub(root,{version:1,passes:[pass]},cargo,{},"observe-failed-span:"+scenario.name,({outcome})=>{
+      if(!outcome)return;
+      const receipts=join(outcome.generation.report,NATIVE_BUILD_DRIVER_POLICY_V1.provenanceDirectory);
+      const record=readdirSync(receipts).find(name=>name.startsWith("cargo-unit-provenance-"));
+      expect(record).toBeDefined();
+      const units=decodeCargoProvenanceV1(readFileSync(join(receipts,record!),"utf8")).units;
+      expect(units.flatMap(unit=>unit.depInfo).flatMap(row=>row.checksums).find(row=>resolve(row.path)===source))
+        .toMatchObject({blake3:Buffer.from(blake3(Buffer.from(expected.editedSource))).toString("hex"),length:Buffer.byteLength(expected.editedSource)});
+    });
+    if(scenario.changed)expect((await run).staged).toEqual(["seal-a:release"]);
+    else await expect(run).rejects.toThrow(/^Native build failed:/u);
+    const calls=readFileSync(cargo.calls,"utf8").trim().split("\n").map(line=>JSON.parse(line));
+    expect(calls.filter(row=>row.pid)).toHaveLength(scenario.attempts);
+    expect(calls.some(row=>row.keepGoing)).toBe(!scenario.retired);
+    checkpoint();
+  },scenario.changed?undefined:/^Native build failed:/u);
 }
 
 for (const scenario of fixture.provenanceSeal.cases) {

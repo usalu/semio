@@ -82,82 +82,81 @@ use semio_s_artifact_stdio_dwg_write_objects::standards::v_ac1024::subsets::any:
 
 //#region 🔖️SectionMapAndInfo
 //#region 🔖️R2004Writer
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn materialize_r2004_ordinary_pages_without_header(snapshot: &DwgSnapshot) -> Result<Vec<EncodedR2004Page>, String> {
-    let (objects, pairs) = materialize_r2010_objects(&snapshot.drawing.objects)?;
-    let handles = materialize_r2004_handles(&pairs)?;
-    let sections = [
-        (9u32, encode_summary_info(&snapshot.summary)?, Some(128usize)),
-        (10, encode_indexed_preview(&snapshot.preview, 0x1c0)?, Some(87_040)),
-        (11, encode_application_info(&snapshot.application)?, Some(768)),
-        (12, encode_application_history(&snapshot.application_history)?, Some(1_408)),
-        (13, encode_dependencies(&snapshot.dependencies)?, Some(768)),
-        (8, encode_revision_history(&snapshot.revision_history)?, None),
-        (7, objects, None),
-        (6, encode_object_free_space(&snapshot.auxiliary_header.updated_at), None),
-        (5, encode_template(&snapshot.template)?, None),
-        (4, handles, None),
-        (3, encode_r2010_classes_section(&snapshot.classes)?, None),
-        (2, encode_auxiliary_header(&snapshot.auxiliary_header)?, None),
-    ];
-    let mut pages = Vec::new();
-    let mut address = 0x100usize;
-    let mut page_number = 1i32;
-    for (section_id, content, stored_capacity) in sections {
-        if let Some(capacity) = stored_capacity {
-            if content.len() > capacity {
-                return Err(format!("stored section {section_id} exceeds capacity {capacity}"));
-            }
-            let mut payload = content;
-            payload.resize(capacity, 0);
-            let allocation_size = (32 + capacity) as u32;
-            pages.push(EncodedR2004Page { section_id, page_number, start_offset: 0, payload, address: address as u64, allocation_size });
-            address += allocation_size as usize;
-            page_number += 1;
-            continue;
-        }
-        for (page_index, chunk) in content.chunks(0x7400).enumerate() {
-            let mut decoded = vec![0; 0x7400];
-            decoded[..chunk.len()].copy_from_slice(chunk);
-            let payload = compress_r2004_section(&decoded)?;
-            let allocation_size = align_r2004(32 + payload.len()) as u32;
-            pages.push(EncodedR2004Page { section_id, page_number, start_offset: (page_index * 0x7400) as u64, payload, address: address as u64, allocation_size });
-            address += allocation_size as usize;
-            page_number += 1;
-        }
+const R2004_PAGE_SIZE: usize = 0x7400;
+
+struct R2004Section {
+    id: u32,
+    name: &'static str,
+    content: Vec<u8>,
+    stored: Option<(u32, u32)>,
+}
+
+impl R2004Section {
+    fn compressed(id: u32, name: &'static str, content: Vec<u8>) -> Self {
+        Self { id, name, content, stored: None }
     }
-    Ok(pages)
+
+    fn stored(id: u32, name: &'static str, content: Vec<u8>, capacity: u32, encryption: u32) -> Self {
+        Self { id, name, content, stored: Some((capacity, encryption)) }
+    }
+
+    fn descriptor(&self) -> R2004SectionDescriptor {
+        let (max_decompressed_size, encryption) = self.stored.unwrap_or((R2004_PAGE_SIZE as u32, 0));
+        R2004SectionDescriptor { name: self.name, section_id: self.id, semantic_size: self.content.len() as u64,
+            max_decompressed_size, compression: if self.stored.is_some() { 1 } else { 2 }, encryption }
+    }
+
+    fn encode_page(&self, start_offset: usize, address: u64, page_number: i32) -> Result<EncodedR2004Page, String> {
+        let size = self.stored.map_or(R2004_PAGE_SIZE, |(capacity, _)| capacity as usize);
+        let source = &self.content[start_offset..];
+        if self.stored.is_some() && source.len() > size {
+            return Err(format!("stored section {} exceeds capacity {size}", self.id));
+        }
+        let mut buffer = vec![0; size];
+        let copied = source.len().min(size);
+        buffer[..copied].copy_from_slice(&source[..copied]);
+        let (payload, allocation_size) = if self.stored.is_some() {
+            (buffer, 32 + size)
+        } else {
+            let payload = compress_r2004_section(&buffer)?;
+            let allocation_size = align_r2004(32 + payload.len());
+            (payload, allocation_size)
+        };
+        Ok(EncodedR2004Page { section_id: self.id, page_number, start_offset: start_offset as u64,
+            payload, address, allocation_size: allocation_size as u32 })
+    }
+
+    fn append_pages(&self, pages: &mut Vec<EncodedR2004Page>) -> Result<(), String> {
+        let span = if self.stored.is_some() { 1 } else { self.content.len() };
+        for offset in (0..span).step_by(R2004_PAGE_SIZE) {
+            let address = pages.last().map_or(0x100, |page| page.address + u64::from(page.allocation_size));
+            let number = i32::try_from(pages.len() + 1).map_err(|_| "R2004 page count exceeds i32")?;
+            pages.push(self.encode_page(offset, address, number)?);
+        }
+        Ok(())
+    }
 }
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn r2004_section_descriptors(snapshot: &DwgSnapshot, header_size: usize) -> Result<Vec<R2004SectionDescriptor>, String> {
+
+fn materialize_r2004_sections(snapshot: &DwgSnapshot) -> Result<[R2004Section; 13], String> {
     let (objects, pairs) = materialize_r2010_objects(&snapshot.drawing.objects)?;
     let handles = materialize_r2004_handles(&pairs)?;
-    let sizes = [
-        (13, "AcDb:FileDepList", encode_dependencies(&snapshot.dependencies)?.len(), 768, 1, 2),
-        (12, "AcDb:AppInfoHistory", encode_application_history(&snapshot.application_history)?.len(), 1_408, 1, 0),
-        (11, "AcDb:AppInfo", encode_application_info(&snapshot.application)?.len(), 768, 1, 0),
-        (10, "AcDb:Preview", encode_indexed_preview(&snapshot.preview, 0x1c0)?.len(), 87_040, 1, 0),
-        (9, "AcDb:SummaryInfo", encode_summary_info(&snapshot.summary)?.len(), 128, 1, 0),
-        (8, "AcDb:RevHistory", encode_revision_history(&snapshot.revision_history)?.len(), 0x7400, 2, 0),
-        (7, "AcDb:AcDbObjects", objects.len(), 0x7400, 2, 0),
-        (6, "AcDb:ObjFreeSpace", encode_object_free_space(&snapshot.auxiliary_header.updated_at).len(), 0x7400, 2, 0),
-        (5, "AcDb:Template", encode_template(&snapshot.template)?.len(), 0x7400, 2, 0),
-        (4, "AcDb:Handles", handles.len(), 0x7400, 2, 0),
-        (3, "AcDb:Classes", encode_r2010_classes_section(&snapshot.classes)?.len(), 0x7400, 2, 0),
-        (2, "AcDb:AuxHeader", encode_auxiliary_header(&snapshot.auxiliary_header)?.len(), 0x7400, 2, 0),
-        (1, "AcDb:Header", header_size, 0x7400, 2, 0),
-    ];
-    let mut descriptors = vec![R2004SectionDescriptor { name: "", section_id: 0, semantic_size: 0, max_decompressed_size: 0x7400, compression: 2, encryption: 0 }];
-    descriptors.extend(sizes.into_iter().map(|(section_id, name, semantic_size, max_decompressed_size, compression, encryption)| R2004SectionDescriptor {
-        name,
-        section_id,
-        semantic_size: semantic_size as u64,
-        max_decompressed_size,
-        compression,
-        encryption,
-    }));
-    Ok(descriptors)
+    Ok([
+        R2004Section::stored(9, "AcDb:SummaryInfo", encode_summary_info(&snapshot.summary)?, 128, 0),
+        R2004Section::stored(10, "AcDb:Preview", encode_indexed_preview(&snapshot.preview, 0x1c0)?, 87_040, 0),
+        R2004Section::stored(11, "AcDb:AppInfo", encode_application_info(&snapshot.application)?, 768, 0),
+        R2004Section::stored(12, "AcDb:AppInfoHistory", encode_application_history(&snapshot.application_history)?, 1_408, 0),
+        R2004Section::stored(13, "AcDb:FileDepList", encode_dependencies(&snapshot.dependencies)?, 768, 2),
+        R2004Section::compressed(8, "AcDb:RevHistory", encode_revision_history(&snapshot.revision_history)?),
+        R2004Section::compressed(7, "AcDb:AcDbObjects", objects),
+        R2004Section::compressed(6, "AcDb:ObjFreeSpace", encode_object_free_space(&snapshot.auxiliary_header.updated_at)),
+        R2004Section::compressed(5, "AcDb:Template", encode_template(&snapshot.template)?),
+        R2004Section::compressed(4, "AcDb:Handles", handles),
+        R2004Section::compressed(3, "AcDb:Classes", encode_r2010_classes_section(&snapshot.classes)?),
+        R2004Section::compressed(2, "AcDb:AuxHeader", encode_auxiliary_header(&snapshot.auxiliary_header)?),
+        R2004Section::compressed(1, "AcDb:Header", encode_r2010_header_section(&snapshot.header)?),
+    ])
 }
+
 /// 🏗️ Materializes a canonical R2004-family directory from logical AC1024 section descriptors.
 /// Section payloads are serialization products and are never retained in the artifact schema.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -165,18 +164,21 @@ fn encode_r2004_canonical(snapshot: &DwgSnapshot) -> Result<Vec<u8>, String> {
     if snapshot.version.len() != 6 {
         return Err("version sentinel must contain six bytes".into());
     }
-    let header = encode_r2010_header_section(&snapshot.header)?;
-    let mut pages = materialize_r2004_ordinary_pages_without_header(snapshot)?;
-    let mut decoded_header = vec![0; 0x7400];
-    decoded_header[..header.len()].copy_from_slice(&header);
-    let header_payload = compress_r2004_section(&decoded_header)?;
-    let header_address = pages.last().map_or(0x100, |page| page.address + u64::from(page.allocation_size));
-    let header_page_number = i32::try_from(pages.len() + 1).map_err(|_| "R2004 page count exceeds i32")?;
-    pages.push(EncodedR2004Page { section_id: 1, page_number: header_page_number, start_offset: 0, allocation_size: align_r2004(32 + header_payload.len()) as u32, address: header_address, payload: header_payload });
-    let section_info_page_number = header_page_number as u32 + 3;
-    let section_map_page_number = header_page_number as u32 + 4;
-    let descriptors = r2004_section_descriptors(snapshot, header.len())?;
-    let application_history_scratch = encode_application_history(&snapshot.application_history)?;
+    let mut pages = Vec::new();
+    let mut descriptors = Vec::with_capacity(14);
+    let mut application_history = Vec::new();
+    for section in materialize_r2004_sections(snapshot)? {
+        descriptors.push(section.descriptor());
+        section.append_pages(&mut pages)?;
+        if section.id == 12 {
+            application_history = section.content;
+        }
+    }
+    let last_page_number = u32::try_from(pages.len()).map_err(|_| "R2004 page count exceeds u32")?;
+    let section_info_page_number = last_page_number + 3;
+    let section_map_page_number = last_page_number + 4;
+    descriptors.sort_unstable_by_key(|descriptor| std::cmp::Reverse(descriptor.section_id));
+    descriptors.insert(0, R2004Section::compressed(0, "", Vec::new()).descriptor());
     let page_map_with = |section_info_allocation: u32, section_map_allocation: u32| {
         let mut page_map = Vec::new();
         for page in &pages {
@@ -195,7 +197,7 @@ fn encode_r2004_canonical(snapshot: &DwgSnapshot) -> Result<Vec<u8>, String> {
     let reserved_len = reserved_source.len().min(64);
     reserved_name[..reserved_len].copy_from_slice(&reserved_source[..reserved_len]);
     reserved_name[0] = 0;
-    let section_info = encode_r2004_section_info(&descriptors, &pages, &reserved_name, &application_history_scratch)?;
+    let section_info = encode_r2004_section_info(&descriptors, &pages, &reserved_name, &application_history)?;
     let section_info_allocation = align_r2004(40 + compress_r2004_section(&section_info)?.len()).max(1_024);
     let page_map = page_map_with(section_info_allocation as u32, 1_600);
     let section_map_allocation = align_r2004(40 + compress_r2004_section(&page_map)?.len()).max(1_600);
@@ -236,7 +238,7 @@ fn encode_r2004_canonical(snapshot: &DwgSnapshot) -> Result<Vec<u8>, String> {
     let last_section_address = page_map_address + section_map_allocation - 0x100;
     file_header[0x2c..0x34].copy_from_slice(&(last_section_address as u64).to_le_bytes());
     file_header[0x34..0x3c].copy_from_slice(&second_header_address.to_le_bytes());
-    file_header[0x40..0x44].copy_from_slice(&(header_page_number as u32 + 2).to_le_bytes());
+    file_header[0x40..0x44].copy_from_slice(&(last_page_number + 2).to_le_bytes());
     file_header[0x44..0x48].copy_from_slice(&0x20u32.to_le_bytes());
     file_header[0x48..0x4c].copy_from_slice(&0x80u32.to_le_bytes());
     file_header[0x4c..0x50].copy_from_slice(&0x40u32.to_le_bytes());

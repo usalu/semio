@@ -177,3 +177,11 @@ Scripts: the asset's chain, extended in place (`r3_red_squirrel_body50.py`, `r3_
 - Hands are paddles with one finger group (single fingers are under the 7.5 mm feature at 1:50).
 - Jagged grey seams where trunk domes and limbs graze (shoulder, haunch).
 - Structure lists unchanged from round 4 (B+ at 1:50; 1:100 pelvis a keg).
+
+## November 21 articulated brush
+
+Published source `ed466b4354a04852a45c8085f77c4f5d8a30e1765da05a6e5d4f6af7a10124c2`. Six caudal groups now span 175 mm and carry 40 g. Their 4, 4, 3, 4, 4 and 4 individually tapered centra follow the seated, running and climbing bones through all 14 poses. The group lengths, heading and taper are authoring estimates. The comparative vertebral anatomy study informed the design. [Comparative tail skeleton study](https://pubmed.ncbi.nlm.nih.gov/34549832/)
+
+In the seated pose the brush rises behind the body, then turns toward the ears. In the running sequence it extends backwards. The coat has overlapping root caps, guard locks and a protected underfur layer. There are 36, 28, 18 and 12 individual guard locks at the four respective scales. The layer joins and the course of the tip were inspected in 24 source-matched physical, temperature and structural panels for sitting and running. The running brush still shows changes of curvature where the six simulated joints meet. The paws and face remain simplified.
+
+At 1 mm surface sampling the maximum isolated brush measured 0.03194 m². Body contact and overlap give 0.03069–0.03165 m² exposed across the pose library. The thermal field uses the measured fractions for each individual pose. All 52 scale rules, paper band endpoints, schema validation and twelve exported scenes passed on the published candidate.

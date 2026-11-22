@@ -6,7 +6,7 @@ import {existsSync,mkdirSync,mkdtempSync,readFileSync,readdirSync,rmSync,writeFi
 import {tmpdir} from "node:os";
 import {join,resolve} from "node:path";
 import Ajv from "ajv";
-import {NX_DAEMON_SLOTS_EXHAUSTED_KEY_V1,acquireNxDaemonSlotV1,countNxDaemonSlotsV1,decideNxDaemonV1,nxDaemonIdleV1,nxDaemonLimitsV1,nxDaemonResidentDirectoryV1,nxDaemonResourceHeldV1,nxDaemonRetireV1,nxDaemonSlotResourceV1,nxDaemonYieldRequestedV1,nxDaemonYieldV1,readNxDaemonResidentV1,removeNxDaemonResidentV1,writeNxDaemonResidentV1} from "../🟦️.ts";
+import {NX_DAEMON_SLOTS_EXHAUSTED_KEY_V1,acquireNxDaemonSlotV1,countNxDaemonSlotsV1,decideNxDaemonV1,nxDaemonIdleV1,nxDaemonLimitsV1,nxDaemonResidentDirectoryV1,nxDaemonResourceHeldV1,nxDaemonRetireV1,nxDaemonSlotResourceV1,nxDaemonSupersededV1,nxDaemonYieldRequestedV1,nxDaemonYieldV1,readNxDaemonResidentV1,removeNxDaemonResidentV1,writeNxDaemonResidentV1} from "../🟦️.ts";
 import {nxGraphYieldResourceV1} from "../../../../💾️storage/🔒️enforcement/🔌️nx/📦️graph/🟦️.ts";
 import {acquireResourceLease} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 
@@ -54,6 +54,8 @@ test("a daemon publishes its resident memory atomically, the writer clears recor
 });
 
 fixture.yield.forEach((row:any,index:number)=>test("yield: "+row.name,()=>{expect(nxDaemonYieldV1(row.state)).toBe(row.expected);expect(row.expected).toBe(model.yield[index]);}));
+
+fixture.superseded.forEach((row:any,index:number)=>test("superseded: "+row.name,()=>{expect(nxDaemonSupersededV1(row.state)).toBe(row.expected);expect(row.expected).toBe(model.superseded[index]);}));
 
 test("an eviction's yield request is seen by a daemon probe of that namespace only, and probes never exclude each other",async()=>{
  const root=mkdtempSync(join(artifacts,"nx-daemon-yield-")),leases=join(root,"lease"),namespace=join(root,"graphs","a","b"),other=join(root,"graphs","a","c");
@@ -110,6 +112,11 @@ test("source: a finite daemon yields to an eviction only while idle and ends wit
  expect(service).toContain("nxDaemonYieldRequestedV1(repositoryLeaseDirectoryV1(birth.repositoryRoot),birth.directory,original.control.signal)");
  expect(service).toContain("nxDaemonYieldV1({kind,openRequests:activity.open,requested})");expect(service).toContain("yieldTimer.unref()");
  expect(service).toContain("watchdog??=setTimeout(");expect(service).toContain("limits.drainMilliseconds");expect(service).toContain("finally{clearInterval(idleTimer);clearInterval(yieldTimer);clearTimeout(watchdog);");
+});
+test("source: a finite daemon drains only while quiet once a newer authorizer bundle holds beside its generation",()=>{
+ expect(service).toContain("supersedingNxAuthorizerBundleV1(dirname(dirname(bundleRoot)),birth.toolingIdentity,basename(bundleRoot))");
+ expect(service).toContain("nxDaemonSupersededV1({kind,openRequests:activity.open,superseded:bundleSuperseded()})");
+ expect(service).toContain('if(kind!=="finite"||activity.open>0||attachedClients()>0||lifetime.snapshot().phase!=="ready")return;if(nxDaemonSupersededV1(');
 });
 test("source: a client whose daemon found every slot taken runs once more without a daemon (a daemon start precedes every task, so no executing check)",()=>{
  expect(script).toContain("state.slotsTaken ||= state.tail.includes(NX_DAEMON_SLOTS_EXHAUSTED_KEY_V1)");

@@ -157,7 +157,7 @@ export type Section = {
   readonly title?: Text;
 };
 
-/** 🦴️ A bone: a rigid frame placed at (`x`, `y`) and rotated by `angleDeg` in its parent's frame at rest; its local x axis runs along it. `z` is the lateral rest offset of the origin in the parent frame (left is +, default 0): the pivot of a spread or twist of a bone beside the symmetry plane (a wing root, a shoulder). */
+/** 🦴️ A bone: a rigid frame with the axes `u` (along the bone, local x), `v` (its normal, local y) and `w` (its joint axis), placed at (`x`, `y`, `z`) along the parent's (`u`, `v`, `w`) (`z` default 0; left is + under a sagittal parent: a wing root, a shoulder) and oriented in the parent at rest by `angleDeg` about the parent's `w`, then `abductionDeg` about its own `v` (positive turns `u` towards `w`; 90 lays the bone laterally: a clavicle, a pelvis half, an axle, a handlebar), then `twistDeg` about its own `u` (positive turns `v` to `-w` and `w` to `v`; it sets the joint axis of the bone and the frame of its children). Both default to 0: the sagittal rest placement. A pose or clip offset turns the bone about its own rest axes in the same order. */
 export type Bone = {
   readonly id: Slug;
   readonly parent: Slug | null;
@@ -167,6 +167,7 @@ export type Bone = {
   readonly z?: number;
   readonly angleDeg: number;
   readonly abductionDeg?: number;
+  readonly twistDeg?: number;
   readonly lengthM: number;
   readonly joint: Joint;
   readonly mass?: SegmentMass;
@@ -318,7 +319,7 @@ export const SECTION_FACES = ["-u", "+u", "-v", "+v", "-w", "+w"] as const;
 /** 🧭️ One of {@link SECTION_FACES}. */
 export type SectionFace = (typeof SECTION_FACES)[number];
 
-/** 🕸️ The fields every {@link VolumeSolid} carries: `bone` frames its coordinates and carries it (or, with `weights`, blends it over up to four bones that sum to 1), `material` an entry of the asset's materials, `role` the line-hierarchy role, `tone` the grey 0..1 of the solid views, `slender` a cord, wire or rod at least 20 times as long as thick, `envelope` the envelope prism that replaces a finer lattice, `texture` a sheet-like texture part excluded from the silhouette comparisons, `sectionFaces` the faces that are section cuts and count for no thermal area. */
+/** 🕸️ The fields every {@link VolumeSolid} carries: `bone` frames its coordinates and carries it (or, with `weights`, blends it over up to four bones that sum to 1), `material` an entry of the asset's materials, `role` the line-hierarchy role, `tone` the grey 0..1 of the solid views, `slender` a cord, wire or rod at least 20 times as long as thick (a structure member from 5 times and two smallest features of length), `sheet` a declared thin sheet (vane, membrane, fabric, board, panel) at least 20 times as broad as thick that keeps its physical thickness below the smallest feature, `envelope` the envelope prism that replaces a finer lattice, `texture` a sheet-like texture part excluded from the silhouette comparisons, `sectionFaces` the faces that are section cuts and count for no thermal area. */
 export type VolumeSolidBase = {
   readonly id: Slug;
   readonly bone: Slug;
@@ -326,6 +327,7 @@ export type VolumeSolidBase = {
   readonly role: ShapeRole;
   readonly tone: number;
   readonly slender?: boolean;
+  readonly sheet?: boolean;
   readonly envelope?: boolean;
   readonly texture?: boolean;
   readonly sectionFaces?: readonly SectionFace[];
@@ -368,8 +370,8 @@ export type ThermalSolid = (VolumeSolid | (SolidReference & { readonly sectionFa
 /** 🏗️ A solid of the `structure` list: its own {@link VolumeSolid} or a {@link SolidReference}, naming the bone `member` it idealises and what it is (`part`); a `support` carries the `anchor` of `structure.supports` it supports. */
 export type StructuralSolid = (VolumeSolid | (SolidReference & { readonly sectionFaces?: readonly SectionFace[] })) & StructuralLabel;
 
-/** 🏷️ What every {@link StructuralSolid} says about itself: a support names its anchor, the other parts have none. */
-export type StructuralLabel = { readonly member: Slug } & ({ readonly part: "support"; readonly anchor: Slug } | { readonly part: Exclude<StructuralPart, "support">; readonly anchor?: undefined });
+/** 🏷️ What every {@link StructuralSolid} says about itself: a support names its anchor, the other parts have none. A `member` part may name in `members` the further bones it spans besides `member` (a spine of five segments as one rod, a skull that takes the mandible in): they are distinct, form with `member` one connected piece of the rig (`volume-member`) and lie, in the default pose, from joint to tip in the solid or within one smallest feature of its surface (`volumes-structure-coverage`); the solid then is the member solid of each of them, is judged for `slender` by its own length and stays coloured and loaded as `member`. */
+export type StructuralLabel = { readonly member: Slug; readonly members?: readonly Slug[] } & ({ readonly part: "support"; readonly anchor: Slug } | { readonly part: Exclude<StructuralPart, "support">; readonly anchor?: undefined });
 
 /** 🔧️ The handcrafted 3D model of an asset at one authored scale, individually authored against that scale's own 2D shapes: `body` carries the tone views, `thermal` and `structure` the two physical models made spatial, `decisions` what was merged or simplified against the finer scale and why. */
 export type AuthoredVolume = {
@@ -497,7 +499,7 @@ export type PrintProfileDocument = { readonly $schema: string; readonly version:
 //#endregion 🖨️Representations
 
 //#region 🧍️Poses
-/** 🎚️ An offset from rest for one bone: rotation delta and translation delta along the parent frame (prismatic joints). `abductionDeg` is the lateral spread of a revolute bone: the bone turns out of the sagittal plane about its own normal (positive towards the left of the asset, +z), added down the chain like `angleDeg`. `twistDeg` turns the bone and its subtree about its own longitudinal axis (a yaw for a vertical bone: slew, swivel, steering; positive counter-clockwise seen from above for a bone pointing up). Both are solved in a three-dimensional chain whose orthographic projections are the side elevation, the front elevation and the plan (top view). */
+/** 🎚️ An offset from rest for one bone: rotation deltas and the translation delta along the parent frame (prismatic joints). The rotations follow the rest placement and turn the bone about its own rest axes: `angleDeg` about its joint axis `w`, then `abductionDeg` about its normal `v`, then `twistDeg` about its axis `u`. `abductionDeg` is the lateral spread of a revolute bone: the bone turns out of its rest plane about its own normal (positive towards its joint axis: the left of the asset, +z, for a sagittal bone). `twistDeg` turns the bone and its subtree about its own longitudinal axis (a yaw for a vertical bone: slew, swivel, steering; positive counter-clockwise seen from above for a bone pointing up). Children ride on the offset bone; the chain is three-dimensional and the side elevation, the front elevation and the plan (top view) are its orthographic projections. */
 export type BoneOffset = { readonly angleDeg?: number; readonly abductionDeg?: number; readonly twistDeg?: number; readonly dx?: number; readonly dy?: number };
 
 /** 🧲️ A load applied at an anchor or a bone point, in world newtons; `distributed` spreads `wyNPerM` along a bone segment instead. */
@@ -785,7 +787,7 @@ export type Emitter = {
 /** ⚙️ An operating state family of a machine: its key, title and the named levels (0 = off, 1 = rated). */
 export type OperatingKey = { readonly id: Slug; readonly title: Text; readonly levels: readonly { readonly v: number; readonly title: Text }[] };
 
-/** 🌡️ The thermal model of an asset. */
+/** 🌡️ The thermal model of an asset. `minimumAirPassageM` is the narrowest real air passage of the asset in metres (a lid slot, a running gap): the flood from outside of `volumes-thermal-coverage` keeps a cell of at most a third of it at every scale, so the opening stays open where it is narrower than half the smallest feature. */
 export type ThermalModel = {
   readonly minimumAirPassageM?: number;
   readonly environment: Environment;

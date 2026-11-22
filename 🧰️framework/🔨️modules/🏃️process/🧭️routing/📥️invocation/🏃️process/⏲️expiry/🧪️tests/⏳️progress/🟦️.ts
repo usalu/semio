@@ -1,9 +1,11 @@
 import {LANGUAGE_PROTOCOL_V1} from "../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
-import { afterAll, beforeAll, expect, test } from "bun:test";
+import { afterAll, beforeAll, expect, spyOn, test } from "bun:test";
+import { Database } from "bun:sqlite";
 import progressSchema from "../../../🧬️schema/📈️progress.json";
 import { createScriptProcessEnvelope, withScriptProcessEnvelope, createIssuedResourceControlV1, createRenewableIssuedResourceControlV1 } from "../../../🟦️.ts";
 import { noteScriptProcessActivityV1, enterScriptProcessWaitV1, createScriptProcessActivitySamplerV1, scriptProcessActivityIdleMillisecondsV1 } from "../../../🐕️watchdog/🟦️.ts";
-import { ProgressDeadlineExpiredV1 } from "../../../../../../⏱️budget/🟦️.ts";
+import { buildPreparationBudgetMs, progressDeadlinePolicyV1, ProgressDeadlineExpiredV1 } from "../../../../../../⏱️budget/🟦️.ts";
+import budgets from "../../../../../../⏱️budget/🧪️tests/🧫️fixtures/🔣️.json";
 import { runOwnedCommand } from "../../../../../../🎛️owned-execution/🟦️.ts";
 
 const within = <T>(run: (control: ReturnType<typeof createIssuedResourceControlV1>, invocation: any) => Promise<T>) => withScriptProcessEnvelope(createScriptProcessEnvelope({ version: 1, owner: "fixture:progress-deadline", maximumElapsedMilliseconds: 60000 }, {}, Date.now()), (invocation) => run(createIssuedResourceControlV1(invocation, "fixture:progress", 0), invocation));
@@ -37,6 +39,43 @@ test("a renewable control cannot be renewed past its maximum", async () => {
     expect(aborted(control.signal).reason).toBe("maximum");
     expect(performance.now() - started).toBeLessThan(1500);
   });
+});
+
+test("the release loan outlives generic preparation and still obeys its earlier real parent", async () => {
+  const fixture = budgets.progressDerivations.find(row => row.kind === "native-release" && row.units === 82)!;
+  const policy = progressDeadlinePolicyV1("native-release", fixture.units, {});
+  const genericMaximum = buildPreparationBudgetMs(), parentMaximum = genericMaximum + 20 * 60_000;
+  const epoch = Date.now(), monotonic = performance.now(), oracle = new Database(":memory:");
+  let elapsed = 0;
+  const date = spyOn(Date, "now").mockImplementation(() => epoch + elapsed);
+  const clock = spyOn(performance, "now").mockImplementation(() => monotonic + elapsed);
+  const advance = (value: number) => { elapsed = value; noteScriptProcessActivityV1(); };
+  try {
+    const envelope = createScriptProcessEnvelope({ version: 1, owner: "fixture:release-deadline", maximumElapsedMilliseconds: 0 }, {}, epoch);
+    await withScriptProcessEnvelope(envelope, async original => {
+      advance(0);
+      const parent = createIssuedResourceControlV1(original, "native:driver", 0);
+      const generic = createRenewableIssuedResourceControlV1(parent, progressDeadlinePolicyV1("native-child", 0, {}, { maximumMilliseconds: genericMaximum }), 0);
+      const release = createRenewableIssuedResourceControlV1(parent, policy, fixture.units);
+      const finiteParent = createIssuedResourceControlV1(original, "fixture:release-parent", parentMaximum);
+      const nested = createRenewableIssuedResourceControlV1(finiteParent, policy, fixture.units);
+      advance(genericMaximum + 1);
+      expect(() => generic.remainingMilliseconds()).toThrow(/maximum duration of 360 min/u);
+      const query = oracle.query("SELECT min(?1 - ?3, ?2 - ?3, ?4) AS remaining");
+      const oracleRemaining = (maximum: number) => (query.get(fixture.expected!.maximumMilliseconds, maximum, elapsed, fixture.expected!.idleMilliseconds) as { remaining: number }).remaining;
+      expect(release.remainingMilliseconds()).toBeCloseTo(oracleRemaining(fixture.expected!.maximumMilliseconds), 3);
+      expect(nested.remainingMilliseconds()).toBeCloseTo(oracleRemaining(parentMaximum), 3);
+      advance(parentMaximum + 1);
+      expect(() => nested.remainingMilliseconds()).toThrow(/deadline/iu);
+      expect(release.remainingMilliseconds()).toBeGreaterThan(0);
+      advance(fixture.expected!.maximumMilliseconds + 1);
+      expect(() => release.remainingMilliseconds()).toThrow(/maximum duration/u);
+    });
+  } finally {
+    date.mockRestore();
+    clock.mockRestore();
+    oracle.close();
+  }
 });
 
 test("a declared wait keeps a renewable control alive and its end starts the idle window", async () => {
@@ -83,10 +122,13 @@ test("a command that writes output keeps its idle window open", async () => {
 test("a silent command is stopped after its idle window although the waiting process writes its own heartbeat", async () => {
   await within(async (parent) => {
     const control = createRenewableIssuedResourceControlV1(parent, { idleMilliseconds: 600, maximumMilliseconds: 20000 }, 1), started = performance.now();
-    let failure: unknown;
-    try { await runOwnedCommand(process.execPath, child("setTimeout(()=>{},30000)"), process.cwd(), "fixture:silent", 0, { signal: control.signal, progressIntervalMs: 100, onProgress: () => {}, output: { maximumBytes: 65536, maximumLines: 1000 }, stdout: "ignore" }); } catch (error) { failure = error; }
-    expect(String(failure)).toContain("fixture:silent stopped: fixture:progress stopped: no progress for");
-    expect(String(failure)).toContain("gestoppt: seit");
+    await expect(runOwnedCommand(process.execPath, child("setTimeout(()=>{},30000)"), process.cwd(), "fixture:silent", 0, { signal: control.signal, progressIntervalMs: 100, onProgress: () => {}, output: { maximumBytes: 65536, maximumLines: 1000 }, stdout: "ignore" })).rejects.toMatchObject({
+      code: "timeout",
+      key: "process.execution.progress-expired",
+      values: { label: "fixture:silent", notice: expect.stringMatching(/fixture:progress stopped: no progress for.*fixture:progress gestoppt: seit/su) },
+    });
+    expect(control.signal.aborted).toBe(true);
+    expect(aborted(control.signal).reason).toBe("idle");
     expect(performance.now() - started).toBeLessThan(10000);
   });
 }, 20000);

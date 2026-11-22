@@ -18,10 +18,10 @@ const ATTACHMENT: &[NormFieldChoice] = &[
 ];
 const USE_CLASS: &[NormFieldChoice] = &[
     choice("Residential", "Residential · dwelling profile unspecified", "Wohnen · Wohngebäudeprofil offen"),
-    choice("ResidentialUpToTwoDwellings", "Residential · 1 or 2 dwellings", "Wohnen · 1 oder 2 Wohneinheiten"),
-    choice("ResidentialMultifamily", "Residential · 3 or more dwellings", "Wohnen · ab 3 Wohneinheiten"),
     choice("Office", "Office", "Büro"),
     choice("School", "School", "Schule"),
+    choice("ResidentialUpToTwoDwellings", "Residential · 1 or 2 dwellings", "Wohnen · 1 oder 2 Wohneinheiten"),
+    choice("ResidentialMultifamily", "Residential · 3 or more dwellings", "Wohnen · ab 3 Wohneinheiten"),
 ];
 const METHOD: &[NormFieldChoice] = &[
     choice("DetailedMonthly", "Detailed monthly balance", "Detailliertes Monatsbilanzverfahren"),

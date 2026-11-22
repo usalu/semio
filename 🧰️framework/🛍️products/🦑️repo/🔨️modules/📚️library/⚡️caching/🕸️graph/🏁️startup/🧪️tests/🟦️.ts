@@ -100,7 +100,7 @@ const leaseRows=(source:ts.SourceFile,keep:(resource:string)=>boolean)=>callsOf(
  if(!keep(property("resource")?.initializer.getText(source)??""))return [];
  return [{mode:JSON.parse(property("mode")!.initializer.getText(source)) as Mode,timeoutMs:property("timeoutMs")?Number(property("timeoutMs")!.initializer.getText(source)):null}];
 });
-const pinFiles=["⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/🟦️.ts","🏗️build/🕸️graph/🟦️.ts"],slotFile="🕸️graph/🏁️startup/🚏️admission/🟦️.ts";
+const pinFiles=["⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/🟦️.ts","🏗️build/🕸️graph/📥️load/🟦️.ts"],slotFile="🕸️graph/🏁️startup/🚏️admission/🟦️.ts";
 test("a graph snapshot pin is only ever exclusive as a non-waiting try-lock, so nothing waits behind a pin (the compiler's syntax tree agrees with the Python scan)",()=>{
  const rows=pinFiles.flatMap(name=>leaseRows(parse(join(library,name)),resource=>resource.startsWith("resource(")||resource.startsWith("\"build-graph:\"")).map(row=>({file:name,...row})));
  expect(rows).toEqual([{file:pinFiles[0]!,mode:"exclusive",timeoutMs:0},{file:pinFiles[0]!,mode:"shared",timeoutMs:null},{file:pinFiles[1]!,mode:"shared",timeoutMs:null}]);

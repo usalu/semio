@@ -1,6 +1,6 @@
 {
   "schema": "semio.os.shell-picked-file-refusal/v1",
-  "description": "Every way the shell's Open file refuses a picked file before any document is created, with the notice text each reason shows (en, de; any other locale renders every language joined) and the fault code a probe and a law name it by (codePrefix + reason). `{file}` is the file name.",
+  "description": "Every way the shell's Open file refuses a picked file before any document is created (an unresolvable name, a format with no owner, or content that contradicts the name), with the notice text each reason shows (en, de; any other locale renders every language joined) and the fault code a probe and a law name it by (codePrefix + reason). `{file}` is the file name.",
   "codePrefix": "shell.openFile.",
   "reasons": {
     "format-unresolved": {
@@ -18,6 +18,10 @@
     "owner-unavailable": {
       "en": "No editor for “{file}” is available in this workspace.",
       "de": "Für „{file}“ ist in diesem Arbeitsbereich kein Editor verfügbar."
+    },
+    "content-mismatch": {
+      "en": "“{file}” has the name of a known format, but its content does not match that format, so nothing was opened.",
+      "de": "„{file}“ trägt den Namen eines bekannten Formats, aber der Inhalt passt nicht zu diesem Format, daher wurde nichts geöffnet."
     }
   }
 }

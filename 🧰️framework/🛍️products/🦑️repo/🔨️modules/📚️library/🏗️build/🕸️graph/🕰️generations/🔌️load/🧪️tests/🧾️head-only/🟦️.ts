@@ -3,12 +3,13 @@ import {Database} from "bun:sqlite";
 import {mkdtempSync,rmSync} from "node:fs";
 import {cp} from "node:fs/promises";
 import {tmpdir} from "node:os";
-import {join} from "node:path";
-import {createNodeFilePortV1} from "../../../🟨️.mjs";
+import {dirname,join} from "node:path";
+import {GENERATION_POLICY_V1,createGenerationStoreV1,createNodeFilePortV1} from "../../../🟨️.mjs";
 import {implementationDigestV1,loadGenerationGraphV1,restoreExpectedWholeGenerationV1} from "../../🟨️.mjs";
-import {createMockHost,ringFiles,seed} from "../../../🧪️tests/🏃️world/🟦️.ts";
+import {applyOps,createMockHost,ringFiles,seed} from "../../../🧪️tests/🏃️world/🟦️.ts";
 import fixture from "./🔣️.json";
 import retryFixture from "./🕓️retry.json";
+import localWaitFixture from "./🖥️local-wait.json";
 
 test("a restore-only request preserves a matching seal and attempts one exact head only under structural custody",async()=>{
  using oracle=new Database(":memory:");
@@ -111,5 +112,75 @@ test("a waiting whole read retries its same exact candidate after a transient re
   expect(restores).toBe(2);
   expect(target.log).toEqual([]);
   expect(Object.keys(result.graph.projects)).toHaveLength(6);
+ }finally{rmSync(area,{recursive:true,force:true});}
+});
+
+
+test("a queued whole read reuses one compatible local seal through the shared reader",async()=>{
+ using oracle=new Database(":memory:");
+ const oracleResult=oracle.query(`SELECT $sealed AND $compatible AS nominated,
+  $sealed AND $compatible AND NOT $withdrawn AND NOT $stale AND NOT $missingClosure AS served`);
+ const area=mkdtempSync(join(tmpdir(),"whole-local-wait-"));
+ try{
+  const files=createNodeFilePortV1();
+  for(const row of localWaitFixture.cases){
+   const root=join(area,row.name),target=createMockHost(root),producer=createMockHost(root,{stamp:!row.stale});
+   await seed(root,ringFiles(3));
+   const generationRoot=join(root,".gen"),pointerPath=join(generationRoot,GENERATION_POLICY_V1.pointer);
+   const admitted=target.host.withBuilder,storeOptions=target.host.storeOptions,reads={pointers:0,manifests:0},controller=new AbortController();
+   if(!row.compatible)Object.assign(producer.host,{implementationRows:async()=>[{kind:"stamp",path:"producer",fact:"other implementation"}]});
+   let closureAvailable=false;
+   const expand=target.host.expand;
+   if("missingClosure" in row)Object.assign(target.host,{expand:async(...args:Parameters<typeof expand>)=>{
+    if(closureAvailable)return expand(...args);
+    throw Object.assign(Error("Fixture closure is unavailable"),{code:"closure-missing",missingClosure:"f".repeat(64),missingProjects:["p2"]});
+   }});
+   let clock=0,entered=0;
+   Object.assign(target.host,{
+    now:()=>clock,waitNoticeMilliseconds:localWaitFixture.interval,signal:controller.signal,
+    storeOptions:(store:{root:string})=>({...storeOptions(store),fs:{...files,read:async(path:string)=>{
+     if(path===pointerPath)reads.pointers++;
+     if(dirname(path)===join(generationRoot,GENERATION_POLICY_V1.manifests))reads.manifests++;
+     return files.read(path);
+    }}}),
+    async withBuilder(body:Parameters<typeof admitted>[0],request:unknown,_peer:unknown,_purpose:unknown,wait?:{available():Promise<boolean>;restore():Promise<any>}){
+     entered++;
+     await loadGenerationGraphV1(producer.host);
+     const engine=createGenerationStoreV1({...storeOptions({root:generationRoot}),fs:files});
+     if(!row.sealed)await engine.invalidate({reason:"closure-missing",expected:(await engine.read())!.pointer});
+     if(row.stale)await applyOps(root,[{op:"write",path:"pkg/p2/src/index.ts",content:"export const v = 99;\n"}]);
+     const expected=oracleResult.get({$sealed:+row.sealed,$compatible:+row.compatible,$withdrawn:+row.withdrawn,$stale:+row.stale,$missingClosure:+("missingClosure" in row)}) as {nominated:number;served:number};
+     const nominated=await wait?.available()??false;
+     expect(Number(nominated),row.name).toBe(expected.nominated);
+     const first={...reads};
+     for(const at of localWaitFixture.busyPolls){clock=at;await wait?.available();}
+     expect(reads,row.name).toEqual(first);
+     if(row.withdrawn)await engine.invalidate({reason:"closure-missing",expected:(await engine.read())!.pointer});
+     const resumed=nominated?await wait!.restore():undefined;
+     expect(Number(resumed?.graph!==undefined),row.name).toBe(expected.served);
+     clock=localWaitFixture.interval;
+     const before={...reads};
+     expect(await wait?.available(),row.name).toBe(false);
+     expect(reads,row.name).toEqual({...before,pointers:before.pointers+1});
+     if(resumed)return resumed;
+     if("recover" in row){
+      const unchanged=await files.read(pointerPath),eligibleAt=Number(oracle.query("SELECT max(value)+2*$interval FROM json_each($polls)").values({$interval:localWaitFixture.interval,$polls:JSON.stringify(localWaitFixture.busyPolls)})[0]![0]);
+      closureAvailable=true;
+      clock=eligibleAt+1;
+      expect(await wait?.available(),row.name).toBe(true);
+      expect(await files.read(pointerPath),row.name).toEqual(unchanged);
+      const recovered=await wait!.restore();
+      expect(recovered?.graph,row.name).toBeDefined();
+      return recovered;
+     }
+     controller.abort(Error("private capacity waiter cancelled"));
+     throw controller.signal.reason;
+    },
+   });
+   const result=await loadGenerationGraphV1(target.host).catch(error=>{if(error!==controller.signal.reason)throw error;return undefined;});
+   expect(entered,row.name).toBe(1);
+   expect(target.log,row.name).toEqual([]);
+   if(result)expect(Object.keys(result.graph.projects),row.name).toEqual(["p0","p1","p2"]);
+  }
  }finally{rmSync(area,{recursive:true,force:true});}
 });

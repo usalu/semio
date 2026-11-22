@@ -8,7 +8,7 @@ import { readBuildOwnerRegistryV1 } from "../../../🏗️build/🕸️graph/�
 import { issueRepositoryScriptProvidersV1 } from "../../../🏃️process/🔌️providers/🟦️.ts";
 import { loadCatalogBuildProvidersV1 } from "../../../../../../💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🏗️build/🟦️.ts";
 import { descriptorEmitterBinaryNameV1, descriptorEmitterRequestV1 } from "../../../../../../💻️os/🔨️modules/🔌️plugin/🖨️describe/🛠️emitter/📋️contract/🟦️.ts";
-import { GENERATED_PLAYGROUNDS_PROJECTION, GENERATED_PLUGINS_PROJECTION, runtimeCatalogProjectionRootV1 } from "../../../../../../💻️os/🔨️modules/🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts";
+import { GENERATED_PLAYGROUNDS_PROJECTION, GENERATED_PLUGINS_PROJECTION, readGeneratedCatalogProjection, runtimeCatalogProjectionRootV1 } from "../../../../../../💻️os/🔨️modules/🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts";
 import { ACTIVATION_RECEIPT_FILE, builtPluginModulesRootIn, developmentRuntimeRoot, playgroundSessionsRootV1, preparedComponentVerdict, type PreparedComponentFacts } from "../../../../../../💻️os/🔨️modules/🧑‍💻dev/♻️activation/🟦️.ts";
 import { frameworkOsEngineDeliveriesV1, frameworkOsEngineFacetV1 } from "../../../../../../💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/📥️artifacts/🕸️engines/🟦️.ts";
 import { loadDevContribution } from "../../../../../../💻️os/🔨️modules/🧑‍💻dev/🧩️contribution/📥️loading/🟦️.ts";
@@ -113,12 +113,23 @@ export function playgroundDescriptorEmitterMissingV1(products: string, mode: "pr
   return missing(path, [".semio-artifact.json", descriptorEmitterBinaryNameV1(intent)]);
 }
 
+/** 🏭️ Runs the owning `generate` or generator target of every mounted Rust module whose generated file is missing, as declared neutral children of this launch. */
+export async function ensurePlaygroundGeneratedInputsV1(workspace: string, invocation: ScriptInvocation): Promise<void> {
+  const { generatedPrerequisiteArgumentsV1 } = await import("../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🏭️generated-owner/🟦️.ts");
+  const requests = generatedPrerequisiteArgumentsV1(workspace);
+  if (requests.length === 0) return;
+  const { runOwnedBuildChildInvocationV1 } = await import("../../../🏗️build/📥️caller/📤️child/🟦️.ts");
+  const control = scriptCompilerAdmissionControlV1(invocation, "playground:generated-inputs", 0);
+  for (const args of requests) await runOwnedBuildChildInvocationV1(workspace, args, invocation, control);
+}
+
 async function preparePlaygroundModels(workspace: string, invocation: ScriptInvocation, missing: ReadonlySet<string>, mode: "prototype" | "release", facet: "browser" | "model"): Promise<void> {
   if (missing.size === 0) return;
+  await ensurePlaygroundGeneratedInputsV1(workspace, invocation);
   const { buildComponentClosureV1 } = await import("../../../../../../💻️os/🔨️modules/🔌️plugin/🏗️build/🧩️driver-stages/🟦️.ts");
   if (facet === "browser") {
     const { ensureNativeTranspileV1 } = await import("../../../../../../💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🦀️native-transpile/📜️script.ts");
-    await ensureNativeTranspileV1(workspace, invocation);
+    await ensureNativeTranspileV1(workspace, invocation, scriptCompilerAdmissionControlV1(invocation, "playground:native-transpile", 0));
   }
   const products = repositoryCachePartitionRootDataV1(workspace, "products");
   if (playgroundDescriptorEmitterMissingV1(products, mode, process.platform)) {
@@ -147,6 +158,7 @@ async function ensureBootComponents(workspace: string, invocation: ScriptInvocat
 const WGPU_RENDERER = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu";
 
 async function ensureWgpuRenderer(workspace: string, invocation: ScriptInvocation, mode: "prototype" | "release"): Promise<void> {
+  await ensurePlaygroundGeneratedInputsV1(workspace, invocation);
   const renderer = join(workspace, WGPU_RENDERER);
   const rustOwner = join(renderer, "📦️packages/🦀️rust");
   const bootFiles = ["🚀️browser-boot", "🎞️frame-worker", "🎬️renderer-boot"].map(part => join(part, "🤖️generated", "🟨️.js"));
@@ -266,11 +278,17 @@ export async function serveRootPlaygroundV1(workspace: string, invocation: Scrip
   process.env.SEMIO_PLUGIN_CATALOG = await ensureCatalog(workspace, invocation);
   try {
     const sessionRoot = join(playgroundSessionsRootV1(workspace, request.profile), request.variant);
-    if (publicationMissing(sessionRoot, [".semio-artifact.json"])) {
-      const { SessionScript } = await import("../../../../../../💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🧭️session/🟦️.ts");
-      const registry = join(workspace, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry");
-      await new SessionScript(registry, workspace, invocation).run([request.variant]);
-    }
+    const { refreshPlaygroundSessionPublicationV1, stagePlaygroundSession } = await import("../../../../../../💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🧭️session/🟦️.ts");
+    const projection = readGeneratedCatalogProjection();
+    if (!projection.playgrounds.some(row => row.variant === request.variant)) throw Error(`Selected playground requires current compiled descriptors: ${request.variant}`);
+    const sessionRefreshed = await refreshPlaygroundSessionPublicationV1(projection, async () => {
+      if (publicationMissing(sessionRoot, [".semio-artifact.json"])) return undefined;
+      const { withPlaygroundSessionV1 } = await import("../../../../../../💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🧭️session/👓️reading/🟦️.ts");
+      return withPlaygroundSessionV1(workspace, invocation, request.variant, async (_session, retained) => retained);
+    }, async current => {
+      const { session } = await stagePlaygroundSession(workspace, invocation, request.variant, current);
+      console.log(`Playground session ${request.variant}: ${session.plugins.length} plugins staged`);
+    });
     if (request.renderer === "native") {
       await prepareNativeRuntimeAssets(workspace, invocation);
       await runNativePlayground(workspace, invocation, request.variant, request.profile);
@@ -279,14 +297,15 @@ export async function serveRootPlaygroundV1(workspace: string, invocation: Scrip
     await ensureBrowserSupport(workspace, invocation, request.profile);
     if (request.renderer === "wgpu") await ensureWgpuRenderer(workspace, invocation, request.profile);
     const restaged = await ensureBootComponents(workspace, invocation, request.variant, request.profile);
+    const activationRequired = restaged || sessionRefreshed;
     if (request.renderer === "wgpu") {
-      await serveWgpuPlayground(workspace, invocation, request.variant, request.profile, restaged);
+      await serveWgpuPlayground(workspace, invocation, request.variant, request.profile, activationRequired);
       return;
     }
     await ensureRendererEngines(workspace, invocation, request.variant, request.profile);
     const bundle = join(workspace, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript");
     const lane = [request.variant, request.renderer, request.profile];
-    if (restaged) {
+    if (activationRequired) {
       const { ActivationScript } = await import("../../../../../../💻️os/🔨️modules/🧑‍💻dev/♻️activation/🏃️execution/🟦️.ts");
       await new ActivationScript(bundle, workspace, invocation).run(lane);
     }

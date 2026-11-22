@@ -1,0 +1,61 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Cargo diagnostic replay after warning suppression",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "live",
+    "tail",
+    "cases"
+  ],
+  "properties": {
+    "live": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 8
+    },
+    "tail": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 8
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "lines",
+          "failureReplay"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z-]+$"
+          },
+          "lines": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 25,
+            "items": {
+              "type": "string",
+              "maxLength": 200
+            }
+          },
+          "failureReplay": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 25,
+            "items": {
+              "type": "string",
+              "maxLength": 200
+            }
+          }
+        }
+      }
+    }
+  }
+}

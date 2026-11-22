@@ -96,11 +96,11 @@ fn clearing_map_features_preserves_the_authored_elevation_geometry() {
 fn explicitly_authored_elevations_export_independently_of_map_coverage() {
     let import = crate::schema::imported_map::ImportedMap::from_json(r#"{"positions":[{"id":"far","lon":5.5818,"lat":50.603}]}"#)
         .expect("a point far from the authored grid");
-    let mut rows = vec![vec![30; 33]; 33];
-    rows[16][16] = 70;
+    let mut rows_millimetres = vec![vec![30_000; 4]; 3];
+    rows_millimetres[1][2] = 70_000;
     let snapshot = GisTerrainSnapshot {
         imported_map: Some(import),
-        elevation_source: Some(crate::schema::snapshot::ElevationSource { bounds: [13.3, 52.5, 13.4, 52.6], rows }),
+        elevation_source: Some(crate::schema::snapshot::ElevationSource { missing_samples: None, bounds: [13.3, 52.5, 13.4, 52.6], rows_millimetres }),
         ..terrain()
     };
     let output = crate::gis_terrain_mesh_from_snapshot(&snapshot).expect("authored elevations");

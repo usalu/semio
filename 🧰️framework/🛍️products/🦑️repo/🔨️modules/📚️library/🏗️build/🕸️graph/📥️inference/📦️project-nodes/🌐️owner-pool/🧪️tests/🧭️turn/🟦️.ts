@@ -46,7 +46,7 @@ test("a heavy owner is asked for in a wave of its own with its need, apart from 
  const server=await startRemoteCacheServerV1({directory:cache,host:"127.0.0.1",port:0,maximumBytes:2**28,maximumEntryBytes:2**26,maximumAgeDays:30,defaultInstance:"main",tokens:{read:"r",write:"w"},validation:"off"});
  try{
   const environment={...process.env,SEMIO_REMOTE_CACHE_ENDPOINT:server.url,SEMIO_REMOTE_CACHE_ACCESS:"read-write",SEMIO_REMOTE_CACHE_TOKEN:"w",SEMIO_REMOTE_CACHE_INSTANCE:"main"},published:{units:Unit[]}[]=[];
-  const publisher=createOwnerPoolPublisherV1({workspaceRoot:root,environment,identity:"id",globals:{projectAuthority:"a",registryDigest:"r",commandRevision:"c",late:false},session:()=>({}),units:()=>Array.from({length:20},(_all,index)=>unitOf("o"+index)),publish:async input=>{published.push({units:[...input.manifest.units]});return true;}});
+  const publisher=createOwnerPoolPublisherV1({workspaceRoot:root,environment,identity:"id",globals:{registryDigest:"r",commandRevision:"c",late:false},session:()=>({}),units:()=>Array.from({length:20},(_all,index)=>unitOf("o"+index)),publish:async input=>{published.push({units:[...input.manifest.units]});return true;}});
   const heavy=[unitOf("norm",4842)];
   expect(await publisher.ask(heavy)).toBe(true);
   expect(published.length).toBe(1);

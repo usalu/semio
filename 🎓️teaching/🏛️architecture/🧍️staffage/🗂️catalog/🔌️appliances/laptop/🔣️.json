@@ -195,19 +195,68 @@
     },
     "anchors": [
       {
-        "id": "feet-contact",
+        "id": "foot-rear-left",
         "bone": "base",
-        "x": 0.109,
+        "x": 0.02,
         "y": 0.0,
         "kind": "contact",
         "title": {
-          "en": "Rubber feet on the desk",
-          "de": "Gummifüße auf dem Tisch"
+          "en": "Rubber foot, rear left",
+          "de": "Gummifuß hinten links"
         },
         "support": "contact",
-        "footprintLengthM": 0.19,
-        "footprintWidthM": 0.28,
-        "frictionCoefficient": 0.6
+        "footprintLengthM": 0.0104,
+        "footprintWidthM": 0.0104,
+        "frictionCoefficient": 0.6,
+        "z": 0.134
+      },
+      {
+        "id": "foot-rear-right",
+        "bone": "base",
+        "x": 0.02,
+        "y": 0.0,
+        "kind": "contact",
+        "title": {
+          "en": "Rubber foot, rear right",
+          "de": "Gummifuß hinten rechts"
+        },
+        "support": "contact",
+        "footprintLengthM": 0.0104,
+        "footprintWidthM": 0.0104,
+        "frictionCoefficient": 0.6,
+        "z": -0.134
+      },
+      {
+        "id": "foot-front-left",
+        "bone": "base",
+        "x": 0.198,
+        "y": 0.0,
+        "kind": "contact",
+        "title": {
+          "en": "Rubber foot, front left",
+          "de": "Gummifuß vorne links"
+        },
+        "support": "contact",
+        "footprintLengthM": 0.0104,
+        "footprintWidthM": 0.0104,
+        "frictionCoefficient": 0.6,
+        "z": 0.134
+      },
+      {
+        "id": "foot-front-right",
+        "bone": "base",
+        "x": 0.198,
+        "y": 0.0,
+        "kind": "contact",
+        "title": {
+          "en": "Rubber foot, front right",
+          "de": "Gummifuß vorne rechts"
+        },
+        "support": "contact",
+        "footprintLengthM": 0.0104,
+        "footprintWidthM": 0.0104,
+        "frictionCoefficient": 0.6,
+        "z": -0.134
       },
       {
         "id": "deck-top",
@@ -277,56 +326,7 @@
               "filled": true,
               "tone": 0.5,
               "kind": "poly",
-              "points": [
-                [
-                  0.2115,
-                  0.002
-                ],
-                [
-                  0.215,
-                  0.0026
-                ],
-                [
-                  0.217,
-                  0.0036
-                ],
-                [
-                  0.2178,
-                  0.005
-                ],
-                [
-                  0.218,
-                  0.0062
-                ],
-                [
-                  0.218,
-                  0.0085
-                ],
-                [
-                  0.0,
-                  0.0085
-                ],
-                [
-                  0.0,
-                  0.0062
-                ],
-                [
-                  0.0002,
-                  0.005
-                ],
-                [
-                  0.001,
-                  0.0036
-                ],
-                [
-                  0.003,
-                  0.0026
-                ],
-                [
-                  0.0065,
-                  0.002
-                ]
-              ],
+              "points": [[0.2115, 0.002], [0.215, 0.0026], [0.217, 0.0036], [0.2178, 0.005], [0.218, 0.0062], [0.218, 0.0085], [0.0, 0.0085], [0.0, 0.0062], [0.0002, 0.005], [0.001, 0.0036], [0.003, 0.0026], [0.0065, 0.002]],
               "closed": true,
               "region": "underside",
               "material": "alu-anodised"
@@ -354,48 +354,7 @@
               "filled": true,
               "tone": 0.55,
               "kind": "poly",
-              "points": [
-                [
-                  0.2135,
-                  -0.0014
-                ],
-                [
-                  0.2135,
-                  0.0025
-                ],
-                [
-                  0.2132,
-                  0.0035
-                ],
-                [
-                  0.2125,
-                  0.0041
-                ],
-                [
-                  0.2113,
-                  0.0045
-                ],
-                [
-                  -0.0023,
-                  0.0045
-                ],
-                [
-                  -0.0035,
-                  0.0041
-                ],
-                [
-                  -0.0042,
-                  0.0035
-                ],
-                [
-                  -0.0045,
-                  0.0025
-                ],
-                [
-                  -0.0045,
-                  -0.0014
-                ]
-              ],
+              "points": [[0.2135, -0.0014], [0.2135, 0.0025], [0.2132, 0.0035], [0.2125, 0.0041], [0.2113, 0.0045], [-0.0023, 0.0045], [-0.0035, 0.0041], [-0.0042, 0.0035], [-0.0045, 0.0025], [-0.0045, -0.0014]],
               "closed": true,
               "region": "lid",
               "material": "alu-anodised"
@@ -423,16 +382,7 @@
               "filled": false,
               "tone": 0.1,
               "kind": "poly",
-              "points": [
-                [
-                  0.0238,
-                  0.0069
-                ],
-                [
-                  0.0468,
-                  0.0069
-                ]
-              ],
+              "points": [[0.0238, 0.0069], [0.0468, 0.0069]],
               "closed": false
             }
           ],
@@ -466,48 +416,7 @@
               "filled": true,
               "tone": 0.55,
               "kind": "poly",
-              "points": [
-                [
-                  0.2135,
-                  -0.0014
-                ],
-                [
-                  0.2135,
-                  0.0025
-                ],
-                [
-                  0.2132,
-                  0.0035
-                ],
-                [
-                  0.2125,
-                  0.0041
-                ],
-                [
-                  0.2113,
-                  0.0045
-                ],
-                [
-                  -0.0023,
-                  0.0045
-                ],
-                [
-                  -0.0035,
-                  0.0041
-                ],
-                [
-                  -0.0042,
-                  0.0035
-                ],
-                [
-                  -0.0045,
-                  0.0025
-                ],
-                [
-                  -0.0045,
-                  -0.0014
-                ]
-              ],
+              "points": [[0.2135, -0.0014], [0.2135, 0.0025], [0.2132, 0.0035], [0.2125, 0.0041], [0.2113, 0.0045], [-0.0023, 0.0045], [-0.0035, 0.0041], [-0.0042, 0.0035], [-0.0045, 0.0025], [-0.0045, -0.0014]],
               "closed": true,
               "region": "lid",
               "material": "alu-anodised",
@@ -598,69 +507,9 @@
               "filled": true,
               "tone": 0.6,
               "kind": "poly",
-              "points": [
-                [
-                  0.15,
-                  0.002
-                ],
-                [
-                  0.1535,
-                  0.0026
-                ],
-                [
-                  0.1555,
-                  0.0036
-                ],
-                [
-                  0.1563,
-                  0.005
-                ],
-                [
-                  0.1565,
-                  0.0062
-                ],
-                [
-                  0.1565,
-                  0.0085
-                ],
-                [
-                  0.1565,
-                  0.0125
-                ],
-                [
-                  -0.1565,
-                  0.0125
-                ],
-                [
-                  -0.1565,
-                  0.0085
-                ],
-                [
-                  -0.1565,
-                  0.0062
-                ],
-                [
-                  -0.1563,
-                  0.005
-                ],
-                [
-                  -0.1555,
-                  0.0036
-                ],
-                [
-                  -0.1535,
-                  0.0026
-                ],
-                [
-                  -0.15,
-                  0.002
-                ]
-              ],
+              "points": [[0.15, 0.002], [0.1535, 0.0026], [0.1555, 0.0036], [0.1563, 0.005], [0.1565, 0.0062], [0.1565, 0.0085], [0.1565, 0.0125], [-0.1565, 0.0125], [-0.1565, 0.0085], [-0.1565, 0.0062], [-0.1563, 0.005], [-0.1555, 0.0036], [-0.1535, 0.0026], [-0.15, 0.002]],
               "closed": true,
-              "regions": [
-                "deck",
-                "underside"
-              ],
+              "regions": ["deck", "underside"],
               "material": "alu-anodised"
             }
           ],
@@ -781,48 +630,7 @@
               "filled": true,
               "tone": 0.55,
               "kind": "poly",
-              "points": [
-                [
-                  0.2135,
-                  -0.0014
-                ],
-                [
-                  0.2135,
-                  0.0025
-                ],
-                [
-                  0.2132,
-                  0.0035
-                ],
-                [
-                  0.2125,
-                  0.0041
-                ],
-                [
-                  0.2113,
-                  0.0045
-                ],
-                [
-                  -0.0023,
-                  0.0045
-                ],
-                [
-                  -0.0035,
-                  0.0041
-                ],
-                [
-                  -0.0042,
-                  0.0035
-                ],
-                [
-                  -0.0045,
-                  0.0025
-                ],
-                [
-                  -0.0045,
-                  -0.0014
-                ]
-              ],
+              "points": [[0.2135, -0.0014], [0.2135, 0.0025], [0.2132, 0.0035], [0.2125, 0.0041], [0.2113, 0.0045], [-0.0023, 0.0045], [-0.0035, 0.0041], [-0.0042, 0.0035], [-0.0045, 0.0025], [-0.0045, -0.0014]],
               "closed": true,
               "region": "lid",
               "material": "alu-anodised",
@@ -888,6 +696,38 @@
         "geometry": {
           "elevation": [
             {
+              "id": "foot-front",
+              "bone": "base",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.15,
+              "kind": "rect",
+              "x": 0.192,
+              "y": 0.0,
+              "w": 0.012,
+              "h": 0.002,
+              "region": "underside",
+              "material": "rubber-foot",
+              "penMm": 0.21
+            },
+            {
+              "id": "foot-rear",
+              "bone": "base",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.15,
+              "kind": "rect",
+              "x": 0.014,
+              "y": 0.0,
+              "w": 0.012,
+              "h": 0.002,
+              "region": "underside",
+              "material": "rubber-foot",
+              "penMm": 0.21
+            },
+            {
               "id": "base-lower",
               "bone": "base",
               "role": "body",
@@ -895,48 +735,7 @@
               "filled": true,
               "tone": 0.5,
               "kind": "poly",
-              "points": [
-                [
-                  0.2115,
-                  0.0
-                ],
-                [
-                  0.216,
-                  0.0012
-                ],
-                [
-                  0.2177,
-                  0.003
-                ],
-                [
-                  0.218,
-                  0.005
-                ],
-                [
-                  0.218,
-                  0.0085
-                ],
-                [
-                  0.0,
-                  0.0085
-                ],
-                [
-                  0.0,
-                  0.005
-                ],
-                [
-                  0.0003,
-                  0.003
-                ],
-                [
-                  0.002,
-                  0.0012
-                ],
-                [
-                  0.0065,
-                  0.0
-                ]
-              ],
+              "points": [[0.2115, 0.002], [0.216, 0.0029176], [0.2177, 0.0042941], [0.218, 0.0058235], [0.218, 0.0085], [0.0, 0.0085], [0.0, 0.0058235], [0.0003, 0.0042941], [0.002, 0.0029176], [0.0065, 0.002]],
               "closed": true,
               "region": "underside",
               "material": "alu-anodised"
@@ -964,54 +763,45 @@
               "filled": true,
               "tone": 0.5,
               "kind": "poly",
-              "points": [
-                [
-                  0.2135,
-                  -0.0014
-                ],
-                [
-                  0.2135,
-                  0.003
-                ],
-                [
-                  0.212,
-                  0.0045
-                ],
-                [
-                  -0.003,
-                  0.0045
-                ],
-                [
-                  -0.0045,
-                  0.003
-                ],
-                [
-                  -0.0045,
-                  -0.0014
-                ],
-                [
-                  -0.0032,
-                  -0.0032
-                ],
-                [
-                  0.0,
-                  -0.0045
-                ],
-                [
-                  0.0032,
-                  -0.0032
-                ],
-                [
-                  0.0043,
-                  -0.0014
-                ]
-              ],
+              "points": [[0.2135, -0.0014], [0.2135, 0.003], [0.212, 0.0045], [-0.003, 0.0045], [-0.0045, 0.003], [-0.0045, -0.0014], [-0.0032, -0.0032], [0.0, -0.0045], [0.0032, -0.0032], [0.0043, -0.0014]],
               "closed": true,
               "region": "lid",
               "material": "alu-anodised"
             }
           ],
           "front": [
+            {
+              "id": "foot-left",
+              "bone": "base",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.15,
+              "kind": "rect",
+              "x": 0.128,
+              "y": 0.0,
+              "w": 0.012,
+              "h": 0.002,
+              "region": "underside",
+              "material": "rubber-foot",
+              "penMm": 0.21
+            },
+            {
+              "id": "foot-right",
+              "bone": "base",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.15,
+              "kind": "rect",
+              "x": -0.14,
+              "y": 0.0,
+              "w": 0.012,
+              "h": 0.002,
+              "region": "underside",
+              "material": "rubber-foot",
+              "penMm": 0.21
+            },
             {
               "id": "lid-shell",
               "bone": "lid",
@@ -1020,48 +810,7 @@
               "filled": true,
               "tone": 0.5,
               "kind": "poly",
-              "points": [
-                [
-                  0.2135,
-                  -0.0014
-                ],
-                [
-                  0.2135,
-                  0.003
-                ],
-                [
-                  0.212,
-                  0.0045
-                ],
-                [
-                  -0.003,
-                  0.0045
-                ],
-                [
-                  -0.0045,
-                  0.003
-                ],
-                [
-                  -0.0045,
-                  -0.0014
-                ],
-                [
-                  -0.0032,
-                  -0.0032
-                ],
-                [
-                  0.0,
-                  -0.0045
-                ],
-                [
-                  0.0032,
-                  -0.0032
-                ],
-                [
-                  0.0043,
-                  -0.0014
-                ]
-              ],
+              "points": [[0.2135, -0.0014], [0.2135, 0.003], [0.212, 0.0045], [-0.003, 0.0045], [-0.0045, 0.003], [-0.0045, -0.0014], [-0.0032, -0.0032], [0.0, -0.0045], [0.0032, -0.0032], [0.0043, -0.0014]],
               "closed": true,
               "region": "lid",
               "material": "alu-anodised",
@@ -1101,48 +850,7 @@
               "filled": true,
               "tone": 0.5,
               "kind": "poly",
-              "points": [
-                [
-                  0.15,
-                  0.0
-                ],
-                [
-                  0.1545,
-                  0.0012
-                ],
-                [
-                  0.1562,
-                  0.003
-                ],
-                [
-                  0.1565,
-                  0.005
-                ],
-                [
-                  0.1565,
-                  0.0085
-                ],
-                [
-                  -0.1565,
-                  0.0085
-                ],
-                [
-                  -0.1565,
-                  0.005
-                ],
-                [
-                  -0.1562,
-                  0.003
-                ],
-                [
-                  -0.1545,
-                  0.0012
-                ],
-                [
-                  -0.15,
-                  0.0
-                ]
-              ],
+              "points": [[0.15, 0.002], [0.1545, 0.0029176], [0.1562, 0.0042941], [0.1565, 0.0058235], [0.1565, 0.0085], [-0.1565, 0.0085], [-0.1565, 0.0058235], [-0.1562, 0.0042941], [-0.1545, 0.0029176], [-0.15, 0.002]],
               "closed": true,
               "region": "underside",
               "material": "alu-anodised"
@@ -1214,48 +922,7 @@
               "filled": true,
               "tone": 0.5,
               "kind": "poly",
-              "points": [
-                [
-                  0.2135,
-                  -0.0014
-                ],
-                [
-                  0.2135,
-                  0.003
-                ],
-                [
-                  0.212,
-                  0.0045
-                ],
-                [
-                  -0.003,
-                  0.0045
-                ],
-                [
-                  -0.0045,
-                  0.003
-                ],
-                [
-                  -0.0045,
-                  -0.0014
-                ],
-                [
-                  -0.0032,
-                  -0.0032
-                ],
-                [
-                  0.0,
-                  -0.0045
-                ],
-                [
-                  0.0032,
-                  -0.0032
-                ],
-                [
-                  0.0043,
-                  -0.0014
-                ]
-              ],
+              "points": [[0.2135, -0.0014], [0.2135, 0.003], [0.212, 0.0045], [-0.003, 0.0045], [-0.0045, 0.003], [-0.0045, -0.0014], [-0.0032, -0.0032], [0.0, -0.0045], [0.0032, -0.0032], [0.0043, -0.0014]],
               "closed": true,
               "region": "lid",
               "material": "alu-anodised",
@@ -1270,24 +937,24 @@
         },
         "decisions": {
           "silhouette": {
-            "en": "An L-shaped side sign 2.7 mm by 2.2 mm: the chassis as a hull with its bilge standing on the desk and the lid leaning back from the round hinge foot at its rear edge. Front view: the chassis and the lid behind it with its dark glass. Top view: the chassis with one key field and the trackpad outline, and the lid seen from above as a band.",
-            "de": "Ein L-förmiges Seitenzeichen von 2,7 mm mal 2,2 mm: das Chassis als Rumpf mit Kimm, der auf dem Tisch steht, und der Deckel, der sich vom runden Scharnierfuß an dessen Hinterkante nach hinten lehnt. Vorderansicht: das Chassis und dahinter der Deckel mit seinem dunklen Glas. Draufsicht: das Chassis mit einem Tastenfeld und dem Umriss des Touchpads sowie der Deckel von oben als Band."
+            "en": "An L-shaped side sign 2.7 mm by 2.2 mm: the chassis as a hull with its bilge above four rubber feet and the lid leaning back from the round hinge foot at its rear edge. Front view: the chassis and the lid behind it with its dark glass. Top view: the chassis with one key field and the trackpad outline, and the lid seen from above as a band.",
+            "de": "Ein L-förmiges Seitenzeichen von 2,7 mm mal 2,2 mm: das Chassis als Rumpf mit Kimm, der auf vier Gummifüßen steht, und der Deckel, der sich vom runden Scharnierfuß an dessen Hinterkante nach hinten lehnt. Vorderansicht: das Chassis und dahinter der Deckel mit seinem dunklen Glas. Draufsicht: das Chassis mit einem Tastenfeld und dem Umriss des Touchpads sowie der Deckel von oben als Band."
           },
           "retained": {
             "en": "Overall height 0.221 m, chassis depth 0.218 m, the bilge, the parting line of the two covers, the lid thickness and the round hinge foot; the glass, the key field and the trackpad.",
             "de": "Gesamthöhe 0,221 m, Chassistiefe 0,218 m, die Kimm, die Trennfuge der zwei Schalen, die Deckeldicke und der runde Scharnierfuß; das Glas, das Tastenfeld und das Touchpad."
           },
           "merged": {
-            "en": "The feet and their 2 mm air gap join the bottom cover, the hinge barrel joins the lid profile, the lit panel joins the glass, the key rows join one key field.",
-            "de": "Die Füße und ihr 2-mm-Luftspalt gehen in der Bodenschale auf, die Scharnierwalze im Deckelprofil, das leuchtende Panel im Glas, die Tastenreihen in einem Tastenfeld."
+            "en": "The hinge barrel joins the lid profile, the lit panel joins the glass and the keys form one field.",
+            "de": "Die Scharnierwalze geht im Deckelprofil auf, das leuchtende Panel im Glas und die Tasten in einem Feld."
           },
           "omitted": {
             "en": "The hinge ledge, the keyboard well, ports, grille, speaker fields and camera; the display face in the top view.",
             "de": "Scharnierabsatz, Tastaturmulde, Buchsen, Gitter, Lautsprecherfelder und Kamera; die Displayfläche in der Draufsicht."
           },
           "thinElements": {
-            "en": "The 12.5 mm chassis is 0.125 mm of paper; the 0.18 mm pen outline lifts it to the feature width, so the two covers read as one dark block with a lighter deck line.",
-            "de": "Das 12,5 mm hohe Chassis sind 0,125 mm Papier; die 0,18-mm-Umrisslinie hebt es auf die Mindestbreite, sodass die zwei Schalen als ein dunkler Block mit hellerer Decklinie lesen."
+            "en": "The 10.5 mm chassis and its 2 mm desk clearance use a separate 0.21 mm outline on the feet.",
+            "de": "Unter dem 10,5 mm starken Chassis bleiben 2 mm Luft. Die Füße haben eine eigene 0,21-mm-Kontur."
           },
           "hatching": {
             "en": "None.",
@@ -1321,6 +988,38 @@
         "geometry": {
           "elevation": [
             {
+              "id": "foot-front",
+              "bone": "base",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.15,
+              "kind": "rect",
+              "x": 0.192,
+              "y": 0.0,
+              "w": 0.012,
+              "h": 0.002,
+              "region": "underside",
+              "material": "rubber-foot",
+              "penMm": 0.21
+            },
+            {
+              "id": "foot-rear",
+              "bone": "base",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.15,
+              "kind": "rect",
+              "x": 0.014,
+              "y": 0.0,
+              "w": 0.012,
+              "h": 0.002,
+              "region": "underside",
+              "material": "rubber-foot",
+              "penMm": 0.21
+            },
+            {
               "id": "base",
               "bone": "base",
               "role": "body",
@@ -1328,37 +1027,9 @@
               "filled": true,
               "tone": 0.55,
               "kind": "poly",
-              "points": [
-                [
-                  0.215,
-                  0.0
-                ],
-                [
-                  0.218,
-                  0.003
-                ],
-                [
-                  0.218,
-                  0.0125
-                ],
-                [
-                  0.0,
-                  0.0125
-                ],
-                [
-                  0.0,
-                  0.003
-                ],
-                [
-                  0.003,
-                  0.0
-                ]
-              ],
+              "points": [[0.215, 0.002], [0.218, 0.00452], [0.218, 0.0125], [0.0, 0.0125], [0.0, 0.00452], [0.003, 0.002]],
               "closed": true,
-              "regions": [
-                "deck",
-                "underside"
-              ],
+              "regions": ["deck", "underside"],
               "material": "alu-anodised"
             },
             {
@@ -1379,6 +1050,38 @@
             }
           ],
           "front": [
+            {
+              "id": "foot-left",
+              "bone": "base",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.15,
+              "kind": "rect",
+              "x": 0.128,
+              "y": 0.0,
+              "w": 0.012,
+              "h": 0.002,
+              "region": "underside",
+              "material": "rubber-foot",
+              "penMm": 0.21
+            },
+            {
+              "id": "foot-right",
+              "bone": "base",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.15,
+              "kind": "rect",
+              "x": -0.14,
+              "y": 0.0,
+              "w": 0.012,
+              "h": 0.002,
+              "region": "underside",
+              "material": "rubber-foot",
+              "penMm": 0.21
+            },
             {
               "id": "lid",
               "bone": "lid",
@@ -1409,37 +1112,9 @@
               "filled": true,
               "tone": 0.55,
               "kind": "poly",
-              "points": [
-                [
-                  0.1535,
-                  0.0
-                ],
-                [
-                  0.1565,
-                  0.003
-                ],
-                [
-                  0.1565,
-                  0.0125
-                ],
-                [
-                  -0.1565,
-                  0.0125
-                ],
-                [
-                  -0.1565,
-                  0.003
-                ],
-                [
-                  -0.1535,
-                  0.0
-                ]
-              ],
+              "points": [[0.1535, 0.002], [0.1565, 0.00452], [0.1565, 0.0125], [-0.1565, 0.0125], [-0.1565, 0.00452], [-0.1535, 0.002]],
               "closed": true,
-              "regions": [
-                "deck",
-                "underside"
-              ],
+              "regions": ["deck", "underside"],
               "material": "alu-anodised"
             }
           ],
@@ -1457,10 +1132,7 @@
               "w": 0.218,
               "h": 0.313,
               "r": 0.009,
-              "regions": [
-                "deck",
-                "underside"
-              ],
+              "regions": ["deck", "underside"],
               "material": "alu-anodised"
             },
             {
@@ -1492,28 +1164,28 @@
             "de": "Zwei Balken, auf Papier 1,4 mm mal 1,1 mm: der Chassisbalken und der Deckelbalken, der sich mit seinem Fuß in der Hinterkante des Chassis nach hinten lehnt. Vorderansicht: der Chassisblock und die mit dem Deckelwinkel gehobene Deckelplatte. Draufsicht: das Chassis und der Deckel von oben hinter dessen Hinterkante."
           },
           "retained": {
-            "en": "Overall height 0.221 m, depth 0.218 m, the real thicknesses of 12.5 and 6.5 mm, the lid angle and the hinge at the rear edge of the chassis.",
-            "de": "Gesamthöhe 0,221 m, Tiefe 0,218 m, die realen Dicken von 12,5 und 6,5 mm, der Deckelwinkel und das Scharnier an der Hinterkante des Chassis."
+            "en": "The four feet carry a 10.5 mm base. The 6.5 mm lid rotates at its rear hinge.",
+            "de": "Vier Füße tragen ein 10,5 mm starkes Chassis. Der 6,5 mm starke Deckel schwenkt am hinteren Scharnier."
           },
           "merged": {
             "en": "Deck and underside merge into one chassis bar; hinge, shell, rim and glass merge into one lid bar.",
             "de": "Deck und Unterseite gehen in einem Chassisbalken auf; Scharnier, Schale, Rand und Glas in einem Deckelbalken."
           },
           "omitted": {
-            "en": "Feet, bilge, key field, trackpad, glass and every port. Front and top view carry no detail beyond the two plates.",
-            "de": "Füße, Kimm, Tastenfeld, Touchpad, Glas und alle Buchsen. Vorder- und Draufsicht tragen keine Einzelheiten außer den zwei Platten."
+            "en": "Bilge, key field, touchpad, glass and ports.",
+            "de": "Kimm, Tastenfeld, Touchpad, Glas und Buchsen."
           },
           "thinElements": {
-            "en": "The 6.5 mm lid is 0.03 mm of paper and the 12.5 mm chassis 0.06 mm; both keep their real thickness and rely on the 0.18 mm pen outline to reach the feature width.",
-            "de": "Der 6,5 mm dicke Deckel sind 0,03 mm Papier und das 12,5 mm hohe Chassis 0,06 mm; beide behalten ihre reale Dicke und erreichen die Mindestbreite durch die 0,18-mm-Umrisslinie."
+            "en": "The 10.5 mm chassis and its 2 mm desk clearance use a separate 0.21 mm outline on the feet.",
+            "de": "Unter dem 10,5 mm starken Chassis bleiben 2 mm Luft. Die Füße haben eine eigene 0,21-mm-Kontur."
           },
           "hatching": {
             "en": "None.",
             "de": "Keine."
           },
           "styles": {
-            "en": "Chassis 0.55, lid 0.5; one body pen of 0.18 mm.",
-            "de": "Chassis 0,55, Deckel 0,5; ein Körperstift von 0,18 mm."
+            "en": "Chassis tone 0.55 and lid tone 0.5; 0.20 mm lid outline and 0.21 mm rubber foot outline.",
+            "de": "Chassiston 0,55 und Deckelton 0,5. Die Deckelkontur misst 0,20 mm und die Fußkontur 0,21 mm."
           },
           "overlays": {
             "en": "The chassis bar lists deck and underside as merged regions; the lid bar is the lid region.",
@@ -1564,9 +1236,7 @@
           }
         },
         "ground": "auto",
-        "contacts": [
-          "feet-contact"
-        ],
+        "contacts": ["foot-rear-left", "foot-rear-right", "foot-front-left", "foot-front-right"],
         "thermal": {
           "regions": {
             "deck": {
@@ -1577,7 +1247,7 @@
               "exposedFraction": 0.8,
               "sunlitFraction": 0,
               "contact": {
-                "fraction": 0.06,
+                "fraction": 0.004997,
                 "tempC": 21
               }
             },
@@ -1611,9 +1281,7 @@
           }
         },
         "ground": "auto",
-        "contacts": [
-          "feet-contact"
-        ],
+        "contacts": ["foot-rear-left", "foot-rear-right", "foot-front-left", "foot-front-right"],
         "thermal": {
           "regions": {
             "deck": {
@@ -1624,7 +1292,7 @@
               "exposedFraction": 0.8,
               "sunlitFraction": 0,
               "contact": {
-                "fraction": 0.06,
+                "fraction": 0.004997,
                 "tempC": 21
               }
             },
@@ -1658,9 +1326,7 @@
           }
         },
         "ground": "auto",
-        "contacts": [
-          "feet-contact"
-        ],
+        "contacts": ["foot-rear-left", "foot-rear-right", "foot-front-left", "foot-front-right"],
         "thermal": {
           "regions": {
             "deck": {
@@ -1671,7 +1337,7 @@
               "exposedFraction": 0.8,
               "sunlitFraction": 0,
               "contact": {
-                "fraction": 0.06,
+                "fraction": 0.004997,
                 "tempC": 21
               }
             },
@@ -1719,7 +1385,22 @@
         ],
         "contacts": [
           {
-            "anchor": "feet-contact",
+            "anchor": "foot-rear-left",
+            "fromS": 0,
+            "toS": 2.4
+          },
+          {
+            "anchor": "foot-rear-right",
+            "fromS": 0,
+            "toS": 2.4
+          },
+          {
+            "anchor": "foot-front-left",
+            "fromS": 0,
+            "toS": 2.4
+          },
+          {
+            "anchor": "foot-front-right",
             "fromS": 0,
             "toS": 2.4
           }
@@ -1837,7 +1518,22 @@
         ],
         "contacts": [
           {
-            "anchor": "feet-contact",
+            "anchor": "foot-rear-left",
+            "fromS": 0,
+            "toS": 600
+          },
+          {
+            "anchor": "foot-rear-right",
+            "fromS": 0,
+            "toS": 600
+          },
+          {
+            "anchor": "foot-front-left",
+            "fromS": 0,
+            "toS": 600
+          },
+          {
+            "anchor": "foot-front-right",
             "fromS": 0,
             "toS": 600
           }
@@ -2127,9 +1823,7 @@
     "structure": {
       "gravityMS2": 9.80665,
       "dynamics": "quasi-static",
-      "supports": [
-        "feet-contact"
-      ],
+      "supports": ["foot-rear-left", "foot-rear-right", "foot-front-left", "foot-front-right"],
       "assumptions": [
         {
           "en": "A rigid base on four rubber feet with the lid as a rotated rigid plate; open at 105 degrees the lid overhangs the rear of the base, and the centre of pressure moves 5 cm back, still inside the feet.",
@@ -2144,40 +1838,48 @@
         "denominator": 50,
         "body": [
           {
-            "id": "foot-l",
+            "id": "foot-rear-left",
             "kind": "revolve",
             "bone": "base",
             "material": "rubber-foot",
             "role": "ground",
             "tone": 0.15,
-            "profile": [[0.0, 0.0052], [0.0006, 0.006], [0.0024, 0.006]],
+            "profile": [[0, 0.0052], [0.0006, 0.006], [0.0024, 0.006]],
             "axis": [0, 1, 0],
-            "origin": [0, 0, 0],
-            "transform": {
-              "translation": [0.02, 0.0, 0.134]
-            },
-            "repeat": {
-              "count": 2,
-              "translation": [0.178, 0.0, 0.0]
-            }
+            "origin": [0.02, 0, 0.134]
           },
           {
-            "id": "foot-r",
+            "id": "foot-rear-right",
             "kind": "revolve",
             "bone": "base",
             "material": "rubber-foot",
             "role": "ground",
             "tone": 0.15,
-            "profile": [[0.0, 0.0052], [0.0006, 0.006], [0.0024, 0.006]],
+            "profile": [[0, 0.0052], [0.0006, 0.006], [0.0024, 0.006]],
             "axis": [0, 1, 0],
-            "origin": [0, 0, 0],
-            "transform": {
-              "translation": [0.02, 0.0, -0.134]
-            },
-            "repeat": {
-              "count": 2,
-              "translation": [0.178, 0.0, 0.0]
-            }
+            "origin": [0.02, 0, -0.134]
+          },
+          {
+            "id": "foot-front-left",
+            "kind": "revolve",
+            "bone": "base",
+            "material": "rubber-foot",
+            "role": "ground",
+            "tone": 0.15,
+            "profile": [[0, 0.0052], [0.0006, 0.006], [0.0024, 0.006]],
+            "axis": [0, 1, 0],
+            "origin": [0.198, 0, 0.134]
+          },
+          {
+            "id": "foot-front-right",
+            "kind": "revolve",
+            "bone": "base",
+            "material": "rubber-foot",
+            "role": "ground",
+            "tone": 0.15,
+            "profile": [[0, 0.0052], [0.0006, 0.006], [0.0024, 0.006]],
+            "axis": [0, 1, 0],
+            "origin": [0.198, 0, -0.134]
           },
           {
             "id": "tub",
@@ -2889,13 +2591,23 @@
         ],
         "thermal": [
           {
-            "id": "th-foot-l",
-            "of": "foot-l",
+            "id": "th-foot-rear-left",
+            "of": "foot-rear-left",
             "region": "underside"
           },
           {
-            "id": "th-foot-r",
-            "of": "foot-r",
+            "id": "th-foot-rear-right",
+            "of": "foot-rear-right",
+            "region": "underside"
+          },
+          {
+            "id": "th-foot-front-left",
+            "of": "foot-front-left",
+            "region": "underside"
+          },
+          {
+            "id": "th-foot-front-right",
+            "of": "foot-front-right",
             "region": "underside"
           },
           {
@@ -2909,6 +2621,115 @@
             "of": "deck",
             "region": "deck",
             "sectionFaces": ["-v"]
+          },
+          {
+            "id": "th-logic-board",
+            "kind": "box",
+            "bone": "base",
+            "material": "keycap-plastic",
+            "role": "body",
+            "tone": 0.3,
+            "size": [0.07, 0.002, 0.19],
+            "transform": {
+              "translation": [0.062, 0.0062, 0.0]
+            },
+            "region": "deck",
+            "sectionFaces": ["+u", "-u", "+v", "-v", "+w", "-w"]
+          },
+          {
+            "id": "th-processor",
+            "kind": "box",
+            "bone": "base",
+            "material": "hinge-steel",
+            "role": "body",
+            "tone": 0.75,
+            "size": [0.03, 0.003, 0.03],
+            "transform": {
+              "translation": [0.058, 0.0087, 0.0]
+            },
+            "region": "deck",
+            "sectionFaces": ["+u", "-u", "+v", "-v", "+w", "-w"]
+          },
+          {
+            "id": "th-heat-pipe",
+            "kind": "box",
+            "bone": "base",
+            "material": "hinge-steel",
+            "role": "body",
+            "tone": 0.7,
+            "size": [0.008, 0.003, 0.18],
+            "transform": {
+              "translation": [0.034, 0.0087, 0.0]
+            },
+            "region": "deck",
+            "sectionFaces": ["+u", "-u", "+v", "-v", "+w", "-w"]
+          },
+          {
+            "id": "th-pipe-bridge",
+            "kind": "box",
+            "bone": "base",
+            "material": "hinge-steel",
+            "role": "body",
+            "tone": 0.7,
+            "size": [0.022, 0.003, 0.012],
+            "transform": {
+              "translation": [0.047, 0.0087, 0.0]
+            },
+            "region": "deck",
+            "sectionFaces": ["+u", "-u", "+v", "-v", "+w", "-w"]
+          },
+          {
+            "id": "th-fin-stack",
+            "kind": "box",
+            "bone": "base",
+            "material": "hinge-steel",
+            "role": "body",
+            "tone": 0.6,
+            "size": [0.01, 0.005, 0.05],
+            "transform": {
+              "translation": [0.018, 0.0075, -0.075]
+            },
+            "repeat": {
+              "count": 2,
+              "translation": [0.0, 0.0, 0.15]
+            },
+            "region": "underside",
+            "sectionFaces": ["+u", "-u", "+v", "-v", "+w", "-w"]
+          },
+          {
+            "id": "th-fan",
+            "kind": "revolve",
+            "bone": "base",
+            "material": "keycap-plastic",
+            "role": "body",
+            "tone": 0.2,
+            "profile": [[0.005, 0.0], [0.005, 0.024], [0.01, 0.024], [0.01, 0.0]],
+            "axis": [0, 1, 0],
+            "origin": [0.054, 0.0, -0.075],
+            "repeat": {
+              "count": 2,
+              "translation": [0.0, 0.0, 0.15]
+            },
+            "region": "underside",
+            "sectionFaces": ["+u", "-u", "+v", "-v", "+w", "-w"]
+          },
+          {
+            "id": "th-battery",
+            "kind": "box",
+            "bone": "base",
+            "material": "keycap-plastic",
+            "role": "body",
+            "tone": 0.4,
+            "size": [0.078, 0.005, 0.086],
+            "transform": {
+              "translation": [0.168, 0.0075, -0.095]
+            },
+            "repeat": {
+              "count": 3,
+              "translation": [0.0, 0.0, 0.095]
+            },
+            "region": "underside",
+            "sectionFaces": ["+u", "-u", "+v", "-v", "+w", "-w"]
           },
           {
             "id": "th-keyboard-bed",
@@ -3103,31 +2924,32 @@
         ],
         "structure": [
           {
-            "id": "support-feet",
-            "kind": "box",
-            "bone": "base",
-            "material": "rubber-foot",
-            "role": "ground",
-            "tone": 0.1,
-            "size": [0.19, 0.0005, 0.28],
-            "transform": {
-              "translation": [0.109, 0.00025, 0.0]
-            },
+            "id": "support-foot-rear-left",
+            "of": "foot-rear-left",
             "member": "base",
             "part": "support",
-            "anchor": "feet-contact"
+            "anchor": "foot-rear-left"
           },
           {
-            "id": "post-foot-l",
-            "of": "foot-l",
+            "id": "support-foot-rear-right",
+            "of": "foot-rear-right",
             "member": "base",
-            "part": "member"
+            "part": "support",
+            "anchor": "foot-rear-right"
           },
           {
-            "id": "post-foot-r",
-            "of": "foot-r",
+            "id": "support-foot-front-left",
+            "of": "foot-front-left",
             "member": "base",
-            "part": "member"
+            "part": "support",
+            "anchor": "foot-front-left"
+          },
+          {
+            "id": "support-foot-front-right",
+            "of": "foot-front-right",
+            "member": "base",
+            "part": "support",
+            "anchor": "foot-front-right"
           },
           {
             "id": "tray-floor",
@@ -3138,7 +2960,7 @@
             "tone": 0.6,
             "profile": [[-0.146, 0.005], [0.146, 0.005], [0.152, 0.011], [0.152, 0.207], [0.146, 0.213], [-0.146, 0.213], [-0.152, 0.207], [-0.152, 0.011]],
             "plane": "zx",
-            "from": 0.0024,
+            "from": 0.002,
             "to": 0.0044,
             "member": "base",
             "part": "member"
@@ -3329,12 +3151,16 @@
             "de": "Körper: das reale Klappgehäuse bei 1:50. Die Bodenschale ist eine Wanne mit bootsförmiger Kimm (6,5 mm hoch, flacher Boden 300 x 205 mm) auf vier runden Gummifüßen von 12 mm; das Tastaturdeck ist eine 4-mm-Platte darüber, die 9,5 mm vor der Hinterkante endet, sodass die Scharnierwalze von 9 mm auf einem Absatz mit dem 1,5 mm hohen Abluftspalt darunter sitzt; das Deck hat die Tastaturmulde (279 x 104 mm, 1,5 mm tief) mit 78 Tastenkappen in sechs Reihen unter der Deckebene, das Glas-Touchpad (130 x 78 mm) 0,2 mm tief in seiner Öffnung, zwei Lautsprecherfelder und das Abluftgitter auf dem Absatz; die Leertastenreihe endet im umgekehrten T der Pfeiltasten; zwei USB-C-Buchsen links, eine USB-C- und die Klinkenbuchse rechts; der flache Boden trägt zwei Felder mit je vierzehn Ansaugschlitzen unter den Lüftern und die acht Schrauben der Schale; die Kameralinse sitzt im oberen Rand des Glases; der Deckel ist eine 5,9-mm-Schale mit gerundeter Rückkante, das Deckglas mit 3 mm Rand und das leuchtende 14-Zoll-Panel im Format 16:10 (301,6 x 188,5 mm). Geschlossen berührt sich nichts: 0,3 mm zwischen Glas und Deck."
           },
           {
-            "en": "Thermal: every body solid is the surface of its region. Underside: the tub, the feet, the ports and the grille; deck: the deck plate, the keyboard bed, the keys and the trackpad; lid: shell, glass, panel and hinge barrel. The faces where tub, deck plate and the two inlays meet are joints of one sealed casing and count for no area. Each region has one aluminium layer, so there are no nested shells; the asset declares no hidden region, so no internals are modelled. The deck plume leaves from a 0.2 m outlet patch lying on the deck.",
-            "de": "Thermik: jeder Körper des Bodys ist die Oberfläche seiner Region. Unterseite: Wanne, Füße, Buchsen und Gitter; Deck: Deckplatte, Tastaturbett, Tasten und Touchpad; Deckel: Schale, Glas, Panel und Scharnierwalze. Die Flächen, an denen Wanne, Deckplatte und die zwei Einlagen aufeinandertreffen, sind Fugen eines geschlossenen Gehäuses und zählen nicht zur Fläche. Jede Region hat eine Aluminiumschicht, daher gibt es keine verschachtelten Schalen; das Asset erklärt keine verdeckte Region, daher sind keine Innenteile modelliert. Die Deckfahne geht von einem 0,2 m großen Auslassfeld auf dem Deck aus."
+            "en": "Thermal: every body solid is the surface of its region. Underside: the tub, the feet, the ports and the grille; deck: the deck plate, the keyboard bed, the keys and the trackpad; lid: shell, glass, panel and hinge barrel. The faces where tub, deck plate and the two inlays meet are joints of one sealed casing and count for no area. Each region has one aluminium layer, so there are no nested shells; the asset declares no hidden region, so no internals are modelled. The deck plume leaves from a 0.2 m outlet patch lying on the deck. The four rubber soles conduct heat across separate desk contacts.",
+            "de": "Thermik: jeder Körper des Bodys ist die Oberfläche seiner Region. Unterseite: Wanne, Füße, Buchsen und Gitter; Deck: Deckplatte, Tastaturbett, Tasten und Touchpad; Deckel: Schale, Glas, Panel und Scharnierwalze. Die Flächen, an denen Wanne, Deckplatte und die zwei Einlagen aufeinandertreffen, sind Fugen eines geschlossenen Gehäuses und zählen nicht zur Fläche. Jede Region hat eine Aluminiumschicht, daher gibt es keine verschachtelten Schalen; das Asset erklärt keine verdeckte Region, daher sind keine Innenteile modelliert. Die Deckfahne geht von einem 0,2 m großen Auslassfeld auf dem Deck aus. Die vier Gummisohlen leiten Wärme über einzelne Kontaktflächen in den Tisch."
           },
           {
-            "en": "Structure: the chassis is a tray: the floor plate on the four feet, the perimeter walls, the cross rib between keyboard bay and battery bay with the two ribs beside the trackpad, and the deck plate with its two openings as the upper flange; two steel brackets rise from the floor to the hinge axis, the two friction hinges are the joints, and the lid is a back plate with a rim and two steel hinge arms. Plates are modelled 2 mm thick (real 1 to 1.2 mm). The masses of 0.82 and 0.48 kg sit at the centres of mass, the contact pad of 190 x 280 mm lies under the feet.",
-            "de": "Tragwerk: das Chassis ist eine Wanne: die Bodenplatte auf den vier Füßen, die umlaufenden Wände, die Querrippe zwischen Tastatur- und Akkufach mit den zwei Rippen neben dem Touchpad und die Deckplatte mit ihren zwei Öffnungen als Obergurt; zwei Stahlwinkel steigen vom Boden zur Scharnierachse, die zwei Reibscharniere sind die Gelenke, und der Deckel ist eine Rückplatte mit Rand und zwei stählernen Scharnierarmen. Platten sind 2 mm dick modelliert (real 1 bis 1,2 mm). Die Massen von 0,82 und 0,48 kg sitzen in den Schwerpunkten, das Kontaktpolster von 190 x 280 mm liegt unter den Füßen."
+            "en": "Structure: the chassis is a tray: the floor plate on the four feet, the perimeter walls, the cross rib between keyboard bay and battery bay with the two ribs beside the trackpad, and the deck plate with its two openings as the upper flange; two steel brackets rise from the floor to the hinge axis, the two friction hinges are the joints, and the lid is a back plate with a rim and two steel hinge arms. Plates are modelled 2 mm thick (real 1 to 1.2 mm). The masses of 0.82 and 0.48 kg sit at the centres of mass. Four separate rubber soles bear on the desk.",
+            "de": "Tragwerk: das Chassis ist eine Wanne: die Bodenplatte auf den vier Füßen, die umlaufenden Wände, die Querrippe zwischen Tastatur- und Akkufach mit den zwei Rippen neben dem Touchpad und die Deckplatte mit ihren zwei Öffnungen als Obergurt; zwei Stahlwinkel steigen vom Boden zur Scharnierachse, die zwei Reibscharniere sind die Gelenke, und der Deckel ist eine Rückplatte mit Rand und zwei stählernen Scharnierarmen. Platten sind 2 mm dick modelliert (real 1 bis 1,2 mm). Die Massen von 0,82 und 0,48 kg sitzen in den Schwerpunkten. Vier einzelne Gummisohlen stehen auf dem Tisch."
+          },
+          {
+            "en": "Thermal internals: in the 6 mm cavity between bottom cover and deck lie the logic board (190 x 70 mm) with the shielded processor, the flat heat pipe (8 x 3 mm) running from it to two fin stacks at the exhaust gap, two 48 mm blower fans over the intake slots and three battery cells of 86 x 78 x 5 mm under the palm rest; board, processor and pipe heat the deck, fans, fins and cells the underside.",
+            "de": "Thermik innen: Im 6 mm hohen Hohlraum zwischen Bodenschale und Deck liegen die Hauptplatine (190 x 70 mm) mit dem abgeschirmten Prozessor, das flache Wärmerohr (8 x 3 mm) von dort zu zwei Lamellenpaketen am Abluftspalt, zwei 48-mm-Radiallüfter über den Ansaugschlitzen und drei Akkuzellen von 86 x 78 x 5 mm unter der Handauflage; Platine, Prozessor und Rohr heizen das Deck, Lüfter, Lamellen und Zellen die Unterseite."
           }
         ]
       },
@@ -3342,6 +3168,50 @@
         "status": "authored",
         "denominator": 100,
         "body": [
+          {
+            "id": "foot-rear-left",
+            "kind": "revolve",
+            "bone": "base",
+            "material": "rubber-foot",
+            "role": "ground",
+            "tone": 0.15,
+            "profile": [[0, 0.0052], [0.0006, 0.006], [0.0024, 0.006]],
+            "axis": [0, 1, 0],
+            "origin": [0.02, 0, 0.134]
+          },
+          {
+            "id": "foot-rear-right",
+            "kind": "revolve",
+            "bone": "base",
+            "material": "rubber-foot",
+            "role": "ground",
+            "tone": 0.15,
+            "profile": [[0, 0.0052], [0.0006, 0.006], [0.0024, 0.006]],
+            "axis": [0, 1, 0],
+            "origin": [0.02, 0, -0.134]
+          },
+          {
+            "id": "foot-front-left",
+            "kind": "revolve",
+            "bone": "base",
+            "material": "rubber-foot",
+            "role": "ground",
+            "tone": 0.15,
+            "profile": [[0, 0.0052], [0.0006, 0.006], [0.0024, 0.006]],
+            "axis": [0, 1, 0],
+            "origin": [0.198, 0, 0.134]
+          },
+          {
+            "id": "foot-front-right",
+            "kind": "revolve",
+            "bone": "base",
+            "material": "rubber-foot",
+            "role": "ground",
+            "tone": 0.15,
+            "profile": [[0, 0.0052], [0.0006, 0.006], [0.0024, 0.006]],
+            "axis": [0, 1, 0],
+            "origin": [0.198, 0, -0.134]
+          },
           {
             "id": "base",
             "kind": "loft",
@@ -3351,28 +3221,28 @@
             "tone": 0.58,
             "sections": [
               {
-                "at": [0.109, 0.0, 0.0],
+                "at": [0.109, 0.002, 0.0],
                 "rx": 0.15,
                 "ry": 0.1025,
                 "exponent": 34,
                 "rotation": [0.5, 0.5, 0.5, -0.5]
               },
               {
-                "at": [0.109, 0.0012, 0.0],
+                "at": [0.109, 0.003008, 0.0],
                 "rx": 0.1545,
                 "ry": 0.107,
                 "exponent": 34,
                 "rotation": [0.5, 0.5, 0.5, -0.5]
               },
               {
-                "at": [0.109, 0.003, 0.0],
+                "at": [0.109, 0.00452, 0.0],
                 "rx": 0.1562,
                 "ry": 0.1087,
                 "exponent": 34,
                 "rotation": [0.5, 0.5, 0.5, -0.5]
               },
               {
-                "at": [0.109, 0.005, 0.0],
+                "at": [0.109, 0.0062, 0.0],
                 "rx": 0.1565,
                 "ry": 0.109,
                 "exponent": 34,
@@ -3474,6 +3344,26 @@
         ],
         "thermal": [
           {
+            "id": "th-foot-rear-left",
+            "of": "foot-rear-left",
+            "region": "underside"
+          },
+          {
+            "id": "th-foot-rear-right",
+            "of": "foot-rear-right",
+            "region": "underside"
+          },
+          {
+            "id": "th-foot-front-left",
+            "of": "foot-front-left",
+            "region": "underside"
+          },
+          {
+            "id": "th-foot-front-right",
+            "of": "foot-front-right",
+            "region": "underside"
+          },
+          {
             "id": "th-underside",
             "kind": "loft",
             "bone": "base",
@@ -3482,28 +3372,28 @@
             "tone": 0.5,
             "sections": [
               {
-                "at": [0.109, 0.0, 0.0],
+                "at": [0.109, 0.002, 0.0],
                 "rx": 0.15,
                 "ry": 0.1025,
                 "exponent": 34,
                 "rotation": [0.5, 0.5, 0.5, -0.5]
               },
               {
-                "at": [0.109, 0.0012, 0.0],
+                "at": [0.109, 0.0029176, 0.0],
                 "rx": 0.1545,
                 "ry": 0.107,
                 "exponent": 34,
                 "rotation": [0.5, 0.5, 0.5, -0.5]
               },
               {
-                "at": [0.109, 0.003, 0.0],
+                "at": [0.109, 0.0042941, 0.0],
                 "rx": 0.1562,
                 "ry": 0.1087,
                 "exponent": 34,
                 "rotation": [0.5, 0.5, 0.5, -0.5]
               },
               {
-                "at": [0.109, 0.005, 0.0],
+                "at": [0.109, 0.0058235, 0.0],
                 "rx": 0.1565,
                 "ry": 0.109,
                 "exponent": 34,
@@ -3521,6 +3411,51 @@
             "capEnd": true,
             "region": "underside",
             "sectionFaces": ["+v"]
+          },
+          {
+            "id": "th-logic-board",
+            "kind": "box",
+            "bone": "base",
+            "material": "keycap-plastic",
+            "role": "body",
+            "tone": 0.3,
+            "size": [0.07, 0.004, 0.19],
+            "transform": {
+              "translation": [0.062, 0.0075, 0.0]
+            },
+            "region": "deck",
+            "sectionFaces": ["+u", "-u", "+v", "-v", "+w", "-w"]
+          },
+          {
+            "id": "th-fan",
+            "kind": "revolve",
+            "bone": "base",
+            "material": "keycap-plastic",
+            "role": "body",
+            "tone": 0.2,
+            "profile": [[0.005, 0.0], [0.005, 0.024], [0.01, 0.024], [0.01, 0.0]],
+            "axis": [0, 1, 0],
+            "origin": [0.054, 0.0, -0.075],
+            "repeat": {
+              "count": 2,
+              "translation": [0.0, 0.0, 0.15]
+            },
+            "region": "underside",
+            "sectionFaces": ["+u", "-u", "+v", "-v", "+w", "-w"]
+          },
+          {
+            "id": "th-battery",
+            "kind": "box",
+            "bone": "base",
+            "material": "keycap-plastic",
+            "role": "body",
+            "tone": 0.4,
+            "size": [0.078, 0.005, 0.276],
+            "transform": {
+              "translation": [0.168, 0.0075, 0.0]
+            },
+            "region": "underside",
+            "sectionFaces": ["+u", "-u", "+v", "-v", "+w", "-w"]
           },
           {
             "id": "th-deck",
@@ -3616,19 +3551,32 @@
         ],
         "structure": [
           {
-            "id": "support-feet",
-            "kind": "box",
-            "bone": "base",
-            "material": "rubber-foot",
-            "role": "ground",
-            "tone": 0.1,
-            "size": [0.19, 0.0005, 0.28],
-            "transform": {
-              "translation": [0.109, 0.00025, 0.0]
-            },
+            "id": "support-foot-rear-left",
+            "of": "foot-rear-left",
             "member": "base",
             "part": "support",
-            "anchor": "feet-contact"
+            "anchor": "foot-rear-left"
+          },
+          {
+            "id": "support-foot-rear-right",
+            "of": "foot-rear-right",
+            "member": "base",
+            "part": "support",
+            "anchor": "foot-rear-right"
+          },
+          {
+            "id": "support-foot-front-left",
+            "of": "foot-front-left",
+            "member": "base",
+            "part": "support",
+            "anchor": "foot-front-left"
+          },
+          {
+            "id": "support-foot-front-right",
+            "of": "foot-front-right",
+            "member": "base",
+            "part": "support",
+            "anchor": "foot-front-right"
           },
           {
             "id": "tray-floor",
@@ -3639,7 +3587,7 @@
             "tone": 0.6,
             "profile": [[-0.146, 0.005], [0.146, 0.005], [0.152, 0.011], [0.152, 0.207], [0.146, 0.213], [-0.146, 0.213], [-0.152, 0.207], [-0.152, 0.011]],
             "plane": "zx",
-            "from": 0.0005,
+            "from": 0.002,
             "to": 0.0045,
             "member": "base",
             "part": "member"
@@ -3757,16 +3705,20 @@
         ],
         "decisions": [
           {
-            "en": "Body: at 1:100 the chassis is one hull that stands on the desk (feet and the 2 mm air gap merged, bilge kept), the keys are one dark key field and the trackpad one inlay, both as sheets on the deck; the lid is one shell with its glass (the lit panel merged into it), and the hinge barrel stays because it joins lid and chassis in every pose. Ports, speaker fields, grille, the hinge ledge and the keyboard well are left out.",
-            "de": "Körper: bei 1:100 ist das Chassis ein Rumpf, der auf dem Tisch steht (Füße und 2 mm Luftspalt aufgegangen, Kimm erhalten), die Tasten sind ein dunkles Tastenfeld und das Touchpad eine Einlage, beide als Blätter auf dem Deck; der Deckel ist eine Schale mit ihrem Glas (das leuchtende Panel darin aufgegangen), und die Scharnierwalze bleibt, weil sie Deckel und Chassis in jeder Pose verbindet. Buchsen, Lautsprecherfelder, Gitter, Scharnierabsatz und Tastaturmulde entfallen."
+            "en": "A chamfered hull and hinged glazed lid retain the keyboard field and touchpad. The 10.5 mm chassis rests 2 mm above the desk on four rubber feet.",
+            "de": "Der abgeschrägte Rumpf und der verglaste Klappdeckel behalten Tastenfeld und Touchpad. Das 10,5 mm starke Chassis steht auf vier Gummifüßen 2 mm über dem Tisch."
           },
           {
-            "en": "Thermal: the hull is split at the parting line of the two covers (8.5 mm) into the underside and the deck, whose meeting faces are a joint; the key field and the trackpad are part of the deck surface; lid, glass and barrel are the lid; the plume outlet lies on the deck.",
-            "de": "Thermik: der Rumpf ist an der Trennfuge der zwei Schalen (8,5 mm) in Unterseite und Deck geteilt, deren Berührflächen eine Fuge sind; Tastenfeld und Touchpad gehören zum Deck; Deckel, Glas und Walze sind der Deckel; der Fahnenauslass liegt auf dem Deck."
+            "en": "Thermal: the hull is split at the parting line of the two covers (8.5 mm) into the underside and the deck, whose meeting faces are a joint; the key field and the trackpad are part of the deck surface; lid, glass and barrel are the lid; the plume outlet lies on the deck. The four rubber soles conduct heat across separate desk contacts.",
+            "de": "Thermik: der Rumpf ist an der Trennfuge der zwei Schalen (8,5 mm) in Unterseite und Deck geteilt, deren Berührflächen eine Fuge sind; Tastenfeld und Touchpad gehören zum Deck; Deckel, Glas und Walze sind der Deckel; der Fahnenauslass liegt auf dem Deck. Die vier Gummisohlen leiten Wärme über einzelne Kontaktflächen in den Tisch."
           },
           {
-            "en": "Structure: floor plate, wall frame with the one cross rib and the deck plate with the keyboard opening; the lid is a frame on two hinge joints; back plate, brackets, hinge arms, battery ribs and the feet are merged; two masses and the contact pad.",
-            "de": "Tragwerk: Bodenplatte, Wandrahmen mit der einen Querrippe und die Deckplatte mit der Tastaturöffnung; der Deckel ist ein Rahmen an zwei Scharniergelenken; Rückplatte, Winkel, Scharnierarme, Akkurippen und Füße sind aufgegangen; zwei Massen und das Kontaktpolster."
+            "en": "The floor plate carries the hinge and rests on four separate rubber soles. The base and lid each retain their mass centre.",
+            "de": "Die Bodenplatte trägt das Scharnier und ruht auf vier einzelnen Gummisohlen. Basis und Deckel behalten jeweils ihren Massenschwerpunkt."
+          },
+          {
+            "en": "Thermal internals: the logic board, the two fans over the intake slots and the battery as one pack lie inside the chassis; processor, heat pipe and fin stacks are below what this scale can carry.",
+            "de": "Thermik innen: Hauptplatine, die zwei Lüfter über den Ansaugschlitzen und der Akku als ein Paket liegen im Gehäuse; Prozessor, Wärmerohr und Lamellenpakete liegen unter dem, was dieser Maßstab tragen kann."
           }
         ]
       },
@@ -3774,6 +3726,50 @@
         "status": "authored",
         "denominator": 200,
         "body": [
+          {
+            "id": "foot-rear-left",
+            "kind": "revolve",
+            "bone": "base",
+            "material": "rubber-foot",
+            "role": "ground",
+            "tone": 0.15,
+            "profile": [[0, 0.0052], [0.0006, 0.006], [0.0024, 0.006]],
+            "axis": [0, 1, 0],
+            "origin": [0.02, 0, 0.134]
+          },
+          {
+            "id": "foot-rear-right",
+            "kind": "revolve",
+            "bone": "base",
+            "material": "rubber-foot",
+            "role": "ground",
+            "tone": 0.15,
+            "profile": [[0, 0.0052], [0.0006, 0.006], [0.0024, 0.006]],
+            "axis": [0, 1, 0],
+            "origin": [0.02, 0, -0.134]
+          },
+          {
+            "id": "foot-front-left",
+            "kind": "revolve",
+            "bone": "base",
+            "material": "rubber-foot",
+            "role": "ground",
+            "tone": 0.15,
+            "profile": [[0, 0.0052], [0.0006, 0.006], [0.0024, 0.006]],
+            "axis": [0, 1, 0],
+            "origin": [0.198, 0, 0.134]
+          },
+          {
+            "id": "foot-front-right",
+            "kind": "revolve",
+            "bone": "base",
+            "material": "rubber-foot",
+            "role": "ground",
+            "tone": 0.15,
+            "profile": [[0, 0.0052], [0.0006, 0.006], [0.0024, 0.006]],
+            "axis": [0, 1, 0],
+            "origin": [0.198, 0, -0.134]
+          },
           {
             "id": "base",
             "kind": "loft",
@@ -3783,14 +3779,14 @@
             "tone": 0.58,
             "sections": [
               {
-                "at": [0.109, 0.0, 0.0],
+                "at": [0.109, 0.002, 0.0],
                 "rx": 0.1535,
                 "ry": 0.106,
                 "exponent": 34,
                 "rotation": [0.5, 0.5, 0.5, -0.5]
               },
               {
-                "at": [0.109, 0.003, 0.0],
+                "at": [0.109, 0.00452, 0.0],
                 "rx": 0.1565,
                 "ry": 0.109,
                 "exponent": 34,
@@ -3861,6 +3857,26 @@
         ],
         "thermal": [
           {
+            "id": "th-foot-rear-left",
+            "of": "foot-rear-left",
+            "region": "underside"
+          },
+          {
+            "id": "th-foot-rear-right",
+            "of": "foot-rear-right",
+            "region": "underside"
+          },
+          {
+            "id": "th-foot-front-left",
+            "of": "foot-front-left",
+            "region": "underside"
+          },
+          {
+            "id": "th-foot-front-right",
+            "of": "foot-front-right",
+            "region": "underside"
+          },
+          {
             "id": "th-underside",
             "kind": "box",
             "bone": "base",
@@ -3869,7 +3885,7 @@
             "tone": 0.5,
             "size": [0.21, 0.0012, 0.305],
             "transform": {
-              "translation": [0.109, 0.0006, 0.0]
+              "translation": [0.109, 0.0026, 0.0]
             },
             "region": "underside",
             "layer": "bottom-shell",
@@ -3951,19 +3967,32 @@
         ],
         "structure": [
           {
-            "id": "support-feet",
-            "kind": "box",
-            "bone": "base",
-            "material": "rubber-foot",
-            "role": "ground",
-            "tone": 0.1,
-            "size": [0.19, 0.0005, 0.28],
-            "transform": {
-              "translation": [0.109, 0.00025, 0.0]
-            },
+            "id": "support-foot-rear-left",
+            "of": "foot-rear-left",
             "member": "base",
             "part": "support",
-            "anchor": "feet-contact"
+            "anchor": "foot-rear-left"
+          },
+          {
+            "id": "support-foot-rear-right",
+            "of": "foot-rear-right",
+            "member": "base",
+            "part": "support",
+            "anchor": "foot-rear-right"
+          },
+          {
+            "id": "support-foot-front-left",
+            "of": "foot-front-left",
+            "member": "base",
+            "part": "support",
+            "anchor": "foot-front-left"
+          },
+          {
+            "id": "support-foot-front-right",
+            "of": "foot-front-right",
+            "member": "base",
+            "part": "support",
+            "anchor": "foot-front-right"
           },
           {
             "id": "chassis-frame",
@@ -3974,7 +4003,7 @@
             "tone": 0.6,
             "profile": [[-0.1485, 0.0], [0.1485, 0.0], [0.1565, 0.008], [0.1565, 0.21], [0.1485, 0.218], [-0.1485, 0.218], [-0.1565, 0.21], [-0.1565, 0.008]],
             "plane": "zx",
-            "from": 0.0,
+            "from": 0.0044,
             "to": 0.0125,
             "holes": [
               [[-0.1325, 0.02], [0.1325, 0.02], [0.1365, 0.024], [0.1365, 0.194], [0.1325, 0.198], [-0.1325, 0.198], [-0.1365, 0.194], [-0.1365, 0.024]]
@@ -3989,7 +4018,7 @@
             "material": "alu-anodised",
             "role": "detail",
             "tone": 0.6,
-            "radii": [0.03, 0.00625, 0.05],
+            "radii": [0.03, 0.0045, 0.05],
             "transform": {
               "translation": [0.109, 0.00625, 0.0]
             },
@@ -4039,20 +4068,34 @@
             },
             "member": "lid",
             "part": "mass"
+          },
+          {
+            "id": "tray-floor",
+            "kind": "extrude",
+            "bone": "base",
+            "material": "alu-anodised",
+            "role": "body",
+            "tone": 0.6,
+            "profile": [[-0.146, 0.005], [0.146, 0.005], [0.152, 0.011], [0.152, 0.207], [0.146, 0.213], [-0.146, 0.213], [-0.152, 0.207], [-0.152, 0.011]],
+            "plane": "zx",
+            "from": 0.002,
+            "to": 0.0044,
+            "member": "base",
+            "part": "member"
           }
         ],
         "decisions": [
           {
-            "en": "Body: at 1:200 the laptop is two plates with rounded plan corners: the chassis 218 x 12.5 x 313 mm with a chamfered bottom edge and the lid 218 x 6.5 x 313 mm, which stands with its foot in the rear edge of the chassis so that the joint is closed in every pose; the dark glass face of the lid and the dark key field on the deck stay as sheets, because both are several features large; trackpad, barrel and bilge are merged.",
-            "de": "Körper: bei 1:200 ist der Laptop zwei Platten mit gerundeten Grundrissecken: das Chassis 218 x 12,5 x 313 mm mit gefaster Unterkante und der Deckel 218 x 6,5 x 313 mm, der mit seinem Fuß in der Hinterkante des Chassis steht, sodass das Gelenk in jeder Pose geschlossen ist; die dunkle Glasfläche des Deckels und das dunkle Tastenfeld auf dem Deck bleiben als Blätter, weil beide mehrere Merkmalsgrößen groß sind; Touchpad, Walze und Kimm sind aufgegangen."
+            "en": "A chamfered base and rounded lid retain the keyboard field and display. The 10.5 mm chassis rests 2 mm above the desk on four rubber feet.",
+            "de": "Die abgeschrägte Basis und der gerundete Deckel behalten Tastenfeld und Display. Das 10,5 mm starke Chassis steht auf vier Gummifüßen 2 mm über dem Tisch."
           },
           {
-            "en": "Thermal: the 1.2 mm bottom plate and the 1.2 mm deck plate of the chassis as the shells of their layers (their inner faces are joints of the casing), the lid plate with its glass and the plume outlet on the deck.",
-            "de": "Thermik: die 1,2 mm dicke Bodenplatte und die 1,2 mm dicke Deckplatte des Chassis als Schalen ihrer Schichten (ihre Innenflächen sind Fugen des Gehäuses), die Deckelplatte mit ihrem Glas und der Fahnenauslass auf dem Deck."
+            "en": "Thermal: the 1.2 mm bottom plate and the 1.2 mm deck plate of the chassis as the shells of their layers (their inner faces are joints of the casing), the lid plate with its glass and the plume outlet on the deck. The four rubber soles conduct heat across separate desk contacts.",
+            "de": "Thermik: die 1,2 mm dicke Bodenplatte und die 1,2 mm dicke Deckplatte des Chassis als Schalen ihrer Schichten (ihre Innenflächen sind Fugen des Gehäuses), die Deckelplatte mit ihrem Glas und der Fahnenauslass auf dem Deck. Die vier Gummisohlen leiten Wärme über einzelne Kontaktflächen in den Tisch."
           },
           {
-            "en": "Structure: the chassis as a perimeter frame, the lid as a frame on one hinge axle, the two masses and the contact pad.",
-            "de": "Tragwerk: das Chassis als umlaufender Rahmen, der Deckel als Rahmen an einer Scharnierachse, die zwei Massen und das Kontaktpolster."
+            "en": "The floor plate carries the hinge and rests on four separate rubber soles. The base and lid each retain their mass centre.",
+            "de": "Die Bodenplatte trägt das Scharnier und ruht auf vier einzelnen Gummisohlen. Basis und Deckel behalten jeweils ihren Massenschwerpunkt."
           }
         ]
       },
@@ -4061,15 +4104,59 @@
         "denominator": 500,
         "body": [
           {
+            "id": "foot-rear-left",
+            "kind": "revolve",
+            "bone": "base",
+            "material": "rubber-foot",
+            "role": "ground",
+            "tone": 0.15,
+            "profile": [[0, 0.0052], [0.0024, 0.006]],
+            "axis": [0, 1, 0],
+            "origin": [0.02, 0, 0.134]
+          },
+          {
+            "id": "foot-rear-right",
+            "kind": "revolve",
+            "bone": "base",
+            "material": "rubber-foot",
+            "role": "ground",
+            "tone": 0.15,
+            "profile": [[0, 0.0052], [0.0024, 0.006]],
+            "axis": [0, 1, 0],
+            "origin": [0.02, 0, -0.134]
+          },
+          {
+            "id": "foot-front-left",
+            "kind": "revolve",
+            "bone": "base",
+            "material": "rubber-foot",
+            "role": "ground",
+            "tone": 0.15,
+            "profile": [[0, 0.0052], [0.0024, 0.006]],
+            "axis": [0, 1, 0],
+            "origin": [0.198, 0, 0.134]
+          },
+          {
+            "id": "foot-front-right",
+            "kind": "revolve",
+            "bone": "base",
+            "material": "rubber-foot",
+            "role": "ground",
+            "tone": 0.15,
+            "profile": [[0, 0.0052], [0.0024, 0.006]],
+            "axis": [0, 1, 0],
+            "origin": [0.198, 0, -0.134]
+          },
+          {
             "id": "base",
             "kind": "box",
             "bone": "base",
             "material": "alu-anodised",
             "role": "body",
             "tone": 0.58,
-            "size": [0.218, 0.0125, 0.313],
+            "size": [0.218, 0.0105, 0.313],
             "transform": {
-              "translation": [0.109, 0.00625, 0.0]
+              "translation": [0.109, 0.00725, 0.0]
             }
           },
           {
@@ -4099,15 +4186,35 @@
         ],
         "thermal": [
           {
+            "id": "th-foot-rear-left",
+            "of": "foot-rear-left",
+            "region": "underside"
+          },
+          {
+            "id": "th-foot-rear-right",
+            "of": "foot-rear-right",
+            "region": "underside"
+          },
+          {
+            "id": "th-foot-front-left",
+            "of": "foot-front-left",
+            "region": "underside"
+          },
+          {
+            "id": "th-foot-front-right",
+            "of": "foot-front-right",
+            "region": "underside"
+          },
+          {
             "id": "th-underside",
             "kind": "box",
             "bone": "base",
             "material": "alu-anodised",
             "role": "body",
             "tone": 0.5,
-            "size": [0.218, 0.00625, 0.313],
+            "size": [0.218, 0.00525, 0.313],
             "transform": {
-              "translation": [0.109, 0.00313, 0.0]
+              "translation": [0.109, 0.004625, 0.0]
             },
             "region": "underside",
             "sectionFaces": ["+v"]
@@ -4119,9 +4226,9 @@
             "material": "alu-anodised",
             "role": "body",
             "tone": 0.62,
-            "size": [0.218, 0.00625, 0.313],
+            "size": [0.218, 0.00525, 0.313],
             "transform": {
-              "translation": [0.109, 0.00938, 0.0]
+              "translation": [0.109, 0.009875, 0.0]
             },
             "region": "deck",
             "sectionFaces": ["-v"]
@@ -4154,19 +4261,32 @@
         ],
         "structure": [
           {
-            "id": "support-feet",
-            "kind": "box",
-            "bone": "base",
-            "material": "rubber-foot",
-            "role": "ground",
-            "tone": 0.1,
-            "size": [0.19, 0.0005, 0.28],
-            "transform": {
-              "translation": [0.109, 0.00025, 0.0]
-            },
+            "id": "support-foot-rear-left",
+            "of": "foot-rear-left",
             "member": "base",
             "part": "support",
-            "anchor": "feet-contact"
+            "anchor": "foot-rear-left"
+          },
+          {
+            "id": "support-foot-rear-right",
+            "of": "foot-rear-right",
+            "member": "base",
+            "part": "support",
+            "anchor": "foot-rear-right"
+          },
+          {
+            "id": "support-foot-front-left",
+            "of": "foot-front-left",
+            "member": "base",
+            "part": "support",
+            "anchor": "foot-front-left"
+          },
+          {
+            "id": "support-foot-front-right",
+            "of": "foot-front-right",
+            "member": "base",
+            "part": "support",
+            "anchor": "foot-front-right"
           },
           {
             "id": "floor-plate",
@@ -4241,16 +4361,16 @@
         ],
         "decisions": [
           {
-            "en": "Minimal: at 1:500 the laptop is smaller than three features (313 x 218 mm against 75 mm), so it is two plain rectangular plates, the chassis 218 x 12.5 x 313 mm and the lid 218 x 6.5 x 313 mm standing in the rear edge of the chassis, and the dark glass face of the lid, which alone tells the screen side from the back; corner radii, key field and every other part are merged. The scale has no printed drawing (below the printable feature); the model serves the digital views.",
-            "de": "Minimal: bei 1:500 ist der Laptop kleiner als drei Merkmalsgrößen (313 x 218 mm gegenüber 75 mm), daher ist er zwei schlichte rechteckige Platten, das Chassis 218 x 12,5 x 313 mm und der Deckel 218 x 6,5 x 313 mm, der in der Hinterkante des Chassis steht, sowie die dunkle Glasfläche des Deckels, die allein die Bildschirmseite von der Rückseite unterscheidet; Eckradien, Tastenfeld und alle übrigen Teile sind aufgegangen. Der Maßstab hat keine gedruckte Zeichnung (unter der druckbaren Merkmalsgröße); das Modell dient den digitalen Ansichten."
+            "en": "Minimal: the base and lid are rectangular plates, with a dark inset marking the display face. The 10.5 mm chassis rests 2 mm above the desk on four rubber feet.",
+            "de": "Minimal: Basis und Deckel sind rechteckige Platten. Eine dunkle Einlage kennzeichnet die Bildschirmseite. Das 10,5 mm starke Chassis steht auf vier Gummifüßen 2 mm über dem Tisch."
           },
           {
-            "en": "Thermal: the chassis plate is halved at mid height into the underside and the deck (the meeting faces are a joint of the casing), the lid with its glass is the lid, and the plume leaves from an octagonal outlet patch on the deck.",
-            "de": "Thermik: die Chassisplatte ist auf halber Höhe in Unterseite und Deck geteilt (die Berührflächen sind eine Fuge des Gehäuses), der Deckel mit seinem Glas ist der Deckel, und die Fahne geht von einem achteckigen Auslassfeld auf dem Deck aus."
+            "en": "Thermal: the chassis plate is halved at mid height into the underside and the deck (the meeting faces are a joint of the casing), the lid with its glass is the lid, and the plume leaves from an octagonal outlet patch on the deck. The four rubber soles conduct heat across separate desk contacts.",
+            "de": "Thermik: die Chassisplatte ist auf halber Höhe in Unterseite und Deck geteilt (die Berührflächen sind eine Fuge des Gehäuses), der Deckel mit seinem Glas ist der Deckel, und die Fahne geht von einem achteckigen Auslassfeld auf dem Deck aus. Die vier Gummisohlen leiten Wärme über einzelne Kontaktflächen in den Tisch."
           },
           {
-            "en": "Structure: the floor plate of the chassis on the contact pad, the back plate of the lid on one square hinge axle, and the two masses at the centres of mass.",
-            "de": "Tragwerk: die Bodenplatte des Chassis auf dem Kontaktpolster, die Rückplatte des Deckels an einer quadratischen Scharnierachse und die zwei Massen in den Schwerpunkten."
+            "en": "The floor plate carries the hinge and rests on four separate rubber soles. The base and lid each retain their mass centre.",
+            "de": "Die Bodenplatte trägt das Scharnier und ruht auf vier einzelnen Gummisohlen. Basis und Deckel behalten jeweils ihren Massenschwerpunkt."
           }
         ]
       }

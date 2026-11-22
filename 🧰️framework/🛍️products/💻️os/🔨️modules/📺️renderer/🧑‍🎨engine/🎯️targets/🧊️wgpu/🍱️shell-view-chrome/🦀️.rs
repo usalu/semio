@@ -8,7 +8,7 @@ use semio_renderer_wgpu_shell_actions::ActionsCtx;
 use semio_renderer_wgpu_shell_async::{chrome_now_ms, debug_log};
 #[cfg(any(test, feature = "testkit"))]
 use semio_renderer_wgpu_shell_async::{chrome_group_border, utility_subtree_has_active_path};
-use semio_renderer_wgpu_shell_chrome_state::{ChromeState, ChromeTooltipHover, ShellChromeBuildState, ShellTransientNotice, chrome_tooltip_ready, shell_control_hotkey_badge, window_measures_surface_id, window_projection_surface_id};
+use semio_renderer_wgpu_shell_chrome_state::{ChromeState, ShellChromeBuildState, ShellTransientNotice, chrome_tooltip_ready, shell_control_hotkey_badge, window_measures_surface_id, window_projection_surface_id};
 use semio_renderer_wgpu_shell_commands::CommandState;
 use semio_renderer_wgpu_shell_directory::DirectoryState;
 use semio_renderer_wgpu_shell_doc_open::{OpeningState, ShellDocumentOpenPhase, ShellDocumentOpening};
@@ -18,14 +18,14 @@ use semio_renderer_wgpu_shell_history::{HistoryState, SHELL_CHROME_IO_FIELD_BYTE
 use semio_renderer_wgpu_shell_input::{OverlayState, PresentedInputCandidateWitness, PresentedInputGeometry, RightClickState, ShellInputState, ShellPaletteKind, note_chrome_control_name, panel_tab_introduction_element_id, panel_tab_scroll_id, tree_hit_item_id, with_chrome_control_names};
 use semio_renderer_wgpu_shell_plugins::{PluginState, ShellPluginInstallPhase};
 use semio_renderer_wgpu_shell_pointer::{PointerCtx, WINDOW_UTILITY_RAIL_PARENT, dock_tab_select_window_id, panel_resize_anchor, tree_row_has_chevron};
-use semio_renderer_wgpu_shell_prefs::{CHROME_ICON_TINY, ChromeGroupItem, DockTabNode, PrefsState, labels, retained_chrome_group_item_width, stored_field_get, stored_field_set};
+use semio_renderer_wgpu_shell_prefs::{CHROME_ICON_TINY, ChromeGroupItem, DockTabNode, PrefsState, retained_chrome_group_item_width, stored_field_get, stored_field_set};
 #[cfg(any(test, feature = "testkit"))]
 use semio_renderer_wgpu_shell_prefs::measure_chrome_group_item;
 use semio_renderer_wgpu_shell_session::{DockTabMoveTarget, SessionCtx, mobile_panel_reconcile_path, panel_state_from_view, shell_navbar_title};
 use semio_renderer_wgpu_shell_state::ShellState;
-use semio_renderer_wgpu_shell_surfaces::{SettleState, SurfaceState, TutorialMode, TutorialState, World3dComputeStatus, tutorial_bar_height, world3d_compute_status};
+use semio_renderer_wgpu_shell_surfaces::{SettleState, SurfaceState, TutorialState, World3dComputeStatus, world3d_compute_status};
 use semio_renderer_wgpu_shell_sync::SyncState;
-use semio_renderer_wgpu_shell_view_paint::{ANCHOR_COLUMN_ORDER, ChromePanelSafeArea, DOCUMENT_OPEN_CANCEL_CONTROL_ID, DOCUMENT_OPEN_STEPS, LOGO_UNTINTED, PLUGIN_INSTALL_CANCEL_CONTROL_ID, PLUGIN_INSTALL_TOP_GAP, RetainedChromeGroupStep, SHELL_NAVBAR_LOGO_UI_SPACING, SHELL_NAVBAR_SESSIONLESS_TITLE, SHELL_WINDOW_PAINT_OPPORTUNITIES, SafeAreaYield, ShellChromeBandSpan, ShellNavbarWidthPolicy, ShellUtilityPath, TAB_INSERT_PREVIEW_WIDTH_PX, TRANSIENT_NOTICE_CLOSE_CONTROL_ID, TRANSIENT_NOTICE_MAX_WIDTH, TRANSIENT_NOTICE_TOP_GAP, WORLD_PROJECTION_PANE_PAINT_OPPORTUNITIES, World3dStatusPill, chrome_icon, chrome_panel_axis_reserve, chrome_text, chrome_text_step, floating_panel_width, flowed_anchor_tab_divider_y, flowed_anchor_tab_row_y, plugin_install_action_rect, plugin_install_banner_text, rects_overlap, render_utility_section_divider, scene_chrome_labels, shell_presence_label, shell_surface_role_chip_text, surface_fits_overlay, surface_overlay_row_box, transient_notice_close_rect, transient_notice_tone, tutorial_scrub_progress, tutorial_scrub_target_ms, utility_at_path, utility_node_label, window_pane_chip_rect, world3d_status_is_visible};
+use semio_renderer_wgpu_shell_view_paint::{ANCHOR_COLUMN_ORDER, ChromePanelSafeArea, DOCUMENT_OPEN_STEPS, LOGO_UNTINTED, PLUGIN_INSTALL_TOP_GAP, RetainedChromeGroupStep, SHELL_NAVBAR_LOGO_UI_SPACING, SHELL_NAVBAR_SESSIONLESS_TITLE, SHELL_WINDOW_PAINT_OPPORTUNITIES, SafeAreaYield, ShellChromeBandSpan, ShellNavbarWidthPolicy, ShellUtilityPath, TAB_INSERT_PREVIEW_WIDTH_PX, TRANSIENT_NOTICE_TOP_GAP, WORLD_PROJECTION_PANE_PAINT_OPPORTUNITIES, World3dStatusPill, chrome_icon, chrome_panel_axis_reserve, chrome_text, chrome_text_step, floating_panel_width, flowed_anchor_tab_divider_y, flowed_anchor_tab_row_y, rects_overlap, render_utility_section_divider, scene_chrome_labels, shell_presence_label, shell_surface_role_chip_text, surface_fits_overlay, surface_overlay_row_box, transient_notice_tone, utility_at_path, utility_node_label, window_pane_chip_rect, world3d_status_is_visible};
 use semio_renderer_wgpu_shell_window_actions::{WINDOW_PANE_BODY_WIDTH_PX, WindowActionsCtx, surface_role_apps};
 use semio_renderer_wgpu_shell_windows::{PanelAnchor, WORLD_PROJECTION_PANE_PARENT, WindowPaneChip, WindowState};
 use semio_framework::AppDefinition;
@@ -47,7 +47,7 @@ use semio_ui_theme::{Level, Rgba, Theme};
 use semio_ui_theme::geometry::Rect;
 use semio_ui_wgpu_paint::{RetainedGlyphCursor, RetainedGlyphStep};
 use semio_ui_declaration::utilities::UtilityNode;
-use semio_ui_wgpu_layout::chrome::{chrome_item_bg, chrome_item_text, push_chrome_group_border};
+use semio_ui_wgpu_layout::chrome::push_chrome_group_border;
 
 #[path = "../../../🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🍱️view-chrome/⚓️dock-model-and-measures/🦀️.rs"]
 mod staged_view_chrome__dock_model_and_measures;

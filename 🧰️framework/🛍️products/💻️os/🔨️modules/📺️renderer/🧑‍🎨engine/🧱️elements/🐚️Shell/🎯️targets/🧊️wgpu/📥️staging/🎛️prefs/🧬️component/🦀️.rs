@@ -30,6 +30,8 @@ pub struct PrefsState {
     /// 📤️ Whether a theme IMPORT picker is parked for the gesture lane — a picker is gated on
     /// user activation, so it rides the same narrow door `pending_file_opens` does.
     pub pending_theme_import: bool,
+    /// 🖼️ The icon selector's Import press (its [`UiIconSelectNode::import_action`]) whose file picker is parked for the gesture lane, for the same user-activation reason.
+    pub pending_icon_import: Option<semio_ui_declaration::layout::ActionDescriptor>,
     /// ⚔️ This session's open first-class conflicts — React's `selectOpenConflicts(shellState)`
     /// over `🐚️Shell`'s `merge.conflicts`. Seeded once per session from
     /// `ProgramBridgeEntry::read_conflicts` and replaced by every `resolve_conflict` reply, which is

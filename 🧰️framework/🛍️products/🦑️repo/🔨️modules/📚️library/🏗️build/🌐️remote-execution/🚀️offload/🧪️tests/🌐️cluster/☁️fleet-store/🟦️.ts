@@ -12,7 +12,7 @@ import {startClusterV1,eventuallyV1,writeHostViewV1,type ClusterV1} from "../../
 import {createTestCheckoutV1,externHash,testHostProbeV1,testRustEnvironmentV1,type TestCheckoutV1} from "../../🧰️workspace/🟦️.ts";
 
 /** ☁️ A unit compiled by a worker reaches the fleet cache exactly like one compiled locally: stored once under the requester's key with its slot, served to a third checkout without any compiler, and its claim is released. Scheduler, cache server (an explicit scratch store, never the real one) and two worker processes run here. */
-const entry=fileURLToPath(new URL("../../../../🏃️entry/🟦️.ts",import.meta.url)),scratch=realpathSync(mkdtempSync(join(tmpdir(),"offload-store-")));
+const entry=fileURLToPath(new URL("../../../../🏃️entry/🟦️.ts",import.meta.url)),scratch=realpathSync(mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir(),"offload-store-")));
 const TOKEN="scratch-fleet-token",AUTH={authorization:"Bearer scratch-fleet-token"},children=new Set<ChildProcess>();
 let cluster:ClusterV1;
 const idleHost=join(scratch,"idle-host.json");
@@ -37,7 +37,7 @@ afterAll(async()=>{
 
 const countingRustc=(directory:string):{path:string;log:string}=>{
  const path=join(directory,"counting-rustc.sh"),log=join(directory,"rustc-calls.log");
- writeFileSync(path,`#!/bin/sh\ncase " $* " in *" -vV "*) ;; *) echo call >> '${log}';; esac\nexec rustc "$@"\n`);chmodSync(path,0o755);
+ writeFileSync(path,`#!/bin/sh\ncase " $* " in *" -vV "*|*" -Z ls="*) ;; *) echo call >> '${log}';; esac\nexec rustc "$@"\n`);chmodSync(path,0o755);
  return{path,log};
 };
 const callsOf=(log:string):number=>existsSync(log)?readFileSync(log,"utf8").split("\n").filter(Boolean).length:0;

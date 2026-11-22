@@ -27,3 +27,27 @@ async fn rejects_malformed_payload() {
     let bad = DwgSnapshot { drawing: DwgLogicalDrawing { extmax: vec![0.0], ..Default::default() }, ..DwgSnapshot::default() };
     assert!(::semio_framework_async::poll::resolve_ready(SemioMeshFromDwg::deserialize(&bad)).is_err());
 }
+
+#[semio_framework_async_macros::async_test]
+async fn checks_triangle_markers_and_rejects_invalid_local_indices() {
+    let drawing_with = |face| {
+        let mut drawing = DwgDrawing::default();
+        let layer = drawing.ensure_layer("facets");
+        drawing.entities.push(DwgEntity { layer, color: DwgColor::ByLayer, geometry: DwgGeometry::PolyfaceMesh {
+            vertices: vec![[0., 0., 0.], [1., 0., 0.], [1., 1., 0.], [0., 1., 0.]], faces: vec![face],
+        } });
+        let face_layer = drawing.ensure_layer("faces");
+        drawing.entities.push(DwgEntity { layer: face_layer, color: DwgColor::ByLayer, geometry: DwgGeometry::Face3d {
+            corners: [[0., 0., 0.], [1., 0., 0.], [0., 1., 0.], [0., 1., 0.]],
+        } });
+        DwgSnapshot::from_drawing(&drawing).expect("logical DWG fixture")
+    };
+    let snapshot = drawing_with([2, -3, 4, 0]);
+    let result = ::semio_framework_async::poll::resolve_ready(SemioMeshFromDwg::deserialize(&snapshot)).unwrap();
+    assert_eq!(result.meshes.iter().map(|mesh| mesh.id.as_str()).collect::<Vec<_>>(), ["facets", "faces"]);
+    assert_eq!(result.meshes[0].primitives[0].indices, [1, 2, 3]);
+    assert_eq!(result.meshes[1].primitives[0].positions.len(), 3);
+    assert_eq!(result.meshes[1].primitives[0].indices, [0, 1, 2]);
+    let invalid = drawing_with([2, -3, 8, 0]);
+    assert!(::semio_framework_async::poll::resolve_ready(SemioMeshFromDwg::deserialize(&invalid)).is_err());
+}

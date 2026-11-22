@@ -24,6 +24,7 @@ import { DEFAULT_LOD_GRID_FACTOR, DEFAULT_MANUAL_LOD, WorldCanvas, WorldLodBridg
 import { WorldTerrainLayer } from "../🗺️WorldTerrainLayer/🟦️.tsx";
 import { parseTerrainBrushAction } from "../🗺️WorldTerrainLayer/🖌️brush/🟦️.ts";
 import type { TerrainBrushSample } from "../🗺️WorldTerrainLayer/🖌️brush/👆️stroke.ts";
+import { parseTerrainMovePosition, type TerrainPositionMove } from "../🗺️WorldTerrainLayer/🗺️overlays/📍️move-position.ts";
 import { parseTerrainOverlayDescriptor } from "../🗺️WorldTerrainLayer/🗺️overlays/🟦️.tsx";
 import { world3dMarqueeOverlayShape } from "../🛠️ShellHelpers/🛑️extension-io/🟦️.ts";
 import { NOTE_WORLD_NAVIGATION_ACTION_ID } from "../🛠️ShellHelpers/🔩️plumbing/🆔️action-ids/🟦️.ts";
@@ -36,13 +37,13 @@ import { CanvasPresenceOverlayV1, usePresenceRuntimeKeyV1 } from "../👕️canv
 import { isTransparentWorldBackground, WORLD3D_FRAME_BOUNDS_MARGIN, world3dCameraDomJson, world3dSunDomJson } from "./🔭️scene-schema/🟦️.ts";
 import { WorldAcceptedFrameDiagnostics, WorldAutoFit, WorldProjectionContentFrame } from "./🎨️mesh-render/🟦️.tsx";
 import { BrushMeshRegistrar } from "./🧩️glb-surface/🟦️.tsx";
-import { resolveWorldContextMenuTarget, world3dContextMenuSurfaceV1, WORLD3D_SUGGESTIONS_LABELS_V1, world3dSuggestionsAltHeld, world3dSuggestionsGestureArmed, world3dSuggestionsGestureTarget, world3dSuggestionsKeyChord, world3dSuggestionsGestureConsumesContextMenu, worldInstancePickBlocked, worldSurfaceGuestSelectionDomV1, worldSurfaceSelectionDomV1 } from "./🔗️instance-selection/🟦️.ts";
+import { resolveWorldContextMenuTarget, world3dContextMenuSurfaceV1, WORLD3D_SUGGESTIONS_LABELS_V1, WORLD3D_SUGGESTIONS_LONG_PRESS_V1, world3dSuggestionsAltHeld, world3dSuggestionsGestureArmed, world3dSuggestionsGestureTarget, world3dSuggestionsKeyChord, world3dSuggestionsGestureConsumesContextMenu, worldInstancePickBlocked, worldSurfaceGuestSelectionDomV1, worldSurfaceSelectionDomV1 } from "./🔗️instance-selection/🟦️.ts";
 import { isWorldTransformGumballMode } from "./🧮️gumball-math/🟦️.ts";
 import { WorldInstancesLayer } from "./🧱️instance-layers/🟦️.tsx";
 import { WorldPointCloudLayer } from "./🧱️instance-layers/☁️point-cloud-layer/🟦️.tsx";
 import { WorldVortexMarkers } from "./🧱️instance-layers/🌪️vortex-markers/🟦️.tsx";
 import { CameraRefBridge, EngagementPreviewLayer, IntroductionWorldResolverBridge, RaycasterPickTuning, WorldAttractionLines, WorldComputeStatusPane, WorldConnectRubberBand, WorldGumballHitStamp, WorldSurfaceStatusPane, WorldVortexHitStamp, WorldVoxelPreviewBox } from "./🎯️marquee-and-bridges/🟦️.tsx";
-import { CatalogueDropGhost, CatalogueDropPreviewInvalidate } from "./🗂️catalogue-drop/🟦️.tsx";
+import { CatalogueDropGhost } from "./🗂️catalogue-drop/🟦️.tsx";
 import { WorldOrbitProjectionSwitchPane } from "./🪟️window-view-store/🟦️.tsx";
 import { openSurfaceContextMenu } from "../🗣️Interpreter/🖱️surface-menu/🟦️.ts";
 
@@ -76,7 +77,7 @@ export function World3dHost(props: ComponentSceneHostProps) {
   Object.assign(core, useWorldPaintAndProjection(core));
   Object.assign(core, useWorldMarqueeAndGumball(core));
   Object.assign(core, useWorldPointerAndDrop(core));
-  const { activeUtility, altHeldRef, publishWorldPresenceView, annotationLayer, annotationStore, attractions, autoFitBounds, autoFitKey, autoFitUserMoved, brushMeshRevisions, brushMeshUrls, brushMode, cameraRef, cameraSeedKey, cameraState, catalogueDropPreview, colors, computeStatus, connectDragHoverPosition, connectDragSource, contentBounds, contextMenu, contextMenuOpenEpochRef, contextMenuTitleLabel, dismissContextMenu, dispatch, emptySceneLabel, engagementPreview, environment, externalPendingProjectionSpec, faceDragSession, fit, fitProjectionContent, frame, geometryRevisionRef, gridFactor, gridSnapEnabled, gumballDragActive, gumballLiveDispatch, gumballTransformPreviewSourceId, handleAutoFitCameraChange, handleDragActive, handleBrushPlace, handleCameraChange, handleCameraNavigate, handleComponentHover, handleConnectDragDrop, handleConnectDragHover, handleEmptyClick, handleFaceDragStart, handleGizmoCameraChange, handleGumballDrag, handleGumballDragEnd, handleGumballDragStart, handleInstancePointerDown, handleInstancePointerMove, handlePaintAt, handlePointerDown, handlePointerMove, handlePointerUp, handleProjectionContentFrame, handleProjectionKindChange, handleReferenceHover, handleReferenceSelect, handleRegisterBrushMesh, handleSuggestionClose, handleTargetVolumeRelocate, handleTargetVolumeSelect, handleVortexHover, handleVortexPointerArm, handleVortexPointerMove, handleVortexPointerUp, handleVortexSelect, handleWorldOrbitRightPointerDown, handleWorldPick, heatmap, hostRef, hoveredVortexFullIdRef, instances, instancesGroupRef, interaction, interactionDomainId, localPresenceActor, lod, lodRef, mapWorldContextMenuSpecs, marqueeCoverage, marqueeDown, marqueeDragActive, marqueeEnd, marqueePath, marqueeStart, meshStylePalette, meshVisuals, meshes, method, modellingOptions, node, onCatalogueDragEnter, onCatalogueDragLeave, onCatalogueDragOver, onCatalogueDrop, overlayRailRef, overlayRailSafeArea, paintMode, pendingProjectionSpec, pendingProjectionSpecRef, persistentSelectionMode, presenceObjectWorldPositions, presenceWindowId, previewAttractions, previewVortices, projectionContentFrameMounted, projectionFramePending, publishHoverPaint, referenceHoveredId, referenceSelectedIds, references, releaseLocalHover, requestContextMenu, scalarField, scene, sceneCamera, sectionCapHex, sectionExtent, selection, selectionMode, setContextMenu, setExternalPendingProjectionSpec, setGumballDragActive, setPendingProjectionSpec, sharedGumballTransformPreview, shellContextMenuFallback, shellScope, subElementPaint, subscribeLocalHoverRelease, suggestionFocus, suggestionMenuTitleLabel, suggestionPopupOwnsThisWindow, suggestionRows, suggestionsRightDownDispatchedAtRef, targetVolumeSelectedIds, targetVolumes, toolRunTrace, visibleSelectionPreview, volumeBrushMode, volumeGumballConfig, volumeLayersInteractive, vortices, voxelHoverOrigin, windowInstanceId, worldOrbitConstraints, worldProjectionSpec , presenceRuntimeKey } = core;
+  const { activeUtility, altHeldRef, publishWorldPresenceView, annotationLayer, annotationStore, attractions, autoFitBounds, autoFitKey, autoFitUserMoved, brushMeshRevisions, brushMeshUrls, brushMode, cameraRef, cameraSeedKey, cameraState, colors, computeStatus, connectDragHoverPosition, connectDragSource, contentBounds, contextMenu, contextMenuOpenEpochRef, contextMenuTitleLabel, dismissContextMenu, dispatch, emptySceneLabel, engagementPreview, environment, externalPendingProjectionSpec, faceDragSession, fit, fitProjectionContent, frame, geometryRevisionRef, gridFactor, gridSnapEnabled, gumballDragActive, gumballLiveDispatch, gumballTransformPreviewSourceId, handleAutoFitCameraChange, handleDragActive, handleBrushPlace, handleCameraChange, handleCameraNavigate, handleComponentHover, handleConnectDragDrop, handleConnectDragHover, handleEmptyClick, handleFaceDragStart, handleGizmoCameraChange, handleGumballDrag, handleGumballDragEnd, handleGumballDragStart, handleInstancePointerDown, handleInstancePointerMove, handlePaintAt, handlePointerDown, handlePointerMove, handlePointerUp, handleProjectionContentFrame, handleProjectionKindChange, handleReferenceHover, handleReferenceSelect, handleRegisterBrushMesh, handleSuggestionClose, handleTargetVolumeRelocate, handleTargetVolumeSelect, handleVortexHover, handleVortexPointerArm, handleVortexPointerMove, handleVortexPointerUp, handleVortexSelect, handleWorldOrbitRightPointerDown, handleWorldPick, heatmap, hostRef, hoveredVortexFullIdRef, instances, instancesGroupRef, interaction, interactionDomainId, localPresenceActor, lod, lodRef, mapWorldContextMenuSpecs, marqueeCoverage, marqueeDown, marqueeDragActive, marqueeEnd, marqueePath, marqueeStart, meshStylePalette, meshVisuals, meshes, method, modellingOptions, node, onCatalogueDragEnter, onCatalogueDragLeave, onCatalogueDragOver, onCatalogueDrop, overlayRailRef, overlayRailSafeArea, paintMode, pendingProjectionSpec, pendingProjectionSpecRef, persistentSelectionMode, presenceObjectWorldPositions, presenceWindowId, previewAttractions, previewVortices, projectionContentFrameMounted, projectionFramePending, publishHoverPaint, referenceHoveredId, referenceSelectedIds, references, releaseLocalHover, requestContextMenu, scalarField, scene, sceneCamera, sectionCapHex, sectionExtent, selection, selectionMode, setContextMenu, setExternalPendingProjectionSpec, setGumballDragActive, setPendingProjectionSpec, sharedGumballTransformPreview, shellContextMenuFallback, shellScope, subElementPaint, subscribeLocalHoverRelease, suggestionFocus, suggestionMenuTitleLabel, suggestionPopupOwnsThisWindow, suggestionRows, suggestionsRightDownDispatchedAtRef, targetVolumeSelectedIds, targetVolumes, toolRunTrace, visibleSelectionPreview, volumeBrushMode, volumeGumballConfig, volumeLayersInteractive, vortices, voxelHoverOrigin, windowInstanceId, worldOrbitConstraints, worldProjectionSpec , presenceRuntimeKey } = core;
 
   const [suggestionsAnnouncement, setSuggestionsAnnouncement] = useState("");
   const [terrainFeatureName, setTerrainFeatureName] = useState<string | null>(null);
@@ -87,10 +88,15 @@ export function World3dHost(props: ComponentSceneHostProps) {
     const [column, row] = first;
     dispatch(terrainBrush.action, { ...terrainBrush.arguments, column, row, ...(samples.length > 1 ? { stroke: samples } : {}) });
   }, [terrainBrush, dispatch]);
+  const terrainMovePosition = terrainBrush ? undefined : parseTerrainMovePosition(interaction.terrainMovePosition);
+  const terrainCapturesPrimary = terrainBrush !== undefined || terrainMovePosition !== undefined;
+  const moveTerrainPosition = useCallback((move: TerrainPositionMove) => {
+    if (terrainMovePosition) dispatch(terrainMovePosition, move);
+  }, [terrainMovePosition, dispatch]);
   const terrainFeatures = useMemo(() => parseTerrainOverlayDescriptor(scene?.terrainJson), [scene?.terrainJson]);
   const terrainCameraFrame = useMemo(() => scene?.cameraJson?.includes('"terrainFrame"') ? {} : null, [scene?.cameraJson]);
   const elevatedTerrainFrame = useRef<object | null>(null);
-  const { adoptViewportCamera, cameraNavigating } = core;
+  const { adoptViewportCamera, cameraNavigating, relocateDragActive } = core;
   const elevateTerrainFrame = useCallback((elevation: number) => {
     if (!terrainCameraFrame || elevatedTerrainFrame.current === terrainCameraFrame || autoFitUserMoved || cameraNavigating) return;
     elevatedTerrainFrame.current = terrainCameraFrame;
@@ -113,8 +119,8 @@ export function World3dHost(props: ComponentSceneHostProps) {
   const openSuggestionsAtRef = useRef(openSuggestionsAt);
   openSuggestionsAtRef.current = openSuggestionsAt;
   const suggestionsLongPress = useMemo(() => createLongPressV1({
-    holdMs: 500,
-    slopPx: 10,
+    holdMs: WORLD3D_SUGGESTIONS_LONG_PRESS_V1.holdMs,
+    slopPx: WORLD3D_SUGGESTIONS_LONG_PRESS_V1.slopPx,
     setTimer: (callback, milliseconds) => { const handle = window.setTimeout(callback, milliseconds); return () => window.clearTimeout(handle); },
     onLongPress: (x, y) => openSuggestionsAtRef.current(x, y),
   }), []);
@@ -130,7 +136,6 @@ export function World3dHost(props: ComponentSceneHostProps) {
       data-selection-json={JSON.stringify(worldSurfaceSelectionDomV1(selection, interaction))}
       data-guest-selection-json={JSON.stringify(worldSurfaceGuestSelectionDomV1(scene.selectionJson))}
       data-orbit-view-gizmo=""
-      data-puzzle3d-fixture-drag-active={catalogueDropPreview ? "" : undefined}
       data-meshes-json={scene.meshesJson ?? undefined}
       data-world-geometry-revision={geometryRevisionRef.current.revision}
       data-instances-json={scene.instancesJson ?? undefined}
@@ -195,8 +200,8 @@ export function World3dHost(props: ComponentSceneHostProps) {
         event.stopPropagation();
         openSuggestionsAt(rect.left + rect.width / 2, rect.top + rect.height / 2);
       }}
-      onPointerDown={(event) => { if (!terrainBrush) { if (event.pointerType === "touch") suggestionsLongPress.down(event.clientX, event.clientY); handlePointerDown(event); } }}
-      onPointerMove={(event) => { if (!terrainBrush) { if (event.pointerType === "touch") suggestionsLongPress.move(event.clientX, event.clientY); handlePointerMove(event); } }}
+      onPointerDown={(event) => { if (!terrainCapturesPrimary) { if (event.pointerType === "touch") suggestionsLongPress.down(event.clientX, event.clientY); handlePointerDown(event); } }}
+      onPointerMove={(event) => { if (!terrainCapturesPrimary) { if (event.pointerType === "touch") suggestionsLongPress.move(event.clientX, event.clientY); handlePointerMove(event); } }}
       onPointerUp={(event) => { suggestionsLongPress.up(); handlePointerUp(event); }}
       onPointerCancel={(event) => { suggestionsLongPress.cancel(); handlePointerUp(event); }}
       onPointerLeave={() => { setTerrainFeatureName(null); releaseLocalHover(); publishWorldPresenceView(null); }}
@@ -213,7 +218,7 @@ export function World3dHost(props: ComponentSceneHostProps) {
         background={environment && !isTransparentWorldBackground(environment.background) ? environment.background : undefined}
         gl={environment && isTransparentWorldBackground(environment.background) ? { antialias: true, alpha: true, stencil: true } : undefined}
         shadows={environment?.shadow?.enabled === true ? true : undefined}
-        onPointerMissed={terrainBrush ? undefined : handleEmptyClick}
+        onPointerMissed={terrainCapturesPrimary ? undefined : handleEmptyClick}
         overlay={
           <>
             {frame ? <IconShotFrame width={frame.width} height={frame.height} shape={frame.shape === "ellipse" ? "ellipse" : "rectangle"} badge={frame.badge !== false} background={frame.background} /> : null}
@@ -280,8 +285,8 @@ export function World3dHost(props: ComponentSceneHostProps) {
             />
           ) : null}
           <WorldOrbitGated
-            controlsGate={marqueeDown || gumballDragActive || handleDragActive || connectDragSource !== null || faceDragSession !== null}
-            reservePrimaryTouch={terrainBrush !== undefined}
+            controlsGate={marqueeDown || gumballDragActive || handleDragActive || relocateDragActive || connectDragSource !== null || faceDragSession !== null}
+            reservePrimaryTouch={terrainCapturesPrimary}
             onCamera={handleCameraChange}
             onCameraNavigate={handleCameraNavigate}
             zoom={cameraState.zoom}
@@ -345,7 +350,6 @@ export function World3dHost(props: ComponentSceneHostProps) {
               />
             ) : null}
             <CameraRefBridge cameraRef={cameraRef} />
-            <CatalogueDropPreviewInvalidate preview={catalogueDropPreview} />
             <RaycasterPickTuning />
             <WorldVortexHitStamp vortices={previewVortices} hostRef={hostRef} />
             <WorldGumballHitStamp target={selection.gumballTarget} active={Boolean(selection.gumballActive) && isWorldTransformGumballMode(selection.transformMode)} hostRef={hostRef} />
@@ -357,7 +361,7 @@ export function World3dHost(props: ComponentSceneHostProps) {
                 <BrushMeshRegistrar url={url} revision={brushMeshRevisions.generation + (brushMeshRevisions.urls[url] ?? 0)} onRegister={handleRegisterBrushMesh} />
               </Suspense>
             ))}
-            <WorldTerrainLayer terrainJson={scene?.terrainJson} cameraPosition={cameraState.position} cameraTarget={cameraState.target} onFeatureHover={setTerrainFeatureName} onOriginElevation={terrainCameraFrame ? elevateTerrainFrame : undefined} brush={terrainBrush && { radius: terrainBrush.arguments.radius, key: JSON.stringify(terrainBrush) }} onElevationStroke={applyTerrainBrush} />
+            <WorldTerrainLayer terrainJson={scene?.terrainJson} cameraPosition={cameraState.position} cameraTarget={cameraState.target} onFeatureHover={setTerrainFeatureName} onOriginElevation={terrainCameraFrame ? elevateTerrainFrame : undefined} brush={terrainBrush && { radius: terrainBrush.arguments.radius, key: JSON.stringify(terrainBrush) }} onElevationStroke={applyTerrainBrush} movePosition={terrainMovePosition} onPositionMoved={moveTerrainPosition} />
             <WorldPointCloudLayer pointsJson={scene?.pointsJson} />
             <group ref={instancesGroupRef}>
               <WorldInstancesLayer
@@ -371,6 +375,7 @@ export function World3dHost(props: ComponentSceneHostProps) {
                 onInstancePointerDown={handleInstancePointerDown}
                 onInstancePointerMove={handleInstancePointerMove}
                 windowInstanceId={windowInstanceId}
+                interactionDomainId={interactionDomainId}
                 onLocalHoverRelease={subscribeLocalHoverRelease}
                 onHoverPaint={publishHoverPaint}
                 onWorldPick={handleWorldPick}
@@ -388,7 +393,7 @@ export function World3dHost(props: ComponentSceneHostProps) {
                 onFaceDragStart={handleFaceDragStart}
                 mergedComponentIds={visibleSelectionPreview.mergedComponentIds}
                 mergedInstanceIds={visibleSelectionPreview.mergedInstanceIds}
-                blockPick={worldInstancePickBlocked(activeUtility)}
+                blockPick={relocateDragActive || worldInstancePickBlocked(activeUtility)}
                 environment={environment}
                 subElementPaint={subElementPaint}
               />
@@ -412,7 +417,7 @@ export function World3dHost(props: ComponentSceneHostProps) {
             />
             {connectDragSource && connectDragHoverPosition ? <WorldConnectRubberBand from={connectDragSource.position} to={connectDragHoverPosition} /> : null}
             <WorldAttractionLines attractions={previewAttractions} />
-            {catalogueDropPreview ? <CatalogueDropGhost preview={catalogueDropPreview} meshes={meshes} palette={meshStylePalette} /> : null}
+            <CatalogueDropGhost controllerId={node.controllerId} hostRef={hostRef} meshVisuals={meshVisuals} palette={meshStylePalette} />
             <WorldToolRunTrace lane={scene.toolRunTrace} meshes={meshes} trace={toolRunTrace} focus={suggestionFocus} />
             {engagementPreview.length > 0 ? <EngagementPreviewLayer items={engagementPreview} color={colors.hover} /> : null}
             <WorldVolumeLayer

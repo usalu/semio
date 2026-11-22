@@ -32,6 +32,37 @@ async fn evaluate_exercises_all_parts_with_numeric_checks() {
     assert!((volume.computed.value - 0.003).abs() < 1e-9);
 }
 
+#[test]
+fn overall_space_contains_the_product_and_valid_child_envelopes() {
+    use semio_s_artifact_norm_iso16757_model::part_2::SpaceEnvelope;
+
+    let mut doc = Iso16757Snapshot::default();
+    let id = "geom-valve-50";
+    let outcome = |doc: &Iso16757Snapshot| {
+        evaluate(doc).checks.into_iter().find(|c| c.id == "iso16757.2.5.3.1.overall.geom-valve-50").unwrap().status
+    };
+    let object = doc.geometry.objects.get_mut(id).expect("default valve geometry");
+    object.spaces.push(SpaceEnvelope {
+        id: "overall".into(),
+        kind: SpaceKind::Overall,
+        bounds: BoundingBox { min: [-1.0; 3], max: [1.0; 3] },
+    });
+    assert_eq!(outcome(&doc), CheckStatus::Pass);
+
+    let object = doc.geometry.objects.get_mut(id).unwrap();
+    object.spaces.push(SpaceEnvelope {
+        id: "remote-access".into(),
+        kind: SpaceKind::Access,
+        bounds: BoundingBox { min: [1.0; 3], max: [2.0; 3] },
+    });
+    assert_eq!(outcome(&doc), CheckStatus::Fail);
+
+    let object = doc.geometry.objects.get_mut(id).unwrap();
+    object.spaces.last_mut().unwrap().bounds = BoundingBox { min: [0.2, 0.2, 0.0], max: [0.1, 0.1, 0.3] };
+    assert!(evaluate(&doc).failing().any(|c| c.id.ends_with(".remote-access") && c.id.contains(".spaceVolume.")));
+    assert_eq!(outcome(&doc), CheckStatus::Fail);
+}
+
 #[semio_framework_async_macros::async_test]
 async fn broken_catalogue_fails_with_applicable_remedies() {
     let report = evaluate(&Iso16757Snapshot::broken_fixture());

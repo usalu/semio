@@ -1,15 +1,6 @@
-//! 🔺️ Sparse diff builder for `CreateAsset` — `RemodelingDiff.assets` REPLACES the whole map on apply
-//! (see `🔺️diff/📝️text/🦀️.rs`'s `MutationDiff::apply`), so this clones `base.assets` and
-//! inserts the one key rather than emitting a single-entry map. `payload.asset` (real `ImageAsset`
-//! bytes, the mutation-payload shape — UNCHANGED per ticket
-//! `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`) is minted into a composed `stdio.semio.image`
-//! CHILD handle via `store_remodeling_asset` (real content, working-scene cache) — that handle, not the
-//! raw asset, is what lands in the document's `assets` map. Deliberately NOT `mutation.duplicate-id`
-//! on an existing key: this is the only asset write path in the app and import handlers rely on
-//! upsert-on-retry (see the mutation leaf's own docstring) — rejecting an existing key would break a
-//! retried import. An upsert also DROPS the durable leaf the overwritten handle owned, so the store
-//! never accumulates a leaf nothing addresses and `delete-asset` (which drops the leaf it minted) is
-//! this verb's exact inverse in both directions.
+//! 🔺️ Upserts one asset binding, shares matching image content, and releases its previous leaf
+//! when the binding was its last owner.
+use crate::standards::v1::subsets::any::schema::mutations::delete_asset::diff::unshared_asset_content;
 use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any::schema::diff::RemodelingAssetEntry;
 use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any::schema::diff::RemodelingContentDelta;
 use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any::schema::diff::RemodelingContentRow;
@@ -26,20 +17,17 @@ pub fn diff(payload: &crate::standards::v1::subsets::any::schema::mutations::cre
     let Some(artifact) = durable_remodeling_asset(&payload.asset) else {
         return protocol::MutationOutcome::fatal("mutation.invariant", "The asset payload is malformed or exceeds its exact bounded envelope.", [payload.key.clone()]);
     };
+    let held = base.durable_artifacts.get(&handle.child_id);
+    if held.is_some_and(|held| held != &artifact) {
+        return protocol::MutationOutcome::error("mutation.target-mismatch", "The asset content ID names different durable content.", [handle.child_id]);
+    }
     let previous = base.assets.get(&payload.key);
     let mut content = Vec::new();
-    let mut released = None;
-    if let Some(previous) = previous.filter(|previous| base.durable_artifacts.get(&previous.child_id).is_some()) {
+    if let Some(previous) = previous.filter(|previous| previous.child_id != handle.child_id && unshared_asset_content(base, &payload.key, &previous.child_id).is_some()) {
         content.push(RemodelingContentRow::Truncate { id: previous.child_id.clone(), from: 0 });
-        released = Some(&previous.child_id);
     }
-    match base.durable_artifacts.get(&handle.child_id) {
-        Some(held) if released != Some(&handle.child_id) && held == &artifact => {}
-        Some(_) if released != Some(&handle.child_id) => {
-            content.push(RemodelingContentRow::Truncate { id: handle.child_id.clone(), from: 0 });
-            content.push(RemodelingContentDelta::create(&handle.child_id, &artifact));
-        }
-        _ => content.push(RemodelingContentDelta::create(&handle.child_id, &artifact)),
+    if held.is_none() {
+        content.push(RemodelingContentDelta::create(&handle.child_id, &artifact));
     }
     let entry = RemodelingAssetEntry { key: payload.key.clone(), child: handle };
     let row = if previous.is_some() { RemodelingRow::Replace { entity: entry } } else { RemodelingRow::Insert { entity: entry } };

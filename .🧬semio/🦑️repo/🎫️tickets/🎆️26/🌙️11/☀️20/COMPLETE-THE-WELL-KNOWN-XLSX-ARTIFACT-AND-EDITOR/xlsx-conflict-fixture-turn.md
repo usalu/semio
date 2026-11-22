@@ -1,0 +1,9 @@
+# XLSX Conflict Fixture Turn Renewal
+
+The first Base run failed the conflict acceptance law while opening `historyEditWithdraw` on its seeded instance. That law checks archive round-trip identity on a separate replica, closes that replica, and then continues dispatching against the seeded instance with the same original caller context. The panic occurred at the fixture dispatch turn bound with every reported action-ingress and typed-operation gate clear. The printed fuel and retained grant were sampled after unused-input retirement had already renewed the caller.
+
+The borrowed action and addressed command fixture drivers each captured the previous turn's remaining retained grant before admitting fixture birth. Renewal reused that remainder on every retry. A mounted archive replica close on a pinned Source can leave the caller on its authored one-item close turn. If close spends the item, a dispatch using that remainder cannot admit even its command lease. Independent examples also show a prior copy-byte remainder can block funded parser ingress. The fixture now renews from the context's original issued ceiling, as its archive and media paths already do. Pinned renewal still caps the new turn at the same Source's remaining stock.
+
+Timeout evidence is sampled before cleanup and names cancellation, decoder and original argument presence, the command lease and route gates. The acceptance failure includes the actual mutation ID.
+
+The neutral grant fixtures exercise both Rust action and addressed-command selectors. SQLite reproduced the expected grant and admission decision for a spent close item, a spent copy-byte grant and a truly exhausted Source. The old selectors failed all three and the new selectors passed all three. The pinned Rust parser accepted the changed Rust files. The next combined native Base run will establish whether the corrected fixture completes the XLSX conflict scenario.

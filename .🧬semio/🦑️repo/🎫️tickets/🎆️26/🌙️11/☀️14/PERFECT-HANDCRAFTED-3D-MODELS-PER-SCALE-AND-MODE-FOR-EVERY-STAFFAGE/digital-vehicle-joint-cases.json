@@ -1,0 +1,22 @@
+{
+  "motor-scooter": {
+    "tubeDiameterM": 0.022,
+    "saddleBoreM": 0.0224,
+    "steererDiameterM": 0.04,
+    "clampWidthM": 0.044,
+    "pinchBolts": 2
+  },
+  "scissor-lift": {
+    "requiredTopRails": [
+      "front-top-rail",
+      "ext-top-rail",
+      "rear-top-rail"
+    ],
+    "requiredPosts": [
+      "post-front",
+      "ext-post-front",
+      "ext-post-rear",
+      "post-rear"
+    ]
+  }
+}

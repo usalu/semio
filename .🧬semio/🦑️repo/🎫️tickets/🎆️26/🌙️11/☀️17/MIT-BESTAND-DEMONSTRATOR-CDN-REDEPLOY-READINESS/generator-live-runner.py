@@ -48,6 +48,13 @@ def observed_memory():
     return next((grant.get("observedMegabytes", 0) or 0 for grant in snapshot["grants"] if grant["id"] == inherited or grant["pid"] == os.getppid()), 0)
 
 
+def native_headroom():
+    """📏️ Reads the repository governor's actual remaining headroom for a native replay."""
+    raw = subprocess.check_output(["repo", "capacity", "status", "--json", "--lang=en"], text=True, timeout=5)
+    snapshot = json.loads(raw)
+    return snapshot["evaluation"]["headroomMegabytes"], snapshot["host"]["pressure"]
+
+
 def replay(args, url, ticket, generated):
     """▶️ Capture a single locale while continuously bounding this browser."""
     variant = "yield" if args.yield_drain else "ack" if args.acknowledgements_only else "full"
@@ -72,6 +79,14 @@ def replay(args, url, ticket, generated):
         flags.append("--yield-drain")
     if args.wire:
         flags.append("--wire")
+    if args.trace_host:
+        flags.append("--trace-host")
+    if args.trace_guest:
+        flags.append("--trace-guest")
+    if args.pause_guest:
+        flags.append("--pause-guest")
+    if args.wasm_breakpoint:
+        flags.append(f"--wasm-breakpoint={args.wasm_breakpoint}")
     if args.stop_on_control_turns:
         flags.append("--stop-on-control-turns")
     if args.profile:
@@ -89,6 +104,14 @@ def replay(args, url, ticket, generated):
                 for chunk in iter(lambda: body.read(1024 * 1024), b""):
                     sha.update(chunk)
             print(f"[DEBUG] SHA-256 {sha.hexdigest()} {asset.name}", file=log)
+        if args.native_min_spare:
+            while True:
+                spare, pressure = native_headroom()
+                if spare >= args.native_min_spare and pressure != "critical":
+                    print(f"[DEBUG] Native replay begins with {spare} MiB host headroom under {pressure} pressure", file=log)
+                    break
+                print(f"[DEBUG] Native replay waiting for {args.native_min_spare} MiB spare, have {spare} MiB under {pressure} pressure", file=log)
+                time.sleep(5)
         process = subprocess.Popen(command, stdout=log, stderr=subprocess.STDOUT)
         start = time.monotonic()
         next_report = start
@@ -101,6 +124,9 @@ def replay(args, url, ticket, generated):
                         browser = int(match[1])
                 if browser is not None:
                     rss = browser_rss(browser)
+                    if args.native_min_spare and native_headroom()[1] == "critical":
+                        print("[DEBUG] Native Generator replay stopped under critical host memory pressure", file=log)
+                        return 2
                     if rss > args.memory * 1024:
                         print(f"[DEBUG] Generator replay exceeded its {args.memory} MiB cap at {rss // 1024} MiB", file=log)
                         return 2
@@ -128,13 +154,19 @@ def main():
     parser.add_argument("--port", type=int, default=8819)
     parser.add_argument("--seconds", type=int, default=125)
     parser.add_argument("--memory", type=int, default=2560)
+    parser.add_argument("--native-min-spare", type=int, default=0)
     parser.add_argument("--liftoff", action="store_true")
     parser.add_argument("--acknowledgements-only", action="store_true")
     parser.add_argument("--yield-drain", action="store_true")
     parser.add_argument("--wire", action="store_true")
+    parser.add_argument("--trace-host", action="store_true")
+    parser.add_argument("--trace-guest", action="store_true")
+    parser.add_argument("--pause-guest", action="store_true")
+    parser.add_argument("--wasm-breakpoint")
     parser.add_argument("--native-diagnostics", action="store_true")
     parser.add_argument("--double-item-grant", action="store_true")
-    parser.add_argument("--label", choices=["remaining", "fresh", "after-retirement"])
+    parser.add_argument("--label", choices=["remaining", "fresh", "after-retirement", "host-tail", "guest-tail", "unreplied", "wy17-refusal"])
+    parser.add_argument("--site", type=Path, default=Path(".cache/b/p/m/vite/release/5dc1b077e86de2aa/out"))
     parser.add_argument("--procedural-dir", type=Path)
     parser.add_argument("--profile", action="store_true")
     parser.add_argument("--stop-on-control-turns", action="store_true")
@@ -142,7 +174,7 @@ def main():
     args = parser.parse_args()
     ticket = Path(__file__).resolve().parent
     generated = ticket / "🗑️generated"
-    site = Path(".cache/b/p/m/vite/release/5dc1b077e86de2aa/out").resolve()
+    site = args.site.resolve()
     modules = Path(".cache/b/p/m/browser/release/modules").resolve()
     procedural = args.procedural_dir or generated / "probe-wqks1dx-65558" / "🌀️procedural"
     assert (site / "index.html").is_file() and procedural.is_dir() and modules.is_dir()

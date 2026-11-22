@@ -21,3 +21,15 @@ The probe in `history-replay-ownership-probe.py` extracted the exact slot implem
 The shared source patch landed after a native capture exited on a media diagnostic type mismatch. The next scoped capture includes the Store close and GIS receiving changes. The focused native command is `repo --lang=en cargo --store=shared --configuration=prototype --parallelism=2 -- test --locked --offline -p semio-s-artifact-gis-gisterrain-editor --lib history_ -- --test-threads=1`. The corrected fixture, actual archive replay, exact Store close, and 32 KiB operation binding remain pending in the rebuilt native instance.
 
 The captured build after the patch compiled the shared Store and GIS operation leaves. It stopped in the Terrain editor on the brush owner’s original-command borrow type. The next editor capture is required for the four registered History outcomes and the mounted-quantum parity law.
+
+## Browser history cursor
+
+The browser’s `data-history-json.cursor` carries the guest’s `HistoryPatch.cursor`. The guest assigns `self.history.log_generation` in `📜️history-view/🦀️.rs:278`. The shell accepts higher patch generations and applies an equal-generation patch carrying upserts. Undo advances this publication generation while restoring the earlier document state. The observable checks for Clear Elevation and Undo are the actual surface, the mutation action identifiers, and the projected Undo and Redo availability.
+
+## Native runtime results
+
+The rebuilt Terrain library accepted all three leaf payload schemas and matched the neutral exaggeration fixture end to end through the typed fold. Conflict acceptance passed the old `DecodeForward` frontier and reached the replacement initializer. Edit acceptance fully closed the TimeTravel owner, then surfaced the earlier driver error. Both paths needed the Store’s replay semantic issuer. Terrain declared only the cold one-item publication factory.
+
+Terrain now supplies the paid `document_store_owners_source_demands` and `build_document_store_owners` hooks used by other first-party cold semantic owners. The shared concrete factory issues distinct paid publication and replay authorities. This also supplies replay preparation to document archive initialization. The one-item bootstrap factory remains necessary for tool-registration contract checks.
+
+The standalone wire parity check stopped under its one-item test quantum. It now uses the mounted preparation policy’s actual 64-item, 32 KiB copy quantum and identifies the operation tag and exact wire extent on refusal. The scoped rebuild uses the mounted native Cargo target, with `-j 3 --lib history_ -- --test-threads=1 --nocapture` and a 64 MiB test stack. Its output is in `🗑️generated/terrain-native-history-issuers.log`.

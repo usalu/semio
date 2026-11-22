@@ -577,16 +577,20 @@ fn run_state(app: &Puzzle2dApp) -> Option<&'static str> {
 
 /// 🔁️ Host continuation turns (driver turn, result page acknowledgement, outboxes) until `done` holds.
 fn pump_until(app: &mut Puzzle2dApp, what: &str, done: impl Fn(&Puzzle2dApp) -> bool) {
+    use semio_plugin::artifact_app_laws::{close_fixture_result_page, fixture_mounted_policy, take_fixture_result_turn};
+
     let deadline = std::time::Instant::now() + std::time::Duration::from_secs(120);
+    let policy = fixture_mounted_policy();
     while std::time::Instant::now() < deadline {
         if done(app) {
             return;
         }
         app.maintain(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).unwrap_or_else(|fault| panic!("{what}: maintenance faulted: {fault:?}"));
         ::semio_framework_async::poll::resolve_ready(app.0.advance_typed_operation_publication(&mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx())).unwrap_or_else(|fault| panic!("{what}: driver turn faulted: {fault:?}"));
-        if let Some(page) = app.take_typed_operation_result_page(1) {
+        if let Some(mut page) = take_fixture_result_turn(&mut app.0, 1, policy.maintenance).expect("take typed operation result page").0 {
             assert_ne!(page.lane, semio_plugin::app::TypedOperationResultLane::Fault, "{what}: typed operation faulted: {}", String::from_utf8_lossy(page.bytes()));
-            app.acknowledge_typed_operation_result(page.token).expect("acknowledge result page");
+            let token = close_fixture_result_page(&mut page, policy.close);
+            app.acknowledge_typed_operation_result(token).expect("acknowledge result page");
         }
         let _ = app.take_typed_operation_effect();
         let _ = app.take_typed_operation_event();
@@ -610,7 +614,7 @@ fn fill_app(spec: &Value, requested: u64) -> Puzzle2dApp {
     let mut app = app_with_registry();
     load_example(&mut app, text(&spec["example"]));
     let keep = number(&spec["keepNodes"]) as usize;
-    let deletes: Vec<String> = board_snapshot_nodes(&fixture_of(&app)).iter().skip(keep).filter_map(|node| node["id"].as_str()).map(|id| protocol::OpText::print_op(&crate::standards::v1::subsets::any::schema::mutations::delete_node(id.into()))).collect();
+    let deletes: Vec<String> = board_snapshot_nodes(&fixture_of(&app)).iter().skip(keep).filter_map(|node| node["id"].as_str()).map(|id| protocol::OpText::print_op(&crate::standards::v1::subsets::any::schema::mutations::delete_node::<Puzzle2dMutation>(id.into()))).collect();
     ::semio_framework_async::poll::resolve_ready(app.ingest_operations_text(&deletes.join("\n"), &mut semio_plugin::artifact_app_laws::fixture_identity())).expect("delete the nodes past keepNodes");
     assert_eq!(fixture_of(&app), example(spec).value().clone(), "the app commits exactly the snapshot document");
     dispatch(&mut app, "setFillCount", Some(&json!({ "count": requested })), None).expect("set fill count");

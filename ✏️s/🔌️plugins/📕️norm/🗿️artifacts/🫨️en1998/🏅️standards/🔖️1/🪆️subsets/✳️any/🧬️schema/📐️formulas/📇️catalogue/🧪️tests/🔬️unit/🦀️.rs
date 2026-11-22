@@ -37,6 +37,15 @@ entry_tests! {
     bridge_ground_motion_set_a => "C98-12",
     bridge_ground_motion_set_b => "C98-13",
     bridge_combined_spatial_effect => "C98-14",
+    concrete_jacket_corrections => "C98-15",
+    steel_jacket_shear => "C98-16",
+    steel_jacket_splice_clamping => "C98-17",
+    frp_concrete_member_shear => "C98-18",
+    welded_pipe_under_differential_ground_movement => "C98-19",
+    concrete_pipe_strain_and_leak_tightness => "C98-20",
+    buried_pipe_joint_combination => "C98-21",
+    pipe_fault_crossing_design_measures => "C98-22",
+    horizontal_silo_wall_pressure => "C98-23",
 }
 
 #[test]
@@ -133,4 +142,125 @@ fn buried_pipe_strain_verification_requires_a_wave_basis_and_sufficient_bond() {
     let report = evaluate_design_case(&case, AnnexChoice::En);
     assert_eq!(report.len(), 1);
     assert_eq!(report[0].status, CheckStatus::Fail);
+}
+
+#[test]
+fn differential_pipe_checks_require_evidence_and_report_each_limit() {
+    let entry = design_case::entry::<En1998Cases>("C98-19").unwrap();
+    let case = En1998Cases::new_document_case(&entry, "differential");
+    assert_eq!(evaluate_design_case(&case, AnnexChoice::En)[0].status, CheckStatus::UnverifiedBasis);
+    let keys = ["radius", "thickness", "tension", "compression", "global"];
+    let fixtures = include_str!("../../../../../🧪️tests/🧫️fixtures/📏️differential-pipe/🔣️.tsv");
+    for line in fixtures.lines().skip(1) {
+        let parts = line.split('\t').collect::<Vec<_>>();
+        let mut tested = case.clone();
+        tested.values = tested.values.with_text("pipe_deformation_basis", parts[1]);
+        for (key, value) in keys.iter().zip(&parts[2..7]) {
+            let key = format!("pipe_deformation_{key}");
+            if value.is_empty() {
+                tested.values.numbers.remove(&key);
+            } else {
+                tested.values = tested.values.with_number(&key, value.parse::<f64>().unwrap());
+            }
+        }
+        let results = evaluate_design_case(&tested, AnnexChoice::En);
+        let statuses: String = results.iter().map(|row| match row.status {
+            CheckStatus::Pass => '1',
+            CheckStatus::Fail => '0',
+            CheckStatus::UnverifiedBasis => 'U',
+            other => panic!("Unexpected {other:?} for {}", parts[0]),
+        }).collect();
+        assert_eq!(statuses, parts[7], "{}", parts[0]);
+    }
+}
+
+#[test]
+fn concrete_pipe_and_joint_assessments_match_the_published_case_fixtures() {
+    for (entry_id, evidence, fixture) in [
+        ("C98-20", "pipe_concrete_basis", include_str!("../../../../../🧪️tests/🧫️fixtures/🧱️concrete-pipes/🧱️concrete.tsv")),
+        ("C98-21", "pipe_joint_basis", include_str!("../../../../../🧪️tests/🧫️fixtures/🧱️concrete-pipes/🔗️joints.tsv")),
+    ] {
+        let entry = design_case::entry::<En1998Cases>(entry_id).unwrap();
+        let mut lines = fixture.lines();
+        let columns = lines.next().unwrap().split('\t').collect::<Vec<_>>();
+        let keys = &columns[2..columns.len()-1];
+        let initial = En1998Cases::new_document_case(&entry, entry_id);
+        assert_eq!(evaluate_design_case(&initial, AnnexChoice::En)[0].status, CheckStatus::UnverifiedBasis);
+        for line in lines {
+            let values = line.split('\t').collect::<Vec<_>>();
+            let mut case = initial.clone();
+            case.values = case.values.with_text(evidence, values[1]);
+            for (key, value) in keys.iter().zip(&values[2..values.len()-1]) {
+                if value.is_empty() {
+                    case.values.numbers.remove(*key);
+                } else {
+                    case.values = case.values.with_number(*key, value.parse().unwrap());
+                }
+            }
+            let checks = evaluate_design_case(&case, AnnexChoice::En);
+            let flags: String = checks.iter().map(|result| match result.status {
+                CheckStatus::Pass => '1',
+                CheckStatus::Fail => '0',
+                CheckStatus::UnverifiedBasis => 'U',
+                other => panic!("Unexpected {other:?} for {}", values[0]),
+            }).collect();
+            assert_eq!(flags, *values.last().unwrap(), "{}", values[0]);
+        }
+    }
+}
+
+#[test]
+fn fault_crossing_assesses_the_two_sides_independently() {
+    let entry = design_case::entry::<En1998Cases>("C98-22").unwrap();
+    let initial = En1998Cases::new_document_case(&entry, "crossing");
+    assert_eq!(evaluate_design_case(&initial, AnnexChoice::En)[0].status, CheckStatus::UnverifiedBasis);
+    let mut records = include_str!("../../../../../🧪️tests/🧫️fixtures/🛤️fault-crossing.tsv").lines();
+    let columns: Vec<_> = records.next().unwrap().split('\t').collect();
+    for line in records {
+        let fields: Vec<_> = line.split('\t').collect();
+        let mut case = initial.clone();
+        case.values = case.values.with_text(columns[1], fields[1]).with_text(columns[2], fields[2]);
+        for (key, value) in columns[3..9].iter().zip(&fields[3..9]) {
+            if value.is_empty() {
+                case.values.numbers.remove(*key);
+            } else {
+                case.values = case.values.with_number(*key, value.parse().unwrap());
+            }
+        }
+        let results = evaluate_design_case(&case, AnnexChoice::En);
+        let flags: String = results.iter().map(|result| match result.status {
+            CheckStatus::Pass => '1',
+            CheckStatus::Fail => '0',
+            CheckStatus::UnverifiedBasis => 'U',
+            CheckStatus::Info => 'I',
+            other => panic!("Unexpected {other:?} for {}", fields[0]),
+        }).collect();
+        assert_eq!(flags, fields[9], "{}", fields[0]);
+    }
+}
+
+#[test]
+fn silo_pressure_reports_a_signed_increment_and_refuses_suction() {
+    let entry = design_case::entry::<En1998Cases>("C98-23").unwrap();
+    let mut case = En1998Cases::new_document_case(&entry, "silo");
+    assert_eq!(evaluate_design_case(&case, AnnexChoice::En)[0].status, CheckStatus::UnverifiedBasis);
+    case.values = case.values.with_text("silo_pressure_basis", "confirmed")
+        .with_number("silo_pressure_azimuth", 180.0);
+    let rows = evaluate_design_case(&case, AnnexChoice::En);
+    assert!(rows.iter().all(|row| row.status == CheckStatus::Info));
+    assert_eq!(rows.iter().map(|row| row.computed.value).collect::<Vec<_>>(), [8000.0, -8000.0, 2000.0]);
+
+    case.values = case.values.with_number("silo_pressure_static", 7999.0);
+    let rows = evaluate_design_case(&case, AnnexChoice::En);
+    assert_eq!(rows.len(), 1);
+    assert_eq!(rows[0].status, CheckStatus::UnverifiedBasis);
+    assert!(rows[0].id.ends_with(".redistribution.silo"));
+
+    case.values = case.values.with_text("silo_pressure_section", "hopper")
+        .with_number("silo_pressure_height", 1.0)
+        .with_number("silo_pressure_slope", 60.0)
+        .with_number("silo_pressure_static", 20_000.0);
+    let rows = evaluate_design_case(&case, AnnexChoice::En);
+    assert!((rows[0].computed.value - 16_000.0).abs() < 1e-6);
+    assert!((rows[2].computed.value - 4_000.0).abs() < 1e-6);
 }

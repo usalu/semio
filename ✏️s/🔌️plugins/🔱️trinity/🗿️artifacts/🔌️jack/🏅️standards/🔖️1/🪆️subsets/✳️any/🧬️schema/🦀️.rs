@@ -16,9 +16,7 @@ pub struct JackArtifact {
     #[state(artifact)]
     pub name: String,
     #[state(artifact)]
-    pub manifest_id: Option<String>,
-    #[state(artifact)]
-    pub manifest: Manifest,
+    pub manifest_id: String,
     #[state(artifact)]
     pub camera: Camera,
     #[state(artifact)]
@@ -45,7 +43,6 @@ impl semio_framework_value::ToValue for JackArtifact {
             ("schema".to_string(), semio_framework_value::ToValue::to_value(&self.schema)),
             ("name".to_string(), semio_framework_value::ToValue::to_value(&self.name)),
             ("manifestId".to_string(), semio_framework_value::ToValue::to_value(&self.manifest_id)),
-            ("manifest".to_string(), semio_framework_value::ToValue::to_value(&self.manifest)),
             ("camera".to_string(), semio_framework_value::ToValue::to_value(&self.camera)),
             ("content".to_string(), semio_framework_value::ToValue::to_value(&self.content)),
             ("rootNodeId".to_string(), semio_framework_value::ToValue::to_value(&self.root_node_id)),
@@ -62,7 +59,6 @@ impl semio_framework_value::FromValue for JackArtifact {
             schema: semio_framework_value::FromValue::from_value(field("schema")?)?,
             name: semio_framework_value::FromValue::from_value(field("name")?)?,
             manifest_id: semio_framework_value::FromValue::from_value(field("manifestId")?)?,
-            manifest: semio_framework_value::FromValue::from_value(field("manifest")?)?,
             camera: semio_framework_value::FromValue::from_value(field("camera")?)?,
             content: semio_framework_value::FromValue::from_value(field("content")?)?,
             root_node_id: semio_framework_value::FromValue::from_value(field("rootNodeId")?)?,
@@ -75,7 +71,7 @@ impl semio_framework_value::FromValue for JackArtifact {
 //#region 🔖️Conversions
 impl Default for JackArtifact {
     fn default() -> Self {
-        Self { schema: crate::standards::v1::subsets::any::schema::graph::TRINITY_GRAPH_SCHEMA.into(), name: String::new(), manifest_id: None, manifest: Manifest::default(), camera: Camera::default(), content: store::os_store::artifact_child::ArtifactChild::new(String::new(),semio_framework_artifact_reference::ArtifactRef{artifact_id:String::new(),dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind:String::new(),standard:String::new(),subset:String::new()}}), root_node_id: None, query: crate::standards::v1::subsets::any::schema::graph::TRINITY_JACK_DEFAULT_QUERY.into() }
+        Self { schema: crate::standards::v1::subsets::any::schema::graph::TRINITY_GRAPH_SCHEMA.into(), name: String::new(), manifest_id: crate::standards::v1::subsets::any::schema::graph::TRINITY_JACK_DEFAULT_MANIFEST_ID.into(), camera: Camera::default(), content: store::os_store::artifact_child::ArtifactChild::new(String::new(),semio_framework_artifact_reference::ArtifactRef{artifact_id:String::new(),dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind:String::new(),standard:String::new(),subset:String::new()}}), root_node_id: None, query: crate::standards::v1::subsets::any::schema::graph::TRINITY_JACK_DEFAULT_QUERY.into() }
     }
 }
 
@@ -86,7 +82,6 @@ impl JackArtifact {
             schema: self.schema.clone(),
             name: self.name.clone(),
             manifest_id: self.manifest_id.clone(),
-            manifest: self.manifest.clone(),
             camera: self.camera.clone(),
             content: self.content.clone(),
             root_node_id: self.root_node_id.clone(),
@@ -96,7 +91,7 @@ impl JackArtifact {
 
     /// 🧬️ Builds the artifact from its document snapshot.
     pub fn from_snapshot(snapshot: crate::standards::v1::subsets::any::schema::snapshot::JackSnapshot) -> Self {
-        Self { schema: snapshot.schema, name: snapshot.name, manifest_id: snapshot.manifest_id, manifest: snapshot.manifest, camera: snapshot.camera, content: snapshot.content, root_node_id: snapshot.root_node_id, query: snapshot.query }
+        Self { schema: snapshot.schema, name: snapshot.name, manifest_id: snapshot.manifest_id, camera: snapshot.camera, content: snapshot.content, root_node_id: snapshot.root_node_id, query: snapshot.query }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
@@ -104,7 +99,6 @@ impl JackArtifact {
         self.schema = snapshot.schema;
         self.name = snapshot.name;
         self.manifest_id = snapshot.manifest_id;
-        self.manifest = snapshot.manifest;
         self.camera = snapshot.camera;
         self.content = snapshot.content;
         self.root_node_id = snapshot.root_node_id;
@@ -181,6 +175,5 @@ pub fn empty_jack_document<C:crate::standards::v1::subsets::any::schema::composi
 //#region 🔁️Re-exports
 /// 🔁️ The model records this schema's artifact state is made of, imported from their owners.
 use crate::standards::v1::subsets::any::schema::graph::Camera;
-use crate::standards::v1::subsets::any::schema::manifest::Manifest;
 //#endregion 🔁️Re-exports
 

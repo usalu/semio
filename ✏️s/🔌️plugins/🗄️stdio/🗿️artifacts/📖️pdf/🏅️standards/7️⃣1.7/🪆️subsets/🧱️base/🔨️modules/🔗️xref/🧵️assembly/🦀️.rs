@@ -1,5 +1,6 @@
 //! 🧵️ Assembles authoritative xref rows one paid revision action at a time.
 
+use semio_framework_value::ByteReadSource;
 use super::{
     RevisionIndex, XrefIndex, XrefIndexReceipt, XrefIndexStatus, XrefRevisionCursor, XrefRevisionEvent,
     XrefRevisionReceipt, XrefStreamError,
@@ -48,7 +49,7 @@ impl XrefAssemblyCursor {
     }
 
     /// ▶️ Drives one child action under the source, allocation, and release grant.
-    pub fn advance(&mut self, source: &[u8], grant: CosGrant, cancelled: bool) -> XrefAssemblyReceipt {
+    pub fn advance(&mut self, source: &(impl ByteReadSource + ?Sized), grant: CosGrant, cancelled: bool) -> XrefAssemblyReceipt {
         use XrefAssemblyEvent as Event;
         if cancelled { self.begin_close(); }
         let event = match self.phase {
@@ -60,12 +61,10 @@ impl XrefAssemblyCursor {
             _ if grant.work == 0 => Event::More,
             Phase::Visit(target) => {
                 let admitted = match target {
-                    XrefTarget::Primary(offset) => offset < source.len() && !self.cycle.revisits(offset),
-                    XrefTarget::Companion(offset) => offset < source.len(),
+                    XrefTarget::Primary(offset) => offset < source.byte_len() && !self.cycle.revisits(offset),
+                    XrefTarget::Companion(offset) => offset < source.byte_len(),
                 };
-                if !self.revisions.admit_visit(target, admitted) {
-                    return fault("xref revision lost its requested target", 1);
-                }
+                if !self.revisions.admit_visit(target, admitted) { return fault("xref revision lost its requested target", 1); }
                 self.phase = Phase::Read;
                 if matches!(target, XrefTarget::Companion(_)) && !admitted && !self.merge(false) {
                     return fault("xref section could not merge its primary index", 1);
@@ -228,7 +227,7 @@ mod tests {
         let source = include_bytes!("../../../🧪️tests/🧫️fixtures/🔗️incremental-free/🌀️flate.pdf");
         let mut footer = FooterCursor::new(source.len());
         let offset = loop {
-            if let FooterStep::Complete(offset) = footer.advance(source, 1) { break offset; }
+            if let FooterStep::Complete(offset) = footer.advance(|position| source.get(position).copied(), 1) { break offset; }
         };
         for cancelled in [false, true] {
             let mut cursor = XrefAssemblyCursor::new(offset, CosLimits::default(), 4096);

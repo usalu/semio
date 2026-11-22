@@ -2,34 +2,33 @@ import{test,expect}from"bun:test";
 import{readFile}from"node:fs/promises";
 import{AsyncLocalStorage}from"node:async_hooks";
 import{Database}from"bun:sqlite";
-import ts from"typescript";
 import Ajv from"ajv";
 import schema from"./🧬️schema/🔣️.json";
 import corpus from"./🔣️.json";
-import observationSchema from"../../../👁️observation/🧬️schema/🔣️.json";
+import{instantiateOwnerClosureV1,prepareOwnerClosureV1}from"../🧰️support/🔗️owner-closure/🟦️.ts";
 
 type Round={outcome:"value"|"failure"|"conflict";message?:string;code?:string;undefined?:boolean;young?:boolean;holds?:boolean};
 
-/** 🔁️ Extracts the actual settlement owner from the observation source (or from SETTLE_SOURCE for a patched copy) and runs it over the closed decision corpus. */
+const SETTLE_STUBS_V1=["scopes","sourceCaptures","inferenceValidationScopes","retainObservationsV1","firstObservationConflictV1","observationsHold","conflictingInferenceErrorV1","RACY_MS"];
+
+/** 🔁️ Derives the actual settlement owner and its module bindings from the observation source (or from SETTLE_SOURCE for a patched copy) and runs it over the closed decision corpus. */
 async function settlementOwner(){
- const source=await readFile(process.env.SETTLE_SOURCE??new URL("../../../👁️observation/🟨️.mjs",import.meta.url),"utf8"),tree=ts.createSourceFile("observation.mjs",source,ts.ScriptTarget.Latest,true,ts.ScriptKind.JS),node=tree.statements.find(node=>ts.isFunctionDeclaration(node)&&node.name?.text==="settleObservedComputationV1");
- if(!node)throw Error("Actual observed settlement owner required");
- return ts.transpileModule(node.getText(tree).replace(/^export\s/u,""),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
+ return prepareOwnerClosureV1({moduleUrl:new URL("../../../👁️observation/🟨️.mjs",import.meta.url),owner:"settleObservedComputationV1",provided:SETTLE_STUBS_V1,source:process.env.SETTLE_SOURCE?await readFile(process.env.SETTLE_SOURCE,"utf8"):undefined});
 }
 
 test("Observed settlement stops repeating a failure that returns unchanged and never repeats a demanded restart",async()=>{
  expect(new Ajv({strict:true}).validate(schema,corpus)).toBe(true);
- const code=await settlementOwner(),db=new Database(":memory:");
+ const closure=await settlementOwner(),db=new Database(":memory:");
  db.run("create table terminal(scenario text, outcome text, round integer)");
  try{
   for(const scenario of corpus.scenarios){
-   const state={consistent:true,holds:true},scopes=new AsyncLocalStorage<Map<string,unknown>>(),bindings={scopes,sourceCaptures:new AsyncLocalStorage(),inferenceValidationScopes:new AsyncLocalStorage(),retainObservationsV1:()=>{},consistentObservationsV1:()=>state.consistent,observationsHold:async()=>state.holds,conflictingInferenceErrorV1:()=>Object.freeze({path:"modeled Source conflict"}),RACY_MS:0,OBSERVATION_LIMITS_V1:observationSchema.$defs.limits.const},run=new Function(...Object.keys(bindings),code+";return settleObservedComputationV1;")(...Object.values(bindings));
+   const state={consistent:true,holds:true},scopes=new AsyncLocalStorage<{order:unknown[]}>(),bindings={scopes,sourceCaptures:new AsyncLocalStorage(),inferenceValidationScopes:new AsyncLocalStorage(),retainObservationsV1:()=>{},firstObservationConflictV1:()=>state.consistent?undefined:{row:Object.freeze({path:"modeled Source conflict"})},observationsHold:async()=>state.holds,conflictingInferenceErrorV1:()=>Object.freeze({path:"modeled Source conflict"}),RACY_MS:0},run=instantiateOwnerClosureV1(closure,bindings);
    let calls=0;const events:string[]=[];let settled:string,failure:unknown;
    try{
     await run(async()=>{
      const row=scenario.rounds[calls++] as Round;if(!row)throw Error("Scripted rounds exhausted: "+scenario.name);
      state.consistent=row.outcome!=="conflict";state.holds=row.holds??true;
-     if(row.young??true)scopes.getStore()!.set("young",{kind:"file",path:"/modeled/young",fact:{mtimeMs:Date.now()+15,ctimeMs:0}});
+     if(row.young??true)scopes.getStore()!.order.push({kind:"file",path:"/modeled/young",fact:{mtimeMs:Date.now()+15,ctimeMs:0}});
      if(row.outcome==="failure"){if(row.undefined)throw undefined;throw Object.assign(Error(row.message),row.code?{code:row.code}:{});}
      return "value";
     },{limit:corpus.limit,onRound:(event:{failure?:unknown;conflict?:string})=>{events.push(Object.hasOwn(event,"failure")?"failure":"conflict");}});

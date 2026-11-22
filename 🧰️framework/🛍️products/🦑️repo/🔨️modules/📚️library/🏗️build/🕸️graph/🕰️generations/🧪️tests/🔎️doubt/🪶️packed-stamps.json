@@ -2,6 +2,8 @@
   "files": 512,
   "digests": 512,
   "published": [
+    "aliases",
+    "changed",
     "listing",
     "missing",
     "nested",
@@ -9,12 +11,27 @@
     "resolved"
   ],
   "excluded": [
+    "aliases",
+    "changed",
     "missing",
     "nested",
     "present",
     "resolved"
   ],
-  "publishedReads": 5,
+  "publishedReads": 4,
   "settledReads": 4,
-  "maximumBytes": 1048576
+  "maximumBytes": 1048576,
+  "contentOnly": {
+    "kinds": [
+      "closure",
+      "field",
+      "registry",
+      "derived",
+      "stamp",
+      "realpath",
+      "typescriptText",
+      "unknown"
+    ],
+    "rowsPerKind": 128
+  }
 }

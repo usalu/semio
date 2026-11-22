@@ -1,0 +1,6 @@
+{"cases":[
+ {"id":"interactive-first","waiting":[{"name":"background","priority":8},{"name":"agent","priority":null},{"name":"interactive","priority":1}],"joins":[],"order":["interactive","agent","background"]},
+ {"id":"equal-priority-arrival-order","waiting":[{"name":"first","priority":3},{"name":"second","priority":3}],"joins":[],"order":["first","second"]},
+ {"id":"late-urgent-client-lifts-queued-load","waiting":[{"name":"background","priority":8},{"name":"agent","priority":null}],"joins":[{"name":"background","priority":0}],"order":["background","agent"]},
+ {"id":"invalid-priority-is-agent","waiting":[{"name":"bad","priority":42},{"name":"urgent","priority":4}],"joins":[],"order":["urgent","bad"]}
+]}

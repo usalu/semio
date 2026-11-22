@@ -1,0 +1,20 @@
+case	annex	building	mode	floor_m2	volume_m3	flow_m3_h	minutes_before	residential_lpsm2	status	required_m3h
+one_zone_volume_en	EN	commercial	shutdown	40	100	50	120		pass	50
+under_supply	EN	commercial	shutdown	40	100	49.9	120		fail	50
+short_valid_flush	EN	commercial	shutdown	40	100	100	60		pass	100
+only_last_two_hours	EN	commercial	shutdown	40	100	40	180		fail	50
+empty_flush_window	EN	commercial	shutdown	40	100	180	0		fail	
+en_low_rate	EN	commercial	setback	40	100	21.6	120		pass	21.6
+en_low_under	EN	commercial	setback	40	100	21.5	120		fail	21.6
+residential_selected_low	EN	dwelling	setback	40	100	14.4	120	0.10	pass	14.4
+residential_selected_high	EN	dwelling	setback	40	100	21	120	0.15	fail	21.6
+residential_rate_gap	EN	dwelling	setback	40	100	21.6	120		unverified	
+residential_rate_outside_default	EN	dwelling	setback	40	100	22	120	0.16	unverified	
+residential_shutdown_default	EN	dwelling	shutdown	40	100	100	120	0.15	unverified	
+german_annex_not_bound	DE	commercial	setback	40	100	21.6	120		unverified	
+missing_zone_volume	EN	commercial	shutdown	40	0	100	120		unverified	
+negative_purge_duration	EN	commercial	shutdown	40	100	100	-20		unverified	
+missing_room_area	EN	commercial	setback	0	100	45	120		unverified	
+negative_delivered_airflow	EN	commercial	setback	40	100	-10	120		unverified	
+zero_air_delivery	EN	commercial	setback	40	100	0	120		fail	21.6
+residential_rate_intermediate	EN	dwelling	setback	40	100	18	120	0.125	pass	18

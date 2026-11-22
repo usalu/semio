@@ -5,7 +5,7 @@ fn exact_analytic_labels_require_current_source_membership() {
     let fixtures: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     for case in fixtures["analyticAdmission"].as_array().unwrap() {
         let ids: Vec<String> = serde_json::from_value(case["ids"].clone()).unwrap();
-        let references = serde_json::from_value(case["references"].clone()).unwrap();
+        let references: semio_framework_mesh_engine::ComponentReferenceTable = semio_framework_pack_json::from_json_str(&case["references"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let actual = validate_analytic_source(&ids, case["revision"].as_str().unwrap(), case["handle"].as_str().unwrap(), &references);
         if case["accepted"] == true { assert_eq!(serde_json::to_value(actual.unwrap()).unwrap(), fixtures["analyticGroups"][0]["labels"]); } else { assert!(actual.is_err()); }
     }

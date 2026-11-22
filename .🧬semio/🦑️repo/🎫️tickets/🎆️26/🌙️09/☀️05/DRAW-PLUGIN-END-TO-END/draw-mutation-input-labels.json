@@ -1,0 +1,63 @@
+[
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧬️schema/🧬️mutations/📋️duplicate-layer/🧬️schema/🔣️.json",
+    "sample": {
+      "mutation": "duplicateLayer",
+      "layerId": "source",
+      "identities": [
+        {
+          "source": "source",
+          "target": "copy"
+        }
+      ]
+    }
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🎨️style/🧬️schema/🧬️mutations/📝️update-text/🧬️schema/🔣️.json",
+    "sample": {
+      "mutation": "updateText",
+      "layerId": "layer",
+      "content": "Text",
+      "size": 12,
+      "fontFamily": "anta"
+    }
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🎨️style/🧬️schema/🧬️mutations/🖼️update-image/🧬️schema/🔣️.json",
+    "sample": {
+      "mutation": "updateImage",
+      "layerId": "layer",
+      "imageKey": "example",
+      "width": 1,
+      "height": 1
+    }
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/🔷️set-shape-coordinate/🧬️schema/🔣️.json",
+    "sample": {
+      "mutation": "setShapeCoordinate",
+      "layerId": "layer",
+      "field": "rectX",
+      "value": 1
+    }
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧬️schema/🧬️mutations/📥️import-image-asset/🧬️schema/🔣️.json",
+    "sample": {
+      "mutation": "importImageAsset",
+      "assetId": "pixel",
+      "asset": {
+        "width": 1,
+        "height": 1,
+        "samples": [
+          [
+            0,
+            0,
+            0,
+            255
+          ]
+        ]
+      }
+    }
+  }
+]

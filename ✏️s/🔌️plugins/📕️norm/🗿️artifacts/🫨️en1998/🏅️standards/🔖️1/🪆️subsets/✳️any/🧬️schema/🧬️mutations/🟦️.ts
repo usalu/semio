@@ -260,6 +260,7 @@ import { type InsertAccelerogram, parseInsertAccelerogram } from "./➕️insert
 import { type InsertBearing, parseInsertBearing } from "./➕️insert-bearing/🧬️schema/🟦️.ts";
 import { type InsertBridgeVariable, parseInsertBridgeVariable } from "./➕️insert-bridge-variable/🧬️schema/🟦️.ts";
 import { type InsertBuilding, parseInsertBuilding } from "./➕️insert-building/🧬️schema/🟦️.ts";
+import { type InsertCase, parseInsertCase } from "./➕️insert-case/🧬️schema/🟦️.ts";
 import { type InsertCriticalRegion, parseInsertCriticalRegion } from "./➕️insert-critical-region/🧬️schema/🟦️.ts";
 import { type InsertDiaphragm, parseInsertDiaphragm } from "./➕️insert-diaphragm/🧬️schema/🟦️.ts";
 import { type InsertIsolationSystem, parseInsertIsolationSystem } from "./➕️insert-isolation-system/🧬️schema/🟦️.ts";
@@ -280,6 +281,7 @@ import { type RemoveBearing, parseRemoveBearing } from "./➖️remove-bearing/�
 import { type RemoveBridgeVariable, parseRemoveBridgeVariable } from "./➖️remove-bridge-variable/🧬️schema/🟦️.ts";
 import { type RemoveBridge, parseRemoveBridge } from "./➖️remove-bridge/🧬️schema/🟦️.ts";
 import { type RemoveBuilding, parseRemoveBuilding } from "./➖️remove-building/🧬️schema/🟦️.ts";
+import { type RemoveCase, parseRemoveCase } from "./➖️remove-case/🧬️schema/🟦️.ts";
 import { type RemoveCriticalRegion, parseRemoveCriticalRegion } from "./➖️remove-critical-region/🧬️schema/🟦️.ts";
 import { type RemoveDiaphragm, parseRemoveDiaphragm } from "./➖️remove-diaphragm/🧬️schema/🟦️.ts";
 import { type RemoveFoundation, parseRemoveFoundation } from "./➖️remove-foundation/🧬️schema/🟦️.ts";
@@ -301,7 +303,10 @@ import { type RemoveTowerVariable, parseRemoveTowerVariable } from "./➖️remo
 import { type RemoveTower, parseRemoveTower } from "./➖️remove-tower/🧬️schema/🟦️.ts";
 import { type InsertBridge, parseInsertBridge } from "./🌉insert-bridge/🧬️schema/🟦️.ts";
 import { type ChangeAssessmentRKN, parseChangeAssessmentRKN } from "./🏋️change-assessment-rkn/🧬️schema/🟦️.ts";
+import { type ChangeCaseLabelDe, parseChangeCaseLabelDe } from "./🏷️change-case-label-de/🧬️schema/🟦️.ts";
+import { type ChangeCaseLabelEn, parseChangeCaseLabelEn } from "./🏷️change-case-label-en/🧬️schema/🟦️.ts";
 import { type ChangeSystemVRdN, parseChangeSystemVRdN } from "./💪️change-system-v-rd-n/🧬️schema/🟦️.ts";
+import { type ChangeCaseEntryId, parseChangeCaseEntryId } from "./📇️change-case-entry-id/🧬️schema/🟦️.ts";
 import { type ChangeCriticalRegionAxialForceN, parseChangeCriticalRegionAxialForceN } from "./📍️change-critical-region-axial-force-n/🧬️schema/🟦️.ts";
 import { type ChangeCriticalRegionClearLengthM, parseChangeCriticalRegionClearLengthM } from "./📍️change-critical-region-clear-length-m/🧬️schema/🟦️.ts";
 import { type ChangeCriticalRegionConcreteDesignStrengthMpa, parseChangeCriticalRegionConcreteDesignStrengthMpa } from "./📍️change-critical-region-concrete-fcd/🧬️schema/🟦️.ts";
@@ -354,6 +359,8 @@ import { type ChangeAnnex, parseChangeAnnex } from "./📎️change-annex/🧬�
 import { type ChangeElevationRegular, parseChangeElevationRegular } from "./📏️change-elevation-regular/🧬️schema/🟦️.ts";
 import { type ChangeStoreyDriftXM, parseChangeStoreyDriftXM } from "./📏️change-storey-drift-xm/🧬️schema/🟦️.ts";
 import { type ChangeStoreyStiffnessX, parseChangeStoreyStiffnessX } from "./📐️change-storey-stiffness-x/🧬️schema/🟦️.ts";
+import { type ChangeCaseNumber, parseChangeCaseNumber } from "./🔢️change-case-number/🧬️schema/🟦️.ts";
+import { type ChangeCaseText, parseChangeCaseText } from "./🔤️change-case-text/🧬️schema/🟦️.ts";
 import { type InsertAssessment, parseInsertAssessment } from "./🔧insert-assessment/🧬️schema/🟦️.ts";
 import { type InsertTower, parseInsertTower } from "./🗼insert-tower/🧬️schema/🟦️.ts";
 import { type ChangeBridgeVRdN, parseChangeBridgeVRdN } from "./🛑️change-bridge-v-rd-n/🧬️schema/🟦️.ts";
@@ -364,22 +371,7 @@ import { type InsertRetainingWall, parseInsertRetainingWall } from "./🧱️ins
 import { type InsertFoundation, parseInsertFoundation } from "./🪨insert-foundation/🧬️schema/🟦️.ts";
 import { type InsertSilo, parseInsertSilo } from "./🫙insert-silo/🧬️schema/🟦️.ts";
 
-import { type InsertCase, parseInsertCase } from "./➕️insert-case/🧬️schema/🟦️.ts";
-import { type RemoveCase, parseRemoveCase } from "./➖️remove-case/🧬️schema/🟦️.ts";
-import { type ChangeCaseNumber, parseChangeCaseNumber } from "./🔢️change-case-number/🧬️schema/🟦️.ts";
-import { type ChangeCaseText, parseChangeCaseText } from "./🔤️change-case-text/🧬️schema/🟦️.ts";
-import { type ChangeCaseLabelEn, parseChangeCaseLabelEn } from "./🏷️change-case-label-en/🧬️schema/🟦️.ts";
-import { type ChangeCaseLabelDe, parseChangeCaseLabelDe } from "./🏷️change-case-label-de/🧬️schema/🟦️.ts";
-import { type ChangeCaseEntryId, parseChangeCaseEntryId } from "./📇️change-case-entry-id/🧬️schema/🟦️.ts";
-
 export type En1998Mutation =
-  | InsertCase
-  | RemoveCase
-  | ChangeCaseNumber
-  | ChangeCaseText
-  | ChangeCaseLabelEn
-  | ChangeCaseLabelDe
-  | ChangeCaseEntryId
   | ChangeAnnex
   | InsertBuilding
   | RemoveBuilding
@@ -740,7 +732,14 @@ export type En1998Mutation =
   | ChangeCriticalRegionRestrainedBarSpacingM
   | ChangeTieBeamSteelArea
   | ChangeTieBeamSteelDesignStrength
-  | ChangeTieBeamWidth;
+  | ChangeTieBeamWidth
+  | InsertCase
+  | RemoveCase
+  | ChangeCaseNumber
+  | ChangeCaseText
+  | ChangeCaseLabelEn
+  | ChangeCaseLabelDe
+  | ChangeCaseEntryId;
 
 export const parseEn1998Mutation: NormWireReader<En1998Mutation> = normWireTagged<En1998Mutation, "mutation">("mutation", {
   changeAnnex: parseChangeAnnex,

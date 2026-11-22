@@ -1,0 +1,11 @@
+# Rust kernel-busy recovery audit
+
+Read-only source review. No detach, eject, repair, reset or cache mutation was performed.
+
+The parent reports that the issued repo-cache-reset:cache-reclaim-wait-rust returned skipped/reclaim-failed because non-forced detach reported Resource busy; diskutil verifyVolume reported PID 0 kernel_task dissent and could not freeze due to ENOSPC; user-process lsof found no visible holder. Those observations are supplied by the parent, not independently repeated by this audit. The absence of a user-space holder does not identify why the kernel dissented.
+
+No second sanctioned non-destructive route was identified that bypasses the same detach prerequisite. Both ordinary reclaimImageIfQuiescentV1 and queued reclaimRepositoryRustImageWithWaitV1 use reclaimNativeImageV1 and the same Darwin port (repo cache reset/🟦️.ts:218–260 and :308–369; native-build/💾️storage/🍎️image/♻️reclaim/🟦️.ts:28–38, :63–75). The initial action on an attached image is hdiutil detach <device> without force; the implementation explicitly treats busy as refusal before the scratch attach. The separately authored retained publication owner also constructs detach without force (native-build/💾️storage/📤️publication/🎛️owner/🟦️.ts:84) and requires original exclusive custody, durable pending witness, verified mapping and preservation work; it is not a special repair for a kernel-dissented device.
+
+The compact compiler and unit-GC recovery paths require filesystem mutation on the same image; parent observed owner-managed unlink and truncation failing ENOSPC. Elastic regrow/reset can retire and recreate an image and is outside this non-discard request. No implementation in the inspected native image/repository recovery paths offers a kernel-dissent override, an online APFS repair, or a write-free recovery of a still-mounted full image.
+
+The existing issued wait can be used only after an external state change lets the exact original image pass its due, backing/mapping and exclusive-custody checks and the OS accept non-forced detach. A repeat without such a change is not evidence of recovery. There is a technical impasse for the requested nondestructive repo-owned path under the reported observed state; this source audit does not determine an OS-level repair or imply filesystem damage.

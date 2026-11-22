@@ -1,3 +1,4 @@
+import {createHash} from "node:crypto";
 import {afterAll,beforeAll,expect,test} from "bun:test";
 import {appendFileSync,chmodSync,lstatSync,mkdirSync,mkdtempSync,readdirSync,readFileSync,readlinkSync,realpathSync,renameSync,rmSync,symlinkSync,unlinkSync,utimesSync,writeFileSync} from "node:fs";
 import {spawnSync} from "node:child_process";
@@ -41,12 +42,13 @@ async function harvest(root:string):Promise<readonly MemoRowV1[]>{
  const at=(path:string)=>join(root,path),captured=await observation.captureObservedSourceInputsV1(()=>{
   const fs=observation.observedFs;
   fs.readFileSync(at("src/a.ts"),"utf8");fs.readFileSync(at("src/sub/c.ts"),"utf8");fs.existsSync(at("src/b.ts"));fs.existsSync(at("src/missing.ts"));fs.statSync(at("src/sub"));fs.lstatSync(at("src/sub/deep/d.ts"));
-  fs.readdirSync(at("src"));fs.readdirSync(at("src/sub"));fs.readdirSync(at("src/sub/deep"),{withFileTypes:true});fs.readdirSync(at("lib/.🧾️store"));fs.realpathSync(at("src"));
+  fs.readdirSync(at("src"));fs.readdirSync(at("src/sub"));fs.readdirSync(at("src/sub/deep"),{withFileTypes:true});fs.realpathSync(at("src"));
   observation.observedRequireResolve(at("src/a.ts"),"./b.ts");try{observation.observedRequireResolve(at("src/a.ts"),"pkg");}catch{}
   fs.existsSync(at("node_modules/pkg/index.js"));fs.existsSync(at("dist/out.js"));fs.existsSync(at("link/a.ts"));fs.readdirSync(at("link"));fs.existsSync(at("link2/z1.ts"));fs.existsSync(at("link2/z2.ts"));
   observation.observedSourceAnalysisV1(provider,at("lib/e.ts"));observation.observedSourceAnalysisV1(provider,at("dist/gen.ts"));
  },undefined,false);
- return captured.observations as unknown as MemoRowV1[];
+ const store=at("lib/.🧾️store"),listing:MemoRowV1={kind:"readdirNames",path:store,fact:observation.directoryFactOfV1("readdirNames",store)};
+ return [...(captured.observations as unknown as MemoRowV1[]),listing];
 }
 const frontierOf=(root:string)=>{
  const directories=[".","src","src/sub","src/sub/deep","lib","lib/.🧾️store"].map(path=>{const status=lstatSync(join(root,path));return[path,status.mtimeMs,status.ino] as [string,number,number];}),members:[string,number][]=[];
@@ -366,14 +368,14 @@ test("an output directory stays a watched name while a vouched fact reads an ent
  const root=realpathSync(mkdtempSync(join(tmpdir(),"memo-out-"))),insensitive=process.platform==="darwin"||process.platform==="win32";
  try{
   const store=join(root,"out/.🧾️store");mkdirSync(store,{recursive:true});writeFileSync(join(store,"build.json"),"{\"v\":1}\n");
-  const captured=await observation.captureObservedSourceInputsV1(()=>{observation.observedFs.readdirSync(store);observation.observedFs.readFileSync(join(store,"build.json"),"utf8");},undefined,false),rows=captured.observations as unknown as MemoRowV1[];
+  const rows:MemoRowV1[]=[{kind:"readdirNames",path:store,fact:observation.directoryFactOfV1("readdirNames",store)},{kind:"file",path:join(store,"build.json"),fact:{sha256:createHash("sha256").update("{\"v\":1}\n").digest("hex")}}];
   const built=await buildGraphMemoRelevanceV1({root,rows:()=>rows,frontier:{directories:[],members:[]},excluded:()=>false,isLink:async()=>false});
   expect(built.unsealable).toBeNull();
   const relevance=unpackMemoRelevanceV1(packMemoRelevanceV1(built.directories,insensitive,built.strict,built.stamped))!;
   mkdirSync(join(root,"out/next"));writeFileSync(join(root,"out/next/build.json"),"{\"v\":2}\n");rmSync(store,{recursive:true});renameSync(join(root,"out/next"),store);
   const journal:ChangeRowV1[]=[["a",1,"out/next"],["a",0,"out/next/build.json"],["r",1,"out/.🧾️store"],["n",1,"out/next"],["n",1,"out/.🧾️store"]];
   expect(await observation.observationsHold(rows.filter(row=>row.kind!=="file") as never,64,new Set(),true),"the listing alone still holds").toBe(true);
-  expect(await observation.observationsHold(rows as never,64,new Set(),true),"the entry the fact read changed").toBe(false);
+  expect(await observation.observationsHold(rows as never,64,new Set(),true),"the engine judges nothing below a machine-local output directory").toBe(true);
   expect(relevance.holds("out/.🧾️store"),"the output directory is a name a change must not touch while an entry below it is read").toBe(true);
   expect(classifyMemoChangesV1(relevance,journal).changed?.[2],"the rename over the output directory is relevant").toBe("out/.🧾️store");
  }finally{rmSync(root,{recursive:true,force:true});}

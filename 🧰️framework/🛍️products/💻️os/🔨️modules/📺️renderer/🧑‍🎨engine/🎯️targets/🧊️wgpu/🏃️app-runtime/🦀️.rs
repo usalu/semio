@@ -2,6 +2,8 @@
 //!
 //! 🧭️ The files WP3 staged for this crate (`wp3-tools/crate-map.json`) are mounted here from their place in the renderer tree; the renderer root re-exports this crate.
 
+#![recursion_limit = "256"]
+
 extern crate infinite_canvas as infinite_world;
 use semio_renderer_wgpu_frame_actions::{AppInteractionState, FrameActionOwners, FrameDeferredCursor, FrameDirectives, SHELL_SYNC_PUMP_INTERVAL_MS};
 use semio_renderer_wgpu_runtime_mailbox::{MailboxRuntime, RuntimeApply, RuntimeCompletion, RuntimeHandle, RuntimeMailbox, RuntimePresentationWitness};
@@ -20,6 +22,8 @@ use semio_renderer_wgpu_host_base::{app_now_ms, appearance_is_dark, log_debug, l
 #[cfg(not(target_arch = "wasm32"))]
 use semio_renderer_wgpu_host_base::{RendererIoHandle, submit_renderer_io};
 use semio_renderer_wgpu_host_plumbing::deadlines;
+#[cfg(not(target_arch = "wasm32"))]
+use semio_renderer_wgpu_host_plumbing::native_io::{RendererSourceIoHandle, start_renderer_modified};
 use semio_renderer_wgpu_program_bridge::filter_plugins;
 #[cfg(not(target_arch = "wasm32"))]
 use semio_renderer_wgpu_program_bridge::load_wasm_plugins;

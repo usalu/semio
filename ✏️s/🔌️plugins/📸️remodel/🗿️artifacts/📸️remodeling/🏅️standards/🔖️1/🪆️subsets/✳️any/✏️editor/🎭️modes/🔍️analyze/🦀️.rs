@@ -4,7 +4,7 @@
 use crate::editor::remodeling::modes::analyze::windows::report;
 use crate::editor::remodeling::modes::model::windows::model;
 use crate::editor::remodeling::modes::model::tools::reconstruction;
-use semio_plugin::create_default_layout;
+use semio_plugin::{create_default_layout, Axis};
 use semio_plugin::create_named_layout;
 use semio_ui_locale::LocalizedLabel;
 use semio_plugin::ModeDefinition;
@@ -22,7 +22,7 @@ pub fn layout() -> NamedLayout {
     create_named_layout(
         REMODELING_PLAY_LAYOUT_ANALYZE,
         "Analyze",
-        create_default_layout(&[model::REMODELING_PLAY_WINDOW_MAIN.into(), report::REMODELING_PLAY_WINDOW_REPORT.into()], "row", Some(&[60.0, 40.0]), Some(&["Model".into(), "Report".into()])),
+        create_default_layout(&[model::REMODELING_PLAY_WINDOW_MAIN.into(), report::REMODELING_PLAY_WINDOW_REPORT.into()], Axis::Horizontal, Some(&[0.6, 0.4]), Some(&["Model".into(), "Report".into()])),
         "builtin",
         Some("table-2".into()),
         None,

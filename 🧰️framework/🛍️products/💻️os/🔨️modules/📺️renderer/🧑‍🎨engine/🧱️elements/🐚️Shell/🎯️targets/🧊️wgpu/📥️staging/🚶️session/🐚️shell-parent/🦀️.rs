@@ -7,28 +7,23 @@ use super::*;
 //#region ShellTypes
 /// 🧭️ Projects the structural fields observed by React Mode without presentation-only titles.
 pub fn dock_mode_layout_identity(layout: &WindowLayout) -> WindowLayout {
-    use semio_ui_declaration::layout::{WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode};
-    fn stack(node: &mut WindowLayoutStackNode) {
-        node.active_window_kind_id = None;
-        for leaf in &mut node.children {
-            leaf.title = None;
-            leaf.window_kind_id = leaf.instance_id.take().unwrap_or_else(|| leaf.window_kind_id.clone());
-            leaf.template_id = None;
-        }
-    }
-    fn axis(node: &mut WindowLayoutAxisNode) {
-        for child in &mut node.children {
-            match child {
-                WindowLayoutChild::Axis(child) => axis(child),
-                WindowLayoutChild::Stack(child) => stack(child),
+    use semio_ui_declaration::layout::WindowLayoutNode;
+    fn project(node: &mut WindowLayoutNode) {
+        match node {
+            WindowLayoutNode::Window { window_kind_id, title, instance_id, template_id, .. } => {
+                *title = None;
+                *window_kind_id = instance_id.take().unwrap_or_else(|| window_kind_id.clone());
+                *template_id = None;
             }
+            WindowLayoutNode::Stack { active_window_id, children, .. } => {
+                *active_window_id = None;
+                children.iter_mut().for_each(project);
+            }
+            WindowLayoutNode::Split { children, .. } => children.iter_mut().for_each(project),
         }
     }
     let mut projected = layout.clone();
-    match &mut projected.root {
-        WindowLayoutRoot::Axis(node) => axis(node),
-        WindowLayoutRoot::Stack(node) => stack(node),
-    }
+    project(&mut projected.root);
     projected
 }
 

@@ -9614,6 +9614,31 @@
       "valid": false
     }
   ],
+  "variantDescriptors": {
+    "variant": "gis2d",
+    "app": "s.gis.gismap@1/*#editor",
+    "descriptors": [
+      { "id": "unrelated", "published": false, "contributes": [], "consumes": [], "dependencies": [] },
+      { "id": "gis", "published": true, "contributes": [], "consumes": ["map-tools"], "dependencies": [] },
+      { "id": "map-tools", "published": true, "contributes": ["map-tools"], "consumes": [], "dependencies": ["map-codec"] },
+      { "id": "map-codec", "published": true, "contributes": [], "consumes": [], "dependencies": ["map-schema"] },
+      { "id": "map-schema", "published": true, "contributes": [], "consumes": [], "dependencies": [] }
+    ],
+    "expectedReads": ["gis", "map-tools", "map-codec", "map-schema"]
+  },
+  "gisBoot": {
+    "catalog": "✏️s/🧑‍💻dev/🧩️catalog/🤖️generated",
+    "manifest": "🌎️hub/🧩️compositions/🌍️gis/🧩️component/📦️packages/🦀️rust/Cargo.toml",
+    "descriptor": "🌎️hub/🧩️compositions/🌍️gis/🧩️component/🔣️.json",
+    "variants": ["gis2d", "gis3d"],
+    "dependencies": ["stdio"],
+    "components": ["gis", "stdio"]
+  },
+  "sessionRefresh": [
+    { "id": "cold", "retainedDependencies": null, "refresh": true },
+    { "id": "warm", "retainedDependencies": ["stdio"], "refresh": false },
+    { "id": "stale dependency closure", "retainedDependencies": [], "refresh": true }
+  ],
   "devBoot": {
     "case": "empty",
     "variant": "",

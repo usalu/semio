@@ -20,8 +20,15 @@ use ui_render::{AccessibilityEvent, AccessibilityTarget, DispatchEvent, EventMod
 
 #[derive(Deserialize)]
 pub struct BrowserBatch {
-    pub replaceable: Vec<BrowserWireEvent>,
-    pub lossless: Vec<BrowserWireEvent>,
+    pub events: Vec<BrowserWireEvent>,
+}
+
+impl BrowserBatch {
+    /// 🧾️ Every page spends distinct credits for replaceable samples and ordered barriers.
+    pub fn within_item_credits(&self) -> bool {
+        let continuous = self.events.iter().filter(|event| matches!(event, BrowserWireEvent::PointerMove { .. } | BrowserWireEvent::Wheel { .. } | BrowserWireEvent::Resize { .. })).count();
+        continuous <= 18 && self.events.len() - continuous <= 16
+    }
 }
 
 #[derive(Deserialize)]
@@ -103,6 +110,7 @@ pub enum BrowserWireEvent {
         ctrl: bool,
         alt: bool,
         meta: bool,
+        repeat: bool,
     },
     KeyUp {
         key: String,
@@ -241,7 +249,7 @@ pub fn stateless_dispatch(event: &BrowserWireEvent) -> Option<DispatchEvent> {
             DispatchEvent::PointerUp { pointer: pointer(*pointer_id, *pointer_kind, *pressure, *tilt_x, *tilt_y), x: *x, y: *y, button: (*button).into(), modifiers: EventModifiers { shift: *shift, ctrl: *ctrl, alt: *alt, meta: *meta } }
         }
         BrowserWireEvent::Wheel { x, y, delta_x, delta_y, shift, ctrl, alt, meta } => DispatchEvent::Scroll { x: *x, y: *y, delta_x: *delta_x, delta_y: *delta_y, modifiers: EventModifiers { shift: *shift, ctrl: *ctrl, alt: *alt, meta: *meta } },
-        BrowserWireEvent::KeyDown { key, shift, ctrl, alt, meta } => DispatchEvent::KeyDown { key: key.clone(), modifiers: EventModifiers { shift: *shift, ctrl: *ctrl, alt: *alt, meta: *meta } },
+        BrowserWireEvent::KeyDown { key, shift, ctrl, alt, meta, repeat } => DispatchEvent::KeyDown { key: key.clone(), modifiers: EventModifiers { shift: *shift, ctrl: *ctrl, alt: *alt, meta: *meta }, repeat: *repeat },
         BrowserWireEvent::KeyUp { key, shift, ctrl, alt, meta } => DispatchEvent::KeyUp { key: key.clone(), modifiers: EventModifiers { shift: *shift, ctrl: *ctrl, alt: *alt, meta: *meta } },
         BrowserWireEvent::ImeStart => DispatchEvent::Ime(ImeEvent::Start),
         BrowserWireEvent::ImeCancel => DispatchEvent::Ime(ImeEvent::Cancel),
@@ -280,7 +288,7 @@ pub fn pointer_button_to_i16(button: PointerButton) -> i16 {
 
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 pub fn event_modifiers_to_pointer(modifiers: EventModifiers) -> semio_ui_wgpu_input::PointerModifiers {
-    semio_ui_wgpu_input::PointerModifiers { shift: modifiers.shift, ctrl: modifiers.ctrl, alt: modifiers.alt, meta: modifiers.meta }
+    semio_ui_wgpu_input::PointerModifiers { shift: modifiers.shift, ctrl: modifiers.ctrl, alt: modifiers.alt, meta: modifiers.meta, repeat: false }
 }
 
 /// ⌨️ DOM-`KeyboardEvent.key`-shaped strings (`ui_host::logical_key_to_dispatch_string`'s own output

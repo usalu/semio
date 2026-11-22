@@ -1,11 +1,11 @@
 /** 🩹️ A vanished build input closure leaf is a miss that is repaired, never a permanent failure. */
 import{expect,test}from"bun:test";
-import{mkdirSync,mkdtempSync,readdirSync,realpathSync,rmSync,writeFileSync,existsSync}from"node:fs";
+import{readFileSync,mkdirSync,mkdtempSync,readdirSync,realpathSync,rmSync,writeFileSync,existsSync}from"node:fs";
 import{tmpdir}from"node:os";
 import{join}from"node:path";
 import{brotliCompressSync}from"node:zlib";
 import{createHash}from"node:crypto";
-import{closureMissingErrorV1,closureMissingLineV1,closureOwnersV1,closureReferencesOfTextV1,closuresOfFragmentsV1,obtainClosureLeafV1,purgeClosureReferencesV1,readClosureLeafV1,settleClosureLeafV1}from"../🟨️.mjs";
+import{closureLeafPresentV1,closureMissingErrorV1,closureMissingLineV1,closureOwnersV1,closureReferencesOfTextV1,closuresOfFragmentsV1,obtainClosureLeafV1,purgeClosureReferencesV1,readClosureLeafV1,settleClosureLeafV1}from"../🟨️.mjs";
 
 const KEY="b".repeat(64),OTHER="c".repeat(64);
 const put=(file:string,text:string)=>writeFileSync(file,brotliCompressSync(Buffer.from(text)));
@@ -47,6 +47,20 @@ test("a leaf on this machine is present, an absent one is fetched from the fleet
  expect(readdirSync(directory(NS))).toEqual([LEAF+".json"]);
  asks.length=0;expect(await call(LEAF,fetch(leafBytes))).toBe("present");expect(asks).toEqual([]);
  await expect(call("nope")).rejects.toThrow("closure key");
+}));
+
+test("a corrupt or torn leaf on this machine is not present: it is fetched again and replaced, its bytes then match its name (python sha256 oracle)",withDirectory(async directory=>{
+ const path=join(directory(NS),LEAF+".json"),put=async(_namespace:string,key:string,bytes:Uint8Array)=>{writeFileSync(join(directory(NS),key+".json"),bytes);};
+ const call=()=>obtainClosureLeafV1({directory:directory as never,namespace:NS,key:LEAF,fetch:(async()=>leafBytes) as never,put:put as never});
+ for(const torn of[Buffer.alloc(leafBytes.length),Buffer.from("{}"),leafBytes.subarray(0,5)]){
+  writeFileSync(path,torn);
+  expect(closureLeafPresentV1(directory(NS),LEAF)).toBe(false);
+  expect(await call()).toBe("refetched");
+  expect(readFileSync(path).equals(leafBytes)).toBe(true);
+  expect(closureLeafPresentV1(directory(NS),LEAF)).toBe(true);
+ }
+ const python=Bun.spawnSync(["python3","-c","import hashlib,sys;print(hashlib.sha256(open(sys.argv[1],'rb').read()).hexdigest())",path]).stdout.toString().trim();
+ expect(python).toBe(LEAF);
 }));
 
 test("reading an absent leaf obtains it and reads again, and stays a typed closure-missing error that is never an ENOENT",async()=>{

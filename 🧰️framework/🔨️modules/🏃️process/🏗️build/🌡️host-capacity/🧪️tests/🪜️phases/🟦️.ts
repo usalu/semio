@@ -32,6 +32,29 @@ test("Recording by phase, the estimate by phase, the re-sizing at a boundary and
  expect(fixture.resizeCases.filter(item=>item.expect).length,"vectors reach resizes").toBeGreaterThan(40);
 });
 
+test("Law: one cold run read at 28 GB never pins the rebuild booking: the learned size follows the median of the recent rebuilds, the recorded peak is clamped at the rebuild share, and a 16 GB host books at least the minimum and at most its share, equal to the oracle",()=>{
+ const share=(capacity:number)=>Math.floor(capacity*policy.estimates.rebuildShareBasisPoints/10000),ceilinged=readHostCapacityPolicyV1({...host.policy,memory:{...host.policy.memory,rampMilliseconds:60000},estimates:fixture.policy,classCeilings:fixture.classCeilings});
+ for(const item of fixture.pinCases){
+  const got=estimateHostPhaseV1(policy,item.store as HostEstimateStoreV1,"rebuild",policy.estimates.rebuildPriorMegabytes,item.nowMs);
+  expect(got,item.name).toEqual(item.expect as typeof got);
+  expect(got!.megabytes,item.name+": below the share of a 14 GB host").toBeLessThan(share(14336));
+ }
+ expect(Math.abs(fixture.pinCases[0]!.expect!.megabytes-fixture.pinCases[2]!.expect!.megabytes),"two cold runs among sixteen move the booking by less than 15 % against ordinary runs only").toBeLessThan(0.15*fixture.pinCases[2]!.expect!.megabytes);
+ for(const item of fixture.shareCases){
+  let store=emptyHostEstimateStoreV1();
+  for(const step of item.history)store=recordHostPhasesV1(policy,store,step.lineage,step.operation,step.defaultMegabytes,step.run as never);
+  expect(store,item.name).toEqual(item.expect as HostEstimateStoreV1);
+  for(const sample of store.classes["phase:rebuild"]!.samples)expect(sample.ratioBasisPoints*policy.estimates.phaseReferenceMegabytes/10000,item.name+": a learned peak never exceeds the rebuild share").toBeLessThanOrEqual(item.shareMegabytes+1);
+  const estimate=estimateHostPhasesV1(ceilinged,store,["show","show:projects"],item.request as HostRequestV1,item.nowMs);
+  expect(estimate,item.name).toEqual(item.estimate as HostPhaseEstimateV1);
+  const resized=createHostPhaseResizerV1(ceilinged,item.request as HostRequestV1,estimate,item.capacityMegabytes)("rebuild",item.context);
+  expect(resized,item.name).toEqual(item.resize as typeof resized);
+  expect(resized!.minimumMegabytes,item.name+": the rebuild shrinks down to its authored minimum").toBe(policy.estimates.rebuildMinimumMegabytes);
+  expect(resized!.reservedMegabytes).toBeGreaterThanOrEqual(resized!.minimumMegabytes!);expect(resized!.reservedMegabytes).toBeLessThanOrEqual(Math.max(item.shareMegabytes,resized!.minimumMegabytes!));
+  expect(resized!.reservedMegabytes,item.name+": the declared ceiling of the read class applies to the rebuild too").toBeLessThanOrEqual(Math.max(4096,resized!.minimumMegabytes!));
+ }
+});
+
 test("Law: the recorded night replayed as a stream (a quarter of the runs build the graph): the TypeScript asks exactly what the Python model asks, a run served by coverage asks at least 30 % less, and the memory used above reservations, does not grow on runs served by coverage (a rebuild books at most its share and grows through the gate)",()=>{
  let old=emptyHostEstimateStoreV1(),split=emptyHostEstimateStoreV1();
  const asks={old:[] as number[],split:[] as number[]},estimates:HostPhaseEstimateV1[]=[],capacity=14336,need=(value:HostRequestV1,jobs:number)=>value.fixedMegabytes+jobs*value.perJobMegabytes;

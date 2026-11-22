@@ -176,15 +176,18 @@ mod tests {
     }
 
     #[test]
-    fn flow_fixture_projects_neuron_preview() {
+    fn flow_fixture_projects_openable_neuron_preview() {
+        let oracle: Value = serde_json::from_str(include_str!("../🧫️fixtures/🚪️workflow-opening/🔣️.json")).unwrap();
+        let input = &oracle["input"];
+        let node_id = input["nodeId"].as_str().unwrap();
         let mut graph = resolve_kernel_future(empty_workflow());
-        graph.nodes.push(media_node("node-1", 0.0, 0.0));
+        let mut node = media_node(node_id, 0.0, 0.0);
+        node.plugin_id = input["pluginId"].as_str().unwrap().into();
+        node.app_id = input["appId"].as_str().unwrap().into();
+        graph.nodes.push(node);
         let fixture = os_workflow_to_flow_host_snapshot_json(&graph, &OsWorkflowCamera::default());
-        assert_eq!(fixture["schema"], "flow.host_snapshot");
-        assert_eq!(fixture["widgets"][0]["preview"], true);
-        assert_eq!(fixture["widgets"][0]["params"]["nodeId"], "node-1");
-        assert_eq!(fixture["widgets"][0]["params"]["pluginId"], "draw");
-        assert_eq!(fixture["widgets"][0]["params"]["appId"], "draw");
+        assert_eq!(fixture, oracle["snapshot"]);
+        assert_eq!(fixture["widgets"][0]["params"]["instanceId"], oracle["opening"]["instanceId"]);
         let operators = build_os_workflow_operator_infos(&graph, &[]);
         assert_eq!(operators.len(), 1);
         assert_eq!(operators[0].id, "os.media.node.node-1");

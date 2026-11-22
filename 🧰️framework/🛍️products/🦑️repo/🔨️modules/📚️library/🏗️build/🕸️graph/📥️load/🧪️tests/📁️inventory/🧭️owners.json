@@ -1,5 +1,5 @@
 [
-  {"mode":"memo-hit","ownerGlyph":"a","ownerRepeat":8,"ownerBudget":256,"memoSampleAt":11,"discoveryAt":25,"discoverySampleAt":42,"stages":["memo-check","memo-check"],"verified":[[64,128],[64,128,192]],"highWater":[64,128,128,128,192]},
+  {"mode":"memo-hit","ownerGlyph":"a","ownerRepeat":8,"ownerBudget":256,"memoSampleAt":11,"discoveryAt":25,"discoverySampleAt":42,"stages":["memo-check"],"verified":[[64,128]],"highWater":[64,128]},
   {"mode":"stale-memo","operations":["declaration","native-closure","source-inputs","compile-closure"],"ownerGlyph":"🧭","ownerRepeat":270,"ownerBudget":256,"memoSampleAt":11,"discoveryAt":25,"discoverySampleAt":42,"stages":["memo-check","discovery"]},
   {"mode":"cancel","ownerGlyph":"c","ownerRepeat":1,"ownerBudget":256,"memoSampleAt":11,"discoveryAt":25,"discoverySampleAt":42,"stages":["memo-check","discovery"]}
 ]

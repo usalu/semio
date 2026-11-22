@@ -57,11 +57,11 @@ export const WithoutNoExampleOption: Story = {
     );
   },
 };
-// #endregion 🩺️NavbarExampleSelectexport const WithNoExampleOption: Story = {
+export const WithNoExampleOption: Story = {
   name: "includeNoExample={true}",
   render: () => {
     const [value, setValue] = useState("nakagin");
     return <NavbarExampleSelect id="navbar.story.example-blank-capable" value={value} options={exampleOptions} onValueChange={setValue} includeNoExample={true} />;
   },
 };
-
+// #endregion 🩺️NavbarExampleSelect

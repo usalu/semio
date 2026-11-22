@@ -107,6 +107,11 @@ pub mod move_overlay_position {
         let mut matching = map.positions.iter_mut().filter(|record| feature_id(record) == Some(payload.id.as_str()));
         let feature = matching.next().ok_or_else(|| Fault::from("Position was not found"))?;
         if matching.next().is_some() { return Err(Fault::from("More than one position has that identifier")); }
+        if feature.get("lon").and_then(DslValue::as_f64) == Some(payload.longitude)
+            && feature.get("lat").and_then(DslValue::as_f64) == Some(payload.latitude)
+        {
+            return Ok(Emit::default());
+        }
         replace_field(feature, "lon", payload.longitude.to_value());
         replace_field(feature, "lat", payload.latitude.to_value());
         replacement(map)

@@ -52,7 +52,7 @@ export function HubWorkspace({ port, locale, activeSpaceId, onlineUserIds, onOpe
   };
   return (
     <section aria-label={title} data-semio-hub-workspace={hub.connection.id} className="flex w-full min-w-0 flex-col">
-      {tour === null ? null : <HubFirstRun locale={locale} state={firstRunState} onDismiss={dismissTour} {...(tour === "replay" ? { initialStepIndex: 0 } : {})} />}
+      {tour === null ? null : <HubFirstRun locale={locale} state={firstRunState} onDismiss={dismissTour} inviteReady={hub.invite !== null} {...(tour === "replay" ? { initialStepIndex: 0 } : {})} />}
       <div className="flex flex-wrap justify-end gap-2 p-2">
         <Button id="os.hub.firstRun.replay" icon="graduation-cap" type="button" variant="ghost" aria-label={replayLabel} onClick={() => setTour("replay")}>
           {replayLabel}

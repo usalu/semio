@@ -183,8 +183,7 @@ pub struct MountedTypedCommandFullOperation<A: ArtifactApp> {
     /// 🧮️ The publication ladder's OWN monotone progress: how many publication units actually
     /// moved this operation's pending store publication, counted by the store's checkpoint
     /// rather than by the unit having been spent. A healthy ladder that folds one mutation per
-    /// unit raises it on every unit; an owner that cannot advance never raises it at all, which
-    /// is exactly the term [`Self::typed_operation_stall_witness`]'s three facts were missing.
+    /// unit raises it on every unit; an owner that cannot advance never raises it at all, even when its stage and ownership flags are unchanged.
     pub publication_progress: u64,
     /// 🧮️ The last checkpoint the pending publication answered with, so a unit that repeats it
     /// verbatim is recognised as no movement at all instead of as progress.
@@ -193,7 +192,8 @@ pub struct MountedTypedCommandFullOperation<A: ArtifactApp> {
     pub original_retirement_receipt: Option<(RetainedCloneGrant,RetainedCloneProgress)>,
     pub actor_capture: Option<ControlledRetirement<semio_framework_value::SharedUtf8>>,
     pub actor_capture_pending:semio_plugin_mounted_owner::actor_capture::ActorCapture,
-    pub publication_attempt: u8,
+    /// 🩺️ Consecutive publication attempts without movement in this operation.
+    pub publication_stall_streak: u64,
     pub ui_pending: bool,
     pub progress: Option<u64>,
     pub progress_pending: bool,
@@ -266,22 +266,10 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
         cx.with_retained_loan(grant,|same|{if same.should_yield()||same.is_cancelled(){return Ok(true)}let turn=self.actor_capture_pending.advance(&self.meta.actor,&mut self.actor_capture,same.retained_grant());semio_framework_job::receive_original_retained_work(same,turn)?;Ok(true)})
     }
 
-    /// 🧮️ Records what the store answered for ONE publication unit. The checkpoint carries the
-    /// store's own cursor, completed items and completed bytes; a unit that repeats the
-    /// previous checkpoint verbatim moved nothing and raises no progress, so an owner that can
-    /// never advance still runs its streak up to
-    /// [`TYPED_OPERATION_STALL_FAULT_CEILING`], while a ladder folding one mutation per unit
-    /// resets that streak every unit however many mutations the edit carries.
-    pub fn note_publication_checkpoint(&mut self, checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint) {
-        if self.publication_checkpoint != Some(checkpoint) {
+    /// 🧮️ Records an advanced Store checkpoint or an accepted physical preparation receipt.
+    pub fn note_publication_progress(&mut self, checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint, ownership: RetainedCloneProgress) {
+        if self.publication_checkpoint != Some(checkpoint) || ownership != RetainedCloneProgress::default() {
             self.publication_checkpoint = Some(checkpoint);
-            self.publication_progress = self.publication_progress.saturating_add(1);
-        }
-    }
-
-    /// 🧾️ Counts an advancing paid publication or acknowledged Store retirement step in the stall witness.
-    pub fn note_paid_publication_progress(&mut self, progress: RetainedCloneProgress) {
-        if self.stage == MountedTypedCommandFullOperationStage::Publishing && progress != RetainedCloneProgress::default() {
             self.publication_progress = self.publication_progress.saturating_add(1);
         }
     }

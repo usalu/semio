@@ -4,12 +4,17 @@ import type {SchedulerStoreV1} from "../💾️store/🟦️.ts";
 /** 🎟️ Client side of the queue/ticket protocol: submit one request, wait with heartbeats, run the work when this ticket is the runner of the (possibly shared) job, or watch the shared run of another agent. Cancellation by signal or by `repo scheduler cancel` stops the work through its `AbortSignal`.
  * @see ../🧬️schema/🔣️.json events and exits */
 export type ScheduledContextV1=Readonly<{jobId:string;signal:AbortSignal;progress:(progress:SchedulerProgressV1)=>void}>;
-export type ScheduledResultV1=Readonly<{exit:"ok"|"failed"|"memory-exceeded"|"cancelled";observedPeakMegabytes?:number}>;
+export type ScheduledResultV1=Readonly<{exit:"ok"|"failed"|"memory-exceeded"|"cancelled";observedPeakMegabytes?:number;reason?:string}>;
 export type ScheduledOutcomeV1=Readonly<{exit:SchedulerExitV1;shared:boolean;jobId:string}>;
 export type ScheduledOptionsV1=Readonly<{signal?:AbortSignal;onQueued?:(position:number)=>void;sleep?:(milliseconds:number)=>Promise<void>}>;
 /** 🪢️ Set in the environment of a running job, so every nested `repo` call of its tasks runs inside the job instead of queueing behind it. */
 export const SCHEDULED_JOB_V1="SEMIO_SCHEDULED_JOB";
 const both=(key:string,values:Record<string,string|number>={}):string=>schedulerTextV1("en",key,values)+"\n"+schedulerTextV1("de",key,values);
+
+/** ✂️ The longest failure reason a finished job keeps. */
+export const SCHEDULER_REASON_CHARACTERS_V1=300;
+/** 🧾️ The one-line reason a thrown error leaves on its finished job, so the history says why a job failed after the caller's output is gone. */
+export function reasonOfV1(error:unknown):string{return(error instanceof Error?error.message:String(error)).split(/\r?\n/u).find(line=>line.trim()!=="")?.trim().slice(0,SCHEDULER_REASON_CHARACTERS_V1)??"error";}
 
 /** ▶️ Runs `work` once for all agents that ask for the same `request.key`; resolves with the exit shared by every ticket of the job. */
 export async function runScheduledV1(store:SchedulerStoreV1,request:JobRequestV1,work:(context:ScheduledContextV1)=>Promise<ScheduledResultV1>,options:ScheduledOptionsV1={}):Promise<ScheduledOutcomeV1>{
@@ -36,10 +41,10 @@ export async function runScheduledV1(store:SchedulerStoreV1,request:JobRequestV1
    const beat=(async()=>{while(!stop){await sleep(policy.pollMs);if(stop)break;const row=await look((_state,at)=>latest&&latest!==sent?[{type:"progressed",at,ticket,progress:(sent=latest)}]:[]);if(row.stopping)controller.abort();}})();
    let result:ScheduledResultV1;
    try{result=await work({jobId,signal:controller.signal,progress:progress=>{latest=progress;}});}
-   catch(error){stop=true;await beat;await store.transact((state,at)=>({events:[{type:"completed",at,jobId,exit:"failed"}],result:undefined}));throw error;}
+   catch(error){stop=true;await beat;await store.transact((state,at)=>({events:[{type:"completed",at,jobId,exit:"failed",reason:reasonOfV1(error)}],result:undefined}));throw error;}
    stop=true;await beat;
    const exit=result.exit;
-   await store.transact((state,at)=>({events:[{type:"completed",at,jobId,exit,...result.observedPeakMegabytes===undefined?{}:{observedPeakMegabytes:result.observedPeakMegabytes}}],result:undefined}));
+   await store.transact((state,at)=>({events:[{type:"completed",at,jobId,exit,...result.observedPeakMegabytes===undefined?{}:{observedPeakMegabytes:result.observedPeakMegabytes},...result.reason===undefined?{}:{reason:result.reason.slice(0,SCHEDULER_REASON_CHARACTERS_V1)}}],result:undefined}));
    return{exit,shared:false,jobId};
   }
   await sleep(policy.pollMs);

@@ -596,7 +596,7 @@ pub fn double_click_action(scene: &UiComponentSceneNode, _target: &str, inner: R
 pub fn render_vfs(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, labels: VirtualFileSystemChromeLabels) {
     let theme = ctx.theme;
     let Some(vfs) = &scene.virtual_file_system else {
-        return render_placeholder("virtual-file-system", bounds, ctx);
+        return render_placeholder(bounds, ctx);
     };
     let schema: VfsSchema = serde_json::from_str(&vfs.schema_json).unwrap_or(VfsSchema { descriptor_column_ids: vec![], descriptor_kinds: HashMap::new(), file_node_kinds: VfsFileNodeKinds::default() });
     let rows: Vec<Value> = serde_json::from_str(&vfs.rows_json).unwrap_or_default();

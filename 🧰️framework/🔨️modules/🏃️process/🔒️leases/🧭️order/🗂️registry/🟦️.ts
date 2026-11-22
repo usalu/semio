@@ -1,7 +1,7 @@
 import {createHash} from "node:crypto";
-import {appendFileSync,mkdirSync,readdirSync,readFileSync,renameSync,rmSync,writeFileSync} from "node:fs";
+import {appendFileSync,existsSync,mkdirSync,readdirSync,readFileSync,renameSync,rmSync,statSync,writeFileSync} from "node:fs";
 import {homedir} from "node:os";
-import {isAbsolute,join} from "node:path";
+import {dirname,isAbsolute,join} from "node:path";
 import type {LeaseCycleV1,LeaseModeV1,LeaseNodeV1,LeaseOrderPolicyV1,LeaseViolationV1} from "../📋️contract/🟦️.ts";
 import {agentSessionAddressOfEnvironmentV1} from "../../../🪪️agent-sessions/🗄️store/🟦️.ts";
 import {leaseHistoryKeyV1,leaseStandingSnapshotV1,observeLeaseStandingV1,probeLeaseActivityV1,type LeaseStandingV1} from "../../📈️standing/🟦️.ts";
@@ -63,6 +63,42 @@ export function readLeaseViolationsV1(root:string,directory:string,limit:number)
  return rows.slice(-limit);
 }
 
+/** 🧹️ What one bounded prune pass did: folders examined, rows and folders removed, and whether the registry still has folders it has not reached. */
+export type LeaseRegistryPruneV1=Readonly<{examined:number;removedEntries:number;removedFolders:number;more:boolean;cursor:string}>;
+const pruneStamp="prune.json";
+const folderGone=(directory:string,folder:string,now:number,idleMilliseconds:number):boolean=>{
+ if(existsSync(directory))return false;
+ if(!existsSync(dirname(directory)))return true;
+ try{return now-statSync(join(folder,"directory.json")).mtimeMs>=idleMilliseconds;}catch{return true;}
+};
+/** 🧹️ Removes the rows of dead or silent processes and the folders of lease directories that are gone (the directory and its parent missing, or missing and unused for `idleMilliseconds`), at most `maximumFolders` folders and `budgetMilliseconds` of work per pass, resuming after `cursor` and starting over once the last folder was reached. A folder with a live row is never removed, and every failure is skipped: pruning never throws. */
+export function pruneLeaseRegistryV1(root:string,rules:Readonly<{maximumFolders:number;budgetMilliseconds:number;idleMilliseconds:number}>,now:number=Date.now(),cursor:string=""):LeaseRegistryPruneV1{
+ let names:string[];try{names=readdirSync(root).filter(name=>/^[0-9a-f]{24}$/u.test(name)).sort();}catch{return Object.freeze({examined:0,removedEntries:0,removedFolders:0,more:false,cursor:""});}
+ const found=names.findIndex(name=>name>cursor),ordered=names.slice(Math.max(0,found)),began=performance.now();
+ let examined=0,removedEntries=0,removedFolders=0,last=cursor;
+ for(const name of ordered){
+  if(examined>=rules.maximumFolders||performance.now()-began>=rules.budgetMilliseconds)break;
+  examined++;last=name;
+  const folder=join(root,name),directory=(readJson(join(folder,"directory.json")) as {directory?:unknown}|undefined)?.directory;
+  try{
+   if(typeof directory!=="string")continue;
+   const live=readLeaseRegistryEntriesV1(root,directory,now,false),keep=new Set(live.map(row=>`${row.pid}-${row.startedAtMs}.json`));
+   if(live.length===0&&folderGone(directory,folder,now,rules.idleMilliseconds)){rmSync(folder,{recursive:true,force:true});removedFolders++;continue;}
+   for(const file of readdirSync(folder))if(/^\d+-\d+\.json$/u.test(file)&&!keep.has(file)&&pid(file)!==process.pid){rmSync(join(folder,file),{force:true});removedEntries++;}
+  }catch{}
+ }
+ const more=examined<ordered.length;return Object.freeze({examined,removedEntries,removedFolders,more,cursor:more?last:""});
+}
+/** ⏱️ Runs one prune pass when the registry's own stamp says one is due (another process may have run it moments ago): a pass that left folders unreached is due again after `backlogMilliseconds`, a complete pass after `intervalMilliseconds`. The stamp is claimed before the pass, so concurrent processes skip it. */
+export function pruneLeaseRegistryIfDueV1(root:string,policy:LeaseOrderPolicyV1,now:number=Date.now()):LeaseRegistryPruneV1|undefined{
+ const rules=policy.registry.prune,path=join(root,pruneStamp),previous=readJson(path) as {atMs?:unknown;more?:unknown;cursor?:unknown}|undefined;
+ if(typeof previous?.atMs==="number"&&now-previous.atMs<(previous.more===true?rules.backlogMilliseconds:rules.intervalMilliseconds)&&now>=previous.atMs)return undefined;
+ try{mkdirSync(root,{recursive:true,mode:0o700});const temporary=`${path}.${process.pid}.tmp`;writeFileSync(temporary,JSON.stringify({atMs:now,more:true,cursor:previous?.cursor??""}));renameSync(temporary,path);}catch{return undefined;}
+ const result=pruneLeaseRegistryV1(root,rules,now,typeof previous?.cursor==="string"?previous.cursor:"");
+ try{const temporary=`${path}.${process.pid}.tmp`;writeFileSync(temporary,JSON.stringify({atMs:now,more:result.more,cursor:result.cursor}));renameSync(temporary,path);}catch{}
+ return result;
+}
+
 /** 🕸️ Builds the wait-for graph nodes of one lease directory from the other processes' entries and this process's own fresh ledger. */
 export function leaseNodesV1(entries:readonly LeaseRegistryEntryV1[],own:Snapshot,directory:string,ownPid:number=process.pid):readonly LeaseNodeV1[]{
  const nodes=new Map<string,{holds:{key:string;mode:LeaseModeV1}[];wait?:{key:string;mode:LeaseModeV1;sinceMs:number;queued:boolean};ancestors?:string[]}>(),chains=new Map<string,string[]>();
@@ -81,6 +117,7 @@ export function leaseNodesV1(entries:readonly LeaseRegistryEntryV1[],own:Snapsho
 
 let source:Source|undefined;
 const dirty=new Set<string>(),policies=new Map<string,LeaseOrderPolicyV1>(),written=new Set<string>(),descriptions=new Map<string,string>();
+let pruneScheduled=false;
 let timer:ReturnType<typeof setTimeout>|undefined,heartbeat:ReturnType<typeof setInterval>|undefined,disabled=false,exitHooked=false;
 const rootNow=():string=>leaseRegistryRootV1();
 const entryPath=(directory:string):string=>join(leaseRegistryFolderV1(rootNow(),directory),`${process.pid}-${startedAtMs}.json`);
@@ -89,6 +126,11 @@ const command=():string=>process.argv.slice(1).join(" ").slice(0,240);
  * @see ../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🛰️sidecar/🚦️ready/🌲️process-tree/🧹️containment/🧬️schema/🔣️.json */
 export const LEASE_OWNER_ENVIRONMENT_V1="SEMIO_LEASE_OWNER";
 
+function schedulePrune(policy:LeaseOrderPolicyV1|undefined):void{
+ if(pruneScheduled||!policy||process.env.SEMIO_LEASE_REGISTRY_PRUNE==="off")return;
+ pruneScheduled=true;
+ setTimeout(()=>{try{pruneLeaseRegistryIfDueV1(rootNow(),policy);}catch{}},policy.registry.prune.delayMilliseconds).unref();
+}
 function flush(directory:string):void{
  if(disabled||!source)return;
  const policy=policies.get(directory),snapshot=source.snapshot(),holds=snapshot.holds.filter(row=>row.directory===directory).map(row=>({resource:row.resource,mode:row.mode,sinceMs:row.atMs,task:row.task})),waits=snapshot.waits.filter(row=>row.directory===directory).map(row=>({resource:row.resource,mode:row.mode,sinceMs:row.sinceMs,task:row.task,queued:row.queued})),tasks=new Set([...holds.map(row=>row.task),...waits.map(row=>row.task)]),ancestry=Object.fromEntries(Object.entries(snapshot.ancestry??{}).filter(([task])=>tasks.has(Number(task))));
@@ -96,7 +138,7 @@ function flush(directory:string):void{
  try{
   if(holds.length===0&&waits.length===0){rmSync(path,{force:true});written.delete(directory);return;}
   const folder=leaseRegistryFolderV1(rootNow(),directory);mkdirSync(folder,{recursive:true,mode:0o700});
-  if(!written.has(directory)){writeFileSync(join(folder,"directory.json"),JSON.stringify({version:1,directory}));if(!exitHooked){exitHooked=true;observeLeaseStandingV1(()=>{for(const known of written)leaseRegistryV1.changed(known,policies.get(known)!);});process.once("exit",()=>{for(const known of written)try{rmSync(entryPath(known),{force:true});}catch{}});}}
+  if(!written.has(directory)){writeFileSync(join(folder,"directory.json"),JSON.stringify({version:1,directory}));schedulePrune(policy);if(!exitHooked){exitHooked=true;observeLeaseStandingV1(()=>{for(const known of written)leaseRegistryV1.changed(known,policies.get(known)!);});process.once("exit",()=>{for(const known of written)try{rmSync(entryPath(known),{force:true});}catch{}});}}
   probeLeaseActivityV1();
   const address=agentSessionAddressOfEnvironmentV1(process.env),text=JSON.stringify({version:1,pid:process.pid,startedAtMs,updatedAtMs:Date.now(),command:command(),directory,...address===undefined?{}:{session:address},...process.env[LEASE_OWNER_ENVIRONMENT_V1]?{owner:process.env[LEASE_OWNER_ENVIRONMENT_V1]}:{},standing:leaseStandingSnapshotV1(address!==undefined),holds,waits,...Object.keys(ancestry).length?{ancestry}:{}});
   if(text.length>(policy?.registry.maximumEntryBytes??65536))throw Error("Bounded lease registry entry required");

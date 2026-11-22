@@ -74,6 +74,7 @@ enum MaintenanceTool {
     Worker(usize, u64),
     Awaiting,
     AwaitingPublication,
+    CloseEmissionConstruction,
     Idle,
 }
 
@@ -165,7 +166,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
         }
         if stage==14{return self.drive_store_replacement_jobs(cx,grant,false)}
         if stage==23{return Ok(match semio_framework_job_worker::pump_worker_job_retirements(1,cx)?{semio_framework_job_worker_authority::WorkerJobCloseStep::Pending{progress}|semio_framework_job_worker_authority::WorkerJobCloseStep::Complete{progress}=>PluginLifecycleStep::Progress(progress),semio_framework_job_worker_authority::WorkerJobCloseStep::Blocked=>PluginLifecycleStep::Blocked{reason:"original worker retirement awaits custody"}})}
-if stage==0{return match self.shared().maintenance_tool_selection(){MaintenanceTool::AwaitingPublication=>Ok(PluginLifecycleStep::AwaitingInput{reason:"typed command awaits its original dispatch or publication turn"}),MaintenanceTool::Awaiting=>Ok(PluginLifecycleStep::AwaitingInput{reason:"every typed operation awaits its exact presented host result ACK"}),MaintenanceTool::Idle=>Ok(idle()),MaintenanceTool::Worker(index,operation_id)=>{self.maintenance.maintenance_tool_cursor=(index+1)%ARTIFACT_LIVE_OUTPUT_SLOTS;let owner=self.tools.tool_operations.get_mut(operation_id).ok_or_else(||maintenance_fault("interactive-job.maintenance-tool-authority","typed operation authority changed during its original turn"))?;cx.with_retained_loan(grant,|same|owner.drive_worker_step(same)).map_err(Into::into)}}}
+if stage==0{return match self.shared().maintenance_tool_selection(){MaintenanceTool::AwaitingPublication=>Ok(PluginLifecycleStep::AwaitingInput{reason:"typed command awaits its original dispatch or publication turn"}),MaintenanceTool::Awaiting=>Ok(PluginLifecycleStep::AwaitingInput{reason:"every typed operation awaits its exact presented host result ACK"}),MaintenanceTool::Idle=>Ok(idle()),MaintenanceTool::CloseEmissionConstruction=>{let before=cx.retained_progress();if let Some(admission)=self.tools.original_emission_construction.as_mut(){admission.close_step(cx)?;}Ok(PluginLifecycleStep::Progress(semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?))}MaintenanceTool::Worker(index,operation_id)=>{self.maintenance.maintenance_tool_cursor=(index+1)%ARTIFACT_LIVE_OUTPUT_SLOTS;let owner=self.tools.tool_operations.get_mut(operation_id).ok_or_else(||maintenance_fault("interactive-job.maintenance-tool-authority","typed operation authority changed during its original turn"))?;cx.with_retained_loan(grant,|same|owner.drive_worker_step(same)).map_err(Into::into)}}}
         if stage==1{
             let Some((index,operation_id))=self.media.media_closures.next_id_from(self.maintenance.maintenance_media_cursor)else{return Ok(idle())};self.maintenance.maintenance_media_cursor=(index+1)%ARTIFACT_LIVE_OUTPUT_SLOTS;
             if self.media.media_closures.get(operation_id).is_some_and(|active|active.download_pending){return Ok(PluginLifecycleStep::AwaitingInput{reason:"terminal media source remains retained until its original output receiving"})}
@@ -397,35 +398,17 @@ if stage==0{return match self.shared().maintenance_tool_selection(){MaintenanceT
         let demand=self.shared().store_replacement_demands(closing,loan.maximum_copy_bytes)?;
         let composed=self.shared().store_replacement_target(closing).and_then(|(_,operation)|self.ingest.store_replacement_jobs.get(operation))
             .is_some_and(|job|matches!(job.state, ActiveArtifactStoreReplacementState::Initializing | ActiveArtifactStoreReplacementState::OpeningMembers));
-        #[cfg(target_arch = "wasm32")]
-        let replacement = self.shared().store_replacement_target(closing)
-            .and_then(|(_, operation)| self.ingest.store_replacement_jobs.get(operation))
-            .map(|job| (job.state, job.outcome_pending, job.resume_pending, job.terminal_target));
         let advance=|same:&mut semio_framework_job::StepContext<'_>,grant|{
             let step=self.drive_store_replacement_original(same,grant,closing)?;
             let terminal=self.ingest.store_replacement_jobs.is_empty();
             let step=if !terminal{match step{PluginLifecycleStep::Complete(progress)=>PluginLifecycleStep::Progress(progress),step=>step}}else{step};
             Ok((step,terminal))
         };
-        let step = if composed {
+        if composed {
             original_composed_lifecycle_step(cx,loan,demand,advance)
         }else{
             semio_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,loan,demand,advance)
-        };
-        #[cfg(target_arch = "wasm32")]
-        {
-            use core::sync::atomic::{AtomicUsize, Ordering};
-            static EMPTY_REPLACEMENT_TURNS: AtomicUsize = AtomicUsize::new(0);
-            if matches!(&step, Ok(PluginLifecycleStep::Progress(progress)) if *progress == RetainedCloneProgress::default()) {
-                let turns = EMPTY_REPLACEMENT_TURNS.fetch_add(1, Ordering::Relaxed) + 1;
-                if matches!(turns, 8 | 64 | 128 | 256) {
-                    eprintln!("[DEBUG] Document replacement {:?}, demand {demand:?}, loan {loan:?}, remaining {:?}, empty turns {turns}", replacement, cx.retained_grant());
-                }
-            } else {
-                EMPTY_REPLACEMENT_TURNS.store(0, Ordering::Relaxed);
-            }
         }
-        step
     }
 
     fn drive_store_replacement_original(&mut self,cx:&mut semio_framework_job::StepContext<'_>, grant: RetainedCloneGrant, closing: bool) -> Result<PluginLifecycleStep,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
@@ -806,6 +789,7 @@ impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'stati
             }
         }
         if retiring { return MaintenanceTool::Idle; }
+        if awaits_publication && self.tools.original_emission_admission.is_none() && self.tools.original_emission_receipt.is_none() && self.tools.tool_operations.is_empty() { return MaintenanceTool::CloseEmissionConstruction; }
         if awaits_publication { return MaintenanceTool::AwaitingPublication; }
         if awaits_ack { return MaintenanceTool::Awaiting; }
         MaintenanceTool::Idle
@@ -816,6 +800,7 @@ impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'stati
             0 => match self.maintenance_tool_selection() {
                 MaintenanceTool::Worker(_, operation_id) => self.tools.tool_operations.get(operation_id).map(|operation| operation.worker_step_demands(body)).transpose()?,
                 MaintenanceTool::Awaiting | MaintenanceTool::AwaitingPublication => Some(RetirementDemand::default()),
+                MaintenanceTool::CloseEmissionConstruction => self.tools.original_emission_construction.as_ref().map(|admission| admission.close_demand()),
                 MaintenanceTool::Idle => None,
             },
             1 => {
@@ -949,6 +934,25 @@ impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'stati
         }
         let demand = self.document_archive_demands(false, stock.maximum_copy_bytes)?;
         Ok(semio_plugin_ownership::bounded_ownership::plugin_grant_funds(demand, stock))
+    }
+
+    /// 🔭️ Names every live archive load phase and store replacement state with the next quoted demand of each against the maintenance grant, for the live cleanup stall report.
+    pub fn document_load_diagnostic(&self, grant: RetainedCloneGrant) -> String {
+        let mut lines = Vec::new();
+        for index in 0..ARTIFACT_LIVE_OUTPUT_SLOTS {
+            if let Some((operation, load)) = self.ingest.document_archive_loads.entry(index) {
+                let demand = self.ingest.document_archive_load_demands(load, false, grant.maximum_copy_bytes);
+                let funded = demand.as_ref().ok().map(|demand| semio_plugin_ownership::bounded_ownership::plugin_grant_funds(*demand, grant));
+                lines.push(format!("archive op={operation} state={:?} phase={:?} target={:?} merge={} terminal={} awaits_merge={} replacement={:?} members={} demand={demand:?} funded={funded:?}", load.state, load.phase, load.terminal_target, load.merge, load.terminal(), load.awaits_merge(), load.replacement.map(|handle| handle.operation.0), load.archive.as_ref().map_or(0, |archive| archive.members.len())));
+            }
+            if let Some((operation, replacement)) = self.ingest.store_replacement_jobs.entry(index) {
+                let demand = store_replacement_unit_demands::<A, M>(replacement, false, grant.maximum_copy_bytes);
+                let funded = demand.as_ref().ok().map(|demand| semio_plugin_ownership::bounded_ownership::plugin_grant_funds(*demand, grant));
+                let worker = replacement.session.as_ref().map(|session| session.poll());
+                lines.push(format!("replacement op={operation} state={:?} refusal={:?} cancelled={} committed={} mounted_genesis={} member_ingress={} worker={worker:?} outcome_pending={} resume_pending={} terminal_target={:?} terminal_empty={} demand={demand:?} funded={funded:?}", replacement.state, replacement.refusal, replacement.cancelled(), replacement.committed, replacement.mounted_genesis.is_some(), replacement.member_ingress.is_some(), replacement.outcome_pending, replacement.resume_pending, replacement.terminal_target, replacement.terminal_is_empty()));
+            }
+        }
+        format!("grant={grant:?} archive_target={:?} replacement_target={:?} waits_for_host={} [{}]", self.document_archive_target(false), self.store_replacement_target(false), self.document_archive_waits_for_host(), lines.join("; "))
     }
 
     pub fn document_archive_waits_for_host(&self) -> bool {

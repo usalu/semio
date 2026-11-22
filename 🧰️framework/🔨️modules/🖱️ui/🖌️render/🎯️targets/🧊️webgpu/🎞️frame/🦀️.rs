@@ -6,7 +6,7 @@
 //! packet's report for exactly which structural decisions changed and why.
 
 use crate::buffers::{FrameBuffers, WorldGlobalsRing};
-use crate::gpu_uniforms::{BlurGlobals, World3dGlobals, World3dGpuInstance, WorldLineGpuVertex};
+use crate::gpu_uniforms::{world3d_point_extent, BlurGlobals, World3dGlobals, World3dGpuInstance, WorldLineGpuVertex, WorldPointGpuInstance};
 use crate::pipelines::Pipelines;
 use crate::resources::GpuResources;
 use crate::scene_target::{SceneColorTarget, SCENE_MIP_LEVELS};
@@ -172,6 +172,7 @@ struct PreparedWorldPass {
     opaque: Vec<(ui_render::MeshId, u32, u32)>,
     translucent: Vec<(ui_render::MeshId, u32, u32)>,
     line_range: (u32, u32),
+    point_range: (u32, u32),
 }
 
 /// 🌐️ Flattens every `packet.surface_passes` into upload-ready GPU arrays. **Decision, flagged in the
@@ -182,10 +183,11 @@ struct PreparedWorldPass {
 /// mask scoped to its own `viewport` rect (`mask_quads`), so 3D content is at least clipped to its own
 /// declared rectangle rather than whatever the last 2D batch's stencil state happened to leave behind.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-fn gather_world_passes(surface_passes: &[SurfacePass], width: f32, height: f32) -> (Vec<PreparedWorldPass>, Vec<World3dGpuInstance>, Vec<WorldLineGpuVertex>, Vec<QuadInstance>) {
+fn gather_world_passes(surface_passes: &[SurfacePass], width: f32, height: f32) -> (Vec<PreparedWorldPass>, Vec<World3dGpuInstance>, Vec<WorldLineGpuVertex>, Vec<WorldPointGpuInstance>, Vec<QuadInstance>) {
     let mut prepared = Vec::new();
     let mut instances = Vec::new();
     let mut lines = Vec::new();
+    let mut points = Vec::new();
     let mut mask_quads = Vec::new();
     let white = [1.0, 1.0, 1.0, 1.0];
     let full_screen = [0.0, 0.0, width.max(1.0), height.max(1.0)];
@@ -215,11 +217,17 @@ fn gather_world_passes(surface_passes: &[SurfacePass], width: f32, height: f32) 
             lines.extend(line_draw.vertices.iter().map(WorldLineGpuVertex::from));
         }
         let line_range = (line_start, lines.len() as u32 - line_start);
+        let point_start = points.len() as u32;
+        for point_draw in &pass.point_draws {
+            let extent = world3d_point_extent(point_draw.size, point_draw.size_attenuation, pass.viewport[2].max(1.0), pass.viewport[3].max(1.0));
+            points.extend(point_draw.vertices.iter().map(|vertex| WorldPointGpuInstance { position: vertex.position, color: vertex.color, extent }));
+        }
+        let point_range = (point_start, points.len() as u32 - point_start);
         mask_quads.push(QuadInstance::solid(full_screen, white));
         mask_quads.push(QuadInstance::solid(pass.viewport, white));
-        prepared.push(PreparedWorldPass { globals: World3dGlobals::from_pass(pass), viewport: pass.viewport, opaque, translucent, line_range });
+        prepared.push(PreparedWorldPass { globals: World3dGlobals::from_pass(pass), viewport: pass.viewport, opaque, translucent, line_range, point_range });
     }
-    (prepared, instances, lines, mask_quads)
+    (prepared, instances, lines, points, mask_quads)
 }
 
 #[allow(clippy::too_many_arguments, reason = "one arg per GPU resource this replay step needs")]
@@ -233,10 +241,10 @@ fn replay_world_passes(
     mask_buffer: Option<&wgpu::BufferSlice<'_>>,
     instance_buffer: Option<wgpu::BufferSlice<'_>>,
     line_buffer: Option<wgpu::BufferSlice<'_>>,
+    point_buffer: Option<wgpu::BufferSlice<'_>>,
     width: f32,
     height: f32,
 ) -> Result<(), BackendError> {
-    let Some(instance_buffer) = instance_buffer else { return Ok(()) };
     for (slot, scene) in prepared.iter().enumerate() {
         if let Some(mask_buffer) = mask_buffer {
             draw_silhouette_mask(pass, pipelines, resources, mask_buffer, slot as u32 * 2, 2, width, height);
@@ -245,8 +253,10 @@ fn replay_world_passes(
         pass.set_bind_group(0, world_ring.bind_group(), &[world_ring.offset_for_slot(slot as u32)]);
         pass.set_pipeline(&pipelines.world_opaque_pipeline);
         pass.set_bind_group(1, &pipelines.world_shadow_bind_group, &[]);
-        for (mesh, offset, count) in &scene.opaque {
-            draw_mesh_range(pass, resources, *mesh, instance_buffer, *offset, *count)?;
+        if let Some(instance_buffer) = instance_buffer {
+            for (mesh, offset, count) in &scene.opaque {
+                draw_mesh_range(pass, resources, *mesh, instance_buffer, *offset, *count)?;
+            }
         }
         if scene.line_range.1 > 0 {
             if let Some(line_buffer) = line_buffer {
@@ -257,7 +267,16 @@ fn replay_world_passes(
                 pass.draw(0..scene.line_range.1, 0..1);
             }
         }
-        if !scene.translucent.is_empty() {
+        if scene.point_range.1 > 0 {
+            if let Some(point_buffer) = point_buffer {
+                pass.set_pipeline(&pipelines.world_points_pipeline);
+                let stride = size_of::<WorldPointGpuInstance>() as u64;
+                let byte_offset = scene.point_range.0 as u64 * stride;
+                pass.set_vertex_buffer(0, point_buffer.slice(byte_offset..byte_offset + scene.point_range.1 as u64 * stride));
+                pass.draw(0..6, 0..scene.point_range.1);
+            }
+        }
+        if let (false, Some(instance_buffer)) = (scene.translucent.is_empty(), instance_buffer) {
             pass.set_pipeline(&pipelines.world_translucent_pipeline);
             pass.set_bind_group(0, world_ring.bind_group(), &[world_ring.offset_for_slot(slot as u32)]);
             for (mesh, offset, count) in &scene.translucent {
@@ -411,7 +430,7 @@ pub(crate) fn render(
     let vector_buffer = frame_buffers.vector_vertices.upload(device, queue, &packet.vector_vertices, wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST, "vector_vertices");
     let glass_buffer = frame_buffers.glass_instances.upload(device, queue, &packet.glass_instances, wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST, "glass_instances");
 
-    let (prepared_world, world_instances, world_lines, world_masks) = gather_world_passes(&packet.surface_passes, width, height);
+    let (prepared_world, world_instances, world_lines, world_points, world_masks) = gather_world_passes(&packet.surface_passes, width, height);
     if !prepared_world.is_empty() {
         world_ring.ensure_slots(device, &pipelines.world_globals_layout, prepared_world.len() as u32);
         let globals: Vec<World3dGlobals> = prepared_world.iter().map(|pass| pass.globals).collect();
@@ -419,6 +438,7 @@ pub(crate) fn render(
     }
     let world_instance_buffer = frame_buffers.world_instances.upload(device, queue, &world_instances, wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST, "world3d_instances");
     let world_line_buffer = frame_buffers.world_lines.upload(device, queue, &world_lines, wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST, "world3d_lines");
+    let world_point_buffer = frame_buffers.world_points.upload(device, queue, &world_points, wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST, "world3d_points");
     let world_mask_buffer = frame_buffers.world_masks.upload(device, queue, &world_masks, wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST, "world3d_masks");
 
     let scene_sample_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
@@ -454,7 +474,7 @@ pub(crate) fn render(
             multiview_mask: None,
         });
         replay_batches(&mut pass, pipelines, resources, quad_buffer.as_ref(), vector_buffer.as_ref(), glass_buffer.as_ref(), &scene_sample_bind_group, &buckets.backdrop_content, width, height)?;
-        replay_world_passes(&mut pass, pipelines, resources, world_ring, &prepared_world, world_mask_buffer.as_ref(), world_instance_buffer, world_line_buffer, width, height)?;
+        replay_world_passes(&mut pass, pipelines, resources, world_ring, &prepared_world, world_mask_buffer.as_ref(), world_instance_buffer, world_line_buffer, world_point_buffer, width, height)?;
     }
 
     if !buckets.backdrop_overlay.is_empty() {

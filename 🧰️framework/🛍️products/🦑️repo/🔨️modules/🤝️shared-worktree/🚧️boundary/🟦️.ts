@@ -20,7 +20,7 @@ type Rule=Readonly<{index:number;negate:boolean;dirOnly:boolean;anchored:boolean
 
 const POSIX:Readonly<Record<string,string>>={alpha:"A-Za-z",digit:"0-9",alnum:"A-Za-z0-9",upper:"A-Z",lower:"a-z",space:"\\t\\n\\v\\f\\r ",blank:"\\t ",punct:"!-/:-@\\[-`{-~",xdigit:"0-9A-Fa-f",cntrl:"\\u0000-\\u001f\\u007f",print:" -~",graph:"!-~",word:"A-Za-z0-9_"};
 const RESERVED_START=/^[cpanl]/iu;
-const reservedName=(name:string):boolean=>RESERVED_START.test(name)&&RESERVED.test(name.split(".")[0].replace(/ +$/u,"").toUpperCase());
+const reservedName=(name:string):boolean=>RESERVED_START.test(name)&&RESERVED.test((name.split(".")[0]??"").replace(/ +$/u,"").toUpperCase());
 const ILLEGAL=/[<>:"|?*\\\u0000-\u001f\u007f-\u009f]/u;
 const RESERVED=/^(?:CON|PRN|AUX|NUL|CONIN\$|CONOUT\$|CLOCK\$|COM[1-9\u00b9\u00b2\u00b3]|LPT[1-9\u00b9\u00b2\u00b3])$/u;
 const LIMIT=20000;
@@ -60,16 +60,16 @@ function parseClass(chars:readonly string[],open:number):Readonly<{source:string
  let j=open+1,negate=false,items="",first=true;
  if(chars[j]==="!"||chars[j]==="^"){negate=true;j++;}
  for(;j<chars.length;first=false){
-  let char=chars[j];
+  let char=chars[j]??"";
   if(char==="]"&&!first)return {source:items===""&&!negate?"(?!)":`[${negate?"^/":""}${items}]`,next:j+1};
   if(char==="["&&chars[j+1]===":"){
    const close=chars.findIndex((c,k)=>k>j+1&&c===":"&&chars[k+1]==="]"),name=close<0?"":chars.slice(j+2,close).join("");
    if(Object.hasOwn(POSIX,name)){items+=POSIX[name];j=close+2;continue;}
   }
-  if(char==="\\"&&j+1<chars.length)char=chars[++j];
+  if(char==="\\"&&j+1<chars.length)char=chars[++j]??"";
   if(chars[j+1]==="-"&&j+2<chars.length&&chars[j+2]!=="]"){
-   let high=chars[j+2],skip=3;
-   if(high==="\\"&&j+3<chars.length){high=chars[j+3];skip=4;}
+   let high=chars[j+2]??"",skip=3;
+   if(high==="\\"&&j+3<chars.length){high=chars[j+3]??"";skip=4;}
    if(code(char)<=code(high))items+=`${escapeChar(char)}-${escapeChar(high)}`;
    j+=skip;continue;
   }
@@ -82,7 +82,7 @@ function translate(glob:string):Readonly<{source:string;literal:string|undefined
  const chars=Array.from(glob);
  let source="",literal="",plain=true,i=0;
  while(i<chars.length){
-  const char=chars[i];
+  const char=chars[i]??"";
   if(char==="*"){
    let end=i;while(chars[end+1]==="*")end++;
    const next=chars[end+1];plain=false;
@@ -97,7 +97,7 @@ function translate(glob:string):Readonly<{source:string;literal:string|undefined
    const parsed=parseClass(chars,i);
    if(parsed){source+=parsed.source;plain=false;i=parsed.next;continue;}
   }
-  const literalChar=char==="\\"&&i+1<chars.length?chars[++i]:char;
+  const literalChar=char==="\\"&&i+1<chars.length?chars[++i]??"":char;
   source+=escapeChar(literalChar);literal+=literalChar;i++;
  }
  return {source,literal:plain?literal:undefined};
@@ -136,14 +136,15 @@ export function compileIgnoreV1(gitignoreText:string,options:Readonly<{caseInsen
   if(known!==undefined)return known;
   let best=-1;
   for(const rule of literals.get(insensitive?foldNameV1(name):name)??[])if(isDirectory||!rule.dirOnly)best=Math.max(best,rule.index);
-  for(let k=wild.length-1;k>=0&&wild[k].index>best;k--){const rule=wild[k];if((isDirectory||!rule.dirOnly)&&rule.expression.test(name)){best=rule.index;break;}}
+  for(let k=wild.length-1;k>=0;k--){const rule=wild[k];if(rule===undefined||rule.index<=best)break;if((isDirectory||!rule.dirOnly)&&rule.expression.test(name)){best=rule.index;break;}}
   if(names.size>LIMIT)names.clear();
   names.set(key,best);return best;
  };
  const decide=(path:string,isDirectory:boolean):boolean=>{
   let best=byName(path.slice(path.lastIndexOf("/")+1),isDirectory);
-  for(let k=anchored.length-1;k>=0&&anchored[k].index>best;k--){const rule=anchored[k];if((isDirectory||!rule.dirOnly)&&rule.expression.test(path)){best=rule.index;break;}}
-  return best<0?false:!rules[best].negate;
+  for(let k=anchored.length-1;k>=0;k--){const rule=anchored[k];if(rule===undefined||rule.index<=best)break;if((isDirectory||!rule.dirOnly)&&rule.expression.test(path)){best=rule.index;break;}}
+  const decided=rules[best];
+  return decided===undefined?false:!decided.negate;
  };
  const ignores=(path:string,isDirectory:boolean):boolean=>{
   const clean=path.endsWith("/")?path.slice(0,-1):path;

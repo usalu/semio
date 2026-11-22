@@ -1424,3 +1424,33 @@ test("every group declares the ports of its services and the network policy, lin
  const python=testPythonV1();
  if(python!==undefined){const run=spawnSync(python,["-I",join(import.meta.dirname,"🐍️.py"),"check"],{encoding:"utf8"});expect(run.status,run.stdout+run.stderr).toBe(0);}
 });
+
+test("every service definition declares its scheduling class: ProcessType on macOS (plutil reads it back), Nice and scheduling policy on Linux, Priority in the Windows task",()=>{
+ const group=fixture.topology.groups[0]!.id,expected:Record<string,string>={interactive:"Interactive",standard:"Standard",background:"Background"};
+ const mac=workerPartsV1(topology,group,"macos"),linux=workerPartsV1(topology,group,"linux"),windows=workerPartsV1(topology,group,"windows");
+ expect(mac["definition"]).toContain("<key>ProcessType</key><string>Interactive</string>");
+ expect(mac["definition"]).not.toContain("LowPriorityIO");
+ expect(mac["compact-definition"]).toContain("<key>ProcessType</key><string>Background</string>");
+ expect(mac["compact-definition"]).toContain("<key>LowPriorityIO</key><true/>");
+ expect(mac["compact-definition"]).toContain("<key>Nice</key><integer>10</integer>");
+ expect(linux["definition"]).toContain("Nice=-5\nCPUSchedulingPolicy=other\nIOSchedulingClass=best-effort\nIOSchedulingPriority=2");
+ expect(linux["compact-definition"]).toContain("Nice=10\nCPUSchedulingPolicy=idle\nIOSchedulingClass=idle");
+ expect(windows["definition"]).toContain("<Priority>3</Priority>");
+ expect(windows["compact-definition"]).toContain("<Priority>8</Priority>");
+ expect(windows["mount-definition"]).not.toContain("<Priority>");
+ for(const id of ids)for(const platform of PLATFORMS){
+  let parts:Readonly<Record<string,string>>;
+  try{parts=serverPartsV1(topology,id);}catch{continue;}
+  if(platform==="linux"&&parts["cache-unit"]?.includes("[Service]")){expect(parts["cache-unit"]).toContain("Nice=-5");expect(parts["relay-unit"]).toContain("Nice=0");}
+  if(parts["cache-unit"]?.includes("<plist")){expect(parts["cache-unit"]).toContain("<key>ProcessType</key><string>Interactive</string>");expect(parts["relay-unit"]).toContain("<key>ProcessType</key><string>Standard</string>");}
+  if(parts["cache-unit"]?.startsWith("<?xml version=\"1.0\" encoding=\"UTF-16\"")){expect(parts["cache-unit"]).toContain("<Priority>3</Priority>");expect(parts["relay-unit"]).toContain("<Priority>5</Priority>");}
+ }
+ if(process.platform==="darwin"){
+  for(const [name,body] of [["definition",mac["definition"]!],["compact-definition",mac["compact-definition"]!]] as const){
+   const file=join(mkdtempSync(join(tmpdir(),"semio-e27-")),"agent.plist");writeFileSync(file,body.replaceAll("__WORKER_HOME__","/Users/test").replaceAll("__WORKER_USER__","test"));
+   expect(spawnSync("plutil",["-lint",file]).status).toBe(0);
+   const read=spawnSync("plutil",["-extract","ProcessType","raw",file],{encoding:"utf8"});
+   expect(read.stdout.trim()).toBe(expected[name==="definition"?"interactive":"background"]!);
+  }
+ }
+});

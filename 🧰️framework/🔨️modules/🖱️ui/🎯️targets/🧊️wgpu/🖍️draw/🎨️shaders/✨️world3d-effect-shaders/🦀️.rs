@@ -71,6 +71,86 @@ return vec4<f32>(color, in.params.y);
 }
 "#;
 
+/// ☁️ The per-instance `extent` of one point-cloud sprite for [`WORLD3D_POINTS_SHADER`]: the half-side of the quad in clip units and whether it scales with `w`. three's `PointsMaterial` makes a point `size * height / (2 * depth)` pixels wide when `sizeAttenuation` is on (a depth-independent clip half-side of `[size * height / (2 * width), size / 2]`) and `size` pixels otherwise (`[size / width, size / height]` times `w`).
+pub fn world3d_point_extent(size: f32, size_attenuation: bool, viewport_width: f32, viewport_height: f32) -> [f32; 4] {
+    if size_attenuation {
+        [size * viewport_height / (2.0 * viewport_width), size / 2.0, 0.0, 0.0]
+    } else {
+        [size / viewport_width, size / viewport_height, 1.0, 0.0]
+    }
+}
+
+pub const WORLD3D_POINTS_SHADER: &str = r#"
+struct Globals {
+view_proj: mat4x4<f32>,
+shadow_view_proj: mat4x4<f32>,
+camera_position: vec4<f32>,
+light_dir: vec4<f32>,
+ambient: vec4<f32>,
+sun: vec4<f32>,
+material: vec4<f32>,
+material_emissive: vec4<f32>,
+shadow: vec4<f32>,
+}
+
+@group(0) @binding(0) var<uniform> globals: Globals;
+
+struct PointInstance {
+@location(0) position: vec3<f32>,
+@location(1) color: vec4<f32>,
+@location(2) extent: vec4<f32>,
+}
+
+struct VertexOutput {
+@builtin(position) clip_position: vec4<f32>,
+@location(0) color: vec4<f32>,
+}
+
+@vertex
+fn vs_main(@builtin(vertex_index) corner_index: u32, point: PointInstance) -> VertexOutput {
+var corners = array<vec2<f32>, 6>(vec2<f32>(-1.0, -1.0), vec2<f32>(1.0, -1.0), vec2<f32>(1.0, 1.0), vec2<f32>(-1.0, -1.0), vec2<f32>(1.0, 1.0), vec2<f32>(-1.0, 1.0));
+var out: VertexOutput;
+let center = globals.view_proj * vec4<f32>(point.position, 1.0);
+let reach = mix(1.0, center.w, point.extent.z);
+out.clip_position = vec4<f32>(center.xy + corners[corner_index] * point.extent.xy * reach, center.z, center.w);
+out.color = point.color;
+return out;
+}
+
+fn world3d_rrt_and_odt_fit(value: vec3<f32>) -> vec3<f32> {
+let a = value * (value + vec3<f32>(0.0245786)) - vec3<f32>(0.000090537);
+let b = value * (vec3<f32>(0.983729) * value + vec3<f32>(0.432951)) + vec3<f32>(0.238081);
+return a / b;
+}
+
+fn world3d_output_transform(linear_rgb: vec3<f32>) -> vec3<f32> {
+let input_matrix = mat3x3<f32>(vec3<f32>(0.59719, 0.07600, 0.02840), vec3<f32>(0.35458, 0.90834, 0.13383), vec3<f32>(0.04823, 0.01566, 0.83777));
+let output_matrix = mat3x3<f32>(vec3<f32>(1.60475, -0.10208, -0.00327), vec3<f32>(-0.53108, 1.10813, -0.07276), vec3<f32>(-0.07367, -0.00605, 1.07602));
+return clamp(output_matrix * world3d_rrt_and_odt_fit(input_matrix * (linear_rgb / 0.6)), vec3<f32>(0.0), vec3<f32>(1.0));
+}
+
+fn world3d_linear_to_srgb(linear_rgb: vec3<f32>) -> vec3<f32> {
+let high = pow(linear_rgb, vec3<f32>(0.41666)) * 1.055 - vec3<f32>(0.055);
+let low = linear_rgb * 12.92;
+return select(high, low, linear_rgb <= vec3<f32>(0.0031308));
+}
+
+fn world3d_attachment_output(linear_rgb: vec3<f32>) -> vec3<f32> {
+let display_linear = world3d_output_transform(linear_rgb);
+return mix(display_linear, world3d_linear_to_srgb(display_linear), clamp(globals.shadow.w, 0.0, 1.0));
+}
+
+fn world3d_svg_attachment_output(linear_rgb: vec3<f32>) -> vec3<f32> {
+return world3d_linear_to_srgb(clamp(linear_rgb, vec3<f32>(0.0), vec3<f32>(1.0)));
+}
+
+@fragment
+fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
+let color = select(world3d_attachment_output(in.color.rgb), world3d_svg_attachment_output(in.color.rgb), globals.shadow.y > 0.5);
+return vec4<f32>(color, in.color.a);
+}
+"#;
+
 pub const WORLD3D_LINES_SHADER: &str = r#"
 struct Globals {
 view_proj: mat4x4<f32>,
@@ -370,6 +450,44 @@ return out;
 @fragment
 fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
 return textureSampleLevel(scene_tex, scene_samp, in.uv, 0.0);
+}
+"#;
+
+/// 🫥️ Composites an offscreen group (premultiplied colour and coverage) onto the frame at the group alpha: CSS `opacity` over a rendered group.
+pub const GROUP_COMPOSITE_SHADER: &str = r#"
+struct GroupGlobals {
+alpha: vec4<f32>,
+}
+
+@group(0) @binding(0) var group_tex: texture_2d<f32>;
+@group(0) @binding(1) var group_samp: sampler;
+@group(0) @binding(2) var<uniform> group_globals: GroupGlobals;
+
+struct VertexOutput {
+@builtin(position) clip_position: vec4<f32>,
+@location(0) uv: vec2<f32>,
+}
+
+@vertex
+fn vs_main(@builtin(vertex_index) vid: u32) -> VertexOutput {
+var positions = array<vec2<f32>, 6>(
+    vec2<f32>(-1.0, -1.0), vec2<f32>(1.0, -1.0), vec2<f32>(-1.0, 1.0),
+    vec2<f32>(-1.0, 1.0), vec2<f32>(1.0, -1.0), vec2<f32>(1.0, 1.0)
+);
+var uvs = array<vec2<f32>, 6>(
+    vec2<f32>(0.0, 1.0), vec2<f32>(1.0, 1.0), vec2<f32>(0.0, 0.0),
+    vec2<f32>(0.0, 0.0), vec2<f32>(1.0, 1.0), vec2<f32>(1.0, 0.0)
+);
+var out: VertexOutput;
+let pos = positions[vid];
+out.clip_position = vec4<f32>(pos, 0.0, 1.0);
+out.uv = uvs[vid];
+return out;
+}
+
+@fragment
+fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
+return textureSampleLevel(group_tex, group_samp, in.uv, 0.0) * group_globals.alpha.x;
 }
 "#;
 

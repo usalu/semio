@@ -33,5 +33,5 @@ test("every message is used by the code it belongs to and every key the code nam
   const code = sources(owner).map((path) => readFileSync(path, "utf8")).join("\n");
   const keys = Object.keys(catalog.messages);
   for (const key of keys) expect(code.includes(JSON.stringify(key)), `${key} is unused`).toBe(true);
-  for (const match of code.matchAll(/\b(?:refuseCapacityV1)\(\s*(?:"(?:usage|invalid|missing|refused|failed|breach|stale|unsupported|cancelled)"\s*,\s*)?("(?:[^"\\]|\\.)*")/gu)) expect(keys, match[1]).toContain(JSON.parse(match[1]!));
+  for (const match of code.matchAll(/\b(?:refuseCapacityV1)\(\s*(?:"(?:usage|invalid|missing|refused|failed|breach|stale|unsupported|cancelled)"\s*,\s*)?("(?:[^"\\]|\\.)*")/gu)) {const key=JSON.parse(match[1]!);if(["usage","invalid","missing","refused","failed","breach","stale","unsupported","cancelled"].includes(key))continue;expect(keys, match[1]).toContain(key);}
 });

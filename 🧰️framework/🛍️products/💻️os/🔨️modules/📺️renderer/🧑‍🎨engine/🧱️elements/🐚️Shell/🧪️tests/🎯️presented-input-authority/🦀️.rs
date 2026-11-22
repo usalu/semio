@@ -232,8 +232,8 @@ fn paint_retained_button_candidate(shell: &mut ShellState, surface: &str, docume
 
 fn click(shell: &mut ShellState, control: &ControlFixture, input: &mut InputState<ActionDescriptor>, theme: &Theme) {
     let point = center(control);
-    semio_framework_async::block_on(ChromeViewCtx::of(&mut shell).handle_pointer_button(point.0, point.1, true, 0, input, theme)).expect("retained input press");
-    semio_framework_async::block_on(ChromeViewCtx::of(&mut shell).handle_pointer_button(point.0, point.1, false, 0, input, theme)).expect("retained input release");
+    semio_framework_async::block_on(ChromeViewCtx::of(shell).handle_pointer_button(point.0, point.1, true, 0, input, theme)).expect("retained input press");
+    semio_framework_async::block_on(ChromeViewCtx::of(shell).handle_pointer_button(point.0, point.1, false, 0, input, theme)).expect("retained input release");
 }
 
 fn admitted_bindings(input: &mut InputState<ActionDescriptor>) -> Vec<String> {

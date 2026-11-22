@@ -306,22 +306,32 @@
           "additionalProperties": false,
           "required": [
             "ceilingBasisPoints",
-            "activeMegabytesPerSecond",
-            "outMegabytesPerSecond"
+            "activeBasisPointsPerSecond",
+            "outBasisPointsPerSecond",
+            "shortBasisPoints"
           ],
           "properties": {
             "ceilingBasisPoints": {
               "type": "integer",
               "minimum": 0,
-              "maximum": 10000
+              "maximum": 10000,
+              "description": "Occupied swap above this share of the host memory is crowded. Occupancy alone never stops admission: a host that has run for days keeps cold pages in swap."
             },
-            "activeMegabytesPerSecond": {
+            "activeBasisPointsPerSecond": {
               "type": "number",
-              "minimum": 0
+              "minimum": 0,
+              "description": "Swap traffic (pages swapped in plus out) per second, as a share of the host memory in basis points, from which swap counts as worked. 0.6 is 1 MB/s on a 16 GB host."
             },
-            "outMegabytesPerSecond": {
+            "outBasisPointsPerSecond": {
               "type": "number",
-              "minimum": 0
+              "minimum": 0,
+              "description": "Swap traffic per second, as a share of the host memory in basis points, above which the host waits whatever its free memory is. 40 is 64 MB/s on a 16 GB host."
+            },
+            "shortBasisPoints": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 10000,
+              "description": "Crowded and worked swap only stops admission while the memory the host can still give out is below this share of its memory: swap traffic with plenty of reclaimable memory is the host tidying up, not a shortage."
             }
           }
         },
@@ -486,6 +496,23 @@
               "type": "integer",
               "minimum": 0,
               "maximum": 5000
+            },
+            "deadlineInteractiveMilliseconds": {
+              "type": "integer",
+              "minimum": 1000,
+              "maximum": 86400000,
+              "description": "How long an interactive request waits for memory before the deadline rules apply: the shrinkable minimum is admitted when the free memory above the floor covers it (also under a soft or hard stop), and the wait keeps naming the holders."
+            },
+            "deadlineBatchMilliseconds": {
+              "type": "integer",
+              "minimum": 1000,
+              "maximum": 86400000,
+              "description": "The same deadline for a batch request, which may wait longer than an interactive one."            },
+            "starvedMilliseconds": {
+              "type": "integer",
+              "minimum": 1000,
+              "maximum": 86400000,
+              "description": "How long a shrinkable request waits while nothing of ours runs and not even its minimum is free before it is refused as starved."
             }
           }
         },
@@ -1144,6 +1171,9 @@
         "blockerHost",
         "blockerStates",
         "shrunk",
+        "shrunkStopped",
+        "pastDeadline",
+        "blockerSelf",
         "lent",
         "waitingShort"
       ],
@@ -1284,7 +1314,8 @@
             "platformUnsupported",
             "quietUpgradeRequired",
             "memoryNeverFits",
-            "memoryStarved"
+            "memoryStarved",
+            "memoryWaitedOut"
           ],
           "properties": {
             "planRequired": {
@@ -1324,6 +1355,9 @@
               "type": "string"
             },
             "memoryStarved": {
+              "type": "string"
+            },
+            "memoryWaitedOut": {
               "type": "string"
             }
           }
@@ -1419,6 +1453,15 @@
         "shrunk": {
           "type": "string"
         },
+        "shrunkStopped": {
+          "type": "string"
+        },
+        "pastDeadline": {
+          "type": "string"
+        },
+        "blockerSelf": {
+          "type": "string"
+        },
         "lent": {
           "type": "string"
         },
@@ -1450,7 +1493,7 @@
           "grantLent": "[capacity]   lent {id} {operation}: its process only waits in a queue, so the {reserved} MB reserved and {cpu} core(s) count for nobody ({observed} MB observed, pid {pid}, since {seconds}s)",
           "reasons": {
             "memory": "not enough free memory",
-            "swap": "swap use is above its ceiling",
+            "swap": "swap is crowded and worked while memory is short",
             "swap-activity": "the host is swapping out too fast",
             "pressure-critical": "memory pressure is critical",
             "pressure-warn": "memory pressure is raised",
@@ -1477,7 +1520,8 @@
             "inheritedIdentifier": "Closed inherited host capacity grant identifier required",
             "quietUpgradeRequired": "a quiet request needs the full request it may grow into, under the same id",
             "memoryNeverFits": "{operation} needs at least {minimum} MB of memory, but this machine has {total} MB of which {floor} MB stay reserved, so at most {capacity} MB can ever be given out. It cannot run here: use a machine with more memory (at least {needed} MB), or take the result from the fleet cache instead of computing it here.",
-            "memoryStarved": "{operation} needs at least {minimum} MB of free memory, but after {seconds} s only {spare} MB are free above the {floor} MB floor of this machine ({total} MB) and nothing of ours is running, so waiting longer cannot help. Close other applications (or stop the resident graph service with `repo service host stop`, which can hold more than 1 GB) until {minimum} MB are free, then run the command again."
+            "memoryStarved": "{operation} needs at least {minimum} MB of free memory, but after {seconds} s only {spare} MB are free above the {floor} MB floor of this machine ({total} MB) and nothing of ours is running, so waiting longer cannot help. Close other applications (or stop the resident graph service with `repo service host stop`, which can hold more than 1 GB) until {minimum} MB are free, then run the command again.",
+            "memoryWaitedOut": "{operation} needs at least {minimum} MB of free memory, but after {seconds} s only {spare} MB are free above the {floor} MB floor of this machine ({total} MB); it is held by {holders}. The wait ends here instead of going on for ever: run the command again once those finish, or stop them."
           },
           "handover": "[capacity] keeping the {operation} grant ({jobs} job(s), {reserved} MB reserved) for the command that replaces this one: it does not queue again",
           "adopted": "[capacity] took over the {operation} grant of the command this one replaces ({jobs} job(s), {reserved} MB reserved): no queue",
@@ -1507,6 +1551,9 @@
           "reducedGrows": "[capacity] admitted {operation} with {jobs} of {preferred} job(s): the host cannot carry more right now; the run grows to more jobs once memory frees up",
           "grown": "[capacity] {operation}: grown from {from} to {jobs} of {preferred} job(s) after {seconds}s, reservation {before} MB -> {reserved} MB: memory freed up and nothing of ours waits ({available} MB available, {floor} MB floor); work that starts from now on uses the new jobs",
           "shrunk": "[capacity] admitted {operation} with {reserved} of {wanted} MB: only {spare} MB are free above the {floor} MB floor right now, and {minimum} MB are enough to start",
+          "shrunkStopped": "[capacity] admitted {operation} with {reserved} of {wanted} MB after waiting {seconds}s (limit {limit}s): {reason}, but {spare} MB are free above the {floor} MB floor and {minimum} MB are enough to start",
+          "pastDeadline": "; past the wait limit of {limit}s: {holders}",
+          "blockerSelf": "this very run ({megabytes} MB, its own grant)",
           "lent": "[capacity] admitted {operation} inside the reservation of {holder}: {jobs} job(s), {reserved} MB lent from its unused part, the parent keeps what it needs",
           "waitingShort": ", short by {megabytes} MB"
         },
@@ -1531,7 +1578,7 @@
           "grantLent": "[capacity]   verliehen {id} {operation}: sein Prozess wartet nur in einer Schlange, darum zählen die {reserved} MB reserviert und {cpu} Kern(e) für niemanden ({observed} MB beobachtet, pid {pid}, seit {seconds} s)",
           "reasons": {
             "memory": "nicht genug freier Speicher",
-            "swap": "die Auslagerung liegt über ihrer Obergrenze",
+            "swap": "die Auslagerung ist voll und wird bewegt, während der Speicher knapp ist",
             "swap-activity": "der Rechner lagert zu schnell aus",
             "pressure-critical": "der Speicherdruck ist kritisch",
             "pressure-warn": "der Speicherdruck ist erhöht",
@@ -1558,7 +1605,8 @@
             "inheritedIdentifier": "Eine gültige Kennung der geerbten Rechner-Kapazitätszusage ist erforderlich",
             "quietUpgradeRequired": "eine ruhige Anfrage braucht die volle Anfrage, in die sie wachsen darf, unter derselben Kennung",
             "memoryNeverFits": "{operation} braucht mindestens {minimum} MB Speicher, dieser Rechner hat aber {total} MB, von denen {floor} MB reserviert bleiben, also können höchstens {capacity} MB vergeben werden. Es kann hier nicht laufen: einen Rechner mit mehr Speicher verwenden (mindestens {needed} MB) oder das Ergebnis aus dem Flottencache holen, statt es hier zu berechnen.",
-            "memoryStarved": "{operation} braucht mindestens {minimum} MB freien Speicher, aber nach {seconds} s sind nur {spare} MB über der Untergrenze von {floor} MB dieses Rechners ({total} MB) frei, und nichts von uns läuft; längeres Warten hilft nicht. Andere Anwendungen schließen (oder den residenten Graphdienst mit `repo service host stop` beenden, er kann über 1 GB halten), bis {minimum} MB frei sind, und den Befehl dann erneut ausführen."
+            "memoryStarved": "{operation} braucht mindestens {minimum} MB freien Speicher, aber nach {seconds} s sind nur {spare} MB über der Untergrenze von {floor} MB dieses Rechners ({total} MB) frei, und nichts von uns läuft; längeres Warten hilft nicht. Andere Anwendungen schließen (oder den residenten Graphdienst mit `repo service host stop` beenden, er kann über 1 GB halten), bis {minimum} MB frei sind, und den Befehl dann erneut ausführen.",
+            "memoryWaitedOut": "{operation} braucht mindestens {minimum} MB freien Speicher, aber nach {seconds} s sind nur {spare} MB über der Untergrenze von {floor} MB dieses Rechners ({total} MB) frei; belegt von {holders}. Das Warten endet hier, statt ewig weiterzugehen: den Befehl erneut ausführen, sobald diese fertig sind, oder sie beenden."
           },
           "handover": "[capacity] die Zusage für {operation} ({jobs} Job(s), {reserved} MB reserviert) bleibt für den Befehl, der diesen ersetzt: er reiht sich nicht erneut ein",
           "adopted": "[capacity] Zusage für {operation} des ersetzten Befehls übernommen ({jobs} Job(s), {reserved} MB reserviert): keine Warteschlange",
@@ -1588,6 +1636,9 @@
           "reducedGrows": "[capacity] {operation} mit {jobs} von {preferred} Job(s) zugelassen: der Rechner trägt gerade nicht mehr; der Lauf wächst auf mehr Jobs, sobald Speicher frei wird",
           "grown": "[capacity] {operation}: nach {seconds} s von {from} auf {jobs} von {preferred} Job(s) gewachsen, Reservierung {before} MB -> {reserved} MB: Speicher ist frei geworden und nichts von uns wartet ({available} MB verfügbar, Untergrenze {floor} MB); Arbeit, die ab jetzt startet, nutzt die neuen Jobs",
           "shrunk": "[capacity] {operation} mit {reserved} von {wanted} MB zugelassen: gerade sind nur {spare} MB über der Untergrenze von {floor} MB frei, und {minimum} MB genügen zum Start",
+          "shrunkStopped": "[capacity] {operation} mit {reserved} von {wanted} MB nach {seconds}s Wartezeit (Grenze {limit}s) zugelassen: {reason}, aber {spare} MB über der Untergrenze von {floor} MB sind frei und {minimum} MB genügen zum Start",
+          "pastDeadline": "; über der Wartegrenze von {limit}s: {holders}",
+          "blockerSelf": "dieser Lauf selbst ({megabytes} MB, seine eigene Zusage)",
           "lent": "[capacity] {operation} innerhalb der Reservierung von {holder} zugelassen: {jobs} Job(s), {reserved} MB aus dem ungenutzten Teil geliehen, der Elternprozess behält, was er braucht",
           "waitingShort": ", es fehlen {megabytes} MB"
         }
@@ -1870,6 +1921,24 @@
           "type": "integer",
           "minimum": 1,
           "maximum": 10000
+        },
+        "maximumPhaseMegabytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1048576,
+          "description": "The most the learned size of the assembly or plan phase may be: both phases only prepare the run and read a served graph, so a peak above this (a thrashing host counts shared and compressed pages many times) is no evidence of what they need and never sets a reservation. The graph build (rebuild) has its own bounds."
+        },
+        "rebuildMinimumMegabytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1048576,
+          "description": "The least a graph rebuild runs with: its farm at width one. A rebuild booking is shrinkable down to this and never refused for memory above it."
+        },
+        "rebuildQuantileBasisPoints": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000,
+          "description": "The quantile of the recent rebuild readings a learned rebuild size follows (the median by default), so one cold run cannot pin later requests."
         },
         "maximumRebuildSlots": {
           "type": "integer",

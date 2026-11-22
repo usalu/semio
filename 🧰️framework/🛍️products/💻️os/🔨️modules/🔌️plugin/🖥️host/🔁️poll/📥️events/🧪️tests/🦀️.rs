@@ -32,7 +32,7 @@ fn dedicated_poll_pages_match_the_shared_wire_without_allocating_projections() {
 }
 #[test]
 fn decimal_scalar_sink_waits_for_whole_bounded_token_before_copy(){
- let events=[Event::InstanceOpen{request:ActorInstanceOpenRequest{activation_generation:u64::MAX,instance_id:0,request_sequence:1},app_id:semio_framework_kernel_identity::AppInstanceId("app".into()),actor:"editor".into(),config:vec![],assets:vec![],capabilities:vec![BrokerCapabilityGrant{token:semio_framework_kernel_identity::CapabilityToken(u128::MAX),id:semio_framework_kernel_identity::CapabilityId("test".into()),scope:"all".into(),expires_ms:Some(u64::MAX)}],quotas:QuotaSchema::default()}];
+ let events=[Event::InstanceOpen{purpose: semio_framework_kernel::ActorInstanceOpenPurpose::Ordinary,request:ActorInstanceOpenRequest{activation_generation:u64::MAX,instance_id:0,request_sequence:1},app_id:semio_framework_kernel_identity::AppInstanceId("app".into()),actor:"editor".into(),config:vec![],assets:vec![],capabilities:vec![BrokerCapabilityGrant{token:semio_framework_kernel_identity::CapabilityToken(u128::MAX),id:semio_framework_kernel_identity::CapabilityId("test".into()),scope:"all".into(),expires_ms:Some(u64::MAX)}],quotas:QuotaSchema::default()}];
  let source=EventJsonSource(&events);let mut cursor=semio_framework_pack_json::JsonBorrowedSinkCursor::empty(32).unwrap();let mut observer=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(65536,&mut observer);let mut output=Vec::new();
  for _ in 0..65536{if cursor.is_complete(){break}let mut bytes=[0;64];let d=cursor.next_demands(bytes.len(),4096).unwrap();let g=semio_framework_value::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth};let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.step(&source,&mut bytes,g,1,&mut control));let step=step.result.unwrap();assert!(step.progress.fits(g));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress.retained_capacity_bytes,step.progress.released_bytes));output.extend_from_slice(&bytes[..step.written_bytes]);}
  assert!(cursor.is_complete());assert_eq!(serde_json::from_slice::<serde_json::Value>(&output).unwrap(),serde_json::to_value(&events).unwrap());
@@ -57,6 +57,13 @@ fn decimal_scalar_sink_waits_for_whole_bounded_token_before_copy(){
 #[test]
 fn borrowed_poll_limits_are_request_data_without_authenticated_scalar_identity(){
  let events=[Event::Wake];let budget=semio_framework_kernel_identity::Budget::original(semio_framework_value::RetainedCloneGrant{maximum_items:9,maximum_copy_bytes:17,maximum_capacity_bytes:31,maximum_release_bytes:63,maximum_depth:7},100,1,1,2,3,4);
- let limits=PollRequestLimits{retained_policy:budget.retained_policy,work_fuel:budget.work_fuel,fuel:budget.fuel,deadline_us:budget.deadline_us,max_effects:budget.max_effects,max_patch_bytes:budget.max_patch_bytes,max_frames:budget.max_frames};let source=PollJsonSource{events:&events,limits:&limits};let actual=oracle(&source,&mut Vec::new());let mut expected=serde_json::to_value(budget).unwrap();expected.as_object_mut().unwrap().remove("retained");assert_eq!(actual,serde_json::json!({"events":["wake"],"command_page":null,"cold_pair_page":null,"limits":expected}));assert!(actual["limits"].get("retained").is_none());
+ let request=PollRequestLimits{retained_policy:budget.retained_policy,work_fuel:budget.work_fuel,fuel:budget.fuel,deadline_us:budget.deadline_us,max_effects:budget.max_effects,max_patch_bytes:budget.max_patch_bytes,max_frames:budget.max_frames};
+ let limits=OwnedCorePollLimits::try_from(request).unwrap();
+ let source=PollJsonSource{events:&events,limits:&limits};
+ let expected=serde_json::json!([9,17,31,63,7,100,100,1001,2,3,4]);
+ assert_eq!(serde_json::to_value(limits).unwrap(),expected);
+ assert_eq!(oracle(&source,&mut Vec::new()),serde_json::json!({"events":["wake"],"command_page":null,"cold_pair_page":null,"limits":expected}));
+ assert!(source.object_key_at_path(&[3],0).is_err());
+ assert!(source.node_at_path(&[3,OwnedCorePollLimits::ARITY]).is_err());
  let invalid=[Event::InstanceClose(ActorInstanceCloseRequest{lifetime:ActorInstanceLifetime{activation_generation:0,instance_id:0,guest_lifetime:1},request_sequence:1})];assert!(EventJsonSource(&invalid).node_at_path(&[0,0]).is_err());
 }

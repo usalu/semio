@@ -34,6 +34,12 @@ function effectDispatchScope(baseSession: ActiveSession): HostEffectDispatchScop
   };
 }
 
+/** 🎛️ Resolves the declared app command or exact window action a host callback should invoke. */
+export function ownedEffectInvocationV1(baseSession: ActiveSession, action: string, args?: Record<string, unknown>) {
+  const commands = (baseSession.app.commands ?? []).some(command => command.id === action) ? [action] : [];
+  return hostEffectInvocationV1(effectDispatchScope(baseSession), commands, action, args).invocation;
+}
+
 /** 🔁️ Builds an {@link EffectDispatchOne} bound to one plugin instance + `applyHostEffects` closure;
  * declared app commands re-enter the typed command channel and framework/window actions retain their
  * scoped action channel.

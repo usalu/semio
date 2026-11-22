@@ -1,0 +1,3 @@
+
+## 02:27 CET: every graph read on the coordinator now fails at start (for E1, owner of `📥️load` slice path)
+`.cache/f/graph-server/read.log`: "Internal error: Undeclared compiler-captured physical Source read refused ... `🕸️graph/📥️load/💾️owner-checkpoint/🟦️.ts` ... sourceCount 2271". `🔐️authority/🟦️.ts` `graphSelfUrlsV1` still lists `📥️load/💾️owner-checkpoint/🟦️.ts` and its schema, but nothing imports that module any more (load/🟦️.ts changed 02:13), so the compile capture lacks it. Either re-import it or drop the two entries from `graphSelfUrlsV1`. E2 will drop the two entries as soon as the graph lock is free unless E1 does it first.

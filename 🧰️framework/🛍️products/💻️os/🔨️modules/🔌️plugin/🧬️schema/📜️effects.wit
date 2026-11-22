@@ -229,10 +229,16 @@ interface effects {
     req: request-id,
     params: spawn-plugin-instance-params,
   }
+  record plugin-document-target {
+    document-id: string,
+    schema: string,
+    space-id: option<string>,
+  }
   record open-plugin-instance-effect {
     plugin-id: string,
     app-id: string,
     os-instance-id: option<string>,
+    document: option<plugin-document-target>,
   }
   /// 🧬️ W0: payload half of `open-dialog-effect`, see `blob-load-params`.
   record open-dialog-params {

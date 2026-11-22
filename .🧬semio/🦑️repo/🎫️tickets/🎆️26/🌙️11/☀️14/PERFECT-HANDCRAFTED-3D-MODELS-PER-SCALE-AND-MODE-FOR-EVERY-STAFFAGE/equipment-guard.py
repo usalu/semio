@@ -87,12 +87,13 @@ def windows_job(command,limit):
     return child,peak,lambda:close(handle)
 
 
-def reservation(path,mib,capacity):
+def reservation(path,mib,capacity,start_mib=0,existing=False):
     import errno
     units=(mib+63)//64
     if units<=0:raise ValueError("Memory reservation must be positive.")
-    if units>capacity//64:return None
-    handle=open(path,"a+b")
+    if units>(capacity-start_mib)//64:return None
+    try:handle=open(path,"r+b" if existing else "a+b")
+    except FileNotFoundError:return None
     if os.name=="nt":
         import msvcrt
         def take(start,count):
@@ -108,17 +109,40 @@ def reservation(path,mib,capacity):
             if exc.errno not in (errno.EACCES,errno.EAGAIN,errno.EDEADLK):raise
             return False
     try:
-        for start in range(1+capacity//64-units):
+        for start in range(start_mib//64,1+capacity//64-units):
             if available(start,units):return handle
         if units>1:
             remaining=units
-            for start in range(capacity//64):
+            for start in range(start_mib//64,capacity//64):
                 if available(start,1):remaining-=1
                 if not remaining:return handle
     except BaseException:
         handle.close();raise
     handle.close()
     return None
+
+
+@contextmanager
+def admission_order(path):
+    directory=path.parent/("queue-"+path.stem.rsplit("-",1)[-1]);directory.mkdir(exist_ok=True)
+    now=time.time_ns();marker=directory/f"{now:020d}-{os.getpid()}.wait"
+    owner=reservation(marker,64,64)
+    if owner is None:raise RuntimeError("Cannot register native memory request")
+    def first():
+        for earlier in sorted(directory.glob("*.wait")):
+            if earlier.name>=marker.name:break
+            try:created=int(earlier.name.split("-",1)[0])
+            except ValueError:continue
+            if time.time_ns()-created>2_000_000_000:
+                abandoned=reservation(earlier,64,64,existing=True)
+                if abandoned is not None:
+                    abandoned.close();earlier.unlink(missing_ok=True);continue
+                if not earlier.exists():continue
+            return False
+        return True
+    try:yield first
+    finally:
+        owner.close();marker.unlink(missing_ok=True)
 
 
 def parent_wait_alive(result):
@@ -158,7 +182,7 @@ def main(command):
 
 def admitted(command,alive):
     if not alive():return 125
-    floor=max(30,min(95,int(os.environ.get("EQUIPMENT_HEADROOM_PERCENT","30"))))
+    floor=max(30,min(95,int(os.environ.get("EQUIPMENT_HEADROOM_PERCENT","48"))))
     if headroom()<floor+5:sys.exit(f"Host headroom below {floor+5} percent")
     limit=min(1150,int(os.environ.get("EQUIPMENT_RSS_MIB","1150")))*1024
     def cancelled(signum,_frame):raise SystemExit(128+signum)
@@ -166,12 +190,15 @@ def admitted(command,alive):
     import hashlib,socket
     host=hashlib.sha256(socket.gethostname().encode()).hexdigest()[:12]
     path=Path(__file__).resolve().parent/"🗑️generated"/("resident-"+host+".lock")
-    slot=reservation(path,limit//1024,3584)
-    while slot is None:
-        time.sleep(.35)
-        if not alive():return 125
-        if headroom()<floor:return 75
-        slot=reservation(path,limit//1024,3584)
+    pool=2816 if os.environ.get("EQUIPMENT_BACKGROUND")=="1" else 3584
+    with admission_order(path) as first:
+        while True:
+            start_mib=0 if first() else 2816
+            slot=reservation(path,limit//1024,pool,start_mib)
+            if slot is not None:break
+            time.sleep(.35)
+            if not alive():return 125
+            if headroom()<floor:return 75
     try:
         return observe(command,limit,floor,alive)
     finally:slot.close()

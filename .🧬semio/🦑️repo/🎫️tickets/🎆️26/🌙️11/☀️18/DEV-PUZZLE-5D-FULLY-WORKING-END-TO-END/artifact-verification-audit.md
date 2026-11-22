@@ -13,7 +13,9 @@ The staged directory is not content-addressed. Ensure it contains the refreshed 
 After refresh, check the staged package directly from the repository root with:
 
 ```sh
-node --experimental-default-type=module '.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️18/DEV-PUZZLE-5D-FULLY-WORKING-END-TO-END/wasm-staged-node.mjs'
+node '.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️18/DEV-PUZZLE-5D-FULLY-WORKING-END-TO-END/wasm-staged-node.mjs'
 ```
 
 The script checks all three fixture counts. It has not been run against the refreshed package.
+
+The existing published Hub package passed the current Node smoke after the cache cleanup. Node checked Concrete Forest, Nakagin and Capsule Dream at 1/0, 180/179 and 2,880/2,864 parts/fasteners respectively. A refreshed binary remains in progress.

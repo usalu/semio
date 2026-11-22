@@ -91,6 +91,7 @@ export {
   IMPORT_ARGUMENT_TOTAL,
   IMPORT_CHUNK_BYTES,
   importChunkArguments,
+  importChunkWithIntegerCarriers,
   importPayloadChunks
 } from "../../🗄️file-open-import/🟦️.ts";
 export type { ImportChunk } from "../../🗄️file-open-import/🟦️.ts";

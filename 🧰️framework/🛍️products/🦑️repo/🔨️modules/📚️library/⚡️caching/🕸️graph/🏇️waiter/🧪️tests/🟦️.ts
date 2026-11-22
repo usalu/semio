@@ -9,6 +9,8 @@ import {withBuildTestInvocationV1} from "../../../../../../../../🔨️modules/
 import {captureOwnedCommandV1} from "../../../../../../../../\ud83d\udd28\ufe0fmodules/\ud83c\udfc3\ufe0fprocess/\ud83d\udce6\ufe0fpackages/\ud83d\udfe6\ufe0ftypescript/\ud83c\udf9b\ufe0fexecution/\ud83d\udfe6\ufe0f.ts";
 import {scriptCompilerAdmissionControlV1} from "../../../../../../../../\ud83d\udd28\ufe0fmodules/\ud83c\udfc3\ufe0fprocess/\ud83d\udce6\ufe0fpackages/\ud83d\udfe6\ufe0ftypescript/\ud83c\udfd7\ufe0fbuild/\ud83c\udf9f\ufe0fcapacity/\ud83d\udfe6\ufe0f.ts";
 import{testNxToolkitDirectoryV1}from"../../../../🧪️testing/🧫️private-repository/🟦️.ts";
+import {declareLibraryBuildTestEnvelopeV1} from "../../../../🧪️testing/🪪️native-birth/🟦️.ts";
+declareLibraryBuildTestEnvelopeV1({suite:"graph-cache-waiter"});
 /** 🏇️ Missing publication after the real graph lock is stale; a published graph failure preserves its cause. */
 test("Actual installed graph cache lets the original waiter rebuild missing publication",async()=>{
  const rows=JSON.parse(readFileSync(new URL("./🧫️fixtures/🔣️.json",import.meta.url),"utf8")),schema=JSON.parse(readFileSync(new URL("../🧬️schema/🔣️.json",import.meta.url),"utf8"));expect(new Ajv({strict:true}).compile(schema)(rows)).toBe(true);

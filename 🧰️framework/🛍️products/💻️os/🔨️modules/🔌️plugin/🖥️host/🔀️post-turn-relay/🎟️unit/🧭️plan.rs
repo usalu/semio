@@ -1,7 +1,7 @@
 //! 🧭️ The Source-native cold controller selects one authored ABI crossing from its actual protocol frontier.
 use semio_framework_actor::OriginalJobBudget;
 use semio_framework_value::{ValueError,ValueRefusalKind};
-use semio_plugin_guest_contract::original_actor_context::ColdJobAction;
+use semio_plugin_guest_contract::original_actor_context::{original_core_first_response_reserve, ColdJobAction, OriginalActorBootstrapReceipt};
 use semio_plugin_host_guest_runtime::{OriginalCoreValue,OwnedSemioExport};
 use semio_plugin_host_wake::GuestRelayGuestPurpose;
 /// 🎯️ A scalar plan contains only inline ABI values; it does not grant or duplicate Source authority.
@@ -32,9 +32,20 @@ impl ColdJobCallPlan{
  }
  pub fn arguments(&self)->&[OriginalCoreValue]{&self.arguments[..self.length]}
 }
-pub(super) fn core_wire_header(action:&ColdJobAction)->Option<usize>{match action{ColdJobAction::AdmitActor|ColdJobAction::AdmitInput|ColdJobAction::CloseActorOutput|ColdJobAction::CloseActor=>Some(144),ColdJobAction::Start|ColdJobAction::Step|ColdJobAction::Read|ColdJobAction::AcknowledgeOutput|ColdJobAction::AcknowledgeChunk|ColdJobAction::CloseJobs|ColdJobAction::PublishFailure|ColdJobAction::ReadFailure|ColdJobAction::AcknowledgeFailure|ColdJobAction::AcknowledgeFailureChunk=>Some(184),ColdJobAction::BorrowChunk|ColdJobAction::BorrowFailureChunk|ColdJobAction::Complete=>None}}
+pub(super) fn core_wire_header(action:&ColdJobAction)->Option<usize>{match action{ColdJobAction::AdmitActor|ColdJobAction::CloseActor=>Some(200),ColdJobAction::AdmitInput|ColdJobAction::CloseActorOutput=>Some(144),ColdJobAction::Start|ColdJobAction::Step|ColdJobAction::Read|ColdJobAction::AcknowledgeOutput|ColdJobAction::AcknowledgeChunk|ColdJobAction::CloseJobs|ColdJobAction::PublishFailure|ColdJobAction::ReadFailure|ColdJobAction::AcknowledgeFailure|ColdJobAction::AcknowledgeFailureChunk=>Some(184),ColdJobAction::BorrowChunk|ColdJobAction::BorrowFailureChunk|ColdJobAction::Complete=>None}}
 /// 📏️ Uses the shared guest-publisher bound before any fixed-receipt Core crossing.
-pub(super) fn require_core_wire(action:&ColdJobAction,budget:OriginalJobBudget)->Result<(),ValueError>{let Some(header)=core_wire_header(action)else{return Ok(())};let(items,demand,work)=semio_plugin_guest_contract::original_actor_context::original_core_first_response_reserve(header)?;for grant in[budget.input.grant,budget.retained_policy]{if grant.maximum_items<items||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"guest Core wire reserve exceeds its actual issued grant"))}}if budget.input.work.fuel<work||budget.fuel<work{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"guest Core wire reserve exceeds its actual issued work"))}Ok(())}
+pub(super) fn require_core_wire(action:&ColdJobAction,budget:OriginalJobBudget)->Result<(),ValueError>{
+ let Some(header)=core_wire_header(action)else{return Ok(())};
+ let reserves=std::iter::once(original_core_first_response_reserve(header)?)
+  .chain((header==200).then(OriginalActorBootstrapReceipt::first_bootstrap_response_reserve));
+ for(items,demand,work)in reserves{
+  for grant in[budget.input.grant,budget.retained_policy]{
+   if grant.maximum_items<items||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"guest Core wire reserve exceeds its actual issued grant"))}
+  }
+  if budget.input.work.fuel<work||budget.fuel<work{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"guest Core wire reserve exceeds its actual issued work"))}
+ }
+ Ok(())
+}
 fn refused()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"cold job action has no valid scalar crossing")}
 
 #[cfg(test)]
@@ -42,6 +53,14 @@ mod tests{
  use super::*;
  use semio_framework_actor::{OriginalActorTurnWork,RetainedTurnInput};
  use semio_framework_value::RetainedCloneGrant;
+ #[test]
+ fn cold_actor_transitions_reserve_the_authored_bootstrap_and_transition_headers(){
+  let law:serde_json::Value=serde_json::from_str(include_str!("plan.json")).unwrap();
+  let header=law["actorTransitionWireHeader"].as_u64().unwrap() as usize;
+  assert_eq!(core_wire_header(&ColdJobAction::AdmitActor),Some(header));
+  assert_eq!(core_wire_header(&ColdJobAction::CloseActor),Some(header));
+  assert_eq!(core_wire_header(&ColdJobAction::AdmitInput),Some(144));
+ }
  #[test]
  fn core_wire_reserve_refuses_before_any_fixed_plan(){
   let grant=semio_framework_value::RetainedCloneGrant{maximum_items:100,maximum_copy_bytes:1048576,maximum_capacity_bytes:1048576,maximum_release_bytes:1048576,maximum_depth:2};let input=semio_framework_actor::RetainedTurnInput{operation:1,generation:2,epoch:3,work:semio_framework_actor::OriginalActorTurnWork{clock_binding:4,absolute_deadline_us:100,fuel:10000},grant};let mut budget=OriginalJobBudget{input,retained_policy:grant,fuel:10000,deadline_us:90,cancelled:false};assert!(require_core_wire(&ColdJobAction::Start,budget).is_ok());let(_,demand,work)=semio_plugin_guest_contract::original_actor_context::original_core_first_response_reserve(184).unwrap();budget.retained_policy.maximum_copy_bytes=demand.copy_bytes-1;assert!(require_core_wire(&ColdJobAction::Start,budget).is_err());budget.retained_policy=grant;budget.fuel=work-1;assert!(require_core_wire(&ColdJobAction::Start,budget).is_err());assert!(require_core_wire(&ColdJobAction::BorrowChunk,budget).is_ok());

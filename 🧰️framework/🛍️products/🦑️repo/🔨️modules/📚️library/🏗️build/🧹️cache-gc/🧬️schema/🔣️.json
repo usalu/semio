@@ -12,7 +12,10 @@
         "atimeProbeAgeMilliseconds": 172800000,
         "atimeProbeToleranceMilliseconds": 1000,
         "dedupeProgressMilliseconds": 250,
-        "dedupeCountProgressStride": 512
+        "dedupeCountProgressStride": 512,
+        "idleCompactionIntervalMilliseconds": 3600000,
+        "idleCompactionMaximumMilliseconds": 600000,
+        "idleCompactionFirstDelayMilliseconds": 600000
       }
     },
     "LimitsDescriptions": {
@@ -25,7 +28,10 @@
           "atimeProbeAgeMilliseconds": "How far back the probe file of the access-time check is dated (two days).",
           "atimeProbeToleranceMilliseconds": "How much later than the dated time the access time must be after the read for the volume to count as recording it.",
           "dedupeProgressMilliseconds": "The least time between two progress reports of the deduplication.",
-          "dedupeCountProgressStride": "After how many counted files the deduplication checks for progress and cancellation."
+          "dedupeCountProgressStride": "After how many counted files the deduplication checks for progress and cancellation.",
+          "idleCompactionIntervalMilliseconds": "The least time between two compactions of one image by `repo cache gc --idle` (1 hour).",
+          "idleCompactionMaximumMilliseconds": "The most time one pass of compaction on idle may take over all images (10 minutes).",
+          "idleCompactionFirstDelayMilliseconds": "How long a starting sidecar waits before its first compaction pass (10 minutes)."
         },
         "de": {
           "graphLeaseWaitMilliseconds": "Wie lange die Graph-Rückgewinnung auf die exklusive Lease der Graph-Partition wartet, bevor sie aufgibt (10 Minuten).",
@@ -35,7 +41,10 @@
           "atimeProbeAgeMilliseconds": "Wie weit die Probedatei der Zugriffszeit-Prüfung zurückdatiert wird (zwei Tage).",
           "atimeProbeToleranceMilliseconds": "Um wie viel später als die zurückdatierte Zeit die Zugriffszeit nach dem Lesen sein muss, damit das Laufwerk sie als erfasst gilt.",
           "dedupeProgressMilliseconds": "Die kleinste Zeit zwischen zwei Fortschrittsmeldungen der Deduplizierung.",
-          "dedupeCountProgressStride": "Nach wie vielen gezählten Dateien die Deduplizierung auf Fortschritt und Abbruch prüft."
+          "dedupeCountProgressStride": "Nach wie vielen gezählten Dateien die Deduplizierung auf Fortschritt und Abbruch prüft.",
+          "idleCompactionIntervalMilliseconds": "Die kleinste Zeit zwischen zwei Verdichtungen eines Abbilds durch `repo cache gc --idle` (1 Stunde).",
+          "idleCompactionMaximumMilliseconds": "Die meiste Zeit, die ein Durchgang der Verdichtung im Leerlauf über alle Abbilder dauern darf (10 Minuten).",
+          "idleCompactionFirstDelayMilliseconds": "Wie lange ein startender Sidecar bis zu seinem ersten Verdichtungsdurchgang wartet (10 Minuten)."
         }
       }
     }

@@ -20,7 +20,15 @@
   "registry": {
     "flushMilliseconds": 100,
     "maximumEntryBytes": 65536,
-    "maximumViolations": 200
+    "maximumViolations": 200,
+    "prune": {
+      "delayMilliseconds": 3000,
+      "intervalMilliseconds": 600000,
+      "backlogMilliseconds": 20000,
+      "maximumFolders": 256,
+      "budgetMilliseconds": 20,
+      "idleMilliseconds": 86400000
+    }
   },
   "fairness": {
     "queuedWithResourceLeases": true,
@@ -32,6 +40,8 @@
     "pollInitialMilliseconds": 20,
     "pollMaximumMilliseconds": 250,
     "admissionPatienceMilliseconds": 5000,
+    "freshRetryAttempts": 6,
+    "freshRetryPauseMilliseconds": 1000,
     "claimSweepIntervalMilliseconds": 30000,
     "claimSweepPressureFreeRatio": 0.2,
     "claimSweepPressureIntervalMilliseconds": 1000
@@ -537,6 +547,22 @@
       "reason": {
         "en": "Provisioning an absent Rust generation takes the managed-tooling provision lease after the toolchain home it already holds exclusively, then publishes its generation custody; every toolchain lease other than the home is requested only while the home is held.",
         "de": "Das Bereitstellen einer fehlenden Rust-Generation nimmt die Provision-Lease der verwalteten Werkzeuge, nachdem es das Toolchain-Home bereits exklusiv hält, und veröffentlicht danach seine Generationssperre; jede Toolchain-Lease außer dem Home wird nur bei gehaltenem Home angefordert."
+      }
+    },
+    {
+      "from": "image",
+      "to": "tool-singleton",
+      "reason": {
+        "en": "Every managed-tooling operation (the provision registry of a generation publication or retirement, the pinned SDK snapshot a planner or derivative reader holds) runs inside the tools partition image its consumer opened first, because the image is the store the operation guards; the daemon start order takes the same singletons before the short native-storage checks of other images, and a wait that closes a cycle is still refused by the cycle detector.",
+        "de": "Jede Operation der verwalteten Werkzeuge (die Provision-Registry einer Generationsveröffentlichung oder -stilllegung, der gepinnte SDK-Schnappschuss eines Planers oder Derivat-Lesers) läuft innerhalb des Werkzeug-Partitions-Images, das ihr Verbraucher zuerst geöffnet hat, weil das Image der Speicher ist, den die Operation schützt; die Daemon-Startreihenfolge nimmt dieselben Singletons vor den kurzen native-storage-Prüfungen anderer Images, und ein Warten, das einen Zyklus schließt, lehnt der Zyklusdetektor weiterhin ab."
+      }
+    },
+    {
+      "from": "image",
+      "to": "bazel-picker",
+      "reason": {
+        "en": "An image holder that runs managed-tooling operations may pick its Bazel session slot, the innermost lock, exactly as every other declared tool singleton holder may.",
+        "de": "Ein Image-Halter, der Operationen der verwalteten Werkzeuge ausführt, darf seinen Bazel-Sitzungs-Slot, die innerste Sperre, auswählen, genau wie jeder andere deklarierte Halter eines Werkzeug-Singletons."
       }
     },
     {

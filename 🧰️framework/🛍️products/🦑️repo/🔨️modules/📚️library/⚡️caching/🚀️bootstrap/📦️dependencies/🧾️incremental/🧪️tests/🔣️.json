@@ -5,7 +5,8 @@
    "^Bun current (?:ownership|workspace membership|manifest|workspace manifests) changed",
    "^Declared (?:provider|execution physical) observation changed",
    "^Current (?:Store provider execution|Source-owner execution) changed",
-   "^Original Bun dependency input (?:changed|appeared) during installation"
+   "^Original Bun dependency input (?:changed|appeared) during installation",
+   "^Current exact (?:Windows )?relative path descriptor changed$"
   ],
   "excluded": [
    "custody",
@@ -16,6 +17,62 @@
   ]
  },
  "retry": [
+  {
+   "id": "relative-descriptor-moved",
+   "message": "Current exact relative path descriptor changed",
+   "aborted": false,
+   "unresolved": false,
+   "attempt": 0,
+   "expect": true
+  },
+  {
+   "id": "windows-relative-descriptor-moved",
+   "message": "Current exact Windows relative path descriptor changed",
+   "aborted": false,
+   "unresolved": false,
+   "attempt": 0,
+   "expect": true
+  },
+  {
+   "id": "relative-descriptor-after-cancel",
+   "message": "Current exact relative path descriptor changed",
+   "aborted": true,
+   "unresolved": false,
+   "attempt": 0,
+   "expect": false
+  },
+  {
+   "id": "relative-descriptor-unresolved-source",
+   "message": "Current exact relative path descriptor changed",
+   "aborted": false,
+   "unresolved": true,
+   "attempt": 0,
+   "expect": false
+  },
+  {
+   "id": "relative-descriptor-retry-limit",
+   "message": "Current exact relative path descriptor changed",
+   "aborted": false,
+   "unresolved": false,
+   "attempt": 2,
+   "expect": false
+  },
+  {
+   "id": "relative-descriptor-custody-refusal",
+   "message": "Current exact relative path descriptor changed: stale custody",
+   "aborted": false,
+   "unresolved": false,
+   "attempt": 0,
+   "expect": false
+  },
+  {
+   "id": "relative-lineage-refusal",
+   "message": "Exact root-family issued relative path lineage required",
+   "aborted": false,
+   "unresolved": false,
+   "attempt": 0,
+   "expect": false
+  },
   {
    "id": "ownership-changed",
    "message": "Bun current ownership changed during verification: /w/a; change={\"operation\":\"list\"}",

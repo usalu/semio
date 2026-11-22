@@ -50,7 +50,7 @@ fn zone_balance(document: &Din18599Snapshot, report: &CheckReport, id: &str, mon
     let gain_source = zone
         .filter(|z| z.usage_profile == UsageProfile::WFH)
         .and_then(|_| check_with(report, RESIDENTIAL_GAINS_CHECK))
-        .map_or_else(|| loc("Includes the entered internal gains.", "Enthält die eingegebenen internen Wärmegewinne."), |check| check.explanation.clone());
+        .map_or_else(|| loc("Includes the entered internal gains.", "Enthält die eingegebenen internen Wärmegewinne."), |check| loc(&check.explanation.en, &check.explanation.de));
     let top = months.iter().map(|m| (m.q_t_kwh + m.q_v_kwh).max(m.q_i_kwh + m.q_s_kwh).max(m.q_h_kwh).max(m.q_c_kwh)).fold(1.0, f64::max) * 1.1;
     let mut series = vec![line("loss", "Heat losses Q_T + Q_V", "Wärmesenken Q_T + Q_V", &loss, Tone::Neutral, Dash::Solid), line("gain", "Heat gains Q_i + Q_s", "Wärmequellen Q_i + Q_s", &gain, Tone::Neutral, Dash::Dashed)];
     for (m, v) in months.iter().enumerate() {
@@ -201,7 +201,7 @@ fn element_u(document: &Din18599Snapshot, report: &CheckReport, element: &Envelo
             let description = check_with(report, &id).map_or_else(|| loc(
                 "Entered transmittance of this component.",
                 "Erfasster Wärmedurchgangskoeffizient des Bauteils.",
-            ), |check| check.explanation.clone());
+            ), |check| loc(&check.explanation.en, &check.explanation.de));
             (same, reference, id, description, loc("Annex 3 mean U limit", "Grenzwert des mittleren U-Werts nach Anlage 3"))
         }
     };

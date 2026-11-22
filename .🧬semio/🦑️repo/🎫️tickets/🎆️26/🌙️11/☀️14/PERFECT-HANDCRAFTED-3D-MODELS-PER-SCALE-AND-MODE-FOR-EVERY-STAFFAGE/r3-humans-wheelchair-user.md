@@ -129,3 +129,7 @@ Script: `r5-wheelchair-user-edit.py` (edits the hand-stated rows of `r3-wheelcha
 - No cloth folds beyond the stacked jeans hem and the rolled hoodie hem; superellipse sections without separate pectorals; 0 degree camber (one lateral axle in the rig); trunk lean in ramp-ascent only 12 degrees; 1:500 faceted by the product's coarse tessellation.
 
 Both castor forks now retain 0.20 mm paper outlines at the 1:350 endpoint. The complete paper document, 1:200 feature, silhouette and cross-scale checks passed. All four live heat checks and all twelve exported scenes passed.
+
+## Rear axle attachment reviewed November 21
+
+The 72 × 150 × 15 mm frame plates and bearing receivers now remain between the frame and wheel hubs at all four scales. Their thermal references use the frame-metal region. Previously the 1:200 structural axle marker was 38.3 mm outside the visible wheelchair. The published correction passed the structural check on both sides, all four strict scale checks and twelve exported scenes.

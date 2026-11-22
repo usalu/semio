@@ -7,6 +7,7 @@ import { createElement, useState, type ReactElement } from "react";
 import { parseResolvedPluginViewState, windowViewContext } from "@semio-tech/framework-manifest/view-state-and-public-invocation";
 import Ajv2020 from "ajv/dist/2020";
 import chordKeyTokensFixture from "../../🧱️elements/🛠️ShellHelpers/🧪️tests/🧫️fixtures/⌨️chord-key-tokens.json";
+import clipboardOrder from "../../🧱️elements/🛠️ShellHelpers/🧪️tests/🧫️fixtures/📋️clipboard-order.json";
 import { cleanup, fireEvent, render } from "@semio-tech/ui-react/test";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { actionSemanticsForKind, type ActionDefinition, type AppDefinition, type AppWindowKindDefinition, createMemoryStoragePort } from "@semio-tech/framework";
@@ -18,6 +19,7 @@ import {
 } from "../../🧱️elements/🛠️ShellHelpers/🪟️window-panes/⌨️keyboard-chords/🟦️.ts";
 import {
   clipboardWriteFragmentFromEffect,
+  ClipboardActionQueue,
   pasteActionWithRetainedFragment,
   pasteArgsFragment
 } from "../../🧱️elements/🛠️ShellHelpers/🪟️window-panes/📋️clipboard-activation/🟦️.ts";
@@ -373,5 +375,31 @@ describe("palette redirect and keybinding rule (P3/P4)", () => {
     expect(pasteActionWithRetainedFragment({ action: "paste" }, fragment)).toEqual({ action: "paste", args: { fragment } });
     expect(pasteArgsFragment({ args: { fragment } })).toBe(fragment);
     expect(pasteArgsFragment({ args: {} })).toBeUndefined();
+  });
+
+  it("reads the latest workspace fragment in submission order while ordinary input continues", async () => {
+    const queue = new ClipboardActionQueue();
+    let finishCopy!: () => void;
+    const copyMayFinish = new Promise<void>((resolve) => { finishCopy = resolve; });
+    let fragment: unknown;
+    let writes = 0;
+    const pasted: unknown[] = [];
+    const actions = clipboardOrder.submitted.map((action) => queue.run({ action }, async () => {
+      if (action === "paste") {
+        pasted.push(pasteArgsFragment(pasteActionWithRetainedFragment({ action, args: {} }, fragment)));
+      } else {
+        const index = writes++;
+        if (index === 0) await copyMayFinish;
+        fragment = clipboardOrder.copied[index];
+      }
+    }));
+
+    expect(queue.pending).toBe(true);
+    await expect(queue.run({ action: "worldRelocate" }, async () => "moved")).resolves.toBe("moved");
+    expect(pasted).toEqual([]);
+    finishCopy();
+    await Promise.all(actions);
+    expect(pasted).toEqual(clipboardOrder.pasted);
+    expect(queue.pending).toBe(false);
   });
 });

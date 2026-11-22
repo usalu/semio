@@ -1,6 +1,6 @@
 {
-  "command": {"west": -1.3, "south": 49.8, "east": -1.2, "north": 49.9, "height": -30},
-  "expected": {"bounds": [-1.3, 49.8, -1.2, 49.9], "rows": 33, "columns": 33, "height": -30},
-  "invalidOrder": {"west": -1.2, "south": 49.8, "east": -1.3, "north": 49.9, "height": 10},
-  "invalidHeight": {"west": -1.3, "south": 49.8, "east": -1.2, "north": 49.9, "height": 5.4}
+  "command": {"west": -1.3, "south": 49.8, "east": -1.2, "north": 49.9, "columns": 4, "rows": 3, "height": -30.125},
+  "expected": {"bounds": [-1.3, 49.8, -1.2, 49.9], "rows": 3, "columns": 4, "heightMillimetres": -30125},
+  "invalidOrder": {"west": -1.2, "south": 49.8, "east": -1.3, "north": 49.9, "columns": 4, "rows": 3, "height": 10},
+  "invalidHeight": {"west": -1.3, "south": 49.8, "east": -1.2, "north": 49.9, "columns": 4, "rows": 3, "height": 5.4001}
 }

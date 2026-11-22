@@ -15,6 +15,10 @@
     "/🧩️extension-modules": "extensionRoot",
     "/🎬️renderer-boot.js": "libraryRoot"
   },
+  "preview2Vendor": {
+    "relativeRoot": "🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim",
+    "request": "/🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/cli.js"
+  },
   "runtimeAssetRoutes": [
     "/renderer-modules/compiler-fonts",
     "/renderer-modules/canvas-fonts",

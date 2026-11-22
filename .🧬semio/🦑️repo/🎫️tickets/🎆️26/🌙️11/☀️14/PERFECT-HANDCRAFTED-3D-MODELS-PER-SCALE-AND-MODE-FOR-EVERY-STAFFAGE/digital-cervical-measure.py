@@ -8,7 +8,7 @@ t=Path(__file__).resolve().parent;g=t/'🗑️generated';r=t.parents[6]
 bun=os.getenv('BUN_EXE') or shutil.which('bun') or next(p for p in r.glob('.cache/b/t/*/bun/*/bun*') if p.name in ('bun','bun.exe'))
 sig=run_path(str(t/'digital-proof-digest.py'))['module_digest'](r,t/'digital-scale-proof.ts',t/'r3-validate.ts',t/'digital-scenes.ts')
 study=os.environ.get('STAFFAGE_STUDY','atlas')
-if study not in ('atlas','passenger','clothing','cat','gull','axle','fittings','hedge'):raise ValueError('Unknown study')
+if study not in ('atlas','passenger','clothing','cat','gull','axle','fittings','hedge','goat','doe','carriage','brush','lab','deck','fleece','transport','digits','gore','road','crown','limb','haul','link','crawler','quilt','pediatric','fret','school','occupied','lacing','saloon','joint','board','cab'):raise ValueError('Unknown study')
 receipts='neck' if study=='atlas' else study
 subjects=sys.argv[1:] or list(json.loads((t/'digital-cervical-stations.json').read_bytes()))
 def check(pair):
@@ -19,7 +19,9 @@ def check(pair):
         prev=json.loads(rec.read_bytes())
         if prev['hash']==h and prev['signature']==sig and prev['complete']:return
     cmd=[t/'r3-validate.ts','--file',input,'--compact'] if part=='document' else [t/'digital-scenes.ts','--file',input] if part=='glb' else [t/'digital-scale-proof.ts',input,part]
-    rss=1050 if study=='fittings' else 540 if part in ('document','glb') else 830
+    rss=1120 if study=='quilt' and part=='glb' else 1050 if study in ('fittings','hedge','carriage','road','crown','limb','haul','link','crawler','lacing','saloon','joint','board','cab') else 540 if part in ('document','glb') else 830
+    if study=='limb' and name in json.loads((t/'digital-human-shaft-case.json').read_bytes())['subjects']:
+        rss=1120 if name=='sleeping-person' and part=='glb' else 830 if part=='50' else 680 if part.isdigit() else 540
     with log.open('w') as stream:
         done=subprocess.run([sys.executable,str(t/'equipment-guard.py'),str(bun),'--smol',*map(str,cmd)],stdout=stream,stderr=stream,env={**os.environ,'EQUIPMENT_RSS_MIB':str(rss),'EQUIPMENT_HEADROOM_PERCENT':'48'})
     out=log.read_text();rows=[json.loads(l) for l in out.splitlines() if l.startswith('{')]
@@ -27,13 +29,17 @@ def check(pair):
         complete=any(l.startswith(('VALID ','INVALID '))for l in out.splitlines())
         problems=[l for l in out.splitlines() if l.startswith(('PRINT ','ASSET ','SCHEMA '))]
     elif part=='glb':
-        complete=bool(rows and rows[0].get('scenes')==12)
-        problems=rows[0].get('findings',[]) if rows else []
+        complete=bool(rows and (rows[0].get('scenes')==12 or rows[0].get('error')))
+        problems=[rows[0]['error']] if rows and rows[0].get('error') else rows[0].get('findings',[]) if rows else []
     else:
         complete=bool(rows and len(rows[0].get('rules',[]))==13)
         problems=rows[0].get('issues',[]) if rows else []
+    code=done.returncode
+    if not complete and (part=='document' or part.isdigit()) and sha256(input.read_bytes()).hexdigest()==h:
+        split=run_path(str(t/'digital-bounded-proof.py'))['measure'](str(bun),input,part,sig)
+        if split is not None:complete=True;problems=split;code=int(bool(split))
     if sha256(input.read_bytes()).hexdigest()!=h:return
-    result={'hash':h,'signature':sig,'complete':complete,'pass':complete and done.returncode==0 and not problems,'findings':problems}
+    result={'hash':h,'signature':sig,'complete':complete,'pass':complete and code==0 and not problems,'findings':problems}
     temp=rec.with_suffix('.'+str(os.getpid())+'.partial');temp.write_text(json.dumps(result));os.replace(temp,rec)
     print(name,part,'pass' if result['pass'] else 'interrupted' if not complete else json.dumps(problems,ensure_ascii=False)[:650],flush=True)
 parts=os.environ.get('STAFFAGE_PARTS','document,50,100,200,500,glb').split(',')

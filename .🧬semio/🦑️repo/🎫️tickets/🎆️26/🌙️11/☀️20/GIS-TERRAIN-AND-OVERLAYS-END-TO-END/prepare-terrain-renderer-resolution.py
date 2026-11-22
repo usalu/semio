@@ -188,7 +188,7 @@ test("A fractional rectangular authored grid drapes and picks against the browse
  }
 });
 '''
-edit(journal_test, '"rows": vec![vec![0; 33]; 33]', '"rowsMillimetres": vec![vec![0; 5]; 3]')
+edit(journal_test, '"rows": vec![vec![height; 33]; 33]', '"rowsMillimetres": vec![vec![i32::from(height) * 1000; 33]; 33]')
 edit(native_test, 'let rows: Vec<_> = (99..=131).map(|height| vec![height; 33]).collect();', '''
     let rows_millimetres: Vec<_> = [99_125, 115_375, 131_625].into_iter().map(|height| vec![height; 5]).collect();'''.lstrip())
 edit(native_test, '"rows": rows', '"rowsMillimetres": rows_millimetres')

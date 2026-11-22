@@ -7,6 +7,7 @@ import {dirname} from "node:path";
 import {ProtocolErrorV1,createFrameDecoderV1,encodeFrameV1} from "../📨️protocol/🟨️.mjs";
 import {POLICY_V1,SUPPORTED_LANGUAGES_V1,renderBothV1,renderTextV1,validatorV1} from "../📨️protocol/🎚️policy/🟨️.mjs";
 import {attenuateCapabilityV1,authorizeCapabilityV1,capabilityIdV1,createRevocationRegistryV1,createRootKeyV1,mintCapabilityV1,verifyCapabilityV1} from "../📨️protocol/🔑️capability/🟨️.mjs";
+import {keepRootKeyV1} from "../📨️protocol/🔑️capability/🛟️keeper/🟨️.mjs";
 import {canonicalRootV1,worktreeIdV1} from "../📨️protocol/📍️endpoint/🟨️.mjs";
 import {appendAuditV1} from "../../📥️caller/🛰️service/🔑️session/🟨️.mjs";
 import {agentSessionEnvironmentV1,agentSessionRegistryRootV1,agentSessionStoreV1,currentAgentSessionV1,setAgentSessionCapabilityV1,writeAgentSessionTokenV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🪪️agent-sessions/🟦️.ts";
@@ -65,7 +66,7 @@ export function createResidentServiceV1(options){
  const governor=createGovernorV1({maximumInFlight:policy.maximumInFlight,maximumQueued:policy.maximumQueued});
  const connections=new Set(),implementationSet=new Set(implementationPaths);
  const frontiers=new Map(),counters={requests:0,memoServed:0,executed:0,refused:0,queries:0,connections:0,staleRefusals:0};
- let graphDirty=false,graphReload,rootKey,revocations,server,watcher,closeResolve,closing=false,stale=false,gateOpen,gate=new Promise(resolve=>{gateOpen=resolve;}),idleTimer,pinTimer,residentTimer,lastActivity=now(),stateTimer,pinned=false,activeWatches=0,graphInfo;
+ let graphDirty=false,graphReload,rootKey,keeper,revocations,server,watcher,closeResolve,closing=false,stale=false,gateOpen,gate=new Promise(resolve=>{gateOpen=resolve;}),idleTimer,pinTimer,residentTimer,lastActivity=now(),stateTimer,pinned=false,activeWatches=0,graphInfo;
  const closed=new Promise(resolve=>{closeResolve=resolve;});
  const agentSessions=new Map(),sessionOf=agent=>{let found=agentSessions.get(agent);if(found===undefined){found=currentAgentSessionV1({environment,worktree:root,agent,origin:"service"});agentSessions.set(agent,found);}return found;},sessionEnvironment=agent=>{try{return agentSessionEnvironmentV1(sessionOf(agent));}catch{return {};}};
 
@@ -216,6 +217,7 @@ export function createResidentServiceV1(options){
   return false;
  };
 
+ let recheckBlockedUntil=0;
  async function ensureFresh(context){
   const started=performance.now();
   const trust=watcher.state().trust;
@@ -224,7 +226,11 @@ export function createResidentServiceV1(options){
    const result=await watcher.fence();
    await watcher.drained();
    if(!result.ok){state.setTrust("verify");void watcher.recheck().then(ok=>{if(ok&&watcher.state().trust==="exact")state.setTrust("exact");});}
-  }else state.setTrust("verify");
+  }else{
+   const backend=watcher.state().backend;let exact=false;
+   if(backend!=="none"&&backend!=="poll"&&now()>=recheckBlockedUntil)for(let attempt=0;attempt<(policy.fenceRecheckAttempts??1)&&!exact;attempt++){await context.progress("fence",attempt,policy.fenceRecheckAttempts??1,"fence",{});exact=await watcher.recheck();}
+   if(exact&&watcher.state().trust==="exact"){await watcher.drained();state.setTrust("exact");}else{recheckBlockedUntil=now()+(policy.fenceRecheckBackoffMilliseconds??0);state.setTrust("verify");}
+  }
   if(graphDirty||graphReload){await context.progress("plan",0,1,"graph",{});await reloadGraph();}
   context.timing.fenceMs=performance.now()-started;
  }
@@ -308,7 +314,8 @@ export function createResidentServiceV1(options){
     for(;;){
      const outcome=await runTasks(context,ids,true);
      if(outcome.exit!==0)await context.progress("idle",0,0,"fence",{});
-     await new Promise(resolve=>{wake=resolve;context.signal.addEventListener("abort",resolve,{once:true});});
+     context.signal.throwIfAborted();
+     await new Promise(resolve=>{wake=resolve;if(context.signal.aborted)resolve();else context.signal.addEventListener("abort",resolve,{once:true});});
      context.signal.throwIfAborted();
     }
    }finally{batchListeners.delete(listener);}
@@ -474,6 +481,7 @@ export function createResidentServiceV1(options){
    preparePrivateDirectoryV1(dirname(runtime.directory));preparePrivateDirectoryV1(runtime.directory);
    if(existsSync(runtime.key))rootKey=readFileSync(runtime.key);
    else{rootKey=createRootKeyV1();try{writeFileSync(runtime.key,rootKey,{flag:"wx",mode:0o600});}catch{rootKey=readFileSync(runtime.key);}}
+   keeper=keepRootKeyV1({path:runtime.key,key:rootKey,touch:[runtime.descriptor],refreshMilliseconds:policy.keyRefreshMilliseconds,now});
    revocations=createRevocationRegistryV1(runtime.revoked,now);
    await listen();lap("listen");
    graphInfo=await ports.graph.load();state.configure(graphInfo);state.setEnvironmentSalt(await ports.graph.environmentDigest());state.setGeneration(graphInfo.generation??null);lap("graph");
@@ -489,6 +497,7 @@ export function createResidentServiceV1(options){
    writeDescriptor();
    idleTimer=setInterval(()=>{if(connections.size===0&&governor.inFlight===0&&now()-lastActivity>policy.idleShutdownMilliseconds)void drainAndExit("idle");},Math.max(250,Math.min(policy.idleShutdownMilliseconds/4,30000)));idleTimer.unref?.();
    residentTimer=setInterval(()=>{
+    if(!closing&&keeper.tick()==="restored")log("key-restored",runtime.key);
     const rss=process.memoryUsage().rss;
     if(rss>policy.maximumResidentBytes){state.dropCaches();runtimeCollectGarbageV1(true);if(process.memoryUsage().rss>policy.maximumResidentBytes*1.25)void drainAndExit("memory");}
     if(pinned&&governor.inFlight===0&&activeWatches===0&&now()-lastActivity>policy.pinReleaseMilliseconds){pinned=false;void Promise.resolve(ports.custody?.release()).catch(error=>log("release-failed",String(error)));}

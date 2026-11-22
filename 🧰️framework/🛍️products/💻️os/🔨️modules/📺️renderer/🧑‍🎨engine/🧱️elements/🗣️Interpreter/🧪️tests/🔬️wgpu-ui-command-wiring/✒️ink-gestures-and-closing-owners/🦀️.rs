@@ -20,9 +20,9 @@ fn ink_pointer_leave_matches_the_shared_hover_clear_and_ignores_navigator() {
         ink.interaction_domain = Some(serde_json::from_value(fixture["scene"]["interactionDomain"].clone()).unwrap());
         ink.hovered_id = fixture["scene"]["hoveredId"].as_str().map(str::to_owned);
         let node = publish_ink_intent_document(window, 1, witness, &[4], &ink);
-        apply_scene_ui_command(window, node, kind, rect, &semio_ui_wgpu_events::UiEvent::PointerMove { x, y, modifiers: Default::default() }, pointer, &mut input);
+        apply_scene_ui_command(window, node, kind, rect, &semio_ui_wgpu_events::UiEvent::PointerMove { x, y, modifiers: Default::default() }, 1, pointer, &mut input);
         for _ in 0..2 {
-            apply_scene_ui_command(window, node, kind, rect, &semio_ui_wgpu_events::UiEvent::PointerLeave, pointer, &mut input);
+            apply_scene_ui_command(window, node, kind, rect, &semio_ui_wgpu_events::UiEvent::PointerLeave, 1, pointer, &mut input);
         }
         drive_ink_scene_terminal(&mut input);
         let actions = semio_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input);
@@ -75,8 +75,7 @@ fn ink_pointer_cancel_retires_only_the_exact_in_progress_owner_without_publishin
         surface_id: surface_id.clone(),
         kind: semio_ui_declaration::ui::SurfaceKind::InkCanvas,
         rect,
-        event: semio_ui_wgpu_events::UiEvent::PointerDown { x: 64.0, y: 64.0, button: semio_ui_wgpu_events::PointerButton::Primary, modifiers: Default::default() },
-    };
+        event: semio_ui_wgpu_events::UiEvent::PointerDown { x: 64.0, y: 64.0, button: semio_ui_wgpu_events::PointerButton::Primary, modifiers: Default::default() }, click_count: 1 };
     apply_ui_commands(&mut vec![down.clone()], Some(pointer), &mut input);
     let installed = (0..4096).any(|_| {
         let installed = SCENE_INTENTS.with(|cell| cell.borrow().slots.iter().flatten().any(|intent| intent.pointer_id == Some(pointer) && intent.ink_job.is_some() && !intent.retiring));
@@ -122,7 +121,7 @@ fn a_streamed_note_ink_gesture_aborts_on_physical_cancel_while_stale_continuatio
     let down_point = point("down");
     let move_point = point("move");
     let mut input = semio_ui_wgpu_input::InputState::<ActionDescriptor>::default();
-    let command = |event| semio_ui_wgpu_events::UiCommand::Scene { window_id: window_id.into(), node, surface_id: surface_id.clone(), kind: semio_ui_declaration::ui::SurfaceKind::InkCanvas, rect, event };
+    let command = |event| semio_ui_wgpu_events::UiCommand::Scene { window_id: window_id.into(), node, surface_id: surface_id.clone(), kind: semio_ui_declaration::ui::SurfaceKind::InkCanvas, rect, event, click_count: 1 };
 
     apply_ui_commands(&mut vec![command(semio_ui_wgpu_events::UiEvent::PointerDown { x: down_point.0, y: down_point.1, button: semio_ui_wgpu_events::PointerButton::Primary, modifiers: Default::default() })], Some(pointer), &mut input);
     drive_ink_scene_terminal(&mut input);
@@ -250,6 +249,7 @@ fn stale_scene_revision_retires_without_mutation_or_action_publication() {
         semio_ui_declaration::ui::SurfaceKind::Canvas2d,
         rect,
         &semio_ui_wgpu_events::UiEvent::PointerDown { x: 10.0, y: 10.0, button: semio_ui_wgpu_events::PointerButton::Primary, modifiers: Default::default() },
+        1,
         Some(ui_render::PointerId(1)),
         &mut input,
     );
@@ -272,6 +272,7 @@ fn closing_window_fences_queued_scene_intent_before_tree_retirement() {
         semio_ui_declaration::ui::SurfaceKind::Canvas2d,
         rect,
         &semio_ui_wgpu_events::UiEvent::PointerDown { x: 10.0, y: 10.0, button: semio_ui_wgpu_events::PointerButton::Primary, modifiers: Default::default() },
+        1,
         Some(ui_render::PointerId(1)),
         &mut input,
     );

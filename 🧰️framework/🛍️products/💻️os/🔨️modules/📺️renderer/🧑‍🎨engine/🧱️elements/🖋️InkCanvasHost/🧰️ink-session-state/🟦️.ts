@@ -3,7 +3,7 @@ import { useCallback, useContext, useEffect, useMemo, useRef, useState } from ".
 import { GestureRecognizer, type ComponentSceneHostProps, windowElementId } from "@semio-tech/framework";
 import { registerIntroductionSurfaceResolver, useLabel, type IntroductionResolvedGeometry, type SelectionMarqueePoint } from "@semio-tech/ui-react";
 import { type SurfaceContextMenuResult } from "../../🗣️Interpreter/🖱️surface-menu/🟦️.ts";
-import { WindowInstanceIdContext } from "../../🗣️Interpreter/🌉️scene-host-contract/🟦️.ts";
+import { WindowActiveUtilityContext, WindowInstanceIdContext } from "../../🗣️Interpreter/🌉️scene-host-contract/🟦️.ts";
 import { useLocalPresenceActorIdV1 , usePresenceRuntimeKeyV1} from "../../👕️canvas-presence/🟦️.tsx";
 import { PRESENCE_VIEW_PUBLISH_MIN_INTERVAL_MS, clearLocalPresenceWindowViewV1, publishLocalPresenceWindowViewV1 } from "../../👕️canvas-presence/🟦️.ts";
 import { type InkCamera, type InkDocument, type InkPendingLive, parseInkScene, parseSelectionIds, type Vec2 } from "../🧾️ink-model/🟦️.ts";
@@ -15,6 +15,8 @@ import { type InkDragState, type InkTableEditState, type InkTextEditState } from
 export function useInkSessionState({ node, onAction, requestContextMenu }: ComponentSceneHostProps) {
   const scene = node.inkCanvas;
   const windowInstanceId = useContext(WindowInstanceIdContext);
+  const utilityRegister = useContext(WindowActiveUtilityContext);
+  const windowUtility = utilityRegister?.surfaceId === node.surfaceId ? utilityRegister.utilityId : undefined;
   const rootRef = useRef<HTMLDivElement | null>(null);
   const gestureActiveRef = useRef(false);
   const rafRef = useRef<number | null>(null);
@@ -113,7 +115,7 @@ export function useInkSessionState({ node, onAction, requestContextMenu }: Compo
       },
     });
   }, [windowInstanceId]);
-  return { contextMenu, contextMenuTitleLabel, doc, dragState, emptySceneLabel, gestureActiveRef, gestureRecognizer, hoveredId, interactionDomain, interactive, isNavigator, localPresenceActor, marqueePoints, node, onAction, pendingLiveRef, pinchCameraRef, presencePointerRef, presenceWindowId, publishInkPresenceView, rafRef, requestContextMenu, rootRef, scene, sceneDoc, selectedIds, selectedSet, setContextMenu, setDraftDoc, setDragState, setMarqueePoints, setTableEdit, setTextEdit, tableEdit, textEdit, windowInstanceId , presenceRuntimeKey };
+  return { contextMenu, contextMenuTitleLabel, doc, dragState, emptySceneLabel, gestureActiveRef, gestureRecognizer, hoveredId, interactionDomain, interactive, isNavigator, localPresenceActor, marqueePoints, node, onAction, pendingLiveRef, pinchCameraRef, presencePointerRef, presenceWindowId, publishInkPresenceView, rafRef, requestContextMenu, rootRef, scene, sceneDoc, selectedIds, selectedSet, setContextMenu, setDraftDoc, setDragState, setMarqueePoints, setTableEdit, setTextEdit, tableEdit, textEdit, windowInstanceId, windowUtility , presenceRuntimeKey };
 }
 
 export type InkCore1 = ReturnType<typeof useInkSessionState>;

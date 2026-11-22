@@ -74,6 +74,18 @@
       ],
       "volume": 24,
       "faces": 6
+    },
+    {
+      "operator": "brep.sweep.pipe",
+      "kind": "rectangle",
+      "size": [2, 4],
+      "path": [[10, 20, 30], [10, 20, 33]],
+      "guide": [[15, 20, 31], [15, 20, 32]],
+      "varyingGuide": [[15, 20, 30], [15, 21, 33]],
+      "profileFrame": [[0, 0, 0], [0, 1, 0], [-1, 0, 0]],
+      "bounds": [[10, 18, 30], [14, 20, 33]],
+      "volume": 24,
+      "faces": 6
     }
   ],
   "unsupportedPath": [

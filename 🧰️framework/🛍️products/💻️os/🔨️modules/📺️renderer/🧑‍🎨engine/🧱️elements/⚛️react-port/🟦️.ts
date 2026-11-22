@@ -3,7 +3,7 @@
  * 🧭️ Part of the React lane implementation (`@semio-tech/framework-renderer-react`). The lane contract that leaves the lane carries no React type — see {@link ../🗣️Interpreter/🧩️host-contract/🟦️.ts}.
  */
 
-export { Component, createContext, createElement, Fragment, memo, Profiler, Suspense, useCallback, useContext, useEffect, useId, useLayoutEffect, useMemo, useReducer, useRef, useState, useSyncExternalStore } from "react";
+export { Component, createContext, createElement, Fragment, memo, Profiler, Suspense, useCallback, useContext, useEffect, useEffectEvent, useId, useLayoutEffect, useMemo, useReducer, useRef, useState, useSyncExternalStore } from "react";
 export type { ClipboardEvent, ComponentProps, ComponentPropsWithoutRef, ComponentType, CSSProperties, Dispatch, DragEvent, ErrorInfo, FC, FormEvent, HTMLAttributes, KeyboardEvent, MouseEvent, MutableRefObject, PointerEvent, ReactElement, ReactNode, RefObject, SetStateAction, WheelEvent } from "react";
 export { createRoot } from "react-dom/client";
 export type { Root } from "react-dom/client";

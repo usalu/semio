@@ -2,7 +2,7 @@
 
 use crate::editor::wires::modes::edit::tools::reorganize;
 use crate::editor::wires::modes::edit::windows::canvas;
-use semio_plugin::create_default_layout;
+use semio_plugin::{create_default_layout, Axis};
 use semio_ui_locale::LocalizedLabel;
 use semio_plugin::ModeDefinition;
 use semio_plugin::ToolRef;
@@ -19,7 +19,7 @@ pub fn definition() -> ModeDefinition {
 /// 🪟️ The app's default window layout — this mode is the app's `default_mode_id`, so its layout IS the
 /// app-level `default_layout`.
 pub fn layout() -> WindowLayout {
-    create_default_layout(&[canvas::WIRES_PLAY_WINDOW_CANVAS.into()], "row", Some(&[100.0]), Some(&["Canvas".into()]))
+    create_default_layout(&[canvas::WIRES_PLAY_WINDOW_CANVAS.into()], Axis::Horizontal, Some(&[1.0]), Some(&["Canvas".into()]))
 }
 //#endregion 🔖️Definition
 

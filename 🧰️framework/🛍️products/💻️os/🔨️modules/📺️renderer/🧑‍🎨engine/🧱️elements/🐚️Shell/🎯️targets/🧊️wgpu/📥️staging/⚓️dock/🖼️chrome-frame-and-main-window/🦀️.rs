@@ -124,7 +124,7 @@ impl ShellDockState {
     /// `excludedIds` excludes the dragged subtree.
     #[allow(clippy::too_many_arguments, reason = "the tab row's own geometry, forwarded unchanged")]
     pub fn dock_tab_insert_preview(&self, row: &[DockTabNode], atlas: &mut FontAtlas, theme: &Theme, row_rect: Rect, offset: f32, pointer_x: f32, pointer_y: f32) -> Option<f32> {
-        if !row_rect.contains(pointer_x, pointer_y) {
+        if !row_rect.contains(pointer_x, pointer_y) || self.dock_tab_nest_target(row, atlas, theme, row_rect, offset, pointer_x, pointer_y).is_some() {
             return None;
         }
         let dragged = self.dock_tab_drag.as_ref().map(|(tab_id, _)| tab_id.as_str());
@@ -140,6 +140,45 @@ impl ShellDockState {
         }
         Some(x)
     }
+
+    /// 🪺️ The index of the BRANCH chip the pointer nests a dragged tab into, or `None`: React's `computeTabDockDropZone` answers `child` when the pointer is inside a branch button's `nestMinFraction..nestMaxFraction` band (30-70%, from the shared schema), and the dragged subtree's own chip is excluded.
+    #[allow(clippy::too_many_arguments, reason = "the tab row's own geometry, forwarded unchanged")]
+    pub fn dock_tab_nest_target(&self, row: &[DockTabNode], atlas: &mut FontAtlas, theme: &Theme, row_rect: Rect, offset: f32, pointer_x: f32, pointer_y: f32) -> Option<usize> {
+        if !row_rect.contains(pointer_x, pointer_y) {
+            return None;
+        }
+        let drop = &semio_renderer_wgpu_shell_chrome_state::chrome_parity_constants().panel_drop;
+        let dragged = self.dock_tab_drag.as_ref().map(|(tab_id, _)| tab_id.as_str());
+        let mut x = row_rect.x - offset;
+        for (index, node) in row.iter().enumerate() {
+            let item = ChromeGroupItem { control_id: node.id.as_str(), icon_id: Some(node.icon_id.as_str()), label: Some(node.label.as_str()), active: false, disabled: false, kind: HitKind::PanelTab };
+            let chip_w = retained_panel_chrome_item_width(atlas, theme, &item).unwrap_or(theme.control_height);
+            if dragged != Some(node.id.as_str()) && pointer_x >= x && pointer_x < x + chip_w {
+                let fraction = if chip_w > 0.0 { (pointer_x - x) / chip_w } else { 0.5 };
+                return (node.is_branch() && fraction > drop.nest_min_fraction && fraction < drop.nest_max_fraction).then_some(index);
+            }
+            x += chip_w + theme.gap_standard;
+        }
+        None
+    }
+}
+
+/// 💧️ The box of an EMPTY anchor's drop zone while a tab drag is live — React's `PanelEmptyDockZone` (`min-w-[10rem]`, one control tall), aligned to the anchor's own corner or edge of the dock `body`.
+pub fn empty_anchor_drop_zone_rect(anchor: PanelAnchor, body: Rect, theme: &Theme) -> Rect {
+    let constants = semio_renderer_wgpu_shell_chrome_state::chrome_parity_constants();
+    let width = constants.panel_drop.empty_zone_min_width_rem * constants.status_stacks.rem_px;
+    let height = theme.control_height;
+    let x = match anchor.horizontal() {
+        "left" => body.x,
+        "right" => body.x + body.w - width,
+        _ => body.x + (body.w - width) * 0.5,
+    };
+    let y = match anchor.vertical() {
+        "top" => body.y,
+        "bottom" => body.y + body.h - height,
+        _ => body.y + (body.h - height) * 0.5,
+    };
+    Rect::new(x, y, width, height)
 }
 
 //#endregion ShellChrome

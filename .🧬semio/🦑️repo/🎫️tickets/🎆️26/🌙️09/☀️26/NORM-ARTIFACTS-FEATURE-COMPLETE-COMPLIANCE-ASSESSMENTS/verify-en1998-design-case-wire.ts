@@ -16,9 +16,13 @@ ajv.addSchema(snapshotSchema);
 const cases = await getJson(resolve(root,"🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/📋️design-cases.json"));
 const archive = await getJson(resolve(root,"🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json"));
 const assert = (condition, description) => { if (!condition) throw Error(description); };
-assert(parseEn1998Snapshot({...archive,cases}).cases.length===2,"Snapshot reader must return both authored case rows");
+const parsed = parseEn1998Snapshot({...archive,cases});
+assert(isDeepStrictEqual(parsed.cases,cases),"Snapshot reader must retain all authored case rows");
+assert(cases.some(row=>row.entryId==="C98-19"),"The fixture must cover differential ground movement");
+assert(cases.some(row=>row.entryId==="C98-22"),"The fixture must cover the fault crossing measures");
+assert(cases.some(row=>row.entryId==="C98-23"),"The fixture must cover seismic silo wall pressure");
 const operations = [
-  ["➕️insert-case",{mutation:"insertCase",index:0,case:cases[0]}],
+  ["➕️insert-case",{mutation:"insertCase",index:0,case:cases[2]}],
   ["➖️remove-case",{mutation:"removeCase",id:cases[0].id}],
   ["🔢️change-case-number",{mutation:"changeCaseNumber",caseId:cases[0].id,key:"pipe_radius",value:0.45}],
   ["🔤️change-case-text",{mutation:"changeCaseText",caseId:cases[0].id,key:"pipe_wave_basis",value:"unconfirmed"}],
@@ -36,12 +40,12 @@ for (const [folder,operation] of operations) {
 const emptyDelta = () => ({removed:[],inserted:[],moved:[],modified:[]});
 const empty = Object.fromEntries(Object.entries(diffSchema.properties)
   .filter(([key])=>!["annex","site"].includes(key)).map(([key])=>[key,emptyDelta()]));
-const caseDiff = {...empty,cases:{...emptyDelta(),inserted:[{index:0,row:cases[0]}],modified:[{
+const caseDiff = {...empty,cases:{...emptyDelta(),inserted:[{index:0,row:cases[2]}],modified:[{
   id:cases[1].id,
   patch:{numbers:{...emptyDelta(),modified:[{id:"spatial_reference_distance",patch:{value:180}}]}},
 }]}};
 const checkDiff = ajv.compile(diffSchema);
 assert(checkDiff(caseDiff),JSON.stringify(checkDiff.errors));
-assert(parseEn1998Diff(caseDiff).cases.inserted[0].row.id===cases[0].id,"Diff reader dropped the inserted case");
+assert(parseEn1998Diff(caseDiff).cases.inserted[0].row.id===cases[2].id,"Diff reader dropped the inserted case");
 assert(parseEn1998Diff(caseDiff).cases.modified[0].patch.numbers.modified[0].patch.value===180,"Diff reader dropped a nested number edit");
 console.log("[DEBUG] EN 1998 snapshot, seven case mutations and nested case diff passed TypeScript and independent Ajv.");

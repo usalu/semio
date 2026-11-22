@@ -84,7 +84,7 @@ use semio_ui_contract as ui;
 
 //#region 🔖️Constants
 pub const BODY_KEY: &str = "fem3d.play.inspection";
-const ROOT: &str = "fem3d-play-inspection";
+pub const ROOT: &str = "fem3d-play-inspection";
 /// 🔽️ Options one reference select offers before it stops listing — a document with more nodes than
 /// this is re-pointed in the viewport, not from a dropdown, and `UiFixedList` admits 32 at most.
 const SELECT_ITEMS_MAX: usize = 24;

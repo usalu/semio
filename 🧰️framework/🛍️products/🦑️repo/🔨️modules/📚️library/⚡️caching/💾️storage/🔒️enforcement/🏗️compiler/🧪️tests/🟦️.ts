@@ -13,6 +13,8 @@ import {recoverNativeStorageReservationV1,nativeStorageRetirementPortV1} from "@
 import {ordinaryNativeStoragePortV1} from "@semio-tech/process/artifacts/native-build/storage";
 import type {NativeImageStorageV1} from "@semio-tech/process/artifacts/native-build/storage/platform/contract";
 import{privateRepositoryWorkspaceV1}from"../../../../../🧪️testing/🧫️private-repository/🟦️.ts";
+import {declareLibraryBuildTestEnvelopeV1} from "../../../../../🧪️testing/🪪️native-birth/🟦️.ts";
+declareLibraryBuildTestEnvelopeV1({suite:"storage-compiler-processes"});
 const repository=await privateRepositoryWorkspaceV1();
 
 test("neutral unsupported build modes refuse before storage observation",async()=>{

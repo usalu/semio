@@ -375,3 +375,45 @@ func TestListingNamesExposedAndExcludedRows(t *testing.T) {
 }
 
 // #endregion 🏗️BuildSurfaceTests
+
+// 🧹️TestEveryFlagIsTypedByWhatItsValueNameMeans sweeps the whole catalogue: a value name that lists literals only is a closed enum with exactly those values, a value name that mixes a free placeholder with literals (`ids|all`) is no enum, and a count, port, pid, size or interval is an integer, never a bare string.
+func TestEveryFlagIsTypedByWhatItsValueNameMeans(t *testing.T) {
+	catalogue, policy := authoredSurface(t)
+	tools, err := Derive(catalogue, policy)
+	if err != nil {
+		t.Fatal(err)
+	}
+	numeric := []string{"n", "port", "pid", "seconds", "bytes", "cores", "megabytes"}
+	checked := 0
+	for _, tool := range tools {
+		for _, input := range tool.Inputs {
+			if input.Flag == "" {
+				continue
+			}
+			row, ok := catalogue.flag(input.Flag, tool.Operation)
+			if !ok || row.Value == "none" {
+				continue
+			}
+			checked++
+			alternatives := strings.Split(row.ValueName, "|")
+			mixed := len(alternatives) > 1 && slices.ContainsFunc(alternatives, func(value string) bool { return slices.Contains(placeholderWords, value) })
+			switch {
+			case mixed && input.Kind == InputEnum:
+				t.Errorf("%s.%s: %q mixes free values with literals and must not be an enum", tool.Name, input.Name, row.ValueName)
+			case slices.Contains(numeric, row.ValueName) && input.Kind != InputInteger && input.Kind != InputList:
+				t.Errorf("%s.%s: %q is a number but the input is %s", tool.Name, input.Name, row.ValueName, input.Kind)
+			case len(alternatives) > 1 && !mixed && enumOf(row.ValueName) != nil && input.Kind == InputEnum && !slices.Equal(input.Items, alternatives):
+				t.Errorf("%s.%s: enum %q differs from %q", tool.Name, input.Name, input.Items, row.ValueName)
+			}
+		}
+	}
+	if checked < 50 {
+		t.Fatalf("the sweep saw only %d typed flags", checked)
+	}
+	if got := enumOf("ids|all"); got != nil {
+		t.Fatalf("ids|all is no closed set: %q", got)
+	}
+	if got := enumOf("on|off"); !slices.Equal(got, []string{"on", "off"}) {
+		t.Fatalf("on|off is a closed set: %q", got)
+	}
+}

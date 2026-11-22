@@ -197,14 +197,14 @@ where
 
 /// 🎬️ Projects the same stationary render source without donating its native resources to the fixture.
 #[doc(hidden)]
-pub async fn render_registered_fixture_app<A,M>(app:&mut VcsArtifactApp<A,M>,body_key:&str,view:&semio_framework::ViewModel,cx:&mut semio_framework_job::StepContext<'_>)->Result<String,semio_framework_job::OriginalTurnFailure>
-where A:ArtifactApp+Default,M:store::ReferenceSpaceMember+store::MemberFactory+Send+'static{
+pub async fn render_registered_fixture_app<PA:semio_plugin_reactor_app::PluginApp>(app:&mut PA,body_key:&str,view:&semio_framework::ViewModel,cx:&mut semio_framework_job::StepContext<'_>)->Result<String,semio_framework_job::OriginalTurnFailure>
+{
     render_registered_fixture_app_over(app,body_key,None,view,cx).await
 }
 
 /// 🧹️ Retires the stationary render tree through the host's own funded close after the caller observed it, so the next render rebuilds from the current document instead of re-serving the retained tree.
-fn release_fixture_render<A,M>(app:&mut VcsArtifactApp<A,M>,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>
-where A:ArtifactApp+Default,M:store::ReferenceSpaceMember+store::MemberFactory+Send+'static{
+fn release_fixture_render<PA:semio_plugin_reactor_app::PluginApp>(app:&mut PA,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>
+{
     fixture_end_turn(cx)?;
     for _ in 0..OriginalFixtureCaller::maximum_turns(){
         if app.close_render_work_request(cx)?==Some(true){return Ok(())}
@@ -215,8 +215,9 @@ where A:ArtifactApp+Default,M:store::ReferenceSpaceMember+store::MemberFactory+S
 
 /// 🎬️ [`render_registered_fixture_app`] over an explicit snapshot override document, the way the host renders an embedded payload.
 #[doc(hidden)]
-pub async fn render_registered_fixture_app_over<A,M>(app:&mut VcsArtifactApp<A,M>,body_key:&str,snapshot_override_json:Option<&str>,view:&semio_framework::ViewModel,cx:&mut semio_framework_job::StepContext<'_>)->Result<String,semio_framework_job::OriginalTurnFailure>
-where A:ArtifactApp+Default,M:store::ReferenceSpaceMember+store::MemberFactory+Send+'static{
+pub async fn render_registered_fixture_app_over<PA:semio_plugin_reactor_app::PluginApp>(app:&mut PA,body_key:&str,snapshot_override_json:Option<&str>,view:&semio_framework::ViewModel,cx:&mut semio_framework_job::StepContext<'_>)->Result<String,semio_framework_job::OriginalTurnFailure>
+{
+    let _arena = super::FixtureUiArena::admit();
     fixture_end_turn(cx)?;
     for _ in 0..OriginalFixtureCaller::maximum_turns(){
         if cx.should_yield(){break}
@@ -236,6 +237,7 @@ where A:ArtifactApp+Default,M:store::ReferenceSpaceMember+store::MemberFactory+S
 #[doc(hidden)]
 pub async fn observe_registered_fixture_app<A,M,R>(app:&mut VcsArtifactApp<A,M>,body_key:&str,view:&semio_framework::ViewModel,cx:&mut semio_framework_job::StepContext<'_>,observe:impl FnOnce(&semio_ui_contract::BuiltNode)->R)->Result<R,semio_framework_job::OriginalTurnFailure>
 where A:ArtifactApp+Default,M:store::ReferenceSpaceMember+store::MemberFactory+Send+'static{
+    let _arena = super::FixtureUiArena::admit();
     for _ in 0..OriginalFixtureCaller::maximum_turns(){
         if cx.should_yield(){break}
         if app.render(body_key,None,view,cx).await?.is_some(){

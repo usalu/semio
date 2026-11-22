@@ -1,0 +1,24 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["root", "owner", "contracts", "edits"],
+  "properties": {
+    "root": { "type": "string" },
+    "owner": { "type": "string" },
+    "contracts": { "type": "object", "additionalProperties": { "type": "object" } },
+    "edits": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "id", "field", "value"],
+        "properties": {
+          "name": { "type": "string" },
+          "id": { "type": "string" },
+          "field": { "type": "string" },
+          "value": {}
+        }
+      }
+    }
+  }
+}

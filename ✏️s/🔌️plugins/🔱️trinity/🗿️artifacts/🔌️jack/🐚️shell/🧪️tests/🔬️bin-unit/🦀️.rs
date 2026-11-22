@@ -2,15 +2,13 @@ use super::*;
 use semio_framework_graph_manifest::{PortDirection, PropertyBag};
 use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::ast::JackQueryGraphSnapshot;
 use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::graph::{Camera, Node, Port};
-use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::manifest::Manifest;
 use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
 
 fn mini_json() -> String {
     JackQueryGraphSnapshot {
         schema: JackSnapshot::SCHEMA.into(),
         name: "mini".into(),
-        manifest_id: Some("nakagin".into()),
-        manifest: Manifest::nakagin_default(),
+        manifest_id: "nakagin".into(),
         camera: Camera::default(),
         nodes: vec![Node {
             id: "root".into(),

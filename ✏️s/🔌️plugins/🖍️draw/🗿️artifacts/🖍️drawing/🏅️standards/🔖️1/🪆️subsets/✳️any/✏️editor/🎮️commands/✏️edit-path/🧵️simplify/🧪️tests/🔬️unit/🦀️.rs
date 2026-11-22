@@ -45,7 +45,7 @@ fn retained_path_simplification_shared_cases() {
         let command=DrawingCommand::EditPath(edit_path::EditPath {layer_id:id.to_string_owner(),edit:Box::new(serde_json::from_value(case["operation"].clone()).unwrap())});
         let config=NoConfig {};let history=semio_plugin::HistoryView::empty();let interaction=protocol::InteractionState::default();let hover=semio_plugin::app::InteractionHoverState::new();
         let operation=semio_plugin::AppOperationContext {app_instance_id:1,parent_document_id:"simplify".into(),operation_id:1,generation:1,canonical_base_revision:[0;32],retained:semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation,authoring_seed:"simplify".into()};
-        let input=ArtifactCommandInputs::<App> {command:&command,snapshot:&snapshot,snapshot_owner:None,snapshot_read:None,config:&config,history:&history,interaction:&interaction,hover:&hover,context:None,operation:&operation};
+        let input=ArtifactCommandInputs::<App> {command:&command,snapshot:&snapshot,snapshot_owner:None,snapshot_read:semio_plugin::retained_command::ArtifactCommandSnapshotRead::unavailable(&operation),config:&config,history:&history,interaction:&interaction,hover:&hover,context:None,operation:&operation};
         let mut work=Work::new();let mut progressed=false;let mut completed=false;
         let mut caller = job_caller(&operation);
         for _ in 0..20000 {

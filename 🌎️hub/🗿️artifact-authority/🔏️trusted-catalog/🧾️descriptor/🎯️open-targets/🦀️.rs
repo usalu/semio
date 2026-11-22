@@ -1,6 +1,7 @@
 //! 🎯️ Document-open target derivation: the one pairing rule, hosted codec targets, creation preference, the most general dialect and the sort key.
 
 use super::*;
+use semio_framework::{MostGeneralDialect, most_general_dialect};
 
 /// 🗂️ The one pairing rule between a verified descriptor's artifact kinds and its surfaces, shared by
 /// publication ([`descriptor_open_targets`]) and verification ([`validate_descriptor_open_target`]). A
@@ -108,45 +109,10 @@ pub fn hosted_codec_targets<'a>(packages: &'a [TrustedBundlePackageV1], host: &'
 /// non-empty tier decides by [`most_general_dialect`], so a host never makes an owner's kind ambiguous, a whole-standard
 /// editor creates for its subset editors, and two most general editors (two owners, two standards) never pick one.
 pub fn owner_preferred_creation<T>(owned: Vec<T>, hosted: Vec<T>, dialect: impl Fn(&T) -> &semio_framework::ArtifactDialect) -> MostGeneralDialect<T> {
-    most_general_dialect(if owned.is_empty() { hosted } else { owned }, dialect)
-}
-
-/// 🌳️ What [`most_general_dialect`] answers over the surfaces of one role that share a document.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum MostGeneralDialect<T> {
-    One(T),
-    Ambiguous,
-    Empty,
-}
-
-impl<T> MostGeneralDialect<T> {
-    /// 🎯️ The one answer, when there is one.
-    pub fn one(self) -> Option<T> {
-        match self {
-            Self::One(candidate) => Some(candidate),
-            Self::Ambiguous | Self::Empty => None,
-        }
-    }
-}
-
-/// 🌳️ The ONE most-general-dialect rule ([fixture](../../../🧰️framework/🛍️products/💻️os/🔨️modules/🚪️io/🧫️fixtures/🌳️most-general-dialect/🔣️.json),
-/// read by the guest's `artifact_codec_owner` too): the candidate no other candidate covers ([`dialect_covers`]); several
-/// uncovered candidates are ambiguous and refused rather than resolved by order.
-pub fn most_general_dialect<T>(candidates: Vec<T>, dialect: impl Fn(&T) -> &semio_framework::ArtifactDialect) -> MostGeneralDialect<T> {
-    let covered = candidates.iter().map(|candidate| candidates.iter().any(|other| dialect_covers(dialect(other), dialect(candidate)))).collect::<Vec<_>>();
-    let mut uncovered = candidates.into_iter().zip(covered).filter_map(|(candidate, covered)| (!covered).then_some(candidate));
-    match (uncovered.next(), uncovered.next()) {
-        (Some(one), None) => MostGeneralDialect::One(one),
-        (Some(_), Some(_)) => MostGeneralDialect::Ambiguous,
-        (None, _) => MostGeneralDialect::Empty,
-    }
-}
-
-/// 🌳️ Whether `general` is the whole-standard dialect (`<kind>@<standard>/*`) of `subset`'s own kind and standard: every
-/// document of a subset of a standard is a document of the whole standard, so the whole-standard surface covers it.
-fn dialect_covers(general: &semio_framework::ArtifactDialect, subset: &semio_framework::ArtifactDialect) -> bool {
-    let any = semio_framework::SubsetId::ANY.0;
-    general.subset == any && subset.subset != any && general.artifact_kind == subset.artifact_kind && general.standard == subset.standard
+    most_general_dialect(if owned.is_empty() { hosted } else { owned }, |candidate| {
+        let dialect = dialect(candidate);
+        (&dialect.artifact_kind, &dialect.standard, &dialect.subset)
+    })
 }
 
 /// 🏷️ The declaration of `selection`'s exact kind among `kinds`.

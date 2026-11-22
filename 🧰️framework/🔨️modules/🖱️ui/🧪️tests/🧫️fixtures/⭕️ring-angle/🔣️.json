@@ -1,0 +1,21 @@
+{
+  "size": 100,
+  "radius": 40,
+  "frames": [[0, 0, 100, 100], [20, 30, 200, 100], [5, 7, 100, 160]],
+  "knobs": [
+    { "id": "top", "t": 0, "offset": [0, -40] },
+    { "id": "eighth", "t": 0.125, "offset": [28.284271, -28.284271] },
+    { "id": "right", "t": 0.25, "offset": [40, 0] },
+    { "id": "bottom", "t": 0.5, "offset": [0, 40] },
+    { "id": "left", "t": 0.75, "offset": [-40, 0] },
+    { "id": "upper-left", "t": 0.875, "offset": [-28.284271, -28.284271] }
+  ],
+  "drags": [
+    { "id": "above", "offset": [0, -30], "t": 0 },
+    { "id": "right", "offset": [30, 0], "t": 0.25 },
+    { "id": "below", "offset": [0, 30], "t": 0.5 },
+    { "id": "left", "offset": [-30, 0], "t": 0.75 },
+    { "id": "upper-left", "offset": [-30, -30], "t": 0.875 },
+    { "id": "lower-right", "offset": [30, 30], "t": 0.375 }
+  ]
+}

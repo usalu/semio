@@ -18,6 +18,7 @@ import { type PluginWasmHandle } from "../../../🔌️PluginRuntime/🟦️.tsx
 import { seededActiveWindowId } from "../../🎚️shell-model/🟦️.tsx";
 import { encodeWindowActionInvocation } from "../../📨️window-invocation/🟦️.ts";
 import { canonicalSurfaceId } from "../../🔐️identity-binding/🟦️.ts";
+import type { DocumentOpeningReference } from "../../🧭️opening/🟦️.ts";
 import { requiredHostPanelLeafId, withLocalizedWindowKindLabels } from "../../🧱️built-node-stores/🟦️.ts";
 import type { useDocumentServicesState } from "../🔶️document-services/🟦️.ts";
 import type { useUpdateSpacePanelState } from "../🔸️update-space-panel/🟦️.ts";
@@ -154,7 +155,7 @@ export function useSwitchPluginAppState({ pluginOpInFlightRef, admitProgramRetir
   }, []);
 
   const ensureSpawnedPlugin = useCallback(
-    async (program: SpaceProgramEntry, isCurrent: () => boolean, label?: string, osInstanceId?: string, artifactJson?: string, sourceViewState?: ViewModel): Promise<SpacePanelState | null> => {
+    async (program: SpaceProgramEntry, isCurrent: () => boolean, label?: string, osInstanceId?: string, artifactJson?: string, sourceViewState?: ViewModel, document?: DocumentOpeningReference): Promise<SpacePanelState | null> => {
       if (!isCurrent()) return null;
       const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === program.pluginId);
       const host = sessionRef.current;
@@ -162,9 +163,31 @@ export function useSwitchPluginAppState({ pluginOpInFlightRef, admitProgramRetir
       const held = (): boolean => isCurrent() && !pluginOpInFlightRef.current.has(program.pluginId) && loadedPluginsRef.current.some(entry => entry.handle === pluginEntry.handle) && sessionRef.current?.pluginId === host.pluginId && sessionRef.current.app.id === host.app.id && sessionRef.current.instanceId === host.instanceId;
       if (!held()) return null;
       const app = pluginEntry.manifest.apps.find((candidate) => candidate.id === program.appId);
+      if (document !== undefined && app === undefined) return null;
       const currentPanel = parsePanelState(sourceViewState ?? host.viewState) ?? buildSpacePanelState([], requiredHostPanelLeafId(hostApp));
       const existing = osInstanceId ? currentPanel.spawnedApps.find((entry) => entry.id === osInstanceId) : currentPanel.spawnedApps.find((entry) => entry.appId === program.appId && entry.pluginId === program.pluginId);
+      const attach = async (instanceId: number, ownerApp: AppDefinition): Promise<DocumentOpeningReceiptV1 | null> => {
+        if (document === undefined) return null;
+        const targetSession: ActiveSession = { pluginId: program.pluginId, instanceId, app: ownerApp, viewState: spawnedProgramViewStateV1(sourceViewState ?? host.viewState, ownerApp), documentInitialized: true };
+        return openDocumentRef.current(document, undefined, { session: targetSession, plugin: pluginEntry.handle, current: held, predecessorClientInstanceId: null });
+      };
       if (existing) {
+        if (document !== undefined) {
+          const ownerApp = pluginEntry.manifest.apps.find((candidate) => candidate.id === existing.appId);
+          if (ownerApp === undefined || existing.pluginId !== program.pluginId) return null;
+          const mounted = [...openDocumentSessionsRef.current.values()].find((entry) => entry.plugin === pluginEntry.handle && entry.session.instanceId === existing.instanceId);
+          if (mounted) {
+            const reference = mounted.openingReference;
+            if (reference.documentId !== document.documentId || reference.schema !== document.schema || reference.spaceId !== document.spaceId) return null;
+          } else {
+            const receipt = await attach(existing.instanceId, ownerApp);
+            if (receipt === null) return null;
+            if (!held()) {
+              closeDocumentRef.current(receipt.runtimeKey, receipt.clientInstanceId);
+              return null;
+            }
+          }
+        }
         if (artifactJson && app) {
           await syncSpawnedPluginDocument(pluginEntry.handle, app, existing.instanceId, artifactJson, sourceViewState ?? host.viewState);
         }
@@ -172,22 +195,32 @@ export function useSwitchPluginAppState({ pluginOpInFlightRef, admitProgramRetir
       }
       const instanceId = await createAdmittedShellInstanceV1(held, () => pluginEntry.handle.createApp(program.appId), (id) => pluginEntry.handle.destroyApp(id));
       if (instanceId === null) return null;
-      if (artifactJson && app) {
-        await syncSpawnedPluginDocument(pluginEntry.handle, app, instanceId, artifactJson, sourceViewState ?? host.viewState);
+      let receipt: DocumentOpeningReceiptV1 | null = null;
+      let opened = false;
+      try {
+        if (document !== undefined && app !== undefined) {
+          receipt = await attach(instanceId, app);
+          if (receipt === null) return null;
+        } else if (artifactJson && app) {
+          await syncSpawnedPluginDocument(pluginEntry.handle, app, instanceId, artifactJson, sourceViewState ?? host.viewState);
+        }
+        opened = held();
+        if (!opened) return null;
+        return studioPanelFocusingSpawned(currentPanel, {
+          id: osInstanceId ?? `${program.pluginId}-${instanceId}`,
+          pluginId: program.pluginId,
+          instanceId,
+          appId: program.appId,
+          label: label ?? program.label,
+          breadcrumb: program.breadcrumb,
+        });
+      } finally {
+        if (!opened) {
+          if (receipt !== null) closeDocumentRef.current(receipt.runtimeKey, receipt.clientInstanceId);
+          await documentAttachmentLanesRef.current.get(pluginEntry.handle)?.get(instanceId)?.drain();
+          await pluginEntry.handle.destroyApp(instanceId);
+        }
       }
-      if (!held()) {
-        await pluginEntry.handle.destroyApp(instanceId);
-        return null;
-      }
-      const spawnedId = osInstanceId ?? `${program.pluginId}-${instanceId}`;
-      return studioPanelFocusingSpawned(currentPanel, {
-        id: spawnedId,
-        pluginId: program.pluginId,
-        instanceId,
-        appId: program.appId,
-        label: label ?? program.label,
-        breadcrumb: program.breadcrumb,
-      });
     },
     [loadedPlugins, session, syncSpawnedPluginDocument, hostApp],
   );

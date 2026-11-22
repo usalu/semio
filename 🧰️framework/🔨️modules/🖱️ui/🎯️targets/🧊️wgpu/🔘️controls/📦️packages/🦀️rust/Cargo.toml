@@ -4,7 +4,7 @@ name = "semio-ui-wgpu-controls"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
-description = "semio wgpu control renderers: select, slider, stepper, input, button, toggle, key value, ring and icon selector"
+description = "semio wgpu control renderers: select, slider and stepper"
 
 [package.metadata.semio]
 role = "framework"

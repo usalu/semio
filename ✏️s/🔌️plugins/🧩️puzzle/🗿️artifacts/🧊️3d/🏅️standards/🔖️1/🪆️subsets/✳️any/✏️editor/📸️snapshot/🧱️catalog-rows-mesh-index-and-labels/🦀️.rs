@@ -168,16 +168,19 @@ pub fn collect_mesh_urls(scene_snapshot: &Puzzle3dSceneSnapshot) -> Vec<String> 
 }
 
 pub fn object_scale_json(object: &Puzzle3dObject) -> [f64; 3] {
-    match object.scale.as_ref().and_then(semio_framework_value::DslValue::as_array) {
-        Some(values) if values.len() >= 3 => [values[0].as_f64().unwrap_or(1.0), values[1].as_f64().unwrap_or(1.0), values[2].as_f64().unwrap_or(1.0)],
-        _ => [1.0, 1.0, 1.0],
-    }
+    scene_scale_json(object.scale.as_ref())
 }
 
 pub fn target_volume_scale_json(volume: &Puzzle3dTargetVolume) -> [f64; 3] {
-    match volume.scale.as_ref().and_then(semio_framework_value::DslValue::as_array) {
-        Some(values) if values.len() >= 3 => [values[0].as_f64().unwrap_or(1.0), values[1].as_f64().unwrap_or(1.0), values[2].as_f64().unwrap_or(1.0)],
-        _ => [1.0, 1.0, 1.0],
+    scene_scale_json(volume.scale.as_ref())
+}
+
+fn scene_scale_json(scale: Option<&semio_framework_value::DslValue>) -> [f64; 3] {
+    use semio_framework_value::DslValue;
+    match scale {
+        Some(DslValue::Number(scale)) => [scale.as_f64(); 3],
+        Some(DslValue::Array(values)) if values.len() >= 3 => std::array::from_fn(|axis| values[axis].as_f64().unwrap_or(1.0)),
+        _ => [1.0; 3],
     }
 }
 

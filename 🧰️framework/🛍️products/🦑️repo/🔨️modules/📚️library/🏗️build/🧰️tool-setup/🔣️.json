@@ -12,6 +12,7 @@
       "uv",
       "python-main",
       "python-oracle",
+      "micromamba",
       "dotnet",
       "cmake",
       "ninja",
@@ -480,6 +481,41 @@
       ],
       "setup": {
         "kind": "binaryen"
+      }
+    },
+    {
+      "id": "micromamba",
+      "summary": {
+        "en": "micromamba installs the native libraries of the Python course environment on macOS.",
+        "de": "micromamba installiert die nativen Bibliotheken der Python-Kursumgebung auf macOS."
+      },
+      "platforms": [
+        "darwin"
+      ],
+      "pin": {
+        "format": "json",
+        "file": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📦️packages/🐍️python/🧱️native/🔣️.json",
+        "pointer": "/micromamba/version"
+      },
+      "probe": {
+        "mode": "hook",
+        "arguments": [],
+        "pattern": ""
+      },
+      "locate": [
+        {
+          "kind": "hook"
+        }
+      ],
+      "setup": {
+        "kind": "script",
+        "script": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📦️packages/🐍️python/🧱️native/🟦️.ts",
+        "prepare": [
+          "prepare-micromamba"
+        ],
+        "verify": [
+          "verify-micromamba"
+        ]
       }
     },
     {

@@ -40,7 +40,7 @@ pub use world3d_mesh_family::{
 mod world3d_lines_grid_and_textured_family;
 pub use world3d_lines_grid_and_textured_family::{
     WORLD3D_FAMILY, WORLD3D_GRID_PIPELINE, WORLD3D_GRID_SHADER, WORLD3D_LINES_SHADER,
-    WORLD3D_LINE_PIPELINE, WORLD3D_TEXTURED_PIPELINE, WORLD3D_TEXTURED_SHADER,
+    WORLD3D_LINE_PIPELINE, WORLD3D_POINTS_PIPELINE, WORLD3D_POINTS_SHADER, WORLD3D_TEXTURED_PIPELINE, WORLD3D_TEXTURED_SHADER,
 };
 
 #[path = "🌫️blur-glass-families-and-registry/🦀️.rs"]

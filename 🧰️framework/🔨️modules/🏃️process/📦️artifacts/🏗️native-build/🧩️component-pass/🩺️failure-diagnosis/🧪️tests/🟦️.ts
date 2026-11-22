@@ -5,7 +5,7 @@ import {expect,test} from "bun:test";
 import {STALE_IMPLEMENTATION_CODES_V1} from "../../../../../../📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
 import {staleImplementationOfV1} from "../../../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧷️format-stamps/🟨️.mjs";
 import {guardStandardStreamsV1} from "../../../../../../⚙️runtime/🏁️main/🟦️.ts";
-import {UNIT_KILLED_CODE_V1,UnitKilledErrorV1,createErrorCaptureV1,killedUnitsV1,unitExitSignalV1,type UnitEndV1} from "../🟦️.ts";
+import {UNIT_KILLED_CODE_V1,UnitKilledErrorV1,cargoSilentExitV1,createErrorCaptureV1,killedUnitsV1,unitExitSignalV1,type UnitEndV1} from "../🟦️.ts";
 
 const unit=(crate:string,exit:number,peak=1024**3):UnitEndV1=>({pass:"prototype-00",crate,package:crate,crateTypes:["lib"],exit,peakRssBytes:peak});
 
@@ -57,4 +57,13 @@ test("the standard stream guard drops EPIPE once per stream and raises any other
  expect(()=>stream.emit("error",Object.assign(Error("write EPIPE"),{code:"EPIPE"}))).not.toThrow();
  expect(()=>stream.emit("error",Object.assign(Error("gone"),{code:"ERR_STREAM_DESTROYED"}))).not.toThrow();
  expect(()=>stream.emit("error",Object.assign(Error("disk"),{code:"ENOSPC"}))).toThrow("disk");
+});
+
+test("a Cargo exit without any diagnostic is named instead of left silent",()=>{
+ const silent={diagnosed:false,unitsStarted:1050};
+ expect(cargoSilentExitV1(0,silent,"linux")).toBeUndefined();
+ expect(cargoSilentExitV1(101,{...silent,diagnosed:true},"linux")).toBeUndefined();
+ expect(cargoSilentExitV1(128+constants.signals.SIGTERM,silent,"linux")).toContain("ended by SIGTERM (exit 143)");
+ expect(cargoSilentExitV1(1,silent,"linux")).toContain("exited with 1 without any compiler error or stderr output after 1050 unit(s)");
+ expect(cargoSilentExitV1(143,silent,"win32")).toContain("exited with 143");
 });

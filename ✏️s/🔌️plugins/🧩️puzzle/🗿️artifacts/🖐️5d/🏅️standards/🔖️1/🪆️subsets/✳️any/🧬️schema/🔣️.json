@@ -218,6 +218,7 @@
           "$ref": "#/$defs/Binary64"
         },
         "shape": {
+          "x-semio-ui": { "label": { "en": "Shape", "de": "Form" } },
           "anyOf": [
             {
               "type": "string"
@@ -268,6 +269,7 @@
           ]
         },
         "iconKind": {
+          "x-semio-ui": { "label": { "en": "Icon kind", "de": "Symbolart" } },
           "anyOf": [
             {
               "type": "string"
@@ -305,9 +307,11 @@
       "required": [],
       "properties": {
         "origin": {
-          "$ref": "#/$defs/Vector3"
+          "$ref": "#/$defs/Vector3",
+          "x-semio-ui": { "label": { "en": "Origin", "de": "Ursprung" } }
         },
         "meshUrl": {
+          "x-semio-ui": { "label": { "en": "Mesh URL", "de": "Mesh-URL" } },
           "anyOf": [
             {
               "type": "string"
@@ -318,6 +322,7 @@
           ]
         },
         "orientation": {
+          "x-semio-ui": { "label": { "en": "Orientation", "de": "Ausrichtung" } },
           "anyOf": [
             {
               "$ref": "#/$defs/Vector4"
@@ -358,6 +363,7 @@
           "$ref": "#/$defs/Binary64"
         },
         "gripKind": {
+          "x-semio-ui": { "label": { "en": "Grip kind", "de": "Griffart" } },
           "anyOf": [
             {
               "type": "string"
@@ -388,6 +394,7 @@
           "$ref": "#/$defs/Vector3"
         },
         "direction": {
+          "x-semio-ui": { "label": { "en": "Direction", "de": "Richtung" } },
           "anyOf": [
             {
               "$ref": "#/$defs/Vector3"
@@ -430,6 +437,7 @@
           "type": "string"
         },
         "gripKind": {
+          "x-semio-ui": { "label": { "en": "Grip kind", "de": "Griffart" } },
           "anyOf": [
             {
               "type": "string"
@@ -440,10 +448,12 @@
           ]
         },
         "2d": {
-          "$ref": "#/$defs/Puzzle5dGrip2d"
+          "$ref": "#/$defs/Puzzle5dGrip2d",
+          "x-semio-ui": { "label": { "en": "2D grip", "de": "2D-Griff" } }
         },
         "3d": {
-          "$ref": "#/$defs/Puzzle5dGrip3d"
+          "$ref": "#/$defs/Puzzle5dGrip3d",
+          "x-semio-ui": { "label": { "en": "3D grip", "de": "3D-Griff" } }
         }
       }
     },
@@ -458,6 +468,7 @@
           "type": "string"
         },
         "partKind": {
+          "x-semio-ui": { "label": { "en": "Part kind", "de": "Teilart" } },
           "anyOf": [
             {
               "type": "string"
@@ -468,16 +479,26 @@
           ]
         },
         "anchor": {
-          "$ref": "#/$defs/Puzzle5dPartAnchor"
+          "$ref": "#/$defs/Puzzle5dPartAnchor",
+          "x-semio-ui": {
+            "label": { "en": "Anchor", "de": "Anker" },
+            "options": {
+              "fixed": { "en": "Fixed", "de": "Fest" },
+              "derived": { "en": "Derived", "de": "Abgeleitet" }
+            }
+          }
         },
         "2d": {
-          "$ref": "#/$defs/Puzzle5dPart2d"
+          "$ref": "#/$defs/Puzzle5dPart2d",
+          "x-semio-ui": { "label": { "en": "2D part", "de": "2D-Teil" } }
         },
         "3d": {
-          "$ref": "#/$defs/Puzzle5dPart3d"
+          "$ref": "#/$defs/Puzzle5dPart3d",
+          "x-semio-ui": { "label": { "en": "3D part", "de": "3D-Teil" } }
         },
         "grips": {
           "type": "array",
+          "x-semio-ui": { "label": { "en": "Grips", "de": "Griffe" } },
           "items": {
             "$ref": "#/$defs/Puzzle5dGrip"
           }
@@ -503,6 +524,7 @@
           "type": "string"
         },
         "fastenerKind": {
+          "x-semio-ui": { "label": { "en": "Fastener kind", "de": "Verbinderart" } },
           "anyOf": [
             {
               "type": "string"
@@ -600,7 +622,16 @@
           "type": "boolean"
         },
         "specificity": {
-          "$ref": "#/$defs/Puzzle5dCompatSpecificity"
+          "$ref": "#/$defs/Puzzle5dCompatSpecificity",
+          "x-semio-ui": {
+            "options": {
+              "general": { "en": "General", "de": "Allgemein" },
+              "part": { "en": "Part", "de": "Teil" },
+              "fastener": { "en": "Fastener", "de": "Verbinder" },
+              "grip": { "en": "Grip", "de": "Griff" },
+              "rope": { "en": "Rope", "de": "Seil" }
+            }
+          }
         }
       }
     },

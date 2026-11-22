@@ -273,7 +273,7 @@ fn wheel_zoom_emits_the_node_graph_viewport_action_with_the_moved_camera() {
     let _serialized = engine_surface_law_guard();
     let surface_id = "node-graph-attach-viewport";
     drop_engine_surface(surface_id);
-    let scene = flow_window_scene(surface_id);
+    let mut scene = flow_window_scene(surface_id);
     let bounds = Rect { x: 0.0, y: 0.0, w: 966.0, h: 836.0 };
     assert!(sync_node_graph_scene(&scene, "law-window", bounds, Theme::default().panel), "attach");
 
@@ -296,6 +296,19 @@ fn wheel_zoom_emits_the_node_graph_viewport_action_with_the_moved_camera() {
         })),
         "the published viewport is exactly the camera the host committed"
     );
+
+    let updated = [committed[0] + 10.0, committed[1] - 8.0, committed[2]];
+    scene.node_graph.as_mut().unwrap().viewport = Some(Viewport2d { x: updated[0], y: updated[1], zoom: updated[2] });
+    assert!(sync_node_graph_scene(&scene, "law-window", bounds, Theme::default().panel));
+    let (published, painted) = ENGINE_SURFACES.with(|cell| {
+        let registry = cell.borrow();
+        let Some(NodeGraphEngine::Flow(host)) = registry.get(surface_id)?.node_graph.as_ref() else { return None };
+        let camera = &host.dag.graph.host_snapshot.camera;
+        Some((host.camera(), [camera.x, camera.y, camera.zoom]))
+    }).expect("live flow host");
+    assert_eq!(published, updated);
+    assert_eq!(painted, updated);
+
     drop_engine_surface(surface_id);
 }
 
@@ -330,6 +343,35 @@ fn fit_graph_answers_the_fitted_camera_not_the_scene_camera() {
     assert_eq!(fitted, published, "the answer the control persists is the surface's own published camera");
     assert_eq!(published, painted, "the published camera and the painted camera are one camera");
     assert!((coverage - 1.0).abs() <= 1e-6, "a fitted camera frames the whole graph, got {coverage}");
+    drop_engine_surface(surface_id);
+}
+
+/// 🔲️ The framework `fitGraph` action persists the fitted camera the way a wheel zoom persists it: one `nodeGraphViewport` carrying exactly the camera the host installed, nothing when the camera did not move, and a fingerprint that keeps the NEXT gesture publishing. Ticket 26/09/09/PROCEDURAL-3D-END-TO-END.
+#[test]
+fn fit_graph_action_persists_the_fitted_camera_like_a_wheel_zoom() {
+    let _serialized = engine_surface_law_guard();
+    let surface_id = "node-graph-attach-fit-action";
+    drop_engine_surface(surface_id);
+    let scene = flow_window_scene(surface_id);
+    let bounds = Rect { x: 0.0, y: 0.0, w: 483.0, h: 814.0 };
+    assert!(sync_node_graph_scene(&scene, "law-window", bounds, Theme::default().panel), "attach");
+
+    let fit = semio_renderer_wgpu_engine_graph::node_graph::node_graph_fit_action;
+    let action = fit(surface_id, &scene.controller_id).expect("admitted").expect("the scene camera differs from the fit");
+    let installed = ENGINE_SURFACES
+        .with(|cell| {
+            let map = cell.borrow();
+            let Some(NodeGraphEngine::Flow(host)) = map.get(surface_id)?.node_graph.as_ref() else { return None };
+            Some(host.camera())
+        })
+        .expect("live flow host");
+    assert_eq!((action.controller_id.as_str(), action.action.as_str()), ("generation3d", "nodeGraphViewport"));
+    assert_eq!(action.args, Some(semio_framework::dsl_value!({ "surfaceId": surface_id, "viewport": { "x": installed[0], "y": installed[1], "zoom": installed[2] } })), "the persisted viewport is exactly the installed camera");
+    assert!(fit(surface_id, &scene.controller_id).expect("admitted").is_none(), "a camera that did not move publishes nothing");
+
+    let wheel = node_graph_wheel(surface_id, &scene.controller_id, bounds, 240.0, 400.0, -120.0, false);
+    assert!(wheel.iter().any(|action| action.action == "nodeGraphViewport"), "the fit recorded its fingerprint, so a later gesture still publishes");
+    assert!(fit("node-graph-never-attached", &scene.controller_id).expect("admitted").is_none(), "a surface with no live graph answers nothing");
     drop_engine_surface(surface_id);
 }
 
@@ -476,37 +518,13 @@ fn flow_canvas_restores_and_publishes_same_named_directional_channels() {
         graph.selection_granularity = Some("handle".into());
         graph.lod_json = Some(json!({ "automatic": false, "forcedLabel": lod }).to_string());
 
-        let ports = directional["ports"].as_array().unwrap();
-        let input = ports.iter().find(|port| port["direction"] == "in").unwrap();
-        graph.hover = Some(NodeGraphHover {
-            node_id: Some(widget.into()),
-            port_id: Some(input["id"].as_str().unwrap().into()),
-            edge_id: None,
-            port_ids: ports.iter().map(|port| port["target"].as_str().unwrap().to_owned()).collect(),
-            hover_source_window_id: Some(None),
-        });
-        assert!(sync_node_graph_scene(&scene, "law-window", bounds, Theme::default().panel));
-        let painted_ports = || ENGINE_SURFACES.with(|cell| {
-            let map = cell.borrow();
-            let entry = map.get(&surface_id).unwrap();
-            let Some(NodeGraphEngine::Flow(host)) = entry.node_graph.as_ref() else { panic!("real Flow engine") };
-            [DagChannelDirection::In, DagChannelDirection::Out].map(|direction| {
-                let handle = host.dag.graph.handle_id_for_channel(widget, channel, Some(direction)).unwrap();
-                host.dag.graph.handle_interaction_chrome(handle).2
-            })
-        });
-        assert_eq!(painted_ports(), [true, true], "both grouped channels are painted at {lod}");
-        scene.node_graph.as_mut().unwrap().hover.as_mut().unwrap().port_ids.clear();
-        assert!(sync_node_graph_scene(&scene, "law-window", bounds, Theme::default().panel));
-        assert_eq!(painted_ports(), [true, false], "same primary and cleared companions at {lod}");
-
         for port in directional["ports"].as_array().unwrap() {
             let direction: DagChannelDirection = serde_json::from_value(port["direction"].clone()).unwrap();
             let semantic = port["id"].as_str().unwrap();
             let target = port["target"].as_str().unwrap();
             let graph = scene.node_graph.as_mut().unwrap();
             graph.selection = vec![target.into()];
-            graph.hover = Some(NodeGraphHover { node_id: Some(widget.into()), port_id: Some(semantic.into()), edge_id: None, port_ids: Vec::new(), hover_source_window_id: Some(None) });
+            graph.hover = Some(NodeGraphHover { node_id: Some(widget.into()), port_id: Some(semantic.into()), edge_id: None, hover_source_window_id: Some(None) });
             assert!(sync_node_graph_scene(&scene, "law-window", bounds, Theme::default().panel));
             let (x, y) = ENGINE_SURFACES.with(|cell| {
                 let map = cell.borrow();

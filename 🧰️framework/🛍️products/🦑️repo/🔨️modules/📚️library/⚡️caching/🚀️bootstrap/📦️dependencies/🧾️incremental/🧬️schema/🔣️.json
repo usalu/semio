@@ -75,7 +75,8 @@
             "^Bun current (?:ownership|workspace membership|manifest|workspace manifests) changed",
             "^Declared (?:provider|execution physical) observation changed",
             "^Current (?:Store provider execution|Source-owner execution) changed",
-            "^Original Bun dependency input (?:changed|appeared) during installation"
+            "^Original Bun dependency input (?:changed|appeared) during installation",
+            "^Current exact (?:Windows )?relative path descriptor changed$"
           ],
           "excluded": [
             "custody",

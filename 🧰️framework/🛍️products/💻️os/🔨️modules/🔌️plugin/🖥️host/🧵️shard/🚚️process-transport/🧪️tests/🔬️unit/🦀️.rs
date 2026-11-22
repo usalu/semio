@@ -287,6 +287,7 @@ async fn encode_envelope(actor: u64, seq: u64, payload: semio_framework_actor::P
 async fn instance_open_envelope(actor: u64, seq: u64, profile: &str) -> Vec<u8> {
     let config = format!("{{\"profile\":\"{profile}\"}}").into_bytes();
     let event = semio_framework::kernel::Event::InstanceOpen {
+        purpose: semio_framework::kernel::ActorInstanceOpenPurpose::Ordinary,
         request: semio_framework::kernel::ActorInstanceOpenRequest { activation_generation: 1, instance_id: u32::try_from(actor).expect("fixture actor fits instance id"), request_sequence: seq },
         app_id: semio_framework::kernel::AppInstanceId("scale-fixture".to_string()),
         actor: actor.to_string(),

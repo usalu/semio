@@ -1,4 +1,5 @@
 //! 🧬️ Native Puzzle2d cloning consumes the authored corpus under exact grants.
+use crate::standards::v1::subsets::any::schema::testkit as test_source_custody;
 
 use crate::standards::v1::subsets::any::schema::snapshot::Puzzle2dSnapshot;
 use semio_framework_test_fixtures::fixture_text;
@@ -12,7 +13,7 @@ use semio_framework_value::retirement::controlled::ControlledRetirement;
 use std::sync::Arc;
 
 fn settle_clone<T: RetainedClone, C: RetainedCloneCursor<T>>(cursor: &mut C, bytes: usize) {
-    cursor.begin_close();
+    test_source_custody::begin_close(cursor);
     for _ in 0..1_000_000 {
         if cursor.terminal_is_empty() { return; }
         let copy=cursor.next_close_copy_byte_demand().unwrap();
@@ -21,9 +22,9 @@ fn settle_clone<T: RetainedClone, C: RetainedCloneCursor<T>>(cursor: &mut C, byt
         let depth=cursor.next_close_depth_demand().unwrap();
         assert!(copy<=bytes&&capacity<=bytes&&release<=bytes&&copy+capacity+release<=4096&&depth<=128);
         let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:capacity,maximum_release_bytes:release,maximum_depth:depth};
-        let (zero,allocation)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.close_step(RetainedCloneGrant::default()).unwrap());
+        let (zero,allocation)=semio_framework_trace::observe_heap_allocations_on_this_thread(||test_source_custody::close_turn(RetainedCloneGrant::default(), |effect| cursor.close_step(4096, effect)).unwrap());
         assert_eq!(zero.progress(),Default::default());assert_eq!((allocation.requested_bytes,allocation.released_bytes),(0,0));
-        let (result,allocation)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.close_step(grant));
+        let (result,allocation)=semio_framework_trace::observe_heap_allocations_on_this_thread(||test_source_custody::close_turn(grant, |effect| cursor.close_step(4096, effect)));
         let step=result.unwrap();assert!(!allocation.overflowed);assert!(allocation.requested_bytes<=step.progress().retained_capacity_bytes&&allocation.released_bytes<=step.progress().released_bytes,"native cursor close exceeded actual admitted layout: {allocation:?}, {step:?}");
         assert!(step.progress().fits(grant));assert!(step.progress().copied_bytes+step.progress().retained_capacity_bytes+step.progress().released_bytes<=4096);
     }
@@ -42,7 +43,7 @@ fn settle_snapshot<T: RetireOwned>(snapshot: T, bytes: usize) {
         let depth=retirement.next_depth_demand().unwrap();
         assert!(copy<=bytes&&capacity<=bytes&&release<=bytes&&copy+capacity+release<=4096&&depth<=128);
         let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:capacity,maximum_release_bytes:release,maximum_depth:depth};
-        let (result,allocation)=semio_framework_trace::observe_heap_allocations_on_this_thread(||retirement.step(grant));
+        let (result,allocation)=semio_framework_trace::observe_heap_allocations_on_this_thread(||test_source_custody::close_turn(grant, |effect| retirement.step(4096, effect)));
         let step=result.unwrap();assert!(!allocation.overflowed);assert!(allocation.requested_bytes<=step.progress().retained_capacity_bytes&&allocation.released_bytes<=step.progress().released_bytes,"native owner close exceeded actual admitted layout: {allocation:?}, {step:?}");
         assert!(step.progress().fits(grant));assert!(step.progress().copied_bytes+step.progress().retained_capacity_bytes+step.progress().released_bytes<=4096);
     }
@@ -71,14 +72,14 @@ fn history_edit_puzzle2d_retained_snapshot_clone_preserves_native_ownership_and_
         let mut source = crate::standards::v1::subsets::any::schema::testkit::admit_source(Arc::clone(&owner));
         let (mut cursor,allocation)=semio_framework_trace::observe_heap_allocations_on_this_thread(Puzzle2dSnapshot::retained_clone_cursor);
         assert!(!allocation.overflowed);assert_eq!((allocation.requested_bytes,allocation.released_bytes),(0,0),"native snapshot cursor constructor must be allocation-free: {allocation:?}");
-        let (result,allocation)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.advance(source.borrow(), controls["maximumCopyBytes"].as_u64().unwrap() as usize, RetainedCloneGrant::default()));
+        let (result,allocation)=semio_framework_trace::observe_heap_allocations_on_this_thread(||test_source_custody::advance(&mut cursor, source.borrow(), controls["maximumCopyBytes"].as_u64().unwrap() as usize, 4096, RetainedCloneGrant::default()));
         let zero=result.unwrap();assert_eq!(allocation.requested_bytes,0);assert_eq!(allocation.released_bytes,0);
         assert_eq!(zero.progress(), RetainedCloneProgress::default());
         let mut completed = false;
         let mut totals = [0usize; 4];
         for turn in 0usize..1_000_000 {
             let turn_grant = match turn % 3 { 0 => RetainedCloneGrant::one_capacity_turn(grant.maximum_capacity_bytes, grant.maximum_depth), 1 => RetainedCloneGrant::one_payload_turn(grant.maximum_copy_bytes, grant.maximum_depth), _ => RetainedCloneGrant::one_release_turn(grant.maximum_release_bytes, grant.maximum_depth) };
-            let (result,allocation)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.advance(source.borrow(), controls["maximumCopyBytes"].as_u64().unwrap() as usize, turn_grant));
+            let (result,allocation)=semio_framework_trace::observe_heap_allocations_on_this_thread(||test_source_custody::advance(&mut cursor, source.borrow(), controls["maximumCopyBytes"].as_u64().unwrap() as usize, 4096, turn_grant));
             let step=result.unwrap();
             let progress = step.progress();
             totals[0] += progress.copied_items; totals[1] += progress.copied_bytes; totals[2] += progress.retained_capacity_bytes; totals[3] += progress.released_bytes;
@@ -94,12 +95,12 @@ fn history_edit_puzzle2d_retained_snapshot_clone_preserves_native_ownership_and_
         if journey == "cancelDuringCopy" {
             assert!(!completed);
             settle_clone::<Puzzle2dSnapshot, _>(&mut cursor, grant.maximum_capacity_bytes);
-            assert!(cursor.take().is_none());
+            assert!(test_source_custody::take(&mut cursor).is_none());
         } else {
             assert!(completed, "{journey}: clone did not complete within its exact grants");
-            let cloned = cursor.take().unwrap();
+            let cloned = test_source_custody::take(&mut cursor).unwrap();
             assert_eq!(serde_json::to_value(&cloned).unwrap(), expected);
-            assert!(cursor.take().is_none());
+            assert!(test_source_custody::take(&mut cursor).is_none());
             settle_clone::<Puzzle2dSnapshot, _>(&mut cursor, grant.maximum_capacity_bytes);
             settle_snapshot(cloned, grant.maximum_capacity_bytes);
         }
@@ -132,12 +133,12 @@ fn history_edit_puzzle2d_borrowed_mutations_clone_every_authored_leaf_with_exact
             let mut authority = crate::standards::v1::subsets::any::schema::testkit::admit();
             let (mut cursor,allocation)=semio_framework_trace::observe_heap_allocations_on_this_thread(Puzzle2dMutation::retained_clone_cursor);
             assert!(!allocation.overflowed);assert_eq!((allocation.requested_bytes,allocation.released_bytes),(0,0),"native mutation cursor constructor must be allocation-free: {allocation:?}");
-            let (result,allocation)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.advance(authority.borrow(&original), controls["maximumCopyBytes"].as_u64().unwrap() as usize, RetainedCloneGrant::default()));
+            let (result,allocation)=semio_framework_trace::observe_heap_allocations_on_this_thread(||test_source_custody::advance(&mut cursor, authority.borrow(&original), controls["maximumCopyBytes"].as_u64().unwrap() as usize, 4096, RetainedCloneGrant::default()));
             assert_eq!(result.unwrap().progress(),RetainedCloneProgress::default());assert_eq!(allocation.requested_bytes,0);assert_eq!(allocation.released_bytes,0);
             let mut complete = false;
             for turn in 0..1_000_000 {
                 let turn_grant = match turn % 3 { 0 => RetainedCloneGrant::one_capacity_turn(grant.maximum_capacity_bytes, grant.maximum_depth), 1 => RetainedCloneGrant::one_payload_turn(grant.maximum_copy_bytes, grant.maximum_depth), _ => RetainedCloneGrant::one_release_turn(grant.maximum_release_bytes, grant.maximum_depth) };
-                let (result,allocation)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.advance(authority.borrow(&original), controls["maximumCopyBytes"].as_u64().unwrap() as usize, turn_grant));
+                let (result,allocation)=semio_framework_trace::observe_heap_allocations_on_this_thread(||test_source_custody::advance(&mut cursor, authority.borrow(&original), controls["maximumCopyBytes"].as_u64().unwrap() as usize, 4096, turn_grant));
                 let step=result.unwrap();
                 assert!(!allocation.overflowed);assert!(allocation.requested_bytes<=step.progress().retained_capacity_bytes,"native borrowed mutation allocation requests {} exceed admitted capacity {}",allocation.requested_bytes,step.progress().retained_capacity_bytes);
                 assert!(allocation.released_bytes<=step.progress().released_bytes,"native clone released unadmitted layout bytes: {allocation:?}");
@@ -146,10 +147,10 @@ fn history_edit_puzzle2d_borrowed_mutations_clone_every_authored_leaf_with_exact
                 if matches!(step, RetainedCloneStep::Complete(_)) { complete = true; break; }
             }
             assert!(complete, "authored borrowed mutation did not complete");
-            let owned = cursor.take().unwrap();
+            let owned = test_source_custody::take(&mut cursor).unwrap();
             assert_eq!(serde_json::to_value(&owned).unwrap(), expected);
             assert_eq!(serde_json::to_value(&original).unwrap(), expected);
-            assert!(cursor.take().is_none());
+            assert!(test_source_custody::take(&mut cursor).is_none());
             settle_clone::<Puzzle2dMutation, _>(&mut cursor, grant.maximum_capacity_bytes);
             settle_snapshot(owned, grant.maximum_capacity_bytes);
             crate::standards::v1::subsets::any::schema::testkit::close(&mut authority);
@@ -166,16 +167,16 @@ fn history_edit_puzzle2d_borrowed_mutations_clone_every_authored_leaf_with_exact
         let grant = RetainedCloneGrant { maximum_copy_bytes: 4, ..grant };
         for turn in 0..controls["cancelAfterTurns"].as_u64().unwrap() {
             let turn_grant=match turn % 3 { 0 => RetainedCloneGrant::one_capacity_turn(grant.maximum_capacity_bytes,grant.maximum_depth), 1 => RetainedCloneGrant::one_payload_turn(grant.maximum_copy_bytes,grant.maximum_depth), _ => RetainedCloneGrant::one_release_turn(grant.maximum_release_bytes,grant.maximum_depth) };
-            let (result,allocation)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.advance(authority.borrow(&original), 4, turn_grant));
+            let (result,allocation)=semio_framework_trace::observe_heap_allocations_on_this_thread(||test_source_custody::advance(&mut cursor, authority.borrow(&original), 4, 4096, turn_grant));
             let step=result.unwrap();assert!(!allocation.overflowed);assert!(allocation.requested_bytes<=step.progress().retained_capacity_bytes);
             assert!(!matches!(step, RetainedCloneStep::Complete(_)));
             assert!(allocation.released_bytes<=step.progress().released_bytes,"native clone released unadmitted layout bytes: {allocation:?}");
             assert!(step.progress().fits(turn_grant));
         }
-        if !cancelled { assert!(cursor.advance(authority.borrow(&swapped), 4, grant).is_err()); }
+        if !cancelled { assert!(test_source_custody::advance(&mut cursor, authority.borrow(&swapped), 4, 4096, grant).is_err()); }
         settle_clone::<Puzzle2dMutation, _>(&mut cursor, grant.maximum_capacity_bytes);
         assert!(cursor.terminal_is_empty());
-        assert!(cursor.take().is_none());
+        assert!(test_source_custody::take(&mut cursor).is_none());
         crate::standards::v1::subsets::any::schema::testkit::close(&mut authority);
     }
 }

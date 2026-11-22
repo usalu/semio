@@ -63,29 +63,19 @@ use semio_plugin_instance_jobs::jobs_instance_root::OriginalRenderTreeIdentity;
 #[path = "🔒️close-terminal/🦀️.rs"]
 mod close_terminal;
 
-#[path = "🧾️typed-operation-results/🦀️.rs"]
-mod typed_operation_results;
-
 #[path = "🕹️ephemeral-interaction/🦀️.rs"]
 mod ephemeral_interaction;
-
-#[path = "📨️action-dispatch/🦀️.rs"]
-mod action_dispatch;
-
-#[path = "🔀️transactions/🦀️.rs"]
-mod transactions;
-
-#[path = "🗃️document-load/🦀️.rs"]
-mod document_load;
-
-#[path = "🖼️render-surface/🦀️.rs"]
-mod render_surface;
 
 #[path = "🎞️media-transfer/🦀️.rs"]
 mod media_transfer;
 
+#[path = "🔖️reserved-mount/🦀️.rs"]
+mod reserved_mount;
+
 #[path = "🎟️picker-publication/🦀️.rs"]
 mod picker_publication;
+#[path = "🎟️natural-publication/🦀️.rs"]
+mod natural_publication;
 
 /// 🧪 Guest laws in dependent crates (puzzle 3d) settle Isolated reserved admits the host would.
 pub async fn settle_framework_reserved_admission<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static>(app: &mut VcsArtifactApp<A, M>, admitted: InvocationResult,cx:&mut StepContext<'_>) -> Result<InvocationResult,OriginalTurnFailure> {
@@ -134,14 +124,6 @@ pub async fn drive_framework_reserved_spawn_like_host<A: ArtifactApp, M: Referen
     Ok((settled, steps))
 }
 
-/// 🪪️ Stamps an omitted dialect with the app's dialect, which child restoration requires.
-fn loaded_with_app_dialect<A: ArtifactApp>(mut envelope: ArtifactEnvelope<A::Snapshot, A::Mutation>) -> ArtifactEnvelope<A::Snapshot, A::Mutation> {
-    if envelope.dialect.is_none() {
-        envelope.dialect = Some(A::DIALECT.into());
-    }
-    envelope
-}
-
 impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> PluginApp for VcsArtifactApp<A, M> {
     fn admit_cancellation_issuer(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{let parent=cx.original_source_parent()?;self.tools.tool_cancellations.admit_step(parent,cx)}
 
@@ -173,7 +155,15 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> P
 
     fn mounted_owner_close_step(&mut self,turn:&mut MountedOwnerTurnV1<'_,'_>)->Result<PluginLifecycleStep,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
         let identity=turn.identity();if self.tools.live_runtime_instance_id!=Some(identity.instance_id)||turn.phase()!=MountedOwnerPhaseV1::Close{return Err(plugin_sdk_fault("mounted close does not own this live instance and phase").into())}
-        let step=turn.advance_lifecycle(PluginLifecycleStep::with_progress, |cx,loan|if !A::mounted_jobs_terminal_is_empty(identity.instance_id){let demand=A::mounted_job_close_demands(identity.instance_id,loan.maximum_copy_bytes)?;semio_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,loan,demand,|same,actual|Ok((A::mounted_job_close_step(identity.instance_id,same,actual)?,A::mounted_jobs_terminal_is_empty(identity.instance_id))))}else{self.close_step(cx,loan)})?;
+        let step = turn.advance_close_batch(PluginLifecycleStep::with_progress, |cx, loan| {
+            if A::mounted_jobs_terminal_is_empty(identity.instance_id) {
+                return self.close_step(cx, loan);
+            }
+            let demand = A::mounted_job_close_demands(identity.instance_id, loan.maximum_copy_bytes)?;
+            semio_plugin_ownership::bounded_ownership::original_lifecycle_step(cx, loan, demand, |same, actual| {
+                Ok((A::mounted_job_close_step(identity.instance_id, same, actual)?, A::mounted_jobs_terminal_is_empty(identity.instance_id)))
+            })
+        })?;
         Ok(match step{PluginLifecycleStep::Complete(progress)if !self.close_terminal_is_empty()=>PluginLifecycleStep::Progress(progress),step=>step})
     }
 
@@ -181,6 +171,9 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> P
         if let Some(owner)=self.original_controller_close.as_ref().filter(|owner|!(owner.terminal)(&self.app)){return (owner.demands)(&self.app,body)}
         if self.constructor.has_constructor_receipt() { return Ok(Default::default()); }
         if !self.constructor.constructor_terminal_is_empty() { return self.stores.constructor_close_demands(&self.constructor, body); }
+        if let Some(source) = self.media.natural_source.as_ref().filter(|_| self.natural_source_can_close()) {
+            return source.close_demands(body);
+        }
         self.close_ladder_demand(body)
     }
 
@@ -193,7 +186,8 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> P
         if self.owns_original_reserved_mount(cx){return self.reserved_mount_close_demands(body)}
         if self.owns_original_reserved_permit(cx){return if self.reserved_permit_waits(cx){Ok(Default::default())}else{self.media.original_tool_lease_close_demands(&self.tools,body)}}
         if self.host_event_routing_ref().owns_original_host_event_source(cx){return self.host_event_routing_ref().original_host_event_close_demands(body)}
-        if !self.host_event_routing_ref().owns_original_command_scope(cx){return Ok(Default::default())}
+        if self.command_lease_release_ready(cx){return Ok(Default::default())}
+        if !self.host_event_routing_ref().owns_original_command_scope(cx){return self.ingress.original_action_ingress_close_demands(body,cx)}
         if self.tools.original_tool_tag_capture.is_some()||self.tools.original_tool_tag_retirement.is_some()||self.tools.original_scrub_dispatch.is_some()||self.tools.original_press_settlement.is_some()||self.tools.original_typing_settlement.is_some()||self.tools.original_tool_follow.is_some(){return self.render_ref().tool_overlay_close_demand(body)}
         if self.original_typed_tag.is_some()||!self.original_typed_tag_close.is_empty(){return self.original_typed_tag_close_demands(body)}
         if self.original_typed_command.pending(){return semio_plugin_instance_dispatch::dispatch_runtime_command::original_typed_source_close_demands(&self.original_typed_command,body)}
@@ -207,7 +201,11 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> P
         let demand=self.maintenance_source_close_demands(loan.maximum_copy_bytes,cx)?;
         semio_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,loan,demand,|same,actual|{
             if self.maintenance_source_terminal_is_empty(same){return Ok((PluginLifecycleStep::Complete(Default::default()),true))}
-            if self.command_lease_release_ready(same){self.host_event_routing_ctx().release_original_command_scope(same);return Ok((PluginLifecycleStep::Complete(Default::default()),true))}
+            if self.command_lease_release_ready(same){
+                self.host_event_routing_ctx().release_original_command_scope(same);
+                let terminal=self.maintenance_source_terminal_is_empty(same);
+                return Ok((if terminal{PluginLifecycleStep::Complete(Default::default())}else{PluginLifecycleStep::Progress(Default::default())},terminal))
+            }
             let step=if semio_plugin_instance_jobs::reserved_preparation::ReservedPreparation::<A>::owns_birth(&self.pending.reserved_preparation,&self.pending.reserved_birth,same){let before=same.retained_progress();semio_plugin_instance_jobs::reserved_preparation::ReservedPreparation::<A>::close_slot(&mut self.pending.reserved_preparation,&mut self.pending.reserved_birth,&*self.tools.tool_jobs,same)?;semio_framework_value::RetainedCloneStep::Progress(semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,same.retained_progress())?)}else if self.owns_original_reserved_mount(same){self.close_original_reserved_mount(same)?}else if self.owns_original_reserved_permit(same){if self.reserved_permit_waits(same){semio_framework_value::RetainedCloneStep::Progress(Default::default())}else{self.media.close_original_tool_lease(&mut self.tools,same,actual)?}}else if self.host_event_routing_ref().owns_original_host_event_source(same){self.host_event_routing_ctx().close_original_host_event_source(same)?}else if self.tools.original_tool_tag_capture.is_some()||self.tools.original_tool_tag_retirement.is_some()||self.tools.original_scrub_dispatch.is_some()||self.tools.original_press_settlement.is_some()||self.tools.original_typing_settlement.is_some()||self.tools.original_tool_follow.is_some(){self.render_ctx().tool_overlay_retirement_step(same,actual,true)?}else if self.original_typed_tag.is_some()||!self.original_typed_tag_close.is_empty(){self.close_original_typed_tag(same)?}else{let before=same.retained_progress();if self.original_typed_command.pending(){semio_plugin_instance_dispatch::dispatch_runtime_command::close_original_typed_source(&mut self.original_typed_command,&mut self.tools.typed_operation_reservations,&mut self.host_events.host_event_operations,same)?;}else if self.original_typing.pending(){self.original_typing.close_step(same)?;}else if self.original_emission.pending(){self.original_emission.close_step(same)?;}else if self.host_events.routes.cache_busy(){self.host_events.routes.settle_capture(same)?;}else{self.host_event_routing_ctx().close_action_host_events(same)?;}semio_framework_value::RetainedCloneStep::Progress(semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,same.retained_progress())?)};
             let terminal=self.maintenance_source_terminal_is_empty(same);Ok((if terminal{PluginLifecycleStep::Complete(step.progress())}else{PluginLifecycleStep::Progress(step.progress())},terminal))
         })
@@ -236,6 +234,14 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> P
     /// 🎟️ Advances one genuine original owner under the complete caller grant.
     fn close_step(&mut self,cx:&mut StepContext<'_>,loan:RetainedCloneGrant)->Result<PluginLifecycleStep,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
         if self.constructor.has_constructor_receipt(){return Ok(PluginLifecycleStep::AwaitingInput{reason:"original constructor receipt awaits its phase recipient"})}
+        if self.media.natural_source.is_some() && self.natural_source_can_close()
+            && self.original_controller_close.as_ref().is_none_or(|owner| (owner.terminal)(&self.app))
+            && self.constructor.constructor_terminal_is_empty()
+        {
+            return semio_plugin_instance_natural_publication::NaturalFilePublication::close_mounted(
+                &mut self.media.natural_source, cx, loan,
+            );
+        }
         if self.original_controller_close.as_ref().is_none_or(|owner|(owner.terminal)(&self.app))&&self.constructor.constructor_terminal_is_empty()&&self.close_ladder_quoted_retirement_selected(){let step=self.close_ladder_step(cx,loan)?;return Ok(PluginLifecycleStep::retained(step,self.close_terminal_is_empty()))}
         let demand=self.close_retirement_demands(loan.maximum_copy_bytes)?;
         if self.original_controller_close.as_ref().is_none_or(|owner|(owner.terminal)(&self.app))&&!self.constructor.constructor_terminal_is_empty(){return semio_plugin_ownership::bounded_ownership::original_lifecycle_effect_step(cx,loan,demand,|_,effect|{self.stores.close_store_constructor_unit(&mut self.constructor, effect)?;let progress=self.constructor.constructor_receipt().map_or(Default::default(),|(_,_,_,progress)|*progress);self.constructor.take_constructor_receipt();Ok((PluginLifecycleStep::Progress(progress),false))})}
@@ -272,7 +278,10 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> P
         ToolOwnerWitness::of::<A>()
     }
 
-    async fn tool_public_contracts(&self) -> Vec<ArtifactToolPublicContract> { self.tool_public_contracts().await }
+    async fn tool_public_contracts(&self) -> Vec<ArtifactToolPublicContract> { self.tools.bounded_contracts().cloned().chain(self.tools.framework_registrations().chain(self.tools.app_registrations()).map(|(_,row)|ArtifactToolPublicContract {
+        owner: row.owner, controller_id: row.key.controller_id.clone(), tool_id: row.key.tool_id.clone(), schema_id: row.schema_id.clone(),
+        max_raw_wire_bytes: row.contract.max_raw_wire_bytes, publication_lanes: row.publication_lanes,
+    })).collect() }
 
     async fn advance_typed_operation_publication(&mut self, identity: &mut EntityIdentityAuthority<'_>, cx:&mut StepContext<'_>) -> Result<(), semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
         let mut retained=cx.retained_grant();if cx.should_yield(){return Ok(())}
@@ -291,8 +300,11 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> P
             self.original_host_event_command=source;
             return stepped.map_err(Into::into)
         }
-        if !self.host_events.resumes.runnable()&&!self.original_typed_command.pending(){self.original_command_scope.release(cx);}
-        if self.host_events.resumes.runnable()&&(self.host_events.resumes.in_flight()||!self.shared_command_source_pending()&&!self.ingress.action_source_pending())&&self.host_events.resumes.take_turn(){
+        let command_source_pending = self.shared_command_source_pending() || self.ingress.action_source_pending();
+        if !self.host_events.resumes.runnable() {
+            self.original_command_scope.release_idle(cx, command_source_pending);
+        }
+        if self.host_events.resumes.runnable()&&(self.host_events.resumes.in_flight()||!command_source_pending)&&self.host_events.resumes.take_turn(){
             if !self.host_event_routing_ctx().claim_original_command_scope(cx)?{return Ok(())}
             let mut source = std::mem::take(&mut self.original_typed_command);
             let stepped = self.dispatch_ctx().task_resume_step(&mut source, identity, cx).await;
@@ -356,6 +368,8 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> P
         })
     }
 
+    fn document_load_diagnostic(&self, grant: RetainedCloneGrant) -> String { self.ladder_ref().document_load_diagnostic(grant) }
+
     fn close_diagnostic(&self) -> String {
         let ladder = self.ladder_ref();
         if matches!(ladder.close_rung(), semio_plugin_instance_ladders::ladders_close_ladder::CloseRung::OwnedStores) {
@@ -376,6 +390,12 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> P
                 return format!("DocumentArchive operation={operation} state={:?} phase={:?} target={:?} hydration={hydration:?} history={} retained={}", load.state, load.phase, load.terminal_target, load.history.is_some(), load.retained.is_some());
             }
         }
+        if matches!(ladder.close_rung(), semio_plugin_instance_ladders::ladders_close_ladder::CloseRung::TimeTravel) {
+            #[cfg(feature = "artifact-app-testing")]
+            return format!("TimeTravel residue={:?} {}", self.time_travel.residue(), self.time_travel.original_close_diagnostic());
+            #[cfg(not(feature = "artifact-app-testing"))]
+            return format!("TimeTravel residue={:?}", self.time_travel.residue());
+        }
         ladder.close_rung_name()
     }
 
@@ -385,7 +405,8 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> P
             Some(format!("op {id} '{}' {:?} s={} rej={}/{} cancel={} term={} sem={} out={} res={} fc={} prod={} ref={}", operation.verb, operation.stage, operation.session.is_some(), operation.session_rejected.is_some(), operation.session_rejected.as_ref().is_some_and(|rejected| rejected.admission_pending()), operation.user_cancel_requested, operation.terminal_seen, operation.worker_semantic_pending, operation.worker_outcome_pending, operation.worker_resume_pending, operation.worker_fault_capture.is_some(), operation.producer_request.is_some(), operation.retained_structural_refusal().unwrap_or_else(|| "none".into())))
         }).collect::<Vec<_>>().join("; ");
         let lw=(0..ARTIFACT_LIVE_OUTPUT_SLOTS).find_map(|i|self.tools.latest_wins_commands.entry(i)).map(|(id,p)|format!(" lw{id}:ctx/lookup/accepted/closing/key={:?}",(p.context_phase,p.lookup_started,p.accepted,p.closing,p.key_copy.as_ref().map(|k|(k.part,k.prefix,k.offset))))).unwrap_or_default();
-        format!("{operations}{lw} | gates resumes={} delivering={} typing={} emission_host={} emission_input={} typed_input={} typed_receipt={} typed_meta={} typed_production={} action_source={} | lw={} ob={}/{}/{}/{} pr={} fa={} q={}", self.host_events.resumes.in_flight(), self.host_events.delivering, self.original_typing.pending(), self.original_emission.host_active(), self.original_emission.input.is_some(), self.original_typed_command.input_ready(), self.original_typed_command.receipt.is_some(), self.original_typed_command.metadata.is_some(), self.original_typed_command.production_pending(), self.ingress.action_source_pending(), self.tools.latest_wins_commands.len(), self.tools.typed_effect_outbox.len(), self.tools.typed_event_outbox.len(), self.tools.typed_ui_outbox.len(), self.tools.typed_completion_outbox.len(), self.tools.operation_progress_retired, self.child_composition.derivable_follow_awaits_retirement(&self.stores), self.interaction.local_interaction_query.as_ref().is_some_and(|query| query.has_pending_work()))
+        let command = format!("command idle={} shared pending={} route cache={} route delivery={} action delivery={} original emission={} original typed command={}", self.original_command_scope.is_idle(), self.shared_command_source_pending(), self.host_events.routes.cache_busy(), self.host_events.routes.delivering, !self.host_events.action_delivery.terminal_is_empty(), self.original_emission.pending(), self.original_typed_command.pending());
+        format!("{operations}{lw} | {command} | gates resumes={} delivering={} typing={} emission_host={} emission_input={} typed_input={} typed_receipt={} typed_meta={} typed_production={} action_source={} | lw={} ob={}/{}/{}/{} pr={} fa={} q={}", self.host_events.resumes.in_flight(), self.host_events.delivering, self.original_typing.pending(), self.original_emission.host_active(), self.original_emission.input.is_some(), self.original_typed_command.input_ready(), self.original_typed_command.receipt.is_some(), self.original_typed_command.metadata.is_some(), self.original_typed_command.production_pending(), self.ingress.action_source_pending(), self.tools.latest_wins_commands.len(), self.tools.typed_effect_outbox.len(), self.tools.typed_event_outbox.len(), self.tools.typed_ui_outbox.len(), self.tools.typed_completion_outbox.len(), self.tools.operation_progress_retired, self.child_composition.derivable_follow_awaits_retirement(&self.stores), self.interaction.local_interaction_query.as_ref().is_some_and(|query| query.has_pending_work()))
     }
 
     fn has_pending_typed_operations(&self) -> bool {
@@ -466,7 +487,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> P
     ;}Ok((page,progress))
     }
 
-    fn acknowledge_typed_operation_result(&mut self, token: TypedOperationResultToken) -> Result<bool, Fault> { self.acknowledge_typed_operation_result(token) }
+    fn acknowledge_typed_operation_result(&mut self, token: TypedOperationResultToken) -> Result<bool, Fault> { self.members_ctx().acknowledge_typed_operation_result(token) }
 
     fn take_typed_operation_effect(&mut self) -> Option<Effect> {
         if self.tools.typed_effect_outbox.items.front().is_some_and(pending_picker_effect) {
@@ -502,7 +523,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> P
         Some(TypedOperationUiProgress { ui_scope, leftover: self.tools.typed_inline_interaction_leftover.take(), history_patch: self.time_travel.take_patch() })
     }
 
-    async fn take_typed_operation_completion(&mut self) -> Result<Option<TypedOperationCompletion>, Fault> { self.take_typed_operation_completion().await }
+    async fn take_typed_operation_completion(&mut self) -> Result<Option<TypedOperationCompletion>, Fault> { self.members_ctx().take_typed_operation_completion().await }
 
     fn take_typed_operation_composed_result(&mut self) -> Option<ComposedGestureResult> {
         self.tools.typed_composed_outbox.pop()
@@ -555,7 +576,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> P
 
     async fn handle_action_invocation(&mut self, address: &semio_framework::manifest::ActionAddress, source_args: &mut Option<DslValue>, original_fault: &mut Option<Fault>, active_mode_id: Option<&str>, meta: &mut Option<ActionMeta>, identity: &mut EntityIdentityAuthority<'_>, cx:&mut StepContext<'_>) -> Result<Option<InvocationResult>,OriginalTurnFailure> {
         let outcome:Result<Option<InvocationResult>,OriginalTurnFailure>=async{
-        if !self.host_event_routing_ctx().capture_original_host_event_route(meta.as_ref(),cx)?{return Ok(None)}  self.handle_action_invocation(address, source_args, original_fault, active_mode_id, meta, identity, cx).await
+        if !self.host_event_routing_ctx().capture_original_host_event_route(meta.as_ref(),cx)?{return Ok(None)}  self.members_ctx().handle_action_invocation(address, source_args, original_fault, active_mode_id, meta, identity, cx).await
         }.await;
         self.settle_command_lease(&outcome,cx);
         outcome
@@ -647,7 +668,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> P
 
     fn take_task_resume_outcome(&mut self) -> Option<Result<InvocationResult, Fault>> { self.host_events.resumes.take_outcome() }
 
-    async fn resume_task_emit(&mut self, artifact_ops: Vec<u8>, config_ops: Vec<u8>, draft_ops: Vec<u8>, meta: &ActionMeta, identity: &mut EntityIdentityAuthority<'_>, cx:&mut StepContext<'_>) -> Result<InvocationResult, Fault> { self.resume_task_emit(artifact_ops, config_ops, draft_ops, meta, identity, cx).await }
+    async fn resume_task_emit(&mut self, artifact_ops: Vec<u8>, config_ops: Vec<u8>, draft_ops: Vec<u8>, meta: &ActionMeta, identity: &mut EntityIdentityAuthority<'_>, cx:&mut StepContext<'_>) -> Result<InvocationResult, Fault> { self.members_ctx().resume_task_emit(artifact_ops, config_ops, draft_ops, meta, identity, cx).await }
 
     async fn take_last_emit_wire(&mut self) -> Option<EmitWire> {
         self.pending.last_emit_wire.take()
@@ -661,9 +682,9 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> P
         self.txn.pending_transaction_proposal.take()
     }
 
-    async fn transaction_prepare(&mut self, txn_id: &str, _mutation_id: &str, payload: &[u8], prepared_ops: &[Vec<u8>], prepared_child_ops: &[u8], origin: Option<protocol::MutationOrigin>) -> TransactionPrepareOutcome { self.transaction_prepare(txn_id, _mutation_id, payload, prepared_ops, prepared_child_ops, origin).await }
+    async fn transaction_prepare(&mut self, txn_id: &str, _mutation_id: &str, payload: &[u8], prepared_ops: &[Vec<u8>], prepared_child_ops: &[u8], origin: Option<protocol::MutationOrigin>) -> TransactionPrepareOutcome { self.members_ctx().transaction_prepare(txn_id, _mutation_id, payload, prepared_ops, prepared_child_ops, origin).await }
 
-    async fn transaction_commit(&mut self, txn_id: &str, meta: &ActionMeta, identity: &mut EntityIdentityAuthority<'_>) -> Result<String, Fault> { self.transaction_commit(txn_id, meta, identity).await }
+    async fn transaction_commit(&mut self, txn_id: &str, meta: &ActionMeta, identity: &mut EntityIdentityAuthority<'_>) -> Result<String, Fault> { self.members_ctx().transaction_commit(txn_id, meta, identity).await }
 
     async fn transaction_rollback(&mut self, txn_id: &str) -> Result<(), Fault> {
         match &self.txn.pending_transaction {
@@ -708,7 +729,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> P
         self.render_ctx().history_patch(true).await
     }
 
-    async fn hydrate_pure_head(&mut self,head:&[u8],cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure> { self.hydrate_pure_head(head, cx).await }
+    async fn hydrate_pure_head(&mut self,head:&[u8],cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure> { self.members_ctx().hydrate_pure_head(head, cx).await }
 
     async fn ephemeral_snapshot(&self) -> EphemeralSnapshot { self.ephemeral_snapshot().await }
 
@@ -773,8 +794,37 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> P
 
     async fn child_head_packs(&self) -> Result<Vec<protocol::ChildHeadPackEntry>, Fault> { self.child_composition.child_head_packs().await }
 
-    fn begin_document_archive_load(&mut self,operation:u64,archive:&mut protocol::DocumentArchivePack,admission:&mut semio_plugin_document_media::OriginalDocumentArchiveAdmission,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{self.begin_document_archive_load(operation,archive,admission,false,cx)}
-    fn begin_document_archive_merge(&mut self,operation:u64,archive:&mut protocol::DocumentArchivePack,admission:&mut semio_plugin_document_media::OriginalDocumentArchiveAdmission,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{self.begin_document_archive_load(operation,archive,admission,true,cx)}
+    fn validate_folder_archive_target(&self, document: &str, schema: &str) -> bool {
+        self.stores.store.envelope().id == document && A::DOCUMENT_SCHEMA == schema
+    }
+
+    fn begin_paged_document_archive_load(
+        &mut self, operation: u64,
+        archive: &mut Option<protocol::channel::archive_ingress::VerifiedDocumentArchiveParent>,
+        cx: &mut StepContext<'_>,
+    ) -> Result<bool, OriginalTurnFailure> {
+        if !self.ingest.document_archive_loads.can_insert(operation) {
+            return Err(plugin_sdk_fault("paged archive operation is already live or its registry slot is busy").into());
+        }
+        let Some(source) = archive.as_ref() else { return Err(plugin_sdk_fault("paged archive admission lost its verified original").into()); };
+        let capacity = size_of::<protocol::DocumentArchivePack>();
+        let charge = RetainedCloneProgress {
+            copied_items: 1, copied_bytes: size_of::<ActiveDocumentArchiveLoad<A::Snapshot, A::Mutation>>() + capacity,
+            retained_capacity_bytes: capacity, ..Default::default()
+        };
+        if cx.should_yield() || cx.is_cancelled() || cx.fuel_remaining() == 0 || !charge.fits(cx.retained_grant()) {
+            return Ok(false);
+        }
+        let history = document_archive_history_decoder(source.spr_len()).map_err(|error| plugin_sdk_fault(error.to_string()))?;
+        let load = ActiveDocumentArchiveLoad::new_paged(operation, archive.take().expect("checked verified archive pages"), history);
+        self.ingest.document_archive_loads.insert_admitted(operation, load);
+        cx.consume_retained(charge)?;
+        cx.consume_fuel(1);
+        Ok(true)
+    }
+
+    fn begin_document_archive_load(&mut self,operation:u64,archive:&mut protocol::DocumentArchivePack,admission:&mut semio_plugin_document_media::OriginalDocumentArchiveAdmission,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{self.members_ctx().begin_document_archive_load(operation,archive,admission,false,cx)}
+    fn begin_document_archive_merge(&mut self,operation:u64,archive:&mut protocol::DocumentArchivePack,admission:&mut semio_plugin_document_media::OriginalDocumentArchiveAdmission,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{self.members_ctx().begin_document_archive_load(operation,archive,admission,true,cx)}
 
     fn document_archive_maintenance_is_runnable(&self, stock: RetainedCloneGrant) -> Result<bool, ValueError> {
         self.ladder_ref().document_archive_maintenance_is_runnable(stock)
@@ -807,16 +857,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> P
         Ok(u64::from_be_bytes(self.stores.store.content_revision_now()[..8].try_into().expect("revision lane width")))
     }
 
-    async fn document_archive(&self) -> Result<protocol::DocumentArchivePack, Fault> {
-        let parent_generation = self.stores.store.generation_now();
-        let child_generation = self.child_composition.child_content_generation;
-        let parent = store::os_store::text_format::print_document_pack(self.stores.store.envelope()).await.map_err(|error| error.into_fault())?;
-        let members = self.child_composition.archive_member_entries().await?;
-        if self.stores.store.generation_now() != parent_generation || self.child_composition.child_content_generation != child_generation {
-            return Err(document_load_fault(DOCUMENT_LOAD_CHANGED_CODE, "document archive authority changed during generation-fenced export"));
-        }
-        Ok(protocol::DocumentArchivePack { parent_pack: parent.pack, parent_spr: parent.spr, members })
-    }
+    async fn document_archive(&self) -> Result<protocol::DocumentArchivePack, Fault> { semio_plugin_instance_members::document_archive(&self.stores, &self.child_composition).await }
 
     async fn load_config_pack(&mut self, files: &store::os_store::serialization::ArtifactPackFiles) -> Result<(), Fault> {
         let parsed: store::os_store::text_format::ParsedDocumentText<A::Config, A::ConfigMutation> = store::os_store::text_format::parse_document_pack(&files.pack, &files.spr, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.map_err(|error| error.into_fault())?;
@@ -925,12 +966,12 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> P
     }
 
     fn render_demand(&self,body_key:&str,maximum_body_bytes:usize)->Result<RetirementDemand,ValueError>{if self.pending.pending_render_failure.is_some()||self.pending.pending_render_failure_place.is_some()||self.pending.pending_render_compound_place.is_some()||self.pending.pending_render_tree.is_some(){return self.pending.render_failure_demands(maximum_body_bytes);}if A::uses_render_work(body_key){if let Some(work)=self.pending.pending_render_work.as_ref(){return work.query_demand(|work|A::render_work_demand(work,maximum_body_bytes));}}Ok(Default::default())}
-    async fn render(&mut self, body_key: &str, snapshot_override_json: Option<&str>, view_state: &ViewModel,cx:&mut StepContext<'_>) -> Result<Option<()>,OriginalTurnFailure> { self.render(body_key, snapshot_override_json, view_state, cx).await }
+    async fn render(&mut self, body_key: &str, snapshot_override_json: Option<&str>, view_state: &ViewModel,cx:&mut StepContext<'_>) -> Result<Option<()>,OriginalTurnFailure> { self.members_ctx().render(body_key, snapshot_override_json, view_state, cx).await }
 
     fn original_render_tree_source<'a>(&'a mut self,cx:&mut StepContext<'_>)->Result<&'a mut Option<ComponentTree>,OriginalTurnFailure> { self.pending.original_render_tree_source(cx) }
     fn staged_action_matches(&self,action:&str,body:&str,view:&ViewModel)->bool{view.active_window_kind_id.as_deref().is_some_and(|kind|self.tools.registry.staged_action_matches(kind,action,body))}
     fn render_work_request_owned(&mut self,cx:&StepContext<'_>)->bool{self.render_ctx().render_request_owned(cx)}
-    fn receive_render_work_request(&mut self,body_key:&str,request:&mut Option<semio_framework::action_staging::StagedFormRequest>,view:&ViewModel,cx:&mut StepContext<'_>)->Result<Option<()>,OriginalTurnFailure>{self.receive_render_request(body_key,request,view,cx)}
+    fn receive_render_work_request(&mut self,body_key:&str,request:&mut Option<semio_framework::action_staging::StagedFormRequest>,view:&ViewModel,cx:&mut StepContext<'_>)->Result<Option<()>,OriginalTurnFailure>{self.members_ctx().receive_render_request(body_key,request,view,cx)}
     fn close_render_work_request(&mut self,cx:&mut StepContext<'_>)->Result<Option<bool>,OriginalTurnFailure>{let grant=cx.retained_grant();cx.with_original_retirement(|cx|{self.pending.close_render_failure(cx,grant).map_err(OriginalTurnFailure::from)?;Ok(self.pending.render_failure_terminal_is_empty().then_some(true))})}
 
     async fn window_engagements(&mut self, view_state: &ViewModel) -> HashMap<String, WindowEngagement> { self.render_ctx().window_engagements(view_state).await }
@@ -949,10 +990,22 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> P
 
     async fn context_menu(&mut self, request: &ContextMenuRequest, view_state: &ViewModel) -> Vec<ContextMenuItemSpec> { self.render_ctx().context_menu(request, view_state).await }
 
-    async fn produce_media(&mut self, port: &str, owner: &mut semio_os_kernel::io::control::NativeSnapshotEncodeOwner<'_,'_>,cx:&mut StepContext<'_>) -> Result<Option<MediaArtifact>,semio_plugin_decl_app::MediaArtifactOperationFailure> { self.produce_media(port, owner, cx).await }
+    async fn produce_media(&mut self, port: &str, owner: &mut semio_os_kernel::io::control::NativeSnapshotEncodeOwner<'_,'_>,cx:&mut StepContext<'_>) -> Result<Option<MediaArtifact>,semio_plugin_decl_app::MediaArtifactOperationFailure> { self.members_ctx().produce_media(port, owner, cx).await }
 
     fn original_media_live_document(&self) -> Option<RawLiveDocument<'_>> {
         Some((&self.stores.store.envelope().id, self.stores.store.content_revision()))
+    }
+
+    fn natural_source_capability(&self) -> Option<(semio_plugin_decl_media::original_media::natural_source_gate::NaturalSourceDeclaration<'static>, u32)> {
+        semio_plugin_instance_natural_publication::natural_source_capability::<A>()
+    }
+
+    fn natural_source_format_closed(&self) -> bool { self.media.natural_source.is_none() }
+
+    async fn advance_natural_source_format(
+        &mut self, source: &mut semio_plugin_decl_media::original_media::natural_source::NaturalFileSourceGuest, cx: &mut StepContext<'_>,
+    ) -> Result<(), OriginalTurnFailure> {
+        semio_plugin_instance_natural_publication::advance_natural_publication(self, source, cx).await
     }
 
     fn original_media_format_closed(&self) -> bool {
@@ -976,115 +1029,20 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> P
         if codec.format_kind!=format_kind{return None}
         Some(::semio_framework_async::poll::resolve_ready(A::io()).map_or(semio_framework::MediaType{class:semio_framework::MediaClass::Data,form:semio_framework::MediaForm::Value},|io|io.artifact_media_type))
     }
-    async fn prepare_media_import(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
-        let source=(cx.operation(),cx.generation(),cx.original_source_parent()?.source_identity()?);
-        if let Some((_,original))=self.media.pending_reserved_producer_permit.as_ref(){
-            if *original!=source{return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"media import requires its retained original receiving source").into())}
-            return Ok(!cx.should_yield()&&cx.retained_grant().maximum_items>0&&cx.retained_grant().maximum_depth>0)
-        }
-        let meta=ActionMeta{ expected_document_revision:None,actor:self.stores.store.local_actor_id().0.clone(),instance_id:self.tools.live_runtime_instance_id.ok_or_else(||plugin_sdk_fault("media import requires its mounted live instance"))?,view_state:None};
-        let Some(permit)=self.dispatch_ctx().admit_reserved_emit_producer("import-media",&meta,cx)?else{return Ok(false)};
-        *self.media.pending_reserved_producer_permit=Some((permit,source));Ok(false)
-    }
-    async fn advance_original_media_import(&mut self, port: &str, media: &mut Option<Media>, meta: &ActionMeta, progress: &mut semio_plugin_reactor_app::OriginalMediaImport, cx: &mut StepContext<'_>) -> Result<bool, OriginalTurnFailure> {
-        use semio_plugin_decl_app::tool_contract::{ArtifactBoundedToolFault, TypedOperationResultLane, decode_typed_operation_fault_page};
-        use semio_framework_value::{RetainedCloneProgress, RetirementDemand};
-        if progress.complete {
-            return Ok(true);
-        }
-        let Some(operation) = progress.operation else {
-            self.dispatch_ctx().advance_original_reserved_media(port, media, meta, &mut progress.operation, cx).await?;
-            return Ok(false);
-        };
-        if let Some(mounted) = self.tools.tool_operations.get(operation.operation.0) {
-            let awaiting_page = mounted.result_page.as_ref().filter(|_| mounted.stage == MountedTypedCommandFullOperationStage::AwaitingAck);
-            if progress.terminal.is_none() {
-                let terminal = mounted.terminal_fault.map(Err).or_else(|| {
-                    let page = mounted.result_page.as_ref()?;
-                    match page.lane {
-                        TypedOperationResultLane::Fault => Some(Err(ArtifactBoundedToolFault::from_fault(&decode_typed_operation_fault_page(page.bytes())))),
-                        TypedOperationResultLane::Terminal if mounted.user_cancel_requested => Some(Err(ArtifactBoundedToolFault::from_fault(&Fault::from("original media import was cancelled")))),
-                        TypedOperationResultLane::Terminal | TypedOperationResultLane::Download => Some(Ok(())),
-                        _ => None,
-                    }
-                });
-                if let Some(terminal) = terminal {
-                    let copy_bytes = size_of_val(&progress.terminal);
-                    let demand = RetirementDemand { copy_bytes, depth: 1, ..Default::default() };
-                    if cx.retirement_should_yield() || !cx.retained_work_can_enter(demand) {
-                        return Ok(false);
-                    }
-                    cx.consume_retained(RetainedCloneProgress { copied_items: 1, copied_bytes: copy_bytes, ..Default::default() })?;
-                    cx.consume_fuel(1);
-                    progress.terminal = Some(terminal);
-                }
-            }
-            if let Some(token) = awaiting_page.map(|page| page.token) {
-                let copy_bytes = size_of_val(&token);
-                let demand = RetirementDemand { copy_bytes, depth: 1, ..Default::default() };
-                if cx.retirement_should_yield() || !cx.retained_work_can_enter(demand) {
-                    return Ok(false);
-                }
-                if !self.acknowledge_typed_operation_result(token)? {
-                    return Err(ValueError::invariant("original media import lost its exact publication acknowledgement").into());
-                }
-                cx.consume_retained(RetainedCloneProgress { copied_items: 1, copied_bytes: copy_bytes, ..Default::default() })?;
-                cx.consume_fuel(1);
-            }
-            return Ok(false);
-        }
-        let terminal = progress.terminal.ok_or_else(|| ValueError::invariant("original media import retired without a terminal publication"))?;
-        terminal.map_err(|fault| fault.into_fault())?;
-        progress.complete = true;
-        Ok(true)
-    }
+    async fn prepare_media_import(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure> { self.prepare_media_import(cx).await }
+    async fn advance_original_media_import(&mut self, port: &str, media: &mut Option<Media>, meta: &ActionMeta, progress: &mut semio_plugin_reactor_app::OriginalMediaImport, cx: &mut StepContext<'_>) -> Result<bool, OriginalTurnFailure> { self.advance_original_media_import(port, media, meta, progress, cx).await }
 
-    async fn consume_media(&mut self,port:&str,artifact:&mut Option<MediaArtifact>,cx:&mut StepContext<'_>)->Result<Option<MediaConsumption>,semio_plugin_decl_app::MediaArtifactOperationFailure>{self.consume_media(port,artifact,cx).await}
+    async fn consume_media(&mut self,port:&str,artifact:&mut Option<MediaArtifact>,cx:&mut StepContext<'_>)->Result<Option<MediaConsumption>,semio_plugin_decl_app::MediaArtifactOperationFailure>{self.members_ctx().consume_media(port,artifact,cx).await}
 
     /// 🎞️ Batch-only adapter. Registered interactive outputs are driven through the same
     /// externally addressable submission API; this loop is not used by UI/workflow entry points.
-    async fn export_media(&mut self,port:&str,cx:&mut StepContext<'_>)->Result<Option<Media>,OriginalTurnFailure>{
-        if self.media.receive_media_submission_refusal(cx)?||cx.should_yield(){return Ok(None)}
-        if self.tools.app_registrations().any(|(verb,_)|verb.strip_prefix("export-media:")==Some(port)){
-            let operation_id=if let Some(id)=self.media.current_media_export{if self.media.media_exports.get(id).is_none_or(|active|active.port!=port){return self.media.retain_media_submission_refusal(MediaError::Payload(port.to_string(),"current export belongs to a different original port".into()), cx)}id}else{let Some(instance)=self.tools.live_runtime_instance_id else{return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"batch media requires its mounted instance").into())};if !self.media.receive_owned_media_export(&mut self.stores, &mut self.tools, &self.child_composition.child_content_root, port, None, instance, None, cx).await?{return Ok(None)}self.media.current_media_export.ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"batch media publication lost its live operation"))?};
-            if self.media.media_export_preparation.is_some(){
-                self.media.snapshot_retirements.get(operation_id).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"batch media lost its original supplier"))?.validate(cx)?;
-                let grant=cx.retained_grant();self.media.close_media_submission_refusal(&mut self.stores,&mut self.tools, cx, grant)?;return Ok(None)
-            }
-            return match self.media.receive_owned_media_poll(&mut self.stores, operation_id, cx).await?{None|Some(ArtifactMediaExportPoll::Running{..})=>Ok(None),Some(ArtifactMediaExportPoll::Complete(result))=>match result.into_batch_media(){Ok(media)=>Ok(Some(media)),Err(source)=>self.media.retain_media_submission_refusal(source, cx)},Some(ArtifactMediaExportPoll::Cancelled)=>self.media.retain_media_submission_refusal(MediaError::Payload(port.to_string(),"media export cancelled".into()), cx),Some(ArtifactMediaExportPoll::Failed(detail))=>self.media.retain_media_submission_refusal(MediaError::Payload(port.to_string(),detail), cx)};
-        }
-        self.render_ctx().refresh_cache().await?;
-        let render_operation=self.tools.live_render_operation(&self.mounted_policy, &self.stores);let parent_document_id=self.stores.store.envelope().id.clone();
-        let VcsArtifactApp{app:_,history:command_history,child_composition,stores,tools,..}=self;
-        let(_,snapshot,config,history)=command_history.cache.as_ref().expect("cache refreshed above");
-        let doc=ArtifactView::with_render_context(snapshot.as_ref(),history.as_ref(),ChildContentView::clone(&child_composition.child_content_root),render_operation,&parent_document_id,None).await.with_instance(tools.instance_operation_owner.clone());let _cfg=ConfigView{snapshot:config.as_ref(),window:None};let transient=stores.transient_store.current_root();
-        match A::export_media_with_request_context(&tools.instance_operation_owner,port,&doc,&TransientView{snapshot:transient.as_ref(),window:None}).await{Ok(media)=>Ok(Some(media)),Err(source)=>self.media.retain_media_submission_refusal(source, cx)}
-    }
+    async fn export_media(&mut self,port:&str,cx:&mut StepContext<'_>)->Result<Option<Media>,OriginalTurnFailure>{self.members_ctx().export_media(port,cx).await}
 
-    async fn submit_media_export(&mut self,port:&str,receiver:&mut Option<ArtifactMediaExportHandle>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
-        if self.media.receive_media_submission_refusal(cx)?||cx.should_yield(){return Ok(false)}
-        let Some(app_instance_id)=self.tools.live_runtime_instance_id else{return self.media.retain_media_submission_refusal::<()>(MediaError::Payload(port.to_string(),"resumable media export requires a bound live app instance".into()), cx).map(|_|false)};
-        self.media.receive_owned_media_export(&mut self.stores, &mut self.tools, &self.child_composition.child_content_root, port, None, app_instance_id, Some(receiver), cx).await
-    }
+    async fn submit_media_export(&mut self,port:&str,receiver:&mut Option<ArtifactMediaExportHandle>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure> { self.submit_media_export(port, receiver, cx).await }
 
-    async fn submit_media_export_checked(&mut self,port:&str,expected_parent_document_id:&str,expected_base_revision:u64,checkpoint_id:Option<&str>,receiver:&mut Option<ArtifactMediaExportHandle>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
-        if self.media.receive_media_submission_refusal(cx)?||cx.should_yield(){return Ok(false)}
-        let parent_document_id=self.stores.store.envelope().id.as_str();let content_revision=self.stores.store.content_revision();let base_revision=u64::from_be_bytes(content_revision[..8].try_into().expect("revision lane width"));
-        if parent_document_id!=expected_parent_document_id||base_revision!=expected_base_revision{return self.media.retain_media_submission_refusal::<()>(MediaError::Payload(port.to_string(),"media export resource authority is stale".into()), cx).map(|_|false)}
-        let Some(app_instance_id)=self.tools.live_runtime_instance_id else{return self.media.retain_media_submission_refusal::<()>(MediaError::Payload(port.to_string(),"resumable media export requires a bound live app instance".into()), cx).map(|_|false)};
-        self.media.receive_owned_media_export(&mut self.stores, &mut self.tools, &self.child_composition.child_content_root, port, checkpoint_id, app_instance_id, Some(receiver), cx).await
-    }
+    async fn submit_media_export_checked(&mut self,port:&str,expected_parent_document_id:&str,expected_base_revision:u64,checkpoint_id:Option<&str>,receiver:&mut Option<ArtifactMediaExportHandle>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure> { self.submit_media_export_checked(port, expected_parent_document_id, expected_base_revision, checkpoint_id, receiver, cx).await }
 
-    async fn poll_media_export(&mut self,handle:semio_plugin_decl_media::ArtifactMediaExportHandleLoan<'_>,receiver:&mut Option<ArtifactMediaExportPoll>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
-        if self.media.receive_media_submission_refusal(cx)?||cx.should_yield(){return Ok(false)}
-        self.media.snapshot_retirements.get(handle.operation_id.0).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"media polling lost its original source"))?.validate(cx)?;
-        if receiver.is_some(){return Ok(true)}
-        if self.media.media_exports.get(handle.operation_id.0).is_none_or(|active|active.handle.original_loan()!=handle){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"media polling requires its exact original live handle").into())}
-        let grant=cx.retained_grant();let bytes=size_of::<ArtifactMediaExportPoll>()+size_of::<bool>();if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<bytes{return Ok(false)}
-        let Some(poll)=self.media.receive_owned_media_poll(&mut self.stores, handle.operation_id.0, cx).await?else{return Ok(false)};
-        if matches!(poll,ArtifactMediaExportPoll::Complete(_)){self.media.media_closures.get_mut(handle.operation_id.0).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"terminal media poll lost its original close owner"))?.download_pending=true}
-        *receiver=Some(poll);cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);Ok(true)
-    }
+    async fn poll_media_export(&mut self,handle:semio_plugin_decl_media::ArtifactMediaExportHandleLoan<'_>,receiver:&mut Option<ArtifactMediaExportPoll>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure> { self.poll_media_export(handle, receiver, cx).await }
 
     async fn cancel_media_export(&mut self, handle: &ArtifactMediaExportHandle) -> Result<(), MediaError> {
         self.media.cancel_owned_media_export(handle).await
@@ -1096,34 +1054,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> P
 
     async fn take_segmented_download_chunk(&mut self, operation_id: u64) -> Result<Option<Vec<u8>>, Fault> { self.media.take_segmented_download_chunk(operation_id).await }
 
-    async fn import_media(&mut self,port:&str,media:&mut Option<Media>,meta:&ActionMeta,cx:&mut StepContext<'_>)->Result<Option<InvocationResult>,OriginalTurnFailure>{
-        let log_generation_before=self.history.log_generation;
-        let Some(result)=self.dispatch_ctx().dispatch_import_media(port,media,meta,cx).await? else{return Ok(None)};
-        Ok(Some(self.render_ctx().finish_recorded(log_generation_before,&format!("import-media:{port}"),result).await))
-    }
+    async fn import_media(&mut self,port:&str,media:&mut Option<Media>,meta:&ActionMeta,cx:&mut StepContext<'_>)->Result<Option<InvocationResult>,OriginalTurnFailure> { self.import_media(port, media, meta, cx).await }
 
-    async fn media_fingerprint(&mut self, port: &str) -> Result<MediaFingerprint, MediaError> {
-        self.render_ctx().refresh_cache().await.map_err(|error| MediaError::Payload(port.to_string(), error.message))?;
-        let render_operation = self.tools.live_render_operation(&self.mounted_policy, &self.stores);
-        let parent_document_id = self.stores.store.envelope().id.clone();
-        let VcsArtifactApp { app: _, history: command_history, child_composition, tools, .. } = self;
-        let (_, snapshot, config, history) = command_history.cache.as_ref().expect("cache refreshed above");
-        let doc = ArtifactView::with_render_context(snapshot.as_ref(), history.as_ref(), ChildContentView::clone(&child_composition.child_content_root), render_operation, &parent_document_id, None).await.with_instance(tools.instance_operation_owner.clone());
-        let _cfg = ConfigView { snapshot: config.as_ref(), window: None };
-        A::media_fingerprint(port, &doc).await
-    }
-}
-
-impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> VcsArtifactApp<A, M> {
-    fn owns_original_reserved_permit(&self,cx:&StepContext<'_>)->bool{let Some(identity)=cx.original_source_parent().ok().and_then(|parent|parent.source_identity().ok()).map(|source|(cx.operation(),cx.generation(),source))else{return false};self.tools.pending_tool_lease_admission.as_ref().is_some_and(|owner|owner.identity==identity)||self.media.pending_reserved_producer_permit.as_ref().is_some_and(|(_,original)|*original==identity)}
-    fn owns_original_reserved_mount(&self,cx:&StepContext<'_>)->bool{!self.media.reserved_mount_construction.terminal_is_empty()||self.media.reserved_mount.as_ref().is_some_and(|owner|owner.matches(cx))||self.media.reserved_receipt.is_some_and(|receipt|receipt.operation(cx).is_ok())}
-    fn reserved_mount_close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{if !self.media.reserved_mount_construction.terminal_is_empty(){return Ok(Default::default())}if let Some(owner)=self.media.reserved_mount.as_ref(){return if owner.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:size_of::<Option<Box<semio_plugin_retained_command::typed_operation::original_emission::OriginalEmissionAdmission<A>>>>(),release_bytes:size_of::<semio_plugin_retained_command::typed_operation::original_emission::OriginalEmissionAdmission<A>>(),depth:1,..Default::default()})}else{owner.close_demands(&self.tools.tool_cancellations,body)}}Ok(RetirementDemand{copy_bytes:size_of::<Option<semio_plugin_job::original_emission::OriginalEmissionReceipt>>(),depth:1,..Default::default()})}
-    fn close_original_reserved_mount(&mut self,cx:&mut StepContext<'_>)->Result<semio_framework_value::RetainedCloneStep,OriginalTurnFailure>{let before=cx.retained_progress();if !self.media.reserved_mount_construction.terminal_is_empty(){self.media.reserved_mount_construction.close_step(cx)?;return Ok(semio_framework_value::RetainedCloneStep::Progress(semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?))}if let Some(owner)=self.media.reserved_mount.as_mut(){if !owner.terminal_is_empty(){cx.with_original_retirement(|cx|owner.close_step(&self.tools.tool_cancellations,cx))?;}else{let d=self.reserved_mount_close_demands(cx.retained_grant().maximum_copy_bytes)?;cx.with_original_retirement(|cx|semio_framework_job::close_original_retained_step(cx,d,|_|{self.media.reserved_mount.take();semio_framework_value::RetainedWorkOutcome::<_,semio_framework_value::ValueError>{result:Ok(semio_framework_value::RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()})),work:1}}))?;}}else if self.media.reserved_receipt.is_some(){let d=self.reserved_mount_close_demands(cx.retained_grant().maximum_copy_bytes)?;cx.with_original_retirement(|cx|semio_framework_job::close_original_retained_step(cx,d,|_|{self.media.reserved_receipt=None;semio_framework_value::RetainedWorkOutcome::<_,semio_framework_value::ValueError>{result:Ok(semio_framework_value::RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})),work:1}}))?;}Ok(semio_framework_value::RetainedCloneStep::Progress(semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?))}
-    fn reserved_permit_waits(&self,cx:&StepContext<'_>)->bool{let Some(identity)=cx.original_source_parent().ok().and_then(|parent|parent.source_identity().ok()).map(|source|(cx.operation(),cx.generation(),source))else{return false};self.media.pending_reserved_producer_permit.as_ref().is_some_and(|(_,original)|*original==identity)&&self.tools.pending_tool_lease_admission.as_ref().is_some_and(|owner|owner.identity!=identity)}
-    fn selected_typed_result_page(&self, receiver: u32) -> Option<(usize, u64)> {
-        (0..ARTIFACT_LIVE_OUTPUT_SLOTS).find_map(|offset| {
-            let index = (self.tools.typed_result_cursor + offset) % ARTIFACT_LIVE_OUTPUT_SLOTS;
-            self.tools.tool_operations.entry(index).filter(|(_, operation)| operation.meta.instance_id == receiver && !operation.result_page_presented && operation.result_page.is_some()).map(|(id, _)| (index, *id))
-        })
-    }
+    async fn media_fingerprint(&mut self, port: &str) -> Result<MediaFingerprint, MediaError> { self.media_fingerprint(port).await }
 }

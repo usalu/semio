@@ -42,10 +42,35 @@
         "forwardAllArgs": true
       }
     },
+    "preview-generated": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "command": "repo ./📜️script.ts preview-generated",
+        "cwd": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🦀️rust"
+      },
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "outputs": []
+    },
     "wasm": {
       "executor": "repo:script",
       "cache": true,
-      "options": { "command": "repo ./📜️script.ts wasm", "cwd": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🦀️rust" },
+      "inputs": [
+        "{workspaceRoot}/package.json",
+        "{workspaceRoot}/bun.lock",
+        "cargoToolchain",
+        "sharedGlobals",
+        "{workspaceRoot}/✏️s/Cargo.lock",
+        "{workspaceRoot}/✏️s/Cargo.toml",
+        "{workspaceRoot}/✏️s/🧑‍💻dev/📐️cad/🏗️build/📜️script.ts",
+        "{workspaceRoot}/✏️s/🧑‍💻dev/📐️cad/**/*.rs",
+        "{workspaceRoot}/✏️s/🧑‍💻dev/📐️cad/📦️packages/🦀️rust/Cargo.toml",
+        "{workspaceRoot}/✏️s/🧑‍💻dev/📐️cad/📦️packages/🦀️rust/📋️project.json"
+      ],
+      "options": { "command": "repo \"../../🏗️build/📜️script.ts\" wasm", "cwd": "{projectRoot}", "forwardAllArgs": false },
       "metadata": {
         "semio": {
           "wasmPackageSourceV1": { "version": 1, "sourceOwner": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🦀️rust" }

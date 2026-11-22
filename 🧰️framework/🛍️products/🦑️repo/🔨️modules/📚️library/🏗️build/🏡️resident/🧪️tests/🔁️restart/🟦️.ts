@@ -1,14 +1,19 @@
 /** 🔁️ Contract: a slice worker that ends with the restart exit code (75: the code on this machine changed under it and the outermost command is to start again) is started again with the current code, a bounded number of times and with a progress line in English and German, never reported to the person as a failure of the plan; a worker that ends otherwise, a cancelled plan and a fourth restart in a row are not retried, and the last says in both languages what happened.
  * @see ../../../🧷️format-stamps/🟨️.mjs */
 import {expect,test} from "bun:test";
+import {Database} from "bun:sqlite";
+import Ajv from "ajv";
 import {createSlicePoolV1} from "../../🏗️composition/🌐️host/👷️slice-pool/🟨️.mjs";
 import {HOST_POLICY_V1,renderTextV1} from "../../📨️protocol/🎚️policy/🟨️.mjs";
 import settle from "./⏱️settle.json" with {type:"json"};
+import slots from "./🔣️slot.json" with {type:"json"};
+import slotsSchema from "./🧬️schema/🔣️slot.json" with {type:"json"};
 
 const elasticity=HOST_POLICY_V1.sliceHostElasticity as {maximumMegabytes:number;hostCapBasisPoints:number;minimumMegabytes:number};
 const harness=(exits:(number|"done")[],options:{lives?:number[];step?:number;elapsed?:readonly number[];restartPolicy?:{backoffMilliseconds:number[];settleMilliseconds:number;progressMilliseconds:number;totalMaximum:number}}={})=>{
  const started:number[]=[],released:number[]=[],progress:any[]=[];let index=0,tick=0;
  const pool=createSlicePoolV1({...options.step===undefined&&options.elapsed===undefined?{}:{now:()=>tick},workerUrl:new URL("file:///unused.mjs"),maximum:1,graceMilliseconds:50,...options.restartPolicy===undefined?{}:{restartPolicy:options.restartPolicy},hostMegabytes:16384,elasticity,unlearnedMegabytes:2048,
+  reaper:{reap:async()=>0,killNow:()=>undefined},
   reserve:async({megabytes}:{megabytes:number})=>{const id=started.length;return{megabytes,attach:()=>undefined,release:()=>{released.push(id);}};},
   createWorker:()=>{tick+=options.step??0;const outcome=exits[index++]!,listeners:Record<string,(value:unknown)=>void>={};started.push(index);const life=options.lives?.[index-1]??0,span=options.elapsed?.[index-1]??0,end=()=>{tick+=span;if(outcome==="done")listeners.message?.({type:"done",graph:{}});else listeners.exit?.(outcome);};if(life>0)setTimeout(end,life);else queueMicrotask(end);return{pid:undefined,on:(event:string,listener:(value:unknown)=>void)=>{listeners[event]=listener;},terminate:async()=>0};}});
  return{pool,started,released,progress};
@@ -78,4 +83,45 @@ for(const row of settle.cases)test(`the replica settles on time since transient 
   expect(run.started.length).toBe(row.starts);
   expect(waits).toEqual(row.waitedSeconds);
  }finally{await run.pool.close();}
+});
+
+test("restart backoff frees the worker slot for the next waiting load of any checkout",async()=>{
+ expect(new Ajv({strict:true}).validate(slotsSchema,slots)).toBe(true);
+ const [leader,follower,other]=slots.requests as [typeof slots.requests[number],typeof slots.requests[number],typeof slots.requests[number]];
+ const db=new Database(":memory:"),started:string[]=[],finished=new Map<string,()=>void>();
+ const controller=new AbortController(),pending:Promise<unknown>[]=[],backingOff=Promise.withResolvers<void>(),retried=Promise.withResolvers<void>();
+ const pool=createSlicePoolV1({workerUrl:new URL("file:///unused.mjs"),maximum:slots.capacity,heartbeatMilliseconds:15,
+  restartPolicy:{backoffMilliseconds:[slots.backoffMilliseconds],settleMilliseconds:5000,progressMilliseconds:100,totalMaximum:3},
+  reaper:{reap:async()=>0,killNow:()=>undefined},
+  createWorker:(_url:URL,request:{name:string})=>{
+   const previous=started.includes(request.name),listeners:Record<string,(value:unknown)=>void>={};
+   started.push(request.name);
+   if(request.name===leader.name&&!previous)queueMicrotask(()=>listeners.exit?.(HOST_POLICY_V1.sliceRestartExitCode));
+   else finished.set(request.name,()=>listeners.message?.({type:"done",graph:{}}));
+   return {pid:undefined,on:(name:string,listener:(value:unknown)=>void)=>{listeners[name]=listener;},terminate:async()=>0};
+  }});
+ const begin=(request:typeof leader,onProgress?:(_ms:number,detail:{decision?:{key:string}})=>void)=>{
+  const run=pool.run(request,{signal:controller.signal,onProgress});
+  pending.push(run);void run.catch(()=>undefined);return run;
+ };
+ try{
+  const first=begin(leader,(_ms,detail)=>{
+   if(detail.decision?.key==="restarted")backingOff.resolve();
+   if(detail.decision?.key==="queued-pool")retried.resolve();
+  });
+  await backingOff.promise;
+  expect(pool.stats().active).toBe(0);
+  const second=begin(follower),different=begin(other);
+  await retried.promise;
+  const waiting=db.query<{name:string},[string,string]>(`select json_extract(value,'$.name') name
+    from json_each(?1) where json_extract(value,'$.name')<>?2 order by key`).all(JSON.stringify(slots.requests),leader.name);
+  expect(started).toEqual([leader.name,waiting[0]!.name]);
+  finished.get(follower.name)!();await second;
+  while(!finished.has(other.name))await Bun.sleep(1);
+  finished.get(other.name)!();await different;
+  while(!finished.has(leader.name))await Bun.sleep(1);
+  finished.get(leader.name)!();await first;
+  expect(started).toEqual([leader.name,...waiting.map(row=>row.name),leader.name]);
+  expect(pool.busy()).toBe(0);
+ }finally{controller.abort();await Promise.allSettled(pending);await pool.close();db.close();}
 });

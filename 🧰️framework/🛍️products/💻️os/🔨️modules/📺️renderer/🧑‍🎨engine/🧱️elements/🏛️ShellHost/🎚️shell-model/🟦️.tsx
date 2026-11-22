@@ -6,8 +6,9 @@
 import * as React from "../../⚛️react-port/🟦️.ts";
 import { createContext } from "../../⚛️react-port/🟦️.ts";
 import { AppRouter, type Severity } from "@semio-tech/framework";
-import { dockSeedActiveWindowIdV1, modeLayoutStacksV1, type WindowScopeLayoutNodeV1 } from "../⌨️window-scope/🟦️.ts";
-import { type IconName, type UiTranslationKey, uiDataLabel, type WindowLayoutNode } from "@semio-tech/ui-react";
+import { dockSeedActiveWindowIdV1, modeLayoutStacksV1 } from "../⌨️window-scope/🟦️.ts";
+import { type IconName, type UiTranslationKey, uiDataLabel } from "@semio-tech/ui-react";
+import type { WindowLayoutNode } from "@semio-tech/ui-layout";
 import { HISTORY_REFUSAL_LABEL_KEYS, historyRefusalCodeV1 } from "../../🛠️ShellHelpers/🛣️route-and-chrome/🟦️.tsx";
 import { shellLabel } from "../../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
 import { type WindowFault, type WindowFaultClass } from "../🩺️fault/🟦️.ts";
@@ -148,6 +149,6 @@ export function WindowFaultStatus({ fault }: { readonly fault: WindowFault }): R
  * the wgpu shell has always seeded `active_window_id` this way, the React shell never did
  * (`⌨️window-scope/🟦️.ts`, ticket 26/09/09/PROCEDURAL-3D-END-TO-END). */
 export function seededActiveWindowId(modeLayout: WindowLayoutNode): string | null {
-  return dockSeedActiveWindowIdV1(modeLayoutStacksV1(modeLayout as WindowScopeLayoutNodeV1), null);
+  return dockSeedActiveWindowIdV1(modeLayoutStacksV1(modeLayout), null);
 }
 //#endregion FrameworkOsShell

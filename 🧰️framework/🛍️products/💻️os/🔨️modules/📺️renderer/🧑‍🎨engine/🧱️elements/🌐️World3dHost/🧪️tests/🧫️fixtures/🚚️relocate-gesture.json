@@ -1,0 +1,53 @@
+{
+  "origin": [0, 0, 2.25],
+  "rotation": [0, 0, 0.6, 0.8],
+  "scale": [1.5, 2, 0.5],
+  "grab": [0.3, -0.25, 2.25],
+  "target": [1.8, 0.5, 2.25],
+  "expected": [1.5, 0.75, 2.25],
+  "moves": 24,
+  "cardinal": [
+    {
+      "view": "front",
+      "axis": 1,
+      "eye": [0, -12, 0],
+      "origin": [0.25, 2.25, -0.25],
+      "grab": [0.5, 2.25, 1],
+      "preview": [0.75, 2.25, 0.75],
+      "release": [1.5, 2.25, 2],
+      "snap": false,
+      "expectedPreview": [0.5, 2.25, -0.5],
+      "expectedRelease": [1.25, 2.25, 0.75]
+    },
+    {
+      "view": "right",
+      "axis": 0,
+      "eye": [12, 0, 0],
+      "origin": [-2.25, 0.25, 0.25],
+      "grab": [-2.25, 0.5, 0.25],
+      "preview": [-2.25, 1.5, 1],
+      "release": [-2.25, -1.5, 2],
+      "snap": true,
+      "expectedPreview": [-2.25, 1, 1],
+      "expectedRelease": [-2.25, -2, 2]
+    }
+  ],
+  "grid": {
+    "origin": [0.25, 0.5, 3.25],
+    "grab": [10, 10, 0],
+    "factor": 1,
+    "cases": [
+      { "target": [10, 10, 0], "expected": null },
+      { "target": [11, 10, 0], "expected": [1, 1, 3.25] },
+      { "target": [11, 8, 0], "expected": [1, -1, 3.25] }
+    ]
+  },
+  "finishes": [
+    { "finish": "release", "commits": 1 },
+    { "finish": "cancel", "commits": 0 },
+    { "finish": "escape", "commits": 0 },
+    { "finish": "pinch", "commits": 0 },
+    { "finish": "blur", "commits": 0 },
+    { "finish": "unmount", "commits": 0 }
+  ]
+}

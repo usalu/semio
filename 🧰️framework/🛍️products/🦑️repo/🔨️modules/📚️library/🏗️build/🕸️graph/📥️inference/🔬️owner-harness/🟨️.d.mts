@@ -1,0 +1,5 @@
+export type OwnerHarnessResultV1 = Readonly<{ name: string; root: string; native: boolean; mode: "full" | "selected"; wallMilliseconds: number; cpuMilliseconds: number; targets: readonly string[]; rows: number; recordBytes: number; managedMegabytes: number; digest: string }>;
+/** 🔬️ Opens the session of a farm child for one workspace and infers single owners in it. */
+export function openOwnerHarnessV1(input: Readonly<{ workspaceRoot: string; registry?: unknown; late?: boolean; analysisStore?: string; stagingParent?: string }>): Promise<Readonly<{ environment: unknown; infer(root: string, options?: Readonly<{ selected?: Readonly<{ targets: readonly string[]; inputs?: readonly string[] }> }>): Promise<OwnerHarnessResultV1>; trim(budgetBytes: number): boolean; close(): void }>>;
+/** 🧭️ The project roots a farm child maps to owner names: every owner root and the native root a project declares. */
+export function projectRootsOfV1(workspaceRoot: string, source: Readonly<{ owners: readonly Readonly<{ root: string; name: string }>[] }>): [string, string][];

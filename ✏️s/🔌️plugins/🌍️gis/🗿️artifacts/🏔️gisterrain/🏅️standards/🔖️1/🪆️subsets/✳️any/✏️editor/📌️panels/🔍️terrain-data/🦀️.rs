@@ -1,6 +1,7 @@
 //! 🔍️ Terrain data inspection for the mounted GIS editor.
 
 use crate::GisTerrainSnapshot;
+use semio_framework_surface::terrain::missing_samples::is_missing;
 use semio_framework_value::DslValue;
 use semio_plugin::{BuiltNode, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiAssemblyResult, ViewModel, tree_item_desc, ui_node_list};
 use semio_ui_locale::LocalizedLabel;
@@ -30,18 +31,31 @@ pub fn render(document: &GisTerrainSnapshot, view: &ViewModel) -> UiAssemblyResu
     let mut data = PanelTreeBuilder::new(BODY)?;
     if let Some(grid) = document.elevation_source.as_ref().filter(|grid| grid.is_valid()) {
         let [west, south, east, north] = grid.bounds;
-        let (minimum, maximum, sum) = grid.rows.iter().flatten().copied().fold((i16::MAX, i16::MIN, 0_i32), |(low, high, sum), height| {
-            (low.min(height), high.max(height), sum + i32::from(height))
-        });
-        let dimensions = (grid.rows[0].len(), grid.rows.len());
-        let samples = dimensions.0 * dimensions.1;
-        let items = ui_node_list([
-            item("grid-size", "Grid Size", "Rastergröße", format!("{} × {}", dimensions.0, dimensions.1)),
-            item("grid-range", "Elevation Range", "Höhenbereich", format!("{minimum}–{maximum} m")),
-            item("grid-mean", "Mean Elevation", "Mittlere Höhe", format!("{:.1} m", f64::from(sum) / samples as f64)),
+        let mask = grid.missing_samples.as_deref();
+        let (minimum, maximum, sum, present) = grid.rows_millimetres.iter().flatten().copied().enumerate()
+            .filter(|(ordinal, _)| !is_missing(mask, *ordinal))
+            .fold((i32::MAX, i32::MIN, 0_i64, 0_usize), |(low, high, sum, present), (_, height)| {
+                (low.min(height), high.max(height), sum + i64::from(height), present + 1)
+            });
+        let dimensions = (grid.rows_millimetres[0].len(), grid.rows_millimetres.len());
+        let absent = dimensions.0 * dimensions.1 - present;
+        let mut items = Vec::with_capacity(6);
+        items.push(item("grid-size", "Grid Size", "Rastergröße", format!("{} × {}", dimensions.0, dimensions.1)));
+        if present > 0 {
+            let minimum = f64::from(minimum) / 1000.0;
+            let maximum = f64::from(maximum) / 1000.0;
+            let mean = sum as f64 / (1000.0 * present as f64);
+            items.push(item("grid-range", "Elevation Range", "Höhenbereich", format!("{minimum}–{maximum} m")));
+            items.push(item("grid-mean", "Mean Elevation", "Mittlere Höhe", format!("{mean:.3} m")));
+        }
+        if absent > 0 {
+            items.push(item("grid-missing-count", "Missing Samples", "Fehlende Rasterpunkte", absent.to_string()));
+        }
+        items.extend([
             item("grid-longitude", "Longitude Bounds", "Längengrade", format!("{west:.6}° → {east:.6}°")),
             item("grid-latitude", "Latitude Bounds", "Breitengrade", format!("{south:.6}° → {north:.6}°")),
-        ])?;
+        ]);
+        let items = ui_node_list(items)?;
         data = data.section("elevation", Some(label(localize("Elevation", "Höhe"))?), true, items)?;
     } else {
         let items = ui_node_list([item("grid-empty", "Elevation Grid", "Höhenraster", localize("No grid loaded", "Kein Raster geladen"))])?;

@@ -58,10 +58,11 @@ export async function* announcedCargoSourceChecksumsV1(filenames:readonly string
 
 /** ⚖️ Holds the first pair of incompatible consumed-byte claims for one attempt's admitted paths. */
 export class CargoSourceAttemptV1 {
+  private readonly admitted:ReadonlyMap<string,string>;
   private readonly first=new Map<string,{unit:string;fingerprint:string}>();
   private disagreement?:CargoSourceDriftV1;
 
-  constructor(private readonly admitted:ReadonlyMap<string,string>){}
+  constructor(admitted:ReadonlyMap<string,string>){this.admitted=admitted;}
 
   get conflict():CargoSourceDriftV1|undefined{return this.disagreement;}
 

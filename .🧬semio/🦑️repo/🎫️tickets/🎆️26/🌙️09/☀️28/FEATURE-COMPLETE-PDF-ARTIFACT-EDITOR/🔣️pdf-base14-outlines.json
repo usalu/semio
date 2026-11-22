@@ -1,0 +1,306 @@
+{
+  "release": "20200910",
+  "faces": [
+    {
+      "font": "Helvetica",
+      "program": "NimbusSans-Regular",
+      "glyphs": [
+        {
+          "name": "A",
+          "unicode": 65
+        },
+        {
+          "name": "W",
+          "unicode": 87
+        },
+        {
+          "name": "m",
+          "unicode": 109
+        },
+        {
+          "name": "Aacute",
+          "unicode": 193
+        }
+      ]
+    },
+    {
+      "font": "Helvetica-Bold",
+      "program": "NimbusSans-Bold",
+      "glyphs": [
+        {
+          "name": "A",
+          "unicode": 65
+        },
+        {
+          "name": "W",
+          "unicode": 87
+        },
+        {
+          "name": "m",
+          "unicode": 109
+        },
+        {
+          "name": "Aacute",
+          "unicode": 193
+        }
+      ]
+    },
+    {
+      "font": "Helvetica-Oblique",
+      "program": "NimbusSans-Italic",
+      "glyphs": [
+        {
+          "name": "A",
+          "unicode": 65
+        },
+        {
+          "name": "W",
+          "unicode": 87
+        },
+        {
+          "name": "m",
+          "unicode": 109
+        },
+        {
+          "name": "Aacute",
+          "unicode": 193
+        }
+      ]
+    },
+    {
+      "font": "Helvetica-BoldOblique",
+      "program": "NimbusSans-BoldItalic",
+      "glyphs": [
+        {
+          "name": "A",
+          "unicode": 65
+        },
+        {
+          "name": "W",
+          "unicode": 87
+        },
+        {
+          "name": "m",
+          "unicode": 109
+        },
+        {
+          "name": "Aacute",
+          "unicode": 193
+        }
+      ]
+    },
+    {
+      "font": "Times-Roman",
+      "program": "NimbusRoman-Regular",
+      "glyphs": [
+        {
+          "name": "A",
+          "unicode": 65
+        },
+        {
+          "name": "W",
+          "unicode": 87
+        },
+        {
+          "name": "m",
+          "unicode": 109
+        },
+        {
+          "name": "Aacute",
+          "unicode": 193
+        }
+      ]
+    },
+    {
+      "font": "Times-Bold",
+      "program": "NimbusRoman-Bold",
+      "glyphs": [
+        {
+          "name": "A",
+          "unicode": 65
+        },
+        {
+          "name": "W",
+          "unicode": 87
+        },
+        {
+          "name": "m",
+          "unicode": 109
+        },
+        {
+          "name": "Aacute",
+          "unicode": 193
+        }
+      ]
+    },
+    {
+      "font": "Times-Italic",
+      "program": "NimbusRoman-Italic",
+      "glyphs": [
+        {
+          "name": "A",
+          "unicode": 65
+        },
+        {
+          "name": "W",
+          "unicode": 87
+        },
+        {
+          "name": "m",
+          "unicode": 109
+        },
+        {
+          "name": "Aacute",
+          "unicode": 193
+        }
+      ]
+    },
+    {
+      "font": "Times-BoldItalic",
+      "program": "NimbusRoman-BoldItalic",
+      "glyphs": [
+        {
+          "name": "A",
+          "unicode": 65
+        },
+        {
+          "name": "W",
+          "unicode": 87
+        },
+        {
+          "name": "m",
+          "unicode": 109
+        },
+        {
+          "name": "Aacute",
+          "unicode": 193
+        }
+      ]
+    },
+    {
+      "font": "Courier",
+      "program": "NimbusMonoPS-Regular",
+      "glyphs": [
+        {
+          "name": "A",
+          "unicode": 65
+        },
+        {
+          "name": "W",
+          "unicode": 87
+        },
+        {
+          "name": "m",
+          "unicode": 109
+        },
+        {
+          "name": "Aacute",
+          "unicode": 193
+        }
+      ]
+    },
+    {
+      "font": "Courier-Bold",
+      "program": "NimbusMonoPS-Bold",
+      "glyphs": [
+        {
+          "name": "A",
+          "unicode": 65
+        },
+        {
+          "name": "W",
+          "unicode": 87
+        },
+        {
+          "name": "m",
+          "unicode": 109
+        },
+        {
+          "name": "Aacute",
+          "unicode": 193
+        }
+      ]
+    },
+    {
+      "font": "Courier-Oblique",
+      "program": "NimbusMonoPS-Italic",
+      "glyphs": [
+        {
+          "name": "A",
+          "unicode": 65
+        },
+        {
+          "name": "W",
+          "unicode": 87
+        },
+        {
+          "name": "m",
+          "unicode": 109
+        },
+        {
+          "name": "Aacute",
+          "unicode": 193
+        }
+      ]
+    },
+    {
+      "font": "Courier-BoldOblique",
+      "program": "NimbusMonoPS-BoldItalic",
+      "glyphs": [
+        {
+          "name": "A",
+          "unicode": 65
+        },
+        {
+          "name": "W",
+          "unicode": 87
+        },
+        {
+          "name": "m",
+          "unicode": 109
+        },
+        {
+          "name": "Aacute",
+          "unicode": 193
+        }
+      ]
+    },
+    {
+      "font": "Symbol",
+      "program": "StandardSymbolsPS",
+      "glyphs": [
+        {
+          "name": "Alpha",
+          "unicode": 913
+        },
+        {
+          "name": "alpha",
+          "unicode": 945
+        },
+        {
+          "name": "summation",
+          "unicode": 8721
+        }
+      ]
+    },
+    {
+      "font": "ZapfDingbats",
+      "program": "D050000L",
+      "glyphs": [
+        {
+          "name": "a1",
+          "unicode": 9985
+        },
+        {
+          "name": "a2",
+          "unicode": 9986
+        },
+        {
+          "name": "a202",
+          "unicode": 9987
+        }
+      ]
+    }
+  ],
+  "commit": "c15105598aa7eb256b1ebfcecd3d078801521e73"
+}

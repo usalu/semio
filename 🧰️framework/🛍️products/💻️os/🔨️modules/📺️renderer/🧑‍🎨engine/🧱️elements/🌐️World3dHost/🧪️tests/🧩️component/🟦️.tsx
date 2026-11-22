@@ -184,7 +184,7 @@ describe("🎬️ world 3d host tool run trace mount", () => {
       const world = view.container.querySelector(".semio-world-3d-host")!;
       expect(JSON.parse(world.getAttribute("data-viewport-camera-json")!).position).not.toEqual(expected);
       expect(recorded.onCamera).toBeDefined();
-      act(() => recorded.onCamera!(cameraSyncFixture.pose as WorldCameraState));
+      act(() => recorded.onCamera!(cameraSyncFixture.pose as unknown as WorldCameraState));
       act(() => vi.advanceTimersByTime(1000));
       expect(JSON.parse(world.getAttribute("data-viewport-camera-json")!).position).toEqual(expected);
       const cameraActions = onAction.mock.calls.flatMap((args) => args).filter((action) => action.action === "setCamera");
@@ -555,6 +555,34 @@ describe("exact analytic component interaction targets", () => {
     for (const label of fixture.invalidLabels) expect(world3dComponentInteractionTarget(fixture.instances, [{ ...fixture.meshes[0], data: { ...fixture.meshes[0].data, componentReferences: { edge: ["1", label] } } }], fixture.instances[0].id, "edge", 1)).toBeUndefined();
     geometry.dispose();
   });
+  it("selects a curve-only wire through the same mounted line the hover answers", async () => {
+    const actions: { action: string; args?: Record<string, unknown> }[] = [];
+    const onAction = async (action: { action: string; args?: Record<string, unknown> }) => { actions.push(action); };
+    const edgePositions = [0, 0, 0, 2, 0, 0, 2, 0, 0, 2, 1.5, 0, 2, 1.5, 0, 0, 1.5, 0, 0, 1.5, 0, 0, 0, 0];
+    const view = render(sceneNode(null, {
+      domainId: "graph", domainGranularityId: "handle",
+      meshesJson: JSON.stringify([{ id: "eval-rect@wire#0", data: { positions: [], normals: [], indices: [], edgePositions, edgeIds: [] } }]),
+      instancesJson: JSON.stringify([{ id: "eval-rect@wire#0", meshId: "eval-rect@wire#0", interactionId: "rect@wire", position: [0, 0, 0] }]),
+      referencesJson: "[]",
+      selectionJson: JSON.stringify({ ids: [], hoveredIds: [], selectionMode: "object" }),
+    }, onAction));
+    try {
+      runFrames();
+      const lines = [...view.container.querySelectorAll("linesegments")];
+      expect(lines).toHaveLength(1);
+      const key = Object.keys(lines[0]!).find(name => name.startsWith("__reactProps$"))!;
+      const props = (lines[0] as unknown as Record<string, unknown>)[key] as { onClick?: (event: unknown) => void; onPointerMove?: (event: unknown) => void };
+      const hit = { index: 0, buttons: 0, shiftKey: false, ctrlKey: false, metaKey: false, stopPropagation: vi.fn() };
+      await act(async () => { props.onPointerMove!(hit); props.onClick!(hit); });
+      const hover = actions.filter(action => action.action === "interactionHover");
+      const select = actions.filter(action => action.action === "interactionSelect");
+      expect(hover).toHaveLength(1);
+      expect(select).toHaveLength(1);
+      expect(JSON.parse(String(select[0]!.args!.targets))).toEqual(JSON.parse(String(hover[0]!.args!.targets)));
+      expect(JSON.parse(String(select[0]!.args!.targets))).toEqual([{ granularity: "handle", id: "rect@wire" }]);
+      expect(select[0]!.args!.merge).toBe("replace");
+    } finally { view.unmount(); }
+  });
   it("dispatches current analytic component hits and clears malformed or stale source targets through mounted handlers", async () => {
     const fixture = (await import("../🧫️fixtures/🎯️analytic-component-target.json")).default;
     const law = fixture.mountedAdmissions;
@@ -718,5 +746,68 @@ it("hands authored hover to another window without mistaking delayed own echoes 
     }
     if ("local" in step) store.setLocalHover(step.local);
     expect(fixture.instances.filter(instance => store.isHovered(instance.id)).map(instance => instance.id), "turn " + index).toEqual(step.expected);
+  }
+});
+
+it("paints the authored local hover group before its echo", async () => {
+  const { createWorldInstanceChromeStore } = await import("../../🧱️instance-layers/🪟️instance-chrome-store/🟦️.ts");
+  const { world3dInstanceHoverGroups } = await import("../../🔗️instance-selection/🟦️.ts");
+  const fixture = (await import("../🧫️fixtures/🎯️grouped-hover.json")).default;
+  const cases = fixture.cases.filter(test => test.expectedPaint);
+  const instances = cases.map(({ instance: { id, hoverTargets } }) => ({ id, hoverTargets }));
+  const store = createWorldInstanceChromeStore("viewport");
+  const staleEcho = instances[2]!.id;
+  const snapshot = {
+    selectedIds: new Set<string>(), hoveredId: staleEcho, hoveredIds: new Set([staleEcho]),
+    hoverSourceWindowId: "viewport", hoveredKindId: null, previewInstanceIds: null,
+  };
+  const painted = () => instances.filter(instance => store.isHovered(instance.id)).map(instance => instance.id);
+  store.setSnapshot({ ...snapshot, localHoverGroups: world3dInstanceHoverGroups(instances) });
+  for (const row of cases) {
+    store.setLocalHover(row.instance.id);
+    expect(painted(), row.name).toEqual(row.expectedPaint);
+  }
+  store.setLocalHover(null);
+  expect(painted()).toEqual([]);
+  store.setLocalHover(undefined);
+  expect(painted()).toEqual([staleEcho]);
+  store.setLocalHover(instances[0]!.id);
+  store.setSnapshot({ ...snapshot, localHoverGroups: world3dInstanceHoverGroups([instances[0]!]) });
+  expect(painted()).toEqual([instances[0]!.id]);
+});
+
+it("paints all coincident authored lines on local viewport pointer moves", async () => {
+  const fixture = (await import("../🧫️fixtures/🎯️grouped-hover.json")).default;
+  const cases = fixture.cases.filter(row => row.expectedPaint);
+  const styles = await loadPrimaryGeometryStyleFixture();
+  const styling = await import("@semio-tech/ui-styling");
+  const three = await vi.importActual<typeof import("three")>("three");
+  const neutral = styles.states.find(state => !state.hovered && !state.selected)!;
+  const active = styles.states.find(state => state.hovered && !state.selected)!;
+  styling.clearColorResolveCache();
+  const paint = (color: string) => new three.Color(styling.resolveColorHex(color)).getHexString();
+  const positions = [0, 0, 0, 1, 0, 0];
+  const data = { positions, normals: [], indices: [], edgePositions: positions };
+  const mounted = render(sceneNode(null, {
+    domainId: "procedural", domainGranularityId: "handle",
+    meshesJson: JSON.stringify([{ id: "axis", data }]),
+    instancesJson: JSON.stringify(cases.map(({ instance }, index) => ({ ...instance, position: [index * 3, 0, 0] }))),
+    referencesJson: "[]",
+    selectionJson: JSON.stringify({ ids: [], hoveredIds: [], selectionMode: "object", targets: { mesh: true } }),
+  }));
+  try {
+    const lines = [...mounted.container.querySelectorAll("linesegments")];
+    expect(lines).toHaveLength(cases.length);
+    const painted = (row: number) => new three.Color(lines[row]!.querySelector("linebasicmaterial")!.getAttribute("color")!).getHexString();
+    for (const [index, row] of cases.entries()) {
+      act(() => { lines[index]!.dispatchEvent(new MouseEvent("pointermove", { bubbles: true })); });
+      expect(cases.map((entry, at) => ({ id: entry.instance.id, color: painted(at) })), row.name).toEqual(
+        cases.map(entry => ({ id: entry.instance.id, color: paint(row.expectedPaint!.includes(entry.instance.id) ? active.line : neutral.line) })),
+      );
+    }
+    act(() => { lines[2]!.dispatchEvent(new MouseEvent("pointerout", { bubbles: true })); });
+    expect(cases.map((_, at) => painted(at))).toEqual(cases.map(() => paint(neutral.line)));
+  } finally {
+    mounted.unmount();
   }
 });

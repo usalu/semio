@@ -247,16 +247,76 @@ fn the_frame_ladder_paints_an_open_overlays_own_surface_chrome_under_its_content
     assert!(!opened.overlay_routed(), "every overlay-routed region the ladder opened is closed again by the time the frame publishes");
 
     let placement = *ui.overlay_placements("w").first().expect("one open overlay");
-    let bucket: Vec<[f32; 4]> = opened.layers.iter().flat_map(|layer| layer.overlay_ui_instances.iter()).map(|instance| instance.rect).collect();
-    let surface_at = bucket.iter().position(|rect| (rect[0] - placement.x).abs() < 0.01 && (rect[1] - placement.y).abs() < 0.01 && (rect[2] - placement.width).abs() < 0.01);
-    let surface_at = surface_at.expect("the overlay surface is painted at the placement layout resolved");
-    assert!(bucket.len() > surface_at + 1, "the overlay's own content paints into the SAME bucket, after the chrome — otherwise the surface covers it");
+    let theme = ui.theme();
+    let surface = opened.glass_regions.iter().position(|region| (region.rect[0] - placement.x).abs() < 0.01 && (region.rect[1] - placement.y).abs() < 0.01 && (region.rect[2] - placement.width).abs() < 0.01);
+    let surface = surface.expect("the overlay surface is a glass region at the placement layout resolved");
+    assert_eq!(opened.glass_regions[surface].alpha, theme.glass(Level::Menu).alpha, "a Popover is a menu-level glass, not an opaque fill");
+    assert!(opened.glass_regions.iter().all(|region| region.alpha < 1.0), "no overlay fill is opaque");
+    assert!(opened.layers.iter().any(|layer| layer.foreground_of == Some(surface) && !layer.overlay_ui_instances.is_empty()), "the overlay's own content paints as the glass region's foreground, never under its tint");
+    assert_eq!(opened.glass_regions.len(), 1, "a Popover draws no veil");
 
     let _ = ui.close_overlay("w", content);
     ui.open_overlay("w", content, OverlayKind::SelectPopup, OverlayAnchor::Node(content));
     drive_layout(&mut ui, "w", body.w, body.h, &mut atlas);
     let popup = settle(&mut ui, &mut atlas, body);
     assert_eq!(overlay_instances(&popup), 0, "a SelectPopup owns its own surface — the ladder must not paint a second one over it");
+}
+
+/// 🌫️ A modal's scrim is the `ui-veil` token set — the dialog level's surface at `veilAlpha` with the `veilBlurPx` blur — and its surface the dialog level's glass; the old hardcoded 0.55 alpha is gone.
+#[test]
+fn a_dialog_scrim_is_the_veil_glass_and_its_surface_the_dialog_level_glass() {
+    let body = Rect { x: 0.0, y: 0.0, w: 400.0, h: 400.0 };
+    let mut ui = UiFixture::new(semio_ui_locale::Locale::En);
+    let mut atlas = FontAtlas::builtin();
+    ui.apply_tree("w", &stack_ui(vec![component_scene_ui("surface.dialog")]));
+    drive_layout(&mut ui, "w", body.w, body.h, &mut atlas);
+    let content = first_component_scene_node(&ui, "w");
+    ui.open_overlay("w", content, OverlayKind::Dialog, OverlayAnchor::Point { x: 0.0, y: 0.0 });
+    drive_layout(&mut ui, "w", body.w, body.h, &mut atlas);
+    let mut draw = DrawList::default();
+    for _ in 0..262_144 {
+        match ui.frame_into_step::<RecordingSceneHost>("w", body, &mut atlas, None, None, &mut draw, ui_contract::UI_WORKER_RETIREMENT_POLICY).0 {
+            UiFrameStep::Pending => {}
+            UiFrameStep::Ready => break,
+            step => panic!("retained paint answered {step:?}"),
+        }
+    }
+    let theme = ui.theme();
+    let veil = theme.veil_glass(Level::Dialog);
+    let scrim = draw.glass_regions.iter().find(|region| region.rect == [0.0, 0.0, body.w, body.h]).expect("a modal paints a viewport-sized scrim");
+    assert_eq!((scrim.alpha, scrim.blur_px, scrim.tint), (veil.alpha, veil.blur_px, veil.tint));
+    assert_ne!(scrim.alpha, 0.55);
+    let dialog = theme.glass(Level::Dialog);
+    let surface = draw.glass_regions.iter().find(|region| region.rect[2] < body.w).expect("the dialog surface is a glass region");
+    assert_eq!((surface.alpha, surface.blur_px, surface.tint), (dialog.alpha, dialog.blur_px, dialog.tint));
+}
+
+/// 🔌 React's `ExtensionView`: an extension with no registered host is a muted `Extension unavailable: <id>` line on no fill, while the reserved media transport keeps its host rect and panel chrome.
+#[test]
+fn an_unregistered_extension_paints_reacts_unavailable_line_and_only_the_media_transport_keeps_its_panel() {
+    let body = Rect { x: 0.0, y: 0.0, w: 400.0, h: 400.0 };
+    let painted = |body_key: &str| -> (DrawList, semio_ui_theme::Rgba) {
+        let mut ui = UiFixture::new(semio_ui_locale::Locale::En);
+        let mut atlas = FontAtlas::builtin();
+        let slot = UiNode::ExternalSlot(UiExternalSlotNode { plugin_id: "plugin".into(), app_id: "app".into(), body_key: body_key.into(), params_json: "{}".into(), host_status: None, presence: UiPresence::default(), menu: None });
+        ui.apply_tree("w", &stack_ui(vec![slot]));
+        drive_layout(&mut ui, "w", body.w, body.h, &mut atlas);
+        let mut draw = DrawList::default();
+        for _ in 0..262_144 {
+            match ui.frame_into_step::<RecordingSceneHost>("w", body, &mut atlas, None, None, &mut draw, ui_contract::UI_WORKER_RETIREMENT_POLICY).0 {
+                UiFrameStep::Pending => {}
+                UiFrameStep::Ready => break,
+                step => panic!("retained paint answered {step:?}"),
+            }
+        }
+        (draw, ui.theme().panel)
+    };
+    let fills = |draw: &DrawList, panel: semio_ui_theme::Rgba| draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).filter(|instance| instance.color == [panel.r, panel.g, panel.b, panel.a]).count();
+    let (unavailable, panel) = painted("vendor.missing@1");
+    assert_eq!(fills(&unavailable, panel), 0, "no panel fill behind the unavailable line");
+    assert!(unavailable.layers.iter().map(|layer| layer.ui_instances.len()).sum::<usize>() > 0, "the unavailable line is drawn");
+    let (media, panel) = painted(semio_ui_retained_tree::reconcile::MEDIA_TRANSPORT_EXTENSION_ID);
+    assert!(fills(&media, panel) > 0, "the reserved media transport keeps its host panel");
 }
 
 #[test]

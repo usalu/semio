@@ -723,3 +723,17 @@ fn shell_credit_checks_actual_reserved_bytes_on_each_target() {
     registry.release_credit(0);
     assert!(registry.reserve_credit(0, 1, SESSION_MAXIMUM_BYTES));
 }
+
+/// 🕸️ The mesh edge index vectors keep exactly three fixed backing roots in the process inventory, sized by the declared triangle maximum; losing a root changes the exact process credit.
+#[test]
+fn mesh_edge_index_vectors_claim_three_fixed_roots_and_the_exact_credit_depends_on_them() {
+    let catalog = MountedProcessOwnerCatalog::fixed();
+    let claim = catalog.claims[MountedOwnerClass::MeshEdgeIndexVectors as usize];
+    assert_eq!(claim.roots, 3);
+    assert_eq!(claim.items, 3 * SESSION_MAXIMUM_MESH_TRIANGLES + 2 * (12 * SESSION_MAXIMUM_MESH_TRIANGLES + 3));
+    let exact = catalog.credit(SESSION_MAXIMUM_INPUT_ITEMS, SESSION_MAXIMUM_INPUT_BYTES).expect("the enumerated working set exactly fits its process authority");
+    let mut lost = catalog;
+    lost.claims[MountedOwnerClass::MeshEdgeIndexVectors as usize].roots -= 1;
+    let credit = lost.credit(SESSION_MAXIMUM_INPUT_ITEMS, SESSION_MAXIMUM_INPUT_BYTES).expect("fewer roots still fit");
+    assert_ne!(credit, exact, "the credit returned to the process authority follows the claimed roots");
+}

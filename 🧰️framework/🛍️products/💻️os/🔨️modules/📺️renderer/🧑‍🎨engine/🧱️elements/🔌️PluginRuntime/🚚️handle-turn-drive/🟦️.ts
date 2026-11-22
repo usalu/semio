@@ -8,7 +8,7 @@ import { FRAMEWORK_RESERVED_JOB_KIND } from "@semio-tech/framework";
 import { type PluginDispatchHintV1 } from "@semio-tech/framework";
 import { createShardCommandIngressPages, type ShardEventEnvelope, type ShardJobStep } from "@semio-tech/framework/actor/shard-client/wire";
 import { hostContinuations } from "@semio-tech/framework/async/continuation";
-import { wireTurnStatusTag } from "@semio-tech/framework/actor/wire-turn";
+import { drainTypedOperationBatches, wireTurnStatusTag } from "@semio-tech/framework/actor/wire-turn";
 import { type ActorDocumentMessagePortV1 } from "@semio-tech/framework/backbone/binding";
 import { beginSpawnedJobV1 } from "../💼️job-ledger/🟦️.ts";
 import {
@@ -35,7 +35,6 @@ import { compactAcknowledgedTurns } from "../🔁️turn-settle/📥️acknowled
 import { commandIngressContinuationCeilingV1, commandIngressNeedsReplyStampV1, commandIngressUnownedV1, PLUGIN_UI_CONTINUATION_LIMIT, settleAcknowledgedPluginTurns, settlePluginTurn } from "../🔁️turn-settle/🟦️.ts";
 import { yieldPluginUiContinuation } from "../⏩️continuation-yield/🟦️.ts";
 import {
-  drainTypedOperationTurns,
   pendingCompletionEffects,
   pendingTurnEffects,
   PLUGIN_OPERATION_DRAIN_BUDGET,
@@ -448,14 +447,14 @@ export function createTurnPump(scope: PluginHandleScope, instances: ReturnType<t
     if (drainingInstances.has(instanceId) || !live()) return;
     drainingInstances.add(instanceId);
     try {
-      const outcome = await drainTypedOperationTurns(PLUGIN_OPERATION_DRAIN_BUDGET, live, async () => {
+      const outcome = await drainTypedOperationBatches(PLUGIN_OPERATION_DRAIN_BUDGET, live, async () => {
         const actorId = requireActorId(instanceId);
         const activation = shardClient.captureActorActivation(actorId);
         const documentPort = documentBindings.get(instanceId)?.port;
         const settled = await withTypedOperationCall(actorId, `operation-drain#${instanceId}`, (call) =>
           serializeCommandIngressForActor(actorId, async () => {
             activation.assertActive();
-            return settlePluginTurn(actorId, await submitTurn(actorId, [], { lane: "UserVisible", activation }), "UserVisible", new Set(), (turn) => acceptUiPatches(instanceId, turn), true, activation, call);
+            return settlePluginTurn(actorId, await submitTurn(actorId, [], { lane: "UserVisible", activation }), "UserVisible", new Set(), (turn) => acceptUiPatches(instanceId, turn), false, activation, call);
           }),
         );
         const frames: Uint8Array[] = [];
@@ -469,7 +468,7 @@ export function createTurnPump(scope: PluginHandleScope, instances: ReturnType<t
         pendingCompletionEffects.set(instanceId, leftover);
         if (frames.length > 0) turnOutcomes.push({ instanceId, frames });
         return { status: settled.status, nextWake: settled.nextWake };
-      });
+      }, yieldPluginUiContinuation);
       if (outcome.stopped === "idle" && outcome.nextWake !== null && live()) {
         hostContinuations.schedule(() => void drainTypedOperations(instanceId), Math.min(Math.max(outcome.nextWake, 0), PLUGIN_OPERATION_WAKE_MAX_MS), `operation-wake#${instanceId}`);
       }

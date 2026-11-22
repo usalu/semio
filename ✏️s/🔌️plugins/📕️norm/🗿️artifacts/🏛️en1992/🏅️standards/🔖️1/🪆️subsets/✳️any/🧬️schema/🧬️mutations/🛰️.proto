@@ -825,7 +825,7 @@ message ChangeStudRowAngle {
 message ChangeStudRowCount {
   string member_id = 1;
   string stud_row_id = 2;
-  uint64 new_count = 3;
+  uint32 new_count = 3;
 }
 message ChangeStudRowSpacingFirst {
   string member_id = 1;

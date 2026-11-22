@@ -75,6 +75,7 @@ export async function fleetCratesPublishV1(context:FleetFetchContextV1,home:stri
 export async function fleetCargoRegistryAroundV1<T>(context:FleetFetchContextV1,request:Readonly<{home:string;manifest:string;workspace:string}>,fetch:()=>Promise<T>):Promise<T>{
  let pins:readonly CratePinV1[]=[],claim:WorkClaimV1|undefined;
  try{const lock=await findCargoLockV1(request.manifest,request.workspace);if(lock)pins=cargoLockRegistryCratesV1(await readFile(lock,"utf8"));if(pins.length)claim=await claimFleetWorkV1(context,{kind:"crates",identity:pins.map(pin=>pin.sha256).sort().join("\n"),ready:async()=>(await fleetCratesRestoreV1(context,request.home,pins)).missing===0});}catch{}
+ 
  try{
   const result=await fetch();
   try{if(pins.length)await fleetCratesPublishV1(context,request.home,pins);}catch{}

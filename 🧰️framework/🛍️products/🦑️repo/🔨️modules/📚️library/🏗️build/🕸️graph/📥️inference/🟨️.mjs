@@ -3,6 +3,7 @@ import { createBoundedCacheV1 } from "../../🧊️bounded/🟨️.mjs";
 import managersV1 from "../../../⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🟨️.cjs";
 const javascriptManagerV1 = managersV1.selectedManagerV1("javascript");
 import { registerSourceAnalysisV1, registerLoadedImplementationRowsV1 } from "../../../🏗️build/👁️observation/🟨️.mjs";
+import { implementationPinnedV1 } from "../../📥️inputs/🔏️revision/🟨️.mjs";
 import { fileURLToPath } from "node:url";
 import { createRevisionIdentity, createRevisionLoader, readComponentRoster, wireRevisionedComponents } from "./🪢️revision-graph/🟨️.mjs";
 import manifest from "./🗂️components/🔣️.json" with { type: "json" };
@@ -103,12 +104,14 @@ export const nativeSourceWatchPlanV1 = current.modules["project-assembly"].nativ
 
 /** 🔁️ Opens the answer of derived facts (the command walks a project record named) against the live files, for the generation that decides whether the projects holding them stay valid. */
 export const openGenerationDeriverV1 = current.modules["project-nodes"].openGenerationDeriverV1;
-export const primeSharedClosuresOfWorkspaceV1 = current.modules["project-nodes"].primeSharedClosuresOfWorkspaceV1;
 
 /** 🔎️ Queries source-project normalization through the same production stages without publishing graph facts. */
 export const inferReadOnlyBuildProjectSourcesV1 = current.modules["project-assembly"].inferReadOnlyBuildProjectSourcesV1;
 
 /** 🪪️ Expands actual native owners through the same read-only phase and original caller controls. */
+
+/** 🛂️ The boundary of one owner's observation: a failure of a workspace source of that owner is that owner's (unsettled replica or withheld source), any other failure stays fatal. */
+export { ownerBoundaryFailureV1 } from "./📦️project-nodes/🚧️source-failure/🟨️.mjs";
 
 /** 🚪️ Observes one canonical owner and only its selected executable source closures. */
 export const discoverBuildOwnerAdmissionFactsV1 = current.modules["owner-discovery"].discoverBuildOwnerAdmissionFactsV1;
@@ -119,9 +122,9 @@ export const readBuildOwnerRegistrySourceV1 = current.modules["owner-discovery"]
 /** 🔏️ Names the revision of the Source this module has on disk right now. */
 export const currentImplementationRevisionV1 = current.modules.revision.implementationRevision;
 
-/** 🔁️ Resolves the implementation of the Source this module has on disk right now: this graph while nothing changed, otherwise the freshly loaded graph of the new revision, so consumers never hold stale components. */
+/** 🔁️ Resolves the implementation of the Source this module has on disk right now: this graph while nothing changed, otherwise the freshly loaded graph of the new revision, so consumers never hold stale components. An invocation pinned to the implementation it loaded keeps this graph for its whole run, so a peer moving or half editing a module of the library never makes a running load import the tree it left. */
 export async function loadCurrentImplementationV1() {
-  const revision = current.modules.revision.implementationRevision();
+  const revision = implementationPinnedV1() ? revisionIdentity.revision : current.modules.revision.implementationRevision();
   const scope = await loader.load(revision);
   return { revision, cacheInternals: scope.modules.internals.cacheInternals, libraryBootstrap: scope.modules.bootstrap.libraryBootstrap, createScriptInputCache: scope.modules["script-inputs"].createScriptInputCache, resolveCommandWalkV1: scope.modules["script-inputs"].resolveCommandWalkV1, createStreamingEdgesV1: scope.modules["dependency-edges"].createStreamingEdgesImplementation };
 }

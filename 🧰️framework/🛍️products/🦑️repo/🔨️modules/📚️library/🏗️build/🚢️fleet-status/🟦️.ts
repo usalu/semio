@@ -13,7 +13,7 @@ export type FleetHolderFactV1=Readonly<{pid:number;resource:string;mode:FleetMod
 export type FleetWaiterFactV1=Readonly<{pid:number;resource:string;mode:FleetModeV1;class:string;waitedSeconds:number;blockers:readonly string[];position?:number;command?:string;session?:string;agent?:string;priority?:FleetPriorityV1;historyKey?:string}>;
 export type FleetGrantFactV1=Readonly<{id:string;operation:string;pid:number;jobs:number;reservedMegabytes:number;observedMegabytes:number|null;heldSeconds:number;phase?:string;lent?:boolean;session?:string;agent?:string}>;
 export type FleetCapacityWaiterFactV1=Readonly<{id:string;operation:string;pid:number;needMegabytes:number;waitedSeconds:number;reason:string;reasonText:string;position:number;session?:string;agent?:string}>;
-export type FleetSourceV1=Readonly<{id:"leases"|"capacity"|"bazel"|"storage"|"sealed"|"generation"|"scheduler"|"fleet";ok:boolean;milliseconds:number;error?:string}>;
+export type FleetSourceV1=Readonly<{id:"leases"|"capacity"|"bazel"|"storage"|"sealed"|"generation"|"scheduler"|"fleet"|"workers";ok:boolean;milliseconds:number;error?:string}>;
 export type FleetImageFactV1=Readonly<{id:string;kind:"partition"|"control";state:"mounted"|"detached"|"directory"|"absent";usedBytes:number|null;capacityBytes:number|null;budgetBytes:number|null;source:"statfs"|"recorded"|"walked"|"unknown"}>;
 export type FleetMachineV1=Readonly<{totalBytes:number;effectiveTotalBytes:number;usedBytes:number;footprintBytes:number;overBytes:number;evictBytes:number;blockedBytes:number;source:"argument"|"environment"|"file"|"default"}>;
 export type FleetSealedEntryFactV1=Readonly<{entry:string;digest:string;files:number;bytes:number;promotedAtMs:number;fresh:boolean|null;changed:number;blocked?:Readonly<{atMs:number;rows:number;first?:string}>;last?:Readonly<{atMs:number;added:number;removed:number;changed:number}>}>;
@@ -32,14 +32,18 @@ export type FleetFactsV1=Readonly<{
  generation?:Readonly<{number:number;built:Readonly<{kind:"cold"|"delta"|"refresh";dirty:number}>;owners:number;implementation:string;publishedAtMs:number|null;verified:Readonly<{atMs:number;covered:number;count:number}>|null}>;
  scheduler?:FleetSchedulerFactV1;
  fleet?:FleetLoadFactV1;
+ workers?:FleetWorkersFactV1;
  sources:readonly FleetSourceV1[];
 }>;
 export type FleetSchedulerJobFactV1=Readonly<{key:string;class:string;priority:string;depth:number;agents:readonly string[];tickets:number;reserveMegabytes:number;waitedSeconds:number;position?:number;runSeconds?:number;progress?:Readonly<{phase:string;done:number;total:number}>;stopping?:boolean}>;
 export type FleetSchedulerFactV1=Readonly<{budgetMegabytes:number;reservedMegabytes:number;running:readonly FleetSchedulerJobFactV1[];queued:readonly FleetSchedulerJobFactV1[];agents:readonly Readonly<{agent:string;running:number;queued:number;served:number;percent:number}>[]}>;
 /** 🌍️ The machines of the fleet as the scheduler of remote execution sees them (load, pressure, queue, worker, offload and unit cache counters) and what the cache server counts. */
-export type FleetLoadFactV1=Readonly<{scheduler:string;expireSeconds:number;machines:readonly Readonly<{origin:string;platform:string;pressure:"normal"|"warn"|"critical";load:number|null;cores:number;running:number;queued:number;headroom:boolean;ageSeconds:number;worker:"absent"|"idle"|"busy"|"refusing";why?:Readonly<{code:string;en:string;de:string}>;offloadedIn:number;offloadedOut:number;refused:number;cacheHit:number;cacheMiss:number;cacheSkipped?:number}>[];queued:number;executing:number;offloadRejected:number;refused:number;retried:number;cache?:Readonly<{hits:number;misses:number;puts:number}>;claims?:Readonly<{active:number;waiting:number;oldestSeconds:number}>}>;
+export type FleetLoadFactV1=Readonly<{scheduler:string;expireSeconds:number;machines:readonly Readonly<{origin:string;platform:string;pressure:"normal"|"warn"|"critical";load:number|null;cores:number;running:number;queued:number;headroom:boolean;ageSeconds:number;worker:"absent"|"idle"|"busy"|"refusing";why?:Readonly<{code:string;en:string;de:string}>;offloadedIn:number;offloadedOut:number;refused:number;cacheHit:number;cacheMiss:number;cacheSkipped?:number;cacheSkipReasons?:Readonly<Record<string,number>>}>[];queued:number;executing:number;offloadRejected:number;refused:number;retried:number;cache?:Readonly<{hits:number;misses:number;puts:number}>;claims?:Readonly<{active:number;waiting:number;oldestSeconds:number}>;keys?:Readonly<{origins:number;units:number;diffs:readonly Readonly<{crate:string;slot:string;origins:readonly string[];differs:readonly string[];sameSource:boolean;values?:Readonly<Record<string,Readonly<Record<string,string>>>>}>[];byComponent:Readonly<Record<string,number>>}>}>;
+/** 🩺️ One worker of the fleet: what its readiness record claims (`recorded`) next to what is really known (`liveness`, from the age of the record and of the heartbeats of its machine). */
+export type FleetWorkerFactV1=Readonly<{origin:string;platform:string|null;liveness:"absent"|"offline"|"silent"|"working"|"ready"|"idle";recorded:string|null;stage:string|null;stageIndex:number;stageCount:number;attempts:number;recordAgeSeconds:number|null;heartbeatAgeSeconds:number|null;refusal:Readonly<{code:string;en:string;de:string}>|null}>;
+export type FleetWorkersFactV1=Readonly<{offlineSeconds:number;rows:readonly FleetWorkerFactV1[]}>;
 export type FleetFindingV1=Readonly<{id:string;severity:"alert"|"warn"|"info";subject:string;values:Readonly<Record<string,string|number>>;text:string}>;
-export type FleetReportV1=Readonly<{version:1;atMs:number;workspace:string;summary:Row;memory:Row;runs:readonly Row[];queues:Row;bazel:Row;storage:Row;sealed:Row;generation:Row|null;scheduler?:Row;fleet?:Row;findings:readonly FleetFindingV1[];sources:readonly FleetSourceV1[]}>;
+export type FleetReportV1=Readonly<{version:1;atMs:number;workspace:string;summary:Row;memory:Row;runs:readonly Row[];queues:Row;bazel:Row;storage:Row;sealed:Row;generation:Row|null;scheduler?:Row;fleet?:Row;workers?:Row;findings:readonly FleetFindingV1[];sources:readonly FleetSourceV1[]}>;
 type Row=Record<string,any>;
 
 const policy=schema.definitions.Policy.const,messages=schema.definitions.Messages.const as Readonly<Record<string,Readonly<Record<FleetLanguageV1,string>>>>,fill=(template:string,values:Readonly<Record<string,string|number>>):string=>template.replace(/\{([A-Za-z]+)\}/gu,(match,key:string)=>key in values?String(values[key]):match);
@@ -157,7 +161,9 @@ function buildGraph(facts:FleetFactsV1,leaseWait:Map<string,number|null>):Row{
  };
 }
 
-const fleetSection=(fact:FleetLoadFactV1):Row=>({scheduler:fact.scheduler,machines:[...fact.machines].sort((left,right)=>compare(left.origin,right.origin)),queued:fact.queued,executing:fact.executing,offloadedIn:fact.machines.reduce((sum,row)=>sum+row.offloadedIn,0),offloadedOut:fact.machines.reduce((sum,row)=>sum+row.offloadedOut,0),refused:fact.refused,declined:fact.offloadRejected,retried:fact.retried,cacheHit:fact.machines.reduce((sum,row)=>sum+row.cacheHit,0),cacheMiss:fact.machines.reduce((sum,row)=>sum+row.cacheMiss,0),...fact.cache===undefined?{}:{cache:fact.cache},...fact.claims===undefined?{}:{claims:fact.claims}});
+const fleetSection=(fact:FleetLoadFactV1):Row=>({scheduler:fact.scheduler,machines:[...fact.machines].sort((left,right)=>compare(left.origin,right.origin)),queued:fact.queued,executing:fact.executing,offloadedIn:fact.machines.reduce((sum,row)=>sum+row.offloadedIn,0),offloadedOut:fact.machines.reduce((sum,row)=>sum+row.offloadedOut,0),refused:fact.refused,declined:fact.offloadRejected,retried:fact.retried,cacheHit:fact.machines.reduce((sum,row)=>sum+row.cacheHit,0),cacheMiss:fact.machines.reduce((sum,row)=>sum+row.cacheMiss,0),...fact.cache===undefined?{}:{cache:fact.cache},...fact.claims===undefined?{}:{claims:fact.claims},...fact.keys===undefined?{}:{keys:fact.keys}});
+
+const workersSection=(fact:FleetWorkersFactV1):Row=>{const rows=[...fact.rows].sort((left,right)=>compare(left.origin,right.origin)),count=(state:string)=>rows.filter(row=>row.liveness===state).length;return{offlineSeconds:fact.offlineSeconds,counts:{ready:count("ready"),working:count("working"),idle:count("idle"),silent:count("silent"),offline:count("offline"),absent:count("absent")},rows};};
 
 const natural=(left:string,right:string):number=>{const a=/^([a-z]*)(\d+)$/u.exec(left),b=/^([a-z]*)(\d+)$/u.exec(right);return a&&b?compare(a[1]!,b[1]!)||Number(a[2])-Number(b[2]):compare(left,right);};
 
@@ -204,6 +210,18 @@ export function summarizeFleetV1(facts:FleetFactsV1,language:FleetLanguageV1):Fl
   if(row.blocked)say("sealed-blocked","alert",row.entry,{entry:row.entry,first:row.blocked.first??`${row.blocked.rows}`});
   else if(row.fresh===false)say("sealed-drifted","info",row.entry,{entry:row.entry,changed:row.changed});
  }
+ for(const machine of facts.fleet?.machines??[]){
+  const reasons=machine.cacheSkipReasons??{},denied=reasons["upload-expired-denied"]??0,readOnly=reasons["read-only"]??0;
+  if(denied>0)say("unit-cache-denied","alert",machine.origin,{origin:machine.origin,count:denied});
+  if(readOnly>0)say("unit-cache-read-only","warn",machine.origin,{origin:machine.origin,count:readOnly});
+ }
+ for(const diff of facts.fleet?.keys?.diffs??[])if(diff.sameSource)say("unit-key-machine-dependent","warn",diff.crate,{crate:diff.crate,origins:diff.origins.join(","),components:diff.differs.join(",")});
+ for(const worker of facts.workers?.rows??[]){
+  const seen=Math.min(worker.recordAgeSeconds??Infinity,worker.heartbeatAgeSeconds??Infinity),values={origin:worker.origin,age:fleetDurationV1(language,Number.isFinite(seen)?seen:0),recorded:worker.recorded??"-",stage:worker.stage??"-"};
+  if(worker.liveness==="offline")say("worker-offline","warn",worker.origin,values);
+  else if(worker.liveness==="silent")say("worker-silent","warn",worker.origin,{...values,age:fleetDurationV1(language,worker.recordAgeSeconds??0)});
+  else if(worker.liveness==="absent"&&(worker.heartbeatAgeSeconds===null||worker.heartbeatAgeSeconds>=facts.workers!.offlineSeconds))say("worker-absent","info",worker.origin,{origin:worker.origin});
+ }
  for(const source of facts.sources)if(!source.ok)say("source-failed","warn",source.id,{section:source.id,reason:source.error??"?"});
  findings.sort((left,right)=>SEVERITY[left.severity]!-SEVERITY[right.severity]!||compare(left.id,right.id)||compare(left.subject,right.subject));
  const kept=findings.slice(0,policy.findings.maximum);
@@ -216,7 +234,7 @@ export function summarizeFleetV1(facts:FleetFactsV1,language:FleetLanguageV1):Fl
   bazel:{slots:servers.length,live:servers.filter(row=>row.live).length,held:servers.filter(row=>row.held).length,rssMegabytes:servers.reduce((sum,row)=>sum+(row.treeMegabytes??0),0),servers},
   storage:{hostFreeBytes:storage?.hostFreeBytes??null,hostFreeFloorBytes:storage?.hostFreeFloorBytes??0,machine:storage?.machine??{totalBytes:0,effectiveTotalBytes:0,usedBytes:0,footprintBytes:0,overBytes:0,evictBytes:0,blockedBytes:0,source:"default"},overAreas:[...storage?.overAreas??[]].sort(compare),images},
   sealed:{mode:facts.sealed?.mode??"live",drifted:sealedEntries.filter(row=>row.fresh===false).length,blocked:sealedEntries.filter(row=>row.blocked!==undefined).length,entries:sealedEntries},
-  generation,...facts.scheduler===undefined?{}:{scheduler:schedulerSection(facts.scheduler)},...facts.fleet===undefined?{}:{fleet:fleetSection(facts.fleet)},findings:kept,sources:facts.sources,
+  generation,...facts.scheduler===undefined?{}:{scheduler:schedulerSection(facts.scheduler)},...facts.fleet===undefined?{}:{fleet:fleetSection(facts.fleet)},...facts.workers===undefined?{}:{workers:workersSection(facts.workers)},findings:kept,sources:facts.sources,
  }) as FleetReportV1;
 }
 
@@ -271,6 +289,13 @@ export function formatFleetReportV1(language:FleetLanguageV1,report:FleetReportV
  if(fleet!==undefined){
   lines.push(say("fleet",{machines:fleet.machines.length,queued:fleet.queued,executing:fleet.executing,offloadedIn:fleet.offloadedIn,offloadedOut:fleet.offloadedOut,refused:fleet.refused,declined:fleet.declined,retried:fleet.retried}));
   for(const machine of fleet.machines as Row[])lines.push(say("fleet.machine",{origin:machine.origin,platform:machine.platform,pressure:machine.pressure,load:machine.load===null?"?":machine.load,cores:machine.cores,running:machine.running,queued:machine.queued,worker:machine.worker,headroom:machine.headroom?"":say("fleet.noheadroom"),offloadedIn:machine.offloadedIn,offloadedOut:machine.offloadedOut,refused:machine.refused,cacheHit:machine.cacheHit,cacheMiss:machine.cacheMiss,cacheSkipped:machine.cacheSkipped??0,age:duration(machine.ageSeconds)}));
+  for(const machine of fleet.machines as Row[]){const rows=Object.entries((machine.cacheSkipReasons??{}) as Record<string,number>).sort((left,right)=>right[1]-left[1]||compare(left[0],right[0]));if(rows.length>0)lines.push(say("fleet.skips",{origin:machine.origin,reasons:rows.map(([name,count])=>`${name} ${count}`).join(", ")}));}
+  if(fleet.keys!==undefined){
+   const diffs=fleet.keys.diffs as Row[],dependent=diffs.filter(row=>row.sameSource);
+   lines.push(say("fleet.keys",{origins:fleet.keys.origins,units:fleet.keys.units,differing:diffs.length,dependent:dependent.length,components:Object.entries(fleet.keys.byComponent as Record<string,number>).sort((left,right)=>right[1]-left[1]||compare(left[0],right[0])).map(([name,count])=>`${name} ${count}`).join(", ")}));
+   for(const row of diffs.slice(0,policy.findings.maximumKeyDiffsShown))lines.push(say("fleet.keydiff",{crate:row.crate,origins:row.origins.join(","),components:row.differs.join(","),source:row.sameSource?say("fleet.keysame"):say("fleet.keyedit")}));
+   for(const row of diffs.slice(0,policy.findings.maximumKeyDiffsShown))for(const [component,texts] of Object.entries((row.values??{}) as Record<string,Record<string,string>>))lines.push(say("fleet.keyvalue",{component,texts:Object.entries(texts).map(([origin,text])=>`${origin} = ${text}`).join(" | ")}));
+  }
   for(const machine of fleet.machines as Row[])if(machine.why!==undefined)lines.push(say("fleet.why",{origin:machine.origin,worker:machine.worker,reason:machine.why[language]}));
   if(fleet.machines.length>1)for(const machine of fleet.machines as Row[]){
    if(/-none$/u.test(machine.platform))lines.push(say("fleet.norustc",{origin:machine.origin,platform:machine.platform}));
@@ -278,6 +303,12 @@ export function formatFleetReportV1(language:FleetLanguageV1,report:FleetReportV
   }
   if(fleet.cache!==undefined)lines.push(say("fleet.cache",fleet.cache));
   if(fleet.claims!==undefined)lines.push(say("fleet.claims",{active:fleet.claims.active,waiting:fleet.claims.waiting,oldest:duration(fleet.claims.oldestSeconds)}));
+ }
+ const workers=report.workers;
+ if(workers!==undefined){
+  const counts=workers.counts as Record<string,number>;
+  lines.push(say("workers",counts));
+  for(const row of workers.rows as Row[])lines.push(say("workers.row",{origin:row.origin,platform:row.platform??"-",state:say(`workers.state.${row.liveness}`),stage:row.stage??"-",index:row.stageIndex,count:row.stageCount,attempts:row.attempts,record:row.recordAgeSeconds===null?"-":duration(row.recordAgeSeconds),machine:row.heartbeatAgeSeconds===null?"-":duration(row.heartbeatAgeSeconds),refusal:row.refusal===null?"":say("workers.refusal",{reason:row.refusal[language]})}));
  }
  const bazel=report.bazel;
  lines.push(say("bazel",{live:bazel.live,rss:bazel.rssMegabytes,held:bazel.held,slots:bazel.slots}));

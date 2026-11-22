@@ -48,4 +48,8 @@ def yields(state):
     return state["kind"] == "finite" and state["openRequests"] == 0 and state["requested"]
 
 
-print(json.dumps({"retire": [retire(row["state"]) for row in fixture["retire"]], "resident": resident(fixture["resident"]), "yield": [yields(row["state"]) for row in fixture["yield"]], "limits": [limits(row["environment"], row["memoryGiB"]) for row in fixture["limits"]], "decisions": [decide(row["input"]) for row in fixture["decisions"]], "idle": [idle(row["state"]) for row in fixture["idle"]]}))
+def superseded(state):
+    return state["kind"] == "finite" and state["openRequests"] == 0 and state["superseded"]
+
+
+print(json.dumps({"superseded": [superseded(row["state"]) for row in fixture["superseded"]], "retire": [retire(row["state"]) for row in fixture["retire"]], "resident": resident(fixture["resident"]), "yield": [yields(row["state"]) for row in fixture["yield"]], "limits": [limits(row["environment"], row["memoryGiB"]) for row in fixture["limits"]], "decisions": [decide(row["input"]) for row in fixture["decisions"]], "idle": [idle(row["state"]) for row in fixture["idle"]]}))

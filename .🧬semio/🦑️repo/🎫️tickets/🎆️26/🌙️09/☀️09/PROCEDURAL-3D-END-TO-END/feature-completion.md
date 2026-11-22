@@ -1,5 +1,14 @@
 # Procedural 3D implementation and verification
 
+## Active verification
+
+- [Canonical browser and native run status](./📓️canonical-procedural-run-status.md) tracks both renderers and the exact hover probes. [The Cargo planning watchdog change](./📓️compiler-planning-watchdog.md) is awaiting the corrected WGPU launch.
+- [Retained Section](./📓️disconnected-planar-section.md) atomically publishes disconnected native faces. [Cavity sections](./📓️disconnected-void-section.md) cover separate holes in one cavity and a material island inside an annular cavity. The [through-hole fixture](./📓️through-hole-section.md) also covers faces with inner loops in one connected shell. Compact native, independent Manifold and all 23 linked analysis checks pass. The linked Flow Section job remains open.
+- [Mesh Boolean expansion](./📓️mesh-longitudinal-prism-booleans.md) covers [multiple intervals on one wall](./📓️mesh-disconnected-longitudinal-supports.md) [grazing contacts](./📓️mesh-grazing-longitudinal-supports.md), and [reflex contacts](./📓️mesh-reflex-longitudinal-support.md). The authored façade, UV and material preservation, closed reimport, and Manifold checks pass on the covered supports. More general operand arrangements remain in scope.
+- [Current UI and hover audit](./📓️ui-final-source-audit.md) found no additional confirmed source defect. Verification still needs both mounted browser journeys.
+- [Remaining retained BRep routes](./📓️remaining-retained-brep-routes.md) and the [selected route audit](./retained-brep-route-audit.md) track Flow admission and geometry boundaries. [Heal](./📓️retained-heal.md) and [guided straight Pipe](./📓️retained-guided-straight-pipe.md) have authored retained routes with scoped independent geometry checks. The linked retained regressions are running.
+- [DWG exchange](./📓️dwg-retained-exchange.md) records the object, block and page codec changes, their independent acadrust checks, and remaining retained work.
+
 ## Geometry
 
 The executable playground obtains its geometry operators from the Flow BRep extension. The procedural inference catalogue has separate tests. Results for one catalogue do not establish coverage of the other. The initial live contribution descriptor declared 142 operators.
@@ -528,3 +537,37 @@ A three-support skew Cut now yields one exact closed BRep shell with 25 vertices
 - [Canonical launch and compiler recovery](./📓️canonical-procedural-run-status.md) records the actual WGPU runtime publication, the React component retry, the native Preview compiler blocker, and the current launch probes.
 
 - [Disconnected planar BRep Section](./📓️disconnected-planar-section.md) separates exterior faces and their holes, with an atomic retained list publisher. Compact geometry and the independent Manifold cases pass. Registered Flow and full browser verification remain in progress.
+
+
+- [Selected DWG drawing pages and records](./📓️dwg-retained-exchange.md) records 13 focused native tests, the independent acadrust handle-map comparison, and the staged interchange widget. Strict retained Flow, document-picker import, and linked full-file verification are open.
+- [Reflex Mesh Difference tails](./📓️mesh-reflex-difference-tails.md) records native clipping, authored closed reimport, and the Manifold geometric check for both material directions.
+- [Geometry channel and document-import audit](./geometry-channel-dwg-route-audit.md) records React and WGPU source coverage and the document-preview rearm defect. The mounted renderer runs still require both servers.
+
+- [Independent longitudinal reflex supports](./📓️mesh-reflex-independent-supports.md) records native and authored coverage for simultaneous reflex contacts, nonparallel supports and transverse tails. Contacts on another support plane and overlapping removal contours remain open.
+
+- [Canonical renderer recovery audit](./canonical-renderer-recovery-audit.md) records the exact production boot closure, safe managed cache reuse and the ongoing WGPU run after the React and linked Flow ENOSPC failures.
+
+
+- [Bounded DWG widget transport and projection](./📓️dwg-retained-exchange.md) covers ownership transfer, 4,096-byte base64 turns, native entity projection, and position, face and normal ticks. The focused tests passed against independent Python, acadrust and Three.js oracles. The strict retained Flow and linked full-file package remain open.
+- [Joined reflex Intersect with moving caps](./📓️mesh-joined-reflex-transverse-caps.md) and [joined reflex Difference with retained tails](./📓️mesh-joined-reflex-retained-tails.md) record native, authored and Manifold tests for the moved-cap cases.
+- [Mounted probe freshness](./mounted-watch-corrections.md) and [WGPU paint observation](./wgpu-paint-observation.md) record run-specific evidence, terminal verdicts, and the independent compositor screenshot check. Tests passed on synthetic results. The new probe has yet to run on the mounted WGPU app.
+
+- [Interior longitudinal support crossings](./📓️mesh-interior-support-crossings.md) records verified native, authored and Manifold geometry for two moved transverse caps, including exact generated-position provenance. A stationary concave cap still requires authored face sampling.
+
+
+- [R2004 DWG directory and page checkpoints](./📓️dwg-retained-exchange.md) records the bounded physical decoder used by the actual drawing reader, one-row directory steps, and byte-exact independent acadrust comparisons on the AutoCAD fixture.
+- [Stationary Mesh cap sampling](./📓️mesh-stationary-cap-sampling.md), [three-support crossings](./📓️mesh-three-support-crossings.md) and [three nonparallel supports](./📓️mesh-three-nonparallel-supports.md) record native, authored and independent Manifold coverage through the actual Mesh operators. Stationary triangular Difference apertures remain in progress.
+- [Canonical WGPU storage recovery](./📓️canonical-procedural-run-status.md) records the exhausted build and the live new launch with the storage guard. The mounted browser proof remains open.
+
+
+- [R2007 DWG directory and physical decode](./📓️dwg-retained-exchange.md) records bounded AC21 LZ77, Reed–Solomon page reads, Unicode descriptors and independence checks through the drawing reader. Strict retained Flow still needs controlled ownership and publication.
+- [Stationary Mesh apertures](./📓️mesh-stationary-cap-openings.md) and [rectangular Mesh interior cuts](./📓️mesh-four-support-interior-cuts.md) record exact blind cuts, cavities and through-openings with Manifold and authored mesh reimport.
+- [Canonical storage and recovery](./📓️canonical-procedural-run-status.md) records the terminal guarded WGPU attempt, corrected live-volume reserve and timeline loss handling, plus the managed collector's blocked claim creation on the full Rust partition.
+
+- [Grouped local viewport hover](./📓️local-grouped-viewport-paint.md) records React component pointer paint, the shared native draw law, and the RxJS oracle. [Canonical renderer status](./📓️canonical-procedural-run-status.md) records the APFS kernel unmount refusal holding the full browser proof.
+- [Bounded DWG logical projection](./📓️dwg-retained-exchange.md) records retained entity turns and the shared checked triangle rules for native and Semio meshes. The [picker audit](./dwg-document-picker-custody.md) also identifies the existing TXT continuation test that the synchronous original import cannot satisfy.
+- [Convex Mesh support rings](./📓️mesh-convex-support-rings.md) and [remote stock contacts](./📓️mesh-remote-stock-contacts.md) record exact cutters through six supports, typed actual-contact refusal, and authored reimport with independent Manifold comparisons.
+- [Matching concave Intersect and Difference](./📓️mesh-matching-concave-prisms.md), [matching concave Union](./📓️mesh-matching-concave-union.md), and [mismatched nested concave profiles](./📓️mesh-nested-concave-prisms.md) record the authored Boolean coverage and retained materials, UVs, and vertex data. Crossing mismatched profile boundaries remain outside those certificates.
+- [Retained blind-bore repair](./retained-defeature-verification.md) documents both opening directions, including imported selected floor and wall labels. [Certified sphere clearance](./📓️certified-sphere-distance.md) documents orthogonal Boolean and rotated shell surfaces. Full linked Flow coverage for these newer BRep changes remains pending.
+- [Separated concave Mesh prisms](./📓️mesh-separated-concave-prisms.md) documents both operand orders, independent Manifold comparisons, and authored closed-shell reimport with original UVs, materials and vertex data.
+- [Retained orthogonal Closest Point](./📓️retained-planar-closest-point.md) records exact projections to exposed material faces, including notch and cavity walls and rigidly placed shells. The focused native source witness and Manifold/Three.js passed. The registered Flow test remains unlinked.

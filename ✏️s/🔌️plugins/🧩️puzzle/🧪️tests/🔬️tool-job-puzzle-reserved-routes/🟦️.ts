@@ -70,7 +70,7 @@ ${routeJob("Puzzle5dImportJob", "raw")}
     ["commit pages never closed", () => exact(source, host, jobs.replace("self.commit.close_step_granted(grant)?;", ""))],
     ["prepared output law omitted", () => exact(source, host, jobs.replace("a_prepared_commit_output_rides_on_the_completion_and_closes_exactly", "commit_smoke"))],
     ["host commit freshness omitted", () => exact(source, host.replaceAll("canonical_revision == live_revision", "true"))],
-    ["host original output ACK omitted", () => exact(source, host.replaceAll("session.acknowledge_checked_out_outcome(grant)", "Default::default()"))],
+    ["host original output ACK omitted", () => exact(source, host.replaceAll("session.acknowledge_checked_out_outcome(cx)", "Default::default()"))],
     ["host exact output bound omitted", () => exact(source, host.replaceAll("self.raw.len() > self.contract.max_output_bytes", "false"))],
     ["host terminal close witness omitted", () => exact(source, host.replaceAll(/progress\.fits\(grant\)\s*&&\s*session\.terminal_is_empty\(\)/g, "progress.fits(grant)"))],
   ];
@@ -109,7 +109,7 @@ impl ArtifactEditor for Puzzle2dPlayApp { fn clipboard_media_type() {} fn copy_f
     ["terminal close witness omitted", () => exact(source.replace("fn terminal_is_empty(&self) -> bool { self.closing }", ""))],
     ["reserved job trait omitted", () => exact(source.replace("impl ArtifactReservedJob for Puzzle2dClipboardJob {}", ""))],
     ["sealed commit output not lent on completion", () => exact(source, host, jobs.replace("admit_complete(cx, None, self.commit.published())", "admit_complete(cx, None, None)"))],
-    ["host original parent loan omitted", () => exact(source, host.replaceAll("cx.original_source_parent()?.admit_loan(cx)", "cx.recreated_source()"))],
+    ["host original parent loan omitted", () => exact(source, host.replaceAll("cx.original_source_parent()?.admit_loan(&mut *pending.source,cx)", "cx.recreated_source()"))],
   ];
   for (const [name, mutation] of mutations) if (mutation()) throw new Error(`[verify interactivity tool-jobs] self-test Puzzle2d ${name} was falsely accepted.`);
   return mutations.length + 1;

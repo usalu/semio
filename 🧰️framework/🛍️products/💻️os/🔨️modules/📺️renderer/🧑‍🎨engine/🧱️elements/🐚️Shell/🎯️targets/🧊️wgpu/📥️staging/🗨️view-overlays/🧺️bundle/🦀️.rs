@@ -87,5 +87,26 @@ impl<'a> OverlaysViewCtx<'a> {
             commands: &mut *self.commands,
         }
     }
+
+    /// 👝️ The same components as a `ChromeOverlaysCtx`, for calling a use case of the lower crate `shell-view-chrome-overlays`.
+    pub fn as_chrome_overlays(&mut self) -> ChromeOverlaysCtx<'_> {
+        ChromeOverlaysCtx {
+            chrome: &mut *self.chrome,
+            surfaces: &mut *self.surfaces,
+            tutorial: &mut *self.tutorial,
+            settle: &mut *self.settle,
+            plugins: &mut *self.plugins,
+            history: &mut *self.history,
+            prefs: &mut *self.prefs,
+            directory: &mut *self.directory,
+            sync: &mut *self.sync,
+            docs: &mut *self.docs,
+            opening: &mut *self.opening,
+            windows: &mut *self.windows,
+            dock: &mut *self.dock,
+            input: &mut *self.input,
+            commands: &mut *self.commands,
+        }
+    }
 }
 //#endregion 👝️OverlaysViewCtx

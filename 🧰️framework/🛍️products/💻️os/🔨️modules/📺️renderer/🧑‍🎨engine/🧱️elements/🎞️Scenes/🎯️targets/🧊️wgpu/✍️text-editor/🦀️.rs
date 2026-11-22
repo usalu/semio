@@ -156,6 +156,7 @@ pub fn render_text_editor_overlays(scene: &UiComponentSceneNode, bounds: Rect, c
     if let Some(draft) = ui.rename.as_ref() {
         render_text_editor_rename_input(scene, bounds, ctx, &draft.text);
     }
+    render_text_editor_diagnostics(scene, bounds, ctx);
     render_text_editor_explicit_draft_controls(scene, bounds, ctx);
     if !ui.completions_open {
         return;
@@ -384,6 +385,54 @@ pub fn text_editor_commit_rename(scene: &UiComponentSceneNode, input: &mut semio
     Ok(true)
 }
 
+/// 🧹️ Asks the host to format the document — React's `dispatch(textEditorActions.formatDocument, {})`, the same empty-argument verb the context-menu row sends; the formatter itself is the host's, never forked here.
+pub fn text_editor_format_document(scene: &UiComponentSceneNode, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<(), semio_ui_action::BoundedActionFault> {
+    let action = semio_ui_declaration::ui::text_editor_actions::FORMAT_DOCUMENT;
+    let bytes = semio_ui_action::checked_action_string_bytes(&[&scene.controller_id, action])?;
+    let mut reservation = input.reserve_action(&scene.controller_id, action, bytes)?;
+    {
+        let builder = reservation.builder();
+        builder.begin_object(None)?;
+        builder.end_container()?;
+    }
+    reservation.publish()
+}
+
+/// 🩺️ The footer rows React lists under the editor — at most four `[severity] message` lines of `diagnosticsJson`, in scene order.
+pub fn text_editor_diagnostic_lines(editor: &semio_ui_declaration::ui::TextEditorScene) -> Vec<String> {
+    #[derive(Deserialize)]
+    struct Row {
+        severity: Option<String>,
+        message: String,
+    }
+    let rows: Vec<Row> = editor.diagnostics_json.as_deref().and_then(|json| serde_json::from_str(json).ok()).unwrap_or_default();
+    rows.into_iter().take(4).map(|row| match row.severity.filter(|severity| !severity.is_empty()) {
+        Some(severity) => format!("[{severity}] {}", row.message),
+        None => row.message,
+    }).collect()
+}
+
+/// 🩺️ Paints the diagnostics footer above the explicit-draft footer, a top border and truncated muted rows as React's `truncate text-[0.6875rem] text-muted-foreground`.
+fn render_text_editor_diagnostics(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
+    let Some(editor) = scene.text_editor.as_ref() else { return };
+    let lines = text_editor_diagnostic_lines(editor);
+    if lines.is_empty() {
+        return;
+    }
+    let theme = ctx.theme;
+    let row_h = theme.font_size_small * 1.5;
+    let draft_h = if semio_renderer_wgpu_engine_text::text_editor::text_editor_explicit_draft_settings(scene).is_some() { theme.control_height_small + 16.0 } else { 0.0 };
+    let height = lines.len() as f32 * row_h + 8.0;
+    let top = bounds.y + bounds.h - draft_h - height;
+    ctx.draw.push_rounded([bounds.x, top, bounds.w, height], theme.panel, 0.0);
+    ctx.draw.push_rounded([bounds.x, top, bounds.w, 1.0], theme.panel_border, 0.0);
+    let capacity = (((bounds.w - 16.0) / (theme.font_size_small * 0.6)).floor() as usize).max(1);
+    for (index, line) in lines.iter().enumerate() {
+        let text = if line.chars().count() > capacity { format!("{}…", line.chars().take(capacity.saturating_sub(1)).collect::<String>()) } else { line.clone() };
+        draw_text(ctx, &text, bounds.x + 8.0, top + 4.0 + (index as f32 + 0.75) * row_h, theme.font_size_small, theme.text_muted);
+    }
+}
+
 /// ✏️ Cancels the rename and restores the committed buffer into the host — React's `cancelRename`.
 pub fn text_editor_cancel_rename(scene: &UiComponentSceneNode) -> bool {
     if text_editor_ui(&scene.host_id).rename.is_none() {
@@ -492,6 +541,9 @@ pub fn text_editor_popup_key(scene: &UiComponentSceneNode, key: &KeyAction, modi
             _ => {}
         }
         return Ok(true);
+    }
+    if accelerator && modifiers.shift && matches!(key, KeyAction::Char(ch) if ch.eq_ignore_ascii_case("f")) {
+        return text_editor_format_document(scene, input).map(|()| true);
     }
     if ui.completions_open {
         match key {

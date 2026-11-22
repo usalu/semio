@@ -27,6 +27,7 @@ semio-framework-job-native-decode = { path = "../../../../../../../../🔨️mod
 semio-plugin-interaction = { path = "../../../../🕹️interaction/📦️packages/🦀️rust" }
 semio-plugin-operation = { path = "../../../../♻️cancellation/📦️packages/🦀️rust" }
 semio-plugin-decl-views = { path = "../../../../📜️declaration/👁️view/📦️packages/🦀️rust" }
+semio-plugin-instance-natural-publication = { path = "../../../🎟️natural-publication/📦️packages/🦀️rust" }
 semio-plugin-decl-media = { path = "../../../../📜️declaration/🎞️media/📦️packages/🦀️rust" }
 semio-plugin-decl-emission = { path = "../../../../📜️declaration/📨️emission/📦️packages/🦀️rust" }
 semio-plugin-decl-app = { path = "../../../../📜️declaration/🧩️app/📦️packages/🦀️rust" }

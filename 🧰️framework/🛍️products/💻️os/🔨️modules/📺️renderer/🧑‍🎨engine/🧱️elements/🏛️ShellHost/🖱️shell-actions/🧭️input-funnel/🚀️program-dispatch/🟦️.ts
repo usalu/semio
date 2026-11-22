@@ -33,7 +33,7 @@ function holdSourceRevision(core: ShellCoreAfterShellUriAndDocuments, session: A
 }
 
 /** 📮️ Runs an action through the hub-mounted browser actor and maps a rejection to a typed refusal. */
-export async function dispatchDirectBrowserActorAction({ dispatchDirectBrowserActorCommand, uiTerminologyRef, directBrowserActor, targetSession, dispatchViewState, action, dispatchExtraInstances, dispatchWindowId, expectedDocumentRevision, applied, refusalReasonForError, core, refuse, propagateFailure }: Pick<ShellCoreAfterShellUriAndDocuments, "dispatchDirectBrowserActorCommand" | "uiTerminologyRef"> & {
+export async function dispatchDirectBrowserActorAction({ dispatchDirectBrowserActorCommand, uiTerminologyRef, directBrowserActor, targetSession, dispatchViewState, action, dispatchExtraInstances, dispatchWindowId, expectedDocumentRevision, inputSeq, applied, refusalReasonForError, core, refuse, propagateFailure }: Pick<ShellCoreAfterShellUriAndDocuments, "dispatchDirectBrowserActorCommand" | "uiTerminologyRef"> & {
   readonly directBrowserActor: ReturnType<ShellCoreAfterShellUriAndDocuments["directBrowserActorForSession"]>;
   readonly targetSession: ActiveSession;
   readonly dispatchViewState: NonNullable<ReturnType<typeof hostArmedViewContext>>;
@@ -41,6 +41,7 @@ export async function dispatchDirectBrowserActorAction({ dispatchDirectBrowserAc
   readonly dispatchExtraInstances: readonly { readonly id: string; readonly windowKindId: string; }[];
   readonly dispatchWindowId: string | undefined;
   readonly expectedDocumentRevision?: string;
+  readonly inputSeq: number;
   readonly applied: (commit?: InputCommitReceiptV1) => InputOutcomeV1;
   readonly refusalReasonForError: (error: unknown) => { readonly reason: InputRefusalReasonV1; readonly detail?: string; readonly diagnostic?: InputDiagnosticV1; readonly draftDisposition?: InputDraftDispositionV1; };
   readonly core: ShellCoreAfterShellUriAndDocuments;
@@ -48,15 +49,15 @@ export async function dispatchDirectBrowserActorAction({ dispatchDirectBrowserAc
   readonly propagateFailure: boolean;
 }) {
   if (directBrowserActor !== null) {
-    const sourcePlugin = core.loadedPluginsRef.current.find(entry => entry.handle.pluginId === targetSession.pluginId)?.handle;
-    const releaseSourceWork = sourcePlugin ? holdSourceRevision(core, targetSession, sourcePlugin) : null;
     try {
       const result = await dispatchDirectBrowserActorCommand(
         directBrowserActor,
-        windowActionInvocation({ ...targetSession, viewState: dispatchViewState }, action, dispatchExtraInstances, dispatchWindowId, expectedDocumentRevision),
+        action.commandAddress
+          ? { address: action.commandAddress, arguments: typeof action.args === "object" && action.args !== null ? action.args as Record<string, unknown> : {} }
+          : windowActionInvocation({ ...targetSession, viewState: dispatchViewState }, action, dispatchExtraInstances, dispatchWindowId, expectedDocumentRevision),
         dispatchViewState,
+        inputSeq,
       );
-      releaseSourceWork?.admit(undefined);
       return applied(result.commit ?? undefined);
     } catch (actionError) {
       const mailboxReason = browserActorActionRefusalReasonV1(actionError);
@@ -68,8 +69,6 @@ export async function dispatchDirectBrowserActorAction({ dispatchDirectBrowserAc
       const outcome = refuse(reason, appNotice?.code ?? detail, reason === "mutation-rejected" || appNotice !== null, diagnostic, draftDisposition);
       if (propagateFailure) throw actionError;
       return outcome;
-    } finally {
-      releaseSourceWork?.finish();
     }
   }
 }

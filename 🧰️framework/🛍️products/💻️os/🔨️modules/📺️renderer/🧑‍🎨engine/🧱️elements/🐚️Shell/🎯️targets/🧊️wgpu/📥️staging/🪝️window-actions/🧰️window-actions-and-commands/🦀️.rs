@@ -169,7 +169,7 @@ pub fn engagement_control_rows(control: &semio_ui_declaration::layout::WindowEng
             if items.is_empty() {
                 Vec::new()
             } else {
-                vec![UiNode::Select(UiSelectNode {
+                vec![UiNode::Select(UiSelectNode { appearance: Default::default(),
                     presence: UiPresence { state: state(disabled.unwrap_or(false)), ..UiPresence::default() },
                     id: id.clone().unwrap_or_else(|| "engagement-control.select".to_string()),
                     value: value.clone().unwrap_or_default(),

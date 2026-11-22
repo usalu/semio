@@ -15,6 +15,11 @@ Feature: The sweep of an extruded solid is required and never defaulted
     When the front and plan views are evaluated
     Then the front is 0.05 m wide by 0.45 m high and the plan 0.5 m long by 0.05 m wide
 
+  Scenario: The lateral span of sweep w is a rest position of the asset
+    Given the same profile on a thigh that the rig places 0.1 m left of the centre plane
+    When it is swept laterally from -0.2 m to 0.3 m and the front and plan views are evaluated
+    Then the part still spans -0.2 m to 0.3 m of the asset, and the same profile swept along the bone normal sits 0.1 m to the left with its bone
+
   Scenario: A missing or unknown sweep is refused
     Given an extruded solid without sweep, or with the axis "u"
     When it is evaluated, resolved to views, validated or checked against the schema

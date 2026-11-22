@@ -158,3 +158,9 @@ Script: `r5-cantilever-balcony-volumes.py` (round-3 script plus the changes belo
 
 - At 1:200 and 1:500 the guard reads as a post, a rail and a panel or bar, and not as a baluster field. The 2D at these scales draws it the same way.
 - In the `--cut` thermal sheets the renderer draws a dark triangle on the wall top and moiré in the plan. These are artefacts of the cut cap and of coincident faces, not geometry.
+
+## Open guard and anchor review, 2026-11-21
+
+Source `db754982faa9290d`. The replaced 1:200 infill plate and unguarded 1:500 post now use the eight 12 mm stock balusters on 106.89 mm centres, attached to the paired 40 × 10 mm upper and lower flats. The 50 mm post, tubular handrail, 150 × 150 × 12 mm base plate, sloping grout pad and four 110 mm anchor studs resolve at all scales. In the structural drawing the anchors enter the slab and the flats carry the balusters to the post. The body, temperature and structural models have been seen from both sides at the four scales. The smaller paper convention at 1:500 draws one vertical on either side of the main post. The 1:200 paper guard draws all eight.
+
+The source authoring and canonical strict checks reported no findings. Twelve independent exported scenes reopened, totalling 1,023,184 bytes.

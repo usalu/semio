@@ -31,3 +31,10 @@ The first corrected run covered all 28 retained roster graphs plus the focused W
 The Puzzle5d editor import declarations were grouped by their Rust module namespace. The focused follow-up passed Puzzle5d at 13 files, 256,282 bytes and 3,961 lines. The focused BREP native registry control passed at 3,970 lines after its owner fixed it. The previously flagged DIN building closure was below all current effective warning thresholds.
 
 The full post-fix pass checked 3,871 closures across the same 29 graph inputs. It exited successfully with zero refusals and 97 warnings below their effective limits.
+
+November 21, 10:32 PST. Across retained graph inputs, 3,870 distinct closures passed and 99 approached a limit. A later Flow session edit exceeded its byte allowance in a newly captured Process, CAD and Demonstrator graph. The targeted WASI scan after shortening its scheduling documentation measured 258,031 bytes. The Process queue then passed source admission and began compilation.
+
+November 21, 10:52 PST. The Process held-lane retry graph plus the retained roster graphs passed all 3,871 distinct source closures, with 99 below-limit warnings and 0 refusals.
+
+
+November 21, 12:57 PST. Exact selected `cdylib` manifest comparison confirms 32 of 32 release roster entries. I replaced the obsolete grouped Hub graph with a fresh pinned, locked, offline graph for its same 48 Cargo roots and included the actual Demonstrator warm-retry graph. This removed a stale Process3d manifest read and exposed a live EN 1998 formulas byte and line breach. The EN 1998-4 ownership split fixed that breach. The final scan passed 3,865 distinct closures with 100 below-limit warnings and zero refusals. The standalone WASI and native formula closures also pass, and the existing pipe and silo goldens pass. See [EN 1998 formula Source admission](🔬️en1998-formula-source-boundary.md).

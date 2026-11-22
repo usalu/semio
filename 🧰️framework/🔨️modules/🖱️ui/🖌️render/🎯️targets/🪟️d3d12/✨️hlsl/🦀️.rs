@@ -162,7 +162,7 @@ float4 ui_fragment_main(PSInput input) : SV_TARGET {
         float two_pi = 6.28318530718;
         float duration = 1.6;
         float phase = _pad.x / duration;
-        float pulse = 0.5 - 0.5 * cos(two_pi * phase);
+        float pulse = 0.85 + 0.15 * cos(two_pi * phase);
         float alpha = border_alpha * pulse * input.color.a;
         return float4(input.color.rgb, alpha);
     }

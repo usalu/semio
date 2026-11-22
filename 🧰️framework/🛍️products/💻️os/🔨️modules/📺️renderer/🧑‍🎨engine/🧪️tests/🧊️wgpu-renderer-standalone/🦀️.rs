@@ -5,8 +5,9 @@ fn realize_fault_remains_scheduled_until_the_aborted_cursor_is_terminal() {
     let native = semio_renderer_wgpu_test_support::repo_module_tree("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🪟️winit-app/🦀️.rs");
     assert!(glue.contains("cursor.phase = AppPresentPhase::Aborted;\n                            if self.retained_fault.is_none()"));
     assert!(glue.contains("return Ok(AppPresentStep::Pending);"));
-    assert!(native.contains("if self.presenter.has_pending_presentation()"));
-    assert!(native.contains("self.scheduler.invalidate(InvalidationReason::RESOURCE_READY);"));
+    let os_host = semio_renderer_wgpu_test_support::repo_module_tree("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🏠️os-host/🦀️.rs");
+    assert!(os_host.contains("if self.presenter.has_pending_presentation() {\n                return Ok(false);"), "component surface close defers while a presentation is pending");
+    assert!(native.contains("if self.advance_component_surface_close(cx)?{self.scheduler.invalidate(InvalidationReason::RESOURCE_READY);}"), "the winit loop re-schedules whenever a close step made progress");
 }
 
 #[cfg(all(test, not(target_arch = "wasm32")))]
@@ -17,7 +18,7 @@ fn native_socket_probe_codec_encodes_the_fixture_shape_and_agrees_with_the_third
     let value = probe["value"].as_str().expect("fixture value is a string").to_string();
     let snapshot = NativeSocketProbeSnapshot(value.clone());
     let diff = NativeSocketProbeDiff(value.clone());
-    let mutation = NativeSocketProbeMutation::Set(value);
+    let mutation = NativeSocketProbeMutation::SetProbe(SetProbe { value });
 
     assert_eq!(serde_json::Value::from(semio_framework_value::ToValue::to_value(&snapshot)), probe["snapshotEncoding"]);
     assert_eq!(serde_json::Value::from(semio_framework_value::ToValue::to_value(&diff)), probe["diffEncoding"]);

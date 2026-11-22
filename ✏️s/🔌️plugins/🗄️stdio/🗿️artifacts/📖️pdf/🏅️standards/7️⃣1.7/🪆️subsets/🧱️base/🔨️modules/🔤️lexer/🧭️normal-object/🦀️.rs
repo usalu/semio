@@ -61,6 +61,11 @@ impl PdfNormalObjectCursor {
 
     /// ▶️ Drives a single stage with the caller's independent work and capacity grants.
     pub fn advance(&mut self, source: &[u8], grant: CosGrant, cancelled: bool) -> NormalObjectReceipt {
+        self.advance_bytes(source.len(), |position| source.get(position).copied(), grant, cancelled)
+    }
+
+    /// 🧲️ Resolves a typed object and exact stream bounds without coalescing the source.
+    pub fn advance_bytes(&mut self, source_len: usize, byte_at: impl Fn(usize) -> Option<u8>, grant: CosGrant, cancelled: bool) -> NormalObjectReceipt {
         if cancelled && matches!(self.phase, Phase::Frame | Phase::Length { .. } | Phase::Wait { .. } | Phase::Span(_)) {
             self.phase = Phase::Cancelled;
         }
@@ -74,7 +79,7 @@ impl PdfNormalObjectCursor {
             Phase::Wait { .. } => Ok(NormalObjectStatus::AwaitingLength),
             _ if grant.work == 0 => Ok(NormalObjectStatus::More),
             Phase::Frame => {
-                let framed = self.frame.advance(source, grant, false);
+                let framed = self.frame.advance_bytes(&byte_at, grant, false);
                 receipt.work = framed.work;
                 receipt.allocated_bytes = framed.allocated_bytes;
                 receipt.released_bytes = framed.released_bytes;
@@ -88,12 +93,14 @@ impl PdfNormalObjectCursor {
             }
             Phase::Length { start, position } => {
                 let (start, position) = (*start, *position);
-                self.plan_length(start, position, source.len(), grant.work, &mut receipt)
+                self.plan_length(start, position, source_len, grant.work, &mut receipt)
             }
             Phase::Span(cursor) => {
-                let result = cursor.advance(source, grant.work);
+                let result = cursor.advance_bytes(source_len, &byte_at, grant.work);
                 receipt.work = result.inspected;
-                if let Some(span) = result.span {
+                if result.source_changed {
+                    Err("PDF stream source lost a byte inside its declared extent")
+                } else if let Some(span) = result.span {
                     self.phase = Phase::Complete(Some(span));
                     Ok(NormalObjectStatus::Complete)
                 } else {

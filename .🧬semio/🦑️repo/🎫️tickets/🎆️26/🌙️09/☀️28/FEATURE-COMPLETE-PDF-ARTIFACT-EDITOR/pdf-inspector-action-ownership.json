@@ -1,0 +1,36 @@
+{
+  "active": [
+    "insert-page",
+    "move-page",
+    "remove-page",
+    "set-page-size",
+    "set-page-rotation",
+    "set-page-user-unit",
+    "set-info-field",
+    "set-language",
+    "set-page-extra",
+    "set-text",
+    "set-font",
+    "move",
+    "set-font-size",
+    "resize",
+    "set-fill",
+    "set-stroke",
+    "set-resource-detail",
+    "set-annotation",
+    "set-annotation-border",
+    "set-annotation-style",
+    "delete"
+  ],
+  "other": [
+    "canvasPointerDown",
+    "insert-text",
+    "set-encryption",
+    "set-embedded-file",
+    "set-document-id"
+  ],
+  "app": [
+    "replace-image",
+    "insert-image"
+  ]
+}

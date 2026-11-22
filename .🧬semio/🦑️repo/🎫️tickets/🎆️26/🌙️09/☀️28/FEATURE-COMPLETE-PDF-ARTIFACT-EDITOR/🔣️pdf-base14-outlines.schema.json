@@ -1,0 +1,81 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "release",
+    "faces",
+    "commit"
+  ],
+  "properties": {
+    "release": {
+      "type": "string",
+      "pattern": "^[0-9]{8}$"
+    },
+    "faces": {
+      "type": "array",
+      "minItems": 14,
+      "maxItems": 14,
+      "items": {
+        "type": "object",
+        "required": [
+          "font",
+          "program",
+          "glyphs"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "font": {
+            "enum": [
+              "Helvetica",
+              "Helvetica-Bold",
+              "Helvetica-Oblique",
+              "Helvetica-BoldOblique",
+              "Times-Roman",
+              "Times-Bold",
+              "Times-Italic",
+              "Times-BoldItalic",
+              "Courier",
+              "Courier-Bold",
+              "Courier-Oblique",
+              "Courier-BoldOblique",
+              "Symbol",
+              "ZapfDingbats"
+            ]
+          },
+          "program": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9-]+$"
+          },
+          "glyphs": {
+            "type": "array",
+            "minItems": 3,
+            "items": {
+              "type": "object",
+              "required": [
+                "name",
+                "unicode"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9]+$"
+                },
+                "unicode": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 65535
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "commit": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    }
+  }
+}

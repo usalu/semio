@@ -50,7 +50,16 @@ async fn window_options_are_local_to_the_window_instance_not_shared_across_split
     let packs = app.window_config_packs().await.expect("exact window packs");
     assert_eq!(packs.len(), 2);
     for pack in packs {
-        reopened.load_window_config_pack(pack).await.expect("reload exact window pack");
+        let envelope_pack = match pack.source {
+            semio_plugin_window_config::WindowConfigPackSource::Pair(files) => semio_os_kernel::os_store::serialization::encode_document_pack_bytes(&files.pack, &files.spr).await,
+            semio_plugin_window_config::WindowConfigPackSource::Framed(bytes) => bytes,
+        };
+        let mut entry = protocol::WindowConfigPackEntry { window_id: pack.window_id, window_kind_id: pack.window_kind_id, envelope_pack };
+        let mut load = semio_plugin_window_config::WindowConfigCommandLoad::default();
+        let (raw, cx) = reopened.parts();
+        for _ in 0..1_000_000 {
+            if raw.advance_window_config_load(&mut load, &mut entry, cx).expect("reload exact window pack") { break; }
+        }
     }
     assert_eq!(render_window(&mut reopened, WINDOW_KIND_ID).await, base_render);
     assert_eq!(render_window(&mut reopened, second_window).await, second_render);

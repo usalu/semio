@@ -8,10 +8,14 @@ pub fn project(snapshot: &GisTerrainSnapshot, control: &mut SqliteSnapshotContro
  let mut projection = Projection::new(<GisTerrainSnapshot as pack::snapshot::ArtifactSqliteSnapshot>::SQLITE_SCHEMA, control)?;
  projection.insert("gis_terrain_document", &[])?; insert_ieee754(&mut projection, "gis_terrain_parameters", &[Cell::Real(snapshot.exaggeration)], SCALAR)?;
  if let Some(source) = &snapshot.elevation_source {
-  if !source.is_valid() { return Err(invalid("invalid GIS elevation source")); }
-  let bounds = source.bounds.map(|value| Cell::Integer(value.to_bits() as i64));
-  let source_id = projection.insert("gis_terrain_elevation_source", &bounds)?;
-  for (ordinal, height) in source.rows.iter().flatten().enumerate() {
+  source.validate()?;
+  let columns = source.rows_millimetres[0].len();
+  let [west, south, east, north] = source.bounds.map(|value| Cell::Integer(value.to_bits() as i64));
+  let source_id = projection.insert(
+   "gis_terrain_elevation_source",
+   &[west, south, east, north, Cell::Integer(columns as i64), source.missing_samples.as_deref().map_or(Cell::Null, Cell::Text)],
+  )?;
+  for (ordinal, height) in source.rows_millimetres.iter().flatten().enumerate() {
    projection.insert("gis_terrain_elevation_sample", &[Cell::Integer(source_id), Cell::Integer(ordinal as i64), Cell::Integer(i64::from(*height))])?;
   }
  }

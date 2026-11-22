@@ -109,7 +109,7 @@ fn graph_node_kinds(graph: &Graph) -> Vec<String> {
     for node in graph.nodes.values() {
         kinds.insert(node.kind.clone());
     }
-    for def in &graph.manifest.node_kinds {
+    for def in graph.manifest().iter().flat_map(|manifest| manifest.node_kinds.iter()) {
         kinds.insert(def.name.clone());
     }
     kinds.into_iter().collect()
@@ -120,7 +120,7 @@ fn graph_edge_kinds(graph: &Graph) -> Vec<String> {
     for edge in graph.edges.values() {
         kinds.insert(edge.kind.clone());
     }
-    for def in &graph.manifest.edge_kinds {
+    for def in graph.manifest().iter().flat_map(|manifest| manifest.edge_kinds.iter()) {
         kinds.insert(def.name.clone());
     }
     kinds.into_iter().collect()

@@ -230,6 +230,20 @@ test("two agents asking for the same target share one run, progress is visible a
  }finally{t.dispose();}
 });
 
+test("a failed job keeps a bounded one-line reason in the history; an ok job keeps none",async()=>{
+ const t=tempStore();
+ try{
+  await runScheduledV1(t.store,requestOf(job("f1","a",{key:"core:thrown"})),async()=>{throw new Error("compile error E0432\n  --> src/lib.rs");}).catch(()=>undefined);
+  await runScheduledV1(t.store,requestOf(job("f2","a",{key:"core:long"})),async()=>({exit:"failed" as const,reason:"x".repeat(1000)}));
+  await runScheduledV1(t.store,requestOf(job("f3","a",{key:"core:fine"})),async()=>({exit:"ok" as const,reason:"ignored"}));
+  const snapshot=await t.store.snapshot(),finished=snapshot.finished,by=(key:string)=>finished.find(row=>row.key===key)!;
+  expect(by("core:thrown")).toMatchObject({exit:"failed",reason:"compile error E0432"});
+  expect(by("core:long").reason!.length).toBe(300);
+  expect(by("core:fine").reason).toBeUndefined();
+  expect(validator("Snapshot")(snapshot)).toBe(true);
+ }finally{t.dispose();}
+});
+
 test("queued jobs wait for capacity in priority order, report their position and a cancel signal aborts a running job",async()=>{
  const t=tempStore({maxConcurrent:1}),positions:number[]=[],order:string[]=[];
  try{
@@ -267,7 +281,9 @@ test("`repo scheduler run -- <command>` queues a child process and returns its e
   const environment={...process.env,SEMIO_LANGUAGE:"en",HOME:home,XDG_CACHE_HOME:join(home,"cache")},lines:string[]=[];
   expect(await runSchedulerCliV1("/w",["run","--key=ok-run","--peak-mb=1024","--","node","-e","process.exit(0)"],environment,line=>lines.push(line),{store:t.store})).toBe(0);
   expect(await runSchedulerCliV1("/w",["run","--key=bad-run","--","node","-e","process.exit(3)"],environment,line=>lines.push(line),{store:t.store})).toBe(1);
-  expect((await t.store.snapshot()).running.length).toBe(0);
+  const after=await t.store.snapshot();expect(after.running.length).toBe(0);
+  expect(after.finished.find(row=>row.key==="bad-run")!.reason).toMatch(/^bad-run: failed, exit code 3, \d+ s, peak \d+ MB$/u);
+  expect(after.finished.find(row=>row.key==="ok-run")!.reason).toBeUndefined();
  }finally{t.dispose();rmSync(home,{recursive:true,force:true});}
 });
 
@@ -305,4 +321,13 @@ test("a limited run that exceeds its memory fails alone with a typed outcome and
   expect(learned).toEqual([{class:"phase:compile",peakMegabytes:320,exit:"memory-exceeded"}]);
   expect((await store.snapshot()).finished.at(-1)).toMatchObject({key:"hog",exit:"memory-exceeded",estimateClass:"phase:compile"});
  }finally{t.dispose();}
+});
+
+test("the scheduler budget is the memory the host-capacity gate may give out (total minus its free-memory floor), one rule for both gates, equal to an independent Python computation on 4 to 64 GB hosts",async()=>{
+ const {defaultSchedulerHostV1}=await import("../💾️store/🟦️.ts"),{totalmem}=await import("node:os"),{readHostCapacityPolicyV1,hostFloorMegabytesV1}=await import("../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📏️decision/🟦️.ts"),buildPolicy=(await import("../../🔣️policy.json")).default.hostCapacity;
+ const policy=readHostCapacityPolicyV1(buildPolicy),python=Bun.which("python3")!;
+ const independent=(total:number)=>Number(Bun.spawnSync([python,"-I","-c","import sys\ntotal,bp,low,high=map(int,sys.argv[1:])\nprint(total-min(total,max(low,min(high,total*bp//10000))))",String(total),String(policy.memory.floorBasisPoints),String(policy.memory.floorMinimumMegabytes),String(policy.memory.floorMaximumMegabytes)]).stdout.toString());
+ for(const total of [4096,8192,16384,32768,65536])expect(total-hostFloorMegabytesV1(policy,{totalMegabytes:total}),String(total)).toBe(independent(total));
+ expect(defaultSchedulerHostV1().budgetMegabytes).toBe(independent(Math.floor(totalmem()/2**20)));
+ expect("hostBudgetMegabytes" in schema.definitions.Policy.const,"the second authority is gone from the scheduler policy").toBe(false);
 });

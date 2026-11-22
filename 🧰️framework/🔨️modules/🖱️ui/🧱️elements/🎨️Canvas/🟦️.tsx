@@ -20,11 +20,12 @@ import { chromeStatusBorderClass } from "../../🔨️modules/🌀️status-bord
 import { useLabel } from "../🏷️Label/🟦️.tsx";
 import { useSurface, LevelProvider } from "../🌈️Surface/🟦️.tsx";
 import { type UiStatus } from "@semio-tech/ui-styling";
-import type { WindowLayoutNode } from "../../🔨️modules/🗺️window-layout/🟦️.ts";
+import type { WindowLayoutDropZone, WindowLayoutNode } from "@semio-tech/ui-layout";
 import type { ControlIcon } from "../🔣️Icons/🟦️.tsx";
 import { ButtonGroup, ButtonGroupItem } from "../🔳️ButtonGroup/🟦️.tsx";
-import { type ModeCanvasDropTarget, type ModeWindowDescriptor, type WindowTemplateDropPayload } from "./🪟️template-drag/🟦️.ts";
+import { type ModeWindowDescriptor, type WindowTemplateDropPayload } from "./🪟️template-drag/🟦️.ts";
 import { computeModeSplitPreviewInBody } from "./🎯️drop/🟦️.ts";
+import { modePathKey } from "./🗺️layout/🟦️.ts";
 import { MODE_DRAG_CURSOR_OFFSET_X, MODE_DRAG_CURSOR_OFFSET_Y, ModeDockDragPreview } from "./🧲️drag-preview/🟦️.tsx";
 import { useModeLayoutState } from "./🧭️mode-layout-state-and-sync/🟦️.tsx";
 import { useModeDragEffectsAndAxisCallbacks, useModeWindowCallbacks } from "./🖱️mode-drag-and-window-callbacks/🟦️.tsx";
@@ -71,7 +72,7 @@ export interface ModeProps {
   onWindowOpenInNewWindow?: (windowId: string) => void;
   layout?: WindowLayoutNode;
   onLayoutChange?: (layout: WindowLayoutNode) => void;
-  onTemplateDrop?: (payload: WindowTemplateDropPayload, target: ModeCanvasDropTarget) => void;
+  onTemplateDrop?: (payload: WindowTemplateDropPayload, target: WindowLayoutDropZone) => void;
   children?: React.ReactNode;
   className?: string;
   /** 📱️ Renders only the active window full-bleed with no tab bar, drag, dock, or maximize chrome. */
@@ -92,7 +93,7 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
   const { canMaximize, previewDragState, tabInsertPreview, draggedInsertTabs, noopDrag, handleExternalTemplateDragOver, handleExternalTemplateDrop, draggedPreviewTitle, draggedPreviewIconId } = useModeTemplateDropAndPreview({ stackDropElementsRef, modeBodyRef, onTemplateDrop, clearTemplateDragPreview, setTemplateDrag, refreshDropZone, templateDrag, dragState, windowsById, dropZone, layoutState });
   const { hasWindows, emptyShellNotice, body } = useModeShortcutsAndContexts({ canMaximize, maximizedStackPath, setMaximizedStackPath, onWindowOpenInNewWindow, activeWindowId, closeWindow, layoutState, toggleMaximize, previewDragState, tabInsertPreview, draggedInsertTabs, registerStackDropTargets, mobile, noopDrag, startTabDrag, clearPendingDrag, activateWindow, deactivateActiveWindow, windowsById, onAxisLayoutChanged, onJoinCornerResize, registerAxisGroup, registerAxisElement, dragState, modeT, children });
   return (
-    <div data-slot="mode" data-mobile={mobile ? "true" : undefined} data-dragging={previewDragState ? "true" : undefined} data-maximized-path={maximizedStackPath ?? undefined} className={cn("relative flex h-full min-h-0 w-full flex-col", className)}>
+    <div data-slot="mode" data-mobile={mobile ? "true" : undefined} data-dragging={previewDragState ? "true" : undefined} data-maximized-path={maximizedStackPath ? modePathKey(maximizedStackPath) : undefined} className={cn("relative flex h-full min-h-0 w-full flex-col", className)}>
       <LevelProvider level="base">
         <div
           ref={modeBodyRef}
@@ -126,19 +127,19 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
                   }}
                 />
               ) : null}
-              {dropZone && (dropZone.kind === "split" || dropZone.kind === "root-split") ? (
+              {dropZone && (dropZone.kind === "split" || dropZone.kind === "rootSplit") ? (
                 <div data-slot="mode-dock-drop-indicator" className="pointer-events-none absolute inset-0 z-panel">
                   <div
                     className="absolute border border-accent bg-accent/20"
                     style={(() => {
-                      if (dropZone.kind === "root-split") {
+                      if (dropZone.kind === "rootSplit") {
                         const side = dropZone.side;
                         if (side === "left") return { left: 0, top: 0, width: "50%", height: "100%" };
                         if (side === "right") return { right: 0, top: 0, width: "50%", height: "100%" };
                         if (side === "top") return { left: 0, top: 0, width: "100%", height: "50%" };
                         return { left: 0, bottom: 0, width: "100%", height: "50%" };
                       }
-                      const elements = stackDropElementsRef.current.get(dropZone.stackPath);
+                      const elements = stackDropElementsRef.current.get(modePathKey(dropZone.stackPath));
                       const rect = elements?.body?.getBoundingClientRect();
                       const modeRect = modeBodyRef.current?.getBoundingClientRect();
                       if (!rect || !modeRect) return { display: "none" };

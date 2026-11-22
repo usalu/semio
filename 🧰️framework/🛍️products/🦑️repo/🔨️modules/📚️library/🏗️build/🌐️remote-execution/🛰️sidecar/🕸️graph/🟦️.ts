@@ -1,6 +1,6 @@
 import{machinePathV1}from"../../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import {createHash} from "node:crypto";
-import {existsSync,statSync} from "node:fs";
+import {existsSync,readdirSync,statSync} from "node:fs";
 import {readdir} from "node:fs/promises";
 import {homedir} from "node:os";
 import {join} from "node:path";
@@ -73,6 +73,7 @@ export async function runGraph(context:RemoteExecutionSidecarContextV1):Promise<
   tickTimer=setInterval(()=>uploader?.tick(),policy.roundMilliseconds);tickTimer.unref?.();
  }
  const work=context.work,adoptionStop=new AbortController();
+ if(work!==undefined){const{repositoryCacheBudgetV1}=await import("../../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🟦️.ts");work.progressAtMs=()=>{const directory=join(repositoryCacheBudgetV1(context.root).partitions.graph.directory,"m","generations","s");try{let newest:number|null=null;for(const name of readdirSync(directory))if(name.endsWith(".progress.json"))newest=Math.max(newest??0,Math.floor(statSync(join(directory,name)).mtimeMs));return newest;}catch{return null;}};}
  const adoption=serving?undefined:import("./📥️adoption/🟦️.ts").then(({runHeadAdoptionLaneV1})=>runHeadAdoptionLaneV1({...context,signal:AbortSignal.any([context.signal,adoptionStop.signal,...context.drain?[context.drain]:[]])},{environment,store,origin,serveTotalMegabytes:policy.serveTotalMegabytes,steerDirectory})).catch(error=>{
   if(!adoptionStop.signal.aborted&&!context.signal.aborted)context.write("graph-head lane / Graphstand-Dienst "+String(error instanceof Error?error.message:error).slice(0,200));
  });

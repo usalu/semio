@@ -95,6 +95,9 @@ pub fn paint_highlighted_node_preview(scene_state: &BoardSceneState, style_state
 pub fn drag_delta(scene: &BoardSceneState, style: &BoardStyleState, world: Point, primary_id: &str, offset: Vec2, start_positions: &BTreeMap<String, (f64, f64)>) -> Option<Vec2> {
     let (px0, py0) = start_positions.get(primary_id).copied()?;
     let (nx, ny) = (world.x - offset.x, world.y - offset.y);
+    if (nx - px0).abs() <= 1e-9 && (ny - py0).abs() <= 1e-9 {
+        return Some(Vec2::ZERO);
+    }
     let (tx, ty) = if style.grid_snap_enabled { board_snap_world_pair(scene, style, nx, ny) } else { (nx, ny) };
     Some(Vec2::new(tx - px0, ty - py0))
 }

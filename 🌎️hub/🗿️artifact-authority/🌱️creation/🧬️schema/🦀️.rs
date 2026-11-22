@@ -80,6 +80,13 @@ pub struct ArtifactCreationIntentV1 {
     pub deadline_ms: u64,
 }
 
+impl ArtifactCreationIntentV1 {
+    /// 🪐️ The Studio container has a single canonical Workflow per Space.
+    pub fn is_space_studio(&self) -> bool {
+        self.request.kind_id == "s.space.studio" && self.artifact_schema == "os.workflow" && self.parent_dialect.artifact_kind == "s.space.studio"
+    }
+}
+
 /// 🪺️ Prepared bytes are retained durably; recovery never invokes the initial factory again.
 #[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
 #[value(crate = "::directory", rename_all = "camelCase", deny_unknown_fields)]

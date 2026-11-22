@@ -148,3 +148,73 @@ fn actual_native_schema_matcher_driver_visits_flattened_original_names(){
   for required in law["visits"][case["kind"].as_str().filter(|kind|matches!(*kind,"refused"|"cut")).unwrap_or("matched")].as_array().unwrap(){let required=required.as_str().unwrap();assert!(visited.contains(required),"{required} absent from {visited:?}");}
  }
 }
+
+#[test]
+fn flat_matcher_compares_original_keys_without_a_schema_stack() {
+ let law:serde_json::Value=serde_json::from_str(include_str!("../flat.json")).unwrap();
+ let funding:serde_json::Value=serde_json::from_str(include_str!("../📐️.json")).unwrap();
+ const LEAVES:&[NativeSchemaLeaf]=&[
+  NativeSchemaLeaf{name:"alpha",ordinal:0},
+  NativeSchemaLeaf{name:"dup",ordinal:7},
+  NativeSchemaLeaf{name:"dup",ordinal:42},
+  NativeSchemaLeaf{name:"beta",ordinal:7},
+  NativeSchemaLeaf{name:"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaé",ordinal:9},
+ ];
+ let table:Vec<_>=LEAVES.iter().map(|leaf|serde_json::json!({"name":leaf.name,"ordinal":leaf.ordinal})).collect();
+ assert_eq!(serde_json::json!(table),law["fields"]);
+ let stock=&funding["stock"];
+ let maximum=stock["maximumTurns"].as_u64().unwrap();
+ let fuel=stock["fuel"].as_u64().unwrap();
+ for case in law["cases"].as_array().unwrap(){
+  let mut cuts=vec![None];
+  if case["name"].as_str()==Some(LEAVES[4].name){cuts.extend(law["cancelAfter"].as_array().unwrap().iter().map(|cut|cut.as_u64().map(|cut|cut as usize)));}
+  for cut in cuts{
+   let mut bank=Bank::from_stock(stock,false);
+   let source=RetainedCloneSource::<KeySource>::from_owner(KeySource{name:case["name"].as_str().unwrap_or("").into(),ordinal:case["ordinal"].as_u64().map(|n|n as u16),refusal:None});
+   let original=source.borrow();
+   let mut matcher=Matcher::new_flat(LEAVES,NativeSchemaKeySource::Record(0));
+   let mut observer=|_|true;
+   let mut native=NativeDecodeControl::new(stock["capacityBytes"].as_u64().unwrap() as usize,&mut observer);
+   let mut trace=Trace::default();
+   let mut comparisons=0;
+   for _ in 0..maximum{
+    if matcher.result().is_some()||cut==Some(comparisons){break}
+    match format!("{:?}",matcher.selection().unwrap()).as_str(){
+     "CompareLeaf"=>{
+      if comparisons==0{
+       let demand=matcher.compare_leaf_demand(4096).unwrap();
+       let short=matcher.compare_leaf_work_demand(4096).unwrap()-1;
+       let mut frame=NativeReceivingEffect::<OriginalReceivingPrimary>::default();
+       let mut authority=OriginalEffectAuthority::new(Local);
+       let denied=bank.run(&mut native,|control|control.receive_original_effect(demand,short,&mut frame,&mut authority,|_,effect,owner,action|owner.drive(&mut (&mut matcher,original),effect,action))).unwrap();
+       let NativeReceivingEffectPoll::Complete(denied)=denied else{panic!("unfunded flat comparison stayed pending")};
+       assert!(authority.into_producer().is_ok());
+       assert_eq!(denied.work,0);
+       assert_eq!(denied.result.unwrap().progress(),RetainedCloneProgress::default());
+       assert_eq!(format!("{:?}",matcher.selection().unwrap()),"CompareLeaf");
+       assert!(matcher.result().is_none());
+      }
+      comparisons+=1;
+     },
+     "PendingSlot"|"CaptureFrame"|"ApplyFrame"|"PopFrame"|"FinishPopped"=>panic!("flat matcher selected stack custody"),
+     _=>{},
+    }
+    turn(&mut bank,&mut native,&mut matcher,original,fuel,&funding["metadata"],&mut trace).unwrap();
+   }
+   if let Some(cut)=cut{
+    assert_eq!(comparisons,cut);
+    assert!(matcher.result().is_none());
+   }else{
+    assert_eq!(Some(comparisons as u64),case["comparisons"].as_u64());
+    let actual=match matcher.result().expect("flat matching completed"){
+     NativeFieldMatch::Missing=>serde_json::json!({"kind":"missing","field":null}),
+     NativeFieldMatch::Field(field)=>serde_json::json!({"kind":"field","field":field}),
+     NativeFieldMatch::Ambiguous=>serde_json::json!({"kind":"ambiguous","field":null}),
+    };
+    assert_eq!(actual,serde_json::json!({"kind":case["kind"],"field":case["field"]}));
+   }
+   close(&mut bank,&mut native,&mut matcher,maximum,&mut trace).unwrap();
+   assert!(matcher.terminal_is_empty());
+  }
+ }
+}

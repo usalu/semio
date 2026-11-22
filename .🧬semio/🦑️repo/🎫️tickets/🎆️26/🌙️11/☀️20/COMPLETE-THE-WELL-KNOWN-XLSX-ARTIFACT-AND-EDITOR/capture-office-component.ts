@@ -1,16 +1,42 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { constants, copyFileSync, createReadStream, readFileSync, statSync, writeFileSync } from "node:fs";
+import { closeSync, constants, copyFileSync, createReadStream, existsSync, mkdirSync, openSync, readSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
-const [log, out] = process.argv.slice(2);
+const [log, out, terminal] = process.argv.slice(2);
 assert.ok(log && out);
-const rows = readFileSync(log, "utf8").split("\n");
-const event = rows.findLast((line) =>
+const isOfficeComponent = (line: string) =>
   line.startsWith('{"reason":"compiler-artifact"') &&
   line.includes("#semio-hub-stdio-office-component@") &&
-  line.includes('"kind":["cdylib"]'));
+  line.includes('"kind":["cdylib"]');
+
+const handle = openSync(log, "r");
+const block = Buffer.alloc(128 * 1024);
+const decoder = new TextDecoder();
+let offset = 0;
+let frame = "";
+let event: string | undefined;
+try {
+  while (!event) {
+    const count = readSync(handle, block, 0, block.byteLength, offset);
+    if (count === 0) {
+      if (!terminal || existsSync(terminal)) {
+        event = isOfficeComponent(frame) ? frame : undefined;
+        break;
+      }
+      await Bun.sleep(1000);
+      continue;
+    }
+    offset += count;
+    const lines = (frame + decoder.decode(block.subarray(0, count), { stream: true })).split("\n");
+    frame = lines.pop()!;
+    event = lines.find(isOfficeComponent);
+  }
+} finally {
+  closeSync(handle);
+}
 if (!event) process.exit(3);
+mkdirSync(out, { recursive: true });
 
 const artifact = JSON.parse(event);
 const source = artifact.filenames.find((path: string) => path.endsWith("semio_hub_stdio_office_component.wasm"));

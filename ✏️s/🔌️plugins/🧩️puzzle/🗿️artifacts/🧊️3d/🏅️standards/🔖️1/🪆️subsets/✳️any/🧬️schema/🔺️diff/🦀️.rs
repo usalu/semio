@@ -17,6 +17,7 @@ use protocol::{ColdDiffAlgebra, DiffAlgebra};
 use protocol::MutationDiff;
 use protocol::ColdMutationDiff;
 use protocol::list_delta::RowPatch;
+use std::sync::Arc;
 
 //#region 🔖️Diff
 /// 🔺️ Sparse typed delta for the puzzle3d artifact: per-field entity patches and id-keyed collection deltas.
@@ -624,9 +625,56 @@ impl RowPatch<Puzzle3dMeta> for Puzzle3dMetaPatch {
     }
 }
 
-impl MutationDiff<Puzzle3dSnapshot> for Puzzle3dDiff {
+impl MutationDiff<Puzzle3dSnapshot> for Puzzle3dDiff {}
 
+impl Puzzle3dDiff {
+    /// 🪞️ Installs a validated candidate on an Arc-backed projection while leaving a shared base untouched.
+    pub fn apply_shared(&self, base: &mut Arc<Puzzle3dSnapshot>, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        if let Some(base) = Arc::get_mut(base) {
+            return <Self as ColdMutationDiff<Puzzle3dSnapshot>>::apply(self, base, capability);
+        }
+        let candidate = self.prepare_projection(base, capability)?;
+        protocol::PreparedField::new(Arc::new(candidate), |displaced| {
+            if let Some(displaced) = Arc::into_inner(displaced) {
+                <Self as MutationDiff<Puzzle3dSnapshot>>::retire_projection(displaced);
+            }
+        }, capability).install(base);
+        Ok(())
+    }
 
+    fn prepare_projection(&self, base: &Puzzle3dSnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Puzzle3dSnapshot> {
+        let replacement = self.artifact.as_ref().map(|artifact| artifact.to_snapshot());
+        let source = replacement.as_ref().unwrap_or(base);
+        let meta = self.meta.as_ref().map(|patch| -> protocol::MutationApplyResult<_> {
+            let mut meta = source.meta.clone();
+            patch.commit_into(&mut meta, capability).map_err(|error| error.under(["meta"]))?;
+            Ok(meta)
+        }).transpose()?;
+        let objects = self.objects.as_ref().map(|delta| delta.commit_onto(&source.objects, capability)).transpose().map_err(|error| error.under(["objects"]))?;
+        let attractions = self.attractions.as_ref().map(|delta| delta.commit_onto(&source.attractions, capability)).transpose().map_err(|error| error.under(["attractions"]))?;
+        let target_volumes = self.target_volumes.as_ref().map(|delta| delta.commit_onto(&source.target_volumes, capability)).transpose().map_err(|error| error.under(["targetVolumes"]))?;
+        let references = self.references.as_ref().map(|delta| delta.commit_onto(&source.references, capability)).transpose().map_err(|error| error.under(["references"]))?;
+        Ok(match replacement {
+            Some(item) => Puzzle3dSnapshot {
+                schema: self.schema.clone().unwrap_or(item.schema),
+                domain: self.domain.clone().unwrap_or(item.domain),
+                meta: meta.unwrap_or(item.meta),
+                objects: objects.unwrap_or(item.objects),
+                attractions: attractions.unwrap_or(item.attractions),
+                target_volumes: target_volumes.unwrap_or(item.target_volumes),
+                references: references.unwrap_or(item.references),
+            },
+            None => Puzzle3dSnapshot {
+                schema: self.schema.clone().unwrap_or_else(|| base.schema.clone()),
+                domain: self.domain.clone().unwrap_or_else(|| base.domain.clone()),
+                meta: meta.unwrap_or_else(|| base.meta.clone()),
+                objects: objects.unwrap_or_else(|| base.objects.clone()),
+                attractions: attractions.unwrap_or_else(|| base.attractions.clone()),
+                target_volumes: target_volumes.unwrap_or_else(|| base.target_volumes.clone()),
+                references: references.unwrap_or_else(|| base.references.clone()),
+            },
+        })
+    }
 }
 
 impl ColdMutationDiff<Puzzle3dSnapshot> for Puzzle3dDiff {
@@ -669,33 +717,8 @@ impl ColdMutationDiff<Puzzle3dSnapshot> for Puzzle3dDiff {
     }
 
     fn apply(&self, base: &mut Puzzle3dSnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
-        let mut prepared = protocol::PreparedField::new(match &self.artifact {
-            Some(artifact) => artifact.to_snapshot(),
-            None => base.clone(),
-        }, <Self as protocol::MutationDiff<Puzzle3dSnapshot>>::retire_projection, capability);
-        let mut item = prepared.value_mut();
-        if let Some(value) = &self.schema {
-            item.schema = value.clone();
-        }
-        if let Some(value) = &self.domain {
-            item.domain = value.clone();
-        }
-        if let Some(patch) = &self.meta {
-            patch.commit_into(&mut item.meta, capability).map_err(|error| error.under(["meta"]))?;
-        }
-        if let Some(delta) = &self.objects {
-            item.objects = delta.commit_onto(&item.objects, capability).map_err(|error| error.under(["objects"]))?;
-        }
-        if let Some(delta) = &self.attractions {
-            item.attractions = delta.commit_onto(&item.attractions, capability).map_err(|error| error.under(["attractions"]))?;
-        }
-        if let Some(delta) = &self.target_volumes {
-            item.target_volumes = delta.commit_onto(&item.target_volumes, capability).map_err(|error| error.under(["targetVolumes"]))?;
-        }
-        if let Some(delta) = &self.references {
-            item.references = delta.commit_onto(&item.references, capability).map_err(|error| error.under(["references"]))?;
-        }
-        prepared.install(base);
+        let candidate = self.prepare_projection(base, capability)?;
+        protocol::PreparedField::new(candidate, <Self as MutationDiff<Puzzle3dSnapshot>>::retire_projection, capability).install(base);
         Ok(())
     }
 }

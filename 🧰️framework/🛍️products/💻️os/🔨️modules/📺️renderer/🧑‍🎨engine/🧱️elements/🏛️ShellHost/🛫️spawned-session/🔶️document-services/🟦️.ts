@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useRef } from "../../../⚛️react-port/🟦️.ts";
 import { panelTabKindId, pendingWindowUiNode, type BuiltNode, type UiDirtyScope, type WindowEngagement, type WindowMeasure } from "@semio-tech/framework";
 import { focusedProgramKeyV1, programKeyedEntriesV1, withProgramEntriesV1, spawnedProgramViewStateV1, guestActiveUtilityByWindowIdV1, guestWindowIdV1, spawnedGuestWindowInstancesV1, spawnedWindowInstanceIdV1 } from "../../🪟️spawned-program/🟦️.ts";
-import { type WindowLayoutNode } from "@semio-tech/ui-react";
+import type { WindowLayoutNode } from "@semio-tech/ui-layout";
 import { sessionProgramsV1 } from "../../../🐚️Shell/📦️program-sessions/🟦️.ts";
 import type { ViewModel } from "../../../🔌️PluginRuntime/🧷️handle-contract/🟦️.ts";
 import { flattenPanelTabLeaves, resolveCanvasBodyKey, frameworkLayoutDeclaredInstances } from "../../../🛠️ShellHelpers/🛣️route-and-chrome/🟦️.tsx";

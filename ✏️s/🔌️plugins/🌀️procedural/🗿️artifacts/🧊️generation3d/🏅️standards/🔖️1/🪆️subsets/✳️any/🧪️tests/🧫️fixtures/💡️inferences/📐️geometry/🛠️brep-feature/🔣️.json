@@ -642,7 +642,7 @@
         "shape": {
           "kind": "solid",
           "volume": 16.0,
-          "area": 40.0,
+          "area": 48.0,
           "bbox": [
             [
               0,
@@ -651,6 +651,74 @@
             ],
             [
               4,
+              4,
+              1
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "name": "defeature fills two distinct through holes",
+      "kind": "brep.feature.defeature",
+      "inputs": {
+        "shape": {
+          "recipe": "cut",
+          "target": {
+            "recipe": "cut",
+            "target": {
+              "recipe": "box",
+              "size": [
+                8,
+                4,
+                1
+              ]
+            },
+            "tool": {
+              "recipe": "translate",
+              "of": {
+                "recipe": "cylinder",
+                "radius": 0.5,
+                "height": 3
+              },
+              "by": [
+                2,
+                2,
+                -1
+              ]
+            }
+          },
+          "tool": {
+            "recipe": "translate",
+            "of": {
+              "recipe": "cylinder",
+              "radius": 0.75,
+              "height": 3
+            },
+            "by": [
+              6,
+              2,
+              -1
+            ]
+          }
+        },
+        "faces": {
+          "curved": true
+        }
+      },
+      "outputs": {
+        "shape": {
+          "kind": "solid",
+          "volume": 32.0,
+          "area": 88.0,
+          "bbox": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              8,
               4,
               1
             ]

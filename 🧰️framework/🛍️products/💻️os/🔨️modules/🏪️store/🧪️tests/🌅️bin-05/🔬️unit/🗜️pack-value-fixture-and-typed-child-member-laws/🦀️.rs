@@ -116,6 +116,22 @@ async fn pack_wire_value_fixture_corpus_hex_dump() {
     }
 }
 
+/// 🧱️ `TAG_BYTES` over the shared, language-neutral `semio.pack.dynamic-bytes/v1` corpus, whose wire hex a third-party Python oracle framed independently; the TypeScript Pack codec pins the same bytes.
+#[semio_framework_async_macros::async_test]
+async fn pack_wire_value_carries_bytes_exactly_as_the_neutral_corpus_frames_them() {
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🧪️tests/🧫️fixtures/🎒️pack-dynamic-bytes-v1/🔣️.json")).expect("dynamic bytes corpus parses");
+    let hex = |text: &str| (0..text.len() / 2).map(|at| u8::from_str_radix(&text[2 * at..2 * at + 2], 16).unwrap()).collect::<Vec<u8>>();
+    for row in corpus["cases"].as_array().unwrap() {
+        let id = row["id"].as_str().unwrap();
+        let payload = hex(row["bytesHex"].as_str().unwrap());
+        let top = pack_rt::encode_wire_value(&DslValue::Bytes(payload.clone()));
+        assert_eq!(top, hex(row["topLevelWireHex"].as_str().unwrap()), "{id}");
+        assert!(matches!(pack_rt::decode_wire_value(&top).expect(id), DslValue::Bytes(decoded) if decoded == payload), "{id}");
+        let keyed = DslValue::object([("kind".into(), DslValue::String("x".into())), ("archive".into(), DslValue::Bytes(payload.clone()))]);
+        assert_eq!(pack_rt::encode_wire_value(&keyed), hex(row["keyedWireHex"].as_str().unwrap()), "{id}");
+    }
+}
+
 /// 🔢️ Exact-variant law for the dynamic `Shape::Value` grammar over the shared,
 /// language-neutral `semio.pack.dynamic-integer/v1` corpus
 /// (`💻️os/🧫️fixtures/🎒️pack-dynamic-integer-v1`, whose `wireHex` is independently generated

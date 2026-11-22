@@ -5,8 +5,8 @@ import {Database} from "bun:sqlite";
 import schema from "../🧬️schema/🔣️.json";
 import policy from "../🔣️policy.json";
 import fixture from "./🧫️fixtures/🔣️.json";
-import {elasticCapacityV1,pinnedCapacityV1,readRepositoryCacheBudgetV1,repositoryCacheBudgetV1} from "../🟦️.ts";
-import {mkdtempSync,mkdirSync,writeFileSync,rmSync} from "node:fs";
+import {elasticCapacityV1,elasticMinimumV1,hostShareCapacityV1,hostSharePercentV1,pinnedCapacityV1,readRepositoryCacheBudgetV1,repositoryCacheBudgetV1} from "../🟦️.ts";
+import {mkdtempSync,mkdirSync,writeFileSync,rmSync,statfsSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {repositoryStrictStorageV1} from "../../🟦️.ts";
 import {cleanProtectedPrefixes,cleanRemovalProtection} from "../../../../../🧼️workspace-cleanup/🛡️protection/🟦️.ts";
@@ -19,6 +19,8 @@ import {lstatSync,readdirSync,readFileSync} from "node:fs";
 import{privateRepositoryWorkspaceV1}from"../../../../../🧪️testing/🧫️private-repository/🟦️.ts";
 import{nativePlatformImageBackendV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🟦️.ts";
 import{nativeStorageBackendsV1,nativeStorageBackingFilenameV1,nativeStorageMountedAtV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🔌️backends/📋️contract/🟦️.ts";
+import {declareLibraryBuildTestEnvelopeV1} from "../../../../../🧪️testing/🪪️native-birth/🟦️.ts";
+declareLibraryBuildTestEnvelopeV1({suite:"storage-budget"});
 const repository=await privateRepositoryWorkspaceV1();
 
 test("cache backing and mount expectations agree with the neutral backend corpus",()=>{
@@ -29,7 +31,7 @@ test("cache backing and mount expectations agree with the neutral backend corpus
 
 /** 🎚️ Keeps authored logical observation limits independent of every physical capacity charge. */
 test("closed repository publication logical observation policy leaves the physical ledger unchanged",()=>{
- const database=new Database(":memory:"),validate=new Ajv({strict:true}).compile(schema),cases=new Ajv({strict:true}).compile(schema.$defs.logicalCase);try{expect((policy.partitions.tools as any).maximumLogicalBytes).toBe(68719476736);const physical=Object.fromEntries(Object.entries(policy.partitions).map(([id,row])=>[id,row.capacityBytes]));for(const row of fixture.logicalCases){expect(cases(row),row.id).toBe(true);const value:any=structuredClone(policy);if(row.missing)delete value.partitions.tools.maximumLogicalBytes;else value.partitions.tools.maximumLogicalBytes=row.maximumLogicalBytes;const encoded=JSON.stringify(value),oracle=database.query("SELECT json_type(?1,'$.partitions.tools.maximumLogicalBytes') IN('integer','real') AND json_extract(?1,'$.partitions.tools.maximumLogicalBytes')=CAST(json_extract(?1,'$.partitions.tools.maximumLogicalBytes') AS INTEGER) AND json_extract(?1,'$.partitions.tools.maximumLogicalBytes') BETWEEN 1 AND 103080263680 accepted,(SELECT sum(json_extract(value,'$.capacityBytes')) FROM json_each(?1,'$.partitions')) bytes").get(encoded)as{accepted:number|null;bytes:number};expect(validate(value),row.id).toBe(row.accepted);expect(Boolean(oracle.accepted),row.id).toBe(row.accepted);expect(oracle.bytes).toBe(fixture.expectedPartitionBytes);if(row.accepted){const actual:any=readRepositoryCacheBudgetV1(value);expect(actual.partitionBytes).toBe(fixture.expectedPartitionBytes);expect(actual.headroomBytes).toBe(fixture.expectedHeadroomBytes);expect(actual.partitions.tools.maximumLogicalBytes).toBe(row.maximumLogicalBytes);expect(Object.fromEntries(Object.entries(actual.partitions).map(([id,part]:[string,any])=>[id,part.capacityBytes]))).toEqual(physical);}else expect(()=>readRepositoryCacheBudgetV1(value)).toThrow();}expect(physical.tools).toBe(8589934592);expect((policy.partitions.tools as any).maximumLogicalBytes).toBeGreaterThan(physical.tools!);}finally{database.close();}
+ const database=new Database(":memory:"),validate=new Ajv({strict:true}).compile(schema),cases=new Ajv({strict:true}).compile(schema.$defs.logicalCase);try{expect((policy.partitions.tools as any).maximumLogicalBytes).toBe(policy.partitions.tools.capacityBytes-1048576);const physical=Object.fromEntries(Object.entries(policy.partitions).map(([id,row])=>[id,row.capacityBytes]));for(const row of fixture.logicalCases){expect(cases(row),row.id).toBe(true);const value:any=structuredClone(policy);if(row.missing)delete value.partitions.tools.maximumLogicalBytes;else value.partitions.tools.maximumLogicalBytes=row.maximumLogicalBytes;const encoded=JSON.stringify(value),oracle=database.query("SELECT json_type(?1,'$.partitions.tools.maximumLogicalBytes') IN('integer','real') AND json_extract(?1,'$.partitions.tools.maximumLogicalBytes')=CAST(json_extract(?1,'$.partitions.tools.maximumLogicalBytes') AS INTEGER) AND json_extract(?1,'$.partitions.tools.maximumLogicalBytes') BETWEEN 1 AND 103080263680 accepted,(SELECT sum(json_extract(value,'$.capacityBytes')) FROM json_each(?1,'$.partitions')) bytes").get(encoded)as{accepted:number|null;bytes:number};expect(validate(value),row.id).toBe(row.accepted);expect(Boolean(oracle.accepted),row.id).toBe(row.accepted);expect(oracle.bytes).toBe(fixture.expectedPartitionBytes);if(row.accepted){const actual:any=readRepositoryCacheBudgetV1(value);expect(actual.partitionBytes).toBe(fixture.expectedPartitionBytes);expect(actual.headroomBytes).toBe(fixture.expectedHeadroomBytes);expect(actual.partitions.tools.maximumLogicalBytes).toBe(row.maximumLogicalBytes);expect(Object.fromEntries(Object.entries(actual.partitions).map(([id,part]:[string,any])=>[id,part.capacityBytes]))).toEqual(physical);}else expect(()=>readRepositoryCacheBudgetV1(value)).toThrow();}expect(physical.tools).toBe(8589934592);expect((policy.partitions.tools as any).maximumLogicalBytes).toBeLessThanOrEqual(physical.tools!-1048576);}finally{database.close();}
 });
 
 test("closed repository cache partitions agree with independent SQLite byte and path admission",()=>{
@@ -130,7 +132,7 @@ print(json.dumps(out))`,run=Bun.spawnSync(["python3","-I","-c",model,JSON.string
  const budget=readRepositoryCacheBudgetV1(grown);expect(budget.partitions.rust.filesystemBytes).toBe(60*2**30-1048576);expect(budget.headroomBytes).toBe(readRepositoryCacheBudgetV1(policy).headroomBytes);
  expect(rule.minimumBytes).toBeLessThan(declared);expect(rule.minimumBytes).toBeLessThanOrEqual(rule.maximumBytes);
  for(const free of Array.from({length:600},(_,i)=>(i+34)*2**30)){const capacity=elasticCapacityV1(rule,rule.minimumBytes,free);expect(capacity,String(free)).toBeLessThanOrEqual(free-64*2**20);expect(capacity).toBeGreaterThanOrEqual(rule.minimumBytes);}
- const strict=repositoryStrictStorageV1(repository.root);expect(strict.capacityBytes).toBeGreaterThanOrEqual(rule.minimumBytes);expect(strict.capacityBytes).toBeLessThanOrEqual(rule.maximumBytes);expect(strict.filesystemBytes).toBe(strict.capacityBytes-1048576);
+ const strict=repositoryStrictStorageV1(repository.root);expect(strict.capacityBytes).toBeGreaterThanOrEqual(elasticMinimumV1(rule,rule.minimumBytes,(()=>{const row=statfsSync(repository.root);return row.bavail*row.bsize;})()));expect(strict.capacityBytes).toBeLessThanOrEqual(rule.maximumBytes);expect(strict.filesystemBytes).toBe(strict.capacityBytes-1048576);
 });
 
 test("the elastic graph capacity follows need and host free space, never below the declared capacity, and agrees with an independent Python model",()=>{
@@ -180,10 +182,10 @@ print(json.dumps(out))`,run=Bun.spawnSync(["python3","-I","-c",model,JSON.string
    pinRust(root);const directory=join(root,declared.directory);mkdirSync(directory,{recursive:true});
    if(row.receipt!==null)writeFileSync(join(directory,"image.json"),typeof row.receipt==="string"?row.receipt:JSON.stringify(row.receipt));
    expect(pinnedCapacityV1(directory,declared.capacityBytes),row.id).toBe(row.expected);expect(independent[row.id],row.id).toBe(row.expected);
-   const budget=repositoryCacheBudgetV1(root),partition=budget.partitions.dependencies;
-   expect(partition.capacityBytes,row.id).toBe(row.expected);expect(partition.filesystemBytes,row.id).toBe(row.expected-unit);
-   expect(budget.partitionBytes-base.partitionBytes,row.id).toBe(row.expected-declared.capacityBytes);
-   expect(budget.maximumBytes-base.maximumBytes,row.id).toBe(row.expected-declared.capacityBytes);
+   const budget=repositoryCacheBudgetV1(root),partition=budget.partitions.dependencies,born=row.id==="no-receipt"?hostShareCapacityV1(declared.capacityBytes,declared.hostSharePercent,(()=>{const free=statfsSync(join(root,".cache","b"));return free.bavail*free.bsize;})()):row.expected;
+   expect(partition.capacityBytes,row.id).toBe(born);expect(partition.filesystemBytes,row.id).toBe(born-unit);
+   expect(budget.partitionBytes-base.partitionBytes,row.id).toBe(born-base.partitions.dependencies.capacityBytes);
+   expect(budget.maximumBytes-base.maximumBytes,row.id).toBe(born-base.partitions.dependencies.capacityBytes);
    expect(budget.headroomBytes,row.id).toBe(base.headroomBytes);
   }finally{rmSync(root,{recursive:true,force:true});}
  }
@@ -227,8 +229,9 @@ test("the bloat rule recognises host blocks an idle image no longer uses, and th
 rule,rows=json.loads(sys.argv[1]),json.loads(sys.argv[2])
 out=[]
 for a,u,f in rows:
-    floor=rule["reclaimFloorBytes"]//8 if f<rule["reclaimTightHostFreeBytes"] else rule["reclaimFloorBytes"]
-    out.append(a-u>=floor and a*100>=u*rule["reclaimRatioPercent"])
+    tight=f<rule["reclaimTightHostFreeBytes"]
+    floor=rule["reclaimFloorBytes"]//8 if tight else rule["reclaimFloorBytes"]
+    out.append(a-u>=floor and (tight or a*100>=u*rule["reclaimRatioPercent"]))
 print(json.dumps(out))`,run=Bun.spawnSync(["python3","-I","-c",model,JSON.stringify(rule),JSON.stringify(rows)]);
   expect(run.exitCode,run.stderr.toString()).toBe(0);
   const independent=JSON.parse(run.stdout.toString()) as boolean[];
@@ -255,7 +258,7 @@ print(json.dumps(out))`,run=Bun.spawnSync(["python3","-I","-c",model,JSON.string
   const independent=JSON.parse(run.stdout.toString()) as number[];
   rows.forEach(([c,f,a],i)=>expect(elasticGrowthV1(rule,c,f,a),name+" "+[c,f,a]).toBe(independent[i]));
  }
- const graph=policy.elastic.graph;expect(elasticGrowthV1(graph,12*GiB,92*GiB)).toBe(18*GiB);expect(elasticGrowthV1(graph,24*GiB,500*GiB)).toBe(24*GiB);
+ const graph=policy.elastic.graph;expect(elasticGrowthV1(graph,12*GiB,400*GiB)).toBe(18*GiB);expect(elasticGrowthV1(graph,6*GiB,92*GiB)).toBe(7*GiB);expect(elasticGrowthV1(graph,24*GiB,500*GiB)).toBe(24*GiB);
  const root=mkdtempSync(join(tmpdir(),"elastic-growth-"));
  try{
   const directory=join(root,"g");mkdirSync(directory);mkdirSync(join(root,"c"));
@@ -273,4 +276,44 @@ test("every partition has a bloat rule, the common one is schema-valid, and the 
  expect(policy.elastic.rust.needBytes).toBeLessThan(policy.elastic.rust.maximumBytes);
  expect(elasticCapacityV1(policy.elastic.rust,policy.elastic.rust.minimumBytes,7*GiB)).toBe(policy.elastic.rust.minimumBytes);
  expect(elasticCapacityV1(policy.elastic.rust,policy.elastic.rust.minimumBytes,400*GiB)).toBe(40*GiB);
+});
+
+/** 🧮️ The disk policy is declared as fractions of the host: no absolute minimum exceeds what the host can create, every logical limit fits its capacity, and the images born on a 16 GB / 60 GB, a 32 GB / 200 GB and a Windows 256 GB / 5 GB-free machine add up to less than the host's free bytes; the elastic minimum agrees with an independent Python model. */
+test("the declared disk policy fits the host: logical limits within capacity, shares within the host, born images within free bytes on the three profiles",()=>{
+ const GiB=2**30,unit=1048576,profiles=[{id:"16 GB RAM, 60 GB free",free:56*GiB},{id:"32 GB RAM, 200 GB free",free:186*GiB},{id:"Windows 256 GB disk, 5 GB free",free:5*10**9},{id:"tiny 1 GB free",free:GiB}];
+ for(const[id,row]of Object.entries(policy.partitions)){expect(row.maximumLogicalBytes,id).toBeLessThanOrEqual(row.capacityBytes-unit);expect(readRepositoryCacheBudgetV1(policy).partitions[id as keyof typeof policy.partitions].maximumLogicalBytes,id).toBe(row.maximumLogicalBytes);}
+ for(const[id,rule]of Object.entries(policy.elastic)){expect(rule.minimumBytes,id).toBeLessThanOrEqual(rule.maximumBytes);}
+ const shares=Object.keys(policy.partitions).map(id=>hostSharePercentV1(policy as never,id));
+ expect(shares.every(share=>share>0),String(shares)).toBe(true);expect(shares.reduce((sum,share)=>sum+share,0)).toBeLessThanOrEqual(90);
+ const model=`import json,sys
+pol,profiles=json.loads(sys.argv[1]),json.loads(sys.argv[2])
+out={}
+for p in profiles:
+    total=0;free=p["free"]
+    for pid,part in pol["partitions"].items():
+        rule=pol.get("elastic",{}).get(pid)
+        if rule:
+            share=free*(100-rule["hostFreeReservePercent"])//100
+            unit=rule["alignBytes"] if share>=rule["alignBytes"] else 67108864
+            minimum=max(67108864,min(rule["minimumBytes"],share//unit*unit))
+            wanted=-(-rule["needBytes"]*(100+rule["headroomPercent"])//100)
+            ceiling=min(rule["maximumBytes"],share)
+            target=min(wanted,max(ceiling,minimum))
+            total+=max(minimum,target//rule["alignBytes"]*rule["alignBytes"])
+        else:
+            share=free*part["hostSharePercent"]//100//1048576*1048576
+            total+=max(min(part["capacityBytes"],67108864),min(part["capacityBytes"],share))
+    out[p["id"]]=total
+print(json.dumps(out))`,run=Bun.spawnSync(["python3","-I","-c",model,JSON.stringify(policy),JSON.stringify(profiles)]);
+ expect(run.exitCode,run.stderr.toString()).toBe(0);const independent=JSON.parse(run.stdout.toString());
+ for(const profile of profiles){
+  let total=0;
+  for(const[id,row]of Object.entries(policy.partitions)){
+   const rule=(policy.elastic as Record<string,typeof policy.elastic.rust>)[id],born=rule?elasticCapacityV1(rule,elasticMinimumV1(rule,rule.minimumBytes,profile.free),profile.free):hostShareCapacityV1(row.capacityBytes,(row as {hostSharePercent:number}).hostSharePercent,profile.free);
+   expect(born%unit,profile.id+" "+id).toBe(0);expect(born,profile.id+" "+id).toBeLessThanOrEqual(rule?rule.maximumBytes:row.capacityBytes);total+=born;
+  }
+  expect(total,profile.id).toBe(independent[profile.id]);if(profile.free>=4*GiB)expect(total,profile.id).toBeLessThanOrEqual(profile.free);
+ }
+ expect(elasticMinimumV1(policy.elastic.rust,policy.elastic.rust.minimumBytes,56*GiB)).toBeLessThan(policy.elastic.rust.minimumBytes);
+ expect(elasticMinimumV1(policy.elastic.rust,policy.elastic.rust.minimumBytes,186*GiB)).toBe(policy.elastic.rust.minimumBytes);
 });

@@ -2,6 +2,7 @@
 
 #[test]
 fn schema_templates_create_required_records_in_empty_lists_and_nullable_fields() {
+    let _arena = ui_arena();
     let schema = r##"{
         "type":"object",
         "required":["schema","records","selection"],
@@ -117,6 +118,7 @@ fn schema_templates_reject_invalid_defaults_and_satisfy_min_properties() {
 
 #[test]
 fn schema_annotations_localize_fixed_fields_without_translating_user_keys() {
+    let _arena = ui_arena();
     struct PresentationFixture;
     impl ToValue for PresentationFixture {
         fn to_value(&self) -> DslValue {
@@ -163,6 +165,7 @@ fn schema_annotations_localize_fixed_fields_without_translating_user_keys() {
 
 #[test]
 fn schema_capabilities_hide_impossible_actions_and_offer_missing_optional_fields() {
+    let _arena = ui_arena();
     struct CapabilityFixture;
     impl ToValue for CapabilityFixture {
         fn to_value(&self) -> DslValue {

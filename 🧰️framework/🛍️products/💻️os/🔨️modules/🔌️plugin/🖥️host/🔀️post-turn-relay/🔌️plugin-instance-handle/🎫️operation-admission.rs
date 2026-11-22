@@ -40,10 +40,14 @@ fn reserve(driver:&GuestRelayWakeDriver,origin:GuestRelayNativeOrigin,phase:&mut
 /// 🧯️ One original failure moves into a paid fault home, is read inside its receiving callback and retires on its Source.
 pub(super) async fn retire_failure(driver:&GuestRelayWakeDriver,slot:&mut Option<GuestRelayAdmissionFailure>,read:&mut dyn FnMut(&GuestRelayAdmissionFailure,&mut StepContext<'_>)->Result<(),OriginalTurnFailure>)->Result<(),GuestRelayAdmissionFailure>{
  if slot.is_none(){return Ok(())}let mut home=GuestRelayFaultHome::empty();
+ trace_failure_retirement("capturing refusal");
  while slot.is_some(){driver.dispatch_operation_step(false,true,|cx|{home.capture_step(slot,cx)?;Ok(())})?;if slot.is_some(){semio_framework_async::yield_once().await}}
+ trace_failure_retirement("reading captured refusal");
  let mut received=false;while !received{driver.dispatch_operation_step(false,true,|cx|{home.with_failure(cx,|failure,cx|read(failure,cx))?;received=true;Ok(())})?;if !received{semio_framework_async::yield_once().await}}
- loop{let mut closed=false;driver.dispatch_operation_step(false,true,|cx|cx.with_original_retirement(|cx|{closed=semio_framework_job::OriginalNativeRetirement::close_on_source(&mut home,cx)?;Ok(())}))?;if closed{return Ok(())}semio_framework_async::yield_once().await}
+ trace_failure_retirement("closing captured refusal");
+ loop{let mut closed=false;driver.dispatch_operation_step(false,true,|cx|cx.with_original_retirement(|cx|{closed=semio_framework_job::OriginalNativeRetirement::close_on_source(&mut home,cx)?;Ok(())}))?;if closed{trace_failure_retirement("closed captured refusal");return Ok(())}semio_framework_async::yield_once().await}
 }
+fn trace_failure_retirement(stage:&str){if std::env::var_os("SEMIO_TRACE_RELAY_RETIREMENT").is_some(){eprintln!("[DEBUG] relay retirement {stage}");}}
 struct Guard<'a>{driver:&'a GuestRelayWakeDriver,armed:bool}
 impl Drop for Guard<'_>{fn drop(&mut self){if self.armed{self.driver.abandon_operation()}}}
 fn stalled()->ValueError{ValueError::literal(ValueRefusalKind::WorkLimit,"operation admission made no progress: the treasury stayed unchanged for 65536 consecutive turns")}

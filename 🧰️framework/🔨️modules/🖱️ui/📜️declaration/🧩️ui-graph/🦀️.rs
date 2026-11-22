@@ -32,7 +32,7 @@ pub use input_select_toggle_and_group_nodes::{
 #[path = "🎚️slider-stepper-and-control-nodes/🦀️.rs"]
 mod slider_stepper_and_control_nodes;
 pub use slider_stepper_and_control_nodes::{
-    UiControlNode, UiIconSelectNode, UiNumberStepperNode, UiProgressNode, UiRingNode, UiSliderNode,
+    IconSelectorMode, UiControlNode, UiIconSelectNode, UiNumberStepperNode, UiProgressNode, UiRingNode, UiSliderNode,
 };
 
 #[path = "🌲️field-section-and-tree-nodes/🦀️.rs"]
@@ -41,6 +41,10 @@ pub use field_section_and_tree_nodes::{
     ui_tree_stamp_presence, UiCardStackNode, UiFieldNode, UiOverviewCardNode, UiSectionNode, UiTreeActionPlacement, UiTreeItemAction,
     UiTreeItemNode, UiTreeNode, UiTreeSectionNode, UiTreeWindow, UiTreeWindowRowExtent,
 };
+
+#[path = "📊️table-nodes/🦀️.rs"]
+mod table_nodes;
+pub use table_nodes::{UiTableNode, UiTableRowNode};
 
 #[path = "🔍️inspector-helpers/🦀️.rs"]
 mod inspector_helpers;

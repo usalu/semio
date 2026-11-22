@@ -4,30 +4,30 @@ use super::*;
 
 //#region 🖌️Graphics
 #[derive(Clone, Debug, PartialEq)]
-pub(super) struct PathClip {
-    pub(super) path: std::sync::Arc<[VectorSegment]>,
-    pub(super) even_odd: bool,
+pub struct PathClip {
+    pub path: std::sync::Arc<[VectorSegment]>,
+    pub even_odd: bool,
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub(super) struct Graphics {
-    pub(super) ctm: PdfMatrix,
-    pub(super) clip_quads: std::sync::Arc<Vec<ClipQuad>>,
-    pub(super) clip_paths: std::sync::Arc<Vec<PathClip>>,
-    pub(super) fill: [f64; 3],
-    pub(super) stroke: [f64; 3],
-    pub(super) line_width: f64,
-    pub(super) vector_stroke: VectorStroke,
-    pub(super) font: String,
-    pub(super) font_size: f64,
-    pub(super) leading: f64,
-    pub(super) text_rise: f64,
-    pub(super) text_render_mode: u32,
-    pub(super) char_spacing: f64,
-    pub(super) word_spacing: f64,
-    pub(super) horizontal_scale: f64,
-    pub(super) text_matrix: PdfMatrix,
-    pub(super) line_matrix: PdfMatrix,
+pub struct Graphics {
+    pub ctm: PdfMatrix,
+    pub clip_quads: std::sync::Arc<Vec<ClipQuad>>,
+    pub clip_paths: std::sync::Arc<Vec<PathClip>>,
+    pub fill: [f64; 3],
+    pub stroke: [f64; 3],
+    pub line_width: f64,
+    pub vector_stroke: VectorStroke,
+    pub font: String,
+    pub font_size: f64,
+    pub leading: f64,
+    pub text_rise: f64,
+    pub text_render_mode: u32,
+    pub char_spacing: f64,
+    pub word_spacing: f64,
+    pub horizontal_scale: f64,
+    pub text_matrix: PdfMatrix,
+    pub line_matrix: PdfMatrix,
 }
 
 impl Default for Graphics {

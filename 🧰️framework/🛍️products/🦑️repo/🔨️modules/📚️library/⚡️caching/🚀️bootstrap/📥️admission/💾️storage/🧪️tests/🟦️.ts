@@ -10,6 +10,8 @@ import {withBuildTestInvocationV1} from "../../../../../../../../../🔨️modul
 import {resourceLeasePathV1} from "@semio-tech/process/leases";
 import schema from "../🧬️schema/🔣️.json";
 import fixture from "./🔣️.json";
+import {declareLibraryBuildTestEnvelopeV1} from "../../../../../🧪️testing/🪪️native-birth/🟦️.ts";
+declareLibraryBuildTestEnvelopeV1({suite:"bootstrap",maximumElapsedMilliseconds:15000});
 
 test("neutral admission scope is independent of broad inference under actual SQLite exclusion",async()=>{
  const independent=new Ajv({strict:true}).compile(schema);

@@ -672,10 +672,15 @@ fn bounded_history_envelope_decoding_obeys_the_neutral_law() {
 #[test]
 fn history_fold_terminal_output_preserves_actual_cleanup_receipt() {
     use semio_framework_value::{ErasedSnapshotRetirement, retained_clone::{RetainedCloneGrant, RetainedCloneProgress}};
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🔁️fold/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let law = &fixture["terminalReceipts"];
+    let rejection_bytes = law["rejectionBackingBytes"].as_u64().unwrap() as usize;
     let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 4096, maximum_capacity_bytes: 4096, maximum_release_bytes: 65536, maximum_depth: 8 };
-    for refused in [false, true] {
+    for case in law["cases"].as_array().unwrap() {
+        let outcome = case["outcome"].as_str().unwrap();
+        let refused = outcome == "Rejected";
         let ((job, pointer), born, freed) = semio_framework_trace_memory_testing::observe_backing(|| {
-            let fault = refused.then(|| semio_framework_replication_error::ProtocolError::Malformed { what: "terminal receipt law", offset: 0, detail: String::with_capacity(37) });
+            let fault = refused.then(|| semio_framework_replication_error::ProtocolError::Malformed { what: "terminal receipt law", offset: 0, detail: String::with_capacity(rejection_bytes) });
             let pointer = fault.as_ref().map(|error| match error { semio_framework_replication_error::ProtocolError::Malformed { detail, .. } => detail.as_ptr(), _ => unreachable!() });
             (HistoryFoldJob::new(move |_| async move { match fault { Some(error) => Err(error), None => Ok(()) } }), pointer)
         });
@@ -683,42 +688,60 @@ fn history_fold_terminal_output_preserves_actual_cleanup_receipt() {
         let mut job = job;
         let mut total_born = 0;
         let mut total_released = 0;
-        let mut outcome = None;
+        let mut terminal = None;
+        let mut previous_release = 0;
         for _ in 0..64 {
             let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| job.step(grant,4096, &mut || false).unwrap());
-            let (progress, done) = match step {
-                HistoryFoldJobStep::Pending { progress, .. } => (progress, false),
-                HistoryFoldJobStep::Ready { value: (), progress } => { assert!(!refused); (progress, true) },
-                HistoryFoldJobStep::Rejected { progress } => { assert!(refused); (progress, true) },
+            let (progress, phase) = match step {
+                HistoryFoldJobStep::Pending { progress, .. } => (progress, "Pending"),
+                HistoryFoldJobStep::Ready { value: (), progress } => (progress, "Ready"),
+                HistoryFoldJobStep::Rejected { progress } => (progress, "Rejected"),
             };
             assert!(progress.fits(grant));
             assert_eq!(progress.retained_capacity_bytes, allocated);
             assert_eq!(progress.released_bytes, released);
-            assert!(done || progress != RetainedCloneProgress::default());
             total_born += allocated;
             total_released += released;
-            if done { outcome = Some(progress); break; }
+            if phase != "Pending" {
+                terminal = Some((phase, progress));
+                break;
+            }
+            assert_ne!(progress, RetainedCloneProgress::default());
+            previous_release = progress.released_bytes;
         }
-        let outcome = outcome.expect("fixed independent fold policy makes finite progress");
-        assert!(outcome.released_bytes > 0);
+        let (phase, progress) = terminal.expect("fixed independent fold policy makes finite progress");
+        assert_eq!(phase, outcome);
+        let release_turn = case["controlReleaseTurn"].as_str().unwrap();
+        if release_turn == "Pending" {
+            assert!(previous_release > 0);
+            assert_eq!(progress.released_bytes, 0);
+        } else {
+            assert_eq!(release_turn, phase);
+            assert!(progress.released_bytes > 0);
+        }
+        let retained_rejection_bytes = case["retainedRejectionBytes"].as_u64().unwrap() as usize;
         if refused {
             assert!(!job.terminal_is_empty());
-            let original = match job.rejection().unwrap() { semio_framework_replication_error::ProtocolError::Malformed { detail, .. } => { assert_eq!(detail.capacity(), 37); detail.as_ptr() }, _ => panic!("same original refusal") };
+            let original = match job.rejection().unwrap() { semio_framework_replication_error::ProtocolError::Malformed { detail, .. } => { assert_eq!(detail.capacity(), retained_rejection_bytes); detail.as_ptr() }, _ => panic!("same original refusal") };
             assert_eq!(Some(original), pointer);
-            let denied = RetainedCloneGrant { maximum_release_bytes: 36, ..grant };
+            let denied = RetainedCloneGrant { maximum_release_bytes: retained_rejection_bytes - 1, ..grant };
             let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| job.close_cold(denied).result.unwrap());
             assert_eq!(step.progress(), RetainedCloneProgress::default());
             assert_eq!((allocated, released), (0, 0));
             assert_eq!(match job.rejection().unwrap() { semio_framework_replication_error::ProtocolError::Malformed { detail, .. } => detail.as_ptr(), _ => unreachable!() }, original);
+            let exact = RetainedCloneGrant { maximum_release_bytes: retained_rejection_bytes, ..grant };
             for _ in 0..4 {
                 if job.terminal_is_empty() { break; }
-                let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| job.close_cold(grant).result.unwrap());
-                assert!(step.progress().fits(grant));
+                let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| job.close_cold(exact).result.unwrap());
+                assert!(step.progress().fits(exact));
                 assert_eq!(step.progress().retained_capacity_bytes, allocated);
                 assert_eq!(step.progress().released_bytes, released);
                 total_born += allocated;
                 total_released += released;
             }
+        } else {
+            assert_eq!(retained_rejection_bytes, 0);
+            assert!(job.rejection().is_none());
         }
         assert!(job.terminal_is_empty());
         assert_eq!(total_released, held + total_born);

@@ -150,6 +150,14 @@ for(const[index,row]of fixture.implementation.entries())test("implementation fac
  expect(implementationDigestV1(row.rows as never)).toBe(expected.digest);
 });
 
+test("the implementation digest is the same on every machine of a fleet: it names relative paths, content digests and stamps, never a stat fact, a root or an order",()=>{
+ const row=(path:string,sha256:string,stat:Readonly<{size:number;mtimeMs:number}>)=>({kind:"digest",path,fact:{sha256,...stat}}),stamp={kind:"stamp",path:"inferrer:rust",fact:"semio.graph-inferrer.rust/3+0123"};
+ const here=[row("libs/a/data.json","aa",{size:1,mtimeMs:10}),row("libs/b/data.json","bb",{size:2,mtimeMs:20}),stamp],there=[stamp,row("libs/b/data.json","bb",{size:2,mtimeMs:99}),row("libs/a/data.json","aa",{size:7,mtimeMs:77})];
+ expect(implementationDigestV1(here as never)).toBe(implementationDigestV1(there as never));
+ expect(implementationDigestV1(here as never)).not.toBe(implementationDigestV1([row("libs/a/data.json","ac",{size:1,mtimeMs:10}),row("libs/b/data.json","bb",{size:2,mtimeMs:20}),stamp] as never));
+ expect(JSON.stringify(here)).not.toMatch(/\/(?:Users|home|private)\/|[A-Za-z]:\\/u);
+});
+
 test("shaping adds the implementation facts of the consumers: every project the data files, the environment also the stamps of the inferrers that shape edges",()=>{
  const{workspaceRoot,part,stubs,implementation,expected}=fixture.shapeImplementation;
  expect(shapeComputeResultV1({workspaceRoot,part:part as never,stubs:stubs as never,implementation:implementation as never})).toEqual(expected as never);
@@ -765,25 +773,86 @@ test("a local missing closure reacquires live structural custody before it can i
 test("cold fragment payloads leave memory before the source rows are consumed",async()=>{
  const dir=scratch();
  try{
-  await seed(dir,ringFiles(6));const mock=createMockHost(dir),discover=mock.host.discoverPart,options=mock.host.storeOptions,events:string[]=[];
-  let payload:WeakRef<object>|undefined,released=false;
+  const count=2*GENERATION_POLICY_V1.readConcurrency+16;await seed(dir,ringFiles(count));
+  const mock=createMockHost(dir),discover=mock.host.discoverPart,options=mock.host.storeOptions,clock=mock.host.clock,events:string[]=[];
+  const payloads:WeakRef<object>[]=[];
+  const released=async(minimum:number)=>{
+   let collected=0;
+   for(let turn=0;turn<8&&collected<minimum;turn++){
+    await sleep(5);Bun.gc(true);
+    collected=payloads.filter(payload=>payload.deref()===undefined).length;
+   }
+   return collected;
+  };
+  let releasedMidway=0,releasedBeforeRows=0;
   mock.host.discoverPart=async(...args)=>{
-   const part=await discover(...args),node=part.owners.find(owner=>owner.name==="p1")?.node;
-   if(node===undefined)throw Error("Original fixture owner payload required");
-   payload=new WeakRef(node);events.push("discovered");
+   const part=await discover(...args);
+   for(const {node} of part.owners)if(node!==undefined)payloads.push(new WeakRef(node));
+   events.push("discovered");
    return{...part,dispose:()=>{events.push("disposed");}};
+  };
+  mock.host.clock=control=>{
+   const phases=clock(control);
+   return{...phases,async advance(phase:string,done:number){
+    if(phase==="fragments"&&done===count/2){
+     expect(events).toEqual(["discovered"]);
+     releasedMidway=await released(count/2);
+    }
+    await phases.advance(phase,done);
+   }};
   };
   mock.host.storeOptions=store=>({...options(store),stepped:async(step:string)=>{
    events.push(step);
    if(step!=="storing")return;
    expect(events).not.toContain("disposed");
-   await sleep(0);Bun.gc(true);await sleep(0);Bun.gc(true);
-   released=payload?.deref()===undefined;
+   releasedBeforeRows=await released(count);
   }});
   const built=await loadGenerationGraphV1(mock.host);
   expect(events).toEqual(["discovered","storing","disposed","indexing","sealing"]);
-  expect(released).toBe(true);
-  expect(built.stats.ownersReinferred).toBe(6);
+  expect(payloads.length).toBe(count);
+  expect(built.stats.ownersReinferred).toBe(count);
   expect(shape(built.graph)).toEqual(pythonGraph(dir));
+  expect(releasedMidway).toBeGreaterThanOrEqual(count/2);
+  expect(releasedBeforeRows).toBe(count);
+ }finally{clean(dir);}
+},120000);
+
+for(const mode of ["cancel","write error"])test("cold fragment "+mode+" leaves the exact graph available for a fresh retry",async()=>{
+ const dir=scratch();
+ try{
+  const count=48;await seed(dir,ringFiles(count));
+  const controller=new AbortController(),mock=createMockHost(dir,{signal:controller.signal}),discover=mock.host.discoverPart,clock=mock.host.clock,options=mock.host.storeOptions,fs=createNodeFilePortV1();
+  const store=createGenerationStoreV1(options({root:join(dir,".gen")}));
+  await loadGenerationGraphV1(createMockHost(dir).host);
+  const baseline=(await store.read())!;
+  expect(await store.invalidate({reason:"closure-missing",expected:baseline.pointer})).toBe(true);
+  const quarantined=readWorldPointer(dir);
+  const stopped=Error(mode);let writes=0,disposed=0;
+  mock.host.discoverPart=async(...args)=>{
+   const part=await discover(...args);
+   return{...part,dispose:()=>{disposed++;part.dispose?.();}};
+  };
+  mock.host.clock=control=>{
+   const phases=clock(control);
+   return{...phases,async advance(phase:string,done:number){
+    if(mode==="cancel"&&phase==="fragments"&&done===count/2)controller.abort(stopped);
+    await phases.advance(phase,done);
+   }};
+  };
+  mock.host.storeOptions=store=>({...options(store),fs:{...fs,async write(path,...args){
+   if(dirname(path)===join(store.root,GENERATION_POLICY_V1.fragments)&&++writes===count&&mode==="write error")throw stopped;
+   await fs.write(path,...args);
+  }}});
+  await expect(loadGenerationGraphV1(mock.host)).rejects.toThrow(mode);
+  expect(disposed).toBe(1);
+  expect(readWorldPointer(dir)).toEqual(quarantined);
+  expect(quarantined.manifest).toBeNull();
+  const retried=await loadGenerationGraphV1(createMockHost(dir).host),sealed=(await store.read())!;
+  expect(retried.stats.ownersReinferred).toBe(count);
+  expect(shape(retried.graph)).toEqual(pythonGraph(dir));
+  expect(sealed.pointer.generation).toBe(quarantined.generation+1);
+  expect(sealed.manifest?.owners).toEqual(baseline.manifest?.owners);
+  expect(sealed.manifest?.global).toBe(baseline.manifest?.global);
+  expect(sealed.manifest?.factIndex).toBe(baseline.manifest?.factIndex);
  }finally{clean(dir);}
 },120000);

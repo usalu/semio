@@ -29,6 +29,7 @@ pub mod configure_terrain_brush {
     use super::*;
     use crate::editor::gis3d::modes::view::windows::terrain::config::{missing_window, TerrainBrushSettings, WINDOW_CONTEXT_REQUIRED};
     use semio_framework_value::DslValue;
+    use semio_s_artifact_gis_gisterrain_inferences::elevation_edit::metres_to_millimetres;
     use semio_plugin::{ActionArgDef, ArgSchema, FaultCode, FaultOrigin};
     use semio_ui_locale::LocalizedLabel;
     const INVALID: &str = "gis.terrain.brush.settings-invalid";
@@ -40,7 +41,7 @@ pub mod configure_terrain_brush {
     #[dsl(keyword = "configure-terrain-brush")]
     pub struct ConfigureTerrainBrush {
         pub radius: u32,
-        pub elevation_step: u32,
+        pub elevation_step_millimetres: u32,
         pub smooth_strength: u32,
     }
 
@@ -52,31 +53,36 @@ pub mod configure_terrain_brush {
                     .map(|value| value as u32)
                     .ok_or_else(invalid)
             };
-            let payload = Self { radius: read("radius")?, elevation_step: read("elevationStep")?, smooth_strength: read("smoothStrength")? };
+            let elevation_step_millimetres = args.get("elevationStep")
+                .and_then(DslValue::as_f64)
+                .and_then(metres_to_millimetres)
+                .and_then(|value| u32::try_from(value).ok())
+                .ok_or_else(invalid)?;
+            let payload = Self { radius: read("radius")?, elevation_step_millimetres, smooth_strength: read("smoothStrength")? };
             payload.settings()?;
             Ok(payload)
         }
 
         pub fn settings(&self) -> Result<TerrainBrushSettings, Fault> {
-            TerrainBrushSettings { radius: self.radius, elevation_step: self.elevation_step, smooth_strength: self.smooth_strength }
+            TerrainBrushSettings { radius: self.radius, elevation_step_millimetres: self.elevation_step_millimetres, smooth_strength: self.smooth_strength }
                 .validate().map_err(|_| invalid())
         }
     }
 
     pub fn action_arguments() -> Vec<ActionArgDef> {
         let defaults = TerrainBrushSettings::default();
-        [
-            ("radius", LocalizedLabel::native("Radius (samples)", "Radius (Rasterpunkte)"), 0, 32, defaults.radius),
-            ("elevationStep", LocalizedLabel::native("Elevation Step (m)", "Höhenänderung (m)"), 1, 32767, defaults.elevation_step),
-            ("smoothStrength", LocalizedLabel::native("Smoothing (%)", "Glättung (%)"), 0, 100, defaults.smooth_strength),
-        ].into_iter().map(|(key, label, min, max, default)| {
-            ActionArgDef::with_schema(key, label, ArgSchema::number(Some(f64::from(min)), Some(f64::from(max)), Some(1.0), true)).default_value(&default)
-        }).collect()
+        let step = f64::from(defaults.elevation_step_millimetres) / 1000.0;
+        let maximum_step = f64::from(TerrainBrushSettings::MAX_ELEVATION_STEP_MILLIMETRES) / 1000.0;
+        vec![
+            ActionArgDef::with_schema("radius", LocalizedLabel::native("Radius (samples)", "Radius (Rasterpunkte)"), ArgSchema::number(Some(0.0), Some(32.0), Some(1.0), true)).default_value(&defaults.radius),
+            ActionArgDef::with_schema("elevationStep", LocalizedLabel::native("Elevation Step (m)", "Höhenänderung (m)"), ArgSchema::number(Some(0.001), Some(maximum_step), Some(0.001), false)).default_value(&step),
+            ActionArgDef::with_schema("smoothStrength", LocalizedLabel::native("Smoothing (%)", "Glättung (%)"), ArgSchema::number(Some(0.0), Some(100.0), Some(1.0), true)).default_value(&defaults.smooth_strength),
+        ]
     }
 
     pub fn fault_notices() -> [(&'static str, LocalizedLabel); 2] {
         [
-            (INVALID, LocalizedLabel::native("Choose a whole-number radius, elevation step and smoothing strength within the shown ranges.", "Wählen Sie ganzzahlige Werte für Radius, Höhenänderung und Glättungsstärke innerhalb der angezeigten Bereiche.")),
+            (INVALID, LocalizedLabel::native("Use a whole-number radius and smoothing percent. The elevation step supports millimetre precision.", "Geben Sie Radius und Glättungsstärke als ganze Zahlen ein. Die Höhenänderung ist millimetergenau.")),
             (WINDOW_CONTEXT_REQUIRED, LocalizedLabel::native("Choose the terrain window to configure.", "Wählen Sie das Geländefenster für die Einstellung.")),
         ]
     }

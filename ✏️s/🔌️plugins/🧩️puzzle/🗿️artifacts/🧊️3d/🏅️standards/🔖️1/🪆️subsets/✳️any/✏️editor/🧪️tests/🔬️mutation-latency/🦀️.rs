@@ -358,10 +358,14 @@ async fn one_mutation_publishes_in_a_bounded_size_independent_number_of_host_tur
     for census in [&small, &large] {
         assert!(
             census.translate_ladder_turns() <= LADDER_TURN_CEILING,
-            "a translate on {} objects must publish within {LADDER_TURN_CEILING} host turns, not one per unit: {census}",
+            "translate on {} objects exceeded {LADDER_TURN_CEILING} publication turns. Small fixture {small}. Large fixture {large}.",
             census.objects
         );
-        assert!(census.delete_ladder_turns() <= LADDER_TURN_CEILING, "a delete on {} objects must publish within {LADDER_TURN_CEILING} host turns: {census}", census.objects);
+        assert!(
+            census.delete_ladder_turns() <= LADDER_TURN_CEILING,
+            "delete on {} objects exceeded {LADDER_TURN_CEILING} publication turns. Small fixture {small}. Large fixture {large}.",
+            census.objects
+        );
         assert!(
             census.translate_census.store >= census.translate_ladder_turns() as u64,
             "the turn must carry MORE than one publication unit or the run bought nothing: {census}"

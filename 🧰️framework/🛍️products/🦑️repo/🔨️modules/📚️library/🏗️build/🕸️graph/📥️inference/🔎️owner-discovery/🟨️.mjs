@@ -10,12 +10,13 @@ import { createHash } from "node:crypto";
 import { parserTypescriptV1 } from "../../../🚀️bootstrap/📦️parsers/🟨️.mjs";
 import { dirname, isAbsolute, join, relative, resolve, posix } from "node:path";
 import { loadCatalogBuildProvidersV1, catalogBuildContributionForManifestV1 } from "../../../../../../../💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🏗️build/🟦️.ts";
-import { importObservedModuleV1, observedSourceAnalysisPairV1, observedRequireResolve, observedTypeScriptHost, observedFs, recordRegistryOwnerV1, memoizedObservedComputationV1, observedFieldV1, registerFieldExtractorV1 } from "../../../../🏗️build/👁️observation/🟨️.mjs";
+import { importObservedModuleV1, observedSourceAnalysisPairV1, observedRequireResolve, observedTypeScriptHost, observedFs, recordRegistryOwnerV1, memoizedObservedComputationV1, observedFieldV1, registerFieldExtractorV1, withObservationRoundV1 } from "../../../../🏗️build/👁️observation/🟨️.mjs";
 import { pathToFileURL } from "node:url";
 import * as loadedProjectInputs from "../../../../🏗️build/📥️inputs/🟨️.mjs";
 import ownerAdmissionSchema from "../../../🧬️schema/🚪️admission.json" with { type: "json" };
 import { registryOwnerIndexesV1, buildInputSourceRoleV1, buildSourceDemandV1, buildNativeSourceObservationV1 } from "../../🚪️admission/🟦️.ts";
 import {refuseBuildV1} from "../../../📖️texts/🟦️.ts";
+import {INFERENCE_LIMITS_V1} from "../🧬️schema/🟨️.mjs";
 import {isOpaqueSourcePathV1} from "../../../../⚡️caching/🔍️discovery/📂️source/🟦️.ts";
 const { existsSync, lstatSync, readFileSync, readdirSync } = observedFs;
 
@@ -94,10 +95,27 @@ export function inferenceCandidates(configFiles, workspaceRoot) {
   return [...files].sort((left, right) => Buffer.compare(Buffer.from(left), Buffer.from(right)));
 }
 
+/** 🌫️ Reads text of a file that replicas may remove while inference runs: a vanished file (ENOENT/ENOTDIR) is absent, every other failure surfaces. */
+export function readVanishableTextV1(path){
+ try{return readFileSync(path,"utf8");}catch(error){if(error?.code==="ENOENT"||error?.code==="ENOTDIR")return undefined;throw error;}
+}
+
 /** 🦉️ Projects native catalog manifest candidates from canonical owner identities. */
 export async function catalogNativeManifestCandidatesV1(workspaceRoot,registry,accept,context){
  const manifest=root=>root==="."?"Cargo.toml":root+"/Cargo.toml",declared=new Set(registry.owners.flatMap(owner=>[...(owner.manifest.endsWith("Cargo.toml")?[owner.manifest]:[]),...(owner.nativeRoots??[]).map(manifest)])),candidates=[...new Set([...declared,...registry.owners.map(owner=>manifest(owner.root))])].filter(accept).sort(),result=[];let index=0;
- for(const path of candidates){await yieldInferenceV1(context,"build:catalog-manifests",++index);try{const entry=lstatSync(join(workspaceRoot,path));if(!entry.isFile()||entry.isSymbolicLink())throw Error("Catalog native manifest must be a real file: "+path);}catch(error){if(!declared.has(path)&&["ENOENT","ENOTDIR"].includes(error.code))continue;throw error;}result.push(path);}
+ for(const path of candidates){
+  await yieldInferenceV1(context,"build:catalog-manifests",++index);
+  try{
+   const entry=lstatSync(join(workspaceRoot,path));
+   if(!entry.isFile()||entry.isSymbolicLink())throw Error("Catalog native manifest must be a real file: "+path);
+  }catch(error){
+   if(error?.code!=="ENOENT"&&error?.code!=="ENOTDIR")throw error;
+   if(!declared.has(path))continue;
+   const manifest=path==="Cargo.toml"?"./"+path:path;
+   throw Object.assign(Error("Build owner manifest absent: "+manifest+" (required by catalog discovery)",{cause:error}),{code:"BUILD_OWNER_MANIFEST_ABSENT"});
+  }
+  result.push(path);
+ }
  return result;
 }
 
@@ -118,10 +136,11 @@ export async function workspaceCatalogBuildContributionsV1(workspaceRoot) {
   return catalogBuildContributionsV1(workspaceRoot,config.catalogProviders.map(({ownerRoot,sourcePath})=>({ownerRoot,sourcePath})));
 }
 
-/** 🧩️ Invalidates project assembly only when its actual native owners or component pipeline change. */
+/** 🧩️ Invalidates project assembly only when its actual native owners or component pipeline change. The closure walk runs in its own validation round, so a memoized manifest closure that many dependants reach is checked once per owner and not once per hit (outside a round every hit re-checked every row of the closure: 38.5 s against 3.2 s for 60 Rust owners, and 13 to 26 s per owner look on the 16 GB workers).
+ * @see ./🧪️tests/🔁️authority-round/🟦️.ts */
 export function projectAssemblyAuthorityV1(workspaceRoot,nativeRoot,projectsByRoot,componentRoots,nativeCache=new Map(),nativeClosures=new Map()){
  assertNotReadParentV1("observe",nativeRoot??"release pipeline");let nativeOwners;
- if(nativeRoot!==undefined){try{nativeOwners=nativeDependencyRoots(nativeRoot,workspaceRoot,true,nativeCache,nativeClosures).map(owner=>[owner,projectsByRoot.get(owner)??null]);}catch(error){if(error.code!=="NATIVE_INPUT_ADMISSION")throw error;nativeOwners=[error.manifest,error.message];}}
+ if(nativeRoot!==undefined){try{nativeOwners=withObservationRoundV1(()=>nativeDependencyRoots(nativeRoot,workspaceRoot,true,nativeCache,nativeClosures)).map(owner=>[owner,projectsByRoot.get(owner)??null]);}catch(error){if(error.code!=="NATIVE_INPUT_ADMISSION")throw error;nativeOwners=[error.manifest,error.message];}}
  return createHash("sha256").update(JSON.stringify([nativeOwners??null,componentRoots??null])).digest("hex");
 }
 
@@ -168,74 +187,94 @@ export function readBuildGeneratedCompileOutputV1(path,workspaceRoot,contracts,r
  if(!matches.length)return undefined;if(!safe(local))throw refusal();if(matches.length!==1)throw Error("Ambiguous generated compile output producer");const {output,producer,inferred}=matches[0];if(inferred&&resolution.probes.some(suffix=>{const candidate=local+suffix;if(candidate===output)return false;const absolute=join(workspaceRoot,candidate);return index.has(candidate)||existsSync(absolute)&&!lstatSync(absolute).isDirectory();}))throw Error("Ambiguous generated compile output resolution");const separator=producer.target?.lastIndexOf(":"),project=producer.target?.slice(0,separator),target=producer.target?.slice(separator+1);if(!project||!target||!safe(producer.ownerPath)&&producer.ownerPath!==".")throw Error("Exact generated task owner required");const manifest=buildPath(join(producer.ownerPath,PROJECT_BASENAME)),owner=registry?.owners.find(owner=>owner.name===project);if(registry)recordRegistryOwnerV1(workspaceRoot,project,owner);if(registry&&(!owner||owner.root!==producer.ownerPath||owner.manifest!==manifest))throw Error("Canonical generated task owner absent");const declaration=JSON.parse(readPhysicalSource(join(workspaceRoot,manifest)).toString("utf8"));if(declaration.name!==project||!declaration.targets?.[target])throw Error("Authored generated producer task absent");return Object.freeze({project,target:producer.target,manifest,output});
 }
 
-/** 🧵️ Shares physical traversal and identical glob questions while keeping each target's input classification. */
+/** 🧵️ Shares observed DFS ranges and identical source questions while keeping each target's input classification and bounded scan checkpoints. */
 export async function readBuildSourceInputMatchesV1(scans,workspaceRoot,context){
  const matched=new Set(),compileMatched=new Set(),compileByTarget=new Map(),walked=new Map(),matchers=new Map();
- const globRoots=new Map(),recursiveRoots=new Set(),ignored=new Set([...POLICY.generatedDirectories,".git",".🧬semio",".nx",".cache",".r","node_modules","dist","target","🗑️generated"]);
+ const globRoots=new Map(),recursiveByRoot=new Map(),ignored=new Set([...POLICY.generatedDirectories,".git",".🧬semio",".nx",".cache",".r","node_modules","dist","target","🗑️generated"]);
  let visited=0;
  for(const scan of scans)for(const pattern of scan.patterns){
   if(pattern.startsWith("!")||globRoots.has(pattern))continue;
   const index=pattern.search(/[?*[{(!]/u);
   if(index<0)continue;
   const prefix=pattern.slice(0,index),root=(prefix.endsWith("/")?prefix.slice(0,-1):dirname(prefix))||".",tail=pattern.slice(index);
-  globRoots.set(pattern,root);
-  if(tail.includes("/")||tail.includes("**")||/[\[({]/u.test(tail))recursiveRoots.add(root);
+  const recursive=tail.includes("/")||tail.includes("**")||/[\[({]/u.test(tail);
+  globRoots.set(pattern,{root,recursive});
+  recursiveByRoot.set(root,recursive||recursiveByRoot.get(root)===true);
  }
  const questions=new Map(),plans=scans.map(scan=>{
   const exclusions=scan.patterns.filter(value=>value.startsWith("!")).map(value=>value.slice(1)),repeats=new Map();
   for(const pattern of scan.patterns){
-   if(!globRoots.has(pattern))continue;
+   if(pattern.startsWith("!"))continue;
    const key=JSON.stringify([pattern,exclusions]),question=questions.get(key)??{remaining:0,paths:undefined};
    question.remaining++;
    questions.set(key,question);repeats.set(pattern,question);
   }
   return {scan,exclusions,repeats};
  });
- const matches=(path,pattern)=>{
+ const matcherOf=pattern=>{
   let matcher=matchers.get(pattern);
   if(!matcher){matcher=loadedProjectInputs.createBuildInputPathMatcherV1(pattern);matchers.set(pattern,matcher);}
-  return matcher(path);
+  return matcher;
  };
+ const checkpoint=()=>yieldInferenceV1(context,"build:selected-source-inputs",visited);
+ const maximumEntries=INFERENCE_LIMITS_V1.selectedSourceCheckpointEntries;
  const walk=async root=>{
-  if(isOpaqueSourcePathV1(root))return [];
   if(walked.has(root))return walked.get(root);
-  const pending=[root],found=[],recursive=recursiveRoots.has(root);
+  if(isOpaqueSourcePathV1(root))return {paths:[],start:0,directEnd:0,end:0};
+  const pending=[root],paths=[],recursive=recursiveByRoot.get(root);
   while(pending.length){
-   await yieldInferenceV1(context,"build:selected-source-inputs",++visited);
-   const directory=pending.pop(),absolute=join(workspaceRoot,directory);
-   if(!existsSync(absolute)||!lstatSync(absolute).isDirectory())continue;
+   const entry=pending.pop();
+   if(typeof entry!=="string"){entry.end=paths.length;continue;}
+   if(++visited%maximumEntries===0)await checkpoint();
+   const directory=entry,absolute=join(workspaceRoot,directory);
+   try{if(!lstatSync(absolute).isDirectory())continue;}catch(error){
+    if(error.code==="ENOENT"||error.code==="ENOTDIR"||!existsSync(absolute))continue;
+    throw error;
+   }
+   const range=recursiveByRoot.has(directory)&&!walked.has(directory)?{paths,start:paths.length,directEnd:0,end:0}:undefined;
+   if(range)pending.push(range);
    for(const entry of readdirSync(absolute,{withFileTypes:true})){
-    await yieldInferenceV1(context,"build:selected-source-inputs",++visited);
+    if(++visited%maximumEntries===0)await checkpoint();
     const path=buildPath(join(directory,entry.name));
     if(entry.isSymbolicLink()||isOpaqueSourcePathV1(path))continue;
-    if(entry.isFile())found.push(path);
+    if(entry.isFile())paths.push(path);
     else if(recursive&&entry.isDirectory()&&!ignored.has(entry.name)&&!(EXAMPLE_COLLECTIONS.includes(entry.name)&&directory.split("/").at(-1)!==WORKSPACE_OWNERSHIP.collections.moduleMember))pending.push(path);
    }
+   if(range){range.directEnd=paths.length;walked.set(directory,range);}
   }
-  walked.set(root,found);
-  return found;
+  const listing=walked.get(root)??{paths,start:0,directEnd:0,end:0};
+  walked.set(root,listing);
+  return listing;
  };
  for(const {scan,exclusions,repeats} of plans){
+  let targetMatches=scan.compile?compileByTarget.get(scan.target):undefined;
   for(const pattern of scan.patterns){
    if(pattern.startsWith("!"))continue;
-   await yieldInferenceV1(context,"build:selected-source-inputs",++visited);
-   const root=globRoots.get(pattern),question=repeats.get(pattern),shared=question?.paths;
+   visited++;await checkpoint();
+   const glob=globRoots.get(pattern),question=repeats.get(pattern),shared=question?.paths;
    if(question&&--question.remaining===0)question.paths=undefined;
-   const candidates=shared??(root===undefined?(existsSync(join(workspaceRoot,pattern))?[pattern]:[]):await walk(root));
-   const remember=shared===undefined&&question?.remaining>0?(question.paths=[]):undefined;
-   for(const path of candidates){
-    await yieldInferenceV1(context,"build:selected-source-inputs",++visited);
-    if(shared===undefined&&(isOpaqueSourcePathV1(path)||!matches(path,pattern)||exclusions.some(pattern=>matches(path,pattern))))continue;
+   let candidates=shared,start=0,end;
+   if(candidates===undefined){
+    if(glob===undefined)candidates=existsSync(join(workspaceRoot,pattern))?[pattern]:[];
+    else{const listing=await walk(glob.root);candidates=listing.paths;start=listing.start;end=glob.recursive?listing.end:listing.directEnd;}
+   }
+   const remember=shared===undefined&&question?.remaining>0?(question.paths=[]):undefined,limit=end??candidates.length;
+   let include;
+   for(let index=start;index<limit;index++){
+    const path=candidates[index];
+    if(++visited%maximumEntries===0)await checkpoint();
+    if(shared===undefined&&(glob===undefined&&isOpaqueSourcePathV1(path)||!(include??=matcherOf(pattern))(path)||exclusions.some(pattern=>matcherOf(pattern)(path))))continue;
     remember?.push(path);
     matched.add(path);
     if(scan.compile){
      compileMatched.add(path);
-     const rows=compileByTarget.get(scan.target)??new Set();
-     rows.add(path);compileByTarget.set(scan.target,rows);
+     if(targetMatches===undefined)compileByTarget.set(scan.target,targetMatches=new Set());
+     targetMatches.add(path);
     }
    }
   }
  }
+ await checkpoint();
  return {matched,compileMatched,compileByTarget};
 }
 
@@ -243,7 +282,7 @@ export async function readBuildSourceInputMatchesV1(scans,workspaceRoot,context)
 export async function discoverBuildOwnerAdmissionFactsV1(owner,targets,registry,context,inputNames=[]){
  await libraryBootstrap;const {workspaceRoot}=context,nativeCache=context.nativeCache??new Map(),nativeClosures=context.nativeClosures??new Map();
  if(context.invocation){requireIssuedResourceControlInvocationV1(context.phaseControl,context.invocation);checkResourceLeaseControl(context.phaseControl);checkScriptInvocation(context.invocation);}
- const stage=async phase=>{context.onOwnerDiscoveryPhase?.(phase);await yieldInferenceV1(context,"build:selected-"+phase,0,true);};
+ const stage=async phase=>{context.onOwnerDiscoveryPhase?.(phase);await yieldInferenceV1(context,"build:selected-"+phase,0);};
  await stage("declaration");
  const path=join(workspaceRoot,owner.manifest),source=readPhysicalSource(path);
  const declaration=owner.manifest.endsWith("Cargo.toml")?readToml(path):JSON.parse(source.toString("utf8"));
@@ -271,7 +310,7 @@ export async function discoverBuildOwnerAdmissionFactsV1(owner,targets,registry,
   for(const input of sources.closure??[]){if(typeof input==="string"){if(input.startsWith("{workspaceRoot}/"))addFile(input.slice("{workspaceRoot}/".length));}else if(input!==null&&typeof input==="object"&&!Array.isArray(input)&&Object.keys(input).length===2&&typeof input.input==="string"&&Array.isArray(input.projects)&&input.projects.length>0)for(const project of input.projects)addInput(project,input.input);else throw refuseBuildV1("invalid","graph.command-closure-reference-required",{input:JSON.stringify(input).slice(0,256)});}
 
  }
- const packageFile=join(workspaceRoot,owner.root,"package.json");if(existsSync(packageFile)){const manifest=JSON.parse(readFileSync(packageFile,"utf8"));addFile(buildPath(relative(workspaceRoot,packageFile)));for(const name of inputRole==="compile"?Object.keys({...manifest.dependencies,...manifest.peerDependencies,...manifest.optionalDependencies}):[]){const owner=byPackage.get(name);if(owner&&owner!==json.name)dependencies.add(owner);}}
+ const packageFile=join(workspaceRoot,owner.root,"package.json");const packageText=readVanishableTextV1(packageFile);if(packageText!==undefined){const manifest=JSON.parse(packageText);addFile(buildPath(relative(workspaceRoot,packageFile)));for(const name of inputRole==="compile"?Object.keys({...manifest.dependencies,...manifest.peerDependencies,...manifest.optionalDependencies}):[]){const owner=byPackage.get(name);if(owner&&owner!==json.name)dependencies.add(owner);}}
  const nativeRoot=json.metadata?.nativeRoot??owner.root,nativeManifest=join(workspaceRoot,nativeRoot,"Cargo.toml"),nativeTargets=Object.entries(selected).filter(([,target])=>target.metadata?.semio?.execution?.kind!=="source"),nativeObservation=()=>buildNativeSourceObservationV1({selectedSource:Object.values(selected).some(target=>target.metadata?.semio?.execution?.kind==="source"),selectedNative:nativeTargets.length>0,requestedInputs:inputNames.length>0,dependencyInputs:caretInputs.size>0,inputRole});let nativeObserved=false;
  const observeNative=()=>{if(nativeObserved)return;nativeObserved=true;if(existsSync(nativeManifest))for(const root of nativeDependencyRoots(nativeRoot,workspaceRoot,true,nativeCache,nativeClosures)){addFile(root+"/Cargo.toml");const dependency=byRoot.get(root);if(!dependency)throw Object.assign(Error("Canonical native dependency owner required: "+root),{code:"BUILD_SOURCE_AUTHORITY"});if(dependency!==json.name)dependencies.add(dependency);}};
  await stage("native-closure");if(nativeObservation()!=="none")observeNative();
@@ -304,7 +343,7 @@ export async function discoverBuildOwnerAdmissionFactsV1(owner,targets,registry,
  const compiler=parserTypescriptV1(),host=observedTypeScriptHost(compiler.sys),pending=[],demands=new Map(),visited=new Map(),enqueue=(target,file,role)=>{const rows=demands.get(target)??new Map(),next=buildSourceDemandV1(rows.get(file),role);if(next!==rows.get(file)){rows.set(file,next);demands.set(target,rows);pending.push({target,file});}};let index=0;
  for(const [target,files] of compileModules)for(const file of files)enqueue(target,file,roles.compileInput);for(const [target,files] of declaredCompileEntries)for(const file of files)enqueue(target,file,roles.declaredEntry);for(const [target,files] of commandModules)for(const file of files)enqueue(target,file,roles.command);
  await stage("compile-closure");
-  while(pending.length){await yieldInferenceV1(context,"build:selected-compile-imports",++index);const {target,file:absolute}=pending.pop(),phase=demands.get(target).get(absolute),seen=visited.get(target)??new Map();if(seen.get(absolute)===phase)continue;seen.set(absolute,phase);visited.set(target,seen);const path=buildPath(relative(workspaceRoot,absolute));readPhysicalSource(absolute);const {module,references}=prepareSourceAnalysesV1(),[facts,{runtime}]=observedSourceAnalysisPairV1(module,references,absolute),imports=phase===roles.compileInput?facts.imports:facts.runtimeImports;
+  while(pending.length){await yieldInferenceV1(context,"build:selected-compile-imports",++index);const {target,file:absolute}=pending.pop(),phase=demands.get(target).get(absolute),seen=visited.get(target)??new Map();if(seen.get(absolute)===phase)continue;seen.set(absolute,phase);visited.set(target,seen);const path=buildPath(relative(workspaceRoot,absolute));requirePhysicalSourceV1(absolute);const {module,references}=prepareSourceAnalysesV1(),[facts,{runtime}]=observedSourceAnalysisPairV1(module,references,absolute,{recordSource:true}),imports=phase===roles.compileInput?facts.imports:facts.runtimeImports;
   for(const specifier of imports){
    await yieldInferenceV1(context,"build:selected-compile-imports",++index);
    const relativeImport=specifier.startsWith(".");if(!relativeImport){const name=specifier.startsWith("@")?specifier.split("/").slice(0,2).join("/"):specifier.split("/")[0],dependency=byPackage.get(name);if(!dependency)continue;if(dependency!==json.name)dependencies.add(dependency);}

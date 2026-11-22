@@ -13,5 +13,20 @@
     [32, 32, 64]
   ],
   "checksum": 52272,
-  "squaredChecksum": 3792624
+  "squaredChecksum": 3792624,
+  "maximumPicker": {
+    "bytes": 65536,
+    "chunkCount": 2,
+    "side": 65,
+    "west": 6.625,
+    "south": 44.625,
+    "cellSize": 0.001953125,
+    "noData": "-9999",
+    "exportNoData": "-9999999",
+    "northSample": "2147483.647",
+    "otherSample": "-2147483.648",
+    "bounds": [6.625, 44.625, 6.75, 44.75],
+    "northMillimetres": 2147483647,
+    "otherMillimetres": -2147483648
+  }
 }

@@ -1,15 +1,17 @@
 //! 🎟️ History coroutines retain original runners and decoder lineage through construction and closure.
 use super::super::*;
-use semio_framework_value_native_owned::{native_decoding::NativeDecodeControl, native_decoding::NativeDecodeCloseControl, native_decoding::OriginalReceivingPrimary, native_decoding::NativeConstructionStepOutcome, native_decoding::NativeConstructionStepResult};
+use semio_framework_value_native_owned::{ORIGINAL_INVOCATION_WORK, native_decoding::NativeDecodeControl, native_decoding::NativeDecodeCloseControl, native_decoding::OriginalReceivingPrimary, native_decoding::NativeConstructionStepOutcome, native_decoding::NativeConstructionStepResult};
 
-/// ⛽️ The most work one original fold turn may spend on its decoder's work authority.
-const FOLD_TURN_WORK: u64 = 1 << 12;
+const FOLD_BODY_WORK: u64 = 1 << 12;
 
 fn invalid(message: &'static str) -> ValueError { ValueError::literal(ValueRefusalKind::InvariantViolated, message) }
 
 fn shared_bytes<T>() -> usize { std::alloc::Layout::new::<[usize; 2]>().extend(std::alloc::Layout::new::<T>()).unwrap().0.pad_to_align().size() }
 
 impl<'a, T: RetireOwned> HistoryFoldJob<'a, T> {
+    /// ⛽️ Prices the original fold body and its receiving invocation's reply handoff.
+    pub const ORIGINAL_STEP_WORK: u64 = FOLD_BODY_WORK + ORIGINAL_INVOCATION_WORK;
+
     /// 📐️ Quotes the concrete future, fixed retirement directory and actual shared control headers.
     pub fn original_birth_demand<R, F>(_: &R) -> Result<RetirementDemand, ValueError>
     where R: FnOnce(HistoryFoldControl) -> F, F: Future<Output = Result<T, semio_framework_replication_error::ProtocolError>> + Send + 'a {
@@ -56,7 +58,7 @@ impl<'a, T: RetireOwned> HistoryFoldJob<'a, T> {
         native.receive_construction_step_typed(demand, |native, grant| {
             let step_grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes - ready_copy, maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth };
             self.last_work = 0;
-            let result = match native.with_effect(step_grant, FOLD_TURN_WORK, |_, effect| self.step_lent(effect, body, &mut || false)) {
+            let result = match native.with_effect(step_grant, FOLD_BODY_WORK, |_, effect| self.step_lent(effect, body, &mut || false)) {
                 Ok(Some(result)) => result,
                 Ok(None) => Ok(HistoryFoldJobStep::Pending { completed: self.completed(), released_bytes: 0, progress: Default::default() }),
                 Err(error) => Err(error),
@@ -209,12 +211,28 @@ mod rejection_laws {
  #[test]
  fn actual_rejection_takes_the_same_cause_only_after_closed_control_and_qualified_receiving(){
   let law:serde_json::Value=serde_json::from_str(include_str!("rejection.json")).unwrap();
+   let fold_law: serde_json::Value = serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+   let work_cases = fold_law["originalStepWork"]["cases"].as_array().unwrap();
+   assert_eq!(HistoryFoldJob::<()>::ORIGINAL_STEP_WORK, work_cases[1]["available"].as_u64().unwrap());
   for case in law["cases"].as_array().unwrap(){
    let mut physical=Physical{left:policy(&law["stock"]),submitted:Default::default()};let mut fuel=law["stock"]["work"].as_u64().unwrap();let mut cleanup=policy(&law["cleanup"]);let mut cleanup_work=law["cleanup"]["work"].as_u64().unwrap();
    let failing=case["result"]!="value";let cause=failing.then(||semio_framework_replication_error::ProtocolError::Malformed{what:"original-fold",offset:7,detail:"complete original cause".into()});let pointer=cause.as_ref().map(|cause|match cause{semio_framework_replication_error::ProtocolError::Malformed{detail,..}=>detail.as_ptr(),_=>unreachable!()});
    let held=std::sync::Arc::new(std::sync::Mutex::new(cause));drop(held.lock().unwrap());let lent=held.clone();let mut runner=Some(move|_control|async move{match lent.lock().unwrap().take(){Some(cause)=>Err::<(),_>(cause),None=>Ok(())}});let mut job=None;let mut accept=|_|true;let mut native=NativeDecodeControl::new(physical.left.maximum_capacity_bytes,&mut accept);
    let(turn,allocated,released)=semio_framework_trace_memory_testing::observe_backing(||receiving(&mut native,&mut physical,&mut Work(fuel),|native|HistoryFoldJob::admit_original(&mut runner,&mut job,native)));assert_eq!((allocated,released),(turn.progress.retained_capacity_bytes,turn.progress.released_bytes));assert!(turn.receipt_refusal.is_none());assert_eq!(turn.result.unwrap().unwrap(),true);fuel-=u64::try_from(turn.work).unwrap();
    let job=job.as_mut().unwrap();
+    for boundary in work_cases {
+     let available = boundary["available"].as_u64().unwrap();
+     let (turn, performed) = receiving(&mut native, &mut physical, &mut Work(available), |native| {
+      let before = native.actual_work();
+      let turn = job.step_original(native, 4096);
+      (turn, native.actual_work() - before)
+     });
+     assert!(turn.receipt_refusal.is_none());
+     assert!(matches!(turn.result.unwrap().unwrap(), HistoryFoldJobStep::Pending { .. }));
+     assert_eq!(turn.work, u128::from(boundary["bodyPerformed"].as_u64().unwrap()));
+     assert_eq!(performed, u128::from(boundary["nativePerformed"].as_u64().unwrap()));
+     fuel -= u64::try_from(performed).unwrap();
+    }
    if case["controlClosed"].as_bool().unwrap(){
     for _ in 0..100000{
      if job.original_rejection_ready()||job.original_output_ready(){break}

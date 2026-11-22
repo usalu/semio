@@ -18,7 +18,7 @@ fn close(cursor: &mut Puzzle2dConnectHandlesPreparationCursor) {
         if cursor.terminal_is_empty() { return; }
         let copy=cursor.next_close_copy_byte_demand().unwrap();let capacity=cursor.next_close_capacity_byte_demand(copy).unwrap();let release=cursor.next_close_release_byte_demand().unwrap();let depth=cursor.next_close_depth_demand().unwrap();assert!(copy+capacity+release<=4096);
         let permit=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:capacity,maximum_release_bytes:release,maximum_depth:depth};
-        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| cursor.close_step(permit));
+        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| test_source_custody::close_turn(permit, |effect| cursor.close_step(effect)));
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
         assert!(!heap.overflowed);
         assert!(step.unwrap().progress().fits(permit));
@@ -52,13 +52,13 @@ fn history_edit_puzzle2d_borrowed_connect_preparation_preserves_finite_priority_
         let mut mutation = test_source_custody::admit();
         let (mut cursor, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(Puzzle2dConnectHandlesPreparationCursor::default);
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
-        let (zero, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| cursor.advance(source.borrow(&snapshot), mutation.borrow(&payload), RetainedCloneGrant::default()));
+        let (zero, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| test_source_custody::run(RetainedCloneGrant::default(), |effect| cursor.advance(source.borrow(&snapshot), mutation.borrow(&payload), effect)));
         assert_eq!(zero.unwrap(), Puzzle2dConnectHandlesPreparationStep::Pending(RetainedCloneProgress::default()));
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
         let mut output = None;
         for turn in 0..100_000 {
             let permit=if turn%2==0{grant}else{RetainedCloneGrant::one_release_turn(4096,64)};
-            let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| cursor.advance(source.borrow(&snapshot), mutation.borrow(&payload), permit));
+            let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| test_source_custody::run(permit, |effect| cursor.advance(source.borrow(&snapshot), mutation.borrow(&payload), effect)));
             assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0)); assert!(!heap.overflowed);
             let step = step.unwrap();
             let progress = match step { Puzzle2dConnectHandlesPreparationStep::Pending(progress) | Puzzle2dConnectHandlesPreparationStep::Complete { progress, .. } => progress };
@@ -75,13 +75,13 @@ fn history_edit_puzzle2d_borrowed_connect_preparation_preserves_finite_priority_
         assert_eq!([payload.gap.to_bits(), payload.shift.to_bits(), payload.rise.to_bits(), payload.rotation.to_bits(), payload.turn.to_bits(), payload.tilt.to_bits(), payload.x.to_bits(), payload.y.to_bits(), payload.tolerance.map(f64::to_bits).unwrap_or(0)], bits);
         for pause in [0, 1, 9, 12, 20, 40] {
             let mut cancelled = Puzzle2dConnectHandlesPreparationCursor::default();
-            for turn in 0..pause { let permit=if turn%2==0{grant}else{RetainedCloneGrant::one_release_turn(4096,64)};if matches!(cancelled.advance(source.borrow(&snapshot), mutation.borrow(&payload), permit).unwrap(), Puzzle2dConnectHandlesPreparationStep::Complete { .. }) { break; } }
+            for turn in 0..pause { let permit=if turn%2==0{grant}else{RetainedCloneGrant::one_release_turn(4096,64)};if matches!(test_source_custody::run(permit, |effect| cancelled.advance(source.borrow(&snapshot), mutation.borrow(&payload), effect)).unwrap(), Puzzle2dConnectHandlesPreparationStep::Complete { .. }) { break; } }
             close(&mut cancelled); assert_eq!(cancelled.take(), None);
         }
-        let mut fenced = Puzzle2dConnectHandlesPreparationCursor::default(); fenced.advance(source.borrow(&snapshot), mutation.borrow(&payload), grant).unwrap();
-        let swapped = payload.clone(); assert!(fenced.advance(source.borrow(&snapshot), mutation.borrow(&swapped), grant).is_err()); close(&mut fenced);
-        let mut fenced = Puzzle2dConnectHandlesPreparationCursor::default(); fenced.advance(source.borrow(&snapshot), mutation.borrow(&payload), grant).unwrap();
-        let swapped = snapshot.clone(); assert!(fenced.advance(source.borrow(&swapped), mutation.borrow(&payload), grant).is_err()); close(&mut fenced);
+        let mut fenced = Puzzle2dConnectHandlesPreparationCursor::default(); test_source_custody::run(grant, |effect| fenced.advance(source.borrow(&snapshot), mutation.borrow(&payload), effect)).unwrap();
+        let swapped = payload.clone(); assert!(test_source_custody::run(grant, |effect| fenced.advance(source.borrow(&snapshot), mutation.borrow(&swapped), effect)).is_err()); close(&mut fenced);
+        let mut fenced = Puzzle2dConnectHandlesPreparationCursor::default(); test_source_custody::run(grant, |effect| fenced.advance(source.borrow(&snapshot), mutation.borrow(&payload), effect)).unwrap();
+        let swapped = snapshot.clone(); assert!(test_source_custody::run(grant, |effect| fenced.advance(source.borrow(&swapped), mutation.borrow(&payload), effect)).is_err()); close(&mut fenced);
         test_source_custody::close(&mut source);test_source_custody::close(&mut mutation);
     }
 }

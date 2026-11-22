@@ -4,7 +4,6 @@ use super::*;
 use semio_framework_3d_brep_analysis::{self as analysis, nearest_analytic};
 use semio_framework_value::{ValueError, ValueRefusalKind};
 
-
 #[path = "🎯️nearest-planar/🦀️.rs"]
 mod nearest_planar;
 pub use nearest_planar::PlanarClosestJob;
@@ -306,6 +305,7 @@ impl Brep {
             Entity::Solid(_,Some(SolidProvenance::SphericalShell(shell,_)))=>nearest_analytic::spherical_shell_nearest(*shell,target)?,
             Entity::Solid(_,Some(SolidProvenance::SphericalCaps(caps,_)))=>nearest_analytic::spherical_caps_nearest(*caps,target)?,
             Entity::Solid(_,Some(SolidProvenance::Frustum(shape,_)))=>nearest_analytic::frustum_nearest(shape.frame,shape.radii,shape.height,target)?,
+            Entity::Solid(_,Some(source))=>self.native.original_orthogonal_nearest(source,target)?,
             _ => return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner, "geometry requires original closest-point traversal")),
         };
         let axes = evec(result);

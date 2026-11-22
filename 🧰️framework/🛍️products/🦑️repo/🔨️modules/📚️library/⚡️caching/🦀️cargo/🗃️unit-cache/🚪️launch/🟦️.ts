@@ -96,7 +96,7 @@ export function fleetRemoteEnvironmentV1(environment:Readonly<Record<string,stri
   const resolved=resolveRemoteCacheV1(environment,copy===undefined||root===undefined?{}:{root,copy});
   if(resolved===undefined)return{};
   const contract=resolved.contract;
-  return{SEMIO_REMOTE_CACHE_ENDPOINT:contract.endpoint,SEMIO_REMOTE_CACHE_INSTANCE:contract.instance,SEMIO_REMOTE_CACHE_ACCESS:contract.access,SEMIO_REMOTE_CACHE_UPLOAD:String(contract.upload),...(resolved.token===undefined?{}:{SEMIO_REMOTE_CACHE_TOKEN:resolved.token}),...(resolved.generation===null?{}:{SEMIO_REMOTE_CACHE_GENERATION:String(resolved.generation)}),...(resolved.environment.SEMIO_REMOTE_CACHE_SIGNED==="1"&&root!==undefined?{SEMIO_REMOTE_CACHE_SIGNED:"1",SEMIO_UNIT_CACHE_WORKSPACE_ROOT:root}:{})};
+  return{SEMIO_REMOTE_CACHE_ENDPOINT:contract.endpoint,SEMIO_REMOTE_CACHE_INSTANCE:contract.instance,SEMIO_REMOTE_CACHE_ACCESS:contract.access,SEMIO_REMOTE_CACHE_UPLOAD:String(contract.upload),SEMIO_REMOTE_CACHE_TIMEOUT_SECONDS:String(contract.timeoutSeconds),SEMIO_REMOTE_CACHE_RETRIES:String(contract.retries),...(resolved.token===undefined?{}:{SEMIO_REMOTE_CACHE_TOKEN:resolved.token}),...(resolved.generation===null?{}:{SEMIO_REMOTE_CACHE_GENERATION:String(resolved.generation)}),...(resolved.environment.SEMIO_REMOTE_CACHE_SIGNED==="1"&&root!==undefined?{SEMIO_REMOTE_CACHE_SIGNED:"1",SEMIO_UNIT_CACHE_WORKSPACE_ROOT:root}:{})};
  }catch{return{};}
 }
 
@@ -113,7 +113,7 @@ export function unitCacheEnvironmentV1(input:Readonly<{cacheRoot:string;lane:str
   SEMIO_UNIT_CACHE_LANE_ROOT:input.laneRoot,
   SEMIO_UNIT_CACHE_INNER:JSON.stringify(input.scheduler===undefined?[input.compiler]:[input.scheduler,input.compiler]),
   SEMIO_UNIT_CACHE_TOOLCHAIN:input.toolchain,
-  SEMIO_UNIT_CACHE_SLOTS:String(input.slots??availableParallelism()),
+  SEMIO_UNIT_CACHE_SLOTS:String(input.slots??(Number((input.environment??process.env).SEMIO_UNIT_CACHE_SLOTS)||availableParallelism())),
   SEMIO_UNIT_CACHE_FOCUS:input.focus.join(","),
   ...(input.features?.buildScripts?{SEMIO_UNIT_CACHE_BUILD_SCRIPTS:"on"}:{}),
   ...(input.features?.brokerReplay?{SEMIO_UNIT_CACHE_BROKER_REPLAY:"on"}:{}),

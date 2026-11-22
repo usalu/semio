@@ -95,6 +95,7 @@ layers {
     }
   }
 }
+assets={}
 artboard {
   width=200 height=200
 }

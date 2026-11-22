@@ -145,18 +145,18 @@ test("update decisions follow the language-agnostic table: newer installs, never
 
 test("an update whose self-test fails is refused through the daemon call, leaves the installed program and manifest byte for byte, and a good newer one installs next with the previous kept",async()=>{
  const box=sandbox("refuse"),module=join(box.base,"module");
- const manifestBefore=readFileSync(join(box.entry,"entry.json"),"utf8"),programBefore=readFileSync(join(box.entry,"boot.mjs"),"utf8");
+ const manifestBefore=readFileSync(join(box.entry,"entry.json"),"utf8"),programBefore=readFileSync(join(box.entry,"boot.mjs"),"utf8"),baseVersion=JSON.parse(manifestBefore).bootVersion;
  const place=(directory:string,source:string):void=>{mkdirSync(directory,{recursive:true});for(const name of readdirSync(dirname(source)))if([".mjs",".sh",".ps1"].includes(extname(name)))copyFileSync(join(dirname(source),name),join(directory,name));};
- place(join(module,"🔁️replica","🥾️entry"),makeSource(join(box.base,"bad"),{version:7,broken:true}));
+ place(join(module,"🔁️replica","🥾️entry"),makeSource(join(box.base,"bad"),{version:baseVersion+1,broken:true}));
  const refused=await maintainEntryV1({worktree:box.repo,moduleRoot:module,storeRoot:box.store,entryDirectory:box.entry});
  expect(refused.action).toBe("refused-selftest");expect(refused.reason).toContain("scenario");
  expect(readFileSync(join(box.entry,"entry.json"),"utf8")).toBe(manifestBefore);expect(readFileSync(join(box.entry,"boot.mjs"),"utf8")).toBe(programBefore);
  rmSync(join(module,"🔁️replica","🥾️entry"),{recursive:true});
- place(join(module,"🔁️replica","🥾️entry"),makeSource(join(box.base,"good"),{version:8}));
+ place(join(module,"🔁️replica","🥾️entry"),makeSource(join(box.base,"good"),{version:baseVersion+2}));
  const installed=await maintainEntryV1({worktree:box.repo,moduleRoot:module,storeRoot:box.store,entryDirectory:box.entry});
  expect(installed.action).toBe("installed");
  const manifest=JSON.parse(readFileSync(join(box.entry,"entry.json"),"utf8")) as {bootVersion:number;previous:{sha256:string}};
- expect(manifest.bootVersion).toBe(8);expect(manifest.previous.sha256).toBe(sha(programBefore));expect(sha(readFileSync(join(box.entry,"boot.prev.mjs")))).toBe(sha(programBefore));
+ expect(manifest.bootVersion).toBe(baseVersion+2);expect(manifest.previous.sha256).toBe(sha(programBefore));expect(sha(readFileSync(join(box.entry,"boot.prev.mjs")))).toBe(sha(programBefore));
  const again=await maintainEntryV1({worktree:box.repo,moduleRoot:module,storeRoot:box.store,entryDirectory:box.entry});
  expect(again.action).toBe("current");
  rmSync(join(module,"🔁️replica","🥾️entry"),{recursive:true});
@@ -353,6 +353,29 @@ test("the installed boot program ends a daemon whose beat says its loop is block
  await stopShim(shim);
 });
 
+test("watchdog silence retains its owned running beat across missing and foreign samples",async()=>{
+ const rows=JSON.parse(readFileSync(join(import.meta.dirname,"🧫️fixtures","🔣️.json"),"utf8")).watchdogSilence as {name:string;pidOffset:number|null}[];
+ const silentMs=750,db=new Database(":memory:");
+ try{for(const row of rows){
+  const supervisor=blockedSupervisor.replace('beat();setInterval(beat,100);','beat();setInterval(()=>{},100);'),box=sandbox(row.name,{supervisor});
+  const shim=startShim(box,{SEMIO_FLEET_ENTRY_SILENT_MS:String(silentMs),SEMIO_FLEET_ENTRY_EARLY_MS:"100"});
+  try{
+   await until(()=>phaseOf(box)==="running");
+   const directory=join(box.repo,".cache","f","boot"),beatFile=join(directory,"beat.json"),recordFile=join(directory,"loop-blocked-restart.json");
+   const first=JSON.parse(readFileSync(beatFile,"utf8"));
+   const replacement=row.pidOffset===null?null:{...first,pid:first.pid+row.pidOffset,wallMs:Date.now(),activity:"foreign"};
+   if(replacement===null)rmSync(beatFile);else writeFileSync(beatFile,JSON.stringify(replacement));
+   await until(()=>existsSync(recordFile),4200);
+   const record=JSON.parse(readFileSync(recordFile,"utf8"));
+   const expected=db.query<{activity:string;reason:string},[number,number,string,number,string|null,number|null,number,number]>(
+    "with samples(pid,activity,seen) as (values (?1,?3,?4),( ?2,?5,?6 )) select activity,'silent' as reason from samples where pid=?1 and ?7-seen>?8 order by seen desc limit 1"
+   ).get(first.pid,replacement?.pid??-1,first.activity,first.wallMs,replacement?.activity??null,replacement?.wallMs??null,record.wallMs,silentMs);
+   expect(record).toMatchObject({pid:first.pid,phase:"run",...expected});
+   expect(expected?.reason).toBe("silent");
+  }finally{await stopShim(shim);}
+ }}finally{db.close();}
+},22000);
+
 test("a missing worktree is a visible waiting state that never exits, and the program starts the code when the worktree appears",async()=>{
  const box=sandbox("missing",{worktree:false});
  const shim=startShim(box);
@@ -519,13 +542,14 @@ test("a healthy daemon installs the boot program of the code it runs, once at st
  await seedV1(options);
  const controller=new AbortController(),events:ReplicaEventV1[]=[],done=runV1(options,controller.signal,event=>events.push(event));
  await until(()=>existsSync(join(entry,"entry.json")),60_000);
- requireEntryShapeV1("EntryManifest",JSON.parse(readFileSync(join(entry,"entry.json"),"utf8")),"manifest");
+ const manifest=JSON.parse(readFileSync(join(entry,"entry.json"),"utf8"));
+ requireEntryShapeV1("EntryManifest",manifest,"manifest");
  await until(()=>events.some(event=>event.event==="sync"&&event.stage==="entry"),30_000);
  const source=join(module,"🔁️replica","🥾️entry"),mjs=readdirSync(source).find(name=>extname(name)===".mjs")!;
  writeFileSync(join(source,mjs),readFileSync(join(source,mjs),"utf8").replace(/export const bootVersionV1=\d+;/u,"export const bootVersionV1=99;").replace("process.on(\"SIGTERM\",()=>{process.exit(0);});","process.on(\"SIGTERM\",()=>{process.exit(9);});"));
  await until(()=>events.some(event=>event.event==="error"&&event.stage==="entry"),60_000);
  expect(events.find(event=>event.event==="error"&&event.stage==="entry")!.message).toContain("refused-selftest");
- expect(JSON.parse(readFileSync(join(entry,"entry.json"),"utf8")).bootVersion).toBe(6);
+ expect(JSON.parse(readFileSync(join(entry,"entry.json"),"utf8")).bootVersion).toBe(manifest.bootVersion);
  controller.abort();await done;
 });
 

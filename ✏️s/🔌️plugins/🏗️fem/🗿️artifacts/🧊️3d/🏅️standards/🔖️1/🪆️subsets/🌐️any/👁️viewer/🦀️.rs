@@ -4,6 +4,7 @@
 //! the sole runtime adapter, so this file can never structurally emit an artifact or draft mutation.
 //! MUST NOT import anything from the sibling editor module (`policyViewerPurityBreaches`).
 
+use semio_plugin::Axis;
 use crate::viewer::fem3d::modes::view;
 use crate::viewer::fem3d::modes::view::windows::model;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
@@ -137,7 +138,7 @@ pub fn create_fem3d_viewer() -> semio_plugin::AppDefinition {
         .mode(view::FEM3D_VIEW_MODE_VIEW, semio_ui_locale::LocalizedLabel::native("View", "Ansicht"), "eye")
         .default_mode_id(view::FEM3D_VIEW_MODE_VIEW)
         .window_kind(model::WINDOW_KIND_ID, semio_ui_locale::LocalizedLabel::native("Model", "Modell"), model::BODY_KEY, semio_ui_contract::SurfaceKind::World3d, "fem-model")
-        .default_layout(semio_plugin::create_default_layout(&[model::WINDOW_KIND_ID.into()], "row", None, None))
+        .default_layout(semio_plugin::create_default_layout(&[model::WINDOW_KIND_ID.into()], Axis::Horizontal, None, None))
         .build_definition()
 }
 //#endregion 🔖️Manifest

@@ -1,0 +1,205 @@
+{
+  "schema": "semio.os.hub-first-run/v1",
+  "introductionId": "os.hub",
+  "storageKeyPrefix": "ui.introduction.seen.",
+  "seenValue": "true",
+  "stepIdPrefix": "hub.firstRun.",
+  "stages": [
+    "welcome",
+    "signIn",
+    "space",
+    "invite",
+    "done"
+  ],
+  "anchors": {
+    "react": {
+      "signIn": "os.hub.signIn.email",
+      "signInSupport": [
+        "os.hub.signIn.password",
+        "os.hub.signIn.submit",
+        "os.hub.signIn.hub"
+      ],
+      "space": "os.hub.spaces.createName",
+      "spaceSupport": [
+        "os.hub.spaces.createSubmit",
+        "os.hub.spaces.list",
+        "os.hub.invite.redeemField"
+      ],
+      "invite": "os.hub.invite.create",
+      "inviteSupport": [
+        "os.hub.invite.role",
+        "os.hub.invite.expiry",
+        "os.hub.invite.copy"
+      ],
+      "redeemField": "os.hub.invite.redeemField",
+      "celebrate": {
+        "signIn": "os.hub.signIn.signedInAs",
+        "space": "os.hub.spaces.current",
+        "redeem": "os.hub.invite.redeemed",
+        "invite": "os.hub.invite.ready"
+      }
+    },
+    "wgpu": {
+      "signIn": "framework.hub.email",
+      "signInSupport": [
+        "framework.hub.password",
+        "framework.hub.sign-in.submit",
+        "framework.hub.address"
+      ],
+      "space": "framework.hub.space-name",
+      "spaceSupport": [
+        "framework.hub.spaces.create",
+        "framework.hub.spaces",
+        "framework.hub.invite"
+      ],
+      "invite": "framework.hub.spaces",
+      "inviteSupport": [
+        "framework.hub.spaces.copy-invite"
+      ],
+      "redeemField": "framework.hub.invite",
+      "celebrate": {
+        "signIn": null,
+        "space": null,
+        "redeem": null,
+        "invite": null
+      }
+    }
+  },
+  "steps": [
+    {
+      "stage": "welcome",
+      "title": "welcomeTitle",
+      "body": "welcomeBody",
+      "placement": "center",
+      "introduce": null,
+      "show": null,
+      "interactions": []
+    },
+    {
+      "stage": "signIn",
+      "title": "signInTitle",
+      "body": "signInBody",
+      "placement": "bottom",
+      "introduce": "signIn",
+      "show": "signInSupport",
+      "interactions": [
+        {
+          "on": "signIn",
+          "label": "signInTask",
+          "celebrate": "signIn"
+        }
+      ]
+    },
+    {
+      "stage": "space",
+      "title": "spaceTitle",
+      "body": "spaceBody",
+      "placement": "bottom",
+      "introduce": "space",
+      "show": "spaceSupport",
+      "interactions": [
+        {
+          "on": "space",
+          "label": "spaceTaskCreate",
+          "celebrate": "space"
+        },
+        {
+          "on": "redeemField",
+          "label": "spaceTaskJoin",
+          "celebrate": "redeem"
+        }
+      ]
+    },
+    {
+      "stage": "invite",
+      "title": "inviteTitle",
+      "body": "inviteBody",
+      "placement": "bottom",
+      "introduce": "invite",
+      "show": "inviteSupport",
+      "interactions": [
+        {
+          "on": "invite",
+          "label": "inviteTask",
+          "celebrate": "invite"
+        }
+      ]
+    },
+    {
+      "stage": "done",
+      "title": "doneTitle",
+      "body": "doneBody",
+      "placement": "center",
+      "introduce": null,
+      "show": null,
+      "interactions": []
+    }
+  ],
+  "completion": {
+    "welcome": "never",
+    "signIn": "signedIn",
+    "space": "spaceOpen",
+    "invite": "inviteReady",
+    "done": "never"
+  },
+  "text": {
+    "en": {
+      "title": "Working together on a hub",
+      "welcomeTitle": "What a hub gives you",
+      "welcomeBody": "A hub is a server that holds shared spaces. Everyone signed into the same space sees the same documents, sees each other's cursors, and edits at the same time. Your work stays available locally even when the hub is unreachable.",
+      "signInTitle": "Sign in",
+      "signInBody": "Enter the email and password for your account on this hub. If you run the hub yourself, the first account is created with `os-hub credential set`. You can add more than one hub and switch between them.",
+      "signInTask": "Sign in to a hub",
+      "spaceTitle": "Create or join a space",
+      "spaceBody": "A space is one team's shared room. Name a new one to start your own, or paste an invite code someone sent you to join theirs.",
+      "spaceTaskCreate": "Create a space",
+      "spaceTaskJoin": "Or redeem an invite",
+      "inviteTitle": "Invite someone",
+      "inviteBody": "Create an invite, choose what the other person may do and how long the code stays valid, then send them the code. They redeem it in the same place you did.",
+      "inviteTask": "Create an invite",
+      "doneTitle": "That is the whole flow",
+      "doneBody": "Sign in, be in a space, invite the people you work with. Reopen this walkthrough any time from the command palette."
+    },
+    "de": {
+      "title": "Gemeinsam auf einem Hub arbeiten",
+      "welcomeTitle": "Wofür ein Hub da ist",
+      "welcomeBody": "Ein Hub ist ein Server mit gemeinsamen Räumen. Alle, die im selben Raum angemeldet sind, sehen dieselben Dokumente, sehen die Cursor der anderen und bearbeiten gleichzeitig. Deine Arbeit bleibt lokal verfügbar, auch wenn der Hub nicht erreichbar ist.",
+      "signInTitle": "Anmelden",
+      "signInBody": "Gib E-Mail und Passwort deines Kontos auf diesem Hub ein. Wenn du den Hub selbst betreibst, wird das erste Konto mit `os-hub credential set` angelegt. Du kannst mehrere Hubs hinterlegen und zwischen ihnen wechseln.",
+      "signInTask": "Bei einem Hub anmelden",
+      "spaceTitle": "Raum erstellen oder beitreten",
+      "spaceBody": "Ein Raum ist der gemeinsame Arbeitsraum eines Teams. Vergib einen Namen für einen eigenen Raum oder füge einen Einladungscode ein, den dir jemand geschickt hat.",
+      "spaceTaskCreate": "Einen Raum erstellen",
+      "spaceTaskJoin": "Oder eine Einladung einlösen",
+      "inviteTitle": "Jemanden einladen",
+      "inviteBody": "Erstelle eine Einladung, lege fest, was die andere Person darf und wie lange der Code gültig bleibt, und schicke ihr den Code. Sie löst ihn an derselben Stelle ein wie du.",
+      "inviteTask": "Eine Einladung erstellen",
+      "doneTitle": "Das ist der ganze Ablauf",
+      "doneBody": "Anmelden, in einem Raum sein, die Leute einladen, mit denen du arbeitest. Diese Einführung lässt sich jederzeit über die Befehlspalette erneut öffnen."
+    }
+  },
+  "controls": {
+    "replay": {
+      "id": "os.hub.firstRun.replay",
+      "icon": "graduation-cap",
+      "variant": "ghost",
+      "label": {
+        "en": "How this works",
+        "de": "So funktioniert das"
+      }
+    },
+    "close": {
+      "id": "os.hub.signIn.cancel",
+      "icon": "x",
+      "variant": "outline",
+      "label": {
+        "en": "Cancel sign-in",
+        "de": "Anmeldung abbrechen"
+      }
+    },
+    "order": [
+      "replay",
+      "close"
+    ]
+  }
+}

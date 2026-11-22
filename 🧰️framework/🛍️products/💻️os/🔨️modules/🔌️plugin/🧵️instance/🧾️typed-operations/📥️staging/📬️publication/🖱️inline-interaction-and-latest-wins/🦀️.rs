@@ -154,7 +154,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                 publication_ownership_progress: None,
                 original_retirement_receipt:None,
                 actor_capture: None,actor_capture_pending:semio_plugin_mounted_owner::actor_capture::ActorCapture::new(),
-                publication_attempt: 0,
+                publication_stall_streak: 0,
                 ui_pending: false,
                 progress: None,
                 progress_pending: false,

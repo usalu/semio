@@ -51,7 +51,7 @@ async function pair(viaA?:()=>string|undefined,base?:typeof fetch){
 const signed=(root:string,audience:"cache"="cache")=>fleetSignedFetchV1({root,audience});
 const across=(root:string,answering:Group)=>fleetSignedFetchV1({root,audience:"cache",fetch:sealedTo(answering.store,answering.id)});
 
-async function statusOf(group:Group){const response=await signed(group.member)(`${group.endpoint}/status`);expect(response.status).toBe(200);return await response.json() as {counters:Record<"ac"|"cas"|"nx",{hits:number;misses:number;puts:number}>;peers?:{hits:number;misses:number;errors:number;skipped:number}};}
+async function statusOf(group:Group){const response=await signed(group.member)(`${group.endpoint}/status`);expect(response.status).toBe(200);return await response.json() as {counters:Record<"ac"|"cas"|"nx",{hits:number;misses:number;puts:number}>;peers?:{hits:number;misses:number;errors:number;skipped:number;absent:number}};}
 const put=(group:Group,bytes:Uint8Array)=>signed(group.member)(`${group.endpoint}/semio/cas/${sha(bytes)}`,{method:"PUT",body:bytes});
 
 test("a blob uploaded in group A is a hit for a machine of group B exactly once through the server of B and local afterwards, with no network check in the way",async()=>{
@@ -98,6 +98,19 @@ test("when the link is down the group keeps working on its own, quickly and with
  expect((await signed(b.member)(`${b.endpoint}/semio/cas/${sha(own)}`)).status).toBe(200);
  expect(performance.now()-started,"a dead peer costs no long wait").toBeLessThan(6000);
  const status=await statusOf(b);expect(status.peers?.errors).toBeGreaterThanOrEqual(1);expect(status.peers?.skipped,"after three failures the peer is left out for a while").toBeGreaterThanOrEqual(1);
+});
+
+test("a peer group with no route (no attested endpoint, an empty mount) is absent: never asked, neither a miss nor an error nor a pause",async()=>{
+ const mount=directory("empty-mount"),routed=directPeerTransportV1({group:"g3",endpoints:async()=>["http://127.0.0.1:1"],fetch:async()=>new Response("",{status:404}),maximumBytes:2**20});
+ const through=createFleetPeerReadThroughV1({transports:[directPeerTransportV1({group:"g2",endpoints:async()=>[],fetch,maximumBytes:2**20}),relayedPeerTransportV1({group:"g4",ownGroup:"g1",ownStore:directory("own"),peerStore:mount,maximumBytes:2**20})],missMilliseconds:0});
+ for(let round=0;round<5;round++)expect(await through.fetch("/semio/cas/"+sha("x"+round))).toBeUndefined();
+ expect(through.counters()).toEqual({hits:0,misses:0,errors:0,skipped:0,absent:2,bytes:0});
+ mkdirSync(join(mount,"v1"),{recursive:true});
+ const mixed=createFleetPeerReadThroughV1({transports:[directPeerTransportV1({group:"g2",endpoints:async()=>[],fetch,maximumBytes:2**20}),routed],missMilliseconds:0});
+ expect(await mixed.fetch("/semio/cas/"+sha("y"))).toBeUndefined();
+ expect(mixed.counters(),"a routed peer that answers 404 is a plain miss").toEqual({hits:0,misses:1,errors:0,skipped:0,absent:1,bytes:0});
+ expect(await through.fetch("/semio/cas/"+sha("z"))).toBeUndefined();
+ expect(through.counters().absent,"a mount with a store is a route again").toBe(1);
 });
 
 test("a wanted request of group two is answered by the server of group one, and the answer comes back, through the caches alone",async()=>{

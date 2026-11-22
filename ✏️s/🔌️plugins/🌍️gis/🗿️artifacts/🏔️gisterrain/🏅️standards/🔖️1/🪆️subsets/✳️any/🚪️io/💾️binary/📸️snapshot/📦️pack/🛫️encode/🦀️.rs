@@ -17,6 +17,6 @@ pub fn project(snapshot:&GisTerrainSnapshot,control:&mut semio_framework_value::
   Ok(semio_framework_dsl_record::FieldValue::Record(owned.take()))
  }else{Ok(semio_framework_dsl_record::FieldValue::Absent)}})?;
  fields.insert(2,mesh)?;control.step()?;
- fields.insert(3,control.scoped_stage(|control|{control.begin_stage(0)?;snapshot.elevation_source.to_value_controlled(control)})?)?;control.step()?;
+ fields.insert(3,control.scoped_stage(|control|{control.begin_stage(0)?;match &snapshot.elevation_source{Some(source)=>DslField::to_value_controlled(source,control),None=>Ok(semio_framework_dsl_record::FieldValue::Absent)}})?)?;control.step()?;
  Ok(fields.take())
 }

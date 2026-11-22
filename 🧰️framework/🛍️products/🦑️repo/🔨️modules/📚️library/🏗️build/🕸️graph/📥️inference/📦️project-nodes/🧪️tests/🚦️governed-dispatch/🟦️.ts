@@ -20,7 +20,7 @@ test("every project inference starts through the memory governor, bounded by the
  for(const inference of inferences)expect(inference.ancestors.some(node=>ts.isCallExpression(node)&&node.expression.getText(tree)==="governor.run"),inference.text).toBe(true);
  const creations=all.filter(call=>call.callee==="createGraphParentMemoryGovernorV1");
  expect(creations.length).toBe(1);expect(creations[0]!.text).toContain("workers:limit");expect(creations[0]!.text).toContain("environment:process.env");
- expect(creations[0]!.text).toContain("signal:context.phaseControl?.signal");
+ expect(creations[0]!.text).toContain("signal:waveSignal");
  const ends=all.filter(call=>call.callee==="phases?.end"&&call.text.includes('"inference"'));
  expect(ends.length).toBe(1);expect(ends[0]!.text).toContain("governor.stats()");
 });
@@ -35,8 +35,9 @@ test("the running projects are named in the inference phase while they run, remo
 
 test("the memory governor of a call is disposed in the finally of the same call, so its abort listener never keeps the environment of a finished chunk alive",()=>{
  const found=calls().filter(call=>call.callee==="governor?.dispose");
- expect(found.length).toBe(1);
- expect(found[0]!.ancestors.some(node=>ts.isTryStatement(node)&&node.finallyBlock!==undefined&&node.finallyBlock.getText(tree).includes("governor?.dispose()"))).toBe(true);
+ expect(found.length).toBe(2);
+ expect(found.filter(call=>call.ancestors.some(node=>ts.isTryStatement(node)&&node.finallyBlock!==undefined&&node.finallyBlock.getText(tree).includes("governor?.dispose()"))).length).toBe(1);
+ expect(found.filter(call=>call.ancestors.some(node=>ts.isCatchClause(node))).length).toBe(1);
 });
 
 test("every governed owner names its kind, the learned peaks persist in the inference data directory and the shared closures are primed once before the first owner",()=>{

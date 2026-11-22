@@ -93,10 +93,25 @@ async fn editor_utilities_and_the_data_panel_project_the_mounted_artifact() {
     let mut mounted = app().await;
     let mut view = context::main_window_view();
     view.active_utility_id = Some("terrainSmooth".into());
+    view.active_utility_by_window_id.insert(GIS3D_PLAY_WINDOW_MAIN.into(), view.active_utility_id.clone());
     let body = context::render_at(&mut mounted, GIS3D_PLAY_BODY_COMPOSITE, &view).await;
     let scene = semio_plugin::artifact_app_laws::decode_fixture_scene_with_lanes::<World3dScene>(&body).expect("terrain editor scene");
     let interaction: Value = serde_json::from_str(scene.interaction_json.as_deref().expect("interaction lane")).unwrap();
     assert_eq!(interaction["activeUtility"], "terrainSmooth");
+    assert_eq!(interaction["terrainBrush"]["action"], "editElevation");
+    assert!(interaction.get("terrainMovePosition").is_none());
+    view.active_utility_id = Some("terrainMovePosition".into());
+    view.active_utility_by_window_id.insert(GIS3D_PLAY_WINDOW_MAIN.into(), view.active_utility_id.clone());
+    let body = context::render_at(&mut mounted, GIS3D_PLAY_BODY_COMPOSITE, &view).await;
+    let scene = semio_plugin::artifact_app_laws::decode_fixture_scene_with_lanes::<World3dScene>(&body).expect("terrain editor scene");
+    let interaction: Value = serde_json::from_str(scene.interaction_json.as_deref().expect("interaction lane")).unwrap();
+    assert_eq!(interaction["terrainMovePosition"]["action"], "moveOverlayPosition");
+    assert!(interaction.get("terrainBrush").is_none());
+    let sections = view.for_panel();
+    for section in [semio_framework::UiRefreshSection::Measures, semio_framework::UiRefreshSection::Tools] {
+        let body = context::render_at(&mut mounted, section.body_key(), &sections).await;
+        assert!(body.contains(section.body_key()));
+    }
     let panel = context::render(&mut mounted, terrain_data::BODY).await;
     assert!(panel.contains("33 × 33"));
     assert!(panel.contains("r_sart_tilman"));

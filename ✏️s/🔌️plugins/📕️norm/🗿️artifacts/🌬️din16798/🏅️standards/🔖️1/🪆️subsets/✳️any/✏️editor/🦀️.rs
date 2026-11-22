@@ -93,7 +93,8 @@ impl ArtifactEditor for Din16798PlayApp {
     }
     /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
     fn examples() -> Vec<semio_plugin::ExampleSource> {
-        vec![semio_s_artifact_norm_din16798_examples::compliant_office::source(), semio_s_artifact_norm_din16798_examples::noncompliant_office::source(), semio_s_artifact_norm_din16798_examples::residential_method3::source(), semio_s_artifact_norm_din16798_examples::demo::source()]
+        use semio_s_artifact_norm_din16798_examples::{compliant_office, noncompliant_office, residential_method3};
+        vec![compliant_office::source(), noncompliant_office::source(), residential_method3::source()]
     }
     type Snapshot = Din16798Snapshot;
     type Mutation = Din16798Mutation;

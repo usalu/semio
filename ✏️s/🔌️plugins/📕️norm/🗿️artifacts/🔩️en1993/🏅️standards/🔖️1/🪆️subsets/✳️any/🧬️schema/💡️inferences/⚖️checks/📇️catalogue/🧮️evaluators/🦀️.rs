@@ -34,6 +34,9 @@ pub use built_up_weld::built_up_weld_fatigue;
 mod plain_and_fastened_fatigue;
 pub use plain_and_fastened_fatigue::plain_and_fastened_fatigue;
 
+#[path = "🕵️fatigue-method/🦀️.rs"]
+pub mod fatigue_method;
+
 /// 📏️ One verification row: what is demanded, what is available and the worked steps.
 pub struct Row {
     pub key: &'static str,

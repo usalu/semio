@@ -1,0 +1,28 @@
+# Result E36 (farm-isolation)
+
+## Verdict
+The farm-child, parent-inline and late-refs (closure-store) paths now isolate an owner failure with the same decision table as the closure walk, and a withheld owner is inferred again after a cool-down. All in the tree and tested; nothing exercised against a live resident service.
+
+## What changed (all under `B/🕸️graph/`)
+- `📥️load/🛟️owner-isolation/🟦️.ts` (shared decision logic, schema first): `ownerFailureDecisionV1` (foreign / retry / stable / unsettled), `ownerPauseMillisecondsV1`, `ownerRetryPlanV1` (rows -> moved? young? -> decision + pause); `observeOwnerWithRetryV1` now runs on them (behaviour unchanged, its 11 old tests pass). Farm wire: `ownerFailureReplyV1` / `ownerFailureOfReplyV1` (named failure + observed rows, bounded by `replyRows`). `ownerFailureV1` carries `observed` rows.
+- Schema `🧬️schema/🔣️.json`: policy keys `revalidateCooldownMilliseconds` (300000), `revalidateAttempts` (3), `replyRows` (4000) with EN/DE descriptions, new EN/DE text `revalidate`.
+- `📦️project-nodes/🟨️.mjs`: `ownerInferenceFailureV1` (used by `inferProjectBodyTrackedV1`: source failure, else the table decides: a failure whose rows moved or are young throws `BUILD_OWNER_RETRY`, a stable/unsettled one is withheld with the right EN/DE text), `observeOwnerAttemptsV1` (loop with pause and `[graph-owner-retry]` line; wraps `produceProjectRecordV1` = farm child and pool child, and the parent's inline `observeProjectInferenceV1`), `observeRefsWithRetriesV1` (late refs: in the farm child around `resolveOwnerRefsV1` and in the parent around the whole refs stage), `ownerFailureAsWithheldV1` (rounds/stable, accepts an already named failure, carries `observedRows`), `ownerRefsFailureV1` (named failure first), `refsFailureV1` (child answers `{ownerFailed}` instead of an unclassified `{failed}`), `askOwnerRefsV1` (throws the named failure at once instead of asking three times and ending as `graph.farm-job-failed`), `withheldRowsV1` (adds the rows the child sent, so the owner heals exactly when one changes). Moved-ness is verified outside the validation round of the inference (`withObservationPassRoundV1(undefined, ...)`), otherwise a file moved after it was read would still "hold".
+- Re-validation: new `📥️load/🛟️owner-isolation/🔁️revalidation/🟨️.mjs` (+ `.d.mts`): `withheldRevalidationV1` (first sighting starts the cool-down, then once per cool-down, at most 3 times, per withholding fragment digest), `revalidatedWithheldOwnersV1` (ledger `withheld-revalidation.json` beside the generations; unreadable or unwritable ledger never fails a read). `🕰️generations/🧭️plan/🟨️.mjs` makes those untagged withheld owners dirty (only owners in the read's `only` scope; result field `revalidated`), `🕰️generations/🟨️.mjs` wires the ledger and prints `[graph-owner-revalidate]` (EN / DE).
+
+## Proof (repo test-file)
+- owner-isolation 14/0: decision table = 7 hand-stated cases and a Python oracle over the whole 32-point domain; re-validation = 7 hand-stated cases and the Python oracle; ledger behaviour (cool-down, bounded attempts, tagged/healed/out-of-scope owners, broken ledger).
+- `🛟️farm-isolation` 5/0: a farm child whose owner throws on an input that moved under it recovers (one pause, bilingual retry line, parent sees a reference, no failure); a stable child failure is answered once as the named bilingual failure with its rows, the parent withholds the owner (`BUILD_SOURCE_UNPARSEABLE`, source = declaration, rows hold, editing the input makes them stale, another owner's named failure is not this owner's); rows moving through every round give the unsettled text and 4 observations; foreign codes pass untouched; the owner inference path (`ownerInferenceFailureV1` inside a real observed computation) recovers on a moved input, withholds a stable one, names the unsettled one after 3 pauses.
+- `🛟️withheld-revalidation` 2/0 (real `createGenerationPlanV1` with a ledger): clean until the cool-down, then `delta` with that owner dirty, at most 3 times, then clean again; a read scoped to other owners neither infers nor counts it.
+- Dependants all pass: owner-withheld, inferred, read-parent, parent-routes, refs-file, project-farm no-inline / late-refusal / warm-jobs, repair-rounds 26, stale-facts, seal-under-churn, generations 37, unfounded-withheld, config-owners, multiwriter.
+
+## NOT verified
+- No live whole read with a failing owner in a farm child, no real late-mode read, no generation seal with a re-validated owner; `inferProjectBodyTrackedV1` itself was not run with the real `projectWithDefaults` (its decision glue `ownerInferenceFailureV1` is tested in a real observed computation).
+- Rows from the parent's own late-refs failures come from the failure's detached rows plus the owner record rows; a failure that carries none is judged stable at once (as before).
+- A child's rows are capped at `replyRows` (4000); beyond that the owner heals through the declaration row only.
+- Re-validation is judged for every untagged withheld owner that names its declaration (a declaration that really does not parse is inferred again up to 3 times as well, cheap); the ledger is a last-writer-wins file.
+- Windows/Linux not run.
+
+## Other lanes must know
+- New wire field in a farm child's refs answer: `refs.ownerFailed` (consumers that test `refs.failed === undefined` must test this too; the three in project-nodes are done).
+- Final-round retries are never thrown (`OWNER_RETRY_CODE_V1` only before `retryRounds`); callers of `inferProjectBodyV1` that do not loop pass no `ownerRound` and get the final-round behaviour (withhold at once, as before).
+- Lock `graph` released, landing recorded in `T/landings.md`; scratch removed, nothing under `🗑️generated`.

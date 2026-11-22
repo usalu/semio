@@ -33,7 +33,7 @@ fn close(cursor: &mut Puzzle2dMoveNodeCandidateCursor) {
     test_source_custody::close_cursor(cursor,1_000_000,|cursor|{
         let copy=cursor.next_close_copy_byte_demand().unwrap();
         (copy,cursor.next_close_capacity_byte_demand(copy).unwrap(),cursor.next_close_release_byte_demand().unwrap(),cursor.next_close_depth_demand().unwrap())
-    },|cursor,grant|cursor.close_step(grant),|cursor|cursor.terminal_is_empty());
+    },|cursor,effect|cursor.close_step(effect),|cursor|cursor.terminal_is_empty());
 }
 
 fn retire(snapshot: Puzzle2dSnapshot) {
@@ -41,7 +41,7 @@ fn retire(snapshot: Puzzle2dSnapshot) {
     assert_eq!(allocation.requested_bytes, 0);
     assert_eq!(allocation.released_bytes, 0);
     let mut owner = match result { Ok(owner) => owner, Err((error, _)) => panic!("{error:?}") };
-    for turn in 0..1_000_000 { if owner.terminal_is_empty() { return; } let permit = grant(turn); observed(permit, || owner.step(permit)); }
+    for turn in 0..1_000_000 { if owner.terminal_is_empty() { return; } let permit = grant(turn); observed(permit, || test_source_custody::close_turn(permit, |effect| owner.step(4096, effect))); }
     panic!("returned native snapshot did not retire every physical page");
 }
 
@@ -62,9 +62,9 @@ fn history_edit_puzzle2d_native_move_candidate_preserves_untouched_owners_and_co
         let mut mutation = test_source_custody::admit();
         let (mut cursor, allocation) = semio_framework_trace::observe_heap_allocations_on_this_thread(Puzzle2dMoveNodeCandidateCursor::default);
         assert!(!allocation.overflowed);assert_eq!(allocation.requested_bytes,0);assert_eq!(allocation.released_bytes,0);
-        assert_eq!(observed(RetainedCloneGrant::default(), || cursor.advance(source.borrow(&snapshot), mutation.borrow(&payload), RetainedCloneGrant::default())).progress(), RetainedCloneProgress::default());
+        assert_eq!(observed(RetainedCloneGrant::default(), || test_source_custody::run(RetainedCloneGrant::default(), |effect| cursor.advance(source.borrow(&snapshot), mutation.borrow(&payload), 4096, effect))).progress(), RetainedCloneProgress::default());
         let mut complete = false;
-        for turn in 0..1_000_000 { let permit = grant(turn); if matches!(observed(permit, || cursor.advance(source.borrow(&snapshot), mutation.borrow(&payload), permit)), RetainedCloneStep::Complete(_)) { complete = true; break; } }
+        for turn in 0..1_000_000 { let permit = grant(turn); if matches!(observed(permit, || test_source_custody::run(permit, |effect| cursor.advance(source.borrow(&snapshot), mutation.borrow(&payload), 4096, effect))), RetainedCloneStep::Complete(_)) { complete = true; break; } }
         assert!(complete);
         let result = cursor.take().unwrap();
         assert_eq!(result.snapshot.is_some(), case["status"] == "changed");
@@ -84,7 +84,7 @@ fn history_edit_puzzle2d_native_move_candidate_preserves_untouched_owners_and_co
         if case["id"] == "large-prefix" {
             let mut cancelled = Puzzle2dMoveNodeCandidateCursor::default();
             let mut copied = 0;
-            for turn in 0..1_000_000 { let copying = cancelled.phase == 2; let permit = grant(turn); let step = observed(permit, || cancelled.advance(source.borrow(&snapshot), mutation.borrow(&payload), permit)); assert!(!matches!(step, RetainedCloneStep::Complete(_))); if copying { copied += step.progress().copied_bytes; } if copied >= corpus["forwardOwnership"]["cancelAfterBodyBytes"].as_u64().unwrap() as usize { break; } }
+            for turn in 0..1_000_000 { let copying = cancelled.phase == 2; let permit = grant(turn); let step = observed(permit, || test_source_custody::run(permit, |effect| cancelled.advance(source.borrow(&snapshot), mutation.borrow(&payload), 4096, effect))); assert!(!matches!(step, RetainedCloneStep::Complete(_))); if copying { copied += step.progress().copied_bytes; } if copied >= corpus["forwardOwnership"]["cancelAfterBodyBytes"].as_u64().unwrap() as usize { break; } }
             assert!(copied > 0);
             close(&mut cancelled);
             assert!(cancelled.take().is_none());

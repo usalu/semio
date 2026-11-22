@@ -100,6 +100,8 @@ pub struct Theme {
     pub accent: Rgba,
     pub accent_hover: Rgba,
     pub active_foreground: Rgba,
+    /// 🖍️ React's `--accent-foreground` — the ink and outline drawn on an `accent` fill (a selected Ring orb's stroke).
+    pub accent_foreground: Rgba,
     pub button: Rgba,
     pub button_hover: Rgba,
     pub input_bg: Rgba,
@@ -124,6 +126,8 @@ pub struct Theme {
     pub tree_indent_per_level: f32,
     /// 🔽️ Tree expand/collapse gutter width — `dom.treeToggleUiSpacing`.
     pub tree_toggle_width: f32,
+    /// 🔠️ Tailwind's `tracking-wide`, in em: the extra advance after every glyph of a tracked label (a tree section header).
+    pub tracking_wide: f32,
     pub glass_saturate: f32,
     pub font_size_body: f32,
     pub font_size_small: f32,
@@ -153,6 +157,16 @@ pub struct Theme {
     pub celebrate: [Rgba; 3],
     /// ⏱️ React's `--celebrate-border-duration` (1.2 s) — one full spin AND one full thickness burst.
     pub celebrate_duration_seconds: f32,
+    /// 🎞️ Tailwind `transition-[color,background-color]` of every interactive chrome control: duration in seconds.
+    pub transition_duration_seconds: f32,
+    /// 📈️ Control transition cubic-bezier control points `[x1, y1, x2, y2]`.
+    pub transition_easing: [f32; 4],
+    /// 🪟️ Dialog `animate-in fade-in-0 zoom-in-95 duration-200` enter duration in seconds.
+    pub dialog_enter_seconds: f32,
+    /// 📈️ Dialog enter cubic-bezier control points.
+    pub dialog_enter_easing: [f32; 4],
+    /// 🔍️ Dialog enter start scale (`zoom-in-95`).
+    pub dialog_enter_scale_from: f32,
     pub checker_light: Rgba,
     pub checker_dark: Rgba,
     pub diagram_stroke: Rgba,
@@ -256,6 +270,7 @@ fn from_chrome(chrome: &ChromePalette, outcome: &OutcomePalette, diagram: &Diagr
         accent: Rgba::from_token(&chrome.accent),
         accent_hover: Rgba::from_token(&chrome.active_hover),
         active_foreground: Rgba::from_token(&chrome.active_foreground),
+        accent_foreground: Rgba::from_token(&chrome.accent_foreground),
         button: Rgba::from_token(&chrome.level_window),
         button_hover: Rgba::from_token(&chrome.hover_interactive_fill),
         input_bg: Rgba::from_token(&chrome.base),
@@ -273,6 +288,7 @@ fn from_chrome(chrome: &ChromePalette, outcome: &OutcomePalette, diagram: &Diagr
         tree_row_height: chrome_px(dom::TREE_ROW_UI_SPACING),
         tree_indent_per_level: chrome_px(dom::TREE_INDENT_PER_LEVEL_UI_SPACING),
         tree_toggle_width: chrome_px(dom::TREE_TOGGLE_UI_SPACING),
+        tracking_wide: 0.025,
         glass_saturate: levels::GLASS_SATURATE as f32,
         font_size_body: typography::TEXT_SM_PX as f32,
         font_size_small: typography::TEXT_XS_PX as f32,
@@ -294,6 +310,11 @@ fn from_chrome(chrome: &ChromePalette, outcome: &OutcomePalette, diagram: &Diagr
         stroke_focus: strokes::CHROME_BORDER_FOCUS as f32,
         celebrate: [Rgba::from_token(&colors::PRIMARY), Rgba::from_token(&colors::SECONDARY), Rgba::from_token(&colors::TERTIARY)],
         celebrate_duration_seconds: chrome_metrics::CELEBRATE_BORDER_DURATION_SECONDS as f32,
+        transition_duration_seconds: (chrome_metrics::TRANSITION_DURATION_MS / 1000.0) as f32,
+        transition_easing: [chrome_metrics::TRANSITION_EASING[0] as f32, chrome_metrics::TRANSITION_EASING[1] as f32, chrome_metrics::TRANSITION_EASING[2] as f32, chrome_metrics::TRANSITION_EASING[3] as f32],
+        dialog_enter_seconds: (chrome_metrics::DIALOG_ENTER_DURATION_MS / 1000.0) as f32,
+        dialog_enter_easing: [chrome_metrics::DIALOG_ENTER_EASING[0] as f32, chrome_metrics::DIALOG_ENTER_EASING[1] as f32, chrome_metrics::DIALOG_ENTER_EASING[2] as f32, chrome_metrics::DIALOG_ENTER_EASING[3] as f32],
+        dialog_enter_scale_from: chrome_metrics::DIALOG_ENTER_SCALE_FROM as f32,
         checker_light: Rgba::from_token(&diagram.checker_light),
         checker_dark: Rgba::from_token(&diagram.checker_dark),
         diagram_stroke: Rgba::from_token(&diagram.stroke),

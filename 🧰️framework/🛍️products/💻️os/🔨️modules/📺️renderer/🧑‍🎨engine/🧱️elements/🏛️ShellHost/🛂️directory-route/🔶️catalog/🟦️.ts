@@ -73,7 +73,8 @@ export function useCatalogState({ core }: { readonly core: ShellCoreAfterBackbon
       });
     });
     worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "open", actorIdentityGrant: {maximumItems:1024,maximumCopyBytes:65536,maximumCapacityBytes:65536,maximumReleaseBytes:65536,maximumDepth:64}, clientInstanceId, documentId, schema, bindings: [admission.binding], actor: shellActorIdRef.current }) });
-    worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "send", documentId, clientInstanceId, message: { kind: "localDocumentArchive", archive: Array.from(admission.archive) } }) });
+    const wire = encodeBackboneWorkerRequest({ kind: "send", documentId, clientInstanceId, message: { kind: "localDocumentArchive", archive: admission.archive } });
+    worker.postMessage({ wire }, [wire.buffer]);
     const written = await verified;
     worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "close", documentId, clientInstanceId }) });
     return written;

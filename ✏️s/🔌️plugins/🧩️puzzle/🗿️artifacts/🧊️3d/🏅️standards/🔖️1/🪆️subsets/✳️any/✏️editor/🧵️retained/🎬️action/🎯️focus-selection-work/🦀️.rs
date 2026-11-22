@@ -55,7 +55,7 @@ impl Puzzle3dFocusSelectionWork {
         Self::frames_source(Self::selection(interaction), object_id)
     }
 
-    fn frames_source(selected: &[String], object_id: &str) -> bool {
+    pub fn frames_source(selected: &[String], object_id: &str) -> bool {
         selected.is_empty() || selected.iter().any(|id| id == object_id)
     }
 

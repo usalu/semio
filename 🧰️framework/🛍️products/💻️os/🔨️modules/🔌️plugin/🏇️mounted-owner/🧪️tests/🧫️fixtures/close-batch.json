@@ -1,0 +1,181 @@
+[
+  {
+    "id": "complete-after-paid-actions",
+    "items": 4,
+    "deadline": 100,
+    "actions": [
+      {
+        "kind": "progress",
+        "items": 1,
+        "copy": 4,
+        "capacity": 8,
+        "release": 16,
+        "now": 12
+      },
+      {
+        "kind": "progress",
+        "items": 1,
+        "copy": 2,
+        "capacity": 0,
+        "release": 4,
+        "now": 14
+      },
+      {
+        "kind": "complete",
+        "items": 0,
+        "copy": 0,
+        "capacity": 0,
+        "release": 0,
+        "now": 15
+      }
+    ],
+    "expected": {
+      "kind": "complete",
+      "calls": 3,
+      "items": 2,
+      "copy": 6,
+      "capacity": 8,
+      "release": 20
+    }
+  },
+  {
+    "id": "total-grant-exhausted",
+    "items": 1,
+    "deadline": 100,
+    "actions": [
+      {
+        "kind": "progress",
+        "items": 1,
+        "copy": 4,
+        "capacity": 0,
+        "release": 2,
+        "now": 12
+      },
+      {
+        "kind": "complete",
+        "items": 0,
+        "copy": 0,
+        "capacity": 0,
+        "release": 0,
+        "now": 14
+      }
+    ],
+    "expected": {
+      "kind": "progress",
+      "calls": 1,
+      "items": 1,
+      "copy": 4,
+      "capacity": 0,
+      "release": 2
+    }
+  },
+  {
+    "id": "empty-action-yields-with-earlier-receipts",
+    "items": 4,
+    "deadline": 100,
+    "actions": [
+      {
+        "kind": "progress",
+        "items": 0,
+        "copy": 0,
+        "capacity": 0,
+        "release": 16,
+        "now": 12
+      },
+      {
+        "kind": "progress",
+        "items": 0,
+        "copy": 0,
+        "capacity": 0,
+        "release": 0,
+        "now": 14
+      },
+      {
+        "kind": "complete",
+        "items": 0,
+        "copy": 0,
+        "capacity": 0,
+        "release": 0,
+        "now": 15
+      }
+    ],
+    "expected": {
+      "kind": "progress",
+      "calls": 2,
+      "items": 0,
+      "copy": 0,
+      "capacity": 0,
+      "release": 16
+    }
+  },
+  {
+    "id": "deadline-stops-after-first-completed-action",
+    "items": 4,
+    "deadline": 12,
+    "actions": [
+      {
+        "kind": "progress",
+        "items": 1,
+        "copy": 4,
+        "capacity": 0,
+        "release": 0,
+        "now": 12
+      },
+      {
+        "kind": "complete",
+        "items": 0,
+        "copy": 0,
+        "capacity": 0,
+        "release": 0,
+        "now": 14
+      }
+    ],
+    "expected": {
+      "kind": "progress",
+      "calls": 1,
+      "items": 1,
+      "copy": 4,
+      "capacity": 0,
+      "release": 0
+    }
+  },
+  {
+    "id": "release-only-actions-respect-iteration-bound",
+    "items": 2,
+    "deadline": 100,
+    "actions": [
+      {
+        "kind": "progress",
+        "items": 0,
+        "copy": 0,
+        "capacity": 0,
+        "release": 3,
+        "now": 12
+      },
+      {
+        "kind": "progress",
+        "items": 0,
+        "copy": 0,
+        "capacity": 0,
+        "release": 4,
+        "now": 14
+      },
+      {
+        "kind": "complete",
+        "items": 0,
+        "copy": 0,
+        "capacity": 0,
+        "release": 0,
+        "now": 15
+      }
+    ],
+    "expected": {
+      "kind": "progress",
+      "calls": 2,
+      "items": 0,
+      "copy": 0,
+      "capacity": 0,
+      "release": 7
+    }
+  }
+]

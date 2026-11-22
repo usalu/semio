@@ -26,6 +26,7 @@ function scan(file:string,text:string):string[]{
   if(!line.includes(".cache")||comment(line)||reading.test(line))return;
   for(const match of line.matchAll(literal)){
    if(foreign.test(line.slice(Math.max(0,match.index!-14),match.index!)))continue;
+   if(!match[0].includes("/")&&!/\b(?:join|resolve)\([^()]*$/u.test(line.slice(0,match.index!)))continue;
    try{requireDeclaredCacheSegmentsV1([match[1]!],ledger,"native");}catch{violations.push(file+":"+(number+1)+" "+match[1]);}
   }
  });

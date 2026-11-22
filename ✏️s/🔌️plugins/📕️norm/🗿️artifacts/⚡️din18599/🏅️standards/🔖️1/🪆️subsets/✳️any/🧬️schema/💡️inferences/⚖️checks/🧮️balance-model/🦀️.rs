@@ -1,6 +1,7 @@
 //! 🧮️ DIN V 18599 balance model: usage profiles, zone transmission and ventilation, solar gains, utilization and the zone balances.
 
 use super::*;
+use semio_s_artifact_norm_din18599_model::POTSDAM_HORIZONTAL_IRRADIANCE_W_M2;
 
 const RHO_CA: f64 = DIN_V_18599_1_RHO_CA;
 
@@ -261,7 +262,7 @@ pub fn zone_heating_months(doc: &Din18599Snapshot) -> Vec<(String, Vec<HeatingMo
 }
 
 fn solar_irradiance_for_element(climate: &MonthlyClimate, month: usize, element: &EnvelopeElement) -> f64 {
-    let horizontal_reference = semio_s_artifact_norm_din18599_model::schema::snapshot::POTSDAM_HORIZONTAL_IRRADIANCE_W_M2[month];
+    let horizontal_reference = POTSDAM_HORIZONTAL_IRRADIANCE_W_M2[month];
     potsdam_irradiance_w_m2(month, element.orientation_deg, element.tilt_deg)
         .map_or(0.0, |plane| climate.g_h_w_m2[month] * (plane / horizontal_reference))
 }

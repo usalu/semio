@@ -1,6 +1,7 @@
 //! 🖼️ Shared semantic UI builders for procedural generation surfaces.
 #![allow(clippy::result_large_err)]
 
+use semio_plugin::Axis;
 use semio_plugin::plugin_app_close_prelude::{form, *};
 use semio_ui_locale::{Locale, Terminology};
 

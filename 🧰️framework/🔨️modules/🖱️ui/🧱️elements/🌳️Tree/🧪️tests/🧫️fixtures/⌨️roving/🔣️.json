@@ -1,0 +1,113 @@
+{
+  "schema": "semio.ui.tree-roving/v1",
+  "tree": [
+    { "id": "fruit", "label": "Fruit", "expanded": true, "items": [{ "id": "apple", "label": "Apple" }, { "id": "banana", "label": "Banana" }] },
+    { "id": "veg", "label": "Vegetables", "expanded": false, "items": [{ "id": "carrot", "label": "Carrot" }] },
+    { "id": "nuts", "label": "Nuts" }
+  ],
+  "cases": [
+    {
+      "name": "arrows, Home and End move focus and stop at the ends",
+      "multiple": false,
+      "focus": "fruit",
+      "steps": [
+        { "key": "ArrowUp", "expect": { "handled": false, "focus": "fruit" } },
+        { "key": "ArrowDown", "expect": { "focus": "apple", "selected": [] } },
+        { "key": "ArrowDown", "expect": { "focus": "banana" } },
+        { "key": "ArrowDown", "expect": { "focus": "veg" } },
+        { "key": "ArrowUp", "expect": { "focus": "banana" } },
+        { "key": "End", "expect": { "focus": "nuts" } },
+        { "key": "ArrowDown", "expect": { "handled": false, "focus": "nuts" } },
+        { "key": "Home", "expect": { "focus": "fruit" } }
+      ]
+    },
+    {
+      "name": "Right enters or unfolds, Left folds or climbs to the parent",
+      "multiple": false,
+      "focus": "fruit",
+      "steps": [
+        { "key": "ArrowRight", "expect": { "focus": "apple" } },
+        { "key": "ArrowRight", "expect": { "handled": false, "focus": "apple" } },
+        { "key": "ArrowLeft", "expect": { "focus": "fruit" } },
+        { "key": "ArrowLeft", "expect": { "focus": "fruit", "expanded": [], "selected": ["fruit"], "clicked": ["fruit"] } },
+        { "key": "ArrowLeft", "expect": { "handled": false, "focus": "fruit" } },
+        { "key": "ArrowRight", "expect": { "expanded": ["fruit"], "clicked": ["fruit", "fruit"] } },
+        { "key": "End", "expect": { "focus": "nuts" } },
+        { "key": "ArrowRight", "expect": { "handled": false } },
+        { "key": "ArrowLeft", "expect": { "handled": false, "focus": "nuts" } }
+      ]
+    },
+    {
+      "name": "Enter and Space click the focused row, which folds an expandable one",
+      "multiple": false,
+      "focus": "veg",
+      "steps": [
+        { "key": "Enter", "expect": { "expanded": ["fruit", "veg"], "selected": ["veg"], "clicked": ["veg"] } },
+        { "key": "ArrowDown", "expect": { "focus": "carrot" } },
+        { "key": " ", "expect": { "selected": ["carrot"], "clicked": ["veg", "carrot"], "expanded": ["fruit", "veg"] } },
+        { "key": "Enter", "modifiers": ["shift"], "expect": { "handled": false } }
+      ]
+    },
+    {
+      "name": "a single-select tree treats Shift with a move key as a plain move",
+      "multiple": false,
+      "focus": "apple",
+      "steps": [
+        { "key": "ArrowDown", "modifiers": ["shift"], "expect": { "focus": "banana", "selected": [] } }
+      ]
+    },
+    {
+      "name": "a multi-select tree extends, toggles and ranges with Shift and Ctrl or Cmd; a range spans folded rows too",
+      "multiple": true,
+      "focus": "fruit",
+      "steps": [
+        { "click": "apple", "expect": { "focus": "apple", "selected": ["apple"] } },
+        { "key": "ArrowDown", "modifiers": ["shift"], "expect": { "focus": "banana", "selected": ["apple", "banana"] } },
+        { "key": "ArrowDown", "modifiers": ["shift"], "expect": { "focus": "veg", "selected": ["apple", "banana", "veg"] } },
+        { "key": "ArrowUp", "modifiers": ["shift"], "expect": { "focus": "banana", "selected": ["apple", "banana"] } },
+        { "key": "ArrowDown", "modifiers": ["ctrl"], "expect": { "focus": "veg", "selected": ["apple", "banana"] } },
+        { "key": " ", "modifiers": ["meta"], "expect": { "selected": ["apple", "banana", "veg"], "expanded": ["fruit"] } },
+        { "key": " ", "modifiers": ["ctrl"], "expect": { "selected": ["apple", "banana"] } },
+        { "click": "nuts", "modifiers": ["ctrl"], "expect": { "focus": "nuts", "selected": ["apple", "banana", "nuts"] } },
+        { "click": "banana", "modifiers": ["shift"], "expect": { "focus": "banana", "selected": ["banana", "veg", "carrot", "nuts"] } },
+        { "click": "fruit", "expect": { "selected": ["fruit"], "expanded": [] } }
+      ]
+    },
+    {
+      "name": "a first Shift+move ranges from the row focus came from",
+      "multiple": true,
+      "focus": "apple",
+      "steps": [
+        { "key": "ArrowDown", "modifiers": ["shift"], "expect": { "focus": "banana", "selected": ["apple", "banana"] } }
+      ]
+    },
+    {
+      "name": "a second press yields to the double-click activation",
+      "multiple": true,
+      "focus": "fruit",
+      "steps": [
+        { "click": "apple", "expect": { "selected": ["apple"], "clicked": ["apple"] } },
+        { "click": "apple", "count": 2, "expect": { "selected": ["apple"], "clicked": ["apple"], "doubleClicked": ["apple"] } }
+      ]
+    },
+    {
+      "name": "typeahead jumps to the next visible row starting with the typed text",
+      "multiple": false,
+      "focus": "fruit",
+      "steps": [
+        { "key": "a", "reset": true, "expect": { "focus": "apple" } },
+        { "key": "n", "reset": true, "expect": { "focus": "nuts" } },
+        { "key": "c", "reset": true, "expect": { "handled": false, "focus": "nuts" } },
+        { "key": "b", "reset": true, "expect": { "focus": "banana" } },
+        { "key": "a", "expect": { "focus": "banana" } },
+        { "key": "F", "reset": true, "expect": { "focus": "fruit" } }
+      ]
+    }
+  ],
+  "roving": [
+    { "remembered": null, "selected": [], "stop": "fruit" },
+    { "remembered": null, "selected": ["banana", "nuts"], "stop": "banana" },
+    { "remembered": "nuts", "selected": ["banana"], "stop": "nuts" },
+    { "remembered": "carrot", "selected": ["banana"], "stop": "banana" }
+  ]
+}

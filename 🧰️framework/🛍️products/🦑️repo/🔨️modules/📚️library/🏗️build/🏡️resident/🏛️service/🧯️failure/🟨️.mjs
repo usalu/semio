@@ -1,6 +1,7 @@
 import {createHash} from "node:crypto";
 import {graphMemoryRefusalOfV1} from "../../../🧠️memory/🟨️.mjs";
 import {homedir} from "node:os";
+import {volumeFactsTextV1} from "../../../🌡️host-capacity/🧹️disk-recovery/📊️volume-facts/🟦️.ts";
 import {lstatSync,mkdirSync,readdirSync,renameSync,rmSync,statSync,writeFileSync} from "node:fs";
 import {join} from "node:path";
 import {HOST_POLICY_V1,renderBothV1} from "../../📨️protocol/🎚️policy/🟨️.mjs";
@@ -130,6 +131,20 @@ export function leaseTimeoutRefusalOfV1(error,depth=4){
  return leaseTimeoutRefusalOfV1(error.cause,depth-1);
 }
 
+/** 🚧 The owner whose own source failed a read (`BUILD_SOURCE_UNPARSEABLE`, in the error or its causes): the source and the first line of the failure, and whether the replica has not settled (the source was written a moment ago); `undefined` for every other failure. A failure of one owner's source is a fact about that owner, never an unexpected failure of the service. @see ../../../🕸️graph/📥️inference/📦️project-nodes/🚧️source-failure/🟨️.mjs */
+export function ownerSourceOfV1(error,depth=4){
+ if(typeof error!=="object"||error===null||depth<0)return undefined;
+ if(error.code==="BUILD_SOURCE_UNPARSEABLE"&&typeof error.source==="string")return{unsettled:error.replicaUnsettled===true,fields:{source:error.source,message:String(error.message??"").split("\n")[0].replace(/\s+/gu," ").slice(0,300)}};
+ return ownerSourceOfV1(error.cause,depth-1);
+}
+
+/** 🛟️ The owners whose own configuration failed a read (`BUILD_OWNER_FAILED`, in the error or its causes) and the first line of the failure of the first one; `undefined` for every other failure. The failure of one project's configuration that the requested tasks need is a fact about that project, never an unexpected failure of the service. @see ../../../🕸️graph/📥️load/🛟️owner-isolation/🟦️.ts */
+export function ownerFailureOfV1(error,depth=4){
+ if(typeof error!=="object"||error===null||depth<0)return undefined;
+ if(error.code==="BUILD_OWNER_FAILED"&&Array.isArray(error.owners)&&error.owners.length>0){const cause=error.cause?.code==="BUILD_OWNER_FAILED"?error.cause.cause:error.cause;return{owners:error.owners.map(owner=>owner.name).join(", ").slice(0,300),message:String(cause?.message??error.message??"").split("\n")[0].replace(/\s+/gu," ").slice(0,300)};}
+ return ownerFailureOfV1(error.cause,depth-1);
+}
+
 /** 🏷️ The text a failure is logged by: its stack, led by its name, code, message and the project it belongs to (`semioProject`) whenever the stack does not carry them, so that a failure whose stack lost its message still says what failed and for which project. */
 export function failureDetailV1(error){
  const stack=String(error?.stack??error);
@@ -149,6 +164,10 @@ function handoverOfV1(error,depth=0){
 function failureRefusalCoreV1(error,{log,logPath,retry="later",root,platform,home,fullImage=fullImageOfV1,inspect,environment=process.env,pid=process.pid,ppid=process.ppid,streak,sameCauseMaximum=HOST_POLICY_V1.sliceRestartSameCauseMaximum}){
  const handed=handoverOfV1(error);
   if(handed!==undefined){log("graph-handover",handed);return{code:"handover",key:"host-graph-handover",fields:{message:handed},retry:"later"};}
+  const owned=ownerSourceOfV1(error);
+ if(owned!==undefined){log(owned.unsettled?"graph-replica-unsettled":"graph-owner-source",JSON.stringify(owned.fields));return{code:owned.unsettled?"stale":"unserved",key:owned.unsettled?"host-graph-replica-unsettled":"host-graph-owner-source",fields:owned.fields,retry:"later"};}
+  const failed=ownerFailureOfV1(error);
+ if(failed!==undefined){log("graph-owner-failed",JSON.stringify(failed));return{code:"unserved",key:"host-graph-owner-failed",fields:failed,retry:"later"};}
   const plan=planRefusalOfV1(error);
  if(plan!==undefined){log("graph-plan-too-heavy",JSON.stringify(plan));return{code:"unserved",key:"host-graph-plan-too-heavy",fields:plan,retry:"later"};}
  const heavy=heavyRefusalOfV1(error);
@@ -182,13 +201,20 @@ export function failureBlockV1({reference,detail,error,refusal,at=new Date(),lim
  return Buffer.from(head+kept+frames).subarray(0,limit).toString("utf8");
 }
 
+/** ✂️ Cuts a failure block to `room` bytes the way `failureBlockV1` does: the head and message give way, the stack frames stay. */
+function cutBlockV1(block,room){
+ const frame=block.indexOf("\n    at "),frames=frame<0?"":block.slice(frame),front=frame<0?block:block.slice(0,frame),keep=Math.max(0,room-Buffer.byteLength(frames)-3);
+ return Buffer.from(front).subarray(0,keep).toString("utf8").replace(/\uFFFD$/u,"")+(frame<0?"":"..."+frames);
+}
+
 /** 📮️ Writes a failure block into the origin folder of the shared store (`<store>/v1/origins/<origin>/service-failure.txt` and `service-failure-<reference>.txt`, the newest 16 references kept) the moment it happens, from the service process itself, so that the cause of a failure on a machine without a shell is readable on the server within seconds. Returns the path written, or `undefined` when the environment names no store or origin or the write fails. */
-export function mirrorFailureV1(block,reference,{environment=process.env}={}){
+export function mirrorFailureV1(block,reference,{environment=process.env,root}={}){
  const store=environment.SEMIO_FLEET_STORE_ROOT,origin=environment.SEMIO_FLEET_ORIGIN;
  if(!store||!origin||/[\\/]|^\.+$/u.test(origin))return undefined;
  try{
   const directory=join(store,"v1","origins",origin);mkdirSync(directory,{recursive:true});
-  for(const name of["service-failure-"+reference+".txt","service-failure.txt"]){const file=join(directory,name),temporary=file+"."+process.pid+".tmp";writeFileSync(temporary,block);renameSync(temporary,file);}
+  const facts=root===undefined?"":volumeFactsTextV1(root),tail=facts===""?"":"\n"+facts+"\n",room=Math.max(0,FAILURE_BLOCK_BYTES_V1-Buffer.byteLength(tail)),text=facts===""?block:Buffer.byteLength(block)<=room?block.replace(/\n*$/u,"")+tail:cutBlockV1(block,room)+tail;
+  for(const name of["service-failure-"+reference+".txt","service-failure.txt"]){const file=join(directory,name),temporary=file+"."+process.pid+".tmp";writeFileSync(temporary,text);renameSync(temporary,file);}
   const kept=readdirSync(directory).filter(name=>/^service-failure-[0-9a-f]{8}\.txt$/u.test(name)).map(name=>[name,statSync(join(directory,name)).mtimeMs]).sort((a,b)=>b[1]-a[1]);
   for(const[name]of kept.slice(FAILURE_FILES_KEPT_V1))rmSync(join(directory,name),{force:true});
   return join(directory,"service-failure.txt");
@@ -198,6 +224,6 @@ export function mirrorFailureV1(block,reference,{environment=process.env}={}){
 /** 🛟️ Turns an unexpected failure of a request into the refusal the client receives (see `failureRefusalCoreV1` in this file for the kinds), and writes the block of every failure that carries a reference into the origin folder of the store. */
 export function failureRefusalV1(error,options){
  const refusal=failureRefusalCoreV1(error,options),reference=refusal.fields?.reference;
- if(typeof reference==="string"&&/^[0-9a-f]{8}$/u.test(reference))mirrorFailureV1(failureBlockV1({reference,detail:failureDetailV1(error),error,refusal}),reference,{environment:options.environment});
+ if(typeof reference==="string"&&/^[0-9a-f]{8}$/u.test(reference))mirrorFailureV1(failureBlockV1({reference,detail:failureDetailV1(error),error,refusal}),reference,{environment:options.environment,root:options.root});
  return refusal;
 }

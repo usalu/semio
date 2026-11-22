@@ -69,7 +69,7 @@ fn merge_action_args_lets_the_patch_win_over_existing_args() {
     patch.insert("id".to_string(), Value::from("overridden"));
     patch.insert("targetId".to_string(), Value::from("t1"));
 
-    let merged: Value = serde_json::from_str(&semio_framework_pack_json::from_dsl_value(&merge_action_args(Some(&existing_dsl), patch).expect("merged args")).to_string()).expect("json args");
+    let merged: Value = serde_json::from_str(&semio_framework_pack_json::from_dsl_value(&semio_renderer_wgpu_ui_engine::retained_ui_engine::merge_action_args(Some(&existing_dsl), patch).expect("merged args")).to_string()).expect("json args");
 
     assert_eq!(merged.get("id").and_then(Value::as_str), Some("overridden"));
     assert_eq!(merged.get("kept").and_then(Value::as_bool), Some(true));
@@ -105,7 +105,7 @@ fn apply_drop_committed_queues_the_merged_action_into_input() {
     payload.insert("application/x-semio-catalogue-item".into(), "{\"id\":\"abc\",\"windowId\":\"unrelated-window\"}".into());
     let mut input = semio_ui_wgpu_input::InputState::<ActionDescriptor>::default();
 
-    apply_drop_committed(window_id, target, &payload, &mut input).expect("fixture drop admission succeeds");
+    apply_drop_committed(window_id, target, 0.0, &payload, &mut input).expect("fixture drop admission succeeds");
 
     let queued = semio_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input);
     assert_eq!(queued.len(), 1);
@@ -115,6 +115,11 @@ fn apply_drop_committed_queues_the_merged_action_into_input() {
     assert_eq!(args.get("id").and_then(semio_framework::DslValue::as_str), Some("abc"), "the decoded payload should flow through");
     assert_eq!(args.get("kept").and_then(semio_framework::DslValue::as_bool), Some(true), "the drop_action's own existing args should survive");
     assert_eq!(args.get("windowId").and_then(semio_framework::DslValue::as_str), Some(window_id), "the drop payload cannot replace its host-owned window target");
+    assert!(args.get("targetId").is_none() && args.get("dropPosition").is_none());
+
+    let positional = DragPayload::from([("application/x-semio-tree-row-reorder".into(), "{\"id\":\"abc\"}".into())]);
+    apply_drop_committed(window_id, target, 0.0, &positional, &mut input).expect("a stack cannot accept a positional row drop");
+    assert!(semio_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input).is_empty());
 }
 
 #[test]
@@ -124,7 +129,7 @@ fn apply_drop_committed_is_a_no_op_without_a_decodable_semio_payload() {
     let target = UI_ENGINE.with(|cell| cell.borrow().tree(window_id).unwrap().root.unwrap());
     let mut input = semio_ui_wgpu_input::InputState::<ActionDescriptor>::default();
 
-    apply_drop_committed(window_id, target, &DragPayload::new(), &mut input).expect("fixture drop admission succeeds");
+    apply_drop_committed(window_id, target, 0.0, &DragPayload::new(), &mut input).expect("fixture drop admission succeeds");
 
     assert!(semio_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input).is_empty());
 }

@@ -35,7 +35,7 @@ impl IndirectHeaderCursor {
     pub fn position(&self) -> usize { self.position }
 
     /// 🧾️ Inspects at most one source byte per unit of work, retaining split tokens across grants.
-    pub fn advance(&mut self, source: &[u8], grant: usize) -> Result<(usize, HeaderStep), &'static str> {
+    pub fn advance(&mut self, byte_at: impl Fn(usize) -> Option<u8>, grant: usize) -> Result<(usize, HeaderStep), &'static str> {
         let mut inspected = 0;
         loop {
             if matches!(self.state, State::Complete) {
@@ -43,7 +43,7 @@ impl IndirectHeaderCursor {
                 return Ok((inspected, HeaderStep::Complete { id, body_offset: self.position }));
             }
             if inspected == grant { return Ok((inspected, HeaderStep::More)); }
-            let byte = source.get(self.position).copied().ok_or("truncated indirect object header")?;
+            let byte = byte_at(self.position).ok_or("truncated indirect object header")?;
             inspected += 1;
             if self.comment {
                 self.comment = !matches!(byte, b'\n' | b'\r');
@@ -96,7 +96,7 @@ mod tests {
         for grant in 1..=12 {
             let mut cursor = IndirectHeaderCursor::new(start);
             loop {
-                let (inspected, step) = cursor.advance(pdf, grant).unwrap();
+                let (inspected, step) = cursor.advance(|position| pdf.get(position).copied(), grant).unwrap();
                 assert!(inspected <= grant);
                 if let HeaderStep::Complete { id, body_offset } = step {
                     assert_eq!(id, ObjRef { num: 4, gen: 0 });
@@ -112,9 +112,9 @@ mod tests {
     fn comments_and_delimiters_do_not_change_numbers() {
         let source = b"% lead\r\n7% object\n65535% generation\robj<<";
         let mut cursor = IndirectHeaderCursor::new(0);
-        let (_, complete) = cursor.advance(source, source.len()).unwrap();
+        let (_, complete) = cursor.advance(|position| source.get(position).copied(), source.len()).unwrap();
         assert_eq!(complete, HeaderStep::Complete { id: ObjRef { num: 7, gen: 65535 }, body_offset: source.len() - 2 });
-        assert!(IndirectHeaderCursor::new(0).advance(b"7 65536 obj ", 64).is_err());
-        assert!(IndirectHeaderCursor::new(0).advance(b"7 0 object ", 64).is_err());
+        assert!(IndirectHeaderCursor::new(0).advance(|position| b"7 65536 obj ".get(position).copied(), 64).is_err());
+        assert!(IndirectHeaderCursor::new(0).advance(|position| b"7 0 object ".get(position).copied(), 64).is_err());
     }
 }

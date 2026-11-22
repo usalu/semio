@@ -3,7 +3,7 @@ import {expect,test} from "bun:test";
 import {Database} from "bun:sqlite";
 import {spawnSync} from "node:child_process";
 import {fileURLToPath} from "node:url";
-import {TAKE_POLICY_V1,createTakeLedgerV1,takeAdmittedV1,takeConcurrencyV1,takeLanesV1, takePassV1,takePollV1,takePollWaitV1,takeSplitV1} from "../🟨️.mjs";
+import {TAKE_POLICY_V1,createTakeLedgerV1,takeAdmittedV1,takeConcurrencyV1,takeLookConcurrencyV1,takeLanesV1, takePassV1,takePollV1,takePollWaitV1,takeSplitV1} from "../🟨️.mjs";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};
 import cancellation from "./🧫️fixtures/take-cancellation.json" with {type:"json"};
@@ -58,13 +58,15 @@ test("the pause, the line and the policy equal the schema, the fixture and the P
  expect(ajv.validate({$ref:"#/definitions/Policy",definitions:schema.definitions},schema.definitions.Policy.const)).toBe(true);
  const run=spawnSync("python3",["-I",here("./🐍️.py"),here("../🧬️schema/🔣️.json"),here("./🧫️fixtures/🔣️.json")],{encoding:"utf8"});
  expect(run.status,run.stderr).toBe(0);
- const oracle=JSON.parse(run.stdout) as {waits:number[];lines:string[];lanes:number[];splits:{light:string[];heavy:string[]}[]};
+ const oracle=JSON.parse(run.stdout) as {waits:number[];lines:string[];lanes:number[];looks:number[];splits:{light:string[];heavy:string[]}[]};
  expect(fixture.rounds.map(round=>takePollWaitV1(round))).toEqual(oracle.waits);
  expect(oracle.waits[0]).toBe(TAKE_POLICY_V1.pollFirstMilliseconds);expect(oracle.waits.at(-1)).toBe(TAKE_POLICY_V1.pollMaximumMilliseconds);
  expect(oracle.waits.every((value,index)=>index===0||value>=oracle.waits[index-1]!)).toBe(true);
  const lines=fixture.ledgers.map(row=>{const ledger=createTakeLedgerV1(row.total);for(const [name,state] of Object.entries(row.states))ledger.mark(name,state as never);ledger.want(row.wanted);ledger.run(row.running);return ledger.line(row.language);});
  expect(lines).toEqual(oracle.lines);
  expect(fixture.cuts.map(cut=>takeConcurrencyV1(cut??Infinity))).toEqual(oracle.lanes);
+ expect(fixture.cuts.map(cut=>takeLookConcurrencyV1(cut??Infinity))).toEqual(oracle.looks);
+ expect(oracle.looks).toEqual([12,12,12,8,8,8,8]);
  expect(fixture.splits.map(row=>{const heavy=new Set(row.heavy);return takeSplitV1(row.names,name=>heavy.has(name));})).toEqual(oracle.splits);
  expect(oracle.splits[0]).toEqual({light:["o0","o2","o3","o5"],heavy:["o1","o4"]});
 });
@@ -75,6 +77,17 @@ test("a pass under a cut never has more looks in flight than the cut allows, an 
   await takePassV1({names:Array.from({length:60},(_,index)=>"o"+index),concurrency:takeConcurrencyV1(cut),attempt:async()=>{flying++;peak=Math.max(peak,flying);await new Promise(resolve=>setTimeout(resolve,2));flying--;return "miss";}});
   expect(peak).toBe(Math.min(TAKE_POLICY_V1.concurrency,cut));
  }
+});
+
+test("the looks of a pass under a cut still reach the declared floor, and the footprint gate holds what they would pile up",async()=>{
+ for(const cut of [Infinity,4,2,1]){
+  let flying=0,peak=0;
+  await takePassV1({names:Array.from({length:60},(_,index)=>"o"+index),concurrency:takeLookConcurrencyV1(cut),attempt:async()=>{flying++;peak=Math.max(peak,flying);await new Promise(resolve=>setTimeout(resolve,2));flying--;return "miss";}});
+  expect(peak).toBe(Math.max(Math.min(TAKE_POLICY_V1.concurrency,cut),Math.min(TAKE_POLICY_V1.concurrency,TAKE_POLICY_V1.lookFloorConcurrency)));
+ }
+ let held=0,most=0;const gate={async admit(){await new Promise(resolve=>setTimeout(resolve,1));}},state={flying:0},attempt=takeAdmittedV1(async()=>{held++;most=Math.max(most,held);await new Promise(resolve=>setTimeout(resolve,3));held--;return "miss";},()=>gate,undefined,state);
+ await takePassV1({names:Array.from({length:40},(_,index)=>"g"+index),concurrency:takeLookConcurrencyV1(2),attempt});
+ expect(most).toBeLessThanOrEqual(TAKE_POLICY_V1.lookFloorConcurrency);
 });
 
 test("the counts of a ledger: an owner counts once by its last outcome, taking an owner ends its wish",()=>{

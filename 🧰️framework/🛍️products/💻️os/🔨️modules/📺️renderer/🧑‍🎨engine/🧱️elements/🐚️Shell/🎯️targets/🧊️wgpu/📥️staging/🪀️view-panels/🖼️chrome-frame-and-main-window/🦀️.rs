@@ -79,9 +79,12 @@ pub enum ShellChromeFramePhase {
     /// 🚪️ The frame-pumped document open's band — phase, step, elapsed time and its cancel control —
     /// painted under the plugin-install band while the guest instantiates and loads the document.
     DocumentOpen,
+    /// 🧱️ The bootstrap, execution-target, artifact-creation and route-admission status stacks — React's `NoticeStack`s, painted above the bands of the document open and below the icon export.
+    StatusStacks,
     IconExport,
     TreeDrag,
     TutorialGesture,
+    TutorialCaptions,
     Error,
     IntroductionWrite,
     PersistPreferences,
@@ -164,9 +167,11 @@ impl ShellChromeFramePhase {
             Self::TransientNotice => "TransientNotice",
             Self::PluginInstall => "PluginInstall",
             Self::DocumentOpen => "DocumentOpen",
+            Self::StatusStacks => "StatusStacks",
             Self::IconExport => "IconExport",
             Self::TreeDrag => "TreeDrag",
             Self::TutorialGesture => "TutorialGesture",
+            Self::TutorialCaptions => "TutorialCaptions",
             Self::Error => "Error",
             Self::IntroductionWrite => "IntroductionWrite",
             Self::PersistPreferences => "PersistPreferences",
@@ -208,6 +213,9 @@ impl<'ctx> PanelsViewCtx<'ctx> {
     ) -> Result<bool,semio_framework_job::OriginalTurnFailure>{
         self.opening.advance_icon_export(cx)?;
         if cx.should_yield(){return Ok(false)}
+        let reduced_motion = semio_renderer_wgpu_host_base::host_platform_prefs().prefers_reduced_motion;
+        draw.set_reduced_motion(reduced_motion);
+        overlay.set_reduced_motion(reduced_motion);
         let mut failure=None;let completed=(||{
         if let Some(census) = cursor.note_opportunity() {
             debug_log(&format!("[TRACE] wgpu-shell chrome walk parked {census} windows={}", self.dock.dock_window_plan.len()));
@@ -405,7 +413,7 @@ impl<'ctx> PanelsViewCtx<'ctx> {
                 cursor.child = ShellChromeChildCursor::default();
             }
             ShellChromeFramePhase::AgentChatHeader => {
-                if !self.as_chrome_view().render_agent_chat_header_step(&mut cursor.child, overlay, atlas, input, theme, body) {
+                if !self.as_chrome_overlays().render_agent_chat_header_step(&mut cursor.child, overlay, atlas, input, theme, body) {
                     return false;
                 }
                 cursor.advance(ShellChromeFramePhase::Navbar);
@@ -417,7 +425,7 @@ impl<'ctx> PanelsViewCtx<'ctx> {
                 cursor.advance(ShellChromeFramePhase::TutorialBar);
             }
             ShellChromeFramePhase::TutorialBar => {
-                if !self.as_chrome_view().render_tutorial_bar_step(&mut cursor.child, overlay, atlas, icons, input, theme, w) {
+                if !self.as_chrome_overlays().render_tutorial_bar_step(&mut cursor.child, overlay, atlas, icons, input, theme, w) {
                     return false;
                 }
                 cursor.advance(ShellChromeFramePhase::Footer);
@@ -471,19 +479,25 @@ impl<'ctx> PanelsViewCtx<'ctx> {
                 cursor.advance(ShellChromeFramePhase::TransientNotice);
             }
             ShellChromeFramePhase::TransientNotice => {
-                if !self.as_chrome_view().render_transient_notice_step(&mut cursor.child, overlay, atlas, input, theme, w) {
+                if !self.as_chrome_overlays().render_transient_notice_step(&mut cursor.child, overlay, atlas, input, theme, w) {
                     return false;
                 }
                 cursor.advance(ShellChromeFramePhase::PluginInstall);
             }
             ShellChromeFramePhase::PluginInstall => {
-                if !self.as_chrome_view().render_plugin_install_step(&mut cursor.child, overlay, atlas, input, theme, w) {
+                if !self.as_chrome_overlays().render_plugin_install_step(&mut cursor.child, overlay, atlas, input, theme, w) {
                     return false;
                 }
                 cursor.advance(ShellChromeFramePhase::DocumentOpen);
             }
             ShellChromeFramePhase::DocumentOpen => {
-                if !self.as_chrome_view().render_document_opening_step(&mut cursor.child, overlay, atlas, input, theme, w) {
+                if !self.as_chrome_overlays().render_document_opening_step(&mut cursor.child, overlay, atlas, input, theme, w) {
+                    return false;
+                }
+                cursor.advance(ShellChromeFramePhase::StatusStacks);
+            }
+            ShellChromeFramePhase::StatusStacks => {
+                if !self.as_chrome_overlays().render_status_stacks_step(&mut cursor.child, overlay, atlas, input, theme, w, h) {
                     return false;
                 }
                 cursor.advance(ShellChromeFramePhase::IconExport);
@@ -500,13 +514,18 @@ impl<'ctx> PanelsViewCtx<'ctx> {
             }
             ShellChromeFramePhase::TutorialGesture => {
                 render_tutorial_gesture_overlay_node(&*self.chrome, &*self.surfaces, &*self.dock, &*self.tutorial, overlay, theme);
+                cursor.advance(ShellChromeFramePhase::TutorialCaptions);
+            }
+            ShellChromeFramePhase::TutorialCaptions => {
+                if !self.as_overlays_view().render_tutorial_captions_step(&mut cursor.child, overlay, atlas, theme, w, h) {
+                    return false;
+                }
                 cursor.advance(ShellChromeFramePhase::Error);
             }
             ShellChromeFramePhase::Error => {
-                let session = self.as_session();
-                if let Some(error) = &session.chrome.error {
-                    let error_top = h - theme.footer_height - session.subfooter_height(theme) - 24.0;
-                    match chrome_text_complete_step(draw, atlas, error, 12.0, error_top, (w - 24.0).max(1.0), theme.font_size_small, theme.error, &mut cursor.child.glyph) {
+                let subfooter_height = self.chrome.error.is_some().then(|| self.as_session().subfooter_height(theme));
+                if let (Some(error), Some(subfooter_height)) = (&self.chrome.error, subfooter_height) {
+                    match chrome_text_complete_step(draw, atlas, error, 12.0, h - theme.footer_height - subfooter_height - 24.0, (w - 24.0).max(1.0), theme.font_size_small, theme.error, &mut cursor.child.glyph) {
                         Ok(false) => return false,
                         Ok(true) => {}
                         Err(()) => cursor.child.glyph.reset(),
@@ -858,6 +877,7 @@ impl<'ctx> PanelsViewCtx<'ctx> {
                 cursor.phase = 6;
             }
             6 => {
+                self.as_chrome_view().paint_empty_anchor_drop_zones(draw, icons, input, theme);
                 if let Some((drag, zone)) = self.dock.dock_drag.as_ref().and_then(|drag| drag.drop_zone.as_ref().map(|zone| (drag, zone))) {
                     if let Some(indicator) = drop_zone_indicator_rect(zone, &self.dock.dock_drop_tab_bars, &self.dock.dock_drop_bodies, self.dock.dock_canvas_bounds, theme.gap_standard) {
                         draw.push_rounded([indicator.x, indicator.y, indicator.w, indicator.h], theme.accent.with_alpha(0.24), theme.border_radius);
@@ -888,3 +908,14 @@ pub const SHELL_CHROME_PARKED_REPORTS: u8 = 4;
 /// so crossing it means the phase's own cursor is not advancing at all.
 pub const SHELL_CHROME_PHASE_OPPORTUNITIES: u64 = 1 << 18;
 //#endregion ShellChrome
+
+//#region 🎞️TutorialVideoCue
+impl<'ctx> PanelsViewCtx<'ctx> {
+    /// 📹️ The tutorial video cue covering the playhead while a tutorial plays, pauses or is deviated from — what the browser host's `<video>` plays; `None` when no cue, or only a blob source, covers it.
+    pub fn tutorial_video_cue(&self) -> Option<semio_renderer_wgpu_shell_view_paint::TutorialVideoOverlay> {
+        use semio_renderer_wgpu_shell_surfaces::TutorialMode;
+        let runtime = self.tutorial.tutorial.as_ref().filter(|runtime| matches!(runtime.mode, TutorialMode::Playing | TutorialMode::Paused | TutorialMode::Deviated))?;
+        semio_renderer_wgpu_shell_view_paint::tutorial_video_overlay(runtime, self.chrome.screen_w, self.chrome.screen_h)
+    }
+}
+//#endregion 🎞️TutorialVideoCue

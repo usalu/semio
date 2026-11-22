@@ -44,7 +44,72 @@ impl<'ctx> WindowActionsCtx<'ctx> {
     /// Parked, never opened here: a picker ends on a user gesture and this funnel is a
     /// plain `fn`; `drain_deferred_actions` owns the `&mut self` the pick needs.
     pub fn queue_host_effects(&mut self, controller_id: &str, effects: Vec<semio_framework::kernel::Effect>) {
-        for effect in effects {
+        if effects.is_empty() { return; }
+        if self.settle.deferred_document_load.is_some() || !self.settle.held_host_effects.is_empty() {
+            let session = self.document_effect_session();
+            self.settle.held_host_effects.push_back(DeferredHostEffects {
+                session,
+                controller_id: controller_id.into(),
+                effects,
+            });
+            return;
+        }
+        self.apply_host_effects_until_load(controller_id, effects);
+    }
+
+    fn document_effect_session(&self) -> Option<(String, u32)> {
+        self.docs.session.as_ref().map(|session| (session.plugin_id.clone(), session.instance_id))
+    }
+
+    /// 🧭️ Advances one document-load boundary before releasing its dependent effects.
+    pub fn poll_deferred_document_effects(&mut self) -> bool {
+        let Some(load) = self.settle.deferred_document_load.take() else {
+            let Some(batch) = self.settle.held_host_effects.pop_front() else { return false; };
+            if batch.session == self.document_effect_session() {
+                self.apply_host_effects_until_load(&batch.controller_id, batch.effects);
+            }
+            return true;
+        };
+        match load {
+            DeferredDocumentLoad::Queued { pack, spr, following } => {
+                let Some((plugin_id, instance_id)) = self.document_effect_session() else { return true; };
+                if following.session.as_ref().is_none_or(|(id, instance)| id != &plugin_id || *instance != instance_id) {
+                    return true;
+                }
+                let Some(plugin) = self.plugins.plugins.iter().find(|entry| entry.plugin_id == plugin_id).cloned() else { return true; };
+                let (sender, completion) = std::sync::mpsc::channel();
+                let load = async move {
+                    let result = plugin.load_app_document_pack(instance_id, &pack, &spr).await;
+                    let _ = sender.send(result);
+                };
+                #[cfg(not(target_arch = "wasm32"))]
+                self.settle.submit_shell_io_future(async move { load.await; ShellIoCompletion::Finished });
+                #[cfg(target_arch = "wasm32")]
+                semio_renderer_wgpu_host_base::spawn_app_task(load);
+                self.settle.deferred_document_load = Some(DeferredDocumentLoad::Loading { completion, following });
+            }
+            DeferredDocumentLoad::Loading { following, .. } if following.session != self.document_effect_session() => {}
+            DeferredDocumentLoad::Loading { completion, following } => match completion.try_recv() {
+                Err(std::sync::mpsc::TryRecvError::Empty) => {
+                    self.settle.deferred_document_load = Some(DeferredDocumentLoad::Loading { completion, following });
+                    return false;
+                }
+                Ok(Ok(())) => {
+                    self.settle.owe_refresh(UiDirtyScope::Full);
+                    self.apply_host_effects_until_load(&following.controller_id, following.effects);
+                }
+                Ok(Err(error)) => {
+                    let _ = self.prefs.note_refused_open(error, &mut self.chrome);
+                }
+                _ => {}
+            },
+        }
+        true
+    }
+
+    fn apply_host_effects_until_load(&mut self, controller_id: &str, effects: Vec<semio_framework::kernel::Effect>) {
+        let mut effects = effects.into_iter();
+        while let Some(effect) = effects.next() {
             match effect {
                 semio_framework::kernel::Effect::SetActiveUtility { window_id, utility_id } => {
                     self.windows.set_active_utility(&window_id, (!utility_id.is_empty()).then_some(utility_id.as_str()), &mut self.chrome, &mut self.docs);
@@ -60,17 +125,15 @@ impl<'ctx> WindowActionsCtx<'ctx> {
                     }
                 }
                 semio_framework::kernel::Effect::LoadDocument { pack, spr } => {
-                    if let Some(session) = self.docs.session.clone() {
-                        if let Some(plugin) = self.plugins.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id).cloned() {
-                            let instance_id = session.instance_id;
-                            #[cfg(not(target_arch = "wasm32"))]
-                            self.settle.submit_shell_io_future(async move { ShellIoCompletion::Program(plugin.load_app_document_pack(instance_id, &pack, &spr).await) });
-                            #[cfg(target_arch = "wasm32")]
-                            semio_renderer_wgpu_host_base::spawn_app_task(async move {
-                                if let Err(error) = plugin.load_app_document_pack(instance_id, &pack, &spr).await { debug_log(&format!("[TRACE] wgpu shell loadDocument effect failed: {error}")); }
-                            });
-                        }
-                    }
+                    self.settle.deferred_document_load = Some(DeferredDocumentLoad::Queued {
+                        pack, spr,
+                        following: DeferredHostEffects {
+                            session: self.document_effect_session(),
+                            controller_id: controller_id.into(),
+                            effects: effects.collect(),
+                        },
+                    });
+                    return;
                 }
                 semio_framework::kernel::Effect::DispatchAction { action: dispatch_action_id, args, .. } => {
                     self.settle.deferred_actions.push(ActionDescriptor { controller_id: controller_id.to_string(), action: dispatch_action_id, args });

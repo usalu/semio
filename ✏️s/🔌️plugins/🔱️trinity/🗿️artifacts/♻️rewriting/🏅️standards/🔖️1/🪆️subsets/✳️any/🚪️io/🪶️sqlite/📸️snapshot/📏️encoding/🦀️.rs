@@ -2,9 +2,8 @@
 use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
 use crate::standards::v1::subsets::any::schema::rule::{Pattern, Rhs};
 use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
-use semio_framework_graph_manifest::PropertyDef;
 use semio_framework_graph_manifest::PropertyValue;
-use semio_framework_value::{ValueError,ValueType};
+use semio_framework_value::ValueError;
 use semio_os_kernel::sqlite_snapshot::{SqliteSnapshotControl,artifact::NativeEncodingBound};
 type Bound<'a,'p>=NativeEncodingBound<'a,'p>;
 pub fn text(value:&str,bound:&mut Bound<'_,'_>)->Result<(),ValueError>{bound.add(128)?;bound.repeated(value.len(),6)}
@@ -19,16 +18,9 @@ pub fn property(value:&PropertyValue,bound:&mut Bound<'_,'_>)->Result<(),ValueEr
  }}
  Ok(())
 }
-fn declarations(values:&[PropertyDef],bound:&mut Bound<'_,'_>)->Result<(),ValueError>{
- for value in values{bound.add(512)?;text(&value.name,bound)?;optional(&value.expr,bound)?;let mut kind=&value.value_type;loop{bound.add(256)?;match kind{ValueType::List(value)=>kind=value,ValueType::Schema(value)=>{text(value,bound)?;break},_=>break}}}
- Ok(())
-}
 fn jack(value:&JackSnapshot,bound:&mut Bound<'_,'_>)->Result<(),ValueError>{
  bound.add(2048)?;for value in[&value.schema,&value.name,&value.query,&value.content.child_id,&value.content.target.artifact_id,&value.content.target.dialect.artifact_kind,&value.content.target.dialect.standard,&value.content.target.dialect.subset]{text(value,bound)?;}
- optional(&value.manifest_id,bound)?;optional(&value.root_node_id,bound)?;bound.repeated(3,1100)?;
- for kind in &value.manifest.node_kinds{bound.add(512)?;text(&kind.name,bound)?;for port in &kind.port_kinds{text(port,bound)?;}declarations(&kind.properties,bound)?;}
- for kind in &value.manifest.edge_kinds{bound.add(512)?;text(&kind.name,bound)?;declarations(&kind.properties,bound)?;}
- for kind in &value.manifest.port_kinds{bound.add(512)?;text(&kind.name,bound)?;declarations(&kind.properties,bound)?;}
+ text(&value.manifest_id,bound)?;optional(&value.root_node_id,bound)?;bound.repeated(3,1100)?;
  Ok(())
 }
 pub fn rhs(value:&Rhs,bound:&mut Bound<'_,'_>)->Result<(),ValueError>{

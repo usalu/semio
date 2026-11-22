@@ -1,5 +1,6 @@
 {
   "job": 7,
+  "actorTransitionWireHeader": 200,
   "offset": 3,
   "length": 5,
   "cases": [

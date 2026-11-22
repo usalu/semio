@@ -1,4 +1,5 @@
 use semio_s_artifact_fem_3d_editor::editor::fem3d::commands::gumball::*;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::gumball::fem3d_gumball_tick;
 use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::gumball::Fem3dGumballMotion;
 use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::gumball::Fem3dGumballTool;

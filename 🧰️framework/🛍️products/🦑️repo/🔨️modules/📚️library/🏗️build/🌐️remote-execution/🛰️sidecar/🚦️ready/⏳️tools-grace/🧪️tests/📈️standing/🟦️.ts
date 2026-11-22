@@ -2,11 +2,12 @@ import {test,expect} from "bun:test";
 import {recordToolsProgress,sampleToolsProgress,toolsGraceActive} from "../../🟦️.ts";
 import {join} from "node:path";
 import {mkdirSync,mkdtempSync,readFileSync,writeFileSync,renameSync,unlinkSync,symlinkSync} from "node:fs";
-import {declareBuildTestEnvelopeV1,withBuildTestInvocationV1} from "../../../../../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts";
+import {withBuildTestInvocationV1} from "../../../../../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts";
+import {declareLibraryBuildTestEnvelopeV1} from "../../../../../../../🧪️testing/🪪️native-birth/🟦️.ts";
 import {createIssuedResourceControlV1} from "../../../../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import {acquireResourceLease} from "../../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
 import {readLeaseRegistryEntriesV1,leaseProcessStartedAtMsV1,leaseRegistryFolderV1} from "../../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🧭️order/🗂️registry/🟦️.ts";
-declareBuildTestEnvelopeV1({owner:"test:ready-owned-tools-standing",maximumElapsedMilliseconds:30000,capabilities:{artifacts:true}});
+declareLibraryBuildTestEnvelopeV1({suite:"build-remote-execution",maximumElapsedMilliseconds:30000});
 test("issued tools progress publishes through the existing held census",()=>withBuildTestInvocationV1(async original=>{
  const previousRegistry=process.env.SEMIO_LEASE_REGISTRY_DIRECTORY,previousOwner=process.env.SEMIO_LEASE_OWNER;
  try{

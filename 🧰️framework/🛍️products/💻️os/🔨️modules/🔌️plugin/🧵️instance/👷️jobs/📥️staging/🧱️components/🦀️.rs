@@ -65,7 +65,7 @@ pub struct PendingReserved<A: ArtifactApp> {
     pub reserved_commits: std::collections::VecDeque<FrameworkReservedCommit<A::Snapshot,A::Mutation>>,
     pub reserved_commit_outcome: Option<Result<InvocationResult, Fault>>,
     pub pending_document_window_admission:std::mem::ManuallyDrop<Option<DocumentWindowResetAdmission>>,
-    pub reserved_preparation:ManuallyDrop<Option<crate::reserved_preparation::ReservedPreparation<A>>>,
+    pub reserved_preparation:ManuallyDrop<Option<Box<crate::reserved_preparation::ReservedPreparation<A>>>>,
     pub reserved_birth:ManuallyDrop<Option<semio_framework_job::OriginalConstructionAdmission>>,
 }
 
@@ -357,29 +357,6 @@ impl<A: ArtifactApp> ToolOperations<A> {
     pub fn framework_registration(&self,id:&str)->Option<&ArtifactToolRegistration>{self.framework_registrations().find_map(|(key,row)|(key==id).then_some(row))}
     pub fn bounded_proof(&self,id:&str)->Option<&QualifiedBoundedFirstStepProof>{self.bounded_tool_proofs.get(id).or_else(||self.declared_tools.as_ref().and_then(DeclaredToolCatalogAlias::catalog).and_then(|catalog|catalog.bounded(id)))}
     pub fn bounded_contracts(&self)->impl Iterator<Item=&ArtifactToolPublicContract>{self.bounded_tool_contracts.iter().chain(self.declared_tools.as_ref().and_then(DeclaredToolCatalogAlias::catalog).into_iter().flat_map(|catalog|catalog.bounded_contracts.iter()))}
-    /// 📚️ Lists this tool owner's registered public contracts in their declared order.
-    pub fn public_tool_contracts(&self) -> Vec<ArtifactToolPublicContract> {
-        self.bounded_contracts()
-            .cloned()
-            .chain(self.framework_registrations().map(|(_,row)|row).map(|registration| ArtifactToolPublicContract {
-                owner: registration.owner,
-                controller_id: registration.key.controller_id.clone(),
-                tool_id: registration.key.tool_id.clone(),
-                schema_id: registration.schema_id.clone(),
-                max_raw_wire_bytes: registration.contract.max_raw_wire_bytes,
-                publication_lanes: registration.publication_lanes,
-            }))
-            .chain(self.app_registrations().map(|(_,row)|row).map(|registration| ArtifactToolPublicContract {
-                owner: registration.owner,
-                controller_id: registration.key.controller_id.clone(),
-                tool_id: registration.key.tool_id.clone(),
-                schema_id: registration.schema_id.clone(),
-                max_raw_wire_bytes: registration.contract.max_raw_wire_bytes,
-                publication_lanes: registration.publication_lanes,
-            }))
-            .collect()
-    }
-
     /// 🔭️ Builds the component from the parts the composer constructs first; every other field starts at its construction value.
     pub fn new(registry: AppActionRegistry, tool_job_controller_id: String, tool_jobs: semio_framework::ActionBus, bounded_tool_proofs: BTreeMap<String, QualifiedBoundedFirstStepProof>, mut bounded_tool_contracts: Vec<ArtifactToolPublicContract>, framework_tool_registrations: BTreeMap<String, ArtifactToolRegistration>, app_tool_registrations: BTreeMap<String, ArtifactToolRegistration>, instance_operation_owner: ArtifactInstanceOperationOwnerHandle) -> Self {
         bounded_tool_contracts.sort_by(|left,right|left.tool_id.cmp(&right.tool_id));

@@ -30,13 +30,11 @@ for (const row of fixture.cases) test(row.name, async () => {
       await session.prefetch({ filenames: [artifact, output, directoryOutput] });
       await session.write(join(root, `receipt-${pass}.json`), {
         manifest, cwd: root, command: "cargo", args: ["build"], buildDirectory: root,
-        builtAtMs: Date.now(), status: pass + 1 === row.passes ? 101 : 0, cancelled: false, units: [],
+        builtAtMs: Date.now(), status: row.change !== "seal" && pass + 1 === row.passes ? 101 : 0, cancelled: false, units: [],
         buildScripts: [{ package_id: "fixture", out_dir: root }],
       }, new Map(), root);
-      paths.push([artifact, false]);
-      const reclaimed = session.reclaimOutput(artifact, () => undefined);
-      expect(reclaimed).toBe(6);
-      expect(existsSync(artifact)).toBeFalse();
+      paths.push([artifact, true]);
+      expect(session.reclaimOutput(artifact, () => undefined)).toBeUndefined();
     }
     paths.push([output, true]);
     db.exec("create table claim(path text, retained integer)");
@@ -58,12 +56,22 @@ for (const row of fixture.cases) test(row.name, async () => {
     if (row.change === "refused") {
       writeFileSync(unretired, "unretired");
       await session.prefetch({ filenames: [unretired] });
-      expect(() => session.reclaimOutput(unretired, () => { throw Error("outside reservation"); })).toThrow("outside reservation");
+      expect(session.reclaimOutput(unretired, () => { throw Error("outside reservation"); })).toBeUndefined();
     }
     changes[row.change]!();
     const edit = await failedPassConcurrentEditV1({ startedMs: Date.now(), files: [], recheck: () => session.recheckFailedPass() });
     expect(edit?.reason ?? null).toBe(row.reason);
-    if (row.change === "seal") await expect(session.seal()).rejects.toMatchObject({ reason: "vanished" });
+    if (row.change === "seal") {
+      const unclaimed = join(root, "unclaimed.rmeta");
+      writeFileSync(unclaimed, "unclaimed");
+      expect(() => session.reclaimOutput(unclaimed, () => { throw Error("outside reservation"); })).toThrow("outside reservation");
+      expect(existsSync(unclaimed)).toBeTrue();
+      expect(session.reclaimOutput(unclaimed, () => undefined)).toBe(9);
+      expect(existsSync(unclaimed)).toBeFalse();
+      await session.seal();
+      await session.close();
+      expect(existsSync(join(root, "receipt-0.json"))).toBeTrue();
+    }
   } finally {
     db.close();
     rmSync(root, { recursive: true, force: true });

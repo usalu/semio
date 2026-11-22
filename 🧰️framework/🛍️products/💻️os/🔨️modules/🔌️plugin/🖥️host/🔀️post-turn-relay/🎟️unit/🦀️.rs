@@ -18,8 +18,49 @@ impl GuestRelayUnitFlow{
  fn validate(&self,cx:&StepContext<'_>)->Result<(),OriginalTurnFailure>{cx.original_source_parent()?.validate_borrowed_context(cx)?;if self.binding.is_some_and(|b|!b.matches(cx)){return Err(refused().into())}Ok(())}
  /// 🔤️ The source is borrowed only in this slice; its complete or partial receiver stays in the original flow.
  pub fn encode_step<S:semio_framework_pack_json::JsonWriteSource+?Sized>(&mut self,source:&S,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{self.validate(cx)?;if !matches!(self.phase,Phase::Encode|Phase::EncoderClose){return Err(refused().into())}if !metadata(cx,false)?{return Ok(false)}self.binding=Some(OriginalSourceBinding::borrow(cx));if self.phase==Phase::Encode{if self.encoder.advance(source,&mut*self.input,cx)?{self.phase=Phase::EncoderClose;}return Ok(false)}if self.encoder.close_step(cx)?{self.phase=Phase::Begin;return Ok(true)}Ok(false)}
+ /// 📦️ Builds the compact Job donor directly in the same unit that owns the Core handback.
+ pub(super) fn encode_job_frame_step(
+  &mut self, job:u64, kind:&str, payload:&[u8], cx:&mut StepContext<'_>,
+ )->Result<bool,OriginalTurnFailure>{
+  use semio_framework_actor::OriginalJobSourceWireHeader;
+  self.validate(cx)?;
+  if self.phase!=Phase::Encode||!self.encoder.terminal_is_empty(){return Err(refused().into())}
+  let header=OriginalJobSourceWireHeader{job,kind_bytes:kind.len(),input_bytes:Some(payload.len()),checkpoint_bytes:None};
+  let extent=header.extent()?;
+  if self.input.is_none(){
+   let grant=cx.retained_grant();
+   if extent>i32::MAX as usize{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"compact Job input exceeds Core address space").into())}
+   if grant.maximum_capacity_bytes<extent||grant.maximum_depth<3||!metadata(cx,false)?{return Ok(false)}
+   let mut input=Vec::new();
+   input.try_reserve_exact(extent).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"compact Job input allocation failed"))?;
+   let capacity=input.capacity();
+   *self.input=Some(input);
+   self.binding=Some(OriginalSourceBinding::borrow(cx));
+   cx.consume_retained(RetainedCloneProgress{retained_capacity_bytes:capacity,..Default::default()})?;
+   return Ok(false)
+  }
+  let offset=self.input.as_ref().ok_or_else(refused)?.len();
+  if offset==extent{
+   if !metadata(cx,false)?{return Ok(false)}
+   self.phase=Phase::Begin;
+   return Ok(true)
+  }
+  let header=header.bytes();
+  let data_start=header.len()+kind.len();
+  let bytes=if offset<header.len(){&header[offset..]}else if offset<data_start{&kind.as_bytes()[offset-header.len()..]}else{&payload[offset-data_start..]};
+  let grant=cx.retained_grant();
+  let count=bytes.len().min(16_384).min(grant.maximum_copy_bytes.saturating_sub(size_of::<usize>())).min(usize::try_from(cx.fuel_remaining().saturating_sub(1)).unwrap_or(usize::MAX));
+  if cx.should_yield()||cx.is_cancelled()||grant.maximum_items==0||grant.maximum_depth<3||count==0{return Ok(false)}
+  cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:count+size_of::<usize>(),..Default::default()})?;
+  cx.consume_fuel(count as u64+1);
+  self.input.as_mut().ok_or_else(refused)?.extend_from_slice(&bytes[..count]);
+  Ok(false)
+ }
  pub fn requires_execution(&self,runtime:&GuestRuntimes,instance:&GuestInstance)->Result<bool,OriginalTurnFailure>{if matches!(self.phase,Phase::Drive|Phase::Release){runtime.original_unit_requires_execution(instance)}else{Ok(false)}}
  pub fn needs_admission_budget(&self)->bool{self.phase==Phase::Begin}
+ pub(crate) fn frozen(&self)->bool{self.phase==Phase::Output}
+ pub(crate) fn header_return_possible(&self)->bool{matches!(self.phase,Phase::Release|Phase::AwaitBudget|Phase::DonorClose)}
+ pub(crate) fn header_return_required(&self)->bool{matches!(self.phase,Phase::AwaitBudget|Phase::DonorClose)}
  /// 🪙️ Controller metadata settles before the driver narrows its genuine VM credit from this actual context.
  pub fn prepare_execution_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{self.validate(cx)?;let retirement=cx.original_retirement_active();if self.failure().is_some()||!matches!(self.phase,Phase::Drive|Phase::Release)||retirement&&!matches!(self.phase,Phase::Drive|Phase::Release){return Err(refused().into())}let epoch=semio_framework_actor::RetainedTurnInput::borrow_original(cx)?.epoch;if self.prepared==Some(epoch){return Ok(true)}if !metadata(cx,retirement)?{return Ok(false)}self.progress.take();self.prepared=Some(epoch);Ok(true)}
  pub fn repeat_step(&mut self,runtime:&GuestRuntimes,instance:&mut GuestInstance,budget:semio_framework_actor::OriginalJobBudget,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{self.validate(cx)?;if self.phase!=Phase::AwaitBudget||self.failure().is_some(){return Err(refused().into())}if cx.original_retirement_active()&&!budget.cancelled{return Err(refused().into())}if !metadata(cx,cx.original_retirement_active())?{return Ok(false)}self.progress.take();if runtime.repeat_original_unit_step(instance,budget,cx)?{self.phase=Phase::Drive;return Ok(true)}Ok(false)}

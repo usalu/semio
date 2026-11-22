@@ -106,7 +106,7 @@ def validate_owner(owner):
     parent, child = owner
     exact(parent, MEMBERS)
     graph = parent["workingGraph"]
-    exact(graph, ("schema", "name", "manifest", "camera", "content", "query"), ("manifestId", "rootNodeId"))
+    exact(graph, ("schema", "name", "manifestId", "camera", "content", "query"), ("rootNodeId",))
     exact(graph["camera"], ("x", "y", "zoom"))
     for axis in graph["camera"].values():
         word(axis)

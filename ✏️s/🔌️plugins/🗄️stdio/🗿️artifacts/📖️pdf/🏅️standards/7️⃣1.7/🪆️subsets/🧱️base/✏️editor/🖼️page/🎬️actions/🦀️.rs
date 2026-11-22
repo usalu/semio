@@ -12,7 +12,7 @@ pub fn edit_from_action(action: &str, args: Option<&semio_framework_value::DslVa
     let object_id = || req_text(args, "object");
     let text_value = || req_text(args, "text");
     let (page, object, text, extra, x, y, width, height, red, green, blue) = match action {
-        "move-page" => (page_index()?, String::new(), String::new(), String::new(), req_num(args, "x")?, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+        "move-page" => (req_index(args, "page").or_else(|error| text_arg(args, "page").trim().parse().map_err(|_| error))?, String::new(), String::new(), String::new(), req_num(args, "x")?, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
         "set-font-size" => (page_index()?, object_id()?, String::new(), String::new(), 0.0, 0.0, 0.0, req_num(args, "size")?, 0.0, 0.0, 0.0),
         "set-text" => (page_index()?, object_id()?, text_value()?, String::new(), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
         "move" => (page_index()?, object_id()?, String::new(), String::new(), req_num(args, "x")?, req_num(args, "y")?, 0.0, 0.0, 0.0, 0.0, 0.0),
@@ -65,6 +65,11 @@ pub fn edit_from_action(action: &str, args: Option<&semio_framework_value::DslVa
         "set-glyph" => (0, object_id()?, text_value()?, String::new(), opt_num(args, "x", 0.0), opt_num(args, "y", 0.0), opt_num(args, "width", 10.0), opt_num(args, "height", 10.0), 0.0, 0.0, 0.0),
         "set-indirect-object" => (0, String::new(), text_arg(args, "text"), String::new(), req_num(args, "x")?, opt_num(args, "y", 0.0), 0.0, 0.0, 0.0, 0.0, 0.0),
         "set-mesh-reference" => (0, object_id()?, text_arg(args, "text"), text_arg(args, "extra"), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+        "create-annotation" => (page_index()?, object_id()?, text_arg(args, "text"), text_arg(args, "extra"), opt_num(args, "x", 0.0), opt_num(args, "y", 0.0), opt_num(args, "width", 0.0), opt_num(args, "height", 0.0), opt_num(args, "red", 0.0), opt_num(args, "green", 0.0), opt_num(args, "blue", 0.0)),
+        "fill-form-field" => (0, object_id()?, text_arg(args, "text"), String::new(), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+        "replace-page" | "merge-document" => (page_index()?, String::new(), text_arg(args, "payload"), text_arg(args, "extra"), 0.0, 0.0, opt_num(args, "width", 0.0), opt_num(args, "height", 0.0), 0.0, 0.0, 0.0),
+        "replace-page-pick" | "merge-pick" => (page_index()?, String::new(), String::new(), text_arg(args, "extra"), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+        "extract-pages" => (0, String::new(), String::new(), text_arg(args, "extra"), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
         "canvasPointerDown" | "canvasPointerMove" | "canvasPointerUp" => (0, String::new(), String::new(), if pointer_extend(args) { "shift".into() } else { String::new() }, opt_num(args, "x", 0.0), opt_num(args, "y", 0.0), 0.0, 0.0, 0.0, 0.0, 0.0),
         _ => return Err(fault(format!("unknown pdf page action '{action}'"))),
     };
@@ -99,9 +104,22 @@ pub fn apply_payload(snapshot: &PdfSnapshot, action: &str, payload: &str) -> Res
             }
             Ok(vec![PdfMutation::SetInfo(SetInfo { info })])
         }
-        "insert-page" => Ok(vec![PdfMutation::InsertPage(InsertPage { index: page, page: PdfPage::new(width.max(1.0), height.max(1.0)) })]),
-        "remove-page" => Ok(vec![PdfMutation::RemovePage(RemovePage { index: page })]),
-        "move-page" => Ok(vec![PdfMutation::MovePage(MovePage { from: page, to: x.max(0.0) as usize })]),
+        "insert-page" => {
+            let mut mutations = vec![PdfMutation::InsertPage(InsertPage { index: page, page: PdfPage::new(width.max(1.0), height.max(1.0)) })];
+            mutations.extend(retarget_pages(snapshot, &insert_page_map(page, 1)));
+            Ok(mutations)
+        }
+        "remove-page" => {
+            let mut mutations = vec![PdfMutation::RemovePage(RemovePage { index: page })];
+            mutations.extend(retarget_pages(snapshot, &remove_page_map(page)));
+            Ok(mutations)
+        }
+        "move-page" => {
+            let to = x.max(0.0) as usize;
+            let mut mutations = vec![PdfMutation::MovePage(MovePage { from: page, to })];
+            mutations.extend(retarget_pages(snapshot, &move_page_map(page, to, snapshot.pages.len())));
+            Ok(mutations)
+        }
         "set-page-size" => {
             let target = snapshot.pages.get(page).ok_or_else(|| fault(format!("pdf page {page} does not exist")))?;
             let [left, bottom, ..] = target.media_box;
@@ -158,7 +176,11 @@ pub fn apply_payload(snapshot: &PdfSnapshot, action: &str, payload: &str) -> Res
         "set-indirect-object" => set_indirect_object(snapshot, x, y, &text),
         "set-mesh-reference" => set_mesh_reference(snapshot, &object, &text, &extra),
         "set-annotation" => edit_annotation(snapshot, page, &object, &text, x, y, width, height),
-        "canvasPointerDown" | "canvasPointerMove" | "canvasPointerUp" => Ok(Vec::new()),
+        "create-annotation" => create_annotation(snapshot, page, &object, &text, &extra, x, y, width, height, [red, green, blue]),
+        "fill-form-field" => fill_form_field(snapshot, &object, &text),
+        "replace-page" => replace_page_with(snapshot, page, &text, &extra, width, height),
+        "merge-document" => merge_document(snapshot, page, &text, &extra),
+        "replace-page-pick" | "merge-pick" | "extract-pages" | "canvasPointerDown" | "canvasPointerMove" | "canvasPointerUp" => Ok(Vec::new()),
         _ => edit_object(snapshot, action, &object, x, y, width, height, red, green, blue, &text),
     }
 }
@@ -170,6 +192,17 @@ pub fn emit_page_edit(snapshot: &PdfSnapshot, action: &str, payload: &str) -> Re
         "canvasPointerDown" => {
             let effect = pointer_down_effect(snapshot, payload)?;
             Ok(semio_plugin::Emit::effect(effect))
+        }
+        "replace-page-pick" | "merge-pick" => {
+            let value: Value = serde_json::from_str(payload).map_err(|error| fault(error.to_string()))?;
+            let page = value.get("page").and_then(Value::as_u64).unwrap_or(0) as usize;
+            let selection = value.get("extra").and_then(Value::as_str).unwrap_or("");
+            Ok(semio_plugin::Emit { effects: vec![pick_source_effect(if action == "merge-pick" { "merge-document" } else { "replace-page" }, page, selection)], ..Default::default() })
+        }
+        "extract-pages" => {
+            let value: Value = serde_json::from_str(payload).map_err(|error| fault(error.to_string()))?;
+            let selection = value.get("extra").and_then(Value::as_str).unwrap_or("");
+            Ok(semio_plugin::Emit { effects: extract_effects(snapshot, selection)?, ..Default::default() })
         }
         _ => {
             let mutations = apply_payload(snapshot, action, payload)?;

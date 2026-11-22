@@ -66,7 +66,7 @@ async fn space_config_op_text_round_trips_every_variant() {
     store::os_store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetCompiledDagEngagementInput(CompiledDagEngagementInputSetting { value: "".into() }));
     store::os_store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetPendingImport(PendingImportSetting { node_id: Some("a".into()), format: Some("dwg".into()) }));
     store::os_store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetPendingImport(PendingImportSetting { node_id: None, format: None }));
-    store::os_store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetSpaceId(SpaceIdSetting { space_id: Some("demo".into()) }));
+    store::os_store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetSpaceId(SpaceIdSetting { space_id: Some("demo".into()), workflow_artifact_id: None }));
     store::os_store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetActivePanelTab(ActivePanelTabSetting { tab_id: "s-play-catalogue".into() }));
 }
 
@@ -89,6 +89,7 @@ fn busy_config() -> SpaceConfig {
         pending_import_format: Some("dwg".into()),
         active_panel_tab: S_PLAY_PARAMETERS_TAB_ID.into(),
         space_id: Some("demo".into()),
+        workflow_artifact_id: Some("workflow-demo".into()),
     }
 }
 
@@ -108,7 +109,7 @@ async fn every_operation_obeys_the_inverse_sum_law_including_a_middle_camera_row
             SpaceConfigMutation::SetWorkflowEngagementInput(WorkflowEngagementInputSetting { value: "line".into() }),
             SpaceConfigMutation::SetCompiledDagEngagementInput(CompiledDagEngagementInputSetting { value: String::new() }),
             SpaceConfigMutation::SetPendingImport(PendingImportSetting { node_id: None, format: Some("step".into()) }),
-            SpaceConfigMutation::SetSpaceId(SpaceIdSetting { space_id: None }),
+            SpaceConfigMutation::SetSpaceId(SpaceIdSetting { space_id: None, workflow_artifact_id: None }),
             SpaceConfigMutation::SetActivePanelTab(ActivePanelTabSetting { tab_id: S_PLAY_CATALOGUE_TAB_ID.into() }),
         ] {
             assert_mutation_inverse_sum_law(&mutation, &base).await;
@@ -120,7 +121,7 @@ async fn every_operation_obeys_the_inverse_sum_law_including_a_middle_camera_row
 #[semio_framework_async_macros::async_test]
 async fn the_diff_names_only_what_changed() {
     let base = busy_config();
-    let same = SpaceConfigMutation::SetSpaceId(SpaceIdSetting { space_id: base.space_id.clone() }).diff(&base);
+    let same = SpaceConfigMutation::SetSpaceId(SpaceIdSetting { space_id: base.space_id.clone(), workflow_artifact_id: base.workflow_artifact_id.clone() }).diff(&base);
     assert!(protocol::DiffAlgebra::is_empty(same.diff()), "an unchanged value is an empty diff");
     let moved = SpaceConfigMutation::SetCamera(CameraSetting { window_id: "left".into(), camera: SpaceWindowCamera { x: 0.0, y: 0.0, zoom: 1.0 } }).diff(&base);
     assert_eq!(moved.diff().camera.keys().collect::<Vec<_>>(), vec!["left"]);
@@ -141,7 +142,7 @@ fn every_config_mutation_variant_is_received_by_its_original_cursor_like_its_dec
         SpaceConfigMutation::SetWorkflowEngagementInput(WorkflowEngagementInputSetting { value: "w".into() }),
         SpaceConfigMutation::SetCompiledDagEngagementInput(CompiledDagEngagementInputSetting { value: "d".into() }),
         SpaceConfigMutation::SetPendingImport(PendingImportSetting { node_id: Some("n".into()), format: None }),
-        SpaceConfigMutation::SetSpaceId(SpaceIdSetting { space_id: Some("s".into()) }),
+        SpaceConfigMutation::SetSpaceId(SpaceIdSetting { space_id: Some("s".into()), workflow_artifact_id: None }),
         SpaceConfigMutation::SetActivePanelTab(ActivePanelTabSetting { tab_id: "t".into() }),
     ];
     dsl::original_receiving::check_receiving_round_trip(&operations).unwrap();

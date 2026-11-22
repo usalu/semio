@@ -147,7 +147,9 @@ test("runtime policy receives the original child failure before propagation",()=
  const owner=readModuleTreeSource(new URL("../🦀️.rs",import.meta.url)),app=pluginSubtreeText("🧵️instance","🔌️plugin-app-impl");
  const recorded=owner.indexOf("self.receive_posted(before, reserved_before)?;",owner.indexOf("pub fn advance_lifecycle"));expect(recorded).toBeGreaterThan(0);expect(recorded).toBeLessThan(owner.indexOf("let step = result?;"));
  for(const name of ["maintenance_step","close_step"]){expect(app.includes(`fn mounted_owner_${name}(&mut self,turn:&mut MountedOwnerTurnV1<'_,'_>)`)).toBe(true);}
- expect((app.match(/turn\.advance_lifecycle\(\|cx,loan\|/g)??[]).length).toBe(2);
+ expect(app).toContain("turn.advance_lifecycle(PluginLifecycleStep::with_progress");
+ expect(app).toContain("turn.advance_close_batch(PluginLifecycleStep::with_progress");
+ expect(owner.slice(owner.indexOf("pub fn advance_close_batch"),owner.indexOf("fn receive_posted")).includes("self.advance_lifecycle(&with_progress, &mut producer)?")).toBe(true);
 });
 
 test("runtime policy retains actual nested error debit without consuming it twice",()=>{
@@ -212,4 +214,33 @@ test("redeemed returns retain their earlier funding across all physical currenci
   } finally {
     db.close();
   }
+});
+
+test("mounted close batches exact paid actions up to the caller deadline and grant", () => {
+  const readFixture = (name: string) => JSON.parse(readFileSync(new URL("🧫️fixtures/" + name, import.meta.url), "utf8"));
+  const cases = readFixture("close-batch.json");
+  expect(new AjvDraft07({ strict: true }).compile(readFixture("close-batch.schema.json"))(cases)).toBe(true);
+  const db = new Database(":memory:");
+  try {
+    const oracle = db.query(`
+      WITH RECURSIVE steps(calls, kind, items, copy, capacity, release, stopped) AS (
+        SELECT 0, 'progress', 0, 0, 0, 0, 0
+        UNION ALL
+        SELECT calls + 1, json_extract(value, '$.kind'),
+          items + json_extract(value, '$.items'), copy + json_extract(value, '$.copy'),
+          capacity + json_extract(value, '$.capacity'), release + json_extract(value, '$.release'),
+          json_extract(value, '$.kind') = 'complete' OR json_extract(value, '$.now') >= ?3 OR
+            json_extract(value, '$.items') + json_extract(value, '$.copy') +
+            json_extract(value, '$.capacity') + json_extract(value, '$.release') = 0
+        FROM steps JOIN json_each(?1) ON json_each.key = steps.calls
+        WHERE steps.stopped = 0 AND calls < ?2 AND items < ?2
+      )
+      SELECT kind, calls, items, copy, capacity, release FROM steps ORDER BY calls DESC LIMIT 1
+    `);
+    for (const row of cases) expect(oracle.get(JSON.stringify(row.actions), row.items, row.deadline)).toEqual(row.expected);
+  } finally { db.close(); }
+  const owner = readFileSync(new URL("../🦀️.rs", import.meta.url), "utf8");
+  const app = readFileSync(new URL("../../🧵️instance/🔌️plugin-app-impl/🦀️.rs", import.meta.url), "utf8");
+  expect(owner).toContain("pub fn advance_close_batch");
+  expect(app).toContain("turn.advance_close_batch(PluginLifecycleStep::with_progress");
 });

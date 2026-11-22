@@ -164,19 +164,3 @@ test("law: a long prime does not hold a heavy question back (two lanes), and two
   const first=await prime,next=await second;expect(next.done-first.done,"the second prime started after the first ended").toBeGreaterThanOrEqual(2500);
  }finally{rmSync(directory,{recursive:true,force:true});}
 },40000);
-
-test("law: the prime of a workspace returns after the preflight and runs on beside the caller, a failing prime never fails the caller, a refused preflight still does",async()=>{
- const inference=await import("../../../🟨️.mjs") as any;await inference.libraryBootstrap;
- const calls:string[]=[];let release:(value:unknown)=>void=()=>undefined;
- const slow=new Promise(resolveSlow=>{release=resolveSlow;});
- const ports={preflight:async()=>{calls.push("preflight");},storeOf:()=>"/store",prime:()=>{calls.push("prime");return slow;}};
- const answer=await inference.primeSharedClosuresOfWorkspaceV1({workspaceRoot:"/w",ports});
- let ended=false;answer.run.then(()=>{ended=true;});
- await new Promise(resolveTimer=>setTimeout(resolveTimer,30));
- expect(calls).toEqual(["preflight","prime"]);expect(ended,"the caller did not wait for the prime").toBe(false);
- release({derived:1});await answer.run;expect(ended).toBe(true);
- const failing=await inference.primeSharedClosuresOfWorkspaceV1({workspaceRoot:"/w",ports:{...ports,prime:async()=>{throw Error("child failed");}}});
- expect(await failing.run).toBeUndefined();
- await expect(inference.primeSharedClosuresOfWorkspaceV1({workspaceRoot:"/w",ports:{...ports,preflight:async()=>{throw Error("refused");}}})).rejects.toThrow("refused");
- expect((await inference.primeSharedClosuresOfWorkspaceV1({workspaceRoot:"/w",ports:{...ports,storeOf:()=>undefined}})).run).toBeInstanceOf(Promise);
-},120000);

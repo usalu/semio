@@ -1,7 +1,7 @@
 {
   "heartbeat": "Reading the project graph slice (1254 s): previous inventory check previous inventory check previous inventory check previous inventory check previous inventory check previous inventory check previous inventory check previous inventory check previous inventory check 1254 of 600.",
   "repeat": 5000,
-  "latest": "Reading the project graph slice (10269 s): reading the owners / Lese die Projekte 5819 of 3600.",
+  "latest": "Reading the project graph slice (5819 s, beyond the expected 3600 s): reading the owners / Lese die Projekte.",
   "historical": "resident failure from the previous workspace",
   "provenance": "current attempt provenance",
   "expectedExit": null

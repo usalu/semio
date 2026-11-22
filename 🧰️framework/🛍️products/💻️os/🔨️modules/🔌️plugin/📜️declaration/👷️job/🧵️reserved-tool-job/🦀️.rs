@@ -64,6 +64,22 @@ mod original_request_construction;
 mod original_request_retirement;
 
 
+/// 🛤️ Internal factory key for the registered, paid paged natural-file route.
+pub const NATURAL_SOURCE_TOOL_ID: &str = "import-natural-source";
+/// 🗝️ Exact payload schema admitted by the paged natural-file factory.
+pub const NATURAL_SOURCE_TOOL_SCHEMA: &str = "framework.reserved.import-natural-source.v1";
+/// 📏 Bounds retained decoded output and Pack separately from the paid source extent.
+pub const NATURAL_SOURCE_TOOL_CONTRACT: semio_framework::ToolExecutionContract =
+    semio_framework::ToolExecutionContract::resumable(1, 8_192, 4_096, 33_554_432, 7_500, 1, 1);
+
+/// ✅ Checks the purpose-bound request metadata before the paged decoder receives its source.
+pub fn admits_paged_natural_request(
+    tool_id: &str, schema: &str, contract: semio_framework::ToolExecutionContract, raw_wire_bytes: usize,
+) -> bool {
+    tool_id == NATURAL_SOURCE_TOOL_ID && schema == NATURAL_SOURCE_TOOL_SCHEMA
+        && contract == NATURAL_SOURCE_TOOL_CONTRACT && raw_wire_bytes == 0
+}
+
 /// 🧭️ Owned input for an app-defined implementation of a framework-reserved route. The runtime
 /// selects the exact owner/factory/tool/schema proof before constructing this value.
 #[derive(semio_framework_value::RetireOwned)]
@@ -71,6 +87,7 @@ pub enum ArtifactReservedToolInput {
     Action { args: Option<DslValue>, interaction: store::os_store::snapshot_read::SnapshotRead<protocol::InteractionState> },
     Media { port: String, media: Media },
     OriginalPicker { input: Box<semio_plugin_decl_media::original_media::RawMediaInput> },
+    NaturalPaged { port: String, source: semio_plugin_decl_media::original_media::natural_source::NaturalFilePagedSource },
 }
 
 /// 🧊️ Immutable app state plus an owned reserved-route input. Implementations only construct a

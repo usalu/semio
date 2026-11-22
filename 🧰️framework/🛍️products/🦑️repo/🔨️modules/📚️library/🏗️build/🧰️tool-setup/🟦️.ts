@@ -34,7 +34,7 @@ export type ToolSetupKindV1 =
 /** 🔥️ One preparation of the table that is not a pinned tool. */
 export type ToolStepV1 = (typeof document.steps)[number];
 /** 🏓️ One row of the table. */
-export type ToolRowV1 = Omit<(typeof document.tools)[number], "pin" | "locate" | "setup"> & Readonly<{pin: ToolPinV1; locate: readonly ToolLocateV1[]; setup: ToolSetupKindV1}>;
+export type ToolRowV1 = Omit<(typeof document.tools)[number], "pin" | "locate" | "setup" | "platforms"> & Readonly<{platforms?: readonly ("darwin" | "linux" | "win32")[]; pin: ToolPinV1; locate: readonly ToolLocateV1[]; setup: ToolSetupKindV1}>;
 /** 🧾️ The authored table of every pinned tool: pins as pointers, probes, locations and provisioners. */
 export const TOOL_SETUP_V1: Omit<typeof document, "tools"> & Readonly<{tools: readonly ToolRowV1[]}> = document as unknown as Omit<typeof document, "tools"> & Readonly<{tools: readonly ToolRowV1[]}>;
 /** 🩺️ The verdict on one tool. */
@@ -77,7 +77,7 @@ export function toolRowV1(id: string, environment: Readonly<Record<string, strin
 /** 📋️ The rows of a selection in table order: `all` or the ids named. */
 export function toolRowsV1(selection: "all" | readonly string[], environment: Readonly<Record<string, string | undefined>> = process.env): readonly ToolRowV1[] {
   const ids = selection === "all" ? document.groups.all : selection;
-  return ids.map(id => toolRowV1(id, environment));
+  return ids.map(id => toolRowV1(id, environment)).filter(row => selection !== "all" || row.platforms === undefined || (row.platforms as readonly string[]).includes(process.platform));
 }
 
 /** 📌️ The version of a tool whose pin is the value the table itself holds. */

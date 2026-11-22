@@ -210,3 +210,47 @@ fn a_revision_bump_while_the_bridge_lease_is_in_flight_still_publishes_the_draws
     assert!(painted, "the bridged draws survive a revision bump taken while their lease was in flight: {}", state.ingest_census());
     drop_world3d_states(frame.world3d_states);
 }
+
+/// 🩹️ Render-device losses walk a map through React's recovery: re-attach once, then unavailable with the live camera kept, restored by the retry.
+#[test]
+fn map_device_loss_recovery_restores_the_live_camera_on_retry() {
+    use semio_renderer_wgpu_engine_board::tiled_map::{MapRecovery, MapRendererState};
+    let fixture: Value = serde_json::from_str(include_str!("🧫️fixtures/🩹️map-recovery/🔣️.json")).expect("map recovery fixture");
+    let live: [f64; 3] = serde_json::from_value(fixture["liveCamera"].clone()).unwrap();
+    for case in fixture["cases"].as_array().unwrap() {
+        let mut record = MapRecovery::default();
+        let states: Vec<&str> = (0..case["losses"].as_u64().unwrap()).map(|_| match record.lost(Some(live)) {
+            MapRendererState::Running => "running",
+            MapRendererState::Reattached => "reattached",
+            MapRendererState::Unavailable => "unavailable",
+        }).collect();
+        assert_eq!(serde_json::to_value(&states).unwrap(), case["states"], "{}", case["name"]);
+        let restored = record.retry();
+        assert_eq!(restored.map(|camera| serde_json::json!(camera)), (!case["restored"].is_null()).then(|| case["restored"].clone()), "{}", case["name"]);
+        if restored.is_some() {
+            assert_eq!(record.state, MapRendererState::Running);
+        }
+    }
+}
+
+/// 🩹️ A given-up map paints its notice; the staged Retry rect is the only pointer target, and the retry route leaves the unavailable state and drops the notice.
+#[test]
+fn map_unavailable_notice_is_staged_and_retried_through_its_button_rect() {
+    use semio_renderer_wgpu_engine_board::tiled_map::{map_retry_contains, map_unavailable_layout, map_unavailable_notice, retry_tiled_map, stage_map_unavailable_notice, tiled_map_device_lost, tiled_map_unavailable, MapUnavailableNotice};
+    let surface_id = "map.notice.retry";
+    let bounds = Rect { x: 10.0, y: 20.0, w: 400.0, h: 200.0 };
+    let (message_rect, retry_rect) = map_unavailable_layout(bounds, (120.0, 16.0), 90.0, 32.0, 8.0);
+    assert_eq!(message_rect, Rect { x: 150.0, y: 20.0 + (200.0 - 56.0) * 0.5, w: 120.0, h: 16.0 });
+    assert_eq!(retry_rect, Rect { x: 165.0, y: message_rect.y + 24.0, w: 90.0, h: 32.0 });
+    stage_map_unavailable_notice(surface_id, MapUnavailableNotice { message: "Canvas unavailable".into(), retry_label: "Retry".into(), message_rect, retry_rect });
+    assert!(map_unavailable_notice(surface_id).is_none(), "a map that still draws shows no notice");
+    tiled_map_device_lost(surface_id);
+    tiled_map_device_lost(surface_id);
+    assert!(tiled_map_unavailable(surface_id));
+    assert_eq!(map_unavailable_notice(surface_id).map(|notice| notice.retry_label), Some("Retry".to_string()));
+    assert!(map_retry_contains(surface_id, retry_rect.x + 1.0, retry_rect.y + 1.0));
+    assert!(!map_retry_contains(surface_id, message_rect.x, message_rect.y), "the message is not the button");
+    assert!(retry_tiled_map(surface_id));
+    assert!(!tiled_map_unavailable(surface_id) && map_unavailable_notice(surface_id).is_none());
+    assert!(!retry_tiled_map(surface_id), "a second retry has nothing pending");
+}

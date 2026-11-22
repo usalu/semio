@@ -583,3 +583,29 @@ fn world_original_fixture_grant()->semio_framework_value::RetainedCloneGrant{
     let law:serde_json::Value=serde_json::from_str(fixture_text!("../../../🧪️tests/🔬️unit/🧫️retained-attributes.json")).unwrap();let axes=&law["grant"];
     semio_framework_value::RetainedCloneGrant{maximum_items:axes["items"].as_u64().unwrap()as usize,maximum_copy_bytes:axes["copyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:axes["capacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:axes["releaseBytes"].as_u64().unwrap()as usize,maximum_depth:axes["depth"].as_u64().unwrap()as usize}
 }
+
+#[test]
+fn point_cloud_lane_decodes_like_the_react_layer() {
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../🧪️tests/🔬️unit/🧫️point-cloud.json")).unwrap();
+    let draws = semio_os_infinite_world_model::world_point_cloud_draws(Some(&fixture["layers"].to_string()));
+    let expected = fixture["expected"].as_array().unwrap();
+    assert_eq!(draws.len(), expected.len());
+    for (draw, want) in draws.iter().zip(expected) {
+        assert_eq!(draw.size, want["size"].as_f64().unwrap() as f32);
+        assert_eq!(draw.size_attenuation, want["sizeAttenuation"].as_bool().unwrap());
+        let rows = want["vertices"].as_array().unwrap();
+        assert_eq!(draw.vertices.len(), rows.len());
+        for (vertex, row) in draw.vertices.iter().zip(rows) {
+            let row: Vec<f32> = row.as_array().unwrap().iter().map(|value| value.as_f64().unwrap() as f32).collect();
+            let got: Vec<f32> = vertex.position.iter().chain(vertex.color.iter()).copied().collect();
+            for (got, want) in got.iter().zip(&row) {
+                assert!((got - want).abs() < 1e-6, "{got} != {want}");
+            }
+        }
+    }
+    for text in fixture["malformed"].as_array().unwrap() {
+        assert!(semio_os_infinite_world_model::world_point_cloud_draws(text.as_str()).is_empty());
+    }
+    let record: semio_os_infinite_world_model::WorldPointCloudRecord = serde_json::from_value(fixture["layers"][0].clone()).unwrap();
+    assert_eq!(record.point_draw(fixture["budget"]["cap"].as_u64().unwrap() as usize).unwrap().vertices.len() as u64, fixture["budget"]["expectedVertices"].as_u64().unwrap());
+}

@@ -5,12 +5,11 @@ import "🧰️framework/🔨️modules/🌱️value/🧬️schema/🛰️.proto
 message JackSnapshot {
  string schema = 1;
  string name = 2;
- optional string manifest_id = 3;
- Manifest manifest = 4;
- Camera camera = 5;
- semio.framework.schema.artifact_child.ArtifactChild content = 6;
- optional string root_node_id = 7;
- string query = 8;
+ string manifest_id = 3;
+ Camera camera = 4;
+ semio.framework.schema.artifact_child.ArtifactChild content = 5;
+ optional string root_node_id = 6;
+ string query = 7;
 }
 message Camera { semio.framework.value.Binary64Word x = 1; semio.framework.value.Binary64Word y = 2; semio.framework.value.Binary64Word zoom = 3; }
 message Manifest { repeated ManifestNodeKind node_kinds = 1; repeated ManifestEdgeKind edge_kinds = 2; repeated ManifestPortKind port_kinds = 3; }

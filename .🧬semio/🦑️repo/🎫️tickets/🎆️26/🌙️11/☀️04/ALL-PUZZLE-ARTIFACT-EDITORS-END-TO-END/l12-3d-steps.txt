@@ -1,0 +1,10 @@
+-p semio-s-artifact-puzzle-3d-editor --lib
+-p semio-s-artifact-puzzle-3d-editor --test editor-action-producer
+-p semio-s-artifact-puzzle-3d-editor --test editor-task-resume
+-p semio-s-artifact-puzzle-3d-editor --test editor-surface
+-p semio-s-artifact-puzzle-3d-editor --test editor-defects
+-p semio-s-artifact-puzzle-3d-editor --test editor-manifest
+-p semio-s-artifact-puzzle-3d-editor --test editor-panels
+-p semio-s-artifact-puzzle-3d-editor --test editor-budgets
+-p semio-s-artifact-puzzle-3d-editor --test editor-gestures
+-p semio-s-artifact-puzzle-3d --test snapshot-sqlite

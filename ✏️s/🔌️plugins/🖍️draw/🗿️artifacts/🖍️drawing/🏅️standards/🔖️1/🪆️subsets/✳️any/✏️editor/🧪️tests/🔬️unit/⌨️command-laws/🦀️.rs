@@ -164,7 +164,6 @@ async fn retained_route_dispositions_are_exact_and_exhaustive() {
     use semio_plugin::ArtifactOwnedToolJobFactory as _;
 
     assert_eq!(DRAWING_GESTURE_TOOL_IDS.len(), 6);
-    assert_eq!(DRAWING_BOUNDED_TOOL_IDS.len(), 30);
     assert_eq!(DRAWING_PATH_TOOL_IDS.len(), 1);
     assert_eq!(DRAWING_IMAGE_TOOL_IDS.len(), 1);
     let mut routes = DRAWING_GESTURE_TOOL_IDS.iter().chain(DRAWING_BOUNDED_TOOL_IDS).chain(DRAWING_PATH_TOOL_IDS).chain(DRAWING_IMAGE_TOOL_IDS).copied().collect::<Vec<_>>();

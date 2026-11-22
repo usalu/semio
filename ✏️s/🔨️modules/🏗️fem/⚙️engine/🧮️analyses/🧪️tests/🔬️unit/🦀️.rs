@@ -4,7 +4,6 @@ use semio_s_fem_analyses_model::MOUNTED_OWNER_PAGE_BYTES;
 use semio_s_fem_analyses_model::reserve_exact_owner_page;
 use semio_s_fem_elements2d::Bar2;
 use semio_s_fem_elements2d::BeamEb2;
-use semio_s_fem_test_support::close_job;
 use semio_s_fem_test_support::pages_bytes;
 use semio_s_fem_test_support::seen_of;
 use semio_s_fem_test_support::Seen;

@@ -37,12 +37,13 @@ pub fn example_media(example_id: &str) -> Vec<(String, semio_s_artifact_stdio_se
 pub fn example_document(example_id: &str) -> Option<RasterSnapshot> {
     let mut document = raster_example_document(example_id)?;
     for (asset_id, image) in example_media(example_id) {
-        if !document.assets.contains_key(&asset_id) {
-            let handle = semio_s_artifact_raster_raster_model::mint_raster_image_child(&asset_id, &image);
-            if document.assets.insert(asset_id, handle).is_err() {
-                dismantle(document);
-                return None;
-            }
+        let child = semio_s_artifact_raster_raster_model::image_content_child_handle(&asset_id, &image)
+            .with_local_owner(std::sync::Arc::new(image));
+        if let Some(reference) = document.assets.get_mut(&asset_id) {
+            *reference = child;
+        } else if document.assets.insert(asset_id, child).is_err() {
+            dismantle(document);
+            return None;
         }
     }
     Some(document)

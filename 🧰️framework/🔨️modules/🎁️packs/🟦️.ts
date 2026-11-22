@@ -57,6 +57,7 @@ const PACK_TAG_TRUE = 0x02;
 const PACK_TAG_INT = 0x03;
 const PACK_TAG_UINT = 0x04;
 const PACK_TAG_F64 = 0x05;
+const PACK_TAG_BYTES = 0x08;
 export const PACK_TAG_STR = 0x06;
 export const PACK_TAG_STR_INLINE = 0x07;
 export const PACK_TAG_LIST = 0x0c;
@@ -113,7 +114,7 @@ export type PackInteger = Readonly<{ readonly kind: "int" | "uint"; readonly val
 
 /** 🌱️ Everything the dynamic pack grammar can carry. `number` is always `TAG_F64`; an exact
  * integer is always a {@link PackInteger}. */
-export type PackValue = null | boolean | number | string | PackInteger | readonly PackValue[] | { readonly [key: string]: PackValue };
+export type PackValue = null | boolean | number | string | PackInteger | Uint8Array | readonly PackValue[] | { readonly [key: string]: PackValue };
 
 const PACK_U64_MAX = (1n << 64n) - 1n;
 const PACK_I64_MIN = -(1n << 63n);
@@ -148,7 +149,7 @@ export function isPackInteger(value: unknown): value is PackInteger {
 /** 🗺️ True only for the MAP arm of {@link PackValue} — not an array, not a minted integer
  * carrier. The one narrowing a reader of a decoded pack needs before it may index by key. */
 export function isPackMap(value: PackValue): value is { readonly [key: string]: PackValue } {
-  return typeof value === "object" && value !== null && !Array.isArray(value) && !isPackInteger(value);
+  return typeof value === "object" && value !== null && !Array.isArray(value) && !isPackInteger(value) && !(value instanceof Uint8Array);
 }
 
 /** 🧬️ Structural-clone replacement. The mint is a `WeakSet`, so a raw `structuredClone`
@@ -156,6 +157,7 @@ export function isPackMap(value: PackValue): value is { readonly [key: string]: 
  * them, and rejects the look-alikes a clone would have produced. */
 export function clonePackValue(value: PackValue): PackValue {
   if (isPackInteger(value)) return value.kind === "uint" ? packUInt(value.value) : packInt(value.value);
+  if (value instanceof Uint8Array) return value.slice();
   if (Array.isArray(value)) return (value as readonly PackValue[]).map(clonePackValue);
   if (value !== null && typeof value === "object") {
     packRejectIntegerLookAlike(value);
@@ -217,7 +219,7 @@ function packCollectStrings(value: unknown, counts: Map<string, number>): void {
     counts.set(value, (counts.get(value) ?? 0) + 1);
     return;
   }
-  if (isPackInteger(value)) return;
+  if (isPackInteger(value) || value instanceof Uint8Array) return;
   if (Array.isArray(value)) {
     for (const item of value as readonly PackValue[]) packCollectStrings(item, counts);
     return;
@@ -280,7 +282,10 @@ function packDecodeString(bytes: Uint8Array, symbols: readonly string[], pos: [n
  * unsigned/zig-zag LEB128. `-0` keeps its sign bit, byte-for-byte with Rust's `normalize_f64`
  * (which only folds `NaN`). Object entries sort by key BYTES with keys always forced inline,
  * never a symref. */
-function packEncodeValue(value: unknown, symbolIndex: ReadonlyMap<string, number>, out: number[]): void {
+/** 🧱️ Byte payloads spliced into the output at a position, so a large `Uint8Array` is copied once and never expanded into a `number[]`. */
+type PackBlob = { readonly at: number; readonly bytes: Uint8Array };
+
+function packEncodeValue(value: unknown, symbolIndex: ReadonlyMap<string, number>, out: number[], blobs: PackBlob[] = []): void {
   if (value === null || value === undefined) {
     out.push(PACK_TAG_NULL);
     return;
@@ -303,10 +308,16 @@ function packEncodeValue(value: unknown, symbolIndex: ReadonlyMap<string, number
     packEncodeString(value, symbolIndex, out);
     return;
   }
+  if (value instanceof Uint8Array) {
+    out.push(PACK_TAG_BYTES);
+    writeVarintU64(out, value.length);
+    blobs.push({ at: out.length, bytes: value });
+    return;
+  }
   if (Array.isArray(value)) {
     out.push(PACK_TAG_LIST);
     writeVarintU64(out, value.length);
-    for (const item of value as readonly PackValue[]) packEncodeValue(item, symbolIndex, out);
+    for (const item of value as readonly PackValue[]) packEncodeValue(item, symbolIndex, out, blobs);
     return;
   }
   if (typeof value === "object") {
@@ -316,7 +327,7 @@ function packEncodeValue(value: unknown, symbolIndex: ReadonlyMap<string, number
     writeVarintU64(out, entries.length);
     for (const [key, entryValue] of entries) {
       packEncodeStringInline(key, out);
-      packEncodeValue(entryValue, symbolIndex, out);
+      packEncodeValue(entryValue, symbolIndex, out, blobs);
     }
     return;
   }
@@ -339,6 +350,13 @@ function packDecodeValue(bytes: Uint8Array, symbols: readonly string[], pos: [nu
       return packInt(packZigzagDecode(packReadVarintBigInt(bytes, pos)));
     case PACK_TAG_F64:
       return readF64(bytes, pos);
+    case PACK_TAG_BYTES: {
+      const len = readVarintU64(bytes, pos);
+      const view = bytes.subarray(pos[0], pos[0] + len);
+      if (view.length !== len) throw new Error("decodePackValue: truncated bytes");
+      pos[0] += len;
+      return view;
+    }
     case PACK_TAG_STR: {
       const index = readVarintU64(bytes, pos);
       const symbol = symbols[index];
@@ -397,8 +415,21 @@ export function encodePackValue(value: unknown): Uint8Array<ArrayBuffer> {
   writeVarintU64(out, 1);
   writeVarintU64(out, JSON_BRIDGE_FIELD_ID);
   out.push(PACK_TAG_VALUE);
-  packEncodeValue(value, symbolIndex, out);
-  return new Uint8Array(out);
+  const blobs: PackBlob[] = [];
+  packEncodeValue(value, symbolIndex, out, blobs);
+  if (blobs.length === 0) return new Uint8Array(out);
+  const result = new Uint8Array(out.length + blobs.reduce((total, blob) => total + blob.bytes.length, 0));
+  let from = 0;
+  let to = 0;
+  for (const blob of blobs) {
+    result.set(out.slice(from, blob.at), to);
+    to += blob.at - from;
+    from = blob.at;
+    result.set(blob.bytes, to);
+    to += blob.bytes.length;
+  }
+  result.set(out.slice(from), to);
+  return result;
 }
 
 /** 🪟️ ONE host→guest view context as the value its pack encoding is taken from — every
@@ -516,6 +547,7 @@ export function packValueToExactJson(value: PackValue, path = "$"): unknown {
     if (value.value < BigInt(Number.MIN_SAFE_INTEGER) || value.value > BigInt(Number.MAX_SAFE_INTEGER)) throw new Error(`packValueToExactJson: ${path} carries ${value.value}, which no JSON number represents exactly`);
     return Number(value.value);
   }
+  if (value instanceof Uint8Array) return Array.from(value);
   if (Array.isArray(value)) return (value as readonly PackValue[]).map((item, index) => packValueToExactJson(item, `${path}[${index}]`));
   if (value !== null && typeof value === "object") {
     packRejectIntegerLookAlike(value);

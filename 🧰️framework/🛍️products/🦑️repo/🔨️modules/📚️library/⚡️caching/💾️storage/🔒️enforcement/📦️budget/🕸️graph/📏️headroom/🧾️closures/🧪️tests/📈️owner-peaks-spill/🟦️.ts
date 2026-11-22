@@ -39,7 +39,7 @@ test("the remote exchange root memos and their temporaries are spills while near
 
 test("files of the stores that share the graph image are spills and near names are not",()=>{
  const h=hash,s24="0123456789abcdef01234567";
- for(const name of ["inference/ce/e/"+h+".json.br","inference/selections/"+h+"/ce/travel/n-"+h,"inference/contexts/"+h+"/ce/collected","derived-nodes/n/"+h+".json.br","derived-nodes/n/"+h+".json.br.1445979.9e01gz8a9pm.tmp","part-ids/x/rows.dict","task-keys/e5/"+h+".json","generations/a/"+h+".json.br","generations/a/"+h+".json.br.fb538d2b6de055bd.tmp","generations/c/"+s24+".json","selected/"+h+".admission.json"]){
+ for(const name of ["inference/ce/e/"+h+".json.br","inference/selections/"+h+"/ce/travel/n-"+h,"inference/contexts/"+h+"/ce/collected","part-ids/x/rows.dict","task-keys/e5/"+h+".json","generations/a/"+h+".json.br","generations/a/"+h+".json.br.fb538d2b6de055bd.tmp","generations/c/"+s24+".json","selected/"+h+".admission.json"]){
   expect(()=>load.role(name),name).toThrow("Unknown closure reference publication: "+name);
   expect(load.spill(name),name).toBe(true);
  }

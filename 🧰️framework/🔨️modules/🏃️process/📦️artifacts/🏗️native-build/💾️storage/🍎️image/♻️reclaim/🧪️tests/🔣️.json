@@ -13,11 +13,11 @@
       "due": true
     },
     {
-      "name": "live dependencies image: 12.9 GB held for 9 GiB used is within the ratio",
+      "name": "live dependencies image: 12.9 GB held for 9 GiB used is due on a tight host",
       "allocatedBytes": 12900000000,
       "usedBytes": 9663676416,
       "hostFreeBytes": 7000000000,
-      "due": false
+      "due": true
     },
     {
       "name": "tight host divides the floor by eight",
@@ -34,10 +34,24 @@
       "due": false
     },
     {
-      "name": "ratio not reached although the floor is",
+      "name": "ratio not reached although the floor is, on a roomy host",
       "allocatedBytes": 20000000000,
       "usedBytes": 10000000000,
-      "hostFreeBytes": 1000000000,
+      "hostFreeBytes": 200000000000,
+      "due": false
+    },
+    {
+      "name": "live 02:00: dependencies 17G held for 7.2G used with 33 GB free is due, the ratio is ignored on a tight host",
+      "allocatedBytes": 17000000000,
+      "usedBytes": 7730000000,
+      "hostFreeBytes": 33000000000,
+      "due": true
+    },
+    {
+      "name": "tight host but slack below an eighth of the floor stays not due",
+      "allocatedBytes": 8000000000,
+      "usedBytes": 7500000000,
+      "hostFreeBytes": 33000000000,
       "due": false
     },
     {
@@ -218,6 +232,52 @@
       "containerFreeBytes": 85899345920,
       "hostFreeBytes": 1073741824,
       "effectiveBytes": 2147483648
+    }
+  ],
+  "floor": [
+    {
+      "name": "stale-low volume with a roomy host does not stop the build",
+      "volumeAvailableBytes": 2040109465,
+      "containerFreeBytes": 80530636800,
+      "hostFreeBytes": 15032385536,
+      "reserveBytes": 2147483648,
+      "realBytes": 15032385536,
+      "stop": false
+    },
+    {
+      "name": "stale-low volume with a truly low host stops the build",
+      "volumeAvailableBytes": 2040109465,
+      "containerFreeBytes": 80530636800,
+      "hostFreeBytes": 1073741824,
+      "reserveBytes": 2147483648,
+      "realBytes": 1073741824,
+      "stop": true
+    },
+    {
+      "name": "consistent low volume stops the build",
+      "volumeAvailableBytes": 1073741824,
+      "containerFreeBytes": 1207959552,
+      "hostFreeBytes": 15032385536,
+      "reserveBytes": 2147483648,
+      "realBytes": 1073741824,
+      "stop": true
+    },
+    {
+      "name": "unknown container with a roomy volume keeps going",
+      "volumeAvailableBytes": 8589934592,
+      "hostFreeBytes": 15032385536,
+      "reserveBytes": 2147483648,
+      "realBytes": 8589934592,
+      "stop": false
+    },
+    {
+      "name": "stale-low volume with a host just under the reserve stops the build",
+      "volumeAvailableBytes": 1073741824,
+      "containerFreeBytes": 80530636800,
+      "hostFreeBytes": 2147483647,
+      "reserveBytes": 2147483648,
+      "realBytes": 2147483647,
+      "stop": true
     }
   ]
 }

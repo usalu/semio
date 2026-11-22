@@ -72,17 +72,17 @@
     {
       "id": "a-saved-layout-follows-the-user",
       "steps": [
-        { "commit": { "device": "A", "mutation": { "mutation": "setNamedLayout", "appId": "s.draw.2d@1/*#editor", "layoutId": "user-1790520000000", "layout": { "label": "Wide", "layout": { "root": { "kind": "row", "children": [{ "kind": "stack", "size": 0.6, "children": [{ "kind": "window", "windowKindId": "draw-main", "title": "Canvas" }] }, { "kind": "stack", "children": [{ "kind": "window", "windowKindId": "draw-layers", "corner": "topRight" }] }] } } } } } },
+        { "commit": { "device": "A", "mutation": { "mutation": "setNamedLayout", "appId": "s.draw.2d@1/*#editor", "layoutId": "user-1790520000000", "layout": { "label": "Wide", "layout": { "root": { "kind": "split", "axis": "horizontal", "children": [{ "kind": "stack", "size": 0.6, "children": [{ "kind": "window", "windowKindId": "draw-main", "title": "Canvas" }] }, { "kind": "stack", "children": [{ "kind": "window", "windowKindId": "draw-layers", "corner": "topRight" }] }] } } } } } },
         { "deliver": "A" },
         { "fold": "B" },
         { "fold": "A" }
       ],
-      "expected": { "A": { "namedLayouts": { "s.draw.2d@1/*#editor": { "user-1790520000000": { "label": "Wide", "layout": { "root": { "kind": "row", "children": [{ "kind": "stack", "size": 0.6, "children": [{ "kind": "window", "windowKindId": "draw-main", "title": "Canvas" }] }, { "kind": "stack", "children": [{ "kind": "window", "windowKindId": "draw-layers", "corner": "topRight" }] }] } } } } } }, "B": { "namedLayouts": { "s.draw.2d@1/*#editor": { "user-1790520000000": { "label": "Wide", "layout": { "root": { "kind": "row", "children": [{ "kind": "stack", "size": 0.6, "children": [{ "kind": "window", "windowKindId": "draw-main", "title": "Canvas" }] }, { "kind": "stack", "children": [{ "kind": "window", "windowKindId": "draw-layers", "corner": "topRight" }] }] } } } } } }, "hubEvents": 1 }
+      "expected": { "A": { "namedLayouts": { "s.draw.2d@1/*#editor": { "user-1790520000000": { "label": "Wide", "layout": { "root": { "kind": "split", "axis": "horizontal", "children": [{ "kind": "stack", "size": 0.6, "children": [{ "kind": "window", "windowKindId": "draw-main", "title": "Canvas" }] }, { "kind": "stack", "children": [{ "kind": "window", "windowKindId": "draw-layers", "corner": "topRight" }] }] } } } } } }, "B": { "namedLayouts": { "s.draw.2d@1/*#editor": { "user-1790520000000": { "label": "Wide", "layout": { "root": { "kind": "split", "axis": "horizontal", "children": [{ "kind": "stack", "size": 0.6, "children": [{ "kind": "window", "windowKindId": "draw-main", "title": "Canvas" }] }, { "kind": "stack", "children": [{ "kind": "window", "windowKindId": "draw-layers", "corner": "topRight" }] }] } } } } } }, "hubEvents": 1 }
     },
     {
       "id": "a-deleted-layout-leaves-every-device",
       "steps": [
-        { "commit": { "device": "A", "mutation": { "mutation": "setNamedLayout", "appId": "s.draw.2d@1/*#editor", "layoutId": "user-1790520000000", "layout": { "label": "Wide", "layout": { "root": { "kind": "row", "children": [{ "kind": "stack", "size": 0.6, "children": [{ "kind": "window", "windowKindId": "draw-main", "title": "Canvas" }] }, { "kind": "stack", "children": [{ "kind": "window", "windowKindId": "draw-layers", "corner": "topRight" }] }] } } } } } },
+        { "commit": { "device": "A", "mutation": { "mutation": "setNamedLayout", "appId": "s.draw.2d@1/*#editor", "layoutId": "user-1790520000000", "layout": { "label": "Wide", "layout": { "root": { "kind": "split", "axis": "horizontal", "children": [{ "kind": "stack", "size": 0.6, "children": [{ "kind": "window", "windowKindId": "draw-main", "title": "Canvas" }] }, { "kind": "stack", "children": [{ "kind": "window", "windowKindId": "draw-layers", "corner": "topRight" }] }] } } } } } },
         { "deliver": "A" },
         { "fold": "B" },
         { "commit": { "device": "B", "mutation": { "mutation": "setNamedLayout", "appId": "s.draw.2d@1/*#editor", "layoutId": "user-1790520000000", "layout": null } } },
@@ -95,9 +95,9 @@
   ],
   "namedLayouts": {
     "valid": [
-      { "label": "Wide", "layout": { "root": { "kind": "row", "children": [{ "kind": "stack", "size": 0.6, "children": [{ "kind": "window", "windowKindId": "draw-main", "title": "Canvas" }] }, { "kind": "stack", "children": [{ "kind": "window", "windowKindId": "draw-layers", "corner": "topRight" }] }] } } },
+      { "label": "Wide", "layout": { "root": { "kind": "split", "axis": "horizontal", "children": [{ "kind": "stack", "size": 0.6, "children": [{ "kind": "window", "windowKindId": "draw-main", "title": "Canvas" }] }, { "kind": "stack", "children": [{ "kind": "window", "windowKindId": "draw-layers", "corner": "topRight" }] }] } } },
       { "label": "Solo", "layout": { "root": { "kind": "stack", "children": [] } } },
-      { "label": "Nested", "layout": { "root": { "kind": "column", "children": [{ "kind": "row", "children": [{ "kind": "stack", "children": [{ "kind": "window", "windowKindId": "a", "instanceId": "a-2", "templateId": "t" }] }] }] } } }
+      { "label": "Nested", "layout": { "root": { "kind": "split", "axis": "vertical", "children": [{ "kind": "stack", "size": 0.4, "children": [{ "kind": "window", "windowKindId": "a", "instanceId": "a-2", "templateId": "t" }] }, { "kind": "split", "axis": "horizontal", "size": 0.6, "children": [{ "kind": "stack", "activeWindowId": "b", "children": [{ "kind": "window", "windowKindId": "b" }] }, { "kind": "stack", "children": [{ "kind": "window", "windowKindId": "c" }] }] }] } } }
     ],
     "invalid": [
       { "label": "", "layout": { "root": { "kind": "stack", "children": [] } } },
@@ -106,7 +106,11 @@
       { "label": "Stack in stack", "layout": { "root": { "kind": "stack", "children": [{ "kind": "stack", "children": [] }] } } },
       { "label": "Bad corner", "layout": { "root": { "kind": "stack", "children": [{ "kind": "window", "windowKindId": "a", "corner": "middle" }] } } },
       { "label": "Extra", "layout": { "root": { "kind": "stack", "children": [] } }, "id": "x" },
-      { "label": "Size", "layout": { "root": { "kind": "row", "size": "wide", "children": [] } } }
+      { "label": "Size", "layout": { "root": { "kind": "split", "axis": "horizontal", "size": "wide", "children": [] } } },
+      { "label": "Percent size", "layout": { "root": { "kind": "split", "axis": "horizontal", "children": [{ "kind": "stack", "size": 60, "children": [] }, { "kind": "stack", "size": 40, "children": [] }] } } },
+      { "label": "Lone split child", "layout": { "root": { "kind": "split", "axis": "horizontal", "children": [{ "kind": "stack", "children": [] }] } } },
+      { "label": "Row kind", "layout": { "root": { "kind": "row", "children": [{ "kind": "stack", "children": [] }, { "kind": "stack", "children": [] }] } } },
+      { "label": "Active id", "layout": { "root": { "kind": "stack", "activeId": "a", "children": [] } } }
     ],
     "oversizeWindows": 60
   }

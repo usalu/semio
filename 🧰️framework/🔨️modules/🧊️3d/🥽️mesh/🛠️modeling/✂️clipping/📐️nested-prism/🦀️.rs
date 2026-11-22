@@ -2,6 +2,10 @@
 
 use super::{MeshResult, Plane, Soup, difference, dot, invalid, length};
 
+#[path = "🧭️axial-relation/🦀️.rs"]
+mod axial_relation;
+pub(super) use axial_relation::{AxialAperture,AxialProfileCertificate,AxialRelation,aperture};
+
 pub(super) const MAX_PROFILE: usize = 128;
 
 #[derive(semio_framework_value::RetireOwned)]
@@ -80,6 +84,35 @@ impl NestedPrism {
     pub(super) fn pair(&self, source: &Soup, i: usize) -> [u32; 2] {
         let [low, high] = self.caps.map(|id| &source.faces[id]);
         [low[(self.anchor + low.len() - i) % low.len()], high[i]]
+    }
+
+    fn orthogonal_axis(&self, source: &Soup) -> Option<usize> {
+        let levels = self.pair(source, 0).map(|id| source.positions[id as usize]);
+        let axis = (0..3).find(|&i| levels[0][i] != levels[1][i])?;
+        let count = source.positions.len()/2;
+        for i in 0..count {
+            let [a,b] = self.pair(source, i).map(|id| source.positions[id as usize]);
+            if projected(a,axis) != projected(b,axis) || [a[axis],b[axis]] != [levels[0][axis],levels[1][axis]] {
+                return None;
+            }
+        }
+        Some(axis)
+    }
+
+    pub(super) fn matching_axis(&self, source: &Soup, other: &Self, cutter: &Soup) -> Option<usize> {
+        if source.positions.len() != cutter.positions.len() { return None; }
+        let axis = self.orthogonal_axis(source)?;
+        if other.orthogonal_axis(cutter) != Some(axis) { return None; }
+        let levels = self.pair(source,0).map(|id| source.positions[id as usize][axis]);
+        let other_levels = other.pair(cutter,0).map(|id| cutter.positions[id as usize][axis]);
+        let first = |prism: &Self, soup: &Soup, i| projected(soup.positions[prism.pair(soup,i)[0] as usize],axis);
+        let count = source.positions.len()/2;
+        let anchor = (0..count).find(|&i| first(other,cutter,i) == first(self,source,0))?;
+        let same_direction = (levels[0] < levels[1]) == (other_levels[0] < other_levels[1]);
+        (0..count).all(|i| {
+            let peer = if same_direction { (anchor+i)%count } else { (anchor+count-i)%count };
+            first(self,source,i) == first(other,cutter,peer)
+        }).then_some(axis)
     }
 
     fn uv(&self, source: &Soup, index: usize, side: usize) -> [f64; 2] {

@@ -1,0 +1,65 @@
+{
+  "live": 2,
+  "tail": 3,
+  "cases": [
+    {
+      "id": "hidden-error-after-live-budget",
+      "lines": [
+        "warning: one",
+        "warning: two",
+        "warning: three",
+        "\u001b[1;31merror[E0425]\u001b[0m: cannot find an owner",
+        " --> owner.rs:7:3",
+        "  | ^^^^^",
+        "",
+        "warning: four",
+        "warning: five",
+        "warning: final",
+        "",
+        "error: could not compile"
+      ],
+      "failureReplay": [
+        "\u001b[1;31merror[E0425]\u001b[0m: cannot find an owner",
+        " --> owner.rs:7:3",
+        "  | ^^^^^",
+        "warning: final",
+        "",
+        "error: could not compile"
+      ]
+    },
+    {
+      "id": "error-already-in-tail",
+      "lines": [
+        "warning: one",
+        "warning: two",
+        "warning: three",
+        "warning: four",
+        "\u001b[1;31merror[E0425]\u001b[0m: cannot find an owner",
+        " --> owner.rs:7:3",
+        "  | ^^^^^"
+      ],
+      "failureReplay": [
+        "\u001b[1;31merror[E0425]\u001b[0m: cannot find an owner",
+        " --> owner.rs:7:3",
+        "  | ^^^^^"
+      ]
+    },
+    {
+      "id": "error-was-forwarded-live",
+      "lines": [
+        "\u001b[1;31merror[E0425]\u001b[0m: cannot find an owner",
+        " --> owner.rs:7:3",
+        "",
+        "warning: four",
+        "warning: final",
+        "",
+        "error: could not compile"
+      ],
+      "failureReplay": [
+        "warning: final",
+        "",
+        "error: could not compile"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "unrelated": 600,
+  "target": {"project": "app", "target": "build"},
+  "rows": {
+    "app": {"targets": {"build": ["^build"]}, "dependencies": ["lib"], "files": ["app/main.ts"]},
+    "lib": {"targets": {"build": ["^build"]}, "dependencies": ["core"], "files": ["lib/index.ts", "core/api.ts"]},
+    "core": {"targets": {"build": []}, "files": ["core/api.ts"]},
+    "web": {"targets": {"build": ["^build"]}, "dependencies": ["lib"], "files": ["web/page.ts"]},
+    "docs": {"targets": {"build": ["^build"]}, "dependencies": ["web"], "files": ["docs/index.md"]}
+  },
+  "outside": "u0300/src/file.ts",
+  "inside": "core/api.ts"
+}

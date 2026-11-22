@@ -1,11 +1,13 @@
 type ElevationSource {
   bounds: [Float!]!
-  rows: [[Int!]!]!
+  rowsMillimetres: [[Int!]!]!
+  missingSamples: String
 }
 
 input ElevationSourceInput {
   bounds: [Float!]!
-  rows: [[Int!]!]!
+  rowsMillimetres: [[Int!]!]!
+  missingSamples: String
 }
 
 type ElevationSourceChange { value: ElevationSource }

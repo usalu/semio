@@ -1,6 +1,6 @@
 /** 📋️ The window engagement and panel tab types, the app definition types, the program hot swap event, the UI refresh request and response and the context menu request and response. */
 import type { TutorialDefinition } from "@semio-tech/framework-onboarding";
-import type { WindowLayout } from "@semio-tech/framework-onboarding/window-layout";
+import type { WindowLayout } from "@semio-tech/ui-layout";
 import type { IconName } from "@semio-tech/assets";
 import type { ContextMenuItemSpec, UiContextMenuHit, UiContextMenuPoint, UiContextMenuRequest, UiContextMenuSelectionGroup, UiContextMenuSurfaceTarget, UiContextMenuTextContext } from "../📋️context-menu/🟦️.ts";
 import type { Effect } from "@semio-tech/framework-effect";
@@ -57,10 +57,7 @@ export function panelTabKindId(kind: PanelTabKind): string {
 export type AppPanelTabDefinition = GeneratedPanelTabDefinition;
 
 /** 📦️ Mirrors Rust `AppDefinition` — generated 1:1 from `framework/core/rs/lib.rs` via the owned schema exporter, except
- * `defaultLayout`/`namedLayouts` which keep this file's narrower hand-refined `WindowLayout` (owned schema exporter
- * widens `WindowLayoutAxisNode.kind`/`WindowLayoutStackNode.kind` to plain `string` since the Rust
- * field is a runtime `String`, not an enum — the narrower `"row" | "column" | "stack" | "window"`
- * literal unions here are domain knowledge worth keeping for exhaustive switches). */
+ * `defaultLayout`/`namedLayouts` which carry the contract `WindowLayout` (`@semio-tech/ui-layout`). */
 export type AppActionDefinition = Omit<GeneratedActionDefinition, "iconId"> & { readonly iconId?: IconName };
 export type AppUtilityDefinition = Omit<GeneratedUtilityDefinition, "iconId"> & { readonly iconId: IconName };
 export type AppToolDefinition = Omit<GeneratedToolDefinition, "iconId"> & { readonly iconId: IconName };

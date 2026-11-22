@@ -34,7 +34,11 @@
      "bodyMacrosAllowed": ["println", "print", "eprintln", "eprint", "format", "write", "writeln", "vec", "assert", "assert_eq", "assert_ne", "debug_assert", "debug_assert_eq", "debug_assert_ne", "panic", "todo", "unimplemented", "unreachable", "matches", "dbg", "format_args", "concat", "stringify", "line", "column", "file", "module_path", "env", "option_env", "cfg", "include_str", "include_bytes"],
      "featuresVoiding": ["type_alias_impl_trait", "impl_trait_in_assoc_type", "impl_trait_in_fn_trait_return", "rustc_attrs", "lang_items", "no_core", "coroutines", "generators", "stmt_expr_attributes", "adt_const_params", "generic_const_exprs", "const_trait_impl", "min_specialization", "specialization", "auto_traits", "negative_impls", "intrinsics", "core_intrinsics", "custom_mir", "unsized_fn_params", "unsized_locals", "fn_delegation", "proc_macro_hygiene", "decl_macro", "trait_alias"]
     },
-    "rebase": {"occurrences": 1}
+    "rebase": {
+     "occurrences": 1,
+     "cargoOutputLayout": {"container": "build", "output": "out", "suffix": "^[0-9a-f]{16}$"},
+     "embeddedMetadataLibrary": "lib{id}.rlib"
+    }
    }
   },
   "Dependencies": {

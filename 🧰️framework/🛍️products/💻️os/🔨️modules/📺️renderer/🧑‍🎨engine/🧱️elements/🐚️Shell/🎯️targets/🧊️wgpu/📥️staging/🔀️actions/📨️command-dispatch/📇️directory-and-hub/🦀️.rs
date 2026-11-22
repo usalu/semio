@@ -70,39 +70,6 @@ impl<'ctx> ActionsCtx<'ctx> {
         Ok(())
     }
 
-    /// 📇️ The browser's every-frame directory turn — the same three steps the native
-    /// `pump_directory_events` takes, minus the two halves whose transports this target has no door
-    /// for: the retained Home projection (needs the directory WebSocket) and the document-sync
-    /// backbone. Identity, the bounded administration operation and the command FIFO are the SAME
-    /// code compiled for both targets.
-    ///
-    /// 🌉️ Packet W15e: the agent bridge's socket rides the SAME 100 ms slot rather than a timer of
-    /// its own — one pump cadence for every out-of-process conversation this shell holds.
-    #[cfg(target_arch = "wasm32")]
-    pub async fn pump_directory_events(&mut self) -> bool {
-        let identity_changed = self.directory.poll_browser_identity().await;
-        let administration_changed = self.directory.pump_space_administration().await;
-        self.directory.flush_pending_directory_commands().await;
-        let creation_changed = self.pump_hub_artifact_creation().await;
-        let hub_changed = self.sync.poll_hub_workspace_tasks(&mut self.directory);
-        let bridge_changed = self.dock.pump_agent_bridge(&mut self.chrome, &mut self.directory, &mut self.windows);
-        let media_changed = self.pump_media_actions().await;
-        identity_changed || administration_changed || creation_changed || hub_changed || bridge_changed || media_changed
-    }
-
-    /// 🎞️ Runs every media-window action the page host left (the trim "Cut selection") through the same `dispatch_action` the UI intents use, so the response's mutations commit through the normal ingest path; a refused one is logged, never dropped silently. Answers whether anything ran.
-    pub async fn pump_media_actions(&mut self) -> bool {
-        let actions = self.dock.drain_media_actions();
-        let ran = !actions.is_empty();
-        for action in actions {
-            let label = format!("{}/{}", action.controller_id, action.action);
-            if let Err(error) = self.dispatch_action(action).await {
-                debug_log(&format!("[TRACE] wgpu shell media action {label} refused: {error}"));
-            }
-        }
-        ran
-    }
-
     //#endregion 📇️DirectoryLane
     //#region 🔐️HubWorkspaceLane
     /// 🔐️ The ONE lane every `hub*` verb the hub workspace names runs through (slice WG6). Drafts
@@ -120,6 +87,7 @@ impl<'ctx> ActionsCtx<'ctx> {
         shell_turn(async move {
             let value = args.as_ref().and_then(|args| args.get("value")).and_then(semio_framework_value::DslValue::as_str).unwrap_or_default().to_string();
             let space_id = args.as_ref().and_then(|args| args.get("spaceId")).and_then(semio_framework_value::DslValue::as_str).unwrap_or_default().to_string();
+            let delegation_id = args.as_ref().and_then(|args| args.get("delegationId")).and_then(semio_framework_value::DslValue::as_str).unwrap_or_default().to_string();
             let connection_id = args.as_ref().and_then(|args| args.get("connectionId")).and_then(semio_framework_value::DslValue::as_str).unwrap_or_default().to_string();
             match verb {
                 hub_action::SET_EMAIL => self.directory.hub_workspace.email_draft = value,
@@ -129,7 +97,33 @@ impl<'ctx> ActionsCtx<'ctx> {
                 hub_action::SET_SPACE_NAME => self.directory.hub_workspace.space_name_draft = value,
                 hub_action::SET_INVITE_TEXT => self.directory.hub_workspace.invite_draft = value,
                 hub_action::DISCARD_INVITE_LINK => self.directory.hub_workspace.invite_capability = None,
+                hub_action::AGENT_DOWNLOAD => {
+                    if let Some((file_name, contents)) = self.directory.hub_workspace.agents.download_file() {
+                        let id = self.directory.hub_workspace.agents.credential.as_ref().map(|credential| credential.receipt.delegation_id.clone()).unwrap_or_default();
+                        let saved = semio_renderer_wgpu_shell_doc_open::save_text_file(file_name, "application/json", contents).await;
+                        self.directory.hub_workspace.agents.download_settled(&id, saved);
+                    }
+                }
+                hub_action::AGENT_INSTALL_MCP => {
+                    let origin = self.directory.hub_workspace.origin().to_string();
+                    if let Some((id, body)) = self.directory.hub_workspace.agents.begin_install(&origin) {
+                        let (status, answer) = semio_renderer_wgpu_shell_doc_open::post_agent_credential_install(semio_renderer_wgpu_hub_workspace::agent_delegations::agent_credential_install_endpoint(), body).await;
+                        self.directory.hub_workspace.agents.install_settled(&id, &origin, status, &answer);
+                    }
+                }
+                hub_action::AGENT_COPY_MCP => {
+                    if let Some((id, config)) = self.directory.hub_workspace.agents.credential.as_ref().and_then(|credential| Some((credential.receipt.delegation_id.clone(), credential.mcp_config.clone()?))) {
+                        if semio_renderer_wgpu_shell_doc_open::write_clipboard_text(&config).await {
+                            self.directory.hub_workspace.agents.mcp_copied(&id);
+                        }
+                    }
+                }
+                hub_action::AGENT_REFRESH | hub_action::AGENT_SET_NAME | hub_action::AGENT_SET_AUDIENCE | hub_action::AGENT_SET_EXPIRY | hub_action::AGENT_CREATE | hub_action::AGENT_DISMISS | hub_action::AGENT_REVOKE_ASK | hub_action::AGENT_REVOKE_CANCEL | hub_action::AGENT_REVOKE_CONFIRM => {
+                    self.directory.run_hub_agent_action(verb, value, &delegation_id).await;
+                }
+                hub_action::REPLAY_FIRST_RUN => self.chrome.chrome_build.start_hub_first_run(semio_renderer_wgpu_hub_workspace::hub_first_run::hub_first_run_replay_step()),
                 hub_action::CLOSE_WORKSPACE => {
+                    self.directory.hub_workspace.agents = Default::default();
                     self.directory.hub_workspace.open_space_id = None;
                     self.directory.hub_workspace_open = false;
                 }
@@ -172,11 +166,15 @@ impl<'ctx> ActionsCtx<'ctx> {
                     self.directory.hub_workspace.session = reduce_hub_session(&self.directory.hub_workspace.session, &HubSessionEvent::Failed { code: HubSignInErrorCode::Cancelled, retry_after_seconds: None });
                 }
                 hub_action::SIGN_IN => self.directory.start_hub_sign_in(),
-                hub_action::SIGN_OUT => self.directory.run_hub_sign_out_turn().await,
+                hub_action::SIGN_OUT => {
+                    self.directory.run_hub_sign_out_turn().await;
+                    self.directory.hub_workspace.agents = Default::default();
+                }
                 hub_action::REFRESH_SPACES => self.directory.start_hub_spaces_reload(),
                 hub_action::OPEN_SPACE => {
                     self.directory.hub_workspace.open_space_id = (!space_id.is_empty()).then(|| space_id.clone());
                     self.directory.reload_hub_members(&space_id).await;
+                    self.directory.run_hub_agents_reload_turn().await;
                     self.directory.open_hub_artifact_creation(&space_id).await;
                     if !space_id.is_empty() {
                         let uri = format!("/spaces/{space_id}");
@@ -458,266 +456,6 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         opening.pending = Some(ShellDetached::spawn(async move { program.create_app(&app_id).await.map(ShellDocumentOpenAnswer::Instantiated) }));
         opening.phase = ShellDocumentOpenPhase::Instantiating;
         self.opening.document_opening = Some(opening);
-    }
-
-    /// ⏭️ Advances the retained open by the one detached step that answered, if any: an instance mounts
-    /// as the session (or is destroyed when the open was cancelled), a seeded document binds, and every
-    /// render the open owes goes to the settle lane. Called once per frame from [`Self::pump_sync_events`];
-    /// answers whether the open moved.
-    pub async fn advance_document_opening(&mut self) -> bool {
-        let Some(answer) = self.opening.document_opening.as_ref().and_then(|opening| opening.pending.as_ref()).and_then(ShellDetached::take) else { return false };
-        let Some(mut opening) = self.opening.document_opening.take() else { return false };
-        opening.pending = None;
-        match answer {
-            #[cfg(not(target_arch = "wasm32"))]
-            Ok(ShellDocumentOpenAnswer::Resolved { plugin_id, app_id, program, checkpoint }) => {
-                if opening.cancel_requested {
-                    opening.phase = ShellDocumentOpenPhase::Cancelled;
-                    self.opening.document_opening = Some(opening);
-                    return true;
-                }
-                opening.plugin_id = plugin_id;
-                opening.app_id = app_id;
-                if let Some(document) = opening.document.as_mut() {
-                    document.checkpoint = Some(checkpoint);
-                }
-                self.continue_resolved_open(opening, program).await;
-            }
-            #[cfg(not(target_arch = "wasm32"))]
-            Ok(ShellDocumentOpenAnswer::NativeFile(imported)) => {
-                if opening.cancel_requested || imported.is_none() {
-                    opening.phase = ShellDocumentOpenPhase::Cancelled;
-                    self.opening.document_opening = Some(opening);
-                } else if let Err(error) = self.finish_native_open(&opening.app_id, imported.expect("checked imported file")).await {
-                    self.opening.document_opening = Some(opening);
-                    self.opening.fail_document_opening(error, &mut self.chrome, &self.prefs);
-                }
-            }
-            Ok(ShellDocumentOpenAnswer::Instantiated(instance_id)) => {
-                if opening.cancel_requested {
-                    if let Some(program) = self.plugins.plugins.iter().find(|entry| entry.plugin_id == opening.plugin_id) {
-                        program.destroy_app(instance_id);
-                    }
-                    opening.phase = ShellDocumentOpenPhase::Cancelled;
-                    self.opening.document_opening = Some(opening);
-                    return true;
-                }
-                let Some(app) = self.plugins.plugins.iter().find(|entry| entry.plugin_id == opening.plugin_id).and_then(|program| program.manifest.apps.iter().find(|app| app.id == opening.app_id).cloned()) else {
-                    self.opening.document_opening = Some(opening);
-                    self.opening.fail_document_opening("the opened app left its plugin".to_string(), &mut self.chrome, &self.prefs);
-                    return true;
-                };
-                self.windows.install_app_session(&opening.plugin_id, app, instance_id, &self.prefs, &mut self.directory, &mut self.docs);
-                self.settle.owe_refresh(UiDirtyScope::Full);
-                self.settle.owe_settle();
-                match opening.document.take() {
-                    Some(document) => {
-                        self.opening.document_opening = Some(opening);
-                        self.begin_document_seed(document).await;
-                    }
-                    None => self.opening.document_opening = None,
-                }
-            }
-            Ok(ShellDocumentOpenAnswer::Seeded(pair)) => {
-                let Some(prepared) = opening.prepared.take() else {
-                    self.opening.document_opening = Some(opening);
-                    self.opening.fail_document_opening("seeded document open lost its prepared owner".to_string(), &mut self.chrome, &self.prefs);
-                    return true;
-                };
-                if opening.cancel_requested {
-                    opening.phase = ShellDocumentOpenPhase::Cancelled;
-                    self.opening.document_opening = Some(opening);
-                    return true;
-                }
-                if let Err(error) = self.sync.install_document_seed(&prepared, pair) {
-                    self.opening.document_opening = Some(opening);
-                    self.opening.fail_document_opening(error, &mut self.chrome, &self.prefs);
-                    return true;
-                }
-                match self.finish_document_open(prepared).await {
-                    Ok(()) => {
-                        self.settle.owe_refresh(UiDirtyScope::Full);
-                        self.settle.owe_settle();
-                    }
-                    Err(error) => {
-                        self.opening.document_opening = Some(opening);
-                        self.opening.fail_document_opening(error, &mut self.chrome, &self.prefs);
-                        return true;
-                    }
-                }
-            }
-            Err(_) if opening.cancel_requested => {
-                opening.phase = ShellDocumentOpenPhase::Cancelled;
-                self.opening.document_opening = Some(opening);
-            }
-            Err(error) => {
-                self.opening.document_opening = Some(opening);
-                let detail = self.prefs.note_refused_open(error, &mut self.chrome);
-                self.opening.fail_document_opening(detail, &mut self.chrome, &self.prefs);
-            }
-        }
-        true
-    }
-
-    /// 📡️ Advances the finite fetch → terminal Home receipt → exact ACK → acknowledged-live owner.
-    ///
-    /// 🌉️ Packet W15e: the agent bridge's socket rides the SAME frame pump as the directory lane.
-    ///
-    /// 🏛️ One bounded administration turn per frame: the retained operation never spins, because
-    /// `pump_space_administration` answers `false` the moment it reaches `Idle` or a terminal phase.
-    #[cfg(not(target_arch = "wasm32"))]
-    pub async fn pump_directory_events(&mut self) -> bool {
-        self.sync.poll_identity_bootstrap(&mut self.chrome, &mut self.directory);
-        let inference_changed = self.directory.pump_inference_port();
-        let bridge_changed = self.dock.pump_agent_bridge(&mut self.chrome, &mut self.directory, &mut self.windows);
-        let mut changed = self.directory.pump_space_administration().await || inference_changed || bridge_changed;
-        changed |= self.pump_hub_artifact_creation().await;
-        changed |= self.opening.pump_hub_check_in(&self.directory, &mut self.sync).await;
-        self.opening.pump_agent_bridge_offer_scope(&mut self.directory).await;
-        changed |= self.sync.poll_hub_workspace_tasks(&mut self.directory);
-        let runner = self.directory.directory_home.as_ref().and_then(|home| home.stream.clone());
-        if let Some(runner) = runner {
-            if runner.take_terminal() {
-                if let Some(home) = self.directory.directory_home.as_mut() {
-                    let _ = home.begin_epoch(0);
-                }
-                self.directory.directory_client = None;
-                #[cfg(not(target_arch="wasm32"))]
-        self.directory.cancel_inference_port();
-        self.directory.identity = None;
-                self.directory.verified_session_authority = None;
-                self.directory.bootstrap_identity();
-                changed = true;
-            }
-            let mut dirty = false;
-            let mut rebootstrap = false;
-            let mut live_events: Vec<semio_os_kernel::os_directory::DirectoryEvent> = Vec::new();
-            for message in runner.drain() {
-                match message {
-                    DirectoryStreamMessage::Event { event } => {
-                        live_events.push(event.as_ref().clone());
-                        dirty = true;
-                    }
-                    DirectoryStreamMessage::Heartbeat { .. } => dirty = true,
-                    DirectoryStreamMessage::Connection { .. } | DirectoryStreamMessage::Presence { .. } => {}
-                    DirectoryStreamMessage::RebootstrapRequired { .. } | DirectoryStreamMessage::AccessChanged { .. } => rebootstrap = true,
-                }
-            }
-            if !live_events.is_empty() {
-                self.as_session().dispatch_fold_directory_events(&live_events);
-                changed = true;
-            }
-            if dirty || rebootstrap {
-                if let Some(home) = self.directory.directory_home.as_mut() {
-                    match home.wake(rebootstrap) {
-                        Ok(Some(_)) => changed = true,
-                        Ok(None) => {}
-                        Err(error) => {
-                            home.close();
-                            self.chrome.error = Some(error.to_string());
-                        }
-                    }
-                }
-            }
-        }
-
-        if let Some((epoch, result)) = self.directory.poll_directory_page_result() {
-            let current = self.directory.directory_home.as_ref().is_some_and(|home| !home.closed && home.bootstrap.bootstrap_epoch() == epoch);
-            if current {
-                match result {
-                    Ok(page) => {
-                        if let Err(error) = self.docs.start_directory_home_publication(page, &self.plugins, &mut self.directory) {
-                            if let Some(home) = self.directory.directory_home.as_mut() {
-                                home.close();
-                            }
-                            self.chrome.error = Some(error);
-                        }
-                    }
-                    Err(DirectoryClientError::Unauthorized) => {
-                        if let Some(home) = self.directory.directory_home.as_mut() {
-                            let _ = home.begin_epoch(0);
-                        }
-                        self.directory.directory_client = None;
-                        #[cfg(not(target_arch="wasm32"))]
-        self.directory.cancel_inference_port();
-        self.directory.identity = None;
-                        self.directory.verified_session_authority = None;
-                        self.directory.bootstrap_identity();
-                    }
-                    Err(DirectoryClientError::Transport(TransportError::Io(_) | TransportError::DeadlineExceeded | TransportError::BudgetExhausted) | DirectoryClientError::Http { status: 500..=599, .. }) => {
-                        if let Some(home) = self.directory.directory_home.as_mut() {
-                            home.retry_at_ms = semio_renderer_wgpu_host_base::renderer_worker_pool().now_ms().saturating_add(DirectoryHomeProjection::RETRY_DELAY_MS);
-                        }
-                    }
-                    Err(DirectoryClientError::Cancelled | DirectoryClientError::Transport(TransportError::Cancelled)) => {}
-                    Err(_) => {
-                        if let Some(home) = self.directory.directory_home.as_mut() {
-                            home.close();
-                        }
-                        self.chrome.error = Some("directory event-page response was terminally rejected".into());
-                    }
-                }
-                changed = true;
-            }
-        }
-
-        if let Some((epoch, instance_id, expected, outcome)) = self.directory.poll_directory_home_publication() {
-            if let ShellDirectoryHomePublicationOutcome::Rejected(refusal) = &outcome {
-                if self.chrome.chrome_build.refused_frame_fault.is_none() { self.chrome.chrome_build.refused_frame_fault = refusal.frame; }if self.chrome.chrome_build.refused_kernel_fault.is_none(){self.chrome.chrome_build.refused_kernel_fault=refusal.kernel;}if self.chrome.chrome_build.refused_actor_call.is_none(){self.chrome.chrome_build.refused_actor_call=refusal.actor_call;}
-            }
-            let current = self.directory.directory_home.as_ref().is_some_and(|home| !home.closed && home.bootstrap.bootstrap_epoch() == epoch && home.instance_id == instance_id);
-            if current {
-                match outcome {
-                    ShellDirectoryHomePublicationOutcome::Published(acknowledgement) => {
-                        let transition = self.directory.directory_home.as_mut().expect("checked retained Home").bootstrap.acknowledge(&acknowledgement).map_err(|error| error.to_string());
-                        match transition {
-                            Ok(DirectoryBootstrapTransition::Fetch { .. }) => {}
-                            Ok(DirectoryBootstrapTransition::Live { since }) => {
-                                if let Err(error) = self.directory.open_acknowledged_directory_stream(since) {
-                                    if let Some(home) = self.directory.directory_home.as_mut() {
-                                        home.close();
-                                    }
-                                    self.chrome.error = Some(error);
-                                }
-                            }
-                            Err(error) => {
-                                if let Some(home) = self.directory.directory_home.as_mut() {
-                                    home.close();
-                                }
-                                self.chrome.error = Some(error);
-                            }
-                        }
-                    }
-                    ShellDirectoryHomePublicationOutcome::Rejected(error) => {
-                        let frame_refusal = error.frame.is_some();
-                        let rebootstrap = error.text.contains("directory-event-page-rebootstrap-required");
-                        let detail = self.prefs.note_refused_open(error, &mut self.chrome);
-                        if let Some(home) = self.directory.directory_home.as_mut() {
-                            if frame_refusal {
-                                home.close();
-                                self.chrome.error = Some(detail);
-                            } else if rebootstrap {
-                                let _ = home.begin_epoch(0);
-                            } else if home.retry(semio_renderer_wgpu_host_base::renderer_worker_pool().now_ms(), &expected.receipt_sha256).is_err() {
-                                home.close();
-                                self.chrome.error = Some("retained Home directory rejection no longer matches the pending page".into());
-                            }
-                        }
-                    }
-                    ShellDirectoryHomePublicationOutcome::Terminal(error) => {
-                        if let Some(home) = self.directory.directory_home.as_mut() {
-                            home.close();
-                        }
-                        self.chrome.error = Some(error);
-                    }
-                }
-                changed = true;
-            }
-        }
-
-        self.directory.start_directory_event_page_fetch();
-        self.directory.flush_pending_directory_commands().await;
-        changed
     }
 
     //#endregion 🔖️DirectoryAndIdentity

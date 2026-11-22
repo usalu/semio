@@ -99,16 +99,22 @@ const runTar=(argv:readonly string[],cwd:string,check:()=>void,stdio:["pipe"|"ig
 };
 const closed=(child:ReturnType<typeof spawn>):Promise<number>=>new Promise((resolve,reject)=>{child.once("error",reject);child.once("close",code=>resolve(code??-1));});
 
+/** 🧭️ Checks whether a pack can reproduce the exact raw link target in another worktree. */
+function fleetInstallLinkRelocatableV1(target:string,relative:string,storeRoot:string):boolean{
+ if(/^[a-zA-Z]:[\\/]/u.test(target))return false;
+ if(isAbsolute(target))return storeRoot!==""&&(target===storeRoot||target.startsWith(storeRoot.replace(/[\\/]+$/u,"")+"/"));
+ return !posix.normalize(posix.join(posix.dirname(relative),target.replaceAll("\\","/"))).startsWith("..");
+}
+
 /** 🚫️ Names the first symbolic link below the roots that cannot be moved to another worktree path: an absolute target outside `storeRoot` (the prefix a restore rewrites to the local one; the caller passes the worktree root, which holds both the dependency store and the workspace packages the generation links to) or a relative target that escapes the roots. */
 export async function firstNonRelocatableLinkV1(directory:string,roots:readonly string[],check:()=>void,storeRoot:string=""):Promise<string|undefined>{
- const inside=(target:string)=>storeRoot!==""&&(target===storeRoot||target.startsWith(storeRoot.replace(/[\\/]+$/u,"")+"/"));
  const walk=async(path:string,relative:string):Promise<string|undefined>=>{
   check();
   let names:string[];try{names=await readdir(path);}catch{return undefined;}
   for(const name of names){
    const child=join(path,name),facts=await lstat(child).catch(()=>undefined),here=posix.join(relative,name);
    if(!facts)continue;
-   if(facts.isSymbolicLink()){const target=await readlink(child).catch(()=>"/");if(/^[a-zA-Z]:[\\/]/u.test(target))return here;if(isAbsolute(target)){if(!inside(target))return here;continue;}const resolved=posix.normalize(posix.join(posix.dirname(here),target.replaceAll("\\","/")));if(resolved.startsWith(".."))return here;}
+   if(facts.isSymbolicLink()){if(!fleetInstallLinkRelocatableV1(await readlink(child).catch(()=>"/"),here,storeRoot))return here;}
    else if(facts.isDirectory()){const found=await walk(child,here);if(found)return found;}
   }
   return undefined;
@@ -122,20 +128,37 @@ export function fleetInstallLinkTextV1(text:string,platform:NodeJS.Platform=proc
  return platform==="win32"?text.replace(/^\\\\\?\\/u,"").replaceAll("\\","/"):text;
 }
 
-/** 🔬️ Digests what a restore must reproduce independent of the checkout path: every entry below the roots with its kind, size, execute bit and, for links, the target with the dependency store prefix replaced by a token. */
+/** 🔬️ Digests what a restore must reproduce independently of the checkout path. */
 export async function fleetInstallFingerprintV1(directory:string,roots:readonly string[],storeRoot:string,check:()=>void,platform:NodeJS.Platform=process.platform):Promise<string>{
+ return (await inspectFleetInstallMetadataV1(directory,roots,storeRoot,check,platform,false)).fingerprint!;
+}
+
+/** 🧾️ Reads the portable fingerprint and, for publication, verifies the same links can be relocated. */
+async function inspectFleetInstallMetadataV1(directory:string,roots:readonly string[],storeRoot:string,check:()=>void,platform:NodeJS.Platform,requireRelocatable:boolean):Promise<{fingerprint:string;bad?:never}|{bad:string;fingerprint?:never}>{
  const rows:string[]=[],prefix=fleetInstallLinkTextV1(storeRoot,platform).replace(/[\\/]+$/u,"");
- const walk=async(path:string,relative:string)=>{
+ const walk=async(path:string,relative:string):Promise<string|undefined>=>{
   check();
   for(const name of (await readdir(path)).sort()){
    const child=join(path,name),facts=await lstat(child),here=posix.join(relative,name);
-   if(facts.isSymbolicLink()){const target=fleetInstallLinkTextV1(await readlink(child),platform);rows.push(`l ${here} ${prefix!==""&&target.startsWith(prefix+"/")?"<store>"+target.slice(prefix.length):target}`);}
-   else if(facts.isDirectory()){rows.push(`d ${here}`);await walk(child,here);}
-   else rows.push(`f ${here} ${facts.size} ${facts.mode&0o111?1:0}`);
+   if(facts.isSymbolicLink()){
+    const raw=await readlink(child);
+    if(requireRelocatable&&!fleetInstallLinkRelocatableV1(raw,here,storeRoot))return here;
+    const target=fleetInstallLinkTextV1(raw,platform);
+    rows.push(`l ${here} ${prefix!==""&&target.startsWith(prefix+"/")?"<store>"+target.slice(prefix.length):target}`);
+   }else if(facts.isDirectory()){
+    rows.push(`d ${here}`);
+    const bad=await walk(child,here);if(bad!==undefined)return bad;
+   }else rows.push(`f ${here} ${facts.size} ${facts.mode&0o111?1:0}`);
   }
  };
- for(const root of roots){const path=join(directory,...root.split("/"));if(await lstat(path).then(()=>true,()=>false)){rows.push(`r ${root}`);await walk(path,root);}}
- return createHash("sha256").update(rows.join("\n")).digest("hex");
+ for(const root of roots){
+  const path=join(directory,...root.split("/")),facts=await lstat(path).catch(()=>undefined);
+  if(!facts)continue;
+  if(requireRelocatable&&facts.isSymbolicLink())return {bad:root};
+  rows.push(`r ${root}`);
+  const bad=await walk(path,root);if(bad!==undefined)return {bad};
+ }
+ return {fingerprint:createHash("sha256").update(rows.join("\n")).digest("hex")};
 }
 
 /** 🔁️ Points every absolute link below the roots that starts with the publisher's dependency store at the local one. */
@@ -256,9 +279,10 @@ export async function fleetInstallPublishV1(request:FleetInstallRequestV1,replac
  if(roots.length===0)return false;
  const origin=readFleetMachineV1(context.root)?.originId;
  if(origin===undefined||signFleetDocumentV1(context.root,"cache-write","install-pack","probe")?.origin!==origin){request.event?.({stage:"skip",detail:"this machine has no fleet identity to sign the pack"});return false;}
- const bad=await firstNonRelocatableLinkV1(request.directory,roots,request.check,request.storeRoot);
- if(bad!==undefined){request.event?.({stage:"skip",detail:`non-relocatable link ${bad}`});return false;}
- const scanned=await request.scan(),shape:FleetInstallShapeV1={entries:scanned.entries,directories:scanned.directories,files:scanned.files,links:scanned.links,sha256:scanned.sha256};request.check();const fingerprint=await fleetInstallFingerprintV1(request.directory,roots,request.storeRoot,request.check);
+ const scanned=await request.scan(),shape:FleetInstallShapeV1={entries:scanned.entries,directories:scanned.directories,files:scanned.files,links:scanned.links,sha256:scanned.sha256};request.check();
+ const metadata=await inspectFleetInstallMetadataV1(request.directory,roots,request.storeRoot,request.check,process.platform,true);
+ if(metadata.bad!==undefined){request.event?.({stage:"skip",detail:`non-relocatable link ${metadata.bad}`});return false;}
+ const fingerprint=metadata.fingerprint;
  await mkdir(directory,{recursive:true});
  try{
   const linking=captureFleetInstallHardlinksV1(request.directory,request.check),plan=await planFleetInstallPackV1(request.directory,roots,request.check,linking.omit);

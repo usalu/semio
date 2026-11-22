@@ -1,7 +1,7 @@
 //! 👁️ WFC 2D viewer — the `view` mode: one full-pane board preview.
 
 use crate::viewer::wfc2d::modes::view::windows::preview;
-use semio_plugin::create_default_layout;
+use semio_plugin::{create_default_layout, Axis};
 use semio_ui_locale::LocalizedLabel;
 use semio_plugin::ModeDefinition;
 use semio_plugin::WindowLayout;
@@ -15,6 +15,6 @@ pub fn definition() -> ModeDefinition {
 
 /// 🪟️ Single full-pane board window — a read-only surface has nothing to put beside it.
 pub fn layout() -> WindowLayout {
-    create_default_layout(&[preview::WFC_2D_VIEW_WINDOW.into()], "row", None, Some(&["Board".into()]))
+    create_default_layout(&[preview::WFC_2D_VIEW_WINDOW.into()], Axis::Horizontal, None, Some(&["Board".into()]))
 }
 //#endregion 🔖️Definition

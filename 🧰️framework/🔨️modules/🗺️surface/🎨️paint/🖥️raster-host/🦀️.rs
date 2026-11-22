@@ -43,6 +43,7 @@ pub struct RasterHost {
     pub(super) selected_ids: Vec<String>,
     pub(super) paint_gesture: Option<gesture::PaintGesture>,
     pub(super) paint_edit: Option<PaintEditCommand>,
+    pub(super) keyboard: PixelKeyboard,
     /// 🖐️ (c) Preview/Effect — pan-gesture-in-progress flag, discarded on release.
     pub(super) panning: bool,
     pub(super) brush_color: [u8; 4],
@@ -96,6 +97,7 @@ impl RasterHost {
             mask_value: 255,
             paint_gesture: None,
             paint_edit: None,
+            keyboard: PixelKeyboard::default(),
             pan_last: None,
             show_selection_chrome: true,
             theme_clear,
@@ -171,6 +173,7 @@ impl RasterHost {
         }
         let world = self.screen_to_world(sx, sy);
         if let Some(gesture) = self.paint_gesture.as_mut() {
+            if self.paint_edit.is_none() { self.paint_edit = gesture.rollover(); }
             gesture.push(world);
             if self.paint_edit.is_none() { self.paint_edit = gesture.stream(); }
         }
@@ -342,6 +345,17 @@ impl RasterHost {
                 }
             }
         }
+        self.sync_keyboard();
+        if let Some((placement, marquee, cursor)) = self.keyboard_overlay() {
+            let world = cam * placement;
+            let zoom = self.camera.zoom.max(f64::EPSILON);
+            if let Some(marquee) = marquee {
+                let (x, y) = (f64::from(marquee.x), f64::from(marquee.y));
+                let path = dashed_rect_path(x, y, f64::from(marquee.width), f64::from(marquee.height), 4.0 / zoom);
+                scene.stroke(&Stroke::new(1.0 / zoom), world, Color::from_rgba8(255, 255, 255, 255), None, &path);
+            }
+            scene.stroke(&Stroke::new(2.0 / zoom), world, Color::from_rgba8(255, 204, 0, 255), None, &Rect::new(f64::from(cursor.x), f64::from(cursor.y), f64::from(cursor.x + 1), f64::from(cursor.y + 1)));
+        }
         scene
     }
 
@@ -349,6 +363,34 @@ impl RasterHost {
         let inner = self.build_vector_scene();
         render::scale_scene_for_device_pixel_ratio(inner, self.viewport.dpr)
     }
+}
+
+/// ┄ The outline of a rectangle as alternating `dash` long drawn and skipped runs, the dashed marquee `setLineDash([4/zoom,4/zoom])` draws in `Paint2dHost`.
+pub(super) fn dashed_rect_path(x: f64, y: f64, width: f64, height: f64, dash: f64) -> BezPath {
+    let corners = [(x, y), (x + width, y), (x + width, y + height), (x, y + height), (x, y)];
+    let mut path = BezPath::new();
+    let mut drawing = true;
+    let mut left = dash;
+    for edge in corners.windows(2) {
+        let ((x0, y0), (x1, y1)) = (edge[0], edge[1]);
+        let length = (x1 - x0).hypot(y1 - y0);
+        let mut at = 0.0;
+        while at < length {
+            let step = left.min(length - at);
+            if drawing {
+                let (from, to) = (at / length, (at + step) / length);
+                path.move_to((x0 + (x1 - x0) * from, y0 + (y1 - y0) * from));
+                path.line_to((x0 + (x1 - x0) * to, y0 + (y1 - y0) * to));
+            }
+            at += step;
+            left -= step;
+            if left <= 0.0 {
+                drawing = !drawing;
+                left = dash;
+            }
+        }
+    }
+    path
 }
 
 impl canvas_content::CanvasContent for RasterHost {

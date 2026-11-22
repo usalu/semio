@@ -1,10 +1,11 @@
 import { BrowserInteractiveJobPort } from "../🔌️browser-interactive-job-port/🟦️.ts";
-import { type BrowserFrameDiagnostic, type BrowserFrameDirectives, type BrowserFrameFallbackState, type BrowserFrameIntrospectionProbe, type BrowserFrameLosslessEvent, type BrowserFrameReplaceableEvent, type BrowserFrameTransportOptions, type BrowserFrameWireLosslessEvent, type BrowserFrameWorkerFaultCode, type BrowserFrameWorkerMessage, type BrowserFrameWorkerPort, type BrowserFrameWorkerStatus, type BrowserFrameWorkerStepReport, type BrowserHubDocumentRemote, FRAME_WORKER_ACCESSIBILITY_ID_BYTES, FRAME_WORKER_BYTE_CAPACITY, FRAME_WORKER_HUB_DOCUMENT_CAPACITY, FRAME_WORKER_IMAGE_DECODE_BYTE_CAPACITY, FRAME_WORKER_INTROSPECTION_CAPACITY, FRAME_WORKER_INTROSPECTION_TIMEOUT_MS, FRAME_WORKER_LOSSLESS_ITEM_CAPACITY, FRAME_WORKER_MESSAGE_BYTE_CAPACITY, FRAME_WORKER_POINTER_CAPACITY, FRAME_WORKER_TEXT_CHUNK_CODE_UNITS, type QueuedLossless } from "./📋️contract/🟦️.ts";
+import { type BrowserFrameDiagnostic, type BrowserFrameDirectives, type BrowserFrameFallbackState, type BrowserFrameIntrospectionProbe, type BrowserFrameLosslessEvent, type BrowserFrameReplaceableEvent, type BrowserFrameTransportOptions, type BrowserFrameWireEvent, type BrowserFrameWireLosslessEvent, type BrowserFrameWireReplaceableEvent, type BrowserFrameWorkerFaultCode, type BrowserFrameWorkerMessage, type BrowserFrameWorkerPort, type BrowserFrameWorkerStatus, type BrowserFrameWorkerStepReport, type BrowserHubDocumentRemote, FRAME_WORKER_ACCESSIBILITY_ID_BYTES, FRAME_WORKER_BYTE_CAPACITY, FRAME_WORKER_CONTINUOUS_PAGE_CAPACITY, FRAME_WORKER_HUB_DOCUMENT_CAPACITY, FRAME_WORKER_IMAGE_DECODE_BYTE_CAPACITY, FRAME_WORKER_INTROSPECTION_CAPACITY, FRAME_WORKER_INTROSPECTION_TIMEOUT_MS, FRAME_WORKER_LOSSLESS_ITEM_CAPACITY, FRAME_WORKER_LOSSLESS_PAGE_CAPACITY, FRAME_WORKER_MESSAGE_BYTE_CAPACITY, FRAME_WORKER_PENDING_REPLACEABLE_CAPACITY, FRAME_WORKER_POINTER_CAPACITY, FRAME_WORKER_TEXT_CHUNK_CODE_UNITS, type QueuedLossless } from "./📋️contract/🟦️.ts";
 import { TurnClock, TurnLedger, type TurnOutcome } from "../⏱️turn-budget/🟦️.ts";
 import { BROWSER_MEDIA_CAPACITY, type BrowserMediaOperation, type BrowserMediaValue, mediaSlotAuthorityKey, parsePresentedMediaSlots, type PresentedMediaSlot } from "@semio-tech/framework-os/modules/renderer/engine/media/browser";
 import { bootPhaseCeilingMs, type BrowserBootPhase, describeBrowserBootSilence, evaluateBrowserBootLiveness, FRAME_WORKER_BOOT_LIVENESS_POLICY } from "../🫀️boot-liveness/🟦️.ts";
 import { OriginalBootstrapRootPort } from "@semio-tech/framework-actor/retained-turn/bootstrap/port";
 import type { MediaTransportPort } from "@semio-tech/framework-os/modules/renderer/engine/media/lifecycle";
+import { parseTutorialVideoPlan, type TutorialVideoOverlayPlan } from "@semio-tech/framework-os/modules/renderer/engine/media/browser/tutorial-video";
 import { nextFrameSequence } from "../🧵️frame-turn-scheduler/🟦️.ts";
 import type { WgpuHostAppearance, WgpuHostPlatformPrefs, WgpuHostStorageSnapshot } from "../🧭️boot-descriptor/🟦️.ts";
 import { stampShardWorkerDiagnostics } from "@semio-tech/framework-actor/diagnostics";
@@ -41,12 +42,10 @@ export class BrowserFrameTransport {
   private readonly onUiTurn?: (outcome: TurnOutcome) => void;
   private readonly requestRaf?: (callback: FrameRequestCallback) => number;
   private readonly cancelRaf?: (handle: number) => void;
-  private readonly pointerIds = new Array<number>(FRAME_WORKER_POINTER_CAPACITY);
-  private readonly pointerSamples = new Array<BrowserFrameReplaceableEvent | undefined>(FRAME_WORKER_POINTER_CAPACITY);
-  private pointerCount = 0;
-  private wheel: BrowserFrameReplaceableEvent | undefined;
-  private resize: BrowserFrameReplaceableEvent | undefined;
-  private lossless: QueuedLossless[] = [];
+  private readonly openSegment: BrowserFrameWireReplaceableEvent[] = [];
+  private queuedInput: (QueuedLossless | BrowserFrameWireReplaceableEvent)[] = [];
+  private replaceableCount = 0;
+  private losslessCount = 0;
   private losslessBytes = 0;
   private readonly hubDocuments = new Map<string, BrowserHubDocumentRemote | null>();
   private nextStreamId = 1;
@@ -111,33 +110,23 @@ export class BrowserFrameTransport {
     }
   }
 
-  /** 🫧 Coalesces replaceable input without consuming lossless credits. */
+  /** 🫧 Coalesces samples only between the ordered events that separate them. */
   enqueueReplaceable(event: BrowserFrameReplaceableEvent): boolean {
     if (!this.accepting()) return false;
+    const slot = this.openSegment.findIndex((sample) => sample.kind === event.kind && (sample.kind !== "pointer-move" || (event.kind === "pointer-move" && sample.pointerId === event.pointerId)));
+    const prior = this.openSegment[slot];
+    if (!prior) {
+      if (this.replaceableCount >= FRAME_WORKER_PENDING_REPLACEABLE_CAPACITY ||
+          (event.kind === "pointer-move" && this.openSegment.filter((sample) => sample.kind === "pointer-move").length >= FRAME_WORKER_POINTER_CAPACITY)) {
+        this.fail("replaceable-overflow", "coalesced input exceeded pointer identities or pending sample credits");
+        return false;
+      }
+      this.replaceableCount++;
+    } else {
+      this.openSegment.splice(slot, 1);
+    }
+    this.openSegment.push({ ...event, timestampMs: this.now() });
     this.generation++;
-    if (event.kind === "pointer-move" || event.kind === "pointer-leave") {
-      let slot = -1;
-      for (let index = 0; index < this.pointerCount; index++) {
-        if (this.pointerIds[index] === event.pointerId) {
-          slot = index;
-          break;
-        }
-      }
-      if (slot < 0) {
-        if (this.pointerCount === FRAME_WORKER_POINTER_CAPACITY) {
-          this.fail("replaceable-overflow", `pointer lane exceeded ${FRAME_WORKER_POINTER_CAPACITY} active identities`);
-          return false;
-        }
-        slot = this.pointerCount++;
-        this.pointerIds[slot] = event.pointerId;
-      }
-      this.pointerSamples[slot] = { ...event, timestampMs: this.now() } as BrowserFrameReplaceableEvent;
-    }
-    if (event.kind === "wheel") {
-      const prior = this.wheel?.kind === "wheel" ? this.wheel : undefined;
-      this.wheel = prior ? { ...event, deltaX: prior.deltaX + event.deltaX, deltaY: prior.deltaY + event.deltaY, timestampMs: this.now() } as BrowserFrameReplaceableEvent : { ...event, timestampMs: this.now() } as BrowserFrameReplaceableEvent;
-    }
-    if (event.kind === "resize") this.resize = { ...event, timestampMs: this.now() } as BrowserFrameReplaceableEvent;
     this.requestFrame();
     return true;
   }
@@ -166,12 +155,24 @@ export class BrowserFrameTransport {
         return false;
       }
     }
+    return this.enqueueOrdered(event);
+  }
+
+  private enqueueOrdered(event: QueuedLossless["event"]): boolean {
     const bytes = admittedBytes(event);
-    if (this.lossless.length >= FRAME_WORKER_LOSSLESS_ITEM_CAPACITY || this.losslessBytes + bytes > FRAME_WORKER_BYTE_CAPACITY) {
+    if (this.losslessCount >= FRAME_WORKER_LOSSLESS_ITEM_CAPACITY || this.losslessBytes + bytes > FRAME_WORKER_BYTE_CAPACITY) {
       this.fail("lossless-overflow", `lossless lane exceeded ${FRAME_WORKER_LOSSLESS_ITEM_CAPACITY} items or ${FRAME_WORKER_BYTE_CAPACITY} bytes`);
       return false;
     }
-    this.lossless.push({ event, bytes, streamId: this.nextStreamId++, timestampMs: this.now(), cursor: 0 });
+    const queued = { event, bytes, streamId: this.nextStreamId, timestampMs: this.now(), cursor: 0 };
+    if (!streamedInput(event) && !fitsEvent(orderedWireEvent(queued))) {
+      this.fail("lossless-overflow", "input exceeds one bounded wire page");
+      return false;
+    }
+    this.sealOpenSegment();
+    this.queuedInput.push(queued);
+    this.nextStreamId++;
+    this.losslessCount++;
     this.losslessBytes += bytes;
     this.generation++;
     this.requestFrame();
@@ -179,7 +180,7 @@ export class BrowserFrameTransport {
   }
 
   publishHubDocumentStatus(documentKey: string, remote: BrowserHubDocumentRemote | null): boolean {
-    if (!this.accepting() || documentKey.length === 0 || documentKey.length > 512 || /[\u0000-\u001f\u007f]/u.test(documentKey)) return false;
+    if (!this.accepting() || documentKey.length === 0 || wireEncoder.encode(documentKey).byteLength > 512 || /[\u0000-\u001f\u007f]/u.test(documentKey)) return false;
     if (!this.hubDocuments.has(documentKey) && this.hubDocuments.size >= FRAME_WORKER_HUB_DOCUMENT_CAPACITY) return false;
     this.hubDocuments.set(documentKey, remote);
     this.generation++;
@@ -261,25 +262,15 @@ export class BrowserFrameTransport {
   /** 📤 Transfers one bounded batch; never executes frame work on the caller. */
   flush(timestampMs = this.now()): boolean {
     if (this.status !== "ready" || this.inFlight || !this.frameRequested) return false;
-    const replaceable: BrowserFrameReplaceableEvent[] = [];
-    for (let index = 0; index < this.pointerCount; index++) {
-      const event = this.pointerSamples[index];
-      if (event) replaceable.push(event);
-    }
-    if (this.wheel) replaceable.push(this.wheel);
-    if (this.resize) replaceable.push(this.resize);
-    const lossless = this.takeLosslessWireBatch();
-    this.pointerSamples.fill(undefined);
-    this.pointerCount = 0;
-    this.wheel = undefined;
-    this.resize = undefined;
-    this.frameRequested = this.lossless.length > 0 || this.hubDocuments.size > 0;
+    this.sealOpenSegment();
+    const events = this.takeWireBatch();
+    this.frameRequested = this.queuedInput.length > 0 || this.hubDocuments.size > 0;
     try {
       const inputSequence = nextFrameSequence(this.inputSequence);
       this.inputSequence = inputSequence;
       this.inFlight = true;
       this.uiTurnClock.enter();
-      this.worker.postMessage({ kind: "batch", lifecycle: this.lifecycle, inputSequence, generation: this.generation, timestampMs, replaceable, lossless });
+      this.worker.postMessage({ kind: "batch", lifecycle: this.lifecycle, inputSequence, generation: this.generation, timestampMs, events });
       this.observeUiTurn("frame-transfer", this.uiTurnClock.leave());
       return true;
     } catch (error) {
@@ -698,9 +689,10 @@ export class BrowserFrameTransport {
     }
     if (message.generation === this.generation) {
       let mediaSlots: readonly PresentedMediaSlot[];
-      try { mediaSlots = this.acceptMediaSlots(message.mediaSlots); }
+      let tutorialVideo: TutorialVideoOverlayPlan | null;
+      try { mediaSlots = this.acceptMediaSlots(message.mediaSlots); tutorialVideo = parseTutorialVideoPlan(message.tutorialVideo); }
       catch (error) { this.fail("protocol-violation", error instanceof Error ? error.message : String(error)); return; }
-      if (!this.runUiHook("directive-hook", () => this.onDirectives?.({ mediaSlots, cursor: message.cursor, fullscreen: message.fullscreen, generation: message.generation, workerDurationMs: message.workerDurationMs }))) return;
+      if (!this.runUiHook("directive-hook", () => this.onDirectives?.({ mediaSlots, tutorialVideo, cursor: message.cursor, fullscreen: message.fullscreen, generation: message.generation, workerDurationMs: message.workerDurationMs }))) return;
     }
     if (message.requestFrame || this.frameRequested || message.generation < this.generation) this.requestFrame();
     else if (message.generation === this.generation) this.replaceDeadlineTimer(message.nextDeadlineDelayMs);
@@ -776,17 +768,16 @@ export class BrowserFrameTransport {
       pending.resolve(null);
     }
     this.introspections.clear();
-    this.pointerSamples.fill(undefined);
-    this.pointerCount = 0;
-    this.wheel = undefined;
-    this.resize = undefined;
-    const retiredLossless = this.lossless;
-    this.lossless = [];
+    this.openSegment.length = 0;
+    const retiredInput = this.queuedInput;
+    this.queuedInput = [];
     const drain = () => {
-      retiredLossless.pop();
-      if (retiredLossless.length > 0) this.setTimer(drain, 0);
+      retiredInput.pop();
+      if (retiredInput.length > 0) this.setTimer(drain, 0);
     };
-    if (retiredLossless.length > 0) this.setTimer(drain, 0);
+    if (retiredInput.length > 0) this.setTimer(drain, 0);
+    this.replaceableCount = 0;
+    this.losslessCount = 0;
     this.losslessBytes = 0;
     this.hubDocuments.clear();
     this.frameRequested = false;
@@ -819,41 +810,95 @@ export class BrowserFrameTransport {
     drain();
   }
 
-  private takeLosslessWireBatch(): BrowserFrameWireLosslessEvent[] {
-    const batch: BrowserFrameWireLosslessEvent[] = [];
-    let budget = FRAME_WORKER_MESSAGE_BYTE_CAPACITY - 2048;
-    for (const [documentKey, remote] of this.hubDocuments) {
-      const bytes = 2 * documentKey.length + 192;
-      if (batch.length >= 16 || budget <= bytes) break;
-      batch.push(remote === null ? { kind: "hub-document-close", documentKey, timestampMs: this.now() } : { kind: "hub-document-status", documentKey, remote, timestampMs: this.now() });
-      this.hubDocuments.delete(documentKey);
+  private sealOpenSegment(): void {
+    this.queuedInput.push(...this.openSegment);
+    this.openSegment.length = 0;
+  }
+
+  private takeWireBatch(): BrowserFrameWireEvent[] {
+    const batch: BrowserFrameWireEvent[] = [];
+    let budget = FRAME_WORKER_MESSAGE_BYTE_CAPACITY - WIRE_BATCH_ENVELOPE_BYTES;
+    let orderedCount = 0;
+    let continuousCount = 0;
+    const append = (event: BrowserFrameWireEvent): boolean => {
+      const bytes = wireBytes(event) + Number(batch.length > 0);
+      if (bytes > budget) return false;
+      batch.push(event);
       budget -= bytes;
-    }
-    while (batch.length < 16 && this.lossless.length > 0 && budget > 256) {
-      const queued = this.lossless[0]!;
-      const event = queued.event;
-      if (event.kind !== "text" && event.kind !== "paste" && event.kind !== "paste-image-data-url" && event.kind !== "ime-update" && event.kind !== "ime-commit") {
-        batch.push({ ...event, timestampMs: queued.timestampMs } as BrowserFrameWireLosslessEvent);
-        budget -= Math.min(queued.bytes, 512);
-        this.lossless.shift();
-        this.losslessBytes -= queued.bytes;
+      return true;
+    };
+    while (this.queuedInput.length > 0) {
+      const next = this.queuedInput[0]!;
+      if (!("event" in next)) {
+        if (continuousCount === FRAME_WORKER_CONTINUOUS_PAGE_CAPACITY || !append(next)) break;
+        continuousCount++;
+        this.replaceableCount--;
+        this.queuedInput.shift();
         continue;
       }
-      const remaining = event.text.length - queued.cursor;
-      const take = Math.min(remaining, FRAME_WORKER_TEXT_CHUNK_CODE_UNITS, Math.max(1, Math.floor((budget - 512) / 6)));
-      let end = queued.cursor + take;
-      if (end < event.text.length && isHighSurrogate(event.text.charCodeAt(end - 1)) && isLowSurrogate(event.text.charCodeAt(end))) end--;
-      const final = end === event.text.length;
-      batch.push({ kind: "text-chunk", streamId: queued.streamId, target: event.kind, text: event.text.slice(queued.cursor, end), totalBytes: 3 * event.text.length, final, timestampMs: queued.timestampMs, ...(event.kind === "ime-update" ? { cursor: event.cursor } : {}) } as BrowserFrameWireLosslessEvent);
-      queued.cursor = end;
-      budget -= 6 * take + 512;
-      if (final) {
-        this.lossless.shift();
-        this.losslessBytes -= queued.bytes;
+      const { event } = next;
+      const isWheel = event.kind === "wheel";
+      if (isWheel ? continuousCount === FRAME_WORKER_CONTINUOUS_PAGE_CAPACITY : orderedCount === FRAME_WORKER_LOSSLESS_PAGE_CAPACITY) break;
+      let end: number | undefined;
+      if (streamedInput(event)) {
+        const available = budget - Number(batch.length > 0) - wireBytes(orderedWireEvent(next, next.cursor));
+        const take = Math.max(0, Math.min(event.text.length - next.cursor, FRAME_WORKER_TEXT_CHUNK_CODE_UNITS, Math.floor(available / 6)));
+        end = next.cursor + take;
+        if (end < event.text.length && isHighSurrogate(event.text.charCodeAt(end - 1)) && isLowSurrogate(event.text.charCodeAt(end))) end--;
+        if (end <= next.cursor && next.cursor < event.text.length) break;
       }
+      const wire = orderedWireEvent(next, end);
+      if (!append(wire)) break;
+      if (isWheel) continuousCount++;
+      else orderedCount++;
+      if (wire.kind === "text-chunk" && !wire.final) {
+        next.cursor = end!;
+        continue;
+      }
+      this.queuedInput.shift();
+      this.losslessCount--;
+      this.losslessBytes -= next.bytes;
+    }
+    for (const [documentKey, remote] of this.hubDocuments) {
+      if (orderedCount === FRAME_WORKER_LOSSLESS_PAGE_CAPACITY || !append(remote === null
+        ? { kind: "hub-document-close", documentKey, timestampMs: this.now() }
+        : { kind: "hub-document-status", documentKey, remote, timestampMs: this.now() })) break;
+      orderedCount++;
+      this.hubDocuments.delete(documentKey);
     }
     return batch;
   }
+}
+
+const wireEncoder = new TextEncoder();
+const WIRE_BATCH_ENVELOPE_BYTES = JSON.stringify({
+  kind: "batch",
+  lifecycle: Number.MAX_SAFE_INTEGER,
+  inputSequence: Number.MAX_SAFE_INTEGER,
+  generation: Number.MAX_SAFE_INTEGER,
+  timestampMs: -Number.MAX_VALUE,
+  events: [],
+}).length;
+
+function wireBytes(event: BrowserFrameWireEvent): number {
+  return wireEncoder.encode(JSON.stringify(event)).byteLength;
+}
+
+function fitsEvent(event: BrowserFrameWireEvent): boolean {
+  return wireBytes(event) + WIRE_BATCH_ENVELOPE_BYTES <= FRAME_WORKER_MESSAGE_BYTE_CAPACITY;
+}
+
+function streamedInput(event: QueuedLossless["event"]): event is Extract<BrowserFrameLosslessEvent, { readonly kind: "text" | "paste" | "paste-image-data-url" }> {
+  return event.kind === "text" || event.kind === "paste" || event.kind === "paste-image-data-url";
+}
+
+function orderedWireEvent(queued: QueuedLossless, end?: number): BrowserFrameWireLosslessEvent {
+  const { event, streamId, timestampMs, cursor } = queued;
+  if (streamedInput(event) || event.kind === "ime-update" || event.kind === "ime-commit") {
+    const until = end ?? event.text.length;
+    return { kind: "text-chunk", streamId, target: event.kind, text: event.text.slice(cursor, until), totalBytes: 3 * event.text.length, final: until === event.text.length, timestampMs, ...(event.kind === "ime-update" ? { cursor: event.cursor } : {}) };
+  }
+  return { ...event, timestampMs };
 }
 
 function admittedBytes(event: BrowserFrameLosslessEvent): number {

@@ -60,12 +60,13 @@ fn leftover_copy_paste_clones_selected_object() {
         hovered: Vec::new(),
         referenced: Vec::new(),
     };
-    let objects = puzzle3d_selected_objects_from(&marks, &scene_snapshot);
+    let document = puzzle3d_snapshot_from_host_snapshot(&scene_snapshot).expect("fixture document");
+    let objects = puzzle3d_selected_objects_from(&marks, &document);
     assert_eq!(objects.len(), 1, "leftover selected object id must copy even when granularity is vortex: {objects:?}");
     assert_eq!(objects[0].id, "seed-left-001");
     assert_eq!(objects[0].origin, [1.0, 2.0, 3.0]);
-    let fragment = puzzle3d_copy_fragment_from(&scene_snapshot, objects).expect("copy fragment");
-    let mutations = puzzle3d_paste_operations(&fragment, &semio_plugin::kernel::PastePlacement::default()).expect("paste");
+    let fragment = puzzle3d_copy_fragment_from(&document, &objects).expect("copy fragment");
+    let mutations = puzzle3d_paste_operations(&Puzzle3dSnapshot::default(), &fragment, &semio_plugin::kernel::PastePlacement::default()).expect("paste");
     let created: Vec<_> = mutations
         .iter()
         .filter_map(|op| match op {
@@ -110,11 +111,12 @@ fn leftover_copy_paste_clones_object_from_selected_vortex_uuid() {
         hovered: Vec::new(),
         referenced: Vec::new(),
     };
-    let objects = puzzle3d_selected_objects_from(&marks, &scene_snapshot);
+    let document = puzzle3d_snapshot_from_host_snapshot(&scene_snapshot).expect("fixture document");
+    let objects = puzzle3d_selected_objects_from(&marks, &document);
     assert_eq!(objects.len(), 1, "leftover selected vortex uuid must resolve to the parent object: {objects:?}");
     assert_eq!(objects[0].id, "seed-left-001");
-    let fragment = puzzle3d_copy_fragment_from(&scene_snapshot, objects).expect("copy fragment");
-    let mutations = puzzle3d_paste_operations(&fragment, &semio_plugin::kernel::PastePlacement::default()).expect("paste");
+    let fragment = puzzle3d_copy_fragment_from(&document, &objects).expect("copy fragment");
+    let mutations = puzzle3d_paste_operations(&Puzzle3dSnapshot::default(), &fragment, &semio_plugin::kernel::PastePlacement::default()).expect("paste");
     let created: Vec<_> = mutations
         .iter()
         .filter_map(|op| match op {

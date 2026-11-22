@@ -1,13 +1,14 @@
 /** 🟠️ The catalogue drag enter phase of useWorldPointerAndDrop. */
-import { useCallback, useEffect, type DragEvent } from "../../../⚛️react-port/🟦️.ts";
-import { CATALOGUE_DRAG_MIME, getActiveCatalogueDragPayload } from "@semio-tech/ui-react";
+import { useCallback, useEffect, useRef, type DragEvent } from "../../../⚛️react-port/🟦️.ts";
+import { CATALOGUE_DRAG_MIME, getActiveCatalogueDragPayload, getActiveCataloguePointerDragData } from "@semio-tech/ui-react";
 import { clientPointOverHost } from "../../🔗️instance-selection/🟦️.ts";
-import { clearWorldCatalogueDropPreview, getWorldCatalogueDropPreview, parsePuzzle3dCatalogueDragPayload, registerWorldCatalogueDropHost, worldCatalogueDropHostContainsPoint } from "../../🗂️catalogue-drop/🟦️.tsx";
+import { parsePuzzle3dCatalogueDragPayload, registerWorldCatalogueDropHost, worldCatalogueDropHostContainsPoint } from "../../🗂️catalogue-drop/🟦️.tsx";
 import type { useActiveUtilityState } from "../🔶️active-utility/🟦️.ts";
 import type { useHandlePointerUpState } from "../🔸️handle-pointer-up/🟦️.ts";
 
 /** 🟡 Builds onCatalogueDragEnter, onCatalogueDragLeave, onCatalogueDragOver, onCatalogueDrop of useWorldPointerAndDrop. */
 export function useCatalogueDragEnterState({ scene, catalogueDragEncodedRef, catalogueDragDepthRef, updateCatalogueDropPreviewAt, commitCatalogueDropAt, clearCatalogueDrop, windowInstanceId, node, hostRef }: Pick<ReturnType<typeof useActiveUtilityState>, "scene" | "catalogueDragEncodedRef" | "catalogueDragDepthRef" | "windowInstanceId" | "node" | "hostRef"> & Pick<ReturnType<typeof useHandlePointerUpState>, "updateCatalogueDropPreviewAt" | "commitCatalogueDropAt" | "clearCatalogueDrop">) {
+  const pointerDrag = useRef<{ readonly pointerId: number; readonly payload: string } | null>(null);
   const onCatalogueDragEnter = useCallback(
     (event: DragEvent<HTMLDivElement>) => {
       if (!scene) return;
@@ -22,11 +23,13 @@ export function useCatalogueDragEnterState({ scene, catalogueDragEncodedRef, cat
   );
 
   const onCatalogueDragLeave = useCallback(
-    (_event: DragEvent<HTMLDivElement>) => {
+    (event: DragEvent<HTMLDivElement>) => {
       if (!scene) return;
       catalogueDragDepthRef.current = Math.max(0, catalogueDragDepthRef.current - 1);
+      if (event.relatedTarget instanceof Node && event.currentTarget.contains(event.relatedTarget)) return;
+      if (!worldCatalogueDropHostContainsPoint(node.controllerId, event.clientX, event.clientY)) clearCatalogueDrop();
     },
-    [scene],
+    [clearCatalogueDrop, node.controllerId, scene],
   );
 
   const onCatalogueDragOver = useCallback(
@@ -74,20 +77,25 @@ export function useCatalogueDragEnterState({ scene, catalogueDragEncodedRef, cat
     };
 
     const onPointerMove = (event: PointerEvent) => {
-      const encoded = getActiveCatalogueDragPayload();
-      if (!encoded) {
-        if (getWorldCatalogueDropPreview(node.controllerId)) clearWorldCatalogueDropPreview(node.controllerId);
+      const data = getActiveCataloguePointerDragData();
+      if (!data) {
+        if (!pointerDrag.current) return;
+        pointerDrag.current = null;
+        if (!getActiveCatalogueDragPayload()) clearCatalogueDrop();
         return;
       }
-      if (!parsePuzzle3dCatalogueDragPayload(encoded)) return;
-      catalogueDragEncodedRef.current = encoded;
+      const tracked = pointerDrag.current;
+      if ((tracked && tracked.pointerId !== event.pointerId) || !parsePuzzle3dCatalogueDragPayload(data.payload)) return;
+      pointerDrag.current = { pointerId: event.pointerId, payload: data.payload };
       updateCatalogueDropPreviewAt(event.clientX, event.clientY);
     };
 
     const onPointerUp = (event: PointerEvent) => {
-      const encoded = getActiveCatalogueDragPayload() ?? catalogueDragEncodedRef.current;
-      const payload = parsePuzzle3dCatalogueDragPayload(encoded);
-      if (!payload) return;
+      const tracked = pointerDrag.current;
+      if (event.button !== 0 || (tracked && tracked.pointerId !== event.pointerId)) return;
+      const encoded = getActiveCataloguePointerDragData()?.payload ?? tracked?.payload;
+      pointerDrag.current = null;
+      if (!parsePuzzle3dCatalogueDragPayload(encoded)) return;
       const host = hostRef.current;
       if (!host) return;
       const rect = host.getBoundingClientRect();
@@ -99,6 +107,12 @@ export function useCatalogueDragEnterState({ scene, catalogueDragEncodedRef, cat
       if (!worldCatalogueDropHostContainsPoint(node.controllerId, event.clientX, event.clientY)) clearCatalogueDrop();
     };
 
+    const onPointerCancel = (event: PointerEvent) => {
+      if (pointerDrag.current?.pointerId !== event.pointerId) return;
+      pointerDrag.current = null;
+      clearCatalogueDrop();
+    };
+
     const onDragEnd = () => {
       queueMicrotask(() => {
         if (!getActiveCatalogueDragPayload()) clearCatalogueDrop();
@@ -108,11 +122,13 @@ export function useCatalogueDragEnterState({ scene, catalogueDragEncodedRef, cat
     window.addEventListener("dragover", onWindowDragOver, true);
     window.addEventListener("pointermove", onPointerMove);
     window.addEventListener("pointerup", onPointerUp, true);
+    window.addEventListener("pointercancel", onPointerCancel, true);
     window.addEventListener("dragend", onDragEnd);
     return () => {
       window.removeEventListener("dragover", onWindowDragOver, true);
       window.removeEventListener("pointermove", onPointerMove);
       window.removeEventListener("pointerup", onPointerUp, true);
+      window.removeEventListener("pointercancel", onPointerCancel, true);
       window.removeEventListener("dragend", onDragEnd);
     };
   }, [clearCatalogueDrop, commitCatalogueDropAt, node.controllerId, updateCatalogueDropPreviewAt]);

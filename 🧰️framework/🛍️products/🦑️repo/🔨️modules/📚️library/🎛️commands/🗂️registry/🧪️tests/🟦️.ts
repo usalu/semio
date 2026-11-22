@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import Ajv from "ajv";
 import ts from "typescript";
 import { existsSync, readFileSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { join, posix, resolve } from "node:path";
 import { createScriptProcessEnvelope, Script, ScriptRouter, withScriptProcessEnvelope, type ScriptInvocation } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { diskZeroTouchTreeV1, scanModuleSpecifiersV1 } from "../../../🏗️build/📥️source/🛗️zero-touch/🟦️.ts";
 import { readRootCommandHelpRequestV1, readRootCommandRegistryV1, registerRootCommandsV1, renderRootCommandHelpV1, rootCommandHelpV1, rootCommandRegistryV1, type RootCommandV1 } from "../🟦️.ts";
@@ -66,10 +66,25 @@ test("every command module exists and exports its command class, as the system s
 
 test("the root script loads every registry module lazily and none eagerly", () => {
   const tree = diskZeroTouchTreeV1(root), entry = tree.read("📜️script.ts")!, rows = scanModuleSpecifiersV1("📜️script.ts", entry);
-  const dynamic = new Set(rows.filter((row) => row.kind === "dynamic").map((row) => row.specifier.replace(/^\.\//u, "")));
-  for (const command of registry.commands) expect(dynamic.has(command.module), `${command.id} dynamic`).toBe(true);
-  const eager = new Set(rows.filter((row) => row.kind === "static").map((row) => row.specifier.replace(/^\.\//u, "")));
-  for (const command of registry.commands) expect(eager.has(command.module), `${command.id} static`).toBe(false);
+  const loads = (file: string, command: RootCommandV1): boolean => {
+    if (file === command.module) return true;
+    const text = tree.read(file);
+    if (text === undefined) return false;
+    const source = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true);
+    return source.statements.some((statement) => {
+      if (!ts.isExportDeclaration(statement) || statement.isTypeOnly || !statement.moduleSpecifier || !ts.isStringLiteral(statement.moduleSpecifier)) return false;
+      const specifier = statement.moduleSpecifier.text;
+      const clause = statement.exportClause;
+      return specifier.startsWith(".") && posix.join(posix.dirname(file), specifier) === command.module
+        && clause !== undefined && ts.isNamedExports(clause)
+        && clause.elements.some((member) => !member.isTypeOnly && member.name.text === command.export && (member.propertyName ?? member.name).text === command.export);
+    });
+  };
+  for (const command of registry.commands) {
+    const imports = rows.filter((row) => row.specifier.startsWith(".") && loads(posix.normalize(row.specifier), command));
+    expect(imports.some((row) => row.kind === "dynamic"), `${command.id} dynamic`).toBe(true);
+    expect(imports.some((row) => row.kind === "static"), `${command.id} static`).toBe(false);
+  }
 });
 
 for (const row of fixture.helpRequests) {
@@ -131,6 +146,8 @@ for (const row of fixture.gate) {
     const calls: { command: string; args: readonly string[]; cwd: string; label: string; environment: Readonly<Record<string, string | undefined>> }[] = [], lines: string[] = [];
     let clock = 0;
     const ports: DependencyProvisionPortsV1 = {
+      ...dependencyProvisionPortsV1,
+      available: () => "available" in row ? row.available : true,
       run: async (command, args, cwd, label, environment) => { calls.push({ command, args, cwd, label, environment }); clock += 2500; if ("fail" in row && row.fail) throw new Error("boom"); },
       write: (line) => { lines.push(line); },
       now: () => clock,
@@ -158,8 +175,14 @@ for (const row of fixture.gate) {
   });
 }
 
+test("dependency availability agrees with the TypeScript loader on accessible generation directories", () => {
+  for (const workspace of [root, join(root, "🔣️.json")]) {
+    expect(dependencyProvisionPortsV1.available(workspace)).toBe(ts.sys.directoryExists(join(workspace, "node_modules")));
+  }
+});
+
 test("an aborted invocation stops before anything is provisioned", async () => {
-  const controller = new AbortController(), calls: string[] = [], ports: DependencyProvisionPortsV1 = { run: async () => { calls.push("run"); }, write: () => {}, now: () => 0 };
+  const controller = new AbortController(), calls: string[] = [], ports: DependencyProvisionPortsV1 = { ...dependencyProvisionPortsV1, run: async () => { calls.push("run"); }, write: () => {}, now: () => 0 };
   const command = registry.commands.find((candidate) => candidate.id === "verify")!, gate = dependencyGateV1(root, registry, { SEMIO_LANGUAGE: "en" }, ports);
   const error = await run({}, async (invocation) => { controller.abort(); return gate(command, { ...invocation, control: { ...invocation.control, signal: controller.signal } }); }).then(() => undefined, (failure: Error) => failure);
   expect(error).toBeDefined();
@@ -167,7 +190,7 @@ test("an aborted invocation stops before anything is provisioned", async () => {
 });
 
 test("a dependent command without any language refuses before it provisions anything", async () => {
-  const calls: string[] = [], ports: DependencyProvisionPortsV1 = { run: async () => { calls.push("run"); }, write: (line) => { calls.push(line); }, now: () => 0 };
+  const calls: string[] = [], ports: DependencyProvisionPortsV1 = { ...dependencyProvisionPortsV1, run: async () => { calls.push("run"); }, write: (line) => { calls.push(line); }, now: () => 0 };
   const command = { ...registry.commands.find((candidate) => candidate.id === "verify")!, requires: "dependencies" } as RootCommandV1;
   const gate = dependencyGateV1(root, registry, { PATH: "/bin" }, ports, () => []);
   const error = await run({}, (invocation) => gate(command, invocation)).then(() => undefined, (failure: Error) => failure);

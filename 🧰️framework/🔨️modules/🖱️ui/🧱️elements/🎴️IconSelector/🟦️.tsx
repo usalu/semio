@@ -77,7 +77,7 @@ function emitIconKindFromSelectorMode(mode: IconSelectorMode, inner: string): st
   }
 }
 
-function migrateIconKindToIconSelectorMode(prev: string, mode: IconSelectorMode, classify: (raw: string) => IconSelectorMode): string {
+export function migrateIconKindToIconSelectorMode(prev: string, mode: IconSelectorMode, classify: (raw: string) => IconSelectorMode): string {
   const cur = classify(prev);
   if (cur === mode) {
     return prev;

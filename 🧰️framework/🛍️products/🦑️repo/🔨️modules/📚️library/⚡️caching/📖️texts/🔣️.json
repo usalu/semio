@@ -94,9 +94,17 @@
       "en": "Retained dependency generation {prefix} cannot be read with the current field set (file {file}; missing {missing}, unexpected {unexpected}; {reason}); it was written by older code and is retired as obsolete",
       "de": "Die behaltene Abhängigkeitsgeneration {prefix} lässt sich mit dem aktuellen Feldsatz nicht lesen (Datei {file}; fehlend {missing}, unerwartet {unexpected}; {reason}); sie stammt von älterem Code und wird als veraltet entfernt"
     },
+    "dependency-store.roster-changed": {
+      "en": "The generation folder of the dependency store changed while retained references were being proved (new names {added}; reference targets present again {returned}); the proof is refused and the stage tries again",
+      "de": "Der Generationsordner des Abhängigkeitsspeichers hat sich geändert, während behaltene Verweise bewiesen wurden (neue Namen {added}; Verweisziele wieder vorhanden {returned}); der Beweis wird abgelehnt und die Stufe versucht es erneut"
+    },
     "dependency-store.retirement-deferred": {
       "en": "The dependency store stayed busy for {seconds} s while obsolete generations were retired ({retired} retired); the rest is retired by the next setup",
       "de": "Der Abhängigkeitsspeicher blieb {seconds} s belegt, während veraltete Generationen entfernt wurden ({retired} entfernt); der Rest wird vom nächsten Setup entfernt"
+    },
+    "dependency-store.roster-unknown": {
+      "en": "The dependency store holds a name that is no generation: {detail}; obsolete generations are not retired this time ({retired} retired) and the rest is left for a later setup",
+      "de": "Der Abhängigkeitsspeicher enthält einen Namen, der keine Generation ist: {detail}; veraltete Generationen werden diesmal nicht entfernt ({retired} entfernt), der Rest bleibt einem späteren Setup überlassen"
     },
     "dependency-store.bindings-moved": {
       "en": "The dependency bindings moved between the retirement plan ({planned}) and the selected retirement ({current}, {scopes} scopes): a tool or the replica changed a package directory that the read had pinned. Nothing was retired for this generation; the setup plans it again",

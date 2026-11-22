@@ -525,7 +525,7 @@ test(`overview chrome ${language}`, async ({ page }) => {
 });
 });
 
-test("short overview scrolls below its chrome and returns focus to the opened card", async ({ page }) => {
+test("overview scroll focus", async ({ page }) => {
   await page.setViewportSize({ width: 1024, height: 300 });
   await page.goto("/", { waitUntil: "domcontentloaded" });
   await dismissIntroduction(page, page.locator('[id="ui.introduction.skip"]'));

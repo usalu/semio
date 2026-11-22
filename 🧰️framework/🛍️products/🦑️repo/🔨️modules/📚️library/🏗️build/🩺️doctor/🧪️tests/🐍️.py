@@ -140,8 +140,10 @@ def analyze(policy, facts):
                 add("storage.image-damaged", "error", p["id"])
             if p["image"] == "ok" and p["state"] == "absent" and p["backing"] == "missing":
                 add("storage.backing-missing", "error", p["id"])
+            if p["state"] == "misplaced":
+                add("storage.image-misplaced", "error", p["id"])
             if p["state"] == "detached":
-                add("storage.image-detached", "info", p["id"])
+                add("storage.image-detached-blocking", "warn", p["id"]) if storage.get("loaderBlocked") else add("storage.image-detached", "info", p["id"])
             if p["publication"] != "none":
                 add("storage.publication-pending", "error" if (p["publicationAgeSeconds"] or 0) >= s["publicationErrorSeconds"] else "info", p["id"])
             if p["state"] == "mounted" and p["freeBytes"] is not None and p["capacityBytes"]:
@@ -277,7 +279,20 @@ def analyze(policy, facts):
     for r in out:
         counts[r[1]] += 1
     verdict = "blocked" if counts["error"] else ("degraded" if counts["warn"] else "ok")
-    return {"findings": [list(r) for r in out], "waits": [w[:4] for w in waits], "processes": rows, "verdict": verdict, "counts": counts}
+    return {"findings": [list(r) for r in out], "waits": [w[:4] for w in waits], "processes": rows, "verdict": verdict, "counts": counts, "imageRepairs": image_repairs(storage)}
+
+
+def image_repairs(storage):
+    """The partitions the storage-images repair touches and its steps: misplaced images detach from the stray mount then attach, detached images attach while the loader is blocked; the leases image goes first."""
+    plan = []
+    for p in (storage or {}).get("partitions", []):
+        if p["image"] == "damaged":
+            continue
+        if p["state"] == "misplaced":
+            plan.append([p["id"], ["detach", "attach"]])
+        elif p["state"] == "detached" and storage.get("loaderBlocked"):
+            plan.append([p["id"], ["attach"]])
+    return [r for r in plan if r[0] == "leases"] + [r for r in plan if r[0] != "leases"]
 
 
 def analyze_processes(policy, facts, add):
@@ -341,7 +356,8 @@ def analyze_processes(policy, facts, add):
             own = None
         phase = own if own else (("running" if via in waiting else "admitted") if via is not None else "running")
         gone_parent = row["parent"] <= 1
-        if own is None and via is None and gone_parent and row["ageSeconds"] >= pr["orphanAgeSeconds"] and rel:
+        service = any(re.search(pattern, row["command"]) for pattern in pr["services"])
+        if own is None and via is None and gone_parent and not service and row["ageSeconds"] >= pr["orphanAgeSeconds"] and rel:
             phase = "orphan"
         rows.append([pid, phase, None if own else via, row["ageSeconds"]])
         if own and row["parent"] == 1 and row["ageSeconds"] >= pr["orphanAgeSeconds"] and rel:

@@ -54,6 +54,9 @@ pub mod standards {
                             pub mod insert_media_annotation;
                             #[path = "../../📝️text/🧬️mutations/✂️remove-trim-box/🦀️.rs"]
                             pub mod remove_trim_box;
+                            #[cfg(test)]
+                            #[path = "../../📝️text/🧬️mutations/✂️remove-trim-box/🧪️tests/🔬️unit/🦀️.rs"]
+                            mod remove_trim_box_tests;
                             #[path = "../../📝️text/🧬️mutations/🏷️set-dpart-metadata/🦀️.rs"]
                             pub mod set_dpart_metadata;
                             #[path = "../../📝️text/🧬️mutations/🚫️remove-javascript-action/🦀️.rs"]
@@ -68,6 +71,9 @@ pub mod standards {
                             pub mod remove_encryption_dictionary;
                             #[path = "../../📝️text/🧬️mutations/📐️set-trim-box/🦀️.rs"]
                             pub mod set_trim_box;
+                            #[cfg(test)]
+                            #[path = "../../📝️text/🧬️mutations/📐️set-trim-box/🧪️tests/🔬️unit/🦀️.rs"]
+                            mod set_trim_box_tests;
                             #[path = "../../📝️text/🧬️mutations/🔤️embed-font-file/🦀️.rs"]
                             pub mod embed_font_file;
                             #[path = "../../📝️text/🧬️mutations/🧽️remove-output-intent/🦀️.rs"]

@@ -1,0 +1,7 @@
+{
+  "value": "Archive metadata",
+  "cases": [
+    { "withheldCopyBytes": 1, "movesSource": false, "work": 0 },
+    { "withheldCopyBytes": 0, "movesSource": true, "work": 1 }
+  ]
+}

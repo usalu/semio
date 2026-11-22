@@ -18,6 +18,8 @@ pub struct PendingRowControlFocus {
 /// Fields keep the names they had on the former `ShellState`; the composer owns one value of this struct as `input`.
 pub struct ShellInputState {
     pub scroll_offsets: HashMap<String, f32>,
+    /// 📜️ The scroll-region thumb drag in flight: the region id, its offset at the grab, content pixels per thumb pixel, its furthest offset and the axis.
+    pub scroll_thumb_drag: Option<(String, f32, f32, f32, bool)>,
     pub overlay_state: OverlayState,
     pub collapsed_sections: HashMap<String, bool>,
     pub tree_open_states: BTreeMap<String, bool>,

@@ -1,0 +1,15 @@
+case	hours	outdoor_c	operative_c	occupied_fraction
+reference_73_degree_hours	3650	18	22.5	1
+warm_and_cold_separate	98	20	23	1
+warm_and_cold_separate	1	20	27	1
+warm_and_cold_separate	1	20	19	1
+warm_and_cold_separate	10	20	60	0
+peak_even_below_degree_hour_limit	499	24	24	1
+peak_even_below_degree_hour_limit	1	24	29	1
+clipped_lower_and_upper_bands	1	-5	20	1
+clipped_lower_and_upper_bands	1	38	28	1
+clipped_lower_and_upper_bands	1	16	19.5	0.5
+clipped_lower_and_upper_bands	1	32	28.5	0.25
+absent_occupancy	24	24	60	0
+invalid_occupancy	1	28	25	1.5
+invalid_temperature	1	28	NaN	1

@@ -61,6 +61,7 @@ pub const HUB_ARTIFACT_NAME_INPUT_ID: &str = "framework.hub.artifact-name";
 /// shell's dispatch arm and this builder cannot drift into two vocabularies.
 pub mod action {
     pub const CLOSE_WORKSPACE: &str = "hubCloseWorkspace";
+    pub const REPLAY_FIRST_RUN: &str = "hubReplayFirstRun";
     pub const REFRESH_SPACES: &str = "hubRefreshSpaces";
     pub const SELECT_CONNECTION: &str = "hubSelectConnection";
     pub const ADD_CONNECTION: &str = "hubAddConnection";
@@ -85,6 +86,18 @@ pub mod action {
     pub const CREATE_ARTIFACT: &str = "hubCreateArtifact";
     pub const CANCEL_ARTIFACT_CREATION: &str = "hubCancelArtifactCreation";
     pub const OPEN_CREATED_ARTIFACT: &str = "hubOpenCreatedArtifact";
+    pub const AGENT_REFRESH: &str = "hubAgentRefresh";
+    pub const AGENT_SET_NAME: &str = "hubAgentSetName";
+    pub const AGENT_SET_AUDIENCE: &str = "hubAgentSetAudience";
+    pub const AGENT_SET_EXPIRY: &str = "hubAgentSetExpiry";
+    pub const AGENT_CREATE: &str = "hubAgentCreate";
+    pub const AGENT_DOWNLOAD: &str = "hubAgentDownload";
+    pub const AGENT_DISMISS: &str = "hubAgentDismiss";
+    pub const AGENT_INSTALL_MCP: &str = "hubAgentInstallMcp";
+    pub const AGENT_COPY_MCP: &str = "hubAgentCopyMcp";
+    pub const AGENT_REVOKE_ASK: &str = "hubAgentRevokeAsk";
+    pub const AGENT_REVOKE_CONFIRM: &str = "hubAgentRevokeConfirm";
+    pub const AGENT_REVOKE_CANCEL: &str = "hubAgentRevokeCancel";
 }
 //#endregion 🆔️SurfaceIds
 
@@ -276,6 +289,8 @@ pub struct HubWorkspaceState {
     pub clipboard_available: bool,
     /// 🌱️ The open space's artifact-creation door (catalog, choice, name, the creation in flight).
     pub creation: HubArtifactCreationState,
+    /// 🤖️ The open space's agent delegations: rows, the one-time credential, the create form.
+    pub agents: crate::agent_delegations::HubAgentState,
 }
 
 impl HubWorkspaceState {
@@ -300,6 +315,7 @@ impl HubWorkspaceState {
             redemption_error: None,
             clipboard_available: false,
             creation: HubArtifactCreationState::default(),
+            agents: crate::agent_delegations::HubAgentState::default(),
         }
     }
 
@@ -537,32 +553,55 @@ pub fn hub_artifact_creation_phase_text(phase: SpaceArtifactCreationPhaseV1, loc
 //#endregion 🌱️ArtifactCreation
 
 //#region 🌲️RetainedTree
-fn descriptor(action: &str, args: Option<DslValue>) -> ActionDescriptor {
+pub(crate) fn descriptor(action: &str, args: Option<DslValue>) -> ActionDescriptor {
     ActionDescriptor { controller_id: "framework".into(), action: action.into(), args }
 }
 
-fn one_arg(key: &str, value: &str) -> Option<DslValue> {
+pub(crate) fn one_arg(key: &str, value: &str) -> Option<DslValue> {
     Some(semio_framework_value::DslValue::Object(vec![(key.to_string(), DslValue::String(value.into()))]))
 }
 
-fn text_row(value: &str) -> UiNode {
+pub(crate) fn text_row(value: &str) -> UiNode {
     UiNode::Text(UiTextNode { presence: UiPresence::default(), value: Label::data(value), emphasize: Some(false), data_attributes: None, menu: None })
 }
 
-fn tagged_row(value: &str, attributes: &[(&str, &str)]) -> UiNode {
+pub(crate) fn tagged_row(value: &str, attributes: &[(&str, &str)]) -> UiNode {
     let data_attributes = attributes.iter().map(|(key, value)| ((*key).to_string(), (*value).to_string())).collect::<HashMap<String, String>>();
     UiNode::Text(UiTextNode { presence: UiPresence::default(), value: Label::data(value), emphasize: Some(true), data_attributes: Some(data_attributes), menu: None })
 }
 
-fn stack(id: &str, children: Vec<UiNode>) -> UiNode {
+pub(crate) fn stack(id: &str, children: Vec<UiNode>) -> UiNode {
     UiNode::Stack(UiStackNode { direction: "column".into(), gap: None, padding: None, id: Some(id.into()), children, presence: UiPresence::default(), activate: None, drop_action: None, drop_overlay: None, menu: None })
 }
 
-fn button(id: &str, icon_id: IconName, label: &str, action: ActionDescriptor, enabled: bool) -> UiNode {
+pub(crate) fn button(id: &str, icon_id: IconName, label: &str, action: ActionDescriptor, enabled: bool) -> UiNode {
     UiNode::Button(UiButtonNode { id: Some(id.into()), icon_id, label: Label::data(label), action, style: None, presence: UiPresence { state: if enabled { UiState::Normal } else { UiState::Disabled }, ..UiPresence::default() }, menu: None })
 }
 
-fn input(id: &str, value: &str, placeholder: &str, action: &str, submit: Option<&str>) -> UiNode {
+/// 🎛️ A workspace control built from the shared first-run contract: its id, icon, variant and en/de label.
+fn control_button(control: crate::hub_first_run::HubFirstRunControl, locale: Locale, verb: &str) -> UiNode {
+    let mut node = button(control.id(), IconName::from(control.icon()), control.label(locale), descriptor(verb, None), true);
+    if let UiNode::Button(button) = &mut node {
+        button.style = Some(semio_ui_declaration::layout::StyleSpec { variant: Some(control.variant().to_string()), size: None, density: None });
+    }
+    node
+}
+
+/// 🔽️ React's `HubSelectField` control: a retained `Select` whose popup rows commit `{value}` on `action`.
+pub(crate) fn select(id: &str, value: &str, options: &[(&str, &str)], action: &str, enabled: bool) -> UiNode {
+    UiNode::Select(semio_ui_declaration::ui::UiSelectNode {
+        appearance: Default::default(),
+        id: id.into(),
+        value: value.into(),
+        items: options.iter().map(|(value, label)| semio_ui_declaration::ui::UiSelectItem { value: (*value).into(), label: Label::data(*label) }).collect(),
+        placeholder: None,
+        on_change: descriptor(action, None),
+        presence: UiPresence { state: if enabled { UiState::Normal } else { UiState::Disabled }, ..UiPresence::default() },
+        menu: None,
+    })
+}
+
+pub(crate) fn input(id: &str, value: &str, placeholder: &str, action: &str, submit: Option<&str>) -> UiNode {
     UiNode::Input(UiInputNode {
         id: id.into(),
         input_kind: if id == HUB_PASSWORD_INPUT_ID { "password".into() } else { "text".into() },
@@ -805,7 +844,8 @@ fn hub_artifact_creation_section(state: &HubWorkspaceState, locale: Locale) -> U
 /// composition. Pure: it reads the state and names verbs, and owns no state of its own, so the same
 /// tree can be asserted in a unit test with no shell, no hub and no GPU.
 pub fn build_hub_workspace_ui(state: &HubWorkspaceState, locale: Locale) -> UiNode {
-    let mut children = vec![button("framework.hub.close", IconName::X, hub_sign_in_label(HubSignInLabel::Cancel, locale), descriptor(action::CLOSE_WORKSPACE, None), true), hub_sign_in_section(state, locale)];
+    let [replay, close] = crate::hub_first_run::hub_first_run_controls();
+    let mut children = vec![control_button(replay, locale, action::REPLAY_FIRST_RUN), control_button(close, locale, action::CLOSE_WORKSPACE), hub_sign_in_section(state, locale)];
     if state.session.phase == HubSessionPhase::SignedIn || !state.rows.is_empty() {
         children.push(hub_spaces_section(state, locale));
     }
@@ -813,6 +853,11 @@ pub fn build_hub_workspace_ui(state: &HubWorkspaceState, locale: Locale) -> UiNo
         children.push(hub_members_section(state, locale));
         children.push(hub_artifact_creation_section(state, locale));
     }
+    let signed_in = state.session.phase == HubSessionPhase::SignedIn;
+    let can_delegate = state.rows.iter().any(|row| Some(row.id.as_str()) == state.open_space_id.as_deref() && space_row_invitable(row));
+    let facts = crate::agent_delegations::AgentSurfaceFacts { signed_in, space_id: state.open_space_id.as_deref(), can_delegate };
+    let used = 1 + children.iter().map(crate::agent_delegations::node_count).sum::<usize>();
+    children.push(crate::agent_delegations::build_agent_delegations_ui(&state.agents, facts, locale, 126usize.saturating_sub(used)));
     stack(FRAMEWORK_HUB_PANEL_ID, children)
 }
 //#endregion 🌲️RetainedTree

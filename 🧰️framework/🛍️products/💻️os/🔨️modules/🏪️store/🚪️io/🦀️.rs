@@ -32,8 +32,35 @@ pub use semio_os_pack as os_pack;
 pub use semio_os_pack::PackError;
 pub use semio_os_spr::{OpBinary, OpText, ProtocolError};
 
+/// 🧬 The original typed snapshot and every partial receive owner stay within one native decoder.
+pub trait PagedSnapshotReceiver<P>: Send {
+    fn demands(&self, source: &dyn protocol::RetainedWireByteSource, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError>;
+    fn step(
+        &mut self, source: &dyn protocol::RetainedWireByteSource,
+        native: &mut semio_framework_value::NativeDecodeControl<'_>, body: usize,
+        effect: &mut semio_framework_value::RetainedAllocationEffect<'_>,
+    ) -> semio_framework_value::RetainedWorkOutcome<semio_framework_value::RetainedCloneProgress, semio_framework_value::OriginalReceivingPrimary>;
+    fn is_ready(&self) -> bool;
+    fn take_demand(&self) -> Result<semio_framework_value::RetirementDemand, ValueError>;
+    fn take_into(&mut self, output: &mut Option<P>, grant: semio_framework_value::RetainedCloneGrant) -> Result<semio_framework_value::RetainedCloneProgress, ValueError>;
+    fn close_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError>;
+    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll;
+    fn terminal_is_empty(&self) -> bool;
+}
+
 /// 🏪️ Explicit OS application capabilities authored independently of snapshot encoding.
 pub trait ArtifactStoreSnapshot {
+    /// 📥 Selects the typed receiver for its authored canonical Pack borrowed from fixed pages.
+    fn admit_paged_snapshot(
+        _source: &dyn protocol::RetainedWireByteSource,
+        _limits: protocol::PackLimits,
+        _native: &semio_framework_value::NativeDecodeControl<'_>,
+        _grant: semio_framework_value::RetainedCloneGrant,
+    ) -> Result<Option<(Box<dyn PagedSnapshotReceiver<Self>>, semio_framework_value::RetainedCloneProgress)>, ValueError>
+    where Self: Sized {
+        Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "snapshot has no declared paged original receiver"))
+    }
+
     /// 📤️ Borrows the owner's actual native Pack fields and immutable authored declaration.
     fn native_pack_source(&self) -> Option<OriginalSnapshotPackView<'_>> { None }
     /// 🧊️ A snapshot explicitly opts into unbounded reference codecs independently of native receiving.

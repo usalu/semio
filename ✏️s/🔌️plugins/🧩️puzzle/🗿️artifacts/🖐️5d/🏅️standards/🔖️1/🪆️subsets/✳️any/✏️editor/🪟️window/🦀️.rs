@@ -10,6 +10,7 @@ use crate::editor::puzzle5d::config::Puzzle5dSelectableKinds;
 use crate::editor::puzzle5d::entities::{PUZZLE5D_BOARD_WINDOW_KIND_ID, PUZZLE5D_WORLD_WINDOW_KIND_ID};
 use crate::editor::puzzle5d::modes::edit::windows::world3d;
 use semio_plugin::WorldSunConfig;
+use store::os_store::codec_registry::native_snapshot::{OriginalArtifactHistoryReadLimits, OriginalArtifactPackReceiving, OriginalArtifactPairFailure, OriginalSnapshotRecordReceiving};
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
@@ -66,7 +67,7 @@ impl Default for Puzzle5dWindowConfig {
 /// requires `dsl::DslField`, emitted by `#[derive(dsl::DslArtifact)]` together with the `__dsl_*`
 /// helpers the record-backed `ArtifactDsl`/`ArtifactPack` below call; `id`/`extension` are stated
 /// explicitly so the derived constants reproduce the envelope identity this kind already carried.
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 #[dsl(layout = "lines")]
 #[artifact(id = "s.puzzle.puzzle5d.boardwindowconfig", extension = "puzzle5dboardwindowcfg")]
@@ -99,7 +100,7 @@ impl Default for Puzzle5dBoardWindowConfig {
 
 /// 🎚️ ONE exact Puzzle 5D world pane's persisted-local options — same `dsl::DslArtifact` completion
 /// as [`Puzzle5dBoardWindowConfig`], with its own envelope identity.
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 #[dsl(layout = "lines")]
 #[artifact(id = "s.puzzle.puzzle5d.worldwindowconfig", extension = "puzzle5dworldwindowcfg")]
@@ -148,13 +149,13 @@ impl Default for Puzzle5dWorldWindowConfig {
 macro_rules! config_mutation {
     ($mutation:ident, $set:ident, $state:ty, $diff:ident, $display:literal, $schema:literal) => {
         /// 🧩️ Payload of the mutation's `Set`: the absolute value of exactly the diff's named fields.
-        #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+        #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree, semio_framework_value::NativeReceive)]
         #[canonical_json(owner = semio_framework_pack_json)]
         pub struct $set {
             pub patch: $diff,
         }
 
-        #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+        #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree, semio_framework_value::NativeReceive)]
         #[canonical_json(owner = semio_framework_pack_json)]
         pub enum $mutation {
             Set($set),
@@ -393,6 +394,17 @@ macro_rules! record_store {
             }
             fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> { Some(Self::__dsl_spec()) }
         }
+        impl OriginalArtifactPackReceiving for $state {
+            type Receiving = OriginalSnapshotRecordReceiving<Self>;
+
+            fn original_pack_birth_demand() -> semio_framework_value::RetirementDemand {
+                semio_framework_value::RetirementDemand { copy_bytes: std::mem::size_of::<Self::Receiving>(), depth: 1, ..Default::default() }
+            }
+
+            fn admit_original_pack(source: &[u8], limits: protocol::PackLimits, native: &semio_framework_value::NativeDecodeControl<'_>, grant: semio_framework_value::RetainedCloneGrant) -> Result<Option<(Self::Receiving, semio_framework_value::RetainedCloneProgress)>, semio_framework_value::ValueError> {
+                Self::Receiving::admit(source, <Self as pack::snapshot::ArtifactDsl>::envelope_id(), limits, native, grant)
+            }
+        }
 impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for $state {
     fn reference_snapshot_codec()->Option<::semio_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
 
@@ -433,10 +445,13 @@ macro_rules! mutation_wire {
             fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> { semio_framework_pack_json::from_json_str(line, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| semio_framework_diagnostic::TextError::from_value_error(error, semio_framework_diagnostic::TextSpan::at(1, 1))) }
         }
         impl protocol::OpBinary for $mutation {
-            fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> { Ok(protocol::OpText::print_op(self).into_bytes()) }
+            fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+                Ok(store::pack_rt::encode_pack_value(&semio_framework_value::ToValue::to_value(self)))
+            }
             fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-                let text = std::str::from_utf8(bytes).map_err(|error| protocol::ProtocolError::Pack(store::PackError::from(semio_framework_value::ValueError::from(error))))?;
-                semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| protocol::ProtocolError::Pack(store::PackError::from(error)))
+                let malformed = |detail: String| protocol::ProtocolError::Malformed { what: "puzzle5d-window-mutation", offset: 0, detail };
+                let value = store::pack_rt::decode_pack_value(bytes).map_err(|error| malformed(error.to_string()))?;
+                semio_framework_value::FromValue::from_value(store::pack_rt::renormalize_whole_number_floats(value)).map_err(|error| malformed(error.to_string()))
             }
         }
     };
@@ -465,6 +480,18 @@ macro_rules! owners {
             fn preparation_source_birth()->semio_framework_value::retained_clone::RetainedCloneBirthDemand{semio_plugin::bounded_window_config_preparation_source_birth::<Self>()}
             fn build_store_owners(grant:semio_framework_value::RetainedCloneGrant)->Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::State,Self::Mutation>,semio_framework_value::RetainedCloneProgress),store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::State,Self::Mutation>>{semio_plugin::bounded_window_config_store_owners::<Self>(grant)}
             fn build_one_item_preparation_factory() -> std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::State, Self::Mutation>> { semio_plugin::bounded_window_config_preparation_factory::<Self>() }
+            fn native_pair_demands() -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+                Ok(semio_plugin::window_config_native_pair_demands::<Self::State>())
+            }
+
+            fn admit_native_pair(pack: &[u8], spr: &[u8], pack_limits: protocol::PackLimits, history_limits: OriginalArtifactHistoryReadLimits, native: &mut semio_framework_value::NativeDecodeControl<'_>, grant: semio_framework_value::RetainedCloneGrant, output: &mut Option<Box<dyn semio_plugin::WindowConfigNativePairReceiving<Self::State>>>) -> Result<semio_framework_value::RetainedCloneProgress, OriginalArtifactPairFailure> {
+                semio_plugin::admit_window_config_native_pair::<Self::State>(pack, spr, pack_limits, history_limits, native, grant, output)
+            }
+
+            fn native_operation_wire() -> store::os_store::ArtifactOperationWire<Self::Mutation> {
+                store::os_store::ArtifactOperationWire::canonical().with_original_binary_receiving()
+            }
+
             fn build_store_disposer() -> Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::State, Self::Mutation>>> { semio_plugin::bounded_window_config_store_disposer::<Self>() }
         }
         pub struct $transient;

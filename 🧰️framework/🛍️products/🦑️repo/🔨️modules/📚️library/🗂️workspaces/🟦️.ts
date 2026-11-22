@@ -13,15 +13,16 @@ import bunSchema from "./🟦️bun/🧬️schema/🔣️.json" with { type: "js
 //#endregion 🔌️Adapters
 
 //#region 🔎️WorkspaceRoot
-/** 🔎️ Uses the build tool's execution workspace before standalone hints and workspace-manifest discovery. Owned here
+/** 🔎️ Uses the build tool's execution workspace before standalone hints and workspace-manifest discovery from `search.directory` (default the working directory) up to and including `search.ceiling` (default the file system root). Owned here
  * rather than in the repository library barrel so a consumer that only needs the root path never pulls
  * the barrel (and its taxonomy discovery walk) into its module graph. */
-export function getWorkspaceRoot(environment: Readonly<Record<string,string|undefined>> = process.env): string {
+export function getWorkspaceRoot(environment: Readonly<Record<string,string|undefined>> = process.env, search: { readonly directory?: string; readonly ceiling?: string } = {}): string {
   const executionRoot = environment.SEMIO_WORKSPACE_ROOT?.trim();
   if (executionRoot) return resolve(executionRoot);
   const fromEnv = environment.REPO_ROOT?.trim();
   if (fromEnv) return resolve(fromEnv);
-  let dir = process.cwd();
+  const start = search.directory ?? process.cwd();
+  let dir = start;
   for (let i = 0; i < 30; i++) {
     const pkg = join(dir, "package.json");
     if (existsSync(pkg)) {
@@ -33,10 +34,10 @@ export function getWorkspaceRoot(environment: Readonly<Record<string,string|unde
       }
     }
     const up = dirname(dir);
-    if (up === dir) break;
+    if (up === dir || dir === search.ceiling) break;
     dir = up;
   }
-  return process.cwd();
+  return start;
 }
 //#endregion 🔎️WorkspaceRoot
 

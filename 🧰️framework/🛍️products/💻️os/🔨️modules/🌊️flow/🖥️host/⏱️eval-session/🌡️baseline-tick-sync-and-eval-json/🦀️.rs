@@ -148,6 +148,70 @@ impl FlowEvalSession {
         self.tick_scheduled
     }
 
+    /// 🎞️ Prepares one preview wave before its separately funded publication turns.
+    pub fn prepare_preview_tick(
+        &self,
+        host: &mut FlowHost,
+        turn_started_us: Option<u64>,
+        project: impl FnOnce(&mut std::collections::HashMap<String, neural_engine::Dictionary>),
+    ) -> Result<(), ValueError> {
+        host.prepare_preview_evaluation(flow_eval_tick_budget(turn_started_us), &|hash| !self.has_evaluation_progress(hash), project)
+    }
+
+    /// 📏️ Quotes the next actual session retirement or baseline handoff after the host publishes.
+    pub fn preview_tick_finish_demands(&self, host: &FlowHost, copy: usize) -> Result<RetirementDemand, ValueError> {
+        let state = &*self.state;
+        if !host.pending_evaluation_ids().is_empty() {
+            return Ok(RetirementDemand { depth: 1, ..Default::default() });
+        }
+        if !state.retirement.terminal_is_empty() {
+            return state.retirement.demands(copy);
+        }
+        if state.previous_snapshot.is_some() || state.previous_channels.is_some() {
+            return state.retirement.admission_demands();
+        }
+        Ok(RetirementDemand { depth: 1, ..Default::default() })
+    }
+
+    /// 🎨️ Advances one session turn and reports the wave only after the baseline is captured.
+    pub fn finish_preview_tick(
+        &mut self,
+        host: &FlowHost,
+        keep_convergence: bool,
+        effect: &mut semio_framework_value::RetainedAllocationEffect<'_>,
+    ) -> Result<(Option<bool>, RetainedCloneProgress), ValueError> {
+        let remaining = host.pending_evaluation_ids();
+        let converged = remaining.is_empty();
+        let grant = effect.grant();
+        let demand = self.preview_tick_finish_demands(host, grant.maximum_copy_bytes)?;
+        if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant, demand) {
+            return Ok((None, Default::default()));
+        }
+        if converged && !self.state.retirement.terminal_is_empty() {
+            let retirement = &mut self.state.retirement;
+            let poll = retirement.step(grant.maximum_copy_bytes, effect);
+            let progress = match poll {
+                semio_framework_value::RetainedWorkPoll::Complete(turn) => turn.result.map_err(semio_framework_value::OriginalRetirementFailure::into_value_error)?.progress(),
+                semio_framework_value::RetainedWorkPoll::Pending { .. } => Default::default(),
+            };
+            return Ok((None, progress));
+        }
+        let progress = if converged {
+            let Some(progress) = self.capture_baseline_from(host, effect)? else { return Ok((None, Default::default())) };
+            progress
+        } else {
+            RetainedCloneProgress { copied_items: 1, ..Default::default() }
+        };
+        let state = &mut *self.state;
+        if let Some(previous) = state.eval_json.replace(SharedOwner::from_cold(host.last_eval_json.clone())) {
+            retire_session_collection_cold(SessionCollectionOwner::SourceLease(previous));
+        }
+        self.status_json = build_flow_status_json(host, remaining);
+        self.repaint(host, converged, keep_convergence);
+        self.tick_scheduled = !converged;
+        Ok((Some(!converged), progress))
+    }
+
     /// 🖼️ Advances what a preview PAINTS, and — on a converged walk only — what a later unconverged
     /// one may fall back on.
     ///

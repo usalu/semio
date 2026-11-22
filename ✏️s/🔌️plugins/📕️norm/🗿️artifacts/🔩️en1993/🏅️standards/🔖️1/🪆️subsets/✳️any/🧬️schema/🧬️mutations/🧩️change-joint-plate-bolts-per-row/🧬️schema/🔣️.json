@@ -32,6 +32,7 @@
     "newBoltsPerRow": {
       "type": "integer",
       "minimum": 0,
+      "maximum": 4294967295,
       "x-semio-ui": {
         "label": {
           "en": "Bolts per row n_2",

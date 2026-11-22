@@ -1,0 +1,5 @@
+humans/seated-office-worker
+humans/seated-reader
+humans/seated-guitarist
+humans/sleeping-person
+humans/kneeling-gardener

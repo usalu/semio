@@ -36,7 +36,7 @@ const world=async(seed:number,pinned:boolean)=>{
   process:{stderr:{write:()=>true}},
   requireNativeStoragePathV1:(_root:string,path:string)=>path,mkdir:async()=>{},readdir:async()=>[],lstat:async()=>{throw Error("Unexpected staging file");},rm:async()=>{},join,dirname,buildGraphPathV1:()=>"/owned/cache/canonical.json",
   selectedThroughFleetV1:({attempt}:{attempt():unknown})=>attempt(),
-  withBuildGraphStateV1:async(_root:string,_invocation:unknown,actual:unknown,body:(store:unknown,phase:unknown)=>Promise<unknown>)=>body({root:"/owned/cache",recheck:async()=>{}},actual),
+  withBuildGraphStateV1:async(_root:string,_invocation:unknown,actual:unknown,body:(store:unknown,phase:unknown,critical:(work:()=>Promise<unknown>)=>Promise<unknown>)=>Promise<unknown>)=>body({root:"/owned/cache",recheck:async()=>{}},actual,work=>work()),
   loadBuildGraphAttemptV1:async(_root:string,_invocation:unknown,_actual:unknown,_options:unknown,registry:{owners:number[]},scope?:string)=>{
    attempts++;expect(registry.owners[0]).toBe(Number(scope));advance(work);
    return JSON.stringify(readRegistry())===JSON.stringify(registry)?{...graph,version:registry.owners[0]!}:invalidated;

@@ -1,9 +1,9 @@
-import type { WindowLayoutNode } from "../../../🔨️modules/🗺️window-layout/🟦️.ts";
+import { applyWindowLayoutOp, collectWindowIds, dropWindow, insertTab, reconcileWindows, windowIdOf } from "@semio-tech/ui-layout";
 import * as ui from "@semio-tech/ui-react/source";
 import type { TestSource, Tests1Vitest, Tests1Dependencies } from "../🧰️harness/🟦️.ts";
 
 export async function registerShellComponents6Tests(vitest: Tests1Vitest, dependencies: Tests1Dependencies, testSource: TestSource): Promise<void> {
-  const { COMPOSE_WINDOW_TEMPLATE_MIME, Engagement, Mode, Search, applyModeDrop, beginWindowTemplateDrag, beginWindowTemplatePointerDrag, cancelWindowTemplatePointerDrag, computeModeDropZone, endWindowTemplateDrag, filterSearchPossibles, insertWindowAsTabAtCorner, insertWindowAtDropZone, isSearchSuggestionActionTarget, modeCollectWindowIds, modeDockOutLayout, modeStackTabsByCorner, readActiveWindowTemplateDragSession, reconcileWindows, removeWindowFromLayout, resolveTranslationLabel, searchActiveInlineCompletion, searchControlledLineV1, searchInlineCompletion, shouldActivateSearchPossibleOnConfirm, splitWithWindow, uiDataLabel, uiI18n, windowTemplatePaletteTreeDragController, windowTemplatePointerDragRef } = dependencies;
+  const { COMPOSE_WINDOW_TEMPLATE_MIME, Engagement, Mode, Search, applyModeDrop, beginWindowTemplateDrag, beginWindowTemplatePointerDrag, cancelWindowTemplatePointerDrag, computeModeDropZone, endWindowTemplateDrag, filterSearchPossibles, isSearchSuggestionActionTarget, modeDockOutLayout, modeStackTabsByCorner, readActiveWindowTemplateDragSession, resolveTranslationLabel, searchActiveInlineCompletion, searchControlledLineV1, searchInlineCompletion, shouldActivateSearchPossibleOnConfirm, uiDataLabel, uiI18n, windowTemplatePaletteTreeDragController, windowTemplatePointerDragRef } = dependencies;
   type WindowLayoutNode = any;
   const { describe, expect, it } = vitest;
   const { render, screen, fireEvent, waitFor } = await import("@testing-library/react");
@@ -17,72 +17,73 @@ describe("Shell components", () => {
         [
           "1",
           {
+            path: [1],
             corners: { topLeft: { rect: tabBar, element: null as unknown as HTMLElement } },
             body,
           },
         ],
       ]);
-      expect(computeModeDropZone(100, 12, targets, null)).toEqual({ kind: "tab", stackPath: "1", corner: "topLeft", index: 0 });
-      expect(computeModeDropZone(100, 30, targets, null)).toEqual({ kind: "split", stackPath: "1", side: "top" });
-      expect(computeModeDropZone(100, 200, targets, null)).toEqual({ kind: "split", stackPath: "1", side: "bottom" });
-      expect(computeModeDropZone(50, 120, targets, null)).toEqual({ kind: "split", stackPath: "1", side: "left" });
-      expect(computeModeDropZone(150, 120, targets, null)).toEqual({ kind: "split", stackPath: "1", side: "right" });
+      expect(computeModeDropZone(100, 12, targets, null)).toEqual({ kind: "tab", stackPath: [1], corner: "topLeft", index: 0 });
+      expect(computeModeDropZone(100, 30, targets, null)).toEqual({ kind: "split", stackPath: [1], side: "top" });
+      expect(computeModeDropZone(100, 200, targets, null)).toEqual({ kind: "split", stackPath: [1], side: "bottom" });
+      expect(computeModeDropZone(50, 120, targets, null)).toEqual({ kind: "split", stackPath: [1], side: "left" });
+      expect(computeModeDropZone(150, 120, targets, null)).toEqual({ kind: "split", stackPath: [1], side: "right" });
     });
     it("modeStackTabsByCorner groups windows by corner defaulting to topLeft", () => {
       const groups = modeStackTabsByCorner([
-        { kind: "window", id: "a" },
-        { kind: "window", id: "b", corner: "topRight" },
-        { kind: "window", id: "c", corner: "bottomLeft" },
-        { kind: "window", id: "d", corner: "bottomRight" },
-        { kind: "window", id: "e", corner: "topLeft" },
+        { kind: "window", windowKindId: "a" },
+        { kind: "window", windowKindId: "b", corner: "topRight" },
+        { kind: "window", windowKindId: "c", corner: "bottomLeft" },
+        { kind: "window", windowKindId: "d", corner: "bottomRight" },
+        { kind: "window", windowKindId: "e", corner: "topLeft" },
       ]);
-      expect(groups.topLeft.map((child) => child.id)).toEqual(["a", "e"]);
-      expect(groups.topRight.map((child) => child.id)).toEqual(["b"]);
-      expect(groups.bottomLeft.map((child) => child.id)).toEqual(["c"]);
-      expect(groups.bottomRight.map((child) => child.id)).toEqual(["d"]);
+      expect(groups.topLeft.map((child) => windowIdOf(child))).toEqual(["a", "e"]);
+      expect(groups.topRight.map((child) => windowIdOf(child))).toEqual(["b"]);
+      expect(groups.bottomLeft.map((child) => windowIdOf(child))).toEqual(["c"]);
+      expect(groups.bottomRight.map((child) => windowIdOf(child))).toEqual(["d"]);
     });
 
     it("applyModeDrop moves a tab to another corner of the same stack", () => {
       const layout: WindowLayoutNode = {
         kind: "stack",
-        activeId: "a",
+        activeWindowId: "a",
         children: [
-          { kind: "window", id: "a", corner: "topLeft" },
-          { kind: "window", id: "b", corner: "topLeft" },
+          { kind: "window", windowKindId: "a", corner: "topLeft" },
+          { kind: "window", windowKindId: "b", corner: "topLeft" },
         ],
       };
       const drag = {
         dragKind: "tab" as const,
         windowId: "b",
-        stackPath: "",
+        stackPath: [],
         tabIndex: 1,
         pointerId: 1,
         ghostLabel: "B",
         x: 0,
         y: 0,
       };
-      const next = applyModeDrop(layout, drag, { kind: "tab", stackPath: "", corner: "bottomRight", index: 0 });
+      const next = applyModeDrop(layout, drag, { kind: "tab", stackPath: [], corner: "bottomRight", index: 0 });
       expect(next.kind).toBe("stack");
       if (next.kind !== "stack") return;
-      expect(next.activeId).toBe("b");
-      expect(next.children.map((child) => ({ id: child.id, corner: child.corner }))).toEqual([
+      expect(next.activeWindowId).toBe("b");
+      expect(next.children.map((child) => ({ id: windowIdOf(child), corner: child.corner }))).toEqual([
         { id: "a", corner: "topLeft" },
         { id: "b", corner: "bottomRight" },
       ]);
     });
 
-    it("insertWindowAsTabAtCorner preserves one activeId across corners", () => {
+    it("insertTab preserves one activeWindowId across corners", () => {
       const layout: WindowLayoutNode = {
         kind: "stack",
-        activeId: "a",
-        children: [{ kind: "window", id: "a", corner: "topLeft" }],
+        activeWindowId: "a",
+        children: [{ kind: "window", windowKindId: "a", corner: "topLeft" }],
       };
-      const next = insertWindowAsTabAtCorner(layout, "", "b", "topRight");
+      const next = insertTab(layout, [], { kind: "window", windowKindId: "b" }, "topRight");
       expect(next.kind).toBe("stack");
       if (next.kind !== "stack") return;
-      expect(next.activeId).toBe("b");
-      expect(modeStackTabsByCorner(next.children).topRight.map((child) => child.id)).toEqual(["b"]);
-      expect(modeStackTabsByCorner(next.children).topLeft.map((child) => child.id)).toEqual(["a"]);
+      expect(next.activeWindowId).toBe("b");
+      expect(modeStackTabsByCorner(next.children).topRight.map((child) => windowIdOf(child))).toEqual(["b"]);
+      expect(modeStackTabsByCorner(next.children).topLeft.map((child) => windowIdOf(child))).toEqual(["a"]);
     });
 
     it("computeModeDropZone resolves distinct corner tab bars", () => {
@@ -93,6 +94,7 @@ describe("Shell components", () => {
         [
           "0",
           {
+            path: [0],
             corners: {
               topLeft: { rect: topLeft, element: null as unknown as HTMLElement },
               topRight: { rect: topRight, element: null as unknown as HTMLElement },
@@ -101,8 +103,8 @@ describe("Shell components", () => {
           },
         ],
       ]);
-      expect(computeModeDropZone(40, 12, targets, null)).toEqual({ kind: "tab", stackPath: "0", corner: "topLeft", index: 0 });
-      expect(computeModeDropZone(160, 12, targets, null)).toEqual({ kind: "tab", stackPath: "0", corner: "topRight", index: 0 });
+      expect(computeModeDropZone(40, 12, targets, null)).toEqual({ kind: "tab", stackPath: [0], corner: "topLeft", index: 0 });
+      expect(computeModeDropZone(160, 12, targets, null)).toEqual({ kind: "tab", stackPath: [0], corner: "topRight", index: 0 });
     });
 
     it("beginWindowTemplateDrag records a session for mode dock preview", () => {
@@ -144,13 +146,13 @@ describe("Shell components", () => {
       const layout: WindowLayoutNode = {
         kind: "stack",
         children: [
-          { kind: "window", id: "a" },
-          { kind: "window", id: "b" },
+          { kind: "window", windowKindId: "a" },
+          { kind: "window", windowKindId: "b" },
         ],
-        activeId: "a",
+        activeWindowId: "a",
       };
       const next = reconcileWindows(layout, ["a"]);
-      expect(modeCollectWindowIds(next)).toEqual(["a"]);
+      expect(collectWindowIds(next)).toEqual(["a"]);
     });
 
     it("resolveTranslationLabel exposes the empty shell notice", () => {
@@ -159,157 +161,154 @@ describe("Shell components", () => {
       expect(label).toContain("Display");
     });
 
-    it("insertWindowAtDropZone adds a window on root-split", () => {
+    it("dropWindow adds a window on rootSplit", () => {
       const layout: WindowLayoutNode = {
         kind: "stack",
-        children: [{ kind: "window", id: "a" }],
+        children: [{ kind: "window", windowKindId: "a" }],
       };
-      const next = insertWindowAtDropZone(layout, "b", { kind: "root-split", side: "right" });
-      expect(next.kind).toBe("row");
-      const ids = next.kind === "row" ? next.children.flatMap((child) => (child.kind === "stack" ? child.children.map((leaf) => leaf.id) : [])) : [];
+      const next = dropWindow(layout, { kind: "window", windowKindId: "b" }, { kind: "rootSplit", side: "right" });
+      expect(next.kind).toBe("split");
+      const ids = next.kind === "split" ? next.children.flatMap((child) => (child.kind === "stack" ? child.children.map((leaf) => windowIdOf(leaf)) : [])) : [];
       expect(ids.sort()).toEqual(["a", "b"]);
     });
 
     it("computeModeDropZone root-split uses half of the mode when pointer is outside stack bodies", () => {
       const modeRect = { left: 0, top: 0, right: 400, bottom: 300, width: 400, height: 300 } as DOMRect;
-      expect(computeModeDropZone(80, 150, new Map(), modeRect)).toEqual({ kind: "root-split", side: "left" });
-      expect(computeModeDropZone(320, 150, new Map(), modeRect)).toEqual({ kind: "root-split", side: "right" });
-      expect(computeModeDropZone(200, 40, new Map(), modeRect)).toEqual({ kind: "root-split", side: "top" });
-      expect(computeModeDropZone(200, 260, new Map(), modeRect)).toEqual({ kind: "root-split", side: "bottom" });
+      expect(computeModeDropZone(80, 150, new Map(), modeRect)).toEqual({ kind: "rootSplit", side: "left" });
+      expect(computeModeDropZone(320, 150, new Map(), modeRect)).toEqual({ kind: "rootSplit", side: "right" });
+      expect(computeModeDropZone(200, 40, new Map(), modeRect)).toEqual({ kind: "rootSplit", side: "top" });
+      expect(computeModeDropZone(200, 260, new Map(), modeRect)).toEqual({ kind: "rootSplit", side: "bottom" });
     });
 
     it("modeDockOutLayout removes the dragged window without mutating drop targets", () => {
       const layout: WindowLayoutNode = {
-        kind: "row",
+        kind: "split", axis: "horizontal",
         children: [
           {
             kind: "stack",
             children: [
-              { kind: "window", id: "a" },
-              { kind: "window", id: "b" },
+              { kind: "window", windowKindId: "a" },
+              { kind: "window", windowKindId: "b" },
             ],
-            activeId: "a",
+            activeWindowId: "a",
           },
-          { kind: "stack", children: [{ kind: "window", id: "c" }], activeId: "c" },
+          { kind: "stack", children: [{ kind: "window", windowKindId: "c" }], activeWindowId: "c" },
         ],
       };
-      const dockedOut = modeDockOutLayout(layout, { dragKind: "tab", windowId: "b", stackPath: "0" });
-      expect(modeCollectWindowIds(dockedOut)).toEqual(["a", "c"]);
-      expect(modeCollectWindowIds(layout)).toEqual(["a", "b", "c"]);
+      const dockedOut = modeDockOutLayout(layout, { dragKind: "tab", windowId: "b", stackPath: [0] });
+      expect(collectWindowIds(dockedOut)).toEqual(["a", "c"]);
+      expect(collectWindowIds(layout)).toEqual(["a", "b", "c"]);
     });
 
-    it("removeWindowFromLayout and splitWithWindow mutate the layout tree", () => {
+    it("closeWindow and dropWindow split mutate the layout tree", () => {
       const layout: WindowLayoutNode = {
-        kind: "row",
+        kind: "split", axis: "horizontal",
         children: [
           {
             kind: "stack",
             children: [
-              { kind: "window", id: "a" },
-              { kind: "window", id: "b" },
+              { kind: "window", windowKindId: "a" },
+              { kind: "window", windowKindId: "b" },
             ],
-            activeId: "a",
+            activeWindowId: "a",
           },
-          { kind: "stack", children: [{ kind: "window", id: "c" }], activeId: "c" },
+          { kind: "stack", children: [{ kind: "window", windowKindId: "c" }], activeWindowId: "c" },
         ],
       };
-      const removed = removeWindowFromLayout(layout, "b");
-      expect(removed?.kind).toBe("row");
-      const split = splitWithWindow(layout, "1", "b", "left");
-      expect(split.kind).toBe("row");
-      if (split.kind === "row") {
-        const target = split.children[1];
-        expect(target?.kind === "row" || target?.kind === "column").toBe(true);
-      }
+      const removed = applyWindowLayoutOp(layout, { op: "closeWindow", windowId: "b" });
+      expect(removed.kind).toBe("split");
+      const split = dropWindow(layout, { kind: "window", windowKindId: "b" }, { kind: "split", stackPath: [1], side: "left" });
+      expect(split.kind).toBe("split");
+      if (split.kind === "split") expect(split.children[1]?.kind).toBe("split");
     });
 
     it("modeDockOutLayout removes an entire stack for stack drag", () => {
       const layout: WindowLayoutNode = {
-        kind: "row",
+        kind: "split", axis: "horizontal",
         children: [
           {
             kind: "stack",
             children: [
-              { kind: "window", id: "a" },
-              { kind: "window", id: "b" },
+              { kind: "window", windowKindId: "a" },
+              { kind: "window", windowKindId: "b" },
             ],
-            activeId: "a",
+            activeWindowId: "a",
           },
-          { kind: "stack", children: [{ kind: "window", id: "c" }], activeId: "c" },
+          { kind: "stack", children: [{ kind: "window", windowKindId: "c" }], activeWindowId: "c" },
         ],
       };
-      const dockedOut = modeDockOutLayout(layout, { dragKind: "stack", windowId: "a", stackPath: "0" });
-      expect(modeCollectWindowIds(dockedOut)).toEqual(["c"]);
-      expect(modeCollectWindowIds(layout)).toEqual(["a", "b", "c"]);
+      const dockedOut = modeDockOutLayout(layout, { dragKind: "stack", windowId: "a", stackPath: [0] });
+      expect(collectWindowIds(dockedOut)).toEqual(["c"]);
+      expect(collectWindowIds(layout)).toEqual(["a", "b", "c"]);
     });
 
     it("applyModeDrop relocates a stack when dropping on another stack body edge", () => {
       const layout: WindowLayoutNode = {
-        kind: "row",
+        kind: "split", axis: "horizontal",
         children: [
           {
             kind: "stack",
             children: [
-              { kind: "window", id: "a" },
-              { kind: "window", id: "b" },
+              { kind: "window", windowKindId: "a" },
+              { kind: "window", windowKindId: "b" },
             ],
-            activeId: "a",
+            activeWindowId: "a",
           },
-          { kind: "stack", children: [{ kind: "window", id: "c" }], activeId: "c" },
+          { kind: "stack", children: [{ kind: "window", windowKindId: "c" }], activeWindowId: "c" },
         ],
       };
       const drag = {
         dragKind: "stack" as const,
         windowId: "a",
-        stackPath: "0",
+        stackPath: [0],
         tabIndex: -1,
         pointerId: 1,
         ghostLabel: "Stack",
         x: 0,
         y: 0,
       };
-      const next = applyModeDrop(layout, drag, { kind: "split", stackPath: "1", side: "left" });
-      expect(next.kind).toBe("row");
-      if (next.kind !== "row") return;
+      const next = applyModeDrop(layout, drag, { kind: "split", stackPath: [1], side: "left" });
+      expect(next.kind).toBe("split");
+      if (next.kind !== "split") return;
       expect(next.children).toHaveLength(2);
       const left = next.children[0];
       const right = next.children[1];
       expect(left?.kind).toBe("stack");
       expect(right?.kind).toBe("stack");
-      if (left?.kind === "stack") expect(left.children.map((child) => child.id)).toEqual(["a", "b"]);
-      if (right?.kind === "stack") expect(right.children.map((child) => child.id)).toEqual(["c"]);
+      if (left?.kind === "stack") expect(left.children.map((child) => windowIdOf(child))).toEqual(["a", "b"]);
+      if (right?.kind === "stack") expect(right.children.map((child) => windowIdOf(child))).toEqual(["c"]);
     });
 
     it("applyModeDrop splits within the same stack when dropping on a body edge zone", () => {
       const layout: WindowLayoutNode = {
         kind: "stack",
         children: [
-          { kind: "window", id: "a" },
-          { kind: "window", id: "b" },
+          { kind: "window", windowKindId: "a" },
+          { kind: "window", windowKindId: "b" },
         ],
-        activeId: "a",
+        activeWindowId: "a",
       };
       const drag = {
         dragKind: "tab" as const,
         windowId: "a",
-        stackPath: "",
+        stackPath: [],
         tabIndex: 0,
         pointerId: 1,
         ghostLabel: "A",
         x: 0,
         y: 0,
       };
-      const zone = { kind: "split" as const, stackPath: "", side: "right" as const };
+      const zone = { kind: "split" as const, stackPath: [], side: "right" as const };
       const next = applyModeDrop(layout, drag, zone);
-      expect(next.kind).toBe("row");
-      if (next.kind !== "row") return;
+      expect(next.kind).toBe("split");
+      if (next.kind !== "split") return;
       expect(next.children).toHaveLength(2);
       const leftStack = next.children[0];
       const rightStack = next.children[1];
       expect(leftStack?.kind).toBe("stack");
       expect(rightStack?.kind).toBe("stack");
-      if (leftStack?.kind === "stack") expect(leftStack.children.map((c) => c.id)).toEqual(["b"]);
-      if (rightStack?.kind === "stack") expect(rightStack.children.map((c) => c.id)).toEqual(["a"]);
+      if (leftStack?.kind === "stack") expect(leftStack.children.map((c) => windowIdOf(c))).toEqual(["b"]);
+      if (rightStack?.kind === "stack") expect(rightStack.children.map((c) => windowIdOf(c))).toEqual(["a"]);
     });
 
     it("Mode maximize shows only one stack", () => {
@@ -321,10 +320,10 @@ describe("Shell components", () => {
               { id: "b", title: uiDataLabel("B"), iconId: "app-window", children: <div>B Body</div> },
             ]}
             layout={{
-              kind: "row",
+              kind: "split", axis: "horizontal",
               children: [
-                { kind: "stack", children: [{ kind: "window", id: "a" }], activeId: "a" },
-                { kind: "stack", children: [{ kind: "window", id: "b" }], activeId: "b" },
+                { kind: "stack", children: [{ kind: "window", windowKindId: "a" }], activeWindowId: "a" },
+                { kind: "stack", children: [{ kind: "window", windowKindId: "b" }], activeWindowId: "b" },
               ],
             }}
             activeWindowId="a"
@@ -354,10 +353,10 @@ describe("Shell components", () => {
               { id: "peer", title: uiDataLabel("Peer"), iconId: "app-window", children: <div>Peer Body</div> },
             ]}
             layout={{
-              kind: "row",
+              kind: "split", axis: "horizontal",
               children: [
-                { kind: "stack", children: [{ kind: "window", id: "solo" }], activeId: "solo" },
-                { kind: "stack", children: [{ kind: "window", id: "peer" }], activeId: "peer" },
+                { kind: "stack", children: [{ kind: "window", windowKindId: "solo" }], activeWindowId: "solo" },
+                { kind: "stack", children: [{ kind: "window", windowKindId: "peer" }], activeWindowId: "peer" },
               ],
             }}
             activeWindowId="solo"
@@ -394,7 +393,7 @@ describe("Shell components", () => {
     });
 
     it("ToggleGroup items never impose a height; vertical groups give their own cells the minimum", () => {
-      const items = [{ value: "a", id: "a", icon: "circle-dot", text: "A" }, { value: "b", id: "b", icon: "circle-dot", text: "B" }];
+      const items = [{ value: "a", id: "a", icon: "circle-dot" as const, text: "A" }, { value: "b", id: "b", icon: "circle-dot" as const, text: "B" }];
       const horizontal = render(<ui.ToggleGroup kind="single" value="a" items={items} />);
       const horizontalItem = horizontal.container.querySelector('[data-slot="toggle-group-item"]') as HTMLElement;
       expect(horizontalItem.className.split(/\s+/)).toContain("self-stretch");

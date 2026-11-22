@@ -6,7 +6,8 @@
     "Policy": {
       "const": {
         "version": 1,
-        "reserveBytes": 6442450944,
+        "maximumReserveBytes": 6442450944,
+        "reserveBasisPoints": 2500,
         "floorBytes": 268435456,
         "coldBaseBytes": 644245094,
         "coldBytesPerKloc": 41943040,

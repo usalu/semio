@@ -6,7 +6,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { useCallback, useContext, useEffect, useMemo, useRef, useState, type MouseEvent, type PointerEvent as ReactPointerEvent, type WheelEvent as ReactWheelEvent } from "../⚛️react-port/🟦️.ts";
+import { useCallback, useContext, useEffect, useEffectEvent, useMemo, useRef, useState, type MouseEvent, type PointerEvent as ReactPointerEvent, type WheelEvent as ReactWheelEvent } from "../⚛️react-port/🟦️.ts";
 import {
   ContextMenuController,
   registerIntroductionSurfaceResolver,
@@ -32,6 +32,7 @@ import { type RasterWasmSession, createRasterSession } from "../🪪️WasmSessi
 import { PixelEditingOverlay } from "./✍️editing/🟦️.tsx";
 // 🐢️ Direct element-to-element imports — `Canvas2dHost`/`🟦️Interpreter` already landed in a prior batch.
 import { type CanvasCamera, canvasPinchCamera, worldToScreenLogical, wheelCameraAtScreen } from "../📐️Canvas2dHost/📷️camera-math/🟦️.ts";
+import { resizeCanvasBackingStore } from "../📐️Canvas2dHost/📏️backing-store/🟦️.ts";
 import { world3dHoverActionArgs, world3dSelectionActionArgs } from "../🌐️World3dHost/🖱️interaction-domain-args/🟦️.ts";
 import { useMapContextMenuSpecs, useShellContextMenuFallback, openSurfaceContextMenu, type SurfaceContextMenuResult } from "../🗣️Interpreter/🖱️surface-menu/🟦️.ts";
 import { WindowInstanceIdContext } from "../🗣️Interpreter/🌉️scene-host-contract/🟦️.ts";
@@ -377,24 +378,30 @@ function Paint2dCanvasSurface({
   //#endregion Session lifecycle
 
   //#region CompositeViewportReporting
+  const reportViewport = useEffectEvent((viewport: Paint2dViewportSize) => dispatch("setCompositeViewport", viewport));
   useEffect(() => {
     if (isNavigator) return;
     const container = containerRef.current;
     if (!container) return;
+    let active = true;
     let last: Paint2dViewportSize = { width: 0, height: 0 };
     const report = () => {
+      if (!active) return;
       const rect = container.getBoundingClientRect();
       const width = Math.round(rect.width);
       const height = Math.round(rect.height);
       if (width === last.width && height === last.height) return;
       last = { width, height };
-      dispatch("setCompositeViewport", { width, height });
+      reportViewport(last);
     };
     report();
     const observer = new ResizeObserver(report);
     observer.observe(container);
-    return () => observer.disconnect();
-  }, [dispatch, isNavigator]);
+    return () => {
+      active = false;
+      observer.disconnect();
+    };
+  }, [isNavigator, node.controllerId, node.surfaceId, windowInstanceId]);
   //#endregion CompositeViewportReporting
 
   //#region PickInteraction
@@ -743,7 +750,6 @@ function Paint2dWasmCanvas({ sessionFactory, onSessionReady }: { readonly sessio
   const cancelRef=useRef<()=>void>(()=>{});
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const observerRef = useRef<ResizeObserver | null>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -759,43 +765,38 @@ function Paint2dWasmCanvas({ sessionFactory, onSessionReady }: { readonly sessio
     });
     cancelRef.current=()=>{session.cancelRender();scheduler.paintNow();};
     onSessionReady(frameDemandingSessionV1(session, scheduler));
-    const rect = container.getBoundingClientRect();
-    const dpr = globalThis.devicePixelRatio || 1;
-    const initW = Math.max(1, Math.round(rect.width));
-    const initH = Math.max(1, Math.round(rect.height));
-    canvas.width = Math.round(initW * dpr);
-    canvas.height = Math.round(initH * dpr);
-    canvas.style.width = `${initW}px`;
-    canvas.style.height = `${initH}px`;
+    const measure = () => {
+      const { width, height } = container.getBoundingClientRect();
+      return { width: Math.max(1, Math.round(width)), height: Math.max(1, Math.round(height)), dpr: Math.max(1, globalThis.devicePixelRatio || 1) };
+    };
+    let size = measure();
+    resizeCanvasBackingStore(canvas, size.width, size.height, size.dpr);
     let disposed = false;
+    let observer: ResizeObserver | undefined;
+    const resize = () => {
+      if (disposed) return false;
+      const next = measure();
+      if (next.width === size.width && next.height === size.height && next.dpr === size.dpr) return false;
+      resizeCanvasBackingStore(canvas, next.width, next.height, next.dpr);
+      session.setSize(next.width, next.height, next.dpr);
+      size = next;
+      return true;
+    };
     void session
-      .attachCanvas(canvas, initW, initH, dpr)
+      .attachCanvas(canvas, size.width, size.height, size.dpr)
       .then(() => {
         if (disposed) return;
         syncSessionCanvasTheme(session);
-        const resize = () => {
-          const nextRect = container.getBoundingClientRect();
-          const nextDpr = globalThis.devicePixelRatio || 1;
-          const w = Math.max(1, Math.round(nextRect.width));
-          const h = Math.max(1, Math.round(nextRect.height));
-          canvas.width = Math.round(w * nextDpr);
-          canvas.height = Math.round(h * nextDpr);
-          canvas.style.width = `${w}px`;
-          canvas.style.height = `${h}px`;
-          session.setSize(w, h, nextDpr);
-          scheduler.paintNow();
-        };
         resize();
-        const observer = new ResizeObserver(resize);
+        scheduler.paintNow();
+        observer = new ResizeObserver(() => { if (resize()) scheduler.paintNow(); });
         observer.observe(container);
-        observerRef.current = observer;
       })
       .catch(() => {});
     return () => {
       disposed = true;
       scheduler.dispose();
-      observerRef.current?.disconnect();
-      observerRef.current = null;
+      observer?.disconnect();
     };
   }, [onSessionReady, sessionFactory]);
 

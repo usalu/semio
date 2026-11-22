@@ -31,9 +31,13 @@ export async function admitBuildDiskV1(environment:Readonly<Record<string,string
 const recoveries=new Map<string,Promise<unknown>>();
 /** 🧹️ Frees the machine before the gate judges it: a volume that can derive its disk budget and has less than the command's need plus its reserve free runs the registered collectors in priority order (derivable artefacts first, then the least recently used cache objects). Below the cushion the command waits for them and is refused with the largest remaining consumers when they free too little; between the cushion and the reserve they run in the background and the command goes on. One recovery per store root at a time. @see ../🧹️disk-recovery/🟦️.ts */
 async function recoverBuildDiskV1(input:Readonly<{environment:Readonly<Record<string,string|undefined>>;root:string;home:string;workspace:string;need:number;measure:(path:string)=>CasPartitionV1|undefined;language:"en"|"de";write:(line:string)=>void;signal?:AbortSignal;writers?:readonly DiskWriterV1[]}>):Promise<void>{
- const facts=()=>input.measure(input.root),judged=judgeDiskV1(facts(),input.need);
- if(judged.action==="fixed-shares"||judged.action==="allow")return;
- const writers=input.writers??realDiskWritersV1({workspace:input.workspace,home:input.home,tmp:input.environment.TMPDIR??tmpdir(),uid:process.getuid?.()??0,environment:input.environment});
+ const facts=()=>input.measure(input.root),current=facts(),judged=judgeDiskV1(current,input.need);
+ if(current===undefined||judged.action==="fixed-shares"||judged.action==="allow")return;
+ const writers=input.writers??realDiskWritersV1({
+  workspace:input.workspace,home:input.home,tmp:input.environment.TMPDIR??tmpdir(),uid:process.getuid?.()??0,environment:input.environment,
+  reclaimPressure:{path:current.partition,requiredFreeBytes:judged.targetFreeBytes,
+   freeBytes:()=>{const measured=facts();return measured?.partition===current.partition?measured.freeBytes:undefined;}},
+ });
  const running=recoveries.get(input.root)??recoverDiskV1({facts,needBytes:input.need,writers,language:input.language,report:input.write,signal:input.signal}).finally(()=>{recoveries.delete(input.root);});
  recoveries.set(input.root,running);
  if(judged.action==="collect-background"){void running.catch(()=>undefined);return;}

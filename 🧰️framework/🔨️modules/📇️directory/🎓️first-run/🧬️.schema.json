@@ -1,0 +1,442 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.os.hub-first-run/v1",
+  "title": "HubFirstRunV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "introductionId",
+    "storageKeyPrefix",
+    "seenValue",
+    "stepIdPrefix",
+    "stages",
+    "anchors",
+    "steps",
+    "completion",
+    "text",
+    "controls"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.os.hub-first-run/v1"
+    },
+    "introductionId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "storageKeyPrefix": {
+      "type": "string",
+      "minLength": 1
+    },
+    "seenValue": {
+      "type": "string",
+      "minLength": 1
+    },
+    "stepIdPrefix": {
+      "type": "string",
+      "minLength": 1
+    },
+    "stages": {
+      "const": [
+        "welcome",
+        "signIn",
+        "space",
+        "invite",
+        "done"
+      ]
+    },
+    "anchors": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "react",
+        "wgpu"
+      ],
+      "properties": {
+        "react": {
+          "$ref": "#/definitions/anchorSet"
+        },
+        "wgpu": {
+          "$ref": "#/definitions/anchorSet"
+        }
+      }
+    },
+    "steps": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "$ref": "#/definitions/step"
+      }
+    },
+    "text": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "en",
+        "de"
+      ],
+      "properties": {
+        "en": {
+          "$ref": "#/definitions/textRow"
+        },
+        "de": {
+          "$ref": "#/definitions/textRow"
+        }
+      }
+    },
+    "controls": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "replay",
+        "close",
+        "order"
+      ],
+      "properties": {
+        "replay": {
+          "$ref": "#/definitions/control"
+        },
+        "close": {
+          "$ref": "#/definitions/control"
+        },
+        "order": {
+          "const": [
+            "replay",
+            "close"
+          ]
+        }
+      }
+    },
+    "completion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "welcome",
+        "signIn",
+        "space",
+        "invite",
+        "done"
+      ],
+      "properties": {
+        "welcome": {
+          "const": "never"
+        },
+        "signIn": {
+          "const": "signedIn"
+        },
+        "space": {
+          "const": "spaceOpen"
+        },
+        "invite": {
+          "const": "inviteReady"
+        },
+        "done": {
+          "const": "never"
+        }
+      }
+    }
+  },
+  "definitions": {
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+    },
+    "nullableId": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/id"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "anchorSet": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "signIn",
+        "signInSupport",
+        "space",
+        "spaceSupport",
+        "invite",
+        "inviteSupport",
+        "redeemField",
+        "celebrate"
+      ],
+      "properties": {
+        "signIn": {
+          "$ref": "#/definitions/id"
+        },
+        "signInSupport": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/id"
+          }
+        },
+        "space": {
+          "$ref": "#/definitions/id"
+        },
+        "spaceSupport": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/id"
+          }
+        },
+        "invite": {
+          "$ref": "#/definitions/id"
+        },
+        "inviteSupport": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/id"
+          }
+        },
+        "redeemField": {
+          "$ref": "#/definitions/id"
+        },
+        "celebrate": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "signIn",
+            "space",
+            "redeem",
+            "invite"
+          ],
+          "properties": {
+            "signIn": {
+              "$ref": "#/definitions/nullableId"
+            },
+            "space": {
+              "$ref": "#/definitions/nullableId"
+            },
+            "redeem": {
+              "$ref": "#/definitions/nullableId"
+            },
+            "invite": {
+              "$ref": "#/definitions/nullableId"
+            }
+          }
+        }
+      }
+    },
+    "step": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "stage",
+        "title",
+        "body",
+        "placement",
+        "introduce",
+        "show",
+        "interactions"
+      ],
+      "properties": {
+        "stage": {
+          "enum": [
+            "welcome",
+            "signIn",
+            "space",
+            "invite",
+            "done"
+          ]
+        },
+        "title": {
+          "type": "string"
+        },
+        "body": {
+          "type": "string"
+        },
+        "placement": {
+          "enum": [
+            "auto",
+            "top",
+            "bottom",
+            "left",
+            "right",
+            "center"
+          ]
+        },
+        "introduce": {
+          "enum": [
+            "signIn",
+            "space",
+            "invite",
+            null
+          ]
+        },
+        "show": {
+          "enum": [
+            "signInSupport",
+            "spaceSupport",
+            "inviteSupport",
+            null
+          ]
+        },
+        "interactions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "on",
+              "label",
+              "celebrate"
+            ],
+            "properties": {
+              "on": {
+                "enum": [
+                  "signIn",
+                  "space",
+                  "invite",
+                  "redeemField"
+                ]
+              },
+              "label": {
+                "type": "string"
+              },
+              "celebrate": {
+                "enum": [
+                  "signIn",
+                  "space",
+                  "redeem",
+                  "invite"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "textRow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "title",
+        "welcomeTitle",
+        "welcomeBody",
+        "signInTitle",
+        "signInBody",
+        "signInTask",
+        "spaceTitle",
+        "spaceBody",
+        "spaceTaskCreate",
+        "spaceTaskJoin",
+        "inviteTitle",
+        "inviteBody",
+        "inviteTask",
+        "doneTitle",
+        "doneBody"
+      ],
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "welcomeTitle": {
+          "type": "string",
+          "minLength": 1
+        },
+        "welcomeBody": {
+          "type": "string",
+          "minLength": 1
+        },
+        "signInTitle": {
+          "type": "string",
+          "minLength": 1
+        },
+        "signInBody": {
+          "type": "string",
+          "minLength": 1
+        },
+        "signInTask": {
+          "type": "string",
+          "minLength": 1
+        },
+        "spaceTitle": {
+          "type": "string",
+          "minLength": 1
+        },
+        "spaceBody": {
+          "type": "string",
+          "minLength": 1
+        },
+        "spaceTaskCreate": {
+          "type": "string",
+          "minLength": 1
+        },
+        "spaceTaskJoin": {
+          "type": "string",
+          "minLength": 1
+        },
+        "inviteTitle": {
+          "type": "string",
+          "minLength": 1
+        },
+        "inviteBody": {
+          "type": "string",
+          "minLength": 1
+        },
+        "inviteTask": {
+          "type": "string",
+          "minLength": 1
+        },
+        "doneTitle": {
+          "type": "string",
+          "minLength": 1
+        },
+        "doneBody": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "control": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "icon",
+        "variant",
+        "label"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/id"
+        },
+        "icon": {
+          "type": "string",
+          "minLength": 1
+        },
+        "variant": {
+          "enum": [
+            "ghost",
+            "outline"
+          ]
+        },
+        "label": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "en",
+            "de"
+          ],
+          "properties": {
+            "en": {
+              "type": "string",
+              "minLength": 1
+            },
+            "de": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    }
+  }
+}

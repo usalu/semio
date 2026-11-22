@@ -16,8 +16,7 @@ fn scene_command_dispatches_a_canvas2d_pointer_down_action() {
             surface_id: "s1".into(),
             kind: semio_ui_declaration::ui::SurfaceKind::Canvas2d,
             rect,
-            event: semio_ui_wgpu_events::UiEvent::PointerDown { x: 10.0, y: 10.0, button: semio_ui_wgpu_events::PointerButton::Primary, modifiers: Default::default() },
-        }],
+            event: semio_ui_wgpu_events::UiEvent::PointerDown { x: 10.0, y: 10.0, button: semio_ui_wgpu_events::PointerButton::Primary, modifiers: Default::default() }, click_count: 1 }],
         Some(ui_render::PointerId(1)),
         &mut input,
     );
@@ -48,8 +47,7 @@ fn canvas2d_pointer_payload_is_react_shaped_screen_logical_with_a_world_lane() {
             surface_id: "s1".into(),
             kind: semio_ui_declaration::ui::SurfaceKind::Canvas2d,
             rect,
-            event: semio_ui_wgpu_events::UiEvent::PointerDown { x: 50.0, y: 70.0, button: semio_ui_wgpu_events::PointerButton::Primary, modifiers: Default::default() },
-        }],
+            event: semio_ui_wgpu_events::UiEvent::PointerDown { x: 50.0, y: 70.0, button: semio_ui_wgpu_events::PointerButton::Primary, modifiers: Default::default() }, click_count: 1 }],
         Some(ui_render::PointerId(1)),
         &mut input,
     );
@@ -92,8 +90,7 @@ fn scene_command_dispatches_an_ink_canvas_scroll_action() {
             surface_id: "s1".into(),
             kind: semio_ui_declaration::ui::SurfaceKind::InkCanvas,
             rect,
-            event: semio_ui_wgpu_events::UiEvent::Scroll { x: 10.0, y: 10.0, delta_x: 0.0, delta_y: -1.0, modifiers: Default::default() },
-        }],
+            event: semio_ui_wgpu_events::UiEvent::Scroll { x: 10.0, y: 10.0, delta_x: 0.0, delta_y: -1.0, modifiers: Default::default() }, click_count: 1 }],
         None,
         &mut input,
     );
@@ -160,7 +157,7 @@ fn dispatch_ink_pointer(window_id: &str, node: NodeId, surface_id: &str, rect: R
     } else {
         semio_ui_wgpu_events::UiEvent::PointerUp { x, y, button: semio_ui_wgpu_events::PointerButton::Primary, modifiers: Default::default() }
     };
-    apply_ui_commands(&mut vec![semio_ui_wgpu_events::UiCommand::Scene { window_id: window_id.into(), node, surface_id: surface_id.into(), kind: semio_ui_declaration::ui::SurfaceKind::InkCanvas, rect, event }], Some(ui_render::PointerId(1)), input);
+    apply_ui_commands(&mut vec![semio_ui_wgpu_events::UiCommand::Scene { window_id: window_id.into(), node, surface_id: surface_id.into(), kind: semio_ui_declaration::ui::SurfaceKind::InkCanvas, rect, event, click_count: 1 }], Some(ui_render::PointerId(1)), input);
     drive_ink_scene_terminal(input);
 }
 //#endregion 🔖️SceneCommandTests

@@ -159,7 +159,7 @@ fragment float4 ui_fragment_main(UiVertexOut in [[stage_in]],
         float two_pi = 6.28318530718;
         float duration = 1.6;
         float phase = globals._pad.x / duration;
-        float pulse = 0.5 - 0.5 * cos(two_pi * phase);
+        float pulse = 0.85 + 0.15 * cos(two_pi * phase);
         float alpha = border_alpha * pulse * in.color.a;
         return float4(in.color.rgb, alpha);
     }

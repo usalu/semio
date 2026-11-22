@@ -31,6 +31,8 @@ pub struct SpaceConfig {
     pub active_panel_tab: String,
     #[state(config)]
     pub space_id: Option<String>,
+    #[state(config)]
+    pub workflow_artifact_id: Option<String>,
 }
 
 //region 📎 App-schema descriptor

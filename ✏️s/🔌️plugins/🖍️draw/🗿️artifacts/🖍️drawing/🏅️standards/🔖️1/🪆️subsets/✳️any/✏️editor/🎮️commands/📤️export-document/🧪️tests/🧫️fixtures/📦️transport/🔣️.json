@@ -1,0 +1,20 @@
+{
+  "header": {
+    "documentId": "original-export-source",
+    "format": "pdf",
+    "width": 240,
+    "height": 180,
+    "transparent": false,
+    "filename": "original-export-source.pdf",
+    "mime": "application/pdf",
+    "artifactKind": "s.stdio.pdf"
+  },
+  "inputPageBytes": 3072,
+  "fullWord": "abc",
+  "fullWordCount": 1024,
+  "tail": "xy",
+  "encodedFullWord": "YWJj",
+  "encodedTail": "eHk=",
+  "sources": ["paged", "contiguous"],
+  "completion": ["seal", "cancel-with-staged-page"]
+}

@@ -1,5 +1,5 @@
 import {createCipheriv,createDecipheriv,createHash,createPrivateKey,createPublicKey,diffieHellman,generateKeyPairSync,hkdfSync,randomBytes,type KeyObject} from "node:crypto";
-import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
+import {compileJsonSchemaSubset,type CompiledJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 
 /** 🔐️ The route every sealed exchange is posted to; the path, the method, the credentials and the body of the real request travel inside it. */
@@ -26,9 +26,11 @@ const channel=new WeakSet<Request>();
 /** 🔐️ Whether a request reached the handler through a sealed exchange (marked by the sealed handler itself; no header can claim it). */
 export const isSealedRequestV1=(request:Request):boolean=>channel.has(request);
 
+const shapes=new Map<string,CompiledJsonSchemaSubset>(),shapeOf=(definition:string):CompiledJsonSchemaSubset=>{let check=shapes.get(definition);if(!check){check=compileJsonSchemaSubset({$ref:`#/definitions/${definition}`},schema);shapes.set(definition,check);}return check;};
+
 /** 🛡️ Validates one value against a definition of the sealed schema and names the first problem. */
 export function requireSealedShapeV1(definition:"RequestHead"|"ReplyHead"|"RequestHeader"|"ReplyHeader"|"TransportPolicy",value:unknown,message:string):void{
- const errors=validateJsonSchemaSubset({$ref:`#/definitions/${definition}`},value,schema);
+ const errors=shapeOf(definition).validate(value);
  if(errors.length)throw Error(`${message}: ${errors[0]}`);
 }
 
@@ -95,7 +97,7 @@ export function sealRequestV1(input:Readonly<{serverPublic:Uint8Array;group:stri
  const ciphertext=seal(request.key,request.iv,aadOf(AAD_LABEL,input.group,Buffer.concat([stamp,nonce])),frame({method:input.request.method,target:input.request.target,headers:input.request.headers},input.request.body??new Uint8Array(0)));
  const header=`1.${epk.toString("base64url")}.${input.now}.${nonce.toString("base64url")}`;
  return {headers:{[SEALED_HEADER_V1]:header},body:ciphertext,open(replyHeader,body){
-  if(typeof replyHeader!=="string"||validateJsonSchemaSubset({$ref:"#/definitions/ReplyHeader"},replyHeader,schema).length>0)throw new SealedErrorV1("malformed");
+  if(typeof replyHeader!=="string"||shapeOf("ReplyHeader").validate(replyHeader).length>0)throw new SealedErrorV1("malformed");
   const serverEpk=Buffer.from(replyHeader.slice(2),"base64url"),second=Buffer.from(diffieHellman({privateKey:ephemeral,publicKey:publicOfX(serverEpk)})),requestHash=sha(ciphertext);
   const reply=derive(Buffer.concat([first,second]),Buffer.concat([epk,serverEpk,requestHash]),REPLY_INFO,input.group);
   const {head,body:data}=unframe(open(reply.key,reply.iv,aadOf(AAD_LABEL+" reply",input.group,requestHash),body),"ReplyHead");
@@ -109,7 +111,7 @@ export type SealedIncomingV1=Readonly<{request:SealedRequestV1;replay:string;sea
 /** 🔓️ Opens a sealed request with the private exchange key of the server of group `group`. Refuses a message outside the clock skew, one that is not the wire format, and one that does not authenticate (changed on the way or made without knowing the server's public key); it never says which part of a bad message was wrong beyond the code. */
 export function openRequestV1(input:Readonly<{serverPrivate:KeyObject;group:string;header:string|null|undefined;body:Uint8Array;now:number;skewMilliseconds?:number}>):SealedIncomingV1{
  const header=input.header;
- if(typeof header!=="string"||validateJsonSchemaSubset({$ref:"#/definitions/RequestHeader"},header,schema).length>0)throw new SealedErrorV1("malformed");
+ if(typeof header!=="string"||shapeOf("RequestHeader").validate(header).length>0)throw new SealedErrorV1("malformed");
  const [,encodedKey,stamped,encodedNonce]=header.split(".") as [string,string,string,string],epk=Buffer.from(encodedKey,"base64url"),nonce=Buffer.from(encodedNonce,"base64url"),timestamp=Number(stamped);
  if(!Number.isSafeInteger(timestamp))throw new SealedErrorV1("malformed");
  if(Math.abs(input.now-timestamp)>(input.skewMilliseconds??SEALED_SKEW_MILLISECONDS_V1))throw new SealedErrorV1("clock");

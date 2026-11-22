@@ -1,11 +1,10 @@
-# 📸️ Jack owns complete inline manifests, exact camera words and one composed child.
+# 📸️ Jack names its interned manifest by id and owns exact camera words and one composed child.
 # import ArtifactChild, ArtifactChildInput from "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🪆️child/🧬️schema/🔗️.graphql"
 # import Binary64Word, Binary64WordInput, ValueType, ValueTypeInput from "🧰️framework/🔨️modules/🌱️value/🧬️schema/🔗️.graphql"
 type JackSnapshot {
  schema: String! @state(class: ARTIFACT)
  name: String! @state(class: ARTIFACT)
- manifestId: String @state(class: ARTIFACT)
- manifest: Manifest! @state(class: ARTIFACT)
+ manifestId: String! @state(class: ARTIFACT)
  camera: Camera! @state(class: ARTIFACT)
  content: ArtifactChild! @child(capability: "s.trinity.jack.graph") @state(class: ARTIFACT)
  rootNodeId: String @state(class: ARTIFACT)
@@ -18,7 +17,7 @@ type ManifestNodeKind { name: String! properties: [ManifestProperty!]! portKinds
 type ManifestEdgeKind { name: String! properties: [ManifestProperty!]! }
 type ManifestPortKind { name: String! direction: String! properties: [ManifestProperty!]! }
 type Manifest { nodeKinds: [ManifestNodeKind!]! edgeKinds: [ManifestEdgeKind!]! portKinds: [ManifestPortKind!]! }
-input JackSnapshotInput { schema: String! name: String! manifestId: String manifest: ManifestInput! camera: CameraInput! content: ArtifactChildInput! rootNodeId: String query: String! }
+input JackSnapshotInput { schema: String! name: String! manifestId: String! camera: CameraInput! content: ArtifactChildInput! rootNodeId: String query: String! }
 input CameraInput { x: Binary64WordInput! y: Binary64WordInput! zoom: Binary64WordInput! }
 input ManifestPropertyInput { name: String! kind: ManifestPropertyKind! valueType: ValueTypeInput! expr: String }
 input ManifestNodeKindInput { name: String! properties: [ManifestPropertyInput!]! portKinds: [String!]! }

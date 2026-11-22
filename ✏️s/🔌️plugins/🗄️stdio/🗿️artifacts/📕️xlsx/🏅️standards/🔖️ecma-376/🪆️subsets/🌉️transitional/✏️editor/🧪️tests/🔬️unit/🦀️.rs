@@ -33,10 +33,10 @@ async fn transitional_cell_edit_uses_the_canonical_lineage_revision() {
     let snapshot = fixture();
     let address = semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::cell_address::xlsx_cell_address(&snapshot, "Sheet 1", 1, 0).unwrap();
     let command = XlsxTransitionalEditorCommand::SetCell { sheet_name: "Sheet 1".into(), row: 1, column: 0, revision: address.revision.clone(), value: "false".into() };
-    let emit = xlsx_set_cell_emit(&snapshot, &command).unwrap();
+    let emit = xlsx_set_cell_emit(&snapshot, &command, None).unwrap();
     assert_eq!(emit.artifact_mutations, vec![XlsxMutation::SetCell(set_cell::SetCell { address, value: XlsxCellValue::Boolean(false), node: None })]);
-    assert!(xlsx_set_cell_emit(&snapshot, &XlsxTransitionalEditorCommand::SetCell { sheet_name: "Sheet 1".into(), row: 1, column: 0, revision: "stale".into(), value: "false".into() }).is_err());
-    assert!(xlsx_set_cell_emit(&snapshot, &XlsxTransitionalEditorCommand::SetCell { sheet_name: "Sheet 1".into(), row: 99, column: 0, revision: command_revision(&command), value: "false".into() }).is_err());
+    assert!(xlsx_set_cell_emit(&snapshot, &XlsxTransitionalEditorCommand::SetCell { sheet_name: "Sheet 1".into(), row: 1, column: 0, revision: "stale".into(), value: "false".into() }, None).is_err());
+    assert!(xlsx_set_cell_emit(&snapshot, &XlsxTransitionalEditorCommand::SetCell { sheet_name: "Sheet 1".into(), row: 99, column: 0, revision: command_revision(&command), value: "false".into() }, None).is_err());
 }
 
 #[semio_framework_async_macros::async_test]
@@ -48,7 +48,7 @@ async fn new_workbook_provides_an_editable_sheet_and_roundtrips_through_its_nati
     assert!(sheet.cells.is_empty());
     let vacancy = semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::cell_address::xlsx_cell_vacancy_address(&snapshot, &sheet.name, 1, 0).unwrap();
     let command = XlsxTransitionalEditorCommand::SetCell { sheet_name: sheet.name.clone(), row: 1, column: 0, revision: vacancy.worksheet.revision, value: "=1+2".into() };
-    let emitted = xlsx_set_cell_emit(&snapshot, &command).unwrap();
+    let emitted = xlsx_set_cell_emit(&snapshot, &command, None).unwrap();
     assert_eq!(emitted.artifact_mutations.len(), 1);
     let mut edited = snapshot;
     let outcome = protocol::ColdMutation::diff(&emitted.artifact_mutations[0], &edited);

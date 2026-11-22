@@ -301,6 +301,11 @@ impl Session {
         Self { state: shell(SessionState { operations, kernel:shell(RetainedOwnerGate::new(ManuallyDrop::new(Brep::new()))), mesh_cache:shell(RetainedOwnerGate::new(ManuallyDrop::new(MeshCache::new()))), claims:shell(RetainedOwnerGate::new(ManuallyDrop::new(FamilyClaims::from_iter([(1,AuthorityClaims::open())])))), next_authority: shell(std::sync::atomic::AtomicU64::new(2)), authority:1,closed:std::sync::atomic::AtomicBool::new(false),jobs:RetainedOwnerGate::new(controlled(TessellationJobRegistry::default())),retirement:shell(RetainedOwnerGate::new(SessionRetirement::default())) }) }
     }
 pub(super) fn kernel(&self) -> &RetainedOwnerGate<ManuallyDrop<Brep>> { &self.state.kernel }
+pub(super) fn with_open_kernel<T>(&self, run: impl FnOnce(&mut Brep) -> Result<T, ValueError>) -> Result<T, ValueError> {
+    if self.is_closed() { return Err(ownership_busy()); }
+    let mut kernel = self.kernel().try_lock().map_err(|_| ownership_busy())?;
+    run(&mut kernel)
+}
 pub(super) fn mesh_cache(&self) -> &RetainedOwnerGate<ManuallyDrop<MeshCache>> { &self.state.mesh_cache }
 pub fn evict_mesh_cache_for_handles(&self,handles:&[String]) {
     if self.is_closed() {return;}
@@ -321,38 +326,32 @@ pub fn with_kernel<T>(&self, f: impl FnOnce(&mut Brep) -> Result<T, EvalError>) 
 }
 /// 🎯️ Plans an analytic curve without scanning or copying session handles.
 pub fn plan_analytic_curve(&self, parameters: semio_framework_3d_brep_engine::AnalyticCurveParameters) -> Result<semio_framework_3d_brep_engine::AnalyticPublication, ValueError> {
-    if self.is_closed() { return Err(ownership_busy()); }
-    self.kernel().try_lock().map_err(|_| ownership_busy())?.plan_analytic_curve(parameters)
+    self.with_open_kernel(|kernel| kernel.plan_analytic_curve(parameters))
 }
 
 /// ➿️ Plans original curve interpolation from the live ordered point input size.
 pub fn plan_interpolated_curve(&self, count: usize, degree: usize) -> Result<AnalyticPublication, ValueError> {
-    if self.is_closed() { return Err(ownership_busy()); }
-    self.kernel().try_lock().map_err(|_| ownership_busy())?.plan_interpolated_curve(count, degree)
+    self.with_open_kernel(|kernel| kernel.plan_interpolated_curve(count, degree))
 }
 
 /// 📉️ Admits an original endpoint-constrained curve fit.
 pub fn plan_approximated_curve(&self, count: usize, degree: usize, controls: usize) -> Result<AnalyticPublication, ValueError> {
-    if self.is_closed() { return Err(ownership_busy()); }
-    self.kernel().try_lock().map_err(|_| ownership_busy())?.plan_approximated_curve(count, degree, controls)
+    self.with_open_kernel(|kernel| kernel.plan_approximated_curve(count, degree, controls))
 }
 
 /// 🌈️ Plans an exact four-boundary Coons surface under the original session owner.
 pub fn plan_coons_surface(&self, boundaries: [usize; 4]) -> Result<AnalyticPublication, ValueError> {
-    if self.is_closed() { return Err(ownership_busy()); }
-    self.kernel().try_lock().map_err(|_| ownership_busy())?.plan_coons_surface(boundaries)
+    self.with_open_kernel(|kernel| kernel.plan_coons_surface(boundaries))
 }
 
 /// 🪡️ Plans a bounded interpolating surface from original grid dimensions.
 pub fn plan_interpolated_grid(&self, rows: usize, columns: usize, degree_u: usize, degree_v: usize) -> Result<AnalyticPublication, ValueError> {
-    if self.is_closed() { return Err(ownership_busy()); }
-    self.kernel().try_lock().map_err(|_| ownership_busy())?.plan_interpolated_grid(rows, columns, degree_u, degree_v)
+    self.with_open_kernel(|kernel| kernel.plan_interpolated_grid(rows, columns, degree_u, degree_v))
 }
 
 /// 📄️ Plans a fixed analytic plane in the original session.
 pub fn plan_analytic_plane(&self, origin: Vec3, normal: Vec3) -> Result<AnalyticPublication, ValueError> {
-    if self.is_closed() { return Err(ownership_busy()); }
-    self.kernel().try_lock().map_err(|_| ownership_busy())?.plan_analytic_plane(origin, normal)
+    self.with_open_kernel(|kernel| kernel.plan_analytic_plane(origin, normal))
 }
 
 /// 🌛️ Opens a budgeted rational circular arc in the original kernel.
@@ -363,20 +362,17 @@ pub fn plan_analytic_arc(&self, center:Vec3,normal:Vec3,radius:f64,start:f64,end
 
 /// 📐️ Stages the analytic affine image in its original kernel.
 pub fn plan_analytic_transform(&self, source: &str, transform: semio_framework_3d_brep_engine::AnalyticTransform) -> Result<AnalyticPublication,ValueError> {
-    if self.is_closed() { return Err(ownership_busy()); }
-    self.kernel().try_lock().map_err(|_| ownership_busy())?.plan_analytic_transform(source, transform)
+    self.with_open_kernel(|kernel| kernel.plan_analytic_transform(source, transform))
 }
 
 /// 🎫️ Captures one original certified Boolean operand with no topology copy.
 pub fn capture_boolean_operand(&self, handle: &str) -> Result<semio_framework_3d_brep_engine::BooleanOperand, ValueError> {
-    if self.is_closed() { return Err(ownership_busy()); }
-    self.kernel().try_lock().map_err(|_| ownership_busy())?.capture_boolean_operand(handle)
+    self.with_open_kernel(|kernel| kernel.capture_boolean_operand(handle))
 }
 
 /// 🔍️ Starts acquisition of the general Boolean's source faces.
 pub fn plan_boolean_preparation(&self, a: &str, b: &str) -> Result<semio_framework_3d_brep_engine::BooleanPreparation, ValueError> {
-    if self.is_closed() { return Err(ownership_busy()); }
-    self.kernel().try_lock().map_err(|_| ownership_busy())?.plan_boolean_preparation(a,b)
+    self.with_open_kernel(|kernel| kernel.plan_boolean_preparation(a,b))
 }
 
 /// 📏️ Quotes one original source face lookup and transfer.
@@ -388,21 +384,18 @@ pub fn boolean_preparation_demand(&self, a: &str, b: &str, preparation: &semio_f
 /// 🧩️ Acquires one original source face for general Boolean preparation.
 pub fn step_boolean_preparation(&self, a: &str, b: &str, preparation: &mut semio_framework_3d_brep_engine::BooleanPreparation,
     effect: &mut RetainedAllocationEffect<'_>) -> Result<(bool, RetainedCloneProgress), ValueError> {
-    if self.is_closed() { return Err(ownership_busy()); }
-    self.kernel().try_lock().map_err(|_| ownership_busy())?.step_boolean_preparation(a,b,preparation,effect)
+    self.with_open_kernel(|kernel| kernel.step_boolean_preparation(a,b,preparation,effect))
 }
 
 /// ⚖️ Admits an exact certified Boolean result without copying any live session rows.
 pub fn plan_certified_boolean(&self, a: &str, b: &str, first: &semio_framework_3d_brep_engine::BooleanOperand,
     operation: semio_framework_3d_brep_engine::BooleanOperation) -> Result<semio_framework_3d_brep_engine::CertifiedBooleanResult<SolidPatternPublication>, ValueError> {
-    if self.is_closed() { return Err(ownership_busy()); }
-    self.kernel().try_lock().map_err(|_| ownership_busy())?.plan_certified_boolean(a, b, first, operation)
+    self.with_open_kernel(|kernel| kernel.plan_certified_boolean(a, b, first, operation))
 }
 
 /// 🛢️ Stages the affine image of a live certified solid recipe if it remains exact.
 pub fn plan_certified_solid_transform(&self, source: &str, transform: semio_framework_3d_brep_engine::AnalyticTransform) -> Result<Option<semio_framework_3d_brep_engine::SolidPublication>,ValueError> {
-    if self.is_closed() { return Err(ownership_busy()); }
-    self.kernel().try_lock().map_err(|_| ownership_busy())?.plan_certified_solid_transform(source, transform)
+    self.with_open_kernel(|kernel| kernel.plan_certified_solid_transform(source, transform))
 }
 
 /// ✂️ Captures one certified box and plane for a retained section.
@@ -418,8 +411,7 @@ pub fn analytic_bounds_depth(&self, handle: &str) -> Result<usize, ValueError> {
 
 /// 🔳️ Stages a solid for the exact world bounds of one live analytic source.
 pub fn plan_analytic_bounds(&self, handle: &str) -> Result<semio_framework_3d_brep_engine::SolidPublication, ValueError> {
-    if self.is_closed() { return Err(ownership_busy()); }
-    self.kernel().try_lock().map_err(|_| ownership_busy())?.plan_analytic_bounds(handle)
+    self.with_open_kernel(|kernel| kernel.plan_analytic_bounds(handle))
 }
 
 /// 🎟️ Quotes the original certified solid lookup and arena read.
@@ -454,8 +446,7 @@ pub fn certified_box_bounds(&self, handle: &str) -> Result<[[f64; 3]; 2], ValueE
 
 /// 🪓️ Builds one native transaction for the bounded box arrangement.
 pub fn plan_compound_box_cut(&self, stock: [[f64; 3]; 2], tools: &[[[f64; 3]; 2]]) -> Result<SolidPublication, ValueError> {
-    if self.is_closed() { return Err(ownership_busy()); }
-    self.kernel().try_lock().map_err(|_| ownership_busy())?.plan_compound_box_cut(stock, tools)
+    self.with_open_kernel(|kernel| kernel.plan_compound_box_cut(stock, tools))
 }
 
 /// 📌️ Classifies a point in the live certified solid's world placement.
@@ -487,8 +478,7 @@ pub fn loft_depth(&self, handles: [&str; 2]) -> Result<usize, ValueError> {
 
 /// 🧱️ Stages a compatible two-profile exact Loft.
 pub fn plan_exact_loft(&self, handles: [&str; 2]) -> Result<semio_framework_3d_brep_engine::LoftPlan, ValueError> {
-    if self.is_closed() { return Err(ownership_busy()); }
-    self.kernel().try_lock().map_err(|_| ownership_busy())?.plan_exact_loft(handles)
+    self.with_open_kernel(|kernel| kernel.plan_exact_loft(handles))
 }
 
 /// 📏️ Quotes one funded check of corresponding Loft lines.
@@ -503,20 +493,18 @@ pub fn step_loft_draft(&self, handles: [&str; 2], draft: &mut semio_framework_3d
 }
 
 /// 🎟️ Quotes the face and line path before a straight sweep's original read.
-pub fn straight_sweep_depth(&self, profile: &str, path: &str) -> Result<usize, ValueError> {
-    self.with_original_geometry_query(|kernel| kernel.straight_sweep_depth(profile, path))
+pub fn straight_sweep_depth(&self, profile: &str, path: &str, guide: Option<&str>) -> Result<usize, ValueError> {
+    self.with_original_geometry_query(|kernel| kernel.straight_sweep_depth(profile, path, guide))
 }
 
 /// 🛤️ Stages an exact straight sweep with the certified solid topology cursors.
-pub fn plan_straight_sweep(&self, profile: &str, path: &str) -> Result<semio_framework_3d_brep_engine::PlanarExtrusion, ValueError> {
-    if self.is_closed() { return Err(ownership_busy()); }
-    self.kernel().try_lock().map_err(|_| ownership_busy())?.plan_straight_sweep(profile, path)
+pub fn plan_straight_sweep(&self, profile: &str, path: &str, guide: Option<&str>) -> Result<semio_framework_3d_brep_engine::PlanarExtrusion, ValueError> {
+    self.with_open_kernel(|kernel| kernel.plan_straight_sweep(profile, path, guide))
 }
 
 /// 📦️ Stages the closed convex hull through the exact original solid publisher.
 pub fn finish_point_hull(&self, draft: &mut semio_framework_3d_brep_engine::HullDraft) -> Result<SolidPublication, ValueError> {
-    if self.is_closed() { return Err(ownership_busy()); }
-    self.kernel().try_lock().map_err(|_| ownership_busy())?.finish_point_hull(draft)
+    self.with_open_kernel(|kernel| kernel.finish_point_hull(draft))
 }
 
 /// 🐚️ Captures a certified box and positive thickness in the original session.
@@ -536,14 +524,12 @@ pub fn add_shell_face(&self, draft: &mut semio_framework_3d_brep_engine::ShellDr
 
 /// 🪚️ Stages the exact closed boundary from the selected box opening sides.
 pub fn finish_shell(&self, draft: &semio_framework_3d_brep_engine::ShellDraft, handle: &str) -> Result<SolidPublication, ValueError> {
-    if self.is_closed() { return Err(ownership_busy()); }
-    self.kernel().try_lock().map_err(|_| ownership_busy())?.finish_shell(draft, handle)
+    self.with_open_kernel(|kernel| kernel.finish_shell(draft, handle))
 }
 
 /// ↔️ Stages a signed sharp box offset through the original solid publisher.
 pub fn plan_certified_solid_offset(&self, handle: &str, distance: f64) -> Result<semio_framework_3d_brep_engine::SolidPublication, ValueError> {
-    if self.is_closed() { return Err(ownership_busy()); }
-    self.kernel().try_lock().map_err(|_| ownership_busy())?.plan_certified_solid_offset(handle, distance)
+    self.with_open_kernel(|kernel| kernel.plan_certified_solid_offset(handle, distance))
 }
 
 /// 📍️ Reads an analytic point or tangent from the original session.
@@ -631,10 +617,8 @@ pub fn original_query_depth_demand(&self, handle: &str) -> Result<usize, ValueEr
     self.with_original_geometry_query(|kernel| kernel.tessellation_source_depth_demand(handle)).map(|depth| depth.max(1))
 }
 
-pub(super) fn with_original_geometry_query<T>(&self, query: impl FnOnce(&Brep) -> Result<T, ValueError>) -> Result<T, ValueError> {
-    if self.is_closed() { return Err(ownership_busy()); }
-    let kernel = self.kernel().try_lock().map_err(|_| ownership_busy())?;
-    query(&kernel)
+pub fn with_original_geometry_query<T>(&self, query: impl FnOnce(&Brep) -> Result<T, ValueError>) -> Result<T, ValueError> {
+    self.with_open_kernel(|kernel| query(kernel))
 }
 
 /// 💠️ Borrows live primitive provenance for an exact bounded volume when available.
@@ -663,8 +647,7 @@ pub fn original_center_of_mass(&self, handle: &str) -> Result<Vec3,ValueError> {
 
 /// 🧊️ Starts exact polygon-face integration from an original live solid.
 pub fn plan_planar_measure(&self, handle: &str, measure_area: bool) -> Result<semio_framework_3d_brep_engine::PlanarMeasureJob, ValueError> {
-    if self.is_closed() { return Err(ownership_busy()); }
-    self.kernel().try_lock().map_err(|_| ownership_busy())?.plan_planar_measure(handle,measure_area)
+    self.with_open_kernel(|kernel| kernel.plan_planar_measure(handle,measure_area))
 }
 
 /// ⚖️ Starts exact retained center-of-mass integration for a planar solid or compound.
@@ -686,8 +669,7 @@ pub fn planar_measure_demand(&self, handle: &str, job: &semio_framework_3d_brep_
 pub fn step_planar_measure(
     &self, handle: &str, job: &mut semio_framework_3d_brep_engine::PlanarMeasureJob, effect: &mut RetainedAllocationEffect<'_>,
 ) -> Result<(Option<f64>, RetainedCloneProgress), ValueError> {
-    if self.is_closed() { return Err(ownership_busy()); }
-    self.kernel().try_lock().map_err(|_| ownership_busy())?.step_planar_measure(handle, job, effect)
+    self.with_open_kernel(|kernel| kernel.step_planar_measure(handle, job, effect))
 }
 
 /// 📐️ Quotes the next original index growth or commit for a fixed analytic entity.
@@ -732,8 +714,7 @@ pub fn step_compound_publication(&self,plan:&mut CompoundPublication,live_key:&m
 
 /// 🎟️ Starts a private solid pattern against one live certified source.
 pub fn plan_solid_pattern(&self, source: &str, recipe: SolidPatternRecipe) -> Result<SolidPatternPublication, ValueError> {
-    if self.is_closed() { return Err(ownership_busy()); }
-    self.kernel().try_lock().map_err(|_| ownership_busy())?.plan_solid_pattern(source, recipe)
+    self.with_open_kernel(|kernel| kernel.plan_solid_pattern(source, recipe))
 }
 
 pub fn solid_pattern_preparation_demand(&self, plan: &SolidPatternPublication) -> Result<RetirementDemand, ValueError> {
@@ -741,8 +722,7 @@ pub fn solid_pattern_preparation_demand(&self, plan: &SolidPatternPublication) -
 }
 
 pub fn step_solid_pattern_preparation(&self, plan: &mut SolidPatternPublication, effect: &mut RetainedAllocationEffect<'_>) -> Result<RetainedCloneProgress, ValueError> {
-    if self.is_closed() { return Err(ownership_busy()); }
-    self.kernel().try_lock().map_err(|_| ownership_busy())?.step_solid_pattern_preparation(plan, effect)
+    self.with_open_kernel(|kernel| kernel.step_solid_pattern_preparation(plan, effect))
 }
 
 pub fn solid_pattern_publication_demand(&self, plan: &SolidPatternPublication, claim_staged: bool, copy: usize) -> Result<RetirementDemand, ValueError> {
@@ -763,8 +743,7 @@ pub fn close_solid_pattern(&self, plan: &mut SolidPatternPublication, effect: &m
 }
 
 pub fn plan_mesh_publication(&self, decoder: &mut MeshDecode) -> Result<MeshPublication, ValueError> {
-    if self.is_closed() { return Err(ownership_busy()); }
-    self.kernel().try_lock().map_err(|_| ownership_busy())?.plan_mesh_publication(decoder)
+    self.with_open_kernel(|kernel| kernel.plan_mesh_publication(decoder))
 }
 
 pub fn mesh_preparation_demand(&self, plan: &MeshPublication) -> Result<RetirementDemand, ValueError> {
@@ -772,8 +751,7 @@ pub fn mesh_preparation_demand(&self, plan: &MeshPublication) -> Result<Retireme
 }
 
 pub fn step_mesh_preparation(&self, plan: &mut MeshPublication, effect: &mut RetainedAllocationEffect<'_>) -> Result<RetainedCloneProgress, ValueError> {
-    if self.is_closed() { return Err(ownership_busy()); }
-    self.kernel().try_lock().map_err(|_| ownership_busy())?.step_mesh_preparation(plan, effect)
+    self.with_open_kernel(|kernel| kernel.step_mesh_preparation(plan, effect))
 }
 
 pub fn mesh_publication_demand(&self, plan: &MeshPublication, claim_staged: bool, copy: usize) -> Result<RetirementDemand, ValueError> {
@@ -795,49 +773,41 @@ pub fn close_mesh_publication(&self, plan: &mut MeshPublication, effect: &mut Re
 
 /// 🗃️ Stages an exact orthogonal cell arrangement.
 pub fn plan_orthogonal_cells(&self, axes: [[f64;4];3], cells: u32) -> Result<SolidPublication, ValueError> {
-    if self.is_closed() { return Err(ownership_busy()); }
-    self.kernel().try_lock().map_err(|_| ownership_busy())?.plan_orthogonal_cells(axes,cells)
+    self.with_open_kernel(|kernel| kernel.plan_orthogonal_cells(axes,cells))
 }
 /// 📥️ Stages one exact solid boundary from a funded exchange cursor.
 pub fn plan_exchange_boundary(&self, boundary: semio_framework_3d_brep_engine::SolidExchangeBoundary) -> Result<SolidPublication, ValueError> {
-    if self.is_closed() { return Err(ownership_busy()); }
-    self.kernel().try_lock().map_err(|_| ownership_busy())?.plan_exchange_boundary(boundary)
+    self.with_open_kernel(|kernel| kernel.plan_exchange_boundary(boundary))
 }
 
 /// 〰️ Plans exact NURBS storage for a certified original cuboid.
 pub fn plan_nurbs_cuboid(&self, source: &str) -> Result<SolidPublication, ValueError> {
-    if self.is_closed() { return Err(ownership_busy()); }
-    self.kernel().try_lock().map_err(|_| ownership_busy())?.plan_nurbs_cuboid(source)
+    self.with_open_kernel(|kernel| kernel.plan_nurbs_cuboid(source))
 }
 
 /// 📥️ Opens an independent spline cuboid from its certified exchange geometry.
 pub fn plan_nurbs_cuboid_primitive(&self, primitive: SolidPrimitive) -> Result<SolidPublication, ValueError> {
-    if self.is_closed() { return Err(ownership_busy()); }
-    self.kernel().try_lock().map_err(|_| ownership_busy())?.plan_nurbs_cuboid_primitive(primitive)
+    self.with_open_kernel(|kernel| kernel.plan_nurbs_cuboid_primitive(primitive))
 }
 
 /// 📦️ Plans an unpublished original analytic solid without scanning session handles.
 pub fn plan_solid_primitive(&self, primitive: SolidPrimitive) -> Result<SolidPublication, ValueError> {
-    if self.is_closed() { return Err(ownership_busy()); }
-    self.kernel().try_lock().map_err(|_| ownership_busy())?.plan_solid_primitive(primitive)
+    self.with_open_kernel(|kernel| kernel.plan_solid_primitive(primitive))
 }
 
 /// 🧱️ Starts an original solid cursor from a published circular profile and axial direction.
 pub fn plan_circular_extrusion(&self, handle: &str, vector: Vec3) -> Result<Option<SolidPublication>, ValueError> {
-    if self.is_closed() { return Err(ownership_busy()); }
-    self.kernel().try_lock().map_err(|_| ownership_busy())?.plan_circular_extrusion(handle, vector)
+    self.with_open_kernel(|kernel| kernel.plan_circular_extrusion(handle, vector))
 }
 
 /// 📦️ Admits exact original extrusion of one horizontal rectangular profile.
 pub fn plan_rectangular_extrusion(&self, handle: &str, vector: Vec3) -> Result<Option<SolidPublication>, ValueError> {
-    if self.is_closed() { return Err(ownership_busy()); }
-    self.kernel().try_lock().map_err(|_| ownership_busy())?.plan_rectangular_extrusion(handle, vector)
+    self.with_open_kernel(|kernel| kernel.plan_rectangular_extrusion(handle, vector))
 }
 
 /// 🎟️ Starts extraction of one original planar face or closed line wire.
 pub fn plan_prism(&self, handle: &str, vector: Vec3) -> Result<Option<PrismDraft>, ValueError> {
-    if self.is_closed() { return Err(ownership_busy()); }
-    self.kernel().try_lock().map_err(|_| ownership_busy())?.plan_prism(handle, vector)
+    self.with_open_kernel(|kernel| kernel.plan_prism(handle, vector))
 }
 
 /// 📏️ Quotes one original prism source turn or transfer.
@@ -852,15 +822,13 @@ pub fn step_prism_draft(&self, source: &str, draft: &mut PrismDraft, effect: &mu
 
 /// 📏️ Quotes the live operand lookups for retained planar sweeps.
 pub fn planar_face_boundary_depth(&self, handle: &str) -> Result<usize, ValueError> {
-    if self.is_closed() { return Err(ownership_busy()); }
-    self.kernel().try_lock().map_err(|_| ownership_busy())?.planar_face_boundary_depth(handle)
+    self.with_open_kernel(|kernel| kernel.planar_face_boundary_depth(handle))
 }
 
 /// 🔄️ Plans the original native torus from a meridional circular face.
 pub fn plan_circular_revolution(&self, handle: &str, origin: Vec3, direction: Vec3, angle: f64)
     -> Result<SolidPublication, ValueError> {
-    if self.is_closed() { return Err(ownership_busy()); }
-    self.kernel().try_lock().map_err(|_| ownership_busy())?.plan_circular_revolution(handle, origin, direction, angle)
+    self.with_open_kernel(|kernel| kernel.plan_circular_revolution(handle, origin, direction, angle))
 }
 
 /// 🌀️ Starts the exact closed circular specialization of a helical sweep.
@@ -871,8 +839,7 @@ pub fn plan_closed_helical_sweep(&self, handle:&str, origin:Vec3, direction:Vec3
 
 /// 🧱️ Starts the exact cylinder or prism for the original planar face thickness.
 pub fn plan_planar_thickening(&self, handle: &str, thickness: f64) -> Result<semio_framework_3d_brep_engine::PlanarExtrusion, ValueError> {
-    if self.is_closed() { return Err(ownership_busy()); }
-    self.kernel().try_lock().map_err(|_| ownership_busy())?.plan_planar_thickening(handle, thickness)
+    self.with_open_kernel(|kernel| kernel.plan_planar_thickening(handle, thickness))
 }
 
 /// 🧮️ Quotes the next arena action or transfer of the completed solid.
@@ -883,8 +850,7 @@ pub fn solid_primitive_demand(&self, solid: &SolidPublication, claim_staged: boo
 
 /// 🏗️ Advances the unpublished solid by one original topology action.
 pub fn step_solid_primitive_topology(&self, solid: &mut SolidPublication, effect: &mut RetainedAllocationEffect<'_>) -> Result<RetainedCloneProgress, ValueError> {
-    if self.is_closed() { return Err(ownership_busy()); }
-    self.kernel().try_lock().map_err(|_| ownership_busy())?.step_solid_primitive_topology(solid, effect)
+    self.with_open_kernel(|kernel| kernel.step_solid_primitive_topology(solid, effect))
 }
 
 /// 🪪️ Publishes the completed original analytic solid and its authority claim.
@@ -911,14 +877,12 @@ pub fn close_solid_primitive(&self, solid: &mut SolidPublication, effect: &mut R
 
 /// 🪷️ Plans original conic face topology from a complete planar boundary.
 pub fn plan_conic_face(&self, handle: &str, xy_only: bool) -> Result<ConicFacePublication, ValueError> {
-    if self.is_closed() { return Err(ownership_busy()); }
-    self.kernel().try_lock().map_err(|_| ownership_busy())?.plan_conic_face(handle, xy_only)
+    self.with_open_kernel(|kernel| kernel.plan_conic_face(handle, xy_only))
 }
 
 /// ↔️ Plans an original conic face offset through the native publisher.
 pub fn plan_conic_face_offset(&self, handle: &str, distance: f64) -> Result<ConicFacePublication, ValueError> {
-    if self.is_closed() { return Err(ownership_busy()); }
-    self.kernel().try_lock().map_err(|_| ownership_busy())?.plan_conic_face_offset(handle, distance)
+    self.with_open_kernel(|kernel| kernel.plan_conic_face_offset(handle, distance))
 }
 
 /// 📏️ Quotes the next funded topology or index action for a conic face.
@@ -994,14 +958,17 @@ pub fn original_curve_plane_contacts(&self,curve:&str,surface:&str,tolerance:f64
 
 /// 🌐️ Plans the exact continuous intersection of two original analytic supports.
 pub fn plan_original_surface_intersection(&self, a: &str, b: &str, tolerance: f64) -> Result<AnalyticPublication, ValueError> {
-    if self.is_closed() { return Err(ownership_busy()); }
-    self.kernel().try_lock().map_err(|_| ownership_busy())?.plan_original_surface_intersection(a, b, tolerance)
+    self.with_open_kernel(|kernel| kernel.plan_original_surface_intersection(a, b, tolerance))
 }
 
 /// 🪚️ Plans one exact finishing prism from a selected box member.
 pub fn plan_box_finish(&self, shape: &str, member: &[&str], finish: semio_framework_3d_brep_engine::BoxFinish) -> Result<SolidPublication, ValueError> {
-    if self.is_closed() { return Err(ownership_busy()); }
-    self.kernel().try_lock().map_err(|_| ownership_busy())?.plan_box_finish(shape,member,finish)
+    self.with_open_kernel(|kernel| kernel.plan_box_finish(shape,member,finish))
+}
+
+/// 🧹️ Admits restoration of the stock from one complete certified fillet.
+pub fn plan_defeature(&self, shape: &str, faces: &[&str]) -> Result<SolidPublication, ValueError> {
+    self.with_open_kernel(|kernel| kernel.plan_defeature(shape, faces))
 }
 
 /// 📏️ Quotes the borrowed box and member paths.
@@ -1086,8 +1053,7 @@ pub fn step_topology_alias_publication(&self, alias: &TopologyAlias, live_key: &
 
 /// 📍️ Plans a native vertex in this geometry authority.
 pub fn plan_vertex_publication(&self, point: Vec3) -> Result<VertexPublication, ValueError> {
-    if self.is_closed() { return Err(ownership_busy()); }
-    self.kernel().try_lock().map_err(|_| ownership_busy())?.plan_vertex_publication(point)
+    self.with_open_kernel(|kernel| kernel.plan_vertex_publication(point))
 }
 
 /// 📐️ Quotes the next vertex topology or publication step.
@@ -1125,8 +1091,7 @@ pub fn close_vertex(&self, vertex: &mut VertexPublication, effect: &mut Retained
 
 /// 🛤️ Plans exact line topology from one original polygonal source.
 pub fn plan_polygon_wire(&self, recipe: PolygonWireRecipe) -> Result<PolygonWirePublication, ValueError> {
-    if self.is_closed() { return Err(ownership_busy()); }
-    self.kernel().try_lock().map_err(|_| ownership_busy())?.plan_polygon_wire(recipe)
+    self.with_open_kernel(|kernel| kernel.plan_polygon_wire(recipe))
 }
 
 /// 📐️ Quotes the next wire topology or index event.
@@ -1164,26 +1129,22 @@ pub fn close_polygon_wire(&self, wire: &mut PolygonWirePublication, effect: &mut
 
 /// 🎟️ Plans a polygon face from a complete bound original wire.
 pub fn plan_polygon_face(&self, source: &str, xy_only: bool) -> Result<Option<PolygonFacePublication>, ValueError> {
-    if self.is_closed() { return Err(ownership_busy()); }
-    self.kernel().try_lock().map_err(|_| ownership_busy())?.plan_polygon_face(source, xy_only)
+    self.with_open_kernel(|kernel| kernel.plan_polygon_face(source, xy_only))
 }
 
 /// 🔒️ Admits a planar point-list face with a private closed polygon boundary.
 pub fn plan_polygon_face_points(&self, vertices: usize) -> Result<PolygonFacePublication, ValueError> {
-    if self.is_closed() { return Err(ownership_busy()); }
-    self.kernel().try_lock().map_err(|_| ownership_busy())?.plan_polygon_face_points(vertices)
+    self.with_open_kernel(|kernel| kernel.plan_polygon_face_points(vertices))
 }
 
 /// ↔️ Admits an original polygon offset under the session authority.
 pub fn plan_polygon_face_offset(&self, source: &str, distance: f64) -> Result<Option<PolygonFacePublication>, ValueError> {
-    if self.is_closed() { return Err(ownership_busy()); }
-    self.kernel().try_lock().map_err(|_| ownership_busy())?.plan_polygon_face_offset(source, distance)
+    self.with_open_kernel(|kernel| kernel.plan_polygon_face_offset(source, distance))
 }
 
 /// 🔁️ Admits a retained affine image of the original planar line ring.
 pub fn plan_polygon_face_transform(&self, source: &str, transform: semio_framework_3d_brep_engine::AnalyticTransform) -> Result<Option<PolygonFacePublication>, ValueError> {
-    if self.is_closed() { return Err(ownership_busy()); }
-    self.kernel().try_lock().map_err(|_| ownership_busy())?.plan_polygon_face_transform(source, transform)
+    self.with_open_kernel(|kernel| kernel.plan_polygon_face_transform(source, transform))
 }
 
 /// 📐️ Quotes the next polygon face validation, topology or index turn.
@@ -1292,8 +1253,7 @@ fn step_geometry_publication(
 
 /// 🪓️ Admits two unpublished solids in signed plane order.
 pub fn plan_plane_split(&self, source: &str, origin: [f64; 3], normal: [f64; 3]) -> Result<[SolidPublication; 2], ValueError> {
-    if self.is_closed() { return Err(ownership_busy()); }
-    self.kernel().try_lock().map_err(|_| ownership_busy())?.plan_plane_split(source, origin, normal)
+    self.with_open_kernel(|kernel| kernel.plan_plane_split(source, origin, normal))
 }
 
 pub fn solid_pair_demand(&self, pair: &[SolidPublication; 2], staged: [bool; 2], copy: usize) -> Result<RetirementDemand, ValueError> {
@@ -1529,13 +1489,15 @@ pub fn tessellation_progress(&self,handle:&str,tolerance:f64)->Option<(usize,usi
 }
 fn with_cached_mesh_at_or_finer<R>(&self, handle: &str, tolerance: f64, read: impl FnOnce(&semio_framework::MeshData) -> R) -> Option<R> {
     if self.is_closed() { return None; }
+    let kernel = self.kernel().try_lock().ok()?;
+    let revision = kernel.preview_validation_revision();
     let cache = self.mesh_cache().try_lock().ok()?;
     if let Some(exact) = cache.iter().find(|(key,_)|key.0==handle&&key.1==tolerance.to_bits()).map(|(_,mesh)|mesh) {
-        if exact.valid {return Some(read(&exact.mesh));}
+        if exact.valid && exact.revision == revision {return Some(read(&exact.mesh));}
     }
     let mut best: Option<(f64, &semio_framework::MeshData)> = None;
     for ((cached_handle,bits),cached) in cache.iter() {
-        if !cached.valid {continue;}
+        if !cached.valid || cached.revision != revision {continue;}
         let mesh=&cached.mesh;
         if cached_handle != handle {
             continue;
@@ -1589,7 +1551,7 @@ pub(super) fn step_tessellation_row(&self,guard:&Brep,key:&TessellationJobKey,re
             let Some((transfer,_report))=retained.job.take_mesh() else {return TessellationStepOutcome::Failed {message:"finished tessellation job produced no mesh".into()};};
             retained.output=Some(transfer);
             let mesh=match semio_framework_3d_brep_engine::mesh_data_from_mesh_transfer(retained.output.as_ref().unwrap()) {Ok(mesh)=>mesh,Err(error)=>return TessellationStepOutcome::Failed {message:error.to_string()}};
-            if let Ok(mut cache)=self.mesh_cache().try_lock() {retained.previous_mesh=cache.insert((key.0.clone(),key.1),CachedMesh {mesh:mesh.clone(),valid:true});}
+            if let Ok(mut cache)=self.mesh_cache().try_lock() {retained.previous_mesh=cache.insert((key.0.clone(),key.1),CachedMesh {mesh:mesh.clone(),valid:true,revision:guard.preview_validation_revision()});}
             TessellationStepOutcome::Ready { mesh, units_total:progress.units_total.saturating_add(validation_units).saturating_add(retained.source_units),faces_total:progress.faces_total }
         }
     }

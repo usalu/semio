@@ -14,6 +14,7 @@ pub(crate) const MAXIMUM:u64=1<<20;
 pub(crate) type Call<'t,F>=dyn for<'r,'e,'a> FnMut(&'e mut RetainedAllocationEffect<'a>,OriginalEffectReply<'r,RetainedCloneStep,F>,bool)->Result<OriginalEffectReplyComplete<'r,RetainedCloneStep,F>,ValueError>+'t;
 thread_local!{static BANK:std::cell::RefCell<EffectBank>=std::cell::RefCell::new(driver::bank());}
 pub(crate) fn with_bank<R>(run:impl FnOnce(&mut EffectBank)->R)->R{BANK.with(|bank|run(&mut bank.borrow_mut()))}
+pub(crate) fn fresh_bank(){BANK.with(|bank|*bank.borrow_mut()=driver::bank())}
 pub(crate) fn source<T:RetireOwned+Sync+'static>(value:T)->RetainedCloneSource<T>{with_bank(|bank|driver::admit(bank,value))}
 pub(crate) fn close_source<T:RetireOwned+Sync+'static>(value:RetainedCloneSource<T>){with_bank(|bank|driver::close_source(value,bank))}
 pub(crate) fn drain<T:RetireOwned>(value:T){with_bank(|bank|driver::retire(value,bank))}
@@ -44,6 +45,7 @@ pub(crate) fn close_projection<T:SnapshotProjection>(mut field:ProjectionField<T
 fn receive<I:RetireOwned+Sync+'static>(input:impl Fn()->I,expected:&serde_json::Value)where FemMaterial:NativeReceive<I>{
  let mut finished=false;
  for cut in 0..=turns::<FemMaterial,I>(&input)+1{
+  fresh_bank();
   let original=source(input());let mut receiver=<FemMaterial as NativeReceive<I>>::receiver();
   with_bank(|bank|driver::none(driver::receive_cut(&mut receiver,original.borrow(),bank,BODY,Some(cut))).unwrap());
   if receiver.output_ready(){
@@ -69,7 +71,7 @@ fn native_material_refuses_invalid_parts_without_dropping_partial_fields(){
  let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let mut refused=0;
  for case in law["refused"].as_array().unwrap().iter().filter(|case|case["dimension"].as_u64()==Some(NATIVE_MATERIAL_DIMENSION as u64)){
   let original=source(DslValue::from(&case["row"]));let mut receiver=<FemMaterial as NativeReceive<DslValue>>::receiver();
-  assert!(with_bank(|bank|driver::receive_cut(&mut receiver,original.borrow(),bank,BODY,None)).is_err());assert!(!receiver.output_ready());
+  match with_bank(|bank|driver::receive_cut(&mut receiver,original.borrow(),bank,BODY,None)){Err(_)=>{}Ok(Some(material))=>{assert!(material.validate().is_err(),"refusable row validated: {}",case["row"]);drain(material);}Ok(None)=>panic!("uncut receive published nothing")}assert!(!receiver.output_ready());
   assert_eq!(original.borrow().get(),&DslValue::from(&case["row"]));
   with_bank(|bank|driver::close(&mut receiver,bank,BODY));assert!(receiver.terminal_is_empty());drop(receiver);close_source(original);refused+=1;
  }assert!(refused>0);

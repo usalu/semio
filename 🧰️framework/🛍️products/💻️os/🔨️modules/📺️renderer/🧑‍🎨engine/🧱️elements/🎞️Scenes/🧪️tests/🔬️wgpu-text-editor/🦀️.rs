@@ -1,7 +1,7 @@
 use semio_renderer_wgpu_contracts::{FrameworkWidgetContext, framework_widget_context};
 use semio_renderer_wgpu_scene_state::text_editor_ui;
 use std::collections::HashMap;
-use super::{cursor_from_click, identifier_prefix_start, line_col_at, multi_span_replace, render_text_editor_overlays, text_editor_cancel_rename, text_editor_close_completions, text_editor_completions, text_editor_completions_open, text_editor_line_range, text_editor_local_menu_action, text_editor_move_completion, text_editor_open_completions, text_editor_popup_key, text_editor_popup_pointer, text_editor_queue_menu_action, text_editor_rename_active, text_editor_rename_info, text_editor_start_rename};
+use super::{cursor_from_click, identifier_prefix_start, line_col_at, multi_span_replace, render_text_editor_overlays, text_editor_cancel_rename, text_editor_close_completions, text_editor_diagnostic_lines, text_editor_completions, text_editor_completions_open, text_editor_line_range, text_editor_local_menu_action, text_editor_move_completion, text_editor_open_completions, text_editor_popup_key, text_editor_popup_pointer, text_editor_queue_menu_action, text_editor_rename_active, text_editor_rename_info, text_editor_start_rename};
 use semio_ui_declaration::layout::ActionDescriptor;
 use semio_ui_theme::geometry::Rect;
 use semio_ui_declaration::ui::{SurfaceKind, UiComponentSceneNode};
@@ -454,3 +454,30 @@ fn the_overlay_pass_draws_nothing_when_no_popup_is_open() {
     assert!(fixture.draw.layers.iter().all(|layer| layer.ui_instances.is_empty() && layer.vector_vertices.is_empty()));
 }
 //#endregion PopupChromePaintTests
+
+//#region FormatAndDiagnostics
+/// 🧹️ `Ctrl/Cmd+Shift+F` dispatches `formatDocument` with empty arguments (React `:357`); without Shift the key is a buffer key.
+#[test]
+fn accelerator_shift_f_dispatches_format_document_and_plain_f_does_not() {
+    let scene = text_editor_scene("editor.format.key", "a", None, None);
+    let mut input = semio_ui_wgpu_input::InputState::<ActionDescriptor>::default();
+    let chord = semio_ui_wgpu_input::PointerModifiers { meta: true, shift: true, ..Default::default() };
+    assert_eq!(text_editor_popup_key(&scene, &KeyAction::Char("F".into()), &chord, &mut input), Ok(true));
+    let actions = drain_actions(&mut input);
+    assert_eq!(actions.len(), 1);
+    assert_eq!(actions[0].action, "formatDocument");
+    let accelerator = semio_ui_wgpu_input::PointerModifiers { ctrl: true, ..Default::default() };
+    assert_eq!(text_editor_popup_key(&scene, &KeyAction::Char("f".into()), &accelerator, &mut input), Ok(false));
+    assert!(drain_actions(&mut input).is_empty());
+}
+
+/// 🩺️ The footer lists at most four diagnostics, severity-prefixed when present, in scene order.
+#[test]
+fn diagnostics_footer_lists_four_rows_with_optional_severity() {
+    let mut scene = text_editor_scene("editor.diag.lines", "x", None, None);
+    scene.text_editor.as_mut().unwrap().diagnostics_json = Some(r#"[{"start":0,"end":1,"severity":"error","message":"bad"},{"start":0,"end":1,"message":"plain"},{"start":0,"end":1,"message":"c"},{"start":0,"end":1,"message":"d"},{"start":0,"end":1,"message":"e"}]"#.into());
+    assert_eq!(text_editor_diagnostic_lines(scene.text_editor.as_ref().unwrap()), vec!["[error] bad", "plain", "c", "d"]);
+    scene.text_editor.as_mut().unwrap().diagnostics_json = Some("not json".into());
+    assert!(text_editor_diagnostic_lines(scene.text_editor.as_ref().unwrap()).is_empty());
+}
+//#endregion FormatAndDiagnostics

@@ -69,13 +69,13 @@ pub(super) fn cross2(o: (f64, f64), a: (f64, f64), b: (f64, f64)) -> f64 {
     (a.0 - o.0) * (b.1 - o.1) - (a.1 - o.1) * (b.0 - o.0)
 }
 
+pub(super) const EAR_EPSILON: f64 = 1e-14;
+
 pub(super) fn point_in_triangle(p: (f64, f64), a: (f64, f64), b: (f64, f64), c: (f64, f64)) -> bool {
     let d1 = cross2(a, b, p);
     let d2 = cross2(b, c, p);
     let d3 = cross2(c, a, p);
-    let has_neg = d1 < 0.0 || d2 < 0.0 || d3 < 0.0;
-    let has_pos = d1 > 0.0 || d2 > 0.0 || d3 > 0.0;
-    !(has_neg && has_pos)
+    d1.min(d2).min(d3) >= -EAR_EPSILON || d1.max(d2).max(d3) <= EAR_EPSILON
 }
 
 /// 🗃️ Triangulates a planar polygon that may contain holes. Holes are bridged into the outer loop with a
@@ -132,17 +132,14 @@ pub fn triangulate_polygon(positions: &[Vec3]) -> Vec<[usize; 3]> {
     if n == 3 {
         return vec![[0, 1, 2]];
     }
-    let fan = |from: usize| -> Vec<[usize; 3]> {
-        let _ = from;
-        (1..n - 1).map(|i| [0, i, i + 1]).collect()
-    };
+    let fan = || (1..n - 1).map(|i| [0, i, i + 1]).collect();
     let mut points_f64: Vec<Vec3f64> = Vec::with_capacity(positions.len());
     for p in positions {
         points_f64.push((p.x() as f64, p.y() as f64, p.z() as f64));
     }
     let normal = newell_normal(positions);
     if normal.length() < 1e-8 {
-        return fan(0);
+        return fan();
     }
     let normal_f64 = normalize3((normal.x() as f64, normal.y() as f64, normal.z() as f64));
     let (axis_u, axis_v) = plane_basis(normal_f64);
@@ -153,7 +150,7 @@ pub fn triangulate_polygon(positions: &[Vec3]) -> Vec<[usize; 3]> {
         projected.push((dot3(local, axis_u), dot3(local, axis_v)));
     }
     let scale = projected.iter().fold(0.0f64, |scale, &(x, y)| scale.max(x.abs()).max(y.abs()));
-    if scale == 0.0 { return fan(0); }
+    if scale == 0.0 { return fan(); }
     for point in &mut projected { point.0 /= scale; point.1 /= scale; }
     let mut signed_area2 = 0.0f64;
     for i in 0..n {
@@ -162,7 +159,7 @@ pub fn triangulate_polygon(positions: &[Vec3]) -> Vec<[usize; 3]> {
         signed_area2 += a.0 * b.1 - b.0 * a.1;
     }
     if signed_area2.abs() < 1e-14 {
-        return fan(0);
+        return fan();
     }
     let ccw = signed_area2 > 0.0;
 
@@ -188,7 +185,7 @@ pub fn triangulate_polygon(positions: &[Vec3]) -> Vec<[usize; 3]> {
             let b = projected[curr];
             let c = projected[next];
             let cross = cross2(a, b, c);
-            let is_convex = if ccw { cross > 1e-14 } else { cross < -1e-14 };
+            let is_convex = if ccw { cross > EAR_EPSILON } else { cross < -EAR_EPSILON };
             if !is_convex {
                 continue;
             }

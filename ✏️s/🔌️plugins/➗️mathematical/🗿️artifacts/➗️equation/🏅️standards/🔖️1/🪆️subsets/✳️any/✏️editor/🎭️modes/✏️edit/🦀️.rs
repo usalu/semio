@@ -2,7 +2,7 @@
 //! geometry).
 
 use crate::editor::equation::modes::edit::windows::{geometry, graph};
-use semio_plugin::create_default_layout;
+use semio_plugin::{create_default_layout, Axis};
 use semio_ui_locale::LocalizedLabel;
 use semio_plugin::ModeDefinition;
 use semio_plugin::WindowLayout;
@@ -18,7 +18,7 @@ pub fn definition() -> ModeDefinition {
 /// 🪟️ The app's default window layout — this mode is the app's `default_mode_id`, so its layout IS the
 /// app-level `default_layout`.
 pub fn layout() -> WindowLayout {
-    create_default_layout(&[graph::MATH_PLAY_WINDOW_GRAPH.into(), geometry::MATH_PLAY_WINDOW_GEOMETRY.into()], "row", Some(&[60.0, 40.0]), Some(&["Graph".into(), "Geometry".into()]))
+    create_default_layout(&[graph::MATH_PLAY_WINDOW_GRAPH.into(), geometry::MATH_PLAY_WINDOW_GEOMETRY.into()], Axis::Horizontal, Some(&[0.6, 0.4]), Some(&["Graph".into(), "Geometry".into()]))
 }
 //#endregion 🔖️Definition
 

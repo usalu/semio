@@ -188,9 +188,9 @@ struct MountedProductReplayRefusalSlot {
 }
 
 pub struct MountedProductReplayRefusalRegistry {
-    pub(super) slots: Box<[MountedProductReplayRefusalSlot; JOB_PROGRESS_ACTIVE_CAPACITY]>,
+    pub slots: Box<[MountedProductReplayRefusalSlot; JOB_PROGRESS_ACTIVE_CAPACITY]>,
     pub(super) abandoned: Box<[Option<RetainedRefusedProductReplay>; JOB_PROGRESS_ACTIVE_CAPACITY]>,
-    pub(super) cursor: usize,
+    pub cursor: usize,
     pub(super) abandoned_cursor: usize,
 }
 
@@ -228,7 +228,7 @@ impl MountedProductReplayRefusalRegistry {
         true
     }
 
-    pub(super) fn publish(&mut self, token: MountedProductReplayRefusalToken, owner: RetainedRefusedProductReplay) {
+    pub fn publish(&mut self, token: MountedProductReplayRefusalToken, owner: RetainedRefusedProductReplay) {
         if let Some(slot) = self.slots.get_mut(token.index) {
             if slot.generation == token.generation && slot.instance == Some(owner.instance) && slot.reserved && slot.owner.is_none() {
                 slot.owner = Some(owner);

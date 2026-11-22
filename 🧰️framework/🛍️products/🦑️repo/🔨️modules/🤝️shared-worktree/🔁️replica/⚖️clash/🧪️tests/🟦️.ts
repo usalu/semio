@@ -1,13 +1,13 @@
 import {afterAll,expect,test} from "bun:test";
 import Ajv from "ajv";
-import {existsSync,lstatSync,mkdirSync,readdirSync,readFileSync,readlinkSync,renameSync,rmSync,symlinkSync,writeFileSync} from "node:fs";
+import {existsSync,lstatSync,mkdirSync,readdirSync,readFileSync,readlinkSync,renameSync,rmSync,symlinkSync,utimesSync,writeFileSync} from "node:fs";
 import {dirname,join} from "node:path";
 import {testPythonV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};
 import {clashKeyV1,clashV1,retiredV1,staleRepublishV1} from "../🟦️.ts";
 import {formatHlcV1} from "../../../📒️journal/🟦️.ts";
-import {closeReplicaV1,followOnceV1,openReplicaV1,publishOnceV1,type ReplicaEventV1} from "../../🟦️.ts";
+import {closeReplicaV1,conflictWinnerV1,followOnceV1,openReplicaV1,publishOnceV1,staleEditV1,type ReplicaEventV1} from "../../🟦️.ts";
 import {buildFleetV1,checkFleetV1,disposeFleetV1,roundV1,settleV1,type ChaosFleetV1,type ChaosMachineV1} from "../../🧪️tests/🌪️harness.ts";
 
 const posixTest=process.platform==="win32"||Bun.spawnSync(["git","--version"]).exitCode!==0?test.skip:test;
@@ -48,6 +48,16 @@ test("the structural conflict rule matches the vectors and the independent Pytho
  if(python===undefined)return;
  const result=Bun.spawnSync([python,"-I",oracle,"vectors",fixturePath],{stdout:"pipe",stderr:"pipe"});
  expect(result.exitCode,result.stderr.toString()).toBe(0);
+});
+
+test("a local edit wins a conflict only when it is simultaneous with the remote event",()=>{
+ const remote=formatHlcV1({ms:1_000_000,counter:0},"g1-m00");
+ expect(conflictWinnerV1(1_000_500,remote)).toBe("local");
+ expect(conflictWinnerV1(999_000,remote)).toBe("remote");
+ expect(conflictWinnerV1(undefined,remote)).toBe("remote");
+ expect(conflictWinnerV1(1_000_000+8*3_600_000,remote)).toBe("remote");
+ expect(staleEditV1(1_000_000+8*3_600_000,remote)).toBe(true);
+ expect(staleEditV1(1_000_500,remote)).toBe(false);
 });
 
 test("the rule is order independent",()=>{
@@ -281,3 +291,37 @@ posixTest("D2 across case: an entry below a directory spelled in another case re
  for(const who of [m0,m1,m2]){expect(names(who).filter(name=>name.toLowerCase()==="dir3")).toHaveLength(1);expect(text(who,"Dir3/x.txt")).toBe("below\n");}
  expect(lostFiles(m0).some(file=>file.endsWith("/dir3"))).toBe(true);
 },180_000);
+
+posixTest("the 02:13 incident: an edit written on a stale view never replaces newer fleet content and is kept in lost",async()=>{
+ const fleet=await fleetOf(),[m0,m1,m2]=fleet.machines as [ChaosMachineV1,ChaosMachineV1,ChaosMachineV1];
+ put(m0,"stale-base.txt","version one\n");
+ await sync(fleet);
+ put(m0,"stale-base.txt","version two, written on top of one\n");
+ await publish(m0);
+ for(const who of [m2]){await closeReplicaV1(who.replica!);who.options={...who.options,concurrentEditMilliseconds:200};who.replica=await openReplicaV1(who.options,event=>who.events.push(event));}
+ await Bun.sleep(400);
+ const later=new Date(Date.now()+3_600_000);
+ put(m2,"stale-base.txt","version one plus a late edit\n");
+ utimesSync(at(m2,"stale-base.txt"),later,later);
+ const held=await publishOnceV1(m2.replica!);
+ expect(held.published).toBe(0);
+ expect(m2.replica!.queue.has("stale-base.txt")).toBe(true);
+ await sync(fleet);
+ for(const who of [m0,m1,m2])expect(text(who,"stale-base.txt")).toBe("version two, written on top of one\n");
+ expect(lostFiles(m2).some(file=>file.endsWith("stale-base.txt"))).toBe(true);
+ expect(events(fleet,"stale-base").length).toBeGreaterThan(0);
+},240_000);
+
+posixTest("a simultaneous edit of the same base still resolves by modification time and keeps the other in lost",async()=>{
+ const fleet=await fleetOf(),[m0,m1,m2]=fleet.machines as [ChaosMachineV1,ChaosMachineV1,ChaosMachineV1];
+ put(m0,"both.txt","start\n");
+ await sync(fleet);
+ put(m0,"both.txt","from zero\n");
+ await publish(m0);
+ put(m2,"both.txt","from two\n");
+ await publish(m2);
+ await sync(fleet);
+ const winner=text(m0,"both.txt");
+ expect(["from zero\n","from two\n"]).toContain(winner);
+ for(const who of [m1,m2])expect(text(who,"both.txt")).toBe(winner);
+},240_000);

@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Prepared natural PDF source",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "kind",
+    "operationId",
+    "generation",
+    "lifetime",
+    "descriptor",
+    "extent"
+  ],
+  "properties": {
+    "kind": {
+      "const": 241
+    },
+    "operationId": {
+      "$ref": "#/$defs/nonzeroU64"
+    },
+    "generation": {
+      "$ref": "#/$defs/nonzeroU64"
+    },
+    "lifetime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "activationGeneration",
+        "instanceId",
+        "guestLifetime"
+      ],
+      "properties": {
+        "activationGeneration": {
+          "$ref": "#/$defs/nonzeroU64"
+        },
+        "instanceId": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4294967295
+        },
+        "guestLifetime": {
+          "$ref": "#/$defs/nonzeroU64"
+        }
+      }
+    },
+    "descriptor": {
+      "const": {
+        "portId": "file",
+        "formatKind": "s.stdio.pdf@1.7",
+        "extension": "pdf",
+        "mediaType": "application/pdf",
+        "binary": true
+      }
+    },
+    "extent": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 536870912
+    }
+  },
+  "$defs": {
+    "nonzeroU64": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{16}$",
+      "not": {
+        "const": "0000000000000000"
+      }
+    }
+  }
+}

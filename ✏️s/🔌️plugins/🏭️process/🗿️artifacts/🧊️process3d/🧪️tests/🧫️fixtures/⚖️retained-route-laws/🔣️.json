@@ -1,13 +1,13 @@
 {
   "schema": "semio.process3d.retained-route-laws.v1",
   "source": "🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
-  "routeCount": 32,
+  "routeCount": 34,
   "modules": [
     "🧵️retained-commands/🦀️.rs",
     "📬️store-preparation/🦀️.rs",
     "🪟️editor-impl/🦀️.rs"
   ],
-  "migratedCount": 32,
+  "migratedCount": 34,
   "modelImport": {
     "source": "🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧱️brep-converters/🦀️.rs",
     "rawFileBytes": 24576,
@@ -76,6 +76,7 @@
         "removeWorkshopMachine",
         "updateWorkshopMachine",
         "moveStep",
+        "dropStep",
         "updateStep",
         "setStepEnabled",
         "patchInspector"
@@ -140,7 +141,8 @@
         "window-transient"
       ],
       "routes": [
-        "worldPointerMove"
+        "worldPointerMove",
+        "placeCapability"
       ]
     }
   ],

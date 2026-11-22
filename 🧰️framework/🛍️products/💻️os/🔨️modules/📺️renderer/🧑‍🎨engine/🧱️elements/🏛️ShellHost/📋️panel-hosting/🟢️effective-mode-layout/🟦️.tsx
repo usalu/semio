@@ -1,7 +1,7 @@
 /** 🟢️ The effective mode layout phase of usePanelHosting. */
 import { useCallback, useEffect, useMemo, useRef } from "../../../⚛️react-port/🟦️.ts";
 import { windowLayoutWindowIdsV1 } from "@semio-tech/framework";
-import { type WindowLayoutNode } from "@semio-tech/ui-react";
+import type { WindowLayoutNode } from "@semio-tech/ui-layout";
 import { LAYOUT_CHANGE_SETTLE_MS, classifyWindowLayoutChange, resolveFrameworkLayoutSeed } from "../../../🛠️ShellHelpers/🛣️route-and-chrome/🟦️.tsx";
 import { shellLabelTextV1 } from "../../../🛠️ShellHelpers/🔩️plumbing/🆔️action-ids/🟦️.ts";
 import { withLocalizedWindowKindLabels } from "../../🧱️built-node-stores/🟦️.ts";

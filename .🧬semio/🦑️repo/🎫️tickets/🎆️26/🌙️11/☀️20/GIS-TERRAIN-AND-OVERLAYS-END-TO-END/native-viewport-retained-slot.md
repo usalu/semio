@@ -1,0 +1,11 @@
+# Native Terrain Preview Read Completion
+
+The captured native Terrain executable reproduced the canceled slider press failure after 32,768 settlement turns. The fixture had no pending typed operation and reported maintenance unit 104, ToolOverlay. Its final quote was one byte with no capacity, release, or depth demand.
+
+An eight-second native process sample found 1,333 samples in the scrub ledger walk beneath the mounted tool follower. The call chain went through the original ledger read and retained slot reader to `OriginalSourceOwner::prepare_dispatch`. Disassembling the sampled callback return site at offset 840 identified the branch that returns `Complete` with an empty receipt because the original Source has no unpaid action. The retained slot wrapped this return in its child-progress reply scope. The ledger therefore never received the completion that marks its row ready. Its one-byte receipt reflected the ledger cursor bookkeeping. The Terrain reducer and Window Config preview owner were downstream of this stalled read.
+
+The retained slot now emits its terminal read reply directly after authenticating the original context and invocation and confirming that neither the pending child nor an unpaid Source action remains. Intermediate callbacks still use the original reply scope and its progress normalization. The equivalent unique-return path retains its own distinct handback sequence.
+
+The original-slot regression asserts that intermediate turns report progress. At the borrowable frontier, the direct read reports completion with zero work and heap effects and preserves the original source identity. The repository-pinned nightly compiler linked the focused unit test against captured native dependencies. The completion assertion failed on the original source and all 11 slot unit tests passed on the corrected source. The repository Cargo slot test was stopped while waiting for compiler image headroom after the direct test passed.
+
+The earlier Terrain binary established the failure mechanism. A warm rebuild in the owning native lane must run the `exaggeration` test group against the updated slot; the separate `history_` run owns that lane first. The commands can use the existing captured Terrain checkout target and Cargo home.

@@ -1,7 +1,7 @@
 //! 🧪️ host tests (🖱️pointer-gestures): compiled against the `testkit` surface of the world crates.
 
 use semio_os_infinite_world_model::{WORLD_INTERACTION_ID_BYTE_CAPACITY, WORLD_INTERACTION_OBJECT_CAPACITY, WORLD_INTERACTION_TOPOLOGY_BYTE_CAPACITY, world_mesh_ownership_grant, WorldCatalogueDropPreviewRecord, WorldInteractionObjectKind, WorldInteractionStep};
-use semio_os_infinite_world_components::World3dRelocateSession;
+use semio_os_infinite_world_components::{World3dRelocatePlane, World3dRelocateSession};
 use semio_os_infinite_world_cursors::{render_pick_viewport, resolved_domain_id, selection_method_wire_str, WorldMarqueeGesture, WorldMarqueePublishJob, WorldMarqueeResult, WorldMarqueeResultPages, WorldRayPickCursor, WorldRayPickPurpose};
 use semio_framework_test_fixtures::fixture_text;
 #[cfg(any(test, feature = "testkit"))]
@@ -268,6 +268,12 @@ fn an_authored_instance_hover_group_publishes_on_the_native_pointer_channel() {
         assert_eq!(action.action, "interactionHover");
         assert_eq!(arg(&action, "channel"), "pointer");
         assert_eq!(&decoded_targets(&action), expected, "{}", case["name"]);
+        if let Some(expected_paint) = case["expectedPaint"].as_array() {
+            semio_os_infinite_world_host::apply_runtime_draw_flags(&mut state.selection, &mut state.interaction, &mut state.scene);
+            let painted: std::collections::HashSet<_> = state.scene.draws.iter().flat_map(|draw| &draw.instances)
+                .filter(|instance| instance.hovered).map(|instance| instance.id.as_str()).collect();
+            assert_eq!(painted, expected_paint.iter().filter_map(serde_json::Value::as_str).collect(), "{}", case["name"]);
+        }
         assert!(hover(&mut state, origin).is_none());
         let cursor = ray_cursor(&state, WorldRayPickPurpose::Instance, origin, direction, 0);
         let click = publish_pick(&mut state, cursor).expect("instance click publishes");
@@ -441,7 +447,7 @@ fn escape_cancels_a_live_relocate_drag_and_commits_nothing() {
     let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut state = fixture_state();
     assert!(!world3d_cancel_relocate_drag(&mut state.session, &mut state.camera, &mut state.gumball, &mut state.scene), "with no live drag Escape is not consumed");
-    state.gumball.relocate = Some(World3dRelocateSession { object_id: "o1".into(), origin: [0.0, 0.0, 0.0], from: [0.0, 0.0, 0.0] });
+    state.gumball.relocate = Some(World3dRelocateSession { object_id: "o1".into(), origin: [0.0, 0.0, 0.0], from: [0.0, 0.0, 0.0], plane: World3dRelocatePlane::Z, mesh_key: "mesh".into(), preview_model: ui_scene::math::Mat4::identity() });
     state.gumball.catalogue_drop_preview = Some(WorldCatalogueDropPreviewRecord { object_kind: "o1".into(), mesh_url: None, origin: [1.0, 1.0, 0.0] });
     assert!(world3d_cancel_relocate_drag(&mut state.session, &mut state.camera, &mut state.gumball, &mut state.scene), "a live drag consumes the key");
     assert!(!world3d_relocate_active(&state.gumball), "the session is gone");

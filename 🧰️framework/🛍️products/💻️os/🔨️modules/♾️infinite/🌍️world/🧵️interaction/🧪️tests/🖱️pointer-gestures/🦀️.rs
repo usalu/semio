@@ -1,6 +1,7 @@
 //! 🧪️ interaction tests (🖱️pointer-gestures): compiled against the `testkit` surface of the world crates.
 
-use semio_os_infinite_world_components::World3dRelocateSession;
+use semio_os_infinite_world_components::{World3dRelocatePlane, World3dRelocateSession};
+use ui_scene::math::Mat4;
 use semio_os_infinite_world_cursors::world_merge_wire_label;
 use semio_os_infinite_world_interaction::{world3d_relocate_dispatch_args, world3d_relocate_drag_target, world_merge_code};
 use semio_framework::MergeMode;
@@ -75,7 +76,7 @@ fn a_relocate_press_grabs_the_object_react_grabs() {
 /// writes no document edit.
 #[test]
 fn a_relocate_commit_is_the_origin_plus_the_ground_travel_and_a_still_drag_commits_nothing() {
-    let session = World3dRelocateSession { object_id: "o1".into(), origin: [10.0, 20.0, 5.0], from: [0.0, 0.0, 5.0] };
+    let session = World3dRelocateSession { object_id: "o1".into(), origin: [10.0, 20.0, 5.0], from: [0.0, 0.0, 5.0], plane: World3dRelocatePlane::Z, mesh_key: "mesh".into(), preview_model: Mat4::identity() };
     let moved = world3d_relocate_dispatch_args(&session, [3.0, -4.0, 5.0], false, 1.0).expect("a travelled drag commits");
     assert_eq!(moved, [13.0, 16.0, 5.0], "origin + (to - from), with the grabbed object's own z preserved");
     assert_eq!(world3d_relocate_dispatch_args(&session, [0.0, 0.0, 5.0], false, 1.0), None, "a drag that never travelled commits nothing");
@@ -83,6 +84,9 @@ fn a_relocate_commit_is_the_origin_plus_the_ground_travel_and_a_still_drag_commi
     assert_eq!(snapped, [13.0, 16.0, 5.0], "the committed point is snapped exactly like a catalogue drop");
 }
 
+/// 📍️ The authored engagement point is a ground pick: an `f32` unprojection through the inverse of the
+/// combined view-projection, whose conditioning costs about 1e-6 relative to the camera distance (measured
+/// 1.1e-5 at distance 8), so the tolerance scales with the orbit distance instead of a fixed absolute 1e-5.
 #[test]
 fn authored_engagement_projects_and_publishes_bounded_pointer_commands() {
     use semio_os_infinite_world_bridge::sync_world3d_scene_selection;
@@ -102,6 +106,7 @@ fn authored_engagement_projects_and_publishes_bounded_pointer_commands() {
     session.pick_bounds = session.bounds;
     session.declared_action_ids = commands.iter().map(|row| row["action"].as_str().unwrap().into()).collect();
     let camera = WorldCameraState::new();
+    let unproject_budget = f64::from(camera.orbit.distance) * 2e-5;
     let mut selection = WorldSelectionState::new();
     let mut gumball = WorldGumballState::new();
     let mut scene = WorldSceneState::new();
@@ -135,7 +140,7 @@ fn authored_engagement_projects_and_publishes_bounded_pointer_commands() {
                 let point = args.get("position").and_then(semio_framework::DslValue::as_array).unwrap();
                 assert_eq!(point.len(), 3);
                 for (value, expected) in point.iter().zip(law["position"].as_array().unwrap()) {
-                    assert!((value.as_f64().unwrap() - expected.as_f64().unwrap()).abs() < 1e-5);
+                    assert!((value.as_f64().unwrap() - expected.as_f64().unwrap()).abs() < unproject_budget, "ground pick {point:?} strays beyond {unproject_budget} from {:?}", law["position"]);
                 }
                 for key in ["shiftKey", "ctrlKey", "metaKey"] {
                     assert_eq!(args.get(key).and_then(semio_framework::DslValue::as_bool), command["modifiers"][key].as_bool());
@@ -166,4 +171,36 @@ fn only_unstarted_engagement_hover_can_fold_into_the_queue_front() {
     assert_eq!([front.x, front.y], [next_x, next_y]);
     assert_eq!([front.dx, front.dy], [next_x - x, next_y - y]);
     assert_eq!(queue.len, 1);
+}
+
+/// 🌪️ The suggestions gesture dispatches `openVortexSuggestions` with the hovered marker, the press point and the window, and nothing without a marker.
+#[test]
+fn vortex_suggestions_dispatch_the_hovered_marker_only() {
+    use semio_os_infinite_world_components::WorldSelectionState;
+    use semio_os_infinite_world_interaction::world3d_open_vortex_suggestions;
+    use semio_os_infinite_world_model::WorldSessionState;
+    let law: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🧪️tests/🧫️fixtures/🌪️vortex-suggestions.json")).unwrap();
+    assert_eq!(semio_os_infinite_world_interaction::WORLD3D_SUGGESTIONS_HOLD_MS, law["longPress"]["holdMs"].as_f64().unwrap());
+    assert_eq!(semio_os_infinite_world_interaction::WORLD3D_SUGGESTIONS_HOLD_SLOP_PX, law["longPress"]["slopPx"].as_f64().unwrap());
+    let session = WorldSessionState::new("surface".into(), "controller".into());
+    for case in law["cases"].as_array().unwrap() {
+        let mut selection = WorldSelectionState::new();
+        selection.hovered_vortex_id = case["hoveredVortexId"].as_str().map(str::to_owned);
+        let action = world3d_open_vortex_suggestions(&session, &selection, case["x"].as_f64().unwrap() as f32, case["y"].as_f64().unwrap() as f32, case["windowId"].as_str().unwrap());
+        match action {
+            None => assert!(case["expected"].is_null(), "{}", case["id"]),
+            Some(action) => {
+                assert_eq!(action.action, law["action"].as_str().unwrap());
+                assert_eq!(action.controller_id, "controller");
+                let args = action.args.unwrap();
+                for (key, value) in case["expected"].as_object().unwrap() {
+                    let got = args.get(key).unwrap_or_else(|| panic!("{key}"));
+                    match value {
+                        serde_json::Value::String(text) => assert_eq!(got.as_str(), Some(text.as_str())),
+                        other => assert_eq!(got.as_f64(), other.as_f64()),
+                    }
+                }
+            }
+        }
+    }
 }

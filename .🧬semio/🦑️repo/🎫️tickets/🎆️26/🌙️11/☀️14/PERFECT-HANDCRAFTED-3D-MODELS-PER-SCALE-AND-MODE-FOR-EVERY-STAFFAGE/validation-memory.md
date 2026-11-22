@@ -17,3 +17,25 @@ At 15:35 CET the host reported normal pressure, 6,719 MB available and 1,565 MB 
 The local reservation manager also admits a job when enough free 64 MiB slots are separated by other running checks. The fixture held four slots, released the first and third, and admitted a 128 MiB request immediately. The aggregate limit stays at 3,584 MiB. The process regressions also passed for normal completion, cancellation and scheduler death.
 
 The macOS process tests again confirmed scheduler-death cleanup, worker cancellation, descendant cleanup and the aggregate memory ceiling. Windows additionally watches a handle to the launching process and releases its job object when that process exits. The Windows wait-state contract was exercised on macOS. A live Windows run remains unverified on this host.
+
+## November 21 evening process sweep
+
+Three obsolete task worker trees were cleared during the task. A fourth, superseded tower-crane thermal worker was stopped after the bounded replacement was verified. Subsequent process scans at the end of the catalogue run and during the flight-feather study found zero orphaned ticket workers. The local aggregate reservation is 3,584 MiB, with no task permitted an individual reservation over 1,150 MiB. Memory pressure remained normal, including 8,080 MB available while measuring the foliage and crane. Dense checks which reached their own cap were divided by rule and resumed from matching receipts.
+
+At the post-publication sweep, all four structural corrections were installed and all 608 scale checks found zero out-of-body structural members. The host reported normal memory pressure, 7,350 MB available of 16,384 MB, and zero orphaned ticket workers.
+
+The next host process sweep found zero orphaned staffage ticket workers. macOS reported 80% system-wide memory free by its pressure metric. The large active resident-build and replica processes belong to shared infrastructure.
+
+The superseded crane validation run and the sequential whole-catalog export run were stopped before their replacements started. The export replacement uses two disjoint source partitions at 640 MiB per worker and respects the existing 3,584 MiB aggregate admission ceiling. macOS subsequently reported 76% system-wide free by its pressure metric.
+
+At 20:03 CET the process sweep found zero ticket processes adopted by init. The resident build host and replica supervisor were identified by their command lines and active children. macOS reported 72% free on its pressure metric. Both export partitions completed. A city-car document check reached its 540 MiB reservation and terminated with its descendants; its own log and receipt preserve the interruption for a bounded retry.
+
+## November 21 late validation
+
+The repo capacity check reported 6,449 MB available of 16,384 MB, normal pressure and 1,008 MB of swap. The fleet status still had no configured scheduler or worker token. The superseded wheel and foliage validator process trees were retired after checking the program and its actual log descriptor. A subsequent scan found zero orphaned ticket processes. The 120-case volume regression suite now runs in named groups of six in the shared 3,584 MiB admission pool, and the dense mixer check runs one rule group per process.
+
+## Bounded workers and the geometry oracle
+
+At the next check, repo reported 6,848 MB available and normal host pressure. The superseded maple and wheel workers were retired by matching their command and open log file. The process tree had zero adopted ticket workers. The Python trimesh and SciPy oracle now walks its grid in batches of 2,048 points. The same analytical band and area case that exceeded the validation memory budget then passed in 31.55 seconds.
+
+The catalog validation and export sweeps can reserve the first 2,816 MiB of the shared 3,584 MiB local pool. Individual subjects can use the remaining 768 MiB even while both bulk sweeps have work. Reservations use the same host-specific lock. The process audit inspects executable arguments and parent IDs before retiring superseded subject checks.

@@ -1,0 +1,53 @@
+{
+  "cases": [
+    {
+      "id": "mounted-servable-replacement",
+      "mounted": true,
+      "oldServable": false,
+      "incomingServable": true,
+      "artifactMutations": false,
+      "effects": [
+        "loadDocument",
+        "toolRunStart"
+      ]
+    },
+    {
+      "id": "mounted-unserved-replacement",
+      "mounted": true,
+      "oldServable": true,
+      "incomingServable": false,
+      "artifactMutations": false,
+      "effects": [
+        "loadDocument"
+      ]
+    },
+    {
+      "id": "unmounted-replacement",
+      "mounted": false,
+      "oldServable": false,
+      "incomingServable": true,
+      "artifactMutations": false,
+      "effects": [
+        "loadDocument"
+      ]
+    },
+    {
+      "id": "identical-texture",
+      "mounted": true,
+      "oldServable": true,
+      "incomingServable": null,
+      "artifactMutations": false,
+      "effects": []
+    },
+    {
+      "id": "changed-texture",
+      "mounted": true,
+      "oldServable": true,
+      "incomingServable": null,
+      "artifactMutations": true,
+      "effects": [
+        "toolRunStart"
+      ]
+    }
+  ]
+}

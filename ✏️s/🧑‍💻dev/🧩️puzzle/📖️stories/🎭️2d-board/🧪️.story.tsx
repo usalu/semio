@@ -125,7 +125,7 @@ function applyStoryBoardEvents(state: StoryPuzzle2dState, eventsJson: string): S
           x: typeof payload.x === "number" ? payload.x : 0,
           y: typeof payload.y === "number" ? payload.y : 0,
           text: nodeKind,
-          handles: Array.isArray(payload.handles) ? payload.handles : [],
+          handles: Array.isArray(payload.handles) ? payload.handles.map((handle, index) => ({ id: `${nodeId}:v${index}`, radius: 6, ...handle })) : [],
           ...(shape === "rectangle"
             ? { width: typeof payload.width === "number" ? payload.width : 48, height: typeof payload.height === "number" ? payload.height : 48 }
             : { radius: typeof payload.radius === "number" ? payload.radius : 24 }),
@@ -351,7 +351,7 @@ function Board2dStoryHost({ initialFixture, initialRuntime, interactive }: { rea
   const debug = useMemo(() => JSON.stringify({ selection: state.runtime.selectedIds, camera: state.fixture.camera, activeUtility: state.runtime.activeUtility, nodeCount: state.fixture.nodes.length, edgeCount: state.fixture.edges.length }), [state]);
 
   return (
-    <div style={{ display: "flex", height: "100%", width: "100%", flexDirection: "column" }}>
+    <div style={{ display: "flex", height: "100vh", width: "100%", flexDirection: "column" }}>
       <div role="group" aria-label={boardLabel} tabIndex={interactive ? 0 : -1} onKeyDown={onKeyDown} onPointerDownCapture={(event) => { if (interactive && event.target instanceof HTMLCanvasElement) event.currentTarget.focus({ preventScroll: true }); }} style={{ position: "relative", flex: "1 1 auto", minHeight: 0 }}>
         <BoardSessionFactoryContext.Provider value={factory}>
           <Board2dHost node={node} onAction={onAction} />

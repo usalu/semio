@@ -5,10 +5,10 @@ export interface GisTerrainWindowConfig {
   brush?: TerrainBrushSettings;
 }
 
-/** 🖌️ Brush radius in samples, elevation step in metres, and smoothing percent. */
+/** 🖌️ Brush radius in samples, elevation step in millimetres, and smoothing percent. */
 export interface TerrainBrushSettings {
   radius: number;
-  elevationStep: number;
+  elevationStepMillimetres: number;
   smoothStrength: number;
 }
 
@@ -68,10 +68,10 @@ export function parseGisTerrainWindowConfig(value: unknown, at = "$"): GisTerrai
   const cameraJson = gisGisTerrainWindowConfigGuardString(row["cameraJson"], `${at}.cameraJson`);
   if (row["brush"] === undefined || row["brush"] === null) return { cameraJson };
   const atBrush = `${at}.brush`;
-  const brush = gisGisTerrainWindowConfigGuardClosed(gisGisTerrainWindowConfigGuardObject(row["brush"], atBrush), atBrush, ["radius", "elevationStep", "smoothStrength"]);
+  const brush = gisGisTerrainWindowConfigGuardClosed(gisGisTerrainWindowConfigGuardObject(row["brush"], atBrush), atBrush, ["radius", "elevationStepMillimetres", "smoothStrength"]);
   return { cameraJson, brush: {
     radius: gisGisTerrainWindowConfigGuardInteger(brush["radius"], `${atBrush}.radius`, { minimum: 0, maximum: 32 }),
-    elevationStep: gisGisTerrainWindowConfigGuardInteger(brush["elevationStep"], `${atBrush}.elevationStep`, { minimum: 1, maximum: 32767 }),
+    elevationStepMillimetres: gisGisTerrainWindowConfigGuardInteger(brush["elevationStepMillimetres"], `${atBrush}.elevationStepMillimetres`, { minimum: 1, maximum: 32767000 }),
     smoothStrength: gisGisTerrainWindowConfigGuardInteger(brush["smoothStrength"], `${atBrush}.smoothStrength`, { minimum: 0, maximum: 100 }),
   } };
 }

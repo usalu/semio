@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "oneOf": [
+    {"$ref": "#/$defs/offer"},
+    {"$ref": "#/$defs/page"},
+    {"$ref": "#/$defs/seal"}
+  ],
+  "$defs": {
+    "u32": {"type": "integer", "minimum": 1, "maximum": 4294967295},
+    "decimal": {"type": "string", "pattern": "^(0|[1-9][0-9]{0,19})$"},
+    "loanToken": {"type": "string", "pattern": "^(?!0{16}$)[0-9a-f]{16}$"},
+    "digest": {"type": "array", "minItems": 32, "maxItems": 32, "items": {"type": "integer", "minimum": 0, "maximum": 255}},
+    "loan": {
+      "type": "object", "additionalProperties": false,
+      "required": ["operationId", "generation", "instanceId", "declaration", "extent"],
+      "properties": {
+        "operationId": {"$ref": "#/$defs/loanToken"},
+        "generation": {"$ref": "#/$defs/loanToken"},
+        "instanceId": {"$ref": "#/$defs/u32"},
+        "extent": {"$ref": "#/$defs/u32"},
+        "declaration": {
+          "type": "object", "additionalProperties": false,
+          "required": ["formatKind", "extension", "mediaType", "binary"],
+          "properties": {
+            "formatKind": {"type": "string", "minLength": 1},
+            "extension": {"type": "string", "minLength": 2},
+            "mediaType": {"type": "string", "minLength": 1},
+            "binary": {"const": true}
+          }
+        }
+      }
+    },
+    "scope": {
+      "type": "object", "additionalProperties": false,
+      "required": ["loan", "seq", "document", "storeGeneration", "storeRevision"],
+      "properties": {
+        "loan": {"$ref": "#/$defs/loan"},
+        "seq": {"$ref": "#/$defs/decimal", "not": {"const": "0"}},
+        "storeGeneration": {"$ref": "#/$defs/decimal"},
+        "storeRevision": {"$ref": "#/$defs/digest"},
+        "document": {
+          "type": "object", "additionalProperties": false,
+          "required": ["appInstanceId", "baseRevision", "parentDocumentId"],
+          "properties": {
+            "appInstanceId": {"$ref": "#/$defs/u32"},
+            "baseRevision": {"$ref": "#/$defs/decimal"},
+            "parentDocumentId": {"type": "string", "minLength": 1, "maxLength": 512}
+          }
+        }
+      }
+    },
+    "offer": {
+      "type": "object", "additionalProperties": false,
+      "required": ["scope", "extent"],
+      "properties": {
+        "scope": {"$ref": "#/$defs/scope"},
+        "extent": {"type": "integer", "minimum": 1, "maximum": 4194304}
+      }
+    },
+    "page": {
+      "type": "object", "additionalProperties": false,
+      "required": ["offer", "offset", "length"],
+      "properties": {
+        "offer": {"$ref": "#/$defs/offer"},
+        "offset": {"type": "integer", "minimum": 0, "maximum": 4190208, "multipleOf": 4096},
+        "length": {"type": "integer", "minimum": 1, "maximum": 4096}
+      }
+    },
+    "seal": {
+      "type": "object", "additionalProperties": false,
+      "required": ["offer", "sha256"],
+      "properties": {
+        "offer": {"$ref": "#/$defs/offer"},
+        "sha256": {"$ref": "#/$defs/digest"}
+      }
+    }
+  }
+}

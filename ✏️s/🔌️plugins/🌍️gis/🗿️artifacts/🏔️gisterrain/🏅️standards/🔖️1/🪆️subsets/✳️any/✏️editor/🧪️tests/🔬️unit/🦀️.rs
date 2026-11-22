@@ -41,7 +41,7 @@ fn history_exaggeration_fixture_matches_the_native_fold() {
 #[test]
 fn history_operations_receive_under_mounted_copy_quanta() {
     use crate::mutations::{ChangeExaggeration, ChangeImportedFeatures, GisTerrainMutation, ReplaceElevationSource};
-    use dsl::original_receiving::{ReceivingStock, receive_to_completion};
+    use dsl::os_dsl::original_receiving::{ReceivingStock, receive_to_completion};
     use protocol::OpBinary;
     use semio_framework_value::RetainedCloneGrant;
 
@@ -52,13 +52,14 @@ fn history_operations_receive_under_mounted_copy_quanta() {
         (2, GisTerrainMutation::ReplaceElevationSource(ReplaceElevationSource { new_elevation_source: gis.elevation_source })),
         (2, GisTerrainMutation::ReplaceElevationSource(ReplaceElevationSource { new_elevation_source: None })),
     ];
-    let quantum = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 16 << 20, maximum_release_bytes: 1 << 20, maximum_depth: 4_096 };
+    let quantum = semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation;
     let stock = ReceivingStock { stock: RetainedCloneGrant { maximum_items: 1 << 20, maximum_copy_bytes: 1 << 30, maximum_capacity_bytes: 1 << 30, maximum_release_bytes: 1 << 30, ..quantum }, quantum, fuel: 1 << 20 };
     for (tag, operation) in operations {
         let bytes = operation.encode_op().unwrap();
         assert_eq!(bytes[..2], [1, tag]);
         assert_eq!(GisTerrainMutation::decode_op(&bytes).unwrap(), operation);
-        let received = receive_to_completion::<GisTerrainMutation>(&bytes, (0, bytes.len()), stock).unwrap();
+        let received = receive_to_completion::<GisTerrainMutation>(&bytes, (0, bytes.len()), stock)
+            .unwrap_or_else(|error| panic!("history tag {tag} with {} wire bytes: {error:?}", bytes.len()));
         assert_eq!(received, operation);
     }
 }

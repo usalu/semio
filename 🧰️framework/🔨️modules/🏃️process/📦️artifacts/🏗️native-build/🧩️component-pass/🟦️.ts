@@ -7,8 +7,8 @@ import {CargoGraphOperationsV1} from "./📥️planning/🟦️.ts";
 import {admitWarmCargoRetryGraphV1,classifyCargoGraphObservationFailureV1,failedCompilerMessageFilesV1,failedDependencyDriftV1,failedPassConcurrentEditV1,retryableWarmComponentPassV1,runCargoPassAttemptsV1,watchWarmCargoAttemptV1} from "./🔁️failure-churn/🟦️.ts";
 import failureChurn from "./🔁️failure-churn/🔣️.json" with {type:"json"};
 import {readPhysicalFileV1} from "../../../../📁️filesystem/🧾️observation/🟦️.ts";
-import {ConcurrentEditErrorV1,concurrentEditV1} from "../../../../📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
-import {UnitKilledErrorV1,createErrorCaptureV1,killedUnitsV1,unitExitSignalV1,type ErrorCaptureV1,type UnitKillV1} from "./🩺️failure-diagnosis/🟦️.ts";
+import {concurrentEditErrorOfV1,concurrentEditV1} from "../../../../📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
+import {UnitKilledErrorV1,cargoSilentExitV1,createErrorCaptureV1,killedUnitsV1,unitExitSignalV1,type ErrorCaptureV1,type UnitKillV1} from "./🩺️failure-diagnosis/🟦️.ts";
 import {cargoUnitPackageNameV1,requireCargoCompilerOutputPathsV1} from "../📏️paths/🟦️.ts";
 import {formatStampProtocolV1} from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧷️format-stamps/🟨️.mjs";
 import {nativeBuildPrerequisiteOrderV1} from "./📋️prerequisites/🟦️.ts";
@@ -24,7 +24,7 @@ import {admitCargoSelectionV1,type AdmittedCargoSelectionV1,type CargoSourceAdmi
 import {publishCargoSourceDriftV1,type CargoSourceDriftV1} from "../📥️source/👁️drift/🟦️.ts";
 import { checkResourceLeaseControl, requireMaterializedPathV1, withLeaseTaskV1 } from "../../../🔒️leases/🟦️.ts";
 import { ProgressDeadlineExpiredV1 } from "../../../⏱️budget/🟦️.ts";
-import { nativeBuildJobStallV1, watchNativeBuildJobV1, type NativeBuildJobWatchV1 } from "./⏳️job-wait/🟦️.ts";
+import { nativeBuildCompilerIdleStallV1, nativeBuildJobStallV1, watchNativeBuildJobV1, type NativeBuildJobWatchV1 } from "./⏳️job-wait/🟦️.ts";
 import { noteScriptProcessActivityV1, scriptProcessActivityIdleMillisecondsV1 } from "../../../🧭️routing/📥️invocation/🏃️process/🐕️watchdog/🟦️.ts";
 import type { BuildMode } from "../../../🏗️build/🎚️mode/🟦️.ts";
 import { compileUnitsForHostV1, compileUnitsRequestV1, compilerAdmissionBudgetV1, requireGrantedCompileUnitsV1, type CompileUnitsDecisionV1, type CompilerAdmissionControl, type CompilerCapacityFactsV1 } from "../../../🏗️build/🎟️capacity/🟦️.ts";
@@ -33,8 +33,8 @@ import { execFile, spawn, type ChildProcess } from "node:child_process";
 import { createHash } from "node:crypto";
 import { closeSync, constants, copyFileSync, existsSync, mkdirSync, mkdtempSync, openSync, readdirSync, readSync, rmSync, statSync, writeFileSync, writeSync } from "node:fs";
 import {nativeStatfsSyncV1} from "../💾️storage/🌐️platform/📋️contract/🟦️.ts";
-import {nativeImageAvailabilityCorrectionMillisecondsV1, nativeImageContainerFreeBytesSyncV1, nativeImageEffectiveAvailableBytesV1} from "../💾️storage/🍎️image/⚖️availability/🟦️.ts";
-import { availableParallelism, homedir } from "node:os";
+import {nativeImageAvailabilityCorrectionMillisecondsV1, nativeImageContainerFreeBytesSyncV1, nativeImageRealAvailableBytesV1} from "../💾️storage/🍎️image/⚖️availability/🟦️.ts";
+import { availableParallelism, constants, homedir } from "node:os";
 import { basename, dirname, join, relative, resolve, sep } from "node:path";
 import { createInterface } from "node:readline";
 import { fileURLToPath } from "node:url";
@@ -46,7 +46,7 @@ import { acquireCargoBuildLeaseV1 } from "../🔒️lease/🟦️.ts";
 import {announcedCargoSourceChecksumsV1,CargoSourceAttemptV1,CargoSourceWitnessV1} from "../🧾️receipt/📎️source-witness/🟦️.ts";
 import { CargoProvenanceSessionV1, cargoConfigurationArgumentsV1, cargoProvenancePhysicalControlV1, cargoProvenanceProgressSinkV1, sharedProvenanceCustodyV1, type CargoProvenanceStagedV1 } from "../🟦️.ts";
 import { cargoBuildRunLeafV1, cargoProvenanceMerkleRootV1, cargoProvenanceRowsDigestV1, cargoProvenanceSourceV1, cargoUnitIdentityV1, cargoUnitLeafV1, type CargoDepInfoChecksumV1, type CargoProvenanceRootsV1, type CargoUnitObservationV1 } from "../🧾️receipt/🟦️.ts";
-import { ADMISSION_POLICY_V1, admissionMemoryBytesV1, admissionMemoryShareV1, buildSchedulerV1,schedulerCargoSelectionV1, compilerWrapperEnvironmentV1, quantileR7V1, readUnitHistoryV1, recordUnitHistoryV1, startAdmissionBrokerV1, unitHistoryPathV1, unitKeyV1, unitObservationsV1, unitOutputBytesV1, type UnitObservationV1 } from "../🎟️admission/🟦️.ts";
+import { ADMISSION_POLICY_V1, admissionMemoryBytesV1, admissionMemoryShareV1, admissionReserveBytesV1, buildSchedulerV1,schedulerCargoSelectionV1, compilerWrapperEnvironmentV1, quantileR7V1, readUnitHistoryV1, recordUnitHistoryV1, startAdmissionBrokerV1, unitHistoryPathV1, unitKeyV1, unitObservationsV1, unitOutputBytesV1, type UnitObservationV1 } from "../🎟️admission/🟦️.ts";
 import { createJobserverV1, defaultJobserverStyleV1, withoutJobserverEnvironmentV1, type JobSlotV1 } from "../🎰️jobserver/🟦️.ts";
 import { criticalPathV1, startTimelineV1, TELEMETRY_POLICY_V1, writeBuildReportV1, type BuildScriptRunV1, type StageRecordV1 } from "../📈️telemetry/🟦️.ts";
 import { STAGE_CACHE_POLICY_V1, stageCacheV1, type StageCacheV1 } from "../🗃️stage-cache/🟦️.ts";
@@ -364,11 +364,40 @@ export async function publishNativeBuildCargoConfigurationsV1(options:Readonly<{
  return distinct.size;
 }
 
-/** 🪵️ An append-only log file that stops growing at its byte cap. */
-function boundedLog(path: string, limit: number): { write: (line: string) => void; close: () => void } {
-  const descriptor = openSync(path, "w");
+/** 🪵️ Keeps observation streams live if only their optional diagnostic files run out of space. */
+function boundedLog(path: string, limit: number, onFull: (path: string) => void): { write: (line: string) => void; close: () => void } {
+  let descriptor: number;
+  try { descriptor = openSync(path, "w"); }
+  catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOSPC") throw error;
+    onFull(path);
+    return { write: () => undefined, close: () => undefined };
+  }
   let written = 0;
-  return { write: (line) => { if (written < limit) written += writeSync(descriptor, `${line}\n`); }, close: () => closeSync(descriptor) };
+  let disabled = false;
+  return {
+    write(line) {
+      if (disabled || written >= limit) return;
+      const entry = `${line}\n`;
+      if (Buffer.byteLength(entry) > limit - written) return;
+      try { written += writeSync(descriptor, entry); }
+      catch (error) {
+        if ((error as NodeJS.ErrnoException).code !== "ENOSPC") throw error;
+        disabled = true;
+        onFull(path);
+      }
+    },
+    close: () => closeSync(descriptor),
+  };
+}
+
+/** 📏️ Confirms apparent storage pressure before refusing continued compiler writes. */
+function nativeBuildStorageFloor(available: number, reserve: number, confirm: () => number): (Error & { code: "ENOSPC" }) | undefined {
+  if (available >= reserve) return;
+  const confirmed = confirm();
+  if (confirmed >= reserve) return;
+  const mib = (bytes: number): string => (bytes / 1024 ** 2).toFixed(0);
+  return Object.assign(Error(`No space left on device for the admitted native build reserve (${mib(confirmed)} MiB free, ${mib(reserve)} MiB required)`), { code: "ENOSPC" as const });
 }
 
 const exec = promisify(execFile);
@@ -388,7 +417,7 @@ type ObservedPassV1 = Readonly<{ staged: CargoProvenanceStagedV1; closures: Read
 type Completion = { promise: Promise<void>; resolve: () => void; reject: (error: unknown) => void; settled: boolean };
 
 /** 💻️ Installs terminal observation immediately after the actual child is born. */
-function nativeBuildChildTerminalV1(child:ChildProcess):Promise<number>{const terminal=new Promise<number>((accept,refuse)=>{let failure:{error:unknown}|undefined;child.once("error",error=>{failure={error};});child.once("close",code=>failure?refuse(failure.error):accept(code??1));});void terminal.catch(()=>{});return terminal;}
+function nativeBuildChildTerminalV1(child:ChildProcess):Promise<number>{const terminal=new Promise<number>((accept,refuse)=>{let failure:{error:unknown}|undefined;child.once("error",error=>{failure={error};});child.once("close",(code,signal)=>failure?refuse(failure.error):accept(code??(signal?128+(constants.signals[signal]??0):1)));});void terminal.catch(()=>{});return terminal;}
 /** 🪢️ Joins the real close and every stream before the enclosing CPU phase can retire. */
 async function finishNativeBuildChildV1(child:ChildProcess,terminal:Promise<number>,streams:readonly Promise<unknown>[],primary:{error:unknown}|undefined,cleanups:readonly(()=>void)[]):Promise<void>{const failures:unknown[]=[];if(child.exitCode===null&&child.signalCode===null)try{terminateOwnedChildTree(child);}catch(error){failures.push(error);}for(const row of await Promise.allSettled([terminal,...streams]))if(row.status==="rejected"&&(!primary||!Object.is(primary.error,row.reason))&&!failures.some(error=>Object.is(error,row.reason)))failures.push(row.reason);for(const cleanup of cleanups)try{cleanup();}catch(error){if(!primary||!Object.is(primary.error,error))failures.push(error);}if(failures.length)throw new AggregateError(primary?[primary.error,...failures]:failures,"Native compiler child and cleanup failed");}
 
@@ -429,6 +458,7 @@ export function runNativeBuildDriverV1(options: NativeBuildDriverOptionsV1): Pro
   requireMaterializedPathV1(unitHistoryPathV1(options.cacheRoot));
   const generation = nativeBuildGenerationV1(options.generation, options.cacheRoot, options.shared), startedMs = Date.now(), cache = (options.decorateStageCache ?? ((local: StageCacheV1) => local))(stageCacheV1(generation.stages));
   const signal = options.control.signal, children = new Set<ChildProcess>(), stages: StageRecordV1[] = [], runs: BuildScriptRunV1[] = [], staged: string[] = [], failures: { pass: string; package: string }[] = [];
+  const planningChildren = new Set<ChildProcess>();
   let stopped=false,stopReason:unknown,failureEdit:Error|undefined,unitKills:readonly UnitKillV1[]=[];const failedFiles=new Set<string>();
   const driftRetirements:{pass:string;started:number;stopped:number;ended:number}[]=[];
   const unexpectedKill=(unit:Readonly<{pass:string;startMs:number;endMs:number}>)=>!driftRetirements.some(window=>
@@ -482,11 +512,12 @@ export function runNativeBuildDriverV1(options: NativeBuildDriverOptionsV1): Pro
   const historyPath = unitHistoryPathV1(options.cacheRoot), history = await unitHistory();
   const jobserver = await createJobserverV1({ version: 1, tokens, style: defaultJobserverStyleV1() }, generation.jobserver);
   let broker:Awaited<ReturnType<typeof startAdmissionBrokerV1>>;
-  try{broker=await startAdmissionBrokerV1({physicalBytes:options.physicalBytes??admissionMemoryShareV1(admissionMemoryBytesV1(),tokens,availableParallelism()),history});}catch(primary){try{jobserver.close();}catch(secondary){throw new AggregateError([primary,secondary],"Native broker initialization and jobserver retirement failed");}throw primary;}
+  try{broker=await startAdmissionBrokerV1({physicalBytes:options.physicalBytes??admissionMemoryShareV1(admissionMemoryBytesV1(),tokens,availableParallelism()),...options.physicalBytes===undefined?{reserveBytes:admissionReserveBytesV1(admissionMemoryBytesV1())}:{},history});}catch(primary){try{jobserver.close();}catch(secondary){throw new AggregateError([primary,secondary],"Native broker initialization and jobserver retirement failed");}throw primary;}
   let timeline:ReturnType<typeof startTimelineV1>;
   try{timeline=startTimelineV1({
     control:cpuControl,
     path: join(generation.report, TELEMETRY_POLICY_V1.timelineFile),
+    onStorageFull: path => log(`[native-build] ${path} stopped recording because its volume is full`),
     counters: () => { const stats = broker.stats(); return { rustcRunning: stats.running, admissionWaiting: stats.waiting, rustcRssBytes: stats.actualRunningBytes, frozen: stats.frozen, tokensHeld: jobserver.held(), stagesRunning, stagesWaiting }; },
     onRow: async (row,actualControl) => { const bytes=await nonRustcBytes([...children],actualControl);broker.observe({ nonRustcBytes: bytes, swapOutBytesPerSecond: row.swapOutBytesPerSecond }); },
   });}catch(primary){const secondary:unknown[]=[];try{await broker.close();}catch(error){secondary.push(error);}try{jobserver.close();}catch(error){secondary.push(error);}if(secondary.length)throw new AggregateError([primary,...secondary],"Native timeline initialization and resource retirement failed");throw primary;}
@@ -614,6 +645,7 @@ export function runNativeBuildDriverV1(options: NativeBuildDriverOptionsV1): Pro
         const child = spawn(job.command[0]!, [...inputs.arguments], { cwd: job.cwd, detached: process.platform !== "win32", stdio: ["ignore", "pipe", "pipe"], env: scriptResourceProcessEnvironmentV1(control,environment) });
         const terminal = nativeBuildChildTerminalV1(child), watch = watchNativeBuildJobV1(Date.now());
         children.add(child);
+        lastMessageMs = Date.now();
         jobWatches.set(job.id, watch);
         const stop = (): void => terminateOwnedChildTree(child);
         const collect = async (stream: NodeJS.ReadableStream): Promise<void> => {
@@ -657,10 +689,13 @@ export function runNativeBuildDriverV1(options: NativeBuildDriverOptionsV1): Pro
   let stallWork:Promise<void>|undefined;
   const watchdog = setInterval(() => {
     const stats = broker.stats(), idleMs = Math.min(Date.now() - Math.max(stats.lastActivityMs, lastMessageMs), scriptProcessActivityIdleMillisecondsV1());
-    const stalledJob = [...jobWatches].map(([id, watch]) => nativeBuildJobStallV1(id, watch, Date.now(), options.stallMs ?? policy.stallMs)).find(Boolean);
-    if (!stalledJob && (children.size === 0 || stats.running > 0 || stagesRunning > 0 || idleMs < (options.stallMs ?? policy.stallMs))) return;
-    if (stallReason) return;
-    stallReason = stalledJob ? `${stalledJob}; samples in ${generation.logs}` : `Native build stalled: no unit started or finished for ${Math.round(idleMs / 1000)} s with ${children.size} child process(es) and no rustc running; samples in ${generation.logs}`;
+    const stallMilliseconds = options.stallMs ?? policy.stallMs;
+    const stalledJob = [...jobWatches].map(([id, watch]) => nativeBuildJobStallV1(id, watch, Date.now(), stallMilliseconds)).find(Boolean);
+    const stalledCompiler = nativeBuildCompilerIdleStallV1({ children: children.size, planning: planningChildren.size,
+      runningUnits: stats.running, runningStages: stagesRunning, idleMilliseconds: idleMs, stallMilliseconds });
+    if (stallReason || (!stalledJob && !stalledCompiler)) return;
+    const active = children.size - planningChildren.size;
+    stallReason = stalledJob ? `${stalledJob}; samples in ${generation.logs}` : `Native build stalled: no unit started or finished for ${Math.round(idleMs / 1000)} s with ${active} execution child process(es) and no rustc running; samples in ${generation.logs}`;
     const failure=Error(stallReason),pids=Object.freeze([...children].flatMap(child=>child.pid===undefined?[]:[child.pid]));
     try{stallWork=withRequestedIssuedResourceControlV1(cpuControl,0,async actual=>{
      try{if(pids.length>TELEMETRY_POLICY_V1.maximumStallSamples)throw Error("Bounded owned stall sample roster required");if(process.platform==="darwin")for(const pid of pids)await withRequestedIssuedResourceControlV1(actual,TELEMETRY_POLICY_V1.maximumStallSampleMilliseconds,async sampleControl=>{const file=join(generation.logs,`stall-${pid}.txt`);try{const result=await captureOwnedCommandResultV1("sample",[String(pid),"3"],options.cwd,{control:sampleControl,output:{maximumBytes:TELEMETRY_POLICY_V1.maximumOutputBytes,maximumLines:TELEMETRY_POLICY_V1.maximumOutputLines}});if(result.signal!==null)throw Error("Owned stall sample terminated by signal");checkResourceLeaseControl(sampleControl);writeFileSync(file,result.stdout+result.stderr);}catch(error){checkResourceLeaseControl(sampleControl);writeFileSync(file,`stall sample of ${pid} unavailable: ${String((error as Error)?.message??error)}\n`);}});}
@@ -680,7 +715,7 @@ export function runNativeBuildDriverV1(options: NativeBuildDriverOptionsV1): Pro
     const port = options.cargo ?? { command: "cargo", args: [] };
     check();graphOperationsOwner.check();checkResourceLeaseControl(effectControl);
     const request = exec(port.command, [...port.args, ...arguments_], { cwd: options.cwd, signal:effectControl.signal, maxBuffer: 512 * 1024 * 1024, env: scriptResourceProcessEnvironmentV1(effectControl,environment) });
-    const terminal=nativeBuildChildTerminalV1(request.child);children.add(request.child);
+    const terminal=nativeBuildChildTerminalV1(request.child);children.add(request.child);planningChildren.add(request.child);
     let output: Awaited<typeof request>,primary:{error:unknown}|undefined;
     try {
       output = await request;
@@ -688,10 +723,10 @@ export function runNativeBuildDriverV1(options: NativeBuildDriverOptionsV1): Pro
     } catch (error) {
       primary={error};
       checkResourceLeaseControl(effectControl);
-      primary.error=classifyCargoGraphObservationFailureV1(error,pass.manifest);
+      primary.error=stopped ? stopReason : classifyCargoGraphObservationFailureV1(error,pass.manifest);
       throw primary.error;
     } finally {
-      try{await finishNativeBuildChildV1(request.child,terminal,[request],primary,[]);}finally{children.delete(request.child);}
+      try{await finishNativeBuildChildV1(request.child,terminal,[request],primary,[]);}finally{planningChildren.delete(request.child);children.delete(request.child);}
     }
     writeFileSync(join(generation.logs, `${policy.unitGraphFile}-${pass.id}${suffix}.json`), output.stdout);
     const graph=JSON.parse(output.stdout) as CargoUnitGraphV1;
@@ -760,9 +795,18 @@ export function runNativeBuildDriverV1(options: NativeBuildDriverOptionsV1): Pro
   const graphOf = (id: string): Promise<CargoUnitGraphV1> => unitGraphs.get(batches.find((row) => row.pass.id === id)?.parent ?? id)!;
   const remainingBytes = (): number => Math.max(0, ...batches.filter((row) => !finishedPasses.has(row.pass.id)).map((row) => row.bytes));
   let correction = { bytes: 0, until: 0 };
-  const statfsBytes = (): number => { const facts = nativeStatfsSyncV1(options.storage.backing.root); return facts.bavail * facts.bsize; };
-  const headroomBytes = (): number => statfsBytes() + (Date.now() < correction.until ? correction.bytes : 0);
-  const reconcileHeadroom = (): void => { const volume = statfsBytes(), effective = nativeImageEffectiveAvailableBytesV1(volume, nativeImageContainerFreeBytesSyncV1(options.storage.backing.root)); correction = { bytes: effective - volume, until: Date.now() + nativeImageAvailabilityCorrectionMillisecondsV1 }; if (effective > volume) log(`[native-build] the volume reports ${(volume / 1024 ** 2).toFixed(0)} MiB available but its container has ${(effective / 1024 ** 2).toFixed(0)} MiB unallocated; the volume figure is stale from its mount, using the container figure`); };
+  const availableOn = (path: string): number => { const facts = nativeStatfsSyncV1(path); return facts.bavail * facts.bsize; };
+  const storageRoot = options.storage.backing.root;
+  const statfsBytes = (): number => availableOn(storageRoot);
+  const hostBytes = (): number => process.platform === "darwin" ? availableOn(dirname(storageRoot)) : Infinity;
+  const observedStorageBytes = (): number => Math.min(statfsBytes(), hostBytes());
+  const headroomBytes = (): number => Math.min(hostBytes(), statfsBytes() + (Date.now() < correction.until ? correction.bytes : 0));
+  const realBytes = (volume: number, host: number): number => nativeImageRealAvailableBytesV1(volume, nativeImageContainerFreeBytesSyncV1(storageRoot), host);
+  const reconcileHeadroom = (): void => {
+    const volume = statfsBytes(), host = hostBytes(), effective = realBytes(volume, host);
+    correction = { bytes: effective - volume, until: Date.now() + nativeImageAvailabilityCorrectionMillisecondsV1 };
+    if (effective > volume) log(`[native-build] the volume reports ${(volume / 1024 ** 2).toFixed(0)} MiB available; the host-capped container estimate for planning is ${(effective / 1024 ** 2).toFixed(0)} MiB`);
+  };
   const reclaimPass = (pass: NativeBuildPassV1, messages: readonly unknown[]): void => {
     const done = completion(`reclaim:${pass.id}`), settled = done.promise.catch(() => undefined);
     reclaims.set(pass.id, settled);
@@ -790,7 +834,9 @@ export function runNativeBuildDriverV1(options: NativeBuildDriverOptionsV1): Pro
     if (availableBytes() < predicted.bytes + reserveBytes) throw Error(`Native build storage refused: ${pass.id} needs a predicted ${(predicted.bytes / 1024 ** 2).toFixed(0)} MiB${predicted.measured ? "" : " (unmeasured units estimated by kind)"} plus the ${(reserveBytes / 1024 ** 2).toFixed(0)} MiB reserve, ${(availableBytes() / 1024 ** 2).toFixed(0)} MiB remain after every running batch settled and every unit no remaining pass needs was reclaimed`);
     let release = (): void => undefined;
     inflight.set(pass.id, { bytes: predicted.bytes, settled: new Promise<void>((accept) => { release = accept; }) });
-    try { await runAdmittedPass(pass); } finally { inflight.delete(pass.id); release(); }
+    try { await runAdmittedPass(pass); }
+    catch (error) { if (stopped) check(); throw error; }
+    finally { inflight.delete(pass.id); release(); }
   };
   const runAdmittedPass = (pass: NativeBuildPassV1): Promise<void> => {
     const retryWarm = retryWarmPlan && pass.id === plan.passes[0]?.id;
@@ -809,6 +855,25 @@ export function runNativeBuildDriverV1(options: NativeBuildDriverOptionsV1): Pro
     return inputContinuations.start(consume=>withNativeBuildCargoInputsV1(options,{manifest:pass.manifest,cwd:options.cwd,arguments:cargoConfigurationArgumentsV1(nativeBuildPassArgsV1(pass),undefined,generation.build),environment:inputEnvironment,control:options.control},(inputs,roster)=>{rememberAdmission(roster);return consume(inputs);},sourceWitness),async inputs=>withRequestedIssuedResourceControlV1(cpuControl,0,async effectControl=>{
     const args = [...inputs.arguments], signal=effectControl.signal;
     const checkPass = () => { check(); checkResourceLeaseControl(inputs.control); checkResourceLeaseControl(effectControl); };
+    const failureEvidenceReader = (stillEligible = () => true) => {
+      const probeDeadline = performance.now() + failureChurn.maximumProbeMilliseconds;
+      let checks = 0;
+      return async (path:string) => {
+        checkPass();
+        const remainingMs = () => Math.min(probeDeadline-performance.now(),checkResourceLeaseControl(effectControl)??Infinity);
+        if (!stillEligible() || remainingMs() <= 0 || checks++ >= failureChurn.maximumChecks) return;
+        try {
+          return (await readPhysicalFileV1(path,{
+            maxBytes:failureChurn.maximumReadBytes,chunkBytes:failureChurn.readChunkBytes,
+            maxWork:Math.ceil(failureChurn.maximumReadBytes/failureChurn.readChunkBytes)+5,
+            cancelled:()=>signal.aborted||!stillEligible(),remainingMs,onProgress:()=>{},
+          })).bytes;
+        } catch {
+          checkPass();
+          return;
+        }
+      };
+    };
     const slot = await jobserver.acquire(signal);
     try {
       checkPass();
@@ -824,21 +889,36 @@ export function runNativeBuildDriverV1(options: NativeBuildDriverOptionsV1): Pro
         const compilerErrors = new Map<string,Set<string>>(), passFiles = new Set<string>(), attemptFailures:string[] = [];
         const child = spawn(port.command, [...port.args, ...args], { cwd: options.cwd, detached: process.platform !== "win32", stdio: ["ignore", "pipe", "pipe"], env: scriptResourceProcessEnvironmentV1(effectControl,{ ...withoutJobserverEnvironmentV1(inputs.environment), SEMIO_COMPILER_PARALLELISM:String(tokens), SEMIO_BUILD_MODE: profileBuildModeV1(pass.profile), ...inherited, RUSTC_WRAPPER: scheduler, ...compilerWrapperEnvironmentV1(scheduler, nativeBuildLaneRootV1(generation), options.environment), [ADMISSION_POLICY_V1.brokerEnvironment]: broker.endpoint, [ADMISSION_POLICY_V1.passEnvironment]: pass.id, CARGO_TARGET_DIR: generation.target, CARGO_BUILD_BUILD_DIR: generation.build, SEMIO_COMPILER_RESOURCE_ROOT: join(generation.build, "semio-compiler-resources"), CARGO_UNSTABLE_FEATURE_UNIFICATION: "true", CARGO_RESOLVER_FEATURE_UNIFICATION: policy.featureUnification, CARGO_TERM_COLOR: "never" }) });
         const terminal=nativeBuildChildTerminalV1(child);children.add(child);
-        const stop = (): void => terminateOwnedChildTree(child),logs:ReturnType<typeof boundedLog>[]=[],streams:Promise<void>[]=[];let primary:{error:unknown}|undefined;
+        const storageCheck = setInterval(() => {
+          if (stopped || child.exitCode !== null || child.signalCode !== null) return;
+          try {
+            const failure = nativeBuildStorageFloor(observedStorageBytes(), reserveBytes, () => realBytes(statfsBytes(), hostBytes()));
+            if (failure) stop(failure);
+          } catch (error) { stop(error); }
+        }, Math.min(policy.watchdogMs, 1000));
+        lastMessageMs = Date.now();
+        const endChild = (): void => terminateOwnedChildTree(child),logs:ReturnType<typeof boundedLog>[]=[],streams:Promise<void>[]=[];let primary:{error:unknown}|undefined;
         let driftStopMs:number|undefined,sourceWatch:ReturnType<typeof watchWarmCargoAttemptV1>|undefined;
-        let linkAnnounced=false;
+        let linkAnnounced=false,failedSpanDrift:CargoSourceDriftV1|undefined;
+        let readFailedSpan:ReturnType<typeof failureEvidenceReader>|undefined;
+        const activeUnlinkedChild=()=>!stopped&&!signal.aborted&&!inputs.control.signal.aborted&&
+          driftStopMs===undefined&&!linkAnnounced&&child.pid!==undefined&&child.exitCode===null&&child.signalCode===null;
+        const stopForDrift=()=>{driftStopMs=Date.now();endChild();};
         const closeSourceWatch=()=>{void sourceWatch?.close();};
         try {
-          signal.addEventListener("abort",stop,{once:true});
+          signal.addEventListener("abort",endChild,{once:true});
           signal.addEventListener("abort",closeSourceWatch,{once:true});
           child.once("exit",closeSourceWatch);
           if(withholdLink&&mayRetry)sourceWatch=watchWarmCargoAttemptV1({
             sources:admittedDigests,startedMs:admissionStartedMs,signal,
             mayRetry:drift=>!sourceCapture?.has(drift.path,drift.expected)&&mayRetry(drift),
-            active:()=>!stopped&&!inputs.control.signal.aborted&&!linkAnnounced&&child.pid!==undefined&&child.exitCode===null&&child.signalCode===null,
-            stopChild:()=>{driftStopMs=Date.now();stop();},
+            active:activeUnlinkedChild,stopChild:stopForDrift,
           });
-          const messages = boundedLog(join(generation.logs, `cargo-${pass.id}${suffix}.jsonl`), policy.logLimitBytes);logs.push(messages);const diagnostics = boundedLog(join(generation.logs, `cargo-${pass.id}${suffix}.log`), policy.logLimitBytes);logs.push(diagnostics);
+          const logFull = (path: string): void => log(`[native-build] ${path} stopped recording because its volume is full`);
+          const messages = boundedLog(join(generation.logs, `cargo-${pass.id}${suffix}.jsonl`), policy.logLimitBytes, logFull);
+          logs.push(messages);
+          const diagnostics = boundedLog(join(generation.logs, `cargo-${pass.id}${suffix}.log`), policy.logLimitBytes, logFull);
+          logs.push(diagnostics);
           const perUnit = new Map<string, number>();
           const stderrTail: string[] = [],errors=createErrorCaptureV1({blockLines:policy.failureLinesPerUnit,totalLines:policy.failureLinesTotal,lineChars:policy.stderrLineChars});
           streams.push(
@@ -894,12 +974,25 @@ export function runNativeBuildDriverV1(options: NativeBuildDriverOptionsV1): Pro
                   const room = Math.max(0, Math.min(policy.failureLinesPerUnit - used, policy.failureLinesTotal - failureLines.length - attemptFailures.length));
                   attemptFailures.push(...lines.slice(0, room).map((text) => `[${pass.id}] ${unit}: ${text}`));
                   perUnit.set(unit, used + Math.min(room, lines.length));
+                  if(withholdLink&&mayRetry&&sourceCapture&&activeUnlinkedChild()){
+                    for(const path of failedCompilerMessageFilesV1(message,options.cwd,cargoWorkspace,true)){
+                      const expected=admittedDigests.get(path);
+                      if(!expected||!sourceCapture.has(path,expected))continue;
+                      const bytes=await (readFailedSpan??=failureEvidenceReader(activeUnlinkedChild))(path);
+                      if(!bytes||!activeUnlinkedChild())continue;
+                      const observed=createHash("sha256").update(bytes).digest("hex"),drift={path,expected,observed};
+                      if(observed===expected||!mayRetry(drift))continue;
+                      failedSpanDrift=drift;
+                      stopForDrift();
+                      break;
+                    }
+                  }
                 }
               }
             })(),
             (async () => { for await (const line of createInterface({ input: child.stderr!, crlfDelay: Infinity })) { diagnostics.write(line); errors.push(line); if (line.trim() && !/^\s*(Compiling|Fresh|Checking|Downloaded)\b/u.test(line)) { stderrTail.push(line.length > policy.stderrLineChars ? `${line.slice(0, policy.stderrLineChars)}…` : line); if (stderrTail.length > policy.stderrTailLines) stderrTail.shift(); } } })());
           const [exit]=await Promise.all([terminal,...streams]);
-          const earlyDrift=exit===0?undefined:sourceWatch?.drift();
+          const earlyDrift=exit===0?undefined:failedSpanDrift??sourceWatch?.drift();
           if(earlyDrift&&driftStopMs!==undefined){
             driftRetirements.push({pass:pass.id,started:startMs,stopped:driftStopMs,ended:Date.now()});
             await publishCargoSourceDriftV1(effectControl,earlyDrift);
@@ -910,9 +1003,10 @@ export function runNativeBuildDriverV1(options: NativeBuildDriverOptionsV1): Pro
              : undefined;
            return {exit,startMs,units,buildScripts,linked,compilerErrors,passFiles,attemptFailures,stderrTail,errors,mixedSources,missingWitnessDrift,earlyDrift};
         }catch(error){primary={error};throw error;}finally {
+          clearInterval(storageCheck);
           try{await finishNativeBuildChildV1(child,terminal,streams,primary,logs.map(log=>()=>log.close()));}
           finally{
-            signal.removeEventListener("abort",stop);
+            signal.removeEventListener("abort",endChild);
             signal.removeEventListener("abort",closeSourceWatch);
             child.removeListener("exit",closeSourceWatch);
             children.delete(child);
@@ -925,23 +1019,7 @@ export function runNativeBuildDriverV1(options: NativeBuildDriverOptionsV1): Pro
          if(failed.mixedSources||failed.missingWitnessDrift)return failed.mixedSources??failed.missingWitnessDrift;
         if(failed.earlyDrift)return failed.earlyDrift;
         if (!retryWarm || failed.exit === 0 || failed.linked.size || killedUnitsV1(broker.units().filter(unit=>unit.pass===pass.id&&unexpectedKill(unit))).length) return undefined;
-        const probeDeadline = performance.now() + failureChurn.maximumProbeMilliseconds;
-        let checks = 0;
-        const read = async (path:string) => {
-          checkPass();
-          const remainingMs = () => Math.min(probeDeadline-performance.now(),checkResourceLeaseControl(effectControl)??Infinity);
-          if (remainingMs() <= 0 || checks++ >= failureChurn.maximumChecks) return;
-          try {
-            return (await readPhysicalFileV1(path,{
-              maxBytes:failureChurn.maximumReadBytes,chunkBytes:failureChurn.readChunkBytes,
-              maxWork:Math.ceil(failureChurn.maximumReadBytes/failureChurn.readChunkBytes)+5,
-              cancelled:()=>signal.aborted,remainingMs,onProgress:()=>{},
-            })).bytes;
-          } catch {
-            checkPass();
-            return;
-          }
-        };
+        const read = failureEvidenceReader();
         for (const path of failed.passFiles) {
           const expected = admittedDigests.get(path);
           if (!expected) continue;
@@ -1013,7 +1091,7 @@ export function runNativeBuildDriverV1(options: NativeBuildDriverOptionsV1): Pro
         rmSync(dirname(nativeBuildComponentStagePathV1(generation,pass,row)),{recursive:true,force:true});
         failComponent(row.name, Error(`${row.name} was not linked by ${pass.id}`));
       }
-      if (exit !== 0) { if (!missing.length) failures.push({ pass: pass.id, package: `cargo exit ${exit}` });failureLines.push(`[${pass.id}] cargo exited with ${exit}`); stderrTails.push({ pass: pass.id, lines: stderrTail }); }
+      if (exit !== 0) { if (!missing.length) failures.push({ pass: pass.id, package: `cargo exit ${exit}` });failureLines.push(`[${pass.id}] cargo exited with ${exit}`);const silent=cargoSilentExitV1(exit,{diagnosed:attemptFailures.length>0||errors.lines().length>0||stderrTail.length>0,unitsStarted:units.length});if(silent)failureLines.push(`[${pass.id}] ${silent}`); stderrTails.push({ pass: pass.id, lines: stderrTail }); }
       passRecords.push({ id: pass.id, manifest: pass.manifest, profile: pass.profile, target: pass.target, startMs, endMs: Date.now(), exit, failed: missing.map((row) => row.name) });
       log(`[native-build] ${pass.id} ${pass.profile} ${basename(dirname(pass.manifest))}: exit ${exit}, ${linked.size}/${pass.packages.length} component(s) linked, ${units.length} unit(s) in ${((Date.now() - startMs) / 1000).toFixed(0)} s`);
       completion(`pass:${pass.id}`).resolve();
@@ -1142,7 +1220,8 @@ export function runNativeBuildDriverV1(options: NativeBuildDriverOptionsV1): Pro
   if (stallReason) throw Error(stallReason);
   if (failureEdit) throw failureEdit;
   if (unitKills.some((kill) => kill.transient) && !signal.aborted) throw new UnitKilledErrorV1(unitKills.filter((kill) => kill.transient));
-  if (firstStageFailure?.error instanceof ConcurrentEditErrorV1) throw firstStageFailure.error;
+  const stageEdit = concurrentEditErrorOfV1(firstStageFailure?.error);
+  if (stageEdit) throw stageEdit;
   if (failures.length) throw Error([`Native build failed: ${failures.map((row) => `${row.package} (${row.pass})`).join(", ")}; report ${outcome.report}`, ...stderrTails.map((row) => `[${row.pass}] cargo stderr tail:\n${row.lines.join("\n")}`)].join("\n"),{cause:firstStageFailure?.error});
   const completedOutcome=outcome;return async()=>{
   let consumerFailed=false;

@@ -1,0 +1,449 @@
+{
+  "schema": "semio.os.hub-first-run-vectors/v1",
+  "stages": [
+    "welcome",
+    "signIn",
+    "space",
+    "invite",
+    "done"
+  ],
+  "stateVectors": [
+    {
+      "id": "signed-out",
+      "state": {
+        "signedIn": false,
+        "spaceCount": 0,
+        "openSpaceId": null,
+        "canInvite": false
+      },
+      "stage": "signIn",
+      "stepIndex": 1
+    },
+    {
+      "id": "signed-out-with-leftover-rows",
+      "state": {
+        "signedIn": false,
+        "spaceCount": 2,
+        "openSpaceId": "spc_owned",
+        "canInvite": true
+      },
+      "stage": "signIn",
+      "stepIndex": 1
+    },
+    {
+      "id": "signed-in-no-space",
+      "state": {
+        "signedIn": true,
+        "spaceCount": 0,
+        "openSpaceId": null,
+        "canInvite": false
+      },
+      "stage": "space",
+      "stepIndex": 2
+    },
+    {
+      "id": "member-of-spaces-none-open",
+      "state": {
+        "signedIn": true,
+        "spaceCount": 3,
+        "openSpaceId": null,
+        "canInvite": true
+      },
+      "stage": "space",
+      "stepIndex": 2
+    },
+    {
+      "id": "open-space-with-zero-count",
+      "state": {
+        "signedIn": true,
+        "spaceCount": 0,
+        "openSpaceId": "spc_1",
+        "canInvite": true
+      },
+      "stage": "space",
+      "stepIndex": 2
+    },
+    {
+      "id": "author-in-open-space",
+      "state": {
+        "signedIn": true,
+        "spaceCount": 1,
+        "openSpaceId": "spc_1",
+        "canInvite": true
+      },
+      "stage": "invite",
+      "stepIndex": 3
+    },
+    {
+      "id": "viewer-in-open-space",
+      "state": {
+        "signedIn": true,
+        "spaceCount": 1,
+        "openSpaceId": "spc_1",
+        "canInvite": false
+      },
+      "stage": "done",
+      "stepIndex": 4
+    }
+  ],
+  "projectionVectors": [
+    {
+      "id": "signed-out",
+      "sessionPhase": "signed-out",
+      "rows": [],
+      "activeSpaceId": null,
+      "state": {
+        "signedIn": false,
+        "spaceCount": 0,
+        "openSpaceId": null,
+        "canInvite": false
+      }
+    },
+    {
+      "id": "signing-in",
+      "sessionPhase": "signing-in",
+      "rows": [],
+      "activeSpaceId": null,
+      "state": {
+        "signedIn": false,
+        "spaceCount": 0,
+        "openSpaceId": null,
+        "canInvite": false
+      }
+    },
+    {
+      "id": "expired",
+      "sessionPhase": "expired",
+      "rows": [],
+      "activeSpaceId": null,
+      "state": {
+        "signedIn": false,
+        "spaceCount": 0,
+        "openSpaceId": null,
+        "canInvite": false
+      }
+    },
+    {
+      "id": "signing-out",
+      "sessionPhase": "signing-out",
+      "rows": [],
+      "activeSpaceId": null,
+      "state": {
+        "signedIn": false,
+        "spaceCount": 0,
+        "openSpaceId": null,
+        "canInvite": false
+      }
+    },
+    {
+      "id": "signed-in-empty",
+      "sessionPhase": "signed-in",
+      "rows": [],
+      "activeSpaceId": null,
+      "state": {
+        "signedIn": true,
+        "spaceCount": 0,
+        "openSpaceId": null,
+        "canInvite": false
+      }
+    },
+    {
+      "id": "active-id-not-among-rows",
+      "sessionPhase": "signed-in",
+      "rows": [
+        {
+          "id": "spc_owned",
+          "access": "author"
+        },
+        {
+          "id": "spc_guest",
+          "access": "member"
+        }
+      ],
+      "activeSpaceId": "spc_missing",
+      "state": {
+        "signedIn": true,
+        "spaceCount": 2,
+        "openSpaceId": null,
+        "canInvite": true
+      }
+    },
+    {
+      "id": "open-authored-space",
+      "sessionPhase": "signed-in",
+      "rows": [
+        {
+          "id": "spc_owned",
+          "access": "author"
+        },
+        {
+          "id": "spc_guest",
+          "access": "member"
+        }
+      ],
+      "activeSpaceId": "spc_owned",
+      "state": {
+        "signedIn": true,
+        "spaceCount": 2,
+        "openSpaceId": "spc_owned",
+        "canInvite": true
+      }
+    },
+    {
+      "id": "open-guest-space",
+      "sessionPhase": "signed-in",
+      "rows": [
+        {
+          "id": "spc_owned",
+          "access": "author"
+        },
+        {
+          "id": "spc_guest",
+          "access": "member"
+        }
+      ],
+      "activeSpaceId": "spc_guest",
+      "state": {
+        "signedIn": true,
+        "spaceCount": 2,
+        "openSpaceId": "spc_guest",
+        "canInvite": false
+      }
+    },
+    {
+      "id": "no-open-space-any-authored",
+      "sessionPhase": "signed-in",
+      "rows": [
+        {
+          "id": "spc_owned",
+          "access": "author"
+        },
+        {
+          "id": "spc_guest",
+          "access": "member"
+        }
+      ],
+      "activeSpaceId": null,
+      "state": {
+        "signedIn": true,
+        "spaceCount": 2,
+        "openSpaceId": null,
+        "canInvite": true
+      }
+    },
+    {
+      "id": "no-open-space-no-authored",
+      "sessionPhase": "signed-in",
+      "rows": [
+        {
+          "id": "spc_guest",
+          "access": "member"
+        }
+      ],
+      "activeSpaceId": null,
+      "state": {
+        "signedIn": true,
+        "spaceCount": 1,
+        "openSpaceId": null,
+        "canInvite": false
+      }
+    }
+  ],
+  "seenVectors": [
+    {
+      "id": "no-store",
+      "stored": null,
+      "storeAvailable": false,
+      "seen": false
+    },
+    {
+      "id": "empty-store",
+      "stored": null,
+      "storeAvailable": true,
+      "seen": false
+    },
+    {
+      "id": "seen-value",
+      "stored": "true",
+      "storeAvailable": true,
+      "seen": true
+    },
+    {
+      "id": "foreign-value",
+      "stored": "yes",
+      "storeAvailable": true,
+      "seen": false
+    },
+    {
+      "id": "empty-string",
+      "stored": "",
+      "storeAvailable": true,
+      "seen": false
+    }
+  ],
+  "lifecycleVectors": [
+    {
+      "id": "fresh-signed-out-opens-on-sign-in",
+      "stored": null,
+      "surfaceOpen": true,
+      "state": {
+        "signedIn": false,
+        "spaceCount": 0,
+        "openSpaceId": null,
+        "canInvite": false
+      },
+      "autoOpenStep": 1
+    },
+    {
+      "id": "fresh-in-space-opens-on-invite",
+      "stored": null,
+      "surfaceOpen": true,
+      "state": {
+        "signedIn": true,
+        "spaceCount": 1,
+        "openSpaceId": "spc_1",
+        "canInvite": true
+      },
+      "autoOpenStep": 3
+    },
+    {
+      "id": "seen-never-opens",
+      "stored": "true",
+      "surfaceOpen": true,
+      "state": {
+        "signedIn": false,
+        "spaceCount": 0,
+        "openSpaceId": null,
+        "canInvite": false
+      },
+      "autoOpenStep": null
+    },
+    {
+      "id": "closed-surface-never-opens",
+      "stored": null,
+      "surfaceOpen": false,
+      "state": {
+        "signedIn": false,
+        "spaceCount": 0,
+        "openSpaceId": null,
+        "canInvite": false
+      },
+      "autoOpenStep": null
+    }
+  ],
+  "replayStep": 0,
+  "dismiss": {
+    "storageKey": "ui.introduction.seen.os.hub",
+    "storedValue": "true"
+  },
+  "completionVectors": [
+    {
+      "id": "sign-in-not-done-signed-out",
+      "stage": "signIn",
+      "state": {
+        "signedIn": false,
+        "spaceCount": 0,
+        "openSpaceId": null,
+        "canInvite": false
+      },
+      "inviteReady": false,
+      "done": false
+    },
+    {
+      "id": "sign-in-done-when-signed-in",
+      "stage": "signIn",
+      "state": {
+        "signedIn": true,
+        "spaceCount": 0,
+        "openSpaceId": null,
+        "canInvite": false
+      },
+      "inviteReady": false,
+      "done": true
+    },
+    {
+      "id": "space-not-done-without-open-space",
+      "stage": "space",
+      "state": {
+        "signedIn": true,
+        "spaceCount": 0,
+        "openSpaceId": null,
+        "canInvite": false
+      },
+      "inviteReady": false,
+      "done": false
+    },
+    {
+      "id": "space-not-done-signed-out-with-open-id",
+      "stage": "space",
+      "state": {
+        "signedIn": false,
+        "spaceCount": 1,
+        "openSpaceId": "spc_1",
+        "canInvite": true
+      },
+      "inviteReady": false,
+      "done": false
+    },
+    {
+      "id": "space-done-with-open-space",
+      "stage": "space",
+      "state": {
+        "signedIn": true,
+        "spaceCount": 1,
+        "openSpaceId": "spc_1",
+        "canInvite": true
+      },
+      "inviteReady": false,
+      "done": true
+    },
+    {
+      "id": "invite-not-done-until-ready",
+      "stage": "invite",
+      "state": {
+        "signedIn": true,
+        "spaceCount": 1,
+        "openSpaceId": "spc_1",
+        "canInvite": true
+      },
+      "inviteReady": false,
+      "done": false
+    },
+    {
+      "id": "invite-done-when-ready",
+      "stage": "invite",
+      "state": {
+        "signedIn": true,
+        "spaceCount": 1,
+        "openSpaceId": "spc_1",
+        "canInvite": true
+      },
+      "inviteReady": true,
+      "done": true
+    },
+    {
+      "id": "welcome-never-done",
+      "stage": "welcome",
+      "state": {
+        "signedIn": true,
+        "spaceCount": 1,
+        "openSpaceId": "spc_1",
+        "canInvite": true
+      },
+      "inviteReady": true,
+      "done": false
+    },
+    {
+      "id": "done-never-done",
+      "stage": "done",
+      "state": {
+        "signedIn": true,
+        "spaceCount": 1,
+        "openSpaceId": "spc_1",
+        "canInvite": true
+      },
+      "inviteReady": true,
+      "done": false
+    }
+  ]
+}

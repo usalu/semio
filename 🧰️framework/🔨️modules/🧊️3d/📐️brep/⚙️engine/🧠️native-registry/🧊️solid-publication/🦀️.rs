@@ -3,13 +3,16 @@
 use super::*;
 use super::certified_boolean::OrthogonalBoundary;
 use semio_framework_3d_brep_construction::primitives::BoxGeometry;
-use semio_framework_3d_brep_solid_topology::{spherical_axial_span,split_spherical_support};
+use semio_framework_3d_brep_solid_topology::{certify_bore_stock, published_bore_stock, spherical_axial_span, split_spherical_support};
 use semio_framework_3d_brep_representation::topology::history::LabelSource;
 use semio_framework_3d_brep_solid_transaction::SolidBoundary;
 pub use semio_framework_3d_brep_solid_transaction::{SolidExchangeBoundary,SolidPublication};
 pub(super) use semio_framework_3d_brep_solid_transaction::{store_demand, store_insert, topology_slot_depth, remove_topology_slot};
 use semio_framework_value::{RetainedAllocationEffect, RetainedCloneGrant as Grant, RetainedCloneProgress as Progress, RetainedCloneStep as Step, RetirementDemand};
 use analytic_publication::primitive_handle;
+
+#[path = "🧹️rounded-box-proof/🦀️.rs"]
+mod rounded_box_proof;
 
 impl BrepRegistry {
     /// 📏️ Admits a finite analytic primitive and an independent range of stable topology labels.
@@ -69,10 +72,77 @@ impl BrepRegistry {
         self.plan_solid_boundary(boundary)
     }
 
+    pub const DEFEATURE_FACE_COUNT: usize = 20;
+
+    /// 🧹️ Certifies the selected feature and restores the six stock planes.
+    pub fn defeature_stock(&self, shape: &str, selected: &[&str]) -> Result<SolidPrimitive, ValueError> {
+        self.restored_box(shape, selected, false)
+    }
+
+    /// 📥️ Re-identifies the complete boundary when shape exchange discarded live provenance.
+    pub fn defeature_imported_stock(&self, shape: &str, selected: &[&str]) -> Result<SolidPrimitive, ValueError> {
+        self.restored_box(shape, selected, true)
+    }
+
+    fn restored_box(&self, shape: &str, selected: &[&str], check_imported: bool) -> Result<SolidPrimitive, ValueError> {
+        let invalid = || ValueError::literal(ValueRefusalKind::InvalidValue, "defeature requires every bore wall and floor or all twenty distinct fillet faces");
+        let unsupported = || ValueError::literal(ValueRefusalKind::UnsupportedOwner, "defeature requires certified rectangular stock with a complete fillet or bore feature");
+        if !matches!(selected.len(), 1 | 2 | Self::DEFEATURE_FACE_COUNT) { return Err(invalid()); }
+        let Entity::Solid(id, provenance) = self.original_query_entity(shape)? else { return Err(unsupported()); };
+        let solid = self.body.solids.get(*id).filter(|solid| solid.inners.is_empty()).ok_or_else(unsupported)?;
+        let shell = self.body.shells.get(solid.outer).ok_or_else(unsupported)?;
+        if selected.len() <= 2 {
+            let face = |handle: &str| match self.original_query_entity(handle)? { Entity::Face(id) => Ok(*id), _ => Err(invalid()) };
+            let verify = |faces: &[_]| match provenance {
+                Some(SolidProvenance::Bore(source)) => published_bore_stock(&self.body, shell, *source, faces),
+                None if check_imported => certify_bore_stock(&self.body, shell, faces),
+                _ => None,
+            }.ok_or_else(unsupported);
+            return match selected {
+                [a] => verify(&[face(a)?]),
+                [a, b] => verify(&[face(a)?, face(b)?]),
+                _ => Err(invalid()),
+            };
+        }
+        let source = match provenance {
+            Some(SolidProvenance::RoundedBox(source, _)) => *source,
+            None if check_imported => rounded_box_proof::certify(&self.body, shell).ok_or_else(unsupported)?,
+            _ => return Err(unsupported()),
+        };
+        if shell.faces.len() != source.face_count() { return Err(unsupported()); }
+        let stock_faces = source.face_count() - Self::DEFEATURE_FACE_COUNT;
+        let mut seen = [false; Self::DEFEATURE_FACE_COUNT];
+        for handle in selected {
+            let Entity::Face(face_id) = self.original_query_entity(handle)? else { return Err(invalid()); };
+            let index = shell.faces[stock_faces..].iter().position(|id| id == face_id).ok_or_else(invalid)?;
+            if seen[index] { return Err(invalid()); }
+            seen[index] = true;
+        }
+        let origin: [f64; 3] = std::array::from_fn(|axis| source.face_frame(2 * axis).origin.to_array()[axis]);
+        let [width, depth, height] = std::array::from_fn(|axis| source.face_frame(2 * axis + 1).origin.to_array()[axis] - origin[axis]);
+        Ok(SolidPrimitive::Box { origin: Pnt3::from_array(origin), width, depth, height })
+    }
+
+    /// 🧹️ Quotes the original solid, shell and selected face paths.
+    pub fn defeature_depth(&self, shape: &str, selected: &[&str]) -> Result<usize, ValueError> {
+        if !matches!(selected.len(), 1 | 2 | Self::DEFEATURE_FACE_COUNT) { return Err(ValueError::invariant("defeature requires a complete bore feature or twenty fillet faces")); }
+        let mut depth = self.selected_member_depth(shape, selected)?;
+        if let Entity::Solid(id, _) = self.original_query_entity(shape)? {
+            if let Some(solid) = self.body.solids.get(*id) {
+                depth = depth.max(self.body.shells.next_remove_depth_demand(solid.outer)?);
+            }
+        }
+        Ok(depth)
+    }
+
     /// 🎟️ Quotes both original index paths and the selected native member record.
     pub fn box_finish_depth(&self, shape: &str, selected: &[&str]) -> Result<usize, ValueError> {
-        if selected.len()>4{return Err(ValueError::invariant("box finish member count exceeds the fixed certificate"));}
-        let mut depth=self.certified_solid_depth(shape)?;
+        if selected.len() > 4 { return Err(ValueError::invariant("box finish member count exceeds the fixed certificate")); }
+        self.selected_member_depth(shape, selected)
+    }
+
+    fn selected_member_depth(&self, shape: &str, selected: &[&str]) -> Result<usize, ValueError> {
+        let mut depth = self.certified_solid_depth(shape)?;
         for handle in selected{
             let member=match self.original_query_entity(handle)? {
                 Entity::Edge(id)=>self.body.edges.next_remove_depth_demand(*id)?,

@@ -17,7 +17,7 @@ package semio:framework@1.0.0;
 interface reactor {
   use types.{plugin-error, pack, instance-id};
   use effects.{effect};
-  use events.{event, original-media-loan};
+  use events.{event, original-media-loan, natural-source-loan};
   use ui.{ui-patch};
   use instance-lifetime.{lifetime, receipt, ui-patch-receipt};
 
@@ -151,7 +151,22 @@ interface reactor {
     page-index: option<u32>,
     %result: original-media-result,
   }
+
+  enum natural-source-phase { prepare, begin, page, complete, cancel }
+  enum natural-source-result { retry, pending, accepted, stale, refused }
+  record natural-source-ack {
+    loan: option<natural-source-loan>,
+    owner: u64,
+    seq: u64,
+    kind: u8,
+    extent: u32,
+    phase: natural-source-phase,
+    page-index: option<u32>,
+    %result: natural-source-result,
+  }
+
   record command-ingress-status {
+    natural-source-ack: option<natural-source-ack>,
     original-media-ack: option<original-media-ack>,
     kind: u8,
     cursor: command-page-cursor,

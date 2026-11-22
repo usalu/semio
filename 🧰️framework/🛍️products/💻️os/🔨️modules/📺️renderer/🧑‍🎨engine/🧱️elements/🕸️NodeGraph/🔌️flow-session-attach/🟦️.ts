@@ -9,6 +9,7 @@ import { nodeGraphActions } from "@semio-tech/framework";
 import { createFlowSession } from "@semio-tech/framework-os/modules/renderer/engine/elements/WasmSessionLoader";
 import { nodeGraphViewportActionArgs, parseNodeGraphSessionViewport } from "../🧰️graph-core/🟦️.ts";
 import { nodeGraphContentSignature } from "../🖼️dag-overlays/🟦️.tsx";
+import { fitGraphCameraV1, registerNodeGraphFitV1 } from "../🎯️fit-graph/🟦️.ts";
 import {
   applyFlowSceneHover,
   applyFlowStartupCamera,
@@ -76,6 +77,22 @@ export function useFlowSessionAttach(core: FlowCoreAfterFlowInteractionPublicati
       sessionRef.current = null;
     };
   }, [interactionLedger, surfaceId]);
+
+  useEffect(() => {
+    if (!sessionReady) return;
+    return registerNodeGraphFitV1(surfaceId, () => {
+      const session = sessionRef.current;
+      const rect = containerRef.current?.getBoundingClientRect();
+      const camera = session && rect && surfaceReadyRef.current ? fitGraphCameraV1(sceneRef.current.nodes, Math.round(rect.width), Math.round(rect.height)) : null;
+      if (!session || !camera) return false;
+      observeFlowTask(session, "setCamera", session.setCamera(camera.x, camera.y, camera.zoom));
+      dispatchRef.current(nodeGraphActions.viewport, nodeGraphViewportActionArgs(camera));
+      renderFlow();
+      paintOverlays();
+      schedulerRef.current?.invalidate();
+      return true;
+    });
+  }, [containerRef, dispatchRef, paintOverlays, renderFlow, sceneRef, schedulerRef, sessionReady, sessionRef, surfaceId, surfaceReadyRef]);
 
   const applySceneHover = useCallback((session: NonNullable<typeof sessionRef.current>) => {
     const scene = sceneRef.current;

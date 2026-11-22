@@ -48,21 +48,26 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         self.advance_original_reserved_mount("import-media",meta,finished,cx).await
     }
     /// 🪝️ Mounts the Original picker through the checked import route and retains its exact operation.
-    pub async fn advance_original_reserved_picker(&mut self,
-        input: &mut Option<Box<semio_plugin_decl_media::original_media::RawMediaInput>>, meta: &ActionMeta,
-        finished: &mut Option<semio_framework_job::Operation>, cx: &mut semio_framework_job::StepContext<'_>,
-    ) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
-        if finished.is_some() { return Ok(true); }
-        if self.original_reserved_prepares() && !self.as_render().advance_reserved_picker(input, meta, cx)? {
-            return Ok(false);
-        }
-        self.advance_original_reserved_mount("import-media", meta, finished, cx).await
-    }
-
-    /// 🧾️ Prepares the original clipboard action request, then mounts its producer through the stepped reserved mount until the receipt settles.
-    pub async fn advance_original_reserved_action(&mut self,action:&str,args:Option<&DslValue>,decoded_items:usize,meta:&ActionMeta,maximum:usize,finished:&mut Option<semio_framework_job::Operation>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+    pub async fn advance_original_reserved_picker(&mut self,input:&mut Option<Box<semio_plugin_decl_media::original_media::RawMediaInput>>,meta:&ActionMeta,finished:&mut Option<semio_framework_job::Operation>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         if finished.is_some(){return Ok(true)}
-        if self.original_reserved_prepares()&&!self.as_render().advance_reserved_action(action,args,decoded_items,meta,maximum,cx)?{return Ok(false)}
+        if self.original_reserved_prepares()&&!self.as_render().advance_reserved_picker(input,meta,cx)?{return Ok(false)}
+        self.advance_original_reserved_mount("import-media",meta,finished,cx).await
+    }
+    /// 🌐 Mounts the sealed natural file source through the reserved natural import route and retains its exact operation.
+    pub async fn advance_original_reserved_natural_source(&mut self,source:&mut Option<semio_plugin_decl_media::original_media::natural_source::NaturalFilePagedSource>,meta:&ActionMeta,finished:&mut Option<semio_framework_job::Operation>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        if finished.is_some(){return Ok(true)}
+        if self.original_reserved_prepares() {
+            let mut render = self.as_render();
+            if !render.prepare_reserved_media_cache(cx).await? || !render.advance_reserved_natural_source(source, meta, cx)? {
+                return Ok(false);
+            }
+        }
+        self.advance_original_reserved_mount(semio_plugin_decl_app::tool_contract::NATURAL_SOURCE_TOOL_ID,meta,finished,cx).await
+    }
+    /// 🧾️ Prepares the original clipboard action request, then mounts its producer through the stepped reserved mount until the receipt settles.
+    pub async fn advance_original_reserved_action(&mut self,action:&str,args:&mut Option<DslValue>,meta:&ActionMeta,contract:semio_framework::ToolExecutionContract,finished:&mut Option<semio_framework_job::Operation>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        if finished.is_some(){return Ok(true)}
+        if self.original_reserved_prepares()&&!self.as_render().advance_reserved_action(action,args,meta,contract,cx)?{return Ok(false)}
         self.advance_original_reserved_mount(action,meta,finished,cx).await
     }
     /// 🪞️ The same started operation answers every settled reserved producer with its exact operation coordinates.
@@ -85,14 +90,12 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         }
         let owner = self.media.reserved_mount.as_ref().unwrap();
         let phase = owner.phase;
-        let owns_terminal = phase == 8 && owner.terminal_is_empty()
+        let owns_terminal_mount = phase == 8 && owner.terminal_is_empty()
             && self.media.reserved_receipt.is_some_and(|receipt| receipt.operation(cx).is_ok());
-        if !owner.matches(cx) && !owns_terminal {
-            return Ok(false);
-        }
+        if !owner.matches(cx) && !owns_terminal_mount { return Ok(false); }
         match phase{
             0=>{self.media.reserved_mount.as_mut().unwrap().advance_phase(0,3,cx)?;},
-            3=>{if self.media.reserved_mount.as_ref().unwrap().mounted.is_some(){self.media.reserved_mount.as_mut().unwrap().advance_phase(3,4,cx)?;return Ok(false)}let proof=self.tools.qualified_tool_proof(&*self.stores,verb)?;let contract=proof.contract();let frontier=OriginalEmissionPublicationFrontier{canonical_revision:self.stores.store.content_revision_now(),artifact_generation:self.stores.store.generation_now(),config_generation:self.stores.config_store.generation_now(),draft_generation:self.stores.draft_store.generation_now(),presence_generation:self.stores.presence_store.generation().await,transient_generation:self.stores.transient_store.generation().await,publication_lanes:proof.publication_lanes()};let operation=self.media.pending_reserved_producer_permit.as_ref().ok_or_else(||ValueError::invariant("reserved mount lost its producer permit"))?.0.operation;let prepared=self.pending.reserved_preparation.as_mut().ok_or_else(||ValueError::invariant("reserved mount lost its preparation"))?;let verb=&mut prepared.headers.as_mut().ok_or_else(||ValueError::invariant("reserved mount lost its original verb"))?[8];let owner=self.media.reserved_mount.as_mut().unwrap();if MountedTypedCommandFullOperation::<A>::admit_original_reserved(verb,meta,frontier,contract,&mut self.media.pending_reserved_producer_permit,&mut prepared.job,&mut prepared.completion,&self.tools.tool_cancellations,cx,&mut owner.construction,&mut owner.mounted)?{owner.operation=Some(operation)}},            4=>{let owner=self.media.reserved_mount.as_mut().unwrap();if owner.window_config.as_ref().is_some_and(|capture|capture.handoff_complete()){owner.advance_phase(4,5,cx)?;}else{owner.capture_window_config(&mut self.stores.window_config_store,cx)?;}},
+            3=>{if self.media.reserved_mount.as_ref().unwrap().mounted.is_some(){self.media.reserved_mount.as_mut().unwrap().advance_phase(3,4,cx)?;return Ok(false)}let proof=self.tools.qualified_tool_proof(&*self.stores,verb)?;let frontier=OriginalEmissionPublicationFrontier{canonical_revision:self.stores.store.content_revision_now(),artifact_generation:self.stores.store.generation_now(),config_generation:self.stores.config_store.generation_now(),draft_generation:self.stores.draft_store.generation_now(),presence_generation:self.stores.presence_store.generation().await,transient_generation:self.stores.transient_store.generation().await,publication_lanes:proof.publication_lanes()};let operation=self.media.pending_reserved_producer_permit.as_ref().ok_or_else(||ValueError::invariant("reserved mount lost its producer permit"))?.0.operation;let prepared=self.pending.reserved_preparation.as_mut().ok_or_else(||ValueError::invariant("reserved mount lost its preparation"))?;let verb=&mut prepared.headers.as_mut().ok_or_else(||ValueError::invariant("reserved mount lost its original verb"))?[8];let owner=self.media.reserved_mount.as_mut().unwrap();if MountedTypedCommandFullOperation::<A>::admit_original_reserved(verb,meta,frontier,proof.contract(),&mut self.media.pending_reserved_producer_permit,&mut prepared.job,&mut prepared.completion,&self.tools.tool_cancellations,cx,&mut owner.construction,&mut owner.mounted)?{owner.operation=Some(operation)}},            4=>{let owner=self.media.reserved_mount.as_mut().unwrap();if owner.window_config.as_ref().is_some_and(|capture|capture.handoff_complete()){owner.advance_phase(4,5,cx)?;}else{owner.capture_window_config(&mut self.stores.window_config_store,cx)?;}},
             5=>{let owner=self.media.reserved_mount.as_mut().unwrap();if owner.window_transient.as_ref().is_some_and(|capture|capture.handoff_complete()){owner.advance_phase(5,6,cx)?;}else{owner.capture_window_transient(&mut self.stores.window_transient_store,cx)?;}},
             6=>{let owner=self.media.reserved_mount.as_mut().unwrap();if owner.mounted.as_ref().unwrap().captured_child_content.is_some(){owner.advance_phase(6,7,cx)?;return Ok(false)}let mounted=owner.mounted.as_mut().unwrap();crate::original_emission::capture_child_content(&*self.child_composition.child_content_root,self.child_composition.child_content_generation,mounted,cx)?;},
             7=>{let owner=self.media.reserved_mount.as_ref().unwrap();if owner.mounted.is_none(){self.media.reserved_mount.as_mut().unwrap().advance_phase(7,8,cx)?;return Ok(false)}let mounted=owner.mounted.as_ref().unwrap();let operation=owner.operation.ok_or_else(||ValueError::invariant("reserved mount lost its operation"))?;let id=operation.operation.0;if mounted.canonical_revision!=self.stores.store.content_revision_now()||mounted.artifact_generation!=self.stores.store.generation_now()||mounted.config_generation!=self.stores.config_store.generation_now()||mounted.draft_generation!=self.stores.draft_store.generation_now()||mounted.captured_child_content_generation!=self.child_composition.child_content_generation||!self.tools.tool_operations.can_insert(id)||self.tools.typed_operation_reservations[id as usize%semio_plugin_ownership::bounded_ownership::ARTIFACT_LIVE_OUTPUT_SLOTS]!=Some(id){return Err(ValueError::invariant("reserved mount changed its original destination or frontier").into())}let receipt=OriginalEmissionReceipt::capture(operation,cx)?;let mut output=None;if self.media.reserved_mount.as_mut().unwrap().take_mounted_into(&mut output,cx)?{self.tools.tool_operations.insert_admitted(id,output.unwrap());self.tools.release_reserved_emit_slot(id);self.media.reserved_receipt=Some(receipt);}},
@@ -209,8 +212,9 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
     /// 🧷️ Drives the stepped clipboard `cut` mount until its producer settles into its admitted operation, or `None` while the turns stay unfunded.
     #[cfg(any(test,feature="artifact-app-testing"))]
     pub async fn test_mount_reserved_cut(&mut self,meta:&ActionMeta,turns:usize,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::Operation>,semio_framework_job::OriginalTurnFailure>{
-        let maximum=self.tools.qualified_tool_proof(&*self.stores,"cut")?.contract().max_raw_wire_bytes;
+        let contract=self.tools.qualified_tool_proof(&*self.stores,"cut")?.contract();
+        let mut args=None;
         let mut finished=None;
-        for _ in 0..turns{if self.advance_original_reserved_action("cut",None,0,meta,maximum,&mut finished,cx).await?{break}}
+        for _ in 0..turns{if self.advance_original_reserved_action("cut",&mut args,meta,contract,&mut finished,cx).await?{break}}
         Ok(finished)    }
 }

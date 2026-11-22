@@ -6,6 +6,7 @@ import type { PluginCatalogRowsV1 } from "@semio-tech/framework/plugin-catalog";
 import { createAssetBuildPluginsV1, type AssetDeliveryModeV1, type AssetDeliveryDeclarationV1 } from "@semio-tech/assets/resolver/dispatch";
 import { PLAYGROUND_ASSET_PROVIDERS_V1 } from "@semio-tech/plugin-registry/playground/assets/composition";
 import { MODULE_ROUTES, MODULE_VENDOR_DIRECTORY } from "@semio-tech/plugin-registry/deployment";
+import { PREVIEW2_VENDOR_RELATIVE } from "@semio-tech/framework-plugin/browser-bundle/imports";
 import { packageAssetMounts } from "@semio-tech/framework-kernel";
 import { FONT_ASSET } from "@semio-tech/framework-canvas-ts/fonts";
 import { repoCacheDirectory } from "@semio-tech/process/execution";
@@ -26,6 +27,8 @@ export type WgpuBrowserConfiguration = {
   readonly variant?: string;
   readonly compilerRoot: string;
   readonly moduleRoot: string;
+  readonly capturedFontsRoot?: string;
+  readonly openCapturedFile?: (path: string) => number | undefined;
   readonly extensionRoot: string;
   readonly bootRoot: string;
   readonly libraryRoot: string;
@@ -59,10 +62,11 @@ function completedArtifactReload(path: string): OwnedBuildPlugin {
 
 /** 🚏️ Projects each completed source to its one browser route. */
 export function wgpuBrowserMounts(options: WgpuBrowserConfiguration): readonly (readonly [string, string])[] {
-  const staged = frameworkOsViteArtifactPathsV1(repositoryCachePartitionRootDataV1(options.workspace, "products"), options.profile);
+  const fontsRoot = options.capturedFontsRoot ?? frameworkOsViteArtifactPathsV1(repositoryCachePartitionRootDataV1(options.workspace, "products"), options.profile).fonts;
   return [
     ["/renderer-modules/wgpu", options.compilerRoot],
-    [MODULE_ROUTES.plugin+"/"+MODULE_VENDOR_DIRECTORY, staged.fonts],
+    [MODULE_ROUTES.plugin + "/" + PREVIEW2_VENDOR_RELATIVE, join(options.moduleRoot, PREVIEW2_VENDOR_RELATIVE)],
+    [MODULE_ROUTES.plugin+"/"+MODULE_VENDOR_DIRECTORY, fontsRoot],
     ...RUNTIME_ASSET_CHANNELS.map(({route,directory})=>[route,resolve(options.workspace,directory)] as const),
     ...packageAssetMounts().map(([route, directory]) => [route, resolve(options.workspace, directory)] as const),
     ["/🚀️boot.js", options.bootRoot],
@@ -107,20 +111,21 @@ export function wgpuBrowserSelectionPlugin(variant: string | undefined): OwnedBu
 
 export function createWgpuBrowserConfig(options: WgpuBrowserConfiguration): OwnedBuildConfig {
   if (!["prototype", "release"].includes(options.profile)) throw new Error("Select a WGPU browser profile");
-  for (const [root, file] of [[options.compilerRoot, "semio-renderer-wgpu-component.js"], [options.compilerRoot, "semio-renderer-wgpu-component_bg.wasm"], [options.bootRoot, "🟨️.js"], [options.libraryRoot, "🟨️.js"], [options.workerRoot, "🟨️.js"], [frameworkOsViteArtifactPathsV1(repositoryCachePartitionRootDataV1(options.workspace, "products"), options.profile).fonts, FONT_ASSET]] as const) if (!existsSync(join(root, file))) throw new Error("Missing prepared WGPU artifact: " + join(root, file));
+  for (const [root, file] of [[options.compilerRoot, "semio-renderer-wgpu-component.js"], [options.compilerRoot, "semio-renderer-wgpu-component_bg.wasm"], [options.bootRoot, "🟨️.js"], [options.libraryRoot, "🟨️.js"], [options.workerRoot, "🟨️.js"], [options.capturedFontsRoot ?? frameworkOsViteArtifactPathsV1(repositoryCachePartitionRootDataV1(options.workspace, "products"), options.profile).fonts, FONT_ASSET]] as const) if (!existsSync(join(root, file))) throw new Error("Missing prepared WGPU artifact: " + join(root, file));
   const mounts = wgpuBrowserMounts(options);
+  const guarded = (root: string) => options.openCapturedFile !== undefined && (root === options.compilerRoot || root === options.capturedFontsRoot);
   return {
     root: options.root,
     publicDir: false,
     cacheDir: repoCacheDirectory(options.workspace, "vite", "wgpu", options.variant ?? "fixture", options.profile),
     optimizeDeps: { noDiscovery: true, include: [] },
     resolve: { alias: mounts.map(([find, replacement]) => ({ find, replacement })) },
-    server: { watch: null, fs: { allow: [options.root, ...mounts.map(([, root]) => root)] }, ...(process.env.SEMIO_VITE_HMR === "0" ? { hmr: false } : {}) },
+    server: { watch: null, fs: { allow: [options.root, ...mounts.map(([, root]) => root).filter(root => !guarded(root))] }, ...(process.env.SEMIO_VITE_HMR === "0" ? { hmr: false } : {}) },
     plugins: [
       { ...playgroundIframeEmbedHeadersPlugin(), enforce: "pre" },
       semioEmojiIndexHtmlVitePlugin(options.root),
       semioAgentBridgeRendezvousVitePlugin({ shellKind: "wgpu-web" }),
-      ...mounts.flatMap(([route, root]) => staticDirVitePlugin(options.workspace, { kind: "static-dir", route, root }).filter(plugin => plugin.apply !== "build")),
+      ...mounts.flatMap(([route, root]) => staticDirVitePlugin(options.workspace, { kind: "static-dir", route, root }, guarded(root) ? options.openCapturedFile : undefined).filter(plugin => plugin.apply !== "build")),
       ...createAssetBuildPluginsV1(options.workspace, options.assets, PLAYGROUND_ASSET_PROVIDERS_V1, options.assetServeMode),
       {
         name: "wgpu-artifact-route-boundary",

@@ -78,8 +78,8 @@
         "loadCeilingBasisPointsPerCore": 15000,
         "foregroundCoreShareBasisPoints": 2500,
         "yieldAfterMilliseconds": 5000,
-        "swapActiveMegabytesPerSecond": 1,
-        "swapOutMegabytesPerSecond": 64,
+        "swapActiveBasisPointsPerSecond": 0.6,
+        "swapOutBasisPointsPerSecond": 40,
         "yieldKillMilliseconds": 3000,
         "targetPollMilliseconds": 2000,
         "beatMilliseconds": 5000,
@@ -211,15 +211,11 @@
           "type": "object",
           "additionalProperties": false,
           "required": [
-            "projectAuthority",
             "registryDigest",
             "commandRevision",
             "late"
           ],
           "properties": {
-            "projectAuthority": {
-              "type": "string"
-            },
             "registryDigest": {
               "type": "string"
             },
@@ -605,6 +601,12 @@
         "cause": {
           "type": "string",
           "maxLength": 300
+        },
+        "causes": {
+          "description": "Every distinct cause the machines of the fleet reported while the note was live, the first one first (at most four); absent in a note with one cause.",
+          "type": "array",
+          "maxItems": 4,
+          "items": { "type": "string", "maxLength": 300 }
         },
         "origin": {
           "type": "string"

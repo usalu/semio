@@ -5,7 +5,7 @@ import {createHostAvailableBytesV1} from "../../../../../../../../🔨️modules
 import {join} from "node:path";
 import {spawn} from "node:child_process";
 import {createHash} from "node:crypto";
-import {HERE,sleep,waitFor} from "../🟦️.ts";
+import {HERE,shortTempDirectory,sleep,waitFor} from "../🟦️.ts";
 import {createHostServiceV1} from "../../🏛️service/🌐️host/🟨️.mjs";
 import {createGraphPlannerPortV1} from "../../🔌️ports/🧭️plan/🟨️.mjs";
 import {hostEndpointsV1} from "../../📨️protocol/📍️endpoint/🏠️host/🟨️.mjs";
@@ -20,7 +20,7 @@ import {PlanRefusedErrorV1,requestPlanV1} from "../../🚪️client/🛰️plan/
 
 const FIXTURE=JSON.parse(readFileSync(join(HERE,"🧫️fixtures/🛑️cancel.json"),"utf8")),BOUND=FIXTURE.boundMilliseconds as number;
 const GRAPH=join(HERE,"🧫️fixtures/🛰️host-graph.json"),CLIENT=join(HERE,"🛑️cancel/🛰️client.mjs");
-const base=mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR??(process.platform==="win32"?tmpdir():"/tmp"),"cx-"));
+const base=shortTempDirectory("cx-");
 afterAll(()=>rmSync(base,{recursive:true,force:true}));
 const alive=(pid:number)=>{try{process.kill(pid,0);}catch(error:any){return error?.code==="EPERM";}try{return !/^\d+ \(.*\) Z/u.test(readFileSync("/proc/"+pid+"/stat","utf8"));}catch{return true;}};
 const digestOf=(name:string)=>createHash("sha256").update(name).digest("hex");

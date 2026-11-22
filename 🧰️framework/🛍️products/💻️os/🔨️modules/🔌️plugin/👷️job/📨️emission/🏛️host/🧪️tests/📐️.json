@@ -81,6 +81,10 @@
           },
           "expected": {
             "type": "string"
+          },
+          "maximumTurns": {
+            "type": "integer",
+            "minimum": 1
           }
         }
       }

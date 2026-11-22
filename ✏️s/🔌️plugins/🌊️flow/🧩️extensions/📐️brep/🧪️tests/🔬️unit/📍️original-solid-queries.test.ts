@@ -147,3 +147,60 @@ test("Manifold confirms Euclidean separation and zero overlap distance", () => {
   }
   source.delete();
 });
+
+
+test("Manifold and Three.js project onto orthogonal Boolean material and measure spherical clearance", () => {
+  for (const row of fixture.orthogonalSphereDistance) {
+    const shell = row.stock;
+    const shape = shell
+      ? { a: shell, b: {
+        origin: shell.origin.map(value => value + shell.thickness),
+        size: shell.size.map(value => value - 2 * shell.thickness),
+      } }
+      : booleans[row.source as "orthogonal" | "cavity"];
+    const stock = translatedBox(shape.a.size, shape.a.origin);
+    const tool = translatedBox(shape.b.size, shape.b.origin);
+    const solid = row.operator === "brep.bool.fuse" ? stock.add(tool) : stock.subtract(tool);
+    const axis = new Vector3(0, 0, 1);
+    const offset = new Vector3().fromArray(row.placement?.offset ?? [0, 0, 0]);
+    const angle = row.placement?.angle ?? 0;
+    const rotated = solid.rotate([0, 0, angle * 180 / Math.PI]);
+    const placed = rotated.translate(offset.toArray() as Vec3);
+    try {
+      const mesh = placed.getMesh();
+      const vertex = (out: Vector3, corner: number) => {
+        const start = mesh.triVerts[corner] * mesh.numProp;
+        out.fromArray(mesh.vertProperties, start);
+      };
+      const winner = new Vector3();
+      const world = (coords: number[]) => new Vector3().fromArray(coords).applyAxisAngle(axis, angle).add(offset);
+      const project = (coords: number[]) => {
+        query.copy(world(coords));
+        let gap = Infinity;
+        for (let corner = 0; corner < mesh.triVerts.length; corner += 3) {
+          vertex(triangle.a, corner);
+          vertex(triangle.b, corner + 1);
+          vertex(triangle.c, corner + 2);
+          const distance = triangle.closestPointToPoint(query, nearest).distanceTo(query);
+          if (distance < gap) {
+            gap = distance;
+            winner.copy(nearest);
+          }
+        }
+        return gap;
+      };
+      for (const probe of row.probes) {
+        const gap = project(probe.center);
+        const rayEnd = query.clone().add(new Vector3(21.374, 17.53, 24.184));
+        const inside = placed.rayCast(query.toArray() as Vec3, rayEnd.toArray() as Vec3).length % 2 === 1;
+        expect(inside ? 0 : Math.max(0, gap - probe.radius), row.name).toBeCloseTo(probe.expected, 6);
+      }
+      for (const [target, expected] of row.closestPoints) {
+        project(target);
+        expect(winner.distanceTo(world(expected)), row.name).toBeLessThan(1e-6);
+      }
+    } finally {
+      for (const value of [placed, rotated, solid, tool, stock]) value.delete();
+    }
+  }
+});

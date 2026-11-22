@@ -51,7 +51,7 @@ pub use dump_types_paths_and_walk::{DumpAccessibility, DumpAccessibilityWindow};
 #[cfg(any(target_arch="wasm32",any(test,feature="testkit")))]
 pub use dump_types_paths_and_walk::{
     ui_node_kind_tag, ui_node_path_segment, walk_dump, DumpFrameStats, DumpMesh, DumpMeshInstance,
-    DumpMeshStats, DumpMeshSurface, DumpNode,
+    DumpMeshStats, DumpMeshSurface, DumpNode, DumpNodeState,
 };
 #[cfg(any(target_arch="wasm32",any(test,feature="testkit")))]
 use dump_types_paths_and_walk::dump_window_id;
@@ -85,6 +85,11 @@ use vfs_feed_world_and_timeline_accessibility::{
     append_graph_timeline_accessibility_nodes, append_vfs_accessibility_nodes,
     append_world3d_accessibility_nodes,
 };
+
+#[path = "🩹️map-unavailable-accessibility/🦀️.rs"]
+mod map_unavailable_accessibility;
+pub use map_unavailable_accessibility::{map_unavailable_accessibility_entries, MapUnavailableAccessibilityEntry};
+use map_unavailable_accessibility::append_map_unavailable_accessibility_nodes;
 
 #[path = "📤️editor-accessibility-frame-stats-and-exports/🦀️.rs"]
 mod editor_accessibility_frame_stats_and_exports;

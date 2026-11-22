@@ -6,7 +6,7 @@ import {resolveLanguageV1,type OsLanguageListV1} from "../../../../../📦️pac
 const protocol=schema.definitions.Protocol.const;
 
 /** 📚️ The authored policy of the measured-demand estimates: decay half-life, the quantile of the learned peaks and the margin on it, how many effective samples earn full trust, the bounds of the store, the bounds of a learned size and the active time under which a class counts as a quick, interactive rebuild. */
-export type HostEstimatePolicyV1=Readonly<{halfLifeMilliseconds:number;quantileBasisPoints:number;marginBasisPoints:number;minimumSamples:number;maximumSamples:number;maximumClasses:number;minimumRatioBasisPoints:number;maximumRatioBasisPoints:number;minimumMegabytes:number;quickMilliseconds:number;maximumShareBasisPoints:number;fallbackCeilingMegabytes:number;defaultRampMilliseconds:number;maximumRampMilliseconds:number;phaseReferenceMegabytes:number;rebuildPriorMegabytes:number;rebuildShareBasisPoints:number;maximumRebuildSlots:number;quietReferenceMegabytes:number;quietMaximumMegabytes:number;quietFollowUpMilliseconds:number}>;
+export type HostEstimatePolicyV1=Readonly<{halfLifeMilliseconds:number;quantileBasisPoints:number;marginBasisPoints:number;minimumSamples:number;maximumSamples:number;maximumClasses:number;minimumRatioBasisPoints:number;maximumRatioBasisPoints:number;minimumMegabytes:number;quickMilliseconds:number;maximumShareBasisPoints:number;fallbackCeilingMegabytes:number;defaultRampMilliseconds:number;maximumRampMilliseconds:number;phaseReferenceMegabytes:number;rebuildPriorMegabytes:number;rebuildShareBasisPoints:number;rebuildMinimumMegabytes?:number;maximumPhaseMegabytes?:number;rebuildQuantileBasisPoints?:number;maximumRebuildSlots:number;quietReferenceMegabytes:number;quietMaximumMegabytes:number;quietFollowUpMilliseconds:number}>;
 /** 🌡️ The authored action kinds a job estimate is keyed by; identical to the worker pool vocabulary, never a build tool name. */
 export type HostActionKindV1="test"|"check"|"generate"|"build"|"script"|"service";
 /** 📐️ One kind's estimate: cores it keeps busy and megabytes it holds at its peak. */
@@ -18,7 +18,7 @@ export type HostCeilingV1=Readonly<{name:string;pattern:string;megabytes:number}
 /** 🧭️ How one operation sizes its request: `tasks` multiplies per-job estimates by the job count, `fixed` reserves one block; `minimumMegabytes` (fixed shape) is the least memory the operation starts with when its fixed block does not fit in full (see `HostRequestV1`); `forecast` lets a run of the operation hold only a small quiet reservation until work has to run (only where the tool gates its executors). */
 export type HostOperationV1=Readonly<{name:string;shape:"tasks"|"fixed";kind?:HostActionKindV1;fixedMegabytes:number;cpu:number;priority:"batch"|"interactive";forecast?:boolean;minimumMegabytes?:number}>;
 /** 📜️ The authored host capacity policy (`Policy` of the schema). */
-export type HostCapacityPolicyV1=Readonly<{version:1;enabled:boolean;memory:Readonly<{floorBasisPoints:number;floorMinimumMegabytes:number;floorMaximumMegabytes:number;budgetBasisPoints:number;rampMilliseconds:number;maximumRamping:number;rampIdleAfterMilliseconds?:number;rampIdleObservedBasisPoints?:number;rampIdleKeepMegabytes?:number;rampIdleKeepBasisPoints?:number;settledAfterMilliseconds?:number;settledKeepBasisPoints?:number;childStartMegabytes?:number;maximumQuiet:number;quietSoftStopGrants:number}>;swap:Readonly<{ceilingBasisPoints:number;activeMegabytesPerSecond:number;outMegabytesPerSecond:number}>;pressure:Readonly<{psiWarnPercent:number;psiCriticalPercent:number;availableWarnBasisPoints:number;availableCriticalBasisPoints:number;compressedWarnBasisPoints:number;compressedCriticalBasisPoints:number}>;load:Readonly<{perCoreCeiling:number;overrideAfterMilliseconds:number}>;files:Readonly<{ceilingBasisPoints:number}>;attaches:Readonly<{maximum:number}>;wait:Readonly<{pollMilliseconds:number;progressMilliseconds:number;heartbeatMilliseconds:number;staleMilliseconds:number;lockStaleMilliseconds:number;sampleMaximumAgeMilliseconds:number;maximumWaiters:number;bypassMilliseconds:number;maximumBypasses:number;agingMilliseconds:number;lendAfterMilliseconds:number;jitterBasisPoints:number}>;kinds:Readonly<Record<HostActionKindV1,HostResourceV1>>;operations:readonly HostOperationV1[];estimates:HostEstimatePolicyV1;envelopes:readonly HostEnvelopeV1[];classCeilings:readonly HostCeilingV1[]}>;
+export type HostCapacityPolicyV1=Readonly<{version:1;enabled:boolean;memory:Readonly<{floorBasisPoints:number;floorMinimumMegabytes:number;floorMaximumMegabytes:number;budgetBasisPoints:number;rampMilliseconds:number;maximumRamping:number;rampIdleAfterMilliseconds?:number;rampIdleObservedBasisPoints?:number;rampIdleKeepMegabytes?:number;rampIdleKeepBasisPoints?:number;settledAfterMilliseconds?:number;settledKeepBasisPoints?:number;childStartMegabytes?:number;maximumQuiet:number;quietSoftStopGrants:number}>;swap:Readonly<{ceilingBasisPoints:number;activeBasisPointsPerSecond:number;outBasisPointsPerSecond:number;shortBasisPoints:number}>;pressure:Readonly<{psiWarnPercent:number;psiCriticalPercent:number;availableWarnBasisPoints:number;availableCriticalBasisPoints:number;compressedWarnBasisPoints:number;compressedCriticalBasisPoints:number}>;load:Readonly<{perCoreCeiling:number;overrideAfterMilliseconds:number}>;files:Readonly<{ceilingBasisPoints:number}>;attaches:Readonly<{maximum:number}>;wait:Readonly<{pollMilliseconds:number;progressMilliseconds:number;heartbeatMilliseconds:number;staleMilliseconds:number;lockStaleMilliseconds:number;sampleMaximumAgeMilliseconds:number;maximumWaiters:number;bypassMilliseconds:number;maximumBypasses:number;agingMilliseconds:number;lendAfterMilliseconds:number;jitterBasisPoints:number;deadlineInteractiveMilliseconds?:number;deadlineBatchMilliseconds?:number;starvedMilliseconds?:number}>;kinds:Readonly<Record<HostActionKindV1,HostResourceV1>>;operations:readonly HostOperationV1[];estimates:HostEstimatePolicyV1;envelopes:readonly HostEnvelopeV1[];classCeilings:readonly HostCeilingV1[]}>;
 /** 🖥️ One sample of the host (`Host` of the schema); every platform reduces to these fields, `null` marking a counter the platform does not offer, `counters:"partial"` marking a sample whose platform probe failed (pressure and swap unknown; unknown is never read as pressure, the free memory of the operating system decides): the machine-wide open file table (used and maximum) and the number of attached disk images join memory, swap and load. */
 export type HostSampleV1=Readonly<{version:1;atMs:number;platform:"darwin"|"linux"|"win32";cores:number;totalMegabytes:number;availableMegabytes:number;pressure:"normal"|"warn"|"critical";swapUsedMegabytes:number|null;swapOutMegabytesPerSecond:number|null;load:number|null;openFiles:number|null;openFilesMaximum:number|null;attachedImages:number|null;unmanagedMegabytes?:number;counters?:"partial"}>;
 /** 🎫️ What one operation asks for (`Request` of the schema); `label` names what it builds (the target of `repo run`), so the progress lines of others can say whom they stand behind; `minimumMegabytes` is the least memory a request that can run smaller still starts with: when its full reservation does not fit but the free memory covers this minimum it is admitted with what is free (`shrunk`), when this minimum can never fit the machine it is refused at once (`never`), and when nothing of ours runs and not even the minimum is free after `load.overrideAfterMilliseconds` it is refused (`starved`), because waiting for memory that no run of ours holds cannot help; `essential` (with `elastic`) marks the FIRST worker of a farm: it is admitted with its minimum jobs whatever the free memory and any soft stop say, as long as no grant of the same label, holder and session runs and the host is not in critical pressure, because a farm without a child makes its parent run every owner itself, which is the largest process doing the slowest work; the floor applies to the additional children; `elastic` marks a supplementary request of a run that already holds a grant and goes on without it (the project farm): it is decided after every other request and never makes one wait; `envelopePerJobMegabytes` is the per-job memory a tool may use when it differs from the reserved `perJobMegabytes`; `rampMilliseconds` is how long the run needs to reach its peak (what its class learned, else the policy ramp) and `rampSlot` marks a reservation sized below the default, which may only ramp in a bounded number of slots at once; `quiet` marks the small forecast request of a run expected to execute nothing, which passes the queue barrier (within `memory.maximumQuiet` such grants) because it can starve nobody and is upgraded to its full request if work has to run. */
@@ -110,12 +110,28 @@ export function hostFloorMegabytesV1(policy:HostCapacityPolicyV1,host:Pick<HostS
  return Math.min(host.totalMegabytes,Math.max(policy.memory.floorMinimumMegabytes,Math.min(policy.memory.floorMaximumMegabytes,share)));
 }
 
+/** 🪫️ How long a request that cannot be served waits at the most, whoever holds the memory: past it a request that fits no shrink (the room above the floor stays under its least need, or a hard stop holds) is refused with the reason `starved` and a named error, so the stage that asked fails and retries instead of waiting for ever; unbounded only for a policy without the field.
+ * @see decideHostCapacityV1 */
+export function hostStarvedMillisecondsV1(policy:HostCapacityPolicyV1):number{
+ return policy.wait.starvedMilliseconds??Infinity;
+}
+
+/** ⏱️ How long a request of this priority waits for memory before its deadline rules apply (an interactive request sooner than a batch one); no deadline is configured for a policy without the fields, so the wait is then unbounded as it was.
+ * @see decideHostCapacityV1 */
+export function hostWaitDeadlineMillisecondsV1(policy:HostCapacityPolicyV1,priority:HostRequestV1["priority"]):number{
+ return (priority==="batch"?policy.wait.deadlineBatchMilliseconds:policy.wait.deadlineInteractiveMilliseconds)??Infinity;
+}
+
 /** 🔢️ Orders waiters for service: interactive before batch, and the lent class of another machine after everything (grow and elastic requests after every other request, and interactive before batch among themselves), then the agent session holding the least memory per unit of budget weight (weighted fair share between sessions; waiters without a session count as holding nothing), then by arrival, then by id; grow requests of running grants and elastic requests come after every other request. */
 export function orderHostWaitersV1(waiters:readonly HostWaiterV1[],ledger:readonly Pick<HostGrantV1,"session"|"reservedMegabytes">[]=[]):HostWaiterV1[]{
  const rank=(waiter:HostWaiterV1)=>(waiter.grow===true||waiter.request.elastic===true?2:0)+(waiter.request.priority==="interactive"?0:waiter.request.priority==="lent"?4:1),held=(waiter:HostWaiterV1)=>waiter.session===undefined?0:ledger.reduce((sum,grant)=>sum+(grant.session===waiter.session?grant.reservedMegabytes:0),0),weight=(waiter:HostWaiterV1)=>waiter.weight??1;
  return [...waiters].sort((left,right)=>rank(left)-rank(right)||held(left)*weight(right)-held(right)*weight(left)||left.arrivedAtMs-right.arrivedAtMs||(left.request.id<right.request.id?-1:left.request.id>right.request.id?1:0));
 }
 
+/** 🌋️ Whether the host is under memory pressure now: pressure above normal or the swap stop; a run measured in such a state does not teach the estimates. */
+export function hostUnderPressureV1(policy:HostCapacityPolicyV1,host:HostSampleV1):boolean{
+ return host.pressure!=="normal"||hostSwapStopV1(policy,host)!==undefined;
+}
 /** 🚧️ Names what holds every admission back without being a hard stop: raised memory pressure, an open file table above its ceiling share or as many attached disk images as the maximum; undefined when none applies. These can be waited out, and are overridden only when nothing of ours is running. */
 export function softHostReasonV1(policy:HostCapacityPolicyV1,host:HostSampleV1):"pressure-warn"|"files"|"attaches"|undefined{
  if(host.pressure==="warn")return "pressure-warn";
@@ -185,6 +201,15 @@ export function evaluateHostCapacityV1(policy:HostCapacityPolicyV1,host:HostSamp
  return Object.freeze({...evaluation,decisions:Object.freeze([...lent,...evaluation.decisions])});
 }
 
+/** 🌊️ Whether the host's swap is a reason to wait: swap that is merely occupied never is (a long-running host parks cold pages there for days and a gate that refused on occupancy would never admit again), only swap that is worked while memory is short: the pages swapped in and out per second reach `activeBasisPointsPerSecond` of the host's memory while the occupied swap is above `ceilingBasisPoints` of it and the memory the host can still give out is below `shortBasisPoints` of it (`swap`), or the traffic alone exceeds `outBasisPointsPerSecond` of the memory per second (`swap-activity`: the disk is saturated whatever the free memory says). Every threshold is a share of the host's memory, so a 16 GB and a 64 GB host judge the same state alike.
+ * @see decideHostCapacityV1 */
+export function hostSwapStopV1(policy:HostCapacityPolicyV1,host:Pick<HostSampleV1,"totalMegabytes"|"availableMegabytes"|"swapUsedMegabytes"|"swapOutMegabytesPerSecond">):"swap"|"swap-activity"|undefined{
+ const rate=host.swapOutMegabytesPerSecond;
+ if(rate===null)return undefined;
+ const rules=policy.swap,total=host.totalMegabytes,swapping=rate*10000>=total*rules.activeBasisPointsPerSecond,short=host.availableMegabytes*10000<total*rules.shortBasisPoints,crowded=host.swapUsedMegabytes!==null&&host.swapUsedMegabytes*10000>total*rules.ceilingBasisPoints;
+ return crowded&&swapping&&short?"swap":rate*10000>total*rules.outBasisPointsPerSecond?"swap-activity":undefined;
+}
+
 /** 🧮️ The decision proper on the view `evaluateHostCapacityV1` hands it: a pure function of its arguments that knows nothing of holders.
  * @see evaluateHostCapacityV1 */
 export function decideHostCapacityV1(policy:HostCapacityPolicyV1,host:HostSampleV1,ledger:readonly HostGrantV1[],waiters:readonly HostWaiterV1[],nowMs:number):HostEvaluationV1{
@@ -198,16 +223,14 @@ export function decideHostCapacityV1(policy:HostCapacityPolicyV1,host:HostSample
  const headroom=Math.min(observed,budget),ledgerCpu=active.reduce((sum,grant)=>sum+grant.cpu,0),ceiling=policy.load.perCoreCeiling*host.cores;
  let loadRoom=host.load===null&&ledgerCpu===0?Infinity:ceiling-Math.max(host.load??0,ledgerCpu);
  const reportedLoadRoom=loadRoom===Infinity?null:loadRoom;
- const swapCeiling=Math.floor(host.totalMegabytes*policy.swap.ceilingBasisPoints/10000);
- const swapping=host.swapOutMegabytesPerSecond!==null&&host.swapOutMegabytesPerSecond>=policy.swap.activeMegabytesPerSecond;
  const soft=softHostReasonV1(policy,host);
- const hard:HostReasonV1|undefined=host.pressure==="critical"?"pressure-critical":host.swapUsedMegabytes!==null&&host.swapUsedMegabytes>swapCeiling&&swapping?"swap":host.swapOutMegabytesPerSecond!==null&&host.swapOutMegabytesPerSecond>policy.swap.outMegabytesPerSecond?"swap-activity":undefined;
+ const hard:HostReasonV1|undefined=host.pressure==="critical"?"pressure-critical":hostSwapStopV1(policy,host);
  const drainedRoom=Math.min(host.availableMegabytes+ledger.reduce((sum,grant)=>sum+(grant.observedMegabytes??0),0),host.totalMegabytes)-floor,drainedBudget=Math.floor(share*policy.memory.budgetBasisPoints/10000);
  const aged=waiters.map(waiter=>waiter.request.priority==="batch"&&nowMs-waiter.arrivedAtMs>=policy.wait.agingMilliseconds?Object.freeze({...waiter,request:Object.freeze({...waiter.request,priority:"interactive" as const})}):waiter);
  const growing=new Set(waiters.filter(waiter=>waiter.upgrade===true).map(waiter=>waiter.request.id)),decisions:HostDecisionV1[]=[],heads:{bypasses:number}[]=[],sessions=new Set<string>();let blocked=false,waits=false,localWaits=false,admitted=0,own=ledgerCpu,softLeft=policy.memory.quietSoftStopGrants-active.filter(grant=>grant.quiet===true).length,rampers=active.filter(grant=>grant.rampSlot===true&&ramping(grant)&&!idleAtGate(grant)).length,quietLeft=policy.memory.maximumQuiet-active.filter(grant=>grant.quiet===true).length;
  const ordered=orderHostWaitersV1(aged.filter(waiter=>waiter.rebuild===undefined||waiter.upgrade===true&&ledger.some(grant=>grant.id===waiter.request.id&&grant.rebuildScope===waiter.rebuild)),active);
  for(const [at,waiter] of ordered.entries()){
-  const request=waiter.request,need=(jobs:number)=>Math.min(request.fixedMegabytes+jobs*request.perJobMegabytes,cap),waited=nowMs-waiter.arrivedAtMs,quiet=request.quiet===true,grows=waiter.grow===true&&waiter.upgrade===true,elastic=request.elastic===true,avoids=quiet&&softLeft>0,ownChild=elastic&&request.holder!==undefined&&active.some(grant=>grant.id===request.holder),light=(request.operation==="graph"||request.operation==="graph-plan")&&request.minimumJobs===1&&(host.load??0)+request.cpuPerJob<=ceiling,pause=avoids?undefined:soft;
+  const request=waiter.request,need=(jobs:number)=>Math.min(request.fixedMegabytes+jobs*request.perJobMegabytes,cap),waited=nowMs-waiter.arrivedAtMs,past=waited>=hostWaitDeadlineMillisecondsV1(policy,request.priority),quiet=request.quiet===true,grows=waiter.grow===true&&waiter.upgrade===true,elastic=request.elastic===true,avoids=quiet&&softLeft>0,ownChild=elastic&&request.holder!==undefined&&active.some(grant=>grant.id===request.holder),light=(request.operation==="graph"||request.operation==="graph-plan")&&request.minimumJobs===1&&(host.load??0)+request.cpuPerJob<=ceiling,pause=avoids?undefined:soft;
   const booked=waiter.upgrade===true?active.find(grant=>grant.id===request.id):undefined,replaced=booked??(waiter.rebuild!==undefined?ledger.find(grant=>grant.id===request.id):undefined),held=replaced?.observedMegabytes??0;
   const credit=booked===undefined&&replaced!==undefined?Math.min(held,unmanagedPending):0,remainingShare=Math.max(0,cap-unmanagedPending),creditedShare=Math.max(0,cap-unmanagedPending+credit),budgetCredit=Math.floor(creditedShare*policy.memory.budgetBasisPoints/10000)-Math.floor(remainingShare*policy.memory.budgetBasisPoints/10000);
   const freeObserved=roomObserved+(booked?unrealizedOf(booked):0),freeBudget=roomBudget+(booked?committedOf(booked):budgetCredit),freeLoad=loadRoom===Infinity||!booked?loadRoom:loadRoom+Math.max(host.load??0,ledgerCpu)-Math.max(host.load??0,ledgerCpu-booked.cpu),freeRampers=rampers-(booked?.rampSlot===true&&ramping(booked)?1:0);
@@ -215,8 +238,13 @@ export function decideHostCapacityV1(policy:HostCapacityPolicyV1,host:HostSample
   const essential=request.essential===true&&elastic&&replaced===undefined&&!active.some(grant=>grant.label===request.label&&grant.holder===request.holder&&grant.session===waiter.session&&grant.id!==request.id);
   const refuse=(reason:HostReasonV1):void=>{if(essential&&reason!=="pressure-critical"){admit(request.minimumJobs,"override",need(request.minimumJobs));return;}if(request.priority!=="lent")localWaits=true;if(!grows&&!elastic)waits=true;decisions.push(Object.freeze({id:request.id,verdict:"wait",jobs:0,reservedMegabytes:0,reason}));};
   const admit=(jobs:number,reason:HostReasonV1,megabytes?:number):void=>{const reserved=megabytes??need(jobs);roomObserved=freeObserved-Math.max(0,reserved-held);roomBudget=freeBudget-Math.max(reserved,held);unmanagedPending-=credit;if(loadRoom!==Infinity)loadRoom=freeLoad-jobs*request.cpuPerJob;own+=jobs*request.cpuPerJob-(booked?.cpu??0);admitted++;if(waiter.session!==undefined)sessions.add(waiter.session);rampers=freeRampers+(request.rampSlot===true?1:0);if(quiet){quietLeft--;softLeft--;}else for(const head of heads){head.bypasses++;if(head.bypasses>=policy.wait.maximumBypasses)blocked=true;}decisions.push(Object.freeze({id:request.id,verdict:"admit",jobs,reservedMegabytes:reserved,reason}));};
-  if(waiter.rebuild!==undefined&&request.fixedMegabytes>Math.floor(cap*policy.memory.budgetBasisPoints/10000)){refuse("never");continue;}
-  if(hard){refuse(hard);continue;}
+  const leastMegabytes=request.minimumMegabytes??request.fixedMegabytes+request.minimumJobs*request.perJobMegabytes,limitMegabytes=Math.floor(cap*policy.memory.budgetBasisPoints/10000);
+  if(waiter.rebuild!==undefined&&leastMegabytes>limitMegabytes){refuse("never");continue;}
+  if(hard){
+   const stopRoom=Math.min(freeObserved,freeBudget);
+   if(past&&request.minimumMegabytes!==undefined&&replaced===undefined&&!elastic&&!quiet&&stopRoom>=request.minimumMegabytes)admit(request.minimumJobs,"shrunk",Math.min(need(request.minimumJobs),stopRoom));else refuse(waiter.rebuild===undefined&&replaced===undefined&&!elastic&&!quiet&&waited>=hostStarvedMillisecondsV1(policy)?"starved":hard);
+   continue;
+  }
   if(request.priority==="lent"&&localWaits){refuse("queue-order");continue;}
   if(grows){
    if(blocked||waits){refuse("queue-order");continue;}
@@ -230,15 +258,18 @@ export function decideHostCapacityV1(policy:HostCapacityPolicyV1,host:HostSample
   if(elastic&&(blocked||waits)||blocked&&!(quiet&&quietLeft>0)){refuse("queue-order");continue;}
   if(quiet&&quietLeft<=0){refuse("quiet-limit");continue;}
   if(request.rampSlot===true&&freeRampers>=policy.memory.maximumRamping){refuse("ramp");continue;}
-  const capacityLimit=Math.floor(cap*policy.memory.budgetBasisPoints/10000);
-  if(request.minimumMegabytes!==undefined&&request.minimumMegabytes>capacityLimit&&replaced===undefined&&!elastic&&!quiet){refuse("never");continue;}
+  if(request.minimumMegabytes!==undefined&&leastMegabytes>limitMegabytes&&replaced===undefined&&!elastic&&!quiet){refuse("never");continue;}
+  if(waiter.rebuild!==undefined&&request.minimumMegabytes!==undefined&&replaced!==undefined&&!fits(request.minimumJobs)&&(pause===undefined||past)){
+   const booking=Math.max(replaced.reservedMegabytes,Math.min(need(request.minimumJobs),held+freeObserved,freeBudget));
+   if(booking>=request.minimumMegabytes){admit(request.minimumJobs,"shrunk",booking);continue;}
+  }
   const memoryFits=fits(request.minimumJobs),shrinkable=request.minimumMegabytes!==undefined&&replaced===undefined&&!elastic&&!quiet&&request.minimumMegabytes<need(request.minimumJobs),room=Math.min(freeObserved,freeBudget),shrunk=shrinkable&&!memoryFits&&room>=request.minimumMegabytes!?Math.min(need(request.minimumJobs),room):0,first=!elastic&&waiter.session!==undefined&&own<ceiling+host.cores&&!sessions.has(waiter.session)&&active.every(grant=>grant.id===request.id||grant.session!==waiter.session);
   let jobs=0;
   if(pause===undefined)for(let candidate=request.preferredJobs;candidate>=request.minimumJobs;candidate--)if(fits(candidate)&&(avoids||ownChild||candidate*request.cpuPerJob<=freeLoad)){jobs=candidate;break;}
-  if(jobs===0&&(pause===undefined||shrunk>0&&active.length-(booked?1:0)===0&&admitted===0)&&(memoryFits||shrunk>0)&&(avoids||light||first&&replaced===undefined||own-(booked?.cpu??0)+request.minimumJobs*request.cpuPerJob<=ceiling))jobs=request.minimumJobs;
+  if(jobs===0&&(pause===undefined||shrunk>0&&(past||active.length-(booked?1:0)===0&&admitted===0))&&(memoryFits||shrunk>0)&&(avoids||light||first&&replaced===undefined||own-(booked?.cpu??0)+request.minimumJobs*request.cpuPerJob<=ceiling))jobs=request.minimumJobs;
   if(jobs>0){if(shrunk>0&&jobs===request.minimumJobs)admit(jobs,"shrunk",shrunk);else admit(jobs,jobs<request.preferredJobs?"reduced":"fits");continue;}
   if(shrunk>0&&active.length===0&&admitted===0&&waited>=policy.load.overrideAfterMilliseconds){admit(request.minimumJobs,"shrunk",shrunk);continue;}
-  if(shrinkable&&!memoryFits&&shrunk===0&&active.length===0&&waited>=policy.load.overrideAfterMilliseconds){refuse("starved");continue;}
+  if(shrinkable&&!memoryFits&&shrunk===0&&active.length===0&&waited>=policy.load.overrideAfterMilliseconds||!memoryFits&&shrunk===0&&waiter.rebuild===undefined&&replaced===undefined&&!elastic&&!quiet&&waited>=hostStarvedMillisecondsV1(policy)){refuse("starved");continue;}
   if(waiter.rebuild===undefined&&pause===undefined&&memoryFits&&replaced!==undefined){const cores=Math.min(request.preferredJobs,Math.floor((ceiling-own+(booked?.cpu??0)-ordered.slice(at+1).filter(later=>later.upgrade!==true&&later.grow!==true&&later.request.elastic!==true).reduce((sum,later)=>sum+later.request.minimumJobs*later.request.cpuPerJob,0))/request.cpuPerJob));if(cores>=1||first){admit(Math.max(1,cores),"reduced",need(request.minimumJobs));continue;}}
   const reason:HostReasonV1=!memoryFits?"memory":pause??"load";
   if(waiter.rebuild===undefined&&reason==="memory"&&replaced!==undefined&&active.every(grant=>grant.id===request.id||grant.quiet===true&&growing.has(grant.id))&&admitted===0&&!quiet){const fitted=Math.min(need(request.minimumJobs),held+freeObserved,freeBudget),units=request.perJobMegabytes>0?Math.max(1,Math.min(request.preferredJobs,Math.floor((fitted-request.fixedMegabytes)/request.perJobMegabytes))):request.preferredJobs;admit(units,"override",Math.max(replaced.reservedMegabytes,Math.min(fitted,need(units))));}
@@ -252,6 +283,13 @@ export function decideHostCapacityV1(policy:HostCapacityPolicyV1,host:HostSample
   }
  }
  return Object.freeze({floorMegabytes:floor,unrealizedMegabytes:unrealized,headroomMegabytes:headroom,...host.unmanagedMegabytes===undefined?{}:{unmanagedMegabytes:unmanaged},binding,loadRoom:reportedLoadRoom,decisions:Object.freeze(decisions)});
+}
+
+/** 🚫️ Whether a request can never run on this machine, whatever else runs: the least it needs (its `minimumMegabytes`, else its reservation at the minimum jobs) exceeds the memory the host may give out at all (the memory above its floor, within the authored budget share). Quiet, elastic and held (replacing) requests are judged by the grant they grow from, never here. A pure function the gate applies the moment a request arrives, so no request waits for what no release can ever give.
+ * @see decideHostCapacityV1 */
+export function hostRequestNeverFitsV1(policy:HostCapacityPolicyV1,host:Pick<HostSampleV1,"totalMegabytes">,request:HostRequestV1):boolean{
+ const limit=Math.floor(Math.max(0,host.totalMegabytes-hostFloorMegabytesV1(policy,host))*policy.memory.budgetBasisPoints/10000);
+ return request.quiet!==true&&request.elastic!==true&&(request.minimumMegabytes??request.fixedMegabytes+request.minimumJobs*request.perJobMegabytes)>limit;
 }
 
 /** 🛟️ Whether a request that waits for memory can never be served by waiting: even if every live grant of ours ended and gave back what it holds (`drainedMegabytes`: the room above the floor the host would then have), the request would not fit (`needMegabytes`), so only foreign processes hold the rest of the host and no release of ours will ever make room, and it has waited `wait.bypassMilliseconds` with nothing admitted before it in the same evaluation. It is then admitted with the room the host has now (at least `estimates.minimumMegabytes`; below that the host genuinely has nothing to give and the request keeps waiting), a reservation reduced below its estimate, with its minimum jobs: degrade to slower, never to never. Quiet, elastic and replacing requests and any soft stop keep their own rules. A pure function of its arguments.
@@ -278,12 +316,14 @@ export function followHostGrantPlanV1(plan:HostPlanV1,grant:Pick<HostGrantV1,"id
 }
 
 /** 📏️ Sizes the request of one named operation, or answers undefined when the operation is light and passes ungated. */
-export function sizeHostRequestV1(policy:HostCapacityPolicyV1,input:Readonly<{id:string;operation:string;preferredJobs?:number;kinds?:readonly HostActionKindV1[];targets?:readonly string[]}>):HostRequestV1|undefined{
+export function sizeHostRequestV1(policy:HostCapacityPolicyV1,input:Readonly<{id:string;operation:string;preferredJobs?:number;kinds?:readonly HostActionKindV1[];targets?:readonly string[];host?:Pick<HostSampleV1,"totalMegabytes">}>):HostRequestV1|undefined{
  const operation=policy.operations.find(row=>row.name===input.operation);
  if(!operation)return undefined;
- if(operation.shape==="fixed")return requireHostCapacityV1<HostRequestV1>("Request",Object.freeze({id:input.id,operation:operation.name,priority:operation.priority,minimumJobs:1,preferredJobs:1,fixedMegabytes:operation.fixedMegabytes,perJobMegabytes:0,cpuPerJob:operation.cpu,...operation.minimumMegabytes===undefined?{}:{minimumMegabytes:operation.minimumMegabytes}}));
+ const reach=input.host===undefined?Infinity:Math.max(operation.minimumMegabytes??0,Math.floor(Math.max(0,input.host.totalMegabytes-hostFloorMegabytesV1(policy,input.host))*policy.estimates.maximumShareBasisPoints/10000)),fixed=Math.min(operation.fixedMegabytes,reach);
+ if(operation.shape==="fixed")return requireHostCapacityV1<HostRequestV1>("Request",Object.freeze({id:input.id,operation:operation.name,priority:operation.priority,minimumJobs:1,preferredJobs:1,fixedMegabytes:fixed,perJobMegabytes:0,cpuPerJob:operation.cpu,...operation.minimumMegabytes===undefined?{}:{minimumMegabytes:operation.minimumMegabytes}}));
  const kinds=[...new Set<HostActionKindV1>([...operation.kind?[operation.kind]:input.kinds??[],"build"])],rows:HostResourceV1[]=[...kinds.map(kind=>policy.kinds[kind]),...policy.envelopes.filter(row=>(input.targets??[]).some(target=>new RegExp(row.pattern,"u").test(target)))];
- return requireHostCapacityV1<HostRequestV1>("Request",Object.freeze({id:input.id,operation:operation.name,priority:operation.priority,minimumJobs:1,preferredJobs:Math.max(1,Math.min(input.preferredJobs??1,protocol.maximumJobs)),fixedMegabytes:operation.fixedMegabytes,perJobMegabytes:Math.max(...rows.map(row=>row.megabytes)),cpuPerJob:Math.max(...rows.map(row=>row.cpu))}));
+ const declared=Math.max(...rows.map(row=>row.megabytes)),perJob=Math.min(declared,Math.max(policy.estimates.minimumMegabytes,reach-fixed));
+ return requireHostCapacityV1<HostRequestV1>("Request",Object.freeze({id:input.id,operation:operation.name,priority:operation.priority,minimumJobs:1,preferredJobs:Math.max(1,Math.min(input.preferredJobs??1,protocol.maximumJobs)),fixedMegabytes:fixed,perJobMegabytes:perJob,...perJob<declared?{envelopePerJobMegabytes:declared}:{},cpuPerJob:Math.max(...rows.map(row=>row.cpu))}));
 }
 
 /** 🎁️ Renders an admitted request into the tool-neutral envelope: jobs, cores, and the memory the jobs may hold beside the fixed block; the envelope per job is the default size (`envelopePerJobMegabytes`) when a learned estimate shrank the reservation, so a build tool is never starved by an estimate. */
@@ -298,7 +338,7 @@ export function resolveHostCapacityLanguageV1(environment:Readonly<Record<string
 }
 
 /** 🖨️ Fills one catalogue message of the chosen language; unknown placeholders stay visible. */
-export function formatHostCapacityV1(language:"en"|"de",name:"waiting"|"admitted"|"estimated"|"phased"|"quiet"|"quietFollowUp"|"upgrading"|"upgraded"|"upgradedPartly"|"upgradedReduced"|"upgradeWithdrawn"|"grantQuiet"|"waiterUpgrade"|"reduced"|"shrunk"|"lent"|"reducedGrows"|"grown"|"override"|"unsatisfiable"|"bypassed"|"status"|"grant"|"grantLent"|"waiter"|"handover"|"adopted"|"handoverRefused"|"treeUnobserved"|"footprintFallback"|"countersPartial"|"availableUnread"|"blocker"|"blockerHost"|"waitingShort",values:Readonly<Record<string,string|number>>):string{
+export function formatHostCapacityV1(language:"en"|"de",name:"waiting"|"admitted"|"estimated"|"phased"|"quiet"|"quietFollowUp"|"upgrading"|"upgraded"|"upgradedPartly"|"upgradedReduced"|"upgradeWithdrawn"|"grantQuiet"|"waiterUpgrade"|"reduced"|"shrunk"|"shrunkStopped"|"pastDeadline"|"blockerSelf"|"lent"|"reducedGrows"|"grown"|"override"|"unsatisfiable"|"bypassed"|"status"|"grant"|"grantLent"|"waiter"|"handover"|"adopted"|"handoverRefused"|"treeUnobserved"|"footprintFallback"|"countersPartial"|"availableUnread"|"blocker"|"blockerHost"|"waitingShort",values:Readonly<Record<string,string|number>>):string{
  return fillHostCapacityV1(schema.definitions.Messages.const[language][name],values);
 }
 

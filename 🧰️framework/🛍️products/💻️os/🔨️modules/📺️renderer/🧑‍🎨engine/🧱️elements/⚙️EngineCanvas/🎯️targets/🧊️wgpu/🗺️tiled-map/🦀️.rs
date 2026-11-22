@@ -5,7 +5,8 @@
 use semio_renderer_wgpu_engine_registry::engine_surface_registry::{
     engine_surface_wire_id, MapSyncCache, ENGINE_SURFACES, MAP_TILE_ASSET_FAULT,
 };
-use crate::element_contracts::ScenePointerTarget;
+use crate::element_contracts::{ScenePointerTarget, WorkerCell};
+use std::collections::HashMap;
 use infinite_world::world::{WorldAssetFault, WorldAssetMetadataId, WorldAssetRequestKind};
 use semio_framework_surface::tiled_map::{tiles as map_tiles, MapHost, MapInteractionIntent};
 use serde_json::Value;
@@ -13,6 +14,129 @@ use semio_ui_declaration::layout::ActionDescriptor;
 use semio_ui_theme::geometry::Rect;
 
 //#region TiledMap
+
+/// 🩹️ Where a map surface stands after render-device losses: drawing, re-attached once after a loss, or given up until the user retries.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum MapRendererState {
+    #[default]
+    Running,
+    Reattached,
+    Unavailable,
+}
+
+/// 🩹️ The recovery record of one map surface — the port of `useMapRenderEffects`' `usingCanvas2d` flag and `recoveryCamera`: a first loss re-attaches the same host with its camera, a loss after that (or any failed re-attach) gives up with the live camera kept, and a retry rebuilds the host at that camera.
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
+pub struct MapRecovery {
+    pub state: MapRendererState,
+    pub camera: Option<[f64; 3]>,
+}
+
+impl MapRecovery {
+    pub fn lost(&mut self, live_camera: Option<[f64; 3]>) -> MapRendererState {
+        self.state = match self.state {
+            MapRendererState::Running => MapRendererState::Reattached,
+            MapRendererState::Reattached | MapRendererState::Unavailable => {
+                self.camera = live_camera.or(self.camera);
+                MapRendererState::Unavailable
+            }
+        };
+        self.state
+    }
+
+    pub fn retry(&mut self) -> Option<[f64; 3]> {
+        (self.state == MapRendererState::Unavailable).then(|| {
+            self.state = MapRendererState::Running;
+            self.camera.unwrap_or_default()
+        })
+    }
+}
+
+static MAP_RECOVERY: WorkerCell<HashMap<String, MapRecovery>> = WorkerCell::new(Default::default);
+
+/// 🩹️ The render device behind a map surface was lost: re-attaches the host once (tiles re-requested, camera kept), else drops the host, keeping its live camera for [`retry_tiled_map`].
+pub fn tiled_map_device_lost(surface_id: &str) -> MapRendererState {
+    let live = with_map_host(surface_id, MapHost::camera);
+    let state = MAP_RECOVERY.with(|cell| cell.borrow_mut().entry(surface_id.to_string()).or_default().lost(live));
+    ENGINE_SURFACES.with(|cell| {
+        let mut map = cell.borrow_mut();
+        let Some(entry) = map.get_mut(surface_id) else { return };
+        match state {
+            MapRendererState::Unavailable => {
+                entry.map_host = None;
+                entry.map_sync_cache = MapSyncCache::default();
+                entry.map_interaction_owner = None;
+            }
+            _ => {
+                entry.map_sync_cache.tile_pending.clear();
+                entry.map_sync_cache.tile_misses.clear();
+                entry.map_sync_cache.raster_tiles_revision = None;
+                entry.map_sync_cache.vector_tiles_revision = None;
+            }
+        }
+        entry.scene_revision = entry.scene_revision.wrapping_add(1);
+    });
+    state
+}
+
+/// 🩹️ Whether the surface gave up after losses and shows its unavailable notice with a retry control.
+pub fn tiled_map_unavailable(surface_id: &str) -> bool {
+    MAP_RECOVERY.with(|cell| cell.borrow().get(surface_id).is_some_and(|record| record.state == MapRendererState::Unavailable))
+}
+
+/// 🔁️ The retry control: leaves the unavailable state; the next scene sync rebuilds the host and restores the camera kept at the loss. `true` when a retry was pending.
+pub fn retry_tiled_map(surface_id: &str) -> bool {
+    let retried = MAP_RECOVERY.with(|cell| cell.borrow_mut().get_mut(surface_id).and_then(MapRecovery::retry)).is_some();
+    if retried {
+        MAP_NOTICE.with(|cell| cell.borrow_mut().remove(surface_id));
+        ENGINE_SURFACES.with(|cell| {
+            if let Some(entry) = cell.borrow_mut().get_mut(surface_id) {
+                entry.scene_revision = entry.scene_revision.wrapping_add(1);
+            }
+        });
+    }
+    retried
+}
+
+/// 🩹️ The painted "Canvas unavailable" notice of one given-up map: the localized texts and the two rects the paint, the pointer route and the accessibility projection share.
+#[derive(Clone, Debug, PartialEq)]
+pub struct MapUnavailableNotice {
+    pub message: String,
+    pub retry_label: String,
+    pub message_rect: Rect,
+    pub retry_rect: Rect,
+}
+
+static MAP_NOTICE: WorkerCell<HashMap<String, MapUnavailableNotice>> = WorkerCell::new(Default::default);
+
+/// 📐️ React's centred column (`flex-col items-center justify-center gap-2`): the message line over the retry button, the pair centred in `bounds`, each centred horizontally.
+pub fn map_unavailable_layout(bounds: Rect, message_size: (f32, f32), retry_width: f32, control_height: f32, gap: f32) -> (Rect, Rect) {
+    let top = bounds.y + (bounds.h - (message_size.1 + gap + control_height)) * 0.5;
+    let retry_width = retry_width.min(bounds.w);
+    (Rect::new(bounds.x + (bounds.w - message_size.0) * 0.5, top, message_size.0, message_size.1), Rect::new(bounds.x + (bounds.w - retry_width) * 0.5, top + message_size.1 + gap, retry_width, control_height))
+}
+
+/// 🖌️ Records the notice the latest paint drew for `surface_id`.
+pub fn stage_map_unavailable_notice(surface_id: &str, notice: MapUnavailableNotice) {
+    MAP_NOTICE.with(|cell| cell.borrow_mut().insert(surface_id.to_string(), notice));
+}
+
+/// ♿️ The notice currently painted for a given-up map, `None` while it draws normally.
+pub fn map_unavailable_notice(surface_id: &str) -> Option<MapUnavailableNotice> {
+    if !tiled_map_unavailable(surface_id) {
+        return None;
+    }
+    MAP_NOTICE.with(|cell| cell.borrow().get(surface_id).cloned())
+}
+
+/// 🔁️ Whether a pointer or accessibility activation at `(x, y)` lands on the painted Retry button of `surface_id`.
+pub fn map_retry_contains(surface_id: &str, x: f32, y: f32) -> bool {
+    map_unavailable_notice(surface_id).is_some_and(|notice| notice.retry_rect.contains(x, y))
+}
+
+/// 🎥️ The camera a rebuilt host takes over once, instead of the last published scene camera.
+pub fn take_map_recovery_camera(surface_id: &str) -> Option<[f64; 3]> {
+    MAP_RECOVERY.with(|cell| cell.borrow_mut().get_mut(surface_id).and_then(|record| record.camera.take()))
+}
 
 pub fn take_map_tile_asset_fault() -> Option<WorldAssetFault> {
     MAP_TILE_ASSET_FAULT.with(|cell| cell.borrow_mut().take())

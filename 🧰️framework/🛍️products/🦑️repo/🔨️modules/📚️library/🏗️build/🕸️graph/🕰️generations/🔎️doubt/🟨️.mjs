@@ -1,7 +1,7 @@
 import{stat}from"node:fs/promises";
 import{basename,dirname,isAbsolute,resolve}from"node:path";
 import{createYielderV1}from"../🧱️guards/🟨️.mjs";
-import{rebaseRowV1,rebaseRowsV1}from"../../../👁️observation/🏚️relocation/🟨️.mjs";
+import{rebaseRowV1,rebaseRowsV1,rebaseTextV1}from"../../../👁️observation/🏚️relocation/🟨️.mjs";
 
 const ABSENT=new Set(["exists","fileExists","directoryExists"]),LISTING=new Set(["readdir","readdirNames"]);
 const parentOf=path=>{const cut=Math.max(path.lastIndexOf("/"),path.lastIndexOf("\\"));return cut<0?"":path.slice(0,cut);};
@@ -48,14 +48,22 @@ export function rowDependenciesV1(row,directories,paths=undefined){
 }
 
 
-/** 🪶️ Collects directory dependencies from packed rows without decoding content-only facts. */
+/** 🪶️ Collects the directory dependencies of packed rows from kind and path metadata wherever the fact is immaterial. */
 async function directoryDependenciesV1({rows,index,signal},wanted,needs=undefined){
  const yieldNow=createYielderV1(),packed=index?.rows===rows?index:undefined;
+ const indexedPath=typeof packed?.rowPathIdOf==="function"&&typeof packed?.textOf==="function";
  for(let id=0;id<rows.length;id++){
   if((id&255)===0){signal?.throwIfAborted();await yieldNow();}
   if(needs!==undefined&&!needs(id))continue;
   const kind=packed?.rowKindOf?.(id);
-  if(kind==="file"||kind==="digest")continue;
+  if(kind!==undefined){
+   const fromPath=LISTING.has(kind)||kind==="lstat";
+   if(!fromPath&&!EXISTING.has(kind)&&kind!=="resolve"&&kind!=="analysis")continue;
+   if(fromPath&&indexedPath){
+    const path=packed.textOf(packed.rowPathIdOf(id));
+    if(typeof path==="string"){wanted.add(structuralDirectoryV1({kind,path:rebaseTextV1(path)}));continue;}
+   }
+  }
   rowDependenciesV1(rebaseRowV1(rows[id]),wanted);
  }
  signal?.throwIfAborted();

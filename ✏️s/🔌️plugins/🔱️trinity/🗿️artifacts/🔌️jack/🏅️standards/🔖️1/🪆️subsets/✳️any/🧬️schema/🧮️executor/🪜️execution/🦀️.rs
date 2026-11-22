@@ -88,7 +88,8 @@ fn create_pattern_node(graph: &Graph, pattern: &PatternNode, binding: &Binding, 
     if binding.edges.contains_key(&pattern.var) {
         return Err(invalid(format!("{} is already bound to an edge", pattern.var)));
     }
-    let def = graph.manifest.node_kind(&pattern.kind).ok_or_else(|| invalid(format!("unknown node kind {:?}", pattern.kind)))?;
+    let manifest = graph.manifest().map_err(|error| invalid(error.to_string()))?;
+    let def = manifest.node_kind(&pattern.kind).ok_or_else(|| invalid(format!("unknown node kind {:?}", pattern.kind)))?;
     if let Some(id) = binding.nodes.get(&pattern.var) {
         if !graph.node(id).is_some_and(|node| node.kind == pattern.kind) {
             return Err(invalid(format!("{} is not a live {} node", pattern.var, pattern.kind)));
@@ -100,7 +101,7 @@ fn create_pattern_node(graph: &Graph, pattern: &PatternNode, binding: &Binding, 
         let compatible = |port: &&crate::standards::v1::subsets::any::schema::manifest::PortKindDef| {
             def.port_kinds.is_empty() || def.port_kinds.contains(&port.name)
         };
-        let mut declared = graph.manifest.port_kinds.iter().filter(compatible);
+        let mut declared = manifest.port_kinds.iter().filter(compatible);
         let kind = declared.clone().find(|port| port.direction == *direction)
             .or_else(|| declared.find(|port| port.name == "Connector"))?;
         let id = match direction {
@@ -134,9 +135,10 @@ fn create_operations(graph: &Graph, pattern: &Pattern, binding: &mut Binding, id
         binding.nodes.insert(left.var.clone(), id);
         return Ok(operations);
     };
+    let manifest = graph.manifest().map_err(|error| invalid(error.to_string()))?;
     let kind = edge.kind.as_deref()
-        .or_else(|| graph.manifest.edge_kind("Connection").map(|kind| kind.name.as_str()))
-        .or_else(|| match graph.manifest.edge_kinds.as_slice() { [kind] => Some(kind.name.as_str()), _ => None })
+        .or_else(|| manifest.edge_kind("Connection").map(|kind| kind.name.as_str()))
+        .or_else(|| match manifest.edge_kinds.as_slice() { [kind] => Some(kind.name.as_str()), _ => None })
         .ok_or_else(|| invalid("created edge requires an explicit kind"))?;
     if let Some(var) = &edge.var {
         if binding.nodes.contains_key(var) || binding.edges.contains_key(var) || *var == left.var || *var == edge.right.var {

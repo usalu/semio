@@ -23,6 +23,8 @@ import {readNativeImageRetirementFileV1} from "../../../../../../../../../../../
 import {withArtifactRelativeDirectoryV1} from "../../../../../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
 import {validateJsonSchemaSubset} from "../../../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import {callerRepositoryRootV1,readNativeCallerAuthorityV1} from "../../../../../../../📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
+import {declareLibraryBuildTestEnvelopeV1} from "../../../../../../../../🧪️testing/🪪️native-birth/🟦️.ts";
+declareLibraryBuildTestEnvelopeV1({suite:"storage-opening",maximumElapsedMilliseconds:15000});
 
 async function actualPreflightV1(workspace:string,directories:Readonly<Record<string,string>>){
  const source=await readFile(new URL("../../🟦️.ts",import.meta.url),"utf8"),tree=ts.createSourceFile("reset.ts",source,ts.ScriptTarget.Latest,true),names=["sameResetEntryV1","ownedRepositoryRootV1","requireOwnedWorkspaceV1","readInactivePublicationDataV1","observeInactivePublicationV1"],nodes=tree.statements.filter((node):node is ts.FunctionDeclaration=>ts.isFunctionDeclaration(node)&&Boolean(node.name)&&names.includes(node.name!.text));expect(nodes).toHaveLength(names.length);const javascript=ts.transpileModule(nodes.map(node=>node.getText(tree).replace(/^export /u,"")).join("\n"),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;

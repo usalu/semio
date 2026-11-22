@@ -529,7 +529,7 @@ fn standard_type1(value: Option<&PdfObject>) -> Option<(&'static str, Option<Pdf
     if name(dict, "Type") != Some("Font") || name(dict, "Subtype") != Some("Type1") { return None; }
     let base_font = name(dict, "BaseFont")?;
     let font = super::standard_font(base_font)?;
-    if font.symbolic || font.name != base_font { return None; }
+    if font.name != base_font { return None; }
     let encoding = match get(dict, "Encoding") {
         None => None,
         Some(value) => Some(match value.as_name()? {

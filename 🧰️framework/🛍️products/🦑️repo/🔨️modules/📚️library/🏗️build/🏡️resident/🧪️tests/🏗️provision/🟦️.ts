@@ -16,7 +16,7 @@ import custodySchema from "./🔣️schema.json";
 import Ajv from "ajv";
 import {Database} from "bun:sqlite";
 import ts from "typescript";
-import {cleanup,tempRoot,residentWatcherV1} from "../🟦️.ts";
+import {cleanup,tempRoot,nativeWatcherUsableV1,residentWatcherV1} from "../🟦️.ts";
 import {POLICY_V1} from "../../📨️protocol/🎚️policy/🟨️.mjs";
 
 const SOURCE=join(import.meta.dir,"../../🔭️watch/🦀️rust/🦀️.rs"),PIN=join(import.meta.dir,"../../🔭️watch/🦀️rust/🔣️.json");
@@ -120,15 +120,16 @@ describe("watcher provisioning custody",()=>{
 test("Nx provisioning retains genuine compiler ownership through tooling publication",async()=>{
  const rows=pinnedRows,check=new Ajv({strict:true}).compile({type:"array",minItems:4,items:{type:"object",additionalProperties:false,required:["name","fail","invalidCompiler","invalidNative","order","environment"],properties:{environment:{type:"object",additionalProperties:{type:"string"}},name:{type:"string"},fail:{type:"boolean"},invalidCompiler:{type:"boolean"},invalidNative:{type:"boolean"},order:{type:"array",items:{enum:["open","check","publish","build","close"]}}}}});expect(check(rows)).toBe(true);
  const text=readFileSync(join(import.meta.dir,"../../../../⚡️caching/🚀️bootstrap/🛠️tools/🟦️.ts"),"utf8"),ast=ts.createSourceFile("tools.ts",text,ts.ScriptTarget.Latest,true),node=ast.statements.find(n=>ts.isFunctionDeclaration(n)&&n.name?.text==="provisionNxTools");if(!node)throw Error("Actual public provisioning owner required");
- const body=ts.transpile(node.getText(ast),{target:ts.ScriptTarget.ESNext}).replace("export ","");
+ const withCompiler=ast.statements.find(n=>ts.isFunctionDeclaration(n)&&n.name?.text==="provisionNxToolsWithCompilerV1");if(!withCompiler)throw Error("Actual compiler provisioning owner required");
+ const body=ts.transpile(node.getText(ast)+"\n"+withCompiler.getText(ast),{target:ts.ScriptTarget.ESNext}).replace("export ","");
  for(const row of rows){const order:string[]=[],environment={RUSTUP_TOOLCHAIN:"source-pinned-test",PATH:"/funded/compiler"},compiler={environment:{...environment,...row.environment},storage:{},captureDirectory:"/funded/compiler/work",toolchain:{host:"host-v1",environment}},native={environment:compiler.environment,recheck:async()=>{order.push("check");if(row.invalidNative)throw failure}},original={},refined={},store={environment:{},invocation:{}},publisher={},failure=Error(row.name);
-  const invoke=new Function("withRepositoryCompilerStoreV1","requireRepositoryCompilerStoreV1","repositoryNativeCompilerConfigurationV1","withManagedToolingProvisionV1","retentionSchema","provisionNxToolsOwnedV1",body+";return provisionNxTools;")(
+  const invoke=new Function("withRepositoryCompilerStoreV1","requireRepositoryCompilerStoreV1","repositoryNativeCompilerConfigurationV1","withManagedToolingProvisionV1","retentionSchema","provisionNxToolsOwnedV1","residentWatcherInstalledV1",body+";return provisionNxTools;")(
    async(_root:unknown,mode:unknown,actualControl:unknown,actualEnvironment:unknown,run:any)=>{expect(mode).toBe("release");expect(actualControl).toBe(original);expect(actualEnvironment).toBe(store.environment);order.push("open");try{return await run(compiler,refined)}finally{order.push("close")}},
    (actual:unknown,_root:unknown,invocation:unknown,control:unknown)=>{expect(actual).toBe(compiler);expect(invocation).toBe(store.invocation);expect(control).toBe(refined);if(row.invalidCompiler)throw failure;},
    async(storage:unknown,actualEnvironment:unknown,context:unknown)=>{expect(storage).toBe(compiler.storage);expect(actualEnvironment).toBe(compiler.environment);expect(context).toEqual({host:"host-v1",target:"host-v1",configuredLinker:false,configuredHostLinker:false,configuredEnvironment:[]});return native},
    async(_root:unknown,actualStore:unknown,actualControl:unknown,_policy:unknown,run:any)=>{expect(actualStore).toBe(store);expect(actualControl).toBe(refined);order.push("publish");return run(publisher,refined)},
    {definitions:{Protocol:{const:{minimumInstallerAvailableBytes:1}}}},
-   async(_root:unknown,actualStore:unknown,actualPublisher:unknown,actualControl:unknown,actualEnvironment:unknown,workRoot:unknown)=>{order.push("build");expect(actualStore).toBe(store);expect(actualPublisher).toBe(publisher);expect(actualControl).toBe(refined);expect(actualEnvironment).toBe(compiler.environment);expect(workRoot).toBe(compiler.captureDirectory);if(row.fail)throw failure;return"ready"});
+   async(_root:unknown,actualStore:unknown,actualPublisher:unknown,actualControl:unknown,actualEnvironment:unknown,workRoot:unknown)=>{order.push("build");expect(actualStore).toBe(store);expect(actualPublisher).toBe(publisher);expect(actualControl).toBe(refined);expect(actualEnvironment).toBe(compiler.environment);expect(workRoot).toBe(compiler.captureDirectory);if(row.fail)throw failure;return"ready"},async()=>false);
   if(row.fail||row.invalidCompiler||row.invalidNative)await expect(invoke("workspace",store,original)).rejects.toBe(failure);else expect(await invoke("workspace",store,original)).toBe("ready");expect(order,row.name).toEqual(row.order);expect(new Ajv({strict:true}).validate({const:row.order},order)).toBe(true);
  }
 });
@@ -140,7 +141,7 @@ test("resident cold publication closes compiler preparation while tooling owns t
  expect(new Ajv({strict:true}).validate({type:"array",items:{type:"object",additionalProperties:false,required:["name","fail"],properties:{name:{type:"string"},fail:{enum:["none","compile","body","compiler","native"]}}}},rows)).toBe(true);
  for(const row of rows){
   let tooling=false,compilerOpen=false;const order:string[]=[],original={},control={},compilerControl={},store={environment:{},invocation:original,recheck:async()=>{expect(tooling).toBe(true);}},compiler={storage:{},environment:{CC:"/managed/cc",RUSTFLAGS:"owned"},captureDirectory:"/compiler/captures",toolchain:{host:"host"}},failure=Error(row.name),native={environment:compiler.environment,recheck:async()=>{if(row.fail==="native")throw failure;}};
-  const invoke=new Function("withNxToolingHeadroomRecoveryV1","withRepositoryToolingStoreV1","withRepositoryCompilerStoreV1","requireRepositoryCompilerStoreV1","repositoryNativeCompilerConfigurationV1","withManagedToolingProvisionV1","retentionSchema","provisionResidentWatcherV1","isToolingHeadroomRefusalV1","checkResourceLeaseControl",body+";return withRepositoryResidentWatcherV1;")(
+  const invoke=new Function("withNxToolingHeadroomRecoveryV1","withRepositoryToolingStoreV1","withRepositoryCompilerStoreV1","requireRepositoryCompilerStoreV1","repositoryNativeCompilerConfigurationV1","withManagedToolingProvisionV1","retentionSchema","provisionResidentWatcherV1","isToolingHeadroomRefusalV1","checkResourceLeaseControl","residentWatcherInstalledV1",body+";return withRepositoryResidentWatcherV1;")(
    async(root:unknown,actual:unknown,phase:unknown,run:any)=>{expect(actual).toBe(original);expect(phase).toBe(control);return run(control);},
    async(root:unknown,actual:unknown,phase:unknown,run:any)=>{expect(actual).toBe(original);expect(phase).toBe(control);tooling=true;order.push("tools-open");try{return await run(store,control);}finally{tooling=false;order.push("tools-close");}},
    async(root:unknown,mode:unknown,phase:unknown,environment:unknown,run:any)=>{expect(phase).toBe(control);expect(environment).toBe(store.environment);compilerOpen=true;order.push("compiler-open");try{return await run(compiler,compilerControl);}finally{compilerOpen=false;order.push("compiler-close");}},
@@ -149,7 +150,7 @@ test("resident cold publication closes compiler preparation while tooling owns t
    async(root:unknown,actual:unknown,phase:unknown,policy:unknown,run:any)=>{expect(actual).toBe(store);expect(phase).toBe(compilerControl);return run({},compilerControl);},
    {definitions:{Protocol:{const:{minimumInstallerAvailableBytes:1}}}},
    async(root:unknown,actual:unknown,publisher:unknown,phase:unknown,environment:unknown,directory:unknown)=>{expect(tooling&&compilerOpen).toBe(true);expect(actual).toBe(store);expect(phase).toBe(compilerControl);expect(environment).toBe(compiler.environment);expect(directory).toBe(compiler.captureDirectory);order.push("publish");if(row.fail==="compile")throw failure;return "/owned/watcher";},
-   ()=>false,()=>{});
+   ()=>false,()=>{},async()=>false);
   const work=invoke("workspace",original,control,async(path:string,phase:unknown)=>{expect(tooling&&!compilerOpen).toBe(true);expect(path).toBe("/owned/watcher");expect(phase).toBe(control);order.push("body");await Promise.resolve();expect(tooling&&!compilerOpen).toBe(true);order.push("settled");if(row.fail==="body")throw failure;return "done";});
   if(row.fail==="none")expect(await work).toBe("done");else await expect(work).rejects.toBe(failure);
   expect(tooling||compilerOpen).toBe(false);const db=new Database(":memory:");try{expect((db.query("SELECT ?1 < ?2 AND ?2 < ?3 ordered").get(order.indexOf("tools-open"),order.indexOf("compiler-open"),order.indexOf("compiler-close")) as {ordered:number}).ordered).toBe(1);}finally{db.close();}
@@ -159,7 +160,7 @@ test("resident cold publication closes compiler preparation while tooling owns t
  expect(runtime.includes("SEMIO_REPO_WATCH_BINARY")).toBe(false);expect(runtime).toContain("withRepositoryResidentWatcherV1(root,parent,phaseControl,(_binary,control)=>");
 });
 
-test.skipIf(process.env.SEMIO_GENUINE_BIRTH!=="setup-sdk")("genuine fresh resident owner compiles the pinned watcher and retains Source delivery through physical settlement",async()=>{
+test.skipIf(process.env.SEMIO_GENUINE_BIRTH!=="setup-sdk"||!await nativeWatcherUsableV1(await residentWatcherV1()))("genuine fresh resident owner compiles the pinned watcher and retains Source delivery through physical settlement",async()=>{
  const {createIssuedResourceControlV1}=await import("../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts"),{withRepositoryResidentWatcherV1}=await import("../../../../⚡️caching/🚀️bootstrap/🛠️tools/🟦️.ts"),{createRepositoryWorkspaceWatcherV1}=await import("../../../../⚡️caching/🕸️graph/🏁️startup/🚦️service/👁️workspace/🟦️.ts");
  const artifact=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!artifact)throw Error("Actual resident proof output required");
  const repository=residentRepository;

@@ -12,6 +12,8 @@
 // #region 🔌️Adapters
 import { cleanup, fireEvent, render, screen } from "@semio-tech/ui-react/test";
 import { ELEMENT_ID_PATTERN, UI_INTRODUCTION_SEEN_STORAGE_KEY_PREFIX, readStoredIntroductionSeen, setUiLocale, writeStoredIntroductionSeen } from "@semio-tech/ui-react";
+import Ajv from "ajv";
+import { hubFirstRunDocument, hubFirstRunSchema, hubFirstRunVectors, hubFirstRunVectorsSchema } from "@semio-tech/framework-os/modules/directory/testing/fixtures";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
   HUB_FIRST_RUN_ANCHORS_V1,
@@ -23,6 +25,7 @@ import {
   hubFirstRunIntroductionV1,
   hubFirstRunSeenV1,
   hubFirstRunShouldStartV1,
+  hubFirstRunStageDoneV1,
   hubFirstRunStageV1,
   hubFirstRunStateFromV1,
   hubFirstRunStepIndexV1,
@@ -330,11 +333,28 @@ describe("hub first-run pane", () => {
     expect(seen).toEqual([true]);
   });
 
-  it("keeps the person on their step when the hub state changes underneath them", () => {
+  it("keeps the person on their step when the hub state changes without completing it", () => {
     const { rerender } = render(<HubFirstRun locale="en" state={SIGNED_OUT} onDismiss={() => {}} />);
     expect(screen.getByText(HUB_FIRST_RUN_TEXT_V1.en.signInTitle)).toBeTruthy();
-    rerender(<HubFirstRun locale="en" state={IN_SPACE} onDismiss={() => {}} />);
+    rerender(<HubFirstRun locale="en" state={{ ...SIGNED_OUT, spaceCount: 2 }} onDismiss={() => {}} />);
     expect(screen.getByText(HUB_FIRST_RUN_TEXT_V1.en.signInTitle)).toBeTruthy();
+  });
+
+  it("moves on by itself when the person does what the step teaches, exactly as the shared completion rule says", () => {
+    const { rerender } = render(<HubFirstRun locale="en" state={SIGNED_OUT} onDismiss={() => {}} />);
+    rerender(<HubFirstRun locale="en" state={NO_SPACE} onDismiss={() => {}} />);
+    expect(screen.getByText(HUB_FIRST_RUN_TEXT_V1.en.spaceTitle)).toBeTruthy();
+    rerender(<HubFirstRun locale="en" state={IN_SPACE} onDismiss={() => {}} />);
+    expect(screen.getByText(HUB_FIRST_RUN_TEXT_V1.en.inviteTitle)).toBeTruthy();
+    rerender(<HubFirstRun locale="en" state={IN_SPACE} inviteReady onDismiss={() => {}} />);
+    expect(screen.getByText(HUB_FIRST_RUN_TEXT_V1.en.doneTitle)).toBeTruthy();
+  });
+
+  it("does not snap forward when the person steps Back onto a step they already finished", () => {
+    render(<HubFirstRun locale="en" state={IN_SPACE} onDismiss={() => {}} initialStepIndex={3} />);
+    expect(screen.getByText(HUB_FIRST_RUN_TEXT_V1.en.inviteTitle)).toBeTruthy();
+    fireEvent.click(document.querySelector('[id="ui.introduction.back"]') as Element);
+    expect(screen.getByText(HUB_FIRST_RUN_TEXT_V1.en.spaceTitle)).toBeTruthy();
   });
 });
 //#endregion 🖥️Pane
@@ -435,3 +455,74 @@ describe("hub first-run inside the hub workspace", () => {
   });
 });
 //#endregion 🏛️Mount
+
+//#region 🧬️SharedContract
+/** 🧬️ LAWS over the language-neutral contract `📇️directory/🎓️first-run/🔣️.json` and its vectors. The Rust
+ * twin (`🎯️targets/🧊️wgpu/🦀️.rs`, `🔬️wgpu-unit`) reads the same two files, so a drift on either side
+ * turns exactly one renderer's suite red. Ajv is the third-party oracle for the two shapes. */
+describe("hub first-run shared contract", () => {
+  type Vectors = typeof hubFirstRunVectors;
+
+  it("validates the contract document and the vectors against their schemas", () => {
+    const ajv = new Ajv({ strict: true });
+    expect(ajv.compile(hubFirstRunSchema as object)(hubFirstRunDocument), "contract shape").toBe(true);
+    const vectors = ajv.compile(hubFirstRunVectorsSchema as object);
+    expect(vectors(hubFirstRunVectors), JSON.stringify(vectors.errors)).toBe(true);
+  });
+
+  it("derives every stage and step index from the vectors", () => {
+    for (const row of (hubFirstRunVectors as Vectors).stateVectors) {
+      expect(hubFirstRunStageV1(row.state), row.id).toBe(row.stage);
+      expect(hubFirstRunStepIndexV1(row.state), row.id).toBe(row.stepIndex);
+      expect(HUB_FIRST_RUN_STAGES_V1.indexOf(row.stage as never), row.id).toBe(row.stepIndex);
+    }
+  });
+
+  it("projects session phase, rows and the active space exactly as the vectors say", () => {
+    for (const row of (hubFirstRunVectors as Vectors).projectionVectors) expect(hubFirstRunStateFromV1(row.sessionPhase, row.rows, row.activeSpaceId), row.id).toEqual(row.state);
+  });
+
+  it("answers the completion vectors with the shared completion rule", () => {
+    for (const row of (hubFirstRunVectors as Vectors).completionVectors) expect(hubFirstRunStageDoneV1(row.stage as never, row.state, row.inviteReady), row.id).toBe(row.done);
+  });
+
+  it("reads the seen flag and the auto-start decision from the vectors", () => {
+    const vectors = hubFirstRunVectors as Vectors;
+    const storeOf = (stored: string | null, available: boolean): HubConnectionStorageV1 | null => (available ? { getItem: () => stored, setItem: () => {} } : null);
+    for (const row of vectors.seenVectors) expect(hubFirstRunSeenV1(storeOf(row.stored, row.storeAvailable)), row.id).toBe(row.seen);
+    for (const row of vectors.lifecycleVectors) {
+      const start = hubFirstRunShouldStartV1(storeOf(row.stored, true), row.surfaceOpen);
+      expect(start ? hubFirstRunStepIndexV1(row.state) : null, row.id).toBe(row.autoOpenStep);
+    }
+    expect(vectors.replayStep).toBe(0);
+    const storage = memoryStorage();
+    markHubFirstRunSeenV1(storage);
+    expect(storage.entries.get(vectors.dismiss.storageKey)).toBe(vectors.dismiss.storedValue);
+  });
+
+  it("builds the tour from the contract's text for both locales, and the replay and close controls in contract order", () => {
+    for (const locale of ["en", "de"] as const) {
+      const introduction = hubFirstRunIntroductionV1(locale);
+      expect(introduction.title).toBe(hubFirstRunDocument.text[locale].title);
+      expect(introduction.steps).toHaveLength(hubFirstRunDocument.steps.length);
+    }
+    expect(hubFirstRunDocument.controls.order).toEqual(["replay", "close"]);
+    expect(hubFirstRunDocument.controls.replay).toMatchObject({ id: "os.hub.firstRun.replay", icon: "graduation-cap", variant: "ghost" });
+    expect(hubFirstRunDocument.controls.close).toMatchObject({ id: "os.hub.signIn.cancel", icon: "x", variant: "outline" });
+  });
+
+  it("keeps the contract's control labels equal to the labels the React workspace renders", async () => {
+    for (const locale of ["en", "de"] as const) {
+      await setUiLocale(locale);
+      render(<HubWorkspace port={{ signIn: { mint: async () => ({ status: 503, body: "", retryAfterHeader: null }), read: async () => ({ status: 401, body: "", retryAfterHeader: null }), end: async () => ({ status: 204, body: "", retryAfterHeader: null }) }, storage: memoryStorage(HUB_FIRST_RUN_SEEN_VALUE_V1), bootstrapOrigin: "http://127.0.0.1:7777", deviceInstanceId: "device-d2", clientClass: "browser", listSpaces: async () => [], readSpaceMembers: async () => [], submitCommand: async () => { throw new Error("unused"); }, redeemInvite: async () => ({ status: 200 }), listAgentDelegations: async () => [], createAgentDelegation: async () => { throw new Error("unused"); }, revokeAgentDelegation: async () => undefined }} locale={locale} activeSpaceId={null} onlineUserIds={[]} onOpenSpace={() => {}} onClose={() => {}} />);
+      const controls = hubFirstRunDocument.controls;
+      const order = [...document.querySelectorAll("[id='os.hub.firstRun.replay'], [id='os.hub.signIn.cancel']")].map((node) => node.id);
+      expect(order).toEqual(["os.hub.firstRun.replay", "os.hub.signIn.cancel"]);
+      expect(document.getElementById(controls.replay.id)?.getAttribute("aria-label")).toBe(controls.replay.label[locale]);
+      expect(document.getElementById(controls.close.id)?.getAttribute("aria-label")).toBe(controls.close.label[locale]);
+      cleanup();
+    }
+    await setUiLocale("en");
+  });
+});
+//#endregion 🧬️SharedContract

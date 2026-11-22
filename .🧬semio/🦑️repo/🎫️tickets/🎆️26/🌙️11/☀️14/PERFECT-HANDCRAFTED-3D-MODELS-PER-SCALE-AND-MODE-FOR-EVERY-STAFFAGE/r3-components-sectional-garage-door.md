@@ -92,3 +92,7 @@ Final check: `volumes-check.ts components/sectional-garage-door --product` PASS 
 - Screws and bolts below 7.5 mm, handle and lock are not modelled.
 
 At 1:200 the three hinge axes are drawn with a 0.20 mm pen, and the hangers, braces and tracks use at least 0.15 mm. At 1:500 the visible panels and track edges use at least 0.18 mm. The whole asset passed its paper endpoints through 1:1000. All four physical panels and their real gauges remain in the model. Both affected scales passed silhouette and cross-scale checks.
+
+## Canonical component readback, 2026-11-21
+
+Canonical source `bbf1efa3977d48f8`. Four finger-safe profiled panels roll on ten independent running wheels. Three rows of fitted hinge leaves and paired pins connect the articulated sections. The overhead tracks bear on actual hangers and diagonal braces. All twelve exported scenes reopened (4,501,608 bytes). The strict catalog source readback passed.

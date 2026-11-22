@@ -35,8 +35,10 @@ fn run<I:RetireOwned+Sync+'static>(input:impl Fn()->I,expected:&serde_json::Valu
   let mut receiver=<FemNode as NativeReceive<I>>::receiver();
   match driver::receive_cut(&mut receiver,original.borrow(),&mut bank,BODY,Some(cut)){Ok(published)=>assert!(published.is_none()),Err(_)=>{assert!(!accepted);refused=true;}}
   if !refused{
-   if receiver.output_ready(){
-    assert!(accepted);let output=driver::receive_cut(&mut receiver,original.borrow(),&mut bank,BODY,None).unwrap().expect("uncut receive publishes");
+   if receiver.output_ready()&&!accepted{
+    let output=driver::receive_cut(&mut receiver,original.borrow(),&mut bank,BODY,None).unwrap().expect("uncut receive publishes");assert!(output.validate().is_err(),"refusable row validated: {expected}");driver::retire(output,&mut bank);refused=true;
+   }else if receiver.output_ready(){
+    let output=driver::receive_cut(&mut receiver,original.borrow(),&mut bank,BODY,None).unwrap().expect("uncut receive publishes");
     assert_eq!(output.id.as_str(),expected["id"].as_str().unwrap());assert_eq!(output.x.to_bits(),expected["x"].as_f64().unwrap().to_bits());assert_eq!(output.y.to_bits(),expected["y"].as_f64().unwrap().to_bits());completed=true;
     let row=driver::admit(&mut bank,output);let pointer=std::ptr::from_ref(row.borrow().get().id.get());
     let field=project(row.borrow(),&mut bank);assert_eq!(std::ptr::from_ref(field.value().unwrap().id.get()),pointer);close_projection(field,&mut bank);

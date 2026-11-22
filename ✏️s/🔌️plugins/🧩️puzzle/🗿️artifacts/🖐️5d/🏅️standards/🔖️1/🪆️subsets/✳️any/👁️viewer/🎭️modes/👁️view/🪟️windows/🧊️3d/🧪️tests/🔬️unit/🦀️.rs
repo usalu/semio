@@ -25,6 +25,6 @@ fn render_produces_a_scene_node_for_the_default_document() {
 
 #[test]
 fn render_places_one_instance_per_part() {
-    let document = Puzzle5dSnapshot { parts: vec![Puzzle5dPart { id: "p1".into(), ..Default::default() }], ..Default::default() };
+    let document = Puzzle5dSnapshot { parts: [Puzzle5dPart { id: "p1".into(), ..Default::default() }].into_iter().collect(), ..Default::default() };
     assert!(instances_json(&document).contains("\"p1\""));
 }

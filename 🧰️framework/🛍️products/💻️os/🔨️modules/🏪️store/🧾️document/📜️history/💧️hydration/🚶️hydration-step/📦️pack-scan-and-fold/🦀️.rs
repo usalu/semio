@@ -9,7 +9,7 @@ where
 {
     /// 🔍 Scans the retained pack for the next record.
     pub(super) fn step_scan_pack(&mut self, cx: &mut StepContext<'_>) -> PersistedDocumentHydrationStep<P, M> {
-        let pack = self.pack.as_ref().expect("persisted Pack remains retained through scan");
+        let Some(pack) = self.pack.as_ref().and_then(|pack| pack.contiguous()) else { return self.reject(MemberOpenDiagnostic::Decode); };
         let remaining = pack.len().saturating_sub(self.pack_scanned);
         if remaining == 0 {
             self.phase = Phase::DecodePack;
@@ -20,7 +20,7 @@ where
         if scanned == 0 {
             return PersistedDocumentHydrationStep::Pending(self.progress());
         }
-        self.pack_hasher.update(&self.pack.as_ref().expect("retained Pack remains present")[self.pack_scanned..self.pack_scanned + scanned]);
+        self.pack_hasher.update(&pack[self.pack_scanned..self.pack_scanned + scanned]);
         self.pack_scanned += scanned;
         cx.consume_fuel(scanned as u64);
         PersistedDocumentHydrationStep::Pending(self.progress())
@@ -28,7 +28,8 @@ where
 
     /// 🧬 Decodes the scanned pack record.
     pub(super) fn step_decode_pack(&mut self, cx: &mut StepContext<'_>) -> PersistedDocumentHydrationStep<P, M> {
-        let initial = match P::decode_pack(self.pack.as_ref().expect("scanned Pack remains retained")) {
+        let Some(pack) = self.pack.as_ref().and_then(|pack| pack.contiguous()) else { return self.reject(MemberOpenDiagnostic::Decode); };
+        let initial = match P::decode_pack(pack) {
             Ok(initial) => initial,
             Err(_) => return self.reject(MemberOpenDiagnostic::Decode),
         };
@@ -120,7 +121,7 @@ where
         let initial = self.initial.take().expect("typed initial snapshot remains retained");
         let initial_digest = self.pack_digest.unwrap_or_else(|| *self.pack_hasher.finalize().as_bytes());
         let pack = self.pack.take().expect("stored genesis Pack remains retained");
-        let (genesis, progress) = match semio_os_vcs::io::binary::genesis::AdmittedArtifactGenesis::admit_verified_pack(initial, pack, initial_digest, child) {
+        let (genesis, progress) = match semio_os_vcs::io::binary::genesis::AdmittedArtifactGenesis::admit_verified_physical_pack(initial, pack, initial_digest, child) {
             Ok(admitted) => admitted,
             Err((_, initial, pack)) => { *self.initial = Some(initial); *self.pack = Some(pack); return self.reject(MemberOpenDiagnostic::Initialization); }
         };

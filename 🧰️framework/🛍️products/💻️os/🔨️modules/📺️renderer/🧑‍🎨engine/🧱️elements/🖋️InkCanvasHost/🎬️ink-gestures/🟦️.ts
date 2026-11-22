@@ -10,7 +10,7 @@ import type { InkCore1 } from "../🧰️ink-session-state/🟦️.ts";
 // #region InkCanvasHost
 /** 🎬️ Publishes the interaction lanes and runs the gesture lifecycle that sends ink events. */
 export function useInkGestures(core: InkCore1) {
-  const { doc, gestureActiveRef, interactionDomain, isNavigator, node, onAction, pendingLiveRef, rafRef, scene, sceneDoc, selectedIds, setDraftDoc } = core;
+  const { doc, gestureActiveRef, interactionDomain, isNavigator, node, onAction, pendingLiveRef, rafRef, scene, windowUtility, sceneDoc, selectedIds, setDraftDoc } = core;
   const dispatch = useCallback(
     (action: string, args?: Record<string, unknown>) => {
       if (!node.controllerId) return;
@@ -124,7 +124,7 @@ export function useInkGestures(core: InkCore1) {
   );
 
   const selectionBounds = useMemo(() => (doc ? inkSelectionBounds(doc.blocks, selectedIds) : null), [doc, selectedIds]);
-  const utility = scene?.activeUtility || "selectDirect";
+  const utility = (windowUtility === undefined ? scene?.activeUtility : windowUtility) || "selectDirect";
   const showResizeHandles = !isNavigator && (utility === "selectDirect" || utility === "selectMarquee") && Boolean(selectionBounds) && selectedIds.length > 0;
   return { abortGesture, atomicGesture, beginGesture, commitGesture, dispatch, liveGesture, mapContextMenu, publishInteractionHover, publishInteractionSelection, selectionBounds, shellContextMenuFallback, showResizeHandles, takePendingLive, utility };
 }

@@ -96,14 +96,14 @@ fn publication_shell() -> ShellState {
 fn unsolicited_progress_patches_move_the_band_between_dispatches() {
     let mut shell = publication_shell();
     semio_framework_async::block_on(ActionsCtx::of(&mut shell).observe_invocation_history(Some(&HistoryPatch { cursor: 5, time_travel: Some(session("editing a mutation")), ..Default::default() })));
-    assert!(!semio_framework_async::block_on(ActionsCtx::of(&mut shell).drain_operation_publications()), "nothing queued is no change");
+    assert!(!semio_framework_async::block_on(FramePumpsCtx::of(&mut shell).drain_operation_publications()), "nothing queued is no change");
     let replaying = session("a running replay");
     PUBLISHED.with(|queue| queue.borrow_mut().extend([progress_patch(HistoryPatch { cursor: 5, time_travel: Some(replaying.clone()), ..Default::default() }), progress_patch(HistoryPatch { cursor: 4, ..Default::default() })]));
-    assert!(semio_framework_async::block_on(ActionsCtx::of(&mut shell).drain_operation_publications()), "the queued progress moved the band");
+    assert!(semio_framework_async::block_on(FramePumpsCtx::of(&mut shell).drain_operation_publications()), "the queued progress moved the band");
     assert_eq!(shell.history.history_time_travel(), Some(&replaying), "the stale patch after it closed nothing");
     assert!(shell.settle.owed_refresh_scope.asks_for_nothing(), "a patch without a scope on a progress frame re-renders nothing");
     assert!(PUBLISHED.with(|queue| queue.borrow().is_empty()), "the drain took the queue");
-    assert!(!semio_framework_async::block_on(ActionsCtx::of(&mut shell).drain_operation_publications()));
+    assert!(!semio_framework_async::block_on(FramePumpsCtx::of(&mut shell).drain_operation_publications()));
 }
 
 /// ⚖️ LAW (live fault F11; React's `subscribeOperationCompletions` pass): a typed operation that ends AFTER the host
@@ -123,7 +123,7 @@ fn a_typed_operation_that_ends_after_its_host_call_refreshes_and_publishes_its_r
             OperationPublication { completed: true, ui_scope: UiDirtyScope::None, history_patch: Some(HistoryPatch { cursor: 41, upserts: vec![row], ..Default::default() }), fault: None, resync: false },
         ])
     });
-    assert!(semio_framework_async::block_on(ActionsCtx::of(&mut shell).drain_operation_publications()), "the lane alone changed the shell");
+    assert!(semio_framework_async::block_on(FramePumpsCtx::of(&mut shell).drain_operation_publications()), "the lane alone changed the shell");
     let rows = history_rows_oldest_first(&shell.history.history_entries);
     assert_eq!(rows.len(), before + 1, "the completion's row is in the projection");
     assert!(rows.iter().any(|entry| entry.key() == "seq:41"));
@@ -141,7 +141,7 @@ fn a_typed_operation_that_ends_after_its_host_call_refreshes_and_publishes_its_r
 fn a_refused_completion_is_told_as_a_notice() {
     let mut shell = publication_shell();
     PUBLISHED.with(|queue| queue.borrow_mut().push(OperationPublication { completed: false, ui_scope: UiDirtyScope::None, history_patch: None, fault: Some("browser-actor-publication: noncanonical bytes".into()), resync: false }));
-    assert!(semio_framework_async::block_on(ActionsCtx::of(&mut shell).drain_operation_publications()), "a told fault repaints");
+    assert!(semio_framework_async::block_on(FramePumpsCtx::of(&mut shell).drain_operation_publications()), "a told fault repaints");
     let notice = shell.chrome.transient_notice().expect("the refused completion is told");
     assert!(notice.message.contains("noncanonical bytes"), "the notice names what was refused: {}", notice.message);
     assert!(shell.settle.owed_refresh_scope.asks_for_nothing(), "a fault alone re-renders nothing");

@@ -58,5 +58,7 @@ export async function rootDevPlaygroundFreshCapabilitiesV1(root: string, argv: r
   ]);
   const { tool } = parseBuildInvocationV1([], environment);
   const capabilities = createNativeBuildCallerCapabilitiesV1(root, argv, tool, { ...environment, SEMIO_BUILD_MODE: request.profile });
-  return Object.freeze({ ...capabilities });
+  const { generatedPrerequisiteArgumentsV1 } = await import("../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🏭️generated-owner/🟦️.ts");
+  const launches = [...capabilities.launches, ...generatedPrerequisiteArgumentsV1(root).map(child => ["repo", ...child])];
+  return Object.freeze({ ...capabilities, launches });
 }

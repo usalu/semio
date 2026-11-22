@@ -38,6 +38,15 @@ pub static ENTRIES: &[Entry] = &[
     Entry { id: "C98-12", part: "EN 1998-2:2005+A2:2011", clause: "3.3(1), (4)–(6)", en: "Continuous bridge deck and Set A ground displacement", de: "Durchlaufender Brückenüberbau und Bodenverschiebung nach Satz A", inputs: &["spatial_deck_length", "spatial_length_limit", "spatial_ground_types", "spatial_ground_displacement", "spatial_reference_distance", "spatial_decorrelation"], eval: evaluators::bridge_spatial_set_a },
     Entry { id: "C98-13", part: "EN 1998-2:2005+A2:2011", clause: "3.3(6)", en: "Set B opposite support displacement", de: "Gegenläufige Auflagerverschiebung nach Satz B", inputs: &["spatial_left_spacing", "spatial_right_spacing", "spatial_governing_strain", "spatial_opposite_factor"], eval: evaluators::bridge_spatial_set_b },
     Entry { id: "C98-14", part: "EN 1998-2:2005+A2:2011", clause: "3.3(7)", en: "Combine inertia and spatial effects of bridge response", de: "Überlagerung der Trägheitswirkung und räumlichen Einwirkungen an Brücken", inputs: &["spatial_effect_kind", "spatial_inertia", "spatial_effect_a", "spatial_effect_b"], eval: evaluators::bridge_spatial_effect },
+    Entry { id: "C98-15", part: "EN 1998-3:2005+AC1", clause: "A.4.2.2", en: "Concrete jacket adjustment of monolithic resistance", de: "Anpassung des monolithischen Widerstands bei Betonummantelung", inputs: &["retrofit_basis", "retrofit_shear", "retrofit_moment", "retrofit_yield_rotation", "retrofit_ultimate_rotation"], eval: evaluators::retrofit::concrete },
+    Entry { id: "C98-16", part: "EN 1998-3:2005+AC1", clause: "A.4.3.2", en: "Steel jacket shear contribution", de: "Schubanteil des Stahlmantels", inputs: &["retrofit_basis", "jacket_depth", "jacket_thickness", "jacket_width_ratio", "jacket_strut_angle", "jacket_strap_angle", "jacket_design_strength"], eval: evaluators::retrofit::steel },
+    Entry { id: "C98-17", part: "EN 1998-3:2005+AC1", clause: "A.4.3.3", en: "Clamping of a lap splice by a steel jacket", de: "Klemmung eines Übergreifungsstoßes durch einen Stahlmantel", inputs: &["jacket_splice_location", "jacket_splice_length", "jacket_length", "jacket_bolts_near", "jacket_bolts_far"], eval: evaluators::retrofit::splice },
+    Entry { id: "C98-18", part: "EN 1998-3:2005+AC1", clause: "A.4.4.2(1)–(8)", en: "FRP shear strengthening of a concrete member", de: "Querkraftverstärkung eines Betonbauteils mit Faserverbund", inputs: &["frp_basis", "frp_configuration", "frp_layout", "frp_member", "frp_thickness", "frp_modulus", "frp_diameter", "frp_depth", "frp_radius", "frp_web_width", "frp_ultimate", "frp_web_height", "frp_strip_width", "frp_strip_spacing", "frp_strut_angle", "frp_fibre_angle", "frp_concrete_tensile", "frp_debonding_factor", "frp_existing", "frp_web_cap", "frp_shear_span", "frp_cyclic_cap", "frp_demand"], eval: evaluators::retrofit::frp_shear },
+    Entry { id: "C98-19", part: "EN 1998-4:2006", clause: "6.5.3(1)P / 6.5.2(2)P", en: "Welded steel pipe under differential ground movement", de: "Geschweißtes Stahlrohr bei unterschiedlichen Bodenbewegungen", inputs: &["pipe_deformation_basis", "pipe_deformation_radius", "pipe_deformation_thickness", "pipe_deformation_tension", "pipe_deformation_compression", "pipe_deformation_global"], eval: evaluators::pipe_deformation },
+    Entry { id: "C98-20", part: "EN 1998-4:2006", clause: "6.5.2(3)P–(4)P", en: "Concrete pipe strain and leak-tightness", de: "Dehnungen und Dichtheit eines Betonrohrs", inputs: &["pipe_concrete_basis", "pipe_concrete_compression", "pipe_concrete_compression_limit", "pipe_steel_tension", "pipe_steel_tension_limit", "pipe_steel_compression", "pipe_steel_compression_limit", "pipe_dls_steel_tension", "pipe_dls_steel_limit"], eval: evaluators::pipe_concrete },
+    Entry { id: "C98-21", part: "EN 1998-4:2006", clause: "6.5.2(1)P and (5)P", en: "Buried pipe joint under combined movement", de: "Verbindung eines erdverlegten Rohrs unter kombinierter Bewegung", inputs: &["pipe_joint_basis", "pipe_joint_displacement", "pipe_joint_rotation", "pipe_joint_rotation_limit"], eval: evaluators::pipe_joint },
+    Entry { id: "C98-22", part: "EN 1998-4:2006", clause: "6.6(6) and (8)", en: "Pipe protection at a fault crossing", de: "Rohrschutz an einer Verwerfungsquerung", inputs: &["pipe_fault_basis", "pipe_fault_soil", "pipe_fault_wall_a", "pipe_fault_wall_b", "pipe_fault_backfill_a", "pipe_fault_backfill_b", "pipe_fault_trench_a", "pipe_fault_trench_b"], eval: evaluators::pipe_fault_crossing },
+    Entry { id: "C98-23", part: "EN 1998-4:2006", clause: "3.3(5)–(9) and (11)–(12)", en: "Horizontal seismic pressure on a silo wall", de: "Seismischer Horizontaldruck auf eine Silowand", inputs: &["silo_pressure_basis", "silo_pressure_section", "silo_pressure_wall", "silo_pressure_fill", "silo_pressure_width", "silo_pressure_height", "silo_pressure_slope", "silo_pressure_acceleration", "silo_pressure_weight", "silo_pressure_azimuth", "silo_pressure_static"], eval: evaluators::silo_wall_pressure },
 ];
 
 fn case_entry(e: &'static Entry) -> CaseEntry {
@@ -59,6 +68,9 @@ fn to_results(e: &Entry, annex: AnnexChoice, case: &DesignCase, outcome: Outcome
                 let computed = Quantity::new(row.kind, row.demand);
                 if row.status == Some(CheckStatus::Info) {
                     return builder.informative(computed).build();
+                }
+                if row.status == Some(CheckStatus::UnverifiedBasis) {
+                    return builder.status(CheckStatus::UnverifiedBasis).build();
                 }
                 let builder = builder.utilization(computed, Quantity::new(row.kind, row.capacity));
                 match row.status {
@@ -84,8 +96,20 @@ impl CaseCatalogue for En1998Cases {
 
     fn new_document_case(entry: &CaseEntry, id: &str) -> DesignCase {
         let mut case = design_case::seed::<Self>(entry, id);
-        if entry.id == "C98-11" {
-            case.values = case.values.with_text("pipe_wave_basis", "unconfirmed");
+        let unconfirmed = match entry.id {
+            "C98-11" => Some("pipe_wave_basis"),
+            "C98-15" | "C98-16" => Some("retrofit_basis"),
+            "C98-17" => Some("jacket_splice_location"),
+            "C98-18" => Some("frp_basis"),
+            "C98-19" => Some("pipe_deformation_basis"),
+            "C98-20" => Some("pipe_concrete_basis"),
+            "C98-21" => Some("pipe_joint_basis"),
+            "C98-22" => Some("pipe_fault_basis"),
+            "C98-23" => Some("silo_pressure_basis"),
+            _ => None,
+        };
+        if let Some(key) = unconfirmed {
+            case.values = case.values.with_text(key, "unconfirmed");
         }
         case
     }

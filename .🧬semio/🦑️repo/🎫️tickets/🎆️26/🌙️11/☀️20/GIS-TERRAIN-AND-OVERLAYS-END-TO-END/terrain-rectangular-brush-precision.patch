@@ -1,0 +1,387 @@
+--- a/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/👁️view/🪟️windows/🏔️terrain/🎚️config/🧬️schema/brush.json
++++ b/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/👁️view/🪟️windows/🏔️terrain/🎚️config/🧬️schema/brush.json
+@@ -4,10 +4,10 @@
+   "title": "Terrain Brush Settings",
+   "type": "object",
+   "additionalProperties": false,
+-  "required": ["radius", "elevationStep", "smoothStrength"],
++  "required": ["radius", "elevationStepMillimetres", "smoothStrength"],
+   "properties": {
+     "radius": {"type": "integer", "minimum": 0, "maximum": 32},
+-    "elevationStep": {"type": "integer", "minimum": 1, "maximum": 32767},
++    "elevationStepMillimetres": {"type": "integer", "minimum": 1, "maximum": 32767000, "description": "Height applied at the centre of the brush in millimetres."},
+     "smoothStrength": {"type": "integer", "minimum": 0, "maximum": 100}
+   }
+ }
+--- a/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/👁️view/🪟️windows/🏔️terrain/🎚️config/🧬️schema/🔗️.graphql
++++ b/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/👁️view/🪟️windows/🏔️terrain/🎚️config/🧬️schema/🔗️.graphql
+@@ -7,6 +7,6 @@
+ 
+ type TerrainBrushSettings {
+   radius: Int!
+-  elevationStep: Int!
++  elevationStepMillimetres: Int!
+   smoothStrength: Int!
+ }
+--- a/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/👁️view/🪟️windows/🏔️terrain/🎚️config/🧬️schema/🛰️.proto
++++ b/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/👁️view/🪟️windows/🏔️terrain/🎚️config/🧬️schema/🛰️.proto
+@@ -8,6 +8,6 @@
+ }
+ message TerrainBrushSettings {
+   uint32 radius = 1;
+-  uint32 elevation_step = 2;
++  uint32 elevation_step_millimetres = 2;
+   uint32 smooth_strength = 3;
+ }
+--- a/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/👁️view/🪟️windows/🏔️terrain/🎚️config/🧬️schema/🦀️.rs
++++ b/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/👁️view/🪟️windows/🏔️terrain/🎚️config/🧬️schema/🦀️.rs
+@@ -23,6 +23,6 @@
+ #[value(rename_all = "camelCase", deny_unknown_fields)]
+ pub struct TerrainBrushSettings {
+     pub radius: u32,
+-    pub elevation_step: u32,
++    pub elevation_step_millimetres: u32,
+     pub smooth_strength: u32,
+ }
+--- a/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/👁️view/🪟️windows/🏔️terrain/🎚️config/🧬️schema/🟦️.ts
++++ b/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/👁️view/🪟️windows/🏔️terrain/🎚️config/🧬️schema/🟦️.ts
+@@ -5,10 +5,10 @@
+   brush?: TerrainBrushSettings;
+ }
+ 
+-/** 🖌️ Brush radius in samples, elevation step in metres, and smoothing percent. */
++/** 🖌️ Brush radius in samples, elevation step in millimetres, and smoothing percent. */
+ export interface TerrainBrushSettings {
+   radius: number;
+-  elevationStep: number;
++  elevationStepMillimetres: number;
+   smoothStrength: number;
+ }
+ 
+@@ -68,10 +68,10 @@
+   const cameraJson = gisGisTerrainWindowConfigGuardString(row["cameraJson"], `${at}.cameraJson`);
+   if (row["brush"] === undefined || row["brush"] === null) return { cameraJson };
+   const atBrush = `${at}.brush`;
+-  const brush = gisGisTerrainWindowConfigGuardClosed(gisGisTerrainWindowConfigGuardObject(row["brush"], atBrush), atBrush, ["radius", "elevationStep", "smoothStrength"]);
++  const brush = gisGisTerrainWindowConfigGuardClosed(gisGisTerrainWindowConfigGuardObject(row["brush"], atBrush), atBrush, ["radius", "elevationStepMillimetres", "smoothStrength"]);
+   return { cameraJson, brush: {
+     radius: gisGisTerrainWindowConfigGuardInteger(brush["radius"], `${atBrush}.radius`, { minimum: 0, maximum: 32 }),
+-    elevationStep: gisGisTerrainWindowConfigGuardInteger(brush["elevationStep"], `${atBrush}.elevationStep`, { minimum: 1, maximum: 32767 }),
++    elevationStepMillimetres: gisGisTerrainWindowConfigGuardInteger(brush["elevationStepMillimetres"], `${atBrush}.elevationStepMillimetres`, { minimum: 1, maximum: 32767000 }),
+     smoothStrength: gisGisTerrainWindowConfigGuardInteger(brush["smoothStrength"], `${atBrush}.smoothStrength`, { minimum: 0, maximum: 100 }),
+   } };
+ }
+--- a/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/👁️view/🪟️windows/🏔️terrain/🎚️config/🖌️brush/🦀️.rs
++++ b/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/👁️view/🪟️windows/🏔️terrain/🎚️config/🖌️brush/🦀️.rs
+@@ -3,27 +3,30 @@
+ use semio_framework_surface::terrain::{TerrainBrushAction, TerrainBrushArguments};
+ use semio_framework_value::{FromValue, ToValue, ValueError, ValueRefusalKind};
+ 
+-/// 🎚️ Brush radius in grid samples, raise or lower step in meters, and smoothing percent.
++/// 🎚️ Brush radius in grid samples, raise or lower step in millimetres, and smoothing percent.
+ #[derive(Clone, Copy, Debug, PartialEq, Eq, FromValue, ToValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+ #[canonical_json(owner = semio_framework_pack_json)]
+ #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize), serde(rename_all = "camelCase", deny_unknown_fields))]
+ #[value(rename_all = "camelCase", deny_unknown_fields)]
+ pub struct TerrainBrushSettings {
+     pub radius: u32,
+-    pub elevation_step: u32,
++    pub elevation_step_millimetres: u32,
+     pub smooth_strength: u32,
+ }
+ 
+ impl Default for TerrainBrushSettings {
+     fn default() -> Self {
+-        Self { radius: 4, elevation_step: 25, smooth_strength: 50 }
++        Self { radius: 4, elevation_step_millimetres: 25_000, smooth_strength: 50 }
+     }
+ }
+ 
+ impl TerrainBrushSettings {
++    /// 📏️ Largest configured height step, stored in exact millimetres.
++    pub const MAX_ELEVATION_STEP_MILLIMETRES: u32 = 32_767_000;
++
+     /// 🎟️ Validates the values before persisting them in the addressed window.
+     pub fn validate(self) -> Result<Self, ValueError> {
+-        if self.radius > 32 || !(1..=32767).contains(&self.elevation_step) || self.smooth_strength > 100 {
++        if self.radius > 32 || !(1..=Self::MAX_ELEVATION_STEP_MILLIMETRES).contains(&self.elevation_step_millimetres) || self.smooth_strength > 100 {
+             return Err(ValueError::new(ValueRefusalKind::InvalidValue, "terrain brush radius, elevation step or smoothing strength exceeds its range"));
+         }
+         Ok(self)
+@@ -32,10 +35,11 @@
+     /// 🎯️ Supplies the terrain action for this window's selected utility.
+     pub fn action(self, utility: &str) -> Option<TerrainBrushAction> {
+         let settings = self.validate().ok()?;
++        let step = f64::from(settings.elevation_step_millimetres) / 1000.0;
+         let (operation, value) = match utility {
+-            "terrainRaise" => ("raise-lower", settings.elevation_step as i32),
+-            "terrainLower" => ("raise-lower", -(settings.elevation_step as i32)),
+-            "terrainSmooth" => ("smooth", settings.smooth_strength as i32),
++            "terrainRaise" => ("raise-lower", step),
++            "terrainLower" => ("raise-lower", -step),
++            "terrainSmooth" => ("smooth", f64::from(settings.smooth_strength)),
+             _ => return None,
+         };
+         Some(TerrainBrushAction {
+--- a/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️view/🦀️.rs
++++ b/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️view/🦀️.rs
+@@ -29,6 +29,7 @@
+     use super::*;
+     use crate::editor::gis3d::modes::view::windows::terrain::config::{missing_window, TerrainBrushSettings, WINDOW_CONTEXT_REQUIRED};
+     use semio_framework_value::DslValue;
++    use semio_s_artifact_gis_gisterrain_inferences::elevation_edit::metres_to_millimetres;
+     use semio_plugin::{ActionArgDef, ArgSchema, FaultCode, FaultOrigin};
+     use semio_ui_locale::LocalizedLabel;
+     const INVALID: &str = "gis.terrain.brush.settings-invalid";
+@@ -40,7 +41,7 @@
+     #[dsl(keyword = "configure-terrain-brush")]
+     pub struct ConfigureTerrainBrush {
+         pub radius: u32,
+-        pub elevation_step: u32,
++        pub elevation_step_millimetres: u32,
+         pub smooth_strength: u32,
+     }
+ 
+@@ -52,31 +53,36 @@
+                     .map(|value| value as u32)
+                     .ok_or_else(invalid)
+             };
+-            let payload = Self { radius: read("radius")?, elevation_step: read("elevationStep")?, smooth_strength: read("smoothStrength")? };
++            let elevation_step_millimetres = args.get("elevationStep")
++                .and_then(DslValue::as_f64)
++                .and_then(metres_to_millimetres)
++                .and_then(|value| u32::try_from(value).ok())
++                .ok_or_else(invalid)?;
++            let payload = Self { radius: read("radius")?, elevation_step_millimetres, smooth_strength: read("smoothStrength")? };
+             payload.settings()?;
+             Ok(payload)
+         }
+ 
+         pub fn settings(&self) -> Result<TerrainBrushSettings, Fault> {
+-            TerrainBrushSettings { radius: self.radius, elevation_step: self.elevation_step, smooth_strength: self.smooth_strength }
++            TerrainBrushSettings { radius: self.radius, elevation_step_millimetres: self.elevation_step_millimetres, smooth_strength: self.smooth_strength }
+                 .validate().map_err(|_| invalid())
+         }
+     }
+ 
+     pub fn action_arguments() -> Vec<ActionArgDef> {
+         let defaults = TerrainBrushSettings::default();
+-        [
+-            ("radius", LocalizedLabel::native("Radius (samples)", "Radius (Rasterpunkte)"), 0, 32, defaults.radius),
+-            ("elevationStep", LocalizedLabel::native("Elevation Step (m)", "Höhenänderung (m)"), 1, 32767, defaults.elevation_step),
+-            ("smoothStrength", LocalizedLabel::native("Smoothing (%)", "Glättung (%)"), 0, 100, defaults.smooth_strength),
+-        ].into_iter().map(|(key, label, min, max, default)| {
+-            ActionArgDef::with_schema(key, label, ArgSchema::number(Some(f64::from(min)), Some(f64::from(max)), Some(1.0), true)).default_value(&default)
+-        }).collect()
++        let step = f64::from(defaults.elevation_step_millimetres) / 1000.0;
++        let maximum_step = f64::from(TerrainBrushSettings::MAX_ELEVATION_STEP_MILLIMETRES) / 1000.0;
++        vec![
++            ActionArgDef::with_schema("radius", LocalizedLabel::native("Radius (samples)", "Radius (Rasterpunkte)"), ArgSchema::number(Some(0.0), Some(32.0), Some(1.0), true)).default_value(&defaults.radius),
++            ActionArgDef::with_schema("elevationStep", LocalizedLabel::native("Elevation Step (m)", "Höhenänderung (m)"), ArgSchema::number(Some(0.001), Some(maximum_step), Some(0.001), false)).default_value(&step),
++            ActionArgDef::with_schema("smoothStrength", LocalizedLabel::native("Smoothing (%)", "Glättung (%)"), ArgSchema::number(Some(0.0), Some(100.0), Some(1.0), true)).default_value(&defaults.smooth_strength),
++        ]
+     }
+ 
+     pub fn fault_notices() -> [(&'static str, LocalizedLabel); 2] {
+         [
+-            (INVALID, LocalizedLabel::native("Choose a whole-number radius, elevation step and smoothing strength within the shown ranges.", "Wählen Sie ganzzahlige Werte für Radius, Höhenänderung und Glättungsstärke innerhalb der angezeigten Bereiche.")),
++            (INVALID, LocalizedLabel::native("Use a whole-number radius and smoothing percent. The elevation step supports millimetre precision.", "Geben Sie Radius und Glättungsstärke als ganze Zahlen ein. Die Höhenänderung ist millimetergenau.")),
+             (WINDOW_CONTEXT_REQUIRED, LocalizedLabel::native("Choose the terrain window to configure.", "Wählen Sie das Geländefenster für die Einstellung.")),
+         ]
+     }
+--- a/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/👁️view/🪟️windows/🏔️terrain/🎚️config/🧪️tests/🧫️fixtures/🔬️window/🔣️.json
++++ b/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/👁️view/🪟️windows/🏔️terrain/🎚️config/🧪️tests/🧫️fixtures/🔬️window/🔣️.json
+@@ -8,25 +8,25 @@
+     {"cameraJson": "", "brush": null},
+     {"cameraJson": "{}"},
+     {"cameraJson": "{\"position\":[1,2,3],\"target\":[0,0,0],\"up\":[0,0,1],\"fov\":50}"},
+-    {"cameraJson": "", "brush": {"radius": 0, "elevationStep": 1, "smoothStrength": 0}},
+-    {"cameraJson": "{}", "brush": {"radius": 32, "elevationStep": 32767, "smoothStrength": 100}}
++    {"cameraJson": "", "brush": {"radius": 0, "elevationStepMillimetres": 1, "smoothStrength": 0}},
++    {"cameraJson": "{}", "brush": {"radius": 32, "elevationStepMillimetres": 32767000, "smoothStrength": 100}}
+   ],
+   "rejected": [
+     {},
+     {"cameraJson": null},
+     {"cameraJson": "{}", "windowId": "payload-owned"},
+     {"cameraJson": "{}", "selection": []},
+-    {"cameraJson": "{}", "brush": {"radius": 33, "elevationStep": 1, "smoothStrength": 0}},
+-    {"cameraJson": "{}", "brush": {"radius": 0, "elevationStep": 0, "smoothStrength": 10}},
+-    {"cameraJson": "{}", "brush": {"radius": 0, "elevationStep": 1, "smoothStrength": 10.5}},
+-    {"cameraJson": "{}", "brush": {"radius": 0, "elevationStep": 1, "smoothStrength": 101}},
+-    {"cameraJson": "{}", "brush": {"radius": 0, "elevationStep": 1, "smoothStrength": 0, "windowId": "foreign"}}
++    {"cameraJson": "{}", "brush": {"radius": 33, "elevationStepMillimetres": 1, "smoothStrength": 0}},
++    {"cameraJson": "{}", "brush": {"radius": 0, "elevationStepMillimetres": 0, "smoothStrength": 10}},
++    {"cameraJson": "{}", "brush": {"radius": 0, "elevationStepMillimetres": 1, "smoothStrength": 10.5}},
++    {"cameraJson": "{}", "brush": {"radius": 0, "elevationStepMillimetres": 1, "smoothStrength": 101}},
++    {"cameraJson": "{}", "brush": {"radius": 0, "elevationStepMillimetres": 1, "smoothStrength": 0, "windowId": "foreign"}}
+   ],
+   "brush": {
+     "windowId": "terrain-left",
+-    "settings": {"radius": 7, "elevationStep": 31, "smoothStrength": 65},
++    "settings": {"radius": 7, "elevationStep": 0.031, "smoothStrength": 65},
+     "activeUtility": "terrainLower",
+-    "expectedTarget": {"action": "editElevation", "arguments": {"operation": "raise-lower", "radius": 7, "value": -31}},
++    "expectedTarget": {"action": "editElevation", "arguments": {"operation": "raise-lower", "radius": 7, "value": -0.031}},
+     "expectedOther": {"action": "editElevation", "arguments": {"operation": "raise-lower", "radius": 4, "value": -25}}
+   },
+   "cases": [
+--- a/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/👁️view/🪟️windows/🏔️terrain/🎚️config/🧪️tests/🔬️unit/🦀️.rs
++++ b/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/👁️view/🪟️windows/🏔️terrain/🎚️config/🧪️tests/🔬️unit/🦀️.rs
+@@ -52,7 +52,7 @@
+     store::os_store::test_support::assert_dsl_round_trip(&GisTerrainWindowConfig::default());
+     let populated = GisTerrainWindowConfig {
+         camera_json: r#"{"position":[1.0,2.0,3.0]}"#.into(),
+-        brush: Some(TerrainBrushSettings { radius: 7, elevation_step: 31, smooth_strength: 65 }),
++        brush: Some(TerrainBrushSettings { radius: 7, elevation_step_millimetres: 31, smooth_strength: 65 }),
+     };
+     store::os_store::test_support::assert_dsl_round_trip(&populated);
+     store::os_store::test_support::assert_dsl_pack_equivalence(&populated);
+@@ -74,7 +74,7 @@
+     use protocol::{ColdDiffAlgebra, ColdMutationDiff, OpBinary, OpText};
+ 
+     let base = GisTerrainWindowConfig { camera_json: "{}".into(), ..Default::default() };
+-    let brush = TerrainBrushSettings { radius: 7, elevation_step: 31, smooth_strength: 65 };
++    let brush = TerrainBrushSettings { radius: 7, elevation_step_millimetres: 31, smooth_strength: 65 };
+     let operation = GisTerrainWindowConfigMutation::SetTerrainBrush(SetTerrainBrush { brush: Some(brush) });
+     let leaf = <SetTerrainBrush as protocol::MutationLeaf>::DESCRIPTOR;
+     assert_eq!(leaf.semantic_kind, "set-terrain-brush");
+--- a/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧩️mounted/🦀️.rs
++++ b/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧩️mounted/🦀️.rs
+@@ -51,7 +51,7 @@
+         Gis3dCommand::ImportGeoJsonFile(geojson::file::ImportGeoJsonFile { payload: geojson_fixture().into() }),
+         Gis3dCommand::ExportGeoJson(geojson::export::ExportGeoJson {}),
+         Gis3dCommand::GenerateTerrainContours(artifact::editor::gis3d::commands::contours::GenerateTerrainContours { interval_metres: 25.0 }),
+-        Gis3dCommand::ConfigureTerrainBrush(configure_terrain_brush::ConfigureTerrainBrush { radius: 7, elevation_step: 31, smooth_strength: 65 }),
++        Gis3dCommand::ConfigureTerrainBrush(configure_terrain_brush::ConfigureTerrainBrush { radius: 7, elevation_step_millimetres: 31, smooth_strength: 65 }),
+     ]
+ }
+ 
+--- a/🧰️framework/🔨️modules/🗺️surface/🏔️terrain/🖌️brush/🦀️.rs
++++ b/🧰️framework/🔨️modules/🗺️surface/🏔️terrain/🖌️brush/🦀️.rs
+@@ -3,7 +3,7 @@
+ use semio_framework_value::{FromValue, ToValue};
+ 
+ /// 🎟️ Typed element of the World3d interaction lane for a terrain sample click.
+-#[derive(Clone, Debug, PartialEq, Eq, FromValue, ToValue)]
++#[derive(Clone, Debug, PartialEq, FromValue, ToValue)]
+ #[value(deny_unknown_fields)]
+ pub struct TerrainBrushAction {
+     pub action: String,
+@@ -11,12 +11,12 @@
+ }
+ 
+ /// 📐️ Arguments declared by the editor. The viewport adds the sampled row and column.
+-#[derive(Clone, Debug, PartialEq, Eq, FromValue, ToValue)]
++#[derive(Clone, Debug, PartialEq, FromValue, ToValue)]
+ #[value(deny_unknown_fields)]
+ pub struct TerrainBrushArguments {
+     pub operation: String,
+     pub radius: u32,
+-    pub value: i32,
++    pub value: f64,
+ }
+ 
+ impl TerrainBrushAction {
+@@ -24,9 +24,15 @@
+     pub fn is_valid(&self) -> bool {
+         let valid_id = |id: &str| !id.is_empty() && id.len() <= 64
+             && id.bytes().all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'-' | b'_' | b'.'));
++        let value = self.arguments.value;
++        let strength = if self.arguments.operation == "smooth" {
++            (0.0..=100.0).contains(&value) && value.fract() == 0.0
++        } else {
++            (-32768.0..=32767.0).contains(&value) && (value * 1000.0).round() / 1000.0 == value
++        };
+         valid_id(&self.action) && valid_id(&self.arguments.operation)
+             && self.arguments.radius < super::TERRAIN_GRID_RESOLUTION
+-            && i16::try_from(self.arguments.value).is_ok()
++            && strength
+     }
+ }
+ 
+--- a/🧰️framework/🔨️modules/🗺️surface/🏔️terrain/🖌️brush/🔣️.json
++++ b/🧰️framework/🔨️modules/🗺️surface/🏔️terrain/🖌️brush/🔣️.json
+@@ -13,8 +13,10 @@
+       "properties": {
+         "operation": { "type": "string", "minLength": 1, "maxLength": 64, "pattern": "^[A-Za-z0-9_.-]+$" },
+         "radius": { "type": "integer", "minimum": 0, "maximum": 32 },
+-        "value": { "type": "integer", "minimum": -32768, "maximum": 32767 }
+-      }
++        "value": { "type": "number", "minimum": -32768, "maximum": 32767, "multipleOf": 0.001 }
++      },
++      "if": { "properties": { "operation": { "const": "smooth" } } },
++      "then": { "properties": { "value": { "type": "integer", "minimum": 0, "maximum": 100 } } }
+     }
+   }
+ }
+--- a/🧰️framework/🔨️modules/🗺️surface/🏔️terrain/🖌️brush/🧪️tests/🔣️.json
++++ b/🧰️framework/🔨️modules/🗺️surface/🏔️terrain/🖌️brush/🧪️tests/🔣️.json
+@@ -1,6 +1,8 @@
+ {
+   "accepted": [
+     {"action":"editElevation","arguments":{"operation":"raise-lower","radius":3,"value":-12}},
++    {"action":"editElevation","arguments":{"operation":"raise-lower","radius":7,"value":-0.031}},
++    {"action":"editElevation","arguments":{"operation":"raise-lower","radius":4,"value":32766.999}},
+     {"action":"surface.brush_v1","arguments":{"operation":"smooth","radius":32,"value":100}},
+     {"action":"editElevation","arguments":{"operation":"flatten","radius":0,"value":-32768}}
+   ],
+@@ -10,6 +12,7 @@
+     {"action":"editElevation","arguments":{"operation":"smooth","radius":33,"value":40}},
+     {"action":"editElevation","arguments":{"operation":"smooth","radius":4,"value":32768}},
+     {"action":"editElevation","arguments":{"operation":"smooth","radius":4,"value":4.1}},
++    {"action":"editElevation","arguments":{"operation":"raise-lower","radius":4,"value":0.0005}},
+     {"action":"editElevation","arguments":{"operation":"smooth","radius":4,"value":40,"column":7}},
+     {"action":"editElevation","arguments":{"operation":"smooth","radius":4,"value":40},"windowId":"foreign"}
+   ]
+--- a/🧰️framework/🔨️modules/🗺️surface/🏔️terrain/🖌️brush/🧪️tests/🟦️.ts
++++ b/🧰️framework/🔨️modules/🗺️surface/🏔️terrain/🖌️brush/🧪️tests/🟦️.ts
+@@ -5,7 +5,7 @@
+ import fixture from "./🔣️.json";
+ 
+ test("the World3d brush descriptor agrees with independent schema validation", () => {
+-  const validate = new Ajv().compile(schema);
++  const validate = new Ajv({ multipleOfPrecision: 7 }).compile(schema);
+   for (const input of fixture.accepted) {
+     expect(validate(input)).toBe(true);
+     expect(parseTerrainBrushAction(input)).toEqual(input);
+--- a/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗺️WorldTerrainLayer/🖌️brush/🟦️.ts
++++ b/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗺️WorldTerrainLayer/🖌️brush/🟦️.ts
+@@ -15,6 +15,10 @@
+   const args = value.arguments;
+   if (!object(args) || Object.keys(args).length !== 3) return undefined;
+   const { operation, radius, value: strength } = args;
+-  if (!identifier(operation) || !integer(radius, 0, 32) || !integer(strength, -32768, 32767)) return undefined;
++  if (!identifier(operation) || !integer(radius, 0, 32) || typeof strength !== "number") return undefined;
++  const valid = operation === "smooth"
++    ? integer(strength, 0, 100)
++    : strength >= -32768 && strength <= 32767 && Math.round(strength * 1000) / 1000 === strength;
++  if (!valid) return undefined;
+   return { action: value.action, arguments: { operation, radius, value: strength } };
+ }
+--- a/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧵️interaction/📜️plan-and-publish/🦀️.rs
++++ b/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧵️interaction/📜️plan-and-publish/🦀️.rs
+@@ -215,7 +215,7 @@
+     let action = WorldFlatAction {
+         kind: WorldFlatActionKind::TerrainEdit,
+         strings: [Some(controller), Some(action_id), Some(operation), Some(window), Some(surface), None, None, None],
+-        numbers: [f64::from(column), f64::from(row), f64::from(brush.arguments.radius), f64::from(brush.arguments.value), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
++        numbers: [f64::from(column), f64::from(row), f64::from(brush.arguments.radius), brush.arguments.value, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+     };
+     plan.push_action(action).then_some(plan)
+ }
+--- a/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎛️host/🧪️tests/🔭️unit-2/🥽️brush-environment-and-hover-laws/🦀️.rs
++++ b/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎛️host/🧪️tests/🔭️unit-2/🥽️brush-environment-and-hover-laws/🦀️.rs
+@@ -658,10 +658,10 @@
+     }).to_string());
+     let viewport = Rect { x: 0.0, y: 0.0, w: 400.0, h: 400.0 };
+     let camera = Camera3d { position: Vec3::new(0.0, 0.0, 300.0), target: Vec3::ZERO, up: Vec3::new(0.0, 1.0, 0.0), fov_y: 45.0_f32.to_radians(), near: 0.1, far: 1000.0, projection: ui_scene::math::CameraProjection3d::Perspective, zoom: 1.0 };
+-    scene.world_3d.as_mut().unwrap().interaction_json = Some(r#"{"terrainBrush":{"action":"editElevation","arguments":{"operation":"smooth","radius":4,"value":50}}}"#.into());
++    scene.world_3d.as_mut().unwrap().interaction_json = Some(r#"{"terrainBrush":{"action":"editElevation","arguments":{"operation":"raise-lower","radius":4,"value":-0.031}}}"#.into());
+     sync_world3d_state(&mut state, &scene, viewport);
+     let (brush, _) = state.terrain.terrain_brush().expect("scene projects a validated terrain brush");
+-    assert_eq!((brush.action.as_str(), brush.arguments.operation.as_str(), brush.arguments.radius, brush.arguments.value), ("editElevation", "smooth", 4, 50));
++    assert_eq!((brush.action.as_str(), brush.arguments.operation.as_str(), brush.arguments.radius, brush.arguments.value), ("editElevation", "raise-lower", 4, -0.031));
+     assert!(apply_terrain_style_if_changed_state(&mut state.session, &mut state.scene, &mut state.terrain).is_empty());
+     let (draws, evicted) = sync_terrain_state(&mut state.session, &mut state.authority, &mut state.scene, &mut state.terrain, &mut state.assets, &camera);
+     assert!(draws.is_empty() && evicted.is_empty());

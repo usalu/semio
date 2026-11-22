@@ -3,10 +3,11 @@
 use super::*;
 
 //#region DockFreeFunctions
-pub fn dock_from_window_layout(root: &WindowLayoutRoot) -> DockNode {
+pub fn dock_from_window_layout(root: &WindowLayoutNode) -> DockNode {
     match root {
-        WindowLayoutRoot::Axis(axis) => axis_from_children(&axis.kind, &axis.children, axis.size),
-        WindowLayoutRoot::Stack(stack) => stack_from_node(stack),
+        WindowLayoutNode::Split { axis, size, children } => axis_from_children(*axis, children, *size),
+        WindowLayoutNode::Stack { active_window_id, children, .. } => stack_from_windows(active_window_id.as_deref(), children),
+        window @ WindowLayoutNode::Window { .. } => stack_from_windows(None, std::slice::from_ref(window)),
     }
 }
 
@@ -17,66 +18,48 @@ pub fn dock_from_window_layout(root: &WindowLayoutRoot) -> DockNode {
 /// a bare kind keeps the kind's own manifest label, exactly as React's `baseWindows` do.
 ///
 /// 🩸️ Without it every pane of a split kind read the KIND label — puzzle3d's two panes both said
-/// `Puzzle 3D` where React reads `Top` and `Perspective`, because `stack_from_node` dropped
-/// `WindowLayoutWindowNode::title` on the floor.
+/// `Puzzle 3D` where React reads `Top` and `Perspective`, because the stack conversion dropped
+/// the window node's `title` on the floor.
 pub fn window_layout_instance_titles(layout: &WindowLayout) -> HashMap<String, String> {
-    fn stack(node: &WindowLayoutStackNode, out: &mut HashMap<String, String>) {
-        for window in &node.children {
-            let (Some(instance_id), Some(title)) = (window.instance_id.as_ref(), window.title.as_ref()) else { continue };
-            if instance_id != &window.window_kind_id && !title.is_empty() {
-                out.insert(instance_id.clone(), title.clone());
-            }
-        }
-    }
-    fn child(node: &WindowLayoutChild, out: &mut HashMap<String, String>) {
-        match node {
-            WindowLayoutChild::Axis(axis) => axis.children.iter().for_each(|child_node| child(child_node, out)),
-            WindowLayoutChild::Stack(node) => stack(node, out),
-        }
-    }
-    let mut out = HashMap::new();
-    match &layout.root {
-        WindowLayoutRoot::Axis(axis) => axis.children.iter().for_each(|child_node| child(child_node, &mut out)),
-        WindowLayoutRoot::Stack(node) => stack(node, &mut out),
-    }
-    out
+    collect_instance_titles(&layout.root).into_iter().collect()
 }
 
-fn axis_from_children(kind: &str, children: &[WindowLayoutChild], size: Option<f64>) -> DockNode {
+fn axis_from_children(axis: Axis, children: &[WindowLayoutNode], size: Option<f64>) -> DockNode {
     let parsed: Vec<(DockNode, f32)> = children
         .iter()
         .map(|child| match child {
-            WindowLayoutChild::Axis(axis) => (axis_from_children(&axis.kind, &axis.children, axis.size), axis.size.map(|v| v as f32).unwrap_or(1.0)),
-            WindowLayoutChild::Stack(stack) => (stack_from_node(stack), stack.size.map(|v| v as f32).unwrap_or(1.0)),
+            WindowLayoutNode::Split { axis, size, children } => (axis_from_children(*axis, children, *size), size.map(|v| v as f32).unwrap_or(1.0)),
+            WindowLayoutNode::Stack { size, active_window_id, children } => (stack_from_windows(active_window_id.as_deref(), children), size.map(|v| v as f32).unwrap_or(1.0)),
+            window @ WindowLayoutNode::Window { .. } => (stack_from_windows(None, std::slice::from_ref(window)), 1.0),
         })
         .collect();
     let normalized = normalize_sizes(parsed, size.map(|v| v as f32));
-    if kind == "column" {
-        DockNode::Column(normalized)
-    } else {
-        DockNode::Row(normalized)
+    match axis {
+        Axis::Vertical => DockNode::Column(normalized),
+        Axis::Horizontal => DockNode::Row(normalized),
     }
 }
 
-fn stack_from_node(stack: &WindowLayoutStackNode) -> DockNode {
-    let windows: Vec<DockStackTab> = stack
-        .children
+fn stack_from_windows(active_window_id: Option<&str>, children: &[WindowLayoutNode]) -> DockNode {
+    let windows: Vec<DockStackTab> = children
         .iter()
-        .map(|window| DockStackTab::instance_template(window.instance_id.clone().unwrap_or_else(|| window.window_kind_id.clone()), window.window_kind_id.clone(), window.template_id.clone(), window.corner.unwrap_or(WindowStackCorner::TopLeft)))
+        .filter_map(|child| match child {
+            WindowLayoutNode::Window { window_kind_id, instance_id, template_id, corner, .. } => {
+                Some(DockStackTab::instance_template(instance_id.clone().unwrap_or_else(|| window_kind_id.clone()), window_kind_id.clone(), template_id.clone(), corner.unwrap_or(WindowStackCorner::TopLeft)))
+            }
+            _ => None,
+        })
         .collect();
-    let active = stack
-        .active_window_kind_id
-        .as_ref()
-        .and_then(|id| windows.iter().find(|window| window.window_id == *id).or_else(|| windows.iter().find(|window| window.window_kind_id == *id)))
+    let active = active_window_id
+        .and_then(|id| windows.iter().find(|window| window.window_id == id).or_else(|| windows.iter().find(|window| window.window_kind_id == id)))
         .map(|window| window.window_id.clone())
         .or_else(|| windows.first().map(|window| window.window_id.clone()))
         .unwrap_or_default();
     DockNode::Stack { windows, active }
 }
 
-fn layout_window_node(tab: &DockStackTab) -> WindowLayoutWindowNode {
-    WindowLayoutWindowNode {
-        kind: "window".into(),
+fn layout_window_node(tab: &DockStackTab) -> WindowLayoutNode {
+    WindowLayoutNode::Window {
         window_kind_id: tab.window_kind_id.clone(),
         title: None,
         instance_id: (tab.window_id != tab.window_kind_id).then(|| tab.window_id.clone()),
@@ -85,21 +68,15 @@ fn layout_window_node(tab: &DockStackTab) -> WindowLayoutWindowNode {
     }
 }
 
-pub fn dock_node_to_layout_root(node: &DockNode) -> WindowLayoutRoot {
-    match node {
-        DockNode::Stack { windows, active } => WindowLayoutRoot::Stack(WindowLayoutStackNode { kind: "stack".into(), size: None, active_window_kind_id: Some(active.clone()), children: windows.iter().map(layout_window_node).collect() }),
-        DockNode::Row(children) => WindowLayoutRoot::Axis(semio_ui_declaration::layout::WindowLayoutAxisNode { kind: "row".into(), size: None, children: children.iter().map(|(child, size)| dock_child_from_node(child, *size)).collect() }),
-        DockNode::Column(children) => WindowLayoutRoot::Axis(semio_ui_declaration::layout::WindowLayoutAxisNode { kind: "column".into(), size: None, children: children.iter().map(|(child, size)| dock_child_from_node(child, *size)).collect() }),
-    }
+pub fn dock_node_to_layout_root(node: &DockNode) -> WindowLayoutNode {
+    dock_child_to_layout_node(node, None)
 }
 
-fn dock_child_from_node(node: &DockNode, size: f32) -> WindowLayoutChild {
+fn dock_child_to_layout_node(node: &DockNode, size: Option<f64>) -> WindowLayoutNode {
     match node {
-        DockNode::Stack { windows, active } => WindowLayoutChild::Stack(WindowLayoutStackNode { kind: "stack".into(), size: Some(size as f64), active_window_kind_id: Some(active.clone()), children: windows.iter().map(layout_window_node).collect() }),
-        DockNode::Row(children) => WindowLayoutChild::Axis(semio_ui_declaration::layout::WindowLayoutAxisNode { kind: "row".into(), size: Some(size as f64), children: children.iter().map(|(child, child_size)| dock_child_from_node(child, *child_size)).collect() }),
-        DockNode::Column(children) => {
-            WindowLayoutChild::Axis(semio_ui_declaration::layout::WindowLayoutAxisNode { kind: "column".into(), size: Some(size as f64), children: children.iter().map(|(child, child_size)| dock_child_from_node(child, *child_size)).collect() })
-        }
+        DockNode::Stack { windows, active } => WindowLayoutNode::Stack { size, active_window_id: Some(active.clone()), children: windows.iter().map(layout_window_node).collect() },
+        DockNode::Row(children) => WindowLayoutNode::Split { axis: Axis::Horizontal, size, children: children.iter().map(|(child, child_size)| dock_child_to_layout_node(child, Some(*child_size as f64))).collect() },
+        DockNode::Column(children) => WindowLayoutNode::Split { axis: Axis::Vertical, size, children: children.iter().map(|(child, child_size)| dock_child_to_layout_node(child, Some(*child_size as f64))).collect() },
     }
 }
 

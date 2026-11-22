@@ -67,6 +67,8 @@ test("the producer takes every interim fence through the budget and keeps its tw
  const source=readFileSync(here("../../💾️storage/🟦️.ts"),"utf8");
  expect(source).toContain("fenceDueV1");
  expect(source).toContain("fullFence=async()=>");
- expect((source.match(/await finalFence\(\)/gu)??[]).length).toBe(2);
+ expect((source.match(/await finalFence\(\)/gu)??[]).length).toBe(1);
+ expect((source.match(/verifyReady=async\(\)=>\{[^]*?await finalFence\(\);\}/gu)??[]).length).toBe(1);
+ expect((source.match(/await verifyReady\(\)/gu)??[]).length).toBe(2);
  expect(source).toContain("frontierBatchPaths:");
 });

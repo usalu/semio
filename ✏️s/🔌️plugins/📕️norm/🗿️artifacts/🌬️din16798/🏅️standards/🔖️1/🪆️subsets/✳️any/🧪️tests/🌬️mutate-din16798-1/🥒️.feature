@@ -36,7 +36,7 @@ Feature: Apply every typed DIN EN 16798 mutation against an independent Python i
   `mutation.clamped` warning.
 
   ⚠️ Honest boundary — the CARRIER. `identity-round-trip` reads the committed example
-  `asset://🎬️demo/🗣️.dsl.semio`. The carrier has no published grammar (the subset's `📖️.grammar.semio` is the
+  `asset://🏢️compliant-office/🗣️.dsl.semio`. The carrier has no published grammar (the subset's `📖️.grammar.semio` is the
   repository-wide `payload = OCTET+` placeholder), so the two implementations are compared on the
   envelope preamble, the ordered `key=value` fields, the table rows as written, and the digest and
   length of what each side re-emitted — never on a mapping from carrier tokens to the JSON snapshot's
@@ -176,6 +176,6 @@ Feature: Apply every typed DIN EN 16798 mutation against an independent Python i
   @level-long
   @mode-round-trip
   Scenario: Re-emit the real committed DIN EN 16798 document from the parsed carrier
-    Given the real committed text artifact asset://🎬️demo/🗣️.dsl.semio
+    Given the real committed text artifact asset://🏢️compliant-office/🗣️.dsl.semio
     When each implementation parses the artifact and prints it back to its canonical carrier bytes
     Then both reproduce the committed file byte for byte and agree on the parsed fields and the digest of what they emitted

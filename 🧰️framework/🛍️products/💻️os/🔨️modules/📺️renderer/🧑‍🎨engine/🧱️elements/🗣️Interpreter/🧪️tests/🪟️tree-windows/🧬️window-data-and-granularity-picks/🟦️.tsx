@@ -4,10 +4,11 @@ import directHover from "../../../../../../../🔌️plugin/🧪️tests/🕹️
 import { uiIntentToActionDescriptor } from "../../../../🛠️ShellHelpers/🌳️tree-windows/🟦️.tsx";
 import inspectorHover from "../../../../../../../../../../../✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧪️tests/🧫️fixtures/🖱️channel-hover.json";
 import type { TreeWindowsTestKit } from "../🧰️tree-windows-test-kit/🟦️.tsx";
+import { TREE_ROW_REORDER_MIME } from "../../../🌲️tree-panel-boundary/🟦️.ts";
 
 /** 🎯 Registers the cleanup hook, the authored window and key data and the granularity pick tests. */
 export function registerWindowDataAndGranularityPickTests(kit: TreeWindowsTestKit): void {
-  const { SURFACE, UiDocumentStore, afterEach, cleanup, expect, fireEvent, it, mount, node, selectBinding, treeItem, treeItemToTreeData } = kit;
+  const { SURFACE, UiDocumentStore, afterEach, cleanup, expect, fireEvent, it, mount, node, rowHeightPx, selectBinding, stubRect, treeItem, treeItemToTreeData } = kit;
   afterEach(() => cleanup());
   it("carries a container's authored window and its authored key onto the tree data, never the volatile node id", () => {
     const store = new UiDocumentStore(SURFACE);
@@ -64,6 +65,56 @@ export function registerWindowDataAndGranularityPickTests(kit: TreeWindowsTestKi
     expect(intents[0].args).toEqual({ domainId: "outliner.objects" });
     expect(intents[0].input).toEqual({ merge: "replace", method: "pick", targets: JSON.stringify([{ granularity: "piece", id: "seed-left-001" }]) });
   });
+  it("dispatches the mounted tree drop with document and step IDs at the released edge", () => {
+    const intents: unknown[] = [];
+    const mime = TREE_ROW_REORDER_MIME;
+    const action = { scope: "process3d", name: "dropStep", version: 1 };
+    const binding = { trigger: "drop", action, args: null, capability: null };
+    const dragRow = (id: number, key: string, label: string) => treeItem(id, key, label, {
+      draggable: true,
+      dragData: { [mime]: JSON.stringify({ documentId: "active-document", stepId: key }) },
+    });
+    const rendered = mount([
+      node(1, "timeline", { type: "tree" }, [2], [binding]),
+      node(2, "steps", { type: "treeSection", label: "Steps", defaultOpen: true }, [3, 4]),
+      dragRow(3, "cut-1", "First cut"),
+      dragRow(4, "cut-2", "Second cut"),
+    ], 1, intent => intents.push(intent));
+    const source = rendered.getByText("First cut").closest<HTMLElement>('[role="treeitem"]')!;
+    const handle = source.querySelector<HTMLElement>('[data-slot="drag-handle"]')!;
+    const target = rendered.getByText("Second cut").closest<HTMLElement>('[role="treeitem"]')!;
+    stubRect(target, 1, 1);
+    const values = new Map<string, string>();
+    const dataTransfer = {
+      get types() { return [...values.keys()]; },
+      getData: (kind: string) => values.get(kind) ?? "",
+      setData: (kind: string, value: string) => values.set(kind, value),
+      effectAllowed: "none",
+      dropEffect: "none",
+    };
+    fireEvent.dragStart(handle, { dataTransfer });
+    expect(dataTransfer.effectAllowed).toBe("move");
+    const event = new MouseEvent("drop", { bubbles: true, cancelable: true, clientY: 1.9 * rowHeightPx });
+    Object.defineProperty(event, "dataTransfer", { value: dataTransfer });
+    target.dispatchEvent(event);
+    expect(intents).toMatchObject([{ nodeKey: "timeline", action, input: {
+      documentId: "active-document", stepId: "cut-1", targetId: "cut-2", dropPosition: "after",
+    } }]);
+  });
+  it("keeps ordinary tree MIME drops on their authored action arguments", () => {
+    const intents: unknown[] = [];
+    const mime = "application/x-semio-norm-row";
+    const action = { scope: "outliner", name: "moveEntity", version: 1 };
+    const args = { path: "rows", over: "row-b" };
+    const rendered = mount([
+      node(1, "outliner", { type: "tree" }, [2], [{ trigger: "drop", action, args, capability: null }]),
+      node(2, "rows", { type: "treeSection", label: "Rows", defaultOpen: true }, [3]),
+      treeItem(3, "row-b", "Row B", { draggable: true, dragData: { [mime]: '{"id":"row-b"}' } }),
+    ], 1, async intent => { intents.push(intent); });
+    const row = rendered.getByText("Row B").closest<HTMLElement>('[role="treeitem"]')!;
+    fireEvent.drop(row, { dataTransfer: { types: [mime], getData: (kind: string) => kind === mime ? '{"id":"row-a"}' : "" } });
+    expect(intents).toMatchObject([{ nodeKey: "outliner", action, args, input: null }]);
+  });
   it("clears the pointer channel when the pointer leaves a hovered graph row", () => {
     const intents: any[] = [];
     const binding = {
@@ -92,7 +143,7 @@ export function registerWindowDataAndGranularityPickTests(kit: TreeWindowsTestKi
     const rendered = mount([
       node(1, "outliner", {type: "tree", interactionDomain: directHover.domain}, [2]),
       node(2, "section", {type: "treeSection", label: "Outputs", defaultOpen: true, headerToolbar: null, window: null}, [3]),
-      treeItem(3, args.targetId, "Long channel", {granularity: "handle"}, [], [binding]),
+      treeItem(3, args.targetId!, "Long channel", {granularity: "handle"}, [], [binding]),
     ], 1, (intent) => intents.push(intent));
     const row = rendered.getByText("Long channel");
     row.dispatchEvent(new MouseEvent("mouseover", {bubbles: true}));

@@ -75,7 +75,7 @@ fn add_brush_object_is_cursorized(source: &str) -> bool {
         && source.contains("Puzzle3dAddBrushObjectStage::ExistingAttractions")
         && source.contains("Puzzle3dAddBrushObjectStage::PublishObject")
         && source.contains("Puzzle3dAddBrushObjectStage::PublishAttraction")
-        && !source.contains(r#""addBrushObject" => Box::new(crate::retained_command::BoundedFirstStepCommandWork"#)
+        && !routes_to_one_grant_reducer(source, "addBrushObject")
 }
 
 #[test]
@@ -83,7 +83,7 @@ fn add_brush_object_hostile_static_law_rejects_engine_run_to_completion() {
     let source: &str = &editor_source();
     assert!(add_brush_object_is_cursorized(source));
     let direct = source
-        .replace(r#""addBrushObject" => owned!(Puzzle3dAddBrushObjectWork, |request, scope| Puzzle3dAddBrushObjectWork::from_original_construction(scope))"#, r#""addBrushObject" => work!(|request| crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle3d_retained_reduce, puzzle3d_retained_extent))"#);
+        .replace(r#""addBrushObject" => owned!(Puzzle3dAddBrushObjectWork, |request, scope| Puzzle3dAddBrushObjectWork::from_original_construction(scope))"#, r#""addBrushObject" => work!(|request| semio_s_plugin_puzzle_retained::BoundedFirstStepCommandWork::new(tool_id, semio_s_artifact_puzzle_3d_retained_action::puzzle3d_retained_reduce::<Self>, semio_s_artifact_puzzle_3d_retained_action::puzzle3d_retained_extent))"#);
     assert!(!add_brush_object_is_cursorized(&direct));
     for marker in [
         "Puzzle3dAddBrushObjectStage::Decode",
@@ -106,7 +106,7 @@ fn add_object_kind_is_cursorized(source: &str) -> bool {
         && source.contains("Puzzle3dAddObjectKindStage::Vortex")
         && source.contains("Puzzle3dAddObjectKindStage::Publish")
         && source.contains("PUZZLE3D_RELOCATE_VORTICES_PER_OBJECT")
-        && !source.contains(r#""addObjectKind" => Box::new(crate::retained_command::BoundedFirstStepCommandWork"#)
+        && !routes_to_one_grant_reducer(source, "addObjectKind")
 }
 
 #[test]
@@ -114,7 +114,7 @@ fn add_object_kind_hostile_static_law_rejects_whole_catalog_conversion() {
     let source: &str = &editor_source();
     assert!(add_object_kind_is_cursorized(source));
     let direct =
-        source.replace(r#""addObjectKind" => owned!(Puzzle3dAddObjectKindWork, |request, scope| Puzzle3dAddObjectKindWork::from_original_construction(scope))"#, r#""addObjectKind" => work!(|request| crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle3d_retained_reduce, puzzle3d_retained_extent))"#);
+        source.replace(r#""addObjectKind" => owned!(Puzzle3dAddObjectKindWork, |request, scope| Puzzle3dAddObjectKindWork::from_original_construction(scope))"#, r#""addObjectKind" => work!(|request| semio_s_plugin_puzzle_retained::BoundedFirstStepCommandWork::new(tool_id, semio_s_artifact_puzzle_3d_retained_action::puzzle3d_retained_reduce::<Self>, semio_s_artifact_puzzle_3d_retained_action::puzzle3d_retained_extent))"#);
     assert!(!add_object_kind_is_cursorized(&direct));
     for marker in ["Puzzle3dAddObjectKindStage::Kind", "Puzzle3dAddObjectKindStage::Representation", "Puzzle3dAddObjectKindStage::Vortex", "Puzzle3dAddObjectKindStage::Publish", "PUZZLE3D_RELOCATE_VORTICES_PER_OBJECT"] {
         assert!(!add_object_kind_is_cursorized(&source.replace(marker, "cursor-removed")), "missing add-object-kind cursor was falsely accepted: {marker}");
@@ -163,7 +163,7 @@ fn kind_weight_route_is_cursorized(source: &str) -> bool {
         && source.contains("Puzzle3dKindWeightStage::Build")
         && source.contains("Puzzle3dConfigMutation::SetObjectKindWeights")
         && source.contains("Puzzle3dConfigMutation::SetVortexKindWeights")
-        && !source.contains(r#""setObjectKindWeight" => Box::new(crate::retained_command::BoundedFirstStepCommandWork"#)
+        && !routes_to_one_grant_reducer(source, "setObjectKindWeight")
 }
 
 #[test]
@@ -172,7 +172,7 @@ fn kind_weight_hostile_static_law_rejects_whole_normalizer_and_missing_cursors()
     assert!(kind_weight_route_is_cursorized(source));
     let direct = source.replace(
         r#""setObjectKindWeight" | "setVortexKindWeight" => owned!(Puzzle3dKindWeightWork, |request, scope| Puzzle3dKindWeightWork::from_original_construction(tool_id, scope))"#,
-        r#""setObjectKindWeight" | "setVortexKindWeight" => work!(|request| crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle3d_retained_reduce, puzzle3d_retained_extent))"#,
+        r#""setObjectKindWeight" | "setVortexKindWeight" => work!(|request| semio_s_plugin_puzzle_retained::BoundedFirstStepCommandWork::new(tool_id, semio_s_artifact_puzzle_3d_retained_action::puzzle3d_retained_reduce::<Self>, semio_s_artifact_puzzle_3d_retained_action::puzzle3d_retained_extent))"#,
     );
     assert!(!kind_weight_route_is_cursorized(&direct));
     assert!(!source.contains("puzzle3d_normalize_kind_weight_group(self.weights"));

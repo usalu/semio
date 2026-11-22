@@ -290,8 +290,6 @@
     },
     {
       "query": "MATCH (a:Piece)-[r:Connection]->(b:Piece) RETURN a, r, b",
-      "inlineManifest": true,
-      "manifestId": null,
       "oracle": {
         "nodes": "SELECT id FROM nodes WHERE id IN (SELECT source FROM edges WHERE kind = 'Connection' UNION SELECT target FROM edges WHERE kind = 'Connection') ORDER BY id",
         "edges": "SELECT id FROM edges WHERE kind = 'Connection' ORDER BY id"

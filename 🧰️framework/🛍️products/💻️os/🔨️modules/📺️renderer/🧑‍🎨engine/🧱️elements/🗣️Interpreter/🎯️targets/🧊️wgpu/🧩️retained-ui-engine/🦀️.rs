@@ -13,7 +13,7 @@ use semio_renderer_wgpu_ui_engine_focus::ink_and_vfs_focus::{abort_focused_ink_c
 use semio_renderer_wgpu_ui_engine_focus::ink_and_vfs_focus::{close_retiring_focus_clipboard_one, close_window_focus_clipboard_one, focus_vfs_control, FOCUSED_VFS_CONTROL};
 #[cfg(all(not(target_arch = "wasm32"), not(any(test, feature = "testkit"))))]
 use semio_renderer_wgpu_ui_engine_focus::ink_and_vfs_focus::{complete_pending_native_text_editor_clipboard, PendingNativeInkClipboardToken, PendingNativeTextEditorClipboardToken};
-use semio_renderer_wgpu_ui_engine_dump::introspection::{block_list_accessibility_entries, event_feed_accessibility_entries, graph_timeline_accessibility_entries, scene_virtual_accessibility_node_id, table_button_accessibility_entries, table_editable_text_accessibility_entries, table_stepper_accessibility_entries, text_editor_accessibility_entries, vfs_accessibility_entries};
+use semio_renderer_wgpu_ui_engine_dump::introspection::{map_unavailable_accessibility_entries, block_list_accessibility_entries, event_feed_accessibility_entries, graph_timeline_accessibility_entries, scene_virtual_accessibility_node_id, table_button_accessibility_entries, table_editable_text_accessibility_entries, table_stepper_accessibility_entries, text_editor_accessibility_entries, vfs_accessibility_entries};
 use crate::retained_document_consumer::document_debug_log;
 #[cfg(all(not(target_arch = "wasm32"), any(test, feature = "testkit")))]
 use crate::retained_document_consumer::{apply_retained_document_page, UiDocumentFrameCursor};
@@ -47,7 +47,7 @@ pub use close_scene_pointer_and_dispatch::{
     claim_scene_pointer_at, claim_scene_pointer_owner, close_ui_document_one,
     dispatch_presented_ui_pointer_event, dispatch_ui_event, dispatch_ui_pointer_event,
     register_clipped_retained_hit_targets, register_retained_hit_targets, release_scene_pointer,
-    request_ui_document_close, retained_any_pointer_capture, retained_content_height, retained_window_pointer_capture,
+    request_ui_document_close, retained_any_pointer_capture, retained_content_height, retained_map_retry_key, retained_paint2d_key, retained_tree_row_reorder_marker, retained_window_pointer_capture,
     retained_pointer_capture_window, retained_scene_target, retained_scene_target_at, retained_selection_cancellation,
     scene_pointer_target_is_live, tree_window_measures,
 };
@@ -59,7 +59,7 @@ use close_scene_pointer_and_dispatch::{apply_window_clock_caret, stamp_window_cl
 mod accessibility_dispatch_and_focus;
 pub use accessibility_dispatch_and_focus::{
     dispatch_accessibility_event, retained_node_focus_identity, retained_node_has_visible_focus,
-    retained_node_is_select, retained_focused_row_key, retained_row_controls, RetainedNodeFocusKind, RetainedRowControl, RetainedRowControls,
+    retained_node_is_select, retained_node_is_tree_row, retained_focused_row_key, retained_row_controls, RetainedNodeFocusKind, RetainedRowControl, RetainedRowControls,
 };
 
 #[path = "📋️receipts-drop-and-clipboard/🦀️.rs"]
@@ -83,7 +83,7 @@ mod app_catalogue_tests;
 //#endregion RetainedEngineCutover
 
 pub use semio_renderer_wgpu_contracts::{
-    component_scene_is_presented, install_ui_engine_locale, ui_document_close_pending, ui_document_close_pending_for, ScenePointerOwner, ScenePointerOwners, UiDocumentCloseOwner, UiDocumentCloseQueue, UiEngineCell, UiEngineGuard, SCENE_POINTER_OWNERS, UI_DOCUMENT_CLOSE_QUEUE, UI_ENGINE, UI_ENGINE_LOCALE_UNRESOLVED,
+    component_scene_is_presented, install_ui_engine_locale, set_ui_engine_driver, ui_document_close_pending, ui_document_close_pending_for, ScenePointerOwner, ScenePointerOwners, UiDocumentCloseOwner, UiDocumentCloseQueue, UiEngineCell, UiEngineGuard, SCENE_POINTER_OWNERS, UI_DOCUMENT_CLOSE_QUEUE, UI_ENGINE, UI_ENGINE_LOCALE_UNRESOLVED,
 };
 #[cfg(any(test, feature = "testkit"))]
 pub use semio_renderer_wgpu_contracts::TEST_UI_ENGINE_LOCALE;

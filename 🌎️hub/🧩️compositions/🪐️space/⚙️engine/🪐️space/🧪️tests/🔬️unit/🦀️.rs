@@ -195,7 +195,7 @@ fn retained_config_preparation_matches_the_json_oracle_and_rejects_maximum_plus_
     assert!(sized(maximum + 1).is_err(), "the retained config lane must refuse maximum plus one");
     for admitted in [
         SpaceConfigMutation::SetClipboard(ClipboardSetting { node_ids: Vec::new() }),
-        SpaceConfigMutation::SetSpaceId(SpaceIdSetting { space_id: Some("demo".into()) }),
+        SpaceConfigMutation::SetSpaceId(SpaceIdSetting { space_id: Some("demo".into()), workflow_artifact_id: None }),
         SpaceConfigMutation::SetActiveNode(ActiveNodeSetting { node_id: Some("node-1".into()) }),
         SpaceConfigMutation::SetFocusedNode(FocusedNodeSetting { node_id: Some("node-1".into()) }),
     ] {
@@ -267,7 +267,7 @@ async fn retained_command_catalog_matches_the_serde_json_oracle() {
         .filter(|contract| contract.lanes == [semio_plugin::ArtifactToolPublicationLane::HostOnly])
         .map(|contract| contract.tool_id.to_string())
         .collect::<std::collections::BTreeSet<_>>();
-    assert_eq!(oracle, SpaceRetainedCatalogSummary { routes: 40, bounded: 40, batch: 0, migrated: 40, unique: true, bounded_ids: bounded_ids.clone(), migrated_ids: bounded_ids.clone(), host_only_ids: host_only_ids.clone() });
+    assert_eq!(oracle, SpaceRetainedCatalogSummary { routes: 41, bounded: 41, batch: 0, migrated: 41, unique: true, bounded_ids: bounded_ids.clone(), migrated_ids: bounded_ids.clone(), host_only_ids: host_only_ids.clone() });
     assert_eq!(bounded_ids.len(), SPACE_BOUNDED_TOOL_IDS.len());
     assert_eq!(host_only_ids.len(), 11);
 }

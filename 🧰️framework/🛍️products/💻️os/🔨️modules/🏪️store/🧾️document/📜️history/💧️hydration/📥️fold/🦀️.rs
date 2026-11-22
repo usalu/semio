@@ -3,13 +3,13 @@ use super::*;
 use semio_framework_value_native_owned::native_decoding::OriginalReceivingPrimary;
 
 /// 🛃️ Funds one concrete fold action plus its original Source receipt before the native body runs.
-fn fold_receiving_quote(cx: &StepContext<'_>, demand: RetirementDemand) -> Option<(RetainedCloneGrant, u64)> {
-    let (items, copy, work) = semio_framework_job::original_receiving_scope_headroom();
+fn fold_receiving_quote(cx: &StepContext<'_>, demand: RetirementDemand, work: u64) -> Option<(RetainedCloneGrant, u64)> {
+    let (items, copy, scope_work) = semio_framework_job::original_receiving_scope_headroom();
     let grant = cx.retained_grant();
     let fuel = cx.fuel_remaining();
     if cx.should_yield() || grant.maximum_items <= items || grant.maximum_copy_bytes < demand.copy_bytes.checked_add(copy)?
         || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes
-        || grant.maximum_depth < demand.depth || fuel <= work {
+        || grant.maximum_depth < demand.depth || fuel < work.checked_add(scope_work)? {
         return None;
     }
     Some((RetainedCloneGrant {
@@ -18,7 +18,7 @@ fn fold_receiving_quote(cx: &StepContext<'_>, demand: RetirementDemand) -> Optio
         maximum_capacity_bytes: demand.capacity_bytes,
         maximum_release_bytes: demand.release_bytes,
         maximum_depth: demand.depth,
-    }, fuel.div_ceil(2).min(fuel - work)))
+    }, work))
 }
 
 type FoldJob = semio_os_spr::HistoryFoldJob<'static, semio_os_spr::history::RetainedHistoryFold>;
@@ -28,23 +28,24 @@ fn fold_step_quote(cx: &StepContext<'_>, job: &FoldJob) -> Result<Option<(usize,
     let (_, headroom, _) = semio_framework_job::original_receiving_scope_headroom();
     let available = cx.retained_grant().maximum_copy_bytes.saturating_sub(headroom);
     let mut body = usize::try_from(cx.fuel_remaining()).unwrap_or(usize::MAX).min(4096).min(available);
-    let demand = if job.original_rejection_ready() {
-        FoldJob::original_rejection_demand()
+    let (demand, work) = if job.original_rejection_ready() {
+        (FoldJob::original_rejection_demand(), 1)
     } else if job.original_output_ready() {
-        FoldJob::original_output_demand()
+        (FoldJob::original_output_demand(), 1)
     } else if body == 0 {
         return Ok(None);
     } else {
         let demand = job.original_step_demand(body)?;
         let reduced = body.saturating_sub(demand.copy_bytes.saturating_sub(available));
-        if reduced == 0 || reduced == body {
+        let demand = if reduced == 0 || reduced == body {
             demand
         } else {
             body = reduced;
             job.original_step_demand(body)?
-        }
+        };
+        (demand, FoldJob::ORIGINAL_STEP_WORK)
     };
-    Ok(fold_receiving_quote(cx, demand).map(|(grant, work)| (body, grant, work)))
+    Ok(fold_receiving_quote(cx, demand, work).map(|(grant, work)| (body, grant, work)))
 }
 
 impl<P,M> RetainedPersistedDocumentHydration<P,M>
@@ -78,7 +79,7 @@ where P:ArtifactPack+semio_os_store_text_io::ArtifactStoreSnapshot+semio_os_spr:
    Ok(demand)=>demand,
    Err(error)=>{*failure=Some(error.into());return self.reject(MemberOpenDiagnostic::Replay)}
   };
-  let Some(quote)=fold_receiving_quote(cx,demand)else{return PersistedDocumentHydrationStep::Pending(self.progress())};
+   let Some(quote)=fold_receiving_quote(cx,demand,1)else{return PersistedDocumentHydrationStep::Pending(self.progress())};
   let mut scope=None;let result=cx.with_native_receiving_quoted(&mut scope,quote,|native,_|{let turn=semio_os_spr::HistoryFoldJob::admit_original(&mut runner,output,native);Self::capture_original_fold(failure,turn.result.map(|result|result.map(|_|())),turn.receipt_refusal,turn.progress);Ok(())});
   if !self.settle_original_receiving_scope(cx,scope,result){return self.reject(MemberOpenDiagnostic::Replay)}
   }

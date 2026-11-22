@@ -37,6 +37,22 @@ let child_plans=variants.iter().zip(all_types.iter()).map(|(variant,ty)|quote!(#
  5=>{self.phase=6;work=1},_=>return Err(#tree::invalid().into())})).collect::<Vec<_>>();
  let child_close_plan=variants.iter().zip(all_types.iter()).map(|(variant,ty)|quote!(#selected::#variant{slot,pending}=>{if !slot.terminal_is_empty(){return if slot.is_closing(){Ok((slot.close_demands(body)?,slot.close_work_demand(body)?))}else{Ok((slot.begin_close_demand()?,slot.begin_close_work_demand()?))}}if pending.is_some(){return Ok((self.retirement.next_owner_demands::<#ty>(true,&None,body)?,self.retirement.next_owner_work::<#ty>(true,&None,body)?))}Ok((#tree::fixed(::std::mem::size_of::<Option<#selected>>()),1))})).collect::<Vec<_>>();
  let child_close=variants.iter().map(|variant|quote!(#selected::#variant{slot,pending}=>{if !slot.terminal_is_empty(){return if slot.is_closing(){#owner::native_close_settle(effect,|effect,reply|slot.close_into(body,effect,reply))}else{#owner::native_close_settle(effect,|effect,reply|slot.begin_close_into(effect,reply))}.map(|s|#value::RetainedCloneStep::Progress(s.progress()))}if pending.is_some(){let turn=self.retirement.begin_granted(&mut **pending,effect);return #value::RetainedWorkPoll::Complete(#value::RetainedWorkOutcome{result:turn.result.map(|s|s.unwrap_or(#value::RetainedCloneStep::Progress(Default::default()))).map_err(Into::into),work:turn.work})}self.child=None;Self::finish(effect,1,Ok(#value::RetainedCloneStep::Progress(#tree::receipt(d))))})).collect::<Vec<_>>();
+ let seed_fields=[
+  (quote!(state.selector),quote!(#tree::variant::NativeVariantSelector::new(#name::__semio_native_variant_spec()))),
+  (quote!(state.projection),quote!(Default::default())),
+  (quote!(state.source),quote!(::std::mem::ManuallyDrop::new(None))),
+  (quote!(state.child),quote!(None)),
+  (quote!(state.output),quote!(::std::mem::ManuallyDrop::new(None))),
+  (quote!(state.retirement),quote!(Default::default())),
+  (quote!(state.direct),quote!(false)),
+  (quote!(state.phase),quote!(0)),
+  (quote!(state.closing),quote!(false)),
+  (quote!(effect),quote!(Default::default())),
+  (quote!(retirement_effect),quote!(Default::default())),
+ ];
+ let seed_count=seed_fields.len();
+ let seed_sizes=seed_fields.iter().enumerate().map(|(index,(field,_))|quote!(#index=>size(::std::ptr::addr_of_mut!((*target).#field))));
+ let seed_writes=seed_fields.iter().enumerate().map(|(index,(field,value))|quote!(#index=>::std::ptr::addr_of_mut!((*target).#field).write(#value)));
  Ok(quote!{
  #(#definitions)*
  impl #name{fn __semio_native_variant_all(index:usize)->Option<#owner::NativeRecordSchema>{match index{#(#schema_all,)*_=>None}}fn __semio_native_variant_units(index:usize)->Option<#owner::NativeRecordSchema>{match index{#(#schema_unit,)*_=>None}}fn __semio_native_variant_data(index:usize)->Option<#owner::NativeRecordSchema>{match index{#(#schema_data,)*_=>None}}fn __semio_native_variant_tag(index:usize)->Option<#owner::NativeRecordSchema>{#tag_schema}fn __semio_native_variant_alternatives(index:usize)->Option<#owner::NativeRecordSchema>{match index{#(#schema_alternatives,)*_=>None}}fn __semio_native_variant_spec()->#tree::variant::NativeVariantSpec{#tree::variant::NativeVariantSpec{all:unsafe{#owner::NativeSchemaFields::native(Self::__semio_native_variant_all)},units:unsafe{#owner::NativeSchemaFields::native(Self::__semio_native_variant_units)},data:unsafe{#owner::NativeSchemaFields::native(Self::__semio_native_variant_data)},count:#variant_count,tag:#tag}}}
@@ -44,7 +60,26 @@ let child_plans=variants.iter().zip(all_types.iter()).map(|(variant,ty)|quote!(#
  enum #selected where #(#all_types:#native::native_decoding::NativeReceive<dyn #tree::NativeValueSource>,)*{#(#variants{slot:#tree::NativeReceiveSlot<dyn #tree::NativeValueSource,#all_types>,pending: ::std::mem::ManuallyDrop<Option<#all_types>>},)*}
  #vis struct #receiver<I:#tree::NativeValueSource+?Sized>where #(#all_types:#native::native_decoding::NativeReceive<dyn #tree::NativeValueSource>,)*{state:#state<I>,effect:#native::native_decoding::NativeReceivingEffect,retirement_effect:#native::native_decoding::NativeReceivingEffect<#value::OriginalRetirementFailure>}
  struct #state<I:#tree::NativeValueSource+?Sized>where #(#all_types:#native::native_decoding::NativeReceive<dyn #tree::NativeValueSource>,)*{selector:#tree::variant::NativeVariantSelector<I>,projection:#value::retained_clone::RetainedOwnedProjectionAdmission<dyn #tree::NativeValueSource>,source: ::std::mem::ManuallyDrop<Option<#value::retained_clone::RetainedOwnedProjection<dyn #tree::NativeValueSource>>>,child:Option<#selected>,output: ::std::mem::ManuallyDrop<Option<#name>>,retirement:#value::retained_clone::RetainedCloneClose,direct:bool,phase:u8,closing:bool}
- impl<I:#tree::NativeValueSource+?Sized>#native::native_decoding::NativeReceive<I>for #name #implementation_where{type Receiver=#receiver<I>;fn receiver()-><Self as #native::native_decoding::NativeReceive<I>>::Receiver{#receiver{state:#state{selector:#tree::variant::NativeVariantSelector::new(Self::__semio_native_variant_spec()),projection:Default::default(),source: ::std::mem::ManuallyDrop::new(None),child:None,output: ::std::mem::ManuallyDrop::new(None),retirement:Default::default(),direct:false,phase:0,closing:false},effect:Default::default(),retirement_effect:Default::default()}}}
+ impl<I:#tree::NativeValueSource+?Sized>#native::native_decoding::NativeReceive<I>for #name #implementation_where{type Receiver=#receiver<I>;fn receiver()-><Self as #native::native_decoding::NativeReceive<I>>::Receiver{#receiver{state:#state{selector:#tree::variant::NativeVariantSelector::new(Self::__semio_native_variant_spec()),projection:Default::default(),source: ::std::mem::ManuallyDrop::new(None),child:None,output: ::std::mem::ManuallyDrop::new(None),retirement:Default::default(),direct:false,phase:0,closing:false},effect:Default::default(),retirement_effect:Default::default()}}
+  fn receiver_template(subset:bool)->Option<#native::native_decoding::NativeSeedTemplate<Self::Receiver>>{
+   if subset{return None}
+   Some(unsafe{#native::native_decoding::NativeSeedTemplate::fields(#seed_count,#receiver::<I>::seed_field_size,#receiver::<I>::write_seed_field)})
+  }
+ }
+ impl<I:#tree::NativeValueSource+?Sized>#receiver<I>where #(#all_types:#native::native_decoding::NativeReceive<dyn #tree::NativeValueSource>,)*{
+  /// 📏️ Quotes an independent empty receiver field in uninitialized resident storage.
+  unsafe fn seed_field_size(target:*mut ::std::mem::MaybeUninit<Self>,index:usize)->Option<usize>{
+   fn size<T>(_:*mut T)->usize{::std::mem::size_of::<T>()}
+   let target=target.cast::<Self>();
+   Some(unsafe{match index{#(#seed_sizes,)*_=>return None}})
+  }
+  /// 🌱️ Initializes the quoted vacant field at its resident address.
+  unsafe fn write_seed_field(target:*mut ::std::mem::MaybeUninit<Self>,index:usize)->bool{
+   let target=target.cast::<Self>();
+   unsafe{match index{#(#seed_writes,)*_=>return false}}
+   true
+  }
+ }
  impl<I:#tree::NativeValueSource+?Sized>#state<I>where #(#all_types:#native::native_decoding::NativeReceive<dyn #tree::NativeValueSource>,)*{
  fn plan(&self,input:#value::retained_clone::RetainedCloneRef<'_,I>,body:usize,maximum:u64)->Result<(#value::RetirementDemand,u64,u8),#value::ValueError>{if self.closing||self.phase>=7{return Err(#tree::invalid())}self.selector.validate_input(input)?;match self.phase{
  0=>if self.selector.result().is_some(){Ok((#tree::fixed(::std::mem::size_of::<Option<#selected>>()+::std::mem::size_of::<bool>()+::std::mem::size_of::<u8>()),3,0))}else{Ok((self.selector.demands(input,body,maximum)?,match self.selector.select_advance(input,body,maximum)?{#owner::NativeAdvanceSelection::Nested=>1,#owner::NativeAdvanceSelection::Local{work}=>work},1))},

@@ -1,0 +1,7 @@
+# Controller Capacity and Worker Progress at 20:11 UTC
+
+At 20:11:55 UTC the controller fleet status showed default-session PID 24613 blocked on a 14,336 MB graph booking while retaining 2,747 MB. Its incremental need was 11,589 MB and reported spare was 7,846 MB. A separate 2,048 MB command waited behind it in queue order. The other named scoped work included graph-plan PID 34231 with child 98821 at `repository:graph-optional-lru`, and isolated Cargo PID 78202 with child 98703; both were attributed to agent `01a1f6d5-651e-7131-9e79-a6aaa1311d72`. Their labels and ages do not prove imminent completion. No authority to stop another process or change the capacity queue follows from this snapshot. The safe path is normal completion and capacity reconciliation, or an independently proven smaller booking; no such smaller booking was established here.
+
+The m07 workspace had advanced from a follower wait to its own current slice PID 54517 at 78,413 inventory observations and 31 completed owner checks. m11 slice PID 3936 had 193,848 observations and 31 checks after capacity admission. Those are inventory verification counters, not final owner-round completion. Both remained not Ready.
+
+After two native failures, m13 recorded a native exit-receipt success at 20:11:02.524 UTC and repo-mcp exit-receipt success at 20:11:58.790 UTC. This is natural stage recovery, not a complete Ready result. No process or worker was changed.

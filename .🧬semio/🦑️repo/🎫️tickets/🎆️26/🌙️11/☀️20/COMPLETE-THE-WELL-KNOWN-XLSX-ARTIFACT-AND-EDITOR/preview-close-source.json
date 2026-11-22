@@ -1,0 +1,128 @@
+{
+  "previewClose": [
+    {
+      "phase": "derived-snapshot-return",
+      "precedingDiscard": false,
+      "closingDerived": true,
+      "cancelled": true,
+      "mutationSource": true,
+      "inputProjection": false,
+      "needsSource": true,
+      "derivedNeedsControl": true
+    },
+    {
+      "phase": "receipt-only-derived",
+      "precedingDiscard": false,
+      "closingDerived": true,
+      "cancelled": true,
+      "mutationSource": true,
+      "inputProjection": false,
+      "needsSource": false,
+      "derivedNeedsControl": false
+    },
+    {
+      "phase": "unselected-derived",
+      "precedingDiscard": false,
+      "closingDerived": false,
+      "cancelled": false,
+      "mutationSource": true,
+      "inputProjection": false,
+      "needsSource": false,
+      "derivedNeedsControl": false
+    },
+    {
+      "phase": "discard-selected-first",
+      "precedingDiscard": true,
+      "closingDerived": true,
+      "cancelled": true,
+      "mutationSource": true,
+      "inputProjection": false,
+      "needsSource": false,
+      "derivedNeedsControl": true
+    },
+    {
+      "phase": "projection-selected-first",
+      "precedingDiscard": false,
+      "closingDerived": false,
+      "cancelled": true,
+      "mutationSource": true,
+      "inputProjection": true,
+      "needsSource": false,
+      "derivedNeedsControl": false
+    },
+    {
+      "phase": "mutation-source-return",
+      "precedingDiscard": false,
+      "closingDerived": false,
+      "cancelled": true,
+      "mutationSource": true,
+      "inputProjection": false,
+      "needsSource": true,
+      "derivedNeedsControl": false
+    }
+  ],
+  "workRecovery": [
+    {
+      "phase": "settled-with-source",
+      "pending": false,
+      "source": true,
+      "sameWork": false,
+      "admitted": true
+    },
+    {
+      "phase": "settled-without-source",
+      "pending": false,
+      "source": false,
+      "sameWork": false,
+      "admitted": false
+    },
+    {
+      "phase": "pending-native-reader-original-work",
+      "pending": true,
+      "source": true,
+      "sameWork": true,
+      "admitted": true
+    },
+    {
+      "phase": "pending-native-reader-foreign-work",
+      "pending": true,
+      "source": true,
+      "sameWork": false,
+      "admitted": false
+    }
+  ],
+  "prefixClose": [
+    {
+      "phase": "prefix-native-task",
+      "finishedFirst": false,
+      "closingPreview": true,
+      "historySource": false,
+      "derivedNeedsControl": true,
+      "needsSource": true
+    },
+    {
+      "phase": "prefix-header-only",
+      "finishedFirst": false,
+      "closingPreview": true,
+      "historySource": false,
+      "derivedNeedsControl": false,
+      "needsSource": false
+    },
+    {
+      "phase": "prefix-history-return",
+      "finishedFirst": false,
+      "closingPreview": true,
+      "historySource": true,
+      "derivedNeedsControl": false,
+      "needsSource": true
+    },
+    {
+      "phase": "prefix-not-selected",
+      "finishedFirst": true,
+      "closingPreview": true,
+      "historySource": true,
+      "derivedNeedsControl": true,
+      "needsSource": false
+    }
+  ]
+}

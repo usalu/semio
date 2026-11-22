@@ -6,7 +6,7 @@ use crate::editor::playbook::modes::builder::windows::changes as changes_window;
 use crate::editor::playbook::modes::builder::windows::files as files_window;
 use crate::editor::playbook::modes::builder::windows::source as source_window;
 use crate::editor::playbook::modes::builder::windows::steps as steps_window;
-use semio_plugin::create_tab_stack_layout;
+use semio_plugin::create_stack_layout;
 use semio_ui_locale::LocalizedLabel;
 use semio_plugin::ModeDefinition;
 use semio_plugin::WindowLayout;
@@ -22,7 +22,7 @@ pub fn definition() -> ModeDefinition {
 /// 🪟️ The app's default window layout — this mode is the app's `default_mode_id`, so its layout IS the
 /// app-level `default_layout`.
 pub fn layout() -> WindowLayout {
-    create_tab_stack_layout(
+    create_stack_layout(
         &[
             builder_window::PLAYBOOK_PLAY_WINDOW_BUILDER.into(),
             steps_window::PLAYBOOK_PLAY_WINDOW_STEPS.into(),

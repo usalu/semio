@@ -18,6 +18,8 @@ impl<T:Puzzle2dTextCandidateIntent>Deref for Puzzle2dTextCandidateCursor<T>{type
 impl<T:Puzzle2dTextCandidateIntent>DerefMut for Puzzle2dTextCandidateCursor<T>{fn deref_mut(&mut self)->&mut Self::Target{&mut self.state}}
 impl<T:Puzzle2dTextCandidateIntent>Default for Puzzle2dTextCandidateCursor<T>{fn default()->Self{Self{state:ManuallyDrop::new(Puzzle2dTextCandidateState{source:None,mutation:None,preparation:Default::default(),snapshot_clone:Default::default(),next:OptionalText::retained_clone_cursor(),plan:None,candidate:None,displaced:None,displaced_close:None,candidate_close:None,phase:0,closing:false})}}}
 impl<T:Puzzle2dTextCandidateIntent>Puzzle2dTextCandidateCursor<T>{
+#[cfg(any(test,feature = "testkit"))]
+ pub fn phase(&self)->u8{self.state.phase}
  pub fn advance(&mut self,source:RetainedCloneRef<'_,Puzzle2dSnapshot>,mutation:RetainedCloneRef<'_,T>,body:usize,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{
         let grant=effect.grant();
   if self.closing||self.phase==12{return Err(refusal("optional text candidate is closing or spent"))}if grant.maximum_items==0||grant.maximum_depth==0{return Ok(RetainedCloneStep::Progress(Default::default()))}if let Some(progress)=source.bind(&mut self.source,effect).result?{return Ok(RetainedCloneStep::Progress(progress))}if let Some(progress)=mutation.bind(&mut self.mutation,effect).result?{return Ok(RetainedCloneStep::Progress(progress))}

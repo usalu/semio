@@ -1,4 +1,5 @@
 {
+  "ellipticMember": {"radiusXM":0.0028,"radiusYM":0.002,"lengthM":0.04,"azimuthDeg":23},
   "subpixelShaft": {"triangle": [[0, 0], [0.3, 8e-05], [0, 0.00016]], "points": [[0.275, 8e-05], [0.275, 0.02008], [0.33, 8e-05]], "degenerate": [[0.3, 0], [0.31, 0], [0.32, 0]], "probeRadiusM": 0.045},
   "closedPartBounds": {"boxes":[[0,0,0,1,1,1],[0,3,0,1,4,1],[4,0,0,5,1,1]],"samples":[{"at":[0.4,0.6,0.3],"skip":[0],"inside":false,"tested":[0]},{"at":[0.4,3.6,0.3],"skip":[],"inside":true,"tested":[1]},{"at":[4.5,0.6,0.3],"skip":[],"inside":true,"tested":[2]},{"at":[0.4,-0.6,0.3],"skip":[],"inside":false,"tested":[]},{"at":[2.0,0.6,0.3],"skip":[],"inside":false,"tested":[]}],"copies":{"count":125,"stepY":1.25,"samples":[[0.5,78,0.5],[0.5,78.3,0.5],[0.5,154.9,0.5],[0.5,155.3,0.5],[0.5,2.333,0.5]]}},
   "totalSurface": {"stockM": [0.4, 0.15, 0.1], "areaM2": 0.23, "wrongAreaM2": 0.5},
@@ -111,7 +112,8 @@
     "volumes-solids",
     "volumes-copied",
     "volumes-slender",
-    "volumes-views-disagree"
+    "volumes-views-disagree",
+    "volumes-connected"
   ],
   "limits": {
     "silhouetteIouElevation": 0.9,
@@ -164,7 +166,15 @@
     "transparentRegionKinds": [
       "glazing"
     ],
-    "enclosedOuterFraction": 0.02
+    "enclosedOuterFraction": 0.02,
+    "sheetRatio": 20,
+    "slenderMemberRatio": 5,
+    "slenderMemberFeatures": 2,
+    "memberSpanFeatures": 1,
+    "memberSpanSamples": 9,
+    "connectedToleranceFeatures": 0.2,
+    "connectedApartFeatures": 1,
+    "connectedGapCapFeatures": 6
   },
   "baselinePasses": {
     "volumes-availability": [
@@ -219,6 +229,19 @@
     ]
   },
   "invalid": [
+    {
+      "name": "a head lifted one metre off the neck",
+      "rule": "volumes-connected",
+      "scale": 500,
+      "measure": "looseGroups:floating",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/volumes/500/body/id=head/transform/translation",
+          "value": [1.103, 0, 0]
+        }
+      ]
+    },
     {
       "name": "a volume that is unavailable where its representation is authored",
       "rule": "volumes-availability",
@@ -1183,6 +1206,25 @@
     "area": 1.12257,
     "evenOddArea": 0.777
   },
+  "viewsPosition": {
+    "description": "`volumes-views-disagree` compares the place as well as the extent of the whole asset along a shared axis. The side elevation of the sample at 1:100 covers -0.1596 to 0.21 m along the length (0.3696 m); the plan is replaced by one filled rectangle on the root of the same length, 0.54 m wide, moved ahead by `shiftM`. The extents agree in every case (difference 0); the limit is max(15 mm, 2 % of 0.3696 m) = 15 mm, so a plan 10 mm ahead passes and one 50 mm ahead is a finding that names both intervals.",
+    "scale": 100,
+    "axis": "x",
+    "elevationM": [-0.1596, 0.21],
+    "widthM": 0.54,
+    "limitM": 0.015,
+    "cases": [
+      { "name": "a plan drawn 10 mm ahead of the side elevation is within one feature", "shiftM": 0.01, "finding": false },
+      { "name": "a plan drawn 50 mm ahead of the side elevation has the right length in the wrong place", "shiftM": 0.05, "finding": true }
+    ]
+  },
+  "typified": {
+    "description": "Typification of a row at a coarser scale (C22 extended): 13 rods of 12 mm at 75 mm pitch (centres 0 to 0.9 m, 1 m high) are drawn at 1:500 as 4 posts of 75 mm at 0.275 m pitch (centres 0.0375 to 0.8625 m). Posts and rods disagree part by part, but the posts are `envelope` solids on the bone of the row, so cross-scale compares the convex hull of the posts (0 to 0.9 m, area 0.9 m²) with the convex hull of the rods (-0.006 to 0.906 m, area 0.912 m²): IoU 0.9 / 0.912 = 0.986842. Without the declaration the posts stay posts and fail against the hull.",
+    "rods": { "count": 13, "first": 0, "pitch": 0.075, "size": [0.012, 1, 0.012] },
+    "posts": { "count": 4, "first": 0.0375, "pitch": 0.275, "size": [0.075, 1, 0.075] },
+    "feature": 0.075,
+    "hullIou": 0.986842
+  },
   "envelope": {
     "bars": [
       {
@@ -1414,6 +1456,8 @@
     ]
   },
   "envelopeArea": {
+    "pocketFraction": 0.001,
+    "pocket": "the areas of the other regions stay equal up to `pocketFraction` of their value: with the arms as walls one face sample of the legs under the torso looks, beyond the torso, into the armpit, a pocket of 19 mm that the flood of 1:200 (cell 7.5 mm) does not reach, so the torso does not stand between that sample and the air; without the arms the pocket is open",
     "name": "the arms of the sample modelled as porous envelope prisms",
     "scale": 200,
     "region": "arms",
@@ -1718,6 +1762,17 @@
     ]
   },
   "follow": {
+    "bodyEdge": {
+      "description": "An unfilled closed outline that is the edge of a body (the solids as they are fill at least half of what it encloses): its centre line is the body edge and the pen is drawing convention, so a slender solid along it keeps its true width. A plate of 1 m x 0.6 m with a rim wire of 10 mm along its upper edge (centre line on the edge), outlined by a closed stroke of 80 mm pen on the bone of both: the reference is the plate and the wire at 10 mm, 0.6 + 1.01 x 0.005 + 2 x 0.005 x 0.005 = 0.6051 m² (at the pen it would be 0.6 + 1.08 x 0.04 + 2 x 0.04 x 0.04 = 0.6464 m², 0.04 m fatter than the drawing all along the edge); the drawing counts as filled up to the centre line, 0.6 m², IoU 0.6 / 0.6051 = 0.9916. The same outline around the wire alone encloses a void: the wire is drawn at the pen, (1 + 0.08) x 0.08 = 0.0864 m².",
+      "plate": { "centre": [0, 0, 0], "size": [1, 0.6, 0.01] },
+      "wire": { "centre": [0, 0.3, 0], "size": [1, 0.01, 0.01] },
+      "outline": [[-0.5, -0.3], [0.5, -0.3], [0.5, 0.3], [-0.5, 0.3]],
+      "penM": 0.08,
+      "edgeAreaM2": 0.6051,
+      "penAreaM2": 0.6464,
+      "voidAreaM2": 0.0864,
+      "rects": [[-0.5, -0.3, 0.5, 0.3], [-0.505, 0.295, 0.505, 0.305]]
+    },
     "description": "C24 refined: a slender solid is drawn like the 2D shape it follows. A bar of 1 m x 10 mm on bone b along x; the drawn shapes of the viewpoint are given by bone, closedness, fill, rings and pen; the stroke area is (length + width) x width. A hoop (a revolve loop of a 16-gon tube of 10 mm radius, 0.5 m from the axis) is slender by the path it follows and is drawn as an annulus.",
     "bar": {
       "centre": [
@@ -1878,6 +1933,98 @@
                 [
                   -0.5,
                   0.4
+                ]
+              ]
+            ],
+            "penM": 0
+          }
+        ],
+        "widthM": 0.01
+      },
+      {
+        "name": "a distant parallel stroke on the same bone leaves the bar at its physical width",
+        "drawn": [
+          {
+            "bone": "b",
+            "closed": false,
+            "filled": false,
+            "rings": [
+              [
+                [
+                  -0.5,
+                  0.45
+                ],
+                [
+                  0.5,
+                  0.45
+                ]
+              ]
+            ],
+            "penM": 0.18
+          }
+        ],
+        "widthM": 0.01
+      },
+      {
+        "name": "a foliage strip cannot widen a woody member on the same animated branch",
+        "material": "bark",
+        "drawn": [
+          {
+            "bone": "b",
+            "material": "leaves",
+            "closed": true,
+            "filled": true,
+            "rings": [
+              [
+                [
+                  -0.5,
+                  -0.08
+                ],
+                [
+                  0.5,
+                  -0.08
+                ],
+                [
+                  0.5,
+                  0.08
+                ],
+                [
+                  -0.5,
+                  0.08
+                ]
+              ]
+            ],
+            "penM": 0
+          }
+        ],
+        "widthM": 0.01
+      },
+      {
+        "name": "the enclosing metal panel does not give an off-centre steel cleat its height",
+        "material": "metal",
+        "drawn": [
+          {
+            "bone": "b",
+            "material": "metal",
+            "closed": true,
+            "filled": true,
+            "rings": [
+              [
+                [
+                  -0.65,
+                  -0.02
+                ],
+                [
+                  0.65,
+                  -0.02
+                ],
+                [
+                  0.65,
+                  0.2
+                ],
+                [
+                  -0.65,
+                  0.2
                 ]
               ]
             ],

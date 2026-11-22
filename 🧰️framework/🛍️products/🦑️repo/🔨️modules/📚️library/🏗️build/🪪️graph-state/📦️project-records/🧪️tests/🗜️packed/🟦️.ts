@@ -5,7 +5,7 @@ import{join}from"node:path";
 import{createHash}from"node:crypto";
 import{startRemoteCacheServerV1}from"../../../../🌐️remote-cache/🖥️server/🟦️.ts";
 import{createProjectFleetPortV1,projectRecordStateV1,type ProjectRecordInfoV1}from"../../🟦️.ts";
-import{bundleKeysV1,hostOfRootV1,localBundleV1,neutralBundleV1,neutralRecordV1,packBundleV1,packRecordV1,unpackBundleV1,unpackRecordV1,type ClosureBundleV1}from"../../🧳️portable/🟦️.ts";
+import{bundleKeysV1,hostOfRootV1,localBundleV1,neutralBundleV1,neutralRecordV1,packBundleV1,packRecordV1,unpackBundleV1,unpackRecordV1,type ClosureBundleV1,canonicalRowOrderV1}from"../../🧳️portable/🟦️.ts";
 import{graphFleetClientV1,type GraphFleetClientV1}from"../../../🛰️exchange/🟦️.ts";
 import{graphFleetSettingsV1}from"../../../🧶️nx/🟦️.ts";
 import{remoteCacheFetchV1}from"../../../../🌐️remote-cache/🛰️fleet/🟦️.ts";
@@ -136,7 +136,7 @@ test("differential: the packed forms give back exactly the rows, layers and valu
  }
  const portable={digest:sha("r"),authority:[{kind:"lstat",path:rootA,fact:"directory"}],observations:Array.from({length:30},(_,at)=>({kind:"file",path:`${rootA}/f${at%7}.ts`,fact:{sha256:sha(String(at%7)),size:at%7,mtimeMs:1,ctimeMs:1,ino:1}})),image:imageOf(0)};
  const neutral=neutralRecordV1(portable,hostA).record;
- expect(JSON.parse(JSON.stringify(unpackRecordV1(JSON.parse(JSON.stringify(packRecordV1(neutral))))))).toEqual(JSON.parse(JSON.stringify(neutral)));
+ expect(JSON.parse(JSON.stringify(unpackRecordV1(JSON.parse(JSON.stringify(packRecordV1(neutral))))))).toEqual(JSON.parse(JSON.stringify({...neutral,authority:canonicalRowOrderV1(neutral.authority),observations:canonicalRowOrderV1(neutral.observations)})));
  expect(JSON.stringify(packRecordV1(neutral)).length,"repeated rows are written once").toBeLessThan(JSON.stringify(neutral).length);
 });
 

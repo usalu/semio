@@ -22,14 +22,14 @@ const stageOf=(name:string,timeoutMilliseconds=600000)=>({...STAGES.find(stage=>
 const messages=residentSchema.definitions.Policy.const.messages as Record<"en"|"de",Record<string,string>>;
 const fill=(text:string,fields:Record<string,string|number>)=>text.replace(/\{(\w+)\}/gu,(_all,name:string)=>String(fields[name]??""));
 const WAIT="waiting for the fleet to infer @semio-tech/s-dev-composition",WARTE="Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet";
-const stepLine=(seconds:number,done:number,bound:number,german=false)=>german
- ?`Lese den Projektgraph-Ausschnitt (${seconds} s): ${WAIT}${done>bound?` (beyond the expected ${bound} s)`:""} / ${WARTE}${done>bound?` (über den erwarteten ${bound} s)`:""} ${done} von ${bound}.`
- :`Reading the project graph slice (${seconds} s): ${WAIT}${done>bound?` (beyond the expected ${bound} s)`:""} / ${WARTE}${done>bound?` (über den erwarteten ${bound} s)`:""} ${done} of ${bound}.`;
+const stepLine=(seconds:number,bound:number,german=false)=>{const note=seconds>bound?(german?"über den erwarteten":"beyond the expected"):(german?"erwartet":"expected");return german
+ ?`Lese den Projektgraph-Ausschnitt (${seconds} s, ${note} ${bound} s): ${WAIT} / ${WARTE}.`
+ :`Reading the project graph slice (${seconds} s, ${note} ${bound} s): ${WAIT} / ${WARTE}.`;};
 const FAST={...TREE,speedFactor:1,stallStopMilliseconds:6000,stallMilliseconds:6000};
 
 test("the step line of the slice worker is parsed in both languages, with and without the note that it passed its bound",()=>{
  for(const german of[false,true]){
-  const inside=readyStepOfV1(["noise",stepLine(900,120,1800,german)])!,beyond=readyStepOfV1([stepLine(11802,11265,1800,german)])!;
+  const inside=readyStepOfV1(["noise",stepLine(120,1800,german)])!,beyond=readyStepOfV1([stepLine(11265,1800,german)])!;
   expect(inside.seconds).toBe(120);expect(inside.bound).toBe(1800);expect(beyond.seconds).toBe(11265);expect(beyond.bound).toBe(1800);
   expect(beyond.text,"the over-bound note is not part of the step").toBe(inside.text);expect(inside.text).toContain("s-dev-composition");
  }
@@ -46,7 +46,7 @@ test("law: every declared step the slice worker can print is a step line the sup
    const row=describeSliceReadStepV1(performance.now()+seconds*1000)!;
    expect(row.id).toBe(id);
    for(const language of["en","de"] as const){
-    const line=fill(messages[language]["host-slice-detail"]!,{seconds:600,phase:row.phase,done:row.done,total:row.total}),step=readyStepOfV1([line]);
+    const line=fill(messages[language][row.done>row.total?"host-slice-step-over":"host-slice-step"]!,{seconds:row.done,bound:row.total,phase:row.phase}),step=readyStepOfV1([line]);
     expect(step,`${id} ${language} ${seconds}: ${line}`).toBeDefined();
     expect(step!.bound).toBe(bound);expect(Math.abs(step!.seconds-seconds)).toBeLessThanOrEqual(2);expect(step!.text).not.toContain("beyond the expected");
     expect(step!.text).not.toContain("über den erwarteten");
@@ -67,20 +67,20 @@ test("the overdue limit is the declared bound lengthened by the speed factor plu
 test("law: the watch ends an overdue step after the quiet window, not a step within its bound, not one that moves something else, not another step",()=>{
  const run=(rows:readonly (readonly string[])[],policy=FAST,start=0,every=1000)=>{const watch=readyStepWatchV1(policy);return rows.map((lines,index)=>watch.observe(lines,start+index*every));};
  const many=(count:number,make:(index:number)=>readonly string[])=>Array.from({length:count},(_,index)=>make(index));
- const overdue=run(many(12,index=>[stepLine(3000+index,9000+index,2),"[repo] still working after 30 s; last phase started: door.script"]));
+ const overdue=run(many(12,index=>[stepLine(9000+index,2),"[repo] still working after 30 s; last phase started: door.script"]));
  expect(overdue[0]!.overdue,"the quiet window starts at the first look").toBe(false);expect(overdue[5]!.overdue).toBe(false);expect(overdue[6]!.overdue).toBe(true);expect(overdue[11]!.overdue).toBe(true);
  expect(overdue[11]!.step!.bound).toBe(2);
- const inside=run(many(30,index=>[stepLine(100+index,index+1,600)]));
+ const inside=run(many(30,index=>[stepLine(index+1,600)]));
  expect(inside.some(row=>row.overdue),"a step within its bound is never overdue").toBe(false);
- const justBefore=run(many(30,index=>[stepLine(100+index,7+index%1,2)]),{...FAST,stallStopMilliseconds:6000});
+ const justBefore=run(many(30,index=>[stepLine(7+index%1,2)]),{...FAST,stallStopMilliseconds:6000});
  expect(justBefore.every(row=>row.step!.seconds===7)).toBe(true);expect(justBefore[29]!.overdue,"7 s is below the limit of 8 s").toBe(false);
- const moving=run(many(30,index=>[stepLine(3000+index,9000+index,2),`Reading the project graph slice (${3000+index} s): taken ${index} of 590.`]));
+ const moving=run(many(30,index=>[stepLine(9000+index,2),`Reading the project graph slice (${3000+index} s): taken ${index} of 590.`]));
  expect(moving.some(row=>row.overdue),"a step beyond its bound that makes other progress is not stopped").toBe(false);
- const stopped=run(many(30,index=>[stepLine(3000+index,9000+index,2),index<10?`Reading the project graph slice (${3000+index} s): taken ${index} of 590.`:"[repo] still working after 30 s; last phase started: door.script"]));
+ const stopped=run(many(30,index=>[stepLine(9000+index,2),index<10?`Reading the project graph slice (${3000+index} s): taken ${index} of 590.`:"[repo] still working after 30 s; last phase started: door.script"]));
  expect(stopped[10]!.overdue).toBe(false);expect(stopped.slice(0,15).some(row=>row.overdue)).toBe(false);expect(stopped[29]!.overdue,"the quiet window counts from the last other progress").toBe(true);
- const changing=run(many(30,index=>[stepLine(3000+index,9000+index,2).replace("s-dev-composition",index<12?"s-dev-composition":"norm-js")]));
+ const changing=run(many(30,index=>[stepLine(9000+index,2).replace("s-dev-composition",index<12?"s-dev-composition":"norm-js")]));
  expect(changing[11]!.overdue,"the same step for 12 s").toBe(true);expect(changing[12]!.overdue,"another step is progress").toBe(false);expect(changing[17]!.overdue).toBe(false);expect(changing[18]!.overdue).toBe(true);
- const slow=run(many(11,index=>[stepLine(3000+index,9000+index,2)]),{...FAST,speedFactor:1,stallStopMilliseconds:12000});
+ const slow=run(many(11,index=>[stepLine(9000+index,2)]),{...FAST,speedFactor:1,stallStopMilliseconds:12000});
  expect(slow.some(row=>row.overdue),"a longer silence window of a slower machine ends later").toBe(false);
 });
 
@@ -93,7 +93,7 @@ test("the typed reason, its refusal and its kill record exist in both languages"
  expect(kill).toContain("step of the read");expect(kill).toContain("Schritt des Lesens");expect(kill).not.toContain("{");
 });
 
-const overdueRepo=(language:"en"|"de",lines=120)=>`#!/bin/sh\ni=0\nwhile [ $i -lt ${lines} ]; do i=$((i+1)); echo "${stepLine(4000,9000,2,language==="de")}" | sed "s/ 9000 / $((9000+i)) /"; sleep 0.3; done\nexit 0\n`;
+const overdueRepo=(language:"en"|"de",lines=120)=>`#!/bin/sh\ni=0\nwhile [ $i -lt ${lines} ]; do i=$((i+1)); echo "${stepLine(9000,2,language==="de")}" | sed "s/(9000 s/($((9000+i)) s/"; sleep 0.3; done\nexit 0\n`;
 const SLOW={...TREE,speedFactor:1,stallStopMilliseconds:12000,stallMilliseconds:12000};
 const run=(home:string,root:string,tree=FAST)=>runReadyStageV1({home,root,environment:{},stage:stageOf("tools"),signal:new AbortController().signal,jobs:1,onLine:()=>undefined,tree});
 
@@ -108,22 +108,22 @@ for(const language of["en","de"] as const)posix(`a stage whose step ran far past
 },60000);
 
 posix("a stage whose step is within its bound goes on",async()=>{
- const root=temp("root"),repo=`#!/bin/sh\ni=0\nwhile [ $i -lt 36 ]; do i=$((i+1)); echo "${stepLine(100,1,600)}" | sed "s/ 1 of / $i of /"; sleep 0.3; done\nexit 0\n`,result=await run(fakeHome(repo),root);
+ const root=temp("root"),repo=`#!/bin/sh\ni=0\nwhile [ $i -lt 36 ]; do i=$((i+1)); echo "${stepLine(1,600)}" | sed "s/(1 s/($i s/"; sleep 0.3; done\nexit 0\n`,result=await run(fakeHome(repo),root);
  expect(result.exit).toBe(0);expect(result.stalled).toBe(false);expect(result.stepOverdue).toBeUndefined();
 },60000);
 
 posix("the executing phase is never stopped by the rule, even when an overdue step line stands in the log (the tasks use processor time only)",async()=>{
- const root=temp("root"),repo=`#!/bin/sh\ni=0\necho "${stepLine(4000,9000,2)}"; echo "NX   Running target build for project @semio-tech/x and 2 tasks they depend on:"; while [ $SECONDS -lt 30 ]; do i=$((i+1)); done\nexit 0\n`,result=await run(fakeHome(repo),root,SLOW);
+ const root=temp("root"),repo=`#!/bin/sh\ni=0\necho "${stepLine(9000,2)}"; echo "NX   Running target build for project @semio-tech/x and 2 tasks they depend on:"; while [ $SECONDS -lt 30 ]; do i=$((i+1)); done\nexit 0\n`,result=await run(fakeHome(repo),root,SLOW);
  expect(result.exit).toBe(0);expect(result.stalled).toBe(false);expect(result.stepOverdue).toBeUndefined();
 },60000);
 
 posix("processor time alone is no progress for a step beyond its bound: the wait that re-reads the same thing for hours burns it too",async()=>{
- const root=temp("root"),repo=`#!/bin/sh\necho "${stepLine(4000,9000,2)}"; while [ $SECONDS -lt 80 ]; do i=$((i+1)); done\nexit 0\n`,began=Date.now(),result=await run(fakeHome(repo),root,SLOW);
+ const root=temp("root"),repo=`#!/bin/sh\necho "${stepLine(9000,2)}"; while [ $SECONDS -lt 80 ]; do i=$((i+1)); done\nexit 0\n`,began=Date.now(),result=await run(fakeHome(repo),root,SLOW);
  expect(result.stalled).toBe(true);expect(result.stepOverdue).toBeDefined();expect(result.stepOverdue!.bound).toBe(2);expect(result.stepOverdue!.limit).toBe(14);expect(Date.now()-began).toBeLessThan(60000);
 },60000);
 
 posix("a step that advances beyond its bound while the read moves something else is not stopped",async()=>{
- const root=temp("root"),repo=`#!/bin/sh\ni=0\nwhile [ $i -lt 40 ]; do i=$((i+1)); echo "${stepLine(4000,9000,2)}" | sed "s/ 9000 / $((9000+i)) /"; echo "Reading the project graph slice (4000 s): taken $i of 590."; sleep 0.3; done\nexit 0\n`,result=await run(fakeHome(repo),root);
+ const root=temp("root"),repo=`#!/bin/sh\ni=0\nwhile [ $i -lt 40 ]; do i=$((i+1)); echo "${stepLine(9000,2)}" | sed "s/(9000 s/($((9000+i)) s/"; echo "Reading the project graph slice (4000 s): taken $i of 590."; sleep 0.3; done\nexit 0\n`,result=await run(fakeHome(repo),root);
  expect(result.exit).toBe(0);expect(result.stalled).toBe(false);expect(result.stepOverdue).toBeUndefined();
 },60000);
 
@@ -223,7 +223,7 @@ test("the real process table agrees with the clock of the runtime about this pro
 test("a lower count in a new inventory observation still advances the explicit step",()=>{
  const watch=readyStepWatchV1(FAST),{line,nextCount}=inventoryHeartbeat;
  expect(watch.observe([line],0).step).toMatchObject(inventoryHeartbeat.step);
- const clocks=line.replace("(2303 s)","(2310 s)").replace("2093 of 600","2100 of 600");
+ const clocks=line.replace("(2093 s,","(2100 s,");
  expect(watch.observe([clocks],6000).overdue).toBe(true);
  const next=line.replaceAll("333961",String(nextCount));
  expect(watch.observe([next],6500).overdue).toBe(false);
@@ -233,8 +233,8 @@ test("a lower count in a new inventory observation still advances the explicit s
 
 posix("the supervisor drops byte-truncated inventory heartbeats and reads the complete bound",async()=>{
  const root=temp("inventory"),replay=inventoryHeartbeat.stationary;
- const line=inventoryHeartbeat.line.replaceAll("333961",String(replay.observations)).replace(" (elapsed seconds",` (${replay.owners} completed owner checks) (elapsed seconds`).replace(" (verstrichene Sekunden",` (${replay.owners} abgeschlossene Projektprüfungen) (verstrichene Sekunden`);
- const burst=Array.from({length:replay.initialLines},(_,index)=>line.replace("2093 of",`${2093+index} of`)).join("\n");
+ const line=inventoryHeartbeat.line.replaceAll("333961",String(replay.observations)).replace("(333961 verschiedene Quellbeobachtungen)",`(${replay.observations} verschiedene Quellbeobachtungen) (${replay.owners} abgeschlossene Projektprüfungen)`).replace(" distinct source observations)",` distinct source observations) (${replay.owners} completed owner checks)`);
+ const burst=Array.from({length:replay.initialLines},(_,index)=>line.replace("(2093 s,",`(${2093+index} s,`)).join("\n");
  expect(Buffer.byteLength(burst)).toBeGreaterThan(schema.definitions.Policy.const.tailBytes);
  const script=`#!/bin/sh
 printf '%s\\n' '${burst}'
@@ -260,7 +260,7 @@ test("verified memo rows advance the bilingual step only at an increased high-wa
    for(const sample of inventoryHeartbeat.verifiedMemo){
     rows=sample.rows;
     const step=describeSliceReadStepV1(started+1800000+sample.milliseconds)!;
-    const line=fill(messages[language]["host-slice-detail"]!,{seconds:2000+Math.floor(sample.milliseconds/1000),phase:step.phase,done:step.done,total:step.total});
+    const line=fill(messages[language][step.done>step.total?"host-slice-step-over":"host-slice-step"]!,{seconds:step.done,bound:step.total,phase:step.phase});
     expect(watch.observe([line],sample.milliseconds).overdue).toBe(sample.overdue);
    }
   },{},()=>({version:1,active:{phase:"scoped-discovery",completedOwners:0,verifiedMemoRows:rows},completed:[]}));
@@ -268,12 +268,12 @@ test("verified memo rows advance the bilingual step only at an increased high-wa
 });
 
 test("completed owner checks advance an inventory step with a stationary source high-water in both languages",()=>{
- const phase=inventoryHeartbeat.line.replace("Reading the project graph slice (2303 s): ","").replace(" 2093 of 600.","");
+ const phase=inventoryHeartbeat.line.replace("Reading the project graph slice (2093 s, beyond the expected 600 s): ","").replace(/\.$/u,"");
  const first=inventoryHeartbeat.ownerCounts[0]!,next=inventoryHeartbeat.ownerCounts[1]!;
  for(const language of ["en","de"] as const){
   const watch=readyStepWatchV1(FAST);
-  const line=(count:number,clock:number)=>fill(messages[language]["host-slice-detail"]!,{seconds:2303+clock,done:2093+clock,total:600,
-   phase:phase.replace(" (elapsed seconds",` (${count} completed owner checks) (elapsed seconds`).replace(" (verstrichene Sekunden",` (${count} abgeschlossene Projektprüfungen) (verstrichene Sekunden`)});
+  const line=(count:number,clock:number)=>fill(messages[language]["host-slice-step-over"]!,{seconds:2093+clock,bound:600,
+   phase:phase.replace("(333961 distinct source observations)",`(333961 distinct source observations) (${count} completed owner checks)`).replace("(333961 verschiedene Quellbeobachtungen)",`(333961 verschiedene Quellbeobachtungen) (${count} abgeschlossene Projektprüfungen)`)});
   expect(watch.observe([line(first,0)],0).overdue).toBe(false);
   expect(watch.observe([line(first,6)],6000).overdue).toBe(true);
   const changed=watch.observe([line(next,7)],7000);

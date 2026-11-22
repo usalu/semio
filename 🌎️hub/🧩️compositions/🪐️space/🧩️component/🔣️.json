@@ -8594,18 +8594,12 @@
         "namedLayouts": [],
         "defaultLayout": {
           "root": {
-            "kind": "row",
+            "kind": "stack",
             "children": [
               {
-                "kind": "stack",
-                "size": 100.0,
-                "children": [
-                  {
-                    "kind": "window",
-                    "windowKindId": "framework.window.table",
-                    "title": "Artifacts"
-                  }
-                ]
+                "kind": "window",
+                "windowKindId": "framework.window.table",
+                "title": "Artifacts"
               }
             ]
           }
@@ -9661,18 +9655,12 @@
         "namedLayouts": [],
         "defaultLayout": {
           "root": {
-            "kind": "row",
+            "kind": "stack",
             "children": [
               {
-                "kind": "stack",
-                "size": 100.0,
-                "children": [
-                  {
-                    "kind": "window",
-                    "windowKindId": "framework.window.table",
-                    "title": "Artifacts"
-                  }
-                ]
+                "kind": "window",
+                "windowKindId": "framework.window.table",
+                "title": "Artifacts"
               }
             ]
           }
@@ -17257,11 +17245,12 @@
         "namedLayouts": [],
         "defaultLayout": {
           "root": {
-            "kind": "row",
+            "kind": "split",
+            "axis": "horizontal",
             "children": [
               {
                 "kind": "stack",
-                "size": 40.0,
+                "size": 0.4,
                 "children": [
                   {
                     "kind": "window",
@@ -17272,7 +17261,7 @@
               },
               {
                 "kind": "stack",
-                "size": 30.0,
+                "size": 0.3,
                 "children": [
                   {
                     "kind": "window",
@@ -17283,7 +17272,7 @@
               },
               {
                 "kind": "stack",
-                "size": 30.0,
+                "size": 0.3,
                 "children": [
                   {
                     "kind": "window",

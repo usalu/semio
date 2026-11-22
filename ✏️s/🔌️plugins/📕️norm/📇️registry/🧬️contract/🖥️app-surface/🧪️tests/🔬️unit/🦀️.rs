@@ -1,3 +1,4 @@
+use semio_plugin::WindowLayoutNode;
 use crate::*;
 use semio_plugin::{FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
 
@@ -130,9 +131,9 @@ async fn the_view_mode_is_the_same_for_every_viewer() {
 #[semio_framework_async_macros::async_test]
 async fn single_window_layout_stacks_exactly_one_window() {
     let layout = single_window_layout("framework.window.table", "Report");
-    let WindowLayoutRoot::Stack(stack) = layout.root else { panic!("expected a stack root") };
-    assert_eq!(stack.children.len(), 1);
-    assert_eq!(stack.children[0].window_kind_id, "framework.window.table");
+    let WindowLayoutNode::Stack { children, .. } = layout.root else { panic!("expected a stack root") };
+    assert_eq!(children.len(), 1);
+    assert!(matches!(&children[0], WindowLayoutNode::Window { window_kind_id, .. } if window_kind_id == "framework.window.table"));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -946,19 +947,15 @@ fn mock_inspector_admission(path: &str) -> Option<FieldSpec> {
 #[test]
 fn layout_windows_carry_no_single_language_title_so_the_localized_kind_label_governs() {
     use crate::viewport3d::config::DeviceClass;
-    use semio_plugin::WindowLayoutChild;
-    fn titles(child: &WindowLayoutChild, out: &mut Vec<Option<String>>) {
-        match child {
-            WindowLayoutChild::Axis(axis) => axis.children.iter().for_each(|child| titles(child, out)),
-            WindowLayoutChild::Stack(stack) => out.extend(stack.children.iter().map(|window| window.title.clone())),
+    fn titles(node: &WindowLayoutNode, out: &mut Vec<Option<String>>) {
+        match node {
+            WindowLayoutNode::Window { title, .. } => out.push(title.clone()),
+            WindowLayoutNode::Stack { children, .. } | WindowLayoutNode::Split { children, .. } => children.iter().for_each(|child| titles(child, out)),
         }
     }
     for device in [DeviceClass::Desktop, DeviceClass::Mobile, DeviceClass::Tablet] {
         let mut found = Vec::new();
-        match visual_layout("en1990", device).root {
-            WindowLayoutRoot::Axis(axis) => axis.children.iter().for_each(|child| titles(child, &mut found)),
-            WindowLayoutRoot::Stack(stack) => found.extend(stack.children.iter().map(|window| window.title.clone())),
-        }
+        titles(&visual_layout("en1990", device).root, &mut found);
         assert!(found.len() >= 3 && found.iter().all(Option::is_none), "{device:?}: {found:?}");
     }
 }

@@ -18,6 +18,12 @@ use semio_plugin_instance_ladders::{DOCUMENT_ARCHIVE_STEP_MINIMUM_ITEMS, MAINTEN
 
 fn empty_demand()->semio_framework_value::RetirementDemand{Default::default()}
 
+/// 📐️ Derives the unit grant from the unit's declared indivisible demand: copy and capacity ceilings are raised to the covering power of two, never past the caller's actual remaining turn authority, so no retained owner can deadlock on a step larger than the fixed host loan.
+fn covering_loan(loan:RetainedCloneGrant,demand:semio_framework_value::RetirementDemand,ceiling:RetainedCloneGrant)->RetainedCloneGrant{
+    let cover=|current:usize,needed:usize,limit:usize|if needed<=current{current}else{needed.checked_next_power_of_two().unwrap_or(needed).min(limit).max(current)};
+    RetainedCloneGrant{maximum_copy_bytes:cover(loan.maximum_copy_bytes,demand.copy_bytes,ceiling.maximum_copy_bytes),maximum_capacity_bytes:cover(loan.maximum_capacity_bytes,demand.capacity_bytes,ceiling.maximum_capacity_bytes),maximum_release_bytes:cover(loan.maximum_release_bytes,demand.release_bytes,ceiling.maximum_release_bytes),maximum_depth:cover(loan.maximum_depth,demand.depth,ceiling.maximum_depth),..loan}
+}
+
 impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> VcsArtifactApp<A, M> {
     /// 🎡️ Visits units in fair order and spends the grant on the first one that releases something. An empty or unfunded
     /// unit never consumes the call; a blocked or input-starved unit is remembered and reported only when nothing else moved.
@@ -54,6 +60,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> V
                 if !archive && !archive_dependency && available_items <= DOCUMENT_ARCHIVE_STEP_MINIMUM_ITEMS { cx.consume_fuel(1); continue; }
             }
             let Some(demand)=self.ladder_ref().maintenance_unit_demand(unit,grant.maximum_copy_bytes,cx.fuel_remaining())?else{cx.consume_fuel(1);continue};
+            let (loan,grant)=if semio_plugin_ownership::bounded_ownership::plugin_grant_funds(demand,grant){(loan,grant)}else{let widened=covering_loan(loan,demand,cx.retained_grant());(widened,semio_plugin_ownership::bounded_ownership::original_lifecycle_grant(cx,widened))};
             if !semio_plugin_ownership::bounded_ownership::plugin_grant_funds(demand,grant){cx.consume_fuel(1);continue}
             if matches!(unit,MaintenanceUnit::MediaRefusal)&&self.media.quoted_media_refusal_selected(){return self.ladder_ctx().maintenance_unit_step(unit,cx,grant)}
             // Preparing an original window partition can open a receiving scope before it copies

@@ -1,0 +1,16 @@
+{
+  "archiveMaximum": 4194304,
+  "readPage": 4096,
+  "cases": [
+    {"name": "exact-after-large-blob", "result": "equal"},
+    {"name": "different-latest-archive", "result": "different"},
+    {"name": "latest-pair", "result": "different"},
+    {"name": "other-document", "result": "different"},
+    {"name": "short-final-record", "result": "equal"},
+    {"name": "unsealed-final-record", "result": "equal"},
+    {"name": "corrupt-interior-record", "result": "invalid"},
+    {"name": "invalid-utf", "result": "invalid"},
+    {"name": "trailing-payload", "result": "invalid"},
+    {"name": "cancelled", "result": "cancelled"}
+  ]
+}

@@ -7,11 +7,10 @@
       "description": "EN: The steps of a read that follow the owner pass and the waits inside them: while one runs the progress line names it (English and German), how long it has run and the bound it is expected to end within; a step that runs past its bound is still named, with a note, at every tick. DE: Die Schritte eines Lesens nach dem Eigner-Durchgang und die Wartezeiten darin: solange einer läuft, nennt die Fortschrittszeile ihn (Englisch und Deutsch), wie lange er läuft und die Grenze, in der er enden soll; ein Schritt über seiner Grenze wird bei jedem Takt weiter genannt, mit Hinweis.",
       "const": {
         "idleMilliseconds": 120000,
-        "counter": { "en": "elapsed seconds of expected seconds", "de": "verstrichene Sekunden von erwarteten Sekunden" },
         "inventoryObservations": { "en": "{rows} distinct source observations", "de": "{rows} verschiedene Quellbeobachtungen" },
         "inventoryOwnerChecks": { "en": "{rows} completed owner checks", "de": "{rows} abgeschlossene Projektprüfungen" },
         "inventoryMemoChecks": { "en": "{rows} verified memo rows", "de": "{rows} bestätigte Memozeilen" },
-        "overBound": { "en": "beyond the expected {bound} s", "de": "über den erwarteten {bound} s" },
+        "inventoryAdmittedOwners": { "en": "{rows} owners admitted", "de": "{rows} zugelassene Projekte" },
         "steps": {
           "inventory": { "boundMilliseconds": 600000, "en": "checking the file inventory of the tree", "de": "Prüfe das Dateiverzeichnis des Baums" },
           "owners-round": { "boundMilliseconds": 3600000, "en": "reading the owners (round {round})", "de": "Lese die Projekte (Runde {round})" },
@@ -69,6 +68,7 @@
         "elapsedMilliseconds": {"type": "integer", "minimum": 0},
         "observations": {"type": "integer", "minimum": 0},
         "completedOwners": {"type": "integer", "minimum": 0},
+        "admittedOwners": {"type": "integer", "minimum": 0},
         "verifiedMemoRows": {"type": "integer", "minimum": 0},
         "files": {"type": "integer", "minimum": 0},
         "directories": {"type": "integer", "minimum": 0},

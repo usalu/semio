@@ -92,7 +92,7 @@ pub(super) static PREPARED_GPU_ABANDONMENT_STATE: [AtomicU8; PREPARED_GPU_ABANDO
 static PREPARED_GPU_ABANDONMENT_OWNER: [AtomicPtr<PreparedGpuPresentCursor>; PREPARED_GPU_ABANDONMENT_SLOTS] = [const { AtomicPtr::new(std::ptr::null_mut()) }; PREPARED_GPU_ABANDONMENT_SLOTS];
 
 pub(super) fn prepared_draw_scalar_uses_world_encoded_attachment(cursor: DrawMeasureCursor) -> bool {
-    matches!(cursor, DrawMeasureCursor::PassSceneClear { .. } | DrawMeasureCursor::PassInstance { .. } | DrawMeasureCursor::PassMaterialInstance { .. } | DrawMeasureCursor::PassTexturedInstance { .. } | DrawMeasureCursor::PassGrid { .. } | DrawMeasureCursor::PassLineVertex { .. } | DrawMeasureCursor::PassPostprocess { .. })
+    matches!(cursor, DrawMeasureCursor::PassSceneClear { .. } | DrawMeasureCursor::PassInstance { .. } | DrawMeasureCursor::PassMaterialInstance { .. } | DrawMeasureCursor::PassTexturedInstance { .. } | DrawMeasureCursor::PassGrid { .. } | DrawMeasureCursor::PassLineVertex { .. } | DrawMeasureCursor::PassPointChunk { .. } | DrawMeasureCursor::PassPostprocess { .. })
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -108,6 +108,10 @@ fn prepared_command_color_layer(draw: &semio_ui_draw_contract::DrawList, cursor:
         DrawMeasureCursor::LayerUi { layer, .. } | DrawMeasureCursor::LayerRaster { layer, .. } => Some((layer, None)),
         DrawMeasureCursor::LayerVector { layer, item, .. } if item % 3 == 2 => Some((layer, None)),
         DrawMeasureCursor::PassSceneClear { pass } | DrawMeasureCursor::PassInstance { pass, .. } | DrawMeasureCursor::PassMaterialInstance { pass, .. } | DrawMeasureCursor::PassTexturedInstance { pass, .. } | DrawMeasureCursor::PassGrid { pass } | DrawMeasureCursor::PassPostprocess { pass } => {
+            let pass = draw.scene_passes.get(pass).ok_or_else(|| "prepared scene pass clip owner was stale".to_string())?;
+            Some((pass.layer_index, Some(pass.viewport)))
+        }
+        DrawMeasureCursor::PassPointChunk { pass, .. } => {
             let pass = draw.scene_passes.get(pass).ok_or_else(|| "prepared scene pass clip owner was stale".to_string())?;
             Some((pass.layer_index, Some(pass.viewport)))
         }

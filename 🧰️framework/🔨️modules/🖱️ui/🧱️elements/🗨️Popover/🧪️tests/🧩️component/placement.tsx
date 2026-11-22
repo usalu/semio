@@ -3,11 +3,19 @@ import { fireEvent, render } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import clamp from "lodash/clamp";
 import { Popover, PopoverContent, PopoverTrigger, resolvePopoverPlacement } from "../../🟦️.tsx";
+import vectors from "../../../../🧪️tests/🧫️fixtures/📍️overlay-placement/🔣️.json";
 import { ShellScopeContext, type ShellScope } from "../../../🐚️ShellScope/🟦️.tsx";
 
 afterEach(() => vi.restoreAllMocks());
 
 describe("floating placement", () => {
+  it("resolves every shared vector the Rust positioner is also held to", () => {
+    for (const c of vectors.cases) {
+      const a = c.anchor;
+      const result = resolvePopoverPlacement({ left: a.x, top: a.y, width: a.width, height: a.height, right: a.x + a.width, bottom: a.y + a.height }, c.content, c.viewport, c.side as "top", c.align as "start", c.sideOffset, c.alignOffset, c.collisionPadding, c.rtl, c.avoidCollisions);
+      expect({ side: result.side, left: result.left, top: result.top }, c.name).toEqual(c.expected);
+    }
+  });
   it("matches an independent clamp reference for detached viewport placement", () => {
     for (const left of [-100, 0, 50, 500]) {
       for (const top of [-100, 0, 50, 500]) {
@@ -48,7 +56,7 @@ describe("floating placement", () => {
   it("uses the shell portal rather than a clipped trigger ancestor or body", () => {
     const layer = document.createElement("div");
     document.body.append(layer);
-    const scope = { portalLayerRef: { current: layer } } as ShellScope;
+    const scope = { portalLayerRef: { current: layer } } as unknown as ShellScope;
     const { getByRole, unmount } = render(<ShellScopeContext.Provider value={scope}><div style={{ overflow: "hidden" }}><Popover open><PopoverTrigger>Open</PopoverTrigger><PopoverContent>Body</PopoverContent></Popover></div></ShellScopeContext.Provider>);
     expect(getByRole("dialog").parentElement).toBe(layer);
     fireEvent.keyDown(document, { key: "Escape" });

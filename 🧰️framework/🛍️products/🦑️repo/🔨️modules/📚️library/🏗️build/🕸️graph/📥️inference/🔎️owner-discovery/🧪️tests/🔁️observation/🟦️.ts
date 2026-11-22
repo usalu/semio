@@ -2,8 +2,10 @@ import{test,expect}from"bun:test";
 import{Database}from"bun:sqlite";
 import Ajv from"ajv";
 import ts from"typescript";
-import{readFileSync}from"node:fs";
+import{readFileSync,mkdtempSync,writeFileSync,rmSync}from"node:fs";
+import{tmpdir}from"node:os";
 import{join,dirname,relative,isAbsolute,posix}from"node:path";
+import{isClosedOwnerRegistryInvalidationV1,vanishedOwnerRootsV1,withOwnerRegistryCustodyV1}from"../../../../📥️load/🧭️registry-follow/🟦️.ts";
 import{buildInputSourceRoleV1,buildNativeSourceObservationV1}from"../../../../🚪️admission/🟦️.ts";
 import admissionSchema from"../../../../../🧬️schema/🚪️admission.json";
 import schema from"./🧬️schema/🔣️.json";
@@ -83,4 +85,55 @@ test("generated import lookup visits only matching authored roots and checks phy
    physical.clear();expect(outcome()).toBe(oracle);expect(manifestReads).toBe(3);
   }
  }}finally{db.close();}
+});
+
+test("a vanished declared catalog Manifest enters the existing owner-registry repair after custody settles",async()=>{
+ const file=ts.createSourceFile("owner.mjs",readFileSync(new URL("../../🟨️.mjs",import.meta.url),"utf8"),ts.ScriptTarget.Latest,true,ts.ScriptKind.JS);
+ const declaration=file.statements.find(node=>ts.isFunctionDeclaration(node)&&node.name?.text==="catalogNativeManifestCandidatesV1");
+ if(!declaration)throw Error("Actual native catalog candidates required");
+ const db=new Database(":memory:"),signal=new AbortController().signal,root="/workspace",path="component/Cargo.toml";
+ const oracle=db.query<{verdict:string},[string,string]>(`select case when ?2='file' then 'admitted' when ?2='symlink' then 'unsafe'
+   when ?2 not in ('ENOENT','ENOTDIR') then 'error' when ?1='implicit' then 'omitted' else 'registry' end verdict`);
+ try{for(const row of fixture.catalog){
+   const expected=oracle.get(row.scope,row.status)!.verdict;
+   expect(row.expected).toBe(expected);
+   const owner=row.scope==="manifest"?{root:"component",manifest:path}:row.scope==="native-root"?{root:"other",manifest:"other/project.json",nativeRoots:["component"]}:{root:"component",manifest:"component/project.json"};
+   const execute=evaluateExtractedFunctionV1(declaration.getText(file).replace(/^export\s+/,""),"catalogNativeManifestCandidatesV1",{
+     join:posix.join,yieldInferenceV1:async()=>undefined,lstatSync:()=>{
+       if(row.status==="file"||row.status==="symlink")return{isFile:()=>true,isSymbolicLink:()=>row.status==="symlink"};
+       throw Object.assign(Error(row.status),{code:row.status});
+     },
+   });
+   let custodyReleased=false,result:string;
+   try{
+     const candidates=await withOwnerRegistryCustodyV1<string[]>(signal,async contain=>{try{return await contain(()=>execute(root,{owners:[owner]},(candidate:string)=>candidate===path,{}));}finally{custodyReleased=true;}});
+     result=candidates.includes(path)?"admitted":"omitted";
+   }catch(error){
+     if(isClosedOwnerRegistryInvalidationV1(error)){
+       expect(vanishedOwnerRootsV1((error as Error).message)).toEqual(["component"]);
+       result="registry";
+     }else result=String(error).includes("must be a real file")?"unsafe":"error";
+   }
+   expect(custodyReleased).toBe(true);
+   expect(result,row.scope+"/"+row.status).toBe(expected);
+ }}finally{db.close();}
+});
+
+test("a package manifest vanishing between existence check and read is absent while other failures surface",()=>{
+ const file=ts.createSourceFile("owner.mjs",readFileSync(new URL("../../🟨️.mjs",import.meta.url),"utf8"),ts.ScriptTarget.Latest,true,ts.ScriptKind.JS);
+ const declaration=file.statements.find(node=>ts.isFunctionDeclaration(node)&&node.name?.text==="readVanishableTextV1");
+ if(!declaration)throw Error("Actual vanishable text reader required");
+ const dir=mkdtempSync(join(tmpdir(),"vanish-")),present=join(dir,"package.json");
+ try{
+  writeFileSync(present,"{}");
+  const real=evaluateExtractedFunctionV1(declaration.getText(file).replace(/^export\s+/,""),"readVanishableTextV1",{readFileSync});
+  expect(real(present)).toBe("{}");
+  rmSync(present);
+  expect(real(present)).toBeUndefined();
+  expect(real(join(present,"below"))).toBeUndefined();
+  for(const code of["EACCES","EIO"]){
+   const failing=evaluateExtractedFunctionV1(declaration.getText(file).replace(/^export\s+/,""),"readVanishableTextV1",{readFileSync:()=>{throw Object.assign(Error(code),{code});}});
+   expect(()=>failing(present)).toThrow(code);
+  }
+ }finally{rmSync(dir,{recursive:true,force:true});}
 });

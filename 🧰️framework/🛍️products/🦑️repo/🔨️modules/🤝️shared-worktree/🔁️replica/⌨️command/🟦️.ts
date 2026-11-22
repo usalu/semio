@@ -490,11 +490,13 @@ async function execute(parsed:ReplicaArgumentsV1,context:ReplicaCommandContextV1
   const fallback=readFallbackV1(context.environment);
   await runV1({...options,watchRoot:context.environment.SEMIO_FLEET_CODE_WATCH,...fallback===undefined?{}:{fallback}},signal,event=>{
    if(event.event==="restarting")restarting=true;
+   if(event.event==="store-stuck")say("event.store-stuck",{seconds:String(event.seconds??0),reason:event.reason??"-"});
    if(event.event==="restart-refused")say("event.restart-refused",{digest:(event.reason??"").slice(0,12),reason:event.message??"-"});
    if(event.event==="code-reverted")say("event.code-reverted",{digest:(event.reason??"").slice(0,12),reason:event.message??"-"});
    if(event.event==="retired")say("event.retired",{origin:options.originId,by:event.origin??"-",reason:event.message===""?"-":event.message??"-"});
    if(event.event==="superseded")say("event.superseded",{path:event.path??"",winner:event.winner??"",reason:event.reason??"-"});
    if(event.event==="stale-republish")say("event.stale-republish",{path:event.path??""});
+   if(event.event==="stale-base")say("event.stale-base",{path:event.path??"",seconds:String(event.seconds??0)});
    if(event.event==="drift")say("event.drift",{fields:event.reason??"-",attempt:event.count??0});
    if(event.event==="linearised")say(event.reason==="duplicate"?"event.linearised.duplicate":(event.count??0)>0?"event.linearised.conflict":"event.linearised",{path:event.path??"",winner:(event.winner??"").slice(0,12),loser:(event.loser??"").slice(0,12),result:(event.result??"").slice(0,12),count:event.count??0});
    sink(event);

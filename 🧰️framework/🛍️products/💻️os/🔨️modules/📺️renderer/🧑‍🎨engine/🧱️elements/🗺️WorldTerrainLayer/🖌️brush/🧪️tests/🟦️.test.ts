@@ -3,7 +3,7 @@ import Ajv from "ajv";
 import fixture from "../../../../../../../../../../✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📐️edit-elevation/🧪️tests/🔣️.json" with { type: "json" };
 import { MAX_TERRAIN_STROKE_SAMPLES, TerrainBrushStroke, type TerrainBrushSample } from "../👆️stroke.ts";
 
-const coordinate = { type: "integer", minimum: 0, maximum: 32 };
+const coordinate = { type: "integer", minimum: 0, maximum: 64 };
 const pathValidator = new Ajv().compile({
   type: "array", minItems: 1, maxItems: MAX_TERRAIN_STROKE_SAMPLES,
   items: { type: "array", minItems: 2, maxItems: 2, items: coordinate },
@@ -20,7 +20,7 @@ test("one pointer yields one bounded stroke or cancels it", () => {
     for (const move of row.moves) gesture.move(7, move ? sample(move) : undefined);
     if ("cancel" in row && row.cancel) gesture.cancel(7);
     const path = gesture.finish(7, sample(row.up));
-    expect(path ?? null, row.id).toEqual(row.anchors);
+    expect(path ?? null, row.id).toEqual(row.anchors as unknown as NonNullable<typeof path> | null);
     if (path) expect(pathValidator(path), row.id).toBe(true);
     expect(gesture.finish(7, sample(row.up))).toBeUndefined();
     expect(releases).toBe(1);
@@ -45,8 +45,9 @@ test("independent brush arithmetic matches the neutral stroke elevations", () =>
   for (const row of fixture.strokeEdits) {
     const { operation, radius, value, stroke } = row.command;
     expect(pathValidator(stroke)).toBe(true);
-    const coordinates = Array.from({ length: fixture.size }, (_, index) => index);
-    const original = coordinates.map(() => coordinates.map(() => fixture.height));
+    const columns = Array.from({ length: fixture.columns }, (_, index) => index);
+    const rows = Array.from({ length: fixture.rows }, (_, index) => index);
+    const original = rows.map(() => columns.map(() => fixture.initialHeightMillimetres));
     for (const [x, y, height] of fixture.seed) original[y]![x] = height;
     let current = original;
     const stamps = [stroke[0]!];
@@ -59,10 +60,10 @@ test("independent brush arithmetic matches the neutral stroke elevations", () =>
     }
     for (const [centerX, centerY] of stamps) {
       const previous = current;
-      current = coordinates.map(y => coordinates.map(x => {
+      current = rows.map(y => columns.map(x => {
         const height = previous[y]![x]!;
         const normalized = Math.max(0, 1 - ((x - centerX!) ** 2 + (y - centerY!) ** 2) / (radius + 1) ** 2);
-        let delta = value * normalized;
+        let delta = value * 1000 * normalized;
         if (operation === "smooth") {
           const neighbors = previous.slice(Math.max(0, y - 1), y + 2).flatMap(row => row.slice(Math.max(0, x - 1), x + 2));
           const average = neighbors.reduce((total, height) => total + height, 0) / neighbors.length;
@@ -76,8 +77,12 @@ test("independent brush arithmetic matches the neutral stroke elevations", () =>
     expect(changed).toBe(row.changed);
     for (const [x, y, height] of row.samples) expect(current[y]![x]).toBe(height);
   }
-  for (const index of [2, 3, 4, 6]) expect(pathValidator(fixture.refusedStrokes[index]!.stroke)).toBe(false);
+  for (const command of fixture.invalidActions) {
+    if ("stroke" in command && (command.operation === "raise-lower" || command.stroke === null)) {
+      expect(pathValidator(command.stroke)).toBe(false);
+    }
+  }
   const overflow = fixture.overflowStroke[0]!;
   expect(pathValidator(overflow.command.stroke)).toBe(true);
-  expect(overflow.seed[2]! + overflow.command.value).toBeGreaterThan(32767);
+  expect(overflow.seed[2]! + overflow.command.value * 1000).toBeGreaterThan(2147483647);
 });

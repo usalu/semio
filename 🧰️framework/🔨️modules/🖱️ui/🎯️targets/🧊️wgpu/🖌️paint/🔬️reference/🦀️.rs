@@ -19,7 +19,7 @@ use semio_ui_declaration::IconName;
 use semio_ui_locale::Label;
 use semio_ui_declaration::ui::UiTreeActionPlacement;
 use semio_ui_wgpu_controls::stepper::{push_stepper_chrome, push_stepper_icon};
-use semio_ui_wgpu_paint::{TREE_ICON_SIZE, TREE_INDENT_PER_LEVEL, TREE_TOGGLE_WIDTH, chrome_band_rect, color_input_swatch, field_paint_metrics, focus_ring_visible, hover_owner, node_selection_outline, paint_checkbox, paint_loading_border, paint_presence_accent_effect, paint_progress, paint_separator, paint_slider_travel, paint_stack_frame, paint_waiting_border, presence_overlay, section_paint_metrics, select_menu_top_for, select_popup_row_rect};
+use semio_ui_wgpu_paint::{paint_ring_orb, paint_ring_track_segment, RING_TRACK_SEGMENTS, SliderTravelState, TREE_ICON_SIZE, TREE_INDENT_PER_LEVEL, TREE_TOGGLE_WIDTH, chrome_band_rect, color_input_swatch, field_paint_metrics, focus_ring_visible, hover_owner, node_selection_outline, paint_checkbox, paint_loading_border, paint_presence_accent_effect, paint_progress, paint_separator, paint_slider_travel, paint_stack_frame, paint_waiting_border, presence_overlay, section_paint_metrics, select_menu_top_for, select_popup_row_rect};
 
 /// 📐️ Every retained chrome metric below is the generated token's px value, never a hand-typed one
 /// — `PANEL_HEADER` is `--size-medium` (`chrome.panelHeaderHeightUiSpacing`, 22.4px, what React's
@@ -213,7 +213,7 @@ pub fn paint_node_self(tree: &UiTree, id: NodeId, origin_x: f32, origin_y: f32, 
             paint_group(group, bounds, theme, atlas, icons, draw);
         }
         UiNode::CardStack(_) | UiNode::OverviewCard(_) => {}
-        UiNode::Tree(_) => {}
+        UiNode::Tree(_) | UiNode::Table(_) => {}
         UiNode::Image(image) => {
             if !has_scene_host {
                 paint_image(image, bounds, theme, atlas, draw);
@@ -260,7 +260,7 @@ pub fn paint_button(node: &UiButtonNode, bounds: Rect, flags: NodeFlags, theme: 
     let focused = !disabled && focus_ring_visible(flags);
     let dim = |color: Rgba| if disabled { color.with_alpha(color.a * 0.5) } else { color };
     let bg = dim(item_bg(theme, false, hovered));
-    let border = if hovered { theme.border_emphasized } else if focused { theme.accent } else { theme.border_normal };
+    let border = if hovered { theme.border_emphasized } else if focused { theme.selected } else { theme.border_normal };
     push_control_border(draw, bounds, theme, dim(border), bg, if hovered { semio_ui_draw_contract::SharedBorderState::Hover } else if focused { semio_ui_draw_contract::SharedBorderState::Focus } else { semio_ui_draw_contract::SharedBorderState::Normal });
     let mut text_x = bounds.x + theme.padding_standard;
     let icon_key = if node.icon_id == IconName::CircleDot { node.label.as_str() } else { node.icon_id.as_str() };
@@ -290,14 +290,12 @@ pub fn edit_selection_bounds(anchor: usize, caret: usize) -> (usize, usize) {
 /// (whose caret/selection are rendered by the browser itself, not by application code — there is no
 /// CSS/JSX to port for their exact geometry) has anything to port from, so caret/selection styling
 /// (`theme.accent`) is this pass's own independent choice, kept consistent with every control's
-/// focus border, which is `theme.accent` because React's shared `formControlFocusBorderClass`
-/// (`🔨️modules/📝️form-control-presentation/🟦️.ts:14`) is `focus-visible:border-accent`. wgpu has no
-/// `focus-visible` distinction of its own, so a pointer-focused control shows the ring React would
-/// only show for keyboard focus — a bounded, documented divergence (ticket
-/// 26/09/17/WGPU-RENDERER-REACT-PARITY packet W1o).
+/// focus border, which is `theme.selected` (`--active-base`) because React's border compositor strokes a
+/// `:focus-visible` cell's silhouette in `var(--active-base)` (`🧱️elements/🗂️WindowChrome/shared-border.ts`
+/// `sharedBorderStroke`); `NodeFlags::FOCUS_VISIBLE` makes the ring keyboard-only on both renderers.
 pub fn paint_input(node: &UiInputNode, edit: Option<&EditState>, bounds: Rect, flags: NodeFlags, theme: &Theme, atlas: &mut FontAtlas, draw: &mut DrawList) {
     let focused = focus_ring_visible(flags);
-    let border = if focused { theme.accent } else { theme.border_normal };
+    let border = if focused { theme.selected } else { theme.border_normal };
     push_control_border(draw, bounds, theme, border, theme.input_bg, if focused { semio_ui_draw_contract::SharedBorderState::Focus } else { semio_ui_draw_contract::SharedBorderState::Normal });
     let swatch = (node.input_kind == "color").then(|| color_input_swatch(bounds, edit.map_or(node.value.as_str(), |edit| edit.text.as_str()))).flatten();
     if let Some((swatch, color, _)) = swatch {
@@ -343,9 +341,9 @@ pub fn paint_select(node: &UiSelectNode, bounds: Rect, flags: NodeFlags, open: b
     let hovered = hover_owner(flags);
     let focused = focus_ring_visible(flags);
     let bg = if hovered { theme.button_hover } else { theme.input_bg };
-    let border = if hovered { theme.border_emphasized } else if focused { theme.accent } else { theme.border_normal };
+    let border = if hovered { theme.border_emphasized } else if focused { theme.selected } else { theme.border_normal };
     push_control_border(draw, bounds, theme, border, bg, if hovered { semio_ui_draw_contract::SharedBorderState::Hover } else if focused { semio_ui_draw_contract::SharedBorderState::Focus } else { semio_ui_draw_contract::SharedBorderState::Normal });
-    let label = node.items.iter().find(|item| item.value == node.value).map_or_else(|| node.placeholder.as_ref().map(Label::as_str).unwrap_or("Select…"), |item| item.label.as_str());
+    let label = node.items.iter().find(|item| item.value == node.value).map_or_else(|| node.placeholder.as_ref().map(Label::as_str).unwrap_or(""), |item| item.label.as_str());
     draw_text_on(draw, atlas, label, bounds.x + theme.padding_standard, bounds.y + (bounds.h + theme.font_size_body) * 0.5 - 2.0, theme.font_size_body, theme.text);
     if let Some(icons) = icons {
         push_icon(draw, icons, "chevron-down", bounds.x + bounds.w - theme.padding_standard - ICON_TINY, bounds.y + (bounds.h - ICON_TINY) * 0.5, ICON_TINY, foreground_on_fill(theme, theme.text_element, false, hovered));
@@ -379,7 +377,7 @@ pub fn paint_toggle(node: &UiToggleNode, bounds: Rect, flags: NodeFlags, theme: 
     let hovered = hover_owner(flags);
     let focused = focus_ring_visible(flags);
     let bg = item_bg(theme, pressed, hovered);
-    let border = if hovered { theme.border_emphasized } else if focused { theme.accent } else { theme.border_normal };
+    let border = if hovered { theme.border_emphasized } else if focused { theme.selected } else { theme.border_normal };
     push_control_border(draw, bounds, theme, border, bg, if hovered { semio_ui_draw_contract::SharedBorderState::Hover } else if focused { semio_ui_draw_contract::SharedBorderState::Focus } else if pressed { semio_ui_draw_contract::SharedBorderState::Active } else { semio_ui_draw_contract::SharedBorderState::Normal });
     let mut content_x = bounds.x + theme.padding_standard;
     if let Some(icons) = icons {
@@ -409,7 +407,7 @@ pub fn paint_slider(node: &UiSliderNode, bounds: Rect, theme: &Theme, atlas: &mu
     let unit_width = unit_label.as_ref().map(|label| atlas.measure_text(label, theme.font_size_body).0);
     let control = semio_ui_wgpu_layout::layout::slider_control_presentation(bounds, node.axis_position(node.value), 0.0, 1.0, unit_width, theme.gap_standard, ui_contract::FlowInline::Ltr);
     let presentation = control.slider;
-    paint_slider_travel(node, node.value, presentation, theme, draw);
+    paint_slider_travel(node, node.value, presentation, theme, SliderTravelState { disabled: node.presence.state == UiState::Disabled, ..SliderTravelState::default() }, draw);
     let text = node.readout(node.value);
     let (width, _) = atlas.measure_text(&text, theme.font_size_small);
     draw_text_on(draw, atlas, &text, presentation.value_cell.x + (presentation.value_cell.w - width).max(0.0), presentation.value_cell.y + (presentation.value_cell.h + theme.font_size_small) * 0.5, theme.font_size_small, theme.text_element);
@@ -431,30 +429,16 @@ pub fn paint_number_stepper(node: &UiNumberStepperNode, bounds: Rect, flags: Nod
 }
 
 pub fn paint_ring(node: &UiRingNode, bounds: Rect, theme: &Theme, draw: &mut DrawList) {
-    let cx = bounds.x + bounds.w * 0.5;
-    let cy = bounds.y + bounds.h * 0.5;
-    let radius = bounds.w.min(bounds.h) * 0.4;
-    let segments = 48usize;
-    let mut points = Vec::with_capacity(segments + 1);
-    for i in 0..=segments {
-        let angle = std::f32::consts::TAU * i as f32 / segments as f32;
-        points.push([cx + angle.cos() * radius, cy + angle.sin() * radius]);
+    for index in 0..RING_TRACK_SEGMENTS {
+        paint_ring_track_segment(draw, bounds, index, theme);
     }
-    for window in points.windows(2) {
-        draw.push_line(window[0][0], window[0][1], window[1][0], window[1][1], theme.separator, 2.0);
-    }
-    let disabled = node.presence.state == UiState::Disabled;
-    let knob_angle = std::f32::consts::TAU * node.t as f32;
-    let kx = cx + knob_angle.cos() * radius;
-    let ky = cy + knob_angle.sin() * radius;
-    let accent = if disabled { theme.text_muted } else { theme.accent };
-    draw.push_rounded([kx - 6.0, ky - 6.0, 12.0, 12.0], accent, 6.0);
+    paint_ring_orb(draw, bounds, node.t, true, false, node.presence.state == UiState::Disabled, theme);
 }
 
 pub fn paint_icon_select(node: &UiIconSelectNode, bounds: Rect, flags: NodeFlags, theme: &Theme, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, draw: &mut DrawList) {
     let hovered = hover_owner(flags);
     let focused = focus_ring_visible(flags);
-    let border = if hovered { theme.border_emphasized } else if focused { theme.accent } else { theme.border_normal };
+    let border = if hovered { theme.border_emphasized } else if focused { theme.selected } else { theme.border_normal };
     push_control_border(draw, bounds, theme, border, chrome_item_bg(theme, false, hovered), if hovered { semio_ui_draw_contract::SharedBorderState::Hover } else if focused { semio_ui_draw_contract::SharedBorderState::Focus } else { semio_ui_draw_contract::SharedBorderState::Normal });
     let content_x = bounds.x + theme.padding_standard;
     let has_icon = icons.and_then(|icons| icons.icon_uv(&node.value)).is_some();

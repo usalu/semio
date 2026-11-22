@@ -365,7 +365,7 @@ export function toolJobReservedSpecs(source: string): ToolJobReservedSpec[] {
   for (const match of source.matchAll(row)) {
     const values = match.slice(4, 8).map((value) => (/^[\d_]+$/u.test(value!) ? Number(value!.replaceAll("_", "")) : Number.NaN));
     const lanes = match[8]!.split(",").map((lane) => lane.trim());
-    if (values.every((value) => Number.isNaN(value) || (Number.isFinite(value) && value > 0)) && lanes.every((lane) => ["HostOnly", "Artifact", "Child"].includes(lane)) && new Set(lanes).size === lanes.length) specs.push({ id: match[3]!, job: match[1]!, factory: match[2]!, line: source.slice(0, match.index).split("\n").length, values, expressions: match.slice(4, 8).map((value) => value!.trim()), lanes });
+    if (values.every((value) => Number.isNaN(value) || (Number.isFinite(value) && value > 0)) && lanes.every((lane) => ["HostOnly", "Artifact", "Child", "Interaction"].includes(lane)) && new Set(lanes).size === lanes.length) specs.push({ id: match[3]!, job: match[1]!, factory: match[2]!, line: source.slice(0, match.index).split("\n").length, values, expressions: match.slice(4, 8).map((value) => value!.trim()), lanes });
   }
   return specs;
 }
@@ -373,23 +373,62 @@ export function toolJobReservedSpecs(source: string): ToolJobReservedSpec[] {
 export function toolJobFrameworkReservedRoutesExact(raw: string): boolean {
  const source=toolJobProductionSource(raw),compact=(value:string)=>value.replace(/\s+/g,"");
  const body=(name:string):string|undefined=>{
-  const at=source.lastIndexOf("fn "+name);return at<0?undefined:toolJobRustBlock(source,source.indexOf("{",at))?.body;
+  const matches=[...source.matchAll(new RegExp("\\bfn\\s+"+name+"\\s*\\(","g"))];
+  if(matches.length!==1)return undefined;
+  return toolJobRustBlock(source,source.indexOf("{",matches[0]!.index!))?.body;
  };
- const dispatch=body("dispatch_action"),reserved=body("dispatch_framework_reserved_action");
+ const actionEntry=body("dispatch_action"),dispatch=body("dispatch_action_received"),reserved=body("dispatch_framework_reserved_action");
  const imported=body("dispatch_import_media"),configuration=body("dispatch_config_command_inner");
- if(!dispatch||!reserved||!imported||!configuration||!toolJobOriginalReservedHostExact(source))return false;
+ const clipboard=body("advance_original_reserved_action"),clipboardPreparation=body("advance_reserved_action"),mediaRoute=body("advance_original_reserved_media");
+ const mediaPreparation=body("advance_reserved_media"),mediaDonation=body("prepare_reserved_media_input"),configurationCommit=body("finish_configuration_command");
+ if(!actionEntry||!dispatch||!reserved||!imported||!configuration||!clipboard||!clipboardPreparation||!mediaRoute||!mediaPreparation||!mediaDonation||!configurationCommit||!toolJobOriginalReservedHostExact(source))return false;
  const macroIds=TOOL_JOB_FRAMEWORK_RESERVED_IDS.filter(id=>id!=="configuration-binary");
  const specs=toolJobReservedSpecs(source).filter(spec=>macroIds.includes(spec.id as (typeof macroIds)[number]));
  if(specs.length!==macroIds.length||new Set(specs.map(spec=>spec.id)).size!==macroIds.length||new Set(specs.map(spec=>spec.job)).size!==macroIds.length||new Set(specs.map(spec=>spec.factory)).size!==macroIds.length||macroIds.some(id=>!specs.some(spec=>spec.id===id)))return false;
- if(specs.some(spec=>spec.lanes.join("\0")!==(["cut","paste","import-media"].includes(spec.id)?["Artifact","Child"]:["HostOnly"]).join("\0")))return false;
+ if(specs.some(spec=>{
+  const lanes=["cut","paste"].includes(spec.id)?["Artifact","Child","Interaction"]:spec.id==="import-media"?["Artifact","Child"]:["HostOnly"];
+  return spec.lanes.join("\0")!==lanes.join("\0");
+ }))return false;
  const registration=specs.every(spec=>source.includes("registry.register("+spec.factory+"::<A>::new(&controller_id))")&&(spec.id==="import-media"||source.includes(spec.job+"::new(")));
  const entry=compact(dispatch),route=compact(reserved),media=compact(imported),config=compact(configuration);
- const originalDispatch=entry.includes("returnself.dispatch_framework_reserved_action(action,args,meta,cx).await")&&dispatch.includes("interactive-job.unknown-key")&&!dispatch.includes("self.store.dispatch(command)");
- const originalRoute=route.includes("admit_reserved_emit_producer(action,meta,cx)")&&route.includes("dispatch_reserved_original_producer(action,&raw,decoded_items,job,")&&route.includes("admit_framework_reserved_spawn(action,&raw,decoded_items,meta,cx)")&&route.includes("pending_reserved.insert_admitted(");
- const originalImport=media.includes("pending_media_import_permit.take()")&&media.includes("(source.0,source.1)!=(cx.operation(),cx.generation())")&&media.includes("build_artifact_reserved_media_job(port,media,meta,semio_framework::action_bus::OriginalToolSourceBinding::borrow(cx))")&&media.includes('dispatch_reserved_original_producer("import-media",&raw,1,job,completion,meta,Some(admission),authority,cx)')&&!media.includes("serde_json::to_vec")&&!media.includes("A::import_media(");
- const originalConfiguration=config.includes("pending_configuration_source.is_some_and(|source|!source.matches(cx))")&&config.includes("pending_configuration_worker.as_mut().unwrap().advance(cx,permit.lease.cancel_token())")&&config.includes("worker.terminal_is_empty()")&&config.includes("semio_framework_job::validate_commit(&operation,revision,")&&config.includes("ConfigurationWorker::new(")&&config.includes("self.mounted_policy.preparation,self.mounted_policy.close,cx)")&&!config.includes("decode_op(");
+ const originalDispatch=compact(actionEntry).includes("self.dispatch_action_received(action,&mutsource,meta,identity,cx).await")
+  &&entry.includes("returnself.dispatch_framework_reserved_action(action,source.original_arguments_mut(),meta,cx).await")
+  &&dispatch.includes("interactive-job.unknown-key")
+  &&![actionEntry,dispatch].some(body=>compact(body).includes("self.store.dispatch(command)"));
+ const clipboardRoute=compact(clipboard);
+ const originalRoute=route.includes("ifCLIPBOARD_ACTION_IDS.contains(&action)")
+  &&route.includes(".advance_original_reserved_action(action,args,meta,contract,&mutfinished,cx)")
+  &&clipboardRoute.includes("self.as_render().advance_reserved_action(action,args,meta,contract,cx)")
+  &&clipboardRoute.includes("self.advance_original_reserved_mount(action,meta,finished,cx).await")
+  &&compact(clipboardPreparation).includes("self.prepare_reserved_action_wire(action,args,meta,contract,cx)")
+  &&!compact(clipboardPreparation).includes("args.cloned()")
+  &&route.includes("admit_framework_reserved_spawn(action,&raw,decoded_items,meta,cx)")
+  &&route.includes("pending_reserved.insert_admitted(");
+ const mediaBuild=compact(mediaPreparation),donation=compact(mediaDonation),mediaMount=compact(mediaRoute);
+ const originalImport=media.includes("ifA::ROLE==AppRole::Viewer")
+  &&media.includes("self.advance_original_reserved_media(port,media,meta,&mutfinished,cx)")
+  &&mediaMount.includes("self.as_render().advance_reserved_media(port,media,meta,cx)")
+  &&mediaMount.includes('self.advance_original_reserved_mount("import-media",meta,finished,cx).await')
+  &&mediaBuild.includes("owner.validate(self.stores.store.content_revision(),cx)?")
+  &&mediaBuild.includes("self.prepare_reserved_media_input(media,cx)")
+  &&mediaBuild.includes("self.prepare_reserved_wire_admission(cx)")
+  &&mediaBuild.includes('self.assemble_reserved_request("import-media",meta,&mutno_external_admission,1,cx)')
+  &&donation.includes("if!Self::media_donation_funded(cx){returnOk(false)}")
+  &&donation.includes("ArtifactReservedToolInput::Media{port,media:media.take().unwrap()}")
+  &&![media,mediaMount,mediaBuild,donation].some(body=>body.includes("serde_json::to_vec")||body.includes("A::import_media("));
+ const commit=compact(configurationCommit);
+ const cancelled=commit.indexOf("ifpermit.is_cancelled().await");
+ const originalConfiguration=config.includes("pending_configuration_source.is_some_and(|source|!source.matches(cx))")
+  &&config.includes("pending_configuration_worker.as_mut().unwrap().advance(cx,permit.lease.cancel_token())")
+  &&config.includes("worker.terminal_is_empty()")
+  &&config.includes("semio_framework_job::validate_commit(&operation,revision,")
+  &&config.includes("ConfigurationWorker::new(")
+  &&config.includes("self.mounted_policy.preparation,self.mounted_policy.close,cx)")
+  &&!config.includes("decode_op(")
+  &&commit.includes("pending_configuration_identity!=Some((cx.operation(),cx.generation()))")
+  &&cancelled>=0&&cancelled<commit.indexOf("self.stores.config_store.dispatch(command,identity)");
  const registeredConfiguration=source.includes("registry.register(FrameworkConfigurationBinaryJobFactory::<A>::new(&controller_id))")&&source.includes("FrameworkConfigurationBinaryStage::Envelope")&&source.includes("FrameworkConfigurationBinaryStage::Decode")&&source.includes("FrameworkConfigurationBinaryStage::Complete");
- const appBuilders=source.includes("A::register_tool_job_factories(&mut app_tool_registry)")&&source.includes("A::build_reserved_tool_job(request)");
+ const appBuilders=source.includes("A::register_tool_job_factories(&mut app_tool_registry)")&&compact(body("advance_builder")??"").includes("A::build_reserved_tool_job(&mutself.request,&mutself.body,&mutself.wire_construction,cx)");
  const staged=source.includes("FrameworkReservedStage::Admitted")&&source.includes("FrameworkReservedStage::Cursor")&&source.includes("FrameworkReservedStage::Retiring");
  return registration&&originalDispatch&&originalRoute&&originalImport&&originalConfiguration&&registeredConfiguration&&appBuilders&&staged;
 }

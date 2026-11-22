@@ -39,6 +39,7 @@ semio-ui-contract-values = { path = "../../🌱️values/📦️packages/🦀️
 semio-ui-contract-budget = { path = "../../📏️budget/📦️packages/🦀️rust" }
 semio-ui-contract-text = { path = "../../🔤️text/📦️packages/🦀️rust" }
 semio-ui-contract-identity = { path = "../../🆔️identity/📦️packages/🦀️rust" }
+semio-ui-contract-window-resource = { path = "../../🚚️window-resource/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../🌱️value/📦️packages/🦀️rust" }
 ui_styling = { path = "../../../🎨️styling/📦️packages/🦀️rust", package = "semio-ui-styling" }
 serde = { version = "1.0.219", features = ["derive"] }

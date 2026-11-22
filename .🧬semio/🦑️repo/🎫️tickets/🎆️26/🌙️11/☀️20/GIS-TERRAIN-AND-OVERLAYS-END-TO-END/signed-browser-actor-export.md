@@ -1,0 +1,9 @@
+# Signed Browser Actor Export
+
+GIS Terrain’s registered `exportElevationGrid` and `exportGeoJson` actions can publish a segmented download. The shell now captures the export reader with the effect’s signed document actor. That reader retains the original actor mailbox, document scope, surface, activation generation and instance. A retired owner aborts the drain, including before the buffered sink hands the completed file to the browser.
+
+The existing worker action envelope carries a bounded `segmented-download` request with the canonical decimal operation ID. Each admitted request calls `jobs.takeSegmentedDownloadChunk` once on the reserved child’s jobs lane. The reply echoes the operation ID and carries up to 4,096 bytes or the terminal marker. The worker checks the document owner before and after the call. The mailbox rejects foreign, replayed or mismatched replies. The existing download drain preserves order and enforces its total size and chunk limits.
+
+The focused tests passed 50 assertions. The changed TypeScript files passed type checking with the document worker assembly included, and a scoped whitespace check passed. They round-trip actual worker pack envelopes, validate the neutral schema against Ajv, preserve the maximum unsigned 64-bit operation ID, verify ordered pages and the terminal read, and refuse stale owners, mismatched operations and oversized pages. The shell tests verify that a signed effect reads the signed actor, the local effect reads its captured plugin instance, and retirement during the read aborts without switching actors. This verification used a controlled child and shell host. A live signed browser and download was outside this check.
+
+The separate Shell framework actions `exportMediaFile` and `exportSnapshotFile` use the declared-media transfer entry point. The GIS editor’s explicit ASCII and GeoJSON actions use the effect path covered here.

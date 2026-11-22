@@ -211,73 +211,115 @@
         {
           "id": "castor-crown-rear-l",
           "kind": "box",
-          "bone": "chassis",
+          "bone": "castor-rear-l",
           "material": "zinc-tube",
           "role": "body",
           "tone": 0.6,
-          "size": [0.05, 0.008, 0.052],
+          "size": [0.008, 0.05, 0.052],
           "transform": {
-            "translation": [0.033, -0.0295, 0.25]
+            "translation": [0.017, -0.002, 0.0]
           },
           "cornerRadius": 0.002
         },
         {
           "id": "castor-axle-rear-l",
           "kind": "capsule",
-          "bone": "chassis",
+          "bone": "castor-rear-l",
           "material": "zinc-tube",
           "role": "detail",
           "tone": 0.8,
-          "p0": [0.0, -0.105, 0.221],
-          "p1": [0.0, -0.105, 0.279],
+          "p0": [0.0925, -0.035, -0.029],
+          "p1": [0.0925, -0.035, 0.029],
           "r0": 0.005,
           "r1": 0.005
         },
         {
           "id": "tyre-rear-l",
           "kind": "revolve",
-          "bone": "chassis",
+          "bone": "wheel-rear-l",
           "material": "pu-tyre",
           "role": "body",
           "tone": 0.18,
-          "profile": [[-0.016, 0.0475], [-0.016, 0.056], [-0.0148, 0.0598], [-0.0118, 0.0618], [-0.007, 0.0625], [0.007, 0.0625], [0.0118, 0.0618], [0.0148, 0.0598], [0.016, 0.056], [0.016, 0.0475]],
+          "profile": [
+            [-0.016, 0.0475],
+            [-0.016, 0.056],
+            [-0.0148, 0.0598],
+            [-0.0118, 0.0618],
+            [-0.007, 0.0625],
+            [0.007, 0.0625],
+            [0.0118, 0.0618],
+            [0.0148, 0.0598],
+            [0.016, 0.056],
+            [0.016, 0.0475]
+          ],
           "axis": [0, 0, 1],
-          "origin": [0.0, -0.105, 0.25]
+          "origin": [0.0, 0.0, 0.0]
         },
         {
           "id": "hub-rear-l",
           "kind": "revolve",
-          "bone": "chassis",
+          "bone": "wheel-rear-l",
           "material": "pu-tyre",
           "role": "detail",
           "tone": 0.78,
-          "profile": [[-0.018, 0.0], [-0.018, 0.0135], [-0.0125, 0.017], [-0.0125, 0.04], [-0.0145, 0.0435], [-0.0145, 0.0485], [0.0145, 0.0485], [0.0145, 0.0435], [0.0125, 0.04], [0.0125, 0.017], [0.018, 0.0135], [0.018, 0.0]],
+          "profile": [
+            [-0.018, 0.0],
+            [-0.018, 0.0135],
+            [-0.0125, 0.017],
+            [-0.0125, 0.04],
+            [-0.0145, 0.0435],
+            [-0.0145, 0.0485],
+            [0.0145, 0.0485],
+            [0.0145, 0.0435],
+            [0.0125, 0.04],
+            [0.0125, 0.017],
+            [0.018, 0.0135],
+            [0.018, 0.0]
+          ],
           "axis": [0, 0, 1],
-          "origin": [0.0, -0.105, 0.25]
+          "origin": [0.0, 0.0, 0.0]
+        },
+        {
+          "id": "hub-ribs-rear-l",
+          "kind": "box",
+          "bone": "wheel-rear-l",
+          "material": "pu-tyre",
+          "role": "detail",
+          "tone": 0.7,
+          "size": [0.0245, 0.0075, 0.031],
+          "transform": {
+            "translation": [0.02825, 0.0, 0.0]
+          },
+          "repeat": {
+            "count": 5,
+            "rotationRad": 1.25664,
+            "rotationAxis": [0, 0, 1],
+            "origin": [0, 0, 0]
+          }
         },
         {
           "id": "castor-fork-rear-l-o",
           "kind": "extrude",
-          "bone": "chassis",
+          "bone": "castor-rear-l",
           "material": "zinc-tube",
           "role": "body",
           "tone": 0.6,
-          "profile": [[0.055, -0.0335], [0.011, -0.0335], [-0.017, -0.101], [-0.012, -0.117], [0.0, -0.121], [0.012, -0.117], [0.016, -0.103]],
+          "profile": [[0.021, 0.02], [0.021, -0.024], [0.0885, -0.052], [0.1045, -0.047], [0.1085, -0.035], [0.1045, -0.023], [0.0905, -0.019]],
           "plane": "xy",
-          "from": 0.2685,
-          "to": 0.276
+          "from": 0.0185,
+          "to": 0.026
         },
         {
           "id": "castor-fork-rear-l-i",
           "kind": "extrude",
-          "bone": "chassis",
+          "bone": "castor-rear-l",
           "material": "zinc-tube",
           "role": "body",
           "tone": 0.6,
-          "profile": [[0.055, -0.0335], [0.011, -0.0335], [-0.017, -0.101], [-0.012, -0.117], [0.0, -0.121], [0.012, -0.117], [0.016, -0.103]],
+          "profile": [[0.021, 0.02], [0.021, -0.024], [0.0885, -0.052], [0.1045, -0.047], [0.1085, -0.035], [0.1045, -0.023], [0.0905, -0.019]],
           "plane": "xy",
-          "from": 0.224,
-          "to": 0.2315
+          "from": -0.026,
+          "to": -0.0185
         },
         {
           "id": "castor-plate-rear-r",
@@ -306,73 +348,115 @@
         {
           "id": "castor-crown-rear-r",
           "kind": "box",
-          "bone": "chassis",
+          "bone": "castor-rear-r",
           "material": "zinc-tube",
           "role": "body",
           "tone": 0.6,
-          "size": [0.05, 0.008, 0.052],
+          "size": [0.008, 0.05, 0.052],
           "transform": {
-            "translation": [0.033, -0.0295, -0.25]
+            "translation": [0.017, -0.002, 0.0]
           },
           "cornerRadius": 0.002
         },
         {
           "id": "castor-axle-rear-r",
           "kind": "capsule",
-          "bone": "chassis",
+          "bone": "castor-rear-r",
           "material": "zinc-tube",
           "role": "detail",
           "tone": 0.8,
-          "p0": [0.0, -0.105, -0.279],
-          "p1": [0.0, -0.105, -0.221],
+          "p0": [0.0925, -0.035, -0.029],
+          "p1": [0.0925, -0.035, 0.029],
           "r0": 0.005,
           "r1": 0.005
         },
         {
           "id": "tyre-rear-r",
           "kind": "revolve",
-          "bone": "chassis",
+          "bone": "wheel-rear-r",
           "material": "pu-tyre",
           "role": "body",
           "tone": 0.18,
-          "profile": [[-0.016, 0.0475], [-0.016, 0.056], [-0.0148, 0.0598], [-0.0118, 0.0618], [-0.007, 0.0625], [0.007, 0.0625], [0.0118, 0.0618], [0.0148, 0.0598], [0.016, 0.056], [0.016, 0.0475]],
+          "profile": [
+            [-0.016, 0.0475],
+            [-0.016, 0.056],
+            [-0.0148, 0.0598],
+            [-0.0118, 0.0618],
+            [-0.007, 0.0625],
+            [0.007, 0.0625],
+            [0.0118, 0.0618],
+            [0.0148, 0.0598],
+            [0.016, 0.056],
+            [0.016, 0.0475]
+          ],
           "axis": [0, 0, 1],
-          "origin": [0.0, -0.105, -0.25]
+          "origin": [0.0, 0.0, 0.0]
         },
         {
           "id": "hub-rear-r",
           "kind": "revolve",
-          "bone": "chassis",
+          "bone": "wheel-rear-r",
           "material": "pu-tyre",
           "role": "detail",
           "tone": 0.78,
-          "profile": [[-0.018, 0.0], [-0.018, 0.0135], [-0.0125, 0.017], [-0.0125, 0.04], [-0.0145, 0.0435], [-0.0145, 0.0485], [0.0145, 0.0485], [0.0145, 0.0435], [0.0125, 0.04], [0.0125, 0.017], [0.018, 0.0135], [0.018, 0.0]],
+          "profile": [
+            [-0.018, 0.0],
+            [-0.018, 0.0135],
+            [-0.0125, 0.017],
+            [-0.0125, 0.04],
+            [-0.0145, 0.0435],
+            [-0.0145, 0.0485],
+            [0.0145, 0.0485],
+            [0.0145, 0.0435],
+            [0.0125, 0.04],
+            [0.0125, 0.017],
+            [0.018, 0.0135],
+            [0.018, 0.0]
+          ],
           "axis": [0, 0, 1],
-          "origin": [0.0, -0.105, -0.25]
+          "origin": [0.0, 0.0, 0.0]
+        },
+        {
+          "id": "hub-ribs-rear-r",
+          "kind": "box",
+          "bone": "wheel-rear-r",
+          "material": "pu-tyre",
+          "role": "detail",
+          "tone": 0.7,
+          "size": [0.0245, 0.0075, 0.031],
+          "transform": {
+            "translation": [0.02825, 0.0, 0.0]
+          },
+          "repeat": {
+            "count": 5,
+            "rotationRad": 1.25664,
+            "rotationAxis": [0, 0, 1],
+            "origin": [0, 0, 0]
+          }
         },
         {
           "id": "castor-fork-rear-r-o",
           "kind": "extrude",
-          "bone": "chassis",
+          "bone": "castor-rear-r",
           "material": "zinc-tube",
           "role": "body",
           "tone": 0.6,
-          "profile": [[0.055, -0.0335], [0.011, -0.0335], [-0.017, -0.101], [-0.012, -0.117], [0.0, -0.121], [0.012, -0.117], [0.016, -0.103]],
+          "profile": [[0.021, 0.02], [0.021, -0.024], [0.0885, -0.052], [0.1045, -0.047], [0.1085, -0.035], [0.1045, -0.023], [0.0905, -0.019]],
           "plane": "xy",
-          "from": -0.2315,
-          "to": -0.224
+          "from": 0.0185,
+          "to": 0.026
         },
         {
           "id": "castor-fork-rear-r-i",
           "kind": "extrude",
-          "bone": "chassis",
+          "bone": "castor-rear-r",
           "material": "zinc-tube",
           "role": "body",
           "tone": 0.6,
-          "profile": [[0.055, -0.0335], [0.011, -0.0335], [-0.017, -0.101], [-0.012, -0.117], [0.0, -0.121], [0.012, -0.117], [0.016, -0.103]],
+          "profile": [[0.021, 0.02], [0.021, -0.024], [0.0885, -0.052], [0.1045, -0.047], [0.1085, -0.035], [0.1045, -0.023], [0.0905, -0.019]],
           "plane": "xy",
-          "from": -0.276,
-          "to": -0.2685
+          "from": -0.026,
+          "to": -0.0185
         },
         {
           "id": "castor-plate-front-l",
@@ -401,73 +485,115 @@
         {
           "id": "castor-crown-front-l",
           "kind": "box",
-          "bone": "chassis",
+          "bone": "castor-front-l",
           "material": "zinc-tube",
           "role": "body",
           "tone": 0.6,
-          "size": [0.05, 0.008, 0.052],
+          "size": [0.008, 0.05, 0.052],
           "transform": {
-            "translation": [0.593, -0.0295, 0.198]
+            "translation": [0.017, -0.002, 0.0]
           },
           "cornerRadius": 0.002
         },
         {
           "id": "castor-axle-front-l",
           "kind": "capsule",
-          "bone": "chassis",
+          "bone": "castor-front-l",
           "material": "zinc-tube",
           "role": "detail",
           "tone": 0.8,
-          "p0": [0.56, -0.105, 0.169],
-          "p1": [0.56, -0.105, 0.227],
+          "p0": [0.0925, -0.035, -0.029],
+          "p1": [0.0925, -0.035, 0.029],
           "r0": 0.005,
           "r1": 0.005
         },
         {
           "id": "tyre-front-l",
           "kind": "revolve",
-          "bone": "chassis",
+          "bone": "wheel-front-l",
           "material": "pu-tyre",
           "role": "body",
           "tone": 0.18,
-          "profile": [[-0.016, 0.0475], [-0.016, 0.056], [-0.0148, 0.0598], [-0.0118, 0.0618], [-0.007, 0.0625], [0.007, 0.0625], [0.0118, 0.0618], [0.0148, 0.0598], [0.016, 0.056], [0.016, 0.0475]],
+          "profile": [
+            [-0.016, 0.0475],
+            [-0.016, 0.056],
+            [-0.0148, 0.0598],
+            [-0.0118, 0.0618],
+            [-0.007, 0.0625],
+            [0.007, 0.0625],
+            [0.0118, 0.0618],
+            [0.0148, 0.0598],
+            [0.016, 0.056],
+            [0.016, 0.0475]
+          ],
           "axis": [0, 0, 1],
-          "origin": [0.56, -0.105, 0.198]
+          "origin": [0.0, 0.0, 0.0]
         },
         {
           "id": "hub-front-l",
           "kind": "revolve",
-          "bone": "chassis",
+          "bone": "wheel-front-l",
           "material": "pu-tyre",
           "role": "detail",
           "tone": 0.78,
-          "profile": [[-0.018, 0.0], [-0.018, 0.0135], [-0.0125, 0.017], [-0.0125, 0.04], [-0.0145, 0.0435], [-0.0145, 0.0485], [0.0145, 0.0485], [0.0145, 0.0435], [0.0125, 0.04], [0.0125, 0.017], [0.018, 0.0135], [0.018, 0.0]],
+          "profile": [
+            [-0.018, 0.0],
+            [-0.018, 0.0135],
+            [-0.0125, 0.017],
+            [-0.0125, 0.04],
+            [-0.0145, 0.0435],
+            [-0.0145, 0.0485],
+            [0.0145, 0.0485],
+            [0.0145, 0.0435],
+            [0.0125, 0.04],
+            [0.0125, 0.017],
+            [0.018, 0.0135],
+            [0.018, 0.0]
+          ],
           "axis": [0, 0, 1],
-          "origin": [0.56, -0.105, 0.198]
+          "origin": [0.0, 0.0, 0.0]
+        },
+        {
+          "id": "hub-ribs-front-l",
+          "kind": "box",
+          "bone": "wheel-front-l",
+          "material": "pu-tyre",
+          "role": "detail",
+          "tone": 0.7,
+          "size": [0.0245, 0.0075, 0.031],
+          "transform": {
+            "translation": [0.02825, 0.0, 0.0]
+          },
+          "repeat": {
+            "count": 5,
+            "rotationRad": 1.25664,
+            "rotationAxis": [0, 0, 1],
+            "origin": [0, 0, 0]
+          }
         },
         {
           "id": "castor-fork-front-l-o",
           "kind": "extrude",
-          "bone": "chassis",
+          "bone": "castor-front-l",
           "material": "zinc-tube",
           "role": "body",
           "tone": 0.6,
-          "profile": [[0.615, -0.0335], [0.571, -0.0335], [0.543, -0.101], [0.548, -0.117], [0.56, -0.121], [0.572, -0.117], [0.576, -0.103]],
+          "profile": [[0.021, 0.02], [0.021, -0.024], [0.0885, -0.052], [0.1045, -0.047], [0.1085, -0.035], [0.1045, -0.023], [0.0905, -0.019]],
           "plane": "xy",
-          "from": 0.2165,
-          "to": 0.224
+          "from": 0.0185,
+          "to": 0.026
         },
         {
           "id": "castor-fork-front-l-i",
           "kind": "extrude",
-          "bone": "chassis",
+          "bone": "castor-front-l",
           "material": "zinc-tube",
           "role": "body",
           "tone": 0.6,
-          "profile": [[0.615, -0.0335], [0.571, -0.0335], [0.543, -0.101], [0.548, -0.117], [0.56, -0.121], [0.572, -0.117], [0.576, -0.103]],
+          "profile": [[0.021, 0.02], [0.021, -0.024], [0.0885, -0.052], [0.1045, -0.047], [0.1085, -0.035], [0.1045, -0.023], [0.0905, -0.019]],
           "plane": "xy",
-          "from": 0.172,
-          "to": 0.1795
+          "from": -0.026,
+          "to": -0.0185
         },
         {
           "id": "castor-plate-front-r",
@@ -496,73 +622,115 @@
         {
           "id": "castor-crown-front-r",
           "kind": "box",
-          "bone": "chassis",
+          "bone": "castor-front-r",
           "material": "zinc-tube",
           "role": "body",
           "tone": 0.6,
-          "size": [0.05, 0.008, 0.052],
+          "size": [0.008, 0.05, 0.052],
           "transform": {
-            "translation": [0.593, -0.0295, -0.198]
+            "translation": [0.017, -0.002, 0.0]
           },
           "cornerRadius": 0.002
         },
         {
           "id": "castor-axle-front-r",
           "kind": "capsule",
-          "bone": "chassis",
+          "bone": "castor-front-r",
           "material": "zinc-tube",
           "role": "detail",
           "tone": 0.8,
-          "p0": [0.56, -0.105, -0.227],
-          "p1": [0.56, -0.105, -0.169],
+          "p0": [0.0925, -0.035, -0.029],
+          "p1": [0.0925, -0.035, 0.029],
           "r0": 0.005,
           "r1": 0.005
         },
         {
           "id": "tyre-front-r",
           "kind": "revolve",
-          "bone": "chassis",
+          "bone": "wheel-front-r",
           "material": "pu-tyre",
           "role": "body",
           "tone": 0.18,
-          "profile": [[-0.016, 0.0475], [-0.016, 0.056], [-0.0148, 0.0598], [-0.0118, 0.0618], [-0.007, 0.0625], [0.007, 0.0625], [0.0118, 0.0618], [0.0148, 0.0598], [0.016, 0.056], [0.016, 0.0475]],
+          "profile": [
+            [-0.016, 0.0475],
+            [-0.016, 0.056],
+            [-0.0148, 0.0598],
+            [-0.0118, 0.0618],
+            [-0.007, 0.0625],
+            [0.007, 0.0625],
+            [0.0118, 0.0618],
+            [0.0148, 0.0598],
+            [0.016, 0.056],
+            [0.016, 0.0475]
+          ],
           "axis": [0, 0, 1],
-          "origin": [0.56, -0.105, -0.198]
+          "origin": [0.0, 0.0, 0.0]
         },
         {
           "id": "hub-front-r",
           "kind": "revolve",
-          "bone": "chassis",
+          "bone": "wheel-front-r",
           "material": "pu-tyre",
           "role": "detail",
           "tone": 0.78,
-          "profile": [[-0.018, 0.0], [-0.018, 0.0135], [-0.0125, 0.017], [-0.0125, 0.04], [-0.0145, 0.0435], [-0.0145, 0.0485], [0.0145, 0.0485], [0.0145, 0.0435], [0.0125, 0.04], [0.0125, 0.017], [0.018, 0.0135], [0.018, 0.0]],
+          "profile": [
+            [-0.018, 0.0],
+            [-0.018, 0.0135],
+            [-0.0125, 0.017],
+            [-0.0125, 0.04],
+            [-0.0145, 0.0435],
+            [-0.0145, 0.0485],
+            [0.0145, 0.0485],
+            [0.0145, 0.0435],
+            [0.0125, 0.04],
+            [0.0125, 0.017],
+            [0.018, 0.0135],
+            [0.018, 0.0]
+          ],
           "axis": [0, 0, 1],
-          "origin": [0.56, -0.105, -0.198]
+          "origin": [0.0, 0.0, 0.0]
+        },
+        {
+          "id": "hub-ribs-front-r",
+          "kind": "box",
+          "bone": "wheel-front-r",
+          "material": "pu-tyre",
+          "role": "detail",
+          "tone": 0.7,
+          "size": [0.0245, 0.0075, 0.031],
+          "transform": {
+            "translation": [0.02825, 0.0, 0.0]
+          },
+          "repeat": {
+            "count": 5,
+            "rotationRad": 1.25664,
+            "rotationAxis": [0, 0, 1],
+            "origin": [0, 0, 0]
+          }
         },
         {
           "id": "castor-fork-front-r-o",
           "kind": "extrude",
-          "bone": "chassis",
+          "bone": "castor-front-r",
           "material": "zinc-tube",
           "role": "body",
           "tone": 0.6,
-          "profile": [[0.615, -0.0335], [0.571, -0.0335], [0.543, -0.101], [0.548, -0.117], [0.56, -0.121], [0.572, -0.117], [0.576, -0.103]],
+          "profile": [[0.021, 0.02], [0.021, -0.024], [0.0885, -0.052], [0.1045, -0.047], [0.1085, -0.035], [0.1045, -0.023], [0.0905, -0.019]],
           "plane": "xy",
-          "from": -0.1795,
-          "to": -0.172
+          "from": 0.0185,
+          "to": 0.026
         },
         {
           "id": "castor-fork-front-r-i",
           "kind": "extrude",
-          "bone": "chassis",
+          "bone": "castor-front-r",
           "material": "zinc-tube",
           "role": "body",
           "tone": 0.6,
-          "profile": [[0.615, -0.0335], [0.571, -0.0335], [0.543, -0.101], [0.548, -0.117], [0.56, -0.121], [0.572, -0.117], [0.576, -0.103]],
+          "profile": [[0.021, 0.02], [0.021, -0.024], [0.0885, -0.052], [0.1045, -0.047], [0.1085, -0.035], [0.1045, -0.023], [0.0905, -0.019]],
           "plane": "xy",
-          "from": -0.224,
-          "to": -0.2165
+          "from": -0.026,
+          "to": -0.0185
         },
         {
           "id": "tray-frame-1",
@@ -882,7 +1050,7 @@
           "material": "zinc-wire",
           "role": "glazing",
           "tone": 0.6,
-          "profile": [[0.0, 0.0], [0.620968, -0.0], [0.891922, 0.301869], [-0.023198, 0.339023]],
+          "profile": [[0.0, 0.0], [0.620968, 0.0], [0.891922, 0.301869], [-0.023198, 0.339023]],
           "plane": "xy",
           "from": -0.0005,
           "to": 0.0005,
@@ -898,7 +1066,7 @@
           "material": "zinc-wire",
           "role": "glazing",
           "tone": 0.6,
-          "profile": [[0.0, 0.0], [0.620968, -0.0], [0.891922, 0.301869], [-0.023198, 0.339023]],
+          "profile": [[0.0, 0.0], [0.620968, 0.0], [0.891922, 0.301869], [-0.023198, 0.339023]],
           "plane": "xy",
           "from": -0.0005,
           "to": 0.0005,
@@ -2181,8 +2349,8 @@
           "material": "zinc-wire",
           "role": "detail",
           "tone": 0.55,
-          "p0": [0.0, 0.0, -0.0],
-          "p1": [0.62, 0.025, -0.0],
+          "p0": [0.0, 0.0, 0.0],
+          "p1": [0.62, 0.025, 0.0],
           "r0": 0.00225,
           "r1": 0.00225,
           "slender": true
@@ -3938,6 +4106,26 @@
           "id": "th-coin-lock",
           "of": "coin-lock",
           "region": "handle-grip"
+        },
+        {
+          "id": "th-hub-ribs-rear-l",
+          "of": "hub-ribs-rear-l",
+          "region": "wheels"
+        },
+        {
+          "id": "th-hub-ribs-rear-r",
+          "of": "hub-ribs-rear-r",
+          "region": "wheels"
+        },
+        {
+          "id": "th-hub-ribs-front-l",
+          "of": "hub-ribs-front-l",
+          "region": "wheels"
+        },
+        {
+          "id": "th-hub-ribs-front-r",
+          "of": "hub-ribs-front-r",
+          "region": "wheels"
         }
       ],
       "structure": [
@@ -4046,37 +4234,37 @@
         {
           "id": "st-castor-crown-rear-l",
           "of": "castor-crown-rear-l",
-          "member": "chassis",
+          "member": "castor-rear-l",
           "part": "member"
         },
         {
           "id": "st-castor-axle-rear-l",
           "of": "castor-axle-rear-l",
-          "member": "chassis",
+          "member": "castor-rear-l",
           "part": "member"
         },
         {
           "id": "st-tyre-rear-l",
           "of": "tyre-rear-l",
-          "member": "chassis",
+          "member": "wheel-rear-l",
           "part": "member"
         },
         {
           "id": "st-hub-rear-l",
           "of": "hub-rear-l",
-          "member": "chassis",
+          "member": "wheel-rear-l",
           "part": "member"
         },
         {
           "id": "st-castor-fork-rear-l-o",
           "of": "castor-fork-rear-l-o",
-          "member": "chassis",
+          "member": "castor-rear-l",
           "part": "member"
         },
         {
           "id": "st-castor-fork-rear-l-i",
           "of": "castor-fork-rear-l-i",
-          "member": "chassis",
+          "member": "castor-rear-l",
           "part": "member"
         },
         {
@@ -4094,37 +4282,37 @@
         {
           "id": "st-castor-crown-rear-r",
           "of": "castor-crown-rear-r",
-          "member": "chassis",
+          "member": "castor-rear-r",
           "part": "member"
         },
         {
           "id": "st-castor-axle-rear-r",
           "of": "castor-axle-rear-r",
-          "member": "chassis",
+          "member": "castor-rear-r",
           "part": "member"
         },
         {
           "id": "st-tyre-rear-r",
           "of": "tyre-rear-r",
-          "member": "chassis",
+          "member": "wheel-rear-r",
           "part": "member"
         },
         {
           "id": "st-hub-rear-r",
           "of": "hub-rear-r",
-          "member": "chassis",
+          "member": "wheel-rear-r",
           "part": "member"
         },
         {
           "id": "st-castor-fork-rear-r-o",
           "of": "castor-fork-rear-r-o",
-          "member": "chassis",
+          "member": "castor-rear-r",
           "part": "member"
         },
         {
           "id": "st-castor-fork-rear-r-i",
           "of": "castor-fork-rear-r-i",
-          "member": "chassis",
+          "member": "castor-rear-r",
           "part": "member"
         },
         {
@@ -4142,37 +4330,37 @@
         {
           "id": "st-castor-crown-front-l",
           "of": "castor-crown-front-l",
-          "member": "chassis",
+          "member": "castor-front-l",
           "part": "member"
         },
         {
           "id": "st-castor-axle-front-l",
           "of": "castor-axle-front-l",
-          "member": "chassis",
+          "member": "castor-front-l",
           "part": "member"
         },
         {
           "id": "st-tyre-front-l",
           "of": "tyre-front-l",
-          "member": "chassis",
+          "member": "wheel-front-l",
           "part": "member"
         },
         {
           "id": "st-hub-front-l",
           "of": "hub-front-l",
-          "member": "chassis",
+          "member": "wheel-front-l",
           "part": "member"
         },
         {
           "id": "st-castor-fork-front-l-o",
           "of": "castor-fork-front-l-o",
-          "member": "chassis",
+          "member": "castor-front-l",
           "part": "member"
         },
         {
           "id": "st-castor-fork-front-l-i",
           "of": "castor-fork-front-l-i",
-          "member": "chassis",
+          "member": "castor-front-l",
           "part": "member"
         },
         {
@@ -4190,37 +4378,37 @@
         {
           "id": "st-castor-crown-front-r",
           "of": "castor-crown-front-r",
-          "member": "chassis",
+          "member": "castor-front-r",
           "part": "member"
         },
         {
           "id": "st-castor-axle-front-r",
           "of": "castor-axle-front-r",
-          "member": "chassis",
+          "member": "castor-front-r",
           "part": "member"
         },
         {
           "id": "st-tyre-front-r",
           "of": "tyre-front-r",
-          "member": "chassis",
+          "member": "wheel-front-r",
           "part": "member"
         },
         {
           "id": "st-hub-front-r",
           "of": "hub-front-r",
-          "member": "chassis",
+          "member": "wheel-front-r",
           "part": "member"
         },
         {
           "id": "st-castor-fork-front-r-o",
           "of": "castor-fork-front-r-o",
-          "member": "chassis",
+          "member": "castor-front-r",
           "part": "member"
         },
         {
           "id": "st-castor-fork-front-r-i",
           "of": "castor-fork-front-r-i",
-          "member": "chassis",
+          "member": "castor-front-r",
           "part": "member"
         },
         {
@@ -4648,6 +4836,30 @@
           },
           "member": "chassis",
           "part": "mass"
+        },
+        {
+          "id": "st-hub-ribs-rear-l",
+          "of": "hub-ribs-rear-l",
+          "member": "wheel-rear-l",
+          "part": "member"
+        },
+        {
+          "id": "st-hub-ribs-rear-r",
+          "of": "hub-ribs-rear-r",
+          "member": "wheel-rear-r",
+          "part": "member"
+        },
+        {
+          "id": "st-hub-ribs-front-l",
+          "of": "hub-ribs-front-l",
+          "member": "wheel-front-l",
+          "part": "member"
+        },
+        {
+          "id": "st-hub-ribs-front-r",
+          "of": "hub-ribs-front-r",
+          "member": "wheel-front-r",
+          "part": "member"
         }
       ],
       "decisions": [
@@ -4662,6 +4874,10 @@
         {
           "en": "Thermal: every wire, tube, castor part, tyre, hub, grip, cap and the coin lock is its region's own surface (references), the glazing mesh planes are no surface. Structure: the bent tubes, struts, brackets and castors carry the chassis, rim ring, floor frame and corner wires the basket, the gate frame and its eyes the gate, the handle tube and arms the handle; joints at the basket fixings, the handle bends and the hinge; contact pads at the four wheel anchors; four mass points.",
           "de": "Thermik: jeder Draht, jedes Rohr, jedes Rollenteil, Reifen, Nabe, Griff, Kappe und das Pfandschloss ist die Oberfläche seiner Zone (Verweise), die Gitterebenen sind keine Oberfläche. Tragwerk: die gebogenen Rohre, Stützen, Laschen und Rollen tragen das Fahrgestell, Randring, Bodenrahmen und Eckdrähte den Korb, der Klappenrahmen mit Ösen die Klappe, Griffrohr und Arme den Griff; Gelenke an den Korbbefestigungen, den Griffbögen und dem Scharnier; Kontaktflächen an den vier Radankern; vier Massenpunkte."
+        },
+        {
+          "en": "The castors work: fork, crown and axle hang on a swivel bone on the kingpin axis (free axial twist), tyre and ribbed nylon hub turn on a wheel bone 35 mm behind it; top plate and ball-race head stay on the chassis.",
+          "de": "Die Lenkrollen funktionieren: Gabel, Gabelkopf und Achse hängen an einem Schwenkknochen auf der Königszapfenachse (freie Drehung um die Längsachse), Reifen und gerippte Nylonnabe drehen auf einem Radknochen 35 mm dahinter; Anschraubplatte und Kugellagerkopf bleiben am Fahrgestell."
         }
       ]
     },
@@ -4839,63 +5055,50 @@
           "cornerRadius": 0.004
         },
         {
-          "id": "castor-crown-rear-l",
-          "kind": "box",
-          "bone": "chassis",
-          "material": "zinc-tube",
-          "role": "body",
-          "tone": 0.6,
-          "size": [0.05, 0.008, 0.052],
-          "transform": {
-            "translation": [0.033, -0.0295, 0.25]
-          },
-          "cornerRadius": 0.002
-        },
-        {
           "id": "tyre-rear-l",
           "kind": "revolve",
-          "bone": "chassis",
+          "bone": "wheel-rear-l",
           "material": "pu-tyre",
           "role": "body",
           "tone": 0.18,
           "profile": [[-0.016, 0.0475], [-0.016, 0.057], [-0.011, 0.0625], [0.011, 0.0625], [0.016, 0.057], [0.016, 0.0475]],
           "axis": [0, 0, 1],
-          "origin": [0.0, -0.105, 0.25]
+          "origin": [0.0, 0.0, 0.0]
         },
         {
           "id": "hub-rear-l",
           "kind": "revolve",
-          "bone": "chassis",
+          "bone": "wheel-rear-l",
           "material": "pu-tyre",
           "role": "detail",
           "tone": 0.78,
           "profile": [[-0.0185, 0.0], [-0.0185, 0.016], [-0.0125, 0.02], [-0.0125, 0.0485], [0.0125, 0.0485], [0.0125, 0.02], [0.0185, 0.016], [0.0185, 0.0]],
           "axis": [0, 0, 1],
-          "origin": [0.0, -0.105, 0.25]
+          "origin": [0.0, 0.0, 0.0]
         },
         {
           "id": "castor-fork-rear-l-o",
           "kind": "extrude",
-          "bone": "chassis",
+          "bone": "castor-rear-l",
           "material": "zinc-tube",
           "role": "body",
           "tone": 0.6,
-          "profile": [[0.055, -0.0335], [0.011, -0.0335], [-0.017, -0.101], [-0.012, -0.117], [0.0, -0.121], [0.012, -0.117], [0.016, -0.103]],
+          "profile": [[0.021, 0.02], [0.021, -0.024], [0.0885, -0.052], [0.1045, -0.047], [0.1085, -0.035], [0.1045, -0.023], [0.0905, -0.019]],
           "plane": "xy",
-          "from": 0.268,
-          "to": 0.276
+          "from": 0.018,
+          "to": 0.033
         },
         {
           "id": "castor-fork-rear-l-i",
           "kind": "extrude",
-          "bone": "chassis",
+          "bone": "castor-rear-l",
           "material": "zinc-tube",
           "role": "body",
           "tone": 0.6,
-          "profile": [[0.055, -0.0335], [0.011, -0.0335], [-0.017, -0.101], [-0.012, -0.117], [0.0, -0.121], [0.012, -0.117], [0.016, -0.103]],
+          "profile": [[0.021, 0.02], [0.021, -0.024], [0.0885, -0.052], [0.1045, -0.047], [0.1085, -0.035], [0.1045, -0.023], [0.0905, -0.019]],
           "plane": "xy",
-          "from": 0.224,
-          "to": 0.232
+          "from": -0.033,
+          "to": -0.018
         },
         {
           "id": "castor-block-rear-r",
@@ -4911,63 +5114,50 @@
           "cornerRadius": 0.004
         },
         {
-          "id": "castor-crown-rear-r",
-          "kind": "box",
-          "bone": "chassis",
-          "material": "zinc-tube",
-          "role": "body",
-          "tone": 0.6,
-          "size": [0.05, 0.008, 0.052],
-          "transform": {
-            "translation": [0.033, -0.0295, -0.25]
-          },
-          "cornerRadius": 0.002
-        },
-        {
           "id": "tyre-rear-r",
           "kind": "revolve",
-          "bone": "chassis",
+          "bone": "wheel-rear-r",
           "material": "pu-tyre",
           "role": "body",
           "tone": 0.18,
           "profile": [[-0.016, 0.0475], [-0.016, 0.057], [-0.011, 0.0625], [0.011, 0.0625], [0.016, 0.057], [0.016, 0.0475]],
           "axis": [0, 0, 1],
-          "origin": [0.0, -0.105, -0.25]
+          "origin": [0.0, 0.0, 0.0]
         },
         {
           "id": "hub-rear-r",
           "kind": "revolve",
-          "bone": "chassis",
+          "bone": "wheel-rear-r",
           "material": "pu-tyre",
           "role": "detail",
           "tone": 0.78,
           "profile": [[-0.0185, 0.0], [-0.0185, 0.016], [-0.0125, 0.02], [-0.0125, 0.0485], [0.0125, 0.0485], [0.0125, 0.02], [0.0185, 0.016], [0.0185, 0.0]],
           "axis": [0, 0, 1],
-          "origin": [0.0, -0.105, -0.25]
+          "origin": [0.0, 0.0, 0.0]
         },
         {
           "id": "castor-fork-rear-r-o",
           "kind": "extrude",
-          "bone": "chassis",
+          "bone": "castor-rear-r",
           "material": "zinc-tube",
           "role": "body",
           "tone": 0.6,
-          "profile": [[0.055, -0.0335], [0.011, -0.0335], [-0.017, -0.101], [-0.012, -0.117], [0.0, -0.121], [0.012, -0.117], [0.016, -0.103]],
+          "profile": [[0.021, 0.02], [0.021, -0.024], [0.0885, -0.052], [0.1045, -0.047], [0.1085, -0.035], [0.1045, -0.023], [0.0905, -0.019]],
           "plane": "xy",
-          "from": -0.232,
-          "to": -0.224
+          "from": -0.033,
+          "to": -0.018
         },
         {
           "id": "castor-fork-rear-r-i",
           "kind": "extrude",
-          "bone": "chassis",
+          "bone": "castor-rear-r",
           "material": "zinc-tube",
           "role": "body",
           "tone": 0.6,
-          "profile": [[0.055, -0.0335], [0.011, -0.0335], [-0.017, -0.101], [-0.012, -0.117], [0.0, -0.121], [0.012, -0.117], [0.016, -0.103]],
+          "profile": [[0.021, 0.02], [0.021, -0.024], [0.0885, -0.052], [0.1045, -0.047], [0.1085, -0.035], [0.1045, -0.023], [0.0905, -0.019]],
           "plane": "xy",
-          "from": -0.276,
-          "to": -0.268
+          "from": 0.018,
+          "to": 0.033
         },
         {
           "id": "castor-block-front-l",
@@ -4983,63 +5173,50 @@
           "cornerRadius": 0.004
         },
         {
-          "id": "castor-crown-front-l",
-          "kind": "box",
-          "bone": "chassis",
-          "material": "zinc-tube",
-          "role": "body",
-          "tone": 0.6,
-          "size": [0.05, 0.008, 0.052],
-          "transform": {
-            "translation": [0.593, -0.0295, 0.198]
-          },
-          "cornerRadius": 0.002
-        },
-        {
           "id": "tyre-front-l",
           "kind": "revolve",
-          "bone": "chassis",
+          "bone": "wheel-front-l",
           "material": "pu-tyre",
           "role": "body",
           "tone": 0.18,
           "profile": [[-0.016, 0.0475], [-0.016, 0.057], [-0.011, 0.0625], [0.011, 0.0625], [0.016, 0.057], [0.016, 0.0475]],
           "axis": [0, 0, 1],
-          "origin": [0.56, -0.105, 0.198]
+          "origin": [0.0, 0.0, 0.0]
         },
         {
           "id": "hub-front-l",
           "kind": "revolve",
-          "bone": "chassis",
+          "bone": "wheel-front-l",
           "material": "pu-tyre",
           "role": "detail",
           "tone": 0.78,
           "profile": [[-0.0185, 0.0], [-0.0185, 0.016], [-0.0125, 0.02], [-0.0125, 0.0485], [0.0125, 0.0485], [0.0125, 0.02], [0.0185, 0.016], [0.0185, 0.0]],
           "axis": [0, 0, 1],
-          "origin": [0.56, -0.105, 0.198]
+          "origin": [0.0, 0.0, 0.0]
         },
         {
           "id": "castor-fork-front-l-o",
           "kind": "extrude",
-          "bone": "chassis",
+          "bone": "castor-front-l",
           "material": "zinc-tube",
           "role": "body",
           "tone": 0.6,
-          "profile": [[0.615, -0.0335], [0.571, -0.0335], [0.543, -0.101], [0.548, -0.117], [0.56, -0.121], [0.572, -0.117], [0.576, -0.103]],
+          "profile": [[0.021, 0.02], [0.021, -0.024], [0.0885, -0.052], [0.1045, -0.047], [0.1085, -0.035], [0.1045, -0.023], [0.0905, -0.019]],
           "plane": "xy",
-          "from": 0.216,
-          "to": 0.224
+          "from": 0.018,
+          "to": 0.033
         },
         {
           "id": "castor-fork-front-l-i",
           "kind": "extrude",
-          "bone": "chassis",
+          "bone": "castor-front-l",
           "material": "zinc-tube",
           "role": "body",
           "tone": 0.6,
-          "profile": [[0.615, -0.0335], [0.571, -0.0335], [0.543, -0.101], [0.548, -0.117], [0.56, -0.121], [0.572, -0.117], [0.576, -0.103]],
+          "profile": [[0.021, 0.02], [0.021, -0.024], [0.0885, -0.052], [0.1045, -0.047], [0.1085, -0.035], [0.1045, -0.023], [0.0905, -0.019]],
           "plane": "xy",
-          "from": 0.172,
-          "to": 0.18
+          "from": -0.033,
+          "to": -0.018
         },
         {
           "id": "castor-block-front-r",
@@ -5055,63 +5232,50 @@
           "cornerRadius": 0.004
         },
         {
-          "id": "castor-crown-front-r",
-          "kind": "box",
-          "bone": "chassis",
-          "material": "zinc-tube",
-          "role": "body",
-          "tone": 0.6,
-          "size": [0.05, 0.008, 0.052],
-          "transform": {
-            "translation": [0.593, -0.0295, -0.198]
-          },
-          "cornerRadius": 0.002
-        },
-        {
           "id": "tyre-front-r",
           "kind": "revolve",
-          "bone": "chassis",
+          "bone": "wheel-front-r",
           "material": "pu-tyre",
           "role": "body",
           "tone": 0.18,
           "profile": [[-0.016, 0.0475], [-0.016, 0.057], [-0.011, 0.0625], [0.011, 0.0625], [0.016, 0.057], [0.016, 0.0475]],
           "axis": [0, 0, 1],
-          "origin": [0.56, -0.105, -0.198]
+          "origin": [0.0, 0.0, 0.0]
         },
         {
           "id": "hub-front-r",
           "kind": "revolve",
-          "bone": "chassis",
+          "bone": "wheel-front-r",
           "material": "pu-tyre",
           "role": "detail",
           "tone": 0.78,
           "profile": [[-0.0185, 0.0], [-0.0185, 0.016], [-0.0125, 0.02], [-0.0125, 0.0485], [0.0125, 0.0485], [0.0125, 0.02], [0.0185, 0.016], [0.0185, 0.0]],
           "axis": [0, 0, 1],
-          "origin": [0.56, -0.105, -0.198]
+          "origin": [0.0, 0.0, 0.0]
         },
         {
           "id": "castor-fork-front-r-o",
           "kind": "extrude",
-          "bone": "chassis",
+          "bone": "castor-front-r",
           "material": "zinc-tube",
           "role": "body",
           "tone": 0.6,
-          "profile": [[0.615, -0.0335], [0.571, -0.0335], [0.543, -0.101], [0.548, -0.117], [0.56, -0.121], [0.572, -0.117], [0.576, -0.103]],
+          "profile": [[0.021, 0.02], [0.021, -0.024], [0.0885, -0.052], [0.1045, -0.047], [0.1085, -0.035], [0.1045, -0.023], [0.0905, -0.019]],
           "plane": "xy",
-          "from": -0.18,
-          "to": -0.172
+          "from": -0.033,
+          "to": -0.018
         },
         {
           "id": "castor-fork-front-r-i",
           "kind": "extrude",
-          "bone": "chassis",
+          "bone": "castor-front-r",
           "material": "zinc-tube",
           "role": "body",
           "tone": 0.6,
-          "profile": [[0.615, -0.0335], [0.571, -0.0335], [0.543, -0.101], [0.548, -0.117], [0.56, -0.121], [0.572, -0.117], [0.576, -0.103]],
+          "profile": [[0.021, 0.02], [0.021, -0.024], [0.0885, -0.052], [0.1045, -0.047], [0.1085, -0.035], [0.1045, -0.023], [0.0905, -0.019]],
           "plane": "xy",
-          "from": -0.224,
-          "to": -0.216
+          "from": 0.018,
+          "to": 0.033
         },
         {
           "id": "tray-frame-1",
@@ -5353,7 +5517,7 @@
           "material": "zinc-wire",
           "role": "glazing",
           "tone": 0.6,
-          "profile": [[0.0, 0.0], [0.620968, -0.0], [0.891922, 0.301869], [-0.023198, 0.339023]],
+          "profile": [[0.0, 0.0], [0.620968, 0.0], [0.891922, 0.301869], [-0.023198, 0.339023]],
           "plane": "xy",
           "from": -0.0005,
           "to": 0.0005,
@@ -5369,7 +5533,7 @@
           "material": "zinc-wire",
           "role": "glazing",
           "tone": 0.6,
-          "profile": [[0.0, 0.0], [0.620968, -0.0], [0.891922, 0.301869], [-0.023198, 0.339023]],
+          "profile": [[0.0, 0.0], [0.620968, 0.0], [0.891922, 0.301869], [-0.023198, 0.339023]],
           "plane": "xy",
           "from": -0.0005,
           "to": 0.0005,
@@ -6093,8 +6257,8 @@
           "material": "zinc-wire",
           "role": "detail",
           "tone": 0.55,
-          "p0": [0.0, 0.0, -0.0],
-          "p1": [0.62, 0.025, -0.0],
+          "p0": [0.0, 0.0, 0.0],
+          "p1": [0.62, 0.025, 0.0],
           "r0": 0.0045,
           "r1": 0.0045,
           "slender": true
@@ -6594,11 +6758,6 @@
           "region": "frame-tube"
         },
         {
-          "id": "th-castor-crown-rear-l",
-          "of": "castor-crown-rear-l",
-          "region": "frame-tube"
-        },
-        {
           "id": "th-tyre-rear-l",
           "of": "tyre-rear-l",
           "region": "wheels"
@@ -6621,11 +6780,6 @@
         {
           "id": "th-castor-block-rear-r",
           "of": "castor-block-rear-r",
-          "region": "frame-tube"
-        },
-        {
-          "id": "th-castor-crown-rear-r",
-          "of": "castor-crown-rear-r",
           "region": "frame-tube"
         },
         {
@@ -6654,11 +6808,6 @@
           "region": "frame-tube"
         },
         {
-          "id": "th-castor-crown-front-l",
-          "of": "castor-crown-front-l",
-          "region": "frame-tube"
-        },
-        {
           "id": "th-tyre-front-l",
           "of": "tyre-front-l",
           "region": "wheels"
@@ -6681,11 +6830,6 @@
         {
           "id": "th-castor-block-front-r",
           "of": "castor-block-front-r",
-          "region": "frame-tube"
-        },
-        {
-          "id": "th-castor-crown-front-r",
-          "of": "castor-crown-front-r",
           "region": "frame-tube"
         },
         {
@@ -7281,33 +7425,27 @@
           "part": "member"
         },
         {
-          "id": "st-castor-crown-rear-l",
-          "of": "castor-crown-rear-l",
-          "member": "chassis",
-          "part": "member"
-        },
-        {
           "id": "st-tyre-rear-l",
           "of": "tyre-rear-l",
-          "member": "chassis",
+          "member": "wheel-rear-l",
           "part": "member"
         },
         {
           "id": "st-hub-rear-l",
           "of": "hub-rear-l",
-          "member": "chassis",
+          "member": "wheel-rear-l",
           "part": "member"
         },
         {
           "id": "st-castor-fork-rear-l-o",
           "of": "castor-fork-rear-l-o",
-          "member": "chassis",
+          "member": "castor-rear-l",
           "part": "member"
         },
         {
           "id": "st-castor-fork-rear-l-i",
           "of": "castor-fork-rear-l-i",
-          "member": "chassis",
+          "member": "castor-rear-l",
           "part": "member"
         },
         {
@@ -7317,33 +7455,27 @@
           "part": "member"
         },
         {
-          "id": "st-castor-crown-rear-r",
-          "of": "castor-crown-rear-r",
-          "member": "chassis",
-          "part": "member"
-        },
-        {
           "id": "st-tyre-rear-r",
           "of": "tyre-rear-r",
-          "member": "chassis",
+          "member": "wheel-rear-r",
           "part": "member"
         },
         {
           "id": "st-hub-rear-r",
           "of": "hub-rear-r",
-          "member": "chassis",
+          "member": "wheel-rear-r",
           "part": "member"
         },
         {
           "id": "st-castor-fork-rear-r-o",
           "of": "castor-fork-rear-r-o",
-          "member": "chassis",
+          "member": "castor-rear-r",
           "part": "member"
         },
         {
           "id": "st-castor-fork-rear-r-i",
           "of": "castor-fork-rear-r-i",
-          "member": "chassis",
+          "member": "castor-rear-r",
           "part": "member"
         },
         {
@@ -7353,33 +7485,27 @@
           "part": "member"
         },
         {
-          "id": "st-castor-crown-front-l",
-          "of": "castor-crown-front-l",
-          "member": "chassis",
-          "part": "member"
-        },
-        {
           "id": "st-tyre-front-l",
           "of": "tyre-front-l",
-          "member": "chassis",
+          "member": "wheel-front-l",
           "part": "member"
         },
         {
           "id": "st-hub-front-l",
           "of": "hub-front-l",
-          "member": "chassis",
+          "member": "wheel-front-l",
           "part": "member"
         },
         {
           "id": "st-castor-fork-front-l-o",
           "of": "castor-fork-front-l-o",
-          "member": "chassis",
+          "member": "castor-front-l",
           "part": "member"
         },
         {
           "id": "st-castor-fork-front-l-i",
           "of": "castor-fork-front-l-i",
-          "member": "chassis",
+          "member": "castor-front-l",
           "part": "member"
         },
         {
@@ -7389,33 +7515,27 @@
           "part": "member"
         },
         {
-          "id": "st-castor-crown-front-r",
-          "of": "castor-crown-front-r",
-          "member": "chassis",
-          "part": "member"
-        },
-        {
           "id": "st-tyre-front-r",
           "of": "tyre-front-r",
-          "member": "chassis",
+          "member": "wheel-front-r",
           "part": "member"
         },
         {
           "id": "st-hub-front-r",
           "of": "hub-front-r",
-          "member": "chassis",
+          "member": "wheel-front-r",
           "part": "member"
         },
         {
           "id": "st-castor-fork-front-r-o",
           "of": "castor-fork-front-r-o",
-          "member": "chassis",
+          "member": "castor-front-r",
           "part": "member"
         },
         {
           "id": "st-castor-fork-front-r-i",
           "of": "castor-fork-front-r-i",
-          "member": "chassis",
+          "member": "castor-front-r",
           "part": "member"
         },
         {
@@ -7833,12 +7953,16 @@
           "de": "1:100 (kleinstes Detail 15 mm): der Korb behält Form, Rand-, Bodenrahmen- und Eckdrähte; das Gitter ist im Abstand 60 mm gezeichnet, daher sind je zwei Drähte o4,5 von 1:50 zu einem Draht o9 gleicher Oberfläche zusammengefasst (Seiten- und Stirnstäbe, zwei Bügel, sieben Bodendrähte auf drei Querdrähten); die Klappe hat zehn Drähte o8, einen Querdraht und zwei Ösen; die Kistenablage sieben Drähte."
         },
         {
-          "en": "Chassis tubes o25 with one bend at the rail end and one at the handle; castor head and plate are one block, the crown and both fork legs stay, tyre and hub are simplified profiles, the axle is dropped; the grip is a capsule.",
-          "de": "Fahrgestellrohre o25 mit je einem Bogen am Holmende und am Griff; Rollenkopf und Platte sind ein Block, Gabelbrücke und beide Gabelschenkel bleiben, Reifen und Nabe sind vereinfachte Profile, die Achse entfällt; der Griff ist eine Kapsel."
+          "en": "Chassis tubes o25 with one bend at the rail end and one at the handle; castor head, plate and the 8 mm fork crown are one 21 mm swivel block under the rail, both fork legs hang from it on the swivelling castor bone, tyre and hub are simplified profiles, the axle is dropped; the grip is a capsule.",
+          "de": "Fahrgestellrohre o25 mit je einem Bogen am Holmende und am Griff; Rollenkopf, Platte und die 8 mm dicke Gabelbrücke sind ein Schwenkblock von 21 mm unter dem Holm, beide Gabelschenkel hängen daran am schwenkenden Rollenknochen, Reifen und Nabe sind vereinfachte Profile, die Achse entfällt; der Griff ist eine Kapsel."
         },
         {
           "en": "Thermal: every wire, tube, castor part, tyre, hub, grip, cap and the coin lock is its region's surface; the mesh planes are none. Structure: tubes, struts, castors, rim, floor frame, corner wires, gate frame and handle tube as members, joints at the six basket fixings, the handle bends and the gate eyes, contact pads at the wheel anchors, castor, basket, gate and handle masses.",
           "de": "Thermik: jeder Draht, jedes Rohr, Rollenteil, Reifen, Nabe, Griff, Kappe und das Pfandschloss ist die Oberfläche seiner Zone; die Gitterebenen sind keine. Tragwerk: Rohre, Stützen, Rollen, Rand, Bodenrahmen, Eckdrähte, Klappenrahmen und Griffrohr als Stäbe, Gelenke an den sechs Korbbefestigungen, den Griffbögen und den Klappenösen, Kontaktflächen an den Radankern, Massen der Rollen, des Korbs, der Klappe und des Griffs."
+        },
+        {
+          "en": "Castor forks swivel on their kingpin bones and the wheels turn on their axle bones, as at 1:50.",
+          "de": "Die Rollengabeln schwenken an ihren Königszapfenknochen und die Räder drehen an ihren Achsknochen wie in 1:50."
         }
       ]
     },
@@ -7963,94 +8087,94 @@
         {
           "id": "wheel-rear-l",
           "kind": "revolve",
-          "bone": "chassis",
+          "bone": "wheel-rear-l",
           "material": "pu-tyre",
           "role": "body",
           "tone": 0.18,
           "profile": [[-0.016, 0.0], [-0.016, 0.057], [-0.011, 0.0625], [0.011, 0.0625], [0.016, 0.057], [0.016, 0.0]],
           "axis": [0, 0, 1],
-          "origin": [0.0, -0.105, 0.25]
+          "origin": [0.0, 0.0, 0.0]
         },
         {
           "id": "castor-rear-l",
           "kind": "extrude",
-          "bone": "chassis",
+          "bone": "castor-rear-l",
           "material": "zinc-tube",
           "role": "body",
           "tone": 0.6,
-          "profile": [[0.07, -0.0125], [0.0, -0.0125], [0.0, -0.0335], [-0.015, -0.105], [0.015, -0.105], [0.055, -0.0335], [0.07, -0.0335]],
+          "profile": [[0.0, 0.035], [0.0, -0.035], [0.021, -0.035], [0.0925, -0.05], [0.0925, -0.02], [0.021, 0.02], [0.021, 0.035]],
           "plane": "xy",
-          "from": 0.22,
-          "to": 0.28
+          "from": -0.03,
+          "to": 0.03
         },
         {
           "id": "wheel-rear-r",
           "kind": "revolve",
-          "bone": "chassis",
+          "bone": "wheel-rear-r",
           "material": "pu-tyre",
           "role": "body",
           "tone": 0.18,
           "profile": [[-0.016, 0.0], [-0.016, 0.057], [-0.011, 0.0625], [0.011, 0.0625], [0.016, 0.057], [0.016, 0.0]],
           "axis": [0, 0, 1],
-          "origin": [0.0, -0.105, -0.25]
+          "origin": [0.0, 0.0, 0.0]
         },
         {
           "id": "castor-rear-r",
           "kind": "extrude",
-          "bone": "chassis",
+          "bone": "castor-rear-r",
           "material": "zinc-tube",
           "role": "body",
           "tone": 0.6,
-          "profile": [[0.07, -0.0125], [0.0, -0.0125], [0.0, -0.0335], [-0.015, -0.105], [0.015, -0.105], [0.055, -0.0335], [0.07, -0.0335]],
+          "profile": [[0.0, 0.035], [0.0, -0.035], [0.021, -0.035], [0.0925, -0.05], [0.0925, -0.02], [0.021, 0.02], [0.021, 0.035]],
           "plane": "xy",
-          "from": -0.28,
-          "to": -0.22
+          "from": -0.03,
+          "to": 0.03
         },
         {
           "id": "wheel-front-l",
           "kind": "revolve",
-          "bone": "chassis",
+          "bone": "wheel-front-l",
           "material": "pu-tyre",
           "role": "body",
           "tone": 0.18,
           "profile": [[-0.016, 0.0], [-0.016, 0.057], [-0.011, 0.0625], [0.011, 0.0625], [0.016, 0.057], [0.016, 0.0]],
           "axis": [0, 0, 1],
-          "origin": [0.56, -0.105, 0.198]
+          "origin": [0.0, 0.0, 0.0]
         },
         {
           "id": "castor-front-l",
           "kind": "extrude",
-          "bone": "chassis",
+          "bone": "castor-front-l",
           "material": "zinc-tube",
           "role": "body",
           "tone": 0.6,
-          "profile": [[0.63, -0.0125], [0.56, -0.0125], [0.56, -0.0335], [0.545, -0.105], [0.575, -0.105], [0.615, -0.0335], [0.63, -0.0335]],
+          "profile": [[0.0, 0.035], [0.0, -0.035], [0.021, -0.035], [0.0925, -0.05], [0.0925, -0.02], [0.021, 0.02], [0.021, 0.035]],
           "plane": "xy",
-          "from": 0.168,
-          "to": 0.228
+          "from": -0.03,
+          "to": 0.03
         },
         {
           "id": "wheel-front-r",
           "kind": "revolve",
-          "bone": "chassis",
+          "bone": "wheel-front-r",
           "material": "pu-tyre",
           "role": "body",
           "tone": 0.18,
           "profile": [[-0.016, 0.0], [-0.016, 0.057], [-0.011, 0.0625], [0.011, 0.0625], [0.016, 0.057], [0.016, 0.0]],
           "axis": [0, 0, 1],
-          "origin": [0.56, -0.105, -0.198]
+          "origin": [0.0, 0.0, 0.0]
         },
         {
           "id": "castor-front-r",
           "kind": "extrude",
-          "bone": "chassis",
+          "bone": "castor-front-r",
           "material": "zinc-tube",
           "role": "body",
           "tone": 0.6,
-          "profile": [[0.63, -0.0125], [0.56, -0.0125], [0.56, -0.0335], [0.545, -0.105], [0.575, -0.105], [0.615, -0.0335], [0.63, -0.0335]],
+          "profile": [[0.0, 0.035], [0.0, -0.035], [0.021, -0.035], [0.0925, -0.05], [0.0925, -0.02], [0.021, 0.02], [0.021, 0.035]],
           "plane": "xy",
-          "from": -0.228,
-          "to": -0.168
+          "from": -0.03,
+          "to": 0.03
         },
         {
           "id": "tray-frame-1",
@@ -8153,7 +8277,7 @@
           "material": "zinc-wire",
           "role": "glazing",
           "tone": 0.6,
-          "profile": [[0.0, 0.0], [0.620968, -0.0], [0.891922, 0.301869], [-0.023198, 0.339023]],
+          "profile": [[0.0, 0.0], [0.620968, 0.0], [0.891922, 0.301869], [-0.023198, 0.339023]],
           "plane": "xy",
           "from": -0.0005,
           "to": 0.0005,
@@ -8169,7 +8293,7 @@
           "material": "zinc-wire",
           "role": "glazing",
           "tone": 0.6,
-          "profile": [[0.0, 0.0], [0.620968, -0.0], [0.891922, 0.301869], [-0.023198, 0.339023]],
+          "profile": [[0.0, 0.0], [0.620968, 0.0], [0.891922, 0.301869], [-0.023198, 0.339023]],
           "plane": "xy",
           "from": -0.0005,
           "to": 0.0005,
@@ -8584,6 +8708,30 @@
             "translation": [0.028, -0.012, 0.0]
           },
           "cornerRadius": 0.008
+        },
+        {
+          "id": "tray-lip-panel-front",
+          "kind": "box",
+          "bone": "chassis",
+          "material": "zinc-wire",
+          "role": "glazing",
+          "tone": 0.6,
+          "size": [0.001, 0.04, 0.38984],
+          "transform": {
+            "translation": [0.545, 0.0355, 0.0]
+          }
+        },
+        {
+          "id": "tray-lip-panel-rear",
+          "kind": "box",
+          "bone": "chassis",
+          "material": "zinc-wire",
+          "role": "glazing",
+          "tone": 0.6,
+          "size": [0.001, 0.04, 0.50888],
+          "transform": {
+            "translation": [0.065, 0.0355, 0.0]
+          }
         }
       ],
       "thermal": [
@@ -9223,49 +9371,49 @@
         {
           "id": "st-wheel-rear-l",
           "of": "wheel-rear-l",
-          "member": "chassis",
+          "member": "wheel-rear-l",
           "part": "member"
         },
         {
           "id": "st-castor-rear-l",
           "of": "castor-rear-l",
-          "member": "chassis",
+          "member": "castor-rear-l",
           "part": "member"
         },
         {
           "id": "st-wheel-rear-r",
           "of": "wheel-rear-r",
-          "member": "chassis",
+          "member": "wheel-rear-r",
           "part": "member"
         },
         {
           "id": "st-castor-rear-r",
           "of": "castor-rear-r",
-          "member": "chassis",
+          "member": "castor-rear-r",
           "part": "member"
         },
         {
           "id": "st-wheel-front-l",
           "of": "wheel-front-l",
-          "member": "chassis",
+          "member": "wheel-front-l",
           "part": "member"
         },
         {
           "id": "st-castor-front-l",
           "of": "castor-front-l",
-          "member": "chassis",
+          "member": "castor-front-l",
           "part": "member"
         },
         {
           "id": "st-wheel-front-r",
           "of": "wheel-front-r",
-          "member": "chassis",
+          "member": "wheel-front-r",
           "part": "member"
         },
         {
           "id": "st-castor-front-r",
           "of": "castor-front-r",
-          "member": "chassis",
+          "member": "castor-front-r",
           "part": "member"
         },
         {
@@ -9626,8 +9774,8 @@
       ],
       "decisions": [
         {
-          "en": "1:200 (feature 30 mm): the basket is its translucent mesh planes outlined by the o8 rim, the o6 floor frame and corner wires and two hoops; pickets and floor wires are no longer drawn. The gate is its panel in its frame, the crate tray a plane in its frame with two lips.",
-          "de": "1:200 (kleinstes Detail 30 mm): der Korb besteht aus seinen durchscheinenden Gitterebenen, umrissen vom Randdraht o8, Bodenrahmen und Eckdrähten o6 und zwei Bügeln; Stäbe und Bodendrähte sind nicht mehr gezeichnet. Die Klappe ist ihre Tafel im Rahmen, die Kistenablage eine Ebene im Rahmen mit zwei Kanten."
+          "en": "1:200 (feature 30 mm): the basket is its translucent mesh planes outlined by the o8 rim, the o6 floor frame and corner wires and two hoops; pickets and floor wires are no longer drawn. The gate is its panel in its frame, the crate tray a plane in its frame with two 40 mm lips, each a mesh panel under its top wire (the o7.5 corner posts are below the feature).",
+          "de": "1:200 (kleinstes Detail 30 mm): der Korb besteht aus seinen durchscheinenden Gitterebenen, umrissen vom Randdraht o8, Bodenrahmen und Eckdrähten o6 und zwei Bügeln; Stäbe und Bodendrähte sind nicht mehr gezeichnet. Die Klappe ist ihre Tafel im Rahmen, die Kistenablage eine Ebene im Rahmen mit zwei 40 mm hohen Kanten, jede eine Gittertafel unter ihrem oberen Draht (die Eckpfosten o7,5 liegen unter dem Detailmaß)."
         },
         {
           "en": "The chassis tubes and struts are slender o25 and o18 rods (the rear bend and the front cross tube thickened to the 30 mm feature); each castor is a o125 x 32 wheel under one 60 mm housing block (plate, head, crown and fork merged); the handle is two o30 arms, one o35 grip bar over caps and tube, and the coin lock.",
@@ -9636,6 +9784,10 @@
         {
           "en": "Thermal: the drawn wires, tubes, wheels, castor blocks, grip and coin lock by reference, plus thermal-only wire bundles that keep the mesh surface the drawing omits (the 1:50 pickets, hoops, floor and tray wires merged into o18 bundles along the walls and floor and o12 tray bundles, the gate wires into three o16 bundles). Structure: tubes, struts, castors and wheels, rim, floor frame, corner wires, gate frame and handle as members, the hinge and four basket fixings as joints, contact pads, masses.",
           "de": "Thermik: die gezeichneten Drähte, Rohre, Räder, Rollenblöcke, Griff und Pfandschloss als Verweise, dazu rein thermische Drahtbündel, welche die von der Zeichnung weggelassene Gitteroberfläche erhalten (die Stäbe, Bügel, Boden- und Ablagedrähte von 1:50 zu Bündeln o18 entlang Wänden und Boden und Ablagebündeln o12, die Klappendrähte zu drei Bündeln o16). Tragwerk: Rohre, Stützen, Rollen und Räder, Rand, Bodenrahmen, Eckdrähte, Klappenrahmen und Griff als Stäbe, Scharnier und vier Korbbefestigungen als Gelenke, Kontaktflächen, Massen."
+        },
+        {
+          "en": "Castor forks swivel on their kingpin bones and the wheels turn on their axle bones, as at 1:50.",
+          "de": "Die Rollengabeln schwenken an ihren Königszapfenknochen und die Räder drehen an ihren Achsknochen wie in 1:50."
         }
       ]
     },
@@ -9670,6 +9822,19 @@
           "slender": true
         },
         {
+          "id": "strut-l",
+          "kind": "capsule",
+          "bone": "chassis",
+          "material": "zinc-tube",
+          "role": "body",
+          "tone": 0.62,
+          "p0": [0.595, 0.0125, 0.1987],
+          "p1": [0.557, 0.3945, 0.186],
+          "r0": 0.0095,
+          "r1": 0.0095,
+          "slender": true
+        },
+        {
           "id": "frame-r-1",
           "kind": "capsule",
           "bone": "chassis",
@@ -9696,6 +9861,19 @@
           "slender": true
         },
         {
+          "id": "strut-r",
+          "kind": "capsule",
+          "bone": "chassis",
+          "material": "zinc-tube",
+          "role": "body",
+          "tone": 0.62,
+          "p0": [0.595, 0.0125, -0.1987],
+          "p1": [0.557, 0.3945, -0.186],
+          "r0": 0.0095,
+          "r1": 0.0095,
+          "slender": true
+        },
+        {
           "id": "front-cross",
           "kind": "capsule",
           "bone": "chassis",
@@ -9709,61 +9887,13 @@
           "slender": true
         },
         {
-          "id": "castor-rear-l",
-          "kind": "extrude",
-          "bone": "chassis",
-          "material": "pu-tyre",
-          "role": "body",
-          "tone": 0.18,
-          "profile": [[0.075, -0.0125], [-0.005, -0.0125], [-0.005, -0.0575], [-0.054127, -0.07375], [-0.06155, -0.094147], [-0.06155, -0.115853], [-0.054127, -0.13625], [-0.040174, -0.152878], [-0.021376, -0.163731], [0.0, -0.1675], [0.021376, -0.163731], [0.040174, -0.152878], [0.054127, -0.13625], [0.06155, -0.115853], [0.06155, -0.094147], [0.054127, -0.07375], [0.075, -0.0575]],
-          "plane": "xy",
-          "from": 0.21,
-          "to": 0.285
-        },
-        {
-          "id": "castor-rear-r",
-          "kind": "extrude",
-          "bone": "chassis",
-          "material": "pu-tyre",
-          "role": "body",
-          "tone": 0.18,
-          "profile": [[0.075, -0.0125], [-0.005, -0.0125], [-0.005, -0.0575], [-0.054127, -0.07375], [-0.06155, -0.094147], [-0.06155, -0.115853], [-0.054127, -0.13625], [-0.040174, -0.152878], [-0.021376, -0.163731], [0.0, -0.1675], [0.021376, -0.163731], [0.040174, -0.152878], [0.054127, -0.13625], [0.06155, -0.115853], [0.06155, -0.094147], [0.054127, -0.07375], [0.075, -0.0575]],
-          "plane": "xy",
-          "from": -0.285,
-          "to": -0.21
-        },
-        {
-          "id": "castor-front-l",
-          "kind": "extrude",
-          "bone": "chassis",
-          "material": "pu-tyre",
-          "role": "body",
-          "tone": 0.18,
-          "profile": [[0.635, -0.0125], [0.555, -0.0125], [0.555, -0.0575], [0.505873, -0.07375], [0.49845, -0.094147], [0.49845, -0.115853], [0.505873, -0.13625], [0.519826, -0.152878], [0.538624, -0.163731], [0.56, -0.1675], [0.581376, -0.163731], [0.600174, -0.152878], [0.614127, -0.13625], [0.62155, -0.115853], [0.62155, -0.094147], [0.614127, -0.07375], [0.635, -0.0575]],
-          "plane": "xy",
-          "from": 0.1605,
-          "to": 0.2355
-        },
-        {
-          "id": "castor-front-r",
-          "kind": "extrude",
-          "bone": "chassis",
-          "material": "pu-tyre",
-          "role": "body",
-          "tone": 0.18,
-          "profile": [[0.635, -0.0125], [0.555, -0.0125], [0.555, -0.0575], [0.505873, -0.07375], [0.49845, -0.094147], [0.49845, -0.115853], [0.505873, -0.13625], [0.519826, -0.152878], [0.538624, -0.163731], [0.56, -0.1675], [0.581376, -0.163731], [0.600174, -0.152878], [0.614127, -0.13625], [0.62155, -0.115853], [0.62155, -0.094147], [0.614127, -0.07375], [0.635, -0.0575]],
-          "plane": "xy",
-          "from": -0.2355,
-          "to": -0.1605
-        },
-        {
           "id": "mesh-side-l",
           "kind": "extrude",
           "bone": "basket",
           "material": "zinc-wire",
           "role": "glazing",
           "tone": 0.6,
-          "profile": [[0.0, 0.0], [0.620968, -0.0], [0.891922, 0.301869], [-0.023198, 0.339023]],
+          "profile": [[0.0, 0.0], [0.620968, 0.0], [0.891922, 0.301869], [-0.023198, 0.339023]],
           "plane": "xy",
           "from": -0.0005,
           "to": 0.0005,
@@ -9779,7 +9909,7 @@
           "material": "zinc-wire",
           "role": "glazing",
           "tone": 0.6,
-          "profile": [[0.0, 0.0], [0.620968, -0.0], [0.891922, 0.301869], [-0.023198, 0.339023]],
+          "profile": [[0.0, 0.0], [0.620968, 0.0], [0.891922, 0.301869], [-0.023198, 0.339023]],
           "plane": "xy",
           "from": -0.0005,
           "to": 0.0005,
@@ -9913,6 +10043,202 @@
           "r0": 0.013,
           "r1": 0.013,
           "slender": true
+        },
+        {
+          "id": "wheel-rear-l",
+          "kind": "revolve",
+          "bone": "wheel-rear-l",
+          "material": "pu-tyre",
+          "role": "body",
+          "tone": 0.18,
+          "profile": [[-0.0375, 0.054], [-0.029, 0.0625], [0.029, 0.0625], [0.0375, 0.054]],
+          "axis": [0, 0, 1],
+          "origin": [0.0, 0.0, 0.0]
+        },
+        {
+          "id": "castor-housing-rear-l",
+          "kind": "box",
+          "bone": "castor-rear-l",
+          "material": "zinc-tube",
+          "role": "body",
+          "tone": 0.6,
+          "size": [0.075, 0.075, 0.075],
+          "transform": {
+            "translation": [0.0585, -0.0175, 0.0]
+          }
+        },
+        {
+          "id": "castor-block-rear-l",
+          "kind": "box",
+          "bone": "chassis",
+          "material": "zinc-tube",
+          "role": "body",
+          "tone": 0.6,
+          "size": [0.07, 0.021, 0.06],
+          "transform": {
+            "translation": [0.035, -0.023, 0.25]
+          },
+          "cornerRadius": 0.004
+        },
+        {
+          "id": "wheel-rear-r",
+          "kind": "revolve",
+          "bone": "wheel-rear-r",
+          "material": "pu-tyre",
+          "role": "body",
+          "tone": 0.18,
+          "profile": [[-0.0375, 0.054], [-0.029, 0.0625], [0.029, 0.0625], [0.0375, 0.054]],
+          "axis": [0, 0, 1],
+          "origin": [0.0, 0.0, 0.0]
+        },
+        {
+          "id": "castor-housing-rear-r",
+          "kind": "box",
+          "bone": "castor-rear-r",
+          "material": "zinc-tube",
+          "role": "body",
+          "tone": 0.6,
+          "size": [0.075, 0.075, 0.075],
+          "transform": {
+            "translation": [0.0585, -0.0175, 0.0]
+          }
+        },
+        {
+          "id": "castor-block-rear-r",
+          "kind": "box",
+          "bone": "chassis",
+          "material": "zinc-tube",
+          "role": "body",
+          "tone": 0.6,
+          "size": [0.07, 0.021, 0.06],
+          "transform": {
+            "translation": [0.035, -0.023, -0.25]
+          },
+          "cornerRadius": 0.004
+        },
+        {
+          "id": "wheel-front-l",
+          "kind": "revolve",
+          "bone": "wheel-front-l",
+          "material": "pu-tyre",
+          "role": "body",
+          "tone": 0.18,
+          "profile": [[-0.0375, 0.054], [-0.029, 0.0625], [0.029, 0.0625], [0.0375, 0.054]],
+          "axis": [0, 0, 1],
+          "origin": [0.0, 0.0, 0.0]
+        },
+        {
+          "id": "castor-housing-front-l",
+          "kind": "box",
+          "bone": "castor-front-l",
+          "material": "zinc-tube",
+          "role": "body",
+          "tone": 0.6,
+          "size": [0.075, 0.075, 0.075],
+          "transform": {
+            "translation": [0.0585, -0.0175, 0.0]
+          }
+        },
+        {
+          "id": "castor-block-front-l",
+          "kind": "box",
+          "bone": "chassis",
+          "material": "zinc-tube",
+          "role": "body",
+          "tone": 0.6,
+          "size": [0.07, 0.021, 0.06],
+          "transform": {
+            "translation": [0.595, -0.023, 0.198]
+          },
+          "cornerRadius": 0.004
+        },
+        {
+          "id": "wheel-front-r",
+          "kind": "revolve",
+          "bone": "wheel-front-r",
+          "material": "pu-tyre",
+          "role": "body",
+          "tone": 0.18,
+          "profile": [[-0.0375, 0.054], [-0.029, 0.0625], [0.029, 0.0625], [0.0375, 0.054]],
+          "axis": [0, 0, 1],
+          "origin": [0.0, 0.0, 0.0]
+        },
+        {
+          "id": "castor-housing-front-r",
+          "kind": "box",
+          "bone": "castor-front-r",
+          "material": "zinc-tube",
+          "role": "body",
+          "tone": 0.6,
+          "size": [0.075, 0.075, 0.075],
+          "transform": {
+            "translation": [0.0585, -0.0175, 0.0]
+          }
+        },
+        {
+          "id": "castor-block-front-r",
+          "kind": "box",
+          "bone": "chassis",
+          "material": "zinc-tube",
+          "role": "body",
+          "tone": 0.6,
+          "size": [0.07, 0.021, 0.06],
+          "transform": {
+            "translation": [0.595, -0.023, -0.198]
+          },
+          "cornerRadius": 0.004
+        },
+        {
+          "id": "bracket-rim-l",
+          "kind": "capsule",
+          "bone": "chassis",
+          "material": "zinc-wire",
+          "role": "detail",
+          "tone": 0.5,
+          "p0": [-0.2, 0.7075, 0.2725],
+          "p1": [-0.005, 0.7075, 0.2524],
+          "r0": 0.004,
+          "r1": 0.004,
+          "slender": true
+        },
+        {
+          "id": "bracket-floor-l",
+          "kind": "capsule",
+          "bone": "chassis",
+          "material": "zinc-wire",
+          "role": "detail",
+          "tone": 0.5,
+          "p0": [-0.1218, 0.3725, 0.2725],
+          "p1": [0.035, 0.3765, 0.2061],
+          "r0": 0.004,
+          "r1": 0.004,
+          "slender": true
+        },
+        {
+          "id": "bracket-rim-r",
+          "kind": "capsule",
+          "bone": "chassis",
+          "material": "zinc-wire",
+          "role": "detail",
+          "tone": 0.5,
+          "p0": [-0.2, 0.7075, -0.2725],
+          "p1": [-0.005, 0.7075, -0.2524],
+          "r0": 0.004,
+          "r1": 0.004,
+          "slender": true
+        },
+        {
+          "id": "bracket-floor-r",
+          "kind": "capsule",
+          "bone": "chassis",
+          "material": "zinc-wire",
+          "role": "detail",
+          "tone": 0.5,
+          "p0": [-0.1218, 0.3725, -0.2725],
+          "p1": [0.035, 0.3765, -0.2061],
+          "r0": 0.004,
+          "r1": 0.004,
+          "slender": true
         }
       ],
       "thermal": [
@@ -9940,26 +10266,6 @@
           "id": "th-front-cross",
           "of": "front-cross",
           "region": "frame-tube"
-        },
-        {
-          "id": "th-castor-rear-l",
-          "of": "castor-rear-l",
-          "region": "wheels"
-        },
-        {
-          "id": "th-castor-rear-r",
-          "of": "castor-rear-r",
-          "region": "wheels"
-        },
-        {
-          "id": "th-castor-front-l",
-          "of": "castor-front-l",
-          "region": "wheels"
-        },
-        {
-          "id": "th-castor-front-r",
-          "of": "castor-front-r",
-          "region": "wheels"
         },
         {
           "id": "th-rim-1",
@@ -10242,6 +10548,96 @@
           "r1": 0.01,
           "slender": true,
           "region": "gate-wire"
+        },
+        {
+          "id": "th-wheel-rear-l",
+          "of": "wheel-rear-l",
+          "region": "wheels"
+        },
+        {
+          "id": "th-castor-block-rear-l",
+          "of": "castor-block-rear-l",
+          "region": "frame-tube"
+        },
+        {
+          "id": "th-wheel-rear-r",
+          "of": "wheel-rear-r",
+          "region": "wheels"
+        },
+        {
+          "id": "th-castor-block-rear-r",
+          "of": "castor-block-rear-r",
+          "region": "frame-tube"
+        },
+        {
+          "id": "th-wheel-front-l",
+          "of": "wheel-front-l",
+          "region": "wheels"
+        },
+        {
+          "id": "th-castor-block-front-l",
+          "of": "castor-block-front-l",
+          "region": "frame-tube"
+        },
+        {
+          "id": "th-wheel-front-r",
+          "of": "wheel-front-r",
+          "region": "wheels"
+        },
+        {
+          "id": "th-castor-block-front-r",
+          "of": "castor-block-front-r",
+          "region": "frame-tube"
+        },
+        {
+          "id": "th-castor-housing-rear-l",
+          "of": "castor-housing-rear-l",
+          "region": "frame-tube"
+        },
+        {
+          "id": "th-castor-housing-rear-r",
+          "of": "castor-housing-rear-r",
+          "region": "frame-tube"
+        },
+        {
+          "id": "th-castor-housing-front-l",
+          "of": "castor-housing-front-l",
+          "region": "frame-tube"
+        },
+        {
+          "id": "th-castor-housing-front-r",
+          "of": "castor-housing-front-r",
+          "region": "frame-tube"
+        },
+        {
+          "id": "th-strut-l",
+          "of": "strut-l",
+          "region": "frame-tube"
+        },
+        {
+          "id": "th-strut-r",
+          "of": "strut-r",
+          "region": "frame-tube"
+        },
+        {
+          "id": "th-bracket-rim-l",
+          "of": "bracket-rim-l",
+          "region": "frame-tube"
+        },
+        {
+          "id": "th-bracket-floor-l",
+          "of": "bracket-floor-l",
+          "region": "frame-tube"
+        },
+        {
+          "id": "th-bracket-rim-r",
+          "of": "bracket-rim-r",
+          "region": "frame-tube"
+        },
+        {
+          "id": "th-bracket-floor-r",
+          "of": "bracket-floor-r",
+          "region": "frame-tube"
         }
       ],
       "structure": [
@@ -10272,30 +10668,6 @@
         {
           "id": "st-front-cross",
           "of": "front-cross",
-          "member": "chassis",
-          "part": "member"
-        },
-        {
-          "id": "st-castor-rear-l",
-          "of": "castor-rear-l",
-          "member": "chassis",
-          "part": "member"
-        },
-        {
-          "id": "st-castor-rear-r",
-          "of": "castor-rear-r",
-          "member": "chassis",
-          "part": "member"
-        },
-        {
-          "id": "st-castor-front-l",
-          "of": "castor-front-l",
-          "member": "chassis",
-          "part": "member"
-        },
-        {
-          "id": "st-castor-front-r",
-          "of": "castor-front-r",
           "member": "chassis",
           "part": "member"
         },
@@ -10351,66 +10723,6 @@
           "part": "joint"
         },
         {
-          "id": "support-wheel-rear-left",
-          "kind": "box",
-          "bone": "chassis",
-          "material": "pu-tyre",
-          "role": "ground",
-          "tone": 0.3,
-          "size": [0.075, 0.075, 0.075],
-          "transform": {
-            "translation": [0.0, -0.13, 0.2475]
-          },
-          "member": "chassis",
-          "part": "support",
-          "anchor": "wheel-rear-left"
-        },
-        {
-          "id": "support-wheel-rear-right",
-          "kind": "box",
-          "bone": "chassis",
-          "material": "pu-tyre",
-          "role": "ground",
-          "tone": 0.3,
-          "size": [0.075, 0.075, 0.075],
-          "transform": {
-            "translation": [0.0, -0.13, -0.2475]
-          },
-          "member": "chassis",
-          "part": "support",
-          "anchor": "wheel-rear-right"
-        },
-        {
-          "id": "support-wheel-front-left",
-          "kind": "box",
-          "bone": "chassis",
-          "material": "pu-tyre",
-          "role": "ground",
-          "tone": 0.3,
-          "size": [0.075, 0.075, 0.075],
-          "transform": {
-            "translation": [0.56, -0.13, 0.198]
-          },
-          "member": "chassis",
-          "part": "support",
-          "anchor": "wheel-front-left"
-        },
-        {
-          "id": "support-wheel-front-right",
-          "kind": "box",
-          "bone": "chassis",
-          "material": "pu-tyre",
-          "role": "ground",
-          "tone": 0.3,
-          "size": [0.075, 0.075, 0.075],
-          "transform": {
-            "translation": [0.56, -0.13, -0.198]
-          },
-          "member": "chassis",
-          "part": "support",
-          "anchor": "wheel-front-right"
-        },
-        {
           "id": "mass-basket",
           "kind": "ellipsoid",
           "bone": "basket",
@@ -10440,73 +10752,335 @@
         },
         {
           "id": "mass-castor-rear-l",
-          "kind": "ellipsoid",
+          "kind": "polyhedron",
           "bone": "chassis",
           "material": "zinc-tube",
           "role": "detail",
           "tone": 0.5,
-          "radii": [0.0375, 0.0375, 0.0375],
           "transform": {
             "translation": [0.018, -0.0675, 0.25]
           },
           "member": "chassis",
-          "part": "mass"
+          "part": "mass",
+          "vertices": [[0.016, 0, 0], [0, 0, 0.016], [-0.016, 0, 0], [0, 0, -0.016], [0, 0.016, 0], [0, -0.016, 0]],
+          "triangles": [[4, 1, 0], [4, 2, 1], [4, 3, 2], [4, 0, 3], [5, 0, 1], [5, 1, 2], [5, 2, 3], [5, 3, 0]]
         },
         {
           "id": "mass-castor-rear-r",
-          "kind": "ellipsoid",
+          "kind": "polyhedron",
           "bone": "chassis",
           "material": "zinc-tube",
           "role": "detail",
           "tone": 0.5,
-          "radii": [0.0375, 0.0375, 0.0375],
           "transform": {
             "translation": [0.018, -0.0675, -0.25]
           },
           "member": "chassis",
-          "part": "mass"
+          "part": "mass",
+          "vertices": [[0.016, 0, 0], [0, 0, 0.016], [-0.016, 0, 0], [0, 0, -0.016], [0, 0.016, 0], [0, -0.016, 0]],
+          "triangles": [[4, 1, 0], [4, 2, 1], [4, 3, 2], [4, 0, 3], [5, 0, 1], [5, 1, 2], [5, 2, 3], [5, 3, 0]]
         },
         {
           "id": "mass-castor-front-l",
-          "kind": "ellipsoid",
+          "kind": "polyhedron",
           "bone": "chassis",
           "material": "zinc-tube",
           "role": "detail",
           "tone": 0.5,
-          "radii": [0.0375, 0.0375, 0.0375],
           "transform": {
             "translation": [0.578, -0.0675, 0.198]
           },
           "member": "chassis",
-          "part": "mass"
+          "part": "mass",
+          "vertices": [[0.016, 0, 0], [0, 0, 0.016], [-0.016, 0, 0], [0, 0, -0.016], [0, 0.016, 0], [0, -0.016, 0]],
+          "triangles": [[4, 1, 0], [4, 2, 1], [4, 3, 2], [4, 0, 3], [5, 0, 1], [5, 1, 2], [5, 2, 3], [5, 3, 0]]
         },
         {
           "id": "mass-castor-front-r",
-          "kind": "ellipsoid",
+          "kind": "polyhedron",
           "bone": "chassis",
           "material": "zinc-tube",
           "role": "detail",
           "tone": 0.5,
-          "radii": [0.0375, 0.0375, 0.0375],
           "transform": {
             "translation": [0.578, -0.0675, -0.198]
           },
           "member": "chassis",
-          "part": "mass"
+          "part": "mass",
+          "vertices": [[0.016, 0, 0], [0, 0, 0.016], [-0.016, 0, 0], [0, 0, -0.016], [0, 0.016, 0], [0, -0.016, 0]],
+          "triangles": [[4, 1, 0], [4, 2, 1], [4, 3, 2], [4, 0, 3], [5, 0, 1], [5, 1, 2], [5, 2, 3], [5, 3, 0]]
+        },
+        {
+          "id": "support-wheel-rear-l",
+          "member": "chassis",
+          "part": "support",
+          "anchor": "wheel-rear-left",
+          "kind": "box",
+          "bone": "chassis",
+          "material": "pu-tyre",
+          "role": "ground",
+          "tone": 0.3,
+          "size": [0.03, 0.03, 0.03],
+          "transform": {
+            "translation": [0.0, -0.1525, 0.25]
+          }
+        },
+        {
+          "id": "st-castor-block-rear-l",
+          "of": "castor-block-rear-l",
+          "member": "chassis",
+          "part": "member"
+        },
+        {
+          "id": "support-wheel-rear-r",
+          "member": "chassis",
+          "part": "support",
+          "anchor": "wheel-rear-right",
+          "kind": "box",
+          "bone": "chassis",
+          "material": "pu-tyre",
+          "role": "ground",
+          "tone": 0.3,
+          "size": [0.03, 0.03, 0.03],
+          "transform": {
+            "translation": [0.0, -0.1525, -0.25]
+          }
+        },
+        {
+          "id": "st-castor-block-rear-r",
+          "of": "castor-block-rear-r",
+          "member": "chassis",
+          "part": "member"
+        },
+        {
+          "id": "support-wheel-front-l",
+          "member": "chassis",
+          "part": "support",
+          "anchor": "wheel-front-left",
+          "kind": "box",
+          "bone": "chassis",
+          "material": "pu-tyre",
+          "role": "ground",
+          "tone": 0.3,
+          "size": [0.03, 0.03, 0.03],
+          "transform": {
+            "translation": [0.5599999999999999, -0.1525, 0.198]
+          }
+        },
+        {
+          "id": "st-castor-block-front-l",
+          "of": "castor-block-front-l",
+          "member": "chassis",
+          "part": "member"
+        },
+        {
+          "id": "support-wheel-front-r",
+          "member": "chassis",
+          "part": "support",
+          "anchor": "wheel-front-right",
+          "kind": "box",
+          "bone": "chassis",
+          "material": "pu-tyre",
+          "role": "ground",
+          "tone": 0.3,
+          "size": [0.03, 0.03, 0.03],
+          "transform": {
+            "translation": [0.5599999999999999, -0.1525, -0.198]
+          }
+        },
+        {
+          "id": "st-castor-block-front-r",
+          "of": "castor-block-front-r",
+          "member": "chassis",
+          "part": "member"
+        },
+        {
+          "id": "st-castor-housing-rear-l",
+          "of": "castor-housing-rear-l",
+          "member": "castor-rear-l",
+          "part": "member"
+        },
+        {
+          "id": "st-wheel-rear-l",
+          "of": "wheel-rear-l",
+          "member": "wheel-rear-l",
+          "part": "member"
+        },
+        {
+          "id": "st-castor-housing-rear-r",
+          "of": "castor-housing-rear-r",
+          "member": "castor-rear-r",
+          "part": "member"
+        },
+        {
+          "id": "st-wheel-rear-r",
+          "of": "wheel-rear-r",
+          "member": "wheel-rear-r",
+          "part": "member"
+        },
+        {
+          "id": "st-castor-housing-front-l",
+          "of": "castor-housing-front-l",
+          "member": "castor-front-l",
+          "part": "member"
+        },
+        {
+          "id": "st-wheel-front-l",
+          "of": "wheel-front-l",
+          "member": "wheel-front-l",
+          "part": "member"
+        },
+        {
+          "id": "st-castor-housing-front-r",
+          "of": "castor-housing-front-r",
+          "member": "castor-front-r",
+          "part": "member"
+        },
+        {
+          "id": "st-wheel-front-r",
+          "of": "wheel-front-r",
+          "member": "wheel-front-r",
+          "part": "member"
+        },
+        {
+          "id": "st-strut-l",
+          "of": "strut-l",
+          "member": "chassis",
+          "part": "member"
+        },
+        {
+          "id": "st-strut-r",
+          "of": "strut-r",
+          "member": "chassis",
+          "part": "member"
+        },
+        {
+          "id": "st-bracket-rim-l",
+          "of": "bracket-rim-l",
+          "member": "chassis",
+          "part": "member"
+        },
+        {
+          "id": "st-bracket-floor-l",
+          "of": "bracket-floor-l",
+          "member": "chassis",
+          "part": "member"
+        },
+        {
+          "id": "st-floor-edge-l",
+          "kind": "capsule",
+          "bone": "basket",
+          "material": "zinc-wire",
+          "role": "detail",
+          "tone": 0.55,
+          "p0": [0.0, 0.0, 0.21],
+          "p1": [0.62, 0.025, 0.186],
+          "r0": 0.004,
+          "r1": 0.004,
+          "slender": true,
+          "member": "basket",
+          "part": "member"
+        },
+        {
+          "id": "st-corner-rear-l",
+          "kind": "capsule",
+          "bone": "basket",
+          "material": "zinc-wire",
+          "role": "detail",
+          "tone": 0.55,
+          "p0": [0.0, 0.0, 0.21],
+          "p1": [-0.035, 0.335, 0.255],
+          "r0": 0.004,
+          "r1": 0.004,
+          "slender": true,
+          "member": "basket",
+          "part": "member"
+        },
+        {
+          "id": "st-corner-front-l",
+          "kind": "capsule",
+          "bone": "basket",
+          "material": "zinc-wire",
+          "role": "detail",
+          "tone": 0.55,
+          "p0": [0.62, 0.025, 0.186],
+          "p1": [0.88, 0.335, 0.215],
+          "r0": 0.004,
+          "r1": 0.004,
+          "slender": true,
+          "member": "basket",
+          "part": "member"
+        },
+        {
+          "id": "st-bracket-rim-r",
+          "of": "bracket-rim-r",
+          "member": "chassis",
+          "part": "member"
+        },
+        {
+          "id": "st-bracket-floor-r",
+          "of": "bracket-floor-r",
+          "member": "chassis",
+          "part": "member"
+        },
+        {
+          "id": "st-floor-edge-r",
+          "kind": "capsule",
+          "bone": "basket",
+          "material": "zinc-wire",
+          "role": "detail",
+          "tone": 0.55,
+          "p0": [0.0, 0.0, -0.21],
+          "p1": [0.62, 0.025, -0.186],
+          "r0": 0.004,
+          "r1": 0.004,
+          "slender": true,
+          "member": "basket",
+          "part": "member"
+        },
+        {
+          "id": "st-corner-rear-r",
+          "kind": "capsule",
+          "bone": "basket",
+          "material": "zinc-wire",
+          "role": "detail",
+          "tone": 0.55,
+          "p0": [0.0, 0.0, -0.21],
+          "p1": [-0.035, 0.335, -0.255],
+          "r0": 0.004,
+          "r1": 0.004,
+          "slender": true,
+          "member": "basket",
+          "part": "member"
+        },
+        {
+          "id": "st-corner-front-r",
+          "kind": "capsule",
+          "bone": "basket",
+          "material": "zinc-wire",
+          "role": "detail",
+          "tone": 0.55,
+          "p0": [0.62, 0.025, -0.186],
+          "p1": [0.88, 0.335, -0.215],
+          "r0": 0.004,
+          "r1": 0.004,
+          "slender": true,
+          "member": "basket",
+          "part": "member"
         }
       ],
       "decisions": [
         {
-          "en": "1:500 (feature 75 mm): the basket is its four translucent mesh planes with the rim; the gate its panel with one frame line; the chassis two slender o25 rods from the o19 front cross rod along the rails and straight up to the handle corner 12 mm behind the grip axis (bends and arms are below the feature); each castor one 75 mm block of wheel, fork and plate; the handle one slender bar.",
-          "de": "1:500 (kleinstes Detail 75 mm): der Korb besteht aus seinen vier durchscheinenden Gitterebenen mit dem Rand; die Klappe aus ihrer Tafel mit einer Rahmenlinie; das Fahrgestell aus zwei schlanken Stäben o25 vom vorderen Querstab o19 die Holme entlang und gerade hinauf zur Griffecke 12 mm hinter der Griffachse (Bögen und Arme liegen unter dem Detailmaß); jede Rolle ist ein Block von 75 mm aus Rad, Gabel und Platte; der Griff eine schlanke Stange."
+          "en": "1:500 (feature 75 mm): the basket is its four translucent mesh planes and the gate panel inside the o8 rim. Two straight o25 rails run from the front cross tube to the rear bend, the uprights run straight to the handle bar (the 80 mm handle arms are merged into them); two o19 front struts and four o8 fixing wires at rim and floor carry the basket on the frame, so nothing floats.",
+          "de": "1:500 (kleinstes Detail 75 mm): der Korb besteht aus seinen vier durchscheinenden Gitterebenen und der Klappentafel im Randdraht o8. Zwei gerade Holme o25 laufen vom vorderen Querrohr zum hinteren Bogen, die Stützen laufen gerade bis zur Griffstange (die 80 mm langen Griffarme sind darin aufgegangen); zwei vordere Stützen o19 und vier Befestigungsdrähte o8 an Rand und Boden tragen den Korb am Rahmen, nichts schwebt."
         },
         {
-          "en": "Merged: struts, tray, brackets, coin lock and caps are dropped (below 75 mm or hidden under the basket).",
-          "de": "Zusammengefasst: Stützen, Ablage, Laschen, Pfandschloss und Kappen entfallen (unter 75 mm oder unter dem Korb verborgen)."
+          "en": "Each castor is one o125 x 75 wheel on its axle bone under one 75 mm fork housing on the swivelling kingpin bone and the 21 mm swivel block on the rail; fork legs, crown, axle, hub ribs, tray, coin lock, caps and every mesh wire are below 75 mm and dropped.",
+          "de": "Jede Rolle ist ein Rad o125 x 75 an seinem Achsknochen unter einem Gabelgehäuse von 75 mm am schwenkenden Königszapfenknochen und dem Schwenkblock von 21 mm am Holm; Gabelschenkel, Brücke, Achse, Nabenrippen, Ablage, Pfandschloss, Kappen und alle Gitterdrähte liegen unter 75 mm und entfallen."
         },
         {
-          "en": "Thermal: rods, rim, gate frame and castor blocks by reference, plus a thermal-only slender o27 grip sleeve over the bar and wire bundles that keep the mesh and gate surface. Structure: the rods, rim, gate frame, castor blocks and handle bar as members, the hinge joint, 75 mm contact blocks at the wheel anchors, castor, basket and handle masses.",
-          "de": "Thermik: Stäbe, Rand, Klappenrahmen und Rollenblöcke als Verweise, dazu eine rein thermische schlanke Griffhülse o27 über der Stange und Drahtbündel, welche die Gitter- und Klappenoberfläche erhalten. Tragwerk: die Stäbe, Rand, Klappenrahmen, Rollenblöcke und Griffstange als Stäbe, das Scharniergelenk, Kontaktblöcke von 75 mm an den Radankern, Massen der Rollen, des Korbs und des Griffs."
+          "en": "Thermal: tubes, struts, fixings, rim, gate frame, castors and wheels by reference, the grip as its own skin over the handle bar, and thermal-only wire bundles that keep the mesh surface of walls, floor and gate. Structure: the load path is closed from the goods to the ground: floor edges, corner wires and rim form the basket cage, it hangs on the uprights at rim and floor and stands on the struts, rails and cross tube carry it to the swivel blocks, housings and wheels, with pads at the four wheel contacts and the masses at their centres.",
+          "de": "Thermik: Rohre, Stützen, Befestigungen, Rand, Klappenrahmen, Rollen und Räder als Verweise, der Griff als eigene Haut über der Griffstange, dazu rein thermische Drahtbündel, welche die Gitteroberfläche von Wänden, Boden und Klappe erhalten. Tragwerk: der Lastpfad ist von der Ware bis zum Boden geschlossen: Bodenkanten, Eckdrähte und Rand bilden den Korbkäfig, er hängt an Rand und Boden an den Stützen und steht auf den vorderen Stützen, Holme und Querrohr tragen ihn zu Schwenkblöcken, Gehäusen und Rädern, mit Kontaktflächen an den vier Radaufstandspunkten und den Massen in ihren Schwerpunkten."
         }
       ]
     }

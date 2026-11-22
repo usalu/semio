@@ -9,29 +9,79 @@
 
 import type { IntroductionDefinition, IntroductionStepDefinition } from "@semio-tech/framework";
 import type { HubConnectionStorageV1 } from "../🔐️sign-in/🟦️.ts";
+import contract from "./🔣️.json" with { type: "json" };
 
 //#region 🔖️Anchors
+/** 🧬️ The language-neutral contract (`🔣️.json`, shape `🧬️.schema.json`): stages, anchors per target, step
+ * structure, localized text, the seen-flag key and the two workspace controls. The Rust twin
+ * (`🎓️HubFirstRun/🎯️targets/🧊️wgpu/🦀️.rs`) reads the very same file, and both are held to the shared
+ * vectors in `🧪️tests/🧫️fixtures/🔣️.json`. */
+interface HubFirstRunAnchorSetV1 {
+  readonly signIn: string;
+  readonly signInSupport: readonly string[];
+  readonly space: string;
+  readonly spaceSupport: readonly string[];
+  readonly invite: string;
+  readonly inviteSupport: readonly string[];
+  readonly redeemField: string;
+  readonly celebrate: Readonly<Record<"signIn" | "space" | "redeem" | "invite", string | null>>;
+}
+interface HubFirstRunStepDataV1 {
+  readonly stage: HubFirstRunStageV1;
+  readonly title: keyof HubFirstRunTextRowV1;
+  readonly body: keyof HubFirstRunTextRowV1;
+  readonly placement: IntroductionStepDefinition["placement"];
+  readonly introduce: "signIn" | "space" | "invite" | null;
+  readonly show: "signInSupport" | "spaceSupport" | "inviteSupport" | null;
+  readonly interactions: readonly { readonly on: "signIn" | "space" | "invite" | "redeemField"; readonly label: keyof HubFirstRunTextRowV1; readonly celebrate: "signIn" | "space" | "redeem" | "invite" }[];
+}
+interface HubFirstRunControlDataV1 {
+  readonly id: string;
+  readonly icon: string;
+  readonly variant: "ghost" | "outline";
+  readonly label: Readonly<Record<"en" | "de", string>>;
+}
+interface HubFirstRunContractV1 {
+  readonly introductionId: string;
+  readonly storageKeyPrefix: string;
+  readonly seenValue: string;
+  readonly stepIdPrefix: string;
+  readonly stages: readonly HubFirstRunStageV1[];
+  readonly anchors: Readonly<Record<"react" | "wgpu", HubFirstRunAnchorSetV1>>;
+  readonly steps: readonly HubFirstRunStepDataV1[];
+  readonly completion: Readonly<Record<HubFirstRunStageV1, "never" | "signedIn" | "spaceOpen" | "inviteReady">>;
+  readonly text: Readonly<Record<"en" | "de", HubFirstRunTextRowV1>>;
+  readonly controls: Readonly<{ replay: HubFirstRunControlDataV1; close: HubFirstRunControlDataV1; order: readonly ("replay" | "close")[] }>;
+}
+const DATA = contract as unknown as HubFirstRunContractV1;
+
 /** 🎯️ The live element ids this tour raises above the glass, owned by `🔐️HubSignIn`
  * (`os.hub.signIn.*`) and `🏘️SpaceBrowser` (`os.hub.spaces.*`, `os.hub.invite.*`). A step whose
  * anchor is not mounted degrades to a centered screen step in `UIIntroduction`; it never throws and
  * never blocks the tour, which is what keeps this safe at phone width where the spaces list and the
  * invite pane are not on screen at the same time. */
 export const HUB_FIRST_RUN_ANCHORS_V1 = {
-  signIn: "os.hub.signIn.email",
-  signInSupport: ["os.hub.signIn.password", "os.hub.signIn.submit", "os.hub.signIn.hub"],
-  space: "os.hub.spaces.createName",
-  spaceSupport: ["os.hub.spaces.createSubmit", "os.hub.spaces.list", "os.hub.invite.redeemField"],
-  invite: "os.hub.invite.create",
-  inviteSupport: ["os.hub.invite.role", "os.hub.invite.expiry", "os.hub.invite.copy"],
+  signIn: DATA.anchors.react.signIn,
+  signInSupport: DATA.anchors.react.signInSupport,
+  space: DATA.anchors.react.space,
+  spaceSupport: DATA.anchors.react.spaceSupport,
+  invite: DATA.anchors.react.invite,
+  inviteSupport: DATA.anchors.react.inviteSupport,
 } as const;
+
+/** 🎛️ The two workspace controls in render order — `os.hub.firstRun.replay` then `os.hub.signIn.cancel` —
+ * with their icon, variant and en/de label, so `HubWorkspace` and the wgpu workspace compose the same
+ * row from one definition. */
+export const HUB_FIRST_RUN_CONTROLS_V1 = DATA.controls;
 //#endregion 🔖️Anchors
+
 
 //#region 🔖️Stages
 /** 🪜️ The ordered stages of the hub flow. `done` is not a task — it is the terminal step that closes
  * the tour, so `HUB_FIRST_RUN_STAGES_V1.indexOf(stage)` is also the step index. */
-export const HUB_FIRST_RUN_STAGES_V1 = ["welcome", "signIn", "space", "invite", "done"] as const;
+export type HubFirstRunStageV1 = "welcome" | "signIn" | "space" | "invite" | "done";
 
-export type HubFirstRunStageV1 = (typeof HUB_FIRST_RUN_STAGES_V1)[number];
+export const HUB_FIRST_RUN_STAGES_V1: readonly HubFirstRunStageV1[] = DATA.stages;
 
 /** 🧭️ What the shell knows about the person's hub right now. Every field is something
  * `useHubConnection` already holds; this module reads it, never fetches it. */
@@ -75,73 +125,41 @@ export function hubFirstRunStateFromV1(
     canInvite: open === null ? rows.some((row) => row.access === "author") : open.access === "author",
   };
 }
+/** ✅️ The one completion rule both renderers share (`🔣️.json` `completion`, vectors `completionVectors`):
+ * whether the person has just done what `stage` teaches — signed in, a space open, an invite ready.
+ * The welcome and done screens are never completed by doing; they advance by button only. */
+export function hubFirstRunStageDoneV1(stage: HubFirstRunStageV1, state: HubFirstRunStateV1, inviteReady: boolean): boolean {
+  switch (DATA.completion[stage]) {
+    case "signedIn":
+      return state.signedIn;
+    case "spaceOpen":
+      return state.signedIn && state.openSpaceId !== null;
+    case "inviteReady":
+      return inviteReady;
+    default:
+      return false;
+  }
+}
 //#endregion 🔖️Stages
 
 //#region 🔖️Text
 /** 🌐️ English first, German second, no default language — an unowned locale is refused rather than
  * silently downgraded, exactly as `hubSignInTextV1` refuses one (`AGENTS.md`: "multiple languages
  * with no default language"). Both locales carry the same keys; the component test asserts that. */
-export const HUB_FIRST_RUN_TEXT_V1 = {
-  en: {
-    title: "Working together on a hub",
-    welcomeTitle: "What a hub gives you",
-    welcomeBody:
-      "A hub is a server that holds shared spaces. Everyone signed into the same space sees the same documents, sees each other's cursors, and edits at the same time. Your work stays available locally even when the hub is unreachable.",
-    signInTitle: "Sign in",
-    signInBody: "Enter the email and password for your account on this hub. If you run the hub yourself, the first account is created with `os-hub credential set`. You can add more than one hub and switch between them.",
-    signInTask: "Sign in to a hub",
-    spaceTitle: "Create or join a space",
-    spaceBody: "A space is one team's shared room. Name a new one to start your own, or paste an invite code someone sent you to join theirs.",
-    spaceTaskCreate: "Create a space",
-    spaceTaskJoin: "Or redeem an invite",
-    inviteTitle: "Invite someone",
-    inviteBody: "Create an invite, choose what the other person may do and how long the code stays valid, then send them the code. They redeem it in the same place you did.",
-    inviteTask: "Create an invite",
-    doneTitle: "That is the whole flow",
-    doneBody: "Sign in, be in a space, invite the people you work with. Reopen this walkthrough any time from the command palette.",
-  },
-  de: {
-    title: "Gemeinsam auf einem Hub arbeiten",
-    welcomeTitle: "Wofür ein Hub da ist",
-    welcomeBody:
-      "Ein Hub ist ein Server mit gemeinsamen Räumen. Alle, die im selben Raum angemeldet sind, sehen dieselben Dokumente, sehen die Cursor der anderen und bearbeiten gleichzeitig. Deine Arbeit bleibt lokal verfügbar, auch wenn der Hub nicht erreichbar ist.",
-    signInTitle: "Anmelden",
-    signInBody: "Gib E-Mail und Passwort deines Kontos auf diesem Hub ein. Wenn du den Hub selbst betreibst, wird das erste Konto mit `os-hub credential set` angelegt. Du kannst mehrere Hubs hinterlegen und zwischen ihnen wechseln.",
-    signInTask: "Bei einem Hub anmelden",
-    spaceTitle: "Raum erstellen oder beitreten",
-    spaceBody: "Ein Raum ist der gemeinsame Arbeitsraum eines Teams. Vergib einen Namen für einen eigenen Raum oder füge einen Einladungscode ein, den dir jemand geschickt hat.",
-    spaceTaskCreate: "Einen Raum erstellen",
-    spaceTaskJoin: "Oder eine Einladung einlösen",
-    inviteTitle: "Jemanden einladen",
-    inviteBody: "Erstelle eine Einladung, lege fest, was die andere Person darf und wie lange der Code gültig bleibt, und schicke ihr den Code. Sie löst ihn an derselben Stelle ein wie du.",
-    inviteTask: "Eine Einladung erstellen",
-    doneTitle: "Das ist der ganze Ablauf",
-    doneBody: "Anmelden, in einem Raum sein, die Leute einladen, mit denen du arbeitest. Diese Einführung lässt sich jederzeit über die Befehlspalette erneut öffnen.",
-  },
-} as const;
+export const HUB_FIRST_RUN_TEXT_V1: Readonly<Record<"en" | "de", HubFirstRunTextRowV1>> = DATA.text;
 
-export type HubFirstRunLocaleV1 = keyof typeof HUB_FIRST_RUN_TEXT_V1;
+export type HubFirstRunTextRowV1 = Readonly<Record<"title" | "welcomeTitle" | "welcomeBody" | "signInTitle" | "signInBody" | "signInTask" | "spaceTitle" | "spaceBody" | "spaceTaskCreate" | "spaceTaskJoin" | "inviteTitle" | "inviteBody" | "inviteTask" | "doneTitle" | "doneBody", string>>;
+
+export type HubFirstRunLocaleV1 = "en" | "de";
 
 /** 🔡️ Refuses unowned locales instead of silently selecting a default language. */
-export function hubFirstRunTextV1(locale: string): (typeof HUB_FIRST_RUN_TEXT_V1)[HubFirstRunLocaleV1] {
+export function hubFirstRunTextV1(locale: string): HubFirstRunTextRowV1 {
   if (locale !== "en" && locale !== "de") throw new Error("hub.first-run.locale-unsupported");
   return HUB_FIRST_RUN_TEXT_V1[locale];
 }
 //#endregion 🔖️Text
 
 //#region 🔖️Definition
-function step(
-  id: HubFirstRunStageV1,
-  title: string,
-  body: string,
-  introduce: string | null,
-  show: readonly string[],
-  placement: IntroductionStepDefinition["placement"],
-  interactions: IntroductionStepDefinition["interactions"],
-): IntroductionStepDefinition {
-  return { id: `hub.firstRun.${id}`, title, body, introduce, show: [...show], placement, interactions, ordered: false, logos: [] };
-}
-
 /** 🎓️ The whole hub walkthrough, already localized, in stage order. The two screen steps
  * (`welcome`, `done`) carry no anchor so they render centered on any viewport; the three task steps
  * anchor to the live controls and list their work as checklist rows. Interactions are `panel` kinds
@@ -149,23 +167,20 @@ function step(
  * Next — the mechanism `IntroductionInteractionKind` already defines. */
 export function hubFirstRunIntroductionV1(locale: string): IntroductionDefinition {
   const text = hubFirstRunTextV1(locale);
-  const anchors = HUB_FIRST_RUN_ANCHORS_V1;
+  const anchors = DATA.anchors.react;
   return {
     title: text.title,
-    steps: [
-      step("welcome", text.welcomeTitle, text.welcomeBody, null, [], "center", []),
-      step("signIn", text.signInTitle, text.signInBody, anchors.signIn, anchors.signInSupport, "bottom", [
-        { on: { kind: "panel", id: anchors.signIn }, label: text.signInTask, celebrate: "os.hub.signIn.signedInAs" },
-      ]),
-      step("space", text.spaceTitle, text.spaceBody, anchors.space, anchors.spaceSupport, "bottom", [
-        { on: { kind: "panel", id: anchors.space }, label: text.spaceTaskCreate, celebrate: "os.hub.spaces.current" },
-        { on: { kind: "panel", id: "os.hub.invite.redeemField" }, label: text.spaceTaskJoin, celebrate: "os.hub.invite.redeemed" },
-      ]),
-      step("invite", text.inviteTitle, text.inviteBody, anchors.invite, anchors.inviteSupport, "bottom", [
-        { on: { kind: "panel", id: anchors.invite }, label: text.inviteTask, celebrate: "os.hub.invite.ready" },
-      ]),
-      step("done", text.doneTitle, text.doneBody, null, [], "center", []),
-    ],
+    steps: DATA.steps.map((row): IntroductionStepDefinition => ({
+      id: `${DATA.stepIdPrefix}${row.stage}`,
+      title: text[row.title],
+      body: text[row.body],
+      introduce: row.introduce === null ? null : anchors[row.introduce],
+      show: row.show === null ? [] : [...anchors[row.show]],
+      placement: row.placement,
+      interactions: row.interactions.map((interaction) => ({ on: { kind: "panel", id: anchors[interaction.on] }, label: text[interaction.label], celebrate: anchors.celebrate[interaction.celebrate] ?? undefined })),
+      ordered: false,
+      logos: [],
+    })),
   };
 }
 //#endregion 🔖️Definition
@@ -182,9 +197,9 @@ export function hubFirstRunIntroductionV1(locale: string): IntroductionDefinitio
  * introductions or reading "has this person been introduced to X" must find it. This module restates
  * the key instead of importing those helpers only because it is pure TS with no React dependency —
  * a law cross-checks the two against each other so the restatement cannot drift. */
-export const HUB_FIRST_RUN_INTRODUCTION_ID_V1 = "os.hub";
-export const HUB_FIRST_RUN_STORAGE_KEY_V1 = `ui.introduction.seen.${HUB_FIRST_RUN_INTRODUCTION_ID_V1}`;
-export const HUB_FIRST_RUN_SEEN_VALUE_V1 = "true";
+export const HUB_FIRST_RUN_INTRODUCTION_ID_V1 = DATA.introductionId;
+export const HUB_FIRST_RUN_STORAGE_KEY_V1 = `${DATA.storageKeyPrefix}${DATA.introductionId}`;
+export const HUB_FIRST_RUN_SEEN_VALUE_V1 = DATA.seenValue;
 
 /** 🔎️ Whether the tour has already run for this profile. A throwing or absent store reads `false`
  * (show the tour) rather than propagating — first-run must never be the thing that breaks the shell. */

@@ -1,0 +1,15 @@
+label	min_x	min_y	min_z	max_x	max_y	max_z	inner_min_x	inner_min_y	inner_min_z	inner_max_x	inner_max_y	inner_max_z	outer_valid	inner_valid	contains
+same	0	0	0	1	1	1	0	0	0	1	1	1	1	1	1
+nested	-2	-2	-2	2	2	2	-1	-1	-1	1	1	1	1	1	1
+one_child_face	0	0	0	5	5	5	1	1	1	2	2	5	1	1	1
+one_limit_exceeded	0	0	0	5	5	5	1	1	1	2	2	5.1	1	1	0
+wrong_origin	-5	-6	-7	-4	-5	-6	0	0	0	1	1	1	1	1	0
+outer_two_inverted_axes	2	2	0	1	1	8	0	0	0	1	1	1	0	1	0
+inner_two_inverted_axes	0	0	0	8	8	8	2	2	0	1	1	3	1	0	0
+outer_zero_thickness	0	0	0	1	1	0	0	0	0	1	1	1	0	1	0
+inner_zero_thickness	0	0	0	2	2	2	0	0	1	1	1	1	1	0	0
+nan	0	0	0	1	NaN	1	0	0	0	1	1	1	0	1	0
+infinite	-infinity	0	0	1	1	1	0	0	0	1	1	1	0	1	0
+extent_overflow	-1.5E308	0	0	1.5E308	1	1	0	0	0	1	1	1	0	1	0
+far_contained	100000.125	-1	-1	100000.375	1	1	100000.25	0	0	100000.31	1	1	1	1	1
+volume_underflow	0	0	0	1E-300	1E-300	1E-300	0	0	0	1	1	1	0	1	0

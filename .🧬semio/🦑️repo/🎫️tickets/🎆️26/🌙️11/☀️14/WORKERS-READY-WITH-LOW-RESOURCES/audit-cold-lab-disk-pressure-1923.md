@@ -1,0 +1,9 @@
+# Cold Lab Disk Pressure at 19:23 UTC
+
+Native fleet status at 19:23:52 UTC reported 15,273,717,760 host free bytes, 44,855,824,384 below the isolated lab requirement of 60,129,542,144. Rust image used 42,833,526,784 of 42,948,624,384 bytes; products used 10,495,021,056 bytes. The ledger estimates 13,817,854,496 evictable bytes, less than the gap and not proof of physical blocks recoverable under active custody. These are instantaneous samples.
+
+The `repo cache gc` contract collects eligible loose units, excludes held or recent units and returns host blocks from idle images. Cargo-owned contents are left to their owner. Fleet reports cargo PID 34318 with child 45681 holding shared Rust prototype/compiler custody, and PID 41475 holding an isolated Rust prototype/CPU slot, classified silent. Neither establishes when custody ends or how many blocks normal cleanup would return. No other process or cache was changed. An attempted `repo cache gc --dry-run` entered source admission and lease discovery and was canceled by its own caller before producing a result.
+
+Earlier 11:48 CAS and scoped local previews estimated 320,805,692 and 573,980,672 candidate bytes respectively; see [Local Controller Disk Relief](audit-cold-lab-local-relief.md). These historical estimates cannot establish current eligibility or overlap. No evidenced route currently supplies the 44.9 GB gap. An ordinary fresh exact managed preview after custody naturally settles can establish candidates under existing lease and quiet-time policy; it does not guarantee sufficient capacity.
+
+The prior 18:12 physical preflight exited 2 before a grant or image, as recorded in [Cold Lab Physical Preflight](audit-cold-lab-physical-preflight-1812.md). The coordinator 19:23 process sample had no literal constrained or slice-lab match, and this audit found no current ticket-owned wait receipt identifying a live PID. This does not exclude an unidentified wrapper; waiter liveness remains unproven.

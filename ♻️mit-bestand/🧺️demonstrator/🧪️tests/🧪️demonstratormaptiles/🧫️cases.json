@@ -7,7 +7,7 @@
       "abortDuring": false,
       "failed": 0,
       "expected": {
-        "prefetchCalls": 1,
+        "prefetchCalls": 2,
         "signalForwarded": true,
         "buildCalls": 1,
         "cancelled": false,

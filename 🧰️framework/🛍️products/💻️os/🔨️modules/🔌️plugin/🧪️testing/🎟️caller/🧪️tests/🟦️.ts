@@ -40,6 +40,46 @@ test("Plugin settle close and history consumers preserve original fixture author
  assert(!history.includes("advance_typed_operation_publication(&mut identity, acceptance_policy().maintenance)") && !history.includes("runtime_lifecycle_grant()"), "history consumer carries original context");
 });
 
+/** 🔄️ Registered close admits each owner under a fresh turn while the phase loan still limits physical spend. */
+test("Registered fixture close renews the caller grant before quoting each close step", () => {
+ const source = readModuleTreeSource(new URL("../../🦀️.rs", import.meta.url));
+ const start = source.indexOf("fn close_registered_fixture_app<");
+ assert(start >= 0);
+ const body = source.slice(start, source.indexOf("\n}", start));
+ const loop = body.indexOf("while close_turn < maximum_turns && idle_streak < maximum_idle_turns");
+ const ceiling = body.indexOf("cx.original_turn_ceiling()");
+ const renew = body.indexOf("fixture_renew_turn(cx, fresh_fuel, fresh_grant)?", loop);
+ const quote = body.indexOf("app.close_retirement_demands", loop);
+ assert(ceiling >= 0 && loop > ceiling && renew > loop && quote > renew);
+ assert(body.includes("OriginalFixtureCaller::maximum_close_turns()"));
+ assert(body.includes("OriginalFixtureCaller::maximum_idle_turns()"));
+
+ const caller = JSON.parse(readFileSync(new URL("./🧫️fixtures/🎟️caller.json", import.meta.url), "utf8"));
+
+ const closeCopy = 32768;
+ const quoteCopy = 104;
+ const copies = [54, closeCopy];
+ const sqlite = new Database(":memory:");
+ try {
+  const close = sqlite.query("SELECT ?1 > ?2 AND ?1 <= min(?3, ?4) AS funded").get(
+   caller.maximumCloseTurns, caller.maximumTurns, caller.grant.maximumItems, caller.fuel,
+  ) as { funded: number };
+  assert.equal(close.funded, 1);
+  const idle = sqlite.query("SELECT ?1 < ?2 AS runnable");
+  assert.deepEqual(
+   [caller.maximumIdleTurns - 1, caller.maximumIdleTurns].map(turn =>
+    (idle.get(turn, caller.maximumIdleTurns) as { runnable: number }).runnable),
+   [1, 0],
+  );
+  const query = sqlite.query("SELECT min(?1, ?2) >= ?3 AS funded");
+  const funded = copies.map(copy => Number(Math.min(copy, closeCopy) >= quoteCopy));
+  assert.deepEqual(funded, [0, 1]);
+  assert.deepEqual(copies.map(copy => (query.get(copy, closeCopy, quoteCopy) as { funded: number }).funded), funded);
+ } finally {
+  sqlite.close();
+ }
+});
+
 /** 📨️ The defining complete failure wire uses the same closed caller input through output and issuer retirement. */
 test("Original extension failure wire retains one finite caller through complete close",()=>{
  const root=resolve(import.meta.dirname,"../../.."),source=readFileSync(resolve(root,"🧩️extension/📨️invoke/⚠️failure/🧪️tests/🦀️.rs"),"utf8"),start=source.indexOf("fn original_extension_context_failure_preserves_complete_canonical_wire(){"),bodyEnd=source.indexOf("\n#[",start+1),body=source.slice(start,bodyEnd<0?undefined:bodyEnd);assert(start>=0);assert.equal(body.match(/caller\.context\(\)/g)?.length,1);assert(body.includes("cx.with_retained_loan(loan")&&body.includes("caller.retire(fuel)")&&body.includes("close_original_retained_step(same"));assert(!body.includes("StepContext::new")&&!body.includes("StepBudget::new")&&!body.includes("maximum_capacity_bytes:demand"));assert(body.includes("serde_json::Value")&&body.includes("assert_eq!(observed,expected)"));assert(body.includes("caller_birth.requested_bytes+caller_close.requested_bytes"));assert(body.includes("slots[slot].take()")&&body.includes("slot=1-slot;slots[slot]=Some(owner)"));

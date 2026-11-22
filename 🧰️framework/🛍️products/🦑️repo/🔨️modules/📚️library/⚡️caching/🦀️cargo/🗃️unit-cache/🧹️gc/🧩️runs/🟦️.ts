@@ -20,10 +20,11 @@ function supersededRuns<T extends ComponentRunMetadataV1>(runs:readonly T[]):T[]
  const ordered=[...runs].sort(byAge),settled=ordered.filter(run=>!run.held),latest=new Map<string,T>();
  for(const run of settled)for(const component of run.components)latest.set(component,run);
  const materialized=settled.filter(run=>run.components.length>0).at(-1);
- return settled.filter(run=>run.components.length>0?run.components.every(component=>latest.get(component)!==run):materialized!==undefined&&byAge(materialized,run)>0);
+ const failed=settled.filter(run=>run.components.length===0),surplus=new Set(failed.slice(0,Math.max(0,failed.length-policy.retainedFailedRuns)));
+ return settled.filter(run=>run.components.length>0?run.components.every(component=>latest.get(component)!==run):surplus.has(run)||materialized!==undefined&&byAge(materialized,run)>0);
 }
 
-/** 🧮️ Plans which runs to remove, oldest first, until `needBytes` are freed: a run that no running build holds and that a newer run supersedes (a newer run materialized every component it did; a run that materialized nothing is superseded by the newest run that materialized anything). Only runs no build holds count as materialized, since a running build may still fail before it links; the newest such run of each component, every held run and every run newer than the newest materialized one always stay. Pure and deterministic. */
+/** 🧮️ Plans which runs to remove, oldest first, until `needBytes` are freed: a run that no running build holds and that a newer run supersedes (a newer run materialized every component it did; a run that materialized nothing is superseded by the newest run that materialized anything, and every such failed run beyond the newest `retainedFailedRuns` goes whatever its age, since it holds only logs of a build that produced nothing). Only runs no build holds count as materialized, since a running build may still fail before it links; the newest such run of each component, every held run and every run newer than the newest materialized one always stay. Pure and deterministic. */
 export function planComponentRunsV1(input:Readonly<{needBytes:number;runs:readonly ComponentRunV1[]}>):ComponentRunRemovalV1[]{
  const removed:ComponentRunRemovalV1[]=[];let freed=0;
  for(const run of supersededRuns(input.runs)){
@@ -43,9 +44,10 @@ export function componentRunRecencyV1(path:string,rules:Pick<typeof policy,"acti
  return Math.floor(newest);
 }
 
-/** 🧩️ The components a run materialized: the folders of its `w` store, the linked copies counted as their component. */
-export function componentRunComponentsV1(path:string,rules:Pick<typeof policy,"materializedDirectory"|"linkedSuffix">=policy):string[]{
- return [...new Set(names(join(path,rules.materializedDirectory)).map(name=>name.endsWith(rules.linkedSuffix)?name.slice(0,-rules.linkedSuffix.length):name))].sort();
+/** 🧩️ The components a run materialized: the folders of its `w` store that carry the artifact marker (a content-addressed output), the linked copies counted as their component; optimizer scratch folders named after a package carry no marker and are not components. */
+export function componentRunComponentsV1(path:string,rules:Pick<typeof policy,"materializedDirectory"|"linkedSuffix"|"artifactMarker">=policy):string[]{
+ const store=join(path,rules.materializedDirectory),marked=(name:string):boolean=>{try{return lstatSync(join(store,name,rules.artifactMarker)).isFile();}catch{return false;}};
+ return [...new Set(names(store).filter(name=>name.endsWith(rules.linkedSuffix)||marked(name)).map(name=>name.endsWith(rules.linkedSuffix)?name.slice(0,-rules.linkedSuffix.length):name))].sort();
 }
 
 /** 💬️ One localized line with its placeholders filled. */

@@ -2,7 +2,7 @@
 use crate::instance_lifetime::ActorInstanceLifetime;
 use semio_framework_value_derive::{FromValue, ToValue};
 
-pub const COLD_PAIR_MAXIMUM_PAGES: u32 = 64;
+pub const COLD_PAIR_MAXIMUM_PAGES: u32 = 256;
 pub const COLD_PAIR_FAULT_MAXIMUM_BYTES: usize = 4 * 1024;
 const COLD_PAIR_ID_MAXIMUM_BYTES: usize = 512;
 

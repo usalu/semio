@@ -1,0 +1,39 @@
+{
+  "scales": [
+    50,
+    100,
+    200,
+    500
+  ],
+  "poses": {
+    "standing": {
+      "support": "ground",
+      "contactFraction": 0.45,
+      "wettedness": 0
+    },
+    "swimming": {
+      "support": "water",
+      "contactFraction": 1,
+      "wettedness": 1
+    },
+    "paddle-3": {
+      "support": "water",
+      "contactFraction": 1,
+      "wettedness": 1
+    },
+    "resting-ashore": {
+      "support": "ground",
+      "contactFraction": 0.42,
+      "wettedness": 0
+    },
+    "upending": {
+      "support": "air",
+      "contactFraction": 0,
+      "wettedness": 0
+    }
+  },
+  "minimumFootprintAreaM2": 0.00085,
+  "minimumPaddleWidthM": 0.038,
+  "maximumSupportGapM": 0.0045,
+  "maximumSubmergedWebHeightM": 0.0005
+}

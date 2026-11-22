@@ -10,6 +10,13 @@
     "id": "demo",
     "label": "Demo"
   },
+  "blankExample": {
+    "id": "blank",
+    "labels": {
+      "en": "Blank Drawing",
+      "de": "Leere Zeichnung"
+    }
+  },
   "utility": "shapeRect",
   "utilityPressStates": [true, false, true],
   "gesture": {

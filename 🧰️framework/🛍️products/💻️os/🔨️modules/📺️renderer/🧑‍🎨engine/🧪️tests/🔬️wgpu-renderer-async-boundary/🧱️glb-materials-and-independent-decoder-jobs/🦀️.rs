@@ -236,28 +236,40 @@ fn embedded_glb_materials_publish_with_their_primitive_ranges_texture_and_vertex
     assert_eq!(preparation.dimensions(), (64, 32));
     assert_eq!(preparation.format(), semio_renderer_wgpu_icon_host::icon_export::IconExportFormat::Png);
     for turn in 0..262_144 {
-        match preparation.advance() {
+        match caller.turn(|cx| Ok(preparation.advance(cx))).unwrap() {
             Ok(true) => break,
-            Ok(false) => {}
+            Ok(false) => assert!(preparation.take_prepared().is_none()),
             Err(fault) => panic!("request-owned Icon scene preparation faulted at turn {turn}: {fault}"),
         }
     }
     assert!(preparation.terminal(), "request-owned Icon scene preparation reaches its accepted boundary");
     let mut prepared = preparation.take_prepared().expect("the exact prepared scene owner is published once");
+    assert!(preparation.take_prepared().is_none());
     assert_eq!(prepared.dimensions(), (64, 32));
     assert_eq!(prepared.format(), semio_renderer_wgpu_icon_host::icon_export::IconExportFormat::Png);
     let mut packet = prepared.take_packet().expect("prepared scene transfers one packet while retaining its World owner");
     let uploads = packet.uploads();
     assert!((0..uploads.len()).any(|index| matches!(uploads.get(index), Some(semio_ui_prepared_staging::PreparedRenderUpload::Mesh { .. }))));
     assert!((0..uploads.len()).any(|index| matches!(uploads.get(index), Some(semio_ui_prepared_staging::PreparedRenderUpload::SceneRaster { .. }))));
-    while !packet.retire_step() {}
+    for _ in 0..262_144 {
+        let closed = caller.turn(|cx| {
+            let quote = packet.next_close_demands(cx.retained_grant().maximum_copy_bytes);
+            Ok(semio_renderer_wgpu_icon_host::icon_export::close_prepared(cx, quote, |effect| packet.close_step(effect)))
+        }).unwrap().unwrap();
+        if closed { break; }
+    }
+    assert!(packet.retirement_is_empty());
     prepared.begin_close();
     for _ in 0..262_144 {
-        if prepared.close_step() {
+        if caller.turn(|cx| Ok(prepared.close_step(cx))).unwrap().unwrap() {
             break;
         }
     }
     assert!(prepared.terminal_is_empty(), "packet retirement lets the retained World asset close to exact terminal empty");
+    for _ in 0..262_144 {
+        if caller.turn(|cx| Ok(preparation.advance(cx))).unwrap().unwrap() { break; }
+    }
+    assert!(preparation.terminal());
     close_owned_decoder_fixture(authority, probe, &mut caller);
 }
 

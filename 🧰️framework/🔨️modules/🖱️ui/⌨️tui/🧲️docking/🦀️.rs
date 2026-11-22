@@ -2,6 +2,8 @@
 
 use crate::geometry::{Pos, Rect};
 
+pub use semio_ui_contract_presentation::WindowStackCorner;
+
 /// ⚓️ A tab joins a group or creates a sibling on one of its four edges.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum DockPlacement { Tabs, Corner(WindowStackCorner), Left, Right, Top, Bottom }
@@ -34,26 +36,6 @@ impl DockPlacement {
                 Rect::new(if corner.is_left() { area.x } else { area.x + area.width - width }, if corner.is_top() { area.y } else { area.y + area.height - height }, width, height)
             }
         }
-    }
-}
-
-/// 🧭️ Corner of a window stack where a tab chip docks.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
-pub enum WindowStackCorner {
-    #[default]
-    TopLeft,
-    TopRight,
-    BottomLeft,
-    BottomRight,
-}
-
-impl WindowStackCorner {
-    pub fn is_top(self) -> bool {
-        matches!(self, Self::TopLeft | Self::TopRight)
-    }
-
-    pub fn is_left(self) -> bool {
-        matches!(self, Self::TopLeft | Self::BottomLeft)
     }
 }
 

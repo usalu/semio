@@ -3,7 +3,6 @@ import {formatHostCapacityV1,requireHostCapacityV1,resolveHostCapacityLanguageV1
 import type {HostCapacityPortsV1} from "../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🎫️gate/🟦️.ts";
 import {hostCapacityDirectoryV1,readHostCapacityStatusV1} from "../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🎫️gate/📖️status/🟦️.ts";
 import {readHostEstimateStoreV1} from "../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📐️estimates/🟦️.ts";
-import {agentSessionAddressV1,agentSessionCapacityRowsV1,agentSessionRegistryRootV1,currentAgentSessionV1,renderAgentSessionCapacityV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🪪️agent-sessions/🟦️.ts";
 import {BUILD_HOST_CAPACITY_POLICY_V1,createCapacityControlV1} from "../🎛️control/🟦️.ts";
 import {writeDiagnosticLineV1} from "../../../../../../../🔨️modules/🏃️process/🏗️build/📤️output/🟦️.ts";
 
@@ -22,6 +21,7 @@ const positive=(value:string|undefined,name:string):number|undefined=>{
 
 /** 📋️ Prints the machine's capacity: the sample, the floor, every running grant and every waiter, as lines or as one JSON document. */
 async function status(head:readonly string[],context:CapacityCommandContextV1,policy:HostCapacityPolicyV1,directory:string):Promise<number>{
+ const {agentSessionCapacityRowsV1,agentSessionRegistryRootV1,renderAgentSessionCapacityV1}=await import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🪪️agent-sessions/🟦️.ts");
  const control=createCapacityControlV1();
  try{
   const now=context.now??Date.now,snapshot=await readHostCapacityStatusV1({...context,directory,policy,control:control.control});
@@ -40,6 +40,7 @@ async function status(head:readonly string[],context:CapacityCommandContextV1,po
 /** ▶️ Runs any command under a capacity grant, so ad-hoc heavy work (a test runner, a compiler, a generator) is admitted like every other expensive operation. */
 async function run(head:readonly string[],command:readonly string[],context:CapacityCommandContextV1,policy:HostCapacityPolicyV1,directory:string):Promise<number>{
  if(command.length===0)throw Error("Capacity run requires a command after --");
+ const {agentSessionAddressV1,currentAgentSessionV1}=await import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🪪️agent-sessions/🟦️.ts");
  const {newHostCapacityIdV1,withHostCapacityV1}=await import("../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🎫️gate/🟦️.ts");
  const memory=positive(flag(head,"memory"),"memory"),cpu=positive(flag(head,"cpu"),"cpu"),jobs=positive(flag(head,"jobs"),"jobs"),operation=flag(head,"operation")??"command";
  const sized:HostRequestV1|undefined=memory!==undefined?requireHostCapacityV1<HostRequestV1>("Request",{id:newHostCapacityIdV1(),operation:"command",priority:"batch",minimumJobs:1,preferredJobs:1,fixedMegabytes:memory,perJobMegabytes:0,cpuPerJob:cpu??1}):sizeHostRequestV1(policy,{id:newHostCapacityIdV1(),operation,...jobs!==undefined?{preferredJobs:jobs}:{}});

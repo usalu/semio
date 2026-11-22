@@ -1,0 +1,7 @@
+{
+  "seed": [11, 37, 101, 179],
+  "extendedLengthZeroes": 32,
+  "extendedLengthTerminator": 17,
+  "copyBudget": 127,
+  "truncatedOffset": [1, 11, 37, 101, 179, 33, 12]
+}

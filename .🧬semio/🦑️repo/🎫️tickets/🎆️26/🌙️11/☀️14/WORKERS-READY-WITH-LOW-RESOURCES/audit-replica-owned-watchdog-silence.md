@@ -1,0 +1,13 @@
+# Replica Watchdog Sample Ownership
+
+During the 18:36–18:42 UTC sample, g1-m02 continued publishing a workspace readiness heartbeat and inventory progress while its replica attestation aged past seven minutes. The last acknowledged server cursor was segment 185 byte 384943, immediately before the exact dependency storage source PUT. Its last health counters recorded an old loop-watchdog restart. Those reports did not establish a new daemon restart or a stuck watchdog. At 18:43 UTC the worker itself resumed publication with replica implementation `b5c631dbc05b…`, the exact coordinator stage, and cursor 185:387655. The workspace stage remained active.
+
+The installed boot owner and the direct TypeScript supervisor previously evaluated silence only while the most recent file read contained the current child's PID. After accepting a running beat, removing the file or replacing it with another PID's record disabled timeout enforcement. A private installed boot test removed the file after the real boot supervisor had observed the child running. The first case timed out without a silence receipt. The same fixture exercises a foreign PID and compares the recorded activity and elapsed window against an independent SQLite query.
+
+Both boot routes now retain the last valid beat for that child. They reject missing, malformed, foreign, backwards and future-dated beat timestamps as updates. The existing silence budget still applies to the earlier owned observation, so a short missing sample clears when a fresh matching record arrives. Launches with no valid beat remain under their existing startup rules. The graceful-stop timer owns shutdown once that stop begins. A delayed stack-sample callback cannot kill after candidate exit or graceful shutdown startup.
+
+The installed program version advances from 7 to 8 under the existing self-tested update path. Existing test fixtures now derive comparison versions from the installed manifest. A running version 7 owner still executes its loaded program. Version 8 applies on the next normal boot-owner launch, so a source receipt or installation by itself does not establish live use. No worker or coordinator service was manually stopped. The focused watchdog, observed blocked loop, verified graceful reload and boot upgrade checks passed 4 tests with 39 assertions.
+
+[Nine-worker stage verification](verification-low-resource-pulse-1835.md)
+
+The installed-entry suite passed all 24 tests in the combined run. Two direct boot cases needed separate correction and rerun. The final direct suite passed all 23 tests with 185 assertions after the snapshot retry and the fixture timing correction.

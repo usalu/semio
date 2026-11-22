@@ -12,7 +12,9 @@
   "ISO-07",
   "ISO-08",
   "ISO-09",
-  "ISO-10"
+  "ISO-10",
+  "ISO-11",
+  "ISO-12"
  ],
  "items": [
   {
@@ -178,6 +180,37 @@
    "description": {
     "en": "The IFC4 projection carries catalogue and product identities, names, class memberships and the declared dictionary reference. Generic products use concrete proxy types. ISO 16757-5 view conformance remains unverified.",
     "de": "Die IFC4-Projektion überträgt Katalog- und Produktkennungen, Namen, Klassenzuordnungen und den erklärten Wörterbuchverweis. Generische Produkte verwenden konkrete Stellvertretertypen. Die Konformität der Katalogsicht nach ISO 16757-5 bleibt ungeprüft."
+   }
+  },
+  {
+   "id": "ISO-11",
+   "clause": "ISO 16757-2:2016 §5.3.1–5.3.5",
+   "entity": "Geometry / SpaceEnvelope",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "iso16757.2.5.3.1.overall.",
+     "iso16757.2.5.3.5.spaceVolume."
+    ]
+   },
+   "description": {
+    "en": "The declared overall envelope includes each valid declared clearance and the modeled product when its bounds establish containment. The axis limits must all be finite and ordered.",
+    "de": "Die erklärte Gesamthülle enthält jeden gültigen Freiraum und das modellierte Produkt, wenn seine Grenzen den Einschluss belegen. Alle Achsgrenzen müssen endlich und geordnet sein."
+   }
+  },
+  {
+   "id": "ISO-12",
+   "clause": "IFC4 ADD2 TC1 IfcPropertySingleValue; EN 17549-2:2023 §4.1",
+   "entity": "ProductCatalogueExchange",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "iso16757.ifc4.catalogueProjection"
+    ]
+   },
+   "description": {
+    "en": "IFC4 library projection preserves eligible scalar product and series values, including explicit external dictionary GUID links.",
+    "de": "Die IFC4-Bibliotheksprojektion erhält geeignete skalare Produkt- und Serienwerte einschließlich ausdrücklicher externer Wörterbuch-GUID-Verknüpfungen."
    }
   }
  ]

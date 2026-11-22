@@ -1,0 +1,8 @@
+{
+  "payload": { "objectKind": "Capsule" },
+  "position": [0.5, -0.75, 0],
+  "finishes": [
+    { "finish": "release", "placements": 1 },
+    { "finish": "cancel", "placements": 0 }
+  ]
+}

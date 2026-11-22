@@ -9,6 +9,7 @@ fn event(kind: &str) -> Event {
     let lifetime = semio_framework::kernel::ActorInstanceLifetime { activation_generation: 41, instance_id: 7, guest_lifetime: 3 };
     match kind {
         "open" => Event::InstanceOpen {
+            purpose: semio_framework::kernel::ActorInstanceOpenPurpose::Ordinary,
             request: semio_framework::kernel::ActorInstanceOpenRequest { activation_generation: 41, instance_id: 7, request_sequence: 8 },
             app_id: semio_framework::kernel::AppInstanceId("s.test.synthetic@1/*#editor".into()),
             actor: "fixture".into(),

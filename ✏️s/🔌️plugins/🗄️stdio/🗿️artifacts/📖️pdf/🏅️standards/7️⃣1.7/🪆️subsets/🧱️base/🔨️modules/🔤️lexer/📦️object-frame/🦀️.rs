@@ -61,6 +61,11 @@ impl IndirectFrameCursor {
 
     /// 📥️ Inspects the original header and value, then identifies where a declared stream begins.
     pub fn advance(&mut self, source: &[u8], grant: CosGrant, cancelled: bool) -> IndirectFrameReceipt {
+        self.advance_bytes(|position| source.get(position).copied(), grant, cancelled)
+    }
+
+    /// 🧷️ Frames the same indirect object using a bounded reader for its original bytes.
+    pub fn advance_bytes(&mut self, byte_at: impl Fn(usize) -> Option<u8>, grant: CosGrant, cancelled: bool) -> IndirectFrameReceipt {
         let mut receipt = IndirectFrameReceipt { status: Ok(IndirectFrameStatus::More), work: 0, allocated_bytes: 0, released_bytes: 0 };
         if cancelled && matches!(self.stage, Stage::Header(_) | Stage::Value | Stage::StreamPrefix(_)) {
             self.stage = Stage::Cancelled;
@@ -68,7 +73,7 @@ impl IndirectFrameCursor {
         match &mut self.stage {
             Stage::Header(header) => {
                 let start = header.position();
-                match header.advance(source, grant.work) {
+                match header.advance(&byte_at, grant.work) {
                     Ok((work, step)) => {
                         receipt.work = work;
                         if let HeaderStep::Complete { id, body_offset } = step {
@@ -86,7 +91,7 @@ impl IndirectFrameCursor {
             }
             Stage::Value => {
                 let cursor = self.value.as_mut().expect("framed value owner");
-                let CosReceipt { status, work, allocated_bytes, released_bytes } = cursor.advance(source, grant, false);
+                let CosReceipt { status, work, allocated_bytes, released_bytes } = cursor.advance_bytes(&byte_at, grant, false);
                 receipt.work = work;
                 receipt.allocated_bytes = allocated_bytes;
                 receipt.released_bytes = released_bytes;
@@ -109,7 +114,7 @@ impl IndirectFrameCursor {
                 };
             }
             Stage::StreamPrefix(prefix) => {
-                let (work, step) = prefix.advance(source, grant.work);
+                let (work, step) = prefix.advance_bytes(&byte_at, grant.work);
                 receipt.work = work;
                 if let StreamPrefixStep::Complete(start) = step {
                     self.stream_start = start;

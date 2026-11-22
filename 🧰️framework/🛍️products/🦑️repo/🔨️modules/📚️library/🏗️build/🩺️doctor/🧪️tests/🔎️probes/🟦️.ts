@@ -1,6 +1,6 @@
 import {afterAll,expect,test} from "bun:test";
 import {createHash} from "node:crypto";
-import {existsSync,mkdirSync,mkdtempSync,readdirSync,rmSync,symlinkSync,utimesSync,writeFileSync} from "node:fs";
+import {existsSync,mkdirSync,mkdtempSync,readdirSync,realpathSync,rmSync,symlinkSync,utimesSync,writeFileSync} from "node:fs";
 import {tmpdir,uptime} from "node:os";
 import {join} from "node:path";
 import {leaseRegistryFolderV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🧭️order/🟦️.ts";
@@ -20,7 +20,8 @@ import {graphProbeV1,newestImplementationMillisecondsV1} from "../../🔎️prob
 import {leasesProbeV1} from "../../🔎️probes/🔒️leases/🟦️.ts";
 import {processesProbeV1} from "../../🔎️probes/🏃️processes/🟦️.ts";
 import {sessionsProbeV1} from "../../🔎️probes/🪪️sessions/🟦️.ts";
-import {storageProbeV1} from "../../🔎️probes/💾️storage/🟦️.ts";
+import {imageRepairPlanV1,storageProbeV1} from "../../🔎️probes/💾️storage/🟦️.ts";
+import {acquireResourceLease,requireMaterializedPathV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {toolsProbeV1} from "../../🔎️probes/🔧️tools/🟦️.ts";
 
 const roots:string[]=[],children:{kill:()=>void}[]=[];
@@ -59,6 +60,121 @@ test("storage: receipts, backing files, mounts and publication residue are read 
  expect(ids).toContain("storage.publication-pending:products");
  const linux=await read(storageProbeV1,ports(root,{platform:"linux"})) as {storage:NonNullable<DoctorFactsV1["storage"]>};
  expect(linux.storage.partitions.find(row=>row.id==="graph")).toMatchObject({state:"directory",backing:"none"});
+});
+
+const imageTool=(program:string,args:string[],input?:string)=>Bun.spawnSync([program,...args],{...input===undefined?{}:{stdin:new TextEncoder().encode(input)},stdout:"pipe",stderr:"pipe"});
+const imageRow=(image:string):{device:string;mounts:string[]}|undefined=>{
+ const plist=imageTool("/usr/bin/hdiutil",["info","-plist"]).stdout.toString(),json=JSON.parse(imageTool("/usr/bin/plutil",["-convert","json","-o","-","-"],plist).stdout.toString()) as {images:{"image-path":string;"system-entities":{"dev-entry"?:string;"mount-point"?:string}[]}[]};
+ const row=json.images.find(item=>item["image-path"]===image);
+ return row===undefined?undefined:{device:row["system-entities"].map(entity=>entity["dev-entry"]).find(value=>value!==undefined&&/^\/dev\/disk\d+$/u.test(value))!,mounts:row["system-entities"].flatMap(entity=>entity["mount-point"]===undefined?[]:[entity["mount-point"]])};
+};
+const attachImage=(image:string,mount:string):void=>{expect(imageTool("/usr/sbin/diskutil",["image","attach","--nobrowse","--mountOptions","owners","--mountPoint",mount,image]).exitCode).toBe(0);};
+const releaseImage=(image:string):void=>{const row=imageRow(image);if(row)imageTool("/usr/bin/hdiutil",["detach","-force",row.device]);};
+
+test("storage-images: the plan names the partitions to repair, the leases image first, a damaged image never and a detached image only while the loader is blocked",()=>{
+ const part=(id:string,state:"mounted"|"detached"|"misplaced"|"directory"|"absent",image:"ok"|"damaged"|"none"="ok")=>({id,state,capacityBytes:null,freeBytes:null,imageBytes:null,backing:"present" as const,publication:"none" as const,publicationAgeSeconds:null,image});
+ const partitions=[part("graph","detached"),part("dependencies","misplaced"),part("tools","misplaced","damaged"),part("leases","detached"),part("nx","mounted")];
+ expect(imageRepairPlanV1({loaderBlocked:true,partitions})).toEqual([{id:"leases",steps:["attach"]},{id:"graph",steps:["attach"]},{id:"dependencies",steps:["detach","attach"]}]);
+ expect(imageRepairPlanV1({loaderBlocked:false,partitions})).toEqual([{id:"dependencies",steps:["detach","attach"]}]);
+ expect(imageRepairPlanV1(undefined)).toEqual([]);
+});
+
+test("storage-images: other platforms have no attachable images and say so",async()=>{
+ const repair=DOCTOR_REPAIRS_V1.get("storage-images")!;
+ for(const platform of["linux","win32"] as const){
+  const root=fresh(),port=ports(root,{platform,command:async()=>{throw Error("no image tool off macOS");}});
+  const done=await repair.run(port,context(),false);
+  expect(done).toMatchObject({removed:0,status:"unavailable"});
+  expect(done.reason).toContain(`Not applicable on ${platform}`);expect(done.reason).toContain("directory-partition");expect(done.reason).toContain("Nicht anwendbar");
+  expect(await repair.run(port,context(),true)).toMatchObject({status:"unavailable"});
+  for(const id of Object.keys(budget.partitions))write(join(partitionDirectory(root,id),"image.json"),'{"version":1}'),mkdirSync(join(partitionDirectory(root,id),"m"),{recursive:true});
+  symlinkSync(join(root,"gone"),join(root,"node_modules"),"junction");
+  const storage=(await read(storageProbeV1,port) as {storage:NonNullable<DoctorFactsV1["storage"]>}).storage;
+  expect(storage.partitions.every(row=>row.state==="directory"&&row.backing==="none")).toBe(true);
+  expect(imageRepairPlanV1(storage)).toEqual([]);
+  expect(analyzeDoctorV1({version:1,atMs:Date.now(),platform,probes:[],storage}).findings.map(row=>row.id).filter(id=>/image-(misplaced|detached)/u.test(id))).toEqual([]);
+ }
+ expect(repair.area).toBe("storage");
+});
+
+test.skipIf(process.platform!=="darwin")("storage-images: a stray image moves back to its mount point, a detached one behind a dangling node_modules attaches, a held lease keeps both untouched and a settled state changes nothing",async()=>{
+ const root=fresh(),directory=partitionDirectory(root,"dependencies");
+ mkdirSync(join(directory,"m"),{recursive:true});
+ const real=realpathSync(directory),image=join(real,"fixed.dmg"),mount=join(real,"m");
+ expect(imageTool("/usr/bin/hdiutil",["create","-size","20m","-fs","APFS","-volname","e14",image]).exitCode).toBe(0);write(join(directory,"image.json"),'{"version":1}');
+ const stray=realpathSync(mkdtempSync(join(tmpdir(),"semio-reclaim-"))),commands:string[]=[],base=ports(root,{platform:"darwin"}),port:DoctorPortsV1={...base,command:async(program,args)=>{commands.push(program+" "+args.join(" "));return base.command(program,args);}};
+ roots.push(stray);
+ const repair=DOCTOR_REPAIRS_V1.get("storage-images")!,state=async()=>((await read(storageProbeV1,port) as {storage:NonNullable<DoctorFactsV1["storage"]>}).storage.partitions.find(row=>row.id==="dependencies"))!;
+ try{
+  attachImage(image,stray);
+  expect(await state()).toMatchObject({state:"misplaced",attachedAt:stray});
+  commands.length=0;
+  expect(await repair.run(port,context(),true)).toMatchObject({removed:1});
+  expect(commands.filter(row=>/detach|attach/u.test(row))).toEqual([]);
+  expect(imageRow(image)!.mounts).toEqual([stray]);
+  const leaseDirectory=join(root,".cache","b","l","m","data");mkdirSync(leaseDirectory,{recursive:true});
+  const held=await acquireResourceLease({directory:leaseDirectory,resource:"native-fixed-image:"+requireMaterializedPathV1(directory),mode:"exclusive",signal:new AbortController().signal,timeoutMs:0});
+  try{
+   const refused=await repair.run(port,context(),false);
+   expect(refused).toMatchObject({removed:0,status:"unavailable"});expect(refused.reason).toContain("dependencies");
+   expect(imageRow(image)!.mounts).toEqual([stray]);
+  }finally{held.release();}
+  commands.length=0;
+  expect(await repair.run(port,context(),false)).toMatchObject({removed:1});
+  expect(commands.filter(row=>/detach|attach/u.test(row))).toEqual([expect.stringMatching(/^\/usr\/bin\/hdiutil detach \/dev\/disk\d+$/u),expect.stringMatching(/^\/usr\/sbin\/diskutil image attach --nobrowse --mountOptions owners --mountPoint /u)]);
+  expect(imageRow(image)!.mounts).toEqual([mount]);expect(await state()).toMatchObject({state:"mounted"});
+  expect(await repair.run(port,context(),false)).toMatchObject({removed:0,status:"nothing"});
+  imageTool("/usr/bin/hdiutil",["detach",imageRow(image)!.device]);
+  expect(await state()).toMatchObject({state:"detached"});
+  expect(await repair.run(port,context(),false)).toMatchObject({removed:0,status:"nothing"});
+  symlinkSync(join(root,"gone"),join(root,"node_modules"),"junction");
+  const dry=await runDoctorV1(port,{only:new Set(["storage"]),fix:true,dryRun:true,probes:[storageProbeV1]});
+  expect(dry.report.findings.map(row=>row.id)).toContain("storage.image-detached-blocking");
+  expect(dry.report.repairs.map(row=>[row.id,row.dryRun,row.status,row.removed])).toEqual([["storage-images",true,"done",1]]);
+  expect(imageRow(image)).toBeUndefined();
+  const fixed=await runDoctorV1(port,{only:new Set(["storage"]),fix:true,probes:[storageProbeV1]});
+  expect(fixed.report.repairs.map(row=>[row.id,row.dryRun,row.status,row.removed])).toEqual([["storage-images",false,"done",1]]);
+  expect(fixed.report.findings.map(row=>row.id)).not.toContain("storage.image-detached-blocking");
+  expect(imageRow(image)!.mounts).toEqual([mount]);
+ }finally{releaseImage(image);}
+ expect(imageRow(image)).toBeUndefined();
+},180000);
+
+test("storage: an image attached at a private scratch mount is an error with the exact fix and a detached image behind a dangling node_modules never claims that any command attaches it",async()=>{
+ const root=fresh(),directory=partitionDirectory(root,"dependencies"),relative=(budget.partitions as Record<string,{directory:string}>).dependencies!.directory;
+ write(join(directory,"image.json"),'{"version":1}');write(join(directory,"fixed.dmg"),"x".repeat(10));mkdirSync(join(directory,"m"));
+ const real=realpathSync(directory),scratch="/private/var/folders/x/T/semio-reclaim-b6Twxt";
+ const roster=(mount:string)=>`<?xml version="1.0" encoding="UTF-8"?><plist version="1.0"><dict><key>images</key><array><dict><key>image-path</key><string>${real}/fixed.dmg</string><key>system-entities</key><array><dict><key>dev-entry</key><string>/dev/disk4</string></dict><dict><key>dev-entry</key><string>/dev/disk4s1</string><key>mount-point</key><string>${mount}</string></dict></array></dict></array></dict></plist>`;
+ const commands:string[]=[];
+ const withRoster=(plist:string)=>ports(root,{platform:"darwin",command:async(program,args)=>{commands.push(program+" "+args.join(" "));return plist;}});
+ const facts=async(port:DoctorPortsV1)=>(await read(storageProbeV1,port) as {storage:NonNullable<DoctorFactsV1["storage"]>}).storage;
+ const stranded=await facts(withRoster(roster(scratch)));
+ expect(commands).toEqual(["/usr/bin/hdiutil info -plist"]);
+ expect(stranded.partitions.find(row=>row.id==="dependencies")).toMatchObject({state:"misplaced",attachedAt:scratch,device:"/dev/disk4",backing:"present"});
+ expect(validateDoctorV1("StorageFacts",stranded)).toEqual([]);
+ const findings=analyzeDoctorV1({version:1,atMs:Date.now(),platform:"darwin",probes:[],storage:stranded}).findings.filter(row=>row.subject==="dependencies");
+ expect(findings.map(row=>`${row.id}:${row.severity}`)).toEqual(["storage.image-misplaced:error"]);
+ const fixed={kind:"automatic",command:"repo doctor --fix --only=storage",repair:"storage-images"};
+ expect(findings[0]!.fix).toMatchObject(fixed);expect(findings[0]!.fix.note.en).toContain(`${relative}/m`);expect(findings[0]!.fix.note.de).toContain(`${relative}/m`);
+ for(const text of[findings[0]!.detail.en,findings[0]!.detail.de])expect(text).not.toMatch(/once a command can start|sobald ein Befehl starten kann/u);
+ expect(findings[0]!.title.en).toContain(scratch);expect(findings[0]!.title.de).toContain(scratch);
+ const canonical=await facts(withRoster(roster(join(real,"m"))));
+ expect(canonical.partitions.find(row=>row.id==="dependencies")).toMatchObject({state:"detached"});
+ expect(canonical.partitions.find(row=>row.id==="dependencies")).not.toHaveProperty("device");
+ expect(canonical.loaderBlocked).toBe(false);
+ const info=analyzeDoctorV1({version:1,atMs:Date.now(),platform:"darwin",probes:[],storage:canonical}).findings.find(row=>row.subject==="dependencies")!;
+ expect(`${info.id}:${info.severity}`).toBe("storage.image-detached:info");
+ symlinkSync(join(root,"gone"),join(root,"node_modules"),"junction");
+ const blocked=await facts(withRoster("<plist version=\"1.0\"><dict><key>images</key><array/></dict></plist>"));
+ expect(blocked.loaderBlocked).toBe(true);
+ const warn=analyzeDoctorV1({version:1,atMs:Date.now(),platform:"darwin",probes:[],storage:blocked}).findings.find(row=>row.subject==="dependencies")!;
+ expect(`${warn.id}:${warn.severity}`).toBe("storage.image-detached-blocking:warn");
+ for(const text of[warn.detail.en,warn.detail.de,warn.fix.note.en,warn.fix.note.de,warn.title.en])expect(text).not.toMatch(/any repo command attaches|jeder repo-Befehl hängt/u);
+ expect(warn.fix).toMatchObject(fixed);expect(warn.fix.note.en).toContain(`${relative}/m`);expect(warn.fix.note.de).toContain(`${relative}/m`);
+ const linux=await facts(ports(root,{platform:"linux",command:async()=>{throw Error("no hdiutil off macOS");}}));
+ expect(linux.partitions.find(row=>row.id==="dependencies")).toMatchObject({state:"directory"});
+ const failing=await facts(ports(root,{platform:"darwin",command:async()=>{throw Error("hdiutil unavailable");}}));
+ expect(failing.partitions.find(row=>row.id==="dependencies")).toMatchObject({state:"detached"});
 });
 
 test("leases: holders, waiters with their blockers, dead rows and folders of vanished lease directories; the repair keeps everything alive",async()=>{

@@ -49,7 +49,7 @@ mod value_round_trip_tests {
                 menu: None,
                 ..Default::default()
             }),
-            UiControlNode::Select(UiSelectNode {
+            UiControlNode::Select(UiSelectNode { appearance: Default::default(),
                 id: "sel1".into(),
                 value: "a".into(),
                 items: vec![UiSelectItem { value: "a".into(), label: Label::data("A") }],
@@ -208,6 +208,18 @@ mod value_round_trip_tests {
         for kind in [SurfaceKind::Canvas2d, SurfaceKind::World3d, SurfaceKind::VirtualFileSystem, SurfaceKind::EventFeed] {
             assert_eq!(SurfaceKind::from_value(kind.to_value()).expect("valid DslValue decodes"), kind);
         }
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn icon_select_import_wraps_its_change_action_and_answers_with_the_picked_value() {
+        let select = UiIconSelectNode { id: "icon".into(), value: String::new(), uniform: true, classifier_kind: "icon".into(), on_change: ActionDescriptor { controller_id: "ctrl".into(), action: "setIcon".into(), args: Some(DslValue::Object(vec![("widgetId".into(), DslValue::String("n1".into()))])) }, presence: UiPresence::default(), menu: None };
+        let import = select.import_action();
+        assert_eq!((import.controller_id.as_str(), import.action.as_str()), ("framework", UiIconSelectNode::IMPORT_ACTION));
+        let answered = UiIconSelectNode::imported_value_action(&import, "<svg/>").expect("an import action answers");
+        assert_eq!((answered.controller_id.as_str(), answered.action.as_str()), ("ctrl", "setIcon"));
+        assert_eq!(answered.args.as_ref().and_then(|args| args.get("widgetId")).and_then(|value| value.as_str()), Some("n1"));
+        assert_eq!(answered.args.as_ref().and_then(|args| args.get("value")).and_then(|value| value.as_str()), Some("<svg/>"));
+        assert!(UiIconSelectNode::imported_value_action(&act("other"), "x").is_none());
     }
 
 }

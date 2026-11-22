@@ -286,6 +286,475 @@
     "intersection": {"area": 14, "volume": 3, "components": 1},
     "difference": {"area": 16, "volume": 2, "components": 4}
   },
+  "disjointSupport": {
+    "footprint": [[0, 0], [3, 0], [3, 3], [2, 3], [2, 1], [1, 1], [1, 3], [0, 3]],
+    "faces": [[7, 6, 5, 4, 3, 2, 1, 0], [8, 9, 10, 11, 12, 13, 14, 15], [0, 1, 9, 8], [1, 2, 10, 9], [2, 3, 11, 10], [3, 4, 12, 11], [4, 5, 13, 12], [5, 6, 14, 13], [6, 7, 15, 14], [7, 0, 8, 15]],
+    "bounds": [[-1, 2, 0], [4, 4, 3]],
+    "walls": [{"coordinate": 2, "axis": 1, "face": 2, "normalSign": -1, "segments": 2}],
+    "horizontalWalls": [],
+    "intersection": {"area": 12, "volume": 2, "components": 2},
+    "difference": {"area": 22, "volume": 5, "components": 1}
+  },
+  "disjointSupportInverse": {
+    "footprint": [[0, 0], [3, 0], [3, 3], [2, 3], [2, 1], [1, 1], [1, 3], [0, 3]],
+    "faces": [[7, 6, 5, 4, 3, 2, 1, 0], [8, 9, 10, 11, 12, 13, 14, 15], [0, 1, 9, 8], [1, 2, 10, 9], [2, 3, 11, 10], [3, 4, 12, 11], [4, 5, 13, 12], [5, 6, 14, 13], [6, 7, 15, 14], [7, 0, 8, 15]],
+    "bounds": [[-1, -1, 0], [4, 2, 3]],
+    "walls": [{"coordinate": 2, "axis": 1, "face": 3, "normalSign": 1, "segments": 2}],
+    "horizontalWalls": [],
+    "intersection": {"area": 22, "volume": 5, "components": 1},
+    "difference": {"area": 12, "volume": 2, "components": 2}
+  },
+  "disjointSupportWithCaps": {
+    "footprint": [[0, 0], [3, 0], [3, 3], [2, 3], [2, 1], [1, 1], [1, 3], [0, 3]],
+    "faces": [[7, 6, 5, 4, 3, 2, 1, 0], [8, 9, 10, 11, 12, 13, 14, 15], [0, 1, 9, 8], [1, 2, 10, 9], [2, 3, 11, 10], [3, 4, 12, 11], [4, 5, 13, 12], [5, 6, 14, 13], [6, 7, 15, 14], [7, 0, 8, 15]],
+    "bounds": [[-1, 2, 1.25], [4, 4, 1.75]],
+    "walls": [{"coordinate": 2, "axis": 1, "face": 2, "normalSign": -1, "segments": 2}],
+    "horizontalWalls": [{"z": 1.25, "face": 0, "segments": 2}, {"z": 1.75, "face": 1, "segments": 2}],
+    "intersection": {"area": 8, "volume": 1, "components": 2},
+    "difference": {"area": 32, "volume": 6, "components": 1}
+  },
+  "disjointAndSingleSupports": {
+    "footprint": [[0, 0], [3, 0], [3, 3], [2, 3], [2, 1], [1, 1], [1, 3], [0, 3]],
+    "faces": [[7, 6, 5, 4, 3, 2, 1, 0], [8, 9, 10, 11, 12, 13, 14, 15], [0, 1, 9, 8], [1, 2, 10, 9], [2, 3, 11, 10], [3, 4, 12, 11], [4, 5, 13, 12], [5, 6, 14, 13], [6, 7, 15, 14], [7, 0, 8, 15]],
+    "bounds": [[-1, 0.5, 0], [4, 2, 3]],
+    "walls": [{"coordinate": 0.5, "axis": 1, "face": 2, "normalSign": -1}, {"coordinate": 2, "axis": 1, "face": 3, "normalSign": 1, "segments": 2}],
+    "horizontalWalls": [],
+    "intersection": {"area": 18, "volume": 3.5, "components": 1},
+    "difference": {"area": 22, "volume": 3.5, "components": 3}
+  },
+  "grazingSupport": {
+    "footprint": [[0, 0], [4, 0], [4, 1], [3.5, 2], [3, 1], [2, 1], [2, 3], [0, 3]],
+    "faces": [[7, 6, 5, 4, 3, 2, 1, 0], [8, 9, 10, 11, 12, 13, 14, 15], [0, 1, 9, 8], [1, 2, 10, 9], [2, 3, 11, 10], [3, 4, 12, 11], [4, 5, 13, 12], [5, 6, 14, 13], [6, 7, 15, 14], [7, 0, 8, 15]],
+    "bounds": [[-1, 2, 0], [5, 4, 3]],
+    "walls": [{"coordinate": 2, "axis": 1, "face": 2, "normalSign": -1}],
+    "horizontalWalls": [],
+    "grazingCorner": [3.5, 2],
+    "intersection": {"area": 10, "volume": 2, "components": 1},
+    "difference": {"area": 26.23606797749979, "volume": 6.5, "components": 1}
+  },
+  "grazingEdge": {
+    "footprint": [[0, 0], [4, 0], [4, 1], [3.75, 2], [3.25, 2], [3, 1], [2, 1], [2, 3], [0, 3]],
+    "faces": [[8, 7, 6, 5, 4, 3, 2, 1, 0], [9, 10, 11, 12, 13, 14, 15, 16, 17], [0, 1, 10, 9], [1, 2, 11, 10], [2, 3, 12, 11], [3, 4, 13, 12], [4, 5, 14, 13], [5, 6, 15, 14], [6, 7, 16, 15], [7, 8, 17, 16], [8, 0, 9, 17]],
+    "bounds": [[-1, 2, 0], [5, 4, 3]],
+    "walls": [{"coordinate": 2, "axis": 1, "face": 2, "normalSign": -1}],
+    "horizontalWalls": [],
+    "grazingFace": 5,
+    "intersection": {"area": 10, "volume": 2, "components": 1},
+    "difference": {"area": 27.06155281280883, "volume": 6.75, "components": 1}
+  },
+  "reflexSupport": {
+    "footprint": [[0, 0], [4, 0], [4, 4], [3, 4], [2, 2], [1, 4], [0, 4]],
+    "faces": [[6, 5, 4, 3, 2, 1, 0], [7, 8, 9, 10, 11, 12, 13], [0, 1, 8, 7], [1, 2, 9, 8], [2, 3, 10, 9], [3, 4, 11, 10], [4, 5, 12, 11], [5, 6, 13, 12], [6, 0, 7, 13]],
+    "horizontalWalls": [],
+    "pinches": [[2, 2]],
+    "bounds": [[-1, 2, 0], [5, 5, 3]],
+    "walls": [{"coordinate": 2, "axis": 1, "face": 2, "normalSign": -1}],
+    "intersection": {"area": 26.47213595499958, "volume": 6, "components": 2, "contactCopies": 2, "wallSegments": 2},
+    "difference": {"area": 28, "volume": 8, "components": 1, "contactCopies": 0, "wallSegments": 1}
+  },
+  "reflexSupportInverse": {
+    "footprint": [[0, 0], [4, 0], [4, 4], [3, 4], [2, 2], [1, 4], [0, 4]],
+    "faces": [[6, 5, 4, 3, 2, 1, 0], [7, 8, 9, 10, 11, 12, 13], [0, 1, 8, 7], [1, 2, 9, 8], [2, 3, 10, 9], [3, 4, 11, 10], [4, 5, 12, 11], [5, 6, 13, 12], [6, 0, 7, 13]],
+    "horizontalWalls": [],
+    "pinches": [[2, 2]],
+    "bounds": [[-1, -1, 0], [5, 2, 3]],
+    "walls": [{"coordinate": 2, "axis": 1, "face": 3, "normalSign": 1}],
+    "intersection": {"area": 28, "volume": 8, "components": 1, "contactCopies": 0, "wallSegments": 1},
+    "difference": {"area": 26.47213595499958, "volume": 6, "components": 2, "contactCopies": 2, "wallSegments": 2}
+  },
+  "reflexSupportWithCaps": {
+    "footprint": [[0, 0], [4, 0], [4, 4], [3, 4], [2, 2], [1, 4], [0, 4]],
+    "faces": [[6, 5, 4, 3, 2, 1, 0], [7, 8, 9, 10, 11, 12, 13], [0, 1, 8, 7], [1, 2, 9, 8], [2, 3, 10, 9], [3, 4, 11, 10], [4, 5, 12, 11], [5, 6, 13, 12], [6, 0, 7, 13]],
+    "horizontalWalls": [{"z": 1.25, "face": 0, "segments": 2}, {"z": 1.75, "face": 1, "segments": 2}],
+    "pinches": [[2, 2]],
+    "bounds": [[-1, 2, 1.25], [5, 5, 1.75]],
+    "walls": [{"coordinate": 2, "axis": 1, "face": 2, "normalSign": -1}],
+    "intersection": {"area": 19.23606797749979, "volume": 3, "components": 2, "contactCopies": 2, "wallSegments": 2, "contactHeights": [1.25, 1.75]},
+    "difference": {"area": 55.236067977499786, "volume": 11, "components": 1, "contactCopies": 1, "wallSegments": 2, "contactHeights": [1.25, 1.75]}
+  },
+  "reflexSupportOpenTail": {
+    "footprint": [[0, 0], [4, 0], [4, 4], [3, 4], [2, 2], [1, 4], [0, 4]],
+    "faces": [[6, 5, 4, 3, 2, 1, 0], [7, 8, 9, 10, 11, 12, 13], [0, 1, 8, 7], [1, 2, 9, 8], [2, 3, 10, 9], [3, 4, 11, 10], [4, 5, 12, 11], [5, 6, 13, 12], [6, 0, 7, 13]],
+    "horizontalWalls": [{"z": 1.5, "face": 1, "segments": 2}],
+    "pinches": [[2, 2]],
+    "bounds": [[-1, 2, 0], [5, 5, 1.5]],
+    "walls": [{"coordinate": 2, "axis": 1, "face": 2, "normalSign": -1}],
+    "intersection": {"area": 19.23606797749979, "volume": 3, "components": 2, "contactCopies": 2, "wallSegments": 2, "contactHeights": [1, 1.5]},
+    "difference": {"area": 43.236067977499786, "volume": 11, "components": 1, "contactCopies": 1, "wallSegments": 2, "contactHeights": [1, 1.5]}
+  },
+  "reflexJoinsBothTails": {
+    "footprint": [[0, 0], [4, 0], [4, 4], [3, 4], [2, 2], [1, 4], [0, 4]],
+    "faces": [[6, 5, 4, 3, 2, 1, 0], [7, 8, 9, 10, 11, 12, 13], [0, 1, 8, 7], [1, 2, 9, 8], [2, 3, 10, 9], [3, 4, 11, 10], [4, 5, 12, 11], [5, 6, 13, 12], [6, 0, 7, 13]],
+    "horizontalWalls": [{"z": 1.25, "face": 0}, {"z": 1.75, "face": 1}],
+    "pinches": [[2, 2]],
+    "bounds": [[-1, -1, 1.25], [5, 2, 1.75]],
+    "walls": [{"coordinate": 2, "axis": 1, "face": 3, "normalSign": 1}],
+    "intersection": {"area": 22, "volume": 4, "components": 1, "contactCopies": 0, "wallSegments": 1, "contactHeights": [1.25, 1.75]},
+    "difference": {"area": 60.47213595499958, "volume": 10, "components": 1, "genus": 1, "contactCopies": [1, 2, 1], "wallSegments": 2, "contactHeights": [1.25, 1.5, 1.75], "separatingOffset": 0.0001}
+  },
+  "reflexJoinsOneTail": {
+    "footprint": [[0, 0], [4, 0], [4, 4], [3, 4], [2, 2], [1, 4], [0, 4]],
+    "faces": [[6, 5, 4, 3, 2, 1, 0], [7, 8, 9, 10, 11, 12, 13], [0, 1, 8, 7], [1, 2, 9, 8], [2, 3, 10, 9], [3, 4, 11, 10], [4, 5, 12, 11], [5, 6, 13, 12], [6, 0, 7, 13]],
+    "horizontalWalls": [{"z": 1.5, "face": 1}],
+    "pinches": [[2, 2]],
+    "bounds": [[-1, -1, 0], [5, 2, 1.5]],
+    "walls": [{"coordinate": 2, "axis": 1, "face": 3, "normalSign": 1}],
+    "intersection": {"area": 22, "volume": 4, "components": 1, "contactCopies": 0, "wallSegments": 1, "contactHeights": [1, 1.5]},
+    "difference": {"area": 44.47213595499958, "volume": 10, "components": 1, "contactCopies": [2, 1], "wallSegments": 2, "contactHeights": [1, 1.5]}
+  },
+  "multipleReflexContacts": {
+    "footprint": [[0, 0], [6, 0], [6, 4], [5, 4], [4, 2], [3, 4], [2, 2], [1, 4], [0, 4]],
+    "faces": [[8, 7, 6, 5, 4, 3, 2, 1, 0], [9, 10, 11, 12, 13, 14, 15, 16, 17], [0, 1, 10, 9], [1, 2, 11, 10], [2, 3, 12, 11], [3, 4, 13, 12], [4, 5, 14, 13], [5, 6, 15, 14], [6, 7, 16, 15], [7, 8, 17, 16], [8, 0, 9, 17]],
+    "horizontalWalls": [],
+    "pinches": [[2, 2], [4, 2]],
+    "bounds": [[-1, 2, 0], [7, 5, 3]],
+    "walls": [{"coordinate": 2, "axis": 1, "face": 2, "normalSign": -1}],
+    "intersection": {"area": 36.94427190999916, "volume": 8, "components": 3, "contactCopies": 2, "wallSegments": 3},
+    "difference": {"area": 40, "volume": 12, "components": 1, "contactCopies": 0, "wallSegments": 1}
+  },
+  "reflexOpposedBaseBand": {
+    "footprint": [[0, 0], [4, 0], [4, 4], [3, 4], [2, 2], [1, 4], [0, 4]],
+    "faces": [[6, 5, 4, 3, 2, 1, 0], [7, 8, 9, 10, 11, 12, 13], [0, 1, 8, 7], [1, 2, 9, 8], [2, 3, 10, 9], [3, 4, 11, 10], [4, 5, 12, 11], [5, 6, 13, 12], [6, 0, 7, 13]],
+    "pinches": [[2, 2]],
+    "bounds": [[-1, 0.5, 0], [5, 2, 3]],
+    "walls": [{"coordinate": 0.5, "axis": 1, "face": 2, "normalSign": -1, "segments": 1}, {"coordinate": 2, "axis": 1, "face": 3, "normalSign": 1, "segments": 1, "differenceSegments": 2}],
+    "horizontalWalls": [],
+    "intersection": {"area": 23, "volume": 6, "components": 1, "contactCopies": 0},
+    "difference": {"area": 39.47213595499958, "volume": 8, "components": 3, "contactCopies": 2}
+  },
+  "reflexOpposedTipBand": {
+    "footprint": [[0, 0], [4, 0], [4, 4], [3, 4], [2, 2], [1, 4], [0, 4]],
+    "faces": [[6, 5, 4, 3, 2, 1, 0], [7, 8, 9, 10, 11, 12, 13], [0, 1, 8, 7], [1, 2, 9, 8], [2, 3, 10, 9], [3, 4, 11, 10], [4, 5, 12, 11], [5, 6, 13, 12], [6, 0, 7, 13]],
+    "pinches": [[2, 2]],
+    "bounds": [[-1, 2, 0], [5, 3.5, 3]],
+    "walls": [{"coordinate": 2, "axis": 1, "face": 2, "normalSign": -1, "segments": 2, "differenceSegments": 1}, {"coordinate": 3.5, "axis": 1, "face": 3, "normalSign": 1, "segments": 2}],
+    "horizontalWalls": [],
+    "intersection": {"area": 22.604101966249686, "volume": 4.875, "components": 2, "contactCopies": 2},
+    "difference": {"area": 36.86803398874989, "volume": 9.125, "components": 3, "contactCopies": 0}
+  },
+  "reflexOpposedBaseTails": {
+    "footprint": [[0, 0], [4, 0], [4, 4], [3, 4], [2, 2], [1, 4], [0, 4]],
+    "faces": [[6, 5, 4, 3, 2, 1, 0], [7, 8, 9, 10, 11, 12, 13], [0, 1, 8, 7], [1, 2, 9, 8], [2, 3, 10, 9], [3, 4, 11, 10], [4, 5, 12, 11], [5, 6, 13, 12], [6, 0, 7, 13]],
+    "pinches": [[2, 2]],
+    "bounds": [[-1, 0.5, 1.25], [5, 2, 1.75]],
+    "walls": [{"coordinate": 0.5, "axis": 1, "face": 2, "normalSign": -1, "segments": 1}, {"coordinate": 2, "axis": 1, "face": 3, "normalSign": 1, "segments": 1, "differenceSegments": 2}],
+    "horizontalWalls": [{"z": 1.25, "face": 0}, {"z": 1.75, "face": 1}],
+    "intersection": {"area": 17.5, "volume": 3, "components": 1, "contactCopies": 0, "contactHeights": [1.25, 1.75]},
+    "difference": {"area": 60.97213595499958, "volume": 11, "components": 1, "contactCopies": [1, 2, 1], "genus": 2, "contactHeights": [1.25, 1.5, 1.75], "separatingOffset": 0.0001, "separatingFaces": [3]}
+  },
+  "reflexOpposedTipTails": {
+    "footprint": [[0, 0], [4, 0], [4, 4], [3, 4], [2, 2], [1, 4], [0, 4]],
+    "faces": [[6, 5, 4, 3, 2, 1, 0], [7, 8, 9, 10, 11, 12, 13], [0, 1, 8, 7], [1, 2, 9, 8], [2, 3, 10, 9], [3, 4, 11, 10], [4, 5, 12, 11], [5, 6, 13, 12], [6, 0, 7, 13]],
+    "pinches": [[2, 2]],
+    "bounds": [[-1, 2, 1.25], [5, 3.5, 1.75]],
+    "walls": [{"coordinate": 2, "axis": 1, "face": 2, "normalSign": -1, "segments": 2}, {"coordinate": 3.5, "axis": 1, "face": 3, "normalSign": 1, "segments": 2}],
+    "horizontalWalls": [{"z": 1.25, "face": 0, "segments": 2}, {"z": 1.75, "face": 1, "segments": 2}],
+    "intersection": {"area": 16.177050983124843, "volume": 2.4375, "components": 2, "contactCopies": 2, "contactHeights": [1.25, 1.75]},
+    "difference": {"area": 56.295084971874736, "volume": 11.5625, "components": 1, "contactCopies": 1, "genus": 2, "contactHeights": [1.25, 1.75]}
+  },
+  "reflexNonparallelSupports": {
+    "footprint": [[-1, 0], [4, 0], [4, 4], [3, 4], [2, 2], [1, 4], [0, 4], [0, 1], [-1, 1]],
+    "faces": [[8, 7, 6, 5, 4, 3, 2, 1, 0], [9, 10, 11, 12, 13, 14, 15, 16, 17], [0, 1, 10, 9], [1, 2, 11, 10], [2, 3, 12, 11], [3, 4, 13, 12], [4, 5, 14, 13], [5, 6, 15, 14], [6, 7, 16, 15], [7, 8, 17, 16], [8, 0, 9, 17]],
+    "pinches": [[2, 2]],
+    "bounds": [[-0.5, -1, 0], [5, 2, 3]],
+    "walls": [{"coordinate": 2, "axis": 1, "face": 3, "normalSign": 1, "segments": 1, "differenceSegments": 2}, {"coordinate": -0.5, "axis": 0, "face": 4, "normalSign": -1}],
+    "horizontalWalls": [],
+    "intersection": {"area": 30, "volume": 8.5, "components": 1, "contactCopies": 0},
+    "difference": {"area": 30.47213595499958, "volume": 6.5, "components": 3, "contactCopies": 2}
+  },
+  "reflexOnBothSupports": {
+    "footprint": [[0, 0], [1, 0], [2, 2], [3, 0], [4, 0], [4, 6], [3, 6], [2, 4], [1, 6], [0, 6]],
+    "faces": [[9, 8, 7, 6, 5, 4, 3, 2, 1, 0], [10, 11, 12, 13, 14, 15, 16, 17, 18, 19], [0, 1, 11, 10], [1, 2, 12, 11], [2, 3, 13, 12], [3, 4, 14, 13], [4, 5, 15, 14], [5, 6, 16, 15], [6, 7, 17, 16], [7, 8, 18, 17], [8, 9, 19, 18], [9, 0, 10, 19]],
+    "pinches": [[2, 2], [2, 4]],
+    "bounds": [[-1, 2, 0], [5, 4, 3]],
+    "walls": [{"coordinate": 2, "axis": 1, "face": 2, "normalSign": -1, "segments": 1, "differenceSegments": 2}, {"coordinate": 4, "axis": 1, "face": 3, "normalSign": 1, "segments": 1, "differenceSegments": 2}],
+    "horizontalWalls": [],
+    "intersection": {"area": 28, "volume": 8, "components": 1, "contactCopies": 0},
+    "difference": {"area": 52.94427190999916, "volume": 12, "components": 4, "contactCopies": 2}
+  },
+  "reflexOnBothSupportsWithTails": {
+    "footprint": [[0, 0], [1, 0], [2, 2], [3, 0], [4, 0], [4, 6], [3, 6], [2, 4], [1, 6], [0, 6]],
+    "faces": [[9, 8, 7, 6, 5, 4, 3, 2, 1, 0], [10, 11, 12, 13, 14, 15, 16, 17, 18, 19], [0, 1, 11, 10], [1, 2, 12, 11], [2, 3, 13, 12], [3, 4, 14, 13], [4, 5, 15, 14], [5, 6, 16, 15], [6, 7, 17, 16], [7, 8, 18, 17], [8, 9, 19, 18], [9, 0, 10, 19]],
+    "pinches": [[2, 2], [2, 4]],
+    "bounds": [[-1, 2, 1.25], [5, 4, 1.75]],
+    "walls": [{"coordinate": 2, "axis": 1, "face": 2, "normalSign": -1, "segments": 1, "differenceSegments": 2}, {"coordinate": 4, "axis": 1, "face": 3, "normalSign": 1, "segments": 1, "differenceSegments": 2}],
+    "horizontalWalls": [{"z": 1.25, "face": 0}, {"z": 1.75, "face": 1}],
+    "intersection": {"area": 22, "volume": 4, "components": 1, "contactCopies": 0, "contactHeights": [1.25, 1.75]},
+    "difference": {"area": 82.94427190999916, "volume": 16, "components": 1, "genus": 3, "contactCopies": [1, 2, 1], "contactHeights": [1.25, 1.5, 1.75], "separatingOffset": 0.0001, "separatingFaces": [2, 3]}
+  },
+  "joinedReflexRight": {
+    "footprint": [[0, 0], [4, 0], [4, 4], [3, 4], [2, 2], [1, 4], [0, 4]],
+    "faces": [[6, 5, 4, 3, 2, 1, 0], [7, 8, 9, 10, 11, 12, 13], [0, 1, 8, 7], [1, 2, 9, 8], [2, 3, 10, 9], [3, 4, 11, 10], [4, 5, 12, 11], [5, 6, 13, 12], [6, 0, 7, 13]],
+    "pinches": [[2, 2]],
+    "horizontalWalls": [],
+    "bounds": [[2, -1, 0], [5, 2, 3]],
+    "walls": [{"coordinate": 2, "axis": 1, "face": 3, "normalSign": 1}, {"coordinate": 2, "axis": 0, "face": 4, "normalSign": -1}],
+    "intersection": {"area": 16, "volume": 4, "components": 1, "contactCopies": 1},
+    "difference": {"area": 38.47213595499958, "volume": 10, "components": 2, "contactCopies": 2}
+  },
+  "joinedReflexLeft": {
+    "footprint": [[0, 0], [4, 0], [4, 4], [3, 4], [2, 2], [1, 4], [0, 4]],
+    "faces": [[6, 5, 4, 3, 2, 1, 0], [7, 8, 9, 10, 11, 12, 13], [0, 1, 8, 7], [1, 2, 9, 8], [2, 3, 10, 9], [3, 4, 11, 10], [4, 5, 12, 11], [5, 6, 13, 12], [6, 0, 7, 13]],
+    "pinches": [[2, 2]],
+    "horizontalWalls": [],
+    "bounds": [[-1, -1, 0], [2, 2, 3]],
+    "walls": [{"coordinate": 2, "axis": 1, "face": 3, "normalSign": 1}, {"coordinate": 2, "axis": 0, "face": 5, "normalSign": 1}],
+    "intersection": {"area": 16, "volume": 4, "components": 1, "contactCopies": 1},
+    "difference": {"area": 38.47213595499958, "volume": 10, "components": 2, "contactCopies": 2}
+  },
+  "joinedReflexDiagonal": {
+    "footprint": [[0, 0], [4, 0], [4, 4], [3, 4], [2, 2], [1, 4], [0, 4]],
+    "faces": [[6, 5, 4, 3, 2, 1, 0], [7, 8, 9, 10, 11, 12, 13], [0, 1, 8, 7], [1, 2, 9, 8], [2, 3, 10, 9], [3, 4, 11, 10], [4, 5, 12, 11], [5, 6, 13, 12], [6, 0, 7, 13]],
+    "pinches": [[2, 2]],
+    "horizontalWalls": [],
+    "bounds": [[-8, 4, 0], [0, 10, 3]],
+    "walls": [{"coordinate": 4, "axis": 1, "face": 2, "normalSign": -1}, {"coordinate": 0, "axis": 0, "face": 5, "normalSign": 1}],
+    "intersection": {"area": 16.12899020449196, "volume": 2, "components": 2, "contactCopies": 2},
+    "difference": {"area": 41.65685424949238, "volume": 12, "components": 1, "contactCopies": 1},
+    "frame": "diagonal"
+  },
+  "joinedReflexRightSlab": {
+    "footprint": [[0, 0], [4, 0], [4, 4], [3, 4], [2, 2], [1, 4], [0, 4]],
+    "faces": [[6, 5, 4, 3, 2, 1, 0], [7, 8, 9, 10, 11, 12, 13], [0, 1, 8, 7], [1, 2, 9, 8], [2, 3, 10, 9], [3, 4, 11, 10], [4, 5, 12, 11], [5, 6, 13, 12], [6, 0, 7, 13]],
+    "pinches": [[2, 2]],
+    "horizontalWalls": [{"z": 1.25, "face": 0}, {"z": 1.75, "face": 1}],
+    "bounds": [[2, -1, 1.25], [5, 2, 1.75]],
+    "walls": [{"coordinate": 2, "axis": 1, "face": 3, "normalSign": 1}, {"coordinate": 2, "axis": 0, "face": 4, "normalSign": -1}],
+    "intersection": {"area": 12, "volume": 2, "components": 1, "contactCopies": 1, "contactHeights": [1.25, 1.75]},
+    "difference": {"area": 54.47213595499958, "volume": 12, "components": 1, "genus": 1, "contactCopies": [1, 2, 1], "contactHeights": [1.25, 1.5, 1.75], "separatingOffset": 0.0001, "separatingFaces": [3, 4]}
+  },
+  "joinedReflexDiagonalTail": {
+    "footprint": [[0, 0], [4, 0], [4, 4], [3, 4], [2, 2], [1, 4], [0, 4]],
+    "faces": [[6, 5, 4, 3, 2, 1, 0], [7, 8, 9, 10, 11, 12, 13], [0, 1, 8, 7], [1, 2, 9, 8], [2, 3, 10, 9], [3, 4, 11, 10], [4, 5, 12, 11], [5, 6, 13, 12], [6, 0, 7, 13]],
+    "pinches": [[2, 2]],
+    "horizontalWalls": [{"z": 1.5, "face": 1, "segments": 2}],
+    "bounds": [[-8, 4, 0], [0, 10, 1.5]],
+    "walls": [{"coordinate": 4, "axis": 1, "face": 2, "normalSign": -1}, {"coordinate": 0, "axis": 0, "face": 5, "normalSign": 1}],
+    "intersection": {"area": 10.06449510224598, "volume": 1, "components": 2, "contactCopies": 2, "contactHeights": [1, 1.5]},
+    "difference": {"area": 46.06449510224598, "volume": 13, "components": 1, "genus": 0, "contactCopies": 1, "contactHeights": [1, 1.5]},
+    "frame": "diagonal"
+  },
+  "joinedReflexLeftTail": {
+    "footprint": [[0, 0], [4, 0], [4, 4], [3, 4], [2, 2], [1, 4], [0, 4]],
+    "faces": [[6, 5, 4, 3, 2, 1, 0], [7, 8, 9, 10, 11, 12, 13], [0, 1, 8, 7], [1, 2, 9, 8], [2, 3, 10, 9], [3, 4, 11, 10], [4, 5, 12, 11], [5, 6, 13, 12], [6, 0, 7, 13]],
+    "pinches": [[2, 2]],
+    "horizontalWalls": [{"z": 1.5, "face": 0}],
+    "bounds": [[-1, -1, 1.5], [2, 2, 3]],
+    "walls": [{"coordinate": 2, "axis": 1, "face": 3, "normalSign": 1}, {"coordinate": 2, "axis": 0, "face": 5, "normalSign": 1}],
+    "intersection": {"area": 12, "volume": 2, "components": 1, "contactCopies": 1, "contactHeights": [1.5, 2]},
+    "difference": {"area": 46.47213595499958, "volume": 12, "components": 1, "genus": 0, "contactCopies": [1, 2], "contactHeights": [1.5, 2]}
+  },
+  "joinedInteriorSlab": {
+    "generatedContact": true,
+    "footprint": [[0, 0], [4, 0], [4, 4], [3, 4], [2, 2], [1, 4], [0, 4]],
+    "faces": [[6, 5, 4, 3, 2, 1, 0], [7, 8, 9, 10, 11, 12, 13], [0, 1, 8, 7], [1, 2, 9, 8], [2, 3, 10, 9], [3, 4, 11, 10], [4, 5, 12, 11], [5, 6, 13, 12], [6, 0, 7, 13]],
+    "pinches": [[2, 1]],
+    "horizontalWalls": [{"z": 1.25, "face": 0}, {"z": 1.75, "face": 1}],
+    "bounds": [[2, -1, 1.25], [5, 1, 1.75]],
+    "walls": [{"coordinate": 1, "axis": 1, "face": 3, "normalSign": 1}, {"coordinate": 2, "axis": 0, "face": 4, "normalSign": -1}],
+    "intersection": {"area": 7, "volume": 1, "components": 1, "contactCopies": 1, "contactHeights": [1.25, 1.75]},
+    "difference": {"area": 50.47213595499958, "volume": 13, "components": 1, "genus": 0, "contactCopies": 1, "contactHeights": [1.25, 1.75]}
+  },
+  "joinedInteriorDiagonalSlab": {
+    "generatedContact": true,
+    "footprint": [[0, 0], [4, 0], [4, 4], [3, 4], [2, 2], [1, 4], [0, 4]],
+    "faces": [[6, 5, 4, 3, 2, 1, 0], [7, 8, 9, 10, 11, 12, 13], [0, 1, 8, 7], [1, 2, 9, 8], [2, 3, 10, 9], [3, 4, 11, 10], [4, 5, 12, 11], [5, 6, 13, 12], [6, 0, 7, 13]],
+    "pinches": [[2, 1]],
+    "horizontalWalls": [{"z": 1.25, "face": 0}, {"z": 1.75, "face": 1}],
+    "bounds": [[1, -8, 1.25], [9, 3, 1.75]],
+    "walls": [{"coordinate": 3, "axis": 1, "face": 3, "normalSign": 1}, {"coordinate": 1, "axis": 0, "face": 4, "normalSign": -1}],
+    "intersection": {"area": 4.414213562373095, "volume": 0.5, "components": 1, "contactCopies": 1, "contactHeights": [1.25, 1.75]},
+    "difference": {"area": 48.88634951737267, "volume": 13.5, "components": 1, "genus": 0, "contactCopies": 1, "contactHeights": [1.25, 1.75]},
+    "frame": "diagonal"
+  },
+  "joinedInteriorStationaryCap": {
+    "generatedContact": true,
+    "footprint": [[0, 0], [4, 0], [4, 4], [3, 4], [2, 2], [1, 4], [0, 4]],
+    "faces": [[6, 5, 4, 3, 2, 1, 0], [7, 8, 9, 10, 11, 12, 13], [0, 1, 8, 7], [1, 2, 9, 8], [2, 3, 10, 9], [3, 4, 11, 10], [4, 5, 12, 11], [5, 6, 13, 12], [6, 0, 7, 13]],
+    "pinches": [[2, 1]],
+    "horizontalWalls": [{"z": 1.5, "face": 1}],
+    "bounds": [[2, -1, 0], [5, 1, 1.5]],
+    "walls": [{"coordinate": 1, "axis": 1, "face": 3, "normalSign": 1}, {"coordinate": 2, "axis": 0, "face": 4, "normalSign": -1}],
+    "intersection": {"area": 7, "volume": 1, "components": 1, "contactCopies": 1, "contactHeights": [1, 1.5]},
+    "difference": {"area": 46.47213595499958, "volume": 13, "components": 1, "genus": 0, "contactCopies": 1, "contactHeights": [1, 1.5]}
+  },
+  "joinedInteriorStockCaps": {
+    "generatedContact": true,
+    "footprint": [[0, 0], [4, 0], [4, 4], [3, 4], [2, 2], [1, 4], [0, 4]],
+    "faces": [[6, 5, 4, 3, 2, 1, 0], [7, 8, 9, 10, 11, 12, 13], [0, 1, 8, 7], [1, 2, 9, 8], [2, 3, 10, 9], [3, 4, 11, 10], [4, 5, 12, 11], [5, 6, 13, 12], [6, 0, 7, 13]],
+    "pinches": [[2, 1]],
+    "horizontalWalls": [],
+    "bounds": [[2, -1, 0], [5, 1, 3]],
+    "walls": [{"coordinate": 1, "axis": 1, "face": 3, "normalSign": 1}, {"coordinate": 2, "axis": 0, "face": 4, "normalSign": -1}],
+    "intersection": {"area": 10, "volume": 2, "components": 1, "contactCopies": 1, "contactHeights": [1, 2]},
+    "difference": {"area": 42.47213595499958, "volume": 12, "components": 1, "genus": 0, "contactCopies": 1, "contactHeights": [1, 2]}
+  },
+  "joinedThreeSupportSlab": {
+    "generatedContact": true,
+    "footprint": [[0, 0], [4, 0], [4, 4], [3, 4], [2, 2], [1, 4], [0, 4]],
+    "faces": [[6, 5, 4, 3, 2, 1, 0], [7, 8, 9, 10, 11, 12, 13], [0, 1, 8, 7], [1, 2, 9, 8], [2, 3, 10, 9], [3, 4, 11, 10], [4, 5, 12, 11], [5, 6, 13, 12], [6, 0, 7, 13]],
+    "pinches": [[1, 1], [3, 1]],
+    "horizontalWalls": [{"z": 1.25, "face": 0}, {"z": 1.75, "face": 1}],
+    "bounds": [[1, -1, 1.25], [3, 1, 1.75]],
+    "walls": [{"coordinate": 1, "axis": 1, "face": 3, "normalSign": 1}, {"coordinate": 1, "axis": 0, "face": 4, "normalSign": -1}, {"coordinate": 3, "axis": 0, "face": 5, "normalSign": 1}],
+    "intersection": {"area": 7, "volume": 1, "components": 1, "contactCopies": 1, "contactHeights": [1.25, 1.75]},
+    "difference": {"area": 51.47213595499958, "volume": 13, "components": 1, "genus": 0, "contactCopies": 1, "contactHeights": [1.25, 1.75]}
+  },
+  "joinedThreeSupportStockCaps": {
+    "generatedContact": true,
+    "footprint": [[0, 0], [4, 0], [4, 4], [3, 4], [2, 2], [1, 4], [0, 4]],
+    "faces": [[6, 5, 4, 3, 2, 1, 0], [7, 8, 9, 10, 11, 12, 13], [0, 1, 8, 7], [1, 2, 9, 8], [2, 3, 10, 9], [3, 4, 11, 10], [4, 5, 12, 11], [5, 6, 13, 12], [6, 0, 7, 13]],
+    "pinches": [[1, 1], [3, 1]],
+    "horizontalWalls": [],
+    "bounds": [[1, -1, 0], [3, 1, 3]],
+    "walls": [{"coordinate": 1, "axis": 1, "face": 3, "normalSign": 1}, {"coordinate": 1, "axis": 0, "face": 4, "normalSign": -1}, {"coordinate": 3, "axis": 0, "face": 5, "normalSign": 1}],
+    "intersection": {"area": 10, "volume": 2, "components": 1, "contactCopies": 1, "contactHeights": [1, 2]},
+    "difference": {"area": 44.47213595499958, "volume": 12, "components": 1, "genus": 0, "contactCopies": 1, "contactHeights": [1, 2]}
+  },
+  "threeNonparallelSlab": {
+    "generatedContact": true,
+    "footprint": [[0, 0], [4, 0], [4, 4], [3, 4], [2, 2], [1, 4], [0, 4]],
+    "faces": [[6, 5, 4, 3, 2, 1, 0], [7, 8, 9, 10, 11, 12, 13], [0, 1, 8, 7], [1, 2, 9, 8], [2, 3, 10, 9], [3, 4, 11, 10], [4, 5, 12, 11], [5, 6, 13, 12], [6, 0, 7, 13]],
+    "pinches": [[1, 0.5], [3, 0.5], [2, 1.5]],
+    "horizontalWalls": [{"z": 1.25, "face": 0}, {"z": 1.75, "face": 1}],
+    "bounds": [[1, 0.5, 1.25], [3, 1.5, 1.75]],
+    "walls": [{"coordinate": 0.5, "axis": 1, "face": 2, "normalSign": -1}, {"coordinate": 3.5, "axis": 0, "face": 3, "normalSign": 1, "coefficients": [1, 1]}, {"coordinate": 0.5, "axis": 0, "face": 4, "normalSign": -1, "coefficients": [1, -1]}],
+    "intersection": {"area": 4.414213562373095, "volume": 0.5, "components": 1, "contactCopies": 1, "contactHeights": [1.25, 1.75]},
+    "difference": {"area": 50.88634951737267, "volume": 13.5, "components": 2, "genus": 0, "contactCopies": 1, "contactHeights": [1.25, 1.75]},
+    "cutterProfile": [[1, 0.5], [3, 0.5], [2, 1.5]],
+    "cutterFaces": [[2, 1, 0], [3, 4, 5], [0, 1, 4, 3], [1, 2, 5, 4], [2, 0, 3, 5]]
+  },
+  "threeNonparallelStockCaps": {
+    "generatedContact": true,
+    "footprint": [[0, 0], [4, 0], [4, 4], [3, 4], [2, 2], [1, 4], [0, 4]],
+    "faces": [[6, 5, 4, 3, 2, 1, 0], [7, 8, 9, 10, 11, 12, 13], [0, 1, 8, 7], [1, 2, 9, 8], [2, 3, 10, 9], [3, 4, 11, 10], [4, 5, 12, 11], [5, 6, 13, 12], [6, 0, 7, 13]],
+    "pinches": [[1, 0.5], [3, 0.5], [2, 1.5]],
+    "horizontalWalls": [],
+    "bounds": [[1, 0.5, 0], [3, 1.5, 3]],
+    "walls": [{"coordinate": 0.5, "axis": 1, "face": 2, "normalSign": -1}, {"coordinate": 3.5, "axis": 0, "face": 3, "normalSign": 1, "coefficients": [1, 1]}, {"coordinate": 0.5, "axis": 0, "face": 4, "normalSign": -1, "coefficients": [1, -1]}],
+    "intersection": {"area": 6.82842712474619, "volume": 1, "components": 1, "contactCopies": 1, "contactHeights": [1, 2]},
+    "cutterProfile": [[1, 0.5], [3, 0.5], [2, 1.5]],
+    "cutterFaces": [[2, 1, 0], [3, 4, 5], [0, 1, 4, 3], [1, 2, 5, 4], [2, 0, 3, 5]],
+    "difference": {"stockCapOpenings": [{"z": 1, "face": 0}, {"z": 2, "face": 1}], "area": 49.30056307974577, "volume": 13, "components": 1, "genus": 1, "contactCopies": 1, "contactHeights": [1, 2]}
+  },
+  "threeNonparallelStationaryCap": {
+    "generatedContact": true,
+    "footprint": [[0, 0], [4, 0], [4, 4], [3, 4], [2, 2], [1, 4], [0, 4]],
+    "faces": [[6, 5, 4, 3, 2, 1, 0], [7, 8, 9, 10, 11, 12, 13], [0, 1, 8, 7], [1, 2, 9, 8], [2, 3, 10, 9], [3, 4, 11, 10], [4, 5, 12, 11], [5, 6, 13, 12], [6, 0, 7, 13]],
+    "pinches": [[1, 0.5], [3, 0.5], [2, 1.5]],
+    "horizontalWalls": [{"z": 1.5, "face": 1}],
+    "bounds": [[1, 0.5, 0], [3, 1.5, 1.5]],
+    "walls": [{"coordinate": 0.5, "axis": 1, "face": 2, "normalSign": -1}, {"coordinate": 3.5, "axis": 0, "face": 3, "normalSign": 1, "coefficients": [1, 1]}, {"coordinate": 0.5, "axis": 0, "face": 4, "normalSign": -1, "coefficients": [1, -1]}],
+    "intersection": {"area": 4.414213562373095, "volume": 0.5, "components": 1, "contactCopies": 1, "contactHeights": [1, 1.5]},
+    "difference": {"stockCapOpenings": [{"z": 1, "face": 0}], "area": 48.88634951737267, "volume": 13.5, "components": 1, "genus": 0, "contactCopies": 1, "contactHeights": [1, 1.5]},
+    "cutterProfile": [[1, 0.5], [3, 0.5], [2, 1.5]],
+    "cutterFaces": [[2, 1, 0], [3, 4, 5], [0, 1, 4, 3], [1, 2, 5, 4], [2, 0, 3, 5]]
+  },
+  "fourInteriorSupportsSlab": {
+    "generatedContact": true,
+    "footprint": [[0, 0], [4, 0], [4, 4], [3, 4], [2, 2], [1, 4], [0, 4]],
+    "faces": [[6, 5, 4, 3, 2, 1, 0], [7, 8, 9, 10, 11, 12, 13], [0, 1, 8, 7], [1, 2, 9, 8], [2, 3, 10, 9], [3, 4, 11, 10], [4, 5, 12, 11], [5, 6, 13, 12], [6, 0, 7, 13]],
+    "pinches": [[1, 0.5], [3, 0.5], [3, 1.5], [1, 1.5]],
+    "horizontalWalls": [{"z": 1.25, "face": 0}, {"z": 1.75, "face": 1}],
+    "bounds": [[1, 0.5, 1.25], [3, 1.5, 1.75]],
+    "walls": [{"coordinate": 0.5, "axis": 1, "face": 2, "normalSign": -1}, {"coordinate": 1.5, "axis": 1, "face": 3, "normalSign": 1}, {"coordinate": 1, "axis": 0, "face": 4, "normalSign": -1}, {"coordinate": 3, "axis": 0, "face": 5, "normalSign": 1}],
+    "intersection": {"area": 7, "volume": 1, "components": 1, "contactCopies": 1, "contactHeights": [1.25, 1.75]},
+    "difference": {"area": 53.47213595499958, "volume": 13, "components": 2, "genus": 0, "contactCopies": 1, "contactHeights": [1.25, 1.75]}
+  },
+  "fourInteriorSupportsStockCaps": {
+    "generatedContact": true,
+    "footprint": [[0, 0], [4, 0], [4, 4], [3, 4], [2, 2], [1, 4], [0, 4]],
+    "faces": [[6, 5, 4, 3, 2, 1, 0], [7, 8, 9, 10, 11, 12, 13], [0, 1, 8, 7], [1, 2, 9, 8], [2, 3, 10, 9], [3, 4, 11, 10], [4, 5, 12, 11], [5, 6, 13, 12], [6, 0, 7, 13]],
+    "pinches": [[1, 0.5], [3, 0.5], [3, 1.5], [1, 1.5]],
+    "horizontalWalls": [],
+    "bounds": [[1, 0.5, 0], [3, 1.5, 3]],
+    "walls": [{"coordinate": 0.5, "axis": 1, "face": 2, "normalSign": -1}, {"coordinate": 1.5, "axis": 1, "face": 3, "normalSign": 1}, {"coordinate": 1, "axis": 0, "face": 4, "normalSign": -1}, {"coordinate": 3, "axis": 0, "face": 5, "normalSign": 1}],
+    "intersection": {"area": 10, "volume": 2, "components": 1, "contactCopies": 1, "contactHeights": [1, 2]},
+    "difference": {"area": 48.47213595499958, "volume": 12, "components": 1, "genus": 1, "contactCopies": 1, "contactHeights": [1, 2], "stockCapOpenings": [{"z": 1, "face": 0}, {"z": 2, "face": 1}]}
+  },
+  "fourInteriorSupportsRotatedPocket": {
+    "generatedContact": true,
+    "footprint": [[0, 0], [4, 0], [4, 4], [3, 4], [2, 2], [1, 4], [0, 4]],
+    "faces": [[6, 5, 4, 3, 2, 1, 0], [7, 8, 9, 10, 11, 12, 13], [0, 1, 8, 7], [1, 2, 9, 8], [2, 3, 10, 9], [3, 4, 11, 10], [4, 5, 12, 11], [5, 6, 13, 12], [6, 0, 7, 13]],
+    "pinches": [[1.25, 0.75], [1.75, 0.25], [2.25, 0.75], [1.75, 1.25]],
+    "horizontalWalls": [{"z": 1.5, "face": 0}],
+    "bounds": [[0.5, 2, 1.5], [1.5, 3, 3]],
+    "walls": [{"coordinate": 2, "axis": 1, "face": 2, "normalSign": -1}, {"coordinate": 3, "axis": 1, "face": 3, "normalSign": 1}, {"coordinate": 0.5, "axis": 0, "face": 4, "normalSign": -1}, {"coordinate": 1.5, "axis": 0, "face": 5, "normalSign": 1}],
+    "intersection": {"area": 2.414213562373095, "volume": 0.25, "components": 1, "contactCopies": 1, "contactHeights": [1.5, 2]},
+    "difference": {"area": 47.88634951737267, "volume": 13.75, "components": 1, "genus": 0, "contactCopies": 1, "contactHeights": [1.5, 2], "stockCapOpenings": [{"z": 2, "face": 1}]},
+    "frame": "diagonal"
+  },
+  "pentagonalInteriorSlab": {
+    "rawUvUlps": 1,
+    "generatedContact": true,
+    "footprint": [[0, 0], [4, 0], [4, 4], [3, 4], [2, 2], [1, 4], [0, 4]],
+    "faces": [[6, 5, 4, 3, 2, 1, 0], [7, 8, 9, 10, 11, 12, 13], [0, 1, 8, 7], [1, 2, 9, 8], [2, 3, 10, 9], [3, 4, 11, 10], [4, 5, 12, 11], [5, 6, 13, 12], [6, 0, 7, 13]],
+    "pinches": [[1, 0.5], [3, 0.5], [3, 1], [2, 1.5], [1, 1]],
+    "horizontalWalls": [{"z": 1.25, "face": 0}, {"z": 1.75, "face": 1}],
+    "bounds": [[1, 0.5, 1.25], [3, 1.5, 1.75]],
+    "walls": [{"coordinate": 0.5, "axis": 1, "face": 2, "normalSign": -1}, {"coordinate": 3, "axis": 0, "face": 3, "normalSign": 1}, {"coordinate": 5, "axis": 0, "face": 4, "normalSign": 1, "coefficients": [1, 2]}, {"coordinate": -1, "axis": 0, "face": 5, "normalSign": -1, "coefficients": [1, -2]}, {"coordinate": 1, "axis": 0, "face": 6, "normalSign": -1}],
+    "intersection": {"area": 5.618033988749895, "volume": 0.75, "components": 1, "contactCopies": 1, "contactHeights": [1.25, 1.75]},
+    "difference": {"area": 52.09016994374947, "volume": 13.25, "components": 2, "genus": 0, "contactCopies": 1, "contactHeights": [1.25, 1.75]},
+    "cutterProfile": [[1, 0.5], [3, 0.5], [3, 1], [2, 1.5], [1, 1]],
+    "cutterFaces": [[4, 3, 2, 1, 0], [5, 6, 7, 8, 9], [0, 1, 6, 5], [1, 2, 7, 6], [2, 3, 8, 7], [3, 4, 9, 8], [4, 0, 5, 9]]
+  },
+  "pentagonalInteriorStockCaps": {
+    "rawUvUlps": 1,
+    "generatedContact": true,
+    "footprint": [[0, 0], [4, 0], [4, 4], [3, 4], [2, 2], [1, 4], [0, 4]],
+    "faces": [[6, 5, 4, 3, 2, 1, 0], [7, 8, 9, 10, 11, 12, 13], [0, 1, 8, 7], [1, 2, 9, 8], [2, 3, 10, 9], [3, 4, 11, 10], [4, 5, 12, 11], [5, 6, 13, 12], [6, 0, 7, 13]],
+    "pinches": [[1, 0.5], [3, 0.5], [3, 1], [2, 1.5], [1, 1]],
+    "horizontalWalls": [],
+    "bounds": [[1, 0.5, 0], [3, 1.5, 3]],
+    "walls": [{"coordinate": 0.5, "axis": 1, "face": 2, "normalSign": -1}, {"coordinate": 3, "axis": 0, "face": 3, "normalSign": 1}, {"coordinate": 5, "axis": 0, "face": 4, "normalSign": 1, "coefficients": [1, 2]}, {"coordinate": -1, "axis": 0, "face": 5, "normalSign": -1, "coefficients": [1, -2]}, {"coordinate": 1, "axis": 0, "face": 6, "normalSign": -1}],
+    "intersection": {"area": 8.23606797749979, "volume": 1.5, "components": 1, "contactCopies": 1, "contactHeights": [1, 2]},
+    "difference": {"area": 48.70820393249937, "volume": 12.5, "components": 1, "genus": 1, "contactCopies": 1, "contactHeights": [1, 2], "stockCapOpenings": [{"z": 1, "face": 0}, {"z": 2, "face": 1}]},
+    "cutterProfile": [[1, 0.5], [3, 0.5], [3, 1], [2, 1.5], [1, 1]],
+    "cutterFaces": [[4, 3, 2, 1, 0], [5, 6, 7, 8, 9], [0, 1, 6, 5], [1, 2, 7, 6], [2, 3, 8, 7], [3, 4, 9, 8], [4, 0, 5, 9]]
+  },
+  "hexagonalInteriorPocket": {
+    "rawUvUlps": 1,
+    "generatedContact": true,
+    "footprint": [[0, 0], [4, 0], [4, 4], [3, 4], [2, 2], [1, 4], [0, 4]],
+    "faces": [[6, 5, 4, 3, 2, 1, 0], [7, 8, 9, 10, 11, 12, 13], [0, 1, 8, 7], [1, 2, 9, 8], [2, 3, 10, 9], [3, 4, 11, 10], [4, 5, 12, 11], [5, 6, 13, 12], [6, 0, 7, 13]],
+    "pinches": [[1.125, 0.5], [3.125, 0.5], [3.125, 1], [2.625, 1.5], [1.625, 1.5], [1.125, 1]],
+    "horizontalWalls": [{"z": 1.5, "face": 0}],
+    "bounds": [[1.125, 0.5, 1.5], [3.125, 1.5, 3]],
+    "walls": [{"coordinate": 0.5, "axis": 1, "face": 2, "normalSign": -1}, {"coordinate": 3.125, "axis": 0, "face": 3, "normalSign": 1}, {"coordinate": 4.125, "axis": 0, "face": 4, "normalSign": 1, "coefficients": [1, 1]}, {"coordinate": 1.5, "axis": 1, "face": 5, "normalSign": 1}, {"coordinate": 0.125, "axis": 0, "face": 6, "normalSign": -1, "coefficients": [1, -1]}, {"coordinate": 1.125, "axis": 0, "face": 7, "normalSign": -1}],
+    "intersection": {"area": 6.207106781186548, "volume": 0.875, "components": 1, "contactCopies": 1, "contactHeights": [1.5, 2]},
+    "difference": {"area": 49.179242736186126, "volume": 13.125, "components": 1, "genus": 0, "contactCopies": 1, "contactHeights": [1.5, 2], "stockCapOpenings": [{"z": 2, "face": 1}]},
+    "cutterProfile": [[1.125, 0.5], [3.125, 0.5], [3.125, 1], [2.625, 1.5], [1.625, 1.5], [1.125, 1]],
+    "cutterFaces": [[5, 4, 3, 2, 1, 0], [6, 7, 8, 9, 10, 11], [0, 1, 7, 6], [1, 2, 8, 7], [2, 3, 9, 8], [3, 4, 10, 9], [4, 5, 11, 10], [5, 0, 6, 11]]
+  },
+  "maskedReflexHexagonalPocket": {
+    "rawUvUlps": 1,
+    "generatedContact": true,
+    "footprint": [[0, 0], [4, 0], [4, 4], [3, 4], [2, 2], [1, 4], [0, 4]],
+    "faces": [[6, 5, 4, 3, 2, 1, 0], [7, 8, 9, 10, 11, 12, 13], [0, 1, 8, 7], [1, 2, 9, 8], [2, 3, 10, 9], [3, 4, 11, 10], [4, 5, 12, 11], [5, 6, 13, 12], [6, 0, 7, 13]],
+    "pinches": [[1.0, 0.5], [3.0, 0.5], [3.0, 1], [2.5, 1.5], [1.5, 1.5], [1.0, 1]],
+    "horizontalWalls": [{"z": 1.5, "face": 0}],
+    "bounds": [[1.0, 0.5, 1.5], [3.0, 1.5, 3]],
+    "walls": [{"coordinate": 0.5, "axis": 1, "face": 2, "normalSign": -1}, {"coordinate": 3.0, "axis": 0, "face": 3, "normalSign": 1}, {"coordinate": 4.0, "axis": 0, "face": 4, "normalSign": 1, "coefficients": [1, 1]}, {"coordinate": 1.5, "axis": 1, "face": 5, "normalSign": 1}, {"coordinate": 0.0, "axis": 0, "face": 6, "normalSign": -1, "coefficients": [1, -1]}, {"coordinate": 1.0, "axis": 0, "face": 7, "normalSign": -1}],
+    "intersection": {"area": 6.207106781186548, "volume": 0.875, "components": 1, "contactCopies": 1, "contactHeights": [1.5, 2]},
+    "difference": {"area": 49.179242736186126, "volume": 13.125, "components": 1, "genus": 0, "contactCopies": 1, "contactHeights": [1.5, 2], "stockCapOpenings": [{"z": 2, "face": 1}]},
+    "cutterProfile": [[1.0, 0.5], [3.0, 0.5], [3.0, 1], [2.5, 1.5], [1.5, 1.5], [1.0, 1]],
+    "cutterFaces": [[5, 4, 3, 2, 1, 0], [6, 7, 8, 9, 10, 11], [0, 1, 7, 6], [1, 2, 8, 7], [2, 3, 9, 8], [3, 4, 10, 9], [4, 5, 11, 10], [5, 0, 6, 11]]
+  },
+  "maskedCoincidentTriangle": {
+    "maskedStockFace": 5,
+    "generatedContact": true,
+    "footprint": [[0, 0], [4, 0], [4, 4], [3, 4], [2, 2], [1, 4], [0, 4]],
+    "faces": [[6, 5, 4, 3, 2, 1, 0], [7, 8, 9, 10, 11, 12, 13], [0, 1, 8, 7], [1, 2, 9, 8], [2, 3, 10, 9], [3, 4, 11, 10], [4, 5, 12, 11], [5, 6, 13, 12], [6, 0, 7, 13]],
+    "pinches": [[1.25, 0.5], [1.5, 1], [0.5, 1]],
+    "horizontalWalls": [],
+    "bounds": [[0.5, 0.5, 0], [1.5, 1, 3]],
+    "walls": [{"coordinate": 2, "axis": 0, "face": 2, "normalSign": 1, "coefficients": [2, -1]}, {"coordinate": 1, "axis": 1, "face": 3, "normalSign": 1}, {"coordinate": 4, "axis": 0, "face": 4, "normalSign": -1, "coefficients": [2, 3]}],
+    "intersection": {"area": 2.960404813240945, "volume": 0.25, "components": 1, "contactCopies": 1, "contactHeights": [1, 2]},
+    "cutterProfile": [[1.25, 0.5], [1.5, 1], [0.5, 1]],
+    "cutterFaces": [[2, 1, 0], [3, 4, 5], [0, 1, 4, 3], [1, 2, 5, 4], [2, 0, 3, 5]],
+    "difference": {"stockCapOpenings": [{"z": 1, "face": 0}, {"z": 2, "face": 1}], "area": 48.43254076824052, "volume": 13.75, "components": 1, "genus": 1, "contactCopies": 1, "contactHeights": [1, 2]},
+    "rawUvUlps": 1
+  },
   "cornerSlab": {
     "bounds": [[-8, -2, 0], [1, 12, 4]],
     "frame": "diagonal",
@@ -298,6 +767,24 @@
     "intersection": {"area": 12.414213562373095, "volume": 2.5, "components": 1},
     "difference": {"area": 4.414213562373095, "volume": 0.5, "components": 1}
   },
+  "axialPairs": [
+    {"name": "contained axial interval", "mismatchedProfileOffset": 0.25, "axis": 2, "cutterRotation": 2, "stock": [0, 4], "cutter": [1, 3], "intersection": {"volume": 6, "area": 22, "components": 1, "cutterCaps": [0, 1]}, "reversedIntersection": {"volume": 6, "area": 22, "components": 1, "cutterCaps": []}, "difference": {"volume": 6, "area": 28, "components": 2, "cutterCaps": [0, 1]}, "union": {"volume": 12, "area": 38, "components": 1, "cutterFaces": [], "stockFaces": [0, 1, 2, 3, 4, 5, 6, 7]}, "reversedUnion": {"volume": 12, "area": 38, "components": 1, "cutterFaces": [0, 1, 2, 3, 4, 5, 6, 7], "stockFaces": []}},
+    {"name": "overlap on a rotated axis", "axis": 1, "cutterRotation": 4, "stock": [0, 2], "cutter": [1, 3], "intersection": {"volume": 3, "area": 14, "components": 1, "cutterCaps": [1]}, "reversedIntersection": {"volume": 3, "area": 14, "components": 1, "cutterCaps": [1]}, "difference": {"volume": 3, "area": 14, "components": 1, "cutterCaps": [1]}, "reverseCutterCaps": true, "union": {"volume": 9, "area": 30, "components": 1, "cutterFaces": [0, 2, 3, 4, 5, 6, 7], "stockFaces": [0, 2, 3, 4, 5, 6, 7], "seam": 1, "interpolatedSeam": true}, "reversedUnion": {"volume": 9, "area": 30, "components": 1, "cutterFaces": [0, 2, 3, 4, 5, 6, 7], "stockFaces": [0, 2, 3, 4, 5, 6, 7], "seam": 2, "interpolatedSeam": true}},
+    {"name": "axial face contact", "axis": 0, "cutterRotation": 1, "stock": [0, 1], "cutter": [1, 2], "intersection": {"volume": 0, "area": 0, "components": 0, "cutterCaps": []}, "reversedIntersection": {"volume": 0, "area": 0, "components": 0, "cutterCaps": []}, "difference": {"volume": 3, "area": 14, "components": 1, "cutterCaps": []}, "union": {"volume": 6, "area": 22, "components": 1, "cutterFaces": [1, 2, 3, 4, 5, 6, 7], "stockFaces": [0, 2, 3, 4, 5, 6, 7], "seam": 1}, "reversedUnion": {"volume": 6, "area": 22, "components": 1, "cutterFaces": [0, 2, 3, 4, 5, 6, 7], "stockFaces": [1, 2, 3, 4, 5, 6, 7], "seam": 1}},
+    {"name": "separated axial intervals", "axis": 2, "cutterRotation": 5, "stock": [0, 1], "cutter": [2, 3], "intersection": {"volume": 0, "area": 0, "components": 0, "cutterCaps": []}, "reversedIntersection": {"volume": 0, "area": 0, "components": 0, "cutterCaps": []}, "difference": {"volume": 3, "area": 14, "components": 1, "cutterCaps": []}, "union": {"volume": 6, "area": 28, "components": 2, "cutterFaces": [0, 1, 2, 3, 4, 5, 6, 7], "stockFaces": [0, 1, 2, 3, 4, 5, 6, 7]}, "reversedUnion": {"volume": 6, "area": 28, "components": 2, "cutterFaces": [0, 1, 2, 3, 4, 5, 6, 7], "stockFaces": [0, 1, 2, 3, 4, 5, 6, 7]}}
+  ],
+  "nestedConcavePairs": [
+    {"name": "scaled concave pocket", "axis": 2, "cutterRotation": 2, "stock": [0, 4], "cutter": [1, 3], "cutterProfile": [[1.25, 1.25], [2.25, 1.25], [2.25, 1.75], [1.75, 1.75], [1.75, 2.25], [1.25, 2.25]], "cutterFaces": [[5, 4, 3, 2, 1, 0], [6, 7, 8, 9, 10, 11], [0, 1, 7, 6], [1, 2, 8, 7], [2, 3, 9, 8], [3, 4, 10, 9], [4, 5, 11, 10], [5, 0, 6, 11]], "intersection": {"area": 9.5, "volume": 1.5, "components": 1, "cutterCaps": [0, 1, 2, 3, 4, 5, 6, 7]}, "reversedIntersection": {"area": 9.5, "volume": 1.5, "components": 1, "cutterCaps": []}, "difference": {"area": 47.5, "volume": 10.5, "components": 2, "cutterCaps": [0, 1, 2, 3, 4, 5, 6, 7]}, "reversedDifference": {"area": 0, "volume": 0, "components": 0, "cutterCaps": []}, "union": {"area": 38, "volume": 12, "components": 1, "stockFaces": [0, 1, 2, 3, 4, 5, 6, 7], "cutterFaces": []}, "reversedUnion": {"area": 38, "volume": 12, "components": 1, "stockFaces": [], "cutterFaces": [0, 1, 2, 3, 4, 5, 6, 7]}, "crossingProfile": {"footprint": [[1.25, 1.25], [2.75, 1.25], [2.75, 1.75], [1.75, 2.75], [1.25, 2.75], [1.5, 1.75]], "intersectionVolume": 2.875}},
+    {"name": "notched pocket on a rotated axis", "axis": 0, "cutterRotation": 2, "stock": [0, 3], "cutter": [1, 2], "cutterProfile": [[1.25, 1.25], [2.75, 1.25], [2.75, 1.75], [2.25, 1.75], [2, 1.5], [1.75, 1.75], [1.25, 1.75]], "cutterFaces": [[6, 5, 4, 3, 2, 1, 0], [7, 8, 9, 10, 11, 12, 13], [0, 1, 8, 7], [1, 2, 9, 8], [2, 3, 10, 9], [3, 4, 11, 10], [4, 5, 12, 11], [5, 6, 13, 12], [6, 0, 7, 13]], "intersection": {"area": 5.582106781186548, "volume": 0.6875, "components": 1, "cutterCaps": [0, 1, 2, 3, 4, 5, 6, 7, 8]}, "reversedIntersection": {"area": 5.582106781186548, "volume": 0.6875, "components": 1, "cutterCaps": []}, "difference": {"area": 35.582106781186546, "volume": 8.3125, "components": 2, "cutterCaps": [0, 1, 2, 3, 4, 5, 6, 7, 8]}, "reversedDifference": {"area": 0, "volume": 0, "components": 0, "cutterCaps": []}, "union": {"area": 30, "volume": 9, "components": 1, "stockFaces": [0, 1, 2, 3, 4, 5, 6, 7], "cutterFaces": []}, "reversedUnion": {"area": 30, "volume": 9, "components": 1, "stockFaces": [], "cutterFaces": [0, 1, 2, 3, 4, 5, 6, 7]}}
+  ],
+  "separatedConcavePairs": [
+    {"name": "separated footprints inside a reentrant corner", "axis": 2, "cutterRotation": 3, "stock": [0, 3], "cutter": [1, 4], "cutterProfile": [[2.25, 2.25], [2.75, 2.25], [2.75, 2.5], [2.5, 2.5], [2.5, 2.75], [2.25, 2.75]], "cutterFaces": [[5, 4, 3, 2, 1, 0], [6, 7, 8, 9, 10, 11], [0, 1, 7, 6], [1, 2, 8, 7], [2, 3, 9, 8], [3, 4, 10, 9], [4, 5, 11, 10], [5, 0, 6, 11]], "intersection": {"area": 0, "volume": 0, "components": 0, "cutterCaps": []}, "reversedIntersection": {"area": 0, "volume": 0, "components": 0, "cutterCaps": []}, "difference": {"area": 30, "volume": 9, "components": 1, "cutterCaps": []}, "reversedDifference": {"area": 6.375, "volume": 0.5625, "components": 1, "cutterCaps": []}, "union": {"area": 36.375, "volume": 9.5625, "components": 2, "stockFaces": [0, 1, 2, 3, 4, 5, 6, 7], "cutterFaces": [0, 1, 2, 3, 4, 5, 6, 7]}, "reversedUnion": {"area": 36.375, "volume": 9.5625, "components": 2, "stockFaces": [0, 1, 2, 3, 4, 5, 6, 7], "cutterFaces": [0, 1, 2, 3, 4, 5, 6, 7]}},
+    {"name": "axial clearance despite crossing footprints", "axis": 1, "cutterRotation": 3, "stock": [0, 3], "cutter": [4, 5], "cutterProfile": [[1.25, 1.25], [2.75, 1.25], [2.75, 1.75], [1.75, 2.75], [1.25, 2.75], [1.5, 1.75]], "cutterFaces": [[5, 4, 3, 2, 1, 0], [6, 7, 8, 9, 10, 11], [0, 1, 7, 6], [1, 2, 8, 7], [2, 3, 9, 8], [3, 4, 10, 9], [4, 5, 11, 10], [5, 0, 6, 11]], "intersection": {"area": 0, "volume": 0, "components": 0, "cutterCaps": []}, "reversedIntersection": {"area": 0, "volume": 0, "components": 0, "cutterCaps": []}, "difference": {"area": 30, "volume": 9, "components": 1, "cutterCaps": []}, "reversedDifference": {"area": 8.629006963152456, "volume": 1.5625, "components": 1, "cutterCaps": []}, "union": {"area": 38.629006963152456, "volume": 10.5625, "components": 2, "stockFaces": [0, 1, 2, 3, 4, 5, 6, 7], "cutterFaces": [0, 1, 2, 3, 4, 5, 6, 7]}, "reversedUnion": {"area": 38.629006963152456, "volume": 10.5625, "components": 2, "stockFaces": [0, 1, 2, 3, 4, 5, 6, 7], "cutterFaces": [0, 1, 2, 3, 4, 5, 6, 7]}}
+  ],
+  "capCoincidentConcavePairs": [
+    {"name": "nested concave blind aperture", "axis": 2, "cutterRotation": 2, "stock": [0, 3], "cutter": [0, 1], "stockProfile": [[1, 1], [3, 1], [3, 1.5], [3, 2], [2, 2], [2, 3], [1, 3], [1, 1.5]], "stockFaces": [[7, 6, 5, 4, 3, 2, 1, 0], [8, 9, 10, 11, 12, 13, 14, 15], [0, 1, 9, 8], [1, 2, 10, 9], [2, 3, 11, 10], [3, 4, 12, 11], [4, 5, 13, 12], [5, 6, 14, 13], [6, 7, 15, 14], [7, 0, 8, 15]], "cutterProfile": [[1.25, 1.5], [2.25, 1.5], [2.25, 1.875], [1.75, 1.875], [1.75, 2.25], [1.25, 2.25]], "cutterFaces": [[5, 4, 3, 2, 1, 0], [6, 7, 8, 9, 10, 11], [0, 1, 7, 6], [1, 2, 8, 7], [2, 3, 9, 8], [3, 4, 10, 9], [4, 5, 11, 10], [5, 0, 6, 11]], "intersection": {"area": 4.625, "volume": 0.5625, "components": 1, "cutterCaps": [0, 1, 2, 3, 4, 5, 6, 7]}, "reversedIntersection": {"area": 4.625, "volume": 0.5625, "components": 1, "cutterCaps": []}, "difference": {"area": 33.5, "volume": 8.4375, "components": 1, "genus": 0, "cutterCaps": [1, 2, 3, 4, 5, 6, 7], "openStockFaces": [0]}, "reversedDifference": {"area": 0, "volume": 0, "components": 0, "cutterCaps": []}, "union": {"area": 30, "volume": 9, "components": 1, "stockFaces": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], "cutterFaces": []}, "reversedUnion": {"area": 30, "volume": 9, "components": 1, "stockFaces": [], "cutterFaces": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}},
+    {"name": "nested concave through aperture", "axis": 1, "cutterRotation": 2, "stock": [0, 3], "cutter": [0, 3], "stockProfile": [[1, 1], [3, 1], [3, 1.5], [3, 2], [2, 2], [2, 3], [1, 3], [1, 1.5]], "stockFaces": [[7, 6, 5, 4, 3, 2, 1, 0], [8, 9, 10, 11, 12, 13, 14, 15], [0, 1, 9, 8], [1, 2, 10, 9], [2, 3, 11, 10], [3, 4, 12, 11], [4, 5, 13, 12], [5, 6, 14, 13], [6, 7, 15, 14], [7, 0, 8, 15]], "cutterProfile": [[1.25, 1.5], [2.25, 1.5], [2.25, 1.875], [1.75, 1.875], [1.75, 2.25], [1.25, 2.25]], "cutterFaces": [[5, 4, 3, 2, 1, 0], [6, 7, 8, 9, 10, 11], [0, 1, 7, 6], [1, 2, 8, 7], [2, 3, 9, 8], [3, 4, 10, 9], [4, 5, 11, 10], [5, 0, 6, 11]], "intersection": {"area": 11.625, "volume": 1.6875, "components": 1, "cutterCaps": [0, 1, 2, 3, 4, 5, 6, 7]}, "reversedIntersection": {"area": 11.625, "volume": 1.6875, "components": 1, "cutterCaps": []}, "difference": {"area": 39.375, "volume": 7.3125, "components": 1, "genus": 1, "cutterCaps": [2, 3, 4, 5, 6, 7], "openStockFaces": [0, 1]}, "reversedDifference": {"area": 0, "volume": 0, "components": 0, "cutterCaps": []}, "union": {"area": 30, "volume": 9, "components": 1, "stockFaces": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], "cutterFaces": []}, "reversedUnion": {"area": 30, "volume": 9, "components": 1, "stockFaces": [], "cutterFaces": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}}
+  ],
   "split": {
     "bounds": [
       [

@@ -6,6 +6,84 @@ use semio_framework_value::RetainedCloneGrant;
 fn clock() -> Option<u64> { Some(1000) }
 
 #[test]
+fn returned_frame_quotes_the_exact_next_physical_release() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+    let law = &fixture["returnedFrame"];
+    let bytes: Vec<_> = fixture["moduleHex"].as_str().unwrap().as_bytes().chunks_exact(2).map(|pair| {
+        u8::from_str_radix(std::str::from_utf8(pair).unwrap(), 16).unwrap()
+    }).collect();
+    let engine = wasmtime::Engine::default();
+    let oracle = wasmtime::Module::new(&engine, &bytes).unwrap();
+    let mut store = wasmtime::Store::new(&engine, ());
+    let instance = wasmtime::Instance::new(&mut store, &oracle, &[]).unwrap();
+    let reference = instance.get_typed_func::<(), i64>(&mut store, "invoke").unwrap().call(&mut store, ()).unwrap();
+    assert_eq!(Some(reference), law["expected"].as_i64());
+
+    let module = Arc::new(CoreModule::parse(&bytes).unwrap());
+    let stock = RetainedCloneGrant { maximum_items: 10_000, maximum_copy_bytes: 2_000_000,
+        maximum_capacity_bytes: 2_000_000, maximum_release_bytes: 2_000_000, maximum_depth: 16 };
+    let mut caller = OriginalJobFixtureCaller::admit(OperationId(196), Generation(1), stock, clock, 1_000_000, 1_000_000);
+    let mut epoch = 1;
+    let mut owner = caller.turn(stock, |cx| {
+        cx.bind_original_source_epoch(epoch)?;
+        CoreInstanceOpening::begin(&module, cx)
+    }).unwrap().unwrap();
+    while !owner.resources_ready() {
+        epoch += 1;
+        caller.turn(stock, |cx| { cx.bind_original_source_epoch(epoch)?; owner.advance(&module, cx) }).unwrap();
+    }
+    epoch += 1;
+    assert!(caller.turn(stock, |cx| {
+        cx.bind_original_source_epoch(epoch)?;
+        assert_eq!(owner.returned_frame_demand(&module, cx)?, None);
+        owner.begin_function_step(&module, 0, &[], cx)
+    }).unwrap());
+
+    let release = law["controlBackingElements"].as_u64().unwrap() as usize * size_of::<ControlFrame>();
+    let copy = size_of::<Vec<ControlFrame>>();
+    let exact = RetirementDemand { copy_bytes: copy, release_bytes: release, depth: 1, ..Default::default() };
+    let limited = RetainedCloneGrant { maximum_release_bytes: release - 1, ..stock };
+    let mut trace = [0; 6];
+    for _ in 0..32 {
+        let turn = if stack_state(&owner).depths[1] > 1 { limited } else { stock };
+        scalar(&mut caller, &mut owner, &module, &mut epoch, turn, &mut trace);
+        if owner.returning_frame { break; }
+    }
+    assert!(owner.returning_frame);
+    let before = stack_state(&owner);
+    for denied in [
+        RetainedCloneGrant { maximum_release_bytes: release - law["releaseBytesBelowExact"].as_u64().unwrap() as usize, ..stock },
+        RetainedCloneGrant { maximum_copy_bytes: copy - law["copyBytesBelowExact"].as_u64().unwrap() as usize, ..stock },
+    ] {
+        epoch += 1;
+        caller.turn(stock, |cx| {
+            cx.bind_original_source_epoch(epoch)?;
+            assert_eq!(owner.returned_frame_demand(&module, cx)?, Some(exact));
+            assert!(semio_framework_value::retained_clone::retained_clone_grant_admits(cx.original_source_total_grant(), exact));
+            assert!(!semio_framework_value::retained_clone::retained_clone_grant_admits(denied, exact));
+            Ok(())
+        }).unwrap();
+        let actual = scalar(&mut caller, &mut owner, &module, &mut epoch, denied, &mut trace);
+        assert_eq!(actual, (CoreOriginalInvocationStatus::Pending, 0, RetainedCloneProgress::default()));
+        assert_eq!(stack_state(&owner), before);
+    }
+    let payable = RetainedCloneGrant { maximum_copy_bytes: copy, maximum_release_bytes: release, ..stock };
+    let actual = scalar(&mut caller, &mut owner, &module, &mut epoch, payable, &mut trace);
+    assert_eq!((actual.1, actual.2.copied_bytes, actual.2.released_bytes), (0, copy, release));
+    for _ in 0..32 {
+        if scalar(&mut caller, &mut owner, &module, &mut epoch, stock, &mut trace).0 == CoreOriginalInvocationStatus::Complete { break; }
+    }
+    assert_eq!(owner.invocation_values(), Some(&[Value::I64(reference)][..]));
+    for _ in 0..32 {
+        if owner.terminal_is_empty() { break; }
+        epoch += 1;
+        caller.turn(stock, |cx| { cx.bind_original_source_epoch(epoch)?; owner.close_step(&module, cx) }).unwrap();
+    }
+    assert!(owner.terminal_is_empty());
+    caller.retire(stock);
+}
+
+#[test]
 fn original_core_stack_growth_preserves_paid_receipts_and_guest_semantics() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let fixture = &fixture["stackGrowth"];

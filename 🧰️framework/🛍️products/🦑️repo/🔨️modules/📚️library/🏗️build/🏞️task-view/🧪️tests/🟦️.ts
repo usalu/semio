@@ -162,3 +162,14 @@ test("freshness law: a rewrite of equal bytes does not move the time a view give
  expect(lstatSync(join(two.root,paths[5]!)).mtimeMs).toBeGreaterThanOrEqual(changed);
  expect(lstatSync(join(live,paths[0]!)).mtimeMs).toBeGreaterThan(before(paths[0]!));
 });
+
+test("cargo tests build in a scratch outside every .cargo/config.toml: the suite scratch is the sandbox and the world follows the artifact directory",()=>{
+ const rows:{id:string;scratch?:string}[]=JSON.parse(readFileSync(join(import.meta.dirname,"../../🗂️suites/🔣️.json"),"utf8")).suites,row=rows.find(entry=>entry.id==="build-task-view");
+ expect(row?.scratch).toBe("sandbox");
+ const saved=process.env.SEMIO_TEST_ARTIFACT_DIR,artifacts=world("tv-artifacts");
+ try{
+  process.env.SEMIO_TEST_ARTIFACT_DIR=artifacts;
+  const root=world("tv-cargo");
+  expect(root.startsWith(artifacts)).toBe(true);
+ }finally{if(saved===undefined)delete process.env.SEMIO_TEST_ARTIFACT_DIR;else process.env.SEMIO_TEST_ARTIFACT_DIR=saved;}
+});

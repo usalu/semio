@@ -1,6 +1,6 @@
 /** 🧭️ The TypeScript resolver agrees with the Rust one on the shared `format-resolution` fixture. */
-import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import raw from "../../../../🚪️io/🧪️tests/🧫️fixtures/🧭️format-resolution/🔣️.json";
 import { FormatResolutionErrorV1, pickRevisionV1, resolveFormatV1, type RevisionSniffV1, type FormatClaimsV1, type FormatQueryV1 } from "../../🧱️elements/🛠️ShellHelpers/🧭️format-resolution/🟦️.ts";
 
 type Row = { kindId: string; shortId: string; aliases: string[]; mimes: string[]; extensions: string[] };
@@ -11,7 +11,7 @@ type Fixture = {
   revisionSniffs: { revisions: RevisionSniffV1[]; cases: { id: string; owner: string; head: number[]; kindId: string }[] };
   ambiguousCase: { query: FormatQueryV1; claim: string; kindIds: string[] };
 };
-const fixture = JSON.parse(readFileSync(new URL("../../../../🚪️io/🧪️tests/🧫️fixtures/🧭️format-resolution/🔣️.json", import.meta.url), "utf8")) as Fixture;
+const fixture = raw as unknown as Fixture;
 
 describe("format resolution twin", () => {
   it("resolves every shared fixture case with the Rust precedence", () => {

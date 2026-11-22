@@ -11,15 +11,16 @@ test("analytic wires hover their exact edge in component mode", () => {
         geometry.setAttribute("position", new Float32BufferAttribute(fixture.positions, 3));
         const segments = new LineSegments(geometry, material);
         const source = { handle: "a".repeat(64), revision: "b".repeat(64) };
-        const instances = [{ id: "node@wire#0", meshId: "wire", componentSource: source }] as WorldInstanceRecord[];
-        const meshes = [{ id: "wire", data: { componentReferences: {edge: fixture.labels} } }] as WorldMeshRecord[];
+        const instances: WorldInstanceRecord[] = [{ id: "node@wire#0", meshId: "wire", componentSource: source }];
+        const meshes: WorldMeshRecord[] = [{ id: "wire", data: { positions: [], normals: [], indices: [], componentReferences: { edge: fixture.labels } } }];
         for (const row of fixture.cases) {
             const ray = new Raycaster(new Vector3(1, row.y, 5), new Vector3(0, 0, -1));
             ray.params.Line = { threshold: 0.1 };
             const intersection = ray.intersectObject(segments)[0];
             expect(intersection?.index).toBe(row.y);
             const pick = world3dLinePick(fixture.edgeIds, intersection?.index, row.edges, row.whole);
-            expect(pick ?? null).toEqual(row.hit);
+            expect(pick?.mode.toString() ?? null).toBe(row.hit?.mode ?? null);
+            expect(pick?.mode === "edge" ? pick.id : null).toBe(row.hit?.id ?? null);
             const target = pick?.mode === "edge" ? world3dComponentInteractionTarget(instances, meshes, instances[0]!.id, "edge", pick.id) : undefined;
             expect(target?.id.split("~")[2] ?? null).toBe(row.label);
         }

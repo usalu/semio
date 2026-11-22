@@ -85,6 +85,7 @@ except (OSError, ValueError, KeyError) as error:
 VERIFY
 }
 verify
+python3 "$T/test-delivery-chain.py" "$D"
 python3 - "$D" <<'STALE_AUTHORED'
 import json, sys
 from pathlib import Path

@@ -106,6 +106,20 @@
         "specificHeatJKgK": 1100,
         "source": "authored-estimate",
         "reference": "incropera-2018"
+      },
+      {
+        "id": "circuit-board",
+        "title": {
+          "en": "Glass-epoxy circuit board",
+          "de": "Glasfaser-Epoxid-Leiterplatte"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.6,
+        "densityKgM3": 1850,
+        "conductivityWmK": 0.3,
+        "specificHeatJKgK": 1100,
+        "source": "authored-estimate",
+        "reference": "incropera-2018"
       }
     ],
     "rig": {
@@ -681,6 +695,10 @@
             "dial": {
               "exposedFraction": 1,
               "sunlitFraction": 0
+            },
+            "electronics": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
             }
           },
           "emitters": {},
@@ -734,6 +752,10 @@
             "dial": {
               "exposedFraction": 1,
               "sunlitFraction": 0
+            },
+            "electronics": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
             }
           },
           "emitters": {},
@@ -785,6 +807,10 @@
               "sunlitFraction": 0
             },
             "dial": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "electronics": {
               "exposedFraction": 1,
               "sunlitFraction": 0
             }
@@ -1219,6 +1245,43 @@
           "heatCapacityJM2K": 3000,
           "source": "authored-estimate",
           "reference": "incropera-2018"
+        },
+        {
+          "id": "electronics",
+          "title": {
+            "en": "Circuit board, sensor and relay",
+            "de": "Leiterplatte, Fühler und Relais"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "circuit-board",
+          "areaM2": 0.0125,
+          "characteristicLengthM": 0.074,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0,
+          "layers": [
+            {
+              "id": "board",
+              "title": {
+                "en": "Glass-epoxy board 1.6 mm",
+                "de": "Glasfaser-Epoxid-Platte 1,6 mm"
+              },
+              "kind": "polymer",
+              "material": "circuit-board",
+              "thicknessM": 0.0016,
+              "resistanceM2KW": 0.0053,
+              "heatCapacityJM2K": 3256,
+              "source": "authored-estimate",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 3256,
+          "source": "authored-estimate",
+          "reference": "incropera-2018",
+          "hidden": {
+            "en": "The circuit board with the NTC sensor bead at its lower edge, the relay, the encoder of the dial and the terminal block fill the 10 mm cavity of the housing; no drawing shows them. The region is passive: their 0.14 to 0.7 W are released by the casing region.",
+            "de": "Die Leiterplatte mit der NTC-Fühlerperle am unteren Rand, das Relais, der Drehgeber des Stellrads und die Klemmleiste füllen den 10 mm tiefen Hohlraum des Gehäuses; keine Zeichnung zeigt sie. Die Region ist passiv: ihre 0,14 bis 0,7 W gibt die Gehäuseregion ab."
+          }
         }
       ],
       "emitters": [],
@@ -1891,6 +1954,91 @@
             "of": "pointer",
             "region": "dial",
             "layer": "knob"
+          },
+          {
+            "id": "th-circuit-board",
+            "bone": "housing",
+            "material": "circuit-board",
+            "role": "body",
+            "tone": 0.35,
+            "region": "electronics",
+            "layer": "board",
+            "kind": "box",
+            "size": [0.074, 0.074, 0.0016],
+            "transform": {
+              "translation": [0.03, 0.0, 0.009]
+            }
+          },
+          {
+            "id": "th-sensor",
+            "bone": "housing",
+            "material": "abs-plastic",
+            "role": "body",
+            "tone": 0.2,
+            "region": "electronics",
+            "layer": "board",
+            "kind": "ellipsoid",
+            "radii": [0.003, 0.003, 0.0025],
+            "transform": {
+              "translation": [-0.006, 0.031, 0.005]
+            }
+          },
+          {
+            "id": "th-sensor-leads",
+            "bone": "housing",
+            "material": "circuit-board",
+            "role": "body",
+            "tone": 0.5,
+            "region": "electronics",
+            "layer": "board",
+            "kind": "capsule",
+            "p0": [-0.006, 0.031, 0.005],
+            "p1": [0.0, 0.031, 0.0082],
+            "r0": 0.0006,
+            "r1": 0.0006
+          },
+          {
+            "id": "th-relay",
+            "bone": "housing",
+            "material": "abs-plastic",
+            "role": "body",
+            "tone": 0.25,
+            "region": "electronics",
+            "layer": "board",
+            "kind": "box",
+            "size": [0.019, 0.01, 0.007],
+            "cornerRadius": 0.001,
+            "transform": {
+              "translation": [0.036, 0.026, 0.0047]
+            }
+          },
+          {
+            "id": "th-encoder",
+            "bone": "dial",
+            "material": "abs-plastic",
+            "role": "body",
+            "tone": 0.3,
+            "region": "electronics",
+            "layer": "board",
+            "kind": "revolve",
+            "profile": [[0.001, 0], [0.001, 0.006], [0.0082, 0.006], [0.0082, 0]],
+            "axis": [0, 0, 1],
+            "origin": [0, 0, 0]
+          },
+          {
+            "id": "th-terminal-block",
+            "bone": "housing",
+            "material": "abs-plastic",
+            "role": "body",
+            "tone": 0.3,
+            "region": "electronics",
+            "layer": "board",
+            "kind": "box",
+            "size": [0.008, 0.036, 0.007],
+            "cornerRadius": 0.001,
+            "transform": {
+              "translation": [-0.006, -0.012, 0.0047]
+            }
           }
         ],
         "structure": [
@@ -2159,6 +2307,10 @@
           {
             "en": "Structure: the load path is the base plate, which spans between the two fixing screws 60 mm apart (bone housing), the upper screw as a round pin, the lower one in its vertical slot as a roller, both flush with the wall plane. The dial hangs on its 6 mm potentiometer spindle, which turns in the 16 mm potentiometer body behind the face plate (joint). The masses are the circuit board with relay and terminals at the centre of the housing and the knob hub on the spindle. The cover is cladding and is absent.",
             "de": "Tragwerk: Der Lastpfad ist die Grundplatte, die zwischen den beiden Befestigungsschrauben im Abstand von 60 mm spannt (Knochen housing), die obere Schraube als runder Stift, die untere in ihrem senkrechten Langloch als Rollenlager, beide bündig mit der Wandebene. Der Drehknopf hängt an seiner 6-mm-Potentiometerachse, die im 16 mm großen Potentiometergehäuse hinter der Frontplatte dreht (Gelenk). Die Massen sind die Leiterplatte mit Relais und Klemmen in der Gehäusemitte und die Knopfnabe auf der Achse. Die Haube ist Verkleidung und fehlt."
+          },
+          {
+            "en": "Thermal: inside the 10 mm housing shell stand, as one hidden region, the 74 mm circuit board at the back, the NTC bead on its two leads at the lower edge where the room air enters through the slots, the relay of 19 x 10 x 7 mm, the encoder under the dial and the terminal block; these are the parts whose self-heating (0.14 to 0.7 W) the casing region releases.",
+            "de": "Thermik: in der 10 mm tiefen Gehäuseschale stehen als eine verdeckte Region die 74 mm große Leiterplatte an der Rückwand, die NTC-Perle an ihren zwei Drähten am unteren Rand, wo die Raumluft durch die Schlitze eintritt, das Relais von 19 x 10 x 7 mm, der Drehgeber unter dem Stellrad und die Klemmleiste; das sind die Teile, deren Eigenerwärmung (0,14 bis 0,7 W) die Gehäuseregion abgibt."
           }
         ]
       },
@@ -2441,6 +2593,34 @@
             "of": "dial",
             "region": "dial",
             "sectionFaces": ["+w"]
+          },
+          {
+            "id": "th-circuit-board",
+            "bone": "housing",
+            "material": "circuit-board",
+            "role": "body",
+            "tone": 0.35,
+            "region": "electronics",
+            "layer": "board",
+            "kind": "box",
+            "size": [0.074, 0.074, 0.0016],
+            "transform": {
+              "translation": [0.03, 0.0, 0.009]
+            }
+          },
+          {
+            "id": "th-relay",
+            "bone": "housing",
+            "material": "abs-plastic",
+            "role": "body",
+            "tone": 0.25,
+            "region": "electronics",
+            "layer": "board",
+            "kind": "box",
+            "size": [0.019, 0.015, 0.007],
+            "transform": {
+              "translation": [0.036, 0.024, 0.0047]
+            }
           }
         ],
         "structure": [
@@ -2613,6 +2793,10 @@
           {
             "en": "Structure: nothing in this 15 mm deep device is thinner than the feature, so the load path is drawn at the feature size: the base plate as a 15 mm bar from screw to screw, both screws as 15 mm round bosses on the screw axis, flush with the wall (pin and slot can no longer be told apart), the spindle merged with the knob hub into one 15 mm shaft, the potentiometer as a 15 mm joint disc where the shaft enters the housing, the circuit board as a 15 by 30 mm mass block at the centre of the housing, where its mass lies at 1:50 and the knob's mass as a 15 mm ball at its centre inside the knob.",
             "de": "Tragwerk: Nichts in diesem 15 mm tiefen Gerät ist dünner als das Mindestmaß, der Lastpfad ist deshalb in Mindestmaßgröße gezeichnet: die Grundplatte als 15-mm-Stab von Schraube zu Schraube, beide Schrauben als runde 15-mm-Dome auf der Schraubenachse, bündig mit der Wand (Stift und Langloch sind nicht mehr zu unterscheiden), die Achse mit der Knopfnabe zu einer 15-mm-Welle zusammengefasst, das Potentiometer als 15-mm-Gelenkscheibe, wo die Welle ins Gehäuse tritt, die Leiterplatte als Massenblock von 15 mal 30 mm in der Gehäusemitte, wo seine Masse bei 1:50 liegt und die Masse des Knopfs als 15-mm-Kugel in seiner Mitte."
+          },
+          {
+            "en": "Thermal: inside the housing shell the circuit board and the relay stand as one hidden region.",
+            "de": "Thermik: in der Gehäuseschale stehen Leiterplatte und Relais als eine verdeckte Region."
           }
         ]
       },
@@ -2709,6 +2893,20 @@
             "of": "dial",
             "region": "dial",
             "sectionFaces": ["+w"]
+          },
+          {
+            "id": "th-circuit-board",
+            "bone": "housing",
+            "material": "circuit-board",
+            "role": "body",
+            "tone": 0.35,
+            "region": "electronics",
+            "layer": "board",
+            "kind": "box",
+            "size": [0.074, 0.074, 0.0016],
+            "transform": {
+              "translation": [0.03, 0.0, 0.009]
+            }
           }
         ],
         "structure": [
@@ -2783,6 +2981,10 @@
           {
             "en": "Structure: the base plate is reduced to its load path, a 20 mm strip at the wall from screw to screw; the two screws are square 14 mm blocks at their anchors, the dial hangs on one 10 mm shaft that reaches back to the strip. Joint and masses are merged into these members.",
             "de": "Tragwerk: Die Grundplatte ist auf ihren Lastpfad verkürzt, einen 20 mm breiten Streifen an der Wand von Schraube zu Schraube; die beiden Schrauben sind quadratische 14-mm-Blöcke an ihren Ankern, der Drehknopf hängt an einer 10-mm-Welle, die bis zum Streifen zurückreicht. Gelenk und Massen gehen in diesen Gliedern auf."
+          },
+          {
+            "en": "Thermal: the circuit board stands inside the housing as the one hidden body.",
+            "de": "Thermik: die Leiterplatte steht als der eine verdeckte Körper im Gehäuse."
           }
         ]
       },
@@ -2877,6 +3079,20 @@
             "of": "dial",
             "region": "dial",
             "sectionFaces": ["+w"]
+          },
+          {
+            "id": "th-circuit-board",
+            "bone": "housing",
+            "material": "circuit-board",
+            "role": "body",
+            "tone": 0.35,
+            "region": "electronics",
+            "layer": "board",
+            "kind": "box",
+            "size": [0.07, 0.07, 0.0016],
+            "transform": {
+              "translation": [0.03, 0.0, 0.009]
+            }
           }
         ],
         "structure": [
@@ -2951,6 +3167,10 @@
           {
             "en": "Structure: one 12 mm spine from screw to screw inside the slab, the two screws as flat pads between spine and wall, and the dial on a square 8 mm stub that ends on the spine.",
             "de": "Tragwerk: ein 12 mm starker Steg von Schraube zu Schraube im Inneren der Platte, die beiden Schrauben als flache Auflager zwischen Steg und Wand und der Drehknopf auf einem quadratischen 8-mm-Stummel, der am Steg endet."
+          },
+          {
+            "en": "Thermal: the circuit board stands inside the housing as the one hidden body.",
+            "de": "Thermik: die Leiterplatte steht als der eine verdeckte Körper im Gehäuse."
           }
         ]
       }

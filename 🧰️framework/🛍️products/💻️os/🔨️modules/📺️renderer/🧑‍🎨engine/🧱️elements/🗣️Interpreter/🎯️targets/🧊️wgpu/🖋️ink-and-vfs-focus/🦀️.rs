@@ -247,9 +247,9 @@ pub fn apply_focused_ink_paste(text: &str, image_data_url: bool, input: &mut sem
 
 #[cfg(not(target_arch = "wasm32"))]
 pub struct PendingNativeInkClipboard {
-    source:semio_ui_wgpu_input::ClipboardIntentSource,
+    pub source:semio_ui_wgpu_input::ClipboardIntentSource,
     pub address: InkClipboardAddress,
-    outcome: Option<Result<Option<semio_ui_wgpu_hosting::host::ClipboardContent>, semio_ui_action::BoundedActionFault>>,
+    pub outcome: Option<Result<Option<semio_ui_wgpu_hosting::host::ClipboardContent>, semio_ui_action::BoundedActionFault>>,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -300,9 +300,9 @@ fn queue_ink_clipboard_read(address: InkClipboardAddress,input:&mut semio_ui_wgp
 
 #[cfg(not(target_arch = "wasm32"))]
 pub struct PendingNativeTextEditorClipboard {
-    source:semio_ui_wgpu_input::ClipboardIntentSource,
+    pub source:semio_ui_wgpu_input::ClipboardIntentSource,
     pub focus: FocusedTextEditor,
-    outcome: Option<Result<Option<semio_ui_wgpu_hosting::host::ClipboardContent>, semio_ui_action::BoundedActionFault>>,
+    pub outcome: Option<Result<Option<semio_ui_wgpu_hosting::host::ClipboardContent>, semio_ui_action::BoundedActionFault>>,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -511,7 +511,7 @@ pub fn abort_focused_ink_clipboard_stream(stream: u64) -> bool {
 pub struct TextEditorInputStream {
     pub id: u64,
     pub focus: FocusedTextEditor,
-    text: String,
+    pub text: String,
 }
 
 thread_local! {

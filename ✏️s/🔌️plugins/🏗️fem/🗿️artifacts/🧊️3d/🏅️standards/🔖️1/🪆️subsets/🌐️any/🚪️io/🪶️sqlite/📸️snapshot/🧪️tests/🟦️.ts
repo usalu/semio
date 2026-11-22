@@ -90,9 +90,13 @@ for(const word of fixture.ieee754Words)test(`fem3d canonical snapshot artifact a
   const source=state();everyWord(source,word);
   expect(()=>artifact.parseFem3dArtifact(source)).toThrow("canonical unique DOF set required");
   source.supports=source.supports.map(support=>({...support,fixed:[...new Set(support.fixed)]}));
+  expect(()=>artifact.parseFem3dArtifact(source)).not.toThrow();
+  const original=source.nodes.map(row=>row.id);
+  source.nodes[0]!.id="";
   expect(()=>artifact.parseFem3dArtifact(source)).toThrow("scoped identity segment");
-  source.nodes.forEach((row,index)=>{row.id=fixture.canonicalIdentities.nodes[index]!;});
+  source.nodes[0]!.id=original[1]!;
   expect(()=>artifact.parseFem3dArtifact(source)).toThrow("repeated entity identity");
+  source.nodes.forEach((row,index)=>{row.id=fixture.canonicalIdentities.nodes[index]!;});
   source.elements.forEach((row,index)=>{row.id=fixture.canonicalIdentities.elements[index]!;});
   source.loadCases.forEach(loadCase=>loadCase.loads.forEach((row,index)=>{row.id=fixture.canonicalIdentities.loads[index]!;}));
   for(const count of fixture.countWords){source.analysis.modalCount=BigInt(count);source.analysis.bucklingCount=BigInt(count);

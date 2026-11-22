@@ -1,0 +1,66 @@
+{
+  "title": "Fix Slice Progress Step Wording",
+  "emoji": "🪧️",
+  "status": "closed",
+  "description": "Fix the repo run progress line for a timed read step: no raw unit-label text and no trailing N of M counter that reads as past 100% for a time estimate. Keep en and de consistent.",
+  "summary": "Pending verification. The progress step line no longer prints the raw counter label or a trailing N of M counter; step lines render as \"(S s, expected|beyond the expected B s): phase\" in en and de, and the watchdog parser reads that form. Tests updated; the repo test run has not yet passed because the shared replica's graph service failed during planning (unrelated missing worker dir and cache ledger errors).",
+  "goal": "runningframework",
+  "sessions": [
+    "c2e9204d-5160-4647-9536-5bfba9a11f81"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-22 00:37:07",
+      "author": "",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Fix the repo run progress line for a timed read step: no raw unit-label text and no trailing N of M counter that reads as past 100% for a time estimate. Keep en and de consistent."
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-22 01:48:35",
+      "author": "ueli",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "b4927d2c311c372f9d5c7bb46b28a67fe36bb421",
+      "summary": "Pending verification. The progress step line no longer prints the raw counter label or a trailing N of M counter; step lines render as \"(S s, expected|beyond the expected B s): phase\" in en and de, and the watchdog parser reads that form. Tests updated; the repo test run has not yet passed because the shared replica's graph service failed during planning (unrelated missing worker dir and cache ledger errors).",
+      "files": [
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧠️memory/📋️slice-report/🟨️.mjs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧠️memory/📋️slice-report/🟨️.d.mts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧠️memory/📋️slice-report/🧬️schema/🔣️.json"
+        },
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🧬️schema/🔣️.json"
+        },
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏛️service/🌐️host/🟨️.mjs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🛰️sidecar/🚦️ready/🌲️process-tree/🧬️schema/🔣️.json"
+        },
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🛰️sidecar/🚦️ready/🌲️process-tree/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧠️memory/📋️slice-report/🧪️tests/🪜️read-steps/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧠️memory/📋️slice-report/🧪️tests/🏁️final-line/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🛰️sidecar/🚦️ready/🧪️tests/🪜️step-overdue/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🛰️sidecar/🚦️ready/🧪️tests/🪜️step-overdue/🔣️.json"
+        }
+      ]
+    }
+  ]
+}

@@ -10,8 +10,106 @@
 //!   very algorithm React's `UISearch` uses (`🔨️modules/🖱️ui/🔨️modules/🔎️fuzzy-ranking/🟦️.ts`).
 
 use semio_renderer_wgpu_fixtures::shell::{host_test_shell, test_app, tree_pointer_record};
+use semio_renderer_wgpu_shell_window_actions::WindowActionsCtx;
 use super::*;
 use semio_framework::{ActionArgDef, ActionArgOption, ActionKind, CommandDefinition, CommandOwnerAddress};
+use semio_framework::kernel::{ClipboardFragment, Effect};
+
+fn workspace_clipboard_fragment(label: &str) -> ClipboardFragment {
+    ClipboardFragment {
+        schema: "puzzle.2d.clipboard.v1".into(),
+        media_type: semio_framework::MediaType { class: semio_framework::MediaClass::TwoD, form: semio_framework::MediaForm::Design },
+        dsl_text: "{}".into(),
+        pack_bytes: None,
+        source_app: "puzzle.2d".into(),
+        label: label.into(),
+    }
+}
+
+#[test]
+fn workspace_clipboard_keeps_the_latest_effect_and_preserves_paste_placement() {
+    use semio_framework_value::ToValue;
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🛠️ShellHelpers/🧪️tests/🧫️fixtures/📋️clipboard-order.json")).unwrap();
+    let mut shell = host_test_shell();
+    let effects = fixture["copied"].as_array().unwrap().iter().map(|label| Effect::ClipboardWrite { fragment: workspace_clipboard_fragment(label.as_str().unwrap()) }).collect();
+    WindowActionsCtx::of(&mut shell).queue_host_effects("puzzle.2d", effects);
+    let mut paste = ActionDescriptor {
+        controller_id: "puzzle.2d".into(),
+        action: "paste".into(),
+        args: Some(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::from_json_str(&fixture["placement"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap())),
+    };
+    let placement = paste.args.clone().unwrap();
+    shell.docs.bind_workspace_paste(&mut paste);
+    let args = paste.args.as_ref().unwrap();
+    let latest = workspace_clipboard_fragment(fixture["pasted"][1].as_str().unwrap()).to_value();
+    assert_eq!(args.get("fragment"), Some(&latest));
+    for (key, value) in placement.as_object().unwrap() {
+        assert_eq!(args.get(key), Some(value));
+    }
+    let supplied = workspace_clipboard_fragment("explicit fragment").to_value();
+    paste.args = Some(DslValue::Object(vec![("fragment".into(), supplied.clone())]));
+    shell.docs.bind_workspace_paste(&mut paste);
+    assert_eq!(paste.args.as_ref().unwrap().get("fragment"), Some(&supplied));
+}
+
+thread_local! {
+    static CLIPBOARD_INVOCATIONS: std::cell::RefCell<Vec<serde_json::Value>> = const { std::cell::RefCell::new(Vec::new()) };
+}
+
+fn clipboard_fixture_action(instance: u32, payload: &str, view: &ViewModel) -> Result<semio_framework::kernel::InvocationResult, String> {
+    let invocation: serde_json::Value = serde_json::from_str(payload).map_err(|error| error.to_string())?;
+    let mut response = accept_find_fixture_action(instance, payload, view)?;
+    response.ui_scope = semio_framework::kernel::UiDirtyScope::None;
+    if invocation["address"]["actionId"] == "copy" {
+        response.requested_effects.push(Effect::ClipboardWrite { fragment: workspace_clipboard_fragment("copied from shortcut") });
+    }
+    CLIPBOARD_INVOCATIONS.with(|log| log.borrow_mut().push(invocation));
+    Ok(response)
+}
+
+#[test]
+fn workspace_clipboard_keeps_copy_through_the_next_paste_shortcut() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
+    CLIPBOARD_INVOCATIONS.with(|log| log.borrow_mut().clear());
+    let mut shell = host_test_shell();
+    shell.plugins.app_catalogue_instance = shell.docs.session.as_ref().map(|session| session.instance_id);
+    let app = &mut shell.docs.session.as_mut().unwrap().app;
+    app.actions = semio_framework::clipboard_action_definitions();
+    app.keybindings = app.actions.iter().filter_map(|action| {
+        Some(semio_framework::manifest::Keybinding {
+            keys: action.keys.clone()?,
+            action: ActionDescriptor { controller_id: app.controller_id.clone(), action: action.id.clone(), args: None },
+        })
+    }).collect();
+    shell.plugins.plugins.iter_mut().find(|program| program.plugin_id == "space").unwrap().install_fixture_action(clipboard_fixture_action);
+    shell.dock.dock.root = semio_renderer_wgpu_dock::DockNode::Stack { windows: vec![DockStackTab::new("main")], active: "main".into() };
+    shell.dock.dock.active_window_id = Some("main".into());
+    shell.windows.active_window_id = Some("main".into());
+    SessionCtx::of(&mut shell).sync_dock_tabs();
+    let mut input = InputState::<ActionDescriptor>::default();
+    for chord in ["mod+c", "mod+v"] {
+        let (action, modifiers) = chord_event(chord);
+        semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_keyboard_async(action, &modifiers, &mut input)).unwrap();
+    }
+    CLIPBOARD_INVOCATIONS.with(|log| {
+        let invocations = log.borrow();
+        assert_eq!(invocations.len(), 2, "{invocations:?}");
+        assert_eq!(invocations[0]["address"]["actionId"], "copy");
+        assert_eq!(invocations[1]["address"]["actionId"], "paste");
+        assert_eq!(invocations[1]["address"]["windowInstanceId"], "main");
+        assert_eq!(invocations[1]["arguments"]["fragment"]["label"], "copied from shortcut");
+    });
+    shell.docs.retire_documents_outside(&[], true, &mut shell.chrome).unwrap();
+    shell.docs.retire_documents_outside(&[], false, &mut shell.chrome).unwrap();
+    let auxiliary = std::mem::take(&mut shell.docs.window_actions_documents)
+        .into_values()
+        .chain(std::mem::take(&mut shell.docs.window_search_documents).into_values())
+        .chain(std::mem::take(&mut shell.docs.window_measures_documents).into_values());
+    for document in auxiliary {
+        shell.docs.retire_one_surface_document(Some(document)).unwrap();
+    }
+    shell.docs.drain_retained_document_arenas();
+}
 
 //#region ⌨️ChordTable
 
@@ -159,7 +257,7 @@ fn each_panel_anchor_chord_toggles_its_own_anchor() {
     let mut input = InputState::<ActionDescriptor>::default();
     let press = |shell: &mut ShellState, chord: &str, input: &mut InputState<ActionDescriptor>| {
         let (action, modifiers) = chord_event(chord);
-        PointerCtx::of(&mut shell).handle_keyboard(action, &modifiers, input);
+        PointerCtx::of(shell).handle_keyboard(action, &modifiers, input);
     };
 
     press(&mut shell, "ctrl+b", &mut input);
@@ -230,7 +328,7 @@ fn the_window_chords_close_maximize_and_open_a_new_instance() {
     let mut input = InputState::<ActionDescriptor>::default();
     let press = |shell: &mut ShellState, chord: &str, input: &mut InputState<ActionDescriptor>| {
         let (action, modifiers) = chord_event(chord);
-        PointerCtx::of(&mut shell).handle_keyboard(action, &modifiers, input);
+        PointerCtx::of(shell).handle_keyboard(action, &modifiers, input);
     };
 
     let mut shell = two_window_shell();
@@ -461,8 +559,8 @@ fn publish_palette_chrome(shell: &mut ShellState, input: &mut InputState<ActionD
     let theme = Theme::light();
     let mut world_resources = infinite_world::world::World3dBuildContext::new(infinite_world::world::WorldCursorWakeAuthority::new());
     for _ in 0..65_536 {
-        if caller.turn(|cx|PanelsViewCtx::of(&mut shell).render_chrome_step(&mut frame, &mut draw, &mut overlay, &mut atlas, &icons, input, &theme, &mut world_resources, cx)).expect("original fixture caller turn") {
-            PanelsViewCtx::of(&mut shell).publish_retained_hit_registry(input);
+        if caller.turn(|cx|PanelsViewCtx::of(shell).render_chrome_step(&mut frame, &mut draw, &mut overlay, &mut atlas, &icons, input, &theme, &mut world_resources, cx)).expect("original fixture caller turn") {
+            PanelsViewCtx::of(shell).publish_retained_hit_registry(input);
             caller.retire_world(&mut world_resources);
             caller.finish();
             return;
@@ -635,7 +733,7 @@ fn palette_accessibility_is_a_dialog_tree_with_close_list_groups_status_and_stab
 /// the host-app verbs — because that order is what the ranker breaks ties on and what a cold palette shows.
 #[test]
 fn the_palette_rows_follow_the_react_declaration_order() {
-    let shell = host_test_shell();
+    let mut shell = host_test_shell();
     assert!(shell.plugins.space_mode);
     let items = SessionCtx::of(&mut shell).build_search_items();
     items.iter().fold(0usize, |rank, item| {
@@ -670,7 +768,7 @@ fn the_palette_rows_follow_the_react_declaration_order() {
 
 #[test]
 fn a_palette_without_a_session_is_empty_like_react() {
-    let shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     assert!(SessionCtx::of(&mut shell).build_search_items().is_empty());
 }
 

@@ -89,7 +89,7 @@ test("the compiler chain of a build names the cache wrapper only when the enviro
 
 test("physical charge freezes broker admission independently of resident memory",async()=>{
  const {budgetBytes,samples}=disconnect.physicalCharge,policy=ADMISSION_POLICY_V1;
- const broker=await startAdmissionBrokerV1({physicalBytes:policy.reserveBytes+budgetBytes,history:new Map()});
+ const broker=await startAdmissionBrokerV1({physicalBytes:policy.maximumReserveBytes+budgetBytes,history:new Map()});
  broker.registerPass({id:"p1",profile:"release",target:"host"});
  const peers:Socket[]=[];
  const send=(socket:Socket,message:object)=>socket.write(JSON.stringify(message)+"\n");

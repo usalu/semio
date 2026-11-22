@@ -1,0 +1,15 @@
+# EN 1998 Formula Source Admission
+
+November 21, 12:47 PST. The refreshed grouped Hub Cargo unit graph exposed one live Source refusal. The selected `semio_s_artifact_norm_en1998_schema_formulas` WASI closure had 17 files, 268,870 bytes and 4,027 active lines. The repository applies ceilings of 262,144 bytes and 4,000 active lines to this owner. The older cached graph also referred to a removed Process3d crate. The fresh grouped Hub graph excludes that obsolete unit and still selects its same 48 root packages.
+
+The EN 1998-4 formula package now owns the pipe strain, pipe wave and granular silo pressure modules, plus the Part 4 tank and silo calculation functions. The formula facade re-exports the same `part_4` and `pipe_wave` paths. Calculation expressions and leaf files were preserved, including the concurrently authored `SiloWallSection` export and the axial-demand call to the existing compliance registry key. The new local package depends only on norm compliance. Cargo reconciled the EN 1998, Hub and fixture-sweep lockfiles to record the new local package. Cargo also exposed an already authored EN 1998 mutation facade dependency on the existing formulas package that the standalone lock had lacked.
+
+## Verification
+
+- With nightly 2026-07-20, locked and offline release unit graphs passed for the 48 grouped Hub WASI roots and standalone EN 1998 for WASI and native macOS. The standalone graphs select the formulas facade → Part 4 → compliance path.
+- The repository Source reader admitted both formula owners for both standalone target graphs. The main formulas closure now uses 14 files, 260,027 bytes and 3,853 active lines on both targets. Part 4 is below the warning threshold. The effective ceilings are unchanged.
+- The existing buried-pipe TSV golden passed against the new production Part 4 root. The focused harness also checks the existing silo pressure golden's signed increment and redistribution cases, verifies both public pipe-wave paths, and compares twelve tank outputs with Python's independent numeric implementation. The harness's linking-only compliance signature panics on use, so it does not execute the axial NDP lookup or the full catalogue integration.
+- Exact Cargo `cdylib` root manifest comparison found all 32 roster entries among the refreshed and retained unit graphs. Source admission passed 3,865 distinct target/configuration closures with 100 below-limit warnings and no refusals. The targeted Flow host session closure for CAD also passes at 258,027 bytes and 2,887 active lines.
+- Fixture-sweep locked/offline manifest metadata passed. Its full offline graph reached a pre-existing third-party cache gap at `rand 0.8.6`.
+
+The evidence under `🗑️generated` is `1247-roster-source.json`, `1252-hub-graph.json`, `1253-roster-source.json`, `1255-en1998-goldens.log`, the `1256-en1998-*-graph.json` files, and `1257-en1998-formula-units-source.json`. Reproduce the bounded native numerical checks by running `en1998-part4-goldens.py` from the workspace root through `repo tools exec --light python`.

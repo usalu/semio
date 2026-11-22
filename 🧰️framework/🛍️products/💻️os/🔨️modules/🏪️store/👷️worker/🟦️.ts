@@ -111,7 +111,8 @@ import "./🚀️artifact-bootstrap/🟦️.ts";
 import { abortArtifactBootstrap, artifactBootstrapFailure, closeArtifactRuntime, directoryCommandOperations, directoryCommandQueue, scopedDirectoryStreams, spaceArtifactCreationCatalogOperations, spaceArtifactCreationOperations } from "./🛑️session-teardown/🟦️.ts";
 import { handleHubFrame } from "./📡️hub-frames/🟦️.ts";
 import { DIRECTORY_COMMAND_TRANSPORT_CAPACITY, cancelSpaceArtifactCreation, openSpaceArtifactCreationCatalog, setSpaceArtifactCreationTestFetch, spaceArtifactCreationTestFetch, submitSpaceArtifactCreation } from "./📇️space-artifact-creation/🟦️.ts";
-import { cancelDocumentCheckIn, submitDocumentCheckIn } from "./📌️document-check-in/🟦️.ts";
+import { cancelDocumentArchiveReadV1, readDocumentArchiveForRendererV1 } from "./📤️document-archive/🟦️.ts";
+import { cancelDocumentCheckIn, settleDocumentForRoleV1, submitDocumentCheckIn } from "./📌️document-check-in/🟦️.ts";
 import { acknowledgeDirectoryBootstrap, cancelDirectoryCommand, closeScopedDirectory, closeSpaceDirectory, openScopedDirectory, openSpaceDirectory, rejectDirectoryBootstrap, submitDirectoryCommand } from "./🧭️directory-bootstrap/🟦️.ts";
 import { closePreferenceLane, openPreferenceLane, recordPreferenceLaneChange } from "./🌐️preference-lane/🟦️.ts";
 import { closeDirectoryAdministration, requestDirectoryAdministrationCapability, revokeDirectoryAdministrationForScope, settleDirectoryAdministrationCapability, submitDirectoryAdministrationCommand } from "./🛡️directory-administration/🟦️.ts";
@@ -149,7 +150,7 @@ function dispatchBackboneWorkerRequest(request: BackboneWorkerRequest, host: Rus
     typescriptDispatch(request);
     return;
   }
-  if (request.kind === "browser-actor-action" || request.kind === "browser-actor-ui-patch-result" || request.kind === "browser-actor-view-state") {
+  if (request.kind === "browser-actor-action" || request.kind === "browser-actor-ui-patch-result" || request.kind === "browser-actor-view-state" || request.kind === "document-settle" || request.kind === "document-archive-read" || request.kind === "document-archive-read-cancel") {
     typescriptDispatch(request);
     return;
   }
@@ -387,10 +388,10 @@ function handleTsRequest(request: BackboneWorkerRequest): void {
       closeScopedDirectory(request.scope);
       break;
     case "directory-space-open":
-      openSpaceDirectory(request.baseUrl, request.spaceId);
+      openSpaceDirectory(request.baseUrl, request.spaceId, request.clientInstanceId);
       break;
     case "directory-space-close":
-      closeSpaceDirectory(request.spaceId);
+      closeSpaceDirectory(request.spaceId, request.clientInstanceId);
       break;
     case "directory-command":
       void submitDirectoryCommand(request.requestId, request.command);
@@ -406,6 +407,15 @@ function handleTsRequest(request: BackboneWorkerRequest): void {
       break;
     case "space-artifact-create-cancel":
       cancelSpaceArtifactCreation(request.requestId, request.spaceId);
+      break;
+    case "document-archive-read":
+      void readDocumentArchiveForRendererV1(request);
+      break;
+    case "document-archive-read-cancel":
+      cancelDocumentArchiveReadV1(request);
+      break;
+    case "document-settle":
+      void settleDocumentForRoleV1(request);
       break;
     case "document-check-in":
       submitDocumentCheckIn(request);

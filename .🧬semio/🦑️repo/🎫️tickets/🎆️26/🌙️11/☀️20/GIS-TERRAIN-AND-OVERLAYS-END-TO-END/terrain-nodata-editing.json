@@ -1,0 +1,120 @@
+{
+  "bounds": [
+    0,
+    0,
+    3,
+    2
+  ],
+  "rowsMillimetres": [
+    [
+      10,
+      20,
+      30,
+      40
+    ],
+    [
+      50,
+      0,
+      70,
+      80
+    ],
+    [
+      90,
+      100,
+      110,
+      120
+    ]
+  ],
+  "missingSamples": "2000",
+  "tests": [
+    {
+      "operation": "offset",
+      "column": 0,
+      "row": 0,
+      "radius": 0,
+      "value": 7,
+      "rowsMillimetres": [
+        [
+          17,
+          27,
+          37,
+          47
+        ],
+        [
+          57,
+          0,
+          77,
+          87
+        ],
+        [
+          97,
+          107,
+          117,
+          127
+        ]
+      ]
+    },
+    {
+      "operation": "smooth",
+      "column": 0,
+      "row": 1,
+      "radius": 0,
+      "value": 100,
+      "rowsMillimetres": [
+        [
+          10,
+          20,
+          30,
+          40
+        ],
+        [
+          54,
+          0,
+          70,
+          80
+        ],
+        [
+          90,
+          100,
+          110,
+          120
+        ]
+      ]
+    },
+    {
+      "operation": "raise-lower",
+      "column": 0,
+      "row": 1,
+      "radius": 1,
+      "value": 8,
+      "rowsMillimetres": [
+        [
+          16,
+          24,
+          30,
+          40
+        ],
+        [
+          58,
+          0,
+          70,
+          80
+        ],
+        [
+          96,
+          104,
+          110,
+          120
+        ]
+      ]
+    },
+    {
+      "operation": "set-sample",
+      "column": 1,
+      "row": 1,
+      "radius": 0,
+      "value": 500,
+      "error": "gis-terrain-elevation-sample-is-missing"
+    }
+  ]
+}

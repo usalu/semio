@@ -21,9 +21,9 @@ describe("browser frame worker transport", () => {
     const batch = worker.messages.at(-1);
     expect(batch?.kind).toBe("batch");
     if (batch?.kind !== "batch") return;
-    expect(batch.lossless.length).toBeGreaterThan(0);
-    expect(batch.lossless.length).toBeLessThanOrEqual(16);
-    expect(batch.lossless[0]).toEqual(expect.objectContaining({ kind: "text-chunk", target: "paste", final: false }));
+    expect(batch.events.length).toBeGreaterThan(0);
+    expect(batch.events.length).toBeLessThanOrEqual(16);
+    expect(batch.events[0]).toEqual(expect.objectContaining({ kind: "text-chunk", target: "paste", final: false }));
     expect(JSON.stringify(batch).length).toBeLessThan(FRAME_WORKER_MESSAGE_BYTE_CAPACITY);
   });
 
@@ -36,7 +36,7 @@ describe("browser frame worker transport", () => {
     const batch = worker.messages.at(-1);
     expect(batch?.kind).toBe("batch");
     if (batch?.kind !== "batch") return;
-    expect(batch.lossless).toContainEqual(expect.objectContaining({ kind: "text-chunk", target: "paste-image-data-url", final: true }));
+    expect(batch.events).toContainEqual(expect.objectContaining({ kind: "text-chunk", target: "paste-image-data-url", final: true }));
   });
 
   it("never slices an astral code point across Worker messages", () => {
@@ -48,7 +48,7 @@ describe("browser frame worker transport", () => {
     expect(subject.flush(1)).toBe(true);
     const batch = worker.messages.at(-1);
     if (batch?.kind !== "batch") return;
-    const chunk = batch.lossless.find((event) => event.kind === "text-chunk");
+    const chunk = batch.events.find((event) => event.kind === "text-chunk");
     expect(chunk?.kind).toBe("text-chunk");
     if (chunk?.kind === "text-chunk") expect(chunk.text.endsWith("\ud83d")).toBe(false);
   });

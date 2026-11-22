@@ -23,7 +23,8 @@
   "VE-18",
   "VE-19",
   "VE-20",
-  "VE-21"
+  "VE-21",
+  "VE-22"
  ],
  "items": [
   {
@@ -366,6 +367,21 @@
    "description": {
     "en": "The report uses the representative visual-task illuminance and continuous equipment sound levels applicable to the modelled room profiles.",
     "de": "Der Bericht verwendet die repräsentative Beleuchtungsstärke der Sehaufgabe und die anwendbaren Dauerschallpegel gebäudetechnischer Anlagen für die modellierten Räume."
+   }
+  },
+  {
+   "id": "VE-22",
+   "clause": "EN 16798-1:2019 B.3.1.5 and B.3.2.5",
+   "entity": "Zone",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "din16798-1.vent.unoccupied."
+    ]
+   },
+   "description": {
+    "en": "Checks a documented non-residential purge, reduced room airflow or residential reduced flow using the selected Annex B basis, separately from occupied design flow.",
+    "de": "Prüft die dokumentierte Vorspülung in Nichtwohngebäuden, abgesenkte Raumlüftung oder abgesenkte Wohnungslüftung nach Anhang B getrennt vom Auslegungsvolumenstrom bei Belegung."
    }
   }
  ]

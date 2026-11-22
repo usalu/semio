@@ -13,6 +13,7 @@
         "🧵️retained/🕸️force-layout-work/🦀️.rs",
         "🧵️retained/🎨️force-layout-command-and-redraw-handles-work/🦀️.rs",
         "🖌️session/🦀️.rs",
+        "📸️snapshot/🧰️retained-tool-ids-and-scene-builders/🦀️.rs",
         "🔧️play-app-retained-commands-and-tool-proofs/🦀️.rs",
         "🧠️artifact-editor/🦀️.rs",
         "🚀️app-assembly/🦀️.rs"
@@ -367,11 +368,9 @@
         "🔧️play-app-retained-commands-and-tool-proofs/🦀️.rs",
         "✍️artifact-editor/🦀️.rs",
         "🚀️app-assembly/🦀️.rs",
-        "🍓️paste-job/🦀️.rs",
-        "🥦️import-job/🦀️.rs",
-        "🌽️command-variants/🦀️.rs",
         "🍠️play-app/🦀️.rs",
-        "🥐️retained-command-works/🦀️.rs"
+        "🖌️session/🧱️support/🦀️.rs",
+        "🧰️kit/💾️store-preparation/🦀️.rs"
       ],
       "groups": [
         {

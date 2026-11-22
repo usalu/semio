@@ -21,11 +21,14 @@ pub const GIS3D_PLAY_WINDOW_MAIN: &str = "gis3d-main";
 pub const GIS3D_PLAY_BODY_COMPOSITE: &str = "gis3d.play.composite";
 const GIS3D_PLAY_SURFACE: &str = "gis3d.play.composite";
 
-pub const UTILITIES: [(&str, &str, &str, &str); 4] = [
+const MOVE_POSITION_UTILITY: &str = "terrainMovePosition";
+
+pub const UTILITIES: [(&str, &str, &str, &str); 5] = [
     ("select", "Select", "Auswählen", "mouse-pointer"),
     ("terrainRaise", "Raise Terrain", "Gelände anheben", "arrow-up"),
     ("terrainLower", "Lower Terrain", "Gelände absenken", "arrow-down"),
     ("terrainSmooth", "Smooth Terrain", "Gelände glätten", "paintbrush"),
+    (MOVE_POSITION_UTILITY, "Move Position", "Position verschieben", "move"),
 ];
 //#endregion 🔖️Constants
 
@@ -74,6 +77,8 @@ pub fn render(document: &GisTerrainSnapshot, cfg: config::GisTerrainWindowConfig
             "activeUtility": utility,
             "terrainBrush": semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&brush))
         }),
+        None if utility == MOVE_POSITION_UTILITY && document.elevation_source.as_ref().is_some_and(|source| source.is_valid()) =>
+            semio_framework_pack_json::json!({"activeUtility": utility, "terrainMovePosition": {"action": "moveOverlayPosition"}}),
         None => semio_framework_pack_json::json!({"activeUtility": utility}),
     };
     scene.interaction_json = Some(interaction.to_string());

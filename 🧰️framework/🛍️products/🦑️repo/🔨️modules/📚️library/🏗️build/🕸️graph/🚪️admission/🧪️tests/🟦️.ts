@@ -112,3 +112,13 @@ test("direct project inference retains native source observations and infers onl
   }
  }finally{db.close();}
 });
+
+
+test("owners reached only through file edges are admitted ownership-only and observed once an actual edge needs them",async()=>{
+ const owner=(name:string)=>({name,root:name,manifest:name+"/📋️project.json",packages:[]}),registry=readBuildOwnerRegistryV1({version:1,owners:["app","hub","leaf","dep"].map(owner),catalogProviders:[]}),calls:string[]=[];
+ const run=(dependencies:string[])=>closeBuildOwnerAdmissionV1({kind:"owners",projects:["app"],exclude:[]},registry,async(row)=>{calls.push(row.name);return{project:{name:row.name,targets:{}},files:[row.manifest,...row.name==="app"?["hub/a.ts","leaf/b.ts"]:row.name==="hub"?["leaf/c.ts"]:[]],dependencies:row.name==="app"?dependencies:[]};});
+ const only=await run([]);
+ expect(calls).toEqual(["app"]);expect(only.owners).toEqual(["app","hub","leaf"]);expect(only.files).toEqual(["app/📋️project.json","hub/a.ts","hub/📋️project.json","leaf/b.ts","leaf/📋️project.json"]);
+ calls.length=0;const promoted=await run(["hub"]);
+ expect(calls.sort()).toEqual(["app","hub"]);expect(promoted.owners).toEqual(["app","hub","leaf"]);expect(promoted.files).toContain("leaf/c.ts");expect(promoted.files).toContain("leaf/📋️project.json");
+});

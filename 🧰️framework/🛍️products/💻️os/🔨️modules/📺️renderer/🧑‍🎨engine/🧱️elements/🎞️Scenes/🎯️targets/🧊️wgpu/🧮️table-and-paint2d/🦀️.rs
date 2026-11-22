@@ -126,7 +126,7 @@ pub struct TableColumn {
     pub id: String,
     pub label: String,
     #[serde(default)]
-    sortable: bool,
+    pub sortable: bool,
 }
 
 /// 🔀️ Mirrors `sourcing::TableSort`'s wire format (`{columnId, direction}`) — the active sort
@@ -286,7 +286,7 @@ pub fn table_metrics(inner: Rect, columns: usize, theme: &Theme) -> TableMetrics
         header_h,
         row_h: theme.control_height,
         pad: theme.padding_standard,
-        col_w: if columns == 0 { inner.w } else { inner.w / columns as f32 },
+        col_w: semio_ui_wgpu_layout::table::table_fill_track_px(inner.w, columns),
         handle_size: theme.control_height_small.min(theme.control_height),
         body: Rect::new(inner.x, inner.y + header_h, inner.w, inner.h - header_h),
     }
@@ -344,10 +344,39 @@ pub fn table_transfer_start(scene: &UiComponentSceneNode, inner: Rect, x: f32, y
 /// 🔀️ The direction a press on `column`'s header asks for next — ascending unless this column is
 /// already the ascending sort, matching `Table`'s own `onSort` toggle.
 fn table_next_sort_direction(sort: Option<&TableSortJson>, column_id: &str) -> &'static str {
-    match sort.filter(|sort| sort.column_id == column_id) {
-        Some(sort) if sort.direction == "asc" => "desc",
-        _ => "asc",
+    semio_ui_wgpu_layout::table::table_sort_next(column_id, sort.map(|sort| sort.column_id.as_str()), sort.map(|sort| sort.direction.as_str()))
+}
+
+/// ♿️ The `aria-sort` a column header announces for the table's sort, shared with React's `tableSortAriaV1`.
+pub fn table_column_aria_sort(scene: &UiComponentSceneNode, column_id: &str) -> Option<&'static str> {
+    let sort: Option<TableSortJson> = scene.table.as_ref()?.sort_json.as_deref().and_then(|json| serde_json::from_str(json).ok());
+    semio_ui_wgpu_layout::table::table_aria_sort(column_id, sort.as_ref().map(|sort| sort.column_id.as_str()), sort.as_ref().map(|sort| sort.direction.as_str()))
+}
+
+/// ⌨️ What one key does to the focused row `focus` of a scene table: the next focus row id, the selection action a Shift range or Ctrl/Meta toggle emits, and whether the row activates — the React `Table` actions (`interactionSelect` / `selectRow`) through the shared model.
+pub struct TableRowKeyOutcome {
+    pub focus_row: Option<String>,
+    pub scroll_to: Option<usize>,
+    pub action: Option<ActionDescriptor>,
+    pub escape: bool,
+}
+
+pub fn table_row_key(scene: &UiComponentSceneNode, focus_row: Option<&str>, key: &str, modifiers: SceneModifiers, page_rows: usize) -> Option<TableRowKeyOutcome> {
+    let table = scene.table.as_ref()?;
+    let rows: Vec<Value> = serde_json::from_str(&table.rows_json).ok()?;
+    let current = focus_row.and_then(|id| rows.iter().enumerate().position(|(index, row)| table_row_id(row, index) == id)).unwrap_or(0);
+    let outcome = semio_ui_wgpu_layout::table::table_key(key, modifiers.shift, modifiers.additive(), current, rows.len(), page_rows);
+    if outcome.focus.is_none() && !outcome.activate && !outcome.escape {
+        return None;
     }
+    let target = outcome.focus.unwrap_or(current);
+    let row = rows.get(target)?;
+    let row_id = table_row_id(row, target);
+    let action = outcome.select.map(|merge| {
+        let modifiers = SceneModifiers { shift: merge == "range", ctrl: merge == "invertive", ..SceneModifiers::default() };
+        table_row_action(scene, table, row, &row_id, modifiers)
+    });
+    Some(TableRowKeyOutcome { focus_row: outcome.focus.map(|_| row_id), scroll_to: outcome.focus, action, escape: outcome.escape })
 }
 
 /// 🎯️ The cell control a press at `x` lands on inside `cell_rect`, or `None` when the cell is plain
@@ -676,6 +705,19 @@ pub fn table_stepper_apply_key(
     Some(Ok(TableStepperKeyOutcome::Consumed))
 }
 
+/// 🪪️ The row id under a press, `None` over the header or past the last row.
+pub fn table_row_id_at(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32) -> Option<String> {
+    let table = scene.table.as_ref()?;
+    let columns: Vec<TableColumn> = serde_json::from_str(&table.columns_json).ok()?;
+    let metrics = table_metrics(inner, columns.len(), &scene_input_theme());
+    if !metrics.body.contains(x, y) {
+        return None;
+    }
+    let rows: Vec<Value> = serde_json::from_str(&table.rows_json).ok()?;
+    let index = usize::try_from(((y - metrics.body.y + scroll_offset(&scene.host_id, "body")) / metrics.row_h.max(1.0)).floor() as i64).ok()?;
+    rows.get(index).map(|row| table_row_id(row, index))
+}
+
 /// 🎯️ Resolves a pointer point inside a `SurfaceKind::Table`: a sortable header band, a stepper
 /// segment, a row action button, or the row itself.
 pub fn table_hit(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, theme: &Theme, modifiers: SceneModifiers, driver_drag: UiDriverDrag) -> Option<SceneListHit> {
@@ -723,11 +765,11 @@ pub fn table_hit(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, them
 /// keys a press three frames later will hold. The live press resolves through
 /// `passive_scene_pointer_button` → `table_hit`, which re-derives this row from the same
 /// geometry WITH the press's own `SceneModifiers` — that is the path that answers shift/ctrl.
-pub fn render_table(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, driver_drag: UiDriverDrag) {
+pub fn render_table(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, driver_drag: UiDriverDrag, labels: semio_renderer_wgpu_scene_state::TableChromeLabels) {
     let theme = ctx.theme;
     let Some(table) = &scene.table else {
         stage_table_button_accessibility_cells(&scene.host_id, Vec::new());
-        return render_placeholder("table", bounds, ctx);
+        return render_placeholder(bounds, ctx);
     };
     let columns: Vec<TableColumn> = serde_json::from_str(&table.columns_json).unwrap_or_default();
     let rows: Vec<Value> = serde_json::from_str(&table.rows_json).unwrap_or_default();
@@ -742,8 +784,8 @@ pub fn render_table(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Framew
         let x = inner.x + index as f32 * col_w;
         let sorted_here = sort.as_ref().filter(|s| s.column_id == column.id);
         let label = match sorted_here {
-            Some(s) if s.direction == "desc" => format!("{} \u{25BC}", column.label),
-            Some(_) => format!("{} \u{25B2}", column.label),
+            Some(s) if s.direction == "desc" => format!("{} \u{2193}", column.label),
+            Some(_) => format!("{} \u{2191}", column.label),
             None => column.label.clone(),
         };
         draw_text(ctx, &label, x + pad, inner.y + header_h * 0.65, theme.font_size_small, if sorted_here.is_some() { theme.text } else { theme.text_muted });
@@ -766,9 +808,11 @@ pub fn render_table(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Framew
     ctx.draw.push_scissor(body);
     reserve_list_rows(ctx, list_visible_row_capacity(body, row_h));
     let hovered_row = scene_hovered_control_id(&scene.host_id).or_else(|| ctx.input.hovered_id.clone());
+    let focused_row = semio_renderer_wgpu_scene_state::scene_table_focused_row(&scene.host_id);
     if rows.is_empty() {
-        let message = "No rows";
-        draw_text(ctx, message, body.x + body.w * 0.5 - 40.0, body.y + body.h * 0.5, theme.font_size_small, theme.text_muted);
+        let message = labels.no_data;
+        let width = message.chars().count() as f32 * theme.font_size_small * 0.5;
+        draw_text(ctx, message, body.x + (body.w - width) * 0.5, body.y + body.h * 0.5, theme.font_size_small, theme.text_muted);
     }
     for (row_index, row) in rows.iter().enumerate() {
         let y = body.y + row_index as f32 * row_h - scroll;
@@ -805,6 +849,9 @@ pub fn render_table(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Framew
             }
         }
         let drag_data = table.row_drag_mime.as_ref().and_then(|mime| row.get("_drag").map(|payload| HashMap::from([(mime.clone(), payload.to_string())])));
+        if focused_row.as_deref() == Some(row_id.as_str()) {
+            draw_ink_rect_outline(ctx.draw, row_rect.x + 0.5, row_rect.y + 0.5, row_rect.w - 1.0, row_rect.h - 1.0, theme.focus_ring, 1.0);
+        }
         ctx.input.register_hit(HitTarget { rect: row_rect, event: Some(table_row_action(scene, table, row, &row_id, SceneModifiers::default())), control_id: Some(control_id), kind: HitKind::Generic, drag_axis: None, drag_data });
     }
     stage_table_stepper_accessibility_cells(&scene.host_id, table_stepper_accessibility_cells(scene, bounds, driver_drag));

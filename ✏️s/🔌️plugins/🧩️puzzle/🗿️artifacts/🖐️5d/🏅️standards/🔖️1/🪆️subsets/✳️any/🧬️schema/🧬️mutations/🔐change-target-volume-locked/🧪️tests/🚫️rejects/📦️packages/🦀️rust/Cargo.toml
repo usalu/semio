@@ -86,6 +86,7 @@ wasm-bindgen = { workspace = true }
 semio-framework-job-payload = { workspace = true }
 
 [dev-dependencies]
+semio-s-artifact-puzzle-5d-mut-any-5 = { path = "../../../../../🌱create-part/🧪️tests/🌱️appends-part-c/📦️packages/🦀️rust", features = ["testkit"] }
 rstar = "0.12"
 semio-framework-async-macros = { workspace = true }
 semio-framework-io-base64 = { path = "../../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust" }

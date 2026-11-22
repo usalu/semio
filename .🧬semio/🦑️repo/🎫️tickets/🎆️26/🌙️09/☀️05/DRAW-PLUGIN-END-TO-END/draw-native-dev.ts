@@ -33,6 +33,7 @@ const workingDirectory = dirname(script);
 const commandLine = ["repo", script, ...args].map(arg => JSON.stringify(arg)).join(" ");
 const mode = process.env.DRAW_NATIVE_BUILD_MODE ?? "prototype";
 if (mode !== "prototype" && mode !== "release") throw Error("Expected a registered Draw build mode");
+const maximumElapsedMilliseconds = stage.startsWith("component") ? 10_800_000 : 5_400_000;
 const capabilities = {
   version: 1,
   buildMode: mode,
@@ -41,22 +42,24 @@ const capabilities = {
   artifactDirectory: resolve(generated),
   command: declaredNativeOwnerCommandV1(target, workingDirectory, commandLine),
   transport: { maximumBytes: 134_217_728, maximumLines: 65_536 },
-  child: { maximumElapsedMilliseconds: 5_400_000, idleMilliseconds: 600_000 },
+  child: { maximumElapsedMilliseconds, idleMilliseconds: 600_000 },
   network: { offline: true },
 };
-const envelope = createScriptProcessEnvelope({ version: 1, owner: "draw:native-dev", maximumElapsedMilliseconds: 5_400_000 }, capabilities, Date.now());
-const env = scriptProcessEnvironment(envelope, {
-  ...process.env,
-  [SCRIPT_PROVIDERS_ENV]: writeScriptProviderMapV1(repositoryScriptProvidersV1()),
-  SEMIO_BUILD_MODE: mode,
-  SEMIO_LANGUAGE: "en",
-  SEMIO_OFFLOAD: process.env.SEMIO_OFFLOAD ?? "auto",
-  SEMIO_PLUGIN_CATALOG: join(root, "✏️s/🧑‍💻dev/🧩️catalog/🤖️generated"),
-});
 const log = await open(join(generated, "draw-native-" + stage + ".log"), "a");
-const deadline = Date.now() + capabilities.child.maximumElapsedMilliseconds;
+const deadline = Date.now() + 10_800_000;
 try {
   for (let attempt = 1; ; attempt++) {
+    const budget = Math.min(capabilities.child.maximumElapsedMilliseconds, deadline - Date.now());
+    if (budget <= 0) throw Error("Draw native stage exhausted its retry window");
+    const envelope = createScriptProcessEnvelope({ version: 1, owner: "draw:native-dev", maximumElapsedMilliseconds: budget }, { ...capabilities, child: { ...capabilities.child, maximumElapsedMilliseconds: budget } }, Date.now());
+    const env = scriptProcessEnvironment(envelope, {
+      ...process.env,
+      [SCRIPT_PROVIDERS_ENV]: writeScriptProviderMapV1(repositoryScriptProvidersV1()),
+      SEMIO_BUILD_MODE: mode,
+      SEMIO_LANGUAGE: "en",
+      SEMIO_OFFLOAD: process.env.SEMIO_OFFLOAD ?? "auto",
+      SEMIO_PLUGIN_CATALOG: join(root, "✏️s/🧑‍💻dev/🧩️catalog/🤖️generated"),
+    });
     const task = Bun.spawn(["repo", script, ...args], { cwd: workingDirectory, env, stdout: log.fd, stderr: log.fd });
     const interrupt = () => task.kill("SIGINT");
     const terminate = () => task.kill("SIGTERM");

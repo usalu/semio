@@ -103,41 +103,7 @@ pub(super) fn add_result_owned(owned: &mut usize, additional: usize, maximum: us
 
 pub(super) fn graph_result_metadata_owned_bytes(graph: &Graph, maximum: usize) -> Result<usize, ValueError> {
     let mut bytes = size_of::<crate::standards::v1::subsets::any::schema::ast::JackQueryGraphSnapshot>() + 2 * size_of::<usize>();
-    add_result_owned(&mut bytes, JackSnapshot::SCHEMA.len() + graph.name.capacity() + graph.manifest_id.as_ref().map_or(0, String::capacity) + graph.root_node_id.as_ref().map_or(0, String::capacity), maximum)?;
-    let mut properties = |values: &Vec<semio_framework_graph_manifest::PropertyDef>| -> Result<(), ValueError> {
-        add_result_owned(&mut bytes, values.capacity().checked_mul(size_of::<semio_framework_graph_manifest::PropertyDef>()).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "query metadata capacity overflow"))?, maximum)?;
-        for value in values {
-            add_result_owned(&mut bytes, value.name.capacity() + value.expr.as_ref().map_or(0, String::capacity), maximum)?;
-            let mut value_type = &value.value_type;
-            let mut depth = 0;
-            loop {
-                match value_type {
-                    semio_framework_value::ValueType::List(inner) => {
-                        depth += 1;
-                        if depth > QUERY_ENTITY_NESTING_MAXIMUM { return Err(ValueError::new(ValueRefusalKind::WorkLimit, "query result metadata exceeds its nesting admission")); }
-                        add_result_owned(&mut bytes, size_of::<semio_framework_value::ValueType>(), maximum)?;
-                        value_type = inner;
-                    }
-                    semio_framework_value::ValueType::Schema(text) => { add_result_owned(&mut bytes, text.capacity(), maximum)?; break; }
-                    _ => break,
-                }
-            }
-        }
-        Ok(())
-    };
-    for kind in &graph.manifest.node_kinds { properties(&kind.properties)?; }
-    for kind in &graph.manifest.edge_kinds { properties(&kind.properties)?; }
-    for kind in &graph.manifest.port_kinds { properties(&kind.properties)?; }
-    for (capacity, inline) in [(graph.manifest.node_kinds.capacity(), size_of::<crate::standards::v1::subsets::any::schema::manifest::NodeKindDef>()), (graph.manifest.edge_kinds.capacity(), size_of::<crate::standards::v1::subsets::any::schema::manifest::EdgeKindDef>()), (graph.manifest.port_kinds.capacity(), size_of::<crate::standards::v1::subsets::any::schema::manifest::PortKindDef>())] {
-        add_result_owned(&mut bytes, capacity.checked_mul(inline).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "query metadata capacity overflow"))?, maximum)?;
-    }
-    for kind in &graph.manifest.node_kinds {
-        add_result_owned(&mut bytes, kind.name.capacity(), maximum)?;
-        add_result_owned(&mut bytes, kind.port_kinds.capacity().checked_mul(size_of::<String>()).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "query metadata capacity overflow"))?, maximum)?;
-        for port in &kind.port_kinds { add_result_owned(&mut bytes, port.capacity(), maximum)?; }
-    }
-    for kind in &graph.manifest.edge_kinds { add_result_owned(&mut bytes, kind.name.capacity(), maximum)?; }
-    for kind in &graph.manifest.port_kinds { add_result_owned(&mut bytes, kind.name.capacity(), maximum)?; }
+    add_result_owned(&mut bytes, JackSnapshot::SCHEMA.len() + graph.name.capacity() + graph.manifest_id.capacity() + graph.root_node_id.as_ref().map_or(0, String::capacity), maximum)?;
     Ok(bytes)
 }
 
@@ -151,7 +117,7 @@ pub(super) enum QueryClosingOwner {
 
 /// 📤️ The graph metadata the working graph still owns once its entities are gone, moved into a snapshot shell that retires it.
 pub(super) fn graph_metadata_owner(graph: &mut Graph) -> JackSnapshot {
-    JackSnapshot { name: std::mem::take(&mut graph.name), manifest_id: graph.manifest_id.take(), manifest: std::mem::take(&mut graph.manifest), camera: graph.camera.clone(), root_node_id: graph.root_node_id.take(), query: std::mem::take(&mut graph.query), ..Default::default() }
+    JackSnapshot { name: std::mem::take(&mut graph.name), manifest_id: std::mem::take(&mut graph.manifest_id), camera: graph.camera.clone(), root_node_id: graph.root_node_id.take(), query: std::mem::take(&mut graph.query), ..Default::default() }
 }
 
 /// 🧹️ Drives one small displaced value to its terminal witness inside the step that displaced it.

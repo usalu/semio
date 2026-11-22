@@ -43,8 +43,8 @@ async function ancestry(path:string):Promise<readonly {path:string;stamp:Stamp}[
 }
 
 /** 🧊️ Copies already patched SDK files through bounded copy-on-write operations and original caller ports. */
-export async function cloneNxSdkSnapshotV1(source:string,destination:string,control:ResourceLeaseControl,material:Readonly<{version:1;kind:"copy"}>|Readonly<{version:1;kind:"shared";store:RepositoryToolingStoreV1;binaryDigest:string}>):Promise<NxSdkSnapshotCloneV1>{
- checkResourceLeaseControl(control);if(material.version!==1||!["copy","shared"].includes(material.kind))throw Error("Original declared SDK material publication required");
+export async function cloneNxSdkSnapshotV1(source:string,destination:string,control:ResourceLeaseControl,material:Readonly<{version:1;kind:"copy"|"adopted"}>|Readonly<{version:1;kind:"shared";store:RepositoryToolingStoreV1;binaryDigest:string}>):Promise<NxSdkSnapshotCloneV1>{
+ checkResourceLeaseControl(control);if(material.version!==1||!["copy","shared","adopted"].includes(material.kind))throw Error("Original declared SDK material publication required");
  if(material.kind==="shared")requireIssuedResourceControlRefinementV1(material.store.control,control);
  const binaries:import("../🧊️binary/🟦️.ts").NxSdkBinaryObjectV1[]=[];const root=resolve(source),target=resolve(destination);bounded(root);bounded(target);
  if(root===target||contained(root,target)||contained(target,root))throw Error("SDK snapshot requires independent directories");
@@ -62,16 +62,16 @@ export async function cloneNxSdkSnapshotV1(source:string,destination:string,cont
   }else if(stamp.isDirectory()){
    await mkdir(output);directories.push({path,stamp});
    for(const name of await readdir(original))await walk(path+"/"+name);
-  }else if(stamp.isFile()){if(stamp.nlink!==1n){const known=knownLinks.get(path);if(!known||known.device!==stamp.dev||known.inode!==stamp.ino)throw Error("SDK snapshot Source requires issued immutable link groups");}files.push({path,stamp});bytes+=Number(stamp.size);if(!Number.isSafeInteger(bytes))throw Error("SDK snapshot byte capacity exceeded");}
+  }else if(stamp.isFile()){if(stamp.nlink!==1n&&material.kind!=="adopted"){const known=knownLinks.get(path);if(!known||known.device!==stamp.dev||known.inode!==stamp.ino)throw Error("SDK snapshot Source requires issued immutable link groups");}files.push({path,stamp});bytes+=Number(stamp.size);if(!Number.isSafeInteger(bytes))throw Error("SDK snapshot byte capacity exceeded");}
   else throw Error("SDK snapshot refuses nonregular dependency files");
   if(count%128===0)await checkpoint();
  };
  await walk("node_modules");let next=0,failed=false,failure:unknown;
  await Promise.allSettled(Array.from({length:Math.min(policy.concurrency,files.length)},async()=>{
   try{while(!failed&&next<files.length){checkResourceLeaseControl(control);const row=files[next++]!,original=join(root,row.path),output=join(target,row.path);
-   if(!(knownLinks.has(row.path)?stableImmutable:stable)(row.stamp,await lstat(original,{bigint:true})))throw Error("SDK snapshot source changed during clone");
+   if(!(knownLinks.has(row.path)||material.kind==="adopted"?stableImmutable:stable)(row.stamp,await lstat(original,{bigint:true})))throw Error("SDK snapshot source changed during clone");
    if(row.link!==undefined)await symlink(row.link,output,row.directory?"dir":"file");else if(material.kind==="shared"&&nxSdkBinaryPathV1(row.path))binaries.push(await publishNxSdkBinaryV1(original,output,row.path,material.store,"create",control));else await copyFile(original,output,constants.COPYFILE_FICLONE|constants.COPYFILE_EXCL);
-   if(!(knownLinks.has(row.path)?stableImmutable:stable)(row.stamp,await lstat(original,{bigint:true}))||row.link!==undefined&&await readlink(original)!==row.link)throw Error("SDK snapshot source changed during clone");
+   if(!(knownLinks.has(row.path)||material.kind==="adopted"?stableImmutable:stable)(row.stamp,await lstat(original,{bigint:true}))||row.link!==undefined&&await readlink(original)!==row.link)throw Error("SDK snapshot source changed during clone");
    checkResourceLeaseControl(control);
   }}catch(error){if(!failed){failed=true;failure=error;}}
  }));

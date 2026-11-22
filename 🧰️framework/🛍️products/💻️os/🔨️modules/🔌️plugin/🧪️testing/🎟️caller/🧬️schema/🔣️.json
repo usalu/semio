@@ -10,6 +10,7 @@
     "clockUs",
     "deadlineUs",
     "maximumTurns",
+    "maximumCloseTurns",
     "maximumIdleTurns",
     "grant",
     "retirementLoan",
@@ -47,6 +48,11 @@
       "maximum": 4294967295
     },
     "maximumTurns": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 4294967295
+    },
+    "maximumCloseTurns": {
       "type": "integer",
       "minimum": 1,
       "maximum": 4294967295

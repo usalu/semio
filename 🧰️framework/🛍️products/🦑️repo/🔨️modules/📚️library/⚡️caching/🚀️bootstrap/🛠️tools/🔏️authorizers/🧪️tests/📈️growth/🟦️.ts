@@ -49,7 +49,7 @@ test("the closure bounds are one proportional family, so one cannot lag behind t
 
 for(const count of[2049,4097])test("a closure of "+count+" files, past the former limit of 2048, is captured and agrees with esbuild",async()=>{
  const artifacts=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!artifacts)throw Error("Ticket-owned test artifacts required");await mkdir(artifacts,{recursive:true});
- const area=await mkdtemp(join(artifacts,"growth-")),root=process.cwd();
+ const area=await mkdtemp(join(artifacts,"growth-")),root=area;
  try{
   await closureTreeV1(area,count);
   const entry=relative(root,join(area,"entry.ts")).replaceAll("\\","/"),captured=await captureNxAuthorizerSourcesV1(root,entry,AbortSignal.timeout(120000));
@@ -61,7 +61,7 @@ for(const count of[2049,4097])test("a closure of "+count+" files, past the forme
 
 test("a closure past the real bound is refused in English and German with the chain and the way out",async()=>{
  const artifacts=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!artifacts)throw Error("Ticket-owned test artifacts required");await mkdir(artifacts,{recursive:true});
- const area=await mkdtemp(join(artifacts,"growth-")),root=process.cwd();
+ const area=await mkdtemp(join(artifacts,"growth-")),root=area;
  try{
   const count=policy.maximumFiles+1;await closureTreeV1(area,count);
   const entry=relative(root,join(area,"entry.ts")).replaceAll("\\","/");let failure:any;

@@ -36,3 +36,5 @@ serde_json = { workspace = true }
 semio-framework-async = { workspace = true }
 semio-framework-async-macros = { workspace = true }
 semio-framework-job = { workspace = true }
+semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-s-fem-receiving = { path = "../../../../../../../../../../../../../../🧩️receiving/📦️packages/🦀️rust", features = ["testkit"] }

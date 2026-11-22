@@ -1,0 +1,23 @@
+{
+ "id": "flow-field",
+ "oracle": "numpy re-implementation of the documented field; scipy quad (continuous entrainment line sink with ground image), numpy trapezoid (volume flux of the Gaussian profile), scipy solve_ivp DOP853 (streams in arc length, particle advection in time); parcels from the Morton-Taylor-Turner top-hat plume and the top-hat round jet",
+ "ambient": { "airTempC": 20, "meanRadiantTempC": 20, "relativeHumidity": 0.5, "windMS": 0, "windDirectionDeg": 0, "solarWM2": 0, "diffuseFraction": 1, "pressurePa": 101325, "sigmaMS": 0.03 },
+ "turbulence": { "intensity": 0.1, "floorMS": 0.03, "lagrangianTimeS": 1 },
+ "emitters": [{ "id": "plume", "kind": "plume", "diameterM": 0.2 }, { "id": "jet", "kind": "fan", "diameterM": 0.1 }],
+ "stream": { "stepM": 0.02, "points": 60, "advectS": [0.5, 1, 2, 4] },
+ "tolerances": { "velocityMS": 1e-6, "scalar": 1e-6, "lineSinkRelative": 0.03, "fluxRelative": 0.03, "streamM": 0.004, "travelRelative": 0.01, "advectedM": 0.01 },
+ "cases": [
+  {
+   "id": "plume", "kind": "plume", "emitter": "plume", "buoyancyFluxM4S3": 0.00277, "fromM": 0.4, "toM": 2.4,
+   "points": [[0, 1, 0], [0.05, 1, 0], [0.1, 1.2, 0], [0, 1.6, 0.12], [0.3, 1, 0], [0.5, 1.4, 0.2], [1.5, 1, 0], [3, 0.5, 1], [0.4, 0, 0], [0, 0.2, 0], [0.05, 2.39, 0], [0, 3, 0]],
+   "entrainmentPoints": [[0.3, 1.2, 0], [0.45, 1.4, 0], [0.6, 1, 0], [0.9, 1.4, 0]],
+   "fluxHeightsM": [1, 1.4, 1.8],
+   "seeds": [[0.02, 0.6, 0], [0.4, 0.9, 0], [0.5, 1.3, 0.3], [0.6, 0.05, 0]]
+  },
+  {
+   "id": "jet", "kind": "jet", "emitter": "jet", "radiusM": 0.05, "speedMS": 3, "excessK": 12, "vapourExcessKgPerKg": 0.004, "heightM": 1.2, "fromM": 0.1, "toM": 2.5,
+   "points": [[0.5, 1.2, 0], [1, 1.25, 0], [1.5, 1.2, 0.1], [1, 1.6, 0], [1, 0.6, 0], [2, 1.2, 0.5], [-0.5, 1.2, 0], [4, 1.2, 0], [1, 0, 0.3]],
+   "seeds": [[0.3, 1.21, 0], [1, 1.7, 0], [1.2, 0.8, 0.2]]
+  }
+ ]
+}

@@ -9,10 +9,11 @@ import { applyFrameworkLayoutSeed } from "../../../🛠️ShellHelpers/🛣️ro
 import { replayRefusalCodeV1, replayRefusalNoticeTextV1 } from "../../📣️replay-refusal/🟦️.ts";
 import { seededActiveWindowId } from "../../🎚️shell-model/🟦️.tsx";
 import { withLocalizedWindowKindLabels } from "../../🧱️built-node-stores/🟦️.ts";
+import { parsePanelState } from "../../../🛠️ShellHelpers/📌️panel/🟦️.ts";
 import type { useScopeState } from "../🔶️scope/🟦️.ts";
 
 /** 🔹 Builds applyNamedLayout, applyModeChange, applyModeStep, switchToSessionRole of useDirectoryLaneAndLayout. */
-export function useApplyNamedLayoutState({ canGoForward, goForward, uiKeybindingOverrides, canGoUp, goUp, dispatch, session, appLabelsOverlay, uiTerminology, uiLocale, extraWindowInstancesRef, extraWindowCounterRef, refreshUi, reportRefreshFault, sessionRef, loadedPluginsRef, openDocumentSessionsRef, sharedSpaceAccessRef, showTransientNoticeRef, uiLocaleRef, switchToPluginApp }: Pick<ReturnType<typeof useScopeState>, "canGoForward" | "goForward" | "uiKeybindingOverrides" | "canGoUp" | "goUp" | "dispatch" | "session" | "appLabelsOverlay" | "uiTerminology" | "uiLocale" | "extraWindowInstancesRef" | "extraWindowCounterRef" | "refreshUi" | "reportRefreshFault" | "sessionRef" | "loadedPluginsRef" | "openDocumentSessionsRef" | "sharedSpaceAccessRef" | "showTransientNoticeRef" | "uiLocaleRef" | "switchToPluginApp">) {
+export function useApplyNamedLayoutState({ canGoForward, goForward, uiKeybindingOverrides, canGoUp, goUp, dispatch, session, appLabelsOverlay, uiTerminology, uiLocale, extraWindowInstancesRef, extraWindowCounterRef, refreshUi, reportRefreshFault, sessionRef, loadedPluginsRef, openDocumentSessionsRef, sharedSpaceAccessRef, showTransientNoticeRef, uiLocaleRef, switchToPluginApp, switchSpawnedRole, focusedSpawnedId }: Pick<ReturnType<typeof useScopeState>, "canGoForward" | "goForward" | "uiKeybindingOverrides" | "canGoUp" | "goUp" | "dispatch" | "session" | "appLabelsOverlay" | "uiTerminology" | "uiLocale" | "extraWindowInstancesRef" | "extraWindowCounterRef" | "refreshUi" | "reportRefreshFault" | "sessionRef" | "loadedPluginsRef" | "openDocumentSessionsRef" | "sharedSpaceAccessRef" | "showTransientNoticeRef" | "uiLocaleRef" | "switchToPluginApp" | "switchSpawnedRole" | "focusedSpawnedId">) {
   useActionHotkey(
     "ui.nav.forward",
     useCallback(() => {
@@ -107,17 +108,27 @@ export function useApplyNamedLayoutState({ canGoForward, goForward, uiKeybinding
     async (role: AppRole): Promise<void> => {
       const current = sessionRef.current;
       if (!current) return;
-      const apps = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === current.pluginId)?.manifest.apps ?? [];
-      const target = roleSwitchTargetV1(apps, current.app.dialect, current.app.role, role);
+      const panel = focusedSpawnedId === null ? null : parsePanelState(current.viewState);
+      const spawned = panel?.spawnedApps.find((entry) => entry.id === panel.activeSpawnedId);
+      const pluginId = spawned?.pluginId ?? current.pluginId;
+      const instanceId = spawned?.instanceId ?? current.instanceId;
+      const appId = spawned?.appId ?? current.app.id;
+      const apps = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === pluginId)?.manifest.apps ?? [];
+      const app = apps.find((candidate) => candidate.id === appId);
+      if (app === undefined) return;
+      const target = roleSwitchTargetV1(apps, app.dialect, app.role, role);
       if (!target) return;
-      const scope = [...openDocumentSessionsRef.current.values()].find((entry) => entry.session.pluginId === current.pluginId && entry.session.instanceId === current.instanceId)?.scope;
+      const owner = [...openDocumentSessionsRef.current.values()].find((entry) => entry.session.pluginId === pluginId && entry.session.instanceId === instanceId && entry.session.app.id === appId);
+      if (spawned !== undefined && owner === undefined) return;
+      const scope = owner?.scope;
       if (scope !== undefined && sharedDocumentRoleSwitchRefusedV1(sharedSpaceAccessRef.current.get(scope.spaceId) ?? null, role)) {
         showTransientNoticeRef.current(replayRefusalNoticeTextV1("view-only-access", uiLocaleRef.current), "warning", replayRefusalCodeV1("view-only-access"));
         return;
       }
-      await switchToPluginApp(current.pluginId, target.id,undefined,current);
+      if (spawned !== undefined) await switchSpawnedRole(spawned, target);
+      else await switchToPluginApp(pluginId, target.id, undefined, current);
     },
-    [switchToPluginApp],
+    [focusedSpawnedId, switchSpawnedRole, switchToPluginApp],
   );
 
   useActionHotkey(

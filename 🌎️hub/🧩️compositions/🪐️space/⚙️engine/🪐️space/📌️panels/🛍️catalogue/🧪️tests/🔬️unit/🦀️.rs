@@ -56,6 +56,52 @@ async fn catalogue_tree_nests_apps_by_canonical_document() {
     assert_eq!(json.matches("\"key\":\"s-play-catalogue.document.semio.puzzle\"").count(), 1, "the two apps share ONE breadcrumb branch: {json}");
 }
 
+/// 🏔️ The shared Terrain breadcrumb exposes both registered app identities as drag sources.
+#[semio_framework_async_macros::async_test]
+async fn catalogue_keeps_distinct_terrain_roles_at_the_same_breadcrumb() {
+    use serde_json::Value;
+
+    fn drag_payloads(value: &Value, plugin: &str, rows: &mut Vec<Value>) {
+        match value {
+            Value::Object(fields) => fields.values().for_each(|value| drag_payloads(value, plugin, rows)),
+            Value::Array(fields) => fields.iter().for_each(|value| drag_payloads(value, plugin, rows)),
+            Value::String(text) => {
+                if let Ok(payload) = serde_json::from_str::<Value>(text) {
+                    if payload["pluginId"].as_str() == Some(plugin) && payload["appId"].is_string() {
+                        rows.push(payload);
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+
+    let fixture: Value = serde_json::from_str(include_str!("terrain-roles.json")).unwrap();
+    let breadcrumb: Vec<_> = fixture["breadcrumb"].as_array().unwrap().iter().map(|part| part.as_str().unwrap()).collect();
+    let plugin = fixture["pluginId"].as_str().unwrap();
+    let schema = fixture["artifactSchema"].as_str().unwrap();
+    let expected = fixture["apps"].as_array().unwrap();
+    for app in expected {
+        seed_app(plugin, app["appId"].as_str().unwrap(), app["label"].as_str().unwrap(), &breadcrumb, schema).await;
+    }
+
+    let closed = window_body((1..breadcrumb.len()).map(|end| open_branch(&breadcrumb[..end], 0, 32)).collect()).await;
+    let mut rows = Vec::new();
+    drag_payloads(&serde_json::from_str(&closed).unwrap(), plugin, &mut rows);
+    assert!(rows.is_empty(), "the closed Terrain group keeps both roles virtual");
+
+    let opened = window_body((1..=breadcrumb.len()).map(|end| open_branch(&breadcrumb[..end], 0, 32)).collect()).await;
+    drag_payloads(&serde_json::from_str(&opened).unwrap(), plugin, &mut rows);
+    assert_eq!(rows.len(), expected.len());
+    for app in expected {
+        assert!(rows.contains(&serde_json::json!({
+            "pluginId": plugin,
+            "appId": app["appId"],
+            "label": app["label"]
+        })), "missing drag identity for {app}");
+    }
+}
+
 //#region 🪟️WindowLaws
 /// 🪟️ Law (a): every container stamps its FULL extent and materialises at most its slice — no `+N`.
 #[semio_framework_async_macros::async_test]

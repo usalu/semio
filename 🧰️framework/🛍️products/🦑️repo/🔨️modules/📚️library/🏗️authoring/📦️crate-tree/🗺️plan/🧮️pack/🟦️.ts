@@ -7,9 +7,12 @@ import { packComponents, prepareComponentPacking } from "./🗜️packing/🟦�
 import { buildMovedUnits, findMovedRootItems, hostMovedUnits, pieceMovedRootItems } from "./🚚️moved-items/🟦️.ts";
 import { draftCrates, nameAndPlaceCrates, renderCrateMirrors } from "./🏗️crate-drafts/🟦️.ts";
 import { collectRootEditsAndPlan } from "./🖇️root-edits/🟦️.ts";
+import { readCarvedLayout } from "../../🧱️carved-layout/🟦️.ts";
 
-/** 🧭️ Plans the crate split of one artifact; when the plain split cannot meet the budget and the artifact has mutation aggregates, the plan is retried with the mutation leaves converted to leaves generic over their aggregate and the plan with fewer problems wins. */
-export async function planArtifactCrates(repoRoot: string, packageDirRel: string, options: PlanOptions = {}): Promise<ArtifactCratePlan> {
+/** 🧭️ Plans the crate split of one artifact; when the plain split cannot meet the budget and the artifact has mutation aggregates, the plan is retried with the mutation leaves converted to leaves generic over their aggregate and the plan with fewer problems wins. An artifact that is already carved is read back first: its carved crates keep their names, directories and declarations, and only the declarations no carved crate owns are packed on top of them (no test rewrites and no mutation conversion run again). */
+export async function planArtifactCrates(repoRoot: string, packageDirRel: string, requested: PlanOptions = {}): Promise<ArtifactCratePlan> {
+  const carved = requested.carved === undefined ? readCarvedLayout(repoRoot, packageDirRel) : requested.carved;
+  const options: PlanOptions = carved ? { ...requested, carved, tests: undefined, mutationFamilies: "off" } : { ...requested, carved: null };
   const mode = options.mutationFamilies ?? "auto";
   if (mode === "on") return planArtifactCratesOnce(repoRoot, packageDirRel, options, true);
   const plain = await planArtifactCratesOnce(repoRoot, packageDirRel, options, false);
@@ -31,8 +34,8 @@ async function planArtifactCratesOnce(repoRoot: string, packageDirRel: string, o
   const { droppedTests, woven } = planRootItemWeaving({ tree, qualifyRootHeads, rootSource, unnestShim, shims, readText, lib, underPath, infos, infoOf, sliceOfDecl, declTree, options });
   const { find, mergeCauses, preGroup, edgesOf } = mergeCoupledComponents({ infos, coherenceType, infoOf });
   const { componentList, blockers } = collectComponentBlockers({ infos, find, target, mergeCauses, infoOf, preGroup, edgesOf });
-  const { order, groupOfSlice, groups, incremental, packing, acyclic, mirrorValid, startGroup } = prepareComponentPacking({ componentList, edgesOf, repoRoot, measureRoot, options });
-  await packComponents({ order, componentList, sliceOfDecl, groupOfSlice, edgesOf, groups, incremental, target, packing, acyclic, mirrorValid, measureMembers, startGroup });
+  const { order, groupOfSlice, groups, incremental, packing, acyclic, mirrorValid, startGroup, pinned, settle } = prepareComponentPacking({ componentList, edgesOf, repoRoot, measureRoot, options });
+  await packComponents({ order, componentList, sliceOfDecl, groupOfSlice, edgesOf, groups, incremental, target, packing, acyclic, mirrorValid, measureMembers, startGroup, pinned, settle });
   const { movedItems, movedNames, crateDeps, referenced, crateOfSlice, referencing } = findMovedRootItems({ groups, edgesOf, rootNames, tree, itemByName, regionOf, rootSource });
   const { unitPieces, pieceItems, pieceOfName, unitOfPiece, pieceDeps } = pieceMovedRootItems({ movedItems, regionOf, rootSource });
   const { movedUnits } = buildMovedUnits({ unitPieces, pieceItems, regionOf, rootSource, pieceOfName, unitOfPiece, tree, cfgAttributeLines, pieceDeps, qualifyRootHeads, movedNames, shims, ownerOfChain });
@@ -40,6 +43,6 @@ async function planArtifactCratesOnce(repoRoot: string, packageDirRel: string, o
   const { draft } = draftCrates({ groups, carvable, unitsOf });
   const { crates } = nameAndPlaceCrates({ repoRoot, packageDirRel, draft, lib, crateDeps, groups, edgesOf, hostedAt, crateOfSlice, infoOf, sliceOfDecl, referencing, rootNames, rootSource, cfgAttributeLines, movedPlaced, gatedUses, shims, innerAttributes });
   const { identOf, resolved, movedAppends } = await renderCrateMirrors({ crates, repoRoot, unitsOf, hostedAt, declTree, problems, gatedUses, innerAttributes, wrapperNodes, gates, cutOverlay, readText, manifestPath, lib, baseOverlay, externRows, rootSource, hard });
-  const { plan } = collectRootEditsAndPlan({ identOf, crateOfSlice, carvable, infos, resolved, sliceOfDecl, built, lib, gates, droppedTests, woven, movedPlaced, problems, wrapperNodes, repoRoot, artifactDir, packageDirRel, tree, crates, movedAppends, keptModules, transform, family, folded, blockers, packing });
+  const { plan } = collectRootEditsAndPlan({ identOf, crateOfSlice, carvable, infos, resolved, sliceOfDecl, built, lib, gates, droppedTests, woven, movedPlaced, problems, wrapperNodes, repoRoot, artifactDir, packageDirRel, tree, crates, movedAppends, keptModules, transform, family, folded, blockers, packing, carved: options.carved ?? null });
   return plan;
 }

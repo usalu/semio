@@ -1134,6 +1134,138 @@
    "peer": "@semio-tech/norm-din16798-rs:build",
    "runs": 3,
    "warmup": 1
+  },
+  {
+   "id": "fleet-unit-warm",
+   "kind": "fleet",
+   "title": {
+    "en": "Warm second workspace, unit cache",
+    "de": "Warmer zweiter Arbeitsbereich, Einheitencache"
+   },
+   "scenario": "unit-cache-warm",
+   "runs": 3,
+   "warmup": 0
+  },
+  {
+   "id": "fleet-nx-warm",
+   "kind": "fleet",
+   "title": {
+    "en": "Warm second workspace, Nx cache",
+    "de": "Warmer zweiter Arbeitsbereich, Nx-Cache"
+   },
+   "scenario": "nx-cache-warm",
+   "runs": 3,
+   "warmup": 0
+  },
+  {
+   "id": "fleet-twin-build",
+   "kind": "fleet",
+   "title": {
+    "en": "One unit built in two directories",
+    "de": "Eine Einheit in zwei Verzeichnissen gebaut"
+   },
+   "scenario": "twin-build",
+   "runs": 3,
+   "warmup": 0
+  },
+  {
+   "id": "fleet-offload-pressure",
+   "kind": "fleet",
+   "title": {
+    "en": "Offload under forced local pressure",
+    "de": "Auslagern unter erzwungenem lokalem Druck"
+   },
+   "scenario": "offload-pressure",
+   "runs": 3,
+   "warmup": 0
+  },
+  {
+   "id": "fleet-offload-fallback",
+   "kind": "fleet",
+   "title": {
+    "en": "Local fallback with the scheduler down",
+    "de": "Lokaler Rückfall bei ausgefallenem Scheduler"
+   },
+   "scenario": "offload-fallback",
+   "runs": 3,
+   "warmup": 0
+  },
+  {
+   "id": "fleet-host-16g",
+   "kind": "fleet",
+   "title": {
+    "en": "Simulated 16 GB host",
+    "de": "Simulierter 16-GB-Rechner"
+   },
+   "scenario": "host-16g",
+   "runs": 3,
+   "warmup": 0
+  },
+  {
+   "id": "fleet-live-unit",
+   "kind": "fleet",
+   "title": {
+    "en": "Live unit cache across two workspaces",
+    "de": "Live-Einheitencache über zwei Arbeitsbereiche"
+   },
+   "scenario": "live-unit-cache",
+   "runs": 1,
+   "warmup": 0
+  },
+  {
+   "id": "fleet-live-nx",
+   "kind": "fleet",
+   "title": {
+    "en": "Live Nx cache with an empty local cache",
+    "de": "Live-Nx-Cache mit leerem lokalem Cache"
+   },
+   "scenario": "live-nx-cache",
+   "runs": 1,
+   "warmup": 0
+  },
+  {
+   "id": "fleet-live-bazel",
+   "kind": "fleet",
+   "title": {
+    "en": "Live Bazel cache through the signing proxy with a cleared local cache",
+    "de": "Live-Bazel-Cache über den Signatur-Proxy mit geleertem lokalem Cache"
+   },
+   "scenario": "live-bazel-cache",
+   "runs": 1,
+   "warmup": 0
+  },
+  {
+   "id": "fleet-live-offload",
+   "kind": "fleet",
+   "title": {
+    "en": "Live forced offload",
+    "de": "Live erzwungene Auslagerung"
+   },
+   "scenario": "live-offload",
+   "runs": 3,
+   "warmup": 0
+  },
+  {
+   "id": "fleet-live-run",
+   "kind": "fleet",
+   "title": {
+    "en": "Warm single-target repo run",
+    "de": "Warmer repo run eines einzelnen Targets"
+   },
+   "scenario": "live-run-warm",
+   "runs": 3,
+   "warmup": 0
+  },
+  {
+   "id": "fleet-ready",
+   "kind": "fleet",
+   "title": {
+    "en": "Readiness of the fleet workers",
+    "de": "Bereitschaft der Flotten-Worker"
+   },
+   "scenario": "fleet-ready",
+   "runs": 1,
+   "warmup": 0
   }
  ],
  "slos": [
@@ -3763,6 +3895,556 @@
    "tolerance": {
     "relative": 0.1,
     "absolute": 1073741824
+   },
+   "source": "user-goal"
+  },
+  {
+   "id": "fleet-unit-warm-hit-min",
+   "title": {
+    "en": "Unit cache hit ratio of a warm second workspace",
+    "de": "Trefferquote des Einheitencache eines warmen zweiten Arbeitsbereichs"
+   },
+   "probe": "fleet-unit-warm",
+   "metric": "hitRatio",
+   "statistic": "min",
+   "direction": "higher",
+   "goal": 1,
+   "gate": 0.9,
+   "tools": [
+    "neutral"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0.05,
+    "absolute": 0
+   },
+   "source": "hot-cache"
+  },
+  {
+   "id": "fleet-unit-warm-executed-max",
+   "title": {
+    "en": "Units a warm second workspace computes again",
+    "de": "Einheiten, die ein warmer zweiter Arbeitsbereich erneut berechnet"
+   },
+   "probe": "fleet-unit-warm",
+   "metric": "executedActions",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": 0,
+   "gate": 0,
+   "tools": [
+    "neutral"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0,
+    "absolute": 0
+   },
+   "source": "hot-cache"
+  },
+  {
+   "id": "fleet-nx-warm-hit-min",
+   "title": {
+    "en": "Nx cache hit ratio of a warm second workspace",
+    "de": "Trefferquote des Nx-Cache eines warmen zweiten Arbeitsbereichs"
+   },
+   "probe": "fleet-nx-warm",
+   "metric": "hitRatio",
+   "statistic": "min",
+   "direction": "higher",
+   "goal": 1,
+   "gate": 0.9,
+   "tools": [
+    "neutral"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0.05,
+    "absolute": 0
+   },
+   "source": "hot-cache"
+  },
+  {
+   "id": "fleet-nx-warm-executed-max",
+   "title": {
+    "en": "Nx tasks a warm second workspace computes again",
+    "de": "Nx-Aufgaben, die ein warmer zweiter Arbeitsbereich erneut berechnet"
+   },
+   "probe": "fleet-nx-warm",
+   "metric": "executedActions",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": 0,
+   "gate": 0,
+   "tools": [
+    "neutral"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0,
+    "absolute": 0
+   },
+   "source": "hot-cache"
+  },
+  {
+   "id": "fleet-twin-divergent-max",
+   "title": {
+    "en": "Divergent writes of one unit built in two directories",
+    "de": "Abweichende Schreibvorgänge einer in zwei Verzeichnissen gebauten Einheit"
+   },
+   "probe": "fleet-twin-build",
+   "metric": "divergentWrites",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": 0,
+   "gate": 0,
+   "tools": [
+    "neutral"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0,
+    "absolute": 0
+   },
+   "source": "hot-cache"
+  },
+  {
+   "id": "fleet-offload-pressure-offloaded-min",
+   "title": {
+    "en": "Units offloaded to another worker under forced local pressure",
+    "de": "Unter erzwungenem lokalem Druck an einen anderen Worker ausgelagerte Einheiten"
+   },
+   "probe": "fleet-offload-pressure",
+   "metric": "offloadedUnits",
+   "statistic": "min",
+   "direction": "higher",
+   "goal": 1,
+   "gate": 1,
+   "tools": [
+    "neutral"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0,
+    "absolute": 0
+   },
+   "source": "user-goal"
+  },
+  {
+   "id": "fleet-offload-pressure-wall-p50",
+   "title": {
+    "en": "Time until an offloaded unit is complete",
+    "de": "Zeit bis eine ausgelagerte Einheit fertig ist"
+   },
+   "probe": "fleet-offload-pressure",
+   "metric": "offloadMs",
+   "statistic": "p50",
+   "direction": "lower",
+   "goal": 5000,
+   "gate": 60000,
+   "tools": [
+    "neutral"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0.5,
+    "absolute": 2000
+   },
+   "source": "user-goal"
+  },
+  {
+   "id": "fleet-offload-fallback-wall-max",
+   "title": {
+    "en": "Time until a unit compiles locally with the scheduler down",
+    "de": "Zeit bis eine Einheit bei ausgefallenem Scheduler lokal gebaut ist"
+   },
+   "probe": "fleet-offload-fallback",
+   "metric": "fallbackMs",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": 10000,
+   "gate": 60000,
+   "tools": [
+    "neutral"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0.5,
+    "absolute": 2000
+   },
+   "source": "user-goal"
+  },
+  {
+   "id": "fleet-host-16g-breaches-max",
+   "title": {
+    "en": "Capacity laws broken on a simulated 16 GB host",
+    "de": "Verletzte Kapazitätsgesetze auf einem simulierten 16-GB-Rechner"
+   },
+   "probe": "fleet-host-16g",
+   "metric": "capacityBreaches",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": 0,
+   "gate": 0,
+   "tools": [
+    "neutral"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0,
+    "absolute": 0
+   },
+   "source": "user-goal"
+  },
+  {
+   "id": "fleet-host-16g-reserved-max",
+   "title": {
+    "en": "Memory reserved for admitted work on a simulated 16 GB host",
+    "de": "Für zugelassene Arbeit reservierter Speicher auf einem simulierten 16-GB-Rechner"
+   },
+   "probe": "fleet-host-16g",
+   "metric": "reservedBytes",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": 10737418240,
+   "gate": 12884901888,
+   "tools": [
+    "neutral"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0.05,
+    "absolute": 67108864
+   },
+   "source": "user-goal"
+  },
+  {
+   "id": "fleet-host-16g-store-max",
+   "title": {
+    "en": "Disk the cache images take on a simulated 56 GB free disk",
+    "de": "Plattenbedarf der Cache-Abbilder auf einer simulierten Platte mit 56 GB frei"
+   },
+   "probe": "fleet-host-16g",
+   "metric": "storeBytes",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": 53687091200,
+   "gate": 54116587929,
+   "tools": [
+    "neutral"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0.05,
+    "absolute": 67108864
+   },
+   "source": "user-goal"
+  },
+  {
+   "id": "fleet-live-unit-hit-min",
+   "title": {
+    "en": "Live: unit found by a second workspace in the fleet cache",
+    "de": "Live: Einheit, die ein zweiter Arbeitsbereich im Flottencache findet"
+   },
+   "probe": "fleet-live-unit",
+   "metric": "hitRatio",
+   "statistic": "min",
+   "direction": "higher",
+   "goal": 1,
+   "gate": 0.9,
+   "tools": [
+    "neutral"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0.05,
+    "absolute": 0
+   },
+   "source": "hot-cache"
+  },
+  {
+   "id": "fleet-live-unit-executed-max",
+   "title": {
+    "en": "Live: compiler runs of the second workspace",
+    "de": "Live: Compilerläufe des zweiten Arbeitsbereichs"
+   },
+   "probe": "fleet-live-unit",
+   "metric": "executedActions",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": 0,
+   "gate": 0,
+   "tools": [
+    "neutral"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0,
+    "absolute": 0
+   },
+   "source": "hot-cache"
+  },
+  {
+   "id": "fleet-live-unit-divergent-max",
+   "title": {
+    "en": "Live: new divergent writes caused by the probe",
+    "de": "Live: durch die Messung neu entstandene abweichende Schreibvorgänge"
+   },
+   "probe": "fleet-live-unit",
+   "metric": "divergentWrites",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": 0,
+   "gate": 0,
+   "tools": [
+    "neutral"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0,
+    "absolute": 0
+   },
+   "source": "hot-cache"
+  },
+  {
+   "id": "fleet-live-nx-hit-min",
+   "title": {
+    "en": "Live: Nx tasks restored from the fleet cache with an empty local cache",
+    "de": "Live: Nx-Aufgaben, die bei leerem lokalem Cache aus dem Flottencache kommen"
+   },
+   "probe": "fleet-live-nx",
+   "metric": "hitRatio",
+   "statistic": "min",
+   "direction": "higher",
+   "goal": 1,
+   "gate": 0.9,
+   "tools": [
+    "neutral"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0.05,
+    "absolute": 0
+   },
+   "source": "hot-cache"
+  },
+  {
+   "id": "fleet-live-nx-executed-max",
+   "title": {
+    "en": "Live: Nx tasks executed again in the second run",
+    "de": "Live: im zweiten Lauf erneut ausgeführte Nx-Aufgaben"
+   },
+   "probe": "fleet-live-nx",
+   "metric": "executedActions",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": 0,
+   "gate": 0,
+   "tools": [
+    "neutral"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0,
+    "absolute": 0
+   },
+   "source": "hot-cache"
+  },
+  {
+   "id": "fleet-live-bazel-hit-min",
+   "title": {
+    "en": "Live: Bazel actions restored from the fleet cache after bazel clean",
+    "de": "Live: Bazel-Aktionen, die nach bazel clean aus dem Flottencache kommen"
+   },
+   "probe": "fleet-live-bazel",
+   "metric": "hitRatio",
+   "statistic": "min",
+   "direction": "higher",
+   "goal": 1,
+   "gate": 0.9,
+   "tools": [
+    "neutral"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0.05,
+    "absolute": 0
+   },
+   "source": "hot-cache"
+  },
+  {
+   "id": "fleet-live-bazel-executed-max",
+   "title": {
+    "en": "Live: Bazel actions executed again in the second build",
+    "de": "Live: im zweiten Build erneut ausgeführte Bazel-Aktionen"
+   },
+   "probe": "fleet-live-bazel",
+   "metric": "executedActions",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": 0,
+   "gate": 0,
+   "tools": [
+    "neutral"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0,
+    "absolute": 0
+   },
+   "source": "hot-cache"
+  },
+  {
+   "id": "fleet-live-offload-offloaded-mean",
+   "title": {
+    "en": "Live: share of runs offloaded through the live scheduler under forced pressure",
+    "de": "Live: Anteil der Läufe, die unter erzwungenem Druck über den echten Scheduler ausgelagert werden"
+   },
+   "probe": "fleet-live-offload",
+   "metric": "offloadedUnits",
+   "statistic": "mean",
+   "direction": "higher",
+   "goal": 1,
+   "gate": 0.66,
+   "tools": [
+    "neutral"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0,
+    "absolute": 0
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "fleet-live-offload-wall-max",
+   "title": {
+    "en": "Live: time until the offloaded unit is complete",
+    "de": "Live: Zeit bis die ausgelagerte Einheit fertig ist"
+   },
+   "probe": "fleet-live-offload",
+   "metric": "offloadMs",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": 30000,
+   "gate": 120000,
+   "tools": [
+    "neutral"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.5,
+    "absolute": 5000
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "fleet-offload-fallback-completed-min",
+   "title": {
+    "en": "Units that compile locally when the scheduler is down",
+    "de": "Einheiten, die bei ausgefallenem Scheduler lokal gebaut werden"
+   },
+   "probe": "fleet-offload-fallback",
+   "metric": "executedActions",
+   "statistic": "min",
+   "direction": "higher",
+   "goal": 1,
+   "gate": 1,
+   "tools": [
+    "neutral"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0,
+    "absolute": 0
+   },
+   "source": "user-goal"
+  },
+  {
+   "id": "fleet-live-run-first-task-p50",
+   "title": {
+    "en": "Warm repo run: command start to first task",
+    "de": "Warmer repo run: Befehlsstart bis zur ersten Task"
+   },
+   "probe": "fleet-live-run",
+   "metric": "firstTaskMs",
+   "statistic": "p50",
+   "direction": "lower",
+   "goal": 3000,
+   "gate": 15000,
+   "tools": [
+    "neutral"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.5,
+    "absolute": 2000
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "fleet-live-run-done-p50",
+   "title": {
+    "en": "Warm repo run: command start to done",
+    "de": "Warmer repo run: Befehlsstart bis zum Ende"
+   },
+   "probe": "fleet-live-run",
+   "metric": "wallMs",
+   "statistic": "p50",
+   "direction": "lower",
+   "goal": 5000,
+   "gate": 30000,
+   "tools": [
+    "neutral"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.5,
+    "absolute": 2000
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "fleet-ready-ratio-min",
+   "title": {
+    "en": "Share of fleet workers that are Ready",
+    "de": "Anteil der Flotten-Worker, die bereit sind"
+   },
+   "probe": "fleet-ready",
+   "metric": "readyRatio",
+   "statistic": "min",
+   "direction": "higher",
+   "goal": 1,
+   "gate": 0.9,
+   "tools": [
+    "neutral"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.05,
+    "absolute": 0
+   },
+   "source": "user-goal"
+  },
+  {
+   "id": "fleet-ready-time-max",
+   "title": {
+    "en": "Time from a worker supervisor's start to Ready",
+    "de": "Zeit vom Start eines Worker-Supervisors bis bereit"
+   },
+   "probe": "fleet-ready",
+   "metric": "wallMs",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": 600000,
+   "gate": 1800000,
+   "tools": [
+    "neutral"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.25,
+    "absolute": 60000
    },
    "source": "user-goal"
   }

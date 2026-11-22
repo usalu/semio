@@ -1,4 +1,4 @@
-"""Independent oracle of the take rules: the pause before look number round (integer growth up to a maximum) and the report line of a ledger, the looks of a lane under a cut. Reads the schema file (argv[1]) and the fixture file (argv[2]) and prints {"waits": [...], "lines": [...]}."""
+"""Independent oracle of the take rules: the pause before look number round (integer growth up to a maximum) and the report line of a ledger, the looks of a lane under a cut and the looks of a take pass under a cut (never below the declared floor). Reads the schema file (argv[1]) and the fixture file (argv[2]) and prints {"waits": [...], "lines": [...]}."""
 import json
 import sys
 
@@ -30,10 +30,11 @@ def line(row):
 
 
 lanes = lambda cut: policy["concurrency"] if cut is None else max(1, min(policy["concurrency"], cut))
+looks = lambda cut: max(lanes(cut), min(policy["concurrency"], policy["lookFloorConcurrency"]))
 
 def split(row):
     heavy = set(row["heavy"])
     return {"light": [n for n in row["names"] if n not in heavy], "heavy": [n for n in row["names"] if n in heavy]}
 
 
-print(json.dumps({"splits": [split(row) for row in fixture["splits"]], "waits": [wait(r) for r in fixture["rounds"]], "lines": [line(row) for row in fixture["ledgers"]], "lanes": [lanes(cut) for cut in fixture["cuts"]]}, ensure_ascii=False))
+print(json.dumps({"splits": [split(row) for row in fixture["splits"]], "waits": [wait(r) for r in fixture["rounds"]], "lines": [line(row) for row in fixture["ledgers"]], "lanes": [lanes(cut) for cut in fixture["cuts"]], "looks": [looks(cut) for cut in fixture["cuts"]]}, ensure_ascii=False))

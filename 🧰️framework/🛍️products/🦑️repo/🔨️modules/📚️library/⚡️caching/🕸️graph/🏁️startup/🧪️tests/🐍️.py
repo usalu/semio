@@ -80,7 +80,7 @@ def replay(policy, directory, steps):
     return {"outOfOrder": order, "holdAndWait": wait}
 
 
-PIN_FILES = ["⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/🟦️.ts", "🏗️build/🕸️graph/🟦️.ts"]
+PIN_FILES = ["⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/🟦️.ts", "🏗️build/🕸️graph/📥️load/🟦️.ts"]
 CALL = re.compile(r"acquire(?:Queued)?ResourceLease\(\{([^{}]*)\}\)")
 
 

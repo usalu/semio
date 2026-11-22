@@ -56,14 +56,8 @@ pub fn layout() -> WindowLayout {
 }
 /// 🪟️ Layout structure leaves window titles to their localized window-kind definitions.
 pub fn lowpoly_layout(window_ids: &[&str], sizes: &[f64]) -> WindowLayout {
-    use semio_plugin::{create_window_layout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode};
-    WindowLayout { root: WindowLayoutRoot::Axis(WindowLayoutAxisNode {
-        kind: "row".into(), size: None,
-        children: window_ids.iter().enumerate().map(|(index, id)| WindowLayoutChild::Stack(WindowLayoutStackNode {
-            kind: "stack".into(), size: sizes.get(index).copied(), active_window_kind_id: None,
-            children: vec![create_window_layout(*id, None, None, None)],
-        })).collect(),
-    }) }
+    use semio_plugin::{create_window_layout, WindowLayoutNode};
+    WindowLayout { root: create_window_layout(*id, None, None, None) }
 }
 //#endregion 🔖️Definition
 

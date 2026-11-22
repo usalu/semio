@@ -16,11 +16,12 @@ export type FleetPeerAnswerV1=Readonly<{status:number;bytes?:Uint8Array}>;
 export interface FleetPeerTransportV1{
  readonly group:string;
  readonly kind:"direct"|"relayed";
+ routed():Promise<boolean>;
  get(path:string,signal:AbortSignal):Promise<FleetPeerAnswerV1>;
 }
 
-/** 📊️ What the read-through did since it started, for `GET /status`. */
-export type FleetPeerCountersV1=Readonly<{hits:number;misses:number;errors:number;skipped:number;bytes:number}>;
+/** 📊️ What the read-through did since it started, for `GET /status`; `absent` is the number of configured peer groups that have no route right now (no attested endpoint, no readable store): they are never asked, so they are neither a miss nor an error. */
+export type FleetPeerCountersV1=Readonly<{hits:number;misses:number;errors:number;skipped:number;absent:number;bytes:number}>;
 
 /** 🔁️ Asks the peer groups for a read that the own cache could not answer. */
 export interface FleetPeerReadThroughV1{
@@ -47,7 +48,7 @@ export async function fleetPeerEndpointsV1(peerStore:string|undefined,listed:rea
 
 /** 🛰️ The direct route: a read request to the first endpoint of the peer that answers, signed by the caller's `fetch` (the group server signs with its own `cache-read` key); the answer is bounded in size and time. */
 export function directPeerTransportV1(options:Readonly<{group:string;endpoints:()=>Promise<readonly string[]>;fetch:typeof fetch;maximumBytes:number}>):FleetPeerTransportV1{
- return Object.freeze({group:options.group,kind:"direct" as const,async get(path,signal){
+ return Object.freeze<FleetPeerTransportV1>({group:options.group,kind:"direct" as const,async routed(){return(await options.endpoints()).length>0;},async get(path,signal){
   requireFleetPeerShapeV1("Path",path,"Readable cache path required");
   for(const endpoint of await options.endpoints()){
    let response:Response;
@@ -74,7 +75,7 @@ async function write(path:string,bytes:Uint8Array|string):Promise<void>{
 /** 📮️ The relayed route: the request is a file in the own store (`v1/fleet/exchange/<peer>/requests/<id>.json`), the answer a file in the peer's store (`v1/fleet/exchange/<own>/answers/<id>.json` with its body `<id>.bin`) that this server reads through its read-only mount `peerStore`. Nothing is ever written into a store of another group. It needs no route between the two networks, only the stores the relay already mounts; the answer is checked against its declared hash and size. */
 export function relayedPeerTransportV1(options:Readonly<{group:string;ownGroup:string;ownStore:string;peerStore:string;pollMilliseconds?:number;maximumBytes:number;now?:()=>number}>):FleetPeerTransportV1{
  const clock=options.now??Date.now,poll=options.pollMilliseconds??100;
- return Object.freeze({group:options.group,kind:"relayed" as const,async get(path,signal){
+ return Object.freeze<FleetPeerTransportV1>({group:options.group,kind:"relayed" as const,async routed(){return readdir(join(options.peerStore,"v1")).then(()=>true,()=>false);},async get(path,signal){
   requireFleetPeerShapeV1("Path",path,"Readable cache path required");
   const id=randomBytes(12).toString("hex"),request={version:1,id,from:options.ownGroup,to:options.group,path,createdMs:clock()},file=join(exchangeDirectory(options.ownStore,options.group,"requests"),`${id}.json`),answers=exchangeDirectory(options.peerStore,options.ownGroup,"answers");
   await write(file,JSON.stringify(request));
@@ -133,10 +134,12 @@ export async function servePeerExchangeV1(options:Readonly<{ownGroup:string;ownS
 export function createFleetPeerReadThroughV1(options:Readonly<{transports:readonly FleetPeerTransportV1[];timeoutMilliseconds?:number;missMilliseconds?:number;failures?:number;pauseMilliseconds?:number;parallel?:number;now?:()=>number}>):FleetPeerReadThroughV1{
  const clock=options.now??Date.now,timeout=options.timeoutMilliseconds??4000,remember=options.missMilliseconds??3000,failures=options.failures??3,pause=options.pauseMilliseconds??30000,parallel=options.parallel??4;
  const broken=new Map<string,{count:number;until:number}>(),misses=new Map<string,number>(),pending=new Map<string,Promise<Readonly<{group:string;bytes:Uint8Array}>|undefined>>();
- const counts={hits:0,misses:0,errors:0,skipped:0,bytes:0};
+ const counts={hits:0,misses:0,errors:0,skipped:0,absent:0,bytes:0};
  const ask=async(path:string):Promise<Readonly<{group:string;bytes:Uint8Array}>|undefined>=>{
-  const now=clock(),usable=options.transports.filter(transport=>(broken.get(transport.group)?.until??0)<=now).slice(0,parallel);
-  counts.skipped+=options.transports.length-usable.length;
+  const now=clock(),routes=await Promise.all(options.transports.map(transport=>transport.routed().catch(()=>false)));
+  counts.absent=routes.filter(routed=>!routed).length;
+  const present=options.transports.filter((transport,index)=>routes[index]),usable=present.filter(transport=>(broken.get(transport.group)?.until??0)<=now).slice(0,parallel);
+  counts.skipped+=present.length-usable.length;
   if(usable.length===0)return undefined;
   const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),timeout);
   try{
@@ -150,7 +153,7 @@ export function createFleetPeerReadThroughV1(options:Readonly<{transports:readon
    });
   }finally{clearTimeout(timer);controller.abort();}
  };
- return Object.freeze({
+ return Object.freeze<FleetPeerReadThroughV1>({
   async fetch(path){
    if(!readable(path))return undefined;
    const known=misses.get(path);
@@ -158,7 +161,7 @@ export function createFleetPeerReadThroughV1(options:Readonly<{transports:readon
    let running=pending.get(path);
    if(running===undefined){running=ask(path).finally(()=>{pending.delete(path);});pending.set(path,running);}
    const found=await running;
-   if(found===undefined){counts.misses++;misses.set(path,clock()+remember);if(misses.size>4096)for(const [name,until] of misses)if(until<=clock())misses.delete(name);return undefined;}
+   if(found===undefined){if(counts.absent<options.transports.length)counts.misses++;misses.set(path,clock()+remember);if(misses.size>4096)for(const [name,until] of misses)if(until<=clock())misses.delete(name);return undefined;}
    counts.hits++;counts.bytes+=found.bytes.byteLength;misses.delete(path);return found;
   },
   counters:()=>({...counts}),

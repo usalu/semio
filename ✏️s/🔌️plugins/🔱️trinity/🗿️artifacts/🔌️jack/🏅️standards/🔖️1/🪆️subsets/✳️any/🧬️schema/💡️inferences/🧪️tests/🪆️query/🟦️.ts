@@ -11,7 +11,7 @@ type FlatPositionRefusal = Pick<GraphCase,"name"|"nodes"|"edges"> & {rootNodeId?
 const fixture=fixtureJson as unknown as {identity:api.ArtifactChild;cases:GraphCase[];flatPositionRefusals:FlatPositionRefusal[]};
 const topology=api.inferJackTopology;
 const flat=api.inferJackFlatPosition;
-const parent:api.JackArtifact={schema:"s.trinity.jack/v1",name:"query",manifest:{nodeKinds:[],edgeKinds:[],portKinds:[]},camera:{x:{bits:0n},y:{bits:0n},zoom:{bits:0x3ff0000000000000n}},content:fixture.identity,query:"",rootNodeId:undefined};
+const parent:api.JackArtifact={schema:"s.trinity.jack/v1",name:"query",manifestId:"nakagin",camera:{x:{bits:0n},y:{bits:0n},zoom:{bits:0x3ff0000000000000n}},content:fixture.identity,query:"",rootNodeId:undefined};
 function query(example:Pick<GraphCase,"nodes"|"edges">,identity=fixture.identity){return{identity,nodeIds:()=>example.nodes,edges:()=>example.edges,displacement:(id:string)=>{const edge=example.edges.find(edge=>edge.id===id)!;return{u:edge.u,v:edge.v};}};}
 function oracle(example:Pick<GraphCase,"nodes"|"edges">){
  const key=(id:string)=>JSON.stringify([id]),literal=(id:string)=>JSON.parse(id)[0] as string,graph=new MultiDirectedGraph();for(const id of example.nodes)graph.addNode(key(id));for(const edge of example.edges)graph.addDirectedEdgeWithKey(edge.id,key(edge.source),key(edge.target),{u:edge.u,v:edge.v});

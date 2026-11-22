@@ -2,10 +2,11 @@
 //!
 //! 🧭️ The files WP3 staged for this crate (`wp3-tools/crate-map.json`) are mounted here from their place in the renderer tree; the renderer root re-exports this crate.
 
+#![recursion_limit = "256"]
+
 extern crate infinite_canvas as infinite_world;
 use semio_renderer_wgpu_asset_authority::{RendererAssetFetchOwner, RendererAssetSealStep, close_renderer_asset_step, finish_renderer_asset, renderer_asset_io, reserve_renderer_asset_response, retire_cancelled_renderer_asset_step, return_renderer_asset, seal_renderer_asset_response, take_next_completed_renderer_asset_step, take_next_renderer_asset};
-use semio_renderer_wgpu_asset_decode::{RendererAssetDecodeResult, RendererAssetDecodeSession, RendererAssetProbe, RendererAssetProbePhase};
-pub use semio_renderer_wgpu_asset_decode::{RendererAssetDecodeTurn, RendererAssetDecodeTurnKind};
+use semio_renderer_wgpu_asset_decode::{RendererAssetDecodeResult, RendererAssetDecodeSession, RendererAssetDecodeTurn, RendererAssetDecodeTurnKind, RendererAssetProbe, RendererAssetProbePhase};
 use semio_renderer_wgpu_frame_actions::{AppInteractionState, FrameActionOwners, FrameActionReceiptOwner, FrameBuildInputs, FrameDeferredCursor, FrameDeferredWork, RuntimeDispatchCursor, RuntimeDispatchSource, dispatch_normalized_event, frame_action_metadata, settle_renderer_action_receipt};
 #[cfg(not(target_arch = "wasm32"))]
 use semio_renderer_wgpu_frame_actions::{FrameExecutionOwnerCell, FrameExecutionRegistry, FrameMaintenanceAuthority, frame_maintenance_terminal_fault};
@@ -22,6 +23,8 @@ use semio_renderer_wgpu_host_base::{app_now_ms, frame_latency, log_debug, log_de
 #[cfg(not(target_arch = "wasm32"))]
 use semio_renderer_wgpu_host_base::run_renderer_io;
 use semio_renderer_wgpu_host_plumbing::deadlines;
+#[cfg(not(target_arch = "wasm32"))]
+use semio_renderer_wgpu_host_plumbing::native_io::{RendererIoPath, RendererSourceIoError, RendererSourceIoFailureKind, open_renderer_source_io};
 use std::collections::HashMap;
 use std::future::Future;
 use std::sync::{Arc, Mutex};

@@ -8,7 +8,8 @@
     { "operation": "doctor", "export": "runDoctorCliV1", "call": "root-args-environment" },
     { "operation": "capacity", "export": "runCapacityCommandV1", "call": "args-options" },
     { "operation": "fleet", "export": "runFleetCliV1", "call": "root-args-environment" },
-    { "operation": "scheduler", "export": "runSchedulerCliV1", "call": "root-args-environment" }
+    { "operation": "scheduler", "export": "runSchedulerCliV1", "call": "root-args-environment" },
+    { "operation": "test-file", "export": "runTestFileCliV1", "call": "root-args-environment" }
   ],
   "closedSubcommands": ["tools", "show", "incremental", "concurrency", "dependencies", "cache", "remote-cache", "capacity", "leases", "fleet", "scheduler", "remote-execution"],
   "refusedExitCode": 2,

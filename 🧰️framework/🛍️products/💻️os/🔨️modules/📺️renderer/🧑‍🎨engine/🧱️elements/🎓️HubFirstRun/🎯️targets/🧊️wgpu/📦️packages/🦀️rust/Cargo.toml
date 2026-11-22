@@ -1,0 +1,28 @@
+[package]
+workspace = "../../../../../../../../../../../.."
+name = "semio-renderer-wgpu-hub-first-run"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Hub first-run introduction twin"
+
+[package.metadata.semio]
+role = "framework"
+id = "os-renderer-wgpu-hub-first-run"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework = { path = "../../../../../../../../../../../📦️packages/🦀️rust" }
+semio-ui-locale = { path = "../../../../../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"

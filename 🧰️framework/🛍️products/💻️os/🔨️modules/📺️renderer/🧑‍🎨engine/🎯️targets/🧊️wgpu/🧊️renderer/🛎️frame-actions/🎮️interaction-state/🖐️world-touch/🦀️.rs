@@ -9,6 +9,36 @@ use std::collections::BTreeMap;
 
 thread_local! {
     static SESSIONS: std::cell::RefCell<BTreeMap<String, TouchSession>> = std::cell::RefCell::new(BTreeMap::new());
+    static HOLDS: std::cell::RefCell<BTreeMap<String, (f64, f64, f64)>> = std::cell::RefCell::new(BTreeMap::new());
+}
+
+/// 🌪️ React's `createLongPressV1` for the vortex-suggestions hold: the first finger arms it at its landing, a drift past the slop, a second finger, a lift or a cancel disarms it, and one still finger fires it once.
+fn hold_contact(host_id: &str, now: f64, first_finger: bool, contact: Contact) {
+    HOLDS.with(|holds| {
+        let mut holds = holds.borrow_mut();
+        match contact {
+            Contact::Down { x, y, .. } if first_finger => {
+                holds.insert(host_id.to_owned(), (now, x, y));
+            }
+            Contact::Move { x, y, .. } => {
+                if holds.get(host_id).is_some_and(|&(_, x0, y0)| (x - x0).hypot(y - y0) > infinite_world::world::WORLD3D_SUGGESTIONS_HOLD_SLOP_PX) {
+                    holds.remove(host_id);
+                }
+            }
+            _ => {
+                holds.remove(host_id);
+            }
+        }
+    });
+}
+
+/// 🌪️ The held fingers that reached the suggestions hold at `now`: each fires once and disarms.
+pub(super) fn due_holds(now: f64) -> Vec<(String, f32, f32)> {
+    HOLDS.with(|holds| {
+        let mut holds = holds.borrow_mut();
+        let ready: Vec<String> = holds.iter().filter(|(_, &(t0, _, _))| now - t0 >= infinite_world::world::WORLD3D_SUGGESTIONS_HOLD_MS).map(|(host, _)| host.clone()).collect();
+        ready.into_iter().filter_map(|host| holds.remove(&host).map(|(_, x, y)| (host, x as f32, y as f32))).collect()
+    })
 }
 
 /// 🖐️ One contact event of a touch pointer.
@@ -25,6 +55,7 @@ pub(super) fn feed(host_id: &str, profile: ShellTouchProfile, now: f64, contact:
     SESSIONS.with(|sessions| {
         let mut sessions = sessions.borrow_mut();
         let session = sessions.entry(host_id.to_owned()).or_default();
+        hold_contact(host_id, now, !session.is_active(), contact);
         if !session.is_active() {
             session.one_finger_orbit = profile.one_finger_orbit;
             session.long_press = profile.long_press;
@@ -40,7 +71,12 @@ pub(super) fn feed(host_id: &str, profile: ShellTouchProfile, now: f64, contact:
 
 /// ⏳️ The wall-clock time (milliseconds of [`app_now_ms`]) at which the earliest still finger of any surface turns into a long press, or `None` when no finger waits on the clock; the shell publishes it as a wake-up deadline, so an idle app sleeps until then and never polls.
 pub(super) fn next_deadline_ms() -> Option<f64> {
-    SESSIONS.with(|sessions| sessions.borrow().values().filter_map(|session| session.next_deadline_ms()).min_by(f64::total_cmp))
+    let holds = HOLDS.with(|holds| holds.borrow().values().map(|&(t0, _, _)| t0 + infinite_world::world::WORLD3D_SUGGESTIONS_HOLD_MS).min_by(f64::total_cmp));
+    let sessions = SESSIONS.with(|sessions| sessions.borrow().values().filter_map(|session| session.next_deadline_ms()).min_by(f64::total_cmp));
+    match (holds, sessions) {
+        (Some(hold), Some(session)) => Some(hold.min(session)),
+        (hold, session) => hold.or(session),
+    }
 }
 
 /// ⏰️ The wake-up deadline of the shell on the monotonic clock: the earlier of the chrome deadline (`chrome`, monotonic seconds) and the long-press deadline of a held finger (`touch_ms`, wall milliseconds, `None` without one), translated to seconds from the same `now`. A deadline that already passed is due `now`; a non-finite clock answers the chrome deadline untouched.

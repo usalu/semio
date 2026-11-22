@@ -15,6 +15,8 @@ import nativeStorageSchema from"../../../../../../../../../../../../🔨️modul
 import helperSchema from"./👷️asset-publication/🧬️schema.json";
 import corpus from"./🔣️.json";
 import{privateRepositoryWorkspaceV1}from"../../../../../../../../🧪️testing/🧫️private-repository/🟦️.ts";
+import {declareLibraryBuildTestEnvelopeV1} from "../../../../../../../../🧪️testing/🪪️native-birth/🟦️.ts";
+declareLibraryBuildTestEnvelopeV1({suite:"storage-opening-processes"});
 const repository=await privateRepositoryWorkspaceV1();
 const freshEnvironment:readonly string[]=helperSchema.definitions.FreshEnvironment.const;
 const compile=(text:string)=>ts.transpileModule(text.replace(/^import[^\n]*\n/gmu,"").replace(/^export /gmu,""),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;

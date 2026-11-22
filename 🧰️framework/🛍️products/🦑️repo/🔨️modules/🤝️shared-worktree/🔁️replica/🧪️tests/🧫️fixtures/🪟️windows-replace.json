@@ -1,0 +1,12 @@
+{
+  "title": "Windows rename-over semantics: a rename onto an existing file fails with EPERM while the target is read-only or a running image; moving the target away is allowed unless it is held open without delete sharing",
+  "cases": [
+    {"name":"writable idle target","readOnly":false,"running":false,"asideBlocked":false,"lateFailures":0},
+    {"name":"read-only attribute on the target","readOnly":true,"running":false,"asideBlocked":false,"lateFailures":0},
+    {"name":"running image, writable","readOnly":false,"running":true,"asideBlocked":false,"lateFailures":0},
+    {"name":"running image with read-only attribute","readOnly":true,"running":true,"asideBlocked":false,"lateFailures":0},
+    {"name":"target held open without delete sharing","readOnly":false,"running":true,"asideBlocked":true,"lateFailures":0},
+    {"name":"read-only target held open without delete sharing","readOnly":true,"running":true,"asideBlocked":true,"lateFailures":0},
+    {"name":"scanner grabs the name right after the target moved away","readOnly":false,"running":true,"asideBlocked":false,"lateFailures":1}
+  ]
+}

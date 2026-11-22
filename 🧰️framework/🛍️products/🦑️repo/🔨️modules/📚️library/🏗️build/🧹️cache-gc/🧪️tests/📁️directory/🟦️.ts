@@ -4,7 +4,10 @@ import {tmpdir} from "node:os";
 import {join,resolve} from "node:path";
 import {activateNativeDirectoryV1,allocateNativeDirectoryV1,deactivateNativeDirectoryV1,nativeDirectoryProtocolV1,nativeDirectoryUsageV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/📁️directory/🟦️.ts";
 import {readCacheLedgerV1} from "../../../../⚡️caching/💾️storage/🧾️ledger/🟦️.ts";
-import {cacheRunnerPortsV1,reportCacheLedgerV1} from "../../🏃️runner/🟦️.ts";
+import {cacheRunnerPortsV1,mountedPartitionUsageV1,reportCacheLedgerV1} from "../../🏃️runner/🟦️.ts";
+import {nativeImageVolumeUsedBytesSyncV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🍎️image/⚖️availability/🟦️.ts";
+import {planMachineBudgetV1,type MachinePolicyV1} from "../../../../⚡️caching/💾️storage/🧾️ledger/🎚️machine/🟦️.ts";
+import usage from "./usage.json" with {type:"json"};
 
 const protocol=nativeDirectoryProtocolV1(),purpose={en:"p",de:"q"},envelope={filesystemBytes:33554432,maximumPhysicalBytes:34603008};
 const ledger=readCacheLedgerV1({version:1,roots:{repository:{directory:"r/cache",maximumBytes:1<<30,undeclaredUnusedAgeMs:1000,undeclaredQuietMs:0,ignored:[]},native:{directory:".cache",maximumBytes:1<<20,undeclaredUnusedAgeMs:1000,undeclaredQuietMs:0,ignored:[]},rust:{directory:".r",maximumBytes:0,undeclaredUnusedAgeMs:1000,undeclaredQuietMs:0,ignored:[]}},areas:[{id:"alpha",root:"native",kind:"partition",directory:"b/a",partition:"alpha",managed:{owner:"image"},writers:["w"],purpose}],retirements:[]},{alpha:{directory:".cache/b/a",capacityBytes:1<<30,maximumLogicalBytes:1<<30}});
@@ -30,4 +33,19 @@ test("the same partition tree is read by the macOS rules as a plain directory be
   expect((await status(base,"darwin")).state).toBe("detached");
   rmSync(join(directory,"fixed.dmg"));expect((await status(base,"darwin")).state).toBe("directory");
  }finally{rmSync(base,{recursive:true,force:true});}
+});
+
+test("host-limited Darwin image availability does not become occupied cache bytes",()=>{
+ const {mount,volume,plist,expected,quotaBytes}=usage;
+ const read=(observedMount:string)=>`<plist version="1.0"><dict><key>MountPoint</key><string>${observedMount}</string><key>FilesystemType</key><string>${plist.FilesystemType}</string><key>CapacityInUse</key><integer>${plist.CapacityInUse}</integer></dict></plist>`;
+ const facts=mountedPartitionUsageV1(mount,volume,"darwin",(path,row,platform)=>nativeImageVolumeUsedBytesSyncV1(path,row,platform,()=>read(plist.MountPoint)));
+ expect(facts).toEqual({usedBytes:expected.usedBytes,capacityBytes:expected.capacityBytes,partial:false});
+ expect(volume.bavail*volume.bsize).toBe(expected.availableBytes);
+ const unknown=mountedPartitionUsageV1(mount,volume,"darwin",(path,row,platform)=>nativeImageVolumeUsedBytesSyncV1(path,row,platform,()=>read(mount+"-foreign")));
+ expect(unknown).toEqual({usedBytes:null,capacityBytes:expected.capacityBytes,partial:true});
+
+ const policy:MachinePolicyV1={version:1,defaultTotalBytes:quotaBytes,environment:"TEST_BUDGET",file:"budget.json",hostFreeFloorBytes:0,alignBytes:1024**2,toleranceBytes:0,stores:[{id:"rust",partition:"rust",weightBasisPoints:10000,floorBytes:0,headroomBasisPoints:0,purpose}],dedupe:[]};
+ const plan=(usedBytes:number)=>planMachineBudgetV1({totalBytes:quotaBytes,hostFreeBytes:expected.availableBytes,uses:[{id:"rust",usedBytes,envelopeBytes:facts.capacityBytes,evictableBytes:null}]},policy);
+ expect(plan(facts.usedBytes!).evictBytes).toBe(0);
+ expect(plan(facts.capacityBytes-expected.availableBytes).evictBytes).toBeGreaterThan(0);
 });

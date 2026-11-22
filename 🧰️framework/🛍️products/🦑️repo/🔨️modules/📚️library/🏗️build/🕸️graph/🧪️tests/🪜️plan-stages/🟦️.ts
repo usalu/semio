@@ -7,7 +7,7 @@ import {PLAN_STAGE_POLICY_V1} from "../../../🧠️memory/🪜️plan-stage/�
 const source=readFileSync(new URL("../../🧭️discovery/🟦️.ts",import.meta.url),"utf8"),part=source.slice(source.indexOf("export async function discoverBuildGraphPartV1"));
 
 test("every declared plan stage is marked once, in the declared order, inside the part discovery only",()=>{
- const marks=[...part.matchAll(/stages\.mark\("([a-z-]+)"\)/gu)].map(match=>match[1]);
+ const marks=[...part.matchAll(/(?<![\w.])(?:stages\.)?mark\("([a-z-]+)"\)/gu)].map(match=>match[1]);
  expect(marks).toEqual([...PLAN_STAGE_POLICY_V1.stages]);
  expect(source.slice(0,source.indexOf("export async function discoverBuildGraphPartV1")).includes("stages.mark(")).toBe(false);
 });

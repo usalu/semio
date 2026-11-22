@@ -24,7 +24,8 @@
       "noiseDb": 34.0,
       "turbulenceIntensityPercent": 40.0,
       "ventMethod": "method_1_perceived_air_quality",
-      "ventSystemId": "vent-central"
+      "ventSystemId": "vent-central",
+      "unoccupiedVentilation": null
     },
     {
       "id": "pad-2",
@@ -47,7 +48,8 @@
       "noiseDb": 34.0,
       "turbulenceIntensityPercent": 40.0,
       "ventMethod": "method_1_perceived_air_quality",
-      "ventSystemId": "vent-central"
+      "ventSystemId": "vent-central",
+      "unoccupiedVentilation": null
     }
   ],
   "ventSystems": [

@@ -15,7 +15,7 @@ use semio_renderer_wgpu_host_base::{keybinding_platform_uses_meta, set_host_plat
 use semio_renderer_wgpu_native_platform::native_accessibility;
 use semio_renderer_wgpu_program_bridge::ProgramBridgeEntry;
 use semio_renderer_wgpu_shell_actions::ActionsCtx;
-use semio_renderer_wgpu_shell_chrome_state::{ChromeDialogRequest, format_keybinding_shortcut};
+use semio_renderer_wgpu_shell_chrome_state::{ChromeDialogRequest, format_keybinding_shortcut, shell_shortcut_table};
 use semio_renderer_wgpu_shell_dock::ShellKeyboardStop;
 use semio_renderer_wgpu_shell_docs::{ShellExampleRow, window_template_drag_data};
 use semio_renderer_wgpu_shell_input::{ContextMenuItem, ContextMenuState, OverlayState, PointerCapture, PointerHitOwner, context_menu_path_for_ordinal, panel_tab_introduction_element_id};
@@ -28,6 +28,7 @@ use semio_renderer_wgpu_shell_session::{SessionCtx, ShellShortcut};
 use semio_renderer_wgpu_shell_state::ShellState;
 use semio_renderer_wgpu_shell_surfaces::ShellSettleWatch;
 use semio_renderer_wgpu_shell_view_chrome::{ChromeViewCtx, ShellChromeChildCursor, shell_example_control};
+use semio_renderer_wgpu_shell_view_chrome_overlays::ChromeOverlaysCtx;
 use semio_renderer_wgpu_shell_view_overlays::{
     ChromeTourLayout, OverlaysViewCtx, chrome_tour_chip_hotkey_box, chrome_tour_chip_icon_x, chrome_tour_chip_label_box, chrome_tour_layout, context_menu_level_width, context_menu_submenu_open, render_context_menu_level,
 };
@@ -60,6 +61,10 @@ mod native_keyboard_ring_tests;
 mod tour_overlay_and_chord_glyph_tests;
 #[path = "../../../🧱️elements/🐚️Shell/🧪️tests/⌨️wgpu-chord-example-role-parity/🦀️.rs"]
 mod chord_example_role_parity_tests;
+#[path = "../../../🧱️elements/🐚️Shell/🧪️tests/⌨️wgpu-mod-chord-and-override-reach/🦀️.rs"]
+mod mod_chord_and_override_reach_tests;
+#[path = "../../../🧱️elements/🐚️Shell/🧪️tests/🔬️wgpu-chrome-parity-constants/🦀️.rs"]
+mod chrome_parity_constants_tests;
 #[path = "../../../🧱️elements/🐚️Shell/🧪️tests/🎡️wgpu-wheel-and-escape-routing/🦀️.rs"]
 mod wheel_and_escape_routing_tests;
 #[path = "../../../🧱️elements/🐚️Shell/🧪️tests/🪟️window-lifecycle-template-drag/🦀️.rs"]

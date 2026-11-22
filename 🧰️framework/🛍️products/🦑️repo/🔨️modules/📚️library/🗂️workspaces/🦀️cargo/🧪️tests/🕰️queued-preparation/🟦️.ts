@@ -7,8 +7,9 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { setTimeout as delay } from "node:timers/promises";
 import { acquireQueuedResourceLease } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
-import{privateRepositoryWorkspaceV1}from"../../../../🧪️testing/🧫️private-repository/🟦️.ts";
-const repository=await privateRepositoryWorkspaceV1();
+import{readLeaseReportV1}from"../../../../../../../../🔨️modules/🏃️process/🔒️leases/📋️status/🟦️.ts";
+import{privateRepositoryWorkspaceV1,testCheckoutRootV1}from"../../../../🧪️testing/🧫️private-repository/🟦️.ts";
+const repository=await privateRepositoryWorkspaceV1();process.env.SEMIO_CARGO_FIXTURE_REPOSITORY=repository.root;await repository.prepare("leases","rust","tools");
 
 const fixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/🕰️queued-preparation/🔣️.json", import.meta.url), "utf8"));
 
@@ -19,7 +20,7 @@ test("queued native preparation survives waiting beyond one active recipe budget
   const artifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
   if (!artifactRoot) throw new Error("SEMIO_TEST_ARTIFACT_DIR is required for queued native proofs");
   mkdirSync(artifactRoot, { recursive: true });
-  const storage={version:1 as const,directory:artifactRoot,leaseDirectory:repositoryCargoPreparationStorageV1(repository.root).leaseDirectory,program:repositoryCargoPreparationStorageV1(repository.root).program};
+  const storage=JSON.parse(JSON.stringify(repositoryCargoPreparationStorageV1(repository.root,testCheckoutRootV1())));process.env.SEMIO_CARGO_PREPARATION_STORAGE=JSON.stringify(storage);
   const root = mkdtempSync(join(artifactRoot, "cargo-queued-preparation-"));
   const put = (path: string, source: string): void => {
     mkdirSync(join(root, path, ".."), { recursive: true });
@@ -35,15 +36,22 @@ test("queued native preparation survives waiting beyond one active recipe budget
   const child = Bun.spawn([process.execPath, join(root, "proof/📜️script.ts")], { cwd: root, env: cargoPreparationFixtureEnvironmentV1(root), stdout: "pipe", stderr: "pipe" });
   const output = new Response(child.stdout).text(), diagnostic = new Response(child.stderr).text();
   try {
-    await delay(fixture.waitMillis);
+    const resource=`cargo-preparation:${root}`,guard=Date.now()+fixture.maximumObservationMillis;let waitedMillis=0;
+    while(waitedMillis<fixture.waitMillis){
+      if(child.exitCode!==null)throw new Error("Preparation ended while its lease was held: "+await diagnostic);
+      if(Date.now()>guard)throw new Error("Preparation never showed as queued behind its holder");
+      const waiter=readLeaseReportV1(storage.leaseDirectory,process.env,Date.now(),0).waiters.find(row=>row.resource===resource);
+      waitedMillis=waiter===undefined?0:waiter.waitedSeconds*1000;
+      await delay(fixture.pollMillis);
+    }
+    expect(child.exitCode).toBe(null);
     holder.release();
     expect(await child.exited, await diagnostic).toBe(0);
     expect(JSON.parse(await output)).toEqual(fixture.expectedMachineOutput);
     expect(readFileSync(join(root, "published.txt"), "utf8")).toBe(fixture.expectedPublication);
-    expect(await diagnostic).toContain(fixture.expectedWait);
   } finally {
     holder.release();
     if (child.exitCode === null) child.kill();
     await child.exited;
   }
-}, 45_000);
+}, 240_000);

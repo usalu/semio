@@ -4,10 +4,10 @@ use super::retained_native_provisional_fold::{NativeProvisionalFold,NativeProvis
 use super::retained_typed_input::{P3ProvisionalFold,ProvisionalTypedInputWork};
 use super::retained_scratch_testing::ScratchCaller;
 use semio_framework_artifact_flow_flow::FlowHostSnapshot;
-use semio_framework_job::{OriginalSourceBinding,close_original_retained_step};
+use semio_framework_job::{OriginalSourceBinding,close_original_effect_step};
 use semio_framework_value::retirement::RetireOwned;
 fn close(work:&mut ProvisionalTypedInputWork,caller:&mut ScratchCaller){
- work.begin_close();for _ in 0..32768{if work.terminal_is_empty(){return}caller.turn(|cx|cx.with_original_retirement(|same|{let d=work.next_close_demands(same.retained_grant().maximum_copy_bytes)?;close_original_retained_step(same,d,|g|work.close_step(g))?;Ok(())}));}panic!("typed landing did not close original owners")
+ work.begin_close();for _ in 0..32768{if work.terminal_is_empty(){return}caller.turn(|cx|cx.with_original_retirement(|same|{let body=same.retained_grant().maximum_copy_bytes;let d=work.next_close_demands(body)?;close_original_effect_step(same,d,|effect|work.close_step(body,effect))?;Ok(())}));}panic!("typed landing did not close original owners")
 }
 #[test]
 fn provisional_typed_input_lands_like_the_original_central_operation_with_one_fuel(){

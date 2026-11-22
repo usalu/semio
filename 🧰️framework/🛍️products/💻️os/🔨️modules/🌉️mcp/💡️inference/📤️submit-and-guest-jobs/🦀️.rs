@@ -29,7 +29,7 @@ fn submit_guest_job(context: &InferenceToolContext<'_>, workspace: &Arc<Headless
     let jobs = job_registry();
     let job_id = jobs.begin("inference.submit");
     let cancel = InferenceCancel::default();
-    let hook = cancel.0.clone();
+    let hook = cancel.activation().cancel().clone();
     jobs.bind_cancel(&job_id, move || hook.cancel_now());
     retain_guest_job(&job_id, GuestInferenceJob { service: service.clone(), document_id: document_id.to_string(), proposal: None, committed: None, commit_refused: false });
     let payload = InferenceJobHandlePayloadV1 { site: InferenceExecutionSiteV1::Guest, service_id: service.service_id().to_string(), artifact_kind: service.declared.artifact_kind.clone(), plugin_id: service.plugin_id().to_string(), document_id: document_id.to_string(), job_id: job_id.clone(), hub: None };
@@ -42,8 +42,7 @@ fn submit_guest_job(context: &InferenceToolContext<'_>, workspace: &Arc<Headless
 #[cfg(not(target_arch = "wasm32"))]
 fn spawn_guest_job(workspace: Arc<HeadlessWorkspace>, actions: Arc<ActionAdapter>, catalog: Arc<Catalog>, service: InferenceService, document_id: String, arguments: serde_json::Value, job_id: String, cancel: InferenceCancel) -> Result<(), GatewayError> {
     let thread_job = job_id.clone();
-    std::thread::Builder::new()
-        .name(format!("semio-inference-{job_id}"))
+    guest_inference_thread(&job_id)
         .spawn(move || run_guest_job(&workspace, &actions, &catalog, &service, &document_id, &arguments, &thread_job, cancel))
         .map(|_| ())
         .map_err(|error| {

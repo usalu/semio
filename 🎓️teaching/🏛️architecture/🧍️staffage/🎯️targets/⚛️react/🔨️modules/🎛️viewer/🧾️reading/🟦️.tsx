@@ -62,9 +62,9 @@ function LegendView(props: { readonly legend: Legend; readonly language: Languag
 }
 
 /** 🏷️ The legends of a scene, or the statement that the view has none. */
-export function Legends(props: { readonly scene: DrawingScene | null; readonly language: Language; readonly patterns: boolean }): ReactElement {
+export function Legends(props: { readonly scene: DrawingScene | null; readonly legends?: readonly Legend[]; readonly language: Language; readonly patterns: boolean }): ReactElement {
   const { t } = useArchive();
-  const legends = props.scene?.legends ?? [];
+  const legends = props.legends ?? props.scene?.legends ?? [];
   return (
     <Column as="section" aria-label={t("viewer.legends")} className="bg-panel">
       <Cell><h3 className="m-0 text-[0.65rem] uppercase tracking-wide text-muted-foreground">{t("viewer.legends")}</h3></Cell>

@@ -33,7 +33,7 @@ const graph={version:1 as const,projects:{
 
 type Parsed={status:number|null;stderr:string;stdout:string};
 test.skipIf(!binary)("law: aliased hermetic inputs, the short private root and the short output root build byte-identical outputs, hit the disk cache from another checkout and stay within the computed path budget",async()=>{
- const directory=mkdtempSync(join(tmpdir(),"pathlaw-")),policy={...BAZEL_PATH_PLAN_V1,outputRoot:{...BAZEL_PATH_PLAN_V1.outputRoot,darwin:{template:join(directory,"b/{checkout}"),checkoutDigits:8},linux:{template:join(directory,"b/{checkout}"),checkoutDigits:8}}};
+ const directory=mkdtempSync(join(process.platform==="win32"?tmpdir():"/tmp","pathlaw-")),policy={...BAZEL_PATH_PLAN_V1,outputRoot:{...BAZEL_PATH_PLAN_V1.outputRoot,darwin:{template:join(directory,"b/{checkout}"),checkoutDigits:8},linux:{template:join(directory,"b/{checkout}"),checkoutDigits:8}}};
  const environment=()=>({...process.env,...(process.platform==="darwin"?{LANG:"en_US.UTF-8",LC_ALL:"en_US.UTF-8"}:{})});
  const roots:string[]=[];
  try{

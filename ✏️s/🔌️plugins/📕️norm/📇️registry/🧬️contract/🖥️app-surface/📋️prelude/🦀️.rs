@@ -65,8 +65,5 @@ use semio_plugin::UiValue;
 use semio_plugin::WindowConfigOwner;
 use semio_plugin::WindowKindDefinition;
 use semio_plugin::WindowLayout;
-use semio_plugin::WindowLayoutRoot;
-use semio_plugin::WindowLayoutStackNode;
-use semio_plugin::WindowLayoutWindowNode;
 use semio_plugin::WindowOptions;
 

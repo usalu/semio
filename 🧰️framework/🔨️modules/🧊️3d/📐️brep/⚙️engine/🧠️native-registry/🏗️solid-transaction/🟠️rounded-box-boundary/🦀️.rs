@@ -11,7 +11,7 @@ pub(super) fn edge(shape:RoundedBox,index:usize)->PrimitiveEdge{
     PrimitiveEdge{vertices,curve,range}
 }
 
-pub(super) fn surface(shape:RoundedBox,index:usize)->Surface{
+pub fn surface(shape:RoundedBox,index:usize)->Surface{
     let frame=shape.face_frame(index);
     let radius=shape.radius();
     match index {
@@ -21,7 +21,7 @@ pub(super) fn surface(shape:RoundedBox,index:usize)->Surface{
     }
 }
 
-pub(super) fn trim(shape:RoundedBox,index:usize,member:usize)->PrimitiveTrim{
+pub fn trim(shape:RoundedBox,index:usize,member:usize)->PrimitiveTrim{
     let edge=TOPOLOGY.members[index][member];
     let spec=self::edge(shape,edge);
     let curve=if index<6 {

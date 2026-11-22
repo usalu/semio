@@ -1,0 +1,24 @@
+{
+  "scales": [
+    100,
+    200,
+    500
+  ],
+  "leafLengthM": [
+    0.07,
+    0.16
+  ],
+  "leafWidthM": [
+    0.008,
+    0.022
+  ],
+  "minLeavesPerCoarseShoot": 6,
+  "axes": 6,
+  "expectedFineApexLeaves": 3,
+  "poses": [
+    "summer-calm",
+    "fresh-breeze",
+    "storm-bent"
+  ],
+  "maxJoinDistanceM": 0.024
+}

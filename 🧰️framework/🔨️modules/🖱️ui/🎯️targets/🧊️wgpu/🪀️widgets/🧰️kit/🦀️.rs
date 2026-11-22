@@ -37,7 +37,7 @@ impl<E> InputMeta<E> {
         if self.input_kind != "number" {
             return Some(semio_framework_value::DslValue::String(raw.to_string()));
         }
-        raw.parse::<f64>().ok().map(|value| semio_framework_value::DslValue::float(crate::constrain_number_input(value, self.min, self.max, self.step)))
+        raw.parse::<f64>().ok().map(|value| semio_framework_value::DslValue::float(constrain_number_input(value, self.min, self.max, self.step)))
     }
 }
 

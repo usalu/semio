@@ -222,3 +222,13 @@ Scripts: `r5-vacuum-cleaner-model.py` (keeps the hand-stated lists of `r3-vacuum
 - Structure keeps one hose wall member per bone (the load path bends at the bone joints).
 
 All scales retain a 36 mm flexible hose, 35 mm steel wand with a 33 mm bore, 285 mm floor head and separate swivel. The fine telescoping inner tube has a 32 mm outside diameter and 30 mm bore. The nozzle has two 250 × 8 × 6 mm brush strips. The canister wall exposes 0.293 m² and the separately modeled lid about 0.178 m². All four measured geometry checks and twelve independent export scenes passed (2,596,572 bytes).
+
+## Rolling contacts, 21 November
+
+At 1:500 the 300 mm rear drum filled the 250 mm gap between the inboard faces of the rear wheels. The front twin castor was one roller at 1:100 and disappeared from the body at 1:200 and 1:500. The structural view placed a rectangular support across the rear axle at every scale.
+
+Each scale now has two 120 mm diameter rear wheels, with 25 mm tyres and dished rims, on 275 mm centres. The 50 mm diameter twin castor uses two 12 mm wheels on 36 mm centres. Four anchors carry the rolling reactions alongside the separate floor-tool contact. The body, thermal and structural meshes have a clear gap between the left and right treads. Rims connect the rear treads to the axle, and the front wheels seat against their yoke.
+
+The 1:500 print side view marks the front castor. Front and plan use a grouped sign for the rear pair at the coarse end of the print band. The maintained Three.js regression measures floor-intersecting triangles, checks both tread widths and rejects a surface bridging an axle. It also probes each structural rear rim from the axle centre to the 44 mm tyre seat.
+
+The revised canonical asset matched the fully validated candidate and the authored volume source. The canonical strict run returned zero schema, asset or measured-volume findings. The GLB reopened in 12 scenes at 2,365,104 bytes with zero findings. The four-scale render shows a solid rim between each structural rear tyre and its axle. Reviewed SHA-256 `28dd9d675ed27f426510ae9c3643732ee48a7c045e5fe946c0cda75f5a13e955`.

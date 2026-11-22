@@ -20,8 +20,8 @@ pub use backend::ReadbackImage;
 pub use backend::{ActiveBackend, BackendError, DeviceCapabilities, DeviceStatus, FrameStats, GpuTier, GraphicsBackend, LossReason, MemoryClass, NullBackend, PhysicalSize, RecoveredResources, RenderReport, ResourceKind, SurfaceFormat};
 pub use resource::{AtlasId, MeshId, ResourceError, ResourceOp, ResourceRegistry, ResourceState, TextureId};
 pub use scene::{
-    ClipRegion, DrawBatch, FinishParams, GlassInstance, GlassRegion, GlassStyle, LayerState, LayoutRect, LineVertex3, MeshInstance, PipelineKind, QuadInstance, RenderPacket, Scene, SceneBuilder, SceneError, SceneLayer, ScissorRect, StencilPolicy,
-    SurfaceLighting, SurfaceLineDraw, SurfaceMaterial, SurfaceMeshDraw, SurfacePass, SurfaceShadow, SurfaceTexturedDraw, TexturedMeshInstance, VectorVertex, KIND_FINISHED_BORDER, KIND_GLYPH, KIND_INTRODUCING_BORDER, KIND_LOADING_BORDER, KIND_RASTER,
+    ClipRegion, DrawBatch, FinishParams, GlassInstance, GlassRegion, GlassStyle, LayerState, LayoutRect, LineVertex3, MeshInstance, PipelineKind, PointVertex3, QuadInstance, RenderPacket, Scene, SceneBuilder, SceneError, SceneLayer, ScissorRect, StencilPolicy,
+    SurfaceLighting, SurfaceLineDraw, SurfaceMaterial, SurfaceMeshDraw, SurfacePass, SurfacePointDraw, SurfaceShadow, SurfaceTexturedDraw, TexturedMeshInstance, VectorVertex, KIND_FINISHED_BORDER, KIND_GLYPH, KIND_INTRODUCING_BORDER, KIND_LOADING_BORDER, KIND_RASTER,
     KIND_ROUNDED, KIND_SOLID, KIND_TEXTURED, KIND_WAITING_BORDER,
 };
 pub use tessellate::{dashed_line_segments, ear_clip_polygon, layer_scissors, mask_instances, merge_scissor_bounds, snap_point, snap_rect, snap_to_device_pixels, thick_line_positions, triangle_fan_positions, union_scissors};

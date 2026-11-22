@@ -4,18 +4,20 @@ import {createHash} from "node:crypto";
 import {mkdtemp,readFile,rm,writeFile} from "node:fs/promises";
 import {join,relative,resolve} from "node:path";
 import {fileURLToPath} from "node:url";
-import {declareBuildTestEnvelopeV1,withBuildTestInvocationV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/📥️invocation/🟦️.ts";
+import {withBuildTestInvocationV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/📥️invocation/🟦️.ts";
+import {declareLibraryBuildTestEnvelopeV1} from "../../../../../../🧪️testing/🪪️native-birth/🟦️.ts";
 import {createIssuedResourceControlV1,scriptInvocationEnvironment} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {captureOwnedCommandResultV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import {captureNxAuthorizerSourcesV1} from "../../../../../../⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/🟦️.ts";
 import {snapshotNxAuthorizerSourcesV1,compileNxAuthorizerSnapshotV1} from "../../../../../../⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📦️snapshot/🟦️.ts";
 import{existsSync as existsRootV1}from"node:fs";import{dirname as dirnameRootV1,join as joinRootV1}from"node:path";
 const repositoryRootV1=(()=>{let directory=import.meta.dir;while(!existsRootV1(joinRootV1(directory,"MODULE.bazel"))&&dirnameRootV1(directory)!==directory)directory=dirnameRootV1(directory);return directory;})();
-declareBuildTestEnvelopeV1({owner:"test:closure-readmission",maximumElapsedMilliseconds:180000,capabilities:{artifacts:true}});
+declareLibraryBuildTestEnvelopeV1({suite:"build-source-tree",maximumElapsedMilliseconds:180000,scratch:"checkout-test"});
 const sha=(text:string|Uint8Array)=>createHash("sha256").update(text).digest("hex");
 type Report={ok:boolean;identity?:string;files?:[string,string][];key?:string;message?:string};
 test("a task that runs after a peer edited its closure admits the current closure for itself, unrelated edits change nothing, and an unadmittable closure ends the task with the real error",()=>withBuildTestInvocationV1(async original=>{
  const root=repositoryRootV1,area=await mkdtemp(join(process.env.SEMIO_TEST_ARTIFACT_DIR!,"ra-")),control=createIssuedResourceControlV1(original,"test:closure-readmission",150000);
+ process.env.SEMIO_TEST_SOURCE_TREE=relative(root,area).replaceAll("\\","/");
  const target=join(area,"target.ts"),helper=join(area,"helper.ts"),other=join(area,"other.ts"),entry=join(area,"entry.ts"),program=join(area,"program.mjs"),rel=(path:string)=>relative(root,path).replaceAll("\\","/"),specifier=(path:string)=>{const value=relative(area,path).replaceAll("\\","/");return JSON.stringify(value.startsWith(".")?value:"./"+value);};
  const closure=fileURLToPath(new URL("../../../🟦️.ts",import.meta.url)),routing=resolve(root,"🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts");
  try{
@@ -37,5 +39,5 @@ test("a task that runs after a peer edited its closure admits the current closur
   const fourth=await run("unrelated");expect(fourth.status,fourth.said).toBe(0);expect(fourth.said).not.toContain("moved while this task was running");expect(fourth.report.identity).toBe(first.report.identity);
   await rm(helper);
   const fifth=await run("gone");expect(fifth.status).toBe(1);expect(fifth.report.ok).toBe(false);expect(fifth.report.message).not.toContain("changed during capture");
- }finally{await rm(area,{recursive:true,force:true});}
+ }finally{delete process.env.SEMIO_TEST_SOURCE_TREE;await rm(area,{recursive:true,force:true});}
 }),175000);

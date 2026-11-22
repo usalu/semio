@@ -1,4857 +1,3257 @@
 {
  "volumes": {
-  "50": {
-   "status": "authored",
-   "denominator": 50,
-   "body": [
-    {
-     "id": "rail-left",
-     "kind": "extrude",
-     "bone": "stand",
-     "material": "galvanised-steel",
-     "role": "body",
-     "tone": 0.5,
-     "profile": [
-      [
-       0.0,
-       0.425
-      ],
-      [
-       0.0,
-       0.45
-      ],
-      [
-       0.025,
-       0.45
-      ],
-      [
-       0.025,
-       0.448
-      ],
-      [
-       0.002,
-       0.448
-      ],
-      [
-       0.002,
-       0.425
-      ]
+   "50": {
+     "status": "authored",
+     "denominator": 50,
+     "body": [
+       {
+         "id": "rail-left",
+         "kind": "extrude",
+         "bone": "stand",
+         "material": "galvanised-steel",
+         "role": "body",
+         "tone": 0.5,
+         "profile": [[0.0, 0.425], [0.0, 0.45], [0.025, 0.45], [0.025, 0.448], [0.002, 0.448], [0.002, 0.425]],
+         "plane": "yz",
+         "from": 0.0,
+         "to": 1.5
+       },
+       {
+         "id": "rail-right",
+         "kind": "extrude",
+         "bone": "stand",
+         "material": "galvanised-steel",
+         "role": "body",
+         "tone": 0.5,
+         "profile": [[0.0, -0.425], [0.0, -0.45], [0.025, -0.45], [0.025, -0.448], [0.002, -0.448], [0.002, -0.425]],
+         "plane": "yz",
+         "from": 0.0,
+         "to": 1.5
+       },
+       {
+         "id": "post-rear-left",
+         "kind": "extrude",
+         "bone": "stand",
+         "material": "galvanised-steel",
+         "role": "body",
+         "tone": 0.5,
+         "profile": [[0.448, 0.18456], [0.448, 0.20956], [0.446, 0.20956], [0.446, 0.18656], [0.423, 0.18656], [0.423, 0.18456]],
+         "plane": "zx",
+         "from": 0.002,
+         "to": 1.1
+       },
+       {
+         "id": "post-rear-right",
+         "kind": "extrude",
+         "bone": "stand",
+         "material": "galvanised-steel",
+         "role": "body",
+         "tone": 0.5,
+         "profile": [[-0.448, 0.18456], [-0.448, 0.20956], [-0.446, 0.20956], [-0.446, 0.18656], [-0.423, 0.18656], [-0.423, 0.18456]],
+         "plane": "zx",
+         "from": 0.002,
+         "to": 1.1
+       },
+       {
+         "id": "post-front-left",
+         "kind": "extrude",
+         "bone": "stand",
+         "material": "galvanised-steel",
+         "role": "body",
+         "tone": 0.5,
+         "profile": [[0.448, 1.23307], [0.448, 1.25807], [0.446, 1.25807], [0.446, 1.23507], [0.423, 1.23507], [0.423, 1.23307]],
+         "plane": "zx",
+         "from": 0.002,
+         "to": 0.365
+       },
+       {
+         "id": "post-front-right",
+         "kind": "extrude",
+         "bone": "stand",
+         "material": "galvanised-steel",
+         "role": "body",
+         "tone": 0.5,
+         "profile": [[-0.448, 1.23307], [-0.448, 1.25807], [-0.446, 1.25807], [-0.446, 1.23507], [-0.423, 1.23507], [-0.423, 1.23307]],
+         "plane": "zx",
+         "from": 0.002,
+         "to": 0.365
+       },
+       {
+         "id": "knee-left",
+         "kind": "extrude",
+         "bone": "stand",
+         "material": "galvanised-steel",
+         "role": "body",
+         "tone": 0.5,
+         "profile": [[-0.0125, 0.421], [-0.0125, 0.446], [0.0125, 0.446], [0.0125, 0.444], [-0.0105, 0.444], [-0.0105, 0.421]],
+         "plane": "yz",
+         "transform": {
+           "translation": [0.51706, 0.0125, 0.0],
+           "rotation": [0.0, 0.0, 0.92373, 0.38305]
+         },
+         "from": -0.003,
+         "to": 0.45166
+       },
+       {
+         "id": "knee-right",
+         "kind": "extrude",
+         "bone": "stand",
+         "material": "galvanised-steel",
+         "role": "body",
+         "tone": 0.5,
+         "profile": [[-0.0125, -0.421], [-0.0125, -0.446], [0.0125, -0.446], [0.0125, -0.444], [-0.0105, -0.444], [-0.0105, -0.421]],
+         "plane": "yz",
+         "transform": {
+           "translation": [0.51706, 0.0125, 0.0],
+           "rotation": [0.0, 0.0, 0.92373, 0.38305]
+         },
+         "from": -0.003,
+         "to": 0.45166
+       },
+       {
+         "id": "cleat-rear",
+         "kind": "extrude",
+         "bone": "stand",
+         "material": "galvanised-steel",
+         "role": "body",
+         "tone": 0.5,
+         "profile": [[0.18156, 1.03], [0.18456, 1.03], [0.18456, 1.12576], [0.26206, 1.0715], [0.26206, 1.07516], [0.18156, 1.13152]],
+         "plane": "xy",
+         "from": -0.448,
+         "to": -0.423,
+         "repeat": {
+           "count": 2,
+           "translation": [0.0, 0.0, 0.871]
+         }
+       },
+       {
+         "id": "cleat-front",
+         "kind": "extrude",
+         "bone": "stand",
+         "material": "galvanised-steel",
+         "role": "body",
+         "tone": 0.5,
+         "profile": [[1.23007, 0.3], [1.23307, 0.3], [1.23307, 0.39159], [1.31057, 0.33732], [1.31057, 0.34098], [1.23007, 0.39735]],
+         "plane": "xy",
+         "from": -0.448,
+         "to": -0.423,
+         "repeat": {
+           "count": 2,
+           "translation": [0.0, 0.0, 0.871]
+         }
+       },
+       {
+         "id": "brace-rising-left",
+         "kind": "box",
+         "bone": "stand",
+         "material": "galvanised-steel",
+         "role": "body",
+         "tone": 0.5,
+         "size": [0.002, 1.18925, 0.02],
+         "transform": {
+           "translation": [0.18356, 0.605, 0.0],
+           "rotation": [0.40271, 0.0, 0.0, 0.91533]
+         },
+         "slender": true
+       },
+       {
+         "id": "brace-rising-right",
+         "kind": "box",
+         "bone": "stand",
+         "material": "galvanised-steel",
+         "role": "body",
+         "tone": 0.5,
+         "size": [0.002, 1.18925, 0.02],
+         "transform": {
+           "translation": [0.18756, 0.605, 0.0],
+           "rotation": [-0.40271, 0.0, 0.0, 0.91533]
+         },
+         "slender": true
+       },
+       {
+         "id": "bolt-foot-right",
+         "kind": "revolve",
+         "bone": "stand",
+         "material": "galvanised-steel",
+         "role": "detail",
+         "tone": 0.4,
+         "profile": [[0.0, 0.0065], [0.016, 0.0065]],
+         "axis": [0.0, 0.0, 1.0],
+         "origin": [0.19706, 0.0125, -0.4555],
+         "repeat": {
+           "count": 2,
+           "translation": [1.04851, 0.0, 0.0]
+         }
+       },
+       {
+         "id": "bolt-foot-left",
+         "kind": "revolve",
+         "bone": "stand",
+         "material": "galvanised-steel",
+         "role": "detail",
+         "tone": 0.4,
+         "profile": [[0.0, 0.0065], [0.016, 0.0065]],
+         "axis": [0.0, 0.0, 1.0],
+         "origin": [0.19706, 0.0125, 0.4395],
+         "repeat": {
+           "count": 2,
+           "translation": [1.04851, 0.0, 0.0]
+         }
+       },
+       {
+         "id": "bolt-knee-right",
+         "kind": "revolve",
+         "bone": "stand",
+         "material": "galvanised-steel",
+         "role": "detail",
+         "tone": 0.4,
+         "profile": [[0.0, 0.0065], [0.016, 0.0065]],
+         "axis": [0.0, 0.0, 1.0],
+         "origin": [0.51706, 0.0125, -0.4555],
+         "repeat": {
+           "count": 2,
+           "translation": [-0.317, 0.3175, 0.0]
+         }
+       },
+       {
+         "id": "bolt-knee-left",
+         "kind": "revolve",
+         "bone": "stand",
+         "material": "galvanised-steel",
+         "role": "detail",
+         "tone": 0.4,
+         "profile": [[0.0, 0.0065], [0.016, 0.0065]],
+         "axis": [0.0, 0.0, 1.0],
+         "origin": [0.51706, 0.0125, 0.4395],
+         "repeat": {
+           "count": 2,
+           "translation": [-0.317, 0.3175, 0.0]
+         }
+       },
+       {
+         "id": "bolt-cleat-rear-right",
+         "kind": "revolve",
+         "bone": "stand",
+         "material": "galvanised-steel",
+         "role": "detail",
+         "tone": 0.4,
+         "profile": [[0.0, 0.0065], [0.016, 0.0065]],
+         "axis": [1.0, 0.0, 0.0],
+         "origin": [0.17556, 1.045, -0.4355],
+         "repeat": {
+           "count": 2,
+           "translation": [0.0, 0.028, 0.0]
+         }
+       },
+       {
+         "id": "bolt-cleat-rear-left",
+         "kind": "revolve",
+         "bone": "stand",
+         "material": "galvanised-steel",
+         "role": "detail",
+         "tone": 0.4,
+         "profile": [[0.0, 0.0065], [0.016, 0.0065]],
+         "axis": [1.0, 0.0, 0.0],
+         "origin": [0.17556, 1.045, 0.4355],
+         "repeat": {
+           "count": 2,
+           "translation": [0.0, 0.028, 0.0]
+         }
+       },
+       {
+         "id": "bolt-cleat-front-right",
+         "kind": "revolve",
+         "bone": "stand",
+         "material": "galvanised-steel",
+         "role": "detail",
+         "tone": 0.4,
+         "profile": [[0.0, 0.0065], [0.016, 0.0065]],
+         "axis": [1.0, 0.0, 0.0],
+         "origin": [1.22407, 0.315, -0.4355],
+         "repeat": {
+           "count": 2,
+           "translation": [0.0, 0.028, 0.0]
+         }
+       },
+       {
+         "id": "bolt-cleat-front-left",
+         "kind": "revolve",
+         "bone": "stand",
+         "material": "galvanised-steel",
+         "role": "detail",
+         "tone": 0.4,
+         "profile": [[0.0, 0.0065], [0.016, 0.0065]],
+         "axis": [1.0, 0.0, 0.0],
+         "origin": [1.22407, 0.315, 0.4355],
+         "repeat": {
+           "count": 2,
+           "translation": [0.0, 0.028, 0.0]
+         }
+       },
+       {
+         "id": "bolt-brace-rising-left",
+         "kind": "revolve",
+         "bone": "stand",
+         "material": "galvanised-steel",
+         "role": "detail",
+         "tone": 0.4,
+         "profile": [[0.0, 0.0065], [0.016, 0.0065]],
+         "axis": [1.0, 0.0, 0.0],
+         "origin": [0.17756, 0.21, -0.431],
+         "repeat": {
+           "count": 2,
+           "translation": [0.0, 0.79, 0.862]
+         }
+       },
+       {
+         "id": "bolt-brace-rising-right",
+         "kind": "revolve",
+         "bone": "stand",
+         "material": "galvanised-steel",
+         "role": "detail",
+         "tone": 0.4,
+         "profile": [[0.0, 0.0065], [0.016, 0.0065]],
+         "axis": [1.0, 0.0, 0.0],
+         "origin": [0.17756, 0.21, 0.431],
+         "repeat": {
+           "count": 2,
+           "translation": [0.0, 0.79, -0.862]
+         }
+       },
+       {
+         "id": "tray",
+         "kind": "extrude",
+         "bone": "housing",
+         "material": "anodised-aluminium",
+         "role": "body",
+         "tone": 0.35,
+         "profile": [[-0.3585, 0.0], [1.6385, 0.0], [1.6385, 0.0953], [1.6235, 0.0953], [1.6235, 0.0938], [1.637, 0.0938], [1.637, 0.0015], [-0.357, 0.0015], [-0.357, 0.0938], [-0.3435, 0.0938], [-0.3435, 0.0953], [-0.3585, 0.0953]],
+         "plane": "xy",
+         "from": -0.497,
+         "to": 0.497
+       },
+       {
+         "id": "tray-side-left",
+         "kind": "extrude",
+         "bone": "housing",
+         "material": "anodised-aluminium",
+         "role": "body",
+         "tone": 0.35,
+         "profile": [[0.0, 0.497], [0.0, 0.4985], [0.0953, 0.4985], [0.0953, 0.4835], [0.0938, 0.4835], [0.0938, 0.497]],
+         "plane": "yz",
+         "from": -0.3585,
+         "to": 1.6385
+       },
+       {
+         "id": "tray-side-right",
+         "kind": "extrude",
+         "bone": "housing",
+         "material": "anodised-aluminium",
+         "role": "body",
+         "tone": 0.35,
+         "profile": [[0.0, -0.497], [0.0, -0.4985], [0.0953, -0.4985], [0.0953, -0.4835], [0.0938, -0.4835], [0.0938, -0.497]],
+         "plane": "yz",
+         "from": -0.3585,
+         "to": 1.6385
+       },
+       {
+         "id": "cover-side-left",
+         "kind": "extrude",
+         "bone": "housing",
+         "material": "anodised-aluminium",
+         "role": "body",
+         "tone": 0.35,
+         "profile": [[0.0865, 0.4985], [0.0865, 0.5], [0.1, 0.5], [0.1, 0.48], [0.0985, 0.48], [0.0985, 0.4985]],
+         "plane": "yz",
+         "from": -0.36,
+         "to": 1.64
+       },
+       {
+         "id": "cover-side-right",
+         "kind": "extrude",
+         "bone": "housing",
+         "material": "anodised-aluminium",
+         "role": "body",
+         "tone": 0.35,
+         "profile": [[0.0865, -0.4985], [0.0865, -0.5], [0.1, -0.5], [0.1, -0.48], [0.0985, -0.48], [0.0985, -0.4985]],
+         "plane": "yz",
+         "from": -0.36,
+         "to": 1.64
+       },
+       {
+         "id": "cover-end-upper",
+         "kind": "extrude",
+         "bone": "housing",
+         "material": "anodised-aluminium",
+         "role": "body",
+         "tone": 0.35,
+         "profile": [[-0.36, 0.0865], [-0.3585, 0.0865], [-0.3585, 0.0985], [-0.34, 0.0985], [-0.34, 0.1], [-0.36, 0.1]],
+         "plane": "xy",
+         "from": -0.5,
+         "to": 0.5
+       },
+       {
+         "id": "cover-end-lower",
+         "kind": "extrude",
+         "bone": "housing",
+         "material": "anodised-aluminium",
+         "role": "body",
+         "tone": 0.35,
+         "profile": [[1.64, 0.0865], [1.64, 0.1], [1.62, 0.1], [1.62, 0.0985], [1.6385, 0.0985], [1.6385, 0.0865]],
+         "plane": "xy",
+         "from": -0.5,
+         "to": 0.5
+       },
+       {
+         "id": "insulation",
+         "kind": "extrude",
+         "bone": "housing",
+         "material": "mineral-wool",
+         "role": "body",
+         "tone": 0.8,
+         "profile": [[-0.357, 0.0015], [1.637, 0.0015], [1.637, 0.052], [1.58, 0.052], [1.58, 0.0598], [-0.3, 0.0598], [-0.3, 0.052], [-0.357, 0.052]],
+         "plane": "xy",
+         "from": -0.497,
+         "to": 0.497
+       },
+       {
+         "id": "glass",
+         "kind": "box",
+         "bone": "glass",
+         "material": "solar-glass",
+         "role": "glazing",
+         "tone": 0.92,
+         "size": [1.99, 0.0032, 0.99],
+         "transform": {
+           "translation": [0.995, 0.0, 0.0]
+         }
+       },
+       {
+         "id": "absorber",
+         "kind": "extrude",
+         "bone": "absorber",
+         "material": "selective-absorber",
+         "role": "body",
+         "tone": 0.2,
+         "profile": [[0.00025, -0.455], [0.00025, 0.455], [-0.00025, 0.455], [-0.00025, 0.40122], [-0.00137, 0.40333], [-0.00334, 0.40468], [-0.00571, 0.40496], [-0.00795, 0.40411], [-0.00953, 0.40232], [-0.0101, 0.4], [-0.00953, 0.39768], [-0.00795, 0.39589], [-0.00571, 0.39504], [-0.00334, 0.39532], [-0.00137, 0.39667], [-0.00025, 0.39878], [-0.00025, 0.30122], [-0.00137, 0.30333], [-0.00334, 0.30468], [-0.00571, 0.30496], [-0.00795, 0.30411], [-0.00953, 0.30232], [-0.0101, 0.3], [-0.00953, 0.29768], [-0.00795, 0.29589], [-0.00571, 0.29504], [-0.00334, 0.29532], [-0.00137, 0.29667], [-0.00025, 0.29878], [-0.00025, 0.20122], [-0.00137, 0.20333], [-0.00334, 0.20468], [-0.00571, 0.20496], [-0.00795, 0.20411], [-0.00953, 0.20232], [-0.0101, 0.2], [-0.00953, 0.19768], [-0.00795, 0.19589], [-0.00571, 0.19504], [-0.00334, 0.19532], [-0.00137, 0.19667], [-0.00025, 0.19878], [-0.00025, 0.10122], [-0.00137, 0.10333], [-0.00334, 0.10468], [-0.00571, 0.10496], [-0.00795, 0.10411], [-0.00953, 0.10232], [-0.0101, 0.1], [-0.00953, 0.09768], [-0.00795, 0.09589], [-0.00571, 0.09504], [-0.00334, 0.09532], [-0.00137, 0.09667], [-0.00025, 0.09878], [-0.00025, 0.00122], [-0.00137, 0.00333], [-0.00334, 0.00468], [-0.00571, 0.00496], [-0.00795, 0.00411], [-0.00953, 0.00232], [-0.0101, -0.0], [-0.00953, -0.00232], [-0.00795, -0.00411], [-0.00571, -0.00496], [-0.00334, -0.00468], [-0.00137, -0.00333], [-0.00025, -0.00122], [-0.00025, -0.09878], [-0.00137, -0.09667], [-0.00334, -0.09532], [-0.00571, -0.09504], [-0.00795, -0.09589], [-0.00953, -0.09768], [-0.0101, -0.1], [-0.00953, -0.10232], [-0.00795, -0.10411], [-0.00571, -0.10496], [-0.00334, -0.10468], [-0.00137, -0.10333], [-0.00025, -0.10122], [-0.00025, -0.19878], [-0.00137, -0.19667], [-0.00334, -0.19532], [-0.00571, -0.19504], [-0.00795, -0.19589], [-0.00953, -0.19768], [-0.0101, -0.2], [-0.00953, -0.20232], [-0.00795, -0.20411], [-0.00571, -0.20496], [-0.00334, -0.20468], [-0.00137, -0.20333], [-0.00025, -0.20122], [-0.00025, -0.29878], [-0.00137, -0.29667], [-0.00334, -0.29532], [-0.00571, -0.29504], [-0.00795, -0.29589], [-0.00953, -0.29768], [-0.0101, -0.3], [-0.00953, -0.30232], [-0.00795, -0.30411], [-0.00571, -0.30496], [-0.00334, -0.30468], [-0.00137, -0.30333], [-0.00025, -0.30122], [-0.00025, -0.39878], [-0.00137, -0.39667], [-0.00334, -0.39532], [-0.00571, -0.39504], [-0.00795, -0.39589], [-0.00953, -0.39768], [-0.0101, -0.4], [-0.00953, -0.40232], [-0.00795, -0.40411], [-0.00571, -0.40496], [-0.00334, -0.40468], [-0.00137, -0.40333], [-0.00025, -0.40122], [-0.00025, -0.455]],
+         "plane": "yz",
+         "from": 0.0,
+         "to": 1.88
+       },
+       {
+         "id": "riser-end-upper",
+         "kind": "revolve",
+         "bone": "absorber",
+         "material": "copper",
+         "role": "detail",
+         "tone": 0.55,
+         "profile": [[0.0, 0.005], [0.015, 0.005]],
+         "axis": [1.0, 0.0, 0.0],
+         "origin": [-0.015, -0.0051, -0.4],
+         "repeat": {
+           "count": 9,
+           "translation": [0.0, 0.0, 0.1]
+         }
+       },
+       {
+         "id": "riser-end-lower",
+         "kind": "revolve",
+         "bone": "absorber",
+         "material": "copper",
+         "role": "detail",
+         "tone": 0.55,
+         "profile": [[0.0, 0.005], [0.015, 0.005]],
+         "axis": [1.0, 0.0, 0.0],
+         "origin": [1.88, -0.0051, -0.4],
+         "repeat": {
+           "count": 9,
+           "translation": [0.0, 0.0, 0.1]
+         }
+       },
+       {
+         "id": "header-upper",
+         "kind": "revolve",
+         "bone": "headers",
+         "material": "copper",
+         "role": "body",
+         "tone": 0.4,
+         "profile": [[0.0, 0.011], [1.0, 0.011]],
+         "axis": [0.0, 0.0, 1.0],
+         "origin": [0.0, 0.0, -0.5]
+       },
+       {
+         "id": "header-lower",
+         "kind": "revolve",
+         "bone": "headers",
+         "material": "copper",
+         "role": "body",
+         "tone": 0.4,
+         "profile": [[0.0, 0.011], [1.0, 0.011]],
+         "axis": [0.0, 0.0, 1.0],
+         "origin": [1.91, 0.0, -0.5]
+       },
+       {
+         "id": "collar-upper",
+         "kind": "revolve",
+         "bone": "headers",
+         "material": "copper",
+         "role": "detail",
+         "tone": 0.4,
+         "profile": [[0.0, 0.011], [0.0, 0.018], [0.008, 0.018], [0.008, 0.011], [0.0, 0.011]],
+         "axis": [0.0, 0.0, 1.0],
+         "origin": [0.0, 0.0, -0.5],
+         "repeat": {
+           "count": 2,
+           "translation": [0.0, 0.0, 0.992]
+         }
+       },
+       {
+         "id": "collar-lower",
+         "kind": "revolve",
+         "bone": "headers",
+         "material": "copper",
+         "role": "detail",
+         "tone": 0.4,
+         "profile": [[0.0, 0.011], [0.0, 0.018], [0.008, 0.018], [0.008, 0.011], [0.0, 0.011]],
+         "axis": [0.0, 0.0, 1.0],
+         "origin": [1.91, 0.0, -0.5],
+         "repeat": {
+           "count": 2,
+           "translation": [0.0, 0.0, 0.992]
+         }
+       }
      ],
-     "plane": "yz",
-     "from": 0.0,
-     "to": 1.5
-    },
-    {
-     "id": "rail-right",
-     "kind": "extrude",
-     "bone": "stand",
-     "material": "galvanised-steel",
-     "role": "body",
-     "tone": 0.5,
-     "profile": [
-      [
-       0.0,
-       -0.425
-      ],
-      [
-       0.0,
-       -0.45
-      ],
-      [
-       0.025,
-       -0.45
-      ],
-      [
-       0.025,
-       -0.448
-      ],
-      [
-       0.002,
-       -0.448
-      ],
-      [
-       0.002,
-       -0.425
-      ]
+     "thermal": [
+       {
+         "id": "th-rail-left",
+         "of": "rail-left",
+         "region": "stand"
+       },
+       {
+         "id": "th-rail-right",
+         "of": "rail-right",
+         "region": "stand"
+       },
+       {
+         "id": "th-post-rear-left",
+         "of": "post-rear-left",
+         "region": "stand"
+       },
+       {
+         "id": "th-post-rear-right",
+         "of": "post-rear-right",
+         "region": "stand"
+       },
+       {
+         "id": "th-post-front-left",
+         "of": "post-front-left",
+         "region": "stand"
+       },
+       {
+         "id": "th-post-front-right",
+         "of": "post-front-right",
+         "region": "stand"
+       },
+       {
+         "id": "th-knee-left",
+         "of": "knee-left",
+         "region": "stand"
+       },
+       {
+         "id": "th-knee-right",
+         "of": "knee-right",
+         "region": "stand"
+       },
+       {
+         "id": "th-cleat-rear",
+         "of": "cleat-rear",
+         "region": "stand"
+       },
+       {
+         "id": "th-cleat-front",
+         "of": "cleat-front",
+         "region": "stand"
+       },
+       {
+         "id": "th-brace-rising-left",
+         "of": "brace-rising-left",
+         "region": "stand"
+       },
+       {
+         "id": "th-brace-rising-right",
+         "of": "brace-rising-right",
+         "region": "stand"
+       },
+       {
+         "id": "th-bolt-foot-right",
+         "of": "bolt-foot-right",
+         "region": "stand"
+       },
+       {
+         "id": "th-bolt-foot-left",
+         "of": "bolt-foot-left",
+         "region": "stand"
+       },
+       {
+         "id": "th-bolt-knee-right",
+         "of": "bolt-knee-right",
+         "region": "stand"
+       },
+       {
+         "id": "th-bolt-knee-left",
+         "of": "bolt-knee-left",
+         "region": "stand"
+       },
+       {
+         "id": "th-bolt-cleat-rear-right",
+         "of": "bolt-cleat-rear-right",
+         "region": "stand"
+       },
+       {
+         "id": "th-bolt-cleat-rear-left",
+         "of": "bolt-cleat-rear-left",
+         "region": "stand"
+       },
+       {
+         "id": "th-bolt-cleat-front-right",
+         "of": "bolt-cleat-front-right",
+         "region": "stand"
+       },
+       {
+         "id": "th-bolt-cleat-front-left",
+         "of": "bolt-cleat-front-left",
+         "region": "stand"
+       },
+       {
+         "id": "th-bolt-brace-rising-left",
+         "of": "bolt-brace-rising-left",
+         "region": "stand"
+       },
+       {
+         "id": "th-bolt-brace-rising-right",
+         "of": "bolt-brace-rising-right",
+         "region": "stand"
+       },
+       {
+         "id": "th-tray",
+         "of": "tray",
+         "region": "housing"
+       },
+       {
+         "id": "th-tray-side-left",
+         "of": "tray-side-left",
+         "region": "housing"
+       },
+       {
+         "id": "th-tray-side-right",
+         "of": "tray-side-right",
+         "region": "housing"
+       },
+       {
+         "id": "th-cover-side-left",
+         "of": "cover-side-left",
+         "region": "housing"
+       },
+       {
+         "id": "th-cover-side-right",
+         "of": "cover-side-right",
+         "region": "housing"
+       },
+       {
+         "id": "th-cover-end-upper",
+         "of": "cover-end-upper",
+         "region": "housing"
+       },
+       {
+         "id": "th-cover-end-lower",
+         "of": "cover-end-lower",
+         "region": "housing"
+       },
+       {
+         "id": "th-insulation",
+         "of": "insulation",
+         "region": "housing"
+       },
+       {
+         "id": "th-glass",
+         "of": "glass",
+         "region": "glazing"
+       },
+       {
+         "id": "th-absorber",
+         "of": "absorber",
+         "region": "absorber"
+       },
+       {
+         "id": "th-riser-end-upper",
+         "of": "riser-end-upper",
+         "region": "absorber"
+       },
+       {
+         "id": "th-riser-end-lower",
+         "of": "riser-end-lower",
+         "region": "absorber"
+       },
+       {
+         "id": "th-header-upper",
+         "of": "header-upper",
+         "region": "header-upper"
+       },
+       {
+         "id": "th-header-lower",
+         "of": "header-lower",
+         "region": "header-lower"
+       },
+       {
+         "id": "th-collar-upper",
+         "of": "collar-upper",
+         "region": "header-upper"
+       },
+       {
+         "id": "th-collar-lower",
+         "of": "collar-lower",
+         "region": "header-lower"
+       },
+       {
+         "id": "th-absorber-plume-outlet",
+         "kind": "box",
+         "bone": "glass",
+         "material": "solar-glass",
+         "role": "body",
+         "tone": 0.9,
+         "size": [0.19, 0.0075, 0.5],
+         "transform": {
+           "translation": [0.11, -0.00065, 0.0]
+         },
+         "region": "absorber",
+         "tags": ["absorber-plume"]
+       }
      ],
-     "plane": "yz",
-     "from": 0.0,
-     "to": 1.5
-    },
-    {
-     "id": "post-rear-left",
-     "kind": "extrude",
-     "bone": "stand",
-     "material": "galvanised-steel",
-     "role": "body",
-     "tone": 0.5,
-     "profile": [
-      [
-       0.448,
-       0.18456
-      ],
-      [
-       0.448,
-       0.20956
-      ],
-      [
-       0.446,
-       0.20956
-      ],
-      [
-       0.446,
-       0.18656
-      ],
-      [
-       0.423,
-       0.18656
-      ],
-      [
-       0.423,
-       0.18456
-      ]
+     "structure": [
+       {
+         "id": "st-rail-left",
+         "of": "rail-left",
+         "member": "stand",
+         "part": "member"
+       },
+       {
+         "id": "st-rail-right",
+         "of": "rail-right",
+         "member": "stand",
+         "part": "member"
+       },
+       {
+         "id": "st-post-rear-left",
+         "of": "post-rear-left",
+         "member": "stand",
+         "part": "member"
+       },
+       {
+         "id": "st-post-rear-right",
+         "of": "post-rear-right",
+         "member": "stand",
+         "part": "member"
+       },
+       {
+         "id": "st-post-front-left",
+         "of": "post-front-left",
+         "member": "stand",
+         "part": "member"
+       },
+       {
+         "id": "st-post-front-right",
+         "of": "post-front-right",
+         "member": "stand",
+         "part": "member"
+       },
+       {
+         "id": "st-knee-left",
+         "of": "knee-left",
+         "member": "stand",
+         "part": "member"
+       },
+       {
+         "id": "st-knee-right",
+         "of": "knee-right",
+         "member": "stand",
+         "part": "member"
+       },
+       {
+         "id": "st-brace-rising-left",
+         "of": "brace-rising-left",
+         "member": "stand",
+         "part": "member"
+       },
+       {
+         "id": "st-brace-rising-right",
+         "of": "brace-rising-right",
+         "member": "stand",
+         "part": "member"
+       },
+       {
+         "id": "st-tray-side-left",
+         "of": "tray-side-left",
+         "member": "housing",
+         "part": "member"
+       },
+       {
+         "id": "st-tray-side-right",
+         "of": "tray-side-right",
+         "member": "housing",
+         "part": "member"
+       },
+       {
+         "id": "end-rail-upper",
+         "kind": "extrude",
+         "bone": "housing",
+         "material": "anodised-aluminium",
+         "role": "body",
+         "tone": 0.35,
+         "profile": [[-0.3585, 0.0], [-0.357, 0.0], [-0.357, 0.0938], [-0.3435, 0.0938], [-0.3435, 0.0953], [-0.3585, 0.0953]],
+         "plane": "xy",
+         "from": -0.497,
+         "to": 0.497,
+         "member": "housing",
+         "part": "member"
+       },
+       {
+         "id": "end-rail-lower",
+         "kind": "extrude",
+         "bone": "housing",
+         "material": "anodised-aluminium",
+         "role": "body",
+         "tone": 0.35,
+         "profile": [[1.6385, 0.0], [1.6385, 0.0953], [1.6235, 0.0953], [1.6235, 0.0938], [1.637, 0.0938], [1.637, 0.0]],
+         "plane": "xy",
+         "from": -0.497,
+         "to": 0.497,
+         "member": "housing",
+         "part": "member"
+       },
+       {
+         "id": "st-glass",
+         "of": "glass",
+         "member": "glass",
+         "part": "member"
+       },
+       {
+         "id": "st-absorber",
+         "of": "absorber",
+         "member": "absorber",
+         "part": "member"
+       },
+       {
+         "id": "st-header-upper",
+         "of": "header-upper",
+         "member": "headers",
+         "part": "member"
+       },
+       {
+         "id": "st-header-lower",
+         "of": "header-lower",
+         "member": "headers",
+         "part": "member"
+       },
+       {
+         "id": "st-cleat-rear",
+         "of": "cleat-rear",
+         "member": "housing",
+         "part": "joint"
+       },
+       {
+         "id": "st-cleat-front",
+         "of": "cleat-front",
+         "member": "housing",
+         "part": "joint"
+       },
+       {
+         "id": "st-bolt-foot-right",
+         "of": "bolt-foot-right",
+         "member": "stand",
+         "part": "joint"
+       },
+       {
+         "id": "st-bolt-foot-left",
+         "of": "bolt-foot-left",
+         "member": "stand",
+         "part": "joint"
+       },
+       {
+         "id": "st-bolt-knee-right",
+         "of": "bolt-knee-right",
+         "member": "stand",
+         "part": "joint"
+       },
+       {
+         "id": "st-bolt-knee-left",
+         "of": "bolt-knee-left",
+         "member": "stand",
+         "part": "joint"
+       },
+       {
+         "id": "st-riser-end-upper",
+         "of": "riser-end-upper",
+         "member": "absorber",
+         "part": "joint"
+       },
+       {
+         "id": "st-riser-end-lower",
+         "of": "riser-end-lower",
+         "member": "absorber",
+         "part": "joint"
+       },
+       {
+         "id": "st-collar-upper",
+         "of": "collar-upper",
+         "member": "headers",
+         "part": "joint"
+       },
+       {
+         "id": "st-collar-lower",
+         "of": "collar-lower",
+         "member": "headers",
+         "part": "joint"
+       },
+       {
+         "id": "mass-housing",
+         "kind": "revolve",
+         "bone": "housing",
+         "material": "anodised-aluminium",
+         "role": "body",
+         "tone": 0.35,
+         "profile": [[0.0, 0.09], [0.03, 0.09]],
+         "axis": [0.0, 1.0, 0.0],
+         "origin": [0.64, 0.008, 0.0],
+         "member": "housing",
+         "part": "mass"
+       },
+       {
+         "id": "mass-glass",
+         "kind": "revolve",
+         "bone": "glass",
+         "material": "solar-glass",
+         "role": "body",
+         "tone": 0.92,
+         "profile": [[0.0, 0.13], [0.0075, 0.13]],
+         "axis": [0.0, 1.0, 0.0],
+         "origin": [0.995, -0.00375, 0.0],
+         "member": "glass",
+         "part": "mass"
+       },
+       {
+         "id": "mass-absorber",
+         "kind": "revolve",
+         "bone": "absorber",
+         "material": "selective-absorber",
+         "role": "body",
+         "tone": 0.2,
+         "profile": [[0.0, 0.1], [0.0101, 0.1]],
+         "axis": [0.0, 1.0, 0.0],
+         "origin": [0.94, -0.0101, 0.0],
+         "member": "absorber",
+         "part": "mass"
+       },
+       {
+         "id": "mass-headers",
+         "kind": "revolve",
+         "bone": "headers",
+         "material": "copper",
+         "role": "body",
+         "tone": 0.4,
+         "profile": [[0.0, 0.011], [0.0, 0.016], [0.08, 0.016], [0.08, 0.011], [0.0, 0.011]],
+         "axis": [0.0, 0.0, 1.0],
+         "origin": [0.0, 0.0, -0.04],
+         "repeat": {
+           "count": 2,
+           "translation": [1.91, 0.0, 0.0]
+         },
+         "member": "headers",
+         "part": "mass"
+       },
+       {
+         "id": "mass-stand-rear",
+         "kind": "box",
+         "bone": "stand",
+         "material": "galvanised-steel",
+         "role": "body",
+         "tone": 0.5,
+         "size": [0.025, 0.14, 0.025],
+         "transform": {
+           "translation": [0.19706, 0.6, -0.4375]
+         },
+         "repeat": {
+           "count": 2,
+           "translation": [0.0, 0.0, 0.875]
+         },
+         "member": "stand",
+         "part": "mass"
+       },
+       {
+         "id": "mass-stand-rail",
+         "kind": "box",
+         "bone": "stand",
+         "material": "galvanised-steel",
+         "role": "body",
+         "tone": 0.5,
+         "size": [0.14, 0.025, 0.025],
+         "transform": {
+           "translation": [0.66, 0.0125, -0.4375]
+         },
+         "repeat": {
+           "count": 2,
+           "translation": [0.0, 0.0, 0.875]
+         },
+         "member": "stand",
+         "part": "mass"
+       },
+       {
+         "id": "mass-stand-front",
+         "kind": "box",
+         "bone": "stand",
+         "material": "galvanised-steel",
+         "role": "body",
+         "tone": 0.5,
+         "size": [0.025, 0.06, 0.025],
+         "transform": {
+           "translation": [1.24557, 0.18, -0.4375]
+         },
+         "repeat": {
+           "count": 2,
+           "translation": [0.0, 0.0, 0.875]
+         },
+         "member": "stand",
+         "part": "mass"
+       },
+       {
+         "id": "base-contact-pad",
+         "kind": "box",
+         "bone": "stand",
+         "material": "galvanised-steel",
+         "role": "body",
+         "tone": 0.5,
+         "size": [1.5, 0.0075, 0.029],
+         "transform": {
+           "translation": [0.75, 0.00375, -0.4375]
+         },
+         "repeat": {
+           "count": 2,
+           "translation": [0.0, 0.0, 0.875]
+         },
+         "member": "stand",
+         "part": "support",
+         "anchor": "base-contact"
+       }
      ],
-     "plane": "zx",
-     "from": 0.002,
-     "to": 1.1
-    },
-    {
-     "id": "post-rear-right",
-     "kind": "extrude",
-     "bone": "stand",
-     "material": "galvanised-steel",
-     "role": "body",
-     "tone": 0.5,
-     "profile": [
-      [
-       -0.448,
-       0.18456
-      ],
-      [
-       -0.448,
-       0.20956
-      ],
-      [
-       -0.446,
-       0.20956
-      ],
-      [
-       -0.446,
-       0.18656
-      ],
-      [
-       -0.423,
-       0.18656
-      ],
-      [
-       -0.423,
-       0.18456
-      ]
-     ],
-     "plane": "zx",
-     "from": 0.002,
-     "to": 1.1
-    },
-    {
-     "id": "post-front-left",
-     "kind": "extrude",
-     "bone": "stand",
-     "material": "galvanised-steel",
-     "role": "body",
-     "tone": 0.5,
-     "profile": [
-      [
-       0.448,
-       1.23307
-      ],
-      [
-       0.448,
-       1.25807
-      ],
-      [
-       0.446,
-       1.25807
-      ],
-      [
-       0.446,
-       1.23507
-      ],
-      [
-       0.423,
-       1.23507
-      ],
-      [
-       0.423,
-       1.23307
-      ]
-     ],
-     "plane": "zx",
-     "from": 0.002,
-     "to": 0.365
-    },
-    {
-     "id": "post-front-right",
-     "kind": "extrude",
-     "bone": "stand",
-     "material": "galvanised-steel",
-     "role": "body",
-     "tone": 0.5,
-     "profile": [
-      [
-       -0.448,
-       1.23307
-      ],
-      [
-       -0.448,
-       1.25807
-      ],
-      [
-       -0.446,
-       1.25807
-      ],
-      [
-       -0.446,
-       1.23507
-      ],
-      [
-       -0.423,
-       1.23507
-      ],
-      [
-       -0.423,
-       1.23307
-      ]
-     ],
-     "plane": "zx",
-     "from": 0.002,
-     "to": 0.365
-    },
-    {
-     "id": "knee-left",
-     "kind": "extrude",
-     "bone": "stand",
-     "material": "galvanised-steel",
-     "role": "body",
-     "tone": 0.5,
-     "profile": [
-      [
-       -0.0125,
-       0.421
-      ],
-      [
-       -0.0125,
-       0.446
-      ],
-      [
-       0.0125,
-       0.446
-      ],
-      [
-       0.0125,
-       0.444
-      ],
-      [
-       -0.0105,
-       0.444
-      ],
-      [
-       -0.0105,
-       0.421
-      ]
-     ],
-     "plane": "yz",
-     "transform": {
-      "translation": [
-       0.51706,
-       0.0125,
-       0.0
-      ],
-      "rotation": [
-       0.0,
-       0.0,
-       0.92373,
-       0.38305
-      ]
-     },
-     "from": -0.003,
-     "to": 0.45166
-    },
-    {
-     "id": "knee-right",
-     "kind": "extrude",
-     "bone": "stand",
-     "material": "galvanised-steel",
-     "role": "body",
-     "tone": 0.5,
-     "profile": [
-      [
-       -0.0125,
-       -0.421
-      ],
-      [
-       -0.0125,
-       -0.446
-      ],
-      [
-       0.0125,
-       -0.446
-      ],
-      [
-       0.0125,
-       -0.444
-      ],
-      [
-       -0.0105,
-       -0.444
-      ],
-      [
-       -0.0105,
-       -0.421
-      ]
-     ],
-     "plane": "yz",
-     "transform": {
-      "translation": [
-       0.51706,
-       0.0125,
-       0.0
-      ],
-      "rotation": [
-       0.0,
-       0.0,
-       0.92373,
-       0.38305
-      ]
-     },
-     "from": -0.003,
-     "to": 0.45166
-    },
-    {
-     "id": "cleat-rear",
-     "kind": "extrude",
-     "bone": "stand",
-     "material": "galvanised-steel",
-     "role": "body",
-     "tone": 0.5,
-     "profile": [
-      [
-       0.18156,
-       1.03
-      ],
-      [
-       0.18456,
-       1.03
-      ],
-      [
-       0.18456,
-       1.12576
-      ],
-      [
-       0.26206,
-       1.0715
-      ],
-      [
-       0.26206,
-       1.07516
-      ],
-      [
-       0.18156,
-       1.13152
-      ]
-     ],
-     "plane": "xy",
-     "from": -0.448,
-     "to": -0.423,
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0.0,
-       0.0,
-       0.871
-      ]
-     }
-    },
-    {
-     "id": "cleat-front",
-     "kind": "extrude",
-     "bone": "stand",
-     "material": "galvanised-steel",
-     "role": "body",
-     "tone": 0.5,
-     "profile": [
-      [
-       1.23007,
-       0.3
-      ],
-      [
-       1.23307,
-       0.3
-      ],
-      [
-       1.23307,
-       0.39159
-      ],
-      [
-       1.31057,
-       0.33732
-      ],
-      [
-       1.31057,
-       0.34098
-      ],
-      [
-       1.23007,
-       0.39735
-      ]
-     ],
-     "plane": "xy",
-     "from": -0.448,
-     "to": -0.423,
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0.0,
-       0.0,
-       0.871
-      ]
-     }
-    },
-    {
-     "id": "brace-rising-left",
-     "kind": "box",
-     "bone": "stand",
-     "material": "galvanised-steel",
-     "role": "body",
-     "tone": 0.5,
-     "size": [
-      0.002,
-      1.18925,
-      0.02
-     ],
-     "transform": {
-      "translation": [
-       0.18356,
-       0.605,
-       0.0
-      ],
-      "rotation": [
-       0.40271,
-       0.0,
-       0.0,
-       0.91533
-      ]
-     },
-     "slender": true
-    },
-    {
-     "id": "brace-rising-right",
-     "kind": "box",
-     "bone": "stand",
-     "material": "galvanised-steel",
-     "role": "body",
-     "tone": 0.5,
-     "size": [
-      0.002,
-      1.18925,
-      0.02
-     ],
-     "transform": {
-      "translation": [
-       0.18756,
-       0.605,
-       0.0
-      ],
-      "rotation": [
-       -0.40271,
-       0.0,
-       0.0,
-       0.91533
-      ]
-     },
-     "slender": true
-    },
-    {
-     "id": "bolt-foot-right",
-     "kind": "revolve",
-     "bone": "stand",
-     "material": "galvanised-steel",
-     "role": "detail",
-     "tone": 0.4,
-     "profile": [
-      [
-       0.0,
-       0.0065
-      ],
-      [
-       0.016,
-       0.0065
-      ]
-     ],
-     "axis": [
-      0.0,
-      0.0,
-      1.0
-     ],
-     "origin": [
-      0.19706,
-      0.0125,
-      -0.4555
-     ],
-     "repeat": {
-      "count": 2,
-      "translation": [
-       1.04851,
-       0.0,
-       0.0
-      ]
-     }
-    },
-    {
-     "id": "bolt-foot-left",
-     "kind": "revolve",
-     "bone": "stand",
-     "material": "galvanised-steel",
-     "role": "detail",
-     "tone": 0.4,
-     "profile": [
-      [
-       0.0,
-       0.0065
-      ],
-      [
-       0.016,
-       0.0065
-      ]
-     ],
-     "axis": [
-      0.0,
-      0.0,
-      1.0
-     ],
-     "origin": [
-      0.19706,
-      0.0125,
-      0.4395
-     ],
-     "repeat": {
-      "count": 2,
-      "translation": [
-       1.04851,
-       0.0,
-       0.0
-      ]
-     }
-    },
-    {
-     "id": "bolt-knee-right",
-     "kind": "revolve",
-     "bone": "stand",
-     "material": "galvanised-steel",
-     "role": "detail",
-     "tone": 0.4,
-     "profile": [
-      [
-       0.0,
-       0.0065
-      ],
-      [
-       0.016,
-       0.0065
-      ]
-     ],
-     "axis": [
-      0.0,
-      0.0,
-      1.0
-     ],
-     "origin": [
-      0.51706,
-      0.0125,
-      -0.4555
-     ],
-     "repeat": {
-      "count": 2,
-      "translation": [
-       -0.317,
-       0.3175,
-       0.0
-      ]
-     }
-    },
-    {
-     "id": "bolt-knee-left",
-     "kind": "revolve",
-     "bone": "stand",
-     "material": "galvanised-steel",
-     "role": "detail",
-     "tone": 0.4,
-     "profile": [
-      [
-       0.0,
-       0.0065
-      ],
-      [
-       0.016,
-       0.0065
-      ]
-     ],
-     "axis": [
-      0.0,
-      0.0,
-      1.0
-     ],
-     "origin": [
-      0.51706,
-      0.0125,
-      0.4395
-     ],
-     "repeat": {
-      "count": 2,
-      "translation": [
-       -0.317,
-       0.3175,
-       0.0
-      ]
-     }
-    },
-    {
-     "id": "bolt-cleat-rear-right",
-     "kind": "revolve",
-     "bone": "stand",
-     "material": "galvanised-steel",
-     "role": "detail",
-     "tone": 0.4,
-     "profile": [
-      [
-       0.0,
-       0.0065
-      ],
-      [
-       0.016,
-       0.0065
-      ]
-     ],
-     "axis": [
-      1.0,
-      0.0,
-      0.0
-     ],
-     "origin": [
-      0.17556,
-      1.045,
-      -0.4355
-     ],
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0.0,
-       0.028,
-       0.0
-      ]
-     }
-    },
-    {
-     "id": "bolt-cleat-rear-left",
-     "kind": "revolve",
-     "bone": "stand",
-     "material": "galvanised-steel",
-     "role": "detail",
-     "tone": 0.4,
-     "profile": [
-      [
-       0.0,
-       0.0065
-      ],
-      [
-       0.016,
-       0.0065
-      ]
-     ],
-     "axis": [
-      1.0,
-      0.0,
-      0.0
-     ],
-     "origin": [
-      0.17556,
-      1.045,
-      0.4355
-     ],
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0.0,
-       0.028,
-       0.0
-      ]
-     }
-    },
-    {
-     "id": "bolt-cleat-front-right",
-     "kind": "revolve",
-     "bone": "stand",
-     "material": "galvanised-steel",
-     "role": "detail",
-     "tone": 0.4,
-     "profile": [
-      [
-       0.0,
-       0.0065
-      ],
-      [
-       0.016,
-       0.0065
-      ]
-     ],
-     "axis": [
-      1.0,
-      0.0,
-      0.0
-     ],
-     "origin": [
-      1.22407,
-      0.315,
-      -0.4355
-     ],
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0.0,
-       0.028,
-       0.0
-      ]
-     }
-    },
-    {
-     "id": "bolt-cleat-front-left",
-     "kind": "revolve",
-     "bone": "stand",
-     "material": "galvanised-steel",
-     "role": "detail",
-     "tone": 0.4,
-     "profile": [
-      [
-       0.0,
-       0.0065
-      ],
-      [
-       0.016,
-       0.0065
-      ]
-     ],
-     "axis": [
-      1.0,
-      0.0,
-      0.0
-     ],
-     "origin": [
-      1.22407,
-      0.315,
-      0.4355
-     ],
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0.0,
-       0.028,
-       0.0
-      ]
-     }
-    },
-    {
-     "id": "bolt-brace-rising-left",
-     "kind": "revolve",
-     "bone": "stand",
-     "material": "galvanised-steel",
-     "role": "detail",
-     "tone": 0.4,
-     "profile": [
-      [
-       0.0,
-       0.0065
-      ],
-      [
-       0.016,
-       0.0065
-      ]
-     ],
-     "axis": [
-      1.0,
-      0.0,
-      0.0
-     ],
-     "origin": [
-      0.17756,
-      0.21,
-      -0.431
-     ],
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0.0,
-       0.79,
-       0.862
-      ]
-     }
-    },
-    {
-     "id": "bolt-brace-rising-right",
-     "kind": "revolve",
-     "bone": "stand",
-     "material": "galvanised-steel",
-     "role": "detail",
-     "tone": 0.4,
-     "profile": [
-      [
-       0.0,
-       0.0065
-      ],
-      [
-       0.016,
-       0.0065
-      ]
-     ],
-     "axis": [
-      1.0,
-      0.0,
-      0.0
-     ],
-     "origin": [
-      0.17756,
-      0.21,
-      0.431
-     ],
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0.0,
-       0.79,
-       -0.862
-      ]
-     }
-    },
-    {
-     "id": "tray",
-     "kind": "extrude",
-     "bone": "housing",
-     "material": "anodised-aluminium",
-     "role": "body",
-     "tone": 0.35,
-     "profile": [
-      [
-       -0.3585,
-       0.0
-      ],
-      [
-       1.6385,
-       0.0
-      ],
-      [
-       1.6385,
-       0.0953
-      ],
-      [
-       1.6235,
-       0.0953
-      ],
-      [
-       1.6235,
-       0.0938
-      ],
-      [
-       1.637,
-       0.0938
-      ],
-      [
-       1.637,
-       0.0015
-      ],
-      [
-       -0.357,
-       0.0015
-      ],
-      [
-       -0.357,
-       0.0938
-      ],
-      [
-       -0.3435,
-       0.0938
-      ],
-      [
-       -0.3435,
-       0.0953
-      ],
-      [
-       -0.3585,
-       0.0953
-      ]
-     ],
-     "plane": "xy",
-     "from": -0.497,
-     "to": 0.497
-    },
-    {
-     "id": "tray-side-left",
-     "kind": "extrude",
-     "bone": "housing",
-     "material": "anodised-aluminium",
-     "role": "body",
-     "tone": 0.35,
-     "profile": [
-      [
-       0.0,
-       0.497
-      ],
-      [
-       0.0,
-       0.4985
-      ],
-      [
-       0.0953,
-       0.4985
-      ],
-      [
-       0.0953,
-       0.4835
-      ],
-      [
-       0.0938,
-       0.4835
-      ],
-      [
-       0.0938,
-       0.497
-      ]
-     ],
-     "plane": "yz",
-     "from": -0.3585,
-     "to": 1.6385
-    },
-    {
-     "id": "tray-side-right",
-     "kind": "extrude",
-     "bone": "housing",
-     "material": "anodised-aluminium",
-     "role": "body",
-     "tone": 0.35,
-     "profile": [
-      [
-       0.0,
-       -0.497
-      ],
-      [
-       0.0,
-       -0.4985
-      ],
-      [
-       0.0953,
-       -0.4985
-      ],
-      [
-       0.0953,
-       -0.4835
-      ],
-      [
-       0.0938,
-       -0.4835
-      ],
-      [
-       0.0938,
-       -0.497
-      ]
-     ],
-     "plane": "yz",
-     "from": -0.3585,
-     "to": 1.6385
-    },
-    {
-     "id": "cover-side-left",
-     "kind": "extrude",
-     "bone": "housing",
-     "material": "anodised-aluminium",
-     "role": "body",
-     "tone": 0.35,
-     "profile": [
-      [
-       0.0865,
-       0.4985
-      ],
-      [
-       0.0865,
-       0.5
-      ],
-      [
-       0.1,
-       0.5
-      ],
-      [
-       0.1,
-       0.48
-      ],
-      [
-       0.0985,
-       0.48
-      ],
-      [
-       0.0985,
-       0.4985
-      ]
-     ],
-     "plane": "yz",
-     "from": -0.36,
-     "to": 1.64
-    },
-    {
-     "id": "cover-side-right",
-     "kind": "extrude",
-     "bone": "housing",
-     "material": "anodised-aluminium",
-     "role": "body",
-     "tone": 0.35,
-     "profile": [
-      [
-       0.0865,
-       -0.4985
-      ],
-      [
-       0.0865,
-       -0.5
-      ],
-      [
-       0.1,
-       -0.5
-      ],
-      [
-       0.1,
-       -0.48
-      ],
-      [
-       0.0985,
-       -0.48
-      ],
-      [
-       0.0985,
-       -0.4985
-      ]
-     ],
-     "plane": "yz",
-     "from": -0.36,
-     "to": 1.64
-    },
-    {
-     "id": "cover-end-upper",
-     "kind": "extrude",
-     "bone": "housing",
-     "material": "anodised-aluminium",
-     "role": "body",
-     "tone": 0.35,
-     "profile": [
-      [
-       -0.36,
-       0.0865
-      ],
-      [
-       -0.3585,
-       0.0865
-      ],
-      [
-       -0.3585,
-       0.0985
-      ],
-      [
-       -0.34,
-       0.0985
-      ],
-      [
-       -0.34,
-       0.1
-      ],
-      [
-       -0.36,
-       0.1
-      ]
-     ],
-     "plane": "xy",
-     "from": -0.5,
-     "to": 0.5
-    },
-    {
-     "id": "cover-end-lower",
-     "kind": "extrude",
-     "bone": "housing",
-     "material": "anodised-aluminium",
-     "role": "body",
-     "tone": 0.35,
-     "profile": [
-      [
-       1.64,
-       0.0865
-      ],
-      [
-       1.64,
-       0.1
-      ],
-      [
-       1.62,
-       0.1
-      ],
-      [
-       1.62,
-       0.0985
-      ],
-      [
-       1.6385,
-       0.0985
-      ],
-      [
-       1.6385,
-       0.0865
-      ]
-     ],
-     "plane": "xy",
-     "from": -0.5,
-     "to": 0.5
-    },
-    {
-     "id": "insulation",
-     "kind": "extrude",
-     "bone": "housing",
-     "material": "mineral-wool",
-     "role": "body",
-     "tone": 0.8,
-     "profile": [
-      [
-       -0.357,
-       0.0015
-      ],
-      [
-       1.637,
-       0.0015
-      ],
-      [
-       1.637,
-       0.052
-      ],
-      [
-       1.58,
-       0.052
-      ],
-      [
-       1.58,
-       0.0598
-      ],
-      [
-       -0.3,
-       0.0598
-      ],
-      [
-       -0.3,
-       0.052
-      ],
-      [
-       -0.357,
-       0.052
-      ]
-     ],
-     "plane": "xy",
-     "from": -0.497,
-     "to": 0.497
-    },
-    {
-     "id": "glass",
-     "kind": "box",
-     "bone": "glass",
-     "material": "solar-glass",
-     "role": "glazing",
-     "tone": 0.92,
-     "size": [
-      1.99,
-      0.0032,
-      0.99
-     ],
-     "transform": {
-      "translation": [
-       0.995,
-       0.0,
-       0.0
-      ]
-     }
-    },
-    {
-     "id": "absorber",
-     "kind": "extrude",
-     "bone": "absorber",
-     "material": "selective-absorber",
-     "role": "body",
-     "tone": 0.2,
-     "profile": [
-      [
-       0.00025,
-       -0.455
-      ],
-      [
-       0.00025,
-       0.455
-      ],
-      [
-       -0.00025,
-       0.455
-      ],
-      [
-       -0.00025,
-       0.40122
-      ],
-      [
-       -0.00137,
-       0.40333
-      ],
-      [
-       -0.00334,
-       0.40468
-      ],
-      [
-       -0.00571,
-       0.40496
-      ],
-      [
-       -0.00795,
-       0.40411
-      ],
-      [
-       -0.00953,
-       0.40232
-      ],
-      [
-       -0.0101,
-       0.4
-      ],
-      [
-       -0.00953,
-       0.39768
-      ],
-      [
-       -0.00795,
-       0.39589
-      ],
-      [
-       -0.00571,
-       0.39504
-      ],
-      [
-       -0.00334,
-       0.39532
-      ],
-      [
-       -0.00137,
-       0.39667
-      ],
-      [
-       -0.00025,
-       0.39878
-      ],
-      [
-       -0.00025,
-       0.30122
-      ],
-      [
-       -0.00137,
-       0.30333
-      ],
-      [
-       -0.00334,
-       0.30468
-      ],
-      [
-       -0.00571,
-       0.30496
-      ],
-      [
-       -0.00795,
-       0.30411
-      ],
-      [
-       -0.00953,
-       0.30232
-      ],
-      [
-       -0.0101,
-       0.3
-      ],
-      [
-       -0.00953,
-       0.29768
-      ],
-      [
-       -0.00795,
-       0.29589
-      ],
-      [
-       -0.00571,
-       0.29504
-      ],
-      [
-       -0.00334,
-       0.29532
-      ],
-      [
-       -0.00137,
-       0.29667
-      ],
-      [
-       -0.00025,
-       0.29878
-      ],
-      [
-       -0.00025,
-       0.20122
-      ],
-      [
-       -0.00137,
-       0.20333
-      ],
-      [
-       -0.00334,
-       0.20468
-      ],
-      [
-       -0.00571,
-       0.20496
-      ],
-      [
-       -0.00795,
-       0.20411
-      ],
-      [
-       -0.00953,
-       0.20232
-      ],
-      [
-       -0.0101,
-       0.2
-      ],
-      [
-       -0.00953,
-       0.19768
-      ],
-      [
-       -0.00795,
-       0.19589
-      ],
-      [
-       -0.00571,
-       0.19504
-      ],
-      [
-       -0.00334,
-       0.19532
-      ],
-      [
-       -0.00137,
-       0.19667
-      ],
-      [
-       -0.00025,
-       0.19878
-      ],
-      [
-       -0.00025,
-       0.10122
-      ],
-      [
-       -0.00137,
-       0.10333
-      ],
-      [
-       -0.00334,
-       0.10468
-      ],
-      [
-       -0.00571,
-       0.10496
-      ],
-      [
-       -0.00795,
-       0.10411
-      ],
-      [
-       -0.00953,
-       0.10232
-      ],
-      [
-       -0.0101,
-       0.1
-      ],
-      [
-       -0.00953,
-       0.09768
-      ],
-      [
-       -0.00795,
-       0.09589
-      ],
-      [
-       -0.00571,
-       0.09504
-      ],
-      [
-       -0.00334,
-       0.09532
-      ],
-      [
-       -0.00137,
-       0.09667
-      ],
-      [
-       -0.00025,
-       0.09878
-      ],
-      [
-       -0.00025,
-       0.00122
-      ],
-      [
-       -0.00137,
-       0.00333
-      ],
-      [
-       -0.00334,
-       0.00468
-      ],
-      [
-       -0.00571,
-       0.00496
-      ],
-      [
-       -0.00795,
-       0.00411
-      ],
-      [
-       -0.00953,
-       0.00232
-      ],
-      [
-       -0.0101,
-       -0.0
-      ],
-      [
-       -0.00953,
-       -0.00232
-      ],
-      [
-       -0.00795,
-       -0.00411
-      ],
-      [
-       -0.00571,
-       -0.00496
-      ],
-      [
-       -0.00334,
-       -0.00468
-      ],
-      [
-       -0.00137,
-       -0.00333
-      ],
-      [
-       -0.00025,
-       -0.00122
-      ],
-      [
-       -0.00025,
-       -0.09878
-      ],
-      [
-       -0.00137,
-       -0.09667
-      ],
-      [
-       -0.00334,
-       -0.09532
-      ],
-      [
-       -0.00571,
-       -0.09504
-      ],
-      [
-       -0.00795,
-       -0.09589
-      ],
-      [
-       -0.00953,
-       -0.09768
-      ],
-      [
-       -0.0101,
-       -0.1
-      ],
-      [
-       -0.00953,
-       -0.10232
-      ],
-      [
-       -0.00795,
-       -0.10411
-      ],
-      [
-       -0.00571,
-       -0.10496
-      ],
-      [
-       -0.00334,
-       -0.10468
-      ],
-      [
-       -0.00137,
-       -0.10333
-      ],
-      [
-       -0.00025,
-       -0.10122
-      ],
-      [
-       -0.00025,
-       -0.19878
-      ],
-      [
-       -0.00137,
-       -0.19667
-      ],
-      [
-       -0.00334,
-       -0.19532
-      ],
-      [
-       -0.00571,
-       -0.19504
-      ],
-      [
-       -0.00795,
-       -0.19589
-      ],
-      [
-       -0.00953,
-       -0.19768
-      ],
-      [
-       -0.0101,
-       -0.2
-      ],
-      [
-       -0.00953,
-       -0.20232
-      ],
-      [
-       -0.00795,
-       -0.20411
-      ],
-      [
-       -0.00571,
-       -0.20496
-      ],
-      [
-       -0.00334,
-       -0.20468
-      ],
-      [
-       -0.00137,
-       -0.20333
-      ],
-      [
-       -0.00025,
-       -0.20122
-      ],
-      [
-       -0.00025,
-       -0.29878
-      ],
-      [
-       -0.00137,
-       -0.29667
-      ],
-      [
-       -0.00334,
-       -0.29532
-      ],
-      [
-       -0.00571,
-       -0.29504
-      ],
-      [
-       -0.00795,
-       -0.29589
-      ],
-      [
-       -0.00953,
-       -0.29768
-      ],
-      [
-       -0.0101,
-       -0.3
-      ],
-      [
-       -0.00953,
-       -0.30232
-      ],
-      [
-       -0.00795,
-       -0.30411
-      ],
-      [
-       -0.00571,
-       -0.30496
-      ],
-      [
-       -0.00334,
-       -0.30468
-      ],
-      [
-       -0.00137,
-       -0.30333
-      ],
-      [
-       -0.00025,
-       -0.30122
-      ],
-      [
-       -0.00025,
-       -0.39878
-      ],
-      [
-       -0.00137,
-       -0.39667
-      ],
-      [
-       -0.00334,
-       -0.39532
-      ],
-      [
-       -0.00571,
-       -0.39504
-      ],
-      [
-       -0.00795,
-       -0.39589
-      ],
-      [
-       -0.00953,
-       -0.39768
-      ],
-      [
-       -0.0101,
-       -0.4
-      ],
-      [
-       -0.00953,
-       -0.40232
-      ],
-      [
-       -0.00795,
-       -0.40411
-      ],
-      [
-       -0.00571,
-       -0.40496
-      ],
-      [
-       -0.00334,
-       -0.40468
-      ],
-      [
-       -0.00137,
-       -0.40333
-      ],
-      [
-       -0.00025,
-       -0.40122
-      ],
-      [
-       -0.00025,
-       -0.455
-      ]
-     ],
-     "plane": "yz",
-     "from": 0.0,
-     "to": 1.88
-    },
-    {
-     "id": "riser-end-upper",
-     "kind": "revolve",
-     "bone": "absorber",
-     "material": "copper",
-     "role": "detail",
-     "tone": 0.55,
-     "profile": [
-      [
-       0.0,
-       0.005
-      ],
-      [
-       0.015,
-       0.005
-      ]
-     ],
-     "axis": [
-      1.0,
-      0.0,
-      0.0
-     ],
-     "origin": [
-      -0.015,
-      -0.0051,
-      -0.4
-     ],
-     "repeat": {
-      "count": 9,
-      "translation": [
-       0.0,
-       0.0,
-       0.1
-      ]
-     }
-    },
-    {
-     "id": "riser-end-lower",
-     "kind": "revolve",
-     "bone": "absorber",
-     "material": "copper",
-     "role": "detail",
-     "tone": 0.55,
-     "profile": [
-      [
-       0.0,
-       0.005
-      ],
-      [
-       0.015,
-       0.005
-      ]
-     ],
-     "axis": [
-      1.0,
-      0.0,
-      0.0
-     ],
-     "origin": [
-      1.88,
-      -0.0051,
-      -0.4
-     ],
-     "repeat": {
-      "count": 9,
-      "translation": [
-       0.0,
-       0.0,
-       0.1
-      ]
-     }
-    },
-    {
-     "id": "header-upper",
-     "kind": "revolve",
-     "bone": "headers",
-     "material": "copper",
-     "role": "body",
-     "tone": 0.4,
-     "profile": [
-      [
-       0.0,
-       0.011
-      ],
-      [
-       1.0,
-       0.011
-      ]
-     ],
-     "axis": [
-      0.0,
-      0.0,
-      1.0
-     ],
-     "origin": [
-      0.0,
-      0.0,
-      -0.5
+     "decisions": [
+       {
+         "en": "Body, built like the real collector in the frame of the housing bone (u down the slope from the upper cleat, v out of the aperture, w across): a folded 1.5 mm aluminium tray (floor and end walls in one section, two side walls, a 15 mm glass ledge all round), a clamping cover angle on each edge (20 mm top leg, 12 mm skirt), 58 mm mineral wool with a recessed channel under each header, a 3.2 mm solar glass pane of 1.99 m by 0.99 m on the ledge, and behind a 25 mm air gap the harp: a 0.5 mm selective sheet of 1.88 m by 0.91 m welded along nine 10 mm copper risers at 100 mm pitch (one fin-and-tube section) that end in two 22 mm headers; the headers end flush with the frame in four connection sockets. The stand is cold-formed galvanised 25 x 25 x 2 mm angle: two base rails, a rear and a front post per rail, a knee brace from each rear post to its rail, a folded 3 mm cleat (one leg on the post, one under the tray back) at each post top, two crossed 20 x 2 mm flat braces between the rear posts and M8 bolts at feet, knee braces, cleats and cross braces. Every sheet keeps its real thickness.",
+         "de": "Körper, gebaut wie der echte Kollektor im Bezugssystem des Wannenknochens (u die Schräge hinab ab der oberen Konsole, v aus der Apertur heraus, w quer): eine gekantete 1,5-mm-Aluminiumwanne (Boden und Stirnwände in einem Profil, zwei Seitenwände, umlaufend 15 mm Glasauflage), an jeder Kante ein klemmender Abdeckwinkel (20 mm Deckschenkel, 12 mm Schürze), 58 mm Mineralwolle mit einer vertieften Rinne unter jedem Sammler, eine 3,2 mm dicke Solarglasscheibe von 1,99 m mal 0,99 m auf der Auflage und hinter 25 mm Luftspalt die Harfe: ein 0,5 mm dickes selektives Blech von 1,88 m mal 0,91 m verschweißt mit neun 10-mm-Kupfersteigrohren im Abstand von 100 mm (ein Blech-Rohr-Profil), die in zwei 22-mm-Sammlern enden; die Sammler enden bündig mit dem Rahmen in vier Anschlussmuffen. Das Gestell besteht aus kaltgeformtem verzinktem Winkel 25 x 25 x 2 mm: zwei Fußschienen, je Schiene ein hinterer und ein vorderer Pfosten, je hinterem Pfosten eine Kopfstrebe zur Schiene, an jedem Pfostenkopf eine gekantete 3-mm-Konsole (ein Schenkel am Pfosten, einer unter dem Wannenrücken), zwei gekreuzte Flachstahlstreben 20 x 2 mm zwischen den hinteren Pfosten und M8-Schrauben an Füßen, Kopfstreben, Konsolen und Kreuzstreben. Jedes Blech behält seine wahre Dicke."
+       },
+       {
+         "en": "Thermal: every region is the set of body solids that carry its surface (housing: tray, cover angles and mineral wool; glazing: the pane; absorber: sheet and risers; one region per header with its sockets; stand: every steel part); each region has one layer, so no nested shells exist. The plume outlet is a 0.19 m by 0.5 m patch of one smallest feature in the glass below the upper cover leg, where the warm boundary layer leaves the pane. Structure: the real load path. The pane rests on the ledge of four frame rails (the two side walls and two end rails; the floor sheet and the wool carry nothing and are absent), the harp spans from header to header, the headers hang in their sockets; four cleats pass the collector to the posts, the knee braces triangulate the rear posts with the rails, the crossed flats brace the rear posts sideways, and two contact strips under the rails carry the anchor base-contact. Masses are discs in the wool, the pane and the riser plane, two sleeves on the headers and three lumps per side frame placed so that their centroid is the centre of mass of the stand.",
+         "de": "Thermik: Jede Region ist die Menge der Körper, die ihre Oberfläche tragen (housing: Wanne, Abdeckwinkel und Mineralwolle; glazing: die Scheibe; absorber: Blech und Steigrohre; je Sammler eine Region samt Muffen; stand: jedes Stahlteil); jede Region hat eine Schicht, daher gibt es keine verschachtelten Schalen. Der Fahnenauslass ist ein Feld von 0,19 m mal 0,5 m und einer kleinsten Einzelheit Dicke im Glas unter dem oberen Deckschenkel, wo die warme Grenzschicht die Scheibe verlässt. Tragwerk: der echte Lastpfad. Die Scheibe liegt auf der Auflage von vier Rahmenholmen (die beiden Seitenwände und zwei Stirnholme; Bodenblech und Wolle tragen nichts und fehlen), die Harfe spannt von Sammler zu Sammler, die Sammler hängen in ihren Muffen; vier Konsolen geben den Kollektor an die Pfosten ab, die Kopfstreben bilden mit hinteren Pfosten und Schienen Dreiecke, die gekreuzten Flachstähle steifen die hinteren Pfosten seitlich aus, und zwei Kontaktstreifen unter den Schienen tragen den Anker base-contact. Massen sind Scheiben in der Wolle, in der Glasscheibe und in der Steigrohrebene, zwei Hülsen auf den Sammlern und je Seitenrahmen drei Klumpen, deren Schwerpunkt der Massenmittelpunkt des Gestells ist."
+       }
      ]
-    },
-    {
-     "id": "header-lower",
-     "kind": "revolve",
-     "bone": "headers",
-     "material": "copper",
-     "role": "body",
-     "tone": 0.4,
-     "profile": [
-      [
-       0.0,
-       0.011
-      ],
-      [
-       1.0,
-       0.011
-      ]
+   },
+   "100": {
+     "status": "authored",
+     "denominator": 100,
+     "body": [
+       {
+         "id": "rail-left",
+         "kind": "extrude",
+         "bone": "stand",
+         "material": "galvanised-steel",
+         "role": "body",
+         "tone": 0.5,
+         "profile": [[0.0, 0.425], [0.0, 0.45], [0.025, 0.45], [0.025, 0.448], [0.002, 0.448], [0.002, 0.425]],
+         "plane": "yz",
+         "from": 0.0,
+         "to": 1.5
+       },
+       {
+         "id": "rail-right",
+         "kind": "extrude",
+         "bone": "stand",
+         "material": "galvanised-steel",
+         "role": "body",
+         "tone": 0.5,
+         "profile": [[0.0, -0.425], [0.0, -0.45], [0.025, -0.45], [0.025, -0.448], [0.002, -0.448], [0.002, -0.425]],
+         "plane": "yz",
+         "from": 0.0,
+         "to": 1.5
+       },
+       {
+         "id": "post-rear-left",
+         "kind": "extrude",
+         "bone": "stand",
+         "material": "galvanised-steel",
+         "role": "body",
+         "tone": 0.5,
+         "profile": [[0.448, 0.18456], [0.448, 0.20956], [0.446, 0.20956], [0.446, 0.18656], [0.423, 0.18656], [0.423, 0.18456]],
+         "plane": "zx",
+         "from": 0.002,
+         "to": 1.1
+       },
+       {
+         "id": "post-rear-right",
+         "kind": "extrude",
+         "bone": "stand",
+         "material": "galvanised-steel",
+         "role": "body",
+         "tone": 0.5,
+         "profile": [[-0.448, 0.18456], [-0.448, 0.20956], [-0.446, 0.20956], [-0.446, 0.18656], [-0.423, 0.18656], [-0.423, 0.18456]],
+         "plane": "zx",
+         "from": 0.002,
+         "to": 1.1
+       },
+       {
+         "id": "post-front-left",
+         "kind": "extrude",
+         "bone": "stand",
+         "material": "galvanised-steel",
+         "role": "body",
+         "tone": 0.5,
+         "profile": [[0.448, 1.23307], [0.448, 1.25807], [0.446, 1.25807], [0.446, 1.23507], [0.423, 1.23507], [0.423, 1.23307]],
+         "plane": "zx",
+         "from": 0.002,
+         "to": 0.365
+       },
+       {
+         "id": "post-front-right",
+         "kind": "extrude",
+         "bone": "stand",
+         "material": "galvanised-steel",
+         "role": "body",
+         "tone": 0.5,
+         "profile": [[-0.448, 1.23307], [-0.448, 1.25807], [-0.446, 1.25807], [-0.446, 1.23507], [-0.423, 1.23507], [-0.423, 1.23307]],
+         "plane": "zx",
+         "from": 0.002,
+         "to": 0.365
+       },
+       {
+         "id": "knee-left",
+         "kind": "extrude",
+         "bone": "stand",
+         "material": "galvanised-steel",
+         "role": "body",
+         "tone": 0.5,
+         "profile": [[-0.0125, 0.421], [-0.0125, 0.446], [0.0125, 0.446], [0.0125, 0.444], [-0.0105, 0.444], [-0.0105, 0.421]],
+         "plane": "yz",
+         "transform": {
+           "translation": [0.51706, 0.0125, 0.0],
+           "rotation": [0.0, 0.0, 0.92373, 0.38305]
+         },
+         "from": -0.003,
+         "to": 0.45166
+       },
+       {
+         "id": "knee-right",
+         "kind": "extrude",
+         "bone": "stand",
+         "material": "galvanised-steel",
+         "role": "body",
+         "tone": 0.5,
+         "profile": [[-0.0125, -0.421], [-0.0125, -0.446], [0.0125, -0.446], [0.0125, -0.444], [-0.0105, -0.444], [-0.0105, -0.421]],
+         "plane": "yz",
+         "transform": {
+           "translation": [0.51706, 0.0125, 0.0],
+           "rotation": [0.0, 0.0, 0.92373, 0.38305]
+         },
+         "from": -0.003,
+         "to": 0.45166
+       },
+       {
+         "id": "cleat-rear",
+         "kind": "extrude",
+         "bone": "stand",
+         "material": "galvanised-steel",
+         "role": "body",
+         "tone": 0.5,
+         "profile": [[0.18156, 1.03], [0.18456, 1.03], [0.18456, 1.12576], [0.26206, 1.0715], [0.26206, 1.07516], [0.18156, 1.13152]],
+         "plane": "xy",
+         "from": -0.448,
+         "to": -0.423,
+         "repeat": {
+           "count": 2,
+           "translation": [0.0, 0.0, 0.871]
+         }
+       },
+       {
+         "id": "cleat-front",
+         "kind": "extrude",
+         "bone": "stand",
+         "material": "galvanised-steel",
+         "role": "body",
+         "tone": 0.5,
+         "profile": [[1.23007, 0.3], [1.23307, 0.3], [1.23307, 0.39159], [1.31057, 0.33732], [1.31057, 0.34098], [1.23007, 0.39735]],
+         "plane": "xy",
+         "from": -0.448,
+         "to": -0.423,
+         "repeat": {
+           "count": 2,
+           "translation": [0.0, 0.0, 0.871]
+         }
+       },
+       {
+         "id": "brace-rising-left",
+         "kind": "box",
+         "bone": "stand",
+         "material": "galvanised-steel",
+         "role": "body",
+         "tone": 0.5,
+         "size": [0.002, 1.18925, 0.02],
+         "transform": {
+           "translation": [0.18356, 0.605, 0.0],
+           "rotation": [0.40271, 0.0, 0.0, 0.91533]
+         },
+         "slender": true
+       },
+       {
+         "id": "brace-rising-right",
+         "kind": "box",
+         "bone": "stand",
+         "material": "galvanised-steel",
+         "role": "body",
+         "tone": 0.5,
+         "size": [0.002, 1.18925, 0.02],
+         "transform": {
+           "translation": [0.18756, 0.605, 0.0],
+           "rotation": [-0.40271, 0.0, 0.0, 0.91533]
+         },
+         "slender": true
+       },
+       {
+         "id": "bolt-brace-rising-left",
+         "kind": "revolve",
+         "bone": "stand",
+         "material": "galvanised-steel",
+         "role": "detail",
+         "tone": 0.4,
+         "profile": [[0.0, 0.0065], [0.016, 0.0065]],
+         "axis": [1.0, 0.0, 0.0],
+         "origin": [0.17756, 0.21, -0.431],
+         "repeat": {
+           "count": 2,
+           "translation": [0.0, 0.79, 0.862]
+         }
+       },
+       {
+         "id": "bolt-brace-rising-right",
+         "kind": "revolve",
+         "bone": "stand",
+         "material": "galvanised-steel",
+         "role": "detail",
+         "tone": 0.4,
+         "profile": [[0.0, 0.0065], [0.016, 0.0065]],
+         "axis": [1.0, 0.0, 0.0],
+         "origin": [0.17756, 0.21, 0.431],
+         "repeat": {
+           "count": 2,
+           "translation": [0.0, 0.79, -0.862]
+         }
+       },
+       {
+         "id": "tray",
+         "kind": "extrude",
+         "bone": "housing",
+         "material": "anodised-aluminium",
+         "role": "body",
+         "tone": 0.35,
+         "profile": [[-0.3585, 0.003], [-0.3580981, 0.0015], [-0.357, 0.0004019], [-0.3555, 0.0], [1.6355, 0.0], [1.637, 0.0004019], [1.6380981, 0.0015], [1.6385, 0.003], [1.6385, 0.0953], [1.6235, 0.0953], [1.6235, 0.0938], [1.637, 0.0938], [1.637, 0.003], [1.636799, 0.00225], [1.63625, 0.001701], [1.6355, 0.0015], [-0.3555, 0.0015], [-0.35625, 0.001701], [-0.356799, 0.00225], [-0.357, 0.003], [-0.357, 0.0938], [-0.3435, 0.0938], [-0.3435, 0.0953], [-0.3585, 0.0953]],
+         "plane": "xy",
+         "from": -0.497,
+         "to": 0.497
+       },
+       {
+         "id": "tray-side-left",
+         "kind": "extrude",
+         "bone": "housing",
+         "material": "anodised-aluminium",
+         "role": "body",
+         "tone": 0.35,
+         "profile": [[0.0, 0.497], [0.0, 0.4985], [0.0953, 0.4985], [0.0953, 0.4835], [0.0938, 0.4835], [0.0938, 0.497]],
+         "plane": "yz",
+         "from": -0.3585,
+         "to": 1.6385
+       },
+       {
+         "id": "tray-side-right",
+         "kind": "extrude",
+         "bone": "housing",
+         "material": "anodised-aluminium",
+         "role": "body",
+         "tone": 0.35,
+         "profile": [[0.0, -0.497], [0.0, -0.4985], [0.0953, -0.4985], [0.0953, -0.4835], [0.0938, -0.4835], [0.0938, -0.497]],
+         "plane": "yz",
+         "from": -0.3585,
+         "to": 1.6385
+       },
+       {
+         "id": "insulation",
+         "kind": "extrude",
+         "bone": "housing",
+         "material": "mineral-wool",
+         "role": "body",
+         "tone": 0.8,
+         "profile": [[-0.357, 0.0015], [1.637, 0.0015], [1.637, 0.052], [1.58, 0.052], [1.58, 0.0598], [-0.3, 0.0598], [-0.3, 0.052], [-0.357, 0.052]],
+         "plane": "xy",
+         "from": -0.497,
+         "to": 0.497
+       },
+       {
+         "id": "glass",
+         "kind": "box",
+         "bone": "glass",
+         "material": "solar-glass",
+         "role": "glazing",
+         "tone": 0.92,
+         "size": [1.99, 0.0032, 0.99],
+         "transform": {
+           "translation": [0.995, 0.0, 0.0]
+         }
+       },
+       {
+         "id": "absorber",
+         "kind": "extrude",
+         "bone": "absorber",
+         "material": "selective-absorber",
+         "role": "body",
+         "tone": 0.2,
+         "profile": [[0.00025, -0.455], [0.00025, 0.455], [-0.00025, 0.455], [-0.00025, 0.40122], [-0.00137, 0.40333], [-0.00334, 0.40468], [-0.00571, 0.40496], [-0.00795, 0.40411], [-0.00953, 0.40232], [-0.0101, 0.4], [-0.00953, 0.39768], [-0.00795, 0.39589], [-0.00571, 0.39504], [-0.00334, 0.39532], [-0.00137, 0.39667], [-0.00025, 0.39878], [-0.00025, 0.30122], [-0.00137, 0.30333], [-0.00334, 0.30468], [-0.00571, 0.30496], [-0.00795, 0.30411], [-0.00953, 0.30232], [-0.0101, 0.3], [-0.00953, 0.29768], [-0.00795, 0.29589], [-0.00571, 0.29504], [-0.00334, 0.29532], [-0.00137, 0.29667], [-0.00025, 0.29878], [-0.00025, 0.20122], [-0.00137, 0.20333], [-0.00334, 0.20468], [-0.00571, 0.20496], [-0.00795, 0.20411], [-0.00953, 0.20232], [-0.0101, 0.2], [-0.00953, 0.19768], [-0.00795, 0.19589], [-0.00571, 0.19504], [-0.00334, 0.19532], [-0.00137, 0.19667], [-0.00025, 0.19878], [-0.00025, 0.10122], [-0.00137, 0.10333], [-0.00334, 0.10468], [-0.00571, 0.10496], [-0.00795, 0.10411], [-0.00953, 0.10232], [-0.0101, 0.1], [-0.00953, 0.09768], [-0.00795, 0.09589], [-0.00571, 0.09504], [-0.00334, 0.09532], [-0.00137, 0.09667], [-0.00025, 0.09878], [-0.00025, 0.00122], [-0.00137, 0.00333], [-0.00334, 0.00468], [-0.00571, 0.00496], [-0.00795, 0.00411], [-0.00953, 0.00232], [-0.0101, -0.0], [-0.00953, -0.00232], [-0.00795, -0.00411], [-0.00571, -0.00496], [-0.00334, -0.00468], [-0.00137, -0.00333], [-0.00025, -0.00122], [-0.00025, -0.09878], [-0.00137, -0.09667], [-0.00334, -0.09532], [-0.00571, -0.09504], [-0.00795, -0.09589], [-0.00953, -0.09768], [-0.0101, -0.1], [-0.00953, -0.10232], [-0.00795, -0.10411], [-0.00571, -0.10496], [-0.00334, -0.10468], [-0.00137, -0.10333], [-0.00025, -0.10122], [-0.00025, -0.19878], [-0.00137, -0.19667], [-0.00334, -0.19532], [-0.00571, -0.19504], [-0.00795, -0.19589], [-0.00953, -0.19768], [-0.0101, -0.2], [-0.00953, -0.20232], [-0.00795, -0.20411], [-0.00571, -0.20496], [-0.00334, -0.20468], [-0.00137, -0.20333], [-0.00025, -0.20122], [-0.00025, -0.29878], [-0.00137, -0.29667], [-0.00334, -0.29532], [-0.00571, -0.29504], [-0.00795, -0.29589], [-0.00953, -0.29768], [-0.0101, -0.3], [-0.00953, -0.30232], [-0.00795, -0.30411], [-0.00571, -0.30496], [-0.00334, -0.30468], [-0.00137, -0.30333], [-0.00025, -0.30122], [-0.00025, -0.39878], [-0.00137, -0.39667], [-0.00334, -0.39532], [-0.00571, -0.39504], [-0.00795, -0.39589], [-0.00953, -0.39768], [-0.0101, -0.4], [-0.00953, -0.40232], [-0.00795, -0.40411], [-0.00571, -0.40496], [-0.00334, -0.40468], [-0.00137, -0.40333], [-0.00025, -0.40122], [-0.00025, -0.455]],
+         "plane": "yz",
+         "from": 0.0,
+         "to": 1.88
+       },
+       {
+         "id": "header-upper",
+         "kind": "revolve",
+         "bone": "headers",
+         "material": "copper",
+         "role": "body",
+         "tone": 0.4,
+         "profile": [[0.0, 0.011], [1.0, 0.011]],
+         "axis": [0.0, 0.0, 1.0],
+         "origin": [0.0, 0.0, -0.5]
+       },
+       {
+         "id": "header-lower",
+         "kind": "revolve",
+         "bone": "headers",
+         "material": "copper",
+         "role": "body",
+         "tone": 0.4,
+         "profile": [[0.0, 0.011], [1.0, 0.011]],
+         "axis": [0.0, 0.0, 1.0],
+         "origin": [1.91, 0.0, -0.5]
+       },
+       {
+         "id": "cover-side-left",
+         "kind": "extrude",
+         "bone": "housing",
+         "material": "anodised-aluminium",
+         "role": "body",
+         "tone": 0.35,
+         "profile": [[0.0865, 0.4985], [0.0865, 0.5], [0.1, 0.5], [0.1, 0.48], [0.0985, 0.48], [0.0985, 0.4985]],
+         "plane": "yz",
+         "from": -0.36,
+         "to": 1.64
+       },
+       {
+         "id": "cover-side-right",
+         "kind": "extrude",
+         "bone": "housing",
+         "material": "anodised-aluminium",
+         "role": "body",
+         "tone": 0.35,
+         "profile": [[0.0865, -0.4985], [0.0865, -0.5], [0.1, -0.5], [0.1, -0.48], [0.0985, -0.48], [0.0985, -0.4985]],
+         "plane": "yz",
+         "from": -0.36,
+         "to": 1.64
+       },
+       {
+         "id": "cover-end-upper",
+         "kind": "extrude",
+         "bone": "housing",
+         "material": "anodised-aluminium",
+         "role": "body",
+         "tone": 0.35,
+         "profile": [[-0.36, 0.0865], [-0.3585, 0.0865], [-0.3585, 0.0985], [-0.34, 0.0985], [-0.34, 0.1], [-0.36, 0.1]],
+         "plane": "xy",
+         "from": -0.5,
+         "to": 0.5
+       },
+       {
+         "id": "cover-end-lower",
+         "kind": "extrude",
+         "bone": "housing",
+         "material": "anodised-aluminium",
+         "role": "body",
+         "tone": 0.35,
+         "profile": [[1.64, 0.0865], [1.64, 0.1], [1.62, 0.1], [1.62, 0.0985], [1.6385, 0.0985], [1.6385, 0.0865]],
+         "plane": "xy",
+         "from": -0.5,
+         "to": 0.5
+       },
+       {
+         "id": "riser-end-upper",
+         "kind": "revolve",
+         "bone": "absorber",
+         "material": "copper",
+         "role": "detail",
+         "tone": 0.55,
+         "profile": [[0.0, 0.005], [0.015, 0.005]],
+         "axis": [1.0, 0.0, 0.0],
+         "origin": [-0.015, -0.0051, -0.4],
+         "repeat": {
+           "count": 9,
+           "translation": [0.0, 0.0, 0.1]
+         }
+       },
+       {
+         "id": "riser-end-lower",
+         "kind": "revolve",
+         "bone": "absorber",
+         "material": "copper",
+         "role": "detail",
+         "tone": 0.55,
+         "profile": [[0.0, 0.005], [0.015, 0.005]],
+         "axis": [1.0, 0.0, 0.0],
+         "origin": [1.88, -0.0051, -0.4],
+         "repeat": {
+           "count": 9,
+           "translation": [0.0, 0.0, 0.1]
+         }
+       }
      ],
-     "axis": [
-      0.0,
-      0.0,
-      1.0
+     "thermal": [
+       {
+         "id": "th-absorber-plume-outlet",
+         "kind": "box",
+         "bone": "glass",
+         "material": "solar-glass",
+         "role": "body",
+         "tone": 0.9,
+         "size": [0.19, 0.015, 0.5],
+         "transform": {
+           "translation": [0.11, -0.0044, 0.0]
+         },
+         "region": "absorber",
+         "tags": ["absorber-plume"]
+       },
+       {
+         "id": "th-rail-left",
+         "of": "rail-left",
+         "region": "stand"
+       },
+       {
+         "id": "th-rail-right",
+         "of": "rail-right",
+         "region": "stand"
+       },
+       {
+         "id": "th-post-rear-left",
+         "of": "post-rear-left",
+         "region": "stand"
+       },
+       {
+         "id": "th-post-rear-right",
+         "of": "post-rear-right",
+         "region": "stand"
+       },
+       {
+         "id": "th-post-front-left",
+         "of": "post-front-left",
+         "region": "stand"
+       },
+       {
+         "id": "th-post-front-right",
+         "of": "post-front-right",
+         "region": "stand"
+       },
+       {
+         "id": "th-knee-left",
+         "of": "knee-left",
+         "region": "stand"
+       },
+       {
+         "id": "th-knee-right",
+         "of": "knee-right",
+         "region": "stand"
+       },
+       {
+         "id": "th-cleat-rear",
+         "of": "cleat-rear",
+         "region": "stand"
+       },
+       {
+         "id": "th-cleat-front",
+         "of": "cleat-front",
+         "region": "stand"
+       },
+       {
+         "id": "th-brace-rising-left",
+         "of": "brace-rising-left",
+         "region": "stand"
+       },
+       {
+         "id": "th-brace-rising-right",
+         "of": "brace-rising-right",
+         "region": "stand"
+       },
+       {
+         "id": "th-bolt-brace-rising-left",
+         "of": "bolt-brace-rising-left",
+         "region": "stand"
+       },
+       {
+         "id": "th-bolt-brace-rising-right",
+         "of": "bolt-brace-rising-right",
+         "region": "stand"
+       },
+       {
+         "id": "th-tray",
+         "of": "tray",
+         "region": "housing"
+       },
+       {
+         "id": "th-tray-side-left",
+         "of": "tray-side-left",
+         "region": "housing"
+       },
+       {
+         "id": "th-tray-side-right",
+         "of": "tray-side-right",
+         "region": "housing"
+       },
+       {
+         "id": "th-insulation",
+         "of": "insulation",
+         "region": "housing"
+       },
+       {
+         "id": "th-glass",
+         "of": "glass",
+         "region": "glazing"
+       },
+       {
+         "id": "th-working-absorber",
+         "of": "absorber",
+         "region": "absorber"
+       },
+       {
+         "id": "th-header-upper",
+         "of": "header-upper",
+         "region": "header-upper"
+       },
+       {
+         "id": "th-header-lower",
+         "of": "header-lower",
+         "region": "header-lower"
+       },
+       {
+         "id": "th-cover-side-left",
+         "of": "cover-side-left",
+         "region": "housing"
+       },
+       {
+         "id": "th-cover-side-right",
+         "of": "cover-side-right",
+         "region": "housing"
+       },
+       {
+         "id": "th-cover-end-upper",
+         "of": "cover-end-upper",
+         "region": "housing"
+       },
+       {
+         "id": "th-cover-end-lower",
+         "of": "cover-end-lower",
+         "region": "housing"
+       },
+       {
+         "id": "th-riser-end-upper",
+         "of": "riser-end-upper",
+         "region": "absorber"
+       },
+       {
+         "id": "th-riser-end-lower",
+         "of": "riser-end-lower",
+         "region": "absorber"
+       }
      ],
-     "origin": [
-      1.91,
-      0.0,
-      -0.5
+     "structure": [
+       {
+         "id": "frame",
+         "kind": "extrude",
+         "bone": "housing",
+         "material": "anodised-aluminium",
+         "role": "body",
+         "tone": 0.35,
+         "profile": [[-0.5, -0.36], [0.5, -0.36], [0.5, 1.64], [-0.5, 1.64]],
+         "plane": "zx",
+         "holes": [
+           [[-0.4985, -0.3585], [0.4985, -0.3585], [0.4985, 1.6385], [-0.4985, 1.6385]]
+         ],
+         "from": 0.0,
+         "to": 0.0953,
+         "member": "housing",
+         "part": "member"
+       },
+       {
+         "id": "riser",
+         "kind": "revolve",
+         "bone": "absorber",
+         "material": "copper",
+         "role": "body",
+         "tone": 0.55,
+         "profile": [[0.0, 0.005], [1.91, 0.005]],
+         "axis": [1.0, 0.0, 0.0],
+         "origin": [-0.015, -0.0051, -0.4],
+         "slender": true,
+         "repeat": {
+           "count": 9,
+           "translation": [0.0, 0.0, 0.1]
+         },
+         "member": "absorber",
+         "part": "member"
+       },
+       {
+         "id": "joint-foot-rear",
+         "kind": "box",
+         "bone": "stand",
+         "material": "galvanised-steel",
+         "role": "body",
+         "tone": 0.5,
+         "size": [0.035, 0.035, 0.035],
+         "transform": {
+           "translation": [0.19706, 0.025, -0.4375]
+         },
+         "repeat": {
+           "count": 2,
+           "translation": [0.0, 0.0, 0.875]
+         },
+         "member": "stand",
+         "part": "joint"
+       },
+       {
+         "id": "joint-foot-front",
+         "kind": "box",
+         "bone": "stand",
+         "material": "galvanised-steel",
+         "role": "body",
+         "tone": 0.5,
+         "size": [0.035, 0.035, 0.035],
+         "transform": {
+           "translation": [1.24557, 0.025, -0.4375]
+         },
+         "repeat": {
+           "count": 2,
+           "translation": [0.0, 0.0, 0.875]
+         },
+         "member": "stand",
+         "part": "joint"
+       },
+       {
+         "id": "joint-cleat-rear",
+         "kind": "box",
+         "bone": "stand",
+         "material": "galvanised-steel",
+         "role": "body",
+         "tone": 0.5,
+         "size": [0.035, 0.035, 0.035],
+         "transform": {
+           "translation": [0.19706, 1.10317, -0.4375]
+         },
+         "repeat": {
+           "count": 2,
+           "translation": [0.0, 0.0, 0.875]
+         },
+         "member": "stand",
+         "part": "joint"
+       },
+       {
+         "id": "joint-cleat-front",
+         "kind": "box",
+         "bone": "stand",
+         "material": "galvanised-steel",
+         "role": "body",
+         "tone": 0.5,
+         "size": [0.035, 0.035, 0.035],
+         "transform": {
+           "translation": [1.24557, 0.369, -0.4375]
+         },
+         "repeat": {
+           "count": 2,
+           "translation": [0.0, 0.0, 0.875]
+         },
+         "member": "stand",
+         "part": "joint"
+       },
+       {
+         "id": "mass-housing",
+         "kind": "revolve",
+         "bone": "housing",
+         "material": "anodised-aluminium",
+         "role": "body",
+         "tone": 0.35,
+         "profile": [[0.0, 0.09], [0.03, 0.09]],
+         "axis": [0.0, 1.0, 0.0],
+         "origin": [0.64, 0.008, 0.0],
+         "member": "housing",
+         "part": "mass"
+       },
+       {
+         "id": "mass-glass",
+         "kind": "revolve",
+         "bone": "glass",
+         "material": "solar-glass",
+         "role": "body",
+         "tone": 0.92,
+         "profile": [[0.0, 0.13], [0.015, 0.13]],
+         "axis": [0.0, 1.0, 0.0],
+         "origin": [0.995, -0.0075, 0.0],
+         "member": "glass",
+         "part": "mass"
+       },
+       {
+         "id": "mass-absorber",
+         "kind": "revolve",
+         "bone": "absorber",
+         "material": "selective-absorber",
+         "role": "body",
+         "tone": 0.2,
+         "profile": [[0.0, 0.1], [0.0164, 0.1]],
+         "axis": [0.0, 1.0, 0.0],
+         "origin": [0.94, -0.01615, 0.0],
+         "member": "absorber",
+         "part": "mass"
+       },
+       {
+         "id": "mass-headers",
+         "kind": "revolve",
+         "bone": "headers",
+         "material": "copper",
+         "role": "body",
+         "tone": 0.4,
+         "profile": [[0.0, 0.011], [0.0, 0.018], [0.08, 0.018], [0.08, 0.011], [0.0, 0.011]],
+         "axis": [0.0, 0.0, 1.0],
+         "origin": [0.0, 0.0, -0.04],
+         "repeat": {
+           "count": 2,
+           "translation": [1.91, 0.0, 0.0]
+         },
+         "member": "headers",
+         "part": "mass"
+       },
+       {
+         "id": "mass-stand-rear",
+         "kind": "box",
+         "bone": "stand",
+         "material": "galvanised-steel",
+         "role": "body",
+         "tone": 0.5,
+         "size": [0.025, 0.14, 0.025],
+         "transform": {
+           "translation": [0.19706, 0.6, -0.4375]
+         },
+         "repeat": {
+           "count": 2,
+           "translation": [0.0, 0.0, 0.875]
+         },
+         "member": "stand",
+         "part": "mass"
+       },
+       {
+         "id": "mass-stand-rail",
+         "kind": "box",
+         "bone": "stand",
+         "material": "galvanised-steel",
+         "role": "body",
+         "tone": 0.5,
+         "size": [0.14, 0.025, 0.025],
+         "transform": {
+           "translation": [0.66, 0.0125, -0.4375]
+         },
+         "repeat": {
+           "count": 2,
+           "translation": [0.0, 0.0, 0.875]
+         },
+         "member": "stand",
+         "part": "mass"
+       },
+       {
+         "id": "mass-stand-front",
+         "kind": "box",
+         "bone": "stand",
+         "material": "galvanised-steel",
+         "role": "body",
+         "tone": 0.5,
+         "size": [0.025, 0.06, 0.025],
+         "transform": {
+           "translation": [1.24557, 0.18, -0.4375]
+         },
+         "repeat": {
+           "count": 2,
+           "translation": [0.0, 0.0, 0.875]
+         },
+         "member": "stand",
+         "part": "mass"
+       },
+       {
+         "id": "base-contact-pad",
+         "kind": "box",
+         "bone": "stand",
+         "material": "galvanised-steel",
+         "role": "body",
+         "tone": 0.5,
+         "size": [1.5, 0.015, 0.029],
+         "transform": {
+           "translation": [0.75, 0.0075, -0.4375]
+         },
+         "repeat": {
+           "count": 2,
+           "translation": [0.0, 0.0, 0.875]
+         },
+         "member": "stand",
+         "part": "support",
+         "anchor": "base-contact"
+       },
+       {
+         "id": "st-rail-left",
+         "of": "rail-left",
+         "member": "stand",
+         "part": "member"
+       },
+       {
+         "id": "st-rail-right",
+         "of": "rail-right",
+         "member": "stand",
+         "part": "member"
+       },
+       {
+         "id": "st-post-rear-left",
+         "of": "post-rear-left",
+         "member": "stand",
+         "part": "member"
+       },
+       {
+         "id": "st-post-rear-right",
+         "of": "post-rear-right",
+         "member": "stand",
+         "part": "member"
+       },
+       {
+         "id": "st-post-front-left",
+         "of": "post-front-left",
+         "member": "stand",
+         "part": "member"
+       },
+       {
+         "id": "st-post-front-right",
+         "of": "post-front-right",
+         "member": "stand",
+         "part": "member"
+       },
+       {
+         "id": "st-knee-left",
+         "of": "knee-left",
+         "member": "stand",
+         "part": "member"
+       },
+       {
+         "id": "st-knee-right",
+         "of": "knee-right",
+         "member": "stand",
+         "part": "member"
+       },
+       {
+         "id": "st-brace-rising-left",
+         "of": "brace-rising-left",
+         "member": "stand",
+         "part": "member"
+       },
+       {
+         "id": "st-brace-rising-right",
+         "of": "brace-rising-right",
+         "member": "stand",
+         "part": "member"
+       },
+       {
+         "id": "st-cleat-rear",
+         "of": "cleat-rear",
+         "member": "housing",
+         "part": "joint"
+       },
+       {
+         "id": "st-cleat-front",
+         "of": "cleat-front",
+         "member": "housing",
+         "part": "joint"
+       },
+       {
+         "id": "st-bolt-brace-rising-left",
+         "of": "bolt-brace-rising-left",
+         "member": "stand",
+         "part": "joint"
+       },
+       {
+         "id": "st-bolt-brace-rising-right",
+         "of": "bolt-brace-rising-right",
+         "member": "stand",
+         "part": "joint"
+       },
+       {
+         "id": "st-glass",
+         "of": "glass",
+         "member": "glass",
+         "part": "member"
+       },
+       {
+         "id": "st-header-upper",
+         "of": "header-upper",
+         "member": "headers",
+         "part": "member"
+       },
+       {
+         "id": "st-header-lower",
+         "of": "header-lower",
+         "member": "headers",
+         "part": "member"
+       }
+     ],
+     "decisions": [
+       {
+         "en": "Two 2 × 20 mm steel straps cross behind the collector. Their ends bolt to the posts. Side knees join the real base channels and posts, with cleats carrying the reactions into the feet.",
+         "de": "Zwei Stahlbänder 2 × 20 mm kreuzen sich hinter dem Kollektor. Ihre Enden sind an den Stützen verschraubt. Seitliche Kniebleche verbinden Fußschienen und Stützen; Laschen übertragen die Auflagerkräfte."
+       },
+       {
+         "en": "The collector contains 3.2 mm glazing, the embossed absorber, mineral-wool backing and two copper headers inside the 1.5 mm folded tray. The smaller scales simplify the bend radius stations and edge trims.",
+         "de": "Im 1,5-mm-Blechgehäuse liegen 3,2-mm-Glas, geprägter Absorber, Mineralwolle und zwei Kupfersammler. In den kleineren Maßstäben sind die Biegeradien und die Kanteneinfassungen vereinfacht."
+       }
      ]
-    },
-    {
-     "id": "collar-upper",
-     "kind": "revolve",
-     "bone": "headers",
-     "material": "copper",
-     "role": "detail",
-     "tone": 0.4,
-     "profile": [
-      [
-       0.0,
-       0.011
-      ],
-      [
-       0.0,
-       0.018
-      ],
-      [
-       0.008,
-       0.018
-      ],
-      [
-       0.008,
-       0.011
-      ],
-      [
-       0.0,
-       0.011
-      ]
+   },
+   "200": {
+     "status": "authored",
+     "denominator": 200,
+     "body": [
+       {
+         "id": "rail-left",
+         "kind": "extrude",
+         "bone": "stand",
+         "material": "galvanised-steel",
+         "role": "body",
+         "tone": 0.5,
+         "profile": [[0.0, 0.425], [0.0, 0.45], [0.025, 0.45], [0.025, 0.448], [0.002, 0.448], [0.002, 0.425]],
+         "plane": "yz",
+         "from": 0.0,
+         "to": 1.5
+       },
+       {
+         "id": "rail-right",
+         "kind": "extrude",
+         "bone": "stand",
+         "material": "galvanised-steel",
+         "role": "body",
+         "tone": 0.5,
+         "profile": [[0.0, -0.425], [0.0, -0.45], [0.025, -0.45], [0.025, -0.448], [0.002, -0.448], [0.002, -0.425]],
+         "plane": "yz",
+         "from": 0.0,
+         "to": 1.5
+       },
+       {
+         "id": "post-rear-left",
+         "kind": "extrude",
+         "bone": "stand",
+         "material": "galvanised-steel",
+         "role": "body",
+         "tone": 0.5,
+         "profile": [[0.448, 0.18456], [0.448, 0.20956], [0.446, 0.20956], [0.446, 0.18656], [0.423, 0.18656], [0.423, 0.18456]],
+         "plane": "zx",
+         "from": 0.002,
+         "to": 1.1
+       },
+       {
+         "id": "post-rear-right",
+         "kind": "extrude",
+         "bone": "stand",
+         "material": "galvanised-steel",
+         "role": "body",
+         "tone": 0.5,
+         "profile": [[-0.448, 0.18456], [-0.448, 0.20956], [-0.446, 0.20956], [-0.446, 0.18656], [-0.423, 0.18656], [-0.423, 0.18456]],
+         "plane": "zx",
+         "from": 0.002,
+         "to": 1.1
+       },
+       {
+         "id": "post-front-left",
+         "kind": "extrude",
+         "bone": "stand",
+         "material": "galvanised-steel",
+         "role": "body",
+         "tone": 0.5,
+         "profile": [[0.448, 1.23307], [0.448, 1.25807], [0.446, 1.25807], [0.446, 1.23507], [0.423, 1.23507], [0.423, 1.23307]],
+         "plane": "zx",
+         "from": 0.002,
+         "to": 0.365
+       },
+       {
+         "id": "post-front-right",
+         "kind": "extrude",
+         "bone": "stand",
+         "material": "galvanised-steel",
+         "role": "body",
+         "tone": 0.5,
+         "profile": [[-0.448, 1.23307], [-0.448, 1.25807], [-0.446, 1.25807], [-0.446, 1.23507], [-0.423, 1.23507], [-0.423, 1.23307]],
+         "plane": "zx",
+         "from": 0.002,
+         "to": 0.365
+       },
+       {
+         "id": "knee-left",
+         "kind": "extrude",
+         "bone": "stand",
+         "material": "galvanised-steel",
+         "role": "body",
+         "tone": 0.5,
+         "profile": [[-0.0125, 0.421], [-0.0125, 0.446], [0.0125, 0.446], [0.0125, 0.444], [-0.0105, 0.444], [-0.0105, 0.421]],
+         "plane": "yz",
+         "transform": {
+           "translation": [0.51706, 0.0125, 0.0],
+           "rotation": [0.0, 0.0, 0.92373, 0.38305]
+         },
+         "from": -0.003,
+         "to": 0.45166
+       },
+       {
+         "id": "knee-right",
+         "kind": "extrude",
+         "bone": "stand",
+         "material": "galvanised-steel",
+         "role": "body",
+         "tone": 0.5,
+         "profile": [[-0.0125, -0.421], [-0.0125, -0.446], [0.0125, -0.446], [0.0125, -0.444], [-0.0105, -0.444], [-0.0105, -0.421]],
+         "plane": "yz",
+         "transform": {
+           "translation": [0.51706, 0.0125, 0.0],
+           "rotation": [0.0, 0.0, 0.92373, 0.38305]
+         },
+         "from": -0.003,
+         "to": 0.45166
+       },
+       {
+         "id": "cleat-rear",
+         "kind": "extrude",
+         "bone": "stand",
+         "material": "galvanised-steel",
+         "role": "body",
+         "tone": 0.5,
+         "profile": [[0.18156, 1.03], [0.18456, 1.03], [0.18456, 1.12576], [0.26206, 1.0715], [0.26206, 1.07516], [0.18156, 1.13152]],
+         "plane": "xy",
+         "from": -0.448,
+         "to": -0.423,
+         "repeat": {
+           "count": 2,
+           "translation": [0.0, 0.0, 0.871]
+         }
+       },
+       {
+         "id": "cleat-front",
+         "kind": "extrude",
+         "bone": "stand",
+         "material": "galvanised-steel",
+         "role": "body",
+         "tone": 0.5,
+         "profile": [[1.23007, 0.3], [1.23307, 0.3], [1.23307, 0.39159], [1.31057, 0.33732], [1.31057, 0.34098], [1.23007, 0.39735]],
+         "plane": "xy",
+         "from": -0.448,
+         "to": -0.423,
+         "repeat": {
+           "count": 2,
+           "translation": [0.0, 0.0, 0.871]
+         }
+       },
+       {
+         "id": "brace-rising-left",
+         "kind": "box",
+         "bone": "stand",
+         "material": "galvanised-steel",
+         "role": "body",
+         "tone": 0.5,
+         "size": [0.002, 1.18925, 0.02],
+         "transform": {
+           "translation": [0.18356, 0.605, 0.0],
+           "rotation": [0.40271, 0.0, 0.0, 0.91533]
+         },
+         "slender": true
+       },
+       {
+         "id": "brace-rising-right",
+         "kind": "box",
+         "bone": "stand",
+         "material": "galvanised-steel",
+         "role": "body",
+         "tone": 0.5,
+         "size": [0.002, 1.18925, 0.02],
+         "transform": {
+           "translation": [0.18756, 0.605, 0.0],
+           "rotation": [-0.40271, 0.0, 0.0, 0.91533]
+         },
+         "slender": true
+       },
+       {
+         "id": "bolt-brace-rising-left",
+         "kind": "revolve",
+         "bone": "stand",
+         "material": "galvanised-steel",
+         "role": "detail",
+         "tone": 0.4,
+         "profile": [[0.0, 0.0065], [0.016, 0.0065]],
+         "axis": [1.0, 0.0, 0.0],
+         "origin": [0.17756, 0.21, -0.431],
+         "repeat": {
+           "count": 2,
+           "translation": [0.0, 0.79, 0.862]
+         }
+       },
+       {
+         "id": "bolt-brace-rising-right",
+         "kind": "revolve",
+         "bone": "stand",
+         "material": "galvanised-steel",
+         "role": "detail",
+         "tone": 0.4,
+         "profile": [[0.0, 0.0065], [0.016, 0.0065]],
+         "axis": [1.0, 0.0, 0.0],
+         "origin": [0.17756, 0.21, 0.431],
+         "repeat": {
+           "count": 2,
+           "translation": [0.0, 0.79, -0.862]
+         }
+       },
+       {
+         "id": "tray",
+         "kind": "extrude",
+         "bone": "housing",
+         "material": "anodised-aluminium",
+         "role": "body",
+         "tone": 0.35,
+         "profile": [[-0.3585, 0.003], [-0.3576213, 0.0008787], [-0.3555, 0.0], [1.6355, 0.0], [1.6376213, 0.0008787], [1.6385, 0.003], [1.6385, 0.0953], [1.6235, 0.0953], [1.6235, 0.0938], [1.637, 0.0938], [1.637, 0.003], [1.6365607, 0.0019393], [1.6355, 0.0015], [-0.3555, 0.0015], [-0.3565607, 0.0019393], [-0.357, 0.003], [-0.357, 0.0938], [-0.3435, 0.0938], [-0.3435, 0.0953], [-0.3585, 0.0953]],
+         "plane": "xy",
+         "from": -0.497,
+         "to": 0.497
+       },
+       {
+         "id": "tray-side-left",
+         "kind": "extrude",
+         "bone": "housing",
+         "material": "anodised-aluminium",
+         "role": "body",
+         "tone": 0.35,
+         "profile": [[0.0, 0.497], [0.0, 0.4985], [0.0953, 0.4985], [0.0953, 0.4835], [0.0938, 0.4835], [0.0938, 0.497]],
+         "plane": "yz",
+         "from": -0.3585,
+         "to": 1.6385
+       },
+       {
+         "id": "tray-side-right",
+         "kind": "extrude",
+         "bone": "housing",
+         "material": "anodised-aluminium",
+         "role": "body",
+         "tone": 0.35,
+         "profile": [[0.0, -0.497], [0.0, -0.4985], [0.0953, -0.4985], [0.0953, -0.4835], [0.0938, -0.4835], [0.0938, -0.497]],
+         "plane": "yz",
+         "from": -0.3585,
+         "to": 1.6385
+       },
+       {
+         "id": "insulation",
+         "kind": "extrude",
+         "bone": "housing",
+         "material": "mineral-wool",
+         "role": "body",
+         "tone": 0.8,
+         "profile": [[-0.357, 0.0015], [1.637, 0.0015], [1.637, 0.052], [1.58, 0.052], [1.58, 0.0598], [-0.3, 0.0598], [-0.3, 0.052], [-0.357, 0.052]],
+         "plane": "xy",
+         "from": -0.497,
+         "to": 0.497
+       },
+       {
+         "id": "glass",
+         "kind": "box",
+         "bone": "glass",
+         "material": "solar-glass",
+         "role": "glazing",
+         "tone": 0.92,
+         "size": [1.99, 0.0032, 0.99],
+         "transform": {
+           "translation": [0.995, 0.0, 0.0]
+         }
+       },
+       {
+         "id": "absorber",
+         "kind": "extrude",
+         "bone": "absorber",
+         "material": "selective-absorber",
+         "role": "body",
+         "tone": 0.2,
+         "profile": [[0.00025, -0.455], [0.00025, 0.455], [-0.00025, 0.455], [-0.00025, 0.40122], [-0.00137, 0.40333], [-0.00334, 0.40468], [-0.00571, 0.40496], [-0.00795, 0.40411], [-0.00953, 0.40232], [-0.0101, 0.4], [-0.00953, 0.39768], [-0.00795, 0.39589], [-0.00571, 0.39504], [-0.00334, 0.39532], [-0.00137, 0.39667], [-0.00025, 0.39878], [-0.00025, 0.30122], [-0.00137, 0.30333], [-0.00334, 0.30468], [-0.00571, 0.30496], [-0.00795, 0.30411], [-0.00953, 0.30232], [-0.0101, 0.3], [-0.00953, 0.29768], [-0.00795, 0.29589], [-0.00571, 0.29504], [-0.00334, 0.29532], [-0.00137, 0.29667], [-0.00025, 0.29878], [-0.00025, 0.20122], [-0.00137, 0.20333], [-0.00334, 0.20468], [-0.00571, 0.20496], [-0.00795, 0.20411], [-0.00953, 0.20232], [-0.0101, 0.2], [-0.00953, 0.19768], [-0.00795, 0.19589], [-0.00571, 0.19504], [-0.00334, 0.19532], [-0.00137, 0.19667], [-0.00025, 0.19878], [-0.00025, 0.10122], [-0.00137, 0.10333], [-0.00334, 0.10468], [-0.00571, 0.10496], [-0.00795, 0.10411], [-0.00953, 0.10232], [-0.0101, 0.1], [-0.00953, 0.09768], [-0.00795, 0.09589], [-0.00571, 0.09504], [-0.00334, 0.09532], [-0.00137, 0.09667], [-0.00025, 0.09878], [-0.00025, 0.00122], [-0.00137, 0.00333], [-0.00334, 0.00468], [-0.00571, 0.00496], [-0.00795, 0.00411], [-0.00953, 0.00232], [-0.0101, -0.0], [-0.00953, -0.00232], [-0.00795, -0.00411], [-0.00571, -0.00496], [-0.00334, -0.00468], [-0.00137, -0.00333], [-0.00025, -0.00122], [-0.00025, -0.09878], [-0.00137, -0.09667], [-0.00334, -0.09532], [-0.00571, -0.09504], [-0.00795, -0.09589], [-0.00953, -0.09768], [-0.0101, -0.1], [-0.00953, -0.10232], [-0.00795, -0.10411], [-0.00571, -0.10496], [-0.00334, -0.10468], [-0.00137, -0.10333], [-0.00025, -0.10122], [-0.00025, -0.19878], [-0.00137, -0.19667], [-0.00334, -0.19532], [-0.00571, -0.19504], [-0.00795, -0.19589], [-0.00953, -0.19768], [-0.0101, -0.2], [-0.00953, -0.20232], [-0.00795, -0.20411], [-0.00571, -0.20496], [-0.00334, -0.20468], [-0.00137, -0.20333], [-0.00025, -0.20122], [-0.00025, -0.29878], [-0.00137, -0.29667], [-0.00334, -0.29532], [-0.00571, -0.29504], [-0.00795, -0.29589], [-0.00953, -0.29768], [-0.0101, -0.3], [-0.00953, -0.30232], [-0.00795, -0.30411], [-0.00571, -0.30496], [-0.00334, -0.30468], [-0.00137, -0.30333], [-0.00025, -0.30122], [-0.00025, -0.39878], [-0.00137, -0.39667], [-0.00334, -0.39532], [-0.00571, -0.39504], [-0.00795, -0.39589], [-0.00953, -0.39768], [-0.0101, -0.4], [-0.00953, -0.40232], [-0.00795, -0.40411], [-0.00571, -0.40496], [-0.00334, -0.40468], [-0.00137, -0.40333], [-0.00025, -0.40122], [-0.00025, -0.455]],
+         "plane": "yz",
+         "from": 0.0,
+         "to": 1.88
+       },
+       {
+         "id": "header-upper",
+         "kind": "revolve",
+         "bone": "headers",
+         "material": "copper",
+         "role": "body",
+         "tone": 0.4,
+         "profile": [[0.0, 0.011], [1.0, 0.011]],
+         "axis": [0.0, 0.0, 1.0],
+         "origin": [0.0, 0.0, -0.5]
+       },
+       {
+         "id": "header-lower",
+         "kind": "revolve",
+         "bone": "headers",
+         "material": "copper",
+         "role": "body",
+         "tone": 0.4,
+         "profile": [[0.0, 0.011], [1.0, 0.011]],
+         "axis": [0.0, 0.0, 1.0],
+         "origin": [1.91, 0.0, -0.5]
+       },
+       {
+         "id": "cover-end-upper",
+         "kind": "extrude",
+         "bone": "housing",
+         "material": "anodised-aluminium",
+         "role": "body",
+         "tone": 0.35,
+         "profile": [[-0.36, 0.0865], [-0.3585, 0.0865], [-0.3585, 0.0985], [-0.34, 0.0985], [-0.34, 0.1], [-0.36, 0.1]],
+         "plane": "xy",
+         "from": -0.5,
+         "to": 0.5
+       },
+       {
+         "id": "cover-end-lower",
+         "kind": "extrude",
+         "bone": "housing",
+         "material": "anodised-aluminium",
+         "role": "body",
+         "tone": 0.35,
+         "profile": [[1.64, 0.0865], [1.64, 0.1], [1.62, 0.1], [1.62, 0.0985], [1.6385, 0.0985], [1.6385, 0.0865]],
+         "plane": "xy",
+         "from": -0.5,
+         "to": 0.5
+       },
+       {
+         "id": "riser-end-upper",
+         "kind": "revolve",
+         "bone": "absorber",
+         "material": "copper",
+         "role": "detail",
+         "tone": 0.55,
+         "profile": [[0.0, 0.005], [0.015, 0.005]],
+         "axis": [1.0, 0.0, 0.0],
+         "origin": [-0.015, -0.0051, -0.4],
+         "repeat": {
+           "count": 9,
+           "translation": [0.0, 0.0, 0.1]
+         }
+       },
+       {
+         "id": "riser-end-lower",
+         "kind": "revolve",
+         "bone": "absorber",
+         "material": "copper",
+         "role": "detail",
+         "tone": 0.55,
+         "profile": [[0.0, 0.005], [0.015, 0.005]],
+         "axis": [1.0, 0.0, 0.0],
+         "origin": [1.88, -0.0051, -0.4],
+         "repeat": {
+           "count": 9,
+           "translation": [0.0, 0.0, 0.1]
+         }
+       }
      ],
-     "axis": [
-      0.0,
-      0.0,
-      1.0
+     "thermal": [
+       {
+         "id": "th-absorber-plume-outlet",
+         "kind": "box",
+         "bone": "glass",
+         "material": "solar-glass",
+         "role": "body",
+         "tone": 0.9,
+         "size": [0.19, 0.03, 0.5],
+         "transform": {
+           "translation": [0.11, -0.0099, 0.0]
+         },
+         "region": "absorber",
+         "tags": ["absorber-plume"]
+       },
+       {
+         "id": "th-rail-left",
+         "of": "rail-left",
+         "region": "stand"
+       },
+       {
+         "id": "th-rail-right",
+         "of": "rail-right",
+         "region": "stand"
+       },
+       {
+         "id": "th-post-rear-left",
+         "of": "post-rear-left",
+         "region": "stand"
+       },
+       {
+         "id": "th-post-rear-right",
+         "of": "post-rear-right",
+         "region": "stand"
+       },
+       {
+         "id": "th-post-front-left",
+         "of": "post-front-left",
+         "region": "stand"
+       },
+       {
+         "id": "th-post-front-right",
+         "of": "post-front-right",
+         "region": "stand"
+       },
+       {
+         "id": "th-knee-left",
+         "of": "knee-left",
+         "region": "stand"
+       },
+       {
+         "id": "th-knee-right",
+         "of": "knee-right",
+         "region": "stand"
+       },
+       {
+         "id": "th-cleat-rear",
+         "of": "cleat-rear",
+         "region": "stand"
+       },
+       {
+         "id": "th-cleat-front",
+         "of": "cleat-front",
+         "region": "stand"
+       },
+       {
+         "id": "th-brace-rising-left",
+         "of": "brace-rising-left",
+         "region": "stand"
+       },
+       {
+         "id": "th-brace-rising-right",
+         "of": "brace-rising-right",
+         "region": "stand"
+       },
+       {
+         "id": "th-bolt-brace-rising-left",
+         "of": "bolt-brace-rising-left",
+         "region": "stand"
+       },
+       {
+         "id": "th-bolt-brace-rising-right",
+         "of": "bolt-brace-rising-right",
+         "region": "stand"
+       },
+       {
+         "id": "th-tray",
+         "of": "tray",
+         "region": "housing"
+       },
+       {
+         "id": "th-tray-side-left",
+         "of": "tray-side-left",
+         "region": "housing"
+       },
+       {
+         "id": "th-tray-side-right",
+         "of": "tray-side-right",
+         "region": "housing"
+       },
+       {
+         "id": "th-insulation",
+         "of": "insulation",
+         "region": "housing"
+       },
+       {
+         "id": "th-glass",
+         "of": "glass",
+         "region": "glazing"
+       },
+       {
+         "id": "th-working-absorber",
+         "of": "absorber",
+         "region": "absorber"
+       },
+       {
+         "id": "th-header-upper",
+         "of": "header-upper",
+         "region": "header-upper"
+       },
+       {
+         "id": "th-header-lower",
+         "of": "header-lower",
+         "region": "header-lower"
+       },
+       {
+         "id": "th-cover-end-upper",
+         "of": "cover-end-upper",
+         "region": "housing"
+       },
+       {
+         "id": "th-cover-end-lower",
+         "of": "cover-end-lower",
+         "region": "housing"
+       },
+       {
+         "id": "th-riser-end-upper",
+         "of": "riser-end-upper",
+         "region": "absorber"
+       },
+       {
+         "id": "th-riser-end-lower",
+         "of": "riser-end-lower",
+         "region": "absorber"
+       }
      ],
-     "origin": [
-      0.0,
-      0.0,
-      -0.5
+     "structure": [
+       {
+         "id": "frame-ring",
+         "kind": "extrude",
+         "bone": "housing",
+         "material": "anodised-aluminium",
+         "role": "body",
+         "tone": 0.35,
+         "profile": [[-0.5, -0.36], [0.5, -0.36], [0.5, 1.64], [-0.5, 1.64]],
+         "plane": "zx",
+         "holes": [
+           [[-0.47, -0.33], [0.47, -0.33], [0.47, 1.61], [-0.47, 1.61]]
+         ],
+         "from": 0.0,
+         "to": 0.1,
+         "member": "housing",
+         "part": "member"
+       },
+       {
+         "id": "riser",
+         "kind": "revolve",
+         "bone": "absorber",
+         "material": "copper",
+         "role": "body",
+         "tone": 0.55,
+         "profile": [[0.0, 0.005], [1.89, 0.005]],
+         "axis": [1.0, 0.0, 0.0],
+         "origin": [-0.005, -0.0149, -0.4],
+         "slender": true,
+         "repeat": {
+           "count": 9,
+           "translation": [0.0, 0.0, 0.1]
+         },
+         "member": "absorber",
+         "part": "member"
+       },
+       {
+         "id": "mass-collector",
+         "kind": "box",
+         "bone": "housing",
+         "material": "anodised-aluminium",
+         "role": "body",
+         "tone": 0.35,
+         "size": [0.3, 0.03, 0.3],
+         "transform": {
+           "translation": [0.64, 0.055, 0.0]
+         },
+         "member": "housing",
+         "part": "mass"
+       },
+       {
+         "id": "mass-stand",
+         "kind": "box",
+         "bone": "stand",
+         "material": "galvanised-steel",
+         "role": "body",
+         "tone": 0.5,
+         "size": [0.036, 0.2, 0.036],
+         "transform": {
+           "translation": [0.19706, 0.6, -0.435]
+         },
+         "repeat": {
+           "count": 2,
+           "translation": [0.0, 0.0, 0.87]
+         },
+         "member": "stand",
+         "part": "mass"
+       },
+       {
+         "id": "base-contact-pad",
+         "kind": "box",
+         "bone": "stand",
+         "material": "galvanised-steel",
+         "role": "body",
+         "tone": 0.5,
+         "size": [1.5, 0.034, 0.034],
+         "transform": {
+           "translation": [0.75, 0.017, -0.435]
+         },
+         "repeat": {
+           "count": 2,
+           "translation": [0.0, 0.0, 0.87]
+         },
+         "member": "stand",
+         "part": "support",
+         "anchor": "base-contact"
+       },
+       {
+         "id": "st-rail-left",
+         "of": "rail-left",
+         "member": "stand",
+         "part": "member"
+       },
+       {
+         "id": "st-rail-right",
+         "of": "rail-right",
+         "member": "stand",
+         "part": "member"
+       },
+       {
+         "id": "st-post-rear-left",
+         "of": "post-rear-left",
+         "member": "stand",
+         "part": "member"
+       },
+       {
+         "id": "st-post-rear-right",
+         "of": "post-rear-right",
+         "member": "stand",
+         "part": "member"
+       },
+       {
+         "id": "st-post-front-left",
+         "of": "post-front-left",
+         "member": "stand",
+         "part": "member"
+       },
+       {
+         "id": "st-post-front-right",
+         "of": "post-front-right",
+         "member": "stand",
+         "part": "member"
+       },
+       {
+         "id": "st-knee-left",
+         "of": "knee-left",
+         "member": "stand",
+         "part": "member"
+       },
+       {
+         "id": "st-knee-right",
+         "of": "knee-right",
+         "member": "stand",
+         "part": "member"
+       },
+       {
+         "id": "st-brace-rising-left",
+         "of": "brace-rising-left",
+         "member": "stand",
+         "part": "member"
+       },
+       {
+         "id": "st-brace-rising-right",
+         "of": "brace-rising-right",
+         "member": "stand",
+         "part": "member"
+       },
+       {
+         "id": "st-cleat-rear",
+         "of": "cleat-rear",
+         "member": "housing",
+         "part": "joint"
+       },
+       {
+         "id": "st-cleat-front",
+         "of": "cleat-front",
+         "member": "housing",
+         "part": "joint"
+       },
+       {
+         "id": "st-bolt-brace-rising-left",
+         "of": "bolt-brace-rising-left",
+         "member": "stand",
+         "part": "joint"
+       },
+       {
+         "id": "st-bolt-brace-rising-right",
+         "of": "bolt-brace-rising-right",
+         "member": "stand",
+         "part": "joint"
+       },
+       {
+         "id": "st-glass",
+         "of": "glass",
+         "member": "glass",
+         "part": "member"
+       },
+       {
+         "id": "st-header-upper",
+         "of": "header-upper",
+         "member": "headers",
+         "part": "member"
+       },
+       {
+         "id": "st-header-lower",
+         "of": "header-lower",
+         "member": "headers",
+         "part": "member"
+       }
      ],
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0.0,
-       0.0,
-       0.992
-      ]
-     }
-    },
-    {
-     "id": "collar-lower",
-     "kind": "revolve",
-     "bone": "headers",
-     "material": "copper",
-     "role": "detail",
-     "tone": 0.4,
-     "profile": [
-      [
-       0.0,
-       0.011
-      ],
-      [
-       0.0,
-       0.018
-      ],
-      [
-       0.008,
-       0.018
-      ],
-      [
-       0.008,
-       0.011
-      ],
-      [
-       0.0,
-       0.011
-      ]
-     ],
-     "axis": [
-      0.0,
-      0.0,
-      1.0
-     ],
-     "origin": [
-      1.91,
-      0.0,
-      -0.5
-     ],
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0.0,
-       0.0,
-       0.992
-      ]
-     }
-    }
-   ],
-   "thermal": [
-    {
-     "id": "th-rail-left",
-     "of": "rail-left",
-     "region": "stand"
-    },
-    {
-     "id": "th-rail-right",
-     "of": "rail-right",
-     "region": "stand"
-    },
-    {
-     "id": "th-post-rear-left",
-     "of": "post-rear-left",
-     "region": "stand"
-    },
-    {
-     "id": "th-post-rear-right",
-     "of": "post-rear-right",
-     "region": "stand"
-    },
-    {
-     "id": "th-post-front-left",
-     "of": "post-front-left",
-     "region": "stand"
-    },
-    {
-     "id": "th-post-front-right",
-     "of": "post-front-right",
-     "region": "stand"
-    },
-    {
-     "id": "th-knee-left",
-     "of": "knee-left",
-     "region": "stand"
-    },
-    {
-     "id": "th-knee-right",
-     "of": "knee-right",
-     "region": "stand"
-    },
-    {
-     "id": "th-cleat-rear",
-     "of": "cleat-rear",
-     "region": "stand"
-    },
-    {
-     "id": "th-cleat-front",
-     "of": "cleat-front",
-     "region": "stand"
-    },
-    {
-     "id": "th-brace-rising-left",
-     "of": "brace-rising-left",
-     "region": "stand"
-    },
-    {
-     "id": "th-brace-rising-right",
-     "of": "brace-rising-right",
-     "region": "stand"
-    },
-    {
-     "id": "th-bolt-foot-right",
-     "of": "bolt-foot-right",
-     "region": "stand"
-    },
-    {
-     "id": "th-bolt-foot-left",
-     "of": "bolt-foot-left",
-     "region": "stand"
-    },
-    {
-     "id": "th-bolt-knee-right",
-     "of": "bolt-knee-right",
-     "region": "stand"
-    },
-    {
-     "id": "th-bolt-knee-left",
-     "of": "bolt-knee-left",
-     "region": "stand"
-    },
-    {
-     "id": "th-bolt-cleat-rear-right",
-     "of": "bolt-cleat-rear-right",
-     "region": "stand"
-    },
-    {
-     "id": "th-bolt-cleat-rear-left",
-     "of": "bolt-cleat-rear-left",
-     "region": "stand"
-    },
-    {
-     "id": "th-bolt-cleat-front-right",
-     "of": "bolt-cleat-front-right",
-     "region": "stand"
-    },
-    {
-     "id": "th-bolt-cleat-front-left",
-     "of": "bolt-cleat-front-left",
-     "region": "stand"
-    },
-    {
-     "id": "th-bolt-brace-rising-left",
-     "of": "bolt-brace-rising-left",
-     "region": "stand"
-    },
-    {
-     "id": "th-bolt-brace-rising-right",
-     "of": "bolt-brace-rising-right",
-     "region": "stand"
-    },
-    {
-     "id": "th-tray",
-     "of": "tray",
-     "region": "housing"
-    },
-    {
-     "id": "th-tray-side-left",
-     "of": "tray-side-left",
-     "region": "housing"
-    },
-    {
-     "id": "th-tray-side-right",
-     "of": "tray-side-right",
-     "region": "housing"
-    },
-    {
-     "id": "th-cover-side-left",
-     "of": "cover-side-left",
-     "region": "housing"
-    },
-    {
-     "id": "th-cover-side-right",
-     "of": "cover-side-right",
-     "region": "housing"
-    },
-    {
-     "id": "th-cover-end-upper",
-     "of": "cover-end-upper",
-     "region": "housing"
-    },
-    {
-     "id": "th-cover-end-lower",
-     "of": "cover-end-lower",
-     "region": "housing"
-    },
-    {
-     "id": "th-insulation",
-     "of": "insulation",
-     "region": "housing"
-    },
-    {
-     "id": "th-glass",
-     "of": "glass",
-     "region": "glazing"
-    },
-    {
-     "id": "th-absorber",
-     "of": "absorber",
-     "region": "absorber"
-    },
-    {
-     "id": "th-riser-end-upper",
-     "of": "riser-end-upper",
-     "region": "absorber"
-    },
-    {
-     "id": "th-riser-end-lower",
-     "of": "riser-end-lower",
-     "region": "absorber"
-    },
-    {
-     "id": "th-header-upper",
-     "of": "header-upper",
-     "region": "header-upper"
-    },
-    {
-     "id": "th-header-lower",
-     "of": "header-lower",
-     "region": "header-lower"
-    },
-    {
-     "id": "th-collar-upper",
-     "of": "collar-upper",
-     "region": "header-upper"
-    },
-    {
-     "id": "th-collar-lower",
-     "of": "collar-lower",
-     "region": "header-lower"
-    },
-    {
-     "id": "th-absorber-plume-outlet",
-     "kind": "box",
-     "bone": "glass",
-     "material": "solar-glass",
-     "role": "body",
-     "tone": 0.9,
-     "size": [
-      0.19,
-      0.0075,
-      0.5
-     ],
-     "transform": {
-      "translation": [
-       0.11,
-       -0.00065,
-       0.0
-      ]
-     },
-     "region": "absorber",
-     "tags": [
-      "absorber-plume"
+     "decisions": [
+       {
+         "en": "Two 2 × 20 mm steel straps cross behind the collector. Their ends bolt to the posts. Side knees join the real base channels and posts, with cleats carrying the reactions into the feet.",
+         "de": "Zwei Stahlbänder 2 × 20 mm kreuzen sich hinter dem Kollektor. Ihre Enden sind an den Stützen verschraubt. Seitliche Kniebleche verbinden Fußschienen und Stützen; Laschen übertragen die Auflagerkräfte."
+       },
+       {
+         "en": "The collector contains 3.2 mm glazing, the embossed absorber, mineral-wool backing and two copper headers inside the 1.5 mm folded tray. The smaller scales simplify the bend radius stations and edge trims.",
+         "de": "Im 1,5-mm-Blechgehäuse liegen 3,2-mm-Glas, geprägter Absorber, Mineralwolle und zwei Kupfersammler. In den kleineren Maßstäben sind die Biegeradien und die Kanteneinfassungen vereinfacht."
+       }
      ]
-    }
-   ],
-   "structure": [
-    {
-     "id": "st-rail-left",
-     "of": "rail-left",
-     "member": "stand",
-     "part": "member"
-    },
-    {
-     "id": "st-rail-right",
-     "of": "rail-right",
-     "member": "stand",
-     "part": "member"
-    },
-    {
-     "id": "st-post-rear-left",
-     "of": "post-rear-left",
-     "member": "stand",
-     "part": "member"
-    },
-    {
-     "id": "st-post-rear-right",
-     "of": "post-rear-right",
-     "member": "stand",
-     "part": "member"
-    },
-    {
-     "id": "st-post-front-left",
-     "of": "post-front-left",
-     "member": "stand",
-     "part": "member"
-    },
-    {
-     "id": "st-post-front-right",
-     "of": "post-front-right",
-     "member": "stand",
-     "part": "member"
-    },
-    {
-     "id": "st-knee-left",
-     "of": "knee-left",
-     "member": "stand",
-     "part": "member"
-    },
-    {
-     "id": "st-knee-right",
-     "of": "knee-right",
-     "member": "stand",
-     "part": "member"
-    },
-    {
-     "id": "st-brace-rising-left",
-     "of": "brace-rising-left",
-     "member": "stand",
-     "part": "member"
-    },
-    {
-     "id": "st-brace-rising-right",
-     "of": "brace-rising-right",
-     "member": "stand",
-     "part": "member"
-    },
-    {
-     "id": "st-tray-side-left",
-     "of": "tray-side-left",
-     "member": "housing",
-     "part": "member"
-    },
-    {
-     "id": "st-tray-side-right",
-     "of": "tray-side-right",
-     "member": "housing",
-     "part": "member"
-    },
-    {
-     "id": "end-rail-upper",
-     "kind": "extrude",
-     "bone": "housing",
-     "material": "anodised-aluminium",
-     "role": "body",
-     "tone": 0.35,
-     "profile": [
-      [
-       -0.3585,
-       0.0
-      ],
-      [
-       -0.357,
-       0.0
-      ],
-      [
-       -0.357,
-       0.0938
-      ],
-      [
-       -0.3435,
-       0.0938
-      ],
-      [
-       -0.3435,
-       0.0953
-      ],
-      [
-       -0.3585,
-       0.0953
-      ]
+   },
+   "500": {
+     "status": "authored",
+     "denominator": 500,
+     "body": [
+       {
+         "id": "rail-left",
+         "kind": "extrude",
+         "bone": "stand",
+         "material": "galvanised-steel",
+         "role": "body",
+         "tone": 0.5,
+         "profile": [[0.0, 0.425], [0.0, 0.45], [0.025, 0.45], [0.025, 0.448], [0.002, 0.448], [0.002, 0.425]],
+         "plane": "yz",
+         "from": 0.0,
+         "to": 1.5,
+         "slender": true
+       },
+       {
+         "id": "rail-right",
+         "kind": "extrude",
+         "bone": "stand",
+         "material": "galvanised-steel",
+         "role": "body",
+         "tone": 0.5,
+         "profile": [[0.0, -0.425], [0.0, -0.45], [0.025, -0.45], [0.025, -0.448], [0.002, -0.448], [0.002, -0.425]],
+         "plane": "yz",
+         "from": 0.0,
+         "to": 1.5,
+         "slender": true
+       },
+       {
+         "id": "post-rear-left",
+         "kind": "extrude",
+         "bone": "stand",
+         "material": "galvanised-steel",
+         "role": "body",
+         "tone": 0.5,
+         "profile": [[0.448, 0.18456], [0.448, 0.20956], [0.446, 0.20956], [0.446, 0.18656], [0.423, 0.18656], [0.423, 0.18456]],
+         "plane": "zx",
+         "from": 0.002,
+         "to": 1.1,
+         "slender": true
+       },
+       {
+         "id": "post-rear-right",
+         "kind": "extrude",
+         "bone": "stand",
+         "material": "galvanised-steel",
+         "role": "body",
+         "tone": 0.5,
+         "profile": [[-0.448, 0.18456], [-0.448, 0.20956], [-0.446, 0.20956], [-0.446, 0.18656], [-0.423, 0.18656], [-0.423, 0.18456]],
+         "plane": "zx",
+         "from": 0.002,
+         "to": 1.1,
+         "slender": true
+       },
+       {
+         "id": "post-front-left",
+         "kind": "extrude",
+         "bone": "stand",
+         "material": "galvanised-steel",
+         "role": "body",
+         "tone": 0.5,
+         "profile": [[0.448, 1.23307], [0.448, 1.25807], [0.446, 1.25807], [0.446, 1.23507], [0.423, 1.23507], [0.423, 1.23307]],
+         "plane": "zx",
+         "from": 0.002,
+         "to": 0.365,
+         "slender": true
+       },
+       {
+         "id": "post-front-right",
+         "kind": "extrude",
+         "bone": "stand",
+         "material": "galvanised-steel",
+         "role": "body",
+         "tone": 0.5,
+         "profile": [[-0.448, 1.23307], [-0.448, 1.25807], [-0.446, 1.25807], [-0.446, 1.23507], [-0.423, 1.23507], [-0.423, 1.23307]],
+         "plane": "zx",
+         "from": 0.002,
+         "to": 0.365,
+         "slender": true
+       },
+       {
+         "id": "knee-left",
+         "kind": "extrude",
+         "bone": "stand",
+         "material": "galvanised-steel",
+         "role": "body",
+         "tone": 0.5,
+         "profile": [[-0.0125, 0.421], [-0.0125, 0.446], [0.0125, 0.446], [0.0125, 0.444], [-0.0105, 0.444], [-0.0105, 0.421]],
+         "plane": "yz",
+         "transform": {
+           "translation": [0.51706, 0.0125, 0.0],
+           "rotation": [0.0, 0.0, 0.92373, 0.38305]
+         },
+         "from": -0.003,
+         "to": 0.45166,
+         "slender": true
+       },
+       {
+         "id": "knee-right",
+         "kind": "extrude",
+         "bone": "stand",
+         "material": "galvanised-steel",
+         "role": "body",
+         "tone": 0.5,
+         "profile": [[-0.0125, -0.421], [-0.0125, -0.446], [0.0125, -0.446], [0.0125, -0.444], [-0.0105, -0.444], [-0.0105, -0.421]],
+         "plane": "yz",
+         "transform": {
+           "translation": [0.51706, 0.0125, 0.0],
+           "rotation": [0.0, 0.0, 0.92373, 0.38305]
+         },
+         "from": -0.003,
+         "to": 0.45166,
+         "slender": true
+       },
+       {
+         "id": "cleat-rear",
+         "kind": "extrude",
+         "bone": "stand",
+         "material": "galvanised-steel",
+         "role": "body",
+         "tone": 0.5,
+         "profile": [[0.18156, 1.03], [0.18456, 1.03], [0.18456, 1.12576], [0.26206, 1.0715], [0.26206, 1.07516], [0.18156, 1.13152]],
+         "plane": "xy",
+         "from": -0.448,
+         "to": -0.423,
+         "repeat": {
+           "count": 2,
+           "translation": [0.0, 0.0, 0.871]
+         }
+       },
+       {
+         "id": "cleat-front",
+         "kind": "extrude",
+         "bone": "stand",
+         "material": "galvanised-steel",
+         "role": "body",
+         "tone": 0.5,
+         "profile": [[1.23007, 0.3], [1.23307, 0.3], [1.23307, 0.39159], [1.31057, 0.33732], [1.31057, 0.34098], [1.23007, 0.39735]],
+         "plane": "xy",
+         "from": -0.448,
+         "to": -0.423,
+         "repeat": {
+           "count": 2,
+           "translation": [0.0, 0.0, 0.871]
+         }
+       },
+       {
+         "id": "brace-rising-left",
+         "kind": "box",
+         "bone": "stand",
+         "material": "galvanised-steel",
+         "role": "body",
+         "tone": 0.5,
+         "size": [0.002, 1.18925, 0.02],
+         "transform": {
+           "translation": [0.18356, 0.605, 0.0],
+           "rotation": [0.40271, 0.0, 0.0, 0.91533]
+         },
+         "slender": true
+       },
+       {
+         "id": "brace-rising-right",
+         "kind": "box",
+         "bone": "stand",
+         "material": "galvanised-steel",
+         "role": "body",
+         "tone": 0.5,
+         "size": [0.002, 1.18925, 0.02],
+         "transform": {
+           "translation": [0.18756, 0.605, 0.0],
+           "rotation": [-0.40271, 0.0, 0.0, 0.91533]
+         },
+         "slender": true
+       },
+       {
+         "id": "bolt-brace-rising-left",
+         "kind": "revolve",
+         "bone": "stand",
+         "material": "galvanised-steel",
+         "role": "detail",
+         "tone": 0.4,
+         "profile": [[0.0, 0.0065], [0.016, 0.0065]],
+         "axis": [1.0, 0.0, 0.0],
+         "origin": [0.17756, 0.21, -0.431],
+         "repeat": {
+           "count": 2,
+           "translation": [0.0, 0.79, 0.862]
+         }
+       },
+       {
+         "id": "bolt-brace-rising-right",
+         "kind": "revolve",
+         "bone": "stand",
+         "material": "galvanised-steel",
+         "role": "detail",
+         "tone": 0.4,
+         "profile": [[0.0, 0.0065], [0.016, 0.0065]],
+         "axis": [1.0, 0.0, 0.0],
+         "origin": [0.17756, 0.21, 0.431],
+         "repeat": {
+           "count": 2,
+           "translation": [0.0, 0.79, -0.862]
+         }
+       },
+       {
+         "id": "tray",
+         "kind": "extrude",
+         "bone": "housing",
+         "material": "anodised-aluminium",
+         "role": "body",
+         "tone": 0.35,
+         "profile": [[-0.3585, 0.003], [-0.3555, 0.0], [1.6355, 0.0], [1.6385, 0.003], [1.6385, 0.0953], [1.6235, 0.0953], [1.6235, 0.0938], [1.637, 0.0938], [1.637, 0.003], [1.6355, 0.0015], [-0.3555, 0.0015], [-0.357, 0.003], [-0.357, 0.0938], [-0.3435, 0.0938], [-0.3435, 0.0953], [-0.3585, 0.0953]],
+         "plane": "xy",
+         "from": -0.497,
+         "to": 0.497
+       },
+       {
+         "id": "tray-side-left",
+         "kind": "extrude",
+         "bone": "housing",
+         "material": "anodised-aluminium",
+         "role": "body",
+         "tone": 0.35,
+         "profile": [[0.0, 0.497], [0.0, 0.4985], [0.0953, 0.4985], [0.0953, 0.4835], [0.0938, 0.4835], [0.0938, 0.497]],
+         "plane": "yz",
+         "from": -0.3585,
+         "to": 1.6385
+       },
+       {
+         "id": "tray-side-right",
+         "kind": "extrude",
+         "bone": "housing",
+         "material": "anodised-aluminium",
+         "role": "body",
+         "tone": 0.35,
+         "profile": [[0.0, -0.497], [0.0, -0.4985], [0.0953, -0.4985], [0.0953, -0.4835], [0.0938, -0.4835], [0.0938, -0.497]],
+         "plane": "yz",
+         "from": -0.3585,
+         "to": 1.6385
+       },
+       {
+         "id": "insulation",
+         "kind": "extrude",
+         "bone": "housing",
+         "material": "mineral-wool",
+         "role": "body",
+         "tone": 0.8,
+         "profile": [[-0.357, 0.0015], [1.637, 0.0015], [1.637, 0.052], [1.58, 0.052], [1.58, 0.0598], [-0.3, 0.0598], [-0.3, 0.052], [-0.357, 0.052]],
+         "plane": "xy",
+         "from": -0.497,
+         "to": 0.497
+       },
+       {
+         "id": "glass",
+         "kind": "box",
+         "bone": "glass",
+         "material": "solar-glass",
+         "role": "glazing",
+         "tone": 0.92,
+         "size": [1.99, 0.0032, 0.99],
+         "transform": {
+           "translation": [0.995, 0.0, 0.0]
+         }
+       },
+       {
+         "id": "absorber",
+         "kind": "extrude",
+         "bone": "absorber",
+         "material": "selective-absorber",
+         "role": "body",
+         "tone": 0.2,
+         "profile": [[0.00025, -0.455], [0.00025, 0.455], [-0.00025, 0.455], [-0.00025, 0.40122], [-0.00137, 0.40333], [-0.00334, 0.40468], [-0.00571, 0.40496], [-0.00795, 0.40411], [-0.00953, 0.40232], [-0.0101, 0.4], [-0.00953, 0.39768], [-0.00795, 0.39589], [-0.00571, 0.39504], [-0.00334, 0.39532], [-0.00137, 0.39667], [-0.00025, 0.39878], [-0.00025, 0.30122], [-0.00137, 0.30333], [-0.00334, 0.30468], [-0.00571, 0.30496], [-0.00795, 0.30411], [-0.00953, 0.30232], [-0.0101, 0.3], [-0.00953, 0.29768], [-0.00795, 0.29589], [-0.00571, 0.29504], [-0.00334, 0.29532], [-0.00137, 0.29667], [-0.00025, 0.29878], [-0.00025, 0.20122], [-0.00137, 0.20333], [-0.00334, 0.20468], [-0.00571, 0.20496], [-0.00795, 0.20411], [-0.00953, 0.20232], [-0.0101, 0.2], [-0.00953, 0.19768], [-0.00795, 0.19589], [-0.00571, 0.19504], [-0.00334, 0.19532], [-0.00137, 0.19667], [-0.00025, 0.19878], [-0.00025, 0.10122], [-0.00137, 0.10333], [-0.00334, 0.10468], [-0.00571, 0.10496], [-0.00795, 0.10411], [-0.00953, 0.10232], [-0.0101, 0.1], [-0.00953, 0.09768], [-0.00795, 0.09589], [-0.00571, 0.09504], [-0.00334, 0.09532], [-0.00137, 0.09667], [-0.00025, 0.09878], [-0.00025, 0.00122], [-0.00137, 0.00333], [-0.00334, 0.00468], [-0.00571, 0.00496], [-0.00795, 0.00411], [-0.00953, 0.00232], [-0.0101, -0.0], [-0.00953, -0.00232], [-0.00795, -0.00411], [-0.00571, -0.00496], [-0.00334, -0.00468], [-0.00137, -0.00333], [-0.00025, -0.00122], [-0.00025, -0.09878], [-0.00137, -0.09667], [-0.00334, -0.09532], [-0.00571, -0.09504], [-0.00795, -0.09589], [-0.00953, -0.09768], [-0.0101, -0.1], [-0.00953, -0.10232], [-0.00795, -0.10411], [-0.00571, -0.10496], [-0.00334, -0.10468], [-0.00137, -0.10333], [-0.00025, -0.10122], [-0.00025, -0.19878], [-0.00137, -0.19667], [-0.00334, -0.19532], [-0.00571, -0.19504], [-0.00795, -0.19589], [-0.00953, -0.19768], [-0.0101, -0.2], [-0.00953, -0.20232], [-0.00795, -0.20411], [-0.00571, -0.20496], [-0.00334, -0.20468], [-0.00137, -0.20333], [-0.00025, -0.20122], [-0.00025, -0.29878], [-0.00137, -0.29667], [-0.00334, -0.29532], [-0.00571, -0.29504], [-0.00795, -0.29589], [-0.00953, -0.29768], [-0.0101, -0.3], [-0.00953, -0.30232], [-0.00795, -0.30411], [-0.00571, -0.30496], [-0.00334, -0.30468], [-0.00137, -0.30333], [-0.00025, -0.30122], [-0.00025, -0.39878], [-0.00137, -0.39667], [-0.00334, -0.39532], [-0.00571, -0.39504], [-0.00795, -0.39589], [-0.00953, -0.39768], [-0.0101, -0.4], [-0.00953, -0.40232], [-0.00795, -0.40411], [-0.00571, -0.40496], [-0.00334, -0.40468], [-0.00137, -0.40333], [-0.00025, -0.40122], [-0.00025, -0.455]],
+         "plane": "yz",
+         "from": 0.0,
+         "to": 1.88
+       },
+       {
+         "id": "header-upper",
+         "kind": "revolve",
+         "bone": "headers",
+         "material": "copper",
+         "role": "body",
+         "tone": 0.4,
+         "profile": [[0.0, 0.011], [1.0, 0.011]],
+         "axis": [0.0, 0.0, 1.0],
+         "origin": [0.0, 0.0, -0.5]
+       },
+       {
+         "id": "header-lower",
+         "kind": "revolve",
+         "bone": "headers",
+         "material": "copper",
+         "role": "body",
+         "tone": 0.4,
+         "profile": [[0.0, 0.011], [1.0, 0.011]],
+         "axis": [0.0, 0.0, 1.0],
+         "origin": [1.91, 0.0, -0.5]
+       }
      ],
-     "plane": "xy",
-     "from": -0.497,
-     "to": 0.497,
-     "member": "housing",
-     "part": "member"
-    },
-    {
-     "id": "end-rail-lower",
-     "kind": "extrude",
-     "bone": "housing",
-     "material": "anodised-aluminium",
-     "role": "body",
-     "tone": 0.35,
-     "profile": [
-      [
-       1.6385,
-       0.0
-      ],
-      [
-       1.6385,
-       0.0953
-      ],
-      [
-       1.6235,
-       0.0953
-      ],
-      [
-       1.6235,
-       0.0938
-      ],
-      [
-       1.637,
-       0.0938
-      ],
-      [
-       1.637,
-       0.0
-      ]
+     "thermal": [
+       {
+         "id": "th-absorber-plume-outlet",
+         "kind": "box",
+         "bone": "glass",
+         "material": "solar-glass",
+         "role": "body",
+         "tone": 0.9,
+         "size": [0.19, 0.075, 0.5],
+         "transform": {
+           "translation": [0.11, -0.0324, 0.0]
+         },
+         "region": "absorber",
+         "tags": ["absorber-plume"]
+       },
+       {
+         "id": "th-rail-left",
+         "of": "rail-left",
+         "region": "stand"
+       },
+       {
+         "id": "th-rail-right",
+         "of": "rail-right",
+         "region": "stand"
+       },
+       {
+         "id": "th-post-rear-left",
+         "of": "post-rear-left",
+         "region": "stand"
+       },
+       {
+         "id": "th-post-rear-right",
+         "of": "post-rear-right",
+         "region": "stand"
+       },
+       {
+         "id": "th-post-front-left",
+         "of": "post-front-left",
+         "region": "stand"
+       },
+       {
+         "id": "th-post-front-right",
+         "of": "post-front-right",
+         "region": "stand"
+       },
+       {
+         "id": "th-knee-left",
+         "of": "knee-left",
+         "region": "stand"
+       },
+       {
+         "id": "th-knee-right",
+         "of": "knee-right",
+         "region": "stand"
+       },
+       {
+         "id": "th-cleat-rear",
+         "of": "cleat-rear",
+         "region": "stand"
+       },
+       {
+         "id": "th-cleat-front",
+         "of": "cleat-front",
+         "region": "stand"
+       },
+       {
+         "id": "th-brace-rising-left",
+         "of": "brace-rising-left",
+         "region": "stand"
+       },
+       {
+         "id": "th-brace-rising-right",
+         "of": "brace-rising-right",
+         "region": "stand"
+       },
+       {
+         "id": "th-bolt-brace-rising-left",
+         "of": "bolt-brace-rising-left",
+         "region": "stand"
+       },
+       {
+         "id": "th-bolt-brace-rising-right",
+         "of": "bolt-brace-rising-right",
+         "region": "stand"
+       },
+       {
+         "id": "th-tray",
+         "of": "tray",
+         "region": "housing"
+       },
+       {
+         "id": "th-tray-side-left",
+         "of": "tray-side-left",
+         "region": "housing"
+       },
+       {
+         "id": "th-tray-side-right",
+         "of": "tray-side-right",
+         "region": "housing"
+       },
+       {
+         "id": "th-insulation",
+         "of": "insulation",
+         "region": "housing"
+       },
+       {
+         "id": "th-glass",
+         "of": "glass",
+         "region": "glazing"
+       },
+       {
+         "id": "th-working-absorber",
+         "of": "absorber",
+         "region": "absorber"
+       },
+       {
+         "id": "th-header-upper",
+         "of": "header-upper",
+         "region": "header-upper"
+       },
+       {
+         "id": "th-header-lower",
+         "of": "header-lower",
+         "region": "header-lower"
+       }
      ],
-     "plane": "xy",
-     "from": -0.497,
-     "to": 0.497,
-     "member": "housing",
-     "part": "member"
-    },
-    {
-     "id": "st-glass",
-     "of": "glass",
-     "member": "glass",
-     "part": "member"
-    },
-    {
-     "id": "st-absorber",
-     "of": "absorber",
-     "member": "absorber",
-     "part": "member"
-    },
-    {
-     "id": "st-header-upper",
-     "of": "header-upper",
-     "member": "headers",
-     "part": "member"
-    },
-    {
-     "id": "st-header-lower",
-     "of": "header-lower",
-     "member": "headers",
-     "part": "member"
-    },
-    {
-     "id": "st-cleat-rear",
-     "of": "cleat-rear",
-     "member": "housing",
-     "part": "joint"
-    },
-    {
-     "id": "st-cleat-front",
-     "of": "cleat-front",
-     "member": "housing",
-     "part": "joint"
-    },
-    {
-     "id": "st-bolt-foot-right",
-     "of": "bolt-foot-right",
-     "member": "stand",
-     "part": "joint"
-    },
-    {
-     "id": "st-bolt-foot-left",
-     "of": "bolt-foot-left",
-     "member": "stand",
-     "part": "joint"
-    },
-    {
-     "id": "st-bolt-knee-right",
-     "of": "bolt-knee-right",
-     "member": "stand",
-     "part": "joint"
-    },
-    {
-     "id": "st-bolt-knee-left",
-     "of": "bolt-knee-left",
-     "member": "stand",
-     "part": "joint"
-    },
-    {
-     "id": "st-riser-end-upper",
-     "of": "riser-end-upper",
-     "member": "absorber",
-     "part": "joint"
-    },
-    {
-     "id": "st-riser-end-lower",
-     "of": "riser-end-lower",
-     "member": "absorber",
-     "part": "joint"
-    },
-    {
-     "id": "st-collar-upper",
-     "of": "collar-upper",
-     "member": "headers",
-     "part": "joint"
-    },
-    {
-     "id": "st-collar-lower",
-     "of": "collar-lower",
-     "member": "headers",
-     "part": "joint"
-    },
-    {
-     "id": "mass-housing",
-     "kind": "revolve",
-     "bone": "housing",
-     "material": "anodised-aluminium",
-     "role": "body",
-     "tone": 0.35,
-     "profile": [
-      [
-       0.0,
-       0.09
-      ],
-      [
-       0.03,
-       0.09
-      ]
+     "structure": [
+       {
+         "id": "frame-ring",
+         "kind": "extrude",
+         "bone": "housing",
+         "material": "anodised-aluminium",
+         "role": "body",
+         "tone": 0.35,
+         "profile": [[-0.5, -0.36], [0.5, -0.36], [0.5, 1.64], [-0.5, 1.64]],
+         "plane": "zx",
+         "holes": [
+           [[-0.425, -0.285], [0.425, -0.285], [0.425, 1.565], [-0.425, 1.565]]
+         ],
+         "from": 0.0,
+         "to": 0.1,
+         "member": "housing",
+         "part": "member"
+       },
+       {
+         "id": "riser",
+         "kind": "revolve",
+         "bone": "absorber",
+         "material": "copper",
+         "role": "body",
+         "tone": 0.55,
+         "profile": [[0.0, 0.005], [1.91, 0.005]],
+         "axis": [1.0, 0.0, 0.0],
+         "origin": [-0.015, -0.0051, -0.4],
+         "slender": true,
+         "repeat": {
+           "count": 3,
+           "translation": [0.0, 0.0, 0.4]
+         },
+         "member": "absorber",
+         "part": "member"
+       },
+       {
+         "id": "mass-collector",
+         "kind": "box",
+         "bone": "housing",
+         "material": "anodised-aluminium",
+         "role": "body",
+         "tone": 0.4,
+         "size": [0.3, 0.075, 0.3],
+         "transform": {
+           "translation": [0.64, 0.05, 0.0]
+         },
+         "member": "housing",
+         "part": "mass"
+       },
+       {
+         "id": "mass-stand",
+         "kind": "box",
+         "bone": "stand",
+         "material": "galvanised-steel",
+         "role": "body",
+         "tone": 0.5,
+         "size": [0.085, 0.2, 0.085],
+         "transform": {
+           "translation": [0.19706, 0.6, -0.4125]
+         },
+         "repeat": {
+           "count": 2,
+           "translation": [0.0, 0.0, 0.825]
+         },
+         "member": "stand",
+         "part": "mass"
+       },
+       {
+         "id": "base-contact-pad",
+         "kind": "box",
+         "bone": "stand",
+         "material": "galvanised-steel",
+         "role": "body",
+         "tone": 0.5,
+         "size": [1.5, 0.08, 0.085],
+         "transform": {
+           "translation": [0.75, 0.04, -0.4125]
+         },
+         "repeat": {
+           "count": 2,
+           "translation": [0.0, 0.0, 0.825]
+         },
+         "member": "stand",
+         "part": "support",
+         "anchor": "base-contact"
+       },
+       {
+         "id": "st-rail-left",
+         "of": "rail-left",
+         "member": "stand",
+         "part": "member"
+       },
+       {
+         "id": "st-rail-right",
+         "of": "rail-right",
+         "member": "stand",
+         "part": "member"
+       },
+       {
+         "id": "st-post-rear-left",
+         "of": "post-rear-left",
+         "member": "stand",
+         "part": "member"
+       },
+       {
+         "id": "st-post-rear-right",
+         "of": "post-rear-right",
+         "member": "stand",
+         "part": "member"
+       },
+       {
+         "id": "st-post-front-left",
+         "of": "post-front-left",
+         "member": "stand",
+         "part": "member"
+       },
+       {
+         "id": "st-post-front-right",
+         "of": "post-front-right",
+         "member": "stand",
+         "part": "member"
+       },
+       {
+         "id": "st-knee-left",
+         "of": "knee-left",
+         "member": "stand",
+         "part": "member"
+       },
+       {
+         "id": "st-knee-right",
+         "of": "knee-right",
+         "member": "stand",
+         "part": "member"
+       },
+       {
+         "id": "st-brace-rising-left",
+         "of": "brace-rising-left",
+         "member": "stand",
+         "part": "member"
+       },
+       {
+         "id": "st-brace-rising-right",
+         "of": "brace-rising-right",
+         "member": "stand",
+         "part": "member"
+       },
+       {
+         "id": "st-cleat-rear",
+         "of": "cleat-rear",
+         "member": "housing",
+         "part": "joint"
+       },
+       {
+         "id": "st-cleat-front",
+         "of": "cleat-front",
+         "member": "housing",
+         "part": "joint"
+       },
+       {
+         "id": "st-bolt-brace-rising-left",
+         "of": "bolt-brace-rising-left",
+         "member": "stand",
+         "part": "joint"
+       },
+       {
+         "id": "st-bolt-brace-rising-right",
+         "of": "bolt-brace-rising-right",
+         "member": "stand",
+         "part": "joint"
+       },
+       {
+         "id": "st-glass",
+         "of": "glass",
+         "member": "glass",
+         "part": "member"
+       },
+       {
+         "id": "st-header-upper",
+         "of": "header-upper",
+         "member": "headers",
+         "part": "member"
+       },
+       {
+         "id": "st-header-lower",
+         "of": "header-lower",
+         "member": "headers",
+         "part": "member"
+       }
      ],
-     "axis": [
-      0.0,
-      1.0,
-      0.0
-     ],
-     "origin": [
-      0.64,
-      0.008,
-      0.0
-     ],
-     "member": "housing",
-     "part": "mass"
-    },
-    {
-     "id": "mass-glass",
-     "kind": "revolve",
-     "bone": "glass",
-     "material": "solar-glass",
-     "role": "body",
-     "tone": 0.92,
-     "profile": [
-      [
-       0.0,
-       0.13
-      ],
-      [
-       0.0075,
-       0.13
-      ]
-     ],
-     "axis": [
-      0.0,
-      1.0,
-      0.0
-     ],
-     "origin": [
-      0.995,
-      -0.00375,
-      0.0
-     ],
-     "member": "glass",
-     "part": "mass"
-    },
-    {
-     "id": "mass-absorber",
-     "kind": "revolve",
-     "bone": "absorber",
-     "material": "selective-absorber",
-     "role": "body",
-     "tone": 0.2,
-     "profile": [
-      [
-       0.0,
-       0.1
-      ],
-      [
-       0.0101,
-       0.1
-      ]
-     ],
-     "axis": [
-      0.0,
-      1.0,
-      0.0
-     ],
-     "origin": [
-      0.94,
-      -0.0101,
-      0.0
-     ],
-     "member": "absorber",
-     "part": "mass"
-    },
-    {
-     "id": "mass-headers",
-     "kind": "revolve",
-     "bone": "headers",
-     "material": "copper",
-     "role": "body",
-     "tone": 0.4,
-     "profile": [
-      [
-       0.0,
-       0.011
-      ],
-      [
-       0.0,
-       0.016
-      ],
-      [
-       0.08,
-       0.016
-      ],
-      [
-       0.08,
-       0.011
-      ],
-      [
-       0.0,
-       0.011
-      ]
-     ],
-     "axis": [
-      0.0,
-      0.0,
-      1.0
-     ],
-     "origin": [
-      0.0,
-      0.0,
-      -0.04
-     ],
-     "repeat": {
-      "count": 2,
-      "translation": [
-       1.91,
-       0.0,
-       0.0
-      ]
-     },
-     "member": "headers",
-     "part": "mass"
-    },
-    {
-     "id": "mass-stand-rear",
-     "kind": "box",
-     "bone": "stand",
-     "material": "galvanised-steel",
-     "role": "body",
-     "tone": 0.5,
-     "size": [
-      0.025,
-      0.14,
-      0.025
-     ],
-     "transform": {
-      "translation": [
-       0.19706,
-       0.6,
-       -0.4375
-      ]
-     },
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0.0,
-       0.0,
-       0.875
-      ]
-     },
-     "member": "stand",
-     "part": "mass"
-    },
-    {
-     "id": "mass-stand-rail",
-     "kind": "box",
-     "bone": "stand",
-     "material": "galvanised-steel",
-     "role": "body",
-     "tone": 0.5,
-     "size": [
-      0.14,
-      0.025,
-      0.025
-     ],
-     "transform": {
-      "translation": [
-       0.66,
-       0.0125,
-       -0.4375
-      ]
-     },
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0.0,
-       0.0,
-       0.875
-      ]
-     },
-     "member": "stand",
-     "part": "mass"
-    },
-    {
-     "id": "mass-stand-front",
-     "kind": "box",
-     "bone": "stand",
-     "material": "galvanised-steel",
-     "role": "body",
-     "tone": 0.5,
-     "size": [
-      0.025,
-      0.06,
-      0.025
-     ],
-     "transform": {
-      "translation": [
-       1.24557,
-       0.18,
-       -0.4375
-      ]
-     },
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0.0,
-       0.0,
-       0.875
-      ]
-     },
-     "member": "stand",
-     "part": "mass"
-    },
-    {
-     "id": "base-contact-pad",
-     "kind": "box",
-     "bone": "stand",
-     "material": "galvanised-steel",
-     "role": "body",
-     "tone": 0.5,
-     "size": [
-      1.5,
-      0.0075,
-      0.029
-     ],
-     "transform": {
-      "translation": [
-       0.75,
-       0.00375,
-       -0.4375
-      ]
-     },
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0.0,
-       0.0,
-       0.875
-      ]
-     },
-     "member": "stand",
-     "part": "support",
-     "anchor": "base-contact"
-    }
-   ],
-   "decisions": [
-    {
-     "en": "Body, built like the real collector in the frame of the housing bone (u down the slope from the upper cleat, v out of the aperture, w across): a folded 1.5 mm aluminium tray (floor and end walls in one section, two side walls, a 15 mm glass ledge all round), a clamping cover angle on each edge (20 mm top leg, 12 mm skirt), 58 mm mineral wool with a recessed channel under each header, a 3.2 mm solar glass pane of 1.99 m by 0.99 m on the ledge, and behind a 25 mm air gap the harp: a 0.5 mm selective sheet of 1.88 m by 0.91 m welded along nine 10 mm copper risers at 100 mm pitch (one fin-and-tube section) that end in two 22 mm headers; the headers end flush with the frame in four connection sockets. The stand is cold-formed galvanised 25 x 25 x 2 mm angle: two base rails, a rear and a front post per rail, a knee brace from each rear post to its rail, a folded 3 mm cleat (one leg on the post, one under the tray back) at each post top, two crossed 20 x 2 mm flat braces between the rear posts and M8 bolts at feet, knee braces, cleats and cross braces. Every sheet keeps its real thickness.",
-     "de": "Körper, gebaut wie der echte Kollektor im Bezugssystem des Wannenknochens (u die Schräge hinab ab der oberen Konsole, v aus der Apertur heraus, w quer): eine gekantete 1,5-mm-Aluminiumwanne (Boden und Stirnwände in einem Profil, zwei Seitenwände, umlaufend 15 mm Glasauflage), an jeder Kante ein klemmender Abdeckwinkel (20 mm Deckschenkel, 12 mm Schürze), 58 mm Mineralwolle mit einer vertieften Rinne unter jedem Sammler, eine 3,2 mm dicke Solarglasscheibe von 1,99 m mal 0,99 m auf der Auflage und hinter 25 mm Luftspalt die Harfe: ein 0,5 mm dickes selektives Blech von 1,88 m mal 0,91 m verschweißt mit neun 10-mm-Kupfersteigrohren im Abstand von 100 mm (ein Blech-Rohr-Profil), die in zwei 22-mm-Sammlern enden; die Sammler enden bündig mit dem Rahmen in vier Anschlussmuffen. Das Gestell besteht aus kaltgeformtem verzinktem Winkel 25 x 25 x 2 mm: zwei Fußschienen, je Schiene ein hinterer und ein vorderer Pfosten, je hinterem Pfosten eine Kopfstrebe zur Schiene, an jedem Pfostenkopf eine gekantete 3-mm-Konsole (ein Schenkel am Pfosten, einer unter dem Wannenrücken), zwei gekreuzte Flachstahlstreben 20 x 2 mm zwischen den hinteren Pfosten und M8-Schrauben an Füßen, Kopfstreben, Konsolen und Kreuzstreben. Jedes Blech behält seine wahre Dicke."
-    },
-    {
-     "en": "Thermal: every region is the set of body solids that carry its surface (housing: tray, cover angles and mineral wool; glazing: the pane; absorber: sheet and risers; one region per header with its sockets; stand: every steel part); each region has one layer, so no nested shells exist. The plume outlet is a 0.19 m by 0.5 m patch of one smallest feature in the glass below the upper cover leg, where the warm boundary layer leaves the pane. Structure: the real load path. The pane rests on the ledge of four frame rails (the two side walls and two end rails; the floor sheet and the wool carry nothing and are absent), the harp spans from header to header, the headers hang in their sockets; four cleats pass the collector to the posts, the knee braces triangulate the rear posts with the rails, the crossed flats brace the rear posts sideways, and two contact strips under the rails carry the anchor base-contact. Masses are discs in the wool, the pane and the riser plane, two sleeves on the headers and three lumps per side frame placed so that their centroid is the centre of mass of the stand.",
-     "de": "Thermik: Jede Region ist die Menge der Körper, die ihre Oberfläche tragen (housing: Wanne, Abdeckwinkel und Mineralwolle; glazing: die Scheibe; absorber: Blech und Steigrohre; je Sammler eine Region samt Muffen; stand: jedes Stahlteil); jede Region hat eine Schicht, daher gibt es keine verschachtelten Schalen. Der Fahnenauslass ist ein Feld von 0,19 m mal 0,5 m und einer kleinsten Einzelheit Dicke im Glas unter dem oberen Deckschenkel, wo die warme Grenzschicht die Scheibe verlässt. Tragwerk: der echte Lastpfad. Die Scheibe liegt auf der Auflage von vier Rahmenholmen (die beiden Seitenwände und zwei Stirnholme; Bodenblech und Wolle tragen nichts und fehlen), die Harfe spannt von Sammler zu Sammler, die Sammler hängen in ihren Muffen; vier Konsolen geben den Kollektor an die Pfosten ab, die Kopfstreben bilden mit hinteren Pfosten und Schienen Dreiecke, die gekreuzten Flachstähle steifen die hinteren Pfosten seitlich aus, und zwei Kontaktstreifen unter den Schienen tragen den Anker base-contact. Massen sind Scheiben in der Wolle, in der Glasscheibe und in der Steigrohrebene, zwei Hülsen auf den Sammlern und je Seitenrahmen drei Klumpen, deren Schwerpunkt der Massenmittelpunkt des Gestells ist."
-    }
-   ]
-  },
-  "100": {
-   "status": "authored",
-   "denominator": 100,
-   "body": [
-    {
-     "id": "rail",
-     "kind": "box",
-     "bone": "stand",
-     "material": "galvanised-steel",
-     "role": "body",
-     "tone": 0.5,
-     "size": [
-      1.5,
-      0.025,
-      0.025
-     ],
-     "transform": {
-      "translation": [
-       0.75,
-       0.0125,
-       -0.4375
-      ]
-     },
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0.0,
-       0.0,
-       0.875
-      ]
-     }
-    },
-    {
-     "id": "post-rear",
-     "kind": "extrude",
-     "bone": "stand",
-     "material": "galvanised-steel",
-     "role": "body",
-     "tone": 0.5,
-     "profile": [
-      [
-       0.18456,
-       0.025
-      ],
-      [
-       0.20956,
-       0.025
-      ],
-      [
-       0.20956,
-       1.11192
-      ],
-      [
-       0.18456,
-       1.12942
-      ]
-     ],
-     "plane": "xy",
-     "from": -0.45,
-     "to": -0.425,
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0.0,
-       0.0,
-       0.875
-      ]
-     }
-    },
-    {
-     "id": "post-front",
-     "kind": "extrude",
-     "bone": "stand",
-     "material": "galvanised-steel",
-     "role": "body",
-     "tone": 0.5,
-     "profile": [
-      [
-       1.23307,
-       0.025
-      ],
-      [
-       1.25807,
-       0.025
-      ],
-      [
-       1.25807,
-       0.37774
-      ],
-      [
-       1.23307,
-       0.39525
-      ]
-     ],
-     "plane": "xy",
-     "from": -0.45,
-     "to": -0.425,
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0.0,
-       0.0,
-       0.875
-      ]
-     }
-    },
-    {
-     "id": "knee",
-     "kind": "box",
-     "bone": "stand",
-     "material": "galvanised-steel",
-     "role": "body",
-     "tone": 0.5,
-     "size": [
-      0.44866,
-      0.025,
-      0.025
-     ],
-     "transform": {
-      "translation": [
-       0.35856,
-       0.17125,
-       -0.4375
-      ],
-      "rotation": [
-       0.0,
-       0.0,
-       0.92373,
-       0.38305
-      ]
-     },
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0.0,
-       0.0,
-       0.875
-      ]
-     }
-    },
-    {
-     "id": "brace-rising-left",
-     "kind": "box",
-     "bone": "stand",
-     "material": "galvanised-steel",
-     "role": "body",
-     "tone": 0.5,
-     "size": [
-      0.002,
-      1.18925,
-      0.02
-     ],
-     "transform": {
-      "translation": [
-       0.18356,
-       0.605,
-       0.0
-      ],
-      "rotation": [
-       0.40271,
-       0.0,
-       0.0,
-       0.91533
-      ]
-     },
-     "slender": true
-    },
-    {
-     "id": "brace-rising-right",
-     "kind": "box",
-     "bone": "stand",
-     "material": "galvanised-steel",
-     "role": "body",
-     "tone": 0.5,
-     "size": [
-      0.002,
-      1.18925,
-      0.02
-     ],
-     "transform": {
-      "translation": [
-       0.21056,
-       0.605,
-       0.0
-      ],
-      "rotation": [
-       -0.40271,
-       0.0,
-       0.0,
-       0.91533
-      ]
-     },
-     "slender": true
-    },
-    {
-     "id": "tray",
-     "kind": "extrude",
-     "bone": "housing",
-     "material": "anodised-aluminium",
-     "role": "body",
-     "tone": 0.35,
-     "profile": [
-      [
-       -0.36,
-       0.0
-      ],
-      [
-       1.64,
-       0.0
-      ],
-      [
-       1.64,
-       0.1
-      ],
-      [
-       1.62,
-       0.1
-      ],
-      [
-       1.62,
-       0.0985
-      ],
-      [
-       1.6385,
-       0.0985
-      ],
-      [
-       1.6385,
-       0.0015
-      ],
-      [
-       -0.3585,
-       0.0015
-      ],
-      [
-       -0.3585,
-       0.0985
-      ],
-      [
-       -0.34,
-       0.0985
-      ],
-      [
-       -0.34,
-       0.1
-      ],
-      [
-       -0.36,
-       0.1
-      ]
-     ],
-     "plane": "xy",
-     "from": -0.4985,
-     "to": 0.4985
-    },
-    {
-     "id": "tray-side-left",
-     "kind": "extrude",
-     "bone": "housing",
-     "material": "anodised-aluminium",
-     "role": "body",
-     "tone": 0.35,
-     "profile": [
-      [
-       0.0015,
-       0.4985
-      ],
-      [
-       0.0015,
-       0.5
-      ],
-      [
-       0.1,
-       0.5
-      ],
-      [
-       0.1,
-       0.48
-      ],
-      [
-       0.0985,
-       0.48
-      ],
-      [
-       0.0985,
-       0.4985
-      ]
-     ],
-     "plane": "yz",
-     "from": -0.36,
-     "to": 1.64
-    },
-    {
-     "id": "tray-side-right",
-     "kind": "extrude",
-     "bone": "housing",
-     "material": "anodised-aluminium",
-     "role": "body",
-     "tone": 0.35,
-     "profile": [
-      [
-       0.0015,
-       -0.4985
-      ],
-      [
-       0.0015,
-       -0.5
-      ],
-      [
-       0.1,
-       -0.5
-      ],
-      [
-       0.1,
-       -0.48
-      ],
-      [
-       0.0985,
-       -0.48
-      ],
-      [
-       0.0985,
-       -0.4985
-      ]
-     ],
-     "plane": "yz",
-     "from": -0.36,
-     "to": 1.64
-    },
-    {
-     "id": "insulation",
-     "kind": "box",
-     "bone": "housing",
-     "material": "mineral-wool",
-     "role": "body",
-     "tone": 0.8,
-     "size": [
-      1.997,
-      0.0523,
-      0.997
-     ],
-     "transform": {
-      "translation": [
-       0.64,
-       0.02765,
-       0.0
-      ]
-     }
-    },
-    {
-     "id": "glass",
-     "kind": "box",
-     "bone": "glass",
-     "material": "solar-glass",
-     "role": "glazing",
-     "tone": 0.92,
-     "size": [
-      1.997,
-      0.0032,
-      0.997
-     ],
-     "transform": {
-      "translation": [
-       0.995,
-       0.0,
-       0.0
-      ]
-     }
-    },
-    {
-     "id": "absorber-plate",
-     "kind": "box",
-     "bone": "absorber",
-     "material": "selective-absorber",
-     "role": "body",
-     "tone": 0.2,
-     "size": [
-      1.88,
-      0.0164,
-      0.91
-     ],
-     "transform": {
-      "translation": [
-       0.94,
-       -0.00795,
-       0.0
-      ]
-     }
-    },
-    {
-     "id": "header-upper",
-     "kind": "revolve",
-     "bone": "headers",
-     "material": "copper",
-     "role": "body",
-     "tone": 0.4,
-     "profile": [
-      [
-       0.0,
-       0.011
-      ],
-      [
-       0.997,
-       0.011
-      ]
-     ],
-     "axis": [
-      0.0,
-      0.0,
-      1.0
-     ],
-     "origin": [
-      0.0,
-      0.0,
-      -0.4985
+     "decisions": [
+       {
+         "en": "Two 2 × 20 mm steel straps cross behind the collector. Their ends bolt to the posts. Side knees join the real base channels and posts, with cleats carrying the reactions into the feet.",
+         "de": "Zwei Stahlbänder 2 × 20 mm kreuzen sich hinter dem Kollektor. Ihre Enden sind an den Stützen verschraubt. Seitliche Kniebleche verbinden Fußschienen und Stützen; Laschen übertragen die Auflagerkräfte."
+       },
+       {
+         "en": "The collector contains 3.2 mm glazing, the embossed absorber, mineral-wool backing and two copper headers inside the 1.5 mm folded tray. The smaller scales simplify the bend radius stations and edge trims.",
+         "de": "Im 1,5-mm-Blechgehäuse liegen 3,2-mm-Glas, geprägter Absorber, Mineralwolle und zwei Kupfersammler. In den kleineren Maßstäben sind die Biegeradien und die Kanteneinfassungen vereinfacht."
+       }
      ]
-    },
-    {
-     "id": "header-lower",
-     "kind": "revolve",
-     "bone": "headers",
-     "material": "copper",
-     "role": "body",
-     "tone": 0.4,
-     "profile": [
-      [
-       0.0,
-       0.011
-      ],
-      [
-       0.997,
-       0.011
-      ]
-     ],
-     "axis": [
-      0.0,
-      0.0,
-      1.0
-     ],
-     "origin": [
-      1.91,
-      0.0,
-      -0.4985
-     ]
-    }
-   ],
-   "thermal": [
-    {
-     "id": "th-rail",
-     "of": "rail",
-     "region": "stand"
-    },
-    {
-     "id": "th-post-rear",
-     "of": "post-rear",
-     "region": "stand"
-    },
-    {
-     "id": "th-post-front",
-     "of": "post-front",
-     "region": "stand"
-    },
-    {
-     "id": "th-knee",
-     "of": "knee",
-     "region": "stand"
-    },
-    {
-     "id": "th-brace-rising-left",
-     "of": "brace-rising-left",
-     "region": "stand"
-    },
-    {
-     "id": "th-brace-rising-right",
-     "of": "brace-rising-right",
-     "region": "stand"
-    },
-    {
-     "id": "th-tray",
-     "of": "tray",
-     "region": "housing"
-    },
-    {
-     "id": "th-tray-side-left",
-     "of": "tray-side-left",
-     "region": "housing"
-    },
-    {
-     "id": "th-tray-side-right",
-     "of": "tray-side-right",
-     "region": "housing"
-    },
-    {
-     "id": "th-insulation",
-     "of": "insulation",
-     "region": "housing"
-    },
-    {
-     "id": "th-glass",
-     "of": "glass",
-     "region": "glazing"
-    },
-    {
-     "id": "th-absorber-plate",
-     "of": "absorber-plate",
-     "region": "absorber"
-    },
-    {
-     "id": "th-header-upper",
-     "of": "header-upper",
-     "region": "header-upper"
-    },
-    {
-     "id": "th-header-lower",
-     "of": "header-lower",
-     "region": "header-lower"
-    },
-    {
-     "id": "th-absorber-plume-outlet",
-     "kind": "box",
-     "bone": "glass",
-     "material": "solar-glass",
-     "role": "body",
-     "tone": 0.9,
-     "size": [
-      0.19,
-      0.015,
-      0.5
-     ],
-     "transform": {
-      "translation": [
-       0.11,
-       -0.0044,
-       0.0
-      ]
-     },
-     "region": "absorber",
-     "tags": [
-      "absorber-plume"
-     ]
-    }
-   ],
-   "structure": [
-    {
-     "id": "st-rail",
-     "of": "rail",
-     "member": "stand",
-     "part": "member"
-    },
-    {
-     "id": "st-post-rear",
-     "of": "post-rear",
-     "member": "stand",
-     "part": "member"
-    },
-    {
-     "id": "st-post-front",
-     "of": "post-front",
-     "member": "stand",
-     "part": "member"
-    },
-    {
-     "id": "st-knee",
-     "of": "knee",
-     "member": "stand",
-     "part": "member"
-    },
-    {
-     "id": "st-brace-rising-left",
-     "of": "brace-rising-left",
-     "member": "stand",
-     "part": "member"
-    },
-    {
-     "id": "st-brace-rising-right",
-     "of": "brace-rising-right",
-     "member": "stand",
-     "part": "member"
-    },
-    {
-     "id": "frame",
-     "kind": "extrude",
-     "bone": "housing",
-     "material": "anodised-aluminium",
-     "role": "body",
-     "tone": 0.35,
-     "profile": [
-      [
-       -0.5,
-       -0.36
-      ],
-      [
-       0.5,
-       -0.36
-      ],
-      [
-       0.5,
-       1.64
-      ],
-      [
-       -0.5,
-       1.64
-      ]
-     ],
-     "plane": "zx",
-     "holes": [
-      [
-       [
-        -0.4985,
-        -0.3585
-       ],
-       [
-        0.4985,
-        -0.3585
-       ],
-       [
-        0.4985,
-        1.6385
-       ],
-       [
-        -0.4985,
-        1.6385
-       ]
-      ]
-     ],
-     "from": 0.0,
-     "to": 0.0953,
-     "member": "housing",
-     "part": "member"
-    },
-    {
-     "id": "st-glass",
-     "of": "glass",
-     "member": "glass",
-     "part": "member"
-    },
-    {
-     "id": "st-header-upper",
-     "of": "header-upper",
-     "member": "headers",
-     "part": "member"
-    },
-    {
-     "id": "st-header-lower",
-     "of": "header-lower",
-     "member": "headers",
-     "part": "member"
-    },
-    {
-     "id": "riser",
-     "kind": "revolve",
-     "bone": "absorber",
-     "material": "copper",
-     "role": "body",
-     "tone": 0.55,
-     "profile": [
-      [
-       0.0,
-       0.005
-      ],
-      [
-       1.91,
-       0.005
-      ]
-     ],
-     "axis": [
-      1.0,
-      0.0,
-      0.0
-     ],
-     "origin": [
-      -0.015,
-      -0.0051,
-      -0.4
-     ],
-     "slender": true,
-     "repeat": {
-      "count": 9,
-      "translation": [
-       0.0,
-       0.0,
-       0.1
-      ]
-     },
-     "member": "absorber",
-     "part": "member"
-    },
-    {
-     "id": "joint-foot-rear",
-     "kind": "box",
-     "bone": "stand",
-     "material": "galvanised-steel",
-     "role": "body",
-     "tone": 0.5,
-     "size": [
-      0.035,
-      0.035,
-      0.035
-     ],
-     "transform": {
-      "translation": [
-       0.19706,
-       0.025,
-       -0.4375
-      ]
-     },
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0.0,
-       0.0,
-       0.875
-      ]
-     },
-     "member": "stand",
-     "part": "joint"
-    },
-    {
-     "id": "joint-foot-front",
-     "kind": "box",
-     "bone": "stand",
-     "material": "galvanised-steel",
-     "role": "body",
-     "tone": 0.5,
-     "size": [
-      0.035,
-      0.035,
-      0.035
-     ],
-     "transform": {
-      "translation": [
-       1.24557,
-       0.025,
-       -0.4375
-      ]
-     },
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0.0,
-       0.0,
-       0.875
-      ]
-     },
-     "member": "stand",
-     "part": "joint"
-    },
-    {
-     "id": "joint-cleat-rear",
-     "kind": "box",
-     "bone": "stand",
-     "material": "galvanised-steel",
-     "role": "body",
-     "tone": 0.5,
-     "size": [
-      0.035,
-      0.035,
-      0.035
-     ],
-     "transform": {
-      "translation": [
-       0.19706,
-       1.10317,
-       -0.4375
-      ]
-     },
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0.0,
-       0.0,
-       0.875
-      ]
-     },
-     "member": "stand",
-     "part": "joint"
-    },
-    {
-     "id": "joint-cleat-front",
-     "kind": "box",
-     "bone": "stand",
-     "material": "galvanised-steel",
-     "role": "body",
-     "tone": 0.5,
-     "size": [
-      0.035,
-      0.035,
-      0.035
-     ],
-     "transform": {
-      "translation": [
-       1.24557,
-       0.369,
-       -0.4375
-      ]
-     },
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0.0,
-       0.0,
-       0.875
-      ]
-     },
-     "member": "stand",
-     "part": "joint"
-    },
-    {
-     "id": "mass-housing",
-     "kind": "revolve",
-     "bone": "housing",
-     "material": "anodised-aluminium",
-     "role": "body",
-     "tone": 0.35,
-     "profile": [
-      [
-       0.0,
-       0.09
-      ],
-      [
-       0.03,
-       0.09
-      ]
-     ],
-     "axis": [
-      0.0,
-      1.0,
-      0.0
-     ],
-     "origin": [
-      0.64,
-      0.008,
-      0.0
-     ],
-     "member": "housing",
-     "part": "mass"
-    },
-    {
-     "id": "mass-glass",
-     "kind": "revolve",
-     "bone": "glass",
-     "material": "solar-glass",
-     "role": "body",
-     "tone": 0.92,
-     "profile": [
-      [
-       0.0,
-       0.13
-      ],
-      [
-       0.015,
-       0.13
-      ]
-     ],
-     "axis": [
-      0.0,
-      1.0,
-      0.0
-     ],
-     "origin": [
-      0.995,
-      -0.0075,
-      0.0
-     ],
-     "member": "glass",
-     "part": "mass"
-    },
-    {
-     "id": "mass-absorber",
-     "kind": "revolve",
-     "bone": "absorber",
-     "material": "selective-absorber",
-     "role": "body",
-     "tone": 0.2,
-     "profile": [
-      [
-       0.0,
-       0.1
-      ],
-      [
-       0.0164,
-       0.1
-      ]
-     ],
-     "axis": [
-      0.0,
-      1.0,
-      0.0
-     ],
-     "origin": [
-      0.94,
-      -0.01615,
-      0.0
-     ],
-     "member": "absorber",
-     "part": "mass"
-    },
-    {
-     "id": "mass-headers",
-     "kind": "revolve",
-     "bone": "headers",
-     "material": "copper",
-     "role": "body",
-     "tone": 0.4,
-     "profile": [
-      [
-       0.0,
-       0.011
-      ],
-      [
-       0.0,
-       0.018
-      ],
-      [
-       0.08,
-       0.018
-      ],
-      [
-       0.08,
-       0.011
-      ],
-      [
-       0.0,
-       0.011
-      ]
-     ],
-     "axis": [
-      0.0,
-      0.0,
-      1.0
-     ],
-     "origin": [
-      0.0,
-      0.0,
-      -0.04
-     ],
-     "repeat": {
-      "count": 2,
-      "translation": [
-       1.91,
-       0.0,
-       0.0
-      ]
-     },
-     "member": "headers",
-     "part": "mass"
-    },
-    {
-     "id": "mass-stand-rear",
-     "kind": "box",
-     "bone": "stand",
-     "material": "galvanised-steel",
-     "role": "body",
-     "tone": 0.5,
-     "size": [
-      0.025,
-      0.14,
-      0.025
-     ],
-     "transform": {
-      "translation": [
-       0.19706,
-       0.6,
-       -0.4375
-      ]
-     },
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0.0,
-       0.0,
-       0.875
-      ]
-     },
-     "member": "stand",
-     "part": "mass"
-    },
-    {
-     "id": "mass-stand-rail",
-     "kind": "box",
-     "bone": "stand",
-     "material": "galvanised-steel",
-     "role": "body",
-     "tone": 0.5,
-     "size": [
-      0.14,
-      0.025,
-      0.025
-     ],
-     "transform": {
-      "translation": [
-       0.66,
-       0.0125,
-       -0.4375
-      ]
-     },
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0.0,
-       0.0,
-       0.875
-      ]
-     },
-     "member": "stand",
-     "part": "mass"
-    },
-    {
-     "id": "mass-stand-front",
-     "kind": "box",
-     "bone": "stand",
-     "material": "galvanised-steel",
-     "role": "body",
-     "tone": 0.5,
-     "size": [
-      0.025,
-      0.06,
-      0.025
-     ],
-     "transform": {
-      "translation": [
-       1.24557,
-       0.18,
-       -0.4375
-      ]
-     },
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0.0,
-       0.0,
-       0.875
-      ]
-     },
-     "member": "stand",
-     "part": "mass"
-    },
-    {
-     "id": "base-contact-pad",
-     "kind": "box",
-     "bone": "stand",
-     "material": "galvanised-steel",
-     "role": "body",
-     "tone": 0.5,
-     "size": [
-      1.5,
-      0.015,
-      0.029
-     ],
-     "transform": {
-      "translation": [
-       0.75,
-       0.0075,
-       -0.4375
-      ]
-     },
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0.0,
-       0.0,
-       0.875
-      ]
-     },
-     "member": "stand",
-     "part": "support",
-     "anchor": "base-contact"
-    }
-   ],
-   "decisions": [
-    {
-     "en": "Authored for the 15 mm feature: tray, ledge and cover angle merge into one 1.5 mm shell with 20 mm lips (one section across the width and two side walls), the pane reaches from wall to wall under the lips, the wool is one flat slab of 52 mm, sheet, risers and their bedding are one absorber plate of 16.5 mm, the headers stay 22 mm pipes between the walls (sockets, cleats and bolts are below the feature). The stand is solid 25 mm bars: per side a rail, two posts cut to the slope of the tray back and the knee brace; the crossed flats stay as slender parts at their true 20 x 2 mm.",
-     "de": "Für die Einzelheit von 15 mm verfasst: Wanne, Auflage und Abdeckwinkel gehen in einer 1,5 mm dicken Schale mit 20-mm-Lippen auf (ein Profil über die Breite und zwei Seitenwände), die Scheibe reicht unter den Lippen von Wand zu Wand, die Wolle ist eine ebene Platte von 52 mm, Blech, Steigrohre und ihre Bettung sind eine Absorberplatte von 16,5 mm, die Sammler bleiben 22-mm-Rohre zwischen den Wänden (Muffen, Konsolen und Schrauben liegen unter der Einzelheit). Das Gestell besteht aus vollen 25-mm-Stäben: je Seite eine Schiene, zwei auf die Schräge des Wannenrückens geschnittene Pfosten und die Kopfstrebe; die gekreuzten Flachstähle bleiben als schlanke Teile in wahrer Größe 20 x 2 mm."
-    },
-    {
-     "en": "Thermal: references to the body solids per region and the outlet patch on the glass. Structure: rails, posts, knee and cross braces, the frame ring of the tray walls, the pane, the nine risers at true size and the headers are the members; four foot and cleat nodes per side frame are the joints; discs in wool, pane and plate, two sleeves on the headers and three lumps per side frame are the masses; two contact strips are the support.",
-     "de": "Thermik: Verweise auf die Körper je Region und das Auslassfeld auf dem Glas. Tragwerk: Schienen, Pfosten, Kopf- und Kreuzstreben, der Rahmenring der Wannenwände, die Scheibe, die neun Steigrohre in wahrer Größe und die Sammler sind die Stäbe; je Seitenrahmen vier Fuß- und Konsolknoten sind die Gelenke; Scheiben in Wolle, Glas und Platte, zwei Hülsen auf den Sammlern und je Seitenrahmen drei Klumpen sind die Massen; zwei Kontaktstreifen sind das Auflager."
-    }
-   ]
-  },
-  "200": {
-   "status": "authored",
-   "denominator": 200,
-   "body": [
-    {
-     "id": "side-frame",
-     "kind": "extrude",
-     "bone": "stand",
-     "material": "galvanised-steel",
-     "role": "body",
-     "tone": 0.5,
-     "profile": [
-      [
-       0.0,
-       0.0
-      ],
-      [
-       1.5,
-       0.0
-      ],
-      [
-       1.5,
-       0.03
-      ],
-      [
-       1.26057,
-       0.03
-      ],
-      [
-       1.26057,
-       0.37599
-      ],
-      [
-       1.23057,
-       0.397
-      ],
-      [
-       1.23057,
-       0.03
-      ],
-      [
-       0.21206,
-       0.03
-      ],
-      [
-       0.21206,
-       1.11017
-      ],
-      [
-       0.18206,
-       1.13117
-      ],
-      [
-       0.18206,
-       0.03
-      ],
-      [
-       0.0,
-       0.03
-      ]
-     ],
-     "plane": "xy",
-     "from": -0.45,
-     "to": -0.42,
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0.0,
-       0.0,
-       0.87
-      ]
-     }
-    },
-    {
-     "id": "knee",
-     "kind": "box",
-     "bone": "stand",
-     "material": "galvanised-steel",
-     "role": "body",
-     "tone": 0.5,
-     "size": [
-      0.44866,
-      0.03,
-      0.03
-     ],
-     "transform": {
-      "translation": [
-       0.35856,
-       0.17125,
-       -0.435
-      ],
-      "rotation": [
-       0.0,
-       0.0,
-       0.92373,
-       0.38305
-      ]
-     },
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0.0,
-       0.0,
-       0.87
-      ]
-     }
-    },
-    {
-     "id": "tray",
-     "kind": "extrude",
-     "bone": "housing",
-     "material": "anodised-aluminium",
-     "role": "body",
-     "tone": 0.35,
-     "profile": [
-      [
-       -0.36,
-       0.0
-      ],
-      [
-       1.64,
-       0.0
-      ],
-      [
-       1.64,
-       0.1
-      ],
-      [
-       1.61,
-       0.1
-      ],
-      [
-       1.61,
-       0.04
-      ],
-      [
-       -0.33,
-       0.04
-      ],
-      [
-       -0.33,
-       0.1
-      ],
-      [
-       -0.36,
-       0.1
-      ]
-     ],
-     "plane": "xy",
-     "from": -0.47,
-     "to": 0.47
-    },
-    {
-     "id": "tray-side",
-     "kind": "box",
-     "bone": "housing",
-     "material": "anodised-aluminium",
-     "role": "body",
-     "tone": 0.35,
-     "size": [
-      2.0,
-      0.1,
-      0.03
-     ],
-     "transform": {
-      "translation": [
-       0.64,
-       0.05,
-       -0.485
-      ]
-     },
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0.0,
-       0.0,
-       0.97
-      ]
-     }
-    },
-    {
-     "id": "glass",
-     "kind": "box",
-     "bone": "glass",
-     "material": "solar-glass",
-     "role": "body",
-     "tone": 0.92,
-     "size": [
-      1.94,
-      0.03,
-      0.94
-     ],
-     "transform": {
-      "translation": [
-       0.995,
-       -0.0119,
-       0.0
-      ]
-     }
-    },
-    {
-     "id": "absorber",
-     "kind": "box",
-     "bone": "absorber",
-     "material": "selective-absorber",
-     "role": "body",
-     "tone": 0.2,
-     "size": [
-      1.86,
-      0.03,
-      0.91
-     ],
-     "transform": {
-      "translation": [
-       0.94,
-       -0.0149,
-       0.0
-      ]
-     }
-    },
-    {
-     "id": "header-upper",
-     "kind": "revolve",
-     "bone": "headers",
-     "material": "copper",
-     "role": "body",
-     "tone": 0.4,
-     "profile": [
-      [
-       0.0,
-       0.015
-      ],
-      [
-       0.94,
-       0.015
-      ]
-     ],
-     "axis": [
-      0.0,
-      0.0,
-      1.0
-     ],
-     "origin": [
-      0.01,
-      -0.0098,
-      -0.47
-     ]
-    },
-    {
-     "id": "header-lower",
-     "kind": "revolve",
-     "bone": "headers",
-     "material": "copper",
-     "role": "body",
-     "tone": 0.4,
-     "profile": [
-      [
-       0.0,
-       0.015
-      ],
-      [
-       0.94,
-       0.015
-      ]
-     ],
-     "axis": [
-      0.0,
-      0.0,
-      1.0
-     ],
-     "origin": [
-      1.9,
-      -0.0098,
-      -0.47
-     ]
-    }
-   ],
-   "thermal": [
-    {
-     "id": "th-side-frame",
-     "of": "side-frame",
-     "region": "stand"
-    },
-    {
-     "id": "th-knee",
-     "of": "knee",
-     "region": "stand"
-    },
-    {
-     "id": "th-tray",
-     "of": "tray",
-     "region": "housing"
-    },
-    {
-     "id": "th-tray-side",
-     "of": "tray-side",
-     "region": "housing"
-    },
-    {
-     "id": "th-glass",
-     "of": "glass",
-     "region": "glazing"
-    },
-    {
-     "id": "th-absorber",
-     "of": "absorber",
-     "region": "absorber"
-    },
-    {
-     "id": "th-header-upper",
-     "of": "header-upper",
-     "region": "header-upper"
-    },
-    {
-     "id": "th-header-lower",
-     "of": "header-lower",
-     "region": "header-lower"
-    },
-    {
-     "id": "th-absorber-plume-outlet",
-     "kind": "box",
-     "bone": "glass",
-     "material": "solar-glass",
-     "role": "body",
-     "tone": 0.9,
-     "size": [
-      0.19,
-      0.03,
-      0.5
-     ],
-     "transform": {
-      "translation": [
-       0.11,
-       -0.0099,
-       0.0
-      ]
-     },
-     "region": "absorber",
-     "tags": [
-      "absorber-plume"
-     ]
-    }
-   ],
-   "structure": [
-    {
-     "id": "st-side-frame",
-     "of": "side-frame",
-     "member": "stand",
-     "part": "member"
-    },
-    {
-     "id": "st-knee",
-     "of": "knee",
-     "member": "stand",
-     "part": "member"
-    },
-    {
-     "id": "brace-rising-left",
-     "kind": "box",
-     "bone": "stand",
-     "material": "galvanised-steel",
-     "role": "body",
-     "tone": 0.5,
-     "size": [
-      0.002,
-      1.18925,
-      0.02
-     ],
-     "transform": {
-      "translation": [
-       0.18106,
-       0.605,
-       0.0
-      ],
-      "rotation": [
-       0.40271,
-       0.0,
-       0.0,
-       0.91533
-      ]
-     },
-     "slender": true,
-     "member": "stand",
-     "part": "member"
-    },
-    {
-     "id": "brace-rising-right",
-     "kind": "box",
-     "bone": "stand",
-     "material": "galvanised-steel",
-     "role": "body",
-     "tone": 0.5,
-     "size": [
-      0.002,
-      1.18925,
-      0.02
-     ],
-     "transform": {
-      "translation": [
-       0.21306,
-       0.605,
-       0.0
-      ],
-      "rotation": [
-       -0.40271,
-       0.0,
-       0.0,
-       0.91533
-      ]
-     },
-     "slender": true,
-     "member": "stand",
-     "part": "member"
-    },
-    {
-     "id": "frame-ring",
-     "kind": "extrude",
-     "bone": "housing",
-     "material": "anodised-aluminium",
-     "role": "body",
-     "tone": 0.35,
-     "profile": [
-      [
-       -0.5,
-       -0.36
-      ],
-      [
-       0.5,
-       -0.36
-      ],
-      [
-       0.5,
-       1.64
-      ],
-      [
-       -0.5,
-       1.64
-      ]
-     ],
-     "plane": "zx",
-     "holes": [
-      [
-       [
-        -0.47,
-        -0.33
-       ],
-       [
-        0.47,
-        -0.33
-       ],
-       [
-        0.47,
-        1.61
-       ],
-       [
-        -0.47,
-        1.61
-       ]
-      ]
-     ],
-     "from": 0.0,
-     "to": 0.1,
-     "member": "housing",
-     "part": "member"
-    },
-    {
-     "id": "st-glass",
-     "of": "glass",
-     "member": "glass",
-     "part": "member"
-    },
-    {
-     "id": "st-header-upper",
-     "of": "header-upper",
-     "member": "headers",
-     "part": "member"
-    },
-    {
-     "id": "st-header-lower",
-     "of": "header-lower",
-     "member": "headers",
-     "part": "member"
-    },
-    {
-     "id": "riser",
-     "kind": "revolve",
-     "bone": "absorber",
-     "material": "copper",
-     "role": "body",
-     "tone": 0.55,
-     "profile": [
-      [
-       0.0,
-       0.005
-      ],
-      [
-       1.89,
-       0.005
-      ]
-     ],
-     "axis": [
-      1.0,
-      0.0,
-      0.0
-     ],
-     "origin": [
-      -0.005,
-      -0.0149,
-      -0.4
-     ],
-     "slender": true,
-     "repeat": {
-      "count": 9,
-      "translation": [
-       0.0,
-       0.0,
-       0.1
-      ]
-     },
-     "member": "absorber",
-     "part": "member"
-    },
-    {
-     "id": "mass-collector",
-     "kind": "box",
-     "bone": "housing",
-     "material": "anodised-aluminium",
-     "role": "body",
-     "tone": 0.35,
-     "size": [
-      0.3,
-      0.03,
-      0.3
-     ],
-     "transform": {
-      "translation": [
-       0.64,
-       0.055,
-       0.0
-      ]
-     },
-     "member": "housing",
-     "part": "mass"
-    },
-    {
-     "id": "mass-stand",
-     "kind": "box",
-     "bone": "stand",
-     "material": "galvanised-steel",
-     "role": "body",
-     "tone": 0.5,
-     "size": [
-      0.036,
-      0.2,
-      0.036
-     ],
-     "transform": {
-      "translation": [
-       0.19706,
-       0.6,
-       -0.435
-      ]
-     },
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0.0,
-       0.0,
-       0.87
-      ]
-     },
-     "member": "stand",
-     "part": "mass"
-    },
-    {
-     "id": "base-contact-pad",
-     "kind": "box",
-     "bone": "stand",
-     "material": "galvanised-steel",
-     "role": "body",
-     "tone": 0.5,
-     "size": [
-      1.5,
-      0.034,
-      0.034
-     ],
-     "transform": {
-      "translation": [
-       0.75,
-       0.017,
-       -0.435
-      ]
-     },
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0.0,
-       0.0,
-       0.87
-      ]
-     },
-     "member": "stand",
-     "part": "support",
-     "anchor": "base-contact"
-    }
-   ],
-   "decisions": [
-    {
-     "en": "Authored for the 30 mm feature: each side of the stand is one frame (rail and both posts merged, 30 mm thick) with a 30 mm knee bar; the collector is a tray with a 40 mm floor (sheet and wool) and 30 mm walls that holds a 30 mm absorber slab between two 30 mm header bars and a 30 mm glass slab flush with the rim (the air gap closes). The crossed flats are below the feature and leave the body.",
-     "de": "Für die Einzelheit von 30 mm verfasst: Jede Gestellseite ist ein Rahmen (Schiene und beide Pfosten verschmolzen, 30 mm dick) mit einer 30-mm-Kopfstrebe; der Kollektor ist eine Wanne mit 40 mm Boden (Blech und Wolle) und 30 mm Wänden, die eine 30-mm-Absorberplatte zwischen zwei 30-mm-Sammlerstäben und eine randbündige 30-mm-Glasplatte aufnimmt (der Luftspalt schließt sich). Die gekreuzten Flachstähle liegen unter der Einzelheit und verlassen den Körper."
-    },
-    {
-     "en": "Thermal: references to the body solids and the outlet patch on the glass. Structure: the two side frames with their knee bars, the crossed flats as slender members at true size, a 30 mm frame ring for the housing, the glass slab, the nine risers as slender members and the header bars; one mass for the collector and one lump per rear post; two contact strips.",
-     "de": "Thermik: Verweise auf die Körper und das Auslassfeld auf dem Glas. Tragwerk: die beiden Seitenrahmen mit ihren Kopfstreben, die gekreuzten Flachstähle als schlanke Stäbe in wahrer Größe, ein 30-mm-Rahmenring für die Wanne, die Glasplatte, die neun Steigrohre als schlanke Stäbe und die Sammlerstäbe; eine Masse für den Kollektor und je hinterem Pfosten ein Klumpen; zwei Kontaktstreifen."
-    }
-   ]
-  },
-  "500": {
-   "status": "authored",
-   "denominator": 500,
-   "body": [
-    {
-     "id": "side-frame",
-     "kind": "extrude",
-     "bone": "stand",
-     "material": "galvanised-steel",
-     "role": "body",
-     "tone": 0.5,
-     "profile": [
-      [
-       0.0,
-       0.0
-      ],
-      [
-       1.5,
-       0.0
-      ],
-      [
-       1.5,
-       0.075
-      ],
-      [
-       1.28307,
-       0.075
-      ],
-      [
-       1.28307,
-       0.36024
-      ],
-      [
-       1.20807,
-       0.41275
-      ],
-      [
-       1.20807,
-       0.075
-      ],
-      [
-       0.23456,
-       0.075
-      ],
-      [
-       0.23456,
-       1.09441
-      ],
-      [
-       0.15956,
-       1.14693
-      ],
-      [
-       0.15956,
-       0.075
-      ],
-      [
-       0.0,
-       0.075
-      ]
-     ],
-     "plane": "xy",
-     "from": -0.45,
-     "to": -0.375,
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0.0,
-       0.0,
-       0.825
-      ]
-     }
-    },
-    {
-     "id": "collector",
-     "kind": "box",
-     "bone": "housing",
-     "material": "anodised-aluminium",
-     "role": "body",
-     "tone": 0.4,
-     "size": [
-      2.0,
-      0.1,
-      1.0
-     ],
-     "transform": {
-      "translation": [
-       0.64,
-       0.05,
-       0.0
-      ]
-     }
-    }
-   ],
-   "thermal": [
-    {
-     "id": "th-side-frame",
-     "of": "side-frame",
-     "region": "stand"
-    },
-    {
-     "id": "th-housing",
-     "kind": "box",
-     "bone": "housing",
-     "material": "anodised-aluminium",
-     "role": "body",
-     "tone": 0.4,
-     "size": [
-      2.0,
-      0.0953,
-      1.0
-     ],
-     "transform": {
-      "translation": [
-       0.64,
-       0.04765,
-       0.0
-      ]
-     },
-     "region": "housing",
-     "sectionFaces": [
-      "+v"
-     ]
-    },
-    {
-     "id": "th-glass",
-     "kind": "box",
-     "bone": "glass",
-     "material": "solar-glass",
-     "role": "body",
-     "tone": 0.92,
-     "size": [
-      2.0,
-      0.0032,
-      1.0
-     ],
-     "transform": {
-      "translation": [
-       0.995,
-       0.0,
-       0.0
-      ]
-     },
-     "region": "glazing",
-     "layer": "glazing-skin",
-     "sectionFaces": [
-      "-v"
-     ]
-    },
-    {
-     "id": "th-absorber",
-     "kind": "box",
-     "bone": "absorber",
-     "material": "selective-absorber",
-     "role": "body",
-     "tone": 0.2,
-     "size": [
-      1.88,
-      0.0005,
-      0.91
-     ],
-     "transform": {
-      "translation": [
-       0.94,
-       0.0,
-       0.0
-      ]
-     },
-     "region": "absorber",
-     "layer": "absorber-skin"
-    },
-    {
-     "id": "th-header-upper",
-     "kind": "revolve",
-     "bone": "headers",
-     "material": "copper",
-     "role": "body",
-     "tone": 0.4,
-     "profile": [
-      [
-       0.0,
-       0.011
-      ],
-      [
-       0.997,
-       0.011
-      ]
-     ],
-     "axis": [
-      0.0,
-      0.0,
-      1.0
-     ],
-     "origin": [
-      0.0,
-      0.0,
-      -0.4985
-     ],
-     "region": "header-upper",
-     "slender": true
-    },
-    {
-     "id": "th-header-lower",
-     "kind": "revolve",
-     "bone": "headers",
-     "material": "copper",
-     "role": "body",
-     "tone": 0.4,
-     "profile": [
-      [
-       0.0,
-       0.011
-      ],
-      [
-       0.997,
-       0.011
-      ]
-     ],
-     "axis": [
-      0.0,
-      0.0,
-      1.0
-     ],
-     "origin": [
-      1.91,
-      0.0,
-      -0.4985
-     ],
-     "region": "header-lower",
-     "slender": true
-    },
-    {
-     "id": "th-absorber-plume-outlet",
-     "kind": "box",
-     "bone": "glass",
-     "material": "solar-glass",
-     "role": "body",
-     "tone": 0.9,
-     "size": [
-      0.19,
-      0.075,
-      0.5
-     ],
-     "transform": {
-      "translation": [
-       0.11,
-       -0.0324,
-       0.0
-      ]
-     },
-     "region": "absorber",
-     "tags": [
-      "absorber-plume"
-     ]
-    }
-   ],
-   "structure": [
-    {
-     "id": "st-side-frame",
-     "of": "side-frame",
-     "member": "stand",
-     "part": "member"
-    },
-    {
-     "id": "frame-ring",
-     "kind": "extrude",
-     "bone": "housing",
-     "material": "anodised-aluminium",
-     "role": "body",
-     "tone": 0.35,
-     "profile": [
-      [
-       -0.5,
-       -0.36
-      ],
-      [
-       0.5,
-       -0.36
-      ],
-      [
-       0.5,
-       1.64
-      ],
-      [
-       -0.5,
-       1.64
-      ]
-     ],
-     "plane": "zx",
-     "holes": [
-      [
-       [
-        -0.425,
-        -0.285
-       ],
-       [
-        0.425,
-        -0.285
-       ],
-       [
-        0.425,
-        1.565
-       ],
-       [
-        -0.425,
-        1.565
-       ]
-      ]
-     ],
-     "from": 0.0,
-     "to": 0.1,
-     "member": "housing",
-     "part": "member"
-    },
-    {
-     "id": "glass-pane",
-     "kind": "box",
-     "bone": "glass",
-     "material": "solar-glass",
-     "role": "body",
-     "tone": 0.92,
-     "size": [
-      1.85,
-      0.075,
-      0.85
-     ],
-     "transform": {
-      "translation": [
-       0.995,
-       -0.0344,
-       0.0
-      ]
-     },
-     "member": "glass",
-     "part": "member"
-    },
-    {
-     "id": "riser",
-     "kind": "revolve",
-     "bone": "absorber",
-     "material": "copper",
-     "role": "body",
-     "tone": 0.55,
-     "profile": [
-      [
-       0.0,
-       0.005
-      ],
-      [
-       1.91,
-       0.005
-      ]
-     ],
-     "axis": [
-      1.0,
-      0.0,
-      0.0
-     ],
-     "origin": [
-      -0.015,
-      -0.0051,
-      -0.4
-     ],
-     "slender": true,
-     "repeat": {
-      "count": 3,
-      "translation": [
-       0.0,
-       0.0,
-       0.4
-      ]
-     },
-     "member": "absorber",
-     "part": "member"
-    },
-    {
-     "id": "header-pipe-upper",
-     "kind": "revolve",
-     "bone": "headers",
-     "material": "copper",
-     "role": "body",
-     "tone": 0.4,
-     "profile": [
-      [
-       0.0,
-       0.011
-      ],
-      [
-       0.85,
-       0.011
-      ]
-     ],
-     "axis": [
-      0.0,
-      0.0,
-      1.0
-     ],
-     "origin": [
-      0.0,
-      0.0,
-      -0.425
-     ],
-     "slender": true,
-     "member": "headers",
-     "part": "member"
-    },
-    {
-     "id": "header-pipe-lower",
-     "kind": "revolve",
-     "bone": "headers",
-     "material": "copper",
-     "role": "body",
-     "tone": 0.4,
-     "profile": [
-      [
-       0.0,
-       0.011
-      ],
-      [
-       0.85,
-       0.011
-      ]
-     ],
-     "axis": [
-      0.0,
-      0.0,
-      1.0
-     ],
-     "origin": [
-      1.91,
-      0.0,
-      -0.425
-     ],
-     "slender": true,
-     "member": "headers",
-     "part": "member"
-    },
-    {
-     "id": "mass-collector",
-     "kind": "box",
-     "bone": "housing",
-     "material": "anodised-aluminium",
-     "role": "body",
-     "tone": 0.4,
-     "size": [
-      0.3,
-      0.075,
-      0.3
-     ],
-     "transform": {
-      "translation": [
-       0.64,
-       0.05,
-       0.0
-      ]
-     },
-     "member": "housing",
-     "part": "mass"
-    },
-    {
-     "id": "mass-stand",
-     "kind": "box",
-     "bone": "stand",
-     "material": "galvanised-steel",
-     "role": "body",
-     "tone": 0.5,
-     "size": [
-      0.085,
-      0.2,
-      0.085
-     ],
-     "transform": {
-      "translation": [
-       0.19706,
-       0.6,
-       -0.4125
-      ]
-     },
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0.0,
-       0.0,
-       0.825
-      ]
-     },
-     "member": "stand",
-     "part": "mass"
-    },
-    {
-     "id": "base-contact-pad",
-     "kind": "box",
-     "bone": "stand",
-     "material": "galvanised-steel",
-     "role": "body",
-     "tone": 0.5,
-     "size": [
-      1.5,
-      0.08,
-      0.085
-     ],
-     "transform": {
-      "translation": [
-       0.75,
-       0.04,
-       -0.4125
-      ]
-     },
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0.0,
-       0.0,
-       0.825
-      ]
-     },
-     "member": "stand",
-     "part": "support",
-     "anchor": "base-contact"
-    }
-   ],
-   "decisions": [
-    {
-     "en": "Authored for the 75 mm feature and already minimal: one slab of 2.0 m by 1.0 m by 0.1 m for the whole collector and one 75 mm frame per side of the stand (rail and both posts merged).",
-     "de": "Für die Einzelheit von 75 mm verfasst und bereits minimal: eine Platte von 2,0 m mal 1,0 m mal 0,1 m für den ganzen Kollektor und je Gestellseite ein 75-mm-Rahmen (Schiene und beide Pfosten verschmolzen)."
-    },
-    {
-     "en": "Thermal: the slab is split into the housing block and, on the sun side, the glazing as its 3.2 mm layer; the absorber sheet (its 0.5 mm layer) and the two 22 mm headers (slender) are real internals at their true places; the outlet patch is one feature thick and sits in the upper end of the slab. Structure: the two side frames, a 75 mm frame ring for the housing with the pane as a slab inside it, three of the nine risers and the two header pipes as slender members; one mass for the collector, one lump per rear post, two contact strips.",
-     "de": "Thermik: Die Platte teilt sich in den Wannenblock und auf der Sonnenseite die Verglasung als ihre 3,2-mm-Schicht; das Absorberblech (seine 0,5-mm-Schicht) und die beiden 22-mm-Sammler (schlank) sind echte Innenteile an ihrem wahren Ort; das Auslassfeld ist eine Einzelheit dick und sitzt im oberen Ende der Platte. Tragwerk: die beiden Seitenrahmen, ein 75-mm-Rahmenring für die Wanne mit der Scheibe als Platte darin, drei der neun Steigrohre und die beiden Sammlerrohre als schlanke Stäbe; eine Masse für den Kollektor, je hinterem Pfosten ein Klumpen, zwei Kontaktstreifen."
-    }
-   ]
-  }
+   }
  }
 }

@@ -125,7 +125,11 @@ impl<A: ArtifactApp> ToolOperations<A> {
             | u8::from(operation.worker_outcome_pending) << 5
             | u8::from(operation.terminal_seen) << 6
             | u8::from(operation.result_page.is_some()) << 7;
-        Some((operation_id, stage, flags, operation.publication_progress))
+        let progress = match operation.stage {
+            MountedTypedCommandFullOperationStage::Worker => operation.progress.unwrap_or(0),
+            _ => operation.publication_progress,
+        };
+        Some((operation_id, stage, flags, progress))
     }
 
     /// 🛑️ Terminates the ONE `Worker`-stage operation whose own step answered a structural

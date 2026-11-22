@@ -10,7 +10,7 @@ impl Surface{
     pub fn configure(&self,device:&Device,config:&SurfaceConfiguration){self.session.check(&device.session).expect("same-session surface configuration");self.raw.configure(&device.session.0.device,&conversion::surface_config(config));}
     pub fn get_current_texture(&self)->CurrentSurfaceTexture{
         let wrap=|raw:wgpu::SurfaceTexture|SurfaceTexture{texture:Texture{raw:raw.texture.clone(),session:self.session.clone()},raw};
-        match self.raw.get_current_texture(){wgpu::CurrentSurfaceTexture::Success(raw)=>CurrentSurfaceTexture::Success(wrap(raw)),wgpu::CurrentSurfaceTexture::Suboptimal(raw)=>CurrentSurfaceTexture::Suboptimal(wrap(raw)),other=>CurrentSurfaceTexture::Unavailable(format!("{other:?}"))}
+        match self.raw.get_current_texture(){wgpu::CurrentSurfaceTexture::Success(raw)=>CurrentSurfaceTexture::Success(wrap(raw)),wgpu::CurrentSurfaceTexture::Suboptimal(raw)=>CurrentSurfaceTexture::Suboptimal(wrap(raw)),other=>{if matches!(other,wgpu::CurrentSurfaceTexture::Lost){note_device_loss(DeviceLoss::Surface);}CurrentSurfaceTexture::Unavailable(format!("{other:?}"))}}
     }
 }
 impl SurfaceTexture{pub fn present(self){self.raw.present();}}

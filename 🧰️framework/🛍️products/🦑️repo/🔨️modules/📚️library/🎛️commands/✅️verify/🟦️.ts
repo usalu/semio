@@ -204,6 +204,11 @@ export abstract class VerifyScript extends VerifyGateLanes {
       if (breaches.length && segments[1] !== "report") throw refuseVerifyV1("failed","run.os-owned-preferences-or-host");
       return;
     }
+    if (segments[0] === "package-export-targets") {
+      if (segments.length !== 1) throw refuseVerifyV1("usage","run.expected-package-export-targets");
+      this.runPackageExportTargets();
+      return;
+    }
     if (segments[0] === "policy-breach") {
       this.runPolicyBreach(segments[1]);
       return;

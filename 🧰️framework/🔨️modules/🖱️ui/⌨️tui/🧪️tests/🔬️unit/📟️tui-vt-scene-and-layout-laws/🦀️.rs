@@ -173,10 +173,10 @@ fn layout_distribute_weight_remainder_goes_to_earliest_child_on_ties() {
 
 #[test]
 fn window_layout_split_resize_move_zoom_and_tabs() {
-    use semio_ui_tui_frame::layout::{WindowLayout, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode, activate_stack_tab, cycle_stack_tab, move_window_to_stack, resize_window, solve_window_layout, split_window, zoom_window};
+    use semio_ui_tui_frame::layout::{WindowLayout, Axis, stack_node, window_node, activate_stack_tab, cycle_stack_tab, move_window_to_stack, resize_window, solve_window_layout, split_window, zoom_window};
     let mut layout =
-        WindowLayout { root: WindowLayoutRoot::Stack(WindowLayoutStackNode { size: None, active_window_kind_id: Some("a".into()), children: vec![WindowLayoutWindowNode { window_kind_id: "a".into(), title: None, corner: None }] }), zoomed: None };
-    assert!(split_window(&mut layout, "a", "row", "b", None));
+        WindowLayout { root: stack_node(None, Some("a".into()), vec![window_node("a".into(), None, None)]), zoomed: None };
+    assert!(split_window(&mut layout, "a", Axis::Horizontal, "b", None));
     let measures = solve_window_layout(&layout, Rect::new(0, 0, 100, 10));
     assert_eq!(measures.len(), 2);
     assert!(resize_window(&mut layout, "a", 0.5));

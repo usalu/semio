@@ -5329,14 +5329,39 @@ name = "semio-os-channel"
 version = "0.1.0"
 dependencies = [
  "semio-framework-diagnostic",
+ "semio-framework-hash",
  "semio-framework-io-control",
  "semio-framework-io-sqlite-snapshot",
  "semio-framework-job",
  "semio-framework-replication",
  "semio-framework-value",
  "semio-framework-value-native-owned",
+ "semio-framework-value-persistent",
+ "semio-os-channel-archive",
+ "semio-os-channel-archive-ingress",
  "serde",
  "serde_json",
+]
+
+[[package]]
+name = "semio-os-channel-archive"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-hash",
+ "semio-framework-io-control",
+ "semio-framework-value",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-persistent",
+]
+
+[[package]]
+name = "semio-os-channel-archive-ingress"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-hash",
+ "semio-framework-value",
+ "semio-framework-value-persistent",
+ "semio-os-channel-archive",
 ]
 
 [[package]]
@@ -6217,6 +6242,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-os-infinite-world-handle-drag"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value",
+ "semio-ui-action",
+ "semio-ui-declaration",
+ "semio-ui-wgpu-input",
+]
+
+[[package]]
 name = "semio-os-infinite-world-host"
 version = "0.1.0"
 dependencies = [
@@ -6228,6 +6263,7 @@ dependencies = [
  "semio-os-infinite-world-bridge",
  "semio-os-infinite-world-components",
  "semio-os-infinite-world-cursors",
+ "semio-os-infinite-world-handle-drag",
  "semio-os-infinite-world-interaction",
  "semio-os-infinite-world-model",
  "semio-os-infinite-world-scene",
@@ -6258,6 +6294,7 @@ dependencies = [
  "semio-os-infinite-world-bridge",
  "semio-os-infinite-world-components",
  "semio-os-infinite-world-cursors",
+ "semio-os-infinite-world-handle-drag",
  "semio-os-infinite-world-model",
  "semio-os-infinite-world-scene",
  "semio-ui-action",
@@ -8445,6 +8482,7 @@ dependencies = [
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dsl-record",
+ "semio-framework-hash",
  "semio-framework-job",
  "semio-framework-job-worker",
  "semio-framework-job-worker-authority",
@@ -8578,6 +8616,8 @@ dependencies = [
  "semio-plugin-instance-initialization",
  "semio-plugin-instance-jobs",
  "semio-plugin-instance-ladders",
+ "semio-plugin-instance-members",
+ "semio-plugin-instance-natural-publication",
  "semio-plugin-instance-render",
  "semio-plugin-instance-stores",
  "semio-plugin-instance-typed-ops",
@@ -8773,6 +8813,7 @@ dependencies = [
  "semio-plugin-document-media",
  "semio-plugin-instance-children",
  "semio-plugin-instance-jobs",
+ "semio-plugin-instance-natural-publication",
  "semio-plugin-instance-stores",
  "semio-plugin-interaction",
  "semio-plugin-job",
@@ -8970,6 +9011,83 @@ dependencies = [
  "semio-plugin-window-config",
  "semio-plugin-window-transient",
  "semio-ui-contract",
+]
+
+[[package]]
+name = "semio-plugin-instance-members"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
+ "semio-framework-artifact-reference",
+ "semio-framework-async",
+ "semio-framework-job",
+ "semio-framework-pack-json",
+ "semio-framework-schema-registry",
+ "semio-framework-tool-run",
+ "semio-framework-value",
+ "semio-framework-value-factory",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-snapshot-read",
+ "semio-os-kernel",
+ "semio-plugin-child",
+ "semio-plugin-command",
+ "semio-plugin-composition-publication",
+ "semio-plugin-decl-app",
+ "semio-plugin-decl-emission",
+ "semio-plugin-decl-media",
+ "semio-plugin-decl-registry",
+ "semio-plugin-decl-surface",
+ "semio-plugin-decl-tool-contract",
+ "semio-plugin-decl-views",
+ "semio-plugin-document-media",
+ "semio-plugin-instance-children",
+ "semio-plugin-instance-commands",
+ "semio-plugin-instance-dispatch",
+ "semio-plugin-instance-docs",
+ "semio-plugin-instance-extension",
+ "semio-plugin-instance-history",
+ "semio-plugin-instance-initialization",
+ "semio-plugin-instance-jobs",
+ "semio-plugin-instance-ladders",
+ "semio-plugin-instance-natural-publication",
+ "semio-plugin-instance-render",
+ "semio-plugin-instance-stores",
+ "semio-plugin-instance-typed-ops",
+ "semio-plugin-interaction",
+ "semio-plugin-job",
+ "semio-plugin-mounted-owner",
+ "semio-plugin-operation",
+ "semio-plugin-ownership",
+ "semio-plugin-peer",
+ "semio-plugin-publication-mounted",
+ "semio-plugin-reactor-app",
+ "semio-plugin-reactor-jobs",
+ "semio-plugin-retained-command",
+ "semio-plugin-time-travel",
+ "semio-plugin-time-travel-panel",
+ "semio-plugin-time-travel-turns",
+ "semio-plugin-tool-machine",
+ "semio-plugin-tool-run",
+ "semio-plugin-tool-run-turns",
+ "semio-plugin-window-config",
+ "semio-plugin-window-kits",
+ "semio-plugin-window-transient",
+ "semio-ui-contract",
+ "semio-ui-layout",
+ "semio-ui-runtime",
+]
+
+[[package]]
+name = "semio-plugin-instance-natural-publication"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-async",
+ "semio-framework-job",
+ "semio-framework-value",
+ "semio-plugin-decl-app",
+ "semio-plugin-decl-emission",
+ "semio-plugin-decl-media",
+ "semio-plugin-ownership",
 ]
 
 [[package]]
@@ -10507,6 +10625,7 @@ dependencies = [
  "semio-framework-tool-run",
  "semio-framework-tool-run-actions",
  "semio-framework-trace",
+ "semio-framework-value",
  "semio-framework-value-derive",
  "semio-os-command",
  "semio-os-infinite",
@@ -10543,7 +10662,6 @@ dependencies = [
  "semio-s-artifact-puzzle-2d-v1",
  "semio-s-artifact-puzzle-3d",
  "semio-s-artifact-puzzle-3d-inferences",
- "semio-s-artifact-stdio-dwg",
  "semio-s-artifact-stdio-dxf",
  "semio-s-artifact-stdio-json",
  "semio-s-artifact-stdio-pdf",
@@ -10596,6 +10714,9 @@ dependencies = [
  "semio-framework-tool-run-actions",
  "semio-framework-trace",
  "semio-os-infinite",
+ "semio-os-infinite-board-normal-focus",
+ "semio-os-infinite-board-normal-gestures",
+ "semio-os-infinite-board-normal-scene",
  "semio-os-kernel",
  "semio-plugin",
  "semio-s-artifact-puzzle-2d-engine",
@@ -10603,15 +10724,11 @@ dependencies = [
  "semio-s-artifact-puzzle-2d-records",
  "semio-s-artifact-puzzle-2d-tambour-end-storeys",
  "semio-s-artifact-puzzle-2d-tambour-single-storey",
- "semio-s-artifact-puzzle-3d",
  "semio-s-artifact-puzzle-3d-inferences",
- "semio-s-artifact-stdio-dwg",
  "semio-s-artifact-stdio-dxf",
  "semio-s-artifact-stdio-json",
- "semio-s-artifact-stdio-pdf",
  "semio-s-artifact-stdio-png",
  "semio-s-artifact-stdio-semio-drawing",
- "semio-s-artifact-stdio-semio-drawing-export",
  "semio-s-artifact-stdio-svg",
  "semio-s-artifact-stdio-txt",
  "semio-s-plugin-puzzle-board-scene",
@@ -10676,7 +10793,6 @@ dependencies = [
  "semio-s-artifact-puzzle-2d-text-inverse",
  "semio-s-artifact-puzzle-3d",
  "semio-s-artifact-puzzle-3d-inferences",
- "semio-s-artifact-stdio-dwg",
  "semio-s-artifact-stdio-dxf",
  "semio-s-artifact-stdio-json",
  "semio-s-artifact-stdio-pdf",
@@ -10732,15 +10848,11 @@ dependencies = [
  "semio-os-kernel",
  "semio-plugin",
  "semio-s-artifact-puzzle-2d-graph-manifest",
- "semio-s-artifact-puzzle-3d",
  "semio-s-artifact-puzzle-3d-inferences",
- "semio-s-artifact-stdio-dwg",
  "semio-s-artifact-stdio-dxf",
  "semio-s-artifact-stdio-json",
- "semio-s-artifact-stdio-pdf",
  "semio-s-artifact-stdio-png",
  "semio-s-artifact-stdio-semio-drawing",
- "semio-s-artifact-stdio-semio-drawing-export",
  "semio-s-artifact-stdio-svg",
  "semio-s-artifact-stdio-txt",
  "semio-s-plugin-puzzle-board-scene",
@@ -10792,15 +10904,11 @@ dependencies = [
  "semio-os-kernel",
  "semio-plugin",
  "semio-s-artifact-puzzle-2d-records",
- "semio-s-artifact-puzzle-3d",
  "semio-s-artifact-puzzle-3d-inferences",
- "semio-s-artifact-stdio-dwg",
  "semio-s-artifact-stdio-dxf",
  "semio-s-artifact-stdio-json",
- "semio-s-artifact-stdio-pdf",
  "semio-s-artifact-stdio-png",
  "semio-s-artifact-stdio-semio-drawing",
- "semio-s-artifact-stdio-semio-drawing-export",
  "semio-s-artifact-stdio-svg",
  "semio-s-artifact-stdio-txt",
  "semio-s-plugin-puzzle-board-scene",
@@ -10865,7 +10973,6 @@ dependencies = [
  "semio-s-artifact-puzzle-2d-v1",
  "semio-s-artifact-puzzle-3d",
  "semio-s-artifact-puzzle-3d-inferences",
- "semio-s-artifact-stdio-dwg",
  "semio-s-artifact-stdio-dxf",
  "semio-s-artifact-stdio-json",
  "semio-s-artifact-stdio-pdf",
@@ -10925,15 +11032,11 @@ dependencies = [
  "semio-s-artifact-puzzle-2d-board-host",
  "semio-s-artifact-puzzle-2d-records",
  "semio-s-artifact-puzzle-2d-snapshot",
- "semio-s-artifact-puzzle-3d",
  "semio-s-artifact-puzzle-3d-inferences",
- "semio-s-artifact-stdio-dwg",
  "semio-s-artifact-stdio-dxf",
  "semio-s-artifact-stdio-json",
- "semio-s-artifact-stdio-pdf",
  "semio-s-artifact-stdio-png",
  "semio-s-artifact-stdio-semio-drawing",
- "semio-s-artifact-stdio-semio-drawing-export",
  "semio-s-artifact-stdio-svg",
  "semio-s-artifact-stdio-txt",
  "semio-s-plugin-puzzle-board-scene",
@@ -10995,7 +11098,6 @@ dependencies = [
  "semio-s-artifact-puzzle-2d-text-inverse",
  "semio-s-artifact-puzzle-3d",
  "semio-s-artifact-puzzle-3d-inferences",
- "semio-s-artifact-stdio-dwg",
  "semio-s-artifact-stdio-dxf",
  "semio-s-artifact-stdio-json",
  "semio-s-artifact-stdio-pdf",
@@ -11059,15 +11161,11 @@ dependencies = [
  "semio-s-artifact-puzzle-2d-records",
  "semio-s-artifact-puzzle-2d-schema",
  "semio-s-artifact-puzzle-2d-snapshot",
- "semio-s-artifact-puzzle-3d",
  "semio-s-artifact-puzzle-3d-inferences",
- "semio-s-artifact-stdio-dwg",
  "semio-s-artifact-stdio-dxf",
  "semio-s-artifact-stdio-json",
- "semio-s-artifact-stdio-pdf",
  "semio-s-artifact-stdio-png",
  "semio-s-artifact-stdio-semio-drawing",
- "semio-s-artifact-stdio-semio-drawing-export",
  "semio-s-artifact-stdio-svg",
  "semio-s-artifact-stdio-txt",
  "semio-s-plugin-puzzle-board-scene",
@@ -11130,15 +11228,11 @@ dependencies = [
  "semio-s-artifact-puzzle-2d-records",
  "semio-s-artifact-puzzle-2d-schema",
  "semio-s-artifact-puzzle-2d-snapshot",
- "semio-s-artifact-puzzle-3d",
  "semio-s-artifact-puzzle-3d-inferences",
- "semio-s-artifact-stdio-dwg",
  "semio-s-artifact-stdio-dxf",
  "semio-s-artifact-stdio-json",
- "semio-s-artifact-stdio-pdf",
  "semio-s-artifact-stdio-png",
  "semio-s-artifact-stdio-semio-drawing",
- "semio-s-artifact-stdio-semio-drawing-export",
  "semio-s-artifact-stdio-svg",
  "semio-s-artifact-stdio-txt",
  "semio-s-plugin-puzzle-board-scene",
@@ -11192,15 +11286,11 @@ dependencies = [
  "semio-s-artifact-puzzle-2d-records",
  "semio-s-artifact-puzzle-2d-schema",
  "semio-s-artifact-puzzle-2d-snapshot",
- "semio-s-artifact-puzzle-3d",
  "semio-s-artifact-puzzle-3d-inferences",
- "semio-s-artifact-stdio-dwg",
  "semio-s-artifact-stdio-dxf",
  "semio-s-artifact-stdio-json",
- "semio-s-artifact-stdio-pdf",
  "semio-s-artifact-stdio-png",
  "semio-s-artifact-stdio-semio-drawing",
- "semio-s-artifact-stdio-semio-drawing-export",
  "semio-s-artifact-stdio-svg",
  "semio-s-artifact-stdio-txt",
  "semio-s-plugin-puzzle-board-scene",
@@ -11254,15 +11344,11 @@ dependencies = [
  "semio-s-artifact-puzzle-2d-records",
  "semio-s-artifact-puzzle-2d-schema",
  "semio-s-artifact-puzzle-2d-snapshot",
- "semio-s-artifact-puzzle-3d",
  "semio-s-artifact-puzzle-3d-inferences",
- "semio-s-artifact-stdio-dwg",
  "semio-s-artifact-stdio-dxf",
  "semio-s-artifact-stdio-json",
- "semio-s-artifact-stdio-pdf",
  "semio-s-artifact-stdio-png",
  "semio-s-artifact-stdio-semio-drawing",
- "semio-s-artifact-stdio-semio-drawing-export",
  "semio-s-artifact-stdio-svg",
  "semio-s-artifact-stdio-txt",
  "semio-s-plugin-puzzle-board-scene",
@@ -11320,15 +11406,11 @@ dependencies = [
  "semio-s-artifact-puzzle-2d-records",
  "semio-s-artifact-puzzle-2d-schema",
  "semio-s-artifact-puzzle-2d-snapshot",
- "semio-s-artifact-puzzle-3d",
  "semio-s-artifact-puzzle-3d-inferences",
- "semio-s-artifact-stdio-dwg",
  "semio-s-artifact-stdio-dxf",
  "semio-s-artifact-stdio-json",
- "semio-s-artifact-stdio-pdf",
  "semio-s-artifact-stdio-png",
  "semio-s-artifact-stdio-semio-drawing",
- "semio-s-artifact-stdio-semio-drawing-export",
  "semio-s-artifact-stdio-svg",
  "semio-s-artifact-stdio-txt",
  "semio-s-plugin-puzzle-board-scene",
@@ -11386,7 +11468,6 @@ dependencies = [
  "semio-s-artifact-puzzle-2d-snapshot",
  "semio-s-artifact-puzzle-3d",
  "semio-s-artifact-puzzle-3d-inferences",
- "semio-s-artifact-stdio-dwg",
  "semio-s-artifact-stdio-dxf",
  "semio-s-artifact-stdio-json",
  "semio-s-artifact-stdio-pdf",
@@ -11448,7 +11529,6 @@ dependencies = [
  "semio-s-artifact-puzzle-2d-tests",
  "semio-s-artifact-puzzle-3d",
  "semio-s-artifact-puzzle-3d-inferences",
- "semio-s-artifact-stdio-dwg",
  "semio-s-artifact-stdio-dxf",
  "semio-s-artifact-stdio-json",
  "semio-s-artifact-stdio-pdf",
@@ -11512,7 +11592,6 @@ dependencies = [
  "semio-s-artifact-puzzle-2d-snapshot",
  "semio-s-artifact-puzzle-3d",
  "semio-s-artifact-puzzle-3d-inferences",
- "semio-s-artifact-stdio-dwg",
  "semio-s-artifact-stdio-dxf",
  "semio-s-artifact-stdio-json",
  "semio-s-artifact-stdio-pdf",
@@ -11574,7 +11653,6 @@ dependencies = [
  "semio-s-artifact-puzzle-2d-snapshot",
  "semio-s-artifact-puzzle-3d",
  "semio-s-artifact-puzzle-3d-inferences",
- "semio-s-artifact-stdio-dwg",
  "semio-s-artifact-stdio-dxf",
  "semio-s-artifact-stdio-json",
  "semio-s-artifact-stdio-pdf",
@@ -11638,7 +11716,6 @@ dependencies = [
  "semio-s-artifact-puzzle-2d-snapshot",
  "semio-s-artifact-puzzle-3d",
  "semio-s-artifact-puzzle-3d-inferences",
- "semio-s-artifact-stdio-dwg",
  "semio-s-artifact-stdio-dxf",
  "semio-s-artifact-stdio-json",
  "semio-s-artifact-stdio-pdf",
@@ -11705,15 +11782,11 @@ dependencies = [
  "semio-s-artifact-puzzle-2d-records",
  "semio-s-artifact-puzzle-2d-schema",
  "semio-s-artifact-puzzle-2d-snapshot",
- "semio-s-artifact-puzzle-3d",
  "semio-s-artifact-puzzle-3d-inferences",
- "semio-s-artifact-stdio-dwg",
  "semio-s-artifact-stdio-dxf",
  "semio-s-artifact-stdio-json",
- "semio-s-artifact-stdio-pdf",
  "semio-s-artifact-stdio-png",
  "semio-s-artifact-stdio-semio-drawing",
- "semio-s-artifact-stdio-semio-drawing-export",
  "semio-s-artifact-stdio-svg",
  "semio-s-artifact-stdio-txt",
  "semio-s-plugin-puzzle-board-scene",
@@ -11765,15 +11838,11 @@ dependencies = [
  "semio-os-infinite",
  "semio-os-kernel",
  "semio-plugin",
- "semio-s-artifact-puzzle-3d",
  "semio-s-artifact-puzzle-3d-inferences",
- "semio-s-artifact-stdio-dwg",
  "semio-s-artifact-stdio-dxf",
  "semio-s-artifact-stdio-json",
- "semio-s-artifact-stdio-pdf",
  "semio-s-artifact-stdio-png",
  "semio-s-artifact-stdio-semio-drawing",
- "semio-s-artifact-stdio-semio-drawing-export",
  "semio-s-artifact-stdio-svg",
  "semio-s-artifact-stdio-txt",
  "semio-s-plugin-puzzle-board-scene",
@@ -11843,7 +11912,6 @@ dependencies = [
  "semio-s-artifact-puzzle-2d-text-inverse",
  "semio-s-artifact-puzzle-3d",
  "semio-s-artifact-puzzle-3d-inferences",
- "semio-s-artifact-stdio-dwg",
  "semio-s-artifact-stdio-dxf",
  "semio-s-artifact-stdio-json",
  "semio-s-artifact-stdio-pdf",
@@ -11919,15 +11987,11 @@ dependencies = [
  "semio-s-artifact-puzzle-2d-inferences",
  "semio-s-artifact-puzzle-2d-records",
  "semio-s-artifact-puzzle-2d-snapshot",
- "semio-s-artifact-puzzle-3d",
  "semio-s-artifact-puzzle-3d-inferences",
- "semio-s-artifact-stdio-dwg",
  "semio-s-artifact-stdio-dxf",
  "semio-s-artifact-stdio-json",
- "semio-s-artifact-stdio-pdf",
  "semio-s-artifact-stdio-png",
  "semio-s-artifact-stdio-semio-drawing",
- "semio-s-artifact-stdio-semio-drawing-export",
  "semio-s-artifact-stdio-svg",
  "semio-s-artifact-stdio-txt",
  "semio-s-plugin-puzzle-board-scene",
@@ -11989,15 +12053,11 @@ dependencies = [
  "semio-s-artifact-puzzle-2d-records",
  "semio-s-artifact-puzzle-2d-tambour-end-storeys",
  "semio-s-artifact-puzzle-2d-tambour-single-storey",
- "semio-s-artifact-puzzle-3d",
  "semio-s-artifact-puzzle-3d-inferences",
- "semio-s-artifact-stdio-dwg",
  "semio-s-artifact-stdio-dxf",
  "semio-s-artifact-stdio-json",
- "semio-s-artifact-stdio-pdf",
  "semio-s-artifact-stdio-png",
  "semio-s-artifact-stdio-semio-drawing",
- "semio-s-artifact-stdio-semio-drawing-export",
  "semio-s-artifact-stdio-svg",
  "semio-s-artifact-stdio-txt",
  "semio-s-plugin-puzzle-board-scene",
@@ -12046,15 +12106,11 @@ dependencies = [
  "semio-os-infinite",
  "semio-os-kernel",
  "semio-plugin",
- "semio-s-artifact-puzzle-3d",
  "semio-s-artifact-puzzle-3d-inferences",
- "semio-s-artifact-stdio-dwg",
  "semio-s-artifact-stdio-dxf",
  "semio-s-artifact-stdio-json",
- "semio-s-artifact-stdio-pdf",
  "semio-s-artifact-stdio-png",
  "semio-s-artifact-stdio-semio-drawing",
- "semio-s-artifact-stdio-semio-drawing-export",
  "semio-s-artifact-stdio-svg",
  "semio-s-artifact-stdio-txt",
  "semio-s-plugin-puzzle-board-scene",
@@ -12103,15 +12159,11 @@ dependencies = [
  "semio-os-infinite",
  "semio-os-kernel",
  "semio-plugin",
- "semio-s-artifact-puzzle-3d",
  "semio-s-artifact-puzzle-3d-inferences",
- "semio-s-artifact-stdio-dwg",
  "semio-s-artifact-stdio-dxf",
  "semio-s-artifact-stdio-json",
- "semio-s-artifact-stdio-pdf",
  "semio-s-artifact-stdio-png",
  "semio-s-artifact-stdio-semio-drawing",
- "semio-s-artifact-stdio-semio-drawing-export",
  "semio-s-artifact-stdio-svg",
  "semio-s-artifact-stdio-txt",
  "semio-s-plugin-puzzle-board-scene",
@@ -12181,7 +12233,6 @@ dependencies = [
  "semio-s-artifact-puzzle-2d-text-inverse",
  "semio-s-artifact-puzzle-3d",
  "semio-s-artifact-puzzle-3d-inferences",
- "semio-s-artifact-stdio-dwg",
  "semio-s-artifact-stdio-dxf",
  "semio-s-artifact-stdio-json",
  "semio-s-artifact-stdio-pdf",
@@ -12253,7 +12304,6 @@ dependencies = [
  "semio-s-artifact-puzzle-2d-snapshot",
  "semio-s-artifact-puzzle-3d",
  "semio-s-artifact-puzzle-3d-inferences",
- "semio-s-artifact-stdio-dwg",
  "semio-s-artifact-stdio-dxf",
  "semio-s-artifact-stdio-json",
  "semio-s-artifact-stdio-pdf",
@@ -12325,7 +12375,6 @@ dependencies = [
  "semio-s-artifact-puzzle-2d-v1",
  "semio-s-artifact-puzzle-3d",
  "semio-s-artifact-puzzle-3d-inferences",
- "semio-s-artifact-stdio-dwg",
  "semio-s-artifact-stdio-dxf",
  "semio-s-artifact-stdio-json",
  "semio-s-artifact-stdio-pdf",
@@ -12404,7 +12453,6 @@ dependencies = [
  "semio-s-artifact-puzzle-2d-text-inverse",
  "semio-s-artifact-puzzle-3d",
  "semio-s-artifact-puzzle-3d-inferences",
- "semio-s-artifact-stdio-dwg",
  "semio-s-artifact-stdio-dxf",
  "semio-s-artifact-stdio-json",
  "semio-s-artifact-stdio-pdf",
@@ -15787,27 +15835,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "semio-s-artifact-stdio-dwg"
-version = "0.1.0"
-dependencies = [
- "semio-framework-artifact-reference",
- "semio-framework-async",
- "semio-framework-dsl",
- "semio-framework-hash",
- "semio-framework-pack",
- "semio-os-command",
- "semio-os-kernel",
- "semio-plugin",
- "semio-s-artifact-stdio-contract",
- "semio-s-artifact-stdio-dwg-diff",
- "semio-s-artifact-stdio-dwg-inferences",
- "semio-s-artifact-stdio-dwg-model",
- "semio-s-artifact-stdio-dwg-mutations",
- "semio-s-artifact-stdio-dwg-snapshot",
- "semio-ui-locale",
-]
-
-[[package]]
 name = "semio-s-artifact-stdio-dwg-diff"
 version = "0.1.0"
 dependencies = [
@@ -15858,24 +15885,6 @@ dependencies = [
  "semio-framework-schema-state",
  "semio-framework-value-derive",
  "semio-os-kernel",
-]
-
-[[package]]
-name = "semio-s-artifact-stdio-dwg-inferences"
-version = "0.1.0"
-dependencies = [
- "semio-framework-dsl-record",
- "semio-framework-pack-json",
- "semio-framework-schema",
- "semio-framework-schema-composition",
- "semio-framework-schema-registry",
- "semio-framework-schema-state",
- "semio-framework-value",
- "semio-framework-value-derive",
- "semio-os-kernel",
- "semio-s-artifact-stdio-dwg-snapshot",
- "semio-s-artifact-stdio-dwg-snapshot-drawing",
- "semio-s-artifact-stdio-dwg-snapshot-objects",
 ]
 
 [[package]]
@@ -17107,6 +17116,30 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-s-artifact-stdio-pdf-base14-mono"
+version = "0.1.0"
+
+[[package]]
+name = "semio-s-artifact-stdio-pdf-base14-mono-italic"
+version = "0.1.0"
+
+[[package]]
+name = "semio-s-artifact-stdio-pdf-base14-sans"
+version = "0.1.0"
+
+[[package]]
+name = "semio-s-artifact-stdio-pdf-base14-serif"
+version = "0.1.0"
+
+[[package]]
+name = "semio-s-artifact-stdio-pdf-base14-serif-italic"
+version = "0.1.0"
+
+[[package]]
+name = "semio-s-artifact-stdio-pdf-base14-symbol"
+version = "0.1.0"
+
+[[package]]
 name = "semio-s-artifact-stdio-pdf-conformance-support"
 version = "0.1.0"
 dependencies = [
@@ -17230,6 +17263,12 @@ dependencies = [
  "semio-s-artifact-stdio-binary",
  "semio-s-artifact-stdio-contract",
  "semio-s-artifact-stdio-deflate",
+ "semio-s-artifact-stdio-pdf-base14-mono",
+ "semio-s-artifact-stdio-pdf-base14-mono-italic",
+ "semio-s-artifact-stdio-pdf-base14-sans",
+ "semio-s-artifact-stdio-pdf-base14-serif",
+ "semio-s-artifact-stdio-pdf-base14-serif-italic",
+ "semio-s-artifact-stdio-pdf-base14-symbol",
  "semio-s-artifact-stdio-pdf-glyph-list",
  "semio-s-artifact-stdio-pdf-inferences",
  "semio-s-artifact-stdio-pdf-model",
@@ -17262,6 +17301,7 @@ dependencies = [
  "semio-framework-schema-composition",
  "semio-framework-schema-registry",
  "semio-framework-schema-state",
+ "semio-framework-value",
  "semio-os-kernel",
  "semio-plugin",
  "semio-s-artifact-stdio-binary",
@@ -17315,6 +17355,53 @@ dependencies = [
  "semio-s-artifact-stdio-pdf-schema-2",
  "semio-s-artifact-stdio-pdf-snapshot-2",
  "semio-s-artifact-stdio-pdf-tests",
+ "semio-ui-contract",
+ "semio-ui-locale",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-pdf-io-export"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-2d",
+ "semio-framework-artifact-reference",
+ "semio-framework-async",
+ "semio-framework-diagnostic",
+ "semio-framework-dsl",
+ "semio-framework-dsl-record",
+ "semio-framework-dsl-record-derive",
+ "semio-framework-hash",
+ "semio-framework-pack",
+ "semio-framework-pack-json",
+ "semio-framework-schema",
+ "semio-framework-schema-composition",
+ "semio-framework-schema-registry",
+ "semio-framework-schema-state",
+ "semio-framework-test-fixtures",
+ "semio-framework-value",
+ "semio-os-kernel",
+ "semio-plugin",
+ "semio-s-artifact-stdio-binary",
+ "semio-s-artifact-stdio-contract",
+ "semio-s-artifact-stdio-deflate",
+ "semio-s-artifact-stdio-pdf-conformance-support",
+ "semio-s-artifact-stdio-pdf-diff",
+ "semio-s-artifact-stdio-pdf-fonts",
+ "semio-s-artifact-stdio-pdf-graph-projection",
+ "semio-s-artifact-stdio-pdf-inferences",
+ "semio-s-artifact-stdio-pdf-lift",
+ "semio-s-artifact-stdio-pdf-lower",
+ "semio-s-artifact-stdio-pdf-model",
+ "semio-s-artifact-stdio-pdf-mut-base-2",
+ "semio-s-artifact-stdio-pdf-mut-base-3",
+ "semio-s-artifact-stdio-pdf-mut-base-4",
+ "semio-s-artifact-stdio-pdf-mut-family-10",
+ "semio-s-artifact-stdio-pdf-mut-family-11",
+ "semio-s-artifact-stdio-pdf-mut-family-5",
+ "semio-s-artifact-stdio-pdf-mut-family-8",
+ "semio-s-artifact-stdio-pdf-mut-family-9",
+ "semio-s-artifact-stdio-pdf-snapshot-2",
  "semio-ui-contract",
  "semio-ui-locale",
  "serde_json",
@@ -18535,11 +18622,69 @@ dependencies = [
  "semio-s-artifact-stdio-pdf-mut-base-4",
  "semio-s-artifact-stdio-pdf-mut-family-8",
  "semio-s-artifact-stdio-pdf-page-coordinates",
+ "semio-s-artifact-stdio-pdf-page-editor-authoring",
+ "semio-s-artifact-stdio-pdf-page-editor-base",
+ "semio-s-artifact-stdio-pdf-page-editor-view",
+ "semio-s-artifact-stdio-pdf-paint-codecs",
  "semio-s-artifact-stdio-pdf-snapshot-2",
  "semio-ui-contract",
  "semio-ui-locale",
  "serde_json",
 ]
+
+[[package]]
+name = "semio-s-artifact-stdio-pdf-page-editor-authoring"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-io-base64",
+ "semio-framework-value",
+ "semio-plugin",
+ "semio-s-artifact-stdio-pdf-editor-document",
+ "semio-s-artifact-stdio-pdf-io-export",
+ "semio-s-artifact-stdio-pdf-mut-family-8",
+ "semio-s-artifact-stdio-pdf-snapshot-2",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-pdf-page-editor-base"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-artifact-reference",
+ "semio-framework-io-base64",
+ "semio-framework-pixels",
+ "semio-framework-value",
+ "semio-plugin",
+ "semio-s-artifact-stdio-contract",
+ "semio-s-artifact-stdio-jpg-inferences",
+ "semio-s-artifact-stdio-pdf-editor-document",
+ "semio-s-artifact-stdio-pdf-fonts",
+ "semio-s-artifact-stdio-pdf-inferences",
+ "semio-s-artifact-stdio-pdf-mut-base-4",
+ "semio-s-artifact-stdio-pdf-mut-family-8",
+ "semio-s-artifact-stdio-pdf-page-coordinates",
+ "semio-s-artifact-stdio-pdf-page-editor-view",
+ "semio-s-artifact-stdio-pdf-snapshot-2",
+ "semio-ui-contract",
+ "semio-ui-locale",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-pdf-page-editor-view"
+version = "0.1.0"
+dependencies = [
+ "semio-plugin",
+ "semio-s-artifact-stdio-pdf-page-coordinates",
+ "semio-s-artifact-stdio-pdf-snapshot-2",
+ "semio-ui-contract",
+ "semio-ui-locale",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-pdf-paint-codecs"
+version = "0.1.0"
 
 [[package]]
 name = "semio-s-artifact-stdio-pdf-pdf-snapshot-value-tests"

@@ -89,7 +89,7 @@ export async function registerConfigFacetFoldTests(
         worker.handleTsRequest(wire({ kind: "send", documentId: LOCAL_CATALOG_CONFIG_SCHEMA, clientInstanceId: client, message: { kind: "localMutations", envelopes: [admit] } }));
         await settle(() => h.counts.writes === 1 && worker.artifactState(LOCAL_CATALOG_CONFIG_SCHEMA)?.pendingMutations.length === 0);
         expect(decodeLocalCatalogArchiveV1(h.only()!)).toEqual({ documents: [alpha] });
-        const replaced = h.events("documentArchiveReplaced") as { readonly archive: readonly number[] }[];
+        const replaced = h.events("documentArchiveReplaced") as { readonly archive: Uint8Array }[];
         expect(replaced).toHaveLength(1);
         expect(decodeLocalCatalogArchiveV1(Uint8Array.from(replaced[0]!.archive))).toEqual({ documents: [alpha] });
 
@@ -135,7 +135,7 @@ export async function registerConfigFacetFoldTests(
         worker.handleTsRequest(wire(open(LOCAL_CATALOG_CONFIG_SCHEMA, client)));
         await settle(() => h.events("documentArchiveAbsent").length === 1);
         const archive = encodeDocumentArchiveBytes({ parent_pack: Array.from(worker.configFacetArchiveV1({ documents: [alpha] })), parent_spr: [], members: [] });
-        worker.handleTsRequest(wire({ kind: "send", documentId: LOCAL_CATALOG_CONFIG_SCHEMA, clientInstanceId: client, message: { kind: "localDocumentArchive", archive: Array.from(archive) } }));
+        worker.handleTsRequest(wire({ kind: "send", documentId: LOCAL_CATALOG_CONFIG_SCHEMA, clientInstanceId: client, message: { kind: "localDocumentArchive", archive: archive } }));
         const malformed = { ...localCatalogMutationEnvelopeV1("actor-1", admitLocalDocument(alpha), { documents: [] }), diff: { schemaId: LOCAL_CATALOG_CONFIG_SCHEMA, payload: { documents: "everything" } } };
         worker.handleTsRequest(wire({ kind: "send", documentId: LOCAL_CATALOG_CONFIG_SCHEMA, clientInstanceId: client, message: { kind: "localMutations", envelopes: [malformed] } }));
         await settle(() => h.events("commandOutcome").length === 2);
@@ -173,7 +173,7 @@ export async function registerConfigFacetFoldTests(
         h.posted.length = 0;
         worker.handleTsRequest(wire(open(IDENTITY_SCHEMA, second)));
         await settle(() => h.events("documentArchiveReplaced").length === 1);
-        const replaced = h.events("documentArchiveReplaced")[0] as { readonly archive: readonly number[] };
+        const replaced = h.events("documentArchiveReplaced")[0] as { readonly archive: Uint8Array };
         expect(sessionOf(Uint8Array.from(replaced.archive))).toBeNull();
       } finally {
         worker.closeArtifact(IDENTITY_SCHEMA, undefined, second);

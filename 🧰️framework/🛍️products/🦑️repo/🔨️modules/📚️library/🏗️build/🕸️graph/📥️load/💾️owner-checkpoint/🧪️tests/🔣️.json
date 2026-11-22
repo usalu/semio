@@ -1,0 +1,45 @@
+{
+  "scope": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "format": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "questions": [
+    {
+      "owner": "owner-a",
+      "targets": [
+        "dev"
+      ],
+      "inputs": [],
+      "revision": 1
+    },
+    {
+      "owner": "owner-b",
+      "targets": [],
+      "inputs": [
+        "source"
+      ],
+      "revision": 1
+    },
+    {
+      "owner": "owner-a",
+      "targets": [
+        "build"
+      ],
+      "inputs": [],
+      "revision": 1
+    }
+  ],
+  "changes": [
+    {
+      "question": 1,
+      "revision": 2
+    }
+  ],
+  "expected": {
+    "reused": [
+      0,
+      2
+    ],
+    "discovered": [
+      1
+    ]
+  }
+}

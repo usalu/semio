@@ -141,3 +141,7 @@ Scripts: `r5-panel-radiator-build.py` (imports the round-3 build, emitters flush
 - Rated output 1.2 kW below catalogue (author-requests, thermal maintainer), unchanged.
 
 The section and front view now distinguish the two valve nuts at the 1:75 band boundary. The twin pipes remain distinguishable at 1:150. The independently measured printed geometry and the full document check passed.
+
+## Digital working-stock readback, 2026-11-21
+
+Canonical source `ce5fa751dce33264`. Both pressed water panels and the folded convector stock remain visible at all four scales, including in the structural view. The 32 top apertures remain open. The 1:200 paper plan shows the central air passage. The temperature scene follows three height bands of the pressed front. The two 15 mm service tails enter separate unions. All twelve GLB scenes reopened (1,389,780 bytes) and all strict checks passed.

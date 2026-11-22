@@ -1,0 +1,31 @@
+[
+  {
+    "mode": "complete",
+    "gateEffect": "none",
+    "expected": {
+      "discoveries": 1,
+      "gates": 1,
+      "ready": 2,
+      "closes": 1,
+      "releases": 1
+    },
+    "terminalFences": {
+      "build": 1,
+      "preswitch": 1,
+      "postswitch": 1,
+      "buildInstalledBeforeFence": 1,
+      "publishInstalledBeforeFence": 1
+    }
+  },
+  {
+    "mode": "reuse",
+    "gateEffect": "membership-drift",
+    "expected": {
+      "discoveries": 3,
+      "gates": 2,
+      "ready": 2,
+      "closes": 3,
+      "releases": 2
+    }
+  }
+]

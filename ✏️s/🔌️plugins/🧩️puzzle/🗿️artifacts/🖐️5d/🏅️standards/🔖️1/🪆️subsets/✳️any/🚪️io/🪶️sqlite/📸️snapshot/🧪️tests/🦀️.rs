@@ -27,7 +27,7 @@ use crate::standards::v1::subsets::any::schema::kind_catalogs::{Puzzle5dCatalogF
    parts:vec![Puzzle5dCatalogPartKindExtra{id:String::new(),name:String::new(),label:String::new(),description:String::new(),icon:String::new(),image:String::new(),unit:String::new(),is_abstract:false,base_kinds:vec![String::new(),String::new()],representations:vec![Puzzle5dRepresentation{id:String::new(),name:String::new(),url:String::new(),mime:String::new(),tags:vec![String::new(),String::new()],lod:None,description:String::new()}],grips:vec![Puzzle5dGripTemplate{id:String::new(),name:String::new(),label:String::new(),description:String::new(),icon:String::new(),grip_kind:None,point:[value;3],direction:[value;3],t:Some(value),mandatory:Some(false),radius:None}],attributes:vec![Puzzle5dAttribute{id:String::new(),key:String::new(),value:String::new(),definition:None}],authors:vec![Puzzle5dAuthor{id:String::new(),name:String::new(),email:String::new(),role:None,rank:Some(i32::MIN)}]}],
    grips:vec![Puzzle5dCatalogGripKindExtra{id:String::new(),code:None,label:Some(String::new()),order:Some(i32::MAX),compatible_with:vec![String::new(),String::new()],description:String::new(),icon:String::new(),color:String::new(),default_rope_kind:String::new()}],fasteners:vec![Puzzle5dCatalogFastenerKindExtra{id:String::new(),name:String::new(),label:None}],ropes:vec![Puzzle5dCatalogRopeKindExtra{id:String::new(),name:String::new(),label:String::new(),default_fastener_kind:String::new()}]}),
   kind_compatibility:vec![Puzzle5dKindCompatibility{source:"unresolved".into(),target:String::new(),bidirectional:false,important:true,specificity:Puzzle5dCompatSpecificity::Rope}],
-  parts:vec![Puzzle5dPart{id:String::new(),part_kind:None,anchor:Puzzle5dPartAnchor::Derived,part_2d:Puzzle5dPart2d{x:value,y:value,shape:Some(String::new()),radius:Some(value),width:None,height:Some(value),text:None,icon_kind:Some(String::new()),hidden:None,locked:Some(false)},part_3d:Puzzle5dPart3d{origin:[value;3],mesh_url:Some(String::new()),orientation:Some([value;4]),scale:Some(Puzzle5dScale::Uniform(value)),label:None},grips:vec![Puzzle5dGrip{id:String::new(),grip_kind:Some("unresolved".into()),grip_2d:Puzzle5dGrip2d{angle:value,grip_kind:None,radius:Some(value)},grip_3d:Puzzle5dGrip3d{position:[value;3],direction:Some([value;3]),radius:None,label:Some(String::new())}}]}],
+  parts:vec![Puzzle5dPart{id:String::new(),part_kind:None,anchor:Puzzle5dPartAnchor::Derived,part_2d:Puzzle5dPart2d{x:value,y:value,shape:Some(String::new()),radius:Some(value),width:None,height:Some(value),text:None,icon_kind:Some(String::new()),hidden:None,locked:Some(false)},part_3d:Puzzle5dPart3d{origin:[value;3],mesh_url:Some(String::new()),orientation:Some([value;4]),scale:Some(Puzzle5dScale::Uniform(value)),label:None},grips:vec![Puzzle5dGrip{id:String::new(),grip_kind:Some("unresolved".into()),grip_2d:Puzzle5dGrip2d{angle:value,grip_kind:None,radius:Some(value)},grip_3d:Puzzle5dGrip3d{position:[value;3],direction:Some([value;3]),radius:None,label:Some(String::new())}}]}].into(),
   fasteners:vec![Puzzle5dFastener{id:String::new(),source:String::new(),target:"unresolved".into(),fastener_kind:None,gap:value,shift:value,rise:value,rotation:value,turn:value,tilt:value,x:value,y:value}],
   target_volumes:vec![Puzzle5dTargetVolume{id:String::new(),origin:[value;3],orientation:None,scale:Some(Puzzle5dScale::Vec3([value;3])),hidden:false,locked:true}]}
 }
@@ -73,9 +73,30 @@ fn sqlite_snapshot_puzzle5d_all_entities_and_words_cross_real_physical_files(){
 
 #[test]
 fn sqlite_snapshot_puzzle5d_independent_sqlite_queries_edits_and_surrogate_renumbering(){
- use std::io::Write;use std::process::{Command,Stdio};let source=project(&complete(0));
+ use std::io::Write;
+ use std::process::{Command,Stdio};
+ let mut expected=complete(0);
+ let part_count=laws()["pagedPartCount"].as_u64().unwrap();
+ let first_part=expected.parts[0].clone();
+ for index in 1..part_count {
+     expected.parts.push(Puzzle5dPart{id:format!("part-{index}"),..first_part.clone()});
+ }
+ let source=project(&expected);
  let script=r#"import{Database}from'bun:sqlite';const d=Database.deserialize(new Uint8Array(await Bun.stdin.arrayBuffer()),{safeIntegers:true});if(d.query('PRAGMA integrity_check').get().integrity_check!=='ok'||d.query('PRAGMA foreign_key_check').all().length)throw Error('integrity');const t=d.query('SELECT name FROM sqlite_schema WHERE type=\'table\'').all();if(t.length!==25)throw Error('tablecount');for(const{name}of t)if(d.query('SELECT COUNT(*) AS n FROM '+name).get().n<1n)throw Error('empty table');d.exec('UPDATE puzzle5_part_board SET x=2,x_ieee754_bits=4611686018427387904,x_numeric_class=\'finite\'');d.query('UPDATE puzzle5_representation SET description=?').run('edited 日本\u0000');for(const{name}of t){d.exec('UPDATE '+name+' SET id=id+1000');for(const fk of d.query('PRAGMA foreign_key_list('+name+')').all())d.exec('UPDATE '+name+' SET '+fk.from+'='+fk.from+'+1000')}if(d.query('PRAGMA foreign_key_check').all().length)throw Error('renumbered foreignkeys');await Bun.write(Bun.stdout,d.serialize());d.close();"#;
- let mut child=Command::new("bun").args(["-e",script]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();child.stdin.take().unwrap().write_all(&export_sqlite_database(&source,SqliteDatabaseLimits::default(),&mut |_|true).unwrap()).unwrap();let out=child.wait_with_output().unwrap();assert!(out.status.success(),"{}",String::from_utf8_lossy(&out.stderr));let actual=restore(&import_sqlite_database(&out.stdout,SqliteDatabaseLimits::default(),&mut |_|true).unwrap()).unwrap();let mut expected=complete(0);expected.parts[0].part_2d.x=2.;expected.kind_catalogs_extra.as_mut().unwrap().parts[0].representations[0].description="edited 日本\0".into();assert_eq!(project(&actual),project(&expected));
+ let mut child = Command::new("bun").args(["-e", script])
+     .stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();
+ child.stdin.take().unwrap()
+     .write_all(&export_sqlite_database(&source, SqliteDatabaseLimits::default(), &mut |_| true).unwrap())
+     .unwrap();
+ let output = child.wait_with_output().unwrap();
+ assert!(output.status.success(), "{}", String::from_utf8_lossy(&output.stderr));
+ let database = import_sqlite_database(&output.stdout, SqliteDatabaseLimits::default(), &mut |_| true).unwrap();
+ let actual = restore(&database).unwrap();
+ for part in expected.parts.iter_mut() {
+     part.part_2d.x = 2.;
+ }
+ expected.kind_catalogs_extra.as_mut().unwrap().parts[0].representations[0].description = "edited 日本\0".into();
+ assert_eq!(project(&actual), project(&expected));
 }
 
 #[test]

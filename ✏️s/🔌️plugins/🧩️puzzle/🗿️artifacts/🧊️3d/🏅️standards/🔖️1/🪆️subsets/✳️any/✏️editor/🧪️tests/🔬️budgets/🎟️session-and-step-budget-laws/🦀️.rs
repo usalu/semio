@@ -49,11 +49,11 @@ fn measured_tool_work(original: &mut semio_s_plugin_puzzle_retained::testing::Or
         "acceptSuggestion" => original.construct_boxed(Puzzle3dAcceptSuggestionWork::original_birth_demands().unwrap(), |scope| Puzzle3dAcceptSuggestionWork::from_original_construction(scope).map(|(work, progress)| (work.bound(instance), progress))),
         "setActiveExample" => original.construct_boxed(Puzzle3dSetActiveExampleWork::original_birth_demands().unwrap(), |scope| Puzzle3dSetActiveExampleWork::from_original_construction(scope)),
         "openVortexSuggestions" => Box::new(Puzzle3dWindowCommandWork::new(tool_id).bound(instance.clone())),
-        _ => Box::new(semio_s_plugin_puzzle_retained::BoundedFirstStepCommandWork::new(tool_id, puzzle3d_retained_reduce, puzzle3d_retained_extent)),
+        _ => Box::new(semio_s_plugin_puzzle_retained::BoundedFirstStepCommandWork::new(tool_id, puzzle3d_retained_reduce::<Puzzle3dPlayApp>, puzzle3d_retained_extent)),
     };
     let context = semio_plugin::app::ArtifactOwnedToolJobContext::new(
         app_instance_id,
-        Some(measured_view_state()),
+        Some(std::sync::Arc::new(measured_view_state())),
         [0; 32],
         0,
         0,

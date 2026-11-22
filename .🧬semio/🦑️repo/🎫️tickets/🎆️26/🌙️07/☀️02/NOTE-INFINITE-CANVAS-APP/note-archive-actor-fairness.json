@@ -1,0 +1,6 @@
+[
+  {"id":"archive-status-waits-for-receipts","acknowledgements":2,"moreWork":true,"queuedInput":true,"order":["acknowledgement","acknowledgement","queued-input","maintenance"]},
+  {"id":"maintenance-yields-to-status","acknowledgements":0,"moreWork":true,"queuedInput":true,"order":["queued-input","maintenance"]},
+  {"id":"idle-with-receipts","acknowledgements":1,"moreWork":false,"queuedInput":false,"order":["acknowledgement"]},
+  {"id":"detached-work-resumes","acknowledgements":0,"moreWork":true,"queuedInput":false,"order":["maintenance"]}
+]

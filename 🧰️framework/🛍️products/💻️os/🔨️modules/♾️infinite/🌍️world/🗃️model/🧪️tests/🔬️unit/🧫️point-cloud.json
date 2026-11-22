@@ -1,0 +1,107 @@
+{
+  "layers": [
+    {
+      "id": "a",
+      "positionsB64": "AACAPwAAAEAAAEBAAACQwAAAgD4AAABB",
+      "colorsB64": "/wAAAID/",
+      "size": 2.5,
+      "sizeAttenuation": true
+    },
+    {
+      "id": "b",
+      "positionsB64": "AACAPwAAAEAAAEBAAACQwAAAgD4AAABB",
+      "size": 4,
+      "sizeAttenuation": false
+    },
+    {
+      "id": "c",
+      "positionsB64": "AACAPwAAAEAAAEBAAACQwAAAgD4AAABB",
+      "colorsB64": "/wAA",
+      "size": 1,
+      "sizeAttenuation": true
+    }
+  ],
+  "expected": [
+    {
+      "size": 2.5,
+      "sizeAttenuation": true,
+      "vertices": [
+        [
+          1,
+          2,
+          3,
+          1,
+          0,
+          0,
+          1
+        ],
+        [
+          -4.5,
+          0.25,
+          8,
+          0,
+          0.5019607843137255,
+          1,
+          1
+        ]
+      ]
+    },
+    {
+      "size": 4,
+      "sizeAttenuation": false,
+      "vertices": [
+        [
+          1,
+          2,
+          3,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          -4.5,
+          0.25,
+          8,
+          1,
+          1,
+          1,
+          1
+        ]
+      ]
+    },
+    {
+      "size": 1,
+      "sizeAttenuation": true,
+      "vertices": [
+        [
+          1,
+          2,
+          3,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          -4.5,
+          0.25,
+          8,
+          1,
+          1,
+          1,
+          1
+        ]
+      ]
+    }
+  ],
+  "malformed": [
+    "not json",
+    "[{\"positionsB64\":\"!!\",\"size\":1,\"sizeAttenuation\":true}]"
+  ],
+  "budget": {
+    "layerVertices": 2,
+    "cap": 1,
+    "expectedVertices": 1
+  }
+}

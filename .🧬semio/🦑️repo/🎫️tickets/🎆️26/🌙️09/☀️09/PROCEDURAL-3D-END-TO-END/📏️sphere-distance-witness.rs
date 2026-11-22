@@ -50,7 +50,7 @@ impl SphericalShell {
 }
 fn exterior(shape: SphericalShell) -> SolidPrimitive { shape.0 }
 __SHELL_DISTANCE__
-enum SolidProvenance { Primitive(PrimitiveSource), PlanarBoundary(Option<Rectangular>), SphericalShell(SphericalShell, ()) }
+enum SolidProvenance { Primitive(PrimitiveSource), PlanarBoundary(Option<Rectangular>), SphericalShell(SphericalShell, ()), Orthogonal(()), PlacedOrthogonal((), ()) }
 impl SolidProvenance {
     fn certified_signed_distance(&self, point: Pnt3) -> Result<f64, ValueError> {
         match self { Self::SphericalShell(shape, _) => Ok(spherical_shell_distance(*shape, point)), _ => unreachable!() }

@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json.schemastore.org/package.json",
+  "name": "@semio-tech/ui-layout",
+  "version": "0.1.0",
+  "description": "ui · the window layout contract: schema, pure reference operations and shared corpus",
+  "type": "module",
+  "private": true,
+  "semio": {
+    "dependencyRole": "ui"
+  },
+  "exports": {
+    ".": "./🟦️.ts",
+    "./schema.json": "./🧬️schema/🔣️.json",
+    "./testing/fixtures.json": "./🧪️tests/🧫️fixtures/🔣️.json"
+  },
+  "license": "LGPL-3.0-or-later",
+  "bundleKind": "library",
+  "devDependencies": {
+    "ajv": "8.20.0"
+  }
+}

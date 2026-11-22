@@ -75,6 +75,7 @@ semio-s-fem-model = { workspace = true }
 semio-s-artifact-fem-2d-model = { workspace = true, features = ["testkit"] }
 semio-framework-async = { workspace = true }
 semio-framework-async-macros = { workspace = true }
+semio-framework-value-clone-source-testing = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️testing/📦️packages/🦀️rust" }
 semio-ui-scene = { workspace = true }
 semio-s-artifact-fem-2d-analysis = { workspace = true }
 semio-s-artifact-fem-2d-boundary = { workspace = true }

@@ -589,3 +589,98 @@ pub fn apply_focused_table_stepper_key(key: &semio_ui_wgpu_input::KeyAction, inp
     }
 }
 //#endregion 📊️TableStepperFocus
+
+//#region 📊️TableRowFocus
+pub struct FocusedTableRow {
+    pub window_id: String,
+    pub window_generation: u64,
+    pub node: NodeId,
+    pub host_id: String,
+}
+
+thread_local! {
+    pub static FOCUSED_TABLE_ROW: std::cell::RefCell<Option<FocusedTableRow>> = const { std::cell::RefCell::new(None) };
+}
+
+/// 📊️ A primary press on a table row focuses that row for the keyboard, as React's `tabIndex={0}` row takes focus.
+pub fn focus_table_row(window_id: &str, window_generation: u64, node: NodeId, host_id: &str, row_id: Option<String>) {
+    semio_renderer_wgpu_scene_state::set_scene_table_focused_row(host_id, row_id);
+    FOCUSED_TABLE_ROW.with(|cell| *cell.borrow_mut() = Some(FocusedTableRow { window_id: window_id.to_owned(), window_generation, node, host_id: host_id.to_owned() }));
+}
+
+/// 🖱️ A primary press anywhere takes keyboard focus off the focused table row; a press on a table row re-arms it in the same pointer turn.
+pub fn blur_focused_table_row_for_pointer(down: bool, button: i16) -> bool {
+    let blur = down && button == 0 && FOCUSED_TABLE_ROW.with(|cell| cell.borrow().is_some());
+    if blur {
+        clear_focused_table_row();
+    }
+    blur
+}
+
+fn clear_focused_table_row() {
+    if let Some(focus) = FOCUSED_TABLE_ROW.with(|cell| cell.borrow_mut().take()) {
+        semio_renderer_wgpu_scene_state::set_scene_table_focused_row(&focus.host_id, None);
+    }
+}
+
+fn table_row_key_name(key: &semio_ui_wgpu_input::KeyAction) -> Option<&'static str> {
+    use semio_ui_wgpu_input::KeyAction as K;
+    Some(match key {
+        K::ArrowUp => "ArrowUp",
+        K::ArrowDown => "ArrowDown",
+        K::PageUp => "PageUp",
+        K::PageDown => "PageDown",
+        K::Home => "Home",
+        K::End => "End",
+        K::Enter => "Enter",
+        K::Space(true) => " ",
+        K::Escape => "Escape",
+        _ => return None,
+    })
+}
+
+/// ⌨️ Offers a key to the focused table row: Up/Down/PageUp/PageDown/Home/End move the focused row and scroll it into view (Shift also range-selects), Enter/Space activate it (Ctrl/Meta toggles) and Escape leaves the table, each emitting the React `Table`'s own `interactionSelect` / `selectRow` action.
+pub fn apply_focused_table_row_key(key: &semio_ui_wgpu_input::KeyAction, modifiers: &semio_ui_wgpu_input::PointerModifiers, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> bool {
+    let Some(name) = table_row_key_name(key) else { return false };
+    let Some((window_id, window_generation, node, host_id)) = FOCUSED_TABLE_ROW.with(|cell| cell.borrow().as_ref().map(|focus| (focus.window_id.clone(), focus.window_generation, focus.node, focus.host_id.clone()))) else { return false };
+    let outcome = UI_ENGINE.with(|cell| {
+        let engine = cell.borrow();
+        if engine.surface_generation(&window_id) != Some(window_generation) || ui_document_close_pending_for(&window_id) {
+            return None;
+        }
+        let tree = engine.tree(&window_id)?;
+        let UiNode::ComponentScene(scene) = &tree.node(node)?.spec.0 else { return None };
+        if scene.component_kind != semio_ui_declaration::ui::SurfaceKind::Table || scene.host_id != host_id || semio_renderer_wgpu_scene_state::scene_host_retiring(&host_id) {
+            return None;
+        }
+        let rect = tree.absolute_rect(node)?;
+        let theme = semio_renderer_wgpu_scene_state::scene_input_theme();
+        let body_h = (rect.h - theme.control_height * 1.33).max(theme.control_height);
+        let page = ((body_h / theme.control_height) as usize).saturating_sub(1).max(1);
+        let focused = semio_renderer_wgpu_scene_state::scene_table_focused_row(&host_id);
+        let modifiers = semio_renderer_wgpu_scene_state::SceneModifiers { shift: modifiers.shift, ctrl: modifiers.ctrl, alt: modifiers.alt, meta: modifiers.meta, click_count: 0 };
+        semio_renderer_wgpu_scene_tables::table_row_key(scene, focused.as_deref(), name, modifiers, page).map(|outcome| (outcome, body_h, theme.control_height))
+    });
+    let Some((outcome, body_h, row_h)) = outcome else {
+        clear_focused_table_row();
+        return false;
+    };
+    if outcome.escape {
+        clear_focused_table_row();
+        return true;
+    }
+    if let Some(row) = outcome.focus_row {
+        semio_renderer_wgpu_scene_state::set_scene_table_focused_row(&host_id, Some(row));
+    }
+    if let Some(index) = outcome.scroll_to {
+        let scroll = semio_renderer_wgpu_scene_state::scroll_offset(&host_id, "body");
+        semio_renderer_wgpu_scene_state::set_scroll_offset(&host_id, "body", semio_ui_wgpu_layout::table::table_scroll_top_for_row(index, row_h, scroll, body_h));
+    }
+    if let Some(action) = outcome.action {
+        if let Err(fault) = semio_renderer_wgpu_scene_state::write_scene_action(input, &action) {
+            input.record_action_fault(fault);
+        }
+    }
+    true
+}
+//#endregion 📊️TableRowFocus

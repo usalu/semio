@@ -239,6 +239,83 @@
       "subsetDirectoryName": "✳️any",
       "vectors": [
         {
+          "mutationId": "insert-case",
+          "sourceMutationDirectoryName": "➕️insert-case",
+          "mutationDirectoryName": "➕️insert-case",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-case",
+          "sourceMutationDirectoryName": "➖️remove-case",
+          "mutationDirectoryName": "➖️remove-case",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-case-number",
+          "sourceMutationDirectoryName": "🔢️change-case-number",
+          "mutationDirectoryName": "🔢️change-case-number",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-case-text",
+          "sourceMutationDirectoryName": "🔤️change-case-text",
+          "mutationDirectoryName": "🔤️change-case-text",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-case-label-en",
+          "sourceMutationDirectoryName": "🏷️change-case-label-en",
+          "mutationDirectoryName": "🏷️change-case-label-en",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-case-label-de",
+          "sourceMutationDirectoryName": "🏷️change-case-label-de",
+          "mutationDirectoryName": "🏷️change-case-label-de",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-case-entry-id",
+          "sourceMutationDirectoryName": "📇️change-case-entry-id",
+          "mutationDirectoryName": "📇️change-case-entry-id",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
           "mutationId": "change-annex",
           "sourceMutationDirectoryName": "📎️change-annex",
           "mutationDirectoryName": "📎️change-annex",
@@ -4275,6 +4352,13 @@
         }
       ],
       "kinds": [
+        "insert-case",
+        "remove-case",
+        "change-case-number",
+        "change-case-text",
+        "change-case-label-en",
+        "change-case-label-de",
+        "change-case-entry-id",
         "change-annex",
         "insert-building",
         "remove-building",
@@ -4648,6 +4732,146 @@
       "standardDirectoryName": "🔖️1",
       "subsetDirectoryName": "✳️any",
       "mutations": [
+        {
+          "id": "insert-case",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "insert-case",
+            "bridgeVersion": 1,
+            "variant": "InsertCase"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "remove-case",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "remove-case",
+            "bridgeVersion": 1,
+            "variant": "RemoveCase"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-case-number",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-case-number",
+            "bridgeVersion": 1,
+            "variant": "ChangeCaseNumber"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-case-text",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-case-text",
+            "bridgeVersion": 1,
+            "variant": "ChangeCaseText"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-case-label-en",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-case-label-en",
+            "bridgeVersion": 1,
+            "variant": "ChangeCaseLabelEn"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-case-label-de",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-case-label-de",
+            "bridgeVersion": 1,
+            "variant": "ChangeCaseLabelDe"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-case-entry-id",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-case-entry-id",
+            "bridgeVersion": 1,
+            "variant": "ChangeCaseEntryId"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
         {
           "id": "change-annex",
           "capability": "en1998-1-mutate",

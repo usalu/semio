@@ -6,6 +6,11 @@
 use semio_renderer_wgpu_doors::directory_door;
 use semio_renderer_wgpu_hub_contracts::{hub_sign_in, space_browser};
 
+pub use semio_renderer_wgpu_hub_first_run as hub_first_run;
+
+#[path = "../../../🧱️elements/🤖️AgentDelegations/🎯️targets/🧊️wgpu/🦀️.rs"]
+pub mod agent_delegations;
+
 #[path = "../../../🧱️elements/🔗️HubConnection/🎯️targets/🧊️wgpu/🦀️.rs"]
 pub mod hub_connection;
 

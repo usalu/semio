@@ -22,27 +22,94 @@ const HEADERS: [&str; 8] = [
     "ncols", "nrows", "xllcorner", "yllcorner", "xllcenter", "yllcenter", "cellsize", "nodata_value",
 ];
 
-/// 📏️ Preserves the sample-centre extent and reverses Esri file rows into canonical south-first rows.
-pub fn decode(text: &str, maximum_bytes: usize) -> Result<ElevationSource, Error> {
-    if text.is_empty() || text.len() > maximum_bytes {
-        return Err(Error::FileSize);
+#[derive(Clone, Copy)]
+struct Tokens<'a>(&'a str);
+
+impl<'a> Tokens<'a> {
+    fn take(&mut self) -> Option<&'a str> {
+        let remainder = self.0.trim_ascii_start();
+        self.0 = remainder;
+        if remainder.is_empty() {
+            return None;
+        }
+        let end = remainder.find(|ch: char| ch.is_ascii_whitespace()).unwrap_or(remainder.len());
+        let (token, rest) = remainder.split_at(end);
+        self.0 = rest;
+        Some(token)
+    }
+}
+
+/// 🧭️ Holds the sample-centre extent and the position of the next north-first row.
+pub struct GridReader {
+    pub bounds: [f64; 4],
+    pub dimensions: [usize; 2],
+    no_data: f64,
+    offset: usize,
+    remaining_rows: usize,
+}
+
+impl GridReader {
+    /// 📋️ Admits the bounded text and reads its complete Esri header.
+    pub fn new(text: &str, maximum_bytes: usize) -> Result<Self, Error> {
+        if text.is_empty() || text.len() > maximum_bytes {
+            return Err(Error::FileSize);
+        }
+        let mut tokens = Tokens(text.trim_start_matches('\u{feff}'));
+        let (bounds, dimensions, no_data) = read_header(&mut tokens)?;
+        if dimensions[0] * dimensions[1] > text.len() / 2 + 1 {
+            return Err(Error::Samples);
+        }
+        Ok(Self {
+            bounds, dimensions, no_data, offset: text.len() - tokens.0.len(), remaining_rows: dimensions[1],
+        })
     }
 
-    let mut tokens = text.trim_start_matches('\u{feff}').split_ascii_whitespace().peekable();
+    /// 📍️ Reports the byte extent already consumed from the original source.
+    pub fn offset(&self) -> usize { self.offset }
+
+    /// 🧱️ Reads one exact-width north-first row and rejects trailing samples at the final row.
+    pub fn next_row(&mut self, text: &str) -> Result<Option<Vec<i32>>, Error> {
+        if self.remaining_rows == 0 {
+            return Ok(None);
+        }
+        let mut tokens = Tokens(text.get(self.offset..).ok_or(Error::Samples)?);
+        let mut row = Vec::with_capacity(self.dimensions[0]);
+        for _ in 0..self.dimensions[0] {
+            let token = tokens.take().ok_or(Error::Samples)?;
+            if token.len() <= 64 && finite(token).is_some_and(|sample| sample == self.no_data) {
+                return Err(Error::NoData);
+            }
+            row.push(parse_millimetres(token).ok_or(Error::Samples)?);
+        }
+        if self.remaining_rows == 1 && tokens.take().is_some() {
+            return Err(Error::Samples);
+        }
+        self.remaining_rows -= 1;
+        self.offset = text.len() - tokens.0.len();
+        Ok(Some(row))
+    }
+}
+
+fn finite(token: &str) -> Option<f64> {
+    token.parse::<f64>().ok().filter(|value| value.is_finite())
+}
+
+fn read_header(tokens: &mut Tokens<'_>) -> Result<([f64; 4], [usize; 2], f64), Error> {
     let mut header = [None; HEADERS.len()];
-    while let Some(key) = tokens.peek().and_then(|token| HEADERS.iter().position(|key| token.eq_ignore_ascii_case(key))) {
-        tokens.next();
+    loop {
+        let mut probe = *tokens;
+        let Some(key) = probe.take().and_then(|token| HEADERS.iter().position(|key| token.eq_ignore_ascii_case(key))) else { break };
         if header[key].is_some() {
             return Err(Error::Header);
         }
-        header[key] = Some(tokens.next().ok_or(Error::Header)?);
+        header[key] = Some(probe.take().ok_or(Error::Header)?);
+        *tokens = probe;
     }
     let [columns, rows, west, south, west_centre, south_centre, size, no_data] = header;
     let dimension = |token: Option<&str>| {
         let value = token.and_then(|value| value.parse::<usize>().ok()).ok_or(Error::Header)?;
         (ELEVATION_MIN_SIDE..=ELEVATION_MAX_SIDE).contains(&value).then_some(value).ok_or(Error::Dimensions)
     };
-    let finite = |token: &str| token.parse::<f64>().ok().filter(|value| value.is_finite());
     let (columns, rows) = (dimension(columns)?, dimension(rows)?);
     let size = size.and_then(finite).filter(|&value| value > 0.0).ok_or(Error::Header)?;
     let (x, y, centre_offset) = match (west, south, west_centre, south_centre) {
@@ -58,27 +125,18 @@ pub fn decode(text: &str, maximum_bytes: usize) -> Result<ElevationSource, Error
         return Err(Error::Bounds);
     }
     let no_data = finite(no_data.unwrap_or("-9999")).ok_or(Error::Header)?;
-    if columns * rows > text.len() / 2 + 1 {
-        return Err(Error::Samples);
-    }
+    Ok(([west, south, east, north], [columns, rows], no_data))
+}
 
-    let mut rows_millimetres = Vec::with_capacity(rows);
-    for _ in 0..rows {
-        let mut row = Vec::with_capacity(columns);
-        for _ in 0..columns {
-            let token = tokens.next().ok_or(Error::Samples)?;
-            if finite(token).is_some_and(|sample| sample == no_data) {
-                return Err(Error::NoData);
-            }
-            row.push(parse_millimetres(token).ok_or(Error::Samples)?);
-        }
+/// 📏️ Preserves the sample-centre extent and reverses Esri file rows into canonical south-first rows.
+pub fn decode(text: &str, maximum_bytes: usize) -> Result<ElevationSource, Error> {
+    let mut reader = GridReader::new(text, maximum_bytes)?;
+    let mut rows_millimetres = Vec::with_capacity(reader.dimensions[1]);
+    while let Some(row) = reader.next_row(text)? {
         rows_millimetres.push(row);
     }
-    if tokens.next().is_some() {
-        return Err(Error::Samples);
-    }
     rows_millimetres.reverse();
-    Ok(ElevationSource { rows_millimetres, bounds: [west, south, east, north] })
+    Ok(ElevationSource { rows_millimetres, bounds: reader.bounds })
 }
 
 fn parse_millimetres(token: &str) -> Option<i32> {
@@ -136,8 +194,11 @@ fn write_metres(output: &mut String, millimetres: i32) {
     }
 }
 
-/// 🧾️ Exports exact millimetre heights in Esri north-first row order when the cells are square.
-pub fn encode(source: &ElevationSource) -> Result<String, Error> {
+pub const MAX_HEADER_BYTES: usize = 1152;
+pub const MAX_CELL_BYTES: usize = 13;
+
+/// 🧾️ Validates the grid extent and writes the shared square-cell Esri header.
+pub fn encode_header(source: &ElevationSource) -> Result<String, Error> {
     let (columns, rows) = source.dimensions().ok_or(Error::Dimensions)?;
     if !source.is_valid() {
         return Err(Error::Bounds);
@@ -153,16 +214,29 @@ pub fn encode(source: &ElevationSource) -> Result<String, Error> {
         return Err(Error::CellShape);
     }
 
-    let mut grid = String::with_capacity(160 + columns * rows * 13);
+    let mut grid = String::with_capacity(MAX_HEADER_BYTES);
     write!(&mut grid, "NCOLS {columns}\nNROWS {rows}\nXLLCENTER {west}\nYLLCENTER {south}\nCELLSIZE {longitude_step}\nNODATA_VALUE -2147483.649\n").expect("ASCII Grid header string");
-    for row in source.rows_millimetres.iter().rev() {
-        let mut cells = row.iter();
-        write_metres(&mut grid, *cells.next().expect("validated ASCII Grid row"));
-        for &cell in cells {
-            grid.push(' ');
-            write_metres(&mut grid, cell);
+    Ok(grid)
+}
+
+/// 🧮️ Appends a validated row of exact signed millimetre samples in west-first order.
+pub fn write_row(output: &mut String, row: &[i32]) {
+    for (index, &cell) in row.iter().enumerate() {
+        if index != 0 {
+            output.push(' ');
         }
-        grid.push('\n');
+        write_metres(output, cell);
+    }
+    output.push('\n');
+}
+
+/// 🧭️ Exports exact millimetre heights in Esri north-first row order.
+pub fn encode(source: &ElevationSource) -> Result<String, Error> {
+    let mut grid = encode_header(source)?;
+    let (columns, rows) = source.dimensions().expect("validated ASCII Grid dimensions");
+    grid.reserve(columns * rows * MAX_CELL_BYTES);
+    for row in source.rows_millimetres.iter().rev() {
+        write_row(&mut grid, row);
     }
     Ok(grid)
 }
@@ -239,5 +313,9 @@ with output.open("w", encoding="utf-8", newline="\n") as patch:
             )
     source = "".join(lines).replace("LocalizedLabel); 7]", "LocalizedLabel); 8]").replace(
         "Error::Header, Error::Bounds, Error::Samples", "Error::Header, Error::Bounds, Error::Dimensions, Error::Samples")
+    source = source.replace("trait ErrorNotice {", "pub(super) trait ErrorNotice {")
+    source = source.replace("mod ascii_grid {", "pub(super) mod ascii_grid {")
+    source = source.replace("pub(super) use semio_s_artifact_gis_gisterrain_inferences", "pub(in super::super) use semio_s_artifact_gis_gisterrain_inferences")
+    source = source.replace("{Error, encode};", "{Error, GridReader, MAX_CELL_BYTES, MAX_HEADER_BYTES, encode, encode_header, write_row};")
     patch.writelines(patch_lines(IMPORT, source))
 print("[DEBUG] Prepared " + output.name)

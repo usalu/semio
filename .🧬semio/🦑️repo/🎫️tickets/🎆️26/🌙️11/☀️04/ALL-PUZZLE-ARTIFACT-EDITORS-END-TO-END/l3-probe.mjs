@@ -1,0 +1,13 @@
+import {chromium} from "@playwright/test";
+const [,, id] = process.argv;
+const b = await chromium.launch({args:(process.env.PWARGS??"").split(" ")});
+const p = await b.newPage();
+p.on("console", m => console.log("CONSOLE", m.type(), m.text().slice(0,400)));
+p.on("pageerror", e => console.log("PAGEERROR", e.message.slice(0,400)));
+p.on("requestfailed", r => console.log("REQFAIL", r.url().slice(0,200)));
+p.on("response", r => { if (r.status()>=400) console.log("HTTP", r.status(), r.url().slice(0,200)); });
+await p.goto(`http://localhost:6010/iframe.html?id=${id}&viewMode=story`);
+await p.waitForTimeout(Number(process.env.WAIT ?? 30000));
+console.log("BODY", (await p.evaluate(()=>document.body.innerText)).slice(0,600));
+console.log("ATTRS", await p.evaluate(()=>[...(document.querySelector(".semio-board-2d-host")?.attributes??[])].map(a=>a.name+"="+a.value.slice(0,40)).filter(s=>!/json/.test(s)).join(" | ")));
+await b.close();

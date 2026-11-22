@@ -13,3 +13,5 @@ include!("📍️anchored-placement-and-tooltip-dwell-laws/🦀️.rs");
 include!("⌨️widget-keyboard-laws/🦀️.rs");
 include!("🧭️flow-direction-focus-visible-and-search-moment-laws/🦀️.rs");
 include!("🪞️mirrored-number-and-text-keyboard-laws/🦀️.rs");
+include!("✍️text-field-editing-vector-laws/🦀️.rs");
+include!("🔘️segmented-select-routing-laws/🦀️.rs");

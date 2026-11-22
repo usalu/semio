@@ -80,6 +80,8 @@ fn json_candidate_demand<T>(owner:&JsonCandidates<T>,demand:&mut RetirementDeman
 
 pub type JsonParseCursor=JsonGrammarCursor<Value>;
 
+const OWNED_TURN_UNITS: usize = 256;
+
 pub struct JsonGrammarCursor<V:JsonParsedValue> {
     #[doc(hidden)] pub position: usize, validated_position:usize, #[doc(hidden)] pub limits:JsonReadLimits, #[doc(hidden)] pub policy: JsonMemberPolicy, #[doc(hidden)] pub frames: JsonCandidates<JsonFrame<V>>, #[doc(hidden)] pub lexeme: Option<JsonLexeme>,
     #[doc(hidden)] pub pending: Option<V>, #[doc(hidden)] pub result: Option<V>, retired: JsonCandidates<V>, obsolete:Option<V>, pub(super) complete: bool, pub(super) normal_step_progress:RetainedCloneProgress, normal_step_work:u64,
@@ -93,6 +95,87 @@ impl<V:JsonParsedValue> JsonGrammarCursor<V> {
     pub fn last_turn_work(&self)->u64{self.normal_step_work}
     /// 🔡️ Quotes scalar validation units guaranteed to precede grammar even when each scalar uses four bytes.
     pub fn validation_work_units(&self,source_bytes:usize)->usize{source_bytes.saturating_sub(self.validated_position)/char::MAX.len_utf8()}
+
+    fn ordinary_string_tail<'source>(&self, input: &'source [u8]) -> Option<(&'source [u8], bool)> {
+        if self.validated_position != input.len() {
+            return None;
+        }
+        let Some(JsonLexeme::String(scan)) = &self.lexeme else { return None };
+        let tail = if scan.writing {
+            if !scan.admitted || scan.pending_index < scan.pending_width {
+                return None;
+            }
+            let tail = input.get(scan.position..)?;
+            let remaining = scan.bytes.min(scan.output.capacity()).checked_sub(scan.output.len())?;
+            &tail[..tail.len().min(remaining)]
+        } else {
+            input.get(self.position..)?
+        };
+        tail.first().copied().filter(|&byte| ordinary_string_byte(byte))?;
+        Some((tail, scan.writing))
+    }
+
+    /// 📊️ Quotes bounded work and additional copied bytes for one contiguous owned-source string turn.
+    #[doc(hidden)]
+    pub fn owned_turn_quote(&self, input: &[u8], maximum_units: usize, maximum_copy_bytes: usize) -> (usize, usize) {
+        let maximum_units = maximum_units.min(OWNED_TURN_UNITS);
+        if maximum_units <= 1 {
+            return (maximum_units, 0);
+        }
+        if let Some((tail, writing)) = self.ordinary_string_tail(input) {
+            let mut units = maximum_units.min(tail.len());
+            if writing {
+                units = units.min(maximum_copy_bytes);
+            }
+            if units > 1 {
+                return (units, if writing { units } else { 0 });
+            }
+        }
+        (self.validation_work_units(input.len()).max(1).min(maximum_units), 0)
+    }
+
+    /// 🧵️ Runs a bounded ordinary ASCII prefix under one owned-source effect.
+    #[doc(hidden)]
+    pub fn step_owned_source(&mut self, input: &[u8], maximum_units: usize, control: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<Option<V>, JsonError> {
+        self.normal_step_work = 0;
+        self.normal_step_progress = Default::default();
+        let available = maximum_units.min(usize::try_from(effect.remaining_work_units()?).unwrap_or(usize::MAX));
+        if available == 0 {
+            return Ok(None);
+        }
+        let run = if available > 1 { self.ordinary_string_tail(input) } else { None };
+        let Some((tail, writing)) = run else {
+            return self.step_source(input, available, control, effect, false);
+        };
+        let grant = effect.grant();
+        let limit = available.min(OWNED_TURN_UNITS).min(grant.maximum_items).min(tail.len());
+        let limit = if writing { limit.min(grant.maximum_copy_bytes) } else { limit };
+        if limit == 0 || !normal_permit(RetirementDemand { depth: self.frames.len() + 1, ..Default::default() }, grant)? {
+            return Ok(None);
+        }
+        control.checkpoint()?;
+        control.admit_turn_capacity(grant.maximum_capacity_bytes)?;
+        let length = tail[..limit].iter().copied().take_while(|&byte| ordinary_string_byte(byte)).count();
+        let admitted = effect.performed(length as u64)?;
+        self.normal_step_work = effect.performed_work() as u64;
+        if !admitted {
+            return Err(ValueError::literal(ValueRefusalKind::WorkLimit, "JSON string run work exceeded its original authority").into());
+        }
+        let Some(JsonLexeme::String(scan)) = &mut self.lexeme else { unreachable!() };
+        let copied_bytes = if writing {
+            scan.output.extend_from_slice(&tail[..length]);
+            scan.position += length;
+            length
+        } else {
+            scan.bytes = scan.bytes.checked_add(length).ok_or_else(|| ValueError::literal(ValueRefusalKind::OwnershipLimit, "JSON string size overflow"))?;
+            self.position += length;
+            0
+        };
+        self.normal_step_progress = RetainedCloneProgress { copied_items: length, copied_bytes, ..Default::default() };
+        control.advance(length).map_err(|error| error.with_retained_progress(self.normal_step_progress))?;
+        Ok(None)
+    }
+
     pub fn normal_step_demands<S:JsonReadSource+?Sized>(&self,input:&S)->Result<RetirementDemand,JsonError>{
         if self.validated_position<input.byte_len(){return Ok(RetirementDemand{depth:1,..Default::default()});}
         let mut demand=RetirementDemand{depth:self.frames.len()+1,..Default::default()};
@@ -259,6 +342,10 @@ impl<V:JsonParsedValue> JsonGrammarCursor<V> {
         if frame.reverse<length/2 {let opposite=length-1-frame.reverse;if frame.object {frame.members.swap(frame.reverse,opposite);}else {frame.array.swap(frame.reverse,opposite);}frame.reverse+=1;return Ok(());}
         let frame=self.frames.pop().unwrap();self.pending=Some(if frame.object {V::json_object(frame.members)}else {V::json_array(frame.array)});Ok(())
     }
+}
+
+fn ordinary_string_byte(byte: u8) -> bool {
+    matches!(byte, 0x20..=0x7f) && !matches!(byte, b'"' | b'\\')
 }
 
 semio_framework_value::artifact_retire_leaf!(Number);
@@ -471,6 +558,9 @@ impl semio_framework_value::retirement::RetireOwned for JsonValueProjection {
 #[cfg(test)]
 #[path="🎟️work/🧪️tests/🦀️.rs"]
 mod actual_work_tests;
+#[cfg(test)]
+#[path="🎟️work/🧪️tests/🧵️string-runs.rs"]
+mod string_run_tests;
 
 impl JsonGrammarCursor<DslValue> {
     /// 🧭️ Detects a requested direct object path at the opening bracket of its array.

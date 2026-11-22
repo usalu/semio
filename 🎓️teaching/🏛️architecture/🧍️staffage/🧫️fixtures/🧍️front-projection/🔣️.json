@@ -1,5 +1,5 @@
 {
-  "description": "Language-agnostic vectors of the front elevation. A front shape keeps its authored front coordinates (x across the width from the centre, y up from the floor, both in metres) and follows its bone only by the bone's y travel from the rest pose. The figure is the rig of the sample figure (pelvis up, thigh 0.45 m); the shank origin is the thigh tip, whose y travel at a thigh angle of 22 degrees is 0.45 · (sin(-68°) - sin(-90°)) = +0.032767 m relative to the thigh origin (hand-computed; the pose lifts the whole figure onto the ground, which cancels in the difference), at the rest pose 0.",
+  "description": "Language-agnostic vectors of the front elevation. A front shape keeps its authored front coordinates (x across the width from the centre, y up from the floor, both in metres) and follows its bone only by the bone's y travel from the rest pose. The figure is the rig of the sample figure (pelvis up, thigh 0.45 m); the shank origin is the thigh tip, whose y travel at a thigh angle of 22 degrees is 0.45 · (sin(-68°) - sin(-90°)) = +0.032767 m relative to the thigh origin (hand-computed; the pose lifts the whole figure onto the ground, which cancels in the difference), at the rest pose 0. The front cast of the panel radiator is 1.2025 m wide: the drawn front of 1.1025 m (dimensions.depthM: the 1.0 m panel, the thermostatic valve head 0.095 m beyond one end and the blanking plug 0.0075 m beyond the other) plus the canvas margin of 0.05 m on each side; the band is 1.2 m ± 0.1 m.",
   "asset": "sample-figure",
   "scale": 100,
   "shapes": [
@@ -113,8 +113,8 @@
     },
     "widthM": {
       "radiator-front": {
-        "min": 1.0,
-        "max": 1.2
+        "min": 1.1,
+        "max": 1.3
       },
       "radiator-side": {
         "min": 0.3,

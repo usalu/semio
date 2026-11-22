@@ -83,19 +83,34 @@ macro_rules! retained_row_patch{
      let _=index;Ok(RetirementDemand{copy_bytes:std::mem::size_of::<$patch>()*2,depth:1,..Default::default()})
     }
     fn advance_work_demand(&self,patch:RetainedCloneRef<'_,$patch>,row:RetainedCloneRef<'_,$row>,body:usize,maximum_work_units:u64)->Result<u64,ValueError>{
-     self.demand(patch,row,body,maximum_work_units)?;if maximum_work_units==0{return Ok(0)}if self.payload.is_none()||self.row.is_none(){return Ok(1)}let mut index=0;$(if self.phase==index{if patch.get().$field.is_none(){return Ok(1)}let Some(field)=self.$field.as_ref()else{return Ok(1)};if field.value().is_some(){return Ok(1)}let source=if self.source==RetainedPatchSource::Authored{patch.project(index,|patch|patch.$field.as_ref().expect("authored schema field"))}else{row.project(index,|row|&row.$field)};return field.advance_work_demand(source,body,maximum_work_units)}index+=1;)+let _=index;Ok(1)
+     self.demand(patch,row,body,maximum_work_units)?;
+     if maximum_work_units==0{return Ok(0)}
+     let binding_work=if self.payload.is_none(){Some(patch.binding_work_demand(&self.payload)?)}else if self.row.is_none(){Some(row.binding_work_demand(&self.row)?)}else{None};
+     if let Some(work)=binding_work{return Ok(if work<=maximum_work_units{work}else{0})}
+     let mut index=0;$(if self.phase==index{if patch.get().$field.is_none(){return Ok(1)}let Some(field)=self.$field.as_ref()else{return Ok(1)};if field.value().is_some(){return Ok(1)}let source=if self.source==RetainedPatchSource::Authored{patch.project(index,|patch|patch.$field.as_ref().expect("authored schema field"))}else{row.project(index,|row|&row.$field)};return field.advance_work_demand(source,body,maximum_work_units)}index+=1;)+let _=index;Ok(1)
     }
     fn advance_reply<'r>(&mut self,patch:RetainedCloneRef<'_,$patch>,row:RetainedCloneRef<'_,$row>,body:usize,maximum_work_units:u64,effect:&mut RetainedAllocationEffect<'_>,reply:$crate::retained::Reply<'r>,recover:bool)->Result<$crate::retained::Done<'r>,ValueError>{let grant=effect.grant();let base=effect.performed_work();let mut work:u128=0;let result:Result<RetainedCloneStep,RetirementPollExit>=(||{
-     if !recover&&!self.flight.idle(){return Err(ValueError::invariant("sparse inverse requires recovery").into())}let selected=self.advance_work_demand(patch,row,body,maximum_work_units)?;if !recover&&selected==0{return Ok(RetainedCloneStep::Progress(Default::default()))}let demand=self.demand(patch,row,body,maximum_work_units)?;
-     if !recover&&!retained_mutation_demand_fits(demand,grant){return Ok(RetainedCloneStep::Progress(Default::default()));}
+     let demand=if recover{
+      if self.closing||self.phase>=<$patch as RetainedRowPatch<$row>>::FIELD_COUNT||self.flight.route().map(usize::from)!=Some(self.phase+1)||!patch.check_binding(&self.payload)?||!row.check_binding(&self.row)?{
+       return Err(ValueError::invariant("sparse inverse recovery has no matching field action").into())
+      }
+      RetirementDemand::default()
+     }else{
+      if !self.flight.idle(){return Err(ValueError::invariant("sparse inverse requires recovery").into())}
+      let selected=self.advance_work_demand(patch,row,body,maximum_work_units)?;
+      if selected==0||effect.remaining_work_units()?<selected{return Ok(RetainedCloneStep::Progress(Default::default()))}
+      let demand=self.demand(patch,row,body,maximum_work_units)?;
+      if !retained_mutation_demand_fits(demand,grant){return Ok(RetainedCloneStep::Progress(Default::default()))}
+      demand
+     };
      if !recover{let turn=patch.bind(&mut self.payload,effect);work+=turn.work;if let Some(progress)=turn.result?{return Ok(RetainedCloneStep::Progress(progress));}
      let turn=row.bind(&mut self.row,effect);work+=turn.work;if let Some(progress)=turn.result?{return Ok(RetainedCloneStep::Progress(progress));}}
      let mut index=0;
      $(if self.phase==index{
-      if patch.get().$field.is_none(){work+=1;self.phase+=1;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}));}
-      if self.$field.is_none(){work+=1;self.$field=Some(Box::new(RetainedFieldPreparation::default()));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,retained_capacity_bytes:demand.capacity_bytes,..Default::default()}));}
-      let field=self.$field.as_mut().expect("funded sparse field owner");
-      if field.value().is_some(){
+      if !recover&&patch.get().$field.is_none(){work+=1;self.phase+=1;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}));}
+      if !recover&&self.$field.is_none(){work+=1;self.$field=Some(Box::new(RetainedFieldPreparation::default()));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,retained_capacity_bytes:demand.capacity_bytes,..Default::default()}));}
+      let field=self.$field.as_mut().ok_or_else(||ValueError::invariant("funded sparse field owner is absent"))?;
+      if !recover&&field.value().is_some(){
        let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-std::mem::size_of::<Option<$field_ty>>(),..grant};
        let mut value=None;let step=$crate::retained::native_child(effect,&mut work,|e,r|field.take_into(&mut value,&mut e.nested(child),r))??;let mut progress=step.progress();
        let Some(value)=value else{return Ok(RetainedCloneStep::Progress(progress))};self.result.as_mut().expect("untransferred sparse inverse").$field=Some(value);

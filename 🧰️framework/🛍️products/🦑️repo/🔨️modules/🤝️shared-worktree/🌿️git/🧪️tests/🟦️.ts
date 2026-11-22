@@ -1,6 +1,8 @@
-import {afterAll,expect,test} from "bun:test";
+import {afterAll,expect,spyOn,test} from "bun:test";
+import * as childProcess from "node:child_process";
 import Ajv from "ajv";
 import observedIndex from "./🧫️fixtures/🩺️observe-index.json" with {type:"json"};
+import presence from "./🧫️fixtures/🩺️presence.json" with {type:"json"};
 import stageRetry from "./🧫️fixtures/⏱️stage-retry.json" with {type:"json"};
 import {createHash} from "node:crypto";
 import {chmodSync,existsSync,mkdirSync,mkdtempSync,readdirSync,readFileSync,renameSync,rmSync,statSync,symlinkSync,utimesSync,writeFileSync} from "node:fs";
@@ -11,7 +13,7 @@ import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};
 import {formatHlcV1} from "../../📒️journal/🟦️.ts";
 import {refusePathV1} from "../../🚧️boundary/🟦️.ts";
-import {applyIndexV1,assembleViewV1,crlfScriptsV1,diffTreeV1,emptyTreeV1,foldRegistersV1,forgetGitV1,gitCandidatesV1,gitGuardsV1,gitPinsHashV1,gitStateV1,gitViewDeltaV1,gitViewV1,GIT_PINS_V1,GIT_VIEW_PINS_V1,spellingV1,volumeV1,INDEX_BASE_V1,INDEX_PREFIX_V1,indexRealmV1,linearizeRefV1,mergeTreesV1,missingObjectsV1,normaliseGitConfigV1,sweepGitGarbageV1,publishIndexV1,readTreeV1,rebaseRequestedV1,requestRebaseV1,resolveGitV1,stageHealthV1,unmergedV1,updateIndexV1,verifyIndexV1,writeTreeV1,type IndexHostV1} from "../🟦️.ts";
+import {applyIndexV1,assembleViewV1,crlfScriptsV1,diffTreeV1,emptyTreeV1,foldRegistersV1,forgetGitV1,gitCandidatesV1,gitGuardsV1,gitPinsHashV1,gitPresentV1,gitStateV1,gitViewDeltaV1,gitViewV1,GIT_PINS_V1,GIT_VIEW_PINS_V1,spellingV1,volumeV1,INDEX_BASE_V1,INDEX_PREFIX_V1,indexCertifiedV1,indexRealmV1,linearizeRefV1,mergeTreesV1,missingObjectsV1,normaliseGitConfigV1,sweepGitGarbageV1,publishIndexV1,readTreeV1,rebaseRequestedV1,requestRebaseV1,resolveGitV1,stageHealthV1,unmergedV1,updateIndexV1,verifyIndexV1,writeTreeV1,type IndexHostV1} from "../🟦️.ts";
 
 type Tree={path:string;mode:string;file:string};
 type Fold=(typeof fixture.folds)[number];
@@ -50,12 +52,56 @@ test("candidates cover PATH, SEMIO_GIT and the install locations of every operat
  expect(gitCandidatesV1({PATH:""},"linux")).toEqual(expect.arrayContaining(["/usr/bin/git","/usr/local/bin/git"]));
 });
 
-gitTest("git is resolved, and a worktree without a root .git or with a broken one is absent and never throws",async()=>{
+gitTest("stage presence distinguishes the missing root from rejected Git without certifying a warm stage",async()=>{
+ const validate=ajv.compile({definitions:schema.definitions,$ref:"#/definitions/PresenceFixture"});
+ expect(validate(presence),JSON.stringify(validate.errors)).toBe(true);
+ for(const sample of presence.cases){
+  const warm=sample.root==="warm-invalid-config",root=warm?repository("presence-config"):temp("presence-"+sample.root),directory=join(root,".git"),config=join(directory,"config");
+  let restore:Buffer|undefined,healthy:Awaited<ReturnType<typeof gitStateV1>>|undefined;
+  if(warm){
+   writeFileSync(join(root,"tracked.txt"),"content\n");cli(root,["add","tracked.txt"]);cli(root,["commit","-m","initial"]);
+   healthy=await gitStateV1(root);
+   expect(healthy.commit).toBe(cli(root,["rev-parse","HEAD"]).trim());
+   expect(healthy.indexTree).toBe(cli(root,["rev-parse","HEAD^{tree}"]).trim());
+   expect(await gitPresentV1(root)).toBe(true);
+   const spawn=spyOn(childProcess,"spawn");
+   try{
+    expect(await gitStateV1(root)).toEqual(healthy);
+    expect(spawn).not.toHaveBeenCalled();
+   }finally{spawn.mockRestore();}
+   const now=Date.now.bind(Date),clock=spyOn(Date,"now").mockImplementation(()=>now()+61_000);
+   try{
+    expect(await gitPresentV1(root)).toBe(true);
+    const afterBoolean=spyOn(childProcess,"spawn");
+    try{
+     expect(await gitStateV1(root)).toEqual(healthy);
+     expect(afterBoolean).not.toHaveBeenCalled();
+    }finally{afterBoolean.mockRestore();}
+   }finally{clock.mockRestore();}
+   restore=readFileSync(config);
+   writeFileSync(config,"[broken\n");
+  }else if(sample.root==="invalid-marker")writeFileSync(directory,"gitdir: missing\n");
+  else if(sample.root!=="missing"){
+   mkdirSync(directory);
+   if(sample.root==="invalid-head")writeFileSync(join(directory,"HEAD"),"nonsense\n");
+  }
+  const oracle=Bun.spawnSync(["git","--git-dir",directory,"rev-parse","--git-dir"],{cwd:root,env:environment,stdout:"pipe",stderr:"pipe"});
+  expect(oracle.exitCode===0,sample.root).toBe(sample.gitAccepts);
+  if(!warm)expect(await gitPresentV1(root),sample.root).toBe(sample.gitAccepts);
+  const observed=await gitStateV1(root);
+  expect(observed,sample.root).toMatchObject({present:false,head:null,commit:null,indexTree:null});
+  expect(observed.observation??null,sample.root).toBe(sample.observation);
+  if(restore!==undefined){
+   writeFileSync(config,restore);
+   expect(await gitStateV1(root)).toEqual(healthy);
+  }
+ }
+});
+
+gitTest("git is resolved, and operations in a worktree without a root .git never throw",async()=>{
  expect(await resolveGitV1()).not.toBeNull();
  const empty=temp("empty");
  expect(await gitStateV1(empty)).toEqual({present:false,head:null,commit:null,indexTree:null});
- const broken=temp("broken");mkdirSync(join(broken,".git"));writeFileSync(join(broken,".git","HEAD"),"nonsense");
- expect(await gitStateV1(broken)).toEqual({present:false,head:null,commit:null,indexTree:null});
  expect(await writeTreeV1(empty)).toBeNull();
  expect(await diffTreeV1(empty,null,"0".repeat(40))).toBeNull();
  expect(await updateIndexV1(empty,[{path:"a",mode:"100644",oid:"1".repeat(40)}])).toBe(false);
@@ -348,25 +394,38 @@ gitTest("a guarded stage publish prepares each blob once before emitting and can
  expect(await publishIndexV1(host)).toMatchObject({published:1,base:true});
 });
 
-gitTest("a refused stage journal write reports waiting and can retry without another index edit",async()=>{
+gitTest("an author stage is certified after publication, stays certified when unchanged and retries a refused journal write",async()=>{
  const root=repository("stage-journal-retry"),host=fake(root,{server:true}),blob=blobOf(root,"staged\n");
  let writable=false,attempts=0;
  const publisher:IndexHostV1={...host,emit:async events=>{attempts++;return writable?host.emit(events):undefined;}};
+ expect(await indexCertifiedV1(root)).toBe(false);
  staging(root,"first.txt",blob);
+ expect(await indexCertifiedV1(root)).toBe(false);
  expect(await publishIndexV1(publisher)).toEqual({published:0,base:false,waiting:true});
+ expect(await indexCertifiedV1(root)).toBe(false);
  expect(host.manifest.size).toBe(0);
  writable=true;
  expect(await publishIndexV1(publisher)).toEqual({published:1,base:true,waiting:false});
+ expect(await indexCertifiedV1(root)).toBe(true);
+ expect(host.base()?.target).toBe(`tree ${treeFrom(root,{"first.txt":blob})}`);
 
  staging(root,"second.txt",blob);
+ expect(await indexCertifiedV1(root)).toBe(false);
  writable=false;
  expect(await publishIndexV1(publisher)).toEqual({published:0,base:false,waiting:true});
+ expect(await indexCertifiedV1(root)).toBe(false);
  expect(host.manifest.has(INDEX_PREFIX_V1+"second.txt")).toBe(false);
  writable=true;
  expect(await publishIndexV1(publisher)).toEqual({published:1,base:false,waiting:false});
+ expect(await indexCertifiedV1(root)).toBe(true);
  expect(host.manifest.get(INDEX_PREFIX_V1+"second.txt")?.target).toBe(`100644 ${blob}`);
  expect(attempts).toBe(4);
  expect(await publishIndexV1(publisher)).toEqual({published:0,base:false,waiting:false});
+ expect(await indexCertifiedV1(root)).toBe(true);
+ utimesSync(join(root,".git","index"),new Date(1e12),new Date(1e12));
+ expect(await indexCertifiedV1(root)).toBe(false);
+ expect(await publishIndexV1(publisher)).toEqual({published:0,base:false,waiting:false});
+ expect(await indexCertifiedV1(root)).toBe(true);
  expect(attempts).toBe(4);
 });
 
@@ -404,8 +463,10 @@ gitTest("unmerged entries are reported once, never published, never reset by an 
  await publishIndexV1(host);
  cli(root,["update-index","--index-info"],`100644 ${one} 1\tu.txt\n100644 ${two} 2\tu.txt\n100644 ${three} 3\tu.txt\n`);
  expect(await unmergedV1(root)).toBe(3);
+ expect(await indexCertifiedV1(root)).toBe(false);
  const count=host.manifest.size;
  for(let round=0;round<2;round++){forgetGitV1(root);await publishIndexV1(host);}
+ expect(await indexCertifiedV1(root)).toBe(false);
  expect(host.manifest.size).toBe(count);
  expect(host.events.filter(event=>event.reason==="unmerged")).toHaveLength(1);
  expect(await stageHealthV1(root)).toEqual({state:"degraded",reason:"unmerged"});
@@ -586,13 +647,15 @@ gitTest("the paths an interrupted apply was writing are not published as local e
  expect(host.manifest.get(`${INDEX_PREFIX_V1}r.txt`)!.hlc).toBe(stamp(900,"g1-server"));
 });
 
-gitTest("a very large change is published as entries in batches and never as a new base, and the fold of the registers equals the stage",async()=>{
+gitTest("a very large change commits one journal batch and its register fold equals the stage",async()=>{
  const root=repository("large"),host=fake(root,{server:true}),blob=blobOf(root,"bulk\n");
  staging(root,"first.txt",blobOf(root,"first\n"));
  await publishIndexV1(host);
  cli(root,["update-index","--index-info"],Array.from({length:6000},(_,index)=>`100644 ${blob}\tbulk/f${index}.txt\n`).join(""));
- const result=await publishIndexV1(host);
+ const batches:number[]=[];
+ const result=await publishIndexV1({...host,emit:events=>{batches.push(events.length);return host.emit(events);}});
  expect(result).toMatchObject({published:6000,base:false});
+ expect(batches).toEqual([6000]);
  expect([...host.manifest.keys()].filter(path=>path===INDEX_BASE_V1)).toHaveLength(1);
  expect(await verifyIndexV1(host)).toMatchObject({ok:true,skipped:false});
 });

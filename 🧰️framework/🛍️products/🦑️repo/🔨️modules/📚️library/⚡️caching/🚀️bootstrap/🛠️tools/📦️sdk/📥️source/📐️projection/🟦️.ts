@@ -14,8 +14,8 @@ export class NxRecipeRefusedV1 extends Error{
   super("Closed pinned dependency recipe required");this.name="NxRecipeRefused";this.violations=Object.freeze([...violations]);
   const shown=violations.slice(0,6).join("; ")+(violations.length>6?` (+${violations.length-6})`:"");
   this.texts=Object.freeze({
-   en:violations.length?`The pinned dependency recipe of the build tools (package.json of the tools recipe) is not closed: ${shown}. Add the field to the Recipe definition of the recipe schema or remove it from package.json.`:`The pinned dependency lock of the build tools (bun.lock of the tools recipe) is not a JSON object. Restore the lock file.`,
-   de:violations.length?`Das gepinnte Abhängigkeitsrezept der Build-Werkzeuge (package.json des Werkzeugrezepts) ist nicht geschlossen: ${shown}. Das Feld in die Recipe-Definition des Rezeptschemas aufnehmen oder aus package.json entfernen.`:`Die gepinnte Abhängigkeitssperre der Build-Werkzeuge (bun.lock des Werkzeugrezepts) ist kein JSON-Objekt. Die Sperrdatei wiederherstellen.`
+   en:violations.length?`The pinned dependency recipe of the build tools (package.json of the tools recipe) is not closed: ${shown}. Add the field to the Recipe definition of the recipe schema or remove it from package.json.`:`The pinned dependency lock of the build tools (the lock file of the tools recipe) is not a JSON object. Restore the lock file.`,
+   de:violations.length?`Das gepinnte Abhängigkeitsrezept der Build-Werkzeuge (package.json des Werkzeugrezepts) ist nicht geschlossen: ${shown}. Das Feld in die Recipe-Definition des Rezeptschemas aufnehmen oder aus package.json entfernen.`:`Die gepinnte Abhängigkeitssperre der Build-Werkzeuge (die Sperrdatei des Werkzeugrezepts) ist kein JSON-Objekt. Die Sperrdatei wiederherstellen.`
   });
  }
 }

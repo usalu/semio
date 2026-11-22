@@ -1,13 +1,15 @@
 //! 🎟️ Actual action parser slots retain unused original arguments and faults through paid receiving retirement.
 use semio_framework_value::DslValue;
 use semio_framework::Fault;
+use semio_framework_job::{OriginalCallerSourceLoan,OriginalSourceBinding,StepContext};
+use semio_plugin_ownership::bounded_ownership::{original_lifecycle_step,plugin_effect_close,PluginLifecycleFailure,PluginLifecycleStep};
 use semio_framework_value::{RetireOwned, RetirementDemand, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, ValueError, ValueRefusalKind};
 use crate::stores_components::ActionIngress;
 use semio_plugin_decl_app::ArtifactApp;
 
 /// 🫴️ Original parser input is transferred only by the receiving caller, never by a structural copy.
 #[derive(RetireOwned)]
-pub struct ActionIngressSource{pub original_typing_ready:bool,pub original_typing_control_ready:bool,pub original_press_result:Option<bool>,pub original_press_selected:bool,pub original_tool_dispatch:Option<bool>,pub original_press_tag:Option<semio_plugin_tool_machine::ScrubTag>,pub original_tool_tag:Option<semio_plugin_tool_machine::ToolTag>,pub original_tool_tag_ready:bool,pub action:Option<String>,pub args:Option<DslValue>,pub prepared:Option<DslValue>,pub assembled:Option<DslValue>,pub fault:Option<Fault>}
+pub struct ActionIngressSource{pub original_typing_ready:bool,pub original_typing_control_ready:bool,pub original_press_selected:bool,pub original_press_result:Option<bool>,pub original_tool_dispatch:Option<bool>,pub original_press_tag:Option<semio_plugin_tool_machine::ScrubTag>,pub original_tool_tag:Option<semio_plugin_tool_machine::ToolTag>,pub original_tool_tag_ready:bool,pub action:Option<String>,pub args:Option<DslValue>,pub prepared:Option<DslValue>,pub assembled:Option<DslValue>,pub fault:Option<Fault>}
 
 impl ActionIngressSource{
  /// 🫴️ The caller-loaned source selects the same authoritative argument slot as its parser.
@@ -15,20 +17,26 @@ impl ActionIngressSource{
 }
 
 /// ♻️ One exact receiving record holds the original source until its acknowledged paid close.
-pub struct ActionIngressRecord{pub source:std::mem::ManuallyDrop<Option<ActionIngressSource>>,pub retirement:std::mem::ManuallyDrop<Option<semio_framework_value::retirement::controlled::ControlledRetirement<ActionIngressSource>>>,pub caller:std::mem::ManuallyDrop<Option<semio_framework_job::OriginalCallerSourceLoan>>,pub ready:bool}
+pub struct ActionIngressRecord{pub source:std::mem::ManuallyDrop<Option<ActionIngressSource>>,pub retirement:std::mem::ManuallyDrop<Option<semio_framework_value::retirement::controlled::ControlledRetirement<ActionIngressSource>>>,pub caller:std::mem::ManuallyDrop<Option<semio_framework_job::OriginalCallerSourceLoan>>,pub ready:bool,binding:OriginalSourceBinding}
 
 fn retired(poll:semio_framework_value::OriginalRetirementPoll)->Result<RetainedCloneStep,ValueError>{match poll{semio_framework_value::RetainedWorkPoll::Pending{..}=>Ok(RetainedCloneStep::Progress(Default::default())),semio_framework_value::RetainedWorkPoll::Complete(turn)=>turn.result.map_err(|failure|failure.into_value_error())}}
 impl ActionIngressRecord{
+ const RECEIVE_COPY_BYTES:usize=size_of::<ActionIngressSource>()+size_of::<OriginalSourceBinding>();
+
  pub fn receive(source:&mut Option<ActionIngressSource>,caller:&mut Option<semio_framework_job::OriginalCallerSourceLoan>,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<Self>,semio_framework_job::OriginalTurnFailure>{
-  let grant=cx.retained_grant();let bytes=size_of::<ActionIngressSource>();if source.is_none()||cx.should_yield()||grant.maximum_items<1+usize::from(caller.is_none())||grant.maximum_copy_bytes<bytes||grant.maximum_depth==0{return Ok(None)}
-  if caller.is_none()&&!cx.original_source_parent()?.admit_loan(caller,cx)?{return Ok(None)}
+  let grant=cx.retained_grant();let bytes=Self::RECEIVE_COPY_BYTES;
+  if source.is_none()||cx.should_yield()||grant.maximum_items<1+usize::from(caller.is_none())||grant.maximum_copy_bytes<bytes||grant.maximum_depth==0{return Ok(None)}
+  if caller.is_none(){
+   let loan=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-bytes,..grant};
+   if !cx.with_retained_loan(loan,|cx|cx.original_source_parent()?.admit_loan(caller,cx))?{return Ok(None)}
+  }
   Self::receive_with_loan(source,caller,cx)
  }
  fn receive_with_loan(source:&mut Option<ActionIngressSource>,caller:&mut Option<semio_framework_job::OriginalCallerSourceLoan>,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<Self>,semio_framework_job::OriginalTurnFailure>{
-  let grant=cx.retained_grant();let bytes=size_of::<ActionIngressSource>();if source.is_none()||cx.should_yield()||grant.maximum_items==0||grant.maximum_copy_bytes<bytes||grant.maximum_depth==0{return Ok(None)}
+  let grant=cx.retained_grant();let bytes=Self::RECEIVE_COPY_BYTES;if source.is_none()||cx.should_yield()||grant.maximum_items==0||grant.maximum_copy_bytes<bytes||grant.maximum_depth==0{return Ok(None)}
   caller.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original action caller loan is absent"))?.validate_context(cx)?;
   cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;
-  Ok(Some(Self{source:std::mem::ManuallyDrop::new(source.take()),retirement:std::mem::ManuallyDrop::new(None),caller:std::mem::ManuallyDrop::new(caller.take()),ready:false}))
+  Ok(Some(Self{source:std::mem::ManuallyDrop::new(source.take()),retirement:std::mem::ManuallyDrop::new(None),caller:std::mem::ManuallyDrop::new(caller.take()),ready:false,binding:OriginalSourceBinding::borrow(cx)}))
  }
  pub fn validate_context(&self,cx:&semio_framework_job::StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>{self.caller.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original action caller loan has returned"))?.validate_context(cx).map_err(Into::into)}
  pub fn parser_slots(&mut self)->Result<(&mut Option<DslValue>,&mut Option<Fault>),ValueError>{if self.ready{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original action source has already left its parser"))}let source=self.source.as_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original action source is absent"))?;Ok((if source.assembled.is_some(){&mut source.assembled}else if source.prepared.is_some(){&mut source.prepared}else{&mut source.args},&mut source.fault))}
@@ -41,7 +49,8 @@ impl ActionIngressRecord{
  pub fn finish_parser(&mut self){self.ready=true;}
  pub fn terminal_is_empty(&self)->bool{self.source.is_none()&&self.retirement.is_none()&&self.caller.is_none()}
  pub fn ready(&self)->bool{self.ready}
- pub fn retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{if self.source.is_none()&&self.retirement.is_none()&&!self.ready{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original action parser still owns its receiving loan"))}if let Some(owner)=self.retirement.as_ref(){return if owner.terminal_is_empty(){Ok(RetirementDemand{depth:1,..Default::default()})}else{owner.selected_demand(body)}}if self.source.is_some(){return Ok(RetirementDemand{copy_bytes:size_of::<ActionIngressSource>(),depth:1,..Default::default()})}Ok(self.caller.as_ref().map_or(Default::default(),|caller|caller.retirement_demands()))}
+ fn source_retirement_copy_bytes(&self)->usize{size_of::<ActionIngressSource>()+usize::from(!self.ready)*size_of::<bool>()}
+ pub fn retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{if self.source.is_none()&&self.retirement.is_none()&&!self.ready{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original action parser still owns its receiving loan"))}if let Some(owner)=self.retirement.as_ref(){return if owner.terminal_is_empty(){Ok(RetirementDemand{depth:1,..Default::default()})}else{owner.selected_demand(body)}}if self.source.is_some(){return Ok(RetirementDemand{copy_bytes:self.source_retirement_copy_bytes(),depth:1,..Default::default()})}Ok(self.caller.as_ref().map_or(Default::default(),|caller|caller.retirement_demands()))}
  pub fn close_granted(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{
   let grant=effect.grant();let demand=match self.retirement_demands(grant.maximum_copy_bytes){Ok(demand)=>demand,Err(error)=>return Self::completed(Err(error))};
   if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Self::completed(Ok(RetainedCloneStep::Progress(Default::default())))}
@@ -51,41 +60,69 @@ impl ActionIngressRecord{
  fn completed(result:Result<RetainedCloneStep,ValueError>)->semio_framework_value::OriginalRetirementPoll{semio_framework_value::RetainedWorkPoll::Complete(semio_framework_value::RetainedWorkOutcome{result:result.map_err(Into::into),work:1})}
  fn retire_source(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{
   semio_plugin_ownership::bounded_ownership::plugin_pay_unit(effect)?;
-  if let Some(source)=self.source.take(){let bytes=size_of::<ActionIngressSource>();match semio_framework_value::retirement::controlled::ControlledRetirement::new(source){Ok(owner)=>{*self.retirement=Some(owner);Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()}))},Err((cause,source))=>{*self.source=Some(source);Err(cause)}}}else{Ok(RetainedCloneStep::Complete(Default::default()))}
+  let bytes=self.source_retirement_copy_bytes();
+  if let Some(source)=self.source.take(){match semio_framework_value::retirement::controlled::ControlledRetirement::new(source){Ok(owner)=>{*self.retirement=Some(owner);if !self.ready{self.ready=true;}Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()}))},Err((cause,source))=>{*self.source=Some(source);Err(cause)}}}else{Ok(RetainedCloneStep::Complete(Default::default()))}
  }
  pub fn close_original_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
   if self.terminal_is_empty(){return Ok(semio_framework_job::InteractiveJobCloseStep::Complete{progress:Default::default()})}
+  let demand=self.retirement_demands(cx.retained_grant().maximum_copy_bytes)?;
   if self.source.is_none()&&self.retirement.is_none(){let step=self.caller.as_mut().unwrap().close_step(cx.original_source_parent()?,cx)?;if self.caller.as_ref().unwrap().terminal_is_empty(){self.caller.take();}return Ok(step)}
-  self.validate_context(cx)?;let demand=self.retirement_demands(cx.retained_grant().maximum_copy_bytes)?;semio_framework_job::close_original_effect_step(cx,demand,|effect|self.close_granted(effect))
+  self.validate_context(cx)?;semio_framework_job::close_original_effect_step(cx,demand,|effect|self.close_granted(effect))
  }
 }
 
 impl Drop for ActionIngressRecord{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original action ingress reached Drop before paid terminal retirement");}}
 
+#[derive(Clone,Copy)]
+enum ActionIngressCloseScope { Ready, Whole, Original(OriginalSourceBinding) }
+
+impl ActionIngressCloseScope {
+ fn instance(closing:bool)->Self{if closing{Self::Whole}else{Self::Ready}}
+}
+
 impl ActionIngress {
- pub fn action_source_pending(&self)->bool{self.pending_action_ingress.is_some()||(0..16).any(|id|self.action_ingress_sources.get(id).is_some_and(|record|!record.ready()))}
+ const PENDING_BINDING_COPY_BYTES:usize=size_of::<Option<OriginalSourceBinding>>();
+ const CAPTURE_COPY_BYTES:usize=size_of::<ActionIngressSource>()+Self::PENDING_BINDING_COPY_BYTES;
+
+ pub fn action_source_pending(&self)->bool{self.pending_action_ingress_identity.is_some()||(0..16).any(|id|self.action_ingress_sources.get(id).is_some_and(|record|!record.ready()))}
 
  pub fn action_source_capture_ready(&self,action:&str,cx:&semio_framework_job::StepContext<'_>)->bool{
-  for id in 0..16{if let Some(record)=self.action_ingress_sources.get(id){if !record.ready(){return record.source.as_ref().and_then(|source|source.action.as_deref())==Some(action)&&self.pending_action_ingress_identity==Some((cx.operation(),cx.generation()))}}}
-  if let Some(original)=self.pending_action_ingress.as_ref(){return original.action.as_deref()==Some(action)&&self.pending_action_ingress_identity==Some((cx.operation(),cx.generation()))}
+  for id in 0..16{if let Some(record)=self.action_ingress_sources.get(id){if !record.ready(){return record.binding.matches(cx)&&record.source.as_ref().and_then(|source|source.action.as_deref())==Some(action)}}}
+  if let Some(binding)=self.pending_action_ingress_identity{return binding.matches(cx)&&self.pending_action_ingress.as_ref().and_then(|source|source.action.as_deref())==Some(action)}
   let backing=if self.action_ingress_sources.allocation_admitted{0}else{16*size_of::<std::mem::MaybeUninit<(u64,ActionIngressRecord)>>()};
-  let grant=cx.retained_grant();!cx.should_yield()&&grant.maximum_items>=5+usize::from(backing!=0)&&grant.maximum_copy_bytes>=4*size_of::<ActionIngressSource>()+action.len()&&grant.maximum_capacity_bytes>=backing+action.len()&&grant.maximum_depth>=2
+  let bytes=Self::CAPTURE_COPY_BYTES+ActionIngressRecord::RECEIVE_COPY_BYTES+2*size_of::<ActionIngressSource>()+OriginalCallerSourceLoan::admission_demand().copy_bytes+action.len();
+  let grant=cx.retained_grant();!cx.should_yield()&&grant.maximum_items>=5+usize::from(backing!=0)&&grant.maximum_copy_bytes>=bytes&&grant.maximum_capacity_bytes>=backing+action.len()&&grant.maximum_depth>=2
  }
 
  pub fn stage_action_source(&mut self,action:&str,args:&mut Option<DslValue>,fault:&mut Option<Fault>,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<u64>,semio_framework_job::OriginalTurnFailure>{
   if !self.action_ingress_sources.allocation_admitted{if cx.should_yield(){return Ok(None)}let step=self.action_ingress_sources.admit_backing_granted(cx.retained_grant())?;cx.consume_retained(step.progress())?;if !self.action_ingress_sources.allocation_admitted{return Ok(None)}}
-  for id in 0..16{if let Some(record)=self.action_ingress_sources.get(id){if !record.ready(){record.validate_context(cx)?;return if record.source.as_ref().and_then(|source|source.action.as_deref())==Some(action)&&self.pending_action_ingress_identity==Some((cx.operation(),cx.generation())){Ok(Some(id))}else{Ok(None)}}}}
-  if let Some(original)=self.pending_action_ingress.as_ref(){if original.action.as_deref()!=Some(action)||self.pending_action_ingress_identity!=Some((cx.operation(),cx.generation())){return Ok(None)}}else{
-   let grant=cx.retained_grant();let bytes=size_of::<ActionIngressSource>()+action.len();if cx.should_yield()||grant.maximum_items<2||grant.maximum_copy_bytes<bytes||grant.maximum_capacity_bytes<action.len()||grant.maximum_depth<2{return Ok(None)}
-   if !cx.original_source_parent()?.admit_loan(&mut *self.pending_action_ingress_caller,cx)?{return Ok(None)}
-   cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<ActionIngressSource>(),..Default::default()})?;
-   *self.pending_action_ingress=Some(ActionIngressSource{original_typing_ready:false,original_typing_control_ready:false,original_press_result:None,original_press_selected:false,original_tool_dispatch:None,original_press_tag:None,original_tool_tag:None,original_tool_tag_ready:false,action:Some(String::new()),args:args.take(),prepared:None,assembled:None,fault:fault.take()});self.pending_action_ingress_identity=Some((cx.operation(),cx.generation()));
+  for id in 0..16{if let Some(record)=self.action_ingress_sources.get(id){if !record.ready(){
+   if !record.binding.matches(cx)||record.source.as_ref().and_then(|source|source.action.as_deref())!=Some(action){return Ok(None)}
+   record.validate_context(cx)?;
+   return Ok(Some(id))
+  }}}
+  if let Some(binding)=self.pending_action_ingress_identity{
+   if !binding.matches(cx)||self.pending_action_ingress.as_ref().and_then(|source|source.action.as_deref())!=Some(action){return Ok(None)}
+  }else{
+   let grant=cx.retained_grant();
+   let bytes=Self::CAPTURE_COPY_BYTES+action.len();
+   if cx.should_yield()||grant.maximum_items<2||grant.maximum_copy_bytes<bytes+OriginalCallerSourceLoan::admission_demand().copy_bytes||grant.maximum_capacity_bytes<action.len()||grant.maximum_depth<2{return Ok(None)}
+   let parent=cx.original_source_parent()?;
+   cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:Self::PENDING_BINDING_COPY_BYTES,..Default::default()})?;
+   self.pending_action_ingress_identity=Some(OriginalSourceBinding::borrow(cx));
+   let loan=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-bytes,..grant};
+   let admitted=cx.with_retained_loan(loan,|cx|parent.admit_loan(&mut *self.pending_action_ingress_caller,cx));
+   if self.pending_action_ingress_caller.is_none(){self.pending_action_ingress_identity=None;}
+   if !admitted?{return Ok(None)}
+   cx.consume_retained(RetainedCloneProgress{copied_bytes:size_of::<ActionIngressSource>(),..Default::default()})?;
+   *self.pending_action_ingress=Some(ActionIngressSource{original_typing_ready:false,original_typing_control_ready:false,original_press_selected:false,original_press_result:None,original_tool_dispatch:None,original_press_tag:None,original_tool_tag:None,original_tool_tag_ready:false,action:Some(String::new()),args:args.take(),prepared:None,assembled:None,fault:fault.take()});
    let original=self.pending_action_ingress.as_mut().unwrap();let name=original.action.as_mut().unwrap();name.try_reserve_exact(action.len()).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"original action name capture allocation refused"))?;name.push_str(action);cx.consume_retained(RetainedCloneProgress{copied_items:0,copied_bytes:action.len(),retained_capacity_bytes:name.capacity(),..Default::default()})?;
   }
   self.pending_action_ingress_caller.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original pending action caller loan is absent"))?.validate_context(cx)?;
   let Some(slot)=(0..16).find(|index|self.action_ingress_sources.slot_is_vacant(*index))else{return Ok(None)};
   let Some(record)=ActionIngressRecord::receive_with_loan(&mut self.pending_action_ingress,&mut self.pending_action_ingress_caller,cx)?else{return Ok(None)};
   self.action_ingress_sources.insert_admitted(slot as u64,record);
+  self.pending_action_ingress_identity=None;
   Ok(Some(slot as u64))
  }
 
@@ -93,23 +130,123 @@ impl ActionIngress {
   let Some(slot)=self.stage_action_source(action, args, fault, cx)?else{return Ok(None)};
   let source=self.action_ingress_sources.get_mut(slot).expect("original admitted parser source");let (args,fault)=source.parser_slots()?;
   let result=A::command_from_action(action,args,fault).await;
-  self.action_ingress_sources.get_mut(slot).unwrap().finish_parser();self.pending_action_ingress_identity=None;result.map(Some).map_err(semio_framework_job::OriginalTurnFailure::from)
+  self.action_ingress_sources.get_mut(slot).unwrap().finish_parser();result.map(Some).map_err(semio_framework_job::OriginalTurnFailure::from)
  }
 
- pub(crate) fn selected_action_record(&self,closing:bool)->Option<u64>{(0..16).find(|id|self.action_ingress_sources.get(*id).is_some_and(|record|closing||record.ready()))}
+ fn selected_action_record(&self,scope:ActionIngressCloseScope)->Option<u64>{
+  (0..16).find(|id|self.action_ingress_sources.get(*id).is_some_and(|record|match scope {
+   ActionIngressCloseScope::Ready=>record.ready(),
+   ActionIngressCloseScope::Whole=>true,
+   ActionIngressCloseScope::Original(binding)=>record.binding==binding,
+  }))
+ }
 
- pub fn action_ingress_sources_idle(&self)->bool{self.selected_action_record(false).is_none()&&self.pending_action_ingress_retirement.is_none()}
+ fn selected_pending_action(&self,scope:ActionIngressCloseScope)->bool{
+  match scope {
+   ActionIngressCloseScope::Ready=>self.pending_action_ingress_retirement.is_some()||self.pending_action_ingress.is_none()&&self.pending_action_ingress_caller.is_some(),
+   ActionIngressCloseScope::Whole=>self.pending_action_ingress_identity.is_some(),
+   ActionIngressCloseScope::Original(binding)=>self.pending_action_ingress_identity==Some(binding),
+  }
+ }
 
- pub fn action_ingress_sources_closed(&self)->bool{self.action_ingress_sources.empty_backing_byte_demand()==Some(0)&&self.pending_action_ingress_retirement.is_none()&&self.pending_action_ingress.is_none()&&self.pending_action_ingress_caller.is_none()}
+ /// 🎯️ Includes the final slot removal even after the original caller loan has returned.
+ pub fn owns_original_action_ingress(&self,cx:&StepContext<'_>)->bool{
+  let scope=ActionIngressCloseScope::Original(OriginalSourceBinding::borrow(cx));
+  self.selected_pending_action(scope)||self.selected_action_record(scope).is_some()
+ }
 
- pub fn action_ingress_sources_demands(&self,body:usize,closing:bool)->Result<RetirementDemand,ValueError>{if let Some(owner)=self.pending_action_ingress_retirement.as_ref(){return if owner.terminal_is_empty(){Ok(RetirementDemand{depth:1,..Default::default()})}else{owner.selected_demand(body)}}if self.pending_action_ingress.is_none(){if let Some(caller)=self.pending_action_ingress_caller.as_ref(){return Ok(caller.retirement_demands())}}if closing&&self.pending_action_ingress.is_some(){return Ok(RetirementDemand{copy_bytes:size_of::<Option<ActionIngressSource>>(),depth:1,..Default::default()})}if let Some(id)=self.selected_action_record(closing){let record=self.action_ingress_sources.get(id).unwrap();if record.terminal_is_empty(){return Ok(RetirementDemand{copy_bytes:size_of::<ActionIngressRecord>(),depth:1,..Default::default()})}return record.retirement_demands(body)}if closing{let release_bytes=self.action_ingress_sources.empty_backing_byte_demand().ok_or_else(||ValueError::invariant("action ingress backing retains an active source"))?;Ok(RetirementDemand{release_bytes,depth:usize::from(release_bytes!=0),..Default::default()})}else{Ok(Default::default())}}
+ pub fn action_ingress_sources_idle(&self)->bool{
+  let scope=ActionIngressCloseScope::Ready;
+  self.selected_action_record(scope).is_none()&&!self.selected_pending_action(scope)
+ }
 
- pub fn close_action_ingress_sources(&mut self,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant,closing:bool)->Result<semio_plugin_ownership::bounded_ownership::PluginLifecycleStep,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{let demand=self.action_ingress_sources_demands(grant.maximum_copy_bytes, closing)?;semio_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|cx,grant|{
-  if let Some(owner)=self.pending_action_ingress_retirement.as_mut(){if owner.terminal_is_empty(){self.pending_action_ingress_retirement.take();self.pending_action_ingress_identity=None;return Ok((semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}),false))}let step=semio_plugin_ownership::bounded_ownership::plugin_effect_close(cx,grant,|effect|retired(owner.step(grant.maximum_copy_bytes,effect)))?;return Ok((semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(step.progress()),false))}
-  if self.pending_action_ingress.is_none(){if let Some(caller)=self.pending_action_ingress_caller.as_mut(){let step=caller.close_step(cx.original_source_parent()?,cx)?;if caller.terminal_is_empty(){self.pending_action_ingress_caller.take();self.pending_action_ingress_identity=None;}return Ok((semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(step.progress()),false))}}
-  if closing{if let Some(caller)=self.pending_action_ingress_caller.as_ref(){caller.validate_context(cx)?;}if let Some(source)=self.pending_action_ingress.take(){match semio_framework_value::retirement::controlled::ControlledRetirement::new(Some(source)){Ok(owner)=>{*self.pending_action_ingress_retirement=Some(owner);return Ok((semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}),false))},Err((cause,source))=>{*self.pending_action_ingress=source;return Err(cause.into())}}}}
-  if let Some(id)=self.selected_action_record(closing){let record=self.action_ingress_sources.get_mut(id).unwrap();if record.terminal_is_empty(){drop(self.action_ingress_sources.remove(id));return Ok((semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<ActionIngressRecord>(),..Default::default()}),false))}let step=record.close_original_step(cx)?;Ok((semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(step.progress()),false))}else if closing{let step=self.action_ingress_sources.close_empty_backing_granted(grant)?;Ok((semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(step.progress()),self.action_ingress_sources_closed()))}else{Ok((semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Complete(Default::default()),true))}
- })}
+ pub fn action_ingress_sources_closed(&self)->bool{self.action_ingress_sources.empty_backing_byte_demand()==Some(0)&&self.pending_action_ingress_retirement.is_none()&&self.pending_action_ingress.is_none()&&self.pending_action_ingress_caller.is_none()&&self.pending_action_ingress_identity.is_none()}
+
+ pub fn action_ingress_sources_demands(&self,body:usize,closing:bool)->Result<RetirementDemand,ValueError>{
+  self.action_ingress_demands(body,ActionIngressCloseScope::instance(closing))
+ }
+
+ /// 📏️ Quotes the retained action parser belonging to this original caller.
+ pub fn original_action_ingress_close_demands(&self,body:usize,cx:&StepContext<'_>)->Result<RetirementDemand,ValueError>{
+  self.action_ingress_demands(body,ActionIngressCloseScope::Original(OriginalSourceBinding::borrow(cx)))
+ }
+
+ fn action_ingress_demands(&self,body:usize,scope:ActionIngressCloseScope)->Result<RetirementDemand,ValueError>{
+  if self.selected_pending_action(scope){
+   if let Some(owner)=self.pending_action_ingress_retirement.as_ref(){return if owner.terminal_is_empty(){Ok(RetirementDemand{depth:1,..Default::default()})}else{owner.selected_demand(body)}}
+   if self.pending_action_ingress.is_some(){return Ok(RetirementDemand{copy_bytes:size_of::<Option<ActionIngressSource>>(),depth:1,..Default::default()})}
+   if let Some(caller)=self.pending_action_ingress_caller.as_ref(){return Ok(caller.retirement_demands())}
+  }
+  if let Some(id)=self.selected_action_record(scope){
+   let record=self.action_ingress_sources.get(id).unwrap();
+   if record.terminal_is_empty(){return Ok(RetirementDemand{copy_bytes:size_of::<ActionIngressRecord>(),depth:1,..Default::default()})}
+   return record.retirement_demands(body)
+  }
+  if matches!(scope,ActionIngressCloseScope::Whole){
+   let release_bytes=self.action_ingress_sources.empty_backing_byte_demand().ok_or_else(||ValueError::invariant("action ingress backing retains an active source"))?;
+   return Ok(RetirementDemand{release_bytes,depth:usize::from(release_bytes!=0),..Default::default()})
+  }
+  Ok(Default::default())
+ }
+
+ pub fn close_action_ingress_sources(&mut self,cx:&mut StepContext<'_>,grant:RetainedCloneGrant,closing:bool)->Result<PluginLifecycleStep,PluginLifecycleFailure>{
+  self.close_action_ingress(cx,grant,ActionIngressCloseScope::instance(closing))
+ }
+
+ /// 🎟️ Returns only this original caller's action ingress and keeps the live registry backing.
+ pub fn close_original_action_ingress(&mut self,cx:&mut StepContext<'_>,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,PluginLifecycleFailure>{
+  let scope=ActionIngressCloseScope::Original(OriginalSourceBinding::borrow(cx));
+  self.close_action_ingress(cx,grant,scope)
+ }
+
+ fn close_action_ingress(&mut self,cx:&mut StepContext<'_>,grant:RetainedCloneGrant,scope:ActionIngressCloseScope)->Result<PluginLifecycleStep,PluginLifecycleFailure>{
+  let demand=self.action_ingress_demands(grant.maximum_copy_bytes,scope)?;
+  original_lifecycle_step(cx,grant,demand,|cx,grant|{
+   if self.selected_pending_action(scope){
+    if let Some(owner)=self.pending_action_ingress_retirement.as_mut(){
+     if let Some(caller)=self.pending_action_ingress_caller.as_ref(){caller.validate_context(cx)?;}
+     if owner.terminal_is_empty(){
+      self.pending_action_ingress_retirement.take();
+      return Ok((PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}),false))
+     }
+     let step=plugin_effect_close(cx,grant,|effect|retired(owner.step(grant.maximum_copy_bytes,effect)))?;
+     return Ok((PluginLifecycleStep::Progress(step.progress()),false))
+    }
+    if self.pending_action_ingress.is_none(){
+     if let Some(caller)=self.pending_action_ingress_caller.as_mut(){
+      let step=caller.close_step(cx.original_source_parent()?,cx)?;
+      if caller.terminal_is_empty(){self.pending_action_ingress_caller.take();self.pending_action_ingress_identity=None;}
+      return Ok((PluginLifecycleStep::Progress(step.progress()),false))
+     }
+    }
+    if let Some(caller)=self.pending_action_ingress_caller.as_ref(){caller.validate_context(cx)?;}
+    if let Some(source)=self.pending_action_ingress.take(){
+     match semio_framework_value::retirement::controlled::ControlledRetirement::new(Some(source)){
+      Ok(owner)=>{
+       *self.pending_action_ingress_retirement=Some(owner);
+       return Ok((PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}),false))
+      }
+      Err((cause,source))=>{*self.pending_action_ingress=source;return Err(cause.into())}
+     }
+    }
+   }
+   if let Some(id)=self.selected_action_record(scope){
+    let record=self.action_ingress_sources.get_mut(id).unwrap();
+    if record.terminal_is_empty(){
+     drop(self.action_ingress_sources.remove(id));
+     return Ok((PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<ActionIngressRecord>(),..Default::default()}),false))
+    }
+    let step=record.close_original_step(cx)?;
+    return Ok((PluginLifecycleStep::Progress(step.progress()),false))
+   }
+   if matches!(scope,ActionIngressCloseScope::Whole){
+    let step=self.action_ingress_sources.close_empty_backing_granted(grant)?;
+    return Ok((PluginLifecycleStep::Progress(step.progress()),self.action_ingress_sources_closed()))
+   }
+   Ok((PluginLifecycleStep::Complete(Default::default()),true))
+  })
+ }
+
 }
 
 /// 🧭️ The admitted protocol command determines its explicit original envelope category.

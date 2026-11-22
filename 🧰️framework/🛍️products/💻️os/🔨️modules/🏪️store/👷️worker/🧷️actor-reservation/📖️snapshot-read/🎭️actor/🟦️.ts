@@ -1,6 +1,6 @@
 /** 🎭️ Serial native snapshot queries preserve the target actor's real command and publication lanes. */
 import type { ReservationHub } from "../../🧩️hub/🟦️.ts";
-import type { AppCommandValue, AppFrameValue, MediaExportHandle } from "../../../../../../../../🔨️modules/🪢️wire-contracts/🟦️.ts";
+import type { AppCommandValue, AppFrameValue, DocumentArchivePack, MediaExportHandle } from "../../../../../../../../🔨️modules/🪢️wire-contracts/🟦️.ts";
 import { encodeAppCommand } from "../../../../../../../../🔨️modules/🧾️app-channel/🎛️command-codec/🟦️.ts";
 import { decodeAppFrame } from "../../../../../../../../🔨️modules/🧾️app-channel/🎞️frame-codec/🟦️.ts";
 import type { BrowserActorChildValue } from "@semio-tech/framework-plugin/browser-bundle/child";
@@ -27,7 +27,7 @@ export class ReservationSnapshotReads {
    const receive = (payload: Uint8Array): boolean => {
     let frame: AppFrameValue;
     try { frame = decodeAppFrame(payload); } catch { return false; }
-    const body = "DocumentIdentity" in frame ? frame.DocumentIdentity : "MediaExportSubmitted" in frame ? frame.MediaExportSubmitted : "MediaExportStatus" in frame ? frame.MediaExportStatus : "MediaExportChunk" in frame ? frame.MediaExportChunk : "Done" in frame ? frame.Done : "Error" in frame ? frame.Error : undefined;
+    const body = "DocumentArchive" in frame ? frame.DocumentArchive : "DocumentIdentity" in frame ? frame.DocumentIdentity : "MediaExportSubmitted" in frame ? frame.MediaExportSubmitted : "MediaExportStatus" in frame ? frame.MediaExportStatus : "MediaExportChunk" in frame ? frame.MediaExportChunk : "Done" in frame ? frame.Done : "Error" in frame ? frame.Error : undefined;
     if (!body || body.in_reply_to === null || BigInt(body.in_reply_to) !== sequence) return false;
     if (reply) throw Error("snapshot-read.ambiguous-reply");
     reply = frame;
@@ -47,6 +47,23 @@ export class ReservationSnapshotReads {
    if ("Error" in reply) throw Error("snapshot-read.target-refused");
    return reply;
   });
+ }
+
+ /** 📦️ Reads the schema-owned archive only if both ends of the read name the same live revision. */
+ async readArchive(current: () => boolean): Promise<DocumentArchivePack> {
+  const documentId = this.hub.session.scope.documentId;
+  const identity = async () => {
+   if (!current()) throw Error("document-archive.owner-retired");
+   const reply = await this.command(seq => ({ReadDocumentIdentity: {seq}}));
+   if (!("DocumentIdentity" in reply) || reply.DocumentIdentity.identity.app_instance_id !== 0
+     || reply.DocumentIdentity.identity.parent_document_id !== documentId || !current()) throw Error("document-archive.foreign-document");
+   return reply.DocumentIdentity.identity;
+  };
+  const before = await identity();
+  const reply = await this.command(seq => ({ReadDocumentArchive: {seq: Number(seq)}}));
+  const after = await identity();
+  if (!("DocumentArchive" in reply) || before.base_revision !== after.base_revision) throw Error("document-archive.source-changed");
+  return reply.DocumentArchive.archive;
  }
 
  /** 🌤️ Captures the live target at an actual revision and exports that frozen native source. */

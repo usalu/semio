@@ -1,5 +1,6 @@
 import vocabulary from "./🔣️.json" with { type: "json" };
 import { localizedLabelTextV1 } from "../📣️replay-refusal/🟦️.ts";
+import { inspectPackageV1, type PackageClaimV1, type PackageSourceV1 } from "../../🛠️ShellHelpers/🗜️package-sniff/🟦️.ts";
 import { FormatResolutionErrorV1, pickRevisionV1, resolveFormatV1, type FormatClaimsV1, type FormatResolutionV1, type RevisionSniffV1 } from "../../🛠️ShellHelpers/🧭️format-resolution/🟦️.ts";
 
 
@@ -10,6 +11,7 @@ export type PickedFileFormatCatalogPortV1 = Readonly<{
   descriptors(): readonly FormatClaimsV1[];
   artifactRefOf(kindId: string): string | undefined;
   revisionsOf?(kindId: string): readonly RevisionSniffV1[];
+  packageOf?(kindId: string): PackageClaimV1 | undefined;
 }>;
 
 /** 🔬️ How many leading bytes of a picked file the revision sniff may read. */
@@ -17,8 +19,8 @@ export const PICKED_FILE_SNIFF_BYTES_V1 = 4096;
 
 export type PickedFileRouteV1 = Readonly<{ kind: "routed"; artifactRef: string; resolution: FormatResolutionV1 }> | Readonly<{ kind: "refused"; reason: PickedFileRefusalReasonV1 }>;
 
-/** 📂️ Routes one picked file to the dialect whose owner editor opens it, picking among a format\'s revisions by sniffing the file head; every dead end is a named refusal, never a guess or a fallback format. */
-export async function routePickedFileV1(catalog: PickedFileFormatCatalogPortV1 | undefined, file: Readonly<{ name: string; type?: string }>, readHead: (bytes: number) => Promise<Uint8Array>): Promise<PickedFileRouteV1> {
+/** 📂️ Routes one picked file to the dialect whose owner editor opens it, picking among a format\'s revisions by sniffing the file head and, for a format that claims a package check, verifying the package content and routing by the dialect its root namespace declares; every dead end is a named refusal, never a guess or a fallback format. */
+export async function routePickedFileV1(catalog: PickedFileFormatCatalogPortV1 | undefined, file: Readonly<{ name: string; type?: string }>, readHead: (bytes: number) => Promise<Uint8Array>, content?: Readonly<{ source: PackageSourceV1; signal: AbortSignal }>): Promise<PickedFileRouteV1> {
   if (catalog === undefined) return { kind: "refused", reason: "format-catalog-unavailable" };
   let resolution: FormatResolutionV1 | null;
   try {
@@ -29,7 +31,10 @@ export async function routePickedFileV1(catalog: PickedFileFormatCatalogPortV1 |
   if (resolution === null) return { kind: "refused", reason: "format-unresolved" };
   const revisions = catalog.revisionsOf?.(resolution.format.kindId) ?? [];
   const kindId = revisions.length === 0 ? resolution.format.kindId : pickRevisionV1(resolution.format.kindId, revisions, await readHead(PICKED_FILE_SNIFF_BYTES_V1));
-  const artifactRef = catalog.artifactRefOf(kindId);
+  const claim = catalog.packageOf?.(kindId);
+  const verdict = claim === undefined || content === undefined ? null : await inspectPackageV1(content.source, claim, content.signal);
+  if (verdict?.kind === "mismatch") return { kind: "refused", reason: "content-mismatch" };
+  const artifactRef = verdict?.kind === "match" && verdict.artifactRef !== null ? verdict.artifactRef : catalog.artifactRefOf(kindId);
   return artifactRef === undefined ? { kind: "refused", reason: "owner-unavailable" } : { kind: "routed", artifactRef, resolution };
 }
 
@@ -44,7 +49,12 @@ export function pickedFileRefusalCodeV1(reason: PickedFileRefusalReasonV1): stri
 }
 
 /** 📖️ Reads the leading bytes of a picked blob; a cancel settles the wait at once even though the browser read itself cannot be aborted. */
-export async function readPickedFileHeadV1(blob: Pick<Blob, "slice">, bytes: number, signal: AbortSignal): Promise<Uint8Array> {
+export function readPickedFileHeadV1(blob: Pick<Blob, "slice">, bytes: number, signal: AbortSignal): Promise<Uint8Array> {
+  return readPickedFileRangeV1(blob, 0, bytes, signal);
+}
+
+/** 📖️ Reads `[start, end)` of a picked blob under the same cancellation rule as the head read. */
+export async function readPickedFileRangeV1(blob: Pick<Blob, "slice">, start: number, end: number, signal: AbortSignal): Promise<Uint8Array> {
   if (signal.aborted) throw signal.reason ?? new DOMException("The operation was aborted", "AbortError");
   let onAbort: (() => void) | undefined;
   const cancelled = new Promise<never>((_resolve, reject) => {
@@ -52,7 +62,7 @@ export async function readPickedFileHeadV1(blob: Pick<Blob, "slice">, bytes: num
     signal.addEventListener("abort", onAbort, { once: true });
   });
   try {
-    return await Promise.race([blob.slice(0, bytes).arrayBuffer().then((buffer) => new Uint8Array(buffer)), cancelled]);
+    return await Promise.race([blob.slice(start, end).arrayBuffer().then((buffer) => new Uint8Array(buffer)), cancelled]);
   } finally {
     if (onAbort !== undefined) signal.removeEventListener("abort", onAbort);
   }

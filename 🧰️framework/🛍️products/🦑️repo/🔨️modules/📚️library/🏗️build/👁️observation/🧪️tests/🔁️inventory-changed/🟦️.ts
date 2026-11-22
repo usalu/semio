@@ -42,6 +42,6 @@ test("every change the batch can see is typed and the presence checks go through
  const source=readFileSync(new URL("../../📥️reuse/🟨️.mjs",import.meta.url),"utf8");
  for(const text of["ancestry changed","absence changed","descriptor changed","leaf changed before delivery","leaf changed"])expect(source).toContain('inventoryChangedV1("Inference inventory '+text+'")');
  expect(source).not.toMatch(/Error\("Inference inventory (ancestry|absence|descriptor|leaf) changed/u);
- expect(source).toContain("run:(names,withdraw)=>inventoryNamesSettledV1(list=>missingInventoryNamesV1(root,list,control,withdraw),names,");
- expect(source).toContain("(await inventoryNamesSettledV1(list=>missingInventoryNamesV1(root,list,control,withdraw),names,");
+ expect(source).toContain("run:(names,withdraw)=>missingInventoryNamesV1(root,names,control,withdraw,state.held)");expect(source).toContain("inventoryNamesSettledV1(async names=>");
+ expect(source).toContain("(await missingInventoryNamesV1(root,names,control,withdraw)).size===0");
 });

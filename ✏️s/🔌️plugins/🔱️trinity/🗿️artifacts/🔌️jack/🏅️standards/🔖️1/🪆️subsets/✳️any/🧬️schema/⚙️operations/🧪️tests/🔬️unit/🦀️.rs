@@ -20,7 +20,7 @@ use semio_framework_graph_manifest::PortDirection;
 use store::os_store::store_schema::ArtifactCommand;
 
 fn mini_fixture() -> JackSnapshot {
-    JackSnapshot::with_content::<crate::test_support::FixtureComposition>(JackSnapshot::SCHEMA.into(), "mini".into(), Some("nakagin".into()), Manifest::nakagin_default(), Camera::default(), JackWorkingScene { nodes: vec![
+    JackSnapshot::with_content::<crate::test_support::FixtureComposition>(JackSnapshot::SCHEMA.into(), "mini".into(), "nakagin".into(), Camera::default(), JackWorkingScene { nodes: vec![
             Node {
                 id: "root".into(),
                 kind: "Piece".into(),
@@ -72,14 +72,15 @@ fn check(effect: GraphEffect) -> Result<(), crate::standards::v1::subsets::any::
 #[semio_framework_async_macros::async_test]
 async fn effect_rejects_port_kind_not_declared_on_the_node_kind() {
     let mut graph = mini_graph();
-    graph.manifest = Manifest {
+    graph.manifest_id = "test-ports".into();
+    Manifest::register("test-ports", Manifest {
         node_kinds: vec![crate::standards::v1::subsets::any::schema::manifest::NodeKindDef { name: "Piece".into(), properties: vec![], port_kinds: vec!["Connector".into()] }],
         edge_kinds: vec![crate::standards::v1::subsets::any::schema::manifest::EdgeKindDef { name: "Connection".into(), properties: vec![] }],
         port_kinds: vec![
             crate::standards::v1::subsets::any::schema::manifest::PortKindDef { name: "Connector".into(), direction: PortDirection::Out, properties: vec![] },
             crate::standards::v1::subsets::any::schema::manifest::PortKindDef { name: "Other".into(), direction: PortDirection::In, properties: vec![] },
         ],
-    };
+    });
     let effect = GraphEffect::CreateNode(mini_node("new", 0.0, 0.0, vec![Port { id: "p".into(), kind: "Other".into(), direction: PortDirection::In, properties: PropertyBag::new() }]));
     assert!(matches!(validate_graph_effect(&effect, &graph), Err(crate::standards::v1::subsets::any::schema::errors::TrinityRamError::PortKindNotDeclaredOnMutation { .. })));
 }

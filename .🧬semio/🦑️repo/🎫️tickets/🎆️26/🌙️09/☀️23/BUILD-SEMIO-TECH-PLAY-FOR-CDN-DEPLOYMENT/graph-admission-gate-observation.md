@@ -1,0 +1,7 @@
+# Graph Worker Admission Gate Observation
+
+The coordinator's read-only Darwin `F_GETLK` observation identified PID 59506 as holding the write lock on the resource-directory admission database. `lsof` confirmed that process had the exact database open on FD 24. It is a live graph slice worker under PID 7575, holding graph image and exclusive graph-facts shard 56 leases. During the observation it alternated between uninterruptible and runnable states and accrued CPU; two observed zombie children later disappeared.
+
+A bounded three-second process sample showed the main thread predominantly in `stat`, with some `openat` and directory reads, underneath unsymbolicated Bun frames. It does not reveal the pathname or exact JavaScript await. `retireResources` is one code path that retains exclusive directory admission while scanning candidate metadata and releases it in `finally`, but the sample does not prove this is that path. The descriptor continued reporting shared admission wait; zero registry waiters does not disprove the kernel lock.
+
+The gate protects database identity and retirement. No supported non-disruptive external release of a live owner's kernel lock was found; stale cleanup cannot legitimately remove a held lease and creating another contender would not release it. The worker's eventual completion or an external filesystem-state recovery could release it. No process, mount, cache or lease was altered.

@@ -1,0 +1,180 @@
+{
+  "fields": [
+    "maximumItems",
+    "maximumCopyBytes",
+    "maximumCapacityBytes",
+    "maximumReleaseBytes",
+    "maximumDepth",
+    "workFuel",
+    "fuel",
+    "deadlineUs",
+    "maxEffects",
+    "maxPatchBytes",
+    "maxFrames"
+  ],
+  "cases": [
+    {
+      "name": "distinct positions",
+      "wire": "[1,2,3,4,5,6,7,8,9,10,11]",
+      "valid": true
+    },
+    {
+      "name": "zero requested ceilings",
+      "wire": "[0,0,0,0,0,0,0,0,0,0,0]",
+      "valid": true
+    },
+    {
+      "name": "maximum integer widths",
+      "wire": "[4294967295,4294967295,4294967295,4294967295,4294967295,18446744073709551615,18446744073709551615,18446744073709551615,4294967295,4294967295,4294967295]",
+      "valid": true
+    },
+    {
+      "name": "previous named object",
+      "wire": "{\"retainedPolicy\":{\"maximumItems\":1,\"maximumCopyBytes\":2,\"maximumCapacityBytes\":3,\"maximumReleaseBytes\":4,\"maximumDepth\":5},\"workFuel\":6,\"fuel\":7,\"deadlineUs\":8,\"maxEffects\":9,\"maxPatchBytes\":10,\"maxFrames\":11}",
+      "valid": false
+    },
+    {
+      "name": "missing position",
+      "wire": "[1,2,3,4,5,6,7,8,9,10]",
+      "valid": false
+    },
+    {
+      "name": "extra identity position",
+      "wire": "[1,2,3,4,5,6,7,8,9,10,11,123]",
+      "valid": false
+    },
+    {
+      "name": "retained extent above wasm32 range",
+      "wire": "[4294967296,2,3,4,5,6,7,8,9,10,11]",
+      "valid": false
+    },
+    {
+      "name": "work fuel above u64 range",
+      "wire": "[1,2,3,4,5,18446744073709551616,7,8,9,10,11]",
+      "valid": false
+    },
+    {
+      "name": "shape extent above u32 range",
+      "wire": "[1,2,3,4,5,6,7,8,9,10,4294967296]",
+      "valid": false
+    },
+    {
+      "name": "negative integer",
+      "wire": "[1,2,3,4,5,6,-1,8,9,10,11]",
+      "valid": false
+    },
+    {
+      "name": "fractional integer",
+      "wire": "[1,2,3,4,5,6,7,8,9,10.25,11]",
+      "valid": false
+    },
+    {
+      "name": "quoted integer",
+      "wire": "[1,2,3,4,5,6,7,\"8\",9,10,11]",
+      "valid": false
+    },
+    {
+      "name": "null mandatory field",
+      "wire": "[1,2,3,4,5,6,7,8,9,10,null]",
+      "valid": false
+    }
+  ],
+  "narrowing": [
+    {
+      "name": "independent ceilings with one authenticated fuel",
+      "wire": "[10,20,30,40,5,60,70,80,9,10,11]",
+      "authority": [
+        "8",
+        "22",
+        "21",
+        "42",
+        "4",
+        "65",
+        "85"
+      ],
+      "identity": [
+        "17",
+        "19",
+        "23",
+        "29"
+      ],
+      "expected": [
+        "8",
+        "20",
+        "21",
+        "40",
+        "4",
+        "60",
+        "65",
+        "80",
+        "9",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "name": "unrounded u64 identities and counters",
+      "wire": "[4294967295,4294967295,4294967295,4294967295,4294967295,18446744073709551615,18446744073709551615,18446744073709551615,4294967295,4294967295,4294967295]",
+      "authority": [
+        "8",
+        "22",
+        "21",
+        "42",
+        "4",
+        "9223372036854775808",
+        "18446744073709551614"
+      ],
+      "identity": [
+        "18446744073709551613",
+        "19",
+        "23",
+        "29"
+      ],
+      "expected": [
+        "8",
+        "22",
+        "21",
+        "42",
+        "4",
+        "9223372036854775808",
+        "9223372036854775808",
+        "18446744073709551614",
+        "4294967295",
+        "4294967295",
+        "4294967295"
+      ]
+    },
+    {
+      "name": "zero requested ceilings never expand",
+      "wire": "[0,0,0,0,0,0,0,0,0,0,0]",
+      "authority": [
+        "8",
+        "22",
+        "21",
+        "42",
+        "4",
+        "65",
+        "85"
+      ],
+      "identity": [
+        "17",
+        "19",
+        "23",
+        "29"
+      ],
+      "expected": [
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0"
+      ]
+    }
+  ]
+}

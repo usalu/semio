@@ -8,7 +8,7 @@ fn original_triplet_csr_matches_portable_sparse_matrix_and_closes_every_page() {
         for entry in case["entries"].as_array().unwrap() {
             while !entries.has_reserved_slot() {
                 let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: entries.next_reserve_copy_byte_demand().unwrap(), maximum_capacity_bytes: entries.next_allocation_bytes().unwrap(), maximum_release_bytes: 0, maximum_depth: entries.next_reserve_depth_demand().unwrap() };
-                entries.reserve_one_funded(grant).unwrap();
+                semio_s_fem_test_support::granted(grant, |effect| entries.reserve_one_funded(effect)).result.unwrap();
             }
             entries.push_reserved(SparseTriplet { sequence: entry["sequence"].as_u64().unwrap(), row: entry["row"].as_u64().unwrap() as u32, col: entry["column"].as_u64().unwrap() as u32, value: entry["value"].as_f64().unwrap() }).unwrap();
         }

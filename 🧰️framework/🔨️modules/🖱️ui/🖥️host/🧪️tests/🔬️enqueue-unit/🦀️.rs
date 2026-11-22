@@ -43,7 +43,7 @@ fn fixture_event(value: &serde_json::Value) -> DispatchEvent {
             modifiers: fixture_modifiers(&value["modifiers"]),
         },
         "pointer-move" => DispatchEvent::PointerMove { pointer: pointer(), x: number("x"), y: number("y"), modifiers: fixture_modifiers(&value["modifiers"]) },
-        "key-down" => DispatchEvent::KeyDown { key: value["key"].as_str().unwrap().to_string(), modifiers: fixture_modifiers(&value["modifiers"]) },
+        "key-down" => DispatchEvent::KeyDown { key: value["key"].as_str().unwrap().to_string(), modifiers: fixture_modifiers(&value["modifiers"]), repeat: false },
         kind => panic!("unknown ordered Scroll fixture event {kind}"),
     }
 }
@@ -138,7 +138,7 @@ fn discrete_events_are_never_dropped_under_capacity() {
     let mut queue = EventQueue::new();
     let ui = UiThreadToken::mint();
     for _ in 0..DISCRETE_QUEUE_CAPACITY {
-        let outcome = queue.enqueue(ui, DispatchEvent::KeyDown { key: "a".to_string(), modifiers: EventModifiers::default() });
+        let outcome = queue.enqueue(ui, DispatchEvent::KeyDown { key: "a".to_string(), modifiers: EventModifiers::default(), repeat: false });
         assert_eq!(outcome, EnqueueOutcome::Accepted);
     }
     let mut drained_count = 0;
@@ -155,9 +155,9 @@ fn discrete_overflow_is_reported_not_silently_dropped() {
     let mut queue = EventQueue::new();
     let ui = UiThreadToken::mint();
     for _ in 0..DISCRETE_QUEUE_CAPACITY {
-        queue.enqueue(ui, DispatchEvent::KeyDown { key: "a".to_string(), modifiers: EventModifiers::default() });
+        queue.enqueue(ui, DispatchEvent::KeyDown { key: "a".to_string(), modifiers: EventModifiers::default(), repeat: false });
     }
-    let outcome = queue.enqueue(ui, DispatchEvent::KeyDown { key: "b".to_string(), modifiers: EventModifiers::default() });
+    let outcome = queue.enqueue(ui, DispatchEvent::KeyDown { key: "b".to_string(), modifiers: EventModifiers::default(), repeat: false });
     assert_eq!(outcome, EnqueueOutcome::Overflow);
     assert_eq!(queue.overflow_count(), 1, "overflow must be observable, never silent");
 }
@@ -167,7 +167,7 @@ fn discrete_drain_never_transfers_more_than_one_fixed_page() {
     let mut queue = EventQueue::new();
     let ui = UiThreadToken::mint();
     for _ in 0..DISCRETE_QUEUE_CAPACITY {
-        assert_eq!(queue.enqueue(ui, DispatchEvent::KeyDown { key: "x".repeat(DISCRETE_EVENT_BYTE_CAPACITY), modifiers: EventModifiers::default() }), EnqueueOutcome::Accepted);
+        assert_eq!(queue.enqueue(ui, DispatchEvent::KeyDown { key: "x".repeat(DISCRETE_EVENT_BYTE_CAPACITY), modifiers: EventModifiers::default(), repeat: false }), EnqueueOutcome::Accepted);
     }
     let mut total = 0;
     while !queue.is_empty() {
@@ -210,7 +210,7 @@ fn input_generation_increases_monotonically_and_survives_drain() {
     queue.enqueue(ui, DispatchEvent::PointerMove { pointer: pointer(), x: 0.0, y: 0.0, modifiers: EventModifiers::default() });
     let g1 = queue.current_generation();
     assert!(g1 > g0, "enqueue must bump the generation");
-    queue.enqueue(ui, DispatchEvent::KeyDown { key: "x".to_string(), modifiers: EventModifiers::default() });
+    queue.enqueue(ui, DispatchEvent::KeyDown { key: "x".to_string(), modifiers: EventModifiers::default(), repeat: false });
     let g2 = queue.current_generation();
     assert!(g2 > g1);
     let drained = queue.drain_page(WorkerContext::new(g2));
@@ -222,7 +222,7 @@ fn drain_leaves_the_queue_empty() {
     let mut queue = EventQueue::new();
     let ui = UiThreadToken::mint();
     queue.enqueue(ui, DispatchEvent::PointerMove { pointer: pointer(), x: 0.0, y: 0.0, modifiers: EventModifiers::default() });
-    queue.enqueue(ui, DispatchEvent::KeyDown { key: "a".to_string(), modifiers: EventModifiers::default() });
+    queue.enqueue(ui, DispatchEvent::KeyDown { key: "a".to_string(), modifiers: EventModifiers::default(), repeat: false });
     assert!(!queue.is_empty());
     while !queue.is_empty() {
         let _ = queue.drain_page(WorkerContext::new(queue.current_generation()));

@@ -16,6 +16,7 @@
         "maximumArgumentLength",
         "parallelism",
         "subcommands",
+        "dependencyFree",
         "isolatedDirectory",
         "isolatedNoncePattern",
         "jobserverDirectoryPrefix",
@@ -114,6 +115,33 @@
               "items": {
                 "type": "string",
                 "pattern": "^[a-z][a-z-]*$"
+              }
+            }
+          }
+        },
+        "dependencyFree": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "command",
+              "flags"
+            ],
+            "properties": {
+              "command": {
+                "type": "string",
+                "pattern": "^[a-z][a-z-]*$"
+              },
+              "flags": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "pattern": "^--[a-z][a-z-]*$"
+                }
               }
             }
           }
@@ -479,6 +507,14 @@
             "update"
           ]
         },
+        "dependencyFree": [
+          {
+            "command": "metadata",
+            "flags": [
+              "--no-deps"
+            ]
+          }
+        ],
         "isolatedDirectory": "isolated",
         "isolatedNoncePattern": "^[a-f0-9]{12}$",
         "jobserverDirectoryPrefix": "jobserver-",

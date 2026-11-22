@@ -5,9 +5,9 @@ use super::*;
 //#region TextEditor
 #[derive(Clone, Debug, PartialEq)]
 pub struct TextEditorExplicitDraftSettings {
-    pub(super) edit_action: String,
-    pub(super) edit_argument: String,
-    pub(super) edit_arguments: serde_json::Map<String, Value>,
+    pub edit_action: String,
+    pub edit_argument: String,
+    pub edit_arguments: serde_json::Map<String, Value>,
     pub apply_label: String,
     pub discard_label: String,
     pub conflict_label: String,

@@ -30,7 +30,7 @@ test("staged graph leaf admission reports the writer’s original refusal",async
     const name=String(index+1).padStart(24,"0")+".json",leaf=join(staging,"inference","np",name),space=nativeStatfsSyncV1(graph.root),free=space.bavail*space.bsize,bytes=row.bytes==="physical"?free+1:row.bytes;
     writeFileSync(leaf,"");
     truncateSync(leaf,bytes);
-    using gate=new Database(join(graph.root,component.definitions.OptionalLedger.definitions.Protocol.const.gateFilename),{create:false});
+    using gate=new Database(join(graph.root,component.definitions.OptionalLedger.definitions.Protocol.const.gateFilename),{readwrite:true,create:false});
     if(row.gate)gate.exec("begin exclusive");
     try{
      const verdict=decide.get({$bytes:bytes,$free:free,$held:held,$busy:Number(row.gate)}) as {result:string};

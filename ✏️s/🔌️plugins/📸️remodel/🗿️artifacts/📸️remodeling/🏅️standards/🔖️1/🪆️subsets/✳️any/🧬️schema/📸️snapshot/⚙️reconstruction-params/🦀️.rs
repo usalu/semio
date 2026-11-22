@@ -14,6 +14,7 @@ use serde::{Deserialize, Serialize};
 pub struct IngestParams {
     pub frame_sample_stride: u32,
     pub max_frames: u32,
+    /// 📐️ Long-edge limit used when importing video frames.
     pub downscale_long_edge_px: u32,
     pub min_sharpness: f32,
 }
@@ -255,6 +256,7 @@ pub struct ReconstructionParams {
 #[value(rename_all = "camelCase")]
 #[serde(rename_all = "camelCase")]
 pub struct CameraPosePreview {
+    /// 🆔 Unique capture identity within the trajectory.
     pub camera_id: String,
     pub rotation_wxyz: [f32; 4],
     #[dsl(coord)]

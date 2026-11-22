@@ -56,7 +56,7 @@ pub fn render(node: &UiComponentSceneNode) -> InputState<ActionDescriptor> {
     let mut selects = HashMap::new();
     {
         let mut ctx = framework_widget_context(&mut draw, None, &mut atlas, Some(&icons), &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, 0.0);
-        render_table(node, Rect::new(0.0, 0.0, 400.0, 300.0), &mut ctx, UiDriverDrag::Handle);
+        render_table(node, Rect::new(0.0, 0.0, 400.0, 300.0), &mut ctx, UiDriverDrag::Handle, semio_renderer_wgpu_scene_state::SceneChromeLabels::english().table);
     }
     input
 }
@@ -535,5 +535,22 @@ fn shared_fixture_table_transfer_crosses_windows_and_revalidates_mime_payload_an
     passive_scene_pointer_move(&source, bounds, ui_render::PointerId(1), x + theme.control_height, y, "window-a", 9, UiDriverDrag::Handle);
     passive_scene_pointer_button(&destination, bounds, ui_render::PointerId(1), 20.0, row_center_y(0), false, 0, SceneModifiers::default(), "window-b", 3, UiDriverDrag::Handle, &mut input).expect("stale destination up");
     assert!(drain_actions(&mut input).is_empty(), "a changed source document generation retires the transfer before release");
+}
+/// 🖱️ React's base `Table` row routes a click with `detail >= 2` to the absent `onRowDoubleClick` and returns, so the second click of a double click neither re-picks nor activates the row.
+#[test]
+fn the_second_click_of_a_double_click_on_a_surface_row_dispatches_nothing() {
+    cancel_scene_list_transfer();
+    let rows = json!([{ "id": "r1", "name": { "kind": "text", "value": "Alpha" } }]).to_string();
+    let node = table_scene("table-second-click", TableScene::base(columns_json(&[("name", "Name", false)]), rows));
+    let bounds = Rect::new(0.0, 0.0, 400.0, 300.0);
+    remember_scene_theme(&Theme::default());
+    let (x, y) = (40.0, row_center_y(0));
+    let mut input = InputState::<ActionDescriptor>::default();
+    for (count, expected) in [(1, 1), (2, 0), (3, 0)] {
+        let modifiers = SceneModifiers { click_count: count, ..SceneModifiers::default() };
+        passive_scene_pointer_button(&node, bounds, ui_render::PointerId(1), x, y, true, 0, modifiers, "window-a", 1, UiDriverDrag::Handle, &mut input).expect("down");
+        passive_scene_pointer_button(&node, bounds, ui_render::PointerId(1), x, y, false, 0, modifiers, "window-a", 1, UiDriverDrag::Handle, &mut input).expect("up");
+        assert_eq!(drain_actions(&mut input).len(), expected, "click {count}");
+    }
 }
 //#endregion TableRowTransferTests

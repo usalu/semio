@@ -34,7 +34,7 @@ pub struct OriginalGuestMediaInput<T, const N: usize> {
     cancelled: bool,
 }
 
-fn validate_source(source: OriginalSourceBinding, cx: &StepContext<'_>) -> Result<(), OriginalTurnFailure> {
+pub(crate) fn validate_source(source: OriginalSourceBinding, cx: &StepContext<'_>) -> Result<(), OriginalTurnFailure> {
     cx.original_source_parent()?.validate_borrowed_context(cx)?;
     if !source.matches(cx) {
         return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit, "Original media borrow changed its caller Source").into());
@@ -42,7 +42,7 @@ fn validate_source(source: OriginalSourceBinding, cx: &StepContext<'_>) -> Resul
     Ok(())
 }
 
-fn run<R>(
+pub(crate) fn run<R>(
     cx: &mut StepContext<'_>, step: impl FnOnce(&mut RetainedAllocationEffect<'_>) -> Result<(R, RetainedCloneProgress), ValueError>,
 ) -> Result<Option<R>, OriginalTurnFailure> {
     if cx.is_cancelled() || cx.should_yield() { return Ok(None); }

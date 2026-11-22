@@ -1,0 +1,12 @@
+appliances/gas-boiler
+appliances/hot-water-cylinder
+appliances/mvhr-unit
+appliances/decentralised-hrv-fan
+appliances/duct-fan
+appliances/ceiling-diffuser
+appliances/circulation-pump
+appliances/split-ac-indoor-unit
+appliances/thermostatic-radiator-valve
+appliances/room-thermostat
+appliances/electricity-meter
+appliances/gas-meter

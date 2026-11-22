@@ -9,12 +9,15 @@
     }
   },
   "metrics": {
-    "source": "🖱️ui/🎨️styling tokens x uiSpacingCompactPx 3.2: treeRowUiSpacing 7.5, gapStandard 1, paddingStandard 1, iconTiny 3.75, controlHeightSmall 5",
+    "source": "🖱️ui/🎨️styling tokens x uiSpacingCompactPx 3.2: treeRowUiSpacing 7.5, gapStandard 1, paddingStandard 1, iconTiny 3.75, controlHeightSmall 5, sizeMedium 7",
     "rowHeightPx": 24.0,
     "gapPx": 3.2,
     "actionIconPx": 12.0,
     "actionGapPx": 3.2,
-    "controlHeightSmallPx": 16.0
+    "controlHeightSmallPx": 16.0,
+    "sizeMediumPx": 22.4,
+    "columnWidthPx": 192.0,
+    "actionPitchPx": 25.6
   },
   "viewport": {
     "width": 480.0,
@@ -215,15 +218,17 @@
     ]
   },
   "expected": {
-    "actionsWidth": 33.6,
+    "actionsWidth": 51.2,
+    "contentWidth": 435.2,
+    "narrowViewportWidth": 300.0,
     "columns": [
       {
         "x": 3.2,
-        "width": 220.0
+        "width": 185.6
       },
       {
-        "x": 226.4,
-        "width": 220.0
+        "x": 195.2,
+        "width": 185.6
       }
     ],
     "rows": [
@@ -252,62 +257,88 @@
         "key": "cell-0",
         "x": 3.2,
         "y": 4.0,
-        "width": 220.0,
+        "width": 185.6,
         "height": 16.0
       },
       {
         "record": 5,
         "key": "cell-1",
-        "x": 226.4,
+        "x": 195.2,
         "y": 0.0,
-        "width": 220.0,
+        "width": 185.6,
         "height": 24.0
       }
     ],
     "actionSlots": [
       {
         "slot": 1,
-        "x": 461.6,
-        "y": 6.0,
-        "size": 12.0
+        "x": 454.4,
+        "y": 0.8,
+        "size": 22.4
       },
       {
         "slot": 2,
-        "x": 446.4,
-        "y": 6.0,
-        "size": 12.0
+        "x": 428.8,
+        "y": 0.8,
+        "size": 22.4
       }
     ],
     "clicks": [
       {
-        "x": 467.6,
+        "x": 465.0,
         "y": 36.0,
-        "fires": "delete-space",
+        "count": 1,
+        "fires": ["delete-space"],
         "why": "slot 1 of space:alpha holds its LAST action"
       },
       {
-        "x": 452.4,
+        "x": 440.0,
         "y": 36.0,
-        "fires": "open-space-settings",
+        "count": 1,
+        "fires": ["open-space-settings"],
         "why": "slot 2 of space:alpha holds its first action"
       },
       {
         "x": 100.0,
         "y": 36.0,
-        "fires": "open-space",
-        "why": "the row itself fires its Trigger::Activate binding"
+        "count": 1,
+        "fires": [],
+        "why": "a single click only focuses the row: React moveTo, no activation"
       },
       {
-        "x": 467.6,
+        "x": 100.0,
+        "y": 36.0,
+        "count": 2,
+        "fires": ["open-space"],
+        "why": "a double click fires the row's Trigger::Activate binding, once: React onDoubleClick calls activateRow"
+      },
+      {
+        "x": 100.0,
+        "y": 36.0,
+        "count": 3,
+        "fires": ["open-space"],
+        "why": "three clicks in a chain fire the activation once, at the second: React dblclick fires at click count 2 only"
+      },
+      {
+        "x": 465.0,
         "y": 60.0,
-        "fires": "delete-space",
+        "count": 1,
+        "fires": ["delete-space"],
         "why": "slot 1 of space:beta holds its only action"
       },
       {
         "x": 452.4,
         "y": 60.0,
-        "fires": "open-space",
-        "why": "an empty slot is the row"
+        "count": 1,
+        "fires": [],
+        "why": "an empty slot is the row: a single click only focuses it"
+      },
+      {
+        "x": 452.4,
+        "y": 60.0,
+        "count": 2,
+        "fires": ["open-space"],
+        "why": "an empty slot is the row: a double click activates it"
       }
     ],
     "paintedText": [
@@ -315,42 +346,42 @@
         "text": "Name",
         "x": 3.2,
         "y": 0.0,
-        "width": 220.0,
+        "width": 185.6,
         "height": 24.0
       },
       {
         "text": "Kind",
-        "x": 226.4,
+        "x": 195.2,
         "y": 0.0,
-        "width": 220.0,
+        "width": 185.6,
         "height": 24.0
       },
       {
         "text": "Alpha",
         "x": 3.2,
         "y": 24.0,
-        "width": 220.0,
+        "width": 185.6,
         "height": 24.0
       },
       {
         "text": "Space",
-        "x": 226.4,
+        "x": 195.2,
         "y": 24.0,
-        "width": 220.0,
+        "width": 185.6,
         "height": 24.0
       },
       {
         "text": "Beta",
         "x": 3.2,
         "y": 48.0,
-        "width": 220.0,
+        "width": 185.6,
         "height": 24.0
       },
       {
         "text": "Space",
-        "x": 226.4,
+        "x": 195.2,
         "y": 48.0,
-        "width": 220.0,
+        "width": 185.6,
         "height": 24.0
       }
     ],

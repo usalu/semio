@@ -1,0 +1,14 @@
+{
+  "prefix": "Internal error: Current expected JavaScript dependency binding required ",
+  "binding": {
+    "version": 1,
+    "purpose": "javascript-dependency-binding-mismatch",
+    "sourceDirectory": "/Users/worker/Documents/semio/design/extensions/procedural/artifacts/generation3d/packages/typescript/node_modules",
+    "expectedTarget": "/Users/worker/Documents/semio/.cache/b/d/m/j/a775b1d53e5d57cf7d81/w/147/node_modules",
+    "observedTarget": "/Users/worker/Documents/semio/.cache/b/d/m/j/a775b1d53e5d57cf7d81/w/84/node_modules",
+    "kind": "symlink",
+    "truncated": false
+  },
+  "ordinary": "ordinary stderr: ",
+  "ordinaryLength": 1800
+}

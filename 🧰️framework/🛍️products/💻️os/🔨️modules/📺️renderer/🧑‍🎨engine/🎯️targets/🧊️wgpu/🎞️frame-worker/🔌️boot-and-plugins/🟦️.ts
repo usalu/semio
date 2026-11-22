@@ -152,7 +152,10 @@ export async function boot(message: Extract<BrowserFrameUiMessage, { kind: "boot
     const catalogRows = admitPluginCatalogV1(message.catalog, { maxBytes: 2097152, maxRows: 512, maxEdges: 4096, maxWork: 65536, deadlineMs: performance.now() + 30000, now: () => performance.now(), cancelled: () => bootAbort.signal.aborted, progress: ({ completed, total }) => progress("catalog-admission", 0.25 + 0.005 * completed / Math.max(1, total)) });
     setWorkerCatalog(pluginCatalogV1(catalogRows));
     setExplicitPluginModules(admitWgpuPluginModules(message.plugins ?? catalogRows.targets.map(({ pluginId, moduleUrl }) => ({ pluginId, moduleUrl })), scope.location.href));
+    const selection = admitWgpuPluginRegistrySelection(message.pluginRegistrySelection);
+    const bootVariant = message.plugins === undefined && selection === "variant" ? message.descriptor.pluginVariant : undefined;
     const prepared = await prepareWgpuPluginModules(workerCatalog!, explicitPluginModules!, componentPackageReceiptSource, {
+      ...(bootVariant === undefined ? {} : { bootVariant }),
       signal: bootAbort.signal,
       deadlineMs: performance.now() + 30000,
       now: () => performance.now(),
@@ -161,7 +164,6 @@ export async function boot(message: Extract<BrowserFrameUiMessage, { kind: "boot
       readDescriptor: (id, url, source, signal, heartbeat) => monitoredSuspension(`plugin-descriptor:${id}`, () => fetchPackageDescriptor(id, url, source, signal, heartbeat), suspensionLedger),
       progress: (id, index, count) => progress(`plugin-descriptor:${id}`, 0.25 + 0.025 * index / Math.max(1, count)),
     });
-    const selection = admitWgpuPluginRegistrySelection(message.pluginRegistrySelection);
     const planner = new PlaygroundBootPlanner(prepared.catalog, message.descriptor.pluginVariant, undefined, selection);
     await driveChunks(planner, 0.25, 0.05);
     const bootPlan = ownedStep("plugin-graph:finish", () => planner.finish());

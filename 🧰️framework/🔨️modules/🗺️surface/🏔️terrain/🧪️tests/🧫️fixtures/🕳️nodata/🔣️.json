@@ -1,0 +1,244 @@
+[
+  {
+    "name": "mixed-extrema-and-holes",
+    "source": {
+      "bounds": [
+        5,
+        50,
+        5.375,
+        50.25
+      ],
+      "rowsMillimetres": [
+        [
+          -2147483648,
+          0,
+          0,
+          2147483647
+        ],
+        [
+          -9999000,
+          20000,
+          30000,
+          40000
+        ],
+        [
+          1000,
+          2000,
+          0,
+          4000
+        ]
+      ],
+      "missingSamples": "0204"
+    },
+    "facesNorthFirst": [
+      [
+        0,
+        4,
+        1
+      ],
+      [
+        1,
+        4,
+        5
+      ],
+      [
+        3,
+        6,
+        7
+      ],
+      [
+        4,
+        8,
+        5
+      ],
+      [
+        6,
+        10,
+        7
+      ],
+      [
+        7,
+        10,
+        11
+      ]
+    ],
+    "surfaceQueriesNorthFirst": [
+      {
+        "xy": [
+          0.25,
+          0.25
+        ],
+        "millimetres": -2498750
+      },
+      {
+        "xy": [
+          1,
+          0.5
+        ],
+        "millimetres": 11000
+      },
+      {
+        "xy": [
+          1.5,
+          0.5
+        ],
+        "millimetres": null
+      },
+      {
+        "xy": [
+          2.25,
+          0.75
+        ],
+        "millimetres": 23500
+      },
+      {
+        "xy": [
+          2,
+          1
+        ],
+        "millimetres": 30000
+      },
+      {
+        "xy": [
+          2,
+          2
+        ],
+        "millimetres": 0
+      }
+    ],
+    "horizontalDrapeNorthFirst": [
+      {
+        "y": 0.75,
+        "intervals": [
+          [
+            0,
+            1
+          ],
+          [
+            2.25,
+            3
+          ]
+        ]
+      },
+      {
+        "y": 1,
+        "intervals": [
+          [
+            0,
+            1
+          ],
+          [
+            2,
+            3
+          ]
+        ]
+      },
+      {
+        "y": 2,
+        "intervals": [
+          [
+            2,
+            3
+          ]
+        ]
+      }
+    ]
+  },
+  {
+    "name": "all-nodata",
+    "source": {
+      "bounds": [
+        5,
+        50,
+        5.125,
+        50.125
+      ],
+      "rowsMillimetres": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "missingSamples": "0f"
+    },
+    "facesNorthFirst": []
+  },
+  {
+    "name": "dense-valid-extrema",
+    "source": {
+      "bounds": [
+        5,
+        50,
+        5.125,
+        50.125
+      ],
+      "rowsMillimetres": [
+        [
+          -9999000,
+          0
+        ],
+        [
+          -2147483648,
+          2147483647
+        ]
+      ]
+    },
+    "facesNorthFirst": [
+      [
+        0,
+        2,
+        1
+      ],
+      [
+        1,
+        2,
+        3
+      ]
+    ]
+  },
+  {
+    "name": "isolated-valid-extreme",
+    "source": {
+      "bounds": [
+        5,
+        50,
+        5.25,
+        50.25
+      ],
+      "rowsMillimetres": [
+        [
+          2147483647,
+          0,
+          4000
+        ],
+        [
+          0,
+          3000,
+          2000
+        ],
+        [
+          0,
+          0,
+          1000
+        ]
+      ],
+      "missingSamples": "4a00"
+    },
+    "facesNorthFirst": [
+      [
+        1,
+        4,
+        2
+      ],
+      [
+        2,
+        4,
+        5
+      ]
+    ]
+  }
+]

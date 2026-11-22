@@ -27,7 +27,7 @@ export async function registerTurnDispatchLifecycleTests(vitest: PluginRuntimeVi
         const owner = client.captureInstanceLifecycle(fixture.actor, fixture.instance);
         const lifetime = { activationGeneration: owner.activation.activationGeneration, instanceId: fixture.instance, guestLifetime: BigInt(fixture.guestLifetime) };
         const captured = { kind: "captured" as const, lifetime, requestSequence: owner.openRequest.requestSequence };
-        const input = { appId: "fixture", actor: {}, config: new Uint8Array(), assets: [], capabilities: [], quotas: new Uint8Array() };
+        const input = { appId: "fixture", purpose: { tag: "ordinary" }, actor: {}, config: new Uint8Array(), assets: [], capabilities: [], quotas: new Uint8Array() };
         const raw = { uiPatches: [], effects: [], nextWake: null, status: { tag: "idle" }, lifecycleReceipt: encodeActorInstanceLifecycle(captured) };
         const opened = await answer(submitPluginLifecycleTurn(owner, { kind: "open", input }, "Interactive"), raw);
         expect(opened.owner).toBe(owner); expect(opened.raw).toBe(raw); expect(opened.turn.original).toBe(raw); expect(opened.turn.lifecycleReceipt).toBe(raw.lifecycleReceipt);
@@ -71,7 +71,7 @@ export async function registerTurnDispatchLifecycleTests(vitest: PluginRuntimeVi
         const owner = client.captureInstanceLifecycle(actorId, fixture.instance);
         const lifetime = { activationGeneration: owner.activation.activationGeneration, instanceId: fixture.instance, guestLifetime: BigInt(fixture.guestLifetime) };
         const captured = { kind: "captured" as const, lifetime, requestSequence: owner.openRequest.requestSequence };
-        await answer(submitPluginLifecycleTurn(owner, { kind: "open", input: { appId: "fixture", actor: {}, config: new Uint8Array(), assets: [], capabilities: [], quotas: new Uint8Array() } }, "Interactive"), { ...plain, lifecycleReceipt: encodeActorInstanceLifecycle(captured) });
+        await answer(submitPluginLifecycleTurn(owner, { kind: "open", input: { appId: "fixture", purpose: { tag: "ordinary" }, actor: {}, config: new Uint8Array(), assets: [], capabilities: [], quotas: new Uint8Array() } }, "Interactive"), { ...plain, lifecycleReceipt: encodeActorInstanceLifecycle(captured) });
         const ui = new OwnedUiInstance(owner.activation, lifetime, { maxNodes: 128, maxDepth: 16, maxChildren: 32, maxTextBytes: 4096, maxPatchOps: 128, maxPatchBytes: 65536 }, { usizeBits: 32 }); owner.bindHostRetirement(ui);
         await answer(submitPluginLifecycleTurn(owner, { kind: "receipt-ack", receipt: captured }, "Interactive"), plain);
         const value = fixture.uiAcknowledgement;

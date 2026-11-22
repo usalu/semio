@@ -7962,11 +7962,12 @@
             "iconId": "paintbrush",
             "layout": {
               "root": {
-                "kind": "row",
+                "kind": "split",
+                "axis": "horizontal",
                 "children": [
                   {
                     "kind": "stack",
-                    "size": 60,
+                    "size": 0.6,
                     "children": [
                       {
                         "kind": "window",
@@ -7976,7 +7977,7 @@
                   },
                   {
                     "kind": "stack",
-                    "size": 40,
+                    "size": 0.4,
                     "children": [
                       {
                         "kind": "window",
@@ -7992,17 +7993,11 @@
         ],
         "defaultLayout": {
           "root": {
-            "kind": "row",
+            "kind": "stack",
             "children": [
               {
-                "kind": "stack",
-                "size": 100,
-                "children": [
-                  {
-                    "kind": "window",
-                    "windowKindId": "lowpoly-main"
-                  }
-                ]
+                "kind": "window",
+                "windowKindId": "lowpoly-main"
               }
             ]
           }

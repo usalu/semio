@@ -49,13 +49,13 @@ pub fn chrome_status_accessibility_node(node_id: u64, key: &str, label: String) 
         multiline: false,
         controls: None,
         active_descendant: None,
-        level: None,
+        level: None, multiselectable: false,
         rect: None,
         value_min: None,
         value_max: None,
         value_now: None,
         value_text: None,
-        busy: false,
+        busy: false, sort: None,
     }
 }
 

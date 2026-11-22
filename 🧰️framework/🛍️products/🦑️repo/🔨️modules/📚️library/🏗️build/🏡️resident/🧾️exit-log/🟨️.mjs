@@ -27,7 +27,7 @@ export function readCgroupEventsV1(path,read=file=>readFileSync(file,"utf8")){
  try{return Object.fromEntries(read(join(path,MEMORY_EVENTS)).split("\n").filter(Boolean).map(line=>{const[name,value]=line.split(" ");return[name,Number(value)];}));}catch{return undefined;}
 }
 
-/** 🔎️ Names why the service behind `directory` is gone: the reason its last exit row gives, else (its last row is a start whose process is gone) a kill without a trace with the cgroup's `oom_kill` count, else nothing is known. */
+/** 🔎️ Names why the service behind `directory` is gone: the reason its last exit row gives, else (its last row is a start whose process is gone, or a start through launchd that names no process because the service itself never wrote its own start row) a kill without a trace with the cgroup's `oom_kill` count, else nothing is known. */
 export function explainServiceLossV1(directory,{alive=pid=>{try{process.kill(pid,0);return true;}catch(error){return error.code==="EPERM";}},events=readCgroupEventsV1}={}){
  const rows=readServiceExitRowsV1(directory),last=rows.at(-1);
  if(!last)return"the service left no exit record";
@@ -35,9 +35,9 @@ export function explainServiceLossV1(directory,{alive=pid=>{try{process.kill(pid
   const held=Array.isArray(last.workers)&&last.workers.length?last.workers.reduce((sum,row)=>sum+row.heapMb+row.extraMb,0):undefined,memory=(last.rssMegabytes===undefined?"":", "+last.rssMegabytes+" MB resident")+(held===undefined?"":", slice workers held "+Math.round(held)+" MB");
   return"the service exited: "+last.reason+(last.code===undefined?"":" (code "+last.code+")")+(last.signal?" (signal "+last.signal+")":"")+memory+(last.error?": "+String(last.error).split("\n")[0]:"");
  }
- if(last.event==="start"&&typeof last.pid==="number"&&!alive(last.pid)){
-  const counters=last.cgroup===undefined?undefined:events(last.cgroup),oom=counters?.oom_kill;
-  return"the service was killed without an exit record"+(oom>0?": its cgroup recorded "+oom+" oom kills (memory limit "+(last.limitMegabytes??"?")+" MB)":counters===undefined?" (its cgroup is gone)":" (no oom kill in its cgroup: an external kill or a crash)");
+ if(last.event==="start"&&(typeof last.pid!=="number"||!alive(last.pid))){
+  const cgroup=last.cgroup??rows.findLast(row=>row.event==="start"&&row.cgroup!==undefined)?.cgroup,counters=cgroup===undefined?undefined:events(cgroup),oom=counters?.oom_kill;
+  return"the service was killed without an exit record"+(oom>0?": its cgroup recorded "+oom+" oom kills (memory limit "+(rows.findLast(row=>row.limitMegabytes!==undefined)?.limitMegabytes??"?")+" MB)":counters===undefined?" (its cgroup is gone)":" (no oom kill in its cgroup: an external kill or a crash)");
  }
  return"the service is still recorded as running";
 }

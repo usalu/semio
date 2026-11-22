@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️splice-scene-rows",
+  "semanticKind": "splice-scene-rows",
+  "displayName": "Splice Scene Rows",
+  "emoji": "🔀️",
+  "aggregateVariant": "SpliceSceneRows",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "splice-scene-rows",
+  "binaryTag": 39,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "rejected"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

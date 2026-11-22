@@ -80,10 +80,12 @@ impl WidgetInputs {
     }
 
     fn require(&self, port: &str) -> Result<&GeometryValue, WidgetFault> {
-        self.values.get(port).ok_or_else(|| {
-            let (en, de) = self.label(port);
-            WidgetFault::new(INPUT_MISSING, format!("Input \u{201c}{en}\u{201d} has no value."), format!("Eingang \u{201c}{de}\u{201d} hat keinen Wert.")).at(port)
-        })
+        self.values.get(port).ok_or_else(|| self.missing(port))
+    }
+
+    fn missing(&self, port: &str) -> WidgetFault {
+        let (en, de) = self.label(port);
+        WidgetFault::new(INPUT_MISSING, format!("Input \u{201c}{en}\u{201d} has no value."), format!("Eingang \u{201c}{de}\u{201d} hat keinen Wert.")).at(port)
     }
 
     fn mismatch(&self, port: &str, expected: (&str, &str)) -> WidgetFault {
@@ -118,6 +120,15 @@ impl WidgetInputs {
         match self.require(port)? {
             GeometryValue::Text(value) => Ok(value),
             _ => Err(self.mismatch(port, ("text", "Text"))),
+        }
+    }
+
+    /// 📤️ Transfers the original text allocation into a widget job.
+    pub fn into_text(mut self, port: &str) -> Result<String, WidgetFault> {
+        match self.values.get_mut(port) {
+            Some(GeometryValue::Text(value)) => Ok(std::mem::take(value)),
+            Some(_) => Err(self.mismatch(port, ("text", "Text"))),
+            None => Err(self.missing(port)),
         }
     }
 

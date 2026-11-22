@@ -10,7 +10,7 @@ import { useLocalPresenceActorIdV1, usePresenceRuntimeKeyV1 } from "../../../�
 import { PRESENCE_VIEW_PUBLISH_MIN_INTERVAL_MS, publishLocalPresenceWindowViewV1, clearLocalPresenceWindowViewV1, publishLocalActiveToolV1 } from "../../../👕️canvas-presence/🟦️.ts";
 import { type WorldVortexRecord } from "../../🔭️scene-schema/🟦️.ts";
 import { getWorldGumballTransformPreview, getWorldGumballTransformPreviewServerSnapshot, subscribeWorldGumballTransformPreview, worldAttractionsWithGumballPreview, worldGumballOwnerPoses, worldVorticesWithGumballPreview } from "../../🧮️gumball-math/🟦️.ts";
-import { getWorldCatalogueDropPreview, getWorldCatalogueDropPreviewServerSnapshot, getWorldSelectionPreview, getWorldSelectionPreviewServerSnapshot, subscribeWorldCatalogueDropPreview, subscribeWorldSelectionPreview } from "../../🗂️catalogue-drop/🟦️.tsx";
+import { getWorldSelectionPreview, getWorldSelectionPreviewServerSnapshot, subscribeWorldSelectionPreview } from "../../🗂️catalogue-drop/🟦️.tsx";
 import { type SurfaceContextMenuResult } from "../../../🗣️Interpreter/🖱️surface-menu/🟦️.ts";
 import type { WorldCore1 } from "../../🌍️scene-lanes/🟦️.ts";
 
@@ -143,11 +143,6 @@ export function useAttractionsState({ core }: { readonly core: WorldCore1 }) {
     readonly event: { readonly shiftKey?: boolean; readonly ctrlKey?: boolean; readonly metaKey?: boolean };
   } | null>(null);
   const [voxelHoverOrigin, setVoxelHoverOrigin] = useState<readonly [number, number, number] | null>(null);
-  const catalogueDropPreview = useSyncExternalStore(
-    subscribeWorldCatalogueDropPreview,
-    () => getWorldCatalogueDropPreview(node.controllerId),
-    () => getWorldCatalogueDropPreviewServerSnapshot(node.controllerId),
-  );
   const sharedSelectionPreview = useSyncExternalStore(
     subscribeWorldSelectionPreview,
     () => getWorldSelectionPreview(node.controllerId),
@@ -181,5 +176,5 @@ export function useAttractionsState({ core }: { readonly core: WorldCore1 }) {
   /** 🎉️ Pre-drop instance ids — when the scene gains new ids after {@link commitCatalogueDropAt}, those objects celebrate. */
   const pendingCelebrateCatalogueDropIdsRef = useRef<ReadonlySet<string> | null>(null);
   const instancesRef = useRef(instances);
-  return { instancesRef, instances, meshes, vortices, references, selection, lod, interaction, windowInstanceId, marqueePath, marqueeModifiers, persistentSelectionMode, onAction, node, setViewportCamera, sceneCamera, retainViewport, setViewportOwned, setDetachEpoch, lastDispatchedWorldCameraRef, activeUtility, interactionDomainId, targetVolumes, autoFitBounds, brushMode, cameraRef, catalogueDragDepthRef, catalogueDragEncodedRef, catalogueDropPreview, computeStatus, connectDragHoverPosition, connectDragSource, contextMenu, contextMenuOpenEpochRef, contextMenuTitleLabel, dismissContextMenu, faceDragSession, gumballDragActive, gumballTransformPreviewSourceId, hostRef, instancesGroupRef, localPresenceActor, lodRef, overlayRailRef, overlayRailSafeArea, pendingCelebrateCatalogueDropIdsRef, presenceObjectWorldPositions, presenceWindowId, previewAttractions, previewVortices, publishWorldPresenceView, relocateMode, sectionExtent, setConnectDragHoverPosition, setConnectDragSource, setContextMenu, setFaceDragSession, setGumballDragActive, setMarqueeModifiers, setMarqueePath, setVortexPointerArm, setVoxelHoverOrigin, sharedGumballTransformPreview, sharedSelectionPreview, toolRunTrace, volumeBrushMode, volumeLayersInteractive, voxelHoverOrigin, presenceRuntimeKey };
+  return { instancesRef, instances, meshes, vortices, references, selection, lod, interaction, windowInstanceId, marqueePath, marqueeModifiers, persistentSelectionMode, onAction, node, setViewportCamera, sceneCamera, retainViewport, setViewportOwned, setDetachEpoch, lastDispatchedWorldCameraRef, activeUtility, interactionDomainId, targetVolumes, autoFitBounds, brushMode, cameraRef, catalogueDragDepthRef, catalogueDragEncodedRef, computeStatus, connectDragHoverPosition, connectDragSource, contextMenu, contextMenuOpenEpochRef, contextMenuTitleLabel, dismissContextMenu, faceDragSession, gumballDragActive, gumballTransformPreviewSourceId, hostRef, instancesGroupRef, localPresenceActor, lodRef, overlayRailRef, overlayRailSafeArea, pendingCelebrateCatalogueDropIdsRef, presenceObjectWorldPositions, presenceWindowId, previewAttractions, previewVortices, publishWorldPresenceView, relocateMode, sectionExtent, setConnectDragHoverPosition, setConnectDragSource, setContextMenu, setFaceDragSession, setGumballDragActive, setMarqueeModifiers, setMarqueePath, setVortexPointerArm, setVoxelHoverOrigin, sharedGumballTransformPreview, sharedSelectionPreview, toolRunTrace, volumeBrushMode, volumeLayersInteractive, voxelHoverOrigin, presenceRuntimeKey };
 }

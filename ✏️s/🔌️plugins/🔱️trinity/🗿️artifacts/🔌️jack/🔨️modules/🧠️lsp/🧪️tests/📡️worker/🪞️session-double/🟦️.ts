@@ -8,6 +8,8 @@ export default async function init(): Promise<void> {
 }
 
 export class JackLspSession {
+  registerManifestJson(_id: string, _json: string): void {}
+
   loadSnapshotJson(json: string): void {
     calls.snapshots.push(json);
   }

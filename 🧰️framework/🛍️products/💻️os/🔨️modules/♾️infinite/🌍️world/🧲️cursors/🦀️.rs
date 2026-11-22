@@ -56,14 +56,20 @@ pub fn pointer_in_pick_rect(session_state: &WorldSessionState, x: f32, y: f32) -
 
 /// 🎯️ Intersects the live viewport ray with a horizontal world plane.
 pub fn world3d_ground_plane_pick(session: &WorldSessionState, camera: &WorldCameraState, x: f32, y: f32, plane_z: f32) -> Option<[f32; 3]> {
+    world3d_axis_plane_pick(session, camera, x, y, 2, plane_z)
+}
+
+/// 🎯️ Intersects the live viewport ray with the world plane whose `axis` coordinate equals `value`.
+pub fn world3d_axis_plane_pick(session: &WorldSessionState, camera: &WorldCameraState, x: f32, y: f32, axis: usize, value: f32) -> Option<[f32; 3]> {
     let (x, y, viewport) = pointer_in_pick_rect(session, x, y)?;
     let (origin, direction) = ui_scene::math::projection_spec_ray_from_screen(&camera.orbit.to_camera(), camera.projection_spec, x, y, viewport.w, viewport.h);
-    let distance = (plane_z - origin.z) / direction.z;
-    if direction.z.abs() < 1e-5 || !distance.is_finite() || distance < 0.0 {
+    let (origin, direction) = (origin.to_array(), direction.to_array());
+    let distance = (value - origin[axis]) / direction[axis];
+    if direction[axis].abs() < 1e-5 || !distance.is_finite() || distance < 0.0 {
         return None;
     }
-    let position = origin.add(direction.scale(distance)).to_array();
-    position.iter().all(|axis| axis.is_finite()).then_some(position)
+    let position = [0, 1, 2].map(|index| origin[index] + direction[index] * distance);
+    position.iter().all(|coordinate| coordinate.is_finite()).then_some(position)
 }
 
 /// 📍️ Captures a bounded ground point with the explicit window and scene addresses.

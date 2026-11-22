@@ -1,0 +1,64 @@
+{
+ "type": "object",
+ "additionalProperties": false,
+ "required": ["version", "packageDir", "budget", "files", "virtualRoot", "crates", "addition", "cycle"],
+ "properties": {
+  "version": { "const": 1 },
+  "packageDir": { "type": "string" },
+  "budget": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["target", "hard"],
+   "properties": {
+    "target": { "$ref": "#/$defs/budget" },
+    "hard": { "$ref": "#/$defs/budget" }
+   }
+  },
+  "files": { "$ref": "#/$defs/files" },
+  "virtualRoot": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["modules", "files", "items"],
+   "properties": {
+    "modules": { "type": "array", "items": { "type": "string" } },
+    "files": { "type": "object", "additionalProperties": { "type": "array", "items": { "type": "string" } } },
+    "items": { "type": "array", "items": { "type": "string" } }
+   }
+  },
+  "crates": { "type": "array", "items": { "type": "string" } },
+  "addition": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["description", "files", "crate", "dependsOn", "unchanged"],
+   "properties": {
+    "description": { "type": "string" },
+    "files": { "$ref": "#/$defs/files" },
+    "crate": { "type": "string" },
+    "dependsOn": { "type": "array", "items": { "type": "string" } },
+    "unchanged": { "type": "array", "items": { "type": "string" } }
+   }
+  },
+  "cycle": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["description", "files"],
+   "properties": {
+    "description": { "type": "string" },
+    "files": { "$ref": "#/$defs/files" }
+   }
+  }
+ },
+ "$defs": {
+  "files": { "type": "object", "additionalProperties": { "type": "string" } },
+  "budget": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["files", "bytes", "lines"],
+   "properties": {
+    "files": { "type": "integer" },
+    "bytes": { "type": "integer" },
+    "lines": { "type": "integer" }
+   }
+  }
+ }
+}

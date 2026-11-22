@@ -5,6 +5,9 @@ use semio_s_artifact_norm_iso16757_model::part_1::Catalogue;
 use semio_s_artifact_stdio_contract_part21::{Part21Builder, Part21Header, Part21Value as V, write_part21};
 use std::collections::{BTreeMap, BTreeSet};
 
+#[path = "📋️properties.rs"]
+mod properties;
+
 /// 🆔 IFC compressed identifier derived from the source namespace and record key.
 fn global_id(catalogue_id: &str, role: &str, id: &str) -> V {
     const ALPHABET: &[u8; 64] = b"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_$";
@@ -33,6 +36,8 @@ pub enum IfcLibraryError {
     SeriesId(String),
     ProductId(String),
     ProductMembership(String),
+    PropertyDefinitionId(String),
+    PropertyValue(String),
 }
 
 impl IfcLibraryError {
@@ -44,6 +49,8 @@ impl IfcLibraryError {
             Self::SeriesId(value) => ("Duplicate catalogue series ID", "Doppelte Katalogserienkennung", value),
             Self::ProductId(value) => ("Duplicate catalogue product ID", "Doppelte Katalogproduktkennung", value),
             Self::ProductMembership(value) => ("Missing class or series for catalogue product", "Fehlende Klasse oder Serie für Katalogprodukt", value),
+            Self::PropertyDefinitionId(value) => ("Duplicate catalogue property definition ID", "Doppelte Katalogmerkmalskennung", value),
+            Self::PropertyValue(value) => ("Invalid or duplicate static value for an exported property", "Ungültiger oder doppelter statischer Wert eines exportierten Merkmals", value),
         };
         (format!("{en} ({value:?})."), format!("{de} ({value:?})."))
     }
@@ -60,7 +67,7 @@ fn refs(ids: impl IntoIterator<Item = u64>) -> V {
     V::List(ids.into_iter().map(V::Ref).collect())
 }
 
-/// 📤 Exports the catalogue identity, names, product IDs, class memberships and dictionary reference as a scoped IFC4 type library.
+/// 📤 Exports the catalogue identity, names, product IDs, class memberships, scalar properties and dictionary links as a scoped IFC4 type library.
 pub fn export_ifc_step(catalogue: &Catalogue) -> Result<String, IfcLibraryError> {
     let catalogue_id = &catalogue.id.0;
     let root_id = |role, id| global_id(catalogue_id, role, id);
@@ -69,7 +76,7 @@ pub fn export_ifc_step(catalogue: &Catalogue) -> Result<String, IfcLibraryError>
         root_id("library", ""), V::Unset, label(&catalogue.metadata.names.preferred.text)?,
         V::Str(catalogue_id.clone()), V::Unset, V::Unset, V::Unset, V::Unset, V::Unset,
     ]);
-    if !catalogue.dictionary.id.trim().is_empty() {
+    let dictionary = if !catalogue.dictionary.id.trim().is_empty() {
         let version = if catalogue.dictionary.version.trim().is_empty() {
             V::Unset
         } else {
@@ -82,7 +89,11 @@ pub fn export_ifc_step(catalogue: &Catalogue) -> Result<String, IfcLibraryError>
             root_id("dictionary", &catalogue.dictionary.id), V::Unset, V::Unset, V::Unset,
             refs([library]), V::Ref(dictionary),
         ]);
-    }
+        Some(dictionary)
+    } else {
+        None
+    };
+    let mut property_sets = properties::CatalogueProperties::new(&catalogue.property_definitions, dictionary)?;
     let mut classes = BTreeMap::new();
     for class in &catalogue.product_classes {
         if class.id.trim().is_empty() || classes.insert(class.id.as_str(), class).is_some() {
@@ -101,7 +112,7 @@ pub fn export_ifc_step(catalogue: &Catalogue) -> Result<String, IfcLibraryError>
     }
     let mut series = BTreeMap::new();
     for row in &catalogue.product_series {
-        if series.insert(row.id.as_str(), row.class_id.as_str()).is_some() {
+        if series.insert(row.id.as_str(), row).is_some() {
             return Err(IfcLibraryError::SeriesId(row.id.clone()));
         }
     }
@@ -112,12 +123,14 @@ pub fn export_ifc_step(catalogue: &Catalogue) -> Result<String, IfcLibraryError>
         if !product_ids.insert(&product.id) {
             return Err(IfcLibraryError::ProductId(product.id.clone()));
         }
-        let class = series.get(product.series_id.as_str())
-            .and_then(|class| groups.get_mut(class))
+        let series = series.get(product.series_id.as_str())
             .ok_or_else(|| IfcLibraryError::ProductMembership(product.id.clone()))?;
+        let class = groups.get_mut(series.class_id.as_str())
+            .ok_or_else(|| IfcLibraryError::ProductMembership(product.id.clone()))?;
+        let property_set = property_sets.export(&mut builder, catalogue_id, series, product)?;
         let entity = builder.alloc("IFCBUILDINGELEMENTPROXYTYPE", vec![
             root_id("product", &product.id), V::Unset, label(&product.names.preferred.text)?,
-            V::Unset, V::Unset, V::Unset, V::Unset, label(&product.id)?,
+            V::Unset, V::Unset, property_set, V::Unset, label(&product.id)?,
             V::Unset, V::Enum("NOTDEFINED".into()),
         ]);
         definitions.push(entity);

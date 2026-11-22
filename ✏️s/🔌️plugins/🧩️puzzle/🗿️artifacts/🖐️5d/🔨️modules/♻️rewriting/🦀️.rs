@@ -193,8 +193,7 @@ pub fn graph_from_puzzle5d(snapshot: &Puzzle5dSnapshot, catalog: &Puzzle5dKindCa
     }
     Ok(Graph {
         name: snapshot.label.clone().unwrap_or_default(),
-        manifest_id: None,
-        manifest: node_manifest(snapshot, catalog),
+        manifest_id: Manifest::intern(node_manifest(snapshot, catalog)),
         camera: Camera::default(),
         nodes,
         edges,

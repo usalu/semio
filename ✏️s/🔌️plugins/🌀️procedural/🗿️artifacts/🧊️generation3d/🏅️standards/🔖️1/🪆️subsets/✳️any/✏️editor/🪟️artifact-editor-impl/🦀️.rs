@@ -585,12 +585,12 @@ impl ArtifactEditor for Generation3dPlayApp {
     fn pending_effects(owner: &semio_plugin::ArtifactInstanceOperationOwnerHandle, doc: &semio_plugin::ArtifactPendingView<'_, Generation3dSnapshot>, _cfg: &ConfigView<'_, Generation3dConfig>, view: Option<&semio_plugin::ViewModel>) -> Vec<Effect> {
         let windows = generation3d_preview_windows(view);
         let servable = flow_eval_tick::may_rearm(&doc.snapshot.host_snapshot);
-        let applied_edits = doc.provisional_generation();
+        let document = semio_s_artifact_procedural_3d_preview_eval::PreviewEvalDocumentStamp { content_revision: doc.source_version().canonical_revision, provisional_generation: doc.provisional_generation() };
         owner
             .with_mut::<Generation3dInstanceOperationOwner, _>(|owner| {
                 use semio_s_artifact_procedural_3d_preview_eval::PreviewEvalRunOwner as _;
                 let (session, link) = owner.preview_eval_parts().ok_or_else(|| Fault::from("generation3d-eval-session-closing"))?;
-                Ok(semio_s_artifact_procedural_3d_preview_eval::preview_eval_run_effects(session, link, &windows, doc.tool_run(), servable, applied_edits))
+                Ok(semio_s_artifact_procedural_3d_preview_eval::preview_eval_run_effects(session, link, &windows, doc.tool_run(), servable, document))
             })
             .unwrap_or_default()
     }

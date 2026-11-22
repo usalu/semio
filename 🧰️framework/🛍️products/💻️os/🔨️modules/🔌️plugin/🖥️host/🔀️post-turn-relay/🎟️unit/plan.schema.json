@@ -4,6 +4,7 @@
   "additionalProperties": false,
   "required": [
     "job",
+    "actorTransitionWireHeader",
     "offset",
     "length",
     "failure",
@@ -12,6 +13,9 @@
   "properties": {
     "job": {
       "const": 7
+    },
+    "actorTransitionWireHeader": {
+      "const": 200
     },
     "offset": {
       "const": 3

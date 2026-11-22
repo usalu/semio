@@ -1,0 +1,32 @@
+{
+  "input": {
+    "nodeId": "node-1",
+    "pluginId": "fixture.plugin",
+    "appId": "fixture.editor"
+  },
+  "snapshot": {
+    "schema": "flow.host_snapshot",
+    "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
+    "widgets": [
+      {
+        "kind": "neuron",
+        "id": "node-1",
+        "neuronKind": "os.media.node.node-1",
+        "inputPorts": ["node-1:in"],
+        "outputPorts": ["node-1:out"],
+        "params": {
+          "instanceId": "node-1",
+          "pluginId": "fixture.plugin",
+          "appId": "fixture.editor"
+        },
+        "preview": true
+      }
+    ],
+    "layout": { "node-1": { "x": 80.0, "y": 36.0 } },
+    "synapses": []
+  },
+  "opening": {
+    "widgetId": "node-1",
+    "instanceId": "node-1"
+  }
+}

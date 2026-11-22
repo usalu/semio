@@ -1,0 +1,24 @@
+{
+  "contract": "actor.original-job-source-frame/v1",
+  "cases": [
+    {
+      "source": {"job":"19","kind":"snapshot","input":null,"checkpoint":null},
+      "hex": "534a5331000000001300000000000000080000000000000000000000000000000000000000000000736e617073686f74"
+    },
+    {
+      "source": {"job":"71","kind":"über\\\"\n","input":[0,1,255],"checkpoint":[]},
+      "hex": "534a5331030000004700000000000000080000000000000003000000000000000000000000000000c3bc6265725c220a0001ff"
+    },
+    {
+      "source": {"job":"18446744073709551615","kind":"","input":[],"checkpoint":[255,0]},
+      "hex": "534a533103000000ffffffffffffffff000000000000000000000000000000000200000000000000ff00"
+    }
+  ],
+  "largeInput": {"job":91,"kind":"s.wfc.solve","repeat":7000,"pattern":[0,255,254,13,10]},
+  "malformed": [
+    {"case":0,"index":4,"value":4},
+    {"case":0,"index":16,"value":9},
+    {"case":1,"index":40,"value":255},
+    {"case":1,"index":47,"value":194}
+  ]
+}

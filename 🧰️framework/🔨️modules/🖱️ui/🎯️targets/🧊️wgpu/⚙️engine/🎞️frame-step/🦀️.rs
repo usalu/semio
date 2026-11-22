@@ -37,6 +37,7 @@ impl Ui {
         let viewport_rect = semio_ui_theme::geometry::Rect::new(0.0, 0.0, viewport_width, viewport_height);
         let theme = self.theme;
         let Some(surface) = self.windows.token(window_id) else { return UiFrameStep::Missing };
+        let presentation = self.presentation();
         let Some(window) = self.windows.get_mut(window_id).filter(|window| window.closing.is_none()) else { return UiFrameStep::Missing };
         let Some(root) = window.tree.root else { return UiFrameStep::Missing };
         let reversed = window.router.flow().block == ui_contract::FlowBlock::Up;
@@ -66,6 +67,8 @@ impl Ui {
                 node_sync: RetainedInteractiveSyncCursor::default(),
                 paint_node: None,
                 paint_overlay: false,
+                paint_glass: None,
+                overlay_glass: [None; UI_FRAME_OVERLAY_CHROME],
                 overlay_chrome,
                 overlay_index: 0,
                 node_paint: RetainedNodePaintCursor::default(),
@@ -115,7 +118,7 @@ impl Ui {
         }
         if matches!(frame.phase, RetainedPaintPhase::Synchronize) {
             if let Some(node) = frame.sync_node {
-                match sync_interactive_state_node_step(&mut window.tree, node, &theme, &mut frame.node_sync) {
+                match sync_interactive_state_node_step(&mut window.tree, node, &theme, presentation.locale, &mut frame.node_sync) {
                     RetainedInteractiveSyncStep::Pending => {
                         frame.note_progress();
                         return UiFrameStep::Pending;
@@ -144,6 +147,9 @@ impl Ui {
                 }
                 if frame.paint_overlay {
                     frame.candidate.begin_overlay_route();
+                    if let Some(region) = frame.paint_glass {
+                        frame.candidate.begin_glass_content(region);
+                    }
                 }
                 let step = paint_node_step_with_driver(
                     &window.tree,
@@ -154,7 +160,7 @@ impl Ui {
                     atlas,
                     icons,
                     scene_host.is_some(),
-                    self.driver_drag,
+                    presentation,
                     window.router.flow().block.is_reversed(),
                     window.router.flow().inline,
                     window.router.hover_pointer(),
@@ -162,6 +168,9 @@ impl Ui {
                     &mut frame.node_paint,
                 );
                 if frame.paint_overlay {
+                    if frame.paint_glass.is_some() {
+                        frame.candidate.end_glass_content();
+                    }
                     frame.candidate.end_overlay_route();
                 }
                 match step {
@@ -245,7 +254,8 @@ impl Ui {
                 Some(placement) => {
                     frame.overlay_index = frame.overlay_index.saturating_add(1);
                     let bounds = semio_ui_theme::geometry::Rect::new(placement.x, placement.y, placement.width, placement.height);
-                    if retained_overlay_chrome_step(&mut frame.candidate, viewport_rect, bounds, placement.backdrop, &theme) {
+                    if let Ok(region) = retained_overlay_chrome_step(&mut frame.candidate, viewport_rect, bounds, placement.backdrop, &theme) {
+                        frame.overlay_glass[frame.overlay_index - 1] = region;
                         UiFrameStep::Pending
                     } else {
                         frame.phase = RetainedPaintPhase::Fault;
@@ -261,7 +271,9 @@ impl Ui {
             RetainedPaintPhase::Paint => match frame.walk.step(&window.tree) {
                 RetainedPaintWalkStep::Visit(node, origin_x, origin_y, overlay_root) => {
                     frame.paint_node = Some((node, origin_x, origin_y));
-                    frame.paint_overlay = overlay_root.is_some_and(|root| frame.overlay_chrome.iter().flatten().any(|placement| placement.root == root));
+                    let chrome = overlay_root.and_then(|root| frame.overlay_chrome.iter().position(|placement| placement.is_some_and(|placement| placement.root == root)));
+                    frame.paint_overlay = chrome.is_some();
+                    frame.paint_glass = chrome.and_then(|index| frame.overlay_glass[index]);
                     UiFrameStep::Pending
                 }
                 RetainedPaintWalkStep::Scalar => UiFrameStep::Pending,
@@ -281,6 +293,26 @@ impl Ui {
                         frame.scene_node = Some((node, origin_x, origin_y));
                     }
                     UiFrameStep::Pending
+                }
+                RetainedPaintWalkStep::Scalar => UiFrameStep::Pending,
+                RetainedPaintWalkStep::Complete => {
+                    frame.phase = RetainedPaintPhase::Scrollbars;
+                    frame.walk = RetainedPaintWalk::new(&window.tree, root);
+                    UiFrameStep::Pending
+                }
+                RetainedPaintWalkStep::DepthFault => {
+                    frame.phase = RetainedPaintPhase::Fault;
+                    UiFrameStep::Fault
+                }
+            },
+            RetainedPaintPhase::Scrollbars => match frame.walk.step(&window.tree) {
+                RetainedPaintWalkStep::Visit(node, _, _, _) => {
+                    if paint_retained_scrollbar(&window.tree, &window.router, &mut frame.candidate, node, (0.0, 0.0), &theme) {
+                        UiFrameStep::Pending
+                    } else {
+                        frame.phase = RetainedPaintPhase::Fault;
+                        UiFrameStep::Fault
+                    }
                 }
                 RetainedPaintWalkStep::Scalar => UiFrameStep::Pending,
                 RetainedPaintWalkStep::Complete => {
@@ -307,7 +339,7 @@ impl Ui {
                     register_retained_hit(
                         &window.tree,
                         &theme,
-                        self.driver_drag,
+                        self.driver.drag,
                         reversed,
                         window.router.flow().inline,
                         node,

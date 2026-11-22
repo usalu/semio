@@ -8,12 +8,12 @@ import {readChangeStateV1} from "../../../../../../../../../🔨️modules/📁�
 import {createFrontierV1} from "../../../../🕸️graph/🕰️generations/🧭️frontier/🟨️.mjs";
 import {walkFrontierV1} from "../../../../🕸️graph/🕰️generations/🌿️frontier-walk/🟨️.mjs";
 import {changeJournalDirectoryV1} from "../../../📜️journal/🟦️.ts";
-import {residentWatcherV1,sleep,waitFor} from "../../../🧪️tests/🟦️.ts";
+import {nativeWatcherUsableV1,residentWatcherV1,sleep,waitFor} from "../../../🧪️tests/🟦️.ts";
 import {journalGraphSeamsV1} from "../../🔌️host/🟨️.mjs";
 import {directJournalPortV1,journalCursorStoreV1} from "../../📖️direct/🟦️.ts";
 
 const sandbox=realpathSync(mkdtempSync(join(tmpdir(),"graph-journal-")));
-const binary=await residentWatcherV1();
+const binary=await residentWatcherV1();const native=await nativeWatcherUsableV1(binary);
 const environment={...process.env,XDG_RUNTIME_DIR:sandbox,SEMIO_REPO_CHANGES:"on",SEMIO_REPO_WATCH_BINARY:binary,SEMIO_BUILD_SERVICE:"off"} as Record<string,string>;
 const roots:string[]=[];
 afterAll(async()=>{
@@ -21,7 +21,7 @@ afterAll(async()=>{
  await sleep(500);rmSync(sandbox,{recursive:true,force:true});
 });
 
-test("journal-driven membership and fact checks without a resident service, including a killed journal service",async()=>{
+test.skipIf(!native)("journal-driven membership and fact checks without a resident service, including a killed journal service",async()=>{
  const root=join(sandbox,"w");roots.push(root);
  for(const[path,content]of Object.entries({"a/x/project.json":"{}","a/x/src/m.ts":"1","a/y/Cargo.toml":"c","b/z.feature":"f","b/node_modules/q/project.json":"{}"})){mkdirSync(dirname(join(root,path)),{recursive:true});writeFileSync(join(root,path),content);}
  const counts={stat:0,list:0,scans:0},ports={

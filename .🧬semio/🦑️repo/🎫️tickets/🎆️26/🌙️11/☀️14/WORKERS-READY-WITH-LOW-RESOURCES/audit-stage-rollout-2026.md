@@ -1,0 +1,7 @@
+# Stage and Replica Rollout at 20:26 UTC
+
+Fresh m07 workspace slice PID 54517 advanced from the earlier 31 to 46 completed inventory owner checks, with 210,750 source observations. Its current inventory owner was `@semio-tech/framework-actor-rs` in normalization. The rolling workspace log does not include a requested project, target or command, so the inventory owner does not establish the selected task scope. m11 slice PID 3936 reported 664 completed inventory checks and 127,872 verified memo rows, with `@semio-tech/dsl-derive-rs` in source-inputs. These are inventory checks, not final graph or Ready completion. Both workers remained not Ready.
+
+At 20:26:14 UTC the coordinator and m01, m03, m08, m10, m11, m12 and m13 freshly attested replica `38fe8a5a335ef2d7e19fd3001a89e9982056787739d086030708f10e4dea26c2` and the exact staged tree `7d8c0b059bcaed05be881279fe59b4fa8305d514`. The m02 and m07 samples were older and still showed `06102e8b3eb1`; fresh m05 also showed that older replica, with 5,083 incoming and generic sharing-violation counters. Consequently the new target-sharing diagnostic cannot yet establish a Windows errno or physical cause there. Its Ready receipt separately still reported dependency disk collection.
+
+The m13 tools stage remained active with a native Cargo heartbeat after earlier compiler progress. No full Ready result was observed. No process, replica or source was changed.

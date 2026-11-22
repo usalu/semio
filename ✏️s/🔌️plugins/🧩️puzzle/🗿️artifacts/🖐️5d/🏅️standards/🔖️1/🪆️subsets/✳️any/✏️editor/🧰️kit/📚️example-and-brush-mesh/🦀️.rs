@@ -1,7 +1,8 @@
 //! 📚️ Example and mesh work of the puzzle 5d editor kit: the retained set-active-example and register-brush-mesh work. See [`super`].
 
 use crate::standards::v1::subsets::any::schema::play_snapshot::Puzzle5dPlaySnapshot;
-use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::{Puzzle5dMutation, SpliceSceneRowBatch, SpliceSceneRows, SCENE_PART_SPLICE_BATCH, SCENE_ROW_CHUNK, SCENE_SPLICE_BATCH};
+use crate::standards::v1::subsets::any::schema::document_records::{Puzzle5dFastener, Puzzle5dKindCompatibility};
 use crate::editor::puzzle5d::commands::register_brush_mesh;
 use crate::editor::puzzle5d::config::Puzzle5dConfig;
 use semio_plugin::kernel::UiDirtyScope;
@@ -16,23 +17,13 @@ use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
 use semio_framework_pack_json::Value;
 use crate::editor::puzzle5d::interaction::Puzzle5dEditor;
-use crate::editor::puzzle5d::entities::{CAPSULE_DREAM_EXAMPLE_DOCUMENT, CONCRETE_FOREST_EXAMPLE_DOCUMENT, EMPTY_EXAMPLE_DOCUMENT, NAKAGIN_EXAMPLE_DOCUMENT, PUZZLE5D_EXAMPLE_CAPSULE_DREAM, PUZZLE5D_EXAMPLE_CONCRETE_FOREST, PUZZLE5D_EXAMPLE_NAKAGIN, PUZZLE5D_INTERACTION_DOMAIN, Puzzle5dDocument, Puzzle5dPart, puzzle5d_editor_projection};
+use crate::editor::puzzle5d::entities::{CAPSULE_DREAM_EXAMPLE_DOCUMENT, CONCRETE_FOREST_EXAMPLE_DOCUMENT, EMPTY_EXAMPLE_DOCUMENT, NAKAGIN_EXAMPLE_DOCUMENT, PUZZLE5D_EXAMPLE_CAPSULE_DREAM, PUZZLE5D_EXAMPLE_CONCRETE_FOREST, PUZZLE5D_EXAMPLE_NAKAGIN, PUZZLE5D_INTERACTION_DOMAIN, Puzzle5dDocument, Puzzle5dPart};
 use semio_framework_job::StepContext;
 use semio_os_kernel::os_store::one_item_publication::ArtifactMutationPages;
 use crate::editor::puzzle5d::interaction::{Puzzle5dCommand, puzzle5d_notice_emit};
 
 //#region 🔖️PlayApp
 //#region 🧵️RetainedCommands
-/// 📦️ Rows one `setActiveExample` step replays. A declared unit is a CHUNK, not a row:
-/// `🌙️capsule-dream` is 2 880 parts + 2 865 fasteners, so a row-per-unit extent (≈5 749, and ≈11 500 when
-/// reloading capsule-dream over itself) overruns the shared `PUZZLE_COMMAND_WORK_ITEMS` band and the
-/// switch could only ever refuse. Chunking makes the same replay fit without widening a constant three
-/// fixtures pin. It is 8× puzzle 3d's `PUZZLE3D_SET_ACTIVE_EXAMPLE_CHUNK` on purpose: 3d steps over a
-/// TYPED snapshot, while every 5d work re-derives `puzzle5d_projection_value` per step, so a step's cost
-/// is dominated by that one O(document) projection rather than by the rows it then replays — fewer,
-/// fatter steps is strictly cheaper here, and capsule-dream's switch drops from ≈720 steps to ≈100.
-const PUZZLE5D_SET_ACTIVE_EXAMPLE_CHUNK: usize = 64;
-
 /// 🔢️ Stage transitions and whole-document rows a switch always pays on top of its chunks (label, domain,
 /// description, catalogs and one exhaustion step per cursored stage). 3d's own count, kept identical.
 const PUZZLE5D_SET_ACTIVE_EXAMPLE_FIXED_STEPS: usize = 13;
@@ -58,7 +49,7 @@ pub(super) enum Puzzle5dSetActiveExampleStage {
 struct Puzzle5dSetActiveExampleWorkOwners {
     pub mutations: Vec<Puzzle5dMutation>,
     pub mutation_pages: Option<ArtifactMutationPages<Puzzle5dMutation>>,
-    pub before: Option<semio_framework_value::retirement::arc_custody::ArcLease<Puzzle5dSetActiveExampleBefore>>,
+    pub scene_rows: Vec<SpliceSceneRows>,
 }
 
 pub struct Puzzle5dSetActiveExampleWork {
@@ -67,37 +58,20 @@ pub struct Puzzle5dSetActiveExampleWork {
     pub admitted: bool,
     pub mutations: Vec<Puzzle5dMutation>,
     mutation_pages: Option<ArtifactMutationPages<Puzzle5dMutation>>,
-    /// 🗂️ The BEFORE document's ids to clear — fastener ids, part ids and compatibility pairs —
-    /// harvested ONCE and then merely indexed by the cursored clearing stages.
-    ///
-    /// 🐛️ `step` used to call `puzzle5d_projection_value` over the run's snapshot on entry, i.e. re-derive the
-    /// whole document (`Value` → `DslValue` → os-pack `Value`) on each of the ~110 chunk
-    /// steps one example switch takes, and then re-walk its arrays. The run's snapshot is an `Arc`
-    /// the retained driver holds FIXED for the whole run (nothing publishes before `Complete`), so
-    /// every one of those derivations produced the same bytes — and leaving `🌙️capsule-dream`
-    /// (2 880 parts, ~3.5 MB of JSON) paid that whole projection ~110 times for one switch.
-    pub before: Option<std::sync::Arc<Puzzle5dSetActiveExampleBefore>>,
+    scene_rows: Vec<SpliceSceneRows>,
     pub close_owners: crate::puzzle_job::WorkClosing<Puzzle5dSetActiveExampleWorkOwners>,
-}
-
-/// 🗂️ Everything the clearing stages need from the BEFORE document, harvested in one pass.
-#[derive(Default, semio_framework_value::RetireOwned)]
-struct Puzzle5dSetActiveExampleBefore {
-    pub fastener_ids: Vec<String>,
-    pub part_ids: Vec<String>,
-    pub compatibility: Vec<(String, String)>,
 }
 
 impl Default for Puzzle5dSetActiveExampleWork {
     fn default() -> Self {
-        Self { close_owners: Default::default(), stage: Puzzle5dSetActiveExampleStage::ClearFasteners, cursor: 0, admitted: false, mutations: Vec::new(), mutation_pages: None, before: None }
+        Self { close_owners: Default::default(), stage: Puzzle5dSetActiveExampleStage::ClearFasteners, cursor: 0, admitted: false, mutations: Vec::new(), mutation_pages: None, scene_rows: Vec::new() }
     }
 }
 
 impl Puzzle5dSetActiveExampleWork {
     /// 📏️ How many semantic units switching to `target` from `snapshot` costs — every old fastener and
     /// part cleared, every old compatibility row dropped, then the target's own compatibility rows, parts
-    /// and fasteners, each counted in `PUZZLE5D_SET_ACTIVE_EXAMPLE_CHUNK`-sized steps, plus the fixed
+    /// and fasteners, each counted in `SCENE_ROW_CHUNK`-sized edits, plus the fixed
     /// stage-transition and whole-document rows.
     pub fn units(command: &Puzzle5dCommand, snapshot: &Puzzle5dPlaySnapshot) -> Option<usize> {
         Self::row_counts(command, snapshot).and_then(Self::work_units)
@@ -117,13 +91,13 @@ impl Puzzle5dSetActiveExampleWork {
     }
 
     fn work_units(rows: [usize; 6]) -> Option<usize> {
-        let capacity = rows.into_iter().try_fold(4usize, usize::checked_add)?;
+        let capacity = Self::mutation_count(rows)?;
         let pages = if ArtifactMutationPages::<Puzzle5dMutation>::needs_pages(capacity) {
             ArtifactMutationPages::<Puzzle5dMutation>::page_count(capacity)
         } else {
             0
         };
-        rows.into_iter().try_fold(PUZZLE5D_SET_ACTIVE_EXAMPLE_FIXED_STEPS.checked_add(pages)?, |units, len| units.checked_add(len.div_ceil(PUZZLE5D_SET_ACTIVE_EXAMPLE_CHUNK)))
+        rows.into_iter().try_fold(PUZZLE5D_SET_ACTIVE_EXAMPLE_FIXED_STEPS.checked_add(pages)?, |units, len| units.checked_add(len.div_ceil(SCENE_ROW_CHUNK)))
     }
 
     /// 🧮️ Counts the original mutation entries this example switch will emit.
@@ -132,15 +106,20 @@ impl Puzzle5dSetActiveExampleWork {
         if Self::work_units(rows).is_none_or(|units| units > crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS) {
             return 0;
         }
-        4 + rows.into_iter().sum::<usize>()
+        Self::mutation_count(rows).unwrap_or_default()
     }
 
-    /// ✂️ The next `PUZZLE5D_SET_ACTIVE_EXAMPLE_CHUNK` rows of a cursored stage, advancing the cursor.
+    fn mutation_count(rows: [usize; 6]) -> Option<usize> {
+        let limits = [SCENE_SPLICE_BATCH, SCENE_PART_SPLICE_BATCH, SCENE_SPLICE_BATCH, SCENE_SPLICE_BATCH, SCENE_PART_SPLICE_BATCH, SCENE_SPLICE_BATCH];
+        rows.into_iter().zip(limits).try_fold(4usize, |total, (len, limit)| total.checked_add(len.div_ceil(SCENE_ROW_CHUNK).div_ceil(limit)))
+    }
+
+    /// ✂️ The next bounded range of a cursored stage, advancing the cursor.
     fn take_chunk(cursor: &mut usize, len: usize) -> std::ops::Range<usize> {
         if *cursor >= len {
             return *cursor..*cursor;
         }
-        let end = cursor.saturating_add(PUZZLE5D_SET_ACTIVE_EXAMPLE_CHUNK).min(len);
+        let end = cursor.saturating_add(SCENE_ROW_CHUNK).min(len);
         let range = *cursor..end;
         *cursor = end;
         range
@@ -171,6 +150,25 @@ impl Puzzle5dSetActiveExampleWork {
         self.mutations.push(mutation);
         Ok(())
     }
+
+    fn push_scene_rows(&mut self, edit: SpliceSceneRows, cx: &mut StepContext<'_>) -> Result<(), semio_framework_job::OriginalTurnFailure> {
+        let limit = if edit.table == "parts" { SCENE_PART_SPLICE_BATCH } else { SCENE_SPLICE_BATCH };
+        if self.scene_rows.capacity() == 0 {
+            self.scene_rows.try_reserve_exact(limit).map_err(|_| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::AllocationFailed, "original scene splice batch allocation was refused"))?;
+            cx.consume_retained(semio_framework_value::RetainedCloneProgress { retained_capacity_bytes: self.scene_rows.capacity() * size_of::<SpliceSceneRows>(), ..Default::default() })?;
+        }
+        self.scene_rows.push(edit);
+        if self.scene_rows.len() == limit { self.flush_scene_rows()?; }
+        Ok(())
+    }
+
+    fn flush_scene_rows(&mut self) -> Result<(), Fault> {
+        if !self.scene_rows.is_empty() {
+            let edits = std::mem::take(&mut self.scene_rows);
+            self.push(SpliceSceneRowBatch { edits }.into())?;
+        }
+        Ok(())
+    }
 }
 
 impl<A: Puzzle5dEditor> semio_plugin::retained_command::ArtifactCommandWork<EditorApp<A>> for Puzzle5dSetActiveExampleWork {
@@ -188,7 +186,11 @@ impl<A: Puzzle5dEditor> semio_plugin::retained_command::ArtifactCommandWork<Edit
         if let Some(demand) = self.mutation_pages.as_ref().and_then(|pages| pages.next_page_demand()) {
             return Ok(demand);
         }
-        crate::retained_command::step_demands::<EditorApp<A>>(size_of::<Self>())
+        let mut demand = crate::retained_command::step_demands::<EditorApp<A>>(size_of::<Self>())?;
+        if self.scene_rows.capacity() == 0 {
+            demand.capacity_bytes += SCENE_SPLICE_BATCH * size_of::<SpliceSceneRows>();
+        }
+        Ok(demand)
     }
 
     fn step(&mut self, input: &semio_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, cx: &mut StepContext<'_>) -> Result<semio_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
@@ -201,26 +203,8 @@ impl<A: Puzzle5dEditor> semio_plugin::retained_command::ArtifactCommandWork<Edit
                 preview: r#"{"en":"Preparing example edit","de":"Beispieländerung wird vorbereitet"}"#.as_bytes(),
             });
         }
-        let original = (|| -> Result<semio_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
-
-        let original: Result<_, Fault> = (|| {
         let semio_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config, interaction: _interaction, hover: _hover, context, .. } = *input;
         let view_state = context.and_then(|context| context.view_state.as_deref());
-        if self.before.is_none() {
-            let projection = puzzle5d_editor_projection(snapshot);
-            let strings = |rows: Option<&Vec<Value>>, key: &str| -> Vec<String> {
-                rows.map(|rows| rows.iter().filter_map(|row| row.get(key)).filter_map(Value::as_str).map(str::to_string).collect()).unwrap_or_default()
-            };
-            self.before = Some(std::sync::Arc::new(Puzzle5dSetActiveExampleBefore {
-                fastener_ids: strings(projection.get("fasteners").and_then(Value::as_array), "id"),
-                part_ids: strings(projection.get("parts").and_then(Value::as_array), "id"),
-                compatibility: projection
-                    .get("kindCompatibility")
-                    .and_then(Value::as_array)
-                    .map(|rows| rows.iter().map(|row| (row.get("source").and_then(Value::as_str).unwrap_or("").to_string(), row.get("target").and_then(Value::as_str).unwrap_or("").to_string())).collect())
-                    .unwrap_or_default(),
-            }));
-        }
         if !self.admitted {
             self.admitted = true;
             if Self::target(command).is_none() || Self::units(command, snapshot).is_none_or(|units| units > crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS) {
@@ -228,32 +212,30 @@ impl<A: Puzzle5dEditor> semio_plugin::retained_command::ArtifactCommandWork<Edit
                 return Ok(semio_plugin::retained_command::ArtifactCommandWorkStep::Complete(puzzle5d_notice_emit(view_state, |labels| labels.example_too_large.as_str())));
             }
         }
-        let before = self.before.clone().unwrap_or_default();
+        let before = snapshot.typed();
         let Some(target) = Self::target(command) else {
             self.stage = Puzzle5dSetActiveExampleStage::Complete;
             return Ok(semio_plugin::retained_command::ArtifactCommandWorkStep::Complete(puzzle5d_notice_emit(view_state, |labels| labels.example_too_large.as_str())));
         };
         match self.stage {
             Puzzle5dSetActiveExampleStage::ClearFasteners => {
-                let range = Self::take_chunk(&mut self.cursor, before.fastener_ids.len());
+                let range = Self::take_chunk(&mut self.cursor, before.fasteners.len());
                 if !range.is_empty() {
-                    for id in before.fastener_ids[range].to_vec() {
-                        self.push(crate::standards::v1::subsets::any::schema::mutations::disconnect_grips(id))?;
-                    }
+                    self.push_scene_rows(SpliceSceneRows { table: "fasteners".into(), delete_count: range.len(), ..Default::default() }, cx)?;
                     return Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-example-clear-fastener", "Removing old fastener", "Alte Verbindung wird entfernt"));
                 }
+                self.flush_scene_rows()?;
                 self.cursor = 0;
                 self.stage = Puzzle5dSetActiveExampleStage::ClearParts;
                 Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-example-clear-part", "Removing old part", "Altes Teil wird entfernt"))
             }
             Puzzle5dSetActiveExampleStage::ClearParts => {
-                let range = Self::take_chunk(&mut self.cursor, before.part_ids.len());
+                let range = Self::take_chunk(&mut self.cursor, before.parts.len());
                 if !range.is_empty() {
-                    for id in before.part_ids[range].to_vec() {
-                        self.push(crate::standards::v1::subsets::any::schema::mutations::delete_part(id))?;
-                    }
+                    self.push_scene_rows(SpliceSceneRows { table: "parts".into(), delete_count: range.len(), ..Default::default() }, cx)?;
                     return Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-example-clear-part", "Removing old part", "Altes Teil wird entfernt"));
                 }
+                self.flush_scene_rows()?;
                 self.cursor = 0;
                 self.stage = Puzzle5dSetActiveExampleStage::Label;
                 Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-example-label", "Updating document label", "Dokumenttitel wird aktualisiert"))
@@ -275,13 +257,12 @@ impl<A: Puzzle5dEditor> semio_plugin::retained_command::ArtifactCommandWork<Edit
                 Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-example-clear-compatibility", "Removing old compatibility", "Alte Kompatibilität wird entfernt"))
             }
             Puzzle5dSetActiveExampleStage::ClearCompatibility => {
-                let range = Self::take_chunk(&mut self.cursor, before.compatibility.len());
+                let range = Self::take_chunk(&mut self.cursor, before.kind_compatibility.len());
                 if !range.is_empty() {
-                    for (source, target) in before.compatibility[range].to_vec() {
-                        self.push(crate::standards::v1::subsets::any::schema::mutations::disconnect_kind_compatibility(source, target))?;
-                    }
+                    self.push_scene_rows(SpliceSceneRows { table: "kindCompatibility".into(), delete_count: range.len(), ..Default::default() }, cx)?;
                     return Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-example-clear-compatibility", "Removing old compatibility", "Alte Kompatibilität wird entfernt"));
                 }
+                self.flush_scene_rows()?;
                 self.cursor = 0;
                 self.stage = Puzzle5dSetActiveExampleStage::AddCompatibility;
                 Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-example-add-compatibility", "Adding compatibility", "Kompatibilität wird hinzugefügt"))
@@ -290,12 +271,11 @@ impl<A: Puzzle5dEditor> semio_plugin::retained_command::ArtifactCommandWork<Edit
                 let rows = Self::compatibility_rows(target);
                 let range = Self::take_chunk(&mut self.cursor, rows.len());
                 if !range.is_empty() {
-                    for row in &rows[range] {
-                        let row: crate::standards::v1::subsets::any::schema::document_records::Puzzle5dKindCompatibility = <crate::standards::v1::subsets::any::schema::document_records::Puzzle5dKindCompatibility as FromValue>::from_value(row.to_value()).map_err(|_| Fault::from("puzzle5d-set-active-example-compatibility-malformed"))?;
-                        self.push(crate::standards::v1::subsets::any::schema::mutations::connect_kind_compatibility(row.source, row.target, row.bidirectional, row.important, row.specificity, None))?;
-                    }
+                    let kind_compatibility = rows[range.clone()].iter().map(|row| Puzzle5dKindCompatibility::from_value(row.to_value())).collect::<Result<_, _>>().map_err(|_| Fault::from("puzzle5d-set-active-example-compatibility-malformed"))?;
+                    self.push_scene_rows(SpliceSceneRows { table: "kindCompatibility".into(), start: range.start, kind_compatibility, ..Default::default() }, cx)?;
                     return Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-example-add-compatibility", "Adding compatibility", "Kompatibilität wird hinzugefügt"));
                 }
+                self.flush_scene_rows()?;
                 self.cursor = 0;
                 self.stage = Puzzle5dSetActiveExampleStage::Catalogs;
                 Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-example-catalogs", "Updating kind catalogs", "Artenkataloge werden aktualisiert"))
@@ -309,13 +289,11 @@ impl<A: Puzzle5dEditor> semio_plugin::retained_command::ArtifactCommandWork<Edit
             Puzzle5dSetActiveExampleStage::AddParts => {
                 let range = Self::take_chunk(&mut self.cursor, target.parts.len());
                 if !range.is_empty() {
-                    for part in &target.parts[range] {
-                        let value = part.to_value();
-                        let part = <crate::standards::v1::subsets::any::schema::document_records::Puzzle5dPart as FromValue>::from_value(value.to_value()).map_err(|_| Fault::from("puzzle5d-set-active-example-part-malformed"))?;
-                        self.push(crate::standards::v1::subsets::any::schema::mutations::create_part(part, None))?;
-                    }
+                    let parts = target.parts[range.clone()].iter().map(|row| crate::standards::v1::subsets::any::schema::document_records::Puzzle5dPart::from_value(row.to_value())).collect::<Result<_, _>>().map_err(|_| Fault::from("puzzle5d-set-active-example-part-malformed"))?;
+                    self.push_scene_rows(SpliceSceneRows { table: "parts".into(), start: range.start, parts, ..Default::default() }, cx)?;
                     return Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-example-add-part", "Adding example part", "Beispielteil wird hinzugefügt"));
                 }
+                self.flush_scene_rows()?;
                 self.cursor = 0;
                 self.stage = Puzzle5dSetActiveExampleStage::AddFasteners;
                 Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-example-add-fastener", "Adding example fastener", "Beispielverbindung wird hinzugefügt"))
@@ -323,24 +301,11 @@ impl<A: Puzzle5dEditor> semio_plugin::retained_command::ArtifactCommandWork<Edit
             Puzzle5dSetActiveExampleStage::AddFasteners => {
                 let range = Self::take_chunk(&mut self.cursor, target.fasteners.len());
                 if !range.is_empty() {
-                    for fastener in &target.fasteners[range] {
-                        self.push(crate::standards::v1::subsets::any::schema::mutations::connect_grips(
-                            fastener.id.clone(),
-                            fastener.source.clone(),
-                            fastener.target.clone(),
-                            fastener.fastener_kind.clone(),
-                            fastener.gap,
-                            fastener.shift,
-                            fastener.rise,
-                            fastener.rotation,
-                            fastener.turn,
-                            fastener.tilt,
-                            fastener.x,
-                            fastener.y, None,
-                        ))?;
-                    }
+                    let fasteners = target.fasteners[range.clone()].iter().map(|row| Puzzle5dFastener::from_value(row.to_value())).collect::<Result<_, _>>().map_err(|_| Fault::from("puzzle5d-set-active-example-fastener-malformed"))?;
+                    self.push_scene_rows(SpliceSceneRows { table: "fasteners".into(), start: range.start, fasteners, ..Default::default() }, cx)?;
                     return Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-example-add-fastener", "Adding example fastener", "Beispielverbindung wird hinzugefügt"));
                 }
+                self.flush_scene_rows()?;
                 self.stage = Puzzle5dSetActiveExampleStage::Complete;
                 let selection = _interaction.selection.get(PUZZLE5D_INTERACTION_DOMAIN);
                 let targets: Vec<InteractionTarget> = selection
@@ -356,19 +321,14 @@ impl<A: Puzzle5dEditor> semio_plugin::retained_command::ArtifactCommandWork<Edit
                     ..Default::default()
                 }))
             }
-            Puzzle5dSetActiveExampleStage::Complete => Err(Fault::from("puzzle5d-set-active-example-complete-repolled")),
-            Puzzle5dSetActiveExampleStage::Closing => Err(Fault::from("puzzle5d-set-active-example-closing")),
+            Puzzle5dSetActiveExampleStage::Complete => Err(Fault::from("puzzle5d-set-active-example-complete-repolled").into()),
+            Puzzle5dSetActiveExampleStage::Closing => Err(Fault::from("puzzle5d-set-active-example-closing").into()),
         }
-        })();
-        original.map_err(semio_framework_job::OriginalTurnFailure::from)
-    
-        })();
-        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 
     fn begin_close(&mut self) {
         self.stage = Puzzle5dSetActiveExampleStage::Closing;
-        self.close_owners.stage(Puzzle5dSetActiveExampleWorkOwners { mutations: std::mem::take(&mut self.mutations), mutation_pages: self.mutation_pages.take(), before: std::mem::take(&mut self.before).map(semio_framework_value::retirement::arc_custody::ArcLease::new) });
+        self.close_owners.stage(Puzzle5dSetActiveExampleWorkOwners { mutations: std::mem::take(&mut self.mutations), mutation_pages: self.mutation_pages.take(), scene_rows: std::mem::take(&mut self.scene_rows) });
     }
 
     fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{

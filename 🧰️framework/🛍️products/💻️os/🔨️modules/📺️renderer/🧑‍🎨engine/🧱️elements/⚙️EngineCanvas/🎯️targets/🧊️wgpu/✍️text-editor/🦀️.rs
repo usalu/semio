@@ -37,8 +37,8 @@ pub use receipts_and_explicit_draft::{
     drive_text_editor_retained_action_step, settle_text_editor_action_receipt,
     text_editor_apply_explicit_draft_into, text_editor_cancel_explicit_publication,
     text_editor_discard_explicit_draft, text_editor_explicit_draft_status,
-    text_editor_move_explicit_draft_history, TextEditorExplicitDraftStatus, TextEditorRetainedActionBatch,
-    TextEditorRetainedActionStep,
+    text_editor_move_explicit_draft_history, TextEditorExplicitDraftStatus,
+    TextEditorRetainedActionBatch, TextEditorRetainedActionStep,
 };
 use receipts_and_explicit_draft::{text_editor_action_bytes, write_text_editor_selection};
 

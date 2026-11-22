@@ -162,8 +162,8 @@ pub struct DepthStencilState{pub format:TextureFormat,pub depth_write_enabled:Op
 pub struct MultisampleState{pub count:u32,pub mask:u64,pub alpha_to_coverage_enabled:bool}
 impl Default for MultisampleState{fn default()->Self{Self{count:1,mask:u64::MAX,alpha_to_coverage_enabled:false}}}
 #[derive(Clone,Copy,Debug)]
-pub enum BlendState{Alpha,Replace}
-impl BlendState{pub const ALPHA_BLENDING:Self=Self::Alpha;pub const REPLACE:Self=Self::Replace;}
+pub enum BlendState{Alpha,Premultiplied,Replace}
+impl BlendState{pub const ALPHA_BLENDING:Self=Self::Alpha;pub const PREMULTIPLIED_ALPHA_BLENDING:Self=Self::Premultiplied;pub const REPLACE:Self=Self::Replace;}
 #[derive(Clone,Copy,Debug)]
 pub struct ColorTargetState{pub format:TextureFormat,pub blend:Option<BlendState>,pub write_mask:ColorWrites}
 #[derive(Clone,Copy,Debug,Default)]

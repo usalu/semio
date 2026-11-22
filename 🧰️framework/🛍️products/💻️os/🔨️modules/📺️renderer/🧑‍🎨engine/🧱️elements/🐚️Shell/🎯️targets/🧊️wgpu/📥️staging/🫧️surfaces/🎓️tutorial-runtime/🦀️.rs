@@ -36,6 +36,10 @@ pub struct TutorialRuntime {
     pub mode: TutorialMode,
     pub playhead_ms: f64,
     pub rate: f32,
+    /// 🔇️ React's `tutorial.muted` — silences every video cue and, with it, the narration audio.
+    pub muted: bool,
+    /// 💬️ React's `tutorial.captionsOn` — shows the covering narration cue's text.
+    pub captions_on: bool,
     /// ✂️ The playhead document/UI state was last synced to — `tutorial_slice(applied_ms, playhead_ms)`
     /// drives each tick's incremental apply; a seek instead jumps this straight to the target.
     pub applied_ms: f64,
@@ -50,6 +54,16 @@ pub struct TutorialRuntime {
     pub recorder_last_camera_pose: HashMap<String, semio_framework::onboarding::TutorialCameraState>,
     pub recorder_last_ui: semio_framework::onboarding::TutorialUiSnapshot,
     pub recorder_last_ui_sample_wall_ms: f64,
+}
+
+impl TutorialRuntime {
+    /// 📖️ React's `TutorialRecorder.addChapter`: an auto-numbered chapter at the rounded elapsed time, its title one locale-free string; `None` unless this runtime is recording.
+    pub fn next_chapter(&self) -> Option<semio_framework::onboarding::TutorialChapter> {
+        (self.mode == TutorialMode::Recording).then(|| {
+            let index = self.definition.chapters.len() + 1;
+            semio_framework::onboarding::TutorialChapter { id: format!("chapter-{index}"), at: self.playhead_ms.max(0.0).round() as u64, title: semio_ui_locale::LocalizedLabel::data(format!("Chapter {index}")), body: None }
+        })
+    }
 }
 
 /// 🎬️ One document-track application queued by a tick/seek this frame — see

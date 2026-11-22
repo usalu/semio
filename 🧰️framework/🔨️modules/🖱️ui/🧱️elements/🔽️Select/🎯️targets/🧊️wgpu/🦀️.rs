@@ -22,7 +22,7 @@ use semio_ui_wgpu_layout::chrome::push_control_border;
 use semio_ui_declaration::layout::MeasureSelectItem;
 use semio_ui_theme::geometry::Rect;
 use semio_ui_wgpu_input::{HitKind, HitTarget};
-use semio_ui_theme::{Level, Theme};
+use semio_ui_theme::Level;
 use semio_ui_wgpu_widget_kit::{draw_text, draw_text_on, SelectItem, WidgetContext};
 
 pub trait SelectItemView {
@@ -57,7 +57,7 @@ pub fn render_select<E: Clone, T: SelectItemView>(id: &str, value: &str, items: 
     let hovered = ctx.input.hovered_id.as_deref() == Some(id);
     let bg = if hovered { ctx.theme.button_hover } else { ctx.theme.input_bg };
     push_control_border(ctx.draw, bounds, ctx.theme, if hovered { ctx.theme.border_emphasized } else { ctx.theme.border_normal }, bg, if hovered { semio_ui_wgpu_layout::chrome::SharedBorderState::Hover } else { semio_ui_wgpu_layout::chrome::SharedBorderState::Normal });
-    let label = items.iter().find(|item| item.value() == value).map_or(placeholder.unwrap_or("Select…"), |item| item.label());
+    let label = items.iter().find(|item| item.value() == value).map_or(placeholder.unwrap_or(""), |item| item.label());
     draw_text(ctx, label, bounds.x + ctx.theme.padding_standard, bounds.y + (bounds.h + ctx.theme.font_size_body) * 0.5 - 2.0, ctx.theme.font_size_body, ctx.theme.text);
     if let Some(icons) = ctx.icons {
         semio_ui_wgpu_layout::chrome::push_icon(

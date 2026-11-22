@@ -41,7 +41,7 @@ pub fn apply_ui_commands(commands: &mut Vec<semio_ui_wgpu_events::UiCommand>, po
                     continue;
                 }
                 let descriptor = intent.descriptor();
-                if let Err(fault) = publish_retained_action(input, window_id, descriptor, intent) {
+                if let Err(fault) = publish_retained_action(input, window_id, &descriptor, intent) {
                     input.record_action_fault(fault);
                     return;
                 }
@@ -54,14 +54,14 @@ pub fn apply_ui_commands(commands: &mut Vec<semio_ui_wgpu_events::UiCommand>, po
                 #[cfg(any(any(test, feature = "testkit"),target_arch="wasm32"))]
                 apply_clipboard_paste_requested(window_id, input);
             }
-            semio_ui_wgpu_events::UiCommand::DropCommitted { window_id, target, payload, .. } => {
-                if let Err(fault) = apply_drop_committed(window_id, *target, payload, input) {
+            semio_ui_wgpu_events::UiCommand::DropCommitted { window_id, target, y, payload, .. } => {
+                if let Err(fault) = apply_drop_committed(window_id, *target, *y, payload, input) {
                     input.record_action_fault(fault);
                     return;
                 }
             }
-            semio_ui_wgpu_events::UiCommand::Scene { window_id, node, kind, rect, event, .. } => {
-                apply_scene_ui_command(window_id, *node, *kind, *rect, event, pointer_id, input);
+            semio_ui_wgpu_events::UiCommand::Scene { window_id, node, kind, rect, event, click_count, .. } => {
+                apply_scene_ui_command(window_id, *node, *kind, *rect, event, *click_count, pointer_id, input);
             }
             semio_ui_wgpu_events::UiCommand::DropCancelled { .. } | semio_ui_wgpu_events::UiCommand::OverlayClosed { .. } | semio_ui_wgpu_events::UiCommand::FocusChanged { .. } => {}
         }
@@ -87,8 +87,8 @@ pub fn apply_ui_commands(commands: &mut Vec<semio_ui_wgpu_events::UiCommand>, po
 
 pub struct RetainedInputSubmission {
     pub(super) token: std::num::NonZeroU64,
-    window: String,
-    draft: semio_ui_wgpu_engine::RetainedInputDraft,
+    pub window: String,
+    pub draft: semio_ui_wgpu_engine::RetainedInputDraft,
 }
 
 pub struct RetainedInputReceipts {
@@ -106,7 +106,7 @@ pub static RETAINED_INPUT_RECEIPTS: WorkerCell<RetainedInputReceipts> = WorkerCe
 pub struct RetainedInputReceiptReservation(#[doc(hidden)] pub Option<semio_ui_action::ActionQueueReceipt>);
 
 #[cfg(not(any(test, feature = "testkit")))]
-pub struct RetainedInputReceiptReservation(Option<semio_ui_action::ActionQueueReceipt>);
+struct RetainedInputReceiptReservation(Option<semio_ui_action::ActionQueueReceipt>);
 
 impl Drop for RetainedInputReceiptReservation {
     fn drop(&mut self) { if let Some(receipt) = self.0.take() { settle_retained_input_receipt(receipt, false); } }
@@ -137,20 +137,7 @@ pub fn settle_retained_input_receipt(receipt: semio_ui_action::ActionQueueReceip
     if discard { if let Some(submission) = submission { UI_ENGINE.with(|cell| { cell.borrow_mut().discard_retained_input_draft(&submission.window, &submission.draft); }); } }
 }
 
-fn publish_retained_action(input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>, window_id: &str, mut action: ActionDescriptor, intent: &semio_ui_action::UiIntentCommand) -> Result<(), semio_ui_action::BoundedActionFault> {
-    use semio_framework::DslValue;
-    if let Some(DslValue::Object(entries)) = action.args.as_mut() {
-        let field = intent.input_field();
-        if let Some(index) = entries.iter().position(|(key, value)| key == field && value.as_str().is_some_and(|text| text.len() > semio_ui_action::ACTION_STRING_BYTE_CAPACITY)) {
-            let (_, DslValue::String(text)) = entries.swap_remove(index) else { return Err(semio_ui_action::BoundedActionFault::Structure); };
-            entries.retain(|(key, _)| key != "windowId");
-            entries.push(("windowId".into(), DslValue::String(window_id.into())));
-            let mut receipt = reserve_retained_input_receipt(window_id, intent)?;
-            input.begin_retained_string_action_owned_with_receipt(action, field.into(), text, receipt.0)?;
-            receipt.0 = None;
-            return Ok(());
-        }
-    }
+fn publish_retained_action(input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>, window_id: &str, action: &ActionDescriptor, intent: &semio_ui_action::UiIntentCommand) -> Result<(), semio_ui_action::BoundedActionFault> {
     let mut reservation = input.reserve_action(&action.controller_id, &action.action, semio_ui_action::ACTION_ITEM_BYTE_CAPACITY)?;
     let builder = reservation.builder();
     builder.begin_object(None)?;
@@ -171,20 +158,42 @@ fn publish_retained_action(input: &mut semio_ui_wgpu_input::InputState<ActionDes
 }
 
 /** 🫳️ Resolves `target`'s own `drop_action` (the only node kind `ui_wgpu`'s own
- * `sync_interactive_state` currently flags `NodeFlags::DROP_TARGET` for is `UiNode::Stack` — a
- * `UiTreeNode` also carries a `drop_action` field but nothing syncs `DROP_TARGET` for `Tree` nodes;
- * tree rows take drops through the shell's tree drag instead, see `apply_tree_row_drop`), decodes `payload`'s first
+ * `sync_interactive_state` flags `NodeFlags::DROP_TARGET`), or resolves an explicitly bound tree row.
+ * It decodes `payload`'s first
  * `application/x-semio-*` mime entry as JSON (mirrors `framework/renderer/react/index.tsx`'s
  * `UiStackHost.onDrop`: `[...dataTransfer.types].filter(k => k.startsWith("application/x-semio-"))`),
  * and queues the merged `ActionDescriptor` — `dispatchUiAction`'s own React-side merge order
  * (`{...descriptor.args, ...patch}`, patch wins) reproduced by `merge_action_args`. A no-op if the
- * target isn't (or no longer is, by the time this command is applied) a `Stack` with a `drop_action`,
+ * target has no currently declared drop action,
  * or the payload carries no decodable semio-mime entry. */
-pub fn apply_drop_committed(window_id: &str, target: NodeId, payload: &DragPayload, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<(), semio_ui_action::BoundedActionFault> {
-    let Some(action) = drop_target_action(window_id, target) else {
-        return Ok(());
+pub fn apply_drop_committed(window_id: &str, target: NodeId, y: f32, payload: &DragPayload, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<(), semio_ui_action::BoundedActionFault> {
+    let mime = ui_contract::TREE_ROW_REORDER_MIME;
+    let Some(encoded) = payload.get(mime) else {
+        return drop_target_action(window_id, target).map_or(Ok(()), |action| queue_drop_action(window_id, &action, decode_drop_payload(payload), input).map(|_| ()));
     };
-    queue_drop_action(window_id, &action, payload, input).map(|_| ())
+    let row = UI_ENGINE.with(|cell| {
+        let engine = cell.borrow();
+        let tree = engine.tree(window_id)?;
+        let item = tree.authored_tree_item(target)?;
+        if !item.drag_data.as_ref()?.contains_key(mime) {
+            return None;
+        }
+        let action = semio_ui_retained_tree::reconcile::tree_item_drop_action(tree.document()?, &item.id)?;
+        let rect = tree.absolute_rect(target)?;
+        let position = match semio_ui_wgpu_engine::tree_row_reorder_position(rect, y) {
+            semio_ui_wgpu_input::TreeDropPosition::Before => "before",
+            semio_ui_wgpu_input::TreeDropPosition::After => "after",
+            semio_ui_wgpu_input::TreeDropPosition::Inside => return None,
+        };
+        Some((action, item.id.clone(), position))
+    });
+    if let Some((action, id, position)) = row {
+        let Some(mut patch) = decode_drop_object(encoded) else { return Ok(()) };
+        patch.insert("targetId".into(), Value::String(id));
+        patch.insert("dropPosition".into(), Value::String(position.into()));
+        queue_drop_action(window_id, &action, Some(patch), input)?;
+    }
+    Ok(())
 }
 
 /// 🫳️ The action the tree row `item_key` of `window_id` declares for a drop on it (its `Trigger::Drop` binding), `None` when the row is no drop target.
@@ -194,14 +203,14 @@ pub fn tree_item_drop_action(window_id: &str, item_key: &str) -> Option<ActionDe
 
 /// 🫳️ Drops `payload` on the tree row `item_key` of `window_id`: queues the row's drop action with the payload merged into its arguments, exactly as a drop on a `Stack` does. `Ok(false)` when the row declares no drop action or the payload carries no `application/x-semio-*` entry.
 pub fn apply_tree_row_drop(window_id: &str, item_key: &str, payload: &DragPayload, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_ui_action::BoundedActionFault> {
-    let Some(action) = tree_item_drop_action(window_id, item_key) else {
+    if payload.contains_key(ui_contract::TREE_ROW_REORDER_MIME) {
         return Ok(false);
-    };
-    queue_drop_action(window_id, &action, payload, input)
+    }
+    tree_item_drop_action(window_id, item_key).map_or(Ok(false), |action| queue_drop_action(window_id, &action, decode_drop_payload(payload), input))
 }
 
-fn queue_drop_action(window_id: &str, action: &ActionDescriptor, payload: &DragPayload, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_ui_action::BoundedActionFault> {
-    let Some(patch) = decode_drop_payload(payload) else {
+fn queue_drop_action(window_id: &str, action: &ActionDescriptor, patch: Option<serde_json::Map<String, Value>>, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_ui_action::BoundedActionFault> {
+    let Some(patch) = patch else {
         return Ok(false);
     };
     let mut reservation = input.reserve_action(&action.controller_id, &action.action, semio_ui_action::ACTION_ITEM_BYTE_CAPACITY)?;
@@ -264,6 +273,10 @@ pub fn drop_target_action(window_id: &str, target: NodeId) -> Option<ActionDescr
 /// `UiStackHost.onDrop`'s own `try { JSON.parse(encoded) } catch { return; }` bail-out.
 pub fn decode_drop_payload(payload: &DragPayload) -> Option<serde_json::Map<String, Value>> {
     let (_, encoded) = payload.iter().find(|(mime, value)| mime.starts_with("application/x-semio-") && !value.trim().is_empty())?;
+    decode_drop_object(encoded)
+}
+
+fn decode_drop_object(encoded: &str) -> Option<serde_json::Map<String, Value>> {
     match serde_json::from_str::<Value>(encoded).ok()? {
         Value::Object(map) => Some(map),
         _ => None,
@@ -364,14 +377,14 @@ pub fn pointer_button_code(button: semio_ui_wgpu_events::PointerButton) -> i16 {
 /// the surface handlers through this path exactly as React's DOM pointer event delivers them (ticket
 /// 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️audit-w14-scenes-residual.md` C1 — this used to be a
 /// documented dead end, with `false` hardcoded at every merge-mode call downstream).
-pub fn apply_scene_ui_command(window_id: &str, node: NodeId, kind: semio_ui_declaration::ui::SurfaceKind, rect: Rect, event: &semio_ui_wgpu_events::UiEvent, pointer_id: Option<ui_render::PointerId>, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) {
+pub fn apply_scene_ui_command(window_id: &str, node: NodeId, kind: semio_ui_declaration::ui::SurfaceKind, rect: Rect, event: &semio_ui_wgpu_events::UiEvent, click_count: u32, pointer_id: Option<ui_render::PointerId>, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) {
     if ui_document_close_pending_for(window_id) {
         return;
     }
     let event = match event {
         semio_ui_wgpu_events::UiEvent::PointerLeave if kind == semio_ui_declaration::ui::SurfaceKind::InkCanvas => SceneIntentEvent::PointerLeave,
         semio_ui_wgpu_events::UiEvent::PointerDown { x, y, button, modifiers } => SceneIntentEvent::PointerDown { x: *x, y: *y, button: pointer_button_code(*button), modifiers: *modifiers },
-        semio_ui_wgpu_events::UiEvent::PointerUp { x, y, button, modifiers } => SceneIntentEvent::PointerUp { x: *x, y: *y, button: pointer_button_code(*button), modifiers: *modifiers },
+        semio_ui_wgpu_events::UiEvent::PointerUp { x, y, button, modifiers } => SceneIntentEvent::PointerUp { x: *x, y: *y, button: pointer_button_code(*button), modifiers: *modifiers, click_count },
         semio_ui_wgpu_events::UiEvent::PointerMove { x, y, modifiers } => SceneIntentEvent::PointerMove { x: *x, y: *y, modifiers: *modifiers },
         semio_ui_wgpu_events::UiEvent::Scroll { x, y, delta_y, modifiers, .. } => SceneIntentEvent::Scroll { x: *x, y: *y, delta_y: *delta_y, modifiers: *modifiers },
         _ => return,

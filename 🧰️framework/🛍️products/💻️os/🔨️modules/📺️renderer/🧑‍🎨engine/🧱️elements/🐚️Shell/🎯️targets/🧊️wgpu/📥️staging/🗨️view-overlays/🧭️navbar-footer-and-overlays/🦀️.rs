@@ -291,7 +291,7 @@ impl<'ctx> OverlaysViewCtx<'ctx> {
                 return false;
             }
             3 => {
-                if !self.as_chrome_view().render_context_menu_step(cursor, overlay, atlas, icons, input, theme, width, height) {
+                if !self.as_chrome_overlays().render_context_menu_step(cursor, overlay, atlas, icons, input, theme, width, height) {
                     return false;
                 }
                 cursor.scalar = 0;
@@ -299,7 +299,7 @@ impl<'ctx> OverlaysViewCtx<'ctx> {
                 cursor.phase = 4;
             }
             4 => {
-                if !self.as_chrome_view().render_chrome_tooltip_step(cursor, overlay, atlas, input, theme, width, height) {
+                if !self.as_chrome_overlays().render_chrome_tooltip_step(cursor, overlay, atlas, input, theme, width, height) {
                     return false;
                 }
                 cursor.scalar = 0;
@@ -442,12 +442,7 @@ impl<'ctx> OverlaysViewCtx<'ctx> {
             }
             10 => {
                 if let Some(rect) = self.input.keyboard_focus_ring_rect(input) {
-                    let edge = theme.stroke_hairline * 2.0;
-                    let [x, y, w, h] = [rect.x - edge, rect.y - edge, rect.w + edge * 2.0, rect.h + edge * 2.0];
-                    overlay.push_solid([x, y, w, edge], theme.focus_ring);
-                    overlay.push_solid([x, y + h - edge, w, edge], theme.focus_ring);
-                    overlay.push_solid([x, y, edge, h], theme.focus_ring);
-                    overlay.push_solid([x + w - edge, y, edge, h], theme.focus_ring);
+                    overlay.push_shared_border(rect, theme.stroke_hairline, theme.selected, semio_ui_draw_contract::SharedBorderState::Focus);
                 }
                 cursor.phase = 11;
                 return false;

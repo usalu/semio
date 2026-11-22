@@ -8,13 +8,16 @@
  * @see ../🏭️prepare/🟦️.ts — the model pipeline
  * @see ../../../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🖥️viewer/🕹️controller/🟦️.ts — the viewer
  */
-import { ModelViewer, PRESETS, type BackendFactory, type CameraPreset, type ViewerStatus } from "../../../../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🖥️viewer/🟦️.ts";
-import type { Asset, Language, View } from "@teaching/staffage";
-import { VIEWS, authoredScales, modeOf } from "@teaching/staffage";
+import { ModelViewer, PRESETS, projectionMatrix, viewMatrix, type BackendFactory, type CameraPreset, type ViewerStatus } from "../../../../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🖥️viewer/🟦️.ts";
+import type { Asset, FlowField, Language, View } from "@teaching/staffage";
+import { CSS_PX_PER_MM, VIEWS, authoredScales, modeOf } from "@teaching/staffage";
 import type { StaffageClock } from "../../⏱️clock/🧱️core/🟦️.ts";
 import { translator, type Key } from "../../🌐️i18n/🟦️.ts";
 import { VIEW_NAMES } from "../../🗣️labels/🟦️.ts";
 import { PREPARE_PHASES, phaseStart, prepareModel, type PreparePhase } from "../🏭️prepare/🟦️.ts";
+import { flowsIn } from "../../🌊️flow/🟦️.ts";
+import type { FlowProjection } from "../../🌊️flow/🖌️overlay/🟦️.ts";
+import { FlowStage } from "../../🌊️flow/🖥️stage/🟦️.ts";
 import { CAMERA_PRESETS, describeModel, modelKey, sceneOf, scaleChoices, variantOf, type CameraPresetName, type ScaleChoice, type SpatialRequest } from "../🟦️.ts";
 
 /** 🧾️ Where the stage is: nothing yet, preparing the model, showing it, cancelled by the reader, failed, or refused because the asset has no 3D model at the requested scale (no authored volume there; no other scale stands in). */
@@ -36,10 +39,17 @@ export type StageOptions = SpatialRequest & {
   readonly onScale?: (scale: number) => void;
   readonly onView?: (view: View) => void;
   readonly onState?: (state: StageState) => void;
+  readonly onFlow?: (flow: FlowField | null) => void;
   readonly backend?: BackendFactory;
   readonly settleMs?: number;
   readonly restoreMs?: number;
 };
+
+/** 🔭️ How far the camera steps back when the air flow is first shown over a model (a zoom factor below 1), so the air around and above the asset is in the picture. */
+export const FLOW_ZOOM = 0.42;
+
+/** 🔎️ The size of the flow marks of the 3D view relative to their paper size at print zoom. */
+export const FLOW_MARK_SCALE = 1.5;
 
 const STYLE = `
 .semio-stage{--semio-edge:var(--staffage-model-border,currentColor);position:relative;display:flex;flex-direction:column;gap:0;box-sizing:border-box;inline-size:100%;block-size:100%;min-block-size:var(--staffage-model-min-height,18rem);color:var(--staffage-model-foreground,inherit);font:inherit;font-size:.8125rem}
@@ -140,6 +150,9 @@ export class ModelStage {
   #selection = "";
   #disposed = false;
   #ready = false;
+  #flow: FlowStage | null = null;
+  #flowFramed = "";
+  readonly #matrices = { view: new Float32Array(16), projection: new Float32Array(16) };
 
   constructor(host: HTMLElement, options: StageOptions) {
     this.#host = host;
@@ -224,6 +237,7 @@ export class ModelStage {
     }
     this.#applyLook();
     this.#refresh();
+    this.#syncFlow();
   }
 
   /** 🛑️ Cancels a running preparation; the stage says so and offers a retry. */
@@ -251,6 +265,8 @@ export class ModelStage {
     if (this.#lostTimer !== null) clearTimeout(this.#lostTimer);
     this.#unsubscribe?.();
     this.#unsubscribe = null;
+    this.#flow?.dispose();
+    this.#flow = null;
     this.#viewer?.dispose();
     this.#viewer = null;
     this.#host.replaceChildren();
@@ -420,6 +436,8 @@ export class ModelStage {
 
   #mountViewer(): void {
     const doc = this.#host.ownerDocument;
+    this.#flow?.dispose();
+    this.#flow = null;
     this.#viewer?.dispose();
     this.#view.replaceChildren();
     this.#ready = false;
@@ -472,11 +490,15 @@ export class ModelStage {
         this.#options.onPreset?.(found);
       }
       this.#refresh();
+      this.#flow?.redraw();
     });
     viewer.on("backend", ({ status: state }) => this.#backend(state));
     viewer.on("issues", () => this.#note.setAttribute("data-issues", ""));
     viewer.on("error", ({ error }) => this.#fail(error));
-    viewer.on("ready", () => (this.#ready = true));
+    viewer.on("ready", () => {
+      this.#ready = true;
+      this.#syncFlow();
+    });
     this.#view.addEventListener(
       "keydown",
       (event) => {
@@ -489,6 +511,53 @@ export class ModelStage {
     );
     canvas.setAttribute("aria-describedby", `${canvas.getAttribute("aria-describedby") ?? ""} ${this.#description.id}`.trim());
     this.#refresh();
+  }
+
+  /** 🌊️ The projection of a staffage world point (ahead x, up y, left z) through the viewer's camera to the pixels of the stage view; marks keep their paper size at print zoom. */
+  #projection(): FlowProjection | null {
+    const viewer = this.#viewer;
+    const canvas = this.#canvas;
+    if (viewer === null || canvas === null || !this.#ready || canvas.clientWidth === 0 || canvas.clientHeight === 0) return null;
+    const width = canvas.clientWidth;
+    const height = canvas.clientHeight;
+    const camera = viewer.getCamera();
+    const view = viewMatrix(camera, this.#matrices.view) as Float32Array;
+    const projection = projectionMatrix(camera, width / height, this.#matrices.projection) as Float32Array;
+    return {
+      pxPerMm: CSS_PX_PER_MM * FLOW_MARK_SCALE,
+      project: (at, out) => {
+        const x = at.z, y = at.y, z = at.x;
+        const ex = view[0]! * x + view[4]! * y + view[8]! * z + view[12]!;
+        const ey = view[1]! * x + view[5]! * y + view[9]! * z + view[13]!;
+        const ez = view[2]! * x + view[6]! * y + view[10]! * z + view[14]!;
+        const w = projection[11]! * ez + projection[15]!;
+        if (w <= 1e-6) return false;
+        out[0] = ((projection[0]! * ex) / w / 2 + 0.5) * width;
+        out[1] = (0.5 - (projection[5]! * ey) / w / 2) * height;
+        return true;
+      },
+    };
+  }
+
+  /** 🌊️ Mounts, updates or removes the air flow layer: it belongs to the thermal view of an asset that moves air and is shown once the model is. */
+  #syncFlow(): void {
+    const options = this.#options;
+    const layers = options.flow ?? [];
+    const wanted = !this.#disposed && this.#ready && layers.length > 0 && flowsIn(options.asset, options.view) && options.query.kind !== "transition";
+    if (!wanted) {
+      if (this.#flow !== null) options.onFlow?.(null);
+      this.#flow?.dispose();
+      this.#flow = null;
+      return;
+    }
+    const flowOptions = { asset: options.asset, query: options.query, environment: options.environment ?? options.asset.thermal.environment, clock: this.#clock, layers, theme: options.theme ?? "light", range: options.range ?? ({ mode: "auto" } as const), scale: options.scale, language: options.language, projection: () => this.#projection(), ...(options.onFlow === undefined ? {} : { onFlow: options.onFlow }) };
+    if (this.#flow === null) {
+      this.#flow = new FlowStage(this.#view, flowOptions);
+      if (this.#flowFramed !== this.#loaded) {
+        this.#flowFramed = this.#loaded;
+        this.#viewer?.zoomBy(FLOW_ZOOM);
+      }
+    } else this.#flow.update(flowOptions);
   }
 
   #backend(status: "ready" | "lost" | "restored"): void {

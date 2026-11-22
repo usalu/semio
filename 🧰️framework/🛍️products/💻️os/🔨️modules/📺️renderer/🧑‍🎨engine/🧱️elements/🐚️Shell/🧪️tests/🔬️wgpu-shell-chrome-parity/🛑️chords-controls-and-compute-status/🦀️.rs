@@ -23,7 +23,7 @@ fn every_shared_keybinding_row_routes_to_its_shell_verb_and_outranks_app_keybind
     for case in fixture["keybindings"].as_array().expect("fixture keybinding rows") {
         let event = &case["event"];
         let action = chord_key_action(event["key"].as_str().expect("fixture chord key"));
-        let modifiers = PointerModifiers { shift: event["shiftKey"].as_bool().unwrap_or(false), ctrl: event["ctrlKey"].as_bool().unwrap_or(false), alt: event["altKey"].as_bool().unwrap_or(false), meta: event["metaKey"].as_bool().unwrap_or(false) };
+        let modifiers = PointerModifiers { shift: event["shiftKey"].as_bool().unwrap_or(false), ctrl: event["ctrlKey"].as_bool().unwrap_or(false), alt: event["altKey"].as_bool().unwrap_or(false), meta: event["metaKey"].as_bool().unwrap_or(false), repeat: false };
         assert!(is_reserved_shell_chord(&action, &modifiers), "{}: a shell chord must outrank every app-declared keybinding", case["controlId"]);
         let control_id = case["controlId"].as_str().expect("fixture control id");
         if let Some(role_suffix) = control_id.strip_prefix("playground.navbar.roles.") {
@@ -46,7 +46,7 @@ fn every_shared_keybinding_row_routes_to_its_shell_verb_and_outranks_app_keybind
 
 #[test]
 fn the_alt_axis_never_swallows_a_neighbouring_chord() {
-    let accelerator = PointerModifiers { shift: false, ctrl: false, alt: false, meta: true };
+    let accelerator = PointerModifiers { shift: false, ctrl: false, alt: false, meta: true, repeat: false };
     let with_alt = PointerModifiers { alt: true, ..accelerator };
     let bare = PointerModifiers::default();
     assert!(!matches!(shell_shortcut_for(&semio_ui_wgpu_input::KeyAction::Char("e".into()), &accelerator), Some(ShellShortcut::SurfaceRole(_))), "mod+e is not a role chord — mod+alt+e is");

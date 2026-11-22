@@ -72,6 +72,11 @@
         "wait": {
           "type": "boolean"
         },
+        "maximumWaitMilliseconds": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1800000
+        },
         "mode": {
           "enum": [
             "exclusive",

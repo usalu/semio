@@ -1,0 +1,658 @@
+{
+  "schema": "semio.os.task-manager.actor-table/v1",
+  "description": "Language-agnostic law for the task manager's actor table: a runtime metrics snapshot maps to one honest row per actor (residency is the only observable status, every counter is unobserved), the table scene carries the twelve columns and three row actions, and a task's progress line and determinate percent follow the same words in both locales.",
+  "snapshot": {
+    "actors": [
+      {
+        "actorId": "actor-1",
+        "pluginId": "s.cad",
+        "resident": true,
+        "shard": 2
+      },
+      {
+        "actorId": "actor-2",
+        "pluginId": "s.stdio",
+        "resident": false,
+        "shard": 0
+      }
+    ]
+  },
+  "rows": [
+    {
+      "actorId": "actor-1",
+      "packageId": "s.cad",
+      "lane": "maintenance",
+      "status": "active",
+      "stage": "healthy",
+      "shard": 2,
+      "wallUsP95": null,
+      "mailboxLen": null,
+      "turns": null,
+      "traps": null,
+      "restarts": null
+    },
+    {
+      "actorId": "actor-2",
+      "packageId": "s.stdio",
+      "lane": "maintenance",
+      "status": "suspended",
+      "stage": "healthy",
+      "shard": 0,
+      "wallUsP95": null,
+      "mailboxLen": null,
+      "turns": null,
+      "traps": null,
+      "restarts": null
+    }
+  ],
+  "columns": {
+    "en": [
+      {
+        "id": "actorId",
+        "label": "Actor",
+        "sortable": true
+      },
+      {
+        "id": "packageId",
+        "label": "Package",
+        "sortable": true
+      },
+      {
+        "id": "lane",
+        "label": "Lane",
+        "sortable": true
+      },
+      {
+        "id": "status",
+        "label": "Status",
+        "sortable": true
+      },
+      {
+        "id": "stage",
+        "label": "Stage",
+        "sortable": true
+      },
+      {
+        "id": "shard",
+        "label": "Shard",
+        "sortable": true
+      },
+      {
+        "id": "wallUsP95",
+        "label": "p95 wall (µs)",
+        "sortable": true
+      },
+      {
+        "id": "mailboxLen",
+        "label": "Mailbox",
+        "sortable": true
+      },
+      {
+        "id": "turns",
+        "label": "Turns",
+        "sortable": true
+      },
+      {
+        "id": "traps",
+        "label": "Traps",
+        "sortable": true
+      },
+      {
+        "id": "restarts",
+        "label": "Restarts",
+        "sortable": true
+      },
+      {
+        "id": "actions",
+        "label": "Actions"
+      }
+    ],
+    "de": [
+      {
+        "id": "actorId",
+        "label": "Akteur",
+        "sortable": true
+      },
+      {
+        "id": "packageId",
+        "label": "Paket",
+        "sortable": true
+      },
+      {
+        "id": "lane",
+        "label": "Spur",
+        "sortable": true
+      },
+      {
+        "id": "status",
+        "label": "Status",
+        "sortable": true
+      },
+      {
+        "id": "stage",
+        "label": "Zustand",
+        "sortable": true
+      },
+      {
+        "id": "shard",
+        "label": "Shard",
+        "sortable": true
+      },
+      {
+        "id": "wallUsP95",
+        "label": "p95 Zeit (µs)",
+        "sortable": true
+      },
+      {
+        "id": "mailboxLen",
+        "label": "Postfach",
+        "sortable": true
+      },
+      {
+        "id": "turns",
+        "label": "Züge",
+        "sortable": true
+      },
+      {
+        "id": "traps",
+        "label": "Abstürze",
+        "sortable": true
+      },
+      {
+        "id": "restarts",
+        "label": "Neustarts",
+        "sortable": true
+      },
+      {
+        "id": "actions",
+        "label": "Aktionen"
+      }
+    ]
+  },
+  "tableRows": {
+    "en": [
+      {
+        "id": "actor-1",
+        "actorId": {
+          "kind": "text",
+          "value": "actor-1"
+        },
+        "packageId": {
+          "kind": "text",
+          "value": "s.cad"
+        },
+        "lane": {
+          "kind": "text",
+          "value": "Maintenance"
+        },
+        "status": {
+          "kind": "text",
+          "value": "Active"
+        },
+        "stage": {
+          "kind": "text",
+          "value": "healthy"
+        },
+        "shard": {
+          "kind": "number",
+          "value": 2
+        },
+        "wallUsP95": {
+          "kind": "text",
+          "value": "—"
+        },
+        "mailboxLen": {
+          "kind": "text",
+          "value": "—"
+        },
+        "turns": {
+          "kind": "text",
+          "value": "—"
+        },
+        "traps": {
+          "kind": "text",
+          "value": "—"
+        },
+        "restarts": {
+          "kind": "text",
+          "value": "—"
+        },
+        "actions": {
+          "kind": "buttons",
+          "buttons": [
+            {
+              "iconId": "pause",
+              "label": "Suspend",
+              "action": {
+                "controllerId": "os.task-manager",
+                "action": "suspend",
+                "args": {
+                  "actorId": "actor-1"
+                }
+              }
+            },
+            {
+              "iconId": "play",
+              "label": "Resume",
+              "action": {
+                "controllerId": "os.task-manager",
+                "action": "resume",
+                "args": {
+                  "actorId": "actor-1"
+                }
+              }
+            },
+            {
+              "iconId": "square",
+              "label": "Cancel",
+              "action": {
+                "controllerId": "os.task-manager",
+                "action": "cancel",
+                "args": {
+                  "actorId": "actor-1"
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "id": "actor-2",
+        "actorId": {
+          "kind": "text",
+          "value": "actor-2"
+        },
+        "packageId": {
+          "kind": "text",
+          "value": "s.stdio"
+        },
+        "lane": {
+          "kind": "text",
+          "value": "Maintenance"
+        },
+        "status": {
+          "kind": "text",
+          "value": "Suspended"
+        },
+        "stage": {
+          "kind": "text",
+          "value": "healthy"
+        },
+        "shard": {
+          "kind": "number",
+          "value": 0
+        },
+        "wallUsP95": {
+          "kind": "text",
+          "value": "—"
+        },
+        "mailboxLen": {
+          "kind": "text",
+          "value": "—"
+        },
+        "turns": {
+          "kind": "text",
+          "value": "—"
+        },
+        "traps": {
+          "kind": "text",
+          "value": "—"
+        },
+        "restarts": {
+          "kind": "text",
+          "value": "—"
+        },
+        "actions": {
+          "kind": "buttons",
+          "buttons": [
+            {
+              "iconId": "pause",
+              "label": "Suspend",
+              "action": {
+                "controllerId": "os.task-manager",
+                "action": "suspend",
+                "args": {
+                  "actorId": "actor-2"
+                }
+              }
+            },
+            {
+              "iconId": "play",
+              "label": "Resume",
+              "action": {
+                "controllerId": "os.task-manager",
+                "action": "resume",
+                "args": {
+                  "actorId": "actor-2"
+                }
+              }
+            },
+            {
+              "iconId": "square",
+              "label": "Cancel",
+              "action": {
+                "controllerId": "os.task-manager",
+                "action": "cancel",
+                "args": {
+                  "actorId": "actor-2"
+                }
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "de": [
+      {
+        "id": "actor-1",
+        "actorId": {
+          "kind": "text",
+          "value": "actor-1"
+        },
+        "packageId": {
+          "kind": "text",
+          "value": "s.cad"
+        },
+        "lane": {
+          "kind": "text",
+          "value": "Wartung"
+        },
+        "status": {
+          "kind": "text",
+          "value": "Aktiv"
+        },
+        "stage": {
+          "kind": "text",
+          "value": "healthy"
+        },
+        "shard": {
+          "kind": "number",
+          "value": 2
+        },
+        "wallUsP95": {
+          "kind": "text",
+          "value": "—"
+        },
+        "mailboxLen": {
+          "kind": "text",
+          "value": "—"
+        },
+        "turns": {
+          "kind": "text",
+          "value": "—"
+        },
+        "traps": {
+          "kind": "text",
+          "value": "—"
+        },
+        "restarts": {
+          "kind": "text",
+          "value": "—"
+        },
+        "actions": {
+          "kind": "buttons",
+          "buttons": [
+            {
+              "iconId": "pause",
+              "label": "Anhalten",
+              "action": {
+                "controllerId": "os.task-manager",
+                "action": "suspend",
+                "args": {
+                  "actorId": "actor-1"
+                }
+              }
+            },
+            {
+              "iconId": "play",
+              "label": "Fortsetzen",
+              "action": {
+                "controllerId": "os.task-manager",
+                "action": "resume",
+                "args": {
+                  "actorId": "actor-1"
+                }
+              }
+            },
+            {
+              "iconId": "square",
+              "label": "Abbrechen",
+              "action": {
+                "controllerId": "os.task-manager",
+                "action": "cancel",
+                "args": {
+                  "actorId": "actor-1"
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "id": "actor-2",
+        "actorId": {
+          "kind": "text",
+          "value": "actor-2"
+        },
+        "packageId": {
+          "kind": "text",
+          "value": "s.stdio"
+        },
+        "lane": {
+          "kind": "text",
+          "value": "Wartung"
+        },
+        "status": {
+          "kind": "text",
+          "value": "Angehalten"
+        },
+        "stage": {
+          "kind": "text",
+          "value": "healthy"
+        },
+        "shard": {
+          "kind": "number",
+          "value": 0
+        },
+        "wallUsP95": {
+          "kind": "text",
+          "value": "—"
+        },
+        "mailboxLen": {
+          "kind": "text",
+          "value": "—"
+        },
+        "turns": {
+          "kind": "text",
+          "value": "—"
+        },
+        "traps": {
+          "kind": "text",
+          "value": "—"
+        },
+        "restarts": {
+          "kind": "text",
+          "value": "—"
+        },
+        "actions": {
+          "kind": "buttons",
+          "buttons": [
+            {
+              "iconId": "pause",
+              "label": "Anhalten",
+              "action": {
+                "controllerId": "os.task-manager",
+                "action": "suspend",
+                "args": {
+                  "actorId": "actor-2"
+                }
+              }
+            },
+            {
+              "iconId": "play",
+              "label": "Fortsetzen",
+              "action": {
+                "controllerId": "os.task-manager",
+                "action": "resume",
+                "args": {
+                  "actorId": "actor-2"
+                }
+              }
+            },
+            {
+              "iconId": "square",
+              "label": "Abbrechen",
+              "action": {
+                "controllerId": "os.task-manager",
+                "action": "cancel",
+                "args": {
+                  "actorId": "actor-2"
+                }
+              }
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "progress": [
+    {
+      "task": {
+        "id": "toolRun:a#1",
+        "lane": "toolRun",
+        "title": "Fill",
+        "owner": "s.wfc",
+        "startedAtMs": 6000,
+        "steps": null,
+        "progress": {
+          "completed": 3,
+          "total": 10,
+          "text": "Filling (1/2): 3 of 10 cells (30 %)"
+        },
+        "suspendable": true,
+        "state": "running"
+      },
+      "nowMs": 13000,
+      "percent": 30,
+      "text": {
+        "en": "Filling (1/2): 3 of 10 cells (30 %) · 7 s",
+        "de": "Filling (1/2): 3 of 10 cells (30 %) · 7 s"
+      }
+    },
+    {
+      "task": {
+        "id": "job:x#1",
+        "lane": "job",
+        "title": "semio.puzzle3d.fill",
+        "owner": "s.puzzle",
+        "startedAtMs": 1000,
+        "steps": 128,
+        "progress": null,
+        "suspendable": false,
+        "state": "running"
+      },
+      "nowMs": 13999,
+      "percent": null,
+      "text": {
+        "en": "128 steps · 12 s",
+        "de": "128 Schritte · 12 s"
+      }
+    },
+    {
+      "task": {
+        "id": "install:s.raster",
+        "lane": "activation",
+        "title": "s.raster",
+        "owner": "",
+        "startedAtMs": 3000,
+        "steps": null,
+        "progress": null,
+        "suspendable": false,
+        "state": "cancelling"
+      },
+      "nowMs": 2000,
+      "percent": null,
+      "text": {
+        "en": "0 s",
+        "de": "0 s"
+      }
+    }
+  ],
+  "routeNotFound": {
+    "path": "/nope",
+    "en": "Route not found: /nope",
+    "de": "Route nicht gefunden: /nope",
+    "homeAction": {
+      "controllerId": "framework",
+      "action": "navigateShellUri",
+      "args": {
+        "uri": "/"
+      }
+    }
+  },
+  "routes": [
+    {
+      "path": "/",
+      "route": {
+        "kind": "landing"
+      }
+    },
+    {
+      "path": "/spaces/my-studio",
+      "route": {
+        "kind": "space",
+        "spaceId": "my-studio",
+        "instanceId": null,
+        "studio": false
+      }
+    },
+    {
+      "path": "/spaces/my-studio/instances/inst-1",
+      "route": {
+        "kind": "space",
+        "spaceId": "my-studio",
+        "instanceId": "inst-1",
+        "studio": false
+      }
+    },
+    {
+      "path": "/spaces/my-studio/studio",
+      "route": {
+        "kind": "space",
+        "spaceId": "my-studio",
+        "instanceId": null,
+        "studio": true
+      }
+    },
+    {
+      "path": "/spaces/my-studio/studio/instances/inst-1",
+      "route": {
+        "kind": "space",
+        "spaceId": "my-studio",
+        "instanceId": "inst-1",
+        "studio": true
+      }
+    },
+    {
+      "path": "/unknown/path",
+      "route": {
+        "kind": "notFound",
+        "path": "/unknown/path"
+      }
+    },
+    {
+      "path": "/spaces/my-studio/instances/inst-1/extra",
+      "route": {
+        "kind": "notFound",
+        "path": "/spaces/my-studio/instances/inst-1/extra"
+      }
+    },
+    {
+      "path": "/unknown?x=1",
+      "route": {
+        "kind": "notFound",
+        "path": "/unknown"
+      }
+    }
+  ]
+}

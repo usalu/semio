@@ -112,6 +112,8 @@ impl Puzzle3dApp {
     fn ensure_window(&mut self, window_id: &str) {
         if !self.view.window_instances.iter().any(|instance| instance.id == window_id) {
             self.view.window_instances.push(ViewWindowInstance { id: window_id.into(), window_kind_id: semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID.into() });
+            let view = self.window_view(window_id);
+            self.window_transient_generation(&view).expect("open the fixture window's transient partition").expect("the Puzzle window has a transient owner");
         }
     }
 
@@ -171,15 +173,27 @@ impl Puzzle3dApp {
     /// against its grant and attributed to the fixed stage that ran it. The stage is read BEFORE the call:
     /// `maintenance_step`'s idle early return leaves the round-robin cursor untouched, so reading it afterwards names a
     /// stale stage.
-    pub fn measure_maintenance_step(&mut self, _maximum_items: usize, _maximum_bytes: usize) -> Result<PluginLifecycleStep, semio_plugin::PluginLifecycleFailure> {
+    pub fn measure_maintenance_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginLifecycleStep, semio_plugin::PluginLifecycleFailure> {
+        use semio_plugin::{MountedOwnerIdentityV1, MountedOwnerPhaseV1, MountedOwnerTurnV1};
+
         let stage = self.next_maintenance_stage();
+        let instance_id = self.instance_id;
         let (raw, cx) = self.parts();
-        let grant = semio_plugin::artifact_app_laws::fixture_mounted_policy().maintenance;
-        let demand = PluginApp::maintenance_retirement_demands(raw, grant.maximum_copy_bytes)?;
-        let step = semio_plugin::plugin_app_close_prelude::semio_plugin_ownership::bounded_ownership::original_lifecycle_step(cx, grant, demand, |same, grant| {
-            let step = PluginApp::maintenance_step(raw, same, grant)?;
-            Ok((step, PluginApp::maintenance_terminal_is_empty(raw)))
-        });
+        let identity = MountedOwnerIdentityV1 { instance_id, operation: cx.operation(), generation: cx.generation() };
+        let phase = raw.mounted_owner_maintenance_phase()?;
+        let mut policy = artifact_app_laws::fixture_mounted_policy();
+        let loan = match phase {
+            MountedOwnerPhaseV1::Preparation => &mut policy.preparation,
+            MountedOwnerPhaseV1::Maintenance => &mut policy.maintenance,
+            MountedOwnerPhaseV1::Close => &mut policy.close,
+        };
+        loan.maximum_items = loan.maximum_items.min(maximum_items);
+        loan.maximum_copy_bytes = loan.maximum_copy_bytes.min(maximum_bytes);
+        let Some(mut turn) = MountedOwnerTurnV1::admit(instance_id, identity, phase, policy, cx)? else {
+            return Ok(PluginLifecycleStep::Progress(Default::default()));
+        };
+        let grant = turn.grant();
+        let step = raw.mounted_owner_maintenance_step(&mut turn);
         self.maintenance.record(stage, grant, &step);
         step
     }
@@ -199,7 +213,7 @@ pub fn fault_of(failure: semio_framework_job::OriginalTurnFailure) -> Fault {
 
 /// 🧹️ Drives `app` through the real `PluginApp` close state machine with the fixture's original caller, one grant
 /// quoted from the owner per turn exactly as a host actor tick does, and returns the terminal-empty witness or the
-/// fault that stopped it. Bounded by the caller's own opportunity (`maximum_turns`), never by a local spin cap.
+/// fault that stopped it. The fixture's `maximum_close_turns` bounds the number of grants.
 fn drain_close(app: &mut Puzzle3dRawApp, cx: &mut semio_plugin::StepContext<'_>) -> Result<bool, semio_plugin::PluginLifecycleFailure> {
     artifact_app_laws::close_registered_fixture_app(app, artifact_app_laws::fixture_mounted_policy(), cx)?;
     Ok(app.close_terminal_is_empty())
@@ -233,7 +247,9 @@ pub fn puzzle3d_manifest_for_tests() -> App {
     App { definition: create_puzzle3d_app(), examples: Vec::new() }
 }
 
-semio_plugin::history_edit_acceptance_law!("puzzle", Puzzle3dPlayApp, puzzle3d_manifest_for_tests, "../..");
+semio_plugin::history_edit_acceptance_law!("puzzle", Puzzle3dPlayApp, puzzle3d_manifest_for_tests, "../../..");
+semio_plugin::history_edit_acceptance_law!(@close Puzzle3dPlayApp, puzzle3d_manifest_for_tests, "../../..",
+    "🧫️fixtures/🧬️mutations/✋️selection/✋️drag-selection/⏸️keeps-a-zero-offset");
 
 /// 🧰️ The registry-backed, instance-bound scene_snapshot app — the ONLY constructor this plugin can use.
 /// puzzle3d declares `bounded_first_step_tool_proofs!`, so `VcsArtifactApp::with_registry_on_bus`'s
@@ -258,8 +274,10 @@ pub async fn app() -> Puzzle3dApp {
     let instance_id = next_fixture_instance_id();
     app.bind_instance_id(instance_id).await;
     artifact_app_laws::settle_store_constructor(&mut app, artifact_app_laws::fixture_mounted_policy());
-    let view = ViewModel { window_instances: vec![ViewWindowInstance { id: WINDOW_KIND_ID.into(), window_kind_id: WINDOW_KIND_ID.into() }], ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) };
-    Puzzle3dApp { raw: Some(Box::new(app)), scope, instance_id, view, maintenance: Box::new(MaintenanceStageGrants::default()) }
+    let view = ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
+    let mut fixture = Puzzle3dApp { raw: Some(Box::new(app)), scope, instance_id, view, maintenance: Box::new(MaintenanceStageGrants::default()) };
+    fixture.ensure_window(WINDOW_KIND_ID);
+    fixture
 }
 
 /// 🖌️ Host-session utility activation without minting a typed operation or running `settle`.
@@ -308,10 +326,8 @@ pub const SETTLE_HOST_TURN_ITEMS: usize = 256;
 pub async fn settle_with_items(app: &mut Puzzle3dApp, maximum_items: usize) -> Puzzle3dSettled {
     let mut settled = Puzzle3dSettled::default();
     let census_before = semio_plugin::app::typed_operation_unit_census();
-    let (fresh_fuel, fresh_grant) = {
-        let (_, cx) = app.parts();
-        (cx.fuel_remaining(), cx.retained_grant())
-    };
+    let fresh_fuel = artifact_app_laws::OriginalFixtureCaller::turn_fuel();
+    let fresh_grant = app.parts().1.retained_grant();
     for _ in 0..1_048_576 {
         if !app.has_pending_typed_operations() {
             settled.census = semio_plugin::app::typed_operation_unit_census() - census_before;
@@ -319,24 +335,33 @@ pub async fn settle_with_items(app: &mut Puzzle3dApp, maximum_items: usize) -> P
         }
         {
             let (_, cx) = app.parts();
-            semio_framework_job::testkit::renew_turn(cx, fresh_fuel, fresh_grant).expect("renew the fixture turn like the host's fresh context");
+            artifact_app_laws::fixture_renew_turn(cx, fresh_fuel, fresh_grant).expect("renew the fixture turn like the host's fresh context");
         }
         host_turn(app, maximum_items, &mut settled).await;
     }
-    panic!("puzzle3d app never quiesced: pending typed operations outlived the settle budget: {}",app.typed_operation_diagnostic());
+    let (raw, cx) = app.parts();
+    panic!(
+        "puzzle3d app never quiesced: pending typed operations outlived the settle budget: {}. History work {}, patch {}, host routes {}, host command {}, resumes {}, fuel {}, grant {:?}, should yield {}, pinned {:?}, return budget {:?}",
+        raw.typed_operation_diagnostic(), raw.time_travel.has_pending_work(), raw.time_travel.has_patch(),
+        raw.host_events.routes.pending(), raw.original_host_event_command.pending(), raw.host_events.resumes.pending(),
+        cx.fuel_remaining(), cx.retained_grant(), cx.should_yield(),
+        semio_framework_job::testkit::return_source_pinned(cx), semio_framework_job::testkit::return_budget_snapshot(cx),
+    );
 }
 
 /// 🔁️ ONE host continuation turn — the unit [`settle_with_items`] repeats — folding what it forwards
 /// into `settled`.
 pub async fn host_turn(app: &mut Puzzle3dApp, maximum_items: usize, settled: &mut Puzzle3dSettled) {
     settled.turns += 1;
-    let maintenance_items = maximum_items.max(semio_plugin::artifact_app_laws::fixture_mounted_policy().maintenance.maximum_items);
-    app.measure_maintenance_step(maintenance_items, SETTLE_TURN_BYTES).expect("maintenance step drives the mounted operation's worker and retirement stages");
+    let policy = artifact_app_laws::fixture_mounted_policy();
+    let maintenance_items = maximum_items.max(policy.maintenance.maximum_items);
+    let publication_grant = app.parts().1.retained_grant();
+    app.measure_maintenance_step(maintenance_items, policy.maintenance.maximum_copy_bytes).expect("maintenance step drives the mounted operation's worker and retirement stages");
     let instance_id = app.instance_id;
     let (raw, cx) = app.parts();
+    artifact_app_laws::fixture_renew_turn(cx, artifact_app_laws::OriginalFixtureCaller::turn_fuel(), publication_grant).expect("renew the fixture turn for publication after maintenance");
     raw.advance_typed_operation_publication(&mut semio_plugin::artifact_app_laws::fixture_identity(), cx).await.expect("advance one typed operation publication unit");
     semio_plugin::artifact_app_laws::retain_original_ownership_receipts(raw, semio_plugin::artifact_app_laws::fixture_mounted_policy(), &mut Vec::new()).expect("post the ownership receipts to the fixture caller like the host's exchange output");
-    let policy = semio_plugin::artifact_app_laws::fixture_mounted_policy();
     while let Some(mut page) = semio_plugin::artifact_app_laws::take_fixture_result_page(raw, instance_id, policy.preparation).expect("take one typed operation result page") {
         assert_ne!(page.lane, semio_plugin::app::TypedOperationResultLane::Fault, "retained operation faulted: {}", String::from_utf8_lossy(page.bytes()));
         if page.lane == semio_plugin::app::TypedOperationResultLane::Download {
@@ -350,6 +375,10 @@ pub async fn host_turn(app: &mut Puzzle3dApp, maximum_items: usize, settled: &mu
     if let Some(completion) = app.take_typed_operation_completion().await.expect("take one typed operation completion witness") {
         settled.completions.push(Puzzle3dCompletion { operation: completion.operation, ui_scope: completion.ui_scope, history_patch: completion.history_patch });
     }
-    settled.scope = app.take_typed_operation_ui_scope().or(settled.scope.take());
+    if let Some(progress) = app.take_typed_operation_ui_progress() {
+        if progress.ui_scope != UiDirtyScope::None || settled.scope.is_none() {
+            settled.scope = Some(progress.ui_scope);
+        }
+    }
     acknowledge_local_interaction_pages(app);
 }

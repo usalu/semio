@@ -1,0 +1,157 @@
+{
+  "schema": "semio.ui.segmented-select.v1",
+  "bounds": {
+    "x": 10.0,
+    "y": 4.0,
+    "w": 120.0,
+    "h": 22.4
+  },
+  "count": 3,
+  "rects": [
+    {
+      "index": 0,
+      "rtl": false,
+      "x": 10.0,
+      "w": 40.0
+    },
+    {
+      "index": 2,
+      "rtl": false,
+      "x": 90.0,
+      "w": 40.0
+    },
+    {
+      "index": 0,
+      "rtl": true,
+      "x": 90.0,
+      "w": 40.0
+    },
+    {
+      "index": 2,
+      "rtl": true,
+      "x": 10.0,
+      "w": 40.0
+    }
+  ],
+  "hits": [
+    {
+      "x": 10.0,
+      "rtl": false,
+      "segment": 0
+    },
+    {
+      "x": 49.9,
+      "rtl": false,
+      "segment": 0
+    },
+    {
+      "x": 50.0,
+      "rtl": false,
+      "segment": 1
+    },
+    {
+      "x": 129.9,
+      "rtl": false,
+      "segment": 2
+    },
+    {
+      "x": 130.0,
+      "rtl": false,
+      "segment": null
+    },
+    {
+      "x": 9.9,
+      "rtl": false,
+      "segment": null
+    },
+    {
+      "x": 12.0,
+      "rtl": true,
+      "segment": 2
+    }
+  ],
+  "keys": [
+    {
+      "current": 0,
+      "key": "ArrowRight",
+      "rtl": false,
+      "disabled": [],
+      "next": 1
+    },
+    {
+      "current": 2,
+      "key": "ArrowRight",
+      "rtl": false,
+      "disabled": [],
+      "next": 0
+    },
+    {
+      "current": 0,
+      "key": "ArrowLeft",
+      "rtl": false,
+      "disabled": [],
+      "next": 2
+    },
+    {
+      "current": 0,
+      "key": "ArrowLeft",
+      "rtl": true,
+      "disabled": [],
+      "next": 1
+    },
+    {
+      "current": 0,
+      "key": "ArrowRight",
+      "rtl": false,
+      "disabled": [
+        1
+      ],
+      "next": 2
+    },
+    {
+      "current": 1,
+      "key": "Home",
+      "rtl": false,
+      "disabled": [],
+      "next": 0
+    },
+    {
+      "current": 1,
+      "key": "End",
+      "rtl": false,
+      "disabled": [],
+      "next": 2
+    },
+    {
+      "current": 0,
+      "key": "Home",
+      "rtl": false,
+      "disabled": [],
+      "next": null
+    },
+    {
+      "current": 1,
+      "key": "ArrowDown",
+      "rtl": false,
+      "disabled": [],
+      "next": null
+    },
+    {
+      "current": 1,
+      "key": "ArrowUp",
+      "rtl": false,
+      "disabled": [],
+      "next": null
+    }
+  ],
+  "labels": {
+    "select": {
+      "en": "Select",
+      "de": "Auswählen"
+    },
+    "mixedValues": {
+      "en": "Mixed",
+      "de": "Gemischt"
+    }
+  }
+}

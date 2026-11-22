@@ -882,6 +882,15 @@
             "en": "The file roster of one dependency package or artifact, not the source closure.",
             "de": "Die Dateiliste eines Abhängigkeitspakets oder Artefakts, nicht der Quellabschluss."
           }
+        },
+        {
+          "file": "⚡️caching/💾️storage/🔒️enforcement/🔌️nx/🤝️nested-custody/🧬️schema/🔣️.json",
+          "pointer": "definitions/Refusal/properties/paths",
+          "key": "maxItems",
+          "reason": {
+            "en": "The paths one custody refusal names as a bounded diagnostic list, not the source closure.",
+            "de": "Die Pfade, die eine Verwahrungsablehnung als begrenzte Diagnoseliste nennt, nicht der Quellabschluss."
+          }
         }
       ]
     } },

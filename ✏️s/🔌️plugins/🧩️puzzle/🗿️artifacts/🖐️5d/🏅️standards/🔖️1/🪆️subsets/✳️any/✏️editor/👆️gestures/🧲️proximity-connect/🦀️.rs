@@ -25,6 +25,9 @@ enum Puzzle5dProximityConnectStage {
     Closing,
 }
 
+/// 🔢️ Each emitted fastener requires a candidate, an existing-fastener check, a compatibility check and an emission.
+const PROXIMITY_OUTPUT_ROWS: usize = crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS / 4;
+
 /// ♻️ The owners one `Puzzle5dProximityConnectWork` still holds when its job closes, retired as one controlled bundle.
 #[derive(semio_framework_value::RetireOwned)]
 struct Puzzle5dProximityConnectWorkOwners {
@@ -235,7 +238,7 @@ impl<A: Puzzle5dEditor> semio_plugin::retained_command::ArtifactCommandWork<Edit
                 Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-proximity-compatibility", "Checking kind compatibility", "Artkompatibilität wird geprüft"))
             }
             Puzzle5dProximityConnectStage::Emit => {
-                if self.mutations.len() >= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS {
+                if self.mutations.len() == self.mutations.capacity() {
                     return Err(Fault::from("puzzle5d-proximity-connect-output-capacity"));
                 }
                 let id = format!("fastener-{:016x}-{}", self.operation_nonce, self.fresh_cursor);
@@ -298,14 +301,14 @@ impl<A: Puzzle5dEditor> semio_plugin::retained_command::ArtifactCommandWork<Edit
 
 impl Puzzle5dProximityConnectWork {
     pub fn original_birth_demands() -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        let capacity = (crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS as usize).checked_mul(std::mem::size_of::<Puzzle5dMutation>())
+        let capacity = PROXIMITY_OUTPUT_ROWS.checked_mul(std::mem::size_of::<Puzzle5dMutation>())
             .ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "Puzzle5D Puzzle5dProximityConnectWork backing extent overflow"))?;
         Ok(semio_framework_value::RetirementDemand { capacity_bytes: capacity, depth: 1, ..Default::default() })
     }
 
     pub fn from_original_construction(scope: &mut semio_framework_action_bus::OriginalToolConstructionScope<'_>) -> Result<(Self, semio_framework_value::RetainedCloneProgress), semio_framework_value::ValueError> {
         scope.admit_owner(Self::original_birth_demands()?)?;
-        let work = Self { mutations: Vec::with_capacity(crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS), ..Self::default() };
+        let work = Self { mutations: Vec::with_capacity(PROXIMITY_OUTPUT_ROWS), ..Self::default() };
         let capacity = work.mutations.capacity() * std::mem::size_of::<Puzzle5dMutation>();
         Ok((work, semio_framework_value::RetainedCloneProgress { retained_capacity_bytes: capacity, ..Default::default() }))
     }

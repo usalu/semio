@@ -83,7 +83,8 @@
           "derived": "text",
           "closure": "none",
           "stamp": "none",
-          "registry": "none"
+          "registry": "none",
+          "global": "none"
         },
         "carry": {
           "shared": [

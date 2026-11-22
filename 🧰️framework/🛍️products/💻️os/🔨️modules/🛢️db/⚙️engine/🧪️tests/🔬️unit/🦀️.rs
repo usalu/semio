@@ -11,3 +11,4 @@ include!("🔌️mount-cleanup-fault-round-trip-and-deferred-seams/🦀️.rs");
 include!("✍️writer-residency-compaction-and-hello/🦀️.rs");
 include!("📚️history-wake-and-terminal-close-laws/🦀️.rs");
 include!("🧭️long-module-and-source-laws/🦀️.rs");
+include!("📬️original-media-sqlite/🦀️.rs");

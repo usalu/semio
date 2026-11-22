@@ -1,0 +1,31 @@
+import { resolve } from "node:path";
+const root = resolve(process.env.SEMIO_WORKSPACE_ROOT ?? "C:/semio");
+const base = "C:/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/";
+const variant = process.argv[2]!, manifest = process.argv[3]!, names = process.argv.slice(4);
+const m = await import(base + (variant === "head" ? "🟦️headcheck.ts" : "🟦️.ts"));
+const w = await import(base + "🛠️preparation/👁️witness/🟦️.ts");
+const total = { ms: 0, cpu: 0 };
+const time = <T>(label: string, work: () => T): T => {
+  const start = performance.now(), cpu = process.cpuUsage();
+  const value = work();
+  const used = process.cpuUsage(cpu), ms = performance.now() - start, c = (used.user + used.system) / 1000;
+  total.ms += ms; total.cpu += c;
+  console.error("[DEBUG]", variant, label, "ms", Math.round(ms), "cpu-ms", Math.round(c));
+  return value;
+};
+const storage = { directory: "G:/claude-scratch/snap" } as any;
+require("node:fs").mkdirSync(storage.directory, { recursive: true });
+const observations = new Map();
+if (variant === "new") w.seedCargoPriorListingsV1(observations, w.readCargoListingSnapshotV1(storage, root));
+const scope = time("scope", () => m.cargoWorkspaceForManifest(root, manifest, observations));
+const prepared = time("prepare", () => m.prepareCargoOwners(root, scope, names, undefined, observations));
+const scopes = prepared.owners.map((owner: string) => m.cargoWorkspaceForManifest(root, owner === "." ? "Cargo.toml" : owner + "/Cargo.toml", observations));
+const membership = m.cargoWorkspaceForManifest(root, scope.manifest);
+time("publish-check", () => { try { m.publishSelectedCargoWorkspaceMembershipV1(root, membership, "check", scopes); } catch (error) { console.error("[DEBUG] publish would write:", (error as Error).message); } });
+const members = time("members", () => prepared.owners.map((owner: string) => { const s = scopes.find((s: any) => s.directory === owner); return { owner, roster: JSON.stringify(prepared.inventories?.[owner] ?? m.cargoWorkspaceMembers(root, s, observations)) }; }));
+const currentOld = () => { for (const member of members) { const s = scopes.find((s: any) => s.directory === member.owner); if (JSON.stringify(m.cargoWorkspaceMembers(root, s)) !== member.roster) throw Error("roster"); } };
+const currentNew = () => { if (!w.cargoPhysicalObservationsHoldV1(root, [...observations.values()])) throw Error("replay refused"); };
+for (let i = 1; i <= 4; i++) time("current#" + i + (variant === "head" ? "-roster-walk" : "-replay"), variant === "head" ? currentOld : currentNew);
+console.error("[DEBUG]", variant, "TOTAL ms", Math.round(total.ms), "cpu-ms", Math.round(total.cpu));
+
+if (variant === "new") w.writeCargoListingSnapshotV1(storage, root, storage.directory, observations);

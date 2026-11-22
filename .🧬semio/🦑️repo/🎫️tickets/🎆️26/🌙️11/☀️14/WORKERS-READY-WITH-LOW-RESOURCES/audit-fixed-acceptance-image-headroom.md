@@ -1,0 +1,11 @@
+# Fixed Acceptance Image Headroom
+
+The ticket backing path had 29,558,910,976 available bytes on its 994,662,584,320-byte partition. The 41 GiB acceptance image needs 60,129,542,144 available bytes, or 56 GiB. With zero allocated backing, the unchanged gate includes 43 GiB for the image and backing overhead, 12 GiB of host reserve, and 1 GiB of margin. The sample was short by 30,570,631,168 bytes (28.47 GiB).
+
+The native disk inventory listed no external physical disks. The system and Data volumes share internal APFS container `disk3` on `disk0s2`. The checkout and the entries under `/Volumes` reported the same stat device and available space. Disk Utility did not recognize `/Volumes/semio-peers` as a mounted volume. The 15 mounted disk images identified through the native image inventory are repository cache mounts, with no attachment to this ticket's acceptance backing. No alternate physical volume was observed.
+
+A bounded inventory traversed only the ticket's generated directory. It counted 773 entries and 652 regular files with a total of 57,815,040 allocated bytes. It reached the end without crossing a mount, hitting the entry cap or encountering an unreadable entry. No disk image backing was present. Even crediting every observed regular block as independent and reclaimable would cover less than 0.2 percent of the sampled deficit. This is an upper estimate of those file allocations, since links, clones or snapshots can further reduce the space actually recovered.
+
+The existing launcher measures its exact ticket path, creates a new owned sparse image, requires a fresh private APFS root with at least 40 GiB available inside the volume, then monitors backing growth against the same physical guard. It has no alternate-volume or existing-image input. A resize would need an existing authenticated owned image and usable physical capacity. Neither was observed. The earlier standalone and nested StorageKit stalls would require a separate positive native probe even after disk admission became possible. No cleanup, attachment, resize, process control or source change was made.
+
+[Constrained launcher](constrained.ts) · [Fixed lab configuration](constrained.json) · [Prior native attach controls](audit-constrained-native-attach.md)

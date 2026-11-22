@@ -119,6 +119,7 @@
       "description": "Closed classes of long native work whose deadline is an idle window renewed by observable progress; each class declares its idle window and the generous maximum derived from the declared cost of the action.",
       "enum": [
         "native-child",
+        "native-release",
         "native-observation"
       ]
     },
@@ -135,6 +136,11 @@
           "native-child": {
             "idleMilliseconds": 3600000,
             "baseMilliseconds": 14400000,
+            "perUnitMilliseconds": 600000
+          },
+          "native-release": {
+            "idleMilliseconds": 3600000,
+            "baseMilliseconds": 21600000,
             "perUnitMilliseconds": 600000
           },
           "native-observation": {

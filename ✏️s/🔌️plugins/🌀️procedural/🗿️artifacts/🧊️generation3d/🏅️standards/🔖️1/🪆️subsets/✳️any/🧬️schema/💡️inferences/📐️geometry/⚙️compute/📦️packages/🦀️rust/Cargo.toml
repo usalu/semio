@@ -16,7 +16,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [features]
-testkit = []
+testkit = ["dep:semio-framework-trace", "dep:serde_json", "semio-framework-job/testkit"]
 funded-turns = []
 
 [dependencies]
@@ -32,13 +32,15 @@ semio-framework-3d-brep-vector = { workspace = true }
 semio-s-artifact-procedural-3d-geometry-inputs = { workspace = true }
 semio-s-artifact-procedural-3d-geometry-value = { workspace = true }
 semio-s-artifact-procedural-3d-model = { workspace = true }
+semio-framework-trace = { workspace = true, optional = true }
+serde_json = { workspace = true, optional = true }
 
 [dev-dependencies]
 semio-framework-async = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true, features = ["testkit"] }
-semio-framework-trace = { workspace = true }
-serde_json = { workspace = true }
 semio-framework-3d-brep-tolerance = { workspace = true }
 semio-s-artifact-procedural-3d-io-geometry = { workspace = true }
 semio-s-artifact-procedural-3d-io-text = { workspace = true }
 
+semio-framework-trace = { workspace = true }
+serde_json = { workspace = true }

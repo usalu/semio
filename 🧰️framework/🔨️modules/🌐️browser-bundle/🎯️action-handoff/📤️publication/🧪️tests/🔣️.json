@@ -1,0 +1,242 @@
+{
+  "valid": [
+    {
+      "name": "signed-workflow-creation",
+      "wire": {
+        "tag": "replay-shell-command",
+        "val": {
+          "actionId": "os.create-workflow-artifact"
+        }
+      },
+      "args": {
+        "nodeId": "node-700",
+        "pluginId": "gis",
+        "appId": "s.gis.gisterrain@1/*#editor",
+        "x": 12.5,
+        "y": 4
+      },
+      "expected": {
+        "replayShellCommand": {
+          "actionId": "os.create-workflow-artifact"
+        }
+      }
+    },
+    {
+      "name": "open-persisted-terrain",
+      "wire": {
+        "tag": "open-plugin-instance",
+        "val": {
+          "pluginId": "gis",
+          "appId": "s.gis.gisterrain@1/*#editor",
+          "osInstanceId": {
+            "tag": "some",
+            "val": "node-700"
+          },
+          "document": {
+            "tag": "some",
+            "val": {
+              "documentId": "terrain-900",
+              "schema": "s.gis.gisterrain",
+              "spaceId": {
+                "tag": "some",
+                "val": "atelier-161"
+              }
+            }
+          }
+        }
+      },
+      "expected": {
+        "openPluginInstance": {
+          "pluginId": "gis",
+          "appId": "s.gis.gisterrain@1/*#editor",
+          "osInstanceId": "node-700",
+          "document": {
+            "documentId": "terrain-900",
+            "schema": "s.gis.gisterrain",
+            "spaceId": "atelier-161"
+          }
+        }
+      }
+    },
+    {
+      "name": "open-plugin-without-document",
+      "wire": {
+        "tag": "open-plugin-instance",
+        "val": {
+          "pluginId": "gis",
+          "appId": "s.gis.gisterrain@1/*#editor",
+          "osInstanceId": {
+            "tag": "none"
+          },
+          "document": {
+            "tag": "none"
+          }
+        }
+      },
+      "expected": {
+        "openPluginInstance": {
+          "pluginId": "gis",
+          "appId": "s.gis.gisterrain@1/*#editor"
+        }
+      }
+    },
+    {
+      "name": "pick-ascii-elevation",
+      "wire": {
+        "tag": "request-file-open",
+        "val": {
+          "req": 1163085650,
+          "params": {
+            "accept": ".asc",
+            "importAction": "importElevationGridFile",
+            "readAs": "text",
+            "args": {
+              "tag": "none"
+            },
+            "multiple": false,
+            "maxFileBytes": 65536
+          }
+        }
+      },
+      "expected": {
+        "requestFileOpen": {
+          "req": 1163085650,
+          "accept": ".asc",
+          "readAs": "text",
+          "importAction": "importElevationGridFile",
+          "multiple": false,
+          "maxFileBytes": 65536
+        }
+      }
+    },
+    {
+      "name": "download-exact-text",
+      "wire": {
+        "tag": "download-media-export",
+        "val": {
+          "filename": "terrain-elevation.asc",
+          "mimeType": "text/plain",
+          "data": "NCOLS 2\nNROWS 2\n0 -7.125\n2 3\n",
+          "encoding": {
+            "tag": "none"
+          }
+        }
+      },
+      "expected": {
+        "downloadMediaExport": {
+          "filename": "terrain-elevation.asc",
+          "mimeType": "text/plain",
+          "data": "NCOLS 2\nNROWS 2\n0 -7.125\n2 3\n"
+        }
+      }
+    },
+    {
+      "name": "activate-editor-utility",
+      "wire": {
+        "tag": "set-active-utility",
+        "val": {
+          "windowId": "gis3d-main",
+          "utilityId": "terrainRaise"
+        }
+      },
+      "expected": {
+        "setActiveUtility": {
+          "windowId": "gis3d-main",
+          "utilityId": "terrainRaise"
+        }
+      }
+    },
+    {
+      "name": "close-focused-node",
+      "wire": {
+        "tag": "set-panel",
+        "val": {
+          "panelJson": "{\"spawnedApps\":[]}"
+        }
+      },
+      "expected": {
+        "setPanel": {
+          "panelJson": "{\"spawnedApps\":[]}"
+        }
+      }
+    }
+  ],
+  "invalid": [
+    {
+      "tag": "open-plugin-instance",
+      "val": {
+        "pluginId": "gis",
+        "appId": "s.gis.gisterrain@1/*#editor",
+        "document": {
+          "documentId": "",
+          "schema": "s.gis.gisterrain"
+        }
+      }
+    },
+    {
+      "tag": "open-plugin-instance",
+      "val": {
+        "pluginId": "gis",
+        "appId": "s.gis.gisterrain@1/*#editor",
+        "document": {
+          "documentId": "terrain-900",
+          "schema": "s.gis.gisterrain",
+          "scope": "foreign"
+        }
+      }
+    },
+    {
+      "tag": "replay-shell-command",
+      "val": {
+        "actionId": "os.create-workflow-artifact",
+        "args": [
+          255
+        ]
+      }
+    },
+    {
+      "tag": "replay-shell-command",
+      "val": {
+        "actionId": "os.create-workflow-artifact",
+        "callerSource": "pretend"
+      }
+    },
+    {
+      "tag": "request-file-open",
+      "val": {
+        "req": 9007199254740991,
+        "params": {
+          "accept": ".asc",
+          "importAction": "importElevationGridFile",
+          "multiple": "false"
+        }
+      }
+    },
+    {
+      "tag": "request-file-open",
+      "val": {
+        "req": 1,
+        "params": {
+          "accept": ".asc",
+          "importAction": "importElevationGridFile",
+          "multiple": false,
+          "maxFileBytes": 4294967296
+        }
+      }
+    },
+    {
+      "tag": "download-media-export",
+      "val": {
+        "filename": "terrain.asc",
+        "mimeType": "text/plain",
+        "data": 12
+      }
+    },
+    {
+      "tag": "invoke-extension",
+      "val": {
+        "req": 1
+      }
+    }
+  ]
+}

@@ -11,12 +11,17 @@ pub(super) fn select_turn_event<PA: PluginApp>(runtime: &PluginRuntime<PA>, even
         original_receiving::retain_completed(runtime,events,cx)?;
     }
     if matches!(events.as_ref(),Some(Event::StagedFormRequested { .. })) {original_receiving::forms::retain(runtime,events,cx)?;}
-    let selected_event = if matches!(events.as_ref(),Some(Event::Completed { .. }|Event::StagedFormRequested { .. }|Event::OriginalMediaControl(_))) {
+    let selected_event = if matches!(events.as_ref(),Some(Event::Completed { .. }|Event::StagedFormRequested { .. }|Event::OriginalMediaControl(_)|Event::NaturalSourcePrepare(_)|Event::NaturalSourceControl(_)|Event::FolderArchiveLoad(_))) {
         None
     } else if events.is_some() {
         let grant=cx.retained_grant();
         if cx.should_yield()||cx.is_cancelled()||grant.maximum_items==0||grant.maximum_depth==0 { None } else {
-            cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()})?;
+            let copy_bytes = if matches!(events.as_ref(), Some(Event::InstanceOpen { purpose: semio_framework::kernel::ActorInstanceOpenPurpose::NaturalSource { .. }, .. })) {
+                size_of::<(String, String, semio_framework::kernel::ActorInstanceOpenPurpose)>()
+            } else { 0 };
+            let progress = semio_framework_value::RetainedCloneProgress { copied_items: 1, copied_bytes: copy_bytes, ..Default::default() };
+            if !progress.fits(grant) { return Ok(None); }
+            cx.consume_retained(progress)?;
             cx.consume_fuel(1);
             events.take()
         }
@@ -35,7 +40,7 @@ pub(super) fn select_turn_event<PA: PluginApp>(runtime: &PluginRuntime<PA>, even
 pub(super) async fn dispatch_turn_event<PA: PluginApp>(runtime: &PluginRuntime<PA>, selected_event: Option<Event>, dirty: &mut DirtyPollOwners, document_backbone_effects: &mut Vec<Effect>, identity: &mut EntityIdentityAuthority<'_>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<(), semio_framework_job::OriginalTurnFailure> {
     for event in selected_event {
         match event {
-            Event::InstanceOpen { request, app_id, actor, assets, quotas, .. } => {
+            Event::InstanceOpen { request, app_id, actor, assets, quotas, purpose, .. } => {
                 let instance = request.instance_id;
                 let admitted = runtime.guest_lifetimes.borrow_mut().admit(request);
                 let fresh = match admitted {
@@ -48,11 +53,11 @@ pub(super) async fn dispatch_turn_event<PA: PluginApp>(runtime: &PluginRuntime<P
                         runtime.guest_lifetimes.borrow_mut().remove_uncreated(instance).map_err(reactor_close_fault)?;
                         return Err(error.into());
                     }
-                    semio_plugin_runtime_instances::inst_opening::plugin_open_actor_instance(runtime,request,app_id.0,actor,identity,cx).await?;
+                    semio_plugin_runtime_instances::inst_opening::plugin_open_actor_instance(runtime,request,app_id.0,actor,purpose,identity,cx).await?;
                 }
             }
             Event::InstanceClose(_) | Event::InstanceLifecycleAck(_) => {}
-            Event::OriginalMediaControl(_) => unreachable!("raw event uses the original command prologue"),
+            Event::OriginalMediaControl(_) | Event::NaturalSourcePrepare(_) | Event::NaturalSourceControl(_) | Event::FolderArchiveLoad(_) => unreachable!("raw event uses the original command prologue"),
             Event::CommandIngressPage { .. } => {
                 return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.command-page-event-bypass"), "command page must use poll_kernel's dedicated owner argument").into());
             }

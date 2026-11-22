@@ -26,6 +26,7 @@ pub mod picker_publication;
 /// 🩺️ Media transfers: the media exports, downloads, closures and snapshot retirements of the instance.
 pub struct MediaTransfers<A: ArtifactApp> {
     pub original_picker: Option<Box<picker_publication::PickerPublication>>,
+    pub natural_source: Option<Box<semio_plugin_instance_natural_publication::NaturalFilePublication>>,
     pub pending_reserved_producer_permit:ManuallyDrop<Option<(FrameworkReservedCommitPermit,(semio_framework_job::OperationId,semio_framework_job::Generation,usize))>>,
     pub reserved_mount:ManuallyDrop<Option<Box<semio_plugin_retained_command::typed_operation::original_emission::OriginalEmissionAdmission<A>>>>,
     pub reserved_mounted_construction:semio_framework::action_bus::ResidentConstruction<Box<semio_plugin_retained_command::typed_operation::MountedTypedCommandFullOperation<A>>>,
@@ -56,6 +57,7 @@ impl<A: ArtifactApp> MediaTransfers<A> {
         Self {
             pending_reserved_producer_permit: ManuallyDrop::new(None),
             original_picker:None,
+            natural_source:None,
             reserved_mount:ManuallyDrop::new(None),
             reserved_mount_construction:Default::default(),
             reserved_mounted_construction:Default::default(),

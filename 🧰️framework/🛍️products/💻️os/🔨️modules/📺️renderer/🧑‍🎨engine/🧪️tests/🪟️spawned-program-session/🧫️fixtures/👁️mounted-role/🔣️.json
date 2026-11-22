@@ -1,0 +1,11 @@
+{
+  "spaceId": "fixture-space",
+  "documentId": "fixture-artifact",
+  "schema": "fixture.artifact",
+  "node": { "id": "workflow-node", "pluginId": "fixture", "appId": "fixture@1/*#editor", "instanceId": 21, "label": "Fixture", "breadcrumb": ["fixture"] },
+  "sibling": { "id": "sibling-node", "pluginId": "fixture", "appId": "fixture@1/*#editor", "instanceId": 22, "label": "Sibling", "breadcrumb": ["fixture"] },
+  "switches": [
+    { "role": "viewer", "appId": "fixture@1/*#viewer", "instanceId": 23 },
+    { "role": "editor", "appId": "fixture@1/*#editor", "instanceId": 24 }
+  ]
+}

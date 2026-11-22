@@ -119,3 +119,7 @@ Check: `VALID vehicles/electric-kick-scooter (catalog file as it is): schema 0, 
 - 1:200 and 1:500 body (B+): seven masses, no mudguards in the body (a 6 mm mudguard is a fifth of the 1:200 feature); the deck plate merges the rear stays beside the wheel. Minimal by the round-3 decision, so not changed.
 - Folded height 0.43 m against 0.49 m: the `dimensions` and hinge height were kept from round 3; the bar rests lower over the rear mudguard than on the M365.
 - No support solids: `structure.supports` is empty in the asset.
+
+## November 21 running gear and moving joints
+
+The rear wheel has five openings and two 14 × 32 × 9 mm bearing cartridges on the axle. The front wheel keeps its hub motor, separate from the rear disc brake. See the [measurements and installed revision](digital-running-gear.md).

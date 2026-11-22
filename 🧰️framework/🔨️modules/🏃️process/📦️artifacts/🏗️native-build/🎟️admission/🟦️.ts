@@ -29,10 +29,16 @@ export function admissionMemoryBytesV1(physicalBytes=totalmem(),constrainedBytes
  return constrainedBytes>0?Math.min(physicalBytes,constrainedBytes):physicalBytes;
 }
 
+/** 🛟️ The memory kept back from admission: the policy share of the effective capacity, capped by the policy maximum. */
+export function admissionReserveBytesV1(effectiveBytes:number):number{
+ if(!Number.isSafeInteger(effectiveBytes)||effectiveBytes<1)throw Error("Actual finite memory capacity required");
+ return Math.min(ADMISSION_POLICY_V1.maximumReserveBytes,Math.floor(effectiveBytes*ADMISSION_POLICY_V1.reserveBasisPoints/10000));
+}
+
 /** ⚖️ Shares effective memory after the unchanged reserve without reconstructing capacity above its real bound. */
 export function admissionMemoryShareV1(effectiveBytes:number,tokens:number,parallelism:number):number{
  if(![effectiveBytes,tokens,parallelism].every(value=>Number.isSafeInteger(value)&&value>0)||tokens>parallelism)throw Error("Actual bounded memory share required");
- return Math.min(effectiveBytes,ADMISSION_POLICY_V1.reserveBytes+Math.floor((effectiveBytes-ADMISSION_POLICY_V1.reserveBytes)*tokens/parallelism));
+ const reserve=admissionReserveBytesV1(effectiveBytes);return Math.min(effectiveBytes,reserve+Math.floor((effectiveBytes-reserve)*tokens/parallelism));
 }
 
 
@@ -252,7 +258,8 @@ export async function startAdmissionBrokerV1(options: Readonly<{ physicalBytes: 
   const now = options.now ?? Date.now, endpoint = options.endpoint ?? brokerEndpointV1(), passes = new Map<string, BrokerPassV1>();
   const waiting: Entry[] = [], running = new Set<Entry>(), completed: UnitRecordV1[] = [], nonRustc: { atMs: number; bytes: number }[] = [];
   let frozen = false, swapOutBytesPerSecond: number | null = null, arrivals = 0, lastActivityMs = now();
-  const budget = (): number => options.physicalBytes - ADMISSION_POLICY_V1.reserveBytes - Math.max(0, ...nonRustc.map((row) => row.bytes));
+  const reserve = admissionReserveBytesV1(options.physicalBytes);
+  const budget = (): number => options.physicalBytes - reserve - Math.max(0, ...nonRustc.map((row) => row.bytes));
   const verdict = (socket: Socket, admitted: boolean): void => { if (!socket.destroyed) socket.write(`{"v":1,"op":"verdict","admitted":${admitted}}\n`); };
   const charged = (): number => [...running].reduce((sum, entry) => sum + entry.chargedBytes, 0);
   const schedule = (): void => {

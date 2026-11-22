@@ -3,11 +3,13 @@ import{expect,test}from"bun:test";
 import{mkdtempSync,readFileSync,rmSync,writeFileSync}from"node:fs";
 import{tmpdir}from"node:os";
 import{join}from"node:path";
+import{pathToFileURL}from"node:url";
 import{createSlicePoolV1}from"../../🏗️composition/🌐️host/👷️slice-pool/🟨️.mjs";
 import{createProcessWorkerV1,workerCauseV1}from"../../🏗️composition/🌐️host/👷️slice-pool/🧵️process/🟨️.mjs";
 import{HOST_POLICY_V1,renderTextV1}from"../../📨️protocol/🎚️policy/🟨️.mjs";
 import{failureRefusalV1}from"../../🏛️service/🧯️failure/🟨️.mjs";
 import corpus from"./🔣️.json" with {type:"json"};
+import bootstrapCorpus from"./🚀️bootstrap.json" with {type:"json"};
 
 const elasticity=HOST_POLICY_V1.sliceHostElasticity as {maximumMegabytes:number;hostCapBasisPoints:number;minimumMegabytes:number};
 const MISSING="error: Cannot find module '/w/🏗️ifc/🦀️render.ts' from '/w/🏗️ifc/📁️generate.ts'";
@@ -89,3 +91,29 @@ for(const exit of [1,75])test(`a real worker process with exit ${exit} leaves it
   await worker.terminate();
  }finally{rmSync(directory,{recursive:true,force:true});}
 });
+
+const workerUrl=new URL("../../🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts",import.meta.url);
+
+for(const vector of bootstrapCorpus)test(vector.name,async()=>{
+ const root=mkdtempSync(join(tmpdir(),"slice-boot-")),launcher=join(root,"worker.mjs"),consumer=join(root,"consumer.mjs"),provider=join(root,"provider.mjs");
+ writeFileSync(consumer,'import "./provider.mjs";await new Promise(done=>process.send({type:"done",graph:{projects:{}}},done));process.exit(0);');
+ const replacement="import "+JSON.stringify(pathToFileURL(consumer).href)+";";
+ writeFileSync(launcher,`Bun.plugin({name:"isolated slice bootstrap",setup(builder){builder.onLoad({filter:/🏗️build[/\\\\]🕸️graph[/\\\\]🟦️\\.ts$/u},()=>({contents:${JSON.stringify(replacement)},loader:"js"}));}});await import(${JSON.stringify(workerUrl.href)});`);
+ if(vector.initialSource!==null)writeFileSync(provider,vector.initialSource);
+ let starts=0;
+ const decisions:{kind:string;cause?:string}[]=[];
+ const pool=createSlicePoolV1({workerUrl:pathToFileURL(launcher),maximum:1,hostMegabytes:16384,headroom:()=>({limitBytes:Infinity,currentBytes:0}),planLimitMegabytes:Infinity,pressure:()=>({sample:()=>({tripped:false})}),
+  restartPolicy:{backoffMilliseconds:[1],settleMilliseconds:60000,progressMilliseconds:60000,totalMaximum:4,sameCauseMaximum:3},
+  createWorker:(url,data,environment)=>{starts++;return createProcessWorkerV1(url,data,environment);}});
+ try{
+  const result=await pool.run({root},{onProgress:(_milliseconds:number,detail?:{decision?:{key:string;kind:string;cause?:string}})=>{
+   if(detail?.decision?.key!=="restarted-cause")return;
+   decisions.push(detail.decision);
+   if(vector.repairSource!==null)writeFileSync(provider,vector.repairSource);
+  }}).then(()=>({exit:null,code:null}),(error:{exit:number;code?:string})=>({exit:error.exit,code:error.code??null}));
+  expect(result).toEqual(vector.result);
+  expect(starts).toBe(vector.starts);
+  expect(decisions.map(row=>Number(row.kind))).toEqual(vector.restarts);
+  if(vector.restarts.length>0)expect(decisions[0]?.cause).toContain("provider.mjs");
+ }finally{await pool.close();rmSync(root,{recursive:true,force:true});}
+},15000);

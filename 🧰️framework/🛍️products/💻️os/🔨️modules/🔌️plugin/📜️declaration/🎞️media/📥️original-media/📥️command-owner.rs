@@ -8,11 +8,11 @@ use semio_framework_value::{
     retirement::controlled::ControlledRetirement,
 };
 
-struct PendingPage {
-    header: CommandPageCursor,
-    body: ControlledRetirement<FixedCommandPage>,
-    copied: usize,
-    complete: bool,
+pub(crate) struct PendingPage {
+    pub(crate) header: CommandPageCursor,
+    pub(crate) body: ControlledRetirement<FixedCommandPage>,
+    pub(crate) copied: usize,
+    pub(crate) complete: bool,
 }
 
 /// 🎬 Holds one original input and its guest-selected target before format admission.
@@ -38,16 +38,16 @@ impl<T, const N: usize> OriginalMediaFormatInput<T, N> {
     pub fn admits_origin(&self, current: OriginalMediaLoan<'_>) -> bool { self.origin.matches(current) }
 }
 
-fn paid(effect: &mut RetainedAllocationEffect<'_>, demand: RetirementDemand, work: u64) -> Result<bool, ValueError> {
+pub(crate) fn paid(effect: &mut RetainedAllocationEffect<'_>, demand: RetirementDemand, work: u64) -> Result<bool, ValueError> {
     Ok(retained_clone_grant_admits(effect.grant(), demand)
         && effect.remaining_work_units()? >= work && effect.performed(work)?)
 }
 
-fn moved(demand: RetirementDemand) -> RetainedCloneProgress {
+pub(crate) fn moved(demand: RetirementDemand) -> RetainedCloneProgress {
     RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }
 }
 
-fn copy_demand<T>() -> RetirementDemand {
+pub(crate) fn copy_demand<T>() -> RetirementDemand {
     RetirementDemand { copy_bytes: size_of::<T>(), depth: 1, ..Default::default() }
 }
 

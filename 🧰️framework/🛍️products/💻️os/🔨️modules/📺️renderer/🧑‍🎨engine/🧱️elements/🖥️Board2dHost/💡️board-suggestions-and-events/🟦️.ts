@@ -3,8 +3,8 @@ import { useCallback, useEffect, useMemo, useRef } from "../../⚛️react-port/
 import { type Board2dScene } from "@semio-tech/framework";
 import { createCoalescingActionDispatcher } from "../../🛠️ShellHelpers/🛑️extension-io/🟦️.ts";
 import { suggestionPopupOwnsWindow, suggestionRowsWithFocus, useSuggestionSubmenuSearch } from "../../🎣️suggestion-submenu/🟦️.ts";
-import { board2dGranularityById, board2dHoverActionArgs, board2dKindDomainById, board2dKindHoverFromElementId, board2dSuggestionMenuItems, board2dSuggestionMenuOwnsWindow, type BoardEventRow, latestBoard2dHoverId, parseBoard2dSuggestionMenu } from "../🔬️board-parsing/🟦️.ts";
-import { coalesceBoard2dEvents, collectBoardLiveMirrorMutations } from "../📡️board-events/🟦️.ts";
+import { board2dGranularityById, board2dHoverActionArgs, board2dKindDomainById, board2dKindHoverFromElementId, board2dSuggestionMenuItems, board2dSuggestionMenuOwnsWindow, type BoardCamera, type BoardEventRow, latestBoard2dHoverId, parseBoard2dSuggestionMenu } from "../🔬️board-parsing/🟦️.ts";
+import { bufferBoard2dEvents, coalesceBoard2dEvents, collectBoardLiveMirrorMutations } from "../📡️board-events/🟦️.ts";
 import { applySnapshotToSession, applyToSession, boardPeerOwnsGesture, pushBoardLiveMirrorMutations } from "../🔄️session-sync/🟦️.ts";
 import type { BoardCore1 } from "../🧰️board-session-state/🟦️.ts";
 import { type Board2dWasmSession } from "@semio-tech/framework/canvas/react-renderer";
@@ -116,14 +116,13 @@ export function useBoardSuggestionsAndEvents(core: BoardCore1) {
   //#endregion Hover
 
   //#region BoardEventFlush
-  const drainIntoBuffer = useCallback((): void => {
+  const drainIntoBuffer = useCallback((includeCamera = true): boolean => {
     const session = sessionRef.current;
-    if (!session) return;
+    if (!session) return false;
     try {
       const json = session.drainEventsJson();
-      if (!json || json === "[]") return;
+      if (!json || json === "[]") return false;
       const rows = JSON.parse(json) as BoardEventRow[];
-      pendingEventRowsRef.current.push(...rows);
       const hovered = latestBoard2dHoverId(rows);
       if (hovered !== undefined) {
         publishHoverPaint(hovered);
@@ -132,9 +131,15 @@ export function useBoardSuggestionsAndEvents(core: BoardCore1) {
       const mutations = collectBoardLiveMirrorMutations(rows);
       pushBoardLiveMirrorMutations(peerScope, node.controllerId, node.surfaceId, mutations);
       if (mutations.selectionIds) setLocalSelectionJson(JSON.stringify(mutations.selectionIds));
-      boardStatusRef.current.pendingEvents = pendingEventRowsRef.current.length;
-      publishBoardVitals();
+      const pending = pendingEventRowsRef.current;
+      const added = bufferBoard2dEvents(pending, rows, includeCamera);
+      if (pending.length !== boardStatusRef.current.pendingEvents) {
+        boardStatusRef.current.pendingEvents = pending.length;
+        publishBoardVitals();
+      }
+      return added;
     } catch {}
+    return false;
   }, [dispatchBoardHover, peerScope, node.controllerId, node.surfaceId, publishBoardVitals, publishHoverPaint]);
 
   const dispatchBufferedEvents = useCallback((): void => {
@@ -148,8 +153,7 @@ export function useBoardSuggestionsAndEvents(core: BoardCore1) {
   }, [dispatch, publishBoardVitals]);
 
   const drainAndMaybeFlush = useCallback((): void => {
-    drainIntoBuffer();
-    if (pendingEventRowsRef.current.length === 0) return;
+    if (!drainIntoBuffer()) return;
     const { flushNow } = coalesceBoard2dEvents(pendingEventRowsRef.current);
     if (flushNow) dispatchBufferedEvents();
   }, [drainIntoBuffer, dispatchBufferedEvents]);
@@ -174,12 +178,12 @@ export function useBoardSuggestionsAndEvents(core: BoardCore1) {
   );
 
   const applyPendingSnapshotIfReady = useCallback(
-    (session: Board2dWasmSession): void => {
+    (session: Board2dWasmSession, liveCamera?: BoardCamera): void => {
       const pendingScene = pendingSnapshotSceneRef.current;
       if (!pendingScene) return;
       if (session.defersDescriptorSyncFromJs?.() || cameraInteractionActiveRef.current || boardPeerOwnsGesture(peerScope, node.controllerId, node.surfaceId)) return;
       pendingSnapshotSceneRef.current = null;
-      applyToSession(session, (s) => recordSnapshotVerdict(pendingScene, applySnapshotToSession(s, pendingScene)));
+      applyToSession(session, (s) => recordSnapshotVerdict(pendingScene, applySnapshotToSession(s, pendingScene, liveCamera)));
     },
     [peerScope, node.controllerId, node.surfaceId, recordSnapshotVerdict],
   );
@@ -243,8 +247,8 @@ export function useBoardSuggestionsAndEvents(core: BoardCore1) {
       cameraInteractionActiveRef.current = false;
       cameraSettleTimeoutRef.current = null;
       const session = sessionRef.current;
-      if (session) applyPendingSnapshotIfReady(session);
       const pendingCamera = pendingCameraDispatchRef.current;
+      if (session) applyPendingSnapshotIfReady(session, pendingCamera?.camera);
       if (pendingCamera) {
         pendingCameraDispatchRef.current = null;
         dispatch("setCamera", pendingCamera);

@@ -71,6 +71,8 @@ registerIsolatedBuildTestV1(import.meta.path,"Nx native graph backing funds an i
 
 import {publishGraphTransactionV1,graphPublicationFileAllocationV1} from "../../../../../🕸️graph/📤️publication/🟦️.ts";
 import{privateRepositoryWorkspaceV1}from"../../../../../../🧪️testing/🧫️private-repository/🟦️.ts";
+import {declareLibraryBuildTestEnvelopeV1} from "../../../../../../🧪️testing/🪪️native-birth/🟦️.ts";
+declareLibraryBuildTestEnvelopeV1({suite:"storage-nx-processes"});
 registerIsolatedBuildTestV1(import.meta.path,"Nx native graph backing preserves an ALL parent and selected child within funded publication peaks",{bodyMilliseconds:100000,scope:{kind:"body"}},()=>withBuildTestInvocationV1(original=>captureNxGraphPurposeV1(original,"pressure")));
 
 test("Nx native graph backing bounds watcher metadata admission",()=>{const maximum=(schema.definitions.Policy.const as any).maximumWatchersPerNamespace;expect(maximum).toBe(64);const db=new(require("bun:sqlite").Database)(":memory:");try{db.run("CREATE TABLE watchers(identity TEXT PRIMARY KEY)");for(let i=0;i<maximum;i++)db.run("INSERT INTO watchers VALUES(?)",[i.toString(16).padStart(24,"0")]);const current=db.query("SELECT count(*) AS total FROM watchers").get() as {total:number};expect(current.total).toBe(maximum);expect((db.query("SELECT EXISTS(SELECT 1 FROM watchers WHERE identity=?) AS known").get("0".repeat(24)) as {known:number}).known).toBe(1);expect(maximum*(4096*2+8192)).toBeLessThan(schema.definitions.Policy.const.namespaceMetadataBytes);}finally{db.close();}});

@@ -92,7 +92,18 @@ pub fn expand(input:&DeriveInput)->syn::Result<proc_macro2::TokenStream>{
 
  let length_get=if tuple{quote!(input.get().sequence_len()?)}else{quote!(input.get().record_len()?)};
  let scan_plan=if tuple{quote!(Ok((#tree::fixed(::std::mem::size_of::<Option<usize>>()+::std::mem::size_of::<usize>()),2,2)))}else{quote!{if let Some(matcher)=self.matcher.as_ref(){if self.stage==1{if matcher.terminal_is_empty(){Ok((#tree::fixed(::std::mem::size_of::<Option<#owner::NativeRecordMatcher<I>>>()+::std::mem::size_of::<usize>()+::std::mem::size_of::<u8>()),3,6))}else{Ok((matcher.close_demands(body)?,matcher.close_work_demand(body)?,5))}}else if matcher.result().is_some(){let mut d=matcher.begin_close_demand();let field=matches!(matcher.result(),Some(#owner::NativeFieldMatch::Field(_)));d.copy_bytes=d.copy_bytes.checked_add(if field{::std::mem::size_of::<Option<usize>>()+::std::mem::size_of::<u8>()}else{::std::mem::size_of::<u8>()}).ok_or_else(#tree::invalid)?;Ok((d,#tree::work_sum(matcher.begin_close_work_demand(),if field{2}else{1})?,4))}else{match matcher.select_advance(input,body,maximum)?{#owner::NativeAdvanceSelection::Nested=>Ok((matcher.demands(input,body,maximum)?,matcher.nested_work_demand(input)?,3)),#owner::NativeAdvanceSelection::Local{work}=>Ok((matcher.demands(input,body,maximum)?,work,22))}}}else{Ok((#tree::fixed(::std::mem::size_of::<Option<#owner::NativeRecordMatcher<I>>>()),1,2))}}};
- let scan_apply=if tuple{quote!(self.positions[self.scan]=Some(self.scan);self.scan+=1;work=2;)}else{quote!(self.matcher=Some(#owner::NativeRecordMatcher::new(<#name as #owner::NativeRecordFields>::native_schema_fields(),<#name as #owner::NativeRecordFields>::native_schema_count(),#owner::NativeSchemaKeySource::Record(self.scan)));work=1;)};
+ let scan_apply=if tuple{
+  quote!(self.positions[self.scan]=Some(self.scan);self.scan+=1;work=2;)
+ }else if flattened.iter().any(|flat|*flat){
+  quote!(self.matcher=Some(#owner::NativeRecordMatcher::new(<#name as #owner::NativeRecordFields>::native_schema_fields(),<#name as #owner::NativeRecordFields>::native_schema_count(),#owner::NativeSchemaKeySource::Record(self.scan)));work=1;)
+ }else{
+  let leaves=wires.iter().enumerate().map(|(index,name)|{let ordinal=index as u32;quote!(#owner::NativeSchemaLeaf{name:#name,ordinal:#ordinal})});
+  quote!{
+   const LEAVES:&[#owner::NativeSchemaLeaf]=&[#(#leaves),*];
+   self.matcher=Some(#owner::NativeRecordMatcher::new_flat(LEAVES,#owner::NativeSchemaKeySource::Record(self.scan)));
+   work=1;
+  }
+ };
  Ok(quote!{
  #vis struct #receiver<I:#tree::NativeValueSource+?Sized>where #(#bounds,)*{state:#state<I>,effect:#native::native_decoding::NativeReceivingEffect,retirement_effect:#native::native_decoding::NativeReceivingEffect<#value::OriginalRetirementFailure>}
  struct #state<I:#tree::NativeValueSource+?Sized>where #(#bounds,)*{binding:Option<#value::retained_clone::RetainedCloneBinding>,positions:[Option<usize>;#count],#(#slots:#tree::NativeReceiveSlot<dyn #tree::NativeValueSource,#types>,#pending: ::std::mem::ManuallyDrop<Option<#types>>,)*#(#default_fields,)*partial:#owner::NativeRecordStorage<#name>,output: ::std::mem::ManuallyDrop<Option<#name>>,source: ::std::mem::ManuallyDrop<Option<#value::retained_clone::RetainedOwnedProjection<dyn #tree::NativeValueSource>>>,initialized:[bool;#count],matcher:Option<#owner::NativeRecordMatcher<I>>,projection:#value::retained_clone::RetainedOwnedProjectionAdmission<dyn #tree::NativeValueSource>,retirement:#value::retained_clone::RetainedCloneClose,total:Option<usize>,scan:usize,field:usize,close_field:usize,phase:u8,stage:u8,closing:bool,subset:bool}

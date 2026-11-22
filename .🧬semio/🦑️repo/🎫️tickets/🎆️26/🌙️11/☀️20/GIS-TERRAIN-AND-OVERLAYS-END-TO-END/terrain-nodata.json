@@ -1,0 +1,269 @@
+{
+  "cases": [
+    {
+      "name": "mixed-extrema-and-holes",
+      "gdal": true,
+      "asciiGrid": "NCOLS 4\nNROWS 3\nXLLCENTER 5\nYLLCENTER 50\nCELLSIZE 0.125\nNODATA_VALUE -1.25e-1\n1 2 -0.1250 4\n-9999 20 30 40\n-2147483.648 -125e-3 0 2147483.647\n",
+      "source": {
+        "bounds": [
+          5,
+          50,
+          5.375,
+          50.25
+        ],
+        "rowsMillimetres": [
+          [
+            -2147483648,
+            0,
+            0,
+            2147483647
+          ],
+          [
+            -9999000,
+            20000,
+            30000,
+            40000
+          ],
+          [
+            1000,
+            2000,
+            0,
+            4000
+          ]
+        ],
+        "missingSamples": "0204"
+      },
+      "facesNorthFirst": [
+        [
+          0,
+          4,
+          1
+        ],
+        [
+          1,
+          4,
+          5
+        ],
+        [
+          3,
+          6,
+          7
+        ],
+        [
+          4,
+          8,
+          5
+        ],
+        [
+          6,
+          10,
+          7
+        ],
+        [
+          7,
+          10,
+          11
+        ]
+      ],
+      "surfaceQueriesNorthFirst": [
+        {
+          "xy": [
+            0.25,
+            0.25
+          ],
+          "millimetres": -2498750
+        },
+        {
+          "xy": [
+            1,
+            0.5
+          ],
+          "millimetres": 11000
+        },
+        {
+          "xy": [
+            1.5,
+            0.5
+          ],
+          "millimetres": null
+        },
+        {
+          "xy": [
+            2.25,
+            0.75
+          ],
+          "millimetres": 23500
+        },
+        {
+          "xy": [
+            2,
+            1
+          ],
+          "millimetres": 30000
+        },
+        {
+          "xy": [
+            2,
+            2
+          ],
+          "millimetres": 0
+        }
+      ],
+      "horizontalDrapeNorthFirst": [
+        {
+          "y": 0.75,
+          "intervals": [
+            [
+              0,
+              1
+            ],
+            [
+              2.25,
+              3
+            ]
+          ]
+        },
+        {
+          "y": 1,
+          "intervals": [
+            [
+              0,
+              1
+            ],
+            [
+              2,
+              3
+            ]
+          ]
+        },
+        {
+          "y": 2,
+          "intervals": [
+            [
+              2,
+              3
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "omitted-nodata-header",
+      "asciiGrid": "NCOLS 2\nNROWS 2\nXLLCORNER 5\nYLLCORNER 50\nCELLSIZE 0.125\n-9999 0\n-9.999e3 1\n",
+      "source": {
+        "bounds": [
+          5.0625,
+          50.0625,
+          5.1875,
+          50.1875
+        ],
+        "rowsMillimetres": [
+          [
+            0,
+            1000
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "missingSamples": "05"
+      },
+      "facesNorthFirst": []
+    },
+    {
+      "name": "float64-nodata-alias",
+      "asciiGrid": "NCOLS 2\nNROWS 2\nXLLCENTER 5\nYLLCENTER 50\nCELLSIZE 0.125\nNODATA_VALUE 1.00000000000000001\n1 1.000000000000000010\n1.0 -0\n",
+      "source": {
+        "bounds": [
+          5,
+          50,
+          5.125,
+          50.125
+        ],
+        "rowsMillimetres": [
+          [
+            1000,
+            0
+          ],
+          [
+            1000,
+            0
+          ]
+        ],
+        "missingSamples": "08"
+      },
+      "facesNorthFirst": []
+    },
+    {
+      "name": "all-nodata",
+      "gdal": true,
+      "asciiGrid": "NCOLS 2\nNROWS 2\nXLLCENTER 5\nYLLCENTER 50\nCELLSIZE 0.125\nNODATA_VALUE -7\n-7 -7\n-7 -7\n",
+      "source": {
+        "bounds": [
+          5,
+          50,
+          5.125,
+          50.125
+        ],
+        "rowsMillimetres": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "missingSamples": "0f"
+      },
+      "facesNorthFirst": []
+    },
+    {
+      "name": "dense-valid-extrema",
+      "gdal": true,
+      "asciiGrid": "NCOLS 2\nNROWS 2\nXLLCENTER 5\nYLLCENTER 50\nCELLSIZE 0.125\nNODATA_VALUE -9999999\n-2147483.648 2147483.647\n-9999 0\n",
+      "source": {
+        "bounds": [
+          5,
+          50,
+          5.125,
+          50.125
+        ],
+        "rowsMillimetres": [
+          [
+            -9999000,
+            0
+          ],
+          [
+            -2147483648,
+            2147483647
+          ]
+        ]
+      },
+      "facesNorthFirst": [
+        [
+          0,
+          2,
+          1
+        ],
+        [
+          1,
+          2,
+          3
+        ]
+      ]
+    }
+  ],
+  "invalidMasks": [
+    "",
+    "00",
+    "0200",
+    "0F",
+    "10",
+    "ff",
+    "zz"
+  ],
+  "exportNoDataMetres": -9999999
+}

@@ -24,6 +24,7 @@ export type CasGuardV1=Readonly<{
  admit(incomingBytes:number,signal?:AbortSignal):Promise<CasEnforcementDecisionV1>;
  admitSync(incomingBytes:number):CasEnforcementDecisionV1;
  account(bytes:number):void;
+ remeasure(signal?:AbortSignal):Promise<void>;
  relieve(error:unknown):void;
  enforce(signal?:AbortSignal):Promise<CasCollectionV1|undefined>;
 }>;
@@ -52,6 +53,14 @@ async function automaticScopeV1(root:string,policy:CasPolicyV1,partition:CasPart
  }
  return digest.digest("hex");
 }
+
+/** ⏳️ Lets a writer stop waiting when its own signal fires while the shared collection it waited for goes on: a collection of a large store takes longer than one write may wait, and a scan cancelled by every timed-out write would never finish. */
+const within=<T>(task:Promise<T>,signal?:AbortSignal):Promise<T>=>signal===undefined?task:new Promise<T>((accept,reject)=>{
+ if(signal.aborted){reject(signal.reason);return;}
+ const stop=()=>reject(signal.reason);
+ signal.addEventListener("abort",stop,{once:true});
+ task.then(value=>{signal.removeEventListener("abort",stop);accept(value);},error=>{signal.removeEventListener("abort",stop);reject(error);});
+});
 
 /** 🚦️ Guards writes and shares one running collection per store root. Only completed scans of the relevant scope give cooldown credit. A critical write waits for relief or receives the low-space refusal. High watermarks start background work. @see ../🌡️partition/🟦️.ts */
 export function createCasGuardV1(options:Readonly<{root:string;policy?:CasPolicyV1}&CasGuardPortsV1>):CasGuardV1{
@@ -122,13 +131,13 @@ export function createCasGuardV1(options:Readonly<{root:string;policy?:CasPolicy
   return bytes();
  };
  const decide=(storeBytesNow:number|undefined,incomingBytes:number)=>{
-  const partition=measure(root),effective=casPartitionPolicyForV1(policy,partition);
+  const partition=measure(root),effective=casPartitionPolicyForV1(policy,partition,storeBytesNow);
   return{partition,effective,decision:decideCasEnforcementV1({policy:effective,storeBytes:storeBytesNow,incomingBytes,partition,collected:false})};
  };
  const usableCompletion=(quote:ReturnType<typeof decide>,hint:CasUsageHintV1|undefined,at=now()):hint is CasUsageHintV1&{automaticScope:string}=>{
   if(!hint?.automaticScope||!fresh(hint.atMs,at))return false;
   switch(quote.decision.reason){
-   case "cap-exceeded":return hint.bytes>policy.capBytes;
+   case "cap-exceeded":return hint.bytes>quote.effective.capBytes;
    case "cap-high":return true;
    case "partition-high":return casPartitionNeedBytesV1(quote.partition,quote.effective)>0;
    case "partition-critical":return state.critical?.atMs===hint.atMs&&state.critical.automaticScope===hint.automaticScope;
@@ -147,7 +156,7 @@ export function createCasGuardV1(options:Readonly<{root:string;policy?:CasPolicy
   const covered=match&&state.hint===hint&&usableCompletion(quote,hint)&&current.decision.reason===quote.decision.reason&&JSON.stringify(partitionScopeV1(current.effective,current.partition))===partitionKey;
   return {quote:current,covered};
  };
- const refuse=(partition:CasPartitionV1|undefined):never=>{throw refuseLowSpaceV1({partition:partition?.partition??root,freeBytes:partition?.freeBytes??0,totalBytes:partition?.totalBytes??1,limitFraction:casPartitionPolicyForV1(policy,partition).partition.criticalUsedFraction});};
+ const refuse=(partition:CasPartitionV1|undefined):never=>{throw refuseLowSpaceV1({partition:partition?.partition??root,freeBytes:partition?.freeBytes??0,totalBytes:partition?.totalBytes??1,limitFraction:casPartitionPolicyForV1(policy,partition,undefined).partition.criticalUsedFraction});};
  const afterCollection=(quote:ReturnType<typeof decide>,incomingBytes:number)=>decideCasEnforcementV1({
   policy:quote.effective,storeBytes:bytes(),incomingBytes,partition:quote.partition,collected:true
  });
@@ -172,13 +181,14 @@ export function createCasGuardV1(options:Readonly<{root:string;policy?:CasPolicy
      }
      if(critical)triedCritical=true;else triedCap=true;
      if(partition&&running===undefined)options.report?.({partition:partition.partition,usedFraction:casPartitionUsedFractionV1(partition,incomingBytes)});
-     await run(quote,signal).task;continue;
+     await within(run(quote).task,signal);continue;
     }
     if(decision.action==="collect-background"){
      if(triedCap||triedCritical||locallyCovered(quote))return afterCollection(quote,incomingBytes);
+     if(decision.reason==="cap-exceeded"&&usableCompletion(quote,state.hint)){const checked=await verifyCompletion(quote,incomingBytes,signal);if(checked.covered)return afterCollection(checked.quote,incomingBytes);if(checked.quote.decision.reason!=="cap-exceeded"){quote=checked.quote;continue;}}
      if(!usableCompletion(quote,state.hint))void run(quote);
      else state.background??=verifyCompletion(quote,incomingBytes).then(async next=>{
-      if(!next.covered&&!signal?.aborted&&(next.quote.decision.action==="collect-now"||next.quote.decision.action==="collect-background"))await run(next.quote,signal).task;
+      if(!next.covered&&!signal?.aborted&&(next.quote.decision.action==="collect-now"||next.quote.decision.action==="collect-background"))await run(next.quote).task;
      }).finally(()=>{state.background=undefined;});
     }
     if(decision.action==="measure")measureStore();
@@ -202,16 +212,17 @@ export function createCasGuardV1(options:Readonly<{root:string;policy?:CasPolicy
   },
   async settle(){await state.criticalBackground;await state.background;await state.direct?.task;await state.running?.task;await state.measuring;},
   account(bytes){state.admitted+=bytes;},
+  async remeasure(signal){const measured=await usage(root);signal?.throwIfAborted();state.base=measured;state.admitted=0;state.hintAt=now();state.checkedAt=now();},
   relieve(error){if(isDiskFullV1(error))void direct();},
   enforce:direct,
  };
  return Object.freeze(guard);
 }
 
-/** ⏱️ One tick of the service that keeps the host store inside its cap and its partition inside its watermarks: it judges like a write of no bytes, so it collects (down to the low watermarks) only when the partition or the store is above its high watermark, measures a store without a usage hint, waits for what it started and honours the cancellation of the service. A partition that stays at its critical share after the collection raises the typed low-space refusal, which the service logs. */
+/** ⏱️ One tick of the service that keeps the host store inside its cap and its partition inside its watermarks: it first measures the store itself, because the usage hint of a collection misses what other processes wrote meanwhile, then judges like a write of no bytes, so it collects (down to the low watermarks) only when the partition or the store is above its high watermark, measures a store without a usage hint, waits for what it started and honours the cancellation of the service. A partition that stays at its critical share after the collection raises the typed low-space refusal, which the service logs. */
 export async function casEnforceTickV1(options:Readonly<{root:string;policy?:CasPolicyV1;signal?:AbortSignal}&CasGuardPortsV1>):Promise<void>{
  const guard=createCasGuardV1(options);
- await guard.admit(0,options.signal);await guard.settle();
+ await guard.remeasure(options.signal);await guard.admit(0,options.signal);await guard.settle();
 }
 
 /** 🧪️ Forgets the shared state of every root; for tests that open many roots in one process. */

@@ -1,4 +1,4 @@
-use crate::editor::puzzle5d::entities::{puzzle5d_grip_full_id, world_grip_position, Puzzle5dDocument};
+use crate::editor::puzzle5d::entities::{concrete_forest_example_document, find_part_by_grip_full_id, nakagin_example_document, puzzle5d_grip_full_id, world_grip_position, Puzzle5dDocument, PUZZLE5D_PROXIMITY_RADIUS};
 #[allow(unused_imports)]
 use crate::editor::puzzle5d::precompute::geometry::distance_squared;
 #[allow(unused_imports)]

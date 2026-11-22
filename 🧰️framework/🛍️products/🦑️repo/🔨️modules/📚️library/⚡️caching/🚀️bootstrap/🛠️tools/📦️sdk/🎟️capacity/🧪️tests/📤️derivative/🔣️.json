@@ -84,8 +84,6 @@
     "paths": [
       "package.json",
       "bun.lock",
-      ".semio-authorizer-source.json",
-      ".semio-authorizer-compiler.json",
       ".semio-sdk-material.json",
       "patches/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.patch"
     ],
@@ -97,6 +95,8 @@
       "patches\\aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.patch",
       "patches/deep/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.patch",
       "patches/A.patch",
+      ".semio-authorizer-source.json",
+      ".semio-authorizer-compiler.json",
       ".semio-nx-tooling.json",
       "node_modules/nx/package.json"
     ],

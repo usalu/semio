@@ -24,7 +24,7 @@ use semio_plugin::app::{ArtifactOwnedToolJobContext, InteractionHoverState};
 use semio_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
 use semio_plugin::{ArtifactInstanceOperationOwner, ArtifactInstanceOperationOwnerHandle, HistoryView, PluginLifecycleStep};
 use semio_ui_locale::app_labels;
-use semio_plugin::create_default_layout;
+use semio_plugin::{create_default_layout, Axis};
 
 use semio_plugin::world3d_default_camera;
 use semio_plugin::world3d_scene;
@@ -537,11 +537,9 @@ async fn create_module_app() -> Result<App, PluginAssemblyError> {
             .window_kind("playbook-module-authored-procedural-params", LocalizedLabel::native("Procedural Inputs", "Prozedurale Eingaben"), BODY_PROCEDURAL_PARAMS, SurfaceKind::NodeGraph, "sliders-horizontal").await
             .window_kind("playbook-module-authored-procedural-preview", LocalizedLabel::native("Procedural Preview", "Prozedurale Vorschau"), BODY_PROCEDURAL_PREVIEW, SurfaceKind::World3d, "box").await
             .default_layout(create_default_layout(
-                &[MODULE_WINDOW_PARAMS.into(), MODULE_WINDOW_PREVIEW.into()],
-                "row",
-                Some(&[50.0, 50.0]),
-                Some(&["Params".into(), "Preview".into()]),
-            )).await
+                &[MODULE_WINDOW_PARAMS.into(), MODULE_WINDOW_PREVIEW.into()], Axis::Horizontal,
+                Some(&[0.5, 0.5]),
+                Some(&["Params".into(), "Preview".into()]))).await
             .view_action(ACTION_EVALUATE_FLOW, LocalizedLabel::native("Run Flow", "Flow ausführen")).await
             .action_args(ACTION_EVALUATE_FLOW, vec![ActionArgDef::text_list("payloadJsonChunks", LocalizedLabel::native("Question Input", "Frageeingabe")), ActionArgDef::text("bodyKey", LocalizedLabel::native("Preview", "Vorschau"))]).await
             .action_interactive_job(ACTION_EVALUATE_FLOW, InteractiveJobClassification::Migrated).await

@@ -4,12 +4,13 @@ import {readRemoteCachePolicyV1} from "../../🌐️remote-cache/🟦️.ts";
 import {remoteCacheLanguagesV1,type RemoteCacheLanguageV1} from "../../🌐️remote-cache/⌨️command/🟦️.ts";
 import {RemoteCacheDirectoryBusyV1,startRemoteCacheServerV1,type RemoteCacheServerV1} from "../../🌐️remote-cache/🖥️server/🟦️.ts";
 import {connectGrpcV1} from "../📡️wire/🚪️grpc/🟦️.ts";
+import {remoteCacheFetchV1} from "../../🌐️remote-cache/🛰️fleet/🟦️.ts";
 import {fleetHeadersV1} from "../../🌐️remote-cache/🛰️fleet/🪪️identity/🟦️.ts";
+import {resolveRemoteExecutionEndpointV1,resolveRemoteExecutionSchedulerV1} from "../🧭️endpoint/🟦️.ts";
 import {httpRemoteExecutionContentV1} from "../🗄️content/🟦️.ts";
 import {startRemoteExecutionServerV1} from "../🖥️server/🟦️.ts";
 import {runRemoteExecutionAgentV1} from "../🛰️agent/🟦️.ts";
 import {detectWorkerRustcV1} from "../🚀️offload/🧰️toolchain/🟦️.ts";
-import {remoteExecutionActionPlatformWhyV1} from "../🌡️load/🔎️why/🟦️.ts";
 import type {RemoteExecutionActionPolicyV1} from "../🧱️actions/🟦️.ts";
 import texts from "../📖️texts/🔣️.json" with {type:"json"};
 import {readRemoteExecutionPolicyV1,remoteExecutionPropertiesV1,requireRemoteExecutionShapeV1,type RemoteExecutionPropertyV1,type RemoteExecutionSandboxV1} from "../🟦️.ts";
@@ -162,9 +163,8 @@ export async function runRemoteExecutionWorkersV1(args:readonly string[],context
  await context.progress("remote-execution:worker");
  say("workers.start",{name,url:scheduler,concurrency,platform:remoteExecutionPlatformIdV1()});
  const label=(event:{stage:string;detail:string}):void=>{say(`workers.${event.stage}`,event.stage==="sandbox"?{sandbox:event.detail}:{detail:event.detail});};
- const actions=(optional(context.environment,"SEMIO_REMOTE_EXECUTION_WORKER_ACTIONS")??policy.worker.actions) as RemoteExecutionActionPolicyV1,why=remoteExecutionActionPlatformWhyV1(actions);
- const rustc=why===undefined?detectWorkerRustcV1(context.root,context.environment):undefined;
- if(why)for(const language of languages)context.write(why[language]);
+ const actions=(optional(context.environment,"SEMIO_REMOTE_EXECUTION_WORKER_ACTIONS")??policy.worker.actions) as RemoteExecutionActionPolicyV1;
+ const rustc=detectWorkerRustcV1(context.root,context.environment);
  await runRemoteExecutionAgentV1({
   root:context.root,environment:context.environment,scheduler,token:optional(context.environment,names.workerToken),cacheToken:optional(context.environment,cachePolicy.defaults.tokenEnvironment),name,...flags["--origin"]?{origin:flags["--origin"]}:{},concurrency,
   directory:where(context.root,flags["--work-directory"]??policy.worker.directory),sandbox:sandboxOf(flags["--sandbox"],policy.worker.sandbox),materialize:policy.worker.materialize as "clone"|"copy",maximumBlobBytes:policy.worker.maximumBlobBytes,inlineOutputBytes:policy.worker.inlineOutputBytes,
@@ -180,12 +180,13 @@ export async function runRemoteExecutionWorkersV1(args:readonly string[],context
 /** 📋️ Prints the client contract, whether the gRPC endpoint answers the protocol's capabilities call, and what the scheduler reports about itself (workers, queues, counters); secrets never appear. */
 export async function remoteExecutionStatusV1(args:readonly string[],context:RemoteExecutionCommandContextV1):Promise<unknown>{
  const parsed=parseRemoteExecutionArgumentsV1(["status",...args]),policy=readRemoteExecutionPolicyV1(),cachePolicy=readRemoteCachePolicyV1(),names=policy.environment,environment=context.environment;
- const endpoint=optional(environment,names.endpoint),derived=endpoint===undefined?null:(()=>{try{const url=new URL(endpoint.replace(/^grpc(s?):/u,"http$1:"));return `${url.protocol}//${url.hostname.includes(":")?`[${url.hostname}]`:url.hostname}:${policy.server.workerPort}`;}catch{return null;}})(),scheduler=parsed.values["--join"]??optional(environment,names.scheduler)??derived;
+ const found=resolveRemoteExecutionEndpointV1({environment,root:context.root}),endpoint=found?.endpoint,named=parsed.values["--join"]??optional(environment,names.scheduler),derived=named!==undefined||endpoint===undefined?undefined:await resolveRemoteExecutionSchedulerV1({environment,root:context.root},endpoint);
+ const scheduler=named??derived?.url??null,schedulerFrom=parsed.values["--join"]!==undefined?"argument" as const:named!==undefined?"environment" as const:"derived" as const;
  const token=optional(environment,cachePolicy.server.tokenEnvironment.write)??optional(environment,cachePolicy.server.tokenEnvironment.read)??optional(environment,cachePolicy.defaults.tokenEnvironment),workerToken=optional(environment,names.workerToken);
  await context.progress("remote-execution:probe");
  const contract=endpoint===undefined?null:{endpoint,platform:optional(environment,names.platform)??remoteExecutionPlatformIdV1(),instance:optional(environment,names.instance)??policy.server.defaultInstance,properties:remoteExecutionPropertiesV1(optional(environment,names.properties)),jobs:Number(optional(environment,names.jobs)??128)};
  let grpc=null;
- if(endpoint!==undefined&&/^grpcs?:\/\//u.test(endpoint)){
+ if(endpoint!==undefined&&/^(grpcs?|https?):\/\//u.test(endpoint)){
   const started=performance.now(),client=connectGrpcV1(endpoint,{sign:(method,content)=>token?{}:fleetHeadersV1(context.root,"submit","execution","POST",`http://x/${method}`,content)});
   try{
    const caps=await client.unary("build.bazel.remote.execution.v2.Capabilities/GetCapabilities",{},{metadata:token?{authorization:`Bearer ${token}`}:{},timeoutMilliseconds:5000,signal:context.signal});
@@ -199,11 +200,11 @@ export async function remoteExecutionStatusV1(args:readonly string[],context:Rem
  let server=null;
  if(scheduler!==null){
   try{
-   const response=await fetch(scheduler.replace(/\/+$/u,"")+"/status",{signal:AbortSignal.any([context.signal,AbortSignal.timeout(5000)]),headers:workerToken?{authorization:`Bearer ${workerToken}`}:token?{authorization:`Bearer ${token}`}:{}});
+   const response=await remoteCacheFetchV1({...environment,SEMIO_WORKSPACE_ROOT:context.root},{root:context.root,audience:"execution",roleOf:()=>"submit"})(scheduler.replace(/\/+$/u,"")+"/status",{signal:AbortSignal.any([context.signal,AbortSignal.timeout(5000)]),headers:workerToken?{authorization:`Bearer ${workerToken}`}:token?{authorization:`Bearer ${token}`}:{}});
    if(response.ok){server=await response.json();requireRemoteExecutionShapeV1("ServerStatus",server,"Closed remote execution server status required");}else await response.body?.cancel();
   }catch(error){if(context.signal.aborted)throw error;server=null;}
  }
- const status={version:1,configured:endpoint!==undefined,contract,scheduler,grpc,server,token:token===undefined&&workerToken===undefined?null:{environment:names.workerToken,present:workerToken!==undefined}};
+ const status={version:1,configured:endpoint!==undefined,contract,scheduler,grpc,server,token:token===undefined&&workerToken===undefined?null:{environment:names.workerToken,present:workerToken!==undefined},resolution:found===undefined?null:{endpointFrom:found.endpointFrom,schedulerFrom,factsGeneration:found.factsGeneration}};
  requireRemoteExecutionShapeV1("Status",status,"Closed remote execution status required");
  return status;
 }

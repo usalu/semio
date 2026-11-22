@@ -105,7 +105,7 @@ pub mod app {
     #[cfg(any(test, feature = "artifact-app-testing"))]
     #[doc(hidden)]
     pub mod history_edit_acceptance {
-        pub use semio_plugin_testing_acceptance::{__EditorApp, acceptance_changes, assert_latest_history_preview, assert_mounted_history_overwrite, block_on_acceptance};
+        pub use semio_plugin_testing_acceptance::{__EditorApp, acceptance_changes, block_on_acceptance};
     }
     pub use semio_plugin_decl_emission::{OriginalHostConfigurationDeclaration,OriginalHostConfigurationProjection,OriginalContributionProjection};
     pub use semio_plugin_decl_surface::{OriginalArtifactEditorBirth,OriginalArtifactViewerBirth};
@@ -574,9 +574,9 @@ pub use world3d_host::{
 /// 📐️ The renderer-neutral window, engagement, measure, context-menu and panel-tab vocabulary plugins name through this
 /// crate, re-exported from its owner `semio-ui-layout`.
 pub use semio_ui_layout::layout::{
-    create_default_layout, create_named_layout, create_stack_layout, create_tab_stack_layout, create_window_layout, ActionDescriptor, ContextMenuHit, ContextMenuItemSpec, ContextMenuRequest, ContextMenuSelectionGroup,
+    collect_window_kind_ids, create_default_layout, create_named_layout, create_stack_layout, create_window_layout, ActionDescriptor, ContextMenuHit, ContextMenuItemSpec, ContextMenuRequest, ContextMenuSelectionGroup,
     ContextMenuSurfaceTarget, ContextMenuTextContext, MeasureSelectItem, NamedLayout, UiMenuRef, WindowEngagement, WindowEngagementControl, WindowEngagementInput, WindowEngagementOption, WindowEngagementPossible,
-    WindowEngagementSlot, WindowEngagementStatus, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode, WindowMeasure, WindowOptions,
+    WindowEngagementSlot, WindowEngagementStatus, Axis, WindowLayout, WindowLayoutNode, WindowMeasure, WindowOptions,
     FRAMEWORK_HISTORY_BODY_KEY, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, FRAMEWORK_PANEL_TAB_PARAMETERS_LABEL,
 };
@@ -824,3 +824,5 @@ pub mod structured_media_export;
 pub use semio_plugin_decl_media::original_media;
 
 pub use semio_framework_tool_run_presentation::ToolRunView as OriginalToolRunView;
+
+pub use semio_plugin_decl_media::original_media::natural_source::NaturalFilePagedSource;

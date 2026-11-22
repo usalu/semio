@@ -168,7 +168,8 @@ test("when every mixed look withdraws, a subsequent batch can still finish",asyn
 test("the actual check runs the names of a batch under one storage consumer with its guards",()=>{
  const source=readFileSync(new URL("../../📥️reuse/🟨️.mjs",import.meta.url),"utf8"),tree=ts.createSourceFile("reuse.mjs",source,ts.ScriptTarget.Latest,true),functions=new Map(tree.statements.filter(ts.isFunctionDeclaration).map(row=>[row.name?.text,row.body?.getText(tree)??""]));
  const check=functions.get("missingInventoryNamesV1")??"",entry=functions.get("inferenceInventoryReferencesHoldV1")??"";
- expect(check.indexOf("withRepositoryBuildGraphConsumerV1(")).toBeLessThan(check.indexOf("inventoryRecordStillHoldsV1("));
+ expect(check).toContain("held!==undefined?await body(held.store,held.actual):await withRepositoryBuildGraphConsumerV1(");expect(check.indexOf("const body=")).toBeLessThan(check.indexOf("inventoryRecordStillHoldsV1("));
+ const session=functions.get("presenceSessionV1")??"";expect(session).toContain("withRepositoryBuildGraphConsumerV1(");expect(session).toContain("state.held=Object.freeze({store,actual})");
  expect(check).toContain("await store.recheck()");expect(check).toContain("Inference inventory leaf changed before delivery");
  expect(check.lastIndexOf("requireCurrentInferenceInventoryReuseV1()")).toBeGreaterThan(check.indexOf("Inference inventory leaf changed before delivery"));
  expect(entry).toContain("requireIssuedResourceControlV1(control)");expect(entry).toContain("presenceCoalescerV1(root,control).ask(names,observationRoundV1(),withdraw)");expect(entry).not.toContain("withRepositoryBuildGraphConsumerV1(");
@@ -211,4 +212,48 @@ test("inventory body timings retain an in-flight operation and settle only its e
  const settled=meter.bodyOperations();
  expect(validate(settled)).toBe(true);
  expect(settled).toEqual({storeRecheck:{started:1,active:0,milliseconds:50},continuation:{started:1,active:0,milliseconds:35}});
+});
+
+test("batches that follow each other run inside one session, a quiet linger ends it, a failing session refuses the waiting callers",async()=>{
+ let sessions=0,inside=0,batches=0;
+ const coalescer=createPresenceCoalescerV1({lingerMilliseconds:40,maximumSessionMilliseconds:10000,session:async work=>{sessions++;inside++;try{return await work();}finally{inside--;}},run:async names=>{expect(inside).toBe(1);batches++;await new Promise(done=>setTimeout(done,2));return new Set();}});
+ for(let wave=0;wave<5;wave++){expect(await coalescer.ask([pool[wave]!],{})).toBe(true);await new Promise(done=>setTimeout(done,5));}
+ expect(sessions).toBe(1);expect(batches).toBe(5);
+ await new Promise(done=>setTimeout(done,120));
+ expect(await coalescer.ask([pool[9]!],{})).toBe(true);expect(sessions).toBe(2);
+ const failing=createPresenceCoalescerV1({session:async()=>{throw Error("custody refused");},run:async()=>new Set()});
+ const rows=await Promise.allSettled([failing.ask([pool[1]!],{}),failing.ask([pool[2]!],{})]);
+ expect(rows.map(row=>row.status)).toEqual(["rejected","rejected"]);
+ expect((rows[0] as PromiseRejectedResult).reason.message).toBe("custody refused");
+});
+
+test("a session ends at its maximum even while asks keep coming",async()=>{
+ let sessions=0,clock=0;
+ const coalescer=createPresenceCoalescerV1({lingerMilliseconds:20,maximumSessionMilliseconds:100,now:()=>clock,linger:async()=>{clock+=60;},session:async work=>{sessions++;return work();},run:async()=>{clock+=10;return new Set();}});
+ const asks=[];for(let at=0;at<4;at++){asks.push(coalescer.ask([pool[at]!],{}));}
+ await Promise.all(asks);
+ expect(sessions).toBe(1);
+ await Promise.all([coalescer.ask([pool[20]!],{})]);
+ expect(sessions).toBe(2);
+});
+
+test("a session that costs more to open than its maximum lasts a multiple of its measured overhead, so a take pass stops paying the open cost every 20 s",async()=>{
+ const simulate=async(factor:number)=>{
+  let sessions=0,clock=0;
+  const coalescer=createPresenceCoalescerV1({maximumNames:1,lingerMilliseconds:20,maximumSessionMilliseconds:20000,sessionOverheadFactor:factor,sessionCeilingMilliseconds:120000,now:()=>clock,linger:async()=>{},session:async work=>{sessions++;clock+=6000;try{return await work();}finally{clock+=10000;}},run:async()=>{clock+=1000;return new Set();}});
+  const names=Array.from({length:100},(_,at)=>pool[at]!);
+  for(const name of names)expect(await coalescer.ask([name],{})).toBe(true);
+  return{sessions,milliseconds:clock};
+ };
+ const before=await simulate(0),after=await simulate(4);
+ console.log("[bench] presence sessions for 100 batches at 16 s open+close, 1 s per batch: before "+JSON.stringify(before)+" after "+JSON.stringify(after));
+ expect(before.sessions).toBeGreaterThanOrEqual(5);
+ expect(after.sessions).toBeLessThanOrEqual(3);
+ expect(after.milliseconds).toBeLessThan(before.milliseconds*0.8);
+});
+
+test("the shipped session policy lengthens a session only in proportion to its overhead and never past the ceiling",()=>{
+ const policy=timingSchema.definitions.Policy.const as {sessionMaximumMilliseconds:number;sessionOverheadFactor:number;sessionCeilingMilliseconds:number};
+ expect(policy.sessionOverheadFactor).toBeGreaterThan(0);
+ expect(policy.sessionCeilingMilliseconds).toBeGreaterThanOrEqual(policy.sessionMaximumMilliseconds);
 });

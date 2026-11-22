@@ -117,3 +117,60 @@ async fn undo_redo_round_trip_on_spawn() {
     .await;
     artifact_app_laws::close_registered_fixture_app(&mut app);
 }
+
+#[semio_framework_async_macros::async_test]
+async fn space_bound_spawn_publishes_only_after_the_correlated_artifact_is_ready() {
+    use semio_hub_space_commands_authoring::{open_instance::OpenInstance, spawn_app::finish_spawn_app::FinishSpawnApp};
+    use semio_plugin::{AppOperationContext, ArtifactView, ConfigView, Effect};
+
+    seed_draw_plugin().await;
+    let data = semio_framework_pack_json::parse(include_str!("../🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let field = |key| data.get(key).and_then(semio_framework_pack_json::Value::as_str).unwrap().to_string();
+    let coords = |key| data.get(key).and_then(semio_framework_pack_json::Value::as_f64).unwrap();
+    let config = SpaceConfig { space_id: Some(field("spaceId")), workflow_artifact_id: Some("workflow-123".into()), ..Default::default() };
+    let projection = demo_space_projection().await;
+    let history = semio_hub_space_app::unit_tests::context::empty_history();
+    let operation = AppOperationContext {
+        app_instance_id: 1,
+        parent_document_id: "workflow-123".into(),
+        operation_id: 1,
+        generation: 1,
+        canonical_base_revision: [0; 32],
+        retained: Default::default(),
+        authoring_seed: "spawn-1".into(),
+    };
+    let expected_node_id = operation.entity_id("node", "spawnApp").unwrap();
+    let doc = ArtifactView::with_operation(&projection, &history, operation);
+    let app_id = test_surface_id("draw").await;
+    let request = SpawnApp { plugin_id: field("pluginId"), app_id: app_id.clone(), x: coords("x"), y: coords("y") };
+    let emitted = SpaceCommand::SpawnApp(request).dispatch(&doc, &ConfigView { snapshot: &config, window: None }).unwrap();
+    assert!(emitted.artifact_mutations.is_empty());
+    assert!(matches!(emitted.effects.as_slice(), [Effect::ReplayShellCommand { action_id, args: Some(args) }] if
+        action_id == "os.create-workflow-artifact" && args.get("nodeId").and_then(semio_framework_value::DslValue::as_str) == Some(expected_node_id.as_str())));
+
+    let payload = FinishSpawnApp {
+        plugin_id: field("pluginId"), app_id: app_id.clone(), node_id: expected_node_id.clone(),
+        x: coords("x"), y: coords("y"), artifact_id: field("artifactId"), artifact_schema: field("schema"),
+        space_id: field("spaceId"), name: field("name"),
+    };
+    let completion = SpaceCommand::FinishSpawnApp(payload.clone());
+    store::os_store::test_support::assert_op_line_round_trip(&completion);
+    let emit = studio_emit(&projection, &config, &completion).await.unwrap();
+    let committed = apply_mutations(&projection, &emit.artifact_mutations).await;
+    let node = committed.graph.nodes.iter().find(|node| node.id == expected_node_id).unwrap();
+    assert_eq!((node.x, node.y), (coords("x"), coords("y")));
+    let persisted: serde_json::Value = serde_json::from_str(&node.artifact_ref).unwrap();
+    let expected: serde_json::Value = serde_json::from_str(include_str!("../🔣️.json")).unwrap();
+    assert_eq!(persisted, expected["document"]);
+    assert_ne!(node.id, field("artifactId"));
+    assert!(studio_emit(&committed, &config, &completion).await.unwrap().artifact_mutations.is_empty());
+    let conflicting = SpaceCommand::FinishSpawnApp(FinishSpawnApp { artifact_id: "different-artifact".into(), ..payload.clone() });
+    assert!(studio_emit(&committed, &config, &conflicting).await.is_err());
+    let stale = SpaceConfig { space_id: Some("another-space".into()), ..Default::default() };
+    assert!(studio_emit(&projection, &stale, &completion).await.is_err());
+
+    let reopened = studio_emit(&committed, &config, &SpaceCommand::OpenInstance(OpenInstance { node_id: Some(expected_node_id.clone()) })).await.unwrap();
+    assert!(matches!(reopened.effects.as_slice(), [Effect::OpenPluginInstance { app_id: opened_app, os_instance_id: Some(node_id), document: Some(target), .. }] if
+        opened_app == &app_id && node_id == &expected_node_id && target.document_id == field("artifactId")
+        && target.schema == field("schema") && target.space_id.as_deref() == Some(field("spaceId").as_str())));
+}

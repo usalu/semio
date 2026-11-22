@@ -1,0 +1,7 @@
+# PDF Build Governor Audit
+
+At 2026-11-21 20:10 UTC the PDF component log had remained at 758 completed units for over nine minutes of sampled status, reporting one running and `frozen`. Direct read-only process samples identify final `semio_hub_stdio_pdf_component` rustc PID 65952 in running state; its accumulated CPU rose from 19:10.51 to 19:12.36 between samples, and the second showed 94.2% CPU. The final unit is executing, although completion cannot be predicted from these samples. The governor status alone does not establish that rustc is suspended.
+
+The separate Stdio build advanced from 3,078 to 3,103 compiled units in two minutes, and the native WGPU host log continued producing fresh compiler artifact records. These builds are on separate compiler cache lanes. Fleet marks the PDF and Stdio runs as older-source and the WGPU run current-source, so successful completion is not by itself verification of subsequent source changes.
+
+`repo capacity status` reported normal pressure, approximately 2.7 GiB above its 2 GiB floor, five running grants and zero waiting. `repo leases status` reported no waiting lease and no deadlock cycle. The fleet scheduler had no queued work. There is no observed repository-owned priority adjustment that would accelerate the running final rustc without disrupting peers or bypassing admission. Continue the existing governed builds, avoid additional heavy builds, and use the resulting cached lanes for a current-source acceptance run.

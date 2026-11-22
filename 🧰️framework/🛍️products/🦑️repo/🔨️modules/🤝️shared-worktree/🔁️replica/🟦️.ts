@@ -1,9 +1,10 @@
 import {createHash,randomBytes} from "node:crypto";
 import {createReplicaProgressWatchV1,replicaProgressRestartDueV1,type ReplicaProgressScopeV1} from "./💓️progress/🟦️.ts";
 import {createStagedPutsV1,stagedPutStampV1} from "./📥️staged-put/🟦️.ts";
+import {bootModuleRelativeV1} from "./🧭️boot-path/🟦️.ts";
 import {closeSync,createReadStream,fsyncSync,lstatSync,openSync,readlinkSync,watch,type BigIntStats,type Stats} from "node:fs";
 import {chmod,copyFile,link,lstat,mkdir,mkdtemp,open,opendir,readdir,readFile,readlink,rename,rm,rmdir,stat,symlink,truncate,unlink,utimes,writeFile} from "node:fs/promises";
-import {homedir,tmpdir,uptime} from "node:os";
+import {homedir,tmpdir,uptime,userInfo} from "node:os";
 import {spawnSync} from "node:child_process";
 import {fileURLToPath} from "node:url";
 import {basename,dirname,join,relative,resolve,sep} from "node:path";
@@ -12,8 +13,8 @@ import {appendEventsV1,expiredHorizonV1,repairBlobV1,blobPathV1,copyVerifiedV1,t
 import {compileIgnoreV1,foldNameV1,gitPrivateV1,hashFileV1,linkRefusalV1,refusePathV1,scanSharedV1,sharedV1,type FleetIgnoreV1,type FleetScanEntryV1} from "../🚧️boundary/🟦️.ts";
 import {compactionDefaultsV1,cursorAheadV1,estimateEventsBehindV1,listSnapshotsV1,planRetirementV1,pruneSnapshotsV1,reclaimBlobsV1,reclaimLitterV1,requireCompactionShapeV1,retireSegmentsV1,scanSnapshotV1,snapshotSavesV1,storeReportV1,withCompactionLockV1,writeCompactionRecordV1,type CompactionSettingsV1,type ReclaimResultV1,type SnapshotRefV1,type StoreReportV1} from "../🗜️compaction/🟦️.ts";
 import {bucketsHexV1,digestHexV1,emptyBucketsV1,foldBucketV1,bucketOfV1,foldTermV1,manifestTermV1,createAttesterV1,fleetReportV1,readAttestationV1,readAttestationsV1,readRetirementV1,readRetirementsV1,repairableDriftV1,type AttesterGitV1,type AttesterViewV1,type FleetFallbackV1,type FleetGuardsV1,type FleetReportV1} from "../🩺️attest/🟦️.ts";
-import {sweepGitGarbageV1,repairGitConfigV1,applyIndexV1,branchRefV1,gitBrokenV1,linearizeRefV1,gitGuardsV1,gitStageRetryDelayV1,gitStateV1,gitViewDeltaV1,gitViewV1,resolveGitV1,INDEX_BASE_V1,INDEX_PREFIX_V1,indexRealmV1,indexSignatureV1,normaliseGitConfigV1,publishIndexV1,stageHealthV1,stageObjectsForApplyV1,stageRecordedV1,verifyIndexV1,type GitBrokenV1,type GitViewV1,type IndexHostV1,type StageReasonV1} from "../🌿️git/🟦️.ts";
-import {DirectoryTableV1,HotSetV1,LatencyV1,nextDelayV1,takeHintsV1,ensureHintsV1,type LatencyReportV1} from "../🎣️tiers/🟦️.ts";
+import {sweepGitGarbageV1,repairGitConfigV1,applyIndexV1,branchRefV1,gitBrokenV1,linearizeRefV1,gitGuardsV1,gitStageRetryDelayV1,gitStateV1,gitViewDeltaV1,gitViewV1,resolveGitV1,INDEX_BASE_V1,INDEX_PREFIX_V1,indexCertifiedV1,indexRealmV1,indexSignatureV1,normaliseGitConfigV1,publishIndexV1,stageHealthV1,stageObjectsForApplyV1,stageRecordedV1,verifyIndexV1,type GitBrokenV1,type GitViewV1,type IndexHostV1,type StageReasonV1} from "../🌿️git/🟦️.ts";
+import {DirectoryTableV1,HotSetV1,LatencyV1,nextDelayV1,readHintsV1,ensureHintsV1,type HintReadCursorV1,type HintReceiptV1,type LatencyReportV1} from "../🎣️tiers/🟦️.ts";
 import {StateCorruptV1,appendWalV1,bytesOfV1,checkpointPartsV1,decodeRecordsV1,partWidthV1,payloadsV1,readCheckpointV1,readWalV1,writeCheckpointV1,type CheckpointV1,type WalRecordV1} from "./💾️state/🟦️.ts";
 import {clashKeyV1,clashV1,staleRepublishV1,type ContentEventV1} from "./⚖️clash/🟦️.ts";
 import {awaitWorktreeAccessV1,readAccessV1,type AccessRecordV1} from "../🔐️access/🟦️.ts";
@@ -22,26 +23,28 @@ import {admitEntryScriptV1,entryDirectoryV1,entryGuardedV1,maintainEntryV1,migra
 import {ensureLauncherConsentV1} from "../../📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/🍎️launchd/🟨️.mjs";
 import {packLocalV1,packPartsV1,prepareStagePackedObjectsV1,readPackAuthorisationV1,rescueLocalPacksV1} from "./🧷️packgate/🟦️.ts";
 import {createSidecarsV1,type SidecarSettingsV1} from "./🧷️sidecars/🟦️.ts";
-import {yieldingV1,activityV1,codeDirectoryV1,createFailuresV1,createStoreGuardV1,existingCompanionsV1,importClosureV1,installBootStageV1,listStoreCodeV1,moduleSourcesV1,pruneLostV1,pruneStoreCodeV1,publishCodeSnapshotV1,readBeatV1,readBlockedRestartV1,readHealthV1,StoreStalledV1,readRefusedPathsV1,readRunHistoryV1,recordRefusedV1,withdrawRefusedV1,recordRunV1,rotateLogV1,runSelfCheckV1,sealCodeV1,suspectCodeV1,writeHealthV1,writeRefusedPathsV1,noteRefusedPathV1,NO_REFUSED_PATHS_V1,type FailuresV1,type HealthV1,type RefusedPathsV1,type SealedCodeV1} from "../🛡️resilience/🟦️.ts";
+import {CODE_SNAPSHOT_PUBLICATION_RETRY_MAXIMUM_V1,yieldingV1,activityV1,codeDirectoryV1,createFailuresV1,createStoreGuardV1,existingCompanionsV1,importClosureV1,installBootStageV1,listStoreCodeV1,moduleSourcesV1,pruneLostV1,pruneStoreCodeV1,publishCodeSnapshotV1,readBeatV1,readBlockedRestartV1,readHealthV1,StoreStalledV1,readRefusedPathsV1,readRunHistoryV1,recordRefusedV1,withdrawRefusedV1,recordRunV1,rotateLogV1,runSelfCheckV1,sealCodeV1,suspectCodeV1,writeHealthV1,writeRefusedPathsV1,noteRefusedPathV1,NO_REFUSED_PATHS_V1,type FailuresV1,type HealthV1,type RefusedPathsV1,type SealedCodeV1,type RenameEpermTargetV1,type TargetSharingCodeV1,type TargetSharingOperationV1} from "../🛡️resilience/🟦️.ts";
 import {maintainKitV1} from "../🗺️topology/🥾️provision/🟦️.ts";
+import {readTopologyV1} from "../🗺️topology/🟦️.ts";
+import {maintainServiceDefinitionV1,realServiceDefinitionPortsV1,serviceDefinitionTextV1,takeReloadOutcomeV1} from "../🗺️topology/🛠️service/🟦️.ts";
 import {createTrustTrackerV1,trustPolicyV1,type TrustTrackerV1} from "../🔏️trust/🟦️.ts";
-import {blamesCheckV1,blamesStartV1,blamesWatchdogV1,canaryLimitsV1,canaryReasonV1,createCanaryTrackerV1,decideCanaryV1,publishRefusalV1,readRefusalsV1,refusalProofMsV1,watchdogWindowMsV1,withdrawRefusalV1,type CanaryLimitsV1,type CanaryPeerV1,type CanaryTrackerV1,type CanaryVerdictV1} from "../🚦️canary/🟦️.ts";
+import {blamesCheckV1,blamesStartV1,blamesWatchdogV1,maximumWaitMsV1,transientStartV1,canaryLimitsV1,canaryReasonV1,createCanaryTrackerV1,decideCanaryV1,publishRefusalV1,readRefusalsV1,refusalProofMsV1,watchdogWindowMsV1,withdrawRefusalV1,type CanaryLimitsV1,type CanaryPeerV1,type CanaryTrackerV1,type CanaryVerdictV1} from "../🚦️canary/🟦️.ts";
 import {readOthersWantsV1,wantsLimitV1,writeWantsV1} from "./🩹️blobs/🟦️.ts";
 import {CompactTableV1,ReplicaBookV1,encoder,hashText,localPathsV1,pageBytes,racyMilliseconds,settleHeap,widen,type LocalPathsV1,type ReplicaStateEntryV1} from "./📇️book/🟦️.ts";
 export {CompactTableV1,ReplicaBookV1,localPathsV1,type LocalPathsV1} from "./📇️book/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 
 /** 🎚️ The explicit inputs of every replica operation: both directories, the identity of this machine and the tunables that default to the topology's `replica` block. `modeless` (default: Windows) says that the volume cannot represent the executable bit: such a replica never reads the bit from disk, keeps the bit of the manifest entry when a file changes, takes it from the staged index entry for a new file and never writes it. */
-export type ReplicaOptionsV1=Readonly<{rescueMilliseconds?:number;rescueAgeMilliseconds?:number;gitCheckMilliseconds?:number;gitHealMilliseconds?:number;worktree:string;storeRoot:string;originId:string;groupId:string;pollMilliseconds?:number;scanSeconds?:number;debounceMilliseconds?:number;retentionDays?:number;concurrency?:number;persistMilliseconds?:number;modeless?:boolean;symlinks?:boolean;caseInsensitive?:boolean;lock?:boolean;now?:()=>number;attestMilliseconds?:number;restartStableMilliseconds?:number;codeRoot?:string;gitState?:(worktree:string,signal?:AbortSignal)=>Promise<AttesterGitV1>;gitGuards?:(worktree:string,signal?:AbortSignal)=>Promise<FleetGuardsV1|null>;guardsMilliseconds?:number;guardsMinimumMilliseconds?:number;gitView?:(worktree:string,signal?:AbortSignal)=>Promise<AttesterViewV1|null>;viewMilliseconds?:number;viewDebounceMilliseconds?:number;deltaDebounceMilliseconds?:number;deltaLimit?:number;watch?:boolean;hintMilliseconds?:number;hotMilliseconds?:number;sweepMilliseconds?:number;walkSeconds?:number;watchRoot?:string;selfCheck?:(digest:string,signal?:AbortSignal)=>Promise<RestartCheckV1>;selfCheckMilliseconds?:number;restartJitterMilliseconds?:number;minimumUptimeMilliseconds?:number;storeDeadlineMilliseconds?:number;storeProbe?:(storeRoot:string)=>Promise<boolean>;storeGate?:()=>Promise<void>;logFiles?:readonly string[];compaction?:CompactionSettingsV1;fallback?:FleetFallbackV1;admit?:(digest:string,signal?:AbortSignal)=>Promise<Readonly<{ok:true}>|Readonly<{ok:false;reason:string}>>;publishCodeMilliseconds?:number;entryDirectory?:string;entryMilliseconds?:number;codeKeep?:number;returnMilliseconds?:number;driftMilliseconds?:number;opened?:(replica:ReplicaV1)=>void;sidecars?:SidecarSettingsV1}>;
+export type ReplicaOptionsV1=Readonly<{concurrentEditMilliseconds?:number;storeStuckRestartMilliseconds?:number;rescueMilliseconds?:number;rescueAgeMilliseconds?:number;gitCheckMilliseconds?:number;gitHealMilliseconds?:number;worktree:string;storeRoot:string;originId:string;groupId:string;pollMilliseconds?:number;scanSeconds?:number;debounceMilliseconds?:number;retentionDays?:number;concurrency?:number;persistMilliseconds?:number;modeless?:boolean;symlinks?:boolean;caseInsensitive?:boolean;lock?:boolean;now?:()=>number;attestMilliseconds?:number;restartStableMilliseconds?:number;codeRoot?:string;gitState?:(worktree:string,signal?:AbortSignal)=>Promise<AttesterGitV1>;gitGuards?:(worktree:string,signal?:AbortSignal)=>Promise<FleetGuardsV1|null>;guardsMilliseconds?:number;guardsMinimumMilliseconds?:number;gitView?:(worktree:string,signal?:AbortSignal)=>Promise<AttesterViewV1|null>;viewMilliseconds?:number;viewDebounceMilliseconds?:number;deltaDebounceMilliseconds?:number;deltaLimit?:number;watch?:boolean;hintMilliseconds?:number;hotMilliseconds?:number;sweepMilliseconds?:number;walkSeconds?:number;watchRoot?:string;selfCheck?:(digest:string,signal?:AbortSignal)=>Promise<RestartCheckV1>;selfCheckMilliseconds?:number;restartJitterMilliseconds?:number;minimumUptimeMilliseconds?:number;storeDeadlineMilliseconds?:number;storeProbe?:(storeRoot:string)=>Promise<boolean>;storeGate?:()=>Promise<void>;logFiles?:readonly string[];compaction?:CompactionSettingsV1;fallback?:FleetFallbackV1;admit?:(digest:string,signal?:AbortSignal)=>Promise<Readonly<{ok:true}>|Readonly<{ok:false;reason:string}>>;publishCodeMilliseconds?:number;entryDirectory?:string;entryMilliseconds?:number;codeKeep?:number;returnMilliseconds?:number;driftMilliseconds?:number;opened?:(replica:ReplicaV1)=>void;sidecars?:SidecarSettingsV1}>;
 
 /** 📡️ One NDJSON progress line, shaped by `ProgressEvent` of the schema. */
-export type ReplicaEventV1=Readonly<{version:1;event:"started"|"stopped"|"scan"|"progress"|"published"|"applied"|"overwritten"|"kept"|"linearised"|"repaired"|"state-rebuilt"|"state-missing"|"refused"|"skipped"|"blocked"|"unstable"|"store-unreachable"|"store-reachable"|"ignore-reloaded"|"clock-refused"|"clock-skew"|"blob-missing"|"rejoin-required"|"relayed"|"snapshot"|"compacted"|"sync"|"restarting"|"restart-refused"|"code-reverted"|"journal-repaired"|"retired"|"superseded"|"stale-republish"|"drift"|"blob-repaired"|"error";stage?:string;path?:string;origin?:string;originId?:string;groupId?:string;hlc?:string;reason?:string;message?:string;lost?:string;winner?:string;loser?:string;result?:string;count?:number;done?:number;total?:number;bytes?:number;seconds?:number}>;
+export type ReplicaEventV1=Readonly<{version:1;event:"started"|"stopped"|"scan"|"progress"|"published"|"applied"|"overwritten"|"kept"|"linearised"|"repaired"|"state-rebuilt"|"state-missing"|"refused"|"skipped"|"blocked"|"unstable"|"store-unreachable"|"store-reachable"|"ignore-reloaded"|"clock-refused"|"clock-skew"|"blob-missing"|"rejoin-required"|"relayed"|"snapshot"|"compacted"|"sync"|"restarting"|"store-stuck"|"restart-refused"|"code-reverted"|"journal-repaired"|"retired"|"superseded"|"stale-republish"|"stale-base"|"drift"|"blob-repaired"|"error";stage?:string;path?:string;origin?:string;originId?:string;groupId?:string;hlc?:string;reason?:string;message?:string;lost?:string;winner?:string;loser?:string;result?:string;count?:number;done?:number;total?:number;bytes?:number;seconds?:number}>;
 
 /** 🚰️ Receives progress events; it must not throw. */
 export type ReplicaSinkV1=(event:ReplicaEventV1)=>void;
 
 type Say=(event:Omit<ReplicaEventV1,"version">)=>void;
-type Settings=Readonly<{worktree:string;storeRoot:string;originId:string;groupId:string;pollMilliseconds:number;scanSeconds:number;debounceMilliseconds:number;retentionDays:number;concurrency:number;persistMilliseconds:number;modeless:boolean;symlinks:boolean|undefined;caseInsensitive:boolean|undefined;now:()=>number;compaction:CompactionSettingsV1}>;
+type Settings=Readonly<{worktree:string;storeRoot:string;originId:string;groupId:string;pollMilliseconds:number;scanSeconds:number;debounceMilliseconds:number;retentionDays:number;concurrency:number;persistMilliseconds:number;modeless:boolean;symlinks:boolean|undefined;caseInsensitive:boolean|undefined;now:()=>number;concurrentEditMilliseconds:number;compaction:CompactionSettingsV1}>;
 type StateEntry=ReplicaStateEntryV1;
 type Machine=Readonly<{version:1;originId:string;groupId:string;storeRoot:string;key?:string}>;
 type Drift=Readonly<{path:string;kind:"missing-local"|"extra-local"|"content"|"target"|"state";expected?:string;actual?:string}>;
@@ -128,7 +131,18 @@ export type RelayOptionsV1=Readonly<{ownStore:string;peers:Readonly<Record<strin
 const originPattern=/^[a-z0-9][a-z0-9-]{0,39}$/u,segmentPattern=/^[0-9]{12}\.jsonl$/u,hexPattern=/^[0-9a-f]{64}$/u,chunkSize=256,driftLimit=1000,futureMilliseconds=60_000,staleStagingMilliseconds=6*3_600_000,collectBatch=2048,walLimitBytes=8*1024*1024,compatWindowMilliseconds=7*86_400_000,checkpointChanges=50_000,paceEntries=2000,heapRounds=20,relayConcurrency=8,stateBytesPerEntry=320,staleLockMilliseconds=60_000,noteCapacity=4096,healthMilliseconds=5000,tendMilliseconds=20_000,maintenanceMilliseconds=3_600_000,lostEntries=2000,logLimitFileBytes=64*1024*1024,logKeepBytes=4*1024*1024;
 const code=(error:unknown):string|undefined=>(error as {code?:string}).code;
 const gone=(error:unknown):boolean=>code(error)==="ENOENT"||code(error)==="ENOTDIR";
-const sharing=(error:unknown):boolean=>code(error)==="EBUSY"||code(error)==="EPERM"||code(error)==="EACCES";
+const sharingCode=(error:unknown):TargetSharingCodeV1|undefined=>{
+ const nativeCode=code(error);
+ return nativeCode==="EBUSY"||nativeCode==="EPERM"||nativeCode==="EACCES"?nativeCode:undefined;
+};
+const sharing=(error:unknown):boolean=>sharingCode(error)!==undefined;
+
+/** 📇️ Classifies target metadata already held by a staged put without another filesystem read. */
+function renameEpermTarget(here:Stats|undefined):RenameEpermTargetV1{
+ if(here===undefined)return "unseen";
+ if(!here.isFile())return "other";
+ return (here.mode&0o200)===0?"no-owner-write":"owner-write";
+}
 const messageOf=(error:unknown):string=>error instanceof Error?error.message:String(error);
 const digest=(text:string):string=>createHash("sha256").update(text).digest("hex");
 const token=():string=>randomBytes(8).toString("hex");
@@ -278,10 +292,11 @@ export class ReplicaFoldsV1{
   let hash=2166136261,parent=hash;
   for(let index=0;index<name.length;index++){
    const code=name.charCodeAt(index);
-   if(code===47){this.dirs[(hash>>>0)&mask]+=step;parent=hash;}
+   if(code===47){const slot=(hash>>>0)&mask;this.dirs[slot]=(this.dirs[slot]??0)+step;parent=hash;}
    hash=Math.imul(hash^code,16777619);
   }
-  this.parents[(parent>>>0)&mask]+=step;
+  const owner=(parent>>>0)&mask;
+  this.parents[owner]=(this.parents[owner]??0)+step;
  }
  private slot(directory:string):number{
   let hash=2166136261;
@@ -378,9 +393,17 @@ class Bits{
 
 const pacer=(every:number):(()=>void)=>{let count=0;return ()=>{if(++count%every===0)settleHeap();};};
 
-/** ⚖️ Decides a conflict between an unpublished local edit and a remote event for the same path: the local edit wins only when its modification time is later than the wall time inside the remote hlc; a local delete has no modification time and always loses. */
-export function conflictWinnerV1(localMtimeMs:number|undefined,remoteHlc:string):"local"|"remote"{
- return localMtimeMs!==undefined&&localMtimeMs>parseHlcV1(remoteHlc).ms?"local":"remote";
+/** ⏳️ How much later than the remote event a local edit may have been written and still count as simultaneous (30 s): an edit written after that had the whole propagation time to see the remote content and was written on a stale view. */
+export const concurrentEditMillisecondsV1=30_000;
+
+/** 🕰️ Tells whether an unpublished local edit was written long after the remote event it conflicts with, so that it was written on a stale view of the path (a machine that was offline, stopped or far behind the store). */
+export function staleEditV1(localMtimeMs:number|undefined,remoteHlc:string,tolerance:number=concurrentEditMillisecondsV1):boolean{
+ return localMtimeMs!==undefined&&localMtimeMs-parseHlcV1(remoteHlc).ms>tolerance;
+}
+
+/** ⚖️ Decides a conflict between an unpublished local edit and a remote event for the same path: the local edit wins only when it is simultaneous, written after the wall time inside the remote hlc but within `concurrentEditMillisecondsV1` of it; an older edit loses and so does a stale one (written on a view that lacked the remote content, which then stays at the path while the local bytes go to `lost/`); a local delete has no modification time and always loses. A remote delete takes no content from the edit, so an edit newer than it always wins (tolerance `Infinity`). */
+export function conflictWinnerV1(localMtimeMs:number|undefined,remoteHlc:string,tolerance:number=concurrentEditMillisecondsV1):"local"|"remote"{
+ return localMtimeMs!==undefined&&localMtimeMs>parseHlcV1(remoteHlc).ms&&!staleEditV1(localMtimeMs,remoteHlc,tolerance)?"local":"remote";
 }
 
 const replicaValidators=new Map<string,CompiledJsonSchemaSubset>();
@@ -753,7 +776,7 @@ async function loadLocal(paths:LocalPathsV1,tables:Tables,mode:LoadMode="read"):
 export function settle(options:ReplicaOptionsV1):Settings{
  requireOriginIdV1(options.originId);
  if(!originPattern.test(options.groupId))throw Error(`Closed replica group id required: ${options.groupId}`);
- return {worktree:options.worktree,storeRoot:options.storeRoot,originId:options.originId,groupId:options.groupId,pollMilliseconds:options.pollMilliseconds??250,scanSeconds:options.scanSeconds??90,debounceMilliseconds:options.debounceMilliseconds??150,retentionDays:options.retentionDays??14,concurrency:options.concurrency??8,persistMilliseconds:options.persistMilliseconds??5000,modeless:options.modeless??process.platform==="win32",symlinks:options.symlinks,caseInsensitive:options.caseInsensitive,now:options.now??Date.now,compaction:options.compaction??compactionDefaultsV1};
+ return {worktree:options.worktree,storeRoot:options.storeRoot,originId:options.originId,groupId:options.groupId,pollMilliseconds:options.pollMilliseconds??250,scanSeconds:options.scanSeconds??90,debounceMilliseconds:options.debounceMilliseconds??150,retentionDays:options.retentionDays??14,concurrency:options.concurrency??8,persistMilliseconds:options.persistMilliseconds??5000,modeless:options.modeless??process.platform==="win32",symlinks:options.symlinks,caseInsensitive:options.caseInsensitive,now:options.now??Date.now,concurrentEditMilliseconds:options.concurrentEditMilliseconds??concurrentEditMillisecondsV1,compaction:options.compaction??compactionDefaultsV1};
 }
 
 export const filesKey=(id:number):number=>id*2,queueKey=(id:number):number=>id*2+1;
@@ -885,6 +908,15 @@ const journalRepair=(replica:ReplicaV1)=>(repair:Readonly<{segment:number;bytes:
 
 const indexHosts=new WeakMap<ReplicaV1,IndexHostV1>();
 
+
+const authorHeads=new WeakMap<ReplicaV1,FleetHeadV1|null>();
+
+function recordOutboundHead(replica:ReplicaV1,head:FleetHeadV1):void{
+ const origin=replica.settings.originId,previous=replica.cursors[origin],next={segment:head.segment,bytes:head.bytes};
+ replica.cursors[origin]=next;
+ if(previous===undefined||cursorAheadV1(next,previous))replica.beat();
+}
+
 function indexHost(replica:ReplicaV1):IndexHostV1{
  const known=indexHosts.get(replica);
  if(known!==undefined)return known;
@@ -901,7 +933,7 @@ function indexHost(replica:ReplicaV1):IndexHostV1{
     await ensureHome(replica);
     const stamped:FleetEventV1[]=events.map(event=>({version:1,hlc:mint(replica),operation:event.operation,path:event.path,...(event.target===undefined?{}:{target:event.target}),base:null}));
     const head=await appendEventsV1(settings.storeRoot,settings.originId,stamped,journalRepair(replica));
-    replica.cursors[settings.originId]={segment:head.segment,bytes:head.bytes};
+    recordOutboundHead(replica,head);
     for(const event of stamped){
      const entry:StateEntry=event.operation==="delete"?{hlc:event.hlc,operation:"delete",mtimeMs:0}:{hlc:event.hlc,operation:"link",target:event.target!,mtimeMs:0},id=book.intern(event.path);
      files.write(id,entry);manifest.set(event.path,plain(entry));replica.changed.add(filesKey(id));
@@ -934,9 +966,9 @@ function requeue(replica:ReplicaV1):void{
  for(const id of manifest.ids())if(!queue.hasId(id)&&(!files.live(id)||!files.sameHlcAs(manifest,id)))enqueueId(replica,id);
 }
 
-function noteOnce(replica:ReplicaV1,key:string,event:Omit<ReplicaEventV1,"version">,incomingWorktree?:boolean):void{
+function noteOnce(replica:ReplicaV1,key:string,event:Omit<ReplicaEventV1,"version">,incomingWorktree?:boolean,nativeCode?:TargetSharingCodeV1,operation?:TargetSharingOperationV1,target?:RenameEpermTargetV1):void{
  if(event.event==="refused"&&event.path!==undefined){replica.refusedPaths.record=noteRefusedPathV1(replica.refusedPaths.record,event.path,event.reason??"-",replica.settings.now());replica.refusedPaths.dirty=true;}
- const {announce,count}=replica.failures.note(key,event.message??event.reason??key,incomingWorktree);
+ const {announce,count}=replica.failures.note(key,event.message??event.reason??key,incomingWorktree,nativeCode,operation,target);
  replica.trust.failure(key);
  if(replica.noted.size>=noteCapacity)replica.noted.clear();
  replica.noted.add(key);
@@ -1264,6 +1296,13 @@ function largePublishV1(replica:ReplicaV1,signal:AbortSignal,ready:(path:string)
  type Result={prepared:Prepared|undefined;source:string|undefined;blob:string|undefined}|{error:unknown};
  type Slot={path:string;controller:AbortController;result?:Result};
  let slot:Slot|undefined;
+ const {retryMilliseconds,retainedRetries}=schema.definitions.LargePublish.const;
+ const retries=new Map<string,number>();
+ const defer=(path:string):undefined=>{
+  retries.delete(path);
+  if(retries.size>=retainedRetries)retries.delete(retries.keys().next().value!);
+  retries.set(path,replica.settings.now()+retryMilliseconds);
+ };
  const stamp=(named:BigIntStats)=>[named.dev,named.ino,named.mode,named.nlink,named.size,named.mtimeNs,named.ctimeNs].join(":");
  const physical=async(path:string):Promise<string|undefined>=>{
   const named=await lstat(path,{bigint:true}).catch(error=>{if(!gone(error))throw error;return undefined;});
@@ -1301,15 +1340,19 @@ function largePublishV1(replica:ReplicaV1,signal:AbortSignal,ready:(path:string)
     const {result}=slot;slot=undefined;
     if("error" in result)throw result.error;
     const item=result.prepared;
-    if(item===undefined||result.source===undefined||!sharedV1(entry.path,false,replica.ignore))return undefined;
+    if(!sharedV1(entry.path,false,replica.ignore))return undefined;
+    if(item===undefined||result.source===undefined)return defer(entry.path);
     if(item.job.current?.hlc!==job.current?.hlc||item.job.entry.executable!==entry.executable)return undefined;
     if(replica.settings.modeless&&job.current?.operation!=="put"&&item.executable!==stagedExecutable(replica,entry.path))return undefined;
-    if(replica.queue.has(entry.path)||await ancestryOf(replica.settings.worktree,entry.path,new Set())!=="ok"||
-     !await freshBlob(item,result.blob)||await physical(path)!==result.source)return undefined;
+    if(replica.queue.has(entry.path)||await ancestryOf(replica.settings.worktree,entry.path,new Set())!=="ok")return undefined;
+    if(!await freshBlob(item,result.blob)||await physical(path)!==result.source)return defer(entry.path);
     turn?.throwIfAborted();
     return {...item,job};
    }
    if(slot!==undefined)return undefined;
+   const retryAt=retries.get(entry.path);
+   if(retryAt!==undefined&&replica.settings.now()<retryAt)return undefined;
+   if(retryAt!==undefined)retries.delete(entry.path);
    const selected:Slot={path:entry.path,controller:new AbortController()};slot=selected;
    const lifetime=AbortSignal.any([signal,selected.controller.signal]);
    void (async()=>{
@@ -1395,7 +1438,7 @@ function targetedSpellingV1(root:string,repeated:ReadonlySet<string>):(path:stri
  };
 }
 
-async function observe(replica:ReplicaV1,paths:readonly string[],flat:readonly string[]=[]):Promise<Readonly<{entries:FleetScanEntryV1[];missing:string[]}>>{
+async function observe(replica:ReplicaV1,paths:readonly string[],flat:readonly string[]=[]):Promise<Readonly<{entries:FleetScanEntryV1[];missing:string[];expanded:ReadonlySet<string>;vanished:readonly string[]}>>{
  const entries:FleetScanEntryV1[]=[],missing:string[]=[],root=replica.settings.worktree,queue=new Set(paths),expanded=new Set<string>(),shallow=new Set<string>(),vanished:string[]=[],reals=new Set<string>();
  for(const directory of flat)await relist(replica,directory,queue,shallow,vanished);
  const seenParents=new Set<string>(),repeated=new Set<string>(),spelled=targetedSpellingV1(root,repeated);
@@ -1490,7 +1533,7 @@ async function observe(replica:ReplicaV1,paths:readonly string[],flat:readonly s
    for(let cut=name.lastIndexOf("/");cut>0;cut=name.lastIndexOf("/",cut-1))if(gonePaths.has(name.slice(0,cut))){missing.push(name);break;}
   }
  }
- return {entries,missing};
+ return {entries,missing,expanded,vanished};
 }
 
 const unchangedSince=(replica:ReplicaV1,id:number,entry:FleetScanEntryV1):boolean=>{
@@ -1578,19 +1621,40 @@ export function sweptDriftV1(replica:ReplicaV1,name:string,startedMs:number):boo
  try{return lstatSync(absolute(replica.settings.worktree,name)).mtimeMs<=startedMs-trustPolicyV1.driftGraceMilliseconds;}catch{return true;}
 }
 
+const catchUpMilliseconds=1000;
+
+/** 🧱️ The fence before an edit or a delete is published. Events of the other origins that are not read yet and are younger than `concurrentEditMillisecondsV1` are ordinary propagation: the edit is published as before and the clash and conflict rules decide. When the oldest unread event is older than that, this replica has a stale view (offline for a long time, stopped, a backlog larger than one pass) and does not know the newer content of its paths: the fence then reads what the origins appended up to their heads read now (without applying it, so the queue names every path with newer fleet content, which the publisher leaves to the apply) and tells whether the replica is level with those heads. A replica that is still behind must not write a `base` that the fleet has long replaced: its edits and deletes wait. Origins whose events lie in the future (clock skew) do not hold it. */
+async function catchUpV1(replica:ReplicaV1,signal?:AbortSignal):Promise<boolean>{
+ const {originId,storeRoot,concurrentEditMilliseconds}=replica.settings,origins=(await originsOf(replica)).filter(origin=>origin!==originId),heads=await followHeads(replica,origins,signal),started=replica.settings.now();
+ const lagging=()=>origins.filter(origin=>{const head=heads.get(origin);return head!==undefined&&!replica.held.has(origin)&&behind(replica.cursors[origin],head);});
+ const waiting=lagging();
+ if(waiting.length===0)return true;
+ let stale=false;
+ for(const origin of waiting){
+  const read=await readEventSpansV1(storeRoot,origin,replica.cursors[origin],1,heads.get(origin),1).catch(()=>undefined),first=read?.events[0];
+  if(first!==undefined&&started-parseHlcV1(first.hlc).ms>concurrentEditMilliseconds){stale=true;break;}
+ }
+ if(!stale)return true;
+ for(;;){
+  const slice=await ingestFollowSlice(replica,origins,heads,signal);
+  if(!slice.more||replica.queue.has(".gitignore")||replica.settings.now()-started>=catchUpMilliseconds)break;
+ }
+ return lagging().length===0;
+}
+
 /** 📤️ One publish round: walks the shared tree (or only the given touched paths), compares by size and mtime and then by hash, writes blobs before events, appends batched events with `base` = the previous sha256, and updates state and clock; deletions are paths in state that are gone from disk. A `walked` result from `walkLocalV1` replaces the walk. */
-export async function publishOnceV1(replica:ReplicaV1,signal?:AbortSignal,paths?:readonly string[],walked?:WalkV1,flat?:readonly string[],cold?:boolean,large?:LargePublishV1):Promise<PublishResultV1>{
+export async function publishOnceV1(replica:ReplicaV1,signal?:AbortSignal,paths?:readonly string[],walked?:WalkV1,flat?:readonly string[],cold?:boolean,large?:LargePublishV1,durableHint=false):Promise<PublishResultV1>{
  if(replica.settings.modeless&&(paths===undefined||paths.includes(".git/index")))await publishStage(replica,signal);
  const {worktree,concurrency,storeRoot,originId}=replica.settings;
  await refreshIgnore(replica);
- if(!await stateReady(replica))return {scanned:0,published:0,deleted:0,touched:0,bytes:0,retry:[]};
+ if(!await stateReady(replica))return {scanned:0,published:0,deleted:0,touched:0,bytes:0,retry:durableHint&&paths!==undefined?paths:[]};
  const retireLarge=large?.retireAfter(paths);
  const stagePriority=paths===undefined||paths.includes(".git/index")?await publishPriorityStage(replica,signal):undefined,stageWork=stagePriority?.work;
  const combined=(result:PublishResultV1):PublishResultV1=>stageWork===undefined?result:{
   scanned:result.scanned+stageWork.scanned,published:result.published+stageWork.published,deleted:result.deleted+stageWork.deleted,
   touched:result.touched+stageWork.touched,bytes:result.bytes+stageWork.bytes,retry:[...new Set([...stageWork.retry,...result.retry])]
  };
- let found:ReplicaFoundV1,candidates:string[],scanned:number;
+ let found:ReplicaFoundV1,candidates:string[],scanned:number,requestedDirectories:Set<string>|undefined;
  if(paths===undefined){
   activityV1("walk");
   const walk=walked??await walkLocalV1(replica,signal);
@@ -1602,6 +1666,10 @@ export async function publishOnceV1(replica:ReplicaV1,signal?:AbortSignal,paths?
   trustWalkV1(replica,walk.startedMs,found,candidates);
  }else{
   const seen=await observe(replica,paths,flat);
+  if(durableHint){
+   const vanished=new Set(seen.vanished);
+   requestedDirectories=new Set(paths.filter(path=>seen.expanded.has(path)||vanished.has(path)));
+  }
   found=new ReplicaFoundV1(replica.book);for(const entry of seen.entries)found.push(entry);scanned=found.length;candidates=[...new Set(seen.missing)].filter(path=>{const state=replica.files.get(path);return state!==undefined&&state.operation!=="delete"&&!replica.queue.has(path)&&!(state.operation==="link"&&capable.get(replica)===false);});
  }
  if(paths===undefined&&!await stormChecked(replica,found,signal))return combined({scanned,published:0,deleted:0,touched:0,bytes:0,retry:[]});
@@ -1625,6 +1693,8 @@ export async function publishOnceV1(replica:ReplicaV1,signal?:AbortSignal,paths?
  }
  let touched=0,published=0,bytes=0,deleted=0,cursor=0,rounds=0;
  const retry:string[]=[],noted:string[]=[];
+ let fenced:Promise<boolean>|undefined;
+ const fence=():Promise<boolean>=>fenced??=catchUpV1(replica,signal),guarded=(path:string,current:StateEntry|undefined):boolean=>current?.operation==="put"&&!path.startsWith(".git/");
  while(cursor<found.length){
   signal?.throwIfAborted();
   const slice:Job[]=[];
@@ -1635,6 +1705,15 @@ export async function publishOnceV1(replica:ReplicaV1,signal?:AbortSignal,paths?
    if(entry.kind==="link"){if(current?.operation==="link"&&current.target===entry.target)continue;}
    else if(current?.operation==="put"&&current.bytes===entry.bytes&&current.mtimeMs===entry.mtimeMs&&!racy(current)&&(replica.settings.modeless||current.executable===entry.executable))continue;
    slice.push({entry,current});
+  }
+  if(slice.length>0&&slice.some(job=>guarded(job.entry.path,job.current))){
+   const caught=await fence();
+   for(let index=slice.length-1;index>=0;index--){
+    const {entry,current}=slice[index]!;
+    if(!guarded(entry.path,current))continue;
+    if(!caught){retry.push(entry.path);slice.splice(index,1);noteOnce(replica,`blocked:${entry.path}:store-ahead`,{event:"blocked",path:entry.path,reason:"store-ahead"});}
+    else if(replica.queue.has(entry.path))slice.splice(index,1);
+   }
   }
   if(slice.length===0)continue;
   const prepared:(Prepared|undefined)[]=new Array(slice.length).fill(undefined);
@@ -1667,7 +1746,7 @@ export async function publishOnceV1(replica:ReplicaV1,signal?:AbortSignal,paths?
    try{
     await ensureHome(replica);
     const head=await appendEventsV1(storeRoot,originId,events,journalRepair(replica));
-    replica.cursors[originId]={segment:head.segment,bytes:head.bytes};
+    recordOutboundHead(replica,head);
     for(const event of events)track(replica,event);
     published+=events.length;
    }catch(error){
@@ -1693,6 +1772,15 @@ export async function publishOnceV1(replica:ReplicaV1,signal?:AbortSignal,paths?
   retry.push(...kept);
   noteOnce(replica,"blocked:objects:pack-unpublished",{event:"blocked",reason:"pack-unpublished",count:kept.length});
  }
+ if(deletions.some(path=>guarded(path,replica.files.get(path)))){
+  const caught=await fence();
+  for(let index=deletions.length-1;index>=0;index--){
+   const path=deletions[index]!;
+   if(!guarded(path,replica.files.get(path)))continue;
+   if(!caught){retry.push(path);deletions.splice(index,1);noteOnce(replica,`blocked:${path}:store-ahead`,{event:"blocked",path,reason:"store-ahead"});}
+   else if(replica.queue.has(path))deletions.splice(index,1);
+  }
+ }
  for(let start=0;start<deletions.length;start+=chunkSize*2){
   signal?.throwIfAborted();
   const slice=deletions.slice(start,start+chunkSize*2),events:FleetEventV1[]=[];
@@ -1707,7 +1795,7 @@ export async function publishOnceV1(replica:ReplicaV1,signal?:AbortSignal,paths?
    retry.push(...slice);noteOnce(replica,`blocked:journal:${code(error)}`,{event:"blocked",reason:code(error)});
    continue;
   }
-  replica.cursors[originId]={segment:head.segment,bytes:head.bytes};
+  recordOutboundHead(replica,head);
   for(const event of events)track(replica,event);
   for(const event of events){setFile(replica,event.path,{hlc:event.hlc,operation:"delete",mtimeMs:0});replica.manifest.set(event.path,{hlc:event.hlc,operation:"delete"});noted.push(event.path);}
   deleted+=events.length;
@@ -1720,21 +1808,82 @@ export async function publishOnceV1(replica:ReplicaV1,signal?:AbortSignal,paths?
  if(deleted>0)replica.say({event:"published",stage:"delete",count:deleted});
  if(stagePriority!==undefined&&(stagePriority.settled||!stagePriority.attempted||published>0))await publishStage(replica,signal);
  await persist(replica,false);
+ if(durableHint&&paths!==undefined){
+  for(const path of paths)if(replica.queue.has(path))retry.push(path);
+  if(requestedDirectories?.size&&replica.queue.size){
+   for(const name of replica.queue.keys()){
+    for(let parent=parentOf(name);parent!=="";parent=parentOf(parent)){
+     if(requestedDirectories.delete(parent))retry.push(parent);
+    }
+    if(requestedDirectories.size===0)break;
+   }
+  }
+ }
  retireLarge?.();
  return combined({scanned,published,deleted,touched,bytes,retry});
 }
 
-const BUSY=Symbol("busy");
-
-async function retrying<T>(job:()=>Promise<T>,maximumRetries=5):Promise<T|typeof BUSY>{
+async function retrying(job:()=>Promise<void>,maximumRetries=5):Promise<TargetSharingCodeV1|undefined>{
  for(let attempt=0;;attempt++){
-  try{return await job();}
+  try{await job();return undefined;}
   catch(error){
-   if(!sharing(error))throw error;
-   if(attempt>=maximumRetries)return BUSY;
+   const nativeCode=sharingCode(error);
+   if(nativeCode===undefined)throw error;
+   if(attempt>=maximumRetries)return nativeCode;
    await sleep(20*2**attempt);
   }
  }
+}
+
+const displacedPrefix="displaced-",accessRefused=(nativeCode:TargetSharingCodeV1|undefined):boolean=>nativeCode==="EPERM"||nativeCode==="EACCES";
+const writable=(target:string,mode:number):Promise<boolean>=>chmod(target,mode|0o200).then(()=>true,()=>false);
+
+/** 🧹️ Removes the files that earlier replaces moved aside: a file that was a running image or held open cannot be deleted at that moment, so it waits in the private directory until a later replace finds it released. */
+async function sweepDisplaced(directory:string):Promise<void>{
+ for(const name of await readdir(directory).catch(()=>[] as string[])){
+  if(!name.startsWith(displacedPrefix))continue;
+  const file=join(directory,name);
+  await chmod(file,0o666).catch(()=>{});
+  await rm(file,{force:true}).catch(()=>{});
+ }
+}
+
+/** 🪟️ Installs the staged `temporary` over `target` with the semantics of Windows, where a rename over an existing file fails with `EPERM` while the target carries the read-only attribute or is a running image, and succeeds in moving that target away: the attribute that the held metadata `here` reports is cleared and the rename retried once, then the target is moved aside to the private directory, the staged file takes its name and the moved file is deleted; when the staged file still cannot take the name the moved file returns, so the name never stays empty and the original bytes and mode stay as they were. Another code (`EBUSY`, a sharing violation) is not recovered here: the queue retries it with its own back-off. Returns the native code of the last refusal, or `undefined` when the staged file is installed. [MoveFileExW](https://learn.microsoft.com/windows/win32/api/winbase/nf-winbase-movefileexw) */
+async function replaceTarget(replica:ReplicaV1,temporary:string,target:string,here:Stats|undefined):Promise<TargetSharingCodeV1|undefined>{
+ const install=()=>retrying(()=>rename(temporary,target),0);
+ let nativeCode=await install();
+ if(!accessRefused(nativeCode)||here===undefined||!here.isFile())return nativeCode;
+ const cleared=(here.mode&0o200)===0&&await writable(target,here.mode);
+ if(cleared){
+  nativeCode=await install();
+  if(nativeCode===undefined)return undefined;
+ }
+ const restore=async():Promise<void>=>{if(cleared)await chmod(target,here.mode).catch(()=>{});};
+ await sweepDisplaced(replica.paths.tmp);
+ const aside=join(replica.paths.tmp,displacedPrefix+token());
+ let displaced=false;
+ try{
+  if(await retrying(()=>rename(target,aside),0)!==undefined){await restore();return nativeCode;}
+  displaced=true;
+ }catch(error){if(!gone(error))throw error;}
+ const last=await install();
+ if(last===undefined){
+  if(displaced)await sweepDisplaced(replica.paths.tmp);
+  return undefined;
+ }
+ if(displaced)await rename(aside,target).catch(()=>{});
+ await restore();
+ return last;
+}
+
+/** 🗑️ Removes `target` and clears the read-only attribute that the held metadata `here` reports when the removal is refused, putting the attribute back when it still fails. Returns the native code of the last refusal, or `undefined` when the target is gone. */
+async function removeTarget(target:string,here:Stats):Promise<TargetSharingCodeV1|undefined>{
+ const remove=()=>retrying(()=>unlink(target).catch(error=>{if(!gone(error))throw error;}),0);
+ let nativeCode=await remove();
+ if(!accessRefused(nativeCode)||!here.isFile()||(here.mode&0o200)!==0||!await writable(target,here.mode))return nativeCode;
+ nativeCode=await remove();
+ if(nativeCode!==undefined)await chmod(target,here.mode).catch(()=>{});
+ return nativeCode;
 }
 
 async function differs(target:string,here:Stats,known:StateEntry|undefined):Promise<boolean>{
@@ -1743,6 +1892,10 @@ async function differs(target:string,here:Stats,known:StateEntry|undefined):Prom
  if(!here.isFile()||here.size!==known.bytes)return true;
  if(here.mtimeMs===known.mtimeMs&&!racy(known))return false;
  return (await hashFileV1(target)).sha256!==known.sha256;
+}
+
+function noteStale(replica:ReplicaV1,path:string,entry:FleetManifestEntryV1,here:Stats):void{
+ if(staleEditV1(here.mtimeMs,entry.hlc,replica.settings.concurrentEditMilliseconds))replica.say({event:"stale-base",path,hlc:entry.hlc,seconds:Math.ceil((here.mtimeMs-parseHlcV1(entry.hlc).ms)/1000)});
 }
 
 async function keepNewer(replica:ReplicaV1,path:string,entry:FleetManifestEntryV1,here:Stats):Promise<Outcome>{
@@ -1831,8 +1984,8 @@ async function onlyDirectories(directory:string):Promise<boolean>{
 
 const stagedPuts=new WeakMap<ReplicaV1,ReturnType<typeof createStagedPutsV1>>();
 const stagedPutCurrent=(replica:ReplicaV1,path:string,put:{hlc:string;sha256:string;bytes:number;executable:boolean})=>{
- const current=replica.manifest.get(path);
- return replica.queue.has(path)&&current?.operation==="put"&&current.hlc===put.hlc&&current.sha256===put.sha256&&current.bytes===put.bytes&&Boolean(current.executable)===put.executable;
+ const {book,manifest,queue}=replica,id=book.find(path);
+ return id!==undefined&&queue.hasId(id)&&manifest.operationAt(id)==="put"&&manifest.hlcAt(id)===put.hlc&&manifest.bytes[id]===put.bytes&&manifest.executableAt(id)===put.executable&&manifest.shaIs(id,put.sha256);
 };
 
 async function materialise(replica:ReplicaV1,path:string,entry:FleetManifestEntryV1,incomingWorktree:boolean,signal?:AbortSignal):Promise<Outcome>{
@@ -1861,9 +2014,10 @@ async function materialiseWork(replica:ReplicaV1,path:string,entry:FleetManifest
   if(other!==undefined&&other!==path)here=undefined;
   if(here!==undefined&&!here.isDirectory()){
    const lose=await differs(target,here,known).catch(error=>{if(gone(error))return false;throw error;});
-   if(lose&&conflictWinnerV1(here.mtimeMs,entry.hlc)==="local")return keepNewer(replica,path,entry,here);
+   if(lose&&conflictWinnerV1(here.mtimeMs,entry.hlc,Infinity)==="local")return keepNewer(replica,path,entry,here);
    if(lose)await keepLost(replica,path,target,here,entry.hlc);
-   if(await retrying(()=>unlink(target).catch(error=>{if(!gone(error))throw error;}),0)===BUSY){noteOnce(replica,`blocked:${path}`,{event:"blocked",path,reason:"sharing-violation"},incomingWorktree);return "queued";}
+    const nativeCode=await removeTarget(target,here);
+   if(nativeCode!==undefined){noteOnce(replica,`blocked:${path}`,{event:"blocked",path,reason:"sharing-violation"},incomingWorktree,nativeCode,"unlink");return "queued";}
    await prune(replica,dirname(target));
   }
   setFile(replica,path,{hlc:entry.hlc,operation:"delete",mtimeMs:0});
@@ -1889,7 +2043,8 @@ async function materialiseWork(replica:ReplicaV1,path:string,entry:FleetManifest
    }else lose=await differs(target,here,known);
   }
  }
- if(lose&&conflictWinnerV1(here!.mtimeMs,entry.hlc)==="local")return keepNewer(replica,path,entry,here!);
+ if(lose&&conflictWinnerV1(here!.mtimeMs,entry.hlc,replica.settings.concurrentEditMilliseconds)==="local")return keepNewer(replica,path,entry,here!);
+ if(lose)noteStale(replica,path,entry,here!);
  const mark=entry.operation==="put"?stales.get(replica)?.get(replica.book.find(path)!):undefined;
  if(mark!==undefined&&!same&&!lose&&here?.isFile()===true&&known?.operation==="put"&&shortSha(known.sha256)===mark){
   stales.get(replica)!.delete(replica.book.find(path)!);
@@ -1977,9 +2132,10 @@ async function materialiseWork(replica:ReplicaV1,path:string,entry:FleetManifest
     signal?.throwIfAborted();
     if(cached&&(await stagedPutStampV1(temporary,put.bytes)!==cached.image||cached.invalid||!current(path,put)))return "queued";
     signal?.throwIfAborted();
-    if(await retrying(()=>rename(temporary,target),0)===BUSY){
+     const nativeCode=await replaceTarget(replica,temporary,target,here);
+    if(nativeCode!==undefined){
      kept=cached!==undefined?current(path,put)&&!cached.invalid&&signal?.aborted!==true:original!==undefined&&image!==undefined&&image===await stagedPutStampV1(temporary,put.bytes)&&await stages.retain(path,put,temporary,source,original,image,seenMs,current,signal);
-     noteOnce(replica,`blocked:${path}`,{event:"blocked",path,reason:"sharing-violation"},incomingWorktree);return "queued";
+      noteOnce(replica,`blocked:${path}`,{event:"blocked",path,reason:"sharing-violation"},incomingWorktree,nativeCode,"rename",nativeCode==="EPERM"?renameEpermTarget(here):undefined);return "queued";
     }
     installed=true;break;
    }catch(error){
@@ -2069,7 +2225,7 @@ async function retire(replica:ReplicaV1,id:number,winnerId:number):Promise<void>
   const here=await lstat(target).catch(()=>undefined);
   if(here!==undefined&&!here.isDirectory()){
    await keepLost(replica,path,target,here,manifest.hlcAt(winnerId));
-   if(await retrying(()=>unlink(target))!==BUSY)await prune(replica,dirname(target));
+   if(await retrying(()=>unlink(target))===undefined)await prune(replica,dirname(target));
   }
  }
  setFile(replica,path,{hlc:manifest.hlcAt(id),operation:"delete",mtimeMs:0});
@@ -2261,10 +2417,13 @@ export async function applyQueue(replica:ReplicaV1,signal:AbortSignal|undefined,
 
 /** 🧩️ Applies author stage registers through their existing Git object and index custody checks. */
 async function applyStage(replica:ReplicaV1,signal:AbortSignal|undefined,hydrateStageObjects?:()=>Promise<void>):Promise<void>{
+ const head=authorHeads.get(replica);
+ if(head===null||head!==undefined&&behind(replica.cursors[indexHost(replica).archivist],head))return;
  try{await applyIndexV1(indexHost(replica),signal,hydrateStageObjects);}
  catch(error){if(signal?.aborted)throw error;noteOnce(replica,`error:git:${messageOf(error)}`,{event:"error",stage:"git",message:messageOf(error)});}
 }
 
+/** 🧬️ Applies the queue in this order: the files of the daemon's own module first (a backlog of ten thousand entries must never hold back the code that repairs the backlog), then the Git stage inputs, then the rest of the worktree. */
 async function applyQueueWork(replica:ReplicaV1,signal:AbortSignal|undefined,stage?:string):Promise<Applied>{
  const waiting=packWaits.get(replica),paused=waiting!==undefined&&replica.settings.now()<waiting.until&&replica.queue.size===waiting.size;
  let items=replica.queue.snapshot().filter(id=>!indexRealmV1(replica.book.name(id))&&!(paused&&replica.manifest.operationAt(id)==="delete"&&replica.book.name(id).startsWith(objectsPrefix)));
@@ -2274,17 +2433,28 @@ async function applyQueueWork(replica:ReplicaV1,signal:AbortSignal|undefined,sta
  try{items=await settleClashes(replica,items);}
  catch(error){if(signal?.aborted)throw error;noteOnce(replica,`error:clash:${messageOf(error)}`,{event:"error",stage:"clash",message:messageOf(error)});}
  const stageInputs={removals:[] as number[],creations:[] as number[]},worktree={removals:[] as number[],creations:[] as number[]},later:number[]=[],otherObjects:number[]=[];
+ const worktreeRetries:{id:number;due:number;deleted:boolean}[]=[];
  const host=indexHost(replica),pending=host.pending(),stageObjects=stageObjectsForApplyV1(host,pending),stagedPaths=new Set<string>();
  for(const path of pending.keys())if(path.startsWith(INDEX_PREFIX_V1))stagedPaths.add(path.slice(INDEX_PREFIX_V1.length));
+ const cooldowns=cooling.get(replica),now=replica.settings.now();
  for(const id of items){
-  const path=replica.book.name(id),deleted=replica.manifest.operationAt(id)==="delete";
+  const path=replica.book.name(id),operation=replica.manifest.operationAt(id),deleted=operation==="delete",stageInput=path.startsWith(".git/")||stagedPaths.has(path);
+  if(!stageInput&&stage===undefined){
+   const wait=cooldowns?.get(path);
+   if(wait!==undefined&&wait.operation===operation&&wait.hlc===replica.manifest.hlcAt(id)){
+    if(wait.until>now)continue;
+    if(path!==".gitignore"){worktreeRetries.push({id,due:wait.until,deleted});continue;}
+   }
+  }
   if(path.startsWith(objectsPrefix)){
    if(deleted){later.push(id);continue;}
    if(stageObjects!==undefined&&!stageObjects.has(path)){otherObjects.push(id);continue;}
   }
-  const group=path.startsWith(".git/")||stagedPaths.has(path)?stageInputs:worktree;
+  const group=stageInput?stageInputs:worktree;
   (deleted?group.removals:group.creations).push(id);
  }
+ if(worktreeRetries.length>schema.definitions.Queue.const.maximumWorktreeRetriesPerTurn)worktreeRetries.sort((a,b)=>a.due-b.due).length=schema.definitions.Queue.const.maximumWorktreeRetriesPerTurn;
+ for(const {id,deleted} of worktreeRetries)(deleted?worktree.removals:worktree.creations).push(id);
  let applied=0,dropped=0,done=0;
  const attempt=(incomingWorktree:boolean)=>async(id:number):Promise<void>=>{
   const path=replica.book.name(id),entry=replica.manifest.entryAt(id),cool=cooling.get(replica)??new Map<string,QueueCooldown>(),prior=cool.get(path),wait=prior?.hlc===entry.hlc&&prior.operation===entry.operation?prior:undefined;
@@ -2316,6 +2486,10 @@ async function applyQueueWork(replica:ReplicaV1,signal:AbortSignal|undefined,sta
   await pool(otherObjects,replica.settings.concurrency,work,signal);
   otherObjects.length=0;
  };
+ const codePrefix=`${bootModuleRelativeV1}/`,codeIds=(ids:number[]):number[]=>{const code:number[]=[];let kept=0;for(const id of ids){if(replica.book.name(id).startsWith(codePrefix))code.push(id);else ids[kept++]=id;}ids.length=kept;return code;};
+ const codeRemovals=codeIds(worktree.removals),codeCreations=codeIds(worktree.creations);
+ await pool(codeRemovals,replica.settings.concurrency,worktreeWork,signal);
+ await pool(codeCreations,replica.settings.concurrency,worktreeWork,signal);
  await pool(stageInputs.removals,replica.settings.concurrency,work,signal);
  await pool(stageInputs.creations,replica.settings.concurrency,work,signal);
  await applyStage(replica,signal,otherObjects.length===0?undefined:hydrateOtherObjects);
@@ -2524,13 +2698,24 @@ async function ingestFollowSlice(replica:ReplicaV1,origins:readonly string[],hea
  return {events,more};
 }
 
-/** 📥️ Folds bounded journal slices against one head snapshot before materialising their winners. An ignore-file change settles before the next intake pass. */
+/** 🎯 Holds the author's published head across bounded follow passes so an index cannot apply a prefix of its journal append. */
+function pinAuthorHead(replica:ReplicaV1,heads:Map<string,FleetHeadV1|undefined>):void{
+ const {server,archivist}=indexHost(replica);
+ if(server)return;
+ const cursor=replica.cursors[archivist],prior=authorHeads.get(replica);
+ if(prior!=null&&behind(cursor,prior)){heads.set(archivist,prior);return;}
+ const head=heads.get(archivist);
+ authorHeads.set(replica,head===undefined||cursor!==undefined&&cursorAheadV1(cursor,head)?null:head);
+}
+
+/** 📥️ Folds bounded journal slices before materialising their winners. The author head stays fixed across passes, and an ignore-file change settles before the next pass. */
 export async function followOnceV1(replica:ReplicaV1,signal?:AbortSignal,reuse:boolean=false):Promise<FollowResultV1>{
  const started=Date.now(),{storeRoot,originId}=replica.settings;
  try{
   signal?.throwIfAborted();
   await refreshIgnore(replica);
   const origins=(reuse?await originsOf(replica):await listOriginsV1(storeRoot)).filter(origin=>origin!==originId),heads=await followHeads(replica,origins,signal);
+  pinAuthorHead(replica,heads);
   await jumpIfFar(replica,heads);
   let events=0;
   for(;;){
@@ -2566,12 +2751,12 @@ const ancestors=(path:string):string[]=>{const found:string[]=[];for(let cut=pat
 
 function hotChanged(replica:ReplicaV1,path:string,now:number,target:string=absolute(replica.settings.worktree,path)):boolean{
  const {files,queue}=replica,id=replica.book.find(path);
+ if(id!==undefined&&queue.hasId(id))return false;
  let info:Stats;
  try{info=lstatSync(target);}
- catch(error){return gone(error)&&id!==undefined&&files.live(id)&&files.operationAt(id)!=="delete"&&!queue.hasId(id)&&!linkless(replica,id);}
+ catch(error){return gone(error)&&id!==undefined&&files.live(id)&&files.operationAt(id)!=="delete"&&!linkless(replica,id);}
  if(info.isDirectory())return false;
- if(id===undefined||!files.live(id)||files.operationAt(id)==="delete")return (info.isFile()||info.isSymbolicLink())&&!queue.has(path)&&sharedV1(path,false,replica.ignore);
- if(queue.hasId(id))return false;
+ if(id===undefined||!files.live(id)||files.operationAt(id)==="delete")return (info.isFile()||info.isSymbolicLink())&&sharedV1(path,false,replica.ignore);
  if(info.isSymbolicLink()){
   try{return files.operationAt(id)!=="link"||files.targets.get(id)!==readlinkSync(target);}catch{return true;}
  }
@@ -2623,17 +2808,22 @@ async function maintain(replica:ReplicaV1,options:ReplicaOptionsV1):Promise<void
  if(cool!==undefined)for(const path of cool.keys()){const id=replica.book.find(path);if(id===undefined||!replica.queue.hasId(id))cool.delete(path);}
 }
 
-/** 🏃️ The long-running daemon. Changes are found by four tiers that never depend on operating-system file events: a drop directory of hints (`.cache/f/hints/`, polled every 50 ms, published at once), the hot set (every path published, applied, hinted or seen by the watcher in the last ten minutes, re-`lstat`ed about every 300 ms together with the directories that contain them and the stat signature of `.git/index`), the directory sweep (a duty-limited `lstat` of every known shared directory, about 12 % of one core at most and never more often than every 2 s, which re-lists only directories whose modification time moved and so finds creates, deletes and atomic-rename saves anywhere within seconds) and the full file sweep every `scanSeconds` (jittered, in the background; in-place edits of cold files), which also runs at start, after an outage, after `.gitignore` changes and after a hint or watcher overflow. The recursive native watch (when the platform has it and `watch` is not `false`) with a 150 ms debounce stays an accelerator. Every tier hands paths to one publish step per round, so a path found twice is published once, and each tier works in slices of a few milliseconds so follow and apply never wait for it. Follow runs every `pollMilliseconds`; the sync switch, the retirement record, repair requests, store reachability and the origin list are read at slower cadences; an unreachable store is reported once per outage while local work continues; every 5 s (and at most once a second when a value changed) it writes its attestation into the store, also while sync is off, and when the code on disk has differed from the code at start for 5 s it persists, reports `restarting` and returns so that the service manager starts the new code; while the own origin carries a retirement record with `retired: true` it reports one `retired` event, publishes and applies nothing and keeps attesting with sync off, until `retire --undo` re-admits it; `.gitignore` changes reload the matcher; `.cache/f/sync.json` with `enabled: false` holds publish and apply until the file is removed; cancelling the signal persists state and releases the lock.  Every store turn runs under a deadline guard: a store call that a hard mount blocks cannot be cancelled, so when the store has not answered a probe within `storeDeadlineMilliseconds` (10 s) the round is abandoned and aborted, `store-unreachable` is reported (reason `stalled`), no further store call is issued while one is outstanding, the loop, the hint channel, the attestation to memory and the state persistence keep running, and the daemon resumes by itself when the store answers again. New code is adopted only after a fresh process proved that it starts (`restart-refused` otherwise), after a deterministic per-origin delay of 0 to 60 s and while the incoming queue is empty. Recurring failures are counted per kind, announced at most once a minute and shown in `status`, the health file and the attestation. */
+/** 🧯️ How long the store may stay stalled, unreachable or its turn busy before the daemon ends itself for the supervisor to start it again (ten minutes): a hung call of a network mount can hold a worker thread for ever, and a restart is the only thing that frees it. */
+export const storeStuckRestartMillisecondsV1=600_000;
+
+/** 🏃️ The long-running daemon. Changes are found by four tiers that never depend on operating-system file events: a durable drop directory of hints (`.cache/f/hints/`, polled every 50 ms and acknowledged after scoped publication), the hot set (every path published, applied, hinted or seen by the watcher in the last ten minutes, re-`lstat`ed about every 300 ms together with the directories that contain them and the stat signature of `.git/index`), the directory sweep (a duty-limited `lstat` of every known shared directory, about 12 % of one core at most and never more often than every 2 s, which re-lists only directories whose modification time moved and so finds creates, deletes and atomic-rename saves anywhere within seconds) and the full file sweep every `scanSeconds` (jittered, in the background; in-place edits of cold files), which also runs at start, after an outage, after `.gitignore` changes and after a watcher or large-ready overflow. The recursive native watch (when the platform has it and `watch` is not `false`) with a 150 ms debounce stays an accelerator. The other discovery tiers share a publish step, so a path found twice is published once, and each tier works in slices of a few milliseconds so follow and apply never wait for it. Follow runs every `pollMilliseconds`; the sync switch, the retirement record, repair requests, store reachability and the origin list are read at slower cadences; an unreachable store is reported once per outage while local work continues; every 5 s (and at most once a second when a value changed) it writes its attestation into the store, also while sync is off, and when the code on disk has differed from the code at start for 5 s it persists, reports `restarting` and returns so that the service manager starts the new code; while the own origin carries a retirement record with `retired: true` it reports one `retired` event, publishes and applies nothing and keeps attesting with sync off, until `retire --undo` re-admits it; `.gitignore` changes reload the matcher; `.cache/f/sync.json` with `enabled: false` holds publish and apply until the file is removed; cancelling the signal persists state and releases the lock.  Every store turn runs under a deadline guard: a store call that a hard mount blocks cannot be cancelled, so when the store has not answered a probe within `storeDeadlineMilliseconds` (10 s) the round is abandoned and aborted, `store-unreachable` is reported (reason `stalled`), no further store call is issued while one is outstanding, the loop, the hint channel, the attestation to memory and the state persistence keep running, and the daemon resumes by itself when the store answers again. New code is adopted only after a fresh process proved that it starts (`restart-refused` otherwise), after a deterministic per-origin delay of 0 to 60 s and while the incoming queue is empty. Recurring failures are counted per kind, announced at most once a minute and shown in `status`, the health file and the attestation. */
 export async function runV1(options:ReplicaOptionsV1,outer:AbortSignal,sink:ReplicaSinkV1=()=>{}):Promise<void>{
  const restartSignal=new AbortController(),signal=AbortSignal.any([outer,restartSignal.signal]);
  await awaitWorktreeAccessV1({worktree:options.worktree,storeRoot:options.storeRoot,originId:options.originId},signal,(state,error)=>{sink({version:1,event:"blocked",reason:"worktree-access-denied",path:options.worktree,message:`${state} ${error}`});});
- const replica=await openReplicaV1(options,sink),settings=replica.settings,touched=new Set<string>(),hinted=new Set<string>();
+ const replica=await openReplicaV1(options,sink),settings=replica.settings,touched=new Set<string>(),largeReady=new Set<string>(),deferredHints=new Map<string,number>();
+ const hintCursor:HintReadCursorV1={};
+ let hintBatch:readonly HintReceiptV1[]=[],hintPaths=new Set<string>();
  const hintEvery=options.hintMilliseconds??hintMilliseconds,hotEvery=options.hotMilliseconds??hotMilliseconds,sweepEvery=options.sweepMilliseconds??sweepMilliseconds,slow=Math.max(settings.pollMilliseconds,Math.min(1000,settings.pollMilliseconds*4));
  let rounds=0,walk:Promise<void>|undefined,walked:WalkV1|undefined,wake:(()=>void)|undefined,lastTouch=0,full=false,nextWalk=0,outage=false,recovering=true,watcher:ReturnType<typeof watch>|undefined,suspended=false,ignoreSeen=replica.ignoreHash,hinting=false,settledAt=-1,failed=0,healthAt=-Infinity,maintainedAt=-Infinity,tendedAt=-Infinity;
  const stageWatch={signature:undefined as string|undefined,pollAt:0,retryAt:Infinity,attempts:0};
  const hot={list:[] as string[],dirs:[] as string[],cursor:0,active:false,spent:0,next:0},sweep={active:false,spent:0,next:0,startedMs:0},file={active:false,ids:new Int32Array(0),index:0,spent:0,next:0,startedMs:0,drift:false},walkEvery=options.walkSeconds??defaultWalkSeconds,walkNext=(cost:number):number=>{const delay=nextDelayV1(scanDelayV1(walkEvery),cost,walkDuty);replica.latency.tiers.record("walk",cost,delay);return settings.now()+delay;};
  if(replica.dirs.size>0)nextWalk=settings.now()+scanDelayV1(walkEvery);
- const large=largePublishV1(replica,signal,path=>{if(hinted.size<hotLimit)hinted.add(path);else full=true;wake?.();});
+ const large=largePublishV1(replica,signal,path=>{if(largeReady.size<hotLimit)largeReady.add(path);else full=true;wake?.();});
  const pause=(milliseconds:number)=>new Promise<void>(done=>{
   const finish=()=>{clearTimeout(timer);signal.removeEventListener("abort",finish);wake=undefined;done();};
   const timer=setTimeout(finish,milliseconds);
@@ -2717,7 +2907,7 @@ export async function runV1(options:ReplicaOptionsV1,outer:AbortSignal,sink:Repl
  const switchOn=cached(slow,()=>syncEnabledV1(settings.worktree)),reachable=cached(slow,()=>guard.reachable()),retirement=cached(slow*2,()=>readRetirementV1(settings.storeRoot,settings.originId)),repairAsked=cached(slow,()=>repairRequestedV1(settings.worktree));
  let everUp=false;
  const down=()=>{large.reset();if(!outage){outage=true;replica.say({event:"store-unreachable",path:settings.storeRoot,reason:everUp?guard.state():"waiting-for-mount"});}};
- let syncOn=true,restart=false,parked=false,sidecarsAdmitted=false;
+ let syncOn=true,restart=false,parked=false,sidecarsAdmitted=false,busySince:number|undefined;
  const history={current:await readRunHistoryV1(settings.worktree)};
  const running=options.codeRoot??codeRootV1,watching=options.watchRoot??running;
  const checks=new Map<string,number>();
@@ -2739,7 +2929,7 @@ export async function runV1(options:ReplicaOptionsV1,outer:AbortSignal,sink:Repl
   finally{clearTimeout(timer);}
  };
  const admission=createAdmissionStateV1();
- const attester=createAttesterV1({storeRoot:settings.storeRoot,originId:settings.originId,groupId:settings.groupId,now:settings.now,heartbeatMilliseconds:options.attestMilliseconds,stableMilliseconds:options.restartStableMilliseconds,codeRoot:options.codeRoot,watchRoot:options.watchRoot,check:options.selfCheck??checkCode,admit:options.admit??(options.selfCheck===undefined?(digest,aborted)=>admitCodeV1(replica,{digest,running:attester.running(),moduleRoot:watching,bounded,signal:aborted,state:admission}):undefined),fallback:options.fallback,returnMilliseconds:options.returnMilliseconds,busy:()=>replica.queue.size>0||replica.applying>0,jitterSpanMilliseconds:options.restartJitterMilliseconds,minimumUptimeMilliseconds:options.minimumUptimeMilliseconds,refused:(digest,reason)=>{replica.say({event:"restart-refused",reason:digest,message:reason});if(blamesCheckV1(reason))void recordRefusedV1(settings.worktree,digest).then(next=>{history.current=next;}).catch(()=>{});if(blamesCheckV1(reason))void publishRefusalV1(settings.storeRoot,settings.originId,{digest,reason},settings.now()).catch(()=>{});},suspect:(digest,runningDigest)=>suspectCodeV1(history.current,runningDigest,digest),suspicious:(digest,reason)=>{replica.say({event:"code-reverted",reason:digest,message:reason});},ran:digest=>{void recordRunV1(settings.worktree,digest).then(next=>{history.current=next;}).catch(()=>{});},failures:()=>{const stage=stageRecordedV1(settings.worktree);return stage===null||stage.state==='shared'||stage.reason===null?replica.failures.diagnostics():[...replica.failures.diagnostics(7),{kind:`stage-${stage.reason}`,count:1,lastMs:settings.now()}];},store:work=>attestStore.call(work),git:signal=>(options.gitState??gitStateV1)(settings.worktree,signal),gitObservationFailed:reason=>{replica.failures.note(`stage-observe-${reason}`,reason);},view:async(signal,request)=>{if(request!==undefined&&options.gitView===undefined){const next=await gitViewDeltaV1(settings.worktree,request.previous as GitViewV1,{paths:request.paths,restage:request.restage},signal);if(next!==null)return next;}return (options.gitView??gitViewV1)(settings.worktree,signal);},changes:()=>takeViewDirtV1(replica),unsettled:()=>[...touched,...hinted,...(full?[".gitignore"]:[])],viewMilliseconds:options.viewMilliseconds,viewDebounceMilliseconds:options.viewDebounceMilliseconds,deltaDebounceMilliseconds:options.deltaDebounceMilliseconds,deltaLimit:options.deltaLimit,guards:async signal=>{if(options.gitGuards!==undefined)return options.gitGuards(settings.worktree,signal);const found=await gitGuardsV1(settings.worktree,{signal,modeless:settings.modeless});if(found===null)return null;const {samples:_,...guards}=found;return guards;},guardsMilliseconds:options.guardsMilliseconds,guardsMinimumMilliseconds:options.guardsMinimumMilliseconds,reachable:()=>attestStore.reachable(),prepare:()=>ensureHome(replica),latency:()=>replica.latency.report(),timed:(name,cost,delay)=>{replica.latency.tiers.record(name,cost,delay);},viewSeed:()=>seedView(replica),onView:view=>{rememberV1(replica,"view",encoder.encode(JSON.stringify(view)));}});
+ const attester=createAttesterV1({storeRoot:settings.storeRoot,originId:settings.originId,groupId:settings.groupId,now:settings.now,heartbeatMilliseconds:options.attestMilliseconds,stableMilliseconds:options.restartStableMilliseconds,codeRoot:options.codeRoot,watchRoot:options.watchRoot,check:options.selfCheck??checkCode,admit:options.admit??(options.selfCheck===undefined?(digest,aborted)=>admitCodeV1(replica,{digest,running:attester.running(),moduleRoot:watching,bounded,signal:aborted,state:admission}):undefined),fallback:options.fallback,returnMilliseconds:options.returnMilliseconds,busy:()=>replica.queue.size>0||replica.applying>0,jitterSpanMilliseconds:options.restartJitterMilliseconds,minimumUptimeMilliseconds:options.minimumUptimeMilliseconds,refused:(digest,reason)=>{replica.say({event:"restart-refused",reason:digest,message:reason});if(blamesCheckV1(reason))void recordRefusedV1(settings.worktree,digest).then(next=>{history.current=next;}).catch(()=>{});if(blamesCheckV1(reason))void publishRefusalV1(settings.storeRoot,settings.originId,{digest,reason},settings.now()).catch(()=>{});},suspect:(digest,runningDigest)=>suspectCodeV1(history.current,runningDigest,digest),suspicious:(digest,reason)=>{replica.say({event:"code-reverted",reason:digest,message:reason});},ran:digest=>{void recordRunV1(settings.worktree,digest).then(next=>{history.current=next;}).catch(()=>{});},failures:()=>{const stage=stageRecordedV1(settings.worktree);return stage===null||stage.state==='shared'||stage.reason===null?replica.failures.diagnostics():[...replica.failures.diagnostics(7),{kind:`stage-${stage.reason}`,count:1,lastMs:settings.now()}];},store:work=>attestStore.call(work),git:signal=>(options.gitState??gitStateV1)(settings.worktree,signal),gitObservationFailed:reason=>{replica.failures.note(`stage-observe-${reason}`,reason);},view:async(signal,request)=>{if(request!==undefined&&options.gitView===undefined){const next=await gitViewDeltaV1(settings.worktree,request.previous as GitViewV1,{paths:request.paths,restage:request.restage},signal);if(next!==null)return next;}return (options.gitView??gitViewV1)(settings.worktree,signal);},changes:()=>takeViewDirtV1(replica),unsettled:()=>[...touched,...largeReady,...hintPaths,...(full?[".gitignore"]:[])],viewMilliseconds:options.viewMilliseconds,viewDebounceMilliseconds:options.viewDebounceMilliseconds,deltaDebounceMilliseconds:options.deltaDebounceMilliseconds,deltaLimit:options.deltaLimit,guards:async signal=>{if(options.gitGuards!==undefined)return options.gitGuards(settings.worktree,signal);const found=await gitGuardsV1(settings.worktree,{signal,modeless:settings.modeless});if(found===null)return null;const {samples:_,...guards}=found;return guards;},guardsMilliseconds:options.guardsMilliseconds,guardsMinimumMilliseconds:options.guardsMinimumMilliseconds,reachable:()=>attestStore.reachable(),prepare:()=>ensureHome(replica),latency:()=>replica.latency.report(),timed:(name,cost,delay)=>{replica.latency.tiers.record(name,cost,delay);},viewSeed:()=>seedView(replica),onView:view=>{rememberV1(replica,"view",encoder.encode(JSON.stringify(view)));}});
  options.opened?.(replica);
  replica.say({event:"started",originId:settings.originId,groupId:settings.groupId});
  const booted=attester.start(signal).catch(()=>{});
@@ -2753,47 +2943,69 @@ export async function runV1(options:ReplicaOptionsV1,outer:AbortSignal,sink:Repl
     if(!blamesStartV1(options.fallback.reason))return;
     const failed=await codeDigestV1(watching);
     if(failed===running)return;
-    history.current=await recordRefusedV1(settings.worktree,failed);
+    if(!transientStartV1(options.fallback.reason))history.current=await recordRefusedV1(settings.worktree,failed);
     await publishRefusalV1(settings.storeRoot,settings.originId,{digest:failed,reason:options.fallback.reason},settings.now());
     return;
    }
    const first=history.current.runs.find(run=>run.digest===running)?.firstMs;
    if(!blamesWatchdogV1({firstRunMs:first,endedMs:(await readBlockedRestartV1(settings.worktree))?.wallMs,windowMs:watchdogWindowMsV1}))return;
-   history.current=await recordRefusedV1(settings.worktree,running);
-   await publishRefusalV1(settings.storeRoot,settings.originId,{digest:running,reason:"the watchdog ended this code while it was new / der Wächter hat diesen Code beendet, als er neu war"},settings.now());
+   const ended="the watchdog ended this code while it was new / der Wächter hat diesen Code beendet, als er neu war";
+   if(!transientStartV1(ended))history.current=await recordRefusedV1(settings.worktree,running);
+   await publishRefusalV1(settings.storeRoot,settings.originId,{digest:running,reason:ended},settings.now());
    replica.say({event:"restart-refused",reason:running,message:"watchdog"});
    disowned=true;
   }catch{}
  });
  const sidecars=options.sidecars===undefined?undefined:createSidecarsV1({settings:options.sidecars,facts:{worktree:settings.worktree,storeRoot:settings.storeRoot,originId:settings.originId,groupId:settings.groupId,platform:process.platform==="darwin"?"macos":process.platform==="win32"?"windows":"linux"}});
  void booted.then(()=>{if(!relative(settings.worktree,running).startsWith("..")&&!relative(settings.worktree,running).startsWith(".cache")&&attester.running()!=="")void sealCodeV1({root:settings.worktree,moduleRoot:running,digest:attester.running(),digestOf:codeDigestV1,signal}).catch(()=>{}).then(()=>installBootStageV1(settings.worktree,join(running,"🔁️replica","🛟️supervisor","🟦️.ts"))).catch(()=>{}).then(()=>settings.originId===`${settings.groupId}-server`&&!signal.aborted?maintainKitV1({root:settings.worktree,moduleRoot:running,store:settings.storeRoot,originId:settings.originId,digest:attester.running(),digestOf:codeDigestV1,signal}):undefined).catch(()=>{});});
+ const keepService=(entryDirectory:string):void=>{
+  try{
+   const ports=realServiceDefinitionPortsV1(entryDirectory,()=>sidecars?.report().some(slot=>slot.state==="waiting"||slot.state==="backoff")??false,process.platform==="darwin"?"macos":process.platform==="win32"?"windows":"linux",homedir(),userInfo().username,process.getuid?.()??0);
+   const result=takeReloadOutcomeV1(ports)??maintainServiceDefinitionV1({topology:readTopologyV1(),groupId:settings.groupId,ports});
+   if(result.action==="current"||result.action==="absent"){resolved(replica,"service-definition");return;}
+   if(result.action==="pending"){const timer=setTimeout(()=>{void keepEntry().catch(()=>{});},(result.dueMs??60_000)+1000);timer.unref?.();return;}
+   if(result.action==="applied"||result.action==="reloading")replica.say({event:"sync",stage:"service",result:serviceDefinitionTextV1(result)});
+   else noteOnce(replica,"service-definition",{event:"error",stage:"service",message:serviceDefinitionTextV1(result)});
+  }catch{}
+ };
  const keepEntry=async():Promise<void>=>{
   if(attester.running()===""||relative(settings.worktree,running).startsWith("..")||relative(settings.worktree,running).startsWith(".cache"))return;
   const entryDirectory=options.entryDirectory??entryDirectoryV1(),result=await maintainEntryV1({worktree:settings.worktree,moduleRoot:running,storeRoot:settings.storeRoot,entryDirectory,signal});
   if(result.action.startsWith("refused"))noteOnce(replica,"entry-boot:update",{event:"error",stage:"entry",message:`${result.action}: ${result.reason??result.installed??""}`});
   else{resolved(replica,"entry-boot:update");if(result.action==="installed")replica.say({event:"sync",stage:"entry",result:`boot program ${result.version} installed`});if(options.entryDirectory===undefined)migrateAgentV1({home:homedir(),entryDirectory});}
+  if(options.entryDirectory===undefined)keepService(entryDirectory);
   if(options.entryDirectory===undefined&&process.platform==="darwin")try{ensureLauncherConsentV1({root:settings.worktree,probeScript:fileURLToPath(new URL("../../📚️library/🏗️build/🏡️resident/🔐️consent/🔎️probe/🟨️.mjs",import.meta.url)),run:(program,args)=>{const outcome=spawnSync(program,[...args],{encoding:"utf8",timeout:10_000});return{status:outcome.status??1,stdout:outcome.stdout??""};},waitMilliseconds:0});}catch{}
  };
  void booted.then(()=>keepEntry()).catch(()=>{});
  const entryTimer=setInterval(()=>{void keepEntry().catch(()=>{});},options.entryMilliseconds??3_600_000);entryTimer.unref?.();
  const bootWall=Date.now(),publishAfter=options.publishCodeMilliseconds??600_000;
- let shared=false;
- const shareCode=async():Promise<void>=>{
+ const shareRetry=Math.max(settings.pollMilliseconds,Math.min(publishAfter,CODE_SNAPSHOT_PUBLICATION_RETRY_MAXIMUM_V1));
+ let shared=false,sharing=false,nextShareAt=bootWall+publishAfter,lastShareRefusal:string|null=null;
+ const shareCode=async():Promise<boolean>=>{
   const digest=attester.running();
-  await bounded(()=>publishCodeSnapshotV1({root:settings.worktree,store:settings.storeRoot,digest,originId:settings.originId}));
+  const result=await bounded(()=>publishCodeSnapshotV1({root:settings.worktree,store:settings.storeRoot,digest,originId:settings.originId}));
+  if(!result.published&&result.reason!=="present"){
+   if(!signal.aborted&&result.reason!==null&&lastShareRefusal!==result.reason)replica.say({event:"error",stage:"code-snapshot",message:result.reason});
+   lastShareRefusal=result.reason;
+   return false;
+  }
   const live=new Set(Object.values(await bounded(()=>readAttestationsV1(settings.storeRoot))).map(item=>item.code));
   live.add(digest);
   await bounded(()=>pruneStoreCodeV1(settings.storeRoot,options.codeKeep??4,live));
+  return true;
  };
  let configured=false;
  await ensureHintsV1(settings.worktree).catch(()=>{});
  const ticker=setInterval(()=>{
-  if(hinting||signal.aborted)return;
+  if(hinting||hintBatch.length>0||signal.aborted)return;
+  const wall=Date.now();
+  for(const [name,until] of deferredHints)if(wall>=until)deferredHints.delete(name);
   hinting=true;
-  void takeHintsV1(settings.worktree,undefined,settings.now()).then(paths=>{
-   if(paths.length===0)return;
-   for(const path of paths){if(hinted.size<hotLimit)hinted.add(path);else full=true;}
-   noteViewDirtV1(replica,paths);
+  void readHintsV1(settings.worktree,undefined,settings.now(),deferredHints,hintCursor).then(batch=>{
+   if(signal.aborted||batch.length===0)return;
+   hintBatch=batch;
+   hintPaths=new Set(batch.flatMap(receipt=>receipt.paths));
+   noteViewDirtV1(replica,[...hintPaths]);
    wake?.();
   }).finally(()=>{hinting=false;});
  },hintEvery);
@@ -2857,7 +3069,35 @@ export async function runV1(options:ReplicaOptionsV1,outer:AbortSignal,sink:Repl
        throw error;
       }
      };
-     if(!indexHost(replica).server){recovering=false;await follow();}
+     const author=indexHost(replica).server;
+     if(!author||recovering&&hintBatch.length>0){await follow();recovering=false;}
+     if(hintBatch.length>0){
+      const batch=hintBatch,remaining=new Set(batch),paths=[...hintPaths].filter(path=>path!==".git/index");
+      try{
+       replica.hot.noteMany(hintPaths,hintPaths.size,settings.now());
+       replica.activity++;
+       await outbound(async()=>{
+        const blocked=new Set<string>();
+        if(paths.length>0){
+         const result=await publishOnceV1(replica,signal,paths,undefined,undefined,undefined,large,true);
+         for(const path of result.retry){blocked.add(path);for(const parent of ancestors(path))blocked.add(parent);}
+        }
+        const acknowledge=(stage:boolean)=>pool(batch,settings.concurrency,async receipt=>{
+         if(receipt.paths.includes(".git/index")!==stage||receipt.paths.some(path=>blocked.has(path)))return;
+         if(await receipt.acknowledge())remaining.delete(receipt);
+        },signal);
+        await acknowledge(false);
+        if(hintPaths.has(".git/index")){
+         const result=await publishOnceV1(replica,signal,[".git/index"],undefined,undefined,undefined,large,true);
+         if(!result.retry.includes(".git/index")&&(!author||await indexCertifiedV1(settings.worktree)))await acknowledge(true);
+        }
+       });
+      }finally{
+       const until=Date.now()+Math.max(slow,hotEvery);
+       for(const receipt of remaining)deferredHints.set(receipt.name,until);
+       hintBatch=[];hintPaths.clear();
+      }
+     }
      activityV1("publish");
      const stageNow=settings.now();
      if(stageNow>=stageWatch.pollAt){
@@ -2894,7 +3134,7 @@ export async function runV1(options:ReplicaOptionsV1,outer:AbortSignal,sink:Repl
      if(recovering){recovering=false;await follow();activityV1("publish");}
      if(replica.ignoreHash!==ignoreSeen){ignoreSeen=replica.ignoreHash;full=true;}
      const now=settings.now();
-     if(full&&now>=nextWalk){full=false;walked=undefined;touched.clear();hinted.clear();const spent=cpuCost();retry.push(...(await outbound(()=>publishOnceV1(replica,signal,undefined,undefined,undefined,undefined,large))).retry);nextWalk=walkNext(spent());file.next=settings.now()+scanDelayV1(settings.scanSeconds);}
+     if(full&&now>=nextWalk){full=false;walked=undefined;touched.clear();largeReady.clear();const spent=cpuCost();retry.push(...(await outbound(()=>publishOnceV1(replica,signal,undefined,undefined,undefined,undefined,large))).retry);nextWalk=walkNext(spent());file.next=settings.now()+scanDelayV1(settings.scanSeconds);}
      else{
       if(walked!==undefined){const scan=walked;walked=undefined;retry.push(...(await outbound(()=>publishOnceV1(replica,signal,undefined,scan,undefined,undefined,large))).retry);}
       else if(walk===undefined&&now>=nextWalk){
@@ -2904,7 +3144,7 @@ export async function runV1(options:ReplicaOptionsV1,outer:AbortSignal,sink:Repl
       }
       const batch=new Set<string>(),flat=new Set<string>();
       if(touched.size>0&&settings.now()-lastTouch>=settings.debounceMilliseconds){for(const path of touched)batch.add(path);touched.clear();}
-      if(hinted.size>0){replica.hot.noteMany(hinted,hinted.size,now);replica.activity++;for(const path of hinted)batch.add(path);hinted.clear();}
+      if(largeReady.size>0){for(const path of largeReady)batch.add(path);largeReady.clear();}
       if(!hot.active&&now>=hot.next){hot.list=replica.hot.snapshot(now);hot.dirs=[...new Set([...hot.list.map(parentOf),...replica.warm.snapshot(now),...replica.dirs.shallow()])].filter(directory=>replica.dirs.has(directory));hot.cursor=0;hot.spent=0;hot.active=true;}
       if(hot.active){
        activityV1("hot");
@@ -2970,6 +3210,7 @@ export async function runV1(options:ReplicaOptionsV1,outer:AbortSignal,sink:Repl
      }
      },signal);
      if(turn.status==="stalled")down();
+     busySince=turn.status==="busy"?busySince??Date.now():undefined;
     }
     }
     failed=0;
@@ -2982,6 +3223,8 @@ export async function runV1(options:ReplicaOptionsV1,outer:AbortSignal,sink:Repl
    }
    if(!signal.aborted){
     attest();
+    const stuckLimit=options.storeStuckRestartMilliseconds??storeStuckRestartMillisecondsV1,stuckAt=Date.now();
+    if(!restart&&(guard.state()!=="ok"&&stuckAt-guard.since()>=stuckLimit||busySince!==undefined&&stuckAt-busySince>=stuckLimit)){restart=true;replica.say({event:"store-stuck",reason:guard.state(),seconds:Math.round(stuckLimit/1000)});}
     if(restart)break;
     const wall=Date.now();
     activityV1("health");
@@ -2990,7 +3233,10 @@ export async function runV1(options:ReplicaOptionsV1,outer:AbortSignal,sink:Repl
     if(wall-tendedAt>=tendMilliseconds&&syncOn&&!parked){tendedAt=wall;await tendBlobsV1(replica,signal).catch(()=>{});}
     activityV1("maintain");
     if(wall-maintainedAt>=maintenanceMilliseconds){maintainedAt=wall;await maintain(replica,options).catch(()=>{});}
-    if(!shared&&wall-bootWall>=publishAfter&&guard.state()==="ok"&&attester.running()!==""&&!parked&&replica.failures.summary().every(item=>wall-item.lastMs>=publishAfter)){shared=true;void shareCode().catch(()=>{shared=false;});}
+    if(!shared&&!sharing&&wall>=nextShareAt&&guard.state()==="ok"&&attester.running()!==""&&!parked&&replica.failures.summary().every(item=>wall-item.lastMs>=publishAfter)){
+     sharing=true;
+     void shareCode().then(complete=>{shared=complete;},()=>{}).finally(()=>{sharing=false;nextShareAt=Date.now()+shareRetry;});
+    }
     if(wall-bootWall>=refusalProofMsV1&&attester.running()!==""&&history.current.refused.includes(attester.running())&&guard.state()==="ok"&&((await readBlockedRestartV1(settings.worktree))?.wallMs??0)<bootWall){
      const proven=attester.running();
      history.current=await withdrawRefusedV1(settings.worktree,proven).catch(()=>history.current);
@@ -3606,20 +3852,21 @@ export async function authoredCodeV1(replica:ReplicaV1,moduleRoot:string,running
 }
 
 /** 🚪️ What the admission remembers between two questions of one daemon: the tracker that times how long each other origin has been healthy on the digest, when this digest was first asked about (the wait of the tie-break runs from there, and a digest that changes starts it again) and the last answer about authorship (asked again after 5 s, 10 s, … up to 60 s while it stays false, because it reads and hashes every file of the code). */
-export type AdmissionStateV1={readonly tracker:CanaryTrackerV1;first:Readonly<{digest:string;at:number}>|undefined;authored:Readonly<{digest:string;at:number;value:boolean;spacing:number}>|undefined};
+export type AdmissionStateV1={readonly tracker:CanaryTrackerV1;first:Readonly<{digest:string;at:number}>|undefined;authored:Readonly<{digest:string;at:number;value:boolean;spacing:number}>|undefined;since:number|undefined};
 
 /** 🚪️ Creates the memory of an admission. */
-export function createAdmissionStateV1(limits:CanaryLimitsV1=canaryLimitsV1):AdmissionStateV1{return {tracker:createCanaryTrackerV1(limits.freshMs),first:undefined,authored:undefined};}
+export function createAdmissionStateV1(limits:CanaryLimitsV1=canaryLimitsV1):AdmissionStateV1{return {tracker:createCanaryTrackerV1(limits.freshMs),first:undefined,authored:undefined,since:undefined};}
 
-/** 🚪️ The admission of new code on disk, asked before its self-check: the pure rule `decideCanaryV1` over what the store says. A digest that some origin refused never passes; one with a store snapshot passes; one that another origin has run healthy for a minute passes (a follower); one whose changed files were all written on this machine passes (the author); everything else is a change set that arrived from elsewhere and that nobody has proven, which is not left waiting for ever: after two minutes the group server goes first, then, five minutes apart, the lowest fresh ids, each only if the one before did not make it, so that the fleet can never wait on itself. The daemon waits, shows `pending` with `waiting: …` in English and German and asks again every heartbeat; the digest changes as more files arrive, which starts the wait again. `bounded` runs one store read under a deadline. */
+/** 🚪️ The admission of new code on disk, asked before its self-check: the pure rule `decideCanaryV1` over what the store says. A digest that some origin refused never passes; one with a store snapshot passes; one that another origin has run healthy for a minute passes (a follower); one whose changed files were all written on this machine passes (the author); everything else is a change set that arrived from elsewhere and that nobody has proven, which is not left waiting for ever: after two minutes the group server goes first, then, five minutes apart, the lowest fresh ids, each only if the one before did not make it, so that the fleet can never wait on itself. The daemon waits, shows `pending` with `waiting: …` in English and German and asks again every heartbeat; the digest changes as more files arrive, which does not start the wait again: the wait runs from the first digest asked about while the running one stays the same, and after `maximumWaitMsV1` (15 minutes) the newest digest goes whatever the tie-break says, if nobody refused it. `bounded` runs one store read under a deadline. */
 export async function admitCodeV1(replica:ReplicaV1,input:Readonly<{digest:string;running:string;moduleRoot:string;bounded:<T>(work:()=>Promise<T>)=>Promise<T>;signal?:AbortSignal;state?:AdmissionStateV1;now?:()=>number;limits?:CanaryLimitsV1}>):Promise<Readonly<{ok:true}>|Readonly<{ok:false;reason:string}>>{
  const {storeRoot,originId,groupId}=replica.settings,limits=input.limits??canaryLimitsV1,state=input.state??createAdmissionStateV1(limits),now=(input.now??replica.settings.now)();
- if(input.digest===input.running)return {ok:true};
+ if(input.digest===input.running){state.since=undefined;return {ok:true};}
+ state.since??=now;
  if(state.first?.digest!==input.digest){state.first={digest:input.digest,at:now};state.authored=undefined;}
  const attestations=await input.bounded(()=>readAttestationsV1(storeRoot,input.signal)),refusals=await input.bounded(()=>readRefusalsV1(storeRoot,input.signal)),snapshots=(await input.bounded(()=>listStoreCodeV1(storeRoot))).map(item=>item.digest),retirements=await input.bounded(()=>readRetirementsV1(storeRoot,input.signal));
  const peers:CanaryPeerV1[]=Object.values(attestations).map(item=>({originId:item.originId,groupId:item.groupId,code:item.code,wallMs:item.wallMs,sync:item.sync,fallback:item.fallback!==undefined}));
  const retired=Object.values(retirements).filter(item=>item.retired).map(item=>item.originId),healthy=state.tracker.observe(input.digest,originId,peers,now);
- const decide=(authored:boolean):CanaryVerdictV1=>decideCanaryV1({digest:input.digest,running:input.running,originId,groupId,now,waitedMs:now-state.first!.at,authored,peers,retired,snapshots,refusals,healthy,limits});
+ const decide=(authored:boolean):CanaryVerdictV1=>decideCanaryV1({digest:input.digest,running:input.running,originId,groupId,now,waitedMs:now-state.since!,authored,peers,retired,snapshots,refusals,healthy,limits});
  let verdict=decide(false);
  if(!verdict.ok&&(verdict.why==="mixed"||verdict.why==="turn")){
   const known=state.authored;
@@ -3629,6 +3876,7 @@ export async function admitCodeV1(replica:ReplicaV1,input:Readonly<{digest:strin
   }
   if(state.authored!.value)verdict=decide(true);
  }
+ if(!verdict.ok&&(verdict.why==="mixed"||verdict.why==="turn")&&now-state.since!>=maximumWaitMsV1)return {ok:true};
  return verdict.ok?{ok:true}:{ok:false,reason:canaryReasonV1(verdict)};
 }
 

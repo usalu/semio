@@ -542,6 +542,7 @@ pub enum WorldFlatActionKind {
     VortexHover,
     SurfacePlace,
     TerrainEdit,
+    TerrainMovePosition,
     EngagementPointerDown,
     EngagementPointerMove,
     Select,
@@ -624,6 +625,7 @@ pub struct WorldInteractionPlan {
     pub cursor: u16,
     pub faulted: bool,
     pub terrain_stroke: Option<WorldTerrainStroke>,
+    pub terrain_position_revision: Option<[u64; 3]>,
 }
 
 pub const TRANSLATE_SELECTION_ACTION_ID: &str = "translateSelection";
@@ -634,7 +636,7 @@ pub const SCALE_SELECTION_ACTION_ID: &str = "scaleSelection";
 
 impl WorldInteractionPlan {
     pub fn new(revision: u64, generation: u64) -> Self {
-        Self { revision, generation, bytes: Box::new([0; WORLD_INTERACTION_BYTE_CAPACITY]), byte_len: 0, actions: Box::new([None; WORLD_INTERACTION_ITEM_CAPACITY]), action_len: 0, cursor: 0, faulted: false, terrain_stroke: None }
+        Self { revision, generation, bytes: Box::new([0; WORLD_INTERACTION_BYTE_CAPACITY]), byte_len: 0, actions: Box::new([None; WORLD_INTERACTION_ITEM_CAPACITY]), action_len: 0, cursor: 0, faulted: false, terrain_stroke: None, terrain_position_revision: None }
     }
 
     pub fn push_string(&mut self, value: &str) -> Option<WorldInteractionSpan> {

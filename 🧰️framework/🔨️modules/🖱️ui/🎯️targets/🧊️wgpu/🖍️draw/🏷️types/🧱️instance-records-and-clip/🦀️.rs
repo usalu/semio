@@ -28,7 +28,7 @@ pub const KIND_WAITING_BORDER: f32 = 7.0;
 /// ✅️ Solid, static at-bounds ring for `UiStatus::Finished` (see `UiInstance::finished_border` and `UI_SHADER`'s `kind == 8` branch) — no motion, distinguishing it from loading/waiting.
 pub const KIND_FINISHED_BORDER: f32 = 8.0;
 
-/// 💫️ Raised-cosine breathing pulse ring for `UiState::Introducing` (see `UiInstance::introducing_border` and `UI_SHADER`'s `kind == 9` branch) — the single shared implementation of the introduction-tour pulse, driven by `globals._pad.x`.
+/// 💫️ Opacity pulse `1 -> 0.7 -> 1` ring (`introduced-border-pulse`) for `UiState::Introducing` (see `UiInstance::introducing_border` and `UI_SHADER`'s `kind == 9` branch) — the single shared implementation of the introduction-tour pulse, driven by `globals._pad.x`.
 pub const KIND_INTRODUCING_BORDER: f32 = 9.0;
 
 #[derive(Clone, Copy, Debug)]

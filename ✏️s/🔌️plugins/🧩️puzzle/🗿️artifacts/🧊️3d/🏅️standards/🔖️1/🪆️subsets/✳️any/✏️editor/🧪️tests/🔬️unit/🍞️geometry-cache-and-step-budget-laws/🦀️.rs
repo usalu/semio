@@ -12,10 +12,10 @@ fn a_second_call_on_one_instance_reuses_the_geometry_cache_instead_of_reserializ
     let fingerprint = semio_s_artifact_puzzle_3d_editor_session::scene_geometry_fingerprint(&scene_snapshot);
     let session = Some((4_001_u32, Some("document-geometry".to_string())));
     let cold = PUZZLE3D_GEOMETRY_SERIALIZATIONS.with(std::cell::Cell::get);
-    let first = with_puzzle3d_app_for(session.clone(), &config, |app| app.geometry_jsons(&scene_snapshot, &std::collections::BTreeSet::new(), &[]));
+    let first = with_puzzle3d_session_for(session.clone(), &config, |app| app.geometry_jsons(&scene_snapshot, &std::collections::BTreeSet::new(), &[]));
     let after_first = PUZZLE3D_GEOMETRY_SERIALIZATIONS.with(std::cell::Cell::get);
     assert_eq!(after_first - cold, 1, "the first call for a cold instance serializes exactly once");
-    let second = with_puzzle3d_app_for(session, &config, |app| {
+    let second = with_puzzle3d_session_for(session, &config, |app| {
         let cached = app.mesh_cache.lock().expect("mesh cache");
         assert_eq!(cached.as_ref().map(|(cached, _)| *cached), Some(fingerprint), "the session slot handed the warm cache to a brand-new app object");
         drop(cached);
@@ -36,17 +36,17 @@ fn a_worker_hop_resume_still_holds_the_registered_brush_mesh() {
     let url = "/test/session-hop.glb";
     let positions: Vec<f32> = vec![-1.0, -1.0, -1.0, 1.0, -1.0, -1.0, 1.0, 1.0, -1.0, -1.0, 1.0, -1.0, -1.0, -1.0, 1.0, 1.0, -1.0, 1.0, 1.0, 1.0, 1.0, -1.0, 1.0, 1.0];
     let indices: Vec<u32> = vec![0, 1, 2, 0, 2, 3, 4, 6, 5, 4, 7, 6, 0, 4, 5, 0, 5, 1, 2, 6, 7, 2, 7, 3, 0, 3, 7, 0, 7, 4, 1, 5, 6, 1, 6, 2];
-    with_puzzle3d_app_for(session.clone(), &config, |app| {
+    with_puzzle3d_session_for(session.clone(), &config, |app| {
         app.precompute.borrow_mut().register_mesh(url, &positions, &indices);
         assert!(app.precompute.borrow().has_mesh(url), "the registering dispatch sees its own mesh");
     });
-    with_puzzle3d_app_for(session, &config, |app| {
+    with_puzzle3d_session_for(session, &config, |app| {
         assert!(app.precompute.borrow().has_mesh(url), "the resumed dispatch adopted the same instance's registered mesh");
     });
-    with_puzzle3d_app_for(Some((4_003_u32, Some("document-other".to_string()))), &config, |app| {
+    with_puzzle3d_session_for(Some((4_003_u32, Some("document-other".to_string()))), &config, |app| {
         assert!(app.precompute.borrow_mut().adopt_shared_mesh(url, None), "a different document reaches the same geometry by id alone");
     });
-    with_puzzle3d_app_for(None, &config, |app| {
+    with_puzzle3d_session_for(None, &config, |app| {
         assert!(!app.precompute.borrow().has_mesh(url), "a call with no instance identity stays session-less, exactly as before");
     });
 }
@@ -131,14 +131,14 @@ const PUZZLE3D_MEASURED_STEP_RUNS: u32 = 5;
 
 fn measured_step_loop(original: &mut semio_s_plugin_puzzle_retained::testing::OriginalFixture, work: &mut dyn semio_plugin::retained_command::ArtifactCommandWork<EditorApp<Puzzle3dPlayApp>>, command: &Puzzle3dCommand, snapshot: &Puzzle3dPlaySnapshot, config: &Puzzle3dConfig, context: &semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Puzzle3dPlayApp>>, guard: usize, label: &str) -> Vec<std::time::Duration> {
 
-    use crate::retained_command::testing::PuzzleCommandWorkStep;
+    use semio_s_plugin_puzzle_retained::testing::PuzzleCommandWorkStep;
     let interaction = protocol::InteractionState::default();
     let hover = semio_plugin::app::InteractionHoverState::default();
     let mut turns = Vec::with_capacity(guard);
     loop {
         assert!(turns.len() <= guard, "{label} step() did not reach Complete within {guard} bounded turns");
         let started = std::time::Instant::now();
-        let outcome = crate::retained_command::testing::step(original, work, command, snapshot, config, &interaction, &hover, Some(context)).expect("bounded step");
+        let outcome = semio_s_plugin_puzzle_retained::testing::step(original, work, command, snapshot, config, &interaction, &hover, Some(context)).expect("bounded step");
         turns.push(started.elapsed());
         if matches!(outcome, PuzzleCommandWorkStep::Complete(_)) {
             break;
@@ -155,11 +155,11 @@ fn measured_tool_work(original: &mut semio_s_plugin_puzzle_retained::testing::Or
         "acceptSuggestion" => original.construct_boxed(Puzzle3dAcceptSuggestionWork::original_birth_demands().unwrap(), |scope| Puzzle3dAcceptSuggestionWork::from_original_construction(scope).map(|(work, progress)| (work.bound(instance), progress))),
         "setActiveExample" => original.construct_boxed(Puzzle3dSetActiveExampleWork::original_birth_demands().unwrap(), |scope| Puzzle3dSetActiveExampleWork::from_original_construction(scope)),
         "openVortexSuggestions" => original.construct_boxed(Default::default(), |_scope| Ok((Puzzle3dWindowCommandWork::new(tool_id).bound(instance), Default::default()))),
-        _ => original.construct_boxed(Default::default(), |_scope| Ok((crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle3d_retained_reduce, puzzle3d_retained_extent), Default::default()))),
+        _ => original.construct_boxed(Default::default(), |_scope| Ok((semio_s_plugin_puzzle_retained::BoundedFirstStepCommandWork::new(tool_id, puzzle3d_retained_reduce::<Puzzle3dPlayApp>, puzzle3d_retained_extent), Default::default()))),
     };
     let context = semio_plugin::app::ArtifactOwnedToolJobContext::new(
         app_instance_id,
-        Some(measured_view_state()),
+        Some(std::sync::Arc::new(measured_view_state())),
         [0; 32],
         0,
         0,
@@ -180,7 +180,7 @@ fn measured_cold_runs(tool_id: &'static str, command: &Puzzle3dCommand, snapshot
             let mut original = semio_s_plugin_puzzle_retained::testing::OriginalFixture::new(
         semio_framework_job::OperationId(1), semio_framework_job::Generation(1), semio_s_plugin_puzzle_retained::testing::fixture_stock(), || Some(0), u64::MAX, 1 << 24);
         let (mut work, context) = measured_tool_work(&mut original, tool_id, run);
-        let turns = measured_step_loop(&mut original, work.as_mut(), command, snapshot, config, &context, crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS, tool_id);
+        let turns = measured_step_loop(&mut original, work.as_mut(), command, snapshot, config, &context, semio_s_plugin_puzzle_retained::PUZZLE_COMMAND_WORK_ITEMS, tool_id);
         original.finish();
         if best.is_empty() {
             best = turns;
@@ -204,7 +204,7 @@ fn measured_view_state() -> semio_plugin::ViewModel {
 }
 
 fn measured_nakagin_snapshot() -> Puzzle3dPlaySnapshot {
-    Puzzle3dPlaySnapshot::new(crate::editor::puzzle3d::puzzle3d_snapshot_from_host_snapshot(&NAKAGIN_EXAMPLE_SNAPSHOT.clone()).expect("typed fixture admits"))
+    Puzzle3dPlaySnapshot::new(semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_snapshot_from_host_snapshot(&NAKAGIN_EXAMPLE_SNAPSHOT.clone()).expect("typed fixture admits"))
 }
 
 /// ⏱️ ticket 26/09/02/PUZZLE-3D-END-TO-END: `openVortexSuggestions` syncs the whole precompute session
@@ -236,7 +236,7 @@ fn accept_suggestion_every_step_stays_below_the_interactive_ceiling_for_nakagin(
 }
 
 fn measured_concrete_forest_snapshot() -> Puzzle3dPlaySnapshot {
-    Puzzle3dPlaySnapshot::new(crate::editor::puzzle3d::puzzle3d_snapshot_from_host_snapshot(&CONCRETE_FOREST_EXAMPLE_SNAPSHOT.clone()).expect("typed fixture admits"))
+    Puzzle3dPlaySnapshot::new(semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_snapshot_from_host_snapshot(&CONCRETE_FOREST_EXAMPLE_SNAPSHOT.clone()).expect("typed fixture admits"))
 }
 
 /// ⏱️ ticket 26/09/02/PUZZLE-3D-END-TO-END W-P3: swapping the Concrete Forest document for the
@@ -297,7 +297,7 @@ fn puzzle3d_next_object_label_increments_from_the_authored_seed_name() {
 #[test]
 fn puzzle3d_typed_fixture_matches_the_projection_bridge_for_every_example() {
     for (label, scene_snapshot) in [("empty", empty_scene_snapshot()), ("concrete-forest", CONCRETE_FOREST_EXAMPLE_SNAPSHOT.clone()), ("nakagin", NAKAGIN_EXAMPLE_SNAPSHOT.clone())] {
-        let seed = Puzzle3dPlaySnapshot::new(crate::editor::puzzle3d::puzzle3d_snapshot_from_host_snapshot(&scene_snapshot).expect("typed fixture admits"));
+        let seed = Puzzle3dPlaySnapshot::new(semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_snapshot_from_host_snapshot(&scene_snapshot).expect("typed fixture admits"));
         let snapshot = Puzzle3dPlaySnapshot::new(semio_framework_value::FromValue::from_value(semio_framework_value::ToValue::to_value(seed.typed())).expect("typed fixture admits"));
         let bridged = Puzzle3dScene { scene_snapshot: semio_framework_value::FromValue::from_value(snapshot.value().clone()).expect("native fixture view admits"), runtime: Puzzle3dRuntime::default(), active_utility: "utility".into() };
         let typed = scene_from_snapshot(snapshot.typed(), Puzzle3dRuntime::default(), "utility");
@@ -322,7 +322,7 @@ fn puzzle3d_typed_fixture_matches_the_projection_bridge_for_every_example() {
 #[test]
 fn world_attraction_segments_match_the_vortex_position_resolver_for_every_example() {
     let mut grown = NAKAGIN_EXAMPLE_SNAPSHOT.clone();
-    let ends: Vec<String> = grown.objects.iter().flat_map(|object| object.vortices.iter().map(|vortex| crate::editor::puzzle3d::puzzle3d_vortex_full_id(&object.id, &vortex.id))).collect();
+    let ends: Vec<String> = grown.objects.iter().flat_map(|object| object.vortices.iter().map(|vortex| semio_s_artifact_puzzle_3d_model::puzzle3d_vortex_full_id(&object.id, &vortex.id))).collect();
     assert!(ends.len() > 2, "nakagin declares vortices to attract");
     grown.attractions = ends.windows(2).enumerate().map(|(index, pair)| Puzzle3dAttraction { id: format!("a{index}"), attracting: pair[0].clone(), attracted: pair[1].clone(), ..Default::default() }).collect();
     grown.attractions.push(Puzzle3dAttraction { id: "dangling".into(), attracting: ends[0].clone(), attracted: "no-such-object:no-such-vortex".into(), ..Default::default() });
@@ -331,8 +331,8 @@ fn world_attraction_segments_match_the_vortex_position_resolver_for_every_exampl
             .attractions
             .iter()
             .filter_map(|attraction| {
-                let from = crate::editor::puzzle3d::resolve_vortex_world_position(&scene_snapshot, &attraction.attracting)?;
-                let to = crate::editor::puzzle3d::resolve_vortex_world_position(&scene_snapshot, &attraction.attracted)?;
+                let from = semio_s_artifact_puzzle_3d_editor_snapshot::resolve_vortex_world_position(&scene_snapshot, &attraction.attracting)?;
+                let to = semio_s_artifact_puzzle_3d_editor_snapshot::resolve_vortex_world_position(&scene_snapshot, &attraction.attracted)?;
                 Some(json!({ "id": attraction.id, "from": from, "to": to, "color": "#60a5fa" }))
             })
             .collect();
@@ -359,7 +359,7 @@ fn puzzle3d_typed_scene_config_matches_the_value_bridge_for_every_example() {
         runtime.object_kind_weights.insert("capsule".into(), 0.25);
         runtime.vortex_kind_weights.insert("rim".into(), 0.75);
         let envelope = Puzzle3dScene { scene_snapshot, runtime, active_utility: "utility".into() };
-        let bridged: semio_s_artifact_puzzle_3d_model::standards::v1::subsets::any::schema::SceneConfig = semio_framework_value::FromValue::from_value(scene_config_value(&envelope)).expect("value bridge decodes");
+        let bridged: semio_s_artifact_puzzle_3d_model::SceneConfig = semio_framework_value::FromValue::from_value(scene_config_value(&envelope)).expect("value bridge decodes");
         let typed = scene_config(&envelope).expect("typed scene config builds");
         assert_eq!(typed, bridged, "{label}: typed engine scene disagrees with the value bridge");
     }

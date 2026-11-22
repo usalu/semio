@@ -239,7 +239,7 @@ pub(super) const WINDOW_LAYOUT: SchemaMetadata = SchemaMetadata {
     version: 1,
     typescript: r####"/**
  * 🪟️ The window-shell root. Moved here from the wgpu target's `WindowLayout` — same name, one
- * recursive `WindowLayoutNode` root instead of the old `WindowLayoutRoot` `Axis`/`Stack` union.
+ * recursive `WindowLayoutNode` root instead of a separate axis/stack union.
  */
 export type WindowLayout = { root: WindowLayoutNode, };"####,
 };
@@ -255,7 +255,7 @@ pub(super) const WINDOW_LAYOUT_NODE: SchemaMetadata = SchemaMetadata {
  * `alias = "activeId"` serde alias on the old stack node is dropped — greenfield, fixtures
  * re-handcrafted, no compatibility requirement.
  */
-export type WindowLayoutNode = { "kind": "window", window_kind_id: string, title: string | null, instance_id: string | null, template_id: string | null, corner: WindowStackCorner | null, } | { "kind": "stack", size: number | null, active_window_kind_id: string | null, children: Array<WindowLayoutNode>, } | { "kind": "split", axis: Axis, size: number | null, children: Array<WindowLayoutNode>, };"####,
+export type WindowLayoutNode = { "kind": "window", windowKindId: string, title: string | null, instanceId: string | null, templateId: string | null, corner: WindowStackCorner | null, } | { "kind": "stack", size: number | null, activeWindowId: string | null, children: Array<WindowLayoutNode>, } | { "kind": "split", axis: Axis, size: number | null, children: Array<WindowLayoutNode>, };"####,
 };
 
 pub(super) const WINDOW_STACK_CORNER: SchemaMetadata = SchemaMetadata {

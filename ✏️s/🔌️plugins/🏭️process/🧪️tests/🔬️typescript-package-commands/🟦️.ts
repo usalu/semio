@@ -47,7 +47,9 @@ function proofRows(source: string): string[] {
   for (let start = source.indexOf("semio_plugin::bounded_first_step_tool_proofs!"); start >= 0; start = source.indexOf("semio_plugin::bounded_first_step_tool_proofs!", start + 1)) {
     const end = source.indexOf("\n    }", start);
     if (end < start) continue;
-    rows.push(...[...source.slice(start, end).matchAll(/"([A-Za-z][A-Za-z0-9]+)"\s*=>/g)].map((match) => match[1]!));
+    for (const [entry] of source.slice(start, end).matchAll(/"[A-Za-z][A-Za-z0-9]+"(?:\s*\|\s*"[A-Za-z][A-Za-z0-9]+")*\s*=>/g)) {
+      rows.push(...[...entry.matchAll(/"([A-Za-z][A-Za-z0-9]+)"/g)].map((match) => match[1]!));
+    }
   }
   return rows;
 }

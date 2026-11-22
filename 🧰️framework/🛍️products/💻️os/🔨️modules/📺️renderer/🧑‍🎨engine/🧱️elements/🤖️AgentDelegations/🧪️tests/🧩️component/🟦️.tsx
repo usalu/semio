@@ -13,6 +13,9 @@
 import { cleanup, fireEvent, render, screen, waitFor } from "@semio-tech/ui-react/test";
 import { setUiLocale } from "@semio-tech/ui-react";
 import { useEffect, type ReactElement } from "react";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import { agentDelegationsDocument, agentDelegationsSchema, agentDelegationsVectors, agentDelegationsVectorsSchema } from "@semio-tech/framework-os/modules/directory/testing/fixtures";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
   AGENT_CREDENTIAL_SCHEMA_V1,
@@ -656,3 +659,64 @@ describe("agent delegation list vectors", () => {
     });
   }
 });
+
+//#region 🧬️SharedContract
+/** 🧬️ LAWS over `📇️directory/🤖️delegations/🔣️.json` (routes, schemas, bounds, lifetimes, control ids and the en/de label
+ * table the wgpu twin renders) and its vectors. The Rust twin (`🎯️targets/🧊️wgpu/🦀️.rs`, `🔬️wgpu-unit`) reads the same
+ * files; Ajv is the third-party oracle for both shapes. */
+describe("agent delegations shared contract", () => {
+  type Vectors = typeof agentDelegationsVectors;
+  const vectors = agentDelegationsVectors as Vectors;
+  const document = agentDelegationsDocument;
+
+  it("validates the contract document and the vectors against their schemas", () => {
+    const ajv = new Ajv({ strict: true });
+    expect(ajv.compile(agentDelegationsSchema as object)(document), "contract shape").toBe(true);
+    const validate = ajv.compile(agentDelegationsVectorsSchema as object);
+    expect(validate(agentDelegationsVectors), JSON.stringify(validate.errors)).toBe(true);
+  });
+
+  it("keeps the TypeScript constants equal to the shared document", () => {
+    expect(document.paths.delegations).toBe(agentDelegationListPathV1("x").split("?")[0]);
+    expect(document.schemas.credential).toBe(AGENT_CREDENTIAL_SCHEMA_V1);
+    expect(document.bounds).toMatchObject({ labelMaxBytes: AGENT_LABEL_MAX_BYTES_V1, minTtlSecs: AGENT_DELEGATION_MIN_TTL_SECS_V1, maxTtlSecs: AGENT_DELEGATION_MAX_TTL_SECS_V1 });
+    expect(document.ttlChoicesSecs).toEqual([...AGENT_DELEGATION_TTL_CHOICES_SECS_V1]);
+  });
+
+  it("keeps every shared label (normal terminology, en and de) in the React label table", () => {
+    const source = readFileSync(join(import.meta.dirname, "../../../🔗️HubConnection/🌐️ui-labels/🟦️.ts"), "utf8");
+    expect(Object.keys(document.labels.en)).toEqual(Object.keys(document.labels.de));
+    for (const locale of ["en", "de"] as const) for (const [key, text] of Object.entries(document.labels[locale])) expect(source.includes(`${key}: { label: { normal: ${JSON.stringify(text)}`), `${locale}.${key}`).toBe(true);
+  });
+
+  it("renders the contract's control ids", async () => {
+    await setUiLocale("en");
+    render(<AgentDelegations spaceId="space-a" rows={[]} phase="ready" error={null} credential={null} signedIn canDelegate onRefresh={() => {}} onCreate={() => {}} onDownloadCredential={() => {}} onDismissCredential={() => {}} onInstallMcpClient={() => {}} onCopyMcpClientConfig={() => {}} onRevoke={() => {}} />);
+    expect(globalThis.document.getElementById(agentDelegationsDocument.controls.create.id)?.tagName).toBe("BUTTON");
+  });
+
+  it("answers the instant, ordering, body, receipt, credential, error, list and path vectors", () => {
+    for (const row of vectors.instants) expect(agentDelegationInstantV1(row.ms), String(row.ms)).toBe(row.text);
+    const summaries = parseAgentDelegationListV1(JSON.stringify({ delegations: vectors.ordering.summaries }));
+    expect(agentDelegationRowsV1(summaries, vectors.ordering.nowMs).map((row) => ({ delegationId: row.delegationId, state: row.state, revocable: agentDelegationRevocableV1(row) }))).toEqual(vectors.ordering.order);
+    for (const row of vectors.createBodies) {
+      const build = () => createAgentDelegationBodyV1(row.spaceId, row.agentLabel, row.audience as "read" | "edit", row.ttlSecs);
+      if (row.body === null) expect(build, row.id).toThrow(row.error as string);
+      else expect(build(), row.id).toBe(row.body);
+    }
+    for (const row of vectors.receipts) {
+      if (row.receipt === null) expect(() => parseAgentDelegationReceiptV1(row.body), row.id).toThrow();
+      else expect(parseAgentDelegationReceiptV1(row.body), row.id).toEqual(row.receipt);
+    }
+    const receipt = parseAgentDelegationReceiptV1(vectors.receipts[0]!.body);
+    const credential = vectors.credential;
+    expect(agentCredentialFileV1(receipt, credential.hubOrigin)).toMatchObject({ fileName: credential.fileName, contents: credential.contents });
+    expect(agentCredentialCommandV1(receipt, credential.hubOrigin)).toBe(credential.command);
+    expect(agentCredentialFileNameV1({ ...receipt, agentLabel: credential.emptySlugFileName.agentLabel })).toBe(credential.emptySlugFileName.fileName);
+    for (const row of vectors.errors) expect(agentDelegationErrorFromResponseV1(row.status, row.body), `${row.status}`).toBe(row.code);
+    for (const row of vectors.lists) expect(parseAgentDelegationListV1(row.body).map((entry) => ({ delegationId: entry.delegationId, revoked: entry.revoked, lastUsedAtMs: entry.lastUsedAtMs })), row.id).toEqual(row.delegations);
+    for (const row of vectors.paths.list) expect(agentDelegationListPathV1(row.spaceId)).toBe(row.path);
+    for (const row of vectors.paths.revoke) expect(agentDelegationRevokePathV1(row.delegationId)).toBe(row.path);
+  });
+});
+//#endregion 🧬️SharedContract

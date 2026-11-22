@@ -1,0 +1,8 @@
+machinery/heat-pump-outdoor-unit
+machinery/scroll-compressor
+machinery/expansion-valve
+machinery/finned-heat-exchanger
+machinery/plate-heat-exchanger
+machinery/sorption-wheel
+machinery/solar-thermal-collector
+machinery/evaporative-humidifier

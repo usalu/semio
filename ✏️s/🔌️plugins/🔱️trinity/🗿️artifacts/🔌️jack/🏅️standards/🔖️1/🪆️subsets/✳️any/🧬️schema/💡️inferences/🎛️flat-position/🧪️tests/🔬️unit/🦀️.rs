@@ -4,12 +4,11 @@ use semio_framework_value::ValueError;
 use crate::standards::v1::subsets::any::schema::content::JackWorkingScene;
 use crate::standards::v1::subsets::any::schema::inferences::flat_position::*;
 use crate::standards::v1::subsets::any::schema::graph::{Camera, Port, Node, Edge};
-use crate::standards::v1::subsets::any::schema::manifest::Manifest;
 use semio_framework_graph_manifest::{PortDirection, PropertyBag, PropertyValue};
 
 //#region 🧸️Fixtures
 fn mini_fixture() -> JackSnapshot {
-    JackSnapshot::with_content::<crate::test_support::FixtureComposition>(JackSnapshot::SCHEMA.into(), "mini".into(), Some("nakagin".into()), Manifest::nakagin_default(), Camera::default(), JackWorkingScene { nodes: vec![
+    JackSnapshot::with_content::<crate::test_support::FixtureComposition>(JackSnapshot::SCHEMA.into(), "mini".into(), "nakagin".into(), Camera::default(), JackWorkingScene { nodes: vec![
             Node {
                 id: "root".into(),
                 kind: "Piece".into(),
@@ -57,7 +56,7 @@ async fn flat_position_bfs_walks_from_root() {
 
 #[semio_framework_async_macros::async_test]
 async fn flat_position_covers_disconnected_components() {
-    let fixture = JackSnapshot::with_content::<crate::test_support::FixtureComposition>(JackSnapshot::SCHEMA.into(), "disconnected".into(), Some("nakagin".into()), Manifest::nakagin_default(), Camera::default(), JackWorkingScene { nodes: vec![
+    let fixture = JackSnapshot::with_content::<crate::test_support::FixtureComposition>(JackSnapshot::SCHEMA.into(), "disconnected".into(), "nakagin".into(), Camera::default(), JackWorkingScene { nodes: vec![
             Node {
                 id: "root-a".into(),
                 kind: "Piece".into(),
@@ -135,7 +134,7 @@ async fn flat_position_covers_disconnected_components() {
 
 #[semio_framework_async_macros::async_test]
 async fn flat_position_handles_cycles_without_looping() {
-    let fixture = JackSnapshot::with_content::<crate::test_support::FixtureComposition>(JackSnapshot::SCHEMA.into(), "cycle".into(), Some("nakagin".into()), Manifest::nakagin_default(), Camera::default(), JackWorkingScene { nodes: vec![
+    let fixture = JackSnapshot::with_content::<crate::test_support::FixtureComposition>(JackSnapshot::SCHEMA.into(), "cycle".into(), "nakagin".into(), Camera::default(), JackWorkingScene { nodes: vec![
             Node {
                 id: "a".into(),
                 kind: "Piece".into(),

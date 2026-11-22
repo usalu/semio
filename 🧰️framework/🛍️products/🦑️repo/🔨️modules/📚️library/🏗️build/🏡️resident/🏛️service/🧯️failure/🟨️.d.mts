@@ -1,3 +1,4 @@
+export function ownerFailureOfV1(error:unknown,depth?:number):{owners:string;message:string}|undefined;
 export function accessDeniedOfV1(error:unknown,options?:{root?:string;platform?:string;home?:string}):string|undefined;
 export function failureRefusalV1(error:unknown,options:{log:(event:string,detail?:string)=>void;logPath:string;retry?:"later"|"never";root?:string;platform?:string;home?:string;environment?:Record<string,string|undefined>;pid?:number;ppid?:number;streak?:{cause:string;count:number};sameCauseMaximum?:number}):{code:"disk"|"internal"|"unserved"|"consent";key:string;fields:Record<string,string>;retry:"later"|"never"};
 export function wantedRefusalOfV1(error:unknown,depth?:number):Record<"wanted"|"arrived"|"seconds"|"missing"|"local",string>|undefined;

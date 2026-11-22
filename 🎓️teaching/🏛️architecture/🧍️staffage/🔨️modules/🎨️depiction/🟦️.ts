@@ -15,13 +15,13 @@
  * @see ../🔗️contracts/🟦️.ts — {@link DepictionOptions}, {@link DrawingScene}, {@link ModelScene}
  */
 import type { Language, PlanarViewpoint, Text, Viewpoint } from "../../🧬️schema/🟦️.ts";
-import { VIEWS, type AxonometricKind, type AxonometricSpec, type DepictionCommon, type DepictionOptions, type TextlessDepiction, type TextualDepiction, type DrawingScene, type EvaluatedState, type JobControl, type Legend, type ModelLayer, type ModelScene, type Point, type RepresentationResolution, type StructuralResult, type ThermalField, type TransportField, type View } from "../🔗️contracts/🟦️.ts";
+import { VIEWS, type AxonometricKind, type AxonometricSpec, type DepictionCommon, type DepictionOptions, type TextlessDepiction, type TextualDepiction, type DrawingScene, type EvaluatedState, type EvaluationQuery, type JobControl, type Legend, type ModelLayer, type ModelScene, type Point, type RepresentationResolution, type StructuralResult, type ThermalField, type TransportField, type View } from "../🔗️contracts/🟦️.ts";
 import { LABEL_TEXT_MM, mmPerMetre } from "../📐️units/🟦️.ts";
 import { DEFAULT_PRINT_PROFILE, requireDrawable, resolveRepresentation, resolveSymbol } from "../🖨️representation/🟦️.ts";
 import { solveStructure } from "../🏗️structure/🟦️.ts";
 import { magnitude, planeOf } from "../🏗️structure/📽️projection/🟦️.ts";
 import { solveThermalAt } from "../🌡️thermal/🟦️.ts";
-import { solveTransport } from "../💨️transport/🟦️.ts";
+import { developedTimeS, solveTransport } from "../💨️transport/🟦️.ts";
 import { type DimensionExtent, dimensionLine, legendBlock, scaleBar, titleBlock } from "./🏷️annotations/🟦️.ts";
 import { Canvas, type Ctx, Labels, labelBudget } from "./🧱️canvas/🟦️.ts";
 import { type DiagramKind, diagramPolygons, forceList, forcesView, momentsView, peakOf } from "./🏗️structural-view/🟦️.ts";
@@ -34,6 +34,7 @@ import { type Checkpoint, drive, driveAsync } from "./⏳️steps/🟦️.ts";
 import { SECTION_MARKER_MAX_DENOMINATOR, drawSectionMarkers, sectionOf, viewpointCaption } from "./✂️section/🟦️.ts";
 import { thermalView } from "./🌡️thermal-view/🟦️.ts";
 import { transportView } from "./💨️transport-view/🟦️.ts";
+import { flowView } from "./🌊️flow-view/🟦️.ts";
 import * as portable from "../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🧮️math/🎯️portable/🟦️.ts";
 
 const GROUND_OVERHANG_M = 0.3;
@@ -181,6 +182,16 @@ export async function depictAsync(state: EvaluatedState, options: DepictionOptio
   return driveAsync(depictSteps(state, options, analysis), control);
 }
 
+/** 🌬️ The transport a depiction solves itself: at the query time moved on by `flowDevelopS` ({@link developedTimeS}; a looping clip keeps its pose and makes the field periodic with its duration), with the flow field when a flow layer is asked for. */
+export function transportOf(state: EvaluatedState, options: Pick<DepictionOptions, "flow" | "flowDevelopS" | "environment" | "environmentTimeline">): TransportField {
+  const { asset, query } = state;
+  const clip = query.kind === "clip" ? asset.clips.find((candidate) => candidate.id === query.clip) : undefined;
+  const periodS = clip?.loop === true && clip.durationS > 0 ? clip.durationS : 0;
+  const developS = options.flowDevelopS ?? 0;
+  const timeS = developedTimeS(Math.max(0, query.timeS ?? 0), developS, periodS);
+  return solveTransport(asset, { ...query, timeS } as EvaluationQuery, options.environmentTimeline ?? options.environment ?? asset.thermal.environment, { ...(developS > 0 ? { maxAgeS: developS, ...(periodS > 0 ? { periodS } : {}) } : {}), ...((options.flow?.length ?? 0) > 0 ? { flow: true } : {}) });
+}
+
 function* depictSteps(state: EvaluatedState, options: DepictionOptions, analysis: Analysis): Generator<Checkpoint, DrawingScene> {
   const resolution = resolveDepiction(state.asset, options);
   checkState(state, options, resolution);
@@ -230,11 +241,19 @@ function* depictSteps(state: EvaluatedState, options: DepictionOptions, analysis
   }
   if ((options.viewpoint === "elevation" || options.viewpoint === "plan") && metric && options.annotations.labels && options.scale.denominator <= SECTION_MARKER_MAX_DENOMINATOR && resolution.kind === "authored" && resolution.representation.sections !== undefined) drawSectionMarkers(canvas, ctx, resolution.representation.sections, b, options.viewpoint);
   const legendsOfTransport: Legend[] = [];
-  if (options.transport.length > 0) {
-    const field = analysis.transport ?? solveTransport(state.asset, state.query, options.environmentTimeline ?? options.environment ?? state.asset.thermal.environment);
-    const overlay = transportView(ctx, field, options.transport, options.range);
-    overlay.overlay(canvas);
-    legendsOfTransport.push(...overlay.legends);
+  const flowLayers = options.flow ?? [];
+  if (options.transport.length > 0 || flowLayers.length > 0) {
+    const field = analysis.transport ?? transportOf(state, options);
+    if (flowLayers.length > 0 && field.flow !== null) {
+      const flow = flowView(ctx, field.flow, flowLayers, options.range);
+      flow.overlay(canvas);
+      legendsOfTransport.push(...flow.legends);
+    }
+    if (options.transport.length > 0) {
+      const overlay = transportView(ctx, field, options.transport, options.range);
+      overlay.overlay(canvas);
+      legendsOfTransport.push(...overlay.legends);
+    }
   }
   if (figure !== null && options.annotations.dimensions && canvas.box !== null) {
     const content = canvas.box;
@@ -275,7 +294,7 @@ function* depictSteps(state: EvaluatedState, options: DepictionOptions, analysis
 
 /** 🖼️ Depicts a state in all seven views, solving each analysis at most once. */
 export function depictAll(state: EvaluatedState, options: WithoutView<DepictionOptions>, analysis: Analysis = {}): Record<View, DrawingScene> {
-  const transport = analysis.transport ?? (options.transport.length > 0 ? solveTransport(state.asset, state.query, options.environmentTimeline ?? options.environment ?? state.asset.thermal.environment) : undefined);
+  const transport = analysis.transport ?? (options.transport.length > 0 || (options.flow?.length ?? 0) > 0 ? transportOf(state, options) : undefined);
   const solved: Analysis = { thermal: analysis.thermal ?? solveThermalAt(state.asset, state.query, options.environmentTimeline ?? options.environment), structure: analysis.structure ?? solveStructure(state), ...(transport ? { transport } : {}) };
   return Object.fromEntries(VIEWS.map((view) => [view, depict(state, { ...options, view }, solved)])) as Record<View, DrawingScene>;
 }

@@ -184,11 +184,22 @@ describe("🧊️ a bone beside the symmetry plane (Bone.z)", () => {
 
 describe("🧊️ the herring gull spreads its wings", () => {
   const gull = catalog().find((candidate) => candidate.id === "herring-gull")!;
+  const wing = (shoulder: string): ReadonlySet<string> => {
+    const bones = new Set([shoulder]);
+    for (let grown = true; grown; ) {
+      grown = false;
+      for (const bone of gull.rig.bones) if (bone.parent !== null && bones.has(bone.parent) && !bones.has(bone.id)) grown = bones.add(bone.id).size > 0;
+    }
+    return bones;
+  };
   const wide = (pose: string, view: "front" | "plan"): { near: number; far: number } => {
     const state = evaluate(gull, { kind: "pose", pose }, select(50));
-    const lateral = (id: string): Extent => extentOf(state.shapes[view].filter((evaluated) => evaluated.shape.id === id), true)!;
-    const side = (a: string, b: string) => ({ lo: Math.min(lateral(a)[view === "front" ? "minX" : "minY"], lateral(b)[view === "front" ? "minX" : "minY"]), hi: Math.max(lateral(a)[view === "front" ? "maxX" : "maxY"], lateral(b)[view === "front" ? "maxX" : "maxY"]) });
-    return { near: -side("near-arm", "near-hand").lo, far: side("far-arm", "far-hand").hi };
+    const lateral = (shoulder: string): Extent => {
+      const drawn = state.shapes[view].filter((evaluated) => wing(shoulder).has(evaluated.shape.bone));
+      expect(drawn.length, `${pose} ${view}: shapes on the wing of ${shoulder}`).toBeGreaterThan(0);
+      return extentOf(drawn, true)!;
+    };
+    return { near: -lateral("humerus-n")[view === "front" ? "minX" : "minY"], far: lateral("humerus-f")[view === "front" ? "maxX" : "maxY"] };
   };
 
   for (const view of ["front", "plan"] as const)

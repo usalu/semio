@@ -1,11 +1,13 @@
 import {appendFileSync,mkdirSync,rmSync} from "node:fs";
 import {join,resolve} from "node:path";
-import {fleetCacheRootV1,readFleetExecutionV1,remoteCacheFetchV1,resolveRemoteCacheV1} from "../../🌐️remote-cache/🛰️fleet/🟦️.ts";
+import {fleetCacheRootV1,remoteCacheFetchV1,resolveRemoteCacheV1} from "../../🌐️remote-cache/🛰️fleet/🟦️.ts";
 import {fleetHeadersV1} from "../../🌐️remote-cache/🛰️fleet/🪪️identity/🟦️.ts";
 import {httpRemoteExecutionContentV1,type RemoteExecutionContentV1} from "../🗄️content/🟦️.ts";
 import {remoteExecutionHostPropertiesV1} from "../🟦️.ts";
 import {buildOffloadActionV1,offloadPlatformV1,parseRustcIdentityV1,type OffloadToolchainV1} from "./📜️action/🟦️.ts";
-import {executeOffloadRidingThroughV1,readOffloadOutputsV1,writeOffloadOutputsV1} from "./🔌️client/🟦️.ts";
+import {executeOffloadRidingThroughV1,readOffloadOutputsV1,runBoundedOffloadPhaseV1,writeOffloadOutputsV1,type OffloadStageV1} from "./🔌️client/🟦️.ts";
+import {classifyOffloadExitV1} from "./🩺️failure/🟦️.ts";
+import {resolveRemoteExecutionEndpointV1} from "../🧭️endpoint/🟦️.ts";
 import {offloadRealTextV1,planOffloadV1} from "./🗺️paths/🟦️.ts";
 import {OFFLOAD_POLICY_V1,offloadTextsV1,type OffloadReasonV1} from "./📐️policy/🟦️.ts";
 import {remoteExecutionOriginV1} from "../🌡️load/🟦️.ts";
@@ -22,10 +24,8 @@ const policy=OFFLOAD_POLICY_V1;
 type Environment=Readonly<Record<string,string|undefined>>;
 /** 🏁️ How an offload attempt ended: the compiler's answer, or the reason the unit compiles here. */
 export type OffloadOutcomeV1=Readonly<{kind:"done";status:number;stdout:string;stderr:string;origin:string;milliseconds:number;cached:boolean}>|Readonly<{kind:"local";reason:OffloadReasonV1;detail:string}>;
-/** 🔌️ Seams for tests: the content store and the endpoint a test cluster runs on. */
-export type OffloadPortsV1=Readonly<{content?:RemoteExecutionContentV1;endpoint?:string;token?:string;instance?:string;cacheEndpoint?:string}>;
-
-const INFRASTRUCTURE_FAILURES:readonly RegExp[]=[/error\[E0463\]/u,/error\[E0583\]/u,/couldn't find file/u,/couldn't read `/u,/can't find crate for/u,/error: linking with `/u,/could not find native static library/u,/No space left on device/u,/couldn't create a temp dir/u,/Executable not found/u];
+/** 🔌️ Seams for tests: the content store and the endpoint a test cluster runs on, and a shorter upload time limit. */
+export type OffloadPortsV1=Readonly<{content?:RemoteExecutionContentV1;endpoint?:string;token?:string;instance?:string;cacheEndpoint?:string;uploadMilliseconds?:number}>;
 
 /** 📒️ Appends one decision to the machine's offload log (`x/offload.jsonl` of the unit cache) and its human progress lines (`x/offload.progress`, English and German). */
 export function emitOffloadEventV1(root:string,event:Readonly<{lane?:string;kind:"offload-run"|"offload-declined"|"offload-failed"|"offload-local-fallback";crate:string;key:string|null;origin?:string;reason?:OffloadReasonV1;detail?:string;milliseconds:number;waitedMs?:number;bytesShipped?:number;bytesUploaded?:number;bytesReturned?:number}>):void{
@@ -37,8 +37,14 @@ export function emitOffloadEventV1(root:string,event:Readonly<{lane?:string;kind
  }catch{}
 }
 
+/** 📣️ Appends the stage an offloaded unit reached (waiting for a machine, compiling there) to the machine's human progress lines (`x/offload.progress`, English and German). */
+export function emitOffloadStageV1(root:string,crate:string,stage:OffloadStageV1):void{
+ if(stage!=="QUEUED"&&stage!=="EXECUTING")return;
+ try{const directory=join(root,"x");mkdirSync(directory,{recursive:true});appendFileSync(join(directory,"offload.progress"),offloadTextsV1(stage==="QUEUED"?"stage.queued":"stage.executing",{crate})+"\n");}catch{}
+}
+
 /** 🚀️ Hands one rustc unit to another machine. Local first is the caller's rule (it calls this only when the machine would wait or the mode is `always`); this builds the hermetic action, releases the job token while it waits, and answers either the compiler's own result translated into the requester's paths (exit status, streams byte for byte, output files written into the real output directory) or the reason the unit compiles here. Never throws: any fault is a reason. The result is NOT stored in the caches here: the caller publishes it like a local compilation, under the unit key it computed, so the entry exists exactly once. */
-export async function offloadRustcUnitV1(input:Readonly<{args:readonly string[];environment:Environment;cwd:string;root:string;lane?:string;crate:string;key:string;compiler:readonly string[];digest?:(path:string)=>string|null;signal?:AbortSignal;ports?:OffloadPortsV1}>):Promise<OffloadOutcomeV1>{
+export async function offloadRustcUnitV1(input:Readonly<{args:readonly string[];environment:Environment;cwd:string;root:string;lane?:string;crate:string;key:string;compiler:readonly string[];digest?:(path:string)=>string|null;signal?:AbortSignal;onStage?:(stage:OffloadStageV1)=>void;ports?:OffloadPortsV1}>):Promise<OffloadOutcomeV1>{
  const marks:number[]=[],bytes:{shipped?:number;uploaded?:number;returned?:number}={},started=Date.now(),local=(reason:OffloadReasonV1,detail=""):OffloadOutcomeV1=>({kind:"local",reason,detail}),{environment,cwd,ports}=input;
  const settle=(outcome:OffloadOutcomeV1,origin?:string):OffloadOutcomeV1=>{
   if(outcome.kind==="local"&&outcome.reason!=="cancelled")emitOffloadEventV1(input.root,{...input.lane?{lane:input.lane}:{},kind:outcome.reason==="no-idle-machine"||outcome.reason==="queue-timeout"||outcome.reason==="not-portable"||outcome.reason==="unmapped-path"||outcome.reason==="inputs-too-large"||outcome.reason==="no-endpoint"||outcome.reason==="no-credential"?"offload-declined":"offload-local-fallback",crate:input.crate,key:input.key,reason:outcome.reason,detail:outcome.detail.slice(0,200),milliseconds:Date.now()-started});
@@ -48,11 +54,10 @@ export async function offloadRustcUnitV1(input:Readonly<{args:readonly string[];
   return outcome;
  };
  try{
-  if(process.platform==="win32")return settle(local("not-portable","windows"));
   const text=rustcVersionTextV1(input.root,input.compiler,environment),toolchainParsed=text===undefined?undefined:parseRustcIdentityV1(text);
   if(!toolchainParsed)return settle(local("toolchain-missing"));
   const workspace=environment.SEMIO_UNIT_CACHE_WORKSPACE_ROOT||fleetCacheRootV1(environment);
-  const endpoint=ports?.endpoint??(environment.SEMIO_REMOTE_EXECUTION_ENDPOINT||readFleetExecutionV1(environment,workspace===undefined?{}:{root:workspace})?.endpoint);
+  const endpoint=ports?.endpoint??resolveRemoteExecutionEndpointV1({environment,...workspace===undefined?{}:{root:workspace}})?.endpoint;
   if(!endpoint)return settle(local("no-endpoint"));
   const cache=ports?.content&&ports.token!==undefined?undefined:resolveRemoteCacheV1(environment,workspace===undefined?{}:{root:workspace});
   const token=ports?.token??cache?.token,cacheEndpoint=ports?.cacheEndpoint??cache?.contract.endpoint,instance=ports?.instance??cache?.contract.instance;
@@ -69,13 +74,16 @@ export async function offloadRustcUnitV1(input:Readonly<{args:readonly string[];
   const content=ports?.content??httpRemoteExecutionContentV1({endpoint:cacheEndpoint!,token,...(workspace===undefined||cache===undefined?{}:{fetch:remoteCacheFetchV1({...environment,...cache.environment,SEMIO_WORKSPACE_ROOT:workspace},{root:workspace})}),timeoutSeconds:Math.ceil(policy.timeouts.requestMilliseconds/1000),retries:0}),toolchain:OffloadToolchainV1={...toolchainParsed,targets:[]};
   const platform=offloadPlatformV1(remoteExecutionHostPropertiesV1(),toolchain,plan.target,(workspace===undefined?undefined:remoteExecutionOriginV1(workspace,environment))),cancelled=input.signal??new AbortController().signal;
   marks.push(Date.now());
-  const built=await Promise.race([buildOffloadActionV1({plan,content,instance:instance!,platform,signal:cancelled,...input.digest?{digest:input.digest}:{}}),new Promise<"timeout">(done=>setTimeout(()=>done("timeout"),policy.timeouts.uploadMilliseconds).unref?.())]);
-  if(built==="timeout")return settle(local("infrastructure","upload"));
+  const phase=await runBoundedOffloadPhaseV1(signal=>buildOffloadActionV1({plan,content,instance:instance!,platform,signal,...input.digest?{digest:input.digest}:{}}),{cancelled,milliseconds:ports?.uploadMilliseconds??policy.timeouts.uploadMilliseconds});
+  if(phase.kind==="timeout")return settle(local("infrastructure","upload"));
+  if(phase.kind==="cancelled")return local("cancelled");
+  const built=phase.value;
   if("declined" in built)return settle(local(built.declined,built.detail));
   marks.push(Date.now());bytes.shipped=built.bytes;bytes.uploaded=built.uploaded;
   const lease=releaseImplicitTokenV1(environment);
-  let execution;
-  try{execution=await executeOffloadRidingThroughV1({endpoint,token,...(workspace===undefined||token!==undefined?{}:{sign:(method,content)=>fleetHeadersV1(workspace,"submit","execution","POST",`http://x/${method}`,content)}),instance:instance!,action:built.digest,signal:cancelled},policy.timeouts.rideThroughMilliseconds);}
+  let execution,seen:OffloadStageV1|undefined;
+  const staged=(stage:OffloadStageV1):void=>{if(stage===seen)return;seen=stage;emitOffloadStageV1(input.root,input.crate,stage);try{input.onStage?.(stage);}catch{}};
+  try{execution=await executeOffloadRidingThroughV1({endpoint,token,...(workspace===undefined||token!==undefined?{}:{sign:(method,content)=>fleetHeadersV1(workspace,"submit","execution","POST",`http://x/${method}`,content)}),instance:instance!,action:built.digest,signal:cancelled,onStage:staged},policy.timeouts.rideThroughMilliseconds);}
   finally{await lease?.reacquire();lease?.close();}
   if(execution.kind==="declined"){
    if(execution.reason==="no-idle-machine"||execution.reason==="queue-timeout"||execution.reason==="worker-policy")writeOffloadMemoV1(input.root,"declined",{atMs:Date.now(),reason:execution.reason,detail:execution.detail.slice(0,120)});
@@ -88,7 +96,9 @@ export async function offloadRustcUnitV1(input:Readonly<{args:readonly string[];
   const root_=Buffer.from(outputs.files.get(policy.virtual.root)??new Uint8Array(0)).toString("utf8")||undefined,translate=(bytes:Buffer):string=>offloadRealTextV1(bytes.toString("utf8"),plan.mappings,root_,cwd);
   const stdout=translate(outputs.stdout),stderr=translate(outputs.stderr);
   if(outputs.exitCode!==0){
-   if(INFRASTRUCTURE_FAILURES.some(pattern=>pattern.test(stderr)))return settle(local("incomplete-inputs",stderr.split("\n")[0]!.slice(0,120)));
+   const kind=classifyOffloadExitV1({exitCode:outputs.exitCode,stderr});
+   if(kind==="incomplete-inputs")return settle(local("incomplete-inputs",stderr.split("\n")[0]!.slice(0,120)));
+   if(kind==="infrastructure")return settle(local("infrastructure",`exit ${outputs.exitCode}`));
    return settle({kind:"done",status:outputs.exitCode,stdout,stderr,origin:execution.origin,milliseconds:Date.now()-started,cached:execution.cached});
   }
   const outDir=resolve(cwd,plan.outDir),marker=root_===undefined?undefined:Buffer.from(root_);

@@ -37,7 +37,7 @@ fn find_select<'a>(node: &'a UiNode, id: &str) -> Option<&'a UiSelectNode> {
     }
 }
 
-fn dispatch(shell: &mut ShellState, action: &str, args: Value) {
+fn dispatch(mut shell: &mut ShellState, action: &str, args: Value) {
     semio_framework_async::block_on(ActionsCtx::of(&mut shell).dispatch_action(ActionDescriptor { controller_id: "framework".into(), action: action.into(), args: Some(semio_framework::DslValue::from(args)) })).expect("driver editor action");
 }
 
@@ -74,7 +74,7 @@ fn draft_is_live_selection_clears_it_and_save_delete_use_owned_preferences() {
     let fixture = fixture();
     dispatch(&mut shell, "setDriverField", fixture["transitions"]["edit"].clone());
     assert!(shell.prefs.driver_draft.is_some());
-    assert_eq!(shell.prefs.driver_document(&shell.chrome).config["labels"], "icons");
+    assert_eq!(shell.prefs.driver_document(&shell.chrome).config["labels"].as_str(), Some("icons"));
     assert_eq!(shell.chrome.chrome_build.driver.labels, semio_ui_wgpu_layout::chrome::UiDriverLabels::Icons, "draft changes live chrome");
     assert!(shell.chrome.chrome_build.preferences.custom_drivers.is_empty(), "draft never persists");
 
@@ -91,7 +91,7 @@ fn draft_is_live_selection_clears_it_and_save_delete_use_owned_preferences() {
     let saved = shell.chrome.chrome_build.preferences.custom_drivers.get(saved_id).expect("saved driver");
     assert_eq!(saved.driver_id, saved_id);
     assert_eq!(saved.label, "Focus Flow");
-    assert_eq!(saved.config["labelTier"], "beginner");
+    assert_eq!(saved.config["labelTier"].as_str(), Some("beginner"));
     assert_eq!(shell.prefs.driver_id, saved_id);
     assert!(shell.prefs.driver_draft.is_none());
     assert!(shell.prefs.driver_save_label.is_empty());

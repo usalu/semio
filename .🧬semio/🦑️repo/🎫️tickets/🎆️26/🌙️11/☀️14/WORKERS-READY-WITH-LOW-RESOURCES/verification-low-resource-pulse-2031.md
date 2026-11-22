@@ -1,0 +1,48 @@
+# Low-Resource Verification Through 20:50 UTC
+
+All ten fresh replica origins continued to match staged tree `7d8c0b059bcaed05be881279fe59b4fa8305d514`. Native Ready still reported zero of 13, with m04 and m06 stale and m09 missing. At 20:26 the actual isolated lab PID 77718 and the whole-graph request PID 24613 with child 24861 were live. [Previous checkpoint](verification-low-resource-pulse-2012.md) [Physical rollout sample](audit-stage-rollout-2026.md)
+
+## Faster selected source traversal
+
+Selected source walks now check the owner memory governor on the existing 64-entry cadence for directories as well as file entries. The 512-directory neutral regression counted 547 old checkpoint calls and at most 34 with the change. The input matches and compiler target matches agree with the independent matcher. The three native suites passed 14 tests and 274 assertions. Scope is checkpoint work, with no live elapsed speed claim. [Checkpoint cadence audit](audit-source-checkpoint-cadence-2030.md)
+
+## Windows recovery
+
+m05 began running replica `38fe8a5a335ef2d7e19fd3001a89e9982056787739d086030708f10e4dea26c2` by 20:28:49 UTC. An origin-bound follow-up reported 7,587 target sharing events, all native `EPERM`. These counts do not identify the exact target operation or effective access reason. m05 remained in dependency disk collection with 5,153 MB free and 6,144 MB required. Its prior installer did not start again in this sample. [EPERM operation audit](audit-m05-eperm-2029.md)
+
+Disk recovery now reports the registered collector immediately before awaiting it. The failing fixture exposed the last completed collector while the next one was blocked. The full native disk suite passed 21 tests with 214 assertions, including SQLite-derived order. The source changes were published together with the selected-source change. The latest matching exact committed hashes cover 32 distinct current files. Eight fresh workers had acknowledged all 32 at 20:31 while m07 and m11 had acknowledged 24 and 26, respectively. Journal positions do not certify the currently loaded Ready version. [Collector evidence](m05%20collector%20start%20evidence.md)
+
+At the latest native Ready sample m07 had reached 94 completed owner checks and m13 was verifying 7,424 build-tool entries. m13 had already completed the first dependency run. The lab continued waiting for its fixed 60,129,542,144-byte admission requirement. The coordinator remained queued for the complete graph at 14,336 MiB. Full physical Ready, constrained completion and compatible complete-graph adoption remain outstanding.
+
+## Physical update at 20:32 UTC
+
+m13 recorded tools exit zero under digest `57d7264ca1ac` at 20:31:50.390 UTC, after 801 seconds, with an observed peak of 3,513 MB. Its verified preceding stages are native, repo-mcp and dependencies. It entered workspace on the 16,384 MiB pool. m11 reached 1,267 owner checks and 454,784 verified memo rows. All ten fresh replicas now run the diagnostic digest and match the active stage. m05 reports 23,193 target errors, all EPERM, and continues its distinct Ready disk wait. The complete-graph adoption verifier independently returned pending with a missing receipt for all 13 destinations. The native status has no local complete generation; the verifier short-circuits before looking up a producer when a destination receipt is missing.
+
+## Physical collector and target operation evidence
+
+At 20:32:50.979 UTC m05's new Ready PID 48204 actually reported `Starting collector compile-caches`. That confirmed the collector active at the earlier side of the latest wait. The same read measured 4,935 MB free against 6,144 MB required. At 20:35 its replica had recorded 40,496 target-sharing events, all EPERM. The prior dependency installer was still the latest terminal attempt.
+
+The replica now counts unlink and rename separately alongside the existing native-code totals. The rows use only spare diagnostic capacity and do not carry paths. The native resilience and race suites passed 26 and 38 tests, respectively, with 673 assertions total. The native self-check passed 34 modules, 23 schemas and three text catalogues for `e3e9e32d044406facd0c95ae39f1dedc00100821a7fa4643e6e1d7a3e903b67e`. Its seven exact files were handed to replica publication. The observed EPERM total predates that operation-level runtime and cannot locate failure custody.
+
+## Automatic image reclaim and m07's stage observation
+
+Build disk intake now passes its measured backing device and existing need-plus-reserve target to the ordinary in-place recovery path. It limits image candidates to that device and forwards the pressure receipt only to in-place reclaim. The existing nonwaiting exclusive lease, free-space recheck and ordinary mounted fallback still own admission. A mixed-device private fixture and SQLite independently checked scope and ordering. With the previous door test isolated from live memory sampling, the three full suites passed all 42 tests and 568 assertions. The six exact source and fixture paths were published via Native. The physical lab has no available automatic recovery request in this run. [Native reclaim integration](audit-build-disk-native-reclaim-pressure.md)
+
+m07 emitted two receipts without a Git HEAD or index observation after its replica restart. It remained at the same server cursor, and the next server event was a ticket Markdown write. At 20:40:46.293 UTC it reported the authoritative stage again at that same cursor. The available receipts do not establish an on-disk stage change or identify what prevented the Git observation. [m07 observation timeline](audit-m07-stage-observation-2040.md)
+
+At 20:41:56 UTC all ten fresh replicas again reported the current staged tree. Nine ran the operation-diagnostic replica; m05 still ran the prior native-code diagnostic build. Its current Ready loop reported `compile-caches` with 4,922 MB free against the 6,144 MB requirement. m13 reached its first workspace owner round and m11 verified 510,464 memo rows. The lab and whole-graph processes remained live. The lab's current before-grant measurement was 39,574,593,536 bytes of its 60,129,542,144-byte requirement.
+
+At 20:43 UTC the fresh native capacity gate reported five active grants, 1,675 MiB spare and a swap refusal for the 14,336 MiB whole-graph request. There was still no published local generation. Exact committed locations were verified for 21 source and fixture hashes from this turn. Nine fresh workers acknowledged every hash. The one outstanding m07 hash was the disk admission test fixture at server journal position 186:429831. It is separate from m07's current staged index.
+
+## Exact Windows rename boundary
+
+At 20:44:04.974 UTC m05 attested the new operation-diagnostic runtime. In that sample its 4,327 generic target-sharing failures were exactly 4,327 native EPERM failures during staged-file rename, with zero unlink failures. This is a count of attempts and does not identify a path, Windows sharing handle, file attribute, or permission cause. Ready separately remained in compile-cache disk recovery, with 4,922 MB free against 6,144 MB required. The operation sample establishes where the replica is retrying without conflating it with Ready's disk admission. [Operation counters and physical proof](Replica%20target%20sharing%20operation%20counts.md)
+
+## Git observation classification
+
+The exact Git stage observer now distinguishes a genuinely absent Git root from an existing root that it cannot certify. It checks local identity before accepting a prior certified stage and keeps an unchanged warm observation process-free. A Boolean-only refresh leaves the exact-stage stamp in place. The tests cover an absent root, a Git-rejected root, a changed warm configuration, restored exact head and tree, and cold-to-warm or Boolean-refresh-to-warm transitions with zero subprocess launches at the warm read. The focused native tests passed 14 cases and 139 assertions. Native self-check passed 34 modules, 23 schemas and three text catalogues for digest `747abd02e8de5ed818510db1a86ff4cfe2cd20118a2bfdbbd8ab36f6eb62851f`. Its four exact paths were submitted to Native replication. The observed m07 recovery preceded this change.
+
+The broad native Git and attestation suites passed 213 tests with 2,877 assertions before the final warm-cache refinement. The final exact source passed its focused tests and native self-check. At 20:50 UTC the 21 earlier current hashes were committed and acknowledged by all ten fresh workers. The four final Git observer files were still in the author’s durable hint queue. Native status and an independent process sample both confirmed author PID 83590 live, while its last reported active code was the earlier digest. The final Git runtime rollout remains unverified. [Git presence and cache tests](audit-m07-git-stage-presence.md)
+
+At 20:49 UTC ten current attested workers matched the authoritative staged tree after m07's receipt freshness returned. m07's cursor reached server position 186:440465. This was a return of current observation after a gap, with no evidence of a staged-tree mutation. Native Ready remained zero of 13. m13 was in workspace, m05 in dependency disk recovery, m04 and m06 stale, and m09 missing. The latest complete-graph capacity sample reported no local generation and 2,136 MiB spare while swap gated the 14,336 MiB request. The actual isolated run was still before its fixed disk grant, with its latest observed availability 34,388,525,056 of 60,129,542,144 bytes. Complete adoption remains unverified on all 13 destinations. The ticket and thread goal remain open.
+

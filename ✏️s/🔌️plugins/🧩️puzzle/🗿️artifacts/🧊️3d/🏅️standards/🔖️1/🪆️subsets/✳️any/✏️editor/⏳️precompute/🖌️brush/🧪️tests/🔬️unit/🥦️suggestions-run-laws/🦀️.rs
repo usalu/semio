@@ -4,6 +4,8 @@
 /// ⏯️ Ticket 26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS lane W2-C — the brush candidate search is a read-only
 /// tool run: every candidate it tests is a trace record, every verdict reaches the instance's link, and the job
 /// follows the link's target. The scene and the laws are read from `🧫️fixtures/🎞️brush-suggestions-run.json`.
+use parry3d::query::PointQuery as _;
+use parry3d::shape::Shape as _;
 use semio_s_artifact_puzzle_3d_editor_session::Puzzle3dInstanceOperationOwner;
 use semio_framework_job::root_cancel_token;
 use semio_framework_job::Generation;

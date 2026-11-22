@@ -10,7 +10,7 @@ use std::mem::size_of;
 
 type App = EditorApp<RasterPlayApp>;
 const TOOL: &str = "importPngFile";
-const RAW_BYTES: usize = MAX_PAYLOAD_BYTES + 65_536;
+pub(crate) const RAW_BYTES: usize = MAX_PAYLOAD_BYTES + 65_536;
 const OUTPUT_BYTES: usize = 16_777_216 * 52 + 65_536;
 const WORK_ITEMS: usize = semio_plugin::retained_command::ArtifactRetainedWorkCapacity::for_invertible_items(2).work_items();
 const CLOSE_PAGE: usize = semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;

@@ -1,0 +1,9 @@
+# Section through a planar bore
+
+A solid with a through-hole has one connected boundary shell. Its entry and exit caps each contain an outer loop and an inner loop. The retained planar Section query previously refused any face with an inner loop, so neither a slice normal to the bore nor a slice across it could reach the existing face publication.
+
+The planar query retains each original face's loop boundaries in its bounded topology view. Its manifold check evaluates the local link around each vertex using real loop adjacency. Connectivity also follows the interior of faces whose boundary has multiple loops. The Euler check counts a face with holes by its own Euler characteristic. When a plane crosses a cap, the query sorts crossings from every loop along the same line and pairs them in material order, then sends the complete material contours through the existing section-face publication.
+
+The neutral fixture uses a 10 by 10 stock profile, a 6 by 6 square bore and a height of 6. A transverse slice returns area 64 with signed loops 100 and −36. A slice across the bore splits into two faces of area 12 each. Both normals for each slice preserve the corresponding winding. The second case has two rectangular bores. A transverse slice returns area 76 with signed loops 100, −12 and −12. A slice across both bores returns three independent faces of area 12. The authored Manifold test passed all eight comparisons. The compact Rust reproduction refused the through-hole with the previous code and passed all 78 cases with the production change. Production-reader source preflight passed across WASI, macOS, Windows and Linux.
+
+The managed native build is still active. This change keeps the existing shell, loop and crossing bounds. A cut lying along a boundary edge of the same face whose other loops cross the plane still needs a more general planar arrangement.

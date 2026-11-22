@@ -6,7 +6,7 @@
 //! holds while its target's placement holds (the layer selected, paintable, at the same pixel grid in the world): the
 //! leaf names samples and brush, never the image under them, so the image's content changing — a preview, a peer's
 //! edit — never cancels it.
-use super::{affine_from_json,Affine,LayerNode,MaskState,Point,RasterHost};
+use super::{affine_from_json,rollover_stroke,Affine,LayerNode,MaskState,Point,RasterHost,STROKE_POINT_CAP};
 use std::sync::atomic::{AtomicU64,Ordering};
 
 /// 🌊️ How many new samples a stroke gathers before it streams them as one `paintStroke{phase: stream}` tick.
@@ -83,7 +83,7 @@ impl PaintGesture {
         let inverse=Affine::new([d/determinant,-b/determinant,-c/determinant,a/determinant,(c*f-d*e)/determinant,(b*e-a*f)/determinant]);
         let tool=if erase {"eraser"} else {"brush"};
         let press=format!("stroke:{}",STROKE_PRESS.fetch_add(1,Ordering::Relaxed));
-        let mut gesture=Self{command:PaintEditCommand{layer_id:id.clone(),target:host.paint_target,tool,points:Vec::new(),phase:None,reason:None,gesture:None},world:matrix,inverse,extent,points:Vec::with_capacity(2048),gesture:press,sent:0};gesture.push(point);Some(gesture)
+        let mut gesture=Self{command:PaintEditCommand{layer_id:id.clone(),target:host.paint_target,tool,points:Vec::new(),phase:None,reason:None,gesture:None},world:matrix,inverse,extent,points:Vec::with_capacity(STROKE_POINT_CAP),gesture:press,sent:0};gesture.push(point);Some(gesture)
     }
 
     /// 🪣️ One bucket click on the selected layer's target: the clicked point in its image's pixels, or nothing when the
@@ -102,9 +102,23 @@ impl PaintGesture {
         host.selected_ids.first()==Some(&self.command.layer_id)&&host.paint_target==self.command.target&&target(host,&host.document.layers,&self.command.layer_id,Affine::IDENTITY,false).is_some_and(|(world,extent)|world.as_coeffs()==self.world.as_coeffs()&&extent==self.extent)
     }
 
+    /// ⌨️ A keyboard edit on the selected layer's target: `points` already in the target image's pixels, whole and un-streamed like a pointer click.
+    pub fn keyboard_edit(host:&RasterHost,tool:&'static str,points:Vec<[f64;2]>)->Option<PaintEditCommand>{
+        let id=host.selected_ids.first()?;
+        target(host,&host.document.layers,id,Affine::IDENTITY,false)?;
+        Some(PaintEditCommand{layer_id:id.clone(),target:host.paint_target,tool,points,phase:None,reason:None,gesture:None})
+    }
+
+    /// ✂️ The stream tick a stroke at [`STROKE_POINT_CAP`] samples hands out before it restarts its buffer at the last sample, so the gesture stays one history step.
+    pub fn rollover(&mut self)->Option<PaintEditCommand>{
+        let rolled=rollover_stroke(&self.points,self.sent,STROKE_POINT_CAP)?;
+        self.points=rolled.points;self.sent=rolled.sent;
+        Some(PaintEditCommand{points:rolled.batch,phase:Some("stream"),gesture:Some(self.gesture.clone()),..self.command.clone()})
+    }
+
     pub fn push(&mut self,world:Point){
         let local=self.inverse*world;
-        if !local.x.is_finite()||!local.y.is_finite()||local.x.abs()>1_000_000.0||local.y.abs()>1_000_000.0||self.points.len()>=2048{return;}
+        if !local.x.is_finite()||!local.y.is_finite()||local.x.abs()>1_000_000.0||local.y.abs()>1_000_000.0||self.points.len()>=STROKE_POINT_CAP{return;}
         let point=[(local.x*1000.0).round()/1000.0,(local.y*1000.0).round()/1000.0];
         if self.points.last()!=Some(&point){self.points.push(point);}
     }

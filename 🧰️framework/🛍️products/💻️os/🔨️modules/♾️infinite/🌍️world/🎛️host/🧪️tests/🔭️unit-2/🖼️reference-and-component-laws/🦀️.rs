@@ -613,55 +613,44 @@ fn assert_native_original_wire(edge_only: bool) {
     retire_bridged_surface(&mut state);
 }
 
-/// 🧷️ Ordinary object hover accepts point geometry with or without topological vertex IDs.
+/// ☁️ Unlabelled points travel the `pointsJson` lane and paint as one point draw without component targeting; the mesh authority refuses the same points as a mesh, loudly and by name.
 #[test]
 fn world_native_analytic_point_paints_without_component_targeting() {
     let _gate = semio_os_infinite_world_host::world_test_gate();
     let fixture: serde_json::Value = serde_json::from_str(read_static("../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🎯️analytic-wire-picking/point-only.json")).unwrap();
-    let point: [f32; 3] = serde_json::from_value(fixture["mesh"]["positions"].clone()).unwrap();
-    let pointer: [f32; 2] = serde_json::from_value(fixture["pointer"].clone()).unwrap();
-    for variant in fixture["variants"].as_array().unwrap() {
-        let mut scene = scene_with_selection("{}");
-        let world = scene.world_3d.as_mut().unwrap();
-        let mut mesh = fixture["mesh"].clone();
-        mesh["vertexIds"] = variant["vertexIds"].clone();
-        world.meshes_json = serde_json::json!([{"id":"point","data":mesh}]).to_string();
-        world.instances_json = serde_json::json!([{"id":fixture["instance"],"meshId":"point"}]).to_string();
-        world.camera_json = fixture["camera"].to_string();
-        world.selection_json = serde_json::json!({"granularity":"object","ids":[],"showEdges":false,"targets":{"mesh":true,"vertex":false,"edge":false,"face":false}}).to_string();
-        let mut state = World3dState::new("surface-point".into(), "controller".into());
-        let bounds = Rect::new(0.0,0.0,400.0,400.0);
-        drive_scene_bridge(&mut state, &scene, bounds);
-        let schema = state.scene.meshes.get("point").unwrap().schema().unwrap();
-        assert_eq!((schema.vertices,schema.vertex_ids,schema.indices,schema.edges),(1,u32::from(variant["semantic"].as_bool().unwrap()),0,0));
-        let mut lines = Vec::new();
-        append_component_overlays(&state.selection, &state.gumball, &state.scene, &state.overlay, &semio_ui_theme::Theme::default(), &state.camera.orbit.to_camera(), bounds, &mut lines);
-        assert_eq!(lines.len(), 6);
-        for pair in lines.chunks_exact(2) {
-            for axis in 0..3 {
-                assert!(((pair[0].position[axis]+pair[1].position[axis])*0.5-point[axis]).abs()<1e-5);
-            }
-        }
-        let mut registry = WorldInteractionRegistryBuildCursor::new(state.session.interaction_revision);
-        for turn in 0..128 {
-            match with_world_step_context(1, |context| registry.step(&mut state.session, &mut state.interaction, &mut state.scene, context)) {
-                WorldInteractionStep::Complete => break,
-                WorldInteractionStep::Pending => assert!(turn < 127),
-                step => panic!("point hover registry {step:?}"),
-            }
-        }
-        let mut pick = WorldRayPickCursor::new(&state.session, &state.camera, 10, WorldRayPickPurpose::Hover, pointer[0], pointer[1]).unwrap();
-        for turn in 0..128 {
-            match with_world_step_context(1, |context| pick.step(&state.session, &state.selection, &state.interaction, &state.scene, 10, context)) {
-                WorldInteractionStep::Complete => break,
-                WorldInteractionStep::Pending => assert!(turn < 127),
-                step => panic!("point hover {step:?}"),
-            }
-        }
-        assert_eq!(pick.best.map(|hit| hit.point.to_array()), Some(point));
-        assert!(state.selection.selected_ids.is_empty());
-        retire_bridged_surface(&mut state);
-    }
+    let expected = &fixture["expected"];
+    let mut scene = scene_with_selection("{}");
+    let world = scene.world_3d.as_mut().unwrap();
+    world.points_json = Some(serde_json::json!([fixture["layer"]]).to_string());
+    world.camera_json = fixture["camera"].to_string();
+    world.selection_json = serde_json::json!({"granularity":"object","ids":[],"showEdges":false,"targets":{"mesh":true,"vertex":false,"edge":false,"face":false}}).to_string();
+    let mut state = World3dState::new("surface-point".into(), "controller".into());
+    let bounds = Rect::new(0.0, 0.0, 400.0, 400.0);
+    drive_scene_bridge(&mut state, &scene, bounds);
+    assert_eq!(state.scene.point_draws.len() as u64, expected["layers"].as_u64().unwrap());
+    let draw = &state.scene.point_draws[0];
+    assert_eq!((draw.size, draw.size_attenuation), (expected["size"].as_f64().unwrap() as f32, expected["sizeAttenuation"].as_bool().unwrap()));
+    let want: Vec<f32> = serde_json::from_value(expected["vertices"][0].clone()).unwrap();
+    let got: Vec<f32> = draw.vertices[0].position.iter().chain(draw.vertices[0].color.iter()).copied().collect();
+    assert_eq!((draw.vertices.len(), got), (1, want));
+    assert!(state.scene.meshes.get("point").is_none(), "an unlabelled point is not a component mesh");
+    assert!(state.session.mesh_refusals.is_empty());
+    let mut lines = Vec::new();
+    append_component_overlays(&state.selection, &state.gumball, &state.scene, &state.overlay, &semio_ui_theme::Theme::default(), &state.camera.orbit.to_camera(), bounds, &mut lines);
+    assert!(lines.is_empty(), "the point lane carries no component targeting");
+    assert!(state.selection.selected_ids.is_empty());
+    retire_bridged_surface(&mut state);
+
+    let mut refused = scene_with_selection("{}");
+    let world = refused.world_3d.as_mut().unwrap();
+    world.meshes_json = serde_json::json!([{"id": expected["meshRefusal"]["meshId"], "data": fixture["mesh"]}]).to_string();
+    world.instances_json = serde_json::json!([{"id": fixture["instance"], "meshId": expected["meshRefusal"]["meshId"]}]).to_string();
+    world.camera_json = fixture["camera"].to_string();
+    let mut state = World3dState::new("surface-point-mesh".into(), "controller".into());
+    drive_scene_bridge(&mut state, &refused, bounds);
+    assert_eq!(state.mesh_refusals(), [semio_os_infinite_world_model::WorldMeshRefusal { mesh_id: "point".into(), reason: semio_os_infinite_world_model::WorldMeshRefusalReason::UnlabelledPointsOnly }]);
+    assert!(state.scene.meshes.get("point").is_none());
+    retire_bridged_surface(&mut state);
 }
 
 /// 🪡️ A wire is primary geometry even when surface outlines and component targeting are disabled.

@@ -22,21 +22,20 @@ export type BufferView = { buffer: 0; byteOffset: number; byteLength: number; ta
 /** 🪪️ A glTF accessor. */
 export type Accessor = { bufferView: number; componentType: number; count: number; type: ElementType; min?: number[]; max?: number[] };
 
-/** 🧰️ Accumulates buffer views and accessors; every view starts on a 4-byte boundary. Equal payloads of at least 1 KiB share one typed accessor after an exact comparison with the encoded bytes. Tiny payloads avoid indexing overhead. Writing every value counts as work of the optional `pace`, so one huge accessor stays cancellable. */
+/** 🧰️ Accumulates buffer views and accessors; every view starts on a 4-byte boundary. Repeated payloads share a typed accessor after an exact encoded comparison. Large documents also reuse short payloads through a bounded index. Writing every value counts as work of the optional `pace`, so one huge accessor stays cancellable. */
 export class BufferBuilder {
   readonly views: BufferView[] = [];
   readonly accessors: Accessor[] = [];
   private readonly writer = new ByteWriter();
 
   private readonly shared = new Map<string, number[]>();
+  private readonly short = new Map<string, number[]>();
   private readonly float = new Float32Array(1);
   private readonly bits = new Uint32Array(this.float.buffer);
 
   constructor(private readonly pace: Pace = new Pace()) {}
 
-  private key(values: ArrayLike<number>, component: ComponentCode, type: ElementType, target: number | undefined, bounds: boolean): string | undefined {
-    const width = component === ComponentType.UnsignedByte ? 1 : component === ComponentType.UnsignedShort ? 2 : 4;
-    if (values.length * width < 1024) return undefined;
+  private key(values: ArrayLike<number>, component: ComponentCode, type: ElementType, target: number | undefined, bounds: boolean): string {
     let hash = 2166136261;
     for (let i = 0; i < values.length; i++) {
       this.pace.tick();
@@ -72,8 +71,10 @@ export class BufferBuilder {
   add(values: ArrayLike<number>, componentType: ComponentCode, type: ElementType, options: { target?: number; bounds?: boolean } = {}): number {
     const components = ElementCount[type];
     if (values.length % components !== 0) throw new Error(`accessor of ${type} needs a multiple of ${components} values, got ${values.length}`);
-    const key = this.key(values, componentType, type, options.target, options.bounds === true);
-    const candidates = key === undefined ? undefined : this.shared.get(key);
+    const width = componentType === ComponentType.UnsignedByte ? 1 : componentType === ComponentType.UnsignedShort ? 2 : 4;
+    const indexForSize = values.length*width >= 1024 ? this.shared : this.writer.length >= 128*1024 ? this.short : undefined;
+    const key = indexForSize && this.key(values, componentType, type, options.target, options.bounds === true);
+    const candidates = key === undefined ? undefined : indexForSize?.get(key);
     const match = candidates?.find((index) => this.matches(index, values, componentType));
     if (match !== undefined) return match;
     const byteOffset = this.writer.length;
@@ -103,9 +104,12 @@ export class BufferBuilder {
       accessor.max = max;
     }
     const index = this.accessors.push(accessor) - 1;
-    if (key !== undefined) {
-      if (candidates === undefined) this.shared.set(key, [index]);
-      else candidates.push(index);
+    if (indexForSize && key !== undefined) {
+      if (candidates !== undefined) candidates.push(index);
+      else {
+        if (indexForSize === this.short && this.short.size >= 4096) this.short.delete(this.short.keys().next().value!);
+        indexForSize.set(key,[index]);
+      }
     }
     return index;
   }

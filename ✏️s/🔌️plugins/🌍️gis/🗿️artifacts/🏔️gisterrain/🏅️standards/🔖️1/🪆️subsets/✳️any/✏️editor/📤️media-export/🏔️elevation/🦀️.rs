@@ -22,6 +22,7 @@ impl JsonWriteSource for ElevationJsonView<'_> {
             ArtifactCanonicalJsonNode::Array(count) => JsonWriteNode::Array(count),
             ArtifactCanonicalJsonNode::F64(value) => JsonWriteNode::Number(Number::Float(value)),
             ArtifactCanonicalJsonNode::I64(value) => JsonWriteNode::Number(Number::Int(value)),
+            ArtifactCanonicalJsonNode::String(value) | ArtifactCanonicalJsonNode::Text(ArtifactCanonicalJsonText::Contiguous(value)) => JsonWriteNode::String(value),
             _ => return Err(absent()),
         })
     }

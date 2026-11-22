@@ -25,6 +25,10 @@ def edit_of(churn, error, depth=0):
 def classify(protocol, churn, error, bundled=False, depth=0):
     if depth > 8 or not isinstance(error, dict):
         return None
+    if error.get("replicaUnsettled") is True:
+        return "error"
+    if error.get("code") in protocol["loadFailure"]["ownerCodes"]:
+        return None
     if error.get("code") in churn["staleImplementationCodes"]:
         return "error"
     load_failure = protocol["loadFailure"]

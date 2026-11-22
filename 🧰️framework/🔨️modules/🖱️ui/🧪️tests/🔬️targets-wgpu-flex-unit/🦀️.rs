@@ -211,6 +211,18 @@ fn a_stacks_padding_is_applied_per_side_not_from_one_sampled_side() {
 
 //#region ↕️AlignJustifyWrapGrow
 
+/// CSS flexbox: `min-width` clamps a cross-axis stretched item, so a narrow viewport leaves a content-wide row to scroll.
+#[test]
+fn min_width_clamps_a_stretched_cross_axis_item() {
+    let mut fixture = Fixture::new();
+    let parent = fixture.push(LayoutNodeKind::Stack { horizontal: false, gap: 0.0, padding: 0.0 }, None, Some(&stack(Axis::Vertical, Align::Stretch, Justify::Start, false)));
+    fixture.push(LayoutNodeKind::TableRow { height: 20.0, actions: 0.0, content: 300.0, lead: 0.0 }, Some(parent), None);
+    fixture.solve(100.0, 100.0);
+    assert!(close(fixture.rect(1).width, 300.0), "got {}", fixture.rect(1).width);
+    fixture.solve(500.0, 100.0);
+    assert!(close(fixture.rect(1).width, 500.0), "got {}", fixture.rect(1).width);
+}
+
 #[test]
 fn justify_space_between_pushes_children_to_both_ends_instead_of_growing_them() {
     let fixture = fixed_children(stack(Axis::Horizontal, Align::Start, Justify::SpaceBetween, false), 3, 300.0, 100.0);

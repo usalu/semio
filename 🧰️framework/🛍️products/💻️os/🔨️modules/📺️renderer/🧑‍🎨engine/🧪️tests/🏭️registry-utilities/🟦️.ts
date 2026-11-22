@@ -2,7 +2,9 @@
 import gumballTargetsFixture from "../../🧱️elements/🌐️World3dHost/🧪️tests/🧫️fixtures/🧭️gesture-targets.json";
 import gumballTargetsSchema from "../../🧱️elements/🌐️World3dHost/🧬️schema/🧭️gesture-targets/🔣️.json";
 import gumballLiveProtocolFixture from "../../🧱️elements/🌐️World3dHost/🧪️tests/🧫️fixtures/🛠️gumball-live-protocol.json";
+import relocateFixture from "../../🧱️elements/🌐️World3dHost/🧪️tests/🧫️fixtures/🚚️relocate-gesture.json";
 import { worldGumballStep, WORLD_GUMBALL_IDLE, type WorldGumballEvent, type WorldGumballTargets } from "../../🧱️elements/🌐️World3dHost/🧮️gumball-math/🟦️.ts";
+import { raycastWorldPlanePoint } from "../../🧱️elements/🌐️World3dHost/🎯️marquee-and-bridges/🟦️.tsx";
 import { type ReactElement } from "react";
 import { hostArmedViewContext, windowViewContext } from "@semio-tech/framework-manifest/view-state-and-public-invocation";
 import Ajv2020 from "ajv";
@@ -234,6 +236,42 @@ describe("registry-derived utilities and activation (P5)", () => {
     expect(world3dRelocateDispatchArgsV1("obj-1", [1, 2, 3], [10, 10, 0], [10.0000001, 10, 0])).toBeNull();
   });
 
+  it("relocates within the grid plane and leaves a still drag alone", () => {
+    const point = (values: number[]): [number, number, number] => [values[0]!, values[1]!, values[2]!];
+    const grid = relocateFixture.grid;
+    for (const { target, expected } of grid.cases) {
+      const result = world3dRelocateDispatchArgsV1("obj-1", point(grid.origin), point(grid.grab), point(target), { gridSnapEnabled: true, gridFactor: grid.factor, planeAxis: 2 });
+      expect(result?.position ?? null).toEqual(expected);
+    }
+  });
+
+  it("relocates front and side grabs through the matching Three.js camera", () => {
+    const point = (values: number[]): [number, number, number] => [values[0]!, values[1]!, values[2]!];
+    const rect = new DOMRect(10, 20, 400, 400);
+    for (const row of relocateFixture.cardinal) {
+      const axis = row.view === "front" ? 1 : 0;
+      expect(axis).toBe(row.axis);
+      const camera = new THREE.OrthographicCamera(-4, 4, 4, -4, 0.1, 100);
+      camera.up.set(0, 0, 1);
+      camera.position.set(...point(row.eye));
+      camera.lookAt(0, 0, 0);
+      camera.updateMatrixWorld();
+      const rayPoint = (values: number[]) => {
+        const ndc = new THREE.Vector3(...point(values)).project(camera);
+        return raycastWorldPlanePoint(rect.left + (ndc.x + 1) * rect.width / 2, rect.top + (1 - ndc.y) * rect.height / 2, rect, camera, axis, row.origin[axis]!);
+      };
+      const from = rayPoint(row.grab);
+      expect(from).not.toBeNull();
+      for (const [sample, expected] of [[row.preview, row.expectedPreview], [row.release, row.expectedRelease]] as const) {
+        const to = rayPoint(sample);
+        expect(to).not.toBeNull();
+        const result = world3dRelocateDispatchArgsV1("object", point(row.origin), from!, to!, { gridSnapEnabled: row.snap, gridFactor: 1, planeAxis: axis });
+        expect(result?.position).toHaveLength(3);
+        result?.position.forEach((value, axis) => expect(value).toBeCloseTo(expected[axis]!, 6));
+      }
+    }
+  });
+
   it("every self-gating world lane returns the controlled round trip it coalesces", async () => {
     const first = Promise.withResolvers<void>();
     const sent: string[] = [];
@@ -254,7 +292,7 @@ describe("registry-derived utilities and activation (P5)", () => {
     let root = process.cwd();
     for (let hop = 0; hop < 12 && !existsSync(resolve(root, relative)); hop += 1) root = resolve(root, "..");
     const source = readModuleTreeSource(resolve(root, relative));
-    for (const action of ["interactionHover", "referenceHover", "worldVortexHover"]) expect(source).toMatch(new RegExp(`return dispatchSettled\\(\\"${action}\\"`));
+    for (const action of ["interactionHover", "referenceHover"]) expect(source).toMatch(new RegExp(`return dispatchSettled\\(\\"${action}\\"`));
     expect(source).toMatch(/createCoalescingActionDispatcher<string \| null>\(\(fullId\) => dispatchSettled\("targetBrushSuggestions"/);
     expect(source).not.toMatch(/return dispatch\("(?:interactionHover|targetBrushSuggestions|worldVortexHover)"/);
   });

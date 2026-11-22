@@ -2,12 +2,17 @@ import {existsSync,readdirSync,readFileSync,statSync,writeFileSync} from "node:f
 import {join,resolve} from "node:path";
 
 const fixturePath="🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/🏗️instance/▶️invocation/💾️memory/🧪️tests/🧫️fixtures/🔣️.json";
+const paidLabels=process.argv.includes("--test-paid-labels");
+const paidControl=process.argv.includes("--test-paid-control");
+const paidTurns=paidLabels||paidControl||process.argv.includes("--test-paid-turns");
+const paidTurnsSource=paidTurns&&process.argv.includes("--source");
 const imageTest=process.argv.includes("--test-image");
 const preparationTest=process.argv.includes("--test-preparation")||imageTest;
 const sourceCheck=process.argv.includes("--check-source")||preparationTest;
-const ticket=import.meta.dir, scratch=resolve(ticket,"🗑️generated"), build=join(scratch,"native-mcp/debug/build");
+const ticket=import.meta.dir, scratch=resolve(ticket,"🗑️generated"), build=join(scratch,paidTurns?"native-host/debug/build":"native-mcp/debug/build");
 const input=join(ticket,"mcp-core-memory-law.rs"), program=join(scratch,"mcp-core-memory-law.wasm");
 const zero=join(scratch,"mcp-core-memory-zero.wasm");
+const paidProgram=join(scratch,"mcp-core-memory-paid-turns.wasm");
 const output=join(scratch,process.platform==="win32"?"mcp-core-memory-law.exe":"mcp-core-memory-law");
 const fixture=JSON.parse(readFileSync(fixturePath,"utf8"));
 function writeProgram(prefix:string,path:string){
@@ -22,9 +27,39 @@ function writeProgram(prefix:string,path:string){
  section(10,[1,row.body.length,...row.body]);
  section(11,[1,0,65,0,11,6,97,98,99,100,101,102]);
  writeFileSync(path,Uint8Array.from(wasm));
+ return row;
 }
 writeProgram("repeated growth",program);
 writeProgram("zero delta",zero);
+const paidFixture=paidTurns?writeProgram("small fills and overlapping",paidProgram):null;
+const returnedFrameProgram=join(scratch,"mcp-core-returned-frame.wasm");
+if(paidTurns){
+ const law=JSON.parse(readFileSync(fixturePath.replace("💾️memory/",""),"utf8"));
+ writeFileSync(returnedFrameProgram,Buffer.from(law.moduleHex,"hex"));
+}
+const labelPath=fixturePath.replace("💾️memory", "🧭️control");
+const labelProgram=join(scratch,"mcp-core-label-growth.wasm");
+type ControlFixture={body:number[];args:number[];expected:number;labelPeak?:number;
+ atomicTransfer?:{prefixFuel:number;expectedFuel:number;retireLabel:boolean}};
+const controls:ControlFixture[]=paidLabels||paidControl?JSON.parse(readFileSync(labelPath,"utf8")).cases:[];
+const labelFixture=controls.find(entry=>entry.labelPeak);
+const controlCases=join(scratch,"mcp-core-paid-control-cases.rs");
+function controlBytes(body:number[]){
+ const wasm=[0,97,115,109,1,0,0,0];
+ const section=(id:number,data:number[])=>wasm.push(id,data.length,...data);
+ section(1,[1,96,1,127,1,127]);
+ section(3,[1,0]);
+ section(7,[1,3,114,117,110,0,0]);
+ section(10,[1,body.length,...body]);
+ return wasm;
+}
+if(paidLabels&&labelFixture)writeFileSync(labelProgram,Uint8Array.from(controlBytes(labelFixture.body)));
+if(paidControl){
+ const rows=controls.flatMap(({body,args,expected,atomicTransfer:proof})=>proof?
+  [`(&[${controlBytes(body)}], ${args[0]}, ${expected}, ${proof.prefixFuel}, ${proof.expectedFuel}, ${proof.retireLabel})`]:[]);
+ if(!rows.length)throw Error("Missing atomic control fixtures");
+ writeFileSync(controlCases,`&[\n${rows.join(",\n")}\n]\n`);
+}
 const names=readdirSync(build,{withFileTypes:true}).filter(entry=>entry.isDirectory()).map(entry=>entry.name);
 const variantCache=new Map<string,string[]>();
 const variants=(pkg:string)=>{
@@ -42,6 +77,7 @@ const rootIdentity=process.env.SEMIO_MEMORY_CORE_VARIANT??variants(rootPkg).filt
 if(!rootIdentity)throw Error("Missing linked Core interpreter");
 const externs=new Map<string,[string,string]>([[rootCrate,[rootPkg,rootIdentity]]]);
 const required=new Set(["semio_framework_actor","semio_framework_job","semio_framework_trace","semio_framework_value"]);
+if(paidTurnsSource)required.add("semio_plugin_interpreter_numeric");
 const targets=[{pkg:rootPkg,identity:rootIdentity,crate:rootCrate}];
 const visited=new Set<string>();
 while(targets.length&&required.size){
@@ -89,6 +125,38 @@ const rustup=JSON.parse(installed.stdout.toString()).find((entry:{id:string})=>e
 const toolchain=readFileSync("rust-toolchain.toml","utf8").match(/^channel\s*=\s*"([^"]+)"/mu)?.[1];
 if(!rustup||!toolchain)throw Error("Pinned Rust unavailable");
 console.error(`[DEBUG] linked Core interpreter variant ${rootIdentity}`);
+if(paidTurns){
+ const wasmtime=variants("wasmtime").filter(identity=>{
+  const artifact=cratePath("wasmtime",identity,"wasmtime")+".rlib";
+  if(!existsSync(join(build,artifact)))return false;
+  const fingerprint=JSON.parse(readFileSync(join(build,"wasmtime",identity,"fingerprint/lib-wasmtime.json"),"utf8"));
+  return JSON.parse(fingerprint.features).includes("cranelift");
+ }).sort((left,right)=>statSync(join(build,cratePath("wasmtime",right,"wasmtime")+".rlib")).mtimeMs-statSync(join(build,cratePath("wasmtime",left,"wasmtime")+".rlib")).mtimeMs)[0];
+ if(!wasmtime)throw Error("Missing Wasmtime with its Cranelift compiler");
+ const testName=paidLabels?"mcp-core-label-growth":paidControl?"mcp-core-paid-control":"mcp-core-memory-paid-turns";
+ const binary=join(scratch,process.platform==="win32"?testName+".exe":testName);
+ let linked=dependencies;
+ if(paidTurnsSource){
+  const interpreter=resolve(fixturePath,"../../../../../../🦀️.rs");
+  const rebuilt=join(scratch,"libsemio_plugin_interpreter-"+testName+".rlib");
+  const compiled=Bun.spawnSync([rustup,"run",toolchain,"rustc","--edition=2021","--crate-name","semio_plugin_interpreter","--crate-type","rlib",
+   interpreter,"-o",rebuilt,...dependencies.slice(4),...searchPaths],{cwd:build,stdout:"inherit",stderr:"inherit"});
+  if(compiled.exitCode)process.exit(compiled.exitCode);
+  linked=[...dependencies.slice(4),"--extern",`semio_plugin_interpreter=${rebuilt}`];
+ }
+ const compiled=Bun.spawnSync([rustup,"run",toolchain,"rustc","--edition=2024","--test","--cfg",paidLabels?"paid_labels":paidControl?"paid_control":"paid_turns",input,
+  "-o",binary,...linked,"--extern",`wasmtime=${cratePath("wasmtime",wasmtime,"wasmtime")}.rmeta`,"--extern",`wasmtime=${cratePath("wasmtime",wasmtime,"wasmtime")}.rlib`,...searchPaths],{
+  cwd:build,stdout:"inherit",stderr:"inherit",
+  env:{...process.env,SEMIO_LINKED_MEMORY_FIXTURE:program,SEMIO_LINKED_MEMORY_ZERO:zero,SEMIO_LINKED_MEMORY_PAID_TURNS:paidProgram,
+   SEMIO_LINKED_RETURNED_FRAME:returnedFrameProgram,
+   SEMIO_LINKED_MEMORY_PAID_RESULT:String(paidFixture.expected),SEMIO_LINKED_MEMORY_PAID_FUEL:String(paidFixture.expectedFuel),
+   SEMIO_LINKED_LABEL_PROGRAM:labelProgram,SEMIO_LINKED_LABEL_INPUT:String(labelFixture?.args[0]),SEMIO_LINKED_LABEL_EXPECTED:String(labelFixture?.expected),
+   SEMIO_LINKED_LABEL_PEAK:String(labelFixture?.labelPeak),SEMIO_LINKED_CONTROL_CASES:controlCases},
+ });
+ if(compiled.exitCode)process.exit(compiled.exitCode);
+ const selection=paidLabels?["paid_control_growth_matches_wasmtime_and_receipts"]:paidControl?["paid_atomic_control_matches_wasmtime_and_receipts"]:paidTurnsSource?[]:["paid_small_memory_dispatch_matches_wasmtime_and_receipts"];
+ process.exit(Bun.spawnSync([binary,"--nocapture",...selection],{stdout:"inherit",stderr:"inherit"}).exitCode??1);
+}
 if(sourceCheck){
  const source=resolve("🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/🦀️.rs");
  const target=join(scratch,imageTest?"libsemio_plugin_interpreter-image.rlib":preparationTest?"libsemio_plugin_interpreter.rlib":"mcp-core-preparation-check.rmeta");

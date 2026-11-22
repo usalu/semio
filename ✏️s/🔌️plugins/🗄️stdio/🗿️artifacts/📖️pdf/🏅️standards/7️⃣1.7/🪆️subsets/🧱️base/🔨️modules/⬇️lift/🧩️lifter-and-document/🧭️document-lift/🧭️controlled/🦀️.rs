@@ -746,12 +746,13 @@ impl FontTable for PageFontBinding<'_> {
 
     fn controlled_type1(&self, name: &str) -> Option<PdfBaseEncoding> {
         let PdfFontKind::Type1 { encoding, program: None, .. } = &self.0.kind else { return None; };
-        (self.0.id == name).then_some(encoding.base.unwrap_or(PdfBaseEncoding::Standard))
+        (self.0.id == name && self.controlled_code_width(name).is_none()).then_some(encoding.base.unwrap_or(PdfBaseEncoding::Standard))
     }
 
     fn controlled_code_width(&self, name: &str) -> Option<PdfFixedCodeWidth> {
         if self.0.id != name { return None; }
         match &self.0.kind {
+            PdfFontKind::Type1 { base_font, program: None, .. } if matches!(base_font.as_str(), "Symbol" | "ZapfDingbats") => Some(PdfFixedCodeWidth::One),
             PdfFontKind::Type1 { program: Some(PdfFontProgram::OpenType { .. }), .. } => Some(PdfFixedCodeWidth::One),
             PdfFontKind::Type0 { descendant, .. } if descendant.true_type => Some(PdfFixedCodeWidth::Two),
             _ => None,

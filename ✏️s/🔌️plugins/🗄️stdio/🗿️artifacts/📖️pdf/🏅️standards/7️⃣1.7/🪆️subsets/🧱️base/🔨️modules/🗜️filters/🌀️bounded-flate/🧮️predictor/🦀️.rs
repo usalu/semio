@@ -61,7 +61,7 @@ enum PredictorInput {
 }
 
 impl PredictorInput {
-    fn advance(&mut self, source: &[u8], output: &mut [u8], grant: FlateGrant) -> FlateStep {
+    fn advance(&mut self, source: &(impl ByteReadSource + ?Sized), output: &mut [u8], grant: FlateGrant) -> FlateStep {
         match self {
             Self::Flate(cursor) => cursor.advance(source, output, grant, false),
             Self::Lzw(cursor) => cursor.advance(source, output, grant, false),
@@ -161,7 +161,7 @@ impl PdfPredictorCursor {
     }
 
     /// ⚙️ Charges both stages and writes to caller-owned staging space. Publish only after completion.
-    pub fn advance(&mut self, source: &[u8], output: &mut [u8], grant: FlateGrant, cancelled: bool) -> FlateStep {
+    pub fn advance(&mut self, source: &(impl ByteReadSource + ?Sized), output: &mut [u8], grant: FlateGrant, cancelled: bool) -> FlateStep {
         let mut step = FlateStep { status: Ok(FlateStatus::Yield), work: 0, allocated_bytes: 0, written_bytes: 0 };
         step.status = match self.lifecycle {
             Lifecycle::Decoding if cancelled => {
@@ -179,7 +179,7 @@ impl PdfPredictorCursor {
         step
     }
 
-    fn decode(&mut self, source: &[u8], output: &mut [u8], grant: FlateGrant, step: &mut FlateStep) -> Result<FlateStatus, ValueError> {
+    fn decode(&mut self, source: &(impl ByteReadSource + ?Sized), output: &mut [u8], grant: FlateGrant, step: &mut FlateStep) -> Result<FlateStatus, ValueError> {
         while step.work < grant.work {
             let allocation = grant.allocation_bytes - step.allocated_bytes;
             if !matches!(self.predicted, Predicted::Empty) {

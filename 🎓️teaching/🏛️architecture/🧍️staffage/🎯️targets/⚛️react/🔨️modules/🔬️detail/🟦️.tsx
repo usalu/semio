@@ -1,12 +1,14 @@
 /** 🔬️ The page of one asset: header and actions, the viewer, poses and clips with their timeline, dimensions, the model assumptions inspector, provenance and the export panel.
  *
  * The viewer's state is the address while this page is open (`#/humans/walking-commuter?view=thermal&scale=50&clip=walk-cycle&t=1.2`). Behind the glass it shows the asset's presentation pose.
- * An asset that is not authored or fails validation gets the reason in place of the viewer, never a crash.
+ * The opened page asks the catalog for its one asset and for nothing else, and withdraws the request when the reader leaves or cancels. While the asset loads the page says so in a live region; while its findings
+ * are still being computed the viewer is already there and a notice says how far the check is; findings that arrive are listed above the viewer, which keeps showing the asset they are about. An asset that is
+ * not authored, or that came with findings, gets the reason in place of the viewer, never a crash; only an asset the manifest plans and nobody authored is called planned.
  *
  * @see ../🎛️viewer/🟦️.tsx — the viewer
  * @see ./📐️dimensions/🟦️.tsx — and the other sections
  */
-import { useMemo, useRef, useState, type ReactElement, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactElement } from "react";
 import type { Asset, EvaluationQuery } from "@teaching/staffage";
 import { useClock } from "../⏱️clock/🟦️.ts";
 import { ViewerBoundary } from "../🎛️viewer/🛡️boundary/🟦️.tsx";
@@ -15,7 +17,7 @@ import { useArchive, useLocal, useRows } from "../🧭️context/🟦️.tsx";
 import { Button, ButtonLink, Cell, Notice, PageFrame, Tag } from "../🪟️chrome/🟦️.tsx";
 import type { PaneView } from "../🥞️levels/🟦️.tsx";
 import { FavoriteButton, RowFacts } from "../🗃️browse/🟦️.tsx";
-import { RowPreview, UnavailableNotice } from "../🖼️previews/🟦️.tsx";
+import { FindingsNotice, RowPreview, UnavailableNotice } from "../🖼️previews/🟦️.tsx";
 import { freshId, placeAllEvents } from "../⭐️collections/🧮️actions/🟦️.ts";
 import type { Row } from "../🔎️search/🟦️.ts";
 import { addressProblems, compareToParams, formatAddress, navigate, useAddress, viewerFromParams, viewerToParams, type ViewerState } from "../🗺️routing/🟦️.ts";
@@ -37,9 +39,9 @@ function Timeline(props: { readonly asset: Asset; readonly frame: ViewerFrame | 
 }
 
 /** 🔭️ The asset page. */
-export function AssetPage({ row, view, progress }: { readonly row: Row; readonly view: PaneView; readonly progress?: ReactNode }): ReactElement {
+export function AssetPage({ row, view }: { readonly row: Row; readonly view: PaneView }): ReactElement {
   const { route, params } = useAddress();
-  return view.opened && route.page === "asset" && route.asset === row.entry.id ? <OpenedAssetPage row={row} params={params} {...(progress === undefined ? {} : { progress })} /> : <AssetPreview row={row} />;
+  return view.opened && route.page === "asset" && route.asset === row.entry.id ? <OpenedAssetPage row={row} params={params} /> : <AssetPreview row={row} />;
 }
 
 function AssetPreview({ row }: { readonly row: Row }): ReactElement {
@@ -54,8 +56,19 @@ function AssetPreview({ row }: { readonly row: Row }): ReactElement {
   );
 }
 
-function OpenedAssetPage({ row, params, progress }: { readonly row: Row; readonly params: URLSearchParams; readonly progress?: ReactNode }): ReactElement {
-  const { t, language, store } = useArchive();
+function OpenedAssetPage({ row, params }: { readonly row: Row; readonly params: URLSearchParams }): ReactElement {
+  const { t, language, store, catalog } = useArchive();
+  const entry = row.entry;
+  const request = useRef<AbortController | null>(null);
+  const [cancelled, setCancelled] = useState(false);
+  const [attempt, retry] = useState(0);
+  useEffect(() => {
+    if (cancelled) return;
+    const run = new AbortController();
+    request.current = run;
+    void catalog.loadAsset(entry, run.signal);
+    return () => run.abort();
+  }, [catalog, entry, cancelled, attempt]);
   const { manifest } = useRows();
   const { playground } = useLocal();
   const viewer = useMemo(() => viewerFromParams(params), [params]);
@@ -88,6 +101,19 @@ function OpenedAssetPage({ row, params, progress }: { readonly row: Row; readonl
       setCopied("blocked");
     }
   };
+  const reload = (): void => {
+    setCancelled(false);
+    retry((count) => count + 1);
+  };
+  const progress = cancelled && asset === undefined
+    ? <Notice kind="info" compact title={t("state.cancelled.title")} actions={<Button onClick={reload}>{t("action.retry")}</Button>} />
+    : row.status === "failed"
+      ? <Notice kind="error" compact title={t("state.failed.short")} actions={<Button onClick={reload}>{t("action.retry")}</Button>} />
+      : row.status === "pending"
+        ? <Notice kind="loading" data={{ "data-asset-state": "loading" }} title={t("state.assetLoading.title", { title })} actions={<Button onClick={() => { request.current?.abort(); setCancelled(true); }}>{t("action.cancel")}</Button>} />
+        : row.check === undefined
+          ? undefined
+          : <Notice kind="loading" compact data={{ "data-asset-state": "checking" }} title={t("state.checking.title")}>{row.check.total > 0 && row.check.label !== undefined ? t("state.checking.progress", { done: row.check.done, total: row.check.total, label: row.check.label[language] }) : t("state.checking.body")}</Notice>;
   const actions = (
     <>
       <FavoriteButton grouped asset={row.entry.id} title={title} className="border-0" />
@@ -104,6 +130,7 @@ function OpenedAssetPage({ row, params, progress }: { readonly row: Row; readonl
     <PageFrame page={`asset:${row.entry.id}`} wide eyebrow={category} title={title} lede={asset?.summary[language] ?? row.entry.distinction[language]} actions={actions}>
       <p role="status" className="sr-only">{announce}</p>
       {progress}
+      {row.findings === undefined ? null : <FindingsNotice findings={row.findings} />}
       {addressProblems(params, "asset").map((problem) => <Notice key={problem.en} kind="info" compact title={problem[language]} />)}
       {copied === "idle" ? null : <Notice kind="info" compact title={t(copied === "done" ? "detail.shareDone" : "detail.shareBlocked")} />}
       <Cell className="items-center">
@@ -113,10 +140,12 @@ function OpenedAssetPage({ row, params, progress }: { readonly row: Row; readonl
         {row.entry.analytics.map((analytic) => <Tag key={analytic}>{t(`analytic.${analytic}`)}</Tag>)}
       </Cell>
       {asset === undefined ? (
-        <>
-          {progress === undefined ? <UnavailableNotice row={row} /> : null}
-          <Notice kind="info" compact title={t("detail.planned")}>{row.entry.distinction[language]}</Notice>
-        </>
+        progress === undefined ? (
+          <>
+            <UnavailableNotice row={row} />
+            {row.status === "missing" ? <Notice kind="info" compact title={t("detail.planned")}>{row.entry.distinction[language]}</Notice> : null}
+          </>
+        ) : null
       ) : (
         <>
           <h2 className="sr-only">{t("detail.viewerHeading")}</h2>

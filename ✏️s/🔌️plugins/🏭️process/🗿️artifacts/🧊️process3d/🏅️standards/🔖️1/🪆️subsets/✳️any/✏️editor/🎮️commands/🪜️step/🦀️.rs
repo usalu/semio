@@ -138,6 +138,38 @@ pub mod move_step {
 }
 //#endregion 🔖️MoveStep
 
+pub mod drop_step {
+    use super::*;
+
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
+    #[dsl(keyword = "drop-step")]
+    pub struct DropStep {
+        pub document_id: String,
+        pub step_id: String,
+        pub target_id: String,
+        pub drop_position: String,
+    }
+
+    pub fn handle(payload: &DropStep, doc: &ArtifactView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>, ctx: &mut semio_s_artifact_process_process3d_kit::Process3dDispatchCtx) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
+        if doc.operation_optional().is_none_or(|operation| operation.parent_document_id != payload.document_id) || payload.step_id == payload.target_id {
+            return Ok(Emit::default());
+        }
+        let offset = match payload.drop_position.as_str() {
+            "before" => 0,
+            "after" => 1,
+            _ => return Ok(Emit::default()),
+        };
+        let steps = &doc.snapshot.step_payloads;
+        let Some(from) = steps.iter().position(|step| step.id == payload.step_id) else { return Ok(Emit::default()) };
+        let Some(target) = steps.iter().position(|step| step.id == payload.target_id) else { return Ok(Emit::default()) };
+        let index = target + offset - usize::from(from < target);
+        if index == from {
+            return Ok(Emit::default());
+        }
+        move_step::handle(&move_step::MoveStep { id: payload.step_id.clone(), index }, doc, cfg, ctx)
+    }
+}
+
 //#region 🔖️UpdateStep
 pub mod update_step {
     use super::*;

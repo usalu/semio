@@ -24,6 +24,7 @@ use ui_contract::{SurfaceId, UiDocumentLease, UiFixedList, UiText};
 use semio_ui_declaration::layout::{ActionDescriptor, WindowEngagement, WindowMeasure};
 use semio_ui_theme::geometry::Rect;
 use semio_ui_theme::Theme;
+use semio_ui_declaration::ui::{UiTableNode, UiTableRowNode, UiTreeItemAction};
 use semio_ui_declaration::ui::{UiButtonNode, UiControlNode, UiInputNode, UiNode, UiPresence, UiSelectItem, UiSelectNode, UiSliderNode, UiStackNode, UiToggleNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, UiTreeWindowRowExtent};
 use semio_ui_declaration::utilities::UtilityNode;
 

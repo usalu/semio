@@ -8,14 +8,15 @@ use semio_s_artifact_process_process3d_kit::Process3dInteractionSnapshot;
 /// 🧱️ Every window/panel body of the process3d editor, rendered against one already-resolved
 /// `"geometry"` selection — shared by `render` (empty selection) and `render_with_request_context`
 /// (the live selection) so there is exactly one body-key match in the app.
-pub(super) fn process3d_render_body(body_key: &str, doc: &Process3dSnapshot, config: &Process3dConfig, view_state: &semio_plugin::ViewModel, selected_ids: &[String], hover: &placement_hover::PlacementHover) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
+pub(super) fn process3d_render_body(body_key: &str, document: &ArtifactView<'_, Process3dSnapshot>, config: &Process3dConfig, view_state: &semio_plugin::ViewModel, selected_ids: &[String], hover: &placement_hover::PlacementHover) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
+    let doc = document.snapshot;
     let labels = process3d_labels(view_state);
     let active_utility = view_state.active_utility_id.as_deref().filter(|utility| !utility.is_empty()).unwrap_or(PROCESS3D_DEFAULT_UTILITY);
     let base_body_key = body_key.split_once(':').map_or(body_key, |(base, _)| base);
     let windows = semio_plugin::TreeWindows::for_body(view_state, base_body_key);
     match base_body_key {
-        PROCESS_3D_PLAY_BODY_MAIN => workpiece::render_with_placement(doc, config, active_utility, selected_ids, hover.position(active_utility)).map(semio_plugin::built_to_component_tree),
-        PROCESS_3D_PLAY_BODY_ARTIFACT => document_panel::render(doc, config.resolved_up_to, labels, &windows).map(semio_plugin::built_to_component_tree),
+        PROCESS_3D_PLAY_BODY_MAIN => workpiece::render_with_placement(doc, config, active_utility, selected_ids, hover.position(active_utility), hover.capability()).map(semio_plugin::built_to_component_tree),
+        PROCESS_3D_PLAY_BODY_ARTIFACT => document_panel::render(doc, config.resolved_up_to, labels, &windows, document.parent_document_id()).map(semio_plugin::built_to_component_tree),
         PROCESS_3D_PLAY_BODY_CATALOGUE => catalogue::render(doc, &config.contributions_json, labels, &windows).map(semio_plugin::built_to_component_tree),
         PROCESS_3D_PLAY_BODY_WORKSHOP => workshop_panel::render(doc, &config.contributions_json, labels, &windows).map(semio_plugin::built_to_component_tree),
         PROCESS_3D_PLAY_BODY_INSPECTION => inspection::render(doc, selected_ids, labels, &windows).map(semio_plugin::built_to_component_tree),
@@ -115,7 +116,7 @@ impl ArtifactEditor for Process3dPlayApp {
             let work: Box<dyn ArtifactCommandWork<EditorApp<Self>>> = match disposition {
                 Process3dCommandDisposition::Bounded => {
                     let work = BoundedArtifactCommandWork::new(tool_id, process3d_retained_reduce, |_, _, _| Some(1));
-                    if matches!(tool_id, "worldPointerMove" | "worldPointerDown" | "engagementAbort") {
+                    if matches!(tool_id, "worldPointerMove" | "worldPointerDown" | "engagementAbort" | "placeCapability") {
                         Box::new(placement_hover::PlacementWork(work))
                     } else {
                         Box::new(work)
@@ -134,7 +135,10 @@ impl ArtifactEditor for Process3dPlayApp {
     }
 
     fn build_document_store_owners(grant: semio_plugin::__value::retained_clone::RetainedCloneGrant) -> Option<Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::Snapshot, Self::Mutation>, semio_plugin::__value::retained_clone::RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::Snapshot, Self::Mutation>>> {
-        Some(semio_plugin::cold_replay_document_store_owners::<Self::Snapshot, Self::Mutation>(grant))
+        Some(semio_plugin::cold_replay_document_store_owners::<Self::Snapshot, Self::Mutation>(grant).map(|(mut owners, progress)| {
+            owners.operation_wire = store::ArtifactOperationWire::semantic::<Self::Snapshot>().with_batch_digest().with_original_pack_value_receiving().with_original_target(store::whole_document_target::<Self::Mutation>);
+            (owners, progress)
+        }))
     }
 
     fn build_envelope_decode_owner_bundle() -> Option<store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {
@@ -302,6 +306,12 @@ impl ArtifactEditor for Process3dPlayApp {
             "removeStep" => Ok(Process3dCommand::RemoveStep(remove_step::RemoveStep { id: string_field("id").unwrap_or_default() })),
             "removeSelectedStep" => Ok(Process3dCommand::RemoveSelectedStep(remove_selected_step::RemoveSelectedStep {})),
             "moveStep" => Ok(Process3dCommand::MoveStep(move_step::MoveStep { id: string_field("id").unwrap_or_default(), index: unsigned_field("index").unwrap_or_default() as usize })),
+            "dropStep" => Ok(Process3dCommand::DropStep(drop_step::DropStep {
+                document_id: string_field("documentId").unwrap_or_default(),
+                step_id: string_field("stepId").unwrap_or_default(),
+                target_id: string_field("targetId").unwrap_or_default(),
+                drop_position: string_field("dropPosition").unwrap_or_default(),
+            })),
             "updateStep" => {
                 let step_json = string_field("stepJson").or_else(|| string_field("step_json")).or_else(|| field("step").map(semio_framework_pack_json::to_json_string)).unwrap_or_default();
                 Ok(Process3dCommand::UpdateStep(update_step::UpdateStep { step_json }))
@@ -322,6 +332,10 @@ impl ArtifactEditor for Process3dPlayApp {
             "stepCursorBack" => Ok(Process3dCommand::StepCursorBack(step_cursor_back::StepCursorBack {})),
             "stepCursorForward" => Ok(Process3dCommand::StepCursorForward(step_cursor_forward::StepCursorForward {})),
             "engagementSubmit" => Ok(Process3dCommand::EngagementSubmit(engagement_submit::EngagementSubmit {})),
+            "placeCapability" => {
+                let required = |field| string_field(field).filter(|value| !value.is_empty()).ok_or_else(|| process3d_action_fault(action, format!("requires {field}")));
+                Ok(Process3dCommand::PlaceCapability(place_capability::PlaceCapability { machine_id: required("machineId")?, capability_id: required("capabilityId")? }))
+            }
             "worldPointerDown" => Ok(Process3dCommand::WorldPointerDown(world_pointer_down::WorldPointerDown { position: position()? })),
             "worldPointerMove" => Ok(Process3dCommand::WorldPointerMove(world_pointer_move::WorldPointerMove { position: position()? })),
             "worldFaceDragEnd" => Ok(Process3dCommand::WorldFaceDragEnd(world_face_drag_end::WorldFaceDragEnd {
@@ -383,7 +397,7 @@ impl ArtifactEditor for Process3dPlayApp {
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
-        process3d_render_body(body_key, doc.snapshot, cfg.snapshot, view_state, &[], &Default::default())
+        process3d_render_body(body_key, doc, cfg.snapshot, view_state, &[], &Default::default())
     }
 
     /// 👆️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): resolves the live `"geometry"`
@@ -401,7 +415,7 @@ impl ArtifactEditor for Process3dPlayApp {
     ) -> semio_plugin::OriginalRenderResult<semio_plugin::ComponentTree> {
         let rendered:semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree>=(||{
         let selected_ids = interaction.selection(PROCESS3D_INTERACTION_DOMAIN).ids.clone();
-        process3d_render_body(body_key, doc.snapshot, cfg.snapshot, view_state, &selected_ids, &placement_hover::current(transient))
+        process3d_render_body(body_key, doc, cfg.snapshot, view_state, &selected_ids, &placement_hover::current(transient))
 
         })();
         rendered.map(Some).map_err(Into::into)

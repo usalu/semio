@@ -274,5 +274,23 @@
     "inserted": [],
     "moved": [],
     "modified": []
+  },
+  "supportCollisions": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "localFires": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "snowGuards": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
   }
 }

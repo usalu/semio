@@ -340,24 +340,9 @@ fn the_editor_binds_every_keyboard_verb_the_fixture_names() {
 /// 🪟️ Every window kind a mode's layout mounts, in layout order — the set `ShellHost`'s keybinding
 /// loop scopes an app-wide chord against (`🏛️ShellHost/⌨️window-scope/🟦️.ts`, `mounted`).
 fn mode_window_kind_ids(definition: &semio_plugin::AppDefinition, mode_id: &str) -> Vec<String> {
-    use semio_plugin::{WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode};
-    fn stack(node: &WindowLayoutStackNode, out: &mut Vec<String>) {
-        out.extend(node.children.iter().map(|window| window.window_kind_id.clone()));
-    }
-    fn axis(node: &WindowLayoutAxisNode, out: &mut Vec<String>) {
-        for child in &node.children {
-            match child {
-                WindowLayoutChild::Axis(node) => axis(node, out),
-                WindowLayoutChild::Stack(node) => stack(node, out),
-            }
-        }
-    }
     let mut out = Vec::new();
     if let Some(layout) = semio_framework::resolve_layout_for_mode(definition, mode_id) {
-        match &layout.root {
-            WindowLayoutRoot::Axis(node) => axis(node, &mut out),
-            WindowLayoutRoot::Stack(node) => stack(node, &mut out),
-        }
+        out = semio_plugin::collect_window_kind_ids(&layout.root);
     }
     out
 }

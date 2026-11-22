@@ -27,26 +27,27 @@ impl OrthogonalCells {
             .then(|| std::array::from_fn(|side| self.axes.map(|planes| planes[side])))
     }
 
-    /// 📍️ Measures the signed Euclidean distance to exposed faces of the closed material.
-    pub fn signed_boundary_distance(&self, point: [f64; 3]) -> f64 {
+    /// 📍️ Finds the nearest exposed boundary point and signed distance to the closed material.
+    pub fn nearest_boundary(&self, point: [f64; 3]) -> ([f64; 3], f64) {
         let mut remaining = self.occupied;
         let mut inside = false;
-        let mut distance = f64::INFINITY;
+        let mut nearest = (point, f64::INFINITY);
         while remaining != 0 {
             let cell = decode(remaining.trailing_zeros() as usize, 3);
             remaining &= remaining - 1;
             let bounds: Bounds = std::array::from_fn(|side| std::array::from_fn(|axis| self.axes[axis][cell[axis] + side]));
-            let gap: [f64; 3] = std::array::from_fn(|i| (bounds[0][i] - point[i]).max(point[i] - bounds[1][i]).max(0.));
-            inside |= gap == [0.; 3];
+            let projected = std::array::from_fn(|i| point[i].clamp(bounds[0][i],bounds[1][i]));
+            inside |= projected == point;
             for (axis, outward) in (0..3).flat_map(|axis| [false, true].map(|side| (axis, side))) {
                 if adjacent_cell(cell, axis, outward).is_some_and(|neighbor| self.occupied & (1 << neighbor) != 0) { continue; }
-                let mut components = gap;
-                components[axis] = (point[axis] - bounds[usize::from(outward)][axis]).abs();
-                let [x, y, z] = components;
-                distance = distance.min(x.hypot(y).hypot(z));
+                let mut candidate = projected;
+                candidate[axis] = bounds[usize::from(outward)][axis];
+                let [x, y, z] = std::array::from_fn(|i| point[i] - candidate[i]);
+                let distance = x.hypot(y).hypot(z);
+                if distance < nearest.1 { nearest = (candidate,distance); }
             }
         }
-        if inside { -distance } else { distance }
+        (nearest.0, if inside { -nearest.1 } else { nearest.1 })
     }
 
     fn contains(&self, low: [f64; 3], high: [f64; 3]) -> bool {

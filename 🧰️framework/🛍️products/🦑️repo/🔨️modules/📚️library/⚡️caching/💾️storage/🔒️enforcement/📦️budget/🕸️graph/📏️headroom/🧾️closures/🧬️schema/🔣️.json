@@ -105,7 +105,8 @@
           "storage-events.jsonl"
         ],
         "ignoredDirectories": [
-          ".fseventsd"
+          ".fseventsd",
+          "derived-nodes"
         ],
         "maximumReadOperations": 16777216,
         "maximumFilesPerChild": 64,

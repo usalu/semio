@@ -299,7 +299,7 @@ fn draw_ink_selection_chrome(draw: &mut semio_ui_draw_contract::DrawList, theme:
 pub fn render_ink_canvas(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
     let theme = ctx.theme;
     let Some(ink) = &scene.ink_canvas else {
-        return render_placeholder("ink-canvas", bounds, ctx);
+        return render_placeholder(bounds, ctx);
     };
     let doc: InkDocumentJson = serde_json::from_str(&ink.document_json).unwrap_or_default();
     let selected_ids: Vec<String> = serde_json::from_str(&ink.selection_json).unwrap_or_default();

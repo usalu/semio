@@ -1,0 +1,5 @@
+humans/elderly-with-cane
+humans/person-on-crutches
+humans/person-with-rollator
+humans/person-with-white-cane
+humans/wheelchair-user

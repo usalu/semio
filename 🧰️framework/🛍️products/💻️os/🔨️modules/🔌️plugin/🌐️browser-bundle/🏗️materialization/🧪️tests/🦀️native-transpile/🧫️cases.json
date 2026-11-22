@@ -1,4 +1,22 @@
 {
+  "nativeTranspileRequest": {
+    "component": "component-digest",
+    "materialization": "implementation-digest",
+    "name": "owned_component",
+    "native": "native-binary-digest",
+    "expected": {
+      "stage": "transpile",
+      "schemaVersion": 2,
+      "inputs": {
+        "component": "component-digest"
+      },
+      "tools": {
+        "materialization": "implementation-digest",
+        "base": "owned_component",
+        "native-transpile": "native-binary-digest"
+      }
+    }
+  },
   "version": 1,
   "reference": "@bytecodealliance/jco 1.39.0 with @bytecodealliance/jco-transpile 0.20.0 (js-component-bindgen 2.16.0)",
   "cases": [

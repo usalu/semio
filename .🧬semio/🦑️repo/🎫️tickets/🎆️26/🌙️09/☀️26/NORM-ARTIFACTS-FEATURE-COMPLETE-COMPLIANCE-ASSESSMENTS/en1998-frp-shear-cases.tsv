@@ -1,0 +1,16 @@
+arrangement	layout	depth	thickness	angle_strut	angle_fibre	frp_modulus	concrete_tensile	debonding_factor	width	spacing	web_height	corner_radius	web_width	frp_strength
+closed	strip	450	1.2	35	90	165000	2.9	1.5	110	210	380	20	280	2400
+closed	strip	450	1.2	35	70	165000	2.9	1.5	110	210	380	140	280	2400
+closed	sheet	450	1.2	35	90	165000	2.9	1.5	110	210	380	20	280	2400
+u	strip	450	1.2	35	90	165000	2.9	1.5	110	210	380	0	0	0
+u	sheet	450	1.2	35	70	165000	2.9	1.5	110	210	380	0	0	0
+side	strip	450	1.2	35	90	165000	2.9	1.5	110	210	380	0	0	0
+side	sheet	450	1.2	35	75	165000	2.9	1.5	110	210	380	0	0	0
+side	strip	15	12	35	90	165000	2.9	1.5	110	210	380	0	0	0
+closed	strip	450	1.2	35	90	165000	2.9	1.5	110	210	380	150	280	2400
+u	strip	450	1.2	35	90	165000	2.9	1.5	210	110	380	0	0	0
+u	strip	450	1.2	35	90	165000	2.9	0	110	210	380	0	0	0
+u	strip	450	1.2	0	90	165000	2.9	1.5	110	210	380	0	0	0
+circular	wrap	400	1.2	0	0	165000	0	0	0	0	0	0	0	0
+circular	wrap	600	0.55	0	0	220000	0	0	0	0	0	0	0	0
+circular	wrap	0	1.2	0	0	165000	0	0	0	0	0	0	0	0

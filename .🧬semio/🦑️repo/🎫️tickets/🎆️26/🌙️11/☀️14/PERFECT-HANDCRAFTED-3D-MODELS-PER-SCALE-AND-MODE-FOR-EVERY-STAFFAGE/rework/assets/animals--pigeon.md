@@ -1,0 +1,3 @@
+# animals/pigeon
+
+- 2026-11-22 12:2x, rig verification (not the volume author): `poses` and `clips` re-solved with `rig-reoffset.ts animals/pigeon --write` because the rig now turns a pose offset about the bone's own rest axes instead of the parent's joint axis. The 40 primary and secondary feather bones had moved by up to 11.5 mm in wings-half-open, the take-off and airborne poses and the take-off clip. Every bone keeps the posed frame it had before the rig change (largest difference of a bone tip after the re-solve under 0.01 mm). Only `asset.poses` and `asset.clips` were written; rig, shapes, volumes untouched. Do not run the tool on this asset again (`rig-reoffset.done.json`); new poses are authored about the bone's own axes (`rig-lateral-rest.md` 1.1).

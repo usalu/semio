@@ -1,0 +1,113 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/mutation/splice-scene-rows/schema.json",
+  "title": "SpliceSceneRows",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "table",
+    "start",
+    "deleteCount"
+  ],
+  "x-semio-inverse-rows": { "fixed": 1 },
+  "properties": {
+    "mutation": {
+      "const": "spliceSceneRows"
+    },
+    "table": {
+      "enum": [
+        "parts",
+        "fasteners",
+        "kindCompatibility"
+      ],
+      "x-semio-ui": {
+        "label": { "en": "Scene table", "de": "Szenentabelle" },
+        "options": {
+          "parts": { "en": "Parts", "de": "Teile" },
+          "fasteners": { "en": "Fasteners", "de": "Verbinder" },
+          "kindCompatibility": { "en": "Kind compatibility", "de": "Artenkompatibilität" }
+        }
+      }
+    },
+    "start": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": { "label": { "en": "Start position", "de": "Startposition" } }
+    },
+    "deleteCount": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 64,
+      "x-semio-ui": { "label": { "en": "Rows to remove", "de": "Zu entfernende Zeilen" } }
+    },
+    "parts": {
+      "type": "array",
+      "maxItems": 64,
+      "x-semio-ui": { "label": { "en": "Inserted parts", "de": "Eingefügte Teile" } },
+      "items": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json#/$defs/Puzzle5dPart"
+      }
+    },
+    "fasteners": {
+      "type": "array",
+      "maxItems": 64,
+      "x-semio-ui": { "label": { "en": "Inserted fasteners", "de": "Eingefügte Verbinder" } },
+      "items": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json#/$defs/Puzzle5dFastener"
+      }
+    },
+    "kindCompatibility": {
+      "type": "array",
+      "maxItems": 64,
+      "x-semio-ui": { "label": { "en": "Inserted kind compatibilities", "de": "Eingefügte Artenkompatibilitäten" } },
+      "items": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json#/$defs/Puzzle5dKindCompatibility"
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "required": [
+          "parts"
+        ]
+      },
+      "then": {
+        "properties": {
+          "table": {
+            "const": "parts"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "fasteners"
+        ]
+      },
+      "then": {
+        "properties": {
+          "table": {
+            "const": "fasteners"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "kindCompatibility"
+        ]
+      },
+      "then": {
+        "properties": {
+          "table": {
+            "const": "kindCompatibility"
+          }
+        }
+      }
+    }
+  ]
+}

@@ -20,6 +20,7 @@
 pub mod remodeling_json;
 
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::default_remodeling_scene;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::durable_remodeling_asset;
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::image_asset_child_handle;
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::remodeling_asset;
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::remodeling_mesh_content_handle;
@@ -35,11 +36,11 @@ use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::sche
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingMesh;
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::SparseCloud;
-use {semio_os_kernel::io::io_dispatch,semio_framework_artifact_reference::Dialect,semio_os_kernel::io::ErasedComposeSource,semio_os_kernel::io::IoDirection,semio_os_kernel::io::IoKey,semio_os_kernel::io::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
-use semio_plugin::{ArtifactSerializer, MeshData};
+use semio_plugin::{ArtifactDeserializer, ArtifactSerializer, MeshData};
 use semio_s_artifact_stdio_las::standards::v1_0::engine as las_engine;
 use semio_s_artifact_stdio_ply::standards::v1_0::engine as ply_engine;
-use semio_s_artifact_stdio_png::PngSnapshot;
+use semio_s_artifact_stdio_semio_image_export::serializers::artifacts::png::v1_2::any::SemioImageToPng;
+use semio_s_artifact_stdio_semio_image_import::deserializers::artifacts::png::v1_2::any::SemioImageFromPng;
 use {semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint3, SemioRgba, SemioUv}, semio_s_artifact_stdio_semio_image::schema::snapshot::SemioImageSnapshot, semio_s_artifact_stdio_semio_mesh_export::serializers::artifacts::las::v1_0::any::SemioMeshToLas, semio_s_artifact_stdio_semio_mesh_export::serializers::artifacts::ply::v1_0::any::SemioMeshToPly, semio_s_artifact_stdio_semio_mesh::schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTopology}};
 
 pub fn import_stdio_kinds() -> &'static [&'static str] {
@@ -133,9 +134,9 @@ pub fn remodeling_png_asset(scene: &RemodelingSnapshot) -> Result<ImageAsset, St
 /// 🖼️ `remodeling_png_asset` in the OS media-export envelope the editor's export command speaks.
 /// Takes the typed scene: `RemodelingSnapshot` left the serde type graph with `store::os_store::artifact_child::ArtifactChild`
 /// (W9), so a `serde_json::Value` document is no longer a carrier this crate can decode.
-pub fn remodeling_png_export(scene: &RemodelingSnapshot) -> Result<semio_os::OsMediaExportResult, String> {
+pub fn remodeling_png_export(scene: &RemodelingSnapshot) -> Result<semio_os_host_workflow::OsMediaExportResult, String> {
     let asset = remodeling_png_asset(scene)?;
-    Ok(semio_os::OsMediaExportResult { data: asset.data, mime_type: "image/png".into(), file_name: "remodeling-export.png".into(), encoding: Some("base64".into()) })
+    Ok(semio_os_host_workflow::OsMediaExportResult { data: asset.data, mime_type: "image/png".into(), file_name: "remodeling-export.png".into(), encoding: Some("base64".into()) })
 }
 //#endregion 🔖️Exporters
 
@@ -295,8 +296,11 @@ pub fn scene_from_png_bytes(bytes: &[u8]) -> Result<RemodelingSnapshot, String> 
     let png = semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::png_layout_bytes(bytes)?;
     let asset = ImageAsset { mime: "image/png".into(), data: base64_codec::base64_standard_encode(bytes), width: png.width, height: png.height };
     let asset_id = "png-import-0".to_string();
+    let content = durable_remodeling_asset(&asset).ok_or("PNG exceeds the durable image envelope")?;
+    let handle = image_asset_child_handle(&asset_id, &asset);
     let mut scene = default_remodeling_scene();
-    scene.assets.cold_insert(asset_id.clone(), image_asset_child_handle(&asset_id, &asset));
+    scene.durable_artifacts.cold_insert(handle.child_id.clone(), content);
+    scene.assets.cold_insert(asset_id.clone(), handle);
     scene.streams.push(MediaStream {
         id: "png-import".into(),
         name: "Imported PNG".into(),
@@ -312,56 +316,14 @@ pub fn scene_from_png_bytes(bytes: &[u8]) -> Result<RemodelingSnapshot, String> 
 //#endregion 🔖️SceneGeometry
 
 //#region 🔖️SemioBridge
-/// 🌉️ Real `s.stdio.semio/v1/image` ↔ `s.stdio.png` bridge, reused verbatim from `🖨️raster`'s own
-/// established pattern (`🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs`)
-/// — dispatches through stdio's real registered PNG codec (`io_dispatch`), never a hand-rolled PNG
-/// reader/writer. `remodeling`'s own `ImageAsset.data` is already base64 TEXT (unlike raster's raw
-/// `Vec<u8>`), so the base64 (de)coding step happens in `semio_image_snapshot_from_image_asset`/
-/// `image_asset_from_semio_image_snapshot` below, one layer up from this raw-bytes bridge.
-const SEMIO_IMAGE_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("image") };
-const PNG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.png", standard: StandardId("1.2"), subset: SubsetId::ANY };
-
-fn semio_io_key(owner: &Dialect, direction: IoDirection, counterpart: &Dialect) -> IoKey {
-    IoKey {
-        artifact_kind: owner.artifact_kind.into(),
-        standard: owner.standard.0.into(),
-        subset: owner.subset.0.into(),
-        direction,
-        format_kind: counterpart.artifact_kind.into(),
-        format_standard: counterpart.standard.0.into(),
-        format_subset: counterpart.subset.0.into(),
-    }
-}
-
-/// 📌️ Registers stdio's `semio` v1 (image subset composer) and `png` engine into the process-global
-/// `io` registry exactly once, so `io_dispatch` below resolves regardless of host-boot ordering — a
-/// bare `cargo test` process never runs the plugin-host boot path that would normally call this
-/// (matches raster's `ensure_stdio_semio_and_png_registered`).
-fn ensure_stdio_semio_and_png_registered() {
-    static ONCE: std::sync::Once = std::sync::Once::new();
-    ONCE.call_once(|| {
-        semio_s_artifact_stdio_semio::register(&[semio_s_artifact_stdio_semio_image_import::CONVERSION, semio_s_artifact_stdio_semio_image_export::CONVERSION, semio_s_artifact_stdio_semio_mesh_import::CONVERSION, semio_s_artifact_stdio_semio_mesh_export::CONVERSION, semio_s_artifact_stdio_semio_drawing_import::CONVERSION, semio_s_artifact_stdio_semio_drawing_export::CONVERSION]);
-        semio_s_artifact_stdio_png::register();
-    });
-}
-
+/// 🌉️ Decodes PNG bytes and converts the typed stdio artifact into a Semio image.
 pub(crate) fn semio_image_from_png_bytes(raw_png_bytes: &[u8]) -> Result<SemioImageSnapshot, String> {
-    ensure_stdio_semio_and_png_registered();
     let png_snapshot = semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::decode_png(raw_png_bytes)?;
-    let payload = IoPayload::Binary(<PngSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&png_snapshot));
-    let key = semio_io_key(&SEMIO_IMAGE_DIALECT, IoDirection::Import, &PNG_DIALECT);
-    let composed = ::semio_framework_async::poll::resolve_ready(io_dispatch(&key, &[ErasedComposeSource { dialect: PNG_DIALECT, payload }])).map_err(|error| error.message)?;
-    let IoPayload::Binary(bytes) = composed.payload else { return Err("s.stdio.semio image composer returned a non-binary payload".into()) };
-    <SemioImageSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&bytes).map_err(|error| format!("{error:?}"))
+    semio_framework_async::poll::resolve_ready(SemioImageFromPng::deserialize(&png_snapshot)).map_err(|error| error.to_string())
 }
 
 pub(crate) fn png_bytes_from_semio_image(image: &SemioImageSnapshot) -> Result<Vec<u8>, String> {
-    ensure_stdio_semio_and_png_registered();
-    let payload = IoPayload::Binary(<SemioImageSnapshot as pack::snapshot::ArtifactPack>::encode_pack(image));
-    let key = semio_io_key(&SEMIO_IMAGE_DIALECT, IoDirection::Export, &PNG_DIALECT);
-    let composed = ::semio_framework_async::poll::resolve_ready(io_dispatch(&key, &[ErasedComposeSource { dialect: SEMIO_IMAGE_DIALECT, payload }])).map_err(|error| error.message)?;
-    let IoPayload::Binary(bytes) = composed.payload else { return Err("s.stdio.png composer returned a non-binary payload".into()) };
-    let png_snapshot = <PngSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&bytes).map_err(|error| format!("{error:?}"))?;
+    let png_snapshot = semio_framework_async::poll::resolve_ready(SemioImageToPng::serialize(image)).map_err(|error| error.to_string())?;
     semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::encode_png(&png_snapshot)
 }
 
@@ -395,3 +357,7 @@ pub mod text;
 
 #[path = "🪶️sqlite/🦀️.rs"]
 pub mod sqlite;
+
+#[cfg(test)]
+#[path = "🧪️tests/📷️png-bridge/🦀️.rs"]
+mod png_bridge_tests;

@@ -9,7 +9,7 @@
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import type { Anchor, Asset, Bone, BoneOffset, Section, SegmentMass, Slug, SupportType } from "../../../🧬️schema/🟦️.ts";
+import type { Anchor, Asset, Bone, Section, SegmentMass, Slug, SupportType } from "../../../🧬️schema/🟦️.ts";
 import type { EvaluatedBone, EvaluatedState, Vec3, WorldForce } from "../../🔗️contracts/🟦️.ts";
 import { rotationRad, solveChain } from "../../🦴️rig/🟦️.ts";
 
@@ -50,15 +50,13 @@ export function loadCase(name: string): StructureCase {
 
 const label = (id: string) => ({ en: id, de: id });
 
-/** 🧱️ Builds the evaluated state of a case, optionally under one scenario's overrides. Bone frames come from the rig chain solver (rest angle, `abductionDeg`, `twistDeg`, lateral `z`), so a case can slew, spread or offset a member laterally.  */
+/** 🧱️ Builds the evaluated state of a case, optionally under one scenario's overrides. Bone frames come from the rig chain solver; a case or a scenario states the rest placement of a member (`angleDeg`, `abductionDeg`, `twistDeg`, lateral `z`), so it can slew, spread or offset a member laterally.  */
 export function buildState(doc: StructureCase, scenario?: CaseScenario): EvaluatedState {
   const dynamics = scenario?.dynamics ?? doc.dynamics;
-  const offsets: Record<Slug, BoneOffset> = {};
   const bones: Bone[] = doc.bones.map((b) => {
     const o = scenario?.bones?.[b.id] ?? {};
     const abductionDeg = o.abductionDeg ?? b.abductionDeg ?? 0;
     const twistDeg = o.twistDeg ?? b.twistDeg ?? 0;
-    if (abductionDeg !== 0 || twistDeg !== 0) offsets[b.id] = { abductionDeg, twistDeg };
     return {
       id: b.id,
       parent: b.parent,
@@ -67,20 +65,22 @@ export function buildState(doc: StructureCase, scenario?: CaseScenario): Evaluat
       y: o.y ?? b.y,
       ...((o.z ?? b.z) === undefined ? {} : { z: o.z ?? b.z }),
       angleDeg: b.parent === null ? 0 : (o.angleDeg ?? b.angleDeg),
+      ...(abductionDeg === 0 ? {} : { abductionDeg }),
+      ...(twistDeg === 0 ? {} : { twistDeg }),
       lengthM: b.lengthM,
-      joint: abductionDeg !== 0 || twistDeg !== 0 ? { type: "revolute" } : { type: b.joint ?? "fixed" },
+      joint: { type: b.joint ?? "fixed" },
       ...(b.mass ? { mass: { ...b.mass, source: "illustrative" as const } } : {}),
       ...(b.section ? { section: b.section } : {}),
     } as Bone;
   });
   const rig = { kind: doc.kind, root: bones[0]!.id, bones } as Asset["rig"];
-  const solved = solveChain(rig, offsets, doc.root);
+  const solved = solveChain(rig, {}, doc.root);
   const evaluated: Record<Slug, EvaluatedBone> = {};
   const three = (v: readonly [number, number, number]): Vec3 => ({ x: v[0], y: v[1], z: v[2] });
   for (const b of bones) {
     const { frame, affine } = solved[b.id]!;
     const tip: Vec3 = { x: frame.o[0] + frame.u[0] * b.lengthM, y: frame.o[1] + frame.u[1] * b.lengthM, z: frame.o[2] + frame.u[2] * b.lengthM };
-    evaluated[b.id] = { id: b.id, world: affine, origin: { x: frame.o[0], y: frame.o[1] }, tip, frame: { o: three(frame.o), u: three(frame.u), v: three(frame.v), w: three(frame.w) }, angleRad: rotationRad(affine), offset: { angleDeg: 0, abductionDeg: offsets[b.id]?.abductionDeg ?? 0, twistDeg: offsets[b.id]?.twistDeg ?? 0, dx: 0, dy: 0 } };
+    evaluated[b.id] = { id: b.id, world: affine, origin: { x: frame.o[0], y: frame.o[1] }, tip, frame: { o: three(frame.o), u: three(frame.u), v: three(frame.v), w: three(frame.w) }, angleRad: rotationRad(affine), offset: { angleDeg: 0, abductionDeg: 0, twistDeg: 0, dx: 0, dy: 0 } };
   }
   const anchors: Anchor[] = doc.anchors.map((a) => ({ ...a, title: label(a.id) }) as Anchor);
   const at = (a: Anchor): { readonly x: number; readonly y: number; readonly z: number } => {

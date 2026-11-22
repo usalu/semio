@@ -31,6 +31,8 @@ pub const FRAMEWORK_SYNC_PANEL_TAB_ID: &str = "s-sync-status";
 
 /// 🧵️ Byte-identical to React's Task Manager panel and row-action controller id.
 pub const FRAMEWORK_TASK_MANAGER_PANEL_ID: &str = "os.task-manager";
+/// 🧭️ The retained panel id of React's `ShellRouteNotFoundPage`, published only while the route is not found.
+pub const ROUTE_NOT_FOUND_PANEL_ID: &str = "os.route-not-found";
 
 /// 🛍️ Byte-identical to React's `FRAMEWORK_MARKETPLACE_TAB_ID` — the bottom-right Marketplace leaf.
 pub const FRAMEWORK_MARKETPLACE_TAB_ID: &str = "framework.marketplace";

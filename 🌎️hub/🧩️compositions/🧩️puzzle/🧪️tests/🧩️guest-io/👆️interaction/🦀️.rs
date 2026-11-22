@@ -109,7 +109,7 @@ fn history(actor:&mut Actor,law:&serde_json::Value,identity:&mut EntityIdentityA
 pub fn setup(actor:&mut Actor,law:&serde_json::Value,identity:&mut EntityIdentityAuthority<'_>)->Session{
  context(actor,law,identity,false);
  let instance=73;let request=ActorInstanceOpenRequest{activation_generation:1,instance_id:instance,request_sequence:1};
- let event=Event::InstanceOpen{request,app_id:AppInstanceId(law["component"]["appId"].as_str().unwrap().into()),actor:"puzzle-export-cancel".into(),config:Vec::new(),assets:Vec::new(),capabilities:Vec::new(),quotas:QuotaSchema::default()};
+ let event=Event::InstanceOpen{purpose: semio_framework::kernel::ActorInstanceOpenPurpose::Ordinary,request,app_id:AppInstanceId(law["component"]["appId"].as_str().unwrap().into()),actor:"puzzle-export-cancel".into(),config:Vec::new(),assets:Vec::new(),capabilities:Vec::new(),quotas:QuotaSchema::default()};
  let mut event=Some(event);let mut captured=None;
  for _ in 0..turns(law){
   let result=poll(actor,event.as_ref().map(std::slice::from_ref).unwrap_or(&[Event::Wake]),identity);

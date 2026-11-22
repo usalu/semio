@@ -8,4 +8,4 @@ export interface ChangeFormingGainBends {
   newBends: number;
 }
 
-export const parseChangeFormingGainBends: NormWireReader<ChangeFormingGainBends> = normWireObject<ChangeFormingGainBends>({ id: normWireRequired(normWireString), newBends: normWireRequired(normWireRange(normWireInteger, {"minimum":0})) });
+export const parseChangeFormingGainBends: NormWireReader<ChangeFormingGainBends> = normWireObject<ChangeFormingGainBends>({ id: normWireRequired(normWireString), newBends: normWireRequired(normWireRange(normWireInteger, {"minimum":0,"maximum":4294967295})) });

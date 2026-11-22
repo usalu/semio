@@ -603,6 +603,24 @@
   ],
   "progressDerivations": [
     {
+      "kind": "native-release",
+      "units": 82,
+      "environment": {},
+      "expected": {
+        "idleMilliseconds": 3600000,
+        "maximumMilliseconds": 70800000
+      }
+    },
+    {
+      "kind": "native-release",
+      "units": 200,
+      "environment": {},
+      "expected": {
+        "idleMilliseconds": 3600000,
+        "maximumMilliseconds": 86400000
+      }
+    },
+    {
       "kind": "native-child",
       "units": 0,
       "environment": {},

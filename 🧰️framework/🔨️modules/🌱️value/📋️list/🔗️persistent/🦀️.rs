@@ -114,19 +114,6 @@ impl<T:RetireOwned+Send+Sync+'static> PersistentList<T>{
   if let Some(root)=self.root.take(){cold_drain(root)}
   self.len=0;self.height=0;
  }
- /// ⛽️ Quotes the immutable root publication and its retained alias.
- pub fn retained_alias_work_demand(&self) -> Result<u64,ValueError> {
-  let alias=self.root.as_ref().map_or(Ok(0),SealedShared::duplicate_work_demand)?;
-  alias.checked_add(1).ok_or_else(||ValueError::invariant("persistent alias work overflow"))
- }
-
- /// 🔗️ Keeps the same packed pages through an independently funded root alias.
- pub fn retained_alias(&self,effect:&mut crate::RetainedAllocationEffect<'_>)->Result<Option<Self>,ValueError>{
-  if !fits(Self::projection_demand(),effect.grant())||effect.remaining_work_units()?<self.retained_alias_work_demand()?{return Ok(None)}
-  if !effect.performed(1)?{return Ok(None)}
-  let root=self.root.as_ref().map(|root|root.try_duplicate(effect).result.map(|(aliased,_)|aliased)).transpose()?;
-  Ok(Some(Self{root,len:self.len,height:self.height}))
- }
  /// 🧷️ A genuine original list source lends an independent immutable candidate root.
  pub fn project(original:RetainedCloneRef<'_,Self>,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::RetainedWorkOutcome<Option<(Self,RetainedCloneProgress)>,ValueError>{let grant=effect.grant();let mut work=0;let result=(||{
   let demand=Self::projection_demand();if !fits(demand,grant){return Ok(None);}
@@ -134,20 +121,95 @@ impl<T:RetireOwned+Send+Sync+'static> PersistentList<T>{
   let(root,progress)=if let Some(root)=original.root.as_ref(){let turn=root.try_duplicate(effect);work=turn.work;let(root,p)=turn.result?;(Some(root),p)}else{work=1;(None,RetainedCloneProgress{copied_items:1,..Default::default()})};
   Ok(Some((Self{root,len:original.len,height:original.height},progress)))
  })();crate::RetainedWorkOutcome{result,work}}
- /// 🌱️ Leaf admission preserves every owned original row on denial or real allocation refusal.
- /// ⏱️ Bounds the fixed fanout validation and actual sealed page birth without probing retained children.
- pub fn page_birth_work_demand()->u64{1+PERSISTENT_PAGE_FANOUT as u64+SealedShared::<Page<T>>::birth_work_demand()}
+ /// ⏱️ Bounds fixed fanout validation and sealed page birth.
+ pub fn page_birth_work_demand()->u64{1+PERSISTENT_PAGE_FANOUT as u64+SealedShared::<Page<T>>::source_admission_work_demand()}
+
+ /// 🌱️ Leaf admission preserves every owned original row on denial and allocation refusal.
  pub fn admit_leaf(rows:[Option<SealedShared<T>>;PERSISTENT_PAGE_FANOUT],len:usize,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::RetainedWorkOutcome<(Self,RetainedCloneProgress),(ValueError,[Option<SealedShared<T>>;PERSISTENT_PAGE_FANOUT])>{
-  let grant=effect.grant();let d=Self::page_birth_demand();if !fits(d,grant){return crate::RetainedWorkOutcome{result:Err((ValueError::literal(ValueRefusalKind::OwnershipLimit,"immutable leaf page birth is not funded"),rows)),work:0};}
-  let mut validation_work=1;let invalid_prefix=if len==0||len>PERSISTENT_PAGE_FANOUT{true}else{let mut invalid=false;for(index,row)in rows.iter().enumerate(){validation_work+=1;if row.is_some()!=(index<len){invalid=true;break}}invalid};if invalid_prefix{return crate::RetainedWorkOutcome{result:Err((ValueError::literal(ValueRefusalKind::InvariantViolated,"immutable leaf requires an exact occupied prefix").with_retained_progress(RetainedCloneProgress{copied_items:1,..Default::default()}),rows)),work:validation_work};}
-  let mut input=Some(Page::Leaf{rows,len});let mut output=None;let turn=SealedShared::admit_from(&mut input,SharedIssuer::owned(),&mut output,effect);let result=match(turn.result,output.take()){(Ok(step),Some(root))=>Ok((Self{root:Some(root),len,height:0},step.progress())),(outcome,_)=>{let error=outcome.err().unwrap_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"immutable leaf page birth is not funded"));match input.take(){Some(Page::Leaf{rows,..})=>Err((error,rows)),_=>unreachable!("immutable leaf retains original declared page")}}};crate::RetainedWorkOutcome{result,work:validation_work+turn.work}
+  let before=effect.performed_work();
+  let result=(||{
+   if let Err(error)=Self::admit_page_work(effect){return Err((error,rows));}
+   let validate=(||{
+    Self::record_page_work(effect)?;
+    let invalid=||ValueError::invariant("immutable leaf requires an exact occupied prefix").with_retained_progress(RetainedCloneProgress{copied_items:1,..Default::default()});
+    if len==0||len>PERSISTENT_PAGE_FANOUT{return Err(invalid());}
+    for(index,row)in rows.iter().enumerate(){
+     Self::record_page_work(effect)?;
+     if row.is_some()!=(index<len){return Err(invalid());}
+    }
+    Ok(())
+   })();
+   if let Err(error)=validate{return Err((error,rows));}
+   let mut input=Some(Page::Leaf{rows,len});
+   let mut output=None;
+   let turn=SealedShared::admit_from(&mut input,SharedIssuer::owned(),&mut output,effect);
+   match(turn.result,output){
+    (Ok(step),Some(root))=>Ok((Self{root:Some(root),len,height:0},step.progress())),
+    (outcome,_)=>{
+     let error=outcome.err().unwrap_or_else(Self::page_admission_denial);
+     let Some(Page::Leaf{rows,..})=input.take()else{unreachable!("immutable leaf retains original declared page")};
+     Err((error,rows))
+    }
+   }
+  })();
+  crate::RetainedWorkOutcome{result,work:effect.performed_work()-before}
  }
- /// 🌿️ Branch admission retains the exact original dense child prefix through actual shared allocation failure.
+
+ /// 🌿️ Branch admission retains the exact dense child prefix through allocation refusal.
  pub fn admit_branch(mut children:[Option<Self>;PERSISTENT_PAGE_FANOUT],effect:&mut crate::RetainedAllocationEffect<'_>)->crate::RetainedWorkOutcome<(Self,RetainedCloneProgress),(ValueError,[Option<Self>;PERSISTENT_PAGE_FANOUT])>{
-  let grant=effect.grant();let d=Self::page_birth_demand();if !fits(d,grant){return crate::RetainedWorkOutcome{result:Err((ValueError::literal(ValueRefusalKind::OwnershipLimit,"immutable branch page birth is not funded"),children)),work:0};}
-  let mut validation_work=1;let validated:Result<(usize,u8),ValueError>=(||{let first=children[0].as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"immutable branch requires at least one child"))?;let child_height=first.height;let height=child_height.checked_add(1).filter(|height|usize::from(*height)*4<usize::BITS as usize).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"immutable page height exceeds ranked address space"))?;let full=1usize<<(usize::from(height)*4);let mut len=0usize;let mut gap=false;for child in &children{validation_work+=1;if let Some(child)=child{if gap||child.height!=child_height||child.len==0||child.len>full||child.root.is_none(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"immutable branch requires a dense prefix of matching-height nonempty children"))}len=len.checked_add(child.len).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"immutable branch cardinality overflow"))?;}else{gap=true;}}Ok((len,height))})();
-  let(len,height)=match validated{Ok(value)=>value,Err(error)=>return crate::RetainedWorkOutcome{result:Err((error.with_retained_progress(RetainedCloneProgress{copied_items:1,..Default::default()}),children)),work:validation_work}};
-  let roots=std::array::from_fn(|i|children[i].as_mut().and_then(|child|child.root.take()));let mut input=Some(Page::Branch{children:roots,len,height});let mut output=None;let turn=SealedShared::admit_from(&mut input,SharedIssuer::owned(),&mut output,effect);let result=match(turn.result,output.take()){(Ok(step),Some(root))=>Ok((Self{root:Some(root),len,height},step.progress())),(outcome,_)=>{let error=outcome.err().unwrap_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"immutable branch page birth is not funded"));let Some(Page::Branch{children:roots,..})=input.take()else{return crate::RetainedWorkOutcome{result:Err((ValueError::invariant("immutable branch retains original declared page"),children)),work:turn.work}};for(i,root)in roots.into_iter().enumerate(){if let Some(root)=root{let Some(child)=children[i].as_mut()else{return crate::RetainedWorkOutcome{result:Err((ValueError::invariant("original branch child wrapper"),children)),work:0}};child.root=Some(root);}}Err((error,children))}};crate::RetainedWorkOutcome{result,work:validation_work+turn.work}
+  let before=effect.performed_work();
+  let result=(||{
+   if let Err(error)=Self::admit_page_work(effect){return Err((error,children));}
+   let validated=(||{
+    Self::record_page_work(effect)?;
+    let child_height=children[0].as_ref().ok_or_else(||ValueError::invariant("immutable branch requires at least one child"))?.height;
+    let height=child_height.checked_add(1).filter(|height|usize::from(*height)*4<usize::BITS as usize).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"immutable page height exceeds ranked address space"))?;
+    let full=1usize<<(usize::from(height)*4);
+    let mut len=0usize;
+    let mut gap=false;
+    for child in &children{
+     Self::record_page_work(effect)?;
+     if let Some(child)=child{
+      if gap||child.height!=child_height||child.len==0||child.len>full||child.root.is_none(){return Err(ValueError::invariant("immutable branch requires a dense prefix of matching-height nonempty children"));}
+      len=len.checked_add(child.len).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"immutable branch cardinality overflow"))?;
+     }else{gap=true;}
+    }
+    Ok((len,height))
+   })();
+   let(len,height)=match validated{
+    Ok(value)=>value,
+    Err(error)=>return Err((error.with_retained_progress(RetainedCloneProgress{copied_items:1,..Default::default()}),children)),
+   };
+   let roots=std::array::from_fn(|i|children[i].as_mut().and_then(|child|child.root.take()));
+   let mut input=Some(Page::Branch{children:roots,len,height});
+   let mut output=None;
+   let turn=SealedShared::admit_from(&mut input,SharedIssuer::owned(),&mut output,effect);
+   match(turn.result,output){
+    (Ok(step),Some(root))=>Ok((Self{root:Some(root),len,height},step.progress())),
+    (outcome,_)=>{
+     let error=outcome.err().unwrap_or_else(Self::page_admission_denial);
+     let Some(Page::Branch{children:roots,..})=input.take()else{unreachable!("immutable branch retains original declared page")};
+     for(child,root)in children.iter_mut().zip(roots){
+      if let Some(root)=root{child.as_mut().expect("original branch child wrapper").root=Some(root);}
+     }
+     Err((error,children))
+    }
+   }
+  })();
+  crate::RetainedWorkOutcome{result,work:effect.performed_work()-before}
+ }
+
+ fn page_admission_denial()->ValueError{ValueError::literal(ValueRefusalKind::OwnershipLimit,"immutable page birth is not funded")}
+
+ fn admit_page_work(effect:&crate::RetainedAllocationEffect<'_>)->Result<(),ValueError>{
+  if !fits(Self::page_birth_demand(),effect.grant()){return Err(Self::page_admission_denial());}
+  if effect.remaining_work_units()?<Self::page_birth_work_demand(){return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"immutable page birth lacks its original Work"));}
+  Ok(())
+ }
+
+ fn record_page_work(effect:&mut crate::RetainedAllocationEffect<'_>)->Result<(),ValueError>{
+  if effect.performed(1)?{return Ok(());}
+  Err(ValueError::literal(ValueRefusalKind::WorkLimit,"immutable page validation exceeded its original Work"))
  }
  /// 📏️ Quotes the native list header and its original root alias.
  pub fn projection_demand()->RetirementDemand{RetirementDemand{copy_bytes:size_of::<Option<Self>>().checked_mul(2).and_then(|copy|copy.checked_add(SealedShared::<Page<T>>::duplicate_copy_bytes())).expect("persistent projection header fits"),depth:1,..Default::default()}}

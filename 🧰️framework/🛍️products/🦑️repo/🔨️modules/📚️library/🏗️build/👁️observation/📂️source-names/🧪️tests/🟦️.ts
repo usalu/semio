@@ -1,6 +1,6 @@
 import{afterAll,expect,test}from"bun:test";
 import{createHash}from"node:crypto";
-import{mkdirSync,mkdtempSync,readFileSync,readdirSync,rmSync,symlinkSync,writeFileSync}from"node:fs";
+import{existsSync,mkdirSync,mkdtempSync,readFileSync,readdirSync,rmSync,symlinkSync,writeFileSync}from"node:fs";
 import{tmpdir}from"node:os";
 import{dirname,join,resolve}from"node:path";
 import ignore from"ignore";
@@ -9,7 +9,7 @@ import{directoryFactOfV1}from"../../🟨️.mjs";
 import{sourceTreeFilterV1}from"../🟨️.mjs";
 import{declaredModuleGlobsV1}from"../../../🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs";
 
-const rules=schema.$defs.rules.const,module=join(import.meta.dir,"..","..","🟨️.mjs"),inputs=join(import.meta.dir,"..","..","..","🕸️graph","📥️inference","🧭️script-inputs","🟨️.mjs"),assembly=join(import.meta.dir,"..","..","..","🕸️graph","📥️inference","🧱️project-assembly","🟨️.mjs"),root=process.cwd();
+const rules=schema.$defs.rules.const,module=join(import.meta.dir,"..","..","🟨️.mjs"),inputs=join(import.meta.dir,"..","..","..","🕸️graph","📥️inference","🧭️script-inputs","🟨️.mjs"),assembly=join(import.meta.dir,"..","..","..","🕸️graph","📥️inference","🧱️project-assembly","🟨️.mjs"),root=(()=>{let directory=import.meta.dir;while(!existsSync(join(directory,"MODULE.bazel"))&&dirname(directory)!==directory)directory=dirname(directory);return directory;})();
 const scratch:string[]=[];
 afterAll(()=>{for(const path of scratch)rmSync(path,{recursive:true,force:true});});
 const sha=(names:readonly string[])=>createHash("sha256").update(JSON.stringify([...names].sort())).digest("hex");

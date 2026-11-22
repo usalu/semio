@@ -1,0 +1,15 @@
+# Local Graph Seals During Rebuild Admission
+
+A fresh graph read that had finished its shared attempt could leave its rebuild request queued even after a different producer published a compatible local generation. The host capacity callback could interrupt both quiet growth and the fixed rebuild reservation on an exact remote head. With no exchange configured, the queue received no reuse callback. The private filesystem regression started an independent generation load while the first read was waiting and reproduced no local nomination before the fix.
+
+The waiting loader now observes the current local pointer under normal shared store custody at most once per graph wait-notice interval, which defaults to 20 seconds. A candidate must advance beyond the generation already examined by the original read. Its manifest must pass the generation store's bounded digest and schema checks and declare the exact generation, registry identity and implementation. The existing capacity owner withdraws the pending exact request. The loader then reacquires shared custody, rechecks the exact current pointer and runs the ordinary fresh reader with the original request time. That reader still checks the applicable coverage or source facts and assembles the graph normally.
+
+A failed candidate re-enters normal admission. An absent manifest or failed normal replay can retry the same digest at 40, 80, 160 and then 300-second pacing under default settings. A verified incompatible manifest stays ineligible until the pointer advances, and a newer quarantine supersedes older offers. An expansion that finds a missing closure during replay leaves the repair budget with the normal funded path. Cancellation travels through the existing shared custody and queue control. No production capacity policy, reservation size or pointer publication authority changed.
+
+The JSON corpus and independent SQLite decisions cover compatibility, quarantine, a withdrawn candidate, stale facts when coverage was never issued, an unavailable closure, and the same immutable head becoming readable after its closure appears. The fixture checks that rapid polls cause no pointer reads and that an incompatible or quarantined contender does not trigger repeated manifest reads. Before backoff was added, the recovered-closure case refused to nominate the same immutable head. The complete loader and whole-gate run passed 187 tests and 1,376 assertions across 14 files. A final focused run after tightening the exact replay result check passed three tests and 107 assertions. Scoped whitespace checks passed.
+
+A local seal is required for this route to help the live waiter. The preceding verification still observed quarantine 260 and the physical reader waiting for 14,336 MiB. This change neither rebuilt that generation nor produced a fleet adoption receipt. No live reservation, process or cache was manually changed.
+
+At 17:59 UTC all eight then-fresh workers' cursors covered the exact journal PUTs for the loader and its two test files. The older physical query was still running.
+
+[Preceding physical observation](audit-ready-dependency-inputs.md)

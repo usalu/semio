@@ -264,7 +264,7 @@ pub fn pointer_press_belongs_to_shell_chrome(hit: Option<&HitTarget<ActionDescri
 /// keyed `<surface>/<id>` (`PanelProjection::key`), so it is their surface-local id that names them chrome.
 pub fn pointer_hit_owner(hit: Option<&HitTarget<ActionDescriptor>>) -> PointerHitOwner {
     let chrome = hit.is_some_and(|hit| {
-        matches!(hit.kind, HitKind::NavbarItem | HitKind::DropdownItem | HitKind::ContextMenu | HitKind::Select | HitKind::DockSplit | HitKind::DockJoinCorner | HitKind::PanelResize | HitKind::PanelTab)
+        matches!(hit.kind, HitKind::NavbarItem | HitKind::DropdownItem | HitKind::ContextMenu | HitKind::Select | HitKind::DockSplit | HitKind::DockJoinCorner | HitKind::PanelResize | HitKind::PanelTab | HitKind::ScrollThumb)
             || hit.control_id.as_deref().is_some_and(|id| {
                 id.starts_with("shell.")
                     || id.starts_with("ui.introduction.")
@@ -288,7 +288,7 @@ pub fn pointer_hit_owner(hit: Option<&HitTarget<ActionDescriptor>>) -> PointerHi
 /// handle. The dock's structural drags travel across whatever the pointer sweeps over, so the
 /// engine surfaces under it must not also receive those moves.
 pub fn drag_captures_pointer(drag: &semio_ui_wgpu_input::DragState) -> bool {
-    drag.active && matches!(drag.kind, Some(HitKind::DockSplit | HitKind::DockJoinCorner | HitKind::PanelResize | HitKind::PanelTab))
+    drag.active && matches!(drag.kind, Some(HitKind::DockSplit | HitKind::DockJoinCorner | HitKind::PanelResize | HitKind::PanelTab | HitKind::ScrollThumb))
 }
 //#endregion ShellInput
 

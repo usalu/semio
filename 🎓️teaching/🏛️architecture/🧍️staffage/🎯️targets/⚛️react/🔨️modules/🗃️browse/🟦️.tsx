@@ -6,7 +6,7 @@
  * @see ../🔎️search/🟦️.ts — the pure search, filter and sort
  * @see ../🥞️levels/🟦️.tsx — the nested grid of a category
  */
-import { useEffect, useRef, useId, useLayoutEffect, useMemo, useState, type ReactElement, type ReactNode } from "react";
+import { useId, useLayoutEffect, useMemo, useState, type ReactElement, type ReactNode } from "react";
 import { CATEGORIES, COMPLETION, formatNumber } from "@teaching/staffage";
 import type { CategoryId, Completion } from "@teaching/staffage";
 import { useArchive, useLocal, useRows } from "../🧭️context/🟦️.tsx";
@@ -285,40 +285,22 @@ export function PhoneBrowsePage({ category }: { readonly category?: CategoryId }
   );
 }
 
-/** 🔎️ Opens the requested asset directly and stops loading when the reader leaves or cancels. */
+/** 🔎️ The phone's asset page: the opened asset alone, which loads itself and stops when the reader leaves or cancels. */
 export function PhoneAssetPage({ category, id }: { readonly category: CategoryId; readonly id: string }): ReactElement {
-  const { catalog, t } = useArchive();
+  const { t } = useArchive();
   const { manifest, rows } = useRows();
   const row = rows.find((candidate) => candidate.entry.category === category && candidate.entry.id === id);
-  const entry = row?.entry;
-  const request = useRef<AbortController | null>(null);
-  const [cancelled, setCancelled] = useState(false);
-  const [attempt, retry] = useState(0);
-  useEffect(() => {
-    if (entry === undefined || cancelled) return;
-    const run = new AbortController();
-    request.current = run;
-    void catalog.loadAsset(entry, run.signal);
-    return () => run.abort();
-  }, [catalog, entry, cancelled, attempt]);
   if (row === undefined) return (
     <PageFrame page={`asset:${id}`} title={t("nav.asset")}>
       {manifest === null ? <CatalogProblem><Notice kind="loading" title={t("state.loading.title")} /></CatalogProblem> : <Notice kind="unavailable" title={t("state.assetUnknown")} />}
     </PageFrame>
   );
-  const pending = row.status === "pending";
-  const reload = () => { setCancelled(false); retry((count) => count + 1); };
-  const progress = cancelled
-    ? <Notice kind="info" compact title={t("state.cancelled.title")} actions={<Button onClick={reload}>{t("action.retry")}</Button>} />
-    : row.status === "failed"
-      ? <Notice kind="error" compact title={t("state.failed.short")} actions={<Button onClick={reload}>{t("action.retry")}</Button>} />
-      : pending ? <Notice kind="loading" title={t("state.loading.title")} actions={<Button onClick={() => { request.current?.abort(); setCancelled(true); }}>{t("action.cancel")}</Button>} /> : undefined;
-  return <AssetPage row={row} view={{ opened: true, revealed: false }} {...(progress === undefined ? {} : { progress })} />;
+  return <AssetPage row={row} view={{ opened: true, revealed: false }} />;
 }
 
 const CATEGORY_ROW_MIN_PX = 190;
 
-/** 🗂️ The page of one category: its filters and a nested grid of asset cards; an asset opens its page while the grid stays live behind it. */
+/** 🗂️ The page of one category: its filters and a nested grid of asset cards; an asset opens its page while the grid stays behind it. The grid loads its category while it is the page the reader is on; an opened asset page loads its one asset itself, so the grid behind it asks for nothing. */
 export function CategoryPage(props: { readonly category: CategoryId; readonly view: PaneView }): ReactElement {
   const { category, view } = props;
   const { t, language, catalog } = useArchive();
@@ -328,9 +310,9 @@ export function CategoryPage(props: { readonly category: CategoryId; readonly vi
   const here: Route = { page: "category", category };
   const inside = view.opened && (route.page === "category" || route.page === "asset") && route.category === category;
   const { filters, set } = useAddressFilters(here, inside, category);
-  const loading = useAssetLoading(catalog, inside || view.revealed, [category], category);
-  const own = useMemo(() => rows.filter((row) => row.entry.category === category), [rows, category]);
   const opened = inside && route.page === "asset" ? route.asset : null;
+  const loading = useAssetLoading(catalog, (inside && opened === null) || view.revealed, [category], category);
+  const own = useMemo(() => rows.filter((row) => row.entry.category === category), [rows, category]);
   const filtered = useMemo(() => filterAndSort(own, filters, language), [own, filters, language]);
   const withOpened = useMemo(() => (opened === null || filtered.some((row) => row.entry.id === opened) ? filtered : [...filtered, ...own.filter((row) => row.entry.id === opened)]), [filtered, own, opened]);
   const entry = manifest?.categories.find((candidate) => candidate.id === category);

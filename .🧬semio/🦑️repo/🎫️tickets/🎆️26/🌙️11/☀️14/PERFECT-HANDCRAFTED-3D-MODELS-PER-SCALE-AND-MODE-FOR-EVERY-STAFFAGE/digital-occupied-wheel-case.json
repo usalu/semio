@@ -1,0 +1,193 @@
+{
+  "scales": [
+    50,
+    100,
+    200,
+    500
+  ],
+  "subjects": {
+    "cyclist": {
+      "otherPose": "standing-on-pedals",
+      "wheels": [
+        [
+          "rear-wheel",
+          "rear",
+          0,
+          0.34,
+          36
+        ],
+        [
+          "front-wheel",
+          "front",
+          0,
+          0.34,
+          36
+        ]
+      ],
+      "graspingPoses": [
+        "riding-upright",
+        "standing-on-pedals",
+        "coasting",
+        "dismounted-astride"
+      ],
+      "maximumGraspGapMm": 2,
+      "minimumReleasedGapMm": 150,
+      "pedallingPoses": [
+        "riding-upright",
+        "standing-on-pedals",
+        "coasting"
+      ],
+      "maximumPedalGapMm": 2
+    },
+    "wheelchair-user": {
+      "otherPose": "ramp-ascent",
+      "wheels": [
+        [
+          "rear-wheel",
+          "l",
+          0.28,
+          0.305,
+          24
+        ],
+        [
+          "rear-wheel",
+          "r",
+          -0.28,
+          0.305,
+          24
+        ]
+      ],
+      "graspingPoses": [
+        "hands-on-rims",
+        "push-end",
+        "ramp-ascent"
+      ],
+      "maximumGraspGapMm": 2,
+      "minimumReleasedGapMm": 150,
+      "maximumRecoveryDriftMm": 2
+    },
+    "person-with-rollator": {
+      "otherPose": "seated-rest",
+      "wheels": [
+        [
+          "wheel-front",
+          "front-l",
+          0.235,
+          0.1,
+          5
+        ],
+        [
+          "wheel-front",
+          "front-r",
+          -0.235,
+          0.1,
+          5
+        ],
+        [
+          "wheel-rear",
+          "rear-l",
+          0.283,
+          0.1,
+          5
+        ],
+        [
+          "wheel-rear",
+          "rear-r",
+          -0.283,
+          0.1,
+          5
+        ]
+      ],
+      "graspingPoses": [
+        "stand-at-grips",
+        "walking-midstance"
+      ],
+      "maximumGraspGapMm": 2,
+      "minimumReleasedGapMm": 150
+    },
+    "parent-with-stroller": {
+      "otherPose": "kerb-tilt",
+      "wheels": [
+        [
+          "wheel-rear",
+          "rear-l",
+          0.4695,
+          0.1592,
+          6,
+          0.044
+        ],
+        [
+          "wheel-rear",
+          "rear-r",
+          -0.0845,
+          0.1592,
+          6,
+          0.044
+        ],
+        [
+          "wheel-front",
+          "front-l",
+          0.4075,
+          0.0796,
+          5,
+          0.032
+        ],
+        [
+          "wheel-front",
+          "front-r",
+          -0.0225,
+          0.0796,
+          5,
+          0.032
+        ]
+      ],
+      "maximumAxleGapMm": 4,
+      "maximumScaleChangeMm": 5,
+      "maximumPoseErrorMm": 2,
+      "distanceOrder": [
+        "parent left hand to push grip",
+        "parent right hand to push grip",
+        "child to seat",
+        "child left hand to bumper",
+        "child right hand to bumper"
+      ],
+      "defaultPushDistancesMm": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "expectedDistancesMm": {
+        "checking-child": [
+          85,
+          0,
+          0,
+          44,
+          0
+        ],
+        "stop-and-check-child@5.2": [
+          85,
+          0,
+          0,
+          44,
+          0
+        ],
+        "kerb-tilt": [
+          0,
+          0,
+          0,
+          0,
+          9
+        ],
+        "kerb-tilt-up@1.4": [
+          0,
+          0,
+          0,
+          0,
+          10
+        ]
+      }
+    }
+  }
+}

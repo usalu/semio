@@ -11,10 +11,10 @@ pub use actor_failure::ActorFailureCapsule;
 pub use original_output::{GuestRelayOutput,GuestRelayOutputHome,GuestRelayFaultHome,GuestRelayFault,GuestRelayResult};
 #[path="🎟️unit/🌱️canonical.rs"]
 mod original_unit_flow;
-pub use original_unit_flow::{GuestRelayUnitFlow,GuestRelayUnitStatus,GuestRelayJobInput,GuestRelayInferenceInput,GuestRelayInferenceSource,ColdJobCallPlan,GuestRelayJsonSource,GuestRelayByteSource,GuestRelayBorrowedJson,GuestRelayBorrowedBytes,GuestRelayJsonTransform,GuestRelayTransformedOutput,GuestRelayColdController};
+pub use original_unit_flow::{GuestRelayUnitFlow,GuestRelayUnitStatus,GuestRelayInferenceInput,ColdJobCallPlan,GuestRelayJsonSource,GuestRelayByteSource,GuestRelayBorrowedJson,GuestRelayBorrowedBytes,GuestRelayJsonTransform,GuestRelayTransformedOutput,GuestRelayColdController};
 #[path="🏠️native/🦀️.rs"]
 mod native_home;
-pub use native_home::{with_bootstrap_history_parts,attest_bootstrap_header_return,with_frozen_history_parts,attest_header_return,attest_actor_failure_if_needed,FrozenReceiptFrontier,GuestRelayNativeHome,GuestRelayNativeOrigin,GuestRelayNativeResolver,GuestRelayNativeCustody,GuestRelayNativeState,NativeInstanceHome,NativeInstanceRetirement};
+pub use native_home::{with_bootstrap_history_parts,attest_bootstrap_header_return,with_frozen_history_parts,attest_header_return,attest_actor_failure_if_needed,FrozenReceiptFrontier,GuestFrozenHistoryCapture,GuestRelayNativeHome,GuestRelayNativeOrigin,GuestRelayNativeResolver,GuestRelayNativeCustody,GuestRelayNativeState,NativeInstanceHome,NativeInstanceRetirement};
 #[path="🌱️native-admission/🦀️.rs"]
 mod native_admission;
 pub use native_home::origin_registry;

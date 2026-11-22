@@ -9,11 +9,13 @@ import {
   IMPORT_ARGUMENT_TOTAL,
   IMPORT_CHUNK_BYTES,
   importChunkArguments,
+  importChunkWithIntegerCarriers,
   importPayloadChunks,
   type ImportChunk
 } from "../../🗄️file-open-import/🟦️.ts";
 import { GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES } from "../../../⏱️trace/🧮️memory/🟦️.ts";
 import { wireEffectToFriendly } from "../../../🎭️actor/📦️packages/🟦️typescript/🖼️wire-turn/🟦️.ts";
+import { decodePackValue, encodePackValue, packUInt } from "../../../🎁️packs/🟦️.ts";
 
 /** 📤️ TypeScript twin of `🧪️tests/📤️file-open-import/🦀️.rs`, driven from the SAME fixture
  * (`🧫️fixtures/📤️file-open-import/🔣️.json`): what `Effect::RequestFileOpen` looks like on the wire,
@@ -127,12 +129,18 @@ export function testFileOpenImportContract(): void {
     const args = importChunkArguments(row.name, row.chunk, row.fanOut ?? undefined);
     assert.deepEqual(args, row.arguments, `${row.id}: dispatch arguments`);
     assert.equal(IMPORT_ARGUMENT_INDEX in args, row.fanOut !== null, `${row.id}: fan-out presence`);
+    const packed = decodePackValue(encodePackValue(importChunkWithIntegerCarriers(args, packUInt))) as Record<string, unknown>;
+    assert.equal(packed.payload, args.payload);
+    assert.equal(packed.name, args.name);
     for (const key of [IMPORT_ARGUMENT_CHUNK, IMPORT_ARGUMENT_CHUNK_COUNT, IMPORT_ARGUMENT_INDEX, IMPORT_ARGUMENT_TOTAL]) {
       if (!(key in args)) continue;
       assert.ok(Number.isInteger(args[key]), `${row.id}: ${key} must stay an exact integer — the guest decodes it as u32 and refuses a float`);
+      assert.deepEqual(packed[key], { kind: "uint", value: BigInt(args[key]!) }, `${row.id}: ${key} has the native unsigned Pack tag`);
     }
   }
 
+  const unrelated = { radius: 3, payload: "sample", name: "grid" };
+  assert.equal(importChunkWithIntegerCarriers(unrelated, packUInt), unrelated);
   const long = importPayloadChunks("x".repeat(IMPORT_CHUNK_BYTES * 2 + 7));
   assert.equal(long.length, 3, "two full chunks and a remainder");
   assert.deepEqual(long.map((chunk) => chunk.payload.length), [IMPORT_CHUNK_BYTES, IMPORT_CHUNK_BYTES, 7]);

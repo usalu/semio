@@ -83,10 +83,11 @@ export function useBoardContextMenuAndDrop(core: BoardCore4) {
       const session = sessionRef.current;
       if (!session) return;
       const world = boardScreenToWorld(session.cameraJson(), readContainerSize(), { x: clientX - rect.left, y: clientY - rect.top });
+      if (!world) return;
       dispatch("addNode", {
         kind: payload.kindId,
-        x: world?.x,
-        y: world?.y,
+        x: world.x,
+        y: world.y,
         shape: payload.shape,
         radius: payload.radius,
         width: payload.width,
@@ -129,7 +130,10 @@ export function useBoardContextMenuAndDrop(core: BoardCore4) {
     [previewCatalogueDropAt, scene?.interactive],
   );
 
-  const onDragLeave = useCallback((): void => {}, []);
+  const onDragLeave = useCallback((event: DragEvent<HTMLDivElement>): void => {
+    if (event.relatedTarget instanceof Node && event.currentTarget.contains(event.relatedTarget)) return;
+    if (!boardCatalogueDropHostContainsPoint(node.controllerId, event.clientX, event.clientY)) clearCatalogueDropPreview();
+  }, [clearCatalogueDropPreview, node.controllerId]);
 
   const onDrop = useCallback(
     (event: DragEvent<HTMLDivElement>): void => {
@@ -147,13 +151,14 @@ export function useBoardContextMenuAndDrop(core: BoardCore4) {
   );
 
   useEffect(() => {
+    if (!scene?.interactive) return undefined;
     const hostId = windowInstanceId ?? node.surfaceId;
     return registerBoardCatalogueDropHost(node.controllerId, hostId, (clientX, clientY) => {
       const host = containerRef.current;
       if (!host) return false;
       return boardCatalogueDropPointOverRect(clientX, clientY, host.getBoundingClientRect());
     });
-  }, [node.controllerId, node.surfaceId, windowInstanceId]);
+  }, [node.controllerId, node.surfaceId, scene?.interactive, windowInstanceId]);
 
   useEffect(() => {
     const onPointerMove = (event: PointerEvent) => {

@@ -3,7 +3,7 @@
 //! window binds its own definition and render in its own file.
 
 use crate::editor::grid2d::modes::edit::windows::{grid, preview};
-use semio_plugin::create_default_layout;
+use semio_plugin::{create_default_layout, Axis};
 use semio_ui_locale::LocalizedLabel;
 use semio_plugin::ModeDefinition;
 use semio_plugin::UtilityCategory;
@@ -20,7 +20,7 @@ pub fn definition() -> ModeDefinition {
 
 /// 🪟️ The grid board beside the inferred preview.
 pub fn layout() -> WindowLayout {
-    create_default_layout(&[grid::WINDOW_KIND_ID.into(), preview::WINDOW_KIND_ID.into()], "row", Some(&[50.0, 50.0]), Some(&["Grid".into(), "Preview".into()]))
+    create_default_layout(&[grid::WINDOW_KIND_ID.into(), preview::WINDOW_KIND_ID.into()], Axis::Horizontal, Some(&[0.5, 0.5]), Some(&["Grid".into(), "Preview".into()]))
 }
 
 /// 🧰️ The three pointer utilities the grid pane arms. A declared utility no window references is

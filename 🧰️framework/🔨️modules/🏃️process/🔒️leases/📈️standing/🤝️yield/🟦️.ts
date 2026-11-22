@@ -5,7 +5,7 @@ import {join} from "node:path";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import {abortLeaseRootV1,leaseBoundComponentsV1,leaseEtaV1,leaseHistoryKeyV1,leaseHolderStateV1,leaseImplementationPinnedV1,leaseImplementationV1,leaseMovedBoundV1,leaseStandingSnapshotV1,leaseStandingTextV1,leaseStuckAfterMsV1,leaseYieldHandlerV1,probeLeaseActivityV1,type LeaseHolderStateV1,type LeaseImplementationV1,type LeaseStandingV1} from "../🟦️.ts";
 import {leaseProcessStartedAtMsV1,leaseRegistryFolderV1,leaseRegistryRootV1,leaseRegistryV1,readLeaseHistoryV1,readLeaseRegistryEntriesV1} from "../../🧭️order/🗂️registry/🟦️.ts";
-import {agentSessionAddressOfEnvironmentV1} from "../../../🪪️agent-sessions/🗄️store/🟦️.ts";
+import {agentSessionAddressOfEnvironmentV1,agentSessionRegistryRootV1,agentSessionStoreV1,parseAgentSessionAddressV1,readAgentSessionV1} from "../../../🪪️agent-sessions/🗄️store/🟦️.ts";
 import {liveChildPidsV1} from "../../../🧭️routing/📥️invocation/🏃️process/🐕️watchdog/🟦️.ts";
 
 const policy=schema.definitions.Policy.const;
@@ -96,8 +96,13 @@ export function readLeaseYieldRequestV1(root:string,directory:string,pid:number,
 }
 
 const refusedOnce=new Set<string>();
+/** 🧑‍💻️ The agent that runs the session a holder registered under, or undefined when the session is unknown or its record cannot be read. */
+function leaseHolderAgentV1(session:string|undefined,environment:Readonly<Record<string,string|undefined>>):string|undefined{
+ const address=parseAgentSessionAddressV1(session);if(address===undefined)return undefined;
+ try{return readAgentSessionV1(agentSessionStoreV1(agentSessionRegistryRootV1(environment),address.worktree),address.id)?.agent.id;}catch{return undefined;}
+}
 /** 📢️ What the queue notice of a waiter says about the holder: its state, phase, counters and the minutes left. */
-export type LeaseHolderNoticeV1=Readonly<{holderState:LeaseHolderStateV1["state"];holderPhase?:string;holderDone?:number;holderTotal?:number;holderEtaMinutes?:number}>;
+export type LeaseHolderNoticeV1=Readonly<{holderState:LeaseHolderStateV1["state"];holderAgent?:string;holderPhase?:string;holderDone?:number;holderTotal?:number;holderEtaMinutes?:number}>;
 /** 🔭️ What observing the holder at the head of the queue needs: the lease directory, the resource, the head's pid, mode and arrival, and the injectable clock, environment, root and ports. */
 export type LeaseObserveInputV1=Readonly<{directory:string;resource:string;headPid:number;headMode:"shared"|"exclusive";headArrivalMs:number;nowMs?:number;environment?:Readonly<Record<string,string|undefined>>;root?:string;ports?:LeaseReclaimPortsV1}>;
 /** 👀️ The waiter's view of the holder at the head of the queue: its state, phase, counters and time left for the queue notice, and, by the reclaim mode, the request to give the resource up and (only in `terminate` mode, after the grace period, with a verified identity) the stop of a holder that ignored it. */
@@ -107,7 +112,7 @@ export async function observeLeaseHolderV1(input:LeaseObserveInputV1):Promise<Le
  const entry=readLeaseRegistryEntriesV1(root,input.directory,Date.now(),false).find(row=>row.pid===input.headPid),hold=entry?.holds.find(row=>row.resource===input.resource&&row.mode==="exclusive"),standing=entry?.standing,holdSinceMs=hold?.sinceMs??input.headArrivalMs;
  const bound=leaseBoundComponentsV1(input.resource),own=leaseImplementationV1(),judged=leaseHolderStateV1({nowMs,holdSinceMs,resource:input.resource,standing,waiter:own,bound});
  const eta=standing?leaseEtaV1({elapsedMs:nowMs-holdSinceMs,phaseElapsedMs:standing.phaseStartedAtMs===undefined?0:nowMs-standing.phaseStartedAtMs,...standing.done===undefined||standing.total===undefined?{}:{done:standing.done,total:standing.total},historyMs:readLeaseHistoryV1(root,input.directory,leaseHistoryKeyV1(input.resource,entry!.command))}):undefined;
- const notice:LeaseHolderNoticeV1=Object.freeze({holderState:judged.state,...standing?.phase===undefined?{}:{holderPhase:standing.phase},...standing?.done===undefined||standing.total===undefined?{}:{holderDone:standing.done,holderTotal:standing.total},...eta&&!eta.overdue?{holderEtaMinutes:Math.max(1,Math.round(eta.seconds/60))}:{}});
+ const agent=leaseHolderAgentV1(entry?.session,environment),notice:LeaseHolderNoticeV1=Object.freeze({holderState:judged.state,...agent===undefined?{}:{holderAgent:agent},...standing?.phase===undefined?{}:{holderPhase:standing.phase},...standing?.done===undefined||standing.total===undefined?{}:{holderDone:standing.done,holderTotal:standing.total},...eta&&!eta.overdue?{holderEtaMinutes:Math.max(1,Math.round(eta.seconds/60))}:{}});
  const reason=leaseYieldDecisionV1(judged.state,mode,bound),languages=leaseLanguagesV1(environment),say=(key:Parameters<typeof leaseStandingTextV1>[1],values:Record<string,string|number>)=>ports.write(languages.map(language=>leaseStandingTextV1(language,key,values)).join("\n")+"\n");
  const existing=entry?readLeaseYieldRequestV1(root,input.directory,entry.pid,entry.startedAtMs,nowMs):undefined;
  if(reason&&entry&&!(existing&&alive(existing.requesterPid)&&existing.reason===reason)){

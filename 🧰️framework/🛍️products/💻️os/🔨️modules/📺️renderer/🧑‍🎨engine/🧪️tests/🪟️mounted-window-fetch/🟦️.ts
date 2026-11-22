@@ -10,6 +10,7 @@
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import fixture from "../../🧱️elements/🛠️ShellHelpers/🧪️tests/🧫️fixtures/🪟️mounted-window-fetch.json" with { type: "json" };
+import type { WindowLayoutNode } from "@semio-tech/ui-layout";
 import { partitionRefreshWindowInstancesV1, windowLayoutWindowIdsV1 } from "@semio-tech/framework-kernel";
 
 
@@ -30,7 +31,7 @@ describe("🪟️ mounted-window refresh fetch", () => {
 
   for (const scenario of fixture.layouts) {
     it(scenario.name, () => {
-      expect([...windowLayoutWindowIdsV1(scenario.layout)]).toEqual(scenario.windowIds);
+      expect([...windowLayoutWindowIdsV1(scenario.layout as WindowLayoutNode | null)]).toEqual(scenario.windowIds);
     });
   }
 

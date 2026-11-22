@@ -26,7 +26,7 @@ it("delivers unchanged archive bytes to the observer and real ordinary archive b
   const bootstrap = vi.fn(), dispatch = vi.fn();
   const entry = { documentId: "document", clientInstanceId: "live", plugin: {}, session: { pluginId: "stdio", instanceId: 7, app: { id: "text", label: { en: "Text" } } }, readBack: { archive: restored }, creationMount: null, rejectReady: vi.fn() };
   const sessions = { current: new Map([["document", entry]]) };
-  const message = { kind: "event", documentId: "document", clientInstanceId: "live", event: { kind: "documentArchiveReplaced", archive: Array.from(bytes) } };
+  const message = { kind: "event", documentId: "document", clientInstanceId: "live", event: { kind: "documentArchiveReplaced", archive: bytes } };
   const consumed = routeLocalDocumentObserverV1({ localDocumentOwnersRef: { current: new Map([["live", { archive: observed }]]) }, openDocumentSessionsRef: sessions, message } as unknown as Parameters<typeof routeLocalDocumentObserverV1>[0]);
   expect(consumed).toBe(false); expect(observed).toHaveBeenCalledWith(bytes);
   handleDocumentEventMessage({
@@ -55,6 +55,6 @@ it("requires the scoped runtime key rather than a same-client unscoped entry", (
   expect(routeLocalDocumentObserverV1(port as unknown as Parameters<typeof routeLocalDocumentObserverV1>[0])).toBe(true);
 });
 it("accepts status-only observers without consuming active archive delivery", () => {
-  const message = { kind: "event", documentId: "document", clientInstanceId: "live", event: { kind: "documentArchiveReplaced", archive: [1, 2] } };
+  const message = { kind: "event", documentId: "document", clientInstanceId: "live", event: { kind: "documentArchiveReplaced", archive: new Uint8Array([1, 2]) } };
   expect(routeLocalDocumentObserverV1({ localDocumentOwnersRef: { current: new Map([["live", { status: vi.fn() }]]) }, openDocumentSessionsRef: { current: new Map([["document", { clientInstanceId: "live" }]]) }, message } as unknown as Parameters<typeof routeLocalDocumentObserverV1>[0])).toBe(false);
 });

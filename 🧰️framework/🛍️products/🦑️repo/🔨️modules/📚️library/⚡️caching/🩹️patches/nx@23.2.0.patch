@@ -2055,7 +2055,7 @@ diff --git a/dist/bin/init-local.js b/dist/bin/init-local.js
 diff --git a/dist/src/utils/handle-import.js b/dist/src/utils/handle-import.js
 --- a/dist/src/utils/handle-import.js
 +++ b/dist/src/utils/handle-import.js
-@@ -1,3 +1,59 @@
+@@ -1,3 +1,63 @@
  "use strict";
  Object.defineProperty(exports, "__esModule", { value: true });
  exports.handleImport = handleImport;
@@ -2085,12 +2085,16 @@ diff --git a/dist/src/utils/handle-import.js b/dist/src/utils/handle-import.js
 +            try { if (JSON.parse(fs.readFileSync(path.join(directory, 'package.json'), 'utf8')).name === 'nx') sdk = directory; } catch {}
 +            if (fs.existsSync(path.join(directory, '.semio-nx-tooling.json'))) {
 +                if (!sdk) throw Error('Actual loaded Nx package required');
-+                const receipt = read(directory, '.semio-nx-tooling.json'), marker = JSON.parse(receipt.bytes), authorizers = marker.authorizers;
-+                if (marker.version !== 1 || !/^[a-f0-9]{64}$/u.test(marker.digest) || path.basename(directory) !== marker.digest || !authorizers || Object.keys(authorizers).sort().join(',') !== 'entry,mode,outputs,sourceSha256,version' || authorizers.version !== 1 || authorizers.mode !== 'release' || authorizers.entry !== 'semio-authorizers.mjs' || !/^[a-f0-9]{64}$/u.test(authorizers.sourceSha256) || !Array.isArray(authorizers.outputs) || authorizers.outputs.length !== 1) throw Error('Immutable release authorizer receipt required');
++                const receipt = read(directory, '.semio-nx-tooling.json'), marker = JSON.parse(receipt.bytes);
++                if (marker.version !== 1 || !/^[a-f0-9]{64}$/u.test(marker.digest) || path.basename(directory) !== marker.digest || marker.authorizers !== undefined) throw Error('Immutable dependency generation marker required');
 +                const version = JSON.parse(read(sdk, 'package.json').bytes).version, patch = marker.patches?.['nx@' + version];
 +                if (patch?.version !== 1 || !patch.files || !Object.keys(patch.files).length) throw Error('Actual loaded Nx patch receipt required');
 +                for (const [relative, expected] of Object.entries(patch.files)) if (!/^[a-f0-9]{64}$/u.test(expected) || digest(read(sdk, relative).bytes) !== expected) throw Error('Actual loaded Nx patch bytes changed');
-+                const source = read(directory, '.semio-authorizer-source.json'), manifest = JSON.parse(source.bytes);
++                const bundleRoot = process.env.SEMIO_NX_AUTHORIZER_ROOT;
++                if (!bundleRoot || !path.isAbsolute(bundleRoot) || path.resolve(bundleRoot) !== bundleRoot || fs.realpathSync(bundleRoot) !== bundleRoot || path.dirname(bundleRoot) !== path.join(path.dirname(path.dirname(directory)), 'nx-authorizers')) throw Error('Immutable authorizer bundle beside the dependency generation required');
++                const bundleReceipt = read(bundleRoot, '.semio-nx-authorizers.json'), bundleMarker = JSON.parse(bundleReceipt.bytes), authorizers = bundleMarker.authorizers;
++                if (Object.keys(bundleMarker).sort().join(',') !== 'authorizers,deps,digest,version' || bundleMarker.version !== 1 || !/^[a-f0-9]{64}$/u.test(bundleMarker.digest) || path.basename(bundleRoot) !== bundleMarker.digest || bundleMarker.deps !== marker.digest || !authorizers || Object.keys(authorizers).sort().join(',') !== 'entry,mode,outputs,sourceSha256,version' || authorizers.version !== 1 || authorizers.mode !== 'release' || authorizers.entry !== 'semio-authorizers.mjs' || !/^[a-f0-9]{64}$/u.test(authorizers.sourceSha256) || !Array.isArray(authorizers.outputs) || authorizers.outputs.length !== 1) throw Error('Immutable release authorizer receipt required');
++                const source = read(bundleRoot, '.semio-authorizer-source.json'), manifest = JSON.parse(source.bytes);
 +                if (digest(source.bytes) !== authorizers.sourceSha256 || Object.keys(manifest).sort().join(',') !== 'entry,mode,resolutions,sources,version' || manifest.version !== 1 || manifest.mode !== 'release' || typeof manifest.entry !== 'string' || !manifest.entry || !Array.isArray(manifest.sources) || !manifest.sources.length || manifest.sources.length > 16384 || !Array.isArray(manifest.resolutions) || manifest.resolutions.length > 256) throw Error('Immutable source authority receipt required');
 +                let previous; const sourcePaths = new Set();
 +                for (const row of manifest.sources) { if (!row || Object.keys(row).sort().join(',') !== 'path,sha256' || typeof row.path !== 'string' || !row.path || row.path.length > 256 || path.isAbsolute(row.path) || /[:\\\0]/u.test(row.path) || row.path.split('/').some(part => !part || part === '.' || part === '..') || !/^[a-f0-9]{64}$/u.test(row.sha256) || previous && Buffer.compare(Buffer.from(previous), Buffer.from(row.path)) >= 0) throw Error('Closed original source authority required'); previous = row.path; sourcePaths.add(row.path); }
@@ -2098,9 +2102,9 @@ diff --git a/dist/src/utils/handle-import.js b/dist/src/utils/handle-import.js
 +                let previousResolution; for (const row of manifest.resolutions) { if (!row || Object.keys(row).sort().join(',') !== 'path,specifier' || typeof row.specifier !== 'string' || !row.specifier || row.specifier.length > 256 || /[\\\0%?#]/u.test(row.specifier) || row.specifier.split('/').some(part => !part || part === '.' || part === '..' || part === 'node_modules') || typeof row.path !== 'string' || !sourcePaths.has(row.path) || previousResolution && Buffer.compare(Buffer.from(previousResolution), Buffer.from(row.specifier)) >= 0) throw Error('Closed original source resolution required'); previousResolution = row.specifier; }
 +                const output = authorizers.outputs[0];
 +                if (Object.keys(output).sort().join(',') !== 'path,sha256' || output.path !== authorizers.entry || !/^[a-f0-9]{64}$/u.test(output.sha256)) throw Error('Immutable authorizer output required');
-+                const bundle = read(directory, output.path, 33554432n, true); if (bundle.sha256 !== output.sha256) throw Error('Immutable authorizer body changed');
-+                const after = read(directory, '.semio-nx-tooling.json'); if (!stable(receipt.status, after.status) || digest(receipt.bytes) !== digest(after.bytes)) throw Error('Immutable toolchain marker changed');
-+                return { toolingIdentity: marker.digest, entry: bundle.file, authority: authorizers.sourceSha256, markerSha256: digest(receipt.bytes), outputSha256: output.sha256 };
++                const bundle = read(bundleRoot, output.path, 33554432n, true); if (bundle.sha256 !== output.sha256) throw Error('Immutable authorizer body changed');
++                const after = read(directory, '.semio-nx-tooling.json'), bundleAfter = read(bundleRoot, '.semio-nx-authorizers.json'); if (!stable(receipt.status, after.status) || digest(receipt.bytes) !== digest(after.bytes) || !stable(bundleReceipt.status, bundleAfter.status) || digest(bundleReceipt.bytes) !== digest(bundleAfter.bytes)) throw Error('Immutable toolchain marker changed');
++                return { toolingIdentity: marker.digest, entry: bundle.file, authority: authorizers.sourceSha256, markerSha256: digest(Buffer.concat([receipt.bytes, bundleReceipt.bytes])), outputSha256: output.sha256 };
 +            }
 +            const parent = path.dirname(directory); if (parent === directory) return null; directory = parent;
 +        }

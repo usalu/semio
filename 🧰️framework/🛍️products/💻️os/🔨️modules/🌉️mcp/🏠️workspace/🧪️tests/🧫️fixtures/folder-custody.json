@@ -69,6 +69,12 @@
       ]
     }
   ],
+  "schemaReads": [
+    {"id":"live","live":"os.agent.probe/v1","storedAlias":null,"ownerSchema":null,"schema":"os.agent.probe/v1","error":null},
+    {"id":"cold","live":null,"storedAlias":"friendly-alias","ownerSchema":"os.agent.probe/v1","schema":"os.agent.probe/v1","error":null},
+    {"id":"malformed","live":null,"storedAlias":"s.wfc.bitmap","ownerSchema":null,"schema":null,"error":"PLUGIN_UNAVAILABLE"},
+    {"id":"missing","live":null,"storedAlias":null,"ownerSchema":null,"schema":null,"error":"PLUGIN_UNAVAILABLE"}
+  ],
   "owners": [
     {
       "id": "unique",

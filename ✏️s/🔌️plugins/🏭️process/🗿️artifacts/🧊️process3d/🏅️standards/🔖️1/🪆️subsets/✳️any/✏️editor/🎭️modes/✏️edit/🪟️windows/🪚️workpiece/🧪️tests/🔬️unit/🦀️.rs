@@ -249,4 +249,81 @@ async fn workpiece_hover_is_local_and_click_commits_at_the_preview_center() {
     assert_eq!(serde_json::json!(pose.position), *position);
     assert!(render(&mut application, &second).engagement_preview_json.is_none());
     assert_eq!(render(&mut application, &view).engagement_preview_json, primary_preview);
+
+    let chosen = &fixture["chosenCapability"];
+    let machine = chosen["machineId"].as_str().unwrap();
+    let capability = chosen["capabilityId"].as_str().unwrap();
+    let utility = chosen["utility"].as_str().unwrap();
+    let position = &chosen["positionMetres"];
+    let start = application.snapshot().unwrap();
+    let count = start.step_payloads.len();
+    let resize = |width| serde_json::json!({"target": start.stock_id, "field": "width", "value": width});
+    let select = |capability: &str| serde_json::json!({"machineId": machine, "capabilityId": capability});
+    let install = serde_json::json!({"machineId": machine, "catalogId": chosen["catalogId"]});
+    assert!(context::published_a_document_mutation(&action(&mut application, &view, "addWorkshopMachine", install).0));
+    assert!(action(&mut application, &view, "placeCapability", select(capability)).1.is_empty(), "default timber exceeds the reach rule");
+    action(&mut application, &view, "patchInspector", resize(chosen["validWidthMetres"].as_f64().unwrap()));
+
+    let arm = |app: &mut context::Process3dApp, view: &ViewModel, capability| {
+        let (receipt, effects) = action(app, view, "placeCapability", select(capability));
+        assert!(!context::published_a_document_mutation(&receipt));
+        assert_eq!(effects, [(view.window_id.clone().unwrap(), utility.to_owned())]);
+    };
+    arm(&mut application, &view, capability);
+    arm(&mut application, &second, chosen["siblingCapabilityId"].as_str().unwrap());
+    view.active_utility_id = Some(utility.into());
+    second.active_utility_id = Some(utility.into());
+    let preview = |app: &mut context::Process3dApp, view: &ViewModel| render(app, view).engagement_preview_json;
+    assert!(preview(&mut application, &view).is_none());
+    let hover = |app: &mut context::Process3dApp, window| action(app, window, "worldPointerMove", serde_json::json!({"position": position}));
+    for window in [&view, &second] {
+        assert!(!context::published_a_document_mutation(&hover(&mut application, window).0));
+    }
+    let mill_preview = preview(&mut application, &view).unwrap();
+    assert!(action(&mut application, &view, "placeCapability", select(capability)).1.is_empty(), "repeat arming is a no-op");
+    assert_eq!(preview(&mut application, &view).as_deref(), Some(mill_preview.as_str()));
+    let items: Vec<serde_json::Value> = serde_json::from_str(&mill_preview).unwrap();
+    assert_eq!(items.len() as u64, chosen["segments"].as_u64().unwrap());
+    assert!(items.iter().all(|item| item["role"] == chosen["measure"]));
+    for axis in 0..3 {
+        let (min, max) = items.iter().flat_map(|item| [item["from"][axis].as_f64().unwrap(), item["to"][axis].as_f64().unwrap()]).fold((f64::INFINITY, f64::NEG_INFINITY), |(min, max), coordinate| (min.min(coordinate), max.max(coordinate)));
+        assert!(((min + max) / 2.0 - position[axis].as_f64().unwrap()).abs() < 1e-9);
+        assert!((max - min - chosen["dimensionsMetres"][axis].as_f64().unwrap()).abs() < 1e-9);
+    }
+    let sibling_preview = preview(&mut application, &second).expect("independent bore wireframe");
+    assert!(sibling_preview.contains("\"role\":\"drill\""));
+
+    let select_effect = [(primary_id, "select".to_owned())];
+    assert_eq!(action(&mut application, &view, "engagementAbort", serde_json::json!({})).1, select_effect);
+    assert!(preview(&mut application, &view).is_none());
+    assert_eq!(preview(&mut application, &second).as_deref(), Some(sibling_preview.as_str()));
+    let click = |app: &mut context::Process3dApp| action(app, &view, "worldPointerDown", serde_json::json!({"position": position}));
+    assert!(!context::published_a_document_mutation(&click(&mut application).0), "a delayed click after abort places nothing");
+
+    arm(&mut application, &view, capability);
+    let (receipt, effects) = click(&mut application);
+    assert!(context::published_a_document_mutation(&receipt));
+    assert_eq!(effects, select_effect);
+    let placed = application.snapshot().unwrap();
+    assert_eq!(placed.step_payloads.len(), count + 1);
+    let step = placed.step_payloads.last().unwrap();
+    let origin = step.origin.as_ref().unwrap();
+    assert_eq!((origin.machine_id.as_str(), origin.capability_id.as_str()), (machine, capability));
+    use semio_s_artifact_process_process3d_model::snapshot::{ProcessMeasure, WorkingSolid};
+    let ProcessMeasure::Cut { tool: WorkingSolid::Box { width, depth, height }, pose } = &step.measure else { panic!("expected the robotic mill box"); };
+    assert_eq!(serde_json::json!(pose.position), *position);
+    assert_eq!(serde_json::json!([width, depth, height]), chosen["dimensionsMetres"]);
+    assert_eq!(preview(&mut application, &second).as_deref(), Some(sibling_preview.as_str()));
+
+    arm(&mut application, &view, capability);
+    action(&mut application, &view, "patchInspector", resize(chosen["tooLargeWidthMetres"].as_f64().unwrap()));
+    hover(&mut application, &view);
+    let stale = render(&mut application, &view);
+    assert!(stale.engagement_preview_json.is_none());
+    let selection: serde_json::Value = serde_json::from_str(&stale.selection_json).unwrap();
+    assert_eq!(selection["engagementSessionActive"], true, "the stale press still reaches the disarming reducer");
+    let (receipt, effects) = click(&mut application);
+    assert!(!context::published_a_document_mutation(&receipt), "stock constraints are checked again at commit");
+    assert_eq!(effects, select_effect);
+    assert_eq!(application.snapshot().unwrap().step_payloads, placed.step_payloads);
 }

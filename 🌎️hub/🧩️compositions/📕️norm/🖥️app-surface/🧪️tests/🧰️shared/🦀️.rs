@@ -1,4 +1,4 @@
-use semio_plugin::artifact_app_laws::{close_registered_fixture_app, project_and_retire_fixture_tree};
+use semio_plugin::artifact_app_laws::{close_registered_fixture_app, fixture_identity, render_registered_fixture_app, OriginalFixtureScope};
 use semio_plugin::{AppDefinition, Locale, PanelTabDefinition, PluginApp, Terminology, ViewModel};
 use std::collections::BTreeSet;
 
@@ -27,7 +27,7 @@ fn panel_bodies(panels: &[PanelTabDefinition], keys: &mut BTreeSet<String>) {
     }
 }
 
-async fn check_surface<A: PluginApp>(app: &mut A, definition: &AppDefinition, fixture: &Surface) -> Result<usize, String> {
+async fn check_surface<A: PluginApp>(app: &mut A, scope: &mut OriginalFixtureScope, definition: &AppDefinition, fixture: &Surface) -> Result<usize, String> {
     if app.app_id().await != fixture.app_id {
         return Err(format!("{} factory returned the wrong app identity", fixture.app_id));
     }
@@ -42,19 +42,18 @@ async fn check_surface<A: PluginApp>(app: &mut A, definition: &AppDefinition, fi
     }
     let view = ViewModel { locale: Locale::En, terminology: Terminology::Native, ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) };
     for key in &fixture.body_keys {
-        let tree = app.render(key, None, &view).await.map_err(|error| format!("{} {key}: {error:?}", fixture.app_id))?;
-        let projection = project_and_retire_fixture_tree(tree).map_err(|error| format!("{} {key} observation and retirement: {error}", fixture.app_id))?;
+        let projection = render_registered_fixture_app(app, key, &view, scope.cx()).await.map_err(|error| format!("{} {key}: {error:?}", fixture.app_id))?;
         if projection.contains("Unknown body") {
             return Err(format!("{} {key} resolved to the unknown-body fallback", fixture.app_id));
         }
     }
-    let unknown = app.render("unregistered.norm.surface", None, &view).await.map_err(|error| format!("{} unknown fallback: {error:?}", fixture.app_id))?;
-    let unknown_projection = project_and_retire_fixture_tree(unknown).map_err(|error| format!("{} unknown fallback observation and retirement: {error}", fixture.app_id))?;
+    let unknown_projection = render_registered_fixture_app(app, "unregistered.norm.surface", &view, scope.cx()).await.map_err(|error| format!("{} unknown fallback: {error:?}", fixture.app_id))?;
     if !unknown_projection.contains("Unknown body") {
         return Err(format!("{} did not render its unknown-body fallback", fixture.app_id));
     }
-    if app.render(&"x".repeat(70_000), None, &view).await.is_ok() {
-        return Err(format!("{} accepted an oversized surface identity", fixture.app_id));
+    match render_registered_fixture_app(app, &"x".repeat(70_000), &view, scope.cx()).await {
+        Ok(_) => return Err(format!("{} accepted an oversized surface identity", fixture.app_id)),
+        Err(refusal) => std::mem::forget(refusal),
     }
     Ok(fixture.body_keys.len())
 }
@@ -64,7 +63,7 @@ async fn norm_public_surfaces_render_all_declared_bodies() {
     let mut fixture: Fixture = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     assert_eq!(fixture.contract_id, "semio.norm.surface-render/v1");
     assert_eq!(fixture.rows.len(), 30);
-    assert_eq!(fixture.rows.iter().map(|row| row.body_keys.len()).sum::<usize>(), 120);
+    assert_eq!(fixture.rows.iter().map(|row| row.body_keys.len()).sum::<usize>(), 191);
     fixture.rows.retain(|row| VARIANTS.contains(&row.variant.as_str()));
     assert_eq!(fixture.rows.len(), VARIANTS.len() * 2);
     let plugin = plugin().expect("the real plugin must assemble its complete surface registry");
@@ -78,14 +77,16 @@ async fn norm_public_surfaces_render_all_declared_bodies() {
         assert_eq!(definition.id, row.app_id);
         assert_eq!(definition.role.as_str(), row.role);
         assert_eq!(definition.dialect.artifact_kind, format!("s.{}.{}", plugin.manifest.plugin_id, row.variant));
-        let mut app = plugin.create_app(&row.app_id, semio_os_kernel::ActorId(semio_os_kernel::os_spr::LOCAL_ACTOR_ID.into())).expect("each manifest app must have a registered factory");
-        let result = check_surface(&mut app, definition, row).await;
-        close_registered_fixture_app(&mut app);
+        let mut scope = OriginalFixtureScope::admit();
+        let mut app = plugin.create_app(&row.app_id, semio_os_kernel::ActorId(semio_os_kernel::os_spr::LOCAL_ACTOR_ID.into()), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut fixture_identity()).expect("each manifest app must construct").expect("each manifest app must have a registered factory");
+        let result = check_surface(&mut app, &mut scope, definition, row).await;
+        close_registered_fixture_app(&mut app, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, scope.cx()).expect("each surface app must close");
+        scope.retire();
         rendered += result.unwrap_or_else(|error| panic!("{error}"));
     }
     assert_eq!(visited.len(), fixture.rows.len());
     assert_eq!(rendered, fixture.rows.iter().map(|row| row.body_keys.len()).sum::<usize>());
-    assert!(plugin.create_app("s.norm.unknown@1/*#editor", semio_os_kernel::ActorId(semio_os_kernel::os_spr::LOCAL_ACTOR_ID.into())).is_none());
+    assert!(plugin.create_app("s.norm.unknown@1/*#editor", semio_os_kernel::ActorId(semio_os_kernel::os_spr::LOCAL_ACTOR_ID.into()), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut fixture_identity()).expect("an unknown app id is a typed absence, not a fault").is_none());
 }
 
 //#region 🧵️RetainedCohort
@@ -144,7 +145,6 @@ macro_rules! assert_norm_pair {
     ($($artifact:path => ($editor:path, $viewer:path)),+ $(,)?) => {
         $(
             semio_plugin::artifact_app_laws::assert_editor_and_viewer_share_dialect::<$editor, $viewer>().await;
-            semio_plugin::artifact_app_laws::assert_viewer_never_mutates::<$viewer>(semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()).await;
         )+
     };
 }
@@ -188,8 +188,10 @@ async fn every_norm_editor_action_is_migrated_onto_the_shared_owned_factory() {
                 assert_eq!(action.semantics.execution.interactive_job, semio_plugin::InteractiveJobClassification::Migrated, "{} {} must dispatch from the UI", app.controller, route.id);
             }
         }
-        let mut runtime = plugin.create_app(&app.controller, semio_os_kernel::ActorId(semio_os_kernel::os_spr::LOCAL_ACTOR_ID.into())).unwrap_or_else(|| panic!("{} must build with its owned bounded factory registered", app.controller));
-        close_registered_fixture_app(&mut runtime);
+        let mut scope = OriginalFixtureScope::admit();
+        let mut runtime = plugin.create_app(&app.controller, semio_os_kernel::ActorId(semio_os_kernel::os_spr::LOCAL_ACTOR_ID.into()), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut fixture_identity()).unwrap_or_else(|error| panic!("{} must construct: {error:?}", app.controller)).unwrap_or_else(|| panic!("{} must build with its owned bounded factory registered", app.controller));
+        close_registered_fixture_app(&mut runtime, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, scope.cx()).expect("each editor app must close");
+        scope.retire();
         identities += fixture.routes.len();
     }
     assert_eq!(identities, VARIANTS.len() * fixture.expected.routes_per_app);

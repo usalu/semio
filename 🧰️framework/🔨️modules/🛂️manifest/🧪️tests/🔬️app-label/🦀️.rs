@@ -497,7 +497,7 @@ async fn resolve_mode_tools_skips_unresolvable_refs() {
 #[semio_framework_async_macros::async_test]
 async fn resolve_layout_for_mode_prefers_named_then_default_then_none() {
     async fn stack_layout(active: &str) -> semio_ui_declaration::layout::WindowLayout {
-        semio_ui_declaration::layout::WindowLayout { root: semio_ui_declaration::layout::WindowLayoutRoot::Stack(semio_ui_declaration::layout::WindowLayoutStackNode { kind: "stack".into(), size: None, active_window_kind_id: Some(active.into()), children: vec![] }) }
+        semio_ui_declaration::layout::WindowLayout { root: semio_ui_declaration::layout::WindowLayoutNode::Stack { size: None, active_window_id: Some(active.into()), children: vec![] } }
     }
     let mut app = app_with(vec![], vec![]).await;
     app.modes.first_mut().layout_id = Some("named".into());
@@ -927,3 +927,24 @@ fn history_action_definitions_are_the_seven_lane_verbs() {
     assert_eq!(ids, ["undo", "redo", "commitCheckpoint", "createAlternative", SWITCH_ALTERNATIVE_ACTION_ID, "checkoutCheckpoint", semio_framework_manifest_actions::REVERT_TO_COMMAND_ACTION_ID]);
 }
 //#endregion 🌿️HistoryLane
+
+//#region 🔲️NodeGraphFitAction
+/// 🔲️ The reserved `fitGraph` action is declared exactly as the language-agnostic camera-fit fixture (`fitAction`) names it: one id, the `f` chord, en/de labels, a palette view action for the chrome audience that persists as `nodeGraphViewport` and takes no argument (so its chord runs it at once).
+#[test]
+fn node_graph_fit_action_is_declared_as_the_shared_fixture_names_it() {
+    use semio_framework_manifest_actions::{CapabilityAudience, NODE_GRAPH_FIT_ACTION_ID, NODE_GRAPH_FIT_KEY, NODE_GRAPH_VIEWPORT_ACTION_ID, node_graph_fit_action_definition};
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🖼️canvas/🧪️tests/🧫️fixtures/📷️camera-fit/🔣️.json")).expect("camera fit fixture");
+    let expected = &fixture["fitAction"];
+    let action = node_graph_fit_action_definition();
+    assert_eq!([NODE_GRAPH_FIT_ACTION_ID, NODE_GRAPH_FIT_KEY, NODE_GRAPH_VIEWPORT_ACTION_ID], [expected["id"].as_str().unwrap(), expected["key"].as_str().unwrap(), expected["persistsAs"].as_str().unwrap()]);
+    assert_eq!(action.id, NODE_GRAPH_FIT_ACTION_ID);
+    assert_eq!(action.keys.as_deref(), Some(NODE_GRAPH_FIT_KEY));
+    assert_eq!(action.kind, ActionKind::View);
+    assert_eq!(action.in_palette, expected["inPalette"].as_bool().unwrap());
+    assert!(action.args.is_empty(), "a chord must run the action without staging an argument");
+    assert_eq!(action.semantics.audience, Some(CapabilityAudience::Chrome));
+    for (locale, key) in [(Locale::En, "en"), (Locale::De, "de")] {
+        assert_eq!(action.label.resolve(Terminology::Native, locale), expected["label"][key].as_str().unwrap(), "{key} label");
+    }
+}
+//#endregion 🔲️NodeGraphFitAction

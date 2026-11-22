@@ -28,10 +28,36 @@
         "forwardAllArgs": true
       }
     },
+    "preview-generated": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "command": "repo ./📜️script.ts preview-generated",
+        "cwd": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/📦️packages/🦀️rust"
+      },
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "outputs": []
+    },
     "wasm": {
       "executor": "repo:script",
       "cache": true,
-      "options": { "command": "repo ./📜️script.ts wasm", "cwd": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/📦️packages/🦀️rust" },
+      "inputs": [
+        "{workspaceRoot}/package.json",
+        "{workspaceRoot}/bun.lock",
+        "cargoToolchain",
+        "sharedGlobals",
+        "{workspaceRoot}/✏️s/Cargo.lock",
+        "{workspaceRoot}/✏️s/Cargo.toml",
+        "{workspaceRoot}/✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/🏗️build/📜️script.ts",
+        "{workspaceRoot}/✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/🧩️component/📦️packages/🦀️rust/Cargo.toml",
+        "{workspaceRoot}/✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/**/*.rs",
+        "{workspaceRoot}/✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/📦️packages/🦀️rust/Cargo.toml",
+        "{workspaceRoot}/✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/📦️packages/🦀️rust/📋️project.json"
+      ],
+      "options": { "command": "repo \"../../🏗️build/📜️script.ts\" wasm", "cwd": "{projectRoot}", "forwardAllArgs": false },
       "metadata": {
         "semio": {
           "wasmPackageSourceV1": { "version": 1, "sourceOwner": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/📦️packages/🦀️rust" }

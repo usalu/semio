@@ -38,7 +38,6 @@ semio-ui-theme = { path = "../../../../../../../../../../🔨️modules/🖱️u
 semio-ui-wgpu-input = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/📥️input/📦️packages/🦀️rust" }
 semio-ui-wgpu-layout = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🧱️layout-stack/📦️packages/🦀️rust" }
 semio-ui-wgpu-widget-kit = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🪀️widgets/🧰️kit/📦️packages/🦀️rust" }
-semio-ui-wgpu-widgets = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🪀️widgets/📦️packages/🦀️rust" }
 
 [target.'cfg(not(target_os = "wasi"))'.dependencies]
 serde = { version = "1.0.219", features = ["derive"] }

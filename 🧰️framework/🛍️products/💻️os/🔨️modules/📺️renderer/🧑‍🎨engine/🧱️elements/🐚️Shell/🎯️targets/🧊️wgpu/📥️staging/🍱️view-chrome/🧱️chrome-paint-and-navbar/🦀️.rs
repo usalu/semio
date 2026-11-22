@@ -71,10 +71,11 @@ fn render_retained_chrome_group_item_step_with_trailing(
     borders: Option<&[ChromeBorderPaint]>,
 ) -> RetainedChromeGroupStep {
     let hovered = !item.disabled && rect.contains(input.pointer_x, input.pointer_y);
-    let color = if item.disabled { theme.text_muted } else { chrome_item_text(theme, item.active, hovered) };
+    let hover = semio_ui_wgpu_layout::chrome::chrome_hover_amount(draw, theme, rect, hovered, semio_renderer_wgpu_shell_async::chrome_motion_seconds());
+    let color = if item.disabled { theme.text_muted } else { semio_ui_wgpu_layout::chrome::chrome_item_text_at(theme, item.active, hover) };
     match *group_phase {
         0 => {
-            let background = if item.disabled { theme.overlay_shadow } else { chrome_item_bg(theme, item.active, hovered) };
+            let background = if item.disabled { theme.overlay_shadow } else { semio_ui_wgpu_layout::chrome::chrome_item_bg_at(theme, item.active, hover) };
             if background.a > 0.0 {
                 draw.push_solid([rect.x, rect.y, rect.w, rect.h], background);
             }
@@ -781,11 +782,12 @@ pub fn render_chrome_group(draw: &mut DrawList, atlas: &mut FontAtlas, icons: &I
         let item_w = measure_chrome_group_item(atlas, theme, item);
         let item_rect = Rect::new(x, inner_y, item_w, inner_h);
         let hovered = !item.disabled && item_rect.contains(input.pointer_x, input.pointer_y);
-        let bg = if item.disabled { theme.overlay_shadow } else { chrome_item_bg(theme, item.active, hovered) };
+        let hover = semio_ui_wgpu_layout::chrome::chrome_hover_amount(draw, theme, item_rect, hovered, semio_renderer_wgpu_shell_async::chrome_motion_seconds());
+        let bg = if item.disabled { theme.overlay_shadow } else { semio_ui_wgpu_layout::chrome::chrome_item_bg_at(theme, item.active, hover) };
         if bg.a > 0.0 {
             draw.push_solid([item_rect.x, item_rect.y, item_rect.w, item_rect.h], bg);
         }
-        let text_color = if item.disabled { theme.text_muted } else { chrome_item_text(theme, item.active, hovered) };
+        let text_color = if item.disabled { theme.text_muted } else { semio_ui_wgpu_layout::chrome::chrome_item_text_at(theme, item.active, hover) };
         let mut content_x = item_rect.x + theme.padding_standard;
         if let Some(icon_id) = item.icon_id {
             chrome_icon(draw, icons, icon_id, content_x, item_rect.y + (item_rect.h - CHROME_ICON_TINY) * 0.5, CHROME_ICON_TINY, text_color);

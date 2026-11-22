@@ -18,7 +18,15 @@
   "registry": {
    "flushMilliseconds": 0,
    "maximumEntryBytes": 65536,
-   "maximumViolations": 50
+   "maximumViolations": 50,
+   "prune": {
+    "delayMilliseconds": 0,
+    "intervalMilliseconds": 1000,
+    "backlogMilliseconds": 1000,
+    "maximumFolders": 8,
+    "budgetMilliseconds": 50,
+    "idleMilliseconds": 0
+   }
   },
   "fairness": {
    "queuedWithResourceLeases": true

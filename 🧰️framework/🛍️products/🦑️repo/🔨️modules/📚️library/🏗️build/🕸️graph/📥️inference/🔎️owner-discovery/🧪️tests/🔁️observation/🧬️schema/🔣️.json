@@ -3,7 +3,8 @@
   "additionalProperties": false,
   "required": [
     "version",
-    "cases"
+    "cases",
+    "catalog"
   ],
   "properties": {
     "version": {
@@ -47,6 +48,46 @@
               "native",
               "authored",
               "component"
+            ]
+          }
+        }
+      }
+    },
+    "catalog": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "scope",
+          "status",
+          "expected"
+        ],
+        "properties": {
+          "scope": {
+            "enum": [
+              "manifest",
+              "native-root",
+              "implicit"
+            ]
+          },
+          "status": {
+            "enum": [
+              "ENOENT",
+              "ENOTDIR",
+              "EACCES",
+              "symlink",
+              "file"
+            ]
+          },
+          "expected": {
+            "enum": [
+              "registry",
+              "omitted",
+              "error",
+              "unsafe",
+              "admitted"
             ]
           }
         }

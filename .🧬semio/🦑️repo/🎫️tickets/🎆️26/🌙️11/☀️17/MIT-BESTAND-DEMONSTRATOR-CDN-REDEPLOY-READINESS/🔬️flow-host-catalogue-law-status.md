@@ -1,0 +1,7 @@
+# Flow host catalogue law status
+
+The handoff's report of 234 `semio-os-flow-host-laws` compile errors is historical, and does not establish the current error count. The retained 19 November standalone native executable was rerun: `catalogue_derivation_captures_the_registry_under_the_turns_own_source` passed 1/1. Its prior failed log complained that `drive` accepted `Fn`; current law source accepts `FnMut`, and the retained later direct-test log passed. This verifies that historical executable, not a fresh test of all current sources or all host laws.
+
+The focused current WASI metadata check against wGACoW7 production job and operators metadata failed to import `OriginalJobFixtureCaller`. The production job crate intentionally exposes that fixture only under `testkit`; the release graph did not enable it. This is a mismatch between a test-only caller and production dependency features, not proof of a defect in the catalogue API. The wGACoW7 lane was subsequently retired during the audit, and the remaining two native lanes did not contain the Flow operators WASI metadata needed for a current coherent fixture. A signature-only replacement caller cannot establish execution or the exact Source protocol, so no success is claimed from it.
+
+A fresh, properly featured test graph or retained matching testkit artifacts are required to execute the current real catalogue law. No module build was started and no production code was changed for this audit.

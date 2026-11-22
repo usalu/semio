@@ -14,6 +14,10 @@ prior={}
 for line in (fleets/'history.jsonl').read_text().splitlines():
     j=json.loads(line)
     if j['mode']=='strict' and j.get('completed') and j.get('passed') and j.get('current'):prior[j['asset'],j['input']]=j
+from runpy import run_path
+sig=run_path(str(t/'digital-proof-digest.py'))['module_digest'](r,t/'digital-scale-proof.ts',t/'r3-validate.ts',t/'digital-scenes.ts')
+studies={'goat':'doe','skateboarder':'deck','sheep':'fleece','patio-heater':'transport','labrador-dog':'lab','herring-gull':'gull','domestic-cat':'cat','wheelchair-user':'axle','cyclist':'fittings','london-plane-pollarded':'fittings','tower-crane':'carriage','red-squirrel':'brush','standing-adult':'digits','person-with-umbrella':'gore','hornbeam-hedge':'hedge'}
+strict=run_path(str(t/'digital-proof-digest.py'))['module_digest'](r,t/'digital-scale-proof.ts')
 rows=[];counts=Counter();recheck=[]
 for p in sorted(r.glob('🎓*/*architecture/*staffage/*catalog/*/*/🔣️.json')):
     name=p.parent.name;category=p.parent.parent.name;h=sha256(p.read_bytes()).hexdigest();state='Pending'
@@ -27,11 +31,22 @@ for p in sorted(r.glob('🎓*/*architecture/*staffage/*catalog/*/*/🔣️.json'
         else:
             last=j if matched else prior.get((name,h))
             if last:state='Pass' if last['code']==fleetCode else 'Pass on earlier validator'
+    if name in studies:
+        prefix=studies[name]+'-'+name;candidate=g/(prefix+'.json')
+        if candidate.exists() and json.loads(candidate.read_bytes())['asset']==json.loads(p.read_bytes())['asset']:
+            checked=sha256(candidate.read_bytes()).hexdigest()
+            proofs=[read(g/(prefix+'-'+scale+'.json')) for scale in ['50','100','200','500']]
+            if all(q.get('hash')==checked and q.get('signature') and q.get('complete') and q.get('pass') for q in proofs):
+                state='Pass' if all(q['signature']==sig for q in proofs) else 'Pass on earlier validator'
+    native=read(g/'canonical-scale-checks'/(name+'.json'))
+    if native.get('hash')==h and native.get('signature')==strict and len(native.get('scales',{}))==4:state='Findings' if any(native['scales'].values()) else 'Pass'
+    physical=read(g/'digital-members'/(name+'.json'))
+    if physical.get('hash')==h and any(physical.get('scales',{}).values()):state='Findings'
     counts[state]+=1
     if state in ('Pending','Findings'):recheck.append(name+' ('+state.lower()+')')
     rows.append(f"| {category} | {name} | `{h[:16]}` | {state} |")
 stamp=datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')
-text=['# Per-model volume verification','',f"At {stamp}, {counts['Pass']+counts['Pass on earlier validator']} of {len(rows)} current model documents have a complete passing measurement at all four scales. Of those passes, {counts['Pass']} used the current validator. {counts['Findings']} documents have a recorded finding on the same source and {counts['Pending']} await a complete source-matched run.",'','Each check covers body, thermal and structural geometry. Whole-model checks include physical bounds, silhouette agreement, features, cross-scale geometry and the binding of thermal surfaces and structural members. The architecture and living-model validators are tracked separately. The table includes complete checks only. Separate evidence covers new model parts while the complete checks run.','',
+text=['# Per-model volume verification','',f"At {stamp}, {counts['Pass']+counts['Pass on earlier validator']} of {len(rows)} current model documents have a complete passing measurement at all four scales. Of those passes, {counts['Pass']} used the current validator. {counts['Findings']} documents have a recorded finding on the same source and {counts['Pending']} await a complete source-matched run.",'','Each check covers body, thermal and structural geometry. Whole-model checks include physical bounds, silhouette agreement, features, cross-scale geometry and the binding of thermal surfaces and structural members. The architecture and living-model validators are tracked separately. The table includes complete checks only. Installed candidate checks are matched by the complete parsed model and all four signed scale receipts. Separate evidence covers new model parts while the complete checks run.','',
 '| Family | Asset | Source SHA-256 prefix | Whole-model check |','| --- | --- | --- | --- |',*rows,'']
 (t/'digital-volume-status.md').write_text('\n'.join(text))
 print(text[2])

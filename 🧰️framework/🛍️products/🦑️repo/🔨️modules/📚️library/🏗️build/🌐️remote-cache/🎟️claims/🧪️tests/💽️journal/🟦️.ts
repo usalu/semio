@@ -19,7 +19,7 @@ test("a table writes its changes to the journal and a second table restores the 
  expect(first.claim("main","nx","gone",{owner:"m3:3:cc",ttlMilliseconds:30000},false).state).toBe("granted");
  clock+=5000;first.release("main","nx","gone","m3:3:cc");first.stored("main","ac","b".repeat(64));
  clock+=5000;expect(first.renew("main","ac","a".repeat(64),{owner:"m1:1:aa",ttlMilliseconds:30000}).state).toBe("granted");
- const live=JSON.parse(await python(oracle,file)) as string[];expect(live.length).toBe(1);
+ await first.flush();const live=JSON.parse(await python(oracle,file)) as string[];expect(live.length).toBe(1);
  first.close();clock+=3000;
  const second=createClaimTableV1({now:()=>clock,sweepMilliseconds:0,journal:openClaimJournalV1(file,{now:()=>clock,graceMilliseconds:20000})});
  expect(second.summary().active).toBe(1);
@@ -36,7 +36,7 @@ test("a claim that lapsed before the server stopped, a torn last line and a fini
  const first=createClaimTableV1({now:()=>clock,sweepMilliseconds:0,journal:openClaimJournalV1(file,{now:()=>clock})});
  first.claim("main","ac","c".repeat(64),{owner:"m1:1:aa",ttlMilliseconds:1000},false);
  clock+=10_000;first.claim("main","ac","d".repeat(64),{owner:"m2:2:bb",ttlMilliseconds:1000},false);
- writeFileSync(file,readFileSync(file,"utf8")+'{"at":1,"t":"set","address":"torn');
+ await first.flush();writeFileSync(file,readFileSync(file,"utf8")+'{"at":1,"t":"set","address":"torn');
  first.close();clock+=1000;
  const second=createClaimTableV1({now:()=>clock,sweepMilliseconds:0,journal:openClaimJournalV1(file,{now:()=>clock,graceMilliseconds:15000})});
  expect(second.summary().active,"only the claim that was alive at the last journal write").toBe(1);
@@ -49,9 +49,22 @@ test("the journal is compacted after many changes and stays equal to the live ta
  const file=join(directory(),"claims.jsonl");let clock=9_000_000;
  const table=createClaimTableV1({now:()=>clock,sweepMilliseconds:0,journal:openClaimJournalV1(file,{now:()=>clock,compactEvents:50})});
  for(let index=0;index<200;index++){const key=index.toString(16).padStart(64,"0");table.claim("main","ac",key,{owner:"m1:1:aa",ttlMilliseconds:30000},false);if(index%2===0)table.release("main","ac",key,"m1:1:aa");clock+=10;}
- expect(readFileSync(file,"utf8").split("\n").filter(Boolean).length).toBeLessThan(120);
+ await table.flush();expect(readFileSync(file,"utf8").split("\n").filter(Boolean).length).toBeLessThan(120);
  expect(JSON.parse(await python(oracle,file)).length).toBe(table.summary().active);
  const blocked=join(directory(),"not-a-directory");writeFileSync(blocked,"x");
  const survivor=createClaimTableV1({now:()=>clock,sweepMilliseconds:0,journal:openClaimJournalV1(join(blocked,"claims.jsonl"),{now:()=>clock})});
  expect(survivor.claim("main","ac","e".repeat(64),{owner:"m1:1:aa",ttlMilliseconds:30000},false).state).toBe("granted");
 });
+
+test("a lapse sweep of twenty thousand claims leaves the event loop free, and the journal still replays (python) to the live set",async()=>{
+ const file=join(directory(),"claims.jsonl");let clock=20_000_000;
+ const table=createClaimTableV1({now:()=>clock,sweepMilliseconds:0,journal:openClaimJournalV1(file,{now:()=>clock})});
+ for(let index=0;index<20000;index++)table.claim("main","ac",index.toString(16).padStart(64,"0"),{owner:"m1:1:aa",ttlMilliseconds:1000},false);
+ await table.flush();clock+=5000;
+ const gaps:number[]=[];let last=performance.now();const probe=setInterval(()=>{const at=performance.now();gaps.push(at-last);last=at;},2);
+ table.sweep();await table.flush();clearInterval(probe);
+ expect(Math.max(...gaps),"the longest time the event loop did not come back").toBeLessThan(250);
+ expect(table.summary().active).toBe(0);
+ expect(JSON.parse(await python(oracle,file)).length).toBe(0);
+ table.close();
+},60000);

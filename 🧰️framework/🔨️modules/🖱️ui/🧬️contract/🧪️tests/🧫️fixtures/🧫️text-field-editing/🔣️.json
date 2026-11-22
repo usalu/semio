@@ -1,0 +1,673 @@
+{
+  "note": "✍️ The keyboard and clipboard editing law of a focused text field every renderer shares: caret motion by character, word (Alt: to the word end; Ctrl: to the next word start; both back to the previous word start), line (Meta, Home, End) and text (Ctrl+Home/End), vertical motion across logical lines keeping the column in scalars, selection by Shift, word and line deletion, select-all, copy and cut. Offsets are UTF-8 bytes; `anchor == caret` is no selection. A word is a run of letters, digits and `_`, a run of other marks, or a blank run; blanks are skipped before a word. A single-line field turns pasted line breaks into one blank. Rust `route_edit_key`; TypeScript twin judges the word motions with `Intl.Segmenter`.",
+  "keys": [
+    {
+      "case": "ctrl-left-jumps-to-the-start-of-the-word",
+      "kind": "text",
+      "text": "hello big world",
+      "caret": 15,
+      "anchor": 15,
+      "key": "ArrowLeft",
+      "shift": false,
+      "ctrl": true,
+      "alt": false,
+      "meta": false,
+      "expected": {
+        "text": "hello big world",
+        "caret": 10,
+        "anchor": 10
+      }
+    },
+    {
+      "case": "ctrl-left-from-a-word-start-skips-the-blank",
+      "kind": "text",
+      "text": "hello big world",
+      "caret": 10,
+      "anchor": 10,
+      "key": "ArrowLeft",
+      "shift": false,
+      "ctrl": true,
+      "alt": false,
+      "meta": false,
+      "expected": {
+        "text": "hello big world",
+        "caret": 6,
+        "anchor": 6
+      }
+    },
+    {
+      "case": "ctrl-right-lands-on-the-next-word-start",
+      "kind": "text",
+      "text": "hello big world",
+      "caret": 0,
+      "anchor": 0,
+      "key": "ArrowRight",
+      "shift": false,
+      "ctrl": true,
+      "alt": false,
+      "meta": false,
+      "expected": {
+        "text": "hello big world",
+        "caret": 6,
+        "anchor": 6
+      }
+    },
+    {
+      "case": "alt-right-lands-on-the-word-end",
+      "kind": "text",
+      "text": "hello big world",
+      "caret": 0,
+      "anchor": 0,
+      "key": "ArrowRight",
+      "shift": false,
+      "ctrl": false,
+      "alt": true,
+      "meta": false,
+      "expected": {
+        "text": "hello big world",
+        "caret": 5,
+        "anchor": 5
+      }
+    },
+    {
+      "case": "alt-right-skips-the-blank-to-the-next-word-end",
+      "kind": "text",
+      "text": "hello big world",
+      "caret": 5,
+      "anchor": 5,
+      "key": "ArrowRight",
+      "shift": false,
+      "ctrl": false,
+      "alt": true,
+      "meta": false,
+      "expected": {
+        "text": "hello big world",
+        "caret": 9,
+        "anchor": 9
+      }
+    },
+    {
+      "case": "alt-left-lands-on-the-word-start",
+      "kind": "text",
+      "text": "hello big world",
+      "caret": 9,
+      "anchor": 9,
+      "key": "ArrowLeft",
+      "shift": false,
+      "ctrl": false,
+      "alt": true,
+      "meta": false,
+      "expected": {
+        "text": "hello big world",
+        "caret": 6,
+        "anchor": 6
+      }
+    },
+    {
+      "case": "shift-ctrl-right-extends-the-selection",
+      "kind": "text",
+      "text": "hello big world",
+      "caret": 0,
+      "anchor": 0,
+      "key": "ArrowRight",
+      "shift": true,
+      "ctrl": true,
+      "alt": false,
+      "meta": false,
+      "expected": {
+        "text": "hello big world",
+        "caret": 6,
+        "anchor": 0
+      }
+    },
+    {
+      "case": "punctuation-is-a-word-of-its-own",
+      "kind": "text",
+      "text": "foo, bar",
+      "caret": 5,
+      "anchor": 5,
+      "key": "ArrowLeft",
+      "shift": false,
+      "ctrl": true,
+      "alt": false,
+      "meta": false,
+      "expected": {
+        "text": "foo, bar",
+        "caret": 3,
+        "anchor": 3
+      }
+    },
+    {
+      "case": "letters-beyond-ascii-are-word-characters",
+      "kind": "text",
+      "text": "Grüße welt",
+      "caret": 12,
+      "anchor": 12,
+      "key": "ArrowLeft",
+      "shift": false,
+      "ctrl": true,
+      "alt": false,
+      "meta": false,
+      "expected": {
+        "text": "Grüße welt",
+        "caret": 8,
+        "anchor": 8
+      }
+    },
+    {
+      "case": "alt-right-crosses-letters-beyond-ascii",
+      "kind": "text",
+      "text": "Grüße welt",
+      "caret": 0,
+      "anchor": 0,
+      "key": "ArrowRight",
+      "shift": false,
+      "ctrl": false,
+      "alt": true,
+      "meta": false,
+      "expected": {
+        "text": "Grüße welt",
+        "caret": 7,
+        "anchor": 7
+      }
+    },
+    {
+      "case": "home-goes-to-the-start-of-the-line",
+      "kind": "longText",
+      "text": "ab\ncd\nef",
+      "caret": 4,
+      "anchor": 4,
+      "key": "Home",
+      "shift": false,
+      "ctrl": false,
+      "alt": false,
+      "meta": false,
+      "expected": {
+        "text": "ab\ncd\nef",
+        "caret": 3,
+        "anchor": 3
+      }
+    },
+    {
+      "case": "end-goes-to-the-end-of-the-line",
+      "kind": "longText",
+      "text": "ab\ncd\nef",
+      "caret": 4,
+      "anchor": 4,
+      "key": "End",
+      "shift": false,
+      "ctrl": false,
+      "alt": false,
+      "meta": false,
+      "expected": {
+        "text": "ab\ncd\nef",
+        "caret": 5,
+        "anchor": 5
+      }
+    },
+    {
+      "case": "ctrl-home-goes-to-the-start-of-the-text",
+      "kind": "longText",
+      "text": "ab\ncd\nef",
+      "caret": 7,
+      "anchor": 7,
+      "key": "Home",
+      "shift": false,
+      "ctrl": true,
+      "alt": false,
+      "meta": false,
+      "expected": {
+        "text": "ab\ncd\nef",
+        "caret": 0,
+        "anchor": 0
+      }
+    },
+    {
+      "case": "ctrl-end-goes-to-the-end-of-the-text",
+      "kind": "longText",
+      "text": "ab\ncd\nef",
+      "caret": 1,
+      "anchor": 1,
+      "key": "End",
+      "shift": false,
+      "ctrl": true,
+      "alt": false,
+      "meta": false,
+      "expected": {
+        "text": "ab\ncd\nef",
+        "caret": 8,
+        "anchor": 8
+      }
+    },
+    {
+      "case": "shift-end-selects-to-the-end-of-the-line",
+      "kind": "longText",
+      "text": "ab\ncd\nef",
+      "caret": 3,
+      "anchor": 3,
+      "key": "End",
+      "shift": true,
+      "ctrl": false,
+      "alt": false,
+      "meta": false,
+      "expected": {
+        "text": "ab\ncd\nef",
+        "caret": 5,
+        "anchor": 3
+      }
+    },
+    {
+      "case": "meta-left-goes-to-the-start-of-the-line",
+      "kind": "longText",
+      "text": "ab\ncdef",
+      "caret": 6,
+      "anchor": 6,
+      "key": "ArrowLeft",
+      "shift": false,
+      "ctrl": false,
+      "alt": false,
+      "meta": true,
+      "expected": {
+        "text": "ab\ncdef",
+        "caret": 3,
+        "anchor": 3
+      }
+    },
+    {
+      "case": "meta-right-goes-to-the-end-of-the-line",
+      "kind": "longText",
+      "text": "ab\ncdef",
+      "caret": 3,
+      "anchor": 3,
+      "key": "ArrowRight",
+      "shift": false,
+      "ctrl": false,
+      "alt": false,
+      "meta": true,
+      "expected": {
+        "text": "ab\ncdef",
+        "caret": 7,
+        "anchor": 7
+      }
+    },
+    {
+      "case": "arrow-down-keeps-the-column-and-clamps-to-a-short-line",
+      "kind": "longText",
+      "text": "abcd\nef\nghij",
+      "caret": 3,
+      "anchor": 3,
+      "key": "ArrowDown",
+      "shift": false,
+      "ctrl": false,
+      "alt": false,
+      "meta": false,
+      "expected": {
+        "text": "abcd\nef\nghij",
+        "caret": 7,
+        "anchor": 7
+      }
+    },
+    {
+      "case": "arrow-down-again-restores-the-column-it-can",
+      "kind": "longText",
+      "text": "abcd\nef\nghij",
+      "caret": 7,
+      "anchor": 7,
+      "key": "ArrowDown",
+      "shift": false,
+      "ctrl": false,
+      "alt": false,
+      "meta": false,
+      "expected": {
+        "text": "abcd\nef\nghij",
+        "caret": 10,
+        "anchor": 10
+      }
+    },
+    {
+      "case": "arrow-up-keeps-the-column",
+      "kind": "longText",
+      "text": "abcd\nef\nghij",
+      "caret": 10,
+      "anchor": 10,
+      "key": "ArrowUp",
+      "shift": false,
+      "ctrl": false,
+      "alt": false,
+      "meta": false,
+      "expected": {
+        "text": "abcd\nef\nghij",
+        "caret": 7,
+        "anchor": 7
+      }
+    },
+    {
+      "case": "arrow-up-on-the-first-line-stays",
+      "kind": "longText",
+      "text": "abcd\nef",
+      "caret": 2,
+      "anchor": 2,
+      "key": "ArrowUp",
+      "shift": false,
+      "ctrl": false,
+      "alt": false,
+      "meta": false,
+      "expected": {
+        "text": "abcd\nef",
+        "caret": 2,
+        "anchor": 2
+      }
+    },
+    {
+      "case": "shift-arrow-down-extends-the-selection",
+      "kind": "longText",
+      "text": "abcd\nef",
+      "caret": 1,
+      "anchor": 1,
+      "key": "ArrowDown",
+      "shift": true,
+      "ctrl": false,
+      "alt": false,
+      "meta": false,
+      "expected": {
+        "text": "abcd\nef",
+        "caret": 6,
+        "anchor": 1
+      }
+    },
+    {
+      "case": "arrow-down-in-a-single-line-field-stays",
+      "kind": "text",
+      "text": "hello",
+      "caret": 2,
+      "anchor": 2,
+      "key": "ArrowDown",
+      "shift": false,
+      "ctrl": false,
+      "alt": false,
+      "meta": false,
+      "expected": {
+        "text": "hello",
+        "caret": 2,
+        "anchor": 2
+      }
+    },
+    {
+      "case": "ctrl-backspace-deletes-the-previous-word",
+      "kind": "text",
+      "text": "hello big world",
+      "caret": 15,
+      "anchor": 15,
+      "key": "Backspace",
+      "shift": false,
+      "ctrl": true,
+      "alt": false,
+      "meta": false,
+      "expected": {
+        "text": "hello big ",
+        "caret": 10,
+        "anchor": 10
+      }
+    },
+    {
+      "case": "alt-backspace-deletes-the-previous-word",
+      "kind": "text",
+      "text": "hello big world",
+      "caret": 9,
+      "anchor": 9,
+      "key": "Backspace",
+      "shift": false,
+      "ctrl": false,
+      "alt": true,
+      "meta": false,
+      "expected": {
+        "text": "hello  world",
+        "caret": 6,
+        "anchor": 6
+      }
+    },
+    {
+      "case": "meta-backspace-deletes-to-the-start-of-the-line",
+      "kind": "longText",
+      "text": "ab\ncdef",
+      "caret": 6,
+      "anchor": 6,
+      "key": "Backspace",
+      "shift": false,
+      "ctrl": false,
+      "alt": false,
+      "meta": true,
+      "expected": {
+        "text": "ab\nf",
+        "caret": 3,
+        "anchor": 3
+      }
+    },
+    {
+      "case": "ctrl-delete-deletes-to-the-end-of-the-word",
+      "kind": "text",
+      "text": "hello big world",
+      "caret": 5,
+      "anchor": 5,
+      "key": "Delete",
+      "shift": false,
+      "ctrl": true,
+      "alt": false,
+      "meta": false,
+      "expected": {
+        "text": "hello world",
+        "caret": 5,
+        "anchor": 5
+      }
+    },
+    {
+      "case": "select-all-selects-the-whole-text",
+      "kind": "text",
+      "text": "hello",
+      "caret": 2,
+      "anchor": 2,
+      "key": "a",
+      "shift": false,
+      "ctrl": true,
+      "alt": false,
+      "meta": false,
+      "expected": {
+        "text": "hello",
+        "caret": 5,
+        "anchor": 0
+      }
+    },
+    {
+      "case": "select-all-with-meta",
+      "kind": "text",
+      "text": "hello",
+      "caret": 2,
+      "anchor": 2,
+      "key": "A",
+      "shift": false,
+      "ctrl": false,
+      "alt": false,
+      "meta": true,
+      "expected": {
+        "text": "hello",
+        "caret": 5,
+        "anchor": 0
+      }
+    },
+    {
+      "case": "backspace-with-a-selection-deletes-it",
+      "kind": "text",
+      "text": "hello",
+      "caret": 4,
+      "anchor": 1,
+      "key": "Backspace",
+      "shift": false,
+      "ctrl": false,
+      "alt": false,
+      "meta": false,
+      "expected": {
+        "text": "ho",
+        "caret": 1,
+        "anchor": 1
+      }
+    },
+    {
+      "case": "arrow-left-collapses-a-selection-to-its-start",
+      "kind": "text",
+      "text": "hello",
+      "caret": 4,
+      "anchor": 1,
+      "key": "ArrowLeft",
+      "shift": false,
+      "ctrl": false,
+      "alt": false,
+      "meta": false,
+      "expected": {
+        "text": "hello",
+        "caret": 1,
+        "anchor": 1
+      }
+    },
+    {
+      "case": "arrow-right-collapses-a-selection-to-its-end",
+      "kind": "text",
+      "text": "hello",
+      "caret": 1,
+      "anchor": 4,
+      "key": "ArrowRight",
+      "shift": false,
+      "ctrl": false,
+      "alt": false,
+      "meta": false,
+      "expected": {
+        "text": "hello",
+        "caret": 4,
+        "anchor": 4
+      }
+    },
+    {
+      "case": "copy-puts-the-selection-on-the-clipboard",
+      "kind": "text",
+      "text": "hello",
+      "caret": 4,
+      "anchor": 1,
+      "key": "c",
+      "shift": false,
+      "ctrl": true,
+      "alt": false,
+      "meta": false,
+      "expected": {
+        "text": "hello",
+        "caret": 4,
+        "anchor": 1,
+        "clipboard": {
+          "copy": "ell"
+        }
+      }
+    },
+    {
+      "case": "cut-removes-the-selection-and-copies-it",
+      "kind": "text",
+      "text": "hello",
+      "caret": 4,
+      "anchor": 1,
+      "key": "x",
+      "shift": false,
+      "ctrl": false,
+      "alt": false,
+      "meta": true,
+      "expected": {
+        "text": "ho",
+        "caret": 1,
+        "anchor": 1,
+        "clipboard": {
+          "cut": "ell"
+        }
+      }
+    },
+    {
+      "case": "copy-without-a-selection-copies-nothing",
+      "kind": "text",
+      "text": "hello",
+      "caret": 2,
+      "anchor": 2,
+      "key": "c",
+      "shift": false,
+      "ctrl": true,
+      "alt": false,
+      "meta": false,
+      "expected": {
+        "text": "hello",
+        "caret": 2,
+        "anchor": 2
+      }
+    },
+    {
+      "case": "home-and-end-in-a-single-line-field-span-the-text",
+      "kind": "text",
+      "text": "hello",
+      "caret": 2,
+      "anchor": 2,
+      "key": "End",
+      "shift": false,
+      "ctrl": false,
+      "alt": false,
+      "meta": false,
+      "expected": {
+        "text": "hello",
+        "caret": 5,
+        "anchor": 5
+      }
+    }
+  ],
+  "pastes": [
+    {
+      "case": "paste-replaces-the-selection",
+      "kind": "text",
+      "text": "hello",
+      "anchor": 0,
+      "caret": 5,
+      "pasted": "hi",
+      "expected": {
+        "text": "hi",
+        "caret": 2
+      }
+    },
+    {
+      "case": "a-single-line-field-turns-line-breaks-into-blanks",
+      "kind": "text",
+      "text": "ab",
+      "anchor": 1,
+      "caret": 1,
+      "pasted": "x\ny",
+      "expected": {
+        "text": "ax yb",
+        "caret": 4
+      }
+    },
+    {
+      "case": "a-single-line-field-turns-crlf-into-one-blank",
+      "kind": "text",
+      "text": "ab",
+      "anchor": 1,
+      "caret": 1,
+      "pasted": "x\r\ny",
+      "expected": {
+        "text": "ax yb",
+        "caret": 4
+      }
+    },
+    {
+      "case": "a-multi-line-field-keeps-line-breaks",
+      "kind": "longText",
+      "text": "ab",
+      "anchor": 1,
+      "caret": 1,
+      "pasted": "x\ny",
+      "expected": {
+        "text": "ax\nyb",
+        "caret": 4
+      }
+    }
+  ]
+}

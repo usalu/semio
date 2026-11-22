@@ -31,7 +31,8 @@ export function readNativeRepoRecoveryPlanV1(root:string,args:readonly string[])
   const declared=(manifest as {targets:Record<string,{options?:{command?:unknown}}>}).targets[targetName];
   const command="repo ./📜️script.ts "+operation+" "+profile+(operation==="regrow"?" --pressed":"");
   if(validateJsonSchemaSubset(schema.$defs.ImageOwnerTarget,declared).length||declared?.options?.command!==command)throw Error("Exact authored Native image maintenance target required");
-  const selected:NativeImageRecoveryTargetV1=operation==="reclaim-wait"?{operation,profile:"rust"}:operation==="reclaim"?{operation,profile:profile as RepositoryCachePartitionIdV1}:{operation,profile:profile as ElasticImageProfileV1};
+  const selected:NativeImageRecoveryTargetV1|undefined=operation==="reclaim-wait"?{operation,profile:"rust"}:operation==="reclaim"?{operation,profile:profile as RepositoryCachePartitionIdV1}:operation==="regrow"?{operation,profile:profile as ElasticImageProfileV1}:undefined;
+  if(selected===undefined)throw Error("Exact authored Native image maintenance target required");
   return Object.freeze({kind:"cache-image",target:Object.freeze(selected),owner});
  }
  return reset?Object.freeze({kind:"cache-reset",target:protocol.reset.targets[target[1] as keyof typeof protocol.reset.targets] as "graph"|"nx"|"rust"|"products",owner:join(root,protocol.reset.scriptRoot)}):maintenance?Object.freeze({kind:"maintenance",target:protocol.maintenance.targets[target[1] as keyof typeof protocol.maintenance.targets] as "preview"|"retire",owner:join(root,protocol.maintenance.scriptRoot)}):Object.freeze({kind:"frontend",target:target[1] as "build"|"install",owner});

@@ -1,5 +1,5 @@
 import {verifyWorldWitnessV1 as verify} from "../../../../🔭️witness/🟨️.mjs";
-import {residentWatcherV1} from "../../../🧪️tests/🟦️.ts";
+import {nativeWatcherUsableV1,residentWatcherV1} from "../../../🧪️tests/🟦️.ts";
 import {createWatchSupervisorV1} from "../../../🔭️watch/🟨️.mjs";
 import {POLICY_V1} from "../../../📨️protocol/🎚️policy/🟨️.mjs";
 import {afterAll,beforeAll,expect,test} from "bun:test";
@@ -10,10 +10,11 @@ import {createChangeJournalClientV1} from "../../../../../../../../../🔨️mod
 import {checkWorldViaJournalV1,symlinkedDirectoriesV1,type WorldRowV1,type WorldVerdictV1} from "../🟦️.ts";
 import {runChangeJournalServiceV1} from "../../🟦️.ts";
 
-const binary=await residentWatcherV1();
+const binary=await residentWatcherV1();const native=await nativeWatcherUsableV1(binary);
 let sandbox="",service:Awaited<ReturnType<typeof runChangeJournalServiceV1>>|undefined;
 
 beforeAll(async()=>{
+ if(!native)return;
  sandbox=realpathSync(mkdtempSync(join(tmpdir(),"journal-world-")));
  service=await runChangeJournalServiceV1({root:sandbox,directory:join(sandbox,".journal"),fence:".fence",exclude:{rooted:[".journal","skipped"],names:["node_modules"]},binary,watcherPolicy:POLICY_V1,createSupervisor:createWatchSupervisorV1,residentBytes:()=>0});
 });
@@ -22,7 +23,7 @@ afterAll(async()=>{await service?.stop("test");if(sandbox)rmSync(sandbox,{recurs
 const identity=(file:string):string=>{try{const f=lstatSync(file);return[f.dev,f.ino,f.mode,f.size,f.mtimeMs,f.ctimeMs].join(":");}catch(error){return"!"+(error as NodeJS.ErrnoException).code;}};
 const world=(files:string[]):WorldRowV1[]=>files.map(file=>["l",file,identity(file)] as WorldRowV1);
 
-test("a world checked through the journal gets the verdict the stat check gives, for edits, touches, renames, removals, appearing paths, mode changes, links and unreported regions, with stat questions only for what the journal reports",async()=>{
+test.skipIf(!native)("a world checked through the journal gets the verdict the stat check gives, for edits, touches, renames, removals, appearing paths, mode changes, links and unreported regions, with stat questions only for what the journal reports",async()=>{
  const client=createChangeJournalClientV1({directory:join(sandbox,".journal"),root:sandbox});
  const files:string[]=[];
  for(let directory=0;directory<20;directory++){mkdirSync(join(sandbox,"src","d"+directory),{recursive:true});for(let file=0;file<25;file++){const path=join(sandbox,"src","d"+directory,"f"+file+".ts");writeFileSync(path,"v0 "+path);files.push(path);}}

@@ -5,107 +5,165 @@ use super::*;
 // #region events
 //#region 🔖️UiCommand
 impl EventRouter {
-    //#region 🔖️DragDropApi
-    pub fn set_drag_payload(&mut self, node: NodeId, payload: DragPayload) {
-        self.drag_payloads.insert(node, payload);
-    }
-
-    #[allow(dead_code, reason = "drag-drop registry accessor, not yet called; likely wired by a later events-integration milestone")]
-    pub fn clear_drag_payload(&mut self, node: NodeId) {
-        self.drag_payloads.remove(&node);
-    }
-
-    #[allow(dead_code, reason = "drag-drop registry accessor, not yet called; likely wired by a later events-integration milestone")]
-    pub fn set_drop_accept(&mut self, node: NodeId, predicate: impl Fn(&DragPayload) -> bool + Send + Sync + 'static) {
-        self.drop_accept.insert(node, Box::new(predicate));
-    }
-
-    pub fn drag_session(&self) -> Option<&DragSession> {
-        self.drag.as_ref()
-    }
-
-    /// 🫳️ Promotes a `Press` capture on a `drag_payloads`-registered node to `CaptureKind::Drag` once
-    /// the pointer has moved past `DRAG_PROMOTE_THRESHOLD_SQ` from `press_origin`.
-    pub(super) fn maybe_promote_to_drag(&mut self, x: f32, y: f32) {
-        let Some((pointer_id, id, CaptureKind::Press)) = self.capture.target else { return };
-        let Some(payload) = self.drag_payloads.get(&id).cloned() else { return };
-        let Some((origin_x, origin_y)) = self.press_origin else { return };
-        if (x - origin_x).powi(2) + (y - origin_y).powi(2) < DRAG_PROMOTE_THRESHOLD_SQ {
-            return;
-        }
-        self.capture.target = Some((pointer_id, id, CaptureKind::Drag));
-        self.drag = Some(DragSession { source: id, payload, ghost: None, pointer_x: x, pointer_y: y, drop_target: None });
-    }
-
-    /// 🔄️ Live-updates the active `DragSession`'s pointer position and re-evaluates the drop target
-    /// under it.
-    pub(super) fn update_drag(&mut self, tree: &UiTree, root: NodeId, x: f32, y: f32) {
-        if let Some(drag) = self.drag.as_mut() {
-            drag.pointer_x = x;
-            drag.pointer_y = y;
-        }
-        let target = self.hit_test(tree, root, x, y).and_then(|hit| self.nearest_accepting_drop_target(tree, hit));
-        if let Some(drag) = self.drag.as_mut() {
-            drag.drop_target = target;
-        }
-    }
-
-    /// 🎯️ Walks `from`'s bubble chain for the nearest `NodeFlags::DROP_TARGET` node whose
-    /// `drop_accept` predicate (if any) accepts the active `DragSession`'s payload.
-    fn nearest_accepting_drop_target(&self, tree: &UiTree, from: NodeId) -> Option<NodeId> {
-        let mut found = None;
-        bubble(tree, from, |id| {
-            if !tree.node(id).is_some_and(|node| node.flags.contains(NodeFlags::DROP_TARGET)) {
-                return false;
-            }
-            let accepts = match self.drop_accept.get(&id) {
-                Some(predicate) => self.drag.as_ref().is_some_and(|drag| predicate(&drag.payload)),
-                None => true,
-            };
-            if accepts {
-                found = Some(id);
-                true
-            } else {
-                false
-            }
-        });
-        found
-    }
-    //#endregion 🔖️DragDropApi
-
     //#region 🔖️ScrollApi
-    #[allow(dead_code, reason = "scroll-thumb registry accessor, not yet called; likely wired by a later events-integration milestone")]
-    pub fn register_scroll_thumb(&mut self, thumb: NodeId, scrollable: NodeId, axis: ScrollAxis) {
-        self.scroll_thumbs.insert(thumb, (scrollable, axis));
+    /// 📜️ A press on a scrollbar of `from`'s nearest scroll host: on a thumb it starts a thumb drag, beside it the host pages one viewport towards the press. `false` when the press is not on a scrollbar.
+    pub(super) fn press_scrollbar(&mut self, tree: &mut UiTree, from: NodeId, x: f32, y: f32, pointer_id: u64) -> bool {
+        let Some(scrollable) = nearest_scrollable_ancestor(tree, from) else { return false };
+        let rtl = self.flow.inline == FlowInline::Rtl;
+        let Some(bar) = [true, false].into_iter().filter_map(|vertical| scrollbar_for(tree, scrollable, vertical, rtl)).find(|bar| bar.track.contains(x, y)) else { return false };
+        let offset = tree.node(scrollable).map(|node| node.state.scroll_offset).unwrap_or_default();
+        if bar.thumb.contains(x, y) {
+            self.capture.target = Some((pointer_id, scrollable, CaptureKind::ScrollThumb(if bar.vertical { ScrollAxis::Vertical } else { ScrollAxis::Horizontal })));
+            self.thumb_start = Some((x, y, offset.0, offset.1));
+        } else if let Some(node) = tree.node_mut(scrollable) {
+            node.state.scroll_offset = if bar.vertical { (offset.0, bar.offset_for_track_press(offset.1, y)) } else { (bar.offset_for_track_press(offset.0, x), offset.1) };
+            tree.mark_dirty(scrollable, NodeFlags::DIRTY_PAINT);
+        }
+        true
     }
 
     pub(super) fn route_scroll(&mut self, tree: &mut UiTree, root: NodeId, x: f32, y: f32, delta_x: f32, delta_y: f32) {
         let Some(hit) = self.hit_test(tree, root, x, y) else { return };
-        let Some(scrollable) = nearest_scrollable_ancestor(tree, hit) else { return };
-        let Some(viewport) = tree.accepted_layout(scrollable) else { return };
-        let (content_width, content_height) = tree.children(scrollable).filter_map(|child| tree.accepted_layout(child)).fold((0.0_f32, 0.0_f32), |(width, height), child| (width.max(child.x + child.width), height.max(child.y + child.height)));
-        let max_x = (content_width - viewport.width).max(0.0);
-        let max_y = (content_height - viewport.height).max(0.0);
-        if let Some(node) = tree.node_mut(scrollable) {
-            let (offset_x, offset_y) = node.state.scroll_offset;
-            node.state.scroll_offset = ((offset_x + delta_x).clamp(0.0, max_x), (offset_y + delta_y).clamp(0.0, max_y));
+        if self.scroll_text_area(tree, hit, delta_y) {
+            return;
         }
-        tree.mark_dirty(scrollable, NodeFlags::DIRTY_PAINT);
+        let mut from = Some(hit);
+        while let Some(start) = from {
+            let Some(scrollable) = nearest_scrollable_ancestor(tree, start) else { return };
+            let Some(viewport) = tree.accepted_layout(scrollable) else { return };
+            let (content_width, content_height) = tree.children(scrollable).filter_map(|child| tree.accepted_layout(child)).fold((0.0_f32, 0.0_f32), |(width, height), child| (width.max(child.x + child.width), height.max(child.y + child.height)));
+            let max_x = (content_width - viewport.width).max(0.0);
+            let max_y = (content_height - viewport.height).max(0.0);
+            let (offset_x, offset_y) = tree.node(scrollable).map_or((0.0, 0.0), |node| node.state.scroll_offset);
+            let moves_x = delta_x != 0.0 && (max_x > 0.0 || offset_x > 0.0);
+            let moves_y = delta_y != 0.0 && (max_y > 0.0 || offset_y > 0.0);
+            if !moves_x && !moves_y {
+                from = tree.node(scrollable).and_then(|node| node.parent);
+                continue;
+            }
+            if let Some(node) = tree.node_mut(scrollable) {
+                node.state.scroll_offset = ((offset_x + delta_x).clamp(0.0, max_x), (offset_y + delta_y).clamp(0.0, max_y));
+            }
+            tree.mark_dirty(scrollable, NodeFlags::DIRTY_PAINT);
+            return;
+        }
     }
 
     pub(super) fn update_scroll_thumb(&mut self, tree: &mut UiTree, scrollable: NodeId, axis: ScrollAxis, x: f32, y: f32) {
         let Some((origin_x, origin_y, start_x, start_y)) = self.thumb_start else { return };
-        let (delta_x, delta_y) = (x - origin_x, y - origin_y);
+        let vertical = axis == ScrollAxis::Vertical;
+        let Some(bar) = scrollbar_for(tree, scrollable, vertical, self.flow.inline == FlowInline::Rtl) else { return };
         let Some(node) = tree.node_mut(scrollable) else { return };
-        node.state.scroll_offset = match axis {
-            ScrollAxis::Horizontal => ((start_x + delta_x).max(0.0), start_y),
-            ScrollAxis::Vertical => (start_x, (start_y + delta_y).max(0.0)),
-        };
+        node.state.scroll_offset = if vertical { (start_x, bar.offset_for_thumb_drag(start_y, y - origin_y)) } else { (bar.offset_for_thumb_drag(start_x, x - origin_x), start_y) };
         tree.mark_dirty(scrollable, NodeFlags::DIRTY_PAINT);
     }
     //#endregion 🔖️ScrollApi
 
     //#region 🔖️EditApi
+    /// 🛞️ A wheel turn over a textarea that holds a laid-out text, focused or not, scrolls it while it has room that way.
+    pub(super) fn scroll_text_area(&mut self, tree: &mut UiTree, id: NodeId, delta_y: f32) -> bool {
+        let Some(node) = tree.node_mut(id) else { return false };
+        let live = match (&node.state.edit, &node.spec.0) {
+            (Some(edit), _) => Some(edit.text.as_str()),
+            (None, UiNode::Input(input)) => Some(input.value.as_str()),
+            _ => None,
+        };
+        let Some(laid) = node.state.edit_layout.as_ref().filter(|laid| laid.multi && live == Some(laid.text.as_str())) else { return false };
+        let max = laid.max_scroll().1;
+        let offset = node.state.scroll_offset;
+        let next = (offset.1 + delta_y).clamp(0.0, max);
+        if delta_y == 0.0 || next == offset.1 {
+            return false;
+        }
+        node.state.scroll_offset = (offset.0, next);
+        tree.mark_dirty(id, NodeFlags::DIRTY_PAINT);
+        true
+    }
+
+    /// 👆️ The caret position under a pointer at `(x, y)` in a field whose laid-out draft is current, `None` while it is not or mid-composition.
+    fn text_byte_at(tree: &UiTree, id: NodeId, x: f32, y: f32) -> Option<usize> {
+        let node = tree.node(id)?;
+        let edit = node.state.edit.as_ref()?;
+        let laid = node.state.edit_layout.as_ref().filter(|laid| laid.text == edit.text)?;
+        if edit.composition.as_deref().is_some_and(|composition| !composition.is_empty()) {
+            return None;
+        }
+        let bounds = absolute_rect(tree, id)?;
+        let (scroll_x, scroll_y) = if laid.multi { (0.0, node.state.scroll_offset.1) } else { (node.state.scroll_offset.0, 0.0) };
+        Some(laid.byte_at(x - bounds.x - laid.inner[0] + scroll_x, y - bounds.y - laid.inner[1] + scroll_y))
+    }
+
+    /// 🖱️ Counts a press into the click chain — DOM `MouseEvent.detail` — and returns its count: a press by the same button within [`DOUBLE_CLICK_SECONDS`] and [`DOUBLE_CLICK_SLOP_PX`] of the one before continues the chain, any other starts it.
+    pub(super) fn note_press(&mut self, x: f32, y: f32, button: PointerButton) -> u32 {
+        let seconds = self.clock_seconds;
+        let count = self.click_chain.filter(|chain| chain.button == button && seconds - chain.seconds <= DOUBLE_CLICK_SECONDS && (chain.x - x).abs() <= DOUBLE_CLICK_SLOP_PX && (chain.y - y).abs() <= DOUBLE_CLICK_SLOP_PX).map_or(1, |chain| chain.count.saturating_add(1));
+        self.click_chain = Some(ClickChain { seconds, x, y, button, count });
+        count
+    }
+
+    /// 🔢️ The click count of the latest press: 1 single, 2 double, 3 triple.
+    pub(super) fn click_count(&self) -> u32 {
+        self.click_chain.map_or(1, |chain| chain.count)
+    }
+
+    /// 🖱️ A primary press on a text field: one click places the caret at the pointer (Shift extends the selection), a second selects the word, a third the line; the held press then drags the selection by character, word or line as the click began. A field with no laid-out text yet takes the caret at its first layout ([`Self::settle_text_press`]).
+    pub(super) fn begin_text_pointer(&mut self, tree: &mut UiTree, id: NodeId, x: f32, y: f32, modifiers: EventModifiers) {
+        if !tree.node(id).is_some_and(|node| matches!(node.spec.0, UiNode::Input(_))) {
+            return;
+        }
+        let press = PendingTextPress { node: id, x, y, extend: modifiers.shift, unit: ((self.click_count() - 1) % 3 + 1) as u8 };
+        self.text_pending = None;
+        if !self.place_text_press(tree, press) && tree.node(id).is_some_and(|node| node.state.edit.as_ref().is_some_and(|edit| node.state.edit_layout.as_ref().is_none_or(|laid| laid.text != edit.text))) {
+            self.text_pending = Some(press);
+        }
+    }
+
+    /// ⌛️ Places the caret of a text press that waited for its field's first layout; called by the frame step right after it parks one.
+    pub fn settle_text_press(&mut self, tree: &mut UiTree, id: NodeId) {
+        if let Some(press) = self.text_pending.filter(|press| press.node == id) {
+            if self.place_text_press(tree, press) {
+                self.text_pending = None;
+            }
+        }
+    }
+
+    fn place_text_press(&mut self, tree: &mut UiTree, press: PendingTextPress) -> bool {
+        let Some(byte) = Self::text_byte_at(tree, press.node, press.x, press.y) else { return false };
+        let Some(edit) = tree.node_mut(press.node).and_then(|node| node.state.edit.as_mut()) else { return false };
+        let origin = match press.unit {
+            2 => word_range_at(&edit.text, byte),
+            3 => (line_start(&edit.text, byte), line_end(&edit.text, byte)),
+            _ => {
+                if !press.extend {
+                    edit.anchor = byte;
+                }
+                (edit.anchor, byte)
+            }
+        };
+        (edit.anchor, edit.caret) = origin;
+        self.text_drag = Some(TextDrag { node: press.node, unit: press.unit, origin });
+        tree.mark_dirty(press.node, NodeFlags::DIRTY_PAINT);
+        true
+    }
+
+    /// ✋️ A held press moving over its text field drags the caret end of the selection to the pointer, by the unit its click began with: by character, or by word or line with the clicked span kept selected.
+    pub(super) fn drag_text_pointer(&mut self, tree: &mut UiTree, drag: TextDrag, x: f32, y: f32) {
+        let Some(byte) = Self::text_byte_at(tree, drag.node, x, y) else { return };
+        let Some(edit) = tree.node_mut(drag.node).and_then(|node| node.state.edit.as_mut()) else { return };
+        let (anchor, caret) = match drag.unit {
+            1 => (edit.anchor, byte),
+            unit => {
+                let (start, end) = if unit == 2 { word_range_at(&edit.text, byte) } else { (line_start(&edit.text, byte), line_end(&edit.text, byte)) };
+                if start < drag.origin.0 { (drag.origin.1, start) } else { (drag.origin.0, end.max(drag.origin.1)) }
+            }
+        };
+        if (edit.anchor, edit.caret) == (anchor, caret) {
+            return;
+        }
+        (edit.anchor, edit.caret) = (anchor, caret);
+        tree.mark_dirty(drag.node, NodeFlags::DIRTY_PAINT);
+    }
+
     pub(super) fn apply_stepper_local_delta(&mut self, tree: &mut UiTree, id: NodeId, delta: f64) {
         let Some(node) = tree.node_mut(id) else { return };
         let UiNode::NumberStepper(stepper) = &node.spec.0 else { return };
@@ -290,8 +348,13 @@ impl EventRouter {
             }
         }
         let Some(node) = tree.node_mut(id) else { return out };
+        let multi_line = matches!(&node.spec.0, UiNode::Input(input) if input.input_kind == "longText");
         let Some(edit) = node.state.edit.as_mut() else { return out };
-        insert_at_caret(edit, text);
+        if multi_line || !text.contains(['\n', '\r']) {
+            insert_at_caret(edit, text);
+        } else {
+            insert_at_caret(edit, &text.replace("\r\n", " ").replace(['\n', '\r'], " "));
+        }
         self.normalize_stepper_edit(tree, id);
         tree.mark_dirty(id, NodeFlags::DIRTY_PAINT);
         self.push_buffer_change(tree, &mut out);
@@ -306,19 +369,27 @@ impl EventRouter {
         let mutated = match event {
             ImeEvent::Start => {
                 edit.composition = Some(String::new());
+                node.state.composition_cursor = None;
                 false
             }
-            ImeEvent::Update { text, .. } => {
+            ImeEvent::Update { text, cursor } => {
+                let mut at = (*cursor).min(text.len());
+                while !text.is_char_boundary(at) {
+                    at -= 1;
+                }
                 edit.composition = Some(text.clone());
+                node.state.composition_cursor = Some(at);
                 false
             }
             ImeEvent::Commit { text } => {
                 edit.composition = None;
+                node.state.composition_cursor = None;
                 insert_at_caret(edit, text);
                 true
             }
             ImeEvent::Cancel => {
                 edit.composition = None;
+                node.state.composition_cursor = None;
                 false
             }
         };
@@ -396,6 +467,9 @@ impl EventRouter {
             return out;
         }
         let Some(node) = tree.node_mut(id) else { return out };
+        if !matches!(key, "ArrowUp" | "ArrowDown") {
+            node.state.caret_goal_x = None;
+        }
         let Some(edit) = node.state.edit.as_mut() else { return out };
         let has_selection = edit.anchor != edit.caret;
         let mut mutated = false;
@@ -414,28 +488,56 @@ impl EventRouter {
                 edit.anchor = edit.caret;
                 mutated = true;
             }
-            "ArrowLeft" => {
-                edit.caret = if has_selection && !modifiers.shift { selection_bounds(edit.anchor, edit.caret).0 } else { prev_char_boundary(&edit.text, edit.caret) };
+            "ArrowLeft" | "ArrowRight" => {
+                let forward = key == "ArrowRight";
+                edit.caret = if modifiers.meta {
+                    if forward { line_end(&edit.text, edit.caret) } else { line_start(&edit.text, edit.caret) }
+                } else if modifiers.alt {
+                    if forward { word_end_after(&edit.text, edit.caret) } else { word_start_before(&edit.text, edit.caret) }
+                } else if modifiers.ctrl {
+                    if forward { word_start_after(&edit.text, edit.caret) } else { word_start_before(&edit.text, edit.caret) }
+                } else if has_selection && !modifiers.shift {
+                    let (start, end) = selection_bounds(edit.anchor, edit.caret);
+                    if forward { end } else { start }
+                } else if forward {
+                    next_char_boundary(&edit.text, edit.caret)
+                } else {
+                    prev_char_boundary(&edit.text, edit.caret)
+                };
                 if !modifiers.shift {
                     edit.anchor = edit.caret;
                 }
             }
-            "ArrowRight" => {
-                edit.caret = if has_selection && !modifiers.shift { selection_bounds(edit.anchor, edit.caret).1 } else { next_char_boundary(&edit.text, edit.caret) };
+            "ArrowUp" | "ArrowDown" => {
+                let down = key == "ArrowDown";
+                let laid = node.state.edit_layout.as_ref().filter(|laid| laid.multi && laid.text == edit.text);
+                let target = if modifiers.meta {
+                    Some(if down { edit.text.len() } else { 0 })
+                } else if let Some(laid) = laid {
+                    let moved = laid.vertical(edit.caret, node.state.caret_goal_x, down);
+                    if let Some((_, goal)) = moved {
+                        node.state.caret_goal_x = Some(goal);
+                    }
+                    moved.map(|(byte, _)| byte)
+                } else {
+                    vertical_target(&edit.text, edit.caret, down)
+                };
+                let Some(target) = target else { return out };
+                edit.caret = target;
+                if !modifiers.shift {
+                    edit.anchor = target;
+                }
+            }
+            "Home" | "End" => {
+                let end = key == "End";
+                edit.caret = match (modifiers.ctrl, end) {
+                    (true, false) => 0,
+                    (true, true) => edit.text.len(),
+                    (false, false) => line_start(&edit.text, edit.caret),
+                    (false, true) => line_end(&edit.text, edit.caret),
+                };
                 if !modifiers.shift {
                     edit.anchor = edit.caret;
-                }
-            }
-            "Home" => {
-                edit.caret = 0;
-                if !modifiers.shift {
-                    edit.anchor = 0;
-                }
-            }
-            "End" => {
-                edit.caret = edit.text.len();
-                if !modifiers.shift {
-                    edit.anchor = edit.text.len();
                 }
             }
             "Backspace" => {
@@ -446,7 +548,13 @@ impl EventRouter {
                     edit.anchor = start;
                     mutated = true;
                 } else if edit.caret > 0 {
-                    let start = prev_char_boundary(&edit.text, edit.caret);
+                    let start = if modifiers.meta {
+                        line_start(&edit.text, edit.caret).min(prev_char_boundary(&edit.text, edit.caret))
+                    } else if modifiers.ctrl || modifiers.alt {
+                        word_start_before(&edit.text, edit.caret)
+                    } else {
+                        prev_char_boundary(&edit.text, edit.caret)
+                    };
                     edit.text.replace_range(start..edit.caret, "");
                     edit.caret = start;
                     edit.anchor = start;
@@ -461,7 +569,7 @@ impl EventRouter {
                     edit.anchor = start;
                     mutated = true;
                 } else if edit.caret < edit.text.len() {
-                    let end = next_char_boundary(&edit.text, edit.caret);
+                    let end = if modifiers.ctrl || modifiers.alt { word_end_after(&edit.text, edit.caret).max(next_char_boundary(&edit.text, edit.caret)) } else { next_char_boundary(&edit.text, edit.caret) };
                     edit.text.replace_range(edit.caret..end, "");
                     mutated = true;
                 }

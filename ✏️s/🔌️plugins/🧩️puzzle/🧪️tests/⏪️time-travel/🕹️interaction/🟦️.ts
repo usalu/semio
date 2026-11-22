@@ -18,6 +18,32 @@ import { revealWindowRow } from "../🛣️lanes/🟦️.ts";
 
 //#region 🔖️Steps
 
+/** 📋️ Copies two selected nodes through the shell shortcut and checks relative paste and undo. */
+export const step25 = async () => {
+  await closePanels();
+  await frameBoard(2);
+  const offset: [number, number] = [24, 24];
+  const { picked: rows } = await pickNodes(2, [offset], []);
+  const selected = await selectNodes(rows);
+  const before = await positions();
+  const originalIds = Object.keys(before);
+  const ready = rows.length === 2 && selected.length === 2 && rows.every(({ id }) => selected.includes(id));
+  verdict("puzzle2d-clipboard-source-selected", ready, { selected, source: rows.map(({ id }) => id) });
+  if (!ready) return;
+  await prepareChord();
+  await page.keyboard.press(`${mod}+c`);
+  await page.keyboard.press(`${mod}+v`);
+  const pasted = await waitUntil(positions, (current) => Object.keys(current).length === originalIds.length + 2, 15000, 200);
+  const clones = Object.keys(pasted.value).filter((id) => before[id] === undefined);
+  const relative = rows.every(({ id }) => clones.some((clone) => placed(pasted.value, clone, before[id], ...offset)));
+  verdict("puzzle2d-copy-paste-relative-position", pasted.ok && relative && movedIds(before, pasted.value).every((id) => before[id] === undefined), { clones, relative });
+  if (!pasted.ok) return;
+  await prepareChord();
+  await page.keyboard.press(`${mod}+z`);
+  const undone = await waitUntil(positions, (current) => Object.keys(current).length === originalIds.length && movedIds(before, current).length === 0 && originalIds.every((id) => current[id] !== undefined), 15000, 200);
+  verdict("puzzle2d-paste-undo", undone.ok, { count: Object.keys(undone.value).length });
+};
+
 /** 🧿 Step 20 — row actions (design §22.1, §22.20), on the main document: a node is duplicated and its clone dragged (two rows:
  * `create-node`, then its drag). Every mutation row offers Edit and Withdraw. Withdraw on the create-node's ROW opens a session
  * with a withdrawn draft (no editor) → the replay leaves the drag blocking ("Target missing"); the row now holds an accepted

@@ -17,9 +17,9 @@ if (phase === "smoke" || phase === "desktop") {
   process.env.SEMIO_LOCKED_TERMINOLOGY ??= "native";
   process.env.S_DATA_DIR ??= join(import.meta.dir, "🗑️generated/native-wgpu-save/desktop-data");
 }
-if (!["host", "modules", "smoke", "desktop"].includes(phase ?? "")) throw Error("Select host, modules, smoke, or desktop");
+if (!["host", "host-receipt", "modules", "smoke", "desktop"].includes(phase ?? "")) throw Error("Select host, host-receipt, modules, smoke, or desktop");
 const entry = (path: string) => pathToFileURL(join(root,path)).href;
-const target = phase === "host" ? "@semio-tech/framework-renderer-wgpu:native-build" : "@semio-tech/framework-os-dev:run-" + variant + "-native-" + mode;
+const target = phase === "host" || phase === "host-receipt" ? "@semio-tech/framework-renderer-wgpu:native-build" : "@semio-tech/framework-os-dev:run-" + variant + "-native-" + mode;
 const selection = ["run", target, "--exclude-dependencies", "--configuration=" + mode];
 const [
   {createNativeBuildCallerCapabilitiesV1},
@@ -52,6 +52,14 @@ await receiveScriptProcessInvocation(process.env, async invocation => {
         const rustPackage = join(root,wgpu,"📦️packages/🦀️rust");
         await withRepositoryCompilerRuntimeEntriesV1(root, invocation, control, () =>
             buildNativeRenderer(rustPackage, mode, root, control, repositoryCargoNetworkV1(invocation, root), invocation));
+        return;
+    }
+    if (phase === "host-receipt") {
+        const {withNativeRendererBinaryV1} = await import(entry(wgpu + "/🏗️compiler/🦀️native/📜️script.ts"));
+        await withNativeRendererBinaryV1(join(root,wgpu,"📦️packages/🦀️rust"), mode, root, invocation, control, async path => {
+            const stats = await Bun.file(path).stat();
+            console.log("[DEBUG] Verified signed native executable", stats.size, stats.mtime.toISOString(), path);
+        });
         return;
     }
     const path = phase === "modules" ? "⌨️native-entrypoint/📦️modules/📜️script.ts" : "⌨️native-entrypoint/📜️script.ts";

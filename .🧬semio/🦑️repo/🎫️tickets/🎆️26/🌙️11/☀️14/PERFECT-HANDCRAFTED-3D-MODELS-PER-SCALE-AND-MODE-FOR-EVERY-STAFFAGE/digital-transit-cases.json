@@ -1,0 +1,35 @@
+{
+  "city-bus": {
+    "rectangularPanes": 15,
+    "lipWidthM": 0.009,
+    "lipDepthM": 0.0055,
+    "cornerRadiusM": 0.026,
+    "sealAreaM2": 3.30402272,
+    "sealExposedFraction": {
+      "at-stop-level": 0.44760632,
+      "kneeling-at-stop": 0.4195025,
+      "braking": 0.44759673,
+      "arriving": 0.44761591,
+      "pull-away-8": 0.44760312,
+      "pull-away-18": 0.44759992,
+      "level-cruise": 0.44760632
+    }
+  },
+  "tram": {
+    "lipWidthM": 0.011,
+    "lipDepthM": 0.006,
+    "cornerRadiusM": 0.032,
+    "sealAreaM2": 4.02759432,
+    "sealExposedFraction": {
+      "running": 0.56440297,
+      "at-stop-doors-open": 0.5496257,
+      "braking-stop": 0.56440297,
+      "depot-pantograph-down": 0.56440297,
+      "loop-start": 0.56440297,
+      "loop-mid": 0.56440297,
+      "loop-end": 0.56440297,
+      "stop-in": 0.56440297,
+      "stop-out": 0.56440297
+    }
+  }
+}

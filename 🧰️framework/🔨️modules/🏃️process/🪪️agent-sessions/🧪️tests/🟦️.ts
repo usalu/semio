@@ -114,7 +114,7 @@ test("the store opens a session once, merges anchors, updates the weight, writes
 test("sessions are listed with state, last use and the budget shared by weight between the live ones",()=>{
  const s=store(),now=10_000_000,mk=(agent:string,weight:number)=>openAgentSessionV1(s,derive({seed:{agent,environment:{},ancestry:[]}}),{now:0,weight}).session;
  const a=mk("a1",1),b=mk("b1",3),c=mk("c1",1),d=openAgentSessionV1(s,deriveAgentSessionV1({environment:{},ancestry:[]}),{now:0}).session;
- touchAgentSessionV1(s,c.id,now-1000,true);touchAgentSessionV1(s,b.id,now-2_000_000,true);
+ touchAgentSessionV1(s,c.id,now-1000,true);touchAgentSessionV1(s,d.id,now-500,true);touchAgentSessionV1(s,b.id,now-2_000_000,true);
  const rows=listAgentSessionsV1(s,{now,alive:()=>false}),by=Object.fromEntries(rows.map(row=>[row.session.agent.id,row]));
  expect(by.a1!.state).toBe("gone");expect(by.b1!.state).toBe("idle");expect(by.c1!.state).toBe("live");expect(by.default!.state).toBe("live");
  expect(by.c1!.shareBasisPoints+by.default!.shareBasisPoints).toBe(10000);expect(by.a1!.shareBasisPoints).toBe(0);expect(by.b1!.shareBasisPoints).toBe(0);
@@ -125,17 +125,16 @@ test("sessions are listed with state, last use and the budget shared by weight b
  expect(lines.join("\n")).toContain("Budgetanteil:");expect(lines.join("\n")).toContain(join(scratch,"st",c.resources.tests.root,"t"));expect(lines.find(row=>row.startsWith("Kapazitätszusagen"))).toBeUndefined();
 });
 
-test("collection reclaims the resources of gone sessions first, keeps a session whose resources are still used, never collects the default session and runs at most once per interval",()=>{
+test("collection reclaims the resources of gone sessions first, keeps a session whose resources are still used, collects the default session of an unused worktree like any other and runs at most once per interval",()=>{
  const s=store(),mk=(agent:string)=>openAgentSessionV1(s,derive({seed:{agent,environment:{},ancestry:[]}}),{now:0}).session;
  const gone=mk("gone"),busy=mk("busy"),fresh=mk("fresh"),base=openAgentSessionV1(s,deriveAgentSessionV1({environment:{},ancestry:[]}),{now:0}).session;
  const now=10_000_000;touchAgentSessionV1(s,fresh.id,now-1000,true);const seen:string[]=[];
  const reclaim=(session:{id:string})=>{seen.push(session.id);return session.id===busy.id?{released:1,kept:1}:{released:2,kept:0};};
- expect(collectAgentSessionsV1(s,reclaim,{only:[base.id],now,alive:()=>false})).toEqual([]);expect(readAgentSessionV1(s,base.id)).toBeDefined();
- const dry=collectAgentSessionsV1(s,reclaim,{now,alive:()=>false,dryRun:true});expect(dry.map(row=>row.session.id).sort()).toEqual([busy.id,gone.id].sort());expect(seen).toEqual([]);
+ const dry=collectAgentSessionsV1(s,reclaim,{now,alive:()=>false,dryRun:true});expect(dry.map(row=>row.session.id).sort()).toEqual([base.id,busy.id,gone.id].sort());expect(seen).toEqual([]);
  const rows=collectAgentSessionsV1(s,reclaim,{now,alive:()=>false});
- expect(Object.fromEntries(rows.map(row=>[row.session.agent.id,[row.released,row.kept,row.removed]]))).toEqual({gone:[2,0,true],busy:[1,1,false]});
- expect(readAgentSessionV1(s,gone.id)).toBeUndefined();expect(readAgentSessionV1(s,busy.id)).toBeDefined();expect(readAgentSessionV1(s,fresh.id)).toBeDefined();expect(readAgentSessionV1(s,base.id)).toBeDefined();
- const events=readFileSync(join(s.directory,"ledger.jsonl"),"utf8").trim().split("\n").map(line=>JSON.parse(line)).filter(row=>row.event!=="open");expect(events.map(row=>row.event)).toEqual(["close","collect"]);
+ expect(Object.fromEntries(rows.map(row=>[row.session.agent.id,[row.released,row.kept,row.removed]]))).toEqual({gone:[2,0,true],busy:[1,1,false],default:[2,0,true]});
+ expect(readAgentSessionV1(s,gone.id)).toBeUndefined();expect(readAgentSessionV1(s,busy.id)).toBeDefined();expect(readAgentSessionV1(s,fresh.id)).toBeDefined();expect(readAgentSessionV1(s,base.id)).toBeUndefined();
+ const events=readFileSync(join(s.directory,"ledger.jsonl"),"utf8").trim().split("\n").map(line=>JSON.parse(line)).filter(row=>row.event!=="open");expect(events.map(row=>row.event)).toEqual(["close","collect","close","collect"]);
  const t=store(),late=openAgentSessionV1(t,derive({seed:{agent:"late",environment:{},ancestry:[]}}),{now:0}).session;let calls=0;
  expect(collectAgentSessionsIfDueV1(t,()=>{calls++;return {released:0,kept:0};},{now:Date.now()+10_000_000_000,alive:()=>false}).length).toBe(1);
  expect(collectAgentSessionsIfDueV1(t,()=>{calls++;return {released:0,kept:0};},{now:Date.now()+10_000_000_000,alive:()=>false}).length).toBe(0);expect(calls).toBe(1);expect(readAgentSessionV1(t,late.id)).toBeUndefined();

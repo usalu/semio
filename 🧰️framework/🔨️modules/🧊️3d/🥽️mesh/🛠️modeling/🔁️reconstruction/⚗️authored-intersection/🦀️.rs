@@ -69,15 +69,16 @@ impl GeometryCopy {
 pub struct MeshAuthoredIntersection<K:MeshIntersectionKernel>{
     inputs:[Option<PolygonMeshSource>;2],copy:[GeometryCopy;2],cut:Option<K>,
     solid:Option<MeshIntersectionSolid>,join:Option<PolygonCombine>,projection:Option<Projection>,
-    owners:[bool;2],left_faces:usize,cursor:usize,phase:u8,cancelled:bool,receipt:[usize;4],
+    owners:[bool;2],left_faces:usize,left_vertices:u32,cursor:usize,phase:u8,cancelled:bool,receipt:[usize;4],
 }
 
 impl<K:MeshIntersectionKernel> MeshAuthoredIntersection<K>{
     /// 📥️ Stages both source owners without traversing them.
     pub fn new(left:PolygonMeshSource,right:PolygonMeshSource)->Self{
         let left_faces=left.faces.len();
+        let left_vertices=left.vertices.len() as u32;
         Self{inputs:[Some(left),Some(right)],copy:Default::default(),cut:None,solid:None,join:None,projection:None,
-            owners:[false;2],left_faces,cursor:0,phase:0,cancelled:false,receipt:[0;4]}
+            owners:[false;2],left_faces,left_vertices,cursor:0,phase:0,cancelled:false,receipt:[0;4]}
     }
 
     /// 🛑️ Stops before publication and retains pending data for retirement.
@@ -117,7 +118,7 @@ impl<K:MeshIntersectionKernel> MeshAuthoredIntersection<K>{
             let result=join.step(effect);
             let receipt=join.take_progress();self.receipt(receipt);
             if let Some(source)=result?{
-                self.projection=Some(Projection::new(self.solid.take().unwrap(),source,self.left_faces));
+                self.projection=Some(Projection::new(self.solid.take().unwrap(),source,self.left_faces,self.left_vertices));
                 self.phase=5;self.join=None;
             }
             return Ok(None);
@@ -170,7 +171,7 @@ impl<K:MeshIntersectionKernel> MeshAuthoredIntersection<K>{
                     }
                 }else{
                     let side=usize::from(self.owners[1]);
-                    self.projection=Some(Projection::new(self.solid.take().unwrap(),self.inputs[side].take().unwrap(),0));
+                    self.projection=Some(Projection::new(self.solid.take().unwrap(),self.inputs[side].take().unwrap(),0,0));
                     self.phase=5;
                 }
             },

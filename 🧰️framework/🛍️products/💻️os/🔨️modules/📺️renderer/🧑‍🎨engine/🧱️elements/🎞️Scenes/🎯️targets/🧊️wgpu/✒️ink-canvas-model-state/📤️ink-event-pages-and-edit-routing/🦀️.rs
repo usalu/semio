@@ -1,7 +1,7 @@
 //! 📤️ Ink event pages and edit routing: the event JSON and raw pages, the event action writers, the gesture abort, the selection and hover writers and the edit key, blur and cancel routing. See [`super`].
 
 use super::*;
-use std::io::Write;
+use std::io::Write as _;
 
 //#region InkCanvas
 //#region InkCanvasState

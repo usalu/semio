@@ -109,6 +109,22 @@
               "$ref": "#/definitions/bytes"
             }
           }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "operationId"
+          ],
+          "properties": {
+            "kind": {
+              "const": "segmented-download"
+            },
+            "operationId": {
+              "$ref": "#/definitions/downloadOperationId"
+            }
+          }
         }
       ]
     },
@@ -377,6 +393,9 @@
               "items": {
                 "$ref": "#/definitions/bytes"
               }
+            },
+            "downloadChunk": {
+              "$ref": "#/definitions/downloadChunk"
             }
           },
           "allOf": [
@@ -419,6 +438,37 @@
                   "required": [
                     "reason"
                   ]
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "downloadChunk": {}
+                },
+                "required": [
+                  "downloadChunk"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "outcome": {
+                    "const": "guest-applied"
+                  },
+                  "mutationCount": {
+                    "const": 0
+                  },
+                  "commit": {
+                    "type": "null"
+                  },
+                  "hostEffects": {
+                    "maxItems": 0,
+                    "type": "array"
+                  },
+                  "historyPatches": {
+                    "maxItems": 0,
+                    "type": "array"
+                  }
                 }
               }
             }
@@ -815,6 +865,49 @@
               "expected": {}
             }
           }
+        }
+      }
+    },
+    "downloadOperationId": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/u64Decimal"
+        },
+        {
+          "not": {
+            "const": "0"
+          }
+        }
+      ]
+    },
+    "downloadChunk": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "operationId",
+        "bytes"
+      ],
+      "properties": {
+        "operationId": {
+          "$ref": "#/definitions/downloadOperationId"
+        },
+        "bytes": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/bytes"
+                },
+                {
+                  "maxItems": 4096
+                }
+              ],
+              "type": "array"
+            }
+          ]
         }
       }
     }

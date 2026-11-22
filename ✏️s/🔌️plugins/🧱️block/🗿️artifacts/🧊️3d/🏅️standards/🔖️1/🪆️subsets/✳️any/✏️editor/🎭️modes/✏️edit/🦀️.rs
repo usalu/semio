@@ -1,7 +1,7 @@
 //! ✏️ Block 3D play app — the `edit` mode: the single-window world authoring layout.
 
 use crate::edit::windows::world;
-use semio_plugin::create_default_layout;
+use semio_plugin::{create_default_layout, Axis};
 use semio_ui_locale::LocalizedLabel;
 use semio_plugin::ModeDefinition;
 use semio_plugin::WindowLayout;
@@ -17,7 +17,7 @@ pub fn definition() -> ModeDefinition {
 /// 🪟️ The app's default window layout — this mode is the app's `default_mode_id`, so its layout IS the
 /// app-level `default_layout`. A single full-width window (block3d has exactly one window kind).
 pub fn layout() -> WindowLayout {
-    create_default_layout(&[world::BLOCK3D_WINDOW_WORLD.into()], "row", Some(&[100.0]), Some(&["Object Kind".into()]))
+    create_default_layout(&[world::BLOCK3D_WINDOW_WORLD.into()], Axis::Horizontal, Some(&[1.0]), Some(&["Object Kind".into()]))
 }
 //#endregion 🔖️Definition
 

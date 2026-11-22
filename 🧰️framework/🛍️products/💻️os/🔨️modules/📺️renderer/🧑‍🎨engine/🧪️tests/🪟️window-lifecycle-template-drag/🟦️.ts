@@ -96,10 +96,9 @@ describe("🪟️ window lifecycle and template drag contract", () => {
     const shell = readModuleTreeSource(join(engineRoot, "🧱️elements", "🏛️ShellHost", "🟦️.tsx"));
     const tests = readModuleTreeSource(join(engineRoot, "..", "..", "..", "..", "..", "🔨️modules", "🖱️ui", "🧪️tests", "🧪️owned-locale-detector-retirement", "🟦️.tsx"));
     expect(canvas).toContain(`COMPOSE_WINDOW_TEMPLATE_MIME = "${fixture.mime}"`);
-    expect(canvas).toContain("insertWindowAtDropZone");
+    expect(canvas).toContain("WindowLayoutDropZone");
     expect(canvas).toContain("cancelWindowTemplatePointerDrag");
     expect(shell).toContain("handleTemplateDrop");
-    expect(tests).toContain("insertWindowAtDropZone adds a window on root-split");
     expect(tests).toContain("cancelWindowTemplatePointerDrag clears an active template drag session");
   });
 

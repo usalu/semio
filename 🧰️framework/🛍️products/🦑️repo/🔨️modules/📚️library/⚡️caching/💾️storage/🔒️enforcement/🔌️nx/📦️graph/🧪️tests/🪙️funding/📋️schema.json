@@ -177,6 +177,7 @@
             "enum": [
               "new",
               "funded",
+              "stale",
               "protected"
             ]
           },

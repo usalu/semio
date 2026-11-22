@@ -120,27 +120,6 @@ impl<'ctx> ActionsCtx<'ctx> {
         })
     }
 
-    /// 📌️ ticket §C5 item 2 — the per-frame auto check-in poll, called from `pump_sync_events` (see
-    /// that method's own doc: "folded into the same every-frame pump"). Viewer sessions never arm
-    /// (`can_check_in`, item 5's guard) — the SAME predicate the `#s-checkin` affordance itself checks.
-    pub async fn poll_auto_checkin(&mut self) {
-        let Some(session) = self.docs.session.as_ref() else { return };
-        if !can_check_in(session.app.role) {
-            return;
-        }
-        let count = uncommitted_edit_count(&self.history.history_entries);
-        if count == 0 {
-            self.sync.auto_checkin_pending = false;
-            self.sync.last_uncommitted_edit_at_ms = None;
-            return;
-        }
-        let now_ms = chrome_now_ms() as i64;
-        if auto_checkin_should_fire(count, self.sync.auto_checkin_pending, self.sync.last_uncommitted_edit_at_ms, now_ms, AUTO_CHECKIN_IDLE_MS, AUTO_CHECKIN_EDIT_THRESHOLD) {
-            self.sync.auto_checkin_pending = true;
-            self.dispatch_checkpoint("auto").await;
-        }
-    }
-
     /// 📌️ ticket §C5 items 2/3/4 — fires `commitCheckpoint` through the same action funnel the
     /// History panel's own "Checkpoint" button uses (`history_command` in `🔌️plugin/🦀️.rs`),
     /// with `authors` riding along (`history_command` still hardcodes `authors: Vec::new()` today per
@@ -244,7 +223,7 @@ impl<'ctx> ActionsCtx<'ctx> {
             program.destroy_app(instance_id);
             return;
         }
-        let channels = self.sync.document_host.open(ArtifactActorConfig { actor_identity_grant: semio_framework_value::RetainedCloneGrant {maximum_items:1024,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64},  document_id: SPACE_INDEX_DOCUMENT_ID.to_string(), schema: S_SPACE_INDEX_DOCUMENT_SCHEMA.to_string(), bindings, watch_external: true, actor: actor.clone() }).await;
+        let channels = self.sync.document_host.open(ArtifactActorConfig { actor_identity_grant: semio_framework_value::RetainedCloneGrant {maximum_items:1024,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64},  document_id: SPACE_INDEX_DOCUMENT_ID.to_string(), schema: space_index.document_schema, bindings, watch_external: true, actor: actor.clone() }).await;
         let binding_generation = match self.sync.mint_sync_binding_generation() {
             Ok(generation) => generation,
             Err(error) => {

@@ -145,6 +145,8 @@ pub enum RetainedPaintPhase {
     Overlays,
     Paint,
     Scenes,
+    /// 📜️ One scroll host's thumb per step, above everything the document and its scenes painted.
+    Scrollbars,
     Tooltip,
     /// 📚️ Re-derives this window's pointer registry from the SAME walk, and therefore the same
     /// accumulated origin, the paint phase just drew from — one geometry for what is painted and
@@ -203,7 +205,7 @@ impl UiFramePaintCensus {
         }
         census.scene_passes = draw.scene_passes.len();
         for pass in &draw.scene_passes {
-            census.scene_draws += pass.shadow_draws.len() + pass.draws.len() + pass.translucent_draws.len() + pass.material_draws.len() + pass.textured_draws.len() + pass.line_draws.len();
+            census.scene_draws += pass.shadow_draws.len() + pass.draws.len() + pass.translucent_draws.len() + pass.material_draws.len() + pass.textured_draws.len() + pass.line_draws.len() + pass.point_draws.len();
             census.scene_instances += pass.shadow_draws.iter().chain(pass.draws.iter()).chain(pass.translucent_draws.iter()).map(|draw| draw.instances.len()).sum::<usize>()
                 + pass.material_draws.iter().map(|draw| draw.instances.len()).sum::<usize>()
                 + pass.textured_draws.iter().map(|draw| draw.instances.len()).sum::<usize>();
@@ -340,6 +342,10 @@ pub struct RetainedPaintFrame {
     /// 🪣️ Whether the node `paint_node` names paints into the overlay bucket — true exactly when it
     /// sits under one of `overlay_chrome`'s roots.
     pub paint_overlay: bool,
+    /// 🧊️ The glass region of the overlay `paint_node` sits under: its content paints as that region's foreground so the translucent surface never tints it.
+    pub paint_glass: Option<usize>,
+    /// 🧊️ The surface glass region each `overlay_chrome` entry's `Overlays` step opened.
+    pub overlay_glass: [Option<usize>; UI_FRAME_OVERLAY_CHROME],
     /// 🔂️ The overlays this frame owes chrome for, captured once when the frame opened so every
     /// step of the `Overlays` phase paints against the same placements the layout published.
     pub overlay_chrome: [Option<UiOverlayPlacement>; UI_FRAME_OVERLAY_CHROME],

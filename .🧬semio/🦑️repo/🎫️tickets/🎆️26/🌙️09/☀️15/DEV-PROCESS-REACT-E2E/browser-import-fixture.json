@@ -22,6 +22,24 @@
     "rawFileBytes": 15447,
     "extentMetres": [0.02, 0.02, 0.02]
   },
+  "chosenPlacement": {
+    "catalog": "robotic",
+    "stockWidthMetres": 2.6,
+    "positionMetres": [-0.4, 0, 0],
+    "toolIntersectionMetresCubed": 0.00002
+  },
+  "wgpuChosenPlacement": {
+    "catalog": "robotic",
+    "machine": "gantryCnc",
+    "capability": "mill",
+    "positionMetres": [-0.4, 0, 0],
+    "toolSizeMetres": [0.025, 0.025, 0.2],
+    "toolIntersectionMetresCubed": 0.0000625
+  },
+  "reorder": {
+    "catalog": "robotic",
+    "firstStepVolumeMetresCubed": 0.000006
+  },
   "workshop": [
     { "catalog": "metal", "catalogLabel": "Metal", "machine": "chopSaw", "capability": "chop", "stepLabel": "Chop", "operation": "slab", "toolSizeMetres": [0.355, 0.355, 0.003], "remainingVolumeMetresCubed": 0.0000074, "edit": { "field": "Height", "sizeMetres": 0.004, "remainingVolumeMetresCubed": 0.0000072 } },
     { "catalog": "concrete", "catalogLabel": "Concrete", "machine": "diamondSaw", "capability": "crosscut", "stepLabel": "Crosscut", "operation": "slab", "toolSizeMetres": [0.35, 0.35, 0.004], "remainingVolumeMetresCubed": 0.0000072, "edit": { "field": "Height", "sizeMetres": 0.005, "remainingVolumeMetresCubed": 0.000007 } },

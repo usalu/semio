@@ -123,6 +123,7 @@ Feature: Apply every typed puzzle5d assembly mutation twice — once in Rust, on
       | drag-selection3d             | 🚚️drag-selection3d/🚚️drags            |
       | rotate-selection3d           | 🔄️rotate-selection3d/🔄️turns          |
       | scale-selection3d            | 🔍️scale-selection3d/🔍️scales         |
+      | splice-scene-rows            | 🔀️splice-scene-rows/🔀️middle         |
 
   @id-inverse
   @level-exhaustive
@@ -182,6 +183,7 @@ Feature: Apply every typed puzzle5d assembly mutation twice — once in Rust, on
       | drag-selection3d             | 🚚️drag-selection3d/🚚️drags            |
       | rotate-selection3d           | 🔄️rotate-selection3d/🔄️turns          |
       | scale-selection3d            | 🔍️scale-selection3d/🔍️scales         |
+      | splice-scene-rows            | 🔀️splice-scene-rows/🔀️middle         |
 
   @id-identity-round-trip
   @level-long

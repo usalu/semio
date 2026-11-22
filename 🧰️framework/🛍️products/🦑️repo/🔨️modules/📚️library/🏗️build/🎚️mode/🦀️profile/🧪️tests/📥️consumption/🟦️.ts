@@ -24,19 +24,51 @@ declareLibraryBuildTestEnvelopeV1({suite:"build-targets-selection"});
 /** 📋️ Historical package constraints remain exact closed DATA after their Cargo selector tables retire. */
 test("neutral consumed Cargo profile policy preserves every actual workspace constraint inventory",async()=>{
  const policy=await import("../../🟦️.ts"),read=policy.cargoProfileConstraintsForOwnerV1;expect(typeof read).toBe("function");if(typeof read!=="function")throw Error("Actual canonical profile constraint owner required");const database=new Database(":memory:");database.exec("create table owners(path text primary key,native integer,wasm integer);create table rows(origin text,name text,level text,primary key(origin,name))");
- try{for(const owner of corpus.owners){const actual=read(owner.manifest)as readonly Readonly<{package:string;optLevel:string;origin:string}>[],rows=actual.map(value=>({origin:value.origin,name:value.package,level:value.optLevel})).sort((a,b)=>a.origin.localeCompare(b.origin)||a.name.localeCompare(b.name));expect(createHash("sha256").update(JSON.stringify(rows)).digest("hex"),owner.manifest).toBe(owner.digest);database.exec("delete from rows");for(const row of rows)database.query("insert into rows values(?,?,?)").run(row.origin,row.name,row.level);const counts=database.query("select sum(origin='native') native,sum(origin='wasm') wasm from rows").get()as{native:number|null;wasm:number|null};expect({native:counts.native??0,wasm:counts.wasm??0}).toEqual({native:owner.native,wasm:owner.wasm});database.query("insert into owners values(?,?,?)").run(owner.manifest,owner.native,owner.wasm);expect(Object.isFrozen(actual)&&actual.every(Object.isFrozen)).toBe(true);}expect(database.query("select count(*) count from owners").get()).toEqual({count:238});expect(database.query("select native,wasm,count(*) count from owners group by native,wasm order by native,wasm").all()).toEqual([{native:0,wasm:0,count:95},{native:28,wasm:51,count:1},{native:29,wasm:4,count:6},{native:29,wasm:38,count:135},{native:29,wasm:52,count:1}]);expect(()=>read("../Cargo.toml")).toThrow();expect(()=>read("unregistered/Cargo.toml")).toThrow();}finally{database.close();}
+ try{for(const owner of corpus.owners){const actual=read(owner.manifest)as readonly Readonly<{package:string;optLevel:string;origin:string}>[],rows=actual.map(value=>({origin:value.origin,name:value.package,level:value.optLevel})).sort((a,b)=>a.origin.localeCompare(b.origin)||a.name.localeCompare(b.name));expect(createHash("sha256").update(JSON.stringify(rows)).digest("hex"),owner.manifest).toBe(owner.digest);database.exec("delete from rows");for(const row of rows)database.query("insert into rows values(?,?,?)").run(row.origin,row.name,row.level);const counts=database.query("select sum(origin='native') native,sum(origin='wasm') wasm from rows").get()as{native:number|null;wasm:number|null};expect({native:counts.native??0,wasm:counts.wasm??0}).toEqual({native:owner.native,wasm:owner.wasm});database.query("insert into owners values(?,?,?)").run(owner.manifest,owner.native,owner.wasm);expect(Object.isFrozen(actual)&&actual.every(Object.isFrozen)).toBe(true);}expect(database.query("select count(*) count from owners").get()).toEqual({count:238});expect(database.query("select native,wasm,count(*) count from owners group by native,wasm order by native,wasm").all()).toEqual([{native:0,wasm:0,count:95},{native:28,wasm:51,count:1},{native:30,wasm:4,count:6},{native:30,wasm:38,count:135},{native:30,wasm:52,count:1}]);expect(()=>read("../Cargo.toml")).toThrow();expect(()=>read("unregistered/Cargo.toml")).toThrow();}finally{database.close();}
 });
 
 /** 🧊️ Imported schema and policy values are public DATA, never mutable private policy. */
 test("neutral consumed Cargo profile constraints resist public DATA mutation",async()=>{
  const{cargoProfileConstraintsForOwnerV1}=await import("../../🟦️.ts");expect(new Ajv({strict:true}).validate(schema,data)).toBe(true);const before=cargoProfileConstraintsForOwnerV1("Cargo.toml"),group=data.owners["Cargo.toml"],limit=schema.definitions.Protocol.const.maximumPackageRows;
- try{data.owners["Cargo.toml"]="isolated";schema.definitions.Protocol.const.maximumPackageRows=0;expect(cargoProfileConstraintsForOwnerV1("Cargo.toml")).toBe(before);expect(before.length).toBe(81);}finally{data.owners["Cargo.toml"]=group;schema.definitions.Protocol.const.maximumPackageRows=limit;}
+ try{data.owners["Cargo.toml"]="isolated";schema.definitions.Protocol.const.maximumPackageRows=0;expect(cargoProfileConstraintsForOwnerV1("Cargo.toml")).toBe(before);expect(before.length).toBe(82);}finally{data.owners["Cargo.toml"]=group;schema.definitions.Protocol.const.maximumPackageRows=limit;}
 });
 
 /** 🎚️ Two-intent selector bytes describe supported TOML values and preserve distinct host override semantics. */
 test("neutral consumed Cargo profile renders exact inline TOML before compiler planning",async()=>{
  const api=await import("../../🟦️.ts"),render=Reflect.get(api,"renderCargoProfileConfigurationV1");expect(typeof render).toBe("function");if(typeof render!=="function")throw Error("Actual consumed profile renderer required");
  for(const row of corpus.rendering){const actual=render(row.request,"Cargo.toml","repository")as{selectors:readonly string[]},text=actual.selectors.join("\n"),parsed=TOML.parse(text)as{profile:Record<string,Record<string,unknown>>};expect(Bun.TOML.parse(text)).toEqual(parsed);const selected=parsed.profile[row.request.mode];if(!selected)throw Error("Exact selected profile required");const{package:packages,"build-override":host,...settings}=selected;expect(Object.keys(parsed.profile)).toEqual([row.request.mode]);expect(settings).toEqual(row.target);expect(host).toEqual(row.host);expect(host).not.toHaveProperty("lto");expect(actual.selectors.length*2).toBeLessThanOrEqual(512);expect(actual.selectors.every(value=>Buffer.byteLength(value)<=4096)).toBe(true);expect(Object.isFrozen(actual.selectors)).toBe(true);}
+});
+
+/** 🔢️ The actual descriptor and MCP workspaces optimize both interpreter crates. */
+test("neutral consumed Cargo native interpreter profiles select the numeric leaf",async()=>{
+ const {renderCargoProfileConfigurationV1}=await import("../../🟦️.ts");
+ const database=new Database(":memory:");
+ const packageNames=["semio-plugin-interpreter","semio-plugin-interpreter-numeric"];
+ try {
+  for(const row of corpus.nativeInterpreterProfiles) {
+   const manifestPath=join(repositoryRootV1,row.manifest),text=readFileSync(manifestPath,"utf8");
+   const manifest=TOML.parse(text) as {package:{name:string;workspace:string}};
+   expect(Bun.TOML.parse(text)).toEqual(manifest);
+   expect(manifest.package.name).toBe(row.packageName);
+   const owner=join(dirname(manifestPath),manifest.package.workspace,"Cargo.toml");
+   expect(owner).toBe(join(repositoryRootV1,row.workspaceOwner));
+   for(const mode of ["prototype","release"] as const) {
+    const request={version:1,mode,target:"aarch64-apple-darwin",producer:row.producer,operation:"build"};
+    expect(new Ajv({strict:true}).validate(profileSchema.definitions.PolicyRequest,request)).toBe(true);
+    const rendered=renderCargoProfileConfigurationV1(request,row.workspaceOwner,"repository");
+    const selectors=rendered.selectors.join("\n"),parsed=TOML.parse(selectors) as {profile:Record<string,{"opt-level":number;package?:Record<string,{"opt-level":number}>}>};
+    expect(Bun.TOML.parse(selectors)).toEqual(parsed);
+    expect(rendered.plan.role).toBe(row.role);
+    const selected=parsed.profile[mode]!;
+    const actual=database.query(`
+      select value as name, coalesce(
+        json_extract(?1, '$.package."' || value || '"."opt-level"'), json_extract(?1, '$."opt-level"')
+      ) as level from json_each(?2)
+    `).all(JSON.stringify(selected),JSON.stringify(packageNames));
+    expect(actual).toEqual(packageNames.map(name=>({name,level:3})));
+   }
+  }
+ }finally{database.close();}
 });
 
 /** 🎟️ Serialized receipts and copied fields cannot issue a live compiler configuration selector. */
@@ -137,7 +169,7 @@ test("neutral consumed Cargo writer selectors are exact unique coordinates",asyn
 
 /** 🎭️ Production actor expectations recompute full consumed arguments, preserving distinct pass and emitter owners. */
 test("neutral consumed Cargo actor witnesses require the full actual compiler tuple",async()=>{
- const path=join(repositoryRootV1,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🔎️verification/🎭️actor/🟦️.ts"),api={runtimeActorCargoArgumentsV1},requestSchema=JSON.parse(readFileSync(join(dirname(path),"🧬️schema/🔣️.json"),"utf8")),database=new Database(":memory:");expect(typeof api.runtimeActorCargoArgumentsV1).toBe("function");try{for(const row of corpus.actorArguments){expect(new Ajv({strict:true}).validate(requestSchema,row)).toBe(true);const request={...row,root:resolve(row.root),packageManifest:resolve(row.packageManifest),buildDirectory:resolve(row.buildDirectory)},actual=api.runtimeActorCargoArgumentsV1(request) as readonly string[],configuration=actual.flatMap((value,index)=>value==="--config"?[actual[index+1]!]:[]),profiles=configuration.filter(value=>value.startsWith("profile.")),table=TOML.parse(profiles.join("\n")) as {profile:Record<string,Record<string,unknown>>};expect(Bun.TOML.parse(profiles.join("\n"))).toEqual(table);expect(table.profile.release?.lto).toBe(row.kind==="component"?"thin":false);expect(database.query("select sum(value='--config') configurations,sum(value='--profile') profiles from json_each(?1)").get(JSON.stringify(actual))).toEqual({configurations:profiles.length+2,profiles:1});expect(actual).not.toContain("wasm-release");expect(actual).not.toContain("host-tool");expect(actual[0]).toBe("build");expect(actual).toContain("--locked");expect(actual).toContain("--message-format=json-render-diagnostics");expect(Object.isFrozen(actual)).toBe(true);expect(()=>api.runtimeActorCargoArgumentsV1({...row,mode:"prototype"})).toThrow();expect(()=>api.runtimeActorCargoArgumentsV1({...row,buildDirectory:"relative"})).toThrow();}}finally{database.close();}
+ const path=join(repositoryRootV1,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🔎️verification/🎭️actor/🟦️.ts"),api={runtimeActorCargoArgumentsV1},requestSchema=JSON.parse(readFileSync(join(dirname(path),"🧬️schema/🔣️.json"),"utf8")),database=new Database(":memory:");expect(typeof api.runtimeActorCargoArgumentsV1).toBe("function");try{for(const row of corpus.actorArguments){expect(new Ajv({strict:true}).validate(requestSchema,row)).toBe(true);const request={...row,root:resolve(row.root),packageManifest:resolve(row.packageManifest),buildDirectory:resolve(row.buildDirectory)},actual=api.runtimeActorCargoArgumentsV1(request) as readonly string[],configuration=actual.flatMap((value,index)=>value==="--config"?[actual[index+1]!]:[]),profiles=configuration.filter(value=>value.startsWith("profile.")),table=TOML.parse(profiles.join("\n")) as {profile:Record<string,Record<string,unknown>>};expect(Bun.TOML.parse(profiles.join("\n"))).toEqual(table);expect(table.profile.release?.lto).toBe(row.kind==="component"?"thin":false);expect(database.query("select sum(value='--config') configurations,sum(value='--profile') profiles from json_each(?1)").get(JSON.stringify(actual))).toEqual({configurations:profiles.length+2,profiles:1});expect(actual).not.toContain("wasm-release");expect(actual).not.toContain("host-tool");expect(actual[0]).toBe("build");expect(actual).toContain("--locked");if((row as {kind?:string}).kind==="descriptor-emitter")expect(actual).toContain("--message-format=json-render-diagnostics");else expect(actual).not.toContain("--message-format=json-render-diagnostics");expect(Object.isFrozen(actual)).toBe(true);expect(()=>api.runtimeActorCargoArgumentsV1({...row,mode:"prototype"})).toThrow();expect(()=>api.runtimeActorCargoArgumentsV1({...row,buildDirectory:"relative"})).toThrow();}}finally{database.close();}
 });
 
 /** 🌉️ Isolated bridges do not keep a redundant local selector outside canonical consumption. */

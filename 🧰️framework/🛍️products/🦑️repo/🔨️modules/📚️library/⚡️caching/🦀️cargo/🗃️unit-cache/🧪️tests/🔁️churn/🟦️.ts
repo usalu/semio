@@ -21,14 +21,14 @@ afterAll(()=>{if(!process.env.SEMIO_TEST_KEEP)for(const path of scratch)rmSync(p
 const cargoArguments=(extra:readonly string[])=>["--crate-name","dep","--edition=2021","src/lib.rs","--error-format=json","--json=diagnostic-rendered-ansi,artifacts,future-incompat",...extra,"--crate-type","lib","--emit=dep-info,metadata,link","-C","embed-bitcode=no","-C","metadata=abc","-C","extra-filename=-abc","--out-dir","/lane/t/debug/deps","-L","dependency=/lane/t/debug/deps","--extern","core=/lane/t/debug/deps/libcore-1.rmeta"];
 const keyOf=(args:readonly string[],environment:Record<string,string|undefined>,laneRoot="/lane",digest="d1")=>unitKeyV1({toolchain:"t",normalized:normalizeRustcArgumentsV1(args,new Map([["/lane/t/debug/deps/libcore-1.rmeta",digest],["/other/lane/t/debug/deps/libcore-1.rmeta",digest]]),laneRoot),sourceSha256:"a".repeat(64),externs:[{name:"core",sha256:digest}],environment:keyEnvironmentV1(environment,laneRoot)});
 
-test("the terminal width, the primary package and the lane do not split a unit",()=>{
+test("the terminal width, the colour, the primary package and the lane do not split a unit",()=>{
  const plain=keyOf(cargoArguments([]),{CARGO_PKG_NAME:"dep"});
  for(const width of[["--diagnostic-width=80"],["--diagnostic-width=211"],["--diagnostic-width","97"]])expect(keyOf(cargoArguments(width),{CARGO_PKG_NAME:"dep"}),width.join(" ")).toBe(plain);
  expect(keyOf(cargoArguments([]),{CARGO_PKG_NAME:"dep",CARGO_PRIMARY_PACKAGE:"1"})).toBe(plain);
  expect(keyOf(cargoArguments([]).map(argument=>argument.replace("/lane/","/other/lane/")),{CARGO_PKG_NAME:"dep"},"/other/lane")).toBe(plain);
  expect(keyOf(cargoArguments([]),{CARGO_PKG_NAME:"dep",CARGO_ENCODED_RUSTFLAGS:"-Zthreads=4"}),"real rustflags are still inputs").not.toBe(plain);
  expect(keyOf(cargoArguments(["--cfg","feature=\"a\""]),{CARGO_PKG_NAME:"dep"}),"features are still inputs").not.toBe(plain);
- expect(keyOf(cargoArguments(["--color=always"]),{CARGO_PKG_NAME:"dep"}),"colour changes the replayed text").not.toBe(plain);
+ expect(keyOf(cargoArguments(["--color=always"]),{CARGO_PKG_NAME:"dep"}),"colour is a rendering of the messages, no input: the replayed text follows the machine that built the unit").toBe(plain);
 });
 
 test("two machines with different roots, target directories and homes give one portable key",()=>{
@@ -57,10 +57,10 @@ test("a dependency rebuilt to the same artifact leaves its dependants' keys alon
 
 test("a proc-macro library is identified by the inputs of the unit that built it, so a relinked copy with other bytes is the same dependency",()=>{
  const root=directory("dylib"),path=join(root,"libmac-1.dylib");
- const stamp=(bytes:string,identity:string)=>{writeFileSync(path,bytes);const sha=digestFileV1(path,undefined)!;writeFileSync(externIdentityFileV1(path),JSON.stringify({version:1,sha256:sha,identity}));return externIdentityV1(path,sha,undefined);};
+ const stamp=(bytes:string,identity:string,svh="a".repeat(32))=>{writeFileSync(path,bytes);const sha=digestFileV1(path,undefined)!;writeFileSync(externIdentityFileV1(path),JSON.stringify({version:2,sha256:sha,identity,svh}));return externIdentityV1(path,sha,undefined);};
  const identity="e".repeat(64);
  expect(stamp("linked-by-machine-one",identity)).toBe(stamp("linked-by-machine-two",identity));
- expect(stamp("linked-by-machine-one",identity)).not.toBe(stamp("linked-by-machine-one","f".repeat(64)));
+ expect(stamp("linked-by-machine-one",identity)).not.toBe(stamp("linked-by-machine-one","f".repeat(64)));expect(stamp("linked-by-machine-one",identity)).not.toBe(stamp("linked-by-machine-one",identity,"b".repeat(32)));expect(stamp("linked-by-machine-one",identity)).toBeDefined();
  writeFileSync(path,"edited after the stamp");
  expect(externIdentityV1(path,digestFileV1(path,undefined)!,undefined),"a stamp is trusted only while it names the library's current bytes").toBeUndefined();
 });

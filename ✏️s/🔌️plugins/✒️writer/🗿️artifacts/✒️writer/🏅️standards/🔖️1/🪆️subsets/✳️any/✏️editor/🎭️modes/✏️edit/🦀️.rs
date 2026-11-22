@@ -1,7 +1,7 @@
 //! ✏️ Writer play app — the `edit` mode: the single-window jack/text-editor authoring layout.
 
 use crate::editor::writer::modes::edit::windows::main;
-use semio_plugin::create_default_layout;
+use semio_plugin::{create_default_layout, Axis};
 use semio_ui_locale::LocalizedLabel;
 use semio_plugin::ModeDefinition;
 use semio_plugin::WindowLayout;
@@ -17,7 +17,7 @@ pub fn definition() -> ModeDefinition {
 /// 🪟️ The app's default window layout — this mode is the app's `default_mode_id`, so its layout IS the
 /// app-level `default_layout`. A single full-width window (writer has exactly one window kind).
 pub fn layout() -> WindowLayout {
-    create_default_layout(&[main::WRITER_PLAY_WINDOW_KIND.into()], "row", Some(&[100.0]), Some(&["Jack".into()]))
+    create_default_layout(&[main::WRITER_PLAY_WINDOW_KIND.into()], Axis::Horizontal, Some(&[1.0]), Some(&["Jack".into()]))
 }
 //#endregion 🔖️Definition
 

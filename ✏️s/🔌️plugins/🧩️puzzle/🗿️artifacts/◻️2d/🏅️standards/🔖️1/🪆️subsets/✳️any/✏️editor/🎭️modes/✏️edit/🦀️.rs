@@ -3,7 +3,7 @@
 //! | selection); the pane builders the three windows share live in the `canvas` child.
 
 use crate::editor::puzzle2d::modes::edit::tools::fill;
-use semio_plugin::create_default_layout;
+use semio_plugin::{create_default_layout, Axis};
 use semio_ui_locale::LocalizedLabel;
 use semio_plugin::ModeDefinition;
 use semio_plugin::ToolRef;
@@ -27,7 +27,7 @@ pub fn definition() -> ModeDefinition {
 
 /// 🪟️ Triptych play layout: a wide interactive overview beside the detail and selection panes.
 pub fn layout() -> WindowLayout {
-    create_default_layout(&[crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID.into(), crate::editor::puzzle2d::config::PUZZLE2D_DETAIL_WINDOW_KIND_ID.into(), crate::editor::puzzle2d::config::PUZZLE2D_SELECTION_WINDOW_KIND_ID.into()], "row", Some(&[50.0, 25.0, 25.0]), Some(&["Overview".into(), "Detail".into(), "Selection".into()]))
+    create_default_layout(&[crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID.into(), crate::editor::puzzle2d::config::PUZZLE2D_DETAIL_WINDOW_KIND_ID.into(), crate::editor::puzzle2d::config::PUZZLE2D_SELECTION_WINDOW_KIND_ID.into()], Axis::Horizontal, Some(&[0.5, 0.25, 0.25]), Some(&["Overview".into(), "Detail".into(), "Selection".into()]))
 }
 //#endregion 🔖️Definition
 

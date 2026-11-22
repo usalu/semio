@@ -1836,58 +1836,32 @@ message ChangeTieBeamWidth {
   string id = 1;
   double new_width = 2;
 }
-
 message InsertCase {
   uint64 index = 1;
   CaseRow case = 2;
 }
-
 message RemoveCase {
   string id = 1;
 }
-
 message ChangeCaseNumber {
   string case_id = 1;
   string key = 2;
   optional double value = 3;
 }
-
 message ChangeCaseText {
   string case_id = 1;
   string key = 2;
   optional string value = 3;
 }
-
 message ChangeCaseLabelEn {
   string case_id = 1;
   string new_value = 2;
 }
-
 message ChangeCaseLabelDe {
   string case_id = 1;
   string new_value = 2;
 }
-
 message ChangeCaseEntryId {
   string case_id = 1;
   string new_value = 2;
-}
-
-message CaseNumber {
-  string id = 1;
-  double value = 2;
-}
-
-message CaseText {
-  string id = 1;
-  string value = 2;
-}
-
-message CaseRow {
-  string id = 1;
-  string label_en = 2;
-  string label_de = 3;
-  string entry_id = 4;
-  repeated CaseNumber numbers = 5;
-  repeated CaseText texts = 6;
 }

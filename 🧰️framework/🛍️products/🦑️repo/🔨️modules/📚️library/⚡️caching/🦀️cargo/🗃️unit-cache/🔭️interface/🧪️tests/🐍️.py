@@ -114,7 +114,25 @@ def digest_equal(old,new):
     wa=a["void"] or a["splice"];wb=b["void"] or b["splice"]
     if wa!=wb:return False,a,b
     return ((old==new) if wa else (a["masked"]==b["masked"])),a,b
+
+def closure_cases(fixture):
+    from pathlib import PurePosixPath
+    crate = fixture["crate"]
+    unit = crate.rsplit("-", 1)[1]
+    results = []
+    for row in fixture["cases"]:
+        artifacts = {PurePosixPath(item["path"]).name: item["hash"] for item in row["artifacts"]}
+        metadata = artifacts.get(f"lib{crate}.rmeta")
+        archive = f"lib{crate}.rlib" in artifacts
+        managed = any(PurePosixPath(path).match(f"build/*/{unit}/out") for path in row["paths"])
+        present = not managed or archive or metadata is not None
+        results.append(dict(code=present and metadata in (None, fixture["expectedSvh"]), metadata=present))
+    return results
+
 vec=json.load(open(sys.argv[1]))
+if sys.argv[3:] == ["closure"]:
+    print(json.dumps(closure_cases(vec["closure"])))
+    sys.exit(0)
 for case in vec["cases"]:
     eq,a,b=digest_equal(case["old"],case["new"])
     print(json.dumps(dict(label=case["label"],equal=eq,oldBodies=a["bodies"],newBodies=b["bodies"],oldMasked=a["masked"]),ensure_ascii=False))

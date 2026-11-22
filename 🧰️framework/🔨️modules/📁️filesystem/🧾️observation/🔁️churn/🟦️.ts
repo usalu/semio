@@ -1,5 +1,6 @@
 import {noticeLanguagesV1} from "../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
-import {renameSync,statSync} from "node:fs";
+import {closeSync,fsyncSync,openSync,renameSync,rmSync,statSync,writeSync} from "node:fs";
+import {dirname} from "node:path";
 import protocolSchema from "./🧬️schema/🔣️.json" with {type:"json"};
 import {filesystemRaceOfErrorV1,filesystemRaceTableV1} from "./🌊️races/🟦️.ts";
 
@@ -83,6 +84,11 @@ export function concurrentEditWireV1(reason:ConcurrentEditReasonV1,path:string,m
 
 /** 🔎️ The concurrent edit behind `error` when a layer of `rank` may retry it: raw errors and errors exhausted only by narrower layers; `undefined` for anything else. */
 export function concurrentEditOfV1(error:unknown,rank:number=Number.POSITIVE_INFINITY):ConcurrentEditFactsV1|undefined{const edit=editOf(error);return edit&&edit.rank<rank?{reason:edit.reason,path:edit.path,rank:edit.rank}:undefined;}
+/** 🪢️ The typed concurrent edit an error is or carries as its cause (a refusal of a closed owner names the failure that closed it as its cause, so the edit that closed it is still the edit), `undefined` when none is typed: a layer that returns an edit instead of throwing it must see through such a wrapper, or the edit becomes a plain failure and no layer retries it. */
+export function concurrentEditErrorOfV1(error:unknown):ConcurrentEditErrorV1|undefined{
+ for(let depth=0,value:unknown=error;value&&typeof value==="object"&&depth<=maximumCauseDepthV1;depth++,value=(value as {cause?:unknown}).cause)if(value instanceof ConcurrentEditErrorV1)return value;
+ return;
+}
 /** ❓️ Whether `error` is a concurrent edit at all, whatever layer exhausted it. */
 export function isConcurrentEditV1(error:unknown):boolean{return editOf(error)!==undefined;}
 
@@ -206,6 +212,28 @@ export function filesystemBusyErrorV1(error:unknown,platform:string=process.plat
 export function renameOverBusyFileSyncV1(from:string,to:string,options:Readonly<{platform?:string;sleepSync?:(milliseconds:number)=>void;report?:(text:string)=>void;environment?:Readonly<Record<string,string|undefined>>;rename?:(from:string,to:string)=>void}>={}):void{
  const{rename=renameSync,...rest}=options,outcome=settleBusyFilesystemSyncV1(to,()=>{rename(from,to);},rest);
  if(!outcome.settled)throw outcome.error;
+}
+
+/** 🧱️ The filesystem operations a durable publication orders; tests substitute them to observe the order. */
+export type DurablePublicationOperationsV1=Readonly<{open:(path:string,flags:string)=>number;write:(descriptor:number,bytes:Uint8Array)=>void;fsync:(descriptor:number)=>void;close:(descriptor:number)=>void;rename:(from:string,to:string)=>void}>;
+
+/** 💾️ Syncs a directory so a rename inside it survives a crash; Windows cannot open a directory for sync and orders its metadata itself, so there it is a declared no-op, and a filesystem that refuses directory sync keeps the rename it already has. See https://man7.org/linux/man-pages/man2/fsync.2.html */
+export function syncDirectorySyncV1(directory:string,options:Readonly<{platform?:string;operations?:Partial<Pick<DurablePublicationOperationsV1,"open"|"fsync"|"close">>}>={}):void{
+ if((options.platform??process.platform)==="win32")return;
+ const{open=(path:string,flags:string)=>openSync(path,flags),fsync=fsyncSync,close=closeSync}=options.operations??{},refused=["EINVAL","ENOTSUP","EPERM","EISDIR","EBADF"];
+ let descriptor:number;try{descriptor=open(directory,"r");}catch(error){if(refused.includes((error as {code?:string}).code??""))return;throw error;}
+ try{fsync(descriptor);}catch(error){if(!refused.includes((error as {code?:string}).code??""))throw error;}finally{close(descriptor);}
+}
+
+/** 🛡️ Publishes bytes crash-safely: exclusive temporary file in the target's directory, full write, fsync of the file, rename over the target (retrying a busy target) and fsync of the directory, so the target name can never reach disk before its content. The temporary is removed when anything before the rename fails. */
+export function publishFileDurablySyncV1(temporary:string,path:string,bytes:Uint8Array,options:Readonly<{platform?:string;operations?:Partial<DurablePublicationOperationsV1>}>={}):void{
+ const{open=(file:string,flags:string)=>openSync(file,flags),write=(descriptor:number,data:Uint8Array)=>{for(let offset=0;offset<data.length;)offset+=writeSync(descriptor,data,offset,data.length-offset);},fsync=fsyncSync,close=closeSync,rename=renameSync}=options.operations??{},platform=options.platform??process.platform;
+ const descriptor=open(temporary,"wx");let renamed=false;
+ try{
+  try{write(descriptor,bytes);fsync(descriptor);}finally{close(descriptor);}
+  renameOverBusyFileSyncV1(temporary,path,{rename,platform});renamed=true;
+  syncDirectorySyncV1(dirname(path),{platform,operations:{open,fsync,close}});
+ }finally{if(!renamed)try{rmSync(temporary,{force:true});}catch{}}
 }
 
 /** 🪞️ The verdict of {@link settleBusyFilesystemSyncV1}: the value, or the error that stayed after the bounded retries. */

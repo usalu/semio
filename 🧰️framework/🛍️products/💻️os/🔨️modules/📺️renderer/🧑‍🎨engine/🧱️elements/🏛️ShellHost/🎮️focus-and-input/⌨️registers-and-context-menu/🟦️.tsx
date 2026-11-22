@@ -1,16 +1,19 @@
 /** ⌨️ The utility and tool registers, the introduction callbacks, the browser actor view state and the context menu of the focus and input hook. */
 import { shellDialogSessionIsCurrentV1 } from "../../🗨️dialog-origin/🟦️.ts";
 import { type DocumentOpeningReceiptV1 } from "../../🗨️dialog-origin/🛂️admission/📄️document/🟦️.ts";
+import { resolveRuntimeKeyV1 } from "../../🗄️shell-uri-documents/🔑️runtime-key/🟦️.ts";
+import { spawnedGuestWindowInstancesV1 } from "../../🪟️spawned-program/🟦️.ts";
 import { TutorialDriveV1 } from "../../🗨️dialog-origin/🎥️tutorial/🟦️.ts";
 import { useCallback, useEffect, useMemo, useRef } from "../../../⚛️react-port/🟦️.ts";
 import { type ContextMenuItemSpec, type IntroductionInteraction, parseResolvedPluginViewState, type PluginContextMenuRequest, type PluginSourceEvent, retireContributorInstances, hostArmedViewContext, panelViewContext } from "@semio-tech/framework";
 import { encodeBackboneWorkerRequest } from "@semio-tech/framework/backbone";
 import { type LocalInteractionState } from "@semio-tech/framework/replication";
-import { CELEBRATE_STAMP_DURATION_MS, celebrateAllElements, celebrateElements, elementIdSelector, type WindowLayoutNode, writeStoredIntroductionSeen } from "@semio-tech/ui-react";
+import { CELEBRATE_STAMP_DURATION_MS, celebrateAllElements, celebrateElements, elementIdSelector, writeStoredIntroductionSeen } from "@semio-tech/ui-react";
+import type { WindowLayoutNode } from "@semio-tech/ui-layout";
 import { type ActiveSession } from "../../../🐚️Shell/📦️program-sessions/🟦️.ts";
 import type { ViewModel } from "../../../🔌️PluginRuntime/🧷️handle-contract/🟦️.ts";
 import { leftoverWorldWindowOverlayV1, publishLeftoverWorldSelectionV1 } from "../../../🌐️World3dHost/🔗️instance-selection/🟦️.ts";
-import { pluginAvailabilityRouteV1 } from "../../../🛠️ShellHelpers/🛣️route-and-chrome/🟦️.tsx";
+import { frameworkLayoutDeclaredInstances, pluginAvailabilityRouteV1 } from "../../../🛠️ShellHelpers/🛣️route-and-chrome/🟦️.tsx";
 import { buildActiveUtilityByWindowId, sessionWindowInstances } from "../../../🛠️ShellHelpers/🔄️ui-refresh/🟦️.ts";
 import { createLatestAsyncDispatcher } from "../../../🛠️ShellHelpers/🛑️extension-io/🟦️.ts";
 import { shellLabel } from "../../../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
@@ -263,18 +266,24 @@ export function useUtilityAndToolRegisters({ utilityRegisterCell, bumpRegisterRe
   }, [injectActiveTool]);
 
   const resolvedTargetViewState = useCallback(
-    (targetSession: ActiveSession) =>
-      parseResolvedPluginViewState(
+    (targetSession: ActiveSession) => {
+      const app = targetSession.app;
+      const spawnedTarget = targetSession.viewState.panelJson !== undefined && !shellDialogSessionIsCurrentV1(targetSession, sessionRef.current);
+      const windowInstances = spawnedTarget
+        ? spawnedGuestWindowInstancesV1(app.windowKinds, frameworkLayoutDeclaredInstances(app.defaultLayout, app.windowKinds))
+        : sessionWindowInstances(app, extraWindowInstancesRef.current);
+      return parseResolvedPluginViewState(
         injectActiveTool({
           ...targetSession.viewState,
           locale: uiLocale,
           terminology: uiTerminology,
           sessionIdentity: identityRef.current ? { userId: identityRef.current.userId, displayName: identityRef.current.displayName } : undefined,
-          windowInstances: sessionWindowInstances(targetSession.app, extraWindowInstancesRef.current).map((instance) => ({ id: instance.id, windowKindId: instance.windowKindId })),
+          windowInstances: windowInstances.map((instance) => ({ id: instance.id, windowKindId: instance.windowKindId })),
           activeUtilityByWindowId: buildActiveUtilityByWindowId(activeUtilityByWindowIdRef.current),
           activeUtilityId: undefined,
         }),
-      ),
+      );
+    },
     [injectActiveTool, uiLocale, uiTerminology],
   );
   return { resolvedTargetViewState, pendingDocumentOpeningPublicationRef, activeWindowIdRef, injectActiveTool, writeUtilityRegister, clearAllWindowUtilities, writeToolRegister, toolGeneration, toolMeasuresByToolIdRef, effectiveModeLayoutRef, actionPaneExpandedByWindowIdRef, actionPaneStagedArgsByKeyRef, startTutorialRef, stopTutorialRef, toggleTutorialRecordingRef, tutorialDrivenRef, tutorialPlayingRef, tutorialRecordingRef, tutorialRecorderRef, tutorialRecorderStartingRef, publishLocalInteraction, observeLocalInteraction, dismissIntroduction, completeIntroductionInteraction, expandedCommandIdRef, commandStagedArgsByCommandIdRef, injectActiveUtility };
@@ -307,7 +316,9 @@ export function useBrowserActorViewAndContextMenu({ resolvedTargetViewState, pen
       && shellDialogSessionIsCurrentV1(pending.session, session)
       ? pending.receipt.runtimeKey
       : null;
-    dispatch({ type: "SET_SYNC_BACKBONE_URI", value: retainedRuntimeKey === null ? null : `actor://${retainedRuntimeKey}` });
+    const spawned = hostMode ? panel?.spawnedApps.find((candidate) => candidate.id === panel.activeSpawnedId) : undefined;
+    const runtimeKey = spawned === undefined ? retainedRuntimeKey : resolveRuntimeKeyV1(openDocumentSessionsRef.current, spawned);
+    dispatch({ type: "SET_SYNC_BACKBONE_URI", value: runtimeKey === null ? null : `actor://${runtimeKey}` });
     dispatch({ type: "SET_SYNC_CARD_KIND", value: null });
   }, [panel?.activeSpawnedId, session, hostMode]);
 

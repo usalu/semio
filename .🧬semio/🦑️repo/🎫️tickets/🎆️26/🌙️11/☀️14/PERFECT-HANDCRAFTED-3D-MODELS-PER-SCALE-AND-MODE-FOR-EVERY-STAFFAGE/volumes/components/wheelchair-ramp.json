@@ -5221,7 +5221,67 @@
      "sections": [
       {
        "at": [
-        0,
+        0.0212,
+        0.75,
+        0.65
+       ],
+       "rx": 0.0212,
+       "ry": 0.0212,
+       "rotation": [
+        -0.5,
+        0.5,
+        0.5,
+        0.5
+       ]
+      },
+      {
+       "at": [
+        0.0212,
+        0.79,
+        0.65
+       ],
+       "rx": 0.0212,
+       "ry": 0.0212,
+       "rotation": [
+        -0.5,
+        0.5,
+        0.5,
+        0.5
+       ]
+      },
+      {
+       "at": [
+        0.02924,
+        0.82,
+        0.65
+       ],
+       "rx": 0.0212,
+       "ry": 0.0212,
+       "rotation": [
+        -0.353553,
+        0.612372,
+        0.353553,
+        0.612372
+       ]
+      },
+      {
+       "at": [
+        0.0512,
+        0.84196,
+        0.65
+       ],
+       "rx": 0.0212,
+       "ry": 0.0212,
+       "rotation": [
+        -0.183013,
+        0.683013,
+        0.183013,
+        0.683013
+       ]
+      },
+      {
+       "at": [
+        0.0812,
         0.85,
         0.65
        ],
@@ -5296,7 +5356,7 @@
       },
       {
        "at": [
-        9.3,
+        9.2188,
         1.45,
         0.65
        ],
@@ -5307,6 +5367,66 @@
         0.707107,
         0.0,
         0.707107
+       ]
+      },
+      {
+       "at": [
+        9.2488,
+        1.44196,
+        0.65
+       ],
+       "rx": 0.0212,
+       "ry": 0.0212,
+       "rotation": [
+        0.183013,
+        0.683013,
+        -0.183013,
+        0.683013
+       ]
+      },
+      {
+       "at": [
+        9.27076,
+        1.42,
+        0.65
+       ],
+       "rx": 0.0212,
+       "ry": 0.0212,
+       "rotation": [
+        0.353553,
+        0.612372,
+        -0.353553,
+        0.612372
+       ]
+      },
+      {
+       "at": [
+        9.2788,
+        1.39,
+        0.65
+       ],
+       "rx": 0.0212,
+       "ry": 0.0212,
+       "rotation": [
+        0.5,
+        0.5,
+        -0.5,
+        0.5
+       ]
+      },
+      {
+       "at": [
+        9.2788,
+        1.35,
+        0.65
+       ],
+       "rx": 0.0212,
+       "ry": 0.0212,
+       "rotation": [
+        0.5,
+        0.5,
+        -0.5,
+        0.5
        ]
       }
      ],
@@ -5323,7 +5443,67 @@
      "sections": [
       {
        "at": [
-        0,
+        0.0212,
+        0.75,
+        -0.65
+       ],
+       "rx": 0.0212,
+       "ry": 0.0212,
+       "rotation": [
+        -0.5,
+        0.5,
+        0.5,
+        0.5
+       ]
+      },
+      {
+       "at": [
+        0.0212,
+        0.79,
+        -0.65
+       ],
+       "rx": 0.0212,
+       "ry": 0.0212,
+       "rotation": [
+        -0.5,
+        0.5,
+        0.5,
+        0.5
+       ]
+      },
+      {
+       "at": [
+        0.02924,
+        0.82,
+        -0.65
+       ],
+       "rx": 0.0212,
+       "ry": 0.0212,
+       "rotation": [
+        -0.353553,
+        0.612372,
+        0.353553,
+        0.612372
+       ]
+      },
+      {
+       "at": [
+        0.0512,
+        0.84196,
+        -0.65
+       ],
+       "rx": 0.0212,
+       "ry": 0.0212,
+       "rotation": [
+        -0.183013,
+        0.683013,
+        0.183013,
+        0.683013
+       ]
+      },
+      {
+       "at": [
+        0.0812,
         0.85,
         -0.65
        ],
@@ -5398,7 +5578,7 @@
       },
       {
        "at": [
-        9.3,
+        9.2188,
         1.45,
         -0.65
        ],
@@ -5409,6 +5589,66 @@
         0.707107,
         0.0,
         0.707107
+       ]
+      },
+      {
+       "at": [
+        9.2488,
+        1.44196,
+        -0.65
+       ],
+       "rx": 0.0212,
+       "ry": 0.0212,
+       "rotation": [
+        0.183013,
+        0.683013,
+        -0.183013,
+        0.683013
+       ]
+      },
+      {
+       "at": [
+        9.27076,
+        1.42,
+        -0.65
+       ],
+       "rx": 0.0212,
+       "ry": 0.0212,
+       "rotation": [
+        0.353553,
+        0.612372,
+        -0.353553,
+        0.612372
+       ]
+      },
+      {
+       "at": [
+        9.2788,
+        1.39,
+        -0.65
+       ],
+       "rx": 0.0212,
+       "ry": 0.0212,
+       "rotation": [
+        0.5,
+        0.5,
+        -0.5,
+        0.5
+       ]
+      },
+      {
+       "at": [
+        9.2788,
+        1.35,
+        -0.65
+       ],
+       "rx": 0.0212,
+       "ry": 0.0212,
+       "rotation": [
+        0.5,
+        0.5,
+        -0.5,
+        0.5
        ]
       }
      ],
@@ -6121,11 +6361,11 @@
        0.0212
       ],
       [
-       0.3009,
+       0.2197,
        0.0212
       ],
       [
-       0.3009,
+       0.2197,
        0.0186
       ],
       [
@@ -6139,7 +6379,7 @@
       0
      ],
      "origin": [
-      0.0,
+      0.0812,
       0.85,
       0.65
      ],
@@ -6289,11 +6529,11 @@
        0.0212
       ],
       [
-       0.3009,
+       0.2197,
        0.0212
       ],
       [
-       0.3009,
+       0.2197,
        0.0186
       ],
       [
@@ -6315,6 +6555,214 @@
      "part": "member"
     },
     {
+     "id": "m-rail-a-bend-end",
+     "kind": "loft",
+     "bone": "handrail",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.45,
+     "sections": [
+      {
+       "at": [
+        9.2148,
+        1.45,
+        0.65
+       ],
+       "rx": 0.0212,
+       "ry": 0.0212,
+       "rotation": [
+        -0.0,
+        0.707107,
+        0.0,
+        0.707107
+       ]
+      },
+      {
+       "at": [
+        9.2188,
+        1.45,
+        0.65
+       ],
+       "rx": 0.0212,
+       "ry": 0.0212,
+       "rotation": [
+        -0.0,
+        0.707107,
+        0.0,
+        0.707107
+       ]
+      },
+      {
+       "at": [
+        9.2488,
+        1.44196,
+        0.65
+       ],
+       "rx": 0.0212,
+       "ry": 0.0212,
+       "rotation": [
+        0.183013,
+        0.683013,
+        -0.183013,
+        0.683013
+       ]
+      },
+      {
+       "at": [
+        9.27076,
+        1.42,
+        0.65
+       ],
+       "rx": 0.0212,
+       "ry": 0.0212,
+       "rotation": [
+        0.353553,
+        0.612372,
+        -0.353553,
+        0.612372
+       ]
+      },
+      {
+       "at": [
+        9.2788,
+        1.39,
+        0.65
+       ],
+       "rx": 0.0212,
+       "ry": 0.0212,
+       "rotation": [
+        0.5,
+        0.5,
+        -0.5,
+        0.5
+       ]
+      },
+      {
+       "at": [
+        9.2788,
+        1.35,
+        0.65
+       ],
+       "rx": 0.0212,
+       "ry": 0.0212,
+       "rotation": [
+        0.5,
+        0.5,
+        -0.5,
+        0.5
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true,
+     "member": "handrail",
+     "part": "member"
+    },
+    {
+     "id": "m-rail-a-bend-start",
+     "kind": "loft",
+     "bone": "handrail",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.45,
+     "sections": [
+      {
+       "at": [
+        0.0212,
+        0.75,
+        0.65
+       ],
+       "rx": 0.0212,
+       "ry": 0.0212,
+       "rotation": [
+        -0.5,
+        0.5,
+        0.5,
+        0.5
+       ]
+      },
+      {
+       "at": [
+        0.0212,
+        0.79,
+        0.65
+       ],
+       "rx": 0.0212,
+       "ry": 0.0212,
+       "rotation": [
+        -0.5,
+        0.5,
+        0.5,
+        0.5
+       ]
+      },
+      {
+       "at": [
+        0.02924,
+        0.82,
+        0.65
+       ],
+       "rx": 0.0212,
+       "ry": 0.0212,
+       "rotation": [
+        -0.353553,
+        0.612372,
+        0.353553,
+        0.612372
+       ]
+      },
+      {
+       "at": [
+        0.0512,
+        0.84196,
+        0.65
+       ],
+       "rx": 0.0212,
+       "ry": 0.0212,
+       "rotation": [
+        -0.183013,
+        0.683013,
+        0.183013,
+        0.683013
+       ]
+      },
+      {
+       "at": [
+        0.0812,
+        0.85,
+        0.65
+       ],
+       "rx": 0.0212,
+       "ry": 0.0212,
+       "rotation": [
+        -0.0,
+        0.707107,
+        0.0,
+        0.707107
+       ]
+      },
+      {
+       "at": [
+        0.0852,
+        0.85,
+        0.65
+       ],
+       "rx": 0.0212,
+       "ry": 0.0212,
+       "rotation": [
+        -0.0,
+        0.707107,
+        0.0,
+        0.707107
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true,
+     "member": "handrail",
+     "part": "member"
+    },
+    {
      "id": "m-rail-b-ext-start",
      "kind": "revolve",
      "bone": "handrail",
@@ -6331,11 +6779,11 @@
        0.0212
       ],
       [
-       0.3009,
+       0.2197,
        0.0212
       ],
       [
-       0.3009,
+       0.2197,
        0.0186
       ],
       [
@@ -6349,7 +6797,7 @@
       0
      ],
      "origin": [
-      0.0,
+      0.0812,
       0.85,
       -0.65
      ],
@@ -6499,11 +6947,11 @@
        0.0212
       ],
       [
-       0.3009,
+       0.2197,
        0.0212
       ],
       [
-       0.3009,
+       0.2197,
        0.0186
       ],
       [
@@ -6521,6 +6969,214 @@
       1.45,
       -0.65
      ],
+     "member": "handrail",
+     "part": "member"
+    },
+    {
+     "id": "m-rail-b-bend-end",
+     "kind": "loft",
+     "bone": "handrail",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.45,
+     "sections": [
+      {
+       "at": [
+        9.2148,
+        1.45,
+        -0.65
+       ],
+       "rx": 0.0212,
+       "ry": 0.0212,
+       "rotation": [
+        -0.0,
+        0.707107,
+        0.0,
+        0.707107
+       ]
+      },
+      {
+       "at": [
+        9.2188,
+        1.45,
+        -0.65
+       ],
+       "rx": 0.0212,
+       "ry": 0.0212,
+       "rotation": [
+        -0.0,
+        0.707107,
+        0.0,
+        0.707107
+       ]
+      },
+      {
+       "at": [
+        9.2488,
+        1.44196,
+        -0.65
+       ],
+       "rx": 0.0212,
+       "ry": 0.0212,
+       "rotation": [
+        0.183013,
+        0.683013,
+        -0.183013,
+        0.683013
+       ]
+      },
+      {
+       "at": [
+        9.27076,
+        1.42,
+        -0.65
+       ],
+       "rx": 0.0212,
+       "ry": 0.0212,
+       "rotation": [
+        0.353553,
+        0.612372,
+        -0.353553,
+        0.612372
+       ]
+      },
+      {
+       "at": [
+        9.2788,
+        1.39,
+        -0.65
+       ],
+       "rx": 0.0212,
+       "ry": 0.0212,
+       "rotation": [
+        0.5,
+        0.5,
+        -0.5,
+        0.5
+       ]
+      },
+      {
+       "at": [
+        9.2788,
+        1.35,
+        -0.65
+       ],
+       "rx": 0.0212,
+       "ry": 0.0212,
+       "rotation": [
+        0.5,
+        0.5,
+        -0.5,
+        0.5
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true,
+     "member": "handrail",
+     "part": "member"
+    },
+    {
+     "id": "m-rail-b-bend-start",
+     "kind": "loft",
+     "bone": "handrail",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.45,
+     "sections": [
+      {
+       "at": [
+        0.0212,
+        0.75,
+        -0.65
+       ],
+       "rx": 0.0212,
+       "ry": 0.0212,
+       "rotation": [
+        -0.5,
+        0.5,
+        0.5,
+        0.5
+       ]
+      },
+      {
+       "at": [
+        0.0212,
+        0.79,
+        -0.65
+       ],
+       "rx": 0.0212,
+       "ry": 0.0212,
+       "rotation": [
+        -0.5,
+        0.5,
+        0.5,
+        0.5
+       ]
+      },
+      {
+       "at": [
+        0.02924,
+        0.82,
+        -0.65
+       ],
+       "rx": 0.0212,
+       "ry": 0.0212,
+       "rotation": [
+        -0.353553,
+        0.612372,
+        0.353553,
+        0.612372
+       ]
+      },
+      {
+       "at": [
+        0.0512,
+        0.84196,
+        -0.65
+       ],
+       "rx": 0.0212,
+       "ry": 0.0212,
+       "rotation": [
+        -0.183013,
+        0.683013,
+        0.183013,
+        0.683013
+       ]
+      },
+      {
+       "at": [
+        0.0812,
+        0.85,
+        -0.65
+       ],
+       "rx": 0.0212,
+       "ry": 0.0212,
+       "rotation": [
+        -0.0,
+        0.707107,
+        0.0,
+        0.707107
+       ]
+      },
+      {
+       "at": [
+        0.0852,
+        0.85,
+        -0.65
+       ],
+       "rx": 0.0212,
+       "ry": 0.0212,
+       "rotation": [
+        -0.0,
+        0.707107,
+        0.0,
+        0.707107
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true,
      "member": "handrail",
      "part": "member"
     },
@@ -7034,8 +7690,8 @@
    ],
    "decisions": [
     {
-     "en": "Body: the four pours with their joints, each kerb as one square 100 mm strip without chamfers, each handrail as one tube with plain ends (the bends are below what this scale draws), and the posts as plain 48.3 mm round bars from the kerb top into the rail; plates, nuts, caps and stems are merged into the posts.",
-     "de": "Körper: die vier Betonierabschnitte mit ihren Fugen, jeder Bord als ein quadratischer Streifen 100 mm ohne Fasen, jeder Handlauf als ein Rohr mit glatten Enden (die Bögen liegen unter dem, was dieser Maßstab zeichnet) und die Pfosten als glatte Rundstäbe 48,3 mm von der Bordoberseite bis in das Rohr; Platten, Muttern, Deckel und Stifte gehen in den Pfosten auf."
+     "en": "Body: the four pours with their joints, each kerb as one square 100 mm strip without chamfers, each handrail as one tube whose 0.30 m extensions turn down into the 100 mm leg through a 60 mm bend drawn in three chords (the end caps are below what this scale draws), and the posts as plain 48.3 mm round bars from the kerb top into the rail; plates, nuts, caps and stems are merged into the posts.",
+     "de": "Körper: die vier Betonierabschnitte mit ihren Fugen, jeder Bord als ein quadratischer Streifen 100 mm ohne Fasen, jeder Handlauf als ein Rohr, dessen 0,30 m lange Verlängerungen über einen in drei Sehnen gezeichneten 60-mm-Bogen in den 100 mm langen Schenkel nach unten laufen (die Endkappen liegen unter dem, was dieser Maßstab zeichnet) und die Pfosten als glatte Rundstäbe 48,3 mm von der Bordoberseite bis in das Rohr; Platten, Muttern, Deckel und Stifte gehen in den Pfosten auf."
     },
     {
      "en": "Thermal: the walking surface as a 100 mm skin on every pour, each flank as one 100 mm skin up to the outer kerb arris, the kerbs with top and inner face, rails and posts as the body solids; the layers are merged into their regions.",
@@ -7204,7 +7860,52 @@
      "sections": [
       {
        "at": [
-        0,
+        0.0212,
+        0.75,
+        0.65
+       ],
+       "rx": 0.0212,
+       "ry": 0.0212,
+       "rotation": [
+        -0.5,
+        0.5,
+        0.5,
+        0.5
+       ]
+      },
+      {
+       "at": [
+        0.0212,
+        0.79,
+        0.65
+       ],
+       "rx": 0.0212,
+       "ry": 0.0212,
+       "rotation": [
+        -0.5,
+        0.5,
+        0.5,
+        0.5
+       ]
+      },
+      {
+       "at": [
+        0.03877,
+        0.83243,
+        0.65
+       ],
+       "rx": 0.0212,
+       "ry": 0.0212,
+       "rotation": [
+        -0.270598,
+        0.653281,
+        0.270598,
+        0.653281
+       ]
+      },
+      {
+       "at": [
+        0.0812,
         0.85,
         0.65
        ],
@@ -7279,7 +7980,7 @@
       },
       {
        "at": [
-        9.3,
+        9.2188,
         1.45,
         0.65
        ],
@@ -7290,6 +7991,51 @@
         0.707107,
         0.0,
         0.707107
+       ]
+      },
+      {
+       "at": [
+        9.26123,
+        1.43243,
+        0.65
+       ],
+       "rx": 0.0212,
+       "ry": 0.0212,
+       "rotation": [
+        0.270598,
+        0.653281,
+        -0.270598,
+        0.653281
+       ]
+      },
+      {
+       "at": [
+        9.2788,
+        1.39,
+        0.65
+       ],
+       "rx": 0.0212,
+       "ry": 0.0212,
+       "rotation": [
+        0.5,
+        0.5,
+        -0.5,
+        0.5
+       ]
+      },
+      {
+       "at": [
+        9.2788,
+        1.35,
+        0.65
+       ],
+       "rx": 0.0212,
+       "ry": 0.0212,
+       "rotation": [
+        0.5,
+        0.5,
+        -0.5,
+        0.5
        ]
       }
      ],
@@ -7307,7 +8053,52 @@
      "sections": [
       {
        "at": [
-        0,
+        0.0212,
+        0.75,
+        -0.65
+       ],
+       "rx": 0.0212,
+       "ry": 0.0212,
+       "rotation": [
+        -0.5,
+        0.5,
+        0.5,
+        0.5
+       ]
+      },
+      {
+       "at": [
+        0.0212,
+        0.79,
+        -0.65
+       ],
+       "rx": 0.0212,
+       "ry": 0.0212,
+       "rotation": [
+        -0.5,
+        0.5,
+        0.5,
+        0.5
+       ]
+      },
+      {
+       "at": [
+        0.03877,
+        0.83243,
+        -0.65
+       ],
+       "rx": 0.0212,
+       "ry": 0.0212,
+       "rotation": [
+        -0.270598,
+        0.653281,
+        0.270598,
+        0.653281
+       ]
+      },
+      {
+       "at": [
+        0.0812,
         0.85,
         -0.65
        ],
@@ -7382,7 +8173,7 @@
       },
       {
        "at": [
-        9.3,
+        9.2188,
         1.45,
         -0.65
        ],
@@ -7393,6 +8184,51 @@
         0.707107,
         0.0,
         0.707107
+       ]
+      },
+      {
+       "at": [
+        9.26123,
+        1.43243,
+        -0.65
+       ],
+       "rx": 0.0212,
+       "ry": 0.0212,
+       "rotation": [
+        0.270598,
+        0.653281,
+        -0.270598,
+        0.653281
+       ]
+      },
+      {
+       "at": [
+        9.2788,
+        1.39,
+        -0.65
+       ],
+       "rx": 0.0212,
+       "ry": 0.0212,
+       "rotation": [
+        0.5,
+        0.5,
+        -0.5,
+        0.5
+       ]
+      },
+      {
+       "at": [
+        9.2788,
+        1.35,
+        -0.65
+       ],
+       "rx": 0.0212,
+       "ry": 0.0212,
+       "rotation": [
+        0.5,
+        0.5,
+        -0.5,
+        0.5
        ]
       }
      ],
@@ -8359,8 +9195,8 @@
    ],
    "decisions": [
     {
-     "en": "Body: the ramp as one wedge (the joints are no longer forms), two kerb strips, the handrails as true 42.4 mm tubes (`slender`, drawn as lines) on their twelve 48.3 mm posts.",
-     "de": "Körper: die Rampe als ein Keil (die Fugen sind keine Formen mehr), zwei Bordstreifen, die Handläufe als wahre Rohre 42,4 mm (`slender`, als Linien gezeichnet) auf ihren zwölf Pfosten 48,3 mm."
+     "en": "Body: the ramp as one wedge (the joints are no longer forms), two kerb strips, the handrails as true 42.4 mm tubes (`slender`, drawn as lines) with the turned-down return of each end as two chords, on their twelve 48.3 mm posts.",
+     "de": "Körper: die Rampe als ein Keil (die Fugen sind keine Formen mehr), zwei Bordstreifen, die Handläufe als wahre Rohre 42,4 mm (`slender`, als Linien gezeichnet) mit der nach unten geführten Rücklenkung jedes Endes als zwei Sehnen, auf ihren zwölf Pfosten 48,3 mm."
     },
     {
      "en": "Thermal: a 100 mm surface skin on every pour, a 100 mm skin on each flank of the wedge, the kerb strips with their three free faces, rails and posts as the body solids; only the total area is compared at this scale.",
@@ -8412,6 +9248,112 @@
      "plane": "xy",
      "from": -0.7,
      "to": 0.7
+    },
+    {
+     "id": "kerb-a",
+     "kind": "extrude",
+     "bone": "body",
+     "material": "concrete",
+     "role": "body",
+     "tone": 0.62,
+     "profile": [
+      [
+       1.5,
+       0
+      ],
+      [
+       5.1,
+       0.3
+      ],
+      [
+       6.6,
+       0.3
+      ],
+      [
+       10.2,
+       0.6
+      ],
+      [
+       11.7,
+       0.6
+      ],
+      [
+       11.7,
+       0.7
+      ],
+      [
+       10.2,
+       0.7
+      ],
+      [
+       6.6,
+       0.4
+      ],
+      [
+       5.1,
+       0.4
+      ],
+      [
+       1.5,
+       0.1
+      ]
+     ],
+     "plane": "xy",
+     "from": 0.6,
+     "to": 0.7
+    },
+    {
+     "id": "kerb-b",
+     "kind": "extrude",
+     "bone": "body",
+     "material": "concrete",
+     "role": "body",
+     "tone": 0.62,
+     "profile": [
+      [
+       1.5,
+       0
+      ],
+      [
+       5.1,
+       0.3
+      ],
+      [
+       6.6,
+       0.3
+      ],
+      [
+       10.2,
+       0.6
+      ],
+      [
+       11.7,
+       0.6
+      ],
+      [
+       11.7,
+       0.7
+      ],
+      [
+       10.2,
+       0.7
+      ],
+      [
+       6.6,
+       0.4
+      ],
+      [
+       5.1,
+       0.4
+      ],
+      [
+       1.5,
+       0.1
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.7,
+     "to": -0.6
     },
     {
      "id": "rail-a",
@@ -8636,11 +9578,11 @@
        0.0375
       ],
       [
-       0.833,
+       0.733,
        0.0375
       ],
       [
-       0.833,
+       0.733,
        0
       ]
      ],
@@ -8651,7 +9593,7 @@
      ],
      "origin": [
       0.4,
-      0.00833,
+      0.10833,
       0.65
      ],
      "repeat": {
@@ -8680,11 +9622,11 @@
        0.0375
       ],
       [
-       0.833,
+       0.733,
        0.0375
       ],
       [
-       0.833,
+       0.733,
        0
       ]
      ],
@@ -8695,7 +9637,7 @@
      ],
      "origin": [
       5.5,
-      0.30833,
+      0.40833,
       0.65
      ],
      "repeat": {
@@ -8724,11 +9666,11 @@
        0.0375
       ],
       [
-       0.833,
+       0.733,
        0.0375
       ],
       [
-       0.833,
+       0.733,
        0
       ]
      ],
@@ -8739,7 +9681,7 @@
      ],
      "origin": [
       0.4,
-      0.00833,
+      0.10833,
       -0.65
      ],
      "repeat": {
@@ -8768,11 +9710,11 @@
        0.0375
       ],
       [
-       0.833,
+       0.733,
        0.0375
       ],
       [
-       0.833,
+       0.733,
        0
       ]
      ],
@@ -8783,7 +9725,7 @@
      ],
      "origin": [
       5.5,
-      0.30833,
+      0.40833,
       -0.65
      ],
      "repeat": {
@@ -8950,57 +9892,7 @@
     },
     {
      "id": "th-kerb-a",
-     "kind": "extrude",
-     "bone": "body",
-     "material": "concrete",
-     "role": "body",
-     "tone": 0.62,
-     "profile": [
-      [
-       1.5,
-       0
-      ],
-      [
-       5.1,
-       0.3
-      ],
-      [
-       6.6,
-       0.3
-      ],
-      [
-       10.2,
-       0.6
-      ],
-      [
-       11.7,
-       0.6
-      ],
-      [
-       11.7,
-       0.7
-      ],
-      [
-       10.2,
-       0.7
-      ],
-      [
-       6.6,
-       0.4
-      ],
-      [
-       5.1,
-       0.4
-      ],
-      [
-       1.5,
-       0.1
-      ]
-     ],
-     "plane": "xy",
-     "from": 0.6,
-     "to": 0.7,
-     "slender": true,
+     "of": "kerb-a",
      "region": "kerb",
      "sectionFaces": [
       "-v",
@@ -9010,57 +9902,7 @@
     },
     {
      "id": "th-kerb-b",
-     "kind": "extrude",
-     "bone": "body",
-     "material": "concrete",
-     "role": "body",
-     "tone": 0.62,
-     "profile": [
-      [
-       1.5,
-       0
-      ],
-      [
-       5.1,
-       0.3
-      ],
-      [
-       6.6,
-       0.3
-      ],
-      [
-       10.2,
-       0.6
-      ],
-      [
-       11.7,
-       0.6
-      ],
-      [
-       11.7,
-       0.7
-      ],
-      [
-       10.2,
-       0.7
-      ],
-      [
-       6.6,
-       0.4
-      ],
-      [
-       5.1,
-       0.4
-      ],
-      [
-       1.5,
-       0.1
-      ]
-     ],
-     "plane": "xy",
-     "from": -0.7,
-     "to": -0.6,
-     "slender": true,
+     "of": "kerb-b",
      "region": "kerb",
      "sectionFaces": [
       "-v",
@@ -9234,6 +10076,18 @@
      "part": "member"
     },
     {
+     "id": "m-kerb-a",
+     "of": "kerb-a",
+     "member": "body",
+     "part": "member"
+    },
+    {
+     "id": "m-kerb-b",
+     "of": "kerb-b",
+     "member": "body",
+     "part": "member"
+    },
+    {
      "id": "m-rail-a",
      "of": "rail-a",
      "member": "handrail",
@@ -9301,7 +10155,7 @@
      ],
      "origin": [
       0.4,
-      0.00833,
+      0.10833,
       0.65
      ],
      "repeat": {
@@ -9347,7 +10201,7 @@
      ],
      "origin": [
       5.5,
-      0.30833,
+      0.40833,
       0.65
      ],
      "repeat": {
@@ -9393,7 +10247,7 @@
      ],
      "origin": [
       0.4,
-      0.00833,
+      0.10833,
       -0.65
      ],
      "repeat": {
@@ -9439,7 +10293,7 @@
      ],
      "origin": [
       5.5,
-      0.30833,
+      0.40833,
       -0.65
      ],
      "repeat": {
@@ -9579,16 +10433,16 @@
    ],
    "decisions": [
     {
-     "en": "Body: the wedge with the kerbs merged into it, the two handrails as true tubes (`slender`) and the twelve posts at the size floor of 75 mm, standing on the slab edge so that no rail floats.",
-     "de": "Körper: der Keil mit den darin aufgegangenen Borden, die zwei Handläufe als wahre Rohre (`slender`) und die zwölf Pfosten an der Größenuntergrenze von 75 mm, auf dem Plattenrand stehend, sodass kein Handlauf schwebt."
+     "en": "Body: the wedge and the two 100 mm kerb strips (above the 75 mm feature, so they stay), the two handrails as true tubes (`slender`) with plain ends (the 100 mm return is one feature long and left out) and the twelve posts at the size floor of 75 mm, standing on the kerb top as built.",
+     "de": "Körper: der Keil und die zwei Bordstreifen von 100 mm (über dem Merkmal von 75 mm, also bleiben sie), die zwei Handläufe als wahre Rohre (`slender`) mit glatten Enden (die Rücklenkung von 100 mm ist ein Merkmal lang und entfällt) und die zwölf Pfosten an der Größenuntergrenze von 75 mm, wie gebaut auf der Bordoberseite stehend."
     },
     {
-     "en": "Thermal: one 100 mm surface skin over runs and landings, a 100 mm skin on each flank, the kerbs as their own 100 mm strips (kept for the region although the body merges them), rails and posts as the body solids.",
-     "de": "Thermik: eine Oberflächenhaut von 100 mm über Läufe und Podeste, eine Haut von 100 mm an jeder Flanke, die Borde als eigene Streifen 100 mm (für die Region behalten, obwohl der Körper sie aufnimmt), Handläufe und Pfosten als die Körper selbst."
+     "en": "Thermal: one 100 mm surface skin over runs and landings, a 100 mm skin on each flank, the kerb strips of the body with their three free faces, rails and posts as the body solids.",
+     "de": "Thermik: eine Oberflächenhaut von 100 mm über Läufe und Podeste, eine Haut von 100 mm an jeder Flanke, die Bordstreifen des Körpers mit ihren drei freien Seiten, Handläufe und Pfosten als die Körper selbst."
     },
     {
-     "en": "Structure: slab on two side walls above 80 mm bearing layers, rails and posts as bars, one joint at every fixed post foot and the lumped mass.",
-     "de": "Tragwerk: Platte auf zwei Seitenwänden über Auflagerschichten von 80 mm, Handläufe und Pfosten als Stäbe, ein Knoten an jedem eingespannten Pfostenfuß und die Ersatzmasse."
+     "en": "Structure: slab on two side walls above 80 mm bearing layers, the kerbs cast onto the slab edges, rails and posts as bars, one joint at every fixed post foot and the lumped mass.",
+     "de": "Tragwerk: Platte auf zwei Seitenwänden über Auflagerschichten von 80 mm, die an die Plattenränder anbetonierten Borde, Handläufe und Pfosten als Stäbe, ein Knoten an jedem eingespannten Pfostenfuß und die Ersatzmasse."
     }
    ]
   }

@@ -114,7 +114,7 @@ def derive(seed):
 
 def state(f):
     L = P["liveness"]
-    if f["isDefault"] or f["ageSeconds"] <= L["idleSeconds"]:
+    if f["ageSeconds"] <= L["idleSeconds"]:
         return "live"
     if (f["anchorAlive"] and f["ageSeconds"] <= L["anchoredSeconds"]) or f["ageSeconds"] <= L["collectSeconds"]:
         return "idle"

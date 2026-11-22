@@ -4,6 +4,8 @@ import {createHash,randomBytes} from "node:crypto";
 import {observeUnsupportedNativeImagePublicationV1} from "../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/📤️publication/❓️unsupported/🟦️.ts";
 import {readNativeImageRetirementFileV1} from "../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🟦️.ts";
 import {Database} from "bun:sqlite";
+import {tmpdir} from "node:os";
+import {nativeStorageMountedAtV1,withNativeStorageSelectionV1} from "../../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🔌️backends/📋️contract/🟦️.ts";
 import Ajv from "ajv";
 import {readFile,mkdtemp,mkdir,writeFile,rm,access,rename} from "node:fs/promises";
 import {lstatSync,statSync,readdirSync,existsSync} from "node:fs";
@@ -22,6 +24,8 @@ import {withArtifactRelativeDirectoryV1,requireArtifactDescriptorClosureV1} from
 import {validateJsonSchemaSubset} from "../../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import {nativeImageInventoryV1} from "../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🍎️image/📥️information/🟦️.ts";
 import {readNativeMountPathsV1,nativeSelectedDescriptorProtocolV1} from "../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/💾️cache/📂️descriptors/🟦️.ts";
+import {declareLibraryBuildTestEnvelopeV1} from "../../../../../../../🧪️testing/🪪️native-birth/🟦️.ts";
+declareLibraryBuildTestEnvelopeV1({suite:"cache-reset"});
 
 test("inactive Nx reset physical DATA matches neutral Ajv and independent SQLite refusal vectors",()=>{
  const db=new Database(":memory:"),valid=new Ajv({strict:true}).compile({$defs:schema.$defs,$ref:"#/$defs/Capsule"});try{for(const row of fixture.cases){expect(valid(row.facts),row.id).toBe(true);const oracle=db.query("select json_extract(?1,'$.directory.kind')='directory' and json_array_length(?1,'$.rootNames')=0 and (select count(*) from json_each(?1,'$.entries'))=3 and not exists(select 1 from json_each(?1,'$.entries') where key not in('fixed.dmg','image.json','m') or json_extract(value,'$.dev')<>json_extract(?1,'$.directory.dev') or json_extract(value,'$.kind')<>case key when 'm' then 'directory' else 'file' end or (key<>'m' and (json_extract(value,'$.nlink')<>'1' or cast(json_extract(value,'$.size')as integer)>case key when 'image.json' then 4096 else json_extract(?1,'$.maximumPhysicalBytes') end))) accepted").get(JSON.stringify(row.facts))as{accepted:number};expect(Boolean(oracle.accepted),row.id).toBe(row.accepted);if(row.accepted)expect(planInactiveCacheResetV1(row.facts).logicalBytes).toBe(1250);else expect(()=>planInactiveCacheResetV1(row.facts),row.id).toThrow();}}finally{db.close();}
@@ -85,4 +89,28 @@ test("elastic regrow resumes an interrupted retirement first and never resets a 
  for(const row of fixture.regrowPlans)expect(planElasticRegrowV1(row),row.name).toBe(row.plan as ReturnType<typeof planElasticRegrowV1>);
  const verdicts=["admitted","empty","persistent-state","foreign-charge","incomplete-charge","unreadable"],table=[false,true].flatMap(record=>[false,true].flatMap(due=>verdicts.map(verdict=>({record,due,verdict,plan:planElasticRegrowV1({record,due,verdict})})))),run=spawnSync("python3",["-I",join(import.meta.dir,"🐍️.py")],{input:JSON.stringify(table),encoding:"utf8"});
  expect(run.status,run.stderr).toBe(0);const report=JSON.parse(run.stdout);expect(report.mismatches).toEqual([]);expect(report.violations).toEqual([]);expect(report.combinations).toBe(table.length);expect(report.states).toBe(14);
+});
+
+test("cold directory partitions never enter mounted-image recovery of their retained lease parent",async()=>{
+ const source=await readFile(new URL("../🟦️.ts",import.meta.url),"utf8");
+ const tree=ts.createSourceFile("reset.ts",source,ts.ScriptTarget.Latest,true);
+ const node=tree.statements.find((entry):entry is ts.FunctionDeclaration=>ts.isFunctionDeclaration(entry)&&entry.name?.text==="openRepositoryCachePartitionV1");
+ const program=ts.transpileModule(node!.getText(tree).replace(/^export /u,""),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
+ using db=new Database(":memory:");
+ const root=await mkdtemp(join(process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir(),"cache-opening-"));
+ try{for(const row of fixture.openingCases){
+  const directory=join(root,row.id),dependencies=join(directory,"d"),leases=join(directory,"l");
+  if(row.backing!==null)for(const path of [dependencies,leases]){await mkdir(path,{recursive:true});await writeFile(join(path,row.backing),"");}
+  const expected=db.query("select ?1='darwin' and coalesce(case ?2 when 'fixed.dmg' then 'mounted-image' when 'fixed.dir' then 'directory-partition' end,?3)='mounted-image' as recover").get(row.platform,row.backing,row.selection) as {recover:number};
+  expect(Boolean(expected.recover),row.id).toBe(row.recover);
+  const control=Object.freeze({}),trace:string[]=[];
+  const open=evaluateExtractedFunctionV1(program,"openRepositoryCachePartitionV1",{
+   process:{platform:row.platform},checkResourceLeaseControl:(actual:unknown)=>expect(actual).toBe(control),nativeStorageMountedAtV1,
+   repositoryCacheBudgetV1:()=>({partitions:{dependencies:{directory:dependencies},leases:{directory:leases}}}),
+   openRepositoryCachePartitionAttemptV1:async(_workspace:string,id:string,actual:unknown,openLeases:()=>Promise<void>)=>{expect(actual).toBe(control);trace.push(`open:${id}`);if(id==="dependencies")await openLeases();},
+   withInactivePublicationRecoveryV1:async(path:string,actual:unknown,ports:{open:()=>Promise<void>})=>{expect(actual).toBe(control);trace.push(`inspect:${path===leases?"leases":"dependencies"}`);await ports.open();},
+  });
+  await withNativeStorageSelectionV1({platform:row.platform,backend:row.selection},()=>open(root,"dependencies",control));
+  expect(trace,row.id).toEqual(row.recover?["inspect:dependencies","open:dependencies","inspect:leases","open:leases"]:["open:dependencies","open:leases"]);
+ }}finally{await rm(root,{recursive:true,force:true});}
 });

@@ -156,3 +156,85 @@ The rooted component driver automatically started a Cargo retry after the action
 The Cargo retry cleared the shared dispatch error, compiled the Raster host and editor, and reached compilation of semio-hub-raster with the corrected dependency declarations. Guest publication and Chromium execution remained pending at this milestone.
 
 The Hub Raster library built and Cargo moved to semio-hub-raster-component. During the extended final compilation, a process sample showed a worker actively running LLVM ThinLTO optimization. No guest publication or listening preview existed at the time of the sample. The temporary sample file was removed.
+
+The real WASI Cargo pass finished in 57 minutes for the successful retry. Native transpilation and browser materialization published the Raster module with its WebAssembly, generated manifest, descriptor pack and receipt. The generated manifest contains importPng and importPngFile. I opened the canonical model descriptor command to refresh the tracked pair while the preview driver prepares the remaining renderer deliveries.
+
+The model-only command had begun building a second component lane. I cancelled only that duplicate command and confirmed it released its leases. The completed browser build had retained the native model emitter output. The repository verifier confirmed its identity and semantic digest matched the published browser descriptor. I then used the same descriptor settlement writer as the canonical command to publish the original emitted pack and JSON at their tracked owner paths. Both tracked files now match the model emitter bytes.
+
+The launcher published the remaining NodeGraph engine and reached Vite. Vite refused the Raster variant because it had no declared development contribution. The default framework configuration and entry intentionally contain empty inventories. Raster now owns its catalog-backed React Vite configuration and browser entry. The existing catalog renderer and publisher refreshed the application projection, and I confirmed the deployed Raster row points to the new contribution before restarting the warm preview.
+
+Chromium reached the real Raster editor. The first workflow waited for a file chooser after clicking the import action row and reached its timeout. The two Raster surfaces also displayed a missing layer image. The corrected probe now presses the accessible action button inside the row and records the underlying file input call and compositor asset identities.
+
+At the goal continuation the workstation cache images were detached and the preview process had ended. The root command failed to import its workspace packages, and dependencies ensure retried its own source admission. The repository tool wrapper used the existing native disk-image attach form to reattach the retained dependency, product and Rust images. I confirmed the old Raster module and all three renderer deliveries survived, and restarted the preview without rebuilding them.
+
+A live browser retry showed the demo layer referenced semio-emblem while the compositor asset inventory was empty. The authored Raster Pack record now carries private image data beside its reference and restores exact local ownership on receive. Example construction replaces the placeholder with the committed image owner. The component rebuild is running through the owned iterate command.
+
+The accessible Actions button opened Chromium’s PNG picker with transient user activation. Chromium then sent multiple staged chunks, but a subsequent ImportPngFile invocation was rejected before decoding its reply. The selected action row was geometrically behind its engagement frame at the point initially sampled. The next probe records full rail geometry after scrolling and preserves transport errors independently of the WebGPU warnings.
+
+The root playground router now attaches dependencies and products before loading workspace dependencies. The focused language-neutral order fixture and independent SQLite check passed 88 assertions. The route releases both bootstrap readers before opening the preview service.
+
+Post-scroll Chromium geometry showed the Actions body had expanded to 300 × 552 pixels while its clip stayed at the folded 75 × 24 pixel polygon. All three points inside the Import PNG label hit the wrapper. WindowChrome now invalidates the silhouette on expansion before paint. The Window suite passed 17 component tests.
+
+The staged import assembles the input before encoding its original command. The stock command bridge allowed 65,536 bytes even though Raster admitted a much larger staged file. Raster now selects its existing raw-file wire ceiling only for ImportPngFile and uses the original producer’s bounded page copies. The native mounted law uses a valid image that crosses the old limit and checks that no mutation occurs before the final chunk. The browser workflow still needs the rebuilt guest.
+
+
+Chromium verified the expanded Actions polygon covers the 300 × 552 pixel area. Three points inside the Import PNG label hit the action, and its trusted pointer click opened the actual Chromium file chooser. A 256 × 256 PNG encoded without compression then sent eleven 32 KiB staging chunks. The final assembled command reached the original transport and reproduced the 65,536-byte wire refusal. The action-local wire fix above will be checked with the same PNG after guest publication.
+
+A second diagnostic supplied identical 256 × 256 RGBA pixels in a 687-byte compressed PNG. The old guest admitted that command without the wire refusal. The asset still did not appear in 30 seconds. Raster limited the original PNG decoder to a single primitive transition per worker turn, so these pixels required at least 327,936 round trips across inflation and conversion. The bounded batch preserves single-step allocation turns and checks copy, work, cancellation and deadline before continuing through allocation-free transitions.
+
+Separately, repeated ResizeObserver callbacks reset unchanged paint canvas backing dimensions while the native surface retained its previous texture. The React host now writes backing dimensions only when they change and discards stale attachment callbacks. The mounted Navigator tests passed all three focused cases. Live texture and pixel acceptance will use the real rebuilt guest.
+
+
+The selected Composite and Navigator windows mounted in Chromium with 1152 × 939 and 448 × 939 backing stores. Both showed the default Backdrop and Brighten layers. The old guest published neither window’s emblem asset. The example catalogue has one enabled choice, Demo. The warm probe verifies its real keyboard control but cannot compare distinct selections.
+
+A 125-byte 32 × 32 diagnostic also entered through the real picker and received an operation ID, but the old guest failed to publish a new asset within 120 seconds. Sampling the browser driver showed thousands of command-pending turns for several commands, including the picker, viewport changes and shell command notes. Reserved shell note jobs observed in the same run reached their terminal result. I left the compatibility probe in the ticket so the final browser acceptance can remain on the ordinary transport.
+
+Paint2dHost was resending the same viewport after a render replaced its action callback. The mounted test first reproduced one extra identical dispatch. The fix keeps the geometry observer on the same controller, surface and window, uses the latest callback for real resizes, and discards callbacks after the recipient retires. All four focused Paint2dHost tests passed.
+
+The mounted Raster grant delivered 64 items and 32 KiB of copy work per preparation. The local PNG importer now uses the Raster preparation grant of 1,024 items and 1 MiB of copy with the same work and time ceilings. CRC batching processes only the current chunk body; header, metadata, range allocations and checksum comparison remain separate. Both browser renderer drivers now continue a live typed operation across their 4,096-poll batches while retaining the same owner and acknowledgements. The shared neutral test and WGPU wire tests passed 8 tests and 71 assertions, with SQLite independently checking the neutral outcomes.
+
+The first updated guest pass terminated after 768 compiled units when the Rust volume refused a Cargo log write and creation of the next FIFO. The host still reported free space and the Rust image was mounted. I left peer builds and active cache data in place and restarted the existing component route with the corrected source. Its next warm generation is admitted to the compiler-capacity queue.
+
+
+The browser host still produced thousands of ingress turns for simple commands on the old guest. The shared manifest receiver now batches successive retirement steps only while the same turn records retained progress or work. It closes the received command and original wire in order before handing out the result. The original-owner law exercises denied and funded turns, and the independent SQLite fixture check passed. The native law still needs a compiled run.
+
+The declared cache collector reclaimed 1.5 GiB across superseded component runs and kept the live compiler lanes. The focused Pixels Rust test was cancelled at its 9.7 GiB compiler-space reservation before starting to allow the browser build to proceed. I stopped the previous preview after collecting the Chromium witnesses to release its memory and service lease. It will be reopened from the updated product after guest publication.
+
+
+The second update attempt ended during compiler admission without creating a Cargo log. The next native retry started its real compile and keeps the complete command output under the ticket’s generated directory. The repo reports remote execution unconfigured for this session.
+
+I also reproduced a storage reporting error during the retries. On the sparse APFS Rust volume, the old cache ledger treated unavailable writable blocks as occupied cache data. The corrected ledger reads exact mounted APFS occupancy independently of filesystem write headroom and host backing bytes. The three focused cache tests and the independent plist/SQLite check passed. The live repo cache status then reported 20.47 GiB occupied on the 96 GiB volume and zero quota-driven eviction, while the filesystem still showed only 4.5 GiB writable. The native guest build remained active.
+
+
+The admitted native retry completed 488 units before the Rust image refused Cargo fingerprint and bytecode writes with ENOSPC. Its component driver had reported ample unallocated APFS container space even while the mounted filesystem had substantially less writable space.
+
+The repo's directory-backed fallback first exposed a missing original runtime-entry provider in direct component commands. The component routes now use the same genuine provider scope as Cargo. The focused route law and a root CLI invalid-facet check passed. That fallback then reached the native allocator, which correctly refused the case-insensitive workspace filesystem.
+
+I created a separate 40 GiB sparse case-sensitive APFS image backed by a temporary file in this ticket and attached only that new image. The fresh directory-backed run created and checked its own lease and dependency stores there. The ordinary shared Rust image and its active peer leases stayed in place.
+
+The recovered native cache maintenance route requires the plain repo target invocation. Its initial result was “not due” because host free space remained above the policy threshold and the image held less than three times its occupied bytes, despite repeated write failures at the mount. Operator reclaim now also considers the existing Rust writable-space threshold and minimum transferable gain. The focused cases and SQLite comparison passed.
+
+
+The scratch volume then exposed a separate boot deadlock. The same process held the directory-backed lease store in shared mode and requested it exclusively when the Darwin opener treated its directory receipt as an obsolete mounted-image publication. The opener now selects the recovery path from the actual backend. The focused nested-open regression passed 40 assertions across six neutral cases.
+
+The shared Rust image subsequently recovered to about 10 GiB writable. I stopped the blocked scratch attempt and resumed the standard component build. The latest Raster Bun run passed 148 tests and 868 assertions across 22 source test files. The full browser proof is configured to identify the imported pixels in a real canvas screenshot, paint at that location and check the new color as well as the downloaded pixels.
+
+
+That standard rebuild captured an older MeshData source that lacked the normal accumulation and normalization methods called by DWG. The current declared mesh source already had both public methods. I let the independent units continue while checking the source digests. The build subsequently hit ENOSPC again after 938 units.
+
+The improved Rust reclaim command entered the real exclusive queue under mounted write pressure. It timed out while shared holders were still active. A later quiescent reclaim command returned “reclaim failed” and left the original image mounted.
+
+After the directory-backend guard, the scratch route successfully provisioned the pinned toolchain. Direct component iteration stopped at the missing descriptor emitter. The playground route then published its browser support and compiled the two font-asset units. Font publication identified another missing original runtime-entry scope during cold boot. The main volume also recovered to 14 GiB writable, so I started a new standard capture using the current mesh source while the cold playground scope was repaired.
+
+
+The direct playground now supplies the genuine compiler runtime-entry provider during cold setup and serving. The fresh volume published the browser vendor shim, shard worker and native fonts through their owning stores. It then compiled the native descriptor emitter. An edit to the shared kernel source changed its digest during provenance verification, so the driver rejected that capture and compiled against a current snapshot. The second compiler pass reused artifacts and entered provenance verification. [Descriptor compiler retry](🔍️descriptor-emitter-retry.md)
+
+The new standard cache capture contained the current MeshData implementation with both methods required by DWG. I cancelled that build after 528 compiled units when the shared Rust volume fell below 3 GiB writable, while the scratch volume still had about 30 GiB. The shared volume subsequently fell below 1 GiB and the exact wait reclaim again returned the generic failure after getting its exclusive lease. The scratch route remains the active verification build. [Rust cache investigation](🔎️rust-mounted-reclaim.md)
+
+
+The scratch descriptor emitter passed compiler provenance verification, and its sealed executable and compilation inventory were published to the separate Products store. I tried the declared Surface WASM target in parallel to prewarm the renderer, but its cold graph service failed before the owner ran because the alternate JavaScript dependency generation path was absent. The active playground can call the same owned producer directly in its original invocation. [Surface producer investigation](🔍️surface-wasm-route.md)
+
+The Rust reclaim owner now emits bounded localized phase diagnostics while preserving the structured receipt. Both focused laws passed with 320 assertions, including the SQLite oracle. The next live reclaim took the maintenance lease and reported that macOS refused a normal detach with status 16 and “Resource busy.” The original image remained mounted and the isolated build continued.
+
+
+The scratch WASI build admitted the full Raster component closure and compiled against its isolated Rust cache. Its first compiler pass encountered a concurrent edit to the shared plugin reactor's call-input source. The driver retained the lane, captured the source again and reused verified compiler results. The new capture has emitted real compiler artifacts for the Raster model, diff and pixel-mutation crates. The component link, publication, renderer startup and Chromium proof are still pending. The scratch volume stayed above 32 GiB writable during this interval.

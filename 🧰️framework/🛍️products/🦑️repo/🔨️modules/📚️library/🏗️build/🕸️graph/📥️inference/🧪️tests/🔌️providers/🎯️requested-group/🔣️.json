@@ -1,0 +1,10 @@
+{
+  "aliases": {
+    "outer": [{"fileset": "inner"}],
+    "inner": [{"input": "scriptProvider:cargo:scheduling", "projects": ["@fixture/script-providers"]}],
+    "cycle": ["cycle"]
+  },
+  "targetInputs": ["outer", {"input": "scriptProvider:bystander:native", "projects": ["@fixture/foreign"]}],
+  "requested": ["toolClosure:cargo-command:native"],
+  "expected": ["scriptProvider:cargo:scheduling", "toolClosure:cargo-command:native"]
+}

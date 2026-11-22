@@ -1,7 +1,7 @@
 //! 🚚️ cut as one history edit, and the locked refusal.
 //! 📋️ Laws for the `Puzzle2dClipboardJob` route: the copy→paste round trip on both shipped examples,
 
-use crate::editor::puzzle2d::snapshot::{PUZZLE2D_BOARD_SNAPSHOT_SCHEMA, PUZZLE2D_GRANULARITY_NODE, PUZZLE2D_INTERACTION_DOMAIN, PUZZLE2D_PLAY_EXAMPLE_NAKAGIN_ID};
+use crate::editor::puzzle2d::snapshot::{PUZZLE2D_BOARD_SNAPSHOT_SCHEMA, PUZZLE2D_GRANULARITY_NODE, PUZZLE2D_INTERACTION_DOMAIN, PUZZLE2D_PASTE_OFFSET, PUZZLE2D_PLAY_EXAMPLE_NAKAGIN_ID};
 use crate::editor::puzzle2d::recorder::puzzle2d_paste_operations_on;
 use crate::editor::puzzle2d::snapshot::Puzzle2dPlaySnapshot;
 use semio_plugin::kernel::{Effect, PastePlacement};
@@ -155,6 +155,45 @@ fn edge_count(app: &Puzzle2dApp) -> usize {
     board_snapshot_edges(&fixture_of(app)).len()
 }
 
+#[test]
+fn clipboard_rewires_distinct_handles_and_protects_locked_incident_edges() {
+    use crate::editor::puzzle2d::recorder::Puzzle2dRecorder;
+
+    let fixture = semio_framework_pack_json::parse(include_str!("../🧫️fixtures/clipboard-topology.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("clipboard topology fixture");
+    let ids = |key: &str| fixture[key].as_array().unwrap().iter().map(|id| id.as_str().unwrap().to_string()).collect::<Vec<_>>();
+    for id in ids("cutRefused") {
+        assert!(puzzle2d_selection_is_locked(&fixture, &[id]));
+    }
+    for id in ids("cutAllowed") {
+        assert!(!puzzle2d_selection_is_locked(&fixture, &[id]));
+    }
+
+    let fragment = puzzle2d_copy_fragment_from(&fixture, &ids("selected")).expect("copy");
+    let base = Puzzle2dPlaySnapshot::new(Default::default());
+    let (mutations, pasted) = puzzle2d_paste_operations_on(&base, &fragment, &PastePlacement::default()).expect("paste");
+    let mut recorder = Puzzle2dRecorder::new(&base);
+    for mutation in mutations {
+        assert!(recorder.record(mutation));
+    }
+    let snapshot = recorder.typed();
+    assert_eq!(pasted.len(), 2);
+    assert_ne!(snapshot.nodes[0].handles[0].id, snapshot.nodes[0].handles[1].id);
+    let source_edges = fixture["edges"].as_array().unwrap();
+    let endpoints = fixture["endpoints"].as_array().unwrap();
+    assert_eq!(snapshot.edges.len(), endpoints.len());
+    let handle = |position: &Value| {
+        let node = position[0].as_u64().unwrap() as usize;
+        let port = position[1].as_u64().unwrap() as usize;
+        &snapshot.nodes[node].handles[port].id
+    };
+    for (index, edge) in snapshot.edges.iter().enumerate() {
+        assert_eq!(&edge.source, handle(&endpoints[index][0]));
+        assert_eq!(&edge.target, handle(&endpoints[index][1]));
+        assert_eq!(Some(edge.gap), source_edges[index]["gap"].as_f64());
+        assert_eq!(edge.locked, source_edges[index]["locked"].as_bool());
+    }
+}
+
 /// 🕹️ Selects exactly these ids at node granularity — the multi-select `select_id` has no shape for.
 fn select_ids(app: &mut Puzzle2dApp, ids: &[String]) {
     let targets: Vec<InteractionTarget> = ids.iter().map(|id| InteractionTarget { granularity: PUZZLE2D_GRANULARITY_NODE.into(), id: id.clone() }).collect();
@@ -192,6 +231,8 @@ fn notices(result: &InvocationResult) -> Vec<String> {
 /// handle ids at the default offset while the source stays exactly where it was.
 #[test]
 fn copy_then_paste_round_trips_the_concrete_forest_seed() {
+    use semio_plugin::PluginApp;
+
     let mut app = concrete_forest_app();
     let source_id = first_node_id(&app);
     let before = fixture_of(&app);
@@ -212,7 +253,35 @@ fn copy_then_paste_round_trips_the_concrete_forest_seed() {
     let clone_handles = clone.get("handles").and_then(Value::as_array).expect("clone handles");
     assert_eq!(clone_handles.len(), source_handles, "the clone carries every handle of its source");
     assert!(clone_handles.iter().all(|handle| handle.get("id").and_then(Value::as_str).is_some_and(|id| id.starts_with(clone_id))), "every cloned handle id is re-minted under the clone: {clone_handles:?}");
+    let position = [350.0, 228.0, 0.0];
+    let mut anchored = paste_args(&fragment);
+    let args = anchored.as_object_mut().expect("paste arguments");
+    args.insert("anchor", json!("centroid"));
+    args.insert("position", json!(position));
+    let pasted = dispatch(&mut app, "paste", Some(&anchored), None).expect("paste at a position");
+    assert!(committed_edits(&pasted) > 0);
+    let anchored_snapshot = fixture_of(&app);
+    let positioned = board_snapshot_nodes(&anchored_snapshot).iter().find(|node| {
+        node.get("id").and_then(Value::as_str).is_some_and(|id| id != source_id && id != clone_id)
+    }).expect("anchored clone");
+    assert_eq!(positioned.get("x").and_then(Value::as_f64), Some(position[0]));
+    assert_eq!(positioned.get("y").and_then(Value::as_f64), Some(position[1]));
+
+    let archive = block_on(app.document_pack()).expect("save both pastes");
     close_app(&mut app);
+    drop(app);
+
+    let mut reopened = app_with_registry();
+    let mut identity = semio_plugin::artifact_app_laws::fixture_identity();
+    block_on(semio_plugin::artifact_app_laws::load_document(
+        &mut reopened.0, &archive, &mut identity, reopened.1.cx(),
+    )).expect("reopen the saved board");
+    assert_eq!(board_snapshot_nodes(&fixture_of(&reopened)), board_snapshot_nodes(&anchored_snapshot));
+    dispatch(&mut reopened, "undo", None, None).expect("undo the anchored paste after reopening");
+    assert_eq!(board_snapshot_nodes(&fixture_of(&reopened)), nodes);
+    dispatch(&mut reopened, "redo", None, None).expect("redo the anchored paste after reopening");
+    assert_eq!(board_snapshot_nodes(&fixture_of(&reopened)), board_snapshot_nodes(&anchored_snapshot));
+    close_app(&mut reopened);
 }
 
 /// 🏗️ A 12-node Nakagin subgraph round trip: the copy carries the edges BETWEEN the copied nodes and

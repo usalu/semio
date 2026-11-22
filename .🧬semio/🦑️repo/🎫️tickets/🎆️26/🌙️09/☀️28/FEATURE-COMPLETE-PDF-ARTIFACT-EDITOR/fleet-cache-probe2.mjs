@@ -1,0 +1,13 @@
+import {mkdtempSync} from "node:fs";import {tmpdir} from "node:os";import {join} from "node:path";
+const root="/Users/ueli/Documents/semio",B=`${root}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/`;
+const {remoteCacheFetchV1}=await import(`${B}🌐️remote-cache/🛰️fleet/🟦️.ts`);
+const {graphFleetSettingsV1}=await import(`${B}🪪️graph-state/🧶️nx/🟦️.ts`);
+const {graphFleetClientV1,fetchGraphEntryV1}=await import(`${B}🪪️graph-state/🛰️exchange/🟦️.ts`);
+const {ownerPoolStateV1}=await import(`${B}🕸️graph/📥️inference/📦️project-nodes/🌐️owner-pool/🟦️.ts`);
+const env={...process.env,SEMIO_WORKSPACE_ROOT:root};
+const s={...graphFleetSettingsV1(root,env),stateDirectory:mkdtempSync(join(tmpdir(),"probe-"))};
+const c=graphFleetClientV1(s,{fetch:remoteCacheFetchV1(env,{root})});
+const out={};const one=async()=>{const t=Date.now();let why;const e=await fetchGraphEntryV1(c,ownerPoolStateV1("pointer"),undefined,undefined,undefined,r=>why=r);const k=e==="fault"?"fault:"+why:e===undefined?"miss":"hit";out[k]=(out[k]??0)+1;return Date.now()-t;};
+const lat=[];for(let i=0;i<30;i++)lat.push(await one());
+await Promise.all(Array.from({length:30},async()=>lat.push(await one())));
+console.log(JSON.stringify(out),"max",Math.max(...lat),"usable",c.usable());

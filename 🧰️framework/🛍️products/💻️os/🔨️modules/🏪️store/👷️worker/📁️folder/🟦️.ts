@@ -54,7 +54,7 @@ export async function reserveFolderCanonicalBootstrapMirror(state: ArtifactState
 }
 
 export async function stageFolderCanonicalBootstrapMirror(state: ArtifactState, owner: FolderCanonicalBootstrapMirrorOwner, pack: Uint8Array, spr: Uint8Array): Promise<void> {
-  const archive = encodeDocumentArchiveBytes({ parent_pack: Array.from(pack), parent_spr: Array.from(spr), members: [] });
+  const archive = encodeDocumentArchiveBytes({ parent_pack: pack, parent_spr: spr, members: [] });
   const response = await fetchWithTimeout(
     folderCanonicalBootstrapMirrorUrl(owner, "stage"),
     { method: "PUT", headers: { ...folderCanonicalBootstrapMirrorHeaders(owner), "content-type": "application/octet-stream" }, body: ownedArrayBuffer(archive) },
@@ -103,7 +103,7 @@ return;
     }
     state.folderArchive = archive;
     state.folderBootstrapped = true;
-    if (!echo) emitEvent(state, { kind: "documentArchiveReplaced", archive: Array.from(archive) });
+    if (!echo) emitEvent(state, { kind: "documentArchiveReplaced", archive });
     if (state.status.writeFailure?.code === "external-divergence" || state.status.writeFailure?.code === "folder-unreadable") setStatus(state, { writeFailure: undefined });
     else setStatus(state, {});
     resumeBlockedFolderArchive(state, binding);

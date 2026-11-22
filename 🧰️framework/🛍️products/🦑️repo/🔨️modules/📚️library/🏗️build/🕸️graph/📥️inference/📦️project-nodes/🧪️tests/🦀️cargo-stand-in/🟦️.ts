@@ -11,7 +11,7 @@ import{projectConfigCandidatesV1}from"../../🟨️.mjs";
 import{projectWithDefaults}from"../../../🧱️project-assembly/🟨️.mjs";
 
 await privateRepositoryWorkspaceV1("graph");
-declareLibraryBuildTestEnvelopeV1({suite:"build-inference",scratch:"checkout"});
+declareLibraryBuildTestEnvelopeV1({suite:"build-inference-projects",scratch:"checkout"});
 const workspace=findWorkspaceRoot(import.meta.dir);
 
 test("the sibling project file of a listed Cargo manifest is a candidate, so the owner holds the generator contract of its root and a package-named stand-in refuses it",async()=>{

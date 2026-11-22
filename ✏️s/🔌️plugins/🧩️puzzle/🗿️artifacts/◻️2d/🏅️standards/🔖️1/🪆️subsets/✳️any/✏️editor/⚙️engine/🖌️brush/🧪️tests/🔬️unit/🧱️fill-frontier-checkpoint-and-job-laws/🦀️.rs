@@ -134,10 +134,9 @@
         let params = fill_config("puzzle2d.fill.cancel");
         let mut session = mount_fill_session(&mut original, job, params);
         original.cancel().cancel_now();
-        let pool = semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1));
         let mut cancelled = false;
         for _ in 0..FILL_TEST_PUMP_LIMIT {
-            match pump_fill_session(&mut session, &pool) {
+            match pump_fill_session(&mut original, &mut session) {
                 WorkerJobPoll::Submitted | WorkerJobPoll::Rejected | WorkerJobPoll::Idle => std::thread::yield_now(),
                 WorkerJobPoll::Terminal => {
                     assert_eq!(seen_fill_outcome(&mut original, &mut session), FillSeen::Cancelled);
@@ -151,14 +150,13 @@
         }
         assert!(cancelled, "cancel terminal exceeded bounded opportunities");
         close_fill_session(&mut original, &mut session);
-        pool.shutdown().expect("bounded snapshot operation succeeds");
 
         original.finish();
         let mut source = fixture(semio_framework_job::default_now_us);
         let stale_operation = Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(11), semio_framework_job::Generation(4), 9);
         let mut stale_job = new_fill_job(&mut source, &host, 32, stale_operation);
         let mut foreign = OriginalFixture::new(semio_framework_job::OperationId(2), semio_framework_job::Generation(5), fixture_stock(), semio_framework_job::default_now_us, u64::MAX, 1 << 48);
-        assert!(foreign.turn(FILL_TEST_GRANT, |cx| stale_job.step(cx).map(|_| ())).is_err(), "different actual source roots must not execute the original job");
+        assert!(foreign.step_job(&mut stale_job, semio_framework_job::StepBudget { fuel: 1 << 20, deadline_us: u64::MAX, retained: FILL_TEST_GRANT }).is_err(), "different actual source roots must not execute the original job");
         source.close_job(&mut stale_job);
         source.finish();
         foreign.finish();
@@ -173,10 +171,9 @@
         DEADLINE_CLOCK.store(0, std::sync::atomic::Ordering::Release);
         let params = fill_config("puzzle2d.fill.deadline");
         let mut session = mount_fill_session(&mut original, job, params);
-        let pool = semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1));
         let mut yielded = false;
         for _ in 0..FILL_TEST_PUMP_LIMIT {
-            match pump_fill_session(&mut session, &pool) {
+            match pump_fill_session(&mut original, &mut session) {
                 WorkerJobPoll::Submitted | WorkerJobPoll::Rejected | WorkerJobPoll::Idle => std::thread::yield_now(),
                 WorkerJobPoll::Outcome => {
                     assert_eq!(seen_fill_outcome(&mut original, &mut session), FillSeen::Yield);
@@ -190,30 +187,19 @@
         }
         assert!(yielded, "deadline yield exceeded bounded opportunities");
         close_fill_session(&mut original, &mut session);
-        pool.shutdown().expect("bounded snapshot operation succeeds");
     }
 
     #[test]
-    fn board_fill_worker_refusal_and_unclaimed_complete_close_exact_owners() {
+    fn board_fill_unclaimed_complete_closes_exact_owners() {
         let mut original = fixture(semio_framework_job::default_now_us);
         let host = frontier_fill_host();
-        let refused_operation = Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(17), semio_framework_job::Generation(7), 23);
-        let refused_params = fill_config("puzzle2d.fill.refusal");
-        let refused_job = new_fill_job(&mut original, &host, 4, refused_operation);
-        let mut refused = mount_fill_session(&mut original, refused_job, refused_params);
-        let unavailable = semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1));
-        unavailable.shutdown().expect("bounded snapshot operation succeeds");
-        assert!(matches!(refused.pump_one(&unavailable, semio_framework_async::Lane::Background, FILL_TEST_GRANT), Err(semio_framework_job_worker::MountedWorkerJobPumpFault::Submit(_))));
-        close_fill_session(&mut original, &mut refused);
-
         let complete_operation = Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(19), semio_framework_job::Generation(8), 29);
         let complete_params = fill_config("puzzle2d.fill.unclaimed-complete");
         let complete_job = new_fill_job(&mut original, &host, 0, complete_operation);
         let mut complete = mount_fill_session(&mut original, complete_job, complete_params);
-        let pool = semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1));
         let mut terminal = false;
         for _ in 0..FILL_TEST_PUMP_LIMIT {
-            match pump_fill_session(&mut complete, &pool) {
+            match pump_fill_session(&mut original, &mut complete) {
                 WorkerJobPoll::Submitted | WorkerJobPoll::Rejected | WorkerJobPoll::Idle => std::thread::yield_now(),
                 WorkerJobPoll::Terminal => {
                     let _ = seen_fill_outcome(&mut original, &mut complete);
@@ -233,58 +219,6 @@
         }
         assert!(terminal, "unclaimed completion exceeded bounded opportunities");
         close_fill_session(&mut original, &mut complete);
-        pool.shutdown().expect("bounded snapshot operation succeeds");
-        original.finish();
-    }
-
-    #[cfg(not(target_arch = "wasm32"))]
-    #[test]
-    fn board_fill_worker_saturation_returns_exact_session_for_close() {
-        let mut original = fixture(semio_framework_job::default_now_us);
-        let gate = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
-        let started = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
-        let pool = semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1));
-        let worker_gate = std::sync::Arc::clone(&gate);
-        let worker_started = std::sync::Arc::clone(&started);
-        let blocker: semio_framework_async::Job = Box::new(move || {
-            worker_started.store(true, std::sync::atomic::Ordering::Release);
-            while !worker_gate.load(std::sync::atomic::Ordering::Acquire) {
-                std::hint::spin_loop();
-            }
-        });
-        if let Err(error) = pool.try_submit(semio_framework_async::Lane::Background, blocker) {
-            drop(error.into_job());
-            panic!("saturation blocker admission failed");
-        }
-        for _ in 0..FILL_TEST_PUMP_LIMIT {
-            if started.load(std::sync::atomic::Ordering::Acquire) {
-                break;
-            }
-            std::thread::yield_now();
-        }
-        assert!(started.load(std::sync::atomic::Ordering::Acquire));
-        let mut queue_filled = true;
-        for _ in 0..semio_framework_async::WORKER_JOBS_PER_LANE {
-            if let Err(error) = pool.try_submit(semio_framework_async::Lane::Background, Box::new(|| {})) {
-                drop(error.into_job());
-                queue_filled = false;
-                break;
-            }
-        }
-        let host = frontier_fill_host();
-        let operation = Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(23), semio_framework_job::Generation(9), 31);
-        let params = fill_config("puzzle2d.fill.saturation");
-        let job = new_fill_job(&mut original, &host, 4, operation);
-        let mut session = mount_fill_session(&mut original, job, params);
-        let saturated = matches!(
-            session.pump_one(&pool, semio_framework_async::Lane::Background, FILL_TEST_GRANT),
-            Err(semio_framework_job_worker::MountedWorkerJobPumpFault::Submit(semio_framework_job_worker::WorkerJobSubmitFault::Pool(semio_framework_async::WorkerSubmitErrorKind::Saturated)))
-        );
-        gate.store(true, std::sync::atomic::Ordering::Release);
-        close_fill_session(&mut original, &mut session);
-        pool.shutdown().expect("bounded snapshot operation succeeds");
-        assert!(queue_filled);
-        assert!(saturated);
         original.finish();
     }
 
@@ -365,17 +299,19 @@
             descriptor.nodes.push(node);
         }
         host.sync_descriptor(&descriptor).unwrap();
-        let mut capture = begin_fill_capture(&mut original, &host);
+        let mut construction = semio_framework_job::OriginalConstructionAdmission::default();
+        let mut capture = begin_fill_capture(&mut original, &host, &mut construction);
         let mut fault = None;
         let capture_opportunities = crate::editor::puzzle2d::engine::BOARD_FILL_NODE_CAPACITY.saturating_mul(3).saturating_add(3);
         for _ in 0..capture_opportunities {
-            if let BoardFillCaptureStep::Fault(found) = original.turn(FILL_TEST_GRANT, |cx| capture.step(&host, cx)).expect("original bounded capture refusal") {
+            if let BoardFillCaptureStep::Fault(found) = original.turn(FILL_TEST_GRANT, |cx| capture.step(&mut construction, &host.scene, &host.style, &host.brush, cx)).expect("original bounded capture refusal") {
                 fault = Some(found);
                 break;
             }
         }
         assert_eq!(fault, Some(crate::editor::puzzle2d::engine::BoardFillCaptureFault::NodeCapacity));
         retire_fill_capture(&mut original, &mut capture);
+        retire_fill_construction(&mut original, &mut construction);
         assert!(capture.terminal_is_empty());
         original.finish();
     }

@@ -1,6 +1,6 @@
 //! 🧫️ Registered native formats preserve original custody and match the shared independent oracle.
 use super::*;
-use semio_os_kernel::io::io_mechanism::{io_register,io_begin_owned_serialization};
+use semio_os_kernel::io::io_mechanism::{io_register,io_begin_owned_serialization,io_owned_serialization_demand};
 use semio_framework_job::{OperationId, Generation, OriginalJobFixtureCaller};
 use semio_framework_test_fixtures::fixture_text;
 use semio_s_artifact_draw_drawing_io::byte_writer::physical_close as close_owned;
@@ -148,7 +148,21 @@ async fn drawing_owned_serializer_original_routes(){
  io_register(semio_s_artifact_draw_drawing::io().entries).unwrap();let contract=corpus();
  for format in contract["formats"].as_array().unwrap().iter().map(|value|value.as_str().unwrap()){
   for fuel in contract["workGrants"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap()){
-   let mut issuer=store::ArtifactStore::new::<::semio_os_kernel::os_store::ArtifactSnapshotPublication>(store::os_store::document_materialize::create_document_envelope::<DrawingSnapshot,semio_s_artifact_draw_drawing_mutations::DrawingMutation>("drawing.drawing","captured-native-export",document(),None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer),protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.unwrap();issuer.install_document_store_owners_exact(::semio_os_kernel::os_store::document_store_owners::funded_bounded_artifact_store_owners().expect("funded bounded document owners"));let generation=issuer.generation();let revision=issuer.content_revision_now();let read=issuer.snapshot_read().unwrap();let original=read.get()as*const DrawingSnapshot;let mut request=OwnedSerializerRequest{source:read.into_erased(),route:(semio_s_artifact_draw_drawing_model::DRAWING_DIALECT.into(),target(format)),generation,revision,options:DslValue::Object(vec![("width".into(),DslValue::uint(2)),("height".into(),DslValue::uint(1)),("transparent".into(),DslValue::Bool(true))]),children:None};let options=request.options.as_object().unwrap().as_ptr();let route=request.route.1.artifact_kind.as_ptr();let demand=serializer_demand(&request,match format{"png"=>"png","svg"=>"svg",_=>"pdf"}).unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_capacity_bytes:demand.capacity_bytes,maximum_depth:demand.depth,..Default::default()};
+   let mut issuer=store::ArtifactStore::new::<::semio_os_kernel::os_store::ArtifactSnapshotPublication>(store::os_store::document_materialize::create_document_envelope::<DrawingSnapshot,semio_s_artifact_draw_drawing_mutations::DrawingMutation>("drawing.drawing","captured-native-export",document(),None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer),protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.unwrap();issuer.install_document_store_owners_exact(::semio_os_kernel::os_store::document_store_owners::funded_bounded_artifact_store_owners().expect("funded bounded document owners"));let generation=issuer.generation();let revision=issuer.content_revision_now();let read=issuer.snapshot_read().unwrap();let original=read.get()as*const DrawingSnapshot;let mut request=OwnedSerializerRequest{source:read.into_erased(),route:(semio_s_artifact_draw_drawing_model::DRAWING_DIALECT.into(),target(format)),generation,revision,options:DslValue::Object(vec![("width".into(),DslValue::uint(2)),("height".into(),DslValue::uint(1)),("transparent".into(),DslValue::Bool(true))]),children:None};let options=request.options.as_object().unwrap().as_ptr();let route=request.route.1.artifact_kind.as_ptr();
+   let (quote, allocation) = observe(|| io_owned_serialization_demand(&request));
+   let demand = quote.expect("calculate the actual registered Draw serializer demand");
+   assert_eq!((allocation.requested_bytes, allocation.released_bytes), (0, 0));
+   assert_eq!(demand.capacity_bytes, size_of::<DrawingOwnedSerializerJob>());
+   for row in contract["constructorFunding"].as_array().unwrap() {
+    let grant = RetainedCloneGrant {
+     maximum_items: row["items"].as_u64().unwrap() as usize,
+     maximum_capacity_bytes: demand.capacity_bytes.checked_add_signed(row["capacityDelta"].as_i64().unwrap() as isize).unwrap(),
+     maximum_depth: row["depth"].as_u64().unwrap() as usize,
+     ..Default::default()
+    };
+    assert_eq!(demand.admit(grant).is_ok(), row["accepted"].as_bool().unwrap(), "{}", row["name"]);
+   }
+   let grant=RetainedCloneGrant{maximum_items:1,maximum_capacity_bytes:demand.capacity_bytes,maximum_depth:demand.depth,..Default::default()};
    for axis in contract["deniedBirth"].as_array().unwrap(){let mut denied=grant;match axis.as_str().unwrap(){"items"=>denied.maximum_items=0,"capacity"=>denied.maximum_capacity_bytes-=1,_=>denied.maximum_depth=0}let(result,physical)=observe(||io_begin_owned_serialization(request,denied));let refusal=match result{Err(refusal)=>refusal,Ok(_)=>panic!("Denied constructor admitted")};assert_eq!((physical.requested_bytes,physical.released_bytes),(0,0));assert_eq!(refusal.progress,Default::default());request=refusal.request;assert_eq!(request.source.get::<DrawingSnapshot>().unwrap()as*const DrawingSnapshot,original);assert_eq!(request.options.as_object().unwrap().as_ptr(),options);assert_eq!(request.route.1.artifact_kind.as_ptr(),route);}
    let(result,physical)=observe(||io_begin_owned_serialization(request,grant));let admission=match result{Ok(admission)=>admission,Err(refusal)=>panic!("Native route refused: {}",refusal.error)};assert_eq!(physical.requested_bytes,admission.progress.retained_capacity_bytes);assert_eq!(physical.released_bytes,0);assert_eq!(admission.progress.retained_capacity_bytes,demand.capacity_bytes);let mut job=admission.job;let mut caller=serializer_caller(17,generation);assert_eq!(advance(&mut *job,&mut caller,0),OwnedSerializerStep::Pending);let mut completed=false;for _ in 0..1_000_000{match advance(&mut *job,&mut caller,fuel){OwnedSerializerStep::Pending=>{},OwnedSerializerStep::Complete=>{completed=true;break;},other=>panic!("Native serializer failed: {other:?} {}",job.fault().map_or("",|fault|fault.message.as_str()))}}assert!(completed);let output=job.output().unwrap();let page=output.page(0).unwrap().as_ptr();for row in handoffs()["terminalHandoffs"].as_array().unwrap().iter().filter(|row|row["kind"]=="output"&&row["current"]==true&&row["finished"]==true&&row["available"]==true&&row["cancelled"]==false&&row["accepted"]==false){let denied=terminal_grant(row);let(result,physical)=observe(||job.take_output(denied));assert!(result.is_err());assert_eq!((physical.requested_bytes,physical.released_bytes),(0,0));assert_eq!(job.output().unwrap().page(0).unwrap().as_ptr(),page);}let(result,physical)=observe(||job.take_output(RetainedCloneGrant{maximum_items:1,maximum_depth:1,..Default::default()}));let handoff=result.unwrap().unwrap();assert_eq!((physical.requested_bytes,physical.released_bytes),(0,0));assert_eq!(handoff.progress,RetainedCloneProgress{copied_items:1,..Default::default()});assert_eq!(handoff.output.page(0).unwrap().as_ptr(),page);assert!(job.output().is_none());let bytes=(0..handoff.output.page_count()).flat_map(|index|handoff.output.page(index).unwrap().iter().copied()).collect::<Vec<_>>();
    if format=="png"{let decoder=png::Decoder::new(std::io::Cursor::new(&bytes));let mut reader=decoder.read_info().unwrap();let mut pixels=vec![0;reader.output_buffer_size()];let info=reader.next_frame(&mut pixels).unwrap();assert_eq!((info.width,info.height),(2,1));assert_eq!(pixels[..info.buffer_size()],contract["expected"].as_array().unwrap().iter().map(|n|n.as_u64().unwrap()as u8).collect::<Vec<_>>());}
@@ -156,6 +170,88 @@ async fn drawing_owned_serializer_original_routes(){
    if fuel==1&&format=="png"{let request=OwnedSerializerRequest{source:issuer.snapshot_read().unwrap().into_erased(),route:(semio_s_artifact_draw_drawing_model::DRAWING_DIALECT.into(),target(format)),generation,revision,options:DslValue::Object(vec![("width".into(),DslValue::uint(contract["fault"]["width"].as_u64().unwrap())),("height".into(),DslValue::uint(contract["fault"]["height"].as_u64().unwrap()))]),children:None};let mut failed=match io_begin_owned_serialization(request,grant){Ok(admission)=>admission.job,Err(refusal)=>panic!("{}",refusal.error)};let mut fault_caller=serializer_caller(19,generation);let mut observed=false;for _ in 0..10{if advance(&mut *failed,&mut fault_caller,1)==OwnedSerializerStep::Fault{observed=true;break;}}assert!(observed);let message=failed.fault().unwrap().message.as_ptr();assert!(failed.output().is_none());for row in handoffs()["terminalHandoffs"].as_array().unwrap().iter().filter(|row|row["kind"]=="fault"&&row["current"]==true&&row["finished"]==true&&row["available"]==true&&row["cancelled"]==false&&row["accepted"]==false){let denied=terminal_grant(row);let(result,physical)=observe(||failed.take_fault(denied));assert!(result.is_err());assert_eq!((physical.requested_bytes,physical.released_bytes),(0,0));assert_eq!(failed.fault().unwrap().message.as_ptr(),message);}let(result,physical)=observe(||failed.take_fault(RetainedCloneGrant{maximum_items:1,maximum_depth:1,..Default::default()}));let handoff=result.unwrap().unwrap();assert_eq!((physical.requested_bytes,physical.released_bytes),(0,0));assert_eq!(handoff.fault.message.as_ptr(),message);assert_eq!(handoff.progress,RetainedCloneProgress{copied_items:1,..Default::default()});assert!(failed.fault().is_none()&&failed.output().is_none());close_job(failed,&mut issuer,&mut fault_caller);fault_caller.retire_exact();close_owned(handoff.fault);}for _ in 0..1_000_000{if issuer.close_owned_terminal_is_empty(){break;}let demand=issuer.close_owned_demands(4096).unwrap();effect_turn(retirement_grant(demand),|effect|progress(issuer.close_owned_step(effect)));}assert!(issuer.close_owned_terminal_is_empty());
   }
  }
+}
+
+
+#[test]
+fn drawing_compressed_png_original_funding() {
+    let contract = corpus();
+    let row = &contract["pngOriginalFunding"];
+    let width = row["width"].as_u64().unwrap() as u32;
+    let height = row["height"].as_u64().unwrap() as u32;
+    let capacity = row["capacity"].as_u64().unwrap() as usize;
+    let encoded = row["encodedBytes"].as_u64().unwrap() as usize;
+    let mut caller = serializer_caller(27, 1);
+    let mut image = Some(semio_framework_pixels::RasterImage::new(width, height));
+    let original = image.as_ref().unwrap().pixels.as_ptr();
+    let mut encoder = None;
+    let exact = RetainedCloneGrant { maximum_capacity_bytes: capacity, ..TURN_GRANT };
+    let denied = RetainedCloneGrant { maximum_capacity_bytes: row["deniedCapacity"].as_u64().unwrap() as usize, ..exact };
+
+    caller.bare_turn(denied, |cx| {
+        let before = cx.retained_progress();
+        let (result, heap) = observe(|| admit_png_encoder(cx, &mut image, &mut encoder));
+        assert!(!result.unwrap());
+        assert_eq!(cx.retained_progress(), before);
+        assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+        Ok(())
+    }).unwrap();
+    assert_eq!(image.as_ref().unwrap().pixels.as_ptr(), original);
+    assert!(encoder.is_none());
+
+    caller.bare_turn(exact, |cx| {
+        let before = cx.retained_progress();
+        let (result, heap) = observe(|| admit_png_encoder(cx, &mut image, &mut encoder));
+        assert!(result.unwrap());
+        assert_eq!(cx.retained_progress().retained_capacity_bytes - before.retained_capacity_bytes, capacity);
+        assert_eq!((heap.requested_bytes, heap.released_bytes), (capacity, 0));
+        Ok(())
+    }).unwrap();
+    assert!(image.is_none());
+    let mut encoder = encoder.unwrap();
+    assert_eq!(encoder.image.pixels.as_ptr(), original);
+    let before_bytes = encoder.bytes.len();
+    let before_input = encoder.progress().completed;
+    let denied_copy = RetainedCloneGrant { maximum_copy_bytes: encoder.next_copy_byte_demand() - 1, ..TURN_GRANT };
+    caller.bare_turn(denied_copy, |cx| {
+        let before = cx.retained_progress();
+        let (result, heap) = observe(|| advance_png_encoder(cx, &mut encoder));
+        assert!(result.unwrap().is_none());
+        assert_eq!(cx.retained_progress(), before);
+        assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+        Ok(())
+    }).unwrap();
+    assert_eq!(encoder.progress().completed, before_input);
+    assert_eq!(encoder.bytes.len(), before_bytes);
+
+    let mut finished = false;
+    for _ in 0..width as usize * height as usize * 4 / 4096 + 2 {
+        finished = caller.bare_turn(TURN_GRANT, |cx| {
+            let (result, heap) = observe(|| advance_png_encoder(cx, &mut encoder));
+            assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+            Ok(result.unwrap().unwrap())
+        }).unwrap();
+        if finished { break; }
+    }
+    assert!(finished);
+    let bytes = encoder.result().unwrap();
+    assert_eq!(bytes.len(), encoded);
+    assert_eq!((bytes[43] >> 1) & 3, 1, "the first IDAT starts with fixed-Huffman DEFLATE");
+    {
+        let decoder = png::Decoder::new(std::io::Cursor::new(bytes));
+        let mut reader = decoder.read_info().unwrap();
+        let mut pixels = vec![0; reader.output_buffer_size()];
+        let info = reader.next_frame(&mut pixels).unwrap();
+        assert_eq!((info.width, info.height), (width, height));
+        assert!(pixels[..info.buffer_size()].iter().all(|byte| *byte == 0));
+    }
+    if let Some(directory) = std::env::var_os("SEMIO_TEST_ARTIFACT_DIR") {
+        let directory = std::path::PathBuf::from(directory);
+        std::fs::create_dir_all(&directory).unwrap();
+        std::fs::write(directory.join("compressed-original-2048.png"), bytes).unwrap();
+    }
+    close_owned(encoder);
+    caller.retire_exact();
 }
 
 #[path="🎟️font/🦀️.rs"]

@@ -231,18 +231,37 @@ impl EventQueue {
         self.generation
     }
 
-    /// 📥️ The single entry point every normalized [`ui_render::DispatchEvent`] funnels through — a
-    /// host's `handle_event` calls this instead of processing the event itself. Routes to
+    /// 📥️ A native host's `handle_event` calls this with a normalized [`ui_render::DispatchEvent`]
+    /// instead of processing the event itself. Routes to
     /// [`CoalesceSlot`] for replaceable kinds, the bounded queue otherwise. Requires a [`UiThreadToken`]
     /// — this is, by construction, the one function a host's event callback is allowed to call
     /// directly with the raw event.
     pub fn enqueue(&mut self, _ui: UiThreadToken, event: DispatchEvent) -> EnqueueOutcome {
+        self.enqueue_input(event, false)
+    }
+
+    /// 🧮️ Reserves the fixed mailbox for an ordered batch whose individual payloads fit item credits.
+    pub fn prepare_ordered_batch(&mut self, _ui: UiThreadToken, events: usize, metrics: usize) -> bool {
+        if self.discrete.len().saturating_add(events) > DISCRETE_QUEUE_CAPACITY ||
+            self.generation.0.checked_add(events.saturating_add(metrics) as u64).is_none() {
+            return false;
+        }
+        events == 0 || self.discrete.capacity() >= DISCRETE_QUEUE_CAPACITY ||
+            self.discrete.try_reserve_exact(DISCRETE_QUEUE_CAPACITY - self.discrete.len()).is_ok()
+    }
+
+    /// 🧭️ Preserves pointer samples already coalesced between barriers by the browser transport.
+    pub fn enqueue_ordered(&mut self, _ui: UiThreadToken, event: DispatchEvent) -> EnqueueOutcome {
+        self.enqueue_input(event, true)
+    }
+
+    fn enqueue_input(&mut self, event: DispatchEvent, ordered: bool) -> EnqueueOutcome {
         let Some(generation) = self.generation.checked_next() else {
             self.overflow_count = self.overflow_count.saturating_add(1);
             return EnqueueOutcome::Overflow;
         };
         let outcome = match event {
-            DispatchEvent::PointerMove { pointer, x, y, modifiers } => {
+            DispatchEvent::PointerMove { pointer, x, y, modifiers } if !ordered => {
                 self.coalesced.coalesce_pointer_move(PointerMoveSample { pointer, x, y, modifiers, generation });
                 EnqueueOutcome::Accepted
             }

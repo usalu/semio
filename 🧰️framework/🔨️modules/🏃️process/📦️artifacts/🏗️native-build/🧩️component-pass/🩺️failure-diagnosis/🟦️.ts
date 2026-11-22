@@ -61,3 +61,11 @@ export function createErrorCaptureV1(limits:ErrorCaptureLimitsV1):ErrorCaptureV1
   lines:()=>Object.freeze([...kept]),
  });
 }
+
+/** 🔇️ Names a Cargo exit that left no diagnostic: no compiler error, no error block and no stderr line. Exit 101 is Cargo's own "a unit failed", so a failure without text is a defect of the capture; a signal exit (`128 + signal`, which the driver maps from a signal-ended Cargo) or the bare exit 1 of a Cargo that was ended from outside names the outside, because the driver's own stops (storage floor, deadline, abort, source drift) are recorded with their reason before they end Cargo. */
+export function cargoSilentExitV1(exit:number,evidence:Readonly<{diagnosed:boolean;unitsStarted:number}>,platform:string=process.platform):string|undefined{
+ if(exit===0||evidence.diagnosed)return;
+ const ended=unitExitSignalV1(exit,platform),started=`${evidence.unitsStarted} unit(s) had finished`;
+ if(ended)return `cargo was ended by ${ended.name} (exit ${exit}) without any diagnostic after ${started}: a process outside the driver signalled it (memory pressure, a lease or capacity sweep, a terminal or session closing), because the driver records the reason of every stop of its own`;
+ return `cargo exited with ${exit} without any compiler error or stderr output after ${started}: Cargo was ended from outside the driver or its diagnostics were lost; the driver recorded no stop of its own`;
+}

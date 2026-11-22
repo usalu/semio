@@ -1,0 +1,21 @@
+*** Begin Patch
+*** Update File: 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/🚪️io/📞️imports/🦀️.rs
+@@
+  /// ▶️ Host work follows its actual VM call receipt; no instruction budget or Source is issued here.
+- pub fn advance(state:&mut OriginalHostState,core:&mut CoreInstanceOpening,module:&Arc<CoreModule>,mut receiver:Option<&mut dyn OriginalOperationReceiving>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
++ pub fn advance(state:&mut OriginalHostState,core:&mut CoreInstanceOpening,module:&Arc<CoreModule>,receiver:Option<&mut dyn OriginalOperationReceiving>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
++  let mut before=source_clock_reply_frontier(state);
++  if advance_once(state,core,module,receiver,cx)?{return Ok(true)}
++  for _ in 0..2{
++   let after=source_clock_reply_frontier(state);
++   if after.is_none()||after==before||cx.retained_grant().maximum_items==0||cx.fuel_remaining()==0{return Ok(false)}
++   before=after;
++   if advance_once(state,core,module,None,cx)?{return Ok(true)}
++  }
++  Ok(false)
++ }
++ fn source_clock_reply_frontier(state:&OriginalHostState)->Option<(usize,bool)>{
++  state.reply.as_ref().filter(|reply|reply.cleanup_clock).map(|reply|(reply.copied,reply.completed))
++ }
++ fn advance_once(state:&mut OriginalHostState,core:&mut CoreInstanceOpening,module:&Arc<CoreModule>,mut receiver:Option<&mut dyn OriginalOperationReceiving>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
+*** End Patch

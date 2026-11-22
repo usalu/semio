@@ -154,6 +154,18 @@
       "en": "[verify] {breaches} raw process spawn breach(es)",
       "de": "[verify] {breaches} Verstoß/Verstöße gegen rohe Prozessstarts"
     },
+    "gates.package-export-targets": {
+      "en": "[verify] every package.json export target exists (a missing target breaks every importer at load time)…",
+      "de": "[verify] jedes Export-Ziel einer package.json existiert (ein fehlendes Ziel bricht jeden Importeur beim Laden)…"
+    },
+    "gates.package-export-target-breach": {
+      "en": "[verify] {breaches} package.json export target(s) point at a missing file",
+      "de": "[verify] {breaches} Export-Ziel(e) einer package.json zeigen auf eine fehlende Datei"
+    },
+    "run.expected-package-export-targets": {
+      "en": "Expected verify package-export-targets",
+      "de": "Erwartet: verify package-export-targets"
+    },
     "gates.json-duplicate-keys": {
       "en": "[verify] JSON files repeat no object key (a repeated key silently shadows the earlier value)…",
       "de": "[verify] JSON-Dateien wiederholen keinen Objektschlüssel (ein wiederholter Schlüssel überdeckt den früheren Wert stillschweigend)…"

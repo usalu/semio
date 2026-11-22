@@ -35,7 +35,9 @@ use semio_plugin::NoTransient;
 use semio_plugin::NoTransientMutation;
 use {semio_framework_artifact_reference::StandardId};
 use {semio_framework_artifact_reference::SubsetId};
-use semio_ui_locale::Label;
+use semio_ui_locale::AppLabels;
+use semio_ui_locale::Locale;
+use semio_ui_locale::Terminology;
 
 //#region 🔖️Dialect
 /// 🪪️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §1: the canonical surface-id
@@ -49,16 +51,61 @@ use semio_ui_locale::Label;
 pub const XLSX_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.xlsx", standard: StandardId("ecma-376"), subset: SubsetId("*") };
 //#endregion 🔖️Dialect
 
+//#region 🔖️Labels
+semio_ui_locale::app_labels! {
+    /// 🗣️ Complete multilingual label set of the XLSX editor surface; the grid axis names and the unknown-body fallback resolve here instead of being picked by locale match.
+    pub struct XlsxEditorLabels {
+        row: native_en "Row", native_de "Zeile", reuse_en "Row", reuse_de "Zeile";
+        column: native_en "Column", native_de "Spalte", reuse_en "Column", reuse_de "Spalte";
+        unknown_body: native_en "Unknown body: {body}", native_de "Unbekannter Bereich: {body}", reuse_en "Unknown body: {body}", reuse_de "Unbekannter Bereich: {body}";
+    }
+}
+
+/// 🗣️ Resolves the editor label set for the session locale in the native terminology.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn xlsx_editor_labels(locale: Locale) -> &'static XlsxEditorLabels {
+    XlsxEditorLabels::labels(locale, Terminology::Native)
+}
+//#endregion 🔖️Labels
+
 //#region 🔖️TableProjection
+/// 🔢️ The decimal separator a session locale types and reads; `None` is the canonical invariant OOXML spelling used by agents and stored values.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn xlsx_decimal_separator(locale: Option<Locale>) -> char {
+    match locale {
+        Some(Locale::De) => ',',
+        Some(Locale::En) | None => '.',
+    }
+}
+
+/// 🔢️ Displays one number with the locale's decimal separator; the stored canonical value is never touched.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn format_xlsx_number(number: f64, locale: Option<Locale>) -> String {
+    format!("{number}").replace('.', &xlsx_decimal_separator(locale).to_string())
+}
+
+/// 🔢️ Parses one typed number: only the locale's decimal separator is a decimal mark, so `1,5` is 1.5 in German and plain text in English, while the other locale's separator never silently regroups digits.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn parse_xlsx_number(text: &str, locale: Option<Locale>) -> Option<f64> {
+    let separator = xlsx_decimal_separator(locale);
+    let foreign = if separator == '.' { ',' } else { '.' };
+    if text.contains(foreign) || text.matches(separator).count() > 1 {
+        return None;
+    }
+    let canonical = text.replace(separator, ".");
+    canonical.parse::<f64>().ok().filter(|number| number.is_finite())
+}
+
 /// 🔎 Renders one cell value to display text. `SharedString` resolves against this document's own
 /// `workbook.shared_strings` (the typed semantic view's own index-keyed table — never `opc`'s raw
 /// XML, see the snapshot module's own doc comment on why the two must stay distinct); an
 /// out-of-range index degrades to `"#<index>"` rather than panicking. `Formula` shows its editable
-/// `=expr`; its optional computed cache remains separately editable in Details.
+/// `=expr`; its optional computed cache remains separately editable in Details. Numbers use the
+/// locale's decimal separator (`None` is the canonical invariant spelling).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn render_xlsx_cell_value(value: &XlsxCellValue, shared_strings: &[String]) -> String {
+pub(crate) fn render_xlsx_cell_value(value: &XlsxCellValue, shared_strings: &[String], locale: Option<Locale>) -> String {
     match value {
-        XlsxCellValue::Number(n) => format!("{n}"),
+        XlsxCellValue::Number(n) => format_xlsx_number(*n, locale),
         XlsxCellValue::SharedString(index) => shared_strings.get(*index).cloned().unwrap_or_else(|| format!("#{index}")),
         XlsxCellValue::InlineString(text) => text.clone(),
         XlsxCellValue::Boolean(flag) => flag.to_string(),
@@ -70,10 +117,11 @@ pub(crate) fn render_xlsx_cell_value(value: &XlsxCellValue, shared_strings: &[St
 
 /// ✍️ Parses one spreadsheet cell draft without losing its common value kind. Empty text clears the
 /// cell, `=expression` creates a formula, an apostrophe forces literal text, exact booleans retain
-/// their type, and only finite complete numbers become numeric cells. Shared-string indexing and a
-/// formula cache remain available through Details because neither has an unambiguous text spelling.
+/// their type, and only finite complete numbers in the locale's notation become numeric cells
+/// (stored canonically, whatever the locale). Shared-string indexing and a formula cache remain
+/// available through Details because neither has an unambiguous text spelling.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn parse_xlsx_cell_value(text: &str) -> XlsxCellValue {
+pub(crate) fn parse_xlsx_cell_value(text: &str, locale: Option<Locale>) -> XlsxCellValue {
     if text.is_empty() {
         return XlsxCellValue::Empty;
     }
@@ -86,9 +134,9 @@ pub(crate) fn parse_xlsx_cell_value(text: &str) -> XlsxCellValue {
     match text {
         "true" => XlsxCellValue::Boolean(true),
         "false" => XlsxCellValue::Boolean(false),
-        _ => match text.parse::<f64>() {
-            Ok(number) if number.is_finite() => XlsxCellValue::Number(number),
-            _ => XlsxCellValue::InlineString(text.to_string()),
+        _ => match parse_xlsx_number(text, locale) {
+            Some(number) => XlsxCellValue::Number(number),
+            None => XlsxCellValue::InlineString(text.to_string()),
         },
     }
 }
@@ -193,7 +241,7 @@ impl ArtifactEditor for XlsxEditor {
         store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::Snapshot, Self::Mutation>,
     >> {
         Some(semio_plugin::cold_replay_document_store_owners::<Self::Snapshot, Self::Mutation>(grant).map(|(mut owners, progress)| {
-            owners.operation_wire = owners.operation_wire.with_original_target(XlsxMutation::original_conflict_target);
+            owners.operation_wire = XlsxMutation::install_original_history_wire(owners.operation_wire);
             (owners, progress)
         }))
     }
@@ -260,7 +308,7 @@ impl ArtifactEditor for XlsxEditor {
         doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
         _interaction: &semio_plugin::app::InteractionView<'_>,
-        _view_state: Option<&semio_plugin::ViewModel>,
+        view_state: Option<&semio_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<Self::Mutation>, Fault> {
@@ -268,7 +316,7 @@ impl ArtifactEditor for XlsxEditor {
             let semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Edit(event) = command else { unreachable!() };
             return <Self as semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor>::snapshot_edit_emit(event, doc.snapshot);
         };
-        xlsx_set_cell_emit(doc.snapshot, command)
+        xlsx_set_cell_emit(doc.snapshot, command, view_state.map(|view| view.locale))
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
@@ -284,7 +332,7 @@ impl ArtifactEditor for XlsxEditor {
                 &semio_plugin::TreeWindows::for_body(view_state, semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_BODY_KEY),
             )
             .map(semio_plugin::built_to_component_tree),
-            _ => semio_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
+            _ => semio_plugin::built_text_to_component_tree(xlsx_editor_labels(view_state.locale).unknown_body.fill(&[("body", body_key)])),
         }
     }
 }
@@ -298,12 +346,12 @@ pub fn xlsx_agent_target_revision(snapshot: &XlsxSnapshot, args: &semio_framewor
     xlsx_cell_target_revision(snapshot, &sheet_name, row, column).map(Some).map_err(|message| Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("stdio.xlsx.cell-stale"), message))
 }
 
-fn xlsx_set_cell_emit(snapshot: &XlsxSnapshot, command: &XlsxEditorCommand) -> Result<Emit<XlsxMutation>, Fault> {
+fn xlsx_set_cell_emit(snapshot: &XlsxSnapshot, command: &XlsxEditorCommand, locale: Option<Locale>) -> Result<Emit<XlsxMutation>, Fault> {
     let XlsxEditorCommand::SetCell { sheet_name, row, column, revision, value } = command;
-    xlsx_set_cell_emit_fields(snapshot, sheet_name, *row, *column, revision, value, "stdio.xlsx")
+    xlsx_set_cell_emit_fields(snapshot, sheet_name, *row, *column, revision, value, locale, "stdio.xlsx")
 }
 
-pub fn xlsx_set_cell_emit_fields(snapshot: &XlsxSnapshot, sheet_name: &str, row: u32, column: u32, revision: &str, value: &str, fault_prefix: &'static str) -> Result<Emit<XlsxMutation>, Fault> {
+pub fn xlsx_set_cell_emit_fields(snapshot: &XlsxSnapshot, sheet_name: &str, row: u32, column: u32, revision: &str, value: &str, locale: Option<Locale>, fault_prefix: &'static str) -> Result<Emit<XlsxMutation>, Fault> {
     let fault = |suffix: &'static str, message: String| {
         Fault::new(
             semio_plugin::FaultOrigin::App,
@@ -331,10 +379,10 @@ pub fn xlsx_set_cell_emit_fields(snapshot: &XlsxSnapshot, sheet_name: &str, row:
         if address.revision != revision {
             return Err(fault("cell-conflict", format!("cell {sheet_name}!{row},{column} changed before this draft was applied")));
         }
-        if render_xlsx_cell_value(&cell.value, &workbook.shared_strings) == value {
+        if render_xlsx_cell_value(&cell.value, &workbook.shared_strings, locale) == value {
             return Ok(Emit::default());
         }
-        return Ok(Emit { artifact_mutations: vec![XlsxMutation::SetCell(set_cell::SetCell { address, value: parse_xlsx_cell_value(value), node: None })], ..Default::default() });
+        return Ok(Emit { artifact_mutations: vec![XlsxMutation::SetCell(set_cell::SetCell { address, value: parse_xlsx_cell_value(value, locale), node: None })], ..Default::default() });
     }
     let address = xlsx_cell_vacancy_address(snapshot, sheet_name, row, column).map_err(|message| fault("cell-stale", message))?;
     if address.worksheet.revision != revision {
@@ -343,7 +391,7 @@ pub fn xlsx_set_cell_emit_fields(snapshot: &XlsxSnapshot, sheet_name: &str, row:
     if value.is_empty() {
         return Ok(Emit::default());
     }
-    Ok(Emit { artifact_mutations: vec![XlsxMutation::InsertCell(insert_cell::InsertCell { address, value: parse_xlsx_cell_value(value), node: None })], ..Default::default() })
+    Ok(Emit { artifact_mutations: vec![XlsxMutation::InsertCell(insert_cell::InsertCell { address, value: parse_xlsx_cell_value(value, locale), node: None })], ..Default::default() })
 }
 
 impl semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor for XlsxEditor {
@@ -371,7 +419,7 @@ semio_s_artifact_stdio_contract::bounded_native_editing_editor! {
         let semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(command) = command else {
             return Err(Fault::from("stdio-xlsx-native-edit-command-mismatch"));
         };
-        xlsx_set_cell_emit(snapshot, command)
+        xlsx_set_cell_emit(snapshot, command, None)
     },
 }
 //#endregion 🔖️Editor
@@ -386,7 +434,7 @@ pub fn create_xlsx_editor() -> semio_plugin::AppDefinition {
         .default_mode_id(edit::XLSX_EDIT_MODE_ID)
         .window_kind_def(main::definition())
         .window_kind_def(semio_s_artifact_stdio_contract::editing::snapshot_details_window_definition())
-        .default_layout(semio_s_artifact_stdio_contract::editing::snapshot_details_split_layout(main::WINDOW_KIND_ID, "Workbook"));
+        .default_layout(semio_s_artifact_stdio_contract::editing::snapshot_details_split_layout(main::WINDOW_KIND_ID));
     semio_s_artifact_stdio_contract::editing::snapshot_edit_actions_with(builder).build_definition()
 }
 //#endregion 🔖️Manifest

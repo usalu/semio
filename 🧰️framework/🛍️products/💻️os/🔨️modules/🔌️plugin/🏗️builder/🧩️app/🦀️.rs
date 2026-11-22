@@ -30,7 +30,7 @@ use semio_ui_locale::LocalizedLabel;
 /// flow. The node schema moved to the contract, but these never did — they are separate concerns
 /// that happen to share a home crate, and a second glob here would silently shadow the contract's
 /// own types with the old ones, quietly undoing the migration.
-use semio_ui_layout::layout::collect_window_kind_ids_from_layout;
+use semio_ui_layout::layout::collect_window_kind_ids;
 /// 🔗️ `manifest::Keybinding.action` (FORBIDDEN file, `🧰️framework/🔨️modules/🛂️manifest/🦀️.rs`)
 /// is still declared as `semio_ui_layout::layout::ActionDescriptor` and was not part of this migration's scope
 /// — it is a separate, un-migrated manifest domain (declarative keybinding data), not one of the

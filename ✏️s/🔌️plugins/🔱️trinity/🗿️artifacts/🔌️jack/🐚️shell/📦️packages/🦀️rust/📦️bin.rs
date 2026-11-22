@@ -1,4 +1,4 @@
-//! 🐚️ Jack query shell for trinity graphs: loads a scene document (`JackQueryGraphSnapshot` JSON: manifest, nodes and edges inline) and answers Jack queries.
+//! 🐚️ Jack query shell for trinity graphs: loads a scene document (`JackQueryGraphSnapshot` JSON: manifest id, nodes and edges inline) and answers Jack queries.
 
 extern crate semio_os_kernel as store;
 use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::ast::QueryResult;

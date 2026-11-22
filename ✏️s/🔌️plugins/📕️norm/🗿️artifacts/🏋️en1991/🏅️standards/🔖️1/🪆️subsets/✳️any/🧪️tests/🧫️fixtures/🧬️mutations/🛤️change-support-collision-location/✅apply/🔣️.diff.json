@@ -286,5 +286,17 @@
         }
       }
     ]
+  },
+  "localFires": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "snowGuards": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
   }
 }

@@ -19,3 +19,11 @@ export { default as directoryAccessPolicySchema } from "../../🛡️access-poli
 export const loadAccessChangedV1Fixture = () => import("./🔑️access-changed-v1/🔣️.json").then(module => module.default);
 export const loadDirectorySchema = () => import("../../🧬️schema/🔣️.json").then(module => module.default);
 export const directorySchemaUrl = fixtureUrl(import.meta.url, "../../🧬️schema/🔣️.json");
+export { default as hubFirstRunDocument } from "../../../../../../🔨️modules/📇️directory/🎓️first-run/🔣️.json" with { type: "json" };
+export { default as hubFirstRunSchema } from "../../../../../../🔨️modules/📇️directory/🎓️first-run/🧬️.schema.json" with { type: "json" };
+export { default as hubFirstRunVectors } from "../../../../../../🔨️modules/📇️directory/🎓️first-run/🧪️tests/🧫️fixtures/🔣️.json" with { type: "json" };
+export { default as hubFirstRunVectorsSchema } from "../../../../../../🔨️modules/📇️directory/🎓️first-run/🧪️tests/🧫️fixtures/🧬️.schema.json" with { type: "json" };
+export { default as agentDelegationsDocument } from "../../../../../../🔨️modules/📇️directory/🤖️delegations/🔣️.json" with { type: "json" };
+export { default as agentDelegationsSchema } from "../../../../../../🔨️modules/📇️directory/🤖️delegations/🧬️.schema.json" with { type: "json" };
+export { default as agentDelegationsVectors } from "../../../../../../🔨️modules/📇️directory/🤖️delegations/🧪️tests/🧫️fixtures/📐️agent-delegation-contract-vectors.json" with { type: "json" };
+export { default as agentDelegationsVectorsSchema } from "../../../../../../🔨️modules/📇️directory/🤖️delegations/🧪️tests/🧫️fixtures/📐️agent-delegation-contract-vectors.schema.json" with { type: "json" };

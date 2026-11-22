@@ -17,11 +17,15 @@ fn finish_partial(work:&mut OriginalWorkBorrow<'_>,action:Option<OriginalWorkAct
 /// 🔢️ Construction items one metadata step accepts in its single turn: the metadata action, its Source Post and the completion release; a turn grant funding the step lends at least this many items.
 pub const NATIVE_SCHEMA_METADATA_ITEMS:usize=3;
 const NATIVE_SCHEMA_METADATA_WORK:u64=3;
+fn metadata_turn_demand(action:RetirementDemand)->Result<RetirementDemand,ValueError>{
+ let post=OriginalConstructionCompletion::demand();
+ Ok(RetirementDemand{copy_bytes:action.copy_bytes.checked_add(post.copy_bytes.checked_mul(2).ok_or_else(invalid)?).ok_or_else(invalid)?,capacity_bytes:action.capacity_bytes.checked_add(post.capacity_bytes.checked_mul(2).ok_or_else(invalid)?).ok_or_else(invalid)?,release_bytes:action.release_bytes.checked_add(post.release_bytes.checked_mul(2).ok_or_else(invalid)?).ok_or_else(invalid)?,depth:action.depth.max(post.depth),..action})
+}
 impl<I:NativeValueSource+?Sized> NativeRecordMatcher<I>{
  fn settlement(&self)->Result<Settle,ValueError>{settlement_of(self.key_backing.get().ok_or_else(invalid)?).ok_or_else(invalid)}
  fn local_work(&self,selection:S,body:usize)->Result<u64,ValueError>{Ok(match selection{S::Complete|S::KeyPost=>0,S::KeyBirth=>self.key_birth_work_demand()?,S::PendingSlot=>self.pending_slot_work_demand()?,S::CompareLeaf=>self.compare_leaf_work_demand(body)?,S::CaptureFrame=>self.capture_frame_work_demand()?,S::ApplyFrame=>self.apply_frame_work_demand()?,S::PopFrame=>self.pop_frame_work_demand()?,S::FinishPopped=>self.finish_popped_work_demand()?,S::Finish=>2,_=>1})}
  /// 📐️ Quotes only the selected action of the resident matcher.
- pub fn demands(&self,input:RetainedCloneRef<'_,I>,body:usize,_maximum:u64)->Result<RetirementDemand,ValueError>{Ok(match self.selection()?{S::Complete|S::KeyPost|S::CheckpointRecovery=>Default::default(),S::KeyAcknowledgement=>self.key_backing.get().ok_or_else(invalid)?.acknowledgement().acknowledgement_demand()?,S::KeyBirth=>self.key_birth_demand()?,S::KeyStart=>self.key_start_demand()?,S::KeyAction=>self.key_action_quote(input)?.0,S::KeyMetadata(operation)=>{let action=self.key_metadata_demand(operation)?;let post=OriginalConstructionCompletion::demand();RetirementDemand{copy_bytes:action.copy_bytes.checked_add(post.copy_bytes.checked_mul(2).ok_or_else(invalid)?).ok_or_else(invalid)?,capacity_bytes:action.capacity_bytes.checked_add(post.capacity_bytes.checked_mul(2).ok_or_else(invalid)?).ok_or_else(invalid)?,release_bytes:action.release_bytes.checked_add(post.release_bytes.checked_mul(2).ok_or_else(invalid)?).ok_or_else(invalid)?,depth:action.depth.max(post.depth),..action}},S::KeySettlement=>match self.settlement()?{Settle::Outcome=>self.key_action_result_demand()?,Settle::Request=>self.key_clear_request_demand()},S::KeyError=>self.key_error_demand()?,S::KeyBind=>self.key_bind_demand()?,S::PendingSlot=>self.pending_slot_demand()?,S::CompareLeaf=>self.compare_leaf_demand(body)?,S::CaptureFrame=>self.capture_frame_demand()?,S::ApplyFrame=>self.apply_frame_demand()?,S::PopFrame=>self.pop_frame_demand()?,S::FinishPopped=>self.finish_popped_demand()?,S::Finish=>self.finish_match_demand()?})}
+ pub fn demands(&self,input:RetainedCloneRef<'_,I>,body:usize,_maximum:u64)->Result<RetirementDemand,ValueError>{Ok(match self.selection()?{S::Complete|S::KeyPost|S::CheckpointRecovery=>Default::default(),S::KeyAcknowledgement=>self.key_backing.get().ok_or_else(invalid)?.acknowledgement().acknowledgement_demand()?,S::KeyBirth=>self.key_birth_demand()?,S::KeyStart=>self.key_start_demand()?,S::KeyAction=>self.key_action_quote(input)?.0,S::KeyMetadata(operation)=>metadata_turn_demand(self.key_metadata_demand(operation)?)?,S::KeySettlement=>match self.settlement()?{Settle::Outcome=>self.key_action_result_demand()?,Settle::Request=>self.key_clear_request_demand()},S::KeyError=>self.key_error_demand()?,S::KeyBind=>self.key_bind_demand()?,S::PendingSlot=>self.pending_slot_demand()?,S::CompareLeaf=>self.compare_leaf_demand(body)?,S::CaptureFrame=>self.capture_frame_demand()?,S::ApplyFrame=>self.apply_frame_demand()?,S::PopFrame=>self.pop_frame_demand()?,S::FinishPopped=>self.finish_popped_demand()?,S::Finish=>self.finish_match_demand()?})}
  /// ⏱️ Quotes the Work of the selected nested original Source action.
  pub fn nested_work_demand(&self,input:RetainedCloneRef<'_,I>)->Result<u64,ValueError>{match self.selection()?{S::KeyAction=>Ok(self.key_action_quote(input)?.1),S::KeyAcknowledgement=>Ok(u64::from(!self.acknowledgement_started()?)),S::CheckpointRecovery=>Ok(1),S::KeyMetadata(_)=>Ok(NATIVE_SCHEMA_METADATA_WORK),_=>Err(invalid())}}
  /// 🧭️ Selects the resident original Source action or one separately funded local action.
@@ -30,10 +34,20 @@ impl<I:NativeValueSource+?Sized> NativeRecordMatcher<I>{
  pub fn advance_nested(&mut self,input:RetainedCloneRef<'_,I>,control:&mut NativeDecodeControl<'_>,witness:engine::OriginalSourceTurnWitness<'_>,body:usize,maximum:u64,grant:RetainedCloneGrant)->Poll{
   match self.selection(){
    Ok(S::KeyMetadata(_)) if maximum<NATIVE_SCHEMA_METADATA_WORK||grant.maximum_items<NATIVE_SCHEMA_METADATA_ITEMS=>idle(0),
-   Ok(S::KeyAcknowledgement|S::KeyMetadata(_)) if !self.demands(input,body,maximum).is_ok_and(|demand|semio_framework_value_control_contract::retained_clone_grant_admits(grant,demand))=>idle(0),
    Ok(S::KeyAction|S::CheckpointRecovery)=>match self.key_action_advance(input,control,witness,body,maximum,grant){Err(error)=>failed(error),Ok(NativeSchemaKeyPoll::Denied)=>idle(0),Ok(NativeSchemaKeyPoll::Pending{work})=>engine::RetainedWorkPoll::Pending{work},Ok(NativeSchemaKeyPoll::Ready{work,progress})=>engine::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(progress)),work})},
-   Ok(S::KeyAcknowledgement)=>self.advance_acknowledgement(control),
-   Ok(S::KeyMetadata(operation))=>{let before=control.actual_work();let advanced=self.advance_metadata(control,operation);let work=control.actual_work().saturating_sub(before);match advanced{Ok(progress)=>engine::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(progress)),work}),Err(error)=>engine::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(error.into()),work})}},
+   Ok(S::KeyAcknowledgement)=>{
+    let demand=self.key_backing.get().ok_or_else(invalid).and_then(|frame|frame.acknowledgement().acknowledgement_demand());
+    if !demand.is_ok_and(|demand|semio_framework_value_control_contract::retained_clone_grant_admits(grant,demand)){return idle(0)}
+    self.advance_acknowledgement(control)
+   }
+   Ok(S::KeyMetadata(operation))=>{
+    let Ok(action)=self.key_metadata_demand(operation)else{return idle(0)};
+    if !metadata_turn_demand(action).is_ok_and(|demand|semio_framework_value_control_contract::retained_clone_grant_admits(grant,demand)){return idle(0)}
+    let before=control.actual_work();
+    let result=self.advance_funded_metadata(control,operation,action);
+    let work=control.actual_work().saturating_sub(before);
+    engine::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:result.map(RetainedCloneStep::Progress).map_err(Into::into),work})
+   }
    Ok(_)=>failed(invalid()),
    Err(error)=>failed(error),
   }
@@ -86,6 +100,9 @@ impl<I:NativeValueSource+?Sized> NativeRecordMatcher<I>{
  /// 🧾️ Performs one acknowledgement metadata action and authenticates its Source Post under the actual Work and construction authorities; it reports one step item while its action, Post and release accept [`NATIVE_SCHEMA_METADATA_ITEMS`] construction items in the same turn.
  pub fn advance_metadata(&mut self,control:&mut NativeDecodeControl<'_>,operation:NativeSchemaKeyMetadata)->Result<RetainedCloneProgress,ValueError>{
   let demand=self.key_metadata_demand(operation)?;
+  self.advance_funded_metadata(control,operation,demand)
+ }
+ fn advance_funded_metadata(&mut self,control:&mut NativeDecodeControl<'_>,operation:NativeSchemaKeyMetadata,demand:RetirementDemand)->Result<RetainedCloneProgress,ValueError>{
   control.with_original_work_and_construction(|work,physical|{
    let mut quote=None;
    let admitted=work.prepare(NATIVE_SCHEMA_METADATA_WORK,&mut quote);

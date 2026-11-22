@@ -13,6 +13,28 @@ export const WATCHER=process.env.SEMIO_REPO_WATCH_BINARY??(NATIVE?NATIVE+"/semio
 export async function residentWatcherV1():Promise<string>{if(WATCHER)return WATCHER;const{ensureResidentWatcherV1}=await import("../🔭️watch/🏗️provision/🔌️tools/🟨️.mjs");return ensureResidentWatcherV1(join(HERE,"..","..","..","..","..","..","..",".."));}
 export const FAKETOOL=process.env.SEMIO_REPO_FAKETOOL_BINARY??(NATIVE?NATIVE+"/faketool":"");
 export const haveBinary=(path:string)=>{try{lstatSync(path);return true;}catch{return false;}};
+/** 🔭️ Whether the native watcher laws can run here: the binary exists and the host delivers file system events; a host that has the binary but delivers none is named once on the console and the laws are skipped. */
+export async function nativeWatcherUsableV1(binary:string):Promise<boolean>{
+ if(!haveBinary(binary))return false;
+ const delivers=await hostDeliversEventsV1();
+ if(!delivers)console.warn("[watch tests] this host did not deliver file system events reliably (4 of 4 within 2.5 s each) (fseventsd starved): the native watcher laws are skipped");
+ return delivers;
+}
+/** 📡️ Whether this host delivers file system events reliably: on a recursive watch of a fresh temporary folder, `rounds` writes in a row must each be reported within `timeoutMilliseconds` (the wait resolves at the event, it never sleeps). A host whose event daemon is starved or only intermittent (macOS `fseventsd` under memory pressure) answers false, and the laws that need an exact journal are skipped there with that reason instead of failing. */
+export async function hostDeliversEventsV1(timeoutMilliseconds=2500,rounds=4):Promise<boolean>{
+ const {watch}=await import("node:fs"),directory=mkdtempSync(join(tmpdir(),"ev-"));
+ let seen:(()=>void)|undefined,watcher:ReturnType<typeof watch>|undefined;
+ try{
+  try{watcher=watch(directory,{recursive:true},(_event,name)=>{if(String(name??"").startsWith("probe"))seen?.();});}catch{return false;}
+  await new Promise(done=>setTimeout(done,500));
+  for(let round=0;round<rounds;round++){
+   const reported=new Promise<boolean>(resolve=>{const timer=setTimeout(()=>resolve(false),timeoutMilliseconds);seen=()=>{clearTimeout(timer);resolve(true);};});
+   try{writeFileSync(join(directory,"probe"+round),"x");}catch{return false;}
+   if(!await reported)return false;
+  }
+  return true;
+ }finally{watcher?.close();rmSync(directory,{recursive:true,force:true});}
+}
 
 export function rng(seed:number){let s=seed>>>0;return()=>{s=(s*1664525+1013904223)>>>0;return s/4294967296;};}
 export const pick=<T>(random:()=>number,items:readonly T[]):T=>items[Math.floor(random()*items.length)]!;

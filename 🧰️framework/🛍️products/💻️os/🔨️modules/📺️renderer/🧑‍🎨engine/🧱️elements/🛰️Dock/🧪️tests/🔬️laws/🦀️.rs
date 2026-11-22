@@ -16,3 +16,6 @@ mod stack_drop_destination_tests;
 #[cfg(not(target_arch = "wasm32"))]
 #[path = "../🔬️wgpu-unit/🦀️.rs"]
 mod unit_tests;
+#[cfg(not(target_arch = "wasm32"))]
+#[path = "../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🖼️presentation/📐️layout/🧪️tests/🪟️window-layout-corpus/🦀️.rs"]
+mod window_layout_corpus_tests;

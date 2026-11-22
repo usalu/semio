@@ -1,0 +1,7 @@
+# Puzzle 3D WGPU Browser Clipboard
+
+The registered `@semio-tech/puzzle-3d-rs:test-browser-wgpu-clipboard` scenario uses the real default Puzzle 3D editor in English and German. It finds the Perspective scene with `dumpMeshStats`, clicks within its published rect until the scene reports one visible instance selected, focuses the WGPU canvas, and sends copy and paste keyboard chords. The verdict requires exactly one new instance with the shared fixture offset, the source rotation and scale, and all prior instances intact. It checks selection of the pasted instance and then sends the undo chord and checks the complete baseline instance set.
+
+The mesh dump now carries optional position, rotation and scale from the published instance payload. Missing or malformed fields are omitted. The native introspection law checks its serialized shape, including omission and the existing mesh and interaction identity.
+
+Rust parsing, scenario TypeScript type checking, target registration, fixture offset parity, and diff whitespace checks passed. The browser command encountered a read-only agent-session and host-capacity cache, and the worktree partition was below its 12 GiB reservation. Chromium was not reached on this route. The prior independent browser attempt and its sandbox refusal are recorded in [Puzzle browser verification](./browser-audit.md). The native introspection law was updated and has not run in the shared Cargo build.

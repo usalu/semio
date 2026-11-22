@@ -1,0 +1,53 @@
+{
+  "stockMetres": [
+    0.2,
+    0.18,
+    0.05
+  ],
+  "steps": [
+    {
+      "catalog": "concrete",
+      "machine": "diamondSaw",
+      "capability": "crosscut",
+      "measure": "cut",
+      "positionMetres": [
+        0,
+        0,
+        0.025
+      ]
+    },
+    {
+      "catalog": "robotic",
+      "machine": "sixAxisMill",
+      "capability": "bore",
+      "measure": "drill",
+      "positionMetres": [
+        0.065,
+        0,
+        0
+      ]
+    },
+    {
+      "catalog": "metal",
+      "machine": "migWelder",
+      "capability": "weldPlate",
+      "measure": "attach",
+      "positionMetres": [
+        -0.04,
+        0,
+        0.025
+      ]
+    }
+  ],
+  "prefixesCubicMetres": [
+    0.0018,
+    0.001728,
+    0.001712920355262769,
+    0.001772920355262769
+  ],
+  "drillEdit": {
+    "radiusMetres": 0.012,
+    "volumeCubicMetres": 0.0017662853115783873
+  },
+  "volumeToleranceCubicMetres": 1e-7
+}

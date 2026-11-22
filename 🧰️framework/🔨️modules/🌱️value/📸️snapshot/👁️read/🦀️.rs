@@ -809,7 +809,7 @@ impl<T: ?Sized> std::ops::Deref for SnapshotReadRef<'_, T> {
 
 
 pub fn artifact_retirement_owned_birth_demands<T: semio_framework_value::retirement::RetireOwned>(pending: &Option<T>) -> Result<semio_framework_value::RetirementDemand, ValueError> {
-    let Some(original) = pending.as_ref() else { return Ok(Default::default()); };
+    let Some(original) = pending.as_ref() else { return Ok(Default::default()) };
     let mut demand = semio_framework_value::retirement::controlled::controlled_retirement_birth_demand(original)?;
     demand.depth += 1;
     Ok(demand)
@@ -825,7 +825,7 @@ pub fn artifact_retirement_admit_owned<T: semio_framework_value::retirement::Ret
         if grant.maximum_items == 0 || effect.maximum_work_units() == 0 { return Ok(RetainedCloneStep::Progress(empty)); }
         let demand = artifact_retirement_owned_birth_demands(pending)?;
         if grant.maximum_depth < demand.depth { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "typed child birth exceeds admitted parent depth")); }
-        if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
+        if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant, demand) { return Ok(RetainedCloneStep::Progress(empty)); }
         let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
         let turn = semio_framework_value::retirement::admit_owned_retirement(pending, &mut effect.nested(child));
         work += turn.work;
@@ -833,7 +833,7 @@ pub fn artifact_retirement_admit_owned<T: semio_framework_value::retirement::Ret
             Some((owner, progress)) => {
                 *active = Some(owner);
                 semio_framework_value::retained_clone::admit_retained_clone_progress(child, progress, "typed child birth")?;
-                if progress.retained_capacity_bytes != demand.capacity_bytes { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "typed child birth receipt differs from its exact current frame quote")); }
+                if progress.copied_bytes != demand.copy_bytes || progress.retained_capacity_bytes != demand.capacity_bytes { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "typed child birth receipt differs from its exact current frame quote")); }
                 Ok(RetainedCloneStep::Progress(progress))
             }
             None => Ok(RetainedCloneStep::Progress(empty)),
@@ -945,6 +945,10 @@ mod presence_read_tests;
 #[cfg(test)]
 #[path="../../../../🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/♻️snapshot-read-retirement/🦀️.rs"]
 mod returned_retirement_tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/🎟️typed-retirement/🦀️.rs"]
+mod typed_retirement_tests;
 
 #[cfg(test)]
 #[path="🧪️tests/🔒️registry-lock/🦀️.rs"]

@@ -31,3 +31,7 @@ semio-framework-value-derive.workspace = true
 [dev-dependencies]
 serde.workspace = true
 serde_json.workspace = true
+
+[[test]]
+name = "analysis-queries"
+path = "../../🧪️tests/🔬️unit/🦀️.rs"

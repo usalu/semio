@@ -56,7 +56,7 @@ fn scene() -> Puzzle5dSnapshot {
         ..Default::default()
     };
     Puzzle5dSnapshot {
-        parts: vec![part("a", 0.0, vec![grip(1.0)], false), part("b", 10.0, vec![grip(-1.0)], false), part("pin", 20.0, Vec::new(), true)],
+        parts: [part("a", 0.0, vec![grip(1.0)], false), part("b", 10.0, vec![grip(-1.0)], false), part("pin", 20.0, Vec::new(), true)].into_iter().collect(),
         target_volumes: vec![Puzzle5dTargetVolume { id: "box".into(), ..Default::default() }],
         ..Default::default()
     }

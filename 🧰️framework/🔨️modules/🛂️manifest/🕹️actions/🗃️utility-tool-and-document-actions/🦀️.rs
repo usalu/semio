@@ -66,6 +66,21 @@ pub fn plan_row_control_focus<'a>(controls: &[RowControl<'a>]) -> Option<&'a str
     controls.iter().find(|control| !control.disabled && FOCUS_ROW_CONTROL_EDITABLE_KINDS.contains(&control.kind)).map(|control| control.id)
 }
 
+/// 🕸️ The action id every node-graph window kind declares to persist its camera (`nodeGraphViewport`); a window kind that lists it hosts one node-graph viewport, which is what [`node_graph_fit_action_definition`] joins on.
+pub const NODE_GRAPH_VIEWPORT_ACTION_ID: &str = "nodeGraphViewport";
+
+/// 🔲️ The framework-owned action id of "fit the whole graph into the node-graph viewport of window W", shell-intercepted in every app (never forwarded to the program): the host frames the graph with the one camera law (`canvas::camera::fit_camera`, TypeScript twin `dagFitCamera`) and persists the answer as a `nodeGraphViewport` exactly the way a wheel zoom is persisted. The i18n label key of the control is `nodeGraph.fitGraph`.
+pub const NODE_GRAPH_FIT_ACTION_ID: &str = "fitGraph";
+
+/// 🪞️ The chord of [`NODE_GRAPH_FIT_ACTION_ID`]; the window-scoped keybinding resolver delivers it to the focused window when that window declares the action, else to the mounted owner.
+pub const NODE_GRAPH_FIT_KEY: &str = "f";
+
+/// 🖼️ The reserved `fitGraph` View action: in the palette and the window toolbar, chrome audience, joined by the builder to every window kind that declares [`NODE_GRAPH_VIEWPORT_ACTION_ID`] and bound to [`NODE_GRAPH_FIT_KEY`].  It takes no argument, so a chord runs it at once: the host resolves the window from a scoped `windowId` when one is present, else from the focused window.
+pub fn node_graph_fit_action_definition() -> ActionDefinition {
+    ActionDefinition { keys: Some(NODE_GRAPH_FIT_KEY.into()), ..ActionDefinition::resumable_framework(NODE_GRAPH_FIT_ACTION_ID, LocalizedLabel::native("Fit graph", "Graph einpassen"), ActionKind::View, "maximize-2").with_category("view").audience(CapabilityAudience::Chrome) }
+        .describe(LocalizedLabel::native("Frames the whole node graph of the window in its view; only the view changes.", "Zeigt den gesamten Knotengraphen des Fensters formatfüllend; nur die Ansicht ändert sich."))
+}
+
 /// 📤️ The framework-owned action id of Export Document: injected into every app window and fully
 /// shell-intercepted (never forwarded to the program) — the shell writes the document's canonical archive (root
 /// envelope, its op log, every owned member) as one `.semio-archive` file, for every artifact kind alike.

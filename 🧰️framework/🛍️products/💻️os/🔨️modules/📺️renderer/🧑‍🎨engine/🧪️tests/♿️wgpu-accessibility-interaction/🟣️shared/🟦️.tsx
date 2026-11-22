@@ -10,7 +10,8 @@ import { type BrowserFrameUiMessage, type BrowserFrameWorkerMessage, type Browse
 import type * as AccessibilityOracle from "dom-accessibility-api" with { "resolution-mode": "require" };
 import { PanelTabBar, type PanelTabNode } from "@semio-tech/ui-react";
 import { Toggle } from "@semio-tech/ui-react";
-import { Mode, uiDataLabel, type WindowLayoutNode } from "@semio-tech/ui-react";
+import { Mode, uiDataLabel } from "@semio-tech/ui-react";
+import type { WindowLayoutNode } from "@semio-tech/ui-layout";
 
 export type ProjectionNode = {
   readonly nodeId: number;
@@ -110,8 +111,9 @@ export function DockTabKeyboardOracle(): React.JSX.Element {
   const [active, setActive] = useState(dockTabKeyboardFixture.stacks[0]!.active);
   const windows = dockTabKeyboardFixture.stacks.flatMap((stack) => stack.tabs.map((id) => ({ id, title: uiDataLabel(id.toUpperCase()), iconId: "app-window" as const, children: <div>{id}</div> })));
   const layout: WindowLayoutNode = {
-    kind: "row",
-    children: dockTabKeyboardFixture.stacks.map((stack) => ({ kind: "stack" as const, activeId: stack.active, children: stack.tabs.map((id) => ({ kind: "window" as const, id })) })),
+    kind: "split",
+    axis: "horizontal",
+    children: dockTabKeyboardFixture.stacks.map((stack) => ({ kind: "stack" as const, activeWindowId: stack.active, children: stack.tabs.map((windowKindId) => ({ kind: "window" as const, windowKindId })) })),
   };
   return <Mode windows={windows} activeWindowId={active} onActiveWindowChange={(id) => setActive(id ?? active)} layout={layout} />;
 }

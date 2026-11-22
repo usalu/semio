@@ -5,10 +5,9 @@ import "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/
 message JackArtifact {
  string schema = 1;
  string name = 2;
- optional string manifest_id = 3;
- semio.s.trinity.jack.snapshot.Manifest manifest = 4;
- semio.s.trinity.jack.snapshot.Camera camera = 5;
- semio.framework.schema.artifact_child.ArtifactChild content = 6;
- optional string root_node_id = 7;
- string query = 8;
+ string manifest_id = 3;
+ semio.s.trinity.jack.snapshot.Camera camera = 4;
+ semio.framework.schema.artifact_child.ArtifactChild content = 5;
+ optional string root_node_id = 6;
+ string query = 7;
 }

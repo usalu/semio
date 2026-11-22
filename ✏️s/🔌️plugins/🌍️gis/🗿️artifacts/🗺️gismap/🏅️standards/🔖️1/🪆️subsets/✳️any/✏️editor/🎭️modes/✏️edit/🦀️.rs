@@ -1,7 +1,7 @@
 //! ✏️ GIS 2D play app — the `edit` mode: a single full-width map window.
 
 use crate::editor::gis2d::modes::edit::windows::map;
-use semio_plugin::create_default_layout;
+use semio_plugin::{create_default_layout, Axis};
 use semio_ui_locale::LocalizedLabel;
 use semio_plugin::ModeDefinition;
 use semio_plugin::WindowLayout;
@@ -14,7 +14,7 @@ pub fn definition() -> ModeDefinition {
 }
 
 pub fn layout() -> WindowLayout {
-    create_default_layout(&[map::GIS2D_PLAY_WINDOW_MAIN.into()], "row", Some(&[100.0]), Some(&["Map".into()]))
+    create_default_layout(&[map::GIS2D_PLAY_WINDOW_MAIN.into()], Axis::Horizontal, Some(&[1.0]), Some(&["Map".into()]))
 }
 //#endregion 🔖️Definition
 

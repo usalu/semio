@@ -274,20 +274,89 @@ pub struct DwgObjectRecordFrame<'a> {
     main_end_bit: usize,
     pub end_bit: usize,
 }
-impl<'a> DwgObjectRecordFrame<'a> {
-    pub fn open(layout: DwgObjectLayout, object_data: &'a [u8], handle: u64, address: usize) -> Result<Self, String> {
-        let frame = object_data.get(address..).ok_or_else(|| format!("object {handle:#x} address {address:#x} is out of bounds"))?;
+struct DwgObjectFrameCheck {
+    layout: DwgObjectLayout,
+    handle: u64,
+    address: usize,
+    header_bytes: usize,
+    record_bytes: usize,
+    handle_stream_bits: Option<usize>,
+    stored_crc: u16,
+    crc: u16,
+    checked: usize,
+}
+
+impl DwgObjectFrameCheck {
+    fn new(layout: DwgObjectLayout, source: &[u8], handle: u64, address: usize) -> Result<Self, String> {
+        let frame = source.get(address..).ok_or_else(|| format!("object {handle:#x} address {address:#x} is out of bounds"))?;
         let mut sizer = DwgBitReader::new(frame);
         let payload_size = sizer.read_ms().map_err(|error| format!("object {handle:#x} size: {error}"))? as usize;
-        let handle_stream_bits = if layout >= DwgObjectLayout::R2010 { Some(sizer.read_umc().map_err(|error| format!("object {handle:#x} handle-stream size: {error}"))? as usize) } else { None };
+        let handle_stream_bits = if layout >= DwgObjectLayout::R2010 {
+            let bits = sizer.read_umc().map_err(|error| format!("object {handle:#x} handle-stream size: {error}"))?;
+            Some(usize::try_from(bits).map_err(|_| format!("object {handle:#x} handle-stream size overflow"))?)
+        } else { None };
         sizer.pad_to_byte();
-        let payload_end = sizer.byte_pos.checked_add(payload_size).ok_or_else(|| format!("object {handle:#x} payload overflow"))?;
-        let payload = frame.get(sizer.byte_pos..payload_end).ok_or_else(|| format!("object {handle:#x} payload is truncated"))?;
-        let stored_crc = frame.get(payload_end..payload_end + 2).map(|bytes| u16::from_le_bytes([bytes[0], bytes[1]])).ok_or_else(|| format!("object {handle:#x} CRC is truncated"))?;
-        if dwg_crc16(0xC0C1, &frame[..payload_end]) != stored_crc {
-            return Err(format!("object {handle:#x} CRC mismatch"));
-        }
-        let end_bit = payload_size * 8;
+        let header_bytes = sizer.byte_pos;
+        let record_bytes = header_bytes.checked_add(payload_size).ok_or_else(|| format!("object {handle:#x} payload overflow"))?;
+        if record_bytes > frame.len() { return Err(format!("object {handle:#x} payload is truncated")); }
+        let crc_end = record_bytes.checked_add(2).ok_or_else(|| format!("object {handle:#x} CRC size overflow"))?;
+        let stored_crc = frame.get(record_bytes..crc_end).map(|bytes| u16::from_le_bytes([bytes[0], bytes[1]])).ok_or_else(|| format!("object {handle:#x} CRC is truncated"))?;
+        Ok(Self { layout, handle, address, header_bytes, record_bytes, handle_stream_bits, stored_crc, crc: 0xC0C1, checked: 0 })
+    }
+
+    fn step(&mut self, source: &[u8], budget: usize) -> Result<bool, String> {
+        let end = self.checked.saturating_add(budget).min(self.record_bytes);
+        self.crc = dwg_crc16(self.crc, &source[self.address + self.checked..self.address + end]);
+        self.checked = end;
+        if end < self.record_bytes { return Ok(false); }
+        if self.crc != self.stored_crc { return Err(format!("object {:#x} CRC mismatch", self.handle)); }
+        Ok(true)
+    }
+
+    fn frame<'a>(&self, source: &'a [u8]) -> Result<DwgObjectRecordFrame<'a>, String> {
+        let payload = &source[self.address + self.header_bytes..self.address + self.record_bytes];
+        DwgObjectRecordFrame::from_verified(self.layout, self.handle, self.handle_stream_bits, payload)
+    }
+}
+
+/// 🛡️ Owns an Objects section while one frame is authenticated in bounded CRC turns.
+pub struct DwgObjectFrames {
+    source: Vec<u8>,
+    layout: DwgObjectLayout,
+    pending: Option<DwgObjectFrameCheck>,
+}
+
+impl DwgObjectFrames {
+    pub fn new(source: Vec<u8>, layout: DwgObjectLayout) -> Self { Self { source, layout, pending: None } }
+
+    pub fn is_pending(&self) -> bool { self.pending.is_some() }
+
+    /// 📍️ Selects one complete physical frame range without scanning its payload.
+    pub fn start(&mut self, handle: u64, address: usize) -> Result<(), String> {
+        if self.is_pending() { return Err("DWG object frame is already pending".into()); }
+        self.pending = Some(DwgObjectFrameCheck::new(self.layout, &self.source, handle, address)?);
+        Ok(())
+    }
+
+    /// ⏭️ Checks at most 4,096 frame bytes, then advances the selected frame's consumer once.
+    pub fn step<T>(&mut self, advance: impl FnOnce(u64, DwgObjectRecordFrame<'_>) -> Result<std::task::Poll<T>, String>) -> Result<std::task::Poll<T>, String> {
+        let pending = self.pending.as_mut().ok_or("DWG object frame was not selected")?;
+        if !pending.step(&self.source, 4096)? { return Ok(std::task::Poll::Pending); }
+        let result = advance(pending.handle, pending.frame(&self.source)?);
+        if !matches!(result, Ok(std::task::Poll::Pending)) { self.pending = None; }
+        result
+    }
+}
+
+impl<'a> DwgObjectRecordFrame<'a> {
+    pub fn open(layout: DwgObjectLayout, object_data: &'a [u8], handle: u64, address: usize) -> Result<Self, String> {
+        let mut check = DwgObjectFrameCheck::new(layout, object_data, handle, address)?;
+        check.step(object_data, usize::MAX)?;
+        check.frame(object_data)
+    }
+
+    fn from_verified(layout: DwgObjectLayout, handle: u64, handle_stream_bits: Option<usize>, payload: &'a [u8]) -> Result<Self, String> {
+        let end_bit = payload.len().checked_mul(8).ok_or_else(|| format!("object {handle:#x} bit length overflow"))?;
         let mut data = DwgBitReader::new(payload);
         let type_code = if layout >= DwgObjectLayout::R2010 { data.read_bot() } else { data.read_bs() }.map_err(|error| format!("object {handle:#x} type: {error}"))?;
         let handle_start = match handle_stream_bits {
@@ -319,16 +388,20 @@ impl<'a> DwgObjectRecordFrame<'a> {
         }
     }
 
-    /// ⏭️ Steps over extended entity data by its declared record sizes.
-    pub fn skip_extended_data(&mut self) -> Result<(), String> {
-        loop {
-            let size = self.data.read_bs()? as usize;
-            if size == 0 {
-                return Ok(());
-            }
+    /// ⏭️ Skips one extended entity data block, or consumes its zero terminator.
+    pub fn skip_extended_block(&mut self) -> Result<bool, String> {
+        let size = self.data.read_bs()? as usize;
+        if size != 0 {
             self.data.read_handle()?;
-            self.data.skip_bits(size.checked_mul(8).ok_or("EED size overflow")?)?;
+            self.data.skip_bits(size * 8)?;
         }
+        if self.data.bit_position() > self.main_end_bit { return Err("EED exceeds the object data stream".into()); }
+        Ok(size == 0)
+    }
+
+    pub fn skip_extended_data(&mut self) -> Result<(), String> {
+        while !self.skip_extended_block()? {}
+        Ok(())
     }
 
     /// 🧾️ Closes the main stream: every entity field was consumed exactly up to the string stream.
@@ -357,7 +430,14 @@ fn decode_entity_common(data: &mut DwgBitReader<'_>, layout: DwgObjectLayout, sk
 /// for fit-point splines, which carry no control polygon to model. The one reading of these
 /// layouts, shared by the drawing projection and the lossless AC1024 decoder. ODA §20.4.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn decode_entity_body(frame: &mut DwgObjectRecordFrame<'_>, skip_graphic: bool) -> Result<Option<(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgEntityBody, DwgObjectRelations)>, String> {
+pub fn decode_entity_body(frame: &mut DwgObjectRecordFrame<'_>, skip_graphic: bool) -> Result<Option<(DwgEntityBody, DwgObjectRelations)>, String> {
+    let Some(mut read) = begin_entity_body(frame, skip_graphic)? else { return Ok(None); };
+    while !read.step(frame)? {}
+    Ok(Some((read.body, read.relations)))
+}
+
+/// 🧾️ Opens the owned entity body while retaining the cursor for any linked vertices.
+pub fn begin_entity_body(frame: &mut DwgObjectRecordFrame<'_>, skip_graphic: bool) -> Result<Option<DwgEntityRecordRead>, String> {
     let class_name = match frame.type_code {
         DWG_TYPE_LINE => "LINE",
         DWG_TYPE_ARC => "ARC",
@@ -565,19 +645,68 @@ pub fn decode_entity_body(frame: &mut DwgObjectRecordFrame<'_>, skip_graphic: bo
     let mut body = body;
     match &mut body {
         DwgEntityBody::Text(text) => text.style_handle = read_object_handle(&mut frame.handles, handle).map_err(context)?.unwrap_or_default(),
-        DwgEntityBody::Polyline3d(DwgPolyline3dEntity { vertex_handles, sequence_end_handle, .. }) | DwgEntityBody::PolyfaceMesh(DwgPolyfaceMeshEntity { vertex_handles, sequence_end_handle, .. }) => {
-            if owned_count > 1 << 20 {
-                return Err(context(format!("{owned_count} owned vertices exceed the codec limit")));
-            }
-            for index in 0..owned_count {
-                vertex_handles.push(read_object_handle(&mut frame.handles, handle).map_err(context)?.ok_or_else(|| context(format!("owned vertex {index} is null")))?);
-            }
-            *sequence_end_handle = read_object_handle(&mut frame.handles, handle).map_err(context)?.ok_or_else(|| context("SEQEND handle is null".into()))?;
-        }
         _ => {}
     }
     *body.common_mut() = decoded.logical;
-    Ok(Some((body, relations)))
+    let links = if matches!(body, DwgEntityBody::Polyline3d(_) | DwgEntityBody::PolyfaceMesh(_)) {
+        Some(DwgOwnedVertexHandles::new(handle, owned_count, frame.handles.bit_position()).map_err(context)?)
+    } else { None };
+    Ok(Some(DwgEntityRecordRead { body, relations, links }))
+}
+
+/// 🔗️ Resolves the body handle table in wire order and admits SEQEND after the final vertex.
+struct DwgOwnedVertexHandles {
+    handle: u64,
+    total: usize,
+    bit: usize,
+}
+
+impl DwgOwnedVertexHandles {
+    fn new(handle: u64, total: usize, bit: usize) -> Result<Self, String> {
+        if total > 1 << 20 { return Err(format!("{total} owned vertices exceed the codec limit")); }
+        Ok(Self { handle, total, bit })
+    }
+
+    fn step(&mut self, reader: &mut DwgBitReader<'_>, vertices: &mut Vec<u64>, end: &mut u64) -> Result<bool, String> {
+        *reader = DwgBitReader::at_bit(reader.bytes, self.bit)?;
+        let value = read_object_handle(reader, self.handle)?;
+        if vertices.len() < self.total {
+            let vertex = value.ok_or_else(|| format!("owned vertex {} is null", vertices.len()))?;
+            vertices.try_reserve(1).map_err(|_| "cannot reserve DWG owned vertex handles")?;
+            vertices.push(vertex);
+            self.bit = reader.bit_position();
+            return Ok(false);
+        }
+        *end = value.ok_or("SEQEND handle is null")?;
+        Ok(true)
+    }
+}
+
+/// 🧩️ Holds one decoded entity privately until all required linked handles have been read.
+pub struct DwgEntityRecordRead {
+    body: DwgEntityBody,
+    relations: DwgObjectRelations,
+    links: Option<DwgOwnedVertexHandles>,
+}
+
+impl DwgEntityRecordRead {
+    /// ⏩️ Advances one linked handle and seals the vertex sequence after SEQEND.
+    pub fn step(&mut self, frame: &mut DwgObjectRecordFrame<'_>) -> Result<bool, String> {
+        let Some(links) = self.links.as_mut() else { return Ok(true); };
+        if links.handle != frame.handle { return Err("DWG linked record changed its owning handle".into()); }
+        let (vertices, end) = match &mut self.body {
+            DwgEntityBody::Polyline3d(DwgPolyline3dEntity { vertex_handles, sequence_end_handle, .. }) |
+            DwgEntityBody::PolyfaceMesh(DwgPolyfaceMeshEntity { vertex_handles, sequence_end_handle, .. }) => (vertex_handles, sequence_end_handle),
+            _ => return Err("DWG linked record lost its typed body".into()),
+        };
+        if !links.step(&mut frame.handles, vertices, end).map_err(|error| format!("object {:#x}: {error}", frame.handle))? { return Ok(false); }
+        self.links = None;
+        Ok(true)
+    }
+
+    pub fn into_body(self) -> Option<(DwgEntityBody, DwgObjectRelations)> {
+        self.links.is_none().then_some((self.body, self.relations))
+    }
 }
 /// 🗂️ A LAYER record reduced to what the drawing projection keeps: its name and ACI colour (the
 /// colour index of an `ByAci` complex colour, else the record's legacy index).

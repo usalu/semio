@@ -6,7 +6,8 @@ import {buildBackendDefaultIdV1} from "../../../🔌️backends/🟦️.ts";
 import ts from"typescript";
 /** 🧭️ The portable CLI, task selections and native caller keep literal arguments and original resources. */
 import {testValueV1} from "../../../../⚡️caching/🧪️tests/📋️values/🟦️.ts";
-import {declareBuildTestEnvelopeV1,registerBuildTestLawV1} from "@semio-tech/process/testing/invocation";
+import {registerBuildTestLawV1} from "@semio-tech/process/testing/invocation";
+import {declareLibraryBuildTestEnvelopeV1} from "../../../../🧪️testing/🪪️native-birth/🟦️.ts";
 import {mkdir,mkdtemp,writeFile,readFile,rm,access} from "node:fs/promises";
 import * as rawPromises from "node:fs/promises";
 import {join,resolve,relative} from "node:path";
@@ -28,7 +29,7 @@ import {createIssuedResourceControlV1,createScriptProcessEnvelope,withScriptProc
 import {nxOracleRequireV1,graph} from "../🧰️support/🟦️.ts";
 import{existsSync as existsRootV1}from"node:fs";import{dirname as dirnameRootV1,join as joinRootV1}from"node:path";
 const repositoryRootV1=(()=>{let directory=import.meta.dir;while(!existsRootV1(joinRootV1(directory,"MODULE.bazel"))&&dirnameRootV1(directory)!==directory)directory=dirnameRootV1(directory);return directory;})();
-declareBuildTestEnvelopeV1({owner:"test:build-workspace-graph-laws",maximumElapsedMilliseconds:300000,capabilities:{}});
+declareLibraryBuildTestEnvelopeV1({suite:"build-workspace-graph-laws",scratch:"checkout"});
 
 const require=createRequire(import.meta.url),Ajv=require("ajv").default;
 test("portable CLI keeps backend selection separate from literal task arguments",()=>{

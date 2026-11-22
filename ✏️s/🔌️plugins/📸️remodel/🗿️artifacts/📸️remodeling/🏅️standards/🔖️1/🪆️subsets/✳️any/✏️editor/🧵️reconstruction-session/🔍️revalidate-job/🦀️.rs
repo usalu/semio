@@ -96,7 +96,7 @@ impl InteractiveJob for ReconstructionRevalidateJob {
         self.closing = true;
         let copy_bytes = self.next_close_copy_byte_demand()?;
         let demand = semio_framework_value::RetirementDemand { copy_bytes, capacity_bytes: self.next_close_capacity_byte_demand(copy_bytes)?, release_bytes: self.next_close_release_byte_demand()?, depth: self.next_close_depth_demand()? };
-        semio_framework_job::close_original_retained_effect_step(cx, demand, |effect| -> Result<RetainedCloneStep, ValueError> {
+        let step = semio_framework_job::close_original_retained_effect_step(cx, demand, |effect| -> Result<RetainedCloneStep, ValueError> {
             if let Some(step) = close_outbox_turn(&mut self.outbox, effect)? {
                 return Ok(step);
             }
@@ -107,7 +107,8 @@ impl InteractiveJob for ReconstructionRevalidateJob {
                 return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }));
             }
             Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()))
-        })
+        })?;
+        Ok(if self.terminal_is_empty() { InteractiveJobCloseStep::Complete { progress: step.progress() } } else { step })
     }
 
     fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> {

@@ -444,7 +444,7 @@ fn world_drag_and_paint_plans_reserve_before_exact_mutation() {
     let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut state = World3dState::new("surface".into(), "controller".into());
     let original_target = state.camera.orbit.target;
-    let modifiers = PointerModifiers { shift: false, ctrl: false, alt: false, meta: false };
+    let modifiers = PointerModifiers { shift: false, ctrl: false, alt: false, meta: false, repeat: false };
     let mut drag = plan_world3d_drag(&state.session, &state.camera, 3, 8.0, -4.0, 1, &modifiers).expect("middle drag plan");
     let mut input = semio_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     let step = with_world_step_context(1, |context| publish_world3d_plan_step(&mut state.session, &mut state.camera, &mut state.selection, &mut state.scene, &mut drag, 3, &mut input, context)).unwrap();

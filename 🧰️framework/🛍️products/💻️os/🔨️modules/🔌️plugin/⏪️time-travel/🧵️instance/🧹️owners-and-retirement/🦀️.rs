@@ -33,7 +33,6 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
     pub(super) fn settle_time_travel_owners(&mut self) -> Result<(), Fault> {
         let stage = self.time_travel.session.stage;
         if stage != TimeTravelStage::Editing {
-            self.time_travel.preview_due = false;
             self.time_travel.replace_editor(None);
         }
         {
@@ -88,14 +87,11 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
     }
 
     pub fn time_travel_retire_step_context(&mut self,grant:RetainedCloneGrant,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<RetainedCloneStep>,Fault>{
-        let source_return = self.time_travel.selected_preview_source_return(grant.maximum_copy_bytes).map_err(ValueError::into_fault)?;
-        let run = |cx: &mut semio_framework_job::StepContext<'_>, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>| -> Result<Option<RetainedCloneStep>, Fault> {
+        let Some((result,performed))=cx.with_original_source_effect(grant,|cx,effect|->Result<Option<RetainedCloneStep>,Fault>{
             if !self.time_travel.requires_original_control(){return self.time_travel_retire_step(effect)}
             let result=cx.with_native_retirement(|control|Ok(self.time_travel.retire_step_controlled(effect,control))).map_err(ValueError::into_fault)??;
             match result{Some(step)=>Ok(Some(step)),None=>self.member_subject_retirement_step(effect)}
-        };
-        let result = if source_return { cx.with_original_source_effect(grant, run) } else { cx.with_original_effect(grant, run) };
-        let Some((result, performed)) = result.map_err(ValueError::into_fault)? else { return Ok(Some(RetainedCloneStep::Progress(Default::default()))); };
+        }).map_err(ValueError::into_fault)? else{return Ok(Some(RetainedCloneStep::Progress(Default::default())))};
         cx.consume_fuel(u64::try_from(performed).unwrap_or(u64::MAX));
         result
     }
@@ -113,24 +109,55 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()));}
         if self.time_travel.has_command_receipt(){return Ok(RetainedCloneStep::Progress(Default::default()))}
         if !self.time_travel.closing{
-            let demand=self.shared().time_travel_retirement_demands(grant.maximum_copy_bytes).map_err(ValueError::into_fault)?;
+            let demand=self.time_travel.begin_close_demand();
             if !protocol::retained_mutation_demand_fits(demand,grant){return Ok(RetainedCloneStep::Progress(Default::default()))}
             self.time_travel.begin_close();
-            self.time_travel.document.cancel_prepared_command();if let Some(owners)=self.time_travel.member.as_mut().and_then(|member|member.owners.as_deref_mut()){owners.cancel_prepared_command()}
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))
         }
         if self.time_travel.finalize_outcome.is_some(){let d=RetirementDemand{copy_bytes:size_of::<Option<TimeTravelCommit>>()+size_of::<bool>(),depth:1,..Default::default()};if protocol::retained_mutation_demand_fits(d,grant){self.time_travel.finalize_outcome=None;self.time_travel.authoring_finalization=false;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))}return Ok(RetainedCloneStep::Progress(Default::default()))}
         {
-            if self.time_travel.owners().any(TimeTravelOwners::finalizing){let before=cx.retained_progress();match semio_framework_async::poll::resolve_ready(self.time_travel_run(TimeTravelStoreCommand::StepCommit,Some(cx)))?{TimeTravelStoreOutput::CommitRefused(failure)=>return Err(failure.into()),_=>{}};let after=cx.retained_progress();return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:after.copied_items-before.copied_items,copied_bytes:after.copied_bytes-before.copied_bytes,retained_capacity_bytes:after.retained_capacity_bytes-before.retained_capacity_bytes,released_bytes:after.released_bytes-before.released_bytes}))}
+            if self.time_travel.owners().any(TimeTravelOwners::finalizing){let before=cx.retained_progress();match semio_framework_async::poll::resolve_ready(self.time_travel_run(TimeTravelStoreCommand::CloseCommit,Some(cx)))?{TimeTravelStoreOutput::CommitRefused(failure)=>return Err(failure.into()),_=>{}};let after=cx.retained_progress();return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:after.copied_items-before.copied_items,copied_bytes:after.copied_bytes-before.copied_bytes,retained_capacity_bytes:after.retained_capacity_bytes-before.retained_capacity_bytes,released_bytes:after.released_bytes-before.released_bytes}))}
             if self.time_travel.authoring.is_some(){let before=cx.retained_progress();self.time_travel.authoring.as_mut().unwrap().closing=true;self.close_supersede_authoring(grant,cx)?;let after=cx.retained_progress();return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:after.copied_items-before.copied_items,copied_bytes:after.copied_bytes-before.copied_bytes,retained_capacity_bytes:after.retained_capacity_bytes-before.retained_capacity_bytes,released_bytes:after.released_bytes-before.released_bytes}))}
-            if let TimeTravelStoreOutput::OriginalProgress { progress, .. } = semio_framework_async::poll::resolve_ready(self.time_travel_run(TimeTravelStoreCommand::CloseOriginalSources { grant, terminal: true }, Some(cx)))? {
-                if progress != RetainedCloneProgress::default() { return Ok(RetainedCloneStep::Progress(progress)); }
-            }
+        }
+        if self.time_travel.document.original_sources_close_pending() {
+            let TimeTravelStoreOutput::OriginalProgress(progress) = self.time_travel.document.run(
+                &mut self.stores.store, TimeTravelStoreCommand::CloseOriginalSources { grant }, Some(cx),
+            )? else { unreachable!("original document history source close output") };
+            return Ok(RetainedCloneStep::Progress(progress));
+        }
+        if self.time_travel.member.as_ref().and_then(|member| member.owners.as_deref())
+            .is_some_and(TimeTravelOwners::original_sources_close_pending)
+        {
+            let TimeTravelStoreOutput::OriginalProgress(progress) = semio_framework_async::poll::resolve_ready(
+                self.time_travel_run(TimeTravelStoreCommand::CloseOriginalSources { grant }, Some(cx))
+            )? else { unreachable!("original member history source close output") };
+            return Ok(RetainedCloneStep::Progress(progress));
+        }
+        if self.time_travel.document.close_session_handoff_demand().is_some() {
+            let TimeTravelStoreOutput::OriginalProgress(progress) = self.time_travel.document.run(
+                &mut self.stores.store, TimeTravelStoreCommand::CloseSessionHandoff { grant }, None,
+            )? else { unreachable!("original document history close handoff output") };
+            return Ok(RetainedCloneStep::Progress(progress));
+        }
+        if self.time_travel.member.as_ref().and_then(|member| member.owners.as_deref())
+            .is_some_and(|owners| owners.close_session_handoff_demand().is_some())
+        {
+            let TimeTravelStoreOutput::OriginalProgress(progress) = semio_framework_async::poll::resolve_ready(
+                self.time_travel_run(TimeTravelStoreCommand::CloseSessionHandoff { grant }, None)
+            )? else { unreachable!("original member history close handoff output") };
+            return Ok(RetainedCloneStep::Progress(progress));
+        }
+        if self.time_travel.close_metadata_demand().map_err(ValueError::into_fault)?.is_some() {
+            let Some((result, work)) = cx.with_original_effect(grant, |_, effect| self.time_travel.close_metadata_step(effect))
+                .map_err(ValueError::into_fault)?
+            else { return Ok(RetainedCloneStep::Progress(Default::default())); };
+            cx.consume_work(work);
+            return Ok(RetainedCloneStep::Progress(result.map_err(ValueError::into_fault)?));
         }
         if self.drive_original_discard_command_context(grant,cx)?{let (original,receipt)=self.time_travel.take_command_receipt().expect("close owns its original command turn receipt");assert_eq!(original,grant);return Ok(RetainedCloneStep::Progress(receipt))}
         if self.drive_original_review_children(grant)?{let (original,receipt)=self.time_travel.take_command_receipt().expect("close owns its original review view turn receipt");assert_eq!(original,grant);return Ok(RetainedCloneStep::Progress(receipt))}
         if let Some(step)=self.time_travel_retire_step_context(grant,cx)?{return Ok(RetainedCloneStep::Progress(step.progress()));}
-        self.shared().time_travel_retirement_demands(grant.maximum_copy_bytes).map_err(ValueError::into_fault)?;
+        self.shared().time_travel_close_demands(grant.maximum_copy_bytes).map_err(ValueError::into_fault)?;
         Ok(if self.time_travel.terminal_is_empty(){RetainedCloneStep::Complete(Default::default())}else{RetainedCloneStep::Progress(Default::default())})
     }
 

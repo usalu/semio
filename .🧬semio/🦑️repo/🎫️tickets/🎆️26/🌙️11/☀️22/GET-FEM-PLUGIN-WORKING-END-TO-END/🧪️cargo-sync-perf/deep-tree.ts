@@ -1,0 +1,15 @@
+import { mkdirSync, writeFileSync, mkdtempSync, rmSync } from "node:fs";
+import { join } from "node:path";
+const put = (root: string, path: string, source: string): void => { mkdirSync(join(root, path, ".."), { recursive: true }); writeFileSync(join(root, path), source); };
+const workspace = (members: string[]): string => `[workspace]\nresolver="2"\nmembers=${JSON.stringify(members)}\n[workspace.metadata.semio.repository]\nschema-version=1\nexclude-patterns=[]\nowner-manifests=["*/Cargo.toml"]\nmember-manifests=${JSON.stringify(members.map(m => m + "/Cargo.toml"))}\n[workspace.package]\nedition="2021"\n`;
+const pkg = (name: string): string => `[package]\nname="${name}"\nversion="0.1.0"\nedition.workspace=true\n[lib]\npath="🦀️.rs"\n`;
+const depth = Number(process.argv[2] ?? 10), breadth = Number(process.argv[3] ?? 20);
+const root = mkdtempSync(join("C:/semio/.cache/scratch", "deep-"));
+put(root, "Cargo.toml", workspace(["packages/**"]));
+const chain = Array.from({ length: depth }, (_, i) => "d" + i).join("/");
+for (let i = 0; i < breadth; i++) put(root, `packages/${chain}/leaf${i}/Cargo.toml`, pkg("leaf" + i));
+const base = "C:/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/📏️custody-work/";
+const child = Bun.spawnSync([process.execPath, "--preload", base + "🪝️preload.ts", base + "📜️script.ts", root], { stdout: "pipe", stderr: "pipe" });
+const row = JSON.parse(child.stdout.toString() || "{}");
+console.error("[DEBUG] depth", depth, "breadth", breadth, "exit", child.exitCode, child.stderr.toString().slice(0, 300), "members", row.members?.length, "lstat", row.lstat, "per member", Math.round(row.lstat / breadth));
+rmSync(root, { recursive: true, force: true });

@@ -5429,18 +5429,12 @@
         "namedLayouts": [],
         "defaultLayout": {
           "root": {
-            "kind": "row",
+            "kind": "stack",
             "children": [
               {
-                "kind": "stack",
-                "size": 100.0,
-                "children": [
-                  {
-                    "kind": "window",
-                    "windowKindId": "gis2d-main",
-                    "title": "Map"
-                  }
-                ]
+                "kind": "window",
+                "windowKindId": "gis2d-main",
+                "title": "Map"
               }
             ]
           }
@@ -11887,18 +11881,12 @@
         "namedLayouts": [],
         "defaultLayout": {
           "root": {
-            "kind": "row",
+            "kind": "stack",
             "children": [
               {
-                "kind": "stack",
-                "size": 100.0,
-                "children": [
-                  {
-                    "kind": "window",
-                    "windowKindId": "gis3d-main",
-                    "title": "Terrain"
-                  }
-                ]
+                "kind": "window",
+                "windowKindId": "gis3d-main",
+                "title": "Terrain"
               }
             ]
           }

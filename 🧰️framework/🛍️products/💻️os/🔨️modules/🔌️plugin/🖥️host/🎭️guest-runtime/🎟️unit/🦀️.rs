@@ -5,6 +5,11 @@ use semio_framework_value::{ValueError,ValueRefusalKind};
 use semio_framework_actor::OriginalGuestExecutionBudget;
 fn unsupported()->OriginalTurnFailure{ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original unit calls require the actual owned backend and its owned instance").into()}
 impl GuestRuntimes{
+ /// 🧮️ Reads the exact physical retirement demand of the original returned frame.
+ pub fn original_returned_frame_demand(&self,instance:&GuestInstance,cx:&StepContext<'_>)->Result<Option<semio_framework_value::RetirementDemand>,OriginalTurnFailure>{
+  let(Self::Owned(runtime),GuestInstanceState::Owned(state))=(self,&instance.state)else{return Err(unsupported())};
+  runtime.original_returned_frame_demand(state,cx)
+ }
  /// 🎟️ Settles cleanup mode on the original call before the caller issues VM execution credit.
  pub fn prepare_original_retirement_step(&self,instance:&mut GuestInstance,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{let(Self::Owned(runtime),GuestInstanceState::Owned(state))=(self,&mut instance.state)else{return Err(unsupported())};runtime.prepare_original_call_retirement_step(state,cx)}
  /// 🎯️ Fixed scalar arguments stay inline in the same genuine Source-owned instance.

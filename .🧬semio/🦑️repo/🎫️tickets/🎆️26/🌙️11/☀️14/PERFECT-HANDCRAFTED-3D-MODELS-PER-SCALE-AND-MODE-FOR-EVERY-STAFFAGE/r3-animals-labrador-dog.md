@@ -143,3 +143,11 @@ Sources: FCI standard No. 122 (withers 56-57 cm, broad skull with stop, deep wid
 - 1:500 structure stays rods of 75 mm (feature rule, filed in round 3); 1:500 legs stouter than life for the same rule.
 - The scapula and upper-arm masses still show seams on the chest; the 1:50 lumbar spinous and transverse processes are continuous plates (one feature wide), not single vertebrae.
 - Plan view of `sitting-waiting`: a small notch between neck and shoulder mass.
+
+## Lumbar column and shoulder in the sitting pose
+
+Seven closed vertebral shells replace the three continuous lumbar strips. The hand-specified bodies increase in width from 21.5 to 25.7 mm. The spinous processes change height down the column, and the paired transverse processes extend and sweep forward by different amounts at each level. Every shell has a continuous central canal. Independent Three.js rays cross the solid centrum and pass through the canal without intersecting a triangle at each scale. The seven vertebrae follow the existing lumbar rig segment as a group.
+
+The forequarter has reshaped scapular and humeral tissue, a broader costal region and a smoother lower neck. The seated neckline drop over an 8 mm sample fell from 32/32/20/30 mm to 4/5/5/4 mm, in scale order. The two-sided attachment probe measured 304 connected pairs in 19 poses at four scales. The trunk and forelimb thermal exchange areas were measured on exposed skin and fur. The combined catalog revision `dbe3b1e913aaf784` passed document, geometry and twelve-scene GLB checks at 5,128,224 bytes with the then-current encoder. The oblique, dorsal and axial lumbar detail views and the seated model in all three modes were visually inspected. The smooth-normal view also exposed weak eye and muzzle detail in the coarse scales.
+
+The levels and proportions are authored for this figure. The anatomical reference for vertebral bodies and their variation along the canine lumbar spine is the CT morphometry study. [Canine lumbar CT measurements](https://pmc.ncbi.nlm.nih.gov/articles/PMC11754510/)

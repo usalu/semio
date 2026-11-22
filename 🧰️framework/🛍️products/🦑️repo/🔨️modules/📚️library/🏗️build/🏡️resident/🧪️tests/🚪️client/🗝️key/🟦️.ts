@@ -27,9 +27,9 @@ describe("a plan request and the key of a service between two generations",()=>{
    expect(planKeyRetryV1(Object.assign(new HostUnavailableErrorV1("key"),{missing:code(dir)==="ENOENT"}),0)).toBe(false);
   }finally{rmSync(dir,{recursive:true,force:true});}
  });
- test("the plan client source marks ENOENT and retries through the helper (pin)",async()=>{
+ test("the plan client source marks ENOENT and retries through the action helper (pin)",async()=>{
   const text=await Bun.file(new URL("../../../🚪️client/🛰️plan/🟨️.mjs",import.meta.url)).text();
   expect(text).toContain('missing:error?.code==="ENOENT"');
-  expect(text).toContain("planKeyRetryV1(error,keyWaits)");
+  expect(text).toContain("planKeyActionV1(error,keyWaits,keyRestarted)");
  });
 });

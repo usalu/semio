@@ -1,7 +1,7 @@
 /** 🔄️ Board2dHost session sync: the application of events, highlights and snapshots to the board session and the peer registry with its gesture ownership, live mirror pushes and drop preview pushes. */
 import { type Board2dScene } from "@semio-tech/framework";
 import { type Board2dPeer, type BoardPeerScope } from "../../🪪️WasmSessionLoader/🟦️.tsx";
-import { parseBoardCamera } from "../🔬️board-parsing/🟦️.ts";
+import { type BoardCamera, parseBoardCamera } from "../🔬️board-parsing/🟦️.ts";
 import type { BoardLiveMirrorMutations } from "../📡️board-events/🟦️.ts";
 import { type Board2dWasmSession } from "@semio-tech/framework/canvas/react-renderer";
 
@@ -25,7 +25,7 @@ export function applyBoard2dHighlightedIds(session: Board2dWasmSession | null, s
 }
 
 /** 🔁️ Re-parses the snapshot and silently re-applies selection/camera, since `loadBoardSnapshotJson` resets both to the snapshot's own defaults. */
-export function applySnapshotToSession(session: Board2dWasmSession, scene: Board2dScene): boolean {
+export function applySnapshotToSession(session: Board2dWasmSession, scene: Board2dScene, liveCamera?: BoardCamera): boolean {
   const parsed = session.loadBoardSnapshotJson(scene.snapshotJson);
   if (!parsed) {
     console.error(`[board-2d] engine refused the snapshot (${scene.snapshotJson.length} chars) — nothing is painted until a snapshot parses`);
@@ -33,7 +33,7 @@ export function applySnapshotToSession(session: Board2dWasmSession, scene: Board
   }
   if (session.setSelectionIdsJsonSilent) session.setSelectionIdsJsonSilent(scene.selectionJson);
   else session.setSelectionIdsJson(scene.selectionJson);
-  const camera = parseBoardCamera(scene.cameraJson);
+  const camera = liveCamera ?? parseBoardCamera(scene.cameraJson);
   if (camera) {
     if (session.setCameraSilent) session.setCameraSilent(camera.x, camera.y, camera.zoom);
     else session.setCamera(camera.x, camera.y, camera.zoom);
@@ -107,15 +107,22 @@ export function notifyBoardPeersGestureEnded(scope: BoardPeerScope, controllerId
   }
 }
 
-/** 👻️ Pushes a world-space catalogue catalogue-drop ghost into every pane of `controllerId` (including the source). */
+const boardDropPreviewBySession = new WeakMap<Board2dWasmSession, string>();
+
+/** 👻️ Pushes a world-space catalogue-drop ghost into every pane of `controllerId` for the next frame. */
 export function pushBoardDropPreview(scope: BoardPeerScope, controllerId: string, previewJson: string | null): void {
   const peers = scope.peers.get(controllerId);
   if (!peers) return;
   for (const peer of peers.values()) {
+    if ((boardDropPreviewBySession.get(peer.session) ?? null) === previewJson) continue;
     try {
-      if (previewJson) peer.session.setDropPreviewJson?.(previewJson);
-      else peer.session.clearDropPreview?.();
-      peer.session.renderFrame?.();
+      if (previewJson === null) {
+        peer.session.clearDropPreview?.();
+        boardDropPreviewBySession.delete(peer.session);
+      } else {
+        peer.session.setDropPreviewJson?.(previewJson);
+        boardDropPreviewBySession.set(peer.session, previewJson);
+      }
     } catch {}
   }
 }

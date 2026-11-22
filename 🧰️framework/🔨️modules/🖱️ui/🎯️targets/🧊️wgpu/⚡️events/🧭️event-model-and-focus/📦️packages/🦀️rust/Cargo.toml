@@ -1,0 +1,35 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-ui-wgpu-events-focus"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "semio wgpu event model: events, hit test, capture state and focus ring with tree roving rows"
+
+[package.metadata.semio]
+role = "framework"
+id = "ui-wgpu-events-focus"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-ui-arena = { path = "../../../../../../🌳️retained/🏟️arena/📦️packages/🦀️rust" }
+semio-ui-declaration = { path = "../../../../../../📜️declaration/📦️packages/🦀️rust" }
+semio-ui-retained-tree = { path = "../../../../../../🌳️retained/🌳️tree/📦️packages/🦀️rust" }
+semio-ui-theme = { path = "../../../../../../🎨️styling/🎭️theme/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../🌱️value/📦️packages/🦀️rust" }
+ui_contract = { path = "../../../../../../🧬️contract/📦️packages/🦀️rust", package = "semio-ui-contract" }
+semio-ui-border-presentation = { path = "../../../../../../🔨️modules/📏️border-presentation/📦️packages/🦀️rust" }
+semio-ui-wgpu-events-commit = { path = "../../../🧮️control-commit-rules/📦️packages/🦀️rust" }
+semio-ui-wgpu-layout = { path = "../../../../🧱️layout-stack/📦️packages/🦀️rust" }
+semio-ui-wgpu-light = { path = "../../../../🪶️light/📦️packages/🦀️rust" }
+semio-ui-wgpu-mounted-layout = { path = "../../../../📌️mounted_layout/📦️packages/🦀️rust" }

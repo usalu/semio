@@ -1,5 +1,5 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { statSync, createReadStream } from "node:fs";
+import { closeSync, fstatSync, statSync, createReadStream } from "node:fs";
 import { pipeline } from "node:stream";
 
 export function contentTypeForStaticDirAsset(filePath: string): string | undefined {
@@ -39,30 +39,42 @@ export function contentTypeForStaticDirAsset(filePath: string): string | undefin
  * 🪟️ The body streams through `pipeline`, so the file handle closes the moment the response ends, errors or the client
  * drops: a bare `pipe` leaves the source open (paused on backpressure) after an aborted download, and on Windows an open
  * handle inside a directory blocks its rename — a republication swapping a served module directory failed with `EPERM`. */
-export function serveFileWithValidatorsV1(req: IncomingMessage, res: ServerResponse, filePath: string, contentType: string | undefined): void {
-  const stats = statSync(filePath, { bigint: true });
-  const tag = `W/"${stats.size.toString(16)}-${stats.mtimeNs.toString(16)}"`;
-  const modifiedSeconds = Number(stats.mtimeMs / 1000n);
-  res.setHeader("ETag", tag);
-  res.setHeader("Last-Modified", new Date(modifiedSeconds * 1000).toUTCString());
-  res.setHeader("Cache-Control", "no-cache");
-  if (contentType) res.setHeader("Content-Type", contentType);
-  const matches = req.headers["if-none-match"];
-  const since = req.headers["if-modified-since"];
-  const opaque = (value: string): string => value.trim().replace(/^W\//u, "");
-  const notModified =
-    typeof matches === "string"
-      ? matches.split(",").some((candidate) => candidate.trim() === "*" || opaque(candidate) === opaque(tag))
-      : typeof since === "string" && Number.isFinite(Date.parse(since)) && Math.floor(Date.parse(since) / 1000) >= modifiedSeconds;
-  if (notModified) {
-    res.statusCode = 304;
+export function serveFileWithValidatorsV1(req: IncomingMessage, res: ServerResponse, filePath: string, contentType: string | undefined, openFile?: (path: string) => number | undefined): void {
+  let fd = openFile?.(filePath);
+  if (openFile && fd === undefined) {
+    res.statusCode = 404;
     res.end();
     return;
   }
-  res.setHeader("Content-Length", stats.size.toString());
-  if (req.method === "HEAD") {
-    res.end();
-    return;
+  try {
+    const stats = fd === undefined ? statSync(filePath, { bigint: true }) : fstatSync(fd, { bigint: true });
+    const tag = `W/"${stats.size.toString(16)}-${stats.mtimeNs.toString(16)}"`;
+    const modifiedSeconds = Number(stats.mtimeMs / 1000n);
+    res.setHeader("ETag", tag);
+    res.setHeader("Last-Modified", new Date(modifiedSeconds * 1000).toUTCString());
+    res.setHeader("Cache-Control", "no-cache");
+    if (contentType) res.setHeader("Content-Type", contentType);
+    const matches = req.headers["if-none-match"];
+    const since = req.headers["if-modified-since"];
+    const opaque = (value: string): string => value.trim().replace(/^W\//u, "");
+    const notModified =
+      typeof matches === "string"
+        ? matches.split(",").some((candidate) => candidate.trim() === "*" || opaque(candidate) === opaque(tag))
+        : typeof since === "string" && Number.isFinite(Date.parse(since)) && Math.floor(Date.parse(since) / 1000) >= modifiedSeconds;
+    if (notModified) {
+      res.statusCode = 304;
+      res.end();
+      return;
+    }
+    res.setHeader("Content-Length", stats.size.toString());
+    if (req.method === "HEAD") {
+      res.end();
+      return;
+    }
+    const stream = createReadStream(filePath, fd === undefined ? undefined : { fd });
+    fd = undefined;
+    pipeline(stream, res, () => undefined);
+  } finally {
+    if (fd !== undefined) closeSync(fd);
   }
-  pipeline(createReadStream(filePath), res, () => undefined);
 }

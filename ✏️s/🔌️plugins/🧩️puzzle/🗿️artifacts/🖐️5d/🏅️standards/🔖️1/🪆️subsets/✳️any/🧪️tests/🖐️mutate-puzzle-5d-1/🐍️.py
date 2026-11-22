@@ -144,6 +144,7 @@ KINDS = (
     "drag-selection3d",
     "rotate-selection3d",
     "scale-selection3d",
+    "splice-scene-rows",
 )
 """🏷️ Every kind the catalog declares, in its declared order."""
 
@@ -346,7 +347,12 @@ def addressed(document, kind, payload):
 def apply_mutation(document, kind, payload):
     """🦠️ Applies one kind, and answers whether it moved anything."""
     document = copy.deepcopy(document)
-    if kind == "create-part":
+    if kind == "splice-scene-rows":
+        table = payload["table"]
+        start = payload["start"]
+        end = start + payload["deleteCount"]
+        document[table][start:end] = copy.deepcopy(payload.get(table, []))
+    elif kind == "create-part":
         index = payload.get("index")
         document["parts"].insert(len(document["parts"]) if index is None else index, copy.deepcopy(payload["part"]))
     elif kind == "delete-part":
@@ -463,6 +469,11 @@ def inverse_mutation(document, kind, payload):
     pre-mutation assembly. `delete-part` and `remove-part-grip` invert to SEVERAL steps, because they
     sever fasteners: the part or grip is put back at its own index first and every severed fastener is
     reconnected after it, in assembly order."""
+    if kind == "splice-scene-rows":
+        table = payload["table"]
+        start = payload["start"]
+        count = payload["deleteCount"]
+        return [(kind, {"table": table, "start": start, "deleteCount": len(payload.get(table, [])), table: copy.deepcopy(document[table][start:start + count])})]
     if kind == "create-part":
         return [("delete-part", {"id": payload["part"]["id"]})]
     if kind == "delete-part":

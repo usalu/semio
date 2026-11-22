@@ -77,4 +77,25 @@ impl<T: DirectoryTransport> DirectoryClient<T> {
         let body = String::from_utf8(response.body).map_err(|error| DirectoryClientError::Decode(error.to_string()))?;
         Ok(live_agent_principals(&body, now_ms))
     }
+
+    /// 🤖️ One bounded call to a `/auth/agent-delegations` route with this client's own session capability, which never
+    /// leaves it: the wgpu `AgentDelegations` twin builds the path and body (`create`, `list`, `revoke`) and parses the
+    /// answer, this only carries it. Yields the status and the bounded text, whatever the status.
+    pub async fn agent_delegation_call(&self, ctx: &OperationContext, method: HttpMethod, path: &str, body: Option<Vec<u8>>) -> Result<(u16, String), DirectoryClientError> {
+        if !path.starts_with("/auth/agent-delegations") {
+            return Err(DirectoryClientError::Decode("agent delegation call names another route".into()));
+        }
+        if ctx.cancel.is_cancelled().await {
+            return Err(DirectoryClientError::Cancelled);
+        }
+        let bearer = self.credential.as_ref().map(|credential| credential.capability()).transpose()?;
+        let response = self.transport.http(ctx, method, &self.url(path), bearer, body).await?;
+        if ctx.cancel.is_cancelled().await {
+            return Err(DirectoryClientError::Cancelled);
+        }
+        if response.body.len() > AGENT_DELEGATION_LIST_MAX_BYTES {
+            return Err(DirectoryClientError::Decode("agent delegation answer exceeds its bound".into()));
+        }
+        Ok((response.status, String::from_utf8_lossy(&response.body).to_string()))
+    }
 }

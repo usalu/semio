@@ -385,7 +385,7 @@ fn foreign_pointer_cancel_preserves_the_canvas_gesture_owner() {
     assert!(canvas_pointer_button_into(&node, bounds, owner, "canvas2d-owner-window", 1, 40.0, 50.0, true, 0, SceneModifiers::default(), &mut input).unwrap());
     assert!(!cancel_canvas_pointer_gesture_for(foreign, &mut input));
     assert!(CANVAS_GESTURE.with(|cell| cell.borrow().get(owner).is_some()));
-    assert!(canvas_pointer_move_into(&node, bounds, owner, "canvas2d-owner-window", 1, 80.0, 90.0, SceneModifiers {shift:true,alt:true,ctrl:false,meta:false}, &mut input).unwrap());
+    assert!(canvas_pointer_move_into(&node, bounds, owner, "canvas2d-owner-window", 1, 80.0, 90.0, SceneModifiers {shift:true,alt:true,ctrl:false,meta:false,click_count:0}, &mut input).unwrap());
     assert!(canvas_pointer_button_into(&node, bounds, owner, "canvas2d-owner-window", 1, 80.0, 90.0, false, 0, SceneModifiers::default(), &mut input).unwrap());
     let actions=catalogue_actions(&mut input);
     assert_eq!(actions.iter().map(|action|action.action.as_str()).collect::<Vec<_>>(),["canvasPointerDown","canvasPointerMove","canvasPointerUp"]);

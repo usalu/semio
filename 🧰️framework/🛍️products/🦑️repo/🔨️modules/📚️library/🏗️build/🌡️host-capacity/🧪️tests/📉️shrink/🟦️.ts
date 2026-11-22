@@ -70,5 +70,5 @@ test("the plan reservation of the graph step carries the minimum and answers the
 test("the doors that read or install the graph (graph, show, dependencies) carry a minimum and are admitted with what a 16 GB host has free instead of waiting for their fixed block",()=>{
  const room=(name:string)=>{const item=sizeHostRequestV1(policy,{id:newHostCapacityIdV1(),operation:name})!,evaluation=evaluateHostCapacityV1(policy,withUnmanagedHostV1(host(16384,7000),[]),[],[{request:item,arrivedAtMs:1000,pid:process.pid}],1000);return{item,row:evaluation.decisions[0]!};};
  for(const name of ["graph","show","dependencies"]){const{item,row}=room(name);expect(item.minimumMegabytes,name).toBe(2304);if(name==="dependencies"){expect(item.fixedMegabytes,name).toBe(3584);expect([row.verdict,row.reason,row.reservedMegabytes],name).toEqual(["admit","fits",3584]);}else expect([row.verdict,row.reason,row.reservedMegabytes],name).toEqual(["admit","fits",3072]);}
- expect(sizeHostRequestV1(policy,{id:newHostCapacityIdV1(),operation:"command"})!.minimumMegabytes).toBeUndefined();
+ expect(sizeHostRequestV1(policy,{id:newHostCapacityIdV1(),operation:"command"})!.minimumMegabytes,"the ad-hoc command declares a minimum too, so it can always be shrunk to the room the host has").toBe(1024);
 });

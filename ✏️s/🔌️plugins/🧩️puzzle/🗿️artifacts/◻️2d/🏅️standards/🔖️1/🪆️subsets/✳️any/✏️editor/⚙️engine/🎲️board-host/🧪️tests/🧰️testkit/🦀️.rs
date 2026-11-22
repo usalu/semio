@@ -2,6 +2,9 @@
 //! re-deriving a camera/LOD/scene scaffold of their own.
 use crate::editor::puzzle2d::engine::{BoardHost, EdgeDescriptor, HandleDescriptor, SceneDescriptor};
 use semio_os_infinite::board::NodeDescriptor;
+pub use semio_os_infinite_board_normal_focus::{board_set_camera, resolve_hit_world, set_camera_silent, set_preselect_state_silent, set_selection_ids, set_selection_ids_silent, test_resolve_node_style_kind};
+pub use semio_os_infinite_board_normal_gestures::{defers_descriptor_sync_from_js, set_drop_preview_json, set_transform_flags};
+pub use semio_os_infinite_board_normal_scene::{indirect_handle_marker_radius_world, indirect_handle_world_pos, overlay_paint_state_json};
 use semio_framework_pack_json::json;
 
 /// 🎟️ Unbounded retained grant: the pre-migration step budget carried no retained limit.

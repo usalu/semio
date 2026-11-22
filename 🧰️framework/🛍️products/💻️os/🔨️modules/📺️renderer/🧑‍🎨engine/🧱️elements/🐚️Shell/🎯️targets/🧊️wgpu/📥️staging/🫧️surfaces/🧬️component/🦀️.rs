@@ -49,13 +49,37 @@ pub struct TutorialState {
     pub tutorial_pending_document_ops: Vec<TutorialPendingDocOp>,
 }
 
+/// 🪢️ Binds a pending effect batch to the session that emitted it.
+pub struct DeferredHostEffects {
+    pub session: Option<(String, u32)>,
+    pub controller_id: String,
+    pub effects: Vec<semio_framework::kernel::Effect>,
+}
+
+/// 📥️ Holds the unprocessed effects until this exact document load completes.
+pub enum DeferredDocumentLoad {
+    Queued {
+        pack: Vec<u8>,
+        spr: Vec<u8>,
+        following: DeferredHostEffects,
+    },
+    Loading {
+        completion: std::sync::mpsc::Receiver<Result<(), semio_renderer_wgpu_program_bridge::ProgramFault>>,
+        following: DeferredHostEffects,
+    },
+}
+
 /// 🫀️ `SettleState`: the settle lane: deferred actions, owed refresh scope, the pump and pending shell I/O.
 ///
 /// Fields keep the names they had on the former `ShellState`; the composer owns one value of this struct as `settle`.
 pub struct SettleState {
     pub deferred_actions: Vec<ActionDescriptor>,
+    pub deferred_document_load: Option<DeferredDocumentLoad>,
+    pub held_host_effects: VecDeque<DeferredHostEffects>,
     /// 🖐️ Touch gestures the frame recognised on its own clock (a held finger reached its long-press deadline): offered to the plugin and answered on the settle lane, because the frame build cannot await.
     pub touch_gestures: Vec<(semio_framework::ShellTouchGesture, f32, f32)>,
+    /// 🌪️ Held fingers of a world surface that reached the vortex-suggestions hold (React's `createLongPressV1`): answered on the settle lane.
+    pub suggestion_holds: Vec<(f32, f32)>,
     /// 🔁️ Guards `flush_deferred_actions`'s convergence loop against re-entry: a nested flush (one a
     /// dispatched action itself asks for) stays a plain drain so the outer loop keeps the single
     /// authority over how many times the window bodies are re-entered.

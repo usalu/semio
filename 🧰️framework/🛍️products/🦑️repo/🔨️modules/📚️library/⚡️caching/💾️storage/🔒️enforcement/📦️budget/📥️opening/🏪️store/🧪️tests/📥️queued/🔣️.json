@@ -66,40 +66,10 @@
   ],
   "nonwaiting": [
     {
-      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/🏪️budget/📜️script.ts",
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📋️contract/🟦️.ts",
       "sites": 2,
-      "kind": "explicit-command",
-      "reason": "Operator cache-retire-inactive previews or retires only what is idle and never waits behind live builds."
-    },
-    {
-      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/🏪️budget/📜️history/🟦️.ts",
-      "sites": 1,
-      "kind": "explicit-command",
-      "reason": "Historical Rust image retirement is an operator command that skips an image any build still holds."
-    },
-    {
-      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/🏪️budget/⚙️execution/🟦️.ts",
-      "sites": 2,
-      "kind": "explicit-command",
-      "reason": "Inactive Cargo store retirement refuses to take the compiler writer from a running build."
-    },
-    {
-      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🟦️.ts",
-      "sites": 1,
-      "kind": "opportunistic",
-      "reason": "Selected tooling object retirement skips objects whose shard writer is busy."
-    },
-    {
-      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/♻️recovery/🟦️.ts",
-      "sites": 1,
-      "kind": "inside-own-writer",
-      "reason": "Compact headroom recovery runs beneath the caller's own compiler writer and cannot queue behind its own readers."
-    },
-    {
-      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🟨️.mjs",
-      "sites": 2,
-      "kind": "opportunistic",
-      "reason": "Optional graph cache trimming and its quota recovery defer to readers because mandatory headroom recovery queues separately."
+      "kind": "type-only",
+      "reason": "The protected mounted-parent read and maintenance request types pin their nonwaiting literal."
     },
     {
       "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/🌐️platform/🟦️.ts",
@@ -108,16 +78,16 @@
       "reason": "Protected parent image retirement is a maintenance command that refuses a held image."
     },
     {
-      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📋️contract/🟦️.ts",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/♻️recovery/🟦️.ts",
       "sites": 1,
-      "kind": "type-only",
-      "reason": "The protected mounted-parent read request type pins its nonwaiting literal."
+      "kind": "inside-own-writer",
+      "reason": "Compact headroom recovery runs beneath the caller's own compiler writer and cannot queue behind its own readers."
     },
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🟦️.ts",
-      "sites": 1,
+      "sites": 2,
       "kind": "opportunistic",
-      "reason": "Compact headroom recovery tries the exclusive compiler writer without waiting; the caller then retries through the queued admission."
+      "reason": "Compact headroom recovery and the nonwaiting compiler workspace maintenance try the exclusive compiler writer without waiting; the caller then retries through the queued admission."
     },
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts",
@@ -126,16 +96,64 @@
       "reason": "Graph fixture maintenance takes the image only when no reader or writer holds it and reports the outcome."
     },
     {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/📸️observation/🟦️.ts",
+      "sites": 1,
+      "kind": "opportunistic",
+      "reason": "Mounted-parent maintenance observation requests the protected parent without waiting and reports the busy parent as an observation."
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🟦️.ts",
+      "sites": 1,
+      "kind": "opportunistic",
+      "reason": "Selected tooling object retirement skips objects whose shard writer is busy."
+    },
+    {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🟦️.ts",
       "sites": 1,
       "kind": "opportunistic",
       "reason": "Selected graph headroom recovery is skipped when readers hold the image; the queued coarse recovery follows."
     },
     {
-      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧹️cache-gc/🚰️reclaim/🟦️.ts",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/🏪️budget/⚙️execution/🟦️.ts",
       "sites": 2,
       "kind": "explicit-command",
-      "reason": "The cache gc command declares its selected graph recovery nonwaiting in its port type and at its call."
+      "reason": "Inactive Cargo store retirement refuses to take the compiler writer from a running build."
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/🏪️budget/📜️history/🟦️.ts",
+      "sites": 1,
+      "kind": "explicit-command",
+      "reason": "Historical Rust image retirement is an operator command that skips an image any build still holds."
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/🏪️budget/📜️script.ts",
+      "sites": 2,
+      "kind": "explicit-command",
+      "reason": "Operator cache-retire-inactive previews or retires only what is idle and never waits behind live builds."
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🟨️.mjs",
+      "sites": 2,
+      "kind": "opportunistic",
+      "reason": "Optional graph cache trimming and its quota recovery defer to readers because mandatory headroom recovery queues separately."
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧹️cache-gc/⌨️command/🟦️.ts",
+      "sites": 1,
+      "kind": "explicit-command",
+      "reason": "The cache gc command takes its collector leases nonwaiting and reports a held lease instead of queueing behind live builds."
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧹️cache-gc/🚰️reclaim/🟦️.ts",
+      "sites": 3,
+      "kind": "explicit-command",
+      "reason": "The cache gc command declares its selected graph recovery nonwaiting in its port type and at its two calls."
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🧫️private-repository/🪦️retirement/🟦️.ts",
+      "sites": 2,
+      "kind": "opportunistic",
+      "reason": "Retiring a private test repository takes its image maintenance nonwaiting; a held image is detached and removed by the exit sweep."
     }
   ],
   "scenarios": [

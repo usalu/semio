@@ -33,7 +33,6 @@ fn assert_norm_value_tree_arguments(definition: AppDefinition) {
     assert_ordinal(&definition, "removeItem", "index");
     assert_text(&definition, "applyRemedy", "checkId", true);
     assert_ordinal(&definition, "applyRemedy", "remedyIndex");
-    assert_text(&definition, "setSnapshot", "snapshot", true);
 }
 
 macro_rules! value_tree_case {

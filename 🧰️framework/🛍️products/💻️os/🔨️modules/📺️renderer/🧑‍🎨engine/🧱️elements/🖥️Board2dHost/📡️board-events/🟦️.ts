@@ -10,6 +10,25 @@ import type { BoardCamera, BoardEventRow } from "../🔬️board-parsing/🟦️
 const BOARD_TRANSIENT_EVENT_NAMES = new Set(["nodeMove", "transformPreview", "preselect", "brushPreview", "linkCompatibleNodes", "linkTargetRing", "hover"]);
 const BOARD_FLUSH_NOW_EVENT_NAMES = new Set(["gesture", "select", "preselectCancel", "brushCandidates", "brushPlace", "edgeCreate", "edgeDelete", "nodeDelete", "regionCreate", "regionResize"]);
 
+/** 🗃️ Buffers document rows and folds consecutive camera samples after peers have consumed each preview. */
+export function bufferBoard2dEvents(buffer: BoardEventRow[], rows: readonly BoardEventRow[], includeCamera = true): boolean {
+  let added = false;
+  for (const row of rows) {
+    if (BOARD_TRANSIENT_EVENT_NAMES.has(row.name)) continue;
+    if (row.name === "camera") {
+      if (!includeCamera || !board2dRowCamera(row)) continue;
+      if (buffer.at(-1)?.name === "camera") {
+        buffer[buffer.length - 1] = row;
+        added = true;
+        continue;
+      }
+    }
+    buffer.push(row);
+    added = true;
+  }
+  return added;
+}
+
 /** 🪪️ The `gestureId` a `select` or `gesture` row carries, `undefined` for an untagged row. */
 function board2dGestureId(row: BoardEventRow): string | undefined {
   const id = (row.payload as { readonly gestureId?: unknown } | undefined)?.gestureId;

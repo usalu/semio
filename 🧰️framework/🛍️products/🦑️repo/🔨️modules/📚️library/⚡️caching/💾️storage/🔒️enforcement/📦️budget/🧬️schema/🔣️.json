@@ -139,6 +139,11 @@
           "type": "integer",
           "minimum": 1,
           "maximum": 103080263680
+        },
+        "hostSharePercent": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
         }
       }
     },

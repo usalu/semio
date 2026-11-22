@@ -24,7 +24,6 @@ members = [
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧱️reference-solids/📦️packages/🦀️rust",
     "📦️packages/🦀️rust",
     "🔨️modules/🏠️host/🧰️owned/📦️packages/🦀️rust",
-  "🔨️modules/🏠️host/🧰️owned/🧵️retained-cursors/📦️packages/🦀️rust",
 ]
 exclude = [
     "**/🏭️bridge/**",
@@ -219,9 +218,6 @@ path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬�
 
 [workspace.dependencies.semio-s-artifact-process-process3d-host]
 path = "🔨️modules/🏠️host/🧰️owned/📦️packages/🦀️rust"
-
-[workspace.dependencies.semio-s-artifact-process-process3d-host-retained-cursors]
-path = "🔨️modules/🏠️host/🧰️owned/🧵️retained-cursors/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-artifact-process-process3d-config]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/📦️packages/🦀️rust"

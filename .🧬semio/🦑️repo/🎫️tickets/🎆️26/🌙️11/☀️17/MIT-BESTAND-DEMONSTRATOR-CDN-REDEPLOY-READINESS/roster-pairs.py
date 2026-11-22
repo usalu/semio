@@ -29,6 +29,7 @@ PAIRS = [
     ('flow-extension-brep', 'playbook-module-procedural'),
     ('cad-extension-aec-building', 'cad-extension-spatial-shape'),
 ]
+SLOTS = int(os.environ.get('ROSTER_SLOTS', '2'))
 PRIORITY = ['demonstrator', 'procedural', 'gis', 'cad']
 
 
@@ -219,7 +220,7 @@ def run_scheduler(roster, state_path, predecessors, launch, valid, identity=proc
         if not queue_command_matches(command(pid), [module]):
             raise RuntimeError(f'predecessor identity does not match: {module}={pid}')
         active.append({'roots': [module], 'pid': pid, 'identity': current, 'predecessor': True, 'before': {module: stamp(module)}})
-    if sum(len(x['roots']) for x in active) > 2:
+    if sum(len(x['roots']) for x in active) > SLOTS:
         raise RuntimeError('more than two root slots already active')
     state['failed'] = sorted(failed)
     state['retry_due'] = sorted(retry_due)
@@ -243,7 +244,7 @@ def run_scheduler(roster, state_path, predecessors, launch, valid, identity=proc
                     failed.add(module)
             active.remove(record)
         busy = {module for row in active for module in row['roots']}
-        slots = 2 - sum(len(row['roots']) for row in active)
+        slots = SLOTS - sum(len(row['roots']) for row in active)
         requests = request_directory(state_path)
         for module in roster:
             path = requests / module
@@ -269,7 +270,7 @@ def run_scheduler(roster, state_path, predecessors, launch, valid, identity=proc
             active.append({'roots': [module], 'pid': process.pid, 'identity': fingerprint, 'predecessor': False, 'before': before, '_process': process})
             busy.add(module); slots -= 1
         complete_pairs = [list(pair) for pair in PAIRS if all(module in roster and needed(module) for module in pair)]
-        if slots == 2 and complete_pairs:
+        if slots >= 2 and complete_pairs:
             pair = complete_pairs[0]
             before = {module: stamp(module) for module in pair}
             process, fingerprint = launch(pair)

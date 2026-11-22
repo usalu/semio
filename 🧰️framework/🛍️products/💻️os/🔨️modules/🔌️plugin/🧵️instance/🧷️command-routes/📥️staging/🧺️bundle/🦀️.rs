@@ -55,7 +55,12 @@ pub struct CommandCtx<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFact
 impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X> CommandCtx<'ctx, A, M, X> {
     /// ⬇️ Reborrows the `dispatch` bundle this bundle bridges to.
     pub fn as_dispatch(&mut self) -> DispatchCtx<'_, A, M, X> {
-        DispatchCtx { app: &mut *self.app, mounted_policy: self.mounted_policy, stores: &mut *self.stores, roster: &mut *self.roster, interaction: &mut *self.interaction, history: &mut *self.history, host_events: &mut *self.host_events, txn: &mut *self.txn, child_composition: &mut *self.child_composition, pending: &mut *self.pending, tools: &mut *self.tools, media: &mut *self.media, ingest: &mut *self.ingest, tool_runs: &mut *self.tool_runs, time_travel: &mut *self.time_travel, tool_machines: &mut *self.tool_machines, extension: PhantomData }
+        self.dispatch_with_original_typed_command().0
+    }
+
+    /// 📸️ Borrows dispatch independently of its caller's original typed command for root capture.
+    pub(crate) fn dispatch_with_original_typed_command(&mut self) -> (DispatchCtx<'_, A, M, X>, &mut semio_plugin_command::command_admission::original_typed_command::OriginalTypedCommandSource<A>) {
+        (DispatchCtx { app: &mut *self.app, mounted_policy: self.mounted_policy, stores: &mut *self.stores, roster: &mut *self.roster, interaction: &mut *self.interaction, history: &mut *self.history, host_events: &mut *self.host_events, txn: &mut *self.txn, child_composition: &mut *self.child_composition, pending: &mut *self.pending, tools: &mut *self.tools, media: &mut *self.media, ingest: &mut *self.ingest, tool_runs: &mut *self.tool_runs, time_travel: &mut *self.time_travel, tool_machines: &mut *self.tool_machines, extension: PhantomData }, &mut *self.original_typed_command)
     }
 
     /// ⬇️ Reborrows the `extension` bundle this bundle bridges to.

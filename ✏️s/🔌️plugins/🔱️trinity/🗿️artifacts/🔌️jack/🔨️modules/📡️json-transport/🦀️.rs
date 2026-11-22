@@ -5,12 +5,12 @@ use semio_framework_value::{ValueError, ValueRefusalKind};
 use crate::standards::v1::subsets::any::schema::graph::Camera;
 fn invalid(message: impl Into<String>) -> ValueError { ValueError::new(ValueRefusalKind::InvalidValue, message) }
 pub fn convert(value: DslValue, decode: bool) -> Result<DslValue, ValueError> {
-    convert_document(value, decode, "parent", &["schema", "name", "manifestId", "manifest", "camera", "content", "rootNodeId", "query"], &["schema", "name", "manifest", "camera", "content", "query"])
+    convert_document(value, decode, "parent", &["schema", "name", "manifestId", "camera", "content", "rootNodeId", "query"], &["schema", "name", "manifestId", "camera", "content", "query"])
 }
 
 /// 🎬️ The self-contained scene document: the parent fields with the nodes and edges inline instead of the content address.
 pub fn convert_scene(value: DslValue, decode: bool) -> Result<DslValue, ValueError> {
-    convert_document(value, decode, "scene", &["schema", "name", "manifestId", "manifest", "camera", "nodes", "edges", "rootNodeId", "query"], &["schema", "name", "manifest", "camera", "nodes", "edges", "query"])
+    convert_document(value, decode, "scene", &["schema", "name", "manifestId", "camera", "nodes", "edges", "rootNodeId", "query"], &["schema", "name", "manifestId", "camera", "nodes", "edges", "query"])
 }
 
 fn convert_document(mut value: DslValue, decode: bool, subject: &str, allowed: &[&str], required: &[&str]) -> Result<DslValue, ValueError> {

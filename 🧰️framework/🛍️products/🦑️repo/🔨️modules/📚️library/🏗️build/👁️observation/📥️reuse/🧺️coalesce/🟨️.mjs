@@ -15,10 +15,11 @@ function bindBatchWithdrawal(callers) {
   return { signal: controller.signal, close: () => { for (const signal of signals) signal.removeEventListener("abort", withdraw); } };
 }
 
-/** 🧺️ The verdict of a presence check shared by every look that asks at the same time: the looks of a take pass ask the same question (are the inventory records my record names stored?) thousands of times, each with a storage lease and a walk of the ancestry of the store. A caller that asks while a batch runs joins the next batch, so one lease answers them even when their withdrawal signals differ. Mixed withdrawal stops the shared operation after every observer has left; a name found present stays answered for the validation round that asked, because the files of a round do not change and every record is content addressed. A batch that fails is asked again caller by caller, so only the caller whose names fail sees the failure. `run(names)` answers the set of names that are missing and throws for a refusal. */
-export function createPresenceCoalescerV1({ run, maximumNames = 512, pause = () => new Promise(resolve => setImmediate(resolve)) }) {
+/** 🧺️ The verdict of a presence check shared by every look that asks at the same time: the looks of a take pass ask the same question (are the inventory records my record names stored?) thousands of times, each with a storage lease and a walk of the ancestry of the store. A caller that asks while a batch runs joins the next batch (and with `session` the batches that follow each other run inside one session, ended after `lingerMilliseconds` without an ask or after `maximumSessionMilliseconds`, so what a session costs to open is paid once), so one lease answers them even when their withdrawal signals differ. Mixed withdrawal stops the shared operation after every observer has left; a name found present stays answered for the validation round that asked, because the files of a round do not change and every record is content addressed. A batch that fails is asked again caller by caller, so only the caller whose names fail sees the failure. `run(names)` answers the set of names that are missing and throws for a refusal. */
+export function createPresenceCoalescerV1({ run, maximumNames = 512, pause = () => new Promise(resolve => setImmediate(resolve)), session = work => work(), lingerMilliseconds = 0, maximumSessionMilliseconds = Infinity, sessionOverheadFactor = 0, sessionCeilingMilliseconds = maximumSessionMilliseconds, now = () => performance.now(), linger = milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds)) }) {
   const waiting = [], rounds = new WeakMap(), stats = { asked: 0, remembered: 0, batches: 0, retried: 0, names: 0 };
-  let draining = false;
+  let draining = false, overhead = 0;
+  const sessionLimit = () => Math.min(Math.max(sessionCeilingMilliseconds, maximumSessionMilliseconds), Math.max(maximumSessionMilliseconds, sessionOverheadFactor * overhead));
   const known = round => { if (round === undefined || round === null || typeof round !== "object") return new Set(); let set = rounds.get(round); if (set === undefined) { set = new Set(); rounds.set(round, set); } return set; };
   const settle = (callers, missing) => { for (const caller of callers) { if (caller.signal?.aborted) { caller.resolve(false); continue; } for (const name of caller.names) if (!missing.has(name)) caller.known.add(name); caller.resolve(caller.names.every(name => !missing.has(name))); } };
   const drain = async () => {
@@ -26,6 +27,8 @@ export function createPresenceCoalescerV1({ run, maximumNames = 512, pause = () 
     draining = true;
     try {
       await pause();
+      const began = now();let inside = 0;
+      try { await session(async () => { const entered = now(); try { for (;;) {
       while (waiting.length > 0) {
         const callers = [], names = new Set();
         while (waiting.length > 0) {
@@ -52,6 +55,10 @@ export function createPresenceCoalescerV1({ run, maximumNames = 512, pause = () 
           }
         } finally { close?.(); }
       }
+      if (lingerMilliseconds <= 0 || now() - began >= sessionLimit()) break;
+      await linger(lingerMilliseconds);
+      if (waiting.length === 0) break;
+      } } finally { inside = now() - entered; } }); overhead = Math.max(0, now() - began - inside); } catch (error) { for (const caller of waiting.splice(0)) { caller.signal?.removeEventListener("abort", caller.withdraw); caller.reject(error); } }
     } finally { draining = false; if (waiting.length > 0) void drain(); }
   };
   return Object.freeze({

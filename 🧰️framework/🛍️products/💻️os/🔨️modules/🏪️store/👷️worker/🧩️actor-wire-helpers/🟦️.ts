@@ -283,7 +283,7 @@ function browserActorOwnedText(value: PackValue | undefined, expected: string | 
 /** 🎛️ Admits one canonical app command against the verified target and names the window it was issued in: any window
  * kind of the verified app, addressed at its base instance, with a view state bound to that same window. A command
  * addressed by id (no window in its address) is issued in the view state's active window, or the lease window. */
-export function browserActorAppCommandV1(request: BrowserActorActionRequestV1, fields: DocumentExecutionTargetLeaseFieldsV1, windowKeys: ReadonlySet<string>): Readonly<{ bytes: Uint8Array; surfaceKey: string }> {
+export function browserActorAppCommandV1(request: BrowserActorActionRequestV1, fields: DocumentExecutionTargetLeaseFieldsV1, windowKeys: ReadonlySet<string>): Readonly<{ bytes: Uint8Array; surfaceKey: string; actionId: string | undefined }> {
   if (request.payload.kind !== "app-command") throw new Error("document browser actor: invalid command payload");
   const bytes = Uint8Array.from(request.payload.bytes),
     command = decodeAppCommand(bytes);
@@ -304,13 +304,14 @@ export function browserActorAppCommandV1(request: BrowserActorActionRequestV1, f
     appId = fields.surface.appId,
     activeWindowKindId = viewState.activeWindowKindId;
   let windowKindId = typeof activeWindowKindId === "string" ? activeWindowKindId : fields.surface.windowKindId;
+  let actionId: string | undefined;
   if ("pluginId" in address) {
     browserActorOwnedText(address.pluginId, pluginId, "document browser actor: command owner mismatch");
     browserActorOwnedText(address.appId, appId, "document browser actor: command owner mismatch");
     browserActorOwnedText(address.modeId, null, "document browser actor: invalid command mode");
     windowKindId = browserActorOwnedText(address.windowKindId, null, "document browser actor: command owner mismatch");
     browserActorOwnedText(address.windowInstanceId, windowKindId, "document browser actor: command owner mismatch");
-    browserActorOwnedText(address.actionId, null, "document browser actor: invalid command action");
+    actionId = browserActorOwnedText(address.actionId, null, "document browser actor: invalid command action");
   } else {
     browserActorOwnedText(address.commandId, null, "document browser actor: invalid command id");
     if (address.owner === "os") throw new Error("document browser actor: command owner mismatch");
@@ -328,7 +329,7 @@ export function browserActorAppCommandV1(request: BrowserActorActionRequestV1, f
   if (!windowKeys.has(windowKindId)) throw new Error("document browser actor: command owner mismatch");
   if (activeWindowKindId !== undefined && activeWindowKindId !== windowKindId) throw new Error("document browser actor: command view owner mismatch");
   if (viewState.windowId !== undefined && viewState.windowId !== windowKindId) throw new Error("document browser actor: command view owner mismatch");
-  return { bytes, surfaceKey: windowKindId };
+  return { bytes, surfaceKey: windowKindId, actionId };
 }
 
 export function browserActorActionDisposition(request: BrowserActorActionRequestV1, outcome: "guest-applied" | "rejected", mutationCount: number, commit: BrowserActorActionCommitReceiptV1 | null, hostEffects: readonly (readonly number[])[] = [], reason?: string, historyPatches: readonly (readonly number[])[] = []): BrowserActorActionResultV1 {

@@ -15,7 +15,8 @@
       "{workspaceRoot}/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🧪️tests/**/*",
       "{workspaceRoot}/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️retained/🎬️action/🧪️tests/**/*",
       "{workspaceRoot}/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/**/*",
-      "{workspaceRoot}/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/**/*"
+      "{workspaceRoot}/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/**/*",
+      "{workspaceRoot}/✏️s/🔌️plugins/🧩️puzzle/🧪️tests/📏️inline-import/**/*"
     ]
   },
   "targets": {
@@ -248,6 +249,25 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
         "command": "repo ./📜️script.ts verify time-travel --scenario ✏️s/🔌️plugins/🧩️puzzle/🧪️tests/🧊️3d-lifecycle/🟦️.ts --renderer react --locales en,de",
+        "forwardAllArgs": true
+      }
+    },
+    "test-browser-wgpu-clipboard": {
+      "executor": "repo:script",
+      "cache": false,
+      "outputs": [],
+      "metadata": {
+        "semio": {
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "drives-running-process"
+          }
+        }
+      },
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts verify time-travel --scenario ✏️s/🔌️plugins/🧩️puzzle/🧪️tests/🧊️3d-wgpu-clipboard/🟦️.ts --renderer wgpu --locales en,de",
         "forwardAllArgs": true
       }
     }

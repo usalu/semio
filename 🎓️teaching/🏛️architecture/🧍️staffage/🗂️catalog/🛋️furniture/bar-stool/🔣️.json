@@ -12,14 +12,7 @@
       "en": "A 0.75 m swivel bar stool with a chromed four-leg frame, footrest ring, foam seat pad that sinks under load and a low backrest that shows the swivel as it turns.",
       "de": "Ein 0,75 m hoher Drehbarhocker mit verchromtem Vierbeingestell, Fußring, unter Last einsinkendem Schaumpolster und niedriger Lehne, die die Drehung beim Drehen zeigt."
     },
-    "tags": [
-      "stool",
-      "bar",
-      "seating",
-      "chrome",
-      "swivel",
-      "interior"
-    ],
+    "tags": ["stool", "bar", "seating", "chrome", "swivel", "interior"],
     "provenance": {
       "author": "Semio staffage content (NW-F)",
       "method": "handcrafted",
@@ -63,14 +56,14 @@
         }
       ],
       "notes": {
-        "en": "Front elevation 0.425 x 0.87 m (seat top 0.752 m, footrest 0.27 m, foot circle 0.395 m). Construction after typical market swivel bar stools: 25 x 1.5 mm chromed tubes welded into a pressed seat pan, ball-bearing swivel plate, 12 mm plywood board with 40 mm foam and wrapped leatherette, bent flat-bar backrest. The swivel is shown through the backrest running round the seat circle. Masses from tube length x 0.87 kg/m, sheet 2 mm x 7850 kg/m3 and nominal volumes.",
-        "de": "Vorderansicht 0,425 x 0,87 m (Sitzoberkante 0,752 m, Fußring 0,27 m, Fußkreis 0,395 m). Konstruktion nach marktüblichen Drehbarhockern: verchromte Rohre 25 x 1,5 mm in eine gepresste Sitzpfanne geschweißt, Kugeldrehteller, 12-mm-Sperrholzplatte mit 40 mm Schaum und umgeschlagenem Kunstleder, Lehne aus gebogenem Flachstahl. Die Drehung zeigt sich an der Lehne, die auf dem Sitzkreis läuft. Massen aus Rohrlänge x 0,87 kg/m, Blech 2 mm x 7850 kg/m3 und Nennvolumen."
+        "en": "Front elevation 0.498 x 0.87 m (seat top 0.752 m, footrest ring 0.498 m over all at 0.29 m, four feet on the diagonals at the corners of a 0.37 m square). Construction after typical market swivel bar stools: 25 x 1.5 mm chromed tubes welded into a pressed seat pan, ball-bearing swivel plate, 12 mm plywood board with 40 mm foam and wrapped leatherette, bent flat-bar backrest. The swivel is shown through the backrest running round the seat circle. Masses from tube length x 0.87 kg/m, sheet 2 mm x 7850 kg/m3 and nominal volumes.",
+        "de": "Vorderansicht 0,498 x 0,87 m (Sitzoberkante 0,752 m, Fußring 0,498 m über alles auf 0,29 m, vier Füße auf den Diagonalen an den Ecken eines Quadrats von 0,37 m). Konstruktion nach marktüblichen Drehbarhockern: verchromte Rohre 25 x 1,5 mm in eine gepresste Sitzpfanne geschweißt, Kugeldrehteller, 12-mm-Sperrholzplatte mit 40 mm Schaum und umgeschlagenem Kunstleder, Lehne aus gebogenem Flachstahl. Die Drehung zeigt sich an der Lehne, die auf dem Sitzkreis läuft. Massen aus Rohrlänge x 0,87 kg/m, Blech 2 mm x 7850 kg/m3 und Nennvolumen."
       }
     },
     "dimensions": {
       "heightM": 0.87,
-      "widthM": 0.425,
-      "depthM": 0.425,
+      "widthM": 0.498,
+      "depthM": 0.498,
       "massKg": 7.8
     },
     "materials": [
@@ -206,8 +199,7 @@
           "lengthM": 0.15,
           "joint": {
             "type": "revolute",
-            "minDeg": 0,
-            "maxDeg": 0
+            "continuousTwist": true
           },
           "mass": {
             "kg": 1.4,
@@ -271,72 +263,72 @@
     },
     "anchors": [
       {
-        "id": "foot-xn",
+        "id": "foot-fl",
         "bone": "frame",
         "x": 0.0,
-        "y": 0.1975,
+        "y": -0.18526,
         "kind": "contact",
         "title": {
-          "en": "Foot on the rear axis",
-          "de": "Fuß auf der hinteren Achse"
+          "en": "Front left foot",
+          "de": "Fuß vorn links"
         },
         "support": "contact",
         "normalDeg": 90,
         "footprintLengthM": 0.03,
         "footprintWidthM": 0.03,
         "frictionCoefficient": 0.5,
-        "z": 0
+        "z": 0.18526
       },
       {
-        "id": "foot-zp",
+        "id": "foot-fr",
         "bone": "frame",
         "x": 0.0,
-        "y": 0.0,
+        "y": -0.18526,
         "kind": "contact",
         "title": {
-          "en": "Foot on the left axis",
-          "de": "Fuß auf der linken Achse"
+          "en": "Front right foot",
+          "de": "Fuß vorn rechts"
         },
         "support": "contact",
         "normalDeg": 90,
         "footprintLengthM": 0.03,
         "footprintWidthM": 0.03,
         "frictionCoefficient": 0.5,
-        "z": 0.1975
+        "z": -0.18526
       },
       {
-        "id": "foot-zn",
+        "id": "foot-rl",
         "bone": "frame",
         "x": 0.0,
-        "y": 0.0,
+        "y": 0.18526,
         "kind": "contact",
         "title": {
-          "en": "Foot on the right axis",
-          "de": "Fuß auf der rechten Achse"
+          "en": "Rear left foot",
+          "de": "Fuß hinten links"
         },
         "support": "contact",
         "normalDeg": 90,
         "footprintLengthM": 0.03,
         "footprintWidthM": 0.03,
         "frictionCoefficient": 0.5,
-        "z": -0.1975
+        "z": 0.18526
       },
       {
-        "id": "foot-xp",
+        "id": "foot-rr",
         "bone": "frame",
         "x": 0.0,
-        "y": -0.1975,
+        "y": 0.18526,
         "kind": "contact",
         "title": {
-          "en": "Foot on the front axis",
-          "de": "Fuß auf der vorderen Achse"
+          "en": "Rear right foot",
+          "de": "Fuß hinten rechts"
         },
         "support": "contact",
         "normalDeg": 90,
         "footprintLengthM": 0.03,
         "footprintWidthM": 0.03,
         "frictionCoefficient": 0.5,
-        "z": 0
+        "z": -0.18526
       },
       {
         "id": "seat-top",
@@ -352,8 +344,8 @@
       {
         "id": "ring-front",
         "bone": "frame",
-        "x": 0.2825,
-        "y": -0.2,
+        "x": 0.3025,
+        "y": -0.2365,
         "kind": "load",
         "title": {
           "en": "Footrest point on top of the ring tube, front",
@@ -389,7 +381,7 @@
               "kind": "poly",
               "region": "legs",
               "material": "chrome-steel",
-              "points": [[0.676, 0.146], [0.0125, 0.1975]],
+              "points": [[0.676, 0.10324], [0.0125, 0.18526]],
               "closed": false
             },
             {
@@ -402,20 +394,7 @@
               "kind": "poly",
               "region": "legs",
               "material": "chrome-steel",
-              "points": [[0.676, -0.146], [0.0125, -0.1975]],
-              "closed": false
-            },
-            {
-              "id": "leg-m",
-              "bone": "frame",
-              "role": "body",
-              "z": 2,
-              "filled": false,
-              "tone": 0.3,
-              "kind": "poly",
-              "region": "legs",
-              "material": "chrome-steel",
-              "points": [[0.676, 0.0], [0.0125, 0.0]],
+              "points": [[0.676, -0.10324], [0.0125, -0.18526]],
               "closed": false
             },
             {
@@ -428,10 +407,10 @@
               "kind": "capsule",
               "region": "footrest-ring",
               "material": "chrome-steel",
-              "x0": 0.27,
-              "y0": 0.2,
-              "x1": 0.27,
-              "y1": -0.2,
+              "x0": 0.29,
+              "y0": 0.2365,
+              "x1": 0.29,
+              "y1": -0.2365,
               "r0": 0.0125,
               "r1": 0.0125
             },
@@ -466,7 +445,24 @@
               "kind": "poly",
               "region": "backrest",
               "material": "pu-leatherette",
-              "points": [[0.151, -0.04047], [0.1635, -0.03712], [0.17265, -0.02797], [0.176, -0.01547], [0.176, 0.05], [0.17265, 0.0625], [0.1635, 0.07165], [0.151, 0.075], [0.041, 0.075], [0.0285, 0.07165], [0.01935, 0.0625], [0.016, 0.05], [0.016, -0.01547], [0.01935, -0.02797], [0.0285, -0.03712], [0.041, -0.04047]],
+              "points": [
+                [0.151, -0.04047],
+                [0.1635, -0.03712],
+                [0.17265, -0.02797],
+                [0.176, -0.01547],
+                [0.176, 0.05],
+                [0.17265, 0.0625],
+                [0.1635, 0.07165],
+                [0.151, 0.075],
+                [0.041, 0.075],
+                [0.0285, 0.07165],
+                [0.01935, 0.0625],
+                [0.016, 0.05],
+                [0.016, -0.01547],
+                [0.01935, -0.02797],
+                [0.0285, -0.03712],
+                [0.041, -0.04047]
+              ],
               "closed": true,
               "solid": {
                 "kind": "extruded",
@@ -487,7 +483,7 @@
               "kind": "poly",
               "region": "legs",
               "material": "chrome-steel",
-              "points": [[0.146, 0.676], [0.1975, 0.0125]],
+              "points": [[0.10324, 0.676], [0.18526, 0.0125]],
               "closed": false
             },
             {
@@ -500,20 +496,7 @@
               "kind": "poly",
               "region": "legs",
               "material": "chrome-steel",
-              "points": [[-0.146, 0.676], [-0.1975, 0.0125]],
-              "closed": false
-            },
-            {
-              "id": "leg-m",
-              "bone": "frame",
-              "role": "body",
-              "z": 2,
-              "filled": false,
-              "tone": 0.3,
-              "kind": "poly",
-              "region": "legs",
-              "material": "chrome-steel",
-              "points": [[0.0, 0.676], [0.0, 0.0125]],
+              "points": [[-0.10324, 0.676], [-0.18526, 0.0125]],
               "closed": false
             },
             {
@@ -526,10 +509,10 @@
               "kind": "capsule",
               "region": "footrest-ring",
               "material": "chrome-steel",
-              "x0": -0.2,
-              "y0": 0.27,
-              "x1": 0.2,
-              "y1": 0.27,
+              "x0": -0.2365,
+              "y0": 0.29,
+              "x1": 0.2365,
+              "y1": 0.29,
               "r0": 0.0125,
               "r1": 0.0125
             },
@@ -564,7 +547,24 @@
               "kind": "poly",
               "region": "backrest",
               "material": "pu-leatherette",
-              "points": [[0.151, -0.04047], [0.1635, -0.03712], [0.17265, -0.02797], [0.176, -0.01547], [0.176, 0.05], [0.17265, 0.0625], [0.1635, 0.07165], [0.151, 0.075], [0.041, 0.075], [0.0285, 0.07165], [0.01935, 0.0625], [0.016, 0.05], [0.016, -0.01547], [0.01935, -0.02797], [0.0285, -0.03712], [0.041, -0.04047]],
+              "points": [
+                [0.151, -0.04047],
+                [0.1635, -0.03712],
+                [0.17265, -0.02797],
+                [0.176, -0.01547],
+                [0.176, 0.05],
+                [0.17265, 0.0625],
+                [0.1635, 0.07165],
+                [0.151, 0.075],
+                [0.041, 0.075],
+                [0.0285, 0.07165],
+                [0.01935, 0.0625],
+                [0.016, 0.05],
+                [0.016, -0.01547],
+                [0.01935, -0.02797],
+                [0.0285, -0.03712],
+                [0.041, -0.04047]
+              ],
               "closed": true,
               "solid": {
                 "kind": "extruded",
@@ -576,19 +576,68 @@
           ],
           "plan": [
             {
+              "id": "leg-fl",
+              "bone": "frame",
+              "role": "body",
+              "z": 2,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "region": "legs",
+              "material": "chrome-steel",
+              "points": [[0.10324, 0.10324], [0.18526, 0.18526]],
+              "closed": false
+            },
+            {
+              "id": "leg-fr",
+              "bone": "frame",
+              "role": "body",
+              "z": 2,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "region": "legs",
+              "material": "chrome-steel",
+              "points": [[0.10324, -0.10324], [0.18526, -0.18526]],
+              "closed": false
+            },
+            {
+              "id": "leg-rl",
+              "bone": "frame",
+              "role": "body",
+              "z": 2,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "region": "legs",
+              "material": "chrome-steel",
+              "points": [[-0.10324, 0.10324], [-0.18526, 0.18526]],
+              "closed": false
+            },
+            {
+              "id": "leg-rr",
+              "bone": "frame",
+              "role": "body",
+              "z": 2,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "region": "legs",
+              "material": "chrome-steel",
+              "points": [[-0.10324, -0.10324], [-0.18526, -0.18526]],
+              "closed": false
+            },
+            {
               "id": "ring",
               "bone": "frame",
               "role": "body",
-              "z": 1,
+              "z": 2.3,
               "filled": true,
-              "tone": 0.7,
-              "kind": "ellipse",
+              "tone": 0.3,
+              "kind": "path",
               "region": "footrest-ring",
               "material": "chrome-steel",
-              "cx": 0,
-              "cy": 0,
-              "rx": 0.21250000000000002,
-              "ry": 0.21250000000000002
+              "d": "M 0.249 0 A 0.249 0.249 0 1 0 -0.249 0 A 0.249 0.249 0 1 0 0.249 0 Z M 0.22399999999999998 0 A 0.22399999999999998 0.22399999999999998 0 1 0 -0.22399999999999998 0 A 0.22399999999999998 0.22399999999999998 0 1 0 0.22399999999999998 0 Z"
             },
             {
               "id": "seat",
@@ -621,7 +670,24 @@
               "kind": "poly",
               "region": "backrest",
               "material": "pu-leatherette",
-              "points": [[0.151, -0.04047], [0.1635, -0.03712], [0.17265, -0.02797], [0.176, -0.01547], [0.176, 0.05], [0.17265, 0.0625], [0.1635, 0.07165], [0.151, 0.075], [0.041, 0.075], [0.0285, 0.07165], [0.01935, 0.0625], [0.016, 0.05], [0.016, -0.01547], [0.01935, -0.02797], [0.0285, -0.03712], [0.041, -0.04047]],
+              "points": [
+                [0.151, -0.04047],
+                [0.1635, -0.03712],
+                [0.17265, -0.02797],
+                [0.176, -0.01547],
+                [0.176, 0.05],
+                [0.17265, 0.0625],
+                [0.1635, 0.07165],
+                [0.151, 0.075],
+                [0.041, 0.075],
+                [0.0285, 0.07165],
+                [0.01935, 0.0625],
+                [0.016, 0.05],
+                [0.016, -0.01547],
+                [0.01935, -0.02797],
+                [0.0285, -0.03712],
+                [0.041, -0.04047]
+              ],
               "closed": true,
               "solid": {
                 "kind": "extruded",
@@ -634,8 +700,8 @@
         },
         "decisions": {
           "silhouette": {
-            "en": "Stool sign 0.85 x 1.74 mm: seat block on the swivel axis, the curved back panel at its rear, three legs as body-pen strokes and the ring as a true 25 mm tube. Front view the same; plan: seat disc, back panel on the rear edge and the ring disc, the leg feet hidden under the ring.",
-            "de": "Hockerzeichen 0,85 x 1,74 mm: Sitzblock auf der Drehachse, die gebogene Rückenplatte an seiner Rückseite, drei Beine als Körperstriche und der Ring als echtes 25-mm-Rohr. Vorderansicht ebenso; Grundriss: Sitzscheibe, Rückenplatte am hinteren Rand und die Ringscheibe, die Beinenden unter dem Ring verborgen."
+            "en": "Stool sign 1.0 x 1.74 mm: seat block on the swivel axis, the curved back panel at its rear, the leg pairs of the diagonal frame as two body-pen strokes and the ring as a true 25 mm tube. Front view the same; plan: seat disc, back panel on the rear edge the four legs running out on the diagonals under it and the ring of 0.50 m as a true annulus over them.",
+            "de": "Hockerzeichen 1,0 x 1,74 mm: Sitzblock auf der Drehachse, die gebogene Rückenplatte an seiner Rückseite, die Beinpaare des Diagonalgestells als zwei Körperstriche und der Ring als echtes 25-mm-Rohr. Vorderansicht ebenso; Grundriss: Sitzscheibe, Rückenplatte am hinteren Rand die vier Beine, die auf den Diagonalen darunter herauslaufen, und darüber der Ring von 0,50 m als echter Kreisring."
           },
           "retained": {
             "en": "Seat, back, legs, ring.",
@@ -695,9 +761,9 @@
               "region": "legs",
               "material": "chrome-steel",
               "x0": 0.676,
-              "y0": 0.146,
+              "y0": 0.10324,
               "x1": 0.0125,
-              "y1": 0.1975,
+              "y1": 0.18526,
               "r0": 0.0125,
               "r1": 0.0125,
               "penMm": 0.13
@@ -713,27 +779,9 @@
               "region": "legs",
               "material": "chrome-steel",
               "x0": 0.676,
-              "y0": -0.146,
+              "y0": -0.10324,
               "x1": 0.0125,
-              "y1": -0.1975,
-              "r0": 0.0125,
-              "r1": 0.0125,
-              "penMm": 0.13
-            },
-            {
-              "id": "leg-m",
-              "bone": "frame",
-              "role": "body",
-              "z": 2,
-              "filled": true,
-              "tone": 0.3,
-              "kind": "capsule",
-              "region": "legs",
-              "material": "chrome-steel",
-              "x0": 0.676,
-              "y0": 0.0,
-              "x1": 0.0125,
-              "y1": 0.0,
+              "y1": -0.18526,
               "r0": 0.0125,
               "r1": 0.0125,
               "penMm": 0.13
@@ -748,10 +796,10 @@
               "kind": "capsule",
               "region": "footrest-ring",
               "material": "chrome-steel",
-              "x0": 0.27,
-              "y0": 0.2,
-              "x1": 0.27,
-              "y1": -0.2,
+              "x0": 0.29,
+              "y0": 0.2365,
+              "x1": 0.29,
+              "y1": -0.2365,
               "r0": 0.0125,
               "r1": 0.0125
             },
@@ -799,7 +847,26 @@
               "kind": "poly",
               "region": "legs",
               "material": "chrome-steel",
-              "points": [[-0.026, -0.03], [-0.026, 0.038], [-0.02494, 0.04602], [-0.02185, 0.0535], [-0.01692, 0.05992], [-0.0105, 0.06485], [-0.00302, 0.06794], [0.005, 0.069], [0.126, 0.069], [0.126, 0.039], [0.005, 0.039], [0.00474, 0.03897], [0.0045, 0.03887], [0.00429, 0.03871], [0.00413, 0.0385], [0.00403, 0.03826], [0.004, 0.038], [0.004, -0.03]],
+              "points": [
+                [-0.026, -0.03],
+                [-0.026, 0.038],
+                [-0.02494, 0.04602],
+                [-0.02185, 0.0535],
+                [-0.01692, 0.05992],
+                [-0.0105, 0.06485],
+                [-0.00302, 0.06794],
+                [0.005, 0.069],
+                [0.126, 0.069],
+                [0.126, 0.039],
+                [0.005, 0.039],
+                [0.00474, 0.03897],
+                [0.0045, 0.03887],
+                [0.00429, 0.03871],
+                [0.00413, 0.0385],
+                [0.00403, 0.03826],
+                [0.004, 0.038],
+                [0.004, -0.03]
+              ],
               "closed": true,
               "solid": {
                 "kind": "extruded",
@@ -818,7 +885,24 @@
               "kind": "poly",
               "region": "backrest",
               "material": "pu-leatherette",
-              "points": [[0.164, 0.00911], [0.17, 0.01072], [0.17439, 0.01511], [0.176, 0.02111], [0.176, 0.062], [0.17439, 0.068], [0.17, 0.07239], [0.164, 0.074], [0.098, 0.074], [0.092, 0.07239], [0.08761, 0.068], [0.086, 0.062], [0.086, 0.02111], [0.08761, 0.01511], [0.092, 0.01072], [0.098, 0.00911]],
+              "points": [
+                [0.164, 0.00911],
+                [0.17, 0.01072],
+                [0.17439, 0.01511],
+                [0.176, 0.02111],
+                [0.176, 0.062],
+                [0.17439, 0.068],
+                [0.17, 0.07239],
+                [0.164, 0.074],
+                [0.098, 0.074],
+                [0.092, 0.07239],
+                [0.08761, 0.068],
+                [0.086, 0.062],
+                [0.086, 0.02111],
+                [0.08761, 0.01511],
+                [0.092, 0.01072],
+                [0.098, 0.00911]
+              ],
               "closed": true,
               "solid": {
                 "kind": "extruded",
@@ -839,9 +923,9 @@
               "kind": "capsule",
               "region": "legs",
               "material": "chrome-steel",
-              "x0": 0.146,
+              "x0": 0.10324,
               "y0": 0.676,
-              "x1": 0.1975,
+              "x1": 0.18526,
               "y1": 0.0125,
               "r0": 0.0125,
               "r1": 0.0125,
@@ -857,27 +941,9 @@
               "kind": "capsule",
               "region": "legs",
               "material": "chrome-steel",
-              "x0": -0.146,
+              "x0": -0.10324,
               "y0": 0.676,
-              "x1": -0.1975,
-              "y1": 0.0125,
-              "r0": 0.0125,
-              "r1": 0.0125,
-              "penMm": 0.13
-            },
-            {
-              "id": "leg-m",
-              "bone": "frame",
-              "role": "body",
-              "z": 2,
-              "filled": true,
-              "tone": 0.3,
-              "kind": "capsule",
-              "region": "legs",
-              "material": "chrome-steel",
-              "x0": 0.0,
-              "y0": 0.676,
-              "x1": 0.0,
+              "x1": -0.18526,
               "y1": 0.0125,
               "r0": 0.0125,
               "r1": 0.0125,
@@ -893,10 +959,10 @@
               "kind": "capsule",
               "region": "footrest-ring",
               "material": "chrome-steel",
-              "x0": -0.2,
-              "y0": 0.27,
-              "x1": 0.2,
-              "y1": 0.27,
+              "x0": -0.2365,
+              "y0": 0.29,
+              "x1": 0.2365,
+              "y1": 0.29,
               "r0": 0.0125,
               "r1": 0.0125
             },
@@ -944,7 +1010,26 @@
               "kind": "poly",
               "region": "legs",
               "material": "chrome-steel",
-              "points": [[-0.026, -0.03], [-0.026, 0.038], [-0.02494, 0.04602], [-0.02185, 0.0535], [-0.01692, 0.05992], [-0.0105, 0.06485], [-0.00302, 0.06794], [0.005, 0.069], [0.126, 0.069], [0.126, 0.039], [0.005, 0.039], [0.00474, 0.03897], [0.0045, 0.03887], [0.00429, 0.03871], [0.00413, 0.0385], [0.00403, 0.03826], [0.004, 0.038], [0.004, -0.03]],
+              "points": [
+                [-0.026, -0.03],
+                [-0.026, 0.038],
+                [-0.02494, 0.04602],
+                [-0.02185, 0.0535],
+                [-0.01692, 0.05992],
+                [-0.0105, 0.06485],
+                [-0.00302, 0.06794],
+                [0.005, 0.069],
+                [0.126, 0.069],
+                [0.126, 0.039],
+                [0.005, 0.039],
+                [0.00474, 0.03897],
+                [0.0045, 0.03887],
+                [0.00429, 0.03871],
+                [0.00413, 0.0385],
+                [0.00403, 0.03826],
+                [0.004, 0.038],
+                [0.004, -0.03]
+              ],
               "closed": true,
               "solid": {
                 "kind": "extruded",
@@ -963,7 +1048,24 @@
               "kind": "poly",
               "region": "backrest",
               "material": "pu-leatherette",
-              "points": [[0.164, 0.00911], [0.17, 0.01072], [0.17439, 0.01511], [0.176, 0.02111], [0.176, 0.062], [0.17439, 0.068], [0.17, 0.07239], [0.164, 0.074], [0.098, 0.074], [0.092, 0.07239], [0.08761, 0.068], [0.086, 0.062], [0.086, 0.02111], [0.08761, 0.01511], [0.092, 0.01072], [0.098, 0.00911]],
+              "points": [
+                [0.164, 0.00911],
+                [0.17, 0.01072],
+                [0.17439, 0.01511],
+                [0.176, 0.02111],
+                [0.176, 0.062],
+                [0.17439, 0.068],
+                [0.17, 0.07239],
+                [0.164, 0.074],
+                [0.098, 0.074],
+                [0.092, 0.07239],
+                [0.08761, 0.068],
+                [0.086, 0.062],
+                [0.086, 0.02111],
+                [0.08761, 0.01511],
+                [0.092, 0.01072],
+                [0.098, 0.00911]
+              ],
               "closed": true,
               "solid": {
                 "kind": "extruded",
@@ -975,19 +1077,88 @@
           ],
           "plan": [
             {
+              "id": "leg-fl",
+              "bone": "frame",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "capsule",
+              "region": "legs",
+              "material": "chrome-steel",
+              "penMm": 0.13,
+              "x0": 0.10324,
+              "y0": 0.10324,
+              "x1": 0.18526,
+              "y1": 0.18526,
+              "r0": 0.0125,
+              "r1": 0.0125
+            },
+            {
+              "id": "leg-fr",
+              "bone": "frame",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "capsule",
+              "region": "legs",
+              "material": "chrome-steel",
+              "penMm": 0.13,
+              "x0": 0.10324,
+              "y0": -0.10324,
+              "x1": 0.18526,
+              "y1": -0.18526,
+              "r0": 0.0125,
+              "r1": 0.0125
+            },
+            {
+              "id": "leg-rl",
+              "bone": "frame",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "capsule",
+              "region": "legs",
+              "material": "chrome-steel",
+              "penMm": 0.13,
+              "x0": -0.10324,
+              "y0": 0.10324,
+              "x1": -0.18526,
+              "y1": 0.18526,
+              "r0": 0.0125,
+              "r1": 0.0125
+            },
+            {
+              "id": "leg-rr",
+              "bone": "frame",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "capsule",
+              "region": "legs",
+              "material": "chrome-steel",
+              "penMm": 0.13,
+              "x0": -0.10324,
+              "y0": -0.10324,
+              "x1": -0.18526,
+              "y1": -0.18526,
+              "r0": 0.0125,
+              "r1": 0.0125
+            },
+            {
               "id": "ring",
               "bone": "frame",
               "role": "body",
-              "z": 1,
+              "z": 2.3,
               "filled": true,
               "tone": 0.7,
-              "kind": "ellipse",
+              "kind": "path",
               "region": "footrest-ring",
               "material": "chrome-steel",
-              "cx": 0,
-              "cy": 0,
-              "rx": 0.21250000000000002,
-              "ry": 0.21250000000000002
+              "d": "M 0.249 0 A 0.249 0.249 0 1 0 -0.249 0 A 0.249 0.249 0 1 0 0.249 0 Z M 0.22399999999999998 0 A 0.22399999999999998 0.22399999999999998 0 1 0 -0.22399999999999998 0 A 0.22399999999999998 0.22399999999999998 0 1 0 0.22399999999999998 0 Z"
             },
             {
               "id": "pad",
@@ -1020,7 +1191,26 @@
               "kind": "poly",
               "region": "legs",
               "material": "chrome-steel",
-              "points": [[-0.026, -0.03], [-0.026, 0.038], [-0.02494, 0.04602], [-0.02185, 0.0535], [-0.01692, 0.05992], [-0.0105, 0.06485], [-0.00302, 0.06794], [0.005, 0.069], [0.126, 0.069], [0.126, 0.039], [0.005, 0.039], [0.00474, 0.03897], [0.0045, 0.03887], [0.00429, 0.03871], [0.00413, 0.0385], [0.00403, 0.03826], [0.004, 0.038], [0.004, -0.03]],
+              "points": [
+                [-0.026, -0.03],
+                [-0.026, 0.038],
+                [-0.02494, 0.04602],
+                [-0.02185, 0.0535],
+                [-0.01692, 0.05992],
+                [-0.0105, 0.06485],
+                [-0.00302, 0.06794],
+                [0.005, 0.069],
+                [0.126, 0.069],
+                [0.126, 0.039],
+                [0.005, 0.039],
+                [0.00474, 0.03897],
+                [0.0045, 0.03887],
+                [0.00429, 0.03871],
+                [0.00413, 0.0385],
+                [0.00403, 0.03826],
+                [0.004, 0.038],
+                [0.004, -0.03]
+              ],
               "closed": true,
               "solid": {
                 "kind": "extruded",
@@ -1039,7 +1229,24 @@
               "kind": "poly",
               "region": "backrest",
               "material": "pu-leatherette",
-              "points": [[0.164, 0.00911], [0.17, 0.01072], [0.17439, 0.01511], [0.176, 0.02111], [0.176, 0.062], [0.17439, 0.068], [0.17, 0.07239], [0.164, 0.074], [0.098, 0.074], [0.092, 0.07239], [0.08761, 0.068], [0.086, 0.062], [0.086, 0.02111], [0.08761, 0.01511], [0.092, 0.01072], [0.098, 0.00911]],
+              "points": [
+                [0.164, 0.00911],
+                [0.17, 0.01072],
+                [0.17439, 0.01511],
+                [0.176, 0.02111],
+                [0.176, 0.062],
+                [0.17439, 0.068],
+                [0.17, 0.07239],
+                [0.164, 0.074],
+                [0.098, 0.074],
+                [0.092, 0.07239],
+                [0.08761, 0.068],
+                [0.086, 0.062],
+                [0.086, 0.02111],
+                [0.08761, 0.01511],
+                [0.092, 0.01072],
+                [0.098, 0.00911]
+              ],
               "closed": true,
               "solid": {
                 "kind": "extruded",
@@ -1052,8 +1259,8 @@
         },
         "decisions": {
           "silhouette": {
-            "en": "Stool 2.1 x 4.4 mm: cushion disc on the mount band, three legs and the ring as true 25 mm tubes, the back bar and the back pad. Front view the same; plan: cushion disc, back pad on the rear edge and the ring disc, the leg feet hidden under the ring.",
-            "de": "Hocker 2,1 x 4,4 mm: Polsterscheibe auf dem Aufnahmeband, drei Beine und der Ring als echte 25-mm-Rohre, Rückenbügel und Rückenpolster. Vorderansicht ebenso; Grundriss: Polsterscheibe, Rückenpolster am hinteren Rand und die Ringscheibe, die Beinenden unter dem Ring verborgen."
+            "en": "Stool 2.5 x 4.4 mm: cushion disc on the mount band, the two leg pairs of the diagonal frame and the ring as true 25 mm tubes, the back bar and the back pad. Front view the same; plan: cushion disc, back pad on the rear edge the four legs running out on the diagonals under it and the ring of 0.50 m as a true annulus over them.",
+            "de": "Hocker 2,5 x 4,4 mm: Polsterscheibe auf dem Aufnahmeband, die zwei Beinpaare des Diagonalgestells und der Ring als echte 25-mm-Rohre, Rückenbügel und Rückenpolster. Vorderansicht ebenso; Grundriss: Polsterscheibe, Rückenpolster am hinteren Rand die vier Beine, die auf den Diagonalen darunter herauslaufen, und darüber der Ring von 0,50 m als echter Kreisring."
           },
           "retained": {
             "en": "Cushion, mount, legs, ring, back bar, back pad.",
@@ -1114,9 +1321,9 @@
               "material": "chrome-steel",
               "penMm": 0.25,
               "x0": 0.6705,
-              "y0": 0.144,
+              "y0": 0.10182,
               "x1": 0.0125,
-              "y1": 0.1975,
+              "y1": 0.18526,
               "r0": 0.0125,
               "r1": 0.0125
             },
@@ -1132,27 +1339,9 @@
               "material": "chrome-steel",
               "penMm": 0.25,
               "x0": 0.6705,
-              "y0": -0.144,
+              "y0": -0.10182,
               "x1": 0.0125,
-              "y1": -0.1975,
-              "r0": 0.0125,
-              "r1": 0.0125
-            },
-            {
-              "id": "leg-m",
-              "bone": "frame",
-              "role": "body",
-              "z": 2,
-              "filled": true,
-              "tone": 0.7,
-              "kind": "capsule",
-              "region": "legs",
-              "material": "chrome-steel",
-              "penMm": 0.25,
-              "x0": 0.6705,
-              "y0": 0.0,
-              "x1": 0.0125,
-              "y1": 0.0,
+              "y1": -0.18526,
               "r0": 0.0125,
               "r1": 0.0125
             },
@@ -1167,10 +1356,10 @@
               "region": "footrest-ring",
               "material": "chrome-steel",
               "penMm": 0.25,
-              "x0": 0.27,
-              "y0": 0.2,
-              "x1": 0.27,
-              "y1": -0.2,
+              "x0": 0.29,
+              "y0": 0.2365,
+              "x1": 0.29,
+              "y1": -0.2365,
               "r0": 0.0125,
               "r1": 0.0125
             },
@@ -1211,6 +1400,28 @@
               }
             },
             {
+              "id": "cushion-skirt",
+              "bone": "seat",
+              "role": "body",
+              "z": 5.5,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "poly",
+              "region": "seat-pad",
+              "material": "pu-leatherette",
+              "penMm": 0.25,
+              "points": [[0.0, -0.0], [0.0, -0.177], [0.003, -0.18], [0.032, -0.18], [0.032, -0.0]],
+              "closed": true,
+              "solid": {
+                "kind": "revolved",
+                "axisBone": "seat",
+                "axis": "u",
+                "axisX": 0,
+                "axisZ": 0,
+                "mirror": true
+              }
+            },
+            {
               "id": "pad",
               "bone": "pad",
               "role": "body",
@@ -1221,7 +1432,7 @@
               "region": "seat-pad",
               "material": "pu-leatherette",
               "penMm": 0.25,
-              "points": [[0.0, -0.022], [0.177, -0.022], [0.18, -0.019], [0.18, 0.01], [0.17732, 0.02], [0.17, 0.02732], [0.16, 0.03], [0.0, 0.032]],
+              "points": [[0.0, 0.032], [0.16, 0.03], [0.17, 0.02732], [0.17732, 0.02], [0.18, 0.008], [0.0, 0.008]],
               "closed": true,
               "solid": {
                 "kind": "revolved",
@@ -1243,7 +1454,26 @@
               "region": "legs",
               "material": "chrome-steel",
               "penMm": 0.25,
-              "points": [[-0.011, -0.04], [-0.011, 0.0415], [-0.01032, 0.04668], [-0.00832, 0.0515], [-0.00514, 0.05564], [-0.001, 0.05882], [0.00382, 0.06082], [0.009, 0.0615], [0.136, 0.0615], [0.136, 0.0465], [0.009, 0.0465], [0.00771, 0.04633], [0.0065, 0.04583], [0.00546, 0.04504], [0.00467, 0.044], [0.00417, 0.04279], [0.004, 0.0415], [0.004, -0.04]],
+              "points": [
+                [-0.011, -0.04],
+                [-0.011, 0.0415],
+                [-0.01032, 0.04668],
+                [-0.00832, 0.0515],
+                [-0.00514, 0.05564],
+                [-0.001, 0.05882],
+                [0.00382, 0.06082],
+                [0.009, 0.0615],
+                [0.136, 0.0615],
+                [0.136, 0.0465],
+                [0.009, 0.0465],
+                [0.00771, 0.04633],
+                [0.0065, 0.04583],
+                [0.00546, 0.04504],
+                [0.00467, 0.044],
+                [0.00417, 0.04279],
+                [0.004, 0.0415],
+                [0.004, -0.04]
+              ],
               "closed": true,
               "solid": {
                 "kind": "extruded",
@@ -1263,7 +1493,24 @@
               "region": "backrest",
               "material": "pu-leatherette",
               "penMm": 0.25,
-              "points": [[0.164, 0.01087], [0.17, 0.01247], [0.17439, 0.01687], [0.176, 0.02287], [0.176, 0.06], [0.17439, 0.066], [0.17, 0.07039], [0.164, 0.072], [0.098, 0.072], [0.092, 0.07039], [0.08761, 0.066], [0.086, 0.06], [0.086, 0.02287], [0.08761, 0.01687], [0.092, 0.01247], [0.098, 0.01087]],
+              "points": [
+                [0.164, 0.01087],
+                [0.17, 0.01247],
+                [0.17439, 0.01687],
+                [0.176, 0.02287],
+                [0.176, 0.06],
+                [0.17439, 0.066],
+                [0.17, 0.07039],
+                [0.164, 0.072],
+                [0.098, 0.072],
+                [0.092, 0.07039],
+                [0.08761, 0.066],
+                [0.086, 0.06],
+                [0.086, 0.02287],
+                [0.08761, 0.01687],
+                [0.092, 0.01247],
+                [0.098, 0.01087]
+              ],
               "closed": true,
               "solid": {
                 "kind": "extruded",
@@ -1285,9 +1532,9 @@
               "region": "legs",
               "material": "chrome-steel",
               "penMm": 0.25,
-              "x0": 0.144,
+              "x0": 0.10182,
               "y0": 0.6705,
-              "x1": 0.1975,
+              "x1": 0.18526,
               "y1": 0.0125,
               "r0": 0.0125,
               "r1": 0.0125
@@ -1303,27 +1550,9 @@
               "region": "legs",
               "material": "chrome-steel",
               "penMm": 0.25,
-              "x0": -0.144,
+              "x0": -0.10182,
               "y0": 0.6705,
-              "x1": -0.1975,
-              "y1": 0.0125,
-              "r0": 0.0125,
-              "r1": 0.0125
-            },
-            {
-              "id": "leg-m",
-              "bone": "frame",
-              "role": "body",
-              "z": 2,
-              "filled": true,
-              "tone": 0.7,
-              "kind": "capsule",
-              "region": "legs",
-              "material": "chrome-steel",
-              "penMm": 0.25,
-              "x0": 0.0,
-              "y0": 0.6705,
-              "x1": 0.0,
+              "x1": -0.18526,
               "y1": 0.0125,
               "r0": 0.0125,
               "r1": 0.0125
@@ -1339,10 +1568,10 @@
               "region": "footrest-ring",
               "material": "chrome-steel",
               "penMm": 0.25,
-              "x0": -0.2,
-              "y0": 0.27,
-              "x1": 0.2,
-              "y1": 0.27,
+              "x0": -0.2365,
+              "y0": 0.29,
+              "x1": 0.2365,
+              "y1": 0.29,
               "r0": 0.0125,
               "r1": 0.0125
             },
@@ -1383,6 +1612,28 @@
               }
             },
             {
+              "id": "cushion-skirt",
+              "bone": "seat",
+              "role": "body",
+              "z": 5.5,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "poly",
+              "region": "seat-pad",
+              "material": "pu-leatherette",
+              "penMm": 0.25,
+              "points": [[0.0, -0.0], [0.0, -0.177], [0.003, -0.18], [0.032, -0.18], [0.032, -0.0]],
+              "closed": true,
+              "solid": {
+                "kind": "revolved",
+                "axisBone": "seat",
+                "axis": "u",
+                "axisX": 0,
+                "axisZ": 0,
+                "mirror": true
+              }
+            },
+            {
               "id": "pad",
               "bone": "pad",
               "role": "body",
@@ -1393,7 +1644,7 @@
               "region": "seat-pad",
               "material": "pu-leatherette",
               "penMm": 0.25,
-              "points": [[0.0, -0.022], [0.177, -0.022], [0.18, -0.019], [0.18, 0.01], [0.17732, 0.02], [0.17, 0.02732], [0.16, 0.03], [0.0, 0.032]],
+              "points": [[0.0, 0.032], [0.16, 0.03], [0.17, 0.02732], [0.17732, 0.02], [0.18, 0.008], [0.0, 0.008]],
               "closed": true,
               "solid": {
                 "kind": "revolved",
@@ -1415,7 +1666,26 @@
               "region": "legs",
               "material": "chrome-steel",
               "penMm": 0.25,
-              "points": [[-0.011, -0.04], [-0.011, 0.0415], [-0.01032, 0.04668], [-0.00832, 0.0515], [-0.00514, 0.05564], [-0.001, 0.05882], [0.00382, 0.06082], [0.009, 0.0615], [0.136, 0.0615], [0.136, 0.0465], [0.009, 0.0465], [0.00771, 0.04633], [0.0065, 0.04583], [0.00546, 0.04504], [0.00467, 0.044], [0.00417, 0.04279], [0.004, 0.0415], [0.004, -0.04]],
+              "points": [
+                [-0.011, -0.04],
+                [-0.011, 0.0415],
+                [-0.01032, 0.04668],
+                [-0.00832, 0.0515],
+                [-0.00514, 0.05564],
+                [-0.001, 0.05882],
+                [0.00382, 0.06082],
+                [0.009, 0.0615],
+                [0.136, 0.0615],
+                [0.136, 0.0465],
+                [0.009, 0.0465],
+                [0.00771, 0.04633],
+                [0.0065, 0.04583],
+                [0.00546, 0.04504],
+                [0.00467, 0.044],
+                [0.00417, 0.04279],
+                [0.004, 0.0415],
+                [0.004, -0.04]
+              ],
               "closed": true,
               "solid": {
                 "kind": "extruded",
@@ -1435,7 +1705,24 @@
               "region": "backrest",
               "material": "pu-leatherette",
               "penMm": 0.25,
-              "points": [[0.164, 0.01087], [0.17, 0.01247], [0.17439, 0.01687], [0.176, 0.02287], [0.176, 0.06], [0.17439, 0.066], [0.17, 0.07039], [0.164, 0.072], [0.098, 0.072], [0.092, 0.07039], [0.08761, 0.066], [0.086, 0.06], [0.086, 0.02287], [0.08761, 0.01687], [0.092, 0.01247], [0.098, 0.01087]],
+              "points": [
+                [0.164, 0.01087],
+                [0.17, 0.01247],
+                [0.17439, 0.01687],
+                [0.176, 0.02287],
+                [0.176, 0.06],
+                [0.17439, 0.066],
+                [0.17, 0.07039],
+                [0.164, 0.072],
+                [0.098, 0.072],
+                [0.092, 0.07039],
+                [0.08761, 0.066],
+                [0.086, 0.06],
+                [0.086, 0.02287],
+                [0.08761, 0.01687],
+                [0.092, 0.01247],
+                [0.098, 0.01087]
+              ],
               "closed": true,
               "solid": {
                 "kind": "extruded",
@@ -1447,89 +1734,89 @@
           ],
           "plan": [
             {
+              "id": "leg-fl",
+              "bone": "frame",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "capsule",
+              "region": "legs",
+              "material": "chrome-steel",
+              "penMm": 0.25,
+              "x0": 0.10182,
+              "y0": 0.10182,
+              "x1": 0.18526,
+              "y1": 0.18526,
+              "r0": 0.0125,
+              "r1": 0.0125
+            },
+            {
+              "id": "leg-fr",
+              "bone": "frame",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "capsule",
+              "region": "legs",
+              "material": "chrome-steel",
+              "penMm": 0.25,
+              "x0": 0.10182,
+              "y0": -0.10182,
+              "x1": 0.18526,
+              "y1": -0.18526,
+              "r0": 0.0125,
+              "r1": 0.0125
+            },
+            {
+              "id": "leg-rl",
+              "bone": "frame",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "capsule",
+              "region": "legs",
+              "material": "chrome-steel",
+              "penMm": 0.25,
+              "x0": -0.10182,
+              "y0": 0.10182,
+              "x1": -0.18526,
+              "y1": 0.18526,
+              "r0": 0.0125,
+              "r1": 0.0125
+            },
+            {
+              "id": "leg-rr",
+              "bone": "frame",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "capsule",
+              "region": "legs",
+              "material": "chrome-steel",
+              "penMm": 0.25,
+              "x0": -0.10182,
+              "y0": -0.10182,
+              "x1": -0.18526,
+              "y1": -0.18526,
+              "r0": 0.0125,
+              "r1": 0.0125
+            },
+            {
               "id": "ring",
               "bone": "frame",
               "role": "body",
-              "z": 1,
+              "z": 2.3,
               "filled": true,
               "tone": 0.7,
               "kind": "path",
               "region": "footrest-ring",
               "material": "chrome-steel",
-              "penMm": 0.25,
-              "d": "M 0.2125 0 A 0.2125 0.2125 0 1 0 -0.2125 0 A 0.2125 0.2125 0 1 0 0.2125 0 Z M 0.1875 0 A 0.1875 0.1875 0 1 0 -0.1875 0 A 0.1875 0.1875 0 1 0 0.1875 0 Z"
-            },
-            {
-              "id": "leg-xp",
-              "bone": "frame",
-              "role": "body",
-              "z": 2,
-              "filled": true,
-              "tone": 0.7,
-              "kind": "capsule",
-              "region": "legs",
-              "material": "chrome-steel",
-              "penMm": 0.25,
-              "x0": 0.144,
-              "y0": 0.0,
-              "x1": 0.1975,
-              "y1": 0.0,
-              "r0": 0.0125,
-              "r1": 0.0125
-            },
-            {
-              "id": "leg-xn",
-              "bone": "frame",
-              "role": "body",
-              "z": 2,
-              "filled": true,
-              "tone": 0.7,
-              "kind": "capsule",
-              "region": "legs",
-              "material": "chrome-steel",
-              "penMm": 0.25,
-              "x0": -0.144,
-              "y0": 0.0,
-              "x1": -0.1975,
-              "y1": 0.0,
-              "r0": 0.0125,
-              "r1": 0.0125
-            },
-            {
-              "id": "leg-yp",
-              "bone": "frame",
-              "role": "body",
-              "z": 2,
-              "filled": true,
-              "tone": 0.7,
-              "kind": "capsule",
-              "region": "legs",
-              "material": "chrome-steel",
-              "penMm": 0.25,
-              "x0": 0.0,
-              "y0": 0.144,
-              "x1": 0.0,
-              "y1": 0.1975,
-              "r0": 0.0125,
-              "r1": 0.0125
-            },
-            {
-              "id": "leg-yn",
-              "bone": "frame",
-              "role": "body",
-              "z": 2,
-              "filled": true,
-              "tone": 0.7,
-              "kind": "capsule",
-              "region": "legs",
-              "material": "chrome-steel",
-              "penMm": 0.25,
-              "x0": 0.0,
-              "y0": -0.144,
-              "x1": 0.0,
-              "y1": -0.1975,
-              "r0": 0.0125,
-              "r1": 0.0125
+              "d": "M 0.249 0 A 0.249 0.249 0 1 0 -0.249 0 A 0.249 0.249 0 1 0 0.249 0 Z M 0.22399999999999998 0 A 0.22399999999999998 0.22399999999999998 0 1 0 -0.22399999999999998 0 A 0.22399999999999998 0.22399999999999998 0 1 0 0.22399999999999998 0 Z",
+              "penMm": 0.25
             },
             {
               "id": "swivel",
@@ -1554,6 +1841,28 @@
               }
             },
             {
+              "id": "cushion-skirt",
+              "bone": "seat",
+              "role": "body",
+              "z": 5.5,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "poly",
+              "region": "seat-pad",
+              "material": "pu-leatherette",
+              "penMm": 0.25,
+              "points": [[0.0, -0.0], [0.0, -0.177], [0.003, -0.18], [0.032, -0.18], [0.032, -0.0]],
+              "closed": true,
+              "solid": {
+                "kind": "revolved",
+                "axisBone": "seat",
+                "axis": "u",
+                "axisX": 0,
+                "axisZ": 0,
+                "mirror": true
+              }
+            },
+            {
               "id": "pad",
               "bone": "pad",
               "role": "body",
@@ -1564,7 +1873,7 @@
               "region": "seat-pad",
               "material": "pu-leatherette",
               "penMm": 0.25,
-              "points": [[0.0, -0.022], [0.177, -0.022], [0.18, -0.019], [0.18, 0.01], [0.17732, 0.02], [0.17, 0.02732], [0.16, 0.03], [0.0, 0.032]],
+              "points": [[0.0, 0.032], [0.16, 0.03], [0.17, 0.02732], [0.17732, 0.02], [0.18, 0.008], [0.0, 0.008]],
               "closed": true,
               "solid": {
                 "kind": "revolved",
@@ -1586,7 +1895,26 @@
               "region": "legs",
               "material": "chrome-steel",
               "penMm": 0.25,
-              "points": [[-0.011, -0.04], [-0.011, 0.0415], [-0.01032, 0.04668], [-0.00832, 0.0515], [-0.00514, 0.05564], [-0.001, 0.05882], [0.00382, 0.06082], [0.009, 0.0615], [0.136, 0.0615], [0.136, 0.0465], [0.009, 0.0465], [0.00771, 0.04633], [0.0065, 0.04583], [0.00546, 0.04504], [0.00467, 0.044], [0.00417, 0.04279], [0.004, 0.0415], [0.004, -0.04]],
+              "points": [
+                [-0.011, -0.04],
+                [-0.011, 0.0415],
+                [-0.01032, 0.04668],
+                [-0.00832, 0.0515],
+                [-0.00514, 0.05564],
+                [-0.001, 0.05882],
+                [0.00382, 0.06082],
+                [0.009, 0.0615],
+                [0.136, 0.0615],
+                [0.136, 0.0465],
+                [0.009, 0.0465],
+                [0.00771, 0.04633],
+                [0.0065, 0.04583],
+                [0.00546, 0.04504],
+                [0.00467, 0.044],
+                [0.00417, 0.04279],
+                [0.004, 0.0415],
+                [0.004, -0.04]
+              ],
               "closed": true,
               "solid": {
                 "kind": "extruded",
@@ -1606,7 +1934,24 @@
               "region": "backrest",
               "material": "pu-leatherette",
               "penMm": 0.25,
-              "points": [[0.164, 0.01087], [0.17, 0.01247], [0.17439, 0.01687], [0.176, 0.02287], [0.176, 0.06], [0.17439, 0.066], [0.17, 0.07039], [0.164, 0.072], [0.098, 0.072], [0.092, 0.07039], [0.08761, 0.066], [0.086, 0.06], [0.086, 0.02287], [0.08761, 0.01687], [0.092, 0.01247], [0.098, 0.01087]],
+              "points": [
+                [0.164, 0.01087],
+                [0.17, 0.01247],
+                [0.17439, 0.01687],
+                [0.176, 0.02287],
+                [0.176, 0.06],
+                [0.17439, 0.066],
+                [0.17, 0.07039],
+                [0.164, 0.072],
+                [0.098, 0.072],
+                [0.092, 0.07039],
+                [0.08761, 0.066],
+                [0.086, 0.06],
+                [0.086, 0.02287],
+                [0.08761, 0.01687],
+                [0.092, 0.01247],
+                [0.098, 0.01087]
+              ],
               "closed": true,
               "solid": {
                 "kind": "extruded",
@@ -1619,8 +1964,8 @@
         },
         "decisions": {
           "silhouette": {
-            "en": "Stool 4.3 x 8.7 mm, the true views of the 1:100 model: cushion with a plain top round, swivel and pan as two bands, four tube legs to the floor, the footrest ring, the back bar and the curved back pad. Front and plan as at 1:50 without glides and piping.",
-            "de": "Hocker 4,3 x 8,7 mm, die wahren Ansichten des 1:100-Modells: Polster mit einfacher Rundung, Drehteller und Pfanne als zwei Bänder, vier Rohrbeine bis zum Boden, der Fußring, der Rückenbügel und das gebogene Rückenpolster. Vorderansicht und Grundriss wie bei 1:50 ohne Gleiter und Keder."
+            "en": "Stool 5.0 x 8.7 mm, the true views of the 1:100 model: cushion as skirt and crown with a plain top round, swivel and pan as two bands, four tube legs on the diagonals to the floor, the footrest ring, the back bar and the curved back pad. Front and plan as at 1:50 without glides and piping.",
+            "de": "Hocker 5,0 x 8,7 mm, die wahren Ansichten des 1:100-Modells: Polster als Schürze und Kuppe mit einfacher Rundung, Drehteller und Pfanne als zwei Bänder, vier Rohrbeine auf den Diagonalen bis zum Boden, der Fußring, der Rückenbügel und das gebogene Rückenpolster. Vorderansicht und Grundriss wie bei 1:50 ohne Gleiter und Keder."
           },
           "retained": {
             "en": "Cushion, swivel 15 mm, pan 17 mm, tubes 25 mm, ring, back bar 15 mm, back pad.",
@@ -1681,9 +2026,9 @@
               "material": "chrome-steel",
               "penMm": 0.25,
               "x0": 0.6705,
-              "y0": 0.144,
+              "y0": 0.10182,
               "x1": 0.014,
-              "y1": 0.1975,
+              "y1": 0.18526,
               "r0": 0.0125,
               "r1": 0.0125
             },
@@ -1699,27 +2044,9 @@
               "material": "chrome-steel",
               "penMm": 0.25,
               "x0": 0.6705,
-              "y0": -0.144,
+              "y0": -0.10182,
               "x1": 0.014,
-              "y1": -0.1975,
-              "r0": 0.0125,
-              "r1": 0.0125
-            },
-            {
-              "id": "leg-m",
-              "bone": "frame",
-              "role": "body",
-              "z": 2,
-              "filled": true,
-              "tone": 0.7,
-              "kind": "capsule",
-              "region": "legs",
-              "material": "chrome-steel",
-              "penMm": 0.25,
-              "x0": 0.6705,
-              "y0": 0.0,
-              "x1": 0.014,
-              "y1": 0.0,
+              "y1": -0.18526,
               "r0": 0.0125,
               "r1": 0.0125
             },
@@ -1734,7 +2061,7 @@
               "region": "legs",
               "material": "rubber",
               "penMm": 0.25,
-              "points": [[0.0, 0.184], [0.0015, 0.1825], [0.019, 0.1825], [0.022, 0.1855], [0.022, 0.2095], [0.019, 0.2125], [0.0015, 0.2125], [0.0, 0.211]],
+              "points": [[0.0, 0.17176], [0.0015, 0.17026], [0.019, 0.17026], [0.022, 0.17326], [0.022, 0.19726], [0.019, 0.20026], [0.0015, 0.20026], [0.0, 0.19876]],
               "closed": true
             },
             {
@@ -1748,21 +2075,7 @@
               "region": "legs",
               "material": "rubber",
               "penMm": 0.25,
-              "points": [[0.0, -0.211], [0.0015, -0.2125], [0.019, -0.2125], [0.022, -0.2095], [0.022, -0.1855], [0.019, -0.1825], [0.0015, -0.1825], [0.0, -0.184]],
-              "closed": true
-            },
-            {
-              "id": "ferrule-m",
-              "bone": "frame",
-              "role": "body",
-              "z": 2.5,
-              "filled": true,
-              "tone": 0.15,
-              "kind": "poly",
-              "region": "legs",
-              "material": "rubber",
-              "penMm": 0.25,
-              "points": [[0.0, -0.0135], [0.0015, -0.015], [0.019, -0.015], [0.022, -0.012], [0.022, 0.012], [0.019, 0.015], [0.0015, 0.015], [0.0, 0.0135]],
+              "points": [[0.0, -0.19876], [0.0015, -0.20026], [0.019, -0.20026], [0.022, -0.19726], [0.022, -0.17326], [0.019, -0.17026], [0.0015, -0.17026], [0.0, -0.17176]],
               "closed": true
             },
             {
@@ -1776,10 +2089,10 @@
               "region": "footrest-ring",
               "material": "chrome-steel",
               "penMm": 0.25,
-              "x0": 0.27,
-              "y0": 0.2,
-              "x1": 0.27,
-              "y1": -0.2,
+              "x0": 0.29,
+              "y0": 0.2365,
+              "x1": 0.29,
+              "y1": -0.2365,
               "r0": 0.0125,
               "r1": 0.0125
             },
@@ -1794,7 +2107,18 @@
               "region": "seat-mount",
               "material": "chrome-steel",
               "penMm": 0.25,
-              "points": [[0.666, 0.16], [0.666, -0.16], [0.68, -0.16], [0.683, -0.1592], [0.6852, -0.157], [0.686, -0.154], [0.686, 0.154], [0.6852, 0.157], [0.683, 0.1592], [0.68, 0.16]],
+              "points": [
+                [0.666, 0.16],
+                [0.666, -0.16],
+                [0.68, -0.16],
+                [0.683, -0.1592],
+                [0.6852, -0.157],
+                [0.686, -0.154],
+                [0.686, 0.154],
+                [0.6852, 0.157],
+                [0.683, 0.1592],
+                [0.68, 0.16]
+              ],
               "closed": true
             },
             {
@@ -1820,6 +2144,28 @@
               }
             },
             {
+              "id": "cushion-skirt",
+              "bone": "seat",
+              "role": "body",
+              "z": 5.5,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "poly",
+              "region": "seat-pad",
+              "material": "pu-leatherette",
+              "penMm": 0.25,
+              "points": [[0.0, -0.0], [0.0, -0.175], [0.00067, -0.1775], [0.0025, -0.17933], [0.005, -0.18], [0.029, -0.18], [0.032, -0.177], [0.032, -0.0]],
+              "closed": true,
+              "solid": {
+                "kind": "revolved",
+                "axisBone": "seat",
+                "axis": "u",
+                "axisX": 0,
+                "axisZ": 0,
+                "mirror": true
+              }
+            },
+            {
               "id": "pad",
               "bone": "pad",
               "role": "body",
@@ -1830,7 +2176,19 @@
               "region": "seat-pad",
               "material": "pu-leatherette",
               "penMm": 0.25,
-              "points": [[0.0, -0.022], [0.175, -0.022], [0.1775, -0.02133], [0.17933, -0.0195], [0.18, -0.017], [0.18, 0.01], [0.17932, 0.01518], [0.17732, 0.02], [0.17414, 0.02414], [0.17, 0.02732], [0.16518, 0.02932], [0.16, 0.03], [0.1, 0.031], [0.0, 0.032]],
+              "points": [
+                [0.0, 0.032],
+                [0.1, 0.031],
+                [0.16, 0.03],
+                [0.16518, 0.02932],
+                [0.17, 0.02732],
+                [0.17414, 0.02414],
+                [0.17732, 0.02],
+                [0.17932, 0.01518],
+                [0.18, 0.011],
+                [0.177, 0.008],
+                [0.0, 0.008]
+              ],
               "closed": true,
               "solid": {
                 "kind": "revolved",
@@ -1852,7 +2210,26 @@
               "region": "legs",
               "material": "chrome-steel",
               "penMm": 0.25,
-              "points": [[-0.004, -0.04], [-0.004, 0.042], [-0.00345, 0.04614], [-0.00186, 0.05], [0.00069, 0.05331], [0.004, 0.05586], [0.00786, 0.05745], [0.012, 0.058], [0.146, 0.058], [0.146, 0.05], [0.012, 0.05], [0.00993, 0.04973], [0.008, 0.04893], [0.00634, 0.04766], [0.00507, 0.046], [0.00427, 0.04407], [0.004, 0.042], [0.004, -0.04]],
+              "points": [
+                [-0.004, -0.04],
+                [-0.004, 0.042],
+                [-0.00345, 0.04614],
+                [-0.00186, 0.05],
+                [0.00069, 0.05331],
+                [0.004, 0.05586],
+                [0.00786, 0.05745],
+                [0.012, 0.058],
+                [0.146, 0.058],
+                [0.146, 0.05],
+                [0.012, 0.05],
+                [0.00993, 0.04973],
+                [0.008, 0.04893],
+                [0.00634, 0.04766],
+                [0.00507, 0.046],
+                [0.00427, 0.04407],
+                [0.004, 0.042],
+                [0.004, -0.04]
+              ],
               "closed": true,
               "solid": {
                 "kind": "extruded",
@@ -1872,7 +2249,24 @@
               "region": "backrest",
               "material": "pu-leatherette",
               "penMm": 0.25,
-              "points": [[0.164, 0.01087], [0.17, 0.01247], [0.17439, 0.01687], [0.176, 0.02287], [0.176, 0.06], [0.17439, 0.066], [0.17, 0.07039], [0.164, 0.072], [0.098, 0.072], [0.092, 0.07039], [0.08761, 0.066], [0.086, 0.06], [0.086, 0.02287], [0.08761, 0.01687], [0.092, 0.01247], [0.098, 0.01087]],
+              "points": [
+                [0.164, 0.01087],
+                [0.17, 0.01247],
+                [0.17439, 0.01687],
+                [0.176, 0.02287],
+                [0.176, 0.06],
+                [0.17439, 0.066],
+                [0.17, 0.07039],
+                [0.164, 0.072],
+                [0.098, 0.072],
+                [0.092, 0.07039],
+                [0.08761, 0.066],
+                [0.086, 0.06],
+                [0.086, 0.02287],
+                [0.08761, 0.01687],
+                [0.092, 0.01247],
+                [0.098, 0.01087]
+              ],
               "closed": true,
               "solid": {
                 "kind": "extruded",
@@ -1880,20 +2274,6 @@
                 "z0": -0.15006,
                 "z1": 0.15006
               }
-            },
-            {
-              "id": "piping",
-              "bone": "pad",
-              "role": "detail",
-              "z": 6.5,
-              "filled": false,
-              "tone": 0.2,
-              "kind": "poly",
-              "region": "seat-pad",
-              "material": "pu-leatherette",
-              "penMm": 0.13,
-              "points": [[-0.1793, 0.0063], [0.1793, 0.0063]],
-              "closed": false
             }
           ],
           "front": [
@@ -1908,9 +2288,9 @@
               "region": "legs",
               "material": "chrome-steel",
               "penMm": 0.25,
-              "x0": 0.144,
+              "x0": 0.10182,
               "y0": 0.6705,
-              "x1": 0.1975,
+              "x1": 0.18526,
               "y1": 0.014,
               "r0": 0.0125,
               "r1": 0.0125
@@ -1926,27 +2306,9 @@
               "region": "legs",
               "material": "chrome-steel",
               "penMm": 0.25,
-              "x0": -0.144,
+              "x0": -0.10182,
               "y0": 0.6705,
-              "x1": -0.1975,
-              "y1": 0.014,
-              "r0": 0.0125,
-              "r1": 0.0125
-            },
-            {
-              "id": "leg-m",
-              "bone": "frame",
-              "role": "body",
-              "z": 2,
-              "filled": true,
-              "tone": 0.7,
-              "kind": "capsule",
-              "region": "legs",
-              "material": "chrome-steel",
-              "penMm": 0.25,
-              "x0": 0.0,
-              "y0": 0.6705,
-              "x1": 0.0,
+              "x1": -0.18526,
               "y1": 0.014,
               "r0": 0.0125,
               "r1": 0.0125
@@ -1962,7 +2324,7 @@
               "region": "legs",
               "material": "rubber",
               "penMm": 0.25,
-              "points": [[0.211, 0.0], [0.2125, 0.0015], [0.2125, 0.019], [0.2095, 0.022], [0.1855, 0.022], [0.1825, 0.019], [0.1825, 0.0015], [0.184, 0.0]],
+              "points": [[0.17176, 0.0], [0.17026, 0.0015], [0.17026, 0.019], [0.17326, 0.022], [0.19726, 0.022], [0.20026, 0.019], [0.20026, 0.0015], [0.19876, 0.0]],
               "closed": true
             },
             {
@@ -1976,21 +2338,7 @@
               "region": "legs",
               "material": "rubber",
               "penMm": 0.25,
-              "points": [[-0.184, 0.0], [-0.1825, 0.0015], [-0.1825, 0.019], [-0.1855, 0.022], [-0.2095, 0.022], [-0.2125, 0.019], [-0.2125, 0.0015], [-0.211, 0.0]],
-              "closed": true
-            },
-            {
-              "id": "ferrule-m",
-              "bone": "frame",
-              "role": "body",
-              "z": 2.5,
-              "filled": true,
-              "tone": 0.15,
-              "kind": "poly",
-              "region": "legs",
-              "material": "rubber",
-              "penMm": 0.25,
-              "points": [[0.0135, 0.0], [0.015, 0.0015], [0.015, 0.019], [0.012, 0.022], [-0.012, 0.022], [-0.015, 0.019], [-0.015, 0.0015], [-0.0135, 0.0]],
+              "points": [[-0.19876, 0.0], [-0.20026, 0.0015], [-0.20026, 0.019], [-0.19726, 0.022], [-0.17326, 0.022], [-0.17026, 0.019], [-0.17026, 0.0015], [-0.17176, 0.0]],
               "closed": true
             },
             {
@@ -2004,10 +2352,10 @@
               "region": "footrest-ring",
               "material": "chrome-steel",
               "penMm": 0.25,
-              "x0": -0.2,
-              "y0": 0.27,
-              "x1": 0.2,
-              "y1": 0.27,
+              "x0": -0.2365,
+              "y0": 0.29,
+              "x1": 0.2365,
+              "y1": 0.29,
               "r0": 0.0125,
               "r1": 0.0125
             },
@@ -2022,7 +2370,18 @@
               "region": "seat-mount",
               "material": "chrome-steel",
               "penMm": 0.25,
-              "points": [[-0.16, 0.666], [0.16, 0.666], [0.16, 0.68], [0.1592, 0.683], [0.157, 0.6852], [0.154, 0.686], [-0.154, 0.686], [-0.157, 0.6852], [-0.1592, 0.683], [-0.16, 0.68]],
+              "points": [
+                [-0.16, 0.666],
+                [0.16, 0.666],
+                [0.16, 0.68],
+                [0.1592, 0.683],
+                [0.157, 0.6852],
+                [0.154, 0.686],
+                [-0.154, 0.686],
+                [-0.157, 0.6852],
+                [-0.1592, 0.683],
+                [-0.16, 0.68]
+              ],
               "closed": true
             },
             {
@@ -2048,6 +2407,28 @@
               }
             },
             {
+              "id": "cushion-skirt",
+              "bone": "seat",
+              "role": "body",
+              "z": 5.5,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "poly",
+              "region": "seat-pad",
+              "material": "pu-leatherette",
+              "penMm": 0.25,
+              "points": [[0.0, -0.0], [0.0, -0.175], [0.00067, -0.1775], [0.0025, -0.17933], [0.005, -0.18], [0.029, -0.18], [0.032, -0.177], [0.032, -0.0]],
+              "closed": true,
+              "solid": {
+                "kind": "revolved",
+                "axisBone": "seat",
+                "axis": "u",
+                "axisX": 0,
+                "axisZ": 0,
+                "mirror": true
+              }
+            },
+            {
               "id": "pad",
               "bone": "pad",
               "role": "body",
@@ -2058,7 +2439,19 @@
               "region": "seat-pad",
               "material": "pu-leatherette",
               "penMm": 0.25,
-              "points": [[0.0, -0.022], [0.175, -0.022], [0.1775, -0.02133], [0.17933, -0.0195], [0.18, -0.017], [0.18, 0.01], [0.17932, 0.01518], [0.17732, 0.02], [0.17414, 0.02414], [0.17, 0.02732], [0.16518, 0.02932], [0.16, 0.03], [0.1, 0.031], [0.0, 0.032]],
+              "points": [
+                [0.0, 0.032],
+                [0.1, 0.031],
+                [0.16, 0.03],
+                [0.16518, 0.02932],
+                [0.17, 0.02732],
+                [0.17414, 0.02414],
+                [0.17732, 0.02],
+                [0.17932, 0.01518],
+                [0.18, 0.011],
+                [0.177, 0.008],
+                [0.0, 0.008]
+              ],
               "closed": true,
               "solid": {
                 "kind": "revolved",
@@ -2080,7 +2473,26 @@
               "region": "legs",
               "material": "chrome-steel",
               "penMm": 0.25,
-              "points": [[-0.004, -0.04], [-0.004, 0.042], [-0.00345, 0.04614], [-0.00186, 0.05], [0.00069, 0.05331], [0.004, 0.05586], [0.00786, 0.05745], [0.012, 0.058], [0.146, 0.058], [0.146, 0.05], [0.012, 0.05], [0.00993, 0.04973], [0.008, 0.04893], [0.00634, 0.04766], [0.00507, 0.046], [0.00427, 0.04407], [0.004, 0.042], [0.004, -0.04]],
+              "points": [
+                [-0.004, -0.04],
+                [-0.004, 0.042],
+                [-0.00345, 0.04614],
+                [-0.00186, 0.05],
+                [0.00069, 0.05331],
+                [0.004, 0.05586],
+                [0.00786, 0.05745],
+                [0.012, 0.058],
+                [0.146, 0.058],
+                [0.146, 0.05],
+                [0.012, 0.05],
+                [0.00993, 0.04973],
+                [0.008, 0.04893],
+                [0.00634, 0.04766],
+                [0.00507, 0.046],
+                [0.00427, 0.04407],
+                [0.004, 0.042],
+                [0.004, -0.04]
+              ],
               "closed": true,
               "solid": {
                 "kind": "extruded",
@@ -2100,7 +2512,24 @@
               "region": "backrest",
               "material": "pu-leatherette",
               "penMm": 0.25,
-              "points": [[0.164, 0.01087], [0.17, 0.01247], [0.17439, 0.01687], [0.176, 0.02287], [0.176, 0.06], [0.17439, 0.066], [0.17, 0.07039], [0.164, 0.072], [0.098, 0.072], [0.092, 0.07039], [0.08761, 0.066], [0.086, 0.06], [0.086, 0.02287], [0.08761, 0.01687], [0.092, 0.01247], [0.098, 0.01087]],
+              "points": [
+                [0.164, 0.01087],
+                [0.17, 0.01247],
+                [0.17439, 0.01687],
+                [0.176, 0.02287],
+                [0.176, 0.06],
+                [0.17439, 0.066],
+                [0.17, 0.07039],
+                [0.164, 0.072],
+                [0.098, 0.072],
+                [0.092, 0.07039],
+                [0.08761, 0.066],
+                [0.086, 0.06],
+                [0.086, 0.02287],
+                [0.08761, 0.01687],
+                [0.092, 0.01247],
+                [0.098, 0.01087]
+              ],
               "closed": true,
               "solid": {
                 "kind": "extruded",
@@ -2108,171 +2537,157 @@
                 "z0": -0.15006,
                 "z1": 0.15006
               }
-            },
-            {
-              "id": "piping",
-              "bone": "pad",
-              "role": "detail",
-              "z": 6.5,
-              "filled": false,
-              "tone": 0.2,
-              "kind": "poly",
-              "region": "seat-pad",
-              "material": "pu-leatherette",
-              "penMm": 0.13,
-              "points": [[-0.1793, 0.7263], [0.1793, 0.7263]],
-              "closed": false
             }
           ],
           "plan": [
             {
+              "id": "leg-fl",
+              "bone": "frame",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "capsule",
+              "region": "legs",
+              "material": "chrome-steel",
+              "penMm": 0.25,
+              "x0": 0.10182,
+              "y0": 0.10182,
+              "x1": 0.18526,
+              "y1": 0.18526,
+              "r0": 0.0125,
+              "r1": 0.0125
+            },
+            {
+              "id": "leg-fr",
+              "bone": "frame",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "capsule",
+              "region": "legs",
+              "material": "chrome-steel",
+              "penMm": 0.25,
+              "x0": 0.10182,
+              "y0": -0.10182,
+              "x1": 0.18526,
+              "y1": -0.18526,
+              "r0": 0.0125,
+              "r1": 0.0125
+            },
+            {
+              "id": "leg-rl",
+              "bone": "frame",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "capsule",
+              "region": "legs",
+              "material": "chrome-steel",
+              "penMm": 0.25,
+              "x0": -0.10182,
+              "y0": 0.10182,
+              "x1": -0.18526,
+              "y1": 0.18526,
+              "r0": 0.0125,
+              "r1": 0.0125
+            },
+            {
+              "id": "leg-rr",
+              "bone": "frame",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "capsule",
+              "region": "legs",
+              "material": "chrome-steel",
+              "penMm": 0.25,
+              "x0": -0.10182,
+              "y0": -0.10182,
+              "x1": -0.18526,
+              "y1": -0.18526,
+              "r0": 0.0125,
+              "r1": 0.0125
+            },
+            {
+              "id": "ferrule-fl",
+              "bone": "frame",
+              "role": "body",
+              "z": 2.1,
+              "filled": true,
+              "tone": 0.15,
+              "kind": "ellipse",
+              "region": "legs",
+              "material": "rubber",
+              "penMm": 0.25,
+              "cx": 0.18526,
+              "cy": 0.18526,
+              "rx": 0.015,
+              "ry": 0.015
+            },
+            {
+              "id": "ferrule-fr",
+              "bone": "frame",
+              "role": "body",
+              "z": 2.1,
+              "filled": true,
+              "tone": 0.15,
+              "kind": "ellipse",
+              "region": "legs",
+              "material": "rubber",
+              "penMm": 0.25,
+              "cx": 0.18526,
+              "cy": -0.18526,
+              "rx": 0.015,
+              "ry": 0.015
+            },
+            {
+              "id": "ferrule-rl",
+              "bone": "frame",
+              "role": "body",
+              "z": 2.1,
+              "filled": true,
+              "tone": 0.15,
+              "kind": "ellipse",
+              "region": "legs",
+              "material": "rubber",
+              "penMm": 0.25,
+              "cx": -0.18526,
+              "cy": 0.18526,
+              "rx": 0.015,
+              "ry": 0.015
+            },
+            {
+              "id": "ferrule-rr",
+              "bone": "frame",
+              "role": "body",
+              "z": 2.1,
+              "filled": true,
+              "tone": 0.15,
+              "kind": "ellipse",
+              "region": "legs",
+              "material": "rubber",
+              "penMm": 0.25,
+              "cx": -0.18526,
+              "cy": -0.18526,
+              "rx": 0.015,
+              "ry": 0.015
+            },
+            {
               "id": "ring",
               "bone": "frame",
               "role": "body",
-              "z": 1,
+              "z": 2.3,
               "filled": true,
               "tone": 0.7,
               "kind": "path",
               "region": "footrest-ring",
               "material": "chrome-steel",
-              "penMm": 0.25,
-              "d": "M 0.2125 0 A 0.2125 0.2125 0 1 0 -0.2125 0 A 0.2125 0.2125 0 1 0 0.2125 0 Z M 0.1875 0 A 0.1875 0.1875 0 1 0 -0.1875 0 A 0.1875 0.1875 0 1 0 0.1875 0 Z"
-            },
-            {
-              "id": "leg-xp",
-              "bone": "frame",
-              "role": "body",
-              "z": 2,
-              "filled": true,
-              "tone": 0.7,
-              "kind": "capsule",
-              "region": "legs",
-              "material": "chrome-steel",
-              "penMm": 0.25,
-              "x0": 0.144,
-              "y0": 0.0,
-              "x1": 0.1975,
-              "y1": 0.0,
-              "r0": 0.0125,
-              "r1": 0.0125
-            },
-            {
-              "id": "leg-xn",
-              "bone": "frame",
-              "role": "body",
-              "z": 2,
-              "filled": true,
-              "tone": 0.7,
-              "kind": "capsule",
-              "region": "legs",
-              "material": "chrome-steel",
-              "penMm": 0.25,
-              "x0": -0.144,
-              "y0": 0.0,
-              "x1": -0.1975,
-              "y1": 0.0,
-              "r0": 0.0125,
-              "r1": 0.0125
-            },
-            {
-              "id": "leg-yp",
-              "bone": "frame",
-              "role": "body",
-              "z": 2,
-              "filled": true,
-              "tone": 0.7,
-              "kind": "capsule",
-              "region": "legs",
-              "material": "chrome-steel",
-              "penMm": 0.25,
-              "x0": 0.0,
-              "y0": 0.144,
-              "x1": 0.0,
-              "y1": 0.1975,
-              "r0": 0.0125,
-              "r1": 0.0125
-            },
-            {
-              "id": "leg-yn",
-              "bone": "frame",
-              "role": "body",
-              "z": 2,
-              "filled": true,
-              "tone": 0.7,
-              "kind": "capsule",
-              "region": "legs",
-              "material": "chrome-steel",
-              "penMm": 0.25,
-              "x0": 0.0,
-              "y0": -0.144,
-              "x1": 0.0,
-              "y1": -0.1975,
-              "r0": 0.0125,
-              "r1": 0.0125
-            },
-            {
-              "id": "ferrule-xp",
-              "bone": "frame",
-              "role": "body",
-              "z": 2.5,
-              "filled": true,
-              "tone": 0.15,
-              "kind": "ellipse",
-              "region": "legs",
-              "material": "rubber",
-              "penMm": 0.25,
-              "cx": 0.1975,
-              "cy": 0.0,
-              "rx": 0.015,
-              "ry": 0.015
-            },
-            {
-              "id": "ferrule-xn",
-              "bone": "frame",
-              "role": "body",
-              "z": 2.5,
-              "filled": true,
-              "tone": 0.15,
-              "kind": "ellipse",
-              "region": "legs",
-              "material": "rubber",
-              "penMm": 0.25,
-              "cx": -0.1975,
-              "cy": 0.0,
-              "rx": 0.015,
-              "ry": 0.015
-            },
-            {
-              "id": "ferrule-yp",
-              "bone": "frame",
-              "role": "body",
-              "z": 2.5,
-              "filled": true,
-              "tone": 0.15,
-              "kind": "ellipse",
-              "region": "legs",
-              "material": "rubber",
-              "penMm": 0.25,
-              "cx": 0.0,
-              "cy": 0.1975,
-              "rx": 0.015,
-              "ry": 0.015
-            },
-            {
-              "id": "ferrule-yn",
-              "bone": "frame",
-              "role": "body",
-              "z": 2.5,
-              "filled": true,
-              "tone": 0.15,
-              "kind": "ellipse",
-              "region": "legs",
-              "material": "rubber",
-              "penMm": 0.25,
-              "cx": 0.0,
-              "cy": -0.1975,
-              "rx": 0.015,
-              "ry": 0.015
+              "d": "M 0.249 0 A 0.249 0.249 0 1 0 -0.249 0 A 0.249 0.249 0 1 0 0.249 0 Z M 0.22399999999999998 0 A 0.22399999999999998 0.22399999999999998 0 1 0 -0.22399999999999998 0 A 0.22399999999999998 0.22399999999999998 0 1 0 0.22399999999999998 0 Z",
+              "penMm": 0.25
             },
             {
               "id": "swivel",
@@ -2297,6 +2712,28 @@
               }
             },
             {
+              "id": "cushion-skirt",
+              "bone": "seat",
+              "role": "body",
+              "z": 5.5,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "poly",
+              "region": "seat-pad",
+              "material": "pu-leatherette",
+              "penMm": 0.25,
+              "points": [[0.0, -0.0], [0.0, -0.175], [0.00067, -0.1775], [0.0025, -0.17933], [0.005, -0.18], [0.029, -0.18], [0.032, -0.177], [0.032, -0.0]],
+              "closed": true,
+              "solid": {
+                "kind": "revolved",
+                "axisBone": "seat",
+                "axis": "u",
+                "axisX": 0,
+                "axisZ": 0,
+                "mirror": true
+              }
+            },
+            {
               "id": "pad",
               "bone": "pad",
               "role": "body",
@@ -2307,7 +2744,19 @@
               "region": "seat-pad",
               "material": "pu-leatherette",
               "penMm": 0.25,
-              "points": [[0.0, -0.022], [0.175, -0.022], [0.1775, -0.02133], [0.17933, -0.0195], [0.18, -0.017], [0.18, 0.01], [0.17932, 0.01518], [0.17732, 0.02], [0.17414, 0.02414], [0.17, 0.02732], [0.16518, 0.02932], [0.16, 0.03], [0.1, 0.031], [0.0, 0.032]],
+              "points": [
+                [0.0, 0.032],
+                [0.1, 0.031],
+                [0.16, 0.03],
+                [0.16518, 0.02932],
+                [0.17, 0.02732],
+                [0.17414, 0.02414],
+                [0.17732, 0.02],
+                [0.17932, 0.01518],
+                [0.18, 0.011],
+                [0.177, 0.008],
+                [0.0, 0.008]
+              ],
               "closed": true,
               "solid": {
                 "kind": "revolved",
@@ -2329,7 +2778,26 @@
               "region": "legs",
               "material": "chrome-steel",
               "penMm": 0.25,
-              "points": [[-0.004, -0.04], [-0.004, 0.042], [-0.00345, 0.04614], [-0.00186, 0.05], [0.00069, 0.05331], [0.004, 0.05586], [0.00786, 0.05745], [0.012, 0.058], [0.146, 0.058], [0.146, 0.05], [0.012, 0.05], [0.00993, 0.04973], [0.008, 0.04893], [0.00634, 0.04766], [0.00507, 0.046], [0.00427, 0.04407], [0.004, 0.042], [0.004, -0.04]],
+              "points": [
+                [-0.004, -0.04],
+                [-0.004, 0.042],
+                [-0.00345, 0.04614],
+                [-0.00186, 0.05],
+                [0.00069, 0.05331],
+                [0.004, 0.05586],
+                [0.00786, 0.05745],
+                [0.012, 0.058],
+                [0.146, 0.058],
+                [0.146, 0.05],
+                [0.012, 0.05],
+                [0.00993, 0.04973],
+                [0.008, 0.04893],
+                [0.00634, 0.04766],
+                [0.00507, 0.046],
+                [0.00427, 0.04407],
+                [0.004, 0.042],
+                [0.004, -0.04]
+              ],
               "closed": true,
               "solid": {
                 "kind": "extruded",
@@ -2349,7 +2817,24 @@
               "region": "backrest",
               "material": "pu-leatherette",
               "penMm": 0.25,
-              "points": [[0.164, 0.01087], [0.17, 0.01247], [0.17439, 0.01687], [0.176, 0.02287], [0.176, 0.06], [0.17439, 0.066], [0.17, 0.07039], [0.164, 0.072], [0.098, 0.072], [0.092, 0.07039], [0.08761, 0.066], [0.086, 0.06], [0.086, 0.02287], [0.08761, 0.01687], [0.092, 0.01247], [0.098, 0.01087]],
+              "points": [
+                [0.164, 0.01087],
+                [0.17, 0.01247],
+                [0.17439, 0.01687],
+                [0.176, 0.02287],
+                [0.176, 0.06],
+                [0.17439, 0.066],
+                [0.17, 0.07039],
+                [0.164, 0.072],
+                [0.098, 0.072],
+                [0.092, 0.07039],
+                [0.08761, 0.066],
+                [0.086, 0.06],
+                [0.086, 0.02287],
+                [0.08761, 0.01687],
+                [0.092, 0.01247],
+                [0.098, 0.01087]
+              ],
               "closed": true,
               "solid": {
                 "kind": "extruded",
@@ -2378,8 +2863,8 @@
         },
         "decisions": {
           "silhouette": {
-            "en": "Stool 8.5 x 17.4 mm, the true views of the 1:50 model: seat cushion with its top round and piping seam, the swivel plate and the pressed seat pan below it, four splayed 25 mm tubes in rubber glides, the footrest ring welded outside the legs at 0.27 m, the bent flat back bar rising behind the cushion into the curved back pad. Front view: the same parts seen from ahead; the cushion, swivel and backrest are revolved and extruded solids of their side profiles so they turn with the swivel. Plan: ring, leg feet and glides outside the cushion disc, the piping circle, the back pad on the rear edge.",
-            "de": "Hocker 8,5 x 17,4 mm, die wahren Ansichten des 1:50-Modells: Sitzpolster mit Rundung und Kedernaht, darunter Drehteller und gepresste Sitzpfanne, vier gespreizte 25-mm-Rohre in Gummigleitern, der außen an die Beine geschweißte Fußring auf 0,27 m, der gebogene Flachstahlbügel hinter dem Polster hinauf ins gebogene Rückenpolster. Vorderansicht: dieselben Teile von vorn; Polster, Drehteller und Lehne sind Rotations- und Extrusionskörper ihrer Seitenprofile und drehen mit. Grundriss: Ring, Beinenden und Gleiter außerhalb der Polsterscheibe, der Kederkreis, das Rückenpolster am hinteren Rand."
+            "en": "Stool 10.0 x 17.4 mm, the true views of the 1:50 model: seat cushion in two parts, the skirt on the board and the crown with its top round above the piping seam (the crown sinks into the skirt under load), the swivel plate and the pressed seat pan below it, four 25 mm tubes splayed on the diagonals in rubber glides (each elevation shows a near and a far leg as one), the footrest ring welded outside the legs at 0.29 m, the bent flat back bar rising behind the cushion into the curved back pad. Front view: the same parts seen from ahead; the cushion, swivel and backrest are revolved and extruded solids of their side profiles so they turn with the swivel. Plan: the legs running out under the cushion disc on the diagonals, the ring over them and the glides outside the ring, the piping circle, the back pad on the rear edge.",
+            "de": "Hocker 10,0 x 17,4 mm, die wahren Ansichten des 1:50-Modells: Sitzpolster in zwei Teilen, die Schürze auf der Platte und die Kuppe mit Rundung über der Kedernaht (die Kuppe sinkt unter Last in die Schürze), darunter Drehteller und gepresste Sitzpfanne, vier auf den Diagonalen gespreizte 25-mm-Rohre in Gummigleitern (jede Ansicht zeigt ein vorderes und ein hinteres Bein als eines), der außen an die Beine geschweißte Fußring auf 0,29 m, der gebogene Flachstahlbügel hinter dem Polster hinauf ins gebogene Rückenpolster. Vorderansicht: dieselben Teile von vorn; Polster, Drehteller und Lehne sind Rotations- und Extrusionskörper ihrer Seitenprofile und drehen mit. Grundriss: die Beine laufen auf den Diagonalen unter der Polsterscheibe heraus, darüber der Ring, die Gleiter außerhalb des Rings, der Kederkreis, das Rückenpolster am hinteren Rand."
           },
           "retained": {
             "en": "Cushion 54 mm with 20 mm top round and 6 mm piping, swivel plate 12 mm, seat pan 20 mm rim, tubes 25 mm, glides 30 x 22 mm, back bar 40 x 8 mm, back pad 26 mm.",
@@ -2420,16 +2905,12 @@
           "de": "Hockersymbol, wahre Ausdehnung"
         },
         "description": {
-          "en": "The bar stool as a simple pictogram in all three views: round seat of 0.36 m diameter at 0.70 to 0.75 m with the low backrest above its rear edge, four splayed legs with a foot ring, leg footprint 0.42 m.",
-          "de": "Der Barhocker als einfaches Piktogramm in allen drei Ansichten: runder Sitz von 0,36 m Durchmesser auf 0,70 bis 0,75 m mit der niedrigen Lehne über seinem hinteren Rand, vier gespreizte Beine mit Fußring, Standfläche 0,42 m."
+          "en": "The bar stool as a simple pictogram in all three views: round seat of 0.36 m diameter at 0.70 to 0.75 m with the low backrest above its rear edge, four legs splayed on the diagonals with a foot ring of 0.50 m, feet on a 0.37 m square.",
+          "de": "Der Barhocker als einfaches Piktogramm in allen drei Ansichten: runder Sitz von 0,36 m Durchmesser auf 0,70 bis 0,75 m mit der niedrigen Lehne über seinem hinteren Rand, vier auf den Diagonalen gespreizte Beine mit Fußring von 0,50 m, Füße auf einem Quadrat von 0,37 m."
         },
         "semantics": "true-extent",
         "units": "model-m",
-        "denominators": [
-          200,
-          100,
-          50
-        ],
+        "denominators": [200, 100, 50],
         "pens": {
           "body": 0.25,
           "detail": 0.13,
@@ -2476,9 +2957,9 @@
               "filled": true,
               "tone": 0.85,
               "kind": "capsule",
-              "x0": -0.146,
+              "x0": -0.102,
               "y0": 0.68,
-              "x1": -0.1975,
+              "x1": -0.185,
               "y1": 0.0125,
               "r0": 0.0125,
               "r1": 0.0125
@@ -2491,9 +2972,9 @@
               "filled": true,
               "tone": 0.85,
               "kind": "capsule",
-              "x0": 0.146,
+              "x0": 0.102,
               "y0": 0.68,
-              "x1": 0.1975,
+              "x1": 0.185,
               "y1": 0.0125,
               "r0": 0.0125,
               "r1": 0.0125
@@ -2506,16 +2987,7 @@
               "filled": false,
               "tone": 0.5,
               "kind": "poly",
-              "points": [
-                [
-                  -0.2125,
-                  0.27
-                ],
-                [
-                  0.2125,
-                  0.27
-                ]
-              ],
+              "points": [[-0.249, 0.29], [0.249, 0.29]],
               "closed": false
             }
           ],
@@ -2556,9 +3028,9 @@
               "filled": true,
               "tone": 0.85,
               "kind": "capsule",
-              "x0": -0.146,
+              "x0": -0.102,
               "y0": 0.68,
-              "x1": -0.1975,
+              "x1": -0.185,
               "y1": 0.0125,
               "r0": 0.0125,
               "r1": 0.0125
@@ -2571,9 +3043,9 @@
               "filled": true,
               "tone": 0.85,
               "kind": "capsule",
-              "x0": 0.146,
+              "x0": 0.102,
               "y0": 0.68,
-              "x1": 0.1975,
+              "x1": 0.185,
               "y1": 0.0125,
               "r0": 0.0125,
               "r1": 0.0125
@@ -2586,16 +3058,7 @@
               "filled": false,
               "tone": 0.5,
               "kind": "poly",
-              "points": [
-                [
-                  -0.2125,
-                  0.27
-                ],
-                [
-                  0.2125,
-                  0.27
-                ]
-              ],
+              "points": [[-0.249, 0.29], [0.249, 0.29]],
               "closed": false
             }
           ],
@@ -2610,8 +3073,8 @@
               "kind": "ellipse",
               "cx": 0,
               "cy": 0,
-              "rx": 0.2125,
-              "ry": 0.2125
+              "rx": 0.249,
+              "ry": 0.249
             },
             {
               "id": "plan-seat",
@@ -2643,8 +3106,8 @@
           ]
         },
         "dimensionalNote": {
-          "en": "Model metres at real size in the frame of the asset (x ahead, lateral positive to the left, y up): the side view is seen from the right, the front view from ahead, the top view from above; all three show the default pose. Seat radius 0.18 m, leg footprint radius 0.21 m; the swivel does not change the round outline.",
-          "de": "Modellmeter in wahrer Größe im Koordinatensystem des Objekts (x nach vorn, seitlich positiv nach links, y nach oben): die Seitenansicht blickt von rechts, die Vorderansicht von vorn, die Draufsicht von oben; alle drei zeigen die Standardhaltung. Sitzradius 0,18 m, Standflächenradius 0,21 m; die Drehung ändert den runden Umriss nicht."
+          "en": "Model metres at real size in the frame of the asset (x ahead, lateral positive to the left, y up): the side view is seen from the right, the front view from ahead, the top view from above; all three show the default pose. Seat radius 0.18 m, footrest ring radius 0.25 m; the swivel does not change the round outline.",
+          "de": "Modellmeter in wahrer Größe im Koordinatensystem des Objekts (x nach vorn, seitlich positiv nach links, y nach oben): die Seitenansicht blickt von rechts, die Vorderansicht von vorn, die Draufsicht von oben; alle drei zeigen die Standardhaltung. Sitzradius 0,18 m, Fußringradius 0,25 m; die Drehung ändert den runden Umriss nicht."
         }
       }
     ],
@@ -2661,12 +3124,7 @@
         },
         "bones": {},
         "ground": "auto",
-        "contacts": [
-          "foot-xn",
-          "foot-zp",
-          "foot-zn",
-          "foot-xp"
-        ],
+        "contacts": ["foot-rr", "foot-rl", "foot-fr", "foot-fl"],
         "thermal": {
           "regions": {
             "seat-pad": {
@@ -2714,12 +3172,7 @@
           }
         },
         "ground": "auto",
-        "contacts": [
-          "foot-xn",
-          "foot-zp",
-          "foot-zn",
-          "foot-xp"
-        ],
+        "contacts": ["foot-rr", "foot-rl", "foot-fr", "foot-fl"],
         "thermal": {
           "regions": {
             "seat-pad": {
@@ -2802,12 +3255,7 @@
           }
         },
         "ground": "auto",
-        "contacts": [
-          "foot-xn",
-          "foot-zp",
-          "foot-zn",
-          "foot-xp"
-        ],
+        "contacts": ["foot-rr", "foot-rl", "foot-fr", "foot-fl"],
         "thermal": {
           "regions": {
             "seat-pad": {
@@ -2855,12 +3303,7 @@
           }
         },
         "ground": "auto",
-        "contacts": [
-          "foot-xn",
-          "foot-zp",
-          "foot-zn",
-          "foot-xp"
-        ],
+        "contacts": ["foot-rr", "foot-rl", "foot-fr", "foot-fl"],
         "thermal": {
           "regions": {
             "seat-pad": {
@@ -2923,12 +3366,7 @@
           }
         },
         "ground": "auto",
-        "contacts": [
-          "foot-xn",
-          "foot-zp",
-          "foot-zn",
-          "foot-xp"
-        ],
+        "contacts": ["foot-rr", "foot-rl", "foot-fr", "foot-fl"],
         "thermal": {
           "regions": {
             "seat-pad": {
@@ -2980,12 +3418,7 @@
           }
         },
         "ground": "auto",
-        "contacts": [
-          "foot-xn",
-          "foot-zp",
-          "foot-zn",
-          "foot-xp"
-        ],
+        "contacts": ["foot-rr", "foot-rl", "foot-fr", "foot-fl"],
         "thermal": {
           "regions": {
             "seat-pad": {
@@ -3097,22 +3530,22 @@
         ],
         "contacts": [
           {
-            "anchor": "foot-xn",
+            "anchor": "foot-rr",
             "fromS": 0,
             "toS": 6
           },
           {
-            "anchor": "foot-zp",
+            "anchor": "foot-rl",
             "fromS": 0,
             "toS": 6
           },
           {
-            "anchor": "foot-zn",
+            "anchor": "foot-fr",
             "fromS": 0,
             "toS": 6
           },
           {
-            "anchor": "foot-xp",
+            "anchor": "foot-fl",
             "fromS": 0,
             "toS": 6
           }
@@ -3183,22 +3616,22 @@
         ],
         "contacts": [
           {
-            "anchor": "foot-xn",
+            "anchor": "foot-rr",
             "fromS": 0,
             "toS": 5
           },
           {
-            "anchor": "foot-zp",
+            "anchor": "foot-rl",
             "fromS": 0,
             "toS": 5
           },
           {
-            "anchor": "foot-zn",
+            "anchor": "foot-fr",
             "fromS": 0,
             "toS": 5
           },
           {
-            "anchor": "foot-xp",
+            "anchor": "foot-fl",
             "fromS": 0,
             "toS": 5
           }
@@ -3322,22 +3755,22 @@
         ],
         "contacts": [
           {
-            "anchor": "foot-xn",
+            "anchor": "foot-rr",
             "fromS": 0,
             "toS": 3
           },
           {
-            "anchor": "foot-zp",
+            "anchor": "foot-rl",
             "fromS": 0,
             "toS": 3
           },
           {
-            "anchor": "foot-zn",
+            "anchor": "foot-fr",
             "fromS": 0,
             "toS": 3
           },
           {
-            "anchor": "foot-xp",
+            "anchor": "foot-fl",
             "fromS": 0,
             "toS": 3
           }
@@ -3576,7 +4009,7 @@
           "kind": "surface",
           "model": "passive",
           "material": "chrome-steel",
-          "areaM2": 0.099,
+          "areaM2": 0.117,
           "characteristicLengthM": 0.025,
           "geometry": "cylinder",
           "skyViewFactor": 0.3,
@@ -3672,16 +4105,11 @@
     "structure": {
       "gravityMS2": 9.80665,
       "dynamics": "quasi-static",
-      "supports": [
-        "foot-xn",
-        "foot-zp",
-        "foot-zn",
-        "foot-xp"
-      ],
+      "supports": ["foot-rr", "foot-rl", "foot-fr", "foot-fl"],
       "assumptions": [
         {
-          "en": "The stool is a welded steel frame on four foot contacts, one under the rubber glide of each leg (x or z = +-0.1975 m): four 25 x 1.5 mm tubes welded into the rim of a pressed seat pan and a footrest ring welded to their outside at 0.27 m; the seat (swivel plate and plywood board) turns on the pan about the vertical axis, the foam cushion sits on a prismatic joint sliding down the stool axis (the frame bone, floor to pan top) and the backrest is screwed under the board.",
-          "de": "Der Hocker ist ein geschweißtes Stahlgestell auf vier Fußkontakten, je einem unter dem Gummigleiter jedes Beins (x oder z = +-0,1975 m): vier Rohre 25 x 1,5 mm, in den Rand einer gepressten Sitzpfanne geschweißt, und ein außen auf 0,27 m angeschweißter Fußring; der Sitz (Drehteller und Sperrholzplatte) dreht auf der Pfanne um die Hochachse, das Schaumpolster sitzt auf einem Schiebegelenk entlang der Hockerachse (Gestellknochen, Boden bis Pfannenoberkante) und die Lehne ist unter der Platte verschraubt."
+          "en": "The stool is a welded steel frame on four foot contacts, one under the rubber glide of each leg (on the diagonals, x and z = +-0.185 m, so the overturning line of two adjacent feet lies 0.185 m from the axis, outside the 0.18 m seat radius): four 25 x 1.5 mm tubes welded into the rim of a pressed seat pan and a footrest ring welded to their outside at 0.29 m; the seat (swivel plate and plywood board) turns on the pan about the vertical axis, the foam cushion sits on a prismatic joint sliding down the stool axis (the frame bone, floor to pan top) and the backrest is screwed under the board.",
+          "de": "Der Hocker ist ein geschweißtes Stahlgestell auf vier Fußkontakten, je einem unter dem Gummigleiter jedes Beins (auf den Diagonalen, x und z = +-0,185 m, die Kippkante zweier benachbarter Füße liegt damit 0,185 m von der Achse, außerhalb des Sitzradius von 0,18 m): vier Rohre 25 x 1,5 mm, in den Rand einer gepressten Sitzpfanne geschweißt, und ein außen auf 0,29 m angeschweißter Fußring; der Sitz (Drehteller und Sperrholzplatte) dreht auf der Pfanne um die Hochachse, das Schaumpolster sitzt auf einem Schiebegelenk entlang der Hockerachse (Gestellknochen, Boden bis Pfannenoberkante) und die Lehne ist unter der Platte verschraubt."
         },
         {
           "en": "The swivel is a rotation about the vertical axis (axial twist of the vertical seat bone). Cushion, board and swivel are revolved solids and look the same at every azimuth; the backrest is a bent 40 x 8 mm flat bar rising 10 mm behind the cushion into a pad bent on a 0.30 m radius, 0.30 m wide, so it runs round the seat circle as the seat turns.",
@@ -3706,8 +4134,8 @@
             "material": "chrome-steel",
             "role": "body",
             "tone": 0.7,
-            "p0": [0.6705, -0.144, 0.0],
-            "p1": [0.014, -0.1975, 0.0],
+            "p0": [0.6705, -0.10182, -0.10182],
+            "p1": [0.014, -0.18526, -0.18526],
             "r0": 0.0125,
             "r1": 0.0125,
             "repeat": {
@@ -3726,7 +4154,7 @@
             "tone": 0.15,
             "profile": [[0.0, 0.0], [0.0, 0.0135], [0.0015, 0.015], [0.019, 0.015], [0.022, 0.012], [0.022, 0.0]],
             "axis": [1.0, 0.0, 0.0],
-            "origin": [0.0, -0.1975, 0.0],
+            "origin": [0.0, -0.18526, -0.18526],
             "repeat": {
               "count": 4,
               "rotationAxis": [1.0, 0.0, 0.0],
@@ -3742,34 +4170,34 @@
             "role": "body",
             "tone": 0.7,
             "profile": [
-              [0.0, 0.21261],
-              [0.00326, 0.21218],
-              [0.0063, 0.21092],
-              [0.00892, 0.20892],
-              [0.01092, 0.2063],
-              [0.01218, 0.20326],
-              [0.01261, 0.2],
-              [0.01218, 0.19674],
-              [0.01092, 0.1937],
-              [0.00892, 0.19108],
-              [0.0063, 0.18908],
-              [0.00326, 0.18782],
-              [0.0, 0.18739],
-              [-0.00326, 0.18782],
-              [-0.0063, 0.18908],
-              [-0.00892, 0.19108],
-              [-0.01092, 0.1937],
-              [-0.01218, 0.19674],
-              [-0.01261, 0.2],
-              [-0.01218, 0.20326],
-              [-0.01092, 0.2063],
-              [-0.00892, 0.20892],
-              [-0.0063, 0.21092],
-              [-0.00326, 0.21218],
-              [0.0, 0.21261]
+              [0.0, 0.24911],
+              [0.00326, 0.24868],
+              [0.0063, 0.24742],
+              [0.00892, 0.24542],
+              [0.01092, 0.2428],
+              [0.01218, 0.23976],
+              [0.01261, 0.2365],
+              [0.01218, 0.23324],
+              [0.01092, 0.2302],
+              [0.00892, 0.22758],
+              [0.0063, 0.22558],
+              [0.00326, 0.22432],
+              [0.0, 0.22389],
+              [-0.00326, 0.22432],
+              [-0.0063, 0.22558],
+              [-0.00892, 0.22758],
+              [-0.01092, 0.2302],
+              [-0.01218, 0.23324],
+              [-0.01261, 0.2365],
+              [-0.01218, 0.23976],
+              [-0.01092, 0.2428],
+              [-0.00892, 0.24542],
+              [-0.0063, 0.24742],
+              [-0.00326, 0.24868],
+              [0.0, 0.24911]
             ],
             "axis": [1.0, 0.0, 0.0],
-            "origin": [0.27, 0.0, 0.0]
+            "origin": [0.29, 0.0, 0.0]
           },
           {
             "id": "pan",
@@ -3806,6 +4234,17 @@
             "origin": [-0.698, 0.0, 0.0]
           },
           {
+            "id": "cushion-skirt",
+            "kind": "revolve",
+            "bone": "seat",
+            "material": "pu-leatherette",
+            "role": "body",
+            "tone": 0.3,
+            "profile": [[0.698, 0.0], [0.698, 0.175], [0.69867, 0.1775], [0.7005, 0.17933], [0.703, 0.18], [0.727, 0.18], [0.73, 0.177], [0.73, 0.0]],
+            "axis": [1.0, 0.0, 0.0],
+            "origin": [-0.698, 0.0, 0.0]
+          },
+          {
             "id": "cushion",
             "kind": "revolve",
             "bone": "pad",
@@ -3813,12 +4252,9 @@
             "role": "body",
             "tone": 0.3,
             "profile": [
-              [0.698, 0.0],
-              [0.698, 0.175],
-              [0.69867, 0.1775],
-              [0.7005, 0.17933],
-              [0.703, 0.18],
-              [0.73, 0.18],
+              [0.728, 0.0],
+              [0.728, 0.177],
+              [0.731, 0.18],
               [0.73518, 0.17932],
               [0.74, 0.17732],
               [0.74414, 0.17414],
@@ -3834,25 +4270,25 @@
           {
             "id": "piping",
             "kind": "revolve",
-            "bone": "pad",
+            "bone": "seat",
             "material": "pu-leatherette",
             "role": "detail",
             "tone": 0.2,
             "profile": [
-              [0.7263, 0.1793],
-              [0.72806, 0.17873],
-              [0.72915, 0.17723],
-              [0.72915, 0.17537],
-              [0.72806, 0.17387],
-              [0.7263, 0.1733],
-              [0.72454, 0.17387],
-              [0.72345, 0.17537],
-              [0.72345, 0.17723],
-              [0.72454, 0.17873],
-              [0.7263, 0.1793]
+              [0.729, 0.1793],
+              [0.73076, 0.17873],
+              [0.73185, 0.17723],
+              [0.73185, 0.17537],
+              [0.73076, 0.17387],
+              [0.729, 0.1733],
+              [0.72724, 0.17387],
+              [0.72615, 0.17537],
+              [0.72615, 0.17723],
+              [0.72724, 0.17873],
+              [0.729, 0.1793]
             ],
-            "axis": [0.0, 1.0, 0.0],
-            "origin": [0.0, -0.72, 0.0],
+            "axis": [1.0, 0.0, 0.0],
+            "origin": [-0.698, 0.0, 0.0],
             "slender": true
           },
           {
@@ -4040,10 +4476,29 @@
             "layer": "plate-ply"
           },
           {
+            "id": "th-cushion-skirt",
+            "of": "cushion-skirt",
+            "region": "seat-pad",
+            "layer": "leatherette"
+          },
+          {
             "id": "th-cushion-cover",
             "of": "cushion",
             "region": "seat-pad",
             "layer": "leatherette"
+          },
+          {
+            "id": "th-skirt-foam",
+            "kind": "revolve",
+            "bone": "seat",
+            "material": "hr-foam",
+            "role": "body",
+            "tone": 0.8,
+            "profile": [[0.71, 0.0], [0.71, 0.1785], [0.7285, 0.1785], [0.7285, 0.0]],
+            "axis": [1.0, 0.0, 0.0],
+            "origin": [-0.698, 0.0, 0.0],
+            "region": "seat-pad",
+            "layer": "pad-foam"
           },
           {
             "id": "th-cushion-foam",
@@ -4053,9 +4508,9 @@
             "role": "body",
             "tone": 0.8,
             "profile": [
-              [0.71, 0.0],
-              [0.71, 0.1785],
-              [0.73, 0.1785],
+              [0.7295, 0.0],
+              [0.7295, 0.1765],
+              [0.731, 0.1785],
               [0.73479, 0.17787],
               [0.73925, 0.17602],
               [0.74308, 0.17308],
@@ -4226,6 +4681,12 @@
             "part": "member"
           },
           {
+            "id": "m-cushion-skirt",
+            "of": "cushion-skirt",
+            "member": "seat",
+            "part": "member"
+          },
+          {
             "id": "m-cushion",
             "of": "cushion",
             "member": "pad",
@@ -4246,7 +4707,7 @@
             "tone": 0.4,
             "radii": [0.012, 0.016, 0.016],
             "transform": {
-              "translation": [0.678, -0.144, 0.0]
+              "translation": [0.678, -0.10182, -0.10182]
             },
             "repeat": {
               "count": 4,
@@ -4266,7 +4727,7 @@
             "tone": 0.4,
             "radii": [0.016, 0.016, 0.016],
             "transform": {
-              "translation": [0.27, -0.18832, 0.0]
+              "translation": [0.29, -0.15871, -0.15871]
             },
             "repeat": {
               "count": 4,
@@ -4298,14 +4759,14 @@
             "material": "hr-foam",
             "role": "detail",
             "tone": 0.4,
-            "profile": [[0.716, 0.0], [0.716, 0.12], [0.724, 0.12], [0.724, 0.0]],
+            "profile": [[0.722, 0.0], [0.722, 0.12], [0.732, 0.12], [0.732, 0.0]],
             "axis": [0.0, 1.0, 0.0],
             "origin": [0.0, -0.72, 0.0],
             "member": "pad",
             "part": "joint"
           },
           {
-            "id": "support-foot-xp",
+            "id": "support-foot-fl",
             "kind": "revolve",
             "bone": "frame",
             "material": "rubber",
@@ -4313,13 +4774,13 @@
             "tone": 0.2,
             "profile": [[0.0, 0.0], [0.0, 0.015], [0.0075, 0.015], [0.0075, 0.0]],
             "axis": [1.0, 0.0, 0.0],
-            "origin": [0.0, -0.1975, 0.0],
+            "origin": [0.0, -0.18526, 0.18526],
             "member": "frame",
             "part": "support",
-            "anchor": "foot-xp"
+            "anchor": "foot-fl"
           },
           {
-            "id": "support-foot-xn",
+            "id": "support-foot-rr",
             "kind": "revolve",
             "bone": "frame",
             "material": "rubber",
@@ -4327,13 +4788,13 @@
             "tone": 0.2,
             "profile": [[0.0, 0.0], [0.0, 0.015], [0.0075, 0.015], [0.0075, 0.0]],
             "axis": [1.0, 0.0, 0.0],
-            "origin": [0.0, 0.1975, 0.0],
+            "origin": [0.0, 0.18526, -0.18526],
             "member": "frame",
             "part": "support",
-            "anchor": "foot-xn"
+            "anchor": "foot-rr"
           },
           {
-            "id": "support-foot-zp",
+            "id": "support-foot-rl",
             "kind": "revolve",
             "bone": "frame",
             "material": "rubber",
@@ -4341,13 +4802,13 @@
             "tone": 0.2,
             "profile": [[0.0, 0.0], [0.0, 0.015], [0.0075, 0.015], [0.0075, 0.0]],
             "axis": [1.0, 0.0, 0.0],
-            "origin": [0.0, 0.0, 0.1975],
+            "origin": [0.0, 0.18526, 0.18526],
             "member": "frame",
             "part": "support",
-            "anchor": "foot-zp"
+            "anchor": "foot-rl"
           },
           {
-            "id": "support-foot-zn",
+            "id": "support-foot-fr",
             "kind": "revolve",
             "bone": "frame",
             "material": "rubber",
@@ -4355,24 +4816,10 @@
             "tone": 0.2,
             "profile": [[0.0, 0.0], [0.0, 0.015], [0.0075, 0.015], [0.0075, 0.0]],
             "axis": [1.0, 0.0, 0.0],
-            "origin": [0.0, 0.0, -0.1975],
+            "origin": [0.0, -0.18526, -0.18526],
             "member": "frame",
             "part": "support",
-            "anchor": "foot-zn"
-          },
-          {
-            "id": "mass-frame",
-            "kind": "ellipsoid",
-            "bone": "frame",
-            "material": "chrome-steel",
-            "role": "detail",
-            "tone": 0.4,
-            "radii": [0.02, 0.02, 0.02],
-            "transform": {
-              "translation": [0.43443, 0.0, 0.0]
-            },
-            "member": "frame",
-            "part": "mass"
+            "anchor": "foot-fr"
           },
           {
             "id": "mass-seat",
@@ -4415,12 +4862,66 @@
             },
             "member": "backrest",
             "part": "mass"
+          },
+          {
+            "id": "mass-pan",
+            "kind": "ellipsoid",
+            "bone": "frame",
+            "material": "chrome-steel",
+            "role": "detail",
+            "tone": 0.4,
+            "radii": [0.008, 0.02, 0.02],
+            "transform": {
+              "translation": [0.676, 0.0, 0.0]
+            },
+            "member": "frame",
+            "part": "mass"
+          },
+          {
+            "id": "mass-leg",
+            "kind": "ellipsoid",
+            "bone": "frame",
+            "material": "chrome-steel",
+            "role": "detail",
+            "tone": 0.4,
+            "radii": [0.02, 0.012, 0.012],
+            "transform": {
+              "translation": [0.34225, -0.14354, -0.14354]
+            },
+            "repeat": {
+              "count": 4,
+              "rotationAxis": [1.0, 0.0, 0.0],
+              "rotationRad": 1.570796,
+              "origin": [0.0, 0.0, 0.0]
+            },
+            "member": "frame",
+            "part": "mass"
+          },
+          {
+            "id": "mass-ring",
+            "kind": "ellipsoid",
+            "bone": "frame",
+            "material": "chrome-steel",
+            "role": "detail",
+            "tone": 0.4,
+            "radii": [0.012, 0.012, 0.02],
+            "transform": {
+              "translation": [0.29, -0.2365, 0.0]
+            },
+            "repeat": {
+              "count": 4,
+              "rotationAxis": [1.0, 0.0, 0.0],
+              "rotationRad": 1.570796,
+              "origin": [0.0, 0.0, 0.0]
+            },
+            "member": "frame",
+            "part": "mass"
           }
         ],
         "decisions": [
           {
-            "en": "1:50 is the full construction of a classic swivel bar stool: four 25 x 1.5 mm chromed tubes splayed 4.7 degrees from the 0.144 m pan radius to the 0.1975 m foot circle, each standing in a domed 30 mm rubber glide; the footrest ring (25 mm tube bent to 0.40 m) welded to the outside of the legs at 0.27 m; a pressed 2 mm steel seat pan with a 20 mm turned-down rim into which the legs are welded; a 12 mm ball-bearing swivel plate with its raised race; the upholstered seat (12 mm birch plywood board, 40 mm foam, leatherette wrapped round the board edge and stapled underneath) as a revolve with a crowned top, a 20 mm top round and piping at the top seam; a bent 40 x 8 mm flat back bar screwed under the board and rising 10 mm behind the cushion into a curved back pad (0.30 m wide, 90 mm high, 26 mm thick) bent on a 0.30 m radius with rounded ends.",
-            "de": "1:50 ist die volle Konstruktion eines klassischen Drehbarhockers: vier verchromte Rohre 25 x 1,5 mm, um 4,7 Grad gespreizt vom Pfannenradius 0,144 m zum Fußkreis 0,1975 m, jedes in einem gewölbten 30-mm-Gummigleiter; der Fußring (25-mm-Rohr, auf 0,40 m gebogen) außen an die Beine auf 0,27 m geschweißt; eine gepresste 2-mm-Stahlpfanne mit 20 mm abgekantetem Rand, in die die Beine geschweißt sind; ein 12-mm-Kugeldrehteller mit erhabener Laufbahn; der Polstersitz (12 mm Birkensperrholz, 40 mm Schaum, Kunstleder um die Plattenkante geschlagen und unten getackert) als Drehkörper mit gewölbter Oberseite, 20-mm-Rundung und Keder an der oberen Naht; ein gebogener Flachstahl 40 x 8 mm unter der Platte verschraubt, 10 mm hinter dem Polster hochgeführt in ein gebogenes Rückenpolster (0,30 m breit, 90 mm hoch, 26 mm dick) auf 0,30 m Radius mit gerundeten Enden."
+            "en": "1:50 is the full construction of a classic swivel bar stool: four 25 x 1.5 mm chromed tubes standing on the diagonals and splayed 10.2 degrees (7.2 in each elevation) from the 0.144 m pan radius to the 0.262 m foot radius, a 0.37 m foot square, each standing in a domed 30 mm rubber glide; the footrest ring (25 mm tube bent to 0.473 m on its centre line) welded to the outside of the legs at 0.29 m, 462 mm under the seat top; a pressed 2 mm steel seat pan with a 20 mm turned-down rim into which the legs are welded; a 12 mm ball-bearing swivel plate with its raised race; the upholstered seat (12 mm birch plywood board, 40 mm foam, leatherette wrapped round the board edge and stapled underneath) as a revolve with a crowned top, a 20 mm top round and piping at the top seam; a bent 40 x 8 mm flat back bar screwed under the board and rising 10 mm behind the cushion into a curved back pad (0.30 m wide, 90 mm high, 26 mm thick) bent on a 0.30 m radius with rounded ends. The cushion is two solids: the skirt (cover wrapped round the board, 0.698 to 0.730 m) stays on the seat bone, the foam crown above the piping seam (0.728 to 0.752 m) rides on the pad bone and sinks into the skirt under load, 18 mm occupied and 30 mm at the proof load, so no pose pushes upholstery through the swivel or the pan; the piping lies in the groove between the two. The frame mass is marked where the steel is: one marker in the pan, one at the middle of each leg and four on the ring.",
+            "de": "1:50 ist die volle Konstruktion eines klassischen Drehbarhockers: vier verchromte Rohre 25 x 1,5 mm, auf den Diagonalen stehend und um 10,2 Grad gespreizt (7,2 in jeder Ansicht) vom Pfannenradius 0,144 m zum Fußradius 0,262 m, ein Fußquadrat von 0,37 m, jedes in einem gewölbten 30-mm-Gummigleiter; der Fußring (25-mm-Rohr, auf 0,473 m Achsmaß gebogen) außen an die Beine auf 0,29 m geschweißt, 462 mm unter der Sitzoberkante; eine gepresste 2-mm-Stahlpfanne mit 20 mm abgekantetem Rand, in die die Beine geschweißt sind; ein 12-mm-Kugeldrehteller mit erhabener Laufbahn; der Polstersitz (12 mm Birkensperrholz, 40 mm Schaum, Kunstleder um die Plattenkante geschlagen und unten getackert) als Drehkörper mit gewölbter Oberseite, 20-mm-Rundung und Keder an der oberen Naht; ein gebogener Flachstahl 40 x 8 mm unter der Platte verschraubt, 10 mm hinter dem Polster hochgeführt in ein gebogenes Rückenpolster (0,30 m breit, 90 mm hoch, 26 mm dick) auf 0,30 m Radius mit gerundeten Enden. Das Polster besteht aus zwei Körpern: die Schürze (um die Platte geschlagener Bezug, 0,698 bis 0,730 m) bleibt am Sitzknochen, die Schaumkuppe über der Kedernaht (0,728 bis 0,752 m) sitzt am Polsterknochen und sinkt unter Last in die Schürze, 18 mm besetzt und 30 mm unter Prüflast, sodass keine Haltung Polster durch Drehteller oder Pfanne drückt; der Keder liegt in der Fuge zwischen beiden. Die Gestellmasse ist dort markiert, wo der Stahl ist: eine Marke in der Pfanne, je eine in der Mitte jedes Beins und vier auf dem Ring."
           },
           {
             "en": "Thermal: legs, glides and back bar are the chromed-frame region, the footrest ring its own, pan and swivel the new seat-mount region; cushion and back pad are nested shells (foam 1.5 mm inside the leatherette cover); the hidden plywood board is a 12 mm solid of its own inside the cushion. Structure: legs, ring and pan as welded members with weld joints at the leg tops and the ring, the swivel as the bearing joint of the seat, the board as seat member, the foam cushion as pad member over its compression joint, the back bar bolted under the board, a contact pad under every glide and masses at the centres of mass (the frame's lies between the legs at 0.43 m, where it really is).",
@@ -4439,8 +4940,8 @@
             "material": "chrome-steel",
             "role": "body",
             "tone": 0.7,
-            "p0": [0.6705, -0.144, 0.0],
-            "p1": [0.0125, -0.1975, 0.0],
+            "p0": [0.6705, -0.10182, -0.10182],
+            "p1": [0.0125, -0.18526, -0.18526],
             "r0": 0.0125,
             "r1": 0.0125,
             "repeat": {
@@ -4458,22 +4959,22 @@
             "role": "body",
             "tone": 0.7,
             "profile": [
-              [0.0, 0.21294],
-              [0.00647, 0.21121],
-              [0.01121, 0.20647],
-              [0.01294, 0.2],
-              [0.01121, 0.19353],
-              [0.00647, 0.18879],
-              [0.0, 0.18706],
-              [-0.00647, 0.18879],
-              [-0.01121, 0.19353],
-              [-0.01294, 0.2],
-              [-0.01121, 0.20647],
-              [-0.00647, 0.21121],
-              [0.0, 0.21294]
+              [0.0, 0.24944],
+              [0.00647, 0.24771],
+              [0.01121, 0.24297],
+              [0.01294, 0.2365],
+              [0.01121, 0.23003],
+              [0.00647, 0.22529],
+              [0.0, 0.22356],
+              [-0.00647, 0.22529],
+              [-0.01121, 0.23003],
+              [-0.01294, 0.2365],
+              [-0.01121, 0.24297],
+              [-0.00647, 0.24771],
+              [0.0, 0.24944]
             ],
             "axis": [1.0, 0.0, 0.0],
-            "origin": [0.27, 0.0, 0.0]
+            "origin": [0.29, 0.0, 0.0]
           },
           {
             "id": "pan",
@@ -4498,13 +4999,24 @@
             "origin": [-0.698, 0.0, 0.0]
           },
           {
+            "id": "cushion-skirt",
+            "kind": "revolve",
+            "bone": "seat",
+            "material": "pu-leatherette",
+            "role": "body",
+            "tone": 0.3,
+            "profile": [[0.698, 0.0], [0.698, 0.177], [0.701, 0.18], [0.73, 0.18], [0.73, 0.0]],
+            "axis": [1.0, 0.0, 0.0],
+            "origin": [-0.698, 0.0, 0.0]
+          },
+          {
             "id": "cushion",
             "kind": "revolve",
             "bone": "pad",
             "material": "pu-leatherette",
             "role": "body",
             "tone": 0.3,
-            "profile": [[0.698, 0.0], [0.698, 0.177], [0.701, 0.18], [0.73, 0.18], [0.74, 0.17732], [0.74732, 0.17], [0.75, 0.16], [0.752, 0.0]],
+            "profile": [[0.728, 0.0], [0.728, 0.18], [0.74, 0.17732], [0.74732, 0.17], [0.75, 0.16], [0.752, 0.0]],
             "axis": [0.0, 1.0, 0.0],
             "origin": [0.0, -0.72, 0.0]
           },
@@ -4663,14 +5175,22 @@
             "layer": "plate-ply"
           },
           {
+            "id": "th-cushion-skirt",
+            "of": "cushion-skirt",
+            "region": "seat-pad",
+            "layer": "leatherette"
+          },
+          {
             "id": "th-cushion",
             "of": "cushion",
-            "region": "seat-pad"
+            "region": "seat-pad",
+            "layer": "leatherette"
           },
           {
             "id": "th-back-pad",
             "of": "back-pad",
-            "region": "backrest"
+            "region": "backrest",
+            "layer": "leatherette"
           }
         ],
         "structure": [
@@ -4695,7 +5215,7 @@
             "tone": 0.2,
             "profile": [[0.0, 0.0], [0.0, 0.015], [0.02, 0.015], [0.02, 0.0]],
             "axis": [1.0, 0.0, 0.0],
-            "origin": [0.0, -0.1975, 0.0],
+            "origin": [0.0, -0.18526, -0.18526],
             "repeat": {
               "count": 4,
               "rotationAxis": [1.0, 0.0, 0.0],
@@ -4731,6 +5251,12 @@
             "part": "member"
           },
           {
+            "id": "m-cushion-skirt",
+            "of": "cushion-skirt",
+            "member": "seat",
+            "part": "member"
+          },
+          {
             "id": "m-cushion",
             "of": "cushion",
             "member": "pad",
@@ -4751,7 +5277,7 @@
             "tone": 0.4,
             "radii": [0.015, 0.015, 0.015],
             "transform": {
-              "translation": [0.678, -0.144, 0.0]
+              "translation": [0.678, -0.10182, -0.10182]
             },
             "repeat": {
               "count": 4,
@@ -4771,7 +5297,7 @@
             "tone": 0.4,
             "radii": [0.015, 0.015, 0.015],
             "transform": {
-              "translation": [0.27, -0.18832, 0.0]
+              "translation": [0.29, -0.15865, -0.15865]
             },
             "repeat": {
               "count": 4,
@@ -4797,7 +5323,7 @@
             "part": "joint"
           },
           {
-            "id": "support-foot-xp",
+            "id": "support-foot-fl",
             "kind": "revolve",
             "bone": "frame",
             "material": "rubber",
@@ -4805,13 +5331,13 @@
             "tone": 0.2,
             "profile": [[0.0, 0.0], [0.0, 0.015], [0.0075, 0.015], [0.0075, 0.0]],
             "axis": [1.0, 0.0, 0.0],
-            "origin": [0.0, -0.1975, 0.0],
+            "origin": [0.0, -0.18526, 0.18526],
             "member": "frame",
             "part": "support",
-            "anchor": "foot-xp"
+            "anchor": "foot-fl"
           },
           {
-            "id": "support-foot-xn",
+            "id": "support-foot-rr",
             "kind": "revolve",
             "bone": "frame",
             "material": "rubber",
@@ -4819,13 +5345,13 @@
             "tone": 0.2,
             "profile": [[0.0, 0.0], [0.0, 0.015], [0.0075, 0.015], [0.0075, 0.0]],
             "axis": [1.0, 0.0, 0.0],
-            "origin": [0.0, 0.1975, 0.0],
+            "origin": [0.0, 0.18526, -0.18526],
             "member": "frame",
             "part": "support",
-            "anchor": "foot-xn"
+            "anchor": "foot-rr"
           },
           {
-            "id": "support-foot-zp",
+            "id": "support-foot-rl",
             "kind": "revolve",
             "bone": "frame",
             "material": "rubber",
@@ -4833,13 +5359,13 @@
             "tone": 0.2,
             "profile": [[0.0, 0.0], [0.0, 0.015], [0.0075, 0.015], [0.0075, 0.0]],
             "axis": [1.0, 0.0, 0.0],
-            "origin": [0.0, 0.0, 0.1975],
+            "origin": [0.0, 0.18526, 0.18526],
             "member": "frame",
             "part": "support",
-            "anchor": "foot-zp"
+            "anchor": "foot-rl"
           },
           {
-            "id": "support-foot-zn",
+            "id": "support-foot-fr",
             "kind": "revolve",
             "bone": "frame",
             "material": "rubber",
@@ -4847,24 +5373,10 @@
             "tone": 0.2,
             "profile": [[0.0, 0.0], [0.0, 0.015], [0.0075, 0.015], [0.0075, 0.0]],
             "axis": [1.0, 0.0, 0.0],
-            "origin": [0.0, 0.0, -0.1975],
+            "origin": [0.0, -0.18526, -0.18526],
             "member": "frame",
             "part": "support",
-            "anchor": "foot-zn"
-          },
-          {
-            "id": "mass-frame",
-            "kind": "ellipsoid",
-            "bone": "frame",
-            "material": "chrome-steel",
-            "role": "detail",
-            "tone": 0.4,
-            "radii": [0.025, 0.025, 0.025],
-            "transform": {
-              "translation": [0.43443, 0.0, 0.0]
-            },
-            "member": "frame",
-            "part": "mass"
+            "anchor": "foot-fr"
           },
           {
             "id": "mass-seat",
@@ -4907,12 +5419,66 @@
             },
             "member": "backrest",
             "part": "mass"
+          },
+          {
+            "id": "mass-pan",
+            "kind": "ellipsoid",
+            "bone": "frame",
+            "material": "chrome-steel",
+            "role": "detail",
+            "tone": 0.4,
+            "radii": [0.0085, 0.025, 0.025],
+            "transform": {
+              "translation": [0.6745, 0.0, 0.0]
+            },
+            "member": "frame",
+            "part": "mass"
+          },
+          {
+            "id": "mass-leg",
+            "kind": "ellipsoid",
+            "bone": "frame",
+            "material": "chrome-steel",
+            "role": "detail",
+            "tone": 0.4,
+            "radii": [0.025, 0.0125, 0.0125],
+            "transform": {
+              "translation": [0.3415, -0.14354, -0.14354]
+            },
+            "repeat": {
+              "count": 4,
+              "rotationAxis": [1.0, 0.0, 0.0],
+              "rotationRad": 1.570796,
+              "origin": [0.0, 0.0, 0.0]
+            },
+            "member": "frame",
+            "part": "mass"
+          },
+          {
+            "id": "mass-ring",
+            "kind": "ellipsoid",
+            "bone": "frame",
+            "material": "chrome-steel",
+            "role": "detail",
+            "tone": 0.4,
+            "radii": [0.0125, 0.0125, 0.025],
+            "transform": {
+              "translation": [0.29, -0.2365, 0.0]
+            },
+            "repeat": {
+              "count": 4,
+              "rotationAxis": [1.0, 0.0, 0.0],
+              "rotationRad": 1.570796,
+              "origin": [0.0, 0.0, 0.0]
+            },
+            "member": "frame",
+            "part": "mass"
           }
         ],
         "decisions": [
           {
-            "en": "1:100 keeps every assembly at 15 mm: legs as true 25 mm tubes running into the floor (the 22 mm glides merge into the leg ends), a 12-section ring, the pan as one 17 mm disc with a chamfered edge, the swivel as one 15 mm plate, the cushion with a three-segment top round and no piping or crown, the back bar thickened to 15 mm and the curved back pad with five sections.",
-            "de": "1:100 behält jede Baugruppe bei 15 mm: Beine als echte 25-mm-Rohre bis zum Boden (die 22-mm-Gleiter gehen in den Beinenden auf), ein Ring mit 12 Schnitten, die Pfanne als eine 17-mm-Scheibe mit gefaster Kante, der Drehteller als eine 15-mm-Platte, das Polster mit dreiteiliger Rundung ohne Keder und Wölbung, der Rückenbügel auf 15 mm verstärkt und das gebogene Rückenpolster mit fünf Schnitten."
+            "en": "1:100 keeps every assembly at 15 mm: legs on the diagonals as true 25 mm tubes running into the floor (the 22 mm glides merge into the leg ends), a 12-section ring, the pan as one 17 mm disc with a chamfered edge, the swivel as one 15 mm plate, the cushion with a three-segment top round and no piping or crown, the back bar thickened to 15 mm and the curved back pad with five sections. The cushion keeps the split of 1:50: a 32 mm skirt on the seat bone and a 24 mm crown on the pad bone that sinks into it under load. The frame mass is marked in the pan, at the middle of each leg and at four points of the ring.",
+            "de": "1:100 behält jede Baugruppe bei 15 mm: Beine auf den Diagonalen als echte 25-mm-Rohre bis zum Boden (die 22-mm-Gleiter gehen in den Beinenden auf), ein Ring mit 12 Schnitten, die Pfanne als eine 17-mm-Scheibe mit gefaster Kante, der Drehteller als eine 15-mm-Platte, das Polster mit dreiteiliger Rundung ohne Keder und Wölbung, der Rückenbügel auf 15 mm verstärkt und das gebogene Rückenpolster mit fünf Schnitten. Das Polster behält die Teilung von 1:50: eine 32-mm-Schürze am Sitzknochen und eine 24-mm-Kuppe am Polsterknochen, die unter Last in sie einsinkt. Die Gestellmasse ist in der Pfanne, in der Mitte jedes Beins und an vier Punkten des Rings markiert."
           },
           {
             "en": "Thermal by reference to the body with the board as its own hidden solid and single shells (layers merged, B2); structure as at 1:50 with feature-sized weld joints and no pad joint.",
@@ -4931,8 +5497,8 @@
             "material": "chrome-steel",
             "role": "body",
             "tone": 0.7,
-            "p0": [0.676, -0.146, 0.0],
-            "p1": [0.0125, -0.1975, 0.0],
+            "p0": [0.676, -0.10324, -0.10324],
+            "p1": [0.0125, -0.18526, -0.18526],
             "r0": 0.0125,
             "r1": 0.0125,
             "repeat": {
@@ -4950,20 +5516,20 @@
             "role": "body",
             "tone": 0.7,
             "profile": [
-              [0.0, 0.21314],
-              [0.00773, 0.21063],
-              [0.0125, 0.20406],
-              [0.0125, 0.19594],
-              [0.00773, 0.18937],
-              [0.0, 0.18686],
-              [-0.00773, 0.18937],
-              [-0.0125, 0.19594],
-              [-0.0125, 0.20406],
-              [-0.00773, 0.21063],
-              [0.0, 0.21314]
+              [0.0, 0.24964],
+              [0.00773, 0.24713],
+              [0.0125, 0.24056],
+              [0.0125, 0.23244],
+              [0.00773, 0.22587],
+              [0.0, 0.22336],
+              [-0.00773, 0.22587],
+              [-0.0125, 0.23244],
+              [-0.0125, 0.24056],
+              [-0.00773, 0.24713],
+              [0.0, 0.24964]
             ],
             "axis": [1.0, 0.0, 0.0],
-            "origin": [0.27, 0.0, 0.0]
+            "origin": [0.29, 0.0, 0.0]
           },
           {
             "id": "mount",
@@ -5132,12 +5698,14 @@
           {
             "id": "th-cushion",
             "of": "cushion",
-            "region": "seat-pad"
+            "region": "seat-pad",
+            "layer": "leatherette"
           },
           {
             "id": "th-back-pad",
             "of": "back-pad",
-            "region": "backrest"
+            "region": "backrest",
+            "layer": "leatherette"
           }
         ],
         "structure": [
@@ -5162,7 +5730,7 @@
             "tone": 0.2,
             "profile": [[0.0, 0.0], [0.0, 0.015], [0.03, 0.015], [0.03, 0.0]],
             "axis": [1.0, 0.0, 0.0],
-            "origin": [0.0, -0.1975, 0.0],
+            "origin": [0.0, -0.18526, -0.18526],
             "repeat": {
               "count": 4,
               "rotationAxis": [1.0, 0.0, 0.0],
@@ -5204,7 +5772,7 @@
             "part": "member"
           },
           {
-            "id": "support-foot-xp",
+            "id": "support-foot-fl",
             "kind": "revolve",
             "bone": "frame",
             "material": "rubber",
@@ -5212,13 +5780,13 @@
             "tone": 0.2,
             "profile": [[0.0, 0.0], [0.0, 0.015], [0.015, 0.015], [0.015, 0.0]],
             "axis": [1.0, 0.0, 0.0],
-            "origin": [0.0, -0.1975, 0.0],
+            "origin": [0.0, -0.18526, 0.18526],
             "member": "frame",
             "part": "support",
-            "anchor": "foot-xp"
+            "anchor": "foot-fl"
           },
           {
-            "id": "support-foot-xn",
+            "id": "support-foot-rr",
             "kind": "revolve",
             "bone": "frame",
             "material": "rubber",
@@ -5226,13 +5794,13 @@
             "tone": 0.2,
             "profile": [[0.0, 0.0], [0.0, 0.015], [0.015, 0.015], [0.015, 0.0]],
             "axis": [1.0, 0.0, 0.0],
-            "origin": [0.0, 0.1975, 0.0],
+            "origin": [0.0, 0.18526, -0.18526],
             "member": "frame",
             "part": "support",
-            "anchor": "foot-xn"
+            "anchor": "foot-rr"
           },
           {
-            "id": "support-foot-zp",
+            "id": "support-foot-rl",
             "kind": "revolve",
             "bone": "frame",
             "material": "rubber",
@@ -5240,13 +5808,13 @@
             "tone": 0.2,
             "profile": [[0.0, 0.0], [0.0, 0.015], [0.015, 0.015], [0.015, 0.0]],
             "axis": [1.0, 0.0, 0.0],
-            "origin": [0.0, 0.0, 0.1975],
+            "origin": [0.0, 0.18526, 0.18526],
             "member": "frame",
             "part": "support",
-            "anchor": "foot-zp"
+            "anchor": "foot-rl"
           },
           {
-            "id": "support-foot-zn",
+            "id": "support-foot-fr",
             "kind": "revolve",
             "bone": "frame",
             "material": "rubber",
@@ -5254,24 +5822,10 @@
             "tone": 0.2,
             "profile": [[0.0, 0.0], [0.0, 0.015], [0.015, 0.015], [0.015, 0.0]],
             "axis": [1.0, 0.0, 0.0],
-            "origin": [0.0, 0.0, -0.1975],
+            "origin": [0.0, -0.18526, -0.18526],
             "member": "frame",
             "part": "support",
-            "anchor": "foot-zn"
-          },
-          {
-            "id": "mass-frame",
-            "kind": "ellipsoid",
-            "bone": "frame",
-            "material": "chrome-steel",
-            "role": "detail",
-            "tone": 0.4,
-            "radii": [0.035, 0.035, 0.035],
-            "transform": {
-              "translation": [0.43443, 0.0, 0.0]
-            },
-            "member": "frame",
-            "part": "mass"
+            "anchor": "foot-fr"
           },
           {
             "id": "mass-seat",
@@ -5314,12 +5868,66 @@
             },
             "member": "backrest",
             "part": "mass"
+          },
+          {
+            "id": "mass-pan",
+            "kind": "ellipsoid",
+            "bone": "frame",
+            "material": "chrome-steel",
+            "role": "detail",
+            "tone": 0.4,
+            "radii": [0.016, 0.035, 0.035],
+            "transform": {
+              "translation": [0.682, 0.0, 0.0]
+            },
+            "member": "frame",
+            "part": "mass"
+          },
+          {
+            "id": "mass-leg",
+            "kind": "ellipsoid",
+            "bone": "frame",
+            "material": "chrome-steel",
+            "role": "detail",
+            "tone": 0.4,
+            "radii": [0.035, 0.015, 0.015],
+            "transform": {
+              "translation": [0.34425, -0.14425, -0.14425]
+            },
+            "repeat": {
+              "count": 4,
+              "rotationAxis": [1.0, 0.0, 0.0],
+              "rotationRad": 1.570796,
+              "origin": [0.0, 0.0, 0.0]
+            },
+            "member": "frame",
+            "part": "mass"
+          },
+          {
+            "id": "mass-ring",
+            "kind": "ellipsoid",
+            "bone": "frame",
+            "material": "chrome-steel",
+            "role": "detail",
+            "tone": 0.4,
+            "radii": [0.015, 0.015, 0.035],
+            "transform": {
+              "translation": [0.29, -0.2365, 0.0]
+            },
+            "repeat": {
+              "count": 4,
+              "rotationAxis": [1.0, 0.0, 0.0],
+              "rotationRad": 1.570796,
+              "origin": [0.0, 0.0, 0.0]
+            },
+            "member": "frame",
+            "part": "mass"
           }
         ],
         "decisions": [
           {
-            "en": "1:200 generalises to 30 mm: legs and footrest ring stay true 25 mm tubes, drawn at that width (C13); pan and swivel merge into one 32 mm mount disc on the frame; the cushion is a 54 mm disc with a chamfered top edge; back bar and back pad are 30 mm thick, the pad bent on its 0.30 m radius with four sections.",
-            "de": "1:200 verallgemeinert auf 30 mm: Beine und Fußring bleiben echte 25-mm-Rohre, in dieser Breite gezeichnet (C13); Pfanne und Drehteller verschmelzen zu einer 32-mm-Aufnahmescheibe am Gestell; das Polster ist eine 54-mm-Scheibe mit gefaster Oberkante; Rückenbügel und Rückenpolster sind 30 mm dick, das Polster mit vier Schnitten auf seinem 0,30-m-Radius gebogen."
+            "en": "1:200 generalises to 30 mm: the four diagonal legs and the footrest ring stay true 25 mm tubes, drawn at that width (C13); pan and swivel merge into one 32 mm mount disc on the frame; the cushion is a 54 mm disc with a chamfered top edge; back bar and back pad are 30 mm thick, the pad bent on its 0.30 m radius with four sections. The cushion stays one disc on the pad bone: its sinking of 18 to 30 mm is below the 30 mm feature, the disc then covers the upper part of the mount band, which is narrower than the cushion. The frame mass is marked in the mount, at the middle of each leg and at four points of the ring.",
+            "de": "1:200 verallgemeinert auf 30 mm: die vier Diagonalbeine und der Fußring bleiben echte 25-mm-Rohre, in dieser Breite gezeichnet (C13); Pfanne und Drehteller verschmelzen zu einer 32-mm-Aufnahmescheibe am Gestell; das Polster ist eine 54-mm-Scheibe mit gefaster Oberkante; Rückenbügel und Rückenpolster sind 30 mm dick, das Polster mit vier Schnitten auf seinem 0,30-m-Radius gebogen. Das Polster bleibt eine Scheibe am Polsterknochen: sein Einsinken von 18 bis 30 mm liegt unter dem 30-mm-Merkmal, die Scheibe deckt dann den oberen Teil des schmaleren Aufnahmebands. Die Gestellmasse ist in der Aufnahme, in der Mitte jedes Beins und an vier Punkten des Rings markiert."
           },
           {
             "en": "Thermal by reference with the board as its own hidden solid; structure: legs, ring, mount, a 30 mm board member, cushion and back bar, one contact pad per foot, four masses.",
@@ -5338,8 +5946,8 @@
             "material": "chrome-steel",
             "role": "body",
             "tone": 0.7,
-            "p0": [0.676, -0.146, 0.0],
-            "p1": [0.0125, -0.1975, 0.0],
+            "p0": [0.676, -0.10324, -0.10324],
+            "p1": [0.0125, -0.18526, -0.18526],
             "r0": 0.0125,
             "r1": 0.0125,
             "repeat": {
@@ -5358,18 +5966,18 @@
             "role": "body",
             "tone": 0.7,
             "profile": [
-              [0.0, 0.21353],
-              [0.00957, 0.20957],
-              [0.01353, 0.2],
-              [0.00957, 0.19043],
-              [0.0, 0.18647],
-              [-0.00957, 0.19043],
-              [-0.01353, 0.2],
-              [-0.00957, 0.20957],
-              [0.0, 0.21353]
+              [0.0, 0.25003],
+              [0.00957, 0.24607],
+              [0.01353, 0.2365],
+              [0.00957, 0.22693],
+              [0.0, 0.22297],
+              [-0.00957, 0.22693],
+              [-0.01353, 0.2365],
+              [-0.00957, 0.24607],
+              [0.0, 0.25003]
             ],
             "axis": [1.0, 0.0, 0.0],
-            "origin": [0.27, 0.0, 0.0]
+            "origin": [0.29, 0.0, 0.0]
           },
           {
             "id": "seat",
@@ -5503,12 +6111,14 @@
           {
             "id": "th-seat",
             "of": "seat",
-            "region": "seat-pad"
+            "region": "seat-pad",
+            "layer": "leatherette"
           },
           {
             "id": "th-back",
             "of": "back",
-            "region": "backrest"
+            "region": "backrest",
+            "layer": "leatherette"
           }
         ],
         "structure": [
@@ -5533,7 +6143,7 @@
             "tone": 0.2,
             "profile": [[0.0, 0.0], [0.0, 0.0375], [0.075, 0.0375], [0.075, 0.0]],
             "axis": [1.0, 0.0, 0.0],
-            "origin": [0.0, -0.1975, 0.0],
+            "origin": [0.0, -0.18526, -0.18526],
             "repeat": {
               "count": 4,
               "rotationAxis": [1.0, 0.0, 0.0],
@@ -5576,7 +6186,7 @@
             "part": "member"
           },
           {
-            "id": "support-foot-xp",
+            "id": "support-foot-fl",
             "kind": "revolve",
             "bone": "frame",
             "material": "rubber",
@@ -5584,13 +6194,13 @@
             "tone": 0.2,
             "profile": [[0.0, 0.0], [0.0, 0.0375], [0.0375, 0.0375], [0.0375, 0.0]],
             "axis": [1.0, 0.0, 0.0],
-            "origin": [0.0, -0.1975, 0.0],
+            "origin": [0.0, -0.18526, 0.18526],
             "member": "frame",
             "part": "support",
-            "anchor": "foot-xp"
+            "anchor": "foot-fl"
           },
           {
-            "id": "support-foot-xn",
+            "id": "support-foot-rr",
             "kind": "revolve",
             "bone": "frame",
             "material": "rubber",
@@ -5598,13 +6208,13 @@
             "tone": 0.2,
             "profile": [[0.0, 0.0], [0.0, 0.0375], [0.0375, 0.0375], [0.0375, 0.0]],
             "axis": [1.0, 0.0, 0.0],
-            "origin": [0.0, 0.1975, 0.0],
+            "origin": [0.0, 0.18526, -0.18526],
             "member": "frame",
             "part": "support",
-            "anchor": "foot-xn"
+            "anchor": "foot-rr"
           },
           {
-            "id": "support-foot-zp",
+            "id": "support-foot-rl",
             "kind": "revolve",
             "bone": "frame",
             "material": "rubber",
@@ -5612,13 +6222,13 @@
             "tone": 0.2,
             "profile": [[0.0, 0.0], [0.0, 0.0375], [0.0375, 0.0375], [0.0375, 0.0]],
             "axis": [1.0, 0.0, 0.0],
-            "origin": [0.0, 0.0, 0.1975],
+            "origin": [0.0, 0.18526, 0.18526],
             "member": "frame",
             "part": "support",
-            "anchor": "foot-zp"
+            "anchor": "foot-rl"
           },
           {
-            "id": "support-foot-zn",
+            "id": "support-foot-fr",
             "kind": "revolve",
             "bone": "frame",
             "material": "rubber",
@@ -5626,24 +6236,10 @@
             "tone": 0.2,
             "profile": [[0.0, 0.0], [0.0, 0.0375], [0.0375, 0.0375], [0.0375, 0.0]],
             "axis": [1.0, 0.0, 0.0],
-            "origin": [0.0, 0.0, -0.1975],
+            "origin": [0.0, -0.18526, -0.18526],
             "member": "frame",
             "part": "support",
-            "anchor": "foot-zn"
-          },
-          {
-            "id": "mass-frame",
-            "kind": "ellipsoid",
-            "bone": "frame",
-            "material": "chrome-steel",
-            "role": "detail",
-            "tone": 0.4,
-            "radii": [0.0375, 0.0375, 0.0375],
-            "transform": {
-              "translation": [0.43443, 0.0, 0.0]
-            },
-            "member": "frame",
-            "part": "mass"
+            "anchor": "foot-fr"
           },
           {
             "id": "mass-seat",
@@ -5658,12 +6254,32 @@
             },
             "member": "seat",
             "part": "mass"
+          },
+          {
+            "id": "mass-frame",
+            "kind": "ellipsoid",
+            "bone": "frame",
+            "material": "chrome-steel",
+            "role": "detail",
+            "tone": 0.4,
+            "radii": [0.0375, 0.0375, 0.0375],
+            "transform": {
+              "translation": [0.29, -0.15909, -0.15909]
+            },
+            "repeat": {
+              "count": 4,
+              "rotationAxis": [1.0, 0.0, 0.0],
+              "rotationRad": 1.570796,
+              "origin": [0.0, 0.0, 0.0]
+            },
+            "member": "frame",
+            "part": "mass"
           }
         ],
         "decisions": [
           {
-            "en": "1:500 is the sign of the stool at 75 mm: four true 25 mm legs as slender tubes (drawn as 90 mm pen strokes, C24) and the ring as a true 25 mm tube drawn at that width (C13), the seat as one 86 mm block on the swivel axis (cushion, board, swivel and pan merged, narrowing to the pan below) and the backrest as one 75 mm curved panel round the rear of the seat, bar and pad merged.",
-            "de": "1:500 ist das Zeichen des Hockers bei 75 mm: vier echte 25-mm-Beine als schlanke Rohre (als 90-mm-Stiftstriche gezeichnet, C24) und der Ring als echtes 25-mm-Rohr in dieser Breite gezeichnet (C13), der Sitz als ein 86-mm-Block auf der Drehachse (Polster, Platte, Drehteller und Pfanne verschmolzen, unten auf die Pfanne eingezogen) und die Lehne als eine 75 mm dicke, gebogene Platte um die Rückseite des Sitzes, Bügel und Polster verschmolzen."
+            "en": "1:500 is the sign of the stool at 75 mm: four true 25 mm legs on the diagonals as slender tubes (drawn as 90 mm pen strokes, C24) and the ring as a true 25 mm tube drawn at that width (C13), the seat as one 86 mm block on the swivel axis (cushion, board, swivel and pan merged, narrowing to the pan below) and the backrest as one 75 mm curved panel round the rear of the seat, bar and pad merged. The frame mass is marked at the four nodes where ring and legs meet; the cover layer colours seat and back in the thermal list.",
+            "de": "1:500 ist das Zeichen des Hockers bei 75 mm: vier echte 25-mm-Beine auf den Diagonalen als schlanke Rohre (als 90-mm-Stiftstriche gezeichnet, C24) und der Ring als echtes 25-mm-Rohr in dieser Breite gezeichnet (C13), der Sitz als ein 86-mm-Block auf der Drehachse (Polster, Platte, Drehteller und Pfanne verschmolzen, unten auf die Pfanne eingezogen) und die Lehne als eine 75 mm dicke, gebogene Platte um die Rückseite des Sitzes, Bügel und Polster verschmolzen. Die Gestellmasse ist an den vier Knoten markiert, an denen Ring und Beine zusammentreffen; die Bezugsschicht färbt Sitz und Lehne in der Thermikliste."
           },
           {
             "en": "Thermal: seat-pad and backrest by reference, the mount and the hidden board as solids inside the seat block; structure: legs, ring, a board member, a cushion member, the back panel, one contact pad per foot and two masses (frame and seat with backrest).",
@@ -5677,20 +6293,7 @@
       "defaultClip": "swivel-turn",
       "defaultScale": 50
     },
-    "exports": [
-      "svg",
-      "pdf",
-      "dxf",
-      "dwg",
-      "png-sequence",
-      "mp4",
-      "webm",
-      "component",
-      "glb",
-      "fbx",
-      "model",
-      "model-zip"
-    ],
+    "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component", "glb", "fbx", "model", "model-zip"],
     "completion": "authored"
   }
 }

@@ -1,0 +1,13 @@
+{
+  "dock": [
+    { "id": "nearest-edge-per-axis", "position": { "top": 380, "left": 340 }, "box": { "width": 100, "height": 50 }, "lines": { "xs": [0, 360, 720], "ys": [29, 424.5, 871] }, "reach": 40, "expected": { "top": 374.5, "left": 360, "width": 100, "height": 50 } },
+    { "id": "far-edge-nearer", "position": { "top": 380, "left": 270 }, "box": { "width": 100, "height": 50 }, "lines": { "xs": [0, 360, 720], "ys": [29, 424.5, 871] }, "reach": 40, "expected": { "top": 374.5, "left": 260, "width": 100, "height": 50 } },
+    { "id": "stretch-onto-second-seam", "position": { "top": 40, "left": 20 }, "box": { "width": 340, "height": 60 }, "lines": { "xs": [0, 360, 720], "ys": [29, 424.5, 871] }, "reach": 40, "expected": { "top": 29, "left": 0, "width": 360, "height": 60 } },
+    { "id": "inner-line-over-nearer-outer", "position": { "top": 200, "left": 28 }, "box": { "width": 343, "height": 50 }, "lines": { "xs": [28, 347, 375], "ys": [] }, "reach": 40, "expected": { "top": 200, "left": 28, "width": 319, "height": 50 } },
+    { "id": "no-line-within-reach", "position": { "top": 200, "left": 200 }, "box": { "width": 100, "height": 50 }, "lines": { "xs": [0, 360, 720], "ys": [29, 424.5, 871] }, "reach": 10, "expected": { "top": 200, "left": 200, "width": 100, "height": 50 } }
+  ],
+  "clear": [
+    { "id": "slide-off-near-miss", "position": { "top": 0, "left": 700 }, "own": { "xs": [0, 19, 38], "ys": [] }, "lines": { "xs": [720], "ys": [] }, "reach": 40, "range": 120, "expected": { "top": 0, "left": 642 } },
+    { "id": "coincident-lines-stay", "position": { "top": 5, "left": 720 }, "own": { "xs": [0, 100], "ys": [0] }, "lines": { "xs": [720], "ys": [5] }, "reach": 40, "range": 120, "expected": { "top": 5, "left": 720 } }
+  ]
+}

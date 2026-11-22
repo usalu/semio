@@ -36,7 +36,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// contributions as immutable data before the aggregate registration commit. `.activation(…)`/
 /// `.execution(…)`/`.requests(…)` (ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME
 /// M6-remaining, `📓️design-abi.md` §3/§6) are this crate's migration proof: one `OnArtifactKind`
-/// event per owned kind (`home`/`space`, read live from each's own `artifact_kind().id`), `Isolated`
+/// event per owned kind, read from its artifact declaration, `Isolated`
 /// execution (grepped for `.handler(…)`, a `🧩️extensions/` dir, and self-tick loops — none found,
 /// despite this crate having the heaviest `Effect` usage in the repo), and one `documents.write` ask
 /// covering both editors' persisted mutations. No quota declared — no measured need found.
@@ -63,12 +63,14 @@ pub fn plugin() -> Result<Plugin<SpaceApps>, PluginAssemblyError> {
         .viewer::<semio_s_artifact_space_space::viewer::space_index::SpaceIndexViewer>(semio_s_artifact_space_space::viewer::space_index::create_space_index_viewer())
         .viewer_mutation_roster::<semio_s_artifact_space_space::viewer::space_index::SpaceIndexViewer>()
         .contributes_topic(semio_s_artifact_space_space::space_index_topic_contribution())
+        .artifact_kind(semio_hub_space_app::workflow_artifact_kind())
         .document_app::<semio_hub_space_app::SpaceApp>(::semio_framework_async::poll::resolve_ready(semio_hub_space_app::create_space_app()))
         .foreign_document_codec::<semio_hub_space_app::SpaceApp>(OS_SPACE_SCHEMA)
         .activation(ActivationEvent::OnArtifactKind { kind: ::semio_framework_async::poll::resolve_ready(semio_s_artifact_space_home::artifact_kind()).id })
         .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_space_space::artifact_kind().id })
+        .activation(ActivationEvent::OnArtifactKind { kind: semio_hub_space_app::workflow_artifact_kind().id })
         .execution(ExecutionMode::Isolated)
-        .requests(CapabilityRequest { id: CapabilityId("artifacts.write".into()), scope: "plugin".into(), reason: "persist home/space-index edits to the open document".into(), optional: false })
+        .requests(CapabilityRequest { id: CapabilityId("artifacts.write".into()), scope: "plugin".into(), reason: "persist home, space-index and workflow edits to the open document".into(), optional: false })
         .canvas_runtime_assets()
         .try_build()
 }

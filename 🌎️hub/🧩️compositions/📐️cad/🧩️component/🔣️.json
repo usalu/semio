@@ -8581,10 +8581,12 @@
         "namedLayouts": [],
         "defaultLayout": {
           "root": {
-            "kind": "row",
+            "kind": "split",
+            "axis": "horizontal",
             "children": [
               {
-                "kind": "column",
+                "kind": "split",
+                "axis": "vertical",
                 "size": 0.5,
                 "children": [
                   {
@@ -8612,7 +8614,8 @@
                 ]
               },
               {
-                "kind": "column",
+                "kind": "split",
+                "axis": "vertical",
                 "size": 0.5,
                 "children": [
                   {

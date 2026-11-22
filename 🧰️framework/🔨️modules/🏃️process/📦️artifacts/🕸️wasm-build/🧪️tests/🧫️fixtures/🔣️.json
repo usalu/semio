@@ -27,6 +27,7 @@
     "leaseDirectory": "/leases",
     "sourceOwner": "owner"
   },
+  "provenance": {"version": 1, "files": 1, "sha256": "0000000000000000000000000000000000000000000000000000000000000000", "proven": 1, "deferred": []},
   "wasmHex": "0061736d01000000",
   "packageIdentity": [
     { "name": "stable.wasm", "change": "unchanged", "expected": [] },

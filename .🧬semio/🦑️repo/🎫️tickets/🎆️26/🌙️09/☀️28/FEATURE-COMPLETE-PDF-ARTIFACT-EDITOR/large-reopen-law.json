@@ -1,0 +1,74 @@
+{
+  "format": 1,
+  "pageMaximum": 4096,
+  "archiveMaximum": 8388608,
+  "packMaximum": 7340032,
+  "sprMaximum": 65536,
+  "cases": [
+    {
+      "name": "high entropy parent",
+      "change": "none",
+      "outcome": "ready"
+    },
+    {
+      "name": "exact extent allowed",
+      "change": "exact",
+      "outcome": "ready"
+    },
+    {
+      "name": "wrong seal",
+      "change": "wrongDigest",
+      "outcome": "refused"
+    },
+    {
+      "name": "short record",
+      "change": "truncated",
+      "outcome": "refused"
+    },
+    {
+      "name": "interrupted durable page source",
+      "change": "earlyEof",
+      "outcome": "refused"
+    },
+    {
+      "name": "trailing record bytes",
+      "change": "trailing",
+      "outcome": "refused"
+    },
+    {
+      "name": "recursive member stays outside memberless lane",
+      "change": "nonzeroMembers",
+      "outcome": "refused"
+    },
+    {
+      "name": "non-minimal length prefix",
+      "change": "overlongLength",
+      "outcome": "refused"
+    },
+    {
+      "name": "encoded archive authority",
+      "change": "overArchiveLimit",
+      "outcome": "refused"
+    },
+    {
+      "name": "Pack domain authority",
+      "change": "overPackLimit",
+      "outcome": "refused"
+    },
+    {
+      "name": "SPR domain authority",
+      "change": "overSprLimit",
+      "outcome": "refused"
+    },
+    {
+      "name": "foreign page offset",
+      "change": "foreignOffset",
+      "outcome": "refused"
+    },
+    {
+      "name": "cancel with partially retained Pack",
+      "change": "cancel",
+      "outcome": "cancelled"
+    }
+  ]
+}

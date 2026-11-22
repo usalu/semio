@@ -28,6 +28,9 @@
 import { chromium } from "playwright";
 import { writeFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
+import { wgpuEvidence } from "./🔍️watch-evidence.mjs";
+import { paintEvidence } from "./🔍️wgpu-paint-oracle.mjs";
+import { PNG } from "pngjs";
 
 const baseUrl = process.env.SEMIO_PROBE_URL ?? "http://127.0.0.1:6118/?plugin=generation3d";
 const outDir = join(import.meta.dir, "🗑️generated", process.env.SEMIO_PROBE_OUT ?? "wgpu-journey/run");
@@ -495,20 +498,37 @@ const verifyShellHover = async () => {
     const preview = await waitForShell(shellMeshSurface, 25000);
     const port = await waitForShell(shellGraphPoint, 25000);
     if (!preview || !port) throw new Error("Box Shell geometry or graph port never became visible");
+    const body = dockPlan()["procedural-preview"];
+    if (!body) throw Error("Box Shell preview is outside the mounted dock");
+    const [left, top, width, height] = preview.rect;
+    const clip = { x: body.x + left, y: body.y + top, width, height };
+    if (clip.x < 0 || clip.y < 0 || width < 2 || height < 2 || clip.x + width > viewport.width || clip.y + height > viewport.height) throw Error("Preview rectangle is outside the screenshot viewport");
+    const away = [3, 3];
+    const cleared = () => Promise.all([shellMeshSurface(), shellGraphHover()]).then(([surface, hover]) => Boolean(surface && !surface.hovered && !hover));
+    const capture = async name => {
+      const bytes = await page.screenshot({ clip, path: join(outDir, name) });
+      return PNG.sync.read(bytes);
+    };
+    await page.mouse.move(...away);
+    if (!await waitForShell(cleared, 10000, away)) throw Error("Shell hover did not start clear");
+    await pump(600, away);
+    const before = await capture("shell-paint-before.png");
     await page.mouse.move(...port);
     proof.graphToPreview = await waitForShell(async () => {
       const target = (await shellMeshSurface())?.hovered;
       return isShell(target) ? { point: port, target } : null;
     }, 12000, port);
     if (!proof.graphToPreview) throw new Error("Shell output hover did not reach the preview instance");
-    const away = [3, 3];
+    await pump(600, port);
+    const hovered = await capture("shell-paint-hover.png");
     await page.mouse.move(...away);
-    const cleared = () => Promise.all([shellMeshSurface(), shellGraphHover()]).then(([surface, hover]) => Boolean(surface && !surface.hovered && !hover));
-    if (!await waitForShell(cleared, 10000, away)) throw new Error("Shell port hover did not clear");
+    if (!await waitForShell(cleared, 10000, away)) throw Error("Shell port hover did not clear");
+    await pump(600, away);
+    const after = await capture("shell-paint-after.png");
+    if (before.width !== hovered.width || before.height !== hovered.height || before.width !== after.width || before.height !== after.height) throw Error("Preview screenshot dimensions changed");
+    proof.paint = paintEvidence(before.data, hovered.data, after.data);
+    if (!proof.paint.pass) throw Error("Preview pixels did not change and restore with graph hover");
 
-    const body = dockPlan()["procedural-preview"];
-    if (!body) throw new Error("Box Shell preview is outside the mounted dock");
-    const [left, top, width, height] = preview.rect;
     const fractions = [0.5, 0.4, 0.6, 0.3, 0.7, 0.2, 0.8];
     const points = fractions.flatMap(y => fractions.map(x => [body.x + left + x * width, body.y + top + y * height]));
     for (const point of points) {
@@ -709,4 +729,5 @@ journey.failureLines = lines.filter((line) => line.includes("pageerror") || line
 writeFileSync(join(outDir, "results.json"), JSON.stringify(journey, null, 2));
 writeFileSync(join(outDir, "console.txt"), lines.join("\n"));
 console.log("DONE", JSON.stringify({ seconds: journey.seconds, census: journey.consoleCensus, verdicts: results.map((r) => [r.label, r.verdict]) }, null, 2));
+if (!wgpuEvidence(boot, results, only)) process.exitCode = 1;
 await browser.close();

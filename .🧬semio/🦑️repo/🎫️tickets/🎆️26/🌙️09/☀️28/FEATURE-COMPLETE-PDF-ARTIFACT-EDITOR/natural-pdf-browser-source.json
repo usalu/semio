@@ -1,0 +1,65 @@
+[
+  {
+    "case": "source-complete",
+    "result": "accepted",
+    "reads": 2305,
+    "pages": 2305,
+    "retirements": 0,
+    "retries": 1,
+    "completionPolls": 1
+  },
+  {
+    "case": "prepare-refused",
+    "result": "natural-source.refused",
+    "reads": 0,
+    "pages": 0,
+    "retirements": 0,
+    "retries": 0,
+    "completionPolls": 0
+  },
+  {
+    "case": "foreign-preparation",
+    "result": "natural-source.foreign-loan",
+    "reads": 0,
+    "pages": 0,
+    "retirements": 0,
+    "retries": 0,
+    "completionPolls": 0
+  },
+  {
+    "case": "prepare-cancelled",
+    "result": "selection cancelled",
+    "reads": 0,
+    "pages": 0,
+    "retirements": 1,
+    "retries": 0,
+    "completionPolls": 0
+  },
+  {
+    "case": "pending-read-cancelled",
+    "result": "selection cancelled",
+    "reads": 2,
+    "pages": 1,
+    "retirements": 1,
+    "retries": 0,
+    "completionPolls": 0
+  },
+  {
+    "case": "foreign-page-ack",
+    "result": "natural-source.foreign-ack",
+    "reads": 1,
+    "pages": 0,
+    "retirements": 1,
+    "retries": 0,
+    "completionPolls": 0
+  },
+  {
+    "case": "short-read",
+    "result": "The selected media changed during the read",
+    "reads": 1,
+    "pages": 0,
+    "retirements": 1,
+    "retries": 0,
+    "completionPolls": 0
+  }
+]

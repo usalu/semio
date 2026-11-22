@@ -28,14 +28,13 @@ export async function applyOpenPluginInstanceEffect({ spacePrograms, ensureSpawn
   readonly effectOwner: ReturnType<ShellCoreAfterSpawnedSession["captureEffectOwner"]>;
   readonly nextViewState: ActiveSession["viewState"];
 }) {
-  const { pluginId, appId, osInstanceId } = effect.openPluginInstance;
-  const program = spacePrograms.find((entry) => entry.pluginId === pluginId && entry.appId === appId) ?? spacePrograms.find((entry) => entry.pluginId === pluginId);
+  const { pluginId, appId, osInstanceId, document } = effect.openPluginInstance;
+  const program = spacePrograms.find((entry) => entry.pluginId === pluginId && entry.appId === appId);
   if (program) {
-    const nextPanel = await ensureSpawnedPlugin(program, () => isCurrentEffectOwner(effectOwner), undefined, osInstanceId, undefined, nextViewState);
+    const nextPanel = await ensureSpawnedPlugin(program, () => isCurrentEffectOwner(effectOwner), undefined, osInstanceId, undefined, nextViewState, document);
     if (!isCurrentEffectOwner(effectOwner)) return null;
-    if (nextPanel) {
-      nextViewState = viewStateWithSpacePanel(nextViewState, nextPanel);
-    }
+    if (nextPanel === null) return nextViewState;
+    nextViewState = viewStateWithSpacePanel(nextViewState, nextPanel);
     if (osInstanceId && openSpaceIdRef.current) {
       openInstanceIdRef.current = osInstanceId;
       navigateShellUri(`/spaces/${openSpaceIdRef.current}/instances/${osInstanceId}`);

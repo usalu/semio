@@ -254,16 +254,6 @@ pub const TYPED_OPERATION_STALL_WITNESS_FLOOR: u64 = 64;
 #[doc(hidden)]
 pub const TYPED_OPERATION_STALL_FAULT_CEILING: u64 = 4_096;
 
-/// 🧮️ Folds the publication ladder's monotone progress term into the one-`u64` witness key the
-/// streak counter remembers between turns, so two witnesses that differ ONLY in how far the
-/// publication has advanced are never mistaken for the same one.
-#[doc(hidden)]
-pub const TYPED_OPERATION_STALL_PROGRESS_MIX: u64 = 0x9E37_79B9_7F4A_7C15;
-
-/// 🩺️ The stage code [`ArtifactApp::typed_operation_stall_witness`] gives a `Publishing` operation.
-#[doc(hidden)]
-pub const TYPED_OPERATION_STALL_PUBLISHING_STAGE: u8 = 1;
-
 #[doc(hidden)]
 pub const TYPED_OPERATION_HOST_OUTBOX_SLOTS: usize = 64;
 
@@ -804,17 +794,21 @@ pub fn drive_agent_lane_preview<J:semio_framework_job::InteractiveJob+'static>(o
     let session=owner.session.as_mut().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"preview continuation lost its admitted producer"))?;
     if owner.acknowledgement_pending{if session.acknowledge_outcome(cx)?{let grant=cx.retained_grant();if !cx.retirement_should_yield()&&grant.maximum_items>0&&grant.maximum_depth>0{owner.acknowledgement_pending=false;owner.resume_pending=true;semio_framework_job::receive_original_retained_work(cx,semio_framework_value::RetainedWorkOutcome::<_,semio_framework_value::ValueError>{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1})?;}}return Ok(None)}
     if owner.resume_pending{session.resume().map_err(|_|semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"preview continuation could not return its original outcome"))?;owner.resume_pending=false;return Ok(None)}
-    match session.step_on_original_caller(cx){Ok(Poll::Outcome|Poll::Terminal)=>{},Ok(_)=>return Ok(None),Err(failure)=>{owner.begin_close();return Err(failure)}}
+    let terminal=match session.step_on_original_caller(cx){Ok(Poll::Outcome)=>false,Ok(Poll::Terminal)=>true,Ok(_)=>return Ok(None),Err(failure)=>{owner.begin_close();return Err(failure)}};
     if !session.checkout_outcome(){return Ok(None)}
     let Some((issued,receipt))=session.take_checked_out_retained_step_receipt()else{return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original preview callback receipt is absent").into())};
     if !receipt.fits(issued){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original preview callback exceeded its issued receipt").into())}
+    let Some(outcome)=session.checked_out_outcome()? else {
+        if terminal{return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original preview terminal outcome is absent").into())}
+        owner.acknowledgement_pending=true;
+        return Ok(None);
+    };
     owner.steps=owner.steps.saturating_add(1);
-    let verdict=match session.checked_out_outcome()?{
-        Some(semio_framework_job::JobOutcomeView::Complete{..})=>Some(Ok(owner.steps)),
-        Some(semio_framework_job::JobOutcomeView::Cancelled{..})=>Some(Err(Fault::new(FaultOrigin::Framework,FaultCode::new("interactive-job.cancelled"),format!("the preview of action '{verb}' was cancelled")).into())),
-        Some(semio_framework_job::JobOutcomeView::Fault{detail,..})=>{let original=ArtifactBoundedToolFault::from_payload(detail);Some(Err(semio_plugin_decl_app::tool_contract::reducer_fault_of_detail(original.as_bytes()).unwrap_or_else(||decode_typed_operation_fault_page(original.as_bytes())).into()))},
-        Some(_)=>None,
-        None=>return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original preview outcome is absent").into()),
+    let verdict=match outcome{
+        semio_framework_job::JobOutcomeView::Complete{..}=>Some(Ok(owner.steps)),
+        semio_framework_job::JobOutcomeView::Cancelled{..}=>Some(Err(Fault::new(FaultOrigin::Framework,FaultCode::new("interactive-job.cancelled"),format!("the preview of action '{verb}' was cancelled")).into())),
+        semio_framework_job::JobOutcomeView::Fault{detail,..}=>{let original=ArtifactBoundedToolFault::from_payload(detail);Some(Err(semio_plugin_decl_app::tool_contract::reducer_fault_of_detail(original.as_bytes()).unwrap_or_else(||decode_typed_operation_fault_page(original.as_bytes())).into()))},
+        _=>None,
     };
     if let Some(verdict)=verdict{owner.verdict=Some(verdict);owner.begin_close()}else{owner.acknowledgement_pending=true}
     Ok(None)

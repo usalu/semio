@@ -1,0 +1,1867 @@
+{
+  "schema": "window-layout.v1",
+  "builders": [
+    {
+      "id": "even-none",
+      "windowIds": [],
+      "expect": {
+        "kind": "stack",
+        "children": []
+      }
+    },
+    {
+      "id": "even-one",
+      "windowIds": [
+        "a"
+      ],
+      "expect": {
+        "kind": "stack",
+        "activeWindowId": "a",
+        "children": [
+          {
+            "kind": "window",
+            "windowKindId": "a"
+          }
+        ]
+      }
+    },
+    {
+      "id": "even-three",
+      "windowIds": [
+        "a",
+        "b",
+        "c"
+      ],
+      "expect": {
+        "kind": "split",
+        "axis": "horizontal",
+        "children": [
+          {
+            "kind": "stack",
+            "size": 0.3333333333333333,
+            "activeWindowId": "a",
+            "children": [
+              {
+                "kind": "window",
+                "windowKindId": "a"
+              }
+            ]
+          },
+          {
+            "kind": "stack",
+            "size": 0.3333333333333333,
+            "activeWindowId": "b",
+            "children": [
+              {
+                "kind": "window",
+                "windowKindId": "b"
+              }
+            ]
+          },
+          {
+            "kind": "stack",
+            "size": 0.3333333333333333,
+            "activeWindowId": "c",
+            "children": [
+              {
+                "kind": "window",
+                "windowKindId": "c"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "queries": [
+    {
+      "id": "stack-path-of-nested",
+      "layout": {
+        "kind": "split",
+        "axis": "horizontal",
+        "children": [
+          {
+            "kind": "stack",
+            "size": 0.4,
+            "activeWindowId": "a",
+            "children": [
+              {
+                "kind": "window",
+                "windowKindId": "a"
+              }
+            ]
+          },
+          {
+            "kind": "split",
+            "axis": "vertical",
+            "size": 0.6,
+            "children": [
+              {
+                "kind": "stack",
+                "size": 0.5,
+                "activeWindowId": "b",
+                "children": [
+                  {
+                    "kind": "window",
+                    "windowKindId": "b"
+                  }
+                ]
+              },
+              {
+                "kind": "stack",
+                "size": 0.5,
+                "activeWindowId": "c",
+                "children": [
+                  {
+                    "kind": "window",
+                    "windowKindId": "c"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "query": "stackPathOf",
+      "windowId": "c",
+      "expect": [
+        1,
+        1
+      ]
+    },
+    {
+      "id": "stack-path-of-missing",
+      "layout": {
+        "kind": "split",
+        "axis": "horizontal",
+        "children": [
+          {
+            "kind": "stack",
+            "size": 0.4,
+            "activeWindowId": "a",
+            "children": [
+              {
+                "kind": "window",
+                "windowKindId": "a"
+              }
+            ]
+          },
+          {
+            "kind": "split",
+            "axis": "vertical",
+            "size": 0.6,
+            "children": [
+              {
+                "kind": "stack",
+                "size": 0.5,
+                "activeWindowId": "b",
+                "children": [
+                  {
+                    "kind": "window",
+                    "windowKindId": "b"
+                  }
+                ]
+              },
+              {
+                "kind": "stack",
+                "size": 0.5,
+                "activeWindowId": "c",
+                "children": [
+                  {
+                    "kind": "window",
+                    "windowKindId": "c"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "query": "stackPathOf",
+      "windowId": "z",
+      "expect": null
+    },
+    {
+      "id": "collect-window-ids",
+      "layout": {
+        "kind": "split",
+        "axis": "horizontal",
+        "children": [
+          {
+            "kind": "stack",
+            "size": 0.4,
+            "activeWindowId": "a",
+            "children": [
+              {
+                "kind": "window",
+                "windowKindId": "a"
+              }
+            ]
+          },
+          {
+            "kind": "split",
+            "axis": "vertical",
+            "size": 0.6,
+            "children": [
+              {
+                "kind": "stack",
+                "size": 0.5,
+                "activeWindowId": "b",
+                "children": [
+                  {
+                    "kind": "window",
+                    "windowKindId": "b"
+                  }
+                ]
+              },
+              {
+                "kind": "stack",
+                "size": 0.5,
+                "activeWindowId": "c",
+                "children": [
+                  {
+                    "kind": "window",
+                    "windowKindId": "c"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "query": "collectWindowIds",
+      "expect": [
+        "a",
+        "b",
+        "c"
+      ]
+    },
+    {
+      "id": "read-at-split",
+      "layout": {
+        "kind": "split",
+        "axis": "horizontal",
+        "children": [
+          {
+            "kind": "stack",
+            "size": 0.4,
+            "activeWindowId": "a",
+            "children": [
+              {
+                "kind": "window",
+                "windowKindId": "a"
+              }
+            ]
+          },
+          {
+            "kind": "split",
+            "axis": "vertical",
+            "size": 0.6,
+            "children": [
+              {
+                "kind": "stack",
+                "size": 0.5,
+                "activeWindowId": "b",
+                "children": [
+                  {
+                    "kind": "window",
+                    "windowKindId": "b"
+                  }
+                ]
+              },
+              {
+                "kind": "stack",
+                "size": 0.5,
+                "activeWindowId": "c",
+                "children": [
+                  {
+                    "kind": "window",
+                    "windowKindId": "c"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "query": "readAt",
+      "path": [
+        1
+      ],
+      "expect": {
+        "kind": "split",
+        "axis": "vertical",
+        "size": 0.6,
+        "children": [
+          {
+            "kind": "stack",
+            "size": 0.5,
+            "activeWindowId": "b",
+            "children": [
+              {
+                "kind": "window",
+                "windowKindId": "b"
+              }
+            ]
+          },
+          {
+            "kind": "stack",
+            "size": 0.5,
+            "activeWindowId": "c",
+            "children": [
+              {
+                "kind": "window",
+                "windowKindId": "c"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "read-at-stack-ignores-rest",
+      "layout": {
+        "kind": "split",
+        "axis": "horizontal",
+        "children": [
+          {
+            "kind": "stack",
+            "size": 0.4,
+            "activeWindowId": "a",
+            "children": [
+              {
+                "kind": "window",
+                "windowKindId": "a"
+              }
+            ]
+          },
+          {
+            "kind": "split",
+            "axis": "vertical",
+            "size": 0.6,
+            "children": [
+              {
+                "kind": "stack",
+                "size": 0.5,
+                "activeWindowId": "b",
+                "children": [
+                  {
+                    "kind": "window",
+                    "windowKindId": "b"
+                  }
+                ]
+              },
+              {
+                "kind": "stack",
+                "size": 0.5,
+                "activeWindowId": "c",
+                "children": [
+                  {
+                    "kind": "window",
+                    "windowKindId": "c"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "query": "readAt",
+      "path": [
+        0,
+        0
+      ],
+      "expect": {
+        "kind": "stack",
+        "size": 0.4,
+        "activeWindowId": "a",
+        "children": [
+          {
+            "kind": "window",
+            "windowKindId": "a"
+          }
+        ]
+      }
+    },
+    {
+      "id": "read-at-missing",
+      "layout": {
+        "kind": "split",
+        "axis": "horizontal",
+        "children": [
+          {
+            "kind": "stack",
+            "size": 0.4,
+            "activeWindowId": "a",
+            "children": [
+              {
+                "kind": "window",
+                "windowKindId": "a"
+              }
+            ]
+          },
+          {
+            "kind": "split",
+            "axis": "vertical",
+            "size": 0.6,
+            "children": [
+              {
+                "kind": "stack",
+                "size": 0.5,
+                "activeWindowId": "b",
+                "children": [
+                  {
+                    "kind": "window",
+                    "windowKindId": "b"
+                  }
+                ]
+              },
+              {
+                "kind": "stack",
+                "size": 0.5,
+                "activeWindowId": "c",
+                "children": [
+                  {
+                    "kind": "window",
+                    "windowKindId": "c"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "query": "readAt",
+      "path": [
+        3
+      ],
+      "expect": null
+    }
+  ],
+  "operations": [
+    {
+      "id": "set-active-in-stack",
+      "layout": {
+        "kind": "stack",
+        "activeWindowId": "a",
+        "children": [
+          {
+            "kind": "window",
+            "windowKindId": "a"
+          },
+          {
+            "kind": "window",
+            "windowKindId": "b"
+          },
+          {
+            "kind": "window",
+            "windowKindId": "c"
+          }
+        ]
+      },
+      "op": {
+        "op": "setActive",
+        "windowId": "b"
+      },
+      "expect": {
+        "kind": "stack",
+        "activeWindowId": "b",
+        "children": [
+          {
+            "kind": "window",
+            "windowKindId": "a"
+          },
+          {
+            "kind": "window",
+            "windowKindId": "b"
+          },
+          {
+            "kind": "window",
+            "windowKindId": "c"
+          }
+        ]
+      }
+    },
+    {
+      "id": "set-active-in-second-stack",
+      "layout": {
+        "kind": "split",
+        "axis": "horizontal",
+        "children": [
+          {
+            "kind": "stack",
+            "size": 0.5,
+            "activeWindowId": "a",
+            "children": [
+              {
+                "kind": "window",
+                "windowKindId": "a"
+              },
+              {
+                "kind": "window",
+                "windowKindId": "b"
+              }
+            ]
+          },
+          {
+            "kind": "stack",
+            "size": 0.5,
+            "activeWindowId": "c",
+            "children": [
+              {
+                "kind": "window",
+                "windowKindId": "c"
+              }
+            ]
+          }
+        ]
+      },
+      "op": {
+        "op": "setActive",
+        "windowId": "b"
+      },
+      "expect": {
+        "kind": "split",
+        "axis": "horizontal",
+        "children": [
+          {
+            "kind": "stack",
+            "size": 0.5,
+            "activeWindowId": "b",
+            "children": [
+              {
+                "kind": "window",
+                "windowKindId": "a"
+              },
+              {
+                "kind": "window",
+                "windowKindId": "b"
+              }
+            ]
+          },
+          {
+            "kind": "stack",
+            "size": 0.5,
+            "activeWindowId": "c",
+            "children": [
+              {
+                "kind": "window",
+                "windowKindId": "c"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "close-inactive-tab",
+      "layout": {
+        "kind": "stack",
+        "activeWindowId": "a",
+        "children": [
+          {
+            "kind": "window",
+            "windowKindId": "a"
+          },
+          {
+            "kind": "window",
+            "windowKindId": "b"
+          },
+          {
+            "kind": "window",
+            "windowKindId": "c"
+          }
+        ]
+      },
+      "op": {
+        "op": "closeWindow",
+        "windowId": "b"
+      },
+      "expect": {
+        "kind": "stack",
+        "activeWindowId": "a",
+        "children": [
+          {
+            "kind": "window",
+            "windowKindId": "a"
+          },
+          {
+            "kind": "window",
+            "windowKindId": "c"
+          }
+        ]
+      }
+    },
+    {
+      "id": "close-active-tab-activates-first",
+      "layout": {
+        "kind": "stack",
+        "activeWindowId": "a",
+        "children": [
+          {
+            "kind": "window",
+            "windowKindId": "a"
+          },
+          {
+            "kind": "window",
+            "windowKindId": "b"
+          },
+          {
+            "kind": "window",
+            "windowKindId": "c"
+          }
+        ]
+      },
+      "op": {
+        "op": "closeWindow",
+        "windowId": "a"
+      },
+      "expect": {
+        "kind": "stack",
+        "activeWindowId": "b",
+        "children": [
+          {
+            "kind": "window",
+            "windowKindId": "b"
+          },
+          {
+            "kind": "window",
+            "windowKindId": "c"
+          }
+        ]
+      }
+    },
+    {
+      "id": "close-last-of-stack-collapses-split",
+      "layout": {
+        "kind": "split",
+        "axis": "horizontal",
+        "children": [
+          {
+            "kind": "stack",
+            "size": 0.5,
+            "activeWindowId": "a",
+            "children": [
+              {
+                "kind": "window",
+                "windowKindId": "a"
+              },
+              {
+                "kind": "window",
+                "windowKindId": "b"
+              }
+            ]
+          },
+          {
+            "kind": "stack",
+            "size": 0.5,
+            "activeWindowId": "c",
+            "children": [
+              {
+                "kind": "window",
+                "windowKindId": "c"
+              }
+            ]
+          }
+        ]
+      },
+      "op": {
+        "op": "closeWindow",
+        "windowId": "c"
+      },
+      "expect": {
+        "kind": "stack",
+        "size": 0.5,
+        "activeWindowId": "a",
+        "children": [
+          {
+            "kind": "window",
+            "windowKindId": "a"
+          },
+          {
+            "kind": "window",
+            "windowKindId": "b"
+          }
+        ]
+      }
+    },
+    {
+      "id": "close-only-window-leaves-empty-stack",
+      "layout": {
+        "kind": "stack",
+        "activeWindowId": "a",
+        "children": [
+          {
+            "kind": "window",
+            "windowKindId": "a"
+          }
+        ]
+      },
+      "op": {
+        "op": "closeWindow",
+        "windowId": "a"
+      },
+      "expect": {
+        "kind": "stack",
+        "children": []
+      }
+    },
+    {
+      "id": "close-collapses-nested-split-keeping-size",
+      "layout": {
+        "kind": "split",
+        "axis": "horizontal",
+        "children": [
+          {
+            "kind": "stack",
+            "size": 0.4,
+            "activeWindowId": "a",
+            "children": [
+              {
+                "kind": "window",
+                "windowKindId": "a"
+              }
+            ]
+          },
+          {
+            "kind": "split",
+            "axis": "vertical",
+            "size": 0.6,
+            "children": [
+              {
+                "kind": "stack",
+                "activeWindowId": "b",
+                "children": [
+                  {
+                    "kind": "window",
+                    "windowKindId": "b"
+                  }
+                ]
+              },
+              {
+                "kind": "stack",
+                "activeWindowId": "c",
+                "children": [
+                  {
+                    "kind": "window",
+                    "windowKindId": "c"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "op": {
+        "op": "closeWindow",
+        "windowId": "b"
+      },
+      "expect": {
+        "kind": "split",
+        "axis": "horizontal",
+        "children": [
+          {
+            "kind": "stack",
+            "size": 0.4,
+            "activeWindowId": "a",
+            "children": [
+              {
+                "kind": "window",
+                "windowKindId": "a"
+              }
+            ]
+          },
+          {
+            "kind": "stack",
+            "size": 0.6,
+            "activeWindowId": "c",
+            "children": [
+              {
+                "kind": "window",
+                "windowKindId": "c"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "reorder-tab",
+      "layout": {
+        "kind": "stack",
+        "activeWindowId": "a",
+        "children": [
+          {
+            "kind": "window",
+            "windowKindId": "a"
+          },
+          {
+            "kind": "window",
+            "windowKindId": "b"
+          },
+          {
+            "kind": "window",
+            "windowKindId": "c"
+          }
+        ]
+      },
+      "op": {
+        "op": "reorderTab",
+        "stackPath": [],
+        "from": 0,
+        "to": 2
+      },
+      "expect": {
+        "kind": "stack",
+        "activeWindowId": "a",
+        "children": [
+          {
+            "kind": "window",
+            "windowKindId": "b"
+          },
+          {
+            "kind": "window",
+            "windowKindId": "c"
+          },
+          {
+            "kind": "window",
+            "windowKindId": "a"
+          }
+        ]
+      }
+    },
+    {
+      "id": "reorder-tab-out-of-range-is-noop",
+      "layout": {
+        "kind": "stack",
+        "activeWindowId": "a",
+        "children": [
+          {
+            "kind": "window",
+            "windowKindId": "a"
+          },
+          {
+            "kind": "window",
+            "windowKindId": "b"
+          },
+          {
+            "kind": "window",
+            "windowKindId": "c"
+          }
+        ]
+      },
+      "op": {
+        "op": "reorderTab",
+        "stackPath": [],
+        "from": 5,
+        "to": 0
+      },
+      "expect": {
+        "kind": "stack",
+        "activeWindowId": "a",
+        "children": [
+          {
+            "kind": "window",
+            "windowKindId": "a"
+          },
+          {
+            "kind": "window",
+            "windowKindId": "b"
+          },
+          {
+            "kind": "window",
+            "windowKindId": "c"
+          }
+        ]
+      }
+    },
+    {
+      "id": "set-corner",
+      "layout": {
+        "kind": "stack",
+        "activeWindowId": "a",
+        "children": [
+          {
+            "kind": "window",
+            "windowKindId": "a"
+          },
+          {
+            "kind": "window",
+            "windowKindId": "b"
+          },
+          {
+            "kind": "window",
+            "windowKindId": "c"
+          }
+        ]
+      },
+      "op": {
+        "op": "setCorner",
+        "windowId": "b",
+        "corner": "topRight"
+      },
+      "expect": {
+        "kind": "stack",
+        "activeWindowId": "a",
+        "children": [
+          {
+            "kind": "window",
+            "windowKindId": "a"
+          },
+          {
+            "kind": "window",
+            "windowKindId": "b",
+            "corner": "topRight"
+          },
+          {
+            "kind": "window",
+            "windowKindId": "c"
+          }
+        ]
+      }
+    },
+    {
+      "id": "apply-sizes",
+      "layout": {
+        "kind": "split",
+        "axis": "horizontal",
+        "children": [
+          {
+            "kind": "stack",
+            "size": 0.5,
+            "activeWindowId": "a",
+            "children": [
+              {
+                "kind": "window",
+                "windowKindId": "a"
+              },
+              {
+                "kind": "window",
+                "windowKindId": "b"
+              }
+            ]
+          },
+          {
+            "kind": "stack",
+            "size": 0.5,
+            "activeWindowId": "c",
+            "children": [
+              {
+                "kind": "window",
+                "windowKindId": "c"
+              }
+            ]
+          }
+        ]
+      },
+      "op": {
+        "op": "applySizes",
+        "splitPath": [],
+        "sizes": [
+          0.3,
+          0.7
+        ]
+      },
+      "expect": {
+        "kind": "split",
+        "axis": "horizontal",
+        "children": [
+          {
+            "kind": "stack",
+            "size": 0.3,
+            "activeWindowId": "a",
+            "children": [
+              {
+                "kind": "window",
+                "windowKindId": "a"
+              },
+              {
+                "kind": "window",
+                "windowKindId": "b"
+              }
+            ]
+          },
+          {
+            "kind": "stack",
+            "size": 0.7,
+            "activeWindowId": "c",
+            "children": [
+              {
+                "kind": "window",
+                "windowKindId": "c"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "apply-sizes-length-mismatch-evens",
+      "layout": {
+        "kind": "split",
+        "axis": "horizontal",
+        "children": [
+          {
+            "kind": "stack",
+            "size": 0.5,
+            "activeWindowId": "a",
+            "children": [
+              {
+                "kind": "window",
+                "windowKindId": "a"
+              },
+              {
+                "kind": "window",
+                "windowKindId": "b"
+              }
+            ]
+          },
+          {
+            "kind": "stack",
+            "size": 0.5,
+            "activeWindowId": "c",
+            "children": [
+              {
+                "kind": "window",
+                "windowKindId": "c"
+              }
+            ]
+          }
+        ]
+      },
+      "op": {
+        "op": "applySizes",
+        "splitPath": [],
+        "sizes": [
+          1
+        ]
+      },
+      "expect": {
+        "kind": "split",
+        "axis": "horizontal",
+        "children": [
+          {
+            "kind": "stack",
+            "size": 0.5,
+            "activeWindowId": "a",
+            "children": [
+              {
+                "kind": "window",
+                "windowKindId": "a"
+              },
+              {
+                "kind": "window",
+                "windowKindId": "b"
+              }
+            ]
+          },
+          {
+            "kind": "stack",
+            "size": 0.5,
+            "activeWindowId": "c",
+            "children": [
+              {
+                "kind": "window",
+                "windowKindId": "c"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "drop-tab-moves-window-within-corner-order",
+      "layout": {
+        "kind": "split",
+        "axis": "horizontal",
+        "children": [
+          {
+            "kind": "stack",
+            "size": 0.5,
+            "activeWindowId": "a",
+            "children": [
+              {
+                "kind": "window",
+                "windowKindId": "a"
+              },
+              {
+                "kind": "window",
+                "windowKindId": "b"
+              }
+            ]
+          },
+          {
+            "kind": "stack",
+            "size": 0.5,
+            "activeWindowId": "c",
+            "children": [
+              {
+                "kind": "window",
+                "windowKindId": "c"
+              }
+            ]
+          }
+        ]
+      },
+      "op": {
+        "op": "dropWindow",
+        "window": {
+          "kind": "window",
+          "windowKindId": "c"
+        },
+        "zone": {
+          "kind": "tab",
+          "stackPath": [],
+          "corner": "topLeft",
+          "index": 1
+        }
+      },
+      "expect": {
+        "kind": "stack",
+        "size": 0.5,
+        "activeWindowId": "c",
+        "children": [
+          {
+            "kind": "window",
+            "windowKindId": "a"
+          },
+          {
+            "kind": "window",
+            "windowKindId": "c",
+            "corner": "topLeft"
+          },
+          {
+            "kind": "window",
+            "windowKindId": "b"
+          }
+        ]
+      }
+    },
+    {
+      "id": "drop-new-window-appends-in-empty-corner",
+      "layout": {
+        "kind": "stack",
+        "activeWindowId": "a",
+        "children": [
+          {
+            "kind": "window",
+            "windowKindId": "a"
+          },
+          {
+            "kind": "window",
+            "windowKindId": "b"
+          },
+          {
+            "kind": "window",
+            "windowKindId": "c"
+          }
+        ]
+      },
+      "op": {
+        "op": "dropWindow",
+        "window": {
+          "kind": "window",
+          "windowKindId": "d"
+        },
+        "zone": {
+          "kind": "tab",
+          "stackPath": [],
+          "corner": "bottomRight"
+        }
+      },
+      "expect": {
+        "kind": "stack",
+        "activeWindowId": "d",
+        "children": [
+          {
+            "kind": "window",
+            "windowKindId": "a"
+          },
+          {
+            "kind": "window",
+            "windowKindId": "b"
+          },
+          {
+            "kind": "window",
+            "windowKindId": "c"
+          },
+          {
+            "kind": "window",
+            "windowKindId": "d",
+            "corner": "bottomRight"
+          }
+        ]
+      }
+    },
+    {
+      "id": "drop-split-right-of-stack",
+      "layout": {
+        "kind": "stack",
+        "activeWindowId": "a",
+        "children": [
+          {
+            "kind": "window",
+            "windowKindId": "a"
+          },
+          {
+            "kind": "window",
+            "windowKindId": "b"
+          },
+          {
+            "kind": "window",
+            "windowKindId": "c"
+          }
+        ]
+      },
+      "op": {
+        "op": "dropWindow",
+        "window": {
+          "kind": "window",
+          "windowKindId": "b"
+        },
+        "zone": {
+          "kind": "split",
+          "stackPath": [],
+          "side": "right"
+        }
+      },
+      "expect": {
+        "kind": "split",
+        "axis": "horizontal",
+        "children": [
+          {
+            "kind": "stack",
+            "activeWindowId": "a",
+            "children": [
+              {
+                "kind": "window",
+                "windowKindId": "a"
+              },
+              {
+                "kind": "window",
+                "windowKindId": "c"
+              }
+            ]
+          },
+          {
+            "kind": "stack",
+            "activeWindowId": "b",
+            "children": [
+              {
+                "kind": "window",
+                "windowKindId": "b"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "drop-split-top-keeps-target-size",
+      "layout": {
+        "kind": "split",
+        "axis": "horizontal",
+        "children": [
+          {
+            "kind": "stack",
+            "size": 0.5,
+            "activeWindowId": "a",
+            "children": [
+              {
+                "kind": "window",
+                "windowKindId": "a"
+              },
+              {
+                "kind": "window",
+                "windowKindId": "b"
+              }
+            ]
+          },
+          {
+            "kind": "stack",
+            "size": 0.5,
+            "activeWindowId": "c",
+            "children": [
+              {
+                "kind": "window",
+                "windowKindId": "c"
+              }
+            ]
+          }
+        ]
+      },
+      "op": {
+        "op": "dropWindow",
+        "window": {
+          "kind": "window",
+          "windowKindId": "a"
+        },
+        "zone": {
+          "kind": "split",
+          "stackPath": [
+            1
+          ],
+          "side": "top"
+        }
+      },
+      "expect": {
+        "kind": "split",
+        "axis": "horizontal",
+        "children": [
+          {
+            "kind": "stack",
+            "size": 0.5,
+            "activeWindowId": "b",
+            "children": [
+              {
+                "kind": "window",
+                "windowKindId": "b"
+              }
+            ]
+          },
+          {
+            "kind": "split",
+            "axis": "vertical",
+            "size": 0.5,
+            "children": [
+              {
+                "kind": "stack",
+                "activeWindowId": "a",
+                "children": [
+                  {
+                    "kind": "window",
+                    "windowKindId": "a"
+                  }
+                ]
+              },
+              {
+                "kind": "stack",
+                "size": 0.5,
+                "activeWindowId": "c",
+                "children": [
+                  {
+                    "kind": "window",
+                    "windowKindId": "c"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "drop-root-split-bottom",
+      "layout": {
+        "kind": "split",
+        "axis": "horizontal",
+        "children": [
+          {
+            "kind": "stack",
+            "size": 0.5,
+            "activeWindowId": "a",
+            "children": [
+              {
+                "kind": "window",
+                "windowKindId": "a"
+              },
+              {
+                "kind": "window",
+                "windowKindId": "b"
+              }
+            ]
+          },
+          {
+            "kind": "stack",
+            "size": 0.5,
+            "activeWindowId": "c",
+            "children": [
+              {
+                "kind": "window",
+                "windowKindId": "c"
+              }
+            ]
+          }
+        ]
+      },
+      "op": {
+        "op": "dropWindow",
+        "window": {
+          "kind": "window",
+          "windowKindId": "c"
+        },
+        "zone": {
+          "kind": "rootSplit",
+          "side": "bottom"
+        }
+      },
+      "expect": {
+        "kind": "split",
+        "axis": "vertical",
+        "children": [
+          {
+            "kind": "stack",
+            "size": 0.5,
+            "activeWindowId": "a",
+            "children": [
+              {
+                "kind": "window",
+                "windowKindId": "a"
+              },
+              {
+                "kind": "window",
+                "windowKindId": "b"
+              }
+            ]
+          },
+          {
+            "kind": "stack",
+            "activeWindowId": "c",
+            "children": [
+              {
+                "kind": "window",
+                "windowKindId": "c"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "drop-onto-missing-stack-is-noop",
+      "layout": {
+        "kind": "split",
+        "axis": "horizontal",
+        "children": [
+          {
+            "kind": "stack",
+            "size": 0.5,
+            "activeWindowId": "a",
+            "children": [
+              {
+                "kind": "window",
+                "windowKindId": "a"
+              },
+              {
+                "kind": "window",
+                "windowKindId": "b"
+              }
+            ]
+          },
+          {
+            "kind": "stack",
+            "size": 0.5,
+            "activeWindowId": "c",
+            "children": [
+              {
+                "kind": "window",
+                "windowKindId": "c"
+              }
+            ]
+          }
+        ]
+      },
+      "op": {
+        "op": "dropWindow",
+        "window": {
+          "kind": "window",
+          "windowKindId": "a"
+        },
+        "zone": {
+          "kind": "split",
+          "stackPath": [
+            5
+          ],
+          "side": "left"
+        }
+      },
+      "expect": {
+        "kind": "split",
+        "axis": "horizontal",
+        "children": [
+          {
+            "kind": "stack",
+            "size": 0.5,
+            "activeWindowId": "a",
+            "children": [
+              {
+                "kind": "window",
+                "windowKindId": "a"
+              },
+              {
+                "kind": "window",
+                "windowKindId": "b"
+              }
+            ]
+          },
+          {
+            "kind": "stack",
+            "size": 0.5,
+            "activeWindowId": "c",
+            "children": [
+              {
+                "kind": "window",
+                "windowKindId": "c"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "drop-stack-merges-tabs",
+      "layout": {
+        "kind": "split",
+        "axis": "horizontal",
+        "children": [
+          {
+            "kind": "stack",
+            "size": 0.5,
+            "activeWindowId": "a",
+            "children": [
+              {
+                "kind": "window",
+                "windowKindId": "a"
+              },
+              {
+                "kind": "window",
+                "windowKindId": "b"
+              }
+            ]
+          },
+          {
+            "kind": "stack",
+            "size": 0.5,
+            "activeWindowId": "c",
+            "children": [
+              {
+                "kind": "window",
+                "windowKindId": "c"
+              }
+            ]
+          }
+        ]
+      },
+      "op": {
+        "op": "dropStack",
+        "sourcePath": [
+          1
+        ],
+        "zone": {
+          "kind": "tab",
+          "stackPath": [],
+          "corner": "topRight"
+        }
+      },
+      "expect": {
+        "kind": "stack",
+        "size": 0.5,
+        "activeWindowId": "c",
+        "children": [
+          {
+            "kind": "window",
+            "windowKindId": "a"
+          },
+          {
+            "kind": "window",
+            "windowKindId": "b"
+          },
+          {
+            "kind": "window",
+            "windowKindId": "c",
+            "corner": "topRight"
+          }
+        ]
+      }
+    },
+    {
+      "id": "drop-stack-root-split-left",
+      "layout": {
+        "kind": "split",
+        "axis": "horizontal",
+        "children": [
+          {
+            "kind": "stack",
+            "size": 0.4,
+            "activeWindowId": "a",
+            "children": [
+              {
+                "kind": "window",
+                "windowKindId": "a"
+              }
+            ]
+          },
+          {
+            "kind": "split",
+            "axis": "vertical",
+            "size": 0.6,
+            "children": [
+              {
+                "kind": "stack",
+                "size": 0.5,
+                "activeWindowId": "b",
+                "children": [
+                  {
+                    "kind": "window",
+                    "windowKindId": "b"
+                  }
+                ]
+              },
+              {
+                "kind": "stack",
+                "size": 0.5,
+                "activeWindowId": "c",
+                "children": [
+                  {
+                    "kind": "window",
+                    "windowKindId": "c"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "op": {
+        "op": "dropStack",
+        "sourcePath": [
+          1,
+          1
+        ],
+        "zone": {
+          "kind": "rootSplit",
+          "side": "left"
+        }
+      },
+      "expect": {
+        "kind": "split",
+        "axis": "horizontal",
+        "children": [
+          {
+            "kind": "stack",
+            "size": 0.5,
+            "activeWindowId": "c",
+            "children": [
+              {
+                "kind": "window",
+                "windowKindId": "c"
+              }
+            ]
+          },
+          {
+            "kind": "split",
+            "axis": "horizontal",
+            "children": [
+              {
+                "kind": "stack",
+                "size": 0.4,
+                "activeWindowId": "a",
+                "children": [
+                  {
+                    "kind": "window",
+                    "windowKindId": "a"
+                  }
+                ]
+              },
+              {
+                "kind": "stack",
+                "size": 0.5,
+                "activeWindowId": "b",
+                "children": [
+                  {
+                    "kind": "window",
+                    "windowKindId": "b"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "drop-root-stack-into-itself-rebuilds-tabs",
+      "layout": {
+        "kind": "stack",
+        "activeWindowId": "a",
+        "children": [
+          {
+            "kind": "window",
+            "windowKindId": "a"
+          },
+          {
+            "kind": "window",
+            "windowKindId": "b"
+          },
+          {
+            "kind": "window",
+            "windowKindId": "c"
+          }
+        ]
+      },
+      "op": {
+        "op": "dropStack",
+        "sourcePath": [],
+        "zone": {
+          "kind": "tab",
+          "stackPath": [],
+          "corner": "topLeft"
+        }
+      },
+      "expect": {
+        "kind": "stack",
+        "activeWindowId": "a",
+        "children": [
+          {
+            "kind": "window",
+            "windowKindId": "a",
+            "corner": "topLeft"
+          },
+          {
+            "kind": "window",
+            "windowKindId": "b",
+            "corner": "topLeft"
+          },
+          {
+            "kind": "window",
+            "windowKindId": "c",
+            "corner": "topLeft"
+          }
+        ]
+      }
+    },
+    {
+      "id": "reconcile-drops-absent-and-collapses",
+      "layout": {
+        "kind": "split",
+        "axis": "horizontal",
+        "children": [
+          {
+            "kind": "stack",
+            "size": 0.5,
+            "activeWindowId": "a",
+            "children": [
+              {
+                "kind": "window",
+                "windowKindId": "a"
+              },
+              {
+                "kind": "window",
+                "windowKindId": "b"
+              }
+            ]
+          },
+          {
+            "kind": "stack",
+            "size": 0.5,
+            "activeWindowId": "c",
+            "children": [
+              {
+                "kind": "window",
+                "windowKindId": "c"
+              }
+            ]
+          }
+        ]
+      },
+      "op": {
+        "op": "reconcile",
+        "windowIds": [
+          "a",
+          "b"
+        ]
+      },
+      "expect": {
+        "kind": "stack",
+        "size": 0.5,
+        "activeWindowId": "a",
+        "children": [
+          {
+            "kind": "window",
+            "windowKindId": "a"
+          },
+          {
+            "kind": "window",
+            "windowKindId": "b"
+          }
+        ]
+      }
+    },
+    {
+      "id": "reconcile-fixes-active",
+      "layout": {
+        "kind": "stack",
+        "activeWindowId": "b",
+        "children": [
+          {
+            "kind": "window",
+            "windowKindId": "a"
+          },
+          {
+            "kind": "window",
+            "windowKindId": "b"
+          },
+          {
+            "kind": "window",
+            "windowKindId": "c"
+          }
+        ]
+      },
+      "op": {
+        "op": "reconcile",
+        "windowIds": [
+          "a",
+          "c"
+        ]
+      },
+      "expect": {
+        "kind": "stack",
+        "activeWindowId": "a",
+        "children": [
+          {
+            "kind": "window",
+            "windowKindId": "a"
+          },
+          {
+            "kind": "window",
+            "windowKindId": "c"
+          }
+        ]
+      }
+    },
+    {
+      "id": "reconcile-defaults-active",
+      "layout": {
+        "kind": "stack",
+        "children": [
+          {
+            "kind": "window",
+            "windowKindId": "a"
+          },
+          {
+            "kind": "window",
+            "windowKindId": "b"
+          }
+        ]
+      },
+      "op": {
+        "op": "reconcile",
+        "windowIds": []
+      },
+      "expect": {
+        "kind": "stack",
+        "activeWindowId": "a",
+        "children": [
+          {
+            "kind": "window",
+            "windowKindId": "a"
+          },
+          {
+            "kind": "window",
+            "windowKindId": "b"
+          }
+        ]
+      }
+    }
+  ]
+}

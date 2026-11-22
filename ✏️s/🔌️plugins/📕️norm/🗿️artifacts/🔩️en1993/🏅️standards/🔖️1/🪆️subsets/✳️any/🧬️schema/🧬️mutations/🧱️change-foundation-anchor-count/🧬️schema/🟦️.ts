@@ -8,4 +8,4 @@ export interface ChangeFoundationAnchorCount {
   newAnchorCount: number;
 }
 
-export const parseChangeFoundationAnchorCount: NormWireReader<ChangeFoundationAnchorCount> = normWireObject<ChangeFoundationAnchorCount>({ id: normWireRequired(normWireString), newAnchorCount: normWireRequired(normWireRange(normWireInteger, {"minimum":0})) });
+export const parseChangeFoundationAnchorCount: NormWireReader<ChangeFoundationAnchorCount> = normWireObject<ChangeFoundationAnchorCount>({ id: normWireRequired(normWireString), newAnchorCount: normWireRequired(normWireRange(normWireInteger, {"minimum":0,"maximum":4294967295})) });

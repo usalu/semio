@@ -97,8 +97,8 @@ pub type Process3dRawApp = VcsArtifactApp<EditorApp<Process3dPlayApp>, semio_s_a
 /// panics while the thread is ALREADY unwinding — a second panic in a destructor aborts the whole
 /// binary and hides the assertion that actually failed.
 /// Field `1` is the fixture's ONE original caller scope: every call that needs a `cx` threads `app.1.cx()`, and the
-/// scope pays the caller's terminal retirement after the paid app close.
-pub struct Process3dApp(pub Process3dRawApp, pub OriginalFixtureScope);
+/// scope pays the caller's terminal retirement after the paid app close. Field `2` holds the UI value arena for the app's whole life, so every render and close runs against a registered lifetime owner.
+pub struct Process3dApp(pub Process3dRawApp, pub OriginalFixtureScope, semio_plugin::artifact_app_laws::FixtureUiArena);
 
 impl Process3dApp {
     /// 🧹️ Closes the registered app through its exact retained close state machine under the scope's original caller; closing a closed app is a no-op.
@@ -275,7 +275,7 @@ pub fn unseeded_app_with_registry() -> Process3dApp {
     let scope = OriginalFixtureScope::admit();
     let mut app = ::semio_framework_async::poll::resolve_ready(new_app_with_registry_and_members::<EditorApp<Process3dPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(process3d_app_manifest_for_tests, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()));
     ::semio_framework_async::poll::resolve_ready(PluginApp::bind_instance_id(&mut app, meta("local").instance_id));
-    Process3dApp(app, scope)
+    Process3dApp(app, scope, semio_plugin::artifact_app_laws::FixtureUiArena::admit())
 }
 
 /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
@@ -283,7 +283,7 @@ pub fn app_with_registry() -> Process3dApp {
     let scope = OriginalFixtureScope::admit();
     let mut app = ::semio_framework_async::poll::resolve_ready(new_app_with_registry_and_members::<EditorApp<Process3dPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(process3d_app_manifest_for_tests, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()));
     ::semio_framework_async::poll::resolve_ready(PluginApp::bind_instance_id(&mut app, meta("local").instance_id));
-    let mut app = Process3dApp(app, scope);
+    let mut app = Process3dApp(app, scope, semio_plugin::artifact_app_laws::FixtureUiArena::admit());
     seed_domain_catalog_contributions(&mut app);
     app
 }

@@ -1,7 +1,8 @@
 import{machinePathV1}from"../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import {prepareRepoCpuTestProfileArgumentsV1} from "../../🏗️build/⏱️profile/📊️cpu/🟨️.mjs";
-import { basename, isAbsolute, join, relative, resolve } from "node:path";
+import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { realpath } from "node:fs/promises";
+import { createRequire } from "node:module";
 import { advanceScriptInvocation, createIssuedResourceControlV1, createScriptProcessEnvelope, scriptInvocationEnvironment, withScriptProcessEnvelope, type ScriptInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runOwnedCommand } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️owned-execution/🟦️.ts";
 import { validateJsonSchemaSubset } from "../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
@@ -14,7 +15,7 @@ import schema from "./🧬️schema/🔣️.json" with { type: "json" };
 import {refuseBuildV1} from "../../🏗️build/📖️texts/🟦️.ts";
 
 /** 🌱️ Names one declared way of giving a test file a genuine Original process birth. */
-export type GenuineBirthV1 = Readonly<{ id: string; arguments: readonly string[]; sdk: boolean; environment: Readonly<Record<string, string>>; after?: string; preparation?: "target-execution" }>;
+export type GenuineBirthV1 = Readonly<{ id: string; arguments: readonly string[]; sdk: boolean; environment: Readonly<Record<string, string>>; after?: string; preparation?: "target-execution"; namespace?: boolean }>;
 
 /** 📋️ Carries the complete authored birth ladder after closed schema admission. */
 export type GenuineBirthPolicyV1 = Readonly<{ version: 1; owner: string; maximumElapsedMilliseconds: number; childTimeoutMilliseconds: number; buildMode: "prototype" | "release"; artifactRoute: string; births: readonly GenuineBirthV1[] }>;
@@ -85,10 +86,25 @@ export async function runGenuineBunTestV1(request: GenuineBunTestRequestV1): Pro
   const start = (original: ScriptInvocation, extra: Readonly<Record<string, string | undefined>> = {}): Promise<void> => birth.preparation === undefined ? launch(original, extra) : withTargetExecutionInventoryV1(root, environment, original, declared.childTimeoutMilliseconds, inventory => launch(original, { ...extra, ...inventory }));
   await withScriptProcessEnvelope(envelope, async original => {
     if (!birth.sdk) return start(original);
+    const withSdk = async (namespace: Readonly<Record<string, string | undefined>> = {}): Promise<void> => {
     const { withRepositoryToolingStoreV1 } = await import("../../⚡️caching/💾️storage/🔒️enforcement/🛠️tools/🟦️.ts"), { withNxToolingUseV1, nxToolingUseStorageV1 } = await import("../../⚡️caching/🚀️bootstrap/🛠️tools/📥️use/🟦️.ts");
     return withRepositoryToolingStoreV1(root, original, createIssuedResourceControlV1(original, "fixture:tooling-store", 0), async (_store, phase) => {
-      const toolkitRoot = await realpath(machinePathV1(root, ".nx/installation")), identity = basename(toolkitRoot);
-      return withNxToolingUseV1(nxToolingUseStorageV1(root), { identity, toolkitRoot, invocation: original }, phase, () => start(original, { SEMIO_NX_TOOLING_ROOT: toolkitRoot, SEMIO_NX_TOOLING_IDENTITY: identity }));
+      const { newestNxAuthorizerBundleV1 } = await import("../../⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📦️bundle/🟦️.ts");
+      const toolkitRoot = await realpath(machinePathV1(root, ".nx/installation")), identity = basename(toolkitRoot), bundle = newestNxAuthorizerBundleV1(dirname(dirname(toolkitRoot)), identity);
+      if (bundle === undefined) throw Error("Installed Nx authorizer bundle required");
+      return withNxToolingUseV1(nxToolingUseStorageV1(root), { identity, toolkitRoot, authorizer: basename(bundle), invocation: original }, phase, () => start(original, { SEMIO_NX_TOOLING_ROOT: toolkitRoot, SEMIO_NX_TOOLING_IDENTITY: identity, SEMIO_NX_AUTHORIZER_ROOT: bundle, ...namespace }));
+    });
+    };
+    if (!birth.namespace) return withSdk();
+    const { withRepositoryNxStorageV1 } = await import("../../⚡️caching/💾️storage/🔒️enforcement/🔌️nx/🟦️.ts"), { prepareNxGraphCacheStorageV1 } = await import("../../⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🟦️.ts"), { prepareNxToolingStorageV1 } = await import("../../⚡️caching/🚀️bootstrap/🛠️tools/🟦️.ts"), { projectionAdmissionV1 } = await import("../../🏗️build/📥️source/🔏️closure/🔁️dependencies/🟦️.ts");
+    const phase = createIssuedResourceControlV1(original, "fixture:nx-storage", 0);
+    await prepareNxToolingStorageV1(root, original, phase);
+    await prepareNxGraphCacheStorageV1(root, original, phase, 0, "queued");
+    return withRepositoryNxStorageV1(root, original, phase, async bind => {
+      const identity = basename(await realpath(machinePathV1(root, ".nx/installation"))), admission = projectionAdmissionV1(createRequire(import.meta.url)("../../🟨️.mjs"));
+      admission.admit();
+      const bound = await bind(identity, null, admission.identity());
+      try { return await withSdk({ ...bound.environment, SEMIO_NX_IMPLEMENTATION_IDENTITY: admission.identity() }); } finally { await bound.release(); }
     });
   });
 }

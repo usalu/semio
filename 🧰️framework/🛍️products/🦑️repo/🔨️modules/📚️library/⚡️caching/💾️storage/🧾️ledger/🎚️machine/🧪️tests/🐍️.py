@@ -72,7 +72,11 @@ def plan(spec, case):
     floors = sum(s["floorBytes"] for s in stores)
     demand_total = sum(r[2] for r in rows)
     free = case["hostFreeBytes"]
-    pressure = spec["hostFreeFloorBytes"] - free if free is not None and free < spec["hostFreeFloorBytes"] else 0
+    floor_bytes = spec["hostFreeFloorBytes"]
+    total_host = case.get("hostTotalBytes")
+    if spec.get("hostFreeFloorPercent") is not None and total_host:
+        floor_bytes = min(floor_bytes, max(spec["alignBytes"], total_host * spec["hostFreeFloorPercent"] // 100 // spec["alignBytes"] * spec["alignBytes"]))
+    pressure = floor_bytes - free if free is not None and free < floor_bytes else 0
     effective = max(floors, min(case["totalBytes"], demand_total - pressure if pressure > 0 else case["totalBytes"]))
     quotas = split(effective, [{"id": s["id"], "weight": s["weightBasisPoints"], "floor": s["floorBytes"], "demand": d} for s, _, d in rows], True)
     out = []

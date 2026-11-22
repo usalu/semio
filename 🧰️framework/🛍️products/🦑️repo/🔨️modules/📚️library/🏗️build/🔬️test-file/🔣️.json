@@ -1,0 +1,75 @@
+{
+  "version": 1,
+  "tables": [
+    {
+      "id": "build",
+      "root": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build",
+      "table": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🗂️suites/🔣️.json",
+      "owner": "build",
+      "route": "build-contract",
+      "project": "@semio-tech/repo-lib",
+      "launchers": true
+    },
+    {
+      "id": "caching",
+      "root": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching",
+      "table": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🗂️suites/🔣️.json",
+      "owner": "cache",
+      "route": "cache-contract",
+      "project": "@semio-tech/repo-lib",
+      "launchers": true
+    },
+    {
+      "id": "process",
+      "root": "🧰️framework/🔨️modules/🏃️process",
+      "table": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🗂️suites/🔣️.json",
+      "owner": "process",
+      "route": "process-contract",
+      "project": "@semio-tech/framework-process",
+      "launchers": false
+    }
+  ],
+  "plain": {
+    "id": "plain",
+    "owner": "test-file",
+    "route": "test-file",
+    "project": "@semio-tech/repo-lib",
+    "budgetMs": 300000,
+    "typecheck": "none"
+  },
+  "providers": [
+    {
+      "root": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo",
+      "provider": "cargo-preparation-storage"
+    }
+  ],
+  "launcherScript": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🌱️genuine-birth/📜️script.ts",
+  "strip": [
+    "SEMIO_SCRIPT_PROCESS_INVOCATION",
+    "SEMIO_SCRIPT_CAPABILITIES",
+    "SEMIO_SCRIPT_POLICY",
+    "SEMIO_PROCESS_OWNER_CONTEXT"
+  ],
+  "scrub": [
+    "SEMIO_FLEET_GROUP",
+    "SEMIO_FLEET_NFS_HOST",
+    "SEMIO_FLEET_NETWORK",
+    "SEMIO_REMOTE_CACHE_ENDPOINT",
+    "SEMIO_REMOTE_CACHE_ACCESS",
+    "SEMIO_REMOTE_CACHE_INSTANCE",
+    "SEMIO_REMOTE_CACHE_TOKEN",
+    "SEMIO_TEST_ARTIFACT_DIR"
+  ],
+  "environment": {
+    "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0"
+  },
+  "defaultBuildMode": "prototype",
+  "elapsedSlackMs": 120000,
+  "extensions": [".ts", ".tsx", ".mts", ".js", ".mjs"],
+  "pythonHints": ["python", "🐍️"],
+  "limits": {
+    "tailCharacters": 8000,
+    "errorCharacters": 400,
+    "maximumFiles": 256
+  }
+}

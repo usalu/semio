@@ -12,11 +12,10 @@ use semio_s_artifact_puzzle_5d_puzzle5d::editor::puzzle5d::modes::edit;
 /// `ArtifactApp` — `EditorApp<Puzzle5dPlayApp>` (SDK adapter, contract §2.1) is the real
 /// `ArtifactApp` implementor `VcsArtifactApp` wraps, exactly the way
 /// `PluginBuilder::editor::<Puzzle5dPlayApp>` builds it.
-type Puzzle5dMembers = <Puzzle5dPlayApp as semio_plugin::ArtifactEditor>::Members;
-pub type Puzzle5dApp = VcsArtifactApp<EditorApp<Puzzle5dPlayApp>, Puzzle5dMembers>;
+pub type Puzzle5dApp = VcsArtifactApp<EditorApp<Puzzle5dPlayApp>>;
 
 /// 🧯️ Projects a fixture dispatch failure onto the diagnostic `Fault` the drivers' callers assert on: the original fault when that is the primary, else the complete debug form.
-fn fault_of(app: &mut Puzzle5dTestApp, failure: impl Into<semio_framework_job::OriginalTurnFailure>) -> Fault {
+pub fn fault_of(app: &mut Puzzle5dTestApp, failure: impl Into<semio_framework_job::OriginalTurnFailure>) -> Fault {
     let failure = failure.into();
     let fault = failure.primary_fault().cloned().unwrap_or_else(|| Fault::from(format!("{failure:?}")));
     let mut pending = Some(failure);
@@ -102,7 +101,7 @@ impl Drop for Puzzle5dTestApp {
 /// utility contract are enforced exactly as in production.
 pub fn app_with_registry() -> Puzzle5dTestApp {
     let scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-    let mut app = semio_plugin::with_authoring_identity!(|identity| ::semio_framework_async::poll::resolve_ready(semio_plugin::artifact_app_laws::new_app_with_registry_and_members::<EditorApp<Puzzle5dPlayApp>, Puzzle5dMembers>(puzzle5d_app_manifest_for_tests, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::artifact_app_laws::fixture_mounted_policy(), &mut identity)));
+    let mut app = semio_plugin::with_authoring_identity!(|identity| ::semio_framework_async::poll::resolve_ready(semio_plugin::artifact_app_laws::new_app_with_registry::<EditorApp<Puzzle5dPlayApp>>(puzzle5d_app_manifest_for_tests, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::artifact_app_laws::fixture_mounted_policy(), &mut identity)));
     ::semio_framework_async::poll::resolve_ready(app.bind_instance_id(1));
     Puzzle5dTestApp(app, scope)
 }
@@ -206,17 +205,31 @@ fn drain_settled(app: &mut Puzzle5dTestApp, result: &mut InvocationResult, fault
 
 type Identity<'a, 'b> = &'a mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'b>;
 
+fn prepare_fixture_operation_turn(
+    app: &mut Puzzle5dTestApp,
+    fuel: u64,
+    grant: semio_framework_value::RetainedCloneGrant,
+) -> Result<(), Fault> {
+    artifact_app_laws::fixture_renew_turn(app.1.cx(), fuel, grant)
+        .map_err(|error| Fault::from(error.to_string()))?;
+    app.maintain(artifact_app_laws::fixture_mounted_policy().maintenance.maximum_copy_bytes)
+        .map_err(|failure| fault_of(app, failure))?;
+    Ok(())
+}
+
 fn settle(app: &mut Puzzle5dTestApp, result: Result<InvocationResult, Fault>, identity: Identity<'_, '_>) -> Result<InvocationResult, Fault> {
     let mut result = result?;
     let mut fault = None;
+    let fuel = artifact_app_laws::OriginalFixtureCaller::turn_fuel();
+    let (grant, _) = app.1.cx().original_turn_ceiling();
     for _ in 0..1_048_576 {
         if !app.has_pending_typed_operations() {
             drain_settled(app, &mut result, &mut fault)?;
             return fault.map_or(Ok(result), Err);
         }
-        semio_plugin::__job::testkit::renew_payload_page_grant(app.1.cx());
-        app.maintain(semio_plugin::artifact_app_laws::fixture_mounted_policy().maintenance.maximum_copy_bytes).map_err(|failure| fault_of(app, failure))?;
-        block_on(app.0.advance_typed_operation_publication(identity, app.1.cx())).map_err(|failure| fault_of(app, failure))?;
+        prepare_fixture_operation_turn(app, fuel, grant)?;
+        block_on(app.0.advance_typed_operation_publication(identity, app.1.cx()))
+            .map_err(|failure| fault_of(app, failure))?;
         drain_settled(app, &mut result, &mut fault)?;
     }
     Err(Fault::from("puzzle5d test operation did not settle"))
@@ -228,6 +241,9 @@ fn settle(app: &mut Puzzle5dTestApp, result: Result<InvocationResult, Fault>, id
 /// `(action, args, window_id)` triple every pre-migration test already passed.
 pub fn dispatch(app: &mut Puzzle5dTestApp, action: &str, args: Option<&Value>, window_id: Option<&str>) -> Result<InvocationResult, Fault> {
     let action_meta = action_meta(action, args, window_id);
+    if let ("copy" | "cut" | "paste", Some(view)) = (action, action_meta.view_state.as_deref()) {
+        app.0.window_transient_generation(view)?;
+    }
     if matches!(
         action,
         "undo"
@@ -299,14 +315,17 @@ fn dispatch_traced_with(app: &mut Puzzle5dTestApp, action: &str, args: Option<&V
     let mut next_turn = 1_u64;
     let mut last_print = std::time::Instant::now();
     let mut last_census = base;
+    let fuel = artifact_app_laws::OriginalFixtureCaller::turn_fuel();
+    let (grant, _) = app.1.cx().original_turn_ceiling();
     for turn in 1..=1_048_576_u64 {
         if !app.has_pending_typed_operations() {
             drain_settled(app, &mut result, &mut fault)?;
             eprintln!("{action} settled turn={turn} ms={} census={} pages={lanes:?} fault={fault:?}", started.elapsed().as_millis(), semio_plugin::app::typed_operation_unit_census() - base);
             return fault.map_or(Ok(result), Err);
         }
-        app.maintain(semio_plugin::artifact_app_laws::fixture_mounted_policy().maintenance.maximum_copy_bytes).map_err(|failure| fault_of(app, failure))?;
-        let unit = block_on(app.0.advance_typed_operation_publication(identity, app.1.cx())).map_err(|failure| fault_of(app, failure));
+        prepare_fixture_operation_turn(app, fuel, grant)?;
+        let unit = block_on(app.0.advance_typed_operation_publication(identity, app.1.cx()))
+            .map_err(|failure| fault_of(app, failure));
         while let Some(page) = take_page(app)? {
             *lanes.entry(format!("{:?}", page.lane)).or_default() += 1;
             if page.lane == semio_plugin::app::TypedOperationResultLane::Fault {

@@ -1,0 +1,11 @@
+# Mounted Media Poll Audit
+
+The captured trace confirms kind 10 reached `stdio-pdf#2` instance 2 on a single command page and the guest keeps returning `more-work / command-pending`. Poll samples show many empty effects and occasional `send-message`; the recorded effect tag does not expose its target or payload. The retained trace has no captured worker replies. It therefore cannot distinguish typed result pages, progress/diagnostic frames, document traffic or another Shell frame.
+
+The concrete producers include `⚛️reactor/🔄️turn/🩹️reconcile-drive-and-publication-receipts/🦀️.rs` `route_app_frame`, which wraps every non-UI-patch AppFrame for Shell, and `⚛️reactor/🏃️runtime/📮️publication/🦀️.rs` `plugin_drive_result_pages`, which publishes typed-operation pages to Shell. Capture endpoint, payload length and bounded prefix, then decode via the shared typed-operation page decoder and, if not that format, AppFrame decoder. Record page operation, generation, sequence, lane and acknowledgement rather than dumping payload.
+
+The browser `PluginRuntime/🚚️handle-turn-drive/🟦️.ts` `runQueuedTurn` accepts UI patches and derives typed-page acknowledgements on each poll, but normally accumulates effects until command completion before `settleAcknowledgedPluginTurns`, `commitReservedToolSpawnsWhileSerialized` and host routing. Test whether an effect or spawned job required to finish this retained command waits behind that closure; do not infer it from the generic tag. Any effect resets `lastObservableMs` at line 397, so periodic effects suppress quiet backoff even if the command owner itself makes no progress.
+
+The guest `🧵️instance/🔌️plugin-app-impl/🦀️.rs` `advance_original_media_import` waits for the actual mounted tool operation, captures its terminal result and internally acknowledges every result page in AwaitingAck, then waits for operation retirement before completing MediaIn. Inspect this operation’s current stage, token, source/work grant, pending result publication and terminal/retirement state at intervals. A missing host acknowledgement alone is not established as the cause.
+
+Read-only analysis; no product edits or runtime tests. Paths are relative to `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin` except PluginRuntime under the renderer tree.

@@ -88,7 +88,7 @@ pub enum DockNode {
 
 impl Default for DockState {
     fn default() -> Self {
-        Self { root: empty_stack(), active_window_id: None, maximized_stack: None, active_stack: None, split_resize_origin: vec![], mobile: false }
+        Self { root: empty_stack(), active_window_id: None, maximized_stack: None, active_stack: None, split_resize_origin: vec![], mobile: false, coarse_pointer: false }
     }
 }
 
@@ -103,6 +103,8 @@ pub struct DockState {
     /// `mobile` prop (`🧱️elements/🎨️Canvas/🟦️.tsx:1136-1158`), which hides the Focus/Unfocus tab
     /// action because a mobile window always fills the canvas anyway. Close stays reachable.
     pub mobile: bool,
+    /// 🖐️ A touch-class device drives the dock: splitters and join corners take React's coarse hit target (`RESIZABLE_HIT_TARGET_MIN_COARSE_PX`) instead of the fine one.
+    pub coarse_pointer: bool,
 }
 
 /// 🏷️ The semantic name of a control painted by this Dock walk.
@@ -174,7 +176,7 @@ impl DockState {
         let root = app.default_layout.as_ref().map(|layout| dock_from_window_layout(&layout.root)).unwrap_or_else(|| even_layout(&app.window_kinds.iter().map(|k| k.id.clone()).collect::<Vec<_>>()));
         let active = active_window_id.and_then(|id| find_stack_path(&root, id, &mut vec![]).map(|_| id.to_string())).or_else(|| first_window_id(&root));
         let active_stack = active.as_ref().and_then(|id| find_stack_path(&root, id, &mut vec![]));
-        Self { root, active_window_id: active, maximized_stack: None, active_stack, split_resize_origin: vec![], mobile: false }
+        Self { root, active_window_id: active, maximized_stack: None, active_stack, split_resize_origin: vec![], mobile: false, coarse_pointer: false }
     }
 
     /// 🪟️ Every window id the layout tree holds, in layout order — twin of React's

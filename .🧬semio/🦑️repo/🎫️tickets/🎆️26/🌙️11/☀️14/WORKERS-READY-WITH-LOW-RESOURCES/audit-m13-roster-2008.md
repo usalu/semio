@@ -1,0 +1,7 @@
+# m13 Readiness and Store Roster at 20:08 UTC
+
+The shared origin directory now contains g1-m01 through g1-m13 and g1-server. The repository readiness report enumerates origin directories, classifies the server suffix separately, validates origin-bound Ready receipts and counts all worker directories including stale and missing evidence. Its current denominator is therefore 13 worker origins. This is a store-origin roster, not independent proof that all labels denote distinct physical machines. The topology server machines field controls network export addresses and is not the Ready roster.
+
+At 20:08:29 UTC m13 freshly attested macOS, staged tree `7d8c0b059bcaed05be881279fe59b4fa8305d514`, executing replica digest `06102e8b3eb19c67dd0eca3234e9920da806b8ff8288b41cc1f10d8d431d5516`, and zero incoming. Its fresh pool reports 16,384 MB physical memory. The separate Ready receipt reports native stage attempt 1 failed with exit 1 and backoff: the Rust toolchain installer rolled back after a `rust-std-wasm32-wasip2` file conflict. It is not Ready. Registration metadata exists; its contents were not read.
+
+The m04 last replica and Ready reports remain November 20 23:43 and 23:53 UTC; m06 reports remain November 20 18:25 UTC. They are stale observations, not current health. m09 has registration metadata but no attestation, pool or Ready receipt. No remote action or process change was made.

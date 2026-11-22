@@ -1,12 +1,80 @@
 {
   "cases": [
-    { "host": 4096, "others": 0 },
-    { "host": 8192, "others": 0 },
-    { "host": 12288, "others": 0 },
-    { "host": 16384, "others": 0 },
-    { "host": 16384, "others": 900 },
-    { "host": 16384, "others": 1800 },
-    { "host": 20000, "others": 0 },
-    { "host": 23999, "others": 0 }
+    {
+      "host": 4096,
+      "others": 0
+    },
+    {
+      "host": 8192,
+      "others": 0
+    },
+    {
+      "host": 12288,
+      "others": 0
+    },
+    {
+      "host": 16384,
+      "others": 0
+    },
+    {
+      "host": 16384,
+      "others": 900
+    },
+    {
+      "host": 16384,
+      "others": 1800
+    },
+    {
+      "host": 20000,
+      "others": 0
+    },
+    {
+      "host": 23999,
+      "others": 0
+    },
+    {
+      "host": 32768,
+      "others": 0,
+      "grant": 2304
+    },
+    {
+      "host": 32768,
+      "others": 0,
+      "grant": 7168
+    },
+    {
+      "host": 32768,
+      "others": 0,
+      "grant": 14336
+    },
+    {
+      "host": 16384,
+      "others": 0,
+      "grant": 99999
+    },
+    {
+      "host": 32768,
+      "others": 0,
+      "grant": 2304,
+      "available": 12000
+    },
+    {
+      "host": 32768,
+      "others": 0,
+      "grant": 2304,
+      "available": 3000
+    },
+    {
+      "host": 32768,
+      "others": 0,
+      "grant": 4096,
+      "available": 20000
+    },
+    {
+      "host": 16384,
+      "others": 0,
+      "grant": 2304,
+      "available": 99999
+    }
   ]
 }

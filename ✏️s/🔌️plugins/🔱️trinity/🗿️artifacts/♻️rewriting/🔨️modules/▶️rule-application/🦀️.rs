@@ -195,7 +195,6 @@ pub fn apply_rule_json(graph: &mut Graph, rule_json: &str, bindings_json: &str) 
         schema: JackSnapshot::SCHEMA.into(),
         name: graph.name.clone(),
         manifest_id: graph.manifest_id.clone(),
-        manifest: graph.manifest.clone(),
         camera: graph.camera.clone(),
         nodes: graph.nodes.values().cloned().collect(),
         edges: graph.edges.values().cloned().collect(),

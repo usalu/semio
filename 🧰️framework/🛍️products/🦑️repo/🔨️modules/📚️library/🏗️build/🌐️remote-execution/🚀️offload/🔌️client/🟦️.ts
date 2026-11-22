@@ -2,8 +2,9 @@ import {chmodSync,mkdirSync,renameSync,rmSync,writeFileSync} from "node:fs";
 import {dirname,join} from "node:path";
 import {randomBytes} from "node:crypto";
 import {decodeProtobufV1,REAPI_V1,type ProtobufMessageV1} from "../../📡️wire/📦️protobuf/🟦️.ts";
-import {connectGrpcV1,GrpcErrorV1,GRPC_CODES_V1} from "../../📡️wire/🚪️grpc/🟦️.ts";
+import {connectGrpcV1,GrpcErrorV1} from "../../📡️wire/🚪️grpc/🟦️.ts";
 import type {RemoteExecutionContentV1} from "../../🗄️content/🟦️.ts";
+import {classifyOffloadStatusV1} from "../🩺️failure/🟦️.ts";
 import {OFFLOAD_POLICY_V1,type OffloadReasonV1} from "../📐️policy/🟦️.ts";
 import type {OffloadDigestV1} from "../📜️action/🟦️.ts";
 
@@ -14,15 +15,18 @@ export type OffloadStageV1=typeof STAGES[number];
 /** 🏁️ How one remote execution ended: a result, or a reason to stay local. */
 export type OffloadExecutionV1=Readonly<{kind:"done";actionResult:ProtobufMessageV1;cached:boolean;origin:string}>|Readonly<{kind:"declined";reason:OffloadReasonV1;detail:string;transient?:true}>;
 
+/** ⏳️ How long the client waits for one action overall, from submitting to the answer: the time the action itself may run (`actionSeconds`) plus a small margin (`executeMarginMilliseconds`); the wait is derived from the action timeout and can never outlast it by more than the margin. */
+export function offloadExecuteBudgetMillisecondsV1():number{return timeouts.actionSeconds*1000+timeouts.executeMarginMilliseconds;}
+
 const declined=(reason:OffloadReasonV1,detail:string,transient=false):OffloadExecutionV1=>({kind:"declined",reason,detail,...(transient?{transient:true as const}:{})});
 /** 🔌️ Submits an action once with `semio-offload=if-idle` semantics and waits for it under per-phase timeouts: connecting, being taken by an idle machine, running. A refusal for lack of an idle machine, a timeout or any fault is a decline the caller answers by compiling here; a cancelled `signal` closes the call, which cancels the remote action. */
 export async function executeOffloadV1(input:Readonly<{endpoint:string;token:string|undefined;sign?:(method:string,content:string)=>Record<string,string>;instance:string;action:OffloadDigestV1;signal?:AbortSignal;onStage?:(stage:OffloadStageV1)=>void;queueMilliseconds?:number;executeMilliseconds?:number;connectMilliseconds?:number}>):Promise<OffloadExecutionV1>{
  const controller=new AbortController(),client=connectGrpcV1(input.endpoint,input.sign===undefined?{}:{sign:input.sign}),cancel=()=>controller.abort();
  input.signal?.addEventListener("abort",cancel,{once:true});
  let phase:"connect"|"queue"|"execute"="connect",expired=false;
- const limits={connect:input.connectMilliseconds??timeouts.connectMilliseconds,queue:input.queueMilliseconds??timeouts.queueMilliseconds,execute:input.executeMilliseconds??timeouts.executeMilliseconds};
+ const limits={connect:input.connectMilliseconds??timeouts.connectMilliseconds,queue:input.queueMilliseconds??timeouts.queueMilliseconds,execute:input.executeMilliseconds??offloadExecuteBudgetMillisecondsV1()},submitted=Date.now();
  let timer:ReturnType<typeof setTimeout>|undefined;
- const arm=(next:typeof phase):void=>{phase=next;if(timer)clearTimeout(timer);timer=setTimeout(()=>{expired=true;controller.abort();},limits[next]);};
+ const arm=(next:typeof phase):void=>{phase=next;if(timer)clearTimeout(timer);timer=setTimeout(()=>{expired=true;controller.abort();},Math.max(1,Math.min(limits[next],submitted+limits.execute-Date.now())));};
  arm("connect");
  try{
   let response:ProtobufMessageV1|undefined;
@@ -37,9 +41,7 @@ export async function executeOffloadV1(input:Readonly<{endpoint:string;token:str
   if(input.signal?.aborted)return declined("cancelled","");
   if(!response)return declined("infrastructure","no response",true);
   const code=response.status?.code??0;
-  if(code!==0&&String(response.status?.message??"").includes("Action refused by the worker policy"))return declined("worker-policy",String(response.status?.message).slice(0,200));
-  if(code===GRPC_CODES_V1.RESOURCE_EXHAUSTED||code===GRPC_CODES_V1.FAILED_PRECONDITION)return declined("no-idle-machine",response.status?.message??"");
-  if(code!==0)return declined("infrastructure",`${code} ${response.status?.message??""}`);
+  if(code!==0){const message=String(response.status?.message??""),verdict=classifyOffloadStatusV1({code,message});return declined(verdict.reason,verdict.reason==="infrastructure"?`${code} ${message}`:message.slice(0,200));}
   const result=response.result;
   if(!result)return declined("infrastructure","no result");
   const worker=/^executed by (.+)$/u.exec(String(response.message??""))?.[1]??"",cached=response.cached_result===true;
@@ -47,7 +49,7 @@ export async function executeOffloadV1(input:Readonly<{endpoint:string;token:str
  }catch(error){
   if(input.signal?.aborted)return declined("cancelled","");
   if(expired)return declined(phase==="execute"?"infrastructure":"queue-timeout",phase);
-  if(error instanceof GrpcErrorV1)return declined(error.code===GRPC_CODES_V1.RESOURCE_EXHAUSTED||error.code===GRPC_CODES_V1.FAILED_PRECONDITION?"no-idle-machine":"infrastructure",`${error.code} ${error.message}`,error.code===GRPC_CODES_V1.UNAVAILABLE);
+  if(error instanceof GrpcErrorV1){const verdict=classifyOffloadStatusV1({code:error.code,message:error.message});return declined(verdict.reason,`${error.code} ${error.message}`,verdict.transient);}
   return declined("infrastructure",String((error as Error)?.message??error),true);
  }finally{
   if(timer)clearTimeout(timer);
@@ -93,13 +95,30 @@ export async function writeOffloadOutputsV1(content:RemoteExecutionContentV1,ins
  return written.sort();
 }
 
-/** 🛟️ Submits like `executeOffloadV1` and, when the call is lost to the transport (the scheduler restarts: connection refused or reset, the stream ends without an answer), submits the same action again with jittered back-off for `budgetMilliseconds`. The scheduler deduplicates by action digest (a worker that kept running the action re-joins and the scheduler adopts it) and answers an action that already finished from the action cache, so the retry never runs the unit a second time; once the budget is spent the caller compiles locally as before. A refusal, a timeout or a cancel is never retried. */
+/** 🛟️ Submits like `executeOffloadV1` and, when the call is lost to the transport (the scheduler restarts: connection refused or reset, the stream ends without an answer), submits the same action again with jittered back-off for `budgetMilliseconds`. The scheduler deduplicates by action digest (a worker that kept running the action re-joins and the scheduler adopts it) and answers an action that already finished from the action cache, so the retry never runs the unit a second time; once the budget is spent the caller compiles locally as before. A refusal, a timeout or a cancel is never retried, and the whole ride never outlasts the overall wait of one action (`offloadExecuteBudgetMillisecondsV1`, or `executeMilliseconds`): every new submission gets what is left of it. */
 export async function executeOffloadRidingThroughV1(input:Parameters<typeof executeOffloadV1>[0],budgetMilliseconds:number,pause:(milliseconds:number)=>Promise<void>=milliseconds=>new Promise<void>(done=>{setTimeout(done,milliseconds);})):Promise<OffloadExecutionV1>{
- const until=Date.now()+budgetMilliseconds;
+ const began=Date.now(),overall=input.executeMilliseconds??offloadExecuteBudgetMillisecondsV1(),until=began+Math.min(budgetMilliseconds,overall);
  let execution=await executeOffloadV1(input);
  for(let attempt=0;execution.kind==="declined"&&execution.transient===true&&input.signal?.aborted!==true&&Date.now()<until;attempt++){
   await pause(Math.min(2000,250*2**attempt)*(0.5+Math.random()));
-  execution=await executeOffloadV1(input);
+  const left=began+overall-Date.now();
+  if(left<=0||input.signal?.aborted===true)break;
+  execution=await executeOffloadV1({...input,executeMilliseconds:left});
  }
  return execution;
+}
+
+/** ⏱️ Runs one phase of an offload (the upload) under a time limit that really stops it: the work gets a signal that aborts when the time is spent or the build is cancelled, so the transport closes its requests; the phase ends at that moment even for work that ignores the signal. Answers the value, `timeout` or `cancelled`; a fault of the work itself is rethrown. */
+export async function runBoundedOffloadPhaseV1<T>(run:(signal:AbortSignal)=>Promise<T>,input:Readonly<{cancelled:AbortSignal;milliseconds:number}>):Promise<Readonly<{kind:"done";value:T}>|Readonly<{kind:"timeout"}>|Readonly<{kind:"cancelled"}>>{
+ const controller=new AbortController(),stop=()=>controller.abort(),timer=setTimeout(stop,input.milliseconds);
+ input.cancelled.addEventListener("abort",stop,{once:true});
+ if(input.cancelled.aborted)controller.abort();
+ const ended=new Promise<"ended">(done=>{if(controller.signal.aborted)done("ended");else controller.signal.addEventListener("abort",()=>done("ended"),{once:true});});
+ const work=(async()=>run(controller.signal))().then(value=>({value}),error=>({error}));
+ try{
+  const first=await Promise.race([work,ended]),over=():Readonly<{kind:"timeout"}>|Readonly<{kind:"cancelled"}>=>input.cancelled.aborted?{kind:"cancelled"}:{kind:"timeout"};
+  if(first==="ended")return over();
+  if("error" in first){if(controller.signal.aborted)return over();throw first.error;}
+  return {kind:"done",value:first.value};
+ }finally{clearTimeout(timer);input.cancelled.removeEventListener("abort",stop);}
 }

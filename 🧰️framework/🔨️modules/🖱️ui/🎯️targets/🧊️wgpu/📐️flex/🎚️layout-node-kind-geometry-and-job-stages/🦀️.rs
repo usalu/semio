@@ -65,12 +65,14 @@ pub enum LayoutNodeKind {
     TreeDetail {
         height: f32,
     },
-    /// 📊️ One table row: its materialised cell children flow along the inline axis in equal columns — the grid
+    /// 📊️ One table row: its materialised cell children flow along the inline axis in fixed-width columns — the grid
     /// `layout::table_column_rect` gives the header and the painted cells — between the leading gap and the trailing
     /// `actions` column its row actions paint in.
     TableRow {
         height: f32,
         actions: f32,
+        /// ↔️ The width the fixed column tracks and the actions track need; the row is never narrower, so a narrower viewport scrolls horizontally.
+        content: f32,
         /// ⏮️ The windowed table's leading spacer when this row is its first materialised row (else `0`).
         lead: f32,
     },
@@ -89,6 +91,11 @@ pub enum LayoutNodeKind {
     Control {
         height: f32,
         label_padding: Option<f32>,
+    },
+    /// 🔣️ A control whose caption the `icons` driver hides — React's `min-w-medium` icon cell: `height` tall and at least `width` wide, measuring no text.
+    IconControl {
+        height: f32,
+        width: f32,
     },
     /// 🔽️ A synthesized Select option whose rect is owned by popup placement, outside document
     /// flow. The retained interaction sync writes this parent-relative physical rect before a

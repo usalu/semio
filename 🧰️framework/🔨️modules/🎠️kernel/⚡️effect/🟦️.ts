@@ -57,7 +57,7 @@ export type Effect =
       };
     }
   | { readonly spawnPluginInstance: { readonly req: number; readonly pluginId: string; readonly appId: string; readonly osInstanceId?: string; readonly label?: string; readonly artifactJson?: string } }
-  | { readonly openPluginInstance: { readonly pluginId: string; readonly appId: string; readonly osInstanceId?: string } }
+  | { readonly openPluginInstance: { readonly pluginId: string; readonly appId: string; readonly osInstanceId?: string; readonly document?: { readonly documentId: string; readonly schema: string; readonly spaceId?: string } } }
   | { readonly setActiveUtility: { readonly windowId: string; readonly utilityId: string } }
   /** 🛠️ Programmatically switches the host-owned active tool of the active mode — the effect form of
    * `setActiveTool`. Empty `toolId` deactivates the current tool. */

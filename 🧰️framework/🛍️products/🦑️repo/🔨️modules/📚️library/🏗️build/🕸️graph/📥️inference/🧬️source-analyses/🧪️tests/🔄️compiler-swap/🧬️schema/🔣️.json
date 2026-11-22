@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["version", "generations", "compiler", "cases"],
+  "additionalProperties": false,
+  "properties": {
+    "version": {"const": 1},
+    "generations": {
+      "type": "object",
+      "required": ["retired", "published"],
+      "additionalProperties": false,
+      "properties": {
+        "retired": {"type": "string", "pattern": "^[0-9a-f]{20}$"},
+        "published": {"type": "string", "pattern": "^[0-9a-f]{20}$"}
+      }
+    },
+    "compiler": {
+      "type": "object",
+      "required": ["version", "main", "source"],
+      "additionalProperties": false,
+      "properties": {"version": {"type": "string"}, "main": {"type": "string"}, "source": {"type": "string"}}
+    },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "change", "expected"],
+        "additionalProperties": false,
+        "properties": {"name": {"type": "string"}, "change": {"enum": ["before-capture", "during-read", "remove-entry"]}, "expected": {"enum": ["published", "ENOENT"]}}
+      }
+    }
+  }
+}

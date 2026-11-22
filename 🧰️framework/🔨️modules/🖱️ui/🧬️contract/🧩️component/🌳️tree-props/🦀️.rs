@@ -70,6 +70,9 @@ pub struct TreeWindow {
 /// 🔑️ Joins the segments of a windowed container's **window path** — the identity both sides of the [Design notes](README.md#source-notes-70).
 pub const TREE_WINDOW_PATH_SEPARATOR: &str = "␟";
 
+/// 📍️ MIME for positional row drops. The renderer supplies the target key and insertion edge.
+pub const TREE_ROW_REORDER_MIME: &str = "application/x-semio-tree-row-reorder";
+
 /// 📑️ Props for `Component::TreeSection` — a labeled, collapsible grouping of `TreeItem` children.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]

@@ -36,6 +36,19 @@ function strippedReleaseDigest(target:ComponentStageTargetV1,receipt:ReturnType<
   return sha(stripWasmDebugSectionsV1(bytes));
 }
 
+/** 🔐️ Matches the published release component against the exact key of either admitted transpile producer. */
+export function matchesTranspileKey(entry:StageEntryV1,component:string,base:string):boolean{
+  const {stage,schemaVersion,inputs,tools}=entry.key;
+  const exact=(actual:Readonly<Record<string,string>>,expected:readonly string[])=>Object.keys(actual).length===expected.length&&expected.every(key=>Object.hasOwn(actual,key));
+  const digest=(value:unknown)=>typeof value==="string"&&/^[0-9a-f]{64}$/u.test(value);
+  if(stage!=="transpile"||!exact(inputs,["component"])||inputs.component!==component||!digest(component)||tools.base!==base||!digest(tools.materialization))return false;
+  const common=["base","materialization"];
+  if(schemaVersion===2)return exact(tools,[...common,"native-transpile"])&&digest(tools["native-transpile"]);
+  if(schemaVersion!==1||!tools.jco)return false;
+  return exact(tools,[...common,"jco"])||
+    exact(tools,[...common,"jco","native-transpile"])&&digest(tools["native-transpile"]);
+}
+
 /** 🧷️ Binds the raw receipt to a unique complete set of optimized cores through the build's transpile, optimizer and browser probe. */
 export function sealedBrowserCores(transpiles:readonly StageEntryV1[],optimizes:readonly StageEntryV1[],probes:readonly StageEntryV1[],base:string,semantic:string):readonly StageFileV1[]{
   const known=new Map<string,readonly StageFileV1[]>();
@@ -64,7 +77,7 @@ async function verifyReceipt(request:Request,targets:readonly ComponentStageTarg
   const owners=targets.filter(target=>target.pluginId===receipt.pluginId&&target.packageId===receipt.packageId);
   if(owners.length!==1||receipt.profile!=="release")throw Error(`Exact release browser component owner required for ${receipt.pluginId}`);
   const target=owners[0]!,base=target.packageName.replaceAll("-","_");
-  const matching=(digest:string)=>transpiles.filter(row=>row.key.schemaVersion===1&&row.key.inputs.component===digest&&row.key.tools.base===base);
+  const matching=(digest:string)=>transpiles.filter(row=>matchesTranspileKey(row,digest,base));
   const initial=matching(receipt.wasmSha256);
   const files=sealedBrowserCores(initial.length?initial:matching(strippedReleaseDigest(target,receipt)),optimizes,probes,base,receipt.semanticDescriptorSha256);
   const root=dirname(request.stagedReceipt),actual=readdirSync(root,{recursive:true}).map(name=>name.replaceAll("\\","/")).filter(name=>name.endsWith(".wasm")).sort();

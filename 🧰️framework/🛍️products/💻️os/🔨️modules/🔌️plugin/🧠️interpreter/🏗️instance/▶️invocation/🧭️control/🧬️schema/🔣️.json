@@ -45,9 +45,25 @@
           "continuation": {
             "enum": ["settledControl", "retiredCallee"]
           },
+          "labelPeak": {
+            "type": "integer",
+            "minimum": 3
+          },
           "executionFuel": {
             "type": "integer",
             "minimum": 1
+          },
+          "atomicTransfer": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["before", "after", "retireLabel", "prefixFuel", "expectedFuel"],
+            "properties": {
+              "before": { "type": "integer", "minimum": 0 },
+              "after": { "type": "integer", "minimum": 0 },
+              "retireLabel": { "type": "boolean" },
+              "prefixFuel": { "type": "integer", "minimum": 0 },
+              "expectedFuel": { "type": "integer", "minimum": 1 }
+            }
           },
           "callee": {
             "type": "array",

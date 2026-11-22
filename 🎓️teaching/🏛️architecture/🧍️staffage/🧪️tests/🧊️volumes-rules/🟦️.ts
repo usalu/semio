@@ -9,7 +9,7 @@ import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { Box3, BoxGeometry, ExtrudeGeometry, Matrix4, Shape, SphereGeometry, Triangle, Vector2, Vector3 } from "three";
+import { Box3, BoxGeometry, ExtrudeGeometry, Matrix4, Quaternion, Shape, SphereGeometry, Triangle, Vector2, Vector3 } from "three";
 import type { Asset, AuthoredVolume, ScaleDenominator } from "../../🧬️schema/🟦️.ts";
 import { validateAsset } from "../../🔨️modules/🗂️catalog/🟦️.ts";
 import { tessellateSolid } from "../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🟦️.ts";
@@ -17,7 +17,7 @@ import { VOLUME_LIMITS, VOLUME_RULES, bandVolumes, checkVolumes, compareSolidLis
 import { insideAny } from "../../🔨️modules/🗂️catalog/🧊️volumes/🧮️measures/🟦️.ts";
 import { centreLineOf } from "../../🔨️modules/🗂️catalog/🧊️volumes/🧵️centreline/🟦️.ts";
 import { minimumWidth, slendernessOf, sortedExtents } from "../../🔨️modules/🗂️catalog/🧊️volumes/🧱️rules/🟦️.ts";
-import { CUT, Mask, projectedBodyDistance, TILE_CELLS, extentOf, measureAsset, measureView, referenceOf, worldSolids, type World } from "../../🔨️modules/🗂️catalog/🧊️volumes/🌓️silhouette/🟦️.ts";
+import { CUT, Mask, bodyOutline, projectedBodyDistance, TILE_CELLS, extentOf, measureAsset, measureView, referenceOf, worldSolids, type World } from "../../🔨️modules/🗂️catalog/🧊️volumes/🌓️silhouette/🟦️.ts";
 import { evaluate } from "../../🔨️modules/🧮️evaluation/🟦️.ts";
 import { qualityOf } from "../../🔨️modules/🧊️volume/⏱️job/🟦️.ts";
 import { STAFFAGE_ROOT, fixture, requireTool } from "../🧰️support/🧰️.ts";
@@ -26,6 +26,7 @@ import { python } from "../🧰️support/🐍️.ts";
 type Operation = { op: "replace" | "add" | "remove"; path: string; value?: unknown };
 type Boxes = { centre: number[]; size: number[]; sectionFaces?: string[] }[];
 type Vectors = {
+  ellipticMember: {radiusXM:number;radiusYM:number;lengthM:number;azimuthDeg:number};
   subpixelShaft: { triangle: number[][]; points: number[][]; degenerate: number[][]; probeRadiusM: number };
   totalSurface: { stockM: [number, number, number]; areaM2: number; wrongAreaM2: number };
   breathApertures: { diameterM: number; pigeonRadiiM: [number, number, number]; ovalProfileM: [number, number][]; normalThicknessM: number; cases: { kind: string; variant: string; finding: boolean }[] };
@@ -34,7 +35,7 @@ type Vectors = {
   exposed: { name: string; boxes: Boxes; target: number; planes?: { point: number[]; normal: number[]; toleranceM: number }[]; area: number }[];
   bands: { excavator: { bar: { size: number[] }; shortenM: number; distanceM: number }; cell: number; distance: number; cases: { name: string; fine: { centre: number[]; size: number[] }[]; coarse: { centre: number[]; size: number[] }[]; eroded: number; dilated: number; fineVolume: number }[] };
   winding: { cell: number; outer: number; area: number; evenOddArea: number };
-  envelopeArea: { name: string; scale: ScaleDenominator; region: string; patch: Operation[]; fineScale: number; finePatch: Operation[] };
+  envelopeArea: { pocketFraction: number; name: string; scale: ScaleDenominator; region: string; patch: Operation[]; fineScale: number; finePatch: Operation[] };
   retained: { cell: number; toleranceM2: number; cases: { view: "elevation" | "front" | "plan"; axis: number; far: number; near: number }[]; sampleSection: { scale: number; view: "elevation" | "front" | "plan"; plane: number; label: { en: string; de: string } } };
   emitters: { scale: ScaleDenominator; region: string; solid: string; untagged: Operation[]; removed: Operation[] };
   stroke: { pen: number; cases: { name: string; size: number[]; centres: number[][]; area: number }[] };
@@ -44,10 +45,12 @@ type Vectors = {
   sheetStock: { spanM: number; depthM: number; clothM: number; narrowM: number; inflatedM: number };
   sweptRod: { radiusM: number; stationsM: [number, number, number][]; lengthM: number; diameterM: number };
   hollow: { solid: unknown; smallestM: number };
-  follow: { bar: { centre: number[]; size: number[] }; cases: { name: string; drawn: { bone: string; closed: boolean; filled: boolean; rings: number[][][]; penM: number }[]; widthM: number }[]; hoop: { radiusM: number; tubeM: number; penM: number; solid: { kind: "revolve"; profile: number[][] }; outline: number[][] } };
+  follow: { bar: { centre: number[]; size: number[] }; cases: { name: string; material?: string; drawn: { bone: string; material?: string; closed: boolean; filled: boolean; rings: number[][][]; penM: number }[]; widthM: number }[]; hoop: { radiusM: number; tubeM: number; penM: number; solid: { kind: "revolve"; profile: number[][] }; outline: number[][] }; bodyEdge: { plate: { centre: number[]; size: number[] }; wire: { centre: number[]; size: number[] }; outline: number[][]; penM: number; edgeAreaM2: number; penAreaM2: number; voidAreaM2: number; rects: number[][] } };
   minimumWidth: { cases: { name: string; points: number[][]; widthM: number }[] };
   tangent: { cell: number; roof: { centre: number[]; size: number[] }; cases: { name: string; bar: { centre: number[]; size: number[] }; gapM: number; rowCells: number; closed: boolean }[] };
   envelope: { bars: { centre: number[]; size: number[] }[]; prism: { centre: number[]; size: number[] }; feature: number };
+  viewsPosition: { scale: number; axis: string; elevationM: number[]; widthM: number; limitM: number; cases: { name: string; shiftM: number; finding: boolean }[] };
+  typified: { rods: { count: number; first: number; pitch: number; size: number[] }; posts: { count: number; first: number; pitch: number; size: number[] }; feature: number; hullIou: number };
   support: { missing: { name: string; rule: VolumeRule; patch: Operation[] }; wrongAnchor: { name: string; code: string; patch: Operation[] }; valid: { name: string; patch: Operation[] } };
   rules: string[];
   limits: Record<string, unknown>;
@@ -128,7 +131,7 @@ describe("🧊️ the limits and rules of the volumes are those of the design", 
     }
   });
 
-  it("lists the thirteen rule ids and the thresholds of the design, unweakened", () => {
+  it("lists the fourteen rule ids and the thresholds of the design, unweakened", () => {
     expect([...VOLUME_RULES]).toEqual(vectors.rules);
     expect(JSON.parse(JSON.stringify(VOLUME_LIMITS))).toEqual(vectors.limits);
     expect(featureOf(50)).toBeCloseTo(0.0075, 9);
@@ -281,6 +284,30 @@ describe("🧊️ exposed thermal area (C1), bands (C3), winding and tiling (C7)
     expect(hulled.iou).toBeGreaterThan(0.98);
   });
 
+  it("compares a typified row with the row it stands for through their common envelope", () => {
+    const { rods, posts, feature, hullIou } = vectors.typified;
+    const row = (prefix: string, r: { count: number; first: number; pitch: number; size: number[] }, envelope: boolean): World[] => Array.from({ length: r.count }, (_, k) => ({ ...cuboid(`${prefix}${k}`, [r.first + k * r.pitch, r.size[1]! / 2, 0], r.size), bone: "balustrade", ...(envelope ? { envelope: true } : {}) }));
+    const [fine, coarse] = [row("rod", rods, false), row("post", posts, true)];
+    const plain = silhouetteAgreement(coarse, fine, "elevation", feature);
+    const hulled = silhouetteAgreement(coarse, fine, "elevation", feature, 0, { hullBones: new Set(["balustrade"]) });
+    expect(plain.rawIou).toBeLessThan(0.5);
+    expect(plain.p95M).toBeGreaterThan(VOLUME_LIMITS.crossDistanceFeatures * feature * 0.5);
+    expect(Math.abs(hulled.rawIou - hullIou)).toBeLessThan(0.01);
+    expect(hulled.p95M).toBeLessThanOrEqual(hulled.cellM);
+    const undeclared = silhouetteAgreement(row("post", posts, false), fine, "elevation", feature, 0, { hullBones: new Set(["balustrade"]) });
+    expect(undeclared.rawIou).toBeLessThan(0.5);
+    const directory = mkdtempSync(join(tmpdir(), "staffage-typified-"));
+    try {
+      const input = join(directory, "input.json");
+      writeFileSync(input, JSON.stringify({ cases: [{ name: "typified", meshes: coarse.map(mesh), other: fine.map(mesh), view: "elevation", hull: true }] }));
+      const reference = JSON.parse(python(ORACLE, "geometry", [input])) as Record<string, { iou: number; iouHull: number }>;
+      expect(Math.abs(reference.typified!.iouHull - hullIou), "shapely convex hulls").toBeLessThan(1e-6);
+      expect(reference.typified!.iou, "shapely rows").toBeLessThan(0.5);
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
+  });
+
   it("measures the same IoU and distances in tiles as on one raster", () => {
     const [a, b] = [cuboid("a", [0, 0, 0], [3, 2, 1]), cuboid("b", [0.3, 0.1, 0], [3, 2, 1])];
     const one = silhouetteAgreement([a], [b], "elevation", 0.2);
@@ -399,14 +426,36 @@ describe("🧊️ exposed thermal area (C1), bands (C3), winding and tiling (C7)
     }
   });
 
-  it("retains the physical gauge of a broad sheet bound to its thermal material", () => {
+  it("measures a slender member against its independently specified elliptical section", () => {
+    const f=vectors.ellipticMember, b=sample.rig.bones[1]!, material=sample.materials[0]!.id;
+    const angle=f.azimuthDeg*Math.PI/180, radius=Math.hypot(f.radiusXM*Math.sin(angle),f.radiusYM*Math.cos(angle));
+    const shape=new Shape();
+    shape.absellipse(0,0,f.radiusXM,f.radiusYM,0,Math.PI*2,false,angle);
+    const geometry=new ExtrudeGeometry(shape,{depth:f.lengthM,curveSegments:180,bevelEnabled:false});
+    const bounds=new Box3().setFromBufferAttribute(geometry.attributes.position! as never);
+    expect(bounds.max.y).toBeCloseTo(radius,5);
+    const area=Math.PI*f.radiusXM*f.radiusYM;
+    const q=new Quaternion().setFromAxisAngle(new Vector3(0,1,0),Math.PI/2).multiply(new Quaternion().setFromAxisAngle(new Vector3(0,0,1),angle));
+    const stations=[0,f.lengthM].map(x=>({at:[x,0,0],rx:f.radiusXM,ry:f.radiusYM,rotation:q.toArray()}));
+    const shaft={id:"physical-shaft",member:b.id,bone:b.id,kind:"loft",material,part:"member",role:"body",tone:.9,sections:stations,capStart:true,capEnd:true};
+    const section={material,areaM2:area,secondMomentM4:area*radius*radius/4,extremeFibreM:radius};
+    for(const [change,want] of [[{},0],[{areaM2:area*.4},1],[{secondMomentM4:section.secondMomentM4*1.7},1],[{material:"other"},1]] as const) {
+      const asset=patch(sample,[{op:"add",path:"/rig/bones/1/section",value:{...section,...change}},
+        {op:"add",path:"/volumes/50/structure/-",value:shaft}]) as Asset;
+      const issues=checkVolumes(asset,{scale:50,rules:["volumes-feature"]}).filter(x=>x.message.en.includes('"physical-shaft"'));
+      expect(issues.length).toBe(want);
+    }
+    geometry.dispose();
+  });
+
+  it("retains the physical gauge of a broad sheet bound to its thermal material, and lets an unbound broad sheet pass only when it declares `sheet`", () => {
     const f = vectors.sheetStock;
     const region = sample.thermal.regions[0]!;
     const material = region.material;
     const bone = sample.rig.bones[1]!.id;
-    const size = (depth: number, thickness: number, bound: boolean) => {
+    const size = (depth: number, thickness: number, bound: boolean, declared = false) => {
       const profile = [[0,0],[f.spanM,0],[0,depth]];
-      const sheet = {id:"canopy-sheet",kind:"extrude",bone,material,role:"body",tone:0.5,plane:"zx",profile,from:0,to:thickness};
+      const sheet = {id:"canopy-sheet",kind:"extrude",bone,material,role:"body",tone:0.5,plane:"zx",profile,from:0,to:thickness,...(declared ? {sheet:true} : {})};
       const layer = { ...region.layers[0]!, id:"sheet-stock", material, thicknessM:f.clothM };
       const thermal = {id:"sheet-surface",of:sheet.id,region:region.id,layer:layer.id};
       const asset = patch(sample,[{op:"add",path:"/volumes/50/body/-",value:sheet},
@@ -423,6 +472,9 @@ describe("🧊️ exposed thermal area (C1), bands (C3), winding and tiling (C7)
     expect(size(f.depthM,f.inflatedM,true)).toBe(true);
     expect(size(f.narrowM,f.clothM,true)).toBe(true);
     expect(size(f.depthM,f.clothM,false)).toBe(true);
+    expect(size(f.depthM,f.clothM,false,true)).toBe(false);
+    expect(size(f.narrowM,f.clothM,false,true)).toBe(true);
+    expect(size(f.depthM,f.inflatedM,true,true)).toBe(true);
   });
 
   it("keeps the measured tissue diameter when the drawing merges its region", () => {
@@ -514,6 +566,33 @@ describe("🧊️ C20 and the defects of the tool owner", () => {
     const [was, now] = [measureVolumes(sample, { scale: 100, rules: ["volumes-views-disagree"] }), measureVolumes(taller, { scale: 100, rules: ["volumes-views-disagree"] })];
     expect(now.find((m) => m.name === "extentDifferenceM:y")!.value).toBeGreaterThan(was.find((m) => m.name === "extentDifferenceM:y")!.value + 1);
   });
+  it.each(vectors.viewsPosition.cases)("$name", { timeout: 300_000 }, (c) => {
+    requireTool("uv");
+    const v = vectors.viewsPosition;
+    const rect = { id: "footprint", bone: sample.rig.root, role: "body", z: 0, filled: true, tone: 0.5, kind: "rect", x: v.elevationM[0]! + c.shiftM, y: -v.widthM / 2, w: v.elevationM[1]! - v.elevationM[0]!, h: v.widthM };
+    const moved = patch(sample, [{ op: "replace", path: `/representations/${v.scale}/geometry/plan`, value: [rect] }]) as Asset;
+    const options = { scale: v.scale as ScaleDenominator, rules: ["volumes-views-disagree"] as const };
+    const measured = measureVolumes(moved, options);
+    const [extent, place] = [measured.find((m) => m.name === `extentDifferenceM:${v.axis}`)!, measured.find((m) => m.name === `positionDifferenceM:${v.axis}`)!];
+    expect(extent.value).toBeLessThan(1e-3);
+    expect(extent.ok).toBe(true);
+    expect(place.value).toBeCloseTo(c.shiftM, 3);
+    expect(place.limit).toBeCloseTo(v.limitM, 9);
+    const findings = checkVolumes(moved, options).filter((f) => (f.data as { axis?: string } | undefined)?.axis === v.axis);
+    expect(findings.length).toBe(c.finding ? 1 : 0);
+    if (c.finding) expect((findings[0]!.data as { firstM: number[]; secondM: number[] }).secondM[0]! - (findings[0]!.data as { firstM: number[] }).firstM[0]!).toBeCloseTo(c.shiftM, 3);
+    const state = evaluate(moved, { kind: "pose", pose: moved.presentation.defaultPose }, { kind: "scale", scale: { denominator: v.scale } } as never);
+    const points = (view: "elevation" | "plan") => (state.shapes[view] as readonly { shape: { role: string }; rings: readonly (readonly { x: number; y: number }[])[] }[]).filter((item) => ["body", "detail", "glazing"].includes(item.shape.role)).flatMap((item) => item.rings.flat().map((q) => [q.x, q.y]));
+    const directory = mkdtempSync(join(tmpdir(), "staffage-volumes-"));
+    try {
+      writeFileSync(join(directory, "input.json"), JSON.stringify({ cases: [{ name: "place", bounds: { first: points("elevation"), second: points("plan"), axis: 0 } }] }));
+      const reference = JSON.parse(python(ORACLE, "geometry", [join(directory, "input.json")])) as Record<string, { shift: number; extentDifference: number }>;
+      expect(Math.abs(reference.place!.shift - place.value)).toBeLessThan(1e-9);
+      expect(Math.abs(reference.place!.extentDifference - extent.value)).toBeLessThan(1e-9);
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
+  });
 });
 
 describe("🧊️ C21: small regions", () => {
@@ -573,12 +652,12 @@ describe("🧊️ C22: envelope solids and thermal area", () => {
     const [before, after] = [areas(plain, scale), areas(envelope, scale)];
     expect(before.has(region)).toBe(true);
     expect(after.has(region)).toBe(false);
-    for (const [id, value] of before) if (id !== region) expect(Math.abs(after.get(id)! - value), id).toBeLessThan(1e-9);
+    for (const [id, value] of before) if (id !== region) expect(Math.abs(after.get(id)! - value), id).toBeLessThan(vectors.envelopeArea.pocketFraction * value);
     expect(checkVolumes(envelope, { scale, rules: ["volumes-thermal-coverage"] }).filter((f) => (f.data as { region?: string } | undefined)?.region === region)).toEqual([]);
     const declared = new Map(sample.thermal.regions.map((r) => [r.id, r.areaM2] as const));
     const rest = [...before].filter(([id]) => id !== region && declared.get(id)! > 0 && sample.thermal.regions.find((r) => r.id === id)!.areaBasis !== "exchange");
     const hand = Math.abs(rest.reduce((s, [, v]) => s + v, 0) / rest.reduce((s, [id]) => s + declared.get(id)!, 0) - 1);
-    expect(Math.abs(measureVolumes(envelope, { scale, rules: ["volumes-thermal-coverage"] }).find((m) => m.name === "areaDeviationTotal")!.value - hand)).toBeLessThan(1e-9);
+    expect(Math.abs(measureVolumes(envelope, { scale, rules: ["volumes-thermal-coverage"] }).find((m) => m.name === "areaDeviationTotal")!.value - hand)).toBeLessThan(vectors.envelopeArea.pocketFraction);
   });
 
   it("measures a per-region area at 1:50 only for the regions without envelope solids", () => {
@@ -903,7 +982,7 @@ describe("🧊️ C24 refined: a slender solid is drawn at the width of the 2D s
   };
 
   it.each(cases)("$name", (c) => {
-    const w = slender(cuboid("bar", bar.centre, bar.size));
+    const w = { ...slender(cuboid("bar", bar.centre, bar.size)), ...(c.material === undefined ? {} : { material: c.material }) };
     expect(Math.abs(area(w, shapes(c)) - (1 + c.widthM) * c.widthM)).toBeLessThan(0.004);
   });
 
@@ -934,6 +1013,33 @@ describe("🧊️ C24 refined: a slender solid is drawn at the width of the 2D s
       writeFileSync(join(directory, "input.json"), JSON.stringify({ cases: [{ name: "ring", annulus: { radius: hoop.radiusM, width: hoop.penM } }] }));
       const reference = JSON.parse(python(ORACLE, "geometry", [join(directory, "input.json")])) as Record<string, { area: number }>;
       expect(Math.abs(faceOn - reference.ring!.area) / reference.ring!.area).toBeLessThan(0.08);
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
+  });
+  it("keeps a slender solid along the outline of a body at its true width: the centre line of the outline is the body edge, the pen is convention", { timeout: 300_000 }, () => {
+    requireTool("uv");
+    const edge = vectors.follow.bodyEdge;
+    const [plate, wire] = [{ ...cuboid("plate", edge.plate.centre, edge.plate.size), bone: "b" }, slender(cuboid("wire", edge.wire.centre, edge.wire.size))];
+    const rings = [edge.outline.map(([x, y]) => ({ x: x!, y: y! }))];
+    const drawn = [{ bone: "b", closed: true, filled: false, rings, penM: edge.penM }];
+    const covered = (solids: readonly World[]): number => {
+      const mask = new Mask({ minX: -1, minY: -1, maxX: 1, maxY: 1 }, 0.001);
+      for (const g of referenceOf("elevation", solids, undefined, drawn).cut) mask.fill(g);
+      return mask.cells.reduce((sum, c) => sum + c, 0) * 1e-6;
+    };
+    expect(bodyOutline("elevation", [plate, wire], rings)).toBe(true);
+    expect(bodyOutline("elevation", [wire], rings)).toBe(false);
+    const own = covered([plate, wire]);
+    expect(Math.abs(own - edge.edgeAreaM2)).toBeLessThan(0.002);
+    expect(edge.penAreaM2 - own).toBeGreaterThan(0.035);
+    expect(Math.abs(covered([wire]) - edge.voidAreaM2)).toBeLessThan(0.002);
+    const directory = mkdtempSync(join(tmpdir(), "staffage-volumes-"));
+    try {
+      writeFileSync(join(directory, "input.json"), JSON.stringify({ cases: [{ name: "edge", closing: { rects: edge.rects, radius: 1e-6 } }] }));
+      const reference = JSON.parse(python(ORACLE, "geometry", [join(directory, "input.json")])) as Record<string, { area: number }>;
+      expect(Math.abs(reference.edge!.area - edge.edgeAreaM2)).toBeLessThan(1e-9);
+      expect(Math.abs(own - reference.edge!.area)).toBeLessThan(0.002);
     } finally {
       rmSync(directory, { recursive: true, force: true });
     }

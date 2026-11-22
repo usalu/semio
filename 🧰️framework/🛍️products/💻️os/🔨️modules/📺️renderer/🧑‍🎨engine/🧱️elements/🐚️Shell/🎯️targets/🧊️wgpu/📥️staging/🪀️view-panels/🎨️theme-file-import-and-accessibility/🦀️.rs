@@ -71,13 +71,13 @@ impl<'ctx> PanelsViewCtx<'ctx> {
             multiline: false,
             controls: None,
             active_descendant: None,
-            level: None,
+            level: None, multiselectable: false,
             rect: rect.map(|rect| [rect.x, rect.y, rect.w, rect.h]),
             value_min: None,
             value_max: None,
             value_now: None,
             value_text: None,
-            busy: false,
+            busy: false, sort: None,
         };
         let mut nodes = Vec::with_capacity(SHELL_PALETTE_PLAN_ENTRY_CAPACITY + 4);
         nodes.push(basic(kind.dialog_id().to_string(), "dialog", 0, Some(title.clone()), Some(description.clone()), dialog_rect));
@@ -204,7 +204,7 @@ impl<'ctx> PanelsViewCtx<'ctx> {
                 .filter_map(|hit| hit.control_id.as_deref().filter(|id| !id.is_empty()).map(|id| (id, hit)))
                 .filter(|(id, _)| !self.input.retained_hit_windows.contains_key(*id))
                 .filter(|(id, hit)| match hit.kind {
-                    HitKind::PanelResize | HitKind::DockSplit | HitKind::DockJoinCorner => false,
+                    HitKind::PanelResize | HitKind::ScrollThumb | HitKind::DockSplit | HitKind::DockJoinCorner => false,
                     HitKind::ScrollRegion => names.get(*id).is_some_and(|name| name.role == Some("tabpanel")),
                     HitKind::Generic => hit.event.is_some() || names.contains_key(*id),
                     _ => true,
@@ -254,7 +254,7 @@ impl<'ctx> PanelsViewCtx<'ctx> {
                         multiline: false,
                         controls: names.get(id).and_then(|name| name.controls.clone()),
                         active_descendant: None,
-                        level: None,
+                        level: None, multiselectable: false,
                         rect: Some([hit.rect.x, hit.rect.y, hit.rect.w, hit.rect.h]),
                         value_min: presentation.and_then(|name| name.value_range).map(|range| range[0]),
                         value_max: presentation.and_then(|name| name.value_range).map(|range| range[1]),
@@ -263,7 +263,7 @@ impl<'ctx> PanelsViewCtx<'ctx> {
                             .map(|kind| self.commands.palette_query(kind).to_string())
                             .or_else(|| presentation.and_then(|name| name.value_text.clone()))
                             .or_else(|| self.input.widget_maps.input_metas.get(id).map(|meta| meta.value.clone())),
-                        busy: false,
+                        busy: false, sort: None,
                     }
                 })
                 .collect::<Vec<_>>();
@@ -301,13 +301,13 @@ impl<'ctx> PanelsViewCtx<'ctx> {
                             multiline: false,
                             controls: None,
                             active_descendant: None,
-                            level: None,
+                            level: None, multiselectable: false,
                             rect: None,
                             value_min: None,
                             value_max: None,
                             value_now: None,
                             value_text: None,
-                            busy: false,
+                            busy: false, sort: None,
                         });
                     }
                 }
@@ -325,6 +325,11 @@ impl<'ctx> PanelsViewCtx<'ctx> {
             }
             if let Some(notice) = self.transient_notice_accessibility_node(nodes.len() as u64 + 1).filter(|_| nodes.len() < SHELL_CHROME_ACCESSIBLE_NAME_CAPACITY) {
                 nodes.push(notice);
+            }
+            for (surface_id, text) in semio_renderer_wgpu_engine_board::paint2d::paint2d_keyboard_announcements() {
+                if nodes.len() < SHELL_CHROME_ACCESSIBLE_NAME_CAPACITY {
+                    nodes.push(chrome_status_accessibility_node(nodes.len() as u64 + 1, &format!("shell.paint2d.announcement.{surface_id}"), text));
+                }
             }
             if let Some(folder) = self.as_overlays_view().folder_reconnect_accessibility_node(nodes.len() as u64 + 1).filter(|_| nodes.len() < SHELL_CHROME_ACCESSIBLE_NAME_CAPACITY) {
                 nodes.push(folder);

@@ -31,6 +31,10 @@ name = "tree"
 path = "../../🎯️tree/🦀️.rs"
 
 [[test]]
+name = "tree-wire"
+path = "../../🎯️tree/📨️wire/🦀️.rs"
+
+[[test]]
 name = "laws"
 path = "../../🎯️laws/🦀️.rs"
 

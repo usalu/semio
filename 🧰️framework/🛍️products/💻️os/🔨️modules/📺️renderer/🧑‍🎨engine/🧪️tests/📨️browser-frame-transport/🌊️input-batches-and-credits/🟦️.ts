@@ -8,24 +8,28 @@ import { FRAME_WORKER_ACCESSIBILITY_ID_BYTES, FRAME_WORKER_BYTE_CAPACITY, FRAME_
 import { FakeWorker, transport } from "../🧰️transport-test-support/🟦️.ts";
 
 describe("browser frame worker transport", () => {
-  it("coalesces pointer, wheel, and resize storms into one bounded batch", () => {
+  it("retains pointer order around distinct wheels and coalesces resizes", () => {
     const worker = new FakeWorker();
     const subject = transport(worker);
     worker.reply({ kind: "booted", lifecycle: 1 });
     subject.enqueueReplaceable({ kind: "pointer-move", pointerId: 7, pointerKind: "mouse", x: 1, y: 2, shift: true, ctrl: false, alt: false, meta: false });
     subject.enqueueReplaceable({ kind: "pointer-move", pointerId: 7, pointerKind: "mouse", x: 3, y: 4, shift: false, ctrl: false, alt: false, meta: false });
-    subject.enqueueReplaceable({ kind: "wheel", x: 3, y: 4, deltaX: 1, deltaY: 2, shift: false, ctrl: true, alt: false, meta: false });
-    subject.enqueueReplaceable({ kind: "wheel", x: 4, y: 5, deltaX: 3, deltaY: 4, shift: false, ctrl: false, alt: true, meta: false });
+    subject.enqueueLossless({ kind: "wheel", x: 3, y: 4, deltaX: 1, deltaY: 2, shift: false, ctrl: true, alt: false, meta: false });
+    subject.enqueueReplaceable({ kind: "pointer-move", pointerId: 7, pointerKind: "mouse", x: 4, y: 5, shift: false, ctrl: false, alt: true, meta: false });
+    subject.enqueueLossless({ kind: "wheel", x: 4, y: 5, deltaX: 3, deltaY: 4, shift: false, ctrl: false, alt: true, meta: false });
     subject.enqueueReplaceable({ kind: "resize", width: 10, height: 20, dpr: 1 });
     subject.enqueueReplaceable({ kind: "resize", width: 30, height: 40, dpr: 2 });
     expect(subject.flush(11)).toBe(true);
     const batch = worker.messages.at(-1);
     expect(batch?.kind).toBe("batch");
     if (batch?.kind !== "batch") return;
-    expect(batch.replaceable).toHaveLength(3);
-    expect(batch.replaceable).toContainEqual(expect.objectContaining({ kind: "pointer-move", x: 3, y: 4, shift: false }));
-    expect(batch.replaceable).toContainEqual(expect.objectContaining({ kind: "wheel", x: 4, y: 5, deltaX: 4, deltaY: 6, ctrl: false, alt: true }));
-    expect(batch.replaceable).toContainEqual(expect.objectContaining({ kind: "resize", width: 30, height: 40, dpr: 2 }));
+    expect(batch.events).toMatchObject([
+      { kind: "pointer-move", x: 3, y: 4, shift: false },
+      { kind: "wheel", x: 3, y: 4, deltaX: 1, deltaY: 2, ctrl: true, alt: false },
+      { kind: "pointer-move", x: 4, y: 5, alt: true },
+      { kind: "wheel", x: 4, y: 5, deltaX: 3, deltaY: 4, ctrl: false, alt: true },
+      { kind: "resize", width: 30, height: 40, dpr: 2 },
+    ]);
   });
 
   it("releases the input lease on batch acknowledgement and orders multiple frame turns independently", () => {
@@ -62,16 +66,16 @@ describe("browser frame worker transport", () => {
     const first = worker.messages.at(-1);
     expect(first?.kind).toBe("batch");
     if (first?.kind !== "batch") return;
-    expect(first.lossless.filter((event) => "documentKey" in event && event.documentKey === key)).toEqual([expect.objectContaining({ kind: "hub-document-close" })]);
+    expect(first.events.filter((event) => "documentKey" in event && event.documentKey === key)).toEqual([expect.objectContaining({ kind: "hub-document-close" })]);
     expect(subject.publishHubDocumentStatus(refused, { kind: "live", peerCount: 9 })).toBe(true);
     worker.reply({ kind: "batch-accepted", lifecycle: 1, inputSequence: first.inputSequence, generation: first.generation });
     worker.reply({ kind: "frame", mediaSlots: [], lifecycle: 1, frameSequence: first.inputSequence, generation: first.generation, cursor: "default", fullscreen: null, requestFrame: false, nextDeadlineDelayMs: null, progress: 1, workerDurationMs: 1, workerExecutingMs: 1, workerStepVerdict: "admitted" });
-    const delivered: unknown[] = [...first.lossless];
+    const delivered: unknown[] = [...first.events];
     let sequence = first.inputSequence;
     while (subject.flush(++sequence)) {
       const batch = worker.messages.at(-1);
       if (batch?.kind !== "batch") break;
-      delivered.push(...batch.lossless);
+      delivered.push(...batch.events);
       worker.reply({ kind: "batch-accepted", lifecycle: 1, inputSequence: batch.inputSequence, generation: batch.generation });
       worker.reply({ kind: "frame", mediaSlots: [], lifecycle: 1, frameSequence: batch.inputSequence, generation: batch.generation, cursor: "default", fullscreen: null, requestFrame: false, nextDeadlineDelayMs: null, progress: 1, workerDurationMs: 1, workerExecutingMs: 1, workerStepVerdict: "admitted" });
     }
@@ -103,11 +107,11 @@ describe("browser frame worker transport", () => {
     const batch = worker.messages.at(-1);
     expect(batch?.kind).toBe("batch");
     if (batch?.kind !== "batch") return;
-    expect(batch.lossless.map((event) => {
+    expect(batch.events.map((event) => {
       const { timestampMs: _, ...wire } = event as typeof event & { readonly timestampMs: number };
       return wire;
     })).toEqual(fixture.events.map((row) => row.wire));
-    for (const event of batch.lossless) {
+    for (const event of batch.events) {
       if (!event.kind.startsWith("accessibility-")) continue;
       expect(event).not.toHaveProperty("x");
       expect(event).not.toHaveProperty("y");

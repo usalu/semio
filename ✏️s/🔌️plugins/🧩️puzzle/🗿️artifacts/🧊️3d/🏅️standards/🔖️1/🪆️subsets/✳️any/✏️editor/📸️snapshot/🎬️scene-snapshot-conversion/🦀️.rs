@@ -1,35 +1,28 @@
 //! 🎬️ Scene snapshot conversion: the clipboard fragments, the scene snapshot from and to the document and host snapshots and the scene object conversions. See [`super`].
 
 use super::*;
+use semio_s_artifact_puzzle_3d_model::Puzzle3dObject as DocumentObject;
 
 const PUZZLE3D_CLIPBOARD_SCHEMA: &str = "puzzle.3d.clipboard.v1";
-
-fn puzzle3d_scene_snapshot_from_view(doc: &ArtifactView<'_, Puzzle3dPlaySnapshot>) -> Puzzle3dSceneSnapshot {
-    puzzle3d_scene_snapshot_from_play_snapshot(doc.snapshot)
-}
 
 pub fn puzzle3d_scene_snapshot_from_play_snapshot(snapshot: &Puzzle3dPlaySnapshot) -> Puzzle3dSceneSnapshot {
     puzzle3d_scene_snapshot_from_document(snapshot.typed())
 }
 
-fn puzzle3d_selected_objects(scene_snapshot: &Puzzle3dSceneSnapshot, interaction: &InteractionView<'_>) -> Vec<Puzzle3dObject> {
-    puzzle3d_selected_objects_from(&Puzzle3dInteractionSnapshot::from_interaction(interaction), scene_snapshot)
-}
-
-pub fn puzzle3d_selected_objects_from(snapshot: &Puzzle3dInteractionSnapshot, scene_snapshot: &Puzzle3dSceneSnapshot) -> Vec<Puzzle3dObject> {
-    let ids = snapshot.selected_object_ids();
-    let mut objects: Vec<Puzzle3dObject> = scene_snapshot.objects.iter().filter(|object| ids.contains(&object.id)).cloned().collect();
-    if objects.is_empty() {
-        objects = scene_snapshot.objects.iter().filter(|object| snapshot.selected.iter().any(|id| id == &object.id)).cloned().collect();
+/// 🎯️ Borrows selected objects, resolving selected vortices to their parents when needed.
+pub fn puzzle3d_selected_objects_from<'a>(snapshot: &Puzzle3dInteractionSnapshot, document: &'a Puzzle3dSnapshot) -> Vec<&'a DocumentObject> {
+    if snapshot.selected.is_empty() {
+        return Vec::new();
     }
+    let ids: HashSet<&str> = snapshot.selected.iter().map(String::as_str).collect();
+    let mut objects: Vec<_> = document.objects.iter().filter(|object| ids.contains(object.id.as_str())).collect();
     if objects.is_empty() {
-        objects = scene_snapshot
+        objects = document
             .objects
             .iter()
             .filter(|object| {
-                object.vortices.iter().any(|vortex| snapshot.selected.iter().any(|id| id == &vortex.id || id == &puzzle3d_vortex_full_id(&object.id, &vortex.id)))
+                object.vortices.iter().any(|vortex| ids.contains(vortex.id.as_str()) || ids.contains(puzzle3d_vortex_full_id(&object.id, &vortex.id).as_str()))
             })
-            .cloned()
             .collect();
     }
     objects
@@ -37,18 +30,25 @@ pub fn puzzle3d_selected_objects_from(snapshot: &Puzzle3dInteractionSnapshot, sc
 
 /// 📋️ Copies the selected objects as a scene_snapshot-shaped fragment.
 pub fn puzzle3d_copy_fragment(doc: &ArtifactView<'_, Puzzle3dPlaySnapshot>, interaction: &InteractionView<'_>) -> Result<ClipboardFragment, ClipboardError> {
-    let scene_snapshot = puzzle3d_scene_snapshot_from_view(doc);
-    puzzle3d_copy_fragment_from(&scene_snapshot, puzzle3d_selected_objects(&scene_snapshot, interaction))
+    let document = doc.snapshot.typed();
+    let marks = Puzzle3dInteractionSnapshot::from_interaction(interaction);
+    puzzle3d_copy_fragment_from(document, &puzzle3d_selected_objects_from(&marks, document))
 }
 
-pub fn puzzle3d_copy_fragment_from(scene_snapshot: &Puzzle3dSceneSnapshot, objects: Vec<Puzzle3dObject>) -> Result<ClipboardFragment, ClipboardError> {
-    let _ = scene_snapshot;
+/// 🖇️ Projects only the selected objects and their internal attractions into the clipboard schema.
+pub fn puzzle3d_copy_fragment_from(document: &Puzzle3dSnapshot, objects: &[&DocumentObject]) -> Result<ClipboardFragment, ClipboardError> {
     if objects.is_empty() {
         return Err(ClipboardError::EmptySelection);
     }
+    let vortex_ids: HashSet<String> = objects.iter().flat_map(|object| {
+        object.vortices.iter().map(|vortex| puzzle3d_vortex_full_id(&object.id, &vortex.id))
+    }).collect();
     let mut clip = empty_scene_snapshot();
     clip.schema = PUZZLE3D_CLIPBOARD_SCHEMA.into();
-    clip.objects = objects;
+    clip.attractions = document.attractions.iter().filter(|attraction| {
+        vortex_ids.contains(&attraction.attracting) && vortex_ids.contains(&attraction.attracted)
+    }).map(scene_attraction_from_snapshot).collect();
+    clip.objects = objects.iter().map(|object| scene_object_from_snapshot(object)).collect();
     Ok(ClipboardFragment {
         schema: PUZZLE3D_CLIPBOARD_SCHEMA.into(),
         media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Design },
@@ -59,8 +59,8 @@ pub fn puzzle3d_copy_fragment_from(scene_snapshot: &Puzzle3dSceneSnapshot, objec
     })
 }
 
-/// 📋 Clones a copied scene_snapshot fragment with fresh ids, one `create-object` per clone.
-pub fn puzzle3d_paste_operations(fragment: &ClipboardFragment, placement: &PastePlacement) -> Result<Vec<Puzzle3dMutation>, ClipboardError> {
+/// 📋️ Rebuilds the copied subgraph with new identities and a shared placement translation.
+pub fn puzzle3d_paste_operations(destination: &Puzzle3dSnapshot, fragment: &ClipboardFragment, placement: &PastePlacement) -> Result<Vec<Puzzle3dMutation>, ClipboardError> {
     let expected = MediaType { class: MediaClass::ThreeD, form: MediaForm::Design };
     if fragment.media_type != expected {
         return Err(ClipboardError::IncompatibleMediaType(fragment.media_type.clone()));
@@ -70,17 +70,57 @@ pub fn puzzle3d_paste_operations(fragment: &ClipboardFragment, placement: &Paste
     if clip.objects.is_empty() {
         return Err(ClipboardError::EmptySelection);
     }
-    let offset = placement.position.unwrap_or([0.5, 0.5, 0.0]);
-    clip.objects
-        .into_iter()
-        .map(|mut clone| {
-            clone.id = next_object_id();
-            clone.origin[0] += offset[0];
-            clone.origin[1] += offset[1];
-            clone.origin[2] += offset[2];
-            snapshot_object_from_host_snapshot(&clone).map(|object| semio_s_artifact_puzzle_3d_mutations_object::create_object::mutation::create_object(object, None)).map_err(|error| ClipboardError::ParseFailed(error.to_string()))
-        })
-        .collect()
+    let offset = placement.point_translation(clip.objects.iter().map(|object| object.origin), [0.5, 0.5, 0.0]);
+    let destination_objects: HashSet<&str> = destination.objects.iter().map(|object| object.id.as_str()).collect();
+    let destination_vortices: HashSet<&str> = destination.objects.iter().flat_map(|object| &object.vortices)
+        .map(|vortex| vortex.id.as_str()).filter(|id| id.contains(':')).collect();
+    let mut object_ids: HashSet<String> = clip.objects.iter().map(|object| object.id.clone()).collect();
+    let mut vortex_ids: HashSet<String> = clip.objects.iter().flat_map(|object| &object.vortices)
+        .filter(|vortex| vortex.id.contains(':')).map(|vortex| vortex.id.clone()).collect();
+    let mut endpoint_ids = HashMap::new();
+    let mut operations = Vec::with_capacity(clip.objects.len() + clip.attractions.len());
+    for mut clone in clip.objects {
+        let id = std::iter::repeat_with(next_object_id)
+            .find(|id| !destination_objects.contains(id.as_str()) && object_ids.insert(id.clone()))
+            .expect("a free object id");
+        let source_scope = format!("{}:", clone.id);
+        for vortex in &mut clone.vortices {
+            let source = puzzle3d_vortex_full_id(&clone.id, &vortex.id);
+            let local = source.strip_prefix(&source_scope).unwrap_or(&source);
+            let preferred = format!("{id}:{local}");
+            let target = std::iter::once(preferred.clone()).chain((2usize..).map(|serial| format!("{preferred}-{serial}")))
+                .find(|id| !destination_vortices.contains(id.as_str()) && vortex_ids.insert(id.clone()))
+                .expect("a free vortex id");
+            if vortex.id.contains(':') || target != preferred {
+                vortex.id = target.clone();
+            }
+            if endpoint_ids.insert(source, target).is_some() {
+                return Err(ClipboardError::ParseFailed("duplicate vortex identity".into()));
+            }
+        }
+        clone.id = id;
+        for (origin, offset) in clone.origin.iter_mut().zip(offset) {
+            *origin += offset;
+        }
+        let object = snapshot_object_from_host_snapshot(&clone).map_err(|error| ClipboardError::ParseFailed(error.to_string()))?;
+        operations.push(semio_s_artifact_puzzle_3d_mutations_object::create_object::mutation::create_object(object, None));
+    }
+    let destination_attractions: HashSet<&str> = destination.attractions.iter().map(|attraction| attraction.id.as_str()).collect();
+    let mut attraction_ids: HashSet<String> = clip.attractions.iter().map(|attraction| attraction.id.clone()).collect();
+    for attraction in clip.attractions {
+        let (Some(attracting), Some(attracted)) = (endpoint_ids.get(&attraction.attracting), endpoint_ids.get(&attraction.attracted)) else {
+            return Err(ClipboardError::ParseFailed("an attraction endpoint is outside the fragment".into()));
+        };
+        let base = format!("attraction-{attracting}-{attracted}");
+        let id = std::iter::once(base.clone()).chain((2usize..).map(|serial| format!("{base}-{serial}")))
+            .find(|id| !destination_attractions.contains(id.as_str()) && attraction_ids.insert(id.clone()))
+            .expect("a free attraction id");
+        operations.push(semio_s_artifact_puzzle_3d_mutations::connect_vortices(
+            id, attracting.clone(), attracted.clone(), attraction.gap, attraction.shift, attraction.rise,
+            attraction.rotation, attraction.turn, attraction.tilt, attraction.x, attraction.y, None,
+        ));
+    }
+    Ok(operations)
 }
 
 pub fn default_scene_snapshot() -> Puzzle3dSceneSnapshot {
@@ -101,10 +141,7 @@ pub fn scene_from_snapshot(document: &Puzzle3dSnapshot, runtime: Puzzle3dRuntime
     Puzzle3dScene { scene_snapshot: puzzle3d_scene_snapshot_from_document(document), runtime, active_utility: active_utility.to_string() }
 }
 
-/// 🌉️ The persisted `Puzzle3dSnapshot` as this app's own structural-twin `Puzzle3dSceneSnapshot`. The
-/// twin deliberately does not carry `anchor`, a vortex `label` or an attraction's diagram `x`/`y`, so
-/// those are dropped here exactly as the `Value` bridge dropped them (an unknown key is ignored by
-/// `FromValue`), and the two untyped catalog members are serialized once instead of per object.
+/// 🌉️ Projects the persisted document into the renderer's scene schema.
 pub fn puzzle3d_scene_snapshot_from_document(document: &Puzzle3dSnapshot) -> Puzzle3dSceneSnapshot {
     Puzzle3dSceneSnapshot {
         schema: document.schema.clone(),

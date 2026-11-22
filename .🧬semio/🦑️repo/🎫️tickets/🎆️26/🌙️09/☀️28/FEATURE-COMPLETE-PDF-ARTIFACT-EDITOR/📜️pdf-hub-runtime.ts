@@ -3,7 +3,7 @@ import { mkdirSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 
-const root = process.cwd(), output = join(import.meta.dir,"🗑️generated","authenticated-pdf");
+const root = process.cwd(), output = resolve(process.argv[2] ?? join(import.meta.dir,"🗑️generated","authenticated-pdf"));
 mkdirSync(output,{recursive:true});
 const load = (path:string) => import(pathToFileURL(resolve(root,path)).href);
 const repo = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library";
@@ -55,7 +55,7 @@ await routing.receiveScriptProcessInvocation(process.env,async invocation=>{
               SEMIO_TWO_HUMAN_USER1_EMAIL:users[0],SEMIO_TWO_HUMAN_USER2_EMAIL:users[1],
               SEMIO_TWO_HUMAN_USER1_PASSWORD:defaults.COLLAB_E2E_USER1_PASSWORD,SEMIO_TWO_HUMAN_USER2_PASSWORD:defaults.COLLAB_E2E_USER2_PASSWORD,
             });
-            const png = join(import.meta.dir,"🗑️generated","large-picked","large-picked.png");
+            const png = resolve(process.argv[3] ?? join(import.meta.dir,"🗑️generated","large-picked","large-picked.png"));
             await runOwnedCommand(process.execPath,[join(import.meta.dir,"📜️pdf-hub-image-check-in.ts"),local(hubPort),local(firstPort),output,png,local(peerPort)],root,
               "pdf:authenticated-check-in",0,{env,signal:actual.control.signal,deadline:actual.control,stdout:"inherit"});
           } finally {

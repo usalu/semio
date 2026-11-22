@@ -9,6 +9,9 @@ pub const WINDOW_FOCUS_ANNOUNCED_CODE: &str = "shell.window-focus.announced";
 /// 🔊️ Notice code of a refused window focus.
 pub const WINDOW_FOCUS_REFUSED_CODE: &str = "shell.window-focus.refused";
 
+/// 🔊️ Notice code of a refused `fitGraph` (the window presents no live node graph).
+pub const NODE_GRAPH_FIT_REFUSED_CODE: &str = "shell.node-graph-fit.refused";
+
 /// 🔊️ Notice code of a refused row control focus (the row holds no cell to type into, or no window presents it).
 pub const ROW_CONTROL_FOCUS_REFUSED_CODE: &str = "shell.row-control-focus.refused";
 
@@ -100,6 +103,25 @@ impl<'ctx> ActionsCtx<'ctx> {
                 self.chrome.show_transient_notice(shell_chrome_string("row.control.refused", is_de).to_string(), semio_framework::Severity::Warning, Some(ROW_CONTROL_FOCUS_REFUSED_CODE));
                 Err(format!("row {row_id} holds no editable control"))
             }
+        }
+    }
+
+    /// 🔲️ Runs [`semio_framework::NODE_GRAPH_FIT_ACTION_ID`]: frames the whole graph of the node-graph surface the action's window (else the focused window) owns and persists the fitted camera as the same `nodeGraphViewport` action a wheel zoom publishes, so the next open honours it; a window with no live graph refuses with a polite localized notice.
+    pub(super) async fn framework_fit_node_graph(&mut self, action: &ActionDescriptor) -> Result<(), String> {
+        let window_id = action.args.as_ref().and_then(|args| args.get("windowId")).and_then(semio_framework_value::DslValue::as_str).map(str::to_string).or_else(|| self.windows.active_window_id.clone());
+        let target = self.surfaces.node_graph_states.iter().find(|(_, surface)| Some(surface.window_id.as_str()) == window_id.as_deref()).map(|(host_id, surface)| (host_id.clone(), surface.controller_id.clone()));
+        let Some((host_id, controller_id)) = target else {
+            self.chrome.show_transient_notice(shell_chrome_string("nodeGraph.fitGraph.refused", self.prefs.locale_id == "de").to_string(), semio_framework::Severity::Warning, Some(NODE_GRAPH_FIT_REFUSED_CODE));
+            return Err(format!("window {} presents no node graph", window_id.unwrap_or_default()));
+        };
+        let persist = semio_renderer_wgpu_engine_graph::node_graph::node_graph_fit_action(&host_id, &controller_id).map_err(|fault| format!("fitGraph refused by the action queue: {fault:?}"))?;
+        self.settle.owe_settle();
+        match persist {
+            Some(descriptor) => {
+                debug_log(&format!("[DEBUG] shell node-graph fit {}", descriptor.args.as_ref().map(dsl_value_as_json).and_then(|args| args.get("viewport").cloned()).unwrap_or_default()));
+                self.dispatch_action(descriptor).await
+            }
+            None => Ok(()),
         }
     }
 

@@ -74,6 +74,13 @@
           "maximumBytes": {
             "type": "integer"
           },
+          "zeroBytes": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "corrupt": {
+            "type": "boolean"
+          },
           "link": {
             "enum": [
               "symbolic",

@@ -166,9 +166,11 @@ fn incoming_layout_identity_resets_maximize_and_identical_sync_preserves_it() {
     )
     .unwrap();
     let mut seeded = layout(&law["initialWeights"], Some(retitle));
-    if let semio_ui_layout::layout::WindowLayoutRoot::Axis(axis) = &mut seeded.root {
-        if let semio_ui_layout::layout::WindowLayoutChild::Stack(stack) = &mut axis.children[1] {
-            stack.children[1].title = retitle["bakedTitle"].as_str().map(str::to_string);
+    if let semio_ui_layout::layout::WindowLayoutNode::Split { children, .. } = &mut seeded.root {
+        if let semio_ui_layout::layout::WindowLayoutNode::Stack { children: windows, .. } = &mut children[1] {
+            if let semio_ui_layout::layout::WindowLayoutNode::Window { title, .. } = &mut windows[1] {
+                *title = retitle["bakedTitle"].as_str().map(str::to_string);
+            }
         }
     }
     shell.dock.layout_override = Some(seeded);
@@ -236,7 +238,7 @@ fn incoming_layout_prunes_unknown_windows_against_the_react_instance_roster() {
                     serde_json::json!({ "kind": "stack", "children": leaves })
                 })
                 .collect();
-            serde_json::from_value(serde_json::json!({ "root": { "kind": "row", "children": children } })).unwrap()
+            serde_json::from_value(serde_json::json!({ "root": { "kind": "split", "axis": "horizontal", "children": children } })).unwrap()
         };
         if let Some(previous) = case.get("previousStacks") {
             shell.dock.layout_override = Some(layout(previous));

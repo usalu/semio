@@ -11,9 +11,9 @@ import {spawn,spawnSync} from "node:child_process";
 import {createWatchSupervisorV1} from "../../🔭️watch/🟨️.mjs";
 import {POLICY_V1,validatorV1} from "../../📨️protocol/🎚️policy/🟨️.mjs";
 import {createFilterV1} from "../../🗃️state/🟨️.mjs";
-import {cleanup,haveBinary,residentWatcherV1,sleep,snapshot,tempRoot,waitFor,writeTree} from "../🟦️.ts";
+import {cleanup,nativeWatcherUsableV1,residentWatcherV1,sleep,snapshot,tempRoot,waitFor,writeTree} from "../🟦️.ts";
 
-const WATCHER=await residentWatcherV1(),native=haveBinary(WATCHER);
+const WATCHER=await residentWatcherV1(),native=await nativeWatcherUsableV1(WATCHER);
 const roots:string[]=[];
 afterAll(()=>roots.forEach(cleanup));
 const filter=createFilterV1({rooted:[".git"],names:["node_modules"]});

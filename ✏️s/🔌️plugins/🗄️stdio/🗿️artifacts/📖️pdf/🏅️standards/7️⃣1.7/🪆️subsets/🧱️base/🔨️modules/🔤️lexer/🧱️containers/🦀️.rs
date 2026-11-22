@@ -158,6 +158,11 @@ impl PdfCosCursor {
 
     /// 🧭️ Advances bounded scanning or assembly. The source prefix must remain stable.
     pub fn advance(&mut self, source: &[u8], grant: CosGrant, cancelled: bool) -> CosReceipt {
+        self.advance_bytes(|position| source.get(position).copied(), grant, cancelled)
+    }
+
+    /// 🔹️ Advances the same parser over stable caller-owned segmented bytes.
+    pub fn advance_bytes(&mut self, byte_at: impl Fn(usize) -> Option<u8>, grant: CosGrant, cancelled: bool) -> CosReceipt {
         let mut turn = Turn::new(grant);
         if cancelled && matches!(self.lifecycle, Lifecycle::Active) { self.lifecycle = Lifecycle::Cancelled; }
         while let Lifecycle::Active = self.lifecycle {
@@ -165,7 +170,7 @@ impl PdfCosCursor {
                 return turn.receipt(Ok(CosStatus::More));
             }
             turn.work += 1;
-            if let Err(error) = self.step(source, &mut turn) { self.lifecycle = Lifecycle::Failed(error); }
+            if let Err(error) = self.step(&byte_at, &mut turn) { self.lifecycle = Lifecycle::Failed(error); }
             if let Some(blocked) = turn.blocked { return turn.receipt(Ok(blocked)); }
         }
         let status = match self.lifecycle {
@@ -230,14 +235,14 @@ impl PdfCosCursor {
     /// 🧺️ True after the cursor has relinquished all retained allocations.
     pub fn terminal_is_empty(&self) -> bool { matches!(self.lifecycle, Lifecycle::Closed) }
 
-    fn step(&mut self, source: &[u8], turn: &mut Turn) -> Result<(), &'static str> {
+    fn step(&mut self, byte_at: &impl Fn(usize) -> Option<u8>, turn: &mut Turn) -> Result<(), &'static str> {
         if self.attachment.is_some() { return self.attach(turn); }
         if self.token.is_none() {
-            if self.reader.ends_reference_lookahead(source) && self.promote_integer() {
+            if self.integers[0].is_some() && self.reader.ends_reference_lookahead(byte_at) && self.promote_integer() {
                 return Ok(());
             }
             let limit = self.limits.scalar_bytes.min(MAX_SCALAR_BYTES);
-            if let Some(token) = self.reader.step(source, limit, self.limits.string_bytes, turn)? {
+            if let Some(token) = self.reader.step(byte_at, limit, self.limits.string_bytes, turn)? {
                 self.token = Some((token, self.reader.position));
             }
             return Ok(());

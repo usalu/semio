@@ -202,7 +202,7 @@ fn present_band(shell: &mut ShellState) -> InputState<ActionDescriptor> {
     input
 }
 
-fn focused_chrome(shell: &ShellState, input: &InputState<ActionDescriptor>) -> Vec<String> {
+fn focused_chrome(mut shell: &ShellState, input: &InputState<ActionDescriptor>) -> Vec<String> {
     PanelsViewCtx::of(&mut shell).chrome_accessibility_nodes(input.hits()).into_iter().filter(|node| node.focused).map(|node| node.key).collect()
 }
 

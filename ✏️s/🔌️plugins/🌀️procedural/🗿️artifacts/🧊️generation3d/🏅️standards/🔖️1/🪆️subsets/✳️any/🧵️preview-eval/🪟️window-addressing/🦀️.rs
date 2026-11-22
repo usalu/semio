@@ -145,33 +145,6 @@ pub fn window_args(window_id: &str, window_kind_id: &str) -> semio_framework_val
     ])
 }
 
-/// 🧾️ The APPLIED document-edit stack, folded into one number — what an evaluation is actually
-/// computed from, independent of the route that changed it.
-///
-/// 🐛️ [`owe_attached_previews_for_mutations`] reads a gesture's OWN emit, so it can only ever see a
-/// route the app itself handles. `undo` and `redo` are FRAMEWORK-RESERVED (`HISTORY_ACTION_IDS`,
-/// intercepted before `dispatch_action` reaches the app), so an undo rewound the document and the app
-/// never learned: measured on :6023, `mod+z` after a slider edit moved `height` 8 → 6 in the graph's
-/// own published fixture and armed `canRedo`, while the preview kept delivering the 8-unit extrusion
-/// and the console carried neither a `toolRunStart` nor a `flowEvalTick` after the chord
-/// (`📓️react-final-sweep-2026-09-15.md` §7). The user pressed undo and the 3d view did not move.
-///
-/// Every route that changes the document moves this stack — a gesture's edit appends an applied entry,
-/// an undo flips one to unapplied, a redo flips it back, `revertToCommand` and a checkpoint checkout
-/// move several — so THIS is the rule, and the emit route stays the fast path a gesture takes without
-/// waiting for a poll. Rows with no `edit_id` are cursor-motion and config entries, which the
-/// evaluation does not read (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-pub fn applied_document_edits_digest(history: &semio_plugin::HistoryView) -> u64 {
-    const OFFSET: u64 = 0xcbf2_9ce4_8422_2325;
-    const PRIME: u64 = 0x0000_0100_0000_01b3;
-    let mut digest = OFFSET;
-    for command in history.commands.iter().filter(|command| command.edit_id.is_some()) {
-        digest = (digest ^ command.seq).wrapping_mul(PRIME);
-        digest = (digest ^ u64::from(command.applied)).wrapping_mul(PRIME);
-    }
-    digest
-}
-
 /// 🧵️ Marks every attached preview window as owing an evaluation — what a gesture owes after it
 /// changed what the evaluation would produce (`setActiveExample`, `setContributions`, the generation
 /// commands, every viewer view command). The window's latch keeps the debt until a hop pays it, so a

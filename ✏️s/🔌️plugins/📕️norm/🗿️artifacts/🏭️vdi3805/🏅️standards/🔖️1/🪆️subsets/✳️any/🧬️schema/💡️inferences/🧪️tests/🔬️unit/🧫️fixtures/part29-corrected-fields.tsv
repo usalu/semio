@@ -1,0 +1,17 @@
+name	family	date	field_count	overrides	bad_positions
+life-valid	700	202604	14	13=50;14=Service life	-
+life-missing	700	202604	12		13,14
+life-decimal	700	202604	14	13=15.25	-
+life-invalid	700	202604	14	13=50 years	13
+life-index	700	202604	14	2=100000	2
+life-no-field15	700	202604	14	13=50	-
+section-valid	710.01	202604	16	12=2000;14=70;15=-20;16=50	-
+section-garbled	710.01	202604	16	14=hot;16=NaN	14,16
+section-short	710.01	202606	15	12=3000	16
+fitting-valid	710.02	202604	20	7=10000;9=95;20=0.45	-
+fitting-field-missing	710.02	202604	19	7=10000;9=95	20
+fitting-infinite	710.02	202604	20	20=inf	20
+fitting-blank	710.02	202604	20		-
+wrong-native-tag	710.02	202604	20	1=710.01	1
+old-edition	710.02	202603	12	7=high	scope
+other-family	710.03	202604	4		scope

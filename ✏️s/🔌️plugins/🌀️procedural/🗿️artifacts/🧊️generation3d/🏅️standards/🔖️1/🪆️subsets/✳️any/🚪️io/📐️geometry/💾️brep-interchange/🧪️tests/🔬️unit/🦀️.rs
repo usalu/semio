@@ -87,6 +87,38 @@ fn mesh_formats_are_stepped_jobs_that_yield_before_they_finish() {
 }
 
 #[test]
+fn dwg_transport_moves_the_original_text_and_trims_only_its_wrapper() {
+    let kind = support::kind_of(catalogue(), "brep.interchange.importDwg");
+    let text = format!("  {}\n", "TWFu".repeat(2048));
+    let address = text.as_ptr();
+    let value = WidgetInputs::new_cold("w", kind, [("data".to_string(), GeometryValue::Text(text))]);
+    let text = value.into_text("data").unwrap();
+    assert_eq!(text.as_ptr(), address);
+    let mut decoder = dwg_input_decoder(text).unwrap();
+    assert_eq!(decoder.expected_output_bytes(), 6144);
+    let mut turns = 0;
+    let mut control = Base64Control { maximum_output_bytes: 6144, progress: &mut |_| true };
+    while decoder.step(32, &mut control).unwrap() == Base64DecodeState::Pending {
+        assert!(decoder.last_turn_receipt().read_bytes <= 32);
+        assert!(decoder.take_output().is_none());
+        turns += 1;
+    }
+    assert!(turns > 256);
+    assert_eq!(decoder.take_output().unwrap(), b"Man".repeat(2048));
+}
+
+#[test]
+fn dwg_import_yields_across_pages_and_records_before_publishing_the_shape() {
+    let (_, exported) = run("brep.interchange.exportDwg", vec![("shape", GeometryValue::Shape(cube(2.0))), ("deflection", GeometryValue::Number(0.1))], 1);
+    let text = text_of(&exported, "dwg");
+    let (slices, imported) = run("brep.interchange.importDwg", vec![("data", GeometryValue::Text(text)), ("tolerance", GeometryValue::Number(1e-4))], 1);
+    assert!(slices >= 13, "DWG pages and records yielded only {slices} times");
+    let (volume, faces) = volume_of(&imported);
+    assert!((volume - 8.0).abs() < 1e-6);
+    assert_eq!(faces, 12);
+}
+
+#[test]
 fn empty_undecodable_and_unparseable_data_are_localized_faults_at_the_data_port() {
     for (id, data, code) in [
         ("brep.interchange.importStep", "", "generation3d.geometry.interchange-empty"),

@@ -1,5 +1,5 @@
 /** 🗺️ Actual GIS map package boundary with independently queried intrinsic values. */
-import {gisMapSnapshotToSqliteDatabase,gisMapSnapshotFromSqliteDatabase,validateGisMapSnapshotSqliteDialect,type GisMapArtifact} from "@semio-tech/gis-gismap-js";
+import {gisMapSnapshotToSqliteDatabase,gisMapSnapshotFromSqliteDatabase,validateGisMapSnapshotSqliteDialect,type GisMapArtifact} from "../../../../🟦️.ts";
 import {exportSqliteDatabase,importSqliteDatabase} from "@semio-tech/framework";
 import {Database} from "bun:sqlite";
 import {expect,test} from "bun:test";

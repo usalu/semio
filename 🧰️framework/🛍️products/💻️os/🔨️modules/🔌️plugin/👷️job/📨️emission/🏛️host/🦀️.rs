@@ -71,8 +71,21 @@ impl<M:RetireOwned+Send+'static> OriginalHostConfiguration<M>{
         self.position=position;self.in_string=in_string;self.escaped=escaped;self.in_scalar=in_scalar;self.depth=depth;self.items=items;self.string_bytes=string_bytes;
         if invalid{self.empty=true;self.phase=1;self.position=0}else if position==length{self.phase=3;self.position=0}Ok(())
     }
-    /// ⏳️ Each call retains one bounded native parse, projection, measurement, copy or mutation-header turn.
-    pub fn advance(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{let mut admission=std::mem::take(&mut self.construction);let settled=self.advance_with(cx,&mut admission);self.construction=admission;settled}
+    /// ⏳️ Settles consecutive funded host steps within the caller's existing turn.
+    pub fn advance(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
+        let mut admission=std::mem::take(&mut self.construction);
+        let settled=(||{
+            for _ in 0..32 {
+                let progress=cx.retained_progress();
+                let work=cx.original_work_units_spent();
+                if self.advance_with(cx,&mut admission)?{return Ok(true)}
+                if cx.should_yield()||cx.retained_progress()==progress&&cx.original_work_units_spent()==work{break}
+            }
+            Ok(false)
+        })();
+        self.construction=admission;
+        settled
+    }
     fn advance_with(&mut self,cx:&mut StepContext<'_>,admission:&mut OriginalConstructionAdmission)->Result<bool,OriginalTurnFailure>{
         self.validate(cx)?;if self.closing{return Err(invalid().into())}if self.ready(){return Ok(true)}if cx.is_cancelled(){return Err(ValueError::literal(ValueRefusalKind::Canceled,"original host configuration was cancelled").into())}if cx.should_yield(){return Ok(false)}
         let grant=cx.retained_grant();

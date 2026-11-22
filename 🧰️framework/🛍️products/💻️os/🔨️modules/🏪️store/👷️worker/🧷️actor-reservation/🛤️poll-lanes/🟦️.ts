@@ -1,7 +1,8 @@
 import type { ReservationSession } from "../🗃️state/🟦️.ts";
 import type { ReservationHub } from "../🧩️hub/🟦️.ts";
 import type { BrowserActorChildValue } from "@semio-tech/framework-plugin/browser-bundle/child";
-import type { ShardCommandIngressPage } from "@semio-tech/framework-actor/shard-client";
+import { admitSegmentedDownloadChunk, admitSegmentedDownloadOperationId, type ShardCommandIngressPage } from "@semio-tech/framework-actor/shard-client";
+import { childRecord } from "@semio-tech/framework/browser-bundle/child/schema";
 import { driveSpawnedJob, spawnedJobCompletedEvent } from "@semio-tech/framework-actor/wire-turn";
 import { type BrowserActorSpawnedJob, type DocumentBrowserActorChild, browserActorTurnShape } from "../../🧩️actor-wire-helpers/🟦️.ts";
 
@@ -29,7 +30,7 @@ export class ReservationPollLanes {
     return work;
   }
 
-  private invokeJobs(child: DocumentBrowserActorChild, name: "startJob" | "stepJob" | "cancelJob", args: BrowserActorChildValue[], assertCurrent: () => void): Promise<BrowserActorChildValue> {
+  private invokeJobs(child: DocumentBrowserActorChild, name: "startJob" | "stepJob" | "cancelJob" | "takeSegmentedDownloadChunk", args: BrowserActorChildValue[], assertCurrent: () => void): Promise<BrowserActorChildValue> {
     const work = this.session.pollTail.then(async () => {
       if ((this.session.closed && name !== "cancelJob") || this.session.child !== child) throw new Error("document browser actor: closed poll lane");
       assertCurrent();
@@ -39,6 +40,17 @@ export class ReservationPollLanes {
     });
     this.session.pollTail = work.then(() => {}, () => {});
     return work;
+  }
+
+  /** 📥️ Reads one bounded output page on this child's serialized jobs lane. */
+  async invokeSegmentedDownloadChunk(child: DocumentBrowserActorChild, instanceId: number, operationId: bigint, assertCurrent: () => void): Promise<Uint8Array | undefined> {
+    const operation = admitSegmentedDownloadOperationId(operationId, instanceId);
+    const value: unknown = await this.invokeJobs(child, "takeSegmentedDownloadChunk", [instanceId, operation], () => {
+      if (this.session.closed || this.session.child !== child) throw new Error("segmented-download-owner-retired");
+      assertCurrent();
+    });
+    if (childRecord(value, ["tag"]) && value.tag === "none") return undefined;
+    return admitSegmentedDownloadChunk(childRecord(value, ["tag", "val"]) && value.tag === "some" ? value.val : value);
   }
 
   /** 🧵️ Drives every spawned job to a terminal step through the shared {@link driveSpawnedJob} pump and returns the

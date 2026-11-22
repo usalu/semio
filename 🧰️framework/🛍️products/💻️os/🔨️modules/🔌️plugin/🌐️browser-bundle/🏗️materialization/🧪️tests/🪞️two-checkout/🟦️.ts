@@ -17,11 +17,12 @@ import {publishStoreReceiptContentV1,restoreStoreReceiptContentV1,fleetContentFr
 import {stageCacheV1} from "../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🗃️stage-cache/🟦️.ts";
 import {optimizeStageRequestV1,transpileStageRequestV1} from "../../🚀️commands/🟦️.ts";
 import {transpilePluginComponentModulesAsync} from "../../🟦️.ts";
+import {nativeTranspileBinaryV1} from "../../🦀️native-transpile/🟦️.ts";
 import {optimizePluginCoreModuleAsync,pluginCoreModuleFilesV1,pluginWasmOptToolV1} from "../../🪶️wasm-opt/🟦️.ts";
 import {stripWasmDebugSectionsV1} from "../../🪶️strip-debug/🟦️.ts";
 import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};
 
-/** 🪞️ The two-checkout proof for the plugin payload pipeline, repeatable and independent of the graph and of the live tree: one hand-written wasm32-wasip2 component crate is built at different temporary roots (each with its own Cargo home) through the repository's real rustc wrapper and the real wasm profile of the build, and the bytes are compared; the real jco transpile and wasm-opt steps run on each result through the stage cache's fleet tier against a cache server this test starts on a free port with a temporary store and test tokens; the second root computes nothing and every output is byte-identical to the first root's. The receipts of the outputs are equal and the fleet content store restores them byte-for-byte. Needs the pinned toolchain with the `wasm32-wasip2` target and the repository's tools (jco; a Binaryen for the optimize step): when one is missing the affected part is skipped and says why, it never passes silently. */
+/** 🪞️ The two-checkout proof for the plugin payload pipeline, repeatable and independent of the graph and of the live tree: one hand-written wasm32-wasip2 component crate is built at different temporary roots (each with its own Cargo home) through the repository's real rustc wrapper and the real wasm profile of the build, and the bytes are compared; the native transpile and wasm-opt steps run on each result through the stage cache's fleet tier against a cache server this test starts on a free port with a temporary store and test tokens; the second root computes nothing and every output is byte-identical to the first root's. The receipts of the outputs are equal and the fleet content store restores them byte-for-byte. Needs the pinned toolchain with the `wasm32-wasip2` target and the repository's native transpiler and Binaryen: when one is missing the affected part is skipped and says why, it never passes silently. */
 const here=dirname(fileURLToPath(import.meta.url));
 const repository=process.env.SEMIO_TEST_REPOSITORY_ROOT??(()=>{for(let at=here;;at=dirname(at)){if(existsSync(join(at,"rust-toolchain.toml"))&&existsSync(join(at,"Cargo.toml")))return at;if(dirname(at)===at)throw Error("repository root not found");}})();
 const toolchainText=readFileSync(join(repository,"rust-toolchain.toml"),"utf8"),channel=/channel\s*=\s*"([^"]+)"/u.exec(toolchainText)![1]!;
@@ -31,7 +32,7 @@ afterAll(async()=>{for(const server of servers)await server.stop().catch(()=>{})
 
 const sysroot=(()=>{try{return runToolSyncV1("cargo",["--print","sysroot"],{command:"rustc",encoding:"utf8",env:{...process.env,RUSTUP_TOOLCHAIN:channel}}).stdout.trim();}catch{return "";}})();
 const toolchainReady=sysroot!==""&&existsSync(join(sysroot,"lib","rustlib","wasm32-wasip2","lib"));
-const jcoReady=existsSync(join(repository,"node_modules","@bytecodealliance","jco","package.json"));
+const nativeTranspileReady=(()=>{try{nativeTranspileBinaryV1(repository);return true;}catch{return false;}})();
 const binaryen=(()=>{const found=join(repository,"node_modules","binaryen","bin","wasm-opt");return process.env.SEMIO_WASM_OPT_BIN??(existsSync(found)?found:undefined);})();
 const section=(text:string,header:string)=>{const lines=text.split("\n"),start=lines.indexOf(header);if(start<0)throw Error("section absent: "+header);const rows=[header];for(let at=start+1;at<lines.length&&!lines[at]!.startsWith("[");at++)rows.push(lines[at]!);return rows.join("\n");};
 const liveConfig=readFileSync(join(repository,".cargo","config.toml"),"utf8"),cargoConfig=`${section(liveConfig,"[unstable]")}\n${section(liveConfig,"[target.wasm32-wasip2]")}\n`;
@@ -87,12 +88,12 @@ wasmPhase("control: a dependency from an absolute directory source makes the byt
  expect(sha(two.wasm)).not.toBe(sha(one.wasm));
 },300000);
 
-const stagePhase=toolchainReady&&jcoReady?test:test.skip;
+const stagePhase=toolchainReady&&nativeTranspileReady?test:test.skip;
 type Stages=Readonly<{transpiled:string;optimized:string|null}>;
 async function stages(c:Checkout,cache:ReturnType<typeof sharedStageCacheV1>):Promise<Stages>{
  const base=fixture.package.replaceAll("-","_"),context={repoRoot:repository,preview2VendorDir:"",environment:process.env,...(binaryen?{wasmOptBin:binaryen}:{})};
  const component=createHash("sha256").update(stripWasmDebugSectionsV1(readFileSync(c.wasm))).digest("hex"),transpiled=join(c.root,"transpiled");
- await cache.run(transpileStageRequestV1(component,"jco-test","materialization-test",base,"native-transpile-test"),transpiled,directory=>transpilePluginComponentModulesAsync(c.wasm,directory,base,context),undefined,base);
+ await cache.run(transpileStageRequestV1(component,"materialization-test",base,"native-transpile-test"),transpiled,directory=>transpilePluginComponentModulesAsync(c.wasm,directory,base,context),undefined,base);
  if(!binaryen)return {transpiled,optimized:null};
  const tool=pluginWasmOptToolV1(context),version=runToolSyncV1("wasm-opt",["--version"],{encoding:"utf8",env:{...process.env,SEMIO_TOOL_WASM_OPT:binaryen}}).stdout.trim(),optimized=join(c.root,"optimized");mkdirSync(optimized,{recursive:true});
  for(const file of pluginCoreModuleFilesV1(transpiled,base)){
@@ -103,7 +104,7 @@ async function stages(c:Checkout,cache:ReturnType<typeof sharedStageCacheV1>):Pr
  return {transpiled,optimized};
 }
 const outputs:Stages[]=[];
-stagePhase("jco transpile and wasm-opt give the same files at every checkout, and the third checkout computes neither through the fleet tier",async()=>{
+stagePhase("native transpile and wasm-opt give the same files at every checkout, and the third checkout computes neither through the fleet tier",async()=>{
  const remote={SEMIO_REMOTE_CACHE_ENDPOINT:server!.url,SEMIO_REMOTE_CACHE_INSTANCE:"main",SEMIO_REMOTE_CACHE_ACCESS:"read-write",SEMIO_REMOTE_CACHE_TOKEN:token};
  const make=(m:Checkout,fleet:boolean)=>sharedStageCacheV1(stageCacheV1(join(m.root,"stages")),fleet?{client:createFleetClientV1(readFleetSettingsV1(join(m.root,"state"),remote)!)}:{});
  const caches=[make(a!,true),make(b!,false),make(c!,true)];

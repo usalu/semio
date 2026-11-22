@@ -1,5 +1,5 @@
 import{createHash}from"node:crypto";
-import{existsSync}from"node:fs";
+import{readInventoryRecordLeanV1}from"../../📥️inputs/🪶️lean-inventory/🟨️.mjs";
 import{mkdir,mkdtemp,readFile,readdir,rm,writeFile}from"node:fs/promises";
 import{tmpdir}from"node:os";
 import{brotliDecompressSync}from"node:zlib";
@@ -51,19 +51,21 @@ export function closureMissingErrorV1({namespace,key,projects=[],cause}){
  return Object.assign(new Error("closure-missing:"+key+" "+namespace+" leaf is not on this machine",cause===undefined?undefined:{cause}),{code:"closure-missing",missingClosure:key,missingNamespace:namespace,missingProjects:projects});
 }
 
-/** 🗄️ Whether the leaf is on this machine. */
-export function closureLeafPresentV1(directory,key){return existsSync(join(directory,key+".json"));}
+/** 🗄️ Whether the leaf is on this machine and its bytes are the bytes its name addresses (the lean inventory verification); an absent, torn or corrupt leaf is not present, so it is fetched again. */
+export function closureLeafPresentV1(directory,key,maximumBytes=CLOSURE_POLICY_V1.maximumLeafBytes){
+ try{readInventoryRecordLeanV1(directory,key,maximumBytes);return true;}catch{return false;}
+}
 
 /** 🧲️ Obtains one closure leaf, the only way a leaf that is not on this machine comes back: on this machine already (`present`), else fetched from the fleet cache, verified against its name (the key is the sha256 of its bytes) and bounded, and written by `put` (`refetched`), else `missing`. A fetch that fails, times out or returns other bytes is `missing`. A strict caller may verify held bytes before and after writing. */
 export async function obtainClosureLeafV1({directory,namespace,key,fetch,put,signal,verify,maximumBytes=CLOSURE_POLICY_V1.maximumLeafBytes}){
  if(typeof key!=="string"||!KEY.test(key))throw Error("Closed closure key required");
- if(verify?await verify(namespace,key):closureLeafPresentV1(directory(namespace),key))return"present";
+ if(verify?await verify(namespace,key):closureLeafPresentV1(directory(namespace),key,maximumBytes))return"present";
  if(!fetch||!put||signal?.aborted)return"missing";
  try{
   const bytes=await fetch(namespace,key,signal);
   if(!bytes||bytes.length<1||bytes.length>maximumBytes||createHash("sha256").update(bytes).digest("hex")!==key)return"missing";
   await put(namespace,key,bytes);
-  const present=verify?await verify(namespace,key):closureLeafPresentV1(directory(namespace),key);
+  const present=verify?await verify(namespace,key):closureLeafPresentV1(directory(namespace),key,maximumBytes);
   return present?"refetched":"missing";
  }catch{return"missing";}
 }

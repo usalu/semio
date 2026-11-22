@@ -40,7 +40,7 @@ describe("🎯️ focusWindow", () => {
   }
 
   it("reads the window kinds of a manifest layout tree and matches a device layout by its id suffix", () => {
-    const tree = { root: { kind: "row", children: [{ kind: "stack", children: [{ kind: "window", windowKindId: "x" }] }, { kind: "column", children: [{ kind: "stack", children: [{ kind: "window", windowKindId: "y" }, { kind: "window", windowKindId: "z" }] }] }] } };
+    const tree = { root: { kind: "split", axis: "horizontal", children: [{ kind: "stack", children: [{ kind: "window", windowKindId: "x" }] }, { kind: "split", axis: "vertical", children: [{ kind: "stack", children: [{ kind: "window", windowKindId: "y" }] }, { kind: "stack", children: [{ kind: "window", windowKindId: "z" }] }] }] } };
     expect(windowKindIdsOfLayoutV1(tree)).toEqual(["x", "y", "z"]);
     const layouts = [{ id: "norm-visual-desktop", windowKindIds: ["x"] }, { id: "norm-visual-mobile", windowKindIds: ["y"] }];
     expect(deviceLayoutWindowKindsV1(layouts, "mobile")).toEqual(["y"]);

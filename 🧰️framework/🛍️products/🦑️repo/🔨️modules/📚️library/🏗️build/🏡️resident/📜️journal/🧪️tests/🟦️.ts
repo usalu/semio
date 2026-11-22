@@ -6,13 +6,13 @@ import {dirname,join} from "node:path";
 import {fileURLToPath} from "node:url";
 import {CHANGE_JOURNAL_POLICY_V1,readChangeRecordsAfterV1,readChangeStateV1,changeHeartbeatAgeV1} from "../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📜️changes/🟦️.ts";
 import {createChangeJournalClientV1} from "../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📜️changes/🧭️client/🟦️.ts";
-import {residentWatcherV1} from "../../🧪️tests/🟦️.ts";
+import {nativeWatcherUsableV1,residentWatcherV1} from "../../🧪️tests/🟦️.ts";
 import {liveChildPidsV1} from "../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🐕️watchdog/🟦️.ts";
 import {observeTreeMegabytesV1,readHostTextV1} from "../../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📡️sampling/🟦️.ts";
 import {changeJournalDirectoryV1,runChangeJournalServiceV1,startChangeJournalServiceV1,ChangeJournalRunningErrorV1,type ChangeWatchFactoryV1} from "../🟦️.ts";
 
 const here=dirname(fileURLToPath(import.meta.url)),policy=CHANGE_JOURNAL_POLICY_V1;
-const binary=await residentWatcherV1();
+const binary=await residentWatcherV1();const native=await nativeWatcherUsableV1(binary);
 let sandbox="";
 beforeAll(()=>{sandbox=realpathSync(mkdtempSync(join(tmpdir(),"journal-service-")));});
 afterAll(()=>rmSync(sandbox,{recursive:true,force:true}));
@@ -121,7 +121,7 @@ test("a burst of one million change rows does not stop the service under its dec
  expect(run(50*1024*1024).result).toBe("memory");
 },60000);
 
-test("the detached process starts on demand with the real watcher, is shared by concurrent starters, stays under its memory bound, and a kill -9 ends in stale, then a new epoch that refuses the old cursor",async()=>{
+test.skipIf(!native)("the detached process starts on demand with the real watcher, is shared by concurrent starters, stays under its memory bound, and a kill -9 ends in stale, then a new epoch that refuses the old cursor",async()=>{
  const{root}=workspace(),environment={...process.env,XDG_RUNTIME_DIR:sandbox,SEMIO_REPO_CHANGES:"on"};
  const directory=changeJournalDirectoryV1(root,environment);
  const startedAt=performance.now();
@@ -151,7 +151,7 @@ test("the detached process starts on demand with the real watcher, is shared by 
  expect(existsSync(join(directory,"heartbeat"))).toBe(false);
 },60000);
 
-test.skipIf(process.platform!=="darwin")("a copy-on-write clone (clonefile, cp -c: how every mirror copies the checkout) is no change of its source: the source leaves no row, the destination is an addition, a real write is still a modification (FSEvents repeats the creation flags of a new file for 10-20 s, so the clone is retried until they faded)",async()=>{
+test.skipIf(process.platform!=="darwin"||!native)("a copy-on-write clone (clonefile, cp -c: how every mirror copies the checkout) is no change of its source: the source leaves no row, the destination is an addition, a real write is still a modification (FSEvents repeats the creation flags of a new file for 10-20 s, so the clone is retried until they faded)",async()=>{
  const{root}=workspace(),environment={...process.env,XDG_RUNTIME_DIR:sandbox,SEMIO_REPO_CHANGES:"on"},directory=changeJournalDirectoryV1(root,environment),start=()=>startJournal({directory,root,environment});
  await start();
  const client=createChangeJournalClientV1({directory,root,environment,start}),source=join(root,"source.ts"),born=await client.cursor() as {epoch:string;seq:number};

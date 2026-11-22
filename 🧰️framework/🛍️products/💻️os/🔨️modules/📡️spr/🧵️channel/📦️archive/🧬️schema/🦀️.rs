@@ -1,6 +1,6 @@
 //! 🧬️ Flat recursive-document carrier identity and owned member contract.
 pub const DOCUMENT_ARCHIVE_MAXIMUM_MEMBERS: usize = 1_024;
-pub const DOCUMENT_ARCHIVE_MAXIMUM_BYTES: usize = 4 * 1_024 * 1_024;
+pub const DOCUMENT_ARCHIVE_MAXIMUM_BYTES: usize = 16 * 1_024 * 1_024;
 /// 🔰️ The leading byte of every encoded document archive (a snapshot pack starts with its magic `0x89` instead), so a reader tells
 /// a composed carrier from a plain pack by its first byte.
 pub const DOCUMENT_ARCHIVE_VERSION: u8 = 1;

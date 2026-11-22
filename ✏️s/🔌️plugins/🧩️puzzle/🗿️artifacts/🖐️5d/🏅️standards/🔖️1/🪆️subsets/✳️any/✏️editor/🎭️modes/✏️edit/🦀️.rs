@@ -12,7 +12,7 @@ use crate::editor::puzzle5d::modes::edit::windows::world3d;
 use crate::editor::puzzle5d::terminology::Puzzle5dLabels;
 use crate::editor::puzzle5d::view::Puzzle5dScene;
 
-use semio_plugin::create_default_layout;
+use semio_plugin::{create_default_layout, Axis};
 use semio_ui_locale::LocalizedLabel;
 use semio_plugin::ModeDefinition;
 use semio_plugin::ToolRunView;
@@ -31,7 +31,7 @@ pub fn definition() -> ModeDefinition {
 
 /// 🪟️ 2D-first 40/60 split — board pane on the left (diagram 40%), world pane on the right (scene 60%).
 pub fn layout() -> WindowLayout {
-    create_default_layout(&[PUZZLE5D_BOARD_WINDOW_KIND_ID.into(), PUZZLE5D_WORLD_WINDOW_KIND_ID.into()], "row", Some(&[40.0, 60.0]), Some(&["Puzzle 2D".into(), "Puzzle 3D".into()]))
+    create_default_layout(&[PUZZLE5D_BOARD_WINDOW_KIND_ID.into(), PUZZLE5D_WORLD_WINDOW_KIND_ID.into()], Axis::Horizontal, Some(&[0.4, 0.6]), Some(&["Puzzle 2D".into(), "Puzzle 3D".into()]))
 }
 //#endregion 🔖️Definition
 

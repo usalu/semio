@@ -56,13 +56,20 @@ pub const SHELL_SHORTCUT_ROWS: &[(&str, &str)] = &[
 /// An override whose value carries no parsable chord is dropped rather than blanking the row, exactly
 /// like React's `parseUiKeybindingOverrides` gate.
 pub fn shell_shortcut_table(overrides: &HashMap<String, String>) -> Vec<(String, String)> {
-    SHELL_SHORTCUT_ROWS
-        .iter()
-        .map(|(control_id, keys)| {
-            let resolved = overrides.get(*control_id).filter(|keys| keys.split(',').any(|chord| !chord.trim().is_empty())).map(String::as_str).unwrap_or(keys);
-            ((*control_id).to_string(), resolved.to_string())
-        })
-        .collect()
+    SHELL_SHORTCUT_ROWS.iter().map(|(control_id, keys)| ((*control_id).to_string(), keybinding_override(overrides, control_id).unwrap_or(keys).to_string())).collect()
+}
+
+/// 🎚️ The user's override for ANY control id (shell row, app action id, OS command id), dropped when it carries no parsable chord — React's `parseUiKeybindingOverrides` gate applied to every id as `composeControlKeybindings` does.
+pub fn keybinding_override<'a>(overrides: &'a HashMap<String, String>, control_id: &str) -> Option<&'a str> {
+    overrides.get(control_id).map(String::as_str).filter(|keys| keys.split(',').any(|chord| !chord.trim().is_empty()))
+}
+
+/// 🎚️ The chords one OS or plugin command answers on `platform`: the user's override for its id wins over the registry's platform-scoped defaults, exactly like an app action id in React's composed map.
+pub fn command_active_chords(definition: &semio_framework::manifest::CommandDefinition, platform: semio_framework::manifest::Platform, overrides: &HashMap<String, String>) -> Vec<String> {
+    match keybinding_override(overrides, &definition.id) {
+        Some(keys) => keys.split(',').map(|chord| chord.trim().to_string()).filter(|chord| !chord.is_empty()).collect(),
+        None => definition.keybindings.iter().filter(|binding| binding.platform.is_none_or(|declared| declared == platform)).map(|binding| binding.chord.clone()).collect(),
+    }
 }
 
 //#endregion ⌨️ShellShortcutTable

@@ -269,6 +269,10 @@ impl<S: ByteReadSource + RetireOwned> PngDecodeJob<S> {
   if self.phase=="allocation"{return Ok(match self.allocation_at{0=>self.total_pixels*4,1|2=>self.stride,_=>0});}
   Ok(if self.phase=="inflating"{self.inflater.as_ref().and_then(|owner|owner.next_retained_allocation_bytes()).unwrap_or(0)}else{0})
  }
+ /// 🧮️ Bytes left in the active chunk checksum before the separate validation or range reservation.
+ pub fn crc_bytes_remaining(&self)->usize{
+  self.chunk.as_ref().map_or(0,|chunk|chunk.end.saturating_sub(chunk.at))
+ }
  pub fn progress(&self)->PngDecodeProgress{PngDecodeProgress{phase:self.phase,bytes:self.bytes,total_bytes:self.total_bytes,pixels:self.pixels,total_pixels:self.total_pixels,work:self.work,done:self.phase=="complete"}}
 }
 
@@ -297,8 +301,12 @@ impl<S: ByteReadSource + RetireOwned> PngDecodeJob<S> {
  /// ⏳️ The effect carries one allocation attempt: a second range reservation waits for the next turn instead of being refused.
  fn defers_range_reservation(&self,effect:&mut RetainedAllocationEffect<'_>)->bool{effect.actual().is_some()&&self.phase=="chunks"&&self.chunk.as_ref().is_some_and(|c|c.at>=c.end&&c.kind==*b"IDAT")&&!self.ranges.has_reserved_slot()}
  pub fn advance(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<(PngDecodeProgress,RetainedCloneProgress),PngDecodeError>{
+  self.advance_while(effect,&mut ||true)
+ }
+ /// 🪜️ Advance only while the caller permits the next funded transition.
+ pub fn advance_while(&mut self,effect:&mut RetainedAllocationEffect<'_>,continue_work:&mut dyn FnMut()->bool)->Result<(PngDecodeProgress,RetainedCloneProgress),PngDecodeError>{
   let grant=effect.grant();self.last_progress=Default::default();self.last_work=0;self.check()?;let mut receipt=RetainedCloneProgress::default();
-  for _ in 0..grant.maximum_items{if self.phase=="complete"||self.defers_range_reservation(effect){break;}let copy=self.next_copy_byte_demand()?;let capacity=self.next_capacity_byte_demand()?;if self.next_depth_demand()?>grant.maximum_depth||copy>grant.maximum_copy_bytes.saturating_sub(receipt.copied_bytes)||capacity>grant.maximum_capacity_bytes.saturating_sub(receipt.retained_capacity_bytes){break;}
+  for _ in 0..grant.maximum_items{if self.phase=="complete"||!continue_work()||effect.remaining_work_units().map_err(|_|PngDecodeError::WorkLimit)?==0||self.defers_range_reservation(effect){break;}let copy=self.next_copy_byte_demand()?;let capacity=self.next_capacity_byte_demand()?;if self.next_depth_demand()?>grant.maximum_depth||copy>grant.maximum_copy_bytes.saturating_sub(receipt.copied_bytes)||capacity>grant.maximum_capacity_bytes.saturating_sub(receipt.retained_capacity_bytes){break;}
    self.partial_allocated=0;let recorded=effect.performed_work();let result=match self.phase{"chunks"=>self.chunk_step(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:grant.maximum_capacity_bytes-receipt.retained_capacity_bytes,maximum_release_bytes:0,maximum_depth:grant.maximum_depth},effect),"allocation"=>self.allocation_step(),"pixels"=>self.pixel_step().map(|_|0),_=>self.inflate_step(grant.maximum_capacity_bytes-receipt.retained_capacity_bytes)};if effect.performed_work()==recorded&&!effect.performed(1).map_err(|_|PngDecodeError::WorkLimit)?{return Err(PngDecodeError::WorkLimit)}let allocated=match result{Ok(value)=>value,Err(error)=>{self.last_work+=1;receipt.copied_items+=1;receipt.copied_bytes+=copy;receipt.retained_capacity_bytes+=self.partial_allocated;self.last_progress=receipt;self.failed=Some(error.clone());return Err(error);}};self.work+=1;self.last_work+=1;receipt.copied_items+=1;receipt.copied_bytes+=copy;receipt.retained_capacity_bytes+=allocated;self.last_progress=receipt;
   }
   Ok((self.progress(),receipt))

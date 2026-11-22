@@ -341,7 +341,7 @@ impl SolidPrimitive {
     }
 }
 
-pub(super) fn make_analytic_solid(body: &mut Body, primitive: SolidPrimitive, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
+pub(crate) fn make_analytic_solid(body: &mut Body, primitive: SolidPrimitive, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
     primitive.validate().map_err(|reason| KernelError::InvalidInput(reason.into()))?;
     let tol = Tol::DEFAULT;
     let vertices: Vec<_> = (0..primitive.vertex_count()).map(|index| make_vertex(body, primitive.vertex(index), tol, rec)).collect();

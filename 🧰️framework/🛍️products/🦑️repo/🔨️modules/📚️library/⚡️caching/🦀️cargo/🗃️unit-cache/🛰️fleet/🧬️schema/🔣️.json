@@ -112,11 +112,58 @@
         "owner": { "type": "string" },
         "claimed": { "type": "boolean" },
         "offer": { "type": "boolean" },
+        "hint": {
+          "description": "The root hint of a unit that was compiled while the cache was unreachable and holds directories of this machine: the neutral key and the kinds; the upload worker publishes the hint before it uploads the unit under its root key.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["neutralKey", "kinds"],
+          "properties": {
+            "neutralKey": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+            "kinds": { "type": "array", "minItems": 1, "items": { "enum": ["cargo-home", "cwd", "manifest", "rustup-home", "workspace"] } }
+          }
+        },
         "costMs": { "type": "integer", "minimum": 0 },
         "platform": { "$ref": "#/definitions/Platform" },
         "queuedMs": { "type": "integer", "minimum": 0 },
         "attempts": { "type": "integer", "minimum": 0 },
         "notBeforeMs": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "KeySamplesRef": {
+      "description": "The reference of the key samples an origin published: the sha256 of the blob (a KeySamples document in the fleet cache), how many units it holds and when it was taken.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["blob", "count", "atMs"],
+      "properties": {
+        "blob": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "count": { "type": "integer", "minimum": 1, "maximum": 400 },
+        "atMs": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "KeySamples": {
+      "description": "The key inputs of the most recent misses of one origin as digests only (never a path, argument text or value): per unit the crate, its slot and one digest per key component. Published as one content-addressed blob; compared across origins by `repo fleet status`.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "atMs", "samples"],
+      "properties": {
+        "version": { "const": 1 },
+        "atMs": { "type": "integer", "minimum": 0 },
+        "samples": {
+          "type": "array",
+          "maxItems": 400,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["crate", "slot", "atMs", "components"],
+            "properties": {
+              "crate": { "type": "string", "maxLength": 200 },
+              "slot": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+              "atMs": { "type": "integer", "minimum": 0 },
+              "components": { "type": "object", "maxProperties": 400, "additionalProperties": { "type": "string", "pattern": "^[0-9a-f]{4,64}$" } },
+              "values": { "description": "The flag texts of the small classes (diagnostics, unstable, codegen, features, cfg, lints, kind, edition, target and the rustflags environment) with every token that holds a path replaced by <path#digest>; never a directory.", "type": "object", "maxProperties": 12, "additionalProperties": { "type": "string", "maxLength": 300, "pattern": "^[^/\\\\]*$" } }
+            }
+          }
+        }
       }
     },
     "Counters": {
@@ -137,6 +184,13 @@
             "miss": { "type": "integer", "minimum": 0 },
             "stored": { "type": "integer", "minimum": 0 }
           }
+        },
+        "keySamples": { "$ref": "#/definitions/KeySamplesRef" },
+        "skipReasons": {
+          "description": "Units compiled here and not shared with the fleet, by reason name; the counts add up to unit.skipped (units counted before their reason was recorded appear as unrecorded).",
+          "type": "object",
+          "propertyNames": { "pattern": "^[a-z][a-z0-9-]{0,40}$" },
+          "additionalProperties": { "type": "integer", "minimum": 1 }
         },
         "offload": {
           "type": "object",

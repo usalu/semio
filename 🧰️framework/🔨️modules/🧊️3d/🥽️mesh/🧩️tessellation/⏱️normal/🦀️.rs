@@ -34,7 +34,7 @@ impl MeshTessellationJob{
     /// 🧪️ Advances one original geometric ear predicate without emitting a triangle or copying source channels.
     pub(super) fn choose_triangle(&mut self)->Option<(TriangleFinish,[usize;3])>{
         match self.phase{
-            8=>{if self.remaining==3{return Some((TriangleFinish::Last,self.triangle_locals(TriangleFinish::Last)));}let(prev,next)=self.links[self.ear];let cross=cross2(self.projected[prev],self.projected[self.ear],self.projected[next]);if if self.area>0.0{cross>1e-14}else{cross< -1e-14}{self.probe=self.head;self.phase=9;}else{self.reject_ear();}}
+            8=>{if self.remaining==3{return Some((TriangleFinish::Last,self.triangle_locals(TriangleFinish::Last)));}let(prev,next)=self.links[self.ear];let cross=cross2(self.projected[prev],self.projected[self.ear],self.projected[next]);if if self.area>0.0{cross>EAR_EPSILON}else{cross< -EAR_EPSILON}{self.probe=self.head;self.phase=9;}else{self.reject_ear();}}
             9=>{let(prev,next)=self.links[self.ear];let k=self.probe;if k!=prev&&k!=self.ear&&k!=next&&point_in_triangle(self.projected[k],self.projected[prev],self.projected[self.ear],self.projected[next]){self.reject_ear();}else{self.probe=self.links[k].1;if self.probe==self.head{return Some((TriangleFinish::Clip,[prev,self.ear,next]));}}}
             10=>return Some((TriangleFinish::Fan,self.triangle_locals(TriangleFinish::Fan))),
             _=>unreachable!("original ear predicate requires its source phase"),

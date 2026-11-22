@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Memberless Document Archive Reopen Law",
+  "type": "object",
+  "required": [
+    "format",
+    "pageMaximum",
+    "archiveMaximum",
+    "packMaximum",
+    "sprMaximum",
+    "cases"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "format": {
+      "const": 1
+    },
+    "pageMaximum": {
+      "const": 4096
+    },
+    "archiveMaximum": {
+      "type": "integer",
+      "minimum": 4194305
+    },
+    "packMaximum": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "sprMaximum": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "change",
+          "outcome"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "change": {
+            "enum": [
+              "none",
+              "exact",
+              "wrongDigest",
+              "truncated",
+              "trailing",
+              "nonzeroMembers",
+              "overlongLength",
+              "overArchiveLimit",
+              "overPackLimit",
+              "overSprLimit",
+              "foreignOffset",
+              "cancel",
+              "earlyEof"
+            ]
+          },
+          "outcome": {
+            "enum": [
+              "ready",
+              "refused",
+              "cancelled"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

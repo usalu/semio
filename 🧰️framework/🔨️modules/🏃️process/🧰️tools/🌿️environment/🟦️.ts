@@ -22,6 +22,7 @@ export function toolEnvironmentV1(entry: ToolEntryV1, ambient: Readonly<Record<s
     result[name] = value;
   }
   for (const [name, value] of Object.entries(entry.environment.set)) result[name] = value;
+  for (const name of entry.environment.rootVariables ?? []) result[name] = context.root;
   const cache = context.cacheDirectory ?? ((...segments: string[]) => join(context.root, ".🧬semio", "🦑️repo", "⚡️cache", ...segments));
   for (const [name, segments] of Object.entries(entry.environment.cacheDirectories ?? {})) result[name] ??= cache(...segments);
   for (const [name, value] of Object.entries(explicit)) if (value === undefined) delete result[name]; else result[name] = value;

@@ -38,7 +38,7 @@ fn close(cursor:&mut Puzzle2dDeleteNodeInverseCursor) {
     test_source_custody::close_cursor(cursor,2_000_000,|cursor|{
         let copy=cursor.next_close_copy_byte_demand().unwrap();
         (copy,cursor.next_close_capacity_byte_demand(copy).unwrap(),cursor.next_close_release_byte_demand().unwrap(),cursor.next_close_depth_demand().unwrap())
-    },|cursor,grant|cursor.close_step(grant),|cursor|cursor.terminal_is_empty());
+    },|cursor,effect|cursor.close_step(effect),|cursor|cursor.terminal_is_empty());
 }
 fn retire(inverse:PagedList<Puzzle2dMutation,{usize::MAX}>) {
     let (result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||ControlledRetirement::new(inverse));
@@ -46,7 +46,7 @@ fn retire(inverse:PagedList<Puzzle2dMutation,{usize::MAX}>) {
     let mut owner=match result{Ok(owner)=>owner,Err((error,_))=>panic!("{error:?}")};
     for turn in 0..2_000_000 {
         if owner.terminal_is_empty(){return;}
-        let permit=grant(turn);observed(permit,||owner.step(permit));
+        let permit=grant(turn);observed(permit,||test_source_custody::close_turn(permit, |effect| owner.step(4096, effect)));
     }
     panic!("delete inverse output retained native ownership");
 }
@@ -72,11 +72,11 @@ fn history_edit_puzzle2d_owned_delete_inverse_preserves_exact_cascade_and_grante
         let expected=inverse_puzzle2d_mutation(&base,&delete_node(payload.id.clone())).unwrap();
         let (mut cursor,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(Puzzle2dDeleteNodeInverseCursor::default);
         assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
-        assert_eq!(observed(RetainedCloneGrant::default(),||cursor.advance(source.borrow(&base),mutation.borrow(&payload),RetainedCloneGrant::default())).progress(),Default::default());
+        assert_eq!(observed(RetainedCloneGrant::default(),||test_source_custody::run(RetainedCloneGrant::default(), |effect| cursor.advance(source.borrow(&base),mutation.borrow(&payload), 4096, effect))).progress(),Default::default());
         let mut complete=false;
         for turn in 0..2_000_000 {
             let permit=grant(turn);
-            if matches!(observed(permit,||cursor.advance(source.borrow(&base),mutation.borrow(&payload),permit)),RetainedCloneStep::Complete(_)){complete=true;break;}
+            if matches!(observed(permit,||test_source_custody::run(permit, |effect| cursor.advance(source.borrow(&base),mutation.borrow(&payload), 4096, effect))),RetainedCloneStep::Complete(_)){complete=true;break;}
         }
         assert!(complete,"deletion inverse did not finish {}",case["id"]);
         let inverse=cursor.take().unwrap();assert!(cursor.take().is_none());
@@ -90,11 +90,11 @@ fn history_edit_puzzle2d_owned_delete_inverse_preserves_exact_cascade_and_grante
         retire(inverse);
         for pause in [0,1,3,11,97,257,1021] {
             let mut cancelled=Puzzle2dDeleteNodeInverseCursor::default();
-            for turn in 0..pause {let permit=grant(turn);if matches!(observed(permit,||cancelled.advance(source.borrow(&base),mutation.borrow(&payload),permit)),RetainedCloneStep::Complete(_)){break;}}
+            for turn in 0..pause {let permit=grant(turn);if matches!(observed(permit,||test_source_custody::run(permit, |effect| cancelled.advance(source.borrow(&base),mutation.borrow(&payload), 4096, effect))),RetainedCloneStep::Complete(_)){break;}}
             close(&mut cancelled);assert!(cancelled.take().is_none());
         }
-        let mut swapped=Puzzle2dDeleteNodeInverseCursor::default();observed(grant(0),||swapped.advance(source.borrow(&base),mutation.borrow(&payload),grant(0)));
-        let other=payload.clone();assert!(swapped.advance(source.borrow(&base),mutation.borrow(&other),grant(1)).is_err());close(&mut swapped);
+        let mut swapped=Puzzle2dDeleteNodeInverseCursor::default();observed(grant(0),||test_source_custody::run(grant(0), |effect| swapped.advance(source.borrow(&base),mutation.borrow(&payload), 4096, effect)));
+        let other=payload.clone();assert!(test_source_custody::run(grant(1), |effect| swapped.advance(source.borrow(&base),mutation.borrow(&other), 4096, effect)).is_err());close(&mut swapped);
         assert_eq!(serde_json::to_value(&base).unwrap(),original);assert_eq!(serde_json::to_value(&payload).unwrap(),original_payload);
     }
     test_source_custody::close(&mut source);test_source_custody::close(&mut mutation);

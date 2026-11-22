@@ -23,6 +23,6 @@ test("any other failure is not absorbed",()=>{
 test("the owner loop absorbs the change with the owner it runs, in both languages, and sets it aside like a failed farm job",()=>{
  expect(source).toContain("deferOwner(error)||failedOwner(error)||changedOwner(error,job)||");
  expect(source).toContain("const verdict=ownerStoreChangeV1(error,owner.name,changedOnce)");
- expect(source).toContain("it is requeued once / Projekt ");expect(source).toContain("wird zurückgestellt, der Lauf geht weiter und nennt es am Ende");
+ expect(source).toContain("it is requeued once / Projekt ");expect(source).toContain("), der Lauf geht weiter und nennt es am Ende");
  expect(source).toContain(".catch(error=>{if(!setAside(error,job))throw error;});");
 });

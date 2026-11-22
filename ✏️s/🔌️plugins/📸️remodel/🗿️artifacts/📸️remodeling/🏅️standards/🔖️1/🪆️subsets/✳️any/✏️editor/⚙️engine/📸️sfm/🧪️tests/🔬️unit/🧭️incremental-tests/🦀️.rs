@@ -64,6 +64,76 @@ fn bounded_triangulation_fixture(degenerate: bool) -> IncrementalSfm {
 }
 
 #[test]
+fn bounded_sfm_preserves_each_view_calibration() {
+    let fixture = include_str!("../../🧫️fixtures/📷️multi-view.csv");
+    let number = |field: &str| field.parse::<f64>().expect("fixture number");
+    let mut intrinsics = Vec::new();
+    let mut keypoints = vec![Vec::new(); 3];
+    let mut tracks = Vec::new();
+    let mut matches = Vec::new();
+    let mut expected_points = Vec::new();
+    let mut expected_poses = Vec::new();
+    let mut dimensions = Vec::new();
+    for row in fixture.lines() {
+        let fields: Vec<_> = row.split(',').collect();
+        match fields[0] {
+            "camera" => {
+                let values: Vec<_> = fields[2..].iter().map(|field| number(field)).collect();
+                let [width, height, fx, fy, cx, cy, skew, k1, k2, k3, d4, d5, angle, tx, ty, tz] = values.as_slice() else { panic!("malformed camera row") };
+                let distortion = match fields[1] {
+                    "pinhole" => Distortion::None,
+                    "brownConrady" => Distortion::BrownConrady { k1: *k1, k2: *k2, k3: *k3, p1: *d4, p2: *d5 },
+                    "fisheye" => Distortion::FisheyeEquidistant { k1: *k1, k2: *k2, k3: *k3, k4: *d4 },
+                    _ => panic!("unknown lens model"),
+                };
+                intrinsics.push(Intrinsics { fx: *fx, fy: *fy, cx: *cx, cy: *cy, skew: *skew, distortion });
+                expected_poses.push(CameraPose(Se3 { r: So3::exp([0.0, *angle, 0.0]), t: [*tx, *ty, *tz] }));
+                dimensions.push([*width, *height]);
+            }
+            "point" => {
+                let point = std::array::from_fn(|axis| number(fields[axis + 1]));
+                let index = expected_points.len() as u32;
+                for (frame, frame_keypoints) in keypoints.iter_mut().enumerate() {
+                    let pixel = [number(fields[4 + frame * 2]), number(fields[5 + frame * 2])];
+                    assert!(pixel.iter().zip(dimensions[frame]).all(|(pixel, limit)| (0.0..limit).contains(pixel)));
+                    let projected = reproject(&intrinsics[frame], &expected_poses[frame], point).expect("visible fixture point");
+                    assert!(pixel.iter().zip(projected).all(|(expected, actual)| (expected - actual).abs() < 1e-8));
+                    frame_keypoints.push(Keypoint { x: pixel[0] as f32, y: pixel[1] as f32, octave: 0, angle: 0.0, response: 1.0 });
+                }
+                expected_points.push(point);
+                tracks.push((0..keypoints.len()).map(|frame| (frame, index)).collect());
+                matches.push(Match { a: index, b: index, distance: 0 });
+            }
+            _ => {}
+        }
+    }
+    let mut sfm = IncrementalSfm::new(intrinsics.clone(), FeatureTracks { tracks }, keypoints, SfmConfig { min_track_length: 2, ..SfmConfig::default() });
+    let mut seed = SeedPairPreparation::new(0, 1, &matches);
+    assert!((0..1000).any(|_| sfm.advance_seed_pair(&mut seed, 8).expect("asymmetric seed")));
+    let mut registration = RegistrationPreparation::new(2);
+    assert!((0..1000).any(|_| sfm.advance_registration(&mut registration, 8).expect("asymmetric PnP registration")));
+
+    sfm.cameras[2].1.0.t[0] += 0.03;
+    let mut adjustment = sfm.begin_bundle_adjustment(&[0, 1, 2], &[0, 1], RobustLoss::Trivial, 20).expect("calibrated adjustment");
+    assert!((0..1000).any(|_| sfm.advance_bundle_adjustment(&mut adjustment, 16)));
+    let mut cleanup = sfm.begin_bundle();
+    assert!((0..1000).any(|_| sfm.advance_bundle(&mut cleanup, 8)));
+    let mut snapshot = sfm.begin_reconstruction_snapshot();
+    assert!((0..1000).any(|_| sfm.advance_reconstruction_snapshot(&mut snapshot, 8)));
+    let reconstruction = IncrementalSfm::finish_reconstruction_snapshot(snapshot);
+    assert_eq!(reconstruction.cameras.len(), intrinsics.len());
+    assert_eq!(reconstruction.points.len(), expected_points.len());
+    for (frame, pose) in reconstruction.cameras {
+        assert_eq!(reconstruction.intrinsics[&frame], intrinsics[frame]);
+        assert!(norm3(sub3(pose.0.t, expected_poses[frame].0.t)) < 1e-3);
+        assert!(norm3(sub3(pose.0.r.log(), expected_poses[frame].0.r.log())) < 1e-3);
+    }
+    for (point, expected) in reconstruction.points.into_iter().zip(expected_points) {
+        assert!(norm3(sub3(point, expected)) < 1e-3, "{point:?} vs {expected:?}");
+    }
+}
+
+#[test]
 fn maximum_seed_pair_and_degenerate_solve_steps_stay_below_hard_ceiling() {
     let (mut sfm, mut preparation) = bounded_seed_fixture(false);
     assert_eq!(preparation.matches.len(), MAX_INTERACTIVE_SEED_CORRESPONDENCES);

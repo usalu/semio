@@ -18,6 +18,7 @@ fn window_close_retires_queued_scene_and_capture_owners_before_slot_release() {
         semio_ui_declaration::ui::SurfaceKind::Canvas2d,
         rect,
         &semio_ui_wgpu_events::UiEvent::PointerDown { x: 10.0, y: 10.0, button: semio_ui_wgpu_events::PointerButton::Primary, modifiers: Default::default() },
+        1,
         Some(ui_render::PointerId(1)),
         &mut input,
     );
@@ -48,6 +49,7 @@ fn closing_window_silently_retires_an_active_canvas_gesture() {
         semio_ui_declaration::ui::SurfaceKind::Canvas2d,
         Rect::new(0.0, 0.0, 200.0, 200.0),
         &semio_ui_wgpu_events::UiEvent::PointerDown { x: 10.0, y: 10.0, button: semio_ui_wgpu_events::PointerButton::Primary, modifiers: Default::default() },
+        1,
         Some(ui_render::PointerId(1)),
         &mut input,
     );
@@ -86,6 +88,7 @@ fn live_canvas_gesture_cancels_when_its_published_generation_is_replaced() {
         semio_ui_declaration::ui::SurfaceKind::Canvas2d,
         rect,
         &semio_ui_wgpu_events::UiEvent::PointerDown { x: 20.0, y: 20.0, button: semio_ui_wgpu_events::PointerButton::Primary, modifiers: semio_ui_wgpu_events::EventModifiers::default() },
+        1,
         Some(ui_render::PointerId(1)),
         &mut input,
     );
@@ -115,8 +118,7 @@ fn scene_command_skips_bespoke_surface_kinds_to_avoid_double_dispatch() {
             surface_id: "s1".into(),
             kind: semio_ui_declaration::ui::SurfaceKind::NodeGraph,
             rect,
-            event: semio_ui_wgpu_events::UiEvent::PointerDown { x: 10.0, y: 10.0, button: semio_ui_wgpu_events::PointerButton::Primary, modifiers: Default::default() },
-        }],
+            event: semio_ui_wgpu_events::UiEvent::PointerDown { x: 10.0, y: 10.0, button: semio_ui_wgpu_events::PointerButton::Primary, modifiers: Default::default() }, click_count: 1 }],
         None,
         &mut input,
     );
@@ -164,7 +166,7 @@ fn scene_command_reaches_every_generic_fallback_surface_kind_without_panicking()
             semio_ui_wgpu_events::UiEvent::Scroll { x: 10.0, y: 10.0, delta_x: 0.0, delta_y: 4.0, modifiers: Default::default() },
         ];
         for event in events {
-            apply_ui_commands(&mut vec![semio_ui_wgpu_events::UiCommand::Scene { window_id: window_id.clone(), node, surface_id: "s1".into(), kind, rect, event }], None, &mut input);
+            apply_ui_commands(&mut vec![semio_ui_wgpu_events::UiCommand::Scene { window_id: window_id.clone(), node, surface_id: "s1".into(), kind, rect, event, click_count: 1 }], None, &mut input);
         }
     }
 }
@@ -195,8 +197,7 @@ fn scene_command_right_click_on_text_editor_does_not_panic_and_stays_a_graceful_
             surface_id: "s1".into(),
             kind: semio_ui_declaration::ui::SurfaceKind::TextEditor,
             rect,
-            event: semio_ui_wgpu_events::UiEvent::PointerDown { x: 10.0, y: 10.0, button: semio_ui_wgpu_events::PointerButton::Secondary, modifiers: Default::default() },
-        }],
+            event: semio_ui_wgpu_events::UiEvent::PointerDown { x: 10.0, y: 10.0, button: semio_ui_wgpu_events::PointerButton::Secondary, modifiers: Default::default() }, click_count: 1 }],
         None,
         &mut input,
     );

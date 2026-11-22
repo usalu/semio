@@ -3,7 +3,7 @@
 use semio_ui_wgpu_device as gpu_device;
 
 use semio_ui_wgpu_draw_execution::{
-    FrameBuffers, MeshGpuTable, PreparedCompositeTarget, RasterTextureAdmission, RasterTextureCancelFault, RasterTextureCleanupStep, RasterTextureStageFault, RasterTextureTable, RasterTextureWitness, RasterUploadPixels, SceneColorTarget, UiPipelines, SCENE_MIP_LEVELS,
+    FrameBuffers, MeshGpuTable, PreparedCompositeTarget, PreparedGroupTarget, RasterTextureAdmission, RasterTextureCancelFault, RasterTextureCleanupStep, RasterTextureStageFault, RasterTextureTable, RasterTextureWitness, RasterUploadPixels, SceneColorTarget, UiPipelines, SCENE_MIP_LEVELS,
 };
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 use semio_ui_prepared::OffscreenPresentToken;

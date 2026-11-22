@@ -73,6 +73,10 @@
     "spaceId": {
       "type": "string",
       "x-semio-state": "config"
+    },
+    "workflowArtifactId": {
+      "type": "string",
+      "x-semio-state": "config"
     }
   },
   "$defs": {

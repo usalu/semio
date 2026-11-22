@@ -1,4 +1,4 @@
-import {homeSnapshotToSqliteDatabase,homeSnapshotFromSqliteDatabase,validateHomeSnapshotSqliteDialect,type SHomeSnapshot} from "@semio-tech/space-home";
+import {homeSnapshotToSqliteDatabase,homeSnapshotFromSqliteDatabase,validateHomeSnapshotSqliteDialect,type SHomeSnapshot} from "../../../../🟦️.ts";
 import {exportSqliteDatabase,importSqliteDatabase} from "@semio-tech/framework";
 import {Database} from "bun:sqlite";
 import {expect,test} from "bun:test";

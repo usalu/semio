@@ -1,0 +1,17 @@
+{
+  "cases": [
+    {
+      "rows": 0,
+      "steps": ["Copy", "Header", "Sre", "ReceiptOrigin", "Coverage", "OriginDelta", "Purpose", "Scope", "Bootstrap", "Ledger", "Journal"]
+    },
+    {
+      "rows": 2,
+      "steps": [
+        "Copy", "Header", "Sre", "ReceiptOrigin",
+        "ClaimOrigin", "StageClaim", "ClaimSlot", "VerifyClaim", "ClaimDelta", "CommitClaim",
+        "ClaimOrigin", "StageClaim", "ClaimSlot", "VerifyClaim", "ClaimDelta", "CommitClaim",
+        "Coverage", "OriginDelta", "Purpose", "Scope", "Bootstrap", "Ledger", "Journal"
+      ]
+    }
+  ]
+}

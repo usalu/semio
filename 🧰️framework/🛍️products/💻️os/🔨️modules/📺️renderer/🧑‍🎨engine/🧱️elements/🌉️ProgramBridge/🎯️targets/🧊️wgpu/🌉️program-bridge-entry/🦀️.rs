@@ -59,13 +59,13 @@ pub struct ProgramBridgeEntry {
     backend: ProgramBridgeBackend,
     #[cfg(not(target_arch="wasm32"))]
     native_observed_mtime:Option<std::time::SystemTime>,
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     fixture_render: Option<fn(u32, &str, &str, &ViewModel, Option<&str>, Option<&mut Vec<Effect>>) -> Result<UiDocumentLease, String>>,
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     fixture_action: Option<fn(u32, &str, &ViewModel) -> Result<semio_framework::kernel::InvocationResult, String>>,
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     fixture_publications: Option<fn(u32) -> Vec<OperationPublication>>,
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     fixture_document: Option<ProgramFixtureDocument>,
 }
 
@@ -94,13 +94,13 @@ impl ProgramBridgeEntry {
             component_sha256: Some(identity.component_sha256),
             manifest,
             backend: ProgramBridgeBackend::Js(Rc::new(handle)),
-            #[cfg(test)]
+            #[cfg(any(test, feature = "testkit"))]
             fixture_render: None,
-            #[cfg(test)]
+            #[cfg(any(test, feature = "testkit"))]
             fixture_action: None,
-            #[cfg(test)]
+            #[cfg(any(test, feature = "testkit"))]
             fixture_publications: None,
-            #[cfg(test)]
+            #[cfg(any(test, feature = "testkit"))]
             fixture_document: None,
         })
     }
@@ -121,13 +121,13 @@ impl ProgramBridgeEntry {
             backend: ProgramBridgeBackend::Wasm { client: KernelClient::get(), wasm_path },
             native_consumes: Vec::new(),
             native_observed_mtime:None,
-            #[cfg(test)]
+            #[cfg(any(test, feature = "testkit"))]
             fixture_render: None,
-            #[cfg(test)]
+            #[cfg(any(test, feature = "testkit"))]
             fixture_action: None,
-            #[cfg(test)]
+            #[cfg(any(test, feature = "testkit"))]
             fixture_publications: None,
-            #[cfg(test)]
+            #[cfg(any(test, feature = "testkit"))]
             fixture_document: None,
         })
     }
@@ -144,26 +144,26 @@ impl ProgramBridgeEntry {
         self
     }
 
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     pub fn install_fixture_render(&mut self, render: fn(u32, &str, &str, &ViewModel, Option<&str>, Option<&mut Vec<Effect>>) -> Result<UiDocumentLease, String>) {
         self.fixture_render = Some(render);
     }
 
     /// 🕰️ The observation belongs to this exact program path and uses only inline scalar state.
     #[cfg(not(target_arch="wasm32"))]
-    pub(crate) fn observe_native_modification(&mut self,path:&std::path::Path,time:std::time::SystemTime)->bool{let ProgramBridgeBackend::Wasm{wasm_path,..}=&self.backend;if wasm_path.as_path()!=path{return false}let changed=self.native_observed_mtime.is_some_and(|previous|previous!=time);self.native_observed_mtime=Some(time);changed}
+    pub fn observe_native_modification(&mut self,path:&std::path::Path,time:std::time::SystemTime)->bool{let ProgramBridgeBackend::Wasm{wasm_path,..}=&self.backend;if wasm_path.as_path()!=path{return false}let changed=self.native_observed_mtime.is_some_and(|previous|previous!=time);self.native_observed_mtime=Some(time);changed}
 
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     pub fn install_fixture_action(&mut self, action: fn(u32, &str, &ViewModel) -> Result<semio_framework::kernel::InvocationResult, String>) {
         self.fixture_action = Some(action);
     }
 
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     pub fn install_fixture_document(&mut self, document: ProgramFixtureDocument) {
         self.fixture_document = Some(document);
     }
 
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     pub fn install_fixture_publications(&mut self, publications: fn(u32) -> Vec<OperationPublication>) {
         self.fixture_publications = Some(publications);
     }
@@ -230,7 +230,7 @@ impl ProgramBridgeEntry {
     }
 
     pub async fn handle_action(&self, instance_id: u32, action_json: &str, view_state: &ViewModel) -> Result<semio_framework::kernel::InvocationResult, ProgramFault> {
-        #[cfg(test)]
+        #[cfg(any(test, feature = "testkit"))]
         if let Some(action) = self.fixture_action {
             return action(instance_id, action_json, view_state).map_err(ProgramFault::from);
         }
@@ -348,6 +348,39 @@ impl ProgramBridgeEntry {
         native_save::import_media(client, instance, declaration, bytes).await
     }
 
+    /// 📂 Launches one fresh instance for the selected extent and streams its source after issuance.
+    #[cfg(not(target_arch = "wasm32"))]
+    pub async fn import_native_pdf_source(
+        &self, app_id: &str, declaration: &NativeMediaDeclaration, source: std::fs::File,
+        extent: u32, cancel: &semio_framework_async::CancelToken, progress: impl FnMut(u64, u64),
+        mut retain_instance: impl FnMut(u32),
+    ) -> Result<Option<semio_framework::kernel::NaturalSourceWireAck>, String> {
+        use semio_framework::kernel::{ActorInstanceOpenPurpose, NaturalSourcePrepare};
+        let declaration = declaration.natural_pdf_source().ok_or("Open File requires the mounted PDF declaration")?;
+        let ProgramBridgeBackend::Wasm { client, wasm_path } = &self.backend;
+        if cancel.is_cancelled_now() { return Ok(None); }
+        let sequence = semio_renderer_wgpu_kernel_protocol::next_seq()?;
+        let instance = client.create_app_with_purpose(
+            wasm_path, &self.plugin_id, app_id, self.app_document_schema(app_id),
+            ActorInstanceOpenPurpose::NaturalSource { declaration: declaration.clone(), extent },
+        ).await.map_err(|error| error.to_string())?;
+        retain_instance(instance);
+        let prepare = NaturalSourcePrepare { instance_id: instance, seq: sequence, declaration, extent };
+        super::native_natural_source::stream(prepare, source, |event, closing| async move {
+            let request = client.exchange_original_media(instance, event);
+            let outcome = if closing {
+                request.await
+            } else {
+                match semio_framework_async::select2(cancel.cancelled(), request).await {
+                    semio_framework_async::Either::Left(()) => return Err("natural-source.cancelled".to_owned()),
+                    semio_framework_async::Either::Right(outcome) => outcome,
+                }
+            }.map_err(|error| error.to_string())?;
+            wasm_program_exchange::observe_ephemeral(instance, &outcome.frames).await;
+            Ok(outcome.command_ingress)
+        }, || !cancel.is_cancelled_now(), progress).await
+    }
+
     /// 📤 Delivers one selected source through the same active component and exact picker loan.
     #[cfg(not(target_arch = "wasm32"))]
     pub fn deliver_original_media<'a, F: std::future::Future<Output = ()> + Send + 'a>(
@@ -376,7 +409,7 @@ impl ProgramBridgeEntry {
     }
 
     pub async fn read_app_document_archive(&self, instance_id: u32) -> Result<protocol::DocumentArchivePack, ProgramFault> {
-        #[cfg(test)]
+        #[cfg(any(test, feature = "testkit"))]
         if let Some(document) = self.fixture_document {
             return (document.archive)(instance_id).map_err(ProgramFault::from);
         }
@@ -394,8 +427,38 @@ impl ProgramBridgeEntry {
         }
     }
 
+    /// 📬 Sends one scoped folder record request on the native bounded event queue.
+    #[cfg(not(target_arch = "wasm32"))]
+    pub async fn exchange_folder_archive(
+        &self, request: protocol::channel::archive_ingress::folder_archive_load::FolderArchiveLoadRequest<'_>,
+    ) -> Result<protocol::channel::archive_ingress::folder_archive_load::FolderArchiveLoadReply, String> {
+        use protocol::channel::archive_ingress::folder_archive_load::FolderArchiveLoadReply as Reply;
+        use semio_framework::kernel::{Event, FolderArchiveLoadEvent, MessageEndpoint, PluginInstanceId};
+        let ProgramBridgeBackend::Wasm { client, .. } = &self.backend;
+        let instance = request.key.instance.to_string();
+        let payload = request.encode().ok_or("folder archive request exceeded its wire authority")?;
+        let event = Event::FolderArchiveLoad(FolderArchiveLoadEvent { instance: request.key.instance, request: payload });
+        let outcome = client.exchange_original_media(request.key.instance, event).await.map_err(|error| error.to_string())?;
+        let mut answer = None;
+        for effect in outcome.effects {
+            if let Effect::SendMessage { target: MessageEndpoint::Shell { instance: target }, payload } = effect {
+                if !Reply::is_wire(&payload) { continue; }
+                if target.0 != instance || answer.is_some() { return Err("folder archive reply changed its Shell instance".into()); }
+                answer = Some(Reply::decode(request, &payload).ok_or("folder archive reply changed its operation")?);
+            }
+        }
+        Ok(answer.unwrap_or(Reply::Pending))
+    }
+
+    /// 🧾 Uses the ordinary archive status and acknowledgment path after a verified page transfer.
+    #[cfg(not(target_arch = "wasm32"))]
+    pub async fn finish_paged_folder_archive(&self, instance: u32, operation: u64) -> Result<(), ProgramFault> {
+        let ProgramBridgeBackend::Wasm { client, .. } = &self.backend;
+        wasm_program_exchange::drive_app_document_archive(client, instance, protocol::DocumentArchiveLoadHost::admitted(operation)).await
+    }
+
     pub async fn load_app_document_archive(&self, instance_id: u32, archive: &protocol::DocumentArchivePack) -> Result<(), ProgramFault> {
-        #[cfg(test)]
+        #[cfg(any(test, feature = "testkit"))]
         if let Some(document) = self.fixture_document {
             return (document.load)(instance_id, archive).map_err(ProgramFault::from);
         }
@@ -416,7 +479,7 @@ impl ProgramBridgeEntry {
 
     pub async fn render_with_document(&self, instance_id: u32, surface_id: &str, body_key: &str, view_state: &ViewModel, document_dsl: Option<&str>, refresh_effects: Option<&mut Vec<Effect>>) -> Result<UiDocumentLease, ProgramFault> {
         let _latency = crate::frame_latency::FrameLatencyTimer::start(crate::frame_latency::latest_frame_authority(), crate::frame_latency::FrameLatencyStage::RetainedExchange, 1);
-        #[cfg(test)]
+        #[cfg(any(test, feature = "testkit"))]
         if let Some(render) = self.fixture_render {
             return render(instance_id, surface_id, body_key, view_state, document_dsl, refresh_effects).map_err(ProgramFault::from);
         }
@@ -524,7 +587,7 @@ impl ProgramBridgeEntry {
     /// browser takes them off the JS bridge's queue (`takeOperationPublications`); natively every such frame is folded
     /// into the next exchange's reply (`invocation_from_frames`), so there is nothing queued to take.
     pub fn take_operation_publications(&self, instance_id: u32) -> Vec<OperationPublication> {
-        #[cfg(test)]
+        #[cfg(any(test, feature = "testkit"))]
         if let Some(publications) = self.fixture_publications {
             return publications(instance_id);
         }
@@ -562,7 +625,7 @@ impl ProgramBridgeEntry {
     /// (`wasm_program_exchange::read_history`), and on the browser build the JS bridge's `readHistory`, the same
     /// command through the guest's `AppChannelClient` — what a restored document archive re-reads its rows and head from.
     pub async fn read_history(&self, instance_id: u32) -> Result<semio_framework::kernel::HistoryPatch, ProgramFault> {
-        #[cfg(test)]
+        #[cfg(any(test, feature = "testkit"))]
         if let Some(document) = self.fixture_document {
             return (document.history)(instance_id).map_err(ProgramFault::from);
         }

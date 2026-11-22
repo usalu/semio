@@ -14,6 +14,10 @@
       "en": "The new code {digest} does not start ({reason}); the daemon keeps running the old code until the code on disk changes again.",
       "de": "Der neue Code {digest} startet nicht ({reason}); der Daemon läuft mit dem alten Code weiter, bis sich der Code auf der Platte erneut ändert."
     },
+    "event.store-stuck": {
+      "en": "The store has not answered for {seconds} s ({reason}); the daemon ends itself so that it starts again and frees the blocked call.",
+      "de": "Der Speicher antwortet seit {seconds} s nicht ({reason}); der Daemon beendet sich, damit er neu startet und den blockierten Aufruf freigibt."
+    },
     "event.code-reverted": {
       "en": "The code {digest} on disk ran here before and was superseded ({reason}); it is not adopted automatically and the daemon keeps running its current code.",
       "de": "Der Code {digest} auf der Platte lief hier schon früher und wurde abgelöst ({reason}); er wird nicht automatisch übernommen, der Daemon läuft mit seinem jetzigen Code weiter."
@@ -493,6 +497,10 @@
     "event.stale-republish": {
       "en": "{path} was republished with older content and is not applied; the newer content is published again.",
       "de": "{path} wurde mit älterem Inhalt erneut veröffentlicht und wird nicht übernommen; der neuere Inhalt wird erneut veröffentlicht."
+    },
+    "event.stale-base": {
+      "en": "{path} was edited here on a view that lacked newer fleet content ({seconds} s after it was published); the fleet content stays and the local bytes are in .cache/f/lost.",
+      "de": "{path} wurde hier auf einer Sicht ohne den neueren Inhalt der Flotte bearbeitet ({seconds} s nach dessen Veröffentlichung); der Flotteninhalt bleibt, die lokalen Bytes liegen in .cache/f/lost."
     },
     "event.drift": {
       "en": "This machine differs from the settled fleet in {fields} (check {attempt}); it repairs its state from the store.",

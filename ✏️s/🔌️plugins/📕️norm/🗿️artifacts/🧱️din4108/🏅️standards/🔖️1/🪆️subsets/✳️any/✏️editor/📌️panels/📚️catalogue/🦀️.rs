@@ -115,8 +115,18 @@ pub fn render(
     windows: &TreeWindows<'_>,
 ) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let mut tables = reference_tables();
-    tables.push(semio_s_plugin_norm_app_surface::verification_catalogue_table::<Din4108PressureCases>("GModG §26", AnnexChoice::De, "", locale));
-    tables.push(semio_s_plugin_norm_app_surface::verification_catalogue_table::<Din4108PeriodCases>("DIN 4108-3 Annex A", AnnexChoice::De, "", locale));
+    tables.push(CatalogueTable {
+        id: "verification-pressure-tests",
+        title_en: "Pressure test verification",
+        title_de: "Nachweise zur Differenzdruckmessung",
+        ..semio_s_plugin_norm_app_surface::verification_catalogue_table::<Din4108PressureCases>("GModG §26", AnnexChoice::De, "", locale)
+    });
+    tables.push(CatalogueTable {
+        id: "verification-moisture",
+        title_en: "Moisture verification",
+        title_de: "Feuchteschutznachweise",
+        ..semio_s_plugin_norm_app_surface::verification_catalogue_table::<Din4108PeriodCases>("DIN 4108-3 Annex A", AnnexChoice::De, "", locale)
+    });
     semio_s_plugin_norm_app_surface::render_catalogue(&examples, &tables, locale, controller_id, windows)
 }
 //#endregion 🔖️Render

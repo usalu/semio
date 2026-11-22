@@ -1,58 +1,70 @@
-/** 🌿 Visit the exact solids of one scale as slices of its source document. */
-function after(raw:string,i:number){
- let quote=false,depth=0
- for(;i<raw.length;i++){
-  const c=raw[i]
-  if(quote){if(c==='\\')i++;else if(c==='"')quote=false;continue}
-  if(c==='"')quote=true
-  else if(c==='['||c==='{')depth++
-  else if(c===']'||c==='}')if(--depth===0)return i+1
+/** 🌿 Visit exact solids and resolve their body references without retaining the full document in memory. */
+const whitespace=(c:string)=>c===' '||c==='\n'||c==='\t'||c==='\r'
+function endOf(raw:string,i:number){
+ const first=raw[i]
+ if(first==='"'){
+  for(let j=i+1;j<raw.length;j++){if(raw[j]==='\\')j++;else if(raw[j]==='"')return j+1}
+ }else if(first==='['||first==='{'){
+  let depth=1
+  for(let j=i+1;j<raw.length;j++){
+   const c=raw[j]
+   if(c==='"')j=endOf(raw,j)-1
+   else if(c==='['||c==='{')depth++
+   else if((c===']'||c==='}')&&--depth===0)return j+1
+  }
+ }else{
+  let j=i;while(j<raw.length&&!whitespace(raw[j])&&!',]}'.includes(raw[j]))j++
+  if(j>i)return j
  }
- throw Error('Unclosed volume')
+ throw Error('Invalid JSON value at '+i)
+}
+function* fields(raw:string,start:number){
+ if(raw[start]!=='{')throw Error('Expected an object at '+start)
+ for(let i=start+1;i<raw.length;){
+  while(whitespace(raw[i])||raw[i]===',')i++
+  if(raw[i]==='}')return
+  const end=endOf(raw,i),key=JSON.parse(raw.slice(i,end));i=end
+  while(whitespace(raw[i]))i++
+  if(raw[i++]!==':')throw Error('Missing colon after '+key)
+  while(whitespace(raw[i]))i++
+  const stop=endOf(raw,i);yield {key,start:i,stop};i=stop
+ }
+}
+function field(raw:string,object:number,key:string){
+ for(const item of fields(raw,object))if(item.key===key)return item
+ throw Error('Missing field '+key)
 }
 export function sceneInput(raw:string){
- const start=raw.indexOf('{',raw.indexOf('"asset":'))
- const asset={}
- for(let i=start+1;i<raw.length;){
-  while(/[\s,]/.test(raw[i]!))i++
-  if(raw[i]==='}')break
-  if(raw[i]!=='"')throw Error('Missing asset field')
-  const end=raw.indexOf('"',i+1),key=raw.slice(i+1,end);i=raw.indexOf(':',end)+1
-  while(/\s/.test(raw[i]!))i++
-  let next=i
-  if(raw[i]==='{'||raw[i]==='[')next=after(raw,i)
-  else if(raw[i]==='"'){next=i+1;while(raw[next]!=='"'){if(raw[next]==='\\')next++;next++}next++}
-  else{while(!/[\s,}]/.test(raw[next]!))next++}
-  if(!['volumes','representations','symbols'].includes(key))asset[key]=JSON.parse(raw.slice(i,next))
-  i=next
- }
+ const object=field(raw,raw.indexOf('{'),'asset'),asset={}
+ for(const {key,start,stop} of fields(raw,object.start))if(!['volumes','representations','symbols'].includes(key))asset[key]=JSON.parse(raw.slice(start,stop))
  return asset
 }
 export function eachSolid(raw:string,scale:string){
- const start=raw.indexOf('{',raw.indexOf('"volumes":'))
- const begin=raw.indexOf('{',raw.indexOf('"'+scale+'":',start))
- if(begin<start)throw Error('Missing scale '+scale)
- const ranges={}
- let pos=begin
- for(const mode of ['body','thermal','structure']){
-  const index=raw.indexOf('[',raw.indexOf('"'+mode+'":',pos))
-  const end=after(raw,index),list=[]
-  for(let i=index+1;i<end-1;){
+ const asset=field(raw,raw.indexOf('{'),'asset'),volumes=field(raw,asset.start,'volumes'),volume=field(raw,volumes.start,scale)
+ const ranges=new Map<string,[number,number][]>(),body=new Map<string,[number,number]>()
+ for(const {key,start,stop} of fields(raw,volume.start)){
+  if(!['body','thermal','structure'].includes(key))continue
+  const list:[number,number][]=[]
+  for(let i=start+1;i<stop-1;){
    if(raw[i]!=='{'){i++;continue}
-   const j=after(raw,i);list.push([i,j]);i=j
+   const end=endOf(raw,i),span:[number,number]=[i,end];list.push(span)
+   if(key==='body'){
+    const id=field(raw,i,'id')
+    body.set(JSON.parse(raw.slice(id.start,id.stop)),span)
+   }
+   i=end
   }
-  ranges[mode]=list;pos=end
+  ranges.set(key,list)
  }
- const body=new Map(ranges.body.map(([i,j])=>{
-  const id=/"id"\s*:\s*"([^"]+)"/.exec(raw.slice(i,Math.min(i+400,j)))?.[1];if(!id)throw Error('Missing solid ID near '+i);return [id,[i,j]]
- }))
  return function* visit(mode:string){
-  for(const [i,j] of ranges[mode]){
+  const list=ranges.get(mode)
+  if(!list)throw Error('Missing volume list '+mode)
+  for(const [i,j] of list){
    const s=JSON.parse(raw.slice(i,j))
    if(!s.of){yield s;continue}
-   const [u,v]=body.get(s.of)??[]
-   if(u===undefined)throw Error('Missing reference '+s.of)
-   yield {...JSON.parse(raw.slice(u,v)),...s}
+   const source=body.get(s.of)
+   if(!source)throw Error('Missing reference '+s.of)
+   yield {...JSON.parse(raw.slice(source[0],source[1])),...s}
   }
  }
 }

@@ -199,11 +199,15 @@ fn sqlite_snapshot_process3d_actual_erased_parent_both_encodings_have_queryable_
                 SnapshotEncoding::Binary => store::io_schema::IoPayload::Binary(expected.encode_pack_with(&store::PackEncodeOptions::default()).unwrap()),
                 SnapshotEncoding::Text => store::io_schema::IoPayload::Text(expected.print_dsl()),
             };
-            let database = original_owners::with_decoding(|native_owner|(capability.export)(semio_s_artifact_process_process3d_model::snapshot::PROCESS_3D_SCHEMA, &dialect, &input, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default()), native_owner)).unwrap().value;
+            let mut exported = None;
+            assert!(original_owners::with_decoding(|native_owner|(capability.export)(semio_s_artifact_process_process3d_model::snapshot::PROCESS_3D_SCHEMA, &dialect, &input, &mut exported, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default()), native_owner)).result.is_ok(), "native export turn");
+            let database = exported.expect("export output").unwrap().value;
             assert_eq!(database.tables.len(), 32);
             assert_eq!(database.table("process3_document").unwrap().single_row().unwrap().text(1).unwrap(), expected.stock_id);
             assert_eq!(database.table("process3_stock_payload").unwrap().single_row().unwrap().text(2).unwrap(), expected.stock_payload.id);
-            let output = original_owners::with_encoding(|native_owner|(capability.import)(semio_s_artifact_process_process3d_model::snapshot::PROCESS_3D_SCHEMA, &dialect, &mut Some(database), encoding, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default()), native_owner)).unwrap().value;
+            let mut imported = None;
+            assert!(original_owners::with_encoding(|native_owner|(capability.import)(semio_s_artifact_process_process3d_model::snapshot::PROCESS_3D_SCHEMA, &dialect, &mut Some(database), encoding, &mut imported, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default()), native_owner)).result.is_ok(), "native import turn");
+            let output = imported.expect("import output").unwrap().value;
             let actual = match output {
                 store::io_schema::IoPayload::Text(v) => Process3dSnapshot::parse_dsl(&v).unwrap(),
                 store::io_schema::IoPayload::Binary(v) => Process3dSnapshot::decode_pack(&v).unwrap(),

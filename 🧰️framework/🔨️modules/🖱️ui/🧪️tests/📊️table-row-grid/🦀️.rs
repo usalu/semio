@@ -11,7 +11,6 @@
 
 use semio_ui_wgpu_hosting::accessibility::{accessibility_projection, row_accessibility_action};
 use semio_ui_arena::NodeId;
-use semio_ui_wgpu_layout::chrome::UiDriverDrag;
 use semio_ui_draw_contract::{DrawList, KIND_GLYPH};
 use semio_ui_wgpu_events::{AccessibilityUiEvent, EventRouter, PointerButton, UiCommand, UiEvent};
 use semio_ui_wgpu_layout::layout::{table_actions_width, table_column_rect, tree_row_action_rect, TreeRowMetrics};
@@ -118,6 +117,7 @@ fn the_grid_metrics_are_the_ones_the_fixture_was_pinned_against() {
     assert!(close(metrics.drag_handle_extent, number(pinned, "actionIconPx")));
     assert!(close(metrics.action_gap, number(pinned, "actionGapPx")));
     assert!(close(theme.control_height_small, number(pinned, "controlHeightSmallPx")));
+    assert!(close(metrics.control_height, number(pinned, "sizeMediumPx")), "size-medium is the control height");
 }
 
 #[test]
@@ -130,9 +130,10 @@ fn rows_columns_and_editable_cells_are_laid_out_on_one_grid() {
     let width = number(&law["viewport"], "width");
     let actions = table_actions_width(expected["actionSlots"].as_array().expect("action slots").len(), &metrics);
     assert!(close(actions, number(expected, "actionsWidth")), "actions column {actions}");
+    assert!(close(semio_ui_wgpu_layout::table::table_content_width(2, actions), number(expected, "contentWidth")), "content width");
     let columns = expected["columns"].as_array().expect("columns");
     for (index, column) in columns.iter().enumerate() {
-        let rect = table_column_rect(width, metrics.row_height, index, columns.len(), actions, &metrics);
+        let rect = table_column_rect(width, metrics.row_height, index, &metrics);
         assert!(close(rect.x, number(column, "x")) && close(rect.w, number(column, "width")), "column {index}: ({}, {})", rect.x, rect.w);
     }
     for row in expected["rows"].as_array().expect("rows") {
@@ -157,7 +158,7 @@ fn taffy_lays_the_editable_rows_cells_where_the_grid_does() {
     solver.disable_rounding();
     let leaves = cells
         .iter()
-        .map(|cell| solver.new_leaf(taffy::Style { flex_grow: 1.0, flex_shrink: 1.0, size: taffy::geometry::Size { width: length(0.0), height: length(number(cell, "height")) }, ..taffy::Style::default() }).expect("taffy leaf"))
+        .map(|cell| solver.new_leaf(taffy::Style { flex_grow: 0.0, flex_shrink: 0.0, size: taffy::geometry::Size { width: length(number(&law["metrics"], "columnWidthPx") - 2.0 * metrics.gap), height: length(number(cell, "height")) }, ..taffy::Style::default() }).expect("taffy leaf"))
         .collect::<Vec<_>>();
     let row = solver
         .new_with_children(
@@ -165,7 +166,7 @@ fn taffy_lays_the_editable_rows_cells_where_the_grid_does() {
                 display: taffy::style::Display::Flex,
                 flex_direction: taffy::style::FlexDirection::Row,
                 align_items: Some(taffy::style::AlignItems::Center),
-                gap: taffy::geometry::Size { width: length(metrics.gap), height: length(0.0) },
+                gap: taffy::geometry::Size { width: length(2.0 * metrics.gap), height: length(0.0) },
                 padding: taffy::geometry::Rect { left: length(metrics.gap), right: length(actions), top: length(0.0), bottom: length(0.0) },
                 size: taffy::geometry::Size { width: length(width), height: length(metrics.row_height) },
                 ..taffy::Style::default()
@@ -191,7 +192,7 @@ fn taffy_lays_the_editable_rows_cells_where_the_grid_does() {
 #[test]
 fn every_action_slot_sits_at_the_inline_end_of_its_row() {
     let law = law();
-    let metrics = TreeRowMetrics::from_theme(&Theme::default());
+    let metrics = TreeRowMetrics::from_theme(&Theme::default()).with_table(true);
     let width = number(&law["viewport"], "width");
     for slot in law["expected"]["actionSlots"].as_array().expect("action slots") {
         let rect = tree_row_action_rect(width, metrics.row_height, slot["slot"].as_u64().expect("slot") as usize, 0.0, &metrics);
@@ -200,17 +201,42 @@ fn every_action_slot_sits_at_the_inline_end_of_its_row() {
 }
 
 #[test]
-fn a_click_on_an_action_icon_fires_that_action_and_anywhere_else_on_the_row_its_activation() {
+fn a_click_on_an_action_icon_fires_that_action_and_a_double_click_anywhere_else_on_the_row_its_activation() {
     let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let law = law();
     let (mut tree, root) = mounted(&law);
     for click in law["expected"]["clicks"].as_array().expect("clicks") {
         let (x, y) = (number(click, "x"), number(click, "y"));
         let mut router = EventRouter::new("main");
-        router.dispatch(&mut tree, root, &UiEvent::PointerDown { x, y, button: PointerButton::Primary, modifiers: Default::default() });
-        let commands = router.dispatch(&mut tree, root, &UiEvent::PointerUp { x, y, button: PointerButton::Primary, modifiers: Default::default() });
-        assert_eq!(fired(&commands), vec![click["fires"].as_str().expect("fires").to_string()], "click ({x}, {y}): {}", click["why"]);
+        let mut commands = Vec::new();
+        for press in 0..click["count"].as_u64().expect("count") {
+            router.advance_clock(&mut tree, 0.1 * press as f64);
+            router.dispatch(&mut tree, root, &UiEvent::PointerDown { x, y, button: PointerButton::Primary, modifiers: Default::default() });
+            commands.extend(router.dispatch(&mut tree, root, &UiEvent::PointerUp { x, y, button: PointerButton::Primary, modifiers: Default::default() }));
+        }
+        let expected: Vec<String> = click["fires"].as_array().expect("fires").iter().map(|verb| verb.as_str().expect("verb").to_string()).collect();
+        assert_eq!(fired(&commands), expected, "click x{} ({x}, {y}): {}", click["count"], click["why"]);
     }
+}
+
+#[test]
+fn two_clicks_further_apart_than_the_os_interval_or_slop_are_two_single_clicks_and_never_activate() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
+    let law = law();
+    let (mut tree, root) = mounted(&law);
+    let (x, y) = (100.0, 36.0);
+    let click = |router: &mut EventRouter, tree: &mut UiTree, x: f32| {
+        router.dispatch(tree, root, &UiEvent::PointerDown { x, y, button: PointerButton::Primary, modifiers: Default::default() });
+        fired(&router.dispatch(tree, root, &UiEvent::PointerUp { x, y, button: PointerButton::Primary, modifiers: Default::default() }))
+    };
+    let mut router = EventRouter::new("main");
+    assert!(click(&mut router, &mut tree, x).is_empty());
+    router.advance_clock(&mut tree, 0.6);
+    assert!(click(&mut router, &mut tree, x).is_empty(), "past the double-click interval");
+    router.advance_clock(&mut tree, 0.7);
+    assert!(click(&mut router, &mut tree, x + 10.0).is_empty(), "past the double-click slop");
+    router.advance_clock(&mut tree, 0.8);
+    assert_eq!(click(&mut router, &mut tree, x + 12.0), vec!["open-space".to_string()], "within both: the second click activates");
 }
 
 #[test]
@@ -226,7 +252,7 @@ fn the_table_paints_its_header_and_plain_cells_once_in_their_columns_and_leaves_
     let mut cursor = RetainedNodePaintCursor::default();
     let mut complete = false;
     for _ in 0..16_384 {
-        match paint_node_step_with_driver(&tree, root, absolute.x - layout.x, absolute.y - layout.y, &theme, &mut atlas, None, false, UiDriverDrag::Handle, false, ui_contract::FlowInline::Ltr, None, &mut draw, &mut cursor) {
+        match paint_node_step_with_driver(&tree, root, absolute.x - layout.x, absolute.y - layout.y, &theme, &mut atlas, None, false, semio_ui_wgpu_paint::RetainedPaintPresentation::default(), false, ui_contract::FlowInline::Ltr, None, &mut draw, &mut cursor) {
             RetainedNodePaintStep::Pending => {}
             RetainedNodePaintStep::Complete => {
                 complete = true;
@@ -353,4 +379,23 @@ fn disabled_row_action_focus_matches_its_explanation_corpus() {
         let commands = EventRouter::new("main").dispatch_accessibility_row_action(&mut tree, node, 0, &AccessibilityUiEvent::Activate);
         assert_eq!(commands.iter().any(|command| matches!(command, UiCommand::App { .. })), case["actionable"].as_bool().unwrap(), "{}", case["id"]);
     }
+}
+
+#[test]
+fn a_viewport_narrower_than_the_columns_keeps_every_row_content_wide_and_scrolls() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
+    let mut law = law();
+    let narrow = law["expected"]["narrowViewportWidth"].clone();
+    law["viewport"]["width"] = narrow;
+    let (mut tree, root) = mounted(&law);
+    let content = number(&law["expected"], "contentWidth");
+    for row in law["expected"]["rows"].as_array().expect("rows") {
+        let (x, _, w, _) = tree.mounted_layout(mounted_node(&tree, row)).expect("row layout");
+        assert!(close(x, 0.0) && close(w, content), "{}: a fixed-width row is content wide, got width {w}", row["key"]);
+    }
+    let viewport = number(&law["viewport"], "width");
+    let mut router = EventRouter::new("main");
+    router.dispatch(&mut tree, root, &UiEvent::Scroll { x: 10.0, y: 30.0, delta_x: 1000.0, delta_y: 0.0, modifiers: Default::default() });
+    let scrolled = tree.node(root).expect("table node").state.scroll_offset;
+    assert!(close(scrolled.0, content - viewport) && close(scrolled.1, 0.0), "horizontal wheel scrolls the table to its maximum, got {scrolled:?}");
 }

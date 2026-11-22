@@ -2,7 +2,7 @@
 
 Each measured scale compares the actual member mesh with the projected body in elevation, front and plan. A direct triangle distance resolves vertices past the raster tolerance on subpixel geometry.
 
-608 of 608 exact-source scales measured. 4 findings.
+608 of 608 exact-source scales measured. 0 findings.
 
 | Model | Scales | Findings |
 | --- | ---: | ---: |
@@ -83,8 +83,6 @@ Each measured scale compares the actual member mesh with the projected body in e
 | motor-scooter | 4 | 0 |
 | sleeping-person | 4 | 0 |
 | city-car | 4 | 0 |
-| sheep | 4 | 0 |
-| hornbeam-hedge | 4 | 0 |
 | office-swivel-chair | 4 | 0 |
 | pig | 4 | 0 |
 | courier-with-hand-truck | 4 | 0 |
@@ -100,17 +98,14 @@ Each measured scale compares the actual member mesh with the projected body in e
 | spiral-stair | 4 | 0 |
 | oil-pumpjack | 4 | 0 |
 | kneeling-gardener | 4 | 0 |
-| herring-gull | 4 | 0 |
 | leaning-person | 4 | 0 |
-| skateboarder | 4 | 0 |
-| labrador-dog | 4 | 0 |
 | person-cooking | 4 | 0 |
 | market-parasol | 4 | 0 |
+| skateboarder | 4 | 0 |
 | domestic-cat | 4 | 0 |
 | person-with-umbrella | 4 | 0 |
 | seated-guitarist | 4 | 0 |
 | cargo-bike | 4 | 0 |
-| goat | 4 | 0 |
 | tram | 4 | 0 |
 | city-bus | 4 | 0 |
 | jogger | 4 | 0 |
@@ -118,6 +113,7 @@ Each measured scale compares the actual member mesh with the projected body in e
 | runner-with-blade-prosthesis | 4 | 0 |
 | person-with-white-cane | 4 | 0 |
 | pigeon | 4 | 0 |
+| goat | 4 | 0 |
 | red-fox | 4 | 0 |
 | pregnant-person | 4 | 0 |
 | child-on-kick-scooter | 4 | 0 |
@@ -135,11 +131,14 @@ Each measured scale compares the actual member mesh with the projected body in e
 | parent-with-stroller | 4 | 0 |
 | standing-adult | 4 | 0 |
 | concrete-mixer-truck | 4 | 0 |
-| wheelchair-user | 4 | 1 |
+| sheep | 4 | 0 |
+| wheelchair-user | 4 | 0 |
+| herring-gull | 4 | 0 |
 | seated-office-worker | 4 | 0 |
 | walking-commuter | 4 | 0 |
-| cyclist | 4 | 1 |
-| tower-crane | 4 | 1 |
+| cyclist | 4 | 0 |
+| tower-crane | 4 | 0 |
+| labrador-dog | 4 | 0 |
 | person-on-crutches | 4 | 0 |
 | apple-tree | 4 | 0 |
 | hot-water-cylinder | 4 | 0 |
@@ -150,10 +149,11 @@ Each measured scale compares the actual member mesh with the projected body in e
 | date-palm | 4 | 0 |
 | miscanthus-grass | 4 | 0 |
 | ivy-on-trellis | 4 | 0 |
-| london-plane-pollarded | 4 | 1 |
 | small-leaved-lime | 4 | 0 |
+| london-plane-pollarded | 4 | 0 |
 | lombardy-poplar | 4 | 0 |
 | hosta-clump | 4 | 0 |
+| hornbeam-hedge | 4 | 0 |
 | english-oak | 4 | 0 |
 | multi-stem-birch | 4 | 0 |
 | agave | 4 | 0 |

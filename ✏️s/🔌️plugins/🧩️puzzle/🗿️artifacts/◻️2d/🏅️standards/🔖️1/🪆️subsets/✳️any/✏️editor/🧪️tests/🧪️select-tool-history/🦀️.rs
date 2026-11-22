@@ -328,7 +328,7 @@ fn run(app: &mut Puzzle2dApp, seed: usize, step: &Value, what: &str) {
         "drag" => {
             select(app, ids(&spec["selection"]));
             let mut host = painted_host_of(&painted(app));
-            host.set_selection_ids_silent(&ids(&spec["selection"]));
+            crate::editor::puzzle2d::engine::board_host::testkit::set_selection_ids_silent(&mut host.scene, &mut host.focus, &mut host.outbox, &ids(&spec["selection"]));
             let (x, y) = point(&spec["from"]);
             press(&mut host, x, y);
             for via in spec["path"].as_array().expect("path") {

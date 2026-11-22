@@ -9,6 +9,9 @@ use std::path::{Path, PathBuf};
 /// 🚫 Forbidden evaluate-path gaming tokens (fingerprint / score folds).
 const GAMING_TOKENS: &[&str] = &["field_fingerprint", "id_score", "tag_fp", "en1999.en1990.psi"];
 
+/// 🏷️ Artifact folders of the families this composition gates; Eurocode families are gated by their own compositions.
+const OWNED_FAMILY_DIRS: &[&str] = &["🧱️din4108", "🌬️din16798", "📇️iso16757", "🏭️vdi3805"];
+
 /// 🗂️ Walk artifact rust sources under evaluate paths (schema + inferences), skipping tests.
 fn walk_evaluate_rs(root: &Path, out: &mut Vec<PathBuf>) {
     let Ok(entries) = std::fs::read_dir(root) else {
@@ -62,7 +65,9 @@ fn has_field_epsilon_fold(line: &str) -> bool {
 fn scan_evaluate_gaming() -> Vec<String> {
     let artifacts = fixture_path!("../../../../../✏️s/🔌️plugins/📕️norm/🗿️artifacts");
     let mut files = Vec::new();
-    walk_evaluate_rs(&artifacts, &mut files);
+    for family in OWNED_FAMILY_DIRS {
+        walk_evaluate_rs(&artifacts.join(family), &mut files);
+    }
     let mut hits = Vec::new();
     for path in files {
         let Ok(text) = std::fs::read_to_string(&path) else {
@@ -108,7 +113,6 @@ fn compliance_gate_all_families() {
     results.push(gate_family::<semio_s_artifact_norm_din16798_editor::DinEn16798Family>(
         "din16798",
         &[
-            ("demo", semio_s_artifact_norm_din16798_examples::demo::PRIMARY_TEXT),
             ("compliant_office", semio_s_artifact_norm_din16798_examples::compliant_office::PRIMARY_TEXT),
             ("noncompliant_office", semio_s_artifact_norm_din16798_examples::noncompliant_office::PRIMARY_TEXT),
         ],

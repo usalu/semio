@@ -848,6 +848,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-value-clone-source-testing"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-trace",
+ "semio-framework-value-clone-source",
+ "semio-framework-value-control-contract",
+ "semio-framework-value-retirement",
+ "semio-framework-value-testing-allocator",
+ "semio-framework-value-testing-effect-bank",
+]
+
+[[package]]
 name = "semio-framework-value-control-contract"
 version = "0.1.0"
 dependencies = [
@@ -1132,6 +1144,7 @@ dependencies = [
  "semio-framework-value-native-decoding",
  "semio-framework-value-native-owned",
  "semio-framework-value-native-receiver-protocol",
+ "semio-framework-value-native-schema",
  "semio-framework-value-native-storage",
  "semio-framework-value-retained-clone",
  "semio-framework-value-retirement",
@@ -1510,11 +1523,34 @@ name = "semio-framework-value-source-turn"
 version = "0.1.0"
 
 [[package]]
+name = "semio-framework-value-testing-admission"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value-clone-source-testing",
+ "semio-framework-value-control-contract",
+ "semio-framework-value-native-decoding",
+ "semio-framework-value-native-encoding",
+ "semio-framework-value-retained-clone",
+ "semio-framework-value-retirement",
+ "semio-framework-value-testing-allocator",
+ "semio-framework-value-testing-effect-bank",
+ "serde_json",
+]
+
+[[package]]
 name = "semio-framework-value-testing-allocator"
 version = "0.1.0"
 dependencies = [
  "semio-framework-trace",
  "semio-framework-trace-memory-testing",
+]
+
+[[package]]
+name = "semio-framework-value-testing-effect-bank"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value-control-contract",
+ "serde_json",
 ]
 
 [[package]]
@@ -1532,6 +1568,7 @@ dependencies = [
  "semio-framework-value-native-receiving-original",
  "semio-framework-value-persistent",
  "semio-framework-value-snapshot-projection",
+ "semio-framework-value-testing-admission",
  "semio-framework-value-testing-allocator",
  "serde_json",
 ]

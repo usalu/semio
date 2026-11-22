@@ -19,13 +19,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         let command = TimeTravelStoreCommand::Preview { target, replacement, drafts, deadline_us, clock: self.time_travel.turn_clock };
         match self.time_travel_run(command, None).await? {
             TimeTravelStoreOutput::Previewed(step) => {
-                self.time_travel.preview_due = false;
                 self.adopt_time_travel_preview_step(step, None).await
-            }
-            TimeTravelStoreOutput::PreviewDeferred => {
-                self.time_travel.preview_due = true;
-                self.note_time_travel_changed(false, false);
-                Ok(())
             }
             _ => Err(Fault::new(FaultOrigin::Plugin, FaultCode::new("timeTravel.preview-mismatch"), "a history-edit preview answered another command")),
         }

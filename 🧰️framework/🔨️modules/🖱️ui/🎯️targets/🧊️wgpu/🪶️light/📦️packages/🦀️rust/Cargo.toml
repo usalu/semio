@@ -4,7 +4,7 @@ name = "semio-ui-wgpu-light"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
-description = "semio wgpu light tier: minimap geometry, tree window request rule, presence bar, tabs builders, card stack layout and paint"
+description = "semio wgpu light tier: minimap geometry, tree window request rule, presence bar builders, card stack layout and paint"
 
 [package.metadata.semio]
 role = "framework"

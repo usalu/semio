@@ -1,0 +1,140 @@
+{
+ "description": "One real rustc unit (semio-framework-hash, check, prototype profile) as the unit cache saw it on a macOS machine: the portable arguments (the checkout root is the token @@semio-cwd@@) and the key environment, recorded with SEMIO_UNIT_CACHE_TRACE_KEYS=1.",
+ "root": "@@semio-cwd@@",
+ "manifest": "@@semio-cwd@@/🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust",
+ "arguments": [
+  "--crate-name",
+  "semio_framework_hash",
+  "--edition=2021",
+  "🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust/🦀️.rs",
+  "--error-format=json",
+  "--json=diagnostic-rendered-ansi,artifacts,future-incompat",
+  "--crate-type",
+  "lib",
+  "--emit=dep-info,metadata",
+  "-C",
+  "opt-level=3",
+  "-C",
+  "lto=off",
+  "-C",
+  "embed-bitcode=no",
+  "-C",
+  "codegen-units=256",
+  "-C",
+  "debuginfo=1",
+  "-C",
+  "split-debuginfo=unpacked",
+  "--remap-path-prefix=@@semio-cwd@@=.",
+  "--remap-path-prefix=⟨cargo-build-dir⟩=/cargo/build-dir",
+  "--remap-path-prefix=⟨rust-src⟩=/rustc/9f36de775bc636c8e88c31a173c2bcb6995956a0",
+  "--warn=rust_2018_idioms",
+  "--warn=future_incompatible",
+  "--warn=clippy::all",
+  "--warn=unused_qualifications",
+  "--warn=unused_lifetimes",
+  "--warn=unsafe_op_in_unsafe_fn",
+  "--warn=clippy::unnecessary_wraps",
+  "--warn=clippy::semicolon_if_nothing_returned",
+  "--warn=clippy::redundant_clone",
+  "--warn=clippy::needless_pass_by_value",
+  "--warn=clippy::map_unwrap_or",
+  "--warn=clippy::inefficient_to_string",
+  "--warn=clippy::cloned_instead_of_copied",
+  "-C",
+  "debug-assertions=on",
+  "--check-cfg",
+  "cfg(docsrs,test)",
+  "--check-cfg",
+  "cfg(feature, values())",
+  "-C",
+  "metadata=9c27eb95346e13f8",
+  "-C",
+  "extra-filename=-45b3a1a63618164b",
+  "-Z",
+  "threads=0",
+  "-Z",
+  "checksum-hash-algorithm=blake3"
+ ],
+ "environment": [
+  [
+   "CARGO_CRATE_NAME",
+   "semio_framework_hash"
+  ],
+  [
+   "CARGO_ENCODED_RUSTFLAGS",
+   "-Z\u001fthreads=0"
+  ],
+  [
+   "CARGO_MANIFEST_DIR",
+   "@@semio-cwd@@/🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust"
+  ],
+  [
+   "CARGO_PKG_AUTHORS",
+   ""
+  ],
+  [
+   "CARGO_PKG_DESCRIPTION",
+   "Content-addressing and Merkle hash utilities for the framework kernel"
+  ],
+  [
+   "CARGO_PKG_HOMEPAGE",
+   ""
+  ],
+  [
+   "CARGO_PKG_LICENSE",
+   ""
+  ],
+  [
+   "CARGO_PKG_LICENSE_FILE",
+   ""
+  ],
+  [
+   "CARGO_PKG_NAME",
+   "semio-framework-hash"
+  ],
+  [
+   "CARGO_PKG_README",
+   ""
+  ],
+  [
+   "CARGO_PKG_REPOSITORY",
+   ""
+  ],
+  [
+   "CARGO_PKG_RUST_VERSION",
+   "1.95"
+  ],
+  [
+   "CARGO_PKG_VERSION",
+   "0.1.0"
+  ],
+  [
+   "CARGO_PKG_VERSION_MAJOR",
+   "0"
+  ],
+  [
+   "CARGO_PKG_VERSION_MINOR",
+   "1"
+  ],
+  [
+   "CARGO_PKG_VERSION_PATCH",
+   "0"
+  ],
+  [
+   "CARGO_PKG_VERSION_PRE",
+   ""
+  ]
+ ],
+ "platform": {
+  "version": 1,
+  "os": "darwin",
+  "arch": "arm64",
+  "host": "aarch64-apple-darwin",
+  "rustc": "312cc5b2932fbb311b9178947edf91f93956da0eb1375bd7f81f5125c203f9da",
+  "toolchain": "ede9cc993322532ae0c84aa1f2b09fa275f922e9339d69900f5caeda44392fa1",
+  "linker": "",
+  "cpu": ""
+ },
+ "toolchain": "ede9cc993322532ae0c84aa1f2b09fa275f922e9339d69900f5caeda44392fa1",
+ "sourceSha256": "0000000000000000000000000000000000000000000000000000000000000000"
+}

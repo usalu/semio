@@ -8,6 +8,7 @@ import {fleetInterfaceAddressV1,readFleetMachineV1,rotateFleetIdentityV1,syncFle
 import type {RemoteCacheValidationV1} from "../🔬️action-result/🟦️.ts";
 import {collectRemoteCacheDirectoryV1,scanRemoteCacheDirectoryV1,type RemoteCacheCollectionReportV1} from "../🧹️collector/🟦️.ts";
 import {RemoteCacheDirectoryBusyV1,startRemoteCacheServerV1,type RemoteCacheServerStatusV1} from "../🖥️server/🟦️.ts";
+import {diffEvidenceV1,type EvidenceDiffV1} from "../🧾️diff/🟦️.ts";
 import texts from "../📖️texts/🔣️.json" with {type:"json"};
 
 /** 🔌️ The build tool's side of `remote-cache status`: which HTTP protocol it speaks, which read-only route proves reachability and credentials, and how it renders the contract. */
@@ -27,14 +28,15 @@ export type RemoteCacheCommandResultV1=Readonly<{exitCode:number;result?:unknown
 /** 🗣️ The languages of all messages; there is no default among them. */
 export type RemoteCacheLanguageV1="en"|"de";
 
-type Operation="serve"|"status"|"gc"|"rotate";
+type Operation="serve"|"status"|"gc"|"rotate"|"evidence";
 
 const LANGUAGES=texts.languages as readonly RemoteCacheLanguageV1[],
  OPTIONS:Readonly<Record<Operation,Readonly<{valued:readonly string[];plain:readonly string[]}>>>={
   serve:{valued:["--port","--host","--directory","--max-bytes","--grace-seconds","--tls-certificate","--tls-key","--lang","--mirror-directory"],plain:["--read-only","--no-mirror"]},
   status:{valued:["--directory","--lang"],plain:[]},
   gc:{valued:["--directory","--max-bytes","--grace-seconds","--current-keys","--lang"],plain:["--dry-run","--json"]},
-  rotate:{valued:["--lang"],plain:[]}
+  rotate:{valued:["--lang"],plain:[]},
+  evidence:{valued:["--lang"],plain:[]}
  };
 
 /** 💬️ Renders one catalogue message in one language. */
@@ -64,15 +66,16 @@ export function formatRemoteCacheBytesV1(bytes:number):string{
 }
 
 /** 📝️ The closed arguments of one `remote-cache` operation: valued options by name and the plain flags that were given. */
-export type RemoteCacheArgumentsV1=Readonly<{operation:Operation;values:Readonly<Record<string,string>>;flags:ReadonlySet<string>}>;
+export type RemoteCacheArgumentsV1=Readonly<{operation:Operation;values:Readonly<Record<string,string>>;flags:ReadonlySet<string>;words:readonly string[]}>;
 
-/** 🧭️ Reads `serve|status|gc|rotate` with its options (`--name value` or `--name=value`); every unknown, misplaced or repeated option is refused in both languages. */
+/** 🧭️ Reads `serve|status|gc|rotate|evidence` with its options (`evidence` also takes the words `list` or `show <id>`) (`--name value` or `--name=value`); every unknown, misplaced or repeated option is refused in both languages. */
 export function parseRemoteCacheArgumentsV1(args:readonly string[]):RemoteCacheArgumentsV1{
  const operation=args[0];
- if(operation!=="serve"&&operation!=="status"&&operation!=="gc"&&operation!=="rotate")throw Error(both("error.syntax"));
- const allowed=OPTIONS[operation],seen=new Set<string>(),values:Record<string,string>={},flags=new Set<string>();
+ if(operation!=="serve"&&operation!=="status"&&operation!=="gc"&&operation!=="rotate"&&operation!=="evidence")throw Error(both("error.syntax"));
+ const allowed=OPTIONS[operation],seen=new Set<string>(),values:Record<string,string>={},flags=new Set<string>(),words:string[]=[];
  for(let index=1;index<args.length;index++){
   const argument=args[index]!,cut=argument.indexOf("="),name=cut<0?argument:argument.slice(0,cut);
+  if(operation==="evidence"&&!argument.startsWith("--")){words.push(argument);continue;}
   if(seen.has(name))throw Error(both("error.repeated",{option:name}));
   if(allowed.valued.includes(name)){
    const value=cut<0?args[++index]:argument.slice(cut+1);
@@ -82,7 +85,7 @@ export function parseRemoteCacheArgumentsV1(args:readonly string[]):RemoteCacheA
   else throw Error(both("error.option",{operation,option:argument}));
   seen.add(name);
  }
- return Object.freeze({operation,values:Object.freeze(values),flags});
+ return Object.freeze({operation,values:Object.freeze(values),flags,words:Object.freeze(words)});
 }
 
 const whole=(name:string,value:string,minimum:number,maximum:number):number=>{
@@ -171,16 +174,23 @@ async function probeRemoteCacheV1(contract:RemoteCacheContractV1,tool:RemoteCach
  }
 }
 
-async function askServerV1(contract:RemoteCacheContractV1,call:typeof fetch,signal:AbortSignal):Promise<RemoteCacheServerStatusV1|null>{
+type ServerFault=Readonly<{reason:"unreachable"|"denied"|"unsupported"|"failed"|"malformed";status:number|null;message:string}>;
+type ServerAnswer=Readonly<{server:RemoteCacheServerStatusV1;fault:null}>|Readonly<{server:null;fault:ServerFault}>;
+
+/** 🩺️ Asks the running server for its own numbers through the signed fetch (the same one every cache client uses, so the request carries this machine's fleet signature or token) and names why there is no answer: unreachable, denied (401, 403), unsupported (404, 405), failed (other statuses) or malformed (not JSON or not a server status); the message comes in both languages. Cancelling the phase throws. */
+async function askServerV1(contract:RemoteCacheContractV1,call:typeof fetch,signal:AbortSignal):Promise<ServerAnswer>{
+ const faulted=(reason:ServerFault["reason"],status:number|null):ServerAnswer=>({server:null,fault:{reason,status,message:both(`status.fault.${reason}`,{status:status??0})}});
+ let response:Response;
+ try{response=await call(`${contract.endpoint}/status`,{signal:AbortSignal.any([signal,AbortSignal.timeout(contract.timeoutSeconds*1000)])});}
+ catch(error){if(signal.aborted)throw error;return faulted("unreachable",null);}
  try{
-  const response=await call(`${contract.endpoint}/status`,{signal:AbortSignal.any([signal,AbortSignal.timeout(contract.timeoutSeconds*1000)])});
-  if(response.status!==200){await response.body?.cancel();return null;}
+  if(response.status!==200){await response.body?.cancel();return faulted(response.status===401||response.status===403?"denied":response.status===404||response.status===405?"unsupported":"failed",response.status);}
   const document=await response.json();
   requireRemoteCacheShapeV1("ServerStatus",document,"Closed remote cache server status required");
-  return document as RemoteCacheServerStatusV1;
+  return {server:document as RemoteCacheServerStatusV1,fault:null};
  }catch(error){
   if(signal.aborted)throw error;
-  return null;
+  return faulted("malformed",response.status);
  }
 }
 
@@ -196,14 +206,14 @@ export async function remoteCacheStatusV1(args:readonly string[],context:RemoteC
   store={directory,entries:index.size,bytes,maximumBytes:all.server.maximumBytes};
  }
  const found=await resolveAuthorisedRemoteCacheV1({...context.environment,SEMIO_WORKSPACE_ROOT:context.environment.SEMIO_WORKSPACE_ROOT??context.root},{root:context.root}),resolved=found.resolution;
- if(resolved===undefined)return {version:1,configured:false,contract:null,effectiveUpload:false,token:null,renderings:null,probes:null,server:null,store,resolution:null,remote:null};
+ if(resolved===undefined)return {version:1,configured:false,contract:null,effectiveUpload:false,token:null,renderings:null,probes:null,server:null,serverFault:null,store,resolution:null,remote:null};
  await context.progress("remote-cache:probe");
  const contract=resolved.contract,token=resolved.token,probes:Probe[]=[],renderings:Record<string,RemoteCacheRenderingV1>={},call=remoteCacheFetchV1(resolved.environment,{root:context.root});
  for(const tool of tools){renderings[tool.tool]=tool.render(contract,resolved.environment);probes.push(await probeRemoteCacheV1(contract,tool,call,context.signal));}
- const server=await askServerV1(contract,call,context.signal);
- const status={version:1,configured:true,contract,effectiveUpload:remoteCacheEffectiveUploadV1(contract),token:{environment:contract.auth.tokenEnvironment,present:token!==undefined},renderings,probes,server,store,
+ const {server,fault:serverFault}=await askServerV1(contract,call,context.signal),sum=(field:"hits"|"misses"):number|null=>server===null?null:Object.values(server.counters).reduce((total,row)=>total+row[field],0);
+ const status={version:1,configured:true,contract,effectiveUpload:remoteCacheEffectiveUploadV1(contract),token:{environment:contract.auth.tokenEnvironment,present:token!==undefined},renderings,probes,server,serverFault,store,
   resolution:{endpointFrom:resolved.endpointFrom,tokenFrom:resolved.tokenFrom,factsGeneration:resolved.generation,factsState:found.refresh?.state??"none"},
-  remote:{endpoint:contract.endpoint,reachable:probes.some(probe=>probe.reachable),authorised:probes.length>0&&probes.every(probe=>probe.authorized),entries:server?.entries??null,bytes:server?.bytes??null,maximumBytes:server?.maximumBytes??null,fleetGeneration:resolved.generation}};
+  remote:{endpoint:contract.endpoint,reachable:probes.some(probe=>probe.reachable),authorised:probes.length>0&&probes.every(probe=>probe.authorized),entries:server?.entries??null,bytes:server?.bytes??null,maximumBytes:server?.maximumBytes??null,hits:sum("hits"),misses:sum("misses"),fleetGeneration:resolved.generation}};
  requireRemoteCacheShapeV1("Status",status,"Closed remote cache status required");return status;
 }
 
@@ -273,11 +283,45 @@ export async function collectRemoteCacheForLedgerV1(workspace:string,dryRun:bool
  return `${dryRun?"would remove":"removed"} ${report.removed.entries} of ${report.scanned.entries} entries (${formatRemoteCacheBytesV1(report.removed.bytes)})`;
 }
 
-/** 🎬️ Routes `remote-cache serve|status|gc|rotate`; `args` are the words after `remote-cache`. */
+/** 🗂️ Reads the evidence the running cache server keeps of the writes it refused as divergences (`repo remote-cache evidence list`: the entries, newest first; `show <id>`: one entry with, for every output that differs, both digests and sizes, the first differing byte, the number of differing bytes and the lines only one side has, Brotli and JSON unpacked). The entries are fetched with the same signed client as `status`; a server that does not answer is a fault, never a hang. */
+export async function remoteCacheEvidenceV1(args:readonly string[],context:RemoteCacheCommandContextV1):Promise<unknown>{
+ const parsed=parseRemoteCacheArgumentsV1(["evidence",...args]),words=parsed.words,action=words[0]??"list";
+ if(action!=="list"&&action!=="show"||action==="list"&&words.length>1||action==="show"&&words.length!==2)throw Error(both("evidence.syntax"));
+ const found=await resolveAuthorisedRemoteCacheV1({...context.environment,SEMIO_WORKSPACE_ROOT:context.environment.SEMIO_WORKSPACE_ROOT??context.root},{root:context.root}),resolved=found.resolution;
+ if(resolved===undefined)throw Error(both("evidence.off"));
+ const call=remoteCacheFetchV1(resolved.environment,{root:context.root}),endpoint=resolved.contract.endpoint,limit=resolved.contract.timeoutSeconds*1000;
+ const get=async(path:string):Promise<Response>=>{
+  let response:Response;
+  try{response=await call(endpoint+path,{signal:AbortSignal.any([context.signal,AbortSignal.timeout(limit)])});}catch(error){if(context.signal.aborted)throw error;throw Error(both("evidence.fault",{status:0}));}
+  if(response.status!==200){await response.body?.cancel();throw Error(both("evidence.fault",{status:response.status}));}
+  return response;
+ };
+ await context.progress("remote-cache:evidence");
+ const listed=(await (await get("/evidence")).json()) as {evidence:readonly EvidenceRowV1[]};
+ if(action==="list"){const result={version:1,action:"list",evidence:listed.evidence};requireRemoteCacheShapeV1("EvidenceList",result,"Closed remote cache evidence list required");return result;}
+ const matches=listed.evidence.filter(row=>row.id===words[1]||row.id.startsWith(words[1]!)),row=matches.find(candidate=>candidate.id===words[1])??(matches.length===1?matches[0]:undefined);
+ if(row===undefined)throw Error(both("evidence.unknown",{id:words[1]!}));
+ const diffs:EvidenceDiffV1[]=[];
+ for(const path of row.differing){
+  const sides=row.files.filter(file=>file.path===path),pick=async(side:"kept"|"refused")=>{
+   const file=sides.find(candidate=>candidate.side===side);
+   if(file===undefined)return undefined;
+   const bytes=file.stored?new Uint8Array(await (await get(`/evidence/${row.id}/${file.name}`)).arrayBuffer()):undefined;
+   return{sha256:file.sha256,bytes,size:file.bytes};
+  };
+  diffs.push(diffEvidenceV1(path,await pick("kept"),await pick("refused")));
+ }
+ const result={version:1,action:"show",evidence:row,diffs};requireRemoteCacheShapeV1("EvidenceShow",result,"Closed remote cache evidence required");return result;
+}
+
+type EvidenceRowV1=Readonly<{id:string;atMs:number;sort:string;namespace:string;key:string;keptOrigin:string;refusedOrigin:string;differing:readonly string[];files:readonly Readonly<{name:string;side:"kept"|"refused";path:string;sha256:string;bytes:number;stored:boolean}>[]}>;
+
+/** 🎬️ Routes `remote-cache serve|status|gc|rotate|evidence`; `args` are the words after `remote-cache`. */
 export async function runRemoteCacheCommandV1(args:readonly string[],context:RemoteCacheCommandContextV1):Promise<RemoteCacheCommandResultV1>{
  const parsed=parseRemoteCacheArgumentsV1(args);
  if(parsed.operation==="serve")return serveRemoteCacheV1(args.slice(1),context);
  if(parsed.operation==="gc")return collectRemoteCacheV1(args.slice(1),context);
  if(parsed.operation==="rotate")return rotateRemoteCacheV1(args.slice(1),context);
+ if(parsed.operation==="evidence")return {exitCode:0,result:await remoteCacheEvidenceV1(args.slice(1),context)};
  return {exitCode:0,result:await remoteCacheStatusV1(args.slice(1),context)};
 }

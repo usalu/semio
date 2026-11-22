@@ -365,10 +365,10 @@ describe("control chrome", () => {
         const { fileURLToPath } = await import("node:url");
         const { dirname, resolve } = await import("node:path");
         const css = readFileSync(resolve(dirname(fileURLToPath(testSource.url)), "../../🎨️styling/🖌️ui/🎨️.css"), "utf8");
-        expect(css).toContain('[data-slot="navbar"]::after');
-        expect(css).toContain('[data-slot="footer"]::before');
-        expect(css).toMatch(/\[data-slot="navbar"\]:hover::after/);
-        expect(css).toMatch(/\[data-slot="footer"\]:hover::before/);
+        expect(css).toContain('[data-slot="navbar"]:not([data-shared-border-attached~="bottom"])::after');
+        expect(css).toContain('[data-slot="footer"]:not([data-shared-border-attached~="top"])::before');
+        expect(css).toContain('[data-slot="navbar"]:not([data-shared-border-attached~="bottom"]):hover::after');
+        expect(css).toContain('[data-slot="footer"]:not([data-shared-border-attached~="top"]):hover::before');
         expect(css).not.toMatch(/\[data-slot="navbar"\]:focus-within::after/);
         expect(css).not.toMatch(/\[data-slot="footer"\]:focus-within::before/);
         expect(css).toContain("background-color: var(--border-emphasized-color)");
@@ -433,7 +433,7 @@ describe("control chrome", () => {
           <div className="h-layout-story w-layout-story-md">
             <Mode
               windows={[{ id: "main", title: uiDataLabel("Main"), iconId: "app-window", children: <div id="framework.window.main">Main Body</div> }]}
-              layout={{ kind: "stack", children: [{ kind: "window", id: "main" }], activeId: "main" }}
+              layout={{ kind: "stack", children: [{ kind: "window", windowKindId: "main" }], activeWindowId: "main" }}
               activeWindowId="main"
               onActiveWindowChange={() => {}}
             />

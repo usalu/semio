@@ -475,6 +475,23 @@
         "command": "repo ./📜️script.ts test component-reclaim"
       }
     },
+    "test-component-feature-unification": {
+      "executor": "repo:script",
+      "cache": true,
+      "dependsOn": [],
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "{projectRoot}/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🏃️process",
+        "command": "repo ./📜️script.ts test component-feature-unification"
+      }
+    },
     "test-capture": {
       "executor": "repo:script",
       "cache": true,
@@ -746,7 +763,8 @@
           },
           "sourceInputObservation": "freshness",
           "runtimeSourceEntries": [
-            "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🎟️admission/🧪️tests/🟦️.ts"
+            "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🎟️admission/🧪️tests/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🏭️generated-owner/🧪️tests/🟦️.ts"
           ]
         }
       }
@@ -853,7 +871,24 @@
           }
         }
       }
+    },    "test-native-image-availability": {
+      "executor": "repo:script",
+      "cache": true,
+      "dependsOn": [],
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "{projectRoot}/📦️artifacts/🏗️native-build/💾️storage/🍎️image/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🏃️process",
+        "command": "repo ./📜️script.ts test native-image-availability"
+      }
     },
+
     "test-runtime-environment": {
       "executor": "repo:script",
       "cache": true,

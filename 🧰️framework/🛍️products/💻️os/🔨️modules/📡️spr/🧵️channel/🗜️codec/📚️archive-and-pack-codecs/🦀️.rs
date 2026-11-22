@@ -57,18 +57,36 @@ pub(super) fn write_document_archive(out: &mut Vec<u8>, archive: &DocumentArchiv
     protocol::write_varint_u64(out, archive.members.len() as u64);
     for entry in &archive.members {
         protocol::write_varint_u64(out, u64::from(entry.ordinal));
-        protocol::write_str(out, &entry.reference.artifact_id);
-        protocol::write_str(out, &entry.reference.artifact_kind);
-        protocol::write_str(out, &entry.reference.standard);
-        protocol::write_str(out, &entry.reference.subset);
-        protocol::write_str(out, &entry.owner.parent.artifact_id);
-        protocol::write_str(out, &entry.owner.parent.artifact_kind);
-        protocol::write_str(out, &entry.owner.parent.standard);
-        protocol::write_str(out, &entry.owner.parent.subset);
-        protocol::write_str(out, &entry.owner.slot);
-        protocol::write_str(out, &entry.owner.child_id);
+        for label in archive_member_labels(entry) {
+            protocol::write_str(out, label);
+        }
         protocol::write_bytes(out, &entry.envelope_pack);
     }
+}
+
+fn archive_member_labels(entry: &OwnedDocumentMemberPackEntry) -> [&str; 10] {
+    [
+        &entry.reference.artifact_id, &entry.reference.artifact_kind,
+        &entry.reference.standard, &entry.reference.subset,
+        &entry.owner.parent.artifact_id, &entry.owner.parent.artifact_kind,
+        &entry.owner.parent.standard, &entry.owner.parent.subset,
+        &entry.owner.slot, &entry.owner.child_id,
+    ]
+}
+
+fn archive_wire_size(archive: &DocumentArchivePack) -> usize {
+    let varint = |value: u64| ((u64::BITS - value.leading_zeros()).div_ceil(7) as usize).max(1);
+    let field = |bytes: &[u8]| varint(bytes.len() as u64).saturating_add(bytes.len());
+    let header = 1 + varint(archive.members.len() as u64);
+    let mut size = header.saturating_add(field(&archive.parent_pack)).saturating_add(field(&archive.parent_spr));
+    for entry in &archive.members {
+        size = size.saturating_add(varint(u64::from(entry.ordinal)));
+        for label in archive_member_labels(entry) {
+            size = size.saturating_add(field(label.as_bytes()));
+        }
+        size = size.saturating_add(field(&entry.envelope_pack));
+    }
+    size
 }
 
 /// 🗃️ Encodes one exact persisted recursive-document archive with an explicit version owner.
@@ -76,11 +94,15 @@ pub fn encode_document_archive_bytes(archive: &DocumentArchivePack) -> Result<Ve
     if archive.members.len() > DOCUMENT_ARCHIVE_MAXIMUM_MEMBERS {
         return Err(malformed("document archive member count", 0, "member count exceeds 1024"));
     }
-    let mut bytes = vec![DOCUMENT_ARCHIVE_VERSION];
-    write_document_archive(&mut bytes, archive);
-    if bytes.len() > DOCUMENT_ARCHIVE_MAXIMUM_BYTES {
+    let size = archive_wire_size(archive);
+    if size > DOCUMENT_ARCHIVE_MAXIMUM_BYTES {
         return Err(malformed("document archive bytes", 0, "archive exceeds its fixed byte authority"));
     }
+    let mut bytes = Vec::new();
+    bytes.try_reserve_exact(size).map_err(|_| malformed("document archive bytes", 0, "archive backing allocation refused"))?;
+    bytes.push(DOCUMENT_ARCHIVE_VERSION);
+    write_document_archive(&mut bytes, archive);
+    debug_assert_eq!(bytes.len(), size);
     Ok(bytes)
 }
 

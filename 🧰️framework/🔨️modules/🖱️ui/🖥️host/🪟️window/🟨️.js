@@ -193,7 +193,7 @@ export function createBrowserHostImports(options = {}) {
   const modifierBits = (value) => (value.shiftKey ? 1 : 0) | (value.ctrlKey ? 2 : 0) | (value.altKey ? 4 : 0) | (value.metaKey ? 8 : 0);
   const emitKey = (record, code, value) => {
     const text = encoder.encode(value.key);
-    const body = prefix(record); body.u8(modifierBits(value)); body.u16(text.length); body.raw(text);
+    const body = prefix(record); body.u8(modifierBits(value) | (value.repeat ? 16 : 0)); body.u16(text.length); body.raw(text);
     event(record, code, body.finish());
   };
 

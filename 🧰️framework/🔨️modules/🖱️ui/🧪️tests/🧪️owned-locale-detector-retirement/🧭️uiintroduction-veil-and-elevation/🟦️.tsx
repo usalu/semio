@@ -176,7 +176,7 @@ export async function registerUiintroductionVeilAndElevationTests(vitest: Tests1
                 ),
               },
             ]}
-            layout={{ kind: "stack", children: [{ kind: "window", id: "puzzle3d-main-top" }], activeId: "puzzle3d-main-top" }}
+            layout={{ kind: "stack", children: [{ kind: "window", windowKindId: "puzzle3d-main-top" }], activeWindowId: "puzzle3d-main-top" }}
             activeWindowId="puzzle3d-main-top"
             onActiveWindowChange={() => {}}
           />
@@ -227,7 +227,7 @@ export async function registerUiintroductionVeilAndElevationTests(vitest: Tests1
                 children: <div id="framework.window.puzzle3dMain">Main Pane</div>,
               },
             ]}
-            layout={{ kind: "stack", children: [{ kind: "window", id: "puzzle3d-main-top" }], activeId: "puzzle3d-main-top" }}
+            layout={{ kind: "stack", children: [{ kind: "window", windowKindId: "puzzle3d-main-top" }], activeWindowId: "puzzle3d-main-top" }}
             activeWindowId="puzzle3d-main-top"
             onActiveWindowChange={() => {}}
           />

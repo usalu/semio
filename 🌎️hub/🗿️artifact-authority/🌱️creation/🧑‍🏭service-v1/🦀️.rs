@@ -264,6 +264,9 @@ impl ArtifactCreationServiceV1 {
         match CheckpointPublicationOrchestrator::new(ArtifactChunkBlobStore::new(self.storage.clone()), publisher).publish_candidate(candidate, context).await {
             Ok(_) => Ok(self.read(&intent.actor.user_id, &intent.scope.space_id, &intent.request.request_id).await?.status()),
             Err(AuthorityError::Publication(detail)) => {
+                if intent.is_space_studio() && self.directory.backend().list_document_descriptors(&intent.scope.space_id).await?.iter().any(|document| document.document_id != intent.scope.document_id && document.artifact_schema == intent.artifact_schema && document.artifact_kind == intent.request.kind_id) {
+                    return self.terminal(intent, false, "a Studio workflow already exists in this Space", context).await;
+                }
                 context.control.fault(&format!("creation {} {}: genesis publication is indeterminate: {detail}", intent.scope.space_id, intent.request.request_id));
                 let current = self.read(&intent.actor.user_id, &intent.scope.space_id, &intent.request.request_id).await?;
                 if matches!(current.phase, SpaceArtifactCreationPhaseV1::Ready | SpaceArtifactCreationPhaseV1::Cancelled | SpaceArtifactCreationPhaseV1::Failed) {

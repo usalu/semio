@@ -56,3 +56,14 @@ CREATE TABLE din16798_vent_system (
   duct_leakage_m3_s_m2_ieee754_bits INTEGER NOT NULL, duct_leakage_m3_s_m2_ieee754_class TEXT NOT NULL,
   design_airflow_m3_h_ieee754_bits INTEGER NOT NULL, design_airflow_m3_h_ieee754_class TEXT NOT NULL
 );
+CREATE TABLE din16798_unoccupied_ventilation (
+  id INTEGER PRIMARY KEY REFERENCES din16798_zone(id),
+  operation TEXT NOT NULL CHECK (operation IN ('nonResidentialPurge','nonResidentialReduced','residentialReduced','residentialShutdown')),
+  assessed_area_m2 REAL, zone_volume_m3 REAL, minutes_before_occupancy REAL,
+  residential_design_rate_l_per_s_m2 REAL, outdoor_air_m3_h REAL,
+  assessed_area_m2_ieee754_bits INTEGER NOT NULL, assessed_area_m2_ieee754_class TEXT NOT NULL,
+  zone_volume_m3_ieee754_bits INTEGER NOT NULL, zone_volume_m3_ieee754_class TEXT NOT NULL,
+  minutes_before_occupancy_ieee754_bits INTEGER NOT NULL, minutes_before_occupancy_ieee754_class TEXT NOT NULL,
+  residential_design_rate_l_per_s_m2_ieee754_bits INTEGER NOT NULL, residential_design_rate_l_per_s_m2_ieee754_class TEXT NOT NULL,
+  outdoor_air_m3_h_ieee754_bits INTEGER NOT NULL, outdoor_air_m3_h_ieee754_class TEXT NOT NULL
+);

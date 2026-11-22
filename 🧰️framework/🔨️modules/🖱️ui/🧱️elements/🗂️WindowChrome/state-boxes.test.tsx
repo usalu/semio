@@ -37,7 +37,7 @@ describe("🔲️ State lines belong to the border compositor", () => {
             <CommandItem value="a">A</CommandItem>
           </CommandList>
         </Command>
-        <Slider min={0} max={10} defaultValue={[3]} aria-label="Level" />
+        <Slider id="level" min={0} max={10} defaultValue={[3]} aria-label="Level" />
       </div>,
     );
     for (const selector of ['[data-slot="menu-item"]', "[data-context-menu-trigger]", '[data-slot="command-item"]', '[data-slot="slider-value"]']) {
@@ -94,7 +94,7 @@ describe("🔲️ State lines belong to the border compositor", () => {
   });
 
   it("recolours the slider thumb hairline on keyboard focus", () => {
-    const { container } = render(<Slider min={0} max={10} defaultValue={[3]} aria-label="Level" />);
+    const { container } = render(<Slider id="level" min={0} max={10} defaultValue={[3]} aria-label="Level" />);
     const thumb = container.querySelector('[role="slider"]')!;
     expect(thumb.className.split(" ")).toEqual(expect.arrayContaining(["border", "border-transparent", "focus-visible:border-emphasized"]));
     expect(thumb.className).not.toContain("ring-");

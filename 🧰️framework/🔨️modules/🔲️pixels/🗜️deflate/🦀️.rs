@@ -18,17 +18,13 @@ fn adler32(data: &[u8]) -> u32 {
 //#endregion Adler32
 
 //#region BitIo
-#[derive(semio_framework_value::RetireOwned)]
-struct BitWriter {
-    out: Vec<u8>,
+struct BitWriter<'a> {
+    out: &'a mut Vec<u8>,
     cur: u8,
     nbits: u8,
 }
 
-impl BitWriter {
-    fn new() -> Self {
-        Self { out: Vec::new(), cur: 0, nbits: 0 }
-    }
+impl BitWriter<'_> {
     fn write_bits(&mut self, mut value: u32, mut count: u8) {
         while count > 0 {
             let take = (8 - self.nbits).min(count);
@@ -90,11 +86,13 @@ impl<'a> BitReader<'a> {
 //#endregion BitIo
 
 //#region Huffman
-fn reverse_bits(mut v: u32, len: u8) -> u32 {
+const fn reverse_bits(mut v: u32, len: u8) -> u32 {
     let mut r = 0u32;
-    for _ in 0..len {
+    let mut bits = len;
+    while bits != 0 {
         r = (r << 1) | (v & 1);
         v >>= 1;
+        bits -= 1;
     }
     r
 }
@@ -260,18 +258,32 @@ fn distance_symbol(dist: usize) -> (usize, u32, u8) {
 /// 🎞️ Batch fixed-Huffman DEFLATE compressor: greedy hash-chain LZ77 with lazy one-step
 /// lookahead, emitted as a single final fixed-Huffman block (RFC1951 BTYPE=1).
 fn deflate_raw(data: &[u8]) -> Vec<u8> {
-    let mut writer = BitWriter::new();
-    write_fixed_block(&mut writer, data, true);
+    let mut output = Vec::new();
+    let mut writer = BitWriter { out: &mut output, cur: 0, nbits: 0 };
+    write_fixed_block(&mut writer, data, true, &mut [-1; WINDOW]);
     writer.align_byte();
-    writer.out
+    output
 }
 
-fn write_fixed_block(writer: &mut BitWriter, data: &[u8], final_block: bool) {
+const LITERAL_CODES: [(u32, u8); 288] = {
+    let mut codes = [(0, 0); 288];
+    let mut symbol = 0;
+    while symbol < codes.len() {
+        let (code, length) = match symbol {
+            0..=143 => (0x30 + symbol, 8),
+            144..=255 => (0x190 + symbol - 144, 9),
+            256..=279 => (symbol - 256, 7),
+            _ => (0xc0 + symbol - 280, 8),
+        };
+        codes[symbol] = (reverse_bits(code as u32, length), length);
+        symbol += 1;
+    }
+    codes
+};
+
+fn write_fixed_block(writer: &mut BitWriter<'_>, data: &[u8], final_block: bool, previous: &mut [i32]) {
     writer.write_bits(if final_block { 0b011 } else { 0b010 }, 3);
-    let literal_codes = build_codes(&fixed_lit_lengths());
-    let distance_codes = build_codes(&fixed_dist_lengths());
-    let mut head = vec![-1i32; HASH_SIZE];
-    let mut previous = vec![-1i32; WINDOW];
+    let mut head = [-1i32; HASH_SIZE];
     let insert = |position: usize, head: &mut [i32], previous: &mut [i32]| {
         if position + MIN_MATCH <= data.len() {
             let hash = hash3(data, position);
@@ -282,36 +294,35 @@ fn write_fixed_block(writer: &mut BitWriter, data: &[u8], final_block: bool) {
     let mut position = 0usize;
     let mut pending: Option<(usize, usize, usize)> = None;
     while position < data.len() {
-        let next = longest_match(data, position, &head, &previous, MAX_CHAIN);
-        insert(position, &mut head, &mut previous);
+        let next = longest_match(data, position, &head, previous, MAX_CHAIN);
+        insert(position, &mut head, previous);
         match (pending.take(), next) {
             (None, Some((length, distance))) => {
                 pending = Some((position, length, distance));
                 position += 1;
             }
             (Some((start, plen, _)), Some((length, distance))) if length > plen => {
-                let (code, bits) = literal_codes[data[start] as usize];
+                let (code, bits) = LITERAL_CODES[data[start] as usize];
                 writer.write_bits(code, bits);
                 pending = Some((position, length, distance));
                 position += 1;
             }
             (Some((start, length, distance)), _) => {
                 let (symbol, extra, extra_bits) = length_symbol(length);
-                let (code, bits) = literal_codes[symbol];
+                let (code, bits) = LITERAL_CODES[symbol];
                 writer.write_bits(code, bits);
                 writer.write_bits(extra, extra_bits);
                 let (symbol, extra, extra_bits) = distance_symbol(distance);
-                let (code, bits) = distance_codes[symbol];
-                writer.write_bits(code, bits);
+                writer.write_bits(reverse_bits(symbol as u32, 5), 5);
                 writer.write_bits(extra, extra_bits);
                 let end = (start + length).min(data.len());
                 for p in (start + 2)..end {
-                    insert(p, &mut head, &mut previous);
+                    insert(p, &mut head, previous);
                 }
                 position = end;
             }
             (None, None) => {
-                let (code, bits) = literal_codes[data[position] as usize];
+                let (code, bits) = LITERAL_CODES[data[position] as usize];
                 writer.write_bits(code, bits);
                 position += 1;
             }
@@ -319,22 +330,23 @@ fn write_fixed_block(writer: &mut BitWriter, data: &[u8], final_block: bool) {
     }
     if let Some((start, length, distance)) = pending.take() {
         let (symbol, extra, extra_bits) = length_symbol(length);
-        let (code, bits) = literal_codes[symbol];
+        let (code, bits) = LITERAL_CODES[symbol];
         writer.write_bits(code, bits);
         writer.write_bits(extra, extra_bits);
         let (symbol, extra, extra_bits) = distance_symbol(distance);
-        let (code, bits) = distance_codes[symbol];
-        writer.write_bits(code, bits);
+        writer.write_bits(reverse_bits(symbol as u32, 5), 5);
         writer.write_bits(extra, extra_bits);
         let _ = start;
     }
-    let (code, bits) = literal_codes[256];
+    let (code, bits) = LITERAL_CODES[256];
     writer.write_bits(code, bits);
 }
 
-#[derive(semio_framework_value::RetireOwned)]
+pub(super) const ZLIB_ENCODE_BLOCK: usize = 4096;
+
 pub(super) struct ZlibEncodeCursor {
-    writer: BitWriter,
+    cur: u8,
+    nbits: u8,
     adler_a: u32,
     adler_b: u32,
     started: bool,
@@ -342,24 +354,26 @@ pub(super) struct ZlibEncodeCursor {
 
 impl ZlibEncodeCursor {
     pub(super) fn new() -> Self {
-        Self { writer: BitWriter::new(), adler_a: 1, adler_b: 0, started: false }
+        Self { cur: 0, nbits: 0, adler_a: 1, adler_b: 0, started: false }
     }
 
-    pub(super) fn push(&mut self, data: &[u8], final_block: bool) -> Vec<u8> {
+    pub(super) fn push(&mut self, data: &[u8], final_block: bool, output: &mut Vec<u8>) {
         if !self.started {
-            self.writer.out.extend_from_slice(&[0x78, 0x01]);
+            output.extend_from_slice(&[0x78, 0x01]);
             self.started = true;
         }
         for &byte in data {
             self.adler_a = (self.adler_a + u32::from(byte)) % 65521;
             self.adler_b = (self.adler_b + self.adler_a) % 65521;
         }
-        write_fixed_block(&mut self.writer, data, final_block);
+        let mut writer = BitWriter { out: output, cur: self.cur, nbits: self.nbits };
+        write_fixed_block(&mut writer, data, final_block, &mut [-1; ZLIB_ENCODE_BLOCK]);
         if final_block {
-            self.writer.align_byte();
-            self.writer.out.extend_from_slice(&((self.adler_b << 16) | self.adler_a).to_be_bytes());
+            writer.align_byte();
+            writer.out.extend_from_slice(&((self.adler_b << 16) | self.adler_a).to_be_bytes());
         }
-        std::mem::take(&mut self.writer.out)
+        self.cur = writer.cur;
+        self.nbits = writer.nbits;
     }
 }
 //#endregion Compress

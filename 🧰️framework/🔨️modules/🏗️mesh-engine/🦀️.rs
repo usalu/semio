@@ -348,32 +348,39 @@ impl MeshData {
     }
 
     pub fn compute_normals(&mut self) {
-        let count = self.vertex_count();
-        self.normals = vec![0.0; count * 3];
-        for tri in self.indices.as_chunks::<3>().0 {
-            let i0 = tri[0] as usize;
-            let i1 = tri[1] as usize;
-            let i2 = tri[2] as usize;
-            let p0 = [self.positions[i0 * 3], self.positions[i0 * 3 + 1], self.positions[i0 * 3 + 2]];
-            let p1 = [self.positions[i1 * 3], self.positions[i1 * 3 + 1], self.positions[i1 * 3 + 2]];
-            let p2 = [self.positions[i2 * 3], self.positions[i2 * 3 + 1], self.positions[i2 * 3 + 2]];
-            let e0 = [p1[0] - p0[0], p1[1] - p0[1], p1[2] - p0[2]];
-            let e1 = [p2[0] - p0[0], p2[1] - p0[1], p2[2] - p0[2]];
-            let n = [e0[1] * e1[2] - e0[2] * e1[1], e0[2] * e1[0] - e0[0] * e1[2], e0[0] * e1[1] - e0[1] * e1[0]];
-            for &idx in tri {
-                let i = idx as usize * 3;
-                self.normals[i] += n[0];
-                self.normals[i + 1] += n[1];
-                self.normals[i + 2] += n[2];
-            }
+        self.normals = vec![0.0; self.vertex_count() * 3];
+        for triangle in 0..self.triangle_count() {
+            self.accumulate_triangle_normal(self.indices.as_chunks::<3>().0[triangle]);
         }
-        for chunk in self.normals.as_chunks_mut::<3>().0 {
-            let len = (chunk[0] * chunk[0] + chunk[1] * chunk[1] + chunk[2] * chunk[2]).sqrt();
-            if len > 1e-8 {
-                chunk[0] /= len;
-                chunk[1] /= len;
-                chunk[2] /= len;
-            }
+        for vertex in 0..self.vertex_count() {
+            self.normalize_vertex_normal(vertex);
+        }
+    }
+
+    /// 🔺️ Adds one indexed triangle's area-weighted normal to its vertex accumulators.
+    pub fn accumulate_triangle_normal(&mut self, triangle: [u32; 3]) {
+        let positions = self.positions.as_chunks::<3>().0;
+        let [p0, p1, p2] = triangle.map(|index| positions[index as usize]);
+        let e0 = [p1[0] - p0[0], p1[1] - p0[1], p1[2] - p0[2]];
+        let e1 = [p2[0] - p0[0], p2[1] - p0[1], p2[2] - p0[2]];
+        let normal = [e0[1] * e1[2] - e0[2] * e1[1], e0[2] * e1[0] - e0[0] * e1[2], e0[0] * e1[1] - e0[1] * e1[0]];
+        let normals = self.normals.as_chunks_mut::<3>().0;
+        for index in triangle {
+            let target = &mut normals[index as usize];
+            target[0] += normal[0];
+            target[1] += normal[1];
+            target[2] += normal[2];
+        }
+    }
+
+    /// 🧭️ Normalizes one accumulated vertex normal after the last incident triangle.
+    pub fn normalize_vertex_normal(&mut self, vertex: usize) {
+        let normal = &mut self.normals.as_chunks_mut::<3>().0[vertex];
+        let length = (normal[0] * normal[0] + normal[1] * normal[1] + normal[2] * normal[2]).sqrt();
+        if length > 1e-8 {
+            normal[0] /= length;
+            normal[1] /= length;
+            normal[2] /= length;
         }
     }
 

@@ -8,6 +8,7 @@
     "cases",
     "independentAxes",
     "retirementCustody",
+    "failureStorageBeforeClose",
     "sourceCancellation"
   ],
   "properties": {
@@ -106,6 +107,21 @@
         },
         "preservesProgress": {
           "const": true
+        }
+      }
+    },
+    "failureStorageBeforeClose": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["funded", "work", "childRetires"],
+        "properties": {
+          "funded": { "type": "boolean" },
+          "work": { "enum": [0, 1] },
+          "childRetires": { "const": false }
         }
       }
     },

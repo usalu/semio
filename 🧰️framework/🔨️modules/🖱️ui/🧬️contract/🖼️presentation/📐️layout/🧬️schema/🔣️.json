@@ -1,0 +1,74 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/ui/window-layout.v1.json",
+  "$defs": {
+    "Id": { "type": "string", "minLength": 1, "maxLength": 256 },
+    "Path": { "type": "array", "items": { "type": "integer", "minimum": 0 } },
+    "Size": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 },
+    "Corner": { "enum": ["topLeft", "topRight", "bottomLeft", "bottomRight"] },
+    "Axis": { "enum": ["horizontal", "vertical"] },
+    "Side": { "enum": ["left", "right", "top", "bottom"] },
+    "Window": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "windowKindId"],
+      "properties": {
+        "kind": { "const": "window" },
+        "windowKindId": { "$ref": "#/$defs/Id" },
+        "instanceId": { "$ref": "#/$defs/Id" },
+        "templateId": { "$ref": "#/$defs/Id" },
+        "title": { "type": "string" },
+        "corner": { "$ref": "#/$defs/Corner" }
+      }
+    },
+    "Stack": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "children"],
+      "properties": {
+        "kind": { "const": "stack" },
+        "size": { "$ref": "#/$defs/Size" },
+        "activeWindowId": { "$ref": "#/$defs/Id" },
+        "children": { "type": "array", "items": { "$ref": "#/$defs/Window" } }
+      }
+    },
+    "Split": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "axis", "children"],
+      "properties": {
+        "kind": { "const": "split" },
+        "axis": { "$ref": "#/$defs/Axis" },
+        "size": { "$ref": "#/$defs/Size" },
+        "children": { "type": "array", "minItems": 2, "items": { "$ref": "#/$defs/Panel" } }
+      }
+    },
+    "Panel": { "oneOf": [{ "$ref": "#/$defs/Stack" }, { "$ref": "#/$defs/Split" }] },
+    "WindowLayout": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["root"],
+      "properties": { "root": { "$ref": "#/$defs/Panel" } }
+    },
+    "DropZone": {
+      "oneOf": [
+        { "type": "object", "additionalProperties": false, "required": ["kind", "stackPath", "corner"], "properties": { "kind": { "const": "tab" }, "stackPath": { "$ref": "#/$defs/Path" }, "corner": { "$ref": "#/$defs/Corner" }, "index": { "type": "integer", "minimum": 0 } } },
+        { "type": "object", "additionalProperties": false, "required": ["kind", "stackPath", "side"], "properties": { "kind": { "const": "split" }, "stackPath": { "$ref": "#/$defs/Path" }, "side": { "$ref": "#/$defs/Side" } } },
+        { "type": "object", "additionalProperties": false, "required": ["kind", "side"], "properties": { "kind": { "const": "rootSplit" }, "side": { "$ref": "#/$defs/Side" } } }
+      ]
+    },
+    "Operation": {
+      "oneOf": [
+        { "type": "object", "additionalProperties": false, "required": ["op", "windowId"], "properties": { "op": { "const": "setActive" }, "windowId": { "$ref": "#/$defs/Id" } } },
+        { "type": "object", "additionalProperties": false, "required": ["op", "windowId"], "properties": { "op": { "const": "closeWindow" }, "windowId": { "$ref": "#/$defs/Id" } } },
+        { "type": "object", "additionalProperties": false, "required": ["op", "stackPath", "from", "to"], "properties": { "op": { "const": "reorderTab" }, "stackPath": { "$ref": "#/$defs/Path" }, "from": { "type": "integer", "minimum": 0 }, "to": { "type": "integer", "minimum": 0 } } },
+        { "type": "object", "additionalProperties": false, "required": ["op", "windowId", "corner"], "properties": { "op": { "const": "setCorner" }, "windowId": { "$ref": "#/$defs/Id" }, "corner": { "$ref": "#/$defs/Corner" } } },
+        { "type": "object", "additionalProperties": false, "required": ["op", "splitPath", "sizes"], "properties": { "op": { "const": "applySizes" }, "splitPath": { "$ref": "#/$defs/Path" }, "sizes": { "type": "array", "items": { "$ref": "#/$defs/Size" } } } },
+        { "type": "object", "additionalProperties": false, "required": ["op", "windowIds"], "properties": { "op": { "const": "reconcile" }, "windowIds": { "type": "array", "items": { "$ref": "#/$defs/Id" } } } },
+        { "type": "object", "additionalProperties": false, "required": ["op", "window", "zone"], "properties": { "op": { "const": "dropWindow" }, "window": { "$ref": "#/$defs/Window" }, "zone": { "$ref": "#/$defs/DropZone" } } },
+        { "type": "object", "additionalProperties": false, "required": ["op", "sourcePath", "zone"], "properties": { "op": { "const": "dropStack" }, "sourcePath": { "$ref": "#/$defs/Path" }, "zone": { "$ref": "#/$defs/DropZone" } } }
+      ]
+    }
+  },
+  "$ref": "#/$defs/WindowLayout"
+}

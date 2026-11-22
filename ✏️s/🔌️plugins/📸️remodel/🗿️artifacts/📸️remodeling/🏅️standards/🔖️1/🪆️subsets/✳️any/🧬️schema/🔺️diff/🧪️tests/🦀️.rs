@@ -1,12 +1,19 @@
 use semio_framework_value::{
-    retained_clone::RetainedCloneGrant,
+    retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep},
     retirement::{controlled::ControlledRetirement, RetireOwned},
-    RetirementDemand,
+    OriginalRetirementFailure, RetirementDemand,
 };
 use semio_framework_value_clone_source_testing::drive::drive;
 
 pub(super) fn grant(demand: RetirementDemand) -> RetainedCloneGrant {
     RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth }
+}
+
+pub(super) fn receipt(result: &Result<RetainedCloneStep, OriginalRetirementFailure>) -> RetainedCloneProgress {
+    match result {
+        Ok(step) => step.progress(),
+        Err(error) => error.retained_progress(),
+    }
 }
 
 pub(super) fn retire<T: RetireOwned>(value: T) {

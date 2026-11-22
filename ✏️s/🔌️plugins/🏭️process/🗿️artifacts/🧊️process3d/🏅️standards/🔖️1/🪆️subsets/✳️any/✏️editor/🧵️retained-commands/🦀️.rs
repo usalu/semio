@@ -19,12 +19,14 @@ pub(crate) const PROCESS3D_BOUNDED_TOOL_IDS: &[&str] = &[
     "setSnapshot",
     "setActiveExample",
     "addStep",
+    "placeCapability",
     "addWorkshopMachine",
     "removeWorkshopMachine",
     "updateWorkshopMachine",
     "removeStep",
     "removeSelectedStep",
     "moveStep",
+    "dropStep",
     "updateStep",
     "setStepEnabled",
     "setStock",
@@ -146,6 +148,10 @@ pub(super) fn process3d_retained_reduce(
     let cfg = ConfigView { snapshot: config, window: None };
     let selection = interaction.selection.get(PROCESS3D_INTERACTION_DOMAIN);
     let mut ctx = Process3dDispatchCtx { interaction: Process3dInteractionSnapshot { ids: selection.map(|selection| selection.ids.clone()).unwrap_or_default() }, view_state: context.and_then(|context| context.view_state.as_deref().cloned()) };
+    if let Process3dCommand::WorldPointerDown(payload) = command {
+        let hover = placement_hover::from_snapshot(context.and_then(|context| context.window_transient.as_ref()));
+        return world_pointer_down::handle_placement(payload, &doc, &cfg, &ctx, hover.capability());
+    }
     command.dispatch(&doc, &cfg, &mut ctx)
 }
 
@@ -342,6 +348,7 @@ impl ArtifactOwnedToolJobFactory for Process3dBoundedCommandJobFactory {
         semio_plugin::ArtifactToolPublicationContract { tool_id: "loadModelRequest", lanes: &[semio_plugin::ArtifactToolPublicationLane::HostOnly] },
         semio_plugin::ArtifactToolPublicationContract { tool_id: "setSnapshot", lanes: &[semio_plugin::ArtifactToolPublicationLane::HostOnly] },
         semio_plugin::ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[semio_plugin::ArtifactToolPublicationLane::HostOnly] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "placeCapability", lanes: &[semio_plugin::ArtifactToolPublicationLane::WindowTransient] },
         semio_plugin::ArtifactToolPublicationContract { tool_id: "addStep", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact, semio_plugin::ArtifactToolPublicationLane::Config] },
         semio_plugin::ArtifactToolPublicationContract { tool_id: "addWorkshopMachine", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
         semio_plugin::ArtifactToolPublicationContract { tool_id: "removeWorkshopMachine", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
@@ -349,6 +356,7 @@ impl ArtifactOwnedToolJobFactory for Process3dBoundedCommandJobFactory {
         semio_plugin::ArtifactToolPublicationContract { tool_id: "removeStep", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact, semio_plugin::ArtifactToolPublicationLane::Config] },
         semio_plugin::ArtifactToolPublicationContract { tool_id: "removeSelectedStep", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact, semio_plugin::ArtifactToolPublicationLane::Config] },
         semio_plugin::ArtifactToolPublicationContract { tool_id: "moveStep", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "dropStep", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
         semio_plugin::ArtifactToolPublicationContract { tool_id: "updateStep", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
         semio_plugin::ArtifactToolPublicationContract { tool_id: "setStepEnabled", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
         semio_plugin::ArtifactToolPublicationContract { tool_id: "setStock", lanes: &[semio_plugin::ArtifactToolPublicationLane::HostOnly] },

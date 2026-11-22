@@ -116,3 +116,21 @@ During the renewed capture, the Store replay compile paused before spawning rust
 The renewed replay advanced through the compiler FIFO and exited 101 in the document media crate before XLSX execution. The compiled Pack cursor lacked `next_intrinsic_advance_work_demand`. The cursor and its caller were written 1 ms apart at 15:02:16 UTC, after the renewed compilation had already started, and the live signatures match. The exact Base selection restarted as `xlsx-history-preview-media-retry`.
 
 The media retry cleared the Pack cursor dependency and later exited 101 before XLSX execution when the compiled ViewModel lacked `scope_window_instance`. The live ViewModel provider and both render call sites already agree and were written 8 milliseconds apart after compilation began. The exact Base selection restarted as `xlsx-history-preview-view-retry`. See [the source capture audit](native-source-snapshot.md).
+
+### Native Test Code Generation and Storage Recovery
+
+The ViewModel retry compiled the revised Store and render dependencies and reached code generation for the XLSX Base test crate. LLVM refused to write its output when the 40 GiB compiler image reached zero free bytes. The repository's automatic collection reclaimed zero during the failed run and its built-in retry also exited 101. After that process exited, the mounted compiler image reported approximately 20 GiB of free space and the cache ledger reported nothing eligible for collection. The repository's managed image regrow requires less than 6 GiB free and exclusive image custody. The exact three-case Base selection restarted as `xlsx-history-native-after-space` without overriding either limit.
+
+The first replay after storage recovered advanced through Cargo admission, then stopped before XLSX execution in Store replay. Its previously compiled `HistoryFoldJob` did not have `ORIGINAL_STEP_WORK`. The current provider and caller agree. Their writes were 13 ms apart at 18:19:13 UTC, after the build began. The exact selector restarted as `xlsx-history-native-after-fold`.
+
+### Original history fold Work
+
+The mounted original fold's receiving loan previously covered the 4,096-unit body while the native invocation additionally reserved one unit for its reply handoff. The native supersession path supplied exactly the quoted amount and could therefore return Pending before entering the fold on every turn. Archive hydration also capped each fold to half of the available turn. Both callers now use the same exact quote from the fold owner. The body remains bounded at 4,096 units and the quote includes the already-defined native invocation cost.
+
+The two focused Bun laws and the independent SQLite oracle agree on Work admission at 4,096 and 4,097 and on successful cleanup and original-cause receipt placement. The pinned Rust parser accepted the three touched Rust sources. The full hydration-source-birth Bun route had 10 passes and 12 failures, including 11 existing source-text assertions and one direct rustfmt lookup on that route. The normal mounted Rust results remain pending.
+
+```sh
+repo cargo --store=shared --configuration=prototype -- test -p semio-framework-replication-history --lib actual_rejection_takes_the_same_cause_only_after_closed_control_and_qualified_receiving
+repo cargo --store=shared --configuration=prototype -- test -p semio-plugin-tests-18 --lib codec_owner_selects_the_most_general_dialect_of_each_role
+repo cargo --store=shared --configuration=prototype -- test -p semio-hub-trusted-catalog-laws --lib the_most_general_dialect_rule_answers_the_shared_fixture
+```

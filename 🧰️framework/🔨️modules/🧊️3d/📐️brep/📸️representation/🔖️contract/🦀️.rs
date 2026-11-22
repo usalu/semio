@@ -372,7 +372,7 @@ pub const BREP_KERNEL_OPERATIONS: &[&str] = &[
 
 /// 📊️ `(method name, quality)` table reflecting the CURRENT engine implementation (audit
 /// `📓️explore-engine-handles-primitives.md` §3, ticket 26/09/03/BREP-KERNEL-DEPENDENCY-FREE-RUNTIME):
-/// patterns/defeature/split/mesh-format IO still tessellate-and-rebuild from a triangle soup
+/// patterns/split/mesh-format IO still tessellate-and-rebuild from a triangle soup
 /// (`MeshDerivedBRep`); primitives/wires/curves/planar-face construction/evaluation/STEP IO/
 /// topology bookkeeping stay on the exact analytic supports (`ExactAnalytic`); mass properties,
 /// point classification, booleans, sweeps with an arbitrary-curvature path, blends and offsets
@@ -462,7 +462,7 @@ const OPERATION_QUALITY: &[(&str, OpQuality)] = &[
     ("shell", OpQuality::ExactNumericalWithinTolerance),
     ("draft", OpQuality::ExactNumericalWithinTolerance),
     ("offset_solid", OpQuality::ExactNumericalWithinTolerance),
-    ("defeature", OpQuality::MeshDerivedBRep),
+    ("defeature", OpQuality::ExactAnalytic),
     ("section", OpQuality::ExactAnalytic),
     ("split", OpQuality::MeshDerivedBRep),
     ("curve_curve_intersect", OpQuality::ExactNumericalWithinTolerance),

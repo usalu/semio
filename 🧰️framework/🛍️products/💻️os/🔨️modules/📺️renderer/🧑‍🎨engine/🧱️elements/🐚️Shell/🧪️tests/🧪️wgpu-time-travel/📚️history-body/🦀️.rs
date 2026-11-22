@@ -19,10 +19,11 @@ fn publish_history_body(current: &mut Option<semio_ui_runtime::SurfaceReconciler
             semio_framework_job::default_now_us, &mut sequence,
             &mut context_retained,
         );
-        match job.drive_one(&mut context) {
-            SurfaceReconcileJobStep::Ready => break,
-            SurfaceReconcileJobStep::Fault => panic!("history producer refused: {:?}", job.fault()),
-            SurfaceReconcileJobStep::MoreWork => {}
+        match job.drive_one(generation, &mut context) {
+            Ok(SurfaceReconcileJobStep::Ready) => break,
+            Ok(SurfaceReconcileJobStep::Fault) => panic!("history producer refused: {:?}", job.fault()),
+            Ok(SurfaceReconcileJobStep::MoreWork) => {}
+            Err(failure) => panic!("history producer turn failed: {failure:?}"),
         }
     }
     let mut patch = None;
@@ -177,7 +178,7 @@ fn wheel_history_window_into_view(shell: &mut ShellState, surface: &str, documen
 }
 
 /// 🖱️ Activates one History mirror node the way the ARIA mirror's click does; answers what it dispatched.
-fn activate_history_mirror_node(shell: &mut ShellState, key: &str) -> Vec<ActionDescriptor> {
+fn activate_history_mirror_node(mut shell: &mut ShellState, key: &str) -> Vec<ActionDescriptor> {
     let node = history_mirror_node(key).unwrap_or_else(|| panic!("`{key}` is in the mirror"));
     let target = semio_renderer_wgpu_ui_engine_dump::chrome_ledger::published_accessibility_target_for_test(FRAMEWORK_PANEL_TAB_HISTORY_ID, &node.key).expect("a mirror node is an accessibility target");
     let mut input = InputState::<ActionDescriptor>::default();

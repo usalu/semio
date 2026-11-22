@@ -14,9 +14,9 @@ use super::*;
 // job (`WorldAssetRequestKind::UiImage`), and until that host resolves it the placeholder chrome
 // below is what shows — unchanged from before this region existed.
 //
-// 🚫️ JPEG is deliberately NOT decoded here. `semio-framework-pixels` is PNG-only, and AGENTS.md
-// forbids a third-party runtime codec; a `data:image/jpeg` source therefore stays on the host path
-// exactly like a URL does, and answers [`UiImageAdmission::Unsupported`] so a caller can say so.
+// 🗜️ PNG and JPEG `data:` sources decode through the in-repo `semio-framework-pixels` decoders (the
+// same `decode_encoded_blocking` the os renderer's scene-host image path uses), so no third-party
+// codec enters the runtime graph. Any other media type answers [`UiImageAdmission::Unsupported`].
 
 /// 🖼️ The largest encoded `src` payload this registry will even look at — the same ceiling the os
 /// renderer's own `RETAINED_UI_IMAGE_SOURCE_BYTES` carries for a retained image source.
@@ -40,7 +40,7 @@ pub enum UiImageAdmission {
     /// 🌐️ Not decodable in-process (a URL, or a `data:` payload in a codec this crate does not own):
     /// the host asset pipeline owns it.
     Deferred,
-    /// 🚫️ A `data:` URL this crate recognises the shape of but cannot decode — `image/jpeg` today.
+    /// 🚫️ A `data:` URL this crate recognises the shape of but owns no decoder for (anything but PNG and JPEG).
     Unsupported,
     /// ⚠️ Malformed source, over-large payload, or a full ledger.
     Refused,
@@ -85,7 +85,7 @@ pub fn admit_ui_image(src: &str) -> UiImageAdmission {
         return UiImageAdmission::Unsupported;
     }
     let Some((media, payload)) = split_data_url(src) else { return UiImageAdmission::Deferred };
-    if !media.starts_with("image/png") {
+    if !(media.starts_with("image/png") || media.starts_with("image/jpeg")) {
         ui_image_ledger(|ledger| ledger.unsupported.push(src.to_string()));
         return UiImageAdmission::Unsupported;
     }
@@ -93,7 +93,8 @@ pub fn admit_ui_image(src: &str) -> UiImageAdmission {
         return UiImageAdmission::Refused;
     }
     let Some(bytes) = payload else { return UiImageAdmission::Refused };
-    let Ok(image) = semio_framework_pixels::decode_png(&bytes) else { return UiImageAdmission::Refused };
+    let Ok(decoded) = semio_framework_pixels::image_decoding::decode_encoded_blocking(bytes, semio_framework_pixels::image_decoding::EncodedDecodeLimits::MAXIMUM, &|| false) else { return UiImageAdmission::Refused };
+    let image = decoded.image;
     if image.width == 0 || image.height == 0 || image.width > UI_IMAGE_MAX_DIMENSION || image.height > UI_IMAGE_MAX_DIMENSION {
         return UiImageAdmission::Refused;
     }
@@ -249,7 +250,7 @@ pub fn skeleton_kind(node: &UiNode) -> SkeletonKind {
         UiNode::Ring(_) => SkeletonKind::Ring,
         UiNode::Field(_) => SkeletonKind::Field,
         UiNode::Section(_) | UiNode::Group(_) | UiNode::OverviewCard(_) => SkeletonKind::Panel,
-        UiNode::KeyValue(_) | UiNode::Tree(_) => SkeletonKind::Rows,
+        UiNode::KeyValue(_) | UiNode::Tree(_) | UiNode::Table(_) => SkeletonKind::Rows,
         UiNode::Stack(_) | UiNode::CardStack(_) | UiNode::ComponentScene(_) | UiNode::ExternalSlot(_) => SkeletonKind::Fill,
         UiNode::Slider(_) => SkeletonKind::Line,
         UiNode::Button(_) | UiNode::Input(_) | UiNode::Select(_) | UiNode::Toggle(_) | UiNode::NumberStepper(_) | UiNode::IconSelect(_) => SkeletonKind::Control,
@@ -347,46 +348,51 @@ pub(super) fn retained_skeleton_step(node: &UiNode, bounds: Rect, theme: &Theme,
 // glass panel + hairline every floating surface sits on. `engine::Ui` paints these into the overlay
 // layer AFTER the document pass, which is what actually puts an overlay above panel content.
 
-/// 🌫️ React's modal scrim alpha (`--veil-alpha` over the dialog level's own surface).
-pub const OVERLAY_BACKDROP_ALPHA: f32 = 0.55;
-
-/// 🎨️ Fills the whole viewport behind a modal overlay.
-pub fn paint_overlay_backdrop(draw: &mut DrawList, viewport: Rect, theme: &Theme) {
-    draw.push_solid_overlay([viewport.x, viewport.y, viewport.w, viewport.h], theme.background.with_alpha(OVERLAY_BACKDROP_ALPHA));
+/// 🪜️ The elevation level a floating surface sits on: React mounts a modal (`Dialog`/`CommandPalette`) on `data-level="dialog"` and every other portalled surface (`Popover`, `ChromeControlHint`) on `data-level="menu"`.
+pub fn overlay_surface_level(backdrop: bool) -> Level {
+    if backdrop {
+        Level::Dialog
+    } else {
+        Level::Menu
+    }
 }
 
-/// 🪟️ The floating surface itself: a `Level::Menu` fill, hairline border and drop shade, drawn into
-/// the overlay layer so it composites over every panel painted this frame.
-pub fn paint_overlay_surface(draw: &mut DrawList, bounds: Rect, theme: &Theme) {
-    draw.push_solid_overlay([bounds.x + 1.0, bounds.y + 2.0, bounds.w, bounds.h], theme.overlay_shadow);
-    draw.push_solid_overlay([bounds.x, bounds.y, bounds.w, bounds.h], theme.surface(Level::Menu));
+/// 🌫️ Fills the whole viewport behind a modal overlay as `ui-veil`: the dialog level's surface at `veilAlpha` over a `veilBlurPx` backdrop blur, never a hardcoded alpha.
+pub fn paint_overlay_backdrop(draw: &mut DrawList, viewport: Rect, theme: &Theme) -> usize {
+    draw.push_glass([viewport.x, viewport.y, viewport.w, viewport.h], 0.0, theme.veil_glass(Level::Dialog))
+}
+
+/// 🪟️ The floating surface itself as `ui-glass` at `level` with its hairline border; the returned glass region stays open as glass content, so the caller paints its content and then calls [`DrawList::end_glass_content`]. React's `--shadow-lg` is `0 0 transparent`, so there is no drop shade.
+pub fn paint_overlay_surface(draw: &mut DrawList, bounds: Rect, theme: &Theme, level: Level) -> usize {
+    let region = draw.push_glass([bounds.x, bounds.y, bounds.w, bounds.h], 0.0, theme.glass(level));
+    draw.begin_glass_content(region);
     push_chrome_border(draw, bounds, theme.stroke_hairline, theme.border_normal, true, true, true, true, semio_ui_draw_contract::SharedBorderState::Normal);
+    region
 }
 
-/// 🎟️ How many quads one overlay's chrome step may emit: a backdrop, a drop shade, the surface
-/// fill, and the four hairline border edges, with slack.
+/// 🎟️ How many quads one overlay's chrome step may emit: a veil, a glass surface, the content brackets and the four hairline border edges, with slack.
 pub const RETAINED_OVERLAY_CHROME_ITEMS: usize = 16;
 
-/// 🔓️ One open overlay's chrome as ONE retained step — the modal backdrop (when its kind has one)
-/// and the floating surface it sits on, both into the overlay bucket so they composite above every
-/// panel this frame painted. `false` means the step overran its own retained grant, which the frame
-/// ladder turns into a fault exactly like any other retained output refusal.
-///
-/// This is the production seam `Ui::frame_step`'s `RetainedPaintPhase::Overlays` drives; before
-/// ticket 26/09/17 packet W15a the two painters below were reachable only from the `🪟️OverlayApi`
-/// façade, which no host ever called, so an open `Dialog`/`Popover` painted its content with no
-/// surface under it (W1n gap 3).
-pub fn retained_overlay_chrome_step(draw: &mut DrawList, viewport: Rect, bounds: Rect, backdrop: bool, theme: &Theme) -> bool {
-    if draw.begin_retained_output(RETAINED_OVERLAY_CHROME_ITEMS, RETAINED_NODE_FIXED_OUTPUT_BYTES).is_err() {
-        return false;
-    }
+/// 🔓️ One open overlay's chrome as ONE retained step — the modal veil (when its kind has one) and the glass surface it sits on. The surface's glass region is answered so the overlay's own content can be painted as that region's foreground, which is what keeps the translucent surface from tinting the content it exists to carry. `Err` means the step overran its own retained grant, which the frame ladder turns into a fault exactly like any other retained output refusal.
+pub fn retained_overlay_chrome_step(draw: &mut DrawList, viewport: Rect, bounds: Rect, backdrop: bool, theme: &Theme) -> Result<Option<usize>, semio_ui_draw_contract::RetainedOutputError> {
+    draw.begin_retained_output(RETAINED_OVERLAY_CHROME_ITEMS, RETAINED_NODE_FIXED_OUTPUT_BYTES)?;
     if backdrop {
         paint_overlay_backdrop(draw, viewport, theme);
     }
-    if bounds.w > 0.0 && bounds.h > 0.0 {
-        paint_overlay_surface(draw, bounds, theme);
+    let region = (bounds.w > 0.0 && bounds.h > 0.0).then(|| {
+        let region = paint_overlay_surface(draw, bounds, theme, overlay_surface_level(backdrop));
+        draw.end_glass_content();
+        region
+    });
+    draw.finish_retained_output().map(|_| region)
+}
+
+/// 📜️ One scroll host's thumb as ONE retained step: React's `::-webkit-scrollbar-thumb` is `--scrollbar-thumb` (the border colour) while the host is hovered and `--scrollbar-thumb-hover` (the muted foreground) under the pointer or while dragged, square, on a transparent track. Drawn into the overlay bucket so it rides above the host's content.
+pub fn retained_scrollbar_step(draw: &mut DrawList, thumb: Rect, hot: bool, theme: &Theme) -> bool {
+    draw.begin_retained_output(1, RETAINED_NODE_FIXED_OUTPUT_BYTES).is_ok() && {
+        draw.push_solid_overlay([thumb.x, thumb.y, thumb.w, thumb.h], if hot { theme.text_muted } else { theme.border_normal });
+        draw.finish_retained_output().is_ok()
     }
-    draw.finish_retained_output().is_ok()
 }
 
 /// 💡️ A hover tooltip's own surface size for `label`, measured the way the popup will draw it —
@@ -400,8 +406,9 @@ pub fn tooltip_surface_size(label: &str, theme: &Theme, atlas: &mut FontAtlas) -
 pub fn paint_tooltip(draw: &mut DrawList, atlas: &mut FontAtlas, label: &str, origin: (f32, f32), theme: &Theme) {
     let (width, height) = tooltip_surface_size(label, theme, atlas);
     let bounds = Rect::new(origin.0, origin.1, width, height);
-    paint_overlay_surface(draw, bounds, theme);
+    paint_overlay_surface(draw, bounds, theme, Level::Menu);
     draw_text_on(draw, atlas, label, bounds.x + theme.padding_standard, bounds.y + theme.padding_standard + theme.font_size_small, theme.font_size_small, theme.text);
+    draw.end_glass_content();
 }
 //#endregion 🪟️OverlayChrome
 // #endregion paint

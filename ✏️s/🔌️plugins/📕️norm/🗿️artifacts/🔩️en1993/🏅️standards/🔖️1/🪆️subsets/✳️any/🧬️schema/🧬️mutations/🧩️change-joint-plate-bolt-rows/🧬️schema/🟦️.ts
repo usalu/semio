@@ -8,4 +8,4 @@ export interface ChangeJointPlateBoltRows {
   newBoltRows: number;
 }
 
-export const parseChangeJointPlateBoltRows: NormWireReader<ChangeJointPlateBoltRows> = normWireObject<ChangeJointPlateBoltRows>({ id: normWireRequired(normWireString), newBoltRows: normWireRequired(normWireRange(normWireInteger, {"minimum":0})) });
+export const parseChangeJointPlateBoltRows: NormWireReader<ChangeJointPlateBoltRows> = normWireObject<ChangeJointPlateBoltRows>({ id: normWireRequired(normWireString), newBoltRows: normWireRequired(normWireRange(normWireInteger, {"minimum":0,"maximum":4294967295})) });

@@ -1,4 +1,4 @@
-/** 📐️ Ruling E1 helper: per bone, the orthographic outline of that bone's body solids in `presentation.defaultPose`, simplified for the scale (closing and opening by a quarter of the smallest feature, Douglas-Peucker at a quarter of the smallest feature, nothing smaller than one feature squared), expressed in the coordinate frame of the 2D shapes of that view and printed as paste-ready shape JSON.
+/** 📐️ Ruling E1 helper: per bone, the orthographic outline of that bone's body solids in `presentation.defaultPose`, simplified for the scale (closing and opening by a quarter of the smallest feature, Douglas-Peucker at a quarter of the smallest feature or finer on small parts, nothing smaller than one feature squared unless it is part of a larger body; see `outline`), expressed in the coordinate frame of the 2D shapes of that view and printed as paste-ready shape JSON.
  *
  * The frame is not re-derived: the product's own `evaluate` is the forward map (a probe shape with the id, bone and members of the shape to be replaced is placed by it), and the outline is solved through that map (Newton steps with the probe's Jacobian), so depth twins, rest-to-pose carry and the elevation's 2D bone matrix are exactly the product's. Every bone is proven by a round trip: the printed shape is placed by `evaluate` again and compared with the bone's projected solids (IoU, and the largest distance of a placed point from its target).
  *
@@ -128,8 +128,58 @@ export function contours(cells: Uint8Array, width: number, height: number, box: 
 
 type Group = { outer: Ring; holes: Ring[] };
 
-/** ✂️ The clean outline groups of a mask: closing then opening by `steps` cells, traced, simplified within `tolerance`, rings under `minArea` dropped, holes attached to their outer ring, largest first. */
-function outline(mask: Mask, steps: number, tolerance: number, minArea: number): { groups: Group[]; opened: boolean } {
+/** 🏝️ The 8-connected islands of the set cells: `label[i]` is the island of cell i (-1 where empty), `sizes[k]` its number of cells. */
+function islands(cells: Uint8Array, width: number, height: number): { label: Int32Array; sizes: number[] } {
+  const label = new Int32Array(cells.length).fill(-1);
+  const sizes: number[] = [];
+  const stack: number[] = [];
+  for (let start = 0; start < cells.length; start++) {
+    if (cells[start] !== 1 || label[start] !== -1) continue;
+    const k = sizes.length;
+    let n = 0;
+    label[start] = k;
+    stack.push(start);
+    while (stack.length > 0) {
+      const i = stack.pop()!;
+      n++;
+      const [x, y] = [i % width, Math.floor(i / width)];
+      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+        const [u, v] = [x + dx, y + dy];
+        if (u < 0 || v < 0 || u >= width || v >= height) continue;
+        const j = v * width + u;
+        if (cells[j] === 1 && label[j] === -1) {
+          label[j] = k;
+          stack.push(j);
+        }
+      }
+    }
+    sizes.push(n);
+  }
+  return { label, sizes };
+}
+
+/** 🧍️ The whole body of the view as the part test of {@link outline}: the union of all its solids, closed by `steps` cells so that touching parts are one island; `areaAt(p)` is the area of the island at a paper point (0 outside the body). */
+function bodyIslands(view: View, list: readonly SolidMesh[], cell: number, steps: number, section?: number): (p: P2) => number {
+  const mask = projectMask(view, list, cell, 2 * steps + 4, section);
+  if (mask === null) return () => 0;
+  const { width, height, box } = mask;
+  const { label, sizes } = islands(grow(grow(mask.cells, width, height, steps, 1), width, height, steps, 0), width, height);
+  return (p) => {
+    const [x, y] = [Math.floor((p.x - box.minX) / cell), Math.floor((p.y - box.minY) / cell)];
+    let most = 0;
+    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+      const [u, v] = [x + dx, y + dy];
+      if (u >= 0 && v >= 0 && u < width && v < height && label[v * width + u]! >= 0) most = Math.max(most, sizes[label[v * width + u]!]!);
+    }
+    return most * cell * cell;
+  };
+}
+
+/** 🎯️ The share of its traced area a simplified ring must keep (intersection over union); a ring that loses more at the given tolerance is simplified within half of it, and so on down to half a raster cell. */
+const PART_IOU = 0.95;
+
+/** ✂️ The clean outline groups of a mask: closing then opening by `steps` cells, traced, simplified within `tolerance` or finer where a part is so small that the tolerance costs more than {@link PART_IOU} allows or collapses it to a line, holes attached to their outer ring, largest first. The cleaning removes spurs and specks, never a part the product compares: a piece the opening took away is put back when it covers a quarter of `minArea` or more (a limb thinner than twice the opening is a part, not a spur), and an outer ring under `minArea` is dropped only when the island of the whole body it lies in (`bodyAreaAt`) is under `minArea` too; `kept` counts the outer rings kept by that second test. */
+function outline(mask: Mask, steps: number, tolerance: number, minArea: number, bodyAreaAt: (p: P2) => number): { groups: Group[]; opened: boolean; kept: number } {
   const { width, height } = mask;
   const closed = grow(grow(mask.cells, width, height, steps, 1), width, height, steps, 0);
   let cells = grow(grow(closed, width, height, steps, 0), width, height, steps, 1);
@@ -137,13 +187,45 @@ function outline(mask: Mask, steps: number, tolerance: number, minArea: number):
   if (!cells.some((c) => c === 1)) {
     cells = closed;
     opened = false;
+  } else {
+    const lost = closed.map((c, i) => (c === 1 && cells[i] === 0 ? 1 : 0));
+    const { label, sizes } = islands(lost, width, height);
+    for (let i = 0; i < lost.length; i++) if (lost[i] === 1 && sizes[label[i]!]! * mask.cell * mask.cell >= minArea / 4) cells[i] = 1;
   }
-  const rings = contours(cells, width, height, mask.box, mask.cell).map((r) => simplifyRing(r, tolerance)).filter((r) => r.length >= 3 && Math.abs(area(r)) >= minArea);
   const signed = (r: Ring): number => r.reduce((n, p, i) => n + p.x * r[(i + 1) % r.length]!.y - r[(i + 1) % r.length]!.x * p.y, 0) / 2;
+  const inBody = (r: Ring): boolean => {
+    if (signed(r) <= 0) return false;
+    for (let i = 0; i < cells.length; i++) {
+      if (cells[i] !== 1) continue;
+      const p = { x: mask.box.minX + ((i % width) + 0.5) * mask.cell, y: mask.box.minY + (Math.floor(i / width) + 0.5) * mask.cell };
+      if (pointInRing(p, r)) return bodyAreaAt(p) >= minArea;
+    }
+    return false;
+  };
+  let kept = 0;
+  const fit = (r: Ring): Ring => {
+    const traced = new Mask(mask.box, mask.cell);
+    traced.fill([r]);
+    for (let within = tolerance; ; within /= 2) {
+      const s = simplifyRing(r, within);
+      if (within < mask.cell / 2) return s;
+      if (s.length > 4 && s.length >= r.length - 1) continue;
+      const drawn = new Mask(mask.box, mask.cell);
+      drawn.fill([s]);
+      if (iou(traced, drawn) >= PART_IOU) return s;
+    }
+  };
+  const rings = contours(cells, width, height, mask.box, mask.cell).map(fit).filter((r) => {
+    if (r.length < 3) return false;
+    if (Math.abs(area(r)) >= minArea) return true;
+    if (!inBody(r)) return false;
+    kept++;
+    return true;
+  });
   const groups: Group[] = rings.filter((r) => signed(r) > 0).sort((a, b) => signed(b) - signed(a)).map((outer) => ({ outer, holes: [] }));
   for (const hole of rings.filter((r) => signed(r) < 0)) groups.filter((g) => pointInRing(hole[0]!, g.outer)).sort((a, b) => signed(a.outer) - signed(b.outer))[0]?.holes.push(hole);
-  if (groups.length === 0 && rings.length > 0) return { groups: [{ outer: [...rings[0]!].reverse(), holes: [] }], opened };
-  return { groups, opened };
+  if (groups.length === 0 && rings.length > 0) return { groups: [{ outer: [...rings[0]!].reverse(), holes: [] }], opened, kept };
+  return { groups, opened, kept };
 }
 
 const metaOf = (shape: Json): Json => Object.fromEntries(META.filter((k) => shape[k] !== undefined).map((k) => [k, shape[k]]));
@@ -232,6 +314,7 @@ if (import.meta.main) {
   const fillable = (s: Json): boolean => DRAWN_ROLES.has(s.role) && s.kind !== "member" && s.filled !== false && !(s.kind === "poly" && s.closed === false);
   const generated = (s: Json): boolean => s.solid !== undefined && view !== "elevation";
   const keepsSolid = (s: Json): boolean => view === "elevation" && s.solid?.kind === "extruded" && s.solid.sweep === "w" && Math.abs(rig.frames[s.bone]?.w[2] ?? 0) > 0.9999;
+  const bodyAreaAt = bodyIslands(view, sm.solids.body.flatMap((s, i) => (s.texture === true || s.slender === true ? [] : [sm.body[i]!])), cell, steps, section);
   const bones: string[] = (asset.rig.bones as Json[]).map((b) => b.id).filter((id) => flag("--bone") === undefined || id === flag("--bone"));
   type Entry = { bone: string; solids: string[]; slender: string[]; target: Json | null; targetIndex: number; raw: Mask; groups: Group[]; notes: string[]; shapes: Json[]; iou?: number; residualM?: number };
   const entries: Entry[] = [];
@@ -256,10 +339,11 @@ if (import.meta.main) {
     for (const [k, solid] of sets) {
       const raw = projectMask(view, solid.map(({ i }) => sm.body[i]!), cell, 2 * steps + 4, section);
       if (raw === null) continue;
-      const { groups, opened } = outline(raw, steps, f / 4, f * f);
+      const { groups, opened, kept } = outline(raw, steps, f / 4, f * f, bodyAreaAt);
       const notes: string[] = [];
       if (!opened) notes.push("thinner than half a feature in this view: outline kept without the sliver removal; consider a stroke instead of a filled shape");
-      if (groups.length === 0) notes.push("smaller than one feature squared in this view: nothing to draw as a filled shape");
+      if (groups.length === 0) notes.push("smaller than one feature squared in this view and not part of a larger body: nothing to draw as a filled shape");
+      if (kept > 0) notes.push(`${kept} outline(s) under one feature squared kept: part of the body silhouette the product compares`);
       const target = k < 0 ? null : drawnShapes[k]!;
       if (target === null) notes.push("no filled closed body, detail or glazing shape of this bone in this view: the shape below is new (choose id, z, tone, region; its frame is that of a shape without an elevation twin)");
       else {

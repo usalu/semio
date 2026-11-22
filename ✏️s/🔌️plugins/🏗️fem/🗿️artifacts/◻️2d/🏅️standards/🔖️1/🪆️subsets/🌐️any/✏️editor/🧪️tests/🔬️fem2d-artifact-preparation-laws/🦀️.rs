@@ -1,5 +1,13 @@
 use super::*;
 use semio_framework_value::retained_clone::RetainedCloneStep;
+use semio_framework_value_clone_source_testing::drive::{drive, warm};
+
+const CLOSE_WORK: u64 = 1 << 20;
+
+fn close(work: &mut Fem2dArtifactPreparation, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> semio_framework_value::RetainedWorkOutcome<RetainedCloneStep, semio_framework_value::OriginalRetirementFailure> {
+    warm();
+    drive(grant.retained_grant(), CLOSE_WORK, |effect| work.close_step(effect))
+}
 use semio_framework_value::OwnedValueRetirementFactory;
 use semio_framework_value::SharedValueRetirementFactory;
 use store::os_store::one_item_publication::ArtifactStoreOneItemPreparation;
@@ -14,7 +22,7 @@ fn admitted_document_mutations_make_bounded_progress_and_retire() {
     let mutation = Fem2dMutation::CreateNode(semio_s_artifact_fem_2d_mesh_topology::standards::v1::subsets::any::schema::mutations::create_node::CreateNode { node: semio_s_fem_node::planar::FemNodeValue { id, x: 0.0, y: 0.0 }, index: None });
     assert_eq!(factory.preflight(&mutation, store::os_store::store_schema::HistoryLane::Document).expect("document admission").work_items, store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_INVERTIBLE_WORK_ITEMS);
     let owners = store::OneItemOwners::detached(mutation, std::sync::Arc::new(OwnedValueRetirementFactory::<Fem2dMutation>::default()), std::sync::Arc::new(SharedValueRetirementFactory::<Fem2dSnapshot>::default()));
-    let mut work = Fem2dArtifactPreparation { owners, checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint::default(), cancelled: false };
+    let mut work = Fem2dArtifactPreparation { owners, checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint::default(), cancelled: false, last_work: 0 };
     let mut allow = |_| true;
     let mut receiving = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(65536, &mut allow);
     let policy = store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 65536, maximum_capacity_bytes: 1048576, maximum_release_bytes: 1048576, maximum_depth: 64 };
@@ -23,7 +31,7 @@ fn admitted_document_mutations_make_bounded_progress_and_retire() {
     assert!(matches!(work.advance(0, policy, &mut receiving), Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked)));
     work.begin_close();
     for grant in [store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 0, ..policy }, store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_capacity_bytes: 0, ..policy }, store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_depth: 0, ..policy }] {
-        let result = work.close_step(grant);
+        let result = close(&mut work, grant).result;
         assert!(result.is_err() || result.as_ref().is_ok_and(|step| step.progress() == Default::default()));
         let Some(Fem2dMutation::CreateNode(value)) = work.owners.mutation.as_ref() else { panic!("denial moved the original mutation") };
         assert_eq!(value.node.id.as_ptr(), pointer);
@@ -34,7 +42,7 @@ fn admitted_document_mutations_make_bounded_progress_and_retire() {
     let mut allocated = 0;
     let mut released = 0;
     for _ in 0..4096 {
-        let step = work.close_step(policy).expect("original immutable policy funds each bounded child");
+        let step = close(&mut work, policy).result.expect("original immutable policy funds each bounded child");
         assert!(step.progress().fits(policy.retained_grant()));
         allocated += step.progress().retained_capacity_bytes;
         released += step.progress().released_bytes;
@@ -44,5 +52,5 @@ fn admitted_document_mutations_make_bounded_progress_and_retire() {
     }
     assert!(work.terminal_is_empty());
     assert_eq!(released, allocated + capacity);
-    assert!(matches!(work.close_step(policy), Ok(RetainedCloneStep::Complete(progress)) if progress == Default::default()));
+    assert!(matches!(close(&mut work, policy).result, Ok(RetainedCloneStep::Complete(progress)) if progress == Default::default()));
 }

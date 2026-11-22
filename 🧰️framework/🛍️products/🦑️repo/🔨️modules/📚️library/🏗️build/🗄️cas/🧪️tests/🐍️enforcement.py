@@ -9,7 +9,7 @@ def decide(policy,case):
         if used>=p["highUsedFraction"] and not collected:return ["collect-background","partition-high"]
     if store is None:return ["measure","unknown-usage"]
     held=store+incoming
-    if held>policy["capBytes"] and not collected:return ["collect-now","cap-exceeded"]
+    if held>policy["capBytes"] and not collected:return ["collect-now" if part is None else "collect-background","cap-exceeded"]
     if held>policy["capBytes"]*policy["highWatermark"] and not collected:return ["collect-background","cap-high"]
     return ["allow","fits"]
 

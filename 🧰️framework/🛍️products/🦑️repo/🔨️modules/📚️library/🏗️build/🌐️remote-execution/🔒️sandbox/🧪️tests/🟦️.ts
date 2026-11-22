@@ -64,3 +64,10 @@ test.skipIf(process.platform!=="darwin")("attack on macOS: the sandbox cannot re
   if(Bun.spawnSync(["/bin/test","-r","/etc/semio/remote-cache.env"]).exitCode===0)expect(run("/bin/cat /etc/semio/remote-cache.env >/dev/null").exitCode,"the cache token file").not.toBe(0);
  }finally{rmSync(parent,{recursive:true,force:true});}
 });
+
+test("on native Windows the private root is the strategy: it needs no symbolic link and no shell, and passes the argv, the environment and the working directory through unchanged",()=>{
+ const strategy=selectRemoteExecutionSandboxV1("auto","win32");
+ expect(strategy.name).toBe("isolated-root");expect(strategy.available()).toBe(true);
+ const spec={argv:["C:\\w\\r\\rustc.exe","--edition=2021"],env:{PATH:"C:\\Windows\\System32"},cwd:"C:\\w\\r",root:"C:\\w\\r",network:false};
+ expect(strategy.wrap(spec)).toEqual({argv:spec.argv,env:spec.env,cwd:spec.cwd});
+});

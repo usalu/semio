@@ -15,6 +15,8 @@ import{classifyBuildGraphRetirementStateV1}from"../../🟦️.ts";
 import schema from"../../🧬️schema/🔣️.json";
 import cases from"../🧫️cases.json";
 import{privateRepositoryWorkspaceV1,withPrivateRepositoryBuildTestInvocationV1}from"../../../../../../../../../🧪️testing/🧫️private-repository/🟦️.ts";
+import {declareLibraryBuildTestEnvelopeV1} from "../../../../../../../../../🧪️testing/🪪️native-birth/🟦️.ts";
+declareLibraryBuildTestEnvelopeV1({suite:"storage-graph-processes"});
 const repository=await privateRepositoryWorkspaceV1();
 test("graph retirement intent states match the independent SQLite transition oracle",()=>{
  const validate=new Ajv({strict:true}).compile({$schema:schema.$schema,definitions:schema.definitions,$ref:"#/definitions/RetirementState"}),db=new Database(":memory:");try{for(const row of cases.retirementStates){expect(validate(row.input)).toBe(true);const result=classifyBuildGraphRetirementStateV1(row.input),independent=db.query("select case when not ?1 and ?2='bound' and ?3='absent' then 'prepared' when ?2 in ('absent','fresh') and ?3='bound' then 'committed' when ?1 and ?2 in ('absent','fresh') and ?3='absent' and ?4=0 then 'terminal' else 'refuse' end state").get(Number(row.input.committed),row.input.original,row.input.retired,row.input.remaining)as{state:string};expect<unknown>(result).toBe(row.state);expect<unknown>(result).toBe(independent.state);}}finally{db.close();}

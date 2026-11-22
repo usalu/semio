@@ -17,12 +17,23 @@ pub struct ExportDocument {
 }
 impl Default for ExportDocument{fn default()->Self{Self{format:DEFAULT_EXPORT_FORMAT.into(),width:None,height:None,transparent:None}}}
 
-/// 📎️ A fixed header copies at most 256 authored filename scalars.
+pub const EXPORT_STEM_BYTES: usize = 256;
+
+/// 📎️ Writes the bounded ASCII filename stem into the caller's original buffer.
+pub fn export_stem_in<'a>(document: &DrawingSnapshot, buffer: &'a mut [u8; EXPORT_STEM_BYTES]) -> &'a str {
+    let source = if document.id.chars().take(EXPORT_STEM_BYTES).all(char::is_whitespace) { document.title.as_ref() } else { Some(&document.id) };
+    let mut length = 0;
+    for ch in source.into_iter().flat_map(|text| text.chars().take(EXPORT_STEM_BYTES)) {
+        buffer[length] = if ch.is_ascii_alphanumeric() || matches!(ch, '-' | '_' | '.') { ch as u8 } else { b'-' };
+        length += 1;
+    }
+    let stem = std::str::from_utf8(&buffer[..length]).unwrap().trim_matches(['-', '.']);
+    if stem.is_empty() { "drawing" } else { stem }
+}
+
+/// 🏷️ Returns an owned filename stem for callers without an original output buffer.
 pub fn export_stem(document: &DrawingSnapshot) -> String {
-    let source = if document.id.chars().take(256).all(char::is_whitespace) { document.title.as_ref() } else { Some(&document.id) };
-    let stem: String = source.map(|source| source.chars().take(256).map(|ch| if ch.is_ascii_alphanumeric() || matches!(ch, '-' | '_' | '.') { ch } else { '-' }).collect()).unwrap_or_else(|| "drawing".into());
-    let stem = stem.trim_matches(['-', '.']).to_owned();
-    if stem.is_empty() { "drawing".into() } else { stem }
+    export_stem_in(document, &mut [0; EXPORT_STEM_BYTES]).into()
 }
 
 pub fn handle(

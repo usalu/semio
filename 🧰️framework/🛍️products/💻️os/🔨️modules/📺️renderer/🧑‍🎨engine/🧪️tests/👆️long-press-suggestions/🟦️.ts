@@ -1,6 +1,7 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { createLongPressV1 } from "../../🧱️elements/👆️long-press/🟦️.ts";
-import { WORLD3D_SUGGESTIONS_LABELS_V1, world3dSuggestionsGestureTarget, world3dSuggestionsKeyChord } from "../../🧱️elements/🌐️World3dHost/🔗️instance-selection/🟦️.ts";
+import { WORLD3D_SUGGESTIONS_LABELS_V1, WORLD3D_SUGGESTIONS_LONG_PRESS_V1, world3dSuggestionsGestureTarget, world3dSuggestionsKeyChord } from "../../🧱️elements/🌐️World3dHost/🔗️instance-selection/🟦️.ts";
 
 function rig() {
   const timers: { live: boolean; callback: () => void }[] = [];
@@ -10,6 +11,10 @@ function rig() {
 }
 
 describe("long press", () => {
+  it("holds for the one value the shared fixture declares", () => {
+    const law = JSON.parse(readFileSync(new URL("../../🧱️elements/🌐️World3dHost/🧪️tests/🧫️fixtures/🌪️vortex-suggestions.json", import.meta.url), "utf8")) as { longPress: { holdMs: number; slopPx: number } };
+    expect(WORLD3D_SUGGESTIONS_LONG_PRESS_V1).toEqual(law.longPress);
+  });
   it("fires once at the pressed point when held", () => {
     const r = rig();
     r.press.down(5, 6);

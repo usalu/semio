@@ -88,6 +88,83 @@
       "subsetDirectoryName": "✳️any",
       "vectors": [
         {
+          "mutationId": "insert-case",
+          "sourceMutationDirectoryName": "➕️insert-case",
+          "mutationDirectoryName": "➕️insert-case",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-case",
+          "sourceMutationDirectoryName": "➖️remove-case",
+          "mutationDirectoryName": "➖️remove-case",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-case-number",
+          "sourceMutationDirectoryName": "🔢️change-case-number",
+          "mutationDirectoryName": "🔢️change-case-number",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-case-text",
+          "sourceMutationDirectoryName": "🔤️change-case-text",
+          "mutationDirectoryName": "🔤️change-case-text",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-case-label-en",
+          "sourceMutationDirectoryName": "🏷️change-case-label-en",
+          "mutationDirectoryName": "🏷️change-case-label-en",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-case-label-de",
+          "sourceMutationDirectoryName": "🏷️change-case-label-de",
+          "mutationDirectoryName": "🏷️change-case-label-de",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-case-entry-id",
+          "sourceMutationDirectoryName": "📇️change-case-entry-id",
+          "mutationDirectoryName": "📇️change-case-entry-id",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
           "mutationId": "change-climate-zone",
           "sourceMutationDirectoryName": "🌦️change-climate-zone",
           "mutationDirectoryName": "🌦️change-climate-zone",
@@ -647,86 +724,16 @@
               "directoryName": "✅apply"
             }
           ]
-        },
-        {
-          "mutationId": "insert-case",
-          "sourceMutationDirectoryName": "➕️insert-case",
-          "mutationDirectoryName": "➕️insert-case",
-          "scenarios": [
-            {
-              "id": "apply",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "remove-case",
-          "sourceMutationDirectoryName": "➖️remove-case",
-          "mutationDirectoryName": "➖️remove-case",
-          "scenarios": [
-            {
-              "id": "apply",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-case-number",
-          "sourceMutationDirectoryName": "🔢️change-case-number",
-          "mutationDirectoryName": "🔢️change-case-number",
-          "scenarios": [
-            {
-              "id": "apply",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-case-text",
-          "sourceMutationDirectoryName": "🔤️change-case-text",
-          "mutationDirectoryName": "🔤️change-case-text",
-          "scenarios": [
-            {
-              "id": "apply",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-case-label-en",
-          "sourceMutationDirectoryName": "🏷️change-case-label-en",
-          "mutationDirectoryName": "🏷️change-case-label-en",
-          "scenarios": [
-            {
-              "id": "apply",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-case-label-de",
-          "sourceMutationDirectoryName": "🏷️change-case-label-de",
-          "mutationDirectoryName": "🏷️change-case-label-de",
-          "scenarios": [
-            {
-              "id": "apply",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-case-entry-id",
-          "sourceMutationDirectoryName": "📇️change-case-entry-id",
-          "mutationDirectoryName": "📇️change-case-entry-id",
-          "scenarios": [
-            {
-              "id": "apply",
-              "directoryName": "✅apply"
-            }
-          ]
         }
       ],
       "kinds": [
+        "insert-case",
+        "remove-case",
+        "change-case-number",
+        "change-case-text",
+        "change-case-label-en",
+        "change-case-label-de",
+        "change-case-entry-id",
         "change-climate-zone",
         "change-usage",
         "change-t-int-c",
@@ -769,14 +776,7 @@
         "change-zone-window-orientation",
         "change-zone-window-inclination-deg",
         "change-layer-application-type",
-        "change-layer-compressive-class",
-        "insert-case",
-        "remove-case",
-        "change-case-number",
-        "change-case-text",
-        "change-case-label-en",
-        "change-case-label-de",
-        "change-case-entry-id"
+        "change-layer-compressive-class"
       ]
     }
   ],

@@ -1,0 +1,19 @@
+{
+  "document": "pdf-document",
+  "schema": "stdio.pdf.1.7",
+  "generation": "9007199254740993",
+  "extent": 2130150,
+  "page": 4096,
+  "cases": {
+    "commit": "accepted",
+    "retry": "accepted",
+    "rollback": "cancelled",
+    "stale": "first archive folder authority changed",
+    "schema": "different first archive already exists",
+    "seal": "archive seal differs from capture",
+    "order": "archive page changed order",
+    "format": "first archive must contain exactly its parent pair",
+    "overLimit": "invalid first archive frontier",
+    "interior": "checksum mismatch"
+  }
+}

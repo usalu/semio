@@ -13,6 +13,9 @@ import type { ActionDescriptor, UiComponentSceneNode } from "@semio-tech/framewo
 import surfacePinchFixture from "@semio-tech/framework-os/modules/renderer/engine/testing/fixtures/surface-pinch.json";
 import touchFixture from "../../../../🧪️tests/🧫️fixtures/👆️tiled-map-touch/🔣️.json";
 import keyboardFixture from "../🧫️fixtures/⌨️map-navigation/🔣️.json";
+import mouseFixture from "../🧫️fixtures/🖱️mouse-pan/🔣️.json";
+import repaintFixture from "../🧫️fixtures/🔁️repaint/🔣️.json";
+import wheelFixture from "../🧫️fixtures/🔎️wheel-zoom/🔣️.json";
 import type { MapWasmSession } from "../../../🪪️WasmSessionLoader/🟦️.tsx";
 
 const { createMapSessionMock } = vi.hoisted(() => ({ createMapSessionMock: vi.fn() }));
@@ -30,16 +33,21 @@ type StubCamera = { x: number; y: number; zoom: number };
 
 function createStubSession(initialCamera: StubCamera = surfacePinchFixture.gestures.spread.initialCamera, feature: { kind: string; id: string } | null = null) {
   const camera = { ...initialCamera };
+  const paintedCamera = { ...initialCamera };
   const calls: string[] = [];
   const call = (name: string) => () => void calls.push(name);
   let pan: { origin: StubCamera; start: Vector2 } | undefined;
   return {
     calls,
     camera,
+    paintedCamera,
     attachCanvas: async () => void calls.push("attachCanvas"),
     attachCanvas2d: () => void calls.push("attachCanvas2d"),
     setSize: call("setSize"),
-    renderFrame: call("renderFrame"),
+    renderFrame: () => {
+      calls.push("renderFrame");
+      Object.assign(paintedCamera, camera);
+    },
     setCamera: (x, y, zoom) => {
       calls.push("setCamera");
       Object.assign(camera, { x, y, zoom });
@@ -58,11 +66,18 @@ function createStubSession(initialCamera: StubCamera = surfacePinchFixture.gestu
       const center = new Vector2(pan.origin.x, pan.origin.y).addScaledVector(new Vector2(x, y).sub(pan.start), -1 / camera.zoom);
       Object.assign(camera, { x: center.x, y: center.y });
     }),
-    pointerUpScreen: vi.fn(() => {
+    pointerUpScreen: vi.fn((_x: number, _y: number) => {
       calls.push("pointerUpScreen");
       pan = undefined;
     }),
-    wheelScreen: vi.fn((_x: number, _y: number, _delta: number) => void calls.push("wheelScreen")),
+    wheelScreen: vi.fn((x: number, y: number, delta: number) => {
+      calls.push("wheelScreen");
+      const { width, height } = surfacePinchFixture.viewport;
+      const offset = new Vector2(x - width / 2, y - height / 2);
+      const zoom = camera.zoom * wheelFixture.zoomFactor ** -Math.sign(delta);
+      const center = new Vector2(camera.x, camera.y).addScaledVector(offset, 1 / camera.zoom - 1 / zoom);
+      Object.assign(camera, { x: center.x, y: center.y, zoom });
+    }),
     syncMapJson: call("syncMapJson"),
     uploadTile: call("uploadTile"),
     uploadVectorTile: call("uploadVectorTile"),
@@ -88,7 +103,7 @@ function createStubSession(initialCamera: StubCamera = surfacePinchFixture.gestu
     setMapThemeJson: call("setMapThemeJson"),
     rendererReady: () => true,
     free: call("free"),
-  } satisfies MapWasmSession & { calls: string[]; camera: StubCamera };
+  } satisfies MapWasmSession & { calls: string[]; camera: StubCamera; paintedCamera: StubCamera };
 }
 
 function tiledMapNode(camera: StubCamera): UiComponentSceneNode {
@@ -128,7 +143,7 @@ function stubLayout(container: HTMLElement): void {
   }
 }
 
-async function mountMap(session: ReturnType<typeof createStubSession>) {
+async function mountMap(session: ReturnType<typeof createStubSession>, waitForAttach = () => new Promise<void>((resolve) => setTimeout(resolve, 0))) {
   const actions: { action: string; args?: unknown }[] = [];
   createMapSessionMock.mockResolvedValueOnce(session);
   const view = render(createElement(TiledMapHost, { node: tiledMapNode(session.camera), onAction: (descriptor: ActionDescriptor) => void actions.push({ action: descriptor.action, args: descriptor.args }) }));
@@ -138,9 +153,7 @@ async function mountMap(session: ReturnType<typeof createStubSession>) {
   canvas.setPointerCapture = (id) => void captures.add(id);
   canvas.hasPointerCapture = (id) => captures.has(id);
   canvas.releasePointerCapture = (id) => void captures.delete(id);
-  await act(async () => {
-    await new Promise<void>((resolve) => setTimeout(resolve, 0));
-  });
+  await act(waitForAttach);
   expect(session.calls).toContain("attachCanvas");
   return { canvas, actions, captures };
 }
@@ -149,6 +162,7 @@ async function mountMap(session: ReturnType<typeof createStubSession>) {
 // #region 🤏️PinchLaws
 afterEach(() => {
   cleanup();
+  vi.useRealTimers();
   vi.restoreAllMocks();
   createMapSessionMock.mockReset();
 });
@@ -184,17 +198,58 @@ describe("⌨️ tiled map keyboard navigation", () => {
   });
 });
 
+describe("🔎️ tiled map zoom repaint", () => {
+  it.each(wheelFixture.cases)("paints $input zoom from idle before the camera action returns through the scene", async ({ input, centerOffset, deltaY, expectedCamera }) => {
+    vi.useFakeTimers();
+    const { initialCamera } = wheelFixture;
+    const session = createStubSession(initialCamera);
+    const { canvas, actions } = await mountMap(session, async () => { await vi.advanceTimersByTimeAsync(0); });
+    const { width, height } = surfacePinchFixture.viewport;
+    const x = width / 2 + centerOffset[0];
+    const y = height / 2 + centerOffset[1];
+    const settle = () => act(async () => { await vi.advanceTimersByTimeAsync(repaintFixture.settleMs); });
+    const frames = () => session.calls.filter((call) => call === "renderFrame").length;
+
+    await settle();
+    const idleFrames = frames();
+    expect(idleFrames).toBeGreaterThan(0);
+    await settle();
+    expect(frames()).toBe(idleFrames);
+
+    const event = input === "wheel"
+      ? new WheelEvent("wheel", { bubbles: true, cancelable: true, clientX: x, clientY: y, deltaY })
+      : new KeyboardEvent("keydown", { bubbles: true, cancelable: true, key: "=" });
+    act(() => canvas.dispatchEvent(event));
+    expect(event.defaultPrevented).toBe(true);
+    expect(session.wheelScreen).toHaveBeenCalledExactlyOnceWith(x, y, deltaY);
+    expect(session.camera).toEqual(expectedCamera);
+    expect(actions).toEqual([{ action: "setCamera", args: { surfaceId: "surface", camera: expectedCamera } }]);
+    expect(session.paintedCamera).toEqual(initialCamera);
+
+    await settle();
+    expect(session.paintedCamera).toEqual(expectedCamera);
+    expect(frames()).toBe(idleFrames + repaintFixture.expectedFramesPerBatch);
+  });
+});
+
 describe("🤏️ tiled map two-finger gesture", () => {
   it("retires a pending single contact, changes the camera silently, then publishes once after the final lift", async () => {
+    vi.useFakeTimers();
     const session = createStubSession();
-    const { canvas, actions } = await mountMap(session);
+    const { canvas, actions } = await mountMap(session, async () => { await vi.advanceTimersByTimeAsync(0); });
     const row = surfacePinchFixture.gestures.spread;
     const map = surfacePinchFixture.surfaces.tiledMap;
+    const frames = () => session.calls.filter((call) => call === "renderFrame").length;
+    const settle = () => act(async () => { await vi.advanceTimersByTimeAsync(repaintFixture.settleMs); });
+    await settle();
+    const idleFrames = frames();
 
     act(() => canvas.dispatchEvent(pointer("pointerdown", row.down[0].pointerId, row.down[0].x, row.down[0].y)));
     const callsBeforeTransfer = session.calls.length;
     act(() => canvas.dispatchEvent(pointer("pointerdown", row.down[1].pointerId, row.down[1].x, row.down[1].y)));
     expect(session.calls.slice(callsBeforeTransfer).filter((call) => call === "pointerUpScreen")).toHaveLength(map.transfer.syntheticPointerUps);
+    await settle();
+    expect(frames()).toBe(idleFrames);
 
     act(() => {
       for (const event of row.move) window.dispatchEvent(pointer("pointermove", event.pointerId, event.x, event.y));
@@ -204,6 +259,9 @@ describe("🤏️ tiled map two-finger gesture", () => {
     expect(session.camera.y).toBeCloseTo(row.expectedCamera.y, 6);
     expect(actions.filter((entry) => entry.action === "setCamera")).toHaveLength(map.moves.cameraPublications);
     expect(session.calls.slice(callsBeforeTransfer).filter((call) => call === "pointerMoveScreen")).toHaveLength(map.moves.pointerMoves);
+    await settle();
+    expect(session.paintedCamera).toEqual(session.camera);
+    expect(frames()).toBe(idleFrames + repaintFixture.expectedFramesPerBatch);
 
     const callsBeforeLifts = session.calls.length;
     act(() => {
@@ -362,6 +420,75 @@ describe("👆️ tiled map single-contact gesture", () => {
 });
 
 describe("🖱️ tiled map mouse gesture", () => {
+  it.each(["pointerup", "pointercancel", "lostpointercapture"])("commits the local pan once on %s", async (terminalEvent) => {
+    const { initialCamera, start, moves, end, cameraPublicationsDuringDrag, cameraPublicationsAfterDrag } = mouseFixture;
+    const session = createStubSession(initialCamera);
+    const { canvas, actions, captures } = await mountMap(session);
+    const pointerId = 1;
+    const middle = { pointerType: "mouse", button: 1, buttons: 4 };
+    const release = { ...middle, buttons: 0 };
+    const cameraPublications = () => actions.filter(({ action }) => action === "setCamera");
+
+    act(() => canvas.dispatchEvent(pointer("pointerdown", pointerId, start.x, start.y, middle)));
+    expect(captures.has(pointerId)).toBe(true);
+    for (const move of moves) {
+      act(() => window.dispatchEvent(pointer("pointermove", pointerId, move.x, move.y, { ...middle, button: -1 })));
+      expect(session.camera).toEqual(move.camera);
+    }
+    expect(cameraPublications()).toHaveLength(cameraPublicationsDuringDrag);
+
+    act(() => {
+      if (terminalEvent === "lostpointercapture") captures.delete(pointerId);
+      const target = terminalEvent === "lostpointercapture" ? canvas : window;
+      target.dispatchEvent(pointer(terminalEvent, pointerId, end.x, end.y, release));
+      window.dispatchEvent(pointer("pointerup", pointerId, end.x, end.y, release));
+    });
+    const terminalSample = terminalEvent === "pointerup" ? end : moves.at(-1)!;
+    expect(session.pointerUpScreen).toHaveBeenCalledExactlyOnceWith(terminalSample.x, terminalSample.y);
+    expect(session.camera).toEqual(terminalSample.camera);
+    expect(captures.has(pointerId)).toBe(false);
+    expect(cameraPublications()).toHaveLength(cameraPublicationsAfterDrag);
+    expect(cameraPublications()[0]?.args).toEqual({ surfaceId: "surface", camera: terminalSample.camera });
+  });
+
+  it.each([
+    { gesture: "pan", button: 1, buttons: 4, cameraPublications: 1 },
+    { gesture: "marquee", button: 0, buttons: 1, cameraPublications: 0 },
+  ])("returns to idle and clears a cancelled $gesture", async ({ button, buttons, cameraPublications }) => {
+    vi.useFakeTimers();
+    const { initialCamera, start, end } = mouseFixture;
+    const { cancelledPointer, settleMs } = repaintFixture;
+    const { pointerId, point } = cancelledPointer;
+    const session = createStubSession(initialCamera);
+    const { canvas, actions, captures } = await mountMap(session, async () => { await vi.advanceTimersByTimeAsync(0); });
+    const input = { pointerType: "mouse", button, buttons };
+    const frames = () => session.calls.filter((call) => call === "renderFrame").length;
+    const settle = () => act(async () => { await vi.advanceTimersByTimeAsync(settleMs); });
+
+    act(() => {
+      canvas.dispatchEvent(pointer("pointerdown", pointerId, start.x, start.y, input));
+      window.dispatchEvent(pointer("pointermove", pointerId, end.x, end.y, { ...input, button: -1 }));
+    });
+    await settle();
+    if (button === 1) {
+      expect(session.paintedCamera).toEqual(session.camera);
+      const previousFrames = frames();
+      await settle();
+      expect(frames()).toBe(previousFrames);
+    }
+    act(() => {
+      window.dispatchEvent(pointer(cancelledPointer.event, pointerId, point.x, point.y, { ...input, buttons: 0 }));
+      window.dispatchEvent(pointer("pointerup", pointerId, end.x, end.y, { ...input, buttons: 0 }));
+    });
+    expect(captures.has(pointerId)).toBe(false);
+    expect(actions.map(({ action }) => action)).toEqual(Array(cameraPublications).fill("setCamera"));
+    expect(session.featuresInRectJson).not.toHaveBeenCalled();
+    await settle();
+    const settledFrames = frames();
+    await settle();
+    expect(frames()).toBe(settledFrames);
+  });
+
   it("still uses primary for marquee and middle for pan", async () => {
     const { initialCamera, start, move, moveCamera } = touchFixture.drag;
     const session = createStubSession(initialCamera);

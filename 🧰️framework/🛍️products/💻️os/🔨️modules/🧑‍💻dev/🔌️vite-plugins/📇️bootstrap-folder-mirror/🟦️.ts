@@ -120,8 +120,8 @@ export async function stageCanonicalBootstrapFolderMirror(uri: string, documentI
   let pack: Uint8Array, spr: Uint8Array;
   try {
     const archive = decodeDocumentArchiveBytes(payload);
-    pack = Uint8Array.from(archive.parent_pack);
-    spr = Uint8Array.from(archive.parent_spr);
+    pack = archive.parent_pack as Uint8Array;
+    spr = archive.parent_spr as Uint8Array;
   } catch {
     throw canonicalBootstrapMirrorError("invalid");
   }

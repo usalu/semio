@@ -28,6 +28,7 @@ fn ui_values_components_and_patch_pages_match_serde_without_cloning_the_retained
   "patch"=>{let value:semio_ui_contract::UiPatch=serde_json::from_str(&text).unwrap();assert_eq!(serde_json::to_string(&value).unwrap(),expected);let root=Root(&value);assert_eq!(write(&JsonNativeSource{root:&root,context:&JsonBorrowNoContext}),expected);},
   "numberBound"=>{let value:semio_ui_contract::UiNumberBound=serde_json::from_str(&text).unwrap();assert_eq!(serde_json::to_string(&value).unwrap(),expected);let root=Root(&value);assert_eq!(write(&JsonNativeSource{root:&root,context:&JsonBorrowNoContext}),expected);},
   "rowAction"=>{let value:semio_ui_contract::RowAction=serde_json::from_str(&text).unwrap();assert_eq!(serde_json::to_string(&value).unwrap(),expected);let root=Root(&value);assert_eq!(write(&JsonNativeSource{root:&root,context:&JsonBorrowNoContext}),expected);},
+  "openPluginInstance"=>{let value:Effect=serde_json::from_str(&text).unwrap();assert_eq!(serde_json::to_string(&value).unwrap(),expected);let root=Root(&value);assert_eq!(write(&JsonNativeSource{root:&root,context:&JsonBorrowNoContext}),expected);},
   "decimal"=>{let value:semio_framework_kernel_identity::ArtifactHandle=serde_json::from_str(&text).unwrap();assert_eq!(serde_json::to_string(&value).unwrap(),expected);let root=Root(&value);assert_eq!(write(&JsonNativeSource{root:&root,context:&JsonBorrowNoContext}),expected);},
   _=>panic!("unexpected shared output fixture kind"),
  }}

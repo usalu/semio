@@ -18,7 +18,7 @@ pub mod hit;
 mod tree_metrics_and_window_measures;
 pub use tree_metrics_and_window_measures::{
     document_row_action_id, document_table, document_table_row, find_tree_item, host_content_height,
-    live_tree_item_height, live_tree_section_height, owning_tree_spec,
+    live_tree_item_height, live_tree_section_height, owning_tree_node, owning_tree_spec,
     retained_section_title_height, retained_tree_height, retained_tree_row_metrics,
     table_actions_width_of, tree_window_measures, MountedLayoutFault, LAYOUT_ATLAS_PAGE_BYTES,
     LAYOUT_ATLAS_PAGE_CREDITS, LAYOUT_DEPTH_CREDITS, LAYOUT_GLYPH_CREDITS, LAYOUT_NODE_CREDITS,
@@ -40,7 +40,7 @@ pub use layout_input_and_text_measurement::RetainedGlyphPreview;
 #[path = "🧱️job-state-and-admission/🦀️.rs"]
 mod job_state_and_admission;
 pub use job_state_and_admission::{MountedLayoutIdentity, MountedLayoutJob, MountedLayoutResult};
-use job_state_and_admission::{AdmissionPhase, WalkFrame};
+use job_state_and_admission::AdmissionPhase;
 
 #[path = "📐️text-admission-and-measure-steps/🦀️.rs"]
 mod text_admission_and_measure_steps;
@@ -48,7 +48,7 @@ mod text_admission_and_measure_steps;
 #[path = "🏁️collect-publish-and-close/🦀️.rs"]
 mod collect_publish_and_close;
 #[cfg(any(test,feature="testkit"))]
-pub use collect_publish_and_close::{layout_tree_flowing_now, layout_tree_now};
+pub use collect_publish_and_close::{layout_tree_flowing_now, layout_tree_now, layout_tree_presenting_now};
 
 #[cfg(test)]
 #[path = "../../../🧪️tests/🪟️tree-window-streaming/🦀️.rs"]

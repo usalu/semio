@@ -90,3 +90,15 @@ path = "../../✂️original-sections.rs"
 [[test]]
 name = "retained-mesh-workbench"
 path = "../../🥽️mesh-workbench.rs"
+
+[[test]]
+name = "retained-heal"
+path = "../../🩹️retained-heal.rs"
+
+[[test]]
+name = "original-straight-sweeps"
+path = "../../🛤️original-straight-sweeps.rs"
+
+[[test]]
+name = "retained-defeature"
+path = "../../🧹️retained-defeature.rs"

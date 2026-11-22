@@ -1,0 +1,1011 @@
+{
+  "description": "A shoulder girdle on the sample figure: clavicles that run laterally at rest (Bone.abductionDeg ±90, Bone.twistDeg ±90) and arms that hang from them (Bone.angleDeg -90, Bone.twistDeg ±90), plus a scapula with a general rest placement. The expected frames of the named cases are computed by hand for the root at (0, 0.96) m; axes and points are [ahead, up, left]. Front and plan shapes are drawn in the rest pose with the root at the origin (the shoulder is 0.52 m above it).",
+  "base": "👤️sample-figure",
+  "scale": 50,
+  "root": {
+    "x": 0,
+    "y": 0.96,
+    "angleDeg": 0
+  },
+  "frameTolerance": 1e-09,
+  "extentToleranceM": 1e-06,
+  "girdle": {
+    "bones": [
+      {
+        "id": "clavicle-l",
+        "parent": "torso",
+        "title": {
+          "en": "Left clavicle",
+          "de": "Linkes Schlüsselbein"
+        },
+        "x": 0.42,
+        "y": 0,
+        "z": 0.02,
+        "angleDeg": 0,
+        "abductionDeg": 90,
+        "twistDeg": 90,
+        "lengthM": 0.17,
+        "joint": {
+          "type": "revolute",
+          "minDeg": -15,
+          "maxDeg": 40
+        }
+      },
+      {
+        "id": "clavicle-r",
+        "parent": "torso",
+        "title": {
+          "en": "Right clavicle",
+          "de": "Rechtes Schlüsselbein"
+        },
+        "x": 0.42,
+        "y": 0,
+        "z": -0.02,
+        "angleDeg": 0,
+        "abductionDeg": -90,
+        "twistDeg": -90,
+        "lengthM": 0.17,
+        "joint": {
+          "type": "revolute",
+          "minDeg": -15,
+          "maxDeg": 40
+        }
+      },
+      {
+        "id": "scapula-l",
+        "parent": "torso",
+        "title": {
+          "en": "Left scapula",
+          "de": "Linkes Schulterblatt"
+        },
+        "x": 0.36,
+        "y": 0.08,
+        "z": 0.09,
+        "angleDeg": 195,
+        "abductionDeg": 25,
+        "twistDeg": -35,
+        "lengthM": 0.15,
+        "joint": {
+          "type": "revolute",
+          "minDeg": -30,
+          "maxDeg": 30
+        }
+      }
+    ],
+    "reparent": {
+      "arm-l": {
+        "parent": "clavicle-l",
+        "x": 0.17,
+        "y": 0,
+        "angleDeg": -90,
+        "twistDeg": 90
+      },
+      "arm-r": {
+        "parent": "clavicle-r",
+        "x": 0.17,
+        "y": 0,
+        "angleDeg": -90,
+        "twistDeg": -90
+      }
+    },
+    "sagittal": {
+      "arm-l": {
+        "z": 0.19
+      },
+      "arm-r": {
+        "z": -0.19
+      }
+    }
+  },
+  "anchors": [
+    {
+      "id": "wrist-l",
+      "bone": "arm-l",
+      "x": 0.6,
+      "y": 0.02,
+      "z": 0.03,
+      "kind": "load",
+      "title": {
+        "en": "Left wrist",
+        "de": "Linkes Handgelenk"
+      }
+    }
+  ],
+  "shapes": {
+    "elevation": [
+      {
+        "id": "arm",
+        "kind": "rect",
+        "bone": "arm-l",
+        "role": "body",
+        "z": 1,
+        "filled": true,
+        "tone": 0.5,
+        "x": 0,
+        "y": -0.05,
+        "w": 0.6,
+        "h": 0.1
+      },
+      {
+        "id": "clavicle",
+        "kind": "rect",
+        "bone": "clavicle-l",
+        "role": "body",
+        "z": 1,
+        "filled": true,
+        "tone": 0.5,
+        "x": -0.02,
+        "y": -0.015,
+        "w": 0.04,
+        "h": 0.03,
+        "solid": {
+          "kind": "extruded",
+          "sweep": "u",
+          "z0": 0,
+          "z1": 0.17
+        }
+      }
+    ],
+    "front": [
+      {
+        "id": "arm",
+        "kind": "rect",
+        "bone": "arm-l",
+        "role": "body",
+        "z": 1,
+        "filled": true,
+        "tone": 0.5,
+        "x": 0.14,
+        "y": -0.08,
+        "w": 0.1,
+        "h": 0.6
+      },
+      {
+        "id": "clavicle",
+        "kind": "rect",
+        "bone": "clavicle-l",
+        "role": "body",
+        "z": 1,
+        "filled": true,
+        "tone": 0.5,
+        "x": -0.02,
+        "y": -0.015,
+        "w": 0.04,
+        "h": 0.03,
+        "solid": {
+          "kind": "extruded",
+          "sweep": "u",
+          "z0": 0,
+          "z1": 0.17
+        }
+      }
+    ],
+    "plan": [
+      {
+        "id": "arm",
+        "kind": "rect",
+        "bone": "arm-l",
+        "role": "body",
+        "z": 1,
+        "filled": true,
+        "tone": 0.5,
+        "x": -0.05,
+        "y": 0.14,
+        "w": 0.1,
+        "h": 0.1
+      },
+      {
+        "id": "clavicle",
+        "kind": "rect",
+        "bone": "clavicle-l",
+        "role": "body",
+        "z": 1,
+        "filled": true,
+        "tone": 0.5,
+        "x": -0.02,
+        "y": -0.015,
+        "w": 0.04,
+        "h": 0.03,
+        "solid": {
+          "kind": "extruded",
+          "sweep": "u",
+          "z0": 0,
+          "z1": 0.17
+        }
+      }
+    ]
+  },
+  "flatOnClavicle": {
+    "id": "clavicle-flat",
+    "kind": "rect",
+    "bone": "clavicle-l",
+    "role": "body",
+    "z": 1,
+    "filled": true,
+    "tone": 0.5,
+    "x": 0,
+    "y": -0.02,
+    "w": 0.17,
+    "h": 0.04
+  },
+  "cases": [
+    {
+      "name": "at rest the clavicles run laterally and the arms hang from their tips",
+      "pose": "rest",
+      "offsets": {},
+      "frames": {
+        "clavicle-l": {
+          "origin": [
+            0,
+            1.48,
+            0.02
+          ],
+          "tip": [
+            0,
+            1.48,
+            0.19
+          ],
+          "u": [
+            0,
+            0,
+            1
+          ],
+          "v": [
+            0,
+            1,
+            0
+          ],
+          "w": [
+            -1,
+            0,
+            0
+          ]
+        },
+        "clavicle-r": {
+          "origin": [
+            0,
+            1.48,
+            -0.02
+          ],
+          "tip": [
+            0,
+            1.48,
+            -0.19
+          ],
+          "u": [
+            0,
+            0,
+            -1
+          ],
+          "v": [
+            0,
+            1,
+            0
+          ],
+          "w": [
+            1,
+            0,
+            0
+          ]
+        },
+        "arm-l": {
+          "origin": [
+            0,
+            1.48,
+            0.19
+          ],
+          "tip": [
+            0,
+            0.88,
+            0.19
+          ],
+          "u": [
+            0,
+            -1,
+            0
+          ],
+          "v": [
+            1,
+            0,
+            0
+          ],
+          "w": [
+            0,
+            0,
+            1
+          ]
+        },
+        "arm-r": {
+          "origin": [
+            0,
+            1.48,
+            -0.19
+          ],
+          "tip": [
+            0,
+            0.88,
+            -0.19
+          ],
+          "u": [
+            0,
+            -1,
+            0
+          ],
+          "v": [
+            1,
+            0,
+            0
+          ],
+          "w": [
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "extents": {
+        "elevation/clavicle": {
+          "minX": -0.015,
+          "maxX": 0.015,
+          "minY": 1.46,
+          "maxY": 1.5
+        },
+        "front/clavicle": {
+          "minX": 0.02,
+          "maxX": 0.19,
+          "minY": 1.46,
+          "maxY": 1.5
+        },
+        "plan/clavicle": {
+          "minX": -0.015,
+          "maxX": 0.015,
+          "minY": 0.02,
+          "maxY": 0.19
+        },
+        "elevation/arm": {
+          "minX": -0.05,
+          "maxX": 0.05,
+          "minY": 0.88,
+          "maxY": 1.48
+        },
+        "front/arm": {
+          "minX": 0.14,
+          "maxX": 0.24,
+          "minY": 0.88,
+          "maxY": 1.48
+        },
+        "plan/arm": {
+          "minX": -0.05,
+          "maxX": 0.05,
+          "minY": 0.14,
+          "maxY": 0.24
+        }
+      },
+      "anchors": {
+        "wrist-l": [
+          0.02,
+          0.88,
+          0.22
+        ]
+      }
+    },
+    {
+      "name": "the hanging arm flexes forward about its own lateral axis",
+      "pose": "arm-flexed",
+      "offsets": {
+        "arm-l": {
+          "angleDeg": 90
+        }
+      },
+      "frames": {
+        "arm-l": {
+          "origin": [
+            0,
+            1.48,
+            0.19
+          ],
+          "tip": [
+            0.6,
+            1.48,
+            0.19
+          ],
+          "u": [
+            1,
+            0,
+            0
+          ],
+          "v": [
+            0,
+            1,
+            0
+          ],
+          "w": [
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "extents": {
+        "elevation/arm": {
+          "minX": 0,
+          "maxX": 0.6,
+          "minY": 1.43,
+          "maxY": 1.53
+        },
+        "front/arm": {
+          "minX": 0.14,
+          "maxX": 0.24
+        },
+        "plan/arm": {
+          "minY": 0.14,
+          "maxY": 0.24
+        }
+      },
+      "anchors": {
+        "wrist-l": [
+          0.6,
+          1.5,
+          0.22
+        ]
+      }
+    },
+    {
+      "name": "the hanging arm spreads sideways about its own normal",
+      "pose": "arm-spread",
+      "offsets": {
+        "arm-l": {
+          "abductionDeg": 60
+        }
+      },
+      "frames": {
+        "arm-l": {
+          "origin": [
+            0,
+            1.48,
+            0.19
+          ],
+          "tip": [
+            0.0,
+            1.18,
+            0.709615242271
+          ],
+          "u": [
+            0.0,
+            -0.5,
+            0.866025403784
+          ],
+          "v": [
+            1,
+            0,
+            0
+          ],
+          "w": [
+            0.0,
+            0.866025403784,
+            0.5
+          ]
+        }
+      },
+      "extents": {},
+      "anchors": {
+        "wrist-l": [
+          0.02,
+          1.205980762114,
+          0.724615242271
+        ]
+      }
+    },
+    {
+      "name": "a shrug lifts both shoulders and the arms ride on the clavicles",
+      "pose": "shrug",
+      "offsets": {
+        "clavicle-l": {
+          "angleDeg": 30
+        },
+        "clavicle-r": {
+          "angleDeg": 30
+        }
+      },
+      "frames": {
+        "clavicle-l": {
+          "origin": [
+            0,
+            1.48,
+            0.02
+          ],
+          "tip": [
+            0.0,
+            1.565,
+            0.167224318643
+          ],
+          "u": [
+            0.0,
+            0.5,
+            0.866025403784
+          ],
+          "v": [
+            0.0,
+            0.866025403784,
+            -0.5
+          ],
+          "w": [
+            -1,
+            0,
+            0
+          ]
+        },
+        "clavicle-r": {
+          "origin": [
+            0,
+            1.48,
+            -0.02
+          ],
+          "tip": [
+            0.0,
+            1.565,
+            -0.167224318643
+          ],
+          "u": [
+            0.0,
+            0.5,
+            -0.866025403784
+          ],
+          "v": [
+            0.0,
+            0.866025403784,
+            0.5
+          ],
+          "w": [
+            1,
+            0,
+            0
+          ]
+        },
+        "arm-l": {
+          "origin": [
+            0.0,
+            1.565,
+            0.167224318643
+          ],
+          "tip": [
+            0.0,
+            1.045384757729,
+            0.467224318643
+          ],
+          "u": [
+            0.0,
+            -0.866025403784,
+            0.5
+          ],
+          "v": [
+            1,
+            0,
+            0
+          ],
+          "w": [
+            0.0,
+            0.5,
+            0.866025403784
+          ]
+        },
+        "arm-r": {
+          "origin": [
+            0.0,
+            1.565,
+            -0.167224318643
+          ],
+          "tip": [
+            0.0,
+            1.045384757729,
+            -0.467224318643
+          ],
+          "u": [
+            0.0,
+            -0.866025403784,
+            -0.5
+          ],
+          "v": [
+            1,
+            0,
+            0
+          ],
+          "w": [
+            0.0,
+            -0.5,
+            0.866025403784
+          ]
+        }
+      },
+      "extents": {
+        "front/clavicle": {
+          "minY": 1.462679491924,
+          "maxX": 0.177224318643
+        }
+      },
+      "anchors": {}
+    },
+    {
+      "name": "a shrug with the arms let hang: the arm spread undoes the lift of the clavicle",
+      "pose": "shrug-hanging",
+      "offsets": {
+        "clavicle-l": {
+          "angleDeg": 30
+        },
+        "clavicle-r": {
+          "angleDeg": 30
+        },
+        "arm-l": {
+          "abductionDeg": -30
+        },
+        "arm-r": {
+          "abductionDeg": 30
+        }
+      },
+      "frames": {
+        "arm-l": {
+          "origin": [
+            0.0,
+            1.565,
+            0.167224318643
+          ],
+          "tip": [
+            0.0,
+            0.965,
+            0.167224318643
+          ],
+          "u": [
+            0,
+            -1,
+            0
+          ],
+          "v": [
+            1,
+            0,
+            0
+          ],
+          "w": [
+            0,
+            0,
+            1
+          ]
+        },
+        "arm-r": {
+          "origin": [
+            0.0,
+            1.565,
+            -0.167224318643
+          ],
+          "tip": [
+            0.0,
+            0.965,
+            -0.167224318643
+          ],
+          "u": [
+            0,
+            -1,
+            0
+          ],
+          "v": [
+            1,
+            0,
+            0
+          ],
+          "w": [
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "extents": {
+        "front/arm": {
+          "minX": 0.117224318643,
+          "maxX": 0.217224318643,
+          "minY": 0.965,
+          "maxY": 1.565
+        }
+      },
+      "anchors": {
+        "wrist-l": [
+          0.02,
+          0.965,
+          0.197224318643
+        ]
+      }
+    },
+    {
+      "name": "the left clavicle retracts about its own normal and carries the arm back",
+      "pose": "retracted",
+      "offsets": {
+        "clavicle-l": {
+          "abductionDeg": 30
+        }
+      },
+      "frames": {
+        "clavicle-l": {
+          "origin": [
+            0,
+            1.48,
+            0.02
+          ],
+          "tip": [
+            -0.085,
+            1.48,
+            0.167224318643
+          ],
+          "u": [
+            -0.5,
+            0.0,
+            0.866025403784
+          ],
+          "v": [
+            0,
+            1,
+            0
+          ],
+          "w": [
+            -0.866025403784,
+            0.0,
+            -0.5
+          ]
+        },
+        "arm-l": {
+          "origin": [
+            -0.085,
+            1.48,
+            0.167224318643
+          ],
+          "tip": [
+            -0.085,
+            0.88,
+            0.167224318643
+          ],
+          "u": [
+            0,
+            -1,
+            0
+          ],
+          "v": [
+            0.866025403784,
+            0.0,
+            0.5
+          ],
+          "w": [
+            -0.5,
+            0.0,
+            0.866025403784
+          ]
+        }
+      },
+      "extents": {},
+      "anchors": {}
+    },
+    {
+      "name": "every bone offset about all three of its own axes, the scapula with a general rest placement",
+      "pose": "general",
+      "offsets": {
+        "torso": {
+          "angleDeg": 11
+        },
+        "clavicle-l": {
+          "angleDeg": 12,
+          "abductionDeg": -7,
+          "twistDeg": 9
+        },
+        "clavicle-r": {
+          "angleDeg": -5,
+          "abductionDeg": 14,
+          "twistDeg": -21
+        },
+        "arm-l": {
+          "angleDeg": 40,
+          "abductionDeg": 25,
+          "twistDeg": -30
+        },
+        "arm-r": {
+          "angleDeg": -20,
+          "abductionDeg": -35,
+          "twistDeg": 15
+        },
+        "scapula-l": {
+          "angleDeg": 8,
+          "abductionDeg": -12,
+          "twistDeg": 17
+        }
+      },
+      "frames": {},
+      "extents": {},
+      "anchors": {}
+    }
+  ],
+  "consumers": {
+    "description": "What every consumer of the bone frames must show of the left clavicle (0.17 m, profile ±0.02 m along its normal v and ±0.015 m along its joint axis w, origin [0, 1.48, 0.02]). Lifted by θ about its own joint axis its axis is u = [0, sin θ, cos θ] and its normal v = [0, cos θ, -sin θ], so its corners are at height 1.48 + L·sin θ ± 0.02·cos θ and at 0.02 + L·cos θ ∓ 0.02·sin θ beside the plane (L = 0 or 0.17) and ±0.015 ahead: the boxes below for θ = 30° (pose shrug, clip key at 0.5 s) and θ = 15° (the clip at 0.25 s, linear ease), as [min, max] per drawing axis in metres. The capsule (radius 0.015 m on the bone axis) spans the axis ends ± its radius. The arm (3.75 kg, centre of mass 0.27 m down the arm) hangs from the clavicle tip 0.17 m beside the sternoclavicular joint: the joint carries 3.75 · 9.80665 = 36.7749375 N of shear along the clavicle normal and 36.7749375 · 0.17 = 6.251739375 N·m of bending about the clavicle's joint axis, falling linearly to zero at the tip. The figure holds its breath in these cases (the respiration moves no bone), so the clip instants are the pure interpolation of the keys. The bending acts in the frontal plane (moment vector along ahead), so its diagram is drawn over the baseline from (0.02, 1.48) to (0.19, 1.48) in the front elevation, has no ordinate in the side elevation (which looks along the bone) and is an out-of-plane mark in the plan (which looks along the ordinate).",
+    "pose": "shrug",
+    "toleranceM": 1e-06,
+    "paperToleranceM": 0.0005,
+    "meshToleranceM": 0.002,
+    "boxes": {
+      "elevation": {
+        "minX": -0.015,
+        "maxX": 0.015,
+        "minY": 1.462679491924,
+        "maxY": 1.582320508076
+      },
+      "front": {
+        "minX": 0.01,
+        "maxX": 0.177224318643,
+        "minY": 1.462679491924,
+        "maxY": 1.582320508076
+      },
+      "plan": {
+        "minX": -0.015,
+        "maxX": 0.015,
+        "minY": 0.01,
+        "maxY": 0.177224318643
+      }
+    },
+    "clip": {
+      "id": "shrugging",
+      "title": {
+        "en": "Shrugging",
+        "de": "Schulterzucken"
+      },
+      "description": {
+        "en": "Both shoulders rise in half a second and sink again.",
+        "de": "Beide Schultern heben sich in einer halben Sekunde und sinken wieder."
+      },
+      "durationS": 1,
+      "fps": 30,
+      "loop": true,
+      "rootMotion": "none",
+      "keys": [
+        {
+          "t": 0,
+          "pose": "rest",
+          "ease": "linear"
+        },
+        {
+          "t": 0.5,
+          "pose": "shrug",
+          "ease": "linear"
+        },
+        {
+          "t": 1,
+          "pose": "rest",
+          "ease": "linear"
+        }
+      ],
+      "contacts": [
+        {
+          "anchor": "contact-l",
+          "fromS": 0,
+          "toS": 1
+        },
+        {
+          "anchor": "contact-r",
+          "fromS": 0,
+          "toS": 1
+        }
+      ],
+      "phases": [],
+      "events": [],
+      "tracks": []
+    },
+    "instants": [
+      {
+        "timeS": 0.25,
+        "liftDeg": 15,
+        "front": {
+          "minX": 0.014823619098,
+          "maxX": 0.189383771371,
+          "minY": 1.460681483474,
+          "maxY": 1.543317754193
+        },
+        "tip": [
+          0,
+          1.523999237767,
+          0.184207390355
+        ]
+      },
+      {
+        "timeS": 0.5,
+        "liftDeg": 30,
+        "front": {
+          "minX": 0.01,
+          "maxX": 0.177224318643,
+          "minY": 1.462679491924,
+          "maxY": 1.582320508076
+        },
+        "tip": [
+          0,
+          1.565,
+          0.167224318643
+        ]
+      }
+    ],
+    "solids": {
+      "body": {
+        "id": "clavicle-l",
+        "kind": "capsule",
+        "bone": "clavicle-l",
+        "material": "skin",
+        "role": "body",
+        "tone": 0.5,
+        "p0": [
+          0,
+          0,
+          0
+        ],
+        "p1": [
+          0.17,
+          0,
+          0
+        ],
+        "r0": 0.015,
+        "r1": 0.015
+      },
+      "structure": {
+        "id": "member-clavicle-l",
+        "kind": "capsule",
+        "bone": "clavicle-l",
+        "material": "skin",
+        "role": "body",
+        "tone": 0.4,
+        "p0": [
+          0,
+          0,
+          0
+        ],
+        "p1": [
+          0.17,
+          0,
+          0
+        ],
+        "r0": 0.015,
+        "r1": 0.015,
+        "member": "clavicle-l",
+        "part": "member"
+      },
+      "thermal": {
+        "id": "clavicle-l-torso",
+        "of": "clavicle-l",
+        "region": "torso"
+      }
+    },
+    "capsule": {
+      "ahead": [
+        -0.015,
+        0.015
+      ],
+      "up": [
+        1.465,
+        1.58
+      ],
+      "left": [
+        0.005,
+        0.182224318643
+      ]
+    },
+    "region": "torso",
+    "structure": {
+      "pose": "rest",
+      "bone": "clavicle-l",
+      "massKg": 3.75,
+      "gravityMS2": 9.80665,
+      "leverM": 0.17,
+      "shearN": 36.7749375,
+      "momentNm": 6.251739375,
+      "baseline": [
+        [
+          0.02,
+          1.48
+        ],
+        [
+          0.19,
+          1.48
+        ]
+      ]
+    }
+  }
+}

@@ -43,14 +43,8 @@ def collect(row, found):
 
 
 for actor in candidates("semio_framework_actor"):
-    try:
-        job = dict(dependencies(actor))["semio_framework_job"]
-        if "semio_framework_job_testing_caller" not in dict(dependencies(job)):
-            continue
-        collect(actor, set())
-    except KeyError:
-        continue
-    else:
+    job = dict(dependencies(actor))["semio_framework_job"]
+    if job[1].parent.parent.name == "b3ddeb514b89307c":
         break
 else:
     raise SystemExit("No compatible cached actor and job testkit")

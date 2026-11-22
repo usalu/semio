@@ -6,7 +6,7 @@ import type { ActorInstanceLifecycleReceipt, OwnedUiPatchAcknowledgement, OwnedU
 export function registerCapturedInstanceLifecycleTests(kit: ShardClientSettlementTestKit): void {
   const { BUDGET, OwnedNativeUiPatchAuthority, OwnedNativeUiPatchSubmissionReceipt, OwnedUiInstance, OwnedUiInstanceRetirement, describe, encodeActorInstanceLifecycle, encodeActorUiPatchReceipt, expect, harness, it, testSource } = kit;
   describe("ShardClient captured instance lifecycle", () => {
-    const openInput = { appId: "fixture", actor: "fixture", config: new Uint8Array(), assets: [], capabilities: [], quotas: new Uint8Array() };
+    const openInput = { appId: "fixture", purpose: { tag: "ordinary" } as const, actor: "fixture", config: new Uint8Array(), assets: [], capabilities: [], quotas: new Uint8Array() };
     async function activateCaptured(client: ShardClient, worker: FakeShardWorker, actorId = "captured") {
       const activated = client.activate(actorId, "https://fixture.invalid/actor.js", [], BUDGET);
       await flushAdmission();
@@ -72,6 +72,7 @@ export function registerCapturedInstanceLifecycleTests(kit: ShardClientSettlemen
       
       const events = worker.sent.flatMap(value => (value as { events?: ShardEventEnvelope[] }).events ?? []);
       expect(events.map(event => event.kind)).toEqual(["instance-open", "instance-lifecycle-ack", "instance-close", "instance-lifecycle-ack", "instance-lifecycle-ack"]);
+      expect((events[0]!.payload as { purpose: unknown }).purpose).toEqual({ tag: "ordinary" });
       expect(events[1]!.payload).toEqual({ kind: "ack", receipt: captured });
       client.dispose("captured");
     });

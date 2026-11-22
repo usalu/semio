@@ -1,0 +1,12 @@
+{
+  "rows": [
+    { "kind": "file", "path": "b/x.ts", "fact": { "size": 1, "mtimeMs": 0, "ctimeMs": 0, "ino": 0, "sha256": "aa" } },
+    { "kind": "exists", "path": "a/script.ts", "fact": false },
+    { "kind": "readdirNames", "path": "a", "fact": "d1" },
+    { "kind": "file", "path": "a/y.ts", "fact": { "size": 2, "mtimeMs": 0, "ctimeMs": 0, "ino": 0, "sha256": "bb" } },
+    { "kind": "lstat", "path": "a/z", "fact": "file" },
+    { "kind": "file", "path": "Ä/ü.ts", "fact": { "size": 3, "mtimeMs": 0, "ctimeMs": 0, "ino": 0, "sha256": "cc" } },
+    { "kind": "file", "path": "a/y.ts", "fact": { "size": 2, "mtimeMs": 0, "ctimeMs": 0, "ino": 0, "sha256": "aa" } }
+  ],
+  "orders": [[0,1,2,3,4,5,6],[6,5,4,3,2,1,0],[3,0,6,2,5,1,4]]
+}

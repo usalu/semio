@@ -1,13 +1,13 @@
 {
   "version": 1,
   "cases": [
-    { "name": "failed pass retires its own output", "passes": 1, "change": "none", "reason": null },
-    { "name": "earlier pass and failed pass both retire outputs", "passes": 2, "change": "none", "reason": null },
+    { "name": "failed pass retains its claimed output", "passes": 1, "change": "none", "reason": null },
+    { "name": "earlier and failed passes retain their claimed outputs", "passes": 2, "change": "none", "reason": null },
     { "name": "a generated input also announced as an output is retained", "passes": 2, "change": "overlap", "reason": "bytes" },
     { "name": "retirement preserves deleted source detection", "passes": 2, "change": "source", "reason": "vanished" },
     { "name": "retirement preserves absent configuration detection", "passes": 2, "change": "absent", "reason": "appeared" },
     { "name": "retirement preserves a directory roster and detects additions", "passes": 2, "change": "directory", "reason": "roster" },
     { "name": "refused retirement does not excuse a later disappearance", "passes": 2, "change": "refused", "reason": "vanished" },
-    { "name": "failure recheck does not allow successful sealing of missing output", "passes": 1, "change": "seal", "reason": null }
+    { "name": "successful provenance keeps its claims and releases unclaimed files", "passes": 1, "change": "seal", "reason": null }
   ]
 }

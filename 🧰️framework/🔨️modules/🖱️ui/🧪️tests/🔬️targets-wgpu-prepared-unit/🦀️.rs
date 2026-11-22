@@ -170,6 +170,39 @@ fn a_procedural_grid_is_one_prepared_scalar_between_textures_and_opaque_geometry
     assert_eq!(line_vertices, 2, "ordinary overlays retain the line-vertex lane");
 }
 
+/// ☁️ LAW: a point-cloud layer is one header scalar plus bounded chunk scalars, measured after lines and before translucent draws.
+#[test]
+fn a_point_cloud_is_chunked_prepared_scalars_between_lines_and_translucent_draws() {
+    let _guard = prepared_process_guard();
+    use semio_ui_scene::math::{Instance3d, LineDraw3d, LineVertex3d, PointDraw3d, PointVertex3d, SceneDraw3d, ScenePass3d, POINT_CHUNK_VERTICES};
+    let instance = Instance3d { component_source: None, id: String::new(), model: Instance3d::model_from_trs([0.0; 3], [0.0, 0.0, 0.0, 1.0], [1.0; 3]), color: [1.0; 4], selected: false, hovered: false, material: Default::default() };
+    let total = POINT_CHUNK_VERTICES * 2 + 1;
+    let mut draw = DrawList::default();
+    draw.push_scene_pass(ScenePass3d {
+        line_draws: vec![LineDraw3d { vertices: vec![LineVertex3d { position: [0.0; 3], color: [1.0; 4] }, LineVertex3d { position: [1.0, 0.0, 0.0], color: [1.0; 4] }] }],
+        point_draws: vec![PointDraw3d { vertices: vec![PointVertex3d { position: [0.0; 3], color: [1.0; 4] }; total], size: 3.0, size_attenuation: true }],
+        translucent_draws: vec![SceneDraw3d { mesh_key: String::new(), mesh_version: 0, instances: vec![instance], shadow_role: Default::default() }],
+        ..Default::default()
+    });
+    let mut cursor = DrawMeasureCursor::PassHeader(0);
+    let mut measured = Vec::new();
+    for _ in 0..64 {
+        let current = cursor;
+        let Some(usage) = PreparedRenderJob::next_draw_usage(&draw, &mut cursor) else { break };
+        measured.push((current, usage));
+        if matches!(cursor, DrawMeasureCursor::Complete) {
+            break;
+        }
+    }
+    let chunks: Vec<_> = measured.iter().filter(|(cursor, _)| matches!(cursor, DrawMeasureCursor::PassPointChunk { .. })).collect();
+    assert_eq!(chunks.len(), 3, "two full chunks and the remainder");
+    assert_eq!(chunks.iter().map(|(_, usage)| usage.draw_bytes).sum::<usize>(), total * size_of::<PointVertex3d>(), "chunk bytes add up to the retained vertices");
+    let header = measured.iter().position(|(cursor, _)| matches!(cursor, DrawMeasureCursor::PassPoint { .. })).expect("point header scalar");
+    let last_line = measured.iter().rposition(|(cursor, _)| matches!(cursor, DrawMeasureCursor::PassLineVertex { .. })).expect("line vertex scalar");
+    let translucent = measured.iter().position(|(cursor, _)| matches!(cursor, DrawMeasureCursor::PassInstance { translucent: true, .. })).expect("translucent instance scalar");
+    assert!(last_line < header && header < translucent, "points are encoded after lines and before translucent draws");
+}
+
 #[test]
 fn ellipse_scene_pass_snapshots_backdrop_clears_inside_then_composites_last() {
     use semio_ui_scene::math::{ScenePass3d, SceneViewportMask3d};
@@ -815,4 +848,23 @@ fn retained_codec_source_moves_once_and_retires_one_page_per_governed_step() {
     assert!(job.terminal_is_empty());
 
     close_caller.retire(semio_ui_prepared::testing::close_source::STOCK);
+}
+
+#[test]
+fn a_group_alpha_group_is_bracketed_by_begin_and_end_cursors() {
+    let mut draw = DrawList::default();
+    draw.push_solid([0.0, 0.0, 4.0, 4.0], semio_ui_theme::Rgba::new(1.0, 0.0, 0.0, 1.0));
+    let mark = draw.begin_group_alpha(semio_ui_theme::geometry::Rect::new(0.0, 0.0, 8.0, 8.0), 0.5);
+    draw.push_solid([0.0, 0.0, 4.0, 4.0], semio_ui_theme::Rgba::new(0.0, 1.0, 0.0, 1.0));
+    draw.end_group_alpha(mark);
+    draw.push_solid([0.0, 0.0, 4.0, 4.0], semio_ui_theme::Rgba::new(0.0, 0.0, 1.0, 1.0));
+    let mut cursor = DrawMeasureCursor::default();
+    let mut walk = vec![cursor];
+    while PreparedRenderJob::next_draw_usage(&draw, &mut cursor).is_some() {
+        walk.push(cursor);
+    }
+    let at = |wanted: DrawMeasureCursor| walk.iter().position(|step| *step == wanted).unwrap_or_else(|| panic!("{wanted:?} missing from {walk:?}"));
+    let (begin, inside, end, after) = (at(DrawMeasureCursor::GroupBegin(1)), at(DrawMeasureCursor::LayerUi { layer: 1, item: 0, overlay: false }), at(DrawMeasureCursor::GroupEnd(1)), at(DrawMeasureCursor::LayerUi { layer: 2, item: 0, overlay: false }));
+    assert!(begin < inside && inside < end && end < after);
+    assert_eq!(walk.iter().filter(|step| matches!(step, DrawMeasureCursor::GroupBegin(_) | DrawMeasureCursor::GroupEnd(_))).count(), 2);
 }

@@ -65,8 +65,11 @@ fn actual_poll_refuses_an_unfundable_ordinary_acknowledgment() {
     }
 }
 
+#[test]
+fn actual_poll_refuses_and_retires_an_unfundable_returned_frame() { exercise_poll_on_stack(PollExercise::ExhaustReturnedFrame); }
+
 #[derive(Clone, Copy)]
-enum PollExercise { Deliver, RefuseCallback, CloseInput(bool, bool), ExhaustAcknowledgment(bool) }
+enum PollExercise { Deliver, RefuseCallback, CloseInput(bool, bool), ExhaustAcknowledgment(bool), ExhaustReturnedFrame }
 
 fn exercise_poll_on_stack(exercise: PollExercise) {
     std::thread::Builder::new().stack_size(8 * 1024 * 1024)
@@ -78,7 +81,12 @@ fn exercise_poll(exercise: PollExercise) {
     let callback_fails = matches!(exercise, PollExercise::RefuseCallback);
     let close_input = match exercise { PollExercise::CloseInput(completed, close) => Some((completed, close)), _ => None };
     let exhaust_acknowledgment = match exercise { PollExercise::ExhaustAcknowledgment(progress) => Some(progress), _ => None };
-    let bytes = channel_fixture::owned_poll_guest(semio_os_kernel::CHANNEL_VERSION);
+    let returned_frame: Option<serde_json::Value> = matches!(exercise, PollExercise::ExhaustReturnedFrame)
+        .then(|| serde_json::from_str(include_str!("🧫️returned-frame-stock.json")).unwrap());
+    let bytes = match returned_frame.as_ref() {
+        Some(law) => channel_fixture::owned_poll_return_guest(semio_os_kernel::CHANNEL_VERSION, law["calleeLocals"].as_u64().unwrap() as u32),
+        None => channel_fixture::owned_poll_guest(semio_os_kernel::CHANNEL_VERSION),
+    };
     let engine = wasmtime::Engine::default();
     let module = wasmtime::Module::new(&engine, core_bytes(&bytes)).unwrap();
     let mut store = wasmtime::Store::new(&engine, ());
@@ -92,7 +100,8 @@ fn exercise_poll(exercise: PollExercise) {
     let wire = &memory[word as u32 as usize..word as u32 as usize + (word as u64 >> 32) as usize];
     let (header,escrow)=OriginalActorFixedReceipt::read(wire).unwrap();assert_eq!((escrow.pointer,escrow.length),(3200,48));
     let OriginalActorFixedKind::TurnOutput{ready:true,captured:true,pointer,length,..}=header.kind else{panic!("Poll returns the actual ready capsule extent")};
-    assert!(serde_json::from_slice::<bool>(&memory[pointer as usize..pointer as usize+length as usize]).unwrap());
+    let oracle = serde_json::from_slice::<bool>(&memory[pointer as usize..pointer as usize+length as usize]).unwrap();
+    assert_eq!(oracle, returned_frame.as_ref().map_or(true, |law| law["oracleOutput"].as_bool().unwrap()));
 
     use semio_plugin_host_post_turn_relay::origin_registry;
     let runtime = std::sync::Arc::new(GuestRuntimes::Owned(OwnedRuntime::new(clock)));
@@ -138,7 +147,41 @@ fn exercise_poll(exercise: PollExercise) {
     let mut was_executing = false;
     let mut interrupted_input = false;
     let mut refused_acknowledgment = false;
+    let mut refused_frame = false;
     for _ in 0..100_000 {
+        if let Some(law) = returned_frame.as_ref() {
+            if let Some((true, issued, request)) = session.fixture_guest_request().filter(|(_, _, request)| request.header_bytes == 152) {
+                let owner = session.fixture_guest_owner();
+                let target = law["ordinaryReleaseBytes"].as_u64().unwrap() as usize;
+                for _ in 0..64 {
+                    let bytes = session.fixture_drive_release() - target;
+                    if bytes == 0 { break; }
+                    let mut donor = Some(Vec::<u8>::with_capacity(bytes));
+                    let status = session.with_native_step(|_, _, _, cx| {
+                        let bytes = donor.as_ref().unwrap().capacity();
+                        cx.consume_retained(RetainedCloneProgress { copied_items: 1, released_bytes: bytes, ..Default::default() })?;
+                        cx.consume_fuel(1);
+                        drop(donor.take());
+                        Ok(())
+                    });
+                    assert_ne!(status, GuestPollSessionStatus::Refused, "{:?}", session.failure());
+                }
+                assert_eq!(session.fixture_drive_release(), target);
+                for _ in 0..law["maximumPollStepsAfterLoan"].as_u64().unwrap() {
+                    let status = session.drive_step(input.as_ref(), &mut |_, _, _| panic!("unfundable frame cannot deliver output"));
+                    if status == GuestPollSessionStatus::Pending { continue; }
+                    assert_eq!(Some(format!("{status:?}").as_str()), law["ordinaryStatus"].as_str());
+                    let (_, retained, retained_request) = session.fixture_guest_request().unwrap();
+                    assert_eq!((retained, retained_request, session.fixture_guest_owner()), (issued, request, owner));
+                    let original = session.failure().unwrap().primary.as_ref().unwrap().primary_value().unwrap();
+                    assert_eq!(original.kind, ValueRefusalKind::WorkLimit);
+                    assert_eq!(Some(original.message.as_ref()), law["refusal"].as_str());
+                    refused_frame = true;
+                    break;
+                }
+                break;
+            }
+        }
         if let Some(pending_progress) = exhaust_acknowledgment {
             if let Some((native_step, issued, request)) = session.fixture_guest_request().filter(|(_, _, request)| request.header_bytes == 144) {
                 let armed = if pending_progress {
@@ -241,7 +284,10 @@ fn exercise_poll(exercise: PollExercise) {
             status => panic!("actual Poll fixture {status:?}: {:?} {:?}", session.failure(), session.cleanup_failure()),
         }
     }
-    if exhaust_acknowledgment.is_some() {
+    if returned_frame.is_some() {
+        assert!(refused_frame);
+        assert_eq!(callback_count, 0);
+    } else if exhaust_acknowledgment.is_some() {
         assert!(refused_acknowledgment);
         assert_eq!(callback_count, 0);
     } else if close_input.is_some() {

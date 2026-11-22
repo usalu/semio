@@ -158,7 +158,7 @@ export type TrustedBootstrapPackageSpecV1 = Readonly<{
 }>;
 
 /** 🎯️ What `trusted-catalog-bootstrap` publishes when no `--packages` list is given. */
-export const TRUSTED_BOOTSTRAP_DEFAULT_PACKAGES = "stdio,gis,note";
+export const TRUSTED_BOOTSTRAP_DEFAULT_PACKAGES = "stdio,gis,note,space";
 
 /** 🌎️ Every selectable `s` plugin package — the top-level plugins and the stdio family components right after the `stdio`
  * package they depend on — in publication order: a host after every owner it hosts kinds of (the publisher binds a hosted row to

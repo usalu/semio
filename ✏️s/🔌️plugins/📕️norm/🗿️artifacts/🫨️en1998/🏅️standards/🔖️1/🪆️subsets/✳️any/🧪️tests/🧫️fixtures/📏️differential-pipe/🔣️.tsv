@@ -1,0 +1,16 @@
+id	basis	radius	thickness	tension	compression	global	results	compression_limit
+verified	confirmed	0.4	0.008	0.012	0.003	0.85	111	0.004
+exact-thin	confirmed	0.4	0.008	0.03	0.004	1.0	111	0.004
+tensile	confirmed	0.4	0.008	0.030001	0.003	0.85	011	0.004
+local	confirmed	0.4	0.008	0.012	0.004001	0.85	101	0.004
+global	confirmed	0.4	0.008	0.012	0.003	1.000001	110	0.004
+all-fail	confirmed	0.4	0.008	0.07	0.03	2.0	000	0.004
+exact-cap	confirmed	0.4	0.05	0.03	0.01	1.0	111	0.01
+above-cap	confirmed	0.4	0.05	0.02	0.010001	0.90	101	0.01
+no-demand	confirmed	0.4	0.008	0.0	0.0	0.0	111	0.004
+unconfirmed	unconfirmed	0.4	0.008	0.012	0.003	0.85	U	
+absent-global	confirmed	0.4	0.008	0.012	0.003		U	
+zero-wall	confirmed	0.4	0.0	0.012	0.003	0.85	U	
+solid	confirmed	0.4	0.4	0.012	0.003	0.85	U	
+negative-compression	confirmed	0.4	0.008	0.012	-0.003	0.85	U	
+nonfinite-tension	confirmed	0.4	0.008	inf	0.003	0.85	U	

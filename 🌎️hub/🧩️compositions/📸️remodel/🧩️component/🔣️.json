@@ -12421,11 +12421,12 @@
             "iconId": "camera",
             "layout": {
               "root": {
-                "kind": "row",
+                "kind": "split",
+                "axis": "horizontal",
                 "children": [
                   {
                     "kind": "stack",
-                    "size": 60.0,
+                    "size": 0.6,
                     "children": [
                       {
                         "kind": "window",
@@ -12436,7 +12437,7 @@
                   },
                   {
                     "kind": "stack",
-                    "size": 40.0,
+                    "size": 0.4,
                     "children": [
                       {
                         "kind": "window",
@@ -12456,11 +12457,12 @@
             "iconId": "table-2",
             "layout": {
               "root": {
-                "kind": "row",
+                "kind": "split",
+                "axis": "horizontal",
                 "children": [
                   {
                     "kind": "stack",
-                    "size": 60.0,
+                    "size": 0.6,
                     "children": [
                       {
                         "kind": "window",
@@ -12471,7 +12473,7 @@
                   },
                   {
                     "kind": "stack",
-                    "size": 40.0,
+                    "size": 0.4,
                     "children": [
                       {
                         "kind": "window",
@@ -12488,11 +12490,12 @@
         ],
         "defaultLayout": {
           "root": {
-            "kind": "row",
+            "kind": "split",
+            "axis": "horizontal",
             "children": [
               {
                 "kind": "stack",
-                "size": 70.0,
+                "size": 0.7,
                 "children": [
                   {
                     "kind": "window",
@@ -12503,7 +12506,7 @@
               },
               {
                 "kind": "stack",
-                "size": 30.0,
+                "size": 0.3,
                 "children": [
                   {
                     "kind": "window",

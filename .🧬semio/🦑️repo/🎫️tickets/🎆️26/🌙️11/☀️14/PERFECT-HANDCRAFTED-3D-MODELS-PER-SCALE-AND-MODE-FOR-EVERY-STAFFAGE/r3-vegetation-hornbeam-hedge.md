@@ -230,3 +230,9 @@ None to the model. The ticket source `volumes/vegetation/hornbeam-hedge.json` wa
 - No leaf relief in 3D; the smooth skin is honest for a fresh cut only.
 - Wind poses lean the hedge along the row (planar rig), real wind pushes across it.
 - Grade A not reached; the brief's bar is not met for this asset.
+
+## Clipped foliage and cross-row sway reviewed November 21
+
+The six crowns have individual section profiles, staggered perimeter relief and distinct growing shoots. Each shoot carries alternate ovate, toothed leaves with a raised midrib, folded blade and closed underside. The models carry 480 blades at 1:50, 384 at 1:100, 144 at 1:200 and 36 at 1:500. Each blade and shoot has an explicit leaf-face thermal binding. The six original woody plants remain independently articulated. A transverse wind tips every crown across the row. The projected drawing sections follow the same stems and crowns in elevation, front and plan.
+
+The test checks transverse crown-tip displacement over 35 mm, distinct plant attachments and thermal bindings. All thirteen geometry rules passed at each scale. The independent GLB reader verified twelve scenes in 6,496,264 bytes. The print and schema checks passed. The full-scale calm and windy renders were inspected. [Leaf shape and shoot placement](digital-hornbeam-flush.json).

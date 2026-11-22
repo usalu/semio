@@ -3,6 +3,7 @@ import {reconcileBuildOwnerRegistry} from "../../🧾️registry-consistency/�
 import {GRAPH_LIMITS_V1} from "../../🔐️authority/🟦️.ts";
 import {readBuildOwnerRegistryV1} from "../../🚪️admission/🟦️.ts";
 import graphSchema from "../../🧬️schema/🔣️.json" with{type:"json"};
+import {emitGraphPassNoticeV1} from "../♻️pass-reuse/🟦️.ts";
 
 /** 🪪️ The native roots a refused inference names because no registry row owns them yet (the two refusals of the native closure), whatever wrapper carried the message across the worker farm. */
 export function pendingOwnerRootsV1(message:string):string[]{
@@ -86,6 +87,7 @@ export async function settleOwnerRegistryV1<T>(root:string,attempt:()=>Promise<T
       if(!moved&&!adopted)moved=readBuildOwnerRegistrySourceV1(root,"current")!==before;
       if(!moved&&!adopted)throw ownerRegistryRefusalV1({roots,rounds:round,moved,cause:fault});
       clearPinnedAuthorityV1();
+      emitGraphPassNoticeV1({round:round+1,moved:roots.length,evicted:0,heap:0});
       options.say?.("[graph-repair] "+JSON.stringify({round:round+1,registry:"followed",roots,adopted,moved})+"\n");
     }
   }

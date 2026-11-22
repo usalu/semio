@@ -114,9 +114,16 @@ export function rampHostRequestV1(base:HostRequestV1,scaled:HostRequestV1,estima
  return requireHostCapacityV1<HostRequestV1>("Request",Object.freeze({...scaled,rampMilliseconds:estimate.rampMilliseconds,rampSlot:!measured&&(scaled.fixedMegabytes<base.fixedMegabytes||scaled.perJobMegabytes<base.perJobMegabytes)}));
 }
 
-/** 🧹️ Whether a finished run may teach its class: a completed run always, a failed or cancelled run only when the partial peak it reached already exceeds the current estimate, so it can only raise a reservation and never lower one with a run that died early. */
-export function learnableHostRunV1(status:HostRunStatusV1,peakRatioBasisPoints:number,estimate:Pick<HostEstimateV1,"ratioBasisPoints">):boolean{
- return status==="ok"||peakRatioBasisPoints>estimate.ratioBasisPoints;
+/** 🧹️ Whether a finished run may teach its class: only a run that completed and ran on a host that was not under memory pressure (a tree reading of a thrashing host counts shared and compressed pages many times), or a run the gate itself stopped at its memory limit (`limited`: it needed more than its limit, the peak is learned grown by the breach growth). A run that failed, was cancelled or was killed by the system teaches nothing, so no early death and no partial peak can set a reservation.
+ * @see ../🧪️tests/🧭️progress/🟦️.ts */
+export function learnableHostRunV1(status:HostRunStatusV1,evidence:Readonly<{limited?:boolean;pressured?:boolean}>={}):boolean{
+ return evidence.pressured!==true&&(status==="ok"||evidence.limited===true);
+}
+
+/** 🔝️ The most one learned peak may count: the share of the memory above the floor that a class may ask for (`estimates.maximumShareBasisPoints`) and, when the class declares one, its ceiling; a measured peak above either is no evidence of what the class needs, so every learned peak is clamped to it before it is stored and a store can never teach a request more than the host could give an idle machine.
+ * @see hostClassCeilingV1 */
+export function hostLearnCeilingV1(policy:HostCapacityPolicyV1,capacityMegabytes:number,classCeilingMegabytes?:number):number{
+ return Math.min(Math.floor(Math.max(0,capacityMegabytes)*policy.estimates.maximumShareBasisPoints/DEFAULT_BASIS_POINTS),classCeilingMegabytes??Infinity);
 }
 
 /** 🥇️ Who is served before the batch: a request the operation marks interactive, a process whose lease standing is interactive (a person at a terminal, the same class the lease queue serves first), or a class learned to be a quick rebuild; a stream of agent suites never delays them, and aging still keeps every batch request from starving. */

@@ -9,11 +9,7 @@ use semio_ui_locale::LocalizedLabel;
 use semio_plugin::ModeDefinition;
 use semio_plugin::ToolRef;
 use semio_plugin::WindowLayout;
-use semio_plugin::WindowLayoutAxisNode;
-use semio_plugin::WindowLayoutChild;
-use semio_plugin::WindowLayoutRoot;
-use semio_plugin::WindowLayoutStackNode;
-use semio_plugin::WindowLayoutWindowNode;
+use semio_plugin::{WindowLayoutNode, Axis};
 
 pub const TRINITY_JACK_MODE_EDIT: &str = "edit";
 
@@ -24,30 +20,24 @@ pub fn definition() -> ModeDefinition {
 }
 
 /// 🪟️ One quadrant of the layout: a stack holding a single window kind.
-fn window_stack(window_kind_id: &str, title: &str, size: Option<f64>) -> WindowLayoutChild {
-    WindowLayoutChild::Stack(WindowLayoutStackNode {
-        kind: "stack".into(),
-        size,
-        active_window_kind_id: None,
-        children: vec![WindowLayoutWindowNode { kind: "window".into(), window_kind_id: window_kind_id.into(), title: Some(title.into()), instance_id: None, template_id: None, corner: None }],
-    })
+fn window_stack(window_kind_id: &str, title: &str, size: Option<f64>) -> WindowLayoutNode {
+    WindowLayoutNode::Stack { size,
+        active_window_id: None,
+        children: vec![WindowLayoutNode::Window { window_kind_id: window_kind_id.into(), title: Some(title.into()), instance_id: None, template_id: None, corner: None }],
+    }
 }
 
 /// 🪟️ Nakagin graph left (60%), Jack query over Results stacked right (40%).
 pub fn layout() -> WindowLayout {
     WindowLayout {
-        root: WindowLayoutRoot::Axis(WindowLayoutAxisNode {
-            kind: "row".into(),
-            size: None,
+        root: WindowLayoutNode::Split { axis: Axis::Horizontal, size: None,
             children: vec![
                 window_stack(TRINITY_JACK_PLAY_WINDOW_GRAPH, "Nakagin Graph", Some(0.6)),
-                WindowLayoutChild::Axis(WindowLayoutAxisNode {
-                    kind: "column".into(),
-                    size: Some(0.4),
+                WindowLayoutNode::Split { axis: Axis::Vertical, size: Some(0.4),
                     children: vec![window_stack(TRINITY_JACK_PLAY_WINDOW_EDITOR, "Jack Query", Some(0.55)), window_stack(TRINITY_JACK_PLAY_WINDOW_RESULTS, "Results", Some(0.45))],
-                }),
+                },
             ],
-        }),
+        },
     }
 }
 //#endregion 🔖️Definition

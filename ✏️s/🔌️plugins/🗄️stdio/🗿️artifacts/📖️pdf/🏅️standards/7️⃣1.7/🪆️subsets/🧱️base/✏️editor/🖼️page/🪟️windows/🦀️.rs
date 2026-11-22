@@ -1,5 +1,6 @@
 //! 🪟️ PDF page editor windows: the page and inspector window definitions, their rendering and the document layout.
 
+use semio_plugin::{WindowLayoutNode, Axis};
 use super::*;
 
 //#region 🪟️Windows
@@ -56,7 +57,7 @@ pub fn window_definition() -> WindowKindDefinition {
             action("set-image", "Set Image Samples", "Bildpunkte setzen", vec![page(), object(), width(), height(), text()]),
             action("insert-page", "Insert Page", "Seite einfügen", vec![page(), width(), height()]),
             action("remove-page", "Remove Page", "Seite entfernen", vec![page()]),
-            action("move-page", "Move Page", "Seite verschieben", vec![page(), x()]),
+            action("move-page", "Move Page", "Seite verschieben", vec![ActionArgDef::number("page", LocalizedLabel::native("Page", "Seite")), x()]),
             action("set-page-size", "Set Page Size", "Seitengröße setzen", vec![page(), width(), height()]),
             action("set-info", "Set Document Info", "Dokumentinfo setzen", vec![ActionArgDef::text("text", LocalizedLabel::native("Title", "Titel")).min_length(0), ActionArgDef::text("extra", LocalizedLabel::native("Author", "Autor")).min_length(0), ActionArgDef::text("object", LocalizedLabel::native("Subject", "Thema")).min_length(0)]),
             action("set-info-field", "Set Info Field", "Infofeld setzen", vec![object(), text()]),
@@ -108,6 +109,13 @@ pub fn window_definition() -> WindowKindDefinition {
             action("set-glyph", "Set Glyph", "Glyphe setzen", vec![object(), text(), x(), y(), width(), height()]),
             action("set-indirect-object", "Set Indirect Object", "Objekt setzen", vec![x(), y(), ActionArgDef::text("text", LocalizedLabel::native("Name", "Name")).min_length(0)]),
             action("set-mesh-reference", "Set Mesh Reference", "Netzreferenz setzen", vec![object(), ActionArgDef::text("text", LocalizedLabel::native("Decode", "Dekodierung")).min_length(0), ActionArgDef::text("extra", LocalizedLabel::native("Artifact Identity", "Artefaktidentität")).min_length(0)]),
+            action("create-annotation", "Create Annotation", "Anmerkung erstellen", vec![page(), ActionArgDef::text("object", LocalizedLabel::native("Kind (note, highlight, underline, strikeOut, squiggly, ink, link)", "Art (note, highlight, underline, strikeOut, squiggly, ink, link)")).min_length(1).required(), ActionArgDef::text("text", LocalizedLabel::native("Contents or link", "Inhalt oder Link")).min_length(0), ActionArgDef::text("extra", LocalizedLabel::native("Quad points or ink strokes", "Quadpunkte oder Freihandstriche")).min_length(0), x(), y(), ActionArgDef::number("width", LocalizedLabel::native("Width", "Breite")), ActionArgDef::number("height", LocalizedLabel::native("Height", "Höhe")), ActionArgDef::number("red", LocalizedLabel::native("Red", "Rot")), ActionArgDef::number("green", LocalizedLabel::native("Green", "Grün")), ActionArgDef::number("blue", LocalizedLabel::native("Blue", "Blau"))]),
+            action("fill-form-field", "Fill Form Field", "Formularfeld ausfüllen", vec![ActionArgDef::text("object", LocalizedLabel::native("Field name", "Feldname")).min_length(1).required(), ActionArgDef::text("text", LocalizedLabel::native("Value", "Wert")).min_length(0)]),
+            action("replace-page", "Replace Page", "Seite ersetzen", vec![page(), ActionArgDef::text("payload", LocalizedLabel::native("PDF Data", "PDF-Daten")).min_length(0), ActionArgDef::text("extra", LocalizedLabel::native("Source Page", "Quellseite")).min_length(0), ActionArgDef::number("width", LocalizedLabel::native("Width", "Breite")), ActionArgDef::number("height", LocalizedLabel::native("Height", "Höhe"))]),
+            action("replace-page-pick", "Replace Page from PDF", "Seite aus PDF ersetzen", vec![page(), ActionArgDef::text("extra", LocalizedLabel::native("Source Page", "Quellseite")).min_length(0)]),
+            action("merge-document", "Merge PDF Pages", "PDF-Seiten zusammenführen", vec![page(), ActionArgDef::text("payload", LocalizedLabel::native("PDF Data", "PDF-Daten")).min_length(1).required(), ActionArgDef::text("extra", LocalizedLabel::native("Source Pages", "Quellseiten")).min_length(0)]),
+            action("merge-pick", "Insert Pages from PDF", "Seiten aus PDF einfügen", vec![page(), ActionArgDef::text("extra", LocalizedLabel::native("Source Pages", "Quellseiten")).min_length(0)]),
+            action("extract-pages", "Extract Pages to PDF", "Seiten als PDF extrahieren", vec![ActionArgDef::text("extra", LocalizedLabel::native("Pages (1-3,5; next file after ;)", "Seiten (1-3,5; weitere Datei nach ;)")).min_length(1).required()]),
         ],
         utilities: Vec::new(),
         interactions: Vec::new(),
@@ -158,19 +166,15 @@ pub fn inspector_window_definition() -> WindowKindDefinition {
 /// 🪟 Page, the selected object's fields, and snapshot details side by side.
 pub fn document_layout(main_window_kind_id: &str) -> WindowLayout {
     let stack = |size: f64, window_kind_id: &str, title: &str| {
-        WindowLayoutChild::Stack(WindowLayoutStackNode {
-            kind: "stack".into(),
-            size: Some(size),
-            active_window_kind_id: None,
-            children: vec![WindowLayoutWindowNode { kind: "window".into(), window_kind_id: window_kind_id.into(), title: Some(title.into()), instance_id: None, template_id: None, corner: None }],
-        })
+        WindowLayoutNode::Stack { size: Some(size),
+            active_window_id: None,
+            children: vec![WindowLayoutNode::Window { window_kind_id: window_kind_id.into(), title: Some(title.into()), instance_id: None, template_id: None, corner: None }],
+        }
     };
     WindowLayout {
-        root: WindowLayoutRoot::Axis(WindowLayoutAxisNode {
-            kind: "row".into(),
-            size: None,
-            children: vec![stack(0.46, main_window_kind_id, "Document"), stack(0.18, TEXT_LAYER_WINDOW_KIND_ID, "Text layer"), stack(0.18, INSPECTOR_WINDOW_KIND_ID, "Object"), stack(0.18, semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_WINDOW_KIND_ID, "Details")],
-        }),
+        root: WindowLayoutNode::Split { axis: Axis::Horizontal, size: None,
+            children: vec![stack(0.12, THUMBNAILS_WINDOW_KIND_ID, "Pages"), stack(0.34, main_window_kind_id, "Document"), stack(0.18, TEXT_LAYER_WINDOW_KIND_ID, "Text layer"), stack(0.18, INSPECTOR_WINDOW_KIND_ID, "Object"), stack(0.18, semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_WINDOW_KIND_ID, "Details")],
+        },
     }
 }
 
@@ -228,6 +232,9 @@ pub fn render_inspector(
                 .map_err(|_| inspector_error("pdf.object.page-action-binding"))?.try_build().map_err(|_| inspector_error("pdf.object.page-action"))?;
             column = column.try_child(node).map_err(|_| inspector_error("pdf.object.page-action"))?;
         }
+        for node in authoring_controls(page_index, size, controller_id, publication_revision, locale)? {
+            column = column.try_child(node).map_err(|_| inspector_error("pdf.object.authoring"))?;
+        }
         return column.try_build().map_err(|_| inspector_error("pdf.object.root"));
     };
     let heading = match locale {
@@ -264,4 +271,22 @@ pub fn render_inspector(
     let delete = delete.try_on_with(ui::Trigger::Activate, inspector_action(controller_id, "delete")?, object_args(object.page, &object.id, "delete", &[])?).map_err(|_| inspector_error("pdf.object.delete-binding"))?.try_build().map_err(|_| inspector_error("pdf.object.delete"))?;
     column.try_child(delete).map_err(|_| inspector_error("pdf.object.delete"))?.try_build().map_err(|_| inspector_error("pdf.object.root"))
 }
-//#endregion 🪟️Windows
+
+//#region 🔭️ViewGlue
+/// 🖼️ Paints the page window through the ephemeral local view with `overlay` layers on top.
+pub fn render_view(snapshot: &PdfSnapshot, selected: Option<&str>, view: &ViewState, viewport: (f64, f64), overlay: Vec<OverlayLayer>) -> UiAssemblyResult<semio_ui_contract::BuiltNode> {
+    semio_plugin::scene_surface(BODY_KEY, semio_ui_contract::SurfaceKind::Canvas2d, &scene_for_view(snapshot, &canvas_layers(snapshot, selected), view, viewport, overlay))
+}
+
+/// 🔎 Hits of `query` over the text of every page object.
+pub fn search(snapshot: &PdfSnapshot, query: &str, match_case: bool, control: &mut SearchControl<'_>) -> SearchOutcome {
+    let texts: Vec<_> = objects(snapshot).into_iter().filter(|o| o.kind == ObjectKind::Text).map(|o| SearchText { page: o.page, object: o.id, text: o.text }).collect();
+    find_hits(&texts, snapshot.pages.len(), query, match_case, control)
+}
+
+/// 🖍️ Highlight layers over the objects holding `hits`.
+pub fn hit_layers(snapshot: &PdfSnapshot, hits: &[SearchHit], active: Option<usize>) -> Vec<OverlayLayer> {
+    let placed = placement(snapshot, &page_viewports(snapshot).collect::<Vec<_>>(), &mut FontMeasurements::new(snapshot));
+    highlight_hits(hits, active, &|id| placed.iter().find(|p| p.object.id == id).map(|p| [p.canvas_x, p.canvas_y, p.canvas_w, p.canvas_h]))
+}
+//#endregion 🔭️ViewGlue

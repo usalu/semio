@@ -11,7 +11,8 @@ use std::collections::HashMap;
 use std::collections::HashSet;
 
 use {crate::euler::{add_face, add_shell, add_solid, make_edge, make_vertex}, semio_framework_3d_brep_representation::topology::make_loop};
-use crate::staged::{drive_solid, Plan, StageOutput, StageProgress, StageStep, StagedOperation};
+use crate::primitives::{SolidPrimitive, make_analytic_solid};
+use crate::staged::{Plan, StageOutput, StageProgress, StageStep, StagedOperation};
 use semio_framework_3d_brep_validation::{issue_reaches, validate_body};
 use semio_framework_3d_brep_representation::arena::{ArenaId, Curve3Id, EdgeId, FaceId, SolidId, SurfaceId, VertexId};
 use semio_framework_3d_brep_curve::bspline::KnotVector;
@@ -165,41 +166,19 @@ pub fn heal_solid(body: &mut Body, solid: SolidId, tolerance: f64, rec: &mut OpR
     Ok(HealingReport { vertices_merged: points.len(), ..HealingReport::default() })
 }
 
-/// 🩹 Resumable [`defeature`]: one unit per removed face (find its kept neighbours and sew them when
-/// they are coplanar), then one unit commits the reduced face list to the shell. The solid is
-/// edited in place, so run it on a private working body when the input must survive.
+/// 🧹️ Rebuilds a closed boundary from the stock certified by feature selection.
 pub struct DefeatureJob {
-    solid: SolidId,
-    removed: Vec<FaceId>,
-    remove_set: HashSet<FaceId>,
-    kept_faces: Vec<FaceId>,
-    sew_tol: f64,
+    stock: SolidPrimitive,
     plan: Plan,
 }
 
 impl DefeatureJob {
-    /// 🩹 Plans the removal of `faces_to_remove` from `solid`'s outer shell.
-    pub fn new(body: &Body, solid: SolidId, faces_to_remove: &[FaceId]) -> Result<Self, KernelError> {
-        if faces_to_remove.is_empty() {
-            return Err(KernelError::InvalidInput("must select at least one face to remove".into()));
+    /// 📦️ Stages the restoration of the certified box.
+    pub fn restoring_stock(stock: SolidPrimitive) -> Result<Self, KernelError> {
+        if !matches!(stock, SolidPrimitive::Box { .. }) {
+            return Err(KernelError::InvalidInput("defeature restoration requires box stock".into()));
         }
-        let solid_data = body.solids.get(solid).ok_or_else(|| KernelError::MissingEntity(format!("solid {solid}")))?;
-        let shell_id = solid_data.outer;
-        let shell = body.shells.get(shell_id).ok_or_else(|| KernelError::MissingEntity(format!("shell {shell_id}")))?;
-        let remove_set: HashSet<FaceId> = faces_to_remove.iter().copied().collect();
-        let kept_faces: Vec<FaceId> = shell.faces.iter().filter(|f| !remove_set.contains(f)).copied().collect();
-        if kept_faces.len() < 4 {
-            return Err(KernelError::InvalidInput(format!("removing {} face(s) would leave only {} face(s) (minimum 4 for a solid shell)", faces_to_remove.len(), kept_faces.len())));
-        }
-        for fid in faces_to_remove {
-            if !shell.faces.contains(fid) {
-                return Err(KernelError::InvalidInput(format!("face {fid} is not on solid {solid}")));
-            }
-        }
-        let tol = faces_to_remove.iter().filter_map(|fid| body.faces.get(*fid)).map(|f| f.tol.value()).fold(f64::INFINITY, f64::min);
-        let sew_tol = if tol.is_finite() && tol > 0.0 { tol } else { Tol::DEFAULT.value() };
-        let plan = Plan::new(&[("faces", faces_to_remove.len()), ("commit", 1)]);
-        Ok(Self { solid, removed: faces_to_remove.to_vec(), remove_set, kept_faces, sew_tol, plan })
+        Ok(Self { stock, plan: Plan::new(&[("stock", 1)]) })
     }
 }
 
@@ -209,25 +188,10 @@ impl StagedOperation for DefeatureJob {
     }
 
     fn advance(&mut self, body: &mut Body, rec: &mut OpRecorder) -> Result<StageStep, KernelError> {
-        let unit = self.plan.take().ok_or_else(|| KernelError::Operation("defeature job already finished".into()))?;
-        if unit.phase == 0 {
-            let fid = self.removed[unit.index];
-            let kept_neighbors: Vec<FaceId> = adjacent_faces(body, fid).into_iter().filter(|n| !self.remove_set.contains(n)).collect();
-            if kept_neighbors.len() == 2 && coplanar_face_pair(body, kept_neighbors[0], kept_neighbors[1]) {
-                let _ = sew_faces(body, &kept_neighbors, self.sew_tol, rec);
-            }
-            return Ok(StageStep::Working);
-        }
-        let shell_id = body.solids.get(self.solid).ok_or_else(|| KernelError::MissingEntity(format!("solid {}", self.solid)))?.outer;
-        body.shells.get_mut(shell_id).expect("shell").faces = std::mem::take(&mut self.kept_faces);
-        Ok(StageStep::Done(StageOutput::Solid(self.solid)))
+        self.plan.take().ok_or_else(|| KernelError::Operation("defeature job already finished".into()))?;
+        let solid = make_analytic_solid(body, self.stock, rec)?;
+        Ok(StageStep::Done(StageOutput::Solid(solid)))
     }
-}
-
-/// 🩹 Removes selected faces from the solid shell and attempts to sew coplanar neighbor pairs.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn defeature(body: &mut Body, solid: SolidId, faces_to_remove: &[FaceId], rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
-    drive_solid(&mut DefeatureJob::new(body, solid, faces_to_remove)?, body, rec)
 }
 
 /// 🩹 Replaces analytic curves and planes in `solid` with NURBS where conversion exists. `rec`
@@ -294,35 +258,6 @@ fn solid_exists(body: &Body, solid: SolidId) -> Result<(), KernelError> {
     } else {
         Err(KernelError::MissingEntity(format!("solid {solid}")))
     }
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn adjacent_faces(body: &Body, face: FaceId) -> Vec<FaceId> {
-    let mut neighbors = HashSet::new();
-    for coedge_id in body.face_coedges(face) {
-        let edge_id = body.coedges.get(coedge_id).expect("coedge").edge;
-        for other_coedge in body.edge_coedges(edge_id) {
-            let loop_id = body.coedges.get(other_coedge).expect("coedge").loop_id;
-            let other_face = body.loops.get(loop_id).expect("loop").face;
-            if other_face != face {
-                neighbors.insert(other_face);
-            }
-        }
-    }
-    neighbors.into_iter().collect()
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn coplanar_face_pair(body: &Body, a: FaceId, b: FaceId) -> bool {
-    let sa = body.faces.get(a).expect("face").surface;
-    let sb = body.faces.get(b).expect("face").surface;
-    let Some(Surface::Plane { frame: fa }) = body.surfaces.get(sa) else {
-        return false;
-    };
-    let Some(Surface::Plane { frame: fb }) = body.surfaces.get(sb) else {
-        return false;
-    };
-    fa.z.dot(fb.z).abs() > 1.0 - 1e-9 && (fa.origin - fb.origin).dot(fa.z).abs() < 1e-6 && (fb.origin - fa.origin).dot(fb.z).abs() < 1e-6
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

@@ -179,8 +179,8 @@ describe("🧊️ depth is the extent of the shape in its own 3D carry", () => {
     for (const bone of person.rig.bones) if (bone.id === "upper-arm-r") bone.z = -0.23;
     else if (bone.id === "upper-arm-l") bone.z = 0.23;
     const shapes = (person.representations["50"] as unknown as { geometry: { elevation: { id: string; bone: string }[] } }).geometry.elevation;
-    const right = shapes.find((s) => s.id === "upper-arm-r")! as Parameters<typeof restShapeDepth>[1];
-    const left = shapes.find((s) => s.id === "upper-arm-l")! as Parameters<typeof restShapeDepth>[1];
+    const right = shapes.find((s) => s.bone === "upper-arm-r")! as Parameters<typeof restShapeDepth>[1];
+    const left = shapes.find((s) => s.bone === "upper-arm-l")! as Parameters<typeof restShapeDepth>[1];
     expect(restShapeDepth(person, right, "elevation")).toBeGreaterThan(restShapeDepth(person, left, "elevation") + 0.4);
   });
 });

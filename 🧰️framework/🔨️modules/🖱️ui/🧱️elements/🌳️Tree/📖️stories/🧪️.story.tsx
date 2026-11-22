@@ -166,7 +166,7 @@ const ControlTreeDemo = () => {
     <LevelProvider level="panel">
       <div className="ui-surface w-[20rem]" data-level="panel">
         <SharedBorderRow orientation="vertical">
-          <Input aria-label="Filter controls" placeholder="Filter controls..." value={filterText} onChange={(e) => setFilterText(e.target.value)} />
+          <Input id="filter-controls" aria-label="Filter controls" placeholder="Filter controls..." value={filterText} onChange={(e) => setFilterText(e.target.value)} />
           <SharedBorderRowCell className="block p-0">
             <ControlTree controls={controls} filterText={filterText} folderSettings={folderSettings} />
           </SharedBorderRowCell>

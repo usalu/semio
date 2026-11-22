@@ -1,7 +1,7 @@
 import * as React from "react";
 import { act, cleanup, fireEvent, render, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { Mode } from "@semio-tech/ui-react";
+import { Mode, uiDataLabel } from "@semio-tech/ui-react";
 import fixture from "../🧫️fixtures/🚪️close/🔣️.json";
 
 afterEach(() => { cleanup(); vi.restoreAllMocks(); });
@@ -12,8 +12,8 @@ describe("rendered window close admission", () => {
     const decision = new Promise<boolean>((accept, refuse) => { resolve = accept; reject = refuse; });
     const request = vi.fn(() => decision);
     vi.spyOn(console, "error").mockImplementation(() => undefined);
-    const windows = [{ id: "a", title: "A", children: <div>First document</div> }, { id: "b", title: "B", children: <div>Second document</div> }];
-    const view = render(<Mode windows={windows} activeWindowId="a" onWindowClose={request} layout={{ kind: "stack", children: windows.map(({ id }) => ({ kind: "window", id })) }} />);
+    const windows = [{ id: "a", title: uiDataLabel("A"), iconId: "app-window" as const, children: <div>First document</div> }, { id: "b", title: uiDataLabel("B"), iconId: "app-window" as const, children: <div>Second document</div> }];
+    const view = render(<Mode windows={windows} activeWindowId="a" onWindowClose={request} layout={{ kind: "stack", children: windows.map(({ id }) => ({ kind: "window", windowKindId: id })) }} />);
     const ids = () => [...view.container.querySelectorAll('[data-slot="mode-dock-tab"]')].map((tab) => tab.getAttribute("data-window-id")).sort();
     const close = view.container.querySelector<HTMLElement>('[data-slot="mode-dock-tab"][data-window-id="a"] [data-slot="mode-dock-tab-close"]')!;
     expect(close).not.toBeNull();

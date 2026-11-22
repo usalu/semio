@@ -11,12 +11,14 @@ import {
   type Effect,
   type InvocationResponse,
   type PluginContextMenuRequest,
+  importChunkWithIntegerCarriers,
   SemioFaultError
 } from "@semio-tech/framework";
 // #endregion 🔌️Adapters
 import {
   decodePackValue,
-  encodePackValue
+  encodePackValue,
+  packUInt
 } from "@semio-tech/framework/packs";
 import {
   AppChannelClient,
@@ -130,7 +132,10 @@ export async function performInvocation(client: AppChannelClient, instanceId: nu
   let response: InvocationResponse;
   let frames: readonly AppFrameValue[];
   try {
-    const wire = hopTrace.time("encode", hopDetail, () => ({ command: encodePackValue(invocation), view: admitCrossingViewContext(`${invocationKind} ${String(actionId)}`, viewState) }));
+    const args = invocationRecord?.arguments;
+    const carried = args && importChunkWithIntegerCarriers(args, packUInt);
+    const command = carried === args ? invocation : { ...invocationRecord, arguments: carried };
+    const wire = hopTrace.time("encode", hopDetail, () => ({ command: encodePackValue(command), view: admitCrossingViewContext(`${invocationKind} ${String(actionId)}`, viewState) }));
     frames = await hopTrace.timeAsync("channel", hopDetail, () => client.command(wire.command, wire.view, dispatch));
     const leftover = pendingTurnEffects.get(instanceId) ?? [];
     pendingTurnEffects.delete(instanceId);

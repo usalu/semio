@@ -14,7 +14,10 @@ use crate::standards::v1::subsets::any::schema::document_records::{Puzzle5dFaste
 
 use ::semio_framework_schema::ArtifactSchema;
 use semio_s_artifact_stdio_semio_kit::schema::snapshot::SemioKitSnapshot;
+pub use semio_framework_value_native_owned::list::PagedList;
 
+/// 📚️ Admits ordered scene parts through independently funded storage pages.
+pub type Puzzle5dParts = PagedList<Puzzle5dPart, { usize::MAX }>;
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted puzzle5d document snapshot (persistent fields of the artifact).
@@ -58,7 +61,7 @@ pub struct Puzzle5dSnapshot {
     #[value(default)]
     #[dsl(table)]
     #[state(artifact)]
-    pub parts: Vec<Puzzle5dPart>,
+    pub parts: PagedList<Puzzle5dPart, { usize::MAX }>,
     #[value(default)]
     #[dsl(table)]
     #[state(artifact)]
@@ -80,7 +83,7 @@ pub struct Puzzle5dSnapshot {
 
 impl Default for Puzzle5dSnapshot {
     fn default() -> Self {
-        Self { schema: PUZZLE_5D_SCHEMA.to_string(), domain: "architecture".to_string(), label: None, meta: Default::default(), kind_catalogs: None, kind_catalogs_extra: None, kind_compatibility: Vec::new(), parts: Vec::new(), fasteners: Vec::new(), target_volumes: Vec::new() }
+        Self { schema: PUZZLE_5D_SCHEMA.to_string(), domain: "architecture".to_string(), label: None, meta: Default::default(), kind_catalogs: None, kind_catalogs_extra: None, kind_compatibility: Vec::new(), parts: Puzzle5dParts::new(), fasteners: Vec::new(), target_volumes: Vec::new() }
     }
 }
 

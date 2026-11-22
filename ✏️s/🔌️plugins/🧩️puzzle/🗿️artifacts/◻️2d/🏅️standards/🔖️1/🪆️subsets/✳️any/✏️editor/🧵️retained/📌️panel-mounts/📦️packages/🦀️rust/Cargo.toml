@@ -15,6 +15,9 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
+[features]
+testkit = ["semio-s-artifact-puzzle-2d-interaction/testkit", "semio-s-artifact-puzzle-2d-mut-any-10/testkit", "semio-s-artifact-puzzle-2d-records/testkit"]
+
 [dependencies]
 semio-framework-pack-json = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-plugin = { workspace = true }
@@ -24,3 +27,8 @@ semio-framework-value = { path = "../../../../../../../../../../../../../../🧰
 semio-s-artifact-puzzle-2d-interaction = { path = "../../../../🕹️interaction/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-2d-mut-any-10 = { path = "../../../../../🧬️schema/🧬️mutations/✋️selection/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-2d-records = { path = "../../../../../🧬️schema/🧱️records/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-s-artifact-puzzle-2d-interaction = { path = "../../../../🕹️interaction/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-puzzle-2d-mut-any-10 = { path = "../../../../../🧬️schema/🧬️mutations/✋️selection/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-puzzle-2d-records = { path = "../../../../../🧬️schema/🧱️records/📦️packages/🦀️rust", features = ["testkit"] }

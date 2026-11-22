@@ -353,5 +353,258 @@
       "radius": 2,
       "height": 4
     }
-  }
+  },
+  "orthogonalSphereDistance": [
+    {
+      "name": "fused corner and internal seam",
+      "source": "orthogonal",
+      "operator": "brep.bool.fuse",
+      "probes": [
+        {
+          "center": [
+            7,
+            7,
+            6
+          ],
+          "radius": 0.25,
+          "expected": 1.4820508075688772
+        },
+        {
+          "center": [
+            3,
+            3.5,
+            4
+          ],
+          "radius": 0.125,
+          "expected": 0
+        }
+      ],
+      "closestPoints": [
+        [
+          [
+            7,
+            7,
+            6
+          ],
+          [
+            6,
+            6,
+            5
+          ]
+        ],
+        [
+          [
+            3,
+            3.5,
+            4.25
+          ],
+          [
+            3,
+            3.5,
+            5
+          ]
+        ]
+      ]
+    },
+    {
+      "name": "notch wall and exposed diagonal edge",
+      "source": "orthogonal",
+      "operator": "brep.bool.cut",
+      "probes": [
+        {
+          "center": [
+            4,
+            4,
+            4
+          ],
+          "radius": 0.25,
+          "expected": 0.75
+        },
+        {
+          "center": [
+            5.5,
+            4,
+            4
+          ],
+          "radius": 0.5,
+          "expected": 0.6180339887498949
+        },
+        {
+          "center": [
+            3.5,
+            3.5,
+            4
+          ],
+          "radius": 0.5,
+          "expected": 0
+        }
+      ],
+      "closestPoints": [
+        [
+          [
+            4.25,
+            3.5,
+            4
+          ],
+          [
+            4.25,
+            3,
+            4
+          ]
+        ],
+        [
+          [
+            5.5,
+            4,
+            4
+          ],
+          [
+            5,
+            3,
+            4
+          ]
+        ]
+      ]
+    },
+    {
+      "name": "enclosed cavity and exterior wall",
+      "source": "cavity",
+      "operator": "brep.bool.cut",
+      "probes": [
+        {
+          "center": [
+            2.5,
+            3.5,
+            4
+          ],
+          "radius": 0.125,
+          "expected": 0.375
+        },
+        {
+          "center": [
+            2.25,
+            3.5,
+            4
+          ],
+          "radius": 0.25,
+          "expected": 0
+        },
+        {
+          "center": [
+            1.5,
+            3.5,
+            4
+          ],
+          "radius": 0.25,
+          "expected": 0
+        },
+        {
+          "center": [
+            0,
+            1,
+            2
+          ],
+          "radius": 0.25,
+          "expected": 1.4820508075688772
+        }
+      ],
+      "closestPoints": [
+        [
+          [
+            2.2,
+            3.6,
+            4.15
+          ],
+          [
+            2,
+            3.6,
+            4.15
+          ]
+        ],
+        [
+          [
+            1.8,
+            3.5,
+            4
+          ],
+          [
+            2,
+            3.5,
+            4
+          ]
+        ]
+      ]
+    },
+    {
+      "name": "oriented box shell",
+      "operator": "brep.solid.shell",
+      "placement": {
+        "angle": 0.5235987755982988,
+        "offset": [
+          6,
+          -2,
+          1
+        ]
+      },
+      "probes": [
+        {
+          "center": [
+            2,
+            1.5,
+            1
+          ],
+          "radius": 0.125,
+          "expected": 0.625
+        },
+        {
+          "center": [
+            0.5,
+            1.5,
+            1
+          ],
+          "radius": 0.25,
+          "expected": 0
+        }
+      ],
+      "stock": {
+        "origin": [
+          0,
+          0,
+          0
+        ],
+        "size": [
+          4,
+          3,
+          2
+        ],
+        "thickness": 0.25
+      },
+      "closestPoints": [
+        [
+          [
+            2,
+            1.5,
+            0.45
+          ],
+          [
+            2,
+            1.5,
+            0.25
+          ]
+        ],
+        [
+          [
+            0.1,
+            1.5,
+            1
+          ],
+          [
+            0,
+            1.5,
+            1
+          ]
+        ]
+      ]
+    }
+  ]
 }

@@ -58,7 +58,7 @@ fn fixed_kernel_request_queue_shutdown_releases_one_real_page_per_grant() {
 fn fixed_kernel_request_queue_shutdown_releases_create_fields_one_owner_per_grant() {
     let queue = KernelRequestQueue::default();
     queue
-        .try_push(KernelRequest::CreateApp { owner: CreateAppRequestOwner::new(PathBuf::from("path"), "plugin".to_string(), "app".to_string(), "schema".to_string()) }, Arc::new(ResponseSlot::default()), None)
+        .try_push(KernelRequest::CreateApp { owner: CreateAppRequestOwner::new(PathBuf::from("path"), "plugin".to_string(), "app".to_string(), "schema".to_string()), purpose: semio_framework::kernel::ActorInstanceOpenPurpose::Ordinary }, Arc::new(ResponseSlot::default()), None)
         .unwrap_or_else(|_| panic!("fixture request queue admission"));
     assert!(queue.begin_shutdown());
     assert_eq!(queue.shutdown_step(3), (false, 0, 0));

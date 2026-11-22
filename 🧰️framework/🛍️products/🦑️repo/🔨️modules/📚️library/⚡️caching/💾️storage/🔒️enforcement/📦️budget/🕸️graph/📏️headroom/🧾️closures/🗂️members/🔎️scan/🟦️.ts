@@ -297,6 +297,32 @@ export async function supersedeBuildGraphClosuresV1(root:string,ports:Pick<Membe
 export type OptionalLruReportV1=Readonly<{usedBytes:number;maximumBytes:number;targetBytes:number;remainingBytes:number;groups:number;retiredGroups:number;retiredFiles:number;retiredBytes:number;busy:number;protected:number;excluded:number;excludedBytes:number;cancelled:boolean}>;
 type OptionalLeafV1=Readonly<{name:string;path:string;bytes:number;rank:number;mtimeMs:number}>;
 const optionalLeafPatternV1=new RegExp(graphStorageSchema.definitions.OptionalQuota.definitions.OptionalPath.const,"u");
+/** 📌️ The optional units a read still needs resident: the owner record headers (`np/<24 hex>.json`) of the owners of the newest sealed generation, or of its parent while the pointer is a quarantine, and every unit written since a live builder began (`sinceMs`, the oldest holder of the generation custody whose process still runs). No retirement removes a pinned unit, so a read that takes hours never loses the records it wrote or the base it resumes from. */
+export type OptionalPinsV1=Readonly<{keys:ReadonlySet<string>;sinceMs:number|undefined}>;
+const processAliveV1=(pid:number):boolean=>{try{process.kill(pid,0);return true;}catch(error){return(error as NodeJS.ErrnoException).code==="EPERM";}};
+/** 📌️ Reads the pins of an image root from its generation store (`<root>/generations`): nothing pinned when the store is absent or unreadable. */
+export function pinnedOptionalUnitsV1(root:string):OptionalPinsV1{
+ const keys=new Set<string>(),base=join(root,"generations");let sinceMs:number|undefined;
+ try{
+  const pointer=JSON.parse(readFileSync(join(base,"current.json"),"utf8")) as {manifest?:string|null;parent?:string|null},digest=pointer.manifest??pointer.parent??undefined;
+  if(digest&&hex.test(digest)){
+   const manifest=JSON.parse(readFileSync(join(base,"m",digest+".json"),"utf8")) as {owners?:Record<string,{root?:string}>};
+   for(const row of Object.values(manifest.owners??{}))if(typeof row?.root==="string")keys.add("np/"+createHash("sha256").update(row.root).digest("hex").slice(0,24)+".json");
+  }
+ }catch{}
+ try{
+  for(const name of readdirSync(join(base,"s"))){
+   if(!/^[0-9a-f]{24}\.json$/u.test(name))continue;
+   try{
+    const custody=JSON.parse(readFileSync(join(base,"s",name),"utf8")) as {state?:string;holder?:{pid?:number;startedMs?:number}},holder=custody.holder;
+    if(custody.state==="held"&&holder&&Number.isSafeInteger(holder.pid)&&Number.isFinite(holder.startedMs)&&processAliveV1(holder.pid!))sinceMs=Math.min(sinceMs??Infinity,holder.startedMs!);
+   }catch{}
+  }
+ }catch{}
+ return Object.freeze({keys,sinceMs});
+}
+const unitPinnedV1=(pins:OptionalPinsV1,key:string,newest:number):boolean=>pins.keys.has(key)||pins.sinceMs!==undefined&&newest>=pins.sinceMs;
+
 const optionalDirectoryOfV1=(root:string,group:string)=>join(root,"inference",...(group==="canonical"?[]:group.split("/")));
 
 /** 🗃️ Lists the optional leaves of one group (index files, receipts and publications never match the optional pattern), records before the packs they index and observation blocks last, so a pass cut short never leaves a record naming a removed block. */
@@ -317,24 +343,25 @@ function optionalLeavesOfV1(root:string,group:string):{leaves:OptionalLeafV1[];n
 }
 
 /** ♻️ Retires optional graph cache groups least recently written first until the optional bytes are at most `targetBytes` (the ledger's low-water mark unless given), so an insertion into a full cache stores its records instead of being declined. Optional leaves are recomputable accelerators that no generation, pin or mandatory publication names; a group is retired only under its non-blocking writer lease (every reader and writer of a namespace holds it, so a busy group is skipped, never waited for), never when it is the caller's own (`exclude`) and never while an optional leaf of it is younger than the protected idle time. Its member index is compacted to the leaves that remain. Reports progress per group and stops at the next group when cancelled; `dryRun` only plans. */
-export async function retireBuildGraphOptionalGroupsLruV1(root:string,ports:Pick<MemberIndexPortsV1,"lease">,control:MemberScanControlV1,{targetBytes=graphStorageSchema.definitions.OptionalQuota.definitions.DefaultPolicy.const.lowWaterBytes,dryRun=false,exclude=[],protectedMilliseconds=M.groupProtectedIdleMilliseconds,now=Date.now()}:Readonly<{targetBytes?:number;dryRun?:boolean;exclude?:readonly string[];protectedMilliseconds?:number;now?:number}>):Promise<OptionalLruReportV1>{
+export async function retireBuildGraphOptionalGroupsLruV1(root:string,ports:Pick<MemberIndexPortsV1,"lease">,control:MemberScanControlV1,{targetBytes=graphStorageSchema.definitions.OptionalQuota.definitions.DefaultPolicy.const.lowWaterBytes,dryRun=false,exclude=[],protectedMilliseconds=M.groupProtectedIdleMilliseconds,now=Date.now(),pins=pinnedOptionalUnitsV1(root)}:Readonly<{targetBytes?:number;dryRun?:boolean;exclude?:readonly string[];protectedMilliseconds?:number;now?:number;pins?:OptionalPinsV1}>):Promise<OptionalLruReportV1>{
  if(!Number.isSafeInteger(targetBytes)||targetBytes<0)throw Error("exact-optional-graph-target-bytes-required");
- const groups=["canonical",...listBuildGraphMemberGroupsV1(root).filter(group=>group.startsWith("selections/")||group.startsWith("contexts/"))].map(group=>{const{leaves,newest}=optionalLeavesOfV1(root,group);return{group,newest,bytes:leaves.reduce((sum,leaf)=>sum+leaf.bytes,0)};}).filter(row=>row.bytes>0).sort((left,right)=>left.newest-right.newest||(left.group<right.group?-1:left.group>right.group?1:0));
+ const groups=["canonical",...listBuildGraphMemberGroupsV1(root).filter(group=>group.startsWith("selections/")||group.startsWith("contexts/"))].map(group=>{const{leaves,newest}=optionalLeavesOfV1(root,group);return{group,newest,bytes:leaves.reduce((sum,leaf)=>sum+leaf.bytes,0),free:leaves.filter(leaf=>!unitPinnedV1(pins,optionalEntryOfV1(leaf.name)??leaf.name,leaf.mtimeMs)).reduce((sum,leaf)=>sum+leaf.bytes,0)};}).filter(row=>row.bytes>0).sort((left,right)=>left.newest-right.newest||(left.group<right.group?-1:left.group>right.group?1:0));
  const usedBytes=groups.reduce((sum,row)=>sum+row.bytes,0);let remaining=usedBytes,retiredGroups=0,retiredFiles=0,retiredBytes=0,busy=0,protectedGroups=0,excluded=0,excludedBytes=0,cancelled=false;
  for(let at=0;at<groups.length&&remaining>targetBytes;at++){
   if(control.cancelled()){cancelled=true;break;}
   const row=groups[at]!;await control.progress(row.group,at,groups.length);await turn();
   if(exclude.includes(row.group)){excluded++;excludedBytes+=row.bytes;continue;}
   if(memberGroupProtectedV1(row.newest,now,protectedMilliseconds)){protectedGroups++;continue;}
-  if(dryRun){retiredGroups++;retiredBytes+=row.bytes;remaining-=row.bytes;continue;}
+  if(row.free===0){protectedGroups++;continue;}
+  if(dryRun){retiredGroups++;retiredBytes+=row.free;remaining-=row.free;continue;}
   const[kind,identity]=row.group.split("/") as [string,string|undefined],lease=await ports.lease(kind==="contexts"?"dataset":kind==="selections"?"selection":"canonical",identity??"");
   if(!lease){busy++;continue;}
   try{
    const{leaves,newest}=optionalLeavesOfV1(root,row.group);
    if(memberGroupProtectedV1(newest,Date.now(),protectedMilliseconds)){protectedGroups++;continue;}
-   let bytes=0;for(const leaf of leaves){try{unlinkSync(leaf.path);}catch(error){if(absent(error))continue;throw error;}retiredFiles++;bytes+=leaf.bytes;}
+   let bytes=0;for(const leaf of leaves){if(unitPinnedV1(pins,optionalEntryOfV1(leaf.name)??leaf.name,leaf.mtimeMs))continue;try{unlinkSync(leaf.path);}catch(error){if(absent(error))continue;throw error;}retiredFiles++;bytes+=leaf.bytes;}
    compactGroupIndexV1(root,row.group);
-   retiredGroups++;retiredBytes+=bytes;remaining-=row.bytes;
+   retiredGroups++;retiredBytes+=bytes;remaining-=bytes;
   }finally{lease.release();}
  }
  return Object.freeze({usedBytes,maximumBytes:graphStorageSchema.definitions.OptionalQuota.definitions.DefaultPolicy.const.maximumBytes,targetBytes,remainingBytes:Math.max(0,remaining),groups:groups.length,retiredGroups,retiredFiles,retiredBytes,busy,protected:protectedGroups,excluded,excludedBytes,cancelled});
@@ -343,17 +370,17 @@ export async function retireBuildGraphOptionalGroupsLruV1(root:string,ports:Pick
 /** 🧺️ The retirement unit of an optional leaf inside one group: a record header with its packs and temporaries (`np|ip|rr/<24 hex>.json…`), a memory record pack with its index (`mr/<stem>`), else the leaf itself. Observation blocks are shared by headers and belong to no unit, the supersede sweep retires them once no header names them. */
 export function optionalEntryOfV1(name:string):string|undefined{
  if(/(?:^|\/)ob\//u.test(name))return undefined;
- return /^((?:np|ip|rr)\/[a-f0-9]{24}\.json)(?:\.|$)/u.exec(name)?.[1]??/^(mr\/[0-9a-z]+-[0-9]+-[a-f0-9]{16})\.(?:pack|idx)/u.exec(name)?.[1]??name;
+ return /^(oc\/[a-f0-9]{2}\.pack)(?:\.tmp)?$/u.exec(name)?.[1]??/^((?:np|ip|rr)\/[a-f0-9]{24}\.json)(?:\.|$)/u.exec(name)?.[1]??/^(mr\/[0-9a-z]+-[0-9]+-[a-f0-9]{16})\.(?:pack|idx)/u.exec(name)?.[1]??name;
 }
 
 /** 📉️ What one in-group pass did: the group's bytes plus the bytes of the other groups before and after, against the target, how many units lost only their accelerator packs (`shedUnits`, `shedBytes`) and how many were retired whole or protected. */
 export type OptionalEntriesReportV1=Readonly<{usedBytes:number;targetBytes:number;remainingBytes:number;entries:number;shedUnits:number;shedBytes:number;retiredEntries:number;retiredFiles:number;retiredBytes:number;protected:number;cancelled:boolean}>;
 
 /** 🏎️ Whether an optional leaf only speeds a recomputation up (the fact packs under `<record>.records/` and the memory packs of `mr/`): losing it costs time, never an answer, while a record header with its result is the answer a later read takes without inferring. */
-export const optionalAcceleratorV1=(name:string):boolean=>/\.records\/|^mr\//u.test(name);
+export const optionalAcceleratorV1=(name:string):boolean=>/\.records\/|^(?:mr|oc)\//u.test(name);
 
 /** ♻️ Retires the least recently written units of ONE group (the writer's own, whose group a pass over other groups must keep) until its bytes plus `otherBytes` are at most `targetBytes`, so a full cache whose bytes sit in the live group still takes new records instead of declining every publication for ever. Two tiers, each oldest first: first the accelerator packs of every unit (a finished owner keeps its record), then, only when that is not enough, whole units, header first and packs after, so a pass cut short never leaves a header naming a removed pack. A unit written within the protected idle time stays; the member index is compacted to the leaves that remain. The caller holds the group's writer lease. */
-export async function retireBuildGraphOptionalEntriesLruV1(root:string,group:string,control:MemberScanControlV1,{targetBytes=graphStorageSchema.definitions.OptionalQuota.definitions.DefaultPolicy.const.lowWaterBytes,otherBytes=0,dryRun=false,protectedMilliseconds=M.groupProtectedIdleMilliseconds,now=Date.now()}:Readonly<{targetBytes?:number;otherBytes?:number;dryRun?:boolean;protectedMilliseconds?:number;now?:number}>={}):Promise<OptionalEntriesReportV1>{
+export async function retireBuildGraphOptionalEntriesLruV1(root:string,group:string,control:MemberScanControlV1,{targetBytes=graphStorageSchema.definitions.OptionalQuota.definitions.DefaultPolicy.const.lowWaterBytes,otherBytes=0,dryRun=false,protectedMilliseconds=M.groupProtectedIdleMilliseconds,now=Date.now(),pins=pinnedOptionalUnitsV1(root)}:Readonly<{targetBytes?:number;otherBytes?:number;dryRun?:boolean;protectedMilliseconds?:number;now?:number;pins?:OptionalPinsV1}>={}):Promise<OptionalEntriesReportV1>{
  if(!Number.isSafeInteger(targetBytes)||targetBytes<0||!Number.isSafeInteger(otherBytes)||otherBytes<0)throw Error("exact-optional-graph-target-bytes-required");
  const{leaves}=optionalLeavesOfV1(root,group),units=new Map<string,{key:string;newest:number;bytes:number;leaves:OptionalLeafV1[]}>();
  for(const leaf of leaves){const key=optionalEntryOfV1(leaf.name);if(key===undefined)continue;const unit=units.get(key)??{key,newest:0,bytes:0,leaves:[]};unit.newest=Math.max(unit.newest,leaf.mtimeMs);unit.bytes+=leaf.bytes;unit.leaves.push(leaf);units.set(key,unit);}
@@ -371,7 +398,7 @@ export async function retireBuildGraphOptionalEntriesLruV1(root:string,group:str
  for(let at=0;at<order.length&&remaining>targetBytes&&!cancelled;at++){
   if(control.cancelled()){cancelled=true;break;}
   const unit=order[at]!;if(!unit.leaves.length)continue;await control.progress(group+"/"+unit.key,at,order.length);await turn();
-  if(memberGroupProtectedV1(unit.newest,now,protectedMilliseconds)){protectedEntries++;continue;}
+  if(memberGroupProtectedV1(unit.newest,now,protectedMilliseconds)||unitPinnedV1(pins,unit.key,unit.newest)){protectedEntries++;continue;}
   drop(unit.leaves);
   retiredEntries++;retiredBytes+=unit.bytes;remaining-=unit.bytes;
  }

@@ -1,4 +1,5 @@
 //! 🧪️ Every actual family payload preserves original projections and independently encoded Serde bytes.
+use semio_s_artifact_puzzle_2d_records::standards::v1::subsets::any::schema::testkit as test_source_custody;
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
 use semio_framework_pack_json::ArtifactCanonicalJsonTree;
 use semio_framework_pack_json::ArtifactCanonicalJsonTreeCursor;
@@ -58,7 +59,7 @@ fn puzzle_canonical_native_all_mutation_fields_preserve_serde_originals_and_gran
   for pause in [Some(0),Some(1),Some(3),Some(17),Some(129),None]{
    let mutation:Puzzle2dMutation=serde_json::from_str(input).unwrap();let oracle=serde_json::to_vec(&mutation).unwrap();
    let birth=RetainedCloneSource::<Puzzle2dMutation>::owned_constructor_demand::<()>();let full=birth_grant(birth);
-   let((mut source,receipt),heap)=observe_heap_allocations_on_this_thread(||RetainedCloneSource::admit_owned(mutation,(),full).unwrap_or_else(|(error,_,_)|panic!("original Puzzle source: {error}")));assert!(receipt.fits(full));assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,0));
+   let((mut source,receipt),heap)=observe_heap_allocations_on_this_thread(||test_source_custody::admit_owner(mutation,full).unwrap_or_else(|error|panic!("original Puzzle source: {error}")));assert!(receipt.fits(full));assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,0));
    let(_,heap)=observe_heap_allocations_on_this_thread(||{
     let owner=source.borrow();let owner=owner.get();
     match owner{
@@ -67,20 +68,20 @@ fn puzzle_canonical_native_all_mutation_fields_preserve_serde_originals_and_gran
      _=>{}
     }
    });assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
-   let projection_grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:source.borrow().binding_copy_bytes(),maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:1};let(projection,_)=source.project_owned(0,|owner|owner as&dyn ArtifactCanonicalJsonTree,projection_grant).unwrap();let demand=ArtifactCanonicalJsonTreeCursor::constructor_demand();let(mut cursor,receipt)=ArtifactCanonicalJsonTreeCursor::admit(projection,grant(demand)).unwrap_or_else(|(error,_)|panic!("original Puzzle traversal: {error}"));assert_eq!(receipt.copied_bytes,demand.copy_bytes);
+   let projection=test_source_custody::project(source.borrow().project(0,|owner|owner as&dyn ArtifactCanonicalJsonTree));let demand=ArtifactCanonicalJsonTreeCursor::constructor_demand();let(mut cursor,receipt)=ArtifactCanonicalJsonTreeCursor::admit(projection,grant(demand)).unwrap_or_else(|(error,_)|panic!("original Puzzle traversal: {error}"));assert_eq!(receipt.copied_bytes,demand.copy_bytes);
    let mut output=Vec::new();let mut turns=0;
    while !cursor.terminal_is_empty(){
     assert!(turns<100000,"Puzzle payload ordinal {ordinal} traversal did not settle");if pause==Some(turns){cursor.begin_close();}
     let(demand,heap)=observe_heap_allocations_on_this_thread(||cursor.next_demand().unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let full=grant(demand);
-    let(zero,heap)=observe_heap_allocations_on_this_thread(||cursor.advance(&mut[0],RetainedCloneGrant::default()).unwrap());assert_eq!(zero.ownership.progress(),Default::default());assert_eq!(zero.written_bytes,0);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
-    let mut byte=[0xa5];let(step,heap)=observe_heap_allocations_on_this_thread(||cursor.advance(&mut byte,full).unwrap());assert!(step.ownership.progress().fits(full));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.ownership.progress().retained_capacity_bytes,step.ownership.progress().released_bytes));assert!(step.written_bytes<=1);output.extend_from_slice(&byte[..step.written_bytes]);turns+=1;
+    let(zero,heap)=observe_heap_allocations_on_this_thread(||test_source_custody::run(RetainedCloneGrant::default(), |effect| cursor.advance(&mut[0], effect)).unwrap());assert_eq!(zero.ownership.progress(),Default::default());assert_eq!(zero.written_bytes,0);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
+    let mut byte=[0xa5];let(step,heap)=observe_heap_allocations_on_this_thread(||test_source_custody::run(full, |effect| cursor.advance(&mut byte, effect)).unwrap());assert!(step.ownership.progress().fits(full));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.ownership.progress().retained_capacity_bytes,step.ownership.progress().released_bytes));assert!(step.written_bytes<=1);output.extend_from_slice(&byte[..step.written_bytes]);turns+=1;
    }
    if pause.is_none(){assert_eq!(output,oracle);}else{assert_eq!(output,oracle[..output.len()]);}
    let(_,heap)=observe_heap_allocations_on_this_thread(||drop(cursor));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
    for turn in 0..100000{
     if source.terminal_is_empty(){break;}
     let copy=source.next_close_copy_byte_demand().unwrap();let full=grant(RetirementDemand{copy_bytes:copy,capacity_bytes:source.next_close_capacity_byte_demand(copy).unwrap(),release_bytes:source.next_close_release_byte_demand().unwrap(),depth:source.next_close_depth_demand().unwrap()});
-    let(step,heap)=observe_heap_allocations_on_this_thread(||source.close_step(full).unwrap());assert!(step.progress().fits(full));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));assert!(turn<99999||source.terminal_is_empty());
+    let step=test_source_custody::close_turn(full,|effect|source.close_step(4096,effect)).unwrap();assert!(step.progress().fits(full));assert!(turn<99999||source.terminal_is_empty());
    }
    assert!(source.terminal_is_empty());let(_,heap)=observe_heap_allocations_on_this_thread(||drop(source));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
   }

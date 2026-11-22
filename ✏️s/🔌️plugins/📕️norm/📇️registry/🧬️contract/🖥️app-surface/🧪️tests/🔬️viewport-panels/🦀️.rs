@@ -1,5 +1,6 @@
 //! 🧪️ Viewport panel tests: window definitions, layouts, interaction domain, the toolbar and the lane overlay surface, lifted out of the viewport3d crate because they need the higher crates. Fixtures mirror the viewport3d unit tests.
 
+use semio_plugin::{WindowLayoutNode, Axis};
 use crate::lane_overlays::{LaneOverlays, PaletteEntry};
 use crate::toolbar::{render_toolbar, render_viewport_panel, ViewportView};
 use crate::viewport3d::config::{DeviceClass, Lang, Viewport3dWindowConfig};
@@ -125,15 +126,14 @@ fn window_definitions_bind_surface_domain_and_actions() {
 #[test]
 fn layouts_are_desktop_first_then_mobile_then_tablet() {
     use crate::visual_layout;
-    use semio_plugin::{WindowLayoutChild, WindowLayoutRoot};
-    let WindowLayoutRoot::Axis(desktop) = visual_layout("en1993", DeviceClass::Desktop).root else { panic!("row") };
-    assert_eq!((desktop.kind.as_str(), desktop.children.len()), ("row", 3));
-    assert!(matches!(&desktop.children[1], WindowLayoutChild::Stack(s) if s.children[0].window_kind_id == "norm-en1993-viewport"));
-    let WindowLayoutRoot::Stack(mobile) = visual_layout("en1993", DeviceClass::Mobile).root else { panic!("stack") };
-    assert_eq!(mobile.children.len(), 5);
-    assert_eq!(mobile.active_window_kind_id.as_deref(), Some("norm-en1993-viewport"));
-    let WindowLayoutRoot::Axis(tablet) = visual_layout("en1993", DeviceClass::Tablet).root else { panic!("row") };
-    assert!(matches!(&tablet.children[1], WindowLayoutChild::Stack(s) if s.children.len() == 4));
+    let WindowLayoutNode::Split { axis: Axis::Horizontal, children: desktop, .. } = visual_layout("en1993", DeviceClass::Desktop).root else { panic!("row") };
+    assert_eq!(desktop.len(), 3);
+    assert!(matches!(&desktop[1], WindowLayoutNode::Stack { children, .. } if matches!(&children[0], WindowLayoutNode::Window { window_kind_id, .. } if window_kind_id == "norm-en1993-viewport")));
+    let WindowLayoutNode::Stack { children: mobile, active_window_id, .. } = visual_layout("en1993", DeviceClass::Mobile).root else { panic!("stack") };
+    assert_eq!(mobile.len(), 5);
+    assert_eq!(active_window_id.as_deref(), Some("norm-en1993-viewport"));
+    let WindowLayoutNode::Split { children: tablet, .. } = visual_layout("en1993", DeviceClass::Tablet).root else { panic!("row") };
+    assert!(matches!(&tablet[1], WindowLayoutNode::Stack { children, .. } if children.len() == 4));
 }
 
 #[test]

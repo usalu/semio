@@ -21,7 +21,8 @@ use crate::editor::puzzle5d::window::*;
                 maximum_release_bytes: retirement.next_release_byte_demand().expect("window retirement release quote"),
                 maximum_depth: retirement.next_depth_demand().expect("window retirement depth quote").max(1),
             };
-            retirement.step(grant).expect("bounded window retirement turn");
+            semio_framework_value_clone_source_testing::drive::warm();
+            semio_framework_value_clone_source_testing::drive::drive(grant, 1 << 20, |effect| retirement.step(4096, effect)).result.expect("bounded window retirement turn");
         }
         panic!("window retirement exceeded its bounded cursor turns");
     }

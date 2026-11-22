@@ -1,7 +1,7 @@
 import { test, expect } from "bun:test";
 import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
-import Ajv from "ajv/dist/2020";
+import Ajv from "ajv";
 import {spawnSync} from "node:child_process";
 import {parseArtifactPreparedOperationOutput,parseArtifactPreparedOperations} from "../📦️output/🧬️schema/🟦️.ts";
 import { valueRefusalCodecSchemaUrl } from "@semio-tech/value-ts/testing/fixtures";
@@ -69,7 +69,7 @@ test("original operation output uses independent dense-octet and retained-owner 
   for(const value of [[256],[-1],[1.5],[null],{}]){expect(admit(value)).toBe(false);expect(()=>parseArtifactPreparedOperationOutput(value)).toThrow();}
   const sparse=new Array(1);expect(()=>parseArtifactPreparedOperationOutput(sparse)).toThrow();
   const source=readFileSync(join(base,"🦀️.rs"),"utf8");expect(source).toContain("ArtifactPreparedOperationOutput");
-  const owner=readFileSync(join(base,"📦️output/🦀️.rs"),"utf8");for(const token of ["RetainedCloneGrant","next_reserve_depth_demand","error.allocated_bytes","next_release_depth_demand","with_retained_progress"])expect(owner).toContain(token);
+  const owner=readFileSync(join(base,"📦️output/🦀️.rs"),"utf8");for(const token of ["RetainedCloneGrant","next_capacity_copy_byte_demand","next_reserve_depth_demand","error.allocated_bytes","next_release_demand","step.placed_bytes","with_retained_progress"])expect(owner).toContain(token);
   expect(owner).not.toContain("to_vec");expect(owner).not.toContain("usize::MAX");
 });
 
@@ -93,13 +93,13 @@ test("original text refusal preserves initialized UTF8 prefix and canonical phys
 test("original text operation admits its real frontier under supplied parent depth",()=>{
  const encode=(node:any):string=>node.kind==="sequence"?node.open+node.children.map(encode).join(node.separator)+node.close:node.text;
  for(const row of fixture.textDepthRows){const text=encode(row.node);expect(Buffer.from(text)).toEqual(Buffer.from(new TextEncoder().encode(text)));if(row.refused)expect(text.startsWith(row.expectedPrefix)).toBe(true);else expect(text).toBe(row.expectedText);}
- const text=readFileSync(join(base,"📝️text/🦀️.rs"),"utf8");expect(text).toContain("grant: RetainedCloneGrant");expect(text).toContain("grant.maximum_depth");expect(text).toContain("self.depth + 2");const wire=readFileSync(join(base,"🦀️.rs"),"utf8");expect(wire).not.toContain("grant.maximum_depth < super::ARTIFACT_CANONICAL_JSON_DEPTH");expect(wire).toContain("self.text.advance(body, &mut output[written..maximum], child)");expect(wire).not.toContain("ValueError::new");
+ const text=readFileSync(join(base,"📝️text/🦀️.rs"),"utf8");expect(text).toContain("grant: RetainedCloneGrant");expect(text).toContain("grant.maximum_depth");expect(text).toContain("self.depth + 2");const wire=readFileSync(join(base,"🦀️.rs"),"utf8");expect(wire).not.toContain("grant.maximum_depth < super::ARTIFACT_CANONICAL_JSON_DEPTH");expect(wire).toContain("self.text_mut().advance(body, &mut output[written..maximum], child)");expect(wire).not.toContain("ValueError::new");
 });
 
 test("original proposal contiguous octets preserve independent payload and funded ownership",()=>{
  const rows=JSON.parse(readFileSync(join(base,"📦️output/🧪️tests/🧫️fixtures/🔣️.json"),"utf8"));const contract=JSON.parse(readFileSync(join(base,"📦️output/🧬️schema/🔣️.json"),"utf8"));const admit=new Ajv({strict:true}).compile(contract);
  for(const row of rows.examples){const bytes=Array.from({length:row.repeat??1},()=>row.bytes).flat();expect(admit(bytes)).toBe(true);expect(parseArtifactPreparedOperationOutput(bytes)).toBe(bytes);expect(Buffer.from(bytes)).toEqual(Buffer.from(new TextEncoder().encode(row.text.repeat(row.repeat??1))));}
- const source=readFileSync(join(base,"📦️output/🦀️.rs"),"utf8");for(const method of ["pub fn prepare_contiguous","pub fn take_contiguous","contiguous:ManuallyDrop<Option<Vec<u8>>>","grant.maximum_capacity_bytes<capacity","self.bytes.allocated_bytes().checked_add(capacity)","self.contiguous_complete=true","self.close_paged_one(grant)"])expect(source).toContain(method);
+ const source=readFileSync(join(base,"📦️output/🦀️.rs"),"utf8");for(const method of ["pub fn prepare_contiguous","pub fn take_contiguous","contiguous:ManuallyDrop<Option<Vec<u8>>>","grant.maximum_capacity_bytes<capacity","self.bytes.allocated_bytes().checked_add(capacity)","self.contiguous_complete=true","self.close_paged_one(effect)"])expect(source).toContain(method);
  expect(source).not.toMatch(/\.collect::<Vec|\.to_vec\(|unwrap_or_default\(/);const parsed=spawnSync("rustfmt",["--edition","2021","--emit","stdout","--config","skip_children=true",join(base,"📦️output/🦀️.rs")],{stdio:["ignore","ignore","pipe"],timeout:5000});expect(parsed.status).toBe(0);const native=spawnSync("rustfmt",["--edition","2021","--emit","stdout","--config","skip_children=true",join(base,"🧪️tests/🦀️.rs")],{stdio:["ignore","ignore","pipe"],timeout:5000});expect(native.status).toBe(0);
 });
 

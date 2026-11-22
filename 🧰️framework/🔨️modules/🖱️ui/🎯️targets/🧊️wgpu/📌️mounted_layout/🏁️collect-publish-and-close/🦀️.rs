@@ -200,7 +200,14 @@ pub fn layout_tree_now(tree: &mut UiTree, root: NodeId, theme: Theme, width: f32
 /// inline direction, exactly the flow a window hands its own [`MountedLayoutJob`].
 #[cfg(any(test, feature = "testkit"))]
 pub fn layout_tree_flowing_now(tree: &mut UiTree, root: NodeId, theme: Theme, width: f32, height: f32, block_reversed: bool, inline: ui_contract::FlowInline) -> bool {
-    let identity = MountedLayoutIdentity { surface: UiSurfaceToken::new(0, 1), generation: 1, revision: 0, theme_revision: 0, viewport_revision: 0 };
+    layout_tree_presenting_now(tree, root, theme, width, height, block_reversed, inline, false)
+}
+
+/// 🔣️ [`layout_tree_flowing_now`] under the `icons` driver's `labels` axis when `icons_only`: captioned controls lay out as icon cells.
+#[cfg(any(test, feature = "testkit"))]
+#[allow(clippy::too_many_arguments, reason = "the flow and the presentation axis of one whole layout pass")]
+pub fn layout_tree_presenting_now(tree: &mut UiTree, root: NodeId, theme: Theme, width: f32, height: f32, block_reversed: bool, inline: ui_contract::FlowInline, icons_only: bool) -> bool {
+    let identity = MountedLayoutIdentity { surface: UiSurfaceToken::new(0, 1), generation: 1, revision: 0, theme_revision: 0, viewport_revision: 0, icons_only };
     let Ok(mut job) = MountedLayoutJob::try_new(tree, root, identity, theme, width, height, block_reversed, inline) else { return false };
     let policy = ui_contract::UI_WORKER_RETIREMENT_POLICY;
     let mut caller = fixture_caller();

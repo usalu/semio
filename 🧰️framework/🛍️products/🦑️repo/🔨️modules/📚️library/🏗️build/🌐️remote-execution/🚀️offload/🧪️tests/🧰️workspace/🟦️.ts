@@ -5,16 +5,16 @@ import {join} from "node:path";
 import {spawnSync} from "node:child_process";
 import fixture from "../../../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/📡️sampling/🧫️fixtures/🔣️.json" with {type:"json"};
 
-/** 🧰️ The pinned compiler the tests run, named by environment so requester and workers see the same build. */
+/** 🧰️ The pinned compiler the tests run, named by environment so requester and workers see the same build; the checkout that runs the test is never named (its fleet facts would supersede the test cluster endpoint and its counters would be written). */
 export const TEST_TOOLCHAIN_V1="nightly-2026-07-20";
-export const testRustEnvironmentV1=(extra:Readonly<Record<string,string|undefined>>={}):Record<string,string>=>Object.fromEntries(Object.entries({...process.env,RUSTUP_TOOLCHAIN:TEST_TOOLCHAIN_V1,...extra}).filter((row):row is [string,string]=>row[1]!==undefined));
+export const testRustEnvironmentV1=(extra:Readonly<Record<string,string|undefined>>={}):Record<string,string>=>Object.fromEntries(Object.entries({...process.env,SEMIO_WORKSPACE_ROOT:undefined,SEMIO_UNIT_CACHE_WORKSPACE_ROOT:undefined,RUSTUP_TOOLCHAIN:TEST_TOOLCHAIN_V1,...extra}).filter((row):row is [string,string]=>row[1]!==undefined));
 /** #️⃣ A stable 16-hex `extra-filename` per crate name, the shape Cargo gives. */
 export const externHash=(name:string):string=>createHash("sha256").update(name).digest("hex").slice(0,16);
 
 /** 📁️ One scratch checkout: a working directory below a fresh temporary directory, so two checkouts differ in their absolute path; the directory name carries an emoji like the repository's. */
 export type TestCheckoutV1=Readonly<{base:string;root:string;target:string;deps:string;crate:(name:string,source:string)=>string;compile:(name:string,source:string,externs?:readonly string[])=>void;arguments:(name:string,externs?:readonly string[],more?:readonly string[])=>string[];environment:(name:string)=>Record<string,string>}>;
 
-export function createTestCheckoutV1(label:string,scratch:string=tmpdir()):TestCheckoutV1{
+export function createTestCheckoutV1(label:string,scratch:string=process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir()):TestCheckoutV1{
  const base=realpathSync(mkdtempSync(join(realpathSync(scratch),`offload-${label}-`))),root=join(base,"ws✏️"),target=join(root,"t"),deps=join(target,"debug","deps");
  mkdirSync(deps,{recursive:true});
  const crate=(name:string,source:string):string=>{const directory=join(root,"pk",name);mkdirSync(join(directory,"src"),{recursive:true});writeFileSync(join(directory,"src","lib.rs"),source);writeFileSync(join(directory,"Cargo.toml"),`[package]\nname = "${name}"\nversion = "0.1.0"\n`);return directory;};

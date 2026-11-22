@@ -65,15 +65,27 @@ export function localPathV1(path:string,host:HostV1,policy:PortableRowsPolicyV1=
  return host.windows?root+rest.replaceAll("/","\\"):root+rest;
 }
 
-/** 📤️ The observations of a record as every machine can replay them: the `lstat` of the directories above `root` is dropped, and when the rows name exactly one dependency generation its id is replaced by the token. */
-export const portableRowsV1=(rows:readonly ObservationRowV1[],root:string,policy:PortableRowsPolicyV1=portableRowsPolicyV1):readonly ObservationRowV1[]=>generationRowsV1(withoutLocationRowsV1(rows,root,policy),policy);
+/** 📤️ The observations of a record as every machine can replay them: the `lstat` of the directories above `root` is dropped, the probes of installed packages are replaced by one row naming the dependency generation ({@link installRowsV1}), and when the rows name exactly one dependency generation its id is replaced by the token. */
+export const portableRowsV1=(rows:readonly ObservationRowV1[],root:string,policy:PortableRowsPolicyV1=portableRowsPolicyV1):readonly ObservationRowV1[]=>generationRowsV1(installRowsV1(withoutLocationRowsV1(rows,root,policy),slashed(root).replace(/\/+$/u,""),policy),policy);
 const isLocationRow=(row:ObservationRowV1,root:string,policy:PortableRowsPolicyV1)=>policy.locationKinds.includes(row.kind)&&row.fact==="directory"&&aboveRootV1(row.path,root);
 const withoutLocationRowsV1=(rows:readonly ObservationRowV1[],root:string,policy:PortableRowsPolicyV1):readonly ObservationRowV1[]=>rows.filter(row=>!isLocationRow(row,root,policy));
+/** 📦️ Replaces what the filesystem says about installed packages by the identity of the install: a row of `installKinds` about a path with a `node_modules` component outside a dependency generation directory (does `node_modules` exist here, does `ajv` exist above the checkout, what lists it) names what this machine has installed at this moment, so two machines with the same install wrote different rows. Those rows are dropped and, for every dependency generation the remaining rows name, one `exists` row says that the generation's `node_modules` exists: the content-addressed install identity (`base` is the root spelling of the rows). The rows below a generation directory stay, a generation holds the same content on every machine. A machine that lacks the generation replays the row with a name no directory has (see {@link localRowsV1}) and infers the project itself. */
+export function installRowsV1(kept:readonly ObservationRowV1[],base:string,policy:PortableRowsPolicyV1,memo?:WeakMap<object,readonly string[]>):readonly ObservationRowV1[]{
+ const probe=(row:ObservationRowV1)=>policy.installKinds.includes(row.kind)&&slashed(row.path).split("/").includes(policy.probe)&&!generationPattern(policy).test(row.path);
+ if(!kept.some(probe))return kept;
+ const pattern=generationPattern(policy),ids=new Set<string>();
+ for(const row of kept){let found=memo?.get(row);if(found===undefined){found=[...JSON.stringify([row.path,row.fact??null]).matchAll(pattern)].map(match=>match[2]!);memo?.set(row,found);}for(const id of found)ids.add(id);}
+ const rows=kept.filter(row=>!probe(row)),named=new Set(rows.filter(row=>row.kind==="exists").map(row=>row.path));
+ for(const id of [...ids].sort()){const path=`${base}/${policy.dependencyRoot}/${id}/${policy.probe}`;if(!named.has(path))rows.push({kind:"exists",path,fact:true});}
+ return rows;
+}
 function generationRowsV1(kept:readonly ObservationRowV1[],policy:PortableRowsPolicyV1,memo?:WeakMap<object,readonly string[]>):readonly ObservationRowV1[]{
  const pattern=generationPattern(policy),ids=new Set<string>(),idsOf=(row:ObservationRowV1)=>{let found=memo?.get(row);if(found===undefined){found=[...JSON.stringify([row.path,row.fact??null]).matchAll(pattern)].map(match=>match[2]!);memo?.set(row,found);}return found;};
  for(const row of kept)for(const id of idsOf(row))ids.add(id);
  if(ids.size!==1)return kept;
- const[id]=[...ids],replacement=new RegExp(`(${escape(policy.dependencyRoot)}[\\\\/])${id}(?=[\\\\/]|$)`,"gu");
+ const[id]=[...ids];
+ if(id===undefined)return kept;
+ const replacement=new RegExp(`(${escape(policy.dependencyRoot)}[\\\\/])${id}(?=[\\\\/]|$)`,"gu");
  return kept.map(row=>JSON.stringify([row.path,row.fact??null]).includes(id)?rewrite(row,text=>text.replaceAll(replacement,`$1${policy.token}`)):row);
 }
 
@@ -169,7 +181,7 @@ export function neutralRowsV1(rows:readonly ObservationRowV1[],host:HostV1,keys:
   if(moved===undefined){moved=isLocationRow(row,host.root,policy)?null:unstampRowV1(convertRow(row,way,policy),policy);memo.rows.set(row,moved);}
   if(moved!==null)kept.push(moved);
  }
- return generationRowsV1(kept,policy,memo.ids);
+ return generationRowsV1(installRowsV1(kept,policy.rootToken,policy,memo.ids),policy,memo.ids);
 }
 
 /** 🏠️ The rows of a neutral record for the host: paths spelled the host's way, the provider owners the host registered and its own closure keys; the generation is put in as {@link localRowsV1} does, through `generation`. Rows that `memo` has seen are not converted again. */
@@ -278,9 +290,16 @@ export function recordingKeysV1(keys:KeyMapV1):Readonly<{keys:KeyMapV1;consulted
 /** 🎯️ Whether `keys` answers every key of `consulted` as it did when `consulted` was recorded. */
 export const consultedHoldV1=(consulted:ConsultedKeysV1,keys:KeyMapV1):boolean=>[...consulted].every(([key,value])=>keys.get(key)===value);
 
+/** 🔢️ The rows in the order that is a function of the set: by kind, path and the text of the fact, compared as code units (never by locale), so two machines that observed the same rows in another order store the same bytes and the fleet cache sees no divergence for them. The rows of a record are judged as a set.
+ * @see ./🧪️tests/🔢️canonical-order */
+export function canonicalRowOrderV1(rows:readonly ObservationRowV1[]):readonly ObservationRowV1[]{
+ const text=(row:ObservationRowV1)=>row.kind+"\u0000"+row.path+"\u0000"+JSON.stringify(row.fact??null);
+ return rows.map(row=>[text(row),row] as const).sort((left,right)=>left[0]<right[0]?-1:left[0]>right[0]?1:0).map(entry=>entry[1]);
+}
+
 /** 📦️ The neutral record in the stored form (see {@link PackedRecordV1}). */
 export function packRecordV1(record:PortableRecordV1):PackedRecordV1{
- const packer=createRowPackerV1();packer.add(record.authority);packer.add(record.observations);
+ const packer=createRowPackerV1();packer.add(canonicalRowOrderV1(record.authority));packer.add(canonicalRowOrderV1(record.observations));
  return{version:2,digest:record.digest,image:record.image,rows:packer.finish()};
 }
 

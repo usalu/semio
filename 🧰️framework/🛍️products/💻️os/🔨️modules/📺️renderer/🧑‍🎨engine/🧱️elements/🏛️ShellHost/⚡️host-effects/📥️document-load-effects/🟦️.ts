@@ -6,7 +6,7 @@ import { programHistoryKeyV1 } from "../../🪟️spawned-program/🟦️.ts";
 import { type ActiveSession } from "../../../🐚️Shell/📦️program-sessions/🟦️.ts";
 import { documentTransferNoticeCodeV1, documentLoadCancelledV1 } from "../../../🛠️ShellHelpers/🧾️transfer-checkin-tutorial/🟦️.ts";
 import { FileOpenSizeRefusalV1, readSelectedFilesBoundedV1, requestFileOpen, requestFileSelectionV1 } from "../../../🛠️ShellHelpers/🔩️plumbing/📥️downloads-and-file-requests/🟦️.ts";
-import { makeEffectDispatchOne } from "../../../🛠️ShellHelpers/🔩️plumbing/🚀️effect-dispatch/🟦️.ts";
+import { makeEffectDispatchOne, ownedEffectInvocationV1, type EffectDispatchOne } from "../../../🛠️ShellHelpers/🔩️plumbing/🚀️effect-dispatch/🟦️.ts";
 import { programHistoryProjectionsWithLoadV1 } from "../../../🛠️ShellHelpers/🔩️plumbing/🟦️.ts";
 import { importOpenedFilesV1 } from "../../../🛠️ShellHelpers/🎞️media-import/🟦️.ts";
 import { resolveManifestLabel } from "../../../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
@@ -36,7 +36,9 @@ export async function applyLoadDocumentEffect({ loadedPlugins, uiTerminologyRef,
     const task = core.documentTransferRef.current.trackDocumentTransfer(file, baseSession.pluginId);
     const showLoad = (load: { readonly completed: number; readonly total: number } | null) => historyStore.update((projections) => programHistoryProjectionsWithLoadV1(projections, programHistoryKeyV1(baseSession), load));
     try {
-      if (await loadDocumentPair(pluginEntry.handle, baseSession.instanceId, packBytes, sprBytes, () => isCurrentEffectOwner(effectOwner), { signal: task.signal, progress: (status) => { task.progress(status.completed, status.total > 0 ? status.total : null); showLoad(status); } })) await refreshHistorySnapshot(baseSession);
+      const loaded = await loadDocumentPair(pluginEntry.handle, baseSession.instanceId, packBytes, sprBytes, () => isCurrentEffectOwner(effectOwner), { signal: task.signal, progress: (status) => { task.progress(status.completed, status.total > 0 ? status.total : null); showLoad(status); } });
+      if (loaded) await refreshHistorySnapshot(baseSession);
+      return loaded;
     } catch (error) {
       const cancelled = documentLoadCancelledV1(error, task.signal);
       console.warn(`[os-shell] ${documentTransferNoticeCodeV1(cancelled ? "load-cancelled" : "load-failed")} ${baseSession.pluginId}#${baseSession.instanceId}`, error);
@@ -48,6 +50,7 @@ export async function applyLoadDocumentEffect({ loadedPlugins, uiTerminologyRef,
   } else {
     console.error("[os-shell] loadDocument: program has no archive loader", baseSession.pluginId, Object.keys(payload));
   }
+  return false;
 }
 
 /** 📂️ Reads the files the user picks and imports them through the program's import action. */
@@ -60,7 +63,10 @@ export async function applyRequestFileOpenEffect({ loadedPlugins, isCurrentEffec
 }) {
   const { accept, readAs, importAction, multiple, args, maxFileBytes } = effect.requestFileOpen;
   const filter = accept || ".spk,.dsl,.ops,application/octet-stream";
+  const actor = effectOwner.browserActor === undefined ? null : core.directBrowserActorForSession(baseSession);
+  if (effectOwner.browserActor !== undefined && (actor === null || !isCurrentEffectOwner(effectOwner))) return;
   if (typeof args === "object" && args !== null && "originalMedia" in args) {
+    if (actor !== null) throw new Error("original-media.signed-ingress-unavailable");
     const issued = args.originalMedia;
     const current = () => isCurrentEffectOwner(effectOwner);
     const host = loadedPlugins.find((entry) => entry.handle.pluginId === baseSession.pluginId)?.handle;
@@ -97,7 +103,14 @@ export async function applyRequestFileOpenEffect({ loadedPlugins, isCurrentEffec
   try {
     const opened = selected === undefined || maxFileBytes === undefined ? unbounded :
       await readSelectedFilesBoundedV1(selected, readAs, maxFileBytes, { signal: task.signal, progress: phaseProgress(0) });
-    const dispatchOne = makeEffectDispatchOne(pluginEntry, baseSession, (effects, target, scope) => applyHostEffects(effects, target, scope, effectOwner), () => isCurrentEffectOwner(effectOwner), resolvedTargetViewState, { causedBy: effectOwner.inputSeq, windowId: baseSession.viewState.windowId ?? null });
+    const dispatchOne: EffectDispatchOne = actor === null
+      ? makeEffectDispatchOne(pluginEntry, baseSession, (effects, target, scope) => applyHostEffects(effects, target, scope, effectOwner), () => isCurrentEffectOwner(effectOwner), resolvedTargetViewState, { causedBy: effectOwner.inputSeq, windowId: baseSession.viewState.windowId ?? null })
+      : async (action, args) => {
+        if (!isCurrentEffectOwner(effectOwner)) throw new Error("action-owner-mismatch: selected file owner retired");
+        const viewState = resolvedTargetViewState(baseSession);
+        const invocation = ownedEffectInvocationV1({ ...baseSession, viewState }, action, args);
+        await core.dispatchDirectBrowserActorCommand(actor, invocation, viewState, effectOwner.inputSeq);
+      };
     const status = await importOpenedFilesV1(baseSession.app, opened, importAction || "importSnapshot", Boolean(multiple), dispatchOne, task.signal, selected === undefined ? task.progress : phaseProgress(50), args as Readonly<Record<string, unknown>> | undefined);
     if (status === "cancelled") transfers.notifyDocumentTransfer("import-cancelled", picked[0]!.name, "info");
   } catch (error) {

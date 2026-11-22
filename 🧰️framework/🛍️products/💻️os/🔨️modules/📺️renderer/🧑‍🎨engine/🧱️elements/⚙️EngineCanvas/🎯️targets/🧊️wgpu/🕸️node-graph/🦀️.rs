@@ -42,7 +42,7 @@ use scene_camera_and_drag_drop::node_graph_pan_gesture;
 #[path = "🖱️wheel-and-pointer-into/🦀️.rs"]
 mod wheel_and_pointer_into;
 pub use wheel_and_pointer_into::{
-    graph_projection_snapshot, node_graph_connection_cursor_active, node_graph_pointer_cancel_into,
+    graph_projection_snapshot, node_graph_connection_cursor_active, node_graph_fit_action, node_graph_pointer_cancel_into,
     node_graph_pointer_down_into, node_graph_pointer_move_into, node_graph_pointer_up_into,
     node_graph_wheel_into, GraphInteractionSnapshot,
 };

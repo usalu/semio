@@ -3498,6 +3498,56 @@
    }
   },
   {
+   "name": "a launchd-managed relay service is no orphan while an old unowned build process is",
+   "ordered": false,
+   "facts": {
+    "version": 1,
+    "atMs": 1792545600000,
+    "platform": "darwin",
+    "probes": [],
+    "processes": [
+     {
+      "pid": 200,
+      "parent": 1,
+      "ageSeconds": 549621,
+      "rssMegabytes": 83,
+      "cpuPercent": 0.1,
+      "command": "bun ./script.ts relay --peers g2=/Volumes/semio-peers/g2"
+     },
+     {
+      "pid": 201,
+      "parent": 1,
+      "ageSeconds": 549621,
+      "rssMegabytes": 10,
+      "cpuPercent": 0,
+      "command": "rustc --crate-name x"
+     }
+    ]
+   },
+   "expect": {
+    "findings": [],
+    "waits": [],
+    "processes": [
+     [
+      201,
+      "orphan",
+      null
+     ],
+     [
+      200,
+      "running",
+      null
+     ]
+    ],
+    "verdict": "ok",
+    "counts": {
+     "error": 0,
+     "warn": 0,
+     "info": 0
+    }
+   }
+  },
+  {
    "name": "waiting processes keep their phase and their children inherit it",
    "ordered": false,
    "facts": {
@@ -3703,6 +3753,516 @@
      "warn": 2,
      "info": 1
     }
+   }
+  },
+  {
+   "name": "image attached at the private scratch mount of a crashed reclaim cycle",
+   "ordered": false,
+   "facts": {
+    "version": 1,
+    "atMs": 1792545600000,
+    "platform": "darwin",
+    "probes": [],
+    "host": {
+     "cores": 10,
+     "totalMegabytes": 32768,
+     "availableMegabytes": 20000,
+     "floorMegabytes": 6553,
+     "pressure": "normal",
+     "swapUsedMegabytes": 0,
+     "swapOutMegabytesPerSecond": 0,
+     "load": 2.0,
+     "openFiles": 8000,
+     "openFilesMaximum": 245760,
+     "attachedImages": 10,
+     "governor": "on"
+    },
+    "storage": {
+     "hostFreeBytes": 107374182400,
+     "hostTotalBytes": 536870912000,
+     "partitions": [
+      {
+       "id": "graph",
+       "state": "mounted",
+       "capacityBytes": 4294967296,
+       "freeBytes": 2147483648,
+       "imageBytes": 8589934592,
+       "backing": "present",
+       "publication": "none",
+       "publicationAgeSeconds": null,
+       "image": "ok"
+      },
+      {
+       "id": "dependencies",
+       "state": "misplaced",
+       "attachedAt": "/private/var/folders/x/T/semio-reclaim-b6Twxt",
+       "device": "/dev/disk4",
+       "capacityBytes": null,
+       "freeBytes": null,
+       "imageBytes": 8589934592,
+       "backing": "present",
+       "publication": "none",
+       "publicationAgeSeconds": null,
+       "image": "ok"
+      }
+     ],
+     "loaderBlocked": true
+    },
+    "tools": {
+     "rows": [
+      {
+       "id": "repo",
+       "state": "ok",
+       "pin": "1.0.0",
+       "found": "1.0.0"
+      },
+      {
+       "id": "git",
+       "state": "ok",
+       "pin": null,
+       "found": "2.50.0"
+      }
+     ]
+    },
+    "leases": {
+     "holders": [],
+     "waiters": [],
+     "cycles": [],
+     "violations": [],
+     "registry": {
+      "folders": 0,
+      "orphanFolders": 0,
+      "deadEntries": 0,
+      "liveEntries": 0
+     },
+     "deadTickets": 0,
+     "deadHolders": []
+    },
+    "capacity": {
+     "headroomMegabytes": 3000,
+     "grants": [],
+     "waiters": []
+    },
+    "sessions": {
+     "live": 1,
+     "idle": 0,
+     "gone": 0,
+     "damaged": 0
+    },
+    "graph": {
+     "pointer": "present",
+     "generation": 3,
+     "manifest": "present",
+     "owners": 3700,
+     "publishedAgeSeconds": 100,
+     "implementationNewerSeconds": 0
+    },
+    "dependencies": {
+     "pointers": "present",
+     "scopes": [
+      {
+       "scope": ".",
+       "generation": "cdb4ee2aea69cc6a83331bbe96dc2caa9a299d21329efb0336fc02a82e1839a8",
+       "directory": "ready",
+       "inputsNewer": null
+      }
+     ],
+     "orphans": 0,
+     "orphanEstimatedBytes": 0,
+     "unready": 0,
+     "unreadyOldestSeconds": null
+    },
+    "caches": {
+     "deadPublications": 0,
+     "deadPublicationBytes": 0,
+     "deadPublicationPartial": false,
+     "retired": [],
+     "undeclared": []
+    },
+    "processes": []
+   },
+   "expect": {
+    "findings": [
+     [
+      "storage.image-misplaced",
+      "error",
+      "dependencies"
+     ]
+    ],
+    "waits": [],
+    "processes": [],
+    "verdict": "blocked",
+    "counts": {
+     "error": 1,
+     "warn": 0,
+     "info": 0
+    },
+    "imageRepairs": [
+     [
+      "dependencies",
+      [
+       "detach",
+       "attach"
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "name": "detached image while node_modules dangles never claims that any command attaches it",
+   "ordered": false,
+   "facts": {
+    "version": 1,
+    "atMs": 1792545600000,
+    "platform": "darwin",
+    "probes": [],
+    "host": {
+     "cores": 10,
+     "totalMegabytes": 32768,
+     "availableMegabytes": 20000,
+     "floorMegabytes": 6553,
+     "pressure": "normal",
+     "swapUsedMegabytes": 0,
+     "swapOutMegabytesPerSecond": 0,
+     "load": 2.0,
+     "openFiles": 8000,
+     "openFilesMaximum": 245760,
+     "attachedImages": 10,
+     "governor": "on"
+    },
+    "storage": {
+     "hostFreeBytes": 107374182400,
+     "hostTotalBytes": 536870912000,
+     "partitions": [
+      {
+       "id": "graph",
+       "state": "mounted",
+       "capacityBytes": 4294967296,
+       "freeBytes": 2147483648,
+       "imageBytes": 8589934592,
+       "backing": "present",
+       "publication": "none",
+       "publicationAgeSeconds": null,
+       "image": "ok"
+      },
+      {
+       "id": "dependencies",
+       "state": "detached",
+       "capacityBytes": null,
+       "freeBytes": null,
+       "imageBytes": 8589934592,
+       "backing": "present",
+       "publication": "none",
+       "publicationAgeSeconds": null,
+       "image": "ok"
+      }
+     ],
+     "loaderBlocked": true
+    },
+    "tools": {
+     "rows": [
+      {
+       "id": "repo",
+       "state": "ok",
+       "pin": "1.0.0",
+       "found": "1.0.0"
+      },
+      {
+       "id": "git",
+       "state": "ok",
+       "pin": null,
+       "found": "2.50.0"
+      }
+     ]
+    },
+    "leases": {
+     "holders": [],
+     "waiters": [],
+     "cycles": [],
+     "violations": [],
+     "registry": {
+      "folders": 0,
+      "orphanFolders": 0,
+      "deadEntries": 0,
+      "liveEntries": 0
+     },
+     "deadTickets": 0,
+     "deadHolders": []
+    },
+    "capacity": {
+     "headroomMegabytes": 3000,
+     "grants": [],
+     "waiters": []
+    },
+    "sessions": {
+     "live": 1,
+     "idle": 0,
+     "gone": 0,
+     "damaged": 0
+    },
+    "graph": {
+     "pointer": "present",
+     "generation": 3,
+     "manifest": "present",
+     "owners": 3700,
+     "publishedAgeSeconds": 100,
+     "implementationNewerSeconds": 0
+    },
+    "dependencies": {
+     "pointers": "present",
+     "scopes": [
+      {
+       "scope": ".",
+       "generation": "cdb4ee2aea69cc6a83331bbe96dc2caa9a299d21329efb0336fc02a82e1839a8",
+       "directory": "ready",
+       "inputsNewer": null
+      }
+     ],
+     "orphans": 0,
+     "orphanEstimatedBytes": 0,
+     "unready": 0,
+     "unreadyOldestSeconds": null
+    },
+    "caches": {
+     "deadPublications": 0,
+     "deadPublicationBytes": 0,
+     "deadPublicationPartial": false,
+     "retired": [],
+     "undeclared": []
+    },
+    "processes": []
+   },
+   "expect": {
+    "findings": [
+     [
+      "storage.image-detached-blocking",
+      "warn",
+      "dependencies"
+     ]
+    ],
+    "waits": [],
+    "processes": [],
+    "verdict": "degraded",
+    "counts": {
+     "error": 0,
+     "warn": 1,
+     "info": 0
+    },
+    "imageRepairs": [
+     [
+      "dependencies",
+      [
+       "attach"
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "name": "leases image first, a damaged image never, a plain detached image only while the loader is blocked",
+   "ordered": false,
+   "facts": {
+    "version": 1,
+    "atMs": 1792545600000,
+    "platform": "darwin",
+    "probes": [],
+    "host": {
+     "cores": 10,
+     "totalMegabytes": 32768,
+     "availableMegabytes": 20000,
+     "floorMegabytes": 6553,
+     "pressure": "normal",
+     "swapUsedMegabytes": 0,
+     "swapOutMegabytesPerSecond": 0,
+     "load": 2.0,
+     "openFiles": 8000,
+     "openFilesMaximum": 245760,
+     "attachedImages": 10,
+     "governor": "on"
+    },
+    "storage": {
+     "hostFreeBytes": 107374182400,
+     "hostTotalBytes": 536870912000,
+     "partitions": [
+      {
+       "id": "dependencies",
+       "state": "misplaced",
+       "capacityBytes": null,
+       "freeBytes": null,
+       "imageBytes": 8589934592,
+       "backing": "present",
+       "publication": "none",
+       "publicationAgeSeconds": null,
+       "image": "ok",
+       "attachedAt": "/private/var/folders/x/T/semio-reclaim-k3Fq9z",
+       "device": "/dev/disk5"
+      },
+      {
+       "id": "tools",
+       "state": "detached",
+       "capacityBytes": null,
+       "freeBytes": null,
+       "imageBytes": 8589934592,
+       "backing": "present",
+       "publication": "none",
+       "publicationAgeSeconds": null,
+       "image": "damaged"
+      },
+      {
+       "id": "graph",
+       "state": "detached",
+       "capacityBytes": null,
+       "freeBytes": null,
+       "imageBytes": 8589934592,
+       "backing": "present",
+       "publication": "none",
+       "publicationAgeSeconds": null,
+       "image": "ok"
+      },
+      {
+       "id": "leases",
+       "state": "detached",
+       "capacityBytes": null,
+       "freeBytes": null,
+       "imageBytes": 8589934592,
+       "backing": "present",
+       "publication": "none",
+       "publicationAgeSeconds": null,
+       "image": "ok"
+      }
+     ],
+     "loaderBlocked": true
+    },
+    "tools": {
+     "rows": [
+      {
+       "id": "repo",
+       "state": "ok",
+       "pin": "1.0.0",
+       "found": "1.0.0"
+      },
+      {
+       "id": "git",
+       "state": "ok",
+       "pin": null,
+       "found": "2.50.0"
+      }
+     ]
+    },
+    "leases": {
+     "holders": [],
+     "waiters": [],
+     "cycles": [],
+     "violations": [],
+     "registry": {
+      "folders": 0,
+      "orphanFolders": 0,
+      "deadEntries": 0,
+      "liveEntries": 0
+     },
+     "deadTickets": 0,
+     "deadHolders": []
+    },
+    "capacity": {
+     "headroomMegabytes": 3000,
+     "grants": [],
+     "waiters": []
+    },
+    "sessions": {
+     "live": 1,
+     "idle": 0,
+     "gone": 0,
+     "damaged": 0
+    },
+    "graph": {
+     "pointer": "present",
+     "generation": 3,
+     "manifest": "present",
+     "owners": 3700,
+     "publishedAgeSeconds": 100,
+     "implementationNewerSeconds": 0
+    },
+    "dependencies": {
+     "pointers": "present",
+     "scopes": [
+      {
+       "scope": ".",
+       "generation": "cdb4ee2aea69cc6a83331bbe96dc2caa9a299d21329efb0336fc02a82e1839a8",
+       "directory": "ready",
+       "inputsNewer": null
+      }
+     ],
+     "orphans": 0,
+     "orphanEstimatedBytes": 0,
+     "unready": 0,
+     "unreadyOldestSeconds": null
+    },
+    "caches": {
+     "deadPublications": 0,
+     "deadPublicationBytes": 0,
+     "deadPublicationPartial": false,
+     "retired": [],
+     "undeclared": []
+    },
+    "processes": []
+   },
+   "expect": {
+    "findings": [
+     [
+      "storage.image-damaged",
+      "error",
+      "tools"
+     ],
+     [
+      "storage.image-misplaced",
+      "error",
+      "dependencies"
+     ],
+     [
+      "storage.image-detached-blocking",
+      "warn",
+      "graph"
+     ],
+     [
+      "storage.image-detached-blocking",
+      "warn",
+      "leases"
+     ],
+     [
+      "storage.image-detached-blocking",
+      "warn",
+      "tools"
+     ]
+    ],
+    "waits": [],
+    "processes": [],
+    "verdict": "blocked",
+    "counts": {
+     "error": 2,
+     "warn": 3,
+     "info": 0
+    },
+    "imageRepairs": [
+     [
+      "leases",
+      [
+       "attach"
+      ]
+     ],
+     [
+      "dependencies",
+      [
+       "detach",
+       "attach"
+      ]
+     ],
+     [
+      "graph",
+      [
+       "attach"
+      ]
+     ]
+    ]
    }
   }
  ]

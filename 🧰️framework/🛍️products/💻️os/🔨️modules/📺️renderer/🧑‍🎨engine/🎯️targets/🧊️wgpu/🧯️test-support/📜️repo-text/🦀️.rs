@@ -186,9 +186,11 @@ pub const SHELL_SOURCE_ROOTS: &[&str] = &[
     "🎯️targets/🧊️wgpu/🚶️shell-session/🦀️.rs",
     "🎯️targets/🧊️wgpu/🪝️shell-window-actions/🦀️.rs",
     "🎯️targets/🧊️wgpu/🔀️shell-actions/🦀️.rs",
+    "🎯️targets/🧊️wgpu/🚰️shell-frame-pumps/🦀️.rs",
     "🎯️targets/🧊️wgpu/🖐️shell-pointer/🦀️.rs",
     "🎯️targets/🧊️wgpu/🖍️shell-view-paint/🦀️.rs",
     "🎯️targets/🧊️wgpu/🍱️shell-view-chrome/🦀️.rs",
+    "🎯️targets/🧊️wgpu/🪧️shell-view-chrome-overlays/🦀️.rs",
     "🎯️targets/🧊️wgpu/🗨️shell-view-overlays/🦀️.rs",
     "🎯️targets/🧊️wgpu/🪀️shell-view-panels/🦀️.rs",
 ];

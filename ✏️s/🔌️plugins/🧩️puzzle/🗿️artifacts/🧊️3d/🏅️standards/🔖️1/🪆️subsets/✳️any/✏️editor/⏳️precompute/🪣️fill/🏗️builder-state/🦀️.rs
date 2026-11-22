@@ -24,14 +24,14 @@ pub enum FillJobStage {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) enum TargetPreparePhase {
+pub enum TargetPreparePhase {
     Reset,
     Blocked,
     Enumerate,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) enum CandidatePreparePhase {
+pub enum CandidatePreparePhase {
     Reset,
     Enumerate,
     Order,
@@ -39,7 +39,7 @@ pub(super) enum CandidatePreparePhase {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) enum AcceptPhase {
+pub enum AcceptPhase {
     Validate,
     CheckAttractions,
     BuildVortices,
@@ -62,16 +62,16 @@ impl FillPreparationRoots {
         Self { scene, meshes }
     }
 
-    pub(super) fn into_lease(self) -> FillPreparationLease {
+    pub fn into_lease(self) -> FillPreparationLease {
         FillPreparationLease { scene: semio_framework_value::retirement::arc_custody::ArcLease::new(self.scene), meshes: semio_framework_value::retirement::arc_custody::ArcLease::new(self.meshes) }
     }
 }
 
 /// 🔗️ The shared roots of a closing fill builder: read leases that retire their Arc backing before the last payload.
 #[derive(semio_framework_value::RetireOwned)]
-pub(super) struct FillPreparationLease {
-    pub(super) scene: semio_framework_value::retirement::arc_custody::ArcLease<SceneConfig>,
-    pub(super) meshes: semio_framework_value::retirement::arc_custody::ArcLease<FillMeshMap>,
+pub struct FillPreparationLease {
+    pub scene: semio_framework_value::retirement::arc_custody::ArcLease<SceneConfig>,
+    pub meshes: semio_framework_value::retirement::arc_custody::ArcLease<FillMeshMap>,
 }
 
 #[derive(Debug)]
@@ -91,7 +91,7 @@ impl FixedSceneOwner {
 
 #[derive(Debug)]
 #[derive(semio_framework_value::RetireOwned)]
-pub(super) struct FixedCatalogOwner {
+pub struct FixedCatalogOwner {
     pub objects: FixedOwnerVec<ObjectKind, DOCUMENT_KIND_SLOTS>,
     pub vortices: FixedOwnerVec<VortexKindCatalog, DOCUMENT_KIND_SLOTS>,
     pub cables: FixedOwnerVec<CableKindCatalog, DOCUMENT_KIND_SLOTS>,
@@ -117,9 +117,9 @@ impl BrushCatalogView for FixedCatalogOwner {
     }
 }
 
-pub(super) struct FillSceneView<'a> {
+pub struct FillSceneView<'a> {
     pub base: &'a FixedSceneOwner,
-    pub(super) appended: &'a [EngineSceneObject],
+    pub appended: &'a [EngineSceneObject],
 }
 
 impl BrushSceneView for FillSceneView<'_> {
@@ -133,7 +133,7 @@ impl BrushSceneView for FillSceneView<'_> {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) enum PreparationCapacityBranch {
+pub enum PreparationCapacityBranch {
     EngineSceneObjects,
     SceneAttractions,
     SceneTargetVolumes,
@@ -147,7 +147,7 @@ pub(super) enum PreparationCapacityBranch {
 }
 
 impl PreparationCapacityBranch {
-    pub(super) fn label(self) -> &'static str {
+    pub fn label(self) -> &'static str {
         match self {
             Self::EngineSceneObjects => "scene_snapshot-objects",
             Self::SceneAttractions => "scene-attractions",
@@ -164,16 +164,16 @@ impl PreparationCapacityBranch {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) struct PreparationCapacityRefusal {
-    pub(super) branch: PreparationCapacityBranch,
-    pub(super) omitted_index: usize,
-    pub(super) published: bool,
+pub struct PreparationCapacityRefusal {
+    pub branch: PreparationCapacityBranch,
+    pub omitted_index: usize,
+    pub published: bool,
 }
 
 impl PreparationCapacityRefusal {
     /// 🏷️ `preparation-capacity:<branch>:<limit>` — the refused document-scale branch and the exact
     /// capacity its fixed page declares, so the published diagnostic never hides which limit bound.
-    pub(super) fn diagnostic(self) -> String {
+    pub fn diagnostic(self) -> String {
         format!("preparation-capacity:{}:{}", self.branch.label(), self.omitted_index)
     }
 }
@@ -204,13 +204,13 @@ pub fn preparation_capacity_refusal(roots: &FillPreparationRoots) -> Option<Prep
 
 pub struct FillBuilder {
     pub base: FixedSceneOwner,
-    pub(super) preparation_roots: Option<FillPreparationRoots>,
-    pub(super) preparation_cursor: usize,
-    pub(super) preparation_inner_cursor: usize,
-    pub(super) preparation_spatial: Option<CollisionIndexMutation>,
+    pub preparation_roots: Option<FillPreparationRoots>,
+    pub preparation_cursor: usize,
+    pub preparation_inner_cursor: usize,
+    pub preparation_spatial: Option<CollisionIndexMutation>,
     /// 🎚️ Live withdrawal of ONE unapplied placement during a weight-only replan — the same
     /// resumable index mutation shape as `preparation_spatial`, so the discard never scans.
-    pub(super) tail_removal: Option<CollisionIndexRemoval>,
+    pub tail_removal: Option<CollisionIndexRemoval>,
     pub preparation_capacity_refusal: Option<PreparationCapacityRefusal>,
     pub applied_count: usize,
     pub sequence: Vec<BrushPlacePayload>,
@@ -226,110 +226,110 @@ pub struct FillBuilder {
     pub max_count: usize,
     /// 🪜️ Where a running tail discard stops: the applied prefix for a weight replan, the newly
     /// requested count for a lowered ask.
-    pub(super) tail_floor: usize,
+    pub tail_floor: usize,
     /// 🔎️ Whether the plan ever built a pose, which tells a bare document apart from one whose every
     /// candidate was refused.
-    pub(super) ever_constructed: bool,
+    pub ever_constructed: bool,
     pub operation: Operation,
     pub stage: FillJobStage,
     pub catalogs: FixedCatalogOwner,
     pub weights: RetainedBrushKindWeights,
     pub kind_compatibility: FixedOwnerVec<KindCompatEntry, DOCUMENT_KIND_SLOTS>,
-    pub(super) host_rules: BrushHostRules,
+    pub host_rules: BrushHostRules,
     pub contact_tolerance: f64,
     pub meshes: FixedOwnerMap<String, CollisionBody, DOCUMENT_KIND_SLOTS>,
-    pub(super) spatial_index: CollisionSpatialIndex,
+    pub spatial_index: CollisionSpatialIndex,
     /// 🌀️ The pool of free vortices, drawn from by `target_weights` (a vortex kind's distribution weight, zero once the
     /// vortex is consumed by a placement or marked) through the Fenwick tree `target_tree`.
     pub targets: Vec<BrushFillVortexTarget>,
     pub target_weights: Vec<f64>,
-    pub(super) target_tree: Vec<f64>,
-    pub(super) targets_ready: bool,
-    pub(super) current_target_index: Option<usize>,
-    pub(super) target_prepare_phase: TargetPreparePhase,
-    pub(super) blocked_vortex_ids: FixedOwnerSet<String, DOCUMENT_VORTEX_SLOTS>,
-    pub(super) target_attraction_cursor: usize,
-    pub(super) target_object_cursor: usize,
-    pub(super) target_vortex_cursor: usize,
+    pub target_tree: Vec<f64>,
+    pub targets_ready: bool,
+    pub current_target_index: Option<usize>,
+    pub target_prepare_phase: TargetPreparePhase,
+    pub blocked_vortex_ids: FixedOwnerSet<String, DOCUMENT_VORTEX_SLOTS>,
+    pub target_attraction_cursor: usize,
+    pub target_object_cursor: usize,
+    pub target_vortex_cursor: usize,
     pub current_target: Option<BrushFillVortexTarget>,
-    pub(super) candidates: Vec<BrushCompatibleCandidate>,
-    pub(super) candidate_cursor: usize,
-    pub(super) candidate_prepare_phase: CandidatePreparePhase,
-    pub(super) candidate_kind_cursor: usize,
-    pub(super) candidate_vortex_cursor: usize,
-    pub(super) candidate_prepare_cursor: usize,
-    pub(super) candidate_seen: FixedOwnerSet<String, DOCUMENT_CANDIDATE_SLOTS>,
-    pub(super) candidate_raw: Vec<BrushCompatibleCandidate>,
-    pub(super) candidate_weights: Vec<f64>,
-    pub(super) candidate_tree: Vec<f64>,
-    pub(super) candidate_remaining: usize,
+    pub candidates: Vec<BrushCompatibleCandidate>,
+    pub candidate_cursor: usize,
+    pub candidate_prepare_phase: CandidatePreparePhase,
+    pub candidate_kind_cursor: usize,
+    pub candidate_vortex_cursor: usize,
+    pub candidate_prepare_cursor: usize,
+    pub candidate_seen: FixedOwnerSet<String, DOCUMENT_CANDIDATE_SLOTS>,
+    pub candidate_raw: Vec<BrushCompatibleCandidate>,
+    pub candidate_weights: Vec<f64>,
+    pub candidate_tree: Vec<f64>,
+    pub candidate_remaining: usize,
     pub current_preview: Option<BrushPreviewState>,
-    pub(super) broad_phase_query: Option<CollisionQueryCursor>,
-    pub(super) broad_phase_cursor: usize,
-    pub(super) broad_phase_bounds: Option<CollisionAabb>,
-    pub(super) collision: Option<CollisionPenetrationState>,
-    pub(super) accept_phase: AcceptPhase,
-    pub(super) accept_attraction_cursor: usize,
-    pub(super) accept_vortex_cursor: usize,
-    pub(super) pending_payload: Option<BrushPlacePayload>,
-    pub(super) pending_object: Option<EngineSceneObject>,
-    pub(super) pending_attraction: Option<AttractionProps>,
-    pub(super) pending_spatial: Option<CollisionIndexMutation>,
+    pub broad_phase_query: Option<CollisionQueryCursor>,
+    pub broad_phase_cursor: usize,
+    pub broad_phase_bounds: Option<CollisionAabb>,
+    pub collision: Option<CollisionPenetrationState>,
+    pub accept_phase: AcceptPhase,
+    pub accept_attraction_cursor: usize,
+    pub accept_vortex_cursor: usize,
+    pub pending_payload: Option<BrushPlacePayload>,
+    pub pending_object: Option<EngineSceneObject>,
+    pub pending_attraction: Option<AttractionProps>,
+    pub pending_spatial: Option<CollisionIndexMutation>,
     pub last_rejection: Option<String>,
-    pub(super) fixed_rejection: Option<FillRetiredOwner>,
+    pub fixed_rejection: Option<FillRetiredOwner>,
     pub collection_over_capacity: bool,
     pub transition_count: u64,
-    pub(super) rejected_count: u64,
-    pub(super) close_started: bool,
-    pub(super) close_owners: semio_s_plugin_puzzle_jobs::WorkClosing<FillClosingOwners>,
-    pub(super) closing: bool,
+    pub rejected_count: u64,
+    pub close_started: bool,
+    pub close_owners: semio_s_plugin_puzzle_jobs::WorkClosing<FillClosingOwners>,
+    pub closing: bool,
     /// 🛰️ Observations for a fill run job; `None` for the retained session lane, which never reads them.
-    pub(super) run_events: Option<Vec<FillRunEvent>>,
+    pub run_events: Option<Vec<FillRunEvent>>,
     /// 👻️ A constructed candidate still owes the run its verdict.
-    pub(super) run_candidate_live: bool,
+    pub run_candidate_live: bool,
 }
 
 #[derive(semio_framework_value::RetireOwned)]
-pub(super) struct FillClosingOwners {
-    pub(super) base: FixedSceneOwner,
-    pub(super) preparation_roots: Option<FillPreparationLease>,
-    pub(super) preparation_spatial: Option<CollisionIndexMutation>,
-    pub(super) tail_removal: Option<CollisionIndexRemoval>,
-    pub(super) sequence: Vec<BrushPlacePayload>,
-    pub(super) appended_objects: Vec<EngineSceneObject>,
-    pub(super) appended_attractions: Vec<AttractionProps>,
-    pub(super) placed: Vec<PlacedCollisionEntry>,
-    pub(super) placed_lookup: FixedOwnerMap<String, usize, DOCUMENT_OBJECT_SLOTS>,
-    pub(super) candidate_cache: FixedOwnerMap<String, Vec<BrushCompatibleCandidate>>,
-    pub(super) catalogs: FixedCatalogOwner,
-    pub(super) weights: RetainedBrushKindWeights,
-    pub(super) kind_compatibility: FixedOwnerVec<KindCompatEntry, DOCUMENT_KIND_SLOTS>,
-    pub(super) meshes: FixedOwnerMap<String, CollisionBody, DOCUMENT_KIND_SLOTS>,
-    pub(super) spatial_index: CollisionSpatialIndex,
-    pub(super) targets: Vec<BrushFillVortexTarget>,
-    pub(super) target_weights: Vec<f64>,
-    pub(super) target_tree: Vec<f64>,
-    pub(super) blocked_vortex_ids: FixedOwnerSet<String, DOCUMENT_VORTEX_SLOTS>,
-    pub(super) current_target: Option<BrushFillVortexTarget>,
-    pub(super) candidates: Vec<BrushCompatibleCandidate>,
-    pub(super) candidate_seen: FixedOwnerSet<String, DOCUMENT_CANDIDATE_SLOTS>,
-    pub(super) candidate_raw: Vec<BrushCompatibleCandidate>,
-    pub(super) candidate_weights: Vec<f64>,
-    pub(super) candidate_tree: Vec<f64>,
-    pub(super) current_preview: Option<BrushPreviewState>,
-    pub(super) broad_phase_query: Option<CollisionQueryCursor>,
-    pub(super) collision: Option<CollisionPenetrationState>,
-    pub(super) pending_payload: Option<BrushPlacePayload>,
-    pub(super) pending_object: Option<EngineSceneObject>,
-    pub(super) pending_attraction: Option<AttractionProps>,
-    pub(super) pending_spatial: Option<CollisionIndexMutation>,
-    pub(super) last_rejection: Option<String>,
-    pub(super) fixed_rejection: Option<FillRetiredOwner>,
-    pub(super) run_events: Option<Vec<FillRunEvent>>,
+pub struct FillClosingOwners {
+    pub base: FixedSceneOwner,
+    pub preparation_roots: Option<FillPreparationLease>,
+    pub preparation_spatial: Option<CollisionIndexMutation>,
+    pub tail_removal: Option<CollisionIndexRemoval>,
+    pub sequence: Vec<BrushPlacePayload>,
+    pub appended_objects: Vec<EngineSceneObject>,
+    pub appended_attractions: Vec<AttractionProps>,
+    pub placed: Vec<PlacedCollisionEntry>,
+    pub placed_lookup: FixedOwnerMap<String, usize, DOCUMENT_OBJECT_SLOTS>,
+    pub candidate_cache: FixedOwnerMap<String, Vec<BrushCompatibleCandidate>>,
+    pub catalogs: FixedCatalogOwner,
+    pub weights: RetainedBrushKindWeights,
+    pub kind_compatibility: FixedOwnerVec<KindCompatEntry, DOCUMENT_KIND_SLOTS>,
+    pub meshes: FixedOwnerMap<String, CollisionBody, DOCUMENT_KIND_SLOTS>,
+    pub spatial_index: CollisionSpatialIndex,
+    pub targets: Vec<BrushFillVortexTarget>,
+    pub target_weights: Vec<f64>,
+    pub target_tree: Vec<f64>,
+    pub blocked_vortex_ids: FixedOwnerSet<String, DOCUMENT_VORTEX_SLOTS>,
+    pub current_target: Option<BrushFillVortexTarget>,
+    pub candidates: Vec<BrushCompatibleCandidate>,
+    pub candidate_seen: FixedOwnerSet<String, DOCUMENT_CANDIDATE_SLOTS>,
+    pub candidate_raw: Vec<BrushCompatibleCandidate>,
+    pub candidate_weights: Vec<f64>,
+    pub candidate_tree: Vec<f64>,
+    pub current_preview: Option<BrushPreviewState>,
+    pub broad_phase_query: Option<CollisionQueryCursor>,
+    pub collision: Option<CollisionPenetrationState>,
+    pub pending_payload: Option<BrushPlacePayload>,
+    pub pending_object: Option<EngineSceneObject>,
+    pub pending_attraction: Option<AttractionProps>,
+    pub pending_spatial: Option<CollisionIndexMutation>,
+    pub last_rejection: Option<String>,
+    pub fixed_rejection: Option<FillRetiredOwner>,
+    pub run_events: Option<Vec<FillRunEvent>>,
 }
 
 #[derive(semio_framework_value::RetireOwned)]
-pub(super) struct RetainedBrushKindWeights {
+pub struct RetainedBrushKindWeights {
     pub object_weights: FixedOwnerMap<String, f64, DOCUMENT_KIND_SLOTS>,
     pub vortex_weights: FixedOwnerMap<String, f64, DOCUMENT_KIND_SLOTS>,
 }
@@ -348,13 +348,13 @@ impl RetainedBrushKindWeights {
     }
 }
 
-pub(super) fn retained_fill_vortex_target_weight(target: &BrushFillVortexTarget, weights: &RetainedBrushKindWeights) -> f64 {
+pub fn retained_fill_vortex_target_weight(target: &BrushFillVortexTarget, weights: &RetainedBrushKindWeights) -> f64 {
     let object_kind = target.object_kind.as_deref().unwrap_or("");
     let vortex_kind = target.vortex_kind.as_deref().unwrap_or("");
     retained_joint_weight(weights, object_kind, vortex_kind)
 }
 
-pub(super) fn retained_candidate_suggestion_weight(candidate: &BrushCompatibleCandidate, weights: &RetainedBrushKindWeights, catalogs: &impl BrushCatalogView) -> f64 {
+pub fn retained_candidate_suggestion_weight(candidate: &BrushCompatibleCandidate, weights: &RetainedBrushKindWeights, catalogs: &impl BrushCatalogView) -> f64 {
     let vortex_kind = catalogs.objects().iter().find(|kind| kind.id == candidate.object_kind_id).and_then(|kind| kind.vortices.get(candidate.source_vortex_index)).and_then(|template| template.vortex_kind.as_deref()).unwrap_or("");
     retained_joint_weight(weights, &candidate.object_kind_id, vortex_kind)
 }

@@ -26,6 +26,7 @@ message SpaceConfig {
   // @state config
   optional string space_id = 12;
   // @state config
+  optional string workflow_artifact_id = 13;
 }
 
 message SpaceWindowCamera {

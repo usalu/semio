@@ -4,14 +4,15 @@ import Ajv from "ajv";
 import * as React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import fixture from "../🧫️fixtures/🎯️stack-drop-destination/🔣️.json";
+import { type WindowLayoutNode, windowIdOf } from "@semio-tech/ui-layout";
 import { applyModeDrop, modeDockOutLayout } from "../../🎯️drop/🟦️.ts";
 
-type Layout = Parameters<typeof applyModeDrop>[0];
+type Layout = WindowLayoutNode;
 type StackProjection = { path: number[]; windows: string[] };
 
 function stacks(layout: Layout, path: number[] = []): StackProjection[] {
   if (layout.kind === "window") return [];
-  if (layout.kind === "stack") return [{ path, windows: layout.children.map((child) => child.id) }];
+  if (layout.kind === "stack") return [{ path, windows: layout.children.map(windowIdOf) }];
   return layout.children.flatMap((child, index) => stacks(child, [...path, index]));
 }
 
@@ -24,10 +25,11 @@ describe("🎯️ stack drop destination", () => {
   });
 
   test.each(fixture.cases)("$id uses the visible destination after extraction", (law) => {
-    const layout = { kind: law.axis, children: law.initialStacks.map((stack) => ({ kind: "stack", activeId: stack.active, children: stack.windows.map((id) => ({ kind: "window", id })) })) } as Layout;
+    const layout = { kind: "split", axis: law.axis === "row" ? "horizontal" : "vertical", children: law.initialStacks.map((stack) => ({ kind: "stack", activeWindowId: stack.active, children: stack.windows.map((id) => ({ kind: "window", windowKindId: id })) })) } as Layout;
     const source = law.initialStacks[law.sourceIndex]!;
-    const drag = { dragKind: law.dragKind, windowId: source.active, stackPath: String(law.sourceIndex), tabIndex: source.windows.indexOf(source.active), pointerId: 1, ghostLabel: source.active, x: 0, y: 0 } as Parameters<typeof applyModeDrop>[1];
-    const zone = { ...law.zone, stackPath: law.zone.path.join(".") } as Parameters<typeof applyModeDrop>[2];
+    const drag = { dragKind: law.dragKind, windowId: source.active, stackPath: [law.sourceIndex], tabIndex: source.windows.indexOf(source.active), pointerId: 1, ghostLabel: source.active, x: 0, y: 0 } as Parameters<typeof applyModeDrop>[1];
+    const { path, ...rest } = law.zone;
+    const zone = { ...rest, stackPath: path } as Parameters<typeof applyModeDrop>[2];
     const before = JSON.stringify(layout);
     const visible = modeDockOutLayout(layout, drag);
     expect(stacks(visible).flatMap((stack) => stack.windows)).not.toContain(source.active);

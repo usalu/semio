@@ -24,6 +24,7 @@ export interface SpaceConfig {
   activePanelTab: string;
   /** 🛋️ @state config */
   spaceId?: string;
+  workflowArtifactId?: string;
   /** ⚙️ @state config */
 }
 
@@ -94,7 +95,7 @@ export function parseSpaceWindowCamera(value: unknown, at = "$"): SpaceWindowCam
 }
 
 export function parseSpaceConfig(value: unknown, at = "$"): SpaceConfig {
-  const row = spaceSpaceConfigGuardClosed(spaceSpaceConfigGuardObject(value, at), at, ["camera", "collapsedNodeIds", "previewOffNodeIds", "activeNodeId", "focusedNodeId", "clipboardNodeIds", "workflowEngagementInput", "compiledDagEngagementInput", "pendingImportNodeId", "pendingImportFormat", "activePanelTab", "spaceId"]);
+  const row = spaceSpaceConfigGuardClosed(spaceSpaceConfigGuardObject(value, at), at, ["camera", "collapsedNodeIds", "previewOffNodeIds", "activeNodeId", "focusedNodeId", "clipboardNodeIds", "workflowEngagementInput", "compiledDagEngagementInput", "pendingImportNodeId", "pendingImportFormat", "activePanelTab", "spaceId", "workflowArtifactId"]);
   return {
     camera: Object.fromEntries(Object.entries(spaceSpaceConfigGuardObject(row["camera"], `${at}.camera`)).map(([key0, value0]) => [key0, parseSpaceWindowCamera(value0, `${at}.camera.${key0}`)])),
     collapsedNodeIds: spaceSpaceConfigGuardArray(row["collapsedNodeIds"], `${at}.collapsedNodeIds`).map((item, index) => spaceSpaceConfigGuardString(item, `${at}.collapsedNodeIds[${index}]`)),
@@ -108,5 +109,6 @@ export function parseSpaceConfig(value: unknown, at = "$"): SpaceConfig {
     pendingImportFormat: row["pendingImportFormat"] === undefined ? undefined : spaceSpaceConfigGuardString(row["pendingImportFormat"], `${at}.pendingImportFormat`),
     activePanelTab: spaceSpaceConfigGuardString(row["activePanelTab"], `${at}.activePanelTab`),
     spaceId: row["spaceId"] === undefined ? undefined : spaceSpaceConfigGuardString(row["spaceId"], `${at}.spaceId`),
+    workflowArtifactId: row["workflowArtifactId"] === undefined ? undefined : spaceSpaceConfigGuardString(row["workflowArtifactId"], `${at}.workflowArtifactId`),
   };
 }

@@ -7,7 +7,7 @@ import { stashOperationProgress, stashOperationPublication, WGPU_TYPED_OPERATION
 import { admitSpawnedJob, declareWgpuBootSubphase, forgetSpawnedJobs, leftoverFriendlyEffects, pendingTurnEffects, shellFrameAnswersACaller, stashLeftoverHostEffects, takeSpawnedJobs, WGPU_SPAWNED_JOB_ROUNDS, wgpuHostEffect, type WgpuSpawnedJobDrain } from "../../🎛️contributions-and-effects/🟦️.ts";
 import { getShardClient, serializeWgpuActorCall, submitTurn } from "../../🧵️shard-and-actor-calls/🟦️.ts";
 import { RETAINED_DOCUMENT_OPPORTUNITIES, type WgpuOwnedUiProjection, yieldWgpuUi } from "../../🍽️ui-intake-and-route/🟦️.ts";
-import { drainTypedOperationTurns, shellFrameBytes, type WireTurnResult } from "../../../../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🔖️turn-result/🟦️.ts";
+import { drainTypedOperationBatches, shellFrameBytes, type WireTurnResult } from "../../../../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🔖️turn-result/🟦️.ts";
 import { driveSpawnedJob, spawnedJobCompletedEvent, type SpawnedJobPort } from "../../../../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🧵️spawned-job/🟦️.ts";
 import { createShardCommandIngressPages } from "@semio-tech/framework-actor/shard-client/wire";
 import type { createInstanceBookkeeping } from "../🪪️descriptor-and-instance-state/🟦️.ts";
@@ -114,7 +114,7 @@ export function createTurnDrivers({ requireUiRoute, executeFor, state, closingIn
   };
   /** 🔁️ Keeps an instance's mounted typed operations advancing once no host call is left to drive
    * them — the wgpu twin of `PluginRuntime`'s own `drainTypedOperations`, on the SAME shared
-   * {@link drainTypedOperationTurns} loop. A `flowEvalTick` is a `Migrated` interactive job: it
+   * {@link drainTypedOperationBatches} loop. A `flowEvalTick` is a `Migrated` interactive job: it
    * returns its "started" reply on the first turn and then needs hundreds more reactor turns to reach
    * its terminal page, so without this poll the actor simply stops and `flowEvalResolve` never
    * arrives. Frames a poll uncovers are published on this instance's own outcome stream, where
@@ -127,7 +127,7 @@ export function createTurnDrivers({ requireUiRoute, executeFor, state, closingIn
     const drive = new WgpuTypedOperationDrive(instanceId);
     try {
       const activation = requireUiRoute(instanceId).lifecycle.activation;
-      const outcome = await drainTypedOperationTurns(
+      const outcome = await drainTypedOperationBatches(
         WGPU_TYPED_OPERATION_DRAIN_BUDGET,
         live,
         async () => serializeWgpuActorCall(requireActorId(instanceId), async () => {

@@ -92,7 +92,7 @@ pub fn staged_arg_row(row_id: String, control_id: &str, arg: &semio_framework::A
     };
     let (control, mut items) = match arg.control() {
         semio_framework::ActionArgControl::Select { options } => (
-            Some(Control::Select(UiSelectNode {
+            Some(Control::Select(UiSelectNode { appearance: Default::default(),
                 presence: UiPresence::default(),
                 id: control_id.to_string(),
                 value: text,

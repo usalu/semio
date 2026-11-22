@@ -17,7 +17,7 @@ pub const FILE_ACTION: &str = "importGeoJsonFile";
 pub struct ImportGeoJson {}
 
 pub fn handle(_: &ImportGeoJson, _: &ArtifactView<'_, GisTerrainSnapshot>, _: &ConfigView<'_, NoConfig>) -> Result<Emit<GisTerrainMutation, NoConfigMutation>, Fault> {
-    Ok(Emit::effect(local_file::open(0x47454f4a, ".geojson,.json,application/geo+json", FILE_ACTION)))
+    Ok(Emit::effect(local_file::open(0x47454f4a, ".geojson,.json,application/geo+json", FILE_ACTION, local_file::MAX_FILE_BYTES)))
 }
 
 pub mod file {
@@ -32,7 +32,7 @@ pub mod file {
     impl ImportGeoJsonFile {
         /// 📥️ Takes the original callback text into one typed import.
         pub fn receive(args: &mut Option<DslValue>) -> Result<Self, Fault> {
-            local_file::receive(args).map(|payload| Self { payload }).ok_or_else(|| Error::File.fault())
+            local_file::receive(args, local_file::MAX_FILE_BYTES).map(|payload| Self { payload }).ok_or_else(|| Error::File.fault())
         }
     }
 
@@ -48,6 +48,8 @@ pub mod file {
 
 pub mod export {
     use super::*;
+    use super::super::import_elevation::{self, ErrorNotice as _, ascii_grid};
+    use crate::schema::snapshot::ELEVATION_MAX_SIDE;
     use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory};
     use semio_framework_job::{InteractiveJobCloseStep, OriginalTurnFailure, StepContext};
     use semio_framework_value::{RetainedCloneProgress, RetirementDemand, ValueError, retirement::controlled::ControlledRetirement};
@@ -78,11 +80,11 @@ pub mod export {
         Emit::effect(Effect::DownloadMediaExport { filename: FILE_NAME.into(), mime_type: MIME_TYPE.into(), data, encoding: None })
     }
 
-    pub(crate) struct GeoJsonExportFactory([ToolFactoryKey; 1]);
+    pub(crate) struct LocalFileExportJobFactory([ToolFactoryKey; 2]);
 
-    impl GeoJsonExportFactory {
+    impl LocalFileExportJobFactory {
         pub(crate) fn new(controller: &str) -> Self {
-            Self([ToolFactoryKey::new(controller, ACTION)])
+            Self([ACTION, import_elevation::export::ACTION].map(|id| ToolFactoryKey::new(controller, id)))
         }
 
         pub(crate) fn proofs() -> Vec<semio_plugin::ArtifactBoundedFirstStepProof> {
@@ -94,18 +96,21 @@ pub mod export {
             owner_file: "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
             controller: "s.gis.gisterrain@1/*#editor",
             artifact_schema: "gis.terrain",
-            factory: "GeoJsonExportFactory",
-            factory_type: GeoJsonExportFactory,
-            tools: { "exportGeoJson" => ToolExecutionContract::resumable(MAX_RAW_BYTES, 32, 4096, MAX_BYTES, 7_500, 64, 1) }
+            factory: "LocalFileExportJobFactory",
+            factory_type: LocalFileExportJobFactory,
+            tools: {
+                "exportGeoJson" => ToolExecutionContract::resumable(MAX_RAW_BYTES, 32, 4096, MAX_BYTES, 7_500, 64, 1),
+                "exportElevationGrid" => ToolExecutionContract::resumable(MAX_RAW_BYTES, 32, 4096, MAX_BYTES, 7_500, 64, 1),
+            }
         }
     }
 
-    impl ToolJobFactory for GeoJsonExportFactory {
+    impl ToolJobFactory for LocalFileExportJobFactory {
         type Payload = ArtifactRetainedCommandPayload<App>;
         type Job = ArtifactRetainedCommandJob<App>;
 
         fn keys(&self) -> &[ToolFactoryKey] { &self.0 }
-        fn payload_schema_id(&self) -> &str { "gis.terrain.geojson-download.tool-command.v1" }
+        fn payload_schema_id(&self) -> &str { "gis.terrain.local-file-download.tool-command.v1" }
         fn classification(&self) -> InteractiveJobClassification { InteractiveJobClassification::Migrated }
         fn execution_contract(&self) -> ToolExecutionContract {
             ToolExecutionContract::resumable(MAX_RAW_BYTES, 32, 4096, MAX_BYTES, 7_500, 64, 1)
@@ -113,18 +118,20 @@ pub mod export {
         semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: MAX_RAW_BYTES, checkpoint_resume: false);
     }
 
-    impl ArtifactOwnedToolJobFactory for GeoJsonExportFactory {
+    impl ArtifactOwnedToolJobFactory for LocalFileExportJobFactory {
         type Owner = App;
-        const TOOL_IDS: &'static [&'static str] = &[ACTION];
+        const TOOL_IDS: &'static [&'static str] = &[ACTION, import_elevation::export::ACTION];
         const DOCUMENT_SCHEMA: &'static str = crate::GIS_3D_TERRAIN_SCHEMA;
         const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[
             ArtifactToolPublicationContract { tool_id: ACTION, lanes: &[ArtifactToolPublicationLane::HostOnly] },
+            ArtifactToolPublicationContract { tool_id: import_elevation::export::ACTION, lanes: &[ArtifactToolPublicationLane::HostOnly] },
         ];
     }
 
     #[derive(Default, semio_framework_value::RetireOwned)]
     struct Owners {
         cursor: codec::FeatureCursor,
+        rows_written: usize,
         chunks: Option<ArtifactOutputChunks>,
         page: Vec<u8>,
         pending_page: Option<Vec<u8>>,
@@ -134,21 +141,54 @@ pub mod export {
         footer: bool,
     }
 
+    #[derive(Clone, Copy)]
+    enum Format { GeoJson, Raster }
+
+    impl Format {
+        fn action(self) -> &'static str {
+            match self { Self::GeoJson => ACTION, Self::Raster => import_elevation::export::ACTION }
+        }
+
+        fn file(self) -> (&'static str, &'static str, usize) {
+            match self {
+                Self::GeoJson => (FILE_NAME, MIME_TYPE, MAX_BYTES),
+                Self::Raster => (import_elevation::export::FILE_NAME, import_elevation::export::MIME_TYPE, import_elevation::MAX_FILE_BYTES as usize),
+            }
+        }
+
+        fn maximum_fragment(self) -> usize {
+            match self {
+                Self::GeoJson => 64 * 1024,
+                Self::Raster => ascii_grid::MAX_HEADER_BYTES.max(ascii_grid::MAX_CELL_BYTES * ELEVATION_MAX_SIDE),
+            }
+        }
+
+        fn status(self, pending: bool) -> Step {
+            let (stage, preview) = match self {
+                Self::GeoJson => (STAGE, PREVIEW),
+                Self::Raster => ("terrain-elevation-export", r#"{"en":"Writing elevation rows","de":"Höhenrasterzeilen werden geschrieben"}"#.as_bytes()),
+            };
+            if pending { Step::Pending { stage, preview } } else { Step::Progress { stage, preview } }
+        }
+    }
+
     pub(crate) struct Work {
+        format: Format,
         owners: ControlledRetirement<Owners>,
     }
 
-    impl Default for Work {
-        fn default() -> Self {
-            Self { owners: ControlledRetirement::retain(Owners::default()) }
+    impl Work {
+        pub(crate) fn for_action(action: &str) -> Self {
+            let format = if action == import_elevation::export::ACTION { Format::Raster } else { Format::GeoJson };
+            Self { format, owners: ControlledRetirement::retain(Owners::default()) }
         }
     }
 
     impl ArtifactCommandWork<App> for Work {
-        fn tool_id(&self) -> &'static str { ACTION }
+        fn tool_id(&self) -> &'static str { self.format.action() }
 
         fn extent(&self, command: &crate::editor::gis3d::Gis3dCommand, _: &GisTerrainSnapshot, _: &protocol::InteractionState, _: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<App>>) -> Option<usize> {
-            matches!(command, crate::editor::gis3d::Gis3dCommand::ExportGeoJson(_)).then_some(1)
+            (command.command_id() == self.format.action()).then_some(1)
         }
 
         fn receive_original_output_chunks(&mut self, chunks: &mut Option<ArtifactOutputChunks>, cx: &mut StepContext<'_>) -> Result<bool, OriginalTurnFailure> {
@@ -166,41 +206,43 @@ pub mod export {
         }
 
         fn step(&mut self, input: &ArtifactCommandInputs<'_, App>, cx: &mut StepContext<'_>) -> Result<Step, OriginalTurnFailure> {
+            let format = self.format;
+            let (filename, mime_type, _) = format.file();
             let owners = self.owners.original_mut().ok_or_else(|| ValueError::invariant("GeoJSON export is closing"))?;
             if cx.is_cancelled() || cx.should_yield() {
-                return Ok(pending());
+                return Ok(format.status(true));
             }
             let chunks = owners.chunks.as_ref().ok_or_else(|| ValueError::invariant("GeoJSON export requires its supplied queue"))?;
             if owners.pending_page.is_some() {
-                return Ok(if chunks.push_original(&mut owners.pending_page, None, cx)? { progress() } else { pending() });
+                return Ok(if chunks.push_original(&mut owners.pending_page, None, cx)? { format.status(false) } else { format.status(true) });
             }
             if owners.fragment.is_some() {
-                return copy_fragment(owners, cx);
+                return copy_fragment(format, owners, cx);
             }
             if !owners.footer {
-                return next_fragment(owners, input.snapshot, cx);
+                return next_fragment(format, owners, input.snapshot, cx);
             }
             if !owners.page.is_empty() && chunks.bytes() == 0 {
-                let demand = RetirementDemand { copy_bytes: size_of::<String>() + size_of::<Step>(), capacity_bytes: FILE_NAME.len() + MIME_TYPE.len(), depth: 1, ..Default::default() };
-                if !cx.retained_work_can_enter(demand) { return Ok(pending()); }
+                let demand = RetirementDemand { copy_bytes: size_of::<String>() + size_of::<Step>(), capacity_bytes: filename.len() + mime_type.len(), depth: 1, ..Default::default() };
+                if !cx.retained_work_can_enter(demand) { return Ok(format.status(true)); }
                 let data = String::from_utf8(std::mem::take(&mut owners.page)).map_err(|_| ValueError::invariant("GeoJSON writer produced invalid UTF-8"))?;
                 charge(cx, demand)?;
-                return Ok(Step::Complete(inline(data)));
+                return Ok(Step::Complete(Emit::effect(Effect::DownloadMediaExport { filename: filename.into(), mime_type: mime_type.into(), data, encoding: None })));
             }
             if !owners.page.is_empty() {
                 let demand = RetirementDemand { copy_bytes: 2 * size_of::<Vec<u8>>(), depth: 1, ..Default::default() };
-                if !cx.retained_work_can_enter(demand) { return Ok(pending()); }
+                if !cx.retained_work_can_enter(demand) { return Ok(format.status(true)); }
                 owners.pending_page = Some(std::mem::take(&mut owners.page));
                 charge(cx, demand)?;
-                return Ok(progress());
+                return Ok(format.status(false));
             }
             if !chunks.is_sealed() {
-                return Ok(if chunks.seal_original(cx)? { progress() } else { pending() });
+                return Ok(if chunks.seal_original(cx)? { format.status(false) } else { format.status(true) });
             }
-            let demand = RetirementDemand { copy_bytes: size_of::<ArtifactDownloadOutput>() + size_of::<Step>(), capacity_bytes: FILE_NAME.len() + MIME_TYPE.len(), depth: 1, ..Default::default() };
-            if !cx.retained_work_can_enter(demand) { return Ok(pending()); }
+            let demand = RetirementDemand { copy_bytes: size_of::<ArtifactDownloadOutput>() + size_of::<Step>(), capacity_bytes: filename.len() + mime_type.len(), depth: 1, ..Default::default() };
+            if !cx.retained_work_can_enter(demand) { return Ok(format.status(true)); }
             let chunks = owners.chunks.take().ok_or_else(|| ValueError::invariant("GeoJSON download lost its sealed queue"))?;
-            let download = ArtifactDownloadOutput::new(FILE_NAME, MIME_TYPE, None, chunks)?;
+            let download = ArtifactDownloadOutput::new(filename, mime_type, None, chunks)?;
             charge(cx, demand)?;
             Ok(Step::CompleteDownload { download, ephemeral: EphemeralEmit::default() })
         }
@@ -219,43 +261,66 @@ pub mod export {
         fn terminal_frame_release_bytes(&self) -> Option<usize> { self.terminal_is_empty().then_some(size_of::<Self>()) }
     }
 
-    fn next_fragment(owners: &mut Owners, snapshot: &GisTerrainSnapshot, cx: &mut StepContext<'_>) -> Result<Step, OriginalTurnFailure> {
-        let mut demand = RetirementDemand { copy_bytes: size_of::<String>(), capacity_bytes: 64 * 1024, depth: 1, ..Default::default() };
-        if !cx.retained_work_can_enter(demand) { return Ok(pending()); }
-        let fragment = if !owners.started {
-            owners.started = true;
-            String::from(codec::HEADER)
-        } else if let Some(feature) = owners.cursor.next(snapshot.imported_map.as_ref()).map_err(Error::fault)? {
-            feature
-        } else {
-            owners.footer = true;
-            String::from(codec::FOOTER)
+    fn next_fragment(format: Format, owners: &mut Owners, snapshot: &GisTerrainSnapshot, cx: &mut StepContext<'_>) -> Result<Step, OriginalTurnFailure> {
+        let mut demand = RetirementDemand { copy_bytes: size_of::<String>(), capacity_bytes: format.maximum_fragment(), depth: 1, ..Default::default() };
+        if !cx.retained_work_can_enter(demand) { return Ok(format.status(true)); }
+        let fragment = match format {
+            Format::GeoJson => {
+                if !owners.started {
+                    owners.started = true;
+                    String::from(codec::HEADER)
+                } else if let Some(feature) = owners.cursor.next(snapshot.imported_map.as_ref()).map_err(Error::fault)? {
+                    feature
+                } else {
+                    owners.footer = true;
+                    String::from(codec::FOOTER)
+                }
+            }
+            Format::Raster => {
+                let source = snapshot.elevation_source.as_ref().ok_or_else(|| ascii_grid::Error::Missing.fault())?;
+                if !owners.started {
+                    owners.started = true;
+                    ascii_grid::encode_header(source).map_err(|error| error.fault())?
+                } else if let Some(row) = source.rows_millimetres.iter().rev().nth(owners.rows_written) {
+                    let mut fragment = String::with_capacity(row.len() * ascii_grid::MAX_CELL_BYTES);
+                    ascii_grid::write_row(&mut fragment, source, source.rows_millimetres.len() - 1 - owners.rows_written);
+                    owners.rows_written += 1;
+                    fragment
+                } else {
+                    owners.footer = true;
+                    cx.consume_fuel(1);
+                    return Ok(format.status(false));
+                }
+            }
         };
         let produced = owners.chunks.as_ref().map_or(0, ArtifactOutputChunks::bytes) + owners.page.len();
-        if produced + fragment.len() > MAX_BYTES {
-            return Err(Error::Extent.fault().into());
+        if produced + fragment.len() > format.file().2 {
+            return Err(match format {
+                Format::GeoJson => Error::Extent.fault(),
+                Format::Raster => ascii_grid::Error::FileSize.fault(),
+            }.into());
         }
         demand.capacity_bytes = fragment.capacity();
         owners.offset = 0;
         owners.fragment = Some(fragment);
         charge(cx, demand)?;
-        Ok(progress())
+        Ok(format.status(false))
     }
 
-    fn copy_fragment(owners: &mut Owners, cx: &mut StepContext<'_>) -> Result<Step, OriginalTurnFailure> {
+    fn copy_fragment(format: Format, owners: &mut Owners, cx: &mut StepContext<'_>) -> Result<Step, OriginalTurnFailure> {
         let fragment = owners.fragment.as_ref().ok_or_else(|| ValueError::invariant("GeoJSON fragment disappeared"))?;
         let remaining = &fragment.as_bytes()[owners.offset..];
         let carrier = 2 * size_of::<Vec<u8>>();
         let copy_grant = cx.retained_grant().maximum_copy_bytes.saturating_sub(carrier);
         let bytes = remaining.len().min(ArtifactOutputChunks::CHUNK_BYTES - owners.page.len()).min(copy_grant);
-        if bytes == 0 { return Ok(pending()); }
+        if bytes == 0 { return Ok(format.status(true)); }
         let mut demand = RetirementDemand {
             copy_bytes: bytes + carrier,
             capacity_bytes: if owners.page.capacity() == 0 { ArtifactOutputChunks::CHUNK_BYTES } else { 0 },
             release_bytes: if bytes == remaining.len() { fragment.capacity() } else { 0 },
             depth: 1,
         };
-        if !cx.retained_work_can_enter(demand) { return Ok(pending()); }
+        if !cx.retained_work_can_enter(demand) { return Ok(format.status(true)); }
         if demand.capacity_bytes != 0 {
             owners.page.reserve_exact(ArtifactOutputChunks::CHUNK_BYTES);
             demand.capacity_bytes = owners.page.capacity();
@@ -269,7 +334,7 @@ pub mod export {
             owners.pending_page = Some(std::mem::take(&mut owners.page));
         }
         charge(cx, demand)?;
-        Ok(progress())
+        Ok(format.status(false))
     }
 
     fn charge(cx: &mut StepContext<'_>, demand: RetirementDemand) -> Result<(), OriginalTurnFailure> {
@@ -280,8 +345,7 @@ pub mod export {
         Ok(())
     }
 
-    fn progress() -> Step { Step::Progress { stage: STAGE, preview: PREVIEW } }
-    fn pending() -> Step { Step::Pending { stage: STAGE, preview: PREVIEW } }
+
 }
 
 trait ErrorNotice {

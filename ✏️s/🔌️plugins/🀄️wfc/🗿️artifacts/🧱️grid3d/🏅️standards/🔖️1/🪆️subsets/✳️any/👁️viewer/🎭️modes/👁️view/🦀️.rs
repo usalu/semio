@@ -1,7 +1,7 @@
 //! 👁️ `s.wfc.grid3d` viewer — the `view` mode: one full-pane preview of the solved grid.
 
 use crate::viewer::grid3d::modes::view::windows::preview;
-use semio_plugin::create_default_layout;
+use semio_plugin::{create_default_layout, Axis};
 use semio_ui_locale::LocalizedLabel;
 use semio_plugin::ModeDefinition;
 use semio_plugin::WindowLayout;
@@ -16,6 +16,6 @@ pub fn definition() -> ModeDefinition {
 
 /// 🪟️ A viewer has nothing to author, so the solved grid takes the whole pane.
 pub fn layout() -> WindowLayout {
-    create_default_layout(&[preview::WINDOW_KIND_ID.into()], "row", None, Some(&["Preview".into()]))
+    create_default_layout(&[preview::WINDOW_KIND_ID.into()], Axis::Horizontal, None, Some(&["Preview".into()]))
 }
 //#endregion 🔖️Definition

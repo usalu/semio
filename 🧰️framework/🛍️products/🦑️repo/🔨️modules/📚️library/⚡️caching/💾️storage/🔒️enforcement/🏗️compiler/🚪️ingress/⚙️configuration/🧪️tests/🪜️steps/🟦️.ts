@@ -1,5 +1,3 @@
-import "../📮️order.ts";
-import "../👁️profile-recheck/🟦️.ts";
 import {expect,test} from "bun:test";
 import {spawnSync} from "node:child_process";
 import {mkdtempSync,readFileSync,rmSync,writeFileSync} from "node:fs";
@@ -13,6 +11,8 @@ import {cargoProfileInvocationArgumentsV1,renderCargoProfileConfigurationV1,type
 import {repositoryCargoStorageArgumentsV1,type RepositoryCargoStorageArgumentsV1} from "../../../📥️arguments/📋️policy/🟦️.ts";
 import policies from "../../../../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🦀️cargo/🧪️tests/🧫️fixtures/🔣️.json" with {type:"json"};
 import fixture from "./🔣️.json" with {type:"json"};
+import {declareLibraryBuildTestEnvelopeV1} from "../../../../../../../../🧪️testing/🪪️native-birth/🟦️.ts";
+declareLibraryBuildTestEnvelopeV1({suite:"storage-compiler-processes"});
 
 const context=fixture.context as RepositoryCargoStorageArgumentsV1;
 type Step=(view:Readonly<{profile:CargoProfileRenderedConfigurationV1}>,args:readonly string[])=>Promise<readonly string[]>;

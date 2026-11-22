@@ -9,4 +9,4 @@ export interface ChangeStudRowCount {
   newCount: number;
 }
 
-export const parseChangeStudRowCount: NormWireReader<ChangeStudRowCount> = normWireObject<ChangeStudRowCount>({ memberId: normWireRequired(normWireString), studRowId: normWireRequired(normWireString), newCount: normWireRequired(normWireRange(normWireInteger, {"minimum":0})) });
+export const parseChangeStudRowCount: NormWireReader<ChangeStudRowCount> = normWireObject<ChangeStudRowCount>({ memberId: normWireRequired(normWireString), studRowId: normWireRequired(normWireString), newCount: normWireRequired(normWireRange(normWireInteger, {"minimum":0,"maximum":4294967295})) });

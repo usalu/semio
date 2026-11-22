@@ -66,8 +66,10 @@ export function openScopedDirectory(baseUrl: string, scope: DocumentScope, since
  * (retried with jittered backoff through a short link loss), then every live event of that space from the global
  * directory stream, each posted as `directory-space-events` in ascending `seq`. The space index is the shell's
  * projection of the space's directory — it has no document scope, so it never asks for a document-scoped stream. */
-export function openSpaceDirectory(baseUrl: string, spaceId: string): void {
-  closeSpaceDirectory(spaceId);
+export function openSpaceDirectory(baseUrl: string, spaceId: string, clientInstanceId?: string): void {
+  closeSpaceDirectory(spaceId, clientInstanceId);
+  const key = spaceDirectoryLaneKey(spaceId, clientInstanceId);
+  const owner = clientInstanceId === undefined ? { spaceId } : { spaceId, clientInstanceId };
   const abort = new AbortController();
   let stream: { close: () => void } | null = null;
   const lane = {
@@ -76,7 +78,7 @@ export function openSpaceDirectory(baseUrl: string, spaceId: string): void {
       stream?.close();
     },
   };
-  spaceDirectoryLanes.set(spaceId, lane);
+  spaceDirectoryLanes.set(key, lane);
   const client = new DirectoryClient(baseUrl, {
     requestBaseUrl: "",
     socketGrantIssuer: createSocketGrantIssuerV1({ post: (path, options) => requestSocketGrant(baseUrl, path, options?.signal) }),
@@ -84,7 +86,7 @@ export function openSpaceDirectory(baseUrl: string, spaceId: string): void {
   });
   const deliver = (events: readonly DirectoryEvent[]): void => {
     const own = events.filter((event) => event.spaceId === spaceId);
-    if (own.length > 0 && spaceDirectoryLanes.get(spaceId) === lane) post({ kind: "directory-space-events", spaceId, events: own });
+    if (own.length > 0 && spaceDirectoryLanes.get(key) === lane) post({ kind: "directory-space-events", ...owner, events: own });
   };
   void (async () => {
     let after = 0;
@@ -94,16 +96,23 @@ export function openSpaceDirectory(baseUrl: string, spaceId: string): void {
       after = page.throughSeqInclusive;
       more = page.hasMore;
     }
-    if (abort.signal.aborted) return;
+    if (abort.signal.aborted || spaceDirectoryLanes.get(key) !== lane) return;
+    if (clientInstanceId !== undefined) post({ kind: "directory-space-history-ready", spaceId, clientInstanceId });
     stream = client.stream(after, (message) => {
       if (message.kind === "event") deliver([message.event]);
     });
   })().catch(() => undefined);
 }
 
-export function closeSpaceDirectory(spaceId: string): void {
-  spaceDirectoryLanes.get(spaceId)?.close();
-  spaceDirectoryLanes.delete(spaceId);
+/** 🪪️ Keeps private lookups independent of the Space Index's canonical feed. */
+function spaceDirectoryLaneKey(spaceId: string, clientInstanceId?: string): string {
+  return clientInstanceId === undefined ? spaceId : JSON.stringify([spaceId, clientInstanceId]);
+}
+
+export function closeSpaceDirectory(spaceId: string, clientInstanceId?: string): void {
+  const key = spaceDirectoryLaneKey(spaceId, clientInstanceId);
+  spaceDirectoryLanes.get(key)?.close();
+  spaceDirectoryLanes.delete(key);
 }
 
 export function closeScopedDirectory(scope: DocumentScope): void {

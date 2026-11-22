@@ -1,0 +1,45 @@
+{
+  "cargo-bike": {
+    "spokesPerWheel": 36,
+    "wireDiameterM": 0.002,
+    "jBendM": 0.0043,
+    "nippleM": 0.012,
+    "frontFlangeM": [
+      0.028,
+      -0.032
+    ],
+    "rearFlangeM": [
+      0.03,
+      -0.03
+    ],
+    "wheelMetalAreaM2": 0.46083108,
+    "wheelMetalExposedFraction": {
+      "parked-on-stand": 0.73512941,
+      "loaded-on-stand": 0.7350837,
+      "rolling-loaded": 0.73513528,
+      "ride-start": 0.73488424,
+      "ride-end": 0.73537133,
+      "turning-left": 0.73491521
+    }
+  },
+  "city-bicycle": {
+    "spokesPerWheel": 36,
+    "wireDiameterM": 0.002,
+    "jBendM": 0.0036,
+    "nippleM": 0.014,
+    "frontFlangeM": [
+      0.022,
+      -0.032
+    ],
+    "rearFlangeM": [
+      0.029,
+      -0.029
+    ]
+  },
+  "electric-kick-scooter": {
+    "rearWindows": 5,
+    "axleDiameterM": 0.014,
+    "bearingOuterM": 0.032,
+    "bearingWidthM": 0.009
+  }
+}

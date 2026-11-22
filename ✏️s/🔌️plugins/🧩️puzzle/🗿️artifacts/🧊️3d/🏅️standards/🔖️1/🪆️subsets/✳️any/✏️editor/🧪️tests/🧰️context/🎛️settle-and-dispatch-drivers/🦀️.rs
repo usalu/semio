@@ -82,10 +82,6 @@ pub struct Puzzle3dCompletion {
     pub history_patch: Option<semio_framework::kernel::HistoryPatch>,
 }
 
-/// 📏️ One continuation turn's byte grant. Deliberately one fixed envelope page, not a huge number: the
-/// point of the loop is that every unit is bounded exactly as a host actor tick bounds it.
-const SETTLE_TURN_BYTES: usize = 16_384;
-
 /// 🕹️ Plays the CLIENT half of the local interaction query protocol: drains the replies the app
 /// published this turn and acknowledges every page, which is what returns the document snapshot-read
 /// leases the query captured — the same Started → Page → acknowledge → Closed round trip

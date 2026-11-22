@@ -1,4 +1,4 @@
-import { dirname, resolve, sep } from "node:path";
+import { dirname, isAbsolute, relative, resolve, sep } from "node:path";
 
 /** 🔒️ Resource lease admission control: the access descriptor, the awaited wait progress, the caller control and the materialized path bound every lease owner shares; a leaf, so leases, retirement and routing never import each other for these. */
 export type ResourceAccess = { readonly resource: string; readonly mode: "shared" | "exclusive" };
@@ -41,11 +41,31 @@ export function fenceMaterializedPathsV1(directories: readonly string[], reason:
   for (const directory of directories) fencedDirectories.set(resolve(directory), reason);
 }
 
+/** 🧲️ The directories a fenced store admits for reading only: installed tool material that a private repository adopts in place; one table per process on a registered symbol. */
+const adoptedDirectories: Set<string> = ((globalThis as Record<symbol, Set<string> | undefined>)[Symbol.for("semio.process.materialized-path-adoptions.v1")] ??= new Set());
+/** 🧲️ Admits installed tool directories below a fenced store as read-only material: a materialized path inside one passes the fence, while the store's image, lease and partition paths stay fenced and no store root contains an adopted directory, so no writer of a private store can address it. */
+export function adoptMaterializedReadOnlyDirectoriesV1(directories: readonly string[]): void {
+  for (const directory of directories) adoptedDirectories.add(resolve(directory));
+}
+
+/** 🧲️ The adopted read-only directory this exact directory is, or undefined when it is none: identity by path, so a clone source is only accepted when it is the very installed material that was adopted. */
+export function adoptedReadOnlyDirectoryV1(directory: string): string | undefined {
+  const absolute = resolve(directory);
+  return adoptedDirectories.has(absolute) ? absolute : undefined;
+}
+
+/** 🧲️ Requires a path to lie inside one adopted read-only directory and returns it resolved; a path that leaves the directory is refused like any path that escapes its enforcing boundary. */
+export function requireWithinAdoptedDirectoryV1(directory: string, path: string): string {
+  const absolute = requireMaterializedPathV1(path), distance = relative(directory, absolute);
+  if (!adoptedDirectories.has(resolve(directory)) || distance === ".." || distance.startsWith(".." + sep) || isAbsolute(distance)) throw Error("Adopted read-only path escapes its directory");
+  return absolute;
+}
+
 /** 📏️ Checks the complete resolved materialized path in both portable string measures and refuses one inside a fenced directory. */
 export function requireMaterializedPathV1(path: string): string {
   const absolute = resolve(path);
   if (absolute.includes("\0") || absolute.length > 256 || [...absolute].length > 256) throw Error("Materialized absolute path exceeds 256 characters");
-  for (const [directory, reason] of fencedDirectories) if (absolute === directory || absolute.startsWith(directory + sep)) throw Error(reason + ": " + absolute);
+  for (const [directory, reason] of fencedDirectories) if ((absolute === directory || absolute.startsWith(directory + sep)) && ![...adoptedDirectories].some(adopted => absolute === adopted || absolute.startsWith(adopted + sep))) throw Error(reason + ": " + absolute);
   return absolute;
 }
 

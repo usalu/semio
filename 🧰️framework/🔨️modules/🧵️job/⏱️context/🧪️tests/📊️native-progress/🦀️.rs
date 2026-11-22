@@ -54,3 +54,6 @@ fn a_thousand_receiving_turns_on_one_owner_never_exhaust_the_escrow_table(){
  for _ in 0..100000{if completed==1000{break}let mut ran=false;measured(&mut caller,&mut decoder,|cx|{let mut out=None;account(cx,|cx|cx.with_native_receiving(&mut out,|native,_|{ran=true;native.checkpoint()}))?;account(cx,|_|drop(out));if ran{cx.consume_receiving_retained(cx.receiving_issued_grant().unwrap(),RetainedCloneProgress::default())?;}Ok(())});completed+=usize::from(ran);}
  assert_eq!(completed,1000);close(caller,decoder);
 }
+
+#[path="retained-charge.rs"]
+mod retained_charge;

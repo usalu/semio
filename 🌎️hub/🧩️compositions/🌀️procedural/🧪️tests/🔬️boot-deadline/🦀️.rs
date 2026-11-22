@@ -16,6 +16,7 @@ fn boot_budget() -> Budget {
 
 fn boot_open() -> Event {
     Event::InstanceOpen {
+        purpose: semio_framework::kernel::ActorInstanceOpenPurpose::Ordinary,
         request: ActorInstanceOpenRequest { activation_generation: 1, instance_id: BOOT_INSTANCE, request_sequence: 1 },
         app_id: AppInstanceId(GENERATION3D_EDITOR.into()),
         actor: "procedural#1".into(),

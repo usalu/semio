@@ -149,3 +149,42 @@ At 16:51 UTC, the expanded editor run was compiling the Flow host-read crate. Th
 At 16:53:12 UTC the expanded editor run (PID 4897) stopped on `E0432` in B-Rep `planar-closest`: its already compiled vector dependency did not export `predicates::ray_event`. The current caller and predicate files have timestamps nine milliseconds apart at 16:46:58 UTC, after the earlier source admission, and the current public module declares and exports the predicate. The unresolved import is consistent with the run compiling across that shared checkout change. The same expanded command restarted at 16:54 UTC as PID 74436. The earlier run did not reach editor tests.
 
 The earlier PID 4897 log resumed source admission after E0432 and then rejected the native registry at 4,058 active lines against 4,000. This is consistent with the held-lane recovery attempting readmission. No recompile was recorded. The wire validation and sampling recipes now live with solid topology, leaving publication state in the registry. Both direct source closure checks pass at 3,964 and 940 active lines. The Workshop integration fixture also now exercises the addressed host configuration route, and all eight integration targets passed the bounded source-resolution audit. [B-Rep admission](brep-engine-source-admission.md) [Cargo coherence](📓️cargo-source-coherence.md) [Workshop verification](🧾️interaction.md)
+
+At 17:04 UTC the exact editor rerun (PID 74436) completed production admission for `semio-framework-3d-brep-native-registry`, unit 36 of 1,030, and reached Cargo compilation. The production cap no longer blocks this invocation. No editor tests have run yet.
+
+At 18:21 UTC the current editor rerun (PID 34318) had progressed through B-Rep analysis, solid topology and the native registry to the Process3d reference solids and model crates. No compiler error was recorded in the current invocation, including the earlier `ray_event` import failure. The library and eight integration tests remained pending.
+
+At 18:49 UTC, exact Cargo child 51143 had live `rustc --test` processes for the Process3d editor library, `process3d_interaction_behavior` and `process3d_workpiece_window`. The current log had no failing compiler diagnostic or test result at that time.
+
+By 18:59:22 UTC the active editor lane had produced executable artifacts for the editor library, `process3d_interaction_behavior` and `process3d_workpiece_window`, with current timestamps in the exact Cargo build directory. At 19:00 UTC the Artifact, Catalogue and Inspection integration targets were compiling. Cargo had not yet started executing tests.
+
+At 19:09 UTC the Artifact, Catalogue and Inspection integration executables completed in the same editor lane. At 19:10 UTC the three live remaining Rust test targets were Workshop, the Bearbeiten pane smoke test and original host configuration. The shared compiler image had about 5.14 GiB available after the first six binaries. The full suite still had no execution result.
+
+All nine test executables linked, and Cargo began running them at 19:21 UTC. The library reported two history failures, then aborted in `vcs_artifact_app_production_maintenance_swap_publishes_the_deep_document` when a bounded history-array owner reached Drop before full transfer or retirement. The following `original_host_configuration` harness passed its one test. In the running Bearbeiten pane harness, four tests had passed and eleven had reported failure, with one native render test still running. Its detailed failure summary and the remaining six integration targets were still pending. The current ResizeStock input metadata independently reproduced a missing localized Depth option and now resolves all four dimension options in both languages. [History schema audit](history-edit-native-audit.md)
+
+## Completed editor execution at 19:33 UTC
+
+| Target | Passed | Failed |
+| --- | ---: | ---: |
+| Original host configuration | 1 | 0 |
+| Bearbeiten pane smoke | 4 | 12 |
+| Interaction behavior | 5 | 19 |
+| Artifact panel | 1 | 10 |
+| Catalogue panel | 1 | 9 |
+| Inspection panel | 1 | 13 |
+| Workshop panel | 2 | 12 |
+| Workpiece window | 4 | 6 |
+
+All 100 integration cases produced results. The library harness started 37 cases and aborted on the owned history-array Drop assertion before it could produce a total. Several integration harnesses fail at the same typed settlement boundary before their intended assertions, and include common context laws. The ResizeStock depth option and retained history-array settlement have source repairs with focused independent checks. The shared typed settlement stall and the archive `DecodeForward` format mismatch are under repair. The direct import tests hit a separate controlled-retirement panic. No current native rerun has verified these fixes.
+
+After the complete test summary, repo restarted the command automatically because its compiler-profile constraints file changed during the old invocation. I canceled that automatic rebuild during source admission to avoid another shared-image conflict while the failures were being fixed. The exact editor supervisor recorded exit 130 with leases released at 19:36 UTC. The original pass/fail output remains in its log. The separate isolated WGPU runner is still live in capacity admission after its own repository-managed restart. [Envelope settlement](process-envelope-history-settlement.md)
+
+## Follow-up from the first executed editor run
+
+The main typed publication blocker was traced to the Config mutation descriptor. The five Process3d configuration setters produce local field updates, and the Store now uses their explicit `may_emit_foreign_steps() = false` declaration. The test checks addressed `setContributions` through the Config page acknowledgement, operation completion and owner retirement. The stale native binary reached Publishing and advanced 4,096 units without moving its ladder. [Typed publication findings](typed-publication-settlement.md)
+
+The synchronous mesh importer now executes the cleanup with the required original invocation witness. It also finishes rollback when a later triangle fails after earlier topology was installed, preserving the original error. The native regressions and two Three.js fixtures cover closed and open mesh import and late refusal. [Mesh import findings](process3d-mesh-import-retirement.md)
+
+The conflict history binary receiver now consumes the same Pack record that Process3d writes. The obsolete compact decoder and its package were removed. A repeat Process3d manifest preflight checked 877 manifests with zero unresolved references after that removal. The history-array owner and localized Depth option corrections are recorded separately. [Archive wire](process-archive-mutation-wire.md) [Envelope history ownership](process-envelope-history-settlement.md) [History input audit](history-edit-native-audit.md)
+
+The isolated WGPU scope check moved out of capacity admission and is compiling again under the same supervised invocation. Its earlier ENOSPC results came from the previous isolated attempt sharing the image with nine editor test binaries. The next editor run has separately supervised filters for envelope, composition and history so one corrected harness can run before the entire package links again. [Supervisor](supervise-process-check.mjs)

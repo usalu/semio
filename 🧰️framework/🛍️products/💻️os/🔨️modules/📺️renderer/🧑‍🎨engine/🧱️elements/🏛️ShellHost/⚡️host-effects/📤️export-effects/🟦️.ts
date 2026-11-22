@@ -9,20 +9,36 @@ import { downloadMediaExportBytes, downloadDataUrl, downloadMediaExport, mediaEx
 import { drainSegmentedMediaExport, SEGMENTED_DOWNLOAD_MARKER_PREFIX } from "../../../📤️SegmentedDownload/🟦️.ts";
 import { browserVideoRenderEnvironmentV1, runVideoRenderExportV1 } from "../../../🎥️VideoRenderHost/🟦️.ts";
 import type { ShellCoreAfterSpawnedSession } from "../../🛫️spawned-session/🟦️.ts";
+import type { ShellEffectOwnerForward } from "../../🧩️shell-core-state/🟦️.ts";
 
 /** 💾️ Delivers an inline or segmented media export as a download. */
-export async function applyDownloadMediaExportEffect({ loadedPlugins, segmentedDownloadAbortRef, effect, baseSession }: Pick<ShellCoreAfterSpawnedSession, "loadedPlugins" | "segmentedDownloadAbortRef"> & {
+export async function applyDownloadMediaExportEffect({ segmentedDownloadAbortRef, isCurrentEffectOwner, effect, baseSession, effectOwner }: Pick<ShellCoreAfterSpawnedSession, "segmentedDownloadAbortRef" | "isCurrentEffectOwner"> & {
   readonly effect: Extract<Effect, Readonly<Record<"downloadMediaExport", unknown>>>;
   readonly baseSession: ActiveSession;
+  readonly effectOwner: ShellEffectOwnerForward;
 }) {
   const { filename, mimeType, data, encoding } = effect.downloadMediaExport;
   const encodingText = mediaExportEncodingText(encoding);
   if (encodingText?.startsWith(SEGMENTED_DOWNLOAD_MARKER_PREFIX)) {
-    const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === baseSession.pluginId);
-    if (!pluginEntry) throw new Error(`segmented-download-plugin-missing:${baseSession.pluginId}`);
-    await drainSegmentedMediaExport(filename, mimeType, data, encodingText, (operationId) => pluginEntry.handle.takeSegmentedDownloadChunk(baseSession.instanceId, operationId), {
+    const plugin = effectOwner.plugin;
+    const read = effectOwner.browserActor?.takeSegmentedDownloadChunk
+      ?? (plugin === null ? undefined : (operationId: bigint) => plugin.takeSegmentedDownloadChunk(baseSession.instanceId, operationId));
+    if (!read) throw new Error(`segmented-download-plugin-missing:${baseSession.pluginId}`);
+    const assertCurrent = () => {
+      if (!isCurrentEffectOwner(effectOwner)) throw new Error("segmented-download-owner-retired");
+    };
+    assertCurrent();
+    await drainSegmentedMediaExport(filename, mimeType, data, encodingText, async (operationId) => {
+      assertCurrent();
+      const chunk = await read(operationId);
+      assertCurrent();
+      return chunk;
+    }, {
       signal: segmentedDownloadAbortRef.current.signal,
-      sinkFactory: shellSegmentedDownloadSinkFactory,
+      sinkFactory: async (name, type) => {
+        const sink = await shellSegmentedDownloadSinkFactory(name, type);
+        return { ...sink, close: async () => { assertCurrent(); await sink.close(); } };
+      },
     });
   } else {
     downloadMediaExport(filename, mimeType, data, encodingText);

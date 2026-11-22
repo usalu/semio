@@ -18,6 +18,9 @@ def under_directories(path):
         current = os.path.join(current, part)
         if kind(current) != "directory": return False
     return True
+# Python on Windows reports another volume id (st_dev) and the creation time as st_ctime_ns, so the oracle compares only the identity both runtimes agree on: inode, size, modification time.
+def host_stable(fields): return fields[1:4]
+def same_stat(recorded, path): return recorded is not None and host_stable(recorded.split(":")) == host_stable(stat_text(path).split(":"))
 def stat_text(path):
     s = os.lstat(path)
     return ":".join(str(v) for v in (s.st_dev, s.st_ino, s.st_size, s.st_mtime_ns, s.st_ctime_ns))
@@ -42,7 +45,7 @@ def replay(row):
     if inside(path): return not (op == "text" or (op == "presence" and row["stamp"] == "true") or (op == "state" and row["stamp"] == "file"))
     if op == "list":
         if not under_directories(path): return False
-        if row.get("stat") == stat_text(path): return True
+        if same_stat(row.get("stat"), path): return True
         now = names_of(path)
         before = row.get("entries")
         if before is None: return sha(dumps(sorted(now))) == row["stamp"]
@@ -55,7 +58,7 @@ def replay(row):
     if op == "state": return current != "absent" and current == row["stamp"]
     if op == "presence": return current != "symlink" and str(current != "absent").lower() == row["stamp"]
     if current != "file": return False
-    return row["stamp"] == (row["stamp"] if row.get("stat") == stat_text(path) else sha(open(path, "rb").read().decode("utf8", "replace")))
+    return row["stamp"] == (row["stamp"] if same_stat(row.get("stat"), path) else sha(open(path, "rb").read().decode("utf8", "replace")))
 def compiler_environment(env):
     rule = protocol["compilerEnvironment"]
     rows = [(k, v) for k, v in env.items() if (k.startswith(rule["prefix"]) and not any(k.startswith(p) for p in rule["excludedPrefixes"]) and k not in rule["excludedNames"]) or k in rule["names"]]
@@ -84,6 +87,7 @@ def holds():
     if any(file_sha(i["path"]) != i["sha256"] for i in hashed["inputs"] + hashed["configuration"]): return False
     for tool in witness["tools"]:
         s = os.lstat(tool["path"])
-        if ":".join(["file" if stat.S_ISREG(s.st_mode) else "other", str(s.st_dev), str(s.st_ino), str(s.st_size), str(s.st_mtime_ns), str(s.st_ctime_ns)]) != tool["stamp"]: return False
+        recorded = tool["stamp"].split(":")
+        if ["file" if stat.S_ISREG(s.st_mode) else "other", str(s.st_ino), str(s.st_size), str(s.st_mtime_ns)] != recorded[:1] + recorded[2:5]: return False
     return all(replay(row) for row in witness["observations"])
 print("true" if holds() else "false")

@@ -28,6 +28,7 @@ fn boot_budget() -> Budget {
 
 fn boot_open(app_id: &str, instance_id: u32) -> Event {
     Event::InstanceOpen {
+        purpose: semio_framework::kernel::ActorInstanceOpenPurpose::Ordinary,
         request: ActorInstanceOpenRequest { activation_generation: 1, instance_id, request_sequence: 1 },
         app_id: AppInstanceId(app_id.into()),
         actor: format!("wfc#{instance_id}"),

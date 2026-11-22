@@ -14,16 +14,21 @@ pub struct RoundedBox {
 
 impl RoundedBox {
     pub fn new(origin: Pnt3, size: [f64; 3], radius: f64, tolerance: f64) -> Option<Self> {
-        if !radius.is_finite() || radius <= tolerance { return None; }
         let low = origin.to_array();
-        let inset = std::array::from_fn(|i| [low[i] + radius, low[i] + size[i] - radius]);
+        let high: [f64; 3] = std::array::from_fn(|i| low[i] + size[i]);
+        let shape = Self::from_inset(std::array::from_fn(|i| [low[i] + radius, high[i] - radius]), radius, tolerance)?;
+        let within = |error: f64| error.abs() <= tolerance / 4.;
+        shape.inset.iter().enumerate().all(|(i, &[a, b])|
+            within(a - radius - low[i]) && within(b + radius - high[i])
+            && within(a - low[i] - radius) && within(high[i] - b - radius)).then_some(shape)
+    }
+
+    /// 🪨️ Reconstructs a rounded boundary recipe from its original inset intervals.
+    pub fn from_inset(inset: [[f64; 2]; 3], radius: f64, tolerance: f64) -> Option<Self> {
         let shape = Self { inset, radius };
-        let valid = inset.iter().enumerate().all(|(i, &[a,b])|
-            b-a > tolerance && (a-radius-low[i]).abs() <= tolerance/4.
-            && (b+radius-(low[i]+size[i])).abs() <= tolerance/4.
-            && ((a-low[i])-radius).abs() <= tolerance/4.
-            && (((low[i]+size[i])-b)-radius).abs() <= tolerance/4.);
-        (valid && shape.volume().is_finite() && shape.area().is_finite()).then_some(shape)
+        (radius.is_finite() && radius > tolerance && tolerance >= 0.
+            && inset.iter().all(|&[a, b]| b - a > tolerance && (a - radius).is_finite() && (b + radius).is_finite())
+            && shape.volume().is_finite() && shape.area().is_finite()).then_some(shape)
     }
 
     pub const fn vertex_count(self) -> usize { VERTICES }
@@ -32,9 +37,7 @@ impl RoundedBox {
     pub const fn ring_sizes(self) -> &'static [usize] { &TOPOLOGY.ring_sizes }
     pub const fn radius(self) -> f64 { self.radius }
 
-    pub fn corner(self, corner: usize) -> Pnt3 {
-        Pnt3::from_array(std::array::from_fn(|i| self.inset[i][(corner >> i) & 1]))
-    }
+    pub fn corner(self, corner: usize) -> Pnt3 { Pnt3::from_array(std::array::from_fn(|i| self.inset[i][(corner >> i) & 1])) }
 
     fn axis(corner: usize, axis: usize) -> Vec3 {
         Vec3::from_array(std::array::from_fn(|i| if i == axis { sign((corner >> i) & 1) } else { 0. }))
@@ -112,9 +115,7 @@ impl RoundedBox {
         std::array::from_fn(|i| std::array::from_fn(|axis|self.inset[axis][i]+sign(i)*self.radius))
     }
 
-    pub fn center(self) -> [f64; 3] {
-        self.inset.map(|[a,b]|a+(b-a)*0.5)
-    }
+    pub fn center(self) -> [f64; 3] { self.inset.map(|[a,b]|a+(b-a)*0.5) }
 
     pub fn signed_boundary_distance(self, point: [f64; 3]) -> f64 {
         let [x,y,z] = std::array::from_fn(|i| {

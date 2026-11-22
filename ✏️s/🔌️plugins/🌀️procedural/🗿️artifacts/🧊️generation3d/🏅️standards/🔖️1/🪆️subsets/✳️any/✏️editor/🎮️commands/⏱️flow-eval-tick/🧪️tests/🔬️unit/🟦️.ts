@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url";
  * one — and `setContributions` as the one route that carries a settled preview its restart. */
 export function testGeneration3dContributionGatedArmingContract(): void {
   const here = fileURLToPath(new URL(".", import.meta.url));
-  const fixture = JSON.parse(readFileSync(`${here}/../../../../🧫️fixtures/🚧️contribution-gated-arming.json`, "utf8")) as {
+  const fixture = JSON.parse(readFileSync(`${here}/../../../../🧪️tests/🧫️fixtures/🚧️contribution-gated-arming.json`, "utf8")) as {
     format: string;
     version: number;
     unservedKind: string;
@@ -162,7 +162,7 @@ function observe(statusJson: unknown, evalJson: Record<string, unknown>, preview
  * surface's pending_effects owes the run — nothing shared with Rust but the fixture. */
 export function testGeneration3dPreviewEvalRunContract(): void {
   const here = fileURLToPath(new URL(".", import.meta.url));
-  const fixture = JSON.parse(readFileSync(`${here}/../../../../../🧫️fixtures/⏯️preview-eval-run.json`, "utf8"));
+  const fixture = JSON.parse(readFileSync(`${here}/../../../../../🧪️tests/🧫️fixtures/⏯️preview-eval-run.json`, "utf8"));
   assert.equal(fixture.format, "semio.generation3d.preview-eval-run");
   assert.equal(fixture.version, 1);
   for (const row of fixture.entityKeys) assert.equal(fnv1a64(row.nodeId).toString(), row.entity, `entity key of ${JSON.stringify(row.nodeId)}`);

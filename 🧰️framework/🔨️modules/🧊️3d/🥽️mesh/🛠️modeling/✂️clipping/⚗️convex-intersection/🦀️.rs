@@ -9,12 +9,14 @@ use partition_difference::{MAX_PARTITION_CUTS, PartitionDifference};
 #[path = "../🧵️ring-stitch/🦀️.rs"]
 mod ring_stitch;
 use ring_stitch::RingStitch;
+#[path = "../🕳️profile-opening/🦀️.rs"]
+mod profile_opening;
 #[path = "../⬚️nested-difference/🦀️.rs"]
 mod nested_difference;
 use nested_difference::NestedDifference;
 #[path = "../📐️nested-prism/🦀️.rs"]
 mod nested_prism;
-use nested_prism::NestedPrism;
+use nested_prism::{AxialAperture,AxialProfileCertificate,AxialRelation,NestedPrism,aperture};
 #[path = "../✂️prism-cap-intersection/🦀️.rs"]
 mod prism_cap_intersection;
 use prism_cap_intersection::{PrismClip, PrismClipStep};
@@ -163,7 +165,7 @@ pub struct MeshConvexIntersection {
     strict:[bool;2],output_edges:HistoryFoldIndex<(u32,u32),[bool;2]>,live:HistoryFoldSet<u32>,paired:usize,volume:f64,
     phase:u8,done:usize,cancelled:bool,
     subtract:bool,cut_plane:Option<usize>,additional_cuts:[Option<usize>;MAX_PARTITION_CUTS-1],multiple_cuts:bool,
-    allow_partitions:bool,partition_difference:Option<PartitionDifference>,nested_difference:Option<NestedDifference>,prisms:[Option<NestedPrism>;2],prism_clip:Option<PrismClip>,
+    allow_partitions:bool,partition_difference:Option<PartitionDifference>,nested_difference:Option<NestedDifference>,prisms:[Option<NestedPrism>;2],prism_clip:Option<PrismClip>,axial_profile:Option<AxialProfileCertificate>,retained_side:Option<usize>,axial_apertures:Vec<AxialAperture>,
 }
 
 impl MeshConvexIntersection {
@@ -177,7 +179,7 @@ impl MeshConvexIntersection {
         }
         if left.faces.len()+right.faces.len()>100_000{return Err(invalid("convex intersection exceeds its face limit"));}
         Ok(Self{left,right,check:Default::default(),clip:None,points:Vec::new(),faces:Vec::new(),new_faces:Vec::new(),origins:Vec::new(),
-            plane:0,face:0,corner:0,cursor:0,live_corners:0,strict:[false;2],output_edges:HistoryFoldIndex::new(),live:HistoryFoldSet::new(),paired:0,volume:0.0,phase:0,done:0,cancelled:false,subtract:false,cut_plane:None,additional_cuts:[None;MAX_PARTITION_CUTS-1],multiple_cuts:false,allow_partitions:true,partition_difference:None,nested_difference:None,prisms:Default::default(),prism_clip:None})
+            plane:0,face:0,corner:0,cursor:0,live_corners:0,strict:[false;2],output_edges:HistoryFoldIndex::new(),live:HistoryFoldSet::new(),paired:0,volume:0.0,phase:0,done:0,cancelled:false,subtract:false,cut_plane:None,additional_cuts:[None;MAX_PARTITION_CUTS-1],multiple_cuts:false,allow_partitions:true,partition_difference:None,nested_difference:None,prisms:Default::default(),prism_clip:None,axial_profile:None,retained_side:None,axial_apertures:Vec::new()})
     }
 
     /// ➖️ Subtracts certified boundaries, including strictly contained prismatic tools.
@@ -188,7 +190,7 @@ impl MeshConvexIntersection {
     /// 📈️ Reports the stable phase and consumed work against the operation's ceiling.
     pub fn progress(&self)->(&'static str,usize,usize){
         (match self.phase{0|1=>"convex-certificate",2=>"intersection-seed",3=>"intersection-classify",4=>"intersection-clip",
-            5|6=>"intersection-provenance",7|8=>"intersection-release",9|10=>"intersection-verify",12=>"intersection-refused",13=>"difference-partition",14=>"difference-containment",15=>"difference-contained-shells",16|17=>"mesh-prism-certificate",18=>"mesh-prism-containment",19|20=>"mesh-prism-output",_=>"intersection-done"},self.done,LIMIT)
+            5|6=>"intersection-provenance",7|8=>"intersection-release",9|10=>"intersection-verify",12=>"intersection-refused",13=>"difference-partition",14=>"difference-containment",15=>"difference-contained-shells",16|17=>"mesh-prism-certificate",18=>"mesh-prism-containment",19|20=>"mesh-prism-output",21=>"mesh-prism-profile-relation",_=>"intersection-done"},self.done,LIMIT)
     }
 
     /// 🛑️ Stops advancement without publishing partial polygon rings.
@@ -220,7 +222,6 @@ impl MeshConvexIntersection {
         let source=[&self.left,&self.right][side];
         if self.check[side].advance(source)?{
             if self.check[side].convex{self.phase=1+side as u8;}else{
-                if self.prisms[1-side].is_some(){return Err(invalid("concave boolean requires a convex containing operand"));}
                 self.prisms[side]=Some(NestedPrism::new(source,self.check[side].epsilon)?);
                 self.phase=16+side as u8;
             }
@@ -229,6 +230,19 @@ impl MeshConvexIntersection {
     }
 
     fn prism_side(&self)->Option<usize>{self.prisms.iter().position(Option::is_some)}
+
+    fn start_axial_profile(&mut self)->MeshResult<()>{
+        let [Some(left),Some(right)]=&self.prisms else {unreachable!()};
+        let epsilon=f64::from(self.check[0].epsilon.min(self.check[1].epsilon));
+        self.axial_profile=Some(AxialProfileCertificate::new([&self.left,&self.right],[left,right],epsilon)?);
+        Ok(())
+    }
+
+    fn advance_axial_profile(&mut self)->MeshResult<Option<AxialRelation>>{
+        let [Some(left),Some(right)]=&self.prisms else {unreachable!()};
+        let epsilon=f64::from(self.check[0].epsilon.min(self.check[1].epsilon));
+        self.axial_profile.as_mut().unwrap().advance([&self.left,&self.right],[left,right],epsilon)
+    }
 
     fn prism_contained(&mut self,side:usize)->MeshResult<bool>{
         let outer=&self.check[1-side];
@@ -253,7 +267,7 @@ impl MeshConvexIntersection {
     fn begin_nested_difference(&mut self)->MeshResult<()>{
         if self.left.positions.len()+self.right.positions.len()>100_000{return Err(invalid("nested difference exceeds its point limit"));}
         self.nested_difference=Some(NestedDifference::new(std::mem::take(&mut self.left),
-            std::mem::take(&mut self.faces),std::mem::take(&mut self.points)));
+            std::mem::take(&mut self.faces),std::mem::take(&mut self.points),std::mem::take(&mut self.axial_apertures)));
         self.phase=15;
         Ok(())
     }
@@ -429,7 +443,18 @@ impl MeshConvexIntersection {
                     let prism=self.prisms[side].as_ref().unwrap();
                     let source_check=&self.check[side];
                     let outer=&self.check[1-side];
-                    let clip=self.prism_clip.get_or_insert_with(||PrismClip::new(side,self.subtract));
+                    if self.prism_clip.is_none() {
+                        self.prism_clip = Some(if let Some(other) = &self.prisms[1-side] {
+                            if let Some(axis)=prism.matching_axis(source,other,&self.right) {
+                                PrismClip::transverse(axis,other.caps(),self.subtract)
+                            } else {
+                                self.start_axial_profile()?;
+                                self.phase=21;
+                                return Ok(Working);
+                            }
+                        } else { PrismClip::new(side, self.subtract) });
+                    }
+                    let clip=self.prism_clip.as_mut().unwrap();
                     match clip.advance(source,prism,&source_check.planes,&outer.planes,source_check.epsilon.min(outer.epsilon))?{
                         PrismClipStep::More=>{},
                         PrismClipStep::Retained=>self.phase=19,
@@ -439,7 +464,26 @@ impl MeshConvexIntersection {
                 }
             },
             19=>{
-                if let Some(output)=self.retain_prism(self.prism_side().unwrap()){self.phase=11;return Ok(Solid(output));}
+                let side=self.retained_side.unwrap_or_else(||self.prism_side().unwrap());
+                if let Some(output)=self.retain_prism(side){self.phase=11;return Ok(Solid(output));}
+            },
+            21=>{
+                match self.advance_axial_profile()? {
+                    None=>{},
+                    Some(AxialRelation::Separate) if self.subtract=>{
+                        self.retained_side=Some(0);
+                        self.phase=19;
+                    }
+                    Some(AxialRelation::Nested { outer, .. }) if !self.subtract=>{
+                        self.retained_side=Some(1-outer);
+                        self.phase=19;
+                    }
+                    Some(AxialRelation::Nested { outer:0, axis, caps })=>{
+                        self.axial_apertures=caps.into_iter().flatten().map(|faces|aperture(&self.left,&self.right,axis,faces)).collect::<MeshResult<_>>()?;
+                        self.phase=20;
+                    },
+                    Some(_)=>{self.phase=11;return Ok(Empty);}
+                }
             },
             20=>{if self.seed_left(){self.begin_nested_difference()?;}},
             15=>{

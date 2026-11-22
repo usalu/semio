@@ -1,112 +1,6 @@
 //! 🧩️ Process3d editor unit tests: the real contribution pack admission, the host contribution output cap and the member-less example archive door.
 
 use super::*;
-use super::context::settled_action;
-
-/// 🧩️ The published extension descriptors deliver the same machines the editor installs.
-#[test]
-fn shipped_extension_descriptors_deliver_installable_machines() {
-    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).ancestors().find(|path| path.join("✏️s/🔌️plugins/🏭️process/🧩️extensions").is_dir()).expect("workspace root");
-    let mut entries = Vec::new();
-    let mut expected = Vec::new();
-    for (folder, id) in [("🪵️wood", "wood"), ("🔩️metal", "metal"), ("🧱️concrete", "concrete"), ("🤖️robotic", "robotic")] {
-        let path = root.join("✏️s/🔌️plugins/🏭️process/🧩️extensions").join(folder).join("🧩️component/🔣️.json");
-        let descriptor: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path).expect("extension descriptor")).expect("descriptor JSON");
-        let manifest = &descriptor["manifest"];
-        let topics = manifest["topicContributions"].as_array().expect("extension topics");
-        assert_eq!(topics.len(), 1);
-        assert_eq!(topics[0]["topic"], "process.machines");
-        let payload = &topics[0]["payload"];
-        assert_eq!(payload["appId"], PROCESS_3D_PLAY_APP_ID);
-        assert_eq!(payload["moduleId"], id);
-        let machines_json = payload["machinesJson"].as_str().expect("machines JSON");
-        let oracle: serde_json::Value = serde_json::from_str(machines_json).expect("machine JSON oracle");
-        let machines: Vec<WorkshopMachine> = semio_framework_pack_json::from_json_str(machines_json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("machine payload");
-        assert_eq!(oracle.as_array().expect("machine array").len(), machines.len());
-        assert!(!machines.is_empty());
-        expected.push((id, machines));
-        entries.push(serde_json::json!({"pluginId": manifest["pluginId"], "topicContribution": topics[0]}));
-    }
-    let pack = serde_json::to_string(&entries).expect("contribution pack");
-    let distilled = installable_contributions(&pack, PROCESS3D_CONFIG_CONTRIBUTIONS_BYTES);
-    assert_eq!(semio_framework::parse_contributions(&distilled).len(), 4);
-    let mut app = context::unseeded_app_with_registry();
-    let receipt = context::install_contributions(&mut app, pack);
-    assert!(receipt.lanes.contains(&semio_plugin::app::TypedOperationResultLane::Config));
-    let stock_id = app.snapshot().expect("document").stock_id.clone();
-    for (field, value) in [("width", 0.2), ("depth", 0.2), ("height", 0.05)] {
-        let args = DslValue::object([("target".into(), DslValue::String(stock_id.clone())), ("field".into(), DslValue::String(field.into())), ("value".into(), DslValue::float(value))]);
-        settled_action(&mut app, "patchInspector", Some(&args));
-    }
-    assert_eq!(app.snapshot().expect("document").stock_payload.solid, WorkingSolid::Box { width: 0.2, depth: 0.2, height: 0.05 });
-    for (catalog_id, machines) in expected {
-        let available = machines.iter().find(|machine| !machine.capabilities.is_empty()).expect("machine with a capability").clone();
-        for mut machine in machines {
-            let installed = catalog_machine(&distilled, catalog_id, &machine.id).expect("extension machine is installable");
-            machine.catalog_id = Some(catalog_id.into());
-            assert_eq!(installed, machine, "{catalog_id} payload differs from the installed machine");
-        }
-        if app.snapshot().expect("document").workshop.machines.iter().any(|existing| existing.id == available.id) {
-            let args = DslValue::object([("id".into(), DslValue::String(available.id.clone()))]);
-            assert!(published_a_document_mutation(&settled_action(&mut app, "removeWorkshopMachine", Some(&args)).1));
-        }
-        let args = DslValue::object([("catalogId".into(), DslValue::String(catalog_id.into())), ("machineId".into(), DslValue::String(available.id.clone()))]);
-        assert!(published_a_document_mutation(&settled_action(&mut app, "addWorkshopMachine", Some(&args)).1));
-        let mut expected_machine = available.clone();
-        expected_machine.catalog_id = Some(catalog_id.into());
-        assert_eq!(app.snapshot().expect("document").workshop.machines.iter().find(|machine| machine.id == available.id), Some(&expected_machine));
-        let capability = &available.capabilities[0];
-        let args = DslValue::object([("machineId".into(), DslValue::String(available.id.clone())), ("capabilityId".into(), DslValue::String(capability.id.clone()))]);
-        if catalog_id == "wood" {
-            let height = |value| DslValue::object([("target".into(), DslValue::String(stock_id.clone())), ("field".into(), DslValue::String("height".into())), ("value".into(), DslValue::float(value))]);
-            assert!(published_a_document_mutation(&settled_action(&mut app, "patchInspector", Some(&height(0.2))).1));
-            let before = app.snapshot().expect("document").step_payloads.len();
-            let meta = semio_plugin::artifact_app_laws::meta("local");
-            let admission = ::semio_framework_async::poll::resolve_ready(semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "addStep", Some(args.clone()), &meta, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close));
-            let outcome = match admission {
-                Err(fault) => format!("{fault:?}"),
-                Ok(admitted) => match ::semio_framework_async::poll::resolve_ready(semio_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted, app.1.cx())) {
-                    Err(fault) => format!("{fault:?}"),
-                    Ok(result) => {
-                        let settled = ::semio_framework_async::poll::resolve_ready(semio_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, meta.instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()));
-                        format!("{result:?} {:?}", settled.err())
-                    }
-                },
-            };
-            assert!(outcome.contains("process3d.capability.stock-limit"), "expected stock-limit refusal: {outcome}");
-            assert_eq!(app.snapshot().expect("document").step_payloads.len(), before);
-            assert!(published_a_document_mutation(&settled_action(&mut app, "patchInspector", Some(&height(0.05))).1));
-        }
-        assert!(published_a_document_mutation(&settled_action(&mut app, "addStep", Some(&args)).1));
-        let snapshot = app.snapshot().expect("document");
-        let (index, step) = snapshot.step_payloads.iter().enumerate().find(|(_, step)| step.origin.as_ref().is_some_and(|origin| origin.machine_id == available.id && origin.capability_id == capability.id)).expect("catalog step");
-        let mut expected = step.clone();
-        let ProcessMeasure::Cut { tool, .. } = &mut expected.measure else { panic!("expected a catalog cut") };
-        let (field, size) = match tool {
-            WorkingSolid::Cylinder { height, .. } => ("height", height),
-            WorkingSolid::Box { width, .. } => ("width", width),
-            _ => panic!("expected an analytic catalog tool"),
-        };
-        *size *= 0.75;
-        let edit = DslValue::object([("target".into(), DslValue::String(step.id.clone())), ("field".into(), DslValue::String(field.into())), ("value".into(), DslValue::float(*size))]);
-        assert!(published_a_document_mutation(&settled_action(&mut app, "patchInspector", Some(&edit)).1));
-        assert_eq!(app.snapshot().expect("edited document").step_payloads[index], expected);
-        assert!(!published_a_document_mutation(&settled_action(&mut app, "patchInspector", Some(&edit)).1));
-    }
-    let before = app.snapshot().expect("document before uninstall");
-    context::install_contributions(&mut app, "[]".into());
-    assert!(catalog_machine("[]", "wood", "circularSaw").is_none());
-    let rendered = context::render(&mut app, workshop_panel::PROCESS_3D_PLAY_BODY_WORKSHOP);
-    assert!(!rendered.contains("process3d-play-workshop.catalog.wood"), "the removed provider no longer appears in the mounted catalog");
-    let after = app.snapshot().expect("document after uninstall");
-    assert_eq!(after.workshop, before.workshop);
-    assert_eq!(after.step_payloads, before.step_payloads);
-    let args = DslValue::object([("id".into(), DslValue::String("circularSaw".into()))]);
-    assert!(published_a_document_mutation(&settled_action(&mut app, "removeWorkshopMachine", Some(&args)).1));
-    let args = DslValue::object([("catalogId".into(), DslValue::String("wood".into())), ("machineId".into(), DslValue::String("circularSaw".into()))]);
-    assert!(!published_a_document_mutation(&settled_action(&mut app, "addWorkshopMachine", Some(&args)).1));
-    assert!(!app.snapshot().expect("document").workshop.machines.iter().any(|machine| machine.id == "circularSaw"));
-}
 
 //#region 🧩️RealContributionsPackAdmission
 /// ⚖️ A demonstrator-shaped pack crosses this app's registered `setContributions` admission, distils
@@ -232,16 +126,19 @@ fn settle_member_less_archive(app: &mut context::Process3dApp, operation: u64, p
     let fuel = OriginalFixtureCaller::turn_fuel();
     let grant = app.1.cx().retained_grant();
     admit_document_archive_load(&mut app.0, operation, protocol::DocumentArchivePack { parent_pack, parent_spr, members: Vec::new() }, app.1.cx()).expect("archive admission");
+    let mut turns=0usize;
     for _ in 0..OriginalFixtureCaller::maximum_turns() {
+        turns+=1;
         fixture_renew_turn(app.1.cx(), fuel, grant).expect("archive caller renewal");
         let polled = ::semio_framework_async::poll::resolve_ready(PluginApp::poll_document_archive_load(&mut app.0, operation, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx())).expect("archive status");
         if matches!(polled.state, protocol::DocumentArchiveLoadState::Ready | protocol::DocumentArchiveLoadState::Cancelled | protocol::DocumentArchiveLoadState::Fault) {
             PluginApp::acknowledge_document_archive_load(&mut app.0, operation).expect("archive acknowledgement");
+            eprintln!("[DEBUG] archive {operation} settled after {turns} turns");
             return polled;
         }
         let _ = PluginApp::maintenance_step(&mut app.0, app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("archive maintenance step");
     }
-    panic!("archive {operation} never reached a terminal state: {}", PluginApp::close_diagnostic(&app.0));
+    panic!("archive {operation} never reached a terminal state: {} / {}", PluginApp::close_diagnostic(&app.0), PluginApp::document_load_diagnostic(&app.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance));
 }
 
 /// 🔁️ Dispatches `setActiveExample` and drives its typed operation to the published

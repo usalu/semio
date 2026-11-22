@@ -13,10 +13,19 @@ impl<T,const N:usize>PagedList<T,N>{
   Ok(PagedListDiscardDemand{items,physical:RetirementDemand{copy_bytes,depth:self.next_pop_depth_demand()?,..Default::default()}})
  }
  pub fn discard_plain_tail(&mut self,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome<RetainedCloneProgress>{
-  let grant=effect.grant();let demand=match self.plain_tail_discard_demand(grant.maximum_items,grant.maximum_copy_bytes){Ok(demand)=>demand,Err(error)=>return RetainedWorkOutcome{result:Err(error.into()),work:0}};
+  self.discard_tail(effect, false)
+ }
+ /// ♻️ Retires one flat no-drop payload group within its originating byte and page limits.
+ pub fn discard_plain_tail_page(&mut self,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome<RetainedCloneProgress>{
+  self.discard_tail(effect, true)
+ }
+ fn discard_tail(&mut self,effect:&mut RetainedAllocationEffect<'_>, page:bool)->RetainedWorkOutcome<RetainedCloneProgress>{
+  let grant=effect.grant();
+  let maximum_items=if page && grant.maximum_items != 0 { usize::MAX } else { grant.maximum_items };
+  let demand=match self.plain_tail_discard_demand(maximum_items,grant.maximum_copy_bytes){Ok(demand)=>demand,Err(error)=>return RetainedWorkOutcome{result:Err(error.into()),work:0}};
   if demand.items==0||effect.maximum_work_units()==0||!semio_framework_value_control_contract::retained_clone_grant_admits(grant,demand.physical){return RetainedWorkOutcome{result:Ok(Default::default()),work:0}}
   let before=effect.performed_work();let admitted=effect.performed(1);let work=effect.performed_work()-before;match admitted{Ok(true)=>{},Ok(false)=>return RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::WorkLimit,"plain tail exceeded its original work action")),work},Err(error)=>return RetainedWorkOutcome{result:Err(error),work}}
   let leaf=self.leaf_mut(self.length-1).expect("quoted original plain leaf");leaf.truncate(leaf.len()-demand.items);self.length-=demand.items;
-  RetainedWorkOutcome{result:Ok(RetainedCloneProgress{copied_items:demand.items,copied_bytes:demand.physical.copy_bytes,..Default::default()}),work}
+  RetainedWorkOutcome{result:Ok(RetainedCloneProgress{copied_items:if page {1} else {demand.items},copied_bytes:demand.physical.copy_bytes,..Default::default()}),work}
  }
 }

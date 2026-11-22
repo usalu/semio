@@ -160,7 +160,7 @@ pub mod derived_construction {
 pub use derived_construction::*;
 
 pub mod derived_analysis {
-    use crate::standards::v_ecma_376::subsets::base::io::import::deserializers::{decode_xlsx_source, sniff_xlsx_bytes};
+    use crate::standards::v_ecma_376::subsets::base::io::import::deserializers::{decode_xlsx_source, sniff_xlsx_bytes, sniff_xlsx_subset};
     use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
     use {semio_plugin::io::Analysis,semio_plugin::io::AnalyzeSource,semio_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
@@ -191,6 +191,7 @@ pub mod derived_analysis {
             let mut parts = XlsxParts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = semio_plugin::io::Confidence::High;
+            let mut dialect = Self::DIALECT;
             for source in sources {
                 match source {
                     AnalyzeSource::Text(text) => match <XlsxSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text) {
@@ -200,16 +201,21 @@ pub mod derived_analysis {
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
-                    AnalyzeSource::Binary(bytes) => match decode_xlsx_source(bytes) {
-                        Ok(snapshot) => parts.snapshot = Some(snapshot),
-                        Err(err) => {
-                            confidence = semio_plugin::io::Confidence::Low;
-                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
+                    AnalyzeSource::Binary(bytes) => {
+                        if let Some(subset) = sniff_xlsx_subset(bytes) {
+                            dialect = Dialect { subset: SubsetId(subset), ..Self::DIALECT };
                         }
-                    },
+                        match decode_xlsx_source(bytes) {
+                            Ok(snapshot) => parts.snapshot = Some(snapshot),
+                            Err(err) => {
+                                confidence = semio_plugin::io::Confidence::Low;
+                                diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
+                            }
+                        }
+                    }
                 }
             }
-            Analysis { parts, dialect: Self::DIALECT, confidence, diagnostics }
+            Analysis { parts, dialect, confidence, diagnostics }
         }
     }
     //#endregion 🔖️Analyzer

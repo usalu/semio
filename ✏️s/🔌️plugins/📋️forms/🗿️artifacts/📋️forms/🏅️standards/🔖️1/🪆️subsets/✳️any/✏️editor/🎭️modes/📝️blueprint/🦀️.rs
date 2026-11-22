@@ -1,7 +1,7 @@
 //! 📝️ Design the form beside its interactive preview.
 
 use crate::editor::forms::modes::blueprint::windows::{builder, try_wizard};
-use semio_plugin::create_default_layout;
+use semio_plugin::{create_default_layout, Axis};
 use semio_ui_locale::LocalizedLabel;
 use semio_plugin::ModeDefinition;
 use semio_plugin::WindowLayout;
@@ -17,7 +17,7 @@ pub fn definition() -> ModeDefinition {
 /// 🪟️ The app's default window layout — this mode is the app's `default_mode_id`, so its layout IS the
 /// app-level `default_layout`.
 pub fn layout() -> WindowLayout {
-    create_default_layout(&[builder::FORMS_PLAY_WINDOW_BLUEPRINT.into(), crate::editor::forms::support::FORMS_PLAY_WINDOW_TRY.into()], "row", Some(&[50.0, 50.0]), None)
+    create_default_layout(&[builder::FORMS_PLAY_WINDOW_BLUEPRINT.into(), crate::editor::forms::support::FORMS_PLAY_WINDOW_TRY.into()], Axis::Horizontal, Some(&[0.5, 0.5]), None)
 }
 //#endregion 🔖️Definition
 

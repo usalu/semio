@@ -17,3 +17,9 @@ The standard framework-os-dev serve-hold target is a continuous repo:script targ
 ## Shared Graph Status Snapshot
 
 Read-only repo fleet status reported the unrelated graph-plan pid 35134 in inference at 345/600, ETA 5,520 seconds, with implementation marked progressing but older. It held graph facts shard 0 and selected graph state; observed memory was 1,610 MB against 931 MB reserved. Fleet reported no blocked runs or alerts, only host memory pressure and the under-reservation warning. A single status snapshot does not establish a stall or identify a source defect. The processes were left untouched.
+
+The Semio-backend owner-only dry run also reached graph discovery and queued behind the existing checkout-wide load on the same fact store. The latest observation showed the leader at 160 of 600. This is independent of the staged component and the live Note server.
+
+The owner-only dry run was cancelled after more than 32 minutes waiting for the existing checkout fact-store load. It had not reached the Note target. The leader remained running. The functioning server still uses the repository-owned activation and ServeScript route.
+
+The sealed-graph query also requested 3,072 MB at the repo entrance while native compilation was active. It queued before reading the graph and was cancelled to leave the shared entrance available. The fleet continued to report no sealed generation. Chromium continues using the already-running managed dev activation.

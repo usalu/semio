@@ -48,7 +48,7 @@ pub use node_labels_ids_and_placement_geometry::{
     puzzle2d_selected_target_region_ids, puzzle2d_selection_is_locked,
     puzzle2d_snapshot_regions_admit, puzzle_extension_id, select_same_kind_ids, set_runtime_camera,
     snapshot_target_regions, unique_edge_id, unique_node_id, PUZZLE2D_CLIPBOARD_SCHEMA,
-    PUZZLE2D_PASTE_OFFSET, PUZZLE2D_PLACEMENT_MEASURE_MAX,
+    PUZZLE2D_PASTE_OFFSET, PUZZLE2D_PLACEMENT_MEASURE_MAX, Puzzle2dNodeLabels,
 };
 
 #[path = "🔁️host-sync-and-ui-scopes/🦀️.rs"]

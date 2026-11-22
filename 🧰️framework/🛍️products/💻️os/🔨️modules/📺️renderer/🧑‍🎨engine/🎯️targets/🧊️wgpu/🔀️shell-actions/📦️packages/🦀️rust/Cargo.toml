@@ -23,6 +23,7 @@ path = "../../🦀️.rs"
 
 [dependencies]
 semio-renderer-wgpu-contracts = { path = "../../../🤝️contracts/📦️packages/🦀️rust" }
+semio-renderer-wgpu-engine-graph = { path = "../../../🕸️engine-graph/📦️packages/🦀️rust" }
 semio-renderer-wgpu-host-base = { path = "../../../🏛️host-base/📦️packages/🦀️rust" }
 semio-renderer-wgpu-hub-contracts = { path = "../../../🔐️hub-contracts/📦️packages/🦀️rust" }
 semio-renderer-wgpu-hub-workspace = { path = "../../../🏘️hub-workspace/📦️packages/🦀️rust" }

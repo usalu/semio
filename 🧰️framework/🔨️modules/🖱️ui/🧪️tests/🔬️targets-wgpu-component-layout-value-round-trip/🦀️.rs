@@ -12,26 +12,25 @@ mod value_round_trip_tests {
     #[semio_framework_async_macros::async_test]
     async fn window_layout_round_trips() {
         let layout = WindowLayout {
-            root: WindowLayoutRoot::Axis(WindowLayoutAxisNode {
-                kind: "horizontal".into(),
+            root: WindowLayoutNode::Split {
+                axis: Axis::Horizontal,
                 size: None,
                 children: vec![
-                    WindowLayoutChild::Stack(WindowLayoutStackNode {
-                        kind: "stack".into(),
+                    WindowLayoutNode::Stack {
                         size: Some(0.5),
-                        active_window_kind_id: Some("main".into()),
-                        children: vec![WindowLayoutWindowNode { kind: "window".into(), window_kind_id: "main".into(), title: Some("Main".into()), instance_id: None, template_id: None, corner: Some(WindowStackCorner::TopRight) }],
-                    }),
-                    WindowLayoutChild::Axis(WindowLayoutAxisNode { kind: "vertical".into(), size: Some(0.5), children: vec![] }),
+                        active_window_id: Some("main".into()),
+                        children: vec![WindowLayoutNode::Window { window_kind_id: "main".into(), title: Some("Main".into()), instance_id: None, template_id: None, corner: Some(WindowStackCorner::TopRight) }],
+                    },
+                    WindowLayoutNode::Split { axis: Axis::Vertical, size: Some(0.5), children: vec![] },
                 ],
-            }),
+            },
         };
         assert_eq!(WindowLayout::from_value(layout.to_value()).expect("valid DslValue decodes"), layout);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn named_layout_round_trips() {
-        let layout = WindowLayout { root: WindowLayoutRoot::Stack(WindowLayoutStackNode { kind: "stack".into(), size: None, active_window_kind_id: None, children: vec![] }) };
+        let layout = WindowLayout { root: WindowLayoutNode::Stack { size: None, active_window_id: None, children: vec![] } };
         let named = NamedLayout { id: "layout-1".into(), label: "Default".into(), icon_id: Some(IconName::AppWindow), layout, origin: "user".into(), group_path: Some(vec!["group".into()]) };
         assert_eq!(NamedLayout::from_value(named.to_value()).expect("valid DslValue decodes"), named);
     }

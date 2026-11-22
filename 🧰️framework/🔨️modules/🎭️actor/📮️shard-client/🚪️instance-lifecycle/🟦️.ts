@@ -37,7 +37,7 @@ export class ShardInstanceLifecycles {
       open: async (input: ShardInstanceOpenInput, budget: ShardBudget): Promise<unknown> => {
         if (owner.phase !== "opening") throw new Error("actor-lifecycle.open-already-captured");
         operation.assertActive();
-        return this.sendInstanceLifecycle(owner, [{ kind: "instance-open", payload: { instance: instanceId, activationGeneration: open.activationGeneration, requestSequence: open.requestSequence, appId: input.appId, actor: input.actor, config: input.config, assets: input.assets, capabilities: input.capabilities, quotas: input.quotas } }], budget);
+        return this.sendInstanceLifecycle(owner, [{ kind: "instance-open", payload: { instance: instanceId, purpose: input.purpose, activationGeneration: open.activationGeneration, requestSequence: open.requestSequence, appId: input.appId, actor: input.actor, config: input.config, assets: input.assets, capabilities: input.capabilities, quotas: input.quotas } }], budget);
       },
       poll: (budget: ShardBudget) => this.sendInstanceLifecycle(owner, [], budget),
       beginClose: () => this.beginInstanceLifecycleClose(owner),

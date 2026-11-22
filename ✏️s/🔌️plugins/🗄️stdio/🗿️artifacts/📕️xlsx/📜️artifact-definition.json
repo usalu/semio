@@ -24,7 +24,7 @@
       "id": "s.stdio.xlsx.standard.ecma-376.profile.any",
       "standard": "s.stdio.xlsx.standard.ecma-376",
       "profile": "any",
-      "status": "unimplemented"
+      "status": "implemented"
     }
   ],
   "source_dialects": [
@@ -33,7 +33,7 @@
       "standard": "s.stdio.xlsx.standard.ecma-376",
       "dialect": "source",
       "registered_code_points": [],
-      "status": "unimplemented"
+      "status": "implemented"
     }
   ],
   "representations": [
@@ -41,6 +41,21 @@
       "id": "s.stdio.xlsx.standard.ecma-376.representation.document",
       "standard": "s.stdio.xlsx.standard.ecma-376",
       "representation": "document",
+      "package": {
+        "main_part_content_types": [
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"
+        ],
+        "dialects": [
+          {
+            "subset": "strict",
+            "namespace": "http://purl.oclc.org/ooxml/spreadsheetml/main"
+          },
+          {
+            "subset": "transitional",
+            "namespace": "http://schemas.openxmlformats.org/spreadsheetml/2006/main"
+          }
+        ]
+      },
       "mimes": [
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
       ],
@@ -70,8 +85,150 @@
       }
     }
   ],
-  "mutations": [],
-  "inferences": [],
+  "mutations": [
+    {
+      "id": "s.stdio.xlsx.mutation.set-cell.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.xlsx.mutation.insert-cell.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.xlsx.mutation.remove-cell.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.xlsx.mutation.insert-sheet.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.xlsx.mutation.remove-sheet.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.xlsx.mutation.rename-sheet.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.xlsx.mutation.set-shared-string.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.xlsx.mutation.insert-shared-string.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.xlsx.mutation.remove-shared-string.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.xlsx.mutation.set-content-type.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.xlsx.mutation.remove-content-type.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.xlsx.mutation.set-relationship.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.xlsx.mutation.remove-relationship.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.xlsx.mutation.strict-set-main-namespace.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.xlsx.mutation.strict-set-relationships-namespace.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.xlsx.mutation.strict-set-relationship-base.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.xlsx.mutation.strict-set-conformance-attribute.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.xlsx.mutation.strict-remove-conformance-attribute.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.xlsx.mutation.strict-set-worksheet-content-type.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.xlsx.mutation.strict-insert-vml-part.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.xlsx.mutation.strict-remove-vml-part.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.xlsx.mutation.transitional-set-main-namespace.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.xlsx.mutation.transitional-set-relationships-namespace.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.xlsx.mutation.transitional-set-relationship-base.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.xlsx.mutation.transitional-set-conformance-attribute.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.xlsx.mutation.transitional-remove-conformance-attribute.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.xlsx.mutation.transitional-set-worksheet-content-type.v1",
+      "status": "implemented",
+      "executable_registration": false
+    }
+  ],
+  "inferences": [
+    {
+      "id": "s.stdio.xlsx.inference.outline.v1",
+      "status": "implemented",
+      "executable_registration": false
+    }
+  ],
   "resources": [
     {
       "id": "s.stdio.xlsx.resource.external-references",
@@ -97,9 +254,15 @@
   ],
   "conformance_suites": [
     {
-      "id": "s.stdio.xlsx.conformance-suite.public-corpus",
+      "id": "s.stdio.xlsx.conformance-suite.calamine-oracle",
       "status": "unimplemented",
-      "fixtures": []
+      "fixtures": [
+        "s.stdio.xlsx.fixture.native-document",
+        "s.stdio.xlsx.fixture.canonical-xml-save",
+        "s.stdio.xlsx.fixture.mutations",
+        "s.stdio.xlsx.fixture.viewer-cell-window",
+        "s.stdio.xlsx.fixture.reuse-marketplaces"
+      ]
     }
   ],
   "runtime_capabilities": [
@@ -282,13 +445,49 @@
       "s.stdio.xlsx.standard.ecma-376.profile.any"
     ],
     "registered_code_points": [],
-    "read": "unimplemented",
-    "write": "unimplemented",
-    "lossless": "unimplemented",
-    "canonical": "unimplemented",
+    "read": "opaque",
+    "write": "opaque",
+    "lossless": "opaque",
+    "canonical": "opaque",
     "validators": [],
-    "mutations": [],
-    "inferences": [],
-    "fixtures": []
+    "mutations": [
+      "s.stdio.xlsx.mutation.set-cell.v1",
+      "s.stdio.xlsx.mutation.insert-cell.v1",
+      "s.stdio.xlsx.mutation.remove-cell.v1",
+      "s.stdio.xlsx.mutation.insert-sheet.v1",
+      "s.stdio.xlsx.mutation.remove-sheet.v1",
+      "s.stdio.xlsx.mutation.rename-sheet.v1",
+      "s.stdio.xlsx.mutation.set-shared-string.v1",
+      "s.stdio.xlsx.mutation.insert-shared-string.v1",
+      "s.stdio.xlsx.mutation.remove-shared-string.v1",
+      "s.stdio.xlsx.mutation.set-content-type.v1",
+      "s.stdio.xlsx.mutation.remove-content-type.v1",
+      "s.stdio.xlsx.mutation.set-relationship.v1",
+      "s.stdio.xlsx.mutation.remove-relationship.v1",
+      "s.stdio.xlsx.mutation.strict-set-main-namespace.v1",
+      "s.stdio.xlsx.mutation.strict-set-relationships-namespace.v1",
+      "s.stdio.xlsx.mutation.strict-set-relationship-base.v1",
+      "s.stdio.xlsx.mutation.strict-set-conformance-attribute.v1",
+      "s.stdio.xlsx.mutation.strict-remove-conformance-attribute.v1",
+      "s.stdio.xlsx.mutation.strict-set-worksheet-content-type.v1",
+      "s.stdio.xlsx.mutation.strict-insert-vml-part.v1",
+      "s.stdio.xlsx.mutation.strict-remove-vml-part.v1",
+      "s.stdio.xlsx.mutation.transitional-set-main-namespace.v1",
+      "s.stdio.xlsx.mutation.transitional-set-relationships-namespace.v1",
+      "s.stdio.xlsx.mutation.transitional-set-relationship-base.v1",
+      "s.stdio.xlsx.mutation.transitional-set-conformance-attribute.v1",
+      "s.stdio.xlsx.mutation.transitional-remove-conformance-attribute.v1",
+      "s.stdio.xlsx.mutation.transitional-set-worksheet-content-type.v1"
+    ],
+    "inferences": [
+      "s.stdio.xlsx.inference.outline.v1"
+    ],
+    "fixtures": [
+      "s.stdio.xlsx.fixture.native-document",
+      "s.stdio.xlsx.fixture.canonical-xml-save",
+      "s.stdio.xlsx.fixture.mutations",
+      "s.stdio.xlsx.fixture.viewer-cell-window",
+      "s.stdio.xlsx.fixture.reuse-marketplaces"
+    ]
   }
 }

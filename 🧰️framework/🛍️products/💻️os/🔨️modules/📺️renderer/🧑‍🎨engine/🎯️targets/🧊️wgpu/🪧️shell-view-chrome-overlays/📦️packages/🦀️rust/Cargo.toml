@@ -1,0 +1,54 @@
+[package]
+workspace = "../../../../../../../../../../.."
+name = "semio-renderer-wgpu-shell-view-chrome-overlays"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Shell chrome overlay steps: tutorial bar, context menu, tooltip, agent chat header, notices and status stacks"
+
+[package.metadata.semio]
+role = "framework"
+id = "os-renderer-wgpu-shell-view-chrome-overlays"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[features]
+testkit = ["semio-renderer-wgpu-shell-view-chrome/testkit", "semio-renderer-wgpu-shell-async/testkit", "semio-renderer-wgpu-shell-chrome-state/testkit", "semio-renderer-wgpu-shell-docs/testkit", "semio-renderer-wgpu-shell-history/testkit", "semio-renderer-wgpu-shell-input/testkit", "semio-renderer-wgpu-shell-prefs/testkit", "semio-renderer-wgpu-shell-state/testkit", "semio-renderer-wgpu-shell-surfaces/testkit", "semio-renderer-wgpu-shell-sync/testkit", "semio-renderer-wgpu-shell-window-actions/testkit", "semio-renderer-wgpu-shell-windows/testkit"]
+
+[dependencies]
+semio-renderer-wgpu-agent-elements = { path = "../../../🙋️agent-elements/📦️packages/🦀️rust" }
+semio-renderer-wgpu-hub-workspace = { path = "../../../🏘️hub-workspace/📦️packages/🦀️rust" }
+semio-renderer-wgpu-shell-async = { path = "../../../⏳️shell-async/📦️packages/🦀️rust" }
+semio-renderer-wgpu-shell-chrome-state = { path = "../../../🎚️shell-chrome-state/📦️packages/🦀️rust" }
+semio-renderer-wgpu-shell-commands = { path = "../../../🎹️shell-commands/📦️packages/🦀️rust" }
+semio-renderer-wgpu-shell-directory = { path = "../../../📒️shell-directory/📦️packages/🦀️rust" }
+semio-renderer-wgpu-shell-doc-open = { path = "../../../📂️shell-doc-open/📦️packages/🦀️rust" }
+semio-renderer-wgpu-shell-dock = { path = "../../../⚓️shell-dock/📦️packages/🦀️rust" }
+semio-renderer-wgpu-shell-docs = { path = "../../../📄️shell-docs/📦️packages/🦀️rust" }
+semio-renderer-wgpu-shell-history = { path = "../../../⏪️shell-history/📦️packages/🦀️rust" }
+semio-renderer-wgpu-shell-input = { path = "../../../🕹️shell-input/📦️packages/🦀️rust" }
+semio-renderer-wgpu-shell-plugins = { path = "../../../🧲️shell-plugins/📦️packages/🦀️rust" }
+semio-renderer-wgpu-shell-prefs = { path = "../../../🎛️shell-prefs/📦️packages/🦀️rust" }
+semio-renderer-wgpu-shell-state = { path = "../../../🐙️shell-state/📦️packages/🦀️rust" }
+semio-renderer-wgpu-shell-surfaces = { path = "../../../🫧️shell-surfaces/📦️packages/🦀️rust" }
+semio-renderer-wgpu-shell-sync = { path = "../../../🔃️shell-sync/📦️packages/🦀️rust" }
+semio-renderer-wgpu-shell-view-chrome = { path = "../../../🍱️shell-view-chrome/📦️packages/🦀️rust" }
+semio-renderer-wgpu-shell-view-paint = { path = "../../../🖍️shell-view-paint/📦️packages/🦀️rust" }
+semio-renderer-wgpu-shell-vocab = { path = "../../../📖️shell-vocab/📦️packages/🦀️rust" }
+semio-renderer-wgpu-shell-window-actions = { path = "../../../🪝️shell-window-actions/📦️packages/🦀️rust" }
+semio-renderer-wgpu-shell-windows = { path = "../../../🔲️shell-windows/📦️packages/🦀️rust" }
+ui_contract = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-ui-contract" }
+semio-ui-declaration = { path = "../../../../../../../../../../🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust" }
+semio-ui-draw-contract = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/📦️packages/🦀️rust" }
+semio-ui-text = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🔤️typography/📦️packages/🦀️rust" }
+semio-ui-theme = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🎭️theme/📦️packages/🦀️rust" }
+semio-ui-wgpu-input = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/📥️input/📦️packages/🦀️rust" }

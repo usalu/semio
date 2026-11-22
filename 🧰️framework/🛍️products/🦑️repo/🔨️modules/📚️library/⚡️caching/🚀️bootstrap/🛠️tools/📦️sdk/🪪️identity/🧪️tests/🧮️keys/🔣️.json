@@ -18,7 +18,7 @@
      "text": "{}\n"
     }
    ],
-   "expected": "8568f64877bdd05bdb5cb80e26ef852918b0837fdff2d352db83f188c03c95fd"
+   "expected": "a3585d7dba6d405fe618b00b19631fc62afaf162d57b5f433228d4a5f3b09825"
   },
   {
    "name": "no files",
@@ -28,7 +28,7 @@
     "libc": "glibc"
    },
    "files": [],
-   "expected": "7e16f9b2dbde19941b7a66ff9e621a21ed5917d0ca03e2025cd0622c4438996a"
+   "expected": "c11b6fdfed1240fd3f107a32c3241264e5908b8fc51cb00e62ea4248843f0361"
   },
   {
    "name": "macOS on arm64",
@@ -43,7 +43,7 @@
      "text": "{}\n"
     }
    ],
-   "expected": "c2fdef721027b167a39cf6121c25a169e7ee920bfd382ca94d28d1da09722a41"
+   "expected": "6c6e3e70974058ba1baf5ae5754a2b67e9789f82373f37bac7c2ffc6b3cf635f"
   },
   {
    "name": "windows",
@@ -58,7 +58,7 @@
      "text": "{}\n"
     }
    ],
-   "expected": "782ae894179ed97ff69c2d7b4912ad5723af60508251c46a2a129b4f7daece45"
+   "expected": "a0c280921f0ed9c1dcc60ac2a9972d28e32c037e1a73c486b62348080ec26f88"
   },
   {
    "name": "musl is another key than glibc",
@@ -73,7 +73,7 @@
      "text": "{}\n"
     }
    ],
-   "expected": "bfdd9a636b4ddb74baa1a70dfb91fd6eebb2d8ed8a57542c5b91f8856010ee3d"
+   "expected": "05ce19a761692f04d0c07a8ad230f38f8059b69b68f883cacc0639abec512d28"
   },
   {
    "name": "an empty file",
@@ -88,7 +88,7 @@
      "text": ""
     }
    ],
-   "expected": "d05aaa69371dc72fe1ea9005ce22801dec1e835aa1a7951d78084f3241e4b93c"
+   "expected": "73f0d36b55ee08596c6936e061cceabbb0d33eb08c9750d2184ce5571c789be9"
   },
   {
    "name": "unicode names and bytes",
@@ -103,7 +103,7 @@
      "text": "é🧪\n"
     }
    ],
-   "expected": "b9a87732aa3f1d2c374bf73bca70fc0d1bf508ea700f3ca9c4223fd7193b7c69"
+   "expected": "5996a15bc13f6924cc2bfb9d5d80bddf4c90682a00893410d95df8a6bb4c3ae1"
   },
   {
    "name": "the order of files is part of the key",
@@ -122,7 +122,7 @@
      "text": "{}\n"
     }
    ],
-   "expected": "8ce22e2892dc289bc3387a3087f4208d30fd8aa1805461d7ebfc068c12c7e7d9"
+   "expected": "1543a1260fff785252bc7fa77d6c7ad765dec4e151a042fba0774b9db0254878"
   },
   {
    "name": "a patch beside the dependencies",
@@ -145,7 +145,7 @@
      "text": "diff\n"
     }
    ],
-   "expected": "57e0adfd138c5c99d4da563ceea90920a0a112025c16dbef4dd926fa4e5fbf7a"
+   "expected": "3f0095884457875c65f2e003400f5d1b7f41dd9f04b52ebb48b09b081f9b3517"
   }
  ],
  "boundaries": [
@@ -298,5 +298,73 @@
    "musl",
    "none"
   ]
- }
+ },
+ "bundles": [
+  {
+   "name": "two manifests beside one dependency generation",
+   "dependencies": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "files": [
+    {
+     "name": ".semio-authorizer-source.json",
+     "text": "{\"version\":1}\n"
+    },
+    {
+     "name": ".semio-authorizer-compiler.json",
+     "text": "{\"version\":1,\"mode\":\"release\"}\n"
+    }
+   ],
+   "expected": "930b15988be904091216547ba6b364403a165fc5ddc0277bb298471d45299d4d"
+  },
+  {
+   "name": "the same manifests beside another dependency generation",
+   "dependencies": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+   "files": [
+    {
+     "name": ".semio-authorizer-source.json",
+     "text": "{\"version\":1}\n"
+    },
+    {
+     "name": ".semio-authorizer-compiler.json",
+     "text": "{\"version\":1,\"mode\":\"release\"}\n"
+    }
+   ],
+   "expected": "21ba7b7ba2a4e487b7a5c1e7bbf60b7c13a5dcb3a1571a2eeb097927aa976203"
+  },
+  {
+   "name": "a changed source manifest",
+   "dependencies": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "files": [
+    {
+     "name": ".semio-authorizer-source.json",
+     "text": "{\"version\":2}\n"
+    },
+    {
+     "name": ".semio-authorizer-compiler.json",
+     "text": "{\"version\":1,\"mode\":\"release\"}\n"
+    }
+   ],
+   "expected": "ba1a7f88c09c0f5854f9c1e881522f2acf860bbff993a23eba7cea46f4aec5aa"
+  },
+  {
+   "name": "a changed compiler manifest",
+   "dependencies": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "files": [
+    {
+     "name": ".semio-authorizer-source.json",
+     "text": "{\"version\":1}\n"
+    },
+    {
+     "name": ".semio-authorizer-compiler.json",
+     "text": "{\"version\":1,\"mode\":\"debug\"}\n"
+    }
+   ],
+   "expected": "6c19bc531099b9e3f729297512f5f315877cd7531e667dd41e331898cedefb61"
+  },
+  {
+   "name": "no manifests at all",
+   "dependencies": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+   "files": [],
+   "expected": "164b08e15705b0a9113260488d8da043c84eee9746ac688fa5a786ef5e81e1d3"
+  }
+ ]
 }

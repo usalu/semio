@@ -1,7 +1,8 @@
 //! 🧬️ Typed input schema admission scans genuine native fields in bounded original events.
 use super::retained_typed_literal::InputIdentity;
 use semio_s_artifact_procedural_3d_mutations::{ChangeWidgetInput,WidgetInputValue};
-use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,RetainedWorkOutcome,RetirementDemand,ValueError,ValueRefusalKind};
+use super::retained_scratch_driver::pay;
+use semio_framework_value::{RetainedAllocationEffect,RetainedCloneProgress,RetainedWorkOutcome,RetirementDemand,ValueError,ValueRefusalKind};
 use semio_framework_value::retained_clone::retained_clone_grant_admits;
 fn fixed(copy_bytes:usize)->RetirementDemand{RetirementDemand{copy_bytes,depth:1,..Default::default()}}
 fn count(input:&WidgetInputValue)->usize{match input{WidgetInputValue::NumberList(v)=>v.len(),WidgetInputValue::TextList(v)=>v.len(),WidgetInputValue::BooleanList(v)=>v.len(),WidgetInputValue::PointList(v)|WidgetInputValue::VectorList(v)=>v.len(),_=>1}}
@@ -37,10 +38,12 @@ impl TypedInputAdmission{
   }))
  }
  fn finish(&mut self,admitted:bool){self.result=Some(admitted)}
- pub(crate) fn advance(&mut self,input:&ChangeWidgetInput,grant:RetainedCloneGrant)->RetainedWorkOutcome<bool>{
-  self.progress=Default::default();let demand=match self.next_demands(input,grant.maximum_copy_bytes){Ok(demand)=>demand,Err(error)=>return RetainedWorkOutcome{result:Err(error),work:0}};
-  if self.result.is_some(){return RetainedWorkOutcome{result:Ok(true),work:0}}if !retained_clone_grant_admits(grant,demand){return RetainedWorkOutcome{result:Ok(false),work:0}}
-  self.binding=Some(Binding::capture(input));self.progress=RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()};
+ pub(crate) fn advance(&mut self,input:&ChangeWidgetInput,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome<bool>{
+  self.progress=Default::default();
+  let result=(||{
+   let grant=effect.grant();let demand=self.next_demands(input,grant.maximum_copy_bytes)?;
+   if self.result.is_some(){return Ok(true)}if !retained_clone_grant_admits(grant,demand)||!pay(effect,1)?{return Ok(false)}
+   self.binding=Some(Binding::capture(input));self.progress=RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()};
   match self.phase{
    0=>{if input.id.is_empty()||input.channel.is_empty(){self.finish(false)}else{self.phase=1}},
    1=>{
@@ -58,6 +61,8 @@ impl TypedInputAdmission{
    },
    _=>unreachable!(),
   }
-  RetainedWorkOutcome{result:Ok(self.result.is_some()),work:1}
+  Ok(self.result.is_some())
+  })();
+  RetainedWorkOutcome{result:result.map_err(|error:ValueError|error.with_retained_progress(self.progress)),work:effect.performed_work()}
  }
 }

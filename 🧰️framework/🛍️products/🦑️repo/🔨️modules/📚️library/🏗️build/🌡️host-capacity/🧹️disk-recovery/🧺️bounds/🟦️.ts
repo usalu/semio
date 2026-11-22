@@ -49,10 +49,15 @@ export async function boundedBytesV1(path:string,limit:number,signal?:AbortSigna
  while(stack.length){
   signal?.throwIfAborted();
   const current=stack.pop()!,info=await lstat(current).catch(()=>undefined);
+  signal?.throwIfAborted();
   if(info===undefined)continue;
   bytes+=info.blocks*512;newestMs=Math.max(newestMs,info.mtimeMs);
   if(++seen>=limit)return{bytes,newestMs,complete:false};
-  if(info.isDirectory())for(const name of await readdir(current).catch(()=>[] as string[]))stack.push(join(current,name));
+  if(info.isDirectory()){
+   const names=await readdir(current).catch(()=>[] as string[]);
+   signal?.throwIfAborted();
+   for(const name of names)stack.push(join(current,name));
+  }
  }
  return{bytes,newestMs,complete:true};
 }

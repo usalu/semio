@@ -22,7 +22,7 @@ export function graphCursorTextV1(key:keyof typeof texts,language:"en"|"de",fiel
 /** 📸️ A state of the shared files the graph walk can enter: paths in UTF-16 code unit order, the first 128 bits of the SHA-256 of each file and the identity of the whole. */
 export type SnapshotV1=Readonly<{instance:string;paths:readonly string[];shas:readonly string[]}>;
 /** 🧾️ One row of the dirty set, in the closed shape of the watcher journal: added, modified or removed, directory or not, and the path. */
-export type CursorRowV1=readonly ["a"|"m"|"r",0|1,string];
+export type CursorRowV1=readonly ["a"|"m"|"r"|"n",0|1,string];
 /** 🔌️ The cursor of the journal ports. */
 export type CursorV1=Readonly<{instance:string;seq:number}>;
 /** 🔌️ The answer of a port to "what changed since". */

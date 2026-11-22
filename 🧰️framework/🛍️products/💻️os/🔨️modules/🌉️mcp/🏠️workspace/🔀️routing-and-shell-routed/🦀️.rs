@@ -579,7 +579,16 @@ impl ArtifactChannel for RoutingArtifactChannel {
 
     /// 🗿️ Re-read on every exchange, never once at open: `artifact_create` binds the artifact See [design notes](README.md).
     async fn exchange(&mut self, instance: u32, commands: Vec<AppCommand>) -> Result<Vec<AppFrame>, Fault> {
-        let route = self.resolved_route(self.route_for(instance, &commands)?, &ActivationScope::detached())?;
+        let detached;
+        let scope = match commands.first() {
+            Some(AppCommand::Infer(command)) => command.cancel.activation(),
+            _ => {
+                detached = ActivationScope::detached();
+                &detached
+            }
+        };
+        scope.checkpoint()?;
+        let route = self.resolved_route(self.route_for(instance, &commands)?, scope)?;
         let session_artifact_id = self.artifact_for(Some(instance), &route);
         if let Some(refusal) = self.edit_refusal(instance, &route, &commands) {
             return Err(refusal);
@@ -589,7 +598,7 @@ impl ArtifactChannel for RoutingArtifactChannel {
         let hub_bound = self.hub.is_some() && session_document.is_some();
         let mut channels = self.channels.lock().expect("routing channel cache lock poisoned");
         if !channels.contains_key(&route) {
-            let channel = open_plugin_artifact_channel(self.components.as_ref(), &route.plugin_id, route.app_id.as_deref(), &self.actor_label, self.host_driver_policy, self.operation_policy).map_err(routing_fault)?;
+            let channel = open_plugin_artifact_channel_scoped(self.components.as_ref(), &route.plugin_id, route.app_id.as_deref(), &self.actor_label, scope, self.host_driver_policy, self.operation_policy).map_err(routing_fault)?;
             channels.insert(route.clone(), channel);
         }
         let channel = channels.get_mut(&route).expect("just inserted above");

@@ -1,0 +1,23 @@
+{
+  "mutation": "spliceSceneRows",
+  "table": "parts",
+  "start": 1,
+  "deleteCount": 1,
+  "parts": [
+    {
+      "id": "x",
+      "2d": {
+        "x": 3,
+        "y": 0
+      },
+      "3d": {
+        "origin": [
+          3,
+          0,
+          0
+        ]
+      },
+      "grips": []
+    }
+  ]
+}

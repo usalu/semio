@@ -4,7 +4,8 @@ import{Database}from"bun:sqlite";
 import{createRequire}from"node:module";
 import{mkdirSync,mkdtempSync,rmSync,symlinkSync,unlinkSync,writeFileSync}from"node:fs";
 import{join}from"node:path";
-import{declareBuildTestEnvelopeV1,withBuildTestInvocationV1}from"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/📥️invocation/🟦️.ts";
+import{withBuildTestInvocationV1}from"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/📥️invocation/🟦️.ts";
+import{declareLibraryBuildTestEnvelopeV1}from"../../../../../../🧪️testing/🪪️native-birth/🟦️.ts";
 import*as issued from"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import*as leases from"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import{readJavascriptDependencySourceOwnerExecutionV1}from"../../🟦️.ts";
@@ -12,8 +13,7 @@ import{javascriptInstallSchemaV1}from"../../🧱️schemas/🟦️.ts";
 import corpus from"./pressure.json";
 import schema from"./pressure.schema.json";
 
-if(corpus.birth.capabilities.artifacts!==true)throw Error("Authored provider pressure artifacts required");
-declareBuildTestEnvelopeV1({...corpus.birth,capabilities:{artifacts:corpus.birth.capabilities.artifacts}});
+declareLibraryBuildTestEnvelopeV1(corpus.birth);
 
 interface VersionOracleV1{compatible(version:string,range:string):boolean}
 const versionOracleV1:VersionOracleV1={compatible:(version,range)=>Boolean((createRequire(import.meta.url)("semver")as{satisfies:(version:string,range:string)=>boolean}).satisfies(version,range))};

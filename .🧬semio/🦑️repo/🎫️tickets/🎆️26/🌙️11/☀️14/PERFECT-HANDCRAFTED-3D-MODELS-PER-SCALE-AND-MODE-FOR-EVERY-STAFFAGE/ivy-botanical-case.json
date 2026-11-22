@@ -1,0 +1,27 @@
+{
+  "scales": [
+    50,
+    100,
+    200,
+    500
+  ],
+  "vertical": {
+    "count": 8,
+    "pitchM": 0.2,
+    "lengthM": 1.53
+  },
+  "horizontal": {
+    "count": 7,
+    "pitchM": 0.18875,
+    "lengthM": 1.71
+  },
+  "widthM": 0.02,
+  "depthM": 0.01,
+  "minOpenings": 42,
+  "poses": [
+    "summer-calm",
+    "breezy",
+    "storm",
+    "winter-snow"
+  ]
+}

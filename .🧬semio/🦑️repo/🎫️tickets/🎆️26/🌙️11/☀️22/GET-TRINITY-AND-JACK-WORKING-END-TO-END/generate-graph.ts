@@ -1,0 +1,12 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import { readGraphOutputCatalog } from "C:/semio/🧰️framework/🔨️modules/🕸️graph/🛂️manifest/📇️catalog/🟦️.ts";
+import { renderGraphArtifacts } from "C:/semio/🧰️framework/🔨️modules/🕸️graph/🛂️manifest/📽️projection/🟦️.ts";
+import { writeGraphArtifacts } from "C:/semio/🧰️framework/🔨️modules/🕸️graph/🛂️manifest/📤️publication/🟦️.ts";
+const component = process.argv[2];
+const read = (path: string): string => readFileSync(path).toString("utf8");
+const outDir = join(component, "🤖️generated");
+const catalog = readGraphOutputCatalog(join(component, "🛂️manifest/📇️outputs.json"), read);
+const rendered = renderGraphArtifacts("C:/semio", outDir, catalog, true, { read, observe: () => {} });
+writeGraphArtifacts(outDir, rendered.artifacts);
+console.log(`[DEBUG] wrote ${rendered.manifestCount} manifests to ${outDir}`);

@@ -27,6 +27,9 @@ pub use staged_view_paint__dock_model_and_measures::*;
 #[path = "../../../🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🖍️view-paint/🎓️tutorial-runtime/🦀️.rs"]
 mod staged_view_paint__tutorial_runtime;
 pub use staged_view_paint__tutorial_runtime::*;
+#[path = "../../../🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🖍️view-paint/👻️tutorial-ghost-glyphs/🦀️.rs"]
+mod staged_view_paint__tutorial_ghost_glyphs;
+pub use staged_view_paint__tutorial_ghost_glyphs::*;
 #[path = "../../../🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🖍️view-paint/🎨️theme-file-import-and-accessibility/🦀️.rs"]
 mod staged_view_paint__theme_file_import_and_accessibility;
 pub use staged_view_paint__theme_file_import_and_accessibility::*;

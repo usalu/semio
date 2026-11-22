@@ -4,5 +4,15 @@
  "initial":[true,true,true],
  "sharedProbes":[1,1,1],
  "removed":0,
- "relocation":{"former":"/admission","live":"/admission-live","conflict":"/admission-conflict"}
+ "relocation":{"former":"/admission","live":"/admission-live","conflict":"/admission-conflict"},
+ "typedProbes":{
+  "before":{"/probe/file":"file","/probe/dir":"directory","/probe/missing":"!ENOENT","/probe/denied":"!EACCES"},
+  "after":{"/probe/file":"directory","/probe/dir":"directory","/probe/missing":"!ENOENT","/probe/denied":"!EACCES"},
+  "owners":[
+   [{"path":"/probe/file","kind":"stat"},{"path":"/probe/dir","kind":"fileExists"},{"path":"/probe/missing","kind":"directoryExists"},{"path":"/probe/denied","kind":"stat"}],
+   [{"path":"/probe/file","kind":"fileExists"},{"path":"/probe/dir","kind":"directoryExists"},{"path":"/probe/missing","kind":"stat"},{"path":"/probe/denied","kind":"fileExists"}],
+   [{"path":"/probe/file","kind":"directoryExists"},{"path":"/probe/dir","kind":"stat"},{"path":"/probe/missing","kind":"fileExists"},{"path":"/probe/denied","kind":"directoryExists"}]
+  ],
+  "unfollowed":{"path":"/probe/file","kind":"lstat","fact":"symlink"}
+ }
 }

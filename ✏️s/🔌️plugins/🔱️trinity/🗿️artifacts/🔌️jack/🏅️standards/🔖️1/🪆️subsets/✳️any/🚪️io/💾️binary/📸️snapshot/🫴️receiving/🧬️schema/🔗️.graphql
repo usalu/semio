@@ -3,5 +3,3 @@ type JackRecordReconstruction { source: NativeRecord! candidate: JackSnapshot cu
 """⏱️ Each supplied original decoder turn admits one bounded field or real backing allocation."""
 interface JackRecordReconstructionReceiver { step(source: JackRecordReconstruction!, control: OriginalNativeDecodeControl!, grant: RetainedCloneGrant!, maximumWork: UInt64!): OriginalNativeDecodeIssued! }
 
-"""📏️ Semantic row/type ceilings are authored independently of each original supplied receiving wallet."""
-type JackRecordReconstructionPolicy { maximumRows: UInt64! maximumTypeDepth: UInt64! }

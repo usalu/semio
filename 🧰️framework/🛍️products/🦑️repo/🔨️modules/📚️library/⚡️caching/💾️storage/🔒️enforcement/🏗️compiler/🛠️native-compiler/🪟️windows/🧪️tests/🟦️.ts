@@ -5,6 +5,8 @@ import{createIssuedResourceControlV1}from"../../../../../../../../../../../🔨�
 import{withRepositoryWindowsCompilerV1}from"../🟦️.ts";
 import{withWindowsCompilerLifetimeV1}from"../🧬️lifetime/🟦️.ts";
 import lifetime from"./🧫️lifetime.json";
+import {declareLibraryBuildTestEnvelopeV1} from "../../../../../../../🧪️testing/🪪️native-birth/🟦️.ts";
+declareLibraryBuildTestEnvelopeV1({suite:"storage-compiler",maximumElapsedMilliseconds:15000});
 
 test("a fabricated tooling store cannot issue Windows compiler readiness",()=>withBuildTestInvocationV1(async original=>{
  const control=createIssuedResourceControlV1(original,"test:windows-compiler-forged-store",10000),db=new Database(":memory:");let called=false;try{const oracle=db.query("select 0 accepted").get() as{accepted:number};expect(oracle.accepted).toBe(0);await expect(Promise.resolve().then(()=>withRepositoryWindowsCompilerV1(process.cwd(),{} as never,control,{},process.env,null,async()=>{called=true;}))).rejects.toThrow();expect(called).toBe(false);}finally{db.close();}

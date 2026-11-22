@@ -493,6 +493,20 @@ pub trait ArtifactEditor: Default + Send + 'static {
     /// 📂️ Enables the single-turn natural-file codec for inputs within the scheduler's work limit.
     const SINGLE_TURN_NATURAL_DECODE: bool = false;
 
+    /// 📐 Enables the paged natural route when its decoder admission is implemented.
+    const PAGED_NATURAL_SOURCE_MAXIMUM_BYTES: u32 = 0;
+
+    /// 🧳 Receives the paid natural byte owner under the format's granted decoder turn.
+    fn admit_paged_natural_file_decode_owner(
+        _source: &mut Option<semio_plugin_decl_media::original_media::natural_source::NaturalFilePagedSource>,
+        _contract: semio_framework::ToolExecutionContract,
+        _receiving: &mut Option<NaturalFileDecodeOwner<Self::Snapshot>>,
+        _cx: &mut semio_framework_job::StepContext<'_>,
+    ) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
+        Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,
+            "natural-file format has no original paged decoder").into())
+    }
+
     /// 🎟️ Moves the original byte buffer into the decoder once the scheduler funds its owner.
     fn admit_natural_file_decode_owner(
         bytes: &mut Option<Vec<u8>>,

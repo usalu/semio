@@ -53,7 +53,7 @@ export function serveHttpV1(options: RuntimeServeOptionsV1): Promise<RuntimeServ
     const server = options.tls === undefined ? createServer(listener) : createSecureServer({ cert: readFileSync(options.tls.certificate), key: readFileSync(options.tls.key) }, listener);
     if (options.idleTimeoutSeconds !== undefined) { server.keepAliveTimeout = options.idleTimeoutSeconds * 1000; server.setTimeout(options.idleTimeoutSeconds * 1000); }
     server.once("error", reject);
-    server.listen(boundPort, hostname, () => {
+    server.listen({ port: boundPort, host: hostname, ...(options.reusePort === true ? { reusePort: true } : {}) } as Parameters<typeof server.listen>[0], () => {
       boundPort = (server.address() as AddressInfo).port;
       accept({
         port: boundPort,

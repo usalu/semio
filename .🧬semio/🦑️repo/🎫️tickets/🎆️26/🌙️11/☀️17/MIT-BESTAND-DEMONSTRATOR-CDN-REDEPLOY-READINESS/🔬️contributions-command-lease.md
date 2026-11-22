@@ -1,0 +1,19 @@
+# Pending Contribution Command Lease
+
+The newer `wc3Mufm` replay receives every `setContributions` page and returns paid reactor turns. The typed operation is runnable for several thousand turns. Once its publication drains, the command remains pending. On the exact Aussuchen core, six sampled command turns called lease arbitration with `pending=true`, then background publication called `leave` on the same lease address `129741632` and removed the lease entry. Interleaved turns called `leave` on that address without changing state. Loading the real app or waiting for the parser cannot resolve this repeating arbitration. See `🗑️generated/1238-aussuchen-lease-values.log`.
+
+Host configuration uses `original_emission`. Idle typed publication previously checked only `original_typed_command` before releasing the command lease keyed by the same retained Source and decoder. This could release the foreground holder during publication of its mounted operation. The next command turn correctly queued behind the still-pending Source, which could only settle while the command held its lease. Background publication could then repeatedly erase the waiter as well.
+
+Idle publication now retains the holder and the waiter while either the shared command owner or the action-ingress source remains pending. It uses the same predicate as the background-resume admission. Explicit completion, error, and close retain their own release paths. The command lane can continue its original receipt and physical retirement without a new admission.
+
+The neutral command lease fixture exercises the foreground holder, a queued competing lane, repeated same-source admission, idle settlement, and FIFO handoff. The legacy Rust replay failed at the first idle publication for the pending holder. The corrected Rust lease agreed with an independent Python deque on all seven fixture sequences. The three changed Rust files parsed with the pinned compiler. Pinned `wasm32-wasip2` source analysis checked `semio-plugin-instance-app` at 260,662 bytes and `semio-plugin-instance-dispatch` at 173,547 bytes, within their 262,144-byte limits. The exact production SHA-256 values are `b36651ccad1ce2ec13995cc0d7fc14064b43cb269cb4b8549424045747396fd7` for the app implementation and `7e1f49c6debc8c8c308793065e2f83dbb65c5b1e888e355a65accfc9ad86f2e1` for command routing.
+
+The corrected canonical guest still needs to link, clear descriptor and browser stages, and pass the Koordinator, Aussuchen and Bearbeiten matrix in both locales.
+
+## Canonical Held Retry
+
+During `w0WRGLI`'s first Cargo attempt, rustc recorded the old 94,661-byte app implementation and 12,276-byte routing source. A concurrent Process3d editor edit led the driver to admit a fresh graph and source selection inside the same held lane at 12:41 PST. This retry retained both corrected command lease bodies and had already reused 959 units by the first post-retry sample.
+
+The retry's fresh dispatch artifact recorded BLAKE3 `2955cd25cf7ad40509d66ccf5906b0c14ca2ca43db515de5fa0b2e85d3d3b9c1` for the exact corrected 12,759-byte command routing source. Its fresh app artifact recorded `847f3c8074b296692dfd388bfe631b4f94b78cc3937a6091f70ef1f9c46672ea` for a 95,405-byte body. The latter retained body adds three TimeTravel residue-diagnostic lines to the original corrected app source and keeps the same lease logic. These independent physical-body hashes match rustc dep-info directly. The canonical retry can consume the fix in the held lane, without interrupting its dependency reuse.
+
+A private governed three-pane probe now follows this exact generation and uses the captured `1053-energy-site.log` site on port 8826. Its input gate waits for the generation's transpiled core. Its output and readiness marker are `🗑️generated/1241-w0-recapture-demonstrator.log` and `🗑️generated/1241-w0-recapture-ready`.

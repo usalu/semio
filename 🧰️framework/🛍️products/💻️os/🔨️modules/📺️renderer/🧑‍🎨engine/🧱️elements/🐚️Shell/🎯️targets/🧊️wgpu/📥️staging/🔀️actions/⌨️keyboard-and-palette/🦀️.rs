@@ -22,6 +22,9 @@ impl<'ctx> ActionsCtx<'ctx> {
         if std::mem::take(&mut self.prefs.pending_theme_import) {
             self.run_theme_import_request().await;
         }
+        if let Some(import) = self.prefs.pending_icon_import.take() {
+            self.run_icon_import_request(import).await;
+        }
         for _ in 0..SHELL_DEFERRED_CHAIN_ROUNDS {
             let file_opens = std::mem::take(&mut self.opening.pending_file_opens);
             if file_opens.is_empty() {

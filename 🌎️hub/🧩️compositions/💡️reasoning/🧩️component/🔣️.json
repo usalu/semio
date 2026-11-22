@@ -5001,18 +5001,12 @@
         "namedLayouts": [],
         "defaultLayout": {
           "root": {
-            "kind": "row",
+            "kind": "stack",
             "children": [
               {
-                "kind": "stack",
-                "size": 100.0,
-                "children": [
-                  {
-                    "kind": "window",
-                    "windowKindId": "reasoning-wires-composite",
-                    "title": "Canvas"
-                  }
-                ]
+                "kind": "window",
+                "windowKindId": "reasoning-wires-composite",
+                "title": "Canvas"
               }
             ]
           }
@@ -6000,18 +5994,12 @@
         "namedLayouts": [],
         "defaultLayout": {
           "root": {
-            "kind": "row",
+            "kind": "stack",
             "children": [
               {
-                "kind": "stack",
-                "size": 100.0,
-                "children": [
-                  {
-                    "kind": "window",
-                    "windowKindId": "reasoning-wires-view-composite",
-                    "title": "Canvas"
-                  }
-                ]
+                "kind": "window",
+                "windowKindId": "reasoning-wires-view-composite",
+                "title": "Canvas"
               }
             ]
           }

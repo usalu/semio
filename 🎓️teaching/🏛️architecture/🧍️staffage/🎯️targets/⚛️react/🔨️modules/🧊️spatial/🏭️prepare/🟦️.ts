@@ -29,8 +29,9 @@ const CAPACITY = 3;
 const prepared = new WeakMap<Asset, Map<string, ModelDocument>>();
 
 /** 🧾️ The options of a model that do not name a pose or clip: the analytic settings (environment, thermal span, quantities, theme) of a request. */
-export function analyticOptionsOf(request: Pick<SpatialRequest, "environment" | "thermalQuantity" | "forceQuantity" | "range" | "theme">): Pick<AssetModelOptions, "environment" | "thermalSpanK" | "thermalQuantity" | "forceQuantity" | "theme"> {
+export function analyticOptionsOf(request: Pick<SpatialRequest, "environment" | "thermalQuantity" | "forceQuantity" | "range" | "theme" | "flow">): Pick<AssetModelOptions, "environment" | "thermalSpanK" | "thermalQuantity" | "forceQuantity" | "theme" | "emitterMarkers"> {
   return {
+    ...((request.flow?.length ?? 0) > 0 ? { emitterMarkers: false } : {}),
     ...(request.environment === undefined ? {} : { environment: request.environment }),
     ...(request.thermalQuantity === undefined ? {} : { thermalQuantity: request.thermalQuantity }),
     ...(request.forceQuantity === undefined ? {} : { forceQuantity: request.forceQuantity }),

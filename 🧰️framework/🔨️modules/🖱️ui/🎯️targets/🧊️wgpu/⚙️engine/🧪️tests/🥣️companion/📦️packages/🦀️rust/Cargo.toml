@@ -48,7 +48,6 @@ semio-ui-wgpu-mounted-layout = { path = "../../../../../📌️mounted_layout/�
 semio-ui-wgpu-paint = { path = "../../../../../🖌️paint/📦️packages/🦀️rust", features = ["testkit"] }
 semio-ui-wgpu-paint-reference = { path = "../../../../../🖌️paint/🔬️reference/📦️packages/🦀️rust" }
 semio-ui-wgpu-widget-kit = { path = "../../../../../🪀️widgets/🧰️kit/📦️packages/🦀️rust" }
-semio-ui-wgpu-widgets = { path = "../../../../../🪀️widgets/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../🌱️value/📦️packages/🦀️rust" }
 semio-framework-value-testing-allocator = { path = "../../../../../../../../🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }
 serde_json = "1.0.140"

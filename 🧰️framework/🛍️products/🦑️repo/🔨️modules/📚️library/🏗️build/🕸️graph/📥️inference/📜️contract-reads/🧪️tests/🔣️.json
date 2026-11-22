@@ -1,0 +1,19 @@
+{
+  "root": "own/a",
+  "owner": "own/a",
+  "contracts": {
+    "gen-a": { "ownership": "owned", "ownerPath": "own/a", "target": "pa:generate", "description": "mine", "outputRoots": [{ "path": "own/a/out", "inclusion": "ignored" }] },
+    "gen-b": { "ownership": "owned", "ownerPath": "own/b", "target": "pb:generate", "description": "unrelated", "outputRoots": [{ "path": "own/b/out", "inclusion": "ignored" }] },
+    "gen-c": { "ownership": "owned", "ownerPath": "own/c", "target": "pc:generate", "description": "unrelated too", "outputRoots": [{ "path": "own/c/out", "inclusion": "ignored", "producer": { "ownerPath": "own/c", "target": "pc:other" } }] }
+  },
+  "edits": [
+    { "name": "a description of an unrelated contract", "id": "gen-b", "field": "description", "value": "changed" },
+    { "name": "the target name of an unrelated contract", "id": "gen-b", "field": "target", "value": "pb:renamed" },
+    { "name": "the output path of an unrelated contract", "id": "gen-b", "field": "outputRoots", "value": [{ "path": "own/b/elsewhere", "inclusion": "ignored" }] },
+    { "name": "an unrelated contract starts to produce for the owner", "id": "gen-b", "field": "ownerPath", "value": "own/a" },
+    { "name": "an unrelated output gets the owner as producer", "id": "gen-c", "field": "outputRoots", "value": [{ "path": "own/c/out", "inclusion": "ignored", "producer": { "ownerPath": "own/a", "target": "pa:other" } }] },
+    { "name": "the description of the own contract", "id": "gen-a", "field": "description", "value": "edited" },
+    { "name": "the output path of the own contract", "id": "gen-a", "field": "outputRoots", "value": [{ "path": "own/a/new", "inclusion": "ignored" }] },
+    { "name": "the ownership of an unrelated contract", "id": "gen-b", "field": "ownership", "value": "shared" }
+  ]
+}

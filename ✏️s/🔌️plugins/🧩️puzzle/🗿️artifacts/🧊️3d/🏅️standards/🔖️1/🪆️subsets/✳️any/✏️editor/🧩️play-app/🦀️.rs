@@ -14,6 +14,20 @@ use semio_s_artifact_puzzle_3d_editor_panels::inspection;
 use semio_s_artifact_puzzle_3d_editor_window as window_ownership;
 use semio_s_artifact_puzzle_3d_editor_presence as presence;
 use semio_s_artifact_puzzle_3d_editor_panels::settings as settings_panel;
+use semio_framework_value::retained_clone::RetainedCloneBirthDemand;
+use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress, RetirementDemand, ValueError};
+use store::os_store::document_store_owners::{self, DocumentStoreOwners, DocumentStoreOwnersAdmissionError};
+use std::sync::Arc;
+
+type Puzzle3dHistoryPreparation = store::os_store::ColdMutationApplyFactory<Puzzle3dPlaySnapshot, Puzzle3dMutation>;
+
+fn puzzle3d_document_semantic_birth() -> RetainedCloneBirthDemand {
+    RetainedCloneBirthDemand {
+        capacity_bytes: semio_framework_value::factory_arc_birth_bytes::<Puzzle3dArtifactStorePreparationFactory>()
+            + semio_framework_value::factory_arc_birth_bytes::<Puzzle3dHistoryPreparation>(),
+        depth: 1,
+    }
+}
 
 /// 🧩️ The puzzle-3d play editor: the `ArtifactEditor` the framework mounts as `EditorApp<Puzzle3dPlayApp>`. It holds no
 /// state of its own — every call checks the document instance's [`Puzzle3dSession`] out of the session registry, and
@@ -67,6 +81,27 @@ impl ArtifactEditor for Puzzle3dPlayApp {
 
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
         Some(std::sync::Arc::new(Puzzle3dArtifactStorePreparationFactory))
+    }
+
+    fn document_store_owners_source_demands() -> Result<RetirementDemand, ValueError> {
+        let mut demand = document_store_owners::bounded_artifact_store_owners_source_demands::<Self::Snapshot, Self::Mutation>()?;
+        let semantics = puzzle3d_document_semantic_birth();
+        demand.capacity_bytes = demand.capacity_bytes.checked_add(semantics.capacity_bytes)
+            .ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "Puzzle3d document catalog capacity overflows"))?;
+        demand.depth = demand.depth.max(semantics.depth);
+        Ok(demand)
+    }
+
+    fn build_document_store_owners(grant: RetainedCloneGrant) -> Option<Result<(DocumentStoreOwners<Self::Snapshot, Self::Mutation>, RetainedCloneProgress), DocumentStoreOwnersAdmissionError<Self::Snapshot, Self::Mutation>>> {
+        Some(document_store_owners::bounded_artifact_store_owners_with_semantic_preparations(grant, puzzle3d_document_semantic_birth(), || {
+            (Arc::new(Puzzle3dArtifactStorePreparationFactory), Arc::new(Puzzle3dHistoryPreparation::default()))
+        }).map(|(mut owners, progress)| {
+            owners.operation_wire.source = semio_s_artifact_puzzle_3d_mutations::io::binary::mutations::prepared_operation_wire_source;
+            owners.operation_wire = owners.operation_wire
+                .with_original_target(Self::Mutation::original_conflict_target)
+                .with_original_binary_receiving();
+            (owners, progress)
+        }))
     }
 
     fn build_document_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
@@ -279,8 +314,8 @@ impl ArtifactEditor for Puzzle3dPlayApp {
         puzzle3d_cut_operations(doc, interaction)
     }
 
-    fn paste_operations(_doc: &ArtifactView<'_, Puzzle3dPlaySnapshot>, fragment: &ClipboardFragment, placement: &PastePlacement) -> Result<Vec<Puzzle3dMutation>, ClipboardError> {
-        puzzle3d_paste_operations(fragment, placement)
+    fn paste_operations(doc: &ArtifactView<'_, Puzzle3dPlaySnapshot>, fragment: &ClipboardFragment, placement: &PastePlacement) -> Result<Vec<Puzzle3dMutation>, ClipboardError> {
+        puzzle3d_paste_operations(doc.snapshot.typed(), fragment, placement)
     }
 
     fn build_reserved_tool_job(request:&mut Option<ArtifactReservedToolJobRequest<EditorApp<Self>>>,body:&mut Option<Box<dyn semio_plugin::ArtifactReservedJob+Send>>,construction:&mut semio_framework_job::OriginalConstructionAdmission,cx:&mut StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{

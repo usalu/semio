@@ -1,0 +1,12 @@
+case	edges	cycle
+empty		0
+chain	a>b;b>c	0
+diamond	a>b;a>c;b>d;c>d	0
+shared-parent	a>c;b>c	0
+parallel	a>b;a>b;b>c	0
+cycle-two	a>b;b>a	1
+cycle-three	a>b;b>c;c>a	1
+self	a>a	1
+branch-cycle	a>b;a>c;c>d;d>c	1
+disconnected-cycle	a>b;c>d;d>c	1
+long-diamond	a>b;a>c;b>d;c>d;d>e;d>f;e>g;f>g	0

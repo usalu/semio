@@ -16,7 +16,6 @@ use semio_plugin::ArtifactViewer;
 use semio_plugin::ConfigView;
 use {semio_framework_artifact_reference::Dialect};
 use semio_plugin::Fault;
-use semio_ui_locale::Label;
 use semio_plugin::NoConfig;
 use semio_plugin::NoConfigMutation;
 use semio_plugin::NoPresence;
@@ -36,18 +35,45 @@ use semio_plugin::Viewer;
 pub const XLSX_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.xlsx", standard: StandardId("ecma-376"), subset: SubsetId("*") };
 //#endregion 🔖️Dialect
 
+//#region 🔖️Labels
+semio_ui_locale::app_labels! {
+    /// 🗣️ Complete multilingual label set of the XLSX viewer surface; the grid axis names and the unknown-body fallback resolve here instead of being picked by locale match.
+    pub struct XlsxViewerLabels {
+        row: native_en "Row", native_de "Zeile", reuse_en "Row", reuse_de "Zeile";
+        column: native_en "Column", native_de "Spalte", reuse_en "Column", reuse_de "Spalte";
+        unknown_body: native_en "Unknown body: {body}", native_de "Unbekannter Bereich: {body}", reuse_en "Unknown body: {body}", reuse_de "Unbekannter Bereich: {body}";
+    }
+}
+
+/// 🗣️ Resolves the viewer label set for the session locale in the native terminology.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn xlsx_viewer_labels(locale: semio_ui_locale::Locale) -> &'static XlsxViewerLabels {
+    <XlsxViewerLabels as semio_ui_locale::AppLabels>::labels(locale, semio_ui_locale::Terminology::Native)
+}
+//#endregion 🔖️Labels
+
 //#region 🔖️TableProjection
+/// 🔢️ Read-only twin of the editor's number display: the locale's decimal separator, canonical value untouched.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn format_xlsx_number(number: f64, locale: semio_ui_locale::Locale) -> String {
+    let text = format!("{number}");
+    match locale {
+        semio_ui_locale::Locale::De => text.replace('.', ","),
+        semio_ui_locale::Locale::En => text,
+    }
+}
+
 /// 🔎 Read-only twin of the sibling mutation-capable surface's own cell-value renderer.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn render_xlsx_cell_value(value: &XlsxCellValue, shared_strings: &[String]) -> String {
+pub(crate) fn render_xlsx_cell_value(value: &XlsxCellValue, shared_strings: &[String], locale: semio_ui_locale::Locale) -> String {
     match value {
-        XlsxCellValue::Number(n) => format!("{n}"),
+        XlsxCellValue::Number(n) => format_xlsx_number(*n, locale),
         XlsxCellValue::SharedString(index) => shared_strings.get(*index).cloned().unwrap_or_else(|| format!("#{index}")),
         XlsxCellValue::InlineString(text) => text.clone(),
         XlsxCellValue::Boolean(flag) => flag.to_string(),
         XlsxCellValue::Error(error) => error.clone(),
         XlsxCellValue::Formula { expr, cached } => match cached {
-            Some(cached) => format!("={expr} ({})", render_xlsx_cell_value(cached, shared_strings)),
+            Some(cached) => format!("={expr} ({})", render_xlsx_cell_value(cached, shared_strings, locale)),
             None => format!("={expr}"),
         },
         XlsxCellValue::Empty => String::new(),
@@ -111,7 +137,7 @@ impl ArtifactViewer for XlsxViewer {
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         match body_key {
             main::BODY_KEY => main::render(doc.snapshot, view_state.locale, &semio_plugin::TreeWindows::for_body(view_state, main::BODY_KEY)).map(semio_plugin::built_to_component_tree),
-            _ => semio_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
+            _ => semio_plugin::built_text_to_component_tree(xlsx_viewer_labels(view_state.locale).unknown_body.fill(&[("body", body_key)])),
         }
     }
 }

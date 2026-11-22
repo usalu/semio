@@ -79,14 +79,24 @@ pub fn admit_payload(payload: &str) -> Result<(), Fault> {
 
 /// 📥️ Admits the whole payload and replaces the document with what it holds.
 pub fn emit(payload: &ImportDocument, doc: &ArtifactView<'_, Generation3dSnapshot>, cfg: &ConfigView<'_, Generation3dConfig>) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
+    emit_with_replacement_servability(payload, doc, cfg, |_| false).map(|(emit, _)| emit)
+}
+
+/// 🪟️ Describes the decoded replacement's graph while it is still owned by the import.
+pub fn emit_with_replacement_servability(
+    payload: &ImportDocument,
+    doc: &ArtifactView<'_, Generation3dSnapshot>,
+    cfg: &ConfigView<'_, Generation3dConfig>,
+    is_servable: impl FnOnce(&Generation3dSnapshot) -> bool,
+) -> Result<(Emit<Generation3dMutation, Generation3dConfigMutation>, Option<bool>), Fault> {
     admit_payload(&payload.payload)?;
     match (&payload.widget_id, &payload.channel, &payload.texture_id) {
-        (None, None, None) => apply_complete_payload(&payload.name, &payload.payload, doc, cfg),
+        (None, None, None) => apply_complete_payload(&payload.name, &payload.payload, cfg, is_servable),
         (Some(widget), Some(channel), Some(texture)) => {
             let (id, channel, text) = semio_s_artifact_procedural_3d_set_widget_input::mesh_source_text(&doc.snapshot.host_snapshot, widget, channel).map_err(Fault::from)?;
             let edited = semio_s_artifact_procedural_3d_set_widget_input::import_mesh_texture(&text, texture, &payload.payload).map_err(Fault::from)?;
             let artifact_mutations = if edited == text { Vec::new() } else { vec![semio_s_artifact_procedural_3d_mut_widgets::change_widget_input::change_widget_input(&id, &channel, semio_s_artifact_procedural_3d_mut_widgets::change_widget_input::WidgetInputValue::Text(edited))] };
-            Ok(Emit { artifact_mutations, ..Default::default() })
+            Ok((Emit { artifact_mutations, ..Default::default() }, None))
         }
         _ => Err(Fault::from("Choose a complete texture target")),
     }
@@ -99,17 +109,18 @@ pub fn emit(payload: &ImportDocument, doc: &ArtifactView<'_, Generation3dSnapsho
 /// 26/09/09/PROCEDURAL-3D-END-TO-END removed from the leaves themselves
 /// (`📓️io-codecs-2026-09-09.md` §1), which a silent `Ok(Emit::default())` here would have
 /// reintroduced one layer up.
-pub fn apply_complete_payload(
+fn apply_complete_payload(
     name: &str,
     payload: &str,
-    _doc: &ArtifactView<'_, Generation3dSnapshot>,
     cfg: &ConfigView<'_, Generation3dConfig>,
-) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
+    is_servable: impl FnOnce(&Generation3dSnapshot) -> bool,
+) -> Result<(Emit<Generation3dMutation, Generation3dConfigMutation>, Option<bool>), Fault> {
     let imported = document_io::import_document(name, payload).map_err(|error| import_fault("generation3d.io.import", error.to_string()))?;
+    let servable = is_servable(&imported);
     let effect = semio_s_artifact_procedural_3d_editor_commands::set_active_example::reset_generation3d_document_effect(&imported);
     let config_mutations = config_load_mutations(cfg.snapshot, &imported.host_snapshot.camera, imported.generation.selected_generation_id.clone());
     imported.retire_cold();
-    Ok(Emit { effects: vec![effect], config_mutations, ..Default::default() })
+    Ok((Emit { effects: vec![effect], config_mutations, ..Default::default() }, Some(servable)))
 }
 
 /// 🧵️ The session-free entry point: the import needs no evaluation session, only the document and its config.

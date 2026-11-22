@@ -1,0 +1,7 @@
+# Pigeon wing articulation at 1:200
+
+Installed catalog SHA-256 `6f630afcea1f1dc38d948aa02882ac4b450a18c3b4f179781d2ace0c26da4f71`. At `489afa4efa`, the 1:200 drawings, primary feather masses and shoulder feathers all followed the forearm. The folded silhouette passed its default checks, but in the half-open pose the wing tips fell 346 mm short of their finest-scale positions. In the takeoff sequence the maximum three-dimensional tip displacement was 400 mm. The structural shafts already followed the hands.
+
+The two primary fans now follow the hands, the shoulder feathers follow the humeri and the coverts follow the forearms. The sparser 1:200 longitudinal sections keep the physical feather ends. Surface-temperature references follow the same posed masses. The paper views retain separate feather groups with a 0.20 mm body pen. Across all 23 poses, both wing tips now coincide with the finest endpoints in each scale. Default schema, semantic and office print checks passed, as did all 52 volume-rule checks. The independent GLB contains 12 scenes and 2,081,468 bytes with zero findings. The coarse head remains plain, and toes reduce to strokes.
+
+[Author](pigeon-flight-fit.ts) · [Language-neutral cases](pigeon-flight-case.json) · [Pose check](pigeon-flight-check.ts) · [Half-open wings](🗑️generated/living-current-views/pigeon-wings-half-open-all-presentation-shaded-temperature-6f630afcea.png) · [Liftoff](🗑️generated/living-current-views/pigeon-takeoff-liftoff-all-presentation-shaded-temperature-6f630afcea.png)

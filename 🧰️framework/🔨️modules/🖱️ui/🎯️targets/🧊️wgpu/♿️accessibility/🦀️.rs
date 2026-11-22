@@ -63,6 +63,8 @@ fn record_is_row(record: &ui_contract::UiNodeRecord) -> bool {
 const SELECT_LISTBOX_KEY_SUFFIX: &str = "::listbox";
 const SELECT_OPTION_KEY_INFIX: &str = "::option::";
 const SLIDER_EDITOR_KEY_SUFFIX: &str = "::editor";
+
+const INPUT_REFUSAL_KEY_SUFFIX: &str = "::refusal";
 pub const ROW_ACTION_KEY_INFIX: &str = "::row-action::";
 
 pub fn select_accessibility_option_value(record: &ui_contract::UiNodeRecord, key: &str) -> Option<String> {
@@ -268,6 +270,7 @@ pub fn accessibility_projection(tree: &UiTree) -> Vec<AccessibilityProjectionNod
             });
         }
         let mut slider_readout = None;
+        let mut refusal_alert = None;
         if node.label.is_none()
             && matches!(
                 record.component,
@@ -340,6 +343,7 @@ pub fn accessibility_projection(tree: &UiTree) -> Vec<AccessibilityProjectionNod
                     _ => {}
                 }
                 node.invalid = arena_node.state.number_refusal.is_some() && arena_node.state.edit.is_some();
+                refusal_alert = arena_node.state.number_refusal.clone().filter(|refusal| !refusal.is_empty() && arena_node.state.edit.is_some() && matches!(arena_node.spec.0, semio_ui_declaration::ui::UiNode::Input(_)));
                 if let Some(refusal) = arena_node.state.number_refusal.as_deref().filter(|refusal| !refusal.is_empty() && arena_node.state.edit.is_some()) {
                     node.description = Some(node.description.take().map_or_else(|| refusal.to_string(), |description| format!("{refusal} · {description}")));
                 }
@@ -361,6 +365,11 @@ pub fn accessibility_projection(tree: &UiTree) -> Vec<AccessibilityProjectionNod
             node.expanded = None;
         }
         projection.push(node.clone());
+        if let Some(refusal) = refusal_alert.filter(|_| projection.len() < UI_DOCUMENT_NODES) {
+            let mut alert = ui_contract::AccessibilityProjectionNode { node_id: node.node_id, key: format!("{}{INPUT_REFUSAL_KEY_SUFFIX}", record.key.as_str()), role: "alert".to_string(), depth: node.depth + 1, label: Some(refusal), live: "assertive".to_string(), rect: node.rect.map(|[x, y, width, height]| [x, y + height, width, height]), ..Default::default() };
+            alert.hidden = node.hidden;
+            projection.push(alert);
+        }
         if let Some(readout) = slider_readout {
             if projection.len() < UI_DOCUMENT_NODES {
                 let mut editor = node.clone();
@@ -426,7 +435,44 @@ pub fn accessibility_projection(tree: &UiTree) -> Vec<AccessibilityProjectionNod
             }
         }
     }
+    tree_item_levels(&mut projection);
+    roving_tab_stops(&mut projection);
     projection
+}
+
+/// 🪜️ A tree row's `aria-level` is its nesting among tree rows: a section is a heading of the tree, never a level, so the rows of a section
+/// start at level 1 (the contract's `depth + 1` also counts every container the row sits in).
+fn tree_item_levels(projection: &mut [AccessibilityProjectionNode]) {
+    let mut ancestors: Vec<usize> = Vec::new();
+    for node in projection.iter_mut() {
+        while ancestors.last().is_some_and(|depth| *depth >= node.depth) {
+            ancestors.pop();
+        }
+        if node.role == "treeitem" {
+            node.level = Some(ancestors.len() + 1);
+            ancestors.push(node.depth);
+        }
+    }
+}
+
+/// 🎯️ Leaves ONE tab stop in each tree, as React's `applyRovingTabindexV1` does: the focused row, else the first selected row, else the first row.
+/// Every other `treeitem` of that tree stays focusable — a key or a click reaches it — but is not `tabbable`.
+fn roving_tab_stops(projection: &mut [AccessibilityProjectionNode]) {
+    let mut start = 0;
+    while start < projection.len() {
+        if projection[start].role != "tree" {
+            start += 1;
+            continue;
+        }
+        let depth = projection[start].depth;
+        let end = (start + 1..projection.len()).find(|&index| projection[index].depth <= depth).unwrap_or(projection.len());
+        let rows: Vec<usize> = (start + 1..end).filter(|&index| projection[index].role == "treeitem" && projection[index].focusable && !projection[index].hidden).collect();
+        let stop = rows.iter().copied().find(|&index| projection[index].focused).or_else(|| rows.iter().copied().find(|&index| projection[index].selected == Some(true))).or_else(|| rows.first().copied());
+        for &index in &rows {
+            projection[index].tabbable = Some(index) == stop;
+        }
+        start = end;
+    }
 }
 
 /// 🏷️ Every node a reader can actually reach and name — the subset an ARIA mirror must expose, and
@@ -444,3 +490,23 @@ mod retained_section_collapse_tests;
 #[cfg(test)]
 #[path = "../../../🧪️tests/🔬️targets-wgpu-accessibility-projection/🦀️.rs"]
 mod tests;
+
+/// 🔒️ React's modal isolation for assistive tech (`aria-hidden` on the siblings of an open `Dialog`): in the flat, depth-ordered `projection`, every node outside the subtree of the modal `modal_node_id` and not one of its ancestors is hidden. Without that node in the projection nothing changes.
+pub fn hide_outside_modal(projection: &mut [AccessibilityProjectionNode], modal_node_id: u64) {
+    let Some(modal) = projection.iter().position(|node| node.node_id == modal_node_id) else { return };
+    let depth = projection[modal].depth;
+    let end = projection[modal + 1..].iter().position(|node| node.depth <= depth).map_or(projection.len(), |offset| modal + 1 + offset);
+    let mut ancestors = Vec::new();
+    let mut shallowest = depth;
+    for index in (0..modal).rev() {
+        if projection[index].depth < shallowest {
+            shallowest = projection[index].depth;
+            ancestors.push(index);
+        }
+    }
+    for (index, node) in projection.iter_mut().enumerate() {
+        if !(modal..end).contains(&index) && !ancestors.contains(&index) {
+            node.hidden = true;
+        }
+    }
+}

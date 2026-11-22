@@ -1,7 +1,7 @@
 //! 👁️ GIS 3D play app — the `view` mode: a single full-width terrain window (read-mostly first pass).
 
 use crate::editor::gis3d::modes::view::windows::terrain;
-use semio_plugin::create_default_layout;
+use semio_plugin::{create_default_layout, Axis};
 use semio_ui_locale::LocalizedLabel;
 use semio_plugin::ModeDefinition;
 use semio_plugin::WindowLayout;
@@ -14,7 +14,7 @@ pub fn definition() -> ModeDefinition {
 }
 
 pub fn layout() -> WindowLayout {
-    create_default_layout(&[terrain::GIS3D_PLAY_WINDOW_MAIN.into()], "row", Some(&[100.0]), Some(&["Terrain".into()]))
+    create_default_layout(&[terrain::GIS3D_PLAY_WINDOW_MAIN.into()], Axis::Horizontal, Some(&[1.0]), Some(&["Terrain".into()]))
 }
 //#endregion 🔖️Definition
 

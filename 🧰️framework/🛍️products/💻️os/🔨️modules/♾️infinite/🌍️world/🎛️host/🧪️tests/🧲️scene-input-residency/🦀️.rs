@@ -1,15 +1,15 @@
 //! 🧪️ host tests (🧲️scene-input-residency): compiled against the `testkit` surface of the world crates.
 
-use semio_os_infinite_world_components::World3dRelocateSession;
+use semio_os_infinite_world_components::{World3dRelocatePlane, World3dRelocateSession};
 use semio_os_infinite_world_scene::{reserve_world3d_asset_request, retire_cancelled_world3d_asset_step, return_world3d_asset, take_next_world3d_asset, world3d_asset_cancellation_requested, WorldAssetRequestKind};
 use semio_os_infinite_world_bridge::sync_world3d_scene_document_lanes;
-use semio_os_infinite_world_interaction::{apply_reference_image_bytes, world3d_catalogue_drop_origin, world3d_end_relocate_drag, world3d_update_catalogue_drop_preview, world3d_update_relocate_drag};
+use semio_os_infinite_world_interaction::{apply_reference_image_bytes, world3d_begin_relocate_drag, world3d_cancel_relocate_drag, world3d_catalogue_drop_origin, world3d_end_relocate_drag, world3d_update_catalogue_drop_preview, world3d_update_relocate_drag};
 use semio_os_infinite_world_host::World3dState;
 use semio_framework_test_fixtures::fixture_text;
-use ui_scene::math::{Camera3d, CameraProjection3d, OrbitController, Vec3};
+use ui_scene::math::{Camera3d, CameraProjection3d, Instance3d, Mat4, OrbitController, SceneDraw3d, Vec3};
 use semio_ui_theme::geometry::Rect;
 use semio_ui_theme::Rgba;
-use semio_ui_viewport::{Viewport3dProjectionMode, Viewport3dProjectionOrientation, Viewport3dProjectionSpec};
+use semio_ui_viewport::{Viewport3dOrthographicView, Viewport3dProjectionMode, Viewport3dProjectionOrientation, Viewport3dProjectionSpec};
 use serde_json::json;
 
 /// 📖️ Reads one test input at run time (relative to the package manifest) so it does not count as an embedded compile input.
@@ -87,15 +87,83 @@ fn pointer_relocate_and_catalogue_drop_honor_the_document_snap_boolean() {
     for (enabled, expected_key) in [(false, "disabled"), (true, "enabled")] {
         let expected = point(&fixture["snap"][expected_key]);
         state.scene.lod.grid_snap_enabled = enabled;
-        state.gumball.relocate = Some(World3dRelocateSession { object_id: "object".into(), origin: [0.0; 3], from: [0.0; 3] });
+        state.gumball.relocate = Some(World3dRelocateSession { object_id: "object".into(), origin: [0.0; 3], from: [0.0; 3], plane: World3dRelocatePlane::Z, mesh_key: "mesh".into(), preview_model: Mat4::identity() });
         assert!(world3d_update_relocate_drag(&mut state.session, &mut state.camera, &mut state.gumball, &mut state.scene, x, y));
-        assert_point(state.gumball.catalogue_drop_preview.as_ref().expect("relocate ghost").origin, expected);
+        assert_point(translation(state.gumball.relocate.as_ref().expect("relocate ghost").preview_model), expected);
         let (_, committed) = world3d_end_relocate_drag(&mut state.session, &mut state.camera, &mut state.gumball, &mut state.scene, Some((x, y))).expect("relocate commit args");
         assert_point(committed, expected);
 
         world3d_update_catalogue_drop_preview(&mut state.session, &mut state.camera, &mut state.gumball, &mut state.scene, x, y, "catalogue-object", None);
         assert_point(state.gumball.catalogue_drop_preview.as_ref().expect("catalogue ghost").origin, expected);
         assert_point(world3d_catalogue_drop_origin(&state.session, &state.camera, &state.scene, x, y).expect("catalogue drop args"), expected);
+    }
+}
+
+fn translation(model: Mat4) -> [f64; 3] {
+    let [x, y, z, _] = model.cols[3];
+    [f64::from(x), f64::from(y), f64::from(z)]
+}
+
+#[test]
+fn cardinal_relocate_retains_the_grabbed_plane_and_model_through_release_or_cancel() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
+    let relocate: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🧪️tests/🧫️fixtures/🚚️relocate-gesture.json")).expect("shared relocate fixture");
+    let rotation = serde_json::from_value(relocate["rotation"].clone()).expect("rotation quaternion");
+    let scale = serde_json::from_value(relocate["scale"].clone()).expect("nonuniform scale");
+    for row in relocate["cardinal"].as_array().expect("cardinal views") {
+        let view = match row["view"].as_str() {
+            Some("front") => Viewport3dOrthographicView::Front,
+            Some("right") => Viewport3dOrthographicView::Right,
+            _ => panic!("unexpected relocate fixture view"),
+        };
+        let [x, y, z] = point(&row["eye"]).map(|value| value as f32);
+        let mut state = World3dState::new("surface".into(), "controller".into());
+        state.session.bounds = Rect { x: 10.0, y: 20.0, w: 400.0, h: 400.0 };
+        state.session.active_utility = "worldRelocate".into();
+        state.camera.projection_spec = Viewport3dProjectionSpec { mode: Viewport3dProjectionMode::Orthographic {}, orientation: Viewport3dProjectionOrientation::Cardinal { view } };
+        state.camera.orbit = OrbitController::from_camera(&Camera3d {
+            position: Vec3::new(x, y, z), target: Vec3::ZERO, up: Vec3::new(0.0, 0.0, 1.0), fov_y: 45.0_f32.to_radians(),
+            near: ui_scene::math::WORLD_ORBIT_CAMERA_NEAR, far: ui_scene::math::WORLD_ORBIT_CAMERA_MIN_FAR,
+            projection: CameraProjection3d::Orthographic, zoom: 20.0,
+        });
+        state.scene.lod.grid_snap_enabled = row["snap"].as_bool().expect("snap policy");
+        state.scene.lod.grid_factor = 1.0;
+        let model = Instance3d::model_from_trs(point(&row["origin"]).map(|value| value as f32), rotation, scale);
+        assert!(state.scene.draws.push(SceneDraw3d { mesh_key: "source-mesh".into(), mesh_version: 1, instances: vec![
+            Instance3d { component_source: None, id: "object".into(), model, color: [1.0; 4], selected: false, hovered: false, material: Default::default() },
+        ], shadow_role: Default::default() }).is_ok());
+        state.selection.local_hover_id = Some("object".into());
+        let (grab_x, grab_y) = pointer_for(&state, point(&row["grab"]));
+        let (move_x, move_y) = pointer_for(&state, point(&row["preview"]));
+        let (release_x, release_y) = pointer_for(&state, point(&row["release"]));
+        let projection = state.camera.projection_spec;
+        for commit in [false, true] {
+            state.camera.projection_spec = projection;
+            assert!(world3d_begin_relocate_drag(&mut state.session, &mut state.camera, &mut state.selection, &mut state.gumball, &mut state.scene, grab_x, grab_y));
+            let grabbed = state.gumball.relocate.as_ref().expect("captured relocate source");
+            assert_eq!(grabbed.plane.axis(), row["axis"].as_u64().unwrap() as usize);
+            assert_eq!(grabbed.preview_model.cols, model.cols);
+            let mesh_storage = grabbed.mesh_key.as_ptr();
+            let object_storage = grabbed.object_id.as_ptr();
+            state.camera.projection_spec.orientation = Viewport3dProjectionOrientation::Free {};
+            assert!(world3d_update_relocate_drag(&mut state.session, &mut state.camera, &mut state.gumball, &mut state.scene, move_x, move_y));
+            let preview = state.gumball.relocate.as_ref().expect("translated preview");
+            assert_eq!(preview.mesh_key, "source-mesh");
+            assert_eq!(preview.mesh_key.as_ptr(), mesh_storage);
+            assert_eq!(preview.object_id.as_ptr(), object_storage);
+            assert_eq!(preview.preview_model.cols[..3], model.cols[..3]);
+            assert_point(translation(preview.preview_model), point(&row["expectedPreview"]));
+            if commit {
+                let (object, released) = world3d_end_relocate_drag(&mut state.session, &mut state.camera, &mut state.gumball, &mut state.scene, Some((release_x, release_y))).expect("release sample commits");
+                assert_eq!(object, "object");
+                assert_point(released, point(&row["expectedRelease"]));
+            } else {
+                assert!(world3d_cancel_relocate_drag(&mut state.session, &mut state.camera, &mut state.gumball, &mut state.scene));
+                assert!(world3d_end_relocate_drag(&mut state.session, &mut state.camera, &mut state.gumball, &mut state.scene, Some((release_x, release_y))).is_none());
+            }
+            assert!(state.gumball.relocate.is_none());
+            assert_eq!(state.scene.draws[0].instances[0].model.cols, model.cols);
+        }
     }
 }
 

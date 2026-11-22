@@ -978,31 +978,31 @@
       "effectiveBytes": 7516192768,
       "tokens": 2,
       "parallelism": 8,
-      "bytes": 6710886400
+      "bytes": 3288334336
     },
     {
       "effectiveBytes": 8589934592,
       "tokens": 1,
       "parallelism": 2,
-      "bytes": 7516192768
+      "bytes": 5368709120
     },
     {
       "effectiveBytes": 5368709120,
       "tokens": 1,
       "parallelism": 2,
-      "bytes": 5368709120
+      "bytes": 3355443200
     },
     {
       "effectiveBytes": 6442450944,
       "tokens": 1,
       "parallelism": 8,
-      "bytes": 6442450944
+      "bytes": 2214592512
     },
     {
       "effectiveBytes": 7516192769,
       "tokens": 1,
       "parallelism": 8,
-      "bytes": 6576668672
+      "bytes": 2583691264
     }
   ],
   "schedulerSelections": [

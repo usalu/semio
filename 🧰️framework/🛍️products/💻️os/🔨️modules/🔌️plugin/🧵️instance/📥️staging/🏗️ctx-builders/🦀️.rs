@@ -18,6 +18,7 @@ use store::{MemberFactory, Mutation, ReferenceSpaceMember};
 use protocol::OpText;
 use semio_plugin_reactor_app::PluginApp;
 use semio_plugin_instance_render::render_bundle::{RenderCtx, RenderRef};
+use semio_plugin_instance_members::MembersCtx;
 use semio_plugin_time_travel_turns::time_travel_bundle::{TimeTravelCtx, TimeTravelRef};
 use semio_plugin_time_travel::TimeTravelLedger;
 use semio_plugin_tool_run_turns::tool_run_bundle::{ToolRunCtx, ToolRunRef};
@@ -81,6 +82,10 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> VcsArtif
     #[doc(hidden)]
     pub fn ladder_ref(&self) -> LadderRef<'_, A, M, InstanceExtensions> {
         LadderRef { app: &self.app, stores: &self.stores, roster: &self.roster, ingress: &self.ingress, interaction: &self.interaction, history: &self.history, txn: &self.txn, child_composition: &self.child_composition, pending: &self.pending, tools: &self.tools, media: &self.media, ingest: &self.ingest, maintenance: &self.maintenance, close: &self.close, tool_runs: &self.tool_runs, time_travel: &self.time_travel, tool_machines: &self.tool_machines, extension: PhantomData }
+    }
+
+    pub(crate) fn members_ctx(&mut self) -> MembersCtx<'_, A, M, InstanceExtensions> {
+        MembersCtx { app: &mut self.app, mounted_policy: self.mounted_policy, stores: &mut self.stores, roster: &mut self.roster, ingress: &mut self.ingress, original_typing: &mut self.original_typing, original_emission: &mut self.original_emission, original_typed_command: &mut self.original_typed_command, original_typed_tag: &mut self.original_typed_tag, interaction: &mut self.interaction, history: &mut self.history, host_events: &mut self.host_events, txn: &mut self.txn, child_composition: &mut self.child_composition, pending: &mut self.pending, tools: &mut self.tools, media: &mut self.media, ingest: &mut self.ingest, maintenance: &mut self.maintenance, close: &mut self.close, tool_runs: &mut self.tool_runs, time_travel: &mut self.time_travel, tool_machines: &mut self.tool_machines, extension: PhantomData }
     }
 
     pub(crate) fn extension_ctx(&mut self) -> ExtensionCtx<'_, A, M, InstanceExtensions> {

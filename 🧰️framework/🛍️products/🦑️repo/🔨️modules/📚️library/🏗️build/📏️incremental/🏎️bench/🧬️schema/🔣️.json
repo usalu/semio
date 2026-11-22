@@ -27,7 +27,8 @@
           "graph",
           "cache",
           "concurrency",
-          "planning"
+          "planning",
+          "fleet"
         ],
         "order": [
           "cli-help",
@@ -37,7 +38,8 @@
           "graph",
           "cache",
           "concurrency",
-          "planning"
+          "planning",
+          "fleet"
         ],
         "metrics": {
           "cli-help": {
@@ -123,6 +125,23 @@
               "peakRssBytes"
             ],
             "memory": []
+          },
+          "fleet": {
+            "plain": [
+              "hitRatio",
+              "executedActions",
+              "divergentWrites",
+              "offloadMs",
+              "fallbackMs",
+              "offloadedUnits",
+              "capacityBreaches",
+              "reservedBytes",
+              "storeBytes",
+              "firstTaskMs",
+              "readyRatio",
+              "wallMs"
+            ],
+            "memory": []
           }
         },
         "units": {
@@ -145,7 +164,15 @@
           "swapBytes": "bytes",
           "availableBytes": "bytes",
           "oomKills": "count",
-          "storeBytes": "bytes"
+          "storeBytes": "bytes",
+          "divergentWrites": "count",
+          "offloadMs": "ms",
+          "fallbackMs": "ms",
+          "offloadedUnits": "count",
+          "capacityBreaches": "count",
+          "reservedBytes": "bytes",
+          "firstTaskMs": "ms",
+          "readyRatio": "ratio"
         },
         "statistics": [
           "min",
@@ -333,7 +360,10 @@
         },
         "history": {
           "name": "^([0-9]{8}T[0-9]{6}Z)-(.+)\\.json$",
-          "prefix": "history:"
+          "prefix": "history:",
+          "directory": "bench",
+          "partition": "diagnostics",
+          "keep": 64
         }
       }
     },
@@ -390,7 +420,8 @@
         "graph",
         "cache",
         "concurrency",
-        "planning"
+        "planning",
+        "fleet"
       ]
     },
     "Lane": {
@@ -420,7 +451,15 @@
         "swapBytes",
         "availableBytes",
         "oomKills",
-        "storeBytes"
+        "storeBytes",
+        "divergentWrites",
+        "offloadMs",
+        "fallbackMs",
+        "offloadedUnits",
+        "capacityBreaches",
+        "reservedBytes",
+        "firstTaskMs",
+        "readyRatio"
       ]
     },
     "Statistic": {
@@ -617,6 +656,9 @@
         },
         "peer": {
           "$ref": "#/definitions/TaskId"
+        },
+        "scenario": {
+          "$ref": "#/definitions/Id"
         }
       }
     },
@@ -1325,6 +1367,38 @@
         "storeBytes": {
           "type": "number",
           "minimum": 0
+        },
+        "divergentWrites": {
+          "type": "number",
+          "minimum": 0
+        },
+        "offloadMs": {
+          "type": "number",
+          "minimum": 0
+        },
+        "fallbackMs": {
+          "type": "number",
+          "minimum": 0
+        },
+        "offloadedUnits": {
+          "type": "number",
+          "minimum": 0
+        },
+        "capacityBreaches": {
+          "type": "number",
+          "minimum": 0
+        },
+        "reservedBytes": {
+          "type": "number",
+          "minimum": 0
+        },
+        "firstTaskMs": {
+          "type": "number",
+          "minimum": 0
+        },
+        "readyRatio": {
+          "type": "number",
+          "minimum": 0
         }
       }
     },
@@ -1464,6 +1538,51 @@
           "$ref": "#/definitions/Stats"
         },
         "inferredProjects": {
+          "$ref": "#/definitions/Stats"
+        },
+        "closuresVerified": {
+          "$ref": "#/definitions/Stats"
+        },
+        "closuresReused": {
+          "$ref": "#/definitions/Stats"
+        },
+        "staleFacts": {
+          "$ref": "#/definitions/Stats"
+        },
+        "swapBytes": {
+          "$ref": "#/definitions/Stats"
+        },
+        "availableBytes": {
+          "$ref": "#/definitions/Stats"
+        },
+        "oomKills": {
+          "$ref": "#/definitions/Stats"
+        },
+        "storeBytes": {
+          "$ref": "#/definitions/Stats"
+        },
+        "divergentWrites": {
+          "$ref": "#/definitions/Stats"
+        },
+        "offloadMs": {
+          "$ref": "#/definitions/Stats"
+        },
+        "fallbackMs": {
+          "$ref": "#/definitions/Stats"
+        },
+        "offloadedUnits": {
+          "$ref": "#/definitions/Stats"
+        },
+        "capacityBreaches": {
+          "$ref": "#/definitions/Stats"
+        },
+        "reservedBytes": {
+          "$ref": "#/definitions/Stats"
+        },
+        "firstTaskMs": {
+          "$ref": "#/definitions/Stats"
+        },
+        "readyRatio": {
           "$ref": "#/definitions/Stats"
         }
       }

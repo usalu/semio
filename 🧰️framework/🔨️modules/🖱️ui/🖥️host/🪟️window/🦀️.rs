@@ -184,7 +184,7 @@ mod native {
                 }
                 E::KeyboardInput { event, .. } => {
                     let logical = event::logical_key_to_dispatch_string(&event.logical_key);
-                    Some(event::key_dispatch_event(logical, self.modifiers, event.state == ElementState::Pressed))
+                    Some(event::key_dispatch_event(logical, self.modifiers, event.state == ElementState::Pressed, event.repeat))
                 }
                 E::Ime(ime) => Some(DispatchEvent::Ime(event::ime_event_from_winit(ime.clone()))),
                 _ => None,

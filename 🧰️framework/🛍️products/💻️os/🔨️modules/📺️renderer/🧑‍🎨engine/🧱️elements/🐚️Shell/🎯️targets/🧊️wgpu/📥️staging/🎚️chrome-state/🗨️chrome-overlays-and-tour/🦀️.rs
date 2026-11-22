@@ -626,6 +626,19 @@ pub struct ChromeTourState {
     pub step_index: usize,
     /// ✅️ Indices into the active step's `interactions` that are done — reset whenever `step_index` changes.
     pub completed_interactions: Vec<usize>,
+    /// 🎓️ Whose introduction this playback walks: the open app's, or the hub first-run tour.
+    pub source: ChromeTourSource,
+    /// 🔭️ The hub tour's `(step index, already done on arrival)` — a step completes by doing only on the
+    /// false-to-true edge, so stepping Back onto a finished step never snaps forward again.
+    pub entry_done: Option<(usize, bool)>,
+}
+
+/// 🎓️ Which definition a running tour reads its steps from.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum ChromeTourSource {
+    #[default]
+    App,
+    HubFirstRun,
 }
 
 impl ShellChromeBuildState {
@@ -668,7 +681,12 @@ impl ShellChromeBuildState {
     }
 
     pub fn start_introduction(&mut self) {
-        self.tour_state = Some(ChromeTourState { step_index: 0, completed_interactions: Vec::new() });
+        self.tour_state = Some(ChromeTourState { step_index: 0, completed_interactions: Vec::new(), source: ChromeTourSource::App, entry_done: None });
+    }
+
+    /// 🎓️ Starts the hub first-run tour at `step_index` — a derived entry step on auto-open, `0` on replay.
+    pub fn start_hub_first_run(&mut self, step_index: usize) {
+        self.tour_state = Some(ChromeTourState { step_index, completed_interactions: Vec::new(), source: ChromeTourSource::HubFirstRun, entry_done: None });
     }
 
     pub fn skip_introduction(&mut self) {

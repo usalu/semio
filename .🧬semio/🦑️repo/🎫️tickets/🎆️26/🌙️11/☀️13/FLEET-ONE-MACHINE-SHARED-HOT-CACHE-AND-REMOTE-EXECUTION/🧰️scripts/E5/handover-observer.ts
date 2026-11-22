@@ -1,0 +1,7 @@
+import {remoteCacheFetchV1} from "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-cache/🛰️fleet/🟦️.ts";
+const root="/Users/ueli/Documents/semio",call=remoteCacheFetchV1({...process.env,SEMIO_WORKSPACE_ROOT:root},{root}),seconds=Number(process.argv[2]??150),url="http://192.168.178.70:6094";
+const listener=():string=>Bun.spawnSync(["lsof","-nP","-iTCP:6094","-sTCP:LISTEN","-t"]).stdout.toString().trim().split("\n").sort().join("+");
+let ok=0,failed:string[]=[],slowest=0,pids=listener();const changes:string[]=[`${new Date().toISOString()} listeners ${pids}`],end=Date.now()+seconds*1000;let nextLook=0;
+const worker=async(id:number):Promise<void>=>{while(Date.now()<end){const t=Date.now();try{const response=await call(`${url}/main/ac/${"1".repeat(64)}`,{signal:AbortSignal.timeout(10000)});await response.body?.cancel();if(response.status===404||response.status===200)ok++;else failed.push(`${new Date().toISOString()} status ${response.status}`);}catch(error){failed.push(`${new Date().toISOString()} ${String((error as Error).message).slice(0,60)}`);}slowest=Math.max(slowest,Date.now()-t);if(id===0&&Date.now()>nextLook){nextLook=Date.now()+1000;const now=listener();if(now!==pids){pids=now;changes.push(`${new Date().toISOString()} listeners ${now}`);}}await new Promise(done=>setTimeout(done,20));}};
+await Promise.all([0,1,2,3].map(worker));
+console.log(JSON.stringify({ok,failed:failed.length,firstFailures:failed.slice(0,3),lastFailure:failed.at(-1),slowestMs:slowest,changes},null,1));

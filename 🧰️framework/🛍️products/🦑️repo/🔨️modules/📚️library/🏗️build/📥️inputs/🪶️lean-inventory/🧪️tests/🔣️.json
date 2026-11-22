@@ -30,6 +30,24 @@
       "name": "leaf-named-after-other-content-is-refused",
       "record": "other",
       "fileKey": "good",
+      "corrupt": true,
+      "expect": "content differs from its name"
+    },
+    {
+      "name": "zero-filled-leaf-is-a-corrupt-cache-entry",
+      "record": "good",
+      "fileKey": "good",
+      "zeroBytes": 4661,
+      "maximumBytes": 8192,
+      "corrupt": true,
+      "expect": "content differs from its name"
+    },
+    {
+      "name": "short-zero-filled-leaf-is-a-corrupt-cache-entry",
+      "record": "good",
+      "fileKey": "good",
+      "zeroBytes": 1,
+      "corrupt": true,
       "expect": "content differs from its name"
     },
     {
@@ -49,6 +67,7 @@
       "name": "non-json-leaf-with-matching-name-fails-parsing",
       "record": "notJson",
       "fileKey": "notJson",
+      "corrupt": true,
       "expect": "JSON"
     },
     {

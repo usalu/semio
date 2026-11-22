@@ -78,6 +78,13 @@ export function suspectsWithinV1(index,suspects,names){
  return out;
 }
 
+/** 🪙️ The suspects that a project outside `rebuilt` holds: a question whose holders are all rebuilt anyway (dirty by their own stale facts, a changed source or a stale config) cannot move the dirty set, and the inference asks it again for them, so the read does not pay twice. A question nobody holds stays a suspect. */
+export function suspectsWithCleanHolderV1(index,suspects,rebuilt){
+ const view=viewOf(index),out=new Set();
+ for(const name of suspects){const id=view.pseudoRow.get(name),holders=id===undefined?undefined:view.holders.get(id);if(holders===undefined||holders.size===0||[...holders].some(holder=>!rebuilt.has(holder)))out.add(name);}
+ return out;
+}
+
 /** 🧾️ The derived row of each suspect pseudo owner: the questions the node graph (`../../🧮️derived-nodes/🧩️closure-kinds`) asks again. */
 export function suspectRowsV1(index,suspects){
  const view=viewOf(index),out=new Map();

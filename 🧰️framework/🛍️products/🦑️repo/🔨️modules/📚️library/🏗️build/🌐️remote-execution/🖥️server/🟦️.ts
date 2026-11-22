@@ -166,14 +166,14 @@ export function remoteExecutionHandlersV1(content:RemoteExecutionContentV1,sched
    }
   },
   [`${STREAM}/Write`]:async(requests:AsyncIterable<ProtobufMessageV1>,call:{signal:AbortSignal})=>{
-   let target:ReturnType<typeof blobName>|undefined,committed=0,queue:Queue<Uint8Array>|undefined,upload:Promise<void>|undefined,finished=false,skipped=false;
+   const abandon=new AbortController();let target:ReturnType<typeof blobName>|undefined,committed=0,queue:Queue<Uint8Array>|undefined,upload:Promise<void>|undefined,finished=false,skipped=false;
    try{
     for await(const message of requests){
      if(!target){
       target=blobName(message.resource_name,"uploads");
       if(target.digest.size===0)skipped=true;
       else if(await content.has(target.instance,target.digest.hash,call.signal).catch(mapStore))skipped=true;
-      else{queue=new Queue<Uint8Array>(8);upload=content.write(target.instance,target.digest,queue.drain(),call.signal);upload.catch(()=>{});}
+      else{queue=new Queue<Uint8Array>(8);upload=content.write(target.instance,target.digest,queue.drain(),AbortSignal.any([call.signal,abandon.signal]));upload.catch(()=>{});}
      }
      if(Number(message.write_offset)!==committed&&!skipped)throw new GrpcErrorV1(GRPC_CODES_V1.INVALID_ARGUMENT,`Write offset ${message.write_offset} but ${committed} bytes were committed`);
      const data=message.data as Uint8Array;
@@ -186,7 +186,7 @@ export function remoteExecutionHandlersV1(content:RemoteExecutionContentV1,sched
     if(committed!==target.digest.size)throw new GrpcErrorV1(GRPC_CODES_V1.INVALID_ARGUMENT,`Blob has ${committed} bytes but the digest declares ${target.digest.size}`);
     queue!.end();await upload!.catch(mapStore);
     return {committed_size:committed};
-   }catch(error){queue?.end();await upload?.catch(()=>{});throw error;}
+   }catch(error){abandon.abort();queue?.end();await upload?.catch(()=>{});throw error;}
   },
   [`${STREAM}/QueryWriteStatus`]:async(request:ProtobufMessageV1,call:{signal:AbortSignal})=>{
    const {instance,digest}=blobName(request.resource_name,"uploads"),exists=digest.size===0||await content.has(instance,digest.hash,call.signal).catch(mapStore);
@@ -239,6 +239,7 @@ export async function startRemoteExecutionServerV1(options:RemoteExecutionServer
    try{
     if(path==="/healthz")return Response.json({status:"ok"});
     if(path==="/status"&&method==="GET"){const guard=await allowed(request,peer,"status");return "denied" in guard?guard.denied:Response.json(await status());}
+    if(path==="/v1/fleet/idle"&&method==="GET"){const guard=await allowed(request,peer,"status");if("denied" in guard)return guard.denied;const origin=new URL(request.url).searchParams.get("origin");return origin===null||origin===""?new Response("origin required\n",{status:400}):Response.json(scheduler.idleFor(origin));}
     if(path==="/v1/fleet/load"&&method==="GET"){const guard=await allowed(request,peer,"status");if("denied" in guard)return guard.denied;const document=scheduler.fleetLoad();requireRemoteExecutionShapeV1("FleetLoad",document,"Closed fleet load required");return Response.json(document);}
     if(path==="/v1/fleet/load"&&method==="POST"){
      const guard=await allowed(request,peer,"worker");if("denied" in guard)return guard.denied;

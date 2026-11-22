@@ -6,10 +6,9 @@ use super::*;
 
 //#region ShellLifecycle
 impl OpeningState {
-    /// 🧵️ The truthful Task Manager body for this target — React's `TaskManagerWindow`: the running tasks this shell owns
-    /// (picked-file imports, [`ShellState::import_task_nodes`]) with their progress and a Cancel each, above the actors. WGPU
-    /// has no actor-registry metrics or dispatch bridge, so the actors read React's distinct `no-runtime` state and publish no
-    /// actor verbs.
+    /// 🧵️ React's `TaskManagerWindow`: the running tasks ([`Self::import_task_nodes`]: this shell's transfers, then the runtime's jobs,
+    /// installations and tool calls, each with progress, Cancel and, where it can be held, Suspend/Resume) above the actors section
+    /// ([`Self::task_manager_actor_nodes`]: the actor table, or the distinct `no-runtime` / `no-actors` notice).
     pub fn build_task_manager_ui(&self, prefs: &PrefsState) -> UiNode {
         let is_de = prefs.locale_id == "de";
         UiNode::Stack(UiStackNode {
@@ -17,18 +16,7 @@ impl OpeningState {
             gap: None,
             padding: None,
             id: Some("os.task-manager.panel".into()),
-            children: vec![self.import_task_nodes(prefs), UiNode::Stack(UiStackNode {
-                direction: "column".into(),
-                gap: None,
-                padding: None,
-                id: Some("os.task-manager.no-runtime".into()),
-                children: vec![settings_text_row(shell_chrome_string("taskManager.noRuntime", is_de))],
-                presence: UiPresence::default(),
-                activate: None,
-                drop_action: None,
-                drop_overlay: None,
-                menu: None,
-            })],
+            children: vec![self.import_task_nodes(prefs), self.task_manager_actor_nodes(is_de)],
             presence: UiPresence::default(),
             activate: None,
             drop_action: None,

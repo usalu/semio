@@ -6,8 +6,12 @@ extern crate semio_os_kernel as vcs;
 pub mod context {
     use semio_s_artifact_fem_3d_editor::editor::fem3d::{create_fem3d_app, Fem3dCommand, Fem3dPlayApp};
     use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::set_active_example;
-    use semio_s_artifact_fem_3d_editor_model_window::editor::fem3d::modes::edit::windows::model::{FEM3D_BODY_MODEL, FEM3D_WINDOW_MODEL};
-    use semio_s_artifact_fem_3d_editor_results_window::editor::fem3d::modes::edit::windows::results::FEM3D_WINDOW_RESULTS;
+    pub mod edit {
+        pub mod windows {
+            pub use semio_s_artifact_fem_3d_editor_model_window::editor::fem3d::modes::edit::windows::model;
+            pub use semio_s_artifact_fem_3d_editor_results_window::editor::fem3d::modes::edit::windows::results;
+        }
+    }
     use semio_plugin::artifact_app_laws::{meta, new_app_with_registry};
     use semio_plugin::{App, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance};
 
@@ -107,7 +111,7 @@ pub mod context {
     /// 🧪️ Dispatches under an explicit view model (a chosen window, a selection-bearing interaction).
     pub async fn dispatch_in(app: &mut Fem3dApp, command: Fem3dCommand, view_state: ViewModel) -> InvocationResult {
         let mut action = meta("local");
-        action.view_state = Some(view_state);
+        action.view_state = Some(std::sync::Arc::new(view_state));
         let mut result = semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &action, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
         let settled = semio_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, FEM3D_TEST_INSTANCE, semio_plugin::artifact_app_laws::fixture_mounted_policy(), &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("settle the typed operation");
         result.requested_effects.extend(settled.effects);
@@ -124,24 +128,10 @@ pub mod context {
     /// history rows its completions upserted — the rows a gumball gesture's transaction landed as.
     pub async fn dispatch_rows(app: &mut Fem3dApp, command: Fem3dCommand) -> Vec<semio_framework::kernel::HistoryEntry> {
         let mut action = meta("local");
-        action.view_state = Some(view(edit::windows::model::FEM3D_WINDOW_MODEL));
+        action.view_state = Some(std::sync::Arc::new(view(edit::windows::model::FEM3D_WINDOW_MODEL)));
         semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &action, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
-        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
-        let mut rows = Vec::new();
-        while app.has_pending_typed_operations() {
-            assert!(std::time::Instant::now() < deadline, "the typed operation settles within 30 seconds");
-            app.0.maintenance_step(app.1.cx(), semio_plugin::artifact_app_laws::fixture_mounted_policy().maintenance).expect("maintenance step");
-            app.0.advance_typed_operation_publication(&mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("advance the publication");
-            while let Some(page) = app.take_typed_operation_result_page(FEM3D_TEST_INSTANCE) {
-                assert_ne!(page.lane, semio_plugin::app::TypedOperationResultLane::Fault, "the retained operation faulted: {}", String::from_utf8_lossy(page.bytes()));
-                assert!(app.acknowledge_typed_operation_result(page.token).expect("acknowledge the result page"), "the app accepts its own result token");
-            }
-            while app.take_typed_operation_effect().is_some() || app.take_typed_operation_event().is_some() || app.take_typed_operation_ui_scope().is_some() || app.take_typed_operation_composed_result().is_some() {}
-            while let Some(completion) = app.take_typed_operation_completion().await.expect("take the completion") {
-                rows.extend(completion.history_patch.into_iter().flat_map(|patch| patch.upserts).filter(|row| row.applied && !row.op_lines.is_empty()));
-            }
-        }
-        rows
+        let settled = semio_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, FEM3D_TEST_INSTANCE, semio_plugin::artifact_app_laws::fixture_mounted_policy(), &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("settle the typed operation");
+        settled.history_patches.into_iter().flat_map(|patch| patch.upserts).filter(|row| row.applied && !row.op_lines.is_empty()).collect()
     }
 
     /// ↩️ Runs a framework-reserved history verb (`undo`/`redo`) and settles its publication.

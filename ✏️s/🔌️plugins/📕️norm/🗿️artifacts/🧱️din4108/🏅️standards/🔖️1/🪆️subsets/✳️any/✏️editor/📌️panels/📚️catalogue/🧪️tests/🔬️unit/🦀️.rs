@@ -24,6 +24,9 @@ fn renders_reference_tables_with_examples() {
     let json = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).expect("project");
     assert!(json.contains("norm-catalogue.examples") || json.contains("Examples") || json.contains("Beispiele") || json.contains("catalogue"), "{json}");
     assert!(json.contains("GModG") && json.contains("Airtightness by envelope area"), "missing pressure-test verification: {json}");
+    assert!(json.contains("norm-catalogue.table-verification-pressure-tests"), "missing pressure-test table key: {json}");
+    assert!(json.contains("norm-catalogue.table-verification-moisture"), "missing moisture table key: {json}");
+    assert!(json.contains("Moisture verification"), "missing moisture verification: {json}");
     let tables = reference_tables();
     assert!(!tables.is_empty(), "din4108 must publish reference tables");
     for table in &tables {

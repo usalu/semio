@@ -1,0 +1,57 @@
+{
+  "scales": [
+    50,
+    100,
+    200,
+    500
+  ],
+  "sides": [
+    "l",
+    "r"
+  ],
+  "limbs": {
+    "femur": "thigh",
+    "humerus": "arm",
+    "radius": "forearm",
+    "ulna": "forearm",
+    "tibia": "shank",
+    "fibula": "shank"
+  },
+  "subjects": {
+    "child-on-kick-scooter": {
+      "prefix": "",
+      "pose": "pushing-off",
+      "lengths": {
+        "thigh": 0.302,
+        "shank": 0.2934,
+        "arm": 0.2286,
+        "forearm": 0.1794
+      },
+      "femurDiameterM": [
+        0.02,
+        0.026
+      ]
+    },
+    "running-child": {
+      "prefix": "sk-",
+      "pose": "airborne",
+      "lengths": {
+        "thigh": 0.2565,
+        "shank": 0.262,
+        "arm": 0.1848,
+        "forearm": 0.1456
+      },
+      "femurDiameterM": [
+        0.016,
+        0.022
+      ]
+    }
+  },
+  "stations": [
+    0.34,
+    0.52,
+    0.7
+  ],
+  "maxDiameterDeviationM": 0.0038,
+  "maxCentreDeviationM": 0.0032
+}

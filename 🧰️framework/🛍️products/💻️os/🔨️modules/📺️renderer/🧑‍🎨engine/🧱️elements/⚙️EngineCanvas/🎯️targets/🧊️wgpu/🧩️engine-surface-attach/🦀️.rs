@@ -8,7 +8,7 @@ use semio_renderer_wgpu_engine_registry::engine_surface_registry::{BoardSyncCach
 use semio_renderer_wgpu_engine_graph::node_graph::log_graph_geometry_census;
 use semio_renderer_wgpu_engine_registry::prepared_engine_canvas::{StagedEngineScene, STAGED_ENGINE_SCENES};
 use semio_renderer_wgpu_engine_text::text_editor::{synchronize_text_editor_host, text_editor_explicit_draft_settings};
-use semio_renderer_wgpu_engine_board::tiled_map::reserve_map_tile_fetches;
+use semio_renderer_wgpu_engine_board::tiled_map::{reserve_map_tile_fetches, take_map_recovery_camera, tiled_map_unavailable};
 use crate::element_contracts::WorkerCell;
 use canvas::Color;
 use flow::FlowHost;
@@ -34,17 +34,17 @@ use semio_os_infinite_board_normal_gestures::set_transform_flags;
 #[path = "📎️registry-and-node-graph/🦀️.rs"]
 mod registry_and_node_graph;
 pub use registry_and_node_graph::{
-    take_engine_surface_registrations, EngineSurfaceKindDetail, EngineSurfaceRegistration,
+    register_engine_surface, take_engine_surface_registrations, EngineSurfaceKindDetail, EngineSurfaceRegistration,
 };
 use registry_and_node_graph::{
-    node_graph_engine_from_scene, sync_node_graph_engine, ATTACHED_SURFACES,
+    node_graph_engine_from_scene, sync_node_graph_engine,
 };
 
 #[path = "🗺️graph-scene-and-map-sync/🦀️.rs"]
 mod graph_scene_and_map_sync;
 use graph_scene_and_map_sync::sync_node_graph_evaluation;
 pub use graph_scene_and_map_sync::{
-    register_engine_surface, sync_node_graph_scene, sync_tiled_map_scene,
+    sync_node_graph_scene, sync_tiled_map_scene,
 };
 
 #[path = "🎲️board-sync/🦀️.rs"]

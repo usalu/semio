@@ -12,13 +12,15 @@ import {remoteCacheFetchV1} from "../../../../../🏗️build/🌐️remote-cach
 import {FLEET_POLICY_V1,portableRootsV1,portableTextV1,type PlatformV1} from "../🪪️identity/🟦️.ts";
 import {adoptFleetUnitV1} from "../📥️adopt/🟦️.ts";
 import {packUnitV1,type RemoteUnitV1} from "../📦️wire/🟦️.ts";
-import {countUnitV1,writeBuildCountersV1} from "../📊️counters/🟦️.ts";
+import {countSkipV1,countUnitV1,writeBuildCountersV1} from "../📊️counters/🟦️.ts";
+import {publishRootHintByKeyV1} from "../🟦️.ts";
+import {publishKeySamplesV1} from "../🔑️key-samples/🟦️.ts";
 
 const fleet=FLEET_POLICY_V1,limits=fleet.limits,sha=(bytes:Uint8Array)=>createHash("sha256").update(bytes).digest("hex"),decoder=new TextDecoder("utf-8",{fatal:true}),encoder=new TextEncoder();
 type Environment=Readonly<Record<string,string|undefined>>;
 
 /** 🧾️ One unit waiting for upload (`SpoolJob` of the schema). */
-export type SpoolJobV1={version:1;key:string;localKey:string;slot:string;crate:string;cwd:string;workspace:string|null;laneRoot:string|null;owner:string;claimed:boolean;offer?:boolean;costMs:number;platform:PlatformV1;queuedMs:number;attempts?:number;notBeforeMs?:number};
+export type SpoolJobV1={version:1;key:string;localKey:string;slot:string;crate:string;cwd:string;workspace:string|null;laneRoot:string|null;owner:string;claimed:boolean;offer?:boolean;hint?:{neutralKey:string;kinds:string[]};costMs:number;platform:PlatformV1;queuedMs:number;attempts?:number;notBeforeMs?:number};
 
 const spoolDirectory=(root:string)=>join(root,fleet.layout.state,fleet.layout.spool);
 const offeredPath=(root:string,key:string)=>join(root,fleet.layout.state,"offered",key.slice(0,2),key);
@@ -106,49 +108,59 @@ export function retryJobV1(job:SpoolJobV1,now:number):SpoolJobV1|undefined{
 }
 
 /** 🚰️ The summary of one drain. */
-export type DrainResultV1=Readonly<{uploaded:number;failed:number;dropped:number;retried?:number}>;
+export type DrainResultV1=Readonly<{uploaded:number;failed:number;dropped:number;retried?:number;deferred?:number}>;
 
-/** 🚰️ Drains the spool until it has been empty for `idleMilliseconds` (or once, with `idleMilliseconds` 0): one drainer per machine holds the lock, takes units oldest first, uploads a few at a time, deletes each job file whatever the outcome (a failed unit is dropped, never retried) and releases the claim of a unit it could not upload so a waiter can take over. */
+/** 🚰️ Drains the spool until it has been empty for `idleMilliseconds` (or once, with `idleMilliseconds` 0): one drainer per machine holds the lock, takes units oldest first, uploads a few at a time, deletes each job file whatever the outcome (a failed unit is dropped, never retried; a job found while the cache is unreachable is queued again, due after the retry delay, and the drain ends after its idle time; the next compile starts a worker again, until the job is too old) and releases the claim of a unit it could not upload so a waiter can take over. */
 export async function drainUploadsV1(root:string,environment:Environment,options:Readonly<{idleMilliseconds?:number;signal?:AbortSignal}>={}):Promise<DrainResultV1|"busy">{
  const settings=readFleetSettingsV1(root,environment);if(!settings)return "busy";
  const directory=join(root,fleet.layout.state);mkdirSync(directory,{recursive:true});
  const lock=tryClaimV1(directory,"uploader");if(!lock)return "busy";
- const client=createFleetClientV1(settings,{fetch:remoteCacheFetchV1(environment,{root:environment.SEMIO_UNIT_CACHE_WORKSPACE_ROOT||root})}),idle=options.idleMilliseconds??fleet.uploader.idleMilliseconds,spool=spoolDirectory(root),result:{uploaded:number;failed:number;dropped:number;retried?:number}={uploaded:0,failed:0,dropped:0};
+ const client=createFleetClientV1(settings,{fetch:remoteCacheFetchV1(environment,{root:environment.SEMIO_UNIT_CACHE_WORKSPACE_ROOT||root})}),idle=options.idleMilliseconds??fleet.uploader.idleMilliseconds,spool=spoolDirectory(root),result:{uploaded:number;failed:number;dropped:number;retried?:number;deferred?:number}={uploaded:0,failed:0,dropped:0};
  let quietSince=Date.now();
  try{
   for(;;){
    if(options.signal?.aborted)break;
    let names:string[]=[];try{names=readdirSync(spool).filter(name=>name.endsWith(".json")).sort();}catch{}
    if(names.length===0){if(Date.now()-quietSince>=idle)break;await new Promise(done=>setTimeout(done,fleet.uploader.pollMilliseconds));continue;}
-   quietSince=Date.now();
    const due=names.filter(name=>{try{return((JSON.parse(readFileSync(join(spool,name),"utf8")) as SpoolJobV1).notBeforeMs??0)<=Date.now();}catch{return true;}});
-   if(due.length===0){if(options.idleMilliseconds===0)break;await new Promise(done=>setTimeout(done,fleet.uploader.pollMilliseconds));continue;}
-   names=due;
+   if(due.length===0){if(options.idleMilliseconds===0||(!client.usable()&&Date.now()-quietSince>=idle))break;await new Promise(done=>setTimeout(done,fleet.uploader.pollMilliseconds));continue;}
+   names=due;const worked=result.uploaded+result.failed+result.dropped+(result.retried??0);
    await bounded(names.slice(0,limits.maximumUploadConcurrency*2),limits.maximumUploadConcurrency,async name=>{
     const path=join(spool,name);let job:SpoolJobV1;
     try{job=JSON.parse(readFileSync(path,"utf8")) as SpoolJobV1;}catch{rmSync(path,{force:true});result.dropped++;return false;}
     rmSync(path,{force:true});
     const started=Date.now(),event=(kind:"remote-publish"|"remote-skip",reason:string)=>emitUnitEventV1(root,{lane:"uploader",kind,crate:job.crate,key:job.key,milliseconds:Date.now()-started,waitedMs:Math.max(0,started-job.queuedMs),reason});
-    if(started-job.queuedMs>fleet.uploader.maximumJobAgeMilliseconds||!client.usable()){result.dropped++;event("remote-skip","upload-dropped");if(job.claimed)await client.release(job.key,job.owner);return false;}
+    if(started-job.queuedMs>fleet.uploader.maximumJobAgeMilliseconds){result.dropped++;countSkipV1(environment.SEMIO_UNIT_CACHE_WORKSPACE_ROOT,client.usable()?"upload-expired":"upload-expired-"+client.state());event("remote-skip","upload-expired");if(job.claimed)await client.release(job.key,job.owner);return false;}
+    if(!client.usable()){if(enqueueUploadV1(root,{...job,claimed:false,notBeforeMs:Date.now()+fleet.uploader.retryBackoffMilliseconds})){result.deferred=(result.deferred??0)+1;event("remote-skip","upload-deferred: "+client.state());}else{result.dropped++;countSkipV1(environment.SEMIO_UNIT_CACHE_WORKSPACE_ROOT,"spool-full");event("remote-skip","spool-full");}if(job.claimed)await client.release(job.key,job.owner);return false;}
+    if(job.hint!==undefined){
+     const named=await publishRootHintByKeyV1(client,job.hint.neutralKey,job.hint.kinds);
+     if(named===undefined){if(enqueueUploadV1(root,{...job,notBeforeMs:Date.now()+fleet.uploader.retryBackoffMilliseconds})){result.deferred=(result.deferred??0)+1;event("remote-skip","root-hint-deferred");}else{result.dropped++;countSkipV1(environment.SEMIO_UNIT_CACHE_WORKSPACE_ROOT,"spool-full");}return false;}
+     if(!job.hint.kinds.every(kind=>(named as readonly string[]).includes(kind))||named.length!==job.hint.kinds.length){result.dropped++;countSkipV1(environment.SEMIO_UNIT_CACHE_WORKSPACE_ROOT,"root-key-conflict");event("remote-skip","root-key-conflict: the fleet names other directories for this unit");return false;}
+    }
     if(job.offer===true&&await client.hasResult(job.key)===true){markOfferedV1(root,job.key);result.dropped++;event("remote-skip","already-stored");return true;}
     const outcome=await Promise.race([uploadUnitV1(client,root,job),new Promise<"retry">(done=>{const timer=setTimeout(()=>done("retry"),fleet.uploader.jobMilliseconds);timer.unref?.();})]),ok=outcome===true;
     if(outcome==="diverged"){
      const adopted=await adoptFleetUnitV1(client,root,job);
-     result.failed++;countUnitV1(environment.SEMIO_UNIT_CACHE_WORKSPACE_ROOT,"skipped");event("remote-skip",adopted?"diverged: the fleet holds other bytes for this key, its copy replaces the local entry":"diverged: the fleet holds other bytes for this key and its copy could not be fetched");
+     result.failed++;countSkipV1(environment.SEMIO_UNIT_CACHE_WORKSPACE_ROOT,"diverged");event("remote-skip",adopted?"diverged: the fleet holds other bytes for this key, its copy replaces the local entry":"diverged: the fleet holds other bytes for this key and its copy could not be fetched");
      if(job.claimed)await client.release(job.key,job.owner);
     }else if(ok){markOfferedV1(root,job.key);result.uploaded++;countUnitV1(environment.SEMIO_UNIT_CACHE_WORKSPACE_ROOT,"stored");event("remote-publish","uploaded");}
     else{
-     const again=outcome==="retry"?retryJobV1(job,Date.now()):undefined,queued=again!==undefined&&enqueueUploadV1(root,again);
-     if(queued){result.retried=(result.retried??0)+1;event("remote-skip","upload-retry "+again.attempts+"/"+fleet.uploader.maximumAttempts);}
-     else{result.failed++;event("remote-skip",outcome==="retry"?"upload-failed after "+((job.attempts??0)+1)+" attempts":"upload-failed");}
+     const refused=outcome==="retry"&&!client.usable(),again=outcome!=="retry"?undefined:refused?{...job,claimed:false,notBeforeMs:Date.now()+fleet.uploader.retryBackoffMilliseconds}:retryJobV1(job,Date.now()),queued=again!==undefined&&enqueueUploadV1(root,again);
+     if(queued){if(refused){result.deferred=(result.deferred??0)+1;event("remote-skip","upload-deferred: "+client.state());}else{result.retried=(result.retried??0)+1;event("remote-skip","upload-retry "+again!.attempts+"/"+fleet.uploader.maximumAttempts);}}
+     else{result.failed++;countSkipV1(environment.SEMIO_UNIT_CACHE_WORKSPACE_ROOT,"upload-failed");event("remote-skip",outcome==="retry"?"upload-failed after "+((job.attempts??0)+1)+" attempts":"upload-failed");}
      if(job.claimed)await client.release(job.key,job.owner);
      if(queued)return false;
     }
     {const spilled=newestEntryV1(root,job.localKey);if(spilled)dropSpillObjectsV1(root,spilled);}
     return ok;
    });
+   if(result.uploaded+result.failed+result.dropped+(result.retried??0)>worked)quietSince=Date.now();
   }
- }finally{lock.release();if(environment.SEMIO_UNIT_CACHE_WORKSPACE_ROOT)writeBuildCountersV1(environment.SEMIO_UNIT_CACHE_WORKSPACE_ROOT);}
+ }finally{
+  const workspace=environment.SEMIO_UNIT_CACHE_WORKSPACE_ROOT;
+  if(workspace)await publishKeySamplesV1(client,{root,workspace});
+  lock.release();if(workspace)writeBuildCountersV1(workspace);
+ }
  return result;
 }
 

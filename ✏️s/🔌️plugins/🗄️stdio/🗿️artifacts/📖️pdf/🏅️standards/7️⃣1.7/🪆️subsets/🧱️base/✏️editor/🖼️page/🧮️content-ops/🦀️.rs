@@ -3,7 +3,7 @@
 use super::*;
 
 //#region 🧮️ContentOps
-pub(super) fn ensure_font(snapshot: &PdfSnapshot, text: &str) -> Result<(String, Option<PdfMutation>), Fault> {
+pub fn ensure_font(snapshot: &PdfSnapshot, text: &str) -> Result<(String, Option<PdfMutation>), Fault> {
     let mut fonts = FontMeasurements::new(snapshot);
     let encodes = |codec: &semio_s_artifact_stdio_pdf_fonts::standards::v1_7::subsets::base::modules::fonts::FontCodec| text.split('\n').all(|line| codec.shows_text(line.strip_suffix('\r').unwrap_or(line)));
     for font in &snapshot.fonts {
@@ -14,13 +14,13 @@ pub(super) fn ensure_font(snapshot: &PdfSnapshot, text: &str) -> Result<(String,
     Ok((font.id.clone(), Some(PdfMutation::SetFont(SetFont { font, index: None }))))
 }
 
-pub(super) fn new_standard_font(snapshot: &PdfSnapshot, base_font: &str) -> PdfFont {
+pub fn new_standard_font(snapshot: &PdfSnapshot, base_font: &str) -> PdfFont {
     let occupied: std::collections::HashSet<_> = snapshot.fonts.iter().map(|font| font.id.as_str()).collect();
     let id = (1..).map(|index| format!("F{index}")).find(|id| !occupied.contains(id.as_str())).expect("available PDF font id");
     PdfFont::standard(id, base_font)
 }
 
-pub(super) fn replace_shown_text(content: &mut Vec<PdfOp>, object: &PageObject, text: &str) -> Result<(), Fault> {
+pub fn replace_shown_text(content: &mut Vec<PdfOp>, object: &PageObject, text: &str) -> Result<(), Fault> {
     let restore = text_cursor_after(content, object)?;
     match &mut content[object.end] {
         PdfOp::ShowText { text: shown } | PdfOp::NextLineShowText { text: shown } | PdfOp::NextLineShowTextSpaced { text: shown, .. } => *shown = PdfTextString::text(text),
@@ -31,7 +31,7 @@ pub(super) fn replace_shown_text(content: &mut Vec<PdfOp>, object: &PageObject, 
     Ok(())
 }
 
-pub(super) fn text_cursor_after(content: &[PdfOp], object: &PageObject) -> Result<Vec<PdfOp>, Fault> {
+pub fn text_cursor_after(content: &[PdfOp], object: &PageObject) -> Result<Vec<PdfOp>, Fault> {
     let mut restore = Vec::new();
     for op in &content[object.end + 1..] {
         match op {
@@ -50,7 +50,7 @@ pub(super) fn text_cursor_after(content: &[PdfOp], object: &PageObject) -> Resul
     Ok(restore)
 }
 
-pub(super) fn delete_paint(content: &mut Vec<PdfOp>, object: &PageObject) {
+pub fn delete_paint(content: &mut Vec<PdfOp>, object: &PageObject) {
     let span = object.start..=object.end;
     match object.kind {
         ObjectKind::Vector => {
@@ -69,7 +69,7 @@ pub(super) fn delete_paint(content: &mut Vec<PdfOp>, object: &PageObject) {
     }
 }
 
-pub(super) fn translate_object(content: &mut Vec<PdfOp>, object: &PageObject, dx: f64, dy: f64) -> Result<(), Fault> {
+pub fn translate_object(content: &mut Vec<PdfOp>, object: &PageObject, dx: f64, dy: f64) -> Result<(), Fault> {
     match object.kind {
         ObjectKind::Text => return translate_text(content, object, dx, dy),
         ObjectKind::Image | ObjectKind::Form => return transform_xobject(content, object, [1.0, 0.0, 0.0, 1.0, dx, dy]),
@@ -79,7 +79,7 @@ pub(super) fn translate_object(content: &mut Vec<PdfOp>, object: &PageObject, dx
     Ok(())
 }
 
-pub(super) fn resize_object(content: &mut Vec<PdfOp>, object: &PageObject, x: f64, y: f64, width: f64, height: f64) -> Result<(), Fault> {
+pub fn resize_object(content: &mut Vec<PdfOp>, object: &PageObject, x: f64, y: f64, width: f64, height: f64) -> Result<(), Fault> {
     match object.kind {
         ObjectKind::Vector | ObjectKind::Image | ObjectKind::Form => {
             let sx = if object.width == 0.0 { 1.0 } else { width / object.width };
@@ -119,7 +119,7 @@ fn previous_color(content: &[PdfOp], stroking: bool) -> Vec<PdfOp> {
     std::iter::once(initial).chain(components).collect()
 }
 
-pub(super) fn set_fill(content: &mut Vec<PdfOp>, object: &PageObject, red: f64, green: f64, blue: f64) {
+pub fn set_fill(content: &mut Vec<PdfOp>, object: &PageObject, red: f64, green: f64, blue: f64) {
     let at = object.end;
     let restore = previous_color(&content[..at], false);
     match content[at] {
@@ -131,7 +131,7 @@ pub(super) fn set_fill(content: &mut Vec<PdfOp>, object: &PageObject, red: f64, 
     content.insert(at, PdfOp::SetFillRgb { r: red, g: green, b: blue });
 }
 
-pub(super) fn set_stroke(content: &mut Vec<PdfOp>, object: &PageObject, red: f64, green: f64, blue: f64, width: f64) {
+pub fn set_stroke(content: &mut Vec<PdfOp>, object: &PageObject, red: f64, green: f64, blue: f64, width: f64) {
     if let Some(op) = content.get_mut(object.end) {
         match op {
             PdfOp::Fill => *op = PdfOp::FillStroke,
@@ -179,7 +179,7 @@ fn show_with_explicit_line(op: PdfOp, replacement: &mut Vec<PdfOp>) -> PdfOp {
     }
 }
 
-pub(super) fn restyle_text(content: &mut Vec<PdfOp>, object: &PageObject, paint: PdfOp, name: String, size: f64) -> Result<(), Fault> {
+pub fn restyle_text(content: &mut Vec<PdfOp>, object: &PageObject, paint: PdfOp, name: String, size: f64) -> Result<(), Fault> {
     let mut replacement = Vec::new();
     let paint = show_with_explicit_line(paint, &mut replacement);
     replacement.extend([PdfOp::SetFont { name, size }, paint]);
@@ -189,7 +189,7 @@ pub(super) fn restyle_text(content: &mut Vec<PdfOp>, object: &PageObject, paint:
     Ok(())
 }
 
-pub(super) fn delete_text(content: &mut Vec<PdfOp>, object: &PageObject) -> Result<(), Fault> {
+pub fn delete_text(content: &mut Vec<PdfOp>, object: &PageObject) -> Result<(), Fault> {
     let placement = object.text_placement.as_ref().ok_or_else(|| fault("text placement is missing"))?;
     let inverse = invert(placement.matrix).ok_or_else(|| fault("cannot restore a singular text matrix"))?;
     let (advance, _) = apply(inverse, placement.next_origin.0, placement.next_origin.1);

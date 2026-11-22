@@ -83,7 +83,7 @@ pub fn create_remodeling_app() -> AppDefinition {
                 ActionArgDef::number("k1", LocalizedLabel::native("k1", "k1")).default_value(&0),
                 ActionArgDef::number("k2", LocalizedLabel::native("k2", "k2")).default_value(&0),
                 ActionArgDef::number("k3", LocalizedLabel::native("k3", "k3")).default_value(&0),
-                ActionArgDef::number("p1", LocalizedLabel::native("p1", "p1")).default_value(&0),
+                ActionArgDef::number("p1", LocalizedLabel::native("p1 / k4 (fisheye)", "p1 / k4 (Fischauge)")).default_value(&0),
                 ActionArgDef::number("p2", LocalizedLabel::native("p2", "p2")).default_value(&0),
                 ActionArgDef::toggle("locked", LocalizedLabel::native("Locked", "Gesperrt")).default_value(&false),
             ])

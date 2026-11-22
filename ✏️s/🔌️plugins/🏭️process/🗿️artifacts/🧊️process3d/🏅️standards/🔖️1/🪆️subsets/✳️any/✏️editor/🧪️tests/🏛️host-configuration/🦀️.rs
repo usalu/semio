@@ -2,6 +2,7 @@
 use semio_plugin::ArtifactEditor;
 use semio_plugin_host_configuration::{with_original_host_configuration,testkit::HeapWitness};
 use semio_framework_value::DslValue;
+use semio_framework_value_testing_allocator as _;
 
 
 use semio_s_artifact_process_process3d_editor::Process3dPlayApp;

@@ -1,4 +1,8 @@
 import fileOpenLifecycleFixture from "./file-open.json";
+import originalMediaCases from "./original-media.json";
+import { Blob as NodeBlob } from "node:buffer";
+import { pickOriginalMedia } from "../../🧱️elements/🔌️PluginRuntime/🚚️handle-turn-drive/original-media-pick.ts";
+import type { OriginalMediaFrame } from "../../🧱️elements/🔌️PluginRuntime/🚚️handle-turn-drive/original-media-sender.ts";
 /** 💾 Media export download and natural file codecs. */
 import {
   DOWNLOAD_MEDIA_EXPORT_REVOKE_MS,
@@ -30,6 +34,63 @@ import "../🧰️engine-contract-helpers/🟦️.ts";
 
 describe("framework renderer hosts", () => {
   afterEach(() => cleanup());
+
+  it.each(originalMediaCases)("$name", async ({ mode, frames, progress, finished, result }) => {
+    const body = Uint8Array.from({ length: 4097 }, (_, index) => index % 251);
+    const oracle = new NodeBlob([body]);
+    const request = {
+      kind: 1, maximumFileBytes: body.byteLength,
+      loan: { operationId: "1".repeat(16), generation: "2".repeat(16), instanceId: 1, documentId: "note", baseRevision: "3".repeat(64) },
+    };
+    const source = {
+      name: "note.png", type: "image/png", size: body.byteLength,
+      slice: (start: number, end: number) => ({ arrayBuffer: async () => body.slice(start, end).buffer }),
+    };
+    const controller = new AbortController();
+    const abort = new Error("fixture cancelled");
+    const retirement = new Error("fixture retirement failed");
+    const observedFrames: OriginalMediaFrame["kind"][] = [];
+    const observedProgress: number[] = [];
+    const finish = vi.fn();
+    let current = true;
+
+    const picked = pickOriginalMedia(request, {
+      current: () => true,
+      async cross(frame, bytes, owned) {
+        expect(owned()).toBe(true);
+        expect(frame.loan).toEqual(request.loan);
+        observedFrames.push(frame.kind);
+        if (frame.kind === "page") {
+          const start = frame.index * 4096;
+          expect(bytes).toEqual(new Uint8Array(await oracle.slice(start, start + frame.byteLength).arrayBuffer()));
+        }
+        if (frame.kind === "cancel" && mode === "failed-retirement") throw retirement;
+      },
+    }, async () => {
+      if (mode === "stale-selection") {
+        current = false;
+        throw new Error("fixture selection owner retired");
+      }
+      return mode === "empty-selection" ? [] : [source];
+    }, () => current, () => ({
+      signal: controller.signal,
+      progress(completed, total) {
+        expect(total).toBe(body.byteLength);
+        observedProgress.push(completed);
+        if (mode === "abort" || mode === "failed-retirement") controller.abort(abort);
+      },
+      finish,
+    }));
+
+    if (mode === "failed-retirement") {
+      await expect(picked).rejects.toMatchObject({ message: result, errors: [abort, retirement] });
+    } else {
+      await expect(picked).resolves.toBe(result);
+    }
+    expect(observedFrames).toEqual(frames);
+    expect(observedProgress).toEqual(progress);
+    expect(finish).toHaveBeenCalledTimes(finished);
+  });
 
   it("forwards cancellation into the admitted import and awaits owner retirement", async () => {
     const fixture = naturalFileLifecycleFixture.openCancellation;

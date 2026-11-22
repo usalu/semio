@@ -2,6 +2,7 @@
 
 #[test]
 fn object_min_properties_hides_removal_at_the_boundary() {
+    let _arena = ui_arena();
     struct MinPropertiesFixture;
     impl ToValue for MinPropertiesFixture {
         fn to_value(&self) -> DslValue {
@@ -38,6 +39,7 @@ fn object_min_properties_hides_removal_at_the_boundary() {
 
 #[test]
 fn tagged_union_details_follow_the_current_native_discriminator() {
+    let _arena = ui_arena();
     struct TaggedFixture;
     impl ToValue for TaggedFixture {
         fn to_value(&self) -> DslValue {
@@ -190,6 +192,7 @@ fn external_all_of_union_uses_the_registered_document_shape_for_controls_and_var
 
 #[test]
 fn enum_values_render_as_an_accessible_typed_select() {
+    let _arena = ui_arena();
     struct EnumValue;
     impl SnapshotDetailsProvider for EnumValue {
         fn value(&self, path: &[SnapshotDetailPathSegment]) -> Option<SnapshotDetailValue> {
@@ -221,6 +224,7 @@ fn enum_values_render_as_an_accessible_typed_select() {
 
 #[test]
 fn unicode_rfc6901_paths_past_one_text_value_use_lossless_chunks() {
+    let _arena = ui_arena();
     let key = "Pfad/mit~Unicode-🚀é".repeat(64);
     let path = pointer(&[SnapshotDetailPathSegment::Key(key.clone())]);
     assert!(path.len() > semio_ui_contract::UI_TEXT_MAX_BYTES);
@@ -244,6 +248,7 @@ fn unicode_rfc6901_paths_past_one_text_value_use_lossless_chunks() {
 
 #[test]
 fn paths_beyond_the_flat_chunk_carrier_open_the_complete_editable_source() {
+    let _arena = ui_arena();
     struct HugeKey(String);
     impl SnapshotDetailsProvider for HugeKey {
         fn value(&self, path: &[SnapshotDetailPathSegment]) -> Option<SnapshotDetailValue> {
@@ -317,6 +322,7 @@ fn heavy_item(id: &str, fillers: usize) -> UiAssemblyResult<ui_contract::TreeIte
 
 #[test]
 fn a_nested_window_leaves_its_enclosing_row_its_own_price() {
+    let _arena = ui_arena();
     let windows = TreeWindows::unhosted();
     let section = tree_window_indexed_section(&windows, "root", label("Root").unwrap(), true, 2, |index| {
         if index == 0 {

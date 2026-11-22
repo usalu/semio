@@ -72,7 +72,7 @@ fn deep_tree(depth: usize) -> (UiTree, NodeId) {
 }
 
 fn text_job(tree: &UiTree, root: NodeId) -> MountedLayoutJob {
-    MountedLayoutJob::try_new(tree, root, MountedLayoutIdentity { surface: UiSurfaceToken::new(3, 7), generation: 11, revision: 13, theme_revision: 17, viewport_revision: 19 }, Theme::default(), 640.0, 480.0, false, ui_contract::FlowInline::Ltr)
+    MountedLayoutJob::try_new(tree, root, MountedLayoutIdentity { surface: UiSurfaceToken::new(3, 7), generation: 11, revision: 13, theme_revision: 17, viewport_revision: 19, icons_only: false }, Theme::default(), 640.0, 480.0, false, ui_contract::FlowInline::Ltr)
         .unwrap_or_else(|fault| panic!("mounted text job: {fault:?}"))
 }
 
@@ -516,7 +516,7 @@ fn mounted_layout_prices_a_text_run_with_the_atlas_pair_kerning() {
 }
 
 fn composite_intrinsic_and_layout(tree: &mut UiTree, root: NodeId, width: f32) -> f32 {
-    let identity = MountedLayoutIdentity { surface: UiSurfaceToken::new(5, 1), generation: 1, revision: 0, theme_revision: 0, viewport_revision: 0 };
+    let identity = MountedLayoutIdentity { surface: UiSurfaceToken::new(5, 1), generation: 1, revision: 0, theme_revision: 0, viewport_revision: 0, icons_only: false };
     let mut job = MountedLayoutJob::try_new(tree, root, identity, Theme::default(), width, 400.0, false, ui_contract::FlowInline::Ltr).expect("composite layout job");
     let policy = ui_contract::UI_WORKER_RETIREMENT_POLICY;
     while !job.is_admitted() {
@@ -631,7 +631,7 @@ fn a_host_content_slot_reserves_the_band_its_host_declared() {
         UiNode::ExternalSlot(semio_ui_declaration::ui::UiExternalSlotNode {
             plugin_id: "framework".into(),
             app_id: "shell".into(),
-            body_key: "framework.chat.transcript".into(),
+            body_key: semio_ui_retained_tree::reconcile::MEDIA_TRANSPORT_EXTENSION_ID.into(),
             params_json: format!("{{\"hostContentHeight\": {declared}}}"),
             host_status: None,
             presence: UiPresence::default(),
@@ -764,7 +764,7 @@ fn every_layout_step_allocates_only_through_its_own_receipt() {
     use semio_framework_job::{InteractiveJob, JobOutcomeBorrow, RetainedCloneProgress};
     let policy = ui_contract::UI_WORKER_RETIREMENT_POLICY;
     let (mut tree, root) = every_container_tree();
-    let identity = MountedLayoutIdentity { surface: UiSurfaceToken::new(9, 3), generation: 5, revision: 0, theme_revision: 0, viewport_revision: 0 };
+    let identity = MountedLayoutIdentity { surface: UiSurfaceToken::new(9, 3), generation: 5, revision: 0, theme_revision: 0, viewport_revision: 0, icons_only: false };
     let (job, birth) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| MountedLayoutJob::try_new(&tree, root, identity, Theme::default(), 120.0, 400.0, false, ui_contract::FlowInline::Ltr).expect("layout job"));
     let mut job = job;
     let (mut born, mut released) = (birth.requested_bytes, birth.released_bytes);

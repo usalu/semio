@@ -1,5 +1,6 @@
 //! 📜️ The studio app manifest: play layout, modes, windows, panels, actions and the proof catalog.
 
+use semio_plugin::Axis;
 use super::*;
 
 //#region 🔖️SpaceManifest
@@ -10,15 +11,42 @@ async fn space_play_layout() -> WindowLayout {
             crate::modes::main::windows::media_vfs::S_PLAY_WINDOW_MEDIA_VFS.into(),
             crate::modes::main::windows::compiled_dag::S_PLAY_WINDOW_COMPILED_DAG.into(),
         ],
-        "row",
-        Some(&[40.0, 30.0, 30.0]),
+        Axis::Horizontal,
+        Some(&[0.4, 0.3, 0.3]),
         Some(&["Workflow".into(), "Media VFS".into(), "Compiled DAG".into()]),
     )
 }
 
+/// 🗃️ Publishes the Studio's existing Workflow schema through the artifact catalogue.
+pub fn workflow_artifact_kind() -> semio_plugin::ArtifactKindSpec {
+    let schema = <SpaceApp as ArtifactApp>::DOCUMENT_SCHEMA;
+    semio_plugin::ArtifactKindSpec {
+        id: <SpaceApp as ArtifactApp>::DIALECT.artifact_kind.into(),
+        label: LocalizedLabel::native("Workflow", "Workflow"),
+        source_format: schema.into(),
+        component_kind: "workflow".into(),
+        dimension: String::new(),
+        media_capability: semio_plugin::OsMediaCapability::MeshOnly,
+        media_type: semio_plugin::MediaType { class: semio_plugin::MediaClass::Graph, form: semio_plugin::MediaForm::Dag },
+        schema: schema.into(),
+        export_formats: Vec::new(),
+        import_formats: Vec::new(),
+        export_stdio_kinds: Vec::new(),
+        import_stdio_kinds: Vec::new(),
+    }
+}
+
 pub async fn create_space_app() -> App {
     use crate::modes::main::windows::{compiled_dag, media_vfs, workflow};
+    let kind = workflow_artifact_kind();
+    let io = semio_plugin::AppIo::from_artifact(kind.schema, kind.media_type, semio_plugin::ArtifactPresentation {
+        id: kind.id,
+        name: "Workflow".into(),
+        dimension: kind.dimension,
+        component_kind: kind.component_kind,
+    }).await;
     let builder = App::builder(S_PLAY_APP_ID, LocalizedLabel::native("Space", "Space")).await.document(["semio", "s", "studio"])
+        .io(io).await
         .command(CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog("setAppRegistrations", LocalizedLabel::native("Set App Registrations", "App-Registrierungen festlegen"), "host", ActionKind::View).with_args([ActionArgDef::text("json", LocalizedLabel::native("App Registrations", "App-Registrierungen"))]) }).await
         .icon_id("s").await
         .mode_def(crate::modes::main::definition().await).await
@@ -35,6 +63,8 @@ pub async fn create_space_app() -> App {
         .mutation("removeParameter", LocalizedLabel::native("Remove Parameter", "Parameter entfernen")).await
         .action_destructive("removeParameter").await
         .mutation("spawnApp", LocalizedLabel::native("Spawn App", "App erzeugen")).await
+        .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog("finishSpawnApp", LocalizedLabel::native("Finish App Creation", "App-Erstellung abschließen"), ActionKind::Mutation) }).await
+        .action_audience("finishSpawnApp", semio_plugin::CapabilityAudience::Chrome).await
         .mutation("moveMediaNode", LocalizedLabel::native("Move Media Node", "Medienknoten verschieben")).await
         .mutation("connectMediaPorts", LocalizedLabel::native("Connect Media Ports", "Medien-Ports verbinden")).await
         .mutation("disconnectMediaEdge", LocalizedLabel::native("Disconnect Media Edge", "Medienverbindung trennen")).await
@@ -80,6 +110,7 @@ pub async fn create_space_app() -> App {
         .action_interactive_job("addParameter", InteractiveJobClassification::Migrated).await
         .action_interactive_job("removeParameter", InteractiveJobClassification::Migrated).await
         .action_interactive_job("spawnApp", InteractiveJobClassification::Migrated).await
+        .action_interactive_job("finishSpawnApp", InteractiveJobClassification::Migrated).await
         .action_interactive_job("moveMediaNode", InteractiveJobClassification::Migrated).await
         .action_interactive_job("connectMediaPorts", InteractiveJobClassification::Migrated).await
         .action_interactive_job("disconnectMediaEdge", InteractiveJobClassification::Migrated).await
@@ -135,7 +166,7 @@ pub async fn create_space_app() -> App {
         ]).await
         .window_kind_action_refs(semio_hub_space_foundation::S_PLAY_WINDOW_WORKFLOW, vec![
             "patchParameter".into(), "addParameter".into(), "removeParameter".into(),
-            "spawnApp".into(), "moveMediaNode".into(), "connectMediaPorts".into(), "disconnectMediaEdge".into(),
+            "spawnApp".into(), "finishSpawnApp".into(), "moveMediaNode".into(), "connectMediaPorts".into(), "disconnectMediaEdge".into(),
             "removeAppInstance".into(), "deleteSelection".into(), "copyAppInstance".into(),
             "duplicateAppInstance".into(), "pasteAppInstance".into(), "renameAppInstance".into(),
             "patchMediaNodes".into(), "patchAppInstances".into(), "bindParameterField".into(),

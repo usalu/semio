@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { createReadStream, existsSync, mkdirSync, writeFileSync } from "node:fs";
+import { createReadStream, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { join, resolve, sep } from "node:path";
 
@@ -8,13 +8,18 @@ const repoRoot = process.cwd();
 const output = join(import.meta.dir, "🗑️generated");
 const browserBundle = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle");
 const materialization = join(browserBundle, "🏗️materialization");
-const component = join(output, "stdio-office.wasm");
-const moduleRoot = join(output, "office-web");
+const [operation, captureDirectory, webDirectory, descriptorDirectory] = process.argv.slice(2);
+const capture = captureDirectory ? resolve(captureDirectory) : output;
+const component = join(capture, "stdio-office.wasm");
+const moduleRoot = webDirectory ? resolve(webDirectory) : join(output, "office-web");
 const moduleBase = "semio_hub_stdio_office_component";
-const componentSha256 = "2ae0845ec0987eaab2d1d584fed4fb1f7745d8d5de819f5db88145b90f163a7b";
-const provedPack = join(output, "office-emitted-replay", "🛂️.descriptor.semio");
+const provedPack = join(descriptorDirectory ? resolve(descriptorDirectory) : join(output, "office-emitted-replay"), "🛂️.descriptor.semio");
 
-if (process.argv[2] === "transpile") {
+if (operation === "transpile") {
+  const receipt = JSON.parse(readFileSync(join(capture, "stdio-office-cargo-artifact.json"), "utf8"));
+  const componentSha256 = receipt.sha256;
+  assert.match(componentSha256, /^[0-9a-f]{64}$/);
+  assert.ok(receipt.cargo.package_id.includes("#semio-hub-stdio-office-component@"));
   const sha = createHash("sha256");
   for await (const chunk of createReadStream(component)) sha.update(chunk);
   assert.equal(sha.digest("hex"), componentSha256);
@@ -27,14 +32,15 @@ if (process.argv[2] === "transpile") {
   mkdirSync(moduleRoot);
   ensurePreview2ShimVendorAt(preview2VendorDir, repoRoot);
   writeFileSync(join(moduleRoot, "🟨️.js"), hostShimSource(), { flag: "wx" });
-  const tool = nativeTranspileBinaryV1(repoRoot);
+  const mode = captureDirectory ? "prototype" : undefined;
+  const tool = nativeTranspileBinaryV1(repoRoot, mode);
   const toolHash = createHash("sha256");
   for await (const chunk of createReadStream(tool)) toolHash.update(chunk);
   console.log(`[DEBUG] Transpiling Office component ${componentSha256} with native tool ${toolHash.digest("hex")}`);
-  await transpilePluginComponentAsync(component, moduleRoot, moduleBase, { repoRoot, preview2VendorDir, optimize: false });
+  await transpilePluginComponentAsync(component, moduleRoot, moduleBase, { repoRoot, preview2VendorDir, mode, optimize: false });
   assert.ok(existsSync(join(moduleRoot, moduleBase + ".js")));
   console.log("Production prototype transpile completed for the captured Office component");
-} else if (process.argv[2] === "chromium") {
+} else if (operation === "chromium") {
   const { PLUGIN_DESCRIPTOR_PROBE_SOURCE } = await import(join(browserBundle, "🛂️descriptor/🟦️.ts"));
   const repositoryBrowser = join(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🧰️preparation/🟦️.ts");
   const { ensureRepositoryBrowserPathV1 } = await import(repositoryBrowser);

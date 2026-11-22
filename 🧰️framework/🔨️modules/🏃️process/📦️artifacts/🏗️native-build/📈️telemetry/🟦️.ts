@@ -83,15 +83,32 @@ export interface TimelineSamplerV1 {
   stop(): Promise<readonly TimelineRowV1[]>;
 }
 
+/** 📓️ Suppresses only storage exhaustion in the optional timeline file. */
+function timelineAppender(path: string, onStorageFull?: (path: string) => void): (line: string) => void {
+  let recording = true;
+  const refusal = (error: unknown): void => {
+    if ((error as NodeJS.ErrnoException).code !== "ENOSPC") throw error;
+    recording = false;
+    onStorageFull?.(path);
+  };
+  try { mkdirSync(dirname(path), { recursive: true }); }
+  catch (error) { refusal(error); }
+  return line => {
+    if (!recording) return;
+    try { appendFileSync(path, line); }
+    catch (error) { refusal(error); }
+  };
+}
+
 /** 🔰️ Samples machine CPU, memory and swap plus the driver's counters at start, every `intervalMs` and at stop, appends each row to `path` and hands it to `onRow`. */
-export function startTimelineV1(options:Readonly<{control:ResourceLeaseControl;path:string;intervalMs?:number;counters:()=>TimelineCountersV1;onRow?:(row:TimelineRowV1,control:ResourceLeaseControl)=>Promise<void>;now?:()=>number}>):TimelineSamplerV1{
+export function startTimelineV1(options:Readonly<{control:ResourceLeaseControl;path:string;intervalMs?:number;counters:()=>TimelineCountersV1;onRow?:(row:TimelineRowV1,control:ResourceLeaseControl)=>Promise<void>;onStorageFull?:(path:string)=>void;now?:()=>number}>):TimelineSamplerV1{
  requireIssuedResourceControlV1(options.control);const {control,path,intervalMs,counters,onRow}=options,now=options.now??Date.now,rows:TimelineRowV1[]=[];
- mkdirSync(dirname(path),{recursive:true});let previous=cpuTimesV1(),swapped:{atMs:number;bytes:number}|null=null;
+ const append=timelineAppender(path,options.onStorageFull);let previous=cpuTimesV1(),swapped:{atMs:number;bytes:number}|null=null;
  const sampler=startTelemetrySamplerV1(control,async actual=>{
   const memory=await memoryCountersV1(actual),atMs=now(),times=cpuTimesV1(),swapOutBytesPerSecond=memory.swappedOutBytes===null||swapped===null||atMs<=swapped.atMs?null:Math.max(0,(memory.swappedOutBytes-swapped.bytes)*1000/(atMs-swapped.atMs));
   if(memory.swappedOutBytes!==null)swapped={atMs,bytes:memory.swappedOutBytes};
   const row:TimelineRowV1=Object.freeze({v:1,atMs,cpuPercent:Math.round(cpuPercentV1(previous,times)*10)/10,cores:cpus().length,memoryTotalBytes:totalmem(),memoryAvailableBytes:memory.availableBytes,swapUsedBytes:memory.swapUsedBytes,swapOutBytesPerSecond:swapOutBytesPerSecond===null?null:Math.round(swapOutBytesPerSecond),...counters()});
-  const line=JSON.stringify(row)+"\n";if(Buffer.byteLength(line)>TELEMETRY_POLICY_V1.maximumRowBytes)throw Error("Bounded telemetry row required");previous=times;rows.push(row);appendFileSync(path,line);await onRow?.(row,actual);
+  const line=JSON.stringify(row)+"\n";if(Buffer.byteLength(line)>TELEMETRY_POLICY_V1.maximumRowBytes)throw Error("Bounded telemetry row required");previous=times;rows.push(row);append(line);await onRow?.(row,actual);
  },intervalMs);
  return Object.freeze({rows:()=>Object.freeze([...rows]),stop:async()=>{await sampler.stop();return Object.freeze([...rows]);}});
 }

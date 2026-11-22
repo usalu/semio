@@ -1,24 +1,5 @@
 scalar JSON
 
-type CaseNumber {
-  id: String!
-  value: Float!
-}
-
-type CaseText {
-  id: String!
-  value: String!
-}
-
-type CaseRow {
-  id: String!
-  labelEn: String!
-  labelDe: String!
-  entryId: String!
-  numbers: [CaseNumber!]!
-  texts: [CaseText!]!
-}
-
 type En1998Artifact {
   annex: String!
   site: En1998Site!
@@ -42,7 +23,7 @@ type En1998Artifact {
   isolationSystems: [En1998IsolationSystem!]!
   pierBases: [En1998PierBase!]!
   criticalRegions: [En1998CriticalRegion!]!
-  cases: [CaseRow!]! @state(class: ARTIFACT)
+  cases: [CaseRow!]!
 }
 enum EnGroundType {
   a
@@ -531,4 +512,20 @@ type En1998CriticalRegion {
   hoopLegsY: Float!
   restrainedBarCount: Float!
   restrainedBarSpacingM: Float!
+}
+type CaseNumber {
+  id: String!
+  value: Float!
+}
+type CaseText {
+  id: String!
+  value: String!
+}
+type CaseRow {
+  id: String!
+  labelEn: String!
+  labelDe: String!
+  entryId: String!
+  numbers: [CaseNumber!]!
+  texts: [CaseText!]!
 }

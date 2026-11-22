@@ -1,5 +1,8 @@
 //! 📦️ The object-record writer: per-class dispatch, layouts, scales, sort tables, dictionaries, xrecords and the handle map.
 
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::{DwgLogicalObject, DwgLogicalObjectBody, tables::DwgTableRecordBody};
+use std::collections::{BTreeMap, BTreeSet};
+
 use semio_s_artifact_stdio_dwg_snapshot::standards::v_ac1024::subsets::any::io::binary::snapshot::dwg_crc16;
 use crate::standards::v_ac1024::subsets::any::io::export::objects::associativity::{encode_r2010_assoc_2d_constraint_group_frame, encode_r2010_assoc_network_frame, encode_r2010_associative_dependency_frame, encode_r2010_associative_dimension_dependency_body_frame, encode_r2010_associative_geometry_dependency_frame, encode_r2010_associative_value_dependency_frame, encode_r2010_associative_variable_frame, encode_r2010_evaluation_graph_frame};
 use semio_s_artifact_stdio_dwg_write_records::standards::v_ac1024::subsets::any::io::export::records::bits::DwgBitWriter;
@@ -435,67 +438,159 @@ fn encode_r2010_object_frame(object: &semio_s_artifact_stdio_dwg_snapshot_object
     }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn finish_r2004_handle_block(output: &mut Vec<u8>, block: &mut Vec<u8>) -> Result<(), String> {
+fn finish_r2004_handle_block(block: &mut Vec<u8>) -> Result<(), String> {
     let size = u16::try_from(block.len()).map_err(|_| "R2004 Handles block exceeds u16")?;
-    block[0..2].copy_from_slice(&size.to_be_bytes());
+    block[..2].copy_from_slice(&size.to_be_bytes());
     let crc = dwg_crc16(0xC0C1, block);
-    output.extend_from_slice(block);
-    output.extend_from_slice(&crc.to_be_bytes());
-    block.clear();
+    block.extend_from_slice(&crc.to_be_bytes());
     Ok(())
 }
+
+const HANDLES_BLOCK_TARGET: usize = 2030;
+const HANDLES_BLOCK_LIMIT: usize = 2048;
+
+/// 📍️ Encodes ordered object locations into independent R2004 Handles blocks.
+pub struct HandleMapBlocks {
+    block: Vec<u8>,
+    base_handle: u64,
+    base_address: i64,
+    previous_handle: u64,
+}
+
+impl HandleMapBlocks {
+    /// 🧾️ Opens an empty handle map with an initial zero delta base.
+    pub fn new() -> Self {
+        Self { block: Self::empty_block(), base_handle: 0, base_address: 0, previous_handle: 0 }
+    }
+
+    fn empty_block() -> Vec<u8> {
+        let mut block = Vec::with_capacity(HANDLES_BLOCK_LIMIT + 20);
+        block.extend([0, 0]);
+        block
+    }
+
+    fn write_row(&mut self, handle: u64, address: i64) {
+        write_r2004_unsigned_modular_char(&mut self.block, handle - self.base_handle);
+        write_r2004_signed_modular_char(&mut self.block, address - self.base_address);
+        self.base_handle = handle;
+        self.base_address = address;
+    }
+
+    fn seal(&mut self) -> Result<Vec<u8>, String> {
+        finish_r2004_handle_block(&mut self.block)?;
+        self.base_handle = 0;
+        self.base_address = 0;
+        Ok(std::mem::replace(&mut self.block, Self::empty_block()))
+    }
+
+    /// ✍️ Accepts one sorted location and returns a completed block when it is ready.
+    pub fn push(&mut self, handle: u64, address: usize) -> Result<Option<Vec<u8>>, String> {
+        if handle <= self.previous_handle {
+            return Err("R2004 Handles requires unique nonzero handles".into());
+        }
+        let address = i64::try_from(address).map_err(|_| "R2004 object address exceeds i64")?;
+        let before = self.block.len();
+        self.write_row(handle, address);
+        let completed = if self.block.len() > HANDLES_BLOCK_LIMIT {
+            self.block.truncate(before);
+            let block = self.seal()?;
+            self.write_row(handle, address);
+            Some(block)
+        } else if self.block.len() > HANDLES_BLOCK_TARGET {
+            Some(self.seal()?)
+        } else {
+            None
+        };
+        self.previous_handle = handle;
+        Ok(completed)
+    }
+
+    /// 🏁️ Seals the last nonempty block and emits the empty terminator.
+    pub fn finish(mut self) -> Result<Vec<u8>, String> {
+        if self.block.len() > 2 { finish_r2004_handle_block(&mut self.block)?; }
+        else { self.block.clear(); }
+        let mut terminator = vec![0, 2];
+        finish_r2004_handle_block(&mut terminator)?;
+        self.block.extend(terminator);
+        Ok(self.block)
+    }
+}
+
+/// 🗃️ Collects a Handles section from an unordered list of object locations.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn materialize_r2004_handles(pairs: &[(u64, usize)]) -> Result<Vec<u8>, String> {
     let mut sorted = pairs.to_vec();
-    sorted.sort_by_key(|(handle, _)| *handle);
-    if sorted.iter().any(|(handle, _)| *handle == 0) || sorted.windows(2).any(|pair| pair[0].0 == pair[1].0) {
-        return Err("R2004 Handles requires unique nonzero handles".into());
-    }
+    sorted.sort_unstable_by_key(|&(handle, _)| handle);
+    let mut encoder = HandleMapBlocks::new();
     let mut output = Vec::new();
-    let mut block = vec![0u8; 2];
-    let mut last_handle = 0u64;
-    let mut last_address = 0usize;
     for (handle, address) in sorted {
-        write_r2004_unsigned_modular_char(&mut block, handle.checked_sub(last_handle).ok_or("R2004 Handles are not strictly increasing")?);
-        write_r2004_signed_modular_char(&mut block, i64::try_from(address).map_err(|_| "R2004 object address exceeds i64")? - i64::try_from(last_address).map_err(|_| "R2004 prior object address exceeds i64")?);
-        last_handle = handle;
-        last_address = address;
-        if block.len() > 2030 {
-            finish_r2004_handle_block(&mut output, &mut block)?;
-            block.extend_from_slice(&[0, 0]);
-            last_handle = 0;
-            last_address = 0;
-        }
+        if let Some(block) = encoder.push(handle, address)? { output.extend(block); }
     }
-    if block.len() > 2 {
-        finish_r2004_handle_block(&mut output, &mut block)?;
-    }
-    let mut terminator = vec![0, 2];
-    finish_r2004_handle_block(&mut output, &mut terminator)?;
+    output.extend(encoder.finish()?);
     Ok(output)
 }
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn materialize_r2010_objects(objects: &[semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject]) -> Result<DwgObjectFrame, String> {
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgTableRecordBody;
-    let mut seen = std::collections::BTreeSet::new();
-    if objects.iter().any(|object| object.handle == 0 || !seen.insert(object.handle)) {
-        return Err("AcDbObjects requires unique nonzero handles".into());
+/// 🧩️ Reports one object indexing or framing step, or completion of the section.
+pub enum ObjectRecordStep {
+    Indexed,
+    Frame { handle: u64, bytes: Vec<u8> },
+    Complete,
+}
+
+/// 📚️ Indexes the drawing's handles before yielding its framed records in authored order.
+pub struct ObjectRecords {
+    address: usize,
+    length: usize,
+    indexed: usize,
+    framed: usize,
+    handles: BTreeSet<u64>,
+    block_names: BTreeMap<u64, String>,
+}
+
+impl ObjectRecords {
+    /// 🎟️ Binds record encoding to an immutable original object slice.
+    pub fn new(objects: &[DwgLogicalObject]) -> Self {
+        Self { address: objects.as_ptr() as usize, length: objects.len(), indexed: 0, framed: 0,
+            handles: BTreeSet::new(), block_names: BTreeMap::new() }
     }
-    let block_names = objects
-        .iter()
-        .filter_map(|object| match object.body.as_ref() {
-            Some(DwgLogicalObjectBody::TableRecord(DwgTableRecordBody::BlockHeader(header))) => Some((header.block_entity_handle, header.common.name.clone())),
-            _ => None,
-        })
-        .collect::<std::collections::BTreeMap<_, _>>();
+
+    /// ⏱️ Validates one original row or yields the bytes of one frame.
+    pub fn step(&mut self, objects: &[DwgLogicalObject]) -> Result<ObjectRecordStep, String> {
+        if objects.as_ptr() as usize != self.address || objects.len() != self.length {
+            return Err("AcDbObjects source changed".into());
+        }
+        if let Some(object) = objects.get(self.indexed) {
+            if object.handle == 0 || !self.handles.insert(object.handle) {
+                return Err("AcDbObjects requires unique nonzero handles".into());
+            }
+            if let Some(DwgLogicalObjectBody::TableRecord(DwgTableRecordBody::BlockHeader(header))) = &object.body {
+                self.block_names.insert(header.block_entity_handle, header.common.name.clone());
+            }
+            self.indexed += 1;
+            return Ok(ObjectRecordStep::Indexed);
+        }
+        let Some(object) = objects.get(self.framed) else { return Ok(ObjectRecordStep::Complete) };
+        let bytes = encode_r2010_object_frame(object, &self.block_names)?;
+        self.framed += 1;
+        Ok(ObjectRecordStep::Frame { handle: object.handle, bytes })
+    }
+}
+
+/// 🧱️ Collects the canonical object section and the original handle locations.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn materialize_r2010_objects(objects: &[DwgLogicalObject]) -> Result<DwgObjectFrame, String> {
+    let mut records = ObjectRecords::new(objects);
     let mut output = vec![0xca, 0x0d, 0x00, 0x00];
     let mut pairs = Vec::with_capacity(objects.len());
-    for object in objects {
-        pairs.push((object.handle, output.len()));
-        output.extend_from_slice(&encode_r2010_object_frame(object, &block_names)?);
+    loop {
+        match records.step(objects)? {
+            ObjectRecordStep::Indexed => (),
+            ObjectRecordStep::Frame { handle, bytes } => {
+                pairs.push((handle, output.len()));
+                output.extend(bytes);
+            }
+            ObjectRecordStep::Complete => return Ok((output, pairs)),
+        }
     }
-    Ok((output, pairs))
 }
 //#endregion DwgRead
 //#endregion 🔖️DwgStructuralCodec

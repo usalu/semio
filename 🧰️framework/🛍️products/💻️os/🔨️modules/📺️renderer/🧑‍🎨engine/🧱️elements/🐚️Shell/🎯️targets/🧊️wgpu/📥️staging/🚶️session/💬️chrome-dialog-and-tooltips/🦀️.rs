@@ -13,6 +13,7 @@ impl<'ctx> SessionCtx<'ctx> {
     /// user who re-folds/closes what the tour revealed doesn't get it snapped back open next frame —
     /// mirrors the React shell's own reveal effects, which likewise fire once per step.
     pub fn chrome_tour_frame_begin(&mut self) {
+        self.docs.reconcile_hub_first_run(self.chrome, self.directory, self.tutorial);
         let Some(step) = self.docs.chrome_tour_active_step(&self.chrome) else {
             return;
         };

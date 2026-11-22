@@ -59,8 +59,9 @@
             ]
           ],
           "plane": "xy",
-          "from": -0.00375,
-          "to": 0.00375
+          "from": -0.003,
+          "to": 0.003,
+          "sheet": true
         },
         {
           "id": "hea-bottom-flange",
@@ -90,6 +91,154 @@
           "plane": "xy",
           "from": -0.08,
           "to": 0.08
+        },
+        {
+          "id": "hea-root-top-r",
+          "kind": "extrude",
+          "bone": "stringer",
+          "material": "steel",
+          "role": "body",
+          "tone": 0.47,
+          "profile": [
+            [
+              0.067,
+              -0.018
+            ],
+            [
+              0.06586,
+              -0.01226
+            ],
+            [
+              0.06261,
+              -0.00739
+            ],
+            [
+              0.05774,
+              -0.00414
+            ],
+            [
+              0.052,
+              -0.003
+            ],
+            [
+              0.067,
+              -0.003
+            ]
+          ],
+          "plane": "yz",
+          "from": -0.05273,
+          "to": 5.09756
+        },
+        {
+          "id": "hea-root-top-l",
+          "kind": "extrude",
+          "bone": "stringer",
+          "material": "steel",
+          "role": "body",
+          "tone": 0.47,
+          "profile": [
+            [
+              0.067,
+              0.003
+            ],
+            [
+              0.052,
+              0.003
+            ],
+            [
+              0.05774,
+              0.00414
+            ],
+            [
+              0.06261,
+              0.00739
+            ],
+            [
+              0.06586,
+              0.01226
+            ],
+            [
+              0.067,
+              0.018
+            ]
+          ],
+          "plane": "yz",
+          "from": -0.05273,
+          "to": 5.09756
+        },
+        {
+          "id": "hea-root-bottom-r",
+          "kind": "extrude",
+          "bone": "stringer",
+          "material": "steel",
+          "role": "body",
+          "tone": 0.47,
+          "profile": [
+            [
+              -0.067,
+              -0.003
+            ],
+            [
+              -0.052,
+              -0.003
+            ],
+            [
+              -0.05774,
+              -0.00414
+            ],
+            [
+              -0.06261,
+              -0.00739
+            ],
+            [
+              -0.06586,
+              -0.01226
+            ],
+            [
+              -0.067,
+              -0.018
+            ]
+          ],
+          "plane": "yz",
+          "from": 0.13111,
+          "to": 5.02053
+        },
+        {
+          "id": "hea-root-bottom-l",
+          "kind": "extrude",
+          "bone": "stringer",
+          "material": "steel",
+          "role": "body",
+          "tone": 0.47,
+          "profile": [
+            [
+              -0.067,
+              0.018
+            ],
+            [
+              -0.06586,
+              0.01226
+            ],
+            [
+              -0.06261,
+              0.00739
+            ],
+            [
+              -0.05774,
+              0.00414
+            ],
+            [
+              -0.052,
+              0.003
+            ],
+            [
+              -0.067,
+              0.003
+            ]
+          ],
+          "plane": "yz",
+          "from": 0.13111,
+          "to": 5.02053
         },
         {
           "id": "base-plate",
@@ -692,6 +841,659 @@
               0.0
             ]
           }
+        },
+        {
+          "id": "riser-guard",
+          "kind": "extrude",
+          "bone": "stringer",
+          "material": "timber",
+          "role": "body",
+          "tone": 0.65,
+          "profile": [
+            [
+              -0.1192,
+              0.20969
+            ],
+            [
+              -0.09402,
+              0.19338
+            ],
+            [
+              -0.07771,
+              0.21857
+            ],
+            [
+              -0.1029,
+              0.23487
+            ]
+          ],
+          "plane": "xy",
+          "from": -0.6,
+          "to": 0.6,
+          "repeat": {
+            "count": 16,
+            "translation": [
+              0.33354,
+              0.0,
+              0.0
+            ]
+          }
+        },
+        {
+          "id": "post-r",
+          "kind": "revolve",
+          "bone": "stringer",
+          "material": "steel",
+          "role": "detail",
+          "tone": 0.3,
+          "profile": [
+            [
+              0.0,
+              0.0212
+            ],
+            [
+              1.02133,
+              0.0212
+            ]
+          ],
+          "axis": [
+            0.54341,
+            0.83947,
+            0.0
+          ],
+          "origin": [
+            0.02812,
+            0.20724,
+            -0.55
+          ],
+          "repeat": {
+            "count": 6,
+            "translation": [
+              1.00063,
+              0.0,
+              0.0
+            ]
+          }
+        },
+        {
+          "id": "post-flange-r",
+          "kind": "revolve",
+          "bone": "stringer",
+          "material": "steel",
+          "role": "detail",
+          "tone": 0.25,
+          "profile": [
+            [
+              0.0,
+              0.04
+            ],
+            [
+              0.008,
+              0.04
+            ]
+          ],
+          "axis": [
+            0.54341,
+            0.83947,
+            0.0
+          ],
+          "origin": [
+            0.02377,
+            0.20052,
+            -0.55
+          ],
+          "repeat": {
+            "count": 6,
+            "translation": [
+              1.00063,
+              0.0,
+              0.0
+            ]
+          }
+        },
+        {
+          "id": "handrail-r",
+          "kind": "revolve",
+          "bone": "stringer",
+          "material": "steel",
+          "role": "detail",
+          "tone": 0.3,
+          "profile": [
+            [
+              0.0,
+              0.0212
+            ],
+            [
+              5.14611,
+              0.0212
+            ]
+          ],
+          "axis": [
+            1.0,
+            0.0,
+            0.0
+          ],
+          "origin": [
+            0.51164,
+            1.06462,
+            -0.55
+          ]
+        },
+        {
+          "id": "bottom-rail-r",
+          "kind": "revolve",
+          "bone": "stringer",
+          "material": "steel",
+          "role": "detail",
+          "tone": 0.3,
+          "profile": [
+            [
+              0.0,
+              0.01065
+            ],
+            [
+              5.00316,
+              0.01065
+            ]
+          ],
+          "axis": [
+            1.0,
+            0.0,
+            0.0
+          ],
+          "origin": [
+            0.13263,
+            0.3687,
+            -0.55
+          ]
+        },
+        {
+          "id": "baluster-r-1",
+          "kind": "revolve",
+          "bone": "stringer",
+          "material": "steel",
+          "role": "detail",
+          "tone": 0.3,
+          "profile": [
+            [
+              0.0,
+              0.006
+            ],
+            [
+              0.829,
+              0.006
+            ]
+          ],
+          "axis": [
+            0.54341,
+            0.83947,
+            0.0
+          ],
+          "origin": [
+            0.25771,
+            0.3687,
+            -0.55
+          ],
+          "repeat": {
+            "count": 7,
+            "translation": [
+              0.12508,
+              0.0,
+              0.0
+            ]
+          }
+        },
+        {
+          "id": "baluster-r-2",
+          "kind": "revolve",
+          "bone": "stringer",
+          "material": "steel",
+          "role": "detail",
+          "tone": 0.3,
+          "profile": [
+            [
+              0.0,
+              0.006
+            ],
+            [
+              0.829,
+              0.006
+            ]
+          ],
+          "axis": [
+            0.54341,
+            0.83947,
+            0.0
+          ],
+          "origin": [
+            1.25835,
+            0.3687,
+            -0.55
+          ],
+          "repeat": {
+            "count": 7,
+            "translation": [
+              0.12508,
+              0.0,
+              0.0
+            ]
+          }
+        },
+        {
+          "id": "baluster-r-3",
+          "kind": "revolve",
+          "bone": "stringer",
+          "material": "steel",
+          "role": "detail",
+          "tone": 0.3,
+          "profile": [
+            [
+              0.0,
+              0.006
+            ],
+            [
+              0.829,
+              0.006
+            ]
+          ],
+          "axis": [
+            0.54341,
+            0.83947,
+            0.0
+          ],
+          "origin": [
+            2.25898,
+            0.3687,
+            -0.55
+          ],
+          "repeat": {
+            "count": 7,
+            "translation": [
+              0.12508,
+              0.0,
+              0.0
+            ]
+          }
+        },
+        {
+          "id": "baluster-r-4",
+          "kind": "revolve",
+          "bone": "stringer",
+          "material": "steel",
+          "role": "detail",
+          "tone": 0.3,
+          "profile": [
+            [
+              0.0,
+              0.006
+            ],
+            [
+              0.829,
+              0.006
+            ]
+          ],
+          "axis": [
+            0.54341,
+            0.83947,
+            0.0
+          ],
+          "origin": [
+            3.25961,
+            0.3687,
+            -0.55
+          ],
+          "repeat": {
+            "count": 7,
+            "translation": [
+              0.12508,
+              0.0,
+              0.0
+            ]
+          }
+        },
+        {
+          "id": "baluster-r-5",
+          "kind": "revolve",
+          "bone": "stringer",
+          "material": "steel",
+          "role": "detail",
+          "tone": 0.3,
+          "profile": [
+            [
+              0.0,
+              0.006
+            ],
+            [
+              0.829,
+              0.006
+            ]
+          ],
+          "axis": [
+            0.54341,
+            0.83947,
+            0.0
+          ],
+          "origin": [
+            4.26024,
+            0.3687,
+            -0.55
+          ],
+          "repeat": {
+            "count": 7,
+            "translation": [
+              0.12508,
+              0.0,
+              0.0
+            ]
+          }
+        },
+        {
+          "id": "post-l",
+          "kind": "revolve",
+          "bone": "stringer",
+          "material": "steel",
+          "role": "detail",
+          "tone": 0.3,
+          "profile": [
+            [
+              0.0,
+              0.0212
+            ],
+            [
+              1.02133,
+              0.0212
+            ]
+          ],
+          "axis": [
+            0.54341,
+            0.83947,
+            0.0
+          ],
+          "origin": [
+            0.02812,
+            0.20724,
+            0.55
+          ],
+          "repeat": {
+            "count": 6,
+            "translation": [
+              1.00063,
+              0.0,
+              0.0
+            ]
+          }
+        },
+        {
+          "id": "post-flange-l",
+          "kind": "revolve",
+          "bone": "stringer",
+          "material": "steel",
+          "role": "detail",
+          "tone": 0.25,
+          "profile": [
+            [
+              0.0,
+              0.04
+            ],
+            [
+              0.008,
+              0.04
+            ]
+          ],
+          "axis": [
+            0.54341,
+            0.83947,
+            0.0
+          ],
+          "origin": [
+            0.02377,
+            0.20052,
+            0.55
+          ],
+          "repeat": {
+            "count": 6,
+            "translation": [
+              1.00063,
+              0.0,
+              0.0
+            ]
+          }
+        },
+        {
+          "id": "handrail-l",
+          "kind": "revolve",
+          "bone": "stringer",
+          "material": "steel",
+          "role": "detail",
+          "tone": 0.3,
+          "profile": [
+            [
+              0.0,
+              0.0212
+            ],
+            [
+              5.14611,
+              0.0212
+            ]
+          ],
+          "axis": [
+            1.0,
+            0.0,
+            0.0
+          ],
+          "origin": [
+            0.51164,
+            1.06462,
+            0.55
+          ]
+        },
+        {
+          "id": "bottom-rail-l",
+          "kind": "revolve",
+          "bone": "stringer",
+          "material": "steel",
+          "role": "detail",
+          "tone": 0.3,
+          "profile": [
+            [
+              0.0,
+              0.01065
+            ],
+            [
+              5.00316,
+              0.01065
+            ]
+          ],
+          "axis": [
+            1.0,
+            0.0,
+            0.0
+          ],
+          "origin": [
+            0.13263,
+            0.3687,
+            0.55
+          ]
+        },
+        {
+          "id": "baluster-l-1",
+          "kind": "revolve",
+          "bone": "stringer",
+          "material": "steel",
+          "role": "detail",
+          "tone": 0.3,
+          "profile": [
+            [
+              0.0,
+              0.006
+            ],
+            [
+              0.829,
+              0.006
+            ]
+          ],
+          "axis": [
+            0.54341,
+            0.83947,
+            0.0
+          ],
+          "origin": [
+            0.25771,
+            0.3687,
+            0.55
+          ],
+          "repeat": {
+            "count": 7,
+            "translation": [
+              0.12508,
+              0.0,
+              0.0
+            ]
+          }
+        },
+        {
+          "id": "baluster-l-2",
+          "kind": "revolve",
+          "bone": "stringer",
+          "material": "steel",
+          "role": "detail",
+          "tone": 0.3,
+          "profile": [
+            [
+              0.0,
+              0.006
+            ],
+            [
+              0.829,
+              0.006
+            ]
+          ],
+          "axis": [
+            0.54341,
+            0.83947,
+            0.0
+          ],
+          "origin": [
+            1.25835,
+            0.3687,
+            0.55
+          ],
+          "repeat": {
+            "count": 7,
+            "translation": [
+              0.12508,
+              0.0,
+              0.0
+            ]
+          }
+        },
+        {
+          "id": "baluster-l-3",
+          "kind": "revolve",
+          "bone": "stringer",
+          "material": "steel",
+          "role": "detail",
+          "tone": 0.3,
+          "profile": [
+            [
+              0.0,
+              0.006
+            ],
+            [
+              0.829,
+              0.006
+            ]
+          ],
+          "axis": [
+            0.54341,
+            0.83947,
+            0.0
+          ],
+          "origin": [
+            2.25898,
+            0.3687,
+            0.55
+          ],
+          "repeat": {
+            "count": 7,
+            "translation": [
+              0.12508,
+              0.0,
+              0.0
+            ]
+          }
+        },
+        {
+          "id": "baluster-l-4",
+          "kind": "revolve",
+          "bone": "stringer",
+          "material": "steel",
+          "role": "detail",
+          "tone": 0.3,
+          "profile": [
+            [
+              0.0,
+              0.006
+            ],
+            [
+              0.829,
+              0.006
+            ]
+          ],
+          "axis": [
+            0.54341,
+            0.83947,
+            0.0
+          ],
+          "origin": [
+            3.25961,
+            0.3687,
+            0.55
+          ],
+          "repeat": {
+            "count": 7,
+            "translation": [
+              0.12508,
+              0.0,
+              0.0
+            ]
+          }
+        },
+        {
+          "id": "baluster-l-5",
+          "kind": "revolve",
+          "bone": "stringer",
+          "material": "steel",
+          "role": "detail",
+          "tone": 0.3,
+          "profile": [
+            [
+              0.0,
+              0.006
+            ],
+            [
+              0.829,
+              0.006
+            ]
+          ],
+          "axis": [
+            0.54341,
+            0.83947,
+            0.0
+          ],
+          "origin": [
+            4.26024,
+            0.3687,
+            0.55
+          ],
+          "repeat": {
+            "count": 7,
+            "translation": [
+              0.12508,
+              0.0,
+              0.0
+            ]
+          }
         }
       ],
       "thermal": [
@@ -708,6 +1510,26 @@
         {
           "id": "th-hea-bottom-flange",
           "of": "hea-bottom-flange",
+          "region": "stringer-steel"
+        },
+        {
+          "id": "th-hea-root-top-r",
+          "of": "hea-root-top-r",
+          "region": "stringer-steel"
+        },
+        {
+          "id": "th-hea-root-top-l",
+          "of": "hea-root-top-l",
+          "region": "stringer-steel"
+        },
+        {
+          "id": "th-hea-root-bottom-r",
+          "of": "hea-root-bottom-r",
+          "region": "stringer-steel"
+        },
+        {
+          "id": "th-hea-root-bottom-l",
+          "of": "hea-root-bottom-l",
           "region": "stringer-steel"
         },
         {
@@ -785,6 +1607,96 @@
           "region": "stringer-steel"
         },
         {
+          "id": "th-post-r",
+          "of": "post-r",
+          "region": "balustrade-steel"
+        },
+        {
+          "id": "th-post-flange-r",
+          "of": "post-flange-r",
+          "region": "balustrade-steel"
+        },
+        {
+          "id": "th-handrail-r",
+          "of": "handrail-r",
+          "region": "balustrade-steel"
+        },
+        {
+          "id": "th-bottom-rail-r",
+          "of": "bottom-rail-r",
+          "region": "balustrade-steel"
+        },
+        {
+          "id": "th-baluster-r-1",
+          "of": "baluster-r-1",
+          "region": "balustrade-steel"
+        },
+        {
+          "id": "th-baluster-r-2",
+          "of": "baluster-r-2",
+          "region": "balustrade-steel"
+        },
+        {
+          "id": "th-baluster-r-3",
+          "of": "baluster-r-3",
+          "region": "balustrade-steel"
+        },
+        {
+          "id": "th-baluster-r-4",
+          "of": "baluster-r-4",
+          "region": "balustrade-steel"
+        },
+        {
+          "id": "th-baluster-r-5",
+          "of": "baluster-r-5",
+          "region": "balustrade-steel"
+        },
+        {
+          "id": "th-post-l",
+          "of": "post-l",
+          "region": "balustrade-steel"
+        },
+        {
+          "id": "th-post-flange-l",
+          "of": "post-flange-l",
+          "region": "balustrade-steel"
+        },
+        {
+          "id": "th-handrail-l",
+          "of": "handrail-l",
+          "region": "balustrade-steel"
+        },
+        {
+          "id": "th-bottom-rail-l",
+          "of": "bottom-rail-l",
+          "region": "balustrade-steel"
+        },
+        {
+          "id": "th-baluster-l-1",
+          "of": "baluster-l-1",
+          "region": "balustrade-steel"
+        },
+        {
+          "id": "th-baluster-l-2",
+          "of": "baluster-l-2",
+          "region": "balustrade-steel"
+        },
+        {
+          "id": "th-baluster-l-3",
+          "of": "baluster-l-3",
+          "region": "balustrade-steel"
+        },
+        {
+          "id": "th-baluster-l-4",
+          "of": "baluster-l-4",
+          "region": "balustrade-steel"
+        },
+        {
+          "id": "th-baluster-l-5",
+          "of": "baluster-l-5",
+          "region": "balustrade-steel"
+        },
+        {
           "id": "th-tread",
           "of": "tread",
           "region": "tread-top",
@@ -813,6 +1725,30 @@
         {
           "id": "st-hea-bottom-flange",
           "of": "hea-bottom-flange",
+          "member": "stringer",
+          "part": "member"
+        },
+        {
+          "id": "st-hea-root-top-r",
+          "of": "hea-root-top-r",
+          "member": "stringer",
+          "part": "member"
+        },
+        {
+          "id": "st-hea-root-top-l",
+          "of": "hea-root-top-l",
+          "member": "stringer",
+          "part": "member"
+        },
+        {
+          "id": "st-hea-root-bottom-r",
+          "of": "hea-root-bottom-r",
+          "member": "stringer",
+          "part": "member"
+        },
+        {
+          "id": "st-hea-root-bottom-l",
+          "of": "hea-root-bottom-l",
           "member": "stringer",
           "part": "member"
         },
@@ -868,27 +1804,157 @@
           ],
           "transform": {
             "translation": [
-              2.52915,
-              0.04632,
+              2.52657,
+              0.04904,
               0.0
             ]
           },
           "member": "stringer",
           "part": "mass"
+        },
+        {
+          "id": "mass-balustrade",
+          "kind": "ellipsoid",
+          "bone": "stringer",
+          "material": "steel",
+          "role": "detail",
+          "tone": 0.1,
+          "radii": [
+            0.012,
+            0.012,
+            0.012
+          ],
+          "transform": {
+            "translation": [
+              2.87202,
+              0.73607,
+              0.0
+            ]
+          },
+          "member": "stringer",
+          "part": "mass"
+        },
+        {
+          "id": "st-post-r",
+          "of": "post-r",
+          "member": "stringer",
+          "part": "member"
+        },
+        {
+          "id": "st-post-flange-r",
+          "of": "post-flange-r",
+          "member": "stringer",
+          "part": "joint"
+        },
+        {
+          "id": "st-handrail-r",
+          "of": "handrail-r",
+          "member": "stringer",
+          "part": "member"
+        },
+        {
+          "id": "st-bottom-rail-r",
+          "of": "bottom-rail-r",
+          "member": "stringer",
+          "part": "member"
+        },
+        {
+          "id": "st-baluster-r-1",
+          "of": "baluster-r-1",
+          "member": "stringer",
+          "part": "member"
+        },
+        {
+          "id": "st-baluster-r-2",
+          "of": "baluster-r-2",
+          "member": "stringer",
+          "part": "member"
+        },
+        {
+          "id": "st-baluster-r-3",
+          "of": "baluster-r-3",
+          "member": "stringer",
+          "part": "member"
+        },
+        {
+          "id": "st-baluster-r-4",
+          "of": "baluster-r-4",
+          "member": "stringer",
+          "part": "member"
+        },
+        {
+          "id": "st-baluster-r-5",
+          "of": "baluster-r-5",
+          "member": "stringer",
+          "part": "member"
+        },
+        {
+          "id": "st-post-l",
+          "of": "post-l",
+          "member": "stringer",
+          "part": "member"
+        },
+        {
+          "id": "st-post-flange-l",
+          "of": "post-flange-l",
+          "member": "stringer",
+          "part": "joint"
+        },
+        {
+          "id": "st-handrail-l",
+          "of": "handrail-l",
+          "member": "stringer",
+          "part": "member"
+        },
+        {
+          "id": "st-bottom-rail-l",
+          "of": "bottom-rail-l",
+          "member": "stringer",
+          "part": "member"
+        },
+        {
+          "id": "st-baluster-l-1",
+          "of": "baluster-l-1",
+          "member": "stringer",
+          "part": "member"
+        },
+        {
+          "id": "st-baluster-l-2",
+          "of": "baluster-l-2",
+          "member": "stringer",
+          "part": "member"
+        },
+        {
+          "id": "st-baluster-l-3",
+          "of": "baluster-l-3",
+          "member": "stringer",
+          "part": "member"
+        },
+        {
+          "id": "st-baluster-l-4",
+          "of": "baluster-l-4",
+          "member": "stringer",
+          "part": "member"
+        },
+        {
+          "id": "st-baluster-l-5",
+          "of": "baluster-l-5",
+          "member": "stringer",
+          "part": "member"
         }
       ],
       "decisions": [
         {
-          "en": "1:50 is the flight as built: an HEA 160 centre stringer (h 152, b 160, flanges 9 mm, web 7.5 mm for the real 6 mm, the 15 mm root radii left out) as top flange, web and bottom flange, cut horizontally where it stands on a 300 x 260 x 15 base plate and plumb where it meets a 15 mm head plate on the landing face; four M12 anchors with hexagon nuts on each plate; under each of the 16 treads a welded bracket of a 10 mm fin and a 170 x 360 x 8 carrier plate; 16 C24 treads of 310 x 1200 x 40 mm with 8 mm rounded nosing edges, lapping 30 mm, risers open.",
-          "de": "1:50 ist der Lauf wie gebaut: eine Mittelwange HEA 160 (h 152, b 160, Flansche 9 mm, Steg 7,5 mm statt der wirklichen 6 mm, die Ausrundungen 15 mm weggelassen) aus Obergurt, Steg und Untergurt, waagrecht geschnitten, wo sie auf einer Fußplatte 300 x 260 x 15 steht, und lotrecht, wo sie an eine 15-mm-Kopfplatte an der Podeststirn stößt; je vier Anker M12 mit Sechskantmuttern an beiden Platten; unter jeder der 16 Stufen eine angeschweißte Konsole aus 10-mm-Steg und Auflagerplatte 170 x 360 x 8; 16 Stufen aus C24, 310 x 1200 x 40 mm, mit 8 mm gerundeten Vorderkanten und 30 mm Unterschneidung, Setzstufen offen."
+          "en": "1:50 is the flight as built: an HEA 160 centre stringer (h 152, b 160, flanges 9 mm, web 6 mm, root radii 15 mm) as top flange, web, bottom flange and the four root fillets, cut horizontally where it stands on a 300 x 260 x 15 base plate and plumb where it meets a 15 mm head plate on the landing face; four M12 anchors with hexagon nuts on each plate; under each of the 16 treads a welded bracket of a 10 mm fin and a 170 x 360 x 8 carrier plate; 16 C24 treads of 310 x 1200 x 40 mm with 8 mm rounded nosing edges, lapping 30 mm; the risers are open, and a 30 x 30 mm timber guard batten screwed under each tread 30 mm behind its nosing narrows the opening from 141 to 111 mm (at most 120 mm where children are expected). Both open sides carry a balustrade (MBO section 38, DIN 18065): six posts CHS 42.4 x 2.6 standing on treads 1, 4, 7, 10, 13 and 16, 50 mm inside the tread ends, each on a screwed 80 x 8 mm flange; a CHS 42.4 handrail parallel to the nosing line with its top 0.95 m above it, running 60 mm past the end posts; a CHS 21.3 bottom rail 0.10 m above the nosing line and 35 balusters of 12 mm at 105 mm centres (93 mm clear) between the two rails. Thermal: these parts are the region balustrade-steel. Structure: posts, rails and balusters are members with the post flanges as joints, and their mass is its own point at the centre of mass of both balustrades, which lies on the middle baluster in the side view.",
+          "de": "1:50 ist der Lauf wie gebaut: eine Mittelwange HEA 160 (h 152, b 160, Flansche 9 mm, Steg 6 mm, Ausrundungen 15 mm) aus Obergurt, Steg, Untergurt und den vier Ausrundungen, waagrecht geschnitten, wo sie auf einer Fußplatte 300 x 260 x 15 steht, und lotrecht, wo sie an eine 15-mm-Kopfplatte an der Podeststirn stößt; je vier Anker M12 mit Sechskantmuttern an beiden Platten; unter jeder der 16 Stufen eine angeschweißte Konsole aus 10-mm-Steg und Auflagerplatte 170 x 360 x 8; 16 Stufen aus C24, 310 x 1200 x 40 mm, mit 8 mm gerundeten Vorderkanten und 30 mm Unterschneidung; die Setzstufen sind offen, eine unter jede Stufe 30 mm hinter der Vorderkante geschraubte Holzleiste 30 x 30 mm verengt die Öffnung von 141 auf 111 mm (höchstens 120 mm, wo mit Kindern zu rechnen ist). Beide offenen Seiten tragen ein Geländer (MBO § 38, DIN 18065): sechs Pfosten CHS 42,4 x 2,6 auf den Stufen 1, 4, 7, 10, 13 und 16, 50 mm innerhalb der Stufenenden, je auf einem geschraubten Flansch 80 x 8 mm; ein Handlauf CHS 42,4 parallel zur Stufenvorderkantenlinie mit Oberkante 0,95 m darüber, 60 mm über die Endpfosten hinaus; ein Untergurt CHS 21,3 0,10 m über der Vorderkantenlinie und 35 Stäbe von 12 mm im Abstand von 105 mm (93 mm licht) zwischen den beiden Gurten. Thermik: diese Teile sind die Region balustrade-steel. Tragwerk: Pfosten, Gurte und Stäbe sind Bauteile mit den Pfostenflanschen als Knoten, ihre Masse ist ein eigener Punkt im Schwerpunkt beider Geländer, der in der Seitenansicht auf dem mittleren Stab liegt."
         },
         {
           "en": "Thermal: stringer-steel is every steel solid by reference; the carrier top lies against the tread, the base plate underside on the floor slab and the head plate back on the landing face, those faces are marked as section faces (C25 b). tread-top is the tread by reference with every face except the walking surface marked, as ruled for this region (area-decisions).",
           "de": "Thermik: Wangenstahl ist jeder Stahlkörper per Verweis; die Oberseite der Auflagerplatte liegt an der Stufe, die Unterseite der Fußplatte auf der Bodenplatte und die Rückseite der Kopfplatte an der Podeststirn, diese Flächen sind als Schnittflächen markiert (C25 b). Stufenoberseite ist die Stufe per Verweis, alle Flächen außer der Trittfläche markiert, wie für diese Region entschieden (area-decisions)."
         },
         {
-          "en": "Structure: the HEA flanges and web are the member along the centroid axis, the treads carry the load into the brackets, which are the joints; the base plate is the pin at the foot, the head plate with horizontal slotted holes the roller at the landing; the mass of the whole flight is a 70 mm sphere whose top point is the centre of mass (81 mm above the stringer axis, just over the top flange).",
-          "de": "Tragwerk: Flansche und Steg der HEA sind das Bauteil entlang der Schwerachse, die Stufen tragen die Last in die Konsolen, die die Knoten sind; die Fußplatte ist das Festlager am Fuß, die Kopfplatte mit waagrechten Langlöchern das Rollenlager am Podest; die Masse des ganzen Laufs ist eine 70-mm-Kugel, deren oberster Punkt der Schwerpunkt ist (81 mm über der Wangenachse, knapp über dem Obergurt)."
+          "en": "Structure: the HEA flanges and web are the member along the centroid axis, the treads carry the load into the brackets, which are the joints; the base plate is the pin at the foot, the head plate with horizontal slotted holes the roller at the landing; the mass of the whole flight is a 70 mm sphere whose top point is the centre of mass (84 mm above the stringer axis, just over the top flange).",
+          "de": "Tragwerk: Flansche und Steg der HEA sind das Bauteil entlang der Schwerachse, die Stufen tragen die Last in die Konsolen, die die Knoten sind; die Fußplatte ist das Festlager am Fuß, die Kopfplatte mit waagrechten Langlöchern das Rollenlager am Podest; die Masse des ganzen Laufs ist eine 70-mm-Kugel, deren oberster Punkt der Schwerpunkt ist (84 mm über der Wangenachse, knapp über dem Obergurt)."
         }
       ]
     },
@@ -1147,6 +2213,587 @@
               0.0
             ]
           }
+        },
+        {
+          "id": "riser-guard",
+          "kind": "extrude",
+          "bone": "stringer",
+          "material": "timber",
+          "role": "body",
+          "tone": 0.65,
+          "profile": [
+            [
+              -0.1192,
+              0.20969
+            ],
+            [
+              -0.09402,
+              0.19338
+            ],
+            [
+              -0.07771,
+              0.21857
+            ],
+            [
+              -0.1029,
+              0.23487
+            ]
+          ],
+          "plane": "xy",
+          "from": -0.6,
+          "to": 0.6,
+          "repeat": {
+            "count": 16,
+            "translation": [
+              0.33354,
+              0.0,
+              0.0
+            ]
+          }
+        },
+        {
+          "id": "post-r",
+          "kind": "revolve",
+          "bone": "stringer",
+          "material": "steel",
+          "role": "detail",
+          "tone": 0.3,
+          "profile": [
+            [
+              0.0,
+              0.0212
+            ],
+            [
+              1.02933,
+              0.0212
+            ]
+          ],
+          "axis": [
+            0.54341,
+            0.83947,
+            0.0
+          ],
+          "origin": [
+            0.02377,
+            0.20052,
+            -0.55
+          ],
+          "repeat": {
+            "count": 6,
+            "translation": [
+              1.00063,
+              0.0,
+              0.0
+            ]
+          }
+        },
+        {
+          "id": "handrail-r",
+          "kind": "revolve",
+          "bone": "stringer",
+          "material": "steel",
+          "role": "detail",
+          "tone": 0.3,
+          "profile": [
+            [
+              0.0,
+              0.0212
+            ],
+            [
+              5.14611,
+              0.0212
+            ]
+          ],
+          "axis": [
+            1.0,
+            0.0,
+            0.0
+          ],
+          "origin": [
+            0.51164,
+            1.06462,
+            -0.55
+          ]
+        },
+        {
+          "id": "bottom-rail-r",
+          "kind": "revolve",
+          "bone": "stringer",
+          "material": "steel",
+          "role": "detail",
+          "tone": 0.3,
+          "profile": [
+            [
+              0.0,
+              0.01065
+            ],
+            [
+              5.00316,
+              0.01065
+            ]
+          ],
+          "axis": [
+            1.0,
+            0.0,
+            0.0
+          ],
+          "origin": [
+            0.13263,
+            0.3687,
+            -0.55
+          ]
+        },
+        {
+          "id": "baluster-r-1",
+          "kind": "revolve",
+          "bone": "stringer",
+          "material": "steel",
+          "role": "detail",
+          "tone": 0.3,
+          "profile": [
+            [
+              0.0,
+              0.0075
+            ],
+            [
+              0.829,
+              0.0075
+            ]
+          ],
+          "axis": [
+            0.54341,
+            0.83947,
+            0.0
+          ],
+          "origin": [
+            0.25771,
+            0.3687,
+            -0.55
+          ],
+          "repeat": {
+            "count": 7,
+            "translation": [
+              0.12508,
+              0.0,
+              0.0
+            ]
+          }
+        },
+        {
+          "id": "baluster-r-2",
+          "kind": "revolve",
+          "bone": "stringer",
+          "material": "steel",
+          "role": "detail",
+          "tone": 0.3,
+          "profile": [
+            [
+              0.0,
+              0.0075
+            ],
+            [
+              0.829,
+              0.0075
+            ]
+          ],
+          "axis": [
+            0.54341,
+            0.83947,
+            0.0
+          ],
+          "origin": [
+            1.25835,
+            0.3687,
+            -0.55
+          ],
+          "repeat": {
+            "count": 7,
+            "translation": [
+              0.12508,
+              0.0,
+              0.0
+            ]
+          }
+        },
+        {
+          "id": "baluster-r-3",
+          "kind": "revolve",
+          "bone": "stringer",
+          "material": "steel",
+          "role": "detail",
+          "tone": 0.3,
+          "profile": [
+            [
+              0.0,
+              0.0075
+            ],
+            [
+              0.829,
+              0.0075
+            ]
+          ],
+          "axis": [
+            0.54341,
+            0.83947,
+            0.0
+          ],
+          "origin": [
+            2.25898,
+            0.3687,
+            -0.55
+          ],
+          "repeat": {
+            "count": 7,
+            "translation": [
+              0.12508,
+              0.0,
+              0.0
+            ]
+          }
+        },
+        {
+          "id": "baluster-r-4",
+          "kind": "revolve",
+          "bone": "stringer",
+          "material": "steel",
+          "role": "detail",
+          "tone": 0.3,
+          "profile": [
+            [
+              0.0,
+              0.0075
+            ],
+            [
+              0.829,
+              0.0075
+            ]
+          ],
+          "axis": [
+            0.54341,
+            0.83947,
+            0.0
+          ],
+          "origin": [
+            3.25961,
+            0.3687,
+            -0.55
+          ],
+          "repeat": {
+            "count": 7,
+            "translation": [
+              0.12508,
+              0.0,
+              0.0
+            ]
+          }
+        },
+        {
+          "id": "baluster-r-5",
+          "kind": "revolve",
+          "bone": "stringer",
+          "material": "steel",
+          "role": "detail",
+          "tone": 0.3,
+          "profile": [
+            [
+              0.0,
+              0.0075
+            ],
+            [
+              0.829,
+              0.0075
+            ]
+          ],
+          "axis": [
+            0.54341,
+            0.83947,
+            0.0
+          ],
+          "origin": [
+            4.26024,
+            0.3687,
+            -0.55
+          ],
+          "repeat": {
+            "count": 7,
+            "translation": [
+              0.12508,
+              0.0,
+              0.0
+            ]
+          }
+        },
+        {
+          "id": "post-l",
+          "kind": "revolve",
+          "bone": "stringer",
+          "material": "steel",
+          "role": "detail",
+          "tone": 0.3,
+          "profile": [
+            [
+              0.0,
+              0.0212
+            ],
+            [
+              1.02933,
+              0.0212
+            ]
+          ],
+          "axis": [
+            0.54341,
+            0.83947,
+            0.0
+          ],
+          "origin": [
+            0.02377,
+            0.20052,
+            0.55
+          ],
+          "repeat": {
+            "count": 6,
+            "translation": [
+              1.00063,
+              0.0,
+              0.0
+            ]
+          }
+        },
+        {
+          "id": "handrail-l",
+          "kind": "revolve",
+          "bone": "stringer",
+          "material": "steel",
+          "role": "detail",
+          "tone": 0.3,
+          "profile": [
+            [
+              0.0,
+              0.0212
+            ],
+            [
+              5.14611,
+              0.0212
+            ]
+          ],
+          "axis": [
+            1.0,
+            0.0,
+            0.0
+          ],
+          "origin": [
+            0.51164,
+            1.06462,
+            0.55
+          ]
+        },
+        {
+          "id": "bottom-rail-l",
+          "kind": "revolve",
+          "bone": "stringer",
+          "material": "steel",
+          "role": "detail",
+          "tone": 0.3,
+          "profile": [
+            [
+              0.0,
+              0.01065
+            ],
+            [
+              5.00316,
+              0.01065
+            ]
+          ],
+          "axis": [
+            1.0,
+            0.0,
+            0.0
+          ],
+          "origin": [
+            0.13263,
+            0.3687,
+            0.55
+          ]
+        },
+        {
+          "id": "baluster-l-1",
+          "kind": "revolve",
+          "bone": "stringer",
+          "material": "steel",
+          "role": "detail",
+          "tone": 0.3,
+          "profile": [
+            [
+              0.0,
+              0.0075
+            ],
+            [
+              0.829,
+              0.0075
+            ]
+          ],
+          "axis": [
+            0.54341,
+            0.83947,
+            0.0
+          ],
+          "origin": [
+            0.25771,
+            0.3687,
+            0.55
+          ],
+          "repeat": {
+            "count": 7,
+            "translation": [
+              0.12508,
+              0.0,
+              0.0
+            ]
+          }
+        },
+        {
+          "id": "baluster-l-2",
+          "kind": "revolve",
+          "bone": "stringer",
+          "material": "steel",
+          "role": "detail",
+          "tone": 0.3,
+          "profile": [
+            [
+              0.0,
+              0.0075
+            ],
+            [
+              0.829,
+              0.0075
+            ]
+          ],
+          "axis": [
+            0.54341,
+            0.83947,
+            0.0
+          ],
+          "origin": [
+            1.25835,
+            0.3687,
+            0.55
+          ],
+          "repeat": {
+            "count": 7,
+            "translation": [
+              0.12508,
+              0.0,
+              0.0
+            ]
+          }
+        },
+        {
+          "id": "baluster-l-3",
+          "kind": "revolve",
+          "bone": "stringer",
+          "material": "steel",
+          "role": "detail",
+          "tone": 0.3,
+          "profile": [
+            [
+              0.0,
+              0.0075
+            ],
+            [
+              0.829,
+              0.0075
+            ]
+          ],
+          "axis": [
+            0.54341,
+            0.83947,
+            0.0
+          ],
+          "origin": [
+            2.25898,
+            0.3687,
+            0.55
+          ],
+          "repeat": {
+            "count": 7,
+            "translation": [
+              0.12508,
+              0.0,
+              0.0
+            ]
+          }
+        },
+        {
+          "id": "baluster-l-4",
+          "kind": "revolve",
+          "bone": "stringer",
+          "material": "steel",
+          "role": "detail",
+          "tone": 0.3,
+          "profile": [
+            [
+              0.0,
+              0.0075
+            ],
+            [
+              0.829,
+              0.0075
+            ]
+          ],
+          "axis": [
+            0.54341,
+            0.83947,
+            0.0
+          ],
+          "origin": [
+            3.25961,
+            0.3687,
+            0.55
+          ],
+          "repeat": {
+            "count": 7,
+            "translation": [
+              0.12508,
+              0.0,
+              0.0
+            ]
+          }
+        },
+        {
+          "id": "baluster-l-5",
+          "kind": "revolve",
+          "bone": "stringer",
+          "material": "steel",
+          "role": "detail",
+          "tone": 0.3,
+          "profile": [
+            [
+              0.0,
+              0.0075
+            ],
+            [
+              0.829,
+              0.0075
+            ]
+          ],
+          "axis": [
+            0.54341,
+            0.83947,
+            0.0
+          ],
+          "origin": [
+            4.26024,
+            0.3687,
+            0.55
+          ],
+          "repeat": {
+            "count": 7,
+            "translation": [
+              0.12508,
+              0.0,
+              0.0
+            ]
+          }
         }
       ],
       "thermal": [
@@ -1190,6 +2837,86 @@
           "id": "th-fin",
           "of": "fin",
           "region": "stringer-steel"
+        },
+        {
+          "id": "th-post-r",
+          "of": "post-r",
+          "region": "balustrade-steel"
+        },
+        {
+          "id": "th-handrail-r",
+          "of": "handrail-r",
+          "region": "balustrade-steel"
+        },
+        {
+          "id": "th-bottom-rail-r",
+          "of": "bottom-rail-r",
+          "region": "balustrade-steel"
+        },
+        {
+          "id": "th-baluster-r-1",
+          "of": "baluster-r-1",
+          "region": "balustrade-steel"
+        },
+        {
+          "id": "th-baluster-r-2",
+          "of": "baluster-r-2",
+          "region": "balustrade-steel"
+        },
+        {
+          "id": "th-baluster-r-3",
+          "of": "baluster-r-3",
+          "region": "balustrade-steel"
+        },
+        {
+          "id": "th-baluster-r-4",
+          "of": "baluster-r-4",
+          "region": "balustrade-steel"
+        },
+        {
+          "id": "th-baluster-r-5",
+          "of": "baluster-r-5",
+          "region": "balustrade-steel"
+        },
+        {
+          "id": "th-post-l",
+          "of": "post-l",
+          "region": "balustrade-steel"
+        },
+        {
+          "id": "th-handrail-l",
+          "of": "handrail-l",
+          "region": "balustrade-steel"
+        },
+        {
+          "id": "th-bottom-rail-l",
+          "of": "bottom-rail-l",
+          "region": "balustrade-steel"
+        },
+        {
+          "id": "th-baluster-l-1",
+          "of": "baluster-l-1",
+          "region": "balustrade-steel"
+        },
+        {
+          "id": "th-baluster-l-2",
+          "of": "baluster-l-2",
+          "region": "balustrade-steel"
+        },
+        {
+          "id": "th-baluster-l-3",
+          "of": "baluster-l-3",
+          "region": "balustrade-steel"
+        },
+        {
+          "id": "th-baluster-l-4",
+          "of": "baluster-l-4",
+          "region": "balustrade-steel"
+        },
+        {
+          "id": "th-baluster-l-5",
+          "of": "baluster-l-5",
+          "region": "balustrade-steel"
         },
         {
           "id": "th-tread",
@@ -1269,19 +2996,137 @@
           ],
           "transform": {
             "translation": [
-              2.52915,
-              0.03632,
+              2.52657,
+              0.03904,
               0.0
             ]
           },
           "member": "stringer",
           "part": "mass"
+        },
+        {
+          "id": "mass-balustrade",
+          "kind": "ellipsoid",
+          "bone": "stringer",
+          "material": "steel",
+          "role": "detail",
+          "tone": 0.1,
+          "radii": [
+            0.02,
+            0.02,
+            0.02
+          ],
+          "transform": {
+            "translation": [
+              2.87202,
+              0.73607,
+              0.0
+            ]
+          },
+          "member": "stringer",
+          "part": "mass"
+        },
+        {
+          "id": "st-post-r",
+          "of": "post-r",
+          "member": "stringer",
+          "part": "member"
+        },
+        {
+          "id": "st-handrail-r",
+          "of": "handrail-r",
+          "member": "stringer",
+          "part": "member"
+        },
+        {
+          "id": "st-bottom-rail-r",
+          "of": "bottom-rail-r",
+          "member": "stringer",
+          "part": "member"
+        },
+        {
+          "id": "st-baluster-r-1",
+          "of": "baluster-r-1",
+          "member": "stringer",
+          "part": "member"
+        },
+        {
+          "id": "st-baluster-r-2",
+          "of": "baluster-r-2",
+          "member": "stringer",
+          "part": "member"
+        },
+        {
+          "id": "st-baluster-r-3",
+          "of": "baluster-r-3",
+          "member": "stringer",
+          "part": "member"
+        },
+        {
+          "id": "st-baluster-r-4",
+          "of": "baluster-r-4",
+          "member": "stringer",
+          "part": "member"
+        },
+        {
+          "id": "st-baluster-r-5",
+          "of": "baluster-r-5",
+          "member": "stringer",
+          "part": "member"
+        },
+        {
+          "id": "st-post-l",
+          "of": "post-l",
+          "member": "stringer",
+          "part": "member"
+        },
+        {
+          "id": "st-handrail-l",
+          "of": "handrail-l",
+          "member": "stringer",
+          "part": "member"
+        },
+        {
+          "id": "st-bottom-rail-l",
+          "of": "bottom-rail-l",
+          "member": "stringer",
+          "part": "member"
+        },
+        {
+          "id": "st-baluster-l-1",
+          "of": "baluster-l-1",
+          "member": "stringer",
+          "part": "member"
+        },
+        {
+          "id": "st-baluster-l-2",
+          "of": "baluster-l-2",
+          "member": "stringer",
+          "part": "member"
+        },
+        {
+          "id": "st-baluster-l-3",
+          "of": "baluster-l-3",
+          "member": "stringer",
+          "part": "member"
+        },
+        {
+          "id": "st-baluster-l-4",
+          "of": "baluster-l-4",
+          "member": "stringer",
+          "part": "member"
+        },
+        {
+          "id": "st-baluster-l-5",
+          "of": "baluster-l-5",
+          "member": "stringer",
+          "part": "member"
         }
       ],
       "decisions": [
         {
-          "en": "1:100 keeps the I of the HEA 160 (the 77 mm recess between the flanges is five features deep) with flanges and web at the 15 mm feature, the base plate and head plate at their true 15 mm, the 16 brackets as one 15 mm fin each that reaches the tread (the 8 mm carrier plate is below the feature and merged into the fin), and 16 plain 40 mm treads; the anchors and the nosing radius are left out.",
-          "de": "1:100 behält das I der HEA 160 (die 77 mm tiefe Kammer zwischen den Flanschen ist fünf Merkmale tief) mit Flanschen und Steg im Merkmal 15 mm, Fuß- und Kopfplatte in ihren wahren 15 mm, die 16 Konsolen als je einen 15-mm-Steg, der bis zur Stufe reicht (die 8-mm-Auflagerplatte liegt unter dem Merkmal und geht im Steg auf), und 16 glatte 40-mm-Stufen; die Anker und die Kantenrundung entfallen."
+          "en": "1:100 keeps the I of the HEA 160 (the 77 mm recess between the flanges is five features deep) with flanges and web at the 15 mm feature, the base plate and head plate at their true 15 mm, the 16 brackets as one 15 mm fin each that reaches the tread (the 8 mm carrier plate is below the feature and merged into the fin), and 16 plain 40 mm treads, each with its 30 x 30 mm guard batten (two features) under the nosing; the anchors and the nosing radius are left out. The two balustrades keep posts, handrail and bottom rail at their true diameters and all balusters as rods of the 15 mm feature (real 12 mm); the 8 mm post flanges are below the feature and left out.",
+          "de": "1:100 behält das I der HEA 160 (die 77 mm tiefe Kammer zwischen den Flanschen ist fünf Merkmale tief) mit Flanschen und Steg im Merkmal 15 mm, Fuß- und Kopfplatte in ihren wahren 15 mm, die 16 Konsolen als je einen 15-mm-Steg, der bis zur Stufe reicht (die 8-mm-Auflagerplatte liegt unter dem Merkmal und geht im Steg auf), und 16 glatte 40-mm-Stufen, jede mit ihrer Kinderschutzleiste 30 x 30 mm (zwei Merkmale) unter der Vorderkante; die Anker und die Kantenrundung entfallen. Die zwei Geländer behalten Pfosten, Handlauf und Untergurt in wahrem Durchmesser und alle Stäbe als Stäbe im Merkmal 15 mm (wahr 12 mm); die 8-mm-Pfostenflansche liegen unter dem Merkmal und entfallen."
         },
         {
           "en": "Thermal: every steel solid by reference with the contact faces of plates marked (C25 b), the treads with only the walking surface counted.",
@@ -1490,6 +3335,587 @@
               0.0
             ]
           }
+        },
+        {
+          "id": "riser-guard",
+          "kind": "extrude",
+          "bone": "stringer",
+          "material": "timber",
+          "role": "body",
+          "tone": 0.65,
+          "profile": [
+            [
+              -0.1192,
+              0.20969
+            ],
+            [
+              -0.09402,
+              0.19338
+            ],
+            [
+              -0.07771,
+              0.21857
+            ],
+            [
+              -0.1029,
+              0.23487
+            ]
+          ],
+          "plane": "xy",
+          "from": -0.6,
+          "to": 0.6,
+          "repeat": {
+            "count": 16,
+            "translation": [
+              0.33354,
+              0.0,
+              0.0
+            ]
+          }
+        },
+        {
+          "id": "post-r",
+          "kind": "revolve",
+          "bone": "stringer",
+          "material": "steel",
+          "role": "detail",
+          "tone": 0.3,
+          "profile": [
+            [
+              0.0,
+              0.0212
+            ],
+            [
+              1.02933,
+              0.0212
+            ]
+          ],
+          "axis": [
+            0.54341,
+            0.83947,
+            0.0
+          ],
+          "origin": [
+            0.02377,
+            0.20052,
+            -0.55
+          ],
+          "repeat": {
+            "count": 6,
+            "translation": [
+              1.00063,
+              0.0,
+              0.0
+            ]
+          }
+        },
+        {
+          "id": "handrail-r",
+          "kind": "revolve",
+          "bone": "stringer",
+          "material": "steel",
+          "role": "detail",
+          "tone": 0.3,
+          "profile": [
+            [
+              0.0,
+              0.0212
+            ],
+            [
+              5.14611,
+              0.0212
+            ]
+          ],
+          "axis": [
+            1.0,
+            0.0,
+            0.0
+          ],
+          "origin": [
+            0.51164,
+            1.06462,
+            -0.55
+          ]
+        },
+        {
+          "id": "bottom-rail-r",
+          "kind": "revolve",
+          "bone": "stringer",
+          "material": "steel",
+          "role": "detail",
+          "tone": 0.3,
+          "profile": [
+            [
+              0.0,
+              0.015
+            ],
+            [
+              5.00316,
+              0.015
+            ]
+          ],
+          "axis": [
+            1.0,
+            0.0,
+            0.0
+          ],
+          "origin": [
+            0.13263,
+            0.3687,
+            -0.55
+          ]
+        },
+        {
+          "id": "baluster-r-1",
+          "kind": "revolve",
+          "bone": "stringer",
+          "material": "steel",
+          "role": "detail",
+          "tone": 0.3,
+          "profile": [
+            [
+              0.0,
+              0.015
+            ],
+            [
+              0.829,
+              0.015
+            ]
+          ],
+          "axis": [
+            0.54341,
+            0.83947,
+            0.0
+          ],
+          "origin": [
+            0.25771,
+            0.3687,
+            -0.55
+          ],
+          "repeat": {
+            "count": 7,
+            "translation": [
+              0.12508,
+              0.0,
+              0.0
+            ]
+          }
+        },
+        {
+          "id": "baluster-r-2",
+          "kind": "revolve",
+          "bone": "stringer",
+          "material": "steel",
+          "role": "detail",
+          "tone": 0.3,
+          "profile": [
+            [
+              0.0,
+              0.015
+            ],
+            [
+              0.829,
+              0.015
+            ]
+          ],
+          "axis": [
+            0.54341,
+            0.83947,
+            0.0
+          ],
+          "origin": [
+            1.25835,
+            0.3687,
+            -0.55
+          ],
+          "repeat": {
+            "count": 7,
+            "translation": [
+              0.12508,
+              0.0,
+              0.0
+            ]
+          }
+        },
+        {
+          "id": "baluster-r-3",
+          "kind": "revolve",
+          "bone": "stringer",
+          "material": "steel",
+          "role": "detail",
+          "tone": 0.3,
+          "profile": [
+            [
+              0.0,
+              0.015
+            ],
+            [
+              0.829,
+              0.015
+            ]
+          ],
+          "axis": [
+            0.54341,
+            0.83947,
+            0.0
+          ],
+          "origin": [
+            2.25898,
+            0.3687,
+            -0.55
+          ],
+          "repeat": {
+            "count": 7,
+            "translation": [
+              0.12508,
+              0.0,
+              0.0
+            ]
+          }
+        },
+        {
+          "id": "baluster-r-4",
+          "kind": "revolve",
+          "bone": "stringer",
+          "material": "steel",
+          "role": "detail",
+          "tone": 0.3,
+          "profile": [
+            [
+              0.0,
+              0.015
+            ],
+            [
+              0.829,
+              0.015
+            ]
+          ],
+          "axis": [
+            0.54341,
+            0.83947,
+            0.0
+          ],
+          "origin": [
+            3.25961,
+            0.3687,
+            -0.55
+          ],
+          "repeat": {
+            "count": 7,
+            "translation": [
+              0.12508,
+              0.0,
+              0.0
+            ]
+          }
+        },
+        {
+          "id": "baluster-r-5",
+          "kind": "revolve",
+          "bone": "stringer",
+          "material": "steel",
+          "role": "detail",
+          "tone": 0.3,
+          "profile": [
+            [
+              0.0,
+              0.015
+            ],
+            [
+              0.829,
+              0.015
+            ]
+          ],
+          "axis": [
+            0.54341,
+            0.83947,
+            0.0
+          ],
+          "origin": [
+            4.26024,
+            0.3687,
+            -0.55
+          ],
+          "repeat": {
+            "count": 7,
+            "translation": [
+              0.12508,
+              0.0,
+              0.0
+            ]
+          }
+        },
+        {
+          "id": "post-l",
+          "kind": "revolve",
+          "bone": "stringer",
+          "material": "steel",
+          "role": "detail",
+          "tone": 0.3,
+          "profile": [
+            [
+              0.0,
+              0.0212
+            ],
+            [
+              1.02933,
+              0.0212
+            ]
+          ],
+          "axis": [
+            0.54341,
+            0.83947,
+            0.0
+          ],
+          "origin": [
+            0.02377,
+            0.20052,
+            0.55
+          ],
+          "repeat": {
+            "count": 6,
+            "translation": [
+              1.00063,
+              0.0,
+              0.0
+            ]
+          }
+        },
+        {
+          "id": "handrail-l",
+          "kind": "revolve",
+          "bone": "stringer",
+          "material": "steel",
+          "role": "detail",
+          "tone": 0.3,
+          "profile": [
+            [
+              0.0,
+              0.0212
+            ],
+            [
+              5.14611,
+              0.0212
+            ]
+          ],
+          "axis": [
+            1.0,
+            0.0,
+            0.0
+          ],
+          "origin": [
+            0.51164,
+            1.06462,
+            0.55
+          ]
+        },
+        {
+          "id": "bottom-rail-l",
+          "kind": "revolve",
+          "bone": "stringer",
+          "material": "steel",
+          "role": "detail",
+          "tone": 0.3,
+          "profile": [
+            [
+              0.0,
+              0.015
+            ],
+            [
+              5.00316,
+              0.015
+            ]
+          ],
+          "axis": [
+            1.0,
+            0.0,
+            0.0
+          ],
+          "origin": [
+            0.13263,
+            0.3687,
+            0.55
+          ]
+        },
+        {
+          "id": "baluster-l-1",
+          "kind": "revolve",
+          "bone": "stringer",
+          "material": "steel",
+          "role": "detail",
+          "tone": 0.3,
+          "profile": [
+            [
+              0.0,
+              0.015
+            ],
+            [
+              0.829,
+              0.015
+            ]
+          ],
+          "axis": [
+            0.54341,
+            0.83947,
+            0.0
+          ],
+          "origin": [
+            0.25771,
+            0.3687,
+            0.55
+          ],
+          "repeat": {
+            "count": 7,
+            "translation": [
+              0.12508,
+              0.0,
+              0.0
+            ]
+          }
+        },
+        {
+          "id": "baluster-l-2",
+          "kind": "revolve",
+          "bone": "stringer",
+          "material": "steel",
+          "role": "detail",
+          "tone": 0.3,
+          "profile": [
+            [
+              0.0,
+              0.015
+            ],
+            [
+              0.829,
+              0.015
+            ]
+          ],
+          "axis": [
+            0.54341,
+            0.83947,
+            0.0
+          ],
+          "origin": [
+            1.25835,
+            0.3687,
+            0.55
+          ],
+          "repeat": {
+            "count": 7,
+            "translation": [
+              0.12508,
+              0.0,
+              0.0
+            ]
+          }
+        },
+        {
+          "id": "baluster-l-3",
+          "kind": "revolve",
+          "bone": "stringer",
+          "material": "steel",
+          "role": "detail",
+          "tone": 0.3,
+          "profile": [
+            [
+              0.0,
+              0.015
+            ],
+            [
+              0.829,
+              0.015
+            ]
+          ],
+          "axis": [
+            0.54341,
+            0.83947,
+            0.0
+          ],
+          "origin": [
+            2.25898,
+            0.3687,
+            0.55
+          ],
+          "repeat": {
+            "count": 7,
+            "translation": [
+              0.12508,
+              0.0,
+              0.0
+            ]
+          }
+        },
+        {
+          "id": "baluster-l-4",
+          "kind": "revolve",
+          "bone": "stringer",
+          "material": "steel",
+          "role": "detail",
+          "tone": 0.3,
+          "profile": [
+            [
+              0.0,
+              0.015
+            ],
+            [
+              0.829,
+              0.015
+            ]
+          ],
+          "axis": [
+            0.54341,
+            0.83947,
+            0.0
+          ],
+          "origin": [
+            3.25961,
+            0.3687,
+            0.55
+          ],
+          "repeat": {
+            "count": 7,
+            "translation": [
+              0.12508,
+              0.0,
+              0.0
+            ]
+          }
+        },
+        {
+          "id": "baluster-l-5",
+          "kind": "revolve",
+          "bone": "stringer",
+          "material": "steel",
+          "role": "detail",
+          "tone": 0.3,
+          "profile": [
+            [
+              0.0,
+              0.015
+            ],
+            [
+              0.829,
+              0.015
+            ]
+          ],
+          "axis": [
+            0.54341,
+            0.83947,
+            0.0
+          ],
+          "origin": [
+            4.26024,
+            0.3687,
+            0.55
+          ],
+          "repeat": {
+            "count": 7,
+            "translation": [
+              0.12508,
+              0.0,
+              0.0
+            ]
+          }
         }
       ],
       "thermal": [
@@ -1523,6 +3949,86 @@
           "id": "th-fin",
           "of": "fin",
           "region": "stringer-steel"
+        },
+        {
+          "id": "th-post-r",
+          "of": "post-r",
+          "region": "balustrade-steel"
+        },
+        {
+          "id": "th-handrail-r",
+          "of": "handrail-r",
+          "region": "balustrade-steel"
+        },
+        {
+          "id": "th-bottom-rail-r",
+          "of": "bottom-rail-r",
+          "region": "balustrade-steel"
+        },
+        {
+          "id": "th-baluster-r-1",
+          "of": "baluster-r-1",
+          "region": "balustrade-steel"
+        },
+        {
+          "id": "th-baluster-r-2",
+          "of": "baluster-r-2",
+          "region": "balustrade-steel"
+        },
+        {
+          "id": "th-baluster-r-3",
+          "of": "baluster-r-3",
+          "region": "balustrade-steel"
+        },
+        {
+          "id": "th-baluster-r-4",
+          "of": "baluster-r-4",
+          "region": "balustrade-steel"
+        },
+        {
+          "id": "th-baluster-r-5",
+          "of": "baluster-r-5",
+          "region": "balustrade-steel"
+        },
+        {
+          "id": "th-post-l",
+          "of": "post-l",
+          "region": "balustrade-steel"
+        },
+        {
+          "id": "th-handrail-l",
+          "of": "handrail-l",
+          "region": "balustrade-steel"
+        },
+        {
+          "id": "th-bottom-rail-l",
+          "of": "bottom-rail-l",
+          "region": "balustrade-steel"
+        },
+        {
+          "id": "th-baluster-l-1",
+          "of": "baluster-l-1",
+          "region": "balustrade-steel"
+        },
+        {
+          "id": "th-baluster-l-2",
+          "of": "baluster-l-2",
+          "region": "balustrade-steel"
+        },
+        {
+          "id": "th-baluster-l-3",
+          "of": "baluster-l-3",
+          "region": "balustrade-steel"
+        },
+        {
+          "id": "th-baluster-l-4",
+          "of": "baluster-l-4",
+          "region": "balustrade-steel"
+        },
+        {
+          "id": "th-baluster-l-5",
+          "of": "baluster-l-5",
+          "region": "balustrade-steel"
         },
         {
           "id": "th-tread",
@@ -1590,19 +4096,137 @@
           ],
           "transform": {
             "translation": [
-              2.52915,
-              0.02132,
+              2.52657,
+              0.02404,
               0.0
             ]
           },
           "member": "stringer",
           "part": "mass"
+        },
+        {
+          "id": "mass-balustrade",
+          "kind": "ellipsoid",
+          "bone": "stringer",
+          "material": "steel",
+          "role": "detail",
+          "tone": 0.1,
+          "radii": [
+            0.03,
+            0.03,
+            0.03
+          ],
+          "transform": {
+            "translation": [
+              2.87202,
+              0.73607,
+              0.0
+            ]
+          },
+          "member": "stringer",
+          "part": "mass"
+        },
+        {
+          "id": "st-post-r",
+          "of": "post-r",
+          "member": "stringer",
+          "part": "member"
+        },
+        {
+          "id": "st-handrail-r",
+          "of": "handrail-r",
+          "member": "stringer",
+          "part": "member"
+        },
+        {
+          "id": "st-bottom-rail-r",
+          "of": "bottom-rail-r",
+          "member": "stringer",
+          "part": "member"
+        },
+        {
+          "id": "st-baluster-r-1",
+          "of": "baluster-r-1",
+          "member": "stringer",
+          "part": "member"
+        },
+        {
+          "id": "st-baluster-r-2",
+          "of": "baluster-r-2",
+          "member": "stringer",
+          "part": "member"
+        },
+        {
+          "id": "st-baluster-r-3",
+          "of": "baluster-r-3",
+          "member": "stringer",
+          "part": "member"
+        },
+        {
+          "id": "st-baluster-r-4",
+          "of": "baluster-r-4",
+          "member": "stringer",
+          "part": "member"
+        },
+        {
+          "id": "st-baluster-r-5",
+          "of": "baluster-r-5",
+          "member": "stringer",
+          "part": "member"
+        },
+        {
+          "id": "st-post-l",
+          "of": "post-l",
+          "member": "stringer",
+          "part": "member"
+        },
+        {
+          "id": "st-handrail-l",
+          "of": "handrail-l",
+          "member": "stringer",
+          "part": "member"
+        },
+        {
+          "id": "st-bottom-rail-l",
+          "of": "bottom-rail-l",
+          "member": "stringer",
+          "part": "member"
+        },
+        {
+          "id": "st-baluster-l-1",
+          "of": "baluster-l-1",
+          "member": "stringer",
+          "part": "member"
+        },
+        {
+          "id": "st-baluster-l-2",
+          "of": "baluster-l-2",
+          "member": "stringer",
+          "part": "member"
+        },
+        {
+          "id": "st-baluster-l-3",
+          "of": "baluster-l-3",
+          "member": "stringer",
+          "part": "member"
+        },
+        {
+          "id": "st-baluster-l-4",
+          "of": "baluster-l-4",
+          "member": "stringer",
+          "part": "member"
+        },
+        {
+          "id": "st-baluster-l-5",
+          "of": "baluster-l-5",
+          "member": "stringer",
+          "part": "member"
         }
       ],
       "decisions": [
         {
-          "en": "1:200 merges flanges and web into one 152 x 160 stringer bar (the I recess reads only in the end view, which the plates cover), keeps the base plate and head plate generalised to the 30 mm feature, one 30 mm fin per tread up to the tread and 16 plain 40 mm treads with their 30 mm lap and the open risers (141 mm, almost five features).",
-          "de": "1:200 fasst Flansche und Steg zu einem Wangenbalken 152 x 160 zusammen (die I-Kammer ist nur in der Stirnansicht lesbar, die die Platten verdecken), behält Fuß- und Kopfplatte, auf das Merkmal 30 mm verallgemeinert, je Stufe einen 30-mm-Steg bis zur Stufe und 16 glatte 40-mm-Stufen mit 30 mm Unterschneidung und offenen Setzstufen (141 mm, fast fünf Merkmale)."
+          "en": "1:200 merges flanges and web into one 152 x 160 stringer bar (the I recess reads only in the end view, which the plates cover), keeps the base plate and head plate generalised to the 30 mm feature, one 30 mm fin per tread up to the tread and 16 plain 40 mm treads with their 30 mm lap and the open risers, narrowed to 111 mm by a guard batten of the 30 mm feature under each nosing. The two balustrades keep posts and handrail at their true 42.4 mm; the bottom rail and all balusters are bars of the 30 mm feature (real 21.3 and 12 mm; 75 mm clear between balusters, 0.38 mm on paper); thinning them to every second bar was tried and rejected, because the side view then departs from 1:100 by 90 mm and from 1:500 by 188 mm (volumes-cross-scale).",
+          "de": "1:200 fasst Flansche und Steg zu einem Wangenbalken 152 x 160 zusammen (die I-Kammer ist nur in der Stirnansicht lesbar, die die Platten verdecken), behält Fuß- und Kopfplatte, auf das Merkmal 30 mm verallgemeinert, je Stufe einen 30-mm-Steg bis zur Stufe und 16 glatte 40-mm-Stufen mit 30 mm Unterschneidung und offenen Setzstufen, die eine Leiste im Merkmal 30 mm unter jeder Vorderkante auf 111 mm verengt. Die zwei Geländer behalten Pfosten und Handlauf in ihren wahren 42,4 mm; Untergurt und alle Stäbe sind Stäbe im Merkmal 30 mm (wahr 21,3 und 12 mm; 75 mm licht zwischen den Stäben, 0,38 mm auf dem Papier); jeden zweiten Stab wegzulassen wurde versucht und verworfen, weil die Seitenansicht dann um 90 mm von 1:100 und um 188 mm von 1:500 abweicht (volumes-cross-scale)."
         },
         {
           "en": "Thermal: the bar, plates and fins by reference with the plate contact faces marked, the treads with the walking surface; the bar has no inner flange faces, so the steel area is smaller than at 1:50 (C15 compares the total).",
@@ -1923,6 +4547,190 @@
           "plane": "xy",
           "from": -0.6,
           "to": 0.6
+        },
+        {
+          "id": "post-r",
+          "kind": "revolve",
+          "bone": "stringer",
+          "material": "steel",
+          "role": "detail",
+          "tone": 0.3,
+          "profile": [
+            [
+              0.0,
+              0.0375
+            ],
+            [
+              1.02933,
+              0.0375
+            ]
+          ],
+          "axis": [
+            0.54341,
+            0.83947,
+            0.0
+          ],
+          "origin": [
+            0.02377,
+            0.20052,
+            -0.55
+          ],
+          "repeat": {
+            "count": 6,
+            "translation": [
+              1.00063,
+              0.0,
+              0.0
+            ]
+          }
+        },
+        {
+          "id": "handrail-r",
+          "kind": "revolve",
+          "bone": "stringer",
+          "material": "steel",
+          "role": "detail",
+          "tone": 0.3,
+          "profile": [
+            [
+              0.0,
+              0.0375
+            ],
+            [
+              5.14611,
+              0.0375
+            ]
+          ],
+          "axis": [
+            1.0,
+            0.0,
+            0.0
+          ],
+          "origin": [
+            0.51164,
+            1.06462,
+            -0.55
+          ]
+        },
+        {
+          "id": "bottom-rail-r",
+          "kind": "revolve",
+          "bone": "stringer",
+          "material": "steel",
+          "role": "detail",
+          "tone": 0.3,
+          "profile": [
+            [
+              0.0,
+              0.0375
+            ],
+            [
+              5.00316,
+              0.0375
+            ]
+          ],
+          "axis": [
+            1.0,
+            0.0,
+            0.0
+          ],
+          "origin": [
+            0.13263,
+            0.3687,
+            -0.55
+          ]
+        },
+        {
+          "id": "post-l",
+          "kind": "revolve",
+          "bone": "stringer",
+          "material": "steel",
+          "role": "detail",
+          "tone": 0.3,
+          "profile": [
+            [
+              0.0,
+              0.0375
+            ],
+            [
+              1.02933,
+              0.0375
+            ]
+          ],
+          "axis": [
+            0.54341,
+            0.83947,
+            0.0
+          ],
+          "origin": [
+            0.02377,
+            0.20052,
+            0.55
+          ],
+          "repeat": {
+            "count": 6,
+            "translation": [
+              1.00063,
+              0.0,
+              0.0
+            ]
+          }
+        },
+        {
+          "id": "handrail-l",
+          "kind": "revolve",
+          "bone": "stringer",
+          "material": "steel",
+          "role": "detail",
+          "tone": 0.3,
+          "profile": [
+            [
+              0.0,
+              0.0375
+            ],
+            [
+              5.14611,
+              0.0375
+            ]
+          ],
+          "axis": [
+            1.0,
+            0.0,
+            0.0
+          ],
+          "origin": [
+            0.51164,
+            1.06462,
+            0.55
+          ]
+        },
+        {
+          "id": "bottom-rail-l",
+          "kind": "revolve",
+          "bone": "stringer",
+          "material": "steel",
+          "role": "detail",
+          "tone": 0.3,
+          "profile": [
+            [
+              0.0,
+              0.0375
+            ],
+            [
+              5.00316,
+              0.0375
+            ]
+          ],
+          "axis": [
+            1.0,
+            0.0,
+            0.0
+          ],
+          "origin": [
+            0.13263,
+            0.3687,
+            0.55
+          ]
         }
       ],
       "thermal": [
@@ -1942,6 +4750,36 @@
             "-w",
             "+w"
           ]
+        },
+        {
+          "id": "th-post-r",
+          "of": "post-r",
+          "region": "balustrade-steel"
+        },
+        {
+          "id": "th-handrail-r",
+          "of": "handrail-r",
+          "region": "balustrade-steel"
+        },
+        {
+          "id": "th-bottom-rail-r",
+          "of": "bottom-rail-r",
+          "region": "balustrade-steel"
+        },
+        {
+          "id": "th-post-l",
+          "of": "post-l",
+          "region": "balustrade-steel"
+        },
+        {
+          "id": "th-handrail-l",
+          "of": "handrail-l",
+          "region": "balustrade-steel"
+        },
+        {
+          "id": "th-bottom-rail-l",
+          "of": "bottom-rail-l",
+          "region": "balustrade-steel"
         }
       ],
       "structure": [
@@ -2035,27 +4873,63 @@
           ],
           "transform": {
             "translation": [
-              2.52915,
-              0.00632,
+              2.616,
+              0.25284,
               0.0
             ]
           },
           "member": "stringer",
           "part": "mass"
+        },
+        {
+          "id": "st-post-r",
+          "of": "post-r",
+          "member": "stringer",
+          "part": "member"
+        },
+        {
+          "id": "st-handrail-r",
+          "of": "handrail-r",
+          "member": "stringer",
+          "part": "member"
+        },
+        {
+          "id": "st-bottom-rail-r",
+          "of": "bottom-rail-r",
+          "member": "stringer",
+          "part": "member"
+        },
+        {
+          "id": "st-post-l",
+          "of": "post-l",
+          "member": "stringer",
+          "part": "member"
+        },
+        {
+          "id": "st-handrail-l",
+          "of": "handrail-l",
+          "member": "stringer",
+          "part": "member"
+        },
+        {
+          "id": "st-bottom-rail-l",
+          "of": "bottom-rail-l",
+          "member": "stringer",
+          "part": "member"
         }
       ],
       "decisions": [
         {
-          "en": "1:500 is the stringer as one 152 x 160 bar standing on the floor and ending at the landing face (base plate, head plate and brackets merged into it) and the 16 steps as one folded band of the 75 mm feature, 1.2 m wide, resting on it: the open risers (141 mm, drawn 106 mm between 75 mm bars) would leave 0.08 mm of white between the pens, which does not print, so they are closed in the drawing and in the model alike; the 16 steps of 0.28 x 0.181 m still read as a saw-tooth.",
-          "de": "1:500 ist die Wange als ein Balken 152 x 160, der auf dem Boden steht und an der Podeststirn endet (Fußplatte, Kopfplatte und Konsolen gehen in ihm auf), und die 16 Stufen als ein gefaltetes Band im Merkmal 75 mm, 1,2 m breit, auf ihr aufliegend: die offenen Setzstufen (141 mm, zwischen 75-mm-Balken 106 mm) ließen 0,08 mm Weiß zwischen den Stiften, das nicht druckt, sie sind daher in Zeichnung und Modell geschlossen; die 16 Stufen von 0,28 x 0,181 m lesen sich weiter als Sägezahn."
+          "en": "1:500 is the stringer as one 152 x 160 bar standing on the floor and ending at the landing face (base plate, head plate and brackets merged into it) and the 16 steps as one folded band of the 75 mm feature, 1.2 m wide, resting on it: the open risers (111 mm clear under the guard battens, drawn 106 mm between 75 mm bars) would leave 0.08 mm of white between the pens, which does not print, so they are closed in the drawing and in the model alike; the 16 steps of 0.28 x 0.181 m still read as a saw-tooth. The two balustrades are modelled at the 75 mm feature: the six posts, the handrail (real 42.4 mm) and the bottom rail; the 35 balusters of 12 mm (0.024 mm on paper, 93 mm clear = 0.19 mm) are left out, at the feature they would close into a wall that the real balustrade is not.",
+          "de": "1:500 ist die Wange als ein Balken 152 x 160, der auf dem Boden steht und an der Podeststirn endet (Fußplatte, Kopfplatte und Konsolen gehen in ihm auf), und die 16 Stufen als ein gefaltetes Band im Merkmal 75 mm, 1,2 m breit, auf ihr aufliegend: die offenen Setzstufen (111 mm licht unter den Kinderschutzleisten, zwischen 75-mm-Balken 106 mm) ließen 0,08 mm Weiß zwischen den Stiften, das nicht druckt, sie sind daher in Zeichnung und Modell geschlossen; die 16 Stufen von 0,28 x 0,181 m lesen sich weiter als Sägezahn. Die zwei Geländer sind im Merkmal 75 mm modelliert: die sechs Pfosten, der Handlauf (wahr 42,4 mm) und der Untergurt; die 35 Stäbe von 12 mm (0,024 mm auf dem Papier, 93 mm licht = 0,19 mm) entfallen, im Merkmal würden sie sich zu einer Wand schließen, die das wirkliche Geländer nicht ist."
         },
         {
           "en": "Thermal: the bar and the folded band by reference, the band with only its walking surfaces counted; only the total is compared at this scale (C15).",
           "de": "Thermik: Balken und gefaltetes Band per Verweis, das Band nur mit seinen Trittflächen gezählt; in diesem Maßstab wird nur die Summe verglichen (C15)."
         },
         {
-          "en": "Structure: the bar as the member and the band as the treads that load it; the supports are the 75 mm end zones of the bar where it bears on the floor (pin) and on the landing face (roller), one mass at the centre of mass.",
-          "de": "Tragwerk: der Balken als Bauteil und das Band als die Stufen, die ihn belasten; die Lager sind die 75-mm-Endzonen des Balkens, wo er auf dem Boden (Festlager) und an der Podeststirn (Rollenlager) aufliegt, eine Masse im Schwerpunkt."
+          "en": "Structure: the bar as the member and the band as the treads that load it; the supports are the 75 mm end zones of the bar where it bears on the floor (pin) and on the landing face (roller); posts and rails are members, and flight and balustrades share one mass at their common centre of mass (253 mm above the stringer axis, inside the saw-tooth of the steps).",
+          "de": "Tragwerk: der Balken als Bauteil und das Band als die Stufen, die ihn belasten; die Lager sind die 75-mm-Endzonen des Balkens, wo er auf dem Boden (Festlager) und an der Podeststirn (Rollenlager) aufliegt; Pfosten und Gurte sind Bauteile, Lauf und Geländer teilen sich eine Masse in ihrem gemeinsamen Schwerpunkt (253 mm über der Wangenachse, im Sägezahn der Stufen)."
         }
       ]
     }

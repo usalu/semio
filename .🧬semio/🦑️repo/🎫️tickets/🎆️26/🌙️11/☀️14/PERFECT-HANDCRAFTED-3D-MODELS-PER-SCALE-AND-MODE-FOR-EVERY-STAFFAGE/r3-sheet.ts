@@ -1,19 +1,20 @@
 /** 🗿️ Renders one PNG sheet of one list of one scale: six shaded views at the same zoom (front, right side, back, left side, top, three-quarter from above) with silhouette, seam and crease edges, the rig drawn over them (bones from joint to tip, joints as dots, bone ids as labels), the ground line and a scale bar.
  *
- * Usage: `bun r3-sheet.ts <category>/<slug> --scale N [--list body|thermal|structure] [--pose ID] [--clip ID --t S] [--only front|right|back|left|top|three-quarter] [--cut] [--no-rig] [--no-labels] [--labels all] [--turn DEG --tilt DEG]`
- * Output: `🗑️generated/r3-sheet/<category>/<slug>.s<N>.<list>[.<pose>|.<clip>-t<S>][.<view>][.cut].png`
+ * Usage: `bun r3-sheet.ts <category>/<slug> --scale N [--list body|thermal|structure] [--pose ID] [--clip ID --t S] [--file <asset document json>] [--only front|right|back|left|top|three-quarter] [--cut] [--no-rig] [--no-labels] [--labels all] [--turn DEG --tilt DEG]`
+ * Output: `🗑️generated/r3-sheet/<category>/<slug>.s<N>.<list>[.<pose>|.<clip>-t<S>][.<view>][.cut][.turn<DEG>-tilt<DEG>][.no-rig][.no-labels][.labels-all].png` (every option that changes the picture is in the name, in the catalog form and in the `--file` form alike, so two renders never overwrite each other; an unknown `--pose` or `--clip` is refused with the ids the document has) `--file` renders a candidate asset document as it is (its own rig, poses, clips and `volumes`) instead of the catalog asset with the source merged over it; its sheets go to `🗑️generated/r3-sheet/file/<folder name of the file>.…`.
  * @see ./r3-tools.md
  * @see ./volumes-render.ts */
 import { Canvas, type RGB } from "./volumes-raster.ts";
 import { PART_COLOR, bodyItems, structureItems, thermalItems, thermalLegend } from "./volumes-render.ts";
-import { extentOf, featureM, type ListName, type SolidMesh } from "./volumes-lib.ts";
+import { basename, dirname, resolve } from "node:path";
+import { extentOf, featureM, loadAsset, type CatalogEntry, type ListName, type SolidMesh } from "./volumes-lib.ts";
 import { Panel, cameraAt, cli, dot, listsIn, load, paperBox, placeLabels, pointsOf, queryOf, r3Out, rigAt, savePng, thickLine, toScreen, type Cam, type Item, type Placement, type Rig } from "./r3-lib.ts";
 
 type ViewSpec = { id: string; title: string; cam: Cam; ground: boolean };
 
 const BG: RGB = [247, 247, 244];
 const BONE: RGB = [225, 0, 95];
-const USAGE = "r3-sheet.ts <category>/<slug> --scale N [--list body|thermal|structure] [--pose ID] [--clip ID --t S] [--only front|right|back|left|top|three-quarter] [--cut] [--no-rig] [--no-labels] [--labels all] [--turn DEG --tilt DEG]";
+const USAGE = "r3-sheet.ts <category>/<slug> --scale N [--list body|thermal|structure] [--pose ID] [--clip ID --t S] [--file <asset document json>] [--only front|right|back|left|top|three-quarter] [--cut] [--no-rig] [--no-labels] [--labels all] [--turn DEG --tilt DEG]";
 
 function views(turn: number, tilt: number): ViewSpec[] {
   return [
@@ -53,12 +54,13 @@ function drawRig(c: Canvas, x: number, y: number, w: number, h: number, p: Place
 }
 
 if (import.meta.main) {
-  const { spec, flag, has } = cli(["--scale", "--list", "--pose", "--clip", "--t", "--only", "--turn", "--tilt", "--labels"]);
-  const { entry, asset } = load(spec, USAGE);
+  const { spec, flag, has } = cli(["--scale", "--list", "--pose", "--clip", "--t", "--only", "--turn", "--tilt", "--labels", "--file"]);
+  const file = flag("--file");
+  const { entry, asset } = file === undefined ? load(spec, USAGE) : { entry: { category: "file", folder: "file", slug: basename(dirname(resolve(file))), path: resolve(file) } as CatalogEntry, asset: loadAsset(resolve(file)) };
   const scale = Number(flag("--scale"));
   const list = (flag("--list") ?? "body") as ListName;
   if (asset.volumes[String(scale)]?.status !== "authored") {
-    process.stderr.write(`scale ${flag("--scale")} is not authored in the source of ${spec} (usage: ${USAGE})\n`);
+    process.stderr.write(`scale ${flag("--scale")} is not authored in the source of ${file ?? spec} (usage: ${USAGE})\n`);
     process.exit(2);
   }
   if (!["body", "thermal", "structure"].includes(list)) {
@@ -145,6 +147,6 @@ if (import.meta.main) {
   });
   if (sm.errors.length > 0) sheet.text(10, sheet.height - 20, `NOT DRAWN (SEE STDERR): ${sm.errors.length} SOLIDS FAILED TO TESSELLATE`, [190, 20, 20], 2);
   const tag = query.kind === "pose" ? (flag("--pose") === undefined ? "" : `.${query.pose}`) : `.${query.clip}-t${query.timeS}`;
-  const path = savePng(r3Out("r3-sheet", entry, `${entry.slug}.s${scale}.${list}${tag}${flag("--only") === undefined ? "" : `.${flag("--only")}`}${has("--cut") ? ".cut" : ""}.png`), sheet);
+  const path = savePng(r3Out("r3-sheet", entry, `${entry.slug}.s${scale}.${list}${tag}${flag("--only") === undefined ? "" : `.${flag("--only")}`}${has("--cut") ? ".cut" : ""}${flag("--turn") === undefined && flag("--tilt") === undefined ? "" : `.turn${Number(flag("--turn") ?? 50)}-tilt${Number(flag("--tilt") ?? 28)}`}${has("--no-rig") ? ".no-rig" : ""}${has("--no-labels") ? ".no-labels" : ""}${flag("--labels") === "all" ? ".labels-all" : ""}.png`), sheet);
   process.stdout.write(`${path}\n`);
 }

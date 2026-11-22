@@ -4015,7 +4015,7 @@
           "kind": "surface",
           "model": "passive",
           "material": "pp-impeller",
-          "areaM2": 0.078,
+          "areaM2": 0.15,
           "characteristicLengthM": 0.144,
           "geometry": "cylinder",
           "skyViewFactor": 0,
@@ -4039,8 +4039,8 @@
           "source": "authored-estimate",
           "reference": "incropera-2018",
           "hidden": {
-            "en": "The extract fan and its scroll sit in the upper left of the lining under the exhaust spigot; no drawing shows them. Its electrical input is part of the 75 W of the supply impeller region and its heat part of the 12 W of the casing.",
-            "de": "Der Abluftventilator und seine Spirale sitzen oben links in der Auskleidung unter dem Fortluftstutzen; keine Zeichnung zeigt sie. Seine Leistungsaufnahme ist Teil der 75 W der Region des Zuluftlaufrads, seine Wärme Teil der 12 W des Gehäuses."
+            "en": "The extract fan sits in the upper left of the lining under the exhaust spigot: a hollow scroll with tangential outlet, the forward-curved wheel and the motor, 0.15 m2 of surface inside and out; no drawing shows them. Its electrical input is part of the 75 W of the supply impeller region and its heat part of the 12 W of the casing.",
+            "de": "Der Abluftventilator sitzt oben links in der Auskleidung unter dem Fortluftstutzen: eine hohle Spirale mit tangentialem Auslass, das vorwärtsgekrümmte Laufrad und der Motor, 0,15 m2 Oberfläche innen und außen; keine Zeichnung zeigt sie. Seine Leistungsaufnahme ist Teil der 75 W der Region des Zuluftlaufrads, seine Wärme Teil der 12 W des Gehäuses."
           }
         },
         {
@@ -5156,6 +5156,35 @@
             "layer": "liner"
           },
           {
+            "id": "th-condensate-tray",
+            "bone": "casing",
+            "material": "epp-foam",
+            "role": "body",
+            "tone": 0.3,
+            "region": "casing",
+            "layer": "liner",
+            "kind": "box",
+            "size": [0.015, 0.3, 0.195],
+            "cornerRadius": 0.004,
+            "transform": {
+              "translation": [0.1575, 0.0, 0.0125]
+            }
+          },
+          {
+            "id": "th-condensate-drain",
+            "bone": "casing",
+            "material": "pp-impeller",
+            "role": "body",
+            "tone": 0.5,
+            "region": "casing",
+            "layer": "liner",
+            "kind": "capsule",
+            "p0": [0.15, 0.1, 0.09],
+            "p1": [0.03, 0.1, 0.09],
+            "r0": 0.008,
+            "r1": 0.008
+          },
+          {
             "id": "th-fan-chamber",
             "of": "fan-chamber",
             "region": "casing",
@@ -5256,69 +5285,79 @@
           },
           {
             "id": "th-extract-fan",
-            "kind": "extrude",
             "bone": "casing",
             "material": "pp-impeller",
             "role": "body",
             "tone": 0.5,
+            "region": "extract-fan",
+            "layer": "scroll",
+            "kind": "extrude",
             "profile": [
-              [0.572, 0.208467],
-              [0.572, 0.234547],
-              [0.518635, 0.234547],
-              [0.509324, 0.235826],
-              [0.5, 0.235875],
-              [0.490822, 0.234711],
-              [0.481947, 0.232373],
-              [0.473523, 0.228921],
-              [0.465688, 0.224431],
-              [0.458566, 0.218998],
-              [0.45227, 0.21273],
-              [0.446895, 0.205749],
-              [0.442518, 0.198187],
-              [0.439197, 0.190185],
-              [0.436973, 0.181888],
-              [0.435866, 0.173443],
-              [0.435875, 0.165],
-              [0.436981, 0.156703],
-              [0.439147, 0.148694],
-              [0.442315, 0.141106],
-              [0.446415, 0.134063],
-              [0.451358, 0.127675],
-              [0.457043, 0.122043],
-              [0.46336, 0.11725],
-              [0.470187, 0.113363],
-              [0.477398, 0.110433],
-              [0.484859, 0.108493],
-              [0.492438, 0.107558],
-              [0.5, 0.107625],
-              [0.507416, 0.108674],
-              [0.514559, 0.110667],
-              [0.521311, 0.113551],
-              [0.527563, 0.11726],
-              [0.533216, 0.121713],
-              [0.538184, 0.126816],
-              [0.542395, 0.132469],
-              [0.545791, 0.138563],
-              [0.54833, 0.144981],
-              [0.549987, 0.151606],
-              [0.55075, 0.158319],
-              [0.550625, 0.165],
-              [0.549634, 0.171534],
-              [0.547813, 0.177812],
-              [0.545212, 0.183728],
-              [0.541894, 0.189188],
-              [0.537932, 0.194106],
-              [0.533411, 0.198411],
-              [0.528422, 0.20204],
-              [0.523062, 0.204945],
-              [0.517436, 0.207094],
-              [0.511647, 0.208467]
+              [0.49, 0.215],
+              [0.51321, 0.2102],
+              [0.53142, 0.19392],
+              [0.53925, 0.17],
+              [0.53388, 0.14467],
+              [0.51604, 0.12489],
+              [0.49, 0.1165],
+              [0.46254, 0.12244],
+              [0.44121, 0.14183],
+              [0.43225, 0.17],
+              [0.43876, 0.19958],
+              [0.45971, 0.22247],
+              [0.49, 0.232],
+              [0.575, 0.232],
+              [0.575, 0.215]
             ],
             "plane": "xy",
             "from": 0.0,
             "to": 0.105,
+            "holes": [
+              [
+                [0.49, 0.212],
+                [0.51171, 0.2076],
+                [0.52883, 0.19242],
+                [0.53625, 0.17],
+                [0.53128, 0.14617],
+                [0.51454, 0.12749],
+                [0.49, 0.1195],
+                [0.46404, 0.12504],
+                [0.44381, 0.14333],
+                [0.43525, 0.17],
+                [0.44136, 0.19808],
+                [0.46121, 0.21987],
+                [0.49, 0.229],
+                [0.572, 0.229],
+                [0.572, 0.218],
+                [0.487, 0.218]
+              ]
+            ]
+          },
+          {
+            "id": "th-extract-wheel",
+            "bone": "casing",
+            "material": "pp-impeller",
+            "role": "body",
+            "tone": 0.75,
             "region": "extract-fan",
-            "layer": "scroll"
+            "layer": "scroll",
+            "kind": "revolve",
+            "profile": [[0.012, 0.024], [0.012, 0.038], [0.08, 0.038], [0.08, 0.024], [0.012, 0.024]],
+            "axis": [0, 0, 1],
+            "origin": [0.49, 0.17, 0.0]
+          },
+          {
+            "id": "th-extract-motor",
+            "bone": "casing",
+            "material": "painted-steel",
+            "role": "body",
+            "tone": 0.4,
+            "region": "extract-fan",
+            "layer": "scroll",
+            "kind": "revolve",
+            "profile": [[0.012, 0], [0.012, 0.02], [0.105, 0.02], [0.105, 0]],
+            "axis": [0, 0, 1],
+            "origin": [0.49, 0.17, 0.0]
           },
           {
             "id": "th-extract-filter",
@@ -5653,8 +5692,8 @@
             "de": "Körper: ein 1 mm starker pulverbeschichteter Stahlblechmantel 0,6 x 0,6 m mit 25 mm Biegekanten, 255 mm tief, ein abnehmbarer Frontdeckel von 30 mm Tiefe, dessen Vorderkante um 8 mm gerundet ist (superelliptischer Loft), in seiner Fläche ein Ring von 256 mm und ein Polycarbonatfenster von 224 mm; hinter dem Glas eine schwarze EPP-Ventilatorkammer mit dem Zuluftlaufrad eines EC-Radialventilators der Klasse R3G190: Deckscheibe 190 mm mit 124 mm Einlaufauge, konische Tragscheibe, sieben rückwärts gekrümmte Schaufeln von 2,5 mm (Textur: nur ihre Vorderkanten zeigen sich im Auge) und der Außenläufer des Motors in der Nabe. Eine Statusleuchte von 28 mm und eine angeformte Griffleiste am Deckel; vier verzinkte DN100-Stutzen mit 0,7 mm Wand, je mit einem EPDM-Doppellippenring; hinten eine gekantete Hakenleiste, die über eine verzinkte Wandschiene greift, und unten eine Gummi-Auflageleiste, die das Gehäuse 15 mm von der Wand halten."
           },
           {
-            "en": "Thermal: the casing as two nested shells, 1 mm steel outside (wrapper, filleted front edge as a tapered ring, cover face, back, bezel, grip and light) and the 19 mm EPP lining inside with the fan chamber; the glass, the impeller with its rotor, the four spigots closed at the casing and at the duct (both duct sections) with their seals; hidden inside the lining the counter-flow plate pack (hexagonal, 0.53 x 0.26 x 0.195 m), the scroll of the extract fan rising to the exhaust spigot and the two filter cassettes under the inlet spigots; the supply and exhaust air leave through patches in the bores of their spigots.",
-            "de": "Thermik: das Gehäuse als zwei verschachtelte Schalen, außen 1 mm Stahl (Mantel, gerundete Vorderkante als konischer Ring, Deckelfläche, Rückwand, Ring, Griff und Leuchte), innen die 19-mm-EPP-Auskleidung mit der Ventilatorkammer; das Glas, das Laufrad mit dem Läufer, die vier Stutzen am Gehäuse und am Kanal geschlossen (beides Kanalschnitte) mit ihren Dichtringen; verborgen in der Auskleidung das Gegenstrom-Plattenpaket (sechseckig, 0,53 x 0,26 x 0,195 m), die Spirale des Abluftventilators, die zum Fortluftstutzen steigt, und die zwei Filterkassetten unter den Ansaugstutzen; Zu- und Fortluft verlassen das Gerät durch Flächen in den Bohrungen ihrer Stutzen."
+            "en": "Thermal: the casing as two nested shells, 1 mm steel outside (wrapper, filleted front edge as a tapered ring, cover face, back, bezel, grip and light) and the 19 mm EPP lining inside with the fan chamber; the glass, the impeller with its rotor, the four spigots closed at the casing and at the duct (both duct sections) with their seals; hidden inside the lining the counter-flow plate pack (hexagonal, 0.53 x 0.26 x 0.195 m), the scroll of the extract fan rising to the exhaust spigot and the two filter cassettes under the inlet spigots; the supply and exhaust air leave through patches in the bores of their spigots. The extract fan is the real radial fan: a hollow scroll of 3 mm wall that grows from 45 to 62 mm with its tangential outlet under the exhaust spigot, the forward-curved wheel of 76 mm and the motor on its axis; under the plate pack lies the condensate tray with its drain down to the casing floor.",
+            "de": "Thermik: das Gehäuse als zwei verschachtelte Schalen, außen 1 mm Stahl (Mantel, gerundete Vorderkante als konischer Ring, Deckelfläche, Rückwand, Ring, Griff und Leuchte), innen die 19-mm-EPP-Auskleidung mit der Ventilatorkammer; das Glas, das Laufrad mit dem Läufer, die vier Stutzen am Gehäuse und am Kanal geschlossen (beides Kanalschnitte) mit ihren Dichtringen; verborgen in der Auskleidung das Gegenstrom-Plattenpaket (sechseckig, 0,53 x 0,26 x 0,195 m), die Spirale des Abluftventilators, die zum Fortluftstutzen steigt, und die zwei Filterkassetten unter den Ansaugstutzen; Zu- und Fortluft verlassen das Gerät durch Flächen in den Bohrungen ihrer Stutzen. Der Abluftventilator ist der wirkliche Radialventilator: eine hohle Spirale mit 3 mm Wand, die von 45 auf 62 mm wächst, mit tangentialem Auslass unter dem Fortluftstutzen, das vorwärtsgekrümmte Laufrad von 76 mm und der Motor auf seiner Achse; unter dem Plattenpaket liegt die Kondensatwanne mit ihrem Ablauf zum Gehäuseboden."
           },
           {
             "en": "Structure: the load path of a hung sheet casing: the 1 mm wrapper and the back tray with folded flanges carry the weight to the hook strip, which hangs on the wall rail (pin) while the rubber strip presses on the wall at the lower edge (roller); the four spigot tubes stand in collars in the top panel, the impeller disc turns on its shaft; masses at the centres of the casing, the spigot group and the impeller.",
@@ -6019,15 +6058,58 @@
           },
           {
             "id": "th-extract-fan",
-            "kind": "revolve",
             "bone": "casing",
             "material": "pp-impeller",
             "role": "body",
             "tone": 0.5,
-            "profile": [[0.0, 0.0], [0.0, 0.07], [0.105, 0.07], [0.105, 0.0]],
-            "axis": [0, 0, 1],
-            "origin": [0.5, 0.165, 0.0],
-            "region": "extract-fan"
+            "region": "extract-fan",
+            "layer": "scroll",
+            "kind": "extrude",
+            "profile": [
+              [0.49, 0.216],
+              [0.52394, 0.20394],
+              [0.54, 0.17],
+              [0.52677, 0.13323],
+              [0.49, 0.116],
+              [0.4504, 0.1304],
+              [0.432, 0.17],
+              [0.44757, 0.21243],
+              [0.49, 0.232],
+              [0.575, 0.232],
+              [0.575, 0.216]
+            ],
+            "plane": "xy",
+            "from": 0.0,
+            "to": 0.105,
+            "holes": [
+              [
+                [0.49, 0.213],
+                [0.52182, 0.20182],
+                [0.537, 0.17],
+                [0.52465, 0.13535],
+                [0.49, 0.119],
+                [0.45252, 0.13252],
+                [0.435, 0.17],
+                [0.44969, 0.21031],
+                [0.49, 0.229],
+                [0.572, 0.229],
+                [0.572, 0.219],
+                [0.487, 0.219]
+              ]
+            ]
+          },
+          {
+            "id": "th-condensate-tray",
+            "bone": "casing",
+            "material": "epp-foam",
+            "role": "body",
+            "tone": 0.3,
+            "region": "casing",
+            "kind": "box",
+            "size": [0.015, 0.3, 0.195],
+            "transform": {
+              "translation": [0.1575, 0.0, 0.0125]
+            }
           },
           {
             "id": "th-extract-filter",
@@ -6376,8 +6458,8 @@
             "de": "Körper: die 8-mm-Deckelrundung, Ring, Leuchte, Griff und Schaufeln liegen unter den 15 mm von 1:100: der Deckel ist eine scharfkantige 30-mm-Platte mit der 256-mm-Fensteröffnung und einer Glasscheibe, die Ventilatorkammer ein 15-mm-Topf, das Laufrad eine gedrehte Scheibe mit Einlaufauge und Nabe, jeder Stutzen ein Rohr mit seiner Dichtung als 15-mm-Band, Hakenleiste und Schiene eine 15-mm-Konsole, dazu die Auflageleiste."
           },
           {
-            "en": "Thermal: steel and EPP layers merged into the casing and cover surfaces; window, impeller and four closed ducts with their seal band; the hidden plate pack, the extract fan as its 140 mm drum and the two filter cassettes; the outlets as 15 mm patches.",
-            "de": "Thermik: Stahl- und EPP-Schicht in die Flächen von Gehäuse und Deckel zusammengeführt; Fenster, Laufrad und vier geschlossene Kanäle mit Dichtband; das verborgene Plattenpaket, der Abluftventilator als seine 140-mm-Trommel und die zwei Filterkassetten; die Auslässe als 15-mm-Flächen."
+            "en": "Thermal: steel and EPP layers merged into the casing and cover surfaces; window, impeller and four closed ducts with their seal band; the hidden plate pack, the extract fan as its 140 mm drum and the two filter cassettes; the outlets as 15 mm patches. The extract fan is a scroll with its tangential outlet under the exhaust spigot (hollow, the wheel inside is below the feature), and the condensate tray lies under the plate pack.",
+            "de": "Thermik: Stahl- und EPP-Schicht in die Flächen von Gehäuse und Deckel zusammengeführt; Fenster, Laufrad und vier geschlossene Kanäle mit Dichtband; das verborgene Plattenpaket, der Abluftventilator als seine 140-mm-Trommel und die zwei Filterkassetten; die Auslässe als 15-mm-Flächen. Der Abluftventilator ist eine Spirale mit tangentialem Auslass unter dem Fortluftstutzen (hohl, das Laufrad darin liegt unter dem Merkmal), und die Kondensatwanne liegt unter dem Plattenpaket."
           },
           {
             "en": "Structure: wrapper and back tray, the four spigot tubes in 15 mm collars, the impeller disc on a 15 mm shaft, bracket and rest strip as the two supports, three masses.",

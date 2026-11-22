@@ -3,6 +3,7 @@ import { dirname } from "node:path";
 import { Worker } from "node:worker_threads";
 import { join } from "node:path";
 import { OWNER_POOL_POLICY_V1 as P, ownerPoolFitsV1, ownerPoolHeavyV1, ownerPoolRecycleV1, pullOwnerPoolV1 } from "../🟦️.ts";
+import { fleetGlobalsKeyV1 } from "../../📥️take/🟨️.mjs";
 import { ownerPoolReadFleetV1, ownerPoolTurnMillisecondsV1 } from "../🤝️fleet/🟦️.ts";
 
 const MEGABYTE = 1048576, megabytes = () => Math.round(process.memoryUsage().rss / MEGABYTE);
@@ -21,7 +22,7 @@ export async function runOwnerPoolChildV1({ args, write, input, environment = pr
   if (opening.revision !== undefined && head.revision !== undefined && head.revision !== opening.revision) { write({ t: "end", reason: "revision", revision: opening.revision }); opening.close?.(); return OWNER_POOL_CHILD_EXIT_V1.revision; }
   const known = new Set(), presence = args.presence, load = () => { try { for (const line of readFileSync(presence, "utf8").split("\n")) { const at = line.indexOf(" "); if (at > 0 && Date.now() - Number(line.slice(0, at)) < P.presenceMaximumAgeMilliseconds) known.add(line.slice(at + 1)); } } catch {} };
   if (presence !== undefined) { try { mkdirSync(dirname(presence), { recursive: true }); } catch {} load(); }
-  const published = typeof args.store === "string" && typeof args.origin === "string" ? join(args.store, "v1", "origins", args.origin, "pool-published-" + String(args.dir).split("/").pop().slice(0, 12) + ".txt") : undefined;
+  const published = typeof args.store === "string" && typeof args.origin === "string" ? join(args.store, "v1", "origins", args.origin, "pool-published-" + String(args.dir).split("/").pop().slice(0, 12) + "-" + fleetGlobalsKeyV1(head.globals) + ".txt") : undefined;
   let drain = false, recycle = false, running = 0, cpu = process.cpuUsage(), latest;
   const leave = () => { drain = true; setTimeout(() => process.exit(OWNER_POOL_CHILD_EXIT_V1.drained), P.drainExitMilliseconds).unref(); };
   input?.on("data", chunk => { if (String(chunk).includes("drain")) leave(); });

@@ -5,7 +5,7 @@
  * @see ../🖥️stage/🟦️.ts — the stage and its customisation properties
  */
 import { useEffect, useRef, type ReactElement } from "react";
-import type { Asset, DisplayRange, Environment, EvaluationQuery, ForceQuantity, Language, ThermalQuantity, View } from "@teaching/staffage";
+import type { Asset, DisplayRange, Environment, EvaluationQuery, FlowField, FlowLayer, ForceQuantity, Language, ThermalQuantity, View } from "@teaching/staffage";
 import type { StaffageClock } from "../../⏱️clock/🧱️core/🟦️.ts";
 import { ModelStage, type StageOptions, type StageState } from "../🖥️stage/🟦️.ts";
 import type { CameraPresetName } from "../🟦️.ts";
@@ -23,6 +23,8 @@ export type ModelFigureProps = {
   readonly onScale?: (scale: number) => void;
   readonly onView?: (view: View) => void;
   readonly onState?: (state: StageState) => void;
+  readonly onFlow?: (flow: FlowField | null) => void;
+  readonly flow?: readonly FlowLayer[];
   readonly environment?: Environment;
   readonly thermalQuantity?: ThermalQuantity;
   readonly forceQuantity?: ForceQuantity;
@@ -37,8 +39,8 @@ export type ModelFigureProps = {
   readonly className?: string;
 };
 
-const optionsOf = (props: ModelFigureProps, callbacks: Pick<StageOptions, "onPreset" | "onScale" | "onView" | "onState">): StageOptions => {
-  const { className: _className, onPreset: _onPreset, onScale: _onScale, onView: _onView, onState: _onState, ...rest } = props;
+const optionsOf = (props: ModelFigureProps, callbacks: Pick<StageOptions, "onPreset" | "onScale" | "onView" | "onState" | "onFlow">): StageOptions => {
+  const { className: _className, onPreset: _onPreset, onScale: _onScale, onView: _onView, onState: _onState, onFlow: _onFlow, ...rest } = props;
   return { ...rest, framed: rest.framed ?? false, ...callbacks };
 };
 
@@ -48,7 +50,7 @@ export function ModelFigure(props: ModelFigureProps): ReactElement {
   const stage = useRef<ModelStage | null>(null);
   const latest = useRef(props);
   latest.current = props;
-  const callbacks: Pick<StageOptions, "onPreset" | "onScale" | "onView" | "onState"> = { onPreset: (preset) => latest.current.onPreset?.(preset), onScale: (scale) => latest.current.onScale?.(scale), onView: (view) => latest.current.onView?.(view), onState: (state) => latest.current.onState?.(state) };
+  const callbacks: Pick<StageOptions, "onPreset" | "onScale" | "onView" | "onState" | "onFlow"> = { onPreset: (preset) => latest.current.onPreset?.(preset), onScale: (scale) => latest.current.onScale?.(scale), onView: (view) => latest.current.onView?.(view), onState: (state) => latest.current.onState?.(state), onFlow: (flow) => latest.current.onFlow?.(flow) };
   useEffect(() => {
     if (host.current === null) return;
     const mounted = new ModelStage(host.current, optionsOf(latest.current, callbacks));

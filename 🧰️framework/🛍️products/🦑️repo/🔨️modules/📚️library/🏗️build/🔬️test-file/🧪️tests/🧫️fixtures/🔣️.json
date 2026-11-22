@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "arguments": [
+    {"id": "one-file", "args": ["a.ts"], "expected": {"files": ["a.ts"], "json": false, "bail": false, "dryRun": false, "language": null}},
+    {"id": "all-flags", "args": ["--json", "--bail", "--dry-run", "a.ts", "b.ts"], "expected": {"files": ["a.ts", "b.ts"], "json": true, "bail": true, "dryRun": true, "language": null}},
+    {"id": "flags-after-files", "args": ["a.ts", "--json"], "expected": {"files": ["a.ts"], "json": true, "bail": false, "dryRun": false, "language": null}},
+    {"id": "separator-makes-paths", "args": ["--json", "--", "--odd.ts", "--bail"], "expected": {"files": ["--odd.ts", "--bail"], "json": true, "bail": false, "dryRun": false, "language": null}},
+    {"id": "duplicates-collapse", "args": ["a.ts", "b.ts", "a.ts"], "expected": {"files": ["a.ts", "b.ts"], "json": false, "bail": false, "dryRun": false, "language": null}},
+    {"id": "language-equals", "args": ["--lang=de", "a.ts"], "expected": {"files": ["a.ts"], "json": false, "bail": false, "dryRun": false, "language": "de"}},
+    {"id": "language-separate", "args": ["--lang", "en", "a.ts"], "expected": {"files": ["a.ts"], "json": false, "bail": false, "dryRun": false, "language": "en"}},
+    {"id": "no-files", "args": ["--json"], "refusal": "usage"},
+    {"id": "nothing", "args": [], "refusal": "usage"},
+    {"id": "unknown-option", "args": ["--fast", "a.ts"], "refusal": "option.unknown"},
+    {"id": "valued-flag-with-value", "args": ["--json=1", "a.ts"], "refusal": "option.unknown"},
+    {"id": "repeated-option", "args": ["--json", "a.ts", "--json"], "refusal": "option.repeated"},
+    {"id": "language-without-value", "args": ["a.ts", "--lang"], "refusal": "option.value"},
+    {"id": "language-swallowing-option", "args": ["--lang", "--json", "a.ts"], "refusal": "option.value"},
+    {"id": "language-unknown", "args": ["--lang=fr", "a.ts"], "refusal": "language.unknown"}
+  ],
+  "routes": [
+    {"id": "build-file-in-tree", "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔬️test-file/🧪️tests/🟦️.ts"},
+    {"id": "build-door", "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚪️door/🧪️tests/🟦️.ts"},
+    {"id": "caching-suite-table", "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🗂️suites/🧪️tests/🟦️.ts"},
+    {"id": "process-routing", "file": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧪️tests/📈️progress/🟦️.ts"},
+    {"id": "plain-law", "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/📦️package-export-targets/🧪️tests/🟦️.ts"}
+  ]
+}

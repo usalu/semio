@@ -224,6 +224,21 @@ pub struct AdmittedToolCommand {
 }
 
 #[doc(hidden)]
+#[derive(semio_framework_value::RetireOwned)]
+#[value(send_only)]
+pub(crate) struct PreviewAdmissionMetadata {
+    verb: String,
+    proof: QualifiedToolProof,
+    wire_admission: semio_framework::ToolWireAdmission,
+}
+
+impl AdmittedToolCommand {
+    pub(crate) fn into_preview_parts(self) -> (semio_framework::action_bus::RetainedToolWireInput, PreviewAdmissionMetadata) {
+        (self.raw_wire, PreviewAdmissionMetadata { verb: self.verb, proof: self.proof, wire_admission: self.wire_admission })
+    }
+}
+
+#[doc(hidden)]
 pub struct PendingLatestWinsCommand<A: ArtifactApp> {
     pub command: ManuallyDrop<Option<Box<A::Command>>>,
     pub command_retirement:RetainedCloneClose,

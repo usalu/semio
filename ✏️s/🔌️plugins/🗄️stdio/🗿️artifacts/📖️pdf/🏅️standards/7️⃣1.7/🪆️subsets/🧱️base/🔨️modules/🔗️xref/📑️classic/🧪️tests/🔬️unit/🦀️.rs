@@ -10,7 +10,7 @@ fn reads_all_live_offsets_under_small_grants() {
         let mut live = Vec::new();
         loop {
             let before = cursor.position();
-            let receipt = cursor.advance(pdf, budget);
+            let receipt = cursor.advance(|position| pdf.get(position).copied(), budget);
             assert!(receipt.work <= budget);
             let event = receipt.event.unwrap();
             assert!(cursor.position() - before <= budget);

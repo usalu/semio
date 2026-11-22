@@ -15,6 +15,8 @@ use protocol::ColdMutation;
 use protocol::ColdDiffAlgebra;
 use protocol::{DiffAlgebra};
 use protocol::{Mutation};
+use semio_framework_value::{ValueError, ValueRefusalKind};
+use semio_os_kernel::os_store::ArtifactOperationTargets;
 
 //#region 🔖️Mutations
 /// 🧮️ Semantic puzzle-5d document mutation vocabulary: id-keyed part create-delete plus per-2d/
@@ -24,13 +26,12 @@ use protocol::{Mutation};
 /// transforms (`drag-selection2d` on the board, `drag-`, `rotate-`, `scale-selection3d` in the world) that
 /// record a gesture's own inputs. There is deliberately no camera
 /// mutation: camera pose is session-only app runtime state (`ActionKind::View`), never a document
-/// operation. There is deliberately no whole-document mutation: import/reset/example-load goes
-/// through `store::ArtifactStore::reset` (non-history), never through this enum.
+/// operation. Example switching groups reversible scene-row splices with ordinary document metadata edits.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_dsl_record_derive::DslReceiving)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[value(tag = "mutation", rename_all = "camelCase")]
-#[cfg_attr(test, serde(tag = "mutation", rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), serde(tag = "mutation", rename_all = "camelCase"))]
 #[mutations(snapshot = Puzzle5dSnapshot, diff = Puzzle5dDiff, schema = "puzzle.puzzle5d", reference = Puzzle5dSnapshot, reference_diff = Puzzle5dDiff)]
 pub enum Puzzle5dMutation {
     CreatePart(CreatePart),
@@ -72,6 +73,103 @@ pub enum Puzzle5dMutation {
     DragSelection3d(DragSelection3d),
     RotateSelection3d(RotateSelection3d),
     ScaleSelection3d(ScaleSelection3d),
+    SpliceSceneRows(SpliceSceneRows),
+    SpliceSceneRowBatch(SpliceSceneRowBatch),
+}
+
+enum ConflictPath<'a> {
+    Document,
+    Entity(&'a str),
+    Nested(&'a str, &'a str),
+    Selection(&'a [String]),
+}
+
+impl<'a> ConflictPath<'a> {
+    fn segment(self, index: usize) -> Result<&'a str, ValueError> {
+        match (self, index) {
+            (Self::Entity(id) | Self::Nested(id, _), 0) => Some(id),
+            (Self::Nested(_, id), 1) => Some(id),
+            (Self::Selection(ids), index) => ids.get(index).map(String::as_str),
+            _ => None,
+        }
+        .ok_or_else(|| ValueError::literal(ValueRefusalKind::InvalidValue, "Puzzle5d conflict path segment is absent"))
+    }
+}
+
+impl Puzzle5dMutation {
+    fn conflict_path(&self) -> ConflictPath<'_> {
+        match self {
+            Self::CreatePart(row) => ConflictPath::Entity(&row.part.id),
+            Self::DeletePart(row) => ConflictPath::Entity(&row.id),
+            Self::MovePart2d(row) => ConflictPath::Entity(&row.id),
+            Self::ReplacePart2dGeometry(row) => ConflictPath::Entity(&row.id),
+            Self::EditPart2dText(row) => ConflictPath::Entity(&row.id),
+            Self::ChangePart2dIcon(row) => ConflictPath::Entity(&row.id),
+            Self::ChangePart2dHidden(row) => ConflictPath::Entity(&row.id),
+            Self::ChangePart2dLocked(row) => ConflictPath::Entity(&row.id),
+            Self::MovePart3d(row) => ConflictPath::Entity(&row.id),
+            Self::RotatePart3d(row) => ConflictPath::Entity(&row.id),
+            Self::ScalePart3d(row) => ConflictPath::Entity(&row.id),
+            Self::ChangePart3dMesh(row) => ConflictPath::Entity(&row.id),
+            Self::EditPart3dLabel(row) => ConflictPath::Entity(&row.id),
+            Self::ChangePartKind(row) => ConflictPath::Entity(&row.id),
+            Self::ChangePartAnchor(row) => ConflictPath::Entity(&row.id),
+            Self::AddPartGrip(row) => ConflictPath::Nested(&row.part_id, &row.grip.id),
+            Self::RemovePartGrip(row) => ConflictPath::Nested(&row.part_id, &row.grip_id),
+            Self::ReplacePartGrip(row) => ConflictPath::Nested(&row.part_id, &row.grip_id),
+            Self::ConnectGrips(row) => ConflictPath::Entity(&row.id),
+            Self::DisconnectGrips(row) => ConflictPath::Entity(&row.id),
+            Self::ReplaceFastenerGeometry(row) => ConflictPath::Entity(&row.id),
+            Self::ChangeFastenerKind(row) => ConflictPath::Entity(&row.id),
+            Self::RenamePuzzle5d(_) | Self::ChangeDomain(_) | Self::ChangeDescription(_) | Self::ReplaceKindCatalogs(_) => ConflictPath::Document,
+            Self::ConnectKindCompatibility(row) => ConflictPath::Nested(&row.source, &row.target),
+            Self::DisconnectKindCompatibility(row) => ConflictPath::Nested(&row.source, &row.target),
+            Self::CreateTargetVolume(row) => ConflictPath::Entity(&row.target_volume.id),
+            Self::DeleteTargetVolume(row) => ConflictPath::Entity(&row.id),
+            Self::MoveTargetVolume(row) => ConflictPath::Entity(&row.id),
+            Self::RotateTargetVolume(row) => ConflictPath::Entity(&row.id),
+            Self::ScaleTargetVolume(row) => ConflictPath::Entity(&row.id),
+            Self::ChangeTargetVolumeHidden(row) => ConflictPath::Entity(&row.id),
+            Self::ChangeTargetVolumeLocked(row) => ConflictPath::Entity(&row.id),
+            Self::DragSelection2d(row) => ConflictPath::Selection(&row.targets),
+            Self::DragSelection3d(row) => ConflictPath::Selection(&row.targets),
+            Self::RotateSelection3d(row) => ConflictPath::Selection(&row.targets),
+            Self::ScaleSelection3d(row) => ConflictPath::Selection(&row.targets),
+            Self::SpliceSceneRows(row) => ConflictPath::Entity(&row.table),
+            Self::SpliceSceneRowBatch(_) => ConflictPath::Document,
+        }
+    }
+
+    /// 🎯️ Borrows the conflict path from the original mutation fields.
+    pub fn original_conflict_target(&self) -> Option<&dyn ArtifactOperationTargets> {
+        match self.conflict_path() {
+            ConflictPath::Document => None,
+            _ => Some(self),
+        }
+    }
+}
+
+impl ArtifactOperationTargets for Puzzle5dMutation {
+    fn len(&self) -> usize {
+        match self.conflict_path() {
+            ConflictPath::Document => 0,
+            ConflictPath::Entity(_) => 1,
+            ConflictPath::Nested(..) => 2,
+            ConflictPath::Selection(ids) => ids.len(),
+        }
+    }
+
+    fn segment_len(&self, index: usize) -> Result<usize, ValueError> {
+        Ok(self.conflict_path().segment(index)?.len())
+    }
+
+    fn read_segment(&self, index: usize, offset: usize, output: &mut [u8]) -> Result<usize, ValueError> {
+        let bytes = self.conflict_path().segment(index)?.as_bytes().get(offset..)
+            .ok_or_else(|| ValueError::literal(ValueRefusalKind::InvalidValue, "Puzzle5d conflict path offset exceeds its segment"))?;
+        let count = bytes.len().min(output.len());
+        output[..count].copy_from_slice(&bytes[..count]);
+        Ok(count)
+    }
 }
 
 //#region 🏷️Kinds
@@ -119,6 +217,8 @@ pub const KINDS: &[&str] = &[
     "drag-selection3d",
     "rotate-selection3d",
     "scale-selection3d",
+    "splice-scene-rows",
+    "splice-scene-row-batch",
 ];
 //#endregion 🏷️Kinds
 //#endregion 🔖️Mutations
@@ -172,6 +272,8 @@ pub use crate::standards::v1::subsets::any::schema::mutations::scale_target_volu
 
 pub use {semio_s_artifact_puzzle_3d_mutations_selection::puzzle3d_selection_items as puzzle5d_selection_items, semio_s_artifact_puzzle_3d_mutations_selection::puzzle3d_selection_number as puzzle5d_selection_number, semio_s_artifact_puzzle_3d_mutations_selection::puzzle3d_selection_triple as puzzle5d_selection_triple, semio_s_artifact_puzzle_3d_mutations_selection::puzzle3d_targets_invariant as puzzle5d_targets_invariant, semio_s_artifact_puzzle_3d_model::quat_from_axis_angle, semio_s_artifact_puzzle_3d_model::quat_mul};
 pub use semio_s_artifact_puzzle_5d_kind_catalogs::standards::v1::subsets::any::schema::mutations::support;
+pub use crate::standards::v1::subsets::any::schema::mutations::splice_scene_rows::{SpliceSceneRows, SCENE_ROW_CHUNK};
+pub use crate::standards::v1::subsets::any::schema::mutations::splice_scene_row_batch::{SpliceSceneRowBatch, SCENE_PART_SPLICE_BATCH, SCENE_SPLICE_BATCH};
 pub use support::{PUZZLE5D_FLAT_TO_WORLD, puzzle5d_scaled};
 
 

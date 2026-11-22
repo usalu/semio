@@ -3,11 +3,11 @@ import{expect,test}from"bun:test";
 import{Database}from"bun:sqlite";
 import ts from"typescript";
 import{createHash,randomUUID}from"node:crypto";
-import{existsSync,lstatSync,mkdirSync,mkdtempSync,readdirSync,readFileSync,rmSync,writeFileSync}from"node:fs";
+import{existsSync,lstatSync,mkdirSync,mkdtempSync,readdirSync,readFileSync,renameSync,rmSync,writeFileSync,writeSync}from"node:fs";
 import{dirname,join}from"node:path";
 import{compactSourceInputs}from"../../../🟨️.mjs";
 import{withBuildGraphStagingV1}from"../../../💾️storage/🟨️.mjs";
-import{concurrentEditV1,retryOnConcurrentEditSyncV1,renameOverBusyFileSyncV1}from"../../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
+import{concurrentEditV1,retryOnConcurrentEditSyncV1,publishFileDurablySyncV1}from"../../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
 import fixture from"./🔣️.json";
 
 const artifacts=()=>{const directory=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!directory)throw Error("Original test artifacts required");mkdirSync(directory,{recursive:true});return directory;};
@@ -28,7 +28,7 @@ test("partial writes, rename refusals and cancellation remove only the original 
  const root=mkdtempSync(join(artifacts(),"f-")),db=new Database(":memory:"),url=new URL("../../../🟨️.mjs",import.meta.url),tree=ts.createSourceFile(url.pathname,readFileSync(url,"utf8"),ts.ScriptTarget.Latest,true),entry=tree.statements.find(node=>ts.isFunctionDeclaration(node)&&node.name?.text==="publishInputClosureV1");if(!entry)throw Error("Actual publisher required");
  try{for(const fault of fixture.failures){
   const contract=JSON.stringify({version:1,files:["owned.txt"]}),hash=createHash("sha256").update(contract).digest("hex"),path=join(root,hash+".json"),controller=new AbortController(),primary=Error(fault),temporaries:string[]=[];
-  const ports={join,dirname,lstatSync,readFileSync,writeFileSync:(temporary:string,bytes:string,options:unknown)=>{temporaries.push(temporary);expect(dirname(temporary)).toBe(dirname(path));expect(temporary.length).toBeLessThanOrEqual(256);writeFileSync(temporary,bytes,options as never);if(fault==="write")throw primary;if(fault==="cancel"){controller.abort(primary);controller.signal.throwIfAborted();}},persistedExists:existsSync,rmSync,randomUUID,renameOverBusyFileSyncV1:(temporary:string,target:string)=>{if(fault==="rename")throw primary;renameOverBusyFileSyncV1(temporary,target);},REVISION_POLICY_V1:{maximumPathUnits:256},VERIFIED_CLOSURES_V1:new Map(),noteBuildGraphStagedLeafV1:()=>{},concurrentEditV1,retryOnConcurrentEditSyncV1};
+  const ports={join,dirname,lstatSync,readFileSync,publishFileDurablySyncV1:(temporary:string,target:string,bytes:Uint8Array)=>{temporaries.push(temporary);expect(dirname(temporary)).toBe(dirname(path));expect(temporary.length).toBeLessThanOrEqual(256);publishFileDurablySyncV1(temporary,target,bytes,{operations:{write:(descriptor:number,data:Uint8Array)=>{writeSync(descriptor,data);if(fault==="write")throw primary;if(fault==="cancel"){controller.abort(primary);controller.signal.throwIfAborted();}},rename:(from:string,to:string)=>{if(fault==="rename")throw primary;renameSync(from,to);}}});},persistedExists:existsSync,rmSync,randomUUID,REVISION_POLICY_V1:{maximumPathUnits:256},VERIFIED_CLOSURES_V1:new Map(),noteBuildGraphStagedLeafV1:()=>{},concurrentEditV1,retryOnConcurrentEditSyncV1};
   const publish=new Function(...Object.keys(ports),entry.getText(tree)+";return publishInputClosureV1;")(...Object.values(ports));expect(()=>publish(path,contract)).toThrow(primary);expect(temporaries.length).toBe(1);expect(temporaries.every(temporary=>!existsSync(temporary))).toBe(true);expect(existsSync(path)).toBe(false);const oracle=db.query("select 0 remaining").get()as{remaining:number};expect(readdirSync(root).length).toBe(oracle.remaining);
  }}finally{db.close();rmSync(root,{recursive:true,force:true});}
 });

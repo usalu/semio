@@ -304,7 +304,7 @@ where
         }
         assert_report_copy_and_paths(&mut report, &doc, &check_report);
         assert_remedies_flip_fails::<F>(&mut report, &doc, &check_report);
-        if check_report.complies() {
+        if check_report.failing().count() == 0 {
             compliant += 1;
         }
         let fail_count = check_report.checks.iter().filter(|check| matches!(check.status, CheckStatus::Fail)).count();
@@ -316,7 +316,7 @@ where
         report.fail("no examples registered for gate");
     }
     if compliant == 0 {
-        report.fail("no compliant example (report.complies())");
+        report.fail("no compliant example (no failing check)");
     }
     if noncompliant == 0 {
         report.fail("no non-compliant example with ≥2 Fail checks");

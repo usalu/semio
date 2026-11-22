@@ -48,7 +48,7 @@ impl FocusDevice {
 /// 🪟️ The window kinds the layout `device` presents holds: the app's named layout whose id is the device id or ends in `-<device id>` (`norm-visual-mobile`); `None` when the app declares no layout for the device, which leaves every declared kind available.
 pub fn device_layout_window_kinds(layouts: &[semio_ui_declaration::layout::NamedLayout], device: FocusDevice) -> Option<Vec<String>> {
     let suffix = format!("-{}", device.id());
-    layouts.iter().find(|layout| layout.id == device.id() || layout.id.ends_with(&suffix)).map(|layout| semio_ui_declaration::layout::collect_window_kind_ids_from_layout(&layout.layout))
+    layouts.iter().find(|layout| layout.id == device.id() || layout.id.ends_with(&suffix)).map(|layout| semio_ui_declaration::layout::collect_window_kind_ids(&layout.layout.root))
 }
 
 /// 🎯️ The window kind a focus lands on for a device: `requested` when the device layout holds it (or declares no layout), else the `fallback` stand-in when the layout holds that, else `None` (the focus is refused as unavailable).

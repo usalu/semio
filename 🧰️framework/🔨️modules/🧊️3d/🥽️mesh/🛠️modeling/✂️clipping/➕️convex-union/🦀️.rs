@@ -1,4 +1,4 @@
-//! ➕️ Joins certified convex boundaries across one matching supporting face.
+//! ➕️ Joins certified solid boundaries across one matching supporting face.
 
 use super::*;
 #[path = "../➗️partial-union/🦀️.rs"]
@@ -41,7 +41,38 @@ impl MeshConvexUnion {
         self.face=0;self.corner=0;self.phase=7;
     }
 
+    fn classify_axial(&mut self) -> MeshResult<()> {
+        let [Some(left),Some(right)] = &self.kernel.prisms else { unreachable!() };
+        let Some(axis)=left.matching_axis(&self.kernel.left,right,&self.kernel.right) else {
+            self.kernel.start_axial_profile()?;
+            self.phase=14;
+            return Ok(());
+        };
+        let ordered = |side: usize, caps: [usize;2]| {
+            let planes = &self.kernel.check[side].planes;
+            let [a,b] = caps.map(|face| (planes[face].origin.0[axis],face));
+            if a.0 < b.0 { [a,b] } else { [b,a] }
+        };
+        let [(a,low_left),(b,high_left)] = ordered(0,left.caps());
+        let [(c,low_right),(d,high_right)] = ordered(1,right.caps());
+        if a <= c && d <= b { self.base(0,true); }
+        else if c <= a && b <= d { self.base(1,true); }
+        else if b < c || d < a { self.base(0,false); }
+        else if b == c { self.start_contact(high_left,low_right); }
+        else if d == a { self.start_contact(low_left,high_right); }
+        else {
+            let overlap = b.min(d) - a.max(c);
+            let stock_tail = if a < c { c-a } else { b-d };
+            if overlap <= self.epsilon() || stock_tail <= self.epsilon() {
+                return Err(invalid("concave union has no stable axial overlap or stock tail"));
+            }
+            self.phase=2;
+        }
+        Ok(())
+    }
+
     fn classify(&mut self)->MeshResult<()>{
+        if self.kernel.prisms.iter().all(Option::is_some){return self.classify_axial();}
         if let Some(side)=self.kernel.prism_side(){
             if self.kernel.prism_contained(side)?{self.base(1-side,true);}
             return Ok(());
@@ -80,6 +111,13 @@ impl MeshConvexUnion {
         Ok(())
     }
 
+    fn start_contact(&mut self, left: usize, right: usize) {
+        self.left_seam=Some(left);
+        self.seam=Some(right);
+        self.cap=self.kernel.left.faces.swap_remove(left);
+        self.base(0,false);
+    }
+
     fn find_contact_face(&mut self)->MeshResult<()>{
         let right=self.kernel.check[1].planes[self.seam.unwrap()];
         let Some(&left)=self.kernel.check[0].planes.get(self.face)else{
@@ -90,19 +128,23 @@ impl MeshConvexUnion {
             if left_ring.len()!=self.kernel.right.faces[self.seam.unwrap()].len(){
                 return Err(invalid("convex union contact does not share a full opposing face"));
             }
-            self.left_seam=Some(self.face);
-            self.cap=self.kernel.left.faces.swap_remove(self.face);
-            self.base(0,false);
+            self.start_contact(self.face,self.seam.unwrap());
         }else{self.face+=1;}
         Ok(())
     }
 
     fn weld(&mut self,solid:MeshIntersectionSolid)->MeshResult<()>{
         let out=self.output.insert(solid);
-        let Some(MeshIntersectionFace::ReversedRightPlane(seam))=out.faces.pop()else{
-            return Err(invalid("convex union requires a single opposing support face"));
+        let mut caps = out.faces.iter().enumerate().filter_map(|(index, owner)| {
+            let MeshIntersectionFace::ReversedRightPlane(seam) = owner else { return None; };
+            Some((index,*seam))
+        });
+        let Some((index,seam))=caps.next()else{
+            return Err(invalid("union requires one opposing support face"));
         };
-        self.cap=out.geometry.faces.pop().unwrap();
+        if caps.next().is_some(){return Err(invalid("union requires one opposing support face"));}
+        out.faces.swap_remove(index);
+        self.cap=out.geometry.faces.swap_remove(index);
         if self.cap.len()!=self.kernel.right.faces[seam as usize].len(){
             return Err(invalid("convex union cross section does not match the opposing support face"));
         }
@@ -148,7 +190,10 @@ impl MeshConvexUnion {
     fn append_face(&mut self){
         let out=self.output.as_mut().unwrap();
         let Some(ring)=self.kernel.right.faces.get(self.face)else{
-            self.face=0;self.corner=0;self.plane=0;self.phase=if self.seam.is_some(){8}else{9};return;
+            self.face=0;self.corner=0;self.plane=0;
+            self.phase=if self.kernel.prisms.iter().all(Option::is_some){11}
+                else if self.seam.is_some(){8}else{9};
+            return;
         };
         if self.seam==Some(self.face){self.face+=1;return;}
         if self.corner==0{
@@ -238,6 +283,11 @@ impl MeshConvexUnion {
                 9=>{self.phase=12;return Ok(Solid(self.output.take().unwrap()));},
                 10=>self.find_contact_face()?,
                 11=>self.verify_incidence()?,
+                14=>match self.kernel.advance_axial_profile()? {
+                    None=>{},
+                    Some(AxialRelation::Separate)=>self.base(0,false),
+                    Some(AxialRelation::Nested { outer, .. })=>self.base(outer,true),
+                },
                 13=>{
                     let partial=self.partial.as_mut().unwrap();
                     if let Some(result)=partial.advance([&self.kernel.left,&self.kernel.right],[&self.kernel.check[0].planes,&self.kernel.check[1].planes])?{

@@ -94,25 +94,122 @@ pub fn introduction_veil_bands(width: f32, height: f32, cutouts: &[Rect]) -> Vec
     bands
 }
 
-pub const INTRODUCTION_INFO_BOX_GAP: f32 = 16.0;
+/// 🎓️ `INTRODUCTION_INFO_BOX_GAP_PX` — the distance between the info box and its anchor and its inset from the viewport edge, read from the schema React reads too: none, the box docks flush.
+pub fn introduction_info_box_gap() -> f32 {
+    semio_renderer_wgpu_shell_chrome_state::chrome_parity_constants().introduction.info_box_gap_px
+}
+
+/// 🧲️ Port of `clampIntroductionInfoBoxPosition`: the `(left, top)` position kept inside the viewport by `inset`.
+pub fn clamp_introduction_info_box(position: (f32, f32), box_size: (f32, f32), viewport: (f32, f32), inset: f32) -> (f32, f32) {
+    (position.0.max(inset).min((viewport.0 - box_size.0 - inset).max(inset)), position.1.max(inset).min((viewport.1 - box_size.1 - inset).max(inset)))
+}
+
+fn dock_introduction_axis(start: f32, size: f32, candidates: &[f32], reach: f32) -> (f32, f32) {
+    let mut best = 0.0;
+    let mut best_distance = reach + 1.0;
+    let mut from_end = false;
+    for &line in candidates {
+        for (delta, end) in [(line - start, false), (line - (start + size), true)] {
+            if delta.abs() < best_distance {
+                best = delta;
+                best_distance = delta.abs();
+                from_end = end;
+            }
+        }
+    }
+    if best_distance > reach {
+        return (start, size);
+    }
+    let fixed = if from_end { start + size + best } else { start + best };
+    let free = if from_end { start + best } else { start + size + best };
+    let mut opposite = free;
+    let mut opposite_distance = reach + 1.0;
+    let mut opposite_inner = false;
+    for &line in candidates {
+        if !(if from_end { line < fixed } else { line > fixed }) {
+            continue;
+        }
+        let distance = (line - free).abs();
+        let inner = if from_end { line >= free } else { line <= free };
+        if distance <= reach && (distance < opposite_distance || (inner && !opposite_inner)) && (inner || !opposite_inner) {
+            opposite = line;
+            opposite_distance = distance;
+            opposite_inner = inner;
+        }
+    }
+    let far = if opposite_distance <= reach { opposite } else { free };
+    if from_end { (far, fixed - far) } else { (fixed, far - fixed) }
+}
+
+/// 🧲️ Port of `dockIntroductionInfoBox`: per axis the box edge closest to a border line within `reach` moves onto it, then the opposite edge onto another line within `reach`. Returns the docked `Rect` (`left`, `top`, `width`, `height`).
+pub fn dock_introduction_info_box(position: (f32, f32), box_size: (f32, f32), xs: &[f32], ys: &[f32], reach: f32) -> Rect {
+    let (top, height) = dock_introduction_axis(position.1, box_size.1, ys, reach);
+    let (left, width) = dock_introduction_axis(position.0, box_size.0, xs, reach);
+    Rect::new(left, top, width, height)
+}
+
+fn introduction_near_miss_cost(origin: f32, own: &[f32], others: &[f32], reach: f32) -> f32 {
+    let mut total = 0.0;
+    for line in own {
+        for other in others {
+            let distance = (origin + line - other).abs();
+            if distance >= 0.5 && distance < reach {
+                total += reach - distance;
+            }
+        }
+    }
+    total
+}
+
+fn clear_introduction_axis(start: f32, own: &[f32], others: &[f32], reach: f32, range: f32) -> f32 {
+    let mut winner = start;
+    let mut winner_cost = introduction_near_miss_cost(start, own, others, reach);
+    let mut step = 1.0;
+    while step <= range && winner_cost > 0.0 {
+        for candidate in [start - step, start + step] {
+            let cost = introduction_near_miss_cost(candidate, own, others, reach);
+            if cost < winner_cost {
+                winner = candidate;
+                winner_cost = cost;
+            }
+        }
+        step += 1.0;
+    }
+    winner
+}
+
+/// 🌬️ Port of `clearIntroductionInfoBoxNearMisses`: slides the `(left, top)` box by the smallest offset within `range` that leaves none of its own border lines (`own_*`, relative to the box origin) a near miss of a line beneath it.
+pub fn clear_introduction_info_box_near_misses(position: (f32, f32), own_xs: &[f32], own_ys: &[f32], xs: &[f32], ys: &[f32], reach: f32, range: f32) -> (f32, f32) {
+    (clear_introduction_axis(position.0, own_xs, xs, reach, range), clear_introduction_axis(position.1, own_ys, ys, reach, range))
+}
+
+/// 🧲️ The tour card's final position: docked onto the border lines beneath it, then slid clear of near misses against the chip lines when the dock kept its size — React's `UIIntroduction` render, with `INTRODUCTION_DOCK_REACH_PX` and `INTRODUCTION_CLEAR_RANGE_PX` from the shared schema.
+pub fn settle_introduction_box(placed: (f32, f32), box_size: (f32, f32), viewport: (f32, f32), border_lines: (&[f32], &[f32]), chip_lines: (&[f32], &[f32]), own_lines: (&[f32], &[f32])) -> (f32, f32) {
+    let constants = &semio_renderer_wgpu_shell_chrome_state::chrome_parity_constants().introduction;
+    let docked = dock_introduction_info_box(placed, box_size, border_lines.0, border_lines.1, constants.dock_reach_px);
+    if (docked.w - box_size.0).abs() >= 0.5 {
+        return (docked.x, docked.y);
+    }
+    let cleared = clear_introduction_info_box_near_misses((docked.x, docked.y), own_lines.0, own_lines.1, chip_lines.0, chip_lines.1, constants.dock_reach_px, constants.clear_range_px);
+    clamp_introduction_info_box(cleared, box_size, viewport, 0.0)
+}
 
 /// 🎓️ Where the info box sits relative to `anchor` — byte-for-byte port of `resolveIntroductionPlacement`
 /// (`ui/js/react/index.tsx`). `auto` picks the side with the most free viewport space; `center` (and any
-/// anchor-less step) centers the box.
+/// anchor-less step) centers the box, and EVERY branch clamps, the centered one included.
 pub fn resolve_introduction_placement(placement: semio_framework::onboarding::IntroductionPlacement, anchor: Option<Rect>, box_size: (f32, f32), viewport: (f32, f32)) -> (f32, f32) {
     use semio_framework::onboarding::IntroductionPlacement;
     let (box_w, box_h) = box_size;
     let (vw, vh) = viewport;
-    let centered = ((vw - box_w) / 2.0, (vh - box_h) / 2.0);
+    let gap = introduction_info_box_gap();
+    let clamp = |position: (f32, f32)| clamp_introduction_info_box(position, box_size, viewport, gap);
+    let centered = clamp(((vw - box_w) / 2.0, (vh - box_h) / 2.0));
     let Some(anchor) = anchor else {
         return centered;
     };
     if matches!(placement, IntroductionPlacement::Center) {
         return centered;
     }
-    let gap = INTRODUCTION_INFO_BOX_GAP;
-    let clamp_left = |left: f32| left.max(gap).min((vw - box_w - gap).max(gap));
-    let clamp_top = |top: f32| top.max(gap).min((vh - box_h - gap).max(gap));
     let space_top = anchor.y;
     let space_bottom = vh - (anchor.y + anchor.h);
     let space_left = anchor.x;
@@ -129,12 +226,27 @@ pub fn resolve_introduction_placement(placement: semio_framework::onboarding::In
         }
     };
     match side {
-        "top" => (clamp_left(anchor.x + anchor.w / 2.0 - box_w / 2.0), clamp_top(anchor.y - box_h - gap)),
-        "bottom" => (clamp_left(anchor.x + anchor.w / 2.0 - box_w / 2.0), clamp_top(anchor.y + anchor.h + gap)),
-        "left" => (clamp_left(anchor.x - box_w - gap), clamp_top(anchor.y + anchor.h / 2.0 - box_h / 2.0)),
-        "right" => (clamp_left(anchor.x + anchor.w + gap), clamp_top(anchor.y + anchor.h / 2.0 - box_h / 2.0)),
+        "top" => clamp((anchor.x + anchor.w / 2.0 - box_w / 2.0, anchor.y - box_h - gap)),
+        "bottom" => clamp((anchor.x + anchor.w / 2.0 - box_w / 2.0, anchor.y + anchor.h + gap)),
+        "left" => clamp((anchor.x - box_w - gap, anchor.y + anchor.h / 2.0 - box_h / 2.0)),
+        "right" => clamp((anchor.x + anchor.w + gap, anchor.y + anchor.h / 2.0 - box_h / 2.0)),
         _ => centered,
     }
+}
+
+/// 🧲️ The vertical and horizontal border lines of `rects`, rounded to half pixels and deduplicated — React's `borderLines` reading of the elements beneath the info box.
+fn introduction_rect_lines(rects: impl Iterator<Item = Rect>) -> (Vec<f32>, Vec<f32>) {
+    let half = |value: f32| (value * 2.0).round() / 2.0;
+    let (mut xs, mut ys) = (Vec::new(), Vec::new());
+    for rect in rects.filter(|rect| rect.w > 0.0 && rect.h > 0.0) {
+        xs.extend([half(rect.x), half(rect.x + rect.w)]);
+        ys.extend([half(rect.y), half(rect.y + rect.h)]);
+    }
+    for lines in [&mut xs, &mut ys] {
+        lines.sort_by(f32::total_cmp);
+        lines.dedup();
+    }
+    (xs, ys)
 }
 
 /// 🎓️ React's card is `w-fit max-w-sm` (`UIIntroduction`, `🖱️ui/🎯️targets/⚛️react/🟦️.tsx`) — 24rem of
@@ -337,7 +449,12 @@ pub fn chrome_tour_layout(state: &OverlaysViewCtx<'_>, atlas: &mut FontAtlas, th
         }
     }
     let veil_blocks_pointer = step.introduce.is_none() || anchor.is_some() || !cutouts.is_empty();
-    let (left, top) = resolve_introduction_placement(step.placement, anchor, (card_w, card_h), (width, height));
+    let placed = resolve_introduction_placement(step.placement, anchor, (card_w, card_h), (width, height));
+    let border_lines = introduction_rect_lines(state.dock.window_content_rects.values().copied());
+    let chip_lines = introduction_rect_lines(state.dock.window_content_rects.values().copied().chain(state.chrome.chrome_build.element_rects.values().map(|entry| entry.rect)));
+    let own_xs = [0.0, card_w, pad, pad + title_chip_w, card_w - pad - skip_w, card_w - pad];
+    let own_ys = [0.0, card_h, pad, pad + cap_h, card_h - pad - theme.control_height, card_h - pad];
+    let (left, top) = settle_introduction_box(placed, (card_w, card_h), (width, height), (&border_lines.0, &border_lines.1), (&chip_lines.0, &chip_lines.1), (&own_xs, &own_ys));
     let card = Rect::new(left, top, card_w, card_h);
     let cap_y = card.y + pad;
     let skip_rect = Rect::new(card.x + card.w - pad - skip_w, cap_y, skip_w, cap_h);

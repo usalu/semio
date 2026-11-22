@@ -6,8 +6,8 @@ use crate::standards::v1_7::subsets::base::modules::lift::{ControlledDocumentLif
 use crate::standards::v1_7::subsets::base::modules::xref::{XrefIndexStatus, XrefStreamError};
 use crate::standards::v1_7::subsets::base::schema::graph_source::GraphSource;
 use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfPage, PdfSnapshot, STDIO_PDF17_DOCUMENT_SCHEMA};
-use semio_framework_value::{ErasedSnapshotRetirement, RetainedAllocationEffect, RetainedCloneGrant, RetainedCloneProgress, RetirementDemand, ValueError, ValueRefusalKind};
-use semio_plugin::{MediaError, NaturalFileDecodeCursor, NaturalFileDecodeOwner, NaturalFileDecodeProgress, NaturalFileDecodeStep, PluginLifecycleStep, StepContext, ToolExecutionContract, NATURAL_FILE_PORT};
+use semio_framework_value::{ByteReadSource, ErasedSnapshotRetirement, RetainedAllocationEffect, RetainedCloneGrant, RetainedCloneProgress, RetirementDemand, ValueError, ValueRefusalKind};
+use semio_plugin::{MediaError, NaturalFileDecodeCursor, NaturalFileDecodeOwner, NaturalFilePagedSource, NaturalFileDecodeProgress, NaturalFileDecodeStep, PluginLifecycleStep, StepContext, ToolExecutionContract, NATURAL_FILE_PORT};
 use std::mem::{size_of, take};
 use store::os_store::snapshot_read::{artifact_retirement_box_close_step, artifact_retirement_box_demands, settle_close_poll};
 
@@ -36,7 +36,7 @@ pub fn admit_pdf_natural_decode(
         let mut decoder = admit_box(NaturalPdfDecoder::new(contract)).ok_or_else(|| {
             ValueError::literal(ValueRefusalKind::AllocationFailed, "unable to allocate the controlled PDF file decoder")
         })?;
-        decoder.source = bytes.take().expect("original PDF source is present");
+        decoder.source = PdfNaturalSource::Contiguous(bytes.take().expect("original PDF source is present"));
         *receiving = Some(NaturalFileDecodeOwner::Controlled(decoder));
     } else {
         *receiving = Some(NaturalFileDecodeOwner::Synchronous(bytes.take().expect("original PDF source is present")));
@@ -52,13 +52,75 @@ pub fn admit_pdf_natural_decode(
 pub fn build_pdf_natural_decode(bytes: Vec<u8>, contract: ToolExecutionContract) -> Result<NaturalFileDecodeOwner<PdfSnapshot>, MediaError> {
     if bytes.len() <= contract.max_work_units_per_step as usize { return Ok(NaturalFileDecodeOwner::Synchronous(bytes)); }
     let mut decoder = admit_box(NaturalPdfDecoder::new(contract)).ok_or_else(|| failure("unable to allocate the controlled PDF file decoder"))?;
-    decoder.source = bytes;
+    decoder.source = PdfNaturalSource::Contiguous(bytes);
     Ok(NaturalFileDecodeOwner::Controlled(decoder))
+}
+
+/// 📏️ Bounds the independently admitted ordinary PDF source extent.
+pub const PDF_PAGED_NATURAL_SOURCE_MAXIMUM_BYTES: u32 = 16 * 1024 * 1024;
+
+/// 📄️ Donates the exact sealed page owner to a paid PDF decoder frame.
+pub fn admit_pdf_paged_natural_decode(
+    source: &mut Option<NaturalFilePagedSource>, contract: ToolExecutionContract,
+    receiving: &mut Option<NaturalFileDecodeOwner<PdfSnapshot>>, context: &mut StepContext<'_>,
+) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
+    if receiving.is_some() { return Ok(true); }
+    let original = source.as_ref().filter(|owner| owner.original_is_untouched()).and_then(|owner| owner.original())
+        .ok_or_else(|| ValueError::invariant("missing sealed original PDF pages"))?;
+    if original.byte_len() == 0 || original.byte_len() > PDF_PAGED_NATURAL_SOURCE_MAXIMUM_BYTES as usize {
+        return Err(ValueError::literal(ValueRefusalKind::InvalidValue, "original PDF extent exceeds its declared source ceiling").into());
+    }
+    let capacity = size_of::<NaturalPdfDecoder>();
+    let copy = capacity + size_of::<NaturalFileDecodeOwner<PdfSnapshot>>();
+    let grant = context.retained_grant();
+    if context.should_yield() || context.is_cancelled() || grant.maximum_items == 0 || grant.maximum_depth == 0
+        || copy > grant.maximum_copy_bytes || capacity > grant.maximum_capacity_bytes
+    {
+        return Ok(false);
+    }
+    let mut decoder = admit_box(NaturalPdfDecoder::new(contract)).ok_or_else(||
+        ValueError::literal(ValueRefusalKind::AllocationFailed, "unable to allocate the controlled PDF file decoder"))?;
+    decoder.source = PdfNaturalSource::Paged(source.take().expect("sealed original PDF pages"));
+    *receiving = Some(NaturalFileDecodeOwner::Controlled(decoder));
+    context.consume_fuel(1);
+    context.consume_retained(RetainedCloneProgress {
+        copied_items: 1, copied_bytes: copy, retained_capacity_bytes: capacity, ..Default::default()
+    })?;
+    Ok(true)
+}
+
+enum PdfNaturalSource {
+    Contiguous(Vec<u8>),
+    Paged(NaturalFilePagedSource),
+}
+
+impl PdfNaturalSource {
+    fn reader(&self) -> Option<&dyn ByteReadSource> {
+        match self {
+            Self::Contiguous(source) => Some(source),
+            Self::Paged(source) => source.original().map(|bytes| bytes as &dyn ByteReadSource),
+        }
+    }
+
+    fn contiguous_capacity(&self) -> usize {
+        match self { Self::Contiguous(bytes) => bytes.capacity(), Self::Paged(_) => 0 }
+    }
+
+    fn close_paged(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> Result<Option<semio_framework_value::RetainedCloneStep>, ValueError> {
+        let Self::Paged(source) = self else { return Ok(None); };
+        let progress = settle_close_poll(source.step(effect.grant().maximum_copy_bytes, effect))?;
+        if source.terminal_is_empty() { *self = Self::Contiguous(Vec::new()); }
+        Ok(Some(progress))
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        match self { Self::Contiguous(bytes) => bytes.capacity() == 0, Self::Paged(source) => source.terminal_is_empty() }
+    }
 }
 
 struct NaturalPdfDecoder {
     phase: Phase,
-    source: Vec<u8>,
+    source: PdfNaturalSource,
     preparing: Option<Box<PdfFilePreparationCursor>>,
     file: Option<PreparedPdfFile>,
     lifting: Option<Box<ControlledDocumentLiftCursor>>,
@@ -78,7 +140,7 @@ struct NaturalPdfDecoder {
 impl NaturalPdfDecoder {
     fn new(contract: ToolExecutionContract) -> Self {
         Self {
-            phase: Phase::AllocateFile, source: Vec::new(), preparing: None, file: None, lifting: None,
+            phase: Phase::AllocateFile, source: PdfNaturalSource::Contiguous(Vec::new()), preparing: None, file: None, lifting: None,
             snapshot: None, partial_page: None, snapshot_retirement: None, trailer_retirement: None,
             graph_retirement: Default::default(), contract, progress: Default::default(), live_bytes: 0, next_release: 0, deferred: None, blocked: None,
         }
@@ -96,7 +158,8 @@ impl NaturalPdfDecoder {
                 Ok(PdfByteGraphReceipt { allocated_bytes: bytes, ..turn(Event::More, 1) })
             }
             Phase::PrepareFile => {
-                let mut step = self.preparing.as_mut().expect("PDF file preparation").advance(&self.source, grant, false);
+                let source = self.source.reader().ok_or_else(|| failure("original PDF source was retired before preparation"))?;
+                let mut step = self.preparing.as_mut().expect("PDF file preparation").advance(source, grant, false);
                 if matches!(step.event, Ok(Event::Complete)) {
                     self.phase = Phase::TransferFile;
                     step.event = Ok(Event::More);
@@ -108,7 +171,7 @@ impl NaturalPdfDecoder {
                 if bytes > grant.release_bytes { return Ok(turn(Event::NeedsRelease { bytes }, 0)); }
                 self.file = self.preparing.as_mut().expect("PDF file transfer").take();
                 self.preparing = None;
-                self.progress.consumed_input_bytes = self.source.len();
+                self.progress.consumed_input_bytes = self.source.reader().ok_or_else(|| failure("original PDF source was retired before transfer"))?.byte_len();
                 self.phase = Phase::AllocateLift;
                 Ok(PdfByteGraphReceipt { released_bytes: bytes, ..turn(Event::More, 1) })
             }
@@ -259,10 +322,11 @@ impl NaturalPdfDecoder {
             });
             return PdfByteGraphReceipt { event, work: step.work, allocated_bytes: step.allocated_bytes, released_bytes: step.released_bytes };
         }
-        let bytes = self.source.capacity();
+        let PdfNaturalSource::Contiguous(source) = &mut self.source else { return turn(Event::Closed, 0); };
+        let bytes = source.capacity();
         if bytes == 0 { return turn(Event::Closed, 0); }
         if bytes > grant.release_bytes { return turn(Event::NeedsRelease { bytes }, 0); }
-        self.source = Vec::new();
+        *source = Vec::new();
         release_turn(bytes)
     }
 }
@@ -340,7 +404,13 @@ impl NaturalFileDecodeCursor<PdfSnapshot> for NaturalPdfDecoder {
         let progress = RetainedCloneProgress { released_bytes: step.released_bytes, ..Default::default() };
         self.next_release = 0;
         match step.event {
-            Ok(PdfByteGraphEvent::Closed) => Ok(PluginLifecycleStep::Complete(progress)),
+            Ok(PdfByteGraphEvent::Closed) => {
+                if let Some(settled) = self.source.close_paged(effect)? {
+                    return Ok(if self.source.terminal_is_empty() { PluginLifecycleStep::Complete(settled.progress()) }
+                        else { PluginLifecycleStep::Progress(settled.progress()) });
+                }
+                Ok(PluginLifecycleStep::Complete(progress))
+            }
             Ok(PdfByteGraphEvent::NeedsRelease { bytes }) => {
                 self.next_release = bytes;
                 Ok(PluginLifecycleStep::Progress(progress))
@@ -354,12 +424,16 @@ impl NaturalFileDecodeCursor<PdfSnapshot> for NaturalPdfDecoder {
         if let Some(retirement) = self.snapshot_retirement.as_ref() { return artifact_retirement_box_demands(retirement, body); }
         if self.snapshot.is_some() { return Ok(retirement_birth::<PdfSnapshot>()); }
         if self.partial_page.is_some() { return Ok(retirement_birth::<PdfPage>()); }
-        let raw_release = if self.preparing.is_none() && self.file.is_none() && self.lifting.is_none() && self.trailer_retirement.is_none() { self.source.capacity() } else { 0 };
+        let files_retired = self.preparing.is_none() && self.file.is_none() && self.lifting.is_none() && self.trailer_retirement.is_none();
+        if files_retired {
+            if let PdfNaturalSource::Paged(source) = &self.source { return source.next_demand(body); }
+        }
+        let raw_release = if files_retired { self.source.contiguous_capacity() } else { 0 };
         Ok(RetirementDemand { release_bytes: self.next_release.max(raw_release), depth: 1, ..Default::default() })
     }
 
     fn terminal_is_empty(&self) -> bool {
-        matches!(self.phase, Phase::Closing) && self.source.capacity() == 0 && self.preparing.is_none() && self.file.is_none()
+        matches!(self.phase, Phase::Closing) && self.source.terminal_is_empty() && self.preparing.is_none() && self.file.is_none()
             && self.lifting.is_none() && self.snapshot.is_none() && self.partial_page.is_none() && self.snapshot_retirement.is_none()
             && self.trailer_retirement.is_none()
     }

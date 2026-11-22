@@ -108,12 +108,15 @@ pub struct ShellDocumentOpening {
     pub cancel: Option<CancelToken>,
     /// ⏳️ The resolution step the detached hub resolution last reported (lease, component, descriptor, verified).
     pub resolve_step: std::sync::Arc<std::sync::atomic::AtomicU8>,
+    pub native_transfer_progress: std::sync::Arc<std::sync::atomic::AtomicU8>,
+    pub observed_native_transfer_progress: u8,
 }
 
 impl ShellDocumentOpening {
     /// 🚪️ An open whose first detached step is `pending`, in `phase`.
     pub fn new(label: String, phase: ShellDocumentOpenPhase, plugin_id: String, app_id: String, document: Option<ShellDocumentOpenTarget>, pending: Option<ShellDetached<Result<ShellDocumentOpenAnswer, semio_renderer_wgpu_program_bridge::ProgramFault>>>) -> Self {
-        Self { label, phase, cancel_requested: false, started_at_ms: chrome_now_ms(), plugin_id, app_id, document, pending, prepared: None, cancel: None, resolve_step: std::sync::Arc::default() }
+        Self { label, phase, cancel_requested: false, started_at_ms: chrome_now_ms(), plugin_id, app_id, document, pending, prepared: None, cancel: None, resolve_step: std::sync::Arc::default(),
+            native_transfer_progress: std::sync::Arc::default(), observed_native_transfer_progress: 0 }
     }
 
     /// ⏳️ Whether a step is still out; a settled record only waits for its band to be closed.

@@ -31,6 +31,7 @@
     "inputs",
     "leases_status",
     "preflight",
+    "remote_cache_evidence",
     "remote_cache_status",
     "remote_execution_status",
     "run",
@@ -47,6 +48,7 @@
     "show_projects",
     "show_targets",
     "test",
+    "test_file",
     "tools_list",
     "tools_setup",
     "tools_verify",
@@ -802,6 +804,62 @@
           "make"
         ]
       },
+      "valid": false
+    },
+    {
+      "id": "test-file-basic",
+      "tool": "test_file",
+      "arguments": {
+        "files": [
+          "a/tests/one.ts"
+        ]
+      },
+      "valid": true,
+      "argv": [
+        "test-file",
+        "--json",
+        "--",
+        "a/tests/one.ts"
+      ],
+      "environment": {},
+      "agent": ""
+    },
+    {
+      "id": "test-file-flags",
+      "tool": "test_file",
+      "arguments": {
+        "files": [
+          "a.ts",
+          "b.ts"
+        ],
+        "bail": true,
+        "dry_run": true
+      },
+      "valid": true,
+      "argv": [
+        "test-file",
+        "--json",
+        "--bail",
+        "--dry-run",
+        "--",
+        "a.ts",
+        "b.ts"
+      ],
+      "environment": {},
+      "agent": ""
+    },
+    {
+      "id": "test-file-empty-files",
+      "tool": "test_file",
+      "arguments": {
+        "files": []
+      },
+      "valid": false
+    },
+    {
+      "id": "test-file-no-files",
+      "tool": "test_file",
+      "arguments": {},
       "valid": false
     }
   ]

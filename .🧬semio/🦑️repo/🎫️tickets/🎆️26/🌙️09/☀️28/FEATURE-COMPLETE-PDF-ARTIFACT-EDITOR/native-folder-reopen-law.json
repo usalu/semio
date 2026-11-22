@@ -1,0 +1,17 @@
+{
+  "format": 1,
+  "document": "high-entropy-reopen-fixture",
+  "schema": "stdio.pdf.1.7",
+  "archiveMaximum": 8388608,
+  "packMaximum": 7340032,
+  "sprMaximum": 65536,
+  "cases": [
+    "exactCommit",
+    "foreignSchema",
+    "unknownDocument",
+    "independentExtent",
+    "cancelledRead",
+    "foreignGuestLifetime",
+    "supersededBeforePublication"
+  ]
+}

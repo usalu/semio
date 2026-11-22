@@ -1,5 +1,6 @@
 //! 🌐️ Admits the PDF header and selects the intact native cross-reference coordinate system.
 
+use semio_framework_value::{ByteReadRange, ByteReadSource};
 use super::{StructuredXrefCursor, StructuredXrefEvent, XrefIndex, XrefStreamError};
 use semio_s_artifact_stdio_pdf_lexer::{CosGrant, CosLimits, PdfHeader, PdfHeaderCursor, PdfHeaderStep};
 use semio_s_artifact_stdio_pdf_xref_stream::StructuredTrailer;
@@ -35,15 +36,16 @@ pub struct PdfFileStructureCursor {
     xref: Option<StructuredXrefCursor>,
     phase: Phase,
     origin: usize,
+    absolute_recovery: bool,
     maximum_stream_bytes: usize,
 }
 
 impl PdfFileStructureCursor {
     pub fn new(maximum_stream_bytes: usize) -> Self {
-        Self { probe: PdfHeaderCursor::default(), header: None, xref: None, phase: Phase::Header, origin: 0, maximum_stream_bytes }
+        Self { probe: PdfHeaderCursor::default(), header: None, xref: None, phase: Phase::Header, origin: 0, absolute_recovery: false, maximum_stream_bytes }
     }
 
-    pub fn advance(&mut self, source: &[u8], grant: CosGrant, cancelled: bool) -> PdfFileStructureReceipt {
+    pub fn advance(&mut self, source: &(impl ByteReadSource + ?Sized), grant: CosGrant, cancelled: bool) -> PdfFileStructureReceipt {
         use PdfFileStructureEvent as Event;
         if cancelled { self.begin_close(); }
         match self.phase {
@@ -53,12 +55,12 @@ impl PdfFileStructureCursor {
             Phase::Closed => result(Event::Closed, 0),
             _ if grant.work == 0 => result(Event::More, 0),
             Phase::Header => {
-                let (work, step) = self.probe.advance(source, grant.work);
+                let (work, step) = self.probe.advance(|position| source.byte_at(position), grant.work);
                 match step {
                     PdfHeaderStep::More => result(Event::More, work),
                     PdfHeaderStep::Complete(Some(header)) => {
                         self.header = Some(header);
-                        self.xref = Some(StructuredXrefCursor::new(source.len(), CosLimits::default(), self.maximum_stream_bytes));
+                        self.xref = Some(StructuredXrefCursor::new(source.byte_len(), CosLimits::default(), self.maximum_stream_bytes));
                         self.phase = Phase::Xref;
                         result(Event::More, work)
                     }
@@ -67,7 +69,10 @@ impl PdfFileStructureCursor {
             }
             Phase::Xref => {
                 let cursor = self.xref.as_mut().expect("PDF source structure requires xref ownership");
-                let step = cursor.advance(&source[self.origin..], grant, false);
+                let Some(bytes) = source.byte_len().checked_sub(self.origin).and_then(|length| ByteReadRange::new(source, self.origin, length)) else {
+                    return PdfFileStructureReceipt { event: Err(XrefStreamError::Structure("PDF source origin has changed")), ..result(Event::More, 1) };
+                };
+                let step = cursor.advance(&bytes, grant, false);
                 let event = match step.event {
                     Ok(StructuredXrefEvent::Complete { offsets_valid }) => {
                         let root_resolves = cursor.root_resolves();
@@ -76,10 +81,18 @@ impl PdfFileStructureCursor {
                             cursor.begin_close();
                             self.phase = Phase::RetryRelative;
                             Ok(Event::More)
+                        } else if !intact && self.absolute_recovery {
+                            Ok(Event::RecoveryRequired)
                         } else {
                             self.phase = Phase::Complete { intact, root_resolves };
                             Ok(Event::Complete)
                         }
+                    }
+                    Ok(StructuredXrefEvent::RecoveryRequired) if source.contiguous_bytes().is_none() && self.origin == 0 && self.header.is_some_and(|header| header.offset() != 0) => {
+                        self.absolute_recovery = true;
+                        cursor.begin_close();
+                        self.phase = Phase::RetryRelative;
+                        Ok(Event::More)
                     }
                     status => status.map(map_event),
                 };
@@ -89,7 +102,8 @@ impl PdfFileStructureCursor {
                 let step = self.retire_xref(grant);
                 if self.xref.is_none() {
                     self.origin = self.header.expect("header-relative structure has a header").offset();
-                    self.xref = Some(StructuredXrefCursor::new(source.len() - self.origin, CosLimits::default(), self.maximum_stream_bytes));
+                    let Some(length) = source.byte_len().checked_sub(self.origin) else { self.phase = Phase::NotPdf; return result(Event::NotPdf, 1); };
+                    self.xref = Some(StructuredXrefCursor::new(length, CosLimits::default(), self.maximum_stream_bytes));
                     self.phase = Phase::Xref;
                 }
                 step

@@ -18,7 +18,7 @@ fn clock()->Option<u64>{Some(0)}
 fn law()->serde_json::Value{let law:serde_json::Value=serde_json::from_str(include_str!("../case.json")).unwrap();let schema:serde_json::Value=serde_json::from_str(include_str!("../case.schema.json")).unwrap();for(k,v)in law.as_object().unwrap(){assert_eq!(&schema["properties"][k]["const"],v)}law}
 fn stock(law:&serde_json::Value)->RetainedCloneGrant{serde_json::from_value(law["stock"].clone()).unwrap()}
 fn cleanup(admission:&mut WorkerJobSessionAdmission<Probe,BatchJobSession<Probe>>,output:&mut Option<BatchJobSession<Probe>>,caller:&mut OriginalJobFixtureCaller,law:&serde_json::Value){
- let g=stock(law);for _ in 0..law["maximumTurns"].as_u64().unwrap(){if admission.terminal_is_empty(){break}caller.turn(g,|cx|admission.close_step(cx)).unwrap();}assert!(admission.terminal_is_empty());
+ let g=stock(law);for _ in 0..law["maximumTurns"].as_u64().unwrap(){if admission.terminal_is_empty(){break}caller.retirement_turn(g,|cx|admission.close_step(cx)).unwrap();}assert!(admission.terminal_is_empty());
  if let Some(session)=output.as_mut(){session.begin_close();for _ in 0..law["maximumTurns"].as_u64().unwrap(){if session.terminal_is_empty(){break}caller.close_owner(g,session).unwrap();}assert!(session.terminal_is_empty());}
  assert_eq!(semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(output.take())).1.released_bytes,0);
 }
@@ -73,12 +73,12 @@ fn original_unpublished_worker_session_returns_its_cancel_alias_to_live_root() {
 
     for _ in 0..maximum_turns {
         if admission.born.as_ref().is_some_and(|session| session.has_original_cancel_alias_witness(caller.cancel()).is_ok_and(|witnessed| witnessed)) { break; }
-        caller.turn(grant, |cx| admission.close_step(cx)).unwrap();
+        caller.retirement_turn(grant, |cx| admission.close_step(cx)).unwrap();
     }
     assert!(admission.born.as_ref().unwrap().has_original_cancel_alias_witness(caller.cancel()).unwrap());
     let denied = RetainedCloneGrant { maximum_items: 0, ..grant };
     let before = caller.cumulative_receipt();
-    let (denied_step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| caller.turn(denied, |cx| {
+    let (denied_step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| caller.retirement_turn(denied, |cx| {
         let work = cx.original_work_units_spent();
         let step = admission.close_step(cx)?;
         assert_eq!(cx.original_work_units_spent() - work, u128::from(law["expected"]["deniedWork"].as_u64().unwrap()));
@@ -91,7 +91,7 @@ fn original_unpublished_worker_session_returns_its_cancel_alias_to_live_root() {
     assert!(admission.born.as_ref().unwrap().has_original_cancel_alias_witness(caller.cancel()).unwrap());
 
     let alias_only = RetainedCloneGrant { maximum_release_bytes: 0, ..grant };
-    let (returned_step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| caller.turn(alias_only, |cx| {
+    let (returned_step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| caller.retirement_turn(alias_only, |cx| {
         let work = cx.original_work_units_spent();
         let step = admission.close_step(cx)?;
         assert_eq!(cx.original_work_units_spent() - work, u128::from(law["expected"]["handoffWork"].as_u64().unwrap()));

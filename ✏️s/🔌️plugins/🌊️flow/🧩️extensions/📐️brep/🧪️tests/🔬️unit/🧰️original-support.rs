@@ -125,8 +125,15 @@ fn retained_boolean_result(
     registry: &Registry, operator: &str, input: Dictionary,
     caller: &mut OriginalJobFixtureCaller, born: &mut usize, free: &mut usize,
 ) -> neural_engine::ColdOwner<Dictionary> {
+    retained_result_with_copy_grant(registry, operator, input, 128, caller, born, free)
+}
+
+fn retained_result_with_copy_grant(
+    registry: &Registry, operator: &str, input: Dictionary, copy_bytes: usize,
+    caller: &mut OriginalJobFixtureCaller, born: &mut usize, free: &mut usize,
+) -> neural_engine::ColdOwner<Dictionary> {
     let mut job = Some(admit_live_job(registry, operator, input));
-    let grant = Grant { maximum_items: 1, maximum_copy_bytes: 128, ..stock() };
+    let grant = Grant { maximum_items: 1, maximum_copy_bytes: copy_bytes, ..stock() };
     let mut output = None;
     for _ in 0..2000 {
         run(caller, grant, born, free, |cx| {

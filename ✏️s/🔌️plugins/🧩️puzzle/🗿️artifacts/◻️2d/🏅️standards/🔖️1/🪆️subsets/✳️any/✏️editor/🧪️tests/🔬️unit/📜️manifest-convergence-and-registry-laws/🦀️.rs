@@ -141,11 +141,11 @@ async fn ingest_operations_is_idempotent() {
     let mut envelopes = Vec::new();
     for message in far.receive().await.expect("receive") {
         if let BackboneMessage::Mutations { envelopes: operations } = message {
-            envelopes.extend(operations);
+            envelopes.extend(protocol::decode_envelopes(&operations).expect("decode envelopes"));
         }
     }
     assert!(!envelopes.is_empty(), "the applied operation must flow onto the channel");
-    let operations = envelopes;
+    let operations = protocol::encode_envelopes(&envelopes);
 
     let mut receiver = app();
     receiver.0.ingest_operations(&operations, &mut semio_plugin::artifact_app_laws::fixture_identity(), receiver.1.cx()).await.expect("ingest once");

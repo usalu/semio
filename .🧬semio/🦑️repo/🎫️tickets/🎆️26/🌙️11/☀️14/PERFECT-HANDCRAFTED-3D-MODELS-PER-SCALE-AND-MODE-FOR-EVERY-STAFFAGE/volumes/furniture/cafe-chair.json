@@ -968,111 +968,111 @@
       {
        "at": [
         0.33,
-        -0.02531,
+        -0.02231,
         -0.205
        ],
        "rx": 0.085,
-       "ry": 0.009,
+       "ry": 0.006,
        "exponent": 6
       },
       {
        "at": [
         0.33,
-        -0.01404,
+        -0.01104,
         -0.164
        ],
        "rx": 0.085,
-       "ry": 0.009,
+       "ry": 0.006,
        "exponent": 6
       },
       {
        "at": [
         0.33,
-        -0.00527,
+        -0.00227,
         -0.123
        ],
        "rx": 0.085,
-       "ry": 0.009,
+       "ry": 0.006,
        "exponent": 6
       },
       {
        "at": [
         0.33,
-        0.00099,
+        0.00399,
         -0.082
        ],
        "rx": 0.085,
-       "ry": 0.009,
+       "ry": 0.006,
        "exponent": 6
       },
       {
        "at": [
         0.33,
-        0.00475,
+        0.00775,
         -0.041
        ],
        "rx": 0.085,
-       "ry": 0.009,
+       "ry": 0.006,
        "exponent": 6
       },
       {
        "at": [
         0.33,
-        0.006,
+        0.009,
         0.0
        ],
        "rx": 0.085,
-       "ry": 0.009,
+       "ry": 0.006,
        "exponent": 6
       },
       {
        "at": [
         0.33,
-        0.00475,
+        0.00775,
         0.041
        ],
        "rx": 0.085,
-       "ry": 0.009,
+       "ry": 0.006,
        "exponent": 6
       },
       {
        "at": [
         0.33,
-        0.00099,
+        0.00399,
         0.082
        ],
        "rx": 0.085,
-       "ry": 0.009,
+       "ry": 0.006,
        "exponent": 6
       },
       {
        "at": [
         0.33,
-        -0.00527,
+        -0.00227,
         0.123
        ],
        "rx": 0.085,
-       "ry": 0.009,
+       "ry": 0.006,
        "exponent": 6
       },
       {
        "at": [
         0.33,
-        -0.01404,
+        -0.01104,
         0.164
        ],
        "rx": 0.085,
-       "ry": 0.009,
+       "ry": 0.006,
        "exponent": 6
       },
       {
        "at": [
         0.33,
-        -0.02531,
+        -0.02231,
         0.205
        ],
        "rx": 0.085,
-       "ry": 0.009,
+       "ry": 0.006,
        "exponent": 6
       }
      ],
@@ -1090,116 +1090,486 @@
       {
        "at": [
         0.14,
-        -0.02531,
+        -0.02231,
         -0.205
        ],
        "rx": 0.025,
-       "ry": 0.009,
+       "ry": 0.006,
        "exponent": 6
       },
       {
        "at": [
         0.14,
-        -0.01404,
+        -0.01104,
         -0.164
        ],
        "rx": 0.025,
-       "ry": 0.009,
+       "ry": 0.006,
        "exponent": 6
       },
       {
        "at": [
         0.14,
-        -0.00527,
+        -0.00227,
         -0.123
        ],
        "rx": 0.025,
-       "ry": 0.009,
+       "ry": 0.006,
        "exponent": 6
       },
       {
        "at": [
         0.14,
-        0.00099,
+        0.00399,
         -0.082
        ],
        "rx": 0.025,
-       "ry": 0.009,
+       "ry": 0.006,
        "exponent": 6
       },
       {
        "at": [
         0.14,
-        0.00475,
+        0.00775,
         -0.041
        ],
        "rx": 0.025,
-       "ry": 0.009,
+       "ry": 0.006,
        "exponent": 6
       },
       {
        "at": [
         0.14,
-        0.006,
+        0.009,
         0.0
        ],
        "rx": 0.025,
-       "ry": 0.009,
+       "ry": 0.006,
        "exponent": 6
       },
       {
        "at": [
         0.14,
-        0.00475,
+        0.00775,
         0.041
        ],
        "rx": 0.025,
-       "ry": 0.009,
+       "ry": 0.006,
        "exponent": 6
       },
       {
        "at": [
         0.14,
-        0.00099,
+        0.00399,
         0.082
        ],
        "rx": 0.025,
-       "ry": 0.009,
+       "ry": 0.006,
        "exponent": 6
       },
       {
        "at": [
         0.14,
-        -0.00527,
+        -0.00227,
         0.123
        ],
        "rx": 0.025,
-       "ry": 0.009,
+       "ry": 0.006,
        "exponent": 6
       },
       {
        "at": [
         0.14,
-        -0.01404,
+        -0.01104,
         0.164
        ],
        "rx": 0.025,
-       "ry": 0.009,
+       "ry": 0.006,
        "exponent": 6
       },
       {
        "at": [
         0.14,
-        -0.02531,
+        -0.02231,
         0.205
        ],
        "rx": 0.025,
-       "ry": 0.009,
+       "ry": 0.006,
        "exponent": 6
       }
      ],
      "capStart": true,
      "capEnd": true
+    },
+    {
+     "id": "rivet-board-upper-l",
+     "kind": "revolve",
+     "bone": "back",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.2,
+     "texture": true,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.006
+      ],
+      [
+       0.0015,
+       0.0052
+      ],
+      [
+       0.003,
+       0.0
+      ]
+     ],
+     "axis": [
+      0.0,
+      -0.964,
+      0.265
+     ],
+     "origin": [
+      0.375,
+      -0.022,
+      0.185
+     ]
+    },
+    {
+     "id": "rivet-board-upper-r",
+     "kind": "revolve",
+     "bone": "back",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.2,
+     "texture": true,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.006
+      ],
+      [
+       0.0015,
+       0.0052
+      ],
+      [
+       0.003,
+       0.0
+      ]
+     ],
+     "axis": [
+      0.0,
+      -0.964,
+      -0.265
+     ],
+     "origin": [
+      0.375,
+      -0.022,
+      -0.185
+     ]
+    },
+    {
+     "id": "rivet-board-lower-l",
+     "kind": "revolve",
+     "bone": "back",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.2,
+     "texture": true,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.006
+      ],
+      [
+       0.0015,
+       0.0052
+      ],
+      [
+       0.003,
+       0.0
+      ]
+     ],
+     "axis": [
+      0.0,
+      -0.964,
+      0.265
+     ],
+     "origin": [
+      0.285,
+      -0.022,
+      0.185
+     ]
+    },
+    {
+     "id": "rivet-board-lower-r",
+     "kind": "revolve",
+     "bone": "back",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.2,
+     "texture": true,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.006
+      ],
+      [
+       0.0015,
+       0.0052
+      ],
+      [
+       0.003,
+       0.0
+      ]
+     ],
+     "axis": [
+      0.0,
+      -0.964,
+      -0.265
+     ],
+     "origin": [
+      0.285,
+      -0.022,
+      -0.185
+     ]
+    },
+    {
+     "id": "rivet-rail-l",
+     "kind": "revolve",
+     "bone": "back",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.2,
+     "texture": true,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.006
+      ],
+      [
+       0.0015,
+       0.0052
+      ],
+      [
+       0.003,
+       0.0
+      ]
+     ],
+     "axis": [
+      0.0,
+      -0.964,
+      0.265
+     ],
+     "origin": [
+      0.14,
+      -0.022,
+      0.185
+     ]
+    },
+    {
+     "id": "rivet-rail-r",
+     "kind": "revolve",
+     "bone": "back",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.2,
+     "texture": true,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.006
+      ],
+      [
+       0.0015,
+       0.0052
+      ],
+      [
+       0.003,
+       0.0
+      ]
+     ],
+     "axis": [
+      0.0,
+      -0.964,
+      -0.265
+     ],
+     "origin": [
+      0.14,
+      -0.022,
+      -0.185
+     ]
+    },
+    {
+     "id": "bolt-seat-rear-l",
+     "kind": "revolve",
+     "bone": "leg-rear",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.2,
+     "texture": true,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.0065
+      ],
+      [
+       0.003,
+       0.0055
+      ],
+      [
+       0.005,
+       0.0
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      1.0
+     ],
+     "origin": [
+      0.4137,
+      0.0,
+      0.19583
+     ]
+    },
+    {
+     "id": "bolt-seat-rear-r",
+     "kind": "revolve",
+     "bone": "leg-rear",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.2,
+     "texture": true,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.0065
+      ],
+      [
+       0.003,
+       0.0055
+      ],
+      [
+       0.005,
+       0.0
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      -1.0
+     ],
+     "origin": [
+      0.4137,
+      0.0,
+      -0.19583
+     ]
+    },
+    {
+     "id": "bolt-seat-front-l",
+     "kind": "revolve",
+     "bone": "leg-front",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.2,
+     "texture": true,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.0065
+      ],
+      [
+       0.003,
+       0.0055
+      ],
+      [
+       0.005,
+       0.0
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      1.0
+     ],
+     "origin": [
+      0.423,
+      0.0,
+      0.20112
+     ]
+    },
+    {
+     "id": "bolt-seat-front-r",
+     "kind": "revolve",
+     "bone": "leg-front",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.2,
+     "texture": true,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.0065
+      ],
+      [
+       0.003,
+       0.0055
+      ],
+      [
+       0.005,
+       0.0
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      -1.0
+     ],
+     "origin": [
+      0.423,
+      0.0,
+      -0.20112
+     ]
     }
    ],
    "thermal": [
@@ -2094,8 +2464,8 @@
    ],
    "decisions": [
     {
-     "en": "1:50 is the full construction of the real chair: per side one Ø22 x 2 mm steel tube that rises from its nylon glide as the rear leg (raked back 7.7 degrees), turns in an 80 mm bend at the seat and continues as the back post (reclined 8 degrees) up to a domed end cap; two straight front legs on glides; two Ø16 side stretchers welded between the legs at 0.15 m; a 20 mm beech seat board, trapezoidal with rounded front corners and notched round the posts, raked 2 degrees, on an apron frame of four 18 x 45 mm beech rails; a curved 18 mm beech backrest board and a lower rail screwed to the post fronts.",
-     "de": "1:50 ist die volle Konstruktion des echten Stuhls: je Seite ein Stahlrohr Ø22 x 2 mm, das von seinem Nylongleiter als Hinterbein (7,7 Grad nach hinten ausgestellt) aufsteigt, am Sitz in einem 80-mm-Bogen umbiegt und als Lehnenpfosten (8 Grad geneigt) bis zur gewölbten Endkappe weiterläuft; zwei gerade Vorderbeine auf Gleitern; zwei seitliche Fußstreben Ø16, auf 0,15 m zwischen die Beine geschweißt; ein 20 mm Buchensitzbrett, trapezförmig mit gerundeten Vorderecken und um die Pfosten ausgeklinkt, 2 Grad geneigt, auf einem Zargenrahmen aus vier Buchenleisten 18 x 45 mm; ein gebogenes 18-mm-Buchenrückenbrett und eine untere Leiste, auf die Pfostenvorderseiten geschraubt."
+     "en": "1:50 is the full construction of the real chair: per side one Ø22 x 2 mm steel tube that rises from its nylon glide as the rear leg (raked back 7.7 degrees), turns in an 80 mm bend at the seat and continues as the back post (reclined 8 degrees) up to a domed end cap; two straight front legs on glides; two Ø16 side stretchers welded between the legs at 0.15 m; a 20 mm beech seat board, trapezoidal with rounded front corners and notched round the posts, raked 2 degrees, on an apron frame of four 18 x 45 mm beech rails; a curved 12 mm beech plywood backrest board and a lower rail lying on the post fronts, each fixed through board and tube with dome-head rivets (two per board end, one per rail end); the apron corners are coped round the tubes and held by one coach bolt through each tube.",
+     "de": "1:50 ist die volle Konstruktion des echten Stuhls: je Seite ein Stahlrohr Ø22 x 2 mm, das von seinem Nylongleiter als Hinterbein (7,7 Grad nach hinten ausgestellt) aufsteigt, am Sitz in einem 80-mm-Bogen umbiegt und als Lehnenpfosten (8 Grad geneigt) bis zur gewölbten Endkappe weiterläuft; zwei gerade Vorderbeine auf Gleitern; zwei seitliche Fußstreben Ø16, auf 0,15 m zwischen die Beine geschweißt; ein 20 mm Buchensitzbrett, trapezförmig mit gerundeten Vorderecken und um die Pfosten ausgeklinkt, 2 Grad geneigt, auf einem Zargenrahmen aus vier Buchenleisten 18 x 45 mm; ein gebogenes 12-mm-Buchensperrholz-Rückenbrett und eine untere Leiste, auf die Pfostenvorderseiten geschraubt."
     },
     {
      "en": "Thermal: every beech and steel solid is its region's surface with the region's one layer (the closed tubes are solid, their sealed bore is not outer surface); glides and caps are nylon and belong to no region. Structure: the tubes, seat board, rails, back board and rail are the members of their bones; the two bends, four stretcher welds, four seat tab fixings and four back screw fixings are the joints; one glide pad per contact anchor; a mass at the middle of every tube and post and at the centres of seat and back boards.",
@@ -2768,51 +3138,51 @@
       {
        "at": [
         0.33,
-        -0.02531,
+        -0.02381,
         -0.205
        ],
        "rx": 0.085,
-       "ry": 0.009,
+       "ry": 0.0075,
        "exponent": 4
       },
       {
        "at": [
         0.33,
-        -0.00183,
+        -0.00033,
         -0.1025
        ],
        "rx": 0.085,
-       "ry": 0.009,
+       "ry": 0.0075,
        "exponent": 4
       },
       {
        "at": [
         0.33,
-        0.006,
+        0.0075,
         0.0
        ],
        "rx": 0.085,
-       "ry": 0.009,
+       "ry": 0.0075,
        "exponent": 4
       },
       {
        "at": [
         0.33,
-        -0.00183,
+        -0.00033,
         0.1025
        ],
        "rx": 0.085,
-       "ry": 0.009,
+       "ry": 0.0075,
        "exponent": 4
       },
       {
        "at": [
         0.33,
-        -0.02531,
+        -0.02381,
         0.205
        ],
        "rx": 0.085,
-       "ry": 0.009,
+       "ry": 0.0075,
        "exponent": 4
       }
      ],
@@ -2830,51 +3200,51 @@
       {
        "at": [
         0.14,
-        -0.02531,
+        -0.02381,
         -0.205
        ],
        "rx": 0.025,
-       "ry": 0.009,
+       "ry": 0.0075,
        "exponent": 4
       },
       {
        "at": [
         0.14,
-        -0.00183,
+        -0.00033,
         -0.1025
        ],
        "rx": 0.025,
-       "ry": 0.009,
+       "ry": 0.0075,
        "exponent": 4
       },
       {
        "at": [
         0.14,
-        0.006,
+        0.0075,
         0.0
        ],
        "rx": 0.025,
-       "ry": 0.009,
+       "ry": 0.0075,
        "exponent": 4
       },
       {
        "at": [
         0.14,
-        -0.00183,
+        -0.00033,
         0.1025
        ],
        "rx": 0.025,
-       "ry": 0.009,
+       "ry": 0.0075,
        "exponent": 4
       },
       {
        "at": [
         0.14,
-        -0.02531,
+        -0.02381,
         0.205
        ],
        "rx": 0.025,
-       "ry": 0.009,
+       "ry": 0.0075,
        "exponent": 4
       }
      ],
@@ -3638,8 +4008,8 @@
    ],
    "decisions": [
     {
-     "en": "1:100 merges glides and caps into the tubes (8-10 mm, below the 15 mm feature), which now stand on the floor; tubes and bend keep their true Ø22, the stretchers their Ø16; the four apron rails become one 18 mm ring under the 20 mm board, whose front corners are rounded in two steps; back board and rail keep their curve with five sections each.",
-     "de": "1:100 lässt Gleiter und Kappen in den Rohren aufgehen (8-10 mm, unter dem 15-mm-Mindestmaß), die nun auf dem Boden stehen; Rohre und Bogen behalten ihr echtes Ø22, die Streben ihr Ø16; die vier Zargenleisten werden ein 18-mm-Ring unter dem 20-mm-Brett, dessen Vorderecken in zwei Schritten gerundet sind; Rückenbrett und Leiste behalten ihre Krümmung mit je fünf Schnitten."
+     "en": "1:100 merges glides and caps into the tubes (8-10 mm, below the 15 mm feature), which now stand on the floor; tubes and bend keep their true Ø22, the stretchers their Ø16; the four apron rails become one 18 mm ring under the 20 mm board, whose front corners are rounded in two steps; back board and rail keep their curve with five sections each and are 15 mm thick (the 12 mm plywood raised to the feature); rivets and bolts are below the feature.",
+     "de": "1:100 lässt Gleiter und Kappen in den Rohren aufgehen (8-10 mm, unter dem 15-mm-Mindestmaß), die nun auf dem Boden stehen; Rohre und Bogen behalten ihr echtes Ø22, die Streben ihr Ø16; die vier Zargenleisten werden ein 18-mm-Ring unter dem 20-mm-Brett, dessen Vorderecken in zwei Schritten gerundet sind; Rückenbrett und Leiste behalten ihre Krümmung mit je fünf Schnitten und sind 15 mm dick (das 12-mm-Sperrholz auf das Mindestmaß angehoben); Nieten und Schrauben liegen unter dem Mindestmaß."
     },
     {
      "en": "Thermal references the body without layers; structure: tubes, board, ring, back board and rail as members, bends, welds and seat fixings as joints (the back screws are below the feature), 30 mm glide pads, masses as at 1:50.",

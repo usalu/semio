@@ -314,7 +314,7 @@ fn appearance_option_commit_uses_the_retained_router_and_retires_its_popup() {
     let mut resources = infinite_world::world::World3dBuildContext::new(infinite_world::world::WorldCursorWakeAuthority::new());
     let mut input = InputState::<ActionDescriptor>::default();
     let body = SessionCtx::of(&mut shell).body_rect(&Theme::default());
-    let mut paint = |shell: &mut ShellState, input: &mut InputState<ActionDescriptor>, theme: &Theme| {
+    let mut paint = |mut shell: &mut ShellState, input: &mut InputState<ActionDescriptor>, theme: &Theme| {
         while input.retire_hit_step() {}
         let mut draw = DrawList::default();
         draw.set_screen_height(shell.chrome.screen_h);
@@ -425,7 +425,7 @@ fn an_open_up_flow_disclosure_keeps_its_header_below_its_children_and_retires_th
     let mut input = InputState::<ActionDescriptor>::default();
     let theme = Theme::default();
     let body = SessionCtx::of(&mut shell).body_rect(&theme);
-    let mut paint = |shell: &mut ShellState, input: &mut InputState<ActionDescriptor>| {
+    let mut paint = |mut shell: &mut ShellState, input: &mut InputState<ActionDescriptor>| {
         while input.retire_hit_step() {}
         shell.input.retained_hit_windows_staging.clear();
         let mut draw = DrawList::default();

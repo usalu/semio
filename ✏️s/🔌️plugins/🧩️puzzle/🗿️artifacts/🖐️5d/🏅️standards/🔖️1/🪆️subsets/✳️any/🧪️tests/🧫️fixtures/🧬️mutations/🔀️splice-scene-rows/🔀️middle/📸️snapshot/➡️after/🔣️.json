@@ -1,0 +1,57 @@
+{
+  "schema": "puzzle.5d",
+  "domain": "architecture",
+  "label": "Ordered parts",
+  "meta": {
+    "description": "A middle row is replaced."
+  },
+  "kindCompatibility": [],
+  "parts": [
+    {
+      "id": "a",
+      "2d": {
+        "x": 0,
+        "y": 0
+      },
+      "3d": {
+        "origin": [
+          0,
+          0,
+          0
+        ]
+      },
+      "grips": []
+    },
+    {
+      "id": "x",
+      "2d": {
+        "x": 3,
+        "y": 0
+      },
+      "3d": {
+        "origin": [
+          3,
+          0,
+          0
+        ]
+      },
+      "grips": []
+    },
+    {
+      "id": "c",
+      "2d": {
+        "x": 4,
+        "y": 0
+      },
+      "3d": {
+        "origin": [
+          4,
+          0,
+          0
+        ]
+      },
+      "grips": []
+    }
+  ],
+  "fasteners": []
+}

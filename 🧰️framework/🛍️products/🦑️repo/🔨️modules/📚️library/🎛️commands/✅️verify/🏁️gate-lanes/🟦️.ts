@@ -8,6 +8,7 @@ import { checkStorybookFreshness } from "../🎨️storybook-freshness/🟦️.t
 import { policyIndexedGeneratedOutputBreaches } from "../../../⚖️laws/📇️indexed-generated-output/🟦️.ts";
 import { policyRawProcessSpawnBreaches } from "../../../⚖️laws/🚷️raw-process-spawn/🟦️.ts";
 import { policyJsonDuplicateKeyBreaches } from "../../../⚖️laws/🔑️json-duplicate-keys/🟦️.ts";
+import { packageExportBreachesV1 } from "../../../⚖️laws/📦️package-export-targets/🟦️.ts";
 import { policyDocumentAppShapeBreaches, policyOsStateAuthorityBreaches } from "../../../⚖️laws/🧩️plugin-consistency/🚧️authority-bans/🟦️.ts";
 import { policyStandardsCoverageBreaches, policyStandardSubsetVocabularyBreaches } from "../../../⚖️laws/🧩️plugin-consistency/🚪️artifact-io/🧾️standards/🟦️.ts";
 import { policyHandcraftedSpecP3Breaches } from "../../../⚖️laws/🧩️plugin-consistency/✍️handcrafted-mutation/🟦️.ts";
@@ -39,6 +40,15 @@ export abstract class VerifyGateLanes extends VerifyToolJobLane {
   protected runLayering(segments: string[]): void {
     if (segments.length) throw refuseVerifyV1("usage","gates.expected-layering");
     runCmd("repo", ["run-many", "--projects=@semio-tech/repo-lib", "--targets=lint-dependency-direction,lint-rust-source-direction,lint-cargo-dependency-direction", "--skip-cache", ...semioBuildParallelFlag()], { cwd: this.root, ...orchestratorBudgetOpts() });
+  }
+
+  /** 📦️ Fails when a tracked package.json `exports` target (neither a pattern nor generated output) names a file that does not exist: the missing target breaks every importer at load time. */
+  protected runPackageExportTargets(): void {
+    sayVerifyV1("gates.package-export-targets");
+    const breaches = packageExportBreachesV1(this.root);
+    if (breaches.length === 0) return;
+    for (const breach of breaches) console.error(`[verify] package-export-target: ${breach}`);
+    throw refuseVerifyV1("breach", "gates.package-export-target-breach", { breaches: breaches.length });
   }
 
   /** 🏛️ Executes architecture contract checks contributed by their owning build projects. */
@@ -97,6 +107,7 @@ export abstract class VerifyGateLanes extends VerifyToolJobLane {
         throw refuseVerifyV1("breach","gates.raw-process-spawn-breach",{breaches:spawnBreaches.length});
       }
     }
+    this.runPackageExportTargets();
     sayVerifyV1("gates.json-duplicate-keys");
     {
       const duplicateKeyBreaches = policyJsonDuplicateKeyBreaches(this.root);

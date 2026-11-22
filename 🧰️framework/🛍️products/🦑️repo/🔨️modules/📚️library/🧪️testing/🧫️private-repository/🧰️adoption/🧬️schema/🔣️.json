@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Read-only adoption of the installed toolchain and SDK by a private repository",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "version": 1,
+        "storeRoot": ".cache/b/t/m",
+        "kinds": {
+          "rust-toolchain": { "directory": "r", "identityFile": "toolchains/*/bin/rustc" },
+          "nx-toolkit": { "directory": "nx", "identityFile": null },
+          "nx-sdk": { "directory": "sdk", "identityFile": null }
+        },
+        "operations": ["read"],
+        "refused": ["write", "lease", "mount", "remove"],
+        "digest": "sha256",
+        "texts": {
+          "refused": {
+            "en": "Adopted tools of the live store are read-only: {operation} refused at {path}",
+            "de": "Übernommene Werkzeuge des aktiven Speichers sind schreibgeschützt: {operation} bei {path} abgelehnt"
+          },
+          "absent": {
+            "en": "No installed {kind} to adopt below {root}",
+            "de": "Kein installiertes {kind} zum Übernehmen unterhalb von {root}"
+          },
+          "operation": {
+            "en": "Unknown adoption operation: {operation}",
+            "de": "Unbekannte Übernahme-Operation: {operation}"
+          }
+        }
+      }
+    },
+    "Adoption": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "kind", "storeRoot", "directory", "identity"],
+      "properties": {
+        "version": { "const": 1 },
+        "kind": { "enum": ["rust-toolchain", "nx-toolkit", "nx-sdk"] },
+        "storeRoot": { "type": "string", "minLength": 1 },
+        "directory": { "type": "string", "minLength": 1 },
+        "identity": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    }
+  }
+}

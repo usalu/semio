@@ -1,7 +1,7 @@
-import {DOCTOR_PROTOCOL_V1,doctorTextV1,resolveDoctorLanguagesV1,type DoctorAreaV1,type DoctorLanguageV1} from "../🟦️.ts";
+import {DoctorCancelledV1,DOCTOR_PROTOCOL_V1,doctorTextV1,resolveDoctorLanguagesV1,type DoctorAreaV1,type DoctorLanguageV1} from "../🟦️.ts";
 import {doctorPortsV1,type DoctorPortsV1} from "../🔌️ports/🟦️.ts";
 import {formatDoctorReportV1} from "../🖨️report/🟦️.ts";
-import {DoctorCancelledV1,runDoctorV1,type DoctorRunOptionsV1} from "../🏃️runner/🟦️.ts";
+import type {DoctorRunOptionsV1} from "../🏃️runner/🟦️.ts";
 import {writeResultLineV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/📤️output/🟦️.ts";
 
 /** 📝️ The closed arguments of `repo doctor`. */
@@ -51,6 +51,7 @@ export async function runDoctorCommandV1(args:readonly string[],context:DoctorCo
  const quiet=parsed.json||parsed.facts,say=context.progress??((line:string)=>process.stderr.write(line+"\n"));
  try{
   const ports=doctorPortsV1(context.root,{environment:context.environment,signal:controller.signal,progress:stage=>{const line=quiet?undefined:progressLine(languages[0]!,stage);if(line)say(line);},...context.ports});
+  const {runDoctorV1}=await import("../🏃️runner/🟦️.ts");
   const {facts,report}=await runDoctorV1(ports,{...parsed.only?{only:parsed.only}:{},fix:parsed.fix,dryRun:parsed.dryRun,...context.options});
   if(parsed.facts)context.write(JSON.stringify(facts,null,2));
   else if(parsed.json)context.write(JSON.stringify(report,null,2));

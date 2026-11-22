@@ -9,10 +9,12 @@ use {crate::standards::v1::subsets::any::schema::records::Puzzle2dHandle, crate:
 //#region 🔖️Mutation
 /// ➕ `add-node-handle` payload — owner node id + new handle payload at an optional FINAL-state
 /// `index` (`None` appends). A duplicate `handle.id` on the same node is a no-op.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslOwnedReceiving, dsl::MutationLeaf, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 #[dsl(keyword = "add-node-handle")]
 pub struct AddNodeHandle {
     pub node_id: PagedUtf8<{ usize::MAX }>,

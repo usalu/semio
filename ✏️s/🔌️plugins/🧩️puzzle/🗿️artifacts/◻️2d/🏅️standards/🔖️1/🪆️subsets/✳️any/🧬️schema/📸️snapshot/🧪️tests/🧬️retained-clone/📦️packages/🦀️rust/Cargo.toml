@@ -60,15 +60,11 @@ semio-s-artifact-puzzle-2d-mut-any-4 = { path = "../../../../../🧬️mutations
 semio-s-artifact-puzzle-2d-records = { path = "../../../../../🧱️records/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-2d-schema = { path = "../../../../../📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-2d-snapshot = { path = "../../../../📦️packages/🦀️rust" }
-semio-s-artifact-puzzle-3d = { workspace = true }
 semio-s-artifact-puzzle-3d-inferences = { workspace = true }
-semio-s-artifact-stdio-dwg = { workspace = true }
 semio-s-artifact-stdio-dxf = { workspace = true }
 semio-s-artifact-stdio-json = { workspace = true }
-semio-s-artifact-stdio-pdf = { workspace = true }
 semio-s-artifact-stdio-png = { workspace = true }
 semio-s-artifact-stdio-semio-drawing = { workspace = true }
-semio-s-artifact-stdio-semio-drawing-export = { workspace = true }
 semio-s-artifact-stdio-svg = { workspace = true }
 semio-s-artifact-stdio-txt = { workspace = true }
 semio-s-plugin-puzzle-board-scene = { workspace = true }
@@ -95,13 +91,19 @@ semio-s-plugin-puzzle-retained = { workspace = true, features = ["testing"] }
 serde = { workspace = true }
 serde_json = { workspace = true }
 semio-s-artifact-puzzle-2d-mut-any-10 = { path = "../../../../../🧬️mutations/✋️selection/📦️packages/🦀️rust" }
+semio-s-artifact-puzzle-2d-mut-any = { path = "../../../../../🧬️mutations/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-puzzle-2d-mut-any-2 = { path = "../../../../../🧬️mutations/🟢️node/🔒change-node-locked/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-puzzle-2d-mut-any-3 = { path = "../../../../../🧬️mutations/📚️catalog/🆔change-manifest-id/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-puzzle-2d-mut-any-4 = { path = "../../../../../🧬️mutations/🔌️handle/🪢️connect-handles/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-puzzle-2d-schema = { path = "../../../../../📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-puzzle-2d-snapshot = { path = "../../../../📦️packages/🦀️rust", features = ["testkit"] }
 
 [target.'cfg(all(target_arch = "wasm32", not(target_env = "p2")))'.dependencies]
 js-sys = { workspace = true }
 web-sys = { version = "0.3.98", features = ["HtmlCanvasElement"] }
 
 [features]
-testkit = []
+testkit = ["semio-s-artifact-puzzle-2d-mut-any/testkit", "semio-s-artifact-puzzle-2d-mut-any-2/testkit", "semio-s-artifact-puzzle-2d-mut-any-3/testkit", "semio-s-artifact-puzzle-2d-mut-any-4/testkit", "semio-s-artifact-puzzle-2d-records/testkit", "semio-s-artifact-puzzle-2d-schema/testkit", "semio-s-artifact-puzzle-2d-snapshot/testkit"]
 
 [[test]]
 name = "typed-json"

@@ -181,7 +181,8 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
  const store=(directory,value,extension,limit)=>keep(directory,packGenerationDocumentV1(value,limit),extension);
  const writeManifest=async manifest=>{const bytes=Buffer.from(canonicalJsonV1(readGenerationManifestV1(Buffer.from(canonicalJsonV1(manifest)))));if(bytes.length>P.maximumManifestBytes)throw fail("Generation manifest exceeds its finite limit");const digest=sha256(bytes);await fs.write(manifestPath(digest),bytes,{ifAbsent:true});return digest;};
 
- const plan=createGenerationPlanV1({readIndexView,fragmentNames:()=>fs.names(join(root,P.fragments)),now,doubt,settler,derive,hold,workspaceRoot});
+ const ledgerPath=join(root,"withheld-revalidation.json"),ledger={read:async()=>{const bytes=await fs.read(ledgerPath);return bytes?JSON.parse(Buffer.from(bytes).toString("utf8")):undefined;},write:book=>fs.write(ledgerPath,Buffer.from(JSON.stringify(book)))};
+ const plan=createGenerationPlanV1({readIndexView,fragmentNames:()=>fs.names(join(root,P.fragments)),now,doubt,settler,derive,hold,workspaceRoot,ledger,say:text=>process.stderr.write("[graph-owner-revalidate] "+JSON.stringify({version:1,text})+"\n")});
 
  /** 🤝️ Swaps the pointer for the next generation only if it still names the generation the builder started from; the exclusive hold covers one small read and one rename and nothing else. */
  async function publish({manifestDigest,expectedGeneration,expectedManifest,expectedRepairParent,reason,verified,signal,claim}){
@@ -203,7 +204,7 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
   let manifest,frontier;
   try{
    manifest=await readManifestAt(repair.parent,signal);
-   if(!manifest||manifest.generation+1!==repair.generation||manifest.identity!==identity||manifest.implementation!==implementation||!repair.owners.every(name=>Object.hasOwn(manifest.owners,name)))return;
+   if(!manifest||manifest.generation+1!==repair.generation||manifest.identity!==identity||!repair.owners.every(name=>Object.hasOwn(manifest.owners,name)))return;
    frontier=await readFrontier(manifest.frontier);
    if(frontier?.version!==1||!Array.isArray(frontier.directories)||!Array.isArray(frontier.members)||!Number.isFinite(frontier.capturedAt))return;
    const indexAvailable=continuing?(await fs.names(join(root,P.indexes))).includes(manifest.factIndex+".facts.br"):await readIndexView(manifest.factIndex,{fresh:true});
@@ -268,7 +269,8 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
   if(repair?.maximumOwners!==undefined&&(cold||found.envStale||found.added.length||found.removed.length||ordered.length>repair.maximumOwners))return unfundedRepair(current,found);
   if(repair&&claim&&claim.structural!==true)return unfundedRepair(current,found);
   if(repair&&hint?.wave&&!reuse&&carry.owners)throw fail("Closure repair base lost between waves","GENERATION_CLOSURE_REPAIR_UNQUALIFIED");
-  const journalKey=carry.journalKey??=buildJournalKeyV1({parent:current?.pointer.manifest??null,identity,membership:live.digest,cold,names:[...ordered].sort(compareCodePointsV1),removed:[...found.removed].sort(compareCodePointsV1),added:[...found.added].sort(compareCodePointsV1),...repair?{repair:resumeBinding,generation:repair.generation,implementation}:{}});
+  carry.membership=live.digest;
+  const journalKey=carry.journalKey??=buildJournalKeyV1(repair?{parent:current?.pointer.manifest??null,identity,membership:live.digest,cold,names:[...ordered].sort(compareCodePointsV1),removed:[...found.removed].sort(compareCodePointsV1),added:[...found.added].sort(compareCodePointsV1),repair:resumeBinding,generation:repair.generation,implementation}:{parent:current?.pointer.manifest??null,identity,cold});
   const verifyResume=repair?async manifest=>{
    const frontier=await readFrontier(manifest.frontier);if(!frontier)return false;
    const refreshed=await membership({manifest,frontier},signal);
@@ -276,7 +278,7 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
    const verdict=await plan({repairBase:manifest,identity,changes:refreshed.changes,verifyAll:true,signal,progress});
    return verdict.kind==="clean"&&!verdict.refresh?.size;
   }:undefined;
-  const resumed=!hint?.wave&&!carry.tried?await journal.resume({key:journalKey,current,repair:resumeBinding,identity,implementation,found,signal,claim,qualify,verify:verifyResume}):undefined;carry.tried=true;
+  const resumed=!hint?.wave&&!carry.tried?await journal.resume({key:journalKey,current,repair:resumeBinding,identity,implementation,found,signal,claim,qualify,verify:verifyResume,ordered,membership:live.digest,hold}):undefined;carry.tried=true;
   if(resumed?.superseded)return supersededRepair(await read(signal),identity,0);
   if(resumed?.result)return resumed.result;
   if(resumed?.carry)Object.assign(carry,resumed.carry);
@@ -301,7 +303,9 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
     if(owner?owner.partial!==undefined:previous.kind!=="project"||previous.tag||!renames.has(previous.root))throw fail("Closure repair requires a fresh computation of "+name,"GENERATION_CLOSURE_REPAIR_UNQUALIFIED");
    }
   }
-  const envDigest=result.env.digest,owners={...owners0},dropped=new Set(found.removed),upserts=new Map(),append=new Map(),returned=new Set(),stored=[];
+  const {env:{digest:envDigest,parts:computedParts},replaceTags,carried,inferred,phases:computePhases,global:globalPayload}=result;
+  let {env:{rows:envRows},derived}=result;
+  const owners={...owners0},dropped=new Set(found.removed),upserts=new Map(),append=new Map(),returned=new Set(),stored=[];
   for(const name of dropped)delete owners[name];
   for(const owner of result.owners){
    aborted(signal);
@@ -320,13 +324,17 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
    upserts.set(owner.name,owner.rows??[]);
   }
     const noisy=returned.size>P.ownerWave;if(noisy)say?.("storing",{count:returned.size});
+  if(cold)result=undefined;
   let fragmentsDone=0;if(stored.length)await progress?.({phase:"fragments",done:0,total:stored.length});
-  await profilePhaseV1("graph.build.fragments",()=>mapLimit(stored,P.readConcurrency,async job=>{await job();if(stored.length)await progress?.({phase:"fragments",done:++fragmentsDone,total:stored.length});},signal));mark("fragments");
-  const {env:{parts:computedParts},replaceTags,carried,inferred,phases:computePhases,global:globalPayload}=result;
-  upserts.set(P.envOwner,result.env.rows??[]);
-  for(const[name,rows]of derivedUpsertsV1(result.derived??[],found.refresh))upserts.set(name,rows);
-  for(const fact of result.derived??[])carry.derived.add(derivedOwnerNameV1(fact.row));
-  result=undefined;stored.length=0;
+  await profilePhaseV1("graph.build.fragments",()=>mapLimit(stored,P.readConcurrency,async(job,at)=>{
+   await job();
+   if(cold){stored[at]=undefined;job=undefined;}
+   await progress?.({phase:"fragments",done:++fragmentsDone,total:stored.length});
+  },signal));mark("fragments");
+  upserts.set(P.envOwner,envRows??[]);
+  for(const[name,rows]of derivedUpsertsV1(derived??[],found.refresh))upserts.set(name,rows);
+  for(const fact of derived??[])carry.derived.add(derivedOwnerNameV1(fact.row));
+  result=envRows=derived=undefined;stored.length=0;
   await markStep("storing",journalKey,sha256(Buffer.from(canonicalJsonV1([...returned].sort(compareCodePointsV1).map(name=>owners[name]?.fragment??null)))));aborted(signal);
   for(const name of wave)if(!returned.has(name)&&!dropped.has(name)){delete owners[name];dropped.add(name);}
   for(const[name,row]of Object.entries(owners))if(row.tag&&replaceTags?.includes(row.tag)&&!returned.has(name)){delete owners[name];dropped.add(name);}
@@ -355,6 +363,7 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
   for(const name of carry.returned)returned.add(name);
   for(const name of returned)dropped.delete(name);
     if(noisy)say?.("indexing",{count:Object.keys(owners).length});
+    await progress?.({phase:"patching",done:1,total:1});
     let index=await profilePhaseV1("graph.build.patch",async()=>{
      const base=cold?emptyFactIndexViewV1():repair?await repairPatchIndex(usable.factIndex,signal):await readIndexView(usable.factIndex);
      return patchView(base,{drop:[...dropped],upserts,append},signal);
@@ -369,6 +378,7 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
 
   mark("patch");
   if(noisy)say?.("sealing",{generation:(current?.pointer.generation??-1)+1});
+  await progress?.({phase:"packing",done:1,total:1});
   const packedIndex=await profilePhaseV1("graph.build.pack",()=>packFactIndexBytesV1(index.document.buffer,P.maximumIndexBytes)),indexStored=await profilePhaseV1("graph.build.keep",()=>keep(P.indexes,packedIndex.bytes,".facts.br"));
   
   mark("pack");
@@ -380,6 +390,7 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
   await qualify?.(next,signal);aborted(signal);
   await markStep("indexing",steps.at(-1).output,indexStored.digest,()=>journal.sealed({key:journalKey,current,repair:resumeBinding,identity,implementation,steps,manifest:manifestDigest,derived:[...carry.derived]}));
   const verified=stamp&&!rest.length?mergeVerifiedStampV1({owners:Object.keys(owners).sort(compareCodePointsV1),scope:cold?undefined:only,observedAtMs,carried:cold?undefined:coverage}):undefined;
+  await progress?.({phase:"publishing",done:1,total:1});
   let outcome=await profilePhaseV1("graph.build.publish",()=>publish({manifestDigest,expectedGeneration,...repair?{expectedManifest:null,expectedRepairParent:repair.parent}:{},verified,signal,claim})),done=outcome.published?{next,index,packed:packedIndex,kept:indexStored}:undefined;
   mark("publish");
   if(!done&&repair){await journal.clear(journalKey);return supersededRepair(await read(signal),identity,computed);}
@@ -540,13 +551,27 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
  /** 🧹️ Removes documents that no retained generation names once they are older than the grace window (every file of the index directory is an index document, whatever format its generation used); a failure only costs disk. */
  async function retire({signal,claim}={}){
   aborted(signal);const pointer=await readPointer();if(!pointer)return;
-  const files=await fs.list(join(root,P.manifests)),rows=[];
-  for(const file of files){aborted(signal);if(!/^[a-f0-9]{64}\.json$/u.test(file.name))continue;const digest=file.name.slice(0,64),bytes=await fs.read(manifestPath(digest));if(!bytes)throw fail("Generation manifest disappeared before retirement","GENERATION_INCOMPLETE");if(bytes.length>P.maximumManifestBytes||sha256(bytes)!==digest)throw fail("Generation manifest content differs from its name","GENERATION_CORRUPT");rows.push({digest,manifest:readGenerationManifestV1(bytes)});}
-  if(pointer.manifest!==null&&!rows.some(row=>row.digest===pointer.manifest))throw fail("Current generation manifest missing before retirement","GENERATION_INCOMPLETE");
-  rows.sort((a,b)=>b.manifest.generation-a.manifest.generation);
+  const files=await fs.list(join(root,P.manifests)),recent=[],live=new Set(),fragments=new Set(),indexes=new Set(),frontiers=new Set();
   const repairParent=pointer.manifest===null&&pointer.reason==="closure-missing"?pointer.parent:null;
-  const kept=rows.filter((row,index)=>index<P.retainGenerations||row.digest===pointer.manifest||row.digest===repairParent),live=new Set([pointer.manifest]),fragments=new Set(),indexes=new Set(),frontiers=new Set();
-  for(const row of kept){live.add(row.digest);indexes.add(row.manifest.factIndex);fragments.add(row.manifest.global);if(row.manifest.frontier)frontiers.add(row.manifest.frontier);for(const owner of Object.values(row.manifest.owners))fragments.add(owner.fragment);}
+  const keep=({digest,factIndex,frontier,global,ownerFragments})=>{
+   live.add(digest);indexes.add(factIndex);fragments.add(global);
+   if(frontier)frontiers.add(frontier);
+   for(const fragment of ownerFragments)fragments.add(fragment);
+  };
+  for(const file of files){
+   aborted(signal);if(!/^[a-f0-9]{64}\.json$/u.test(file.name))continue;
+   const digest=file.name.slice(0,64),bytes=await fs.read(manifestPath(digest));
+   if(!bytes)throw fail("Generation manifest disappeared before retirement","GENERATION_INCOMPLETE");
+   if(bytes.length>P.maximumManifestBytes||sha256(bytes)!==digest)throw fail("Generation manifest content differs from its name","GENERATION_CORRUPT");
+   const {generation,factIndex,frontier,global,owners}=readGenerationManifestV1(bytes);
+   const at=recent.findIndex(row=>row.generation<generation),keepRecent=at>=0||recent.length<P.retainGenerations,required=digest===pointer.manifest||digest===repairParent;
+   if(!keepRecent&&!required)continue;
+   const row={digest,generation,factIndex,frontier,global,ownerFragments:Object.values(owners).map(owner=>owner.fragment)};
+   if(required)keep(row);
+   if(keepRecent){recent.splice(at<0?recent.length:at,0,row);if(recent.length>P.retainGenerations)recent.pop();}
+  }
+  if(pointer.manifest!==null&&!live.has(pointer.manifest))throw fail("Current generation manifest missing before retirement","GENERATION_INCOMPLETE");
+  for(const row of recent)if(!live.has(row.digest))keep(row);
   const cutoff=now()-P.graceMilliseconds;
   const sweep=async(directory,keep,extension)=>{for(const file of await fs.list(join(root,directory))){aborted(signal);if(file.name.endsWith(extension)&&!keep.has(file.name.slice(0,64))&&file.modifiedMs<cutoff)await fs.remove(join(root,directory,file.name));}};
   await sweep(P.manifests,live,".json");await sweep(P.fragments,fragments,".json.br");await sweep(P.indexes,indexes,"");await sweep(P.frontiers,frontiers,".json.br");await sweep(BUILD_JOURNAL_V1.directory,new Set(),"");await nodes?.prune({now:now()});

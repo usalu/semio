@@ -34,3 +34,6 @@ pub mod path_job {
     #[path = "../../🎮️commands/✏️edit-path/🧵️simplify/🧪️tests/🔬️unit/🦀️.rs"]
     pub mod tests;
 }
+
+#[path = "../../🎮️commands/📤️export-document/🧵️export/🧪️tests/🔬️unit/🦀️.rs"]
+mod export_work_tests;

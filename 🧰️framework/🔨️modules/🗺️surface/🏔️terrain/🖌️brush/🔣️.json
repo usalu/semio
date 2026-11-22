@@ -13,8 +13,10 @@
       "properties": {
         "operation": { "type": "string", "minLength": 1, "maxLength": 64, "pattern": "^[A-Za-z0-9_.-]+$" },
         "radius": { "type": "integer", "minimum": 0, "maximum": 32 },
-        "value": { "type": "integer", "minimum": -32768, "maximum": 32767 }
-      }
+        "value": { "type": "number", "minimum": -32768, "maximum": 32767, "multipleOf": 0.001 }
+      },
+      "if": { "properties": { "operation": { "const": "smooth" } } },
+      "then": { "properties": { "value": { "type": "integer", "minimum": 0, "maximum": 100 } } }
     }
   }
 }

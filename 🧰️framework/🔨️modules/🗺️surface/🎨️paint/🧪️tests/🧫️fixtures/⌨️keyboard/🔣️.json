@@ -1,0 +1,51 @@
+{
+  "cursorSteps": [
+    { "cursor": [5, 5], "key": "ArrowRight", "extent": [10, 10], "stride": 1, "expected": [6, 5] },
+    { "cursor": [0, 0], "key": "ArrowLeft", "extent": [10, 10], "stride": 1, "expected": [0, 0] },
+    { "cursor": [9, 9], "key": "ArrowDown", "extent": [10, 10], "stride": 8, "expected": [9, 9] },
+    { "cursor": [5, 5], "key": "ArrowUp", "extent": [10, 10], "stride": 8, "expected": [5, 0] },
+    { "cursor": [5, 5], "key": "a", "extent": [10, 10], "stride": 1, "expected": null }
+  ],
+  "marquees": [
+    { "anchor": [5, 4], "cursor": [5, 5], "expected": [5, 4, 1, 2] },
+    { "anchor": [7, 7], "cursor": [2, 3], "expected": [2, 3, 6, 5] }
+  ],
+  "announcements": [
+    { "locale": "en", "cursor": [5, 4], "extent": [8, 8], "expected": "Pixel column 6 of 8, row 5 of 8" },
+    { "locale": "de", "cursor": [0, 0], "extent": [8, 4], "expected": "Pixel Spalte 1 von 8, Zeile 1 von 4" }
+  ],
+  "cameras": [
+    { "camera": [10, 20, 2], "key": "+", "stride": 40, "expected": [10, 20, 2.5] },
+    { "camera": [10, 20, 2], "key": "-", "stride": 40, "expected": [10, 20, 1.6] },
+    { "camera": [10, 20, 30], "key": "=", "stride": 40, "expected": [10, 20, 32] },
+    { "camera": [10, 20, 0.05], "key": "-", "stride": 40, "expected": [10, 20, 0.05] },
+    { "camera": [10, 20, 4], "key": "0", "stride": 40, "expected": [10, 20, 1] },
+    { "camera": [10, 20, 4], "key": "ArrowRight", "stride": 40, "expected": [20, 20, 4] },
+    { "camera": [10, 20, 2], "key": "ArrowUp", "stride": 40, "expected": [10, 0, 2] },
+    { "camera": [10, 20, 2], "key": "x", "stride": 40, "expected": null }
+  ],
+  "limits": [
+    { "count": 0, "expected": "ok" },
+    { "count": 1842, "expected": "ok" },
+    { "count": 1843, "expected": "warn" },
+    { "count": 2047, "expected": "warn" },
+    { "count": 2048, "expected": "full" }
+  ],
+  "rollover": [
+    { "points": 3, "sent": 1, "cap": 4, "expected": null },
+    { "points": 4, "sent": 1, "cap": 4, "expectedBatch": [1, 2, 3], "expectedKept": [3], "expectedSent": 1 }
+  ],
+  "host": {
+    "layer": "back",
+    "locale": "en",
+    "brushKeys": [
+      { "key": "ArrowRight", "expectedAnnouncement": "Pixel column 51 of 100, row 51 of 100" },
+      { "key": "Enter", "expectedPoints": [[50.5, 50.5], [50.5, 50.5]] }
+    ],
+    "marqueeKeys": [
+      { "key": "ArrowRight", "shift": true },
+      { "key": "ArrowDown", "shift": true },
+      { "key": "Enter", "expectedPath": [[50, 50], [52, 52]] }
+    ]
+  }
+}

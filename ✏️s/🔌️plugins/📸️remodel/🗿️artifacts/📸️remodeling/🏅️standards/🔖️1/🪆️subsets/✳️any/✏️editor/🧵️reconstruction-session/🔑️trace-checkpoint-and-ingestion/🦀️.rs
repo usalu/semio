@@ -84,18 +84,25 @@ impl ReconstructionRunCheckpoint {
 /// #️⃣️ Digests the frame inputs, reconstruction settings and the ground-control presence used by the QC report.
 pub fn reconstruction_inputs(snapshot: &RemodelingSnapshot) -> RemodelingContentDigest {
     let mut digest = RemodelingContentDigest::default();
+    let record_text = |digest: &mut RemodelingContentDigest, text: &str| {
+        digest.record(&(text.len() as u64).to_le_bytes());
+        digest.record(text.as_bytes());
+    };
+    digest.record(&(snapshot.streams.len() as u64).to_le_bytes());
     for stream in &snapshot.streams {
-        digest.record(stream.id.as_bytes());
-        digest.record(stream.camera_id.as_deref().unwrap_or_default().as_bytes());
+        record_text(&mut digest, &stream.id);
+        digest.record(&[u8::from(stream.camera_id.is_some())]);
+        record_text(&mut digest, stream.camera_id.as_deref().unwrap_or_default());
         digest.record(&stream.sync_offset_ms.to_le_bytes());
+        digest.record(&(stream.frames.len() as u64).to_le_bytes());
         for frame in &stream.frames {
-            digest.record(&u64::from(frame.index).to_le_bytes());
+            digest.record(&frame.index.to_le_bytes());
             digest.record(&frame.timestamp_ms.to_le_bytes());
-            digest.record(snapshot.assets.get(&frame.asset_id).map_or(frame.asset_id.as_bytes(), |handle| handle.child_id.as_bytes()));
+            record_text(&mut digest, snapshot.assets.get(&frame.asset_id).map_or(frame.asset_id.as_str(), |handle| &handle.child_id));
         }
     }
-    digest.record(semio_framework_pack_json::to_json_string(&semio_framework_value::ToValue::to_value(&snapshot.params)).as_bytes());
-    digest.record(semio_framework_pack_json::to_json_string(&semio_framework_value::ToValue::to_value(&snapshot.calibration)).as_bytes());
+    record_text(&mut digest, &semio_framework_pack_json::to_json_string(&semio_framework_value::ToValue::to_value(&snapshot.params)));
+    record_text(&mut digest, &semio_framework_pack_json::to_json_string(&semio_framework_value::ToValue::to_value(&snapshot.calibration)));
     digest.record(&[u8::from(!snapshot.gcps.is_empty())]);
     digest
 }
@@ -106,7 +113,9 @@ pub fn reconstruction_inputs(snapshot: &RemodelingSnapshot) -> RemodelingContent
 pub(super) struct FrameIngestion {
     pub(super) frame: FrameRef,
     pub(super) decoder: Option<BoundedStillDecoder>,
+    pub(super) resize: Option<semio_framework_pixels::editing::PixelEditJob>,
     pub(super) image: Option<ImageRgba8>,
+    pub(super) source_extent: [u32; 2],
     sharpness_cursor: usize,
     pub(super) sharpness_sum: f64,
 }
@@ -114,7 +123,15 @@ pub(super) struct FrameIngestion {
 pub(super) fn frame_ingestion(scene: &RemodelingSnapshot, frame: &FrameRef) -> Option<FrameIngestion> {
     let source = semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::remodeling_asset_chunk_source(scene, &frame.asset_id)?;
     let compressed = CompressedChunkRope::from_leaves(source.leaves, MAX_STILL_INPUT_BYTES).ok()?;
-    Some(FrameIngestion { frame: frame.clone(), decoder: Some(BoundedStillDecoder::new(&source.mime, compressed)), image: None, sharpness_cursor: 0, sharpness_sum: 0.0 })
+    Some(FrameIngestion { frame: frame.clone(), decoder: Some(BoundedStillDecoder::new(&source.mime, compressed)), resize: None, image: None, source_extent: [0, 0], sharpness_cursor: 0, sharpness_sum: 0.0 })
+}
+
+/// 📐️ Fits a frame within the requested long edge without enlarging it.
+pub(super) fn frame_extent(width: u32, height: u32, long_edge: u32) -> [u32; 2] {
+    let edge = width.max(height);
+    if edge == 0 || long_edge == 0 || edge <= long_edge { return [width, height]; }
+    let scale = |side: u32| ((u64::from(side) * u64::from(long_edge) + u64::from(edge) / 2) / u64::from(edge)).max(1) as u32;
+    [scale(width), scale(height)]
 }
 
 fn rgba_luma(image: &ImageRgba8, index: usize) -> f64 {

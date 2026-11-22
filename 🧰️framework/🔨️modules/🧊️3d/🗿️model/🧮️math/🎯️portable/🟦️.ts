@@ -260,20 +260,32 @@ export const pow = (x: number, y: number): number => {
   const magnitude = exponential(product)[0];
   return negative && Math.abs(y % 2) === 1 ? -magnitude : magnitude;
 };
-/** 📏️ Euclidean length of the values, rounded once from the exact sum of squares. */
+/** 📏️ Euclidean length of the values, rounded once from the exact sum of squares. The double-double sum and root are written out on plain locals, in the order of `add`, `twoProduct` and `squareRoot`, so a call allocates nothing and converts only what is not a number yet. */
 export const hypot = (...inputs: readonly number[]): number => {
-  const values = inputs.map(Number);
-  if (values.some((value) => value === Infinity || value === -Infinity)) return Infinity;
-  if (values.some(Number.isNaN)) return NaN;
-  const largest = Math.max(0, ...values.map(Math.abs));
-  if (largest === 0) return 0;
-  const k = -exponentOf(largest);
-  let sum: DD = [0, 0];
-  for (const value of values) {
-    const scaled = scaleByPower(value, k);
-    sum = add(sum, twoProduct(scaled, scaled));
+  const count = inputs.length;
+  let largest = 0, missing = false;
+  for (let i = 0; i < count; i += 1) {
+    const input = inputs[i]!, size = Math.abs(typeof input === "number" ? input : Number(input));
+    if (size === Infinity) return Infinity;
+    if (size !== size) missing = true;
+    else if (size > largest) largest = size;
   }
-  return scaleByPower(squareRoot(sum)[0], -k);
+  if (missing) return NaN;
+  if (largest === 0) return 0;
+  const k = -exponentOf(largest), direct = k <= 1000 && k >= -1000, up = direct ? powerOfTwo(k) : 0;
+  let high = 0, low = 0;
+  for (let i = 0; i < count; i += 1) {
+    const input = inputs[i]!, value = typeof input === "number" ? input : Number(input), scaled = direct ? value * up : scaleByPower(value, k);
+    const p = scaled * scaled, split = SPLITTER * scaled, head = split - (split - scaled), tail = scaled - head, e = head * head - p + head * tail + tail * head + tail * tail;
+    const s = high + p, v = s - high, se = high - (s - v) + (p - v), t = low + e, w = t - low, f = low - (t - w) + (e - w), carry = se + t, u = s + carry, rest = carry - (u - s) + f;
+    high = u + rest;
+    low = rest - (high - u);
+  }
+  if (!(high > 0)) return direct ? 0 * powerOfTwo(-k) : scaleByPower(0, -k);
+  const root = Math.sqrt(high), p = root * root, split = SPLITTER * root, head = split - (split - root), tail = root - head, e = head * head - p + head * tail + tail * head + tail * tail;
+  const s = high - p, v = s - high, se = high - (s - v) + (-p - v), t = low - e, w = t - low, f = low - (t - w) + (-e - w), carry = se + t, u = s + carry, remainder = u + (carry - (u - s) + f);
+  const length = root + remainder / (2 * root);
+  return direct ? length * powerOfTwo(-k) : scaleByPower(length, -k);
 };
 
 const FAST_LN2_HIGH = 6.93147180369123816490e-01, FAST_LN2_LOW = 1.90821492927058770002e-10, LOG2E = 1.4426950408889634;

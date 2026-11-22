@@ -1,7 +1,7 @@
 /** 🎒️ Every native editor binding emits the complete key vocabulary of its canonical payload schema. */
 import { expect, test } from "bun:test";
 import { readFileSync, readdirSync } from "node:fs";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { semioSchemaAjvV1 } from "@semio-tech/framework/schema/oracles/validator";
 import fixture from "./🧫️cases/🔣️.json" with { type: "json" };
 import schema from "./🧬️schema/🔣️.json" with { type: "json" };
@@ -14,13 +14,13 @@ function files(directory: string): string[] {
   });
 }
 const sourceFiles = files(root);
+const familyOf = (path: string) => path.slice(root.length + 1).split(/[\\/]/)[0]!.match(/(?:en\d+|din\d+|iso\d+|vdi\d+)/)![0];
 const payloads = new Map(sourceFiles.filter(path => path.endsWith(".json")).flatMap(path => {
   const value = JSON.parse(readFileSync(path, "utf8"));
-  const id = value.$id?.match(/\/s\/norm\/([^/]+)\/mutation\/([^/]+)\/schema\.json$/);
-  return id ? [[id[1] + ":" + id[2], value] as const] : [];
+  return typeof value.semanticKind === "string" && typeof value.payloadSchema === "string" ? [[familyOf(path) + ":" + value.semanticKind, JSON.parse(readFileSync(join(dirname(path), value.payloadSchema), "utf8"))] as const] : [];
 }));
 const source = sourceFiles.filter(path => path.endsWith(".rs")).map(path => ({
-  path, family: path.slice(root.length + 1).split(/[\\/]/)[0]!.match(/(?:en\d+|din\d+|iso\d+|vdi\d+)/)![0], text: readFileSync(path, "utf8"),
+  path, family: familyOf(path), text: readFileSync(path, "utf8"),
 }));
 const field = (text: string, name: string) => text.match(new RegExp("\\b" + name + ':\\s*"([^"]*)"'))?.[1];
 const argumentsActual = source.flatMap(row => [...row.text.matchAll(/\bSetFieldArgument\s*\{([^}]+)\}/g)].map(match => {

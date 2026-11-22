@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "generator": "splitmix64-little-endian",
+  "former": 4194304,
+  "ceiling": 16777216,
+  "cases": [
+    {
+      "name": "typical edited large PDF above the former ceiling",
+      "packSeed": "1",
+      "packBytes": 9600000,
+      "sprSeed": "2",
+      "sprBytes": 179,
+      "archiveBytes": 9600187,
+      "fnv1a64": "16363573828895b1",
+      "sha256": "a4b79054f978c8546af5b37b3d0025241750ad03c1198f2326c50e5de4aad504",
+      "outcome": "accepted"
+    },
+    {
+      "name": "exact new ceiling",
+      "packSeed": "3",
+      "packBytes": 16777199,
+      "sprSeed": "4",
+      "sprBytes": 10,
+      "archiveBytes": 16777216,
+      "fnv1a64": "83d3d01d6d322887",
+      "sha256": "6e907964fc5fc338303aa5c6d021bd90529a51094ee109182f32a9bdfb9f42be",
+      "outcome": "accepted"
+    },
+    {
+      "name": "one byte above the new ceiling",
+      "packSeed": "5",
+      "packBytes": 16777200,
+      "sprSeed": "6",
+      "sprBytes": 10,
+      "archiveBytes": 16777217,
+      "fnv1a64": "38a794b257a0da17",
+      "sha256": "b1a67a38115a49d6dfbc990e8558804fbd495552bc44e72db0d92c786152ebdf",
+      "outcome": "refused"
+    }
+  ]
+}

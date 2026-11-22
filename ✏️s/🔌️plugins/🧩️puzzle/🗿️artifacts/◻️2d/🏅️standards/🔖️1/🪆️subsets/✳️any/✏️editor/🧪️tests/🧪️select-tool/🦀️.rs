@@ -30,7 +30,7 @@ use crate::standards::v1::subsets::any::schema::mutations::apply_puzzle2d_mutati
 use crate::standards::v1::subsets::any::schema::mutations::ConnectHandles;
 use crate::standards::v1::subsets::any::schema::mutations::DragSelection;
 
-use protocol::Mutation as _;
+use protocol::{ColdMutation as _, Mutation as _};
 use semio_framework_tool_machine::drive_chart_gesture;
 use semio_framework_tool_machine::ChartGesture;
 use semio_framework_tool_machine::GestureDrive;

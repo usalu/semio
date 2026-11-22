@@ -68,6 +68,7 @@
                     "output-acknowledged",
                     "actor-close-pending",
                     "actor-closed",
+                    "actor-core-quiescent",
                     "failed",
                     "semantic-refusal",
                     "failure-pending",

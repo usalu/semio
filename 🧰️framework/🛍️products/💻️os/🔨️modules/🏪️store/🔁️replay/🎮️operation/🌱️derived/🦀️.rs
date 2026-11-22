@@ -80,7 +80,11 @@ impl<P:Send+Sync+'static,M:Send+Sync+'static> ArtifactDerivedOperation<P,M>{
         if self.retirement.is_some(){return semio_framework_value::factory_ticket_demands(self.retirement.as_ref().unwrap(),body);}
         if let Some(input)=self.failed_input.as_ref(){return if input.terminal_is_empty(){Ok(header::<Option<semio_framework_value::retained_clone::RetainedOwnedProjection<M>>>())}else{input.close_demand(body)};}
         if self.failed_read.is_some(){return Ok(RetirementDemand{copy_bytes:size_of::<ErasedSnapshotRead>()+size_of::<Arc<dyn semio_framework_value::FactoryRetirement>>(),capacity_bytes:ReturnedSnapshotReadRetirement::<P>::constructor_capacity_bytes(),depth:1,..Default::default()});}
-        if self.mutation.is_some(){return Ok(RetirementDemand{capacity_bytes:semio_framework_value::FactoryOwnedRetirement::<M>::constructor_capacity_bytes(),depth:1,..Default::default()});}
+        if self.mutation.is_some(){
+            let mut demand=semio_framework_value::FactoryOwnedRetirement::<M>::original_admission_demands(&self.mutation);
+            demand.copy_bytes+=size_of::<Arc<dyn ArtifactOwnedValueRetirementFactory<M>>>();
+            return Ok(demand);
+        }
         let Some(prepared)=self.prepared.as_ref()else{
             if self.producer.is_some(){return Ok(header::<Arc<dyn ArtifactReplayPreparationFactory<P,M>>>());}
             if self.snapshots.is_some()||self.mutations.is_some(){return Ok(header::<Arc<dyn semio_framework_value::FactoryRetirement>>());}
@@ -107,6 +111,23 @@ impl<P:Send+Sync+'static,M:Send+Sync+'static> ArtifactDerivedOperation<P,M>{
     /// ⏯️ Advances exactly one funded action, leaving cancellation and incomplete work owned across turns.
     pub fn step(&mut self,generation:u64,revision:[u8;32],body:usize,grant:RetainedCloneGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,deadline:&mut dyn FnMut()->bool)->Result<RetainedCloneStep,semio_framework_value::OriginalRetirementFailure>{
         if self.base.is_none()&&self.task.is_some()&&!self.closing&&!self.ready{return self.step_task(generation,revision,body,grant,receiving,deadline)}
+        if self.requires_original_control()&&(receiving.failure_storage_birth_pending()||!receiving.has_retirement_failure_storage()){
+            self.last_work=0;
+            let demand=semio_framework_value::original_failure_storage_birth_demand();
+            if deadline()||!funded(grant,demand){return Ok(RetainedCloneStep::Progress(Default::default()));}
+            let refill=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};
+            let poll=receiving.with_retirement(refill,|control| {
+                let funding: &mut dyn semio_framework_value::OriginalRetirementControl=control;
+                Ok::<_,ValueError>(semio_framework_value::refill_original_failure_storage(funding,refill))
+            })?;
+            let (work,progress)=match poll{
+                semio_framework_value::RetainedWorkPoll::Pending{work}=>(work,Default::default()),
+                semio_framework_value::RetainedWorkPoll::Complete(turn)=>(turn.work,turn.result?.progress()),
+            };
+            self.last_work=u64::try_from(work).unwrap_or(u64::MAX);
+            self.record(progress);
+            return Ok(RetainedCloneStep::Progress(progress));
+        }
         let turn=crate::native::probe_effect(receiving,grant,|control,effect|self.step_turn(generation,revision,effect,DerivedOperationTurn::Advance(control,body),deadline))?;
         match turn{None=>Ok(RetainedCloneStep::Progress(Default::default())),Some(Ok(step))=>Ok(step),Some(Err(semio_framework_value::RetirementPollExit::Pending(_)))=>Ok(RetainedCloneStep::Progress(Default::default())),Some(Err(semio_framework_value::RetirementPollExit::Failed(failure)))=>Err(failure)}
     }
@@ -148,7 +169,14 @@ impl<P:Send+Sync+'static,M:Send+Sync+'static> ArtifactDerivedOperation<P,M>{
         }else if self.retirement.is_some(){let poll=match turn{DerivedOperationTurn::Advance(control,_)=>control.with_retirement(grant,|original|Ok::<_,ValueError>(semio_framework_value::close_factory_ticket_controlled(&mut self.retirement,grant.maximum_copy_bytes,effect,original)))?,DerivedOperationTurn::Close(Some(original))=>semio_framework_value::close_factory_ticket_controlled(&mut self.retirement,grant.maximum_copy_bytes,effect,original),DerivedOperationTurn::Close(None)=>semio_framework_value::close_factory_ticket(&mut self.retirement,grant.maximum_copy_bytes,effect),DerivedOperationTurn::Original(original)=>semio_framework_value::close_factory_ticket_original(&mut self.retirement,original,grant.maximum_copy_bytes,effect)};Exit::resume(poll)?.progress()
         }else if let Some(input)=self.failed_input.as_mut(){if input.terminal_is_empty(){one(effect)?;self.failed_input.take();RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..idle}}else{Exit::resume(input.close_step(grant.maximum_copy_bytes,effect))?.progress()}
         }else if let Some(read)=self.failed_read.as_mut(){let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-demand.copy_bytes,..grant};let Some((frame,mut p))=read.admit_retirement(self.registry.as_ref().unwrap(),self.snapshots.as_ref().unwrap(),&mut effect.nested(child)).result?else{return Ok(RetainedCloneStep::Progress(idle));};*self.retirement=Some(frame);self.failed_read.take();p.copied_bytes+=demand.copy_bytes;p
-        }else if self.mutation.is_some(){Exit::resume(crate::native::lifted(semio_framework_value::FactoryOwnedRetirement::<M>::admit_original(&mut self.mutation,&mut self.mutations,&mut self.retirement,effect)))?.progress()
+        }else if self.mutation.is_some(){
+            let factory=self.mutations.as_ref().ok_or_else(||refusal("derived inverse lost its original mutation issuer"))?;
+            let copy=size_of::<Arc<dyn ArtifactOwnedValueRetirementFactory<M>>>();
+            let mut issuer=Some(Arc::clone(factory));
+            let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-copy,..grant};
+            let mut progress=Exit::resume(crate::native::lifted(semio_framework_value::FactoryOwnedRetirement::<M>::admit_original(&mut self.mutation,&mut issuer,&mut self.retirement,&mut effect.nested(child))))?.progress();
+            if self.retirement.is_some(){progress.copied_bytes+=copy;}
+            progress
         }else if let Some(prepared)=self.prepared.as_mut(){
             if !self.closing&&self.message<prepared.messages.len(){one(effect)?;let row=&prepared.messages[self.message];if self.mode==ArtifactDerivedOperationMode::Provisional&&self.policy.rejects(row.level){self.accepted=false;}self.message+=1;RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..idle}
             }else if prepared.next.is_some()&&(self.closing||!self.accepted||prepared.apply_refusal.is_some()||prepared.input_refusal.is_some()){

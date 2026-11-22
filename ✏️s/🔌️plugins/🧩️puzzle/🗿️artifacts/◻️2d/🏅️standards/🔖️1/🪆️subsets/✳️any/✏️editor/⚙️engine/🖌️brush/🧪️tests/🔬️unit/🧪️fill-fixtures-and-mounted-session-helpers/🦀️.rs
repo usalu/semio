@@ -19,13 +19,15 @@
     }
 
     fn capture_fill_snapshot(original: &mut OriginalFixture, host: &BoardHost) -> crate::editor::puzzle2d::engine::BoardFillSnapshot {
-        let mut capture = begin_fill_capture(original, host);
+        let mut construction = semio_framework_job::OriginalConstructionAdmission::default();
+        let mut capture = begin_fill_capture(original, host, &mut construction);
         for _ in 0..FILL_TEST_PUMP_LIMIT {
-            match original.turn(FILL_TEST_GRANT, |cx| capture.step(host, cx)).expect("original captured descriptor turn") {
+            match original.turn(FILL_TEST_GRANT, |cx| capture.step(&mut construction, &host.scene, &host.style, &host.brush, cx)).expect("original captured descriptor turn") {
                 BoardFillCaptureStep::Pending => {}
                 BoardFillCaptureStep::Complete => {
                     let snapshot = capture.take_snapshot().expect("complete fill capture owns snapshot");
                     retire_fill_capture(original, &mut capture);
+                    retire_fill_construction(original, &mut construction);
                     return snapshot;
                 }
                 BoardFillCaptureStep::Fault(fault) => panic!("fill capture faulted: {fault:?}"),
@@ -38,12 +40,10 @@
         OriginalFixture::new(semio_framework_job::OperationId(1), semio_framework_job::Generation(1), fixture_stock(), clock, u64::MAX, 1 << 48)
     }
 
-    fn begin_fill_capture(original: &mut OriginalFixture, host: &BoardHost) -> crate::editor::puzzle2d::engine::BoardFillSnapshotCapture {
+    fn begin_fill_capture(original: &mut OriginalFixture, host: &BoardHost, construction: &mut semio_framework_job::OriginalConstructionAdmission) -> crate::editor::puzzle2d::engine::BoardFillSnapshotCapture {
         let mut output = None;
-        let mut construction = semio_framework_job::OriginalConstructionAdmission::default();
         for _ in 0..FILL_TEST_PUMP_LIMIT {
-            if original.turn(FILL_TEST_GRANT, |cx| host.begin_board_fill_snapshot(&mut construction, &mut output, cx)).expect("original capture admission") {
-                retire_fill_construction(original, &mut construction);
+            if original.turn(FILL_TEST_GRANT, |cx| host.begin_board_fill_snapshot(construction, &mut output, cx)).expect("original capture admission") {
                 return output.expect("admitted capture stays in caller custody");
             }
         }
@@ -117,11 +117,11 @@
             if placement.terminal_is_empty() { return; }
             original.turn(FILL_TEST_GRANT, |cx| {
                 let demand = RetirementDemand { release_bytes: placement.next_close_release_byte_demand(), depth: 1, ..Default::default() };
-                semio_framework_job::close_original_retained_step(cx, demand, |grant| Ok(match placement.close_step(grant) {
+                semio_framework_job::close_original_retained_step(cx, demand, |grant| semio_framework_value::RetainedWorkOutcome { result: Ok(match placement.close_step(grant) {
                     InteractiveJobCloseStep::Complete { progress } => RetainedCloneStep::Complete(progress),
                     InteractiveJobCloseStep::Pending { progress } => RetainedCloneStep::Progress(progress),
                     InteractiveJobCloseStep::Blocked => RetainedCloneStep::Progress(Default::default()),
-                }))?;
+                }), work: 1 })?;
                 Ok(())
             }).expect("original fill placement retirement");
         }
@@ -135,11 +135,11 @@
             if capture.terminal_is_empty() { return; }
             original.turn(FILL_TEST_GRANT, |cx| {
                 let demand = RetirementDemand { release_bytes: capture.next_close_release_byte_demand(), depth: 1, ..Default::default() };
-                semio_framework_job::close_original_retained_step(cx, demand, |grant| Ok(match capture.close_step(grant) {
+                semio_framework_job::close_original_retained_step(cx, demand, |grant| semio_framework_value::RetainedWorkOutcome { result: Ok(match capture.close_step(grant) {
                     InteractiveJobCloseStep::Complete { progress } => RetainedCloneStep::Complete(progress),
                     InteractiveJobCloseStep::Pending { progress } => RetainedCloneStep::Progress(progress),
                     InteractiveJobCloseStep::Blocked => RetainedCloneStep::Progress(Default::default()),
-                }))?;
+                }), work: 1 })?;
                 Ok(())
             }).expect("original fill capture retirement");
         }
@@ -149,9 +149,10 @@
     fn mount_fill_session(original: &mut OriginalFixture, job: BoardFillJob, config: BatchDriveConfig) -> FillSession {
         let mut pending = original.turn(FILL_TEST_GRANT, |cx| Ok(semio_plugin_ownership::reserved_job_session::RefusedWorkerSource::pending(job, (cx.operation(), cx.generation())))).expect("same original pending source");
         for _ in 0..FILL_TEST_PUMP_LIMIT {
-            if let Some(session) = original.turn(FILL_TEST_GRANT, |cx| pending.admit_pending(config, cx)).expect("same original mounted admission") {
+            let mut output = None;
+            if original.turn(FILL_TEST_GRANT, |cx| pending.admit_pending(config, &mut output, cx)).expect("same original mounted admission") {
                 assert!(pending.terminal_is_empty());
-                return session;
+                return output.expect("admitted mounted session stays in caller custody");
             }
         }
         panic!("original mounted fill admission remains pending");
@@ -162,15 +163,19 @@
         for _ in 0..FILL_TEST_PUMP_LIMIT {
             if session.terminal_is_empty() { return; }
             original.turn(FILL_TEST_GRANT, |cx| {
-                if let Some(step) = session.return_original_cancel_alias_step(cx.original_cancel_token(), cx.retained_grant()).map_err(|error| match error {
+                if session.has_original_cancel_alias_witness(cx.original_cancel_token()).map_err(|error| match error {
                     semio_framework_job_worker::WorkerJobDemandError::Refused(error) => semio_framework_job::OriginalTurnFailure::from(error),
                     semio_framework_job_worker::WorkerJobDemandError::Contention(_) => semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "original fill session remains contended").into(),
                 })? {
-                    cx.consume_retained(step.progress())?;
-                    cx.consume_fuel(step.progress().copied_items as u64);
-                    return Ok(());
+                    let turn = cx.with_original_effect(cx.retained_grant(), |cx, effect| session.return_original_cancel_alias_step(cx.original_cancel_token(), effect))?.map_or(semio_framework_value::RetainedWorkOutcome { result: Ok(None), work: 0 }, |(turn, _)| turn);
+                    let result = turn.result.map(|step| step.expect("same original witnessed cancellation alias")).map_err(|error| match error {
+                        semio_framework_job_worker::WorkerJobDemandError::Refused(error) => error,
+                        semio_framework_job_worker::WorkerJobDemandError::Contention(_) => semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "original fill session alias remains checked out"),
+                    });
+                    semio_framework_job::receive_original_retained_work(cx, semio_framework_value::RetainedWorkOutcome { result, work: turn.work })?;
+                } else {
+                    session.close_step(cx)?;
                 }
-                session.close_step(cx)?;
                 Ok(())
             }).expect("same original mounted fill close");
             std::thread::yield_now();
@@ -178,26 +183,9 @@
         panic!("mounted fill close exceeded bounded opportunities");
     }
 
-    /// 🔁️ `WorkerPool::try_submit` is a TRY: it answers `Contended` whenever the live worker thread
-    /// holds its own lane queue, and `Saturated` when that queue is full. Both are back-pressure the
-    /// owner is expected to retry — `submit_retained_timer_job` reschedules on exactly these two —
-    /// so treating the first refusal as a fault made every mounted fill law flaky-by-construction.
-    fn pump_fill_session(session: &mut FillSession, pool: &semio_framework_async::WorkerPool) -> WorkerJobPoll {
-        for _ in 0..FILL_TEST_PUMP_LIMIT {
-            match session.pump_one(pool, semio_framework_async::Lane::Background, FILL_TEST_GRANT) {
-                Ok(poll) => return poll,
-                Err(semio_framework_job_worker::MountedWorkerJobPumpFault::Submit(semio_framework_job_worker::WorkerJobSubmitFault::Pool(
-                    semio_framework_async::WorkerSubmitErrorKind::Contended | semio_framework_async::WorkerSubmitErrorKind::Saturated,
-                ))) => std::thread::yield_now(),
-                Err(semio_framework_job_worker::MountedWorkerJobPumpFault::Submit(semio_framework_job_worker::WorkerJobSubmitFault::Contention(_))) => std::thread::yield_now(),
-                Err(semio_framework_job_worker::MountedWorkerJobPumpFault::Submit(semio_framework_job_worker::WorkerJobSubmitFault::Pool(kind))) => panic!("mounted fill pump fault: the worker pool refused the step submission ({kind:?})"),
-                Err(semio_framework_job_worker::MountedWorkerJobPumpFault::Submit(semio_framework_job_worker::WorkerJobSubmitFault::SequenceExhausted)) => panic!("mounted fill pump fault: the step sequence is exhausted"),
-                Err(semio_framework_job_worker::MountedWorkerJobPumpFault::Take(_)) => panic!("mounted fill pump fault: the finished step could not be taken back"),
-                Err(semio_framework_job_worker::MountedWorkerJobPumpFault::MissingTicket) => panic!("mounted fill pump fault: the session holds no ticket"),
-                Err(semio_framework_job_worker::MountedWorkerJobPumpFault::CheckedOut) => panic!("mounted fill pump fault: an outcome is still checked out"),
-            }
-        }
-        panic!("mounted fill pump never won admission within its bounded opportunities")
+    /// 🔁️ One original-caller turn of the mounted session: the business producer runs on the caller's own funded turn.
+    fn pump_fill_session(original: &mut OriginalFixture, session: &mut FillSession) -> WorkerJobPoll {
+        original.turn(FILL_TEST_GRANT, |cx| session.pump_one_for_interactive_turn(cx)).expect("original mounted fill pump turn")
     }
 
     /// 🔎️ Settles the checked-out step receipt and classifies the retained outcome without taking it.
@@ -218,15 +206,8 @@
     }
 
     fn acknowledge_fill_outcome(original: &mut OriginalFixture, session: &mut FillSession) {
-        let acknowledgement = RetainedCloneGrant { maximum_items: 1, maximum_depth: 1, ..Default::default() };
         for _ in 0..FILL_TEST_PUMP_LIMIT {
-            let step = original.turn(acknowledgement, |cx| {
-                let step = session.acknowledge_checked_out_outcome(cx.retained_grant());
-                cx.consume_retained(step.progress())?;
-                cx.consume_fuel(step.progress().copied_items as u64);
-                Ok(step)
-            }).expect("original fill outcome acknowledgement");
-            if matches!(step, RetainedCloneStep::Complete(_)) { return; }
+            if original.turn(FILL_TEST_GRANT, |cx| session.acknowledge_checked_out_outcome(cx)).expect("original fill outcome acknowledgement") { return; }
         }
         panic!("fill outcome acknowledgement exceeded bounded opportunities");
     }
@@ -262,12 +243,11 @@
     fn run_mounted_fill_job(original: &mut OriginalFixture, job: BoardFillJob, worker_count: usize) -> (Vec<FillPlacementWitness>, Vec<u64>, crate::editor::puzzle2d::engine::BoardFillResult) {
         let operation = job.operation();
         let mut session = mount_fill_session(original, job, fill_config("puzzle2d.fill.test"));
-        let pool = semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, worker_count));
         let mut placements = Vec::new();
         let mut previews = Vec::new();
         let mut result = None;
         for _ in 0..FILL_TEST_PUMP_LIMIT {
-            match pump_fill_session(&mut session, &pool) {
+            match pump_fill_session(original, &mut session) {
                 WorkerJobPoll::Submitted | WorkerJobPoll::Rejected | WorkerJobPoll::Idle => {
                     std::thread::yield_now();
                 }
@@ -326,7 +306,6 @@
         }
         let result = result.expect("fill completion within bounded opportunities");
         close_fill_session(original, &mut session);
-        pool.shutdown().expect("bounded snapshot operation succeeds");
         (placements, previews, result)
     }
 
@@ -344,10 +323,9 @@
     fn first_fill_checkpoint(original: &mut OriginalFixture, job: BoardFillJob) -> BoardFillCheckpoint {
         let operation = job.operation();
         let mut session = mount_fill_session(original, job, fill_config("puzzle2d.fill.checkpoint"));
-        let pool = semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1));
         let mut checkpoint = None;
         for _ in 0..FILL_TEST_PUMP_LIMIT {
-            match pump_fill_session(&mut session, &pool) {
+            match pump_fill_session(original, &mut session) {
                 WorkerJobPoll::Submitted | WorkerJobPoll::Rejected | WorkerJobPoll::Idle => std::thread::yield_now(),
                 WorkerJobPoll::Outcome | WorkerJobPoll::Terminal => {
                     if seen_fill_outcome(original, &mut session) == FillSeen::Checkpoint {
@@ -364,7 +342,6 @@
         }
         let checkpoint = checkpoint.expect("checkpoint within bounded opportunities");
         close_fill_session(original, &mut session);
-        pool.shutdown().expect("bounded snapshot operation succeeds");
         checkpoint
     }
 

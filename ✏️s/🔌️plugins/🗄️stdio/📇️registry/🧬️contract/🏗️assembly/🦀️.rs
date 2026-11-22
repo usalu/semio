@@ -242,6 +242,23 @@ struct Representation {
     owner: bool,
     #[value(default, skip_serializing_if = "Option::is_none")]
     sniff: Option<RepresentationSniff>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    package: Option<RepresentationPackage>,
+}
+
+/// 🗜️ Bounded content check of a zip-based (OPC) representation: the package must name a main part whose content type is one of `main_part_content_types`, and the root namespace of that part selects the `subset` editor of the same artifact standard.
+#[derive(Clone, value_derive::FromValue, value_derive::ToValue)]
+#[value(deny_unknown_fields)]
+struct RepresentationPackage {
+    main_part_content_types: Vec<String>,
+    dialects: Vec<RepresentationPackageDialect>,
+}
+
+#[derive(Clone, value_derive::FromValue, value_derive::ToValue)]
+#[value(deny_unknown_fields)]
+struct RepresentationPackageDialect {
+    subset: String,
+    namespace: String,
 }
 
 /// 🔬 Cheap bounded content check naming one revision among representations that share a claim set: any `contains` ASCII needle inside the first `window` bytes selects it.
@@ -557,6 +574,19 @@ fn violations(source: &Source) -> Vec<PluginAssemblyError> {
         let owned = needles.entry(representation_claims(item)).or_default();
         if sniff.window == 0 || sniff.window > 65536 || sniff.contains.is_empty() || sniff.contains.iter().any(|needle| needle.is_empty() || !needle.is_ascii() || needle.len() > sniff.window as usize || !owned.insert(needle.as_str())) {
             check(Err(failure(format!("representation {} declares an unbounded, empty, non-ASCII or shared sniff", item.id))));
+        }
+    }
+    for item in &source.representations {
+        let Some(package) = &item.package else { continue };
+        let subsets: BTreeSet<&str> = package.dialects.iter().map(|dialect| dialect.subset.as_str()).collect();
+        let namespaces: BTreeSet<&str> = package.dialects.iter().map(|dialect| dialect.namespace.as_str()).collect();
+        if package.main_part_content_types.is_empty()
+            || package.main_part_content_types.iter().any(|content_type| content_type.is_empty() || !content_type.is_ascii())
+            || package.dialects.iter().any(|dialect| dialect.subset.is_empty() || dialect.subset == "*" || dialect.namespace.is_empty() || !dialect.namespace.is_ascii())
+            || subsets.len() != package.dialects.len()
+            || namespaces.len() != package.dialects.len()
+        {
+            check(Err(failure(format!("representation {} declares an empty, non-ASCII or ambiguous package check", item.id))));
         }
     }
     if owners_by_claims.values().any(|(members, owners)| *owners > 1 || (*members > 1 && *owners != 1)) {

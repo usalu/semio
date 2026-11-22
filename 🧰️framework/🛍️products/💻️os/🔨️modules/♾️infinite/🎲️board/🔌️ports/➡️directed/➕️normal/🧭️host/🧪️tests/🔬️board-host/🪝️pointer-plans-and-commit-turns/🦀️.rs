@@ -178,6 +178,34 @@
         assert!(matches!(host.focus.interaction, Interaction::None));
     }
 
+/// 🔁️ A closed lasso that is released on its own start is a drag, never a click: it must select what it encloses instead of clearing.
+#[cfg(test)]
+    #[test]
+    fn closed_lasso_released_at_its_start_commits_the_enclosed_nodes() {
+        let mut host = BoardHost::default();
+        host.scene.set_size(800, 600, 1.0);
+        let fixture = serde_json::json!({
+            "schema": "board.normal.undirected.v1",
+            "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
+            "nodes": [
+                { "id": "node-a", "x": 0.0, "y": 0.0, "shape": "circle", "radius": 4.0 },
+                { "id": "node-b", "x": 80.0, "y": 0.0, "shape": "circle", "radius": 4.0 }
+            ],
+            "edges": []
+        });
+        assert!({let mut accepted=|_|true;let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(64*1024*1024,&mut accepted);load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox,&fixture.to_string(),&mut control)});
+        host.pointer_down_screen(380.0, 280.0, 0, false, false);
+        for (x, y) in [(380.0, 320.0), (420.0, 320.0), (420.0, 280.0)] {
+            let preview = host.plan_pointer(BoardPointerIntent { phase: BoardPointerPhase::Move, x, y, shift: false, ctrl_or_meta: false, alt: false }).expect("lasso preview plan");
+            begin_pointer_commit(&mut host.scene, &mut host.commit, preview).expect("retained lasso preview");
+            drive_pointer_commit(&mut host);
+            assert!(host.commit.take_pointer_publication().expect("lasso preview publication").close_step());
+        }
+        let commit = host.plan_pointer(BoardPointerIntent { phase: BoardPointerPhase::Up, x: 380.0, y: 280.0, shift: false, ctrl_or_meta: false, alt: false }).expect("lasso commit plan");
+        assert!(commit.events_json().contains("node-a"));
+        assert!(!commit.events_json().contains("node-b"));
+    }
+
 #[cfg(test)]
     #[test]
     fn non_drag_pointer_commit_yields_between_selection_link_and_brush_items() {

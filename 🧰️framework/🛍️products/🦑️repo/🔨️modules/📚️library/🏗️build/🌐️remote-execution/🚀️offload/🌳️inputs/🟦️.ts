@@ -26,19 +26,31 @@ export function walkFilesV1(root:string,ignored:readonly string[],maximumFiles:n
 }
 
 const ARTIFACT=/^lib(.+)-([0-9a-f]{16})\.(rlib|rmeta|so|dylib|dll)$/u;
-/** 🔗️ The dependency artifacts a compilation can load from one `-L dependency=` directory: the given direct externs and, transitively, every artifact whose 16-hex file-name suffix (the `extra-filename` the compiler records for each dependency in its metadata) occurs in the metadata of one already chosen, with the siblings sharing a suffix (the `.rmeta` beside an `.rlib`). A superset is harmless, a missing artifact is not, so the scan errs towards inclusion. `undefined` beyond the policy bound. */
-export function dependencyClosureV1(directory:string,direct:readonly string[],read:(path:string)=>Buffer=path=>readFileSync(path)):readonly string[]|undefined{
- let names:string[];try{names=readdirSync(directory);}catch{return undefined;}
- const bySuffix=new Map<string,string[]>();
- for(const name of names){const match=ARTIFACT.exec(name);if(match)bySuffix.set(match[2]!,[...bySuffix.get(match[2]!)??[],name]);}
- const chosen=new Set<string>(),queue:string[]=[];
+/** 🔗️ Follows Cargo metadata suffixes across the original dependency search directories, keeping every selected artifact in its own root. */
+export function dependencyClosureV1(directories:readonly string[],direct:readonly string[],read:(path:string)=>Buffer=path=>readFileSync(path)):ReadonlyMap<string,readonly string[]>|undefined{
+ const bySuffix=new Map<string,Map<string,string[]>>();
+ for(const directory of directories){
+  let names:string[];try{names=readdirSync(directory);}catch{return undefined;}
+  for(const name of names){
+   const match=ARTIFACT.exec(name);if(!match)continue;
+   const origins=bySuffix.get(match[2]!)??new Map<string,string[]>();
+   const files=origins.get(directory)??[];
+   files.push(name);origins.set(directory,files);bySuffix.set(match[2]!,origins);
+  }
+ }
+ const selected=new Map<string,string[]>(),chosen=new Set<string>(),queue:string[]=[];
  const take=(suffix:string):void=>{if(chosen.has(suffix)||!bySuffix.has(suffix))return;chosen.add(suffix);queue.push(suffix);};
  for(const path of direct){const match=ARTIFACT.exec(path.split(/[\\/]/u).at(-1)!);if(match)take(match[2]!);}
  while(queue.length>0){
   if(chosen.size>limits.maximumClosureFiles)return undefined;
-  const suffix=queue.shift()!,files=bySuffix.get(suffix)!,source=files.find(file=>file.endsWith(".rmeta"))??files.find(file=>file.endsWith(".so")||file.endsWith(".dylib")||file.endsWith(".dll"))??files[0]!;
-  let text:string;try{text=read(join(directory,source)).toString("latin1");}catch{return undefined;}
-  for(const token of text.matchAll(/[0-9a-f]{16}/gu))take(token[0]);
+  const suffix=queue.shift()!;
+  for(const [directory,files] of bySuffix.get(suffix)!){
+   const current=selected.get(directory)??[];
+   current.push(...files);selected.set(directory,current);
+   const source=files.find(file=>file.endsWith(".rmeta"))??files.find(file=>file.endsWith(".so")||file.endsWith(".dylib")||file.endsWith(".dll"))??files[0]!;
+   let text:string;try{text=read(join(directory,source)).toString("latin1");}catch{return undefined;}
+   for(const token of text.matchAll(/[0-9a-f]{16}/gu))take(token[0]);
+  }
  }
- return[...chosen].sort().flatMap(suffix=>bySuffix.get(suffix)!).sort();
+ return new Map([...selected].map(([directory,files])=>[directory,files.sort()]));
 }

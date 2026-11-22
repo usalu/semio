@@ -21,7 +21,7 @@ test("the execution contract is closed, names six platforms and pins each bun ar
  expect(ajv.compile({$ref:"component#/definitions/ContractShape"})(contract)).toBe(true);
  expect(ajv.compile({$ref:"component#/definitions/AuditShape"})(schema.definitions.Audit.const)).toBe(true);
  expect(contract.platforms.map(row=>row.id).sort()).toEqual(["darwin-arm64","darwin-x64","linux-arm64","linux-x64","windows-arm64","windows-x64"]);
- expect(contract.remote.localFallback).toBe(false);
+ expect(contract.remote.localFallback).toBe("same-platform");
  expect(contract.platforms.some(row=>row.id===contract.remote.defaultPlatform)).toBe(true);
  const names=Object.keys(schema.definitions.Environment.properties);for(const name of Object.values(contract.environment))expect(names).toContain(name);
  for(const row of contract.platforms){
@@ -31,7 +31,7 @@ test("the execution contract is closed, names six platforms and pins each bun ar
   expect(api.bazelBunExecutableNameV1(row)).toBe(row.platform==="win32"?"bun.exe":"bun");
   expect(api.bazelBunToolPathV1(row)).toBe(`tools/bun/${row.id}/${api.bazelBunExecutableNameV1(row)}`);
  }
- expect(ajv.compile({$ref:"component#/definitions/ContractShape"})({...contract,remote:{...contract.remote,localFallback:true}})).toBe(false);
+ expect(ajv.compile({$ref:"component#/definitions/ContractShape"})({...contract,remote:{...contract.remote,localFallback:false}})).toBe(false);
  expect(ajv.compile({$ref:"component#/definitions/ContractShape"})({...contract,platforms:contract.platforms.slice(1)})).toBe(false);
 });
 
@@ -49,7 +49,7 @@ test("the remote execution switch agrees with an independent Python parser and t
  }
 });
 
-test("execution flags register only what hermetic actions need, route them to the remote pool without local fallback and leave cache flags alone",()=>{
+test("execution flags register only what hermetic actions need, route them to the remote pool, forbid the local fallback only where the local toolchain could not run the action, and leave cache flags alone",()=>{
  const admit=new Ajv({strict:true}).addSchema(schema,"component").compile({$ref:"component#/definitions/Flags"});
  for(const row of fixture.flags){
   const options={host:row.host,hermetic:row.hermetic,jobs:row.jobs,environment:row.environment as Record<string,string>};

@@ -62,7 +62,7 @@ function oracleCompare(store:string,who:Machine):{status:number|null;report:{ok:
 }
 
 type Step={machine:string;op:"write"|"remove"|"publish"|"follow"|"settle";path?:string;text?:string;mtime?:"future"};
-type Scenario={name:string;machines:string[];steps:Step[];expect:{tree?:Record<string,string>;absent?:string[];absentOn?:string[];absentFromStore?:string[];converged?:string[];lost?:Record<string,number>;lostTexts?:Record<string,string[]>;keptOn?:string[];silent?:string[]}};
+type Scenario={name:string;machines:string[];steps:Step[];expect:{tree?:Record<string,string>;absent?:string[];absentOn?:string[];absentFromStore?:string[];converged?:string[];lost?:Record<string,number>;lostTexts?:Record<string,string[]>;staleOn?:string[];keptOn?:string[];silent?:string[]}};
 
 for(const scenario of fixture.scenarios as unknown as Scenario[])test(`scenario ${scenario.name} converges and agrees with the Python oracle`,async()=>{
  const {store,machines}=await fleet(scenario.machines),by=new Map(machines.map(who=>[who.name,who] as const));
@@ -81,6 +81,7 @@ for(const scenario of fixture.scenarios as unknown as Scenario[])test(`scenario 
   if(wanted.converged!==undefined){const reference=shared(by.get(wanted.converged[0]!)!);for(const name of wanted.converged)expect(shared(by.get(name)!)).toEqual(reference);}
   for(const [name,count] of Object.entries(wanted.lost??{}))expect(lostFiles(by.get(name)!)).toHaveLength(count);
   for(const [name,texts] of Object.entries(wanted.lostTexts??{}))expect(lostFiles(by.get(name)!).map(file=>readFileSync(file,"utf8")).sort()).toEqual([...texts].sort());
+  for(const name of wanted.staleOn??[])expect(by.get(name)!.events.some(event=>event.event==="stale-base")).toBe(true);
   for(const name of wanted.keptOn??[])expect(by.get(name)!.events.some(event=>event.event==="kept")).toBe(true);
   for(const name of wanted.silent??[])expect(await readHeadV1(store,name)).toBeUndefined();
   const journal=walk(store).filter(file=>file.includes("origins")).map(file=>readFileSync(file,"utf8")).join("\n"),names=walk(store).join("\n");
@@ -103,26 +104,37 @@ test("conflict vectors give the same winner in TypeScript and in the Python orac
  if(python){const result=Bun.spawnSync([python,"-I",oracle,"conflicts",fixturePath],{stdout:"pipe",stderr:"pipe"});expect(result.exitCode).toBe(0);}
 });
 
-test("a newer offline edit is published once with a greater hlc, the loser is not echoed and further rounds are silent",async()=>{
+test("an offline edit written long after the remote event is not published, the fleet content stays and the edit is kept in lost",async()=>{
  const {store,machines}=await fleet(["a","b"]),[a,b]=machines as [Machine,Machine];
  write(a,"x.txt","base");await publish(a);await follow(b);
  write(b,"x.txt","b newer",true);write(a,"x.txt","a older");await publish(a);
- const remote=(await readHeadV1(store,"a"))!.hlc;
- expect(await follow(b)).toMatchObject({kept:1,applied:0,queued:0});
- const kept=b.events.find(event=>event.event==="kept")!;
- expect(kept).toMatchObject({path:"x.txt",reason:"newer-than-remote"});
- expect(validator("ProgressEvent")(JSON.parse(JSON.stringify(kept)))).toBe(true);
- const events=(await readEventsV1(store,"b",undefined)).events;
- expect(events).toHaveLength(1);
- expect(events[0]).toMatchObject({operation:"put",path:"x.txt",base:createHash("sha256").update("a older").digest("hex")});
- expect(events[0]!.hlc>remote).toBe(true);
- expect(b.events.some(event=>event.event==="overwritten")).toBe(false);
+ expect(await follow(b)).toMatchObject({kept:0,applied:1,queued:0});
+ const stale=b.events.find(event=>event.event==="stale-base")!;
+ expect(stale).toMatchObject({path:"x.txt"});
+ expect(validator("ProgressEvent")(JSON.parse(JSON.stringify(stale)))).toBe(true);
+ expect(await readHeadV1(store,"b")).toBeUndefined();
  const heads=async()=>JSON.stringify([await readHeadV1(store,"a"),await readHeadV1(store,"b")]);
  const before=await heads();
  await settle(machines);await settle(machines);
  expect(await heads()).toBe(before);
- expect(read(a,"x.txt")).toBe("b newer");expect(read(b,"x.txt")).toBe("b newer");
- expect(lostFiles(a)).toHaveLength(0);expect(lostFiles(b)).toHaveLength(0);
+ expect(read(a,"x.txt")).toBe("a older");expect(read(b,"x.txt")).toBe("a older");
+ expect(lostFiles(a)).toHaveLength(0);expect(lostFiles(b).map(file=>readFileSync(file,"utf8"))).toEqual(["b newer"]);
+});
+
+test("an offline edit written within the concurrency window still wins by modification time and is published once",async()=>{
+ const {store,machines}=await fleet(["a","b"]),[a,b]=machines as [Machine,Machine];
+ write(a,"w.txt","base");await publish(a);await follow(b);
+ write(a,"w.txt","a older");await publish(a);
+ const remote=(await readHeadV1(store,"a"))!.hlc;
+ write(b,"w.txt","b newer");utimesSync(at(b,"w.txt"),new Date(Date.now()+5000),new Date(Date.now()+5000));
+ expect(await follow(b)).toMatchObject({kept:1,applied:0,queued:0});
+ expect(b.events.some(event=>event.event==="stale-base")).toBe(false);
+ const events=(await readEventsV1(store,"b",undefined)).events;
+ expect(events).toHaveLength(1);
+ expect(events[0]).toMatchObject({operation:"put",path:"w.txt",base:createHash("sha256").update("a older").digest("hex")});
+ expect(events[0]!.hlc>remote).toBe(true);
+ await settle(machines);await settle(machines);
+ expect(read(a,"w.txt")).toBe("b newer");expect(read(b,"w.txt")).toBe("b newer");
 });
 
 test("a local delete has no modification time: the remote put wins, the file comes back and nothing is published",async()=>{
@@ -135,18 +147,19 @@ test("a local delete has no modification time: the remote put wins, the file com
  expect(await readHeadV1(store,"b")).toBeUndefined();
 });
 
-test("a restarted daemon publishes an offline edit that is newer than what the other machine published meanwhile",async()=>{
+test("a restarted daemon does not publish an offline edit written on a stale view over what the other machine published meanwhile",async()=>{
  const {store,machines}=await fleet(["a","b"]),[a,b]=machines as [Machine,Machine];
  write(a,"d.txt","base");await publish(a);await follow(b);await shut(b);
  write(a,"d.txt","a while b was down");await publish(a);
  write(b,"d.txt","b offline newer",true);
- const controller=new AbortController(),events:ReplicaEventV1[]=[],running=runV1(b.options,controller.signal,event=>events.push(event));
- await until(()=>events.some(event=>event.event==="kept"));
- await until(()=>existsSync(join(store,"v1","origins","b","head.json")));
+ await Bun.sleep(300);
+ const controller=new AbortController(),events:ReplicaEventV1[]=[],running=runV1({...b.options,concurrentEditMilliseconds:100},controller.signal,event=>events.push(event));
+ await until(()=>events.some(event=>event.event==="stale-base"));
  controller.abort();await running;
  await follow(a);
- expect(read(a,"d.txt")).toBe("b offline newer");expect(read(b,"d.txt")).toBe("b offline newer");
- expect(lostFiles(a)).toHaveLength(0);expect(lostFiles(b)).toHaveLength(0);
+ expect(await readHeadV1(store,"b")).toBeUndefined();
+ expect(read(a,"d.txt")).toBe("a while b was down");expect(read(b,"d.txt")).toBe("a while b was down");
+ expect(lostFiles(a)).toHaveLength(0);expect(lostFiles(b).map(file=>readFileSync(file,"utf8"))).toEqual(["b offline newer"]);
 },60000);
 
 test("the path book interns many unicode paths exactly once across pages and rejects lone surrogates",()=>{

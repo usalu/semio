@@ -190,7 +190,7 @@ pub fn default_terrain_document() -> GisTerrainSnapshot {
     let mut document = <GisTerrainSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(REUSE_TERRAIN_EXAMPLE_TEXT)
         .expect("bundled terrain document settings");
     let grid = crate::schema::imported_map::bundled_terrain_grid();
-    document.elevation_source = Some(crate::schema::snapshot::ElevationSource { bounds: grid.bounds, rows: grid.rows.clone() });
+    document.elevation_source = Some(crate::schema::snapshot::ElevationSource { bounds: grid.bounds, rows_millimetres: grid.rows_millimetres.clone(), missing_samples: grid.missing_samples.clone() });
     document.imported_map = Some(super::bundled_terrain_scenery().clone());
     document
 }
@@ -247,7 +247,38 @@ pub fn build_artifact_terrain_camera_json(document: &GisTerrainSnapshot, descrip
         return build_terrain_camera_json(descriptor);
     };
     let frame = artifact_terrain_camera_frame(document, descriptor);
-    let center_elevation = f64::from(source.rows[16][16]) * descriptor.exaggeration;
+    let rows = &source.rows_millimetres;
+    let width = rows[0].len();
+    let height = rows.len();
+    let west = (width - 1) / 2;
+    let east = width / 2;
+    let south = (height - 1) / 2;
+    let north = height / 2;
+    let centre_millimetres = if let Some(mask) = source.missing_samples.as_deref() {
+        use semio_framework_surface::terrain::TerrainGridTopology;
+        let topology = TerrainGridTopology::new([width as u32, height as u32], Some(mask));
+        let center = [(width - 1) as f64 / 2.0, (height - 1) as f64 / 2.0];
+        let sample_height = |vertex| {
+            let [column, row] = topology.sample(vertex);
+            f64::from(rows[row as usize][column as usize])
+        };
+        if let Some(face) = topology.face_at(center) {
+            face.vertices.into_iter().zip(face.weights(center)).map(|(vertex, weight)| sample_height(vertex) * weight).sum()
+        } else {
+            let distance = |vertex: u32| {
+                (f64::from(vertex % width as u32) - center[0]).powi(2)
+                    + (f64::from(vertex / width as u32) - center[1]).powi(2)
+            };
+            topology.faces().flat_map(|face| face.vertices)
+                .min_by(|&a, &b| distance(a).total_cmp(&distance(b)).then_with(|| a.cmp(&b)))
+                .map_or_else(|| {
+                    1000.0 * descriptor.overlays.positions.iter().filter_map(|position| position.elevation).fold(200.0, f64::max)
+                }, sample_height)
+        }
+    } else {
+        [rows[south][west], rows[south][east], rows[north][west], rows[north][east]].into_iter().map(f64::from).sum::<f64>() / 4.0
+    };
+    let center_elevation = centre_millimetres / 1000.0 * descriptor.exaggeration;
     terrain_camera_json(frame, (frame[2] * 2.5).max(10.0), center_elevation)
 }
 

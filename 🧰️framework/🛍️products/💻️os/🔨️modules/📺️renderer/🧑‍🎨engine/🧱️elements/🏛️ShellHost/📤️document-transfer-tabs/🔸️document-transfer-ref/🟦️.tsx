@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef } from "../../../⚛️react-po
 import { FOCUS_ROW_CONTROL_ACTION_ID, FOCUS_ROW_CONTROL_ARG_ROW, type LocalizedLabel, panelTabKindId, resolveWindowActions, SET_ACTIVE_TOOL_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID } from "@semio-tech/framework";
 import { focusedRowKeyV1, isFocusRowControlKeyV1 } from "../../🎯️focus-row-control/🟦️.ts";
 import { handleGripFocusKeyV1 } from "../../🎯️grip-focus/🟦️.ts";
-import { KEYBINDING_UNOWNED_CODE, keybindingUnownedTextV1, modeLayoutStacksV1, reservedShellChordsV1, resolveKeybindingTargetWindowV1, type WindowScopeInstanceV1, type WindowScopeKindV1, type WindowScopeLayoutNodeV1 } from "../../⌨️window-scope/🟦️.ts";
+import { KEYBINDING_UNOWNED_CODE, keybindingUnownedTextV1, modeLayoutStacksV1, reservedShellChordsV1, resolveKeybindingTargetWindowV1, type WindowScopeInstanceV1, type WindowScopeKindV1 } from "../../⌨️window-scope/🟦️.ts";
 import { SHELL_KEYBINDINGS, formatKeybindingShortcut, useShellKeydown } from "@semio-tech/ui-react";
 import { localDocumentOwnerIdentityForSessionV1 } from "../../../🗣️Interpreter/🧭️local-document-owner/🟦️.ts";
 import { actionStageKey } from "../../../🐚️Shell/🗃️state-shapes/🟦️.ts";
@@ -18,12 +18,14 @@ import { FRAMEWORK_CHAT_PANEL_ID } from "../../../📌️ChromePanels/🆔️pan
 import { focusAgentApprovalV1 } from "../../../🤖️AgentApprovals/🟦️.tsx";
 import type { ShellCoreAfterThemeDriverSettings } from "../../🎨️theme-driver-settings/🟦️.tsx";
 import type { buildScopeState } from "../🔶️scope/🟦️.tsx";
+import { installNaturalFileDropV1 } from "../../🛬️natural-file-drop/🟦️.ts";
 
 /** 🔹 Builds documentTransferRef, revealAgentApproval, revealedApprovalIdsRef, handleAppKeydown of useDocumentTransferAndTabs. */
 export function useDocumentTransferRefState({ exportDocumentArchive, importDocumentArchive, exportMediaFile, saveNaturalFile, openNaturalFile, trackDocumentTransfer, notifyDocumentTransfer, core, dispatch, agentBridge, session, focusedApp, focusedWindowInstancesRef, activeWindowIdRef, focusedSpawnedId, effectiveModeLayoutRef, uiKeybindingOverrides, activeUtilityByWindowIdRef, onAction, utilityGenerationFor, activeToolIdRef, toolGeneration, appLabelsOverlay, uiTerminology, uiLocale, showTransientNotice, clipboardFragmentRef, actionPaneExpandedByWindowIdRef, actionPaneStagedArgsByKeyRef, scope, openDocumentSessionsRef, localDocumentOwnerRegistry, panel, foldSpaceDirectoryRef, browserActorUiByRuntimeKeyRef, browserActorUiVersion, onBrowserActorIntent, onActionStable }: Pick<ReturnType<typeof buildScopeState>, "exportDocumentArchive" | "importDocumentArchive" | "exportMediaFile" | "saveNaturalFile" | "openNaturalFile" | "trackDocumentTransfer" | "notifyDocumentTransfer" | "dispatch" | "agentBridge" | "session" | "focusedApp" | "focusedWindowInstancesRef" | "activeWindowIdRef" | "focusedSpawnedId" | "effectiveModeLayoutRef" | "uiKeybindingOverrides" | "activeUtilityByWindowIdRef" | "onAction" | "utilityGenerationFor" | "activeToolIdRef" | "toolGeneration" | "appLabelsOverlay" | "uiTerminology" | "uiLocale" | "showTransientNotice" | "clipboardFragmentRef" | "actionPaneExpandedByWindowIdRef" | "actionPaneStagedArgsByKeyRef" | "scope" | "openDocumentSessionsRef" | "localDocumentOwnerRegistry" | "panel" | "foldSpaceDirectoryRef" | "browserActorUiByRuntimeKeyRef" | "browserActorUiVersion" | "onBrowserActorIntent" | "onActionStable"> & { readonly core: ShellCoreAfterThemeDriverSettings }) {
   const documentTransferRef = useRef({ exportDocumentArchive, importDocumentArchive, exportMediaFile, saveNaturalFile, openNaturalFile, trackDocumentTransfer, notifyDocumentTransfer });
   core.documentTransferRef = documentTransferRef;
   documentTransferRef.current = { exportDocumentArchive, importDocumentArchive, exportMediaFile, saveNaturalFile, openNaturalFile, trackDocumentTransfer, notifyDocumentTransfer };
+  useEffect(() => installNaturalFileDropV1(window, (file) => documentTransferRef.current.openNaturalFile(file)), []);
   //#endregion 📤️DocumentTransfer
   /** ⛩️ An approval request has ONE affordance: its row in the agent conversation. Revealing the chat panel
    * is what makes it visible; `focus` additionally moves keyboard focus onto it (the footer notice's
@@ -62,7 +64,7 @@ export function useDocumentTransferRefState({ exportDocumentArchive, importDocum
           .filter(Boolean);
       const instances = focusedWindowInstancesRef.current;
       const focusedWindowId = activeWindowIdRef.current ?? (focusedSpawnedId !== null ? (instances[0]?.id ?? null) : (session.viewState.windowId ?? session.viewState.activeWindowKindId ?? null));
-      const mounted: readonly WindowScopeInstanceV1[] = modeLayoutStacksV1(effectiveModeLayoutRef.current as WindowScopeLayoutNodeV1 | null)
+      const mounted: readonly WindowScopeInstanceV1[] = modeLayoutStacksV1(effectiveModeLayoutRef.current)
         .flatMap((stack) => [...stack.windowIds])
         .map((id) => ({ id, windowKindId: instances.find((instance) => instance.id === id)?.windowKindId ?? id }));
       const scopeKinds: readonly WindowScopeKindV1[] = keyApp.windowKinds.map((kind) => ({ id: kind.id, actionIds: resolveWindowActions(keyApp, kind).map((action) => action.id) }));
@@ -154,17 +156,19 @@ export function useDocumentTransferRefState({ exportDocumentArchive, importDocum
    * the other way around (no `ActiveSession.documentId` field exists — see `📓️w3-a-report.md`'s
    * "Design decisions"). This tiny scan intentionally runs on every render because `openDocument`
    * fills the ref while retaining the same visible session identity. */
-  const currentDocumentRuntimeKey = session ? resolveRuntimeKeyV1(openDocumentSessionsRef.current, session) : null;
+  const focusedProgram = core.focusedProgram;
+  const currentDocumentRuntimeKey = focusedProgram ? resolveRuntimeKeyV1(openDocumentSessionsRef.current, focusedProgram) : null;
   const currentDocumentEntry = currentDocumentRuntimeKey === null ? undefined : openDocumentSessionsRef.current.get(currentDocumentRuntimeKey);
-  const currentLocalDocumentOwnerIdentity = !session
+  const currentLocalDocumentOwnerIdentity = !focusedProgram
     ? null
     : localDocumentOwnerIdentityForSessionV1(
-      { pluginId: session.pluginId, appId: session.app.id, sessionInstanceId: session.instanceId },
-      currentDocumentRuntimeKey === null || currentDocumentEntry === undefined ? undefined : { runtimeKey: currentDocumentRuntimeKey, clientInstanceId: currentDocumentEntry.clientInstanceId },
+      { pluginId: focusedProgram.pluginId, appId: focusedProgram.appId, sessionInstanceId: focusedProgram.instanceId },
+      currentDocumentRuntimeKey !== null && currentDocumentEntry !== undefined ? { runtimeKey: currentDocumentRuntimeKey, clientInstanceId: currentDocumentEntry.clientInstanceId }
+        : focusedSpawnedId !== null ? { runtimeKey: `spawned:${focusedSpawnedId}`, clientInstanceId: focusedSpawnedId } : undefined,
     );
   const currentLocalDocumentOwner = currentLocalDocumentOwnerIdentity === null ? null : localDocumentOwnerRegistry.acquire(currentLocalDocumentOwnerIdentity);
   core.localSourceOwnerRef.current = currentLocalDocumentOwner;
-  const sourcePlugin = session === null ? null : core.loadedPluginsRef.current.find(entry => entry.handle.pluginId === session.pluginId)?.handle ?? null;
+  const sourcePlugin = focusedProgram === null ? null : core.loadedPluginsRef.current.find(entry => entry.handle.pluginId === focusedProgram.pluginId)?.handle ?? null;
   useEffect(() => {
     const owner = currentLocalDocumentOwnerIdentity === null ? null : localDocumentOwnerRegistry.acquire(currentLocalDocumentOwnerIdentity);
     core.localSourceOwnerRef.current = owner;
@@ -184,8 +188,11 @@ export function useDocumentTransferRefState({ exportDocumentArchive, importDocum
     foldSpaceDirectoryRef.current();
   }, [currentDocumentRuntimeKey, session?.pluginId, session?.instanceId]);
   const currentBrowserActorUi = useMemo(
-    () => currentDocumentRuntimeKey === null ? undefined : browserActorUiByRuntimeKeyRef.current.get(currentDocumentRuntimeKey),
-    [browserActorUiVersion, currentDocumentRuntimeKey],
+    () => {
+      const actor = currentDocumentRuntimeKey === null ? undefined : browserActorUiByRuntimeKeyRef.current.get(currentDocumentRuntimeKey);
+      return actor?.clientInstanceId === currentDocumentEntry?.clientInstanceId && actor?.sessionInstanceId === focusedProgram?.instanceId ? actor : undefined;
+    },
+    [browserActorUiVersion, currentDocumentRuntimeKey, currentDocumentEntry, focusedProgram?.instanceId],
   );
   /** 🎭️ The panel route of an actor-bound document ({@link BrowserActorPanelHostV1}): its intents go to the verified
    * actor under the panel's own surface; `browserActorUiVersion` moves when a panel store first arrives. */
@@ -193,12 +200,11 @@ export function useDocumentTransferRefState({ exportDocumentArchive, importDocum
     () => currentDocumentRuntimeKey === null || currentBrowserActorUi === undefined ? null : (tabId: string, intent: Parameters<typeof uiIntentToActionDescriptor>[0]) => onBrowserActorIntent(currentDocumentRuntimeKey, currentBrowserActorUi, tabId, intent),
     [currentBrowserActorUi, currentDocumentRuntimeKey, onBrowserActorIntent],
   );
-  const browserActorPanels = useMemo(
-    (): BrowserActorPanelHostV1 | null => !session || browserActorPanelIntent === null || currentBrowserActorUi?.sessionInstanceId !== session.instanceId ? null : { stores: new Map(currentBrowserActorUi.panels), onIntent: browserActorPanelIntent, onAction: onActionStable },
-    [browserActorPanelIntent, browserActorUiVersion, currentBrowserActorUi, onActionStable, session],
+  const focusedBrowserActorPanels = useMemo(
+    (): BrowserActorPanelHostV1 | null => browserActorPanelIntent === null || currentBrowserActorUi === undefined ? null : { stores: new Map(currentBrowserActorUi.panels), onIntent: browserActorPanelIntent, onAction: onActionStable },
+    [browserActorPanelIntent, browserActorUiVersion, currentBrowserActorUi, onActionStable],
   );
 
-  const focusedBrowserActorPanels = focusedSpawnedId === null ? browserActorPanels : null;
   const activeRightPanelTab = focusedApp?.panelTabs.find((tab) => panelAnchorForGroup(tab.group) === "top-right");
   const activePanelTabId = panel?.activePanelTab ?? (activeRightPanelTab ? panelTabKindId(activeRightPanelTab.kind) : undefined) ?? (focusedApp?.panelTabs[0] ? panelTabKindId(focusedApp.panelTabs[0].kind) : undefined);
   return { focusedBrowserActorPanels, revealAgentApproval, currentDocumentRuntimeKey, currentLocalDocumentOwner, currentBrowserActorUi };

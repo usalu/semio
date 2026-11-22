@@ -11,8 +11,14 @@ requested={s for s in sys.argv[1:] if not s.startswith('--')}
 unknown=requested-{p.parent.name for p in catalog}
 if unknown:raise SystemExit('Unknown staffage: '+', '.join(sorted(unknown)))
 assets=[p for p in catalog if (p.parent.name in requested if requested else '--all' in sys.argv or p.parent.parent.name.endswith(('objects','furniture','appliances')))]
+partition=next((opt for opt in sys.argv[1:] if opt.startswith('--shard=')),None)
+if partition:
+    index,count=map(int,partition.split('=',1)[1].split('/'))
+    if not 0<=index<count:raise ValueError(partition)
+    assets=sorted(assets,key=lambda p:(-p.stat().st_size,p.parent.name))[index::count]
 old={(r['id'],r['sha256'],r['validator']):r for r in ([json.loads(line) for line in out.read_text().splitlines()] if out.exists() else [])}
 bun=os.environ.get('BUN_EXE') or shutil.which('bun') or next(p for p in R.glob('.cache/b/t/*/bun/*/bun*') if p.name in ('bun','bun.exe'))
+os.environ["EQUIPMENT_BACKGROUND"]="1"
 for p in assets:
     name=p.parent.name;key=(name,digest(p),version())
     if key in old and old[key].get('findings')==[]:continue

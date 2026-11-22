@@ -57,6 +57,58 @@ async fn import_glb_to_body_has_faces() {
 }
 
 #[test]
+fn synchronous_import_publishes_the_open_shell_after_retirement() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🔣️import-rollback.json")).unwrap();
+    let positions: Vec<[f64; 3]> = serde_json::from_value(fixture["points"].clone()).unwrap();
+    let triangles: Vec<[u32; 3]> = serde_json::from_value(fixture["triangles"].clone()).unwrap();
+    let mesh = TriangleMesh {
+        positions: positions.into_iter().map(|[x, y, z]| Pnt3::new(x, y, z)).collect(),
+        normals: Vec::new(),
+        indices: triangles.into_iter().flatten().collect(),
+    };
+    let mut body = Body::new();
+    let EntityRef::Shell(shell) = import_triangle_mesh_to_body(&mut body, &mesh, 1e-6).unwrap() else {
+        panic!("open mesh requires a shell");
+    };
+    let expected = &fixture["openShell"];
+    let count = |name| expected[name].as_u64().unwrap() as usize;
+    let mut uses = std::collections::HashMap::new();
+    for (_, coedge) in body.coedges.iter() {
+        *uses.entry(coedge.edge).or_insert(0) += 1;
+    }
+    assert_eq!(body.shells.get(shell).unwrap().faces.len(), count("faces"));
+    assert_eq!(body.edges.len(), count("edges"));
+    assert_eq!(uses.values().filter(|&&uses| uses == 1).count(), count("boundaryEdges"));
+    assert!(body.solids.is_empty());
+}
+
+#[test]
+fn synchronous_import_rollback_preserves_the_callers_live_geometry() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🔣️import-rollback.json")).unwrap();
+    let positions: Vec<[f64; 3]> = serde_json::from_value(fixture["points"].clone()).unwrap();
+    let first: [u32; 3] = serde_json::from_value(fixture["triangles"][0].clone()).unwrap();
+    let second: [u32; 3] = serde_json::from_value(fixture["lateRefusal"]["triangle"].clone()).unwrap();
+    let mesh = TriangleMesh {
+        positions: positions.into_iter().map(|[x, y, z]| Pnt3::new(x, y, z)).collect(),
+        normals: Vec::new(),
+        indices: first.into_iter().chain(second).collect(),
+    };
+    let mut body = Body::new();
+    let solid = make_box(&mut body, 1.0, 2.0, 3.0, &mut OpRecorder::new()).unwrap();
+    let entity_counts = body.entity_counts();
+    let faces = body.solid_faces(solid);
+    let obj = export_solid_obj(&body, solid, 0.1).unwrap();
+
+    assert_eq!(
+        import_triangle_mesh_to_body(&mut body, &mesh, 1e-6),
+        Err(KernelError::InvalidInput(fixture["lateRefusal"]["message"].as_str().unwrap().into())),
+    );
+    assert_eq!(body.entity_counts(), entity_counts);
+    assert_eq!(body.solid_faces(solid), faces);
+    assert_eq!(export_solid_obj(&body, solid, 0.1).unwrap(), obj);
+}
+
+#[test]
 fn original_import_rollback_debits_each_caller_funded_body_turn() {
     use semio_framework_value::AuthoringWallet;
     let fixture: serde_json::Value = serde_json::from_str(include_str!("🔣️import-rollback.json")).unwrap();
@@ -93,8 +145,9 @@ fn original_import_rollback_debits_each_caller_funded_body_turn() {
         };
         let start = body.faces.len();
         let mut wallet = AuthoringWallet::new(grant, u128::from(work));
-        let turn = wallet.run(grant, work, |effect| {
-            let result = cursor.close_original_step(&mut body, effect);
+        let turn = wallet.run_invoked(grant, work, |effect| {
+            let mut effect = effect.reborrow(grant, work).unwrap();
+            let result = cursor.close_original_step(&mut body, &mut effect);
             assert_eq!(result.work, effect.performed_work());
             result.result
         }).unwrap().unwrap();

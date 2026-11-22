@@ -54,6 +54,7 @@ fn every_mutation() -> Vec<Process3dMutation> {
         Process3dMutation::ReplaceMachineCapabilities(ReplaceMachineCapabilities { id: "machine-1".into(), new_capabilities: vec![] }),
         Process3dMutation::MoveStock(MoveStock { new_pose: Pose { position: [1.0, 0.0, 0.0], ..Pose::default() } }),
         Process3dMutation::ChangeStockLabel(ChangeStockLabel { new_label: "Beam".into() }),
+        Process3dMutation::ResizeStock(semio_s_artifact_process_process3d_mut_stock::resize_stock::ResizeStock { field: "width".into(), size: 2.0 }),
         Process3dMutation::ReplaceStockSolid(ReplaceStockSolid { new_solid: brep_child_handle("stock", &brep_snapshot_for_working_solid(&WorkingSolid::Sphere { radius: 0.5 })) }),
     ]
 }

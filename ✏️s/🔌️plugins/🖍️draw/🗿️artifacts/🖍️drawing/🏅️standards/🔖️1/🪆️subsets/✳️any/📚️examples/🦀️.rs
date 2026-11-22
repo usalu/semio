@@ -17,7 +17,26 @@ use std::sync::OnceLock;
 /// registering it would advertise an id `setActiveExample` could never parse into a document.
 pub fn examples() -> &'static [ExampleSource] {
     static EXAMPLES: OnceLock<Vec<ExampleSource>> = OnceLock::new();
-    EXAMPLES.get_or_init(|| vec![crate::demo::source()]).as_slice()
+    EXAMPLES.get_or_init(|| vec![demo::source(), ExampleSource::new(
+        "blank",
+        semio_ui_locale::LocalizedLabel::native("Blank Drawing", "Leere Zeichnung"),
+        include_str!("../🖼️assets/📄️blank/🗣️.dsl.semio"),
+        "file",
+    )]).as_slice()
+}
+
+
+/// 📝️ The selectable blank document starts with an empty 1024-square artboard.
+#[cfg(test)]
+#[test]
+fn registered_blank_starts_with_no_layers_or_assets() {
+    let source = examples().iter().find(|example| example.id() == "blank").expect("registered blank drawing");
+    let document = semio_s_artifact_draw_drawing_model::io::text::snapshot::parse_dsl(&source.document_json()).expect("parse registered blank drawing");
+    assert_eq!(document.id, "blank");
+    assert!(document.layers.is_empty());
+    assert!(document.assets.is_empty());
+    let artboard = document.artboard.expect("blank drawing artboard");
+    assert_eq!((artboard.width, artboard.height), (1024.0, 1024.0));
 }
 
 //#region 🪢️TaxonomyMounts

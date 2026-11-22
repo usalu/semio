@@ -67,9 +67,8 @@ fn invalid_utf8_keeps_its_paid_prefix_and_failure_owner(){
    if outcome.value.is_err(){
     let receiver=source.receiver().unwrap();
     let parser=receiver.parser.as_ref().unwrap();
-    assert_eq!(receiver.parse_work_quote(wire.len(),0,10).unwrap(),0);
-    assert_eq!(receiver.parse_work_quote(wire.len(),1,10).unwrap(),1);
-    assert_eq!(receiver.parse_work_quote(wire.len(),10,1).unwrap(),1);
+    assert_eq!(parser.owned_turn_quote(&wire,0,10),(0,0));
+    assert_eq!(parser.owned_turn_quote(&wire,1,10),(1,0));
     assert!(matches!(receiver.syntax_error(),Some(JsonError::InvalidUtf8)));
     assert!(receiver.failure().is_some());
     assert!(receiver.action.terminal_is_empty());

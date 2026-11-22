@@ -13,7 +13,6 @@ import labelResolutionFixture from "../../🧱️elements/🛠️ShellHelpers/�
 import { cleanup, fireEvent, render } from "@semio-tech/ui-react/test";
 import { describe, expect, it, vi } from "vitest";
 import { type WindowMeasure } from "@semio-tech/framework";
-import { uiDataLabel } from "@semio-tech/ui-react";
 import { WorldOrbitProjectionSwitchPane, world3dProjectionPaneElementId } from "../../🧱️elements/🌐️World3dHost/🪟️window-view-store/🟦️.tsx";
 import { buildUiRefreshRequest, dispatchOsCommand, classifyWindowLayoutChange, buildNoteShellCommandAction, isShellOwnedCommandId, TUTORIAL_RECORDING_EXCLUDED_ACTION_IDS, resolveFrameworkLayoutSeed, retitleWindowLayoutNode, windowMeasureTreeContainsId, FrameworkOsShell, TutorialRecorder, synthesizeLocalizedLabel, resolveManifestLabel } from "../../🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx";
 import { encodeWorldProjectionTemplateId } from "@semio-tech/infinite-world-r3f";
@@ -127,7 +126,7 @@ describe("resolveFrameworkLayoutSeed — multi-pane default layouts", () => {
 
   it("does not infer focus when an app has no explicit layout", () => {
     const seed = resolveFrameworkLayoutSeed(undefined, [{ id: "main", label: "Main" }], emptyLabels, "native", "en");
-    expect(seed.modeLayout).toEqual({ kind: "stack", children: [{ kind: "window", id: "main" }] });
+    expect(seed.modeLayout).toEqual({ kind: "stack", activeWindowId: "main", children: [{ kind: "window", windowKindId: "main" }] });
     expect(seed).not.toHaveProperty("activeWindowId");
   });
 
@@ -137,16 +136,17 @@ describe("resolveFrameworkLayoutSeed — multi-pane default layouts", () => {
     const seed = resolveFrameworkLayoutSeed(
       {
         root: {
-          kind: "row",
+          kind: "split",
+          axis: "horizontal",
           children: [
             {
               kind: "stack",
-              size: 100 / 3,
+              size: 1 / 3,
               children: [{ kind: "window", windowKindId: "puzzle3d-main", title: "Top", instanceId: "puzzle3d-main-top", templateId: topTemplate }],
             },
             {
               kind: "stack",
-              size: 200 / 3,
+              size: 2 / 3,
               children: [{ kind: "window", windowKindId: "puzzle3d-main", title: "Perspective", instanceId: "puzzle3d-main-perspective", templateId: perspectiveTemplate }],
             },
           ],
@@ -158,10 +158,11 @@ describe("resolveFrameworkLayoutSeed — multi-pane default layouts", () => {
       "en",
     );
     expect(seed.modeLayout).toEqual({
-      kind: "row",
+      kind: "split",
+      axis: "horizontal",
       children: [
-        { kind: "stack", size: 100 / 3, children: [{ kind: "window", id: "puzzle3d-main-top", title: "Top" }] },
-        { kind: "stack", size: 200 / 3, children: [{ kind: "window", id: "puzzle3d-main-perspective", title: "Perspective" }] },
+        { kind: "stack", size: 1 / 3, children: [{ kind: "window", windowKindId: "puzzle3d-main", instanceId: "puzzle3d-main-top", title: "Top", templateId: topTemplate }] },
+        { kind: "stack", size: 2 / 3, children: [{ kind: "window", windowKindId: "puzzle3d-main", instanceId: "puzzle3d-main-perspective", title: "Perspective", templateId: perspectiveTemplate }] },
       ],
     });
     expect(seed.extraInstances).toEqual([
@@ -181,16 +182,17 @@ describe("resolveFrameworkLayoutSeed — multi-pane default layouts", () => {
     const seed = resolveFrameworkLayoutSeed(
       {
         root: {
-          kind: "row",
+          kind: "split",
+          axis: "horizontal",
           children: [
             {
               kind: "stack",
-              size: 100 / 3,
+              size: 1 / 3,
               children: [{ kind: "window", windowKindId: "puzzle3d-main", title: "Top", instanceId: "puzzle3d-main-top", templateId: topTemplate }],
             },
             {
               kind: "stack",
-              size: 200 / 3,
+              size: 2 / 3,
               children: [{ kind: "window", windowKindId: "puzzle3d-main", title: "Perspective", instanceId: "puzzle3d-main-perspective", templateId: perspectiveTemplate }],
             },
           ],
@@ -218,19 +220,19 @@ describe("resolveFrameworkLayoutSeed — multi-pane default layouts", () => {
     ];
     const layout = {
       kind: "stack" as const,
-      children: [{ kind: "window" as const, id: "main", title: uiDataLabel("Main Window") }],
+      children: [{ kind: "window" as const, windowKindId: "main", title: "Main Window" }],
     };
 
     const retitledDeNative = retitleWindowLayoutNode(layout, windowKinds, [], "native", "de", {});
     expect(retitledDeNative).toEqual({
       kind: "stack",
-      children: [{ kind: "window", id: "main", title: "Hauptfenster" }],
+      children: [{ kind: "window", windowKindId: "main", title: "Hauptfenster" }],
     });
 
     const retitledDeReuse = retitleWindowLayoutNode(layout, windowKinds, [], "reuse", "de", {});
     expect(retitledDeReuse).toEqual({
       kind: "stack",
-      children: [{ kind: "window", id: "main", title: "Hauptkomponente" }],
+      children: [{ kind: "window", windowKindId: "main", title: "Hauptkomponente" }],
     });
   });
 
@@ -247,56 +249,57 @@ describe("resolveFrameworkLayoutSeed — multi-pane default layouts", () => {
     const extraInstances = [{ id: "puzzle3d-main-top", windowKindId: "puzzle3d-main", title: "Top" }];
     const layout = {
       kind: "stack" as const,
-      children: [{ kind: "window" as const, id: "puzzle3d-main-top", title: uiDataLabel("Top") }],
+      children: [{ kind: "window" as const, windowKindId: "puzzle3d-main", instanceId: "puzzle3d-main-top", title: "Top" }],
     };
 
     const retitled = retitleWindowLayoutNode(layout, windowKinds, extraInstances, "reuse", "de", {});
     expect(retitled).toEqual({
       kind: "stack",
-      children: [{ kind: "window", id: "puzzle3d-main-top", title: "Top" }],
+      children: [{ kind: "window", windowKindId: "puzzle3d-main", instanceId: "puzzle3d-main-top", title: "Top" }],
     });
   });
 });
 
 describe("classifyWindowLayoutChange", () => {
   const twoStackRow = (leftSize: number, rightSize: number) => ({
-    kind: "row" as const,
-    size: 100,
+    kind: "split" as const,
+    axis: "horizontal" as const,
+    size: 1,
     children: [
-      { kind: "stack" as const, size: leftSize, children: [{ kind: "window" as const, id: "a" }] },
-      { kind: "stack" as const, size: rightSize, children: [{ kind: "window" as const, id: "b" }] },
+      { kind: "stack" as const, size: leftSize, children: [{ kind: "window" as const, windowKindId: "a" }] },
+      { kind: "stack" as const, size: rightSize, children: [{ kind: "window" as const, windowKindId: "b" }] },
     ],
   });
 
   it("returns null when the layout is identical (deep-equal, not just same reference)", () => {
-    expect(classifyWindowLayoutChange(twoStackRow(50, 50), twoStackRow(50, 50))).toBeNull();
-    const same = twoStackRow(50, 50);
+    expect(classifyWindowLayoutChange(twoStackRow(0.5, 0.5), twoStackRow(0.5, 0.5))).toBeNull();
+    const same = twoStackRow(0.5, 0.5);
     expect(classifyWindowLayoutChange(same, same)).toBeNull();
   });
 
   it("returns null for a pure active-window-flag change (skeleton and sizes both unchanged)", () => {
     const previous = {
       kind: "stack" as const,
-      size: 100,
-      activeId: "a",
+      size: 1,
+      activeWindowId: "a",
       children: [
-        { kind: "window" as const, id: "a" },
-        { kind: "window" as const, id: "b" },
+        { kind: "window" as const, windowKindId: "a" },
+        { kind: "window" as const, windowKindId: "b" },
       ],
     };
-    const next = { ...previous, activeId: "b" };
+    const next = { ...previous, activeWindowId: "b" };
     expect(classifyWindowLayoutChange(previous, next)).toBeNull();
   });
 
   it("returns 'resize' when only pane sizes differ", () => {
-    expect(classifyWindowLayoutChange(twoStackRow(50, 50), twoStackRow(30, 70))).toBe("resize");
+    expect(classifyWindowLayoutChange(twoStackRow(0.5, 0.5), twoStackRow(0.3, 0.7))).toBe("resize");
   });
 
   it("returns 'rearrange' when window ids/nesting structure differ (drag-to-new-position, split, close)", () => {
-    const previous = twoStackRow(50, 50);
+    const previous = twoStackRow(0.5, 0.5);
     const swapped = { ...previous, children: [previous.children[1]!, previous.children[0]!] };
     expect(classifyWindowLayoutChange(previous, swapped)).toBe("rearrange");
-    const closed = { kind: "stack" as const, children: [{ kind: "window" as const, id: "a" }] };
+    const closed = { kind: "stack" as const, children: [{ kind: "window" as const, windowKindId: "a" }] };
     expect(classifyWindowLayoutChange(previous, closed)).toBe("rearrange");
     expect(classifyWindowLayoutChange(null, previous)).toBe("rearrange");
     expect(classifyWindowLayoutChange(previous, null)).toBe("rearrange");

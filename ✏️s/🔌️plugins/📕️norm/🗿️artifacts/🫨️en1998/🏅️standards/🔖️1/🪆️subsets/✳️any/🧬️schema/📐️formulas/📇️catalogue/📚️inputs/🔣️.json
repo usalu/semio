@@ -1390,6 +1390,1054 @@
       "unit": "1",
       "unitId": "One",
       "example": 620000.0
+    },
+    {
+      "key": "retrofit_basis",
+      "scope": "C98-15",
+      "en": "Monolithic composite action and material basis",
+      "de": "Monolithischer Verbund und Materialgrundlagen",
+      "confidence": "high",
+      "kind": "choice",
+      "choices": [
+        {
+          "value": "unconfirmed",
+          "en": "Unconfirmed",
+          "de": "Unbestätigt"
+        },
+        {
+          "value": "confirmed",
+          "en": "Composite action, full axial load and jacket concrete properties confirmed. Material factors accounted for.",
+          "de": "Verbund, volle Normalkraft und Eigenschaften des Mantelbetons bestätigt. Materialbeiwerte berücksichtigt."
+        }
+      ],
+      "example": "confirmed"
+    },
+    {
+      "key": "retrofit_shear",
+      "scope": "C98-15",
+      "en": "Monolithic shear resistance before the overall factor",
+      "de": "Monolithischer Schubwiderstand vor dem Gesamtbeiwert",
+      "confidence": "high",
+      "kind": "number",
+      "unit": "N",
+      "unitId": "Newton",
+      "example": 120000.0
+    },
+    {
+      "key": "retrofit_moment",
+      "scope": "C98-15",
+      "en": "Monolithic yield moment",
+      "de": "Monolithisches Fließmoment",
+      "confidence": "high",
+      "kind": "number",
+      "unit": "N·m",
+      "unitId": "NewtonMetre",
+      "example": 150000.0
+    },
+    {
+      "key": "retrofit_yield_rotation",
+      "scope": "C98-15",
+      "en": "Monolithic yield chord rotation",
+      "de": "Monolithische Sehnenrotation beim Fließen",
+      "confidence": "high",
+      "kind": "number",
+      "unit": "rad",
+      "unitId": "Radian",
+      "example": 0.016
+    },
+    {
+      "key": "retrofit_ultimate_rotation",
+      "scope": "C98-15",
+      "en": "Monolithic ultimate chord rotation before the overall factor",
+      "de": "Monolithische Grenzsehnenrotation vor dem Gesamtbeiwert",
+      "confidence": "high",
+      "kind": "number",
+      "unit": "rad",
+      "unitId": "Radian",
+      "example": 0.035
+    },
+    {
+      "key": "retrofit_basis",
+      "scope": "C98-16",
+      "en": "Condition for adding the jacket resistance",
+      "de": "Voraussetzung für den zusätzlichen Mantelwiderstand",
+      "confidence": "high",
+      "kind": "choice",
+      "choices": [
+        {
+          "value": "unconfirmed",
+          "en": "Unconfirmed",
+          "de": "Unbestätigt"
+        },
+        {
+          "value": "confirmed",
+          "en": "Applicability and elastic jacket behaviour confirmed",
+          "de": "Anwendbarkeit und elastisches Mantelverhalten bestätigt"
+        }
+      ],
+      "example": "confirmed"
+    },
+    {
+      "key": "jacket_depth",
+      "scope": "C98-16",
+      "en": "Depth of the existing section",
+      "de": "Höhe des Bestandsquerschnitts",
+      "confidence": "high",
+      "kind": "number",
+      "unit": "m",
+      "unitId": "Metre",
+      "example": 0.6
+    },
+    {
+      "key": "jacket_thickness",
+      "scope": "C98-16",
+      "en": "Thickness of each strap or plate",
+      "de": "Dicke eines Bandes oder Blechs",
+      "confidence": "high",
+      "kind": "number",
+      "unit": "m",
+      "unitId": "Metre",
+      "example": 0.004
+    },
+    {
+      "key": "jacket_width_ratio",
+      "scope": "C98-16",
+      "en": "Strap width over spacing, use 1 for continuous plates",
+      "de": "Bandbreite geteilt durch Abstand, bei durchgehenden Blechen 1",
+      "confidence": "high",
+      "kind": "number",
+      "unit": "1",
+      "unitId": "One",
+      "example": 0.4
+    },
+    {
+      "key": "jacket_strut_angle",
+      "scope": "C98-16",
+      "en": "Strut angle to the member axis",
+      "de": "Druckstrebenwinkel zur Bauteilachse",
+      "confidence": "high",
+      "kind": "number",
+      "unit": "°",
+      "unitId": "Degree",
+      "example": 45.0
+    },
+    {
+      "key": "jacket_strap_angle",
+      "scope": "C98-16",
+      "en": "Strap angle to the member axis, use 90° for continuous plates",
+      "de": "Bandwinkel zur Bauteilachse, bei durchgehenden Blechen 90°",
+      "confidence": "high",
+      "kind": "number",
+      "unit": "°",
+      "unitId": "Degree",
+      "example": 90.0
+    },
+    {
+      "key": "jacket_design_strength",
+      "scope": "C98-16",
+      "en": "Design yield strength of jacket steel",
+      "de": "Bemessungsstreckgrenze des Mantelstahls",
+      "confidence": "high",
+      "kind": "number",
+      "unit": "Pa",
+      "unitId": "Pascal",
+      "example": 355000000.0
+    },
+    {
+      "key": "jacket_splice_location",
+      "scope": "C98-17",
+      "en": "Splice location and bolt layout at the column base",
+      "de": "Stoßlage und Schraubenanordnung am Stützenfuß",
+      "confidence": "high",
+      "kind": "choice",
+      "choices": [
+        {
+          "value": "unconfirmed",
+          "en": "Unconfirmed",
+          "de": "Unbestätigt"
+        },
+        {
+          "value": "away",
+          "en": "Splice away from the column base",
+          "de": "Stoß außerhalb des Stützenfußes"
+        },
+        {
+          "value": "base-confirmed",
+          "en": "At the base, with rows at the splice top and one-third from the bottom",
+          "de": "Am Fuß mit Reihen am oberen Stoßende und bei einem Drittel von unten"
+        },
+        {
+          "value": "base-unverified",
+          "en": "At the base, required row positions unconfirmed",
+          "de": "Am Fuß, erforderliche Reihenlagen unbestätigt"
+        }
+      ],
+      "example": "base-confirmed"
+    },
+    {
+      "key": "jacket_splice_length",
+      "scope": "C98-17",
+      "en": "Length of the lap region",
+      "de": "Länge des Übergreifungsbereichs",
+      "confidence": "high",
+      "kind": "number",
+      "unit": "m",
+      "unitId": "Metre",
+      "example": 0.8
+    },
+    {
+      "key": "jacket_length",
+      "scope": "C98-17",
+      "en": "Length of the jacket",
+      "de": "Länge des Stahlmantels",
+      "confidence": "high",
+      "kind": "number",
+      "unit": "m",
+      "unitId": "Metre",
+      "example": 1.25
+    },
+    {
+      "key": "jacket_bolts_near",
+      "scope": "C98-17",
+      "en": "Bolt rows on the near face normal to loading",
+      "de": "Schraubenreihen auf der nahen Seite senkrecht zur Belastung",
+      "confidence": "high",
+      "kind": "number",
+      "unit": "1",
+      "unitId": "One",
+      "example": 2.0
+    },
+    {
+      "key": "jacket_bolts_far",
+      "scope": "C98-17",
+      "en": "Bolt rows on the opposite face normal to loading",
+      "de": "Schraubenreihen auf der gegenüberliegenden Seite senkrecht zur Belastung",
+      "confidence": "high",
+      "kind": "number",
+      "unit": "1",
+      "unitId": "One",
+      "example": 2.0
+    },
+    {
+      "key": "frp_basis",
+      "scope": "C98-18",
+      "en": "Qualification of the FRP and concrete resistance inputs",
+      "de": "Qualifikation der Faserverbund- und Betonwiderstände",
+      "confidence": "high",
+      "kind": "choice",
+      "choices": [
+        {
+          "value": "unconfirmed",
+          "en": "Unconfirmed",
+          "de": "Unbestätigt"
+        },
+        {
+          "value": "confirmed",
+          "en": "Section, materials and concrete resistances confirmed",
+          "de": "Querschnitt, Werkstoffe und Betonwiderstände bestätigt"
+        }
+      ],
+      "example": "confirmed"
+    },
+    {
+      "key": "frp_configuration",
+      "scope": "C98-18",
+      "en": "Section and FRP arrangement",
+      "de": "Querschnitt und Faserverbundanordnung",
+      "confidence": "high",
+      "kind": "choice",
+      "choices": [
+        {
+          "value": "closed",
+          "en": "Rectangular, fully wrapped or properly anchored",
+          "de": "Rechteckig, vollständig umwickelt oder ausreichend verankert"
+        },
+        {
+          "value": "u",
+          "en": "Rectangular, U-shaped",
+          "de": "Rechteckig, U-förmig"
+        },
+        {
+          "value": "side",
+          "en": "Rectangular, side bonded",
+          "de": "Rechteckig, seitlich verklebt"
+        },
+        {
+          "value": "circular",
+          "en": "Circular column, fully wrapped",
+          "de": "Runde Stütze, vollständig umwickelt"
+        }
+      ],
+      "example": "closed"
+    },
+    {
+      "key": "frp_layout",
+      "scope": "C98-18",
+      "en": "Rectangular section FRP layout",
+      "de": "Faserverbundanordnung am Rechteckquerschnitt",
+      "confidence": "high",
+      "kind": "choice",
+      "choices": [
+        {
+          "value": "strips",
+          "en": "Strips",
+          "de": "Streifen"
+        },
+        {
+          "value": "sheet",
+          "en": "Continuous sheet",
+          "de": "Durchgehende Bahn"
+        }
+      ],
+      "example": "strips"
+    },
+    {
+      "key": "frp_member",
+      "scope": "C98-18",
+      "en": "Concrete member type",
+      "de": "Betonbauteilart",
+      "confidence": "high",
+      "kind": "choice",
+      "choices": [
+        {
+          "value": "beam",
+          "en": "Beam",
+          "de": "Balken"
+        },
+        {
+          "value": "column",
+          "en": "Column",
+          "de": "Stütze"
+        },
+        {
+          "value": "wall",
+          "en": "Shear wall",
+          "de": "Schubwand"
+        }
+      ],
+      "example": "beam"
+    },
+    {
+      "key": "frp_thickness",
+      "scope": "C98-18",
+      "en": "Single-side FRP thickness",
+      "de": "Dicke des Faserverbunds auf einer Seite",
+      "confidence": "high",
+      "kind": "number",
+      "unit": "mm",
+      "unitId": "Millimetre",
+      "example": 1.2
+    },
+    {
+      "key": "frp_modulus",
+      "scope": "C98-18",
+      "en": "FRP elastic modulus",
+      "de": "Elastizitätsmodul des Faserverbunds",
+      "confidence": "high",
+      "kind": "number",
+      "unit": "MPa",
+      "unitId": "NewtonPerSquareMillimetre",
+      "example": 165000.0
+    },
+    {
+      "key": "frp_diameter",
+      "scope": "C98-18",
+      "en": "Circular column diameter",
+      "de": "Durchmesser der runden Stütze",
+      "confidence": "high",
+      "kind": "number",
+      "unit": "mm",
+      "unitId": "Millimetre",
+      "example": 400.0
+    },
+    {
+      "key": "frp_depth",
+      "scope": "C98-18",
+      "en": "Effective rectangular depth",
+      "de": "Statische Nutzhöhe des Rechteckquerschnitts",
+      "confidence": "high",
+      "kind": "number",
+      "unit": "mm",
+      "unitId": "Millimetre",
+      "example": 450.0
+    },
+    {
+      "key": "frp_radius",
+      "scope": "C98-18",
+      "en": "Corner radius for a closed wrap",
+      "de": "Eckradius bei geschlossener Umwicklung",
+      "confidence": "high",
+      "kind": "number",
+      "unit": "mm",
+      "unitId": "Millimetre",
+      "example": 20.0
+    },
+    {
+      "key": "frp_web_width",
+      "scope": "C98-18",
+      "en": "Web width for a closed wrap",
+      "de": "Stegbreite bei geschlossener Umwicklung",
+      "confidence": "high",
+      "kind": "number",
+      "unit": "mm",
+      "unitId": "Millimetre",
+      "example": 280.0
+    },
+    {
+      "key": "frp_ultimate",
+      "scope": "C98-18",
+      "en": "Ultimate FRP tension strength for a closed wrap",
+      "de": "Zugfestigkeit des Faserverbunds bei geschlossener Umwicklung",
+      "confidence": "high",
+      "kind": "number",
+      "unit": "MPa",
+      "unitId": "NewtonPerSquareMillimetre",
+      "example": 2400.0
+    },
+    {
+      "key": "frp_web_height",
+      "scope": "C98-18",
+      "en": "Web height for sheets",
+      "de": "Steghöhe bei durchgehenden Bahnen",
+      "confidence": "high",
+      "kind": "number",
+      "unit": "mm",
+      "unitId": "Millimetre",
+      "example": 380.0
+    },
+    {
+      "key": "frp_strip_width",
+      "scope": "C98-18",
+      "en": "Width of a strip perpendicular to the fibres",
+      "de": "Streifenbreite senkrecht zur Faserrichtung",
+      "confidence": "high",
+      "kind": "number",
+      "unit": "mm",
+      "unitId": "Millimetre",
+      "example": 110.0
+    },
+    {
+      "key": "frp_strip_spacing",
+      "scope": "C98-18",
+      "en": "Spacing of strips perpendicular to the fibres",
+      "de": "Streifenabstand senkrecht zur Faserrichtung",
+      "confidence": "high",
+      "kind": "number",
+      "unit": "mm",
+      "unitId": "Millimetre",
+      "example": 210.0
+    },
+    {
+      "key": "frp_strut_angle",
+      "scope": "C98-18",
+      "en": "Strut inclination to the member axis",
+      "de": "Druckstrebenwinkel zur Bauteilachse",
+      "confidence": "high",
+      "kind": "number",
+      "unit": "°",
+      "unitId": "Degree",
+      "example": 35.0
+    },
+    {
+      "key": "frp_fibre_angle",
+      "scope": "C98-18",
+      "en": "Fibre inclination to the member axis",
+      "de": "Faserwinkel zur Bauteilachse",
+      "confidence": "high",
+      "kind": "number",
+      "unit": "°",
+      "unitId": "Degree",
+      "example": 90.0
+    },
+    {
+      "key": "frp_concrete_tensile",
+      "scope": "C98-18",
+      "en": "Mean concrete tensile strength",
+      "de": "Mittlere Betonzugfestigkeit",
+      "confidence": "high",
+      "kind": "number",
+      "unit": "MPa",
+      "unitId": "NewtonPerSquareMillimetre",
+      "example": 2.9
+    },
+    {
+      "key": "frp_debonding_factor",
+      "scope": "C98-18",
+      "en": "Applicable partial factor for FRP debonding",
+      "de": "Maßgebender Teilsicherheitsbeiwert für die Ablösung",
+      "confidence": "high",
+      "kind": "number",
+      "unit": "1",
+      "unitId": "One",
+      "example": 1.5
+    },
+    {
+      "key": "frp_existing",
+      "scope": "C98-18",
+      "en": "Existing member shear resistance before the diagonal cap",
+      "de": "Querkraftwiderstand des Bestandsbauteils vor der Druckstrebengrenze",
+      "confidence": "high",
+      "kind": "number",
+      "unit": "N",
+      "unitId": "Newton",
+      "example": 100000.0
+    },
+    {
+      "key": "frp_web_cap",
+      "scope": "C98-18",
+      "en": "Web-crushing limit according to EN 1992-1-1",
+      "de": "Druckstrebenwiderstand nach EN 1992-1-1",
+      "confidence": "high",
+      "kind": "number",
+      "unit": "N",
+      "unitId": "Newton",
+      "example": 220000.0
+    },
+    {
+      "key": "frp_shear_span",
+      "scope": "C98-18",
+      "en": "Column shear-span ratio Lv/h",
+      "de": "Schubschlankheit Lv/h der Stütze",
+      "confidence": "high",
+      "kind": "number",
+      "unit": "1",
+      "unitId": "One",
+      "example": 1.9
+    },
+    {
+      "key": "frp_cyclic_cap",
+      "scope": "C98-18",
+      "en": "Cyclic web limit A.3.3.1(2) for walls or (3) for short columns",
+      "de": "Zyklische Druckstrebengrenze A.3.3.1(2) für Wände oder (3) für kurze Stützen",
+      "confidence": "high",
+      "kind": "number",
+      "unit": "N",
+      "unitId": "Newton",
+      "example": 170000.0
+    },
+    {
+      "key": "frp_demand",
+      "scope": "C98-18",
+      "en": "Design shear demand",
+      "de": "Bemessungsquerkraft",
+      "confidence": "high",
+      "kind": "number",
+      "unit": "N",
+      "unitId": "Newton",
+      "example": 140000.0
+    },
+    {
+      "key": "pipe_deformation_basis",
+      "scope": "C98-19",
+      "kind": "choice",
+      "en": "Affected welded-steel segment and project analysis",
+      "de": "Betroffener geschweißter Stahlrohrabschnitt und Projektberechnung",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "unconfirmed",
+          "en": "Affected segment and analysis unconfirmed",
+          "de": "Betroffener Abschnitt und Berechnung unbestätigt"
+        },
+        {
+          "value": "confirmed",
+          "en": "Fault movement, landslide or lateral spreading analysis and global stability evidence documented",
+          "de": "Berechnung für Verwerfungsbewegung, Hangrutschung oder seitliche Bodenverschiebung und Nachweis der globalen Stabilität dokumentiert"
+        }
+      ],
+      "example": "confirmed"
+    },
+    {
+      "key": "pipe_deformation_radius",
+      "scope": "C98-19",
+      "en": "Pipe radius",
+      "de": "Rohrradius",
+      "confidence": "high",
+      "kind": "number",
+      "unit": "m",
+      "unitId": "Metre",
+      "example": 0.4
+    },
+    {
+      "key": "pipe_deformation_thickness",
+      "scope": "C98-19",
+      "en": "Pipe wall thickness",
+      "de": "Rohrwanddicke",
+      "confidence": "high",
+      "kind": "number",
+      "unit": "m",
+      "unitId": "Metre",
+      "example": 0.008
+    },
+    {
+      "key": "pipe_deformation_tension",
+      "scope": "C98-19",
+      "en": "Maximum combined tensile strain (fraction)",
+      "de": "Größte kombinierte Zugdehnung (Verhältniswert)",
+      "confidence": "high",
+      "kind": "number",
+      "unit": "1",
+      "unitId": "One",
+      "example": 0.012
+    },
+    {
+      "key": "pipe_deformation_compression",
+      "scope": "C98-19",
+      "en": "Maximum combined compressive strain magnitude (fraction)",
+      "de": "Größter Betrag der kombinierten Druckdehnung (Verhältniswert)",
+      "confidence": "high",
+      "kind": "number",
+      "unit": "1",
+      "unitId": "One",
+      "example": 0.003
+    },
+    {
+      "key": "pipe_deformation_global",
+      "scope": "C98-19",
+      "en": "Global buckling demand divided by resistance",
+      "de": "Beanspruchung geteilt durch Widerstand beim globalen Knicken",
+      "confidence": "high",
+      "kind": "number",
+      "unit": "1",
+      "unitId": "One",
+      "example": 0.85
+    },
+    {
+      "key": "pipe_concrete_basis",
+      "scope": "C98-20",
+      "kind": "choice",
+      "en": "Concrete pipe strain and leak-tightness evidence",
+      "de": "Nachweis: Dehnungen und Dichtheit eines Betonrohrs",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "unconfirmed",
+          "en": "Analysis and resistance evidence unconfirmed",
+          "de": "Berechnung und Widerstandsnachweis unbestätigt"
+        },
+        {
+          "value": "confirmed",
+          "en": "Governing axial and bending envelopes, applicable EN 1992-1-1 strain limits and project leak-tightness evidence documented",
+          "de": "Maßgebende Längs- und Biegebeanspruchung, anwendbare Grenzdehnungen nach EN 1992-1-1 und projektbezogener Dichtheitsnachweis dokumentiert"
+        }
+      ],
+      "example": "confirmed"
+    },
+    {
+      "key": "pipe_concrete_compression",
+      "scope": "C98-20",
+      "kind": "number",
+      "en": "Concrete compression magnitude at the seismic design state",
+      "de": "Betrag der Betondruckdehnung im seismischen Bemessungszustand",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One",
+      "example": 0.0025
+    },
+    {
+      "key": "pipe_concrete_compression_limit",
+      "scope": "C98-20",
+      "kind": "number",
+      "en": "Applicable concrete compression limit",
+      "de": "Anwendbare Betondruckdehnungsgrenze",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One",
+      "example": 0.0035
+    },
+    {
+      "key": "pipe_steel_tension",
+      "scope": "C98-20",
+      "kind": "number",
+      "en": "Reinforcement tensile strain at the seismic design state",
+      "de": "Zugdehnung der Bewehrung im seismischen Bemessungszustand",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One",
+      "example": 0.015
+    },
+    {
+      "key": "pipe_steel_tension_limit",
+      "scope": "C98-20",
+      "kind": "number",
+      "en": "Applicable reinforcement tension limit",
+      "de": "Anwendbare Zugdehnungsgrenze der Bewehrung",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One",
+      "example": 0.025
+    },
+    {
+      "key": "pipe_steel_compression",
+      "scope": "C98-20",
+      "kind": "number",
+      "en": "Reinforcement compression magnitude at the seismic design state",
+      "de": "Betrag der Bewehrungsdruckdehnung im seismischen Bemessungszustand",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One",
+      "example": 0.002
+    },
+    {
+      "key": "pipe_steel_compression_limit",
+      "scope": "C98-20",
+      "kind": "number",
+      "en": "Applicable reinforcement compression limit",
+      "de": "Anwendbare Druckdehnungsgrenze der Bewehrung",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One",
+      "example": 0.0035
+    },
+    {
+      "key": "pipe_dls_steel_tension",
+      "scope": "C98-20",
+      "kind": "number",
+      "en": "Reinforcement tensile strain at damage limitation",
+      "de": "Zugdehnung der Bewehrung im Schadensbegrenzungszustand",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One",
+      "example": 0.001
+    },
+    {
+      "key": "pipe_dls_steel_limit",
+      "scope": "C98-20",
+      "kind": "number",
+      "en": "Maximum reinforcement strain demonstrated to maintain leak-tightness",
+      "de": "Höchste Bewehrungsdehnung bei nachgewiesener Dichtheit",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One",
+      "example": 0.0015
+    },
+    {
+      "key": "pipe_joint_basis",
+      "scope": "C98-21",
+      "kind": "choice",
+      "en": "Buried pipe joint under combined movement evidence",
+      "de": "Nachweis: Verbindung eines erdverlegten Rohrs unter kombinierter Bewegung",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "unconfirmed",
+          "en": "Analysis and resistance evidence unconfirmed",
+          "de": "Berechnung und Widerstandsnachweis unbestätigt"
+        },
+        {
+          "value": "confirmed",
+          "en": "The documented joint rotation limit applies at the entered axial movement, pressure and damage criterion",
+          "de": "Die dokumentierte Verdrehungsgrenze der Rohrverbindung gilt für die eingegebene Axialverschiebung, den Druck und das Schadenskriterium"
+        }
+      ],
+      "example": "confirmed"
+    },
+    {
+      "key": "pipe_joint_displacement",
+      "scope": "C98-21",
+      "kind": "number",
+      "en": "Governing axial joint displacement, positive for opening",
+      "de": "Maßgebende Axialverschiebung der Rohrverbindung, positiv bei Öffnung",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre",
+      "example": 0.008
+    },
+    {
+      "key": "pipe_joint_rotation",
+      "scope": "C98-21",
+      "kind": "number",
+      "en": "Rotation magnitude at that displacement",
+      "de": "Betrag der Verdrehung bei dieser Verschiebung",
+      "confidence": "high",
+      "unit": "rad",
+      "unitId": "Radian",
+      "example": 0.02
+    },
+    {
+      "key": "pipe_joint_rotation_limit",
+      "scope": "C98-21",
+      "kind": "number",
+      "en": "Documented rotation limit at the same displacement",
+      "de": "Dokumentierte Verdrehungsgrenze bei derselben Verschiebung",
+      "confidence": "high",
+      "unit": "rad",
+      "unitId": "Radian",
+      "example": 0.03
+    },
+    {
+      "key": "pipe_fault_basis",
+      "scope": "C98-22",
+      "kind": "choice",
+      "en": "Fault crossing design evidence",
+      "de": "Nachweis der Verwerfungsquerung",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "unconfirmed",
+          "en": "Fault crossing and protection extents unconfirmed",
+          "de": "Verwerfungsquerung und Schutzlängen unbestätigt"
+        },
+        {
+          "value": "confirmed",
+          "en": "Fault crossing and documented length of each measure on each side",
+          "de": "Verwerfungsquerung und dokumentierte Länge jeder Maßnahme auf beiden Seiten"
+        }
+      ],
+      "example": "confirmed"
+    },
+    {
+      "key": "pipe_fault_soil",
+      "scope": "C98-22",
+      "kind": "choice",
+      "en": "Existing soil compared with the recommended backfill",
+      "de": "Vorhandener Boden im Vergleich zur empfohlenen Verfüllung",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "unconfirmed",
+          "en": "Soil suitability unconfirmed",
+          "de": "Eignung des Bodens unbestätigt"
+        },
+        {
+          "value": "suitable",
+          "en": "Existing soil is suitable",
+          "de": "Vorhandener Boden ist geeignet"
+        },
+        {
+          "value": "different",
+          "en": "Existing soil differs substantially from suitable backfill",
+          "de": "Vorhandener Boden unterscheidet sich wesentlich von geeigneter Verfüllung"
+        }
+      ],
+      "example": "different"
+    },
+    {
+      "key": "pipe_fault_wall_a",
+      "scope": "C98-22",
+      "kind": "number",
+      "en": "Length of thick-walled pipe on side A",
+      "de": "Länge des dickwandigen Rohrs auf Seite A",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre",
+      "example": 55.0
+    },
+    {
+      "key": "pipe_fault_wall_b",
+      "scope": "C98-22",
+      "kind": "number",
+      "en": "Length of thick-walled pipe on side B",
+      "de": "Länge des dickwandigen Rohrs auf Seite B",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre",
+      "example": 50.0
+    },
+    {
+      "key": "pipe_fault_backfill_a",
+      "scope": "C98-22",
+      "kind": "number",
+      "en": "Length with controlled backfill on side A",
+      "de": "Länge mit kontrollierter Verfüllung auf Seite A",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre",
+      "example": 50.0
+    },
+    {
+      "key": "pipe_fault_backfill_b",
+      "scope": "C98-22",
+      "kind": "number",
+      "en": "Length with controlled backfill on side B",
+      "de": "Länge mit kontrollierter Verfüllung auf Seite B",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre",
+      "example": 55.0
+    },
+    {
+      "key": "pipe_fault_trench_a",
+      "scope": "C98-22",
+      "kind": "number",
+      "en": "Widened trench length on side A when the soil differs",
+      "de": "Länge des verbreiterten Grabens auf Seite A bei abweichendem Boden",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre",
+      "example": 15.0
+    },
+    {
+      "key": "pipe_fault_trench_b",
+      "scope": "C98-22",
+      "kind": "number",
+      "en": "Widened trench length on side B when the soil differs",
+      "de": "Länge des verbreiterten Grabens auf Seite B bei abweichendem Boden",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre",
+      "example": 15.0
+    },
+    {
+      "key": "silo_pressure_basis",
+      "scope": "C98-23",
+      "kind": "choice",
+      "en": "Filled silo wall plane pressure evidence",
+      "de": "Drucknachweis der betrachteten Silowandebene",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "unconfirmed",
+          "en": "Geometry and pressure basis unconfirmed",
+          "de": "Geometrie und Druckgrundlage unbestätigt"
+        },
+        {
+          "value": "confirmed",
+          "en": "Filled wall plane, section and uniform static pressure documented",
+          "de": "Gefüllte Wandebene, Querschnitt und gleichmäßiger statischer Druck dokumentiert"
+        }
+      ],
+      "example": "confirmed"
+    },
+    {
+      "key": "silo_pressure_section",
+      "scope": "C98-23",
+      "kind": "choice",
+      "en": "Wall section",
+      "de": "Wandabschnitt",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "flat-bottom",
+          "en": "Vertical wall above a flat bottom",
+          "de": "Senkrechte Wand über einem Flachboden"
+        },
+        {
+          "value": "hopper",
+          "en": "Wall in a conical or pyramidal hopper",
+          "de": "Wand in einem Konus- oder Pyramidentrichter"
+        }
+      ],
+      "example": "flat-bottom"
+    },
+    {
+      "key": "silo_pressure_wall",
+      "scope": "C98-23",
+      "kind": "choice",
+      "en": "Wall relative to the horizontal seismic action",
+      "de": "Wandlage zur horizontalen Erdbebeneinwirkung",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "circular",
+          "en": "Circular wall at the entered azimuth",
+          "de": "Runde Wand beim eingegebenen Azimut"
+        },
+        {
+          "value": "leeward",
+          "en": "Rectangular silo, leeward wall",
+          "de": "Rechtecksilo, Leewand"
+        },
+        {
+          "value": "windward",
+          "en": "Rectangular silo, windward wall",
+          "de": "Rechtecksilo, Luvwand"
+        },
+        {
+          "value": "parallel",
+          "en": "Rectangular silo, parallel wall",
+          "de": "Rechtecksilo, parallele Wand"
+        }
+      ],
+      "example": "circular"
+    },
+    {
+      "key": "silo_pressure_fill",
+      "scope": "C98-23",
+      "kind": "number",
+      "en": "Equivalent fill height above flat bottom or hopper outlet",
+      "de": "Äquivalente Füllhöhe über Flachboden oder Trichterauslass",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre",
+      "example": 8.0
+    },
+    {
+      "key": "silo_pressure_width",
+      "scope": "C98-23",
+      "kind": "number",
+      "en": "Inside diameter or width in the seismic direction",
+      "de": "Innendurchmesser oder lichte Weite in Erdbebenrichtung",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre",
+      "example": 4.0
+    },
+    {
+      "key": "silo_pressure_height",
+      "scope": "C98-23",
+      "kind": "number",
+      "en": "Height of the plane above flat bottom or hopper apex",
+      "de": "Höhe der Ebene über Flachboden oder Trichterspitze",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre",
+      "example": 4.0
+    },
+    {
+      "key": "silo_pressure_slope",
+      "scope": "C98-23",
+      "kind": "number",
+      "en": "Hopper inclination from vertical, steepest wall for a pyramid",
+      "de": "Trichterwandneigung zur Vertikalen, steilste Wand bei Pyramidentrichtern",
+      "confidence": "high",
+      "unit": "°",
+      "unitId": "Degree",
+      "example": 60.0
+    },
+    {
+      "key": "silo_pressure_acceleration",
+      "scope": "C98-23",
+      "kind": "number",
+      "en": "Horizontal response acceleration divided by gravity at the assessed plane",
+      "de": "Horizontale Antwortbeschleunigung in der untersuchten Ebene geteilt durch Erdbeschleunigung",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One",
+      "example": 0.5
+    },
+    {
+      "key": "silo_pressure_weight",
+      "scope": "C98-23",
+      "kind": "number",
+      "en": "Bulk unit weight in the seismic design situation",
+      "de": "Wichte des Schüttguts in der seismischen Bemessungssituation",
+      "confidence": "high",
+      "unit": "N/m³",
+      "unitId": "NewtonPerCubicMetre",
+      "example": 8000.0
+    },
+    {
+      "key": "silo_pressure_azimuth",
+      "scope": "C98-23",
+      "kind": "number",
+      "en": "Azimuth from the seismic direction for a circular wall",
+      "de": "Azimut zur Erdbebenrichtung bei einer runden Wand",
+      "confidence": "high",
+      "unit": "°",
+      "unitId": "Degree",
+      "example": 60.0
+    },
+    {
+      "key": "silo_pressure_static",
+      "scope": "C98-23",
+      "kind": "number",
+      "en": "Uniform static wall pressure at the assessed plane",
+      "de": "Gleichmäßiger statischer Wanddruck in der untersuchten Ebene",
+      "confidence": "high",
+      "unit": "Pa",
+      "unitId": "Pascal",
+      "example": 10000.0
     }
   ]
 }

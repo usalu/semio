@@ -1,0 +1,9 @@
+export CARGO_TARGET_DIR='G:\t\s'
+export CARGO_BUILD_BUILD_DIR='G:\t\sb'
+export CARGO_BUILD_RUSTC=rustc
+export CARGO_BUILD_RUSTC_WRAPPER=
+export RUSTC_WRAPPER=
+export TMP='G:\t\tmp'
+export TEMP='G:\t\tmp'
+export TMPDIR='G:\t\tmp'
+export CARGO_INCREMENTAL=0

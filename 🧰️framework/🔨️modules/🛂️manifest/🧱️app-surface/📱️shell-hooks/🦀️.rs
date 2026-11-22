@@ -364,6 +364,11 @@ impl ShellHookDriver {
         self.touch = touch;
     }
 
+    /// 🖐️ Whether the last pointer was a finger: React's `pointer: coarse`, the class that picks the coarse splitter hit target.
+    pub fn last_input_was_touch(&self) -> bool {
+        self.touch
+    }
+
     /// 🎛️ Records the platform preferences the host reports and tells the plugin when they differ from the last report (the first report always counts); `true` when the plugin was told, so the caller repaints.
     pub fn note_platform(&mut self, plugin_id: &str, prefs: ShellPlatformPrefs) -> bool {
         if self.platform == Some(prefs) {

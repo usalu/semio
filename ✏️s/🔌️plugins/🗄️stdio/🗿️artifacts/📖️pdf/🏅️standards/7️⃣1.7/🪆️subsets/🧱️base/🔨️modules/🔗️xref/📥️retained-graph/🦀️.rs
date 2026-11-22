@@ -1,5 +1,6 @@
 //! 📥️ Materializes retained PDF objects in authored order under the source's allocation and work grants.
 
+use semio_framework_value::{ByteReadRange, ByteReadSource};
 use crate::standards::v1_7::subsets::base::io::text::snapshot::retained_text::{RetainedTextCursor, RetainedTextGrant, RetainedTextReceipt, RetainedTextStatus};
 use crate::standards::v1_7::subsets::base::modules::lexer::{CosGrant, CosLimits, CosReceipt, CosStatus, PdfCosCursor, PdfHeader, PdfIndirectLengthCursor, PdfStreamDictionaryCursor, StreamSpan};
 use crate::standards::v1_7::subsets::base::schema::snapshot::{ObjRef, PdfDictEntry, PdfIndirectObject, PdfObject, PdfStreamFilter};
@@ -161,7 +162,7 @@ impl GraphImportCursor {
     }
 
     /// ▶️ Advances the same source and index as the previous turn, with no source or object cloning.
-    pub fn advance(&mut self, source: &[u8], index: &XrefIndex, grant: CosGrant, cancelled: bool) -> GraphImportReceipt {
+    pub fn advance(&mut self, source: &(impl ByteReadSource + ?Sized), index: &XrefIndex, grant: CosGrant, cancelled: bool) -> GraphImportReceipt {
         use GraphImportEvent as Event;
         if cancelled { self.begin_close(); }
         match self.phase {
@@ -227,7 +228,7 @@ impl GraphImportCursor {
         more(1)
     }
 
-    fn advance_normal(&mut self, source: &[u8], grant: CosGrant) -> GraphImportReceipt {
+    fn advance_normal(&mut self, source: &(impl ByteReadSource + ?Sized), grant: CosGrant) -> GraphImportReceipt {
         let cursor = self.normal.as_mut().expect("original PDF object projection");
         let step = cursor.advance(source, grant, false);
         match step.event {
@@ -278,7 +279,7 @@ impl GraphImportCursor {
         waiting.expect("waiting PDF object")
     }
 
-    fn advance_length(&mut self, source: &[u8], grant: CosGrant) -> GraphImportReceipt {
+    fn advance_length(&mut self, source: &(impl ByteReadSource + ?Sized), grant: CosGrant) -> GraphImportReceipt {
         let (reference, cursor, resolved) = self.length.as_mut().expect("original indirect PDF stream length");
         if let Some(length) = *resolved {
             let step = cursor.close_step(grant);
@@ -290,7 +291,7 @@ impl GraphImportCursor {
             }
             return cos(step);
         }
-        let mut step = cursor.advance(source, grant, false);
+        let mut step = cursor.advance_bytes(|position| source.byte_at(position), grant, false);
         match step.status {
             Ok(CosStatus::Complete { .. }) => { *resolved = Some(cursor.length()); cursor.begin_close(); }
             Err(_) => { *resolved = Some(None); cursor.begin_close(); step.status = Ok(CosStatus::More); }
@@ -333,19 +334,24 @@ impl GraphImportCursor {
         retire_projection(&mut self.normal, grant)
     }
 
-    fn raw_stream(&mut self, source: &[u8], grant: CosGrant) -> GraphImportReceipt {
+    fn raw_stream(&mut self, source: &(impl ByteReadSource + ?Sized), grant: CosGrant) -> GraphImportReceipt {
         let raw = self.raw.as_mut().expect("preserved coded PDF stream");
-        let Some(bytes) = source.get(raw.span.start..raw.span.end) else { return failed("raw PDF stream source was replaced"); };
-        if bytes.len() > self.maximum_stream_bytes { return failed("retained PDF stream exceeds the declared byte ceiling"); }
-        if raw.bytes.capacity() < bytes.len() {
-            if bytes.len() > grant.allocation_bytes { return report(Ok(GraphImportEvent::NeedsAllocation { bytes: bytes.len() }), 0); }
-            if raw.bytes.try_reserve_exact(bytes.len()).is_err() { return failed("unable to allocate retained PDF stream"); }
+        let Some(bytes) = raw.span.end.checked_sub(raw.span.start).and_then(|length| ByteReadRange::new(source, raw.span.start, length)) else { return failed("raw PDF stream source was replaced"); };
+        let length = bytes.byte_len();
+        if length > self.maximum_stream_bytes { return failed("retained PDF stream exceeds the declared byte ceiling"); }
+        if raw.bytes.capacity() < length {
+            if length > grant.allocation_bytes { return report(Ok(GraphImportEvent::NeedsAllocation { bytes: length }), 0); }
+            if raw.bytes.try_reserve_exact(length).is_err() { return failed("unable to allocate retained PDF stream"); }
             return GraphImportReceipt { allocated_bytes: raw.bytes.capacity(), ..more(1) };
         }
-        if raw.bytes.len() < bytes.len() {
+        if raw.bytes.len() < length {
             let start = raw.bytes.len();
-            let count = (bytes.len() - start).min(grant.work);
-            raw.bytes.extend_from_slice(&bytes[start..start + count]);
+            let count = (length - start).min(grant.work);
+            raw.bytes.resize(start + count, 0);
+            if bytes.read_bytes(start, &mut raw.bytes[start..]) != count {
+                raw.bytes.truncate(start);
+                return report(Err(XrefStreamError::Structure("raw PDF stream source lost an admitted fragment")), count);
+            }
             return more(count);
         }
         let step = raw.dictionary.advance(grant, false);
@@ -572,7 +578,7 @@ impl PdfByteGraphCursor {
         }
     }
 
-    pub fn advance(&mut self, source: &[u8], grant: CosGrant, cancelled: bool) -> PdfByteGraphReceipt {
+    pub fn advance(&mut self, source: &(impl ByteReadSource + ?Sized), grant: CosGrant, cancelled: bool) -> PdfByteGraphReceipt {
         use PdfByteGraphEvent as Event;
         if cancelled { self.begin_close(); }
         match self.phase {
@@ -617,8 +623,8 @@ impl PdfByteGraphCursor {
             }
             BytePhase::Project => {
                 let file = self.file.as_ref().expect("original PDF graph source");
-                let Some(bytes) = source.get(file.origin..) else { return byte_error("PDF source origin has changed"); };
-                let step = self.projection.as_mut().expect("retained PDF graph projection").advance(bytes, &file.index, grant, false);
+                let Some(bytes) = source.byte_len().checked_sub(file.origin).and_then(|length| ByteReadRange::new(source, file.origin, length)) else { return byte_error("PDF source origin has changed"); };
+                let step = self.projection.as_mut().expect("retained PDF graph projection").advance(&bytes, &file.index, grant, false);
                 if matches!(step.event, Ok(GraphImportEvent::Complete)) {
                     self.file.as_mut().expect("original cross-reference source").index.begin_close();
                     self.phase = BytePhase::CloseIndex;
@@ -760,7 +766,7 @@ impl PdfFilePreparationCursor {
         }
     }
 
-    pub fn advance(&mut self, source: &[u8], grant: CosGrant, cancelled: bool) -> PdfByteGraphReceipt {
+    pub fn advance(&mut self, source: &(impl ByteReadSource + ?Sized), grant: CosGrant, cancelled: bool) -> PdfByteGraphReceipt {
         use PdfByteGraphEvent as Event;
         if cancelled { self.begin_close(); }
         match self.phase {

@@ -1,5 +1,5 @@
-import { type ColdDocumentPairFrontier, type ColdPairIngressStatus, coldDocumentPairFrontierEquals } from "@semio-tech/framework-actor/cold-pair";
-import type { ArtifactActorConfig } from "../../../../🟦️";
+import { COLD_PAIR_MAXIMUM_PAGES, type ColdDocumentPairFrontier, type ColdPairIngressStatus, coldDocumentPairFrontierEquals } from "@semio-tech/framework-actor/cold-pair";
+import { DOCUMENT_ARCHIVE_MAXIMUM_BYTES, type ArtifactActorConfig } from "../../../../🟦️";
 import type { WireArtifactBootstrap } from "@semio-tech/framework-replication";
 import { type ActorInstanceLifetime, actorInstanceLifetimeEquals } from "../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts";
 import type { BrowserActorChildValue } from "@semio-tech/framework-plugin/browser-bundle/child";
@@ -10,8 +10,8 @@ import { equalByteArrays, equalFrontiers } from "../📮️hub-outbox/🟦️.ts
 import { documentBrowserActorLease } from "../🎭️actor-lifecycle/🟦️.ts";
 
 const COLD_DOCUMENT_PAIR_PAGE_BYTES = 64 * 1024;
-const COLD_DOCUMENT_PAIR_MAXIMUM_PAGES = 64;
-const COLD_DOCUMENT_PAIR_MAXIMUM_BYTES = 4 * 1024 * 1024;
+const COLD_DOCUMENT_PAIR_MAXIMUM_BYTES = DOCUMENT_ARCHIVE_MAXIMUM_BYTES;
+const COLD_DOCUMENT_PAIR_MAXIMUM_PAGES = COLD_PAIR_MAXIMUM_PAGES;
 
 export const verifiedColdDocumentPairMintToken = Symbol("semio.os.verified-cold-document-pair.mint/v1");
 let verifiedColdDocumentPairGeneration = 0n;

@@ -6,5 +6,10 @@
   "moduleDirectoryName": "🪐️space",
   "artifactKindPrefix": "s.space.",
   "playgroundVariant": "s",
-  "host": { "landingAppId": "home", "hostAppId": "studio" }
+  "host": { "landingAppId": "home", "hostAppId": "studio" },
+  "workflow": {
+    "artifactKind": "s.space.studio",
+    "schema": "os.workflow",
+    "surfaceId": "s.space.studio@1/*#editor"
+  }
 }

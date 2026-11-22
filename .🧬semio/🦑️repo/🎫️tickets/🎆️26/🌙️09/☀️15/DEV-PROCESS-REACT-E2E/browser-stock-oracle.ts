@@ -101,7 +101,13 @@ for (const row of fixture.workshop) {
   assert.ok(Math.abs(editedVolume - row.edit.remainingVolumeMetresCubed) < 1e-12, `${row.machine} edited tool`);
   assert.ok(Math.abs(editedVolume - volume) > 1e-12, `${row.machine} edit changes the preview`);
 }
-console.log("[DEBUG] Three.js matched each catalog step's composed and edited workpiece volumes");
+const movedCapability = fixture.workshop.find(row => row.catalog === fixture.reorder.catalog)!;
+assert.equal(movedCapability.operation, "corner");
+const firstToolHalf = new Vector3().fromArray(movedCapability.toolSizeMetres).multiplyScalar(0.5);
+const firstPocket = new Box3(firstToolHalf.clone().negate(), firstToolHalf).intersect(stepBounds);
+const firstVolume = boxVolume(stepBounds) - boxVolume(firstPocket);
+assert.ok(Math.abs(firstVolume - fixture.reorder.firstStepVolumeMetresCubed) < 1e-12);
+console.log("[DEBUG] Three.js matched the composed, edited and reordered workpiece volumes.");
 
 const attachment = fixture.demoAttachment;
 const timber = await Bun.file(attachment.replayFixture).json();
@@ -113,6 +119,38 @@ const toolBounds = new Box3().setFromCenterAndSize(new Vector3().fromArray(place
 const placedCutVolume = boxVolume(timberBounds) - boxVolume(toolBounds.intersect(timberBounds));
 assert.ok(Math.abs(placedCutVolume - placement.remainingVolumeMetresCubed) < 1e-12);
 console.log("[DEBUG] Three.js verified the viewport-placed cut leaves 0.1775 m³ of timber");
+const chosen = fixture.chosenPlacement;
+const chosenTool = fixture.workshop.find(row => row.catalog === chosen.catalog)!;
+assert.equal(chosenTool.operation, "corner");
+const chosenCatalog = catalogs.get(chosen.catalog);
+const chosenMachine = JSON.parse(chosenCatalog.machinesJson).find((machine: { id: string }) => machine.id === chosenTool.machine);
+const chosenCapability = chosenMachine.capabilities.find((capability: { id: string }) => capability.id === chosenTool.capability);
+const envelope = chosenCapability.rules.find((rule: { kind: string; quantity: string }) => rule.kind === "max" && rule.quantity === "maxDimension");
+const envelopeLimit = chosenCapability.parameters.find((parameter: { id: string }) => parameter.id === envelope.parameter).value;
+assert.ok(timberSize.x + envelope.margin > envelopeLimit);
+assert.ok(Math.max(chosen.stockWidthMetres, timberSize.y, timberSize.z) + envelope.margin <= envelopeLimit);
+const chosenBounds = new Box3().setFromCenterAndSize(new Vector3().fromArray(chosen.positionMetres), new Vector3().fromArray(chosenTool.toolSizeMetres));
+assert.equal(chosenBounds.intersectsBox(toolBounds), false);
+const resizedTimber = new Box3().setFromCenterAndSize(new Vector3().fromArray(timberStock.pose.position), timberSize.clone().setX(chosen.stockWidthMetres));
+assert.ok(Math.abs(boxVolume(chosenBounds.intersect(resizedTimber)) - chosen.toolIntersectionMetresCubed) < 1e-12);
+console.log("[DEBUG] Three.js verified the chosen robotic placement meets untouched timber and cuts 0.00002 m³");
+const gantry = fixture.wgpuChosenPlacement;
+const gantryCatalog = catalogs.get(gantry.catalog);
+const gantryMachine = JSON.parse(gantryCatalog.machinesJson).find((machine: { id: string }) => machine.id === gantry.machine);
+const gantryCapability = gantryMachine.capabilities.find((capability: { id: string }) => capability.id === gantry.capability);
+const gantryParameter = (id: string) => gantryCapability.parameters.find((parameter: { id: string }) => parameter.id === id).value;
+assert.equal(gantryCapability.recipe.recipe, "pocketCut");
+const gantryDiameter = gantryParameter(gantryCapability.recipe.diameter);
+assert.deepEqual(gantry.toolSizeMetres, [gantryDiameter, gantryDiameter, gantryParameter(gantryCapability.recipe.depth)]);
+const maximumStock = new Map([["width", timberSize.x], ["depth", timberSize.y]]);
+for (const rule of gantryCapability.rules) {
+  assert.equal(rule.kind, "max");
+  assert.ok(maximumStock.get(rule.quantity)! + rule.margin <= gantryParameter(rule.parameter));
+}
+const gantryBounds = new Box3().setFromCenterAndSize(new Vector3().fromArray(gantry.positionMetres), new Vector3().fromArray(gantry.toolSizeMetres));
+assert.equal(gantryBounds.intersectsBox(toolBounds), false);
+assert.ok(Math.abs(boxVolume(gantryBounds.intersect(timberBounds)) - gantry.toolIntersectionMetresCubed) < 1e-12);
+console.log("[DEBUG] Three.js verified the Gantry CNC pocket and the original timber fit");
 const [lap, drill, dowel] = timber.scene.steps.slice(-3).map((row: { measure: unknown }) => row.measure);
 assert.equal(timber.scene.steps.at(-1).id, attachment.step);
 assert.equal(timber.scene.steps.at(-1).label, attachment.label);

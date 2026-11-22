@@ -4,10 +4,10 @@
   "title": "Terrain Brush Settings",
   "type": "object",
   "additionalProperties": false,
-  "required": ["radius", "elevationStep", "smoothStrength"],
+  "required": ["radius", "elevationStepMillimetres", "smoothStrength"],
   "properties": {
     "radius": {"type": "integer", "minimum": 0, "maximum": 32},
-    "elevationStep": {"type": "integer", "minimum": 1, "maximum": 32767},
+    "elevationStepMillimetres": {"type": "integer", "minimum": 1, "maximum": 32767000, "description": "Height applied at the centre of the brush in millimetres."},
     "smoothStrength": {"type": "integer", "minimum": 0, "maximum": 100}
   }
 }

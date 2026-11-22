@@ -2,6 +2,7 @@ import {createHash} from "node:crypto";
 import {closeSync,fstatSync,lstatSync,openSync,readSync,readlinkSync,type BigIntStats} from "node:fs";
 import {isAbsolute,join,relative,resolve,sep} from "node:path";
 import {compileJsonSchemaSubset} from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
+import {manifestProfileSha256V1} from "./🪪️profile/🟦️.ts";
 import {javascriptGenerationSchemaV1 as schema} from "../💾️storage/🧱️schemas/🟦️.ts";
 
 const protocol=schema.$defs.Protocol.const,receiptSchema=compileJsonSchemaSubset(schema.$defs.Receipt,schema);
@@ -25,15 +26,15 @@ export interface GenerationProducerV1{readonly files:readonly GenerationProducer
 /** 📑️ Is the sealed, schema-defined proof that a complete walk accepted exactly these observations. */
 export interface GenerationReceiptV1{
  readonly version:1;readonly purpose:"dependency-generation-receipt";readonly scope:string;readonly walkStamp:string;readonly runtime:GenerationRuntimeV1;readonly producer:GenerationProducerV1;readonly recipeSha256:string;readonly ownershipSha256:string;readonly required:readonly string[];
- readonly inputs:readonly Readonly<{scope:string;sources:readonly Readonly<{path:string;kind:"file"|"directory"|"missing";dev:string;ino:string;mode:number;sha256:string|null}>[]}>[];
- readonly membership:Readonly<{frontier:GenerationEvidenceV1;texts:readonly Readonly<{path:string;sha256:string}>[]}>;
+ readonly inputs:readonly Readonly<{scope:string;sources:readonly Readonly<{path:string;kind:"file"|"directory"|"missing";dev:string;ino:string;mode:number;sha256:string|null;profileSha256:string|null}>[]}>[];
+ readonly membership:Readonly<{frontier:GenerationEvidenceV1;texts:readonly Readonly<{path:string;sha256:string;profileSha256:string|null}>[]}>;
  readonly bindings:readonly Readonly<{scope:string;pairs:readonly Readonly<{source:string;target:string}>[];observationSha256:string}>[];
  readonly ready:readonly Readonly<{scope:string;generation:string;location:string;fingerprint:string}>[];
  readonly execution:Readonly<{evidence:GenerationEvidenceV1;scopes:readonly Readonly<{scope:string;sha256:string}>[];runtimeSha256:string}>;
  readonly scopeReadSha256:string;readonly sha256:string;
 }
 /** 🌳️ Reports exactly what the ownership walk retained: directory listings, path states and manifest texts. */
-export interface GenerationMembershipV1{readonly root:string;readonly paths:readonly Readonly<{path:string;state:readonly (string|number)[];list?:readonly Readonly<{name:string;kind:string}>[]}>[];readonly texts:readonly Readonly<{path:string;sha256:string}>[]}
+export interface GenerationMembershipV1{readonly root:string;readonly paths:readonly Readonly<{path:string;state:readonly (string|number)[];list?:readonly Readonly<{name:string;kind:string}>[]}>[];readonly texts:readonly Readonly<{path:string;sha256:string;profileSha256?:string|null}>[]}
 /** 🔭️ Reports one physical observation of the provider walk exactly as it replays them; stamp and anchor are the colon-joined decimal fields named by the protocol. */
 export interface GenerationObservationV1{readonly path:string;readonly stamp:string|null;readonly anchor:string|null;readonly kind:string;readonly target:string|null;readonly full:boolean}
 /** 📥️ Collects everything a completed walk produced; nothing else may enter a receipt. */
@@ -157,11 +158,11 @@ export async function captureGenerationReceiptV1(input:GenerationCaptureInputV1)
   if(row.full&&row.stamp!==null){const parts=row.stamp.split(":");if(BigInt(parts[5]!)>=threshold||BigInt(parts[6]!)>=threshold)return deferred("provider-observation-unsettled",generationLocationV1(row.path,workspace,storeRoot));}
   observations.push(["o",generationLocationV1(row.path,workspace,storeRoot),kindLetter(row.kind),row.anchor,row.stamp,row.target,row.full?1:0]);
  }
- const inputs=input.inputs.map(group=>Object.freeze({scope:group.scope,sources:Object.freeze(group.sources.map(source=>Object.freeze({path:generationLocationV1(source.path,workspace,storeRoot),kind:source.kind,dev:source.dev,ino:source.ino,mode:source.mode,sha256:source.kind==="file"?generationSha256V1(source.bytes):null})))}));
+ const inputs=input.inputs.map(group=>Object.freeze({scope:group.scope,sources:Object.freeze(group.sources.map(source=>Object.freeze({path:generationLocationV1(source.path,workspace,storeRoot),kind:source.kind,dev:source.dev,ino:source.ino,mode:source.mode,sha256:source.kind==="file"?generationSha256V1(source.bytes):null,profileSha256:source.kind==="file"?manifestProfileSha256V1(source.path,source.bytes):null})))}));
  const frontierFile=frontier.finish(),executionFile=observations.finish(),sha=(text:string)=>generationSha256V1(text);
  const receipt=sealGenerationReceiptV1({
   version:1,purpose:"dependency-generation-receipt",scope:input.scope,walkStamp:protocol.walkStamp,runtime:input.runtime,producer:input.producer,recipeSha256:input.recipeSha256,ownershipSha256:input.ownershipSha256,required:[...input.required],inputs,
-  membership:{frontier:frontierFile.evidence,texts:membership.texts.map(row=>({path:row.path,sha256:row.sha256}))},
+  membership:{frontier:frontierFile.evidence,texts:membership.texts.map(row=>({path:row.path,sha256:row.sha256,profileSha256:row.profileSha256??null}))},
   bindings:input.bindings.map(row=>({scope:row.scope,pairs:row.pairs.map(pair=>({source:generationLocationV1(pair.sourceDirectory,workspace,storeRoot),target:generationLocationV1(pair.targetDirectory,workspace,storeRoot)})),observationSha256:sha(row.observation)})),
   ready:input.ready.map(row=>({scope:row.scope,generation:row.generation,location:generationLocationV1(row.path,workspace,storeRoot),fingerprint:row.fingerprint})),
   execution:{evidence:executionFile.evidence,scopes:input.execution.scopes.map(row=>({scope:row.scope,sha256:row.sha256})),runtimeSha256:input.execution.runtimeSha256},scopeReadSha256:input.scopeReadSha256,
@@ -211,14 +212,16 @@ export async function verifyGenerationReceiptV1(input:GenerationVerifyInputV1):P
   for(const group of receipt.inputs)for(const source of group.sources){
    await advance();const path=generationResolveV1(source.path,workspace,storeRoot);if(known.has(asRelative(path)??""))continue;const facts=lstatBig(path);
    if(source.kind==="missing"){if(facts)return mismatch("input-changed",source.path,"appeared");continue;}
-   if(!facts||facts.isSymbolicLink()||(source.kind==="file"?!facts.isFile():!facts.isDirectory())||String(facts.dev)!==source.dev||String(facts.ino)!==source.ino||Number(facts.mode)!==source.mode)return mismatch("input-changed",source.path,"identity");
-   if(source.kind==="file"){if(facts.size>BigInt(protocol.maximumSourceFileBytes)||generationSha256V1(readGenerationData(path,protocol.maximumSourceFileBytes))!==source.sha256)return mismatch("input-changed",source.path,"bytes");}
+   if(!facts||facts.isSymbolicLink()||(source.kind==="file"?!facts.isFile():!facts.isDirectory())||(String(facts.dev)!==source.dev||String(facts.ino)!==source.ino||Number(facts.mode)!==source.mode)&&source.profileSha256===null)return mismatch("input-changed",source.path,"identity");
+   if(source.kind==="file"){if(facts.size>BigInt(protocol.maximumSourceFileBytes))return mismatch("input-changed",source.path,"bytes");const data=readGenerationData(path,protocol.maximumSourceFileBytes);if(generationSha256V1(data)!==source.sha256&&(source.profileSha256===null||manifestProfileSha256V1(path,data)!==source.profileSha256))return mismatch("input-changed",source.path,"bytes");}
   }
   for(const row of receipt.membership.texts){
    await advance();if(known.has(asRelative(resolve(workspace,row.path))??""))continue;let text:string;
    try{text=new TextDecoder("utf-8",{fatal:true}).decode(readGenerationData(resolve(workspace,row.path),protocol.maximumSourceFileBytes));}catch(error){if(control.signal.aborted)throw error;return mismatch("manifest-changed",row.path,"unreadable");}
-   if(generationSha256V1(text)!==row.sha256)return mismatch("manifest-changed",row.path,"bytes");
+   if(generationSha256V1(text)!==row.sha256&&(row.profileSha256===null||manifestProfileSha256V1(row.path,text)!==row.profileSha256))return mismatch("manifest-changed",row.path,"bytes");
   }
+  const texted=new Set(receipt.membership.texts.map(row=>row.path));
+  const profiled=new Set(receipt.membership.texts.filter(row=>row.profileSha256!==null).map(row=>resolve(workspace,row.path)));
   let relisted=0,scanned=0;
   const rows=decodeRows(input.readEvidence(receipt.membership.frontier.name,protocol.maximumEvidenceBytes),receipt.membership.frontier),flags=new Map<string,number>(),child=(parent:string,name:string)=>parent==="."?name:parent+"/"+name;
   for(const row of rows)if(row[0]==="d")flags.set(row[1]as string,row[10]as number);
@@ -232,7 +235,7 @@ export async function verifyGenerationReceiptV1(input:GenerationVerifyInputV1):P
   for(const row of rows){
    if(settled.has(row[1]as string)){if(++work%protocol.checkWork===0)control.check();if(work%protocol.progressWork===0)await control.tick(work);continue;}
    await advance();const path=resolve(workspace,row[1]as string),facts=lstatBig(path);
-   if(row[0]==="s"){if(stateTuple(facts)!==JSON.stringify(row.slice(2)))return mismatch("membership-changed",row[1]as string,"state");continue;}
+   if(row[0]==="s"){if(texted.has(row[1]as string)&&facts?.isFile()===true)continue;if(stateTuple(facts)!==JSON.stringify(row.slice(2)))return mismatch("membership-changed",row[1]as string,"state");continue;}
    if(!facts||!facts.isDirectory()){if(row[10]===0&&!facts?.isSymbolicLink())continue;return mismatch("membership-changed",row[1]as string,"directory");}
    if(row[7]===1&&String(facts.dev)===row[2]&&String(facts.ino)===row[3]&&Number(facts.mode)===row[4]&&String(facts.mtimeNs)===row[5]&&String(facts.ctimeNs)===row[6])continue;
    if(++relisted>protocol.maximumRelist)return mismatch("membership-churn",row[1]as string);
@@ -243,7 +246,7 @@ export async function verifyGenerationReceiptV1(input:GenerationVerifyInputV1):P
   }
   if(!input.recheck)for(const row of decodeRows(input.readEvidence(receipt.execution.evidence.name,protocol.maximumEvidenceBytes),receipt.execution.evidence)){
    await advance();const path=generationResolveV1(row[1]as string,workspace,storeRoot),facts=lstatBig(path),full=row[6]===1,expected=full?row[4]:row[3];
-   if((facts?(full?generationStampV1(facts):generationAnchorV1(facts)):null)!==expected)return mismatch("provider-changed",row[1]as string,"identity");
+   if((facts?(full?generationStampV1(facts):generationAnchorV1(facts)):null)!==expected&&!(facts?.isFile()===true&&profiled.has(resolve(path))))return mismatch("provider-changed",row[1]as string,"identity");
    if(row[2]==="l"&&readlinkSync(path)!==row[5])return mismatch("provider-changed",row[1]as string,"target");
   }
   const receipts=receipt.required.map(scope=>{const ready=receipt.ready.find(row=>row.scope===scope);if(!ready)throw Error("Complete ready rows required");return Object.freeze({scope,generation:ready.generation,fingerprint:fingerprints.get(scope)!});}),

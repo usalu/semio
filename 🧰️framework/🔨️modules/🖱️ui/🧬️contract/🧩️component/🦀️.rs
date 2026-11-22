@@ -43,6 +43,9 @@ pub use slider_geometry_and_key_handling::{
     SLIDER_SNAP_RADIUS,
 };
 
+/// 🪜️ Identifies the drag payload for reordering a row within a tree.
+pub const TREE_ROW_REORDER_MIME: &str = "application/x-semio-tree-row-reorder";
+
 #[path = "🌳️tree-props/🦀️.rs"]
 mod tree_props;
 pub use tree_props::{

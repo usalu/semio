@@ -1,0 +1,36 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "staffage-site",
+      "runtimeExecutable": "repo",
+      "runtimeArgs": [
+        "run",
+        "@teaching/staffage-site:dev"
+      ],
+      "port": 6071
+    },
+    {
+      "name": "staffage-site-native",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "cd '/Users/ueli/Documents/semio/🎓️teaching/🏛️architecture/🧍️staffage/🌐️site/📦️packages/🟦️typescript' && SEMIO_BUILD_MODE=prototype SEMIO_VITE_CACHE_DIRECTORY=/Users/ueli/Documents/semio/.cache/b/p/m/staffage-preview-vite exec \"$(ls ~/Library/Caches/semio/runtimes/bun/*/bun | head -1)\" x vite --config '../../🏗️builder/🌐️vite/🟦️.ts' --mode prototype --port 6072 --strictPort"
+      ],
+      "port": 6072
+    },
+    {
+      "name": "process3d-react",
+      "runtimeExecutable": "repo",
+      "runtimeArgs": [
+        "./📜️script.ts",
+        "dev",
+        "playground",
+        "process3d",
+        "react",
+        "prototype"
+      ],
+      "port": 6022
+    }
+  ]
+}

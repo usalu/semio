@@ -63,7 +63,7 @@ pub(super) async fn retained_document_cancellation<A: ArtifactApp + Default>(fac
                     result_sequence: 0,
                     publication_progress: 0,
                     publication_checkpoint: None, publication_ownership_progress: None, original_retirement_receipt: None, actor_capture: None,actor_capture_pending:semio_plugin_mounted_owner::actor_capture::ActorCapture::new(),
-                    publication_attempt: 0,
+                    publication_stall_streak: 0,
                     ui_pending: true,
                     progress: None,
                     progress_pending: false,

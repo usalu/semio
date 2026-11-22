@@ -1,6 +1,6 @@
 import {spawn} from "node:child_process";
 import {createHash,randomBytes} from "node:crypto";
-import {constants} from "node:fs";
+import {constants,type BigIntStats} from "node:fs";
 import {copyFile,lstat,mkdir,open,readdir,readFile,readlink,rename,rm,stat,symlink,unlink,writeFile} from "node:fs/promises";
 import {devNull} from "node:os";
 import {delimiter,dirname,isAbsolute,join,relative,resolve} from "node:path";
@@ -60,7 +60,7 @@ export const INDEX_PREFIX_V1=".cache/f/index/";
 /** 🧭 Tells whether a replica path belongs to the virtual index realm. */
 export const indexRealmV1=(path:string):boolean=>path===INDEX_BASE_V1||path.startsWith(INDEX_PREFIX_V1);
 
-const GIT_PROBE_MILLISECONDS=10_000,GIT_RUN_MILLISECONDS=600_000,BATCH_LIMIT=5000,SHA1_EMPTY="4b825dc642cb6eb9a060e54bf8d69288fbee4904",SHA256_EMPTY="6ef19b41225c5369f1c104d45d8d85efa9b057b53b14b4b9b939dd74decc5321",NEGATIVE_MILLISECONDS=2000,RETRY_MILLISECONDS=1000,MAX_RETRY_MILLISECONDS=30_000,STALE_LOCK_MILLISECONDS=600_000;
+const GIT_PROBE_MILLISECONDS=10_000,GIT_RUN_MILLISECONDS=600_000,SHA1_EMPTY="4b825dc642cb6eb9a060e54bf8d69288fbee4904",SHA256_EMPTY="6ef19b41225c5369f1c104d45d8d85efa9b057b53b14b4b9b939dd74decc5321",NEGATIVE_MILLISECONDS=2000,RETRY_MILLISECONDS=1000,MAX_RETRY_MILLISECONDS=30_000,STALE_LOCK_MILLISECONDS=600_000;
 /** ⏱️ Delays the next Git stage retry by one second after the first failed attempt, doubling up to thirty seconds. */
 export const gitStageRetryDelayV1=(attempts:number):number=>Math.min(MAX_RETRY_MILLISECONDS,RETRY_MILLISECONDS*2**Math.max(0,attempts-1));
 
@@ -155,16 +155,39 @@ async function git(worktree:string,args:readonly string[],options:Run={}):Promis
 const text=(outcome:Outcome|null):string|null=>outcome!==null&&outcome.code===0?outcome.out.toString("utf8").trim():null;
 const oidPattern=/^[0-9a-f]{40}(?:[0-9a-f]{24})?$/u;
 
-/** 🏠 Tells whether the worktree has a root `.git` directory that a usable git accepts as a repository; a negative answer for a `.git` that exists is remembered for two seconds so that a broken directory does not cost a process per call. */
-const verdicts=new Map<string,Readonly<{until:number;present:boolean}>>();
-export async function gitPresentV1(worktree:string,signal?:AbortSignal):Promise<boolean>{
- const head=await lstat(join(worktree,".git","HEAD")).catch(()=>undefined),root=await lstat(join(worktree,".git")).catch(()=>undefined);
- if(head===undefined||root===undefined||!root.isDirectory())return false;
+type GitPresenceV1="absent"|"unavailable"|"present";
+const verdicts=new Map<string,Readonly<{until:number;present:boolean;stamp?:string}>>();
+const gitFileStampV1=(info:BigIntStats):string=>`${info.dev}:${info.ino}:${info.mode}:${info.size}:${info.mtimeNs}:${info.ctimeNs}`;
+const missingGitEntryV1=(error:NodeJS.ErrnoException):null=>{if(error.code==="ENOENT")return null;throw error;};
+
+/** 🏥️ Distinguishes a missing root from an existing Git root that cannot certify a stage. */
+async function probeGitPresenceV1(worktree:string,signal:AbortSignal|undefined,observe:boolean):Promise<GitPresenceV1>{
+ const directory=join(worktree,".git"),root=await lstat(directory,{bigint:true}).catch(missingGitEntryV1);
+ if(root===null)return "absent";
+ if(!root.isDirectory())return "unavailable";
+ const head=await lstat(join(directory,"HEAD"),{bigint:true}).catch(missingGitEntryV1);
+ if(head===null)return "unavailable";
+ const selected=observe&&!abortedV1(signal)?await resolveGitV1():null;
+ if(observe&&selected===null)return "unavailable";
+ const stamp=selected===null?undefined:`${root.dev}:${root.ino}:${root.mode}|${gitFileStampV1(head)}|${await gitPresenceFilesV1(directory,selected)}`;
  const known=verdicts.get(worktree),now=Date.now();
- if(known!==undefined&&known.until>now)return known.present;
+ if(known!==undefined&&known.until>now&&(!observe||known.stamp===stamp))return known.present?"present":"unavailable";
+ if(observe&&known?.stamp!==stamp){stamps.delete(worktree);trees.delete(worktree);}
  const present=text(await git(worktree,["rev-parse","--git-dir"],{signal}))!==null;
- verdicts.set(worktree,{present,until:present?now+60_000:now+NEGATIVE_MILLISECONDS});
- return present;
+ if(!abortedV1(signal))verdicts.set(worktree,{present,until:present?now+60_000:now+NEGATIVE_MILLISECONDS,stamp:stamp??known?.stamp});
+ return present?"present":"unavailable";
+}
+
+/** 📎️ Stamps the local config and selected absolute Git executable before a warm stage observation. */
+async function gitPresenceFilesV1(directory:string,selected:string):Promise<string>{
+ const config=await stat(join(directory,"config"),{bigint:true}).catch(missingGitEntryV1);
+ const file=isAbsolute(selected)?await stat(selected,{bigint:true}).catch(missingGitEntryV1):null;
+ return (config===null?"-":gitFileStampV1(config))+"|"+(file===null?"-":gitFileStampV1(file));
+}
+
+/** 🏠 Tells whether a usable Git accepts the root, with the existing short-lived negative and warm positive cache. */
+export async function gitPresentV1(worktree:string,signal?:AbortSignal):Promise<boolean>{
+ return (await probeGitPresenceV1(worktree,signal,false).catch(()=>"unavailable"))==="present";
 }
 
 /** 🌲 Writes the tree of the stage with `git write-tree`; `null` when git, the repository or an object is missing, the stage has unmerged entries or the index lock is held. `index` selects another index file. */
@@ -225,6 +248,12 @@ async function signatureOf(worktree:string):Promise<string>{
 /** 🧾 The stat signature of `.git/index` (inode, size, modification time in nanoseconds; empty without an index): equal signatures mean the stage did not move, and the call costs one `stat`. */
 export const indexSignatureV1=signatureOf;
 
+/** 🔖 Whether the index still has the signature certified by publication or comparison with the register tree. */
+export async function indexCertifiedV1(worktree:string):Promise<boolean>{
+ const signature=signatures.get(worktree);
+ return signature!==undefined&&signature!==""&&await signatureOf(worktree)===signature;
+}
+
 const stamps=new Map<string,Readonly<{stamp:string;state:GitStateV1;at:number}>>(),stampRefreshMilliseconds=300_000;
 const statStamp=async(file:string):Promise<string>=>{const info=await stat(file,{bigint:true}).catch(()=>undefined);return info===undefined?"-":`${info.ino}:${info.size}:${info.mtimeNs}`;};
 
@@ -274,7 +303,11 @@ async function readIndexTreeSnapshotV1(worktree:string,signature:string,{signal,
 export async function gitStateV1(worktree:string,signal?:AbortSignal,observeTree:typeof writeTreeV1=writeTreeV1):Promise<GitStateV1>{
  const absent:GitStateV1={present:false,head:null,commit:null,indexTree:null};
  try{
-  if(!await gitPresentV1(worktree,signal))return absent;
+  const presence=await probeGitPresenceV1(worktree,signal,true);
+  if(presence!=="present"||abortedV1(signal)){
+   if(!abortedV1(signal)){stamps.delete(worktree);trees.delete(worktree);}
+   return presence==="absent"?absent:{...absent,observation:"observation-failed"};
+  }
   const before=await refStamp(worktree),known=stamps.get(worktree);
   if(known!==undefined&&known.stamp===stampKey(before)&&Date.now()-known.at<stampRefreshMilliseconds)return known.state;
   let reason:GitStageObservationV1="observation-failed";
@@ -938,7 +971,7 @@ async function followStage(host:IndexHostV1,before:string,pending:ReadonlyMap<st
  return none;
 }
 
-/** 📤 The publish step. Only the archivist (the group server, `host.server`) publishes; a member follows (`followStage`). The archivist's stage tree is compared with the tree of the registers this machine has published (`held`, folded as `verifyIndexV1` folds; kept in memory afterwards), and every differing path becomes one entry register in batches of 5000 (`diff-tree -r -z`), however many there are. The tree itself is published as the base (`tree <oid>`) when the machine has no base yet, on an explicit rebase request (which lists the registers it voids), and whenever a changed path cannot be an entry (a path the entry policy cannot represent, or an unsafe link): the base carries the whole tree, so the stage of every machine can equal the archivist's stage exactly. A semantic no-op (a `git status` that only refreshes stat data) leaves the tree equal and publishes nothing; so does an unchanged `.git/index` stat signature without any process. A stage that cannot be written (unmerged entries, a failing git) is never published and is reported as degraded; a missing `.git/index` is restored from the registers. After a crash during an apply, the paths that apply was writing are not re-published as local edits. With `prepareObjects`, only incremental changes on the archivist can publish. Before emitting them, the callback must accept the distinct object IDs referenced by the entry events, excluding gitlinks. A refused batch can retry the same index signature. */
+/** 📤 The publish step. Only the archivist (the group server, `host.server`) publishes; a member follows (`followStage`). The archivist's stage tree is compared with the tree of the registers this machine has published (`held`, folded as `verifyIndexV1` folds; kept in memory afterwards), and every differing path becomes an entry register in one atomic journal append (`diff-tree -r -z`), however many there are. The tree itself is published as the base (`tree <oid>`) when the machine has no base yet, on an explicit rebase request (which lists the registers it voids), and whenever a changed path cannot be an entry (a path the entry policy cannot represent, or an unsafe link): the base carries the whole tree, so the stage of every machine can equal the archivist's stage exactly. A semantic no-op (a `git status` that only refreshes stat data) leaves the tree equal and publishes nothing; so does an unchanged `.git/index` stat signature without any process. A stage that cannot be written (unmerged entries, a failing git) is never published and is reported as degraded; a missing `.git/index` is restored from the registers. After a crash during an apply, the paths that apply was writing are not re-published as local edits. With `prepareObjects`, only incremental changes on the archivist can publish. Before emitting them, the callback must accept the distinct object IDs referenced by the entry events, excluding gitlinks. A refused batch can retry the same index signature. */
 export async function publishIndexV1(host:IndexHostV1,signal?:AbortSignal,prepareObjects?:(oids:readonly string[],paths:readonly string[])=>Promise<boolean>):Promise<IndexPublishV1>{
  const none:IndexPublishV1={published:0,base:false,waiting:false},waiting:IndexPublishV1={...none,waiting:true},{worktree}=host;
  if(prepareObjects!==undefined&&!host.server||!await gitPresentV1(worktree,signal))return none;
@@ -1020,9 +1053,7 @@ export async function publishIndexV1(host:IndexHostV1,signal?:AbortSignal,prepar
   }
   if(!await current())return waiting;
  }
- for(let from=0;from<events.length;from+=BATCH_LIMIT){
-  if(!await current()||await host.emit(events.slice(from,from+BATCH_LIMIT))===undefined){memory.delete(worktree);return waiting;}
- }
+ if(events.length>0&&(!await current()||await host.emit(events)===undefined)){memory.delete(worktree);return waiting;}
  memory.set(worktree,{...known,tree:local});signatures.set(worktree,settled);
  if(events.length>0){
   if(prepare!==undefined)await clearHealth(host,["objects-missing"]);

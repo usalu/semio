@@ -8,7 +8,7 @@ const GENERATION3D_MEASURED_CONTRIBUTIONS_PACK_CHARS: usize = 272_089;
 #[semio_framework_async_macros::async_test]
 async fn document_io_outer_export_yields_before_physical_publication() {
     let _serial = semio_s_artifact_procedural_3d_testkit::test_serial::lock();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🚪️io/🧪️tests/🧫️fixtures/🎨️surface/🔣️.json")).expect("neutral document continuation fixture");
+    let fixture: serde_json::Value = serde_json::from_str(semio_framework_test_fixtures::repo_text!("✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🧫️fixtures/🎨️surface/🔣️.json")).expect("neutral document continuation fixture");
     let snapshot = <Generation3dPlayApp as ArtifactEditor>::reference_birth().expect("explicit reference snapshot producer")().expect("the reference snapshot births");
     let config = Generation3dConfig::default();
     let command = Generation3dCommand::ExportDocument(export_document::ExportDocument { format: "txt".into(), widget_id: None });
@@ -36,7 +36,7 @@ async fn document_io_outer_export_yields_before_physical_publication() {
 #[semio_framework_async_macros::async_test]
 async fn document_io_outer_text_resumes_parity_cancel_and_stale_source_without_publication(){
     let _serial=semio_s_artifact_procedural_3d_testkit::test_serial::lock();
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🚪️io/🧪️tests/🧫️fixtures/🎨️surface/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(semio_framework_test_fixtures::repo_text!("✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🧫️fixtures/🎨️surface/🔣️.json")).unwrap();
     let capacity=&fixture["documentContinuation"]["capacity"];assert_eq!(GENERATION3D_DOCUMENT_SOURCE_ALLOCATION_BYTES,capacity["sourceAllocationBytes"].as_u64().unwrap()as usize);assert_eq!(GENERATION3D_DOCUMENT_OWNERSHIP_SOURCE_MULTIPLES,capacity["ownershipSourceMultiples"].as_u64().unwrap()as usize);assert_eq!(GENERATION3D_DOCUMENT_SCAFFOLD_BYTES,capacity["scaffoldBytes"].as_u64().unwrap()as usize);assert_eq!(generation3d_document_io_contract().max_output_bytes,capacity["downloadBytes"].as_u64().unwrap()as usize);
     let mut snapshot=<Generation3dPlayApp as ArtifactEditor>::reference_birth().expect("explicit reference snapshot producer")().expect("the reference snapshot births");
     let demand=&fixture["documentContinuation"]["capacity"]["sourceDemand"];let recipe=demand["cases"].as_array().unwrap().iter().find(|row|row["id"]=="combined").unwrap();let text=demand["text"].as_str().unwrap();let prior_widgets=snapshot.host_snapshot.widgets.len();
@@ -80,7 +80,7 @@ async fn document_io_import_extent_accounts_the_actual_incoming_graph_groups(){
     use semio_s_artifact_procedural_3d_geometry::infer_geometry;
     use semio_s_artifact_procedural_3d_geometry_value::GeometryValue;
     use semio_framework_artifact_playbook_playbook::FormGeneration;
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🚪️io/🧪️tests/🧫️fixtures/🎨️surface/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(semio_framework_test_fixtures::repo_text!("✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🧫️fixtures/🎨️surface/🔣️.json")).unwrap();
     let law=&fixture["documentContinuation"]["importContinuation"]["restoration"];
     assert_eq!(law["publication"],"canonical-load-genesis");assert_eq!(law["sourceBytes"],"exact-original-pack");assert_eq!(law["history"],"empty-genesis");assert_eq!(law["inference"],"original-imported-shapes");
     let mut incoming=Generation3dSnapshotRead::new(<Generation3dPlayApp as ArtifactEditor>::reference_birth().expect("explicit reference snapshot producer")().expect("the reference snapshot births"));
@@ -110,7 +110,7 @@ async fn document_io_import_extent_accounts_the_actual_incoming_graph_groups(){
 #[test]
 fn document_io_eval_source_lease_preserves_owner_identity_and_stale_refusal() {
     use std::sync::Arc;
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🚪️io/🧪️tests/🧫️fixtures/🎨️surface/🔣️.json")).unwrap();let law=&fixture["documentContinuation"];assert_eq!(law["sourceReleases"],1);
+    let fixture:serde_json::Value=serde_json::from_str(semio_framework_test_fixtures::repo_text!("✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🧫️fixtures/🎨️surface/🔣️.json")).unwrap();let law=&fixture["documentContinuation"];assert_eq!(law["sourceReleases"],1);
     let mut session=FlowEvalSession::new();let text="Mesh 😀 source ".repeat(512);let pointer=text.as_ptr();session.set_eval_json(text);let source=session.lease_eval_json().unwrap();assert_eq!(source.as_ptr(),pointer);assert!(session.owns_eval_json(&source));let same=session.lease_eval_json().unwrap();assert!(Arc::ptr_eq(&source,&same));
     let mut alias=semio_s_artifact_procedural_3d_testkit::retirement_driver::retire_shared_for_test(same,"eval source alias");semio_s_artifact_procedural_3d_testkit::retirement_driver::drive_erased_released(alias.as_mut(),"eval source alias");
     session.set_eval_json("replacement".into());assert!(!session.owns_eval_json(&source));let mut retirement=semio_s_artifact_procedural_3d_testkit::retirement_driver::retire_shared_for_test(source,"eval source");assert!(matches!(retirement.close_step(Default::default()).unwrap(),semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress) if progress==Default::default()));semio_s_artifact_procedural_3d_testkit::retirement_driver::drive_erased_released(retirement.as_mut(),"eval source");session.retire_cold();
@@ -279,7 +279,7 @@ fn mesh_component_action_is_scoped_and_publishes_history_and_selection() {
         if let Some(action) = kind.actions.iter().find(|action| action.id == "editMeshSelection") {
             let cuts = action.args.iter().find(|arg| arg.id == "cuts").unwrap();
             assert!(matches!(cuts.schema, semio_framework::ArgSchema::Number { min: Some(1.0), max: Some(256.0), step: Some(1.0), integer: true, .. }));
-            let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🎮️commands/🥽️edit-mesh-selection/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+            let fixture: serde_json::Value = serde_json::from_str(semio_framework_test_fixtures::repo_text!("✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🥽️edit-mesh-selection/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
             let operation = action.args.iter().find(|arg| arg.id == "operation").unwrap();
             let semio_framework::ArgSchema::String { options, .. } = &operation.schema else { panic!("operation choices"); };
             let expected = fixture["valid"].as_array().unwrap().iter().map(|case| case["name"].as_str().unwrap()).collect::<Vec<_>>();
@@ -510,7 +510,7 @@ semio_plugin::history_edit_acceptance_law!("procedural", semio_s_artifact_proced
 
 #[test]
 fn document_io_import_state_values_agree_with_serde_json(){
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🚪️io/🧪️tests/🧫️fixtures/🎨️surface/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(semio_framework_test_fixtures::repo_text!("✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🧫️fixtures/🎨️surface/🔣️.json")).unwrap();
     let source=serde_json::to_string(&fixture["documentContinuation"]["importContinuation"]["restoration"]["value"]).unwrap();
     let bytes=semio_s_artifact_procedural_3d_io::document_io::import_payload_bytes(&source).unwrap();assert!(matches!(bytes,std::borrow::Cow::Borrowed(_)));assert_eq!(bytes.as_ptr(),source.as_ptr());let data_url=format!("data:text/plain,{source}");let body=semio_s_artifact_procedural_3d_io::document_io::import_payload_bytes(&data_url).unwrap();assert!(matches!(body,std::borrow::Cow::Borrowed(_)));assert_eq!(body.as_ptr(),data_url.as_bytes()[16..].as_ptr());assert_eq!(body.as_ref(),source.as_bytes());
     let oracle:serde_json::Value=serde_json::from_str(&source).unwrap();
@@ -528,7 +528,7 @@ async fn document_io_import_continuation_restores_original_generation_selection_
     let _serial=semio_s_artifact_procedural_3d_testkit::test_serial::lock();
     use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshotRead;
     use semio_framework_artifact_playbook_playbook::FormGeneration;
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🚪️io/🧪️tests/🧫️fixtures/🎨️surface/🔣️.json")).unwrap();let law=&fixture["documentContinuation"]["importContinuation"];let state=&law["restoration"];
+    let fixture:serde_json::Value=serde_json::from_str(semio_framework_test_fixtures::repo_text!("✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🧫️fixtures/🎨️surface/🔣️.json")).unwrap();let law=&fixture["documentContinuation"]["importContinuation"];let state=&law["restoration"];
     assert_eq!(law["snapshotParity"],"all-semantic-fields");assert_eq!(law["rawSourceCopies"],0);assert_eq!(state["cameraLane"],"config");assert_eq!(state["publication"],"canonical-load-genesis");
     let mut snapshot=Generation3dSnapshotRead::new(<Generation3dPlayApp as ArtifactEditor>::reference_birth().expect("explicit reference snapshot producer")().expect("the reference snapshot births"));
     let prior_id=state["priorGenerationId"].as_str().unwrap().to_string();let prior=snapshot.generation.cold_builder_mut().unwrap();prior.generations.push(FormGeneration{id:prior_id.clone(),name:"Prior generation".into(),values:Default::default()});prior.selected_generation_id=Some(prior_id.clone());prior.preview_text=Some("Prior preview".into());
@@ -598,3 +598,6 @@ fn original_preview_reply_command_keeps_malformed_source_and_fault_through_paid_
   caller.retire(stock);
  }}}
 }
+
+#[path = "📥️import-preview.rs"]
+mod import_preview;

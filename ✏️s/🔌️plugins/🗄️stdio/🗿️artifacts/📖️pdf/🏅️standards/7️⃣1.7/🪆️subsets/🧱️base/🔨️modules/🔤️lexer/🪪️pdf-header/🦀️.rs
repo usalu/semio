@@ -35,11 +35,11 @@ pub struct PdfHeaderCursor {
 
 impl PdfHeaderCursor {
     /// 🔎️ Consumes one bounded source transition per work unit until a printable version settles.
-    pub fn advance(&mut self, source: &[u8], grant: usize) -> (usize, PdfHeaderStep) {
+    pub fn advance(&mut self, byte_at: impl Fn(usize) -> Option<u8>, grant: usize) -> (usize, PdfHeaderStep) {
         let mut work = 0;
         while work < grant && self.result.is_none() {
             work += 1;
-            let next = source.get(self.position).copied();
+            let next = byte_at(self.position);
             if let Some(header) = self.header.as_mut() {
                 let finishes = next.is_none_or(|byte| matches!(byte, b' ' | b'\t' | b'\r' | b'\n'));
                 if finishes {
@@ -83,7 +83,7 @@ impl PdfHeaderCursor {
 /// 🗺️ Drains the bounded probe for a reference reader.
 pub fn pdf_header(source: &[u8]) -> Option<PdfHeader> {
     let mut cursor = PdfHeaderCursor::default();
-    match cursor.advance(source, MAXIMUM_OFFSET + MAGIC.len() + MAXIMUM_VERSION_BYTES + 1).1 {
+    match cursor.advance(|position| source.get(position).copied(), MAXIMUM_OFFSET + MAGIC.len() + MAXIMUM_VERSION_BYTES + 1).1 {
         PdfHeaderStep::Complete(header) => header,
         PdfHeaderStep::More => None,
     }

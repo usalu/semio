@@ -285,64 +285,75 @@
               "material": "oak-timber"
             },
             {
-              "id": "back-slab",
-              "bone": "backrest",
+              "id": "l-post",
+              "bone": "end-left",
               "role": "body",
-              "z": 3,
+              "z": 2,
               "filled": true,
-              "tone": 0.56,
+              "tone": 0.4,
               "kind": "rect",
-              "x": 0.0,
-              "y": -0.232,
-              "w": 1.8,
-              "h": 0.4032,
-              "region": "back-timber",
-              "material": "oak-timber"
+              "x": 0.35,
+              "y": -0.02,
+              "w": 0.4927,
+              "h": 0.04,
+              "region": "steel-frame",
+              "material": "steel-painted"
             },
             {
-              "id": "l-frame",
+              "id": "l-leg",
               "bone": "end-left",
               "role": "body",
               "z": 5,
               "filled": true,
-              "tone": 0.4,
-              "kind": "rect",
-              "x": 0.0,
-              "y": -0.0375,
-              "w": 0.63,
-              "h": 0.075,
+              "tone": 0.42,
+              "kind": "poly",
+              "points": [[0.0, 0.035], [0.03, 0.025], [0.1, 0.02], [0.63, 0.02], [0.63, -0.02], [0.1, -0.02], [0.03, -0.025], [0.0, -0.035]],
+              "closed": true,
               "region": "steel-frame",
               "material": "steel-painted"
             },
             {
-              "id": "r-frame",
-              "bone": "end-right",
-              "role": "body",
-              "z": 5,
-              "filled": true,
-              "tone": 0.4,
-              "kind": "rect",
-              "x": 0.0,
-              "y": -0.0375,
-              "w": 0.63,
-              "h": 0.075,
-              "region": "steel-frame",
-              "material": "steel-painted"
-            }
-          ],
-          "front": [
-            {
-              "id": "r-frame",
+              "id": "r-post",
               "bone": "end-right",
               "role": "body",
               "z": 2,
               "filled": true,
               "tone": 0.4,
-              "kind": "path",
-              "d": "M -0.298 0.615 L -0.298 0.015 L -0.2936 0.0044 L -0.2845 0.0001 L -0.2365 0.0001 L -0.2285 0.0034 L -0.2236 0.0106 L -0.223 0.2846 L -0.2163 0.2975 L -0.2076 0.3 L 0.1732 0.3 L 0.1832 0.2965 L 0.1883 0.2876 L 0.21 0.0095 L 0.2143 0.0035 L 0.2224 0.0001 L 0.2702 0.0001 L 0.2793 0.0043 L 0.2838 0.0162 L 0.2501 0.4519 L 0.244 0.4628 L 0.2361 0.4657 L 0.1905 0.4687 L 0.1799 0.4637 L 0.176 0.4541 L 0.1806 0.3882 L 0.1762 0.3793 L 0.1686 0.3753 L -0.2076 0.375 L -0.2175 0.3784 L -0.2229 0.3885 L -0.223 0.5396 L -0.2212 0.5471 L -0.2151 0.5532 L 0.1952 0.5553 L 0.2029 0.5594 L 0.2072 0.5685 L 0.2072 0.6165 L 0.2029 0.6256 L 0.1923 0.63 L -0.283 0.63 L -0.2936 0.6256 Z",
+              "kind": "rect",
+              "x": 0.35,
+              "y": -0.02,
+              "w": 0.4927,
+              "h": 0.04,
               "region": "steel-frame",
               "material": "steel-painted"
             },
+            {
+              "id": "r-leg",
+              "bone": "end-right",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.42,
+              "kind": "poly",
+              "points": [[0.0, 0.035], [0.03, 0.025], [0.1, 0.02], [0.63, 0.02], [0.63, -0.02], [0.1, -0.02], [0.03, -0.025], [0.0, -0.035]],
+              "closed": true,
+              "region": "steel-frame",
+              "material": "steel-painted"
+            },
+            {
+              "id": "three-back-slats",
+              "bone": "backrest",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.58,
+              "kind": "path",
+              "region": "back-timber",
+              "material": "oak-timber",
+              "d": "M 0.0 -0.1878 L 1.8 -0.1878 L 1.8 -0.1037 L 0.0 -0.1037 Z M 0.0 -0.0244 L 1.8 -0.0244 L 1.8 0.0466 L 0.0 0.0466 Z M 0.0 0.0996 L 1.8 0.0996 L 1.8 0.1706 L 0.0 0.1706 Z"
+            }
+          ],
+          "front": [
             {
               "id": "seat-slab",
               "bone": "seat",
@@ -359,17 +370,28 @@
               "material": "oak-timber"
             },
             {
-              "id": "back-slab",
+              "id": "r-frame",
+              "bone": "end-right",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.42,
+              "kind": "path",
+              "d": "M -0.2891 0.0 L -0.2459 0.0 L -0.2412 0.0017 L -0.2376 0.0063 L -0.2371 0.0122 L -0.2441 0.0333 L -0.248 0.1004 L -0.2476 0.1279 L -0.2435 0.1333 L -0.2378 0.135 L 0.2011 0.1346 L 0.2059 0.1314 L 0.2082 0.1258 L 0.2182 0.0279 L 0.2139 0.0112 L 0.215 0.0054 L 0.2182 0.0017 L 0.2239 0.0 L 0.2671 0.0 L 0.2745 0.0046 L 0.2761 0.0112 L 0.2687 0.0335 L 0.2671 0.0583 L 0.2646 0.0657 L 0.2339 0.3568 L 0.3001 0.8278 L 0.2992 0.8336 L 0.2961 0.8373 L 0.2738 0.8414 L 0.2683 0.8394 L 0.2649 0.8347 L 0.2372 0.6388 L 0.2354 0.6342 L 0.2309 0.6307 L -0.288 0.63 L -0.2927 0.6288 L -0.2963 0.6256 L -0.298 0.621 L -0.2978 0.6004 L -0.2958 0.596 L -0.2898 0.5907 L -0.288 0.5847 L -0.288 0.1004 L -0.2919 0.0333 L -0.2991 0.0102 L -0.2963 0.003 Z M 0.1892 0.3675 L -0.2426 0.406 L -0.2468 0.4101 L -0.248 0.4151 L -0.248 0.5848 L -0.2468 0.5897 L -0.2427 0.5938 L -0.2378 0.595 L 0.2192 0.595 L 0.2243 0.5937 L 0.2284 0.5895 L 0.2294 0.5834 L 0.2003 0.3762 L 0.1969 0.3699 Z M -0.2418 0.1658 L -0.2463 0.1695 L -0.248 0.1752 L -0.2472 0.3534 L -0.2428 0.3584 L -0.2369 0.3596 L 0.1827 0.3224 L 0.1872 0.3187 L 0.1889 0.3139 L 0.203 0.1763 L 0.2009 0.1687 L 0.1969 0.1658 Z",
+              "region": "steel-frame",
+              "material": "steel-painted"
+            },
+            {
+              "id": "three-back-slats",
               "bone": "backrest",
               "role": "body",
               "z": 5,
               "filled": true,
-              "tone": 0.56,
-              "kind": "poly",
-              "points": [[0.2463, 0.445], [0.3015, 0.8377], [0.2272, 0.8482], [0.172, 0.45]],
-              "closed": true,
+              "tone": 0.58,
+              "kind": "path",
               "region": "back-timber",
-              "material": "oak-timber"
+              "material": "oak-timber",
+              "d": "M 0.1815 0.4941 L 0.1926 0.5733 L 0.2273 0.5684 L 0.2161 0.4892 Z M 0.2044 0.6575 L 0.2156 0.7236 L 0.2502 0.7187 L 0.2391 0.6526 Z M 0.22 0.7815 L 0.2312 0.8476 L 0.2658 0.8427 L 0.2547 0.7766 Z"
             }
           ],
           "plan": [
@@ -389,19 +411,19 @@
               "material": "oak-timber"
             },
             {
-              "id": "back-slab",
-              "bone": "backrest",
+              "id": "l-feet",
+              "bone": "end-left",
               "role": "body",
-              "z": 5,
+              "z": 2,
               "filled": true,
-              "tone": 0.56,
+              "tone": 0.3,
               "kind": "rect",
-              "x": 0.0,
-              "y": 0.172,
-              "w": 1.8,
-              "h": 0.1295,
-              "region": "back-timber",
-              "material": "oak-timber"
+              "x": 0.085,
+              "y": -0.2991,
+              "w": 0.07,
+              "h": 0.5992,
+              "region": "steel-frame",
+              "material": "steel-painted"
             },
             {
               "id": "l-frame",
@@ -409,12 +431,27 @@
               "role": "body",
               "z": 6,
               "filled": true,
-              "tone": 0.4,
+              "tone": 0.42,
               "kind": "rect",
-              "x": 0.0825,
-              "y": -0.298,
-              "w": 0.075,
-              "h": 0.5818,
+              "x": 0.1,
+              "y": -0.2991,
+              "w": 0.04,
+              "h": 0.5992,
+              "region": "steel-frame",
+              "material": "steel-painted"
+            },
+            {
+              "id": "r-feet",
+              "bone": "end-right",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": 1.645,
+              "y": -0.2991,
+              "w": 0.07,
+              "h": 0.5992,
               "region": "steel-frame",
               "material": "steel-painted"
             },
@@ -424,21 +461,33 @@
               "role": "body",
               "z": 6,
               "filled": true,
-              "tone": 0.4,
+              "tone": 0.42,
               "kind": "rect",
-              "x": 1.6425,
-              "y": -0.298,
-              "w": 0.075,
-              "h": 0.5818,
+              "x": 1.66,
+              "y": -0.2991,
+              "w": 0.04,
+              "h": 0.5992,
               "region": "steel-frame",
               "material": "steel-painted"
+            },
+            {
+              "id": "three-back-slats",
+              "bone": "backrest",
+              "role": "body",
+              "z": 5.0,
+              "filled": true,
+              "tone": 0.58,
+              "kind": "path",
+              "region": "back-timber",
+              "material": "oak-timber",
+              "d": "M 0.0 0.1815 L 1.8 0.1815 L 1.8 0.2273 L 0.0 0.2273 Z M 0.0 0.2044 L 1.8 0.2044 L 1.8 0.2502 L 0.0 0.2502 Z M 0.0 0.22 L 1.8 0.22 L 1.8 0.2658 L 0.0 0.2658 Z"
             }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "Bench sign 3.6 x 1.7 mm: the seat slab, the back slab above it and the two end frames. Front view: the frame of 75 mm members with the space under the seat and the gap under the armrest open, the flat seat slab and the raked back slab. Plan: seat, back and the two frames.",
-            "de": "Bankzeichen 3,6 x 1,7 mm: die Sitzplatte, darüber die Lehnenplatte und die zwei Endgestelle. Vorderansicht: das Gestell aus 75-mm-Gliedern mit offenem Raum unter dem Sitz und offener Lücke unter der Armlehne, die flache Sitzplatte und die geneigte Lehnenplatte. Grundriss: Sitz, Lehne und die zwei Gestelle."
+            "en": "Separate lumbar, middle and upper slats span the two cast frames above the continuous seat. The side view shows the rake and the open arms.",
+            "de": "Lenden-, Mittel- und Oberlatte überspannen die Gussgestelle über der durchgehenden Sitzfläche. Die Seitenansicht zeigt die Neigung und die offenen Armlehnen."
           },
           "retained": {
             "en": "Overall size, seat height, back rake, armrest height, the open leg space.",
@@ -503,38 +552,6 @@
               "material": "oak-timber"
             },
             {
-              "id": "back-board-1",
-              "bone": "backrest",
-              "role": "body",
-              "z": 3,
-              "filled": true,
-              "tone": 0.56,
-              "kind": "rect",
-              "x": 0.0,
-              "y": -0.1878,
-              "w": 1.8,
-              "h": 0.071,
-              "region": "back-timber",
-              "material": "oak-timber",
-              "penMm": 0.15
-            },
-            {
-              "id": "back-board-2",
-              "bone": "backrest",
-              "role": "body",
-              "z": 3,
-              "filled": true,
-              "tone": 0.56,
-              "kind": "rect",
-              "x": 0.0,
-              "y": -0.0113,
-              "w": 1.8,
-              "h": 0.1819,
-              "region": "back-timber",
-              "material": "oak-timber",
-              "penMm": 0.15
-            },
-            {
               "id": "l-post",
               "bone": "end-left",
               "role": "body",
@@ -589,6 +606,18 @@
               "closed": true,
               "region": "steel-frame",
               "material": "steel-painted"
+            },
+            {
+              "id": "three-back-slats",
+              "bone": "backrest",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.58,
+              "kind": "path",
+              "region": "back-timber",
+              "material": "oak-timber",
+              "d": "M 0.0 -0.1878 L 1.8 -0.1878 L 1.8 -0.1037 L 0.0 -0.1037 Z M 0.0 -0.0244 L 1.8 -0.0244 L 1.8 0.0466 L 0.0 0.0466 Z M 0.0 0.0996 L 1.8 0.0996 L 1.8 0.1706 L 0.0 0.1706 Z"
             }
           ],
           "front": [
@@ -618,30 +647,16 @@
               "material": "oak-timber"
             },
             {
-              "id": "back-board-1",
+              "id": "three-back-slats",
               "bone": "backrest",
               "role": "body",
               "z": 5,
               "filled": true,
-              "tone": 0.56,
-              "kind": "poly",
-              "points": [[0.1815, 0.4941], [0.1926, 0.5733], [0.2273, 0.5684], [0.2161, 0.4892]],
-              "closed": true,
+              "tone": 0.58,
+              "kind": "path",
               "region": "back-timber",
-              "material": "oak-timber"
-            },
-            {
-              "id": "back-board-2",
-              "bone": "backrest",
-              "role": "body",
-              "z": 5,
-              "filled": true,
-              "tone": 0.56,
-              "kind": "poly",
-              "points": [[0.2044, 0.6575], [0.2312, 0.8476], [0.2658, 0.8427], [0.2391, 0.6526]],
-              "closed": true,
-              "region": "back-timber",
-              "material": "oak-timber"
+              "material": "oak-timber",
+              "d": "M 0.1815 0.4941 L 0.1926 0.5733 L 0.2273 0.5684 L 0.2161 0.4892 Z M 0.2044 0.6575 L 0.2156 0.7236 L 0.2502 0.7187 L 0.2391 0.6526 Z M 0.22 0.7815 L 0.2312 0.8476 L 0.2658 0.8427 L 0.2547 0.7766 Z"
             }
           ],
           "plan": [
@@ -658,36 +673,6 @@
               "w": 1.8,
               "h": 0.4323,
               "region": "seat-timber",
-              "material": "oak-timber"
-            },
-            {
-              "id": "back-board-1",
-              "bone": "backrest",
-              "role": "body",
-              "z": 5.0,
-              "filled": true,
-              "tone": 0.56,
-              "kind": "rect",
-              "x": 0.0,
-              "y": 0.1815,
-              "w": 1.8,
-              "h": 0.0458,
-              "region": "back-timber",
-              "material": "oak-timber"
-            },
-            {
-              "id": "back-board-2",
-              "bone": "backrest",
-              "role": "body",
-              "z": 5.1,
-              "filled": true,
-              "tone": 0.56,
-              "kind": "rect",
-              "x": 0.0,
-              "y": 0.2044,
-              "w": 1.8,
-              "h": 0.0614,
-              "region": "back-timber",
               "material": "oak-timber"
             },
             {
@@ -749,13 +734,25 @@
               "h": 0.5992,
               "region": "steel-frame",
               "material": "steel-painted"
+            },
+            {
+              "id": "three-back-slats",
+              "bone": "backrest",
+              "role": "body",
+              "z": 5.0,
+              "filled": true,
+              "tone": 0.58,
+              "kind": "path",
+              "region": "back-timber",
+              "material": "oak-timber",
+              "d": "M 0.0 0.1815 L 1.8 0.1815 L 1.8 0.2273 L 0.0 0.2273 Z M 0.0 0.2044 L 1.8 0.2044 L 1.8 0.2502 L 0.0 0.2502 Z M 0.0 0.22 L 1.8 0.22 L 1.8 0.2658 L 0.0 0.2658 Z"
             }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "Bench 9 x 4.3 mm: the seat as one board, the back as the lumbar slat and one board above the armrest gap, the end frames with legs to the floor. Front view: the casting outline with both openings, the raked seat board and the two back boards. Plan: seat board, back boards and the frames.",
-            "de": "Bank 9 x 4,3 mm: der Sitz als ein Brett, die Lehne als Lendenlatte und ein Brett über der Armlehnenfuge, die Endgestelle mit Beinen bis zum Boden. Vorderansicht: der Gussumriss mit beiden Öffnungen, das geneigte Sitzbrett und die zwei Lehnenbretter. Grundriss: Sitzbrett, Lehnenbretter und die Gestelle."
+            "en": "Separate lumbar, middle and upper slats span the two cast frames above the continuous seat. The side view shows the rake and the open arms.",
+            "de": "Lenden-, Mittel- und Oberlatte überspannen die Gussgestelle über der durchgehenden Sitzfläche. Die Seitenansicht zeigt die Neigung und die offenen Armlehnen."
           },
           "retained": {
             "en": "Seat rake, back rake, the armrest gap in the back, both openings of the frame.",
@@ -3874,6 +3871,12 @@
             "part": "member"
           },
           {
+            "id": "m-l-pads",
+            "of": "l-pads",
+            "member": "end-left",
+            "part": "member"
+          },
+          {
             "id": "m-r-web",
             "of": "r-web",
             "member": "end-right",
@@ -3894,6 +3897,12 @@
           {
             "id": "m-r-rim-3",
             "of": "r-rim-3",
+            "member": "end-right",
+            "part": "member"
+          },
+          {
+            "id": "m-r-pads",
+            "of": "r-pads",
             "member": "end-right",
             "part": "member"
           },
@@ -4107,8 +4116,8 @@
             "de": "Körper, für 7,5 mm gebaut: zwei einteilige gegossene Endgestelle im I-Querschnitt (40-mm-Randflansch um den Umriss und beide Öffnungen, 10-mm-Steg), je mit Vorderbein und Armlehnenstütze in einem Stück, um 5 Grad geneigter Sitzzarge, um 8 Grad geneigtem Rückenpfosten, zur Standsicherheit nach hinten ausgestelltem Hinterbein, unterer Strebe, Armband unter einer gerundeten Armlehne 50 x 35 mm mit Knauf und einer Fußplatte 70 x 70 x 16 mm unter jedem Fuß; vier Eichen-Sitzlatten 100 x 45 mm mit 10-mm-Wasserfugen und drei Eichen-Rückenlatten 80 x 35 mm, alle mit 6 mm gebrochenen Kanten, 0,12 m über die Gestelle auskragend; die Armlehne trifft den Pfosten in der 90-mm-Fuge zwischen Lendenlatte und oberen Latten; die gewölbten Köpfe der M8-Schlossschrauben (eine je Latte und Gestell) als Textur."
           },
           {
-            "en": "Thermal: every region is the surface of its body solids with its one layer (45 mm and 35 mm oak slats, 10 mm cast steel); no hidden regions, no emitters. Structure: the end frames (web and rims of the casting) carry seat and back to the floor; the seat slats span 1.56 m between the frames, the back slats lie on the back posts; the M8 carriage bolts of every slat at each frame are the joints; the two foot pads of each frame are the support of its contact anchor; each bone carries its mass at its centre.",
-            "de": "Thermik: jede Region ist die Oberfläche ihrer Körper mit ihrer einen Schicht (Eichenlatten 45 mm und 35 mm, Stahlguss 10 mm); keine verdeckten Regionen, keine Emitter. Tragwerk: die Endgestelle (Steg und Flansche des Gusses) tragen Sitz und Lehne zum Boden; die Sitzlatten spannen 1,56 m zwischen den Gestellen, die Rückenlatten liegen auf den Rückenpfosten; die M8-Schlossschrauben jeder Latte an jedem Gestell sind die Gelenke; die zwei Fußplatten jedes Gestells sind das Auflager seines Kontaktankers; jeder Knochen trägt seine Masse im Schwerpunkt."
+            "en": "Thermal: every region is the surface of its body solids with its one layer (45 mm and 35 mm oak slats, 10 mm cast steel); no hidden regions, no emitters. Structure: the end frames (web and rims of the casting) carry seat and back to the floor; the seat slats span 1.56 m between the frames, the back slats lie on the back posts; the M8 carriage bolts of every slat at each frame are the joints; the two cast foot pads of each frame are members of it and stand on the contact pads of its anchor; each bone carries its mass at its centre.",
+            "de": "Thermik: jede Region ist die Oberfläche ihrer Körper mit ihrer einen Schicht (Eichenlatten 45 mm und 35 mm, Stahlguss 10 mm); keine verdeckten Regionen, keine Emitter. Tragwerk: die Endgestelle (Steg und Flansche des Gusses) tragen Sitz und Lehne zum Boden; die Sitzlatten spannen 1,56 m zwischen den Gestellen, die Rückenlatten liegen auf den Rückenpfosten; die M8-Schlossschrauben jeder Latte an jedem Gestell sind die Gelenke; die zwei angegossenen Fußplatten jedes Gestells sind seine Glieder und stehen auf den Kontaktfeldern seines Ankers; jeder Knochen trägt seine Masse im Schwerpunkt."
           }
         ]
       },
@@ -4934,7 +4943,7 @@
             "to": 1.8
           },
           {
-            "id": "back-board-1",
+            "id": "back-slat-1",
             "kind": "extrude",
             "bone": "backrest",
             "material": "oak-timber",
@@ -4946,13 +4955,25 @@
             "to": 1.8
           },
           {
-            "id": "back-board-2",
+            "id": "back-slat-2",
             "kind": "extrude",
             "bone": "backrest",
             "material": "oak-timber",
             "role": "body",
             "tone": 0.58,
-            "profile": [[-0.01951, 0.20444], [0.17062, 0.23116], [0.16575, 0.26582], [-0.02438, 0.2391]],
+            "profile": [[-0.01951, 0.20444], [0.05971, 0.21557], [0.05484, 0.25023], [-0.02438, 0.2391]],
+            "plane": "yz",
+            "from": 0.0,
+            "to": 1.8
+          },
+          {
+            "id": "back-slat-3",
+            "kind": "extrude",
+            "bone": "backrest",
+            "material": "oak-timber",
+            "role": "body",
+            "tone": 0.58,
+            "profile": [[0.0914, 0.22003], [0.17062, 0.23116], [0.16575, 0.26582], [0.08653, 0.25468]],
             "plane": "yz",
             "from": 0.0,
             "to": 1.8
@@ -4975,13 +4996,18 @@
             "region": "seat-timber"
           },
           {
-            "id": "th-back-board-1",
-            "of": "back-board-1",
+            "id": "th-back-slat-1",
+            "of": "back-slat-1",
             "region": "back-timber"
           },
           {
-            "id": "th-back-board-2",
-            "of": "back-board-2",
+            "id": "th-back-slat-2",
+            "of": "back-slat-2",
+            "region": "back-timber"
+          },
+          {
+            "id": "th-back-slat-3",
+            "of": "back-slat-3",
             "region": "back-timber"
           }
         ],
@@ -5005,18 +5031,6 @@
             "part": "member"
           },
           {
-            "id": "m-back-board-1",
-            "of": "back-board-1",
-            "member": "backrest",
-            "part": "member"
-          },
-          {
-            "id": "m-back-board-2",
-            "of": "back-board-2",
-            "member": "backrest",
-            "part": "member"
-          },
-          {
             "id": "bolt-seat-l",
             "kind": "revolve",
             "bone": "seat",
@@ -5040,40 +5054,6 @@
             "axis": [0, -0.99619, -0.08716],
             "origin": [1.68, 0.02209, -0.0219],
             "member": "seat",
-            "part": "joint"
-          },
-          {
-            "id": "bolt-back-1",
-            "kind": "revolve",
-            "bone": "backrest",
-            "material": "steel-painted",
-            "role": "detail",
-            "tone": 0.25,
-            "profile": [[-0.0216, 0.0216], [-0.0162, 0.036], [0.0, 0.036], [0.0, 0.015], [0.065, 0.015], [0.065, 0.024], [0.089, 0.024]],
-            "axis": [0, -0.13917, 0.99027],
-            "origin": [0.12, -0.1433, 0.18704],
-            "repeat": {
-              "count": 2,
-              "translation": [1.56, 0, 0]
-            },
-            "member": "backrest",
-            "part": "joint"
-          },
-          {
-            "id": "bolt-back-2",
-            "kind": "revolve",
-            "bone": "backrest",
-            "material": "steel-painted",
-            "role": "detail",
-            "tone": 0.25,
-            "profile": [[-0.0216, 0.0216], [-0.0162, 0.036], [0.0, 0.036], [0.0, 0.015], [0.065, 0.015], [0.065, 0.024], [0.089, 0.024]],
-            "axis": [0, -0.13917, 0.99027],
-            "origin": [0.12, 0.07555, 0.2178],
-            "repeat": {
-              "count": 2,
-              "translation": [1.56, 0, 0]
-            },
-            "member": "backrest",
             "part": "joint"
           },
           {
@@ -5169,16 +5149,85 @@
             },
             "member": "backrest",
             "part": "mass"
+          },
+          {
+            "id": "m-back-slat-1",
+            "of": "back-slat-1",
+            "member": "backrest",
+            "part": "member"
+          },
+          {
+            "id": "m-back-slat-2",
+            "of": "back-slat-2",
+            "member": "backrest",
+            "part": "member"
+          },
+          {
+            "id": "m-back-slat-3",
+            "of": "back-slat-3",
+            "member": "backrest",
+            "part": "member"
+          },
+          {
+            "id": "bolt-back-1",
+            "kind": "revolve",
+            "bone": "backrest",
+            "material": "steel-painted",
+            "role": "detail",
+            "tone": 0.25,
+            "profile": [[-0.0108, 0.0108], [-0.0081, 0.018], [0.0, 0.018], [0.0, 0.0075], [0.055, 0.0075], [0.055, 0.012], [0.067, 0.012]],
+            "axis": [0, -0.13917, 0.99027],
+            "origin": [0.12, -0.1433, 0.18704],
+            "repeat": {
+              "count": 2,
+              "translation": [1.56, 0, 0]
+            },
+            "member": "backrest",
+            "part": "joint"
+          },
+          {
+            "id": "bolt-back-2",
+            "kind": "revolve",
+            "bone": "backrest",
+            "material": "steel-painted",
+            "role": "detail",
+            "tone": 0.25,
+            "profile": [[-0.0108, 0.0108], [-0.0081, 0.018], [0.0, 0.018], [0.0, 0.0075], [0.055, 0.0075], [0.055, 0.012], [0.067, 0.012]],
+            "axis": [0, -0.13917, 0.99027],
+            "origin": [0.12, 0.0201, 0.21],
+            "repeat": {
+              "count": 2,
+              "translation": [1.56, 0, 0]
+            },
+            "member": "backrest",
+            "part": "joint"
+          },
+          {
+            "id": "bolt-back-3",
+            "kind": "revolve",
+            "bone": "backrest",
+            "material": "steel-painted",
+            "role": "detail",
+            "tone": 0.25,
+            "profile": [[-0.0108, 0.0108], [-0.0081, 0.018], [0.0, 0.018], [0.0, 0.0075], [0.055, 0.0075], [0.055, 0.012], [0.067, 0.012]],
+            "axis": [0, -0.13917, 0.99027],
+            "origin": [0.12, 0.13101, 0.22559],
+            "repeat": {
+              "count": 2,
+              "translation": [1.56, 0, 0]
+            },
+            "member": "backrest",
+            "part": "joint"
           }
         ],
         "decisions": [
           {
-            "en": "Body, authored anew for 30 mm: each end frame a 40 mm plate whose members are at least 30 mm, the legs reaching the floor with their feet (the 16 mm pads merged), the armrest merged into the arm band; the seat as one raked 45 mm board (the 10 mm gaps closed); the back as the lumbar slat and one board for the two upper slats (their 30 mm gap closed); the 90 mm gap where the armrest meets the post stays open.",
-            "de": "Körper, für 30 mm neu gebaut: jedes Endgestell eine 40-mm-Platte mit Gliedern von mindestens 30 mm, die Beine mit ihren Füßen bis zum Boden (die 16-mm-Platten verschmolzen), die Armlehne im Armband aufgegangen; der Sitz als ein geneigtes 45-mm-Brett (die 10-mm-Fugen geschlossen); die Lehne als Lendenlatte und ein Brett aus den zwei oberen Latten (ihre 30-mm-Fuge geschlossen); die 90-mm-Fuge, in der die Armlehne den Pfosten trifft, bleibt offen."
+            "en": "Three separate raked oak slats span the two cast end frames. Their 90 and 32 mm gaps clear the armrest and divide the back. The one-piece seating surface retains its scale-specific section.",
+            "de": "Drei einzeln geneigte Eichenlatten überspannen die beiden Gussgestelle. Ihre 90 und 32 mm breiten Abstände lassen Platz für die Armlehne und gliedern den Rücken. Die durchgehende Sitzfläche behält ihren maßstabsabhängigen Querschnitt."
           },
           {
-            "en": "Thermal: one surface per region. Structure: plates and boards as members; one 30 mm bolt per board and frame as the joints; 30 mm contact pads under the feet; masses at the centres.",
-            "de": "Thermik: eine Oberfläche je Region. Tragwerk: Platten und Bretter als Stäbe; je Brett und Gestell eine 30-mm-Schraube als Gelenk; 30-mm-Kontaktplatten unter den Füßen; Massen in den Schwerpunkten."
+            "en": "Each slat carries its own timber temperature surface and bears on the cast posts through two bolts. The iron frames retain the open arm and leg bracing.",
+            "de": "Jede Latte besitzt eine eigene thermische Holzoberfläche und liegt mit zwei Bolzen an den Gusspfosten. Die Eisengestelle behalten die offenen Arm- und Beinstreben."
           }
         ]
       },
@@ -5186,116 +5235,6 @@
         "status": "authored",
         "denominator": 500,
         "body": [
-          {
-            "id": "l-frame",
-            "kind": "extrude",
-            "bone": "end-left",
-            "material": "steel-painted",
-            "role": "body",
-            "tone": 0.42,
-            "profile": [
-              [-0.298, 0.615],
-              [-0.298, 0.015],
-              [-0.29361, 0.00439],
-              [-0.28447, 7e-05],
-              [-0.23653, 7e-05],
-              [-0.22848, 0.0034],
-              [-0.22365, 0.01065],
-              [-0.223, 0.28463],
-              [-0.21632, 0.29746],
-              [-0.20763, 0.3],
-              [0.17322, 0.3],
-              [0.18322, 0.29648],
-              [0.18835, 0.2876],
-              [0.20995, 0.00952],
-              [0.21428, 0.00351],
-              [0.22242, 7e-05],
-              [0.27025, 7e-05],
-              [0.2793, 0.00429],
-              [0.28375, 0.01616],
-              [0.25006, 0.45186],
-              [0.24403, 0.46275],
-              [0.23611, 0.46567],
-              [0.19053, 0.46867],
-              [0.17987, 0.46369],
-              [0.17604, 0.45406],
-              [0.1806, 0.38822],
-              [0.1762, 0.37929],
-              [0.16861, 0.3753],
-              [-0.20763, 0.375],
-              [-0.2175, 0.37842],
-              [-0.22291, 0.38853],
-              [-0.223, 0.53963],
-              [-0.22121, 0.54706],
-              [-0.21506, 0.55321],
-              [0.19522, 0.55529],
-              [0.20291, 0.55939],
-              [0.20723, 0.56853],
-              [0.20723, 0.61647],
-              [0.20291, 0.62561],
-              [0.1923, 0.63],
-              [-0.283, 0.63],
-              [-0.29361, 0.62561]
-            ],
-            "plane": "zx",
-            "from": -0.0375,
-            "to": 0.0375
-          },
-          {
-            "id": "r-frame",
-            "kind": "extrude",
-            "bone": "end-right",
-            "material": "steel-painted",
-            "role": "body",
-            "tone": 0.42,
-            "profile": [
-              [-0.298, 0.615],
-              [-0.298, 0.015],
-              [-0.29361, 0.00439],
-              [-0.28447, 7e-05],
-              [-0.23653, 7e-05],
-              [-0.22848, 0.0034],
-              [-0.22365, 0.01065],
-              [-0.223, 0.28463],
-              [-0.21632, 0.29746],
-              [-0.20763, 0.3],
-              [0.17322, 0.3],
-              [0.18322, 0.29648],
-              [0.18835, 0.2876],
-              [0.20995, 0.00952],
-              [0.21428, 0.00351],
-              [0.22242, 7e-05],
-              [0.27025, 7e-05],
-              [0.2793, 0.00429],
-              [0.28375, 0.01616],
-              [0.25006, 0.45186],
-              [0.24403, 0.46275],
-              [0.23611, 0.46567],
-              [0.19053, 0.46867],
-              [0.17987, 0.46369],
-              [0.17604, 0.45406],
-              [0.1806, 0.38822],
-              [0.1762, 0.37929],
-              [0.16861, 0.3753],
-              [-0.20763, 0.375],
-              [-0.2175, 0.37842],
-              [-0.22291, 0.38853],
-              [-0.223, 0.53963],
-              [-0.22121, 0.54706],
-              [-0.21506, 0.55321],
-              [0.19522, 0.55529],
-              [0.20291, 0.55939],
-              [0.20723, 0.56853],
-              [0.20723, 0.61647],
-              [0.20291, 0.62561],
-              [0.1923, 0.63],
-              [-0.283, 0.63],
-              [-0.29361, 0.62561]
-            ],
-            "plane": "zx",
-            "from": -0.0375,
-            "to": 0.0375
-          },
           {
             "id": "seat-slab",
             "kind": "extrude",
@@ -5309,16 +5248,215 @@
             "to": 1.8
           },
           {
-            "id": "back-slab",
+            "id": "back-slat-1",
             "kind": "extrude",
             "bone": "backrest",
             "material": "oak-timber",
             "role": "body",
             "tone": 0.58,
-            "profile": [[-0.23201, 0.24627], [0.16074, 0.30147], [0.17117, 0.2272], [-0.227, 0.172]],
+            "profile": [
+              [-0.18374, 0.18742],
+              [-0.18253, 0.18456],
+              [-0.18005, 0.18269],
+              [-0.17697, 0.18231],
+              [-0.10963, 0.19177],
+              [-0.10677, 0.19299],
+              [-0.1049, 0.19547],
+              [-0.10452, 0.19855],
+              [-0.10772, 0.22133],
+              [-0.10894, 0.22419],
+              [-0.11142, 0.22605],
+              [-0.1145, 0.22643],
+              [-0.18184, 0.21697],
+              [-0.1847, 0.21576],
+              [-0.18657, 0.21327],
+              [-0.18694, 0.21019]
+            ],
             "plane": "yz",
             "from": 0.0,
             "to": 1.8
+          },
+          {
+            "id": "back-slat-2",
+            "kind": "extrude",
+            "bone": "backrest",
+            "material": "oak-timber",
+            "role": "body",
+            "tone": 0.58,
+            "profile": [
+              [-0.02035, 0.21038],
+              [-0.01913, 0.20752],
+              [-0.01665, 0.20565],
+              [-0.01357, 0.20527],
+              [0.05377, 0.21474],
+              [0.05663, 0.21595],
+              [0.05849, 0.21843],
+              [0.05887, 0.22151],
+              [0.05567, 0.24429],
+              [0.05446, 0.24715],
+              [0.05198, 0.24902],
+              [0.0489, 0.2494],
+              [-0.01844, 0.23993],
+              [-0.0213, 0.23872],
+              [-0.02317, 0.23624],
+              [-0.02355, 0.23316]
+            ],
+            "plane": "yz",
+            "from": 0.0,
+            "to": 1.8
+          },
+          {
+            "id": "back-slat-3",
+            "kind": "extrude",
+            "bone": "backrest",
+            "material": "oak-timber",
+            "role": "body",
+            "tone": 0.58,
+            "profile": [
+              [0.09056, 0.22597],
+              [0.09178, 0.22311],
+              [0.09426, 0.22124],
+              [0.09734, 0.22086],
+              [0.16468, 0.23032],
+              [0.16754, 0.23154],
+              [0.1694, 0.23402],
+              [0.16978, 0.2371],
+              [0.16658, 0.25988],
+              [0.16537, 0.26274],
+              [0.16289, 0.26461],
+              [0.15981, 0.26498],
+              [0.09247, 0.25552],
+              [0.08961, 0.25431],
+              [0.08774, 0.25183],
+              [0.08736, 0.24874]
+            ],
+            "plane": "yz",
+            "from": 0.0,
+            "to": 1.8
+          },
+          {
+            "id": "l-frame",
+            "kind": "extrude",
+            "bone": "end-left",
+            "material": "steel-painted",
+            "role": "body",
+            "tone": 0.42,
+            "profile": [
+              [-0.24588, 5e-05],
+              [-0.23757, 0.00633],
+              [-0.24415, 0.03332],
+              [-0.24756, 0.1279],
+              [-0.24355, 0.1333],
+              [0.20113, 0.13456],
+              [0.20595, 0.13135],
+              [0.21824, 0.02787],
+              [0.21395, 0.01122],
+              [0.21825, 0.00173],
+              [0.26712, 5e-05],
+              [0.27452, 0.00456],
+              [0.23394, 0.35679],
+              [0.30008, 0.82783],
+              [0.29607, 0.8373],
+              [0.27376, 0.84144],
+              [0.26489, 0.83475],
+              [0.23537, 0.63422],
+              [0.23095, 0.63073],
+              [-0.29271, 0.62882],
+              [-0.29795, 0.62098],
+              [-0.29781, 0.60037],
+              [-0.288, 0.58475],
+              [-0.288, 0.10043],
+              [-0.29185, 0.03332],
+              [-0.29912, 0.01023],
+              [-0.29628, 0.00301]
+            ],
+            "plane": "zx",
+            "from": -0.02,
+            "to": 0.02,
+            "holes": [
+              [
+                [0.18919, 0.36745],
+                [-0.24264, 0.40602],
+                [-0.24679, 0.41012],
+                [-0.24681, 0.58971],
+                [-0.24271, 0.59381],
+                [0.22431, 0.59375],
+                [0.22843, 0.58947],
+                [0.19692, 0.3699]
+              ],
+              [
+                [-0.24182, 0.16577],
+                [-0.2463, 0.16945],
+                [-0.24724, 0.35341],
+                [-0.24277, 0.35839],
+                [0.1827, 0.3224],
+                [0.18724, 0.31874],
+                [0.20304, 0.17626],
+                [0.19695, 0.16578]
+              ]
+            ]
+          },
+          {
+            "id": "r-frame",
+            "kind": "extrude",
+            "bone": "end-right",
+            "material": "steel-painted",
+            "role": "body",
+            "tone": 0.42,
+            "profile": [
+              [-0.24588, 5e-05],
+              [-0.23757, 0.00633],
+              [-0.24415, 0.03332],
+              [-0.24756, 0.1279],
+              [-0.24355, 0.1333],
+              [0.20113, 0.13456],
+              [0.20595, 0.13135],
+              [0.21824, 0.02787],
+              [0.21395, 0.01122],
+              [0.21825, 0.00173],
+              [0.26712, 5e-05],
+              [0.27452, 0.00456],
+              [0.23394, 0.35679],
+              [0.30008, 0.82783],
+              [0.29607, 0.8373],
+              [0.27376, 0.84144],
+              [0.26489, 0.83475],
+              [0.23537, 0.63422],
+              [0.23095, 0.63073],
+              [-0.29271, 0.62882],
+              [-0.29795, 0.62098],
+              [-0.29781, 0.60037],
+              [-0.288, 0.58475],
+              [-0.288, 0.10043],
+              [-0.29185, 0.03332],
+              [-0.29912, 0.01023],
+              [-0.29628, 0.00301]
+            ],
+            "plane": "zx",
+            "from": -0.02,
+            "to": 0.02,
+            "holes": [
+              [
+                [0.18919, 0.36745],
+                [-0.24264, 0.40602],
+                [-0.24679, 0.41012],
+                [-0.24681, 0.58971],
+                [-0.24271, 0.59381],
+                [0.22431, 0.59375],
+                [0.22843, 0.58947],
+                [0.19692, 0.3699]
+              ],
+              [
+                [-0.24182, 0.16577],
+                [-0.2463, 0.16945],
+                [-0.24724, 0.35341],
+                [-0.24277, 0.35839],
+                [0.1827, 0.3224],
+                [0.18724, 0.31874],
+                [0.20304, 0.17626],
+                [0.19695, 0.16578]
+              ]
+            ]
           }
         ],
         "thermal": [
@@ -5338,8 +5476,18 @@
             "region": "seat-timber"
           },
           {
-            "id": "th-back-slab",
-            "of": "back-slab",
+            "id": "th-back-slat-1",
+            "of": "back-slat-1",
+            "region": "back-timber"
+          },
+          {
+            "id": "th-back-slat-2",
+            "of": "back-slat-2",
+            "region": "back-timber"
+          },
+          {
+            "id": "th-back-slat-3",
+            "of": "back-slat-3",
             "region": "back-timber"
           }
         ],
@@ -5363,12 +5511,6 @@
             "part": "member"
           },
           {
-            "id": "m-back-slab",
-            "of": "back-slab",
-            "member": "backrest",
-            "part": "member"
-          },
-          {
             "id": "bolt-seat-l",
             "kind": "revolve",
             "bone": "seat",
@@ -5392,23 +5534,6 @@
             "axis": [0, -0.99619, -0.08716],
             "origin": [1.68, 0.02209, -0.0219],
             "member": "seat",
-            "part": "joint"
-          },
-          {
-            "id": "bolt-back-1",
-            "kind": "revolve",
-            "bone": "backrest",
-            "material": "steel-painted",
-            "role": "detail",
-            "tone": 0.25,
-            "profile": [[0.0, 0.0375], [0.075, 0.0375]],
-            "axis": [0, -0.13917, 0.99027],
-            "origin": [0.12, -0.00614, 0.20632],
-            "repeat": {
-              "count": 2,
-              "translation": [1.56, 0, 0]
-            },
-            "member": "backrest",
             "part": "joint"
           },
           {
@@ -5504,16 +5629,85 @@
             },
             "member": "backrest",
             "part": "mass"
+          },
+          {
+            "id": "m-back-slat-1",
+            "of": "back-slat-1",
+            "member": "backrest",
+            "part": "member"
+          },
+          {
+            "id": "m-back-slat-2",
+            "of": "back-slat-2",
+            "member": "backrest",
+            "part": "member"
+          },
+          {
+            "id": "m-back-slat-3",
+            "of": "back-slat-3",
+            "member": "backrest",
+            "part": "member"
+          },
+          {
+            "id": "bolt-back-1",
+            "kind": "revolve",
+            "bone": "backrest",
+            "material": "steel-painted",
+            "role": "detail",
+            "tone": 0.25,
+            "profile": [[-0.00576, 0.00576], [-0.00432, 0.0096], [0.0, 0.0096], [0.0, 0.004], [0.052, 0.004], [0.052, 0.0064], [0.0584, 0.0064]],
+            "axis": [0, -0.13917, 0.99027],
+            "origin": [0.12, -0.1433, 0.18704],
+            "repeat": {
+              "count": 2,
+              "translation": [1.56, 0, 0]
+            },
+            "member": "backrest",
+            "part": "joint"
+          },
+          {
+            "id": "bolt-back-2",
+            "kind": "revolve",
+            "bone": "backrest",
+            "material": "steel-painted",
+            "role": "detail",
+            "tone": 0.25,
+            "profile": [[-0.00576, 0.00576], [-0.00432, 0.0096], [0.0, 0.0096], [0.0, 0.004], [0.052, 0.004], [0.052, 0.0064], [0.0584, 0.0064]],
+            "axis": [0, -0.13917, 0.99027],
+            "origin": [0.12, 0.0201, 0.21],
+            "repeat": {
+              "count": 2,
+              "translation": [1.56, 0, 0]
+            },
+            "member": "backrest",
+            "part": "joint"
+          },
+          {
+            "id": "bolt-back-3",
+            "kind": "revolve",
+            "bone": "backrest",
+            "material": "steel-painted",
+            "role": "detail",
+            "tone": 0.25,
+            "profile": [[-0.00576, 0.00576], [-0.00432, 0.0096], [0.0, 0.0096], [0.0, 0.004], [0.052, 0.004], [0.052, 0.0064], [0.0584, 0.0064]],
+            "axis": [0, -0.13917, 0.99027],
+            "origin": [0.12, 0.13101, 0.22559],
+            "repeat": {
+              "count": 2,
+              "translation": [1.56, 0, 0]
+            },
+            "member": "backrest",
+            "part": "joint"
           }
         ],
         "decisions": [
           {
-            "en": "Body, authored anew for 75 mm: each end frame a 75 mm plate of 75 mm members (front column up to the armrest, seat rail, rear leg rising into the back, arm band; the brace and the slender legs merged); the seat a flat 75 mm slab (the 38 mm rake is below the feature); the back one 75 mm slab of the posts and the slats together (36 + 35 mm), raked 8 degrees from the seat to the top. The model is minimal: two frames, a seat and a back; nothing smaller can be left out without losing the bench.",
-            "de": "Körper, für 75 mm neu gebaut: jedes Endgestell eine 75-mm-Platte aus 75-mm-Gliedern (vordere Stütze bis zur Armlehne, Sitzzarge, in die Lehne aufsteigendes Hinterbein, Armband; Strebe und schlanke Beine verschmolzen); der Sitz eine flache 75-mm-Platte (die 38-mm-Neigung liegt unter dem Merkmal); die Lehne eine 75-mm-Platte aus Pfosten und Latten zusammen (36 + 35 mm), um 8 Grad geneigt vom Sitz bis oben. Das Modell ist minimal: zwei Gestelle, ein Sitz und eine Lehne; kleiner geht es nicht, ohne die Bank zu verlieren."
+            "en": "Three separate raked oak slats span the two cast end frames. Their 90 and 32 mm gaps clear the armrest and divide the back. The one-piece seating surface retains its scale-specific section.",
+            "de": "Drei einzeln geneigte Eichenlatten überspannen die beiden Gussgestelle. Ihre 90 und 32 mm breiten Abstände lassen Platz für die Armlehne und gliedern den Rücken. Die durchgehende Sitzfläche behält ihren maßstabsabhängigen Querschnitt."
           },
           {
-            "en": "Thermal: one surface per region. Structure: frames, seat slab and back slab as members; one 75 mm joint where the seat and where the back cross each frame; 75 mm contact pads; masses at the centres.",
-            "de": "Thermik: eine Oberfläche je Region. Tragwerk: Gestelle, Sitz- und Lehnenplatte als Stäbe; je ein 75-mm-Gelenk, wo Sitz und Lehne jedes Gestell kreuzen; 75-mm-Kontaktplatten; Massen in den Schwerpunkten."
+            "en": "Each slat carries its own timber temperature surface and bears on the cast posts through two bolts. The iron frames retain the open arm and leg bracing.",
+            "de": "Jede Latte besitzt eine eigene thermische Holzoberfläche und liegt mit zwei Bolzen an den Gusspfosten. Die Eisengestelle behalten die offenen Arm- und Beinstreben."
           }
         ]
       }

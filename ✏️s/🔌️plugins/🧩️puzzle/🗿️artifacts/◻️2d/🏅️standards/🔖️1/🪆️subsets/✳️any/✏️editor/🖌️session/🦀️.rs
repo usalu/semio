@@ -537,16 +537,17 @@ impl Puzzle2dClipboardJob{
     pub fn emit(request:&ArtifactReservedToolJobRequest<EditorApp<Puzzle2dPlayApp>>) -> Result<Emit<Puzzle2dMutation, Puzzle2dConfigMutation, NoDraftMutation>, Fault> {
         let Some(ArtifactReservedToolInput::Action{args,interaction})=request.input.as_ref()else{return Ok(Emit::default())};
         let args=args.as_ref();let owned=request.snapshot.as_ref();let snapshot=owned.value();let state=interaction.get();
-        let selected=match state.selection.get(crate::editor::puzzle2d::snapshot::PUZZLE2D_INTERACTION_DOMAIN).filter(|selection|!selection.ids.is_empty()){
+        let selected=|| match state.selection.get(crate::editor::puzzle2d::snapshot::PUZZLE2D_INTERACTION_DOMAIN).filter(|selection|!selection.ids.is_empty()){
             Some(selection)=>puzzle2d_selected_node_ids(snapshot,&selection.ids),
             None=>puzzle2d_selected_node_ids(snapshot,state.selection.values().flat_map(|selection|selection.ids.iter())),
         };
         Ok(match request.tool_id.as_str() {
-            "copy" => match puzzle2d_copy_fragment_from(snapshot, &selected) {
+            "copy" => match puzzle2d_copy_fragment_from(snapshot, &selected()) {
                 Ok(fragment) => Emit { effects: vec![Effect::ClipboardWrite { fragment }], ui_scope: UiDirtyScope::None, ..Default::default() },
                 Err(_) => Emit::default(),
             },
             "cut" => {
+                let selected = selected();
                 let Ok(fragment) = puzzle2d_copy_fragment_from(snapshot, &selected) else { return Ok(Emit::default()) };
                 if puzzle2d_selection_is_locked(snapshot, &selected) {
                     let labels=request.ui_axes.map(|(locale,terminology)|crate::editor::puzzle2d::terminology::puzzle2d_labels_for_axes(locale,terminology)).ok_or_else(||Fault::from("puzzle2d clipboard notification requires the caller's explicit presentation axes"))?;
@@ -557,10 +558,11 @@ impl Puzzle2dClipboardJob{
                 Emit { artifact_mutations: mutations, effects: vec![Effect::ClipboardWrite { fragment }], interaction_writes: clear, ..Default::default() }
             }
             "paste" => {
-                let Some(fragment) = args.as_ref().and_then(|value| value.get("fragment")).and_then(|value| semio_framework_value::FromValue::from_value(value.clone()).ok()) else {
+                let Some(args) = args else { return Ok(Emit::default()) };
+                let Ok(placement) = PastePlacement::from_action_args(args) else { return Ok(Emit::default()) };
+                let Some(fragment) = args.get("fragment").and_then(|value| semio_framework_value::FromValue::from_value(value.clone()).ok()) else {
                     return Ok(Emit::default());
                 };
-                let placement = PastePlacement::default();
                 match puzzle2d_paste_operations_on(owned, &fragment, &placement) {
                     Ok((mutations, pasted)) => Emit { artifact_mutations: mutations, interaction_writes: vec![puzzle2d_selection_write(snapshot, &pasted)], ..Default::default() },
                     Err(_) => Emit::default(),

@@ -711,6 +711,7 @@ impl<B: BlobStore + 'static> AppChannelHost for WasmtimeNodeHost<B> {
         self.instance_actors.insert(instance_handle, actor);
         let assets = self.package_assets_for(plugin_id)?;
         let open_event = Event::InstanceOpen {
+            purpose: semio_framework::kernel::ActorInstanceOpenPurpose::Ordinary,
             request: semio_framework::kernel::ActorInstanceOpenRequest { activation_generation: 1, instance_id: instance_handle, request_sequence: 1 },
             app_id: AppInstanceId(app_id.to_string()),
             actor: "local".to_string(),

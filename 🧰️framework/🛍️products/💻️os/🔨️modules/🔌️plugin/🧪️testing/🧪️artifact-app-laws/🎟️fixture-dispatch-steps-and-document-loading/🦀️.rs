@@ -69,8 +69,11 @@ pub fn ensure_fixture_cancellation_issuer<P:PluginApp>(app:&mut P,cx:&mut semio_
 
 /// 🎟️ Drives the actual borrowed action endpoint and pays remaining original fixture sources under its authored close loan.
 pub async fn dispatch_fixture_action<P:PluginApp>(app:&mut P,action:&str,args:Option<semio_framework_value::DslValue>,meta:&ActionMeta,identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>,close_loan:RetainedCloneGrant)->Result<semio_framework::kernel::InvocationResult,semio_framework_job::OriginalTurnFailure>{
-    let (fresh_fuel,fresh_grant)=(OriginalFixtureCaller::turn_fuel(),cx.retained_grant());
+    let (fresh_fuel,fresh_grant)=(OriginalFixtureCaller::turn_fuel(),cx.original_turn_ceiling().0);
     ensure_fixture_cancellation_issuer(app,cx)?;
+    if matches!(action, "copy" | "cut" | "paste") {
+        app.history_snapshot().await?;
+    }
     let mut original_args=args;let mut original_meta=Some(meta.clone());
     let mut result=Ok(None);
     for _ in 0..OriginalFixtureCaller::maximum_turns(){
@@ -80,17 +83,21 @@ pub async fn dispatch_fixture_action<P:PluginApp>(app:&mut P,action:&str,args:Op
         if !matches!(result,Ok(None)){break}
         if let Err(failure)=app.maintenance_step(cx,close_loan){result=Err(failure.into());break}
     }
+    let stalled = matches!(result, Ok(None)).then(|| format!(
+        "original action fixture dispatch exceeded its authored turn bound for {action}: fuel {}, deadline exceeded {}, cancelled {}, decoder {}, args {}, metadata {}, remaining grant {:?}, {}",
+        cx.fuel_remaining(), cx.deadline_exceeded(), cx.is_cancelled(), cx.native_receiving_identity().is_some(),
+        original_args.is_some(), original_meta.is_some(), cx.retained_grant(), app.typed_operation_diagnostic(),
+    ));
     close_fixture_action_inputs(original_args,None,cx,close_loan);
-    result?.ok_or_else(||semio_framework_value::ValueError::new(
+    result?.ok_or_else(|| semio_framework_value::ValueError::new(
         semio_framework_value::ValueRefusalKind::WorkLimit,
-        format!("original action fixture dispatch exceeded its authored turn bound for {action}: fuel {}, deadline exceeded {}, remaining grant {:?}, {}",
-            cx.fuel_remaining(),cx.deadline_exceeded(),cx.retained_grant(),app.typed_operation_diagnostic()),
+        stalled.expect("pending fixture dispatch recorded its original turn"),
     ).into())
 }
 
 /// 🧭️ Drives the actual addressed command endpoint and pays remaining original fixture sources under its authored close loan.
 pub async fn dispatch_fixture_command<P:PluginApp>(app:&mut P,address:&semio_framework::manifest::CommandAddress,args:Option<semio_framework_value::DslValue>,active_mode:Option<&str>,meta:&ActionMeta,identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>,close_loan:RetainedCloneGrant)->Result<semio_framework::kernel::InvocationResult,semio_framework_job::OriginalTurnFailure>{
-    let (fresh_fuel,fresh_grant)=(OriginalFixtureCaller::turn_fuel(),cx.retained_grant());
+    let (fresh_fuel,fresh_grant)=(OriginalFixtureCaller::turn_fuel(),cx.original_turn_ceiling().0);
     ensure_fixture_cancellation_issuer(app,cx)?;
     let mut original_args=args;let mut original_fault=None;let mut original_meta=Some(meta.clone());
     let mut result=Ok(None);
@@ -179,17 +186,27 @@ pub async fn dispatch_fixture_response_action<P:PluginApp>(app:&mut P,action:&st
 }
 
 fn close_fixture_action_inputs(args:Option<semio_framework_value::DslValue>,fault:Option<semio_framework::Fault>,cx:&mut semio_framework_job::StepContext<'_>,close_loan:RetainedCloneGrant){
-    if args.is_some()||fault.is_some(){
-        let mut receiving=Some(semio_plugin_instance_stores::action_ingress::ActionIngressSource{original_typing_ready:false,original_typing_control_ready:false,original_press_result:None,original_press_selected:false,original_tool_dispatch:None,original_press_tag:None,original_tool_tag:None,original_tool_tag_ready:false,action:None,args,prepared:None,assembled:None,fault});
-        let mut original_caller=None;
-        let mut owner=semio_plugin_instance_stores::action_ingress::ActionIngressRecord::receive(&mut receiving,&mut original_caller,cx).expect("original fixture action receiving receipt").expect("authored caller must fund original unused argument receiving");
-        owner.finish_parser();
-        for _ in 0..OriginalFixtureCaller::maximum_turns(){
-            if owner.terminal_is_empty(){break}
-            cx.with_retained_loan(close_loan,|same|owner.close_original_step(same)).expect("original fixture action unused argument close");
-        }
-        assert!(owner.terminal_is_empty(),"original fixture action unused source did not complete its paid close");
+    use semio_plugin_instance_stores::action_ingress::{ActionIngressRecord,ActionIngressSource};
+
+    if args.is_none() && fault.is_none() { return; }
+    let (grant,_) = cx.original_turn_ceiling();
+    let fuel = OriginalFixtureCaller::turn_fuel();
+    let mut receiving = Some(ActionIngressSource { original_typing_ready:false, original_typing_control_ready:false, original_press_result:None, original_press_selected:false, original_tool_dispatch:None, original_press_tag:None, original_tool_tag:None, original_tool_tag_ready:false, action:None, args, prepared:None, assembled:None, fault });
+    let mut original_caller = None;
+    let mut admitted = None;
+    for _ in 0..OriginalFixtureCaller::maximum_turns() {
+        fixture_renew_turn(cx,fuel,grant).expect("renew the unused action input receiving turn");
+        admitted = ActionIngressRecord::receive(&mut receiving,&mut original_caller,cx).expect("original fixture action receiving receipt");
+        if admitted.is_some() { break; }
     }
+    let mut owner = admitted.expect("the original fixture did not receive its unused inputs within the turn bound");
+    owner.finish_parser();
+    for _ in 0..OriginalFixtureCaller::maximum_turns() {
+        if owner.terminal_is_empty() { return; }
+        fixture_renew_turn(cx,fuel,grant).expect("renew the unused action input retirement turn");
+        cx.with_retained_loan(close_loan,|same|owner.close_original_step(same)).expect("original fixture action unused argument close");
+    }
+    assert!(owner.terminal_is_empty(),"original fixture action unused source did not complete its paid close");
 }
 
 /// 🔬️ Borrows one real app registry publication for a synchronous integration-law closure.
@@ -370,7 +387,6 @@ where
 /// 🧾️ Drives and acknowledges a fixture's admitted archive load on the original caller.
 pub async fn settle_document_archive_load<P: PluginApp>(app:&mut P, operation:u64, identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<(),semio_framework_job::OriginalTurnFailure> {
     let mut polls = 0usize;
-    let trace = std::env::var_os("SEMIO_XLSX_ARCHIVE_PROGRESS").is_some();
     let fresh = OriginalFixtureCaller::turn_fuel();
     let (fresh_grant, _) = cx.original_turn_ceiling();
     ensure_fixture_cancellation_issuer(app,cx)?;
@@ -378,9 +394,6 @@ pub async fn settle_document_archive_load<P: PluginApp>(app:&mut P, operation:u6
         fixture_renew_turn(cx, fresh, fresh_grant)?;
         cx.consume_fuel(1);let grant=cx.retained_grant();PluginApp::maintenance_step(app,cx,grant)?;
         let status = PluginApp::poll_document_archive_load(app, operation, identity,cx).await?;
-        if trace && polls >= 2048 && polls.is_power_of_two() {
-            eprintln!("[DEBUG] Archive reload operation {operation}, turn {polls}, state {:?}, records {}/{}, owners {}", status.state, status.completed, status.total, app.close_diagnostic());
-        }
         if !law_load_running(&status, &mut polls)? {
             break status;
         }
@@ -668,6 +681,22 @@ mod renew_turn_laws {
         assert_eq!(cx.retained_grant().maximum_items, 0);
         fixture_renew_turn(cx, fuel, issued).expect("renew the issued archive turn");
         assert!(cx.retained_grant().maximum_items >= 2);
+        assert_eq!(cx.original_recipient_identity(), source);
+    }
+
+    /// 📨️ An unused original action input retires after the action spent the last item of its turn.
+    #[test]
+    fn unused_action_inputs_retire_after_a_spent_dispatch_turn() {
+        let mut scope = OriginalFixtureScope::admit();
+        let cx = scope.cx();
+        let (issued, _) = cx.original_turn_ceiling();
+        let source = cx.original_recipient_identity();
+        fixture_renew_turn(cx,OriginalFixtureCaller::turn_fuel(),RetainedCloneGrant { maximum_items: 1, ..issued }).unwrap();
+        cx.consume_retained(semio_framework_value::RetainedCloneProgress { copied_items: 1, ..Default::default() }).unwrap();
+        assert_eq!(cx.retained_grant().maximum_items, 0);
+
+        close_fixture_action_inputs(Some(semio_framework_value::DslValue::String("unused".into())),None,cx,fixture_mounted_policy().close);
+
         assert_eq!(cx.original_recipient_identity(), source);
     }
 

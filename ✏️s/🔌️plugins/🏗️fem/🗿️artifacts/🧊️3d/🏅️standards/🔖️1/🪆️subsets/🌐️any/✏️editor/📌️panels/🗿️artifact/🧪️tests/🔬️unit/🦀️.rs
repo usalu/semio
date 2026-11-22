@@ -1,4 +1,7 @@
 use semio_s_artifact_fem_3d_editor_panels::editor::fem3d::panels::artifact::*;
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::fem3d_entity_target;
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::fem3d_load_target;
+use semio_s_fem_node::volumetric::FemNodeValue;
 use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::Fem3dInteractionSnapshot;
 use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::FEM3D_GRANULARITY_COMBINATION;
 use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::FEM3D_GRANULARITY_ELEMENT;

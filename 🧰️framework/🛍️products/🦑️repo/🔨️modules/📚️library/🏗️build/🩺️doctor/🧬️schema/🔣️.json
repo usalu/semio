@@ -582,6 +582,7 @@
           "required": [
             "patterns",
             "exclude",
+            "services",
             "orphanAgeSeconds",
             "idleHolderSeconds",
             "idleCpuPercent"
@@ -590,6 +591,13 @@
             "patterns": {
               "type": "array",
               "minItems": 1,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "services": {
+              "type": "array",
               "items": {
                 "type": "string",
                 "minLength": 1
@@ -738,9 +746,24 @@
           "enum": [
             "mounted",
             "detached",
+            "misplaced",
             "directory",
             "absent"
           ]
+        },
+        "attachedAt": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 1024
+        },
+        "device": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^/dev/disk[0-9]+$"
         },
         "capacityBytes": {
           "type": [
@@ -815,6 +838,9 @@
             "null"
           ],
           "minimum": 0
+        },
+        "loaderBlocked": {
+          "type": "boolean"
         },
         "partitions": {
           "type": "array",
@@ -1204,6 +1230,16 @@
         },
         "reason": {
           "type": "string"
+        },
+        "blocker": {
+          "type": "string"
+        },
+        "holder": {
+          "enum": [
+            "self",
+            "other",
+            "none"
+          ]
         }
       }
     },

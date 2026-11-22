@@ -7,7 +7,7 @@ fn pdf_header_retains_file_origin_and_version_during_single_unit_reads() {
         source.extend_from_slice(b"%PDF-2.0\r\n");
         let mut cursor = PdfHeaderCursor::default();
         for _ in 0..source.len() + 16 {
-            let (work, status) = cursor.advance(&source, 1);
+            let (work, status) = cursor.advance(|position| source.get(position).copied(), 1);
             assert!(work <= 1);
             if let PdfHeaderStep::Complete(header) = status {
                 if prefix < 1024 {
@@ -18,7 +18,7 @@ fn pdf_header_retains_file_origin_and_version_during_single_unit_reads() {
                 break;
             }
         }
-        assert!(matches!(cursor.advance(&source, 0), (0, PdfHeaderStep::Complete(_))));
+        assert!(matches!(cursor.advance(|position| source.get(position).copied(), 0), (0, PdfHeaderStep::Complete(_))));
     }
 }
 
@@ -32,7 +32,7 @@ fn first_header_candidate_owns_version_validation() {
         (b"%PDF--1.7", None),
     ] {
         let mut cursor = PdfHeaderCursor::default();
-        let (_, status) = cursor.advance(source, source.len() + 1);
+        let (_, status) = cursor.advance(|position| source.get(position).copied(), source.len() + 1);
         let PdfHeaderStep::Complete(header) = status else { panic!("short header probe must terminate"); };
         assert_eq!(header.as_ref().map(PdfHeader::version), expected);
     }

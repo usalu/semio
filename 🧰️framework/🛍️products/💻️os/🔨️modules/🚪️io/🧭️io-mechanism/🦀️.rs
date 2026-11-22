@@ -18,7 +18,7 @@ use std::sync::RwLock;
 
 #[path="../📤️serialization/📦️owned/🦀️.rs"]
 pub mod owned_serialization;
-pub use owned_serialization::{io_begin_owned_serialization, OwnedSerializerAdmission, OwnedSerializerChildren, OwnedSerializerFactory, OwnedSerializerJob, OwnedSerializerOutput, OwnedSerializerOutputHandoff, OwnedSerializerFaultHandoff, OwnedSerializerRefusal, OwnedSerializerRequest, OwnedSerializerStep};
+pub use owned_serialization::{io_begin_owned_serialization, io_owned_serialization_demand, OwnedSerializerAdmission, OwnedSerializerChildren, OwnedSerializerFactory, OwnedSerializerJob, OwnedSerializerOutput, OwnedSerializerOutputHandoff, OwnedSerializerFaultHandoff, OwnedSerializerRefusal, OwnedSerializerRequest, OwnedSerializerStep};
 use owned_serialization::same_owned_serializer;
 
 //#region 🔖️Traits

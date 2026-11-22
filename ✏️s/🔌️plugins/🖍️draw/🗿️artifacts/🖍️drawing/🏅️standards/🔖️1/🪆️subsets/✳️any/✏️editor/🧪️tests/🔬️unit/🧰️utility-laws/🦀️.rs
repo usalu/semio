@@ -102,7 +102,7 @@ async fn path_join_conversion_position_and_translation_each_undo_as_one_edit() {
         let layer=semio_s_artifact_draw_drawing_model::create_drawing_path_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Editable")).to_string().into()).expect("nonempty authored identity"), "Editable",before.clone().into());
         let id=layer_id(&layer).to_string();
         let snapshot=DrawingSnapshot { id:"path-history".into(),layers:vec![layer].into(),..Default::default() };
-        load_drawing_fixture(&mut app,&snapshot);
+        load_drawing_fixture(&mut app,&snapshot).await;
         let command=DrawingCommand::EditPath(edit_path::EditPath { layer_id:id,edit:Box::new(edit) });
         artifact_laws::assert_undo_redo_round_trip(&mut app.0, command, |app| {
             let snapshot=app.snapshot().unwrap();
@@ -118,7 +118,7 @@ async fn shape_conversion_restores_the_primitive_with_one_undo() {
     let layer=semio_s_artifact_draw_drawing_model::create_drawing_shape_layer_rect(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Convert me")).to_string().into()).expect("nonempty authored identity"), "Convert me");
     let id=layer_id(&layer).to_string();
     let before=DrawingSnapshot { id:"conversion-history".into(),layers:vec![layer].into(),..Default::default() };
-    load_drawing_fixture(&mut app,&before);
+    load_drawing_fixture(&mut app,&before).await;
     let mut after=before.clone();
     let admission = semio_s_artifact_draw_drawing_editor::identity_test::operation();
     let mut observer = |_| true;
@@ -154,7 +154,8 @@ fn initial_utility_maps_preserve_clears_in_owned_and_serde_guest_contexts() {
             assert!(owned.is_ok(), "{}: {:?}", row["id"], owned.err());
             assert!(oracle.is_ok(), "{}: {:?}", row["id"], oracle.err());
             let mut owned = owned.unwrap();
-            assert_eq!(owned, oracle.unwrap());
+            let oracle = oracle.unwrap();
+            assert_eq!(owned, oracle);
             assert_eq!(serde_json::to_value(&owned.active_utility_by_window_id).unwrap(), row["activeUtilityByWindowId"]);
             let address = row["windowId"].as_str().unwrap();
             if owned.active_utility_by_window_id.get(address) == Some(&None) {
@@ -164,6 +165,9 @@ fn initial_utility_maps_preserve_clears_in_owned_and_serde_guest_contexts() {
                 owned.active_utility_id = Some("shapeEllipse".into());
                 assert_eq!(semio_s_artifact_draw_drawing_editor::drawing_active_utility(&owned), semio_s_artifact_draw_drawing_editor_interaction::DRAWING_DEFAULT_UTILITY);
             }
+            let mut wallet = semio_s_artifact_draw_drawing_scene::preparation::testkit::scene_wallet();
+            wallet.close_owned(owned);
+            wallet.close_owned(oracle);
         }
     }
 }
@@ -236,7 +240,7 @@ async fn armed_canvas_utilities_retire_gestures_after_document_actions() {
         semio_s_artifact_draw_drawing_model::layer_base_mut(&mut layer).id = "source".into();
         semio_s_artifact_draw_drawing_model::layer_base_mut(&mut layer).attributes.fill = Some(semio_s_artifact_draw_drawing_model::FillStyle::Solid { color: [1.0, 0.0, 0.0, 1.0] });
         let before = DrawingSnapshot { id: "action-interruption".into(), layers: vec![layer].into(), ..Default::default() };
-        load_drawing_fixture(&mut app, &before);
+        load_drawing_fixture(&mut app, &before).await;
         settled(&mut app, DrawingCommand::SetCamera(set_camera::SetCamera { camera: store::Viewport2d { x: 0.0, y: 0.0, zoom: 1.0 } }), &meta).await;
         let targets = serde_json::to_string(&vec![serde_json::json!({ "granularity": DRAWING_INTERACTION_GRANULARITY, "id": "source" })]).unwrap();
         let admission = semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, semio_framework::INTERACTION_SELECT_ACTION_ID, Some(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "domainId": DRAWING_INTERACTION_DOMAIN, "targets": targets, "merge": "replace", "method": "pick" }))), &meta, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap();

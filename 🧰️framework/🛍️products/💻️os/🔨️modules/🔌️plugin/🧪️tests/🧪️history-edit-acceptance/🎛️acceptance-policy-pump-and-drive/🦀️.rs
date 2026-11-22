@@ -1,12 +1,10 @@
 //! 🎛️ Acceptance policy, pump and drive: the policy, meta and verb helpers, the pump, close, seeded document, head and the drive of one leaf. See [`super`].
 
 use super::*;
-use std::collections::BTreeMap;
 
-/// 🎟️ The explicit mounted owner policy every acceptance instance runs under.
+/// 🎟️ The explicit mounted owner policy every acceptance instance runs under: the production interactive component grant.
 pub(super) fn acceptance_policy() -> semio_plugin_mounted_owner::MountedOwnerPolicyV1 {
-    let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
-    semio_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant }
+    semio_plugin_mounted_owner::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT
 }
 
 /// 🎟️ Establishes the original decoder receipt required to enter mounted command dispatch.
@@ -23,6 +21,17 @@ pub(super) fn acceptance_context(caller: &mut artifact_app_laws::OriginalFixture
         }
     }
     panic!("original acceptance decoder exceeded its supplied turns");
+}
+
+/// 🎬️ Funds a complete independent acceptance scenario through its original caller and terminal decoder.
+pub(super) async fn with_acceptance_caller<T>(run: impl for<'turn> AsyncFnOnce(&mut semio_framework_job::StepContext<'turn>) -> T) -> T {
+    let mut caller = artifact_app_laws::OriginalFixtureCaller::admit().expect("original acceptance caller admission");
+    let mut context = acceptance_context(&mut caller);
+    let result = run(&mut context).await;
+    let fuel = context.fuel_remaining();
+    drop(context);
+    caller.retire(fuel).expect("original acceptance caller paid retirement");
+    result
 }
 
 /// 🪪️ The acceptance actor's action meta on the registered instance.
@@ -55,11 +64,17 @@ where
     M: ReferenceSpaceMember + MemberFactory + Send + 'static,
     <A as ArtifactApp>::Snapshot: pack::snapshot::ArtifactDsl,
 {
-    let grant = cx.retained_grant();
+    let entry_grant = cx.retained_grant();
+    let (grant, _) = cx.original_turn_ceiling();
     let fuel = artifact_app_laws::OriginalFixtureCaller::turn_fuel();
+    let work_before = cx.original_work_units_spent();
+    let mut receipts = 0usize;
+    let mut empty_receipts = 0usize;
     for _ in 0..artifact_app_laws::OriginalFixtureCaller::maximum_turns() {
         if let Some((issued, progress)) = app.take_history_command_receipt() {
             assert!(progress.fits(issued), "history command receipt exceeds its supplied original grant");
+            receipts += 1;
+            empty_receipts += usize::from(progress == RetainedCloneProgress::default());
         }
         if done(app) {
             return Ok(());
@@ -67,12 +82,20 @@ where
         artifact_app_laws::fixture_renew_turn(cx, fuel, grant).map_err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from)?;
         semio_plugin_testing_laws::with_authoring_identity!(|identity| app.advance_typed_operation_publication(&mut identity,cx).await)?;
         while app.take_typed_operation_ui_progress().is_some() {}
+        artifact_app_laws::retain_original_ownership_receipts(app, acceptance_policy(), &mut Vec::new()).map_err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from)?;
     }
+    let status = app.time_travel.status().map(|status| (status.stage, status.done, status.total));
+    let maintenance = acceptance_policy().maintenance;
+    let demands = app.time_travel.owners().map(|owner| owner.retirement_demands(maintenance.maximum_copy_bytes)).collect::<Vec<_>>();
+    let work = cx.original_work_units_spent().saturating_sub(work_before);
+    let operations = app.typed_operation_diagnostic();
     Err((format!(
-        "the instance never settled within its original turn bound; time travel rests at {:?} (pending history work: {}, pending typed operations: {})",
-        app.time_travel.status().map(|status| status.stage),
+        "the instance never settled within its original turn bound. History stage and progress {status:?}, preview progress {:?}, replay owner {}, processed replay items {:?}, pending history work {}, and pending typed operations {}. Entry grant {entry_grant:?}, renewed grant {grant:?}. Retired owner demands {demands:?}. Work {work}, history receipts {receipts}, empty receipts {empty_receipts}. {operations}",
+        app.time_travel.preview_progress(),
+        app.time_travel.replaying(),
+        app.time_travel.processed(),
         app.time_travel.has_pending_work(),
-        app.has_pending_typed_operations()
+        app.has_pending_typed_operations(),
     )).into())
 }
 
@@ -175,52 +198,49 @@ where
     M: ReferenceSpaceMember + MemberFactory + Send + 'static,
     <A as ArtifactApp>::Snapshot: pack::snapshot::ArtifactDsl,
 {
-    let mut caller = artifact_app_laws::OriginalFixtureCaller::admit().expect("original preview fixture caller");
-    let mut cx = acceptance_context(&mut caller);
     let cases = acceptance_cases::<A>(fixtures);
     assert_eq!(cases.len(), 1, "the preview law selects one committed wire witness");
     let case = cases.into_iter().next().unwrap();
-    let seeded = Box::pin(acceptance_seeded::<A, M>(manifest, &case.base, &[&case.op], true, &mut cx)).await;
-    ::protocol::Mutation::<A::Snapshot>::retire_cold(case.op);
-    let mut app = match seeded {
-        Ok(app) => app,
-        Err(AcceptanceSeedFault::Operation(_, reason)) => panic!("{reason}"),
-        Err(AcceptanceSeedFault::Original(reason)) => panic!("{reason}"),
-    };
-    let result = async {
-        let target = app.stores.store.mutation_ops().unwrap().first().unwrap().mutation_id.0.clone();
-        let begin = vec![(HISTORY_EDIT_ARG_MUTATION_ID, DslValue::String(target))];
-        Box::pin(acceptance_verb(&mut app, HISTORY_EDIT_BEGIN_ACTION_ID, begin.clone(), &mut cx)).await?;
-        assert!(app.time_travel.preview_progress().is_some(), "the first original preview is still active");
-        for (path, value) in changes {
+    with_acceptance_caller(async |cx| {
+        let seeded = Box::pin(acceptance_seeded::<A, M>(manifest, &case.base, &[&case.op], true, cx)).await;
+        ::protocol::Mutation::<A::Snapshot>::retire_cold(case.op);
+        let mut app = match seeded {
+            Ok(app) => app,
+            Err(AcceptanceSeedFault::Operation(_, reason)) => panic!("{reason}"),
+            Err(AcceptanceSeedFault::Original(reason)) => panic!("{reason}"),
+        };
+        let result = async {
+            let target = app.stores.store.mutation_ops().unwrap().first().unwrap().mutation_id.0.clone();
+            let begin = vec![(HISTORY_EDIT_ARG_MUTATION_ID, DslValue::String(target))];
+            Box::pin(acceptance_verb(&mut app, HISTORY_EDIT_BEGIN_ACTION_ID, begin.clone(), cx)).await?;
+            assert!(app.time_travel.preview_progress().is_some(), "the first original preview is still active");
+            for (path, value) in changes {
+                let args = vec![("path", DslValue::String((*path).to_owned())), ("value", value.clone())];
+                Box::pin(acceptance_verb(&mut app, HISTORY_EDIT_INPUT_ACTION_ID, args, cx)).await?;
+                assert!(app.time_travel.editor().is_some_and(|editor| editor.refused.is_none()));
+            }
+            Box::pin(acceptance_pump(&mut app, |app| !app.time_travel.has_pending_work(), cx)).await?;
+            let committed = app.stores.store.snapshot_owner();
+            let shown = app.time_travel.render_snapshot_or(&app.tool_runs, &committed);
+            let latest = semio_framework_value::ToValue::to_value(shown.as_ref());
+            Box::pin(acceptance_verb(&mut app, HISTORY_EDIT_EXIT_ACTION_ID, Vec::new(), cx)).await?;
+            Box::pin(acceptance_pump(&mut app, |app| app.time_travel.status().is_none() && !app.time_travel.has_pending_work(), cx)).await?;
+            Box::pin(acceptance_verb(&mut app, HISTORY_EDIT_BEGIN_ACTION_ID, begin.clone(), cx)).await?;
+            assert!(app.time_travel.preview_progress().is_some());
+            Box::pin(acceptance_verb(&mut app, HISTORY_EDIT_EXIT_ACTION_ID, Vec::new(), cx)).await?;
+            Box::pin(acceptance_pump(&mut app, |app| app.time_travel.status().is_none() && !app.time_travel.has_pending_work(), cx)).await?;
+            Box::pin(acceptance_verb(&mut app, HISTORY_EDIT_BEGIN_ACTION_ID, begin, cx)).await?;
+            let (path, value) = changes.first().expect("a draft to defer before closing");
             let args = vec![("path", DslValue::String((*path).to_owned())), ("value", value.clone())];
-            Box::pin(acceptance_verb(&mut app, HISTORY_EDIT_INPUT_ACTION_ID, args, &mut cx)).await?;
-            assert!(app.time_travel.editor().is_some_and(|editor| editor.refused.is_none()));
-        }
-        Box::pin(acceptance_pump(&mut app, |app| !app.time_travel.has_pending_work(), &mut cx)).await?;
-        let committed = app.stores.store.snapshot_owner();
-        let shown = app.time_travel.render_snapshot_or(&app.tool_runs, &committed);
-        let latest = semio_framework_value::ToValue::to_value(shown.as_ref());
-        Box::pin(acceptance_verb(&mut app, HISTORY_EDIT_EXIT_ACTION_ID, Vec::new(), &mut cx)).await?;
-        Box::pin(acceptance_pump(&mut app, |app| app.time_travel.status().is_none() && !app.time_travel.has_pending_work(), &mut cx)).await?;
-        Box::pin(acceptance_verb(&mut app, HISTORY_EDIT_BEGIN_ACTION_ID, begin.clone(), &mut cx)).await?;
-        assert!(app.time_travel.preview_progress().is_some());
-        Box::pin(acceptance_verb(&mut app, HISTORY_EDIT_EXIT_ACTION_ID, Vec::new(), &mut cx)).await?;
-        Box::pin(acceptance_pump(&mut app, |app| app.time_travel.status().is_none() && !app.time_travel.has_pending_work(), &mut cx)).await?;
-        Box::pin(acceptance_verb(&mut app, HISTORY_EDIT_BEGIN_ACTION_ID, begin, &mut cx)).await?;
-        let (path, value) = changes.first().expect("a draft to defer before closing");
-        let args = vec![("path", DslValue::String((*path).to_owned())), ("value", value.clone())];
-        Box::pin(acceptance_verb(&mut app, HISTORY_EDIT_INPUT_ACTION_ID, args, &mut cx)).await?;
-        assert!(app.time_travel.preview_due);
-        assert_eq!(app.time_travel.status().unwrap().stage, HistoryTimeTravelStage::Editing);
-        Ok::<_, AcceptanceError>(latest)
-    }.await;
-    artifact_app_laws::close_registered_fixture_app(&mut app, acceptance_policy(), &mut cx)
-        .unwrap_or_else(|failure| panic!("mounted preview fixture could not close its live editor: {failure:?}"));
-    let fuel = cx.fuel_remaining();
-    drop(cx);
-    caller.retire(fuel).expect("original preview fixture caller retirement");
-    result.expect("mounted latest preview and exit")
+            Box::pin(acceptance_verb(&mut app, HISTORY_EDIT_INPUT_ACTION_ID, args, cx)).await?;
+            assert!(app.time_travel.has_pending_work() || app.time_travel.preview_progress().is_some(), "the deferred draft keeps its preview owned");
+            assert_eq!(app.time_travel.status().unwrap().stage, HistoryTimeTravelStage::Editing);
+            Ok::<_, AcceptanceError>(latest)
+        }.await;
+        artifact_app_laws::close_registered_fixture_app(&mut app, acceptance_policy(), cx)
+            .unwrap_or_else(|failure| panic!("mounted preview fixture could not close its live editor: {failure:?}"));
+        result.expect("mounted latest preview and exit")
+    }).await
 }
 
 /// ↪️ Checks one explicit History overwrite in a mounted fixture that produced its own committed mutation.
@@ -243,7 +263,7 @@ where
 /// accepting a draft that rebuilds the same operation closes time travel without a trace, by design, and the next one is tried on a
 /// re-opened session), accept, replay to a clean
 /// review, finalize, and commit as an overwrite or as the new alternative `alternative`. With `as_of` (the document folded up to
-/// and including `target`), what every render seam reads right after the begin must be exactly that: the preview applies no
+/// and including `target`), what every render seam reads when the preview settles must be exactly that: the preview applies no
 /// downstream mutation. With `kind` (and no `change`) only changes of that control kind are drafted. Answers the change drafted.
 #[allow(clippy::too_many_arguments)]
 pub(super) async fn acceptance_drive<A, M>(
@@ -269,6 +289,8 @@ where
         Some(editor) => (editor.inputs.clone(), editor.value.clone()),
     };
     if let Some(as_of) = as_of {
+        Box::pin(acceptance_pump(app, |app| !app.time_travel.has_pending_work(), cx)).await
+            .map_err(|reason| AcceptanceVerdict::Fail(reason.context("the initial history preview does not settle".into())))?;
         let committed = app.stores.store.snapshot_owner();
         let shown = app.time_travel.render_snapshot_or(&app.tool_runs, &committed);
         let shown = (semio_framework_value::ToValue::to_value(shown.as_ref()), pack::snapshot::ArtifactDsl::print_dsl(shown.as_ref()));
@@ -283,27 +305,19 @@ where
         (None, None) => acceptance_changes(&inputs, &original),
     };
     let (mut drafted, mut unchanged) = (None, 0);
-    let mut refusals = BTreeMap::new();
-    let mut note_refusal = |path: &str, refusal: String| {
-        if refusals.len() < 3 || path == "/address/row" {
-            refusals.entry(path.to_string()).or_insert_with(|| refusal.chars().take(400).collect::<String>());
-        }
-    };
     for candidate in changes {
         if app.time_travel.status().is_none() {
             Box::pin(acceptance_verb(app, HISTORY_EDIT_BEGIN_ACTION_ID, begin.clone(),cx)).await.map_err(|reason|AcceptanceVerdict::Fail(reason.into()))?;
         }
-        let input = Box::pin(acceptance_verb(app, HISTORY_EDIT_INPUT_ACTION_ID, vec![("path", DslValue::String(candidate.0.clone())), ("value", candidate.1.clone())],cx)).await;
-        if input.is_err()
+        if Box::pin(acceptance_verb(app, HISTORY_EDIT_INPUT_ACTION_ID, vec![("path", DslValue::String(candidate.0.clone())), ("value", candidate.1.clone())],cx)).await.is_err()
             || !app.time_travel.editor().is_some_and(|editor| editor.refused.is_none() && editor.value != original)
         {
-            note_refusal(&candidate.0, format!("action={:?} editor={:?}", input.err().map(|error| error.to_string()), app.time_travel.editor().and_then(|editor| editor.refused.as_ref())));
             continue;
         }
         Box::pin(acceptance_verb(app, HISTORY_EDIT_ACCEPT_ACTION_ID, Vec::new(),cx)).await.map_err(|reason|AcceptanceVerdict::Fail(reason.into()))?;
-        Box::pin(acceptance_pump(app, |app| app.time_travel.status().is_none_or(|status| status.stage != HistoryTimeTravelStage::Replaying),cx)).await.map_err(|reason|AcceptanceVerdict::Fail(reason.into()))?;
+        Box::pin(acceptance_pump(app, |app| app.time_travel.status().is_none_or(|status| status.stage != HistoryTimeTravelStage::Replaying),cx)).await
+            .map_err(|reason| AcceptanceVerdict::Fail(reason.context("after accepting history replacement".into())))?;
         if change.is_none() && app.time_travel.status().is_some_and(|status| status.review == Some(HistoryTimeTravelReview::Blocked)) {
-            note_refusal(&candidate.0, format!("replay blocked with {:?}", app.time_travel.status().and_then(|status| status.worst)));
             Box::pin(acceptance_verb(app, HISTORY_EDIT_EXIT_ACTION_ID, Vec::new(),cx)).await.map_err(|reason|AcceptanceVerdict::Fail(reason.into()))?;
             Box::pin(acceptance_pump(app, |app| app.time_travel.status().is_none() && !app.time_travel.has_pending_work(),cx)).await.map_err(|reason|AcceptanceVerdict::Fail(reason.into()))?;
             if store.is_none() && app.stores.store.supersessions().iter().any(|(id, _)| id.0 == target) {
@@ -325,9 +339,9 @@ where
             let _ = Box::pin(acceptance_verb(app, HISTORY_EDIT_EXIT_ACTION_ID, Vec::new(),cx)).await;
         }
         return Err(AcceptanceVerdict::Skip(format!(
-            "no schema-valid{} change of its {} input(s) is accepted ({unchanged} left the operation unchanged); first refusals by path: {:?}",
+            "no schema-valid{} change of its {} input(s) is accepted ({unchanged} left the operation unchanged)",
             kind.map_or(String::new(), |kind| format!(" {}", ACCEPTANCE_CONTROL_KINDS[kind])),
-            inputs.len(), refusals
+            inputs.len()
         )));
     };
     let status = app.time_travel.status().ok_or_else(|| AcceptanceVerdict::Fail("accepting closed the session".into()))?;

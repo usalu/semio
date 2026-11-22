@@ -1,0 +1,9 @@
+# First Archive Integration Preflight
+
+Read-only inspection of the 175-path candidate and related evidence found no additional high-confidence TypeScript/React compile error or actor-scope mismatch. This is not a full typecheck or mounted proof. The candidate normalizes `naturalSourceAck` and its nested option-valued loan/page index in `🔌️plugin/🌐️browser-bundle/🏗️materialization/🌉️component-bridge-source/🟦️.ts`; the sender checks instance, owner, sequence, kind, extent, full declaration and loan tokens. The first archive request carries that same instance/operation/generation/sequence and the guest compares it against the retained source; the shell binds the returned Store frontier and document to the captured host and actor. `shellFrameBytes` returns the raw non-typed Shell payload, and the candidate catches `SEMIOFR1` before ordinary AppFrame delivery.
+
+A mounted prerequisite remains unproven: the guest exposes `first_archive_frontier` only after Published and the terminal natural-source receipt was sent. The first-archive path is exercised after accepted kind-241 Complete; a stalled kind-10 baseline does not exercise it. Focused controlled-peer laws do not prove actual generated JCO enum/option representations, actor lifetime, or the complete shell attachment in a real component. Test those exact crossings before treating the application patch as integrated. The 4 MiB persisted archive and ordinary full-buffer reopen remain explicit limits.
+
+The staged event-log API becomes asynchronous; candidate storage changes await the internal read and write call sites that need the result, and the existing early return occurs inside an async function. No unmodified production caller was found in the inspected dev module. The full assembled TypeScript, Cargo and four-target source closures still require their normal gates.
+
+No product files were edited and no heavy build was started.

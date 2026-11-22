@@ -102,14 +102,16 @@ export function useScopeState({ core }: { readonly core: ShellCoreAfterCheckInAn
   /** 👁️✏️ The plugin's editor/viewer pair for the OPEN document's dialect, or `null` when it declares
    * fewer than two surfaces for it — which is exactly when the role group must not render. */
   const sessionRoleApps = useMemo((): Readonly<Record<AppRole, AppDefinition>> | null => {
-    if (!session) return null;
-    const apps = loadedPlugins.find((entry) => entry.handle.pluginId === session.pluginId)?.manifest.apps ?? [];
-    return surfaceRoleAppsV1(apps, session.app.dialect);
-  }, [loadedPlugins, session]);
+    if (focusedProgram === null || focusedApp === null) return null;
+    const apps = loadedPlugins.find((entry) => entry.handle.pluginId === focusedProgram.pluginId)?.manifest.apps ?? [];
+    return surfaceRoleAppsV1(apps, focusedApp.dialect);
+  }, [loadedPlugins, focusedProgram, focusedApp]);
+  const roleDocument = focusedProgram === null ? undefined : [...openDocumentSessionsRef.current.values()].find((entry) =>
+    entry.session.pluginId === focusedProgram.pluginId && entry.session.instanceId === focusedProgram.instanceId && entry.session.app.id === focusedProgram.appId);
   const sessionWork = sessionWorkRef.current;
   const sourceBusy = useSyncExternalStore(
     sessionWork.subscribe,
-    () => session !== null && sessionWork.pending(session.pluginId, session.instanceId) > 0,
+    () => focusedProgram !== null && sessionWork.pending(focusedProgram.pluginId, focusedProgram.instanceId) > 0,
     () => false,
   );
   const roleSwitchBlocked = surfaceSwitchBusy || sourceBusy;
@@ -119,15 +121,15 @@ export function useScopeState({ core }: { readonly core: ShellCoreAfterCheckInAn
    * `AppDefinition`'s OWN localized label, so en/de follow the plugin rather than a shell dictionary.
    * Shares the mode switcher's placement in both the desktop navbar cluster and the mobile "App" tab. */
   const roleSwitcherElement = useMemo(() => {
-    if (!session || sessionRoleApps === null) return null;
-    const scope = [...openDocumentSessionsRef.current.values()].find((entry) => entry.session.pluginId === session.pluginId && entry.session.instanceId === session.instanceId)?.scope;
+    if (focusedProgram === null || focusedApp === null || sessionRoleApps === null || (focusedProgram.spawnedId !== null && roleDocument === undefined)) return null;
+    const scope = roleDocument?.scope;
     const access = scope === undefined ? null : (sharedSpaceAccessRef.current.get(scope.spaceId) ?? null);
     const refused = (role: AppRole, isActive: boolean): boolean => !isActive && sharedDocumentRoleSwitchRefusedV1(access, role);
     return (
       <ButtonGroup key="roles" id="playground.navbar.roles" role="group" aria-label={surfaceRoleGroupText(uiLocale)} aria-busy={surfaceSwitchBusy || undefined}>
         {SURFACE_ROLE_ORDER.map((role) => {
           const app = sessionRoleApps[role];
-          const isActive = session.app.role === role;
+          const isActive = focusedApp.role === role;
           return (
             <ButtonGroupItem
               key={role}
@@ -147,7 +149,7 @@ export function useScopeState({ core }: { readonly core: ShellCoreAfterCheckInAn
         })}
       </ButtonGroup>
     );
-  }, [session, sessionRoleApps, surfaceSwitchBusy, roleSwitchBlocked, switchToSessionRole, controlKeybindings, uiTerminology, uiLocale, sharedSpaceAccessVersion]);
+  }, [focusedProgram, focusedApp, roleDocument, sessionRoleApps, surfaceSwitchBusy, roleSwitchBlocked, switchToSessionRole, controlKeybindings, uiTerminology, uiLocale, sharedSpaceAccessVersion]);
 
   const resolvedCommands = useMemo(() => {
     const resolved = resolveCommands(osCommands, activePluginManifest, session?.app, activeModeId, appLabelsOverlay, uiTerminology, uiLocale, localPrograms.map((entry) => entry.manifest), selectedSpaceArtifactKinds);

@@ -1,0 +1,150 @@
+{
+  "version": 1,
+  "scenarios": [
+    {
+      "id": "unit-cache-warm",
+      "title": {
+        "en": "Warm second workspace reads the fleet unit cache",
+        "de": "Warmer zweiter Arbeitsbereich liest den Flotten-Einheitencache"
+      },
+      "metrics": [
+        "hitRatio",
+        "executedActions"
+      ]
+    },
+    {
+      "id": "nx-cache-warm",
+      "title": {
+        "en": "Warm second workspace reads the fleet Nx cache",
+        "de": "Warmer zweiter Arbeitsbereich liest den Flotten-Nx-Cache"
+      },
+      "metrics": [
+        "hitRatio",
+        "executedActions"
+      ]
+    },
+    {
+      "id": "twin-build",
+      "title": {
+        "en": "One unit built in two directories writes identical action results",
+        "de": "Eine in zwei Verzeichnissen gebaute Einheit schreibt gleiche Aktionsergebnisse"
+      },
+      "metrics": [
+        "divergentWrites"
+      ]
+    },
+    {
+      "id": "offload-pressure",
+      "title": {
+        "en": "A unit under forced local pressure completes on another worker",
+        "de": "Eine Einheit unter erzwungenem lokalem Druck wird auf einem anderen Worker fertig"
+      },
+      "metrics": [
+        "offloadMs",
+        "offloadedUnits"
+      ],
+      "optional": [
+        "offloadMs"
+      ]
+    },
+    {
+      "id": "offload-fallback",
+      "title": {
+        "en": "With the scheduler down a unit under pressure compiles locally in time",
+        "de": "Bei ausgefallenem Scheduler wird eine Einheit unter Druck rechtzeitig lokal gebaut"
+      },
+      "metrics": [
+        "fallbackMs",
+        "executedActions"
+      ],
+      "optional": [
+        "fallbackMs"
+      ]
+    },
+    {
+      "id": "host-16g",
+      "title": {
+        "en": "Memory and disk gates on a simulated 16 GB host",
+        "de": "Speicher- und Plattengrenzen auf einem simulierten 16-GB-Rechner"
+      },
+      "metrics": [
+        "capacityBreaches",
+        "reservedBytes",
+        "storeBytes"
+      ]
+    },
+    {
+      "id": "live-unit-cache",
+      "title": {
+        "en": "Live: one tiny unit through the real wrapper in two workspaces against the fleet cache",
+        "de": "Live: eine kleine Einheit durch den echten Wrapper in zwei Arbeitsbereichen gegen den Flottencache"
+      },
+      "metrics": [
+        "hitRatio",
+        "executedActions",
+        "divergentWrites"
+      ]
+    },
+    {
+      "id": "live-nx-cache",
+      "title": {
+        "en": "Live: a scratch Nx workspace in two directories with an empty local cache against the fleet cache",
+        "de": "Live: ein Nx-Arbeitsbereich in zwei Verzeichnissen mit leerem lokalem Cache gegen den Flottencache"
+      },
+      "metrics": [
+        "hitRatio",
+        "executedActions"
+      ]
+    },
+    {
+      "id": "live-bazel-cache",
+      "title": {
+        "en": "Live: a real Bazel build twice with bazel clean between through the signing proxy against the fleet cache",
+        "de": "Live: ein echter Bazel-Build zweimal mit bazel clean dazwischen über den Signatur-Proxy gegen den Flottencache"
+      },
+      "metrics": [
+        "hitRatio",
+        "executedActions"
+      ]
+    },
+    {
+      "id": "live-offload",
+      "title": {
+        "en": "Live: a forced offload through the live scheduler",
+        "de": "Live: eine erzwungene Auslagerung über den echten Scheduler"
+      },
+      "metrics": [
+        "offloadMs",
+        "offloadedUnits"
+      ],
+      "optional": [
+        "offloadMs"
+      ]
+    },
+    {
+      "id": "live-run-warm",
+      "title": {
+        "en": "Live: a warm single-target repo run, command start to first task and to done",
+        "de": "Live: ein warmer repo run eines einzelnen Targets, vom Befehlsstart bis zur ersten Task und bis zum Ende"
+      },
+      "metrics": [
+        "firstTaskMs",
+        "wallMs"
+      ]
+    },
+    {
+      "id": "fleet-ready",
+      "title": {
+        "en": "Workers that are Ready and the time they took from the start of their supervisor",
+        "de": "Worker, die bereit sind, und die Zeit seit dem Start ihres Supervisors"
+      },
+      "metrics": [
+        "readyRatio",
+        "wallMs"
+      ],
+      "optional": [
+        "wallMs"
+      ]
+    }
+  ]
+}

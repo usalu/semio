@@ -8,6 +8,9 @@ use semio_framework_value::{RetainedCloneProgress,RetainedCloneStep,RetainedWork
 use semio_plugin_abi::owned_abi::ActorInput;
 use std::mem::ManuallyDrop;
 
+#[path="💼️job.rs"]
+mod job_frame;
+
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub enum InputAdmission { Pending, Ready, Failed, Closed }
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
@@ -50,6 +53,7 @@ pub struct OriginalActorInputReceiving {
     event:ManuallyDrop<Option<semio_framework::kernel::Event>>,
     job:ManuallyDrop<Option<semio_framework_actor::OriginalJobSource>>,
     job_retirement:ManuallyDrop<Option<ControlledRetirement<semio_framework_actor::OriginalJobSource>>>, job_id:Option<u64>,
+    job_frame:Option<job_frame::JobFrame>,
     failed:bool, closing:bool, returning:bool, returned:bool,
 }
 
@@ -60,6 +64,9 @@ pub fn retire_step<U:semio_framework_value::retirement::RetireOwned>(owner:&mut 
     let turn=match poll{semio_framework_value::RetainedWorkPoll::Complete(turn)=>turn,semio_framework_value::RetainedWorkPoll::Pending{work}=>RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work}};
     semio_framework_job::receive_original_retained_work(cx,turn)?;Ok(())
 }
+fn input_refusal(error:ValueError)->OriginalJsonOutputOutcome{
+    OriginalJsonOutputOutcome{value:Err(OriginalJsonOutputFailure::Refused(error)),progress:Default::default(),work:0,reported_work:0,observed_native_work:0,receiving_refusal:None}
+}
 fn invalid()->OriginalTurnFailure{ValueError::literal(ValueRefusalKind::InvariantViolated,"actor input changed its original Source or borrowed wire").into()}
 fn charge(cx:&mut StepContext<'_>,retiring:bool,bytes:usize)->Result<bool,OriginalTurnFailure>{
     let grant=cx.retained_grant();
@@ -68,9 +75,9 @@ fn charge(cx:&mut StepContext<'_>,retiring:bool,bytes:usize)->Result<bool,Origin
 }
 impl OriginalActorInputReceiving {
     /// 🌱️ Construction declares limits but admits no parser, source loan or byte owner.
-    pub const fn new(policy:OriginalNativeDecodePolicy,limits:JsonReadLimits)->Self{Self{binding:None,pointer:0,length:0,capture:OriginalCallerReturnPlace::empty(),decoder:ManuallyDrop::new(OriginalJsonOutputSource::new(policy,limits)),input:ManuallyDrop::new(None),outcome:ManuallyDrop::new(None),settlement:ManuallyDrop::new(None),retirement:ManuallyDrop::new(None),event:ManuallyDrop::new(None),job:ManuallyDrop::new(None),job_retirement:ManuallyDrop::new(None),job_id:None,failed:false,closing:false,returning:false,returned:false}}
+    pub const fn new(policy:OriginalNativeDecodePolicy,limits:JsonReadLimits)->Self{Self{binding:None,pointer:0,length:0,capture:OriginalCallerReturnPlace::empty(),decoder:ManuallyDrop::new(OriginalJsonOutputSource::new(policy,limits)),input:ManuallyDrop::new(None),outcome:ManuallyDrop::new(None),settlement:ManuallyDrop::new(None),retirement:ManuallyDrop::new(None),event:ManuallyDrop::new(None),job:ManuallyDrop::new(None),job_retirement:ManuallyDrop::new(None),job_id:None,job_frame:None,failed:false,closing:false,returning:false,returned:false}}
     /// 🎟️ The containing Source pays the frame before binding its exact wire and caller.
-    pub fn new_bound(policy:OriginalNativeDecodePolicy,limits:JsonReadLimits,wire:&[u8],cx:&StepContext<'_>)->Self{let mut owner=Self::new(policy,limits);owner.binding=Some(OriginalSourceBinding::borrow(cx));owner.pointer=wire.as_ptr() as usize;owner.length=wire.len();owner}
+    pub fn new_bound(policy:OriginalNativeDecodePolicy,limits:JsonReadLimits,wire:&[u8],cx:&StepContext<'_>)->Self{let mut owner=Self::new(policy,limits);owner.binding=Some(OriginalSourceBinding::borrow(cx));owner.pointer=wire.as_ptr() as usize;owner.length=wire.len();owner.job_frame=job_frame::JobFrame::select(wire,limits.maximum_bytes,policy.maximum_owned_bytes);owner}
     fn validate(&self,wire:Option<&[u8]>,cx:&StepContext<'_>)->Result<(),OriginalTurnFailure>{
         cx.original_source_parent()?.validate_borrowed_context(cx)?;
         if self.binding.is_some_and(|binding|!binding.matches(cx)){return Err(invalid())}
@@ -188,6 +195,14 @@ impl OriginalActorInputReceiving {
         if self.capture.is_admitted(){if !self.capture.settle_return(cx)?{return Ok(InputAdmission::Pending)}if self.returned{return Ok(if self.closing{if self.terminal_is_empty(){InputAdmission::Closed}else{InputAdmission::Pending}}else if self.failed{InputAdmission::Failed}else{InputAdmission::Ready})}return Ok(InputAdmission::Pending)}
         if self.returned&&!self.closing{return Ok(if self.failed{InputAdmission::Failed}else{InputAdmission::Ready})}
         if self.binding.is_none(){if !charge(cx,false,std::mem::size_of::<(Option<OriginalSourceBinding>,usize,usize)>())?{return Ok(InputAdmission::Pending)}let wire=wire.ok_or_else(invalid)?;self.binding=Some(OriginalSourceBinding::borrow(cx));self.pointer=wire.as_ptr() as usize;self.length=wire.len();return Ok(InputAdmission::Pending)}
+        if self.closing&&(self.job_frame.is_some()||matches!(self.input.as_ref(),Some(ActorInput::Job(_)))){
+            if let Some(outcome)=self.outcome.as_mut(){
+                if !outcome.terminal_is_empty(){retire_step(outcome,cx)?;return Ok(InputAdmission::Pending)}
+                if !charge(cx,true,std::mem::size_of_val(&*self.outcome))?{return Ok(InputAdmission::Pending)}
+                self.outcome.take();
+                return Ok(InputAdmission::Pending)
+            }
+        }
         if self.outcome.is_some() || self.settlement.is_some() { return Ok(InputAdmission::Failed); }
         if self.closing{
             if self.event.is_some(){let progress=RetainedCloneProgress{copied_items:2,copied_bytes:std::mem::size_of::<Option<semio_framework::kernel::Event>>()+std::mem::size_of::<usize>(),..Default::default()};if cx.retirement_should_yield()||cx.fuel_remaining()<2||cx.retained_grant().maximum_depth==0||!progress.fits(cx.retained_grant()){return Ok(InputAdmission::Pending)}cx.retained_progress().checked_add(progress)?;let Some(ActorInput::Poll(poll))=self.input.as_mut()else{return Err(invalid())};if poll.events.len()==poll.events.capacity(){return Err(invalid())}poll.events.push(self.event.take().ok_or_else(invalid)?);let posted=cx.consume_retained(progress);cx.consume_fuel(2);posted?;return Ok(InputAdmission::Pending)}
@@ -203,7 +218,7 @@ impl OriginalActorInputReceiving {
             if self.retirement.is_none()&&self.input.is_some(){if !charge(cx,true,std::mem::size_of::<Option<ActorInput>>()+std::mem::size_of::<Option<ControlledRetirement<ActorInput>>>())?{return Ok(InputAdmission::Pending)}*self.retirement=Some(ControlledRetirement::retain(self.input.take().ok_or_else(invalid)?));return Ok(InputAdmission::Pending)}
             if let Some(owner)=self.retirement.as_mut(){
                 if !owner.terminal_is_empty(){
-                    if self.decoder.terminal_is_empty(){retire_step(owner,cx)?;}
+                    if self.job_frame.is_some()||self.decoder.terminal_is_empty(){retire_step(owner,cx)?;}
                     else {let address=(&mut *self.settlement as *mut Option<ControlledRetirement<OriginalNativeDecodeOutcome<RetainedCloneStep>>>) as usize;let bytes=std::mem::size_of::<Option<ControlledRetirement<OriginalNativeDecodeOutcome<RetainedCloneStep>>>>();if !cx.with_original_retirement(|cx|self.capture.admit_sized(cx,address,bytes))?{return Ok(InputAdmission::Pending)}if let Some(raw)=cx.with_original_retirement(|cx|self.decoder.close_owned_step(owner,cx))?{self.retain_settlement(raw)?}}
                     return Ok(InputAdmission::Pending)
                 }
@@ -211,7 +226,7 @@ impl OriginalActorInputReceiving {
             }
             if self.returned{return Ok(if self.terminal_is_empty(){InputAdmission::Closed}else{InputAdmission::Pending})}
         }
-        if self.failed||self.input.is_some(){self.returning=true}
+        if self.failed||self.job_frame.is_none()&&self.input.is_some(){self.returning=true}
         if self.returning{
             let(address,bytes)=self.settlement_destination();let admitted=if self.closing{cx.with_original_retirement(|cx|self.capture.admit_sized(cx,address,bytes))?}else{self.capture.admit_sized(cx,address,bytes)?};if !admitted{return Ok(InputAdmission::Pending)}
             let before=(cx.original_work_units_spent(),cx.retained_progress());
@@ -226,9 +241,18 @@ impl OriginalActorInputReceiving {
         }else{
             let(address,bytes)=self.outcome_destination();if !self.capture.admit_sized(cx,address,bytes)?{return Ok(InputAdmission::Pending)}
             let before=(cx.original_work_units_spent(),cx.retained_progress());
-            let raw=if self.decoder.ready(){self.decoder.take_step(&mut *self.input,cx)?}else{self.decoder.receive_step(wire.ok_or_else(invalid)?,cx)?};
+            let raw=if let Some(frame)=self.job_frame.as_mut(){
+                match frame.advance(wire.ok_or_else(invalid)?,&mut *self.input,cx)?{
+                    Ok(ready)=>{self.returning=ready;None},
+                    Err(error)=>Some(input_refusal(error)),
+                }
+            }else if self.decoder.ready(){self.decoder.take_step(&mut *self.input,cx)?}else{self.decoder.receive_step(wire.ok_or_else(invalid)?,cx)?};
             *decoder_progress=before!=(cx.original_work_units_spent(),cx.retained_progress());
-            if let Some(raw)=raw.filter(|raw| raw.value.is_err() || raw.receiving_refusal.is_some()){
+            let failure=raw.filter(|raw|raw.value.is_err()||raw.receiving_refusal.is_some()).or_else(||{
+                (self.job_frame.is_none()&&matches!(self.input.as_ref(),Some(ActorInput::Job(_))))
+                    .then(||input_refusal(ValueError::literal(ValueRefusalKind::InvalidValue,"owned Job input requires a compact SJS1 frame")))
+            });
+            if let Some(raw)=failure{
                 self.failed = true;
                 *self.outcome = Some(ControlledRetirement::retain(raw));
                 self.capture.record_sized_return(address, bytes)?;

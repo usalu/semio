@@ -25,6 +25,86 @@ fn png_decode_shared_all_depths_filters_interlace_and_huffman_under_grants(){
 }
 
 #[test]
+fn png_decode_batches_funded_transitions_and_resumes_after_yield() {
+    let rows = rows();
+    let row = rows.as_array().unwrap().iter()
+        .find(|row| row["name"] == "RGBA filter 4").unwrap();
+    let input = input(&row["input"]);
+    let reference = oracle(&input.data);
+    let expected: Vec<u8> = serde_json::from_value(row["expected"]["pixels"].clone()).unwrap();
+    assert_eq!(reference.pixels, expected);
+    let mut decoder = job(input);
+    for expected_bytes in [17, 41] {
+        let open_chunk = grant(&decoder);
+        advance_with(&mut decoder, open_chunk).unwrap();
+        let before_checksum = decoder.progress();
+        let crc_bytes = decoder.crc_bytes_remaining();
+        assert_eq!(crc_bytes, expected_bytes);
+        let crc_grant = RetainedCloneGrant {
+            maximum_items: crc_bytes,
+            maximum_copy_bytes: crc_bytes * decoder.next_copy_byte_demand().unwrap(),
+            maximum_depth: decoder.next_depth_demand().unwrap(),
+            ..Default::default()
+        };
+        let (progress, receipt) = advance_with(&mut decoder, crc_grant).unwrap();
+        assert_eq!(progress.bytes - before_checksum.bytes, crc_bytes);
+        assert_eq!(decoder.crc_bytes_remaining(), 0);
+        assert_eq!(receipt.copied_items, crc_bytes);
+        assert!(receipt.fits(crc_grant));
+        let finalize = grant(&decoder);
+        assert_eq!(finalize.maximum_capacity_bytes != 0, expected_bytes == 41);
+        if expected_bytes == 41 {
+            let unfunded = RetainedCloneGrant { maximum_capacity_bytes: 0, ..finalize };
+            assert_eq!(advance_with(&mut decoder, unfunded).unwrap(), (progress, Default::default()));
+        }
+        let (_, receipt) = advance_with(&mut decoder, finalize).unwrap();
+        assert!(receipt.fits(finalize));
+        assert_eq!(receipt.retained_capacity_bytes != 0, expected_bytes == 41);
+    }
+    for _ in 0..1024 {
+        if decoder.progress().phase == "inflating" && decoder.next_capacity_byte_demand().unwrap() == 0 {
+            break;
+        }
+        let quote = grant(&decoder);
+        advance_with(&mut decoder, quote).unwrap();
+    }
+    let before = decoder.progress();
+    assert_eq!(before.phase, "inflating");
+    let quote = RetainedCloneGrant {
+        maximum_items: 8,
+        maximum_copy_bytes: 8 * decoder.next_copy_byte_demand().unwrap(),
+        maximum_depth: decoder.next_depth_demand().unwrap(),
+        ..Default::default()
+    };
+    let mut remaining = 3usize;
+    let ((progress, receipt), performed) = effect::with_effect(quote, 8, &mut None, |effect| {
+        let result = decoder.advance_while(effect, &mut || {
+            let permitted = remaining != 0;
+            remaining = remaining.saturating_sub(1);
+            permitted
+        });
+        (result.unwrap(), effect.performed_work())
+    });
+    assert_eq!(progress.work - before.work, 3);
+    assert_eq!(performed, 3);
+    assert_eq!(receipt.copied_items, 3);
+    assert!(receipt.fits(quote));
+    let ((progress, receipt), performed) = effect::with_effect(quote, 2, &mut None, |effect| {
+        let result = decoder.advance_while(effect, &mut || true);
+        (result.unwrap(), effect.performed_work())
+    });
+    assert_eq!(progress.work - before.work, 5);
+    assert_eq!(performed, 2);
+    assert_eq!(receipt.copied_items, 2);
+    assert!(receipt.fits(quote));
+    finish(&mut decoder, 7).unwrap();
+    let image = output(&mut decoder);
+    assert_eq!(image.pixels, reference.pixels);
+    drain(decoder);
+    drain(image);
+}
+
+#[test]
 fn png_decode_moves_paged_original_across_chunk_seams_under_exact_grants() {
     type Source = PagedBytes<65536>;
     let fixture: serde_json::Value =

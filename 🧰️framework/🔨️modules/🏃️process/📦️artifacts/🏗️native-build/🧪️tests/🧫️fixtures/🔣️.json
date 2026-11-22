@@ -61,6 +61,25 @@
       "replacementSource": "fn main() { let value = 3; }\n"
     },
     {
+      "id": "ordinary source drift stops the running compiler",
+      "mode": "running-source-edit",
+      "accepted": true,
+      "compilerRuns": 2,
+      "consumerRuns": 1,
+      "staleCompletion": false,
+      "finishDelayMs": 3500,
+      "replacementSource": "fn main() { let value = 4; }\n"
+    },
+    {
+      "id": "precompiler source drift retries under the original",
+      "mode": "planning-source-edit",
+      "accepted": true,
+      "compilerRuns": 1,
+      "consumerRuns": 1,
+      "editOnGraphCapture": 2,
+      "replacementSource": "fn main() { let value = 6; }\n"
+    },
+    {
       "id": "successful observation output after lock edit",
       "mode": "successful-source-edit",
       "accepted": true,

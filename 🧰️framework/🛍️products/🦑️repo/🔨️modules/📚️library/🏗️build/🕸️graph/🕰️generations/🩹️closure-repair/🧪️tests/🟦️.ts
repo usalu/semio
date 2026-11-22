@@ -267,3 +267,12 @@ test("full-funded repair evidence admits the measured archive shape and keeps it
   }
  }
 });
+
+test("a quarantined parent of another implementation stays a valid resume base: the repaired candidate is verified by content, never started cold",async()=>{
+ const w=world();w.move(w.pointer);
+ const moved={...basic,implementation:hash("moved implementation")},verifyClosure=async(ref:typeof input|typeof lock)=>ref.namespace===lock.namespace;
+ const recovered=await recoverClosureRepairV1({...moved,fs:w.fs,pointer:w.pointer,verifyClosure});
+ expect(recovered?.owners).toEqual(["a","b"]);
+ expect(recovered?.parent).toBe(w.expected.manifest);
+ expect(await recoverClosureRepairV1({...moved,identity:hash("another registry"),fs:w.fs,pointer:w.pointer,verifyClosure})).toBeUndefined();
+});

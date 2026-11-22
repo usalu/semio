@@ -5,7 +5,6 @@ import * as React from "react";
 import { ephemeralBox } from "@semio-tech/framework-transient";
 import { panelGhostSessionBridge } from "../../👻️PanelGhost/🟦️.tsx";
 import type { TreeDragAndDropController } from "../../🌳️Tree/🧲️drag-drop/🟦️.tsx";
-import type { WindowStackCorner } from "../../../🔨️modules/🗺️window-layout/🟦️.ts";
 
 /** 🪟️ Window descriptor rendered inside {@link Mode}. */
 export interface ModeWindowDescriptor extends Omit<WindowConfig, "children" | "onOpenInNewWindow" | "onMaximize" | "onMinimize" | "onClose"> {
@@ -91,8 +90,6 @@ export function windowTemplatePaletteTreeDragController(): TreeDragAndDropContro
     },
   };
 }
-
-export type ModeCanvasDropTarget = { kind: "tab"; stackPath: string; index: number; corner?: WindowStackCorner } | { kind: "split"; stackPath: string; side: "left" | "right" | "top" | "bottom" } | { kind: "root-split"; side: "left" | "right" | "top" | "bottom" };
 
 export interface WindowTemplateDropPayload {
   readonly windowKindId: string;

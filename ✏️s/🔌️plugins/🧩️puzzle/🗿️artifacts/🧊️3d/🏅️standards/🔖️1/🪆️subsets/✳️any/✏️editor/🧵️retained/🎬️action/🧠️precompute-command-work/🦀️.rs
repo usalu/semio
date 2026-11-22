@@ -98,7 +98,7 @@ impl Puzzle3dPrecomputeCommandWork {
 /// 🔤️ Base64 characters one interactive step of a `registerBrushMesh` page validates. A whole page is
 /// at most [`crate::editor::puzzle3d::precompute::PUZZLE3D_MESH_PAGE_BASE64_CHARS`] characters, so a
 /// page costs at most eleven steps per stream and no step approaches the lane's own budget.
-const PUZZLE3D_MESH_PAGE_SCAN_CHARS: usize = 512;
+pub const PUZZLE3D_MESH_PAGE_SCAN_CHARS: usize = 512;
 
 impl<A: Puzzle3dEditor> semio_plugin::retained_command::ArtifactCommandWork<EditorApp<A>> for Puzzle3dPrecomputeCommandWork {
     fn tool_id(&self) -> &'static str {

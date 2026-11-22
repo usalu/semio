@@ -85,7 +85,7 @@ impl BoardHost {
             self.focus.interaction = Interaction::Pan { origin: self.scene.camera.clone(), start_screen: screen };
             return;
         }
-        if let Some(ref hid) = hit {
+        if let Some(hid) = hit.as_ref().filter(|_| button == 0) {
             if let Some(node) = self.scene.nodes.get(hid) {
                 if node.draggable && !node.locked {
                     let nid = hid.clone();
@@ -186,49 +186,11 @@ impl BoardHost {
             update_transform_drag(&mut self.scene, &mut self.outbox, &mut self.gestures, world, self.style.grid_snap_enabled);
             return;
         }
+        if self.update_node_drag_at(world) {
+            return;
+        }
         match std::mem::replace(&mut self.focus.interaction, Interaction::None) {
-            Interaction::DragNodes { primary_id, offset, start_positions, proximity_pair: retained_proximity_pair, gesture, delta: retained_delta } => {
-                let Some(delta) = drag_delta(&self.scene, &self.style, world, &primary_id, offset, &start_positions) else {
-                    self.focus.interaction = Interaction::DragNodes { primary_id, offset, start_positions, proximity_pair: retained_proximity_pair, gesture, delta: retained_delta };
-                    return;
-                };
-                let mut event_count = 0usize;
-                let mut event_bytes = 0usize;
-                for (id, (ox0, oy0)) in &start_positions {
-                    if self.scene.nodes.contains_key(id) {
-                        event_count += 1;
-                        let Some(total) = board_node_move_owned_bytes(id, ox0 + delta.x, oy0 + delta.y).and_then(|bytes| event_bytes.checked_add(bytes)) else {
-                            self.outbox.event_schema_fault = true;
-                            self.focus.interaction = Interaction::DragNodes { primary_id, offset, start_positions, proximity_pair: retained_proximity_pair, gesture, delta: retained_delta };
-                            return;
-                        };
-                        event_bytes = total;
-                    }
-                }
-                if self.outbox.events.reserve(event_count, event_bytes).is_err() {
-                    self.focus.interaction = Interaction::DragNodes { primary_id, offset, start_positions, proximity_pair: retained_proximity_pair, gesture, delta: retained_delta };
-                    return;
-                }
-                let mut geometry_changed = false;
-                for (id, (ox0, oy0)) in &start_positions {
-                    if let Some(n) = self.scene.nodes.get_mut(id) {
-                        let mx = ox0 + delta.x;
-                        let my = oy0 + delta.y;
-                        if (n.x - mx).abs() > 1e-9 || (n.y - my).abs() > 1e-9 {
-                            geometry_changed = true;
-                        }
-                        n.x = mx;
-                        n.y = my;
-                        let event = BoardOwnedEvent::node_move(id, mx, my).expect("node move event was exactly preflighted");
-                        self.outbox.events.push(event).expect("node move event credits were reserved before mutation");
-                    }
-                }
-                if geometry_changed {
-                    self.scene.bump_content_scene_generation();
-                }
-                let proximity_pair = if start_positions.len() == 1 { node_drag_proximity_handle_pair(&self.scene, &self.style, primary_id.as_str()) } else { None };
-                self.focus.interaction = Interaction::DragNodes { primary_id, offset, start_positions, proximity_pair, gesture, delta };
-            }
+            Interaction::DragNodes { .. } => unreachable!("node drag was already handled"),
             Interaction::Pan { origin, start_screen } => {
                 let delta = screen - start_screen;
                 let nx = origin.x - delta.x / origin.zoom;
@@ -307,6 +269,46 @@ impl BoardHost {
         }
     }
 
+    /// 📍️ Applies the pointer sample to the original grab positions for both live drag and release.
+    fn update_node_drag_at(&mut self, world: Point) -> bool {
+        let Interaction::DragNodes { primary_id, offset, start_positions, proximity_pair, delta, .. } = &mut self.focus.interaction else {
+            return false;
+        };
+        let Some(next_delta) = drag_delta(&self.scene, &self.style, world, primary_id, *offset, start_positions).filter(|next| *next != *delta) else {
+            return true;
+        };
+        let mut event_count = 0usize;
+        let mut event_bytes = 0usize;
+        for (id, (x, y)) in start_positions.iter() {
+            if self.scene.nodes.contains_key(id) {
+                event_count += 1;
+                let Some(total) = board_node_move_owned_bytes(id, x + next_delta.x, y + next_delta.y).and_then(|bytes| event_bytes.checked_add(bytes)) else {
+                    self.outbox.event_schema_fault = true;
+                    return true;
+                };
+                event_bytes = total;
+            }
+        }
+        let individual_previews = self.outbox.events.reserve(event_count, event_bytes).is_ok();
+        for (id, (x, y)) in start_positions.iter() {
+            if let Some(node) = self.scene.nodes.get_mut(id) {
+                node.x = x + next_delta.x;
+                node.y = y + next_delta.y;
+                if individual_previews {
+                    let event = BoardOwnedEvent::node_move(id, node.x, node.y).expect("node move event was exactly preflighted");
+                    self.outbox.events.push(event).expect("node move event credits were reserved before mutation");
+                }
+            }
+        }
+        if !individual_previews {
+            self.outbox.publish_transform_previews(start_positions.iter().filter_map(|(id, _)| self.scene.nodes.get(id).map(|node| (id.as_str(), node.x, node.y))));
+        }
+        self.scene.bump_content_scene_generation();
+        *delta = next_delta;
+        *proximity_pair = if start_positions.len() == 1 && next_delta != Vec2::ZERO { node_drag_proximity_handle_pair(&self.scene, &self.style, primary_id) } else { None };
+        true
+    }
+
     pub fn pointer_up_screen(&mut self, sx: f64, sy: f64, shift: bool, ctrl_or_meta: bool, alt: bool) {
         self.scene.interaction_revision = self.scene.interaction_revision.wrapping_add(1);
         let screen = Point::new(sx, sy);
@@ -315,9 +317,11 @@ impl BoardHost {
             if matches!(self.focus.interaction, Interaction::Pan { .. }) {
                 self.focus.interaction = Interaction::None;
             }
+            update_region_paint(&mut self.scene, &mut self.style, &mut self.gestures, world);
             commit_region_paint(&mut self.scene, &mut self.outbox, &mut self.gestures);
             return;
         }
+        update_region_drag(&mut self.scene, &mut self.style, &mut self.gestures, world);
         if commit_region_drag(&mut self.scene, &mut self.outbox, &mut self.gestures) {
             self.update_hover_from_world(world);
             return;
@@ -331,10 +335,12 @@ impl BoardHost {
             set_hovered_id(&mut self.scene, &mut self.focus, &mut self.outbox, None);
             return;
         }
+        update_transform_drag(&mut self.scene, &mut self.outbox, &mut self.gestures, world, self.style.grid_snap_enabled);
         if commit_transform_drag(&mut self.outbox, &mut self.gestures) {
             self.update_hover_from_world(world);
             return;
         }
+        self.update_node_drag_at(world);
         let grabbed = std::mem::take(&mut self.focus.interaction);
         match grabbed {
             Interaction::LinkDragSnap { source_id, target_id, .. } => {
@@ -394,8 +400,7 @@ impl BoardHost {
             Interaction::Selection { mut points, mut screen_points, start, initial_ids, start_screen } => {
                 points.push(world);
                 screen_points.push(screen);
-                let end_screen = screen_points.last().copied().unwrap_or(start_screen);
-                let click_only = distance_between(start_screen, end_screen) < SELECTION_CLICK_MAX_DISTANCE_PX;
+                let click_only = screen_points.iter().all(|point| distance_between(start_screen, *point) < SELECTION_CLICK_MAX_DISTANCE_PX);
                 let merge_from_modifiers = ctrl_or_meta || shift;
                 let merge_mode = pick_merge_mode_for_modifiers(ctrl_or_meta, shift, self.focus.selection_options.mode.as_str());
                 let gesture = merge_from_modifiers.then_some(merge_mode.as_str());

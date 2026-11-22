@@ -237,6 +237,14 @@ impl ArtifactCreationDirectory for PostgresDirectory {
             return Err(DirectoryError::Conflict("genesis publication is outside its live server deadline".into()));
         }
         validate_document_genesis_append_v1(&operation, append)?;
+        if append.intent.is_space_studio() {
+            let (exists,): (bool,) = sqlx_core::query_as::query_as("SELECT EXISTS(SELECT 1 FROM hub_document_descriptor WHERE space_id = $1 AND descriptor->>'artifactKind' = $2 AND descriptor->>'artifactSchema' = $3)")
+                .bind(&append.intent.scope.space_id).bind(&append.intent.request.kind_id).bind(&append.intent.artifact_schema)
+                .fetch_one(&mut *tx).await.map_err(backend)?;
+            if exists {
+                return Err(DirectoryError::Conflict("a Studio workflow already exists in this Space".into()));
+            }
+        }
         let checkpoint = &append.checkpoint;
         let reservation = &append.reservation;
         let encoded = encode_artifact_cas_ownership_v1(&reservation.plan).map_err(|error| DirectoryError::Conflict(error.to_string()))?;

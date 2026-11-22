@@ -1,11 +1,13 @@
 //! 🧵️ Resolved scene custody emits scalar SVG fragments and segmented byte owners.
-use semio_s_artifact_draw_drawing_scene::preparation::{DocumentScenePlan, DocumentSceneContent};
+use semio_s_artifact_draw_drawing_scene::preparation::{advance_original_scene, DocumentScenePlan, DocumentSceneContent, DocumentSceneError};
 use semio_s_artifact_draw_drawing_model::{FillStyle, PathSegment};
-use semio_framework_pixels::{png_encoding::PngEncodeJob,retirement::RasterLease};
-use semio_framework_value::retirement::RetireOwned;
+use semio_framework_pixels::{editing::PixelEditError, png_encoding::PngEncodeJob, retirement::RasterLease};
+use semio_framework_job::{OriginalWorkFailure, StepContext};
+use semio_framework_value::{RetainedCloneProgress, RetirementDemand, ValueError, retirement::RetireOwned, work::RetainedWorkLedger};
 use semio_framework_value_persistent::list::PagedList;
 use std::fmt::Write;
-use semio_s_artifact_draw_drawing_io::byte_writer::{Fragment, PAGE, reserve};
+use semio_s_artifact_draw_drawing_io::byte_writer::{Fragment, PAGE};
+use crate::writer_work::Storage;
 type Pages=PagedList<Vec<u8>,{usize::MAX}>;
 type Encoder=PngEncodeJob<RasterLease>;
 #[derive(Clone,Copy)]
@@ -14,8 +16,8 @@ pub struct SvgWriteLimits{pub view_box:[f64;4],pub max_output_bytes:usize,pub ma
 pub struct SvgWriteProgress{pub phase:&'static str,pub nodes:usize,pub bytes:usize,pub work:u64,pub done:bool}
 #[derive(semio_framework_value::RetireOwned)]
 #[doc(hidden)]
-pub struct Owners{plan:DocumentScenePlan,pages:Pages,encoder:Option<Encoder>,image_bytes:Vec<u8>,retired_encoders:PagedList<Encoder,{usize::MAX}>,retired_bytes:Pages,rejected_image:Option<RasterLease>,failure:Option<String>}
-pub struct SvgWriteJob{owners:Owners,limits:SvgWriteLimits,pending:Fragment,phase:u8,node:usize,common:usize,depth:usize,groups:[(usize,usize);32],scalar:usize,part:usize,asset:usize,stops:[usize;64],stop_count:usize,constant:Option<[f64;4]>,image_at:usize,bytes:usize,work:u64,cancelled:bool}
+pub struct Owners{plan:DocumentScenePlan,pages:Pages,encoder:Option<Encoder>,image_bytes:Vec<u8>,retired_encoders:PagedList<Encoder,{usize::MAX}>,retired_bytes:Pages,rejected_image:Option<RasterLease>,spare:Vec<u8>}
+pub struct SvgWriteJob{owners:Owners,failure:Option<&'static str>,limits:SvgWriteLimits,pending:Fragment,phase:u8,node:usize,common:usize,depth:usize,groups:[(usize,usize);32],scalar:usize,part:usize,asset:usize,stops:[usize;64],stop_count:usize,constant:Option<[f64;4]>,image_at:usize,bytes:usize,work:u64,cancelled:bool}
 impl RetireOwned for SvgWriteJob{
  type RetirementCursor = <Owners as RetireOwned>::RetirementCursor;
     fn retirement_seed(self) -> Self::RetirementCursor { self.owners.retirement_seed() }
@@ -28,11 +30,76 @@ fn escaped(out:&mut Fragment,at:&mut usize,value:&str)->Result<bool,std::fmt::Er
 fn rgb(out:&mut Fragment,color:&[f64;4])->std::fmt::Result{write!(out,"rgb({},{},{})",color[0]*255.0,color[1]*255.0,color[2]*255.0)}
 fn blend(value:&str)->&str{match value{"colorDodge"=>"color-dodge","colorBurn"=>"color-burn","hardLight"=>"hard-light","softLight"=>"soft-light",_=>value}}
 fn path(out:&mut Fragment,segment:&PathSegment)->std::fmt::Result{match segment{PathSegment::Move{to:[x,y]}=>write!(out,"M{x} {y} "),PathSegment::Line{to:[x,y]}=>write!(out,"L{x} {y} "),PathSegment::Quad{ctrl:[x1,y1],to:[x,y]}=>write!(out,"Q{x1} {y1} {x} {y} "),PathSegment::Cubic{ctrl1:[x1,y1],ctrl2:[x2,y2],to:[x,y]}=>write!(out,"C{x1} {y1} {x2} {y2} {x} {y} "),PathSegment::Arc{rx,ry,rotation,large_arc,sweep,to:[x,y]}=>write!(out,"A{rx} {ry} {rotation} {} {} {x} {y} ",u8::from(*large_arc),u8::from(*sweep)),PathSegment::Close=>out.write_str("Z ")}}
+fn png_error(error: PixelEditError) -> &'static str {
+    match error {
+        PixelEditError::Invalid(message) => message,
+        PixelEditError::Incomplete => "Pixel operation is incomplete",
+        PixelEditError::Cancelled => "Pixel operation cancelled",
+    }
+}
 impl SvgWriteJob{
- pub fn new(plan:DocumentScenePlan,limits:SvgWriteLimits)->Self{let failure=(!limits.view_box.iter().all(|n|n.is_finite())||limits.view_box[2]<=0.0||limits.view_box[3]<=0.0||!(64..=67108864).contains(&limits.max_output_bytes)||!(1..=1000000000).contains(&limits.max_work)).then(||"Invalid SVG writer limits".into());Self{owners:Owners{plan,pages:Pages::new(),encoder:None,image_bytes:Vec::new(),retired_encoders:PagedList::new(),retired_bytes:Pages::new(),rejected_image:None,failure},limits,pending:Fragment::default(),phase:0,node:0,common:0,depth:0,groups:[(0,0);32],scalar:0,part:0,asset:0,stops:[0;64],stop_count:0,constant:None,image_at:0,bytes:0,work:0,cancelled:false}}
+ pub fn new(plan:DocumentScenePlan,limits:SvgWriteLimits)->Self{let failure=(!limits.view_box.iter().all(|n|n.is_finite())||limits.view_box[2]<=0.0||limits.view_box[3]<=0.0||!(64..=67108864).contains(&limits.max_output_bytes)||!(1..=1000000000).contains(&limits.max_work)).then_some("Invalid SVG writer limits");Self{owners:Owners{plan,pages:Pages::new(),encoder:None,image_bytes:Vec::new(),retired_encoders:PagedList::new(),retired_bytes:Pages::new(),rejected_image:None,spare:Vec::new()},failure,limits,pending:Fragment::default(),phase:0,node:0,common:0,depth:0,groups:[(0,0);32],scalar:0,part:0,asset:0,stops:[0;64],stop_count:0,constant:None,image_at:0,bytes:0,work:0,cancelled:false}}
  fn done(&self)->bool{self.phase==30&&self.pending.at==self.pending.len}
- fn step(&mut self)->Result<(),String>{
-  if self.pending.at<self.pending.len{let full=self.owners.pages.last().is_none_or(|page|page.len()==page.capacity());if full{if self.bytes==self.limits.max_output_bytes{return Err("SVG output byte limit exceeded".into());}if !reserve(&mut self.owners.pages)?{return Ok(());}let mut page=Vec::new();page.try_reserve_exact(PAGE.min(self.limits.max_output_bytes-self.bytes)).map_err(|_|"SVG page allocation refused")?;self.owners.pages.push_reserved(page).unwrap_or_else(|_|unreachable!());return Ok(());}let page=self.owners.pages.last_mut().unwrap();let count=(self.pending.len-self.pending.at).min(page.capacity()-page.len());page.extend_from_slice(&self.pending.bytes[self.pending.at..self.pending.at+count]);self.pending.at+=count;self.bytes+=count;return Ok(());}
+ fn page_room(&self) -> usize {
+    self.owners.pages.last().map_or(0, |page| (PAGE - page.len()).min(self.limits.max_output_bytes - self.bytes))
+ }
+ fn next_demand(&self) -> Result<RetirementDemand, ValueError> {
+    if self.pending.at < self.pending.len {
+        let room = self.page_room();
+        if room != 0 {
+            let copy_bytes = (self.pending.len - self.pending.at).min(room);
+            return Ok(RetirementDemand { copy_bytes, depth: 1, ..Default::default() });
+        }
+        if self.bytes < self.limits.max_output_bytes {
+            let mut demand = RetainedWorkLedger::slot_demand(&self.owners.pages).map_err(ValueError::invariant)?;
+            if demand.capacity_bytes == 0 && self.owners.spare.capacity() == 0 {
+                demand.capacity_bytes = PAGE.min(self.limits.max_output_bytes - self.bytes);
+            }
+            return Ok(demand);
+        }
+    }
+    match self.phase {
+        11 | 20 => {
+            if let Some(DocumentSceneContent::Image { asset, .. }) = self.owners.plan.nodes.get(self.node).map(|node| &node.content) {
+                let index = if self.phase == 11 { 0 } else { self.asset };
+                if let Some(source) = self.owners.plan.assets.get(index).filter(|source| &source.id == asset) {
+                    if let Ok(demand) = Encoder::birth_demand(&source.image, self.limits.max_output_bytes) { return Ok(demand); }
+                }
+            }
+        }
+        21 => {
+            let copy_bytes = self.owners.encoder.as_ref().unwrap().next_copy_byte_demand();
+            return Ok(RetirementDemand { copy_bytes, depth: 1, ..Default::default() });
+        }
+        22 => return RetainedWorkLedger::slot_demand(&self.owners.retired_encoders).map_err(ValueError::invariant),
+        24 if self.image_at < self.owners.image_bytes.len() => {}
+        24 | 25 => return RetainedWorkLedger::slot_demand(&self.owners.retired_bytes).map_err(ValueError::invariant),
+        _ => {}
+    }
+    Ok(RetirementDemand { depth: 1, ..Default::default() })
+ }
+ fn step(&mut self, storage: &mut Storage<'_, '_>) -> Result<bool, &'static str> {
+    if self.pending.at < self.pending.len {
+        let room = self.page_room();
+        if room == 0 {
+            if self.bytes == self.limits.max_output_bytes { return Err("SVG output byte limit exceeded"); }
+            if !storage.slot(&mut self.owners.pages, "SVG paged list allocation refused")? { return Ok(true); }
+            let capacity = PAGE.min(self.limits.max_output_bytes - self.bytes);
+            if !storage.page(&mut self.owners.spare, capacity, "SVG page allocation refused")? { return Ok(false); }
+            if let Err(page) = storage.push(&mut self.owners.pages, std::mem::take(&mut self.owners.spare)) {
+                self.owners.spare = page;
+                return Err("SVG page reservation lost");
+            }
+            return Ok(true);
+        }
+        let page = self.owners.pages.last_mut().unwrap();
+        let count = (self.pending.len - self.pending.at).min(room);
+        if !storage.copy(count) { return Ok(false); }
+        page.extend_from_slice(&self.pending.bytes[self.pending.at..self.pending.at + count]);
+        self.pending.at += count;
+        self.bytes += count;
+        return Ok(true);
+    }
   self.pending.len=0;self.pending.at=0;let out=&mut self.pending;let plan=&self.owners.plan;
   let node=plan.nodes.get(self.node);
   let formatting=(||->std::fmt::Result{match self.phase{
@@ -60,18 +127,108 @@ impl SvgWriteJob{
    _=>{},
   }Ok(())})();formatting.map_err(|_|"SVG scalar fragment exceeds capacity")?;
   match self.phase{
-   20=>{let DocumentSceneContent::Image{asset,..}=&self.owners.plan.nodes[self.node].content else{unreachable!()};let Some(source)=self.owners.plan.assets.get(self.asset)else{return Err("Missing authoritative SVG image".into());};if &source.id!=asset{self.asset+=1;return Ok(());}match PngEncodeJob::with_maximum_bytes(RasterLease(source.image.clone()),self.limits.max_output_bytes){Ok(job)=>self.owners.encoder=Some(job),Err((error,image))=>{self.owners.rejected_image=Some(image);return Err(error.to_string());}}self.phase=21;},
-   21=>{let job=self.owners.encoder.as_mut().unwrap();if job.advance().map_err(|error|error.to_string())?.done{self.owners.image_bytes=job.take_result().map_err(|error|error.to_string())?.data;self.image_at=0;self.phase=22;}},
-   22=>{if reserve(&mut self.owners.retired_encoders)?{self.owners.retired_encoders.push_reserved(self.owners.encoder.take().unwrap()).unwrap_or_else(|_|unreachable!());self.phase=23;}},
-   25=>{if reserve(&mut self.owners.retired_bytes)?{self.owners.retired_bytes.push_reserved(std::mem::take(&mut self.owners.image_bytes)).unwrap_or_else(|_|unreachable!());self.phase=27;}},
-   31=>return Err("SVG requires resolved authored geometry".into()),32=>return Err("SVG retained source capacity exceeded".into()),
+   20 => {
+       let DocumentSceneContent::Image { asset, .. } = &self.owners.plan.nodes[self.node].content else { unreachable!() };
+       let Some(source) = self.owners.plan.assets.get(self.asset) else { return Err("Missing authoritative SVG image"); };
+       if &source.id != asset { self.asset += 1; return Ok(true); }
+       let job = match Encoder::with_maximum_bytes(RasterLease(source.image.clone()), self.limits.max_output_bytes) {
+           Ok(job) => job,
+           Err((error, image)) => { self.owners.rejected_image = Some(image); return Err(png_error(error)); }
+       };
+       let receipt = RetainedCloneProgress { copied_items: 1, copied_bytes: job.bytes.len(), retained_capacity_bytes: job.bytes.capacity(), ..Default::default() };
+       self.owners.encoder = Some(job);
+       storage.record_child(receipt)?;
+       self.phase = 21;
+   }
+   21 => {
+       let job = self.owners.encoder.as_mut().unwrap();
+       let before_input = job.progress().completed;
+       let before_output = job.bytes.len();
+       let progress = job.advance().map_err(png_error)?;
+       storage.record_child(RetainedCloneProgress { copied_items: 1, copied_bytes: progress.completed - before_input + job.bytes.len() - before_output, ..Default::default() })?;
+       if progress.done {
+           self.owners.image_bytes = job.take_result().map_err(png_error)?.data;
+           self.image_at = 0;
+           self.phase = 22;
+       }
+   }
+   22 => {
+       if storage.slot(&mut self.owners.retired_encoders, "SVG encoder archive allocation refused")? {
+           if let Err(encoder) = storage.push(&mut self.owners.retired_encoders, self.owners.encoder.take().unwrap()) {
+               self.owners.encoder = Some(encoder);
+               return Err("SVG encoder archive reservation lost");
+           }
+           self.phase = 23;
+       }
+   }
+   25 => {
+       if storage.slot(&mut self.owners.retired_bytes, "SVG image archive allocation refused")? {
+           if let Err(bytes) = storage.push(&mut self.owners.retired_bytes, std::mem::take(&mut self.owners.image_bytes)) {
+               self.owners.image_bytes = bytes;
+               return Err("SVG image archive reservation lost");
+           }
+           self.phase = 27;
+       }
+   }
+   31 => return Err("SVG requires resolved authored geometry"),
+   32 => return Err("SVG retained source capacity exceeded"),
    _=>{},
-  }Ok(())
+  }Ok(true)
  }
- pub fn advance(&mut self,grant:usize)->Result<SvgWriteProgress,String>{if grant==0||grant as u128>9007199254740991{return Err("Invalid SVG work grant".into());}if self.cancelled{return Err("SVG writer cancelled".into());}if let Some(error)=&self.owners.failure{return Err(error.clone());}for _ in 0..grant{if self.done(){break;}if self.work>=self.limits.max_work{self.owners.failure=Some("SVG work limit exceeded".into());break;}if let Err(error)=self.step(){self.owners.failure=Some(error);break;}self.work+=1;}if let Some(error)=&self.owners.failure{return Err(error.clone());}Ok(SvgWriteProgress{phase:if self.done(){"complete"}else{"writing"},nodes:self.node,bytes:self.bytes,work:self.work,done:self.done()})}
- pub fn result(&self)->Result<&Pages,&str>{if self.cancelled||self.owners.failure.is_some()||!self.done(){Err("SVG output incomplete or cancelled")}else{Ok(&self.owners.pages)}}
+ fn progress(&self) -> SvgWriteProgress {
+    SvgWriteProgress { phase: if self.done() { "complete" } else { "writing" }, nodes: self.node, bytes: self.bytes, work: self.work, done: self.done() }
+ }
+ fn check(&self) -> Result<(), &'static str> {
+    if self.cancelled { return Err("SVG writer cancelled"); }
+    self.failure.map_or(Ok(()), Err)
+ }
+ fn advance_step(&mut self, storage: &mut Storage<'_, '_>) -> Result<(), &'static str> {
+    let result = if self.work >= self.limits.max_work { Err("SVG work limit exceeded") } else { self.step(storage) };
+    match result {
+        Ok(completed) => { self.work += u64::from(completed); Ok(()) }
+        Err(error) => { self.failure = Some(error); Err(error) }
+    }
+ }
+ pub fn advance(&mut self, grant: usize) -> Result<SvgWriteProgress, String> {
+    if grant == 0 || grant as u128 > 9007199254740991 { return Err("Invalid SVG work grant".into()); }
+    self.check()?;
+    for _ in 0..grant {
+        if self.done() { break; }
+        self.advance_step(&mut Storage::Standalone)?;
+    }
+    Ok(self.progress())
+ }
+ /// 📗️ Writes SVG pages and embedded image bytes under the original caller’s grant.
+ pub fn advance_original(&mut self, cx: &mut StepContext<'_>) -> Result<SvgWriteProgress, OriginalWorkFailure<DocumentSceneError>> {
+    OriginalWorkFailure::qualify(cx)?;
+    if cx.is_cancelled() {
+        OriginalWorkFailure::fold(cx, Some(DocumentSceneError::Cancelled), Default::default(), 0)?;
+    }
+    while !cx.should_yield() {
+        let idle = self.progress();
+        let status = self.check();
+        if status.is_ok() && idle.done { return Ok(idle); }
+        let demand = if status.is_err() || self.work >= self.limits.max_work {
+            Ok(true)
+        } else {
+            self.next_demand().and_then(|demand| cx.admit_work_step(demand))
+        };
+        if matches!(demand, Ok(false)) { return Ok(idle); }
+        let before = cx.fuel_remaining();
+        advance_original_scene(cx, idle, |work, effect| {
+            if let Err(error) = demand { return (Err(DocumentSceneError::Refused(error)), 0); }
+            if let Err(error) = status { return (Err(DocumentSceneError::literal(error)), 0); }
+            let result = self.advance_step(&mut Storage::Original(work, effect)).map_err(DocumentSceneError::literal);
+            work.note_source(true);
+            (result.map(|()| self.progress()), 1)
+        })?;
+        if before == cx.fuel_remaining() { break; }
+    }
+    Ok(self.progress())
+ }
+ pub fn result(&self)->Result<&Pages,&str>{if self.cancelled||self.failure.is_some()||!self.done(){Err("SVG output incomplete or cancelled")}else{Ok(&self.owners.pages)}}
  pub fn cancel(&mut self){self.cancelled=true;}
- pub fn into_retirement(mut self)->(SvgWriteRetirement,Option<Pages>){let pages=(!self.cancelled&&self.owners.failure.is_none()&&self.done()).then(||std::mem::take(&mut self.owners.pages));self.cancelled=true;(SvgWriteRetirement::new(self),pages)}
+ pub fn into_retirement(mut self)->(SvgWriteRetirement,Option<Pages>){let pages=(!self.cancelled&&self.failure.is_none()&&self.done()).then(||std::mem::take(&mut self.owners.pages));self.cancelled=true;(SvgWriteRetirement::new(self),pages)}
 }
 
 #[cfg(test)]

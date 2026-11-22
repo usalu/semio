@@ -72,7 +72,7 @@ pub use surface::MeshSurfaceJob;
 
 #[path = "🔺️polygon-triangulation/🦀️.rs"]
 mod polygon_triangulation;
-use polygon_triangulation::{Vec3f64, cross2, normalize3, plane_basis, point_in_triangle, triangulate_indexed_polygon_with_holes};
+use polygon_triangulation::{EAR_EPSILON, Vec3f64, cross2, normalize3, plane_basis, point_in_triangle, triangulate_indexed_polygon_with_holes};
 pub use polygon_triangulation::{cross3, dot3, length3, newell_normal, sub3, triangulate_polygon};
 
 #[path = "⏱️tessellation-job-and-obj-export/🦀️.rs"]

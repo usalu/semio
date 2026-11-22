@@ -1,5 +1,7 @@
 //! 🔡️ Bounded decoders for ASCIIHexDecode and RunLengthDecode.
 
+use semio_framework_value::ByteReadSource;
+
 #[derive(Clone, Copy)]
 enum Run {
     Control,
@@ -22,6 +24,7 @@ pub(super) struct SimpleFilterReceipt {
     pub(super) written: usize,
     pub(super) work: usize,
     pub(super) complete: bool,
+    pub(super) source_changed: bool,
 }
 
 impl SimpleFilterCursor {
@@ -30,7 +33,7 @@ impl SimpleFilterCursor {
 
     fn new(filter: Filter) -> Self { Self { filter, input: 0, pending: None, complete: false } }
 
-    pub(super) fn advance(&mut self, source: &[u8], out: &mut [u8], budget: usize) -> SimpleFilterReceipt {
+    pub(super) fn advance(&mut self, source: &(impl ByteReadSource + ?Sized), out: &mut [u8], budget: usize) -> SimpleFilterReceipt {
         let mut work = 0;
         let mut written = 0;
         while work < budget {
@@ -49,7 +52,10 @@ impl SimpleFilterCursor {
                 self.filter = Filter::RunLength(if count == 1 { Run::Control } else { Run::Repeat { count: count - 1, byte } });
                 continue;
             }
-            let byte = source.get(self.input).copied();
+            let byte = source.byte_at(self.input);
+            if byte.is_none() && self.input < source.byte_len() {
+                return SimpleFilterReceipt { input: self.input, written, work, complete: false, source_changed: true };
+            }
             if byte.is_some() { self.input += 1; }
             match &mut self.filter {
                 Filter::Hex(high) => match byte {
@@ -80,6 +86,6 @@ impl SimpleFilterCursor {
                 }
             }
         }
-        SimpleFilterReceipt { input: self.input, written, work, complete: self.complete && self.pending.is_none() }
+        SimpleFilterReceipt { input: self.input, written, work, complete: self.complete && self.pending.is_none(), source_changed: false }
     }
 }

@@ -2,7 +2,7 @@
 
 //#region 📡️HistoryReprojectionStatus
 /// 🖌️ Walks the reprojection band's retained step to completion; answers the opportunities it took and the hits it staged.
-fn paint_reprojection_band(shell: &mut ShellState) -> (usize, Vec<HitTarget<ActionDescriptor>>) {
+fn paint_reprojection_band(mut shell: &mut ShellState) -> (usize, Vec<HitTarget<ActionDescriptor>>) {
     let mut cursor = ShellChromeChildCursor::default();
     let (mut overlay, mut atlas, mut input, theme) = (DrawList::default(), FontAtlas::builtin(), InputState::<ActionDescriptor>::default(), Theme::light());
     for step in 0..100_000 {

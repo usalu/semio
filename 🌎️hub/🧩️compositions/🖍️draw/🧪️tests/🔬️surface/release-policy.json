@@ -1,0 +1,60 @@
+{
+  "version": 1,
+  "vectors": [
+    {
+      "phase": "close",
+      "admitted": true,
+      "callerBytes": 16777216,
+      "requestedBytes": 1270080
+    },
+    {
+      "phase": "close",
+      "admitted": false,
+      "callerBytes": 1048576,
+      "requestedBytes": 1270080
+    },
+    {
+      "phase": "close",
+      "admitted": true,
+      "callerBytes": 25165824,
+      "requestedBytes": 19007840
+    },
+    {
+      "phase": "close",
+      "admitted": false,
+      "callerBytes": 16777216,
+      "requestedBytes": 19007840
+    },
+    {
+      "phase": "close",
+      "admitted": true,
+      "callerBytes": 33554432,
+      "requestedBytes": 25165824
+    },
+    {
+      "phase": "close",
+      "admitted": false,
+      "callerBytes": 33554432,
+      "requestedBytes": 25165825
+    },
+    {
+      "phase": "maintenance",
+      "admitted": false,
+      "callerBytes": 16777216,
+      "requestedBytes": 1270080
+    },
+    {
+      "phase": "preparation",
+      "callerBytes": 25165824,
+      "requestedBytes": 19007840,
+      "admitted": true
+    },
+    {
+      "phase": "preparation",
+      "callerBytes": 16777216,
+      "requestedBytes": 19007840,
+      "admitted": false
+    }
+  ],
+  "maximumExportBytes": 25165824
+}

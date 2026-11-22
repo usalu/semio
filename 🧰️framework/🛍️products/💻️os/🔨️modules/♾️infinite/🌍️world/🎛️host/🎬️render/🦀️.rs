@@ -239,11 +239,20 @@ pub fn render_world_3d(
     let mut translucent_draws = Vec::new();
     append_component_face_translucent_overlays(state, gpu, &mut translucent_draws);
     append_tool_run_trace_draws(&mut state.session, &mut state.authority, &mut state.retirement, &mut state.scene, &mut state.trace, gpu, theme, &mut translucent_draws);
-    if let Some(preview) = state.gumball.catalogue_drop_preview.clone() {
+    let catalogue = if state.gumball.relocate.is_none() { state.gumball.catalogue_drop_preview.as_ref() } else { None };
+    let catalogue_ghost = catalogue.map(|preview| {
         let mesh_id = ghost_mesh_id(&state.scene, preview.mesh_url.as_deref());
-        if !state.scene.meshes.contains_key(&mesh_id) {
-            begin_world_placeholder_mesh(&mut state.session, &mut state.authority, &mut state.retirement, &mut state.scene, &mesh_id, WorldPlaceholderKind::Box);
+        let model = Instance3d::model_from_trs(preview.origin.map(|value| value as f32), [0.0, 0.0, 0.0, 1.0], [1.0, 1.0, 1.0]);
+        (mesh_id, model)
+    });
+    if let Some((mesh_id, _)) = catalogue_ghost.as_ref() {
+        if !state.scene.meshes.contains_key(mesh_id) {
+            begin_world_placeholder_mesh(&mut state.session, &mut state.authority, &mut state.retirement, &mut state.scene, mesh_id, WorldPlaceholderKind::Box);
         }
+    }
+    let ghost = state.gumball.relocate.as_ref().map(|preview| (preview.mesh_key.clone(), preview.preview_model, "relocate-preview"))
+        .or_else(|| catalogue_ghost.map(|(mesh_id, model)| (mesh_id, model, "catalogue-drop-preview")));
+    if let Some((mesh_id, model, id)) = ghost {
         let mesh_version = live_world3d_mesh_version(&state.scene, &mesh_id);
         if let Some(mesh) = state.scene.meshes.get(&mesh_id).copied() {
             gpu.ensure_mesh(&mesh_id, mesh_version, mesh);
@@ -251,8 +260,8 @@ pub fn render_world_3d(
                 mesh_key: mesh_id,
                 mesh_version,
                 instances: vec![Instance3d { component_source: None,
-                    id: "catalogue-drop-preview".into(),
-                    model: Instance3d::model_from_trs([preview.origin[0] as f32, preview.origin[1] as f32, preview.origin[2] as f32], [0.0, 0.0, 0.0, 1.0], [1.0, 1.0, 1.0]),
+                    id: id.into(),
+                    model,
                     color: {
                         let mut color = parse_color("#59bfff");
                         color[3] = 0.55;
@@ -370,6 +379,7 @@ pub fn render_world_3d(
         shadow_draws,
         draws: culled_draws,
         line_draws: if line_vertices.is_empty() { Vec::new() } else { vec![LineDraw3d { vertices: line_vertices }] },
+        point_draws: state.scene.point_draws.clone(),
         translucent_draws,
         material_draws,
         textured_draws,

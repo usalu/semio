@@ -15,6 +15,8 @@ import{withBuildTestInvocationV1}from"@semio-tech/process/testing/invocation";
 import{createIssuedResourceControlV1,scriptInvocationEnvironment}from"../../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import*as leases from"@semio-tech/process/leases";
 import{captureOwnedCommandResultV1}from"@semio-tech/process/execution";
+import {declareLibraryBuildTestEnvelopeV1} from "../../../../../../../../🧪️testing/🪪️native-birth/🟦️.ts";
+declareLibraryBuildTestEnvelopeV1({suite:"storage-opening-processes"});
 
 const sitePattern=/\bwait\s*:\s*false\b|\bwithRepositoryCacheStoreMaintenanceV1\s*\(/u,oracleProgram=`import json,os,re,sys
 spec=json.loads(sys.argv[1]);pattern=re.compile(r"\\bwait\\s*:\\s*false\\b|\\bwithRepositoryCacheStoreMaintenanceV1\\s*\\(");rows={}

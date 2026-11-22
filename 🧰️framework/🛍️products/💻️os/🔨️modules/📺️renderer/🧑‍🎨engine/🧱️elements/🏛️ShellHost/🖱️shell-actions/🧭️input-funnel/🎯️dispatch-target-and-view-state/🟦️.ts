@@ -71,8 +71,9 @@ export function resolveDispatchTarget({ hostMode, panel, loadedPlugins, activeWi
 }
 
 /** ⏪️ Sends an undo to the mounted remote history owner when the undo route is remote. */
-export function routeRemoteUndo({ inferenceHistoryByRuntimeKeyRef, openDocumentSessionsRef, historyCanUndo, localHistoryOrderRef, verifiedSessionAuthorityRef, ensureBackboneWorker, action, targetSession, refuse, applied }: Pick<ShellCoreAfterShellUriAndDocuments, "inferenceHistoryByRuntimeKeyRef" | "openDocumentSessionsRef" | "historyCanUndo" | "localHistoryOrderRef" | "verifiedSessionAuthorityRef" | "ensureBackboneWorker"> & {
+export function routeRemoteUndo({ inferenceHistoryByRuntimeKeyRef, openDocumentSessionsRef, historyCanUndo, localHistoryOrderRef, verifiedSessionAuthorityRef, ensureBackboneWorker, action, targetSession, documentActorOwnsHistory, refuse, applied }: Pick<ShellCoreAfterShellUriAndDocuments, "inferenceHistoryByRuntimeKeyRef" | "openDocumentSessionsRef" | "historyCanUndo" | "localHistoryOrderRef" | "verifiedSessionAuthorityRef" | "ensureBackboneWorker"> & {
   readonly action: ShellInputActionV1;
+  readonly documentActorOwnsHistory: boolean;
   readonly targetSession: ActiveSession;
   readonly refuse: (reason: InputRefusalReasonV1, detail?: string, alreadyNotified?: boolean, diagnostic?: InputDiagnosticV1, draftDisposition?: InputDraftDispositionV1) => InputOutcomeV1;
   readonly applied: (commit?: InputCommitReceiptV1) => InputOutcomeV1;
@@ -84,7 +85,7 @@ export function routeRemoteUndo({ inferenceHistoryByRuntimeKeyRef, openDocumentS
     });
     const remote = mounted.length === 1 ? mounted[0] : undefined;
     const route = shellHistoryUndoRouteV1(remote?.[1] === undefined ? null : { ...remote[1].status, order: remote[1].order }, { canUndo: historyCanUndo, order: localHistoryOrderRef.current });
-    if (route === "blocked") return refuse("dispatch-failed", "undo route blocked: nothing to undo");
+    if (route === "blocked" && !documentActorOwnsHistory) return refuse("dispatch-failed", "undo route blocked: nothing to undo");
     if (route === "remote") {
       const history = remote![1];
       if (!directorySessionAuthorityIsCurrentV1(history.authority, verifiedSessionAuthorityRef.current)) return refuse("owner-mismatch", "undo: directory session authority is not current");

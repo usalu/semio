@@ -32,6 +32,7 @@
     "newPlateCount": {
       "type": "integer",
       "minimum": 0,
+      "maximum": 4294967295,
       "x-semio-ui": {
         "label": {
           "en": "Plates acting in parallel (1 or 2)",

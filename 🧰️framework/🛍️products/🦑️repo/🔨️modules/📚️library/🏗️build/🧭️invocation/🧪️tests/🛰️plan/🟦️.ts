@@ -26,7 +26,7 @@ import {workspaceIdV1} from "../../../🏡️resident/📨️protocol/📍️end
 import {isRepoErrorV1,renderRepoErrorV1,repoErrorDataV1} from "../../../../../../../../🔨️modules/🏃️process/🏗️build/🗣️language/🚨️error/🟦️.ts";
 import repoErrorSchema from "../../../../../../../../🔨️modules/🏃️process/🏗️build/🗣️language/🚨️error/🧬️schema/🔣️.json" with {type:"json"};
 import {reportRepoErrorV1} from "../../../../../../../../🔨️modules/🏃️process/🏗️build/🗣️language/📣️progress/🟦️.ts";
-import {PLAN_HANDOFF_V1,invocationPlanRequestV1,planHandoffEnvironmentV1,readSliceV1,requestInvocationPlanV1,scopedPlanOfReplyV1,takePlannedGraphV1} from "../../🛰️plan/🟦️.ts";
+import {PLAN_HANDOFF_V1,invocationPlanRequestV1,planHandoffEnvironmentV1,readSliceV1,planPriorityV1,requestInvocationPlanV1,scopedPlanOfReplyV1,takePlannedGraphV1} from "../../🛰️plan/🟦️.ts";
 
 const here=fileURLToPath(new URL(".",import.meta.url)),root=realpathSync(fileURLToPath(new URL("../../../../../../../../../",import.meta.url))),fixture=JSON.parse(readFileSync(join(here,"🔣️.json"),"utf8"));
 const base=mkdtempSync(join(tmpdir(),"semio-client-plan-"));
@@ -284,4 +284,10 @@ test("a verified client plan ends the supervised graph read before execution adm
    expect(readyStagePhaseV1(progress,"reading")).toBe(expected.phase);
   }
  }finally{db.close();await service.stop("test");}
+});
+
+test("a foreground run asks the host for the interactive priority and a background graph read for the background one",()=>{
+ expect(planPriorityV1({})).toBe(1);
+ expect(planPriorityV1({SEMIO_GRAPH_BACKGROUND:"0"})).toBe(1);
+ expect(planPriorityV1({SEMIO_GRAPH_BACKGROUND:"1"})).toBe(8);
 });

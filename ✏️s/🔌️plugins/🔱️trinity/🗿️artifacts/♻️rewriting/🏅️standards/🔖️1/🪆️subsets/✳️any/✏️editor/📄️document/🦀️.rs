@@ -50,10 +50,9 @@ pub fn rewritten_graph(state: &RewritingSnapshot) -> Result<JackSnapshot, String
     schema::application::apply_rule(&mut graph, &build_rule_from_state(state), &state.parameter_bindings).map_err(|error|error.to_string())?;
     Ok(graph.to_snapshot::<SemioJackContent>())
 }
-/// 🧾️ The working graph's resolved manifest (embedded, else named by `manifestId`); `None` when it resolves to none.
-pub fn resolved_working_manifest(state: &RewritingSnapshot) -> Option<semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::manifest::Manifest> {
-    let mut graph = state.working_graph.clone();
-    graph.resolve_manifest().ok().map(|()| graph.manifest.clone())
+/// 🧾️ The working graph's interned manifest named by its `manifestId`; `None` when the id resolves to none.
+pub fn resolved_working_manifest(state: &RewritingSnapshot) -> Option<std::sync::Arc<semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::manifest::Manifest>> {
+    state.working_graph.manifest().ok()
 }
 /// 🧩️ One semantic rule-graph node at its `rule_layout` point, else at its default slot ([`schema::lhs_graph_slots`],
 /// [`schema::rhs_graph_slots`] — the same positions a node drag moves from).
@@ -71,7 +70,7 @@ pub fn lhs_semantic_graph_snapshot(lhs: &schema::rule::Lhs, rule_layout: &schema
         nodes.push(semantic_rule_node("lhs-where", "rewriting.where", where_clause, &slots, rule_layout));
         edges.push(semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::graph::Edge { id: "lhs-match-where".into(), kind: "rewriting.flow".into(), source: "lhs-match@out".into(), target: "lhs-where@in".into(), properties: Default::default() });
     }
-    JackSnapshot::with_content::<SemioJackContent>(JackSnapshot::SCHEMA.into(), "lhs".into(), Some("nakagin".into()), semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::manifest::Manifest::nakagin_default(), Camera { x: 0.0, y: 0.0, zoom: 1.0 }, JackWorkingScene { nodes: nodes, edges: edges }, None)
+    JackSnapshot::with_content::<SemioJackContent>(JackSnapshot::SCHEMA.into(), "lhs".into(), "nakagin".into(), Camera { x: 0.0, y: 0.0, zoom: 1.0 }, JackWorkingScene { nodes: nodes, edges: edges }, None)
 }
 
 pub fn rhs_semantic_graph_snapshot(rhs: &Rhs, rule_layout: &schema::layout::RuleLayout) -> JackSnapshot {
@@ -93,7 +92,7 @@ pub fn rhs_semantic_graph_snapshot(rhs: &Rhs, rule_layout: &schema::layout::Rule
     if nodes.is_empty() {
         nodes.push(node("rhs-empty".into(), "rewriting.create", "result:Piece".into()));
     }
-    JackSnapshot::with_content::<SemioJackContent>(JackSnapshot::SCHEMA.into(), "rhs".into(), Some("nakagin".into()), semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::manifest::Manifest::nakagin_default(), Camera { x: 0.0, y: 0.0, zoom: 1.0 }, JackWorkingScene { nodes: nodes, edges: Vec::new() }, None)
+    JackSnapshot::with_content::<SemioJackContent>(JackSnapshot::SCHEMA.into(), "rhs".into(), "nakagin".into(), Camera { x: 0.0, y: 0.0, zoom: 1.0 }, JackWorkingScene { nodes: nodes, edges: Vec::new() }, None)
 }
 
 pub fn lhs_graph_snapshot(lhs: &schema::rule::Lhs, rule_layout: &schema::layout::RuleLayout) -> JackSnapshot {

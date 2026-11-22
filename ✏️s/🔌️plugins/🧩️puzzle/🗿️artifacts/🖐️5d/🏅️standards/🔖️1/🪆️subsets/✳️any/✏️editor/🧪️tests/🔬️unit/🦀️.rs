@@ -161,10 +161,19 @@ use crate::editor::puzzle5d::dispatch::puzzle5d_handle_action;
 #[allow(unused_imports)]
 use crate::editor::puzzle5d::modes::edit::windows::world3d::utilities::transform::puzzle5d_inspector_nudge;
 use crate::editor::puzzle5d::{Puzzle5dRetainedCommandJobFactory};
-semio_plugin::history_edit_acceptance_law!("puzzle", Puzzle5dPlayApp, puzzle5d_app_manifest_for_tests, "../..");
+semio_plugin::history_edit_acceptance_law!("puzzle", Puzzle5dPlayApp, puzzle5d_app_manifest_for_tests, "../../../../..");
 use crate::editor::puzzle5d::testkit::*;
 use semio_framework::SET_ACTIVE_UTILITY_ACTION_ID;
 use crate::editor::puzzle5d::*;
+
+/// 🎁️ Delivers the authored Capsule Dream package asset as an instance open would.
+fn admit_capsule_dream_fixture() {
+    let (name, size, digest) = crate::examples::puzzle5d::capsule_dream::dsl_bytes_digest();
+    let bytes = std::fs::read(semio_framework_test_fixtures::repo_root!().join(name)).expect("Capsule Dream package asset");
+    assert_eq!(bytes.len() as u64, size);
+    assert_eq!(semio_framework_hash::sha256_hex(&bytes), digest);
+    semio_plugin::reactor::admit_package_assets_for_testing(vec![(name.to_string(), bytes)]);
+}
 
 use semio_plugin::ContextMenuRequest;
 

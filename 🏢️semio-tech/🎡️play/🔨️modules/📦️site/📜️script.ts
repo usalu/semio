@@ -3,6 +3,7 @@ import { receiveScriptProcessInvocation } from "../../../../🧰️framework/�
 import { BundleScript, ScriptRouter } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { PLAY_HOST } from "../🧩️runtime/📇️catalog/🟦️.ts";
 import { publishPlayPageCohortV1 } from "./📄pages/📦️publication/🟦️.ts";
+import { runExportScript } from "./📄pages/📦️publication/📤️export/🟦️.ts";
 import { runBuildScript, runMapTilesScript, runBundleSiteScript, runVerifyScript } from "./🟦️.ts";
 
 /** 🚀️ `build`: the whole play release as ONE build driver, then the pages assembly — the components of every pane's closure in one Cargo pass per workspace, each streamed through
@@ -48,5 +49,12 @@ class VerifyScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("build", BuildScript).register("map-tiles", MapTilesScript).register("bundle", BundleSiteScript).register("pages", PagesScript).register("verify", VerifyScript);
+/** 📤️ `export`: copies the verified release cohort byte for byte into a plain CDN folder (default `dist/cdn`, or the one folder argument) with `🔣️cohort.json` and the CDN rules `🔣️cdn.json`. */
+class ExportScript extends BundleScript {
+  async run(args: string[]): Promise<void> {
+    await runExportScript({ repoRoot: this.repoRoot, invocation: this.invocation }, args);
+  }
+}
+
+const router = new ScriptRouter(import.meta.dir).register("build", BuildScript).register("map-tiles", MapTilesScript).register("bundle", BundleSiteScript).register("pages", PagesScript).register("verify", VerifyScript).register("export", ExportScript);
 if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => (router).run(process.argv.slice(2), original));

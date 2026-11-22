@@ -1,4 +1,4 @@
-import {stlSnapshotToSqliteDatabase,stlSnapshotFromSqliteDatabase,stlSnapshotValidateSqliteSubset,STL_SQLITE_SCHEMA,type StlSnapshot} from "@semio-tech/stdio-stl";
+import {stlSnapshotToSqliteDatabase,stlSnapshotFromSqliteDatabase,stlSnapshotValidateSqliteSubset,STL_SQLITE_SCHEMA,type StlSnapshot} from "../../../../🟦️.ts";
 import {exportSqliteDatabase,importSqliteDatabase} from "@semio-tech/framework";
 import {Database} from "bun:sqlite";
 import {expect,test} from "bun:test";

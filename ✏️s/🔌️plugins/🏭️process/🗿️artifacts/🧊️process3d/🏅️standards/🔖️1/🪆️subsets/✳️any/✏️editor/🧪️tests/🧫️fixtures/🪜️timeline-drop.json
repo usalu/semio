@@ -1,0 +1,110 @@
+{
+  "documentId": "process3d-retained-test",
+  "steps": [
+    "a",
+    "b",
+    "c",
+    "d"
+  ],
+  "cases": [
+    {
+      "stepId": "a",
+      "targetId": "c",
+      "dropPosition": "after",
+      "order": [
+        "b",
+        "c",
+        "a",
+        "d"
+      ]
+    },
+    {
+      "stepId": "a",
+      "targetId": "d",
+      "dropPosition": "after",
+      "order": [
+        "b",
+        "c",
+        "d",
+        "a"
+      ]
+    },
+    {
+      "stepId": "b",
+      "targetId": "d",
+      "dropPosition": "before",
+      "order": [
+        "a",
+        "c",
+        "b",
+        "d"
+      ]
+    },
+    {
+      "stepId": "d",
+      "targetId": "b",
+      "dropPosition": "before",
+      "order": [
+        "a",
+        "d",
+        "b",
+        "c"
+      ]
+    },
+    {
+      "stepId": "d",
+      "targetId": "a",
+      "dropPosition": "after",
+      "order": [
+        "a",
+        "d",
+        "b",
+        "c"
+      ]
+    },
+    {
+      "stepId": "a",
+      "targetId": "b",
+      "dropPosition": "before",
+      "order": null
+    },
+    {
+      "stepId": "b",
+      "targetId": "a",
+      "dropPosition": "after",
+      "order": null
+    },
+    {
+      "stepId": "b",
+      "targetId": "b",
+      "dropPosition": "after",
+      "order": null
+    },
+    {
+      "stepId": "missing",
+      "targetId": "b",
+      "dropPosition": "before",
+      "order": null
+    },
+    {
+      "stepId": "b",
+      "targetId": "stock",
+      "dropPosition": "after",
+      "order": null
+    },
+    {
+      "documentId": "other-document",
+      "stepId": "b",
+      "targetId": "d",
+      "dropPosition": "after",
+      "order": null
+    },
+    {
+      "stepId": "b",
+      "targetId": "d",
+      "dropPosition": "inside",
+      "order": null,
+      "schemaAccepted": false
+    }
+  ]
+}

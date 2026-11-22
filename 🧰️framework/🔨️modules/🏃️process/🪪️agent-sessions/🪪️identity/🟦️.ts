@@ -113,10 +113,10 @@ export function deriveAgentSessionV1(seed:AgentSeedV1):DerivedAgentSessionV1{
  });
 }
 
-/** ⏳️ Classifies a session: live while it is the default session or was seen within the idle window; idle while its owner process is alive within a day or it was seen within the collection window; gone after that. */
-export function agentSessionStateV1(facts:Readonly<{ageSeconds:number;anchorAlive:boolean;isDefault:boolean}>):AgentSessionStateV1{
+/** ⏳️ Classifies a session: live while it was seen within the idle window, the default session of a worktree nobody uses included; idle while its owner process is alive within a day or it was seen within the collection window; gone after that. */
+export function agentSessionStateV1(facts:Readonly<{ageSeconds:number;anchorAlive:boolean}>):AgentSessionStateV1{
  const rules=policy.liveness;
- if(facts.isDefault||facts.ageSeconds<=rules.idleSeconds)return "live";
+ if(facts.ageSeconds<=rules.idleSeconds)return "live";
  return facts.anchorAlive&&facts.ageSeconds<=rules.anchoredSeconds||facts.ageSeconds<=rules.collectSeconds?"idle":"gone";
 }
 

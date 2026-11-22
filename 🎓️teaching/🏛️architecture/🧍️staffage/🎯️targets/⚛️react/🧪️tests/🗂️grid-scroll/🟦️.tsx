@@ -5,11 +5,12 @@
  */
 import { act, cleanup, fireEvent, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { CATEGORIES, type Manifest, type ManifestEntry } from "@teaching/staffage";
+import { CATEGORIES, type Asset, type Issue, type JobControl, type Manifest, type ManifestEntry } from "@teaching/staffage";
 import { mountArchive } from "@teaching/staffage-react/app";
 import { STORAGE_KEY, memoryStorage } from "../../🔨️modules/💾️persistence/🟦️.ts";
 import { APP_CONFIG } from "../../🔨️modules/⚙️config/🟦️.ts";
-import type { CatalogSource } from "../../🔨️modules/📚️catalog/🟦️.ts";
+import type { AssetCheck, CatalogSource } from "../../🔨️modules/📚️catalog/🟦️.ts";
+import { walker } from "../🧰️support/🧰️.ts";
 import { tracks } from "../../🔨️modules/🥞️levels/🟦️.tsx";
 import { ROOT_PAGES } from "../../🔨️modules/🏠️overview/🟦️.tsx";
 
@@ -49,13 +50,13 @@ function installViewport(width: number, height: number, coarse = false): void {
 
 let unmount: (() => void) | undefined;
 
-function mount(catalog: CatalogSource = { manifest: async () => manifest, category: async () => null }, hash = "#/"): HTMLElement {
+function mount(catalog: CatalogSource = { manifest: async () => manifest, category: async () => null }, hash = "#/", language: "en" | "de" = "en", check?: AssetCheck): HTMLElement {
   const storage = memoryStorage();
-  storage.setItem(STORAGE_KEY, JSON.stringify({ version: 1, state: { preferences: { language: "en" } } }));
+  storage.setItem(STORAGE_KEY, JSON.stringify({ version: 1, state: { preferences: { language } } }));
   const root = document.createElement("div");
   document.body.append(root);
   window.history.replaceState(null, "", hash);
-  unmount = mountArchive(root, { storage, languages: ["en"], catalog });
+  unmount = mountArchive(root, { storage, languages: [language], catalog, ...(check === undefined ? {} : { check }) });
   return root;
 }
 
@@ -232,5 +233,91 @@ describe("the mounted archive", () => {
     fireEvent.change(within(root).getByRole("searchbox"), { target: { value: "human-24" } });
     await waitFor(() => expect(root.querySelectorAll("[data-staffage-asset-list] li")).toHaveLength(1));
     await waitFor(() => expect(category).toHaveBeenCalled());
+  });
+
+  it("asks on the overview for the assets its cards show and for no category document", async () => {
+    installViewport(1280, 800);
+    const authored = (id: string, category: ManifestEntry["category"]): ManifestEntry => ({ ...human(id), category, completion: "authored" });
+    const archive = {
+      ...manifest,
+      entries: [...Array.from({ length: 7 }, (_, index) => authored(`human-${index + 1}`, "humans")), authored("animal-1", "animals"), human("human-planned")],
+      collections: [{ id: APP_CONFIG.featuredCollection, title: text("Featured"), description: text("Featured figures"), assets: ["human-7"] }],
+    } as unknown as Manifest;
+    const category = vi.fn<CatalogSource["category"]>(async () => null);
+    const asset = vi.fn<NonNullable<CatalogSource["asset"]>>(async () => null);
+    mount({ manifest: async () => archive, category, asset });
+    const shown = new Set(["human-1", "human-2", "human-3", "human-4", "human-7", "animal-1"]);
+    await waitFor(() => expect(new Set(asset.mock.calls.map(([, id]) => id))).toEqual(shown), { timeout: 400 + CATEGORIES.length * 350 + 3000 });
+    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 400 + CATEGORIES.length * 350 + 300)); });
+    expect(new Set(asset.mock.calls.map(([, id]) => id))).toEqual(shown);
+    expect(category).not.toHaveBeenCalled();
+  }, 20_000);
+
+  it("requests only the opened asset on a desktop, and its category once the reader goes up", async () => {
+    installViewport(1280, 800);
+    const category = vi.fn<CatalogSource["category"]>(async () => null);
+    const asset = vi.fn<NonNullable<CatalogSource["asset"]>>(async () => null);
+    const root = mount({ manifest: async () => manifest, category, asset }, "#/humans/human-24");
+    await waitFor(() => expect(asset).toHaveBeenCalledWith(manifest.categories[0], "human-24", expect.any(AbortSignal)));
+    await waitFor(() => expect(root.querySelector('[data-page="asset:human-24"]')).not.toBeNull());
+    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 400 + CATEGORIES.length * 350 + 300)); });
+    expect(category).not.toHaveBeenCalled();
+    expect(new Set(asset.mock.calls.map(([, id]) => id))).toEqual(new Set(["human-24"]));
+    window.location.hash = "#/humans";
+    await waitFor(() => expect(category.mock.calls.map(([entry]) => entry.id)).toContain("humans"));
+  }, 20_000);
+
+  it.each([["en", "Loading human-24…", "Planned, not yet authored"], ["de", "human-24 wird geladen …", "Geplant, noch nicht erstellt"]] as const)("says in %s that the asset is loading and calls it planned only once no document exists", async (language, loading, planned) => {
+    installViewport(1280, 800);
+    let finish!: (document: null) => void;
+    const asset = vi.fn<NonNullable<CatalogSource["asset"]>>(() => new Promise((resolve) => { finish = resolve; }));
+    const root = mount({ manifest: async () => manifest, category: async () => null, asset }, "#/humans/human-24", language);
+    const page = await waitFor(() => {
+      const found = root.querySelector<HTMLElement>('[data-page="asset:human-24"]');
+      expect(found?.querySelector('[data-asset-state="loading"]') ?? null).not.toBeNull();
+      return found!;
+    });
+    const notice = page.querySelector<HTMLElement>('[data-asset-state="loading"]')!;
+    expect(notice.getAttribute("role")).toBe("status");
+    expect(notice.textContent).toContain(loading);
+    expect(page.textContent).not.toContain(planned);
+    await act(async () => finish(null));
+    await waitFor(() => expect(page.textContent).toContain(planned));
+    expect(page.querySelector('[data-asset-state="loading"]')).toBeNull();
+  });
+
+  it("shows an authored asset while its findings are computed and keeps showing it beside the findings that arrive", async () => {
+    installViewport(1280, 800);
+    const authored = { ...walker, id: "human-24", category: "humans" } as Asset;
+    const asset = vi.fn<NonNullable<CatalogSource["asset"]>>(async () => ({ asset: authored }));
+    let hear!: NonNullable<JobControl["progress"]>;
+    let answer!: (issues: readonly Issue[]) => void;
+    const check: AssetCheck = (_asset, control) => new Promise((resolve) => {
+      hear = control!.progress!;
+      answer = resolve;
+    });
+    const root = mount({ manifest: async () => manifest, category: async () => null, asset }, "#/humans/human-24", "en", check);
+    const page = await waitFor(() => {
+      const found = root.querySelector<HTMLElement>('[data-page="asset:human-24"]');
+      expect(found?.querySelector("[data-viewer]") ?? null).not.toBeNull();
+      return found!;
+    });
+    const notice = page.querySelector<HTMLElement>('[data-asset-state="checking"]')!;
+    expect(notice.getAttribute("role")).toBe("status");
+    expect(notice.textContent).toContain("Checking this asset…");
+    await act(async () => hear(2, 6, { en: "Drawings checked", de: "Zeichnungen geprüft" }));
+    expect(page.querySelector('[data-asset-state="checking"]')!.textContent).toContain("Part 2 of 6: Drawings checked.");
+    await act(async () => answer([{ path: "$.rig", code: "broken", message: { en: "Broken rig", de: "Defektes Rig" } }]));
+    const findings = await waitFor(() => {
+      const found = page.querySelector<HTMLElement>('[data-asset-state="findings"]');
+      expect(found).not.toBeNull();
+      return found!;
+    });
+    expect(findings.getAttribute("role")).toBe("alert");
+    expect(findings.textContent).toContain("Findings of the check: 1");
+    expect(findings.textContent).toContain("Broken rig");
+    expect(page.querySelector("[data-viewer]")).not.toBeNull();
+    expect(page.textContent).not.toContain("Planned, not yet authored");
+    expect(page.querySelector('[data-asset-state="checking"]')).toBeNull();
   });
 });

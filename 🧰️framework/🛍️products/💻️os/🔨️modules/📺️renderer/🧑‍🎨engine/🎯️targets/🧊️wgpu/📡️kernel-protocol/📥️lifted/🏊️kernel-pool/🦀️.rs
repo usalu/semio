@@ -203,6 +203,7 @@ impl KernelRequestQueue {
             return (state.closing && state.len == 0, 0, 0);
         }
         let index = state.read;
+        let (request_pages, request_bytes) = state.slots[index].as_ref().expect("fixed shutdown request slot is occupied").0.command_credits();
         let (terminal, processed, released, page_released) = match &mut state.slots[index].as_mut().expect("fixed shutdown request slot is occupied").0 {
             KernelRequest::ExchangeCommands { driver, .. } => {
                 let before = driver.remaining_pages();
@@ -216,10 +217,10 @@ impl KernelRequestQueue {
                 let page_released = usize::from(owner.remaining_pages() < before);
                 (terminal, usize::from(terminal || page_released != 0), released, page_released)
             }
-            KernelRequest::CreateApp { owner } => {
+            KernelRequest::CreateApp { owner, .. } => {
                 owner.begin_close();
-                let terminal=owner.terminal_is_empty();
-                (terminal,usize::from(terminal),0,0)
+                let terminal = owner.terminal_is_empty() && request_bytes <= maximum_bytes;
+                (terminal, usize::from(terminal), if terminal { request_bytes } else { 0 }, 0)
             }
             KernelRequest::DestroyApp { owner } => {
                 owner.finish(KernelCloseStatus::Fault);
@@ -231,7 +232,7 @@ impl KernelRequestQueue {
             }
             KernelRequest::Exchange { event, .. } => {
                 let (terminal, processed, released) = event.close_step(maximum_bytes);
-                (terminal, processed, released, 0)
+                (terminal, processed, released, if terminal { request_pages } else { 0 })
             }
             KernelRequest::AdvanceRetained { .. } | KernelRequest::MountProductReplay { .. } | KernelRequest::RetireProductReplay { .. } | KernelRequest::RetireProductReplayRefusal { .. } | KernelRequest::AdvanceProductReplay { .. } => {
                 (true, 1, 0, 0)

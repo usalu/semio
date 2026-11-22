@@ -209,6 +209,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
         role="treeitem"
         {...sharedBorderlessBoxProps}
         {...windowRowAria}
+        aria-level={level}
         aria-selected={isSelected}
         aria-expanded={isExpandable ? open : undefined}
         data-selected={isSelected ? "true" : undefined}
@@ -348,6 +349,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
               role="treeitem"
               {...sharedBorderlessBoxProps}
               {...windowRowAria}
+              aria-level={level}
               aria-selected={isSelected}
               aria-expanded={open}
               data-selected={isSelected ? "true" : undefined}
@@ -490,6 +492,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
         role="treeitem"
         {...sharedBorderlessBoxProps}
         {...windowRowAria}
+        aria-level={level}
         aria-selected={isSelected}
         data-selected={isSelected ? "true" : undefined}
         data-highlighted={isHighlighted ? "true" : undefined}

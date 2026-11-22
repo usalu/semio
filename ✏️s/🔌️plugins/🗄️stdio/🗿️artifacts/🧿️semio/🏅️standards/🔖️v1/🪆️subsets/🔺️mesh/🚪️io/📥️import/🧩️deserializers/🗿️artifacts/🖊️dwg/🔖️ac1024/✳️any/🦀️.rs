@@ -14,8 +14,7 @@
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
 use semio_s_artifact_stdio_semio_mesh::schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTopology, STDIO_SEMIOMESH_DOCUMENT_SCHEMA};
 use {semio_plugin::ArtifactDeserializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
-use semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::schema::geometry::DwgDrawing;
-use semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::schema::geometry::DwgGeometry;
+use semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::schema::geometry::{DwgDrawing, DwgGeometry, dwg_face_triangles, dwg_mesh_rows};
 use semio_s_artifact_stdio_dwg_snapshot::standards::v_ac1024::subsets::any::schema::snapshot::DwgSnapshot;
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.dwg", standard: StandardId("ac1024"), subset: SubsetId::ANY };
@@ -23,52 +22,38 @@ const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard
 
 //#region 🔖️MeshBuild
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn append_geometry(geometry: &DwgGeometry, positions: &mut Vec<SemioPoint3>, indices: &mut Vec<u32>) {
-    match geometry {
-        DwgGeometry::PolyfaceMesh { vertices, faces } => {
-            let base = positions.len() as u32;
-            for v in vertices {
-                positions.push(SemioPoint3 { x: v[0], y: v[1], z: v[2] });
-            }
-            for face in faces {
-                let idx: Vec<u32> = face.iter().map(|i| (i.unsigned_abs().saturating_sub(1)) + base).collect();
-                if face[2] == face[3] {
-                    indices.extend_from_slice(&[idx[0], idx[1], idx[2]]);
-                } else {
-                    indices.extend_from_slice(&[idx[0], idx[1], idx[2]]);
-                    indices.extend_from_slice(&[idx[0], idx[2], idx[3]]);
-                }
-            }
-        }
-        DwgGeometry::Face3d { corners } => {
-            let base = positions.len() as u32;
-            for c in corners {
-                positions.push(SemioPoint3 { x: c[0], y: c[1], z: c[2] });
-            }
-            indices.extend_from_slice(&[base, base + 1, base + 2]);
-            if corners[3] != corners[2] {
-                indices.extend_from_slice(&[base, base + 2, base + 3]);
-            }
-        }
-        _ => {}
+fn append_geometry(geometry: &DwgGeometry, positions: &mut Vec<SemioPoint3>, indices: &mut Vec<u32>) -> Result<(), String> {
+    let (vertices, faces) = dwg_mesh_rows(geometry);
+    let base = u32::try_from(positions.len()).map_err(|_| "DWG mesh has too many vertices")?;
+    let count = u32::try_from(vertices.len()).map_err(|_| "DWG mesh has too many vertices")?;
+    base.checked_add(count).ok_or("DWG mesh has too many vertices")?;
+    positions.try_reserve(vertices.len()).map_err(|_| "DWG mesh position allocation failed")?;
+    for &[x, y, z] in vertices {
+        if ![x, y, z].into_iter().all(f64::is_finite) { return Err("DWG mesh position is not finite".into()); }
+        positions.push(SemioPoint3 { x, y, z });
     }
+    for &face in faces {
+        let (first, second) = dwg_face_triangles(base, count, face)?;
+        indices.try_reserve(if second.is_some() { 6 } else { 3 }).map_err(|_| "DWG mesh index allocation failed")?;
+        indices.extend_from_slice(&first);
+        if let Some(second) = second { indices.extend_from_slice(&second); }
+    }
+    Ok(())
 }
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn semio_meshes_from_drawing(drawing: &DwgDrawing) -> Vec<SemioMesh> {
-    let mut meshes = Vec::new();
-    for (layer_index, layer) in drawing.layers.iter().enumerate() {
-        let mut positions = Vec::new();
-        let mut indices = Vec::new();
-        for entity in drawing.entities.iter().filter(|e| e.layer == layer_index) {
-            append_geometry(&entity.geometry, &mut positions, &mut indices);
+fn semio_meshes_from_drawing(drawing: &DwgDrawing) -> Result<Vec<SemioMesh>, String> {
+    let mut geometry: Vec<_> = drawing.layers.iter().map(|_| (Vec::new(), Vec::new())).collect();
+    for entity in &drawing.entities {
+        if let Some((positions, indices)) = geometry.get_mut(entity.layer) {
+            append_geometry(&entity.geometry, positions, indices)?;
         }
-        if positions.is_empty() {
-            continue;
-        }
-        meshes.push(SemioMesh { id: layer.name.clone(), primitives: vec![SemioPrimitive { id: format!("{}-mesh", layer.name), topology: SemioTopology::Triangles, positions, indices, ..SemioPrimitive::default() }] });
     }
-    meshes
+    Ok(drawing.layers.iter().zip(geometry).filter_map(|(layer, (positions, indices))| {
+        if indices.is_empty() { return None; }
+        Some(SemioMesh { id: layer.name.clone(), primitives: vec![SemioPrimitive {
+            id: format!("{}-mesh", layer.name), topology: SemioTopology::Triangles, positions, indices, ..SemioPrimitive::default()
+        }] })
+    }).collect())
 }
 //#endregion 🔖️MeshBuild
 
@@ -82,8 +67,9 @@ impl ArtifactDeserializer for SemioMeshFromDwg {
     const INTO: Dialect = INTO_DIALECT;
 
     async fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
-        let drawing = from.drawing.to_native().map_err(|detail| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, detail)))?;
-        Ok(SemioMeshSnapshot { schema: STDIO_SEMIOMESH_DOCUMENT_SCHEMA.into(), meshes: semio_meshes_from_drawing(&drawing), materials: Vec::new(), textures: Vec::new() })
+        let meshes = from.drawing.to_native().and_then(|drawing| semio_meshes_from_drawing(&drawing))
+            .map_err(|detail| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, detail)))?;
+        Ok(SemioMeshSnapshot { schema: STDIO_SEMIOMESH_DOCUMENT_SCHEMA.into(), meshes, materials: Vec::new(), textures: Vec::new() })
     }
 }
 //#endregion 🔖️Deserializer

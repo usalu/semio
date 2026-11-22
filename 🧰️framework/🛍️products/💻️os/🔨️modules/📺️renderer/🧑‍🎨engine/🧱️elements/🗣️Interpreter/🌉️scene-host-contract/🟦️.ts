@@ -35,6 +35,9 @@ export function useAppCatalogue(): AppCatalogue {
  * host can't otherwise tell which pane it is; provided per-pane around each `<InterpretedUiNode>` call. */
 export const WindowInstanceIdContext = createContext<string | null>(null);
 
+/** 🎚️ The shell utility register scoped to the owning window's surface, including explicit deactivation. */
+export const WindowActiveUtilityContext = createContext<Readonly<{ surfaceId: string; utilityId: string | null | undefined }> | null>(null);
+
 export function parseSceneJsonField<T>(encoded: string): T {
   if (encoded.startsWith("pk:")) return decodeScenePackField(encoded) as T;
   return JSON.parse(encoded) as T;

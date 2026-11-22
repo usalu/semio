@@ -10,12 +10,13 @@ import { createElement } from "react";
 import { createRequire } from "node:module";
 import type * as AccessibilityOracle from "dom-accessibility-api" with { "resolution-mode": "require" };
 import { argControl } from "@semio-tech/framework";
-import { Stepper } from "@semio-tech/ui-react";
+import { Stepper, Tree } from "@semio-tech/ui-react";
 import { act, cleanup, fireEvent, render } from "@semio-tech/ui-react/test";
 import "../../../🐚️Shell/🟦️.tsx";
 import {
   interactionSelectionIdsV1,
   renderStagedArgControl,
+  stagedArgTreeItem,
   stagedNumberDisplayText,
   stagedNumberFacetsV1,
   type StagedArgContextV1
@@ -48,6 +49,16 @@ const pivot: Def = { id: "pivot", label: "Pivot", schema: { kind: "reference", k
 describe("🎛️ staged mutation-input controls", () => {
   afterEach(() => cleanup());
   afterAll(() => syncShellLabelLocale("en"));
+
+  it("names an inline staged field from the tree row label in each window", () => {
+    const def: Def = { id: "id", label: "Region ID", schema: { kind: "string", options: [] }, required: true };
+    const left = stagedArgTreeItem("first.grade.id", def, "yard", () => {});
+    const right = stagedArgTreeItem("second.grade.id", { ...def, label: "Regions-ID" }, "hof", () => {});
+    const view = render(createElement(Tree, { sections: [{ id: "fields", label: "Fields", items: [left, right] }], sortableSections: false }));
+    const fields = Array.from(view.container.querySelectorAll<HTMLInputElement>("input"));
+    expect(fields.map((field) => [computeAccessibleName(field), field.required])).toEqual([["Region ID", true], ["Regions-ID", true]]);
+    expect(fields[0]?.id).not.toBe(fields[1]?.id);
+  });
 
   it("derives each case's control kind from the stored schema", () => {
     expect([quantity, angle, axis, note, offset, targets, pivot].map((def) => argControl(def as Parameters<typeof argControl>[0]).kind)).toEqual(["stepper", "dial", "segmented", "multiline", "vector", "reference", "reference"]);

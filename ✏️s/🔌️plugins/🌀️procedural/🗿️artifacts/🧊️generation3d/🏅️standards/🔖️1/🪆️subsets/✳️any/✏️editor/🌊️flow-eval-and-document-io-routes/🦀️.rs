@@ -282,10 +282,14 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dDocumen
             }
             Generation3dCommand::ImportDocument(payload) => {
                 let windows = generation3d_preview_windows(input.context.and_then(|context| context.view_state.as_deref()));
-                let servable = flow_eval_tick::may_rearm(&input.snapshot.host_snapshot);
                 self.instance_owner.with_mut::<Generation3dInstanceOperationOwner, _>(|owner| {
-                    let mut emit = import_document::emit(payload, &doc, &cfg)?;
-                    if !emit.artifact_mutations.is_empty() {
+                    let (mut emit, replacement_servable) = import_document::emit_with_replacement_servability(
+                        payload, &doc, &cfg, |imported| flow_eval_tick::may_rearm(&imported.host_snapshot),
+                    )?;
+                    let servable = replacement_servable.or_else(|| {
+                        (!emit.artifact_mutations.is_empty()).then(|| flow_eval_tick::may_rearm(&input.snapshot.host_snapshot))
+                    });
+                    if let Some(servable) = servable.filter(|_| !windows.is_empty()) {
                         owner.owe_attached_previews_carrying(&windows, servable, &mut emit, input.operation.retained)?;
                     }
                     Ok(emit)

@@ -18,6 +18,8 @@ import {RemoteCacheStoreV1,type RemoteCacheStoreEventV1} from "../💾️store/�
 import {startRemoteCacheServerV1,parseRemoteCachePathV1,type RemoteCacheServerV1} from "../🖥️server/🟦️.ts";
 import {collectRemoteCacheV1,parseRemoteCacheArgumentsV1,remoteCacheLanguagesV1,remoteCacheStatusV1,remoteCacheTextV1,runRemoteCacheCommandV1,serveRemoteCacheV1,type RemoteCacheCommandContextV1} from "../⌨️command/🟦️.ts";
 import texts from "../📖️texts/🔣️.json" with {type:"json"};
+import {resolveBazelBinaryV1} from "../../🔧️tools/🏗️bazel/🌐️remote-cache/🧭️binary/🟦️.ts";
+import {provisionPristineNxV1} from "../🧶️nx/🧰️scratch/🟦️.ts";
 import {bazelRemoteCacheToolV1} from "../../🔧️tools/🏗️bazel/🌐️remote-cache/🟦️.ts";
 import {nxRemoteCacheToolV1} from "../../../⚡️caching/🚀️bootstrap/🛠️tools/🌐️remote-cache/🟦️.ts";
 
@@ -268,7 +270,7 @@ test("remote-cache status reports the contract, both renderings, a probe per pro
   expect((await fetch(server.url+"/v1/cache/777",{method:"PUT",body:"payload",headers:{authorization:"Bearer write-token-7"}})).status).toBe(200);
   const on={SEMIO_REMOTE_CACHE_ENDPOINT:server.url,SEMIO_REMOTE_CACHE_ACCESS:"read-write",SEMIO_REMOTE_CACHE_TOKEN:"write-token-7"};
   const off=await remoteCacheStatusV1([],context({}));
-  expect(off).toEqual({version:1,configured:false,contract:null,effectiveUpload:false,token:null,renderings:null,probes:null,server:null,store:null,resolution:null,remote:null});expect(validator("Status")(off),JSON.stringify(validator("Status").errors)).toBe(true);
+  expect(off).toEqual({version:1,configured:false,contract:null,effectiveUpload:false,token:null,renderings:null,probes:null,server:null,serverFault:null,store:null,resolution:null,remote:null});expect(validator("Status")(off),JSON.stringify(validator("Status").errors)).toBe(true);
   const status=await remoteCacheStatusV1(["--directory",folder],context(on)) as {configured:boolean;probes:{protocol:string;reachable:boolean;authorized:boolean;status:number}[];server:{readOnly:boolean;validation:string;entries:number};store:{entries:number;bytes:number}};
   expect(validator("Status")(status),JSON.stringify(validator("Status").errors)).toBe(true);
   expect(status).toMatchObject({configured:true,effectiveUpload:true,token:{present:true},renderings:{nx:{mechanism:"nx-environment"},bazel:{mechanism:"bazel-flags"}},server:{readOnly:false,validation:"off",entries:1},store:{entries:1,bytes:7},resolution:{endpointFrom:"environment",tokenFrom:"environment",factsGeneration:null},remote:{reachable:true,authorised:true,entries:1,bytes:7}});
@@ -282,7 +284,7 @@ test("remote-cache status reports the contract, both renderings, a probe per pro
   for(const probe of unreachable.probes)expect(probe).toMatchObject({reachable:false,status:null});
   const cancelled=new AbortController();cancelled.abort();await expect(remoteCacheStatusV1([],context(on,cancelled.signal))).rejects.toThrow();
   expect(await runRemoteCacheCommandV1(["status"],context({}))).toEqual({exitCode:0,result:expect.objectContaining({configured:false})});
-  await expect(runRemoteCacheCommandV1(["remote","clear"],context(on))).rejects.toThrow("Expected repo remote-cache serve|status|gc|rotate.");
+  await expect(runRemoteCacheCommandV1(["remote","clear"],context(on))).rejects.toThrow("Expected repo remote-cache serve|status|gc|rotate|evidence.");
  }finally{await server.stop();}
 },60000);
 
@@ -374,7 +376,9 @@ test("the public JSON of the remote cache is schema-first: status, gc results an
  }
  expect(validator("StoreBounds")({maximumBytes:10,maximumEntryBytes:10,maximumAgeMilliseconds:0})).toBe(true);
 });
-const bazelBinary=process.env.SEMIO_TEST_BAZEL_BINARY;
+const checkoutRootOf=(start:string):string=>{for(let at=start;;at=dirname(at)){if(existsSync(join(at,"MODULE.bazel")))return at;if(dirname(at)===at)return start;}};
+const checkoutRoot=((start:string):string|undefined=>{for(let at=start;;at=dirname(at)){if(existsSync(join(at,"node_modules","nx","package.json")))return at;if(dirname(at)===at)return undefined;}})(import.meta.dir);
+const bazelBinary=process.env.SEMIO_TEST_BAZEL_BINARY??resolveBazelBinaryV1(checkoutRootOf(import.meta.dir));
 
 test.skipIf(!bazelBinary)("a real Bazel client builds against the server, hits the remote cache after bazel clean, honours read-only and authenticates through the credential helper without writing the token to disk",async()=>{
  const token="rcache-sentinel-4711-token",base=directory("bazel"),workspace=join(base,"ws"),output=join(base,"ob"),second=join(base,"ws2"),outputTwo=join(base,"ob2"),events:{method:string;path:string;status:number}[]=[];
@@ -434,7 +438,7 @@ test("an unreachable, hanging or unauthorized remote cache keeps the Nx run loca
    for(let again=0;again<3;again++)expect(Object.values(await nxRemoteCacheEnvironmentV1(environment,{probeMilliseconds:200,warn:text=>warnings.push(text)})).every(value=>value===undefined),endpoint).toBe(true);
    expect(warnings,endpoint).toHaveLength(1);
   }
-  expect(hits.hang).toBe(1);expect(hits.deny).toBe(1);
+  expect(hits.hang,"a probe without any answer is repeated, bounded").toBe(3);expect(hits.deny,"a refusal is never repeated").toBe(1);
   const warnings:string[]=[],base=`http://127.0.0.1:${servers[2]!.port}`,reachable=await nxRemoteCacheEnvironmentV1({SEMIO_REMOTE_CACHE_ENDPOINT:base},{probeMilliseconds:200,warn:text=>warnings.push(text)});
   expect(reachable).toEqual({NX_SELF_HOSTED_REMOTE_CACHE_SERVER:`${base}/main`});expect(warnings).toEqual([]);expect(hits.serve).toBe(1);
   expect(await nxRemoteCacheEnvironmentV1({SEMIO_REMOTE_CACHE_ENDPOINT:base,NX_SELF_HOSTED_REMOTE_CACHE_SERVER:`${base}/main`},{probeMilliseconds:200}),"already routed to the same cache").toEqual({});
@@ -442,7 +446,17 @@ test("an unreachable, hanging or unauthorized remote cache keeps the Nx run loca
  }finally{for(const server of servers)await server.stop(true);}
 });
 
-const nxBinary=process.env.SEMIO_TEST_NX_BIN;
+test("a probe that got no answer is repeated within the run and a slow start does not switch the cache off",async()=>{
+ const {nxRemoteCacheEnvironmentV1,NX_PROBE_RETRIES_V1}=await import("../🧶️nx/🟦️.ts");
+ let seen=0;
+ const slow=Bun.serve({port:0,fetch:()=>{seen++;if(seen<NX_PROBE_RETRIES_V1)return new Promise<Response>(()=>{});return new Response("",{status:404});}});
+ try{
+  const warnings:string[]=[],base=`http://127.0.0.1:${slow.port}`,started=performance.now(),routed=await nxRemoteCacheEnvironmentV1({SEMIO_REMOTE_CACHE_ENDPOINT:base},{probeMilliseconds:200,warn:text=>warnings.push(text)});
+  expect(routed).toEqual({NX_SELF_HOSTED_REMOTE_CACHE_SERVER:`${base}/main`});expect(warnings).toEqual([]);expect(seen).toBe(NX_PROBE_RETRIES_V1);expect(performance.now()-started).toBeLessThan(1500);
+ }finally{await slow.stop(true);}
+});
+
+const nxBinary=process.env.SEMIO_TEST_NX_BIN??(checkoutRoot===undefined?undefined:provisionPristineNxV1(checkoutRoot));
 
 test.skipIf(!nxBinary)("a real Nx 23 client stores archives, hits the remote cache after the local cache is gone, is rejected on a wrong token and is read-only with a read token",async()=>{
  const token="rcache-sentinel-4711-token",base=directory("nx"),events:{method:string;path:string;status:number}[]=[];
@@ -472,3 +486,57 @@ test.skipIf(!nxBinary)("a real Nx 23 client stores archives, hits the remote cac
 },900000);
 
 afterAll(()=>{for(const path of scratch)rmSync(path,{recursive:true,force:true});});
+
+test("a write whose host store does not admit it in time (the disk is critical and a collection runs) is answered `capacity` within the write budget instead of hanging until the client gives up",async()=>{
+ const folder=mkdtempSync(join(tmpdir(),"rcache-budget-"));
+ try{
+  const host={get:async()=>undefined,has:async()=>[false],release:async()=>undefined,pin:async()=>undefined,putChecked:(_source:unknown,_expect:unknown,signal?:AbortSignal)=>new Promise((_,fail)=>{signal?.addEventListener("abort",()=>{fail(signal.reason);});})} as unknown as NonNullable<Parameters<typeof RemoteCacheStoreV1.open>[0]["host"]>;
+  const store=await RemoteCacheStoreV1.open({directory:folder,host,maximumBytes:2**26,maximumEntryBytes:2**24,maximumAgeMilliseconds:0,writeBudgetMilliseconds:150});
+  const started=Date.now(),outcome=await store.put("main","cas",createHash("sha256").update("x").digest("hex"),(async function*(){yield new TextEncoder().encode("x");})(),{mode:"content"});
+  expect(outcome).toBe("capacity");expect(Date.now()-started).toBeLessThan(2000);
+  await store.close();
+ }finally{rmSync(folder,{recursive:true,force:true});}
+});
+
+test("remote-cache evidence lists what the server keeps of refused writes and shows both sides of one with the first differing byte and the differing lines, in a validated shape, and refuses a wrong id or a missing endpoint in both languages",async()=>{
+ const folder=directory("evidence-store"),{openProvenanceV1}=await import("../🧾️provenance/🟦️.ts"),keeper=await openProvenanceV1(folder);
+ const kept=new TextEncoder().encode(JSON.stringify({a:1,b:"same",c:[1,2]})),refused=new TextEncoder().encode(JSON.stringify({a:1,b:"same",c:[1,3]}));
+ await keeper.evidence.keep({outcome:"refused",sort:"unit",namespace:"main",key:"a".repeat(64),keptOrigin:"g1-m01",refusedOrigin:"g1-m02",differing:["out/libx.rlib","out/gone"],kept:new Uint8Array([1]),refused:new Uint8Array([2]),keptRows:[{path:"out/libx.rlib",hash:"1".repeat(64)},{path:"out/gone",hash:"3".repeat(64)}],refusedRows:[{path:"out/libx.rlib",hash:"2".repeat(64)}],blob:async hash=>hash==="1".repeat(64)?kept:hash==="2".repeat(64)?refused:undefined});
+ await keeper.flush();
+ const server=await serve({directory:folder,tokens:{read:"read-only-token-9",write:"write-token-7"}}),written:string[]=[];
+ const context=(environment:Record<string,string>):RemoteCacheCommandContextV1=>({root:directory("root"),environment,signal:new AbortController().signal,progress:async()=>{},write:line=>written.push(line),tools:toolsFor});
+ try{
+  const on={SEMIO_REMOTE_CACHE_ENDPOINT:server.url,SEMIO_REMOTE_CACHE_ACCESS:"read-only",SEMIO_REMOTE_CACHE_TOKEN:"read-only-token-9"};
+  const list=await runRemoteCacheCommandV1(["evidence","list"],context(on)) as {exitCode:number;result:{evidence:{id:string;sort:string;differing:string[]}[]}};
+  expect(list.exitCode).toBe(0);expect(validator("EvidenceList")(list.result),JSON.stringify(validator("EvidenceList").errors)).toBe(true);
+  expect(list.result.evidence.length).toBe(1);expect(list.result.evidence[0]).toMatchObject({sort:"unit",differing:["out/libx.rlib","out/gone"]});
+  expect((await runRemoteCacheCommandV1(["evidence"],context(on)) as {result:{action:string}}).result.action).toBe("list");
+  const id=list.result.evidence[0]!.id,shown=await runRemoteCacheCommandV1(["evidence","show",id.slice(0,12)],context(on)) as {result:{diffs:{path:string;firstDifferenceByte:number|null;differingBytes:number|null;lines:string[];kept:{stored:boolean}|null;refused:unknown}[]}};
+  expect(validator("EvidenceShow")(shown.result),JSON.stringify(validator("EvidenceShow").errors)).toBe(true);
+  const [rlib,gone]=shown.result.diffs;
+  expect(rlib).toMatchObject({path:"out/libx.rlib",lines:["-  2","+  3"]});expect(rlib!.firstDifferenceByte).toBeGreaterThan(0);expect(rlib!.differingBytes).toBe(1);
+  expect(gone).toMatchObject({path:"out/gone",refused:null,firstDifferenceByte:null,lines:[]});expect(gone!.kept!.stored).toBe(false);
+  expect(JSON.stringify(shown),"never prints the token").not.toContain("read-only-token-9");
+  await expect(runRemoteCacheCommandV1(["evidence","show","nothing"],context(on))).rejects.toThrow("No evidence nothing");
+  await expect(runRemoteCacheCommandV1(["evidence","show"],context(on))).rejects.toThrow("Expected repo remote-cache evidence [list|show <id>].");
+  await expect(runRemoteCacheCommandV1(["evidence","list","x"],context(on))).rejects.toThrow("Erwartet wird repo remote-cache evidence [list|show <id>].");
+  await expect(runRemoteCacheCommandV1(["evidence","--bogus"],context(on))).rejects.toThrow();
+  await expect(runRemoteCacheCommandV1(["evidence","list"],context({}))).rejects.toThrow("Es ist kein Remote-Cache-Endpunkt konfiguriert");
+  await expect(runRemoteCacheCommandV1(["evidence","list"],context({...on,SEMIO_REMOTE_CACHE_TOKEN:"wrong-token"}))).rejects.toThrow("Status 401");
+ }finally{await server.stop();}
+},60000);
+
+test("the maintenance tick of the server collects the host store back under its cap although no write asks for it",async()=>{
+ const root=directory("cap");
+ const{createCasStoreV1}=await import("../../🗄️cas/🗃️store/🟦️.ts"),{CAS_POLICY_V1}=await import("../../🗄️cas/🧬️schema/🟦️.ts"),{casUsageV1}=await import("../../🗄️cas/🗃️store/📏️usage/🟦️.ts");
+ const hostStore=createCasStoreV1({root,policy:{...CAS_POLICY_V1,capBytes:3000,minAgeMs:0,ledgerQuietMs:0,temporaryMaxAgeMs:0,enforceTickMilliseconds:200}});
+ for(let index=0;index<6;index++)await hostStore.put(new Uint8Array(1024).fill(index+1));
+ const{resetCasGuardsV1}=await import("../../🗄️cas/🚦️guard/🟦️.ts");resetCasGuardsV1();rmSync(join(root,"v1","usage.json"),{force:true});
+ const before=(await casUsageV1(root)).bytes;expect(before).toBeGreaterThan(3000);
+ const server=await serve({hostStore});
+ try{
+  const deadline=Date.now()+15000;let bytes=(await casUsageV1(root)).bytes;
+  while(bytes>3000&&Date.now()<deadline){await Bun.sleep(200);bytes=(await casUsageV1(root)).bytes;}
+  expect(bytes).toBeLessThanOrEqual(3000);
+ }finally{await server.stop(true);}
+});

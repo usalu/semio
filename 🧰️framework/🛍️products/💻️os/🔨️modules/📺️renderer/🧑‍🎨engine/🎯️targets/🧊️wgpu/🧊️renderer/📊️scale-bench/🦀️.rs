@@ -13,7 +13,7 @@
 //! `semio-wgpu-native --scale/--scale-wasm/--shards/--report`.
 use semio_framework::kernel::{AppInstanceId, Budget as TurnBudget, CapabilityChange, CapabilityId, Effect, Event, QuotaSchema};
 use semio_framework_actor::{ActivationEvent as ActorActivationTrigger, ActorId, ActorKind, Envelope, JobCheckpoint, JobOperation, Kernel, Lane, Origin, PackageHash, PackageId, Payload};
-use semio_plugin_host::shard::ShardOutcome;
+use semio_plugin_host::shard::{OriginalShardIdentity, ShardIdentityPolicy, ShardOutcome};
 use semio_renderer_wgpu_host_base::RendererTurnLimits;
 use semio_plugin_host::{CompiledHandle, GuestRuntime, GuestRuntimes, PackageRef};
 use semio_plugin_interpreter_runtime::OwnedRuntime;
@@ -101,8 +101,32 @@ fn turn_budget_of(record: &RegistryRecord) -> RendererTurnLimits {
     RendererTurnLimits { fuel: BENCH_FUEL, deadline_us: u64::from(record.quotas.deadline_ms) * 1_000, max_effects: record.quotas.max_effects, max_patch_bytes: record.quotas.max_patch_bytes, max_frames: record.quotas.max_frames }
 }
 
+fn shard_identity_policy() -> ShardIdentityPolicy {
+    serde_json::from_str(include_str!("../../../../../../🔌️plugin/🖥️host/🧵️shard/🪪️identity/⚙️configuration/🔣️.json")).expect("authored benchmark shard identity policy")
+}
+
+fn benchmark_turn_budget(limits: RendererTurnLimits, now: u64, operation: u64, epoch: u64) -> TurnBudget {
+    let policy = semio_renderer_wgpu_host_plumbing::native_caller::NativeFrameRootPolicyV1::initiating_event();
+    let retained = semio_framework_actor::RetainedTurnInput {
+        operation,
+        generation: 1,
+        epoch,
+        work: semio_framework_actor::OriginalActorTurnWork {
+            clock_binding: operation,
+            absolute_deadline_us: now.saturating_add(policy.maximum_elapsed_microseconds),
+            fuel: limits.fuel,
+        },
+        grant: policy.grant,
+    };
+    TurnBudget {
+        deadline_us: now.saturating_add(limits.deadline_us).min(retained.work.absolute_deadline_us),
+        ..TurnBudget::from_retained(retained, limits.fuel, limits.max_effects, limits.max_patch_bytes, limits.max_frames)
+    }
+}
+
 fn instance_open_event(record: &RegistryRecord, instance_id: u32) -> Event {
     Event::InstanceOpen {
+        purpose: semio_framework::kernel::ActorInstanceOpenPurpose::Ordinary,
         request: semio_framework::kernel::ActorInstanceOpenRequest { activation_generation: 1, instance_id, request_sequence: 1 },
         app_id: AppInstanceId(record.id.clone()),
         actor: "bench".to_string(),
@@ -152,7 +176,10 @@ impl Env {
     async fn new(runtime: Arc<GuestRuntimes>, shard_count: u16) -> Self {
         let cores = std::thread::available_parallelism().map_or(1, std::num::NonZeroUsize::get);
         let pool = Arc::new(semio_framework_async::process_worker_pool(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, cores)));
-        let runtime = super::parallel_runtime::ParallelRuntime::new(pool, runtime, shard_count.max(1), 0, 64,{let policy=semio_framework_pack_json::from_json_str(include_str!("../../../../../../🔌️plugin/🖥️host/🧵️shard/🪪️identity/⚙️configuration/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).expect("authored benchmark shard identity policy");move |_|semio_plugin_host::shard::native_identity_issuer(policy,|_|Box::new(|_|true))}).await;
+        let policy = shard_identity_policy();
+        let runtime = super::parallel_runtime::ParallelRuntime::new(pool, runtime, shard_count.max(1), 0, 64, move |_| {
+            semio_plugin_host::shard::native_identity_issuer(policy, |_| Box::new(|_| true))
+        }).await;
         Self { runtime, budgets: HashMap::new(), seq: 0, ordinals: HashMap::new(), now_ms: 0, pending: Vec::new() }
     }
 
@@ -184,23 +211,8 @@ impl Env {
         let ordinal = self.ordinal(&package_id);
         let limits = turn_budget_of(record);
         let now = semio_framework_job::default_now_us().ok_or_else(|| "benchmark activation clock unavailable".to_string())?;
-        let policy = semio_renderer_wgpu_host_plumbing::native_caller::NativeFrameRootPolicyV1::initiating_event();
         let operation = semio_framework_job::allocate_operation_id().0;
-        let retained = semio_framework_actor::RetainedTurnInput {
-            operation,
-            generation: 1,
-            epoch: 1,
-            work: semio_framework_actor::OriginalActorTurnWork {
-                clock_binding: operation,
-                absolute_deadline_us: now.saturating_add(policy.maximum_elapsed_microseconds),
-                fuel: limits.fuel,
-            },
-            grant: policy.grant,
-        };
-        let budget = TurnBudget {
-            deadline_us: now.saturating_add(limits.deadline_us).min(retained.work.absolute_deadline_us),
-            ..TurnBudget::from_retained(retained, limits.fuel, limits.max_effects, limits.max_patch_bytes, limits.max_frames)
-        };
+        let budget = benchmark_turn_budget(limits, now, operation, 1);
         let actor = self.runtime.activate(PackageId(package_id), ordinal, kind, lane, None, ActorActivationTrigger::Manual, compiled, &[], &budget).await.map_err(|refusal| refusal.reason)?;
         self.budgets.insert(actor.0, limits);
         Ok(actor)
@@ -386,7 +398,7 @@ async fn budget_2_cold_boot(process_start: Instant, runtime: &Arc<GuestRuntimes>
         env.send(actors[index], &instance_open_event(record, index as u32 + 1)).await;
     }
     if let Err(error) = env.pump().await {
-        return row(2, "cold boot to first interactive frame, only on-startup-finished actors live", "fail", json!({ "error": error }), json!({ "nativeMs": native_budget_ms }), "ShardLoop::pump failed");
+        return row(2, "cold boot to first interactive frame, only on-startup-finished actors live", "fail", json!({ "error": error.to_string() }), json!({ "nativeMs": native_budget_ms }), "ShardLoop::pump failed");
     }
     let outcomes = env.drain();
     let elapsed_ms = process_start.elapsed().as_millis() as u64;
@@ -428,7 +440,7 @@ async fn budget_3_activate_100(runtime: &Arc<GuestRuntimes>, compiled: &Compiled
         }
     }
     if let Err(error) = env.pump().await {
-        return row(3, "activate 50 plugins + 50 extensions of one plugin", "fail", json!({ "error": error }), json!({ "activeActors": 100, "shards": shard_count }), "ShardLoop::pump failed");
+        return row(3, "activate 50 plugins + 50 extensions of one plugin", "fail", json!({ "error": error.to_string() }), json!({ "activeActors": 100, "shards": shard_count }), "ShardLoop::pump failed");
     }
     let outcomes = env.drain();
     let faults = unexpected_faults(&outcomes, &activated, &selected).len();
@@ -503,7 +515,7 @@ async fn budget_4_and_5(runtime: &Arc<GuestRuntimes>, compiled: &CompiledHandle,
         }
     }
     if let Err(error) = env.pump().await {
-        let fail = row(4, "memory <= K x 512MiB + 256MiB headroom (native RSS <= 1.5GiB)", "fail", json!({ "error": error }), json!({ "maxBytes": memory_budget_bytes }), "ShardLoop::pump failed");
+        let fail = row(4, "memory <= K x 512MiB + 256MiB headroom (native RSS <= 1.5GiB)", "fail", json!({ "error": error.to_string() }), json!({ "maxBytes": memory_budget_bytes }), "ShardLoop::pump failed");
         return (fail, skipped(5, "interactive p95 command->patch <= 16ms web / <= 8ms native, 40 cpu actors saturating background", "budget 4's full-scale activation failed before this could run"));
     }
     let outcomes = env.drain();
@@ -773,40 +785,56 @@ async fn budget_7_stateful(runtime: &Arc<GuestRuntimes>, compiled: &CompiledHand
 /// the `io` profile's ONE-TIME `RequestCapability` effect is therefore typically emitted on
 /// THIS very first `InstanceOpen` turn, not a dedicated follow-up. Checked on both turns so a
 /// real request is never misread as absent just because it landed on turn 1.
-async fn budget_8_capability_revoke(runtime: &Arc<GuestRuntimes>, compiled: &CompiledHandle, records: &[RegistryRecord]) -> serde_json::Value {
+async fn budget_8_capability_revoke(runtime: &Arc<GuestRuntimes>, compiled: &CompiledHandle, records: &[RegistryRecord], original_clock: fn() -> Option<u64>) -> serde_json::Value {
+    const DESCRIPTION: &str = "capability revoked at runtime -> denied completion, actor stays alive, quota counters zero";
     let Some(record) = records.iter().find(|r| profile_of(r) == "io") else {
-        return skipped(8, "capability revoked at runtime -> denied completion, actor stays alive, quota counters zero", "no io-profile record in registry");
+        return skipped(8, DESCRIPTION, "no io-profile record in registry");
     };
     let cap_id = record.scale_fixture.get("ioCapabilityId").and_then(|v| v.as_str()).unwrap_or("scale-fixture.io").to_string();
-    let budget = turn_budget_of(record);
+    let limits = turn_budget_of(record);
+    let operation = semio_framework_job::allocate_operation_id().0;
+    let turn_budget = |epoch| original_clock().map(|now| benchmark_turn_budget(limits, now, operation, epoch)).ok_or_else(|| "benchmark turn clock unavailable".to_string());
+    let fail = |error, note| row(8, DESCRIPTION, "fail", json!({ "error": error }), json!(null), note);
+    let budget = match turn_budget(1) {
+        Ok(budget) => budget,
+        Err(error) => return fail(error, "instantiate clock unavailable"),
+    };
     let actor = ActorId(0xB8_0000_0001);
     let mut inst = match runtime.instantiate(compiled, actor, &[], &budget).await {
         Ok(instance) => instance,
-        Err(error) => return row(8, "capability revoked at runtime -> denied completion, actor stays alive, quota counters zero", "fail", json!({ "error": error.to_string() }), json!(null), "instantiate failed"),
+        Err(error) => return fail(error.to_string(), "instantiate failed"),
     };
-    let open_result = match runtime.execute_turn(&mut inst, &[instance_open_event(record, 1)], budget).await {
+    let mut identity = match OriginalShardIdentity::issue(shard_identity_policy(), Box::new(|_| true)) {
+        Ok(identity) => identity,
+        Err(refusal) => return fail(refusal.error.to_string(), "original shard identity refused"),
+    };
+    let mut execute = async |event, epoch| {
+        let budget = turn_budget(epoch)?;
+        identity.execute_turn(runtime, &mut inst, &mut [event], budget).await.map_err(|fault| fault.to_string())
+    };
+    let open_result = match execute(instance_open_event(record, 1), 1).await {
         Ok(result) => result,
-        Err(fault) => return row(8, "capability revoked at runtime -> denied completion, actor stays alive, quota counters zero", "fail", json!({ "error": fault.to_string() }), json!(null), "InstanceOpen turn failed"),
+        Err(error) => return fail(error, "InstanceOpen turn failed"),
     };
     let requested_on_open = open_result.effects.iter().any(|effect| matches!(effect, Effect::RequestCapability { capability, .. } if capability.id.0 == cap_id));
-    let requested_on_wake = match runtime.execute_turn(&mut inst, &[Event::Wake], budget).await {
+    let requested_on_wake = match execute(Event::Wake, 2).await {
         Ok(result) => result.effects.iter().any(|effect| matches!(effect, Effect::RequestCapability { capability, .. } if capability.id.0 == cap_id)),
-        Err(fault) => return row(8, "capability revoked at runtime -> denied completion, actor stays alive, quota counters zero", "fail", json!({ "error": fault.to_string() }), json!(null), "capability-request turn failed"),
+        Err(error) => return fail(error, "capability-request turn failed"),
     };
     let requested = requested_on_open || requested_on_wake;
     let revoke_event = Event::CapabilityChanged { change: CapabilityChange::Revoked { id: CapabilityId(cap_id.clone()) } };
-    let revoke_result = runtime.execute_turn(&mut inst, &[revoke_event], budget).await;
+    let revoke_result = execute(revoke_event, 3).await;
     let survived_revoke = revoke_result.is_ok();
     let revoke_status = match &revoke_result {
         Ok(result) => format!("{:?}", result.status),
-        Err(fault) => fault.to_string(),
+        Err(error) => error.clone(),
     };
-    let followup = runtime.execute_turn(&mut inst, &[Event::Wake], budget).await;
+    let followup = execute(Event::Wake, 4).await;
     let survived_followup = followup.is_ok();
     let pass = requested && survived_revoke && survived_followup;
     row(
         8,
-        "capability revoked at runtime -> denied completion, actor stays alive, quota counters zero",
+        DESCRIPTION,
         if pass { "pass" } else { "fail" },
         json!({ "capabilityId": cap_id, "capabilityRequested": requested, "requestedOnInstanceOpenTurn": requested_on_open, "survivedRevokeTurn": survived_revoke, "statusAfterRevoke": revoke_status, "survivedFollowupTurn": survived_followup }),
         json!("no trap across or after the revoke turn"),
@@ -857,7 +885,7 @@ pub async fn run(registry_path: PathBuf, wasm_path: PathBuf, shard_count: u16, r
     let (row_4, row_5) = budget_4_and_5(&runtime, &compiled, &registry.records, shard_count, shard_count as u64 * 512 * 1024 * 1024 + 256 * 1024 * 1024).await;
     let row_6 = budget_6_hang(&runtime, &compiled, &registry.records).await?;
     let row_7 = budget_7_stateful(&runtime, &compiled, &registry.records).await?;
-    let row_8 = budget_8_capability_revoke(&runtime, &compiled, &registry.records).await;
+    let row_8 = budget_8_capability_revoke(&runtime, &compiled, &registry.records, original_clock).await;
 
     drop((row_2, row_3, row_4, row_5, row_6, row_7, row_8));
     eprintln!("scale-bench: refusing to write populated report {} until its retained page encoder is mounted (renderer=native, shards={shard_count}, records={}, wasm={})", report_path.display(), registry.records.len(), wasm_path.display());

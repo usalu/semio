@@ -1,5 +1,5 @@
 export type TakeOutcomeV1 = "present" | "fetched" | "stale" | "miss" | "fault";
-export type TakePolicyV1 = Readonly<{ concurrency: number; pollFirstMilliseconds: number; pollGrowthPercent: number; pollMaximumMilliseconds: number; pollBatch: number; faultRetries: number; faultWaitMilliseconds: number; progressMilliseconds: number; passBoundMilliseconds: number; releaseMilliseconds: number; noProgressMilliseconds: number; tailReportMilliseconds: number; watchMilliseconds: number; strongMemoryMegabytes: number; strongCores: number; cpuProgressPercent: number; hotRetryMilliseconds: number; adoptConcurrency: number; hotNamesMilliseconds: number; adoptReportMilliseconds: number; adoptStaleMilliseconds: number; adoptRetryMilliseconds: number }>;
+export type TakePolicyV1 = Readonly<{ concurrency: number; lookFloorConcurrency: number; claimStaleMilliseconds: number; claimPollMilliseconds: number; pollFirstMilliseconds: number; pollGrowthPercent: number; pollMaximumMilliseconds: number; pollBatch: number; faultRetries: number; faultWaitMilliseconds: number; progressMilliseconds: number; passBoundMilliseconds: number; releaseMilliseconds: number; noProgressMilliseconds: number; tailReportMilliseconds: number; watchMilliseconds: number; strongMemoryMegabytes: number; strongCores: number; cpuProgressPercent: number; hotRetryMilliseconds: number; adoptConcurrency: number; hotNamesMilliseconds: number; adoptReportMilliseconds: number; adoptStaleMilliseconds: number; adoptRetryMilliseconds: number }>;
 export type TakeCountsV1 = Readonly<{ total: number; present: number; fetched: number; here: number; stale: number; running: number; wanted: number; done: number; missing: number }>;
 /** ⚙️ The authored numbers of the take pass. */
 export const TAKE_POLICY_V1: TakePolicyV1;
@@ -20,7 +20,15 @@ export function createCpuProgressV1(input: Readonly<{ sample(): Promise<number |
 /** 🗣️ The plain text of a read that stopped for lack of progress. */
 export function takeNoProgressTextV1(language: string, fields: Readonly<Record<string, string | number>>): string;
 /** 🔢 The looks a lane runs at once under the cut of the process. */
+/** 🔒️ The claims of the owners that loads of one checkout infer at the same time. */
+export function createOwnerClaimsV1(input: Readonly<{ directory: string; pid?: number; now?(): number; alive?(pid: number): boolean; staleMilliseconds?: number }>): Readonly<{ claim(stem: string): "granted" | "running"; release(stem: string): void }>;
+/** 🔒️ Holds the claim of an owner or takes the record the claimant stores. */
+export function takeClaimedV1(input: Readonly<{ name: string; stem: string; claims: { claim(stem: string): "granted" | "running"; release(stem: string): void }; look(name: string): Promise<string | undefined>; signal?: AbortSignal; sleep?: (milliseconds: number, signal?: AbortSignal) => Promise<unknown>; pollMilliseconds?: number }>): Promise<Readonly<{ outcome?: string; release?(): void }>>;
+/** 🔑️ The key of the globals a pool wave published its records under. */
+export function fleetGlobalsKeyV1(globals: unknown): string;
 export function takeConcurrencyV1(cutConcurrency?: number, policy?: TakePolicyV1): number;
+/** 🔢 The looks a lane runs at once: the cut of the process, never fewer than the declared floor. */
+export function takeLookConcurrencyV1(cutConcurrency?: number, policy?: TakePolicyV1): number;
 /** 🚦 A look admitted by the footprint gate of the process. */
 export function takeAdmittedV1<Name, Outcome>(attempt: (name: Name, signal?: AbortSignal) => Promise<Outcome>, gate: () => Readonly<{ admit(signal?: AbortSignal): Promise<unknown> }> | undefined, signal?: AbortSignal, state?: { flying: number }): (name: Name, signal?: AbortSignal) => Promise<Outcome>;
 /** 🔍️ Looks at every name once, and again those the cache did not answer. */

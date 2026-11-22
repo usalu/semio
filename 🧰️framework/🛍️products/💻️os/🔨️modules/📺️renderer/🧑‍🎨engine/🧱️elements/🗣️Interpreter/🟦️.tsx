@@ -14,6 +14,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
+import { WindowActiveUtilityContext } from "./🌉️scene-host-contract/🟦️.ts";
 import { memo, Profiler, useCallback, type ReactNode } from "../⚛️react-port/🟦️.ts";
 import { LocalDocumentOwnerContext, LocalDocumentWindowContext, type LocalDocumentOwnerV1 } from "./🧭️local-document-owner/🟦️.ts";
 import { inputActionWithWindowV1, type ShellInputActionV1 } from "../🏛️ShellHost/🎯️input-ledger/🟦️.ts";
@@ -77,7 +78,7 @@ export function interpretUiNode(store: UiDocumentStore, context: UiInterpreterCo
  * handled entirely by `UiNodeView`'s own per-id subscription several levels down, never by
  * re-rendering from here.
  */
-export const InterpretedUiNode = memo(function InterpretedUiNode({ store, windowId, localDocumentOwner = null, onAction, onIntent, requestContextMenu }: { readonly store: UiDocumentStore; readonly windowId?: string; readonly localDocumentOwner?: LocalDocumentOwnerV1 | null } & Pick<UiInterpreterContext, "onAction" | "onIntent" | "requestContextMenu">): ReactNode {
+export const InterpretedUiNode = memo(function InterpretedUiNode({ store, windowId, windowUtilityId, localDocumentOwner = null, onAction, onIntent, requestContextMenu }: { readonly store: UiDocumentStore; readonly windowId?: string; readonly windowUtilityId?: string | null; readonly localDocumentOwner?: LocalDocumentOwnerV1 | null } & Pick<UiInterpreterContext, "onAction" | "onIntent" | "requestContextMenu">): ReactNode {
   const surfaceActions = usePluginSurfaceActions();
   const root = useUiDocumentRoot(store);
   const ownedAction = useCallback((action: ShellInputActionV1, lifecycle?: ActionDispatchLifecycleV1) => onAction(windowId === undefined ? action : inputActionWithWindowV1(action, windowId), lifecycle), [onAction, windowId]);
@@ -93,7 +94,8 @@ export const InterpretedUiNode = memo(function InterpretedUiNode({ store, window
     return onIntent(intent, windowId);
   }, [onIntent, treeWindows, windowId]);
   if (root === null) return null;
-  return <LocalDocumentOwnerContext.Provider value={localDocumentOwner}><LocalDocumentWindowContext.Provider value={windowId ?? null}><UiNodeView store={store} id={root} context={{ store, localDocumentOwner, onAction: ownedAction, onIntent: ownedIntent, requestContextMenu: requestContextMenu ?? surfaceActions }} /></LocalDocumentWindowContext.Provider></LocalDocumentOwnerContext.Provider>;
+  const windowUtility = windowId === undefined ? null : { surfaceId: String(store.getState().surface), utilityId: windowUtilityId };
+  return <LocalDocumentOwnerContext.Provider value={localDocumentOwner}><LocalDocumentWindowContext.Provider value={windowId ?? null}><WindowActiveUtilityContext.Provider value={windowUtility}><UiNodeView store={store} id={root} context={{ store, localDocumentOwner, onAction: ownedAction, onIntent: ownedIntent, requestContextMenu: requestContextMenu ?? surfaceActions }} /></WindowActiveUtilityContext.Provider></LocalDocumentWindowContext.Provider></LocalDocumentOwnerContext.Provider>;
 });
 //#endregion 🔖️UiInterpreter
 

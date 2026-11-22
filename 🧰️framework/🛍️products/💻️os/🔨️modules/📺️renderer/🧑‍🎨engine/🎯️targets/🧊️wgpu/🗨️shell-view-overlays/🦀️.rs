@@ -19,6 +19,7 @@ use semio_renderer_wgpu_shell_session::{SHELL_PALETTE_TINY_UI_SPACING, SessionCt
 use semio_renderer_wgpu_shell_state::ShellState;
 use semio_renderer_wgpu_shell_surfaces::{SettleState, SurfaceState, TutorialState};
 use semio_renderer_wgpu_shell_sync::SyncState;
+use semio_renderer_wgpu_shell_view_chrome_overlays::ChromeOverlaysCtx;
 use semio_renderer_wgpu_shell_view_chrome::{ChromeViewCtx, ShellChromeChildCursor, chrome_text_complete_step, close_chrome_overlay_glass_content, note_chrome_group_item, open_chrome_overlay_glass_content, render_retained_chrome_group_item_step};
 use semio_renderer_wgpu_shell_view_paint::{RetainedChromeGroupStep, chrome_icon, chrome_text, scene_chrome_labels, surface_fits_overlay, transient_notice_tone, window_pane_chip_rect};
 use semio_renderer_wgpu_shell_windows::{PanelAnchor, WINDOW_PANE_CHIP_PARENT, WindowState};

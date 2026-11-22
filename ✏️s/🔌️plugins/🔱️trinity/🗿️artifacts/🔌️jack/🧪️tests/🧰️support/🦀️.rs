@@ -3,7 +3,6 @@ use crate::standards::v1::subsets::any::schema::composition::{genesis_jack_child
 use crate::standards::v1::subsets::any::schema::content::{jack_content_identity, jack_content_with_owner, JackContentChild, JackContentFactory, JackContentOwner};
 use crate::standards::v1::subsets::any::schema::content_read::{JackContentLayout, JackContentMove, JackContentMoveCodec, JackContentProjection, JackContentRead, JackOwnedContent};
 use crate::standards::v1::subsets::any::schema::graph::{Camera, Edge, GraphEffect, Node};
-use crate::standards::v1::subsets::any::schema::manifest::Manifest;
 use crate::standards::v1::subsets::any::schema::snapshot::{empty_trinity_graph_snapshot, JackSnapshot};
 use semio_framework_graph_manifest::PropertyValue;
 use semio_s_artifact_trinity_jack_graph_query::{JackContentEdgeView, JackContentNodeView, JackContentPortView, JackContentVisual, JackGraphEndpoint, JackGraphQuery};
@@ -45,7 +44,7 @@ impl JackOwnedContent for FixtureContent{
 }
 impl JackContentFactory for FixtureComposition{
  fn child_from_working(nodes:Vec<Node>,edges:Vec<Edge>)->JackContentChild{
-  let graph=crate::standards::v1::subsets::any::schema::ast::JackQueryGraphSnapshot{schema:JackSnapshot::SCHEMA.into(),name:String::new(),manifest_id:None,manifest:Manifest::default(),camera:Camera::default(),nodes,edges,root_node_id:None,query:String::new()};
+  let graph=crate::standards::v1::subsets::any::schema::ast::JackQueryGraphSnapshot{schema:JackSnapshot::SCHEMA.into(),name:String::new(),manifest_id:crate::standards::v1::subsets::any::schema::graph::TRINITY_JACK_DEFAULT_MANIFEST_ID.into(),camera:Camera::default(),nodes,edges,root_node_id:None,query:String::new()};
   let bytes=semio_framework_pack_json::to_json_string(&graph);let child_id=store::content_id("jack-intrinsic-fixture",bytes.as_bytes());let target=semio_framework_artifact_reference::ArtifactRef{artifact_id:child_id.clone(),dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"s.fixture.graph".into(),standard:"exact".into(),subset:"query".into()}};let handle=JackContentChild::new(child_id,target);let identity=JackContentChild::new(handle.child_id.clone(),handle.target.clone());jack_content_with_owner(handle,Box::new(FixtureContent{identity,graph})).unwrap()
  }
 }
@@ -64,4 +63,4 @@ impl JackComposition for FixtureComposition{
  fn io_entries()->&'static[store::io::io_mechanism::IoEntry]{&[]}
 }
 
-pub fn materialize_fixture(handle:&mut JackContentChild,nodes:Vec<Node>,edges:Vec<Edge>){let identity=JackContentChild::new(handle.child_id.clone(),handle.target.clone());let graph=crate::standards::v1::subsets::any::schema::ast::JackQueryGraphSnapshot{schema:JackSnapshot::SCHEMA.into(),name:String::new(),manifest_id:None,manifest:Manifest::default(),camera:Camera::default(),nodes,edges,root_node_id:None,query:String::new()};let owner=JackContentOwner::new(identity.clone(),Box::new(FixtureContent{identity,graph})).unwrap();handle.set_local_owner(std::sync::Arc::new(owner));}
+pub fn materialize_fixture(handle:&mut JackContentChild,nodes:Vec<Node>,edges:Vec<Edge>){let identity=JackContentChild::new(handle.child_id.clone(),handle.target.clone());let graph=crate::standards::v1::subsets::any::schema::ast::JackQueryGraphSnapshot{schema:JackSnapshot::SCHEMA.into(),name:String::new(),manifest_id:crate::standards::v1::subsets::any::schema::graph::TRINITY_JACK_DEFAULT_MANIFEST_ID.into(),camera:Camera::default(),nodes,edges,root_node_id:None,query:String::new()};let owner=JackContentOwner::new(identity.clone(),Box::new(FixtureContent{identity,graph})).unwrap();handle.set_local_owner(std::sync::Arc::new(owner));}

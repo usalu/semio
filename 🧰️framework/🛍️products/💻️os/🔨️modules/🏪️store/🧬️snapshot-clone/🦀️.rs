@@ -71,6 +71,10 @@ pub trait RetainedCloneEditCursor<P: RetainedClone, M>: Send {
     fn cancel(&mut self);
     fn begin_close(&mut self) -> bool;
     fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, ValueError>;
+    /// ⛽️ Quotes the selected native retirement turn before the original edit cursor is advanced.
+    fn close_work_demand(&self, _body: usize) -> Result<u64, ValueError> {
+        Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner, "retained edit cursor has no original close work quote"))
+    }
     fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError>;
     fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, ValueError>;
     fn next_close_release_byte_demand(&self) -> Result<usize, ValueError>;

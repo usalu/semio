@@ -95,6 +95,18 @@ impl DrawList {
                 pass.translucent_draws.pop();
                 return Ok(false);
             }
+            if let Some(draw) = pass.point_draws.last_mut() {
+                if !draw.vertices.is_empty() {
+                    draw.vertices.clear();
+                    return Ok(false);
+                }
+                if draw.vertices.capacity() > 0 {
+                    draw.vertices = Vec::new();
+                    return Ok(false);
+                }
+                pass.point_draws.pop();
+                return Ok(false);
+            }
             if let Some(draw) = pass.line_draws.last_mut() {
                 if draw.vertices.pop().is_some() {
                     return Ok(false);
@@ -168,6 +180,10 @@ impl DrawList {
             }
             if pass.translucent_draws.capacity() > 0 {
                 pass.translucent_draws = Vec::new();
+                return Ok(false);
+            }
+            if pass.point_draws.capacity() > 0 {
+                pass.point_draws = Vec::new();
                 return Ok(false);
             }
             if pass.line_draws.capacity() > 0 {

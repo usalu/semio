@@ -1,5 +1,7 @@
 /** 🦀️ The native transpile writes exactly the files `jco transpile` writes, over the language-agnostic cases of `🧫️cases.json`; jco is the third-party oracle. */
 import { expect, test } from "bun:test";
+import { Database } from "bun:sqlite";
+import { transpileStageRequestV1 } from "../../🚀️commands/🟦️.ts";
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -67,3 +69,13 @@ for (const row of cases.shim_imports) {
     }
   });
 }
+
+
+test("native transpile cache identifies the binary and implementation that actually ran", () => {
+ const row = cases.nativeTranspileRequest;
+ const actual = transpileStageRequestV1(row.component, row.materialization, row.name, row.native);
+ expect(actual).toEqual(row.expected);
+ using db = new Database(":memory:");
+ const fields = db.query<{ tool: string }, [string]>("select key as tool from json_each(json_extract(?1, '$.tools')) order by key");
+ expect(fields.all(JSON.stringify(actual)).map(row => row.tool)).toEqual(["base", "materialization", "native-transpile"]);
+});

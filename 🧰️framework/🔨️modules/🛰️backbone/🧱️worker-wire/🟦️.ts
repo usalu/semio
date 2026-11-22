@@ -12,6 +12,8 @@ import { parseBrowserActorViewStateRequest } from "../../🌐️browser-bundle/�
 import { decodePackValue, encodePackValue } from "../../🎁️packs/🟦️.ts";
 import { parseArtifactActorMsg, parseArtifactEvent, wireArtifactActorMsg, wireArtifactEvent } from "../🎭️artifact-actor/🟦️.ts";
 import { parseDirectoryAdministrationWorkerRequestV1, parseSpaceArtifactCreationCatalogRefreshRequiredV1, parseSpaceArtifactCreationCatalogStatusV1, parseSpaceArtifactCreationCatalogV1, parseSpaceArtifactCreationStatusV1, parseSpaceArtifactCreationWorkerRequestV1, workerWireArtifactFrontierV1, workerWireClientInstanceIdV1, workerWireCreationIdentityV1, workerWireCreationRequestIdV1, workerWireIdV1, workerWireScopeV1, workerWireSha256V1 } from "../🔬️worker-parsers/🟦️.ts";
+import { base64StandardDecodeControlled, base64StandardEncodeControlled } from "../../🚪️io/🔤️base64/🟦️.ts";
+import { DOCUMENT_ARCHIVE_MAXIMUM_BYTES } from "../../🪢️wire-contracts/🟦️.ts";
 import type { BackboneWorkerRequest, BackboneWorkerResponse } from "../📨️worker-messages/🟦️.ts";
 
 //#region 🔖️BackboneWorkerProtocol
@@ -32,14 +34,33 @@ function parseBackboneWorkerWire<T>(wire: Uint8Array, decode: (value: unknown) =
 /** 📇️ The most events one `directory-space-events` message carries: one sealed directory page's raw rows. */
 export const DIRECTORY_SPACE_EVENTS_MAX_PER_MESSAGE = DIRECTORY_EVENT_PAGE_MAX_RAW_ROWS;
 
+export const DOCUMENT_ARCHIVE_WORKER_PAGE_BYTES_V1 = 64 * 1024;
+
+function workerDocumentTransferOwner(parsed: Readonly<Record<string, unknown>>, fields: string) {
+  const documentId = typeof parsed.scope === "object" && parsed.scope !== null ? workerWireIdV1((parsed.scope as Record<string, unknown>).documentId) : null;
+  const scope = documentId === null ? null : workerWireScopeV1(parsed.scope, documentId);
+  const clientInstanceId = workerWireClientInstanceIdV1(parsed.clientInstanceId);
+  const requestId = workerWireCreationRequestIdV1(parsed.requestId);
+  if (Object.keys(parsed).sort().join(",") !== fields || scope === null || clientInstanceId === null || requestId === null) throw new Error("backbone worker: invalid document transfer owner");
+  return { scope, clientInstanceId, requestId };
+}
+
 /** 🧵️ Encodes a {@link BackboneWorkerRequest} for the wasm `store_worker` (`handleRequestBytes`). */
+/** 🧵️ Prefixes the magic byte with one exactly sized copy; a spread of a large pack would overflow the argument limit. */
+function withWireMagic(packed: Uint8Array): Uint8Array {
+  const wire = new Uint8Array(packed.length + 1);
+  wire[0] = BACKBONE_WORKER_WIRE_MAGIC;
+  wire.set(packed, 1);
+  return wire;
+}
+
 export function encodeBackboneWorkerRequest(request: BackboneWorkerRequest): Uint8Array {
   const wire =
     request.kind === "send"
       ? { ...request, message: wireArtifactActorMsg(request.message) }
       : request;
   const packed = encodePackValue(wire);
-  return new Uint8Array([BACKBONE_WORKER_WIRE_MAGIC, ...packed]);
+  return withWireMagic(packed);
 }
 
 /** 🧵️ Decodes a {@link BackboneWorkerRequest} from the wasm actor or structured-clone twin. */
@@ -58,6 +79,7 @@ export function decodeBackboneWorkerRequest(wire: Uint8Array): BackboneWorkerReq
   if (parsed.kind === "space-artifact-create" || parsed.kind === "space-artifact-create-cancel") {
     return parseSpaceArtifactCreationWorkerRequestV1(parsed);
   }
+  if (parsed.kind === "document-settle" || parsed.kind === "document-archive-read" || parsed.kind === "document-archive-read-cancel") return { kind: parsed.kind, ...workerDocumentTransferOwner(parsed, "clientInstanceId,kind,requestId,scope") };
   if (parsed.kind === "document-check-in" || parsed.kind === "document-check-in-cancel") {
     const start = parsed.kind === "document-check-in";
     if (Object.keys(parsed).sort().join(",") !== (start ? "clientInstanceId,kind,requestId,scope" : "kind,requestId,scope")) throw new Error("backbone worker request: invalid check-in fields");
@@ -72,10 +94,14 @@ export function decodeBackboneWorkerRequest(wire: Uint8Array): BackboneWorkerReq
   }
   if (parsed.kind === "directory-space-open" || parsed.kind === "directory-space-close") {
     const open = parsed.kind === "directory-space-open";
-    if (Object.keys(parsed).sort().join(",") !== (open ? "baseUrl,kind,spaceId" : "kind,spaceId")) throw new Error("backbone worker request: invalid space directory fields");
+    const hasClient = Object.hasOwn(parsed, "clientInstanceId");
+    const fields = [...(open ? ["baseUrl"] : []), ...(hasClient ? ["clientInstanceId"] : []), "kind", "spaceId"];
+    if (Object.keys(parsed).sort().join(",") !== fields.join(",")) throw new Error("backbone worker request: invalid space directory fields");
     const spaceId = workerWireCreationIdentityV1(parsed.spaceId);
-    if (spaceId === null || (open && (typeof parsed.baseUrl !== "string" || parsed.baseUrl.length === 0 || parsed.baseUrl.length > 2048))) throw new Error("backbone worker request: invalid space directory owner");
-    return open ? { kind: "directory-space-open", baseUrl: parsed.baseUrl as string, spaceId } : { kind: "directory-space-close", spaceId };
+    const clientInstanceId = hasClient ? workerWireClientInstanceIdV1(parsed.clientInstanceId) : undefined;
+    if (spaceId === null || clientInstanceId === null || (open && (typeof parsed.baseUrl !== "string" || parsed.baseUrl.length === 0 || parsed.baseUrl.length > 2048))) throw new Error("backbone worker request: invalid space directory owner");
+    const owner = clientInstanceId === undefined ? { spaceId } : { spaceId, clientInstanceId };
+    return open ? { kind: "directory-space-open", baseUrl: parsed.baseUrl as string, ...owner } : { kind: "directory-space-close", ...owner };
   }
   if (parsed.kind === "space-artifact-creation-catalog-open") {
     if (Object.keys(parsed).sort().join(",") !== "clientInstanceId,kind,spaceId") throw new Error("backbone worker request: invalid creation catalog fields");
@@ -127,9 +153,13 @@ export function decodeBackboneWorkerRequest(wire: Uint8Array): BackboneWorkerReq
 /** 🧵️ Encodes a {@link BackboneWorkerResponse} from the wasm actor / TS fallback. */
 export function encodeBackboneWorkerResponse(response: BackboneWorkerResponse): Uint8Array {
   const wire =
-    response.kind === "event" ? { ...response, event: wireArtifactEvent(response.event) } : response;
+    response.kind === "event" ? { ...response, event: wireArtifactEvent(response.event) }
+      : response.kind === "document-archive-page" ? { ...response, bytes: base64StandardEncodeControlled(response.bytes, {
+        maximumOutputBytes: Math.ceil(DOCUMENT_ARCHIVE_WORKER_PAGE_BYTES_V1 / 3) * 4,
+        progress: () => true,
+      }) } : response;
   const packed = encodePackValue(wire);
-  return new Uint8Array([BACKBONE_WORKER_WIRE_MAGIC, ...packed]);
+  return withWireMagic(packed);
 }
 
 /** 🧵️ Decodes a worker response/event wire payload from the wasm actor. */
@@ -142,13 +172,37 @@ export function decodeBackboneWorkerResponse(wire: Uint8Array): BackboneWorkerRe
     return { ...parseBrowserActorActionResultV1(response), clientInstanceId };
   }
   if (parsed.kind === "space-artifact-creation-status") return parseSpaceArtifactCreationStatusV1(parsed);
-  if (parsed.kind === "directory-space-events") {
-    if (Object.keys(parsed).sort().join(",") !== "events,kind,spaceId") throw new Error("backbone worker response: invalid space directory fields");
+  if (parsed.kind === "directory-space-events" || parsed.kind === "directory-space-history-ready") {
+    const ready = parsed.kind === "directory-space-history-ready";
+    const hasClient = ready || Object.hasOwn(parsed, "clientInstanceId");
+    const fields = [...(hasClient ? ["clientInstanceId"] : []), ...(ready ? [] : ["events"]), "kind", "spaceId"];
+    if (Object.keys(parsed).sort().join(",") !== fields.join(",")) throw new Error("backbone worker response: invalid space directory fields");
     const spaceId = workerWireCreationIdentityV1(parsed.spaceId);
-    if (spaceId === null || !Array.isArray(parsed.events) || parsed.events.length === 0 || parsed.events.length > DIRECTORY_SPACE_EVENTS_MAX_PER_MESSAGE) throw new Error("backbone worker response: invalid space directory owner");
+    const clientInstanceId = hasClient ? workerWireClientInstanceIdV1(parsed.clientInstanceId) : undefined;
+    if (spaceId === null || clientInstanceId === null) throw new Error("backbone worker response: invalid space directory owner");
+    if (ready && clientInstanceId !== undefined) return { kind: "directory-space-history-ready", spaceId, clientInstanceId };
+    if (!Array.isArray(parsed.events) || parsed.events.length === 0 || parsed.events.length > DIRECTORY_SPACE_EVENTS_MAX_PER_MESSAGE) throw new Error("backbone worker response: invalid space directory events");
     const events = parsed.events.map((value) => parseDirectoryEventV1(value));
     if (events.some((event, index) => event.spaceId !== spaceId || (index > 0 && events[index - 1]!.seq >= event.seq))) throw new Error("backbone worker response: invalid space directory events");
-    return { kind: "directory-space-events", spaceId, events };
+    return { kind: "directory-space-events", spaceId, events, ...(clientInstanceId === undefined ? {} : { clientInstanceId }) };
+  }
+  if (parsed.kind === "document-archive-page") {
+    const owner = workerDocumentTransferOwner(parsed, "bytes,clientInstanceId,kind,offset,requestId,scope,total");
+    const { offset, total, bytes } = parsed;
+    if (typeof offset !== "number" || !Number.isSafeInteger(offset) || offset < 0 || offset % DOCUMENT_ARCHIVE_WORKER_PAGE_BYTES_V1 !== 0
+      || typeof total !== "number" || !Number.isSafeInteger(total) || total < 0 || total > DOCUMENT_ARCHIVE_MAXIMUM_BYTES || offset > total
+      || (offset === total && total !== 0) || typeof bytes !== "string") {
+      throw new Error("backbone worker: invalid archive page extent");
+    }
+    const expected = Math.min(total - offset, DOCUMENT_ARCHIVE_WORKER_PAGE_BYTES_V1);
+    if (bytes.length !== Math.ceil(expected / 3) * 4) throw new Error("backbone worker: invalid archive payload extent");
+    const decoded = expected === 0 ? new Uint8Array() : base64StandardDecodeControlled(bytes, { maximumOutputBytes: expected, progress: () => true });
+    if (decoded.byteLength !== expected) throw new Error("backbone worker: invalid archive payload extent");
+    return { kind: parsed.kind, ...owner, offset, total, bytes: decoded };
+  }
+  if (parsed.kind === "document-settled") {
+    if (typeof parsed.settled !== "boolean") throw new Error("backbone worker: invalid document settle receipt");
+    return { kind: parsed.kind, ...workerDocumentTransferOwner(parsed, "clientInstanceId,kind,requestId,scope,settled"), settled: parsed.settled };
   }
   if (parsed.kind === "document-check-in-status") {
     if (Object.keys(parsed).sort().join(",") !== "clientInstanceId,kind,scope,status") throw new Error("backbone worker response: invalid check-in status fields");

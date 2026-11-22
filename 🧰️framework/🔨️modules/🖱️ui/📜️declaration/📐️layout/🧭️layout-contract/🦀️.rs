@@ -43,14 +43,14 @@ pub use context_menu_requests_and_panel_tabs::{
     FRAMEWORK_PANEL_TAB_TOOL_RUN_LABEL,
 };
 
-#[path = "🪟️window-layout-tree/🦀️.rs"]
-mod window_layout_tree;
-pub use window_layout_tree::{
-    collect_window_kind_ids_from_layout, create_default_layout, create_named_layout,
-    create_stack_layout, create_tab_stack_layout, create_window_layout, even_window_layout,
-    merge_named_layouts, NamedLayout, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild,
-    WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode, WindowStackCorner,
+#[path = "🏷️named-layout/🦀️.rs"]
+mod named_layout;
+pub use named_layout::{create_named_layout, merge_named_layouts, NamedLayout};
+
+pub use semio_ui_contract::window_layout_ops::{
+    collect_instance_titles, collect_window_kind_ids, create_default_layout, create_stack_layout, create_window_layout, even_layout, validate_window_layout,
 };
+pub use semio_ui_contract::{Axis, WindowLayout, WindowLayoutNode, WindowStackCorner};
 
 #[path = "📏️window-measure/🦀️.rs"]
 mod window_measure;

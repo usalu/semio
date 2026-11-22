@@ -169,3 +169,64 @@ test("the environment switches a server to read-only and rejects a value that is
  controller.abort();await running;
  await expect(serveRemoteCacheV1(["--port","0"],context({SEMIO_REMOTE_CACHE_SERVER_READ_ONLY:"maybe"},()=>{}))).rejects.toThrow("Unknown option for remote-cache serve");
 });
+
+test("with a background start the server answers at once, entries written during the first scan are kept, and the scan ends with the usual ready event",async()=>{
+ const folder=directory("background"),events:string[]=[],blob="written before the scan ends",key=sha(blob);
+ const first=await serve({directory:folder,tokens:{write:"w"},validation:"off"});
+ await fetch(`${first.url}/main/cas/${key}`,{method:"PUT",headers:{authorization:"Bearer w"},body:blob});
+ for(let index=0;index<300;index++)writeFileSync(join(folder,"v1",".tmp",`pad-${index}`),"x");
+ await first.stop();
+ const server=await serve({directory:folder,startupScan:"background",tokens:{write:"w"},validation:"off",onEvent:event=>{events.push(event.stage);}});
+ try{
+  const answered=await fetch(`${server.url}/main/cas/${sha("late")}`,{method:"PUT",headers:{authorization:"Bearer w"},body:"late"});
+  expect(answered.status).toBeLessThan(300);
+  for(let attempt=0;attempt<200&&!events.includes("ready");attempt++)await new Promise(done=>setTimeout(done,25));
+  expect(events).toContain("ready");
+  expect((await fetch(`${server.url}/main/cas/${sha("late")}`,{headers:{authorization:"Bearer w"}})).status).toBe(200);
+  expect((await fetch(`${server.url}/main/cas/${key}`,{headers:{authorization:"Bearer w"}})).status).toBe(200);
+ }finally{await server.stop();}
+});
+
+test("stopping the server lets a request in flight finish before the connections close, and reports activity",async()=>{
+ const counts:number[]=[],server=await serve({tokens:{write:"w"},validation:"off",onActivity:active=>{counts.push(active);}}),blob="slowly sent",key=sha(blob);
+ const body=new ReadableStream<Uint8Array>({async start(controller){controller.enqueue(new TextEncoder().encode(blob.slice(0,4)));await new Promise(done=>setTimeout(done,400));controller.enqueue(new TextEncoder().encode(blob.slice(4)));controller.close();}});
+ const pending=fetch(`${server.url}/main/cas/${key}`,{method:"PUT",headers:{authorization:"Bearer w","content-length":String(blob.length)},body,duplex:"half"} as RequestInit);
+ await new Promise(done=>setTimeout(done,100));
+ const stopping=server.stop();
+ const response=await pending;
+ expect(response.status).toBeLessThan(300);
+ await stopping;
+ expect(Math.max(...counts)).toBeGreaterThanOrEqual(1);expect(counts.at(-1)).toBe(0);
+});
+
+test("a successor on the same directory and port takes over while the first drains: clients that never stop asking see no failed request and every answer is complete",async()=>{
+ const folder=directory("handover"),blob="same on both",key=sha(blob);
+ const first=await serve({directory:folder,reusePort:true,tokens:{write:"w"},validation:"off"});
+ await fetch(`${first.url}/main/cas/${key}`,{method:"PUT",headers:{authorization:"Bearer w"},body:blob});
+ const failures:string[]=[],answers:number[]=[];let running=true;
+ const client=async():Promise<void>=>{while(running){try{const response=await fetch(`${first.url}/main/cas/${key}`,{headers:{authorization:"Bearer w"}}),text=await response.text();if(response.status!==200||text!==blob)failures.push(`${response.status} ${text.slice(0,20)}`);else answers.push(Date.now());}catch(error){failures.push(String((error as Error).message));}}};
+ const clients=Array.from({length:6},()=>client());
+ await new Promise(done=>setTimeout(done,300));
+ const second=await serve({directory:folder,port:first.port,reusePort:true,successor:true,tokens:{write:"w"},validation:"off"});
+ expect(second.port).toBe(first.port);
+ await new Promise(done=>setTimeout(done,300));
+ await first.stop();
+ await new Promise(done=>setTimeout(done,600));
+ running=false;await Promise.all(clients);
+ try{
+  expect(failures).toEqual([]);expect(answers.length).toBeGreaterThan(50);
+  const after=await fetch(`${second.url}/main/cas/${key}`,{headers:{authorization:"Bearer w"}});expect(await after.text()).toBe(blob);
+  expect(existsSync(join(folder,"v1",".server.lock")),"the successor holds the directory lock after the first released it").toBe(true);
+ }finally{await second.stop();}
+});
+
+test("more requests than the file budget allows are answered 503 with a retry hint instead of being opened, and the ones in flight finish",async()=>{
+ const server=await serve({tokens:{write:"w"},validation:"off",maximumConcurrentRequests:2}),held:(()=>void)[]=[],slow=(name:string)=>{const body=new ReadableStream<Uint8Array>({start(controller){controller.enqueue(new TextEncoder().encode("a"));held.push(()=>{controller.enqueue(new TextEncoder().encode("b"));controller.close();});}});return fetch(`${server.url}/main/cas/${sha("ab")}`,{method:"PUT",headers:{authorization:"Bearer w","content-length":"2","x-name":name},body,duplex:"half"} as RequestInit);};
+ try{
+  const one=slow("one"),two=slow("two");await new Promise(done=>setTimeout(done,150));
+  const refused=await fetch(`${server.url}/healthz`);expect(refused.status).toBe(503);expect(refused.headers.get("retry-after")).toBe("1");
+  for(const release of held)release();
+  const answers=await Promise.all([one,two]);expect(answers.every(response=>response.status<300||response.status===409||response.status===200)).toBe(true);
+  expect((await fetch(`${server.url}/healthz`)).status).toBe(200);
+ }finally{await server.stop();}
+});

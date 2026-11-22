@@ -23,7 +23,7 @@
       "name": "a shared reader runs before the exclusive writer lease is requested",
       "function": "loadBuildGraphV1",
       "before": "readSealedBuildGraphV1(root,invocation,phaseControl,options,registry)",
-      "after": "withBuildGraphStateV1(root,invocation,phaseControl,async(store,actualControl)=>{"
+      "after": "withBuildGraphStateV1(root,invocation,phaseControl,async(store,actualControl,critical)=>{"
     },
     {
       "name": "the sealed-only attempt leaves before any inference starts",

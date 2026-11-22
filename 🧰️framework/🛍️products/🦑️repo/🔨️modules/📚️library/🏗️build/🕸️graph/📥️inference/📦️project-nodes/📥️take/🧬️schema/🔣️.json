@@ -31,9 +31,12 @@
     "Policy": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["adoptStaleMilliseconds", "adoptConcurrency", "hotNamesMilliseconds", "adoptReportMilliseconds", "adoptRetryMilliseconds", "hotRetryMilliseconds", "publishedMaximumAgeMilliseconds", "concurrency", "pollFirstMilliseconds", "pollGrowthPercent", "pollMaximumMilliseconds", "pollBatch", "faultRetries", "faultWaitMilliseconds", "progressMilliseconds", "passBoundMilliseconds", "releaseMilliseconds", "noProgressMilliseconds", "tailReportMilliseconds", "watchMilliseconds", "strongMemoryMegabytes", "strongCores", "cpuProgressPercent"],
+      "required": ["adoptStaleMilliseconds", "adoptConcurrency", "hotNamesMilliseconds", "adoptReportMilliseconds", "adoptRetryMilliseconds", "hotRetryMilliseconds", "publishedMaximumAgeMilliseconds", "concurrency", "lookFloorConcurrency", "claimStaleMilliseconds", "claimPollMilliseconds", "pollFirstMilliseconds", "pollGrowthPercent", "pollMaximumMilliseconds", "pollBatch", "faultRetries", "faultWaitMilliseconds", "progressMilliseconds", "passBoundMilliseconds", "releaseMilliseconds", "noProgressMilliseconds", "tailReportMilliseconds", "watchMilliseconds", "strongMemoryMegabytes", "strongCores", "cpuProgressPercent"],
       "properties": {
         "concurrency": { "type": "integer", "minimum": 1 },
+        "lookFloorConcurrency": { "type": "integer", "minimum": 1 },
+        "claimStaleMilliseconds": { "type": "integer", "minimum": 1 },
+        "claimPollMilliseconds": { "type": "integer", "minimum": 1 },
         "adoptStaleMilliseconds": { "type": "integer", "minimum": 0 },
         "adoptConcurrency": { "type": "integer", "minimum": 1 },
         "hotNamesMilliseconds": { "type": "integer", "minimum": 1 },
@@ -57,7 +60,7 @@
         "strongCores": { "type": "integer", "minimum": 1 },
         "cpuProgressPercent": { "type": "integer", "minimum": 1, "maximum": 100 }
       },
-      "const": { "adoptStaleMilliseconds": 240000, "adoptConcurrency": 2, "hotNamesMilliseconds": 10000, "adoptReportMilliseconds": 180000, "adoptRetryMilliseconds": 10000, "hotRetryMilliseconds": 60000, "publishedMaximumAgeMilliseconds": 7200000, "concurrency": 12, "pollFirstMilliseconds": 2000, "pollGrowthPercent": 150, "pollMaximumMilliseconds": 20000, "pollBatch": 48, "faultRetries": 3, "faultWaitMilliseconds": 4000, "progressMilliseconds": 10000, "passBoundMilliseconds": 900000, "releaseMilliseconds": 30000, "noProgressMilliseconds": 300000, "tailReportMilliseconds": 60000, "watchMilliseconds": 10000, "strongMemoryMegabytes": 24576, "strongCores": 8, "cpuProgressPercent": 10 }
+      "const": { "adoptStaleMilliseconds": 240000, "adoptConcurrency": 2, "hotNamesMilliseconds": 10000, "adoptReportMilliseconds": 180000, "adoptRetryMilliseconds": 10000, "hotRetryMilliseconds": 60000, "publishedMaximumAgeMilliseconds": 7200000, "concurrency": 12, "lookFloorConcurrency": 8, "claimStaleMilliseconds": 600000, "claimPollMilliseconds": 2000, "pollFirstMilliseconds": 2000, "pollGrowthPercent": 150, "pollMaximumMilliseconds": 20000, "pollBatch": 48, "faultRetries": 3, "faultWaitMilliseconds": 4000, "progressMilliseconds": 10000, "passBoundMilliseconds": 900000, "releaseMilliseconds": 30000, "noProgressMilliseconds": 300000, "tailReportMilliseconds": 60000, "watchMilliseconds": 10000, "strongMemoryMegabytes": 24576, "strongCores": 8, "cpuProgressPercent": 10 }
     },
     "Outcome": { "enum": ["present", "fetched", "stale", "miss", "fault", "inferred"] },
     "Texts": {

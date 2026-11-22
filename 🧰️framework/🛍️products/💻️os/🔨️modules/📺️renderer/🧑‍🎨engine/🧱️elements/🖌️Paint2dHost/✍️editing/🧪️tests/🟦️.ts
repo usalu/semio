@@ -37,7 +37,7 @@ test("pixel source preparation yields while retaining exact bytes",async()=>{
   let yielded=false;setTimeout(()=>{yielded=true;},0);
   const bytes=await preparePixelSourceBytes(encoded,{onProgress:p=>progress.push(p)});
   expect(bytes.length).toBe(row.decodedBytes);expect(yielded).toBe(true);
-  expect(bytes).toEqual(base64.toByteArray(encoded));
+  expect(bytes).toEqual(new Uint8Array(base64.toByteArray(encoded)));
   expect(progress.some(p=>p>0&&p<0.5)).toBe(true);
   expect(progress.some(p=>p>0.5&&p<1)).toBe(true);
   expect(progress.every((value,index)=>index===0||value>=progress[index-1]!)).toBe(true);

@@ -39,10 +39,10 @@
  ],
  "managers": {
   "bun": {
-   "descriptorSha256": "024ae9c81e43fd060ace4a9b5bc89780637ff1378ba63cfd4bf7b368f2767ff4",
+   "descriptorSha256": "0c7d8ecf9c1717fa3ab9ebfdb253d8853c172963ba92a8b914710dbdfd09bf08",
    "materialized": {
     "install": "2922c5f9bfb6858a0005ec1b6236252d39ec13be6323c85c6b333bd58f946e18",
-    "generation": "90aa6a9627ac1261d4d91fdc10c721702e5354b4d1ddd1887ceb5c8e8b93e464"
+    "generation": "8a87a3983fdea9470080222b4538867505bd8f7aac80079276af44461c21ae4d"
    },
    "render": [
     {
@@ -3877,7 +3877,7 @@
    ]
   },
   "uv": {
-   "descriptorSha256": "354461f76dcf33da4945422f9b9a23cdd719940a65b1f116d65d2ec87a1a1f9f",
+   "descriptorSha256": "711264b5b5e9922718649953a3e5fa7db2e5145bdb2daa442292b80bcb404910",
    "materialized": {
     "install": "e47c209e3693a38683e5b43f5db740110de0a22f803f3e27bb8ada9727a0fc25",
     "generation": "eacd3b825226db79af12772a59660e82ec1ec770d4358554337db1ca89823865"

@@ -54,7 +54,7 @@ export function useFlowInteractionPublication(core: FlowCoreAfterFlowCanvasSurfa
       const hover=await decodeDagHoverJson(flowJsonText(channelValue),admission);
       const hovered = hover.channel?.widgetId ?? (typeof hoveredValue === "string" ? hoveredValue : undefined);
       if(sessionRef.current!==session||request!==hoverRequestRef.current)return;
-      const portId = hover.channel && projectedFlowPortCode(sceneRef.current.nodes, hover.channel);
+      const portId = (hover.channel && projectedFlowPortCode(sceneRef.current.nodes, hover.channel)) ?? undefined;
       const edgeId=hover.edge ?? undefined;
       const selectionDue=interactionLedger.publishSelection(selection);
       const hoverDue = interactionLedger.publishHover({ hoveredId: hovered, portId, edgeId }, sceneHoverRevision);

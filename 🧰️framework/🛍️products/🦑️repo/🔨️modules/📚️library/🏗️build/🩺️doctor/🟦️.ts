@@ -38,8 +38,8 @@ export type DoctorPolicyV1=Readonly<{
 export type DoctorProbeStatusV1="ok"|"unavailable"|"failed"|"timeout"|"skipped";
 export type DoctorProbeRowV1=Readonly<{area:DoctorAreaV1;status:DoctorProbeStatusV1;durationMs:number;reason?:string}>;
 export type HostFactsV1=Readonly<{cores:number;totalMegabytes:number;availableMegabytes:number;floorMegabytes:number;pressure:"normal"|"warn"|"critical";swapUsedMegabytes:number|null;swapOutMegabytesPerSecond:number|null;load:number|null;openFiles:number|null;openFilesMaximum:number|null;attachedImages:number|null;governor:"on"|"off"}>;
-export type PartitionFactsV1=Readonly<{id:string;state:"mounted"|"detached"|"directory"|"absent";capacityBytes:number|null;freeBytes:number|null;imageBytes:number|null;backing:"present"|"missing"|"none";publication:"none"|"intent"|"receipt";publicationAgeSeconds:number|null;image:"ok"|"damaged"|"none"}>;
-export type StorageFactsV1=Readonly<{hostFreeBytes:number|null;hostTotalBytes:number|null;partitions:readonly PartitionFactsV1[]}>;
+export type PartitionFactsV1=Readonly<{id:string;state:"mounted"|"detached"|"misplaced"|"directory"|"absent";attachedAt?:string|null;device?:string|null;capacityBytes:number|null;freeBytes:number|null;imageBytes:number|null;backing:"present"|"missing"|"none";publication:"none"|"intent"|"receipt";publicationAgeSeconds:number|null;image:"ok"|"damaged"|"none"}>;
+export type StorageFactsV1=Readonly<{hostFreeBytes:number|null;hostTotalBytes:number|null;loaderBlocked?:boolean;partitions:readonly PartitionFactsV1[]}>;
 export type ToolRowFactsV1=Readonly<{id:string;state:"ok"|"missing"|"drift"|"unprobed";pin:string|null;found:string|null}>;
 /** 🔒️ One lockfile a wasm build resolves against: the `wasm-bindgen` crate version it locks (null when unreadable) and the version of the pinned binding generator. */
 export type WasmLockFactsV1=Readonly<{path:string;version:string|null;pinned:string}>;
@@ -52,7 +52,7 @@ export type LeasesFactsV1=Readonly<{
  registry:Readonly<{folders:number;orphanFolders:number;deadEntries:number;liveEntries:number}>;deadTickets:number;deadHolders:readonly number[];
 }>;
 export type GrantFactsV1=Readonly<{operation:string;pid:number;jobs:number;reservedMegabytes:number;observedMegabytes:number|null;heldSeconds:number}>;
-export type CapacityWaiterFactsV1=Readonly<{operation:string;pid:number;needMegabytes:number;waitedSeconds:number;reason:string}>;
+export type CapacityWaiterFactsV1=Readonly<{operation:string;pid:number;needMegabytes:number;waitedSeconds:number;reason:string;blocker?:string;holder?:"self"|"other"|"none"}>;
 export type CapacityFactsV1=Readonly<{headroomMegabytes:number;grants:readonly GrantFactsV1[];waiters:readonly CapacityWaiterFactsV1[]}>;
 export type SessionsFactsV1=Readonly<{live:number;idle:number;gone:number;damaged:number}>;
 export type GraphFactsV1=Readonly<{pointer:"present"|"absent"|"damaged";generation:number|null;manifest:"present"|"missing"|"damaged"|"none";owners:number|null;publishedAgeSeconds:number|null;implementationNewerSeconds:number|null}>;
@@ -182,3 +182,6 @@ export function requireDoctorFactsV1(value:unknown):DoctorFactsV1{
  const errors=validateDoctorV1("Facts",value);if(errors.length)throw Error("Closed doctor facts required: "+errors.slice(0,3).join("; "));
  return value as DoctorFactsV1;
 }
+
+/** 🛑️ The error of a doctor run that was cancelled; it lives with the protocol so the command can name it without loading the runner and every probe. */
+export class DoctorCancelledV1 extends Error{constructor(){super("doctor cancelled");this.name="DoctorCancelledV1";}}

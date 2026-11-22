@@ -6,6 +6,7 @@
     "version",
     "phases",
     "cuts",
+    "retirement",
     "invocation"
   ],
   "properties": {
@@ -58,6 +59,17 @@
             "type": "boolean"
           }
         }
+      }
+    },
+    "retirement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["narrowItems", "wideItems", "minimumPaidItemsPerBatch", "maximumTurns"],
+      "properties": {
+        "narrowItems": { "const": 0 },
+        "wideItems": { "type": "integer", "minimum": 2 },
+        "minimumPaidItemsPerBatch": { "type": "integer", "minimum": 2 },
+        "maximumTurns": { "type": "integer", "minimum": 1 }
       }
     },
     "invocation": {

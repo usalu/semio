@@ -14,6 +14,7 @@ enum Phase {
 pub struct FooterCursor {
     position: usize,
     marker: usize,
+    length: usize,
     phase: Phase,
     offset: usize,
     digits: bool,
@@ -26,16 +27,16 @@ pub enum FooterStep {
 
 impl FooterCursor {
     pub fn new(length: usize) -> Self {
-        Self { position: length, marker: 0, phase: Phase::Search { matched: 0 }, offset: 0, digits: false }
+        Self { position: length, marker: 0, length, phase: Phase::Search { matched: 0 }, offset: 0, digits: false }
     }
 
     /// 🧭 Inspect at most one input byte per unit of the supplied grant.
-    pub fn advance(&mut self, bytes: &[u8], budget: usize) -> FooterStep {
-        self.advance_counted(bytes, budget).1
+    pub fn advance(&mut self, byte_at: impl Fn(usize) -> Option<u8>, budget: usize) -> FooterStep {
+        self.advance_counted(byte_at, budget).1
     }
 
     /// 🧮️ Measures actual footer transitions when composing the probe with other cursors.
-    pub(crate) fn advance_counted(&mut self, bytes: &[u8], budget: usize) -> (usize, FooterStep) {
+    pub(crate) fn advance_counted(&mut self, byte_at: impl Fn(usize) -> Option<u8>, budget: usize) -> (usize, FooterStep) {
         const MARKER: &[u8] = b"ferxtrats";
         let mut work = 0;
         while work < budget && !matches!(self.phase, Phase::Done(_)) {
@@ -47,7 +48,7 @@ impl FooterCursor {
                         break;
                     }
                     self.position -= 1;
-                    let Some(&byte) = bytes.get(self.position) else {
+                    let Some(byte) = byte_at(self.position) else {
                         self.phase = Phase::Done(None);
                         break;
                     };
@@ -60,19 +61,19 @@ impl FooterCursor {
                     }
                 }
                 Phase::LeadingBoundary => {
-                    if self.marker == 0 || bytes.get(self.marker - 1).copied().is_some_and(whitespace) {
+                    if self.marker == 0 || byte_at(self.marker - 1).is_some_and(whitespace) {
                         self.position = self.marker + MARKER.len();
                         self.phase = Phase::TrailingBoundary;
                     } else { self.earlier_candidate(); }
                 }
                 Phase::TrailingBoundary => {
-                    if bytes.get(self.position).copied().is_some_and(|byte| whitespace(byte) || byte == b'%') {
+                    if byte_at(self.position).is_some_and(|byte| whitespace(byte) || byte == b'%') {
                         self.phase = Phase::Space;
                     } else { self.earlier_candidate(); }
                 }
                 Phase::Space | Phase::Comment | Phase::Digits => {
-                    let Some(&byte) = bytes.get(self.position) else {
-                        self.settle(bytes.len(), true);
+                    let Some(byte) = byte_at(self.position) else {
+                        self.settle(self.length, true);
                         continue;
                     };
                     self.position += 1;
@@ -95,7 +96,7 @@ impl FooterCursor {
                         }
                         _ => {
                             let delimiter = matches!(byte, b'(' | b')' | b'<' | b'>' | b'[' | b']' | b'{' | b'}' | b'/' | b'%');
-                            self.settle(bytes.len(), space || delimiter);
+                            self.settle(self.length, space || delimiter);
                         }
                     }
                 }

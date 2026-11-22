@@ -408,7 +408,21 @@ pub enum WindowStackCorner {
     BottomRight,
 }
 
-/// 🌲️ The window-shell tree: a single recursive, internally-tagged enum replacing the old [Design notes](README.md#source-notes-411).
+impl WindowStackCorner {
+    /// ⬆️ Whether the corner sits on the top edge of its stack.
+    pub const fn is_top(self) -> bool {
+        matches!(self, Self::TopLeft | Self::TopRight)
+    }
+
+    /// ⬅️ Whether the corner sits on the left edge of its stack.
+    pub const fn is_left(self) -> bool {
+        matches!(self, Self::TopLeft | Self::BottomLeft)
+    }
+}
+
+/// 🌲️ The window-shell tree: THE schema-owned window layout (`🧬️schema/🔣️.json`, shared fixtures in
+/// `🧪️tests/🧫️fixtures/🔣️.json`) consumed by React, wgpu and the TUI — see [Design notes](README.md#source-notes-411)
+/// and the reference operations in [`window_layout_ops`]. A window's id is `instance_id` or else `window_kind_id`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 #[value(crate = "::semio_framework_value", tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
@@ -436,7 +450,7 @@ pub enum WindowLayoutNode {
         size: Option<f64>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[value(default, skip_serializing_if = "Option::is_none")]
-        active_window_kind_id: Option<String>,
+        active_window_id: Option<String>,
         children: Vec<WindowLayoutNode>,
     },
     Split {
@@ -449,7 +463,7 @@ pub enum WindowLayoutNode {
 }
 
 /// 👑️ The window-shell root. Moved here from the wgpu target's `WindowLayout` — same name, one
-/// recursive `WindowLayoutNode` root instead of the old `WindowLayoutRoot` `Axis`/`Stack` union.
+/// recursive `WindowLayoutNode` root instead of a separate axis/stack union.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(crate = "::semio_framework_value", rename_all = "camelCase")]
@@ -458,6 +472,9 @@ pub struct WindowLayout {
     pub root: WindowLayoutNode,
 }
 //#endregion 🔖️WindowLayout
+
+#[path="🪟️window-layout-ops/🦀️.rs"]
+pub mod window_layout_ops;
 
 #[cfg(test)]
 #[path="🧪️tests/🔬️unit/🦀️.rs"]

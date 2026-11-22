@@ -132,6 +132,16 @@ export function registerAdmitsInferenceOpeningOnlyTests(): void {
     const external = encodeBrowserActorHostEffectV1(fixture.publication.externalHostEffect);
     expect(equal(external, Array.from(encodePackValue(fixture.publication.externalProjectedEffect)))).toBe(true);
     expect(equal(decodeBrowserActorHostEffectsV1([external]), [fixture.publication.externalProjectedEffect])).toBe(true);
+    const fragment = fixture.publication.clipboardFragment;
+    const fragmentBytes = encodePackValue(fragment);
+    const clipboard = encodeBrowserActorHostEffectV1({ tag: "clipboard-write", val: { fragment: fragmentBytes } });
+    const projectedClipboard = { clipboardWrite: { fragment } };
+    expect(equal(clipboard, Array.from(encodePackValue(projectedClipboard)))).toBe(true);
+    expect(equal(decodeBrowserActorHostEffectsV1([clipboard]), [projectedClipboard])).toBe(true);
+    expect(() => encodeBrowserActorHostEffectV1({ tag: "clipboard-write", val: { fragment: [...fragmentBytes, 0] } })).toThrow();
+    expect(() => encodeBrowserActorHostEffectV1({ tag: "clipboard-write", val: { fragment: encodePackValue({ label: "incomplete" }) } })).toThrow();
+    const notice = encodeBrowserActorHostEffectV1({ tag: "notify", val: { message: fixture.publication.notice } });
+    expect(equal(decodeBrowserActorHostEffectsV1([notice]), [{ notify: { message: fixture.publication.notice } }])).toBe(true);
     for (const url of ["javascript:alert(1)", "data:text/html,script", "file:///secret", "/relative", "https://user:secret@example.invalid", "https://example.invalid/\nforged", "https://example.invalid/" + "a".repeat(2048)]) {
       expect(() => encodeBrowserActorHostEffectV1({ tag: "open-external-url", val: { url } })).toThrow();
     }
@@ -159,5 +169,7 @@ export function registerAdmitsInferenceOpeningOnlyTests(): void {
     expect(equal(published, [fixture.publication.projectedEffect])).toBe(true);
     await expect(publishBrowserActorHostEffectsV1([encoded, encoded], () => true, publish)).rejects.toThrow();
     expect(equal(published, [fixture.publication.projectedEffect])).toBe(true);
+    await publishBrowserActorHostEffectsV1([clipboard], () => true, publish);
+    expect(equal(published.at(-1), projectedClipboard)).toBe(true);
   });
 }

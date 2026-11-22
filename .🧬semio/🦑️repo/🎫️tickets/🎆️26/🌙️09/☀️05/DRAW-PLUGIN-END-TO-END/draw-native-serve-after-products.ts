@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { join } from "node:path";
 
 const [generated] = Bun.argv.slice(2);
@@ -49,6 +50,13 @@ const complete = async (stage: string, success: RegExp) => {
 };
 const fontsReady = /"command":"fonts","stage":"complete"/;
 const compiled = /\[component\] semio:draw: built, described and materialized/;
+const currentDrawPublication = async () => {
+  const descriptor = Bun.file(join(source, "🌎️hub/🧩️compositions/🖍️draw/🧩️component/🛂️.descriptor.semio"));
+  const receipt = Bun.file(join(source, ".cache/b/p/m/browser/prototype/modules/🖍️draw/🧾️receipt.json"));
+  if (!await receipt.exists()) return false;
+  const expected = createHash("sha256").update(await descriptor.bytes()).digest("hex");
+  return (await receipt.json()).semanticDescriptorSha256 === expected;
+};
 const support = finishAfter("restore-support", /"command":"support","stage":"complete"/);
 const session = finishAfter("restore-session", /"command":"session","stage":"complete"/);
 const fonts = finishAfter("restore-fonts", fontsReady);
@@ -77,7 +85,7 @@ const awaitStorage = async (required: number) => {
   throw Error("Draw compiler storage remained below the native driver's requirement");
 };
 const component = (async () => {
-  if (await complete("component", compiled)) return;
+  if (process.env.DRAW_REQUIRE_COMPONENT_RECAPTURE !== "1" && await complete("component", compiled) && await currentDrawPublication()) return;
   await Promise.all([
     finishAfter("descriptor-emitter", /"command":"build","stage":"complete"/),
     finishAfter("restore-native-transpile", /[\\/]browser[\\/]prototype[\\/]tools[\\/]native-transpile[\\/][a-z0-9]+[\\/]semio-native-transpile(?:\.exe)?(?:\r?\n|$)/),
@@ -88,13 +96,15 @@ const component = (async () => {
     const start = Bun.file(join(generated, "draw-native-component.log")).size;
     try {
       await drive("component", "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🧩️driver-stages/📜️script.ts", ["--manifest", "🌎️hub/🧩️compositions/🖍️draw/🧩️component/📦️packages/🦀️rust/Cargo.toml"]);
-      break;
+      if (await currentDrawPublication()) break;
+      if (attempt === 2) throw Error("Draw component emitted a descriptor older than the current authored examples");
+      console.log("[DEBUG] Draw component will recapture the current authored descriptor");
     } catch (error) {
       required = await storageBlocked(start);
       if (required === undefined || attempt === 2) throw error;
     }
   }
-  if (!(await complete("component", compiled))) throw Error("Draw component finished without a publication receipt");
+  if (!await complete("component", compiled) || !await currentDrawPublication()) throw Error("Draw component finished without a current publication receipt");
 })();
 await Promise.all([support, session, fonts, component]);
 const args = ["draw", "react", "prototype"];

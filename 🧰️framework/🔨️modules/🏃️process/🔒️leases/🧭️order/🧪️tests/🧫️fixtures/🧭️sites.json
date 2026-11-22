@@ -1,10 +1,10 @@
 {
   "version": 1,
-  "sites": 170,
+  "sites": 174,
   "unclassified": {
     "names": [
       "[\"semio.build-telemetry/v1\"",
-      "compiler-state:v1:",
+      "graph:head-adoption",
       "native-cache-producer:",
       "repository-nx-tooling-collector:",
       "repository-storybook:"
@@ -17,18 +17,21 @@
   "dynamic": {
     "files": {
       "🔨️modules/🏃️process/🏗️build/🎟️capacity/🎫️lease/🟦️.ts": 1,
+      "🔨️modules/🏃️process/🏗️build/🗃️state/🟦️.ts": 1,
       "🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🥾️boot/🩹️recovery/🧯️act/🟦️.ts": 1,
       "🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🥾️boot/🩹️recovery/🩺️heal/🟦️.ts": 2,
       "🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🟦️.ts": 9,
       "🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧹️cleanup/🎛️command/🟦️.ts": 2,
+      "🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧹️whole/🟦️.ts": 2,
       "🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🔒️lease/🔐️custody/🟦️.ts": 1,
       "🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🔒️lease/🟦️.ts": 4,
       "🔨️modules/🏃️process/📦️artifacts/💾️cache/💾️volume/🟦️.ts": 2,
       "🔨️modules/🏃️process/🔒️leases/🟦️.ts": 10,
       "🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🟦️.ts": 1,
-      "🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🟦️.ts": 2,
-      "🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/🟦️.ts": 1,
-      "🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🟦️.ts": 14,
+      "🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🟦️.ts": 3,
+      "🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/🟦️.ts": 3,
+      "🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🔒️bindings/🟦️.ts": 1,
+      "🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🟦️.ts": 9,
       "🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🟦️.ts": 1,
       "🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/🎟️put-slots/🟦️.ts": 2,
       "🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🟦️.ts": 1,
@@ -41,6 +44,7 @@
       "🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟢️ready/💾️storage/🟦️.ts": 3,
       "🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts": 2,
       "🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🚪️launcher/🟦️.ts": 1,
+      "🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌡️host-capacity/🧹️disk-recovery/🧱️native-shards/🔒️hold/🟦️.ts": 1,
       "🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🔧️custody/🟨️.mjs": 1,
       "🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🟨️.mjs": 3,
       "🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧵️sessions/🔌️port/🟦️.ts": 2,

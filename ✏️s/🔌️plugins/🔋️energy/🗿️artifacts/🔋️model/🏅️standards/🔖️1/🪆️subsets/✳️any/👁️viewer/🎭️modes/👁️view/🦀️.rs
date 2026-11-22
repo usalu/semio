@@ -6,11 +6,7 @@ use crate::modes::view::windows::{model as model_window, simulation, structure, 
 use semio_ui_locale::LocalizedLabel;
 use semio_plugin::ModeDefinition;
 use semio_plugin::WindowLayout;
-use semio_plugin::WindowLayoutAxisNode;
-use semio_plugin::WindowLayoutChild;
-use semio_plugin::WindowLayoutRoot;
-use semio_plugin::WindowLayoutStackNode;
-use semio_plugin::WindowLayoutWindowNode;
+use semio_plugin::{WindowLayoutNode, Axis};
 
 pub const ENERGY_MODEL_VIEW_MODE_ID: &str = "view";
 
@@ -23,28 +19,24 @@ pub fn definition() -> ModeDefinition {
 /// 🪟️ One pane of the split layout: a stack holding a single window kind. `size` is the pane's share
 /// of its own axis — the 3d viewport takes the bigger half of the row, the three data windows split
 /// the right-hand column in equal thirds.
-fn model_window_stack(window_kind_id: &str, title: &str, size: f64) -> WindowLayoutChild {
-    WindowLayoutChild::Stack(WindowLayoutStackNode {
-        kind: "stack".into(),
-        size: Some(size),
-        active_window_kind_id: None,
-        children: vec![WindowLayoutWindowNode { kind: "window".into(), window_kind_id: window_kind_id.into(), title: Some(title.into()), instance_id: None, template_id: None, corner: None }],
-    })
+fn model_window_stack(window_kind_id: &str, title: &str, size: f64) -> WindowLayoutNode {
+    WindowLayoutNode::Stack { size: Some(size),
+        active_window_id: None,
+        children: vec![WindowLayoutNode::Window { window_kind_id: window_kind_id.into(), title: Some(title.into()), instance_id: None, template_id: None, corner: None }],
+    }
 }
 
 /// 🪟️ Same split as the sibling mutation-capable surface's own layout — read-only twin, no quadrant
 /// to allocate for edit affordances.
 pub fn layout() -> WindowLayout {
-    let data_column = WindowLayoutChild::Axis(WindowLayoutAxisNode {
-        kind: "column".into(),
-        size: Some(MODEL_DATA_COLUMN_SHARE),
+    let data_column = WindowLayoutNode::Split { axis: Axis::Vertical, size: Some(MODEL_DATA_COLUMN_SHARE),
         children: vec![
             model_window_stack(structure::WINDOW_KIND_ID, "Structure", 1.0 / 3.0),
             model_window_stack(zones::WINDOW_KIND_ID, "Zones", 1.0 / 3.0),
             model_window_stack(simulation::WINDOW_KIND_ID, "Energy results", 1.0 / 3.0),
         ],
-    });
-    WindowLayout { root: WindowLayoutRoot::Axis(WindowLayoutAxisNode { kind: "row".into(), size: None, children: vec![model_window_stack(model_window::WINDOW_KIND_ID, "Model", MODEL_VIEWPORT_SHARE), data_column] }) }
+    };
+    WindowLayout { root: WindowLayoutNode::Split { axis: Axis::Horizontal, size: None, children: vec![model_window_stack(model_window::WINDOW_KIND_ID, "Model", MODEL_VIEWPORT_SHARE), data_column] } }
 }
 
 /// 🪟️ The 3d viewport's share of the view-mode row.

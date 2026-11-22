@@ -1,48 +1,35 @@
 use super::*;
-use semio_framework_value::retirement::RetireOwned;
-use super::*;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::{FemLoad, FemLoadCase};
 use semio_framework_value::{NativeDecodeControl, RetainedCloneGrant};
-use semio_framework_value_native_owned::native_decoding::{NativeDecodeRetirementRecipient,NativeDecodeWorkRecipient};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient;
 
-/// 🎟️ Lower-level finite work loan; genuine job authority is tested separately.
-struct Loan { limit:u64 }
-impl NativeDecodeWorkRecipient for Loan {fn available_work(&mut self,observed:u64)->Result<u64,ValueError>{let limit:u64=self.limit;limit.checked_sub(observed).ok_or_else(||ValueError::invariant("native observed work exceeds its actual finite scope"))}
- fn admits(&mut self,observed:u64,additional:u64)->Result<bool,ValueError>{Ok(observed.checked_add(additional).is_some_and(|total|total<=self.limit))}
-}
 
-/// 🪙️ Finite lower-level encoding work loan.
-struct EncodeLoan { limit:u64, posted:u64 }
-impl semio_framework_value::native_encoding::NativeEncodeWorkRecipient for EncodeLoan {
- fn admits(&mut self,observed:u64,additional:u64)->Result<bool,ValueError>{Ok(observed.checked_add(additional).is_some_and(|total|total<=self.limit))}
- fn committed(&mut self,actual:u64)->Result<(),ValueError>{self.posted=self.posted.checked_add(actual).filter(|total|*total<=self.limit).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"finite encoder test loan exhausted"))?;Ok(())}
-}
 
-#[derive(semio_framework_value_derive::FromValue, RetireOwned)]
+#[derive(semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 struct IdentityCase {
     id: String,
     cases: Vec<CaseIds>,
     valid: bool,
 }
-#[derive(semio_framework_value_derive::FromValue, RetireOwned)]
+#[derive(semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(deny_unknown_fields)]
 struct CaseIds {
     id: String,
     loads: Vec<String>,
 }
-#[derive(semio_framework_value_derive::FromValue, RetireOwned)]
+#[derive(semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 struct Receiver {
     variants: Vec<String>,
-    area: String,
     unknown: String,
     self_weight: String,
     empty_cases: String,
     node_reference: String,
     member_reference: String,
+    area: String,
 }
-#[derive(semio_framework_value_derive::FromValue, RetireOwned)]
+#[derive(semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(deny_unknown_fields)]
 struct Cases {
     schema: String,
@@ -79,17 +66,9 @@ fn pack(value: &Fem2dSnapshotValue) -> Vec<u8> {
 }
 fn exact(d:RetirementDemand)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth}}
 fn drain<T: RetireOwned>(value: T) {
-    let mut close = semio_framework_value::retirement::controlled::ControlledRetirement::new(value).ok().unwrap();
-    let mut retirement_fuel=10_000_000u64;
-    while !close.terminal_is_empty() {
-        let demand=close.next_demand(4096).unwrap();
-        assert!(retained_clone_grant_admits(grant(),demand));
-        let step=close.step(exact(demand)).unwrap();
-        assert!(step.progress().fits(exact(demand)));
-        retirement_fuel=retirement_fuel.checked_sub(close.last_turn_work()).expect("finite retirement work loan");
-    }
+    semio_s_fem_receiving::testkit::retire(value)
 }
-fn checked<T>(turn:semio_framework_value::RetainedWorkOutcome<T,store::NativeSnapshotFailure>,fuel:&mut u64)->Result<T,store::NativeSnapshotFailure>{*fuel=fuel.checked_sub(turn.work).expect("finite test work loan");turn.result}
+fn checked<T>(turn:semio_framework_value::RetainedWorkOutcome<T,store::NativeSnapshotFailure>,fuel:&mut u128)->Result<T,store::NativeSnapshotFailure>{*fuel=fuel.checked_sub(turn.work).expect("finite test work loan");turn.result}
 fn failure_kind(error:store::NativeSnapshotFailure)->ValueRefusalKind{let kind=error.kind();drain(error);kind}
 fn receive(bytes: &[u8], g: RetainedCloneGrant, cut: usize) -> (Result<Fem2dSnapshot, store::NativeSnapshotFailure>, usize) {
     let calls = std::cell::Cell::new(0);
@@ -98,26 +77,22 @@ fn receive(bytes: &[u8], g: RetainedCloneGrant, cut: usize) -> (Result<Fem2dSnap
         calls.set(n + 1);
         n < cut
     };
-    let mut recipient = NativeDecodeRetirementRecipient::new();
-    let mut native = NativeDecodeControl::new(256 * 1048576, &mut callback);
-    native.install_retirement_recipient(&mut recipient).unwrap();
-    let mut published=None;let result = native.with_work_recipient(&mut Loan { limit:10_000_000 }, |native| {
-        let mut owner = NativeSnapshotDecodeOwner::new(native, g);
-        let turn = <Fem2dSnapshot as store::ArtifactPackReceiving>::receive_pack(bytes, &mut published, &mut owner);
+    let result = original_owners::with_decoding_granted(g, &mut callback, |owner| {
+        let mut published = None;
+        let result = <Fem2dSnapshot as store::ArtifactPackReceiving>::receive_pack(bytes, &mut published, owner);
         assert!(owner.progress().copied_items <= g.maximum_items);
-        Ok::<_,ValueError>(turn)
-    }).unwrap();
-    native.with_work_recipient(&mut Loan { limit:10_000_000 }, |native| native
-        .with_retirement(grant(), |native| {
-            let mut retirement_fuel=10_000_000u64;
-            while native.has_retirement_owner() {
-                let demand=native.retirement_demands(4096)?;assert!(retained_clone_grant_admits(grant(),demand));let offered=exact(demand);let turn=native.close_retirement_recipient(offered);retirement_fuel=retirement_fuel.checked_sub(turn.work).expect("finite retirement work loan");let step=turn.result?;assert!(step.progress().fits(offered));
+        assert!(result.work <= 10_000_000);
+        match result.result {
+            Ok(()) => Ok(published.take().unwrap()),
+            Err(error) => {
+                if let Some(value) = published.take() {
+                    drain(value)
+                }
+                Err(error)
             }
-            Ok(())
-        }))
-        .unwrap();
-    assert!(result.work<=10_000_000);
-    (match result.result{Ok(())=>Ok(published.take().unwrap()),Err(error)=>{if let Some(value)=published.take(){drain(value)}Err(error)}}, calls.get())
+        }
+    });
+    (result, calls.get())
 }
 #[test]
 fn neutral_vectors_receive_actual_pack_and_preserve_all_selected_bits() {
@@ -146,18 +121,14 @@ fn neutral_vectors_receive_actual_pack_and_preserve_all_selected_bits() {
                 }
                 _ => panic!("actual variant changed"),
             }
-            let mut callback = |_| true;
-            let mut recipient = semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();
-            let mut native = semio_framework_value::NativeEncodeControl::new(256 * 1048576, &mut callback);
-            native.install_retirement_recipient(&mut recipient).unwrap();
-            let bytes=native.with_work_recipient(&mut EncodeLoan { limit:10_000_000,posted:0 }, |native| {
-                let mut work_fuel=10_000_000;
-                let mut owner=store::NativeSnapshotEncodeOwner::new(native,grant());
-                let mut published=None;checked(output.encode_exchange_pack(&mut published,&mut owner),&mut work_fuel).unwrap();let store::io_schema::IoPayload::Binary(bytes)=published.take().unwrap() else { unreachable!() };
-                Ok::<_,ValueError>(bytes)
-            }).unwrap();
+            let bytes = original_owners::with_encoding(|owner| {
+                let mut published = None;
+                let mut fuel = 10_000_000;
+                checked(output.encode_exchange_pack(&mut published, owner), &mut fuel).unwrap();
+                let store::io_schema::IoPayload::Binary(bytes) = published.unwrap() else { unreachable!() };
+                bytes
+            });
             assert_eq!(bytes, pack(&input));
-            assert!(!native.has_retirement_owner());
             drain((output, bytes));
         }
     }
@@ -197,6 +168,7 @@ fn canonical_member_udl_is_retained_but_missing_targets_and_area_are_refused() {
 }
 #[test]
 fn declared_variant_dof_and_scalar_shapes_are_closed() {
+    with_lend(grant(), |loan| {
     let mut input = source();
     input.load_cases = vec![load_case("case", vec![nodal("load", FemDof::Tx, 0)])];
     for defect in 0..4 {
@@ -218,26 +190,12 @@ fn declared_variant_dof_and_scalar_shapes_are_closed() {
                 }
             }
         }
-        let mut callback = |_| true;
-        let mut recipient = NativeDecodeRetirementRecipient::new();
-        let mut native = NativeDecodeControl::new(256 * 1048576, &mut callback);
-        native.install_retirement_recipient(&mut recipient).unwrap();
-        native.with_work_recipient(&mut Loan { limit:10_000_000 }, |native| {
+        original_owners::with_decoding_granted(grant(), &mut |_| true, |owner| {
             let mut work_fuel=10_000_000;
-                let mut owner = NativeSnapshotDecodeOwner::new(native, grant());
-            let mut published=None;let error=checked(Fem2dSnapshot::receive_exchange_record(&record, &mut published, &mut owner),&mut work_fuel).unwrap_err();let value=published.take();let absent=value.is_none();if let Some(value)=value{drain(value)}assert!(absent);assert_eq!(failure_kind(error), ValueRefusalKind::InvalidValue);
-            Ok::<_,ValueError>(())
-        }).unwrap();
-        native.with_work_recipient(&mut Loan { limit:10_000_000 }, |native| native
-            .with_retirement(grant(), |native| {
-            let mut retirement_fuel=10_000_000u64;
-                while native.has_retirement_owner() {
-                    let demand=native.retirement_demands(4096)?;assert!(retained_clone_grant_admits(grant(),demand));let offered=exact(demand);let turn=native.close_retirement_recipient(offered);retirement_fuel=retirement_fuel.checked_sub(turn.work).expect("finite retirement work loan");let step=turn.result?;assert!(step.progress().fits(offered));
-                }
-                Ok(())
-            }))
-            .unwrap();
+            let mut published=None;let error=checked(Fem2dSnapshot::receive_exchange_record(&record, &mut published, owner),&mut work_fuel).unwrap_err();let value=published.take();let absent=value.is_none();if let Some(value)=value{drain(value)}assert!(absent);assert_eq!(failure_kind(error), ValueRefusalKind::InvalidValue);
+        });
     }
+    })
 }
 #[test]
 fn every_actual_checkpoint_prefix_and_original_grant_denial_closes_without_publication() {
@@ -265,19 +223,19 @@ fn scoped_index_rejects_substitute_source_and_oversized_words() {
     let mut input = source();
     input.load_cases = vec![load_case("case", vec![nodal("load", FemDof::Tx, 0)])];
     let substitute = input.clone();
-    let mut recipient = NativeDecodeRetirementRecipient::new();
-    let mut callback = |_| true;
-    let mut native = NativeDecodeControl::new(256 * 1048576, &mut callback);
-    native.install_retirement_recipient(&mut recipient).unwrap();
-    let index=native.with_work_recipient(&mut Loan { limit:10_000_000 }, |native| {
-        let mut work_fuel=10_000_000;
-        let mut owner=NativeSnapshotDecodeOwner::new(native,grant());
-        let mut published=None;checked(FemIdentityIndex::receive(&input,&mut published,&mut owner),&mut work_fuel).unwrap();let index=published.take().unwrap();
-        let before=owner.progress();
-        assert_eq!(failure_kind({let mut found=None;checked(index.lookup(&substitute,FemIdentityKind::Node,"a",&mut found,&mut owner),&mut work_fuel).unwrap_err()}),ValueRefusalKind::InvariantViolated);
-        assert_eq!(owner.progress(),before);
-        Ok::<_,ValueError>(index)
-    }).unwrap();
+    let index = original_owners::with_decoding_granted(grant(), &mut |_| true, |owner| {
+        let mut fuel = 10_000_000;
+        let mut published = None;
+        checked(FemIdentityIndex::receive(&input, &mut published, owner), &mut fuel).unwrap();
+        published.unwrap()
+    });
+    original_owners::with_decoding_granted(grant(), &mut |_| true, |owner| {
+        let mut fuel = 10_000_000;
+        let mut found = None;
+        let error = checked(index.lookup(&substitute, FemIdentityKind::Node, "a", &mut found, owner), &mut fuel).unwrap_err();
+        assert_eq!(failure_kind(error), ValueRefusalKind::InvariantViolated);
+        assert!(found.is_none());
+    });
     drain(index);
     input.load_cases[0].id = "é".repeat(32768);
     assert_eq!(failure_kind(receive(&pack(&input), grant(), usize::MAX).0.unwrap_err()), ValueRefusalKind::InvalidValue);
@@ -295,35 +253,24 @@ fn identity_child_restores_original_finite_parent_stage_on_success_and_error() {
             last.set((p.completed, p.total));
             true
         };
-        let mut recipient = NativeDecodeRetirementRecipient::new();
-        let mut native = NativeDecodeControl::new(256 * 1048576, &mut callback);
-        native.install_retirement_recipient(&mut recipient).unwrap();
-        native.begin_stage(1).unwrap();
-        let result=native.with_work_recipient(&mut Loan { limit:10_000_000 }, |native| {
-            let mut work_fuel=10_000_000;
-        let mut owner=NativeSnapshotDecodeOwner::new(native,grant());
-            let mut published=None;let turn=FemIdentityIndex::receive(&input,&mut published,&mut owner);let result=checked(turn,&mut work_fuel).map(|()|published.take().unwrap());if result.is_err(){if let Some(value)=published.take(){drain(value)}}
-            assert_eq!(result.is_err(),duplicate);
-            assert!(owner.progress().copied_items>0);
-            if let Ok(index)=&result {
-                assert_eq!({let mut found=None;checked(index.lookup(&input,FemIdentityKind::LoadCase,"case",&mut found,&mut owner),&mut work_fuel).unwrap();found.unwrap()},0);
-                assert_eq!({let mut found=None;checked(index.lookup(&input,FemIdentityKind::Node,"a",&mut found,&mut owner),&mut work_fuel).unwrap();found.unwrap()},0);
-            }
-            Ok::<_,ValueError>(result)
-        }).unwrap();
-        match result { Ok(index)=>drain(index), Err(error)=>drain(error) }
-        native.with_work_recipient(&mut Loan { limit:10_000_000 }, |native| native
-            .with_retirement(grant(), |native| {
-            let mut retirement_fuel=10_000_000u64;
-                while native.has_retirement_owner() {
-                    let demand=native.retirement_demands(4096)?;assert!(retained_clone_grant_admits(grant(),demand));let offered=exact(demand);let turn=native.close_retirement_recipient(offered);retirement_fuel=retirement_fuel.checked_sub(turn.work).expect("finite retirement work loan");let step=turn.result?;assert!(step.progress().fits(offered));
+        original_owners::with_decoding_granted(grant(), &mut callback, |owner| {
+            owner.native().begin_stage(1).unwrap();
+            let mut fuel = 10_000_000;
+            let mut published = None;
+            let result = checked(FemIdentityIndex::receive(&input, &mut published, owner), &mut fuel);
+            assert_eq!(result.is_err(), duplicate);
+            assert!(owner.progress().copied_items > 0);
+            match result {
+                Ok(()) => drain(published.unwrap()),
+                Err(error) => {
+                    assert!(published.is_none());
+                    drain(error);
                 }
-                Ok(())
-            }))
-            .unwrap();
-        native.step().unwrap();
-        native.checkpoint().unwrap();
-        assert_eq!(last.get(), (1, 1));
+            }
+            owner.native().step().unwrap();
+            owner.native().checkpoint().unwrap();
+            assert_eq!(last.get(), (1, 1));
+        });
     }
 }
 #[test]

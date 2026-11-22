@@ -22,13 +22,21 @@ export function hollowDirectoryV1(path,entriesOf,join,depth=32){
  return true;
 }
 
+/** 🧠️ The verdicts of {@link isMachineLocalPathV1} by path, per reading (file or directory), each cleared whole at this many entries: the verification of a stored record asks the same few thousand paths for every row of every owner (600 owners of a slice, millions of calls), and a verdict depends on the path text alone. */
+const MACHINE_LOCAL_MEMO_ROWS=65536,machineLocalFileMemo=new Map(),machineLocalDirectoryMemo=new Map();
+
 /** 🤖️ Whether a path lies below a machine-local directory (`machineLocalDirectoryNames`: git ignores it, a generator fills it on the machines that ran it), so that whatever the filesystem says about it names the machine and not the project; any directory component counts, in either spelling of the separator. The last component counts only for `directory` (the path is read as a directory: a file of that name is source, as in a listing).
  * @see ./🧪️tests/🤖️machine-local-paths/🟦️.ts */
 export function isMachineLocalPathV1(path,directory=false){
  if(typeof path!=="string")return false;
+ const memo=directory?machineLocalDirectoryMemo:machineLocalFileMemo,known=memo.get(path);
+ if(known!==undefined)return known;
  const parts=path.split(/[\\/]/u);
- for(let at=0;at<parts.length-(directory?0:1);at++)if(local.has(parts[at]))return true;
- return false;
+ let found=false;
+ for(let at=0;at<parts.length-(directory?0:1)&&!found;at++)found=local.has(parts[at]);
+ if(memo.size>=MACHINE_LOCAL_MEMO_ROWS)memo.clear();
+ memo.set(path,found);
+ return found;
 }
 
 /** 🤖️ Whether an observation row (its kind and its path) is a fact of the filesystem about a machine-local path: the one predicate that recording and judging share for every kind (`machineLocalPathKinds`: `exists`, `stat`, `file`, `field`, `analysis`, the type, real-path and TypeScript probes, the listings), so a record made on a machine that ran the generators and one made on a machine that did not carry the same rows and every machine holds them; the kinds that read a directory (`machineLocalDirectoryKinds`) count the directory itself too. */

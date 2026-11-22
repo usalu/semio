@@ -17,11 +17,7 @@
         "workingGraph": {
           "schema": "trinity.graph",
           "name": "",
-          "manifest": {
-            "nodeKinds": [],
-            "edgeKinds": [],
-            "portKinds": []
-          },
+          "manifestId": "nakagin",
           "camera": {
             "x": {
               "bits": "0000000000000000"
@@ -62,7 +58,7 @@
         "parameterBindings": {},
         "ruleLayout": {}
       },
-      "bytes": 59
+      "bytes": 66
     },
     {
       "id": "nested-properties-and-layout",
@@ -70,11 +66,7 @@
         "workingGraph": {
           "schema": "trinity.graph",
           "name": "B",
-          "manifest": {
-            "nodeKinds": [],
-            "edgeKinds": [],
-            "portKinds": []
-          },
+          "manifestId": "nakagin",
           "camera": {
             "x": {
               "bits": "0000000000000000"
@@ -165,7 +157,7 @@
           }
         }
       },
-      "bytes": 113
+      "bytes": 120
     }
   ],
   "mutations": [
@@ -175,11 +167,7 @@
         "newWorkingGraph": {
           "schema": "trinity.graph",
           "name": "Ü",
-          "manifest": {
-            "nodeKinds": [],
-            "edgeKinds": [],
-            "portKinds": []
-          },
+          "manifestId": "nakagin",
           "camera": {
             "x": {
               "bits": "0000000000000000"
@@ -205,7 +193,7 @@
           "query": ""
         }
       },
-      "bytes": 61
+      "bytes": 68
     },
     {
       "value": {

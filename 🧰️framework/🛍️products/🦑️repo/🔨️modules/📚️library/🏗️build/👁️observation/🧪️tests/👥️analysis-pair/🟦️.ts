@@ -1,5 +1,6 @@
 import {expect,test} from "bun:test";
 import * as fs from "node:fs";
+import {createHash} from "node:crypto";
 import {dirname,join,relative} from "node:path";
 import Ajv from "ajv";
 import ts from "typescript";
@@ -17,7 +18,7 @@ type Row=observation.SourceObservationV1;
 const pair=observation.observedSourceAnalysisPairV1;
 const revision="1".repeat(64);
 const withFiles=async(body:(file:string,nested:string)=>Promise<void>)=>{
- const root=fs.mkdtempSync(join(testScratchRootV1("source-analysis-pair"),"pair-")),file=join(root,"input.ts"),nested=join(root,"nested.txt");
+ const root=fs.realpathSync(fs.mkdtempSync(join(testScratchRootV1("source-analysis-pair"),"pair-"))),file=join(root,"input.ts"),nested=join(root,"nested.txt");
  try{fs.writeFileSync(file,fixture.original);fs.writeFileSync(nested,fixture.nested);await body(file,nested);}finally{fs.rmSync(root,{recursive:true,force:true});}
 };
 const providers=(role:string,nested:string)=>[
@@ -77,20 +78,35 @@ test("a missing file or failing provider keeps the same failure and its original
  expect(facts.some(row=>row.kind==="file"&&row.path===nested)).toBe(true);
 }));
 
-test("actual owner compile discovery keeps the exact physical Source row alongside both parser facts",()=>withFiles(async file=>{
+test("actual owner compile discovery uses one physical Source image to record the exact file and both parser facts",()=>withFiles(async file=>{
  const source=ts.createSourceFile("owner.mjs",fs.readFileSync(new URL("../../../🕸️graph/📥️inference/🔎️owner-discovery/🟨️.mjs",import.meta.url),"utf8"),ts.ScriptTarget.Latest,true,ts.ScriptKind.JS);
  const declaration=source.statements.find(node=>ts.isFunctionDeclaration(node)&&node.name?.text==="discoverBuildOwnerAdmissionFactsV1");
  if(!declaration)throw Error("Actual owner discovery required");
  const workspaceRoot=dirname(file),owner={name:"fixture",root:".",manifest:"📋️project.json",packages:[]},input=relative(workspaceRoot,file);
  const module=registerSourceAnalysisV1({id:"test:source-analysis-pair:owner-module",revision,analyze:()=>({imports:[],runtimeImports:[]})});
  const references=registerSourceAnalysisV1({id:"test:source-analysis-pair:owner-references",revision,analyze:()=>({runtime:{imports:[],requires:[]}})});
+ const coordinates=ts.createSourceFile("coordinates.mjs",fs.readFileSync(new URL("../../../🕸️graph/📥️inference/📍️coordinates/🟨️.mjs",import.meta.url),"utf8"),ts.ScriptTarget.Latest,true,ts.ScriptKind.JS);
+ const guard=coordinates.statements.find(node=>ts.isFunctionDeclaration(node)&&node.name?.text==="requirePhysicalSourceV1");
+ if(!guard)throw Error("Actual physical Source guard required");
+ const requirePhysicalSourceV1=evaluateExtractedFunctionV1(guard.getText(coordinates).replace(/^export\s+/,""),"requirePhysicalSourceV1",{dirname,lstatSync:observedFs.lstatSync});
  const execute=evaluateExtractedFunctionV1(declaration.getText(source).replace(/^export\s+/,""),"discoverBuildOwnerAdmissionFactsV1",{
-  libraryBootstrap:Promise.resolve(),join,relative,buildPath:(path:string)=>path.replaceAll("\\","/"),readPhysicalSource:(path:string)=>path===file?observedFs.readFileSync(file):Buffer.from(JSON.stringify({name:owner.name})),createScriptInputCache:()=>({}),cargoTargets:async()=>({}),componentBuildTargets:()=>({}),existsSync:()=>false,yieldInferenceV1:async()=>{},buildInputSourceRoleV1,buildNativeSourceObservationV1,buildSourceDemandV1,ownerAdmissionSchema,registryOwnerIndexesV1,parserTypescriptV1:()=>({sys:{}}),observedTypeScriptHost:()=>({}),
+  libraryBootstrap:Promise.resolve(),join,relative,requirePhysicalSourceV1,buildPath:(path:string)=>path.replaceAll("\\","/"),readPhysicalSource:(path:string)=>path===file?observedFs.readFileSync(file):Buffer.from(JSON.stringify({name:owner.name})),createScriptInputCache:()=>({}),cargoTargets:async()=>({}),componentBuildTargets:()=>({}),existsSync:()=>false,yieldInferenceV1:async()=>{},buildInputSourceRoleV1,buildNativeSourceObservationV1,buildSourceDemandV1,ownerAdmissionSchema,registryOwnerIndexesV1,parserTypescriptV1:()=>({sys:{}}),observedTypeScriptHost:()=>({}),
   projectWithDefaults:async()=>({namedInputs:{chosen:[]}}),WORKSPACE_POLICY:{},readBuildSourceInputMatchesV1:async()=>({matched:[input],compileByTarget:new Map([["chosen",new Set([input])]])}),relativeScriptInputs:async()=>[],prepareSourceAnalysesV1:()=>({module,references}),observedSourceAnalysisPairV1:pair,
  });
- const current=await captureObservedSourceInputsV1(()=>execute(owner,[],{version:1,owners:[owner],catalogProviders:[]},{workspaceRoot},["chosen"]),undefined,false);
+ let stats=0,reads=0;
+ const world={...fs,statSync:((path:fs.PathLike)=>{if(path===file)stats++;return fs.statSync(path);}) as typeof fs.statSync,readFileSync:((path:fs.PathOrFileDescriptor)=>{if(path===file)reads++;return fs.readFileSync(path);}) as typeof fs.readFileSync};
+ const run=()=>execute(owner,[],{version:1,owners:[owner],catalogProviders:[]},{workspaceRoot},["chosen"]);
+ const current=await withObservedWorldV1(world,()=>captureObservedSourceInputsV1(run,undefined,false));
+ expect({stats,reads}).toEqual({stats:1,reads:1});
  expect(current.value.observedFiles).toEqual([input]);
  expect(current.observations.filter(row=>row.kind==="analysis").map(row=>row.fact.provider)).toEqual([module.id,references.id]);
- expect(current.observations.some(row=>row.kind==="file"&&row.path===file)).toBe(true);
+ const exact=current.observations.find(row=>row.kind==="file"&&row.path===file);
+ expect(current.observations).toContainEqual({kind:"lstat",path:file,fact:"file"});
+ expect(exact).toMatchObject({fact:{sha256:createHash("sha256").update(fixture.original).digest("hex")}});
  expect(await observationsHold(current.observations)).toBe(true);
+ fs.writeFileSync(file,fixture.replacement);
+ expect(await observationsHold(current.observations)).toBe(false);
+ fs.rmSync(file);
+ await expect(withObservedWorldV1(world,()=>captureObservedSourceInputsV1(run,undefined,false))).rejects.toMatchObject({code:"ENOENT"});
+ expect({stats,reads}).toEqual({stats:1,reads:1});
 }));

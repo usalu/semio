@@ -19200,6 +19200,30 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-s-artifact-stdio-pdf-base14-mono"
+version = "0.1.0"
+
+[[package]]
+name = "semio-s-artifact-stdio-pdf-base14-mono-italic"
+version = "0.1.0"
+
+[[package]]
+name = "semio-s-artifact-stdio-pdf-base14-sans"
+version = "0.1.0"
+
+[[package]]
+name = "semio-s-artifact-stdio-pdf-base14-serif"
+version = "0.1.0"
+
+[[package]]
+name = "semio-s-artifact-stdio-pdf-base14-serif-italic"
+version = "0.1.0"
+
+[[package]]
+name = "semio-s-artifact-stdio-pdf-base14-symbol"
+version = "0.1.0"
+
+[[package]]
 name = "semio-s-artifact-stdio-pdf-conformance-support"
 version = "0.1.0"
 dependencies = [
@@ -19299,6 +19323,12 @@ dependencies = [
  "semio-s-artifact-stdio-binary",
  "semio-s-artifact-stdio-contract",
  "semio-s-artifact-stdio-deflate",
+ "semio-s-artifact-stdio-pdf-base14-mono",
+ "semio-s-artifact-stdio-pdf-base14-mono-italic",
+ "semio-s-artifact-stdio-pdf-base14-sans",
+ "semio-s-artifact-stdio-pdf-base14-serif",
+ "semio-s-artifact-stdio-pdf-base14-serif-italic",
+ "semio-s-artifact-stdio-pdf-base14-symbol",
  "semio-s-artifact-stdio-pdf-glyph-list",
  "semio-s-artifact-stdio-pdf-inferences",
  "semio-s-artifact-stdio-pdf-model",

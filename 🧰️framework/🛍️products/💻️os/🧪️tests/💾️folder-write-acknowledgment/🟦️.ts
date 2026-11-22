@@ -24,7 +24,7 @@ export async function registerFolderWriteAcknowledgmentTests(
     for (let turn = 0; turn < 400 && !done(); turn += 1) await new Promise((resolve) => setTimeout(resolve, 5));
     expect(done()).toBe(true);
   };
-  const archiveBytes = (name: string) => Array.from(encodeDocumentArchiveBytes({ parent_pack: Array.from(new TextEncoder().encode(name)), parent_spr: [], members: [] }));
+  const archiveBytes = (name: string) => encodeDocumentArchiveBytes({ parent_pack: new TextEncoder().encode(name), parent_spr: [], members: [] });
   const nameOf = (body: Uint8Array) => ["a1", "a2", "a3"].find((name) => new TextDecoder("latin1").decode(body).includes(name)) ?? "?";
 
   describe("folder write acknowledgment", () => {

@@ -1,12 +1,10 @@
 use super::*;
 use semio_s_artifact_fem_2d_editor_transient::editor::fem2d::transient::FemGumballTransient;
 use crate::editor::fem2d::interaction::canvas_gesture::FEM2D_UTILITY_TRANSFORM;
-use pack::snapshot::ArtifactDsl;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::{Fem2dSnapshot, Fem2dSnapshotRetiring, Fem2dSnapshotValue};
 
-type Fem2dSnapshot = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
-
-fn demo() -> Fem2dSnapshot {
-    Fem2dSnapshot::parse_dsl(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::FEM2D_EXAMPLE_TEXT).expect("demo document parses")
+fn demo() -> Fem2dSnapshotRetiring {
+    Fem2dSnapshotRetiring::new(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::default_fem2d_snapshot().expect("demo document parses"))
 }
 
 #[test]
@@ -29,10 +27,10 @@ fn gumball_meta_absent_without_selection() {
 #[test]
 fn a_tick_is_the_relative_leaf_over_the_selected_geometry() {
     let doc = demo();
-    let n1 = doc.nodes.iter().find(|node| node.id == "n1").expect("n1").clone();
+    let n1 = doc.nodes.iter().find(|node| node.id.as_str() == "n1").expect("n1").clone();
     let tick = fem2d_gumball_tick(&doc, &["scope:1:4:node2:n1".into()], Fem2dGumballMotion::Translate { dx: 1.0, dy: 2.0 }).expect("a node selection moves geometry");
     assert_eq!((tick.node_ids.clone(), tick.region_ids.clone(), tick.pivot_x, tick.pivot_y, tick.dx, tick.dy), (vec!["n1".to_string()], Vec::new(), n1.x, n1.y, 1.0, 2.0));
-    let mut moved = doc.clone();
+    let mut moved = doc.to_reference();
     semio_s_artifact_fem_2d_mutations::central_apply::apply_fem2d_mutation(&mut moved, &Fem2dMutation::MoveSelection(tick)).expect("the tick applies");
     let after = moved.nodes.iter().find(|node| node.id == "n1").expect("n1");
     assert_eq!((after.x, after.y), (n1.x + 1.0, n1.y + 2.0));
@@ -85,9 +83,9 @@ fn streamed_ticks_commit_the_net_leaf_once() {
     let second = drive(&open, "w", GesturePhase::Stream, tick(0.25), "base");
     let open = second.transient.expect("the second tick advances it");
     assert_eq!(open.gesture("w").expect("window w holds a gesture").transaction, minted, "every tick rides the same transaction");
-    let preview = open.preview::<Fem2dSnapshot, Fem2dMutation>(&doc).expect("an open gesture previews");
-    let start = doc.nodes.iter().find(|node| node.id == "n1").expect("n1").x;
-    assert_eq!(preview.nodes.iter().find(|node| node.id == "n1").expect("n1").x, start + 0.75, "the preview is the net transform");
+    let preview = open.preview::<Fem2dSnapshot, Fem2dSnapshotValue, Fem2dMutation>(&doc, Fem2dSnapshot::to_reference, |value| Fem2dSnapshot::from_reference(value).ok()).map(Fem2dSnapshotRetiring::new).expect("an open gesture previews");
+    let start = doc.nodes.iter().find(|node| node.id.as_str() == "n1").expect("n1").x;
+    assert_eq!(preview.nodes.iter().find(|node| node.id.as_str() == "n1").expect("n1").x, start + 0.75, "the preview is the net transform");
     let done = drive(&open, "w", GesturePhase::Commit, tick(0.0), "base");
     let (reference, mutations) = done.committed.expect("the commit publishes");
     assert_eq!(reference, minted);
@@ -129,7 +127,7 @@ async fn a_gumball_move_edited_in_history_replays_its_downstream() {
     let base = demo();
     let tick = |motion| Fem2dMutation::MoveSelection(fem2d_gumball_tick(&base, &["scope:1:4:node2:n1".to_string()], motion).expect("the selection moves geometry"));
     let log = [tick(Fem2dGumballMotion::Translate { dx: 1.0, dy: 0.0 }), tick(Fem2dGumballMotion::Scale { sx: 2.0, sy: 1.0 }), tick(Fem2dGumballMotion::Rotate { angle: 0.5 })];
-    let mut store = store::ArtifactStore::<Fem2dSnapshot, Fem2dMutation>::new::<::semio_os_kernel::os_store::ArtifactSnapshotPublication>(store::os_store::document_materialize::create_document_envelope::<Fem2dSnapshot, Fem2dMutation>(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FEM_2D_SCHEMA, "gumball-time-travel", base.clone(), None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
+    let mut store = store::ArtifactStore::<Fem2dSnapshot, Fem2dMutation>::new::<::semio_os_kernel::os_store::ArtifactSnapshotPublication>(store::os_store::document_materialize::create_document_envelope::<Fem2dSnapshot, Fem2dMutation>(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FEM_2D_SCHEMA, "gumball-time-travel", (*base).clone(), None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
     store.install_document_store_owners_exact(semio_os_kernel::os_store::document_store_owners::funded_bounded_artifact_store_owners::<Fem2dSnapshot, Fem2dMutation>().expect("funded bounded document owners")).unwrap_or_else(|(error, _)| panic!("bounded document owners install refused: {error}"));
     for mutation in &log {
         store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: None }, &mut semio_plugin::artifact_app_laws::fixture_identity()).await.expect("the edit applies");
@@ -137,23 +135,23 @@ async fn a_gumball_move_edited_in_history_replays_its_downstream() {
     let ids: Vec<protocol::MutationId> = store.mutation_ops().expect("applied operations").into_iter().map(|operation| operation.mutation_id).collect();
     let edited = tick(Fem2dGumballMotion::Translate { dx: -0.5, dy: 3.0 });
     let drafts: protocol::HistoryInputDrafts = [(ids[0].clone(), protocol::InputReplacement::Input { schema: semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FEM_2D_SCHEMA.into(), payload: edited.encode_op().expect("the edited leaf encodes") })].into_iter().collect();
-    assert_eq!(store.state_before(&ids[0], &drafts).expect("the preview base folds").as_ref(), &base, "the preview base is the state right before the edited move");
+    assert_eq!(store.state_before(&ids[0], &drafts).expect("the preview base folds").as_ref(), &*base, "the preview base is the state right before the edited move");
     let mut replay = store.begin_report_replay(&drafts, Some(&ids[0])).expect("the replay begins at the edited move");
     assert!(matches!(replay.step(store.replay_edits(), &mut || false).expect("the replay steps"), store::os_store::replay::ReplayStep::Finished(_)));
     let result = replay.finish().expect("a finished replay yields its result");
     assert!(!store.replay_report(&result).expect("report").blocks_finalize(), "a re-offset move never blocks finalizing");
     let fold = |mutations: &[Fem2dMutation]| {
-        let mut snapshot = base.clone();
+        let mut snapshot = base.to_reference();
         for mutation in mutations {
             semio_s_artifact_fem_2d_mutations::central_apply::apply_fem2d_mutation(&mut snapshot, mutation).expect("the log folds");
         }
-        snapshot
+        Fem2dSnapshotRetiring::new(Fem2dSnapshot::from_reference(snapshot).expect("the folded log seals"))
     };
     let fresh = fold(&[edited, log[1].clone(), log[2].clone()]);
-    assert_ne!(fresh, fold(&log), "the edit changes the outcome");
-    assert_eq!(result.state().expect("the replay reached a state").as_ref(), &fresh, "the replay equals the fresh fold of the edited log");
+    assert_ne!(*fresh, *fold(&log), "the edit changes the outcome");
+    assert_eq!(result.state().expect("the replay reached a state").as_ref(), &*fresh, "the replay equals the fresh fold of the edited log");
     store.commit_finished_replay(result, store::HistoryFinalization::Overwrite, &mut semio_plugin::artifact_app_laws::fixture_identity()).await.expect("overwrite commits");
-    assert_eq!(store.snapshot_ref(), &fresh, "the overwritten history folds to the edited state");
+    assert_eq!(store.snapshot_ref(), &*fresh, "the overwritten history folds to the edited state");
     let mut disposer = semio_plugin::bounded_document_store_disposer::<Fem2dSnapshot, Fem2dMutation>();
     for _ in 0..4_096 {
         if disposer.terminal_is_empty(&store) {
@@ -161,7 +159,7 @@ async fn a_gumball_move_edited_in_history_replays_its_downstream() {
         }
         let demand = disposer.retirement_demands(&store, 1 << 20).expect("the store quotes its next retirement turn");
         let grant = semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes.max(1 << 20), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
-        disposer.close_step(&mut store, grant).expect("the store retires");
+        disposer.close_step_cold(&mut store, grant).expect("the store retires");
     }
     assert!(disposer.terminal_is_empty(&store), "the standalone store retires to its terminal-empty shell");
 }

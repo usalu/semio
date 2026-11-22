@@ -21,3 +21,11 @@ The five existing confirmations were rechecked against their matching live stage
 The real Dictionary fixture re-certified the exact bundle, verified it with access to stage evidence intentionally withdrawn, and rejected the same paired substitution. The paired queue fixture supplied two raw receipts with one missing core proof. Pair confirmation stayed private and the wrapper completed its singleton fallback. The synthetic full-roster fixture exercised all 32 receipt slots and retained the mismatch checks for staged receipts, extension imports, and copied site files. Runtime acceptance for the rebuilt 32-root candidate is tracked separately.
 
 [Release receipt gate](release-receipts.py) · [Stage lineage certification](verify-browser-core-lineage.ts) · [Real component regression](test-sealed-browser-cores.py)
+
+## Native transpile key transition
+
+The release of `wy17Kh3` recorded all eleven successful stages. The certified raw component `43b81e4c4b1776c6f029903040426681be04504e6e801de247f047547a75b326` links through transpile receipt `cd6126673d…` to raw core `fa06b73fda…`, optimizer receipt `87809962d5…` to staged core `3a8ac778961cbe2c9e44deafac8417298f5c2947ccb0c1a2e766d8731958d05e`, and browser receipt `6fd3fa6bd6…` to that exact core and descriptor `511f205f33…`. The certificate builder previously filtered out the actual schema-v2 transpile entry and returned zero proofs.
+
+The gate now recognizes the native schema-v2 key with an exact component input and base, materialization and native transpiler tool identities. It checks the completed schema-v1 tool shapes with their required JCO version and their optional native executable digest. The optimizer and browser receipts must still name exactly the inventory subsequently read from the staged bundle.
+
+The read-only command moved from the zero-proof refusal to the exact staged Procedural digest. That same command reproduced the five recorded optimized inventories byte for byte for Energy, FEM, BIM, Dictionary and GIS. The independent SQLite fixture covers admitted shapes and malformed or extra inputs, tool identities and schema versions. This certifies the staged bytes for `wy17Kh3`. Its official Generator tests hit a separate ToolRun retirement refusal.

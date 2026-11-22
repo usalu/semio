@@ -167,6 +167,8 @@ import{withCurrentBunWorkspaceOwnershipV1}from"../../../../../../🗂️workspac
 import bunWorkspaceSchema from"../../../../../../🗂️workspaces/🟦️bun/🧬️schema/🔣️.json"with{type:"json"};
 import{validateJsonSchemaSubset as validateDependencyMaintenanceSchemaV1}from"@semio-tech/schema-validator-ts";
 const dependencySelectedPlanProtocol=Object.freeze({...dependencyInstallSchema.$defs.SelectedPlanProtocol.const});
+import{dependencyGenerationNamesV1,dependencyNameKindV1,settleDependencyForeignNamesV1,type DependencyForeignPolicyV1}from"./🧹️foreign-names/🟦️.ts";
+const dependencyForeignPolicy=dependencySelectedPlanProtocol.foreignNames as DependencyForeignPolicyV1;
 /** 📬️ Parses current plan DATA without granting storage or payload effect authority. */
 export function readSelectedRepositoryDependencyPlanRequestV1(value:unknown):Readonly<{version:1;purpose:"plan-current-dependency-generations";selectedPrefix:string|null;parent:NativeProtectedMaintenanceRequestV1}>{if(validateDependencyMaintenanceSchemaV1(dependencyInstallSchema.$defs.SelectedPlanRequest,value,{definitions:dependencyNativeSchema.definitions}).length)throw Error("Closed current dependency plan request required");const row=value as{selectedPrefix:string|null;parent:unknown};return Object.freeze({version:1,purpose:"plan-current-dependency-generations",selectedPrefix:row.selectedPrefix,parent:readNativeProtectedMaintenanceRequestV1(row.parent)});}
 /** 🎚️ Captures only a bounded complete current directory level through one real reader. */
@@ -185,8 +187,15 @@ async function captureRepositoryDependencySelectedPlanV1(workspace:string,contex
  if(current.scopes.some(scope=>scope.generation===null)&&(!bootstrapCapsules||selectedPrefix!==null&&!/^\.p[a-f0-9]{8}$/u.test(selectedPrefix)))throw Error("Complete current ready Source ownership required before inactivity");
  const check=()=>context.check(control),root=context.root,roles=requireRepositoryDependencyImageRolesV1(root,check);
  await observeSelectedToolingPlanServiceV1(root,control,check);check();
- const generationRoot=join(root,"j"),generations=repositoryDependencySelectedNamesV1(generationRoot,dependencySelectedPlanProtocol.maximumGenerations,check);
- if(generations.names.some(name=>!/^(?:[a-f0-9]{20}|\.p[a-f0-9]{8})$/u.test(name))||selectedPrefix!==null&&!generations.names.includes(selectedPrefix))throw Error("Exact known current dependency generation roster required");
+ const generationRoot=join(root,"j"),readGenerations=()=>repositoryDependencySelectedNamesV1(generationRoot,dependencySelectedPlanProtocol.maximumGenerations,check),kindOf=(name:string)=>dependencyNameKindV1(name,dependencyForeignPolicy),isGeneration=(name:string)=>kindOf(name)==="generation";
+ let observed=readGenerations();
+ if(observed.names.some(name=>{const kind=kindOf(name);return kind==="ignorable"||kind==="unknown";})){
+  const settled=settleDependencyForeignNamesV1({directory:generationRoot,nowMs:Date.now(),policy:dependencyForeignPolicy,check});
+  if(settled.removed.length+settled.quarantined.length+settled.collected>0)try{console.error("[DATA] Store dependency foreign names settled "+JSON.stringify({version:1,removed:settled.removed.length,quarantined:settled.quarantined.slice(0,8),collected:settled.collected}));}catch{}
+  observed=readGenerations();
+ }
+ const generations=Object.freeze({...observed,names:observed.names.filter(isGeneration)}),unknownNames=observed.names.filter(name=>{const kind=kindOf(name);return kind==="ignorable"||kind==="unknown";});
+ if(unknownNames.length>0||selectedPrefix!==null&&!generations.names.includes(selectedPrefix))throw Error("Exact known current dependency generation roster required"+(unknownNames.length>0?": "+JSON.stringify(unknownNames.slice(0,8).map(name=>name.slice(0,64)))+" is not a generation or capsule name":": selected prefix "+selectedPrefix+" is not in the roster"));
  const candidates:Array<Readonly<{prefix:string;generation:string|null;status:"active"|"inactive"|"unqualified"|"unready"|"retained-unready"|"unready-metadata";receiptFingerprint:string|null;rootStamp:string;roles:readonly string[];ownerReferences:JavascriptDependencyRetainedGenerationDataV1["ownerReferences"];payloadQualified:false}>>=[];
  for(const prefix of generations.names){
   check();const directory=join(generationRoot,prefix),entry=repositoryDependencySelectedNamesV1(directory,dependencySelectedPlanProtocol.maximumRoles,check),capsule=prefix.startsWith(".p"),known=new Set(capsule?dependencyInstallSchema.$defs.UnreadyRetirementProtocol.const.capsuleRoles:[...dependencyInstallSchema.$defs.SelectedRetirementProtocol.const.directoryRoles,...dependencyInstallSchema.$defs.SelectedRetirementProtocol.const.fileRoles]);
@@ -217,7 +226,7 @@ async function captureRepositoryDependencySelectedPlanV1(workspace:string,contex
   candidates.push(Object.freeze({prefix,generation,status,receiptFingerprint:fingerprint,rootStamp:entry.stamp,roles:entry.names,ownerReferences,payloadQualified:false}));
   await control.publish({resource:"dependencies:selected-plan:"+candidates.length,mode:"exclusive",elapsedMs:0});check();await control.yieldContinuation();check();
  }
- if(JSON.stringify(repositoryDependencySelectedNamesV1(root,dependencySelectedPlanProtocol.maximumRoles,check))!==JSON.stringify(roles)||JSON.stringify(repositoryDependencySelectedNamesV1(generationRoot,dependencySelectedPlanProtocol.maximumGenerations,check))!==JSON.stringify(generations))throw Error("Complete current dependency roster changed");
+ if(JSON.stringify(repositoryDependencySelectedNamesV1(root,dependencySelectedPlanProtocol.maximumRoles,check))!==JSON.stringify(roles)||(()=>{const fresh=readGenerations();return JSON.stringify({...fresh,names:fresh.names.filter(isGeneration)})!==JSON.stringify(generations);})())throw Error("Complete current dependency roster changed");
  return Object.freeze({roles,generations,candidates:Object.freeze(candidates),selected:selectedPrefix===null?null:candidates.find(row=>row.prefix===selectedPrefix)!});
 }
 /** 🏪️ Holds the actual declared parent, unchanged whole artifact, global bindings EX and ALL Bun ownership for current plan DATA. */
@@ -307,8 +316,8 @@ async function withRepositoryDependencyRetirementReferencesV1<T>(workspace:strin
     if(bootstrapSources&&observeBootstrapAliases(observed)!==physicalAliases)throw Error("Historical dependency Source references changed at a Native target");
     for(const row of metadata){if(row.data.prefix===plan.selected?.prefix)continue;const receipt=await readJavascriptDependencyBindingReceiptReadV1(context,row.path,control);if(receipt.fingerprint!==row.fingerprint||(row.referenceOnly?observeJavascriptDependencyRetainedGenerationReferencesV1:readJavascriptDependencyRetainedGenerationDataV1)(workspace,context.root,receipt.value).receiptSha256!==row.data.receiptSha256)throw Error("Retained dependency artifact references changed");}
    for(const capsule of capsuleMetadata){if(capsule.prefix===plan.selected?.prefix)continue;for(const file of capsule.files)if(JSON.stringify(readJavascriptDependencyUnreadyMetadataV1(file.path,dependencyInstallSchema.$defs.UnreadyRetirementProtocol.const.maximumMetadataBytes,check))!==JSON.stringify(file))throw Error("Retained capsule metadata changed");}
-   const names=repositoryDependencySelectedNamesV1(join(context.root,"j"),dependencySelectedPlanProtocol.maximumGenerations,check).names;
-   if(names.some(name=>!present.has(name))||absent.some(generation=>names.includes(generation.slice(0,20))))throw Error("Retained reference target absence changed");pins();
+   const names=dependencyGenerationNamesV1(repositoryDependencySelectedNamesV1(join(context.root,"j"),dependencySelectedPlanProtocol.maximumGenerations,check).names,dependencyForeignPolicy);
+   const added=names.filter(name=>!present.has(name)),returned=absent.map(generation=>generation.slice(0,20)).filter(prefix=>names.includes(prefix));if(added.length||returned.length){sayCachingV1("dependency-store.roster-changed",{added:JSON.stringify(added.slice(0,8)),returned:JSON.stringify(returned.slice(0,8))},"warn");throw Error("Retained reference target absence changed");}pins();
   };
   await recheck();result=await body(recheck);await recheck();
  }catch(error){retainNativeStorageFailureV1(failures,error);}

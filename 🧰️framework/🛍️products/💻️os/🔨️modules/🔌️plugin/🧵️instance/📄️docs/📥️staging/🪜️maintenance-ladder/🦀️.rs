@@ -266,7 +266,11 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> Envelope
                 let decoder = active.history.as_mut().ok_or_else(|| missing("recursive document archive parent history decoder is absent"))?;
                 let fuel=cx.fuel_remaining();
                 let actual=StepTurn{actual:std::sync::Mutex::new(&mut *cx),closing:false};
-                let turn=match active.work.with_loan(&mut (&actual as &dyn semio_plugin_document_media::ArchiveWorkTurn),|loan|decoder.step(&archive.parent_spr,&actual,grant,&mut active.decoded_history,loan)){Ok(turn)=>turn,Err(error)=>semio_framework_value::RetainedWorkOutcome{work:0,result:Err(semio_framework_value::OriginalRetirementFailure::from_work_refusal(error))}};drop(actual);
+                let source: &dyn protocol::RetainedWireByteSource = match active.paged_parent.as_ref() {
+                    Some(parent) => parent.spr().ok_or_else(|| missing("document archive has lost its original paged SPR"))?,
+                    None => &archive.parent_spr,
+                };
+                let turn=match active.work.with_loan(&mut (&actual as &dyn semio_plugin_document_media::ArchiveWorkTurn),|loan|decoder.step(source,&actual,grant,&mut active.decoded_history,loan)){Ok(turn)=>turn,Err(error)=>semio_framework_value::RetainedWorkOutcome{work:0,result:Err(semio_framework_value::OriginalRetirementFailure::from_work_refusal(error))}};drop(actual);
                 let progress=decoder.take_receipt().map_or_else(||match &turn.result {Err(error)=>error.retained_progress(),_=>Default::default()},|(_,progress)|progress);
                 let observed=u128::from(decoder.last_turn_native_work());
                 let step=receive_archive(cx,grant,fuel,turn,progress,observed)?;
@@ -297,6 +301,46 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> Envelope
             }
             ActiveDocumentArchiveLoadPhase::MergeParent => Ok(PluginLifecycleStep::Progress(empty)),
             ActiveDocumentArchiveLoadPhase::HydrateParent => {
+                if let Some(parent) = active.paged_parent.as_mut() {
+                    if active.hydration.is_none() {
+                        if !parent.receiver_ready() {
+                            return Ok(PluginLifecycleStep::Progress(parent.advance(cx)?));
+                        }
+                        let history = active.decoded_history.as_ref().ok_or_else(|| missing("paged archive parent history was not decoded"))?;
+                        let current = stores.store.envelope();
+                        if history.doc_id != current.id || history.schema != A::DOCUMENT_SCHEMA {
+                            return Err(missing("paged folder archive history changed its document or schema").into());
+                        }
+                        let (owners, built) = A::build_document_store_owners(grant).ok_or_else(|| missing("paged archive requires the app's exact Store owner catalog"))?.map_err(owners_admission_fault)?;
+                        let mut initial = None;
+                        let moved = parent.take_initial(&mut initial, grant)?;
+                        let Some(initial) = initial else { return Ok(PluginLifecycleStep::Progress(built)); };
+                        let pages = parent.pages.as_mut().ok_or_else(|| missing("verified Pack owner is absent"))?;
+                        let pack = std::mem::take(&mut pages.pack);
+                        let history = active.decoded_history.take().expect("checked original paged archive History");
+                        let expected = store::PersistedDocumentHydrationIdentity { id: history.doc_id.clone(), dialect: Some(A::DIALECT.into()) };
+                        active.hydration = Some(store::RetainedPersistedDocumentHydration::from_decoded_pack(
+                            initial, pack, parent.digest(), history, expected, current.owner.clone(),
+                            A::DOCUMENT_SCHEMA.to_string(), owners, cx.operation(), cx.generation(),
+                            u64::MAX, store::PersistedDocumentHydrationTarget::Envelope, stores.store.local_actor_id().clone(),
+                        ));
+                        return Ok(PluginLifecycleStep::Progress(built.checked_add(moved).map_err(plugin_retirement_fault)?));
+                    }
+                    if parent.has_receiver() {
+                        let Some((closed, work)) = cx.with_original_effect(grant, |_, effect| parent.close_receiver(effect))? else {
+                            return Ok(PluginLifecycleStep::Progress(empty));
+                        };
+                        cx.consume_work(work);
+                        return match closed {
+                            semio_framework_value::RetainedWorkPoll::Pending { .. } => Ok(PluginLifecycleStep::Progress(empty)),
+                            semio_framework_value::RetainedWorkPoll::Complete(turn) => {
+                                let progress = turn.result.map_err(|error| archive_retirement_failure(error, None, empty))?.progress();
+                                cx.consume_retained(progress)?;
+                                Ok(PluginLifecycleStep::Progress(progress))
+                            }
+                        };
+                    }
+                }
                 if active.hydration.is_none() {
                     let (owners, built) = A::build_document_store_owners(grant).ok_or_else(|| missing("document archive parent requires the app's exact document owner catalog"))?.map_err(owners_admission_fault)?;
                     let archive = active.archive.as_mut().ok_or_else(|| missing("recursive document archive parent input owner is absent"))?;
@@ -328,7 +372,10 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> Envelope
                 let spent=semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?;
                 let item=RetainedCloneProgress{copied_items:spent.copied_items.max(1),..spent};
                 let envelope = match step {
-                    store::PersistedDocumentHydrationStep::Pending(_) => return Ok(PluginLifecycleStep::Progress(item)),
+                    store::PersistedDocumentHydrationStep::Pending(progress) => {
+                        active.fold = (progress.completed, active.fold.1.max(progress.total));
+                        return Ok(PluginLifecycleStep::Progress(item));
+                    }
                     store::PersistedDocumentHydrationStep::Rejected(diagnostic) => {
                         let cause=owner.original_failure.as_ref().or(owner.original_context_failure.as_ref());
                         let message=match cause{
@@ -354,7 +401,9 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> Envelope
                 match self.begin_persisted_document_store_replacement(stores, child_composition, envelope, cx) {
                     Ok(handle) => {
                         active.replacement = Some(handle);
-                        active.completed = active.completed.saturating_add(1);
+                        let hydration_total = std::mem::take(&mut active.fold).1;
+                        active.completed = active.completed.saturating_add(hydration_total).saturating_add(1);
+                        active.total = active.total.saturating_add(hydration_total);
                         active.phase = ActiveDocumentArchiveLoadPhase::AwaitingMembers;
                         Ok(PluginLifecycleStep::Progress(item))
                     }

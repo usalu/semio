@@ -88,7 +88,19 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 wasm-bindgen = { workspace = true }
 
+[features]
+testkit = []
+
 [dev-dependencies]
+semio-s-artifact-puzzle-5d-diff = { path = "../../../../../../🔺️diff/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-puzzle-5d-diff-2 = { path = "../../../../../🙈change-target-volume-hidden/🔺️diff/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-puzzle-5d-mut-any = { path = "../../../../../📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-puzzle-5d-mut-any-2 = { path = "../../../../../🖋️edit-part3d-label/🔺️diff/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-puzzle-5d-mut-any-3 = { path = "../../../../../🗒️change-description/🔺️diff/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-puzzle-5d-mut-any-4 = { path = "../../../../🔺️diff/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-puzzle-5d-mut-any-part2d = { path = "../../../../../🧱️part2d-leaves/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-puzzle-5d-kind-catalogs = { path = "../../../../../../🗂️kind-catalogs/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-puzzle-5d-document-records = { path = "../../../../../../🧱️document-records/📦️packages/🦀️rust", features = ["testkit"] }
 rstar = "0.12"
 semio-framework-async-macros = { workspace = true }
 semio-framework-io-base64 = { path = "../../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust" }

@@ -1,0 +1,82 @@
+{
+  "provenance": {
+    "what": "Language-neutral vectors for the table model: fixed 192px column tracks with the actions strip, horizontal scroll, row and column keys, selection merge, sort and aria-sort, the empty label and avatar initials.",
+    "rule": "Fixed-width tracks minmax(192px,192px), actions = n x size-medium + n x spacing-single, header and rows share one template, content scrolls horizontally; keys follow tableWindowNextRowV1.",
+    "implementations": {
+      "rust": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/📊️table-column-model/🦀️.rs",
+      "typescript": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/📊️table-column-model/🟦️.ts"
+    }
+  },
+  "metrics": { "sizeMediumPx": 22.4, "spacingSinglePx": 3.2, "columnWidthPx": 192.0 },
+  "templates": [
+    { "columns": 2, "actions": 0, "leading": 0, "trailing": 0, "template": "minmax(192px, 192px) minmax(192px, 192px)" },
+    { "columns": 2, "actions": 2, "leading": 0, "trailing": 0, "template": "minmax(192px, 192px) minmax(192px, 192px) calc(2 * var(--size-medium) + 2 * var(--spacing-single))" },
+    { "columns": 1, "actions": 1, "leading": 2, "trailing": 1, "template": "minmax(384px, 384px) minmax(192px, 192px) calc(1 * var(--size-medium) + 1 * var(--spacing-single)) minmax(192px, 192px)" }
+  ],
+  "tracks": [
+    { "name": "two fixed columns and two actions", "columns": 2, "actions": 2, "viewport": 300.0, "widths": [192.0, 192.0, 51.2], "starts": [0.0, 192.0, 384.0], "content": 435.2, "maxScrollLeft": 135.2 },
+    { "name": "content narrower than the viewport does not scroll", "columns": 1, "actions": 0, "viewport": 480.0, "widths": [192.0], "starts": [0.0], "content": 192.0, "maxScrollLeft": 0.0 }
+  ],
+  "scrollLeftForColumn": [
+    { "index": 0, "columnPx": 192.0, "scrollLeft": 100.0, "width": 300.0, "expected": 0.0 },
+    { "index": 1, "columnPx": 192.0, "scrollLeft": 0.0, "width": 300.0, "expected": 84.0 },
+    { "index": 1, "columnPx": 192.0, "scrollLeft": 192.0, "width": 300.0, "expected": 192.0 },
+    { "index": 2, "columnPx": 192.0, "scrollLeft": 0.0, "width": 1000.0, "expected": 0.0 }
+  ],
+  "fillTrack": [
+    { "width": 400.0, "columns": 4, "expected": 100.0 },
+    { "width": 400.0, "columns": 0, "expected": 400.0 },
+    { "width": 300.0, "columns": 1, "expected": 300.0 }
+  ],
+  "scrollTopForRow": [
+    { "index": 0, "rowPx": 24.0, "scrollTop": 48.0, "height": 96.0, "expected": 0.0 },
+    { "index": 5, "rowPx": 24.0, "scrollTop": 0.0, "height": 96.0, "expected": 48.0 },
+    { "index": 2, "rowPx": 24.0, "scrollTop": 24.0, "height": 96.0, "expected": 24.0 }
+  ],
+  "nextRow": [
+    { "key": "ArrowDown", "current": 0, "total": 5, "page": 3, "expected": 1 },
+    { "key": "ArrowDown", "current": 4, "total": 5, "page": 3, "expected": 4 },
+    { "key": "ArrowUp", "current": 0, "total": 5, "page": 3, "expected": 0 },
+    { "key": "PageDown", "current": 0, "total": 5, "page": 3, "expected": 3 },
+    { "key": "PageDown", "current": 3, "total": 5, "page": 3, "expected": 4 },
+    { "key": "PageUp", "current": 2, "total": 5, "page": 3, "expected": 0 },
+    { "key": "Home", "current": 3, "total": 5, "page": 3, "expected": 0 },
+    { "key": "End", "current": 1, "total": 5, "page": 3, "expected": 4 },
+    { "key": "x", "current": 1, "total": 5, "page": 3, "expected": null },
+    { "key": "ArrowDown", "current": 0, "total": 0, "page": 3, "expected": null }
+  ],
+  "nextColumn": [
+    { "key": "ArrowRight", "current": 0, "total": 3, "expected": 1 },
+    { "key": "ArrowRight", "current": 2, "total": 3, "expected": 2 },
+    { "key": "ArrowLeft", "current": 0, "total": 3, "expected": 0 },
+    { "key": "Home", "current": 2, "total": 3, "expected": 0 },
+    { "key": "End", "current": 0, "total": 3, "expected": 2 }
+  ],
+  "keys": [
+    { "key": "ArrowDown", "shift": false, "ctrl": false, "current": 1, "total": 4, "page": 2, "focus": 2, "select": null, "activate": false, "escape": false },
+    { "key": "ArrowDown", "shift": true, "ctrl": false, "current": 1, "total": 4, "page": 2, "focus": 2, "select": "range", "activate": false, "escape": false },
+    { "key": "End", "shift": true, "ctrl": false, "current": 0, "total": 4, "page": 2, "focus": 3, "select": "range", "activate": false, "escape": false },
+    { "key": "Enter", "shift": false, "ctrl": false, "current": 1, "total": 4, "page": 2, "focus": null, "select": "replace", "activate": true, "escape": false },
+    { "key": " ", "shift": false, "ctrl": true, "current": 1, "total": 4, "page": 2, "focus": null, "select": "invertive", "activate": true, "escape": false },
+    { "key": "Escape", "shift": false, "ctrl": false, "current": 1, "total": 4, "page": 2, "focus": null, "select": null, "activate": false, "escape": true }
+  ],
+  "merge": [
+    { "shift": false, "ctrlOrMeta": false, "alt": false, "expected": "replace" },
+    { "shift": true, "ctrlOrMeta": true, "alt": false, "expected": "range" },
+    { "shift": false, "ctrlOrMeta": true, "alt": false, "expected": "invertive" },
+    { "shift": false, "ctrlOrMeta": false, "alt": true, "expected": "subtractive" }
+  ],
+  "sort": [
+    { "columnId": "name", "sortColumn": null, "sortDirection": null, "next": "asc", "aria": null },
+    { "columnId": "name", "sortColumn": "name", "sortDirection": "asc", "next": "desc", "aria": "ascending" },
+    { "columnId": "name", "sortColumn": "name", "sortDirection": "desc", "next": "asc", "aria": "descending" },
+    { "columnId": "kind", "sortColumn": "name", "sortDirection": "asc", "next": "asc", "aria": null }
+  ],
+  "emptyLabel": { "key": "ui.common.noData", "en": "No data", "de": "Keine Daten" },
+  "avatarInitials": [
+    { "name": "Ada Lovelace", "expected": "AL" },
+    { "name": "  grace hopper b ", "expected": "GH" },
+    { "name": "Linus", "expected": "L" },
+    { "name": "", "expected": "" }
+  ]
+}

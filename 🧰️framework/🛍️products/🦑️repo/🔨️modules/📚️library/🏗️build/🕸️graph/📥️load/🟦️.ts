@@ -5,7 +5,7 @@ import {REVISION_POLICY_V1,captureBoundedSourceRevisionV1,clearPinnedAuthorityV1
 import * as observationV1 from "../../👁️observation/🟨️.mjs";
 import {decodeAuthorityObservationsV1,distinctObservationRowsV1,encodeAuthorityObservationsV1} from "../../👁️observation/🔢️row-table/🟨️.mjs";
 import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
-import {withRepositoryBuildGraphConsumerV1} from "../../📥️inputs/💾️storage/🟨️.mjs";
+import {repositoryBuildGraphWriterDirectoryV1,withBuildGraphOptionalPublicationsV1,withRepositoryBuildGraphConsumerV1} from "../../📥️inputs/💾️storage/🟨️.mjs";
 import {settleOwnerRegistryV1,withOwnerRegistryCustodyV1} from "./🧭️registry-follow/🟦️.ts";
 import {readBuildOwnerRegistryV1,readBuildGraphSelectionV1,closeBuildOwnerAdmissionV1,buildGraphScopeKeyV1,type BuildGraphSelectionV1,type BuildOwnerRegistryV1,type BuildOwnerAdmissionV1} from "../🚪️admission/🟦️.ts";
 import {selectLiteralBuildProjectsV1} from "../../🧭️selection/📥️options/🟦️.ts";
@@ -23,6 +23,10 @@ import {decodeGraphRecordsV1} from "../../../⚡️caching/💾️storage/🔒�
 import {readGenerationExternalInputsV1,resolveGenerationExternalInputV1,canonicalJsonV1 as canonicalGenerationJsonV1} from "../🕰️generations/🟨️.mjs";
 import {loadGenerationGraphV1,type GenerationLoadStatsV1} from "../🕰️generations/🔌️load/🟨️.mjs";
 import {graphSnapshotPolicyV1,GRAPH_LIMITS_V1,graphDeclarationV1,graphPinSchemaV1,buildGraphProducerAuthorityV1,loadedGraphModuleAuthorityV1,loadedGraphAdmissionFormatV1,graphSelfUrlsV1} from "../🔐️authority/🟦️.ts";
+import {openOwnerCheckpointV1} from "./💾️owner-checkpoint/🟦️.ts";
+import {createPassReuseV1} from "./♻️pass-reuse/🟦️.ts";
+import {graphInventoryTextV1,graphRetryTextV1,graphSettleTextV1,membershipChangePathsV1,followedPathsV1} from "./🧲️membership-follow/🟦️.ts";
+import {observeOwnerWithRetryV1,ownerWithheldTextV1,stableOwnerFailureHoldsV1} from "./🛟️owner-isolation/🟦️.ts";
 import {readAdmissionMemoV1,writeAdmissionMemoV1,packAdmissionMemoV1,ownersOfAdmissionMemoV1} from "./🧠️admission-memo/🟦️.ts";
 import {sliceReadStepV1} from "../../🧠️memory/📋️slice-report/🟨️.mjs";
 import sourceAuthoritySchema from "../../🧬️schema/📥️authority.json" with {type:"json"};
@@ -34,7 +38,7 @@ import {inventoryDirectoriesV1} from "../🕊️release/🟦️.ts";
 import {discoverBuildGraphV1} from "../🧭️discovery/🟦️.ts";
 import {generationHostV1,requireEqualBuildGraphsV1} from "../🕰️host/🟦️.ts";
 import {boundGenerationPinV1} from "../📍️pin/🟦️.ts";
-import {withBuildGraphStateV1} from "../🛑️custody/🟦️.ts";
+import {withBuildGraphStateV1,type BuildGraphCriticalV1} from "../🛑️custody/🟦️.ts";
 
 
 type OwnerRegistryInvalidationV1={readonly kind:"invalidated";readonly reason:"owner-registry"};
@@ -61,15 +65,28 @@ export const selectedAdmissionFactsV1={
   seed(scope:string,suffix:string,facts:unknown,rows:readonly unknown[]):void{rememberOwnerFactsV1(scope+"\0"+loadedGraphAdmissionFormatV1+"\0"+suffix,{facts,rows});}
 };
 
-/** 🪄️ Answers the admission facts of one owner from the memo while every row of its observation holds, and observes the owner (recording its rows apart) otherwise; the rows of a reused answer are retained by the capture around the caller, so the result stays held to what it rests on.
+/** 🪄️ Answers the admission facts of one owner from the memo while every row of its observation holds, and observes the owner (recording its rows apart) otherwise; the rows of a reused answer are retained by the capture around the caller, so the result stays held to what it rests on. An entry the caller already `trust`s (verified or observed earlier in the same follow-up of one read, whose final seal verifies every row again) answers without a second verification, so a restart of the inventory pays only for the owners that were forgotten.
+ * @see ../../🧪️tests/🕸️graph/🩹️repair-rounds
  * @see ../../🧪️tests/🕸️graph/🩹️repair-rounds */
-export async function observeOwnerFactsMemoizedV1(input:{readonly key:string;readonly hold:(rows:readonly unknown[])=>Promise<boolean>;readonly observation:Pick<typeof observationV1,"captureObservedSourceInputsV1"|"retainObservedRowsV1">;readonly observe:()=>Promise<unknown>}):Promise<unknown>{
-  const known=ownerFactsMemoV1.get(input.key);
-  if(known!==undefined&&await input.hold(known.rows)){input.observation.retainObservedRowsV1(known.rows as never);return known.facts;}
-  const fresh=await input.observation.captureObservedSourceInputsV1(input.observe,undefined,false);
-  rememberOwnerFactsV1(input.key,{facts:fresh.value,rows:fresh.observations});return fresh.value;
+export async function observeOwnerFactsMemoizedV1(input:{readonly key:string;readonly hold:(rows:readonly unknown[])=>Promise<boolean>;readonly observation:Pick<typeof observationV1,"captureObservedSourceInputsV1"|"retainObservedRowsV1">;readonly observe:()=>Promise<unknown>;readonly boundary?:(error:unknown)=>unknown;readonly recover?:()=>Promise<{readonly facts:unknown;readonly rows:readonly unknown[]}|undefined>;readonly persist?:(entry:{readonly facts:unknown;readonly rows:readonly unknown[]})=>void;readonly outcome?:(kind:"memo"|"checkpoint"|"discovery")=>void;readonly owner?:string;readonly aborted?:()=>boolean;readonly foreign?:(error:unknown)=>boolean;readonly onRetry?:Parameters<typeof observeOwnerWithRetryV1>[0]["onRetry"];readonly trust?:{has(entry:object):boolean;add(entry:object):void}}):Promise<unknown>{
+  const memoized=ownerFactsMemoV1.get(input.key);
+  if(memoized!==undefined&&(input.trust?.has(memoized)===true||await input.hold(memoized.rows))){input.trust?.add(memoized);input.observation.retainObservedRowsV1(memoized.rows as never);input.outcome?.("memo");return memoized.facts;}
+  const recovered=await input.recover?.();
+  if(recovered!==undefined&&await input.hold(recovered.rows)){rememberOwnerFactsV1(input.key,recovered);input.trust?.add(recovered);input.observation.retainObservedRowsV1(recovered.rows as never);input.outcome?.("checkpoint");return recovered.facts;}
+  const observe=input.boundary===undefined?input.observe:async()=>{try{return await input.observe();}catch(error){let classified:unknown;try{classified=input.boundary!(error);}catch{classified=undefined;}throw classified??error;}},fresh=await observeOwnerWithRetryV1({owner:input.owner??input.key,attempt:onFailure=>input.observation.captureObservedSourceInputsV1(observe,onFailure as never,false),hold:input.hold,aborted:input.aborted,foreign:input.foreign,onRetry:input.onRetry}),entry={facts:fresh.value,rows:fresh.observations};
+  input.persist?.(entry);rememberOwnerFactsV1(input.key,entry);input.trust?.add(entry);input.outcome?.("discovery");return fresh.value;
 }
 
+
+/** 🧹️ Forgets the memoized owner facts of `scope` whose rows name one of `paths` or the listing of its parent directory, so a member that vanished or changed type re-observes exactly the owners that read it; the answer is the number forgotten.
+ * @see ./🧪️tests/🧲️membership-follow */
+export function evictOwnerFactsReferencingV1(scope:string,paths:readonly string[]):number{
+  if(paths.length===0)return 0;
+  const named=new Set(paths),listings=new Set(paths.map(path=>path.slice(0,Math.max(path.lastIndexOf("/"),path.lastIndexOf("\\")))));
+  const prefix=scope+"\0"+loadedGraphAdmissionFormatV1+"\0";let forgotten=0;
+  for(const [key,entry] of [...ownerFactsMemoV1])if(key.startsWith(prefix)&&entry.rows.some(row=>{const {kind,path}=row as {kind:string;path:string};return named.has(path)||(kind==="readdir"||kind==="readdirNames")&&listings.has(path);})){ownerFactsMemoV1.delete(key);forgotten++;}
+  return forgotten;
+}
 
 /** 📌️ Reads immutable snapshot bytes while the existing original Graph store and exact content reader lease remain held. */
 async function withRetainedGraphSnapshotV1<T>(workspace:string,store:RepositoryCacheStoreV1,path:string,control:ResourceLeaseControl,run:(source:string)=>Promise<T>):Promise<T>{
@@ -88,7 +105,7 @@ export function withRepositoryBuildGraphPublicationV1<T>(root:string,control:Res
 
 
 type InventoryAwaitPhaseV1="registry-check"|"memo-read"|"memo-seed"|"memo-check"|"scoped-discovery"|"memo-publish"|"catalog"|"membership-hash";
-type InventoryAwaitCountsV1={observations?:number;completedOwners?:number;verifiedMemoRows?:number;files?:number;directories?:number;reused?:boolean;published?:boolean};
+type InventoryAwaitCountsV1={observations?:number;completedOwners?:number;admittedOwners?:number;verifiedMemoRows?:number;files?:number;directories?:number;reused?:boolean;published?:boolean};
 type InventoryOwnerStageV1="lookup"|"memo-check"|"discovery";
 
 /** 🔍️ Samples active and completed inventory work, keeping verified memo progress across retries of the same lookup. */
@@ -98,6 +115,7 @@ function createGraphInventoryAwaitReportV1(clock=()=>performance.now()){
   let activeOwner:{owner:string;stage:InventoryOwnerStageV1;started:number;operation?:string}|undefined;
   const ownerLimit=sliceReportSchema.definitions.InventoryAwait.properties.activeOwner.properties.owner.maxLength;
   const memoHighWater=new Map<string,number>();
+  const outcomes={memo:0,checkpoint:0,discovery:0};
   const elapsed=(started:number,at:number)=>Math.max(0,Math.round(at-started));
   const row=(value:NonNullable<typeof active>,at:number)=>({phase:value.phase,elapsedMilliseconds:elapsed(value.started,at),...value.counts});
   return{
@@ -120,13 +138,15 @@ function createGraphInventoryAwaitReportV1(clock=()=>performance.now()){
       };
     },
     count(counts:InventoryAwaitCountsV1){if(active)Object.assign(active.counts,counts);},
+    outcome(kind:keyof typeof outcomes){outcomes[kind]++;},
+    outcomes(){return {...outcomes};},
     ownerCompleted(){if(active?.phase==="scoped-discovery")active.counts.completedOwners=(active.counts.completedOwners??0)+1;},
     read(){const now=clock();return {version:1,active:active?row(active,now):null,completed:[...completed.values()],...(activeOwner&&{activeOwner:{owner:activeOwner.owner,stage:activeOwner.stage,...activeOwner.operation&&{operation:activeOwner.operation},elapsedMilliseconds:elapsed(activeOwner.started,now)}})};},
   };
 }
 
 /** 🎬️ Resolves one candidate while keeping every candidate's memory within its own finite attempt. */
-async function loadBuildGraphAttemptV1(root:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,options:{selection:BuildGraphSelectionV1;reuse?:boolean;sealedOnly?:boolean},registry?:BuildOwnerRegistryV1,scope?:string):Promise<BuildGraphV1|OwnerRegistryInvalidationV1|undefined> {
+async function loadBuildGraphAttemptV1(root:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,options:{selection:BuildGraphSelectionV1;reuse?:boolean;sealedOnly?:boolean},registry?:BuildOwnerRegistryV1,scope?:string,critical:BuildGraphCriticalV1=work=>work()):Promise<BuildGraphV1|OwnerRegistryInvalidationV1|undefined> {
   requireIssuedResourceControlInvocationV1(phaseControl,invocation);checkResourceLeaseControl(phaseControl);
   const invalidated=(reason:string,details:Record<string,unknown>={})=>{if(process.env.SEMIO_BUILD_TRACE_AUTHORITY==="true"){let diagnostic;try{diagnostic=buildGraphRetryDiagnosticV1(root,reason,details,path=>captureBoundedSourceRevisionV1(path,REVISION_POLICY_V1.maximumSourceBytes).sha256);}catch{diagnostic=buildGraphRetryDiagnosticV1(root,reason);}process.stderr.write("[graph-retry] "+JSON.stringify(diagnostic)+"\n");}else process.stderr.write("[graph-retry] "+JSON.stringify({version:1,reason,stale:((details.stale as {path:string}[]|undefined)??[]).map(row=>row.path)})+"\n");return undefined;};
   const phaseRows:{phase:string;milliseconds:number}[]=[],timing=(phase:string,started:number,details:Record<string,unknown>={})=>{const row={phase,milliseconds:Math.round(performance.now()-started),...details};phaseRows.push(row);if(process.env.SEMIO_BUILD_PROFILE_INPUTS==="1"||process.env.SEMIO_GRAPH_PHASES==="1")process.stderr.write("[graph-phase] "+JSON.stringify(row)+"\n");};
@@ -137,42 +157,61 @@ async function loadBuildGraphAttemptV1(root:string,invocation:ScriptInvocation,p
   const check=()=>checkResourceLeaseControl(phaseControl);
   const observation=observationV1,[producer]=await Promise.all([import("../📥️inference/🟨️.mjs"),import("../../../../🧪️test/📦️packages/🟦️typescript/🟨️.mjs"),import("../📥️inference/🛡️policy/🟨️.mjs")]);checkResourceLeaseControl(phaseControl);
   const memoPath=scope?join(dirname(path),scope+".admission.json"):"";
-  const inventory=async(report:ReturnType<typeof createGraphInventoryAwaitReportV1>)=>{
+  let recovery:Promise<Awaited<ReturnType<typeof openOwnerCheckpointV1>>|undefined>|undefined;
+  const checkpointForScope=()=>recovery??=(async()=>{
+    if(!scope)return undefined;
+    try{return await openOwnerCheckpointV1(join(repositoryBuildGraphWriterDirectoryV1(root,"inference"),"oc"),scope,loadedGraphAdmissionFormatV1,{check,yieldContinuation:()=>phaseControl.yieldContinuation(),publish:(paths,plan,write)=>withBuildGraphOptionalPublicationsV1(paths,plan,write,undefined)});}catch{check();return undefined;}
+  })();
+  const inventory=async(report:ReturnType<typeof createGraphInventoryAwaitReportV1>,followUp=false,trust:{current:WeakSet<object>}={current:new WeakSet()})=>{
     let started=performance.now();
     if(selected&&scope){
       report.begin("registry-check");
       if(buildGraphScopeKeyV1(options.selection,readBuildOwnerRegistryV1(JSON.parse(producer.readBuildOwnerRegistrySourceV1(root))))!==scope)return ownerRegistryInvalidationV1;
       report.begin("memo-read");
     }
-    const lent=selected&&scope?await readAdmissionMemoV1(memoPath,scope,value=>value.format===loadedGraphAdmissionFormatV1):undefined;
-    if(lent!==undefined){
+    let lent=selected&&scope&&!followUp?await readAdmissionMemoV1(memoPath,scope,value=>value.format===loadedGraphAdmissionFormatV1):undefined;
+    const stored=lent;
+    if(lent!==undefined&&scope!==undefined){
       report.count({observations:lent.observations.length});report.begin("memo-seed");
       const known=new Set(selectedAdmissionFactsV1.entries(scope).map(entry=>entry.suffix));for(const owner of ownersOfAdmissionMemoV1(lent,known))selectedAdmissionFactsV1.seed(scope,owner.suffix,owner.facts,owner.rows);
       report.begin("memo-check",{observations:lent.observations.length});
     }
     const remembered=lent!==undefined&&await buildGraphSourceFactsHoldV1(lent.observations,invocation)?lent:undefined;
     if(lent!==undefined)report.count({reused:remembered!==undefined});
+    if(remembered===undefined)lent=undefined;
     if(selected)timing("admission-memo",started,{hit:remembered!==undefined});started=performance.now();
     if(remembered===undefined&&selected)report.begin("scoped-discovery",{completedOwners:0});
+    const checkpoint=remembered===undefined&&selected&&scope?await checkpointForScope():undefined;
     const captured=remembered!==undefined?{value:remembered.admission as unknown,observations:remembered.observations}:selected?await observation.captureObservedSourceInputsV1(()=>observation.settleObservedComputationV1(async()=>{
       const current=readBuildOwnerRegistryV1(JSON.parse(producer.readBuildOwnerRegistrySourceV1(root)));if(buildGraphScopeKeyV1(options.selection,current)!==scope)return ownerRegistryInvalidationV1;
       const nativeCache=new Map(),nativeClosures=new Map();
       return closeBuildOwnerAdmissionV1(options.selection,registry!,async(owner,targets,inputs)=>{
         if(invocation)checkScriptInvocation(invocation);
-        const key=scope+"\0"+loadedGraphAdmissionFormatV1+"\0"+owner.name+"\0"+JSON.stringify([targets,inputs]),lookup=report.ownerLookup(owner.name,key);
+        const suffix=owner.name+"\0"+JSON.stringify([targets,inputs]),key=scope+"\0"+loadedGraphAdmissionFormatV1+"\0"+suffix,lookup=report.ownerLookup(owner.name,key);
         try{
           const facts=await observeOwnerFactsMemoizedV1({
-            key,
+            key,owner:owner.name,aborted:()=>invocation?.control.signal.aborted===true,foreign:error=>followedPathsV1(root,error).length>0,onRetry:event=>{process.stderr.write("[graph-owner-retry] "+JSON.stringify({version:1,...event})+"\n");},
             hold:rows=>{lookup.stage("memo-check");return buildGraphSourceFactsHoldV1(rows,invocation,undefined,lookup.verified,true);},
             observation,
+            recover:()=>checkpoint?.read(suffix)??Promise.resolve(undefined),
+            persist:entry=>checkpoint?.save(suffix,entry),
+            outcome:kind=>report.outcome(kind),
+            trust:{has:entry=>trust.current.has(entry),add:entry=>trust.current.add(entry)},
+            boundary:error=>producer.ownerBoundaryFailureV1(error,{workspaceRoot:root,fallback:join(root,owner.manifest)}),
             observe:()=>{lookup.stage("discovery");return producer.discoverBuildOwnerAdmissionFactsV1(owner,targets,registry,{workspaceRoot:root,invocation,phaseControl,selection:options.selection,nativeCache,nativeClosures,onOwnerDiscoveryPhase:lookup.operation},inputs);},
           }) as never;
           report.ownerCompleted();return facts;
         }finally{lookup.end();}
-      });
-    },{signal:invocation?.control.signal})):undefined,candidate=captured?.value;
+      },failure=>{process.stderr.write("[graph-owner] "+JSON.stringify({version:1,owners:failure.error.owners,needed:failure.needed,text:failure.needed?failure.error.text:ownerWithheldTextV1(failure.owner,failure.error)})+"\n");},(name,target)=>{const manifest=registry!.owners.find(owner=>owner.name===name)?.manifest;if(manifest===undefined||!manifest.endsWith(".json"))return undefined;try{const targets=(JSON.parse(observation.observedFs.readFileSync(join(root,manifest),"utf8")) as {targets?:Record<string,unknown>}).targets;return targets===undefined?undefined:Object.hasOwn(targets,target);}catch{return undefined;}},summary=>{report.count({admittedOwners:summary.owners});process.stderr.write("[graph-closure] "+JSON.stringify({version:1,...summary})+"\n");});
+    },{signal:invocation?.control.signal,onRound:event=>{
+      const paths=event.paths??[],settled=event.settled===true,evicted=!settled&&scope?evictOwnerFactsReferencingV1(scope,paths):0,first=paths.slice(0,5).map(path=>path.startsWith(root)?path.slice(root.length+1):path);
+      if(paths.length>0)process.stderr.write("[graph-settle] "+JSON.stringify({version:1,round:event.round,settled,paths:paths.length,first,evicted,text:graphSettleTextV1(event.round,paths.length,first.slice(0,3),evicted,settled)})+"\n");
+      if(!settled&&paths.length===0)trust.current=new WeakSet();
+    }})):undefined,candidate=captured?.value;
     if(isOwnerRegistryInvalidationV1(candidate))return candidate;
-    if(remembered===undefined&&selected&&scope&&captured!==undefined){
+    const owners=report.outcomes(),unchanged=stored!==undefined&&owners.discovery===0&&owners.checkpoint===0&&JSON.stringify(captured?.value)===JSON.stringify(stored.admission);
+    if(remembered===undefined&&selected&&scope&&captured!==undefined&&!followUp&&!unchanged){
+      checkpoint?.flush();
       report.count({observations:captured.observations.length});report.begin("memo-publish",{observations:captured.observations.length});
       if(invocation)checkScriptInvocation(invocation);let published:boolean|undefined;
       try{published=await writeAdmissionMemoV1(memoPath,packAdmissionMemoV1({format:loadedGraphAdmissionFormatV1,scope,admission:candidate as BuildOwnerAdmissionV1,observations:captured.observations,owners:selectedAdmissionFactsV1.entries(scope)}),graphSnapshotPolicyV1.maximumSnapshotBytes);}catch(error){if(invocation)checkScriptInvocation(invocation);}
@@ -184,7 +223,27 @@ async function loadBuildGraphAttemptV1(root:string,invocation:ScriptInvocation,p
     report.begin("membership-hash",counts);const digest=await buildGraphMembershipV1(root,files,invocation);timing("workspace-membership-hash",started);
     return {files,digest,admission,observations:captured?.observations??[]};
   };
-  const settledInventory=async(orNothing:boolean):Promise<Awaited<ReturnType<typeof inventory>>|undefined>=>{for(let tries=0;;tries++){try{const report=createGraphInventoryAwaitReportV1();return await sliceReadStepV1("inventory",()=>inventory(report),{},report.read);}catch(error){if(buildGraphErrorCodeV1(error)!=="BUILD_MEMBERSHIP_CHANGED"||tries>=GRAPH_LIMITS_V1.repairRounds)if(orNothing&&buildGraphErrorCodeV1(error)==="BUILD_MEMBERSHIP_CHANGED")return undefined;else throw error;}}};
+  const settledInventory=async(orNothing:boolean):Promise<Awaited<ReturnType<typeof inventory>>|undefined>=>{
+    const started=performance.now(),trust={current:new WeakSet<object>()};let previous="",repeats=0;
+    for(let round=1;;round++){
+      const report=createGraphInventoryAwaitReportV1(),attemptStarted=performance.now();
+      try{
+        const value=await sliceReadStepV1("inventory",()=>inventory(report,round>1,trust),{},report.read);
+        if(round>1)process.stderr.write("[graph-inventory] "+JSON.stringify({version:1,round,elapsedMilliseconds:Math.round(performance.now()-started),...report.outcomes(),text:graphInventoryTextV1(round,report.outcomes(),Math.round(performance.now()-started))})+"\n");
+        return value;
+      }catch(error){
+        const membership=buildGraphErrorCodeV1(error)==="BUILD_MEMBERSHIP_CHANGED",paths=membership?membershipChangePathsV1(root,error):followedPathsV1(root,error);
+        if(!membership&&paths.length===0)throw error;
+        if(invocation)checkScriptInvocation(invocation);
+        const signature=JSON.stringify([...paths].sort());
+        repeats=signature===previous?repeats+1:0;previous=signature;
+        if(repeats>=2||paths.length===0&&round>=GRAPH_LIMITS_V1.repairRounds){if(orNothing&&membership)return undefined;throw error;}
+        if(!membership)await new Promise<void>(accept=>setTimeout(accept,Math.min(round,8)*GRAPH_LIMITS_V1.editFollowPauseMilliseconds));
+        const evicted=scope?evictOwnerFactsReferencingV1(scope,paths):0,counts=report.outcomes(),elapsed=Math.round(performance.now()-attemptStarted);
+        process.stderr.write("[graph-retry] "+JSON.stringify({version:1,reason:membership?"membership-changed":"path-moved",round,path:paths[0]?.slice(root.length+1)??null,paths:paths.length,evicted,...counts,elapsedMilliseconds:elapsed,text:graphRetryTextV1(round,paths[0]?.slice(root.length+1)??"",paths.length,evicted,counts,elapsed)})+"\n");
+      }
+    }
+  };
   const initial=(await settledInventory(false))!;
   if(isOwnerRegistryInvalidationV1(initial)){invalidated("owner-registry");return initial;}
   const {files,digest:before}=initial;
@@ -201,33 +260,36 @@ async function loadBuildGraphAttemptV1(root:string,invocation:ScriptInvocation,p
     if(factsHold){
       phaseStarted=performance.now();const source=await readFile(path,"utf8");timing("graph-file-read",phaseStarted,{bytes:Buffer.byteLength(source)});phaseStarted=performance.now();const digest=createHash("sha256").update(source).digest("hex");timing("graph-content-hash",phaseStarted);if(digest===cachedReceipt.graph){const graph=await image(source);if(selected&&JSON.stringify(graph.admission?.selection)!==JSON.stringify(options.selection))throw Error("Original selected publication scope differs");if(await buildGraphSourceFactsHoldV1([...initial.observations,...cachedObservations!],invocation))return graph;}
     }
-  }catch(error){if((error as NodeJS.ErrnoException).code!=="ENOENT")throw error;}
+  }catch(error){const code=buildGraphErrorCodeV1(error);if(code!=="ENOENT"&&code!=="closure-missing")throw error;check();}
   if(options.sealedOnly)return undefined;
   let captured!:{value:BuildGraphV1;observations:readonly unknown[]};
+  const reuse=createPassReuseV1();
   let basis=initial as Basis,failedFacts:unknown[]=[],failedAuthority:unknown[]=[];
   phaseStarted=performance.now();
   const discoverOnce=(on:Basis)=>observation.captureObservedSourceInputsV1(async()=>{
     for(const source of [...graphSelfUrlsV1(),new URL("../../🧬️schema/📣️publication.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../../🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../../🧬️schema/📥️authority.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../../🔣️policy.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../../../⚡️caching/🔣️policy.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../../../🗂️workspaces/🔣️policy.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../../📤️arguments/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../../../../../../../🔨️modules/🏃️process/🏗️build/🎚️mode/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL))])observation.observedFs.readFileSync(source);
     const admittedRegistry=readBuildOwnerRegistryV1(JSON.parse(producer.readBuildOwnerRegistrySourceV1(root)));if(JSON.stringify(admittedRegistry)!==JSON.stringify(registry))return ownerRegistryInvalidationV1;
     for(const source of [new URL("../../🧬️schema/🚪️selection.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../../🧬️schema/📋️owners.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../../🧬️schema/🚪️admission.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../🚪️admission/🟦️.ts",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL))])observation.observedFs.readFileSync(source);
-    return discoverBuildGraphV1(root,options.selection,registry!,invocation,phaseControl,on.files,on.admission,true);
+    return discoverBuildGraphV1(root,options.selection,registry!,invocation,phaseControl,on.files,on.admission,true,reuse.memo);
   },(rows:unknown[],authority:unknown[])=>{failedFacts=rows;failedAuthority=authority;});
   type Basis=Exclude<Awaited<ReturnType<typeof inventory>>,OwnerRegistryInvalidationV1>;
-  const stale:{kind:string;path:string;fact:unknown}[]=[];let staleCount=0,rounds=0,previousStale="",membershipMoved=false,admissionMoved=false;
+  const stale:{kind:string;path:string;fact:unknown}[]=[];let moved:string[]=[],staleCount=0,rounds=reuse.carried.round,previousStale="",membershipMoved=false,admissionMoved=false;
   const collect=(row:{kind:string;path:string;fact:unknown})=>{staleCount++;if(stale.length<GRAPH_LIMITS_V1.sealStalePaths)stale.push(row);},sameAdmission=(left:Basis,right:Basis)=>!selected||JSON.stringify(left.admission)===JSON.stringify(right.admission);
   const followed=(current:Awaited<ReturnType<typeof inventory>>|undefined)=>{rounds++;if(current!==undefined&&!isOwnerRegistryInvalidationV1(current))basis=current;};
   for(;;){
-    stale.length=0;staleCount=0;
+    stale.length=0;staleCount=0;reuse.boundary({round:rounds,moved});moved=[];
     let produced:Awaited<ReturnType<typeof discoverOnce>>;
     try{produced=await sliceReadStepV1("owners-round",()=>discoverOnce(basis),{round:rounds+1});}catch(error){
       if(invocation)checkScriptInvocation(invocation);if(buildGraphErrorCodeV1(error)==="BUILD_AUTHORITY_CHANGED")throw error;
+      observation.requirePinnedImplementationFactsV1(failedFacts as readonly observationV1.SourceObservationV1[],invocation?.control.signal);
       const current=await settledInventory(true);if(current!==undefined&&isOwnerRegistryInvalidationV1(current))throw error;
       const holds=await sliceReadStepV1("facts-hold",()=>buildGraphSourceFactsHoldV1(failedFacts,invocation,collect),{round:rounds+1});
-      if(holds&&current!==undefined&&current.digest===basis.digest&&sameAdmission(basis,current)||rounds>=GRAPH_LIMITS_V1.repairRounds)throw error;
-      process.stderr.write("[graph-repair] "+JSON.stringify({round:rounds+1,failure:true,stale:stale.map(row=>row.path)})+"\n");followed(current);continue;
+      if(stableOwnerFailureHoldsV1(error,holds)||holds&&current!==undefined&&current.digest===basis.digest&&sameAdmission(basis,current)||rounds>=GRAPH_LIMITS_V1.repairRounds)throw error;
+      process.stderr.write("[graph-repair] "+JSON.stringify({round:rounds+1,failure:true,stale:stale.map(row=>row.path)})+"\n");moved=[...stale.map(row=>row.path),...followedPathsV1(root,error)];followed(current);continue;
     }
     if(isOwnerRegistryInvalidationV1(produced.value)){invalidated("owner-registry",{before:basis.digest});return produced.value;}
     if(rounds===0)timing("graph-original-inference",phaseStarted,{observations:produced.observations.length});
+    observation.requirePinnedImplementationFactsV1(produced.observations,invocation?.control.signal);
     const current=await settledInventory(true);
     if(current!==undefined&&isOwnerRegistryInvalidationV1(current)){invalidated("owner-registry",{before:basis.digest});return current;}
     const observed=distinctObservationRowsV1((current?.observations??[]) as readonly observationV1.SourceObservationV1[],produced.observations),holds=await sliceReadStepV1("facts-hold",()=>buildGraphSourceFactsHoldV1(observed,invocation,collect),{round:rounds+1});
@@ -237,12 +299,12 @@ async function loadBuildGraphAttemptV1(root:string,invocation:ScriptInvocation,p
     const signature=JSON.stringify(stale.map(row=>[row.path,row.fact]).sort());
     if(staleCount>0&&!membershipMoved&&!admissionMoved&&signature===previousStale){process.stderr.write("[graph-retry] "+JSON.stringify({version:1,reason:"unrefreshed-facts",stale:stale.map(row=>row.path)})+"\n");throw observation.staleSourceFactsErrorV1(stale);}
     if(rounds>=GRAPH_LIMITS_V1.repairRounds)break;
-    previousStale=signature;const repairStarted=performance.now();process.stderr.write("[graph-repair] "+JSON.stringify({round:rounds+1,stale:stale.slice(0,8).map(row=>row.path),staleCount,membershipMoved,admissionMoved})+"\n");followed(current);timing("graph-repair",repairStarted,{round:rounds,holds});
+    previousStale=signature;const repairStarted=performance.now();process.stderr.write("[graph-repair] "+JSON.stringify({round:rounds+1,stale:stale.slice(0,8).map(row=>row.path),staleCount,membershipMoved,admissionMoved})+"\n");moved=stale.map(row=>row.path);followed(current);timing("graph-repair",repairStarted,{round:rounds,holds});
   }
   const verdict=sealVerdictV1({rounds,staleCount,stale,membershipMoved,admissionMoved,projects:captured.value.projects as never,rows:captured.observations as never});
   reportSealV1(verdict);process.stderr.write("[graph-seal] "+JSON.stringify({version:1,mode:verdict.mode,rounds,sealedWithLaterChanges:verdict.sealedWithLaterChanges,laterChangedOwners:verdict.laterChangedOwners,membershipMoved,admissionMoved,owners:Object.keys(verdict.owners).length})+"\n");
   const publishStarted=performance.now(),compact=captured.value,source=JSON.stringify(compact),digest=createHash("sha256").update(source).digest("hex"),authorityHead=JSON.stringify({version:sourceAuthoritySchema.properties.version.const,module:loadedGraphModuleAuthorityV1,membership:basis.digest,graph:digest,seal:verdict}).slice(0,-1)+',"observations":',authority=authorityHead+encodeAuthorityObservationsV1(captured.observations as readonly observationV1.SourceObservationV1[],graphSnapshotPolicyV1.maximumSnapshotBytes-Buffer.byteLength(authorityHead)-1,check)+"}";timing("graph-serialize",publishStarted,{graphBytes:Buffer.byteLength(source),authorityBytes:Buffer.byteLength(authority)});if(Buffer.byteLength(source)>graphSnapshotPolicyV1.maximumSnapshotBytes||Buffer.byteLength(authority)>graphSnapshotPolicyV1.maximumSnapshotBytes)throw Error("Build graph cache exceeds its finite publication limit: "+Buffer.byteLength(source)+" graph bytes, "+Buffer.byteLength(authority)+" authority bytes, "+graphSnapshotPolicyV1.maximumSnapshotBytes+" allowed");await mkdir(dirname(path),{recursive:true});const expandStarted=performance.now(),graph=readBuildGraphV1(await sliceReadStepV1("seal",()=>portableInputs(root,compact,invocation,phaseControl)));timing("graph-expansion",expandStarted);
-  const temporary=path+"."+randomUUID(),receipt=authorityPath+"."+randomUUID();try{await sliceReadStepV1("seal",async()=>{await writeFile(temporary,source,{flag:"wx"});await writeFile(receipt,authority,{flag:"wx"});});if(invocation)checkScriptInvocation(invocation);timing("graph-publication",publishStarted);process.stderr.write("[graph-phase] "+JSON.stringify({summary:phaseRows.map(row=>[row.phase,row.milliseconds])})+"\n");await sliceReadStepV1("seal",async()=>{await rename(temporary,path);await rename(receipt,authorityPath);});}finally{await Promise.all([rm(temporary,{force:true}),rm(receipt,{force:true})]);}
+  const temporary=path+"."+randomUUID(),receipt=authorityPath+"."+randomUUID();try{await sliceReadStepV1("seal",async()=>{await writeFile(temporary,source,{flag:"wx"});await writeFile(receipt,authority,{flag:"wx"});});if(invocation)checkScriptInvocation(invocation);timing("graph-publication",publishStarted);process.stderr.write("[graph-phase] "+JSON.stringify({summary:phaseRows.map(row=>[row.phase,row.milliseconds])})+"\n");await sliceReadStepV1("seal",()=>critical(async()=>{await rename(temporary,path);await rename(receipt,authorityPath);}));}finally{await Promise.all([rm(temporary,{force:true}),rm(receipt,{force:true})]);}
   return graph;
 }
 
@@ -334,10 +396,10 @@ async function loadBuildGraphUnpinnedV1(root:string,invocation:ScriptInvocation,
     checkScriptInvocation(invocation);checkResourceLeaseControl(phaseControl);
     const producer=await import("../📥️inference/🟨️.mjs");checkResourceLeaseControl(phaseControl);const registry=readBuildOwnerRegistryV1(JSON.parse(producer.readBuildOwnerRegistrySourceV1(root))),scope=options.selection.kind!=="all"?buildGraphScopeKeyV1(options.selection,registry):undefined;
     if(scope===undefined){const sealed=await readSealedBuildGraphV1(root,invocation,phaseControl,options,registry);if(sealed&&!isOwnerRegistryInvalidationV1(sealed)){checkScriptInvocation(invocation);return sealed;}}
-    const graph=await withOwnerRegistryCustodyV1<BuildGraphV1|OwnerRegistryInvalidationV1|undefined>(phaseControl.signal,contain=>withBuildGraphStateV1(root,invocation,phaseControl,async(store,actualControl)=>{
+    const graph=await withOwnerRegistryCustodyV1<BuildGraphV1|OwnerRegistryInvalidationV1|undefined>(phaseControl.signal,contain=>withBuildGraphStateV1(root,invocation,phaseControl,async(store,actualControl,critical)=>{
       const staging=scope?join(store.root,"selected"):store.root;await store.recheck();checkResourceLeaseControl(actualControl);requireNativeStoragePathV1(store.root,staging);await mkdir(staging,{recursive:true});checkResourceLeaseControl(actualControl);const selectedStage=scope?new RegExp("^"+scope+"(?:\\.authority)?\\.json\\.[a-f0-9-]{36}$","u"):undefined;
-      const staged=await readdir(staging);checkResourceLeaseControl(actualControl);for(const name of staged){if(!(selectedStage?.test(name)??/^(?:canonical|authority)\.json\.[a-f0-9-]{36}$/u.test(name)))continue;await store.recheck();checkResourceLeaseControl(actualControl);const path=join(staging,name),status=await lstat(path);checkResourceLeaseControl(actualControl);if(!status.isFile()||status.isSymbolicLink()||status.nlink!==1||status.size>graphSnapshotPolicyV1.maximumSnapshotBytes)throw Error("Owned bounded graph staging file required");await rm(path);checkResourceLeaseControl(actualControl);}
-      checkResourceLeaseControl(actualControl);await store.recheck();const attempt=()=>loadBuildGraphAttemptV1(root,invocation,actualControl,options,registry,scope);
+      await critical(async()=>{const staged=await readdir(staging);checkResourceLeaseControl(actualControl);for(const name of staged){if(!(selectedStage?.test(name)??/^(?:canonical|authority)\.json\.[a-f0-9-]{36}$/u.test(name)))continue;await store.recheck();checkResourceLeaseControl(actualControl);const path=join(staging,name),status=await lstat(path);checkResourceLeaseControl(actualControl);if(!status.isFile()||status.isSymbolicLink()||status.nlink!==1||status.size>graphSnapshotPolicyV1.maximumSnapshotBytes)throw Error("Owned bounded graph staging file required");await rm(path);checkResourceLeaseControl(actualControl);}});
+      checkResourceLeaseControl(actualControl);await store.recheck();const attempt=()=>loadBuildGraphAttemptV1(root,invocation,actualControl,options,registry,scope,critical);
       return contain(()=>scope===undefined?attempt():selectedThroughFleetV1({root,invocation,scope,staging,attempt}));
     },scope));
     checkScriptInvocation(invocation);checkResourceLeaseControl(phaseControl);

@@ -27,7 +27,7 @@ export async function workspaceBuildFilesV1(root:string,invocation?:ScriptInvoca
     if(invocation)checkScriptInvocation(invocation);
     const batch=pending.splice(-32),listings=await Promise.all(batch.map(async directory=>{
       try{return {directory,entries:await readdir(join(root,directory),{withFileTypes:true})};}
-      catch(error){if(directory&&["ENOENT","ENOTDIR"].includes((error as NodeJS.ErrnoException).code??""))throw Object.assign(Error(`Build directory removed during discovery: ${directory}`),{code:"BUILD_MEMBERSHIP_CHANGED"});throw error;}
+      catch(error){if(directory&&["ENOENT","ENOTDIR"].includes((error as NodeJS.ErrnoException).code??""))throw Object.assign(Error(`Build directory removed during discovery: ${directory}`),{code:"BUILD_MEMBERSHIP_CHANGED",paths:[directory]});throw error;}
     }));
     if(invocation)checkScriptInvocation(invocation);
     for(const {directory,entries}of listings){
@@ -130,13 +130,15 @@ export function graphMemberPredicateV1():(file:string)=>boolean {
 }
 
 
-/** 🧾️ Identifies complete admitted physical membership, types and modes independently of implementation bytes. */
+/** 🧾️ Identifies complete admitted physical membership, types and modes independently of implementation bytes. Every member that vanished or changed type is collected in one pass and named once by `paths`, so a single follow-up round answers all changes seen so far.
+ * @see ../📥️load/🧪️tests/🧲️membership-follow */
 export async function buildGraphMembershipV1(root:string,files:string[],invocation?:ScriptInvocation):Promise<string> {
-  const records:string[]=[],entries=[...files.map(file=>({file,directory:false})),...(inventoryDirectoriesV1.get(files)??[]).map(file=>({file,directory:true}))].filter(({file})=>![".nxignore","nx.json"].includes(file)).sort((a,b)=>a.file.localeCompare(b.file));
+  const records:string[]=[],changed:string[]=[],entries=[...files.map(file=>({file,directory:false})),...(inventoryDirectoriesV1.get(files)??[]).map(file=>({file,directory:true}))].filter(({file})=>![".nxignore","nx.json"].includes(file)).sort((a,b)=>a.file.localeCompare(b.file));
   for(let index=0;index<entries.length;index+=64){
     if(invocation)checkScriptInvocation(invocation);
-    records.push(...await Promise.all(entries.slice(index,index+64).map(async({file,directory})=>{let info;try{info=await lstat(join(root,file));}catch(error){if(["ENOENT","ENOTDIR"].includes((error as NodeJS.ErrnoException).code??""))throw Object.assign(Error(`Build member removed during discovery: ${file}`),{code:"BUILD_MEMBERSHIP_CHANGED"});throw error;}if(info.isSymbolicLink()||(directory?!info.isDirectory():!info.isFile()))throw Object.assign(Error(`Build membership changed during discovery: ${file}`),{code:"BUILD_MEMBERSHIP_CHANGED"});return JSON.stringify([file,info.isDirectory()?"directory":"file",info.mode]);})));
+    records.push(...await Promise.all(entries.slice(index,index+64).map(async({file,directory})=>{let info;try{info=await lstat(join(root,file));}catch(error){if(["ENOENT","ENOTDIR"].includes((error as NodeJS.ErrnoException).code??"")){changed.push(file);return"";}throw error;}if(info.isSymbolicLink()||(directory?!info.isDirectory():!info.isFile())){changed.push(file);return"";}return JSON.stringify([file,info.isDirectory()?"directory":"file",info.mode]);})));
   }
+  if(changed.length)throw Object.assign(Error(`Build membership changed during discovery: ${changed.slice(0,8).join(", ")}${changed.length>8?" (+"+(changed.length-8)+")":""}`),{code:"BUILD_MEMBERSHIP_CHANGED",paths:changed});
   return createHash("sha256").update(records.join("\n")).digest("hex");
 }
 

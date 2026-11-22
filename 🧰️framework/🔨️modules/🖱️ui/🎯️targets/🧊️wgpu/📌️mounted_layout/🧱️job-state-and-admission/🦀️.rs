@@ -38,6 +38,7 @@ pub struct MountedLayoutJob {
     pub(super) theme_revision: u64,
     pub(super) viewport_revision: u64,
     pub(super) theme: Theme,
+    pub(super) icons_only: bool,
     pub(super) row_metrics: TreeRowMetrics,
     pub(super) width: f32,
     pub(super) height: f32,
@@ -88,11 +89,12 @@ pub struct MountedLayoutIdentity {
     pub revision: u64,
     pub theme_revision: u64,
     pub viewport_revision: u64,
+    pub icons_only: bool,
 }
 
 impl MountedLayoutJob {
     pub fn try_new(tree: &UiTree, root: NodeId, identity: MountedLayoutIdentity, theme: Theme, width: f32, height: f32, block_reversed: bool, inline: ui_contract::FlowInline) -> Result<Self, MountedLayoutFault> {
-        let MountedLayoutIdentity { surface, generation, revision, theme_revision, viewport_revision } = identity;
+        let MountedLayoutIdentity { surface, generation, revision, theme_revision, viewport_revision, icons_only } = identity;
         let root_node = tree.node(root).ok_or(MountedLayoutFault::Stale)?;
         if !root_node.flags.contains(NodeFlags::DIRTY_LAYOUT) && !root_node.flags.contains(NodeFlags::SUBTREE_DIRTY) {
             return Err(MountedLayoutFault::Stale);
@@ -105,6 +107,7 @@ impl MountedLayoutJob {
             revision,
             theme_revision,
             viewport_revision,
+            icons_only,
             row_metrics: TreeRowMetrics::from_theme(&theme).with_inline(inline),
             theme,
             width,
@@ -245,10 +248,16 @@ impl MountedLayoutJob {
                         let shares_footer = tree.node(id).and_then(|node| node.next_sibling).and_then(|next| tree.node(next)).is_some_and(|next| matches!(next.spec.0, UiNode::OverviewCard(_)));
                         LayoutNodeKind::Section { gap: 0.0, top: self.theme.control_height, bottom: if card.footer.is_some() && !shares_footer { self.theme.control_height } else { 0.0 } }
                     }
+                    UiNode::Button(_) if self.icons_only => LayoutNodeKind::IconControl { height: self.theme.control_height, width: self.theme.control_height },
+                    UiNode::Select(select) if self.icons_only && select.appearance == ui_contract::SelectAppearance::Segmented => LayoutNodeKind::IconControl { height: self.theme.control_height, width: self.theme.control_height * select.items.len().max(1) as f32 },
                     UiNode::Button(_) => LayoutNodeKind::Control { height: self.theme.control_height, label_padding: Some(self.theme.padding_standard) },
-                    UiNode::Input(_) | UiNode::Select(_) => LayoutNodeKind::Control { height: if tree_inline_control { self.theme.control_height_small } else { self.theme.control_height }, label_padding: None },
-                    UiNode::Toggle(_) | UiNode::Slider(_) | UiNode::NumberStepper(_) | UiNode::Ring(_) | UiNode::IconSelect(_) => LayoutNodeKind::Control { height: self.theme.control_height, label_padding: None },
-                    UiNode::ExternalSlot(slot) => LayoutNodeKind::HostContent { height: host_content_height(&slot.params_json, &self.theme) },
+                    UiNode::Input(input) if input.input_kind == "longText" => LayoutNodeKind::Control { height: semio_ui_wgpu_layout::layout::TEXTAREA_MIN_HEIGHT.max(node.state.textarea_grow), label_padding: None },
+                    UiNode::Input(_) | UiNode::Select(_) => LayoutNodeKind::Control { height: (if tree_inline_control { self.theme.control_height_small } else { self.theme.control_height }) + if matches!(node.spec.0, UiNode::Input(_)) && node.state.edit.is_some() && node.state.number_refusal.as_deref().is_some_and(|message| !message.is_empty()) { semio_ui_wgpu_layout::layout::input_refusal_row_height(self.theme.font_size_small) } else { 0.0 }, label_padding: None },
+                    UiNode::Ring(_) => LayoutNodeKind::Control { height: semio_ui_wgpu_layout::layout::RING_SIZE, label_padding: None },
+                    UiNode::IconSelect(select) => LayoutNodeKind::Control { height: semio_ui_wgpu_layout::layout::icon_select_height(semio_ui_declaration::ui::UiIconSelectNode::decode_mode(&select.value).0.editor_rows()), label_padding: None },
+                    UiNode::Toggle(_) | UiNode::Slider(_) | UiNode::NumberStepper(_) => LayoutNodeKind::Control { height: self.theme.control_height, label_padding: None },
+                    UiNode::ExternalSlot(slot) if slot.body_key == semio_ui_retained_tree::reconcile::MEDIA_TRANSPORT_EXTENSION_ID => LayoutNodeKind::HostContent { height: host_content_height(&slot.params_json, &self.theme) },
+                    UiNode::ExternalSlot(_) => LayoutNodeKind::Control { height: self.theme.control_height_small, label_padding: None },
                     UiNode::ComponentScene(_) => LayoutNodeKind::EngineSurface,
                     UiNode::Progress(_) => LayoutNodeKind::Control { height: semio_ui_wgpu_layout::chrome::SIZE_TINY, label_padding: None },
                     _ => LayoutNodeKind::Leaf,

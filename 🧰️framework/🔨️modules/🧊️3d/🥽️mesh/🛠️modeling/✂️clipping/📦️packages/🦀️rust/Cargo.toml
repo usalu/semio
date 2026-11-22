@@ -20,6 +20,10 @@ maxActiveLines = 4000
 [lib]
 path = "../../🦀️.rs"
 
+[[test]]
+name = "longitudinal-clipping"
+path = "../../🧪️tests/🧱️longitudinal.rs"
+
 [dependencies]
 semio-framework-3d-mesh-contract = { path = "../../../../🧬️contract/📦️packages/🦀️rust" }
 semio-framework-value.workspace = true

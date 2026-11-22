@@ -87,9 +87,8 @@ export function takeTypedOperationTerminalOutputV1(instanceId: number): unknown 
  * accumulate without bound. Exceeding it fails closed rather than growing. */
 export const PLUGIN_OPERATION_EFFECT_CAPACITY = 4_096;
 
-/** 📏️ Continuation turns {@link drainTypedOperations} submits before it gives up on one instance —
- * the drain twin of {@link PLUGIN_UI_CONTINUATION_LIMIT}, which bounds ONE settle rather than the
- * poll chain across settles. */
+/** 📏️ Continuation turns per standing drain batch for one instance. The next batch retains
+ * the same operation owner and uses the same cooperative yields. */
 export const PLUGIN_OPERATION_DRAIN_BUDGET = 4_096;
 
 /** ⏱️ Upper bound on the re-poll delay a `TurnResult.next-wake` may request. `next-wake` has no

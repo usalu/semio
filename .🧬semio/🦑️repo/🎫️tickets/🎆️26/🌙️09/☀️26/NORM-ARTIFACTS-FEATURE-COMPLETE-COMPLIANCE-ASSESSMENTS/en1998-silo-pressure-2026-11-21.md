@@ -1,0 +1,7 @@
+# EN 1998 horizontal seismic silo pressure
+
+EN 1998-4:2006 §3.3(5)–(9) now has an editable case for a horizontal plane on a vertical wall over a flat bottom or in a conical or pyramidal hopper. The hopper uses its wall inclination from vertical, the station height from the apex and the filled height from the outlet. The circular wall uses an azimuth. Rectangular walls use their orientation relative to the same horizontal action. The report gives the reference pressure, signed increment and combined pressure in pascals. [EN 1998-4:2006 §3.3](https://gaprojekt.com/wp-content/uploads/2021/11/Eurocode-8-Design-of-structures-for-earthquake-resistance.pdf)
+
+The case checks non-negative total pressure across a plane of uniform static pressure using the maximum reference increment. If suction would occur anywhere, the case requires pressure redistribution that preserves the horizontal force resultant. The calculation takes documented project geometry and response acceleration. Nonuniform static pressure and the redistribution solution remain open.
+
+The Rust kernel and catalogue evaluator matched SQLite in all 23 cases. The language-independent fixture covers both active depth limits, circular and rectangular orientation, the hopper inclination and datum, the zero-pressure boundary, missing contact and a plane that needs redistribution. TypeScript and Ajv validated the authored case and the mutation wires. All 500 archive tests passed with the updated case. A native editor regression requires the archived case to reach the full and incremental report paths.

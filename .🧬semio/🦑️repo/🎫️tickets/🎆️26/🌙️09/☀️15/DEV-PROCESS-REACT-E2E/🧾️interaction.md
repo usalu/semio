@@ -71,3 +71,9 @@ The shared artifact test driver now uses the issued original turn ceiling for ar
 The editor manifest and current supervisor agree on all eight standalone tests. The native source resolver found every source and literal fixture path. The four panel closures have 601–684 active lines. The interaction root has 700 lines and the original host configuration root has 22. The editor unit closure remains within the crate limits at 15 files, 3,749 active lines, and 252,320 bytes.
 
 The Workshop test `the_real_extension_pack_renders_each_catalog_section_once` still sent the four-extension contribution pack through ordinary command dispatch. That lane has no `setContributions` route. The test now installs the original pack through the shared addressed host configuration fixture, asserts publication in the Config lane, and retains the distinct catalogue section assertions. The integration closure contains no other ordinary contribution dispatch calls. The scoped diff check and existing Three.js stock capability oracle passed. The native integration execution remains with the supervised editor run.
+
+## Timeline and Exact Capability Placement
+
+The mounted timeline publishes a reorder handle for each step. React uses the retained row's native drag events. WGPU uses the row hit at release, and both carry the same stable step and document IDs. The inspector's reorder buttons remain available for keyboard interaction. [Timeline implementation and tests](timeline-drag-drop.md)
+
+Catalogue now has a Place capability row action alongside the existing label action. Its exact machine and capability IDs live in the addressed Workpiece transient owner. Hover and commit resolve the same authored workshop record and validate current stock. The arm stays local to that Workpiece and expires on document replacement. [Placement audit](capability-placement-audit.md)

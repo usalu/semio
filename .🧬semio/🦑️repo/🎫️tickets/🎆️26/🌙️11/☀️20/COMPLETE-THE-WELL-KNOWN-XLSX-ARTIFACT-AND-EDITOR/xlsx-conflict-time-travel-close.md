@@ -1,0 +1,9 @@
+# Native XLSX conflict original close
+
+The current captured Base test passes the archive reload and closes its replica. It then stalls closing the seeded original plugin app for the cascade withdrawal half. The backtrace enters `acceptance_cascade` at line 181, where `acceptance_close` precedes matching the returned withdrawal verdict. The old binary therefore leaves the withdrawal verdict undetermined.
+
+Three isolated replays of `conflict_history_edits_end_to_end` reproduce the registered original app teardown bound at rung TimeTravel with a release-only quote of 848 bytes and depth 3. The turn presents one item, a 32,768-byte copy ceiling, a 262,144-byte capacity ceiling, a 1,048,576-byte release ceiling, maximum depth 4,096, and 2,000,000 fuel. The quoted budget fits the turn. The fixture drains history-owner receipts before and after each close turn. The owner ordering first checks finalized and authoring work, asks the Store for original source retirement, then handles command discard, member review, and the selected TimeTravel ledger owner.
+
+Set `SEMIO_XLSX_ARCHIVE_PROGRESS=1` on a fresh native build to report the withdrawal verdict before original teardown. The close diagnostic now includes the terminal residue and ledger owner fronts. Captured replay durations were 56.84, 32.32 and 35.58 seconds. Darwin LLDB and sample did not produce a useful running stack on the captured binary. The native run remains the owner and progress oracle.
+
+Pinned Rust nightly parsed all three diagnostic edits. The adjacent TimeTravel custody Bun suite reported 15 pass and 7 fail. Its seven failed source-text checks concern original constructor, returned snapshot pump, child member close, inactive member retirement, command receipt, TimeTravel driver, and native config spellings outside the diagnostics; the native acceptance result is tracked separately.

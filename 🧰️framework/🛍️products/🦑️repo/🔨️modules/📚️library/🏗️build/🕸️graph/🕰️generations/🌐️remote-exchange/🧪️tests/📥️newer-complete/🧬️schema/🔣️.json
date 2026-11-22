@@ -1,0 +1,23 @@
+{
+  "$schema":"http://json-schema.org/draft-07/schema#",
+  "type":"array",
+  "minItems":1,
+  "items":{
+    "type":"object",
+    "additionalProperties":false,
+    "required":["name","sameSignatureFromOwnHead","headStateMs","headPublishedMs","headStale","headImplementation","localModifiedMs","localImplementation","readerImplementation","marginMilliseconds","keeps"],
+    "properties":{
+      "name":{"type":"string"},
+      "sameSignatureFromOwnHead":{"type":"boolean"},
+      "headStateMs":{"type":"integer","minimum":0},
+      "headPublishedMs":{"type":"integer","minimum":0},
+      "headStale":{"type":["integer","null"],"minimum":0},
+      "headImplementation":{"type":"string"},
+      "localModifiedMs":{"type":"integer","minimum":0},
+      "localImplementation":{"type":"string"},
+      "readerImplementation":{"type":["string","null"]},
+      "marginMilliseconds":{"type":"integer","minimum":0},
+      "keeps":{"type":"boolean"}
+    }
+  }
+}

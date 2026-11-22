@@ -21,7 +21,7 @@ export type GraphReadWatchV1=Readonly<{feed(text:string):void;verdict(at?:number
 /** 🩺️ Watches one graph read for published generations, completed startup and inference work and new observations within an active owner. Replayed work, running age, concurrency and waits do not renew the stall clock. The absolute read limit applies even when work keeps advancing. */
 export function createGraphReadWatchV1(policy:WantedServerPolicyV1=wantedServerPolicyV1,now:()=>number=Date.now,onWave?:(row:GraphWaveRowV1)=>void,startedMs:number=now(),observation?:ReadWatchObservationV1):GraphReadWatchV1{
  const config=policy.readProgress,ledgerKey="owners:ledger",high=new Map<string,[number,number]>(observation?.phases.map(({name,done,total})=>[name,[done,total]])),owners=new Map<string,number>(observation?.owners.map(({name,rows})=>[name,rows]));
- const phasePattern=new RegExp(config.phasePattern,"u"),ownerPattern=new RegExp(config.ownerRowPattern,"u"),ledgers=config.ledgerPatterns.map(pattern=>new RegExp(pattern,"u")),generations=config.generationPatterns.map(pattern=>new RegExp(pattern,"u"));
+ const phasePattern=new RegExp(config.phasePattern,"u"),ownerPattern=new RegExp(config.ownerRowPattern,"u"),sharedPattern=new RegExp(config.sharedClosuresPattern,"u"),ledgers=config.ledgerPatterns.map(pattern=>new RegExp(pattern,"u")),generations=config.generationPatterns.map(pattern=>new RegExp(pattern,"u"));
  const dependencyCounters=new RegExp(config.dependencyCounterPattern,"u"),storeOwnership=new RegExp(config.storeOwnershipPattern,"u"),sourcePattern=new RegExp(config.sourcePattern,"u"),sourceBatch=parserSchema.definitions.ProgressProtocol.const.operationBatch,startupCommands=new Set<string>(config.startupCommands);
  let progressAt=observation?.progressAt??now(),newest=observation?.generation??-1,registryRound=observation?.registryRound??0,pending="",dropping=false;
  const counted=(name:string,done:number,total:number):boolean=>{
@@ -103,6 +103,8 @@ export function createGraphReadWatchV1(policy:WantedServerPolicyV1=wantedServerP
   if(!Number.isSafeInteger(done)||!Number.isSafeInteger(total)||done>total)return;
   const name="build:graph-phase:"+phase.phase;
   if(done<(high.get(name)?.[0]??0))return;
+  const shared=phase.owners===undefined?undefined:sharedPattern.exec(phase.owners)?.groups;
+  if(shared!==undefined&&counted(name+":shared-closures",Number(shared.done),Number(shared.total)))progressAt=now();
   const completed=counted(name,done,total),advanced=phase.phase==="inference"&&phase.owners!==undefined&&rowsMoved(phase.owners);
   if(completed||advanced)progressAt=now();
  };

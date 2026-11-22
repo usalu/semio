@@ -1,7 +1,7 @@
 //! 📦️ Projects a normal indirect object from stable authored bytes into retained data.
 
 use super::XrefStreamError;
-use semio_framework_value::ValueRefusalKind;
+use semio_framework_value::{ByteReadRange, ByteReadSource, ValueRefusalKind};
 use semio_s_artifact_stdio_pdf_inferences::standards::v1_7::subsets::base::modules::filters::{DecodedStreamData, PdfDecodedStreamCursor, StreamDataGrant, StreamDataReceipt, StreamDataStatus};
 use semio_s_artifact_stdio_pdf_lexer::{CosGrant, CosLimits, CosReceipt, CosStatus, NormalObject, NormalObjectStatus, PdfCosCursor, PdfNormalObjectCursor, PdfStreamDictionaryCursor, StreamSpan};
 use semio_s_artifact_stdio_pdf_snapshot_2::standards::v1_7::subsets::base::schema::snapshot::{ObjRef, PdfDictEntry, PdfObject, PdfStreamFilter};
@@ -80,7 +80,7 @@ impl NormalProjectionCursor {
     }
 
     /// ▶️ Drives one object, one stream and its dictionary under the original stable source and grants.
-    pub fn advance(&mut self, source: &[u8], grant: CosGrant, cancelled: bool) -> NormalProjectionReceipt {
+    pub fn advance(&mut self, source: &(impl ByteReadSource + ?Sized), grant: CosGrant, cancelled: bool) -> NormalProjectionReceipt {
         use NormalProjectionEvent as Event;
         if cancelled && !matches!(self.phase, Phase::Closing | Phase::Closed) { self.phase = Phase::Cancelled; }
         match self.phase {
@@ -114,10 +114,10 @@ impl NormalProjectionCursor {
         }
     }
 
-    fn advance_frame(&mut self, source: &[u8], grant: CosGrant) -> NormalProjectionReceipt {
+    fn advance_frame(&mut self, source: &(impl ByteReadSource + ?Sized), grant: CosGrant) -> NormalProjectionReceipt {
         use NormalObjectStatus as Status;
         use NormalProjectionEvent as Event;
-        let step = self.frame.advance(source, grant, false);
+        let step = self.frame.advance_bytes(source.byte_len(), |position| source.byte_at(position), grant, false);
         let event = match step.status {
             Ok(Status::Complete) => {
                 self.current = self.frame.take_object();
@@ -160,15 +160,15 @@ impl NormalProjectionCursor {
         receipt(Ok(NormalProjectionEvent::More), 1)
     }
 
-    fn decode(&mut self, source: &[u8], grant: CosGrant) -> NormalProjectionReceipt {
+    fn decode(&mut self, source: &(impl ByteReadSource + ?Sized), grant: CosGrant) -> NormalProjectionReceipt {
         let Some(NormalObject { value: PdfObject::Dict(dict), stream: Some(span), .. }) = self.current.as_ref() else {
             return receipt(Err(XrefStreamError::Structure("framed PDF stream lost its dictionary")), 0);
         };
-        let Some(raw) = source.get(span.start..span.end) else {
+        let Some(raw) = span.end.checked_sub(span.start).and_then(|length| ByteReadRange::new(source, span.start, length)) else {
             return receipt(Err(XrefStreamError::Structure("retained PDF stream source changed")), 0);
         };
         let decoder = self.decoder.as_mut().expect("active PDF stream decoder");
-        let mut step = decoder.advance(dict, raw, stream_grant(grant), false);
+        let mut step = decoder.advance(dict, &raw, stream_grant(grant), false);
         if matches!(step.status, Ok(StreamDataStatus::Complete)) {
             self.data = decoder.take_output();
             if self.data.is_none() { return receipt(Err(XrefStreamError::Structure("retained PDF stream lost its decoded output")), step.work); }

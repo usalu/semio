@@ -17,7 +17,7 @@ use semio_renderer_wgpu_host_base::frame_latency::*;
 #[cfg(not(target_arch = "wasm32"))]
 use semio_renderer_wgpu_native_probe::native_socket_sqlite;
 #[cfg(not(target_arch = "wasm32"))]
-use semio_renderer_wgpu_native_probe::{NativeSocketProbeDiff, NativeSocketProbeMutation, NativeSocketProbeSnapshot};
+use semio_renderer_wgpu_native_probe::{NativeSocketProbeDiff, NativeSocketProbeMutation, NativeSocketProbeSnapshot, SetProbe};
 use semio_renderer_wgpu_shell_sync::Phase;
 #[cfg(test)]
 use semio_renderer_wgpu_ui_engine_tests::fixture_original_turn;

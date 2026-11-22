@@ -7,7 +7,8 @@ use semio_s_artifact_fem_3d_editor::editor::fem3d::Fem3dCommand;
 #[cfg(test)] use semio_plugin::component::NoConfig;
 #[cfg(test)] use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
 #[cfg(test)] use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
-#[cfg(test)] use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::patch_support::PatchSupport;
+#[cfg(test)] use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::patch_support::{handle, PatchSupport};
+#[cfg(test)] use semio_plugin::ConfigView;
 #[cfg(test)] use semio_plugin::component::Emit;
 #[cfg(test)] use semio_plugin::component::NoConfigMutation;
 #[cfg(test)] use semio_framework::Fault;
@@ -44,11 +45,11 @@ fn sibling_field_commands_and_inverse_preserve_concurrent_intent(){
     let first_then_second=vcs::apply_mutation(&vcs::apply_mutation(&base,&first).unwrap().0,&second).unwrap().0;
     let combined=vcs::apply_mutation(&vcs::apply_mutation(&base,&second).unwrap().0,&first).unwrap().0;
     assert_eq!(combined,first_then_second);
-    assert_eq!(combined.supports[0].fixed,vec![crate::FemDof::Tx,crate::FemDof::Ty,crate::FemDof::Rz]);
+    assert_eq!(combined.supports[0].fixed,vec![FemDof::Tx,FemDof::Ty,FemDof::Rz]);
     let mut undo=combined.clone();for inverse in protocol::ColdMutation::inverse(&first,&base).unwrap().iter().rev(){undo=vcs::apply_mutation(&undo,inverse).unwrap().0;}
     assert_eq!(undo,vcs::apply_mutation(&base,&second).unwrap().0,"undo owns no sibling field");
     let first_diff=protocol::ColdMutation::diff(&first,&base).into_parts().0;let second_diff=protocol::ColdMutation::diff(&second,&base).into_parts().0;
     let mut sum=first_diff.clone();protocol::ColdMutationDiff::absorb(&mut sum,second_diff);
     assert_eq!(protocol::apply_diff_cold(&sum,&base).unwrap(),combined);
-    assert_eq!(protocol::apply_diff_cold(&protocol::DiffAlgebra::inverse(&sum,&base),&combined).unwrap(),base);
+    assert_eq!(protocol::apply_diff_cold(&protocol::ColdDiffAlgebra::inverse(&sum,&base),&combined).unwrap(),base);
 }

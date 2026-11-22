@@ -6,6 +6,7 @@ import {isClosedOwnerRegistryInvalidationV1,withOwnerRegistryCustodyV1} from "..
 import {createGraphPhaseClockV1,writeGraphPhaseRowV1} from "../⏱️phases/🟨️.mjs";
 import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {type BuildOwnerRegistryV1} from "../🚪️admission/🟦️.ts";
+import {readFileSync} from "node:fs";
 import {readdir,readFile,lstat} from "node:fs/promises";
 import {join,dirname,relative,isAbsolute,resolve,sep} from "node:path";
 import {randomBytes,createHash} from "node:crypto";
@@ -96,7 +97,7 @@ export function generationHostV1(root:string,invocation:ScriptInvocation,phaseCo
     const capturedAt=Date.now(),all=await workspaceBuildFilesV1(root,invocation),members=buildGraphMembersV1(all),directoryPaths=inventoryDirectoriesV1.get(all)??[];
     const stamp=async<T>(paths:readonly string[],row:(path:string,status:NonNullable<Awaited<ReturnType<typeof statEntry>>>)=>T):Promise<T[]>=>{
       const out:T[]=new Array(paths.length);let next=0;
-      await Promise.all(Array.from({length:Math.min(64,paths.length)},async()=>{while(next<paths.length){const at=next++;checkScriptInvocation(invocation);const status=await statEntry(paths[at]!);if(!status)throw Object.assign(Error(`Build member removed during discovery: ${paths[at]}`),{code:"BUILD_MEMBERSHIP_CHANGED"});out[at]=row(paths[at]!,status);}}));
+      await Promise.all(Array.from({length:Math.min(64,paths.length)},async()=>{while(next<paths.length){const at=next++;checkScriptInvocation(invocation);const status=await statEntry(paths[at]!);if(!status)throw Object.assign(Error(`Build member removed during discovery: ${paths[at]}`),{code:"BUILD_MEMBERSHIP_CHANGED",paths:[paths[at]]});out[at]=row(paths[at]!,status);}}));
       return out;
     };
     const directories=await stamp(directoryPaths,(path,status)=>[path,status.mtimeMs,status.ino] as [string,number,number]),stamped=await stamp(members,(path,status)=>[path,status.mode] as [string,number]);
@@ -152,7 +153,7 @@ export function generationHostV1(root:string,invocation:ScriptInvocation,phaseCo
   const obtainClosure=async(namespace:"build-input-closures"|"build-lock-closures",key:string,signal=invocation.control.signal)=>{
     if(!closurePort)return "missing" as const;
     const {obtainClosureLeafV1}=await import("../🩹️closure-repair/🟨️.mjs"),verify=closurePort.verify;
-    return obtainClosureLeafV1({directory:closurePort.directory,namespace,key,fetch:exchange?(space,name,active)=>exchange.leaf({namespace:space,key:name,signal:active}):undefined,put:closurePort.put,verify:verify?(space,name)=>verify(space,name,signal):undefined,signal});
+    return obtainClosureLeafV1({directory:closurePort.directory,namespace,key,fetch:exchange?(space,name,active)=>exchange.leaf({namespace:space,key:name,signal:active}):undefined,put:closurePort.put,verify:verify?async(space,name)=>await verify(space,name,signal)===true:undefined,signal});
   };
   const release=async(options?:{more?:boolean})=>{observationV1.releaseInferenceMemoryV1();(await import("../../📥️inputs/🟨️.mjs")).releaseInputMemoryV1();if(!state.carry&&options?.more!==true){(await import("../📥️inference/🧭️script-inputs/🟨️.mjs")).resetClosureEntriesV1();setupSharesV1.delete(invocation);}graphStringInternerV1.clear();createMemoryPortsV1().collect();if(options?.more===true)(await import("../../🧠️memory/🧽️settle/🟨️.mjs")).reportRetainedGraphMemoryV1();};
   const prepareRebuild=async<T>(published?:PublishedGenerationV1<T>):Promise<{release?:()=>void;restored?:T}>=>{
@@ -167,9 +168,9 @@ export function generationHostV1(root:string,invocation:ScriptInvocation,phaseCo
     ...exchange?{exchange}:{},
     ...exchange&&wholeGate?{wholeGate}:{},
     workspaceRoot:root,separator:sep,language:resolveLanguageV1(CATALOG_LANGUAGES_V1,[],process.env).language,namedInputs:graphDeclarationV1("../🔣️policy.json").namedInputs,registryDigest,signal:invocation.control.signal,verbose:process.env.SEMIO_GRAPH_PHASES==="1"||process.env.SEMIO_BUILD_PROFILE_INPUTS==="1",
-    async wholeReadProgress(){const language=resolveLanguageV1(CATALOG_LANGUAGES_V1,[],process.env).language as "en"|"de",{collectFleetFactsV1,readFleetLeasesV1}=await import("../../🚢️fleet-status/📥️readers/🟦️.ts"),{summarizeFleetV1}=await import("../../🚢️fleet-status/🟦️.ts"),idle=async()=>({}),facts=await collectFleetFactsV1({root,environment:process.env,language,now:Date.now},{leases:readFleetLeasesV1,capacity:idle,bazel:idle,storage:idle,sealed:idle,generation:idle,scheduler:idle,fleet:idle},5000);return renderWholeReadProgressV1(summarizeFleetV1(facts,language).queues.graph.builder,language);},
+    async wholeReadProgress(){const language=resolveLanguageV1(CATALOG_LANGUAGES_V1,[],process.env).language as "en"|"de",{collectFleetFactsV1,readFleetLeasesV1}=await import("../../🚢️fleet-status/📥️readers/🟦️.ts"),{summarizeFleetV1}=await import("../../🚢️fleet-status/🟦️.ts"),idle=async()=>({}),facts=await collectFleetFactsV1({root,environment:process.env,language,now:Date.now},{leases:readFleetLeasesV1,capacity:idle,bazel:idle,storage:idle,sealed:idle,generation:idle,scheduler:idle,fleet:idle,workers:idle},5000);return renderWholeReadProgressV1(summarizeFleetV1(facts,language).queues.graph.builder,language);},
     async externalDependencies(){const{nxBuildEngineInputsV1}=await import("../../../🟨️.mjs");return["generic","native"].flatMap(family=>nxBuildEngineInputsV1(family as "generic"|"native").flatMap(row=>(row as {externalDependencies?:readonly string[]}).externalDependencies??[]));},
-    async preflight(){const{canonicalTestAggregatePolicyV1:policy,requireCanonicalTestAggregateV1}=await import("../../../⚡️caching/🗂️suites/🧮️aggregate/🟦️.ts");let text:string;try{text=await readFile(join(root,policy.root,"📋️project.json"),"utf8");}catch(error){if((error as NodeJS.ErrnoException).code==="ENOENT")return;throw error;}requireCanonicalTestAggregateV1(JSON.parse(text),policy.root);},
+    async preflight(){const{canonicalTestAggregatePolicyV1:policy,requireCanonicalTestAggregateV1}=await import("../../../⚡️caching/🗂️suites/🧮️aggregate/🟦️.ts");let text:string;try{text=await readFile(join(root,policy.root,"📋️project.json"),"utf8");}catch(error){if((error as NodeJS.ErrnoException).code==="ENOENT")return;throw error;}requireCanonicalTestAggregateV1(JSON.parse(text),policy.root,path=>readFileSync(join(root,path),"utf8"));},
     async identity(){requireCurrentFormatStampsV1(graphFormatStampsV1,"graph generation","refuse");return buildGraphGenerationIdentityV1(registry);},
     async implementationRows(){const producer=await import("../📥️inference/🟨️.mjs");await producer.libraryBootstrap;const rows:{kind:"digest";path:string;fact:{sha256:string;size:number;mtimeMs:number}}[]=[];for(const row of [...loadedGraphImplementationRowsV1,...producer.loadedImplementationRowsV1]){const inside=relative(root,row.path);if(inside===""||inside.startsWith("..")||isAbsolute(inside))continue;rows.push({...row,path:inside.split(sep).join("/")});}return producer.classifyImplementationRowsV1(rows);},
     release,
@@ -187,7 +188,7 @@ export function generationHostV1(root:string,invocation:ScriptInvocation,phaseCo
       try{
         if(rebuilding&&!funded){const prepared=await profilePhaseV1("graph.host.capacity",()=>prepareRebuild(published));releaseCapacity=prepared.release;if(prepared.restored!==undefined)return prepared.restored;}
         result=await withOwnerRegistryCustodyV1<T>(phaseControl.signal,contain=>profilePhaseV1("graph.host.custody",()=>withGenerationCustodyV1(root,invocation,phaseControl,request,(store,control,claim)=>{image=store.root;profileMarkV1("graph.host.custody-held");return contain(()=>body(store,control,claim));},peerWait)));
-      }catch(error){if(isClosedOwnerRegistryInvalidationV1(error))await release();else if(error?.code==="SEMIO_STALE_IMPLEMENTATION")await release().catch(()=>undefined);throw error;}
+      }catch(error){if(isClosedOwnerRegistryInvalidationV1(error))await release();else if(typeof error==="object"&&error!==null&&"code" in error&&error.code==="SEMIO_STALE_IMPLEMENTATION")await release().catch(()=>undefined);throw error;}
       finally{try{releaseCapacity?.();}finally{if(rebuilding)await markBuildCapacityPhaseV1("plan");}}
       if(rebuilding&&image!==undefined)await sweepSupersededBlocksV1(root,image,invocation,phaseControl,(key,fields)=>process.stderr.write(renderGenerationMessageV1(key as never,fields,resolveLanguageV1(CATALOG_LANGUAGES_V1,[],process.env).language)+"\n"));
       return result;
@@ -195,7 +196,12 @@ export function generationHostV1(root:string,invocation:ScriptInvocation,phaseCo
     storeOptions:(store:RepositoryCacheStoreV1,control:ResourceLeaseControl)=>({root:join(store.root,"generations"),fs:generationFilesV1(store),lease:lease(control),holds,doubt:factDoubt(store),derive:deriveAgain,resources:{facts:"repository-graph-facts:"+resolve(root)}}),
     membership,
     planUnchanged:async(live:{frontier:any})=>await seams.unchanged(live)&&await frontierHoldsV1(live.frontier,statEntry,{}),
-    prime:async(signal:AbortSignal|undefined)=>{const inference=await import("../📥️inference/🟨️.mjs");await inference.libraryBootstrap;await inference.primeSharedClosuresOfWorkspaceV1({workspaceRoot:root,signal});},
+    prime:async(signal:AbortSignal|undefined)=>{
+      signal?.throwIfAborted();
+      const {preflightToolClosuresInChildV1}=await import("../📥️inference/🧭️script-inputs/🪆️heavy-questions/🟨️.mjs");
+      await preflightToolClosuresInChildV1({workspaceRoot:root,signal});
+      signal?.throwIfAborted();
+    },
     discoverPart:async(spec:{cold:boolean;owners:string[];discover:string[];removed:string[];changed?:string[];previousEnv:string|null;previousParts?:EnvironmentStoredPartsV1;stubs:Record<string,BuildGraphPartStubV1>},signal:AbortSignal|undefined,control:ResourceLeaseControl,ownerDone?:()=>void,ownerRunning?:(running:readonly {name:string;seconds:number;kind?:string;rows?:number}[],decision?:unknown)=>unknown,ownerProgress?:(done:number,total:number)=>unknown)=>{
        const ownerSignal=signal===undefined?control.signal:AbortSignal.any([signal,control.signal]);
        ownerSignal.throwIfAborted();

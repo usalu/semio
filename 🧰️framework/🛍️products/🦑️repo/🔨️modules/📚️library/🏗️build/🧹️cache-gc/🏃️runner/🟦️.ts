@@ -1,4 +1,5 @@
 import {statSync} from "node:fs";
+import {nativeImageVolumeUsedBytesSyncV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🍎️image/⚖️availability/🟦️.ts";
 import {chmod,lstat,mkdir,readdir,readFile,rename,rmdir,stat,unlink,utimes,writeFile} from "node:fs/promises";
 import {nativeDirectoryProtocolV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/📁️directory/🟦️.ts";
 import {nativePartitionOfV1,nativeStatfsV1,nativeStorageBackendOfDirectoryV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
@@ -99,11 +100,17 @@ export async function probeCacheHeldV1(measure:CacheMeasureV1,ports:CacheRunnerP
 
 const exists=async(path:string):Promise<boolean>=>lstat(path).then(()=>true,()=>false);
 
+/** 🧮️ Reads occupied volume bytes even when the mounted filesystem reports writable headroom limited by the host. */
+export function mountedPartitionUsageV1(mountPoint:string,volume:Parameters<typeof nativeImageVolumeUsedBytesSyncV1>[1],platform:NodeJS.Platform,readUsage=nativeImageVolumeUsedBytesSyncV1){
+ const usedBytes=readUsage(mountPoint,volume,platform)??null;
+ return{usedBytes,capacityBytes:volume.blocks*volume.bsize,partial:usedBytes===null};
+}
+
 async function partitionStateV1(directory:string,ports:CacheRunnerPortsV1,deep:boolean):Promise<Readonly<{state:CachePartitionRowV1["state"];usedBytes:number|null;capacityBytes:number|null;partial:boolean;walked:boolean}>>{
  let outer;try{outer=await lstat(directory);}catch{return{state:"absent",usedBytes:null,capacityBytes:null,partial:false,walked:false};}
  const inner=join(directory,mount);let child;try{child=await lstat(inner);}catch{child=undefined;}
  const platform=ports.platform??process.platform,declaration=nativeStorageBackendOfDirectoryV1(directory,{platform}),backing=declaration.backingFilename,mounted=declaration.capabilities.includes("mounted-volume")?child?.isDirectory()===true&&child.dev!==outer.dev:nativePartitionOfV1(inner,platform)?.attached===true;
- if(mounted){const row=await nativeStatfsV1(inner,{platform,...(deep?{}:{maximumAgeMilliseconds:nativeDirectoryProtocolV1().usage.statusMaximumAgeMilliseconds})});return{state:"mounted",usedBytes:(row.blocks-row.bfree)*row.bsize,capacityBytes:row.blocks*row.bsize,partial:false,walked:false};}
+ if(mounted){const row=await nativeStatfsV1(inner,{platform,...(deep?{}:{maximumAgeMilliseconds:nativeDirectoryProtocolV1().usage.statusMaximumAgeMilliseconds})});return{state:"mounted",...mountedPartitionUsageV1(inner,row,platform),walked:false};}
  if(await exists(join(directory,backing)))return{state:"detached",usedBytes:null,capacityBytes:null,partial:false,walked:false};
  if(!child)return{state:"absent",usedBytes:null,capacityBytes:null,partial:false,walked:false};
  if(!deep)return{state:"directory",usedBytes:null,capacityBytes:null,partial:false,walked:false};
@@ -148,7 +155,7 @@ async function measureCollectionFleetV1(directory:string,id:string,record:CacheS
  }catch{ports.signal.throwIfAborted();return UNMEASURED_FLEET;}
 }
 
-/** 📈️ Reads the ledger's status from the disk without taking a lease and, by default, without walking any tree: partitions come from the (virtual) statfs of their mounted image, every other size from the size ledger that collections and deep status write, existence from one lstat or readdir. `deep` walks everything with progress and cancellation, then records what it measured. */
+/** 📈️ Reads the ledger's status from the disk without taking a lease and, by default, without walking any tree: partitions come from native filesystem measurements of their mounted image, every other size from the size ledger that collections and deep status write, existence from one lstat or readdir. `deep` walks everything with progress and cancellation, then records what it measured. */
 export async function reportCacheLedgerV1(workspace:string,ledger:CacheLedgerV1,ports:CacheRunnerPortsV1,partitions:CachePartitionBudgetsV1=budgetPolicy.partitions,only?:ReadonlySet<string>,options:Readonly<{deep:boolean;measureFleetForCollection?:boolean}>={deep:false}):Promise<CacheReportV1>{
  const deep=options.deep,sizes=deep?{version:1 as const,records:{}}:await loadCacheSizesV1(workspace,ledger),fresh:Record<string,CacheSizeRecordV1>={},rows:CachePartitionRowV1[]=[],areaRows:CacheAreaRowV1[]=[],states=new Map<string,Awaited<ReturnType<typeof partitionStateV1>>>(),used=new Map<string,Sized>(),partial=new Map<CacheRootIdV1,boolean>(),selected=(id:string)=>only===undefined||only.has(id),now=ports.now();
  const sized=async(key:string,paths:readonly string[],stage:string):Promise<Sized>=>{
@@ -261,6 +268,8 @@ export async function removeCacheTreeV1(path:string,ports:CacheRunnerPortsV1,sta
 
 /** 💽️ The bytes the host volume of a workspace still has free; unreadable is null. */
 export function machineHostFreeBytesV1(workspace:string):number|null{return nativeFreeSpaceSyncV1(workspace)?.availableBytes??null;}
+/** 💽️ The size of the host volume of a workspace; unknown or unreadable is null. */
+export function machineHostTotalBytesV1(workspace:string):number|null{return nativeFreeSpaceSyncV1(workspace)?.totalBytes??null;}
 
 /** 💽️ The bytes the host really holds for the fixed image of a partition directory (blocks, not size), null without an image file: raw images keep blocks freed inside them, so this is what the machine budget must count. */
 export function hostAllocationV1(directory:string):number|null{try{return statSync(join(directory,"fixed.dmg")).blocks*512;}catch{return null;}}
@@ -312,7 +321,7 @@ async function observe(base:string,names:readonly string[],id:string,custody:"qu
 }
 
 /** 🧹️ Plans and, unless asked to only plan, performs the collection: it scans every selected target, takes the area's exclusive lease without waiting, re-checks each unit right before removing it, and never touches a held or recently used one. */
-export async function collectCacheV1(workspace:string,ledger:CacheLedgerV1,request:Readonly<{dryRun:boolean;only?:ReadonlySet<string>;machine?:Readonly<{totalBytes:number;source:MachineSourceV1;policy?:MachinePolicyV1}>}>,ports:CacheRunnerPortsV1,output:CacheOutputV1,partitions:CachePartitionBudgetsV1=budgetPolicy.partitions):Promise<CacheCollectionV1>{
+export async function collectCacheV1(workspace:string,ledger:CacheLedgerV1,request:Readonly<{dryRun:boolean;only?:ReadonlySet<string>;reclaimBytes?:number;machine?:Readonly<{totalBytes:number;source:MachineSourceV1;policy?:MachinePolicyV1}>}>,ports:CacheRunnerPortsV1,output:CacheOutputV1,partitions:CachePartitionBudgetsV1=budgetPolicy.partitions):Promise<CacheCollectionV1>{
  const text=(key:string,variables:Readonly<Record<string,string|number>>={})=>cacheTextV1(output.language,key,variables),selected=(id:string)=>request.only===undefined||request.only.has(id),resolved:Resolved[]=[],delegated:{owner:string;text:string}[]=[],deferred:{slot:number;owner:string;id:string}[]=[],notes:string[]=[],now=ports.now();
  try{
   for(const area of ledger.areas){
@@ -328,7 +337,7 @@ export async function collectCacheV1(workspace:string,ledger:CacheLedgerV1,reque
    else{base=cacheRootDirectoryV1(workspace,ledger,area.root);const matcher=new RegExp(area.pattern!,"u");try{names=(await readdir(base)).filter(name=>matcher.test(name));}catch{names=[];}}
    const lease=area.collect.custody==="lease"?await ports.exclusive(area.collect.lease!):undefined,heldBy=area.collect.custody==="lease"&&!lease?area.collect.lease!:undefined;
    const units=heldBy?[]:await observe(base,names,area.id,area.collect.custody,ports,matcher);
-   resolved.push({target:{id:area.id,kind:"area",budgetBytes:cacheAreaBudgetBytesV1(ledger,area,partitions),unusedAgeMs:area.collect.unusedAgeMs,quietMs:area.collect.quietMs,...heldBy?{heldBy}:{},units},base,prefix:[],unusedAgeMs:area.collect.unusedAgeMs,loose:area.kind==="tree"||area.kind==="control",custody:area.collect.custody,...matcher?{units:matcher}:{},...lease?{release:()=>lease.release()}:{}});
+   resolved.push({target:{id:area.id,kind:"area",budgetBytes:cacheAreaBudgetBytesV1(ledger,area,partitions),unusedAgeMs:area.collect.unusedAgeMs,quietMs:area.collect.quietMs,...heldBy?{heldBy}:{},...area.collect.pressure==="pinned"?{pinned:true as const}:{},units},base,prefix:[],unusedAgeMs:area.collect.unusedAgeMs,loose:area.kind==="tree"||area.kind==="control",custody:area.collect.custody,...matcher?{units:matcher}:{},...lease?{release:()=>lease.release()}:{}});
    if(heldBy)notes.push(text("gc.held",{path:area.id,holder:heldBy}));
   }
   if(request.only===undefined||request.only.has("retired"))for(const retirement of ledger.retirements){
@@ -349,8 +358,8 @@ export async function collectCacheV1(workspace:string,ledger:CacheLedgerV1,reque
    if(fleetStatePartial)notes.push(text("machine.gc.fleetIncomplete"));
    else{
     const first=planCacheCollectionV1(targets,now),retained=new Map(first.map(plan=>[plan.id,plan.retainedBytes])),members=resolved.filter(row=>row.loose&&row.target.kind==="area"),looseBytes=resolved.filter(row=>row.loose).reduce((sum,row)=>sum+(retained.get(row.target.id)??0),0);
-    const evictableBytes=resolved.filter(row=>row.loose&&row.target.heldBy===undefined).reduce((sum,row)=>sum+row.target.units.filter(unit=>unit.held===undefined&&now-unit.recencyMs>=row.target.quietMs).reduce((inner,unit)=>inner+unit.bytes,0),0);
-    machine=planMachineBudgetV1({totalBytes:request.machine.totalBytes,hostFreeBytes:machineHostFreeBytesV1(workspace),uses:machineUsesV1(report,{usedBytes:looseBytes,evictableBytes})},request.machine.policy);
+    const evictableBytes=resolved.filter(row=>row.loose&&row.target.heldBy===undefined&&!row.target.pinned).reduce((sum,row)=>sum+row.target.units.filter(unit=>unit.held===undefined&&now-unit.recencyMs>=row.target.quietMs).reduce((inner,unit)=>inner+unit.bytes,0),0);
+    machine=planMachineBudgetV1({totalBytes:request.machine.totalBytes,hostFreeBytes:machineHostFreeBytesV1(workspace),hostTotalBytes:machineHostTotalBytesV1(workspace),uses:machineUsesV1(report,{usedBytes:looseBytes,evictableBytes})},request.machine.policy);
     const quota=machine.stores.find(store=>store.id==="loose");
     if(quota){
      const split=splitMachineBudgetV1(Math.max(0,quota.contentLimitBytes-fleetStateBytesV1(report)),members.map(row=>({id:row.target.id,weight:Math.max(1,row.target.budgetBytes??retained.get(row.target.id)??1),floor:0,demand:retained.get(row.target.id)??0})),false);
@@ -372,7 +381,7 @@ export async function collectCacheV1(workspace:string,ledger:CacheLedgerV1,reque
    const answer=ports.delegate?await ports.delegate(row.owner,row.id,request.dryRun,output.language,{machine,selected:request.only!==undefined}):undefined;
    if(answer!==undefined){delegated.push({owner:row.owner,text:answer});notes[row.slot]=text("gc.owner",{owner:row.owner,text:answer});}else notes[row.slot]=text("gc.managed",{id:row.id,owner:row.owner});
   }
-  const plans=planCacheCollectionV1(targets,now),removed:CacheRemovalV1[]=[],failed:{target:string;name:string;message:string}[]=[],gone=new Map<string,number>(),goneNames=new Set<string>();let kept=0,freed=0;
+  const plans=planCacheCollectionV1(targets,now,request.reclaimBytes??0),removed:CacheRemovalV1[]=[],failed:{target:string;name:string;message:string}[]=[],gone=new Map<string,number>(),goneNames=new Set<string>();let kept=0,freed=0;
   output.write(text("gc.start",{count:plans.length,mode:text(request.dryRun?"gc.mode.plan":"gc.mode.apply")}));
   for(const note of notes)output.write(note);
   for(const[index,plan]of plans.entries()){

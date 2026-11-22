@@ -34,6 +34,11 @@ test("a complete head that a restore would take is fetched at once, without a cl
  expect(said).toEqual([wholeGateTextV1("en","fetching",{owners:20,age:2})]);
 });
 
+test("a machine that already holds owners still fetches a newer complete head for the rest instead of skipping it",async()=>{
+ const fleet=makeFleet(),outcome=await gate(fleet,"b",async()=>({...complete,held:7}));
+ expect(outcome.outcome).toBe("fetch");expect(fleet.log.filter(row=>row.includes("claim"))).toEqual([]);
+});
+
 test("a machine that holds a generation of its own reads the difference alone and takes no claim",async()=>{
  const fleet=makeFleet(),outcome=await gate(fleet,"b",async()=>({...none,held:20}));
  expect(outcome.outcome).toBe("skipped");expect(fleet.log.filter(row=>row.includes("claim"))).toEqual([]);

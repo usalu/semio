@@ -2,7 +2,7 @@
 //! counterpart of the editor's single-window `edit` mode.
 
 use crate::modes::view::windows::workpiece;
-use semio_plugin::create_default_layout;
+use semio_plugin::{create_default_layout, Axis};
 use semio_ui_locale::LocalizedLabel;
 use semio_plugin::ModeDefinition;
 use semio_plugin::WindowLayout;
@@ -17,7 +17,7 @@ pub fn definition() -> ModeDefinition {
 
 /// 🪟️ Single full-pane Workpiece window — the read-only viewer has no chrome to allocate around it.
 pub fn layout() -> WindowLayout {
-    create_default_layout(&[workpiece::PROCESS3D_VIEW_WINDOW_MAIN.into()], "row", None, Some(&["Workpiece".into()]))
+    create_default_layout(&[workpiece::PROCESS3D_VIEW_WINDOW_MAIN.into()], Axis::Horizontal, None, Some(&["Workpiece".into()]))
 }
 //#endregion 🔖️Definition
 

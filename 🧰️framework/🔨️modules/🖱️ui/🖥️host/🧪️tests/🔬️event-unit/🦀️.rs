@@ -37,6 +37,34 @@ fn browser_schema_and_canonical_trace_decode_without_dependencies() {
     assert_eq!(decoded, 10);
 }
 
+/// ⌨️ A browser key event rides its auto-repeat flag as the sixth modifier bit: a repeating key-down decodes `repeat`, the same bytes as a key-up never do.
+#[test]
+fn browser_key_events_carry_the_auto_repeat_bit() {
+    let canvas = CanvasId::try_new(1).unwrap();
+    let listener = ListenerId::try_new(1, 1).unwrap();
+    let event = |code: u16, modifiers: u8| {
+        let mut bytes = vec![1];
+        for _ in 0..3 {
+            bytes.extend_from_slice(&1_u32.to_le_bytes());
+        }
+        bytes.push(modifiers);
+        bytes.extend_from_slice(&1_u16.to_le_bytes());
+        bytes.push(b'a');
+        AbiEvent {
+            request_id: semio_framework_abi::AbiRequestId(1),
+            generation: 1,
+            sequence: 0,
+            event: semio_framework_abi::AbiEventCode::try_new(code).unwrap(),
+            status: semio_framework_abi::AbiStatus::OK,
+            bytes: semio_framework_abi::AbiBytes::try_new(bytes).unwrap(),
+        }
+    };
+    let held = EventModifiers { shift: true, ..Default::default() };
+    assert_eq!(decode_browser_host_event(&event(BROWSER_EVENT_KEY_DOWN, 1 | 16), canvas, listener), Ok(BrowserHostEvent::Dispatch(DispatchEvent::KeyDown { key: "a".into(), modifiers: held, repeat: true })));
+    assert_eq!(decode_browser_host_event(&event(BROWSER_EVENT_KEY_DOWN, 1), canvas, listener), Ok(BrowserHostEvent::Dispatch(DispatchEvent::KeyDown { key: "a".into(), modifiers: held, repeat: false })));
+    assert_eq!(decode_browser_host_event(&event(BROWSER_EVENT_KEY_UP, 1 | 16), canvas, listener), Ok(BrowserHostEvent::Dispatch(DispatchEvent::KeyUp { key: "a".into(), modifiers: held })));
+}
+
 fn decode_fixture_hex(value: &str) -> Vec<u8> {
     value
         .as_bytes()

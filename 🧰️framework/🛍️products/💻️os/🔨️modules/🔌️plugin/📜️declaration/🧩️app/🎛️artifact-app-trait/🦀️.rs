@@ -703,6 +703,9 @@ pub trait ArtifactApp: Default + Send + 'static {
     async fn natural_file_codec() -> Option<NaturalFileCodec> {
         None
     }
+    /// 🧮 Maximum selected natural bytes when the app installs an original paged decoder.
+    fn natural_file_paged_maximum_bytes() -> u32 { 0 }
+
     /// 💾️ Encodes genuine natural-format bytes; unsupported apps must keep the default refusal.
     async fn encode_natural_file(_snapshot: &Self::Snapshot) -> Result<Vec<u8>, MediaError> {
         Err(MediaError::NotImplemented)

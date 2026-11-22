@@ -12,6 +12,7 @@ pub mod standards {
             pub mod any {
                 #[path = "."]
                 pub mod schema {
+                    #[cfg(test)]
                     pub use semio_s_artifact_architect_program_schema::standards::v1::subsets::any::schema::*;
                     #[path = "../../../../🧱️kernel/🦀️.rs"]
                     pub mod kernel;

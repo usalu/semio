@@ -3,6 +3,9 @@
 //! Members of tier-1 crates are methods of their component struct with the lower components as parameters; use-case members stay `impl ShellState` and address the components as `self.<component>.<field>`; a private item that crossed a module boundary was widened to `pub(super)`.
 
 use super::*;
+#[cfg(not(target_arch = "wasm32"))]
+#[path = "📥️restore.rs"]
+mod native_restore;
 use semio_os_config::opening_config::mutations::{apply_local_folders_config_mutation, attach_local_folder, detach_local_folder, LocalFolderBinding, LocalFolderBindings, LocalFolderRef, LocalFoldersConfigMutation, LOCAL_FOLDERS_CONFIG_SCHEMA};
 
 //#region 🔖️HostRouteFolder
@@ -29,8 +32,43 @@ impl<'ctx> WindowActionsCtx<'ctx> {
     /// surface refreshes. `true` when an archive was restored.
     #[cfg(not(target_arch = "wasm32"))]
     pub async fn restore_folder_archive(&mut self, path: &str, document_id: &str) -> Result<bool, String> {
-        let Some(bytes) = store_sync::sync::FolderEventLogStorage::new(std::path::PathBuf::from(path)).read_archive(document_id).await.map_err(|error| error.to_string())? else { return Ok(false) };
-        self.restore_document_archive_bytes(&bytes).await?;
+        use protocol::channel::archive_ingress::folder_archive_load::FolderArchiveLoadKey;
+        use std::sync::atomic::{AtomicU64, Ordering};
+        static OPERATION: AtomicU64 = AtomicU64::new(1);
+        let session = self.docs.session.clone().ok_or("session missing")?;
+        let schema = &session.app.io.artifact_schema;
+        let storage = store_sync::sync::FolderEventLogStorage::new(std::path::PathBuf::from(path));
+        let limit = native_restore::NATIVE_FOLDER_ARCHIVE_REOPEN_MAXIMUM_BYTES;
+        let cancelled = || false;
+        let Some(mut source) = storage.open_archive_source(document_id, schema, limit, &cancelled).map_err(|error| error.to_string())? else {
+            return Ok(false);
+        };
+        let seal = source.seal();
+        if seal.extent <= protocol::channel::archive_reopen_route::DOCUMENT_ARCHIVE_CONTIGUOUS_REOPEN_MAXIMUM_BYTES {
+            let mut bytes = Vec::new();
+            bytes.try_reserve_exact(seal.extent).map_err(|error| error.to_string())?;
+            bytes.resize(seal.extent, 0);
+            let mut offset = 0;
+            while offset < seal.extent {
+                let count = source.read_next(&mut bytes[offset..], &cancelled).map_err(|error| error.to_string())?;
+                if count == 0 { return Err("folder record ended prematurely".into()); }
+                offset += count;
+            }
+            if !storage.archive_source_is_current(document_id, schema, seal, limit, &cancelled).map_err(|error| error.to_string())? {
+                return Err("folder archive changed during restore".into());
+            }
+            self.restore_document_archive_bytes(&bytes).await?;
+            return Ok(true);
+        }
+        let plugin = self.plugins.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id).cloned().ok_or("plugin missing")?;
+        let sequence = OPERATION.fetch_add(1, Ordering::Relaxed);
+        let key = FolderArchiveLoadKey { instance: session.instance_id, activation: 0, lifetime: 0, sequence };
+        let operation = key.operation().ok_or("folder archive operation authority exhausted")?;
+        native_restore::restore(&storage, source, key, document_id, schema, cancelled,
+            |request| { let plugin = plugin.clone(); Box::pin(async move { plugin.exchange_folder_archive(request).await }) }).await?;
+        plugin.finish_paged_folder_archive(session.instance_id, operation).await.map_err(|error| error.to_string())?;
+        self.as_session().refresh_history_snapshot().await;
+        self.refresh_ui(UiDirtyScope::Full).await?;
         Ok(true)
     }
 
@@ -40,7 +78,7 @@ impl<'ctx> WindowActionsCtx<'ctx> {
         let archive = protocol::decode_document_archive_bytes(bytes).await.map_err(|error| error.to_string())?;
         let session = self.docs.session.clone().ok_or("session missing")?;
         let plugin = self.plugins.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id).cloned().ok_or("plugin missing")?;
-        plugin.load_app_document_archive(session.instance_id, &archive).await.map_err(|fault| fault.to_string())?;
+        plugin.load_app_document_archive(session.instance_id, &archive).await.map_err(|error| error.to_string())?;
         self.as_session().refresh_history_snapshot().await;
         self.refresh_ui(UiDirtyScope::Full).await
     }

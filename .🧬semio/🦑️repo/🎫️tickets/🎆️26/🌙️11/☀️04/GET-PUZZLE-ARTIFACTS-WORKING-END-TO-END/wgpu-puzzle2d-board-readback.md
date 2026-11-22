@@ -1,0 +1,15 @@
+# Puzzle 2D Native Board Readback
+
+The normal BoardHost already owns `build_vector_scene`. The EngineCanvas adapter's separate board crate only supplies scene admission and other surface orchestration. The production `CanvasRasterSession` is independently runnable from the same native Vello stack used by EngineCanvas.
+
+The warm graph for the Puzzle-specific host wrapper `6426e2ec0c773b2f` failed to link. Selected transitive libraries reuse their filename fingerprints but carry different compiler metadata hashes, including `semio_framework_value-9bdf583128e12ac9`, `semio_framework_value_retained_clone-34dfe9b80055e114`, and `compiler-7bb251dd0e94ec33`. The alternate normal BoardHost `84dcd3ec09f56cb2`, CanvasScene `836564b8f07877db`, and WGPU `4a28f827e24dc36a` share the fingerprint graph of the passing native Puzzle 3D GPU probe.
+
+The readback probe takes the authored `board` snapshot in the Puzzle 2D history fixture. It uses the production snapshot decoder, pointer down, move and cancel methods, and `build_vector_scene`. A real native `CanvasRasterSession` renders these frames to mapped WGPU RGBA textures. The grid is disabled to isolate the board. The two fixed pixel samples are x=256 and x=320 at y=128 on a 512 × 256 frame. The pressed frame paints the original center, and the held frame clears it and fills the translated center. Cancellation returns the authored node coordinates, paints the original center again and vacates the translated sample. The pointer-down method sets hover, and the cancel method restores pose and staged selection while leaving the current hover. Full-frame differences can therefore include highlight changes. The sample assertions establish geometric restoration independently of that paint state.
+
+The single native probe completed successfully on SwiftShader Device (Subzero). The idle board painted 2,992 pixels. Compared with the pressed frame, the held frame changed 5,322 pixels inside x=195–380 and y=67–188. A separate Python comparison verified alpha sequences of 255/0/255 at the original center and 0/255/0 at the translated center, in press/hold/cancel order. The locked board peer's control sample at x=456 retained alpha 128 throughout. The board host and its caller retired successfully.
+
+From the repository root, run `python3 '<ticket>/verify-puzzle3d-scene-handoff.py' board` with the Chromium SwiftShader ICD supplied through `VK_DRIVER_FILES` or located in the Playwright headless Chromium cache. The executable and RGBA frames are kept under `🗑️generated/puzzle2d-board-readback`, and the final run logs to `🗑️generated/puzzle2d-board-readback-final.log`.
+
+The warm-cache executable exercises the BoardHost and canvas raster stages directly. Registered window composition, action transport, input coalescing, prepared raster residency and final EngineCanvas composition remain outside its scope. Every prebuilt WGPU renderer lacks the `canvas-raster` feature, and the engine attach and registry packages have no compatible linked artifacts in the ticket cache.
+
+[Probe](./verify-puzzle2d-board-readback.rs) · [Warm-cache wrapper](./verify-puzzle3d-scene-handoff.py)

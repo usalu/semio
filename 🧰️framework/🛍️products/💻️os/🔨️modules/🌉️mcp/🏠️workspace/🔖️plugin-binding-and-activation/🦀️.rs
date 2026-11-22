@@ -106,6 +106,7 @@ pub fn activate_plugin_instance(
 
     let assets = semio_plugin_host::package_assets::package_file_assets(repo_root, &descriptor.assets).map_err(|message| GatewayError::new(GatewayErrorCode::Internal, format!("`{}` package assets: {message}", entry.plugin_id)))?;
     let open_event = semio_framework::kernel::Event::InstanceOpen {
+        purpose: semio_framework::kernel::ActorInstanceOpenPurpose::Ordinary,
         request: semio_framework::kernel::ActorInstanceOpenRequest { activation_generation: 1, instance_id: u32::from(plugin_ordinal), request_sequence: 1 },
         app_id: semio_framework::kernel::AppInstanceId(app_ref.app_id.clone()),
         actor: actor_label.to_string(),

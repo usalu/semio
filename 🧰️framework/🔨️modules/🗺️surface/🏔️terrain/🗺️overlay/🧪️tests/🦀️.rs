@@ -65,11 +65,11 @@ fn authored_polar_overlays_use_exact_grid_bounds_and_local_mesh_triangles() {
     let bounds = serde_json::from_value(fixture["bounds"].clone()).unwrap();
     let [lon, lat]: [f64; 2] = serde_json::from_value(fixture["origin"].clone()).unwrap();
     let exaggeration = fixture["exaggeration"].as_f64().unwrap();
-    let height = |field: &str| fixture[field].as_i64().unwrap() as i16;
-    let rows = (0..GRID as i16).map(|row| (0..GRID as i16).map(|column| {
+    let height = |field: &str| fixture[field].as_i64().unwrap() as i32 * 1000;
+    let rows_millimetres = (0..GRID as i32).map(|row| (0..GRID as i32).map(|column| {
         height("heightAtSouthWest") + height("heightStepEast") * column + height("heightStepNorth") * row
     }).collect()).collect();
-    let source = super::super::TerrainElevationGrid { bounds, rows };
+    let source = super::super::TerrainElevationGrid { missing_samples: None, bounds, rows_millimetres };
     let overlays = serde_json::from_value(fixture["overlays"].clone()).unwrap();
     let mut session = TerrainSessionCore::default();
     session.set_project_origin(lon, lat);

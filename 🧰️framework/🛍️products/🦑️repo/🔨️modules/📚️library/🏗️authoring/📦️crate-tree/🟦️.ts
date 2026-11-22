@@ -9,9 +9,10 @@ import { readCargoLib } from "./🗺️plan/📦️cargo-lib/🟦️.ts";
 import { weaveRootEdits } from "./🗺️plan/🪢️weave/🟦️.ts";
 import { type ArtifactCratePlan, type CrateMeasure, type PlannedCrate } from "./🗺️plan/🧾️model/🟦️.ts";
 import { buildTestkitCrate, cfgFeatures, declaredNames, externalDependencies, optionalDependencyRow, planTestkitWiring, requiredTestFeatures, scanTestGates, testOnlyGate, testkitFeatureRow, withFeatureRows, withRequiredFeatures, type CrateWiring, type ExternalDependency, type ExternalGateReader, type TestkitCrate } from "./🧰️testkit/🟦️.ts";
-import { addWorkspaceMembers, manifestRowKey, rebaseManifestDirPaths, renderMirrorFiles, patchCargoLock, patchRouterPackages, readManifestDependencyRows, rebaseManifestRow, relativePosix, renderCrateManifest, renderMirrorRoot, type ManifestDependencyRows, type MirrorSpec, type MirrorUnit } from "./📝️render/🟦️.ts";
+import { addWorkspaceMembers, removeWorkspaceMembers, manifestRowKey, rebaseManifestDirPaths, renderMirrorFiles, patchCargoLock, patchRouterPackages, readManifestDependencyRows, rebaseManifestRow, relativePosix, renderCrateManifest, renderMirrorRoot, type ManifestDependencyRows, type MirrorSpec, type MirrorUnit } from "./📝️render/🟦️.ts";
 import { demoteDanglingOuterDocs, parseRustSourceTree, rustOuterDocStart } from "./🌳️module-tree/🟦️.ts";
 import { FIXTURE_READER_CRATE, FIXTURE_READER_PACKAGE_DIR, resolveFixturePlaceholders } from "./🧪️test-closure/🟦️.ts";
+import { deltaWrites, supersededCrates } from "./♻️recarve-delta/🟦️.ts";
 import { runtimeParseTomlV1 } from "../../../../../../📦️packages/🟦️typescript/⚙️runtime/📄️parse/🟦️.ts";
 
 export { planArtifactCrates } from "./🗺️plan/🧮️pack/🟦️.ts";
@@ -185,7 +186,7 @@ async function testkitCrateOf(plan: ArtifactCratePlan, overlay: ReadonlyMap<stri
 export async function carveWrites(plan: ArtifactCratePlan): Promise<{ writes: CarveFileWrite[]; rootLib: CrateMeasure; rootTest: CrateMeasure; fileTexts: Map<string, string> }> {
   const writes: CarveFileWrite[] = [];
   const packageManifestPath = resolve(plan.repoRoot, plan.packageDir, "Cargo.toml");
-  const originalManifest = readFileSync(packageManifestPath, "utf8");
+  const originalManifest = plan.carved?.uncarvedManifest ?? readFileSync(packageManifestPath, "utf8");
   const rows = readManifestDependencyRows(originalManifest);
   const artifactPackageDir = resolve(plan.repoRoot, plan.packageDir);
   const crateById = new Map(plan.crates.map((crate) => [crate.id, crate]));
@@ -228,6 +229,7 @@ export async function carveWrites(plan: ArtifactCratePlan): Promise<{ writes: Ca
       devDependencyRows: [...rows.devDependencies.map((row) => rebaseManifestRow(row, artifactPackageDir, packageDir)), ...siblingDevRows],
       targetSections: rows.targetSections.map((section) => rebaseManifestRow(section, artifactPackageDir, packageDir)),
       featureRows: [...features.map((feature) => featureRow(feature, crate.dependsOn.map((id) => crateById.get(id)!.name))), ...mine.features.map(testkitFeatureRow)],
+      ownedEffs: [...new Set(crate.slices.flatMap((slice) => slice.decls.map((decl) => decl.eff.join("::"))))].sort(),
     });
     writes.push({ path: join(crate.packageDir, "Cargo.toml"), action: existsSync(join(packageDir, "Cargo.toml")) ? "update" : "create", content: manifest });
     const mirror = mirrors.get(crate.id)!;
@@ -270,13 +272,15 @@ export async function carveWrites(plan: ArtifactCratePlan): Promise<{ writes: Ca
   const facadeText = withRequiredFeatures(withFeatureRows(withDevDependencyRows(facadeOptional.length ? insertDependencyRows(forwardedFacade, facadeOptional) : forwardedFacade, facadeDevRows), facade.features), wiring.requiredFeatures);
   writes.push({ path: join(plan.packageDir, "Cargo.toml"), action: "update", content: facadeText });
   const workspaceManifestPath = resolve(plan.artifactDir, "Cargo.toml");
-  writes.push({ path: relativePosix(plan.repoRoot, workspaceManifestPath), action: "update", content: addWorkspaceMembers(readFileSync(workspaceManifestPath, "utf8"), plan.crates.map((crate) => relativePosix(plan.artifactDir, resolve(plan.repoRoot, crate.packageDir)))) });
+  const superseded = supersededCrates(plan);
+  const workspaceText = removeWorkspaceMembers(addWorkspaceMembers(readFileSync(workspaceManifestPath, "utf8"), plan.crates.map((crate) => relativePosix(plan.artifactDir, resolve(plan.repoRoot, crate.packageDir)))), superseded.map((crate) => relativePosix(plan.artifactDir, resolve(plan.repoRoot, crate.packageDir))));
+  writes.push({ path: relativePosix(plan.repoRoot, workspaceManifestPath), action: "update", content: workspaceText });
   const routerPath = resolve(artifactPackageDir, "📜️script.ts");
-  if (existsSync(routerPath)) writes.push({ path: join(plan.packageDir, "📜️script.ts"), action: "update", content: patchRouterPackages(readFileSync(routerPath, "utf8"), plan.artifactCrate, plan.crates.map((crate) => crate.name)) });
+  if (existsSync(routerPath)) writes.push({ path: join(plan.packageDir, "📜️script.ts"), action: "update", content: patchRouterPackages(readFileSync(routerPath, "utf8"), plan.artifactCrate, plan.crates.map((crate) => crate.name), superseded.map((crate) => crate.name)) });
   const lockPath = resolve(plan.artifactDir, "Cargo.lock");
   if (existsSync(lockPath)) {
     const memberNames = new Set<string>();
-    for (const member of ((runtimeParseTomlV1(readFileSync(workspaceManifestPath, "utf8")) as { workspace?: { members?: string[] } }).workspace?.members ?? [])) {
+    for (const member of ((runtimeParseTomlV1(workspaceText) as { workspace?: { members?: string[] } }).workspace?.members ?? [])) {
       try { memberNames.add((runtimeParseTomlV1(readFileSync(resolve(plan.artifactDir, member, "Cargo.toml"), "utf8")) as { package: { name: string } }).package.name); } catch { continue; }
     }
     writes.push({ path: relativePosix(plan.repoRoot, lockPath), action: "update", content: patchCargoLock(readFileSync(lockPath, "utf8"), plan.artifactCrate, plan.crates.map((crate) => ({ name: crate.name, dependsOn: crate.dependsOn.map((id) => crateById.get(id)!.name) })), memberNames) });
@@ -287,7 +291,7 @@ export async function carveWrites(plan: ArtifactCratePlan): Promise<{ writes: Ca
     const at = writes.findIndex((write) => write.path === manifestPath);
     if (at >= 0) writes[at] = { ...writes[at]!, content: withFixtureReaderDevDependency(writes[at]!.content, owner.dir, plan.repoRoot) };
   }
-  return { writes, rootLib, rootTest, fileTexts };
+  return { writes: deltaWrites(plan, writes), rootLib, rootTest, fileTexts };
 }
 
 const EXTERNAL_GATE_CACHE = new Map<string, ReadonlySet<string> | null>();
@@ -418,7 +422,11 @@ async function planCarveWiring(plan: ArtifactCratePlan, originalManifest: string
 /** ➕️ Adds dependency rows to the `[dependencies]` section of a manifest, after the rows it has. */
 function insertDependencyRows(manifestText: string, rows: readonly string[]): string {
   const lines = manifestText.split("\n");
-  lines.splice(lines.findIndex((line) => /^\[dependencies\]\s*$/u.test(line)) + 1, 0, ...rows);
+  const at = lines.findIndex((line) => /^\[dependencies\]\s*$/u.test(line));
+  let end = at + 1;
+  while (end < lines.length && !/^\[/u.test(lines[end]!)) end += 1;
+  const present = new Set(lines.slice(at + 1, end).map(manifestRowKey));
+  lines.splice(at + 1, 0, ...rows.filter((row) => !present.has(manifestRowKey(row))));
   return lines.join("\n");
 }
 

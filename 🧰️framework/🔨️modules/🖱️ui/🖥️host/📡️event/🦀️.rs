@@ -123,9 +123,9 @@ pub fn decode_browser_host_event(event: &AbiEvent, canvas: CanvasId, listener: L
             modifiers: modifiers_from_bits(decoder.u8()?),
         }),
         BROWSER_EVENT_KEY_DOWN | BROWSER_EVENT_KEY_UP => {
-            let modifiers = modifiers_from_bits(decoder.u8()?);
+            let bits = decoder.u8()?;
             let key = decoder.string()?;
-            BrowserHostEvent::Dispatch(key_dispatch_event(key, modifiers, event.event.get() == BROWSER_EVENT_KEY_DOWN))
+            BrowserHostEvent::Dispatch(key_dispatch_event(key, modifiers_from_bits(bits), event.event.get() == BROWSER_EVENT_KEY_DOWN, bits & KEY_REPEAT_BIT != 0))
         }
         BROWSER_EVENT_TEXT => BrowserHostEvent::Dispatch(DispatchEvent::TextInput { text: decoder.string()? }),
         BROWSER_EVENT_CLOSE => BrowserHostEvent::Closed,
@@ -146,6 +146,9 @@ fn pointer_info_from_browser_tag(pointer_id: i32, kind: u8, pressure: f32, tilt_
     let tilt = (tilt_x.is_finite() && tilt_y.is_finite()).then_some((tilt_x, tilt_y));
     PointerInfo { id: pointer_id_from_web(pointer_id), kind, pressure, tilt }
 }
+
+/// ⌨️ The bit a browser key event adds to its modifier byte when the key auto-repeats (`KeyboardEvent.repeat`).
+const KEY_REPEAT_BIT: u8 = 16;
 
 fn modifiers_from_bits(bits: u8) -> EventModifiers {
     EventModifiers { shift: bits & 1 != 0, ctrl: bits & 2 != 0, alt: bits & 4 != 0, meta: bits & 8 != 0 }
@@ -742,9 +745,9 @@ pub fn ime_event_from_winit(event: winit::event::Ime) -> ImeEvent {
 /// 📥️ The small final step every normalized piece above feeds into — kept separate from the
 /// per-platform extraction so both native and web share this one assembly point.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-pub fn key_dispatch_event(logical: String, modifiers: EventModifiers, pressed: bool) -> DispatchEvent {
+pub fn key_dispatch_event(logical: String, modifiers: EventModifiers, pressed: bool, repeat: bool) -> DispatchEvent {
     if pressed {
-        DispatchEvent::KeyDown { key: logical, modifiers }
+        DispatchEvent::KeyDown { key: logical, modifiers, repeat }
     } else {
         DispatchEvent::KeyUp { key: logical, modifiers }
     }

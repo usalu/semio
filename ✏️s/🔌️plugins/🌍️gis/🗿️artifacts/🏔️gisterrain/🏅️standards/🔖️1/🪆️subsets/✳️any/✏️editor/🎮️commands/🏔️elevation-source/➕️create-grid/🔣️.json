@@ -3,12 +3,14 @@
   "title": "Create Elevation Grid",
   "type": "object",
   "additionalProperties": false,
-  "required": ["west", "south", "east", "north", "height"],
+  "required": ["west", "south", "east", "north", "columns", "rows", "height"],
   "properties": {
     "west": { "type": "number", "minimum": -180, "exclusiveMaximum": 180 },
     "south": { "type": "number", "minimum": -90, "exclusiveMaximum": 90 },
     "east": { "type": "number", "exclusiveMinimum": -180, "maximum": 180 },
     "north": { "type": "number", "exclusiveMinimum": -90, "maximum": 90 },
-    "height": { "type": "integer", "minimum": -32768, "maximum": 32767 }
+    "columns": { "type": "integer", "minimum": 2, "maximum": 65 },
+    "rows": { "type": "integer", "minimum": 2, "maximum": 65 },
+    "height": { "type": "number", "minimum": -2147483.648, "maximum": 2147483.647, "multipleOf": 0.001 }
   }
 }

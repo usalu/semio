@@ -70,7 +70,10 @@ pub const PUZZLE5D_WINDOW_TOOL_IDS: &[&str] = &[
 ];
 pub const PUZZLE5D_RETAINED_PAYLOAD_SCHEMA: &str = "puzzle.5d.tool-command.v1";
 
-pub fn puzzle5d_retained_extent(_command: &Puzzle5dCommand, snapshot: &Puzzle5dPlaySnapshot, interaction: &protocol::InteractionState) -> Option<usize> {
+pub fn puzzle5d_retained_extent(command: &Puzzle5dCommand, snapshot: &Puzzle5dPlaySnapshot, interaction: &protocol::InteractionState) -> Option<usize> {
+    if matches!(command, Puzzle5dCommand::ImportSnapshot { .. }) {
+        return Some(1);
+    }
     let projection = puzzle5d_editor_projection(snapshot);
     let selection = interaction.selection.get(PUZZLE5D_INTERACTION_DOMAIN).map_or(0, |selection| selection.ids.len());
     let parts = projection.get("parts").and_then(Value::as_array).map_or(0, Vec::len);

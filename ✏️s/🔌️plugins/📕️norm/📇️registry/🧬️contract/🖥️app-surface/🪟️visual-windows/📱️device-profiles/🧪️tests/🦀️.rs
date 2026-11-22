@@ -1,23 +1,32 @@
 //! 🧪️ Device profile tests; scenarios in `🥒️.feature`. The layout shape is read back from the framework layout of [`visual_layout`].
 
+use semio_plugin::WindowLayoutNode;
 use super::*;
 use gestures::*;
 use semio_plugin::{MergeMode, SelectionMethod};
-use semio_plugin::{WindowLayoutChild, WindowLayoutRoot};
 use semio_ui_locale::LocalizedLabel;
 use semio_framework_value::{FromValue, ToValue};
 use semio_s_plugin_norm_structural_scene::EntityKind;
 
-fn windows(root: &WindowLayoutRoot) -> usize {
-    fn count(child: &WindowLayoutChild) -> usize {
-        match child {
-            WindowLayoutChild::Stack(s) => s.children.len(),
-            WindowLayoutChild::Axis(a) => a.children.iter().map(count).sum(),
-        }
-    }
+fn windows(root: &WindowLayoutNode) -> usize {
     match root {
-        WindowLayoutRoot::Stack(s) => s.children.len(),
-        WindowLayoutRoot::Axis(a) => a.children.iter().map(count).sum(),
+        WindowLayoutNode::Window { .. } => 1,
+        WindowLayoutNode::Stack { children, .. } => children.len(),
+        WindowLayoutNode::Split { children, .. } => children.iter().map(windows).sum(),
+    }
+}
+
+fn children_of(node: &WindowLayoutNode) -> &[WindowLayoutNode] {
+    match node {
+        WindowLayoutNode::Window { .. } => &[],
+        WindowLayoutNode::Stack { children, .. } | WindowLayoutNode::Split { children, .. } => children,
+    }
+}
+
+fn active_of(node: &WindowLayoutNode) -> Option<&String> {
+    match node {
+        WindowLayoutNode::Stack { active_window_id, .. } => active_window_id.as_ref(),
+        _ => None,
     }
 }
 
@@ -49,11 +58,11 @@ fn profile_agrees_with_the_window_layout() {
     assert_eq!(windows(&desktop), device_profile(DeviceClass::Desktop).visible_windows as usize);
     assert!(!device_profile(DeviceClass::Desktop).tabbed);
     let mobile = crate::visual_layout("en1993", DeviceClass::Mobile).root;
-    assert!(matches!(mobile, WindowLayoutRoot::Stack(_)) && device_profile(DeviceClass::Mobile).tabbed);
+    assert!(matches!(mobile, _) && device_profile(DeviceClass::Mobile).tabbed);
     assert_eq!((windows(&mobile), device_profile(DeviceClass::Mobile).visible_windows), (5, 1));
     let tablet = crate::visual_layout("en1993", DeviceClass::Tablet).root;
-    let WindowLayoutRoot::Axis(axis) = &tablet else { panic!("row") };
-    assert_eq!(axis.children.len(), device_profile(DeviceClass::Tablet).visible_windows as usize);
+    assert!(matches!(&tablet, WindowLayoutNode::Split { .. }), "row");
+    assert_eq!(children_of(&tablet).len(), device_profile(DeviceClass::Tablet).visible_windows as usize);
 }
 
 #[test]
@@ -81,28 +90,28 @@ fn close(actual: &[f64], expected: &[f64]) {
     assert!(actual.iter().zip(expected).all(|(a, e)| (a - e).abs() < 1e-9), "{actual:?} != {expected:?}");
 }
 
-fn size(child: &WindowLayoutChild) -> f64 {
+fn size(child: &WindowLayoutNode) -> f64 {
     match child {
-        WindowLayoutChild::Stack(s) => s.size.expect("size"),
-        WindowLayoutChild::Axis(a) => a.size.expect("size"),
+        WindowLayoutNode::Stack { size, .. } | WindowLayoutNode::Split { size, .. } => size.expect("size"),
+        WindowLayoutNode::Window { .. } => panic!("a window has no size"),
     }
 }
 
-fn roles(child: &WindowLayoutChild) -> Vec<String> {
+fn roles(child: &WindowLayoutNode) -> Vec<String> {
     match child {
-        WindowLayoutChild::Stack(s) => s.children.iter().map(|w| w.window_kind_id.rsplit('-').next().expect("role").to_owned()).collect(),
-        WindowLayoutChild::Axis(a) => a.children.iter().flat_map(roles).collect(),
+        WindowLayoutNode::Window { window_kind_id, .. } => vec![window_kind_id.rsplit('-').next().expect("role").to_owned()],
+        WindowLayoutNode::Stack { children, .. } | WindowLayoutNode::Split { children, .. } => children.iter().flat_map(roles).collect(),
     }
 }
 
-fn root_children(root: &WindowLayoutRoot) -> &[WindowLayoutChild] {
+fn root_children(root: &WindowLayoutNode) -> &[WindowLayoutNode] {
     match root {
-        WindowLayoutRoot::Axis(a) => &a.children,
-        WindowLayoutRoot::Stack(_) => panic!("axis"),
+        WindowLayoutNode::Split { children, .. } => children,
+        _ => panic!("axis"),
     }
 }
 
-fn layout(device: DeviceClass, prefs: &LayoutPrefs) -> WindowLayoutRoot {
+fn layout(device: DeviceClass, prefs: &LayoutPrefs) -> WindowLayoutNode {
     crate::visual_layout_with("en1993", device, prefs).root
 }
 
@@ -123,8 +132,8 @@ fn the_dock_is_resizable_hideable_and_always_keeps_the_viewport() {
     let desktop = layout(DeviceClass::Desktop, &prefs);
     let columns = root_children(&desktop);
     close(&columns.iter().map(size).collect::<Vec<_>>(), &[0.3, 0.4, 0.3]);
-    let WindowLayoutChild::Axis(left) = &columns[0] else { panic!("column") };
-    close(&left.children.iter().map(size).collect::<Vec<_>>(), &[0.7, 0.3]);
+    assert!(matches!(&columns[0], WindowLayoutNode::Split { .. }), "column");
+    close(&children_of(&columns[0]).iter().map(size).collect::<Vec<_>>(), &[0.7, 0.3]);
     let prefs = apply_layout(&prefs, &LayoutCommand::SetHidden { role: "checks".into(), hidden: true });
     let prefs = apply_layout(&prefs, &LayoutCommand::SetHidden { role: "diagrams".into(), hidden: true });
     let prefs = apply_layout(&prefs, &LayoutCommand::SetHidden { role: "viewport".into(), hidden: true });
@@ -143,9 +152,10 @@ fn the_dock_is_resizable_hideable_and_always_keeps_the_viewport() {
 fn mobile_is_one_pane_with_a_reorderable_tab_bar_and_a_bottom_sheet() {
     let prefs = apply_layout(&LayoutPrefs::default(), &LayoutCommand::MoveTab { mobile: true, role: "checks".into(), to: 1 });
     let prefs = apply_layout(&prefs, &LayoutCommand::Activate { mobile: true, role: "checks".into() });
-    let WindowLayoutRoot::Stack(tabs) = layout(DeviceClass::Mobile, &prefs) else { panic!("stack") };
-    assert_eq!(tabs.children.iter().map(|w| w.window_kind_id.rsplit('-').next().expect("role").to_owned()).collect::<Vec<_>>(), ["viewport", "checks", "outliner", "properties", "diagrams"]);
-    assert_eq!(tabs.active_window_kind_id, Some(crate::visual_window_id("en1993", "checks")));
+    let tabs = layout(DeviceClass::Mobile, &prefs);
+    assert!(matches!(&tabs, WindowLayoutNode::Stack { .. }), "stack");
+    assert_eq!(children_of(&tabs).iter().map(|w| roles(w).remove(0)).collect::<Vec<_>>(), ["viewport", "checks", "outliner", "properties", "diagrams"]);
+    assert_eq!(active_of(&tabs).cloned(), Some(crate::visual_window_id("en1993", "checks")));
     assert_eq!(bottom_sheet(DeviceClass::Mobile, &prefs, true), None, "the sheet sits over the model tab only");
     let prefs = apply_layout(&LayoutPrefs::default(), &LayoutCommand::Sheet(SheetState::Half));
     let sheet = bottom_sheet(DeviceClass::Mobile, &prefs, true).expect("sheet");
@@ -167,8 +177,7 @@ fn tablet_is_two_panes_with_a_tabbed_side_pane() {
     assert_eq!(panes.len(), 2);
     close(&panes.iter().map(size).collect::<Vec<_>>(), &[0.5, 0.5]);
     assert_eq!(roles(&panes[1]), ["diagrams", "outliner", "properties", "checks"]);
-    let WindowLayoutChild::Stack(side) = &panes[1] else { panic!("stack") };
-    assert_eq!(side.active_window_kind_id, Some(crate::visual_window_id("en1993", "diagrams")));
+    assert_eq!(active_of(&panes[1]).cloned(), Some(crate::visual_window_id("en1993", "diagrams")));
 }
 
 #[test]
@@ -294,13 +303,13 @@ fn viewers_keep_only_model_checks_and_diagrams_and_every_device_has_a_named_layo
         let layout = crate::view_layout_with("en1993", device, &LayoutPrefs::default()).root;
         assert_eq!(windows(&layout), 3, "{device:?}");
         let ids = match &layout {
-            WindowLayoutRoot::Axis(a) => a.children.iter().flat_map(roles).collect::<Vec<_>>(),
-            WindowLayoutRoot::Stack(s) => s.children.iter().map(|w| w.window_kind_id.rsplit('-').next().expect("role").to_owned()).collect(),
+            root => roles(&root),
         };
         assert!(ids.iter().all(|r| ["viewport", "checks", "diagrams"].contains(&r.as_str())), "{ids:?}");
     }
-    let WindowLayoutRoot::Axis(tablet) = crate::view_layout_with("en1993", DeviceClass::Tablet, &LayoutPrefs::default()).root else { panic!("row") };
-    assert_eq!(roles(&tablet.children[1]), ["checks", "diagrams"]);
+    let tablet = crate::view_layout_with("en1993", DeviceClass::Tablet, &LayoutPrefs::default()).root;
+    assert!(matches!(&tablet, WindowLayoutNode::Split { .. }), "row");
+    assert_eq!(roles(&children_of(&tablet)[1]), ["checks", "diagrams"]);
     for (name, class) in [("desktop", DeviceClass::Desktop), ("mobile", DeviceClass::Mobile), ("tablet", DeviceClass::Tablet)] {
         let edit = crate::edit_named_layout("en1993", name);
         assert_eq!((edit.id.as_str(), edit.origin.as_str()), (crate::visual_layout_id(class).as_str(), "builtin"));

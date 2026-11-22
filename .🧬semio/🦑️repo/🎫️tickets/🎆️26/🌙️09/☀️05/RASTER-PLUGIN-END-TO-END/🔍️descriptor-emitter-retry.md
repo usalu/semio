@@ -1,0 +1,7 @@
+# Descriptor Emitter Retry
+
+The first 587-unit emitter build completed in 379.18 seconds, but its provenance verification detected a concurrent input change before publication. The scratch log records `cargo:source-digest-mismatch` for `🧰️framework/🔨️modules/🎠️kernel/🦀️.rs`: expected `4503ed6e12ec9dfe007cd41238d77c90f29fa8e8db45a2a6cd0da205176db13f`, observed `336a3fbcd4e564dfb0d3cf3be559af6d02f884c6abcb2d2797ca87ebc54fef07`. It explicitly reports a new snapshot, attempt 2 of 120, after 2000 ms. This is a current-source publication retry, not an unconditional second build.
+
+The second build again reports 587 units, but many Cargo artifact frames are `fresh: true`; its reported wall time is 87.4 seconds. An executable artifact frame by itself is not a published emitter receipt: provenance collection and source verification follow before publication. At the time inspected the second provenance pass was ongoing, so success was not established.
+
+Retries recur if admitted inputs change during compilation or provenance checking; a stable source interval permits the current attempt to publish its verified receipt and subsequent reuse, subject to the normal artifact freshness checks. No evidence supports accepting the first executable as a current-source publication, copying it, or bypassing verification. Avoid unnecessary restarts and allow the current pass to complete; coordinate edits to the reported input closure when feasible.

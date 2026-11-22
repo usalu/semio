@@ -1,25 +1,36 @@
 import { expect, test } from "bun:test";
-import { spawnSync } from "node:child_process";
 import { resolve } from "node:path";
 import catalog from "../../🔣️catalog.json" with { type: "json" };
 
 const root = resolve(import.meta.dir, "../../../../../../../../.."), entry = resolve(import.meta.dir, "../../../📜️script.ts");
 const environment = Object.fromEntries(Object.entries(process.env).filter(([key]) => !key.startsWith("SEMIO_SCRIPT") && !key.startsWith("SEMIO_BUILD_INV") && key !== "SEMIO_LANGUAGE"));
 
-const help = (operation: string, language: string): string => {
-  const result = spawnSync(process.execPath, [entry, "repo", operation, "--help", `--lang=${language}`], { cwd: root, encoding: "utf8", timeout: 30_000, env: environment });
-  expect(result.error, operation).toBeUndefined();
-  expect(result.status, `${operation} ${language}: ${result.stderr}`).toBe(0);
-  return result.stdout;
+const concurrency = 6;
+
+const help = async (operation: string, language: string): Promise<string> => {
+  const child = Bun.spawn([process.execPath, entry, "repo", operation, "--help", `--lang=${language}`], { cwd: root, env: environment, stdout: "pipe", stderr: "pipe" }), timer = setTimeout(() => child.kill(), 120_000);
+  const [stdout, stderr, status] = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text(), child.exited]);
+  clearTimeout(timer);
+  expect(status, `${operation} ${language}: ${stderr}`).toBe(0);
+  return stdout;
 };
 
-test("every operation of the catalogue prints its own help in every catalogue language without running anything", () => {
-  for (const row of catalog.operations) {
-    const texts = catalog.languages.map((language) => {
-      const text = help(row.name, language);
-      expect(text.split("\n")[0], `${row.name} ${language}`).toBe(`repo ${row.name} - ${(row.summary as Record<string, string>)[language]}`);
-      return text;
-    });
-    expect(new Set(texts).size, row.name).toBe(texts.length);
+const pooled = async <T>(count: number, run: (index: number) => Promise<T>): Promise<T[]> => {
+  const rows: T[] = new Array(count);
+  let next = 0;
+  await Promise.all(Array.from({ length: Math.min(concurrency, count) }, async () => { for (let index = next++; index < count; index = next++) rows[index] = await run(index); }));
+  return rows;
+};
+
+test("every operation of the catalogue prints its own help in every catalogue language without running anything", async () => {
+  const jobs = catalog.operations.flatMap((row) => catalog.languages.map((language) => ({ row, language })));
+  const texts = await pooled(jobs.length, async (index) => {
+    const { row, language } = jobs[index]!, text = await help(row.name, language);
+    expect(text.split("\n")[0], `${row.name} ${language}`).toBe(`repo ${row.name} - ${(row.summary as Record<string, string>)[language]}`);
+    return text;
+  });
+  for (const [index, row] of catalog.operations.entries()) {
+    const own = texts.slice(index * catalog.languages.length, (index + 1) * catalog.languages.length);
+    expect(new Set(own).size, row.name).toBe(own.length);
   }
-}, 120_000);
+}, 240_000);

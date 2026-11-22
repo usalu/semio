@@ -1,0 +1,169 @@
+{
+ "version": 1,
+ "cases": [
+  {
+   "name": "nothing behind the newest ones",
+   "nowMs": 1000000,
+   "keepNewest": 4,
+   "minimumAgeMilliseconds": 600000,
+   "rows": [
+    {
+     "identity": "1111111111111111111111111111111111111111111111111111111111111111",
+     "touchedAt": 10,
+     "held": false
+    },
+    {
+     "identity": "2222222222222222222222222222222222222222222222222222222222222222",
+     "touchedAt": 20,
+     "held": false
+    },
+    {
+     "identity": "3333333333333333333333333333333333333333333333333333333333333333",
+     "touchedAt": 30,
+     "held": false
+    }
+   ],
+   "expected": []
+  },
+  {
+   "name": "the oldest go first, the newest stay",
+   "nowMs": 1000000,
+   "keepNewest": 2,
+   "minimumAgeMilliseconds": 600000,
+   "rows": [
+    {
+     "identity": "1111111111111111111111111111111111111111111111111111111111111111",
+     "touchedAt": 10,
+     "held": false
+    },
+    {
+     "identity": "2222222222222222222222222222222222222222222222222222222222222222",
+     "touchedAt": 20,
+     "held": false
+    },
+    {
+     "identity": "3333333333333333333333333333333333333333333333333333333333333333",
+     "touchedAt": 30,
+     "held": false
+    },
+    {
+     "identity": "4444444444444444444444444444444444444444444444444444444444444444",
+     "touchedAt": 40,
+     "held": false
+    }
+   ],
+   "expected": [
+    "1111111111111111111111111111111111111111111111111111111111111111",
+    "2222222222222222222222222222222222222222222222222222222222222222"
+   ]
+  },
+  {
+   "name": "a held bundle stays however old",
+   "nowMs": 1000000,
+   "keepNewest": 1,
+   "minimumAgeMilliseconds": 600000,
+   "rows": [
+    {
+     "identity": "1111111111111111111111111111111111111111111111111111111111111111",
+     "touchedAt": 10,
+     "held": true
+    },
+    {
+     "identity": "2222222222222222222222222222222222222222222222222222222222222222",
+     "touchedAt": 20,
+     "held": false
+    },
+    {
+     "identity": "3333333333333333333333333333333333333333333333333333333333333333",
+     "touchedAt": 30,
+     "held": false
+    }
+   ],
+   "expected": [
+    "2222222222222222222222222222222222222222222222222222222222222222"
+   ]
+  },
+  {
+   "name": "a young bundle behind the newest stays",
+   "nowMs": 1000000,
+   "keepNewest": 1,
+   "minimumAgeMilliseconds": 600000,
+   "rows": [
+    {
+     "identity": "1111111111111111111111111111111111111111111111111111111111111111",
+     "touchedAt": 10,
+     "held": false
+    },
+    {
+     "identity": "2222222222222222222222222222222222222222222222222222222222222222",
+     "touchedAt": 500000,
+     "held": false
+    },
+    {
+     "identity": "3333333333333333333333333333333333333333333333333333333333333333",
+     "touchedAt": 900000,
+     "held": false
+    }
+   ],
+   "expected": [
+    "1111111111111111111111111111111111111111111111111111111111111111"
+   ]
+  },
+  {
+   "name": "equal birth times order by key",
+   "nowMs": 1000000,
+   "keepNewest": 1,
+   "minimumAgeMilliseconds": 0,
+   "rows": [
+    {
+     "identity": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+     "touchedAt": 5,
+     "held": false
+    },
+    {
+     "identity": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+     "touchedAt": 5,
+     "held": false
+    },
+    {
+     "identity": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+     "touchedAt": 5,
+     "held": false
+    }
+   ],
+   "expected": [
+    "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+   ]
+  },
+  {
+   "name": "keeping none retires every released bundle",
+   "nowMs": 1000000,
+   "keepNewest": 0,
+   "minimumAgeMilliseconds": 0,
+   "rows": [
+    {
+     "identity": "1111111111111111111111111111111111111111111111111111111111111111",
+     "touchedAt": 10,
+     "held": false
+    },
+    {
+     "identity": "2222222222222222222222222222222222222222222222222222222222222222",
+     "touchedAt": 20,
+     "held": true
+    }
+   ],
+   "expected": [
+    "1111111111111111111111111111111111111111111111111111111111111111"
+   ]
+  },
+  {
+   "name": "an empty census retires nothing",
+   "nowMs": 0,
+   "keepNewest": 4,
+   "minimumAgeMilliseconds": 600000,
+   "rows": [],
+   "expected": []
+  }
+ ]
+}

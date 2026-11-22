@@ -17,7 +17,7 @@ export async function publishCargoSourceDriftV1(control:Pick<ResourceLeaseContro
   try{await control.publish({resource:"cargo:running-source-digest-mismatch:"+JSON.stringify(record),mode:"shared",elapsedMs:0});}catch{}
 }
 
-/** 🔭️ Uses file events and a rolling metadata scan as hints to compare stable bytes against the admitted plan during a retained compile.
+/** 🔭️ Uses file events and a rolling metadata scan as hints to compare stable bytes against the admitted plan during compilation.
  * A callback returning false declines the mismatch and keeps the watcher active.
  * @see ./🔣️.json */
 export function watchCargoSourceDriftV1(inputs:Iterable<CargoAdmittedSourceV1>,admissionStartedMs:number,onDrift:(mismatch:CargoSourceDriftV1)=>boolean|void):()=>Promise<void>{

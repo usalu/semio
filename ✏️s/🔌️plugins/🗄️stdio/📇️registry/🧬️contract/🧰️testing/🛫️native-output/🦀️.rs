@@ -18,6 +18,24 @@ fn stage_message(failure: SqliteStageFailure<(), NativeSnapshotFailure>) -> Stri
     }
 }
 
+/// 🛫️ Runs one controlled native encode of `snapshot` under an original owner and settles its published output.
+pub fn encode_native<T: ArtifactSqliteSnapshotHost>(snapshot: &T, encoding: SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>) -> Result<IoPayload, String> {
+    crate::with_encoding(|native_owner| {
+        let mut output = None;
+        snapshot.encode_sqlite_snapshot_native(encoding, control, native_owner, &mut output).result.map_err(stage_message)?;
+        output.expect("native encode publishes its outcome").map_err(|error| stage_message(error.map_operation(|_| ())))
+    })
+}
+
+/// 🛬️ Runs one controlled native decode of `payload` under an original owner and settles its published output.
+pub fn decode_native<T: ArtifactSqliteSnapshotHost>(payload: &IoPayload, control: &mut SqliteSnapshotControl<'_>) -> Result<T, String> {
+    crate::with_decoding(|native_owner| {
+        let mut output = None;
+        T::decode_sqlite_snapshot_native(payload, control, native_owner, &mut output).result.map_err(stage_message)?;
+        output.expect("native decode publishes its outcome").map_err(|error| stage_message(error.map_operation(|_| ())))
+    })
+}
+
 pub fn assert_output<T: ArtifactDsl + ArtifactPack + ArtifactSqliteSnapshotHost>(snapshot: &T, semantic_value_bytes: usize) {
     assert!(semantic_value_bytes > 0);
     for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {

@@ -1,0 +1,11 @@
+const B="/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/";
+const root="/Users/ueli/Documents/semio";
+const adm=await import(B+"🕸️graph/🚪️admission/🟦️.ts");
+const prod=await import(B+"🕸️graph/📥️inference/🟨️.mjs");
+const [project,target]=process.argv.slice(2);
+const registry=adm.readBuildOwnerRegistryV1(JSON.parse(prod.readBuildOwnerRegistrySourceV1(root)));
+console.log("registry owners",registry.owners.length);
+const selection=adm.readBuildGraphSelectionV1({kind:"tasks",tasks:[{project,target}],...(process.argv[4]==="direct"?{excludeDependencies:true}:{})});
+const t0=performance.now();let calls=0;const seen=[];
+const out=await adm.closeBuildOwnerAdmissionV1(selection,registry,async(owner,targets,inputs)=>{calls++;seen.push(owner.name);const t=performance.now();const v=await prod.discoverBuildOwnerAdmissionFactsV1(owner,targets,registry,{workspaceRoot:root,selection},inputs);console.log(calls,owner.name,Math.round(performance.now()-t)+"ms",v.files.length,"files");return v;});
+console.log("owners",out.owners.length,"calls",calls,"ms",Math.round(performance.now()-t0));

@@ -37,9 +37,13 @@ fn original_pack_allocation_limit_respects_target_address_width() {
     let key = if usize::BITS == 32 { "wasm32" } else { "native" };
     let cases = law["allocationLimits"].as_array().unwrap();
     let default = store::os_pack::PackLimits::default().max_total_alloc;
-    assert!(cases.iter().any(|case| case["bytes"].as_u64() == Some(default)));
+    let requested = |case: &serde_json::Value| case["bytes"].as_str().unwrap().parse::<u64>().unwrap();
+    assert!(cases.iter().any(|case| requested(case) == default));
     for case in cases {
-        assert_eq!(addressable_allocation_limit(case["bytes"].as_u64().unwrap()) as u64, case[key].as_u64().unwrap());
+        let expected = if key == "wasm32" { case[key].as_u64().unwrap() } else { case[key].as_str().unwrap().parse().unwrap() };
+        let capacity = addressable_allocation_limit(requested(case));
+        assert_eq!(capacity as u64, expected);
+        assert_eq!((1..=isize::MAX as usize).contains(&capacity), case["admitted"].as_bool().unwrap());
     }
 }
 #[test]fn original_value_receives_without_reparsing(){receive_authored_source("original λ🙂".repeat(2049),true)}

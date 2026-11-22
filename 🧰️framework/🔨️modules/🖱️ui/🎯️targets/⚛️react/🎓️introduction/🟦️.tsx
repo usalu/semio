@@ -17,7 +17,7 @@ import { DragHandle } from "@semio-tech/ui/elements/DragHandle";
 import { CloseIcon, Icon } from "@semio-tech/ui/elements/Icons";
 import { Button } from "@semio-tech/ui/elements/Button";
 import { createPortal } from "react-dom";
-import { type IntroductionInfoBoxPosition, clampIntroductionInfoBoxPosition, clearIntroductionInfoBoxNearMisses, dockIntroductionInfoBox, introductionRectRelativeToHost, resolveIntroductionPlacement, splitIntroductionBodyParagraphs, useIntroductionAnchorRect, useIntroductionElevation } from "../📐️introduction-geometry/🟦️.ts";
+import { INTRODUCTION_CLEAR_RANGE_PX, INTRODUCTION_DOCK_REACH_PX, type IntroductionInfoBoxPosition, clampIntroductionInfoBoxPosition, clearIntroductionInfoBoxNearMisses, dockIntroductionInfoBox, introductionRectRelativeToHost, resolveIntroductionPlacement, splitIntroductionBodyParagraphs, useIntroductionAnchorRect, useIntroductionElevation } from "../📐️introduction-geometry/🟦️.ts";
 import { INTRODUCTION_DEMO_NEXT_BUTTON_DEMONSTRATION, IntroductionDemonstrationOverlay } from "../🎬️introduction-demo/🟦️.tsx";
 import { celebrateElement } from "../🧬️element-state/🟦️.ts";
 
@@ -100,12 +100,6 @@ export function reuseSurvey<T>(survey: { current: PlacementSurvey }, key: string
   if (!values.has(kind)) values.set(kind, measure());
   return values.get(kind) as T;
 }
-
-/** 🧲️ How far (px) the info box reaches to dock onto a border line beneath it. */
-const INTRODUCTION_DOCK_REACH_PX = 40;
-
-/** 🌬️ How far (px) the info box may slide to keep its own lines clear of the chips beneath. */
-const INTRODUCTION_CLEAR_RANGE_PX = 120;
 
 /** 🧲️ The vertical and horizontal border lines of the elements matching `selector` beneath the info box, relative to the overlay host (the box itself and its ancestors are left out). */
 function borderLines(selector: string, host: DOMRect, box: HTMLElement | null): { readonly xs: readonly number[]; readonly ys: readonly number[] } {

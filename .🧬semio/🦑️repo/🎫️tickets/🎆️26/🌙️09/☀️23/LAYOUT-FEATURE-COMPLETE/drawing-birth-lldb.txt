@@ -1,0 +1,10 @@
+settings set target.disable-aslr false
+breakpoint set --file 🧪️tests/🦀️.rs --line 134
+breakpoint modify --ignore-count 200 1
+run parent_reference_copy_preserves_the_exact_original_birth_and_physical_ledger --exact
+breakpoint set --func-regex 'DrawingBirthPreparation.*step_selected'
+continue
+bt 8
+frame variable action
+register read x0 x1 x2 x3 x4 x5 x6 x7 x8
+disassemble --frame --count 16

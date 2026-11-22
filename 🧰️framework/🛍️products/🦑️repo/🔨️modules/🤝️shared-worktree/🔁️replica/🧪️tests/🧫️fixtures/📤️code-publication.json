@@ -1,0 +1,5 @@
+{
+  "publishAfter": 300,
+  "blocker": "private test fixture temporarily occupies the store code directory",
+  "timeout": 5500
+}

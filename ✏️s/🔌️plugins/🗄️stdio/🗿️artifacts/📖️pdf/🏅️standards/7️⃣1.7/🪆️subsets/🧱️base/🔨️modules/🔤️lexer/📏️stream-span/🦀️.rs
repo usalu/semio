@@ -12,6 +12,7 @@ pub struct StreamSpan {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct StreamSpanStep {
     pub inspected: usize,
+    pub source_changed: bool,
     pub span: Option<StreamSpan>,
 }
 
@@ -45,26 +46,33 @@ impl StreamSpanCursor {
 
     /// 📥️ Inspect at most the granted source bytes; a complete span can be borrowed without allocation.
     pub fn advance(&mut self, source: &[u8], grant: usize) -> StreamSpanStep {
+        self.advance_bytes(source.len(), |position| source.get(position).copied(), grant)
+    }
+
+    /// 🔍️ Scans a framed extent through its stable bounded byte reader.
+    pub fn advance_bytes(&mut self, source_len: usize, byte_at: impl Fn(usize) -> Option<u8>, grant: usize) -> StreamSpanStep {
         let mut inspected = 0;
         loop {
             if let Phase::Complete(span) = self.phase {
-                return StreamSpanStep { inspected, span: Some(span) };
+                return StreamSpanStep { inspected, source_changed: false, span: Some(span) };
             }
-            if self.position == source.len() {
+            if self.position == source_len {
                 if self.matched == MARKER.len() {
                     self.finish_marker();
                 } else if matches!(self.phase, Phase::Declared { .. }) {
                     self.start_search();
                 } else {
-                    self.phase = Phase::Complete(StreamSpan { start: self.start, end: source.len(), resume: source.len() });
+                    self.phase = Phase::Complete(StreamSpan { start: self.start, end: source_len, resume: source_len });
                 }
                 continue;
             }
             if inspected == grant {
-                return StreamSpanStep { inspected, span: None };
+                return StreamSpanStep { inspected, source_changed: false, span: None };
             }
-            let byte = source[self.position];
             inspected += 1;
+            let Some(byte) = byte_at(self.position) else {
+                return StreamSpanStep { inspected, source_changed: true, span: None };
+            };
             if self.matched == MARKER.len() {
                 if super::is_ws(byte) || super::is_delim(byte) {
                     self.finish_marker();

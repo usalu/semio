@@ -4,6 +4,7 @@
     "run-many",
     "affected",
     "exec",
+    "test-file",
     "watch",
     "graph",
     "show",
@@ -293,6 +294,12 @@
       "argv": ["conformance", "--opaque=value"],
       "kind": "build",
       "arguments": ["conformance", "--opaque=value"]
+    },
+    {
+      "id": "test-file",
+      "argv": ["test-file", "--opaque=value"],
+      "kind": "build",
+      "arguments": ["test-file", "--opaque=value"]
     },
     {
       "id": "units",

@@ -77,7 +77,7 @@ fn gis_map_window_ownership_runtime_isolates_renders_and_reopens_two_map_windows
                 command: Gis2dCommand,
                 view: &ViewModel, cx: &mut semio_framework_job::StepContext<'_>) -> Result<usize, String> {
                 let command_id = command.command_id();
-                let meta = ActionMeta { instance_id: 86, view_state: Some(view.clone()), ..artifact_app_laws::meta(semio_os_kernel::LOCAL_ACTOR_ID) };
+                let meta = ActionMeta { instance_id: 86, view_state: Some(view.clone().into()), ..artifact_app_laws::meta(semio_os_kernel::LOCAL_ACTOR_ID) };
                 semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut *app, &command, &meta, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), cx).await.map_err(|error| format!("{command_id}: {error:?}"))?;
                 let receipt = artifact_app_laws::settle_registered_typed_operation(app, meta.instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), cx).await.map_err(|error| format!("{command_id}: {error:?}"))?;
                 Ok(receipt.lanes.iter().filter(|lane| **lane == semio_plugin::app::TypedOperationResultLane::WindowConfig).count())
@@ -179,8 +179,8 @@ fn gis_map_window_ownership_runtime_isolates_renders_and_reopens_two_map_windows
                 if packs.len() != 2 { return Err(format!("GIS Map persisted {} window packs instead of two", packs.len())); }
                 let persisted_payloads = packs
                     .iter()
-                    .map(|pack| (pack.window_id.clone(), pack.window_kind_id.clone(), pack.files.pack.clone(), pack.files.spr.clone()))
-                    .collect::<Vec<_>>();
+                    .map(|pack| pack.source.pair().map(|(pack_bytes, spr)| (pack.window_id.clone(), pack.window_kind_id.clone(), pack_bytes.to_vec(), spr.to_vec())).map_err(|error| format!("{error:?}")))
+                    .collect::<Result<Vec<_>, _>>()?;
                 let persisted_left = artifact_app_laws::capture_fixture_window_config::<MapWindowConfigOwner, _, _>(&mut *app, &left)
                     .await
                     .map_err(|error| format!("{error:?}"))?
@@ -200,14 +200,14 @@ fn gis_map_window_ownership_runtime_isolates_renders_and_reopens_two_map_windows
                 if render(&mut app, &left, scope.cx()).await?.camera_json == camera_before_example { return Err("GIS Map example camera was not captured by its caller window".into()); }
                 let mut reopened = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<Gis2dPlayApp>, GisMapMembers>(manifest, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()).await);
                 reopened.bind_instance_id(87).await;
-                for pack in packs { reopened.load_window_config_pack(pack).await.map_err(|error| format!("{error:?}"))?; }
+                for pack in packs { semio_plugin::restore_fixture_window_config(&mut *reopened, pack, scope.cx()).await.map_err(|error| format!("{error:?}"))?; }
                 let reopened_payloads = reopened
                     .window_config_packs()
                     .await
                     .map_err(|error| format!("{error:?}"))?
                     .into_iter()
-                    .map(|pack| (pack.window_id, pack.window_kind_id, pack.files.pack, pack.files.spr))
-                    .collect::<Vec<_>>();
+                    .map(|pack| pack.source.pair().map(|(pack_bytes, spr)| (pack.window_id.clone(), pack.window_kind_id.clone(), pack_bytes.to_vec(), spr.to_vec())).map_err(|error| format!("{error:?}")))
+                    .collect::<Result<Vec<_>, _>>()?;
                 let reopened_left_config = artifact_app_laws::capture_fixture_window_config::<MapWindowConfigOwner, _, _>(&mut *reopened, &left)
                     .await
                     .map_err(|error| format!("{error:?}"))?

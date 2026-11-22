@@ -65,7 +65,7 @@ pub struct NodeGraphSyncCache {
     pub viewport: Option<semio_os_kernel::Viewport2d>,
     pub viewport_pixels: Option<(u32, u32)>,
     pub operator_ids: Option<Vec<String>>,
-    pub hover: Option<(String, Option<String>, String)>,
+    pub hover: Option<(String, String, String)>,
     pub hover_port_ids: Vec<String>,
     pub hover_source_window_id: Option<Option<EngineSurfaceId>>,
     pub local_owns_hover: bool,

@@ -1,8 +1,8 @@
 import {noticeLanguagesV1} from "../../../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
 import schemaContract from"./🧬️schema/🔣️.json"with{type:"json"};
 import{createHash}from"node:crypto";
-import{closeSync,constants,fstatSync,openSync,readSync,writeSync}from"node:fs";
-import{join}from"node:path";
+import{closeSync,constants,existsSync,fstatSync,lstatSync,openSync,readlinkSync,readSync,writeSync}from"node:fs";
+import{dirname,join,resolve}from"node:path";
 import{fileURLToPath}from"node:url";
 import{abortLeaseRootV1,registerLeaseImplementationProviderV1,registerLeaseYieldHandlerV1}from"../../../../../../🔨️modules/🏃️process/🔒️leases/📈️standing/🟦️.ts";
 import{physicalSourceOriginV1}from"../📥️inputs/🔏️revision/🟨️.mjs";
@@ -98,12 +98,43 @@ export function isHalfEditedModuleLoadV1(error){
  const policy=protocol.loadFailure;
  return policy.names.includes(error.name)||error.name==="SyntaxError"&&String(error.message).startsWith(policy.syntaxErrorPrefix);
 }
+const missingPackage=/Cannot find (?:package|module) '([^']+)'/u,importerOf=/(?:imported )?from '?([^'\s]+)'?/u;
+const entryOf=(lstat,path)=>{try{return lstat(path);}catch{return undefined;}};
+/** 🏚️ Tells whether a module-resolution failure is the footprint of a dependency store that is not attached: the missing bare package resolves through a `node_modules` (or a package link inside it) found above the importing file that is a link whose target does not exist, as after the storage image behind it was detached. Returns the package, the dangling link and its target, `undefined` for any other failure (a relative specifier, a missing package behind a healthy link). The file system access is injectable so the rule runs on a fake tree.
+ * @see ./🧪️tests/🏚️dangling-store/🟦️.ts */
+export function danglingDependencyStoreOfV1(error,{lstat=lstatSync,exists=existsSync,readlink=readlinkSync,cwd=()=>process.cwd()}={}){
+ const seen=new Set(),walk=(value,depth)=>{
+  if(value===null||typeof value!=="object"||seen.has(value)||depth>8)return undefined;seen.add(value);
+  if(value.code===protocol.danglingStore.code)return{package:value.package,link:value.link,target:value.target};
+  const text=String(value.message??""),named=missingPackage.exec(text)?.[1];
+  if(named!==undefined&&!/^(?:\.|\/|[A-Za-z]:|node:|bun:)/u.test(named)){
+   const parts=named.split("/"),name=named.startsWith("@")?parts.slice(0,2).join("/"):parts[0],importer=importerOf.exec(text)?.[1]??value.position?.file;
+   const target=link=>resolve(dirname(link),readlink(link));
+   for(let directory=typeof importer==="string"?dirname(importer):cwd();;directory=dirname(directory)){
+    for(const link of[join(directory,"node_modules"),join(directory,"node_modules",name)])if(entryOf(lstat,link)?.isSymbolicLink()&&!exists(link))return{package:name,link,target:target(link)};
+    if(dirname(directory)===directory)break;
+   }
+  }
+  for(const inner of[value.cause,...(Array.isArray(value.errors)?value.errors:[])]){const found=walk(inner,depth+1);if(found)return found;}
+  return undefined;
+ };
+ return walk(error,0);
+}
+/** 🏚️ A command that cannot start because the store behind its `node_modules` is not attached: bilingual, naming the package, the dangling link and the store path it points to, failing fast with its own exit code instead of asking for a restart. */
+export class DanglingDependencyStoreErrorV1 extends Error{
+ constructor(facts,languages,cause){
+  super(languages.map(language=>formatStampTextV1(language,"danglingstore",facts)).join("\n"),{cause});
+  this.name="DanglingDependencyStoreErrorV1";this.code=protocol.danglingStore.code;this.package=facts.package;this.link=facts.link;this.target=facts.target;
+ }
+}
 /** 🔎️ Finds a stale-implementation, half-edited-module or escaped concurrent-edit failure in an error, its causes and aggregated errors, also when only the exit code of a captured child crossed the process boundary. */
 export function staleImplementationOfV1(error){
  const seen=new Set(),walk=(value,depth,bundled=false)=>{
   if(value===null||typeof value!=="object"||seen.has(value)||depth>8)return undefined;seen.add(value);
+  if(value.replicaUnsettled===true)return{origin:"error",moved:[],message:protocol.loadFailure.unsettledPrefix+String(value.message).split("\n")[0].slice(0,300)};
+  if(protocol.loadFailure.ownerCodes.includes(value.code))return undefined;
   if(STALE_IMPLEMENTATION_CODES_V1.has(value.code))return{origin:"error",moved:value.moved??[],message:String(value.message)};
-  if(!bundled&&isHalfEditedModuleLoadV1(value))return{origin:"load",moved:[],message:String(value.message).split("\n")[0].slice(0,300)+(typeof value.position?.file==="string"?" ("+value.position.file+(Number.isInteger(value.position.line)?":"+value.position.line:"")+")":"")};
+  if(!bundled&&isHalfEditedModuleLoadV1(value)&&!danglingDependencyStoreOfV1(value))return{origin:"load",moved:[],message:String(value.message).split("\n")[0].slice(0,300)+(typeof value.position?.file==="string"?" ("+value.position.file+(Number.isInteger(value.position.line)?":"+value.position.line:"")+")":"")};
   if(value.name==="OwnedCommandFailure"&&value.outcome?.status===protocol.exitCode)return{origin:"exit",moved:[],message:""};
   for(const inner of[value.cause,...(Array.isArray(value.errors)?value.errors:[])]){const found=walk(inner,depth+1,bundled||Array.isArray(value.errors));if(found)return found;}
   return undefined;
@@ -116,7 +147,8 @@ export function staleImplementationOfV1(error){
 export function renderEditRestartV1(languages,edit,values){return languages.map(language=>formatStampTextV1(language,"editfailure",{path:edit.path,reason:churnReasonTextV1(language,edit.reason),...values})).join("\n");}
 /** 🚪️ Ends a captured command process with the declared exit code when its failure is a stale implementation, a half-edited module or a concurrent edit that escaped every layer (that one first waits the declared pause, so the restart finds the edit settled); any other failure is left to the caller. */
 export function exitIfStaleImplementationV1(error,{write=text=>{try{writeSync(2,text);}catch{}},exit=code=>process.exit(code),sleepSync=pause,environment=process.env}={}){
- const stale=staleImplementationOfV1(error);if(!stale)return;
+ const stale=staleImplementationOfV1(error);
+ if(!stale){const dangling=danglingDependencyStoreOfV1(error);if(dangling){write(new DanglingDependencyStoreErrorV1(dangling,formatStampLanguagesV1(environment)).message+"\n");exit(protocol.danglingStore.exitCode);}return;}
  if(stale.origin==="edit"){const attempt=Number.parseInt(environment[protocol.reexecutionEnvironment]??"0",10)||0,delays=protocol.editFailure.backoffMs,delay=delays[Math.min(attempt,delays.length-1)];write(renderEditRestartV1(formatStampLanguagesV1(environment),stale.edit,{delay,attempt:attempt+1,maximum:protocol.maximumReexecutions})+"\n");sleepSync(delay);}
  else if(stale.origin!=="exit")write(stale.message+"\n");
  exit(protocol.exitCode);

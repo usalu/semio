@@ -30,6 +30,11 @@ pub use environment_check_entry::*;
 mod zone_evaluation;
 use zone_evaluation::*;
 
+#[path = "🌙️unoccupied-ventilation/🦀️.rs"]
+mod unoccupied_ventilation;
+#[path = "🌙️unoccupied-ventilation/🧾️report/🦀️.rs"]
+mod unoccupied_ventilation_report;
+
 #[path = "🌀️vent-and-envelope-evaluation/🦀️.rs"]
 mod vent_and_envelope_evaluation;
 use vent_and_envelope_evaluation::*;

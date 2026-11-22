@@ -1,5 +1,7 @@
 //! 📏️ Resolves a stream's compressed integer length through its exact live object-stream entry.
 
+use semio_framework_value::ByteReadSource;
+
 use super::{
     admit_box, failed, more, object_stream, projection, release, released, report, retire_object_stream_header, retire_projection,
     CosGrant, CosLimits, GraphImportCursor, GraphImportEvent, GraphImportReceipt, NormalProjection, NormalProjectionCursor,
@@ -33,7 +35,7 @@ impl CompressedLength {
 }
 
 impl GraphImportCursor {
-    pub(super) fn advance_compressed_length(&mut self, source: &[u8], index: &XrefIndex, grant: CosGrant) -> GraphImportReceipt {
+    pub(super) fn advance_compressed_length(&mut self, source: &(impl ByteReadSource + ?Sized), index: &XrefIndex, grant: CosGrant) -> GraphImportReceipt {
         let lookup = self.compressed_length.as_mut().expect("compressed PDF length lookup");
         if let Some(length) = lookup.result {
             let reference = lookup.reference;
@@ -73,7 +75,7 @@ impl GraphImportCursor {
         self.advance_length_projection(source, index, grant)
     }
 
-    fn advance_length_projection(&mut self, source: &[u8], index: &XrefIndex, grant: CosGrant) -> GraphImportReceipt {
+    fn advance_length_projection(&mut self, source: &(impl ByteReadSource + ?Sized), index: &XrefIndex, grant: CosGrant) -> GraphImportReceipt {
         let lookup = self.compressed_length.as_mut().expect("compressed PDF length carrier");
         let Some(cursor) = lookup.projection.as_mut() else {
             let (work, entry) = lookup.stream_lookup.advance(index, grant.work);

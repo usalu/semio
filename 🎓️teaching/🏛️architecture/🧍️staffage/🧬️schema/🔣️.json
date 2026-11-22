@@ -386,7 +386,7 @@
       }
     },
     "Bone": {
-      "description": "A rigid frame placed at (x, y) and rotated by angleDeg in its parent's frame at rest.",
+      "description": "A rigid frame placed at (x, y, z) in its parent's frame and oriented in it at rest by angleDeg about the parent joint axis w, then abductionDeg about its own normal v, then twistDeg about its own axis u. A pose or clip offset then turns the bone about its own rest axes in the same order.",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -445,7 +445,13 @@
           "type": "number",
           "minimum": -180,
           "maximum": 180,
-          "description": "Rest rotation about the parent normal, applied after the in-plane angle."
+          "description": "Rest rotation about the bone's own normal v, applied after angleDeg: positive turns the bone axis u towards the joint axis w of the parent (the left of the asset for a sagittal parent). 90 lays a bone laterally: a clavicle, a pelvis half, an axle, a handlebar. Default 0."
+        },
+        "twistDeg": {
+          "type": "number",
+          "minimum": -180,
+          "maximum": 180,
+          "description": "Rest roll about the bone's own axis u, applied after angleDeg and abductionDeg: positive turns the normal v away from the joint axis w (v to -w, w to v). It sets the joint axis w of the bone, about which angleDeg offsets turn it and in whose frame its children are placed. Default 0."
         }
       }
     },
@@ -1962,7 +1968,7 @@
       }
     },
     "BoneOffset": {
-      "description": "An offset from rest for one bone. abductionDeg is the lateral spread of a revolute bone: the bone turns out of the sagittal plane about its own normal (positive towards the left of the asset), added down the chain like angleDeg; all three views are projections of the same three-dimensional chain. twistDeg turns the bone and its subtree about its own longitudinal axis (a yaw for a vertical bone: slew, swivel, steering), added down the chain like angleDeg.",
+      "description": "An offset from rest for one bone, applied after its rest placement about the bone's own rest axes: angleDeg about its joint axis w, then abductionDeg about its normal v, then twistDeg about its axis u. abductionDeg is the lateral spread of a revolute bone: the bone turns out of its rest plane about its own normal (positive towards its joint axis: the left of the asset for a sagittal bone); all three views are projections of the same three-dimensional chain. twistDeg turns the bone and its subtree about its own longitudinal axis (a yaw for a vertical bone: slew, swivel, steering). Children ride on the offset bone.",
       "type": "object",
       "additionalProperties": false,
       "required": [],
@@ -3678,11 +3684,15 @@
               "minItems": 1
             },
             "slender": {
-              "description": "Declares a slender part (cord, wire, capillary, rod, hose, antenna): its length is at least 20 times its largest cross extent (validator `volumes-slender`). A slender solid is exempt from `volumes-feature` and from the cross-scale comparison; at each scale it is as thick as that scale's 2D draws it, and a coarser scale may keep it in `thermal` or `structure` without having it in `body`.",
+              "description": "Declares a slender part (cord, wire, capillary, rod, hose, antenna): its length is at least 20 times its largest cross extent (validator `volumes-slender`); a `member` solid of the `structure` list (a bone, a strut) may declare it from 5 times and a length of two smallest features of the scale. A slender solid is exempt from `volumes-feature` and from the cross-scale comparison; at each scale it is as thick as that scale's 2D draws it, and a coarser scale may keep it in `thermal` or `structure` without having it in `body`.",
+              "type": "boolean"
+            },
+            "sheet": {
+              "description": "Declares a true thin sheet (feather vane, leaf blade, fabric, membrane, foil, sheet metal, thin board or panel, thin vessel or shell wall built as a plate): it keeps its physical thickness below the smallest feature of the scale when its middle extent is at least that feature and at least 20 times its thickness (validator `volumes-feature`); where a thermal layer declares a gauge (`thicknessM`) for its bone and material, the thickness is that gauge. Not together with `slender`. A lump or a strip is no sheet.",
               "type": "boolean"
             },
             "envelope": {
-              "description": "Marks an envelope prism: at a coarser scale a lattice (truss, mast, framework) of the finer scale is replaced by its envelope, declared in `decisions`; cross-scale then compares this solid with the convex hull per bone of the finer solids of its bone instead of with the bars (validator `volume-envelope`: not at the finest authored scale).",
+              "description": "Marks an envelope solid: at a coarser scale a lattice (truss, mast, framework) of the finer scale is replaced by its envelope prism, or a row of many thin elements (balusters, pales, louvres) by fewer, thicker ones on a bone of their own (typification), declared in `decisions`; cross-scale then compares the convex hull of the envelope solids of a bone with the convex hull of the finer solids of that bone instead of part against part (validator `volume-envelope`: not at the finest authored scale).",
               "type": "boolean"
             },
             "texture": {
@@ -3793,11 +3803,15 @@
               "minItems": 1
             },
             "slender": {
-              "description": "Declares a slender part (cord, wire, capillary, rod, hose, antenna): its length is at least 20 times its largest cross extent (validator `volumes-slender`). A slender solid is exempt from `volumes-feature` and from the cross-scale comparison; at each scale it is as thick as that scale's 2D draws it, and a coarser scale may keep it in `thermal` or `structure` without having it in `body`.",
+              "description": "Declares a slender part (cord, wire, capillary, rod, hose, antenna): its length is at least 20 times its largest cross extent (validator `volumes-slender`); a `member` solid of the `structure` list (a bone, a strut) may declare it from 5 times and a length of two smallest features of the scale. A slender solid is exempt from `volumes-feature` and from the cross-scale comparison; at each scale it is as thick as that scale's 2D draws it, and a coarser scale may keep it in `thermal` or `structure` without having it in `body`.",
+              "type": "boolean"
+            },
+            "sheet": {
+              "description": "Declares a true thin sheet (feather vane, leaf blade, fabric, membrane, foil, sheet metal, thin board or panel, thin vessel or shell wall built as a plate): it keeps its physical thickness below the smallest feature of the scale when its middle extent is at least that feature and at least 20 times its thickness (validator `volumes-feature`); where a thermal layer declares a gauge (`thicknessM`) for its bone and material, the thickness is that gauge. Not together with `slender`. A lump or a strip is no sheet.",
               "type": "boolean"
             },
             "envelope": {
-              "description": "Marks an envelope prism: at a coarser scale a lattice (truss, mast, framework) of the finer scale is replaced by its envelope, declared in `decisions`; cross-scale then compares this solid with the convex hull per bone of the finer solids of its bone instead of with the bars (validator `volume-envelope`: not at the finest authored scale).",
+              "description": "Marks an envelope solid: at a coarser scale a lattice (truss, mast, framework) of the finer scale is replaced by its envelope prism, or a row of many thin elements (balusters, pales, louvres) by fewer, thicker ones on a bone of their own (typification), declared in `decisions`; cross-scale then compares the convex hull of the envelope solids of a bone with the convex hull of the finer solids of that bone instead of part against part (validator `volume-envelope`: not at the finest authored scale).",
               "type": "boolean"
             },
             "texture": {
@@ -3920,11 +3934,15 @@
               "minItems": 1
             },
             "slender": {
-              "description": "Declares a slender part (cord, wire, capillary, rod, hose, antenna): its length is at least 20 times its largest cross extent (validator `volumes-slender`). A slender solid is exempt from `volumes-feature` and from the cross-scale comparison; at each scale it is as thick as that scale's 2D draws it, and a coarser scale may keep it in `thermal` or `structure` without having it in `body`.",
+              "description": "Declares a slender part (cord, wire, capillary, rod, hose, antenna): its length is at least 20 times its largest cross extent (validator `volumes-slender`); a `member` solid of the `structure` list (a bone, a strut) may declare it from 5 times and a length of two smallest features of the scale. A slender solid is exempt from `volumes-feature` and from the cross-scale comparison; at each scale it is as thick as that scale's 2D draws it, and a coarser scale may keep it in `thermal` or `structure` without having it in `body`.",
+              "type": "boolean"
+            },
+            "sheet": {
+              "description": "Declares a true thin sheet (feather vane, leaf blade, fabric, membrane, foil, sheet metal, thin board or panel, thin vessel or shell wall built as a plate): it keeps its physical thickness below the smallest feature of the scale when its middle extent is at least that feature and at least 20 times its thickness (validator `volumes-feature`); where a thermal layer declares a gauge (`thicknessM`) for its bone and material, the thickness is that gauge. Not together with `slender`. A lump or a strip is no sheet.",
               "type": "boolean"
             },
             "envelope": {
-              "description": "Marks an envelope prism: at a coarser scale a lattice (truss, mast, framework) of the finer scale is replaced by its envelope, declared in `decisions`; cross-scale then compares this solid with the convex hull per bone of the finer solids of its bone instead of with the bars (validator `volume-envelope`: not at the finest authored scale).",
+              "description": "Marks an envelope solid: at a coarser scale a lattice (truss, mast, framework) of the finer scale is replaced by its envelope prism, or a row of many thin elements (balusters, pales, louvres) by fewer, thicker ones on a bone of their own (typification), declared in `decisions`; cross-scale then compares the convex hull of the envelope solids of a bone with the convex hull of the finer solids of that bone instead of part against part (validator `volume-envelope`: not at the finest authored scale).",
               "type": "boolean"
             },
             "texture": {
@@ -4050,11 +4068,15 @@
               "minItems": 1
             },
             "slender": {
-              "description": "Declares a slender part (cord, wire, capillary, rod, hose, antenna): its length is at least 20 times its largest cross extent (validator `volumes-slender`). A slender solid is exempt from `volumes-feature` and from the cross-scale comparison; at each scale it is as thick as that scale's 2D draws it, and a coarser scale may keep it in `thermal` or `structure` without having it in `body`.",
+              "description": "Declares a slender part (cord, wire, capillary, rod, hose, antenna): its length is at least 20 times its largest cross extent (validator `volumes-slender`); a `member` solid of the `structure` list (a bone, a strut) may declare it from 5 times and a length of two smallest features of the scale. A slender solid is exempt from `volumes-feature` and from the cross-scale comparison; at each scale it is as thick as that scale's 2D draws it, and a coarser scale may keep it in `thermal` or `structure` without having it in `body`.",
+              "type": "boolean"
+            },
+            "sheet": {
+              "description": "Declares a true thin sheet (feather vane, leaf blade, fabric, membrane, foil, sheet metal, thin board or panel, thin vessel or shell wall built as a plate): it keeps its physical thickness below the smallest feature of the scale when its middle extent is at least that feature and at least 20 times its thickness (validator `volumes-feature`); where a thermal layer declares a gauge (`thicknessM`) for its bone and material, the thickness is that gauge. Not together with `slender`. A lump or a strip is no sheet.",
               "type": "boolean"
             },
             "envelope": {
-              "description": "Marks an envelope prism: at a coarser scale a lattice (truss, mast, framework) of the finer scale is replaced by its envelope, declared in `decisions`; cross-scale then compares this solid with the convex hull per bone of the finer solids of its bone instead of with the bars (validator `volume-envelope`: not at the finest authored scale).",
+              "description": "Marks an envelope solid: at a coarser scale a lattice (truss, mast, framework) of the finer scale is replaced by its envelope prism, or a row of many thin elements (balusters, pales, louvres) by fewer, thicker ones on a bone of their own (typification), declared in `decisions`; cross-scale then compares the convex hull of the envelope solids of a bone with the convex hull of the finer solids of that bone instead of part against part (validator `volume-envelope`: not at the finest authored scale).",
               "type": "boolean"
             },
             "texture": {
@@ -4198,11 +4220,15 @@
               "minItems": 1
             },
             "slender": {
-              "description": "Declares a slender part (cord, wire, capillary, rod, hose, antenna): its length is at least 20 times its largest cross extent (validator `volumes-slender`). A slender solid is exempt from `volumes-feature` and from the cross-scale comparison; at each scale it is as thick as that scale's 2D draws it, and a coarser scale may keep it in `thermal` or `structure` without having it in `body`.",
+              "description": "Declares a slender part (cord, wire, capillary, rod, hose, antenna): its length is at least 20 times its largest cross extent (validator `volumes-slender`); a `member` solid of the `structure` list (a bone, a strut) may declare it from 5 times and a length of two smallest features of the scale. A slender solid is exempt from `volumes-feature` and from the cross-scale comparison; at each scale it is as thick as that scale's 2D draws it, and a coarser scale may keep it in `thermal` or `structure` without having it in `body`.",
+              "type": "boolean"
+            },
+            "sheet": {
+              "description": "Declares a true thin sheet (feather vane, leaf blade, fabric, membrane, foil, sheet metal, thin board or panel, thin vessel or shell wall built as a plate): it keeps its physical thickness below the smallest feature of the scale when its middle extent is at least that feature and at least 20 times its thickness (validator `volumes-feature`); where a thermal layer declares a gauge (`thicknessM`) for its bone and material, the thickness is that gauge. Not together with `slender`. A lump or a strip is no sheet.",
               "type": "boolean"
             },
             "envelope": {
-              "description": "Marks an envelope prism: at a coarser scale a lattice (truss, mast, framework) of the finer scale is replaced by its envelope, declared in `decisions`; cross-scale then compares this solid with the convex hull per bone of the finer solids of its bone instead of with the bars (validator `volume-envelope`: not at the finest authored scale).",
+              "description": "Marks an envelope solid: at a coarser scale a lattice (truss, mast, framework) of the finer scale is replaced by its envelope prism, or a row of many thin elements (balusters, pales, louvres) by fewer, thicker ones on a bone of their own (typification), declared in `decisions`; cross-scale then compares the convex hull of the envelope solids of a bone with the convex hull of the finer solids of that bone instead of part against part (validator `volume-envelope`: not at the finest authored scale).",
               "type": "boolean"
             },
             "texture": {
@@ -4345,11 +4371,15 @@
               "minItems": 1
             },
             "slender": {
-              "description": "Declares a slender part (cord, wire, capillary, rod, hose, antenna): its length is at least 20 times its largest cross extent (validator `volumes-slender`). A slender solid is exempt from `volumes-feature` and from the cross-scale comparison; at each scale it is as thick as that scale's 2D draws it, and a coarser scale may keep it in `thermal` or `structure` without having it in `body`.",
+              "description": "Declares a slender part (cord, wire, capillary, rod, hose, antenna): its length is at least 20 times its largest cross extent (validator `volumes-slender`); a `member` solid of the `structure` list (a bone, a strut) may declare it from 5 times and a length of two smallest features of the scale. A slender solid is exempt from `volumes-feature` and from the cross-scale comparison; at each scale it is as thick as that scale's 2D draws it, and a coarser scale may keep it in `thermal` or `structure` without having it in `body`.",
+              "type": "boolean"
+            },
+            "sheet": {
+              "description": "Declares a true thin sheet (feather vane, leaf blade, fabric, membrane, foil, sheet metal, thin board or panel, thin vessel or shell wall built as a plate): it keeps its physical thickness below the smallest feature of the scale when its middle extent is at least that feature and at least 20 times its thickness (validator `volumes-feature`); where a thermal layer declares a gauge (`thicknessM`) for its bone and material, the thickness is that gauge. Not together with `slender`. A lump or a strip is no sheet.",
               "type": "boolean"
             },
             "envelope": {
-              "description": "Marks an envelope prism: at a coarser scale a lattice (truss, mast, framework) of the finer scale is replaced by its envelope, declared in `decisions`; cross-scale then compares this solid with the convex hull per bone of the finer solids of its bone instead of with the bars (validator `volume-envelope`: not at the finest authored scale).",
+              "description": "Marks an envelope solid: at a coarser scale a lattice (truss, mast, framework) of the finer scale is replaced by its envelope prism, or a row of many thin elements (balusters, pales, louvres) by fewer, thicker ones on a bone of their own (typification), declared in `decisions`; cross-scale then compares the convex hull of the envelope solids of a bone with the convex hull of the finer solids of that bone instead of part against part (validator `volume-envelope`: not at the finest authored scale).",
               "type": "boolean"
             },
             "texture": {
@@ -4452,11 +4482,15 @@
               "minItems": 1
             },
             "slender": {
-              "description": "Declares a slender part (cord, wire, capillary, rod, hose, antenna): its length is at least 20 times its largest cross extent (validator `volumes-slender`). A slender solid is exempt from `volumes-feature` and from the cross-scale comparison; at each scale it is as thick as that scale's 2D draws it, and a coarser scale may keep it in `thermal` or `structure` without having it in `body`.",
+              "description": "Declares a slender part (cord, wire, capillary, rod, hose, antenna): its length is at least 20 times its largest cross extent (validator `volumes-slender`); a `member` solid of the `structure` list (a bone, a strut) may declare it from 5 times and a length of two smallest features of the scale. A slender solid is exempt from `volumes-feature` and from the cross-scale comparison; at each scale it is as thick as that scale's 2D draws it, and a coarser scale may keep it in `thermal` or `structure` without having it in `body`.",
+              "type": "boolean"
+            },
+            "sheet": {
+              "description": "Declares a true thin sheet (feather vane, leaf blade, fabric, membrane, foil, sheet metal, thin board or panel, thin vessel or shell wall built as a plate): it keeps its physical thickness below the smallest feature of the scale when its middle extent is at least that feature and at least 20 times its thickness (validator `volumes-feature`); where a thermal layer declares a gauge (`thicknessM`) for its bone and material, the thickness is that gauge. Not together with `slender`. A lump or a strip is no sheet.",
               "type": "boolean"
             },
             "envelope": {
-              "description": "Marks an envelope prism: at a coarser scale a lattice (truss, mast, framework) of the finer scale is replaced by its envelope, declared in `decisions`; cross-scale then compares this solid with the convex hull per bone of the finer solids of its bone instead of with the bars (validator `volume-envelope`: not at the finest authored scale).",
+              "description": "Marks an envelope solid: at a coarser scale a lattice (truss, mast, framework) of the finer scale is replaced by its envelope prism, or a row of many thin elements (balusters, pales, louvres) by fewer, thicker ones on a bone of their own (typification), declared in `decisions`; cross-scale then compares the convex hull of the envelope solids of a bone with the convex hull of the finer solids of that bone instead of part against part (validator `volume-envelope`: not at the finest authored scale).",
               "type": "boolean"
             },
             "texture": {
@@ -4605,11 +4639,15 @@
               "minItems": 1
             },
             "slender": {
-              "description": "Declares a slender part (cord, wire, capillary, rod, hose, antenna): its length is at least 20 times its largest cross extent (validator `volumes-slender`). A slender solid is exempt from `volumes-feature` and from the cross-scale comparison; at each scale it is as thick as that scale's 2D draws it, and a coarser scale may keep it in `thermal` or `structure` without having it in `body`.",
+              "description": "Declares a slender part (cord, wire, capillary, rod, hose, antenna): its length is at least 20 times its largest cross extent (validator `volumes-slender`); a `member` solid of the `structure` list (a bone, a strut) may declare it from 5 times and a length of two smallest features of the scale. A slender solid is exempt from `volumes-feature` and from the cross-scale comparison; at each scale it is as thick as that scale's 2D draws it, and a coarser scale may keep it in `thermal` or `structure` without having it in `body`.",
+              "type": "boolean"
+            },
+            "sheet": {
+              "description": "Declares a true thin sheet (feather vane, leaf blade, fabric, membrane, foil, sheet metal, thin board or panel, thin vessel or shell wall built as a plate): it keeps its physical thickness below the smallest feature of the scale when its middle extent is at least that feature and at least 20 times its thickness (validator `volumes-feature`); where a thermal layer declares a gauge (`thicknessM`) for its bone and material, the thickness is that gauge. Not together with `slender`. A lump or a strip is no sheet.",
               "type": "boolean"
             },
             "envelope": {
-              "description": "Marks an envelope prism: at a coarser scale a lattice (truss, mast, framework) of the finer scale is replaced by its envelope, declared in `decisions`; cross-scale then compares this solid with the convex hull per bone of the finer solids of its bone instead of with the bars (validator `volume-envelope`: not at the finest authored scale).",
+              "description": "Marks an envelope solid: at a coarser scale a lattice (truss, mast, framework) of the finer scale is replaced by its envelope prism, or a row of many thin elements (balusters, pales, louvres) by fewer, thicker ones on a bone of their own (typification), declared in `decisions`; cross-scale then compares the convex hull of the envelope solids of a bone with the convex hull of the finer solids of that bone instead of part against part (validator `volume-envelope`: not at the finest authored scale).",
               "type": "boolean"
             },
             "texture": {
@@ -4729,11 +4767,15 @@
               "minItems": 1
             },
             "slender": {
-              "description": "Declares a slender part (cord, wire, capillary, rod, hose, antenna): its length is at least 20 times its largest cross extent (validator `volumes-slender`). A slender solid is exempt from `volumes-feature` and from the cross-scale comparison; at each scale it is as thick as that scale's 2D draws it, and a coarser scale may keep it in `thermal` or `structure` without having it in `body`.",
+              "description": "Declares a slender part (cord, wire, capillary, rod, hose, antenna): its length is at least 20 times its largest cross extent (validator `volumes-slender`); a `member` solid of the `structure` list (a bone, a strut) may declare it from 5 times and a length of two smallest features of the scale. A slender solid is exempt from `volumes-feature` and from the cross-scale comparison; at each scale it is as thick as that scale's 2D draws it, and a coarser scale may keep it in `thermal` or `structure` without having it in `body`.",
+              "type": "boolean"
+            },
+            "sheet": {
+              "description": "Declares a true thin sheet (feather vane, leaf blade, fabric, membrane, foil, sheet metal, thin board or panel, thin vessel or shell wall built as a plate): it keeps its physical thickness below the smallest feature of the scale when its middle extent is at least that feature and at least 20 times its thickness (validator `volumes-feature`); where a thermal layer declares a gauge (`thicknessM`) for its bone and material, the thickness is that gauge. Not together with `slender`. A lump or a strip is no sheet.",
               "type": "boolean"
             },
             "envelope": {
-              "description": "Marks an envelope prism: at a coarser scale a lattice (truss, mast, framework) of the finer scale is replaced by its envelope, declared in `decisions`; cross-scale then compares this solid with the convex hull per bone of the finer solids of its bone instead of with the bars (validator `volume-envelope`: not at the finest authored scale).",
+              "description": "Marks an envelope solid: at a coarser scale a lattice (truss, mast, framework) of the finer scale is replaced by its envelope prism, or a row of many thin elements (balusters, pales, louvres) by fewer, thicker ones on a bone of their own (typification), declared in `decisions`; cross-scale then compares the convex hull of the envelope solids of a bone with the convex hull of the finer solids of that bone instead of part against part (validator `volume-envelope`: not at the finest authored scale).",
               "type": "boolean"
             },
             "texture": {
@@ -4865,11 +4907,15 @@
               "minItems": 1
             },
             "slender": {
-              "description": "Declares a slender part (cord, wire, capillary, rod, hose, antenna): its length is at least 20 times its largest cross extent (validator `volumes-slender`). A slender solid is exempt from `volumes-feature` and from the cross-scale comparison; at each scale it is as thick as that scale's 2D draws it, and a coarser scale may keep it in `thermal` or `structure` without having it in `body`.",
+              "description": "Declares a slender part (cord, wire, capillary, rod, hose, antenna): its length is at least 20 times its largest cross extent (validator `volumes-slender`); a `member` solid of the `structure` list (a bone, a strut) may declare it from 5 times and a length of two smallest features of the scale. A slender solid is exempt from `volumes-feature` and from the cross-scale comparison; at each scale it is as thick as that scale's 2D draws it, and a coarser scale may keep it in `thermal` or `structure` without having it in `body`.",
+              "type": "boolean"
+            },
+            "sheet": {
+              "description": "Declares a true thin sheet (feather vane, leaf blade, fabric, membrane, foil, sheet metal, thin board or panel, thin vessel or shell wall built as a plate): it keeps its physical thickness below the smallest feature of the scale when its middle extent is at least that feature and at least 20 times its thickness (validator `volumes-feature`); where a thermal layer declares a gauge (`thicknessM`) for its bone and material, the thickness is that gauge. Not together with `slender`. A lump or a strip is no sheet.",
               "type": "boolean"
             },
             "envelope": {
-              "description": "Marks an envelope prism: at a coarser scale a lattice (truss, mast, framework) of the finer scale is replaced by its envelope, declared in `decisions`; cross-scale then compares this solid with the convex hull per bone of the finer solids of its bone instead of with the bars (validator `volume-envelope`: not at the finest authored scale).",
+              "description": "Marks an envelope solid: at a coarser scale a lattice (truss, mast, framework) of the finer scale is replaced by its envelope prism, or a row of many thin elements (balusters, pales, louvres) by fewer, thicker ones on a bone of their own (typification), declared in `decisions`; cross-scale then compares the convex hull of the envelope solids of a bone with the convex hull of the finer solids of that bone instead of part against part (validator `volume-envelope`: not at the finest authored scale).",
               "type": "boolean"
             },
             "texture": {
@@ -5004,11 +5050,15 @@
               "minItems": 1
             },
             "slender": {
-              "description": "Declares a slender part (cord, wire, capillary, rod, hose, antenna): its length is at least 20 times its largest cross extent (validator `volumes-slender`). A slender solid is exempt from `volumes-feature` and from the cross-scale comparison; at each scale it is as thick as that scale's 2D draws it, and a coarser scale may keep it in `thermal` or `structure` without having it in `body`.",
+              "description": "Declares a slender part (cord, wire, capillary, rod, hose, antenna): its length is at least 20 times its largest cross extent (validator `volumes-slender`); a `member` solid of the `structure` list (a bone, a strut) may declare it from 5 times and a length of two smallest features of the scale. A slender solid is exempt from `volumes-feature` and from the cross-scale comparison; at each scale it is as thick as that scale's 2D draws it, and a coarser scale may keep it in `thermal` or `structure` without having it in `body`.",
+              "type": "boolean"
+            },
+            "sheet": {
+              "description": "Declares a true thin sheet (feather vane, leaf blade, fabric, membrane, foil, sheet metal, thin board or panel, thin vessel or shell wall built as a plate): it keeps its physical thickness below the smallest feature of the scale when its middle extent is at least that feature and at least 20 times its thickness (validator `volumes-feature`); where a thermal layer declares a gauge (`thicknessM`) for its bone and material, the thickness is that gauge. Not together with `slender`. A lump or a strip is no sheet.",
               "type": "boolean"
             },
             "envelope": {
-              "description": "Marks an envelope prism: at a coarser scale a lattice (truss, mast, framework) of the finer scale is replaced by its envelope, declared in `decisions`; cross-scale then compares this solid with the convex hull per bone of the finer solids of its bone instead of with the bars (validator `volume-envelope`: not at the finest authored scale).",
+              "description": "Marks an envelope solid: at a coarser scale a lattice (truss, mast, framework) of the finer scale is replaced by its envelope prism, or a row of many thin elements (balusters, pales, louvres) by fewer, thicker ones on a bone of their own (typification), declared in `decisions`; cross-scale then compares the convex hull of the envelope solids of a bone with the convex hull of the finer solids of that bone instead of part against part (validator `volume-envelope`: not at the finest authored scale).",
               "type": "boolean"
             },
             "texture": {
@@ -5161,11 +5211,15 @@
               "minItems": 1
             },
             "slender": {
-              "description": "Declares a slender part (cord, wire, capillary, rod, hose, antenna): its length is at least 20 times its largest cross extent (validator `volumes-slender`). A slender solid is exempt from `volumes-feature` and from the cross-scale comparison; at each scale it is as thick as that scale's 2D draws it, and a coarser scale may keep it in `thermal` or `structure` without having it in `body`.",
+              "description": "Declares a slender part (cord, wire, capillary, rod, hose, antenna): its length is at least 20 times its largest cross extent (validator `volumes-slender`); a `member` solid of the `structure` list (a bone, a strut) may declare it from 5 times and a length of two smallest features of the scale. A slender solid is exempt from `volumes-feature` and from the cross-scale comparison; at each scale it is as thick as that scale's 2D draws it, and a coarser scale may keep it in `thermal` or `structure` without having it in `body`.",
+              "type": "boolean"
+            },
+            "sheet": {
+              "description": "Declares a true thin sheet (feather vane, leaf blade, fabric, membrane, foil, sheet metal, thin board or panel, thin vessel or shell wall built as a plate): it keeps its physical thickness below the smallest feature of the scale when its middle extent is at least that feature and at least 20 times its thickness (validator `volumes-feature`); where a thermal layer declares a gauge (`thicknessM`) for its bone and material, the thickness is that gauge. Not together with `slender`. A lump or a strip is no sheet.",
               "type": "boolean"
             },
             "envelope": {
-              "description": "Marks an envelope prism: at a coarser scale a lattice (truss, mast, framework) of the finer scale is replaced by its envelope, declared in `decisions`; cross-scale then compares this solid with the convex hull per bone of the finer solids of its bone instead of with the bars (validator `volume-envelope`: not at the finest authored scale).",
+              "description": "Marks an envelope solid: at a coarser scale a lattice (truss, mast, framework) of the finer scale is replaced by its envelope prism, or a row of many thin elements (balusters, pales, louvres) by fewer, thicker ones on a bone of their own (typification), declared in `decisions`; cross-scale then compares the convex hull of the envelope solids of a bone with the convex hull of the finer solids of that bone instead of part against part (validator `volume-envelope`: not at the finest authored scale).",
               "type": "boolean"
             },
             "texture": {
@@ -5317,11 +5371,15 @@
               "minItems": 1
             },
             "slender": {
-              "description": "Declares a slender part (cord, wire, capillary, rod, hose, antenna): its length is at least 20 times its largest cross extent (validator `volumes-slender`). A slender solid is exempt from `volumes-feature` and from the cross-scale comparison; at each scale it is as thick as that scale's 2D draws it, and a coarser scale may keep it in `thermal` or `structure` without having it in `body`.",
+              "description": "Declares a slender part (cord, wire, capillary, rod, hose, antenna): its length is at least 20 times its largest cross extent (validator `volumes-slender`); a `member` solid of the `structure` list (a bone, a strut) may declare it from 5 times and a length of two smallest features of the scale. A slender solid is exempt from `volumes-feature` and from the cross-scale comparison; at each scale it is as thick as that scale's 2D draws it, and a coarser scale may keep it in `thermal` or `structure` without having it in `body`.",
+              "type": "boolean"
+            },
+            "sheet": {
+              "description": "Declares a true thin sheet (feather vane, leaf blade, fabric, membrane, foil, sheet metal, thin board or panel, thin vessel or shell wall built as a plate): it keeps its physical thickness below the smallest feature of the scale when its middle extent is at least that feature and at least 20 times its thickness (validator `volumes-feature`); where a thermal layer declares a gauge (`thicknessM`) for its bone and material, the thickness is that gauge. Not together with `slender`. A lump or a strip is no sheet.",
               "type": "boolean"
             },
             "envelope": {
-              "description": "Marks an envelope prism: at a coarser scale a lattice (truss, mast, framework) of the finer scale is replaced by its envelope, declared in `decisions`; cross-scale then compares this solid with the convex hull per bone of the finer solids of its bone instead of with the bars (validator `volume-envelope`: not at the finest authored scale).",
+              "description": "Marks an envelope solid: at a coarser scale a lattice (truss, mast, framework) of the finer scale is replaced by its envelope prism, or a row of many thin elements (balusters, pales, louvres) by fewer, thicker ones on a bone of their own (typification), declared in `decisions`; cross-scale then compares the convex hull of the envelope solids of a bone with the convex hull of the finer solids of that bone instead of part against part (validator `volume-envelope`: not at the finest authored scale).",
               "type": "boolean"
             },
             "texture": {
@@ -5433,11 +5491,15 @@
               "minItems": 1
             },
             "slender": {
-              "description": "Declares a slender part (cord, wire, capillary, rod, hose, antenna): its length is at least 20 times its largest cross extent (validator `volumes-slender`). A slender solid is exempt from `volumes-feature` and from the cross-scale comparison; at each scale it is as thick as that scale's 2D draws it, and a coarser scale may keep it in `thermal` or `structure` without having it in `body`.",
+              "description": "Declares a slender part (cord, wire, capillary, rod, hose, antenna): its length is at least 20 times its largest cross extent (validator `volumes-slender`); a `member` solid of the `structure` list (a bone, a strut) may declare it from 5 times and a length of two smallest features of the scale. A slender solid is exempt from `volumes-feature` and from the cross-scale comparison; at each scale it is as thick as that scale's 2D draws it, and a coarser scale may keep it in `thermal` or `structure` without having it in `body`.",
+              "type": "boolean"
+            },
+            "sheet": {
+              "description": "Declares a true thin sheet (feather vane, leaf blade, fabric, membrane, foil, sheet metal, thin board or panel, thin vessel or shell wall built as a plate): it keeps its physical thickness below the smallest feature of the scale when its middle extent is at least that feature and at least 20 times its thickness (validator `volumes-feature`); where a thermal layer declares a gauge (`thicknessM`) for its bone and material, the thickness is that gauge. Not together with `slender`. A lump or a strip is no sheet.",
               "type": "boolean"
             },
             "envelope": {
-              "description": "Marks an envelope prism: at a coarser scale a lattice (truss, mast, framework) of the finer scale is replaced by its envelope, declared in `decisions`; cross-scale then compares this solid with the convex hull per bone of the finer solids of its bone instead of with the bars (validator `volume-envelope`: not at the finest authored scale).",
+              "description": "Marks an envelope solid: at a coarser scale a lattice (truss, mast, framework) of the finer scale is replaced by its envelope prism, or a row of many thin elements (balusters, pales, louvres) by fewer, thicker ones on a bone of their own (typification), declared in `decisions`; cross-scale then compares the convex hull of the envelope solids of a bone with the convex hull of the finer solids of that bone instead of part against part (validator `volume-envelope`: not at the finest authored scale).",
               "type": "boolean"
             },
             "texture": {
@@ -5513,7 +5575,7 @@
       ]
     },
     "StructuralSolid": {
-      "description": "A solid of the `structure` list: the structural idealisation made spatial. Either its own VolumeSolid with a `member` and a `part`, or a reference `{ id, of, member, part }` that reuses a body solid. Every load-bearing bone is a member solid with its real cross-section, joints are joint solids at the rig joints, supports sit at the `structure.supports` anchors, concentrated masses are compact solids at their centre of mass; non-bearing cladding is absent.",
+      "description": "A solid of the `structure` list: the structural idealisation made spatial. Either its own VolumeSolid with a `member` and a `part`, or a reference `{ id, of, member, part }` that reuses a body solid. Every load-bearing bone is a member solid with its real cross-section (one member solid may stand for several connected bones that it names in `members`), joints are joint solids at the rig joints, supports sit at the `structure.supports` anchors, concentrated masses are compact solids at their centre of mass; non-bearing cladding is absent.",
       "oneOf": [
         {
           "description": "A box centred on the origin of the bone-local frame with edges along u, v, w; size is the edge length along u, v, w; cornerRadius rounds every edge and is at most half the smallest edge. In the structure list the solid additionally names what it models.",
@@ -5607,8 +5669,17 @@
               "minimum": 0
             },
             "member": {
-              "description": "The id of the bone whose load-bearing member, joint, support or concentrated mass this solid is (validator `volume-member`).",
+              "description": "The id of the bone whose load-bearing member, joint, support or concentrated mass this solid is (validator `volume-member`). The structural views colour and load the solid as this bone.",
               "$ref": "#/$defs/Slug"
+            },
+            "members": {
+              "description": "Only on a `member` part: the further bones that this one member solid spans besides `member`, so that one bar stands for a run of bones the scale cannot show apart (a spine of five segments as one rod, a skull that takes the mandible in). The named bones are distinct, exist in the rig and form with `member` one connected piece of it (each is the parent or a child of another of them; validator `volume-member`), and in the default pose the whole of each named bone, from its joint to its tip, lies in the solid or within one smallest feature of the scale of its surface (`volumes-structure-coverage`). The solid counts as the member solid of every named bone, is judged for `slender` by its own length and stays coloured and loaded as `member`.",
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Slug"
+              },
+              "uniqueItems": true,
+              "minItems": 1
             },
             "part": {
               "description": "What the solid is: `member` (the load-bearing cross-section of the bone), `joint` (a rig joint), `support` (a support at an anchor of `structure.supports`) or `mass` (a compact solid at a concentrated centre of mass).",
@@ -5636,7 +5707,11 @@
               "minItems": 1
             },
             "slender": {
-              "description": "Declares a slender part (cord, wire, capillary, rod, hose, antenna): its length is at least 20 times its largest cross extent (validator `volumes-slender`). A slender solid is exempt from `volumes-feature` and from the cross-scale comparison; at each scale it is as thick as that scale's 2D draws it, and a coarser scale may keep it in `thermal` or `structure` without having it in `body`.",
+              "description": "Declares a slender part (cord, wire, capillary, rod, hose, antenna): its length is at least 20 times its largest cross extent (validator `volumes-slender`); a `member` solid of the `structure` list (a bone, a strut) may declare it from 5 times and a length of two smallest features of the scale. A slender solid is exempt from `volumes-feature` and from the cross-scale comparison; at each scale it is as thick as that scale's 2D draws it, and a coarser scale may keep it in `thermal` or `structure` without having it in `body`.",
+              "type": "boolean"
+            },
+            "sheet": {
+              "description": "Declares a true thin sheet (feather vane, leaf blade, fabric, membrane, foil, sheet metal, thin board or panel, thin vessel or shell wall built as a plate): it keeps its physical thickness below the smallest feature of the scale when its middle extent is at least that feature and at least 20 times its thickness (validator `volumes-feature`); where a thermal layer declares a gauge (`thicknessM`) for its bone and material, the thickness is that gauge. Not together with `slender`. A lump or a strip is no sheet.",
               "type": "boolean"
             },
             "anchor": {
@@ -5644,7 +5719,7 @@
               "$ref": "#/$defs/Slug"
             },
             "envelope": {
-              "description": "Marks an envelope prism: at a coarser scale a lattice (truss, mast, framework) of the finer scale is replaced by its envelope, declared in `decisions`; cross-scale then compares this solid with the convex hull per bone of the finer solids of its bone instead of with the bars (validator `volume-envelope`: not at the finest authored scale).",
+              "description": "Marks an envelope solid: at a coarser scale a lattice (truss, mast, framework) of the finer scale is replaced by its envelope prism, or a row of many thin elements (balusters, pales, louvres) by fewer, thicker ones on a bone of their own (typification), declared in `decisions`; cross-scale then compares the convex hull of the envelope solids of a bone with the convex hull of the finer solids of that bone instead of part against part (validator `volume-envelope`: not at the finest authored scale).",
               "type": "boolean"
             },
             "texture": {
@@ -5761,8 +5836,17 @@
               "maxItems": 3
             },
             "member": {
-              "description": "The id of the bone whose load-bearing member, joint, support or concentrated mass this solid is (validator `volume-member`).",
+              "description": "The id of the bone whose load-bearing member, joint, support or concentrated mass this solid is (validator `volume-member`). The structural views colour and load the solid as this bone.",
               "$ref": "#/$defs/Slug"
+            },
+            "members": {
+              "description": "Only on a `member` part: the further bones that this one member solid spans besides `member`, so that one bar stands for a run of bones the scale cannot show apart (a spine of five segments as one rod, a skull that takes the mandible in). The named bones are distinct, exist in the rig and form with `member` one connected piece of it (each is the parent or a child of another of them; validator `volume-member`), and in the default pose the whole of each named bone, from its joint to its tip, lies in the solid or within one smallest feature of the scale of its surface (`volumes-structure-coverage`). The solid counts as the member solid of every named bone, is judged for `slender` by its own length and stays coloured and loaded as `member`.",
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Slug"
+              },
+              "uniqueItems": true,
+              "minItems": 1
             },
             "part": {
               "description": "What the solid is: `member` (the load-bearing cross-section of the bone), `joint` (a rig joint), `support` (a support at an anchor of `structure.supports`) or `mass` (a compact solid at a concentrated centre of mass).",
@@ -5790,7 +5874,11 @@
               "minItems": 1
             },
             "slender": {
-              "description": "Declares a slender part (cord, wire, capillary, rod, hose, antenna): its length is at least 20 times its largest cross extent (validator `volumes-slender`). A slender solid is exempt from `volumes-feature` and from the cross-scale comparison; at each scale it is as thick as that scale's 2D draws it, and a coarser scale may keep it in `thermal` or `structure` without having it in `body`.",
+              "description": "Declares a slender part (cord, wire, capillary, rod, hose, antenna): its length is at least 20 times its largest cross extent (validator `volumes-slender`); a `member` solid of the `structure` list (a bone, a strut) may declare it from 5 times and a length of two smallest features of the scale. A slender solid is exempt from `volumes-feature` and from the cross-scale comparison; at each scale it is as thick as that scale's 2D draws it, and a coarser scale may keep it in `thermal` or `structure` without having it in `body`.",
+              "type": "boolean"
+            },
+            "sheet": {
+              "description": "Declares a true thin sheet (feather vane, leaf blade, fabric, membrane, foil, sheet metal, thin board or panel, thin vessel or shell wall built as a plate): it keeps its physical thickness below the smallest feature of the scale when its middle extent is at least that feature and at least 20 times its thickness (validator `volumes-feature`); where a thermal layer declares a gauge (`thicknessM`) for its bone and material, the thickness is that gauge. Not together with `slender`. A lump or a strip is no sheet.",
               "type": "boolean"
             },
             "anchor": {
@@ -5798,7 +5886,7 @@
               "$ref": "#/$defs/Slug"
             },
             "envelope": {
-              "description": "Marks an envelope prism: at a coarser scale a lattice (truss, mast, framework) of the finer scale is replaced by its envelope, declared in `decisions`; cross-scale then compares this solid with the convex hull per bone of the finer solids of its bone instead of with the bars (validator `volume-envelope`: not at the finest authored scale).",
+              "description": "Marks an envelope solid: at a coarser scale a lattice (truss, mast, framework) of the finer scale is replaced by its envelope prism, or a row of many thin elements (balusters, pales, louvres) by fewer, thicker ones on a bone of their own (typification), declared in `decisions`; cross-scale then compares the convex hull of the envelope solids of a bone with the convex hull of the finer solids of that bone instead of part against part (validator `volume-envelope`: not at the finest authored scale).",
               "type": "boolean"
             },
             "texture": {
@@ -5927,8 +6015,17 @@
               "exclusiveMinimum": 0
             },
             "member": {
-              "description": "The id of the bone whose load-bearing member, joint, support or concentrated mass this solid is (validator `volume-member`).",
+              "description": "The id of the bone whose load-bearing member, joint, support or concentrated mass this solid is (validator `volume-member`). The structural views colour and load the solid as this bone.",
               "$ref": "#/$defs/Slug"
+            },
+            "members": {
+              "description": "Only on a `member` part: the further bones that this one member solid spans besides `member`, so that one bar stands for a run of bones the scale cannot show apart (a spine of five segments as one rod, a skull that takes the mandible in). The named bones are distinct, exist in the rig and form with `member` one connected piece of it (each is the parent or a child of another of them; validator `volume-member`), and in the default pose the whole of each named bone, from its joint to its tip, lies in the solid or within one smallest feature of the scale of its surface (`volumes-structure-coverage`). The solid counts as the member solid of every named bone, is judged for `slender` by its own length and stays coloured and loaded as `member`.",
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Slug"
+              },
+              "uniqueItems": true,
+              "minItems": 1
             },
             "part": {
               "description": "What the solid is: `member` (the load-bearing cross-section of the bone), `joint` (a rig joint), `support` (a support at an anchor of `structure.supports`) or `mass` (a compact solid at a concentrated centre of mass).",
@@ -5956,7 +6053,11 @@
               "minItems": 1
             },
             "slender": {
-              "description": "Declares a slender part (cord, wire, capillary, rod, hose, antenna): its length is at least 20 times its largest cross extent (validator `volumes-slender`). A slender solid is exempt from `volumes-feature` and from the cross-scale comparison; at each scale it is as thick as that scale's 2D draws it, and a coarser scale may keep it in `thermal` or `structure` without having it in `body`.",
+              "description": "Declares a slender part (cord, wire, capillary, rod, hose, antenna): its length is at least 20 times its largest cross extent (validator `volumes-slender`); a `member` solid of the `structure` list (a bone, a strut) may declare it from 5 times and a length of two smallest features of the scale. A slender solid is exempt from `volumes-feature` and from the cross-scale comparison; at each scale it is as thick as that scale's 2D draws it, and a coarser scale may keep it in `thermal` or `structure` without having it in `body`.",
+              "type": "boolean"
+            },
+            "sheet": {
+              "description": "Declares a true thin sheet (feather vane, leaf blade, fabric, membrane, foil, sheet metal, thin board or panel, thin vessel or shell wall built as a plate): it keeps its physical thickness below the smallest feature of the scale when its middle extent is at least that feature and at least 20 times its thickness (validator `volumes-feature`); where a thermal layer declares a gauge (`thicknessM`) for its bone and material, the thickness is that gauge. Not together with `slender`. A lump or a strip is no sheet.",
               "type": "boolean"
             },
             "anchor": {
@@ -5964,7 +6065,7 @@
               "$ref": "#/$defs/Slug"
             },
             "envelope": {
-              "description": "Marks an envelope prism: at a coarser scale a lattice (truss, mast, framework) of the finer scale is replaced by its envelope, declared in `decisions`; cross-scale then compares this solid with the convex hull per bone of the finer solids of its bone instead of with the bars (validator `volume-envelope`: not at the finest authored scale).",
+              "description": "Marks an envelope solid: at a coarser scale a lattice (truss, mast, framework) of the finer scale is replaced by its envelope prism, or a row of many thin elements (balusters, pales, louvres) by fewer, thicker ones on a bone of their own (typification), declared in `decisions`; cross-scale then compares the convex hull of the envelope solids of a bone with the convex hull of the finer solids of that bone instead of part against part (validator `volume-envelope`: not at the finest authored scale).",
               "type": "boolean"
             },
             "texture": {
@@ -6096,8 +6197,17 @@
               "exclusiveMinimum": 0
             },
             "member": {
-              "description": "The id of the bone whose load-bearing member, joint, support or concentrated mass this solid is (validator `volume-member`).",
+              "description": "The id of the bone whose load-bearing member, joint, support or concentrated mass this solid is (validator `volume-member`). The structural views colour and load the solid as this bone.",
               "$ref": "#/$defs/Slug"
+            },
+            "members": {
+              "description": "Only on a `member` part: the further bones that this one member solid spans besides `member`, so that one bar stands for a run of bones the scale cannot show apart (a spine of five segments as one rod, a skull that takes the mandible in). The named bones are distinct, exist in the rig and form with `member` one connected piece of it (each is the parent or a child of another of them; validator `volume-member`), and in the default pose the whole of each named bone, from its joint to its tip, lies in the solid or within one smallest feature of the scale of its surface (`volumes-structure-coverage`). The solid counts as the member solid of every named bone, is judged for `slender` by its own length and stays coloured and loaded as `member`.",
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Slug"
+              },
+              "uniqueItems": true,
+              "minItems": 1
             },
             "part": {
               "description": "What the solid is: `member` (the load-bearing cross-section of the bone), `joint` (a rig joint), `support` (a support at an anchor of `structure.supports`) or `mass` (a compact solid at a concentrated centre of mass).",
@@ -6125,7 +6235,11 @@
               "minItems": 1
             },
             "slender": {
-              "description": "Declares a slender part (cord, wire, capillary, rod, hose, antenna): its length is at least 20 times its largest cross extent (validator `volumes-slender`). A slender solid is exempt from `volumes-feature` and from the cross-scale comparison; at each scale it is as thick as that scale's 2D draws it, and a coarser scale may keep it in `thermal` or `structure` without having it in `body`.",
+              "description": "Declares a slender part (cord, wire, capillary, rod, hose, antenna): its length is at least 20 times its largest cross extent (validator `volumes-slender`); a `member` solid of the `structure` list (a bone, a strut) may declare it from 5 times and a length of two smallest features of the scale. A slender solid is exempt from `volumes-feature` and from the cross-scale comparison; at each scale it is as thick as that scale's 2D draws it, and a coarser scale may keep it in `thermal` or `structure` without having it in `body`.",
+              "type": "boolean"
+            },
+            "sheet": {
+              "description": "Declares a true thin sheet (feather vane, leaf blade, fabric, membrane, foil, sheet metal, thin board or panel, thin vessel or shell wall built as a plate): it keeps its physical thickness below the smallest feature of the scale when its middle extent is at least that feature and at least 20 times its thickness (validator `volumes-feature`); where a thermal layer declares a gauge (`thicknessM`) for its bone and material, the thickness is that gauge. Not together with `slender`. A lump or a strip is no sheet.",
               "type": "boolean"
             },
             "anchor": {
@@ -6133,7 +6247,7 @@
               "$ref": "#/$defs/Slug"
             },
             "envelope": {
-              "description": "Marks an envelope prism: at a coarser scale a lattice (truss, mast, framework) of the finer scale is replaced by its envelope, declared in `decisions`; cross-scale then compares this solid with the convex hull per bone of the finer solids of its bone instead of with the bars (validator `volume-envelope`: not at the finest authored scale).",
+              "description": "Marks an envelope solid: at a coarser scale a lattice (truss, mast, framework) of the finer scale is replaced by its envelope prism, or a row of many thin elements (balusters, pales, louvres) by fewer, thicker ones on a bone of their own (typification), declared in `decisions`; cross-scale then compares the convex hull of the envelope solids of a bone with the convex hull of the finer solids of that bone instead of part against part (validator `volume-envelope`: not at the finest authored scale).",
               "type": "boolean"
             },
             "texture": {
@@ -6283,8 +6397,17 @@
               "maxItems": 2
             },
             "member": {
-              "description": "The id of the bone whose load-bearing member, joint, support or concentrated mass this solid is (validator `volume-member`).",
+              "description": "The id of the bone whose load-bearing member, joint, support or concentrated mass this solid is (validator `volume-member`). The structural views colour and load the solid as this bone.",
               "$ref": "#/$defs/Slug"
+            },
+            "members": {
+              "description": "Only on a `member` part: the further bones that this one member solid spans besides `member`, so that one bar stands for a run of bones the scale cannot show apart (a spine of five segments as one rod, a skull that takes the mandible in). The named bones are distinct, exist in the rig and form with `member` one connected piece of it (each is the parent or a child of another of them; validator `volume-member`), and in the default pose the whole of each named bone, from its joint to its tip, lies in the solid or within one smallest feature of the scale of its surface (`volumes-structure-coverage`). The solid counts as the member solid of every named bone, is judged for `slender` by its own length and stays coloured and loaded as `member`.",
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Slug"
+              },
+              "uniqueItems": true,
+              "minItems": 1
             },
             "part": {
               "description": "What the solid is: `member` (the load-bearing cross-section of the bone), `joint` (a rig joint), `support` (a support at an anchor of `structure.supports`) or `mass` (a compact solid at a concentrated centre of mass).",
@@ -6312,7 +6435,11 @@
               "minItems": 1
             },
             "slender": {
-              "description": "Declares a slender part (cord, wire, capillary, rod, hose, antenna): its length is at least 20 times its largest cross extent (validator `volumes-slender`). A slender solid is exempt from `volumes-feature` and from the cross-scale comparison; at each scale it is as thick as that scale's 2D draws it, and a coarser scale may keep it in `thermal` or `structure` without having it in `body`.",
+              "description": "Declares a slender part (cord, wire, capillary, rod, hose, antenna): its length is at least 20 times its largest cross extent (validator `volumes-slender`); a `member` solid of the `structure` list (a bone, a strut) may declare it from 5 times and a length of two smallest features of the scale. A slender solid is exempt from `volumes-feature` and from the cross-scale comparison; at each scale it is as thick as that scale's 2D draws it, and a coarser scale may keep it in `thermal` or `structure` without having it in `body`.",
+              "type": "boolean"
+            },
+            "sheet": {
+              "description": "Declares a true thin sheet (feather vane, leaf blade, fabric, membrane, foil, sheet metal, thin board or panel, thin vessel or shell wall built as a plate): it keeps its physical thickness below the smallest feature of the scale when its middle extent is at least that feature and at least 20 times its thickness (validator `volumes-feature`); where a thermal layer declares a gauge (`thicknessM`) for its bone and material, the thickness is that gauge. Not together with `slender`. A lump or a strip is no sheet.",
               "type": "boolean"
             },
             "anchor": {
@@ -6320,7 +6447,7 @@
               "$ref": "#/$defs/Slug"
             },
             "envelope": {
-              "description": "Marks an envelope prism: at a coarser scale a lattice (truss, mast, framework) of the finer scale is replaced by its envelope, declared in `decisions`; cross-scale then compares this solid with the convex hull per bone of the finer solids of its bone instead of with the bars (validator `volume-envelope`: not at the finest authored scale).",
+              "description": "Marks an envelope solid: at a coarser scale a lattice (truss, mast, framework) of the finer scale is replaced by its envelope prism, or a row of many thin elements (balusters, pales, louvres) by fewer, thicker ones on a bone of their own (typification), declared in `decisions`; cross-scale then compares the convex hull of the envelope solids of a bone with the convex hull of the finer solids of that bone instead of part against part (validator `volume-envelope`: not at the finest authored scale).",
               "type": "boolean"
             },
             "texture": {
@@ -6469,8 +6596,17 @@
               "type": "boolean"
             },
             "member": {
-              "description": "The id of the bone whose load-bearing member, joint, support or concentrated mass this solid is (validator `volume-member`).",
+              "description": "The id of the bone whose load-bearing member, joint, support or concentrated mass this solid is (validator `volume-member`). The structural views colour and load the solid as this bone.",
               "$ref": "#/$defs/Slug"
+            },
+            "members": {
+              "description": "Only on a `member` part: the further bones that this one member solid spans besides `member`, so that one bar stands for a run of bones the scale cannot show apart (a spine of five segments as one rod, a skull that takes the mandible in). The named bones are distinct, exist in the rig and form with `member` one connected piece of it (each is the parent or a child of another of them; validator `volume-member`), and in the default pose the whole of each named bone, from its joint to its tip, lies in the solid or within one smallest feature of the scale of its surface (`volumes-structure-coverage`). The solid counts as the member solid of every named bone, is judged for `slender` by its own length and stays coloured and loaded as `member`.",
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Slug"
+              },
+              "uniqueItems": true,
+              "minItems": 1
             },
             "part": {
               "description": "What the solid is: `member` (the load-bearing cross-section of the bone), `joint` (a rig joint), `support` (a support at an anchor of `structure.supports`) or `mass` (a compact solid at a concentrated centre of mass).",
@@ -6498,7 +6634,11 @@
               "minItems": 1
             },
             "slender": {
-              "description": "Declares a slender part (cord, wire, capillary, rod, hose, antenna): its length is at least 20 times its largest cross extent (validator `volumes-slender`). A slender solid is exempt from `volumes-feature` and from the cross-scale comparison; at each scale it is as thick as that scale's 2D draws it, and a coarser scale may keep it in `thermal` or `structure` without having it in `body`.",
+              "description": "Declares a slender part (cord, wire, capillary, rod, hose, antenna): its length is at least 20 times its largest cross extent (validator `volumes-slender`); a `member` solid of the `structure` list (a bone, a strut) may declare it from 5 times and a length of two smallest features of the scale. A slender solid is exempt from `volumes-feature` and from the cross-scale comparison; at each scale it is as thick as that scale's 2D draws it, and a coarser scale may keep it in `thermal` or `structure` without having it in `body`.",
+              "type": "boolean"
+            },
+            "sheet": {
+              "description": "Declares a true thin sheet (feather vane, leaf blade, fabric, membrane, foil, sheet metal, thin board or panel, thin vessel or shell wall built as a plate): it keeps its physical thickness below the smallest feature of the scale when its middle extent is at least that feature and at least 20 times its thickness (validator `volumes-feature`); where a thermal layer declares a gauge (`thicknessM`) for its bone and material, the thickness is that gauge. Not together with `slender`. A lump or a strip is no sheet.",
               "type": "boolean"
             },
             "anchor": {
@@ -6506,7 +6646,7 @@
               "$ref": "#/$defs/Slug"
             },
             "envelope": {
-              "description": "Marks an envelope prism: at a coarser scale a lattice (truss, mast, framework) of the finer scale is replaced by its envelope, declared in `decisions`; cross-scale then compares this solid with the convex hull per bone of the finer solids of its bone instead of with the bars (validator `volume-envelope`: not at the finest authored scale).",
+              "description": "Marks an envelope solid: at a coarser scale a lattice (truss, mast, framework) of the finer scale is replaced by its envelope prism, or a row of many thin elements (balusters, pales, louvres) by fewer, thicker ones on a bone of their own (typification), declared in `decisions`; cross-scale then compares the convex hull of the envelope solids of a bone with the convex hull of the finer solids of that bone instead of part against part (validator `volume-envelope`: not at the finest authored scale).",
               "type": "boolean"
             },
             "texture": {
@@ -6615,8 +6755,17 @@
               "uniqueItems": true
             },
             "member": {
-              "description": "The id of the bone whose load-bearing member, joint, support or concentrated mass this solid is (validator `volume-member`).",
+              "description": "The id of the bone whose load-bearing member, joint, support or concentrated mass this solid is (validator `volume-member`). The structural views colour and load the solid as this bone.",
               "$ref": "#/$defs/Slug"
+            },
+            "members": {
+              "description": "Only on a `member` part: the further bones that this one member solid spans besides `member`, so that one bar stands for a run of bones the scale cannot show apart (a spine of five segments as one rod, a skull that takes the mandible in). The named bones are distinct, exist in the rig and form with `member` one connected piece of it (each is the parent or a child of another of them; validator `volume-member`), and in the default pose the whole of each named bone, from its joint to its tip, lies in the solid or within one smallest feature of the scale of its surface (`volumes-structure-coverage`). The solid counts as the member solid of every named bone, is judged for `slender` by its own length and stays coloured and loaded as `member`.",
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Slug"
+              },
+              "uniqueItems": true,
+              "minItems": 1
             },
             "part": {
               "description": "What the solid is: `member` (the load-bearing cross-section of the bone), `joint` (a rig joint), `support` (a support at an anchor of `structure.supports`) or `mass` (a compact solid at a concentrated centre of mass).",
@@ -6644,7 +6793,11 @@
               "minItems": 1
             },
             "slender": {
-              "description": "Declares a slender part (cord, wire, capillary, rod, hose, antenna): its length is at least 20 times its largest cross extent (validator `volumes-slender`). A slender solid is exempt from `volumes-feature` and from the cross-scale comparison; at each scale it is as thick as that scale's 2D draws it, and a coarser scale may keep it in `thermal` or `structure` without having it in `body`.",
+              "description": "Declares a slender part (cord, wire, capillary, rod, hose, antenna): its length is at least 20 times its largest cross extent (validator `volumes-slender`); a `member` solid of the `structure` list (a bone, a strut) may declare it from 5 times and a length of two smallest features of the scale. A slender solid is exempt from `volumes-feature` and from the cross-scale comparison; at each scale it is as thick as that scale's 2D draws it, and a coarser scale may keep it in `thermal` or `structure` without having it in `body`.",
+              "type": "boolean"
+            },
+            "sheet": {
+              "description": "Declares a true thin sheet (feather vane, leaf blade, fabric, membrane, foil, sheet metal, thin board or panel, thin vessel or shell wall built as a plate): it keeps its physical thickness below the smallest feature of the scale when its middle extent is at least that feature and at least 20 times its thickness (validator `volumes-feature`); where a thermal layer declares a gauge (`thicknessM`) for its bone and material, the thickness is that gauge. Not together with `slender`. A lump or a strip is no sheet.",
               "type": "boolean"
             },
             "anchor": {
@@ -6652,7 +6805,7 @@
               "$ref": "#/$defs/Slug"
             },
             "envelope": {
-              "description": "Marks an envelope prism: at a coarser scale a lattice (truss, mast, framework) of the finer scale is replaced by its envelope, declared in `decisions`; cross-scale then compares this solid with the convex hull per bone of the finer solids of its bone instead of with the bars (validator `volume-envelope`: not at the finest authored scale).",
+              "description": "Marks an envelope solid: at a coarser scale a lattice (truss, mast, framework) of the finer scale is replaced by its envelope prism, or a row of many thin elements (balusters, pales, louvres) by fewer, thicker ones on a bone of their own (typification), declared in `decisions`; cross-scale then compares the convex hull of the envelope solids of a bone with the convex hull of the finer solids of that bone instead of part against part (validator `volume-envelope`: not at the finest authored scale).",
               "type": "boolean"
             },
             "texture": {
@@ -6721,8 +6874,17 @@
               "$ref": "#/$defs/Slug"
             },
             "member": {
-              "description": "The id of the bone whose load-bearing member, joint, support or concentrated mass this solid is (validator `volume-member`).",
+              "description": "The id of the bone whose load-bearing member, joint, support or concentrated mass this solid is (validator `volume-member`). The structural views colour and load the solid as this bone.",
               "$ref": "#/$defs/Slug"
+            },
+            "members": {
+              "description": "Only on a `member` part: the further bones that this one member solid spans besides `member`, so that one bar stands for a run of bones the scale cannot show apart (a spine of five segments as one rod, a skull that takes the mandible in). The named bones are distinct, exist in the rig and form with `member` one connected piece of it (each is the parent or a child of another of them; validator `volume-member`), and in the default pose the whole of each named bone, from its joint to its tip, lies in the solid or within one smallest feature of the scale of its surface (`volumes-structure-coverage`). The solid counts as the member solid of every named bone, is judged for `slender` by its own length and stays coloured and loaded as `member`.",
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Slug"
+              },
+              "uniqueItems": true,
+              "minItems": 1
             },
             "part": {
               "description": "What the solid is: `member` (the load-bearing cross-section of the bone), `joint` (a rig joint), `support` (a support at an anchor of `structure.supports`) or `mass` (a compact solid at a concentrated centre of mass).",

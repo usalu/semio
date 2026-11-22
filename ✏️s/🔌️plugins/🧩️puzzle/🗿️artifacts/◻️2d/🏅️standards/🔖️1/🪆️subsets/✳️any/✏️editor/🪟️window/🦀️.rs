@@ -2,13 +2,14 @@
 
 use crate::editor::puzzle2d::config::Puzzle2dSuggestionMenu;
 use std::collections::BTreeMap;
+use store::os_store::codec_registry::native_snapshot::{OriginalArtifactHistoryReadLimits, OriginalArtifactPackReceiving, OriginalArtifactPairFailure, OriginalSnapshotRecordReceiving};
 
 /// 🎚️ ONE exact Puzzle 2D pane's persisted-local options. `WindowConfigOwner::State` requires
 /// `dsl::DslField`, which `#[derive(dsl::DslArtifact)]` emits alongside the `__dsl_*` helpers the
 /// record-backed `ArtifactDsl`/`ArtifactPack` below are written against; `id`/`extension` are stated
 /// explicitly so the derived `__DSL_ENVELOPE_ID`/`__DSL_EXTENSION` reproduce the envelope identity
 /// the three panes already shared.
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 #[dsl(layout = "lines")]
 #[artifact(id = "s.puzzle.puzzle2d.windowconfig", extension = "puzzle2dwindowcfg")]
@@ -228,6 +229,18 @@ impl pack::snapshot::ArtifactPack for Puzzle2dWindowConfig {
         Some(Self::__dsl_spec())
     }
 }
+impl OriginalArtifactPackReceiving for Puzzle2dWindowConfig {
+    type Receiving = OriginalSnapshotRecordReceiving<Self>;
+
+    fn original_pack_birth_demand() -> semio_framework_value::RetirementDemand {
+        semio_framework_value::RetirementDemand { copy_bytes: std::mem::size_of::<Self::Receiving>(), depth: 1, ..Default::default() }
+    }
+
+    fn admit_original_pack(source: &[u8], limits: protocol::PackLimits, native: &semio_framework_value::NativeDecodeControl<'_>, grant: semio_framework_value::RetainedCloneGrant) -> Result<Option<(Self::Receiving, semio_framework_value::RetainedCloneProgress)>, semio_framework_value::ValueError> {
+        Self::Receiving::admit(source, <Self as pack::snapshot::ArtifactDsl>::envelope_id(), limits, native, grant)
+    }
+}
+
 impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for Puzzle2dWindowConfig {
     fn reference_snapshot_codec()->Option<::semio_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
 
@@ -424,11 +437,12 @@ impl protocol::OpText for Puzzle2dWindowConfigMutation {
 }
 impl protocol::OpBinary for Puzzle2dWindowConfigMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(protocol::OpText::print_op(self).into_bytes())
+        Ok(store::pack_rt::encode_pack_value(&semio_framework_value::ToValue::to_value(self)))
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let text = std::str::from_utf8(bytes).map_err(|error| protocol::ProtocolError::Pack(store::PackError::from(semio_framework_value::ValueError::from(error))))?;
-        semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| protocol::ProtocolError::Pack(store::PackError::from(error)))
+        let malformed = |detail: String| protocol::ProtocolError::Malformed { what: "puzzle2d-window-mutation", offset: 0, detail };
+        let value = store::pack_rt::decode_pack_value(bytes).map_err(|error| malformed(error.to_string()))?;
+        semio_framework_value::FromValue::from_value(store::pack_rt::renormalize_whole_number_floats(value)).map_err(|error| malformed(error.to_string()))
     }
 }
 
@@ -674,6 +688,15 @@ macro_rules! owners {
             type Mutation = Puzzle2dWindowConfigMutation;
             type Edit = semio_plugin::WindowConfigApplyEdit<Puzzle2dWindowConfig, Puzzle2dWindowConfigMutation>;
             const MAXIMUM_PREPARATION_DEPTH: usize = 64;
+            fn native_pair_demands() -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+                Ok(semio_plugin::window_config_native_pair_demands::<Self::State>())
+            }
+            fn admit_native_pair(pack: &[u8], spr: &[u8], pack_limits: protocol::PackLimits, history_limits: OriginalArtifactHistoryReadLimits, native: &mut semio_framework_value::NativeDecodeControl<'_>, grant: semio_framework_value::RetainedCloneGrant, output: &mut Option<Box<dyn semio_plugin::WindowConfigNativePairReceiving<Self::State>>>) -> Result<semio_framework_value::RetainedCloneProgress, OriginalArtifactPairFailure> {
+                semio_plugin::admit_window_config_native_pair::<Self::State>(pack, spr, pack_limits, history_limits, native, grant, output)
+            }
+            fn native_operation_wire() -> store::os_store::ArtifactOperationWire<Self::Mutation> {
+                store::os_store::ArtifactOperationWire::canonical().with_original_binary_receiving()
+            }
             fn build_retained_edit() -> std::sync::Arc<Self::Edit> {
                 std::sync::Arc::new(semio_plugin::WindowConfigApplyEdit::new())
             }

@@ -45,7 +45,7 @@ export const LOCAL_CATALOG_TARGET_MAXIMUM_BYTES_V1 = 4096;
 
 /** 📏️ Upper bound of the base64 pack + spr text one admission carries (the archive's own byte authority is checked again
  * when it is encoded). */
-export const LOCAL_CATALOG_DOCUMENT_MAXIMUM_BASE64_BYTES_V1 = 8 * 1024 * 1024;
+export const LOCAL_CATALOG_DOCUMENT_MAXIMUM_BASE64_BYTES_V1 = 24 * 1024 * 1024;
 
 /** ⏱️ How long the host waits for a folder write to read back identically before it reports the write as failed. */
 export const LOCAL_CATALOG_WRITE_DEADLINE_MS_V1 = 30_000;
@@ -106,7 +106,7 @@ export function localCatalogAdmissionV1(args: Readonly<Record<string, unknown>> 
   const target = requested === "" ? `${folderRoot}/os/local-documents/${documentId}` : requested;
   let archive: Uint8Array;
   try {
-    archive = encodeDocumentArchiveBytes({ parent_pack: Array.from(pack), parent_spr: Array.from(spr), members: [] });
+    archive = encodeDocumentArchiveBytes({ parent_pack: pack, parent_spr: spr, members: [] });
   } catch {
     return { refusal: "invalid-request" };
   }
@@ -152,7 +152,7 @@ export function foldLocalCatalogEnvelopesV1(base: LocalCatalog, envelopes: reado
 /** 🗃️ The catalog a persisted archive holds, or `undefined` when the archive is not one. */
 export function decodeLocalCatalogArchiveV1(archive: Uint8Array): LocalCatalog | undefined {
   try {
-    return decodeLocalCatalogValue(decodePackValue(new Uint8Array(decodeDocumentArchiveBytes(archive).parent_pack)));
+    return decodeLocalCatalogValue(decodePackValue(decodeDocumentArchiveBytes(archive).parent_pack as Uint8Array));
   } catch {
     return undefined;
   }
@@ -168,7 +168,7 @@ export function sameLocalDocumentArchiveV1(left: Uint8Array, right: Uint8Array):
   return left.byteLength === right.byteLength && left.every((byte, index) => byte === right[index]);
 }
 
-function encodeBase64(bytes: readonly number[]): string {
+function encodeBase64(bytes: Uint8Array | readonly number[]): string {
   let text = "";
   for (let index = 0; index < bytes.length; index += 0x8000) text += String.fromCharCode(...bytes.slice(index, index + 0x8000));
   return btoa(text);

@@ -1,0 +1,6 @@
+{
+  "job": 9001,
+  "kind": "test.fixed-original",
+  "input": "fixed",
+  "output": [1, 2]
+}

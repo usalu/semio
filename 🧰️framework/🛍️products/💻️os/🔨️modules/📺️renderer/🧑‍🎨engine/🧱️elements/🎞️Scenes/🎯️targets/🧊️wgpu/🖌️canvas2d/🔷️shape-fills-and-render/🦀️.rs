@@ -176,7 +176,7 @@ pub fn apply_canvas_framing(scene: &UiComponentSceneNode, bounds: Rect) -> bool 
 pub fn render_canvas_2d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
     let theme = ctx.theme;
     let Some(canvas) = &scene.canvas_2d else {
-        return render_placeholder("canvas-2d", bounds, ctx);
+        return render_placeholder(bounds, ctx);
     };
     let inner = bounds;
     let mut order = CanvasPaintOrder::open(ctx.draw, inner);

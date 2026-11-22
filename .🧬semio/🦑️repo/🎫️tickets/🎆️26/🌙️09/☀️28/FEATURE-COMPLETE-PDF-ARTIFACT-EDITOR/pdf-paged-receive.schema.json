@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "pageBytes",
+    "pdfPages",
+    "streamObject",
+    "streamBytes",
+    "streamSha256",
+    "cancellationCuts"
+  ],
+  "properties": {
+    "pageBytes": {
+      "const": 97
+    },
+    "pdfPages": {
+      "const": 1
+    },
+    "streamObject": {
+      "const": 4
+    },
+    "streamBytes": {
+      "const": 2688
+    },
+    "streamSha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "cancellationCuts": {
+      "type": "array",
+      "minItems": 3,
+      "uniqueItems": true,
+      "items": {
+        "type": "integer",
+        "minimum": 1
+      }
+    }
+  }
+}

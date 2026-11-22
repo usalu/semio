@@ -94,12 +94,16 @@ impl semio_framework_value::FromValue for Puzzle5dPlaySnapshot {
 
 /// 🧒️ Visits the literal persisted child owned by the typed Puzzle5d parent.
 impl semio_framework_schema_composition::ArtifactCompositionFields for Puzzle5dPlaySnapshot {
+    fn visit_child_refs<'a, V: semio_framework_schema_composition::ChildRefVisitor<'a>>(&'a self, visitor: &mut V) -> Result<(), V::Error> {
+        semio_framework_schema_composition::ArtifactCompositionFields::visit_child_refs(self.typed(),visitor)
+    }
+
     fn child_slots() -> &'static [semio_framework_schema_composition::ChildSlotSpec] {
         <Puzzle5dSnapshot as semio_framework_schema_composition::ArtifactCompositionFields>::child_slots()
     }
 
-    fn visit_child_refs<'a, V: semio_framework_schema_composition::ChildRefVisitor<'a>>(&'a self, visitor: &mut V) -> Result<(), V::Error> {
-        semio_framework_schema_composition::ArtifactCompositionFields::visit_child_refs(self.typed(),visitor)
+    fn link_slots() -> &'static [semio_framework_schema_composition::LinkSlotSpec] {
+        <Puzzle5dSnapshot as semio_framework_schema_composition::ArtifactCompositionFields>::link_slots()
     }
 }
 

@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
+import { uiDataLabel } from "../🎗️UiLabel/🟦️.tsx";
 import { Engagement } from "../🎮️Engagement/🟦️.tsx";
 import { Tree } from "../🌳️Tree/🟦️.tsx";
 import { ControlTree } from "../🌳️Tree/🕹️control-tree/🟦️.tsx";
@@ -33,7 +34,7 @@ describe("round 3 framework shared-border findings", () => {
     expect(only.container.querySelector('[data-slot="engagement"]')!.getAttribute("data-shared-border-edges")).toBe("right bottom left");
   });
   it("renders file-tree cards as frames with cell rows", () => {
-    const view = render(<Tree.Files title="Files" nodes={[{ title: "a.ts", path: "a.ts" } as never]} />);
+    const view = render(<Tree.Files title={uiDataLabel("Files")} nodes={[{ title: "a.ts", path: "a.ts" } as never]} />);
     const card = view.container.querySelector<HTMLElement>('[data-slot="tree-files"]')!;
     expect(card.hasAttribute("data-shared-border-frame")).toBe(true);
     expect(card.querySelectorAll(":scope > [data-shared-border-cell]").length).toBe(2);

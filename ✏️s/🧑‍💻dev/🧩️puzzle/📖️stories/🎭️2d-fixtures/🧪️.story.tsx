@@ -34,6 +34,15 @@ async function parsePuzzle2dFixtureDsl(dslText: string): Promise<StoryPuzzle2dFi
   const mod = await loadPuzzle2dWasm();
   return JSON.parse(mod.puzzle2dParseDslJson(dslText)) as StoryPuzzle2dFixture;
 }
+/** 🧹️ Projects a parsed puzzle document onto the board engine's closed snapshot vocabulary — the engine refuses document-only fields (`anchor`, edge placement) instead of ignoring them. */
+const ENGINE_NODE_FIELDS = new Set(["id", "x", "y", "shape", "radius", "width", "height", "scale", "text", "label", "iconKind", "nodeKind", "draggable", "selected", "style", "userData", "root", "hidden", "visible", "locked", "handles"]);
+const ENGINE_EDGE_FIELDS = new Set(["id", "source", "target", "edgeKind", "sourceTip", "targetTip", "label", "text", "selected", "style", "userData", "hidden", "visible", "locked"]);
+function pickFields(entity: StoryPuzzle2dEntity, allowed: ReadonlySet<string>): StoryPuzzle2dEntity {
+  return Object.fromEntries(Object.entries(entity).filter(([key]) => allowed.has(key))) as StoryPuzzle2dEntity;
+}
+function boardEngineSnapshot(fixture: StoryPuzzle2dFixture): StoryPuzzle2dFixture {
+  return { ...fixture, nodes: fixture.nodes.map((node) => pickFields(node, ENGINE_NODE_FIELDS)), edges: fixture.edges.map((edge) => pickFields(edge, ENGINE_EDGE_FIELDS)) };
+}
 //#endregion WasmFixtureLoader
 
 //#region StoryTypes
@@ -192,7 +201,7 @@ function buildStorySceneNode(state: StoryPuzzle2dState, interactive: boolean): U
     controllerId: "puzzle2d-fixtures-story",
     componentKind: "board-2d",
     board2d: {
-      snapshotJson: JSON.stringify(fixture),
+      snapshotJson: JSON.stringify(boardEngineSnapshot(fixture)),
       cameraJson: JSON.stringify(fixture.camera),
       glyphCatalogsJson: JSON.stringify(fixture.meta?.kindCatalogs ?? {}),
       selectionJson: JSON.stringify(runtime.selectedIds),
@@ -249,7 +258,7 @@ function Board2dFixtureStoryHost({ fixtureDsl, interactive }: { readonly fixture
   }
 
   return (
-    <div style={{ display: "flex", height: "100%", width: "100%", flexDirection: "column" }}>
+    <div style={{ display: "flex", height: "100vh", width: "100%", flexDirection: "column" }}>
       <div style={{ position: "relative", flex: "1 1 auto", minHeight: 0 }}>
         <BoardSessionFactoryContext.Provider value={factory}>
           <Board2dHost node={node} onAction={onAction} />

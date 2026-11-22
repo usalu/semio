@@ -19,6 +19,7 @@ import {
 import { rowActionAdmissionKeyV1 } from "../🎬️row-action-admission/🟦️.ts";
 import {
   Tree,
+  CATALOGUE_DRAG_MIME,
   borderNormalTopClass,
   catalogueTreeDragController,
   SharedBorderRowCell,
@@ -40,10 +41,10 @@ import {
   useUiNode,
   type UiDocumentState
 } from "../../📃️UiDocumentStore/🟦️.tsx";
-import { type Component, type UiNodeId, type UiNodeRecord } from "@semio-tech/framework";
+import { type Component, type UiNodeId, type UiNodeRecord, type UiValue } from "@semio-tech/framework";
 import { leftoverItemSelectedV1, leftoverSelectionOverlayV1, subscribeLeftoverSelectionV1 } from "../🗺️element-host-registry/🟦️.ts";
 import { type UiPresenceOverlayValue, usePresenceOverlayEntry, useUiPresenceOverlay } from "../👥️presence-overlay/🟦️.ts";
-import { treeSectionsCatalogueDragMime } from "../🌲️tree-panel-boundary/🟦️.ts";
+import { TREE_ROW_REORDER_MIME, treeSectionsDragMime } from "../🌲️tree-panel-boundary/🟦️.ts";
 import { type UiInterpreterContext } from "../🧷️interpreter-context/🟦️.ts";
 import { layoutSpecStyle } from "../📐️layout-accessibility/🟦️.tsx";
 import { dispatchTrigger, resolveControlIconNode } from "../⚡️action-dispatch/🟦️.tsx";
@@ -258,7 +259,26 @@ function TreeView({ store, record, context }: { readonly store: UiDocumentStore;
   useTreeWindowObserver(rootRef, windows, revision, store);
   const dragController: TreeDragAndDropController | undefined = useMemo(() => {
     const dropBinding = (record.bindings ?? []).find((b) => b.trigger === "drop");
-    const catalogueMime = treeSectionsCatalogueDragMime(sections);
+    const rowReorderMime = dropBinding && treeSectionsDragMime(sections, mime => mime === TREE_ROW_REORDER_MIME);
+    if (rowReorderMime) {
+      return {
+        rowReorderMime,
+        handleDrop: async ({ data, target, targetKind, dropPosition }) => {
+          if (targetKind !== "item" || !("dragData" in target && target.dragData?.[rowReorderMime]) || !target.windowKey || (dropPosition !== "before" && dropPosition !== "after")) return;
+          const encoded = data[rowReorderMime];
+          if (!encoded) return;
+          let payload: UiValue;
+          try {
+            payload = JSON.parse(encoded);
+          } catch {
+            return;
+          }
+          if (!payload || typeof payload !== "object" || Array.isArray(payload)) return;
+          await dispatchTrigger(context, record, "drop", { ...payload, targetId: target.windowKey, dropPosition });
+        },
+      };
+    }
+    const catalogueMime = treeSectionsDragMime(sections, mime => mime === CATALOGUE_DRAG_MIME);
     const catalogue = catalogueMime ? catalogueTreeDragController(catalogueMime) : undefined;
     if (!dropBinding && !catalogue) return undefined;
     return {

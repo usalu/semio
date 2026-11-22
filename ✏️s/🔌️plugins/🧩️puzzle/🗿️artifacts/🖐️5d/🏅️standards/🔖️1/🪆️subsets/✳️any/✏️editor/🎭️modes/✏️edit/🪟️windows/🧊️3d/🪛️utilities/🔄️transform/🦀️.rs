@@ -200,7 +200,7 @@ impl Puzzle5dRelocateScan {
     pub fn step(&mut self, base: &Puzzle5dSnapshot, page: usize) -> bool {
         let end = self.cursor.saturating_add(page.max(1)).min(base.parts.len());
         if let Some((source, from)) = self.source.as_ref() {
-            for other in base.parts.get(self.cursor..end).into_iter().flatten().filter(|other| other.id != self.record.targets[0]) {
+            for other in base.parts.iter().skip(self.cursor).take(end.saturating_sub(self.cursor)).filter(|other| other.id != self.record.targets[0]) {
                 for candidate in &other.grips {
                     let target = puzzle5d_grip_full_id(&other.id, &candidate.id);
                     let at = puzzle5d_world_point(other.part_3d.origin, other.part_3d.orientation, candidate.grip_3d.position);

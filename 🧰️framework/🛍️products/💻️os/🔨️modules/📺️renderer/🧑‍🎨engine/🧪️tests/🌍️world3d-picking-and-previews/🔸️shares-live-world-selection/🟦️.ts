@@ -110,13 +110,9 @@ export function registerSharesLiveWorldSelectionTests(): void {
 
     expect(calls).toEqual([
       { pane: "pane.source", method: "setDropPreviewJson", arg: preview },
-      { pane: "pane.source", method: "renderFrame", arg: "" },
       { pane: "pane.sibling", method: "setDropPreviewJson", arg: preview },
-      { pane: "pane.sibling", method: "renderFrame", arg: "" },
       { pane: "pane.source", method: "clearDropPreview", arg: "" },
-      { pane: "pane.source", method: "renderFrame", arg: "" },
       { pane: "pane.sibling", method: "clearDropPreview", arg: "" },
-      { pane: "pane.sibling", method: "renderFrame", arg: "" },
     ]);
 
     unregisterBoard2dPeer(scope, "fixture-preview", "pane.source", scope.peers.get("fixture-preview")?.get("pane.source") ?? null);

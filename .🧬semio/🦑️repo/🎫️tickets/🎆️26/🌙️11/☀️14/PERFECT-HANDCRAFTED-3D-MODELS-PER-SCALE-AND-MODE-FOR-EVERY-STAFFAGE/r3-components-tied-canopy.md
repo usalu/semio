@@ -106,3 +106,7 @@ Root change: 1:100 plan `glass-0` to `glass-3` extended by half a joint (10 mm) 
 Check: `r3-validate.ts components/tied-canopy` VALID (schema 0, validateAsset 0, print suitable at every scale); `volumes-check.ts --product` PASS.
 
 Still imperfect: the glass lies flat (0 degrees) while overhead glazing is normally laid with 2 to 3 degrees of fall for drainage; a fall changes the rig angle, anchors and every 2D view and is left as an open point. The model is one beam with its 1.0 m glass strip, a bay of a longer canopy, so the panes bear on one line with 0.5 m edge overhangs. The 1:200 and 1:500 strut is a slender rod and the nodes are lugs at the feature floor.
+
+## Canonical component readback, 2026-11-21
+
+Canonical source `5f8849476d5844ac`. Both gusset and clevis pairs close around real pins. At the wall, two 20 mm plates and two thermal pads are drilled for four 16 mm studs apiece. The paired studs project through the separate nuts. All twelve exported scenes reopened (1,319,868 bytes). The strict catalog source readback passed.

@@ -1,8 +1,9 @@
 import assert from "node:assert/strict";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
-import { readFileSync, statSync } from "node:fs";
+import { readFileSync, statSync, writeFileSync } from "node:fs";
 import { isMainThread, parentPort, Worker, workerData } from "node:worker_threads";
+import { diagnosticPollLimitsObject, diagnosticPollLimitsTuple } from "./owned-input-poll-limits.ts";
 
 function length(bytes: Uint8Array, cursor: { position: number }): number {
   let value = 0;
@@ -33,14 +34,16 @@ const componentPath = "🗑️generated/m-canon/browser/prototype/components/6d8
 const fixturesPath = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/🔁️persistent-local/📊️actor-input.json";
 const MiB = 1024 * 1024;
 const wallLimitMs = 60_000;
+const liveFixture = new URL("🗑️generated/native-note-poll-exact.json", import.meta.url);
+const liveBudget = new URL("🗑️generated/native-note-poll-scalar.json", import.meta.url);
 const memoryLimit = 256 * MiB;
 
-function audit(path: string, expectedDigest: string, plugin: string) {
+function audit(path: string, expectedDigest: string, plugin: string, live: boolean, fixtureMode: "empty" | "minimal" | "standard", tuple: boolean, transcriptPath?: string) {
   const began = performance.now();
   const elapsed = (since = began) => Number((performance.now() - since).toFixed(3));
   const log = (report: object) => parentPort?.postMessage(report);
   const stat = statSync(path);
-  assert(stat.size < 128 * MiB, "Component exceeds the diagnostic input bound");
+  assert(stat.size <= (plugin === "wfc" ? 256 : 128) * MiB, "Component exceeds the diagnostic input bound");
   const component = readFileSync(path);
   const sha256 = createHash("sha256").update(component).digest("hex");
   assert.equal(sha256, expectedDigest);
@@ -52,6 +55,12 @@ function audit(path: string, expectedDigest: string, plugin: string) {
   }));
   assert.equal(matches.length, 1);
   const selected = matches[0].data;
+  const transcript = transcriptPath ? ["owned-input-v1", `M ${selected.byteOffset - component.byteOffset} ${selected.length} ${sha256}`] : undefined;
+  const record = (...fields: (number | bigint | string)[]) => {
+    if (!transcript) return;
+    assert(transcript.length < 65_536, "Replay transcript exceeded record bound");
+    transcript.push(fields.join(" "));
+  };
   const module = new WebAssembly.Module(selected);
   const compileMs = elapsed();
 
@@ -59,8 +68,11 @@ function audit(path: string, expectedDigest: string, plugin: string) {
   let phase = "instantiate";
   let clockReads = 0;
   const seenImports = new Set<string>();
-  const clockBinding = 1n;
+  const exact = live ? JSON.parse(readFileSync(liveBudget, "utf8")).map(BigInt) as bigint[] : undefined;
+  if (exact) assert.equal(exact.length, 19);
+  const clockBinding = exact?.[3] ?? 1n;
   const micros = () => BigInt(Math.floor((performance.now() - began) * 1000));
+  let call: string[] | undefined;
   const view = (pointer: number, length: number) => {
     assert(memory, "Guest used memory during instantiation");
     assert(memory.buffer.byteLength <= memoryLimit, "Guest exceeds diagnostic linear-memory bound");
@@ -79,13 +91,24 @@ function audit(path: string, expectedDigest: string, plugin: string) {
           const out = view(Number(args[1]), 16);
           out.fill(0);
           assert.equal(args[0], clockBinding);
+          const time = micros();
           out.writeUInt32LE(1, 0);
-          out.writeBigUInt64LE(micros(), 8);
+          out.writeBigUInt64LE(time, 8);
+          if (call) {
+            assert(call.length < 65_536, "Replay import count exceeded record bound");
+            call.push(`I operation-clock-us ${args[0]} ${args[1]} ${time}`);
+          }
           clockReads++;
           return;
         }
-        case "wasi:clocks/monotonic-clock@0.2.0::now":
-          return micros() * 1000n;
+        case "wasi:clocks/monotonic-clock@0.2.0::now": {
+          const time = micros() * 1000n;
+          if (call) {
+            assert(call.length < 65_536, "Replay import count exceeded record bound");
+            call.push(`I now ${time}`);
+          }
+          return time;
+        }
         default:
           throw Error("Unexpected " + phase + " import: " + key);
       }
@@ -98,7 +121,14 @@ function audit(path: string, expectedDigest: string, plugin: string) {
   const invoke = (name: string, ...args: (number | bigint)[]) => {
     const fn = guest.exports["semio_owned_" + name + "_v1"];
     assert.equal(typeof fn, "function", "Missing owned export " + name);
-    return (fn as (...values: (number | bigint)[]) => number | bigint | undefined)(...args);
+    if (transcript) call = [];
+    const result = (fn as (...values: (number | bigint)[]) => number | bigint | undefined)(...args);
+    if (call) {
+      record("C", name, result ?? "_", memory!.buffer.byteLength, call.length, ...args);
+      for (const event of call) record(event);
+      call = undefined;
+    }
+    return result;
   };
   const unpack = (result: number | bigint | undefined) => {
     assert.equal(typeof result, "bigint");
@@ -107,7 +137,9 @@ function audit(path: string, expectedDigest: string, plugin: string) {
     const length = Number(word >> 32n);
     assert.notEqual(length, 0xffffffff, "Unframed scalar refusal " + pointer);
     assert(pointer > 0 && length > 0);
-    return { pointer, length, bytes: view(pointer, length) };
+    const bytes = view(pointer, length);
+    if (transcript) record("R", pointer, bytes.toString("hex"));
+    return { pointer, length, bytes };
   };
   phase = "prepare";
   const prepareStart = performance.now();
@@ -123,15 +155,30 @@ function audit(path: string, expectedDigest: string, plugin: string) {
 
   const fixtures = JSON.parse(readFileSync(fixturesPath, "utf8"));
   const appId = plugin === "note" ? "s.note.note@1/*#editor" : "s.wfc.bitmap@1/*#editor";
-  const fixture = fixtures.find(({ wire, valid }: { wire: { Poll?: { events: { instanceOpen?: { appId: string; capabilities: unknown[] } }[] } }; valid: boolean }) => valid && wire.Poll?.events[0]?.instanceOpen?.appId === appId && wire.Poll.events[0].instanceOpen?.capabilities.length === 1);
-  assert(fixture, "No exact valid InstanceOpen fixture");
-  const wire = Buffer.from(JSON.stringify(fixture.wire));
-  assert.equal(wire.length, plugin === "note" ? 601 : 602);
+  const fixture = fixtures.find(({ wire, valid }: {
+    wire: { Poll?: { events: { instanceOpen?: { appId: string; capabilities: unknown[] } }[] } };
+    valid: boolean;
+  }) => {
+    if (!valid || !wire.Poll) return false;
+    if (fixtureMode === "empty") return wire.Poll.events.length === 0;
+    const open = wire.Poll.events[0]?.instanceOpen;
+    return open?.appId === appId && open.capabilities.length === (fixtureMode === "minimal" ? 0 : 1);
+  });
+  assert(fixture, "No exact valid Poll fixture");
+  const input = live ? JSON.parse(readFileSync(liveFixture, "utf8")) : fixture.wire;
+  const limits = diagnosticPollLimitsObject(input.Poll.limits);
+  input.Poll.limits = tuple ? diagnosticPollLimitsTuple(limits) : limits;
+  const wire = Buffer.from(JSON.stringify(input));
+  const objectLength = live ? 681 : fixtureMode === "empty" ? 284 : fixtureMode === "minimal" ? 480 : plugin === "note" ? 601 : 602;
+  assert.equal(wire.length, objectLength - (tuple ? 185 : 0));
+  if (live) assert.equal(JSON.parse(wire.toString()).Poll.events[0].instanceOpen.appId, appId);
 
   let epoch = 0n;
-  const deadline = 86_400_000_000n;
+  const deadline = exact?.[4] ?? 86_400_000_000n;
+  const purposeDeadline = exact?.[17] ?? deadline;
   const available = [48_000_000n, 3_000_000_000n, 2_147_483_648n, 2_147_483_648n, 64n, 1_000_000_000n];
-  const policy = [65_536n, BigInt(16 * MiB), BigInt(64 * MiB), BigInt(64 * MiB), 64n];
+  let policy = [65_536n, BigInt(16 * MiB), BigInt(64 * MiB), BigInt(64 * MiB), 64n];
+  let purposeWork = 1_000_000n;
   const effects = (bytes: Buffer, offset: number) =>
     Array.from({ length: 5 }, (_, index) => bytes.readBigUInt64LE(offset + index * 8));
   const describeEffects = (values: bigint[]) => ({
@@ -146,10 +193,10 @@ function audit(path: string, expectedDigest: string, plugin: string) {
   };
   const min = (a: bigint, b: bigint) => a < b ? a : b;
   const issue = () => [
-    1n, 1n, ++epoch, clockBinding, deadline, available[5],
+    exact?.[0] ?? 1n, exact?.[1] ?? 1n, ++epoch, clockBinding, deadline, available[5],
     ...available.slice(0, 5),
     ...policy.map((value, index) => min(value, available[index])),
-    min(1_000_000n, available[5]), deadline, 0n,
+    min(purposeWork, available[5]), purposeDeadline, 0n,
   ];
   let bootstrapSequence = 0n;
   let revision = 0n;
@@ -162,9 +209,11 @@ function audit(path: string, expectedDigest: string, plugin: string) {
   const readReceipt = (name: string, pointerArgs: number[] = []) => {
     phase = name;
     const loan = issue();
+    if (exact && name === "admit_actor_input" && inputCalls === 0) assert.deepEqual(loan, exact);
     if (pointerArgs.length) {
       assert.equal(inputReturnCount, 0);
       assert.deepEqual(view(pointerArgs[0], pointerArgs[1]), wire);
+      if (transcript) record("R", pointerArgs[0], wire.toString("hex"));
     }
     const start = performance.now();
     const clockBefore = clockReads;
@@ -225,7 +274,9 @@ function audit(path: string, expectedDigest: string, plugin: string) {
     consume(spent);
     const escrowLength = bytes.readUInt32LE(offset + 140);
     assert(escrowLength >= 48 && escrowLength <= 5936);
-    const escrow = view(bytes.readUInt32LE(offset + 136), escrowLength);
+    const escrowPointer = bytes.readUInt32LE(offset + 136);
+    const escrow = view(escrowPointer, escrowLength);
+    if (transcript) record("R", escrowPointer, escrow.toString("hex"));
     assert.equal(escrow.toString("ascii", 0, 4), "SRE1");
     const rows = escrow.readUInt32LE(4);
     assert(rows <= 32);
@@ -261,6 +312,7 @@ function audit(path: string, expectedDigest: string, plugin: string) {
       assert.notEqual(kind, 7, "Input published a semantic failure");
       assert.equal(inputReturned, ready, "Successful passage requires exactly one terminal input return");
       assert.deepEqual(view(pointerArgs[0], pointerArgs[1]), wire);
+      if (transcript) record("R", pointerArgs[0], wire.toString("hex"));
       if (inputReturned) {
         invoke("dealloc", pointerArgs[0], pointerArgs[1]);
         inputReturnCount++;
@@ -272,14 +324,23 @@ function audit(path: string, expectedDigest: string, plugin: string) {
   let bootReady = false;
   for (let attempt = 0; attempt < 64 && !bootReady; attempt += 1) bootReady = readReceipt("admit_actor_context");
   assert(bootReady, "Boot did not reach ready within 64 receipts");
+  if (exact) {
+    assert(epoch < exact[2]);
+    epoch = exact[2] - 1n;
+    available.splice(0, available.length, ...exact.slice(6, 11), exact[5]);
+    policy = exact.slice(11, 16);
+    purposeWork = exact[16];
+  }
   phase = "allocate_input";
   const pointer = Number(invoke("alloc", wire.length));
   assert(pointer > 0);
   view(pointer, wire.length).set(wire);
+  if (transcript) record("W", pointer, wire.toString("hex"));
   const inputStart = performance.now();
   let inputReady = false;
   for (let attempt = 0; attempt < 64 && !inputReady; attempt += 1) inputReady = readReceipt("admit_actor_input", [pointer, wire.length]);
   assert(inputReady && inputReturnCount === 1, "Input did not reach ready and return its wire");
+  if (transcript && transcriptPath) writeFileSync(transcriptPath, transcript.join("\n") + "\n");
   log({ stage: "complete", inputBytes: wire.length, inputReturnCount, inputCalls, inputCallMs: Number(inputCallMs.toFixed(3)), inputElapsedMs: elapsed(inputStart), totalInputSpent: describeEffects(totalInputSpent), sha256, elapsedMs: elapsed(), rssBytes: process.memoryUsage().rss, imports: [...seenImports] });
 }
 
@@ -288,7 +349,16 @@ if (isMainThread) {
   const expectedDigest = process.argv[3] ?? canonicalNote;
   const plugin = process.argv[4] ?? "note";
   assert(["note", "wfc"].includes(plugin));
-  const worker = new Worker(new URL(import.meta.url), { workerData: { path, expectedDigest, plugin } });
+  const live = process.argv.includes("--live-note");
+  const emptyPoll = process.argv.includes("--empty-poll");
+  const minimalOpen = process.argv.includes("--minimal-open");
+  const tuple = process.argv.includes("--tuple-limits");
+  assert(!emptyPoll || !minimalOpen);
+  const fixtureMode = emptyPoll ? "empty" : minimalOpen ? "minimal" : "standard";
+  assert(!live || plugin === "note" && fixtureMode === "standard");
+  assert(!minimalOpen || plugin === "note");
+  const transcriptPath = process.env.SEMIO_OWNED_INPUT_TRANSCRIPT;
+  const worker = new Worker(new URL(import.meta.url), { workerData: { path, expectedDigest, plugin, live, fixtureMode, tuple, transcriptPath } });
   const deadline = setTimeout(() => {
     console.error("[DEBUG] Owned Input diagnostic exceeded its wall-clock bound");
     process.exit(1);
@@ -306,5 +376,5 @@ if (isMainThread) {
     process.exitCode = 1;
   });
 } else {
-  audit(workerData.path, workerData.expectedDigest, workerData.plugin);
+  audit(workerData.path, workerData.expectedDigest, workerData.plugin, workerData.live, workerData.fixtureMode, workerData.tuple, workerData.transcriptPath);
 }

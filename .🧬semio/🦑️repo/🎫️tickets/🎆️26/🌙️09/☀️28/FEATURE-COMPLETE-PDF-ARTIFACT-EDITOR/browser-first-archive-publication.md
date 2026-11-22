@@ -1,0 +1,9 @@
+# Browser First Archive Publication
+
+The staged shell carries the accepted source instance, operation, grant generation, command sequence, exact source extent and format declaration from selected-file Complete into the same guest archive exchange. The shell pins its actor and active host, binds the guest’s exact document ID and Store frontier to the existing SHA-256 catalog folder, and reports acknowledged archive bytes. The initial editor is attached and listed only after the capture returns the verified disk frontier, a second guest Seal confirms the same digest and Close acknowledges retirement.
+
+Nine opening cases exercise the shared production functions with Ajv, independent SHA-256 and the existing archive encoder and decoder. An ordinary opening uses the same folder and generates the same version-one bytes. A streamed opening reaches the persistence callback without an archive buffer. Cancellation or refusal before attachment does not list the editor. A catalog or panel failure closes the exact receipt and removes the tentative entry.
+
+The scoped browser packet driver passed ten cases against SQLite for 2,130,150 framed bytes. The proof uses exact offsets and acknowledgments, independent SHA-256 readback, and tests a changed frontier, refused Close or loss of the actor after Close after the durable write. A successfully synced event can remain after a later refusal or cancellation while the shell suppresses publication.
+
+The Shell overlay remains staged. Mounted first-archive acceptance still requires the shared guest’s canonical first SPR producer and a dev/native folder authority for scoped capture. The folder archive protocol currently admits at most 4 MiB. The separate mounted baseline reached the real picker with the rebuilt signed PDF artifact and timed out on the new actor lane before the trace showed a command page.

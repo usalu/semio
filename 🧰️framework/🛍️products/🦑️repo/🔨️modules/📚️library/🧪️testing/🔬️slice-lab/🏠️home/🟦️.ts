@@ -191,7 +191,7 @@ export function sliceLabHomeReportV1(language:"en"|"de",report:SliceLabHomeRepor
 }
 
 
-/** 📵️ Writes the two files every package manager of the account reads (`.npmrc`, `.bunfig.toml`) so that the registry is a loopback address nobody listens on: a dependency the seeded cache does not hold fails at once with a refused connection instead of fetching (the dependency producer copies both files from the account into its own home). */
+/** 📵️ Writes the two files every package manager of the account reads (`.npmrc`, the home configuration of the selected manager) so that the registry is a loopback address nobody listens on: a dependency the seeded cache does not hold fails at once with a refused connection instead of fetching (the dependency producer copies both files from the account into its own home). */
 export function sliceLabRegistryRefusalV1(home:string):readonly string[]{
  const rule=H.registry,made:string[]=[];
  for(const[name,template]of Object.entries(rule.files)){writeFileSync(join(home,name),(template as string).replaceAll("{url}",rule.url));made.push(name);}

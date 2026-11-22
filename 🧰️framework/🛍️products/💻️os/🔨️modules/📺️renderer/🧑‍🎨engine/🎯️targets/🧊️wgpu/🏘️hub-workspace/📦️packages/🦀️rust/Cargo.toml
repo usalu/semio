@@ -32,6 +32,7 @@ semio-ui-declaration = { path = "../../../../../../../../../../🔨️modules/�
 semio-ui-theme = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🎭️theme/📦️packages/🦀️rust" }
 semio-renderer-wgpu-contracts = { path = "../../../🤝️contracts/📦️packages/🦀️rust" }
 semio-renderer-wgpu-hub-contracts = { path = "../../../🔐️hub-contracts/📦️packages/🦀️rust" }
+semio-renderer-wgpu-hub-first-run = { path = "../../../../../🧱️elements/🎓️HubFirstRun/🎯️targets/🧊️wgpu/📦️packages/🦀️rust" }
 semio-renderer-wgpu-media-slots = { path = "../../../🎥️media-slots/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 serde_json = "1.0.140"

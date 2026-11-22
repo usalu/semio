@@ -15,7 +15,8 @@ thread_local!{static IDLE:std::cell::Cell<u32>=const{std::cell::Cell::new(0)};}
 use semio_framework_value_native_owned::retirement::{RetireOwned,controlled::ControlledRetirement};
 use semio_framework_value_native_owned::retained_clone::{RetainedCloneRef,RetainedCloneSource};
 pub fn bank()->EffectBank{EffectBank::new(semio_framework_value_testing_admission::Wallet::new(RetainedCloneGrant{maximum_items:1<<20,maximum_copy_bytes:1<<30,maximum_capacity_bytes:1<<30,maximum_release_bytes:1<<30,maximum_depth:1<<10},1<<30))}
-fn grant(d:RetirementDemand)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth}}
+fn grant(d:RetirementDemand)->RetainedCloneGrant{grant_items(d,1)}
+fn grant_items(d:RetirementDemand,items:usize)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:items,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth}}
 /// 🪢️ Settles one reply-shaped action into a poll.
 pub fn settle<E:From<ValueError>>(effect:&mut RetainedAllocationEffect<'_>,run:impl for<'r> FnOnce(&mut RetainedAllocationEffect<'_>,OriginalEffectReply<'r,RetainedCloneStep,E>)->Result<OriginalEffectReplyComplete<'r,RetainedCloneStep,E>,ValueError>)->RetainedWorkPoll<RetainedCloneStep,E>{
     let mut slot=None;let ran=OriginalEffectReply::borrow(&mut slot).and_then(|reply|run(&mut *effect,reply).map(|_|()));let work=effect.performed_work();
@@ -61,7 +62,7 @@ pub fn receive_traced<I:?Sized,T,R:NativeReceiver<I,T>>(receiver:&mut R,source:R
         if receiver.output_ready(){break}
         assert!(IDLE.get()<STALL,"receiver stalled: {} consecutive funded turns performed no work",IDLE.get());
         let selection=receiver.select_advance(source,body,MAXIMUM).map_err(|error|format!("{error:?}"))?;
-        let demand=receiver.demands(source,body,MAXIMUM).map_err(|error|format!("{error:?}"))?;let g=grant(demand);
+        let demand=receiver.demands(source,body,MAXIMUM).map_err(|error|format!("{error:?}"))?;let g=grant_items(demand,if matches!(selection,NativeAdvanceSelection::Nested){semio_framework_value_native_owned::native_decoding::owned::NATIVE_SCHEMA_METADATA_ITEMS}else{1});
         trace.shapes.push([demand.copy_bytes,demand.capacity_bytes,demand.release_bytes,demand.depth,match selection{NativeAdvanceSelection::Nested=>usize::MAX,NativeAdvanceSelection::Local{work}=>work as usize}]);
         for denied in denials(g,demand){
             match selection{

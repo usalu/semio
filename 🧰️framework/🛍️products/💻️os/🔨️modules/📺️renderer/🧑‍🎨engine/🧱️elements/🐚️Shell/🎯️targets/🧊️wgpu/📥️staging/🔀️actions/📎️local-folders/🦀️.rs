@@ -11,18 +11,6 @@ impl<'ctx> ActionsCtx<'ctx> {
     pub async fn reattach_local_folder(&mut self, binding: &LocalFolderBinding) -> Result<(), String> {
         self.attach_sync_backbone(format!("folder://{}", local_folder_path(binding))).await
     }
-
-    /// 🔁️ The boot reattach: once per document, the remembered folder of the session's document is reopened without a
-    /// gesture. A failure is told through the dispatch-fault funnel and leaves the band offering it. `true` when it ran.
-    pub async fn reattach_remembered_local_folder(&mut self) -> bool {
-        self.history.ensure_local_folder_bindings();
-        let Some(offer) = self.docs.direct_reattach_candidate(&self.history, &self.sync) else { return false };
-        self.history.local_folder_reattach_tried = Some(offer.document_id.clone());
-        if let Err(error) = self.reattach_local_folder(&offer).await {
-            self.prefs.note_dispatch_fault(&error, &mut self.chrome);
-        }
-        true
-    }
 }
 
 //#region 🔖️Reconnect

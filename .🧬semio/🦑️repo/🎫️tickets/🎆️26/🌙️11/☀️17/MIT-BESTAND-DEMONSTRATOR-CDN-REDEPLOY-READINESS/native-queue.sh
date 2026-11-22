@@ -2,6 +2,7 @@
 # Usage: JOBS=2 native-queue.sh [--pairs] <plugin-id>...
 set -u
 T="$(cd "$(dirname "$0")" && pwd)"; G="${QUEUE_GENERATED:-$T/🗑️generated}"; JOBS="${JOBS:-2}"; DRIVER="${QUEUE_DRIVER:-$T/native-lanes.sh}"
+emitter() { [ -n "${QUEUE_DRIVER:-}" ] || FORCE=1 "$DRIVER" step describe-build "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust" repo ./📜️script.ts build --host-platform="$(node -p process.platform)" >/dev/null; }
 ROOT="$(cd "$T/../../../../../../.." && pwd)"
 M="${QUEUE_MODULES:-$ROOT/.cache/b/p/m/browser/release/modules}"
 mkdir -p "$G"
@@ -13,7 +14,7 @@ build() {
   rm -f "$G/confirmed/$id.json"
   for attempt in 1 2; do
     [ -f "$G/browser-$id.log" ] && mv "$G/browser-$id.log" "$G/browser-$id.log.prev"
-    FORCE=1 "$DRIVER" step "browser-$id" "" repo ./📜️script.ts components describe "$id" --facet browser; local rc=$?
+    emitter; FORCE=1 "$DRIVER" step "browser-$id" "" repo ./📜️script.ts components describe "$id" --facet browser; local rc=$?
     if { [ "$rc" -eq 0 ] || [ "$rc" -eq 75 ]; } && [ -f "$G/browser-$id.log" ] && staged "$G/browser-$id.log" 1; then
       if python3 "$T/release-receipts.py" record "$M" "$G/confirmed" "$id"; then
         echo "[queue ok] $id"
@@ -29,7 +30,7 @@ build_pair() {
   local left="$1" right="$2" name="browser-pair-$1+$2" rc pending status=0
   rm -f "$G/confirmed/$left.json" "$G/confirmed/$right.json"
   [ ! -f "$G/$name.log" ] || mv "$G/$name.log" "$G/$name.log.prev"
-  FORCE=1 "$DRIVER" step "$name" "" repo ./📜️script.ts components describe "$left" "$right" --facet browser
+  emitter; FORCE=1 "$DRIVER" step "$name" "" repo ./📜️script.ts components describe "$left" "$right" --facet browser
   rc=$?
   if { [ "$rc" -eq 0 ] || [ "$rc" -eq 75 ]; } && staged "$G/$name.log" 2 &&
      pending="$(mktemp -d "$G/pair.XXXXXX")"; then

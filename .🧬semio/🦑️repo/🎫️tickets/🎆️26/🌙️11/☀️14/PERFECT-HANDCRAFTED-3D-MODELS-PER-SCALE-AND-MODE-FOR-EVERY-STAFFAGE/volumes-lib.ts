@@ -144,7 +144,7 @@ export function poseState(asset: Json, scale: number): PoseState {
   return out;
 }
 
-const GEOMETRY_META = new Set(["id", "material", "tone", "role", "region", "regions", "layer", "tags", "member", "part", "anchor", "of", "maxDenominator", "slender", "texture", "envelope", "sectionFaces", "bone", "node", "weights"]);
+const GEOMETRY_META = new Set(["id", "material", "tone", "role", "region", "regions", "layer", "tags", "member", "part", "anchor", "of", "maxDenominator", "slender", "sheet", "texture", "envelope", "sectionFaces", "bone", "node", "weights"]);
 const tessMemory = new Map<string, { positions: Float64Array; indices: Uint32Array }>();
 export const quality = { fast: false };
 

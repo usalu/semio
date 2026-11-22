@@ -219,9 +219,13 @@ pub(super) fn close_tool_erased_retirement(owner:&mut Option<Box<dyn store::Eras
  if !tool_grant_funds(grant,demand){return Ok(RetainedCloneStep::Progress(Default::default()));}
  let current=owner.as_mut().expect("tool retained owner admitted in place");
  if current.terminal_is_empty(){drop(owner.take());return Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()}));}
- let step=settled(current.close_step(grant.maximum_copy_bytes,effect))?;
+ let step=settled(semio_framework_value::close_owner(current.as_mut(),grant.maximum_copy_bytes,effect))?;
  Ok(RetainedCloneStep::Progress(step.progress()))
 }
+
+#[cfg(test)]
+#[path = "🧪️tests/🦀️.rs"]
+mod retirement_tests;
 
 #[doc(hidden)]
 pub trait ToolRunMemberEmissionOwner:Send{

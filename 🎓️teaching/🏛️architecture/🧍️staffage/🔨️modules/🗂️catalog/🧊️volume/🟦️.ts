@@ -122,6 +122,7 @@ export function volumeIssues(asset: Asset): readonly Issue[] {
   const out: Issue[] = [];
   const add = (path: string, code: string, en: string, de: string): void => void out.push({ path, code, message: text(en, de) });
   const bones = new Set(asset.rig.bones.map((bone) => bone.id));
+  const parents = new Map(asset.rig.bones.map((bone) => [bone.id as string, (bone as { readonly parent?: string | null }).parent ?? undefined] as const));
   const materials = new Set(asset.materials.map((material) => material.id));
   const layers = new Map(asset.thermal.regions.map((region) => [region.id, new Set(region.layers.map((layer) => layer.id))] as const));
   const finest = authoredVolumes(asset)[0]?.denominator;
@@ -164,6 +165,7 @@ export function volumeIssues(asset: Asset): readonly Issue[] {
           else if (part !== "support" && anchor !== undefined) add(`${p}.anchor`, "volume-anchor", `${label} names anchor "${anchor}" but is not a support.`, `${bez} nennt den Anker "${anchor}", ist aber kein Auflager.`);
         }
         if (list === "structure" && !bones.has(solid.member!)) add(`${p}.member`, "volume-member", `${label} idealises bone "${solid.member}", which does not exist in the rig.`, `${bez} idealisiert den Knochen "${solid.member}", der im Rig nicht existiert.`);
+        if (list === "structure") spanIssues(solid as never, parents, p, label, bez, add);
       });
     }
   }
@@ -176,7 +178,7 @@ const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 const SOLID_REQUIRED = ["id", "kind", "bone", "material", "role", "tone"];
 
-const SOLID_OPTIONAL = ["slender", "envelope", "texture", "sectionFaces", "weights", "transform", "repeat", "tags"];
+const SOLID_OPTIONAL = ["slender", "sheet", "envelope", "texture", "sectionFaces", "weights", "transform", "repeat", "tags"];
 
 const KIND_FIELDS: Readonly<Record<VolumeSolidKind, { readonly required: readonly string[]; readonly optional: readonly string[] }>> = {
   box: { required: ["size"], optional: ["cornerRadius"] },
@@ -188,10 +190,31 @@ const KIND_FIELDS: Readonly<Record<VolumeSolidKind, { readonly required: readonl
   loft: { required: ["sections", "capStart", "capEnd"], optional: [] },
 };
 
+/** 🦴️ `volume-member` for the bones a member solid spans (`members`): only a `member` part spans, every name is a bone of the rig, the names are distinct and none repeats `member`, and together with `member` they are one connected piece of the rig (each is the parent or a child of another of them), so that one bar stands for a run of bones and never for bones that do not meet. */
+function spanIssues(solid: { readonly member?: string; readonly members?: unknown; readonly part?: string }, parents: ReadonlyMap<string, string | undefined>, p: string, label: string, bez: string, add: Add): void {
+  if (solid.members === undefined || !Array.isArray(solid.members)) return;
+  const names = solid.members as readonly string[];
+  if (solid.part !== "member") return add(`${p}.members`, "volume-member", `${label} names spanned bones in \`members\` but is a ${solid.part}; only a member part spans bones.`, `${bez} nennt überspannte Knochen in \`members\`, ist aber ein Teil der Art ${solid.part}; nur ein Stab (member) überspannt Knochen.`);
+  const unknown = names.filter((name) => !parents.has(name));
+  if (unknown.length > 0) return add(`${p}.members`, "volume-member", `${label} spans ${unknown.map((name) => `"${name}"`).join(", ")}, which ${unknown.length === 1 ? "does" : "do"} not exist in the rig.`, `${bez} überspannt ${unknown.map((name) => `"${name}"`).join(", ")}, ${unknown.length === 1 ? "der" : "die"} im Rig nicht existier${unknown.length === 1 ? "t" : "en"}.`);
+  if (new Set([solid.member, ...names]).size !== names.length + 1) return add(`${p}.members`, "volume-member", `${label} names a bone twice in \`member\` and \`members\`; \`members\` lists each further bone once.`, `${bez} nennt einen Knochen doppelt in \`member\` und \`members\`; \`members\` führt jeden weiteren Knochen einmal auf.`);
+  if (!parents.has(solid.member!)) return;
+  const reached = new Set([solid.member!]);
+  for (let grown = true; grown; ) {
+    grown = false;
+    for (const name of names) {
+      if (reached.has(name)) continue;
+      if ((parents.get(name) !== undefined && reached.has(parents.get(name)!)) || [...reached].some((other) => parents.get(other) === name)) grown = reached.add(name).size > 0;
+    }
+  }
+  const apart = names.filter((name) => !reached.has(name));
+  if (apart.length > 0) add(`${p}.members`, "volume-member", `${label} spans ${apart.map((name) => `"${name}"`).join(", ")}, which ${apart.length === 1 ? "is" : "are"} not joined to bone "${solid.member}" through the named bones: \`member\` and \`members\` are one connected piece of the rig, each the parent or a child of another.`, `${bez} überspannt ${apart.map((name) => `"${name}"`).join(", ")}, ${apart.length === 1 ? "der" : "die"} über die genannten Knochen nicht mit dem Knochen "${solid.member}" verbunden ${apart.length === 1 ? "ist" : "sind"}: \`member\` und \`members\` bilden ein zusammenhängendes Stück des Rigs, jeder Elternteil oder Kind eines anderen.`);
+}
+
 const LIST_FIELDS: Readonly<Record<VolumeList, { readonly required: readonly string[]; readonly optional: readonly string[] }>> = {
   body: { required: [], optional: [] },
   thermal: { required: ["region"], optional: ["layer"] },
-  structure: { required: ["member", "part"], optional: ["anchor"] },
+  structure: { required: ["member", "part"], optional: ["anchor", "members"] },
 };
 
 /** 🛂️ The members of one solid: exactly those the schema defines for its list and kind (or, in `thermal` and `structure`, for a `{ of }` reference: `id`, `of`, `sectionFaces` and the binding of the list), none missing, none unknown, none `null`; a reference is never `slender` and takes its tags from the body solid it names. */

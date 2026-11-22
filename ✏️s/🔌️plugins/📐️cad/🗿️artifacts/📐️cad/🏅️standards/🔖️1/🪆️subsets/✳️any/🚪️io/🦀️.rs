@@ -558,33 +558,21 @@ pub fn cad_mesh_from_document(doc: &DslValue) -> Result<semio_plugin::MeshData, 
     Ok(semio_s_artifact_cad_cad_inferences::export_mesh_from_scene(&scene))
 }
 
-/// 🌉 One `CadObject` per non-empty DWG layer — filters `drawing` down to that layer's entities and
-/// tessellates them via the existing `dwg_drawing_to_mesh` merge (reused verbatim, not
-/// reimplemented), then imports the result into the live kernel through `geometry_import::cad_object_from_mesh`
-/// — the identical OBJ-text bridge every other native-geometry import path in this file already
-/// uses. A layer with no entities (or none that triangulate) contributes no object — never a
-/// fabricated placeholder.
-pub fn cad_working_scene_from_dwg(drawing: &semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::schema::geometry::DwgDrawing) -> semio_s_artifact_cad_cad_model::snapshot::CadWorkingScene {
+/// 🌉 Imports each DWG layer with triangulated faces into the live CAD kernel.
+pub fn cad_working_scene_from_dwg(drawing: &semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::schema::geometry::DwgDrawing) -> Result<semio_s_artifact_cad_cad_model::snapshot::CadWorkingScene, String> {
     use semio_s_artifact_cad_cad_play::cad_object_from_mesh;
     use semio_s_artifact_cad_cad_inferences::{cad_brep_kernel, next_cad_id};
+    use semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::schema::geometry::dwg_entities_to_mesh;
     let mut kernel = cad_brep_kernel();
-    let objects = drawing
-        .layers
-        .iter()
-        .enumerate()
-        .filter_map(|(layer_index, layer)| {
-            let filtered = semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::schema::geometry::DwgDrawing { layers: drawing.layers.clone(), entities: drawing.entities.iter().filter(|entity| entity.layer == layer_index).cloned().collect(), extmin: drawing.extmin, extmax: drawing.extmax };
-            if filtered.entities.is_empty() {
-                return None;
-            }
-            let mesh = semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::schema::geometry::dwg_drawing_to_mesh(&filtered);
-            if mesh.indices.is_empty() || mesh.positions.is_empty() {
-                return None;
-            }
-            Some(cad_object_from_mesh(&mut kernel, next_cad_id("object"), layer.name.clone(), "spatial.shape.imported", &mesh))
-        })
-        .collect();
-    semio_s_artifact_cad_cad_model::snapshot::CadWorkingScene { objects, ..Default::default() }
+    let mut objects = Vec::new();
+    for (layer_index, layer) in drawing.layers.iter().enumerate() {
+        let entities = drawing.entities.iter().filter(|entity| entity.layer == layer_index);
+        let mesh = dwg_entities_to_mesh(entities).map_err(|error| format!("DWG layer {}: {error}", layer.name))?;
+        if !mesh.indices.is_empty() {
+            objects.push(cad_object_from_mesh(&mut kernel, next_cad_id("object"), layer.name.clone(), "spatial.shape.imported", &mesh));
+        }
+    }
+    Ok(semio_s_artifact_cad_cad_model::snapshot::CadWorkingScene { objects, ..Default::default() })
 }
 
 /// 🌉 Real per-layer DWG import: every non-empty layer becomes a real `CadObject`
@@ -599,7 +587,7 @@ pub fn cad_document_from_dwg(drawing: &semio_s_artifact_stdio_dwg_geometry::stan
     use semio_s_artifact_cad_cad_model::geometry::semio_model_snapshot_from_objects;
     use semio_s_artifact_cad_cad_inferences::default_document;
     use semio_s_artifact_cad_cad_model::{snapshot::cad_model_child_handle, snapshot::CadPaneId};
-    let working = cad_working_scene_from_dwg(drawing);
+    let working = cad_working_scene_from_dwg(drawing)?;
     let mut document = default_document();
     if !working.objects.is_empty() {
         let model = semio_model_snapshot_from_objects(&working.objects);

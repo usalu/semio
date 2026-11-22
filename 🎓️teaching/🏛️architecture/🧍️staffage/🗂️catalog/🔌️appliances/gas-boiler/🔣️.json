@@ -2827,7 +2827,7 @@
           "kind": "heater",
           "model": "operating",
           "material": "burner-mesh",
-          "areaM2": 0.01,
+          "areaM2": 0.012,
           "characteristicLengthM": 0.05,
           "geometry": "horizontal-plate-up",
           "skyViewFactor": 0.4,
@@ -2940,7 +2940,7 @@
           "kind": "surface",
           "model": "passive",
           "material": "stainless-steel",
-          "areaM2": 0.34,
+          "areaM2": 0.65,
           "characteristicLengthM": 0.23,
           "geometry": "cylinder",
           "skyViewFactor": 0,
@@ -2964,8 +2964,8 @@
           "source": "authored-estimate",
           "reference": "incropera-2018",
           "hidden": {
-            "en": "The coil pack of 0.23 m diameter and 0.17 m depth with its burner door, back plate and the flue collector up to the collar sits in the upper half of the casing behind the sight glass; no drawing shows it. Its area is the envelope of the housing (0.35 m2); the wetted coil area that takes the 20 kW into the heating water is not modelled, the region is passive at room air.",
-            "de": "Das Rohrschlangenpaket von 0,23 m Durchmesser und 0,17 m Tiefe mit Brennertür, Rückwand und dem Abgassammler bis zum Stutzen sitzt in der oberen Gehäusehälfte hinter dem Schauglas; keine Zeichnung zeigt es. Seine Fläche ist die Hülle des Gehäuses (0,35 m2); die benetzte Rohrfläche, die die 20 kW ans Heizwasser abgibt, ist nicht modelliert, die Region ist passiv bei Raumluft."
+            "en": "The coil pack of 0.23 m diameter and 0.17 m depth with its burner door, back plate and the flue collector up to the collar sits in the upper half of the casing behind the sight glass; no drawing shows it. Its area is the surface of the shell, the door, the back plate, the flue collector and the six coil turns as modelled (0.65 m2); the heat the coil takes into the heating water is not modelled, the region is passive at room air.",
+            "de": "Das Rohrschlangenpaket von 0,23 m Durchmesser und 0,17 m Tiefe mit Brennertür, Rückwand und dem Abgassammler bis zum Stutzen sitzt in der oberen Gehäusehälfte hinter dem Schauglas; keine Zeichnung zeigt es. Seine Fläche ist die Oberfläche von Mantel, Tür, Rückwand, Abgassammler und den sechs Rohrwindungen wie modelliert (0,65 m2); die Wärme, die die Rohrschlange ans Heizwasser abgibt, ist nicht modelliert, die Region ist passiv bei Raumluft."
           }
         },
         {
@@ -2977,7 +2977,7 @@
           "kind": "surface",
           "model": "passive",
           "material": "die-cast-aluminium",
-          "areaM2": 0.04,
+          "areaM2": 0.05,
           "characteristicLengthM": 0.09,
           "geometry": "cylinder",
           "skyViewFactor": 0,
@@ -3001,8 +3001,8 @@
           "source": "authored-estimate",
           "reference": "incropera-2018",
           "hidden": {
-            "en": "The premix fan of 90 mm diameter sits beside the heat exchanger on the left and blows the gas-air mixture through the burner door; no drawing shows it. Its 30 W of electrical input are part of the casing losses.",
-            "de": "Das Vormischgebläse von 90 mm Durchmesser sitzt links neben dem Wärmeübertrager und bläst das Gas-Luft-Gemisch durch die Brennertür; keine Zeichnung zeigt es. Seine 30 W Leistungsaufnahme sind Teil der Gehäuseverluste."
+            "en": "The premix fan with its scroll of 80 to 108 mm, the flat motor and the gas-air venturi sits beside the heat exchanger on the left and blows the mixture through the burner door; no drawing shows it. Its 30 W of electrical input are part of the casing losses.",
+            "de": "Das Vormischgebläse mit seiner Spirale von 80 bis 108 mm, dem flachen Motor und dem Gas-Luft-Venturi sitzt links neben dem Wärmeübertrager und bläst das Gemisch durch die Brennertür; keine Zeichnung zeigt es. Seine 30 W Leistungsaufnahme sind Teil der Gehäuseverluste."
           }
         },
         {
@@ -3014,7 +3014,7 @@
           "kind": "surface",
           "model": "passive",
           "material": "painted-steel",
-          "areaM2": 0.18,
+          "areaM2": 0.16,
           "characteristicLengthM": 0.32,
           "geometry": "vertical-plate",
           "skyViewFactor": 0,
@@ -3038,8 +3038,8 @@
           "source": "authored-estimate",
           "reference": "incropera-2018",
           "hidden": {
-            "en": "The flat round expansion vessel of 0.32 m diameter and 80 mm depth stands between the heat exchanger and the back sheet; no drawing shows it.",
-            "de": "Das flache runde Ausdehnungsgefäß von 0,32 m Durchmesser und 80 mm Tiefe steht zwischen Wärmeübertrager und Rückwand; keine Zeichnung zeigt es."
+            "en": "The flat round expansion vessel of 0.28 m diameter and 90 mm depth stands at the back sheet below the heat exchanger; no drawing shows it.",
+            "de": "Das flache runde Ausdehnungsgefäß von 0,28 m Durchmesser und 90 mm Tiefe steht an der Rückwand unter dem Wärmeübertrager; keine Zeichnung zeigt es."
           }
         },
         {
@@ -3051,7 +3051,7 @@
           "kind": "surface",
           "model": "passive",
           "material": "brass",
-          "areaM2": 0.21,
+          "areaM2": 0.32,
           "characteristicLengthM": 0.1,
           "geometry": "cylinder",
           "skyViewFactor": 0,
@@ -3075,8 +3075,8 @@
           "source": "authored-estimate",
           "reference": "incropera-2018",
           "hidden": {
-            "en": "Pump, gas valve, domestic hot-water plate heat exchanger, the connection manifold, the condensate siphon and the flow and return pipes from the heat exchanger fill the lower part of the casing behind the control panel; no drawing shows them.",
-            "de": "Pumpe, Gasarmatur, Trinkwasser-Plattenwärmeübertrager, der Anschlussverteiler, der Kondensatsiphon und Vor- und Rücklaufrohre vom Wärmeübertrager füllen den unteren Gehäuseteil hinter dem Bedienfeld; keine Zeichnung zeigt sie."
+            "en": "Pump, diverter valve, gas valve with its line to the fan, domestic hot-water plate heat exchanger, the two hydroblocks, the condensate siphon with its hose and the flow and return pipes from the heat exchanger fill the lower part of the casing behind the control panel; no drawing shows them.",
+            "de": "Pumpe, Umschaltventil, Gasarmatur mit ihrer Leitung zum Gebläse, Trinkwasser-Plattenwärmeübertrager, die zwei Hydroblöcke, der Kondensatsiphon mit Schlauch und Vor- und Rücklaufrohre vom Wärmeübertrager füllen den unteren Gehäuseteil hinter dem Bedienfeld; keine Zeichnung zeigt sie."
           }
         }
       ],
@@ -3417,16 +3417,14 @@
           },
           {
             "id": "burner-tube",
-            "kind": "box",
             "bone": "casing",
             "material": "burner-mesh",
             "role": "body",
             "tone": 0.45,
-            "size": [0.052, 0.011, 0.046],
-            "cornerRadius": 0.002,
-            "transform": {
-              "translation": [0.0, 0.5355, -0.107]
-            }
+            "kind": "revolve",
+            "profile": [[-0.142, 0], [-0.142, 0.01], [-0.03, 0.01], [-0.03, 0]],
+            "axis": [0, 0, 1],
+            "origin": [0.0, 0.531, 0.0]
           },
           {
             "id": "flame-tall",
@@ -4272,184 +4270,574 @@
             "layer": "tube"
           },
           {
-            "id": "th-hx",
-            "kind": "revolve",
+            "id": "th-hx-shell",
             "bone": "casing",
             "material": "stainless-steel",
             "role": "body",
             "tone": 0.5,
-            "profile": [[0.043, 0.0], [0.043, 0.115], [-0.147, 0.115], [-0.147, 0.0355], [-0.137, 0.0355], [-0.137, 0.065], [0.033, 0.065], [0.033, 0.0]],
-            "axis": [0, 0, 1],
-            "origin": [0.0, 0.56, 0.0],
             "region": "heat-exchanger",
-            "layer": "wall"
+            "layer": "wall",
+            "kind": "revolve",
+            "profile": [[-0.137, 0.113], [-0.137, 0.115], [0.043, 0.115], [0.043, 0.113], [-0.137, 0.113]],
+            "axis": [0, 0, 1],
+            "origin": [0.0, 0.56, 0.0]
+          },
+          {
+            "id": "th-hx-door",
+            "bone": "casing",
+            "material": "stainless-steel",
+            "role": "body",
+            "tone": 0.45,
+            "region": "heat-exchanger",
+            "layer": "wall",
+            "kind": "revolve",
+            "profile": [[-0.147, 0.0365], [-0.147, 0.115], [-0.137, 0.115], [-0.137, 0.0365], [-0.147, 0.0365]],
+            "axis": [0, 0, 1],
+            "origin": [0.0, 0.56, 0.0]
+          },
+          {
+            "id": "th-hx-back",
+            "bone": "casing",
+            "material": "stainless-steel",
+            "role": "body",
+            "tone": 0.45,
+            "region": "heat-exchanger",
+            "layer": "wall",
+            "kind": "revolve",
+            "profile": [[0.033, 0], [0.033, 0.113], [0.043, 0.113], [0.043, 0]],
+            "axis": [0, 0, 1],
+            "origin": [0.0, 0.56, 0.0]
+          },
+          {
+            "id": "th-hx-coil",
+            "bone": "casing",
+            "material": "stainless-steel",
+            "role": "body",
+            "tone": 0.6,
+            "repeat": {
+              "count": 6,
+              "translation": [0, 0, 0.026]
+            },
+            "region": "heat-exchanger",
+            "layer": "wall",
+            "kind": "revolve",
+            "profile": [
+              [-0.1095, 0.092],
+              [-0.11091, 0.09725],
+              [-0.11475, 0.10109],
+              [-0.12, 0.1025],
+              [-0.12525, 0.10109],
+              [-0.12909, 0.09725],
+              [-0.1305, 0.092],
+              [-0.12909, 0.08675],
+              [-0.12525, 0.08291],
+              [-0.12, 0.0815],
+              [-0.11475, 0.08291],
+              [-0.11091, 0.08675],
+              [-0.1095, 0.092]
+            ],
+            "axis": [0, 0, 1],
+            "origin": [0.0, 0.56, 0.0]
           },
           {
             "id": "th-hx-collector",
-            "kind": "revolve",
             "bone": "casing",
             "material": "stainless-steel",
             "role": "body",
             "tone": 0.5,
-            "profile": [[0.67, 0.0], [0.67, 0.04], [0.77, 0.04], [0.77, 0.0]],
-            "axis": [0, 1, 0],
-            "origin": [0.0, 0.0, 0.04],
             "region": "heat-exchanger",
-            "layer": "wall"
+            "layer": "wall",
+            "kind": "revolve",
+            "profile": [[0.665, 0], [0.665, 0.04], [0.77, 0.04], [0.77, 0]],
+            "axis": [0, 1, 0],
+            "origin": [0.0, 0.0, 0.04]
           },
           {
-            "id": "th-fan",
+            "id": "th-hx-sump",
+            "bone": "casing",
+            "material": "stainless-steel",
+            "role": "body",
+            "tone": 0.5,
+            "region": "heat-exchanger",
+            "layer": "wall",
             "kind": "revolve",
+            "profile": [[0.4, 0], [0.4, 0.008], [0.45, 0.008], [0.45, 0]],
+            "axis": [0, 1, 0],
+            "origin": [0.0, 0.0, 0.032]
+          },
+          {
+            "id": "th-fan-volute",
             "bone": "casing",
             "material": "die-cast-aluminium",
             "role": "body",
             "tone": 0.6,
-            "profile": [[0.0, 0.0], [0.0, 0.045], [0.07, 0.045], [0.07, 0.0]],
-            "axis": [1, 0, 0],
-            "origin": [-0.205, 0.6, -0.05],
             "region": "fan",
-            "layer": "housing"
+            "layer": "housing",
+            "kind": "extrude",
+            "profile": [
+              [0.6, -0.09],
+              [0.62078, -0.08599],
+              [0.63734, -0.07156],
+              [0.64467, -0.05],
+              [0.64003, -0.02689],
+              [0.62389, -0.00862],
+              [0.6, -0.00067],
+              [0.57456, -0.00593],
+              [0.55458, -0.02378],
+              [0.546, -0.05],
+              [0.546, -0.105],
+              [0.572, -0.105],
+              [0.572, -0.088]
+            ],
+            "plane": "yz",
+            "from": -0.195,
+            "to": -0.15
+          },
+          {
+            "id": "th-fan-motor",
+            "bone": "casing",
+            "material": "die-cast-aluminium",
+            "role": "body",
+            "tone": 0.55,
+            "region": "fan",
+            "layer": "housing",
+            "kind": "revolve",
+            "profile": [[-0.217, 0], [-0.217, 0.032], [-0.195, 0.032], [-0.195, 0]],
+            "axis": [1, 0, 0],
+            "origin": [0.0, 0.6, -0.05]
+          },
+          {
+            "id": "th-fan-venturi",
+            "bone": "casing",
+            "material": "die-cast-aluminium",
+            "role": "body",
+            "tone": 0.6,
+            "region": "fan",
+            "layer": "housing",
+            "kind": "revolve",
+            "profile": [[-0.15, 0], [-0.15, 0.022], [-0.138, 0.014], [-0.125, 0.02], [-0.125, 0]],
+            "axis": [1, 0, 0],
+            "origin": [0.0, 0.6, -0.05]
           },
           {
             "id": "th-fan-duct",
-            "kind": "capsule",
             "bone": "casing",
             "material": "die-cast-aluminium",
             "role": "body",
             "tone": 0.6,
-            "p0": [-0.15, 0.585, -0.09],
-            "p1": [-0.095, 0.545, -0.142],
-            "r0": 0.012,
-            "r1": 0.012,
             "region": "fan",
-            "layer": "housing"
+            "layer": "housing",
+            "kind": "capsule",
+            "p0": [-0.172, 0.559, -0.1],
+            "p1": [-0.095, 0.545, -0.14],
+            "r0": 0.012,
+            "r1": 0.012
           },
           {
             "id": "th-vessel",
-            "kind": "revolve",
             "bone": "casing",
             "material": "painted-steel",
             "role": "body",
             "tone": 0.35,
+            "region": "expansion-vessel",
+            "layer": "shell",
+            "kind": "revolve",
             "profile": [
-              [0.065, 0.0],
-              [0.068, 0.06],
-              [0.075, 0.1],
-              [0.085, 0.13],
-              [0.0935, 0.148],
-              [0.1035, 0.15],
-              [0.1035, 0.158],
-              [0.1065, 0.158],
-              [0.1065, 0.15],
-              [0.1165, 0.148],
-              [0.125, 0.13],
-              [0.135, 0.1],
-              [0.142, 0.06],
-              [0.145, 0.0]
+              [0.075, 0],
+              [0.077, 0.08],
+              [0.087, 0.122],
+              [0.105, 0.137],
+              [0.116, 0.137],
+              [0.12, 0.14],
+              [0.124, 0.137],
+              [0.135, 0.137],
+              [0.153, 0.122],
+              [0.163, 0.08],
+              [0.165, 0]
             ],
             "axis": [0, 0, 1],
-            "origin": [0.0, 0.4, 0.0],
+            "origin": [0.0, 0.32, 0.0]
+          },
+          {
+            "id": "th-vessel-valve",
+            "bone": "casing",
+            "material": "painted-steel",
+            "role": "body",
+            "tone": 0.35,
             "region": "expansion-vessel",
-            "layer": "shell"
-          },
-          {
-            "id": "th-pump",
+            "layer": "shell",
             "kind": "revolve",
-            "bone": "casing",
-            "material": "brass",
-            "role": "body",
-            "tone": 0.4,
-            "profile": [[-0.09, 0.0], [-0.09, 0.036], [-0.085, 0.04], [-0.02, 0.04], [-0.02, 0.05], [0.03, 0.05], [0.03, 0.0]],
-            "axis": [0, 0, 1],
-            "origin": [-0.12, 0.17, 0.0],
-            "region": "hydraulics",
-            "layer": "body"
+            "profile": [[0.168, 0], [0.168, 0.008], [0.185, 0.008], [0.185, 0]],
+            "axis": [0, 1, 0],
+            "origin": [0.0, 0.0, 0.12]
           },
           {
-            "id": "th-gas-valve",
-            "kind": "box",
+            "id": "th-block-flow",
             "bone": "casing",
             "material": "brass",
             "role": "body",
             "tone": 0.4,
-            "size": [0.06, 0.07, 0.05],
+            "region": "hydraulics",
+            "layer": "body",
+            "kind": "box",
+            "size": [0.17, 0.03, 0.05],
+            "cornerRadius": 0.003,
+            "transform": {
+              "translation": [-0.105, 0.075, 0.07]
+            }
+          },
+          {
+            "id": "th-block-return",
+            "bone": "casing",
+            "material": "brass",
+            "role": "body",
+            "tone": 0.4,
+            "region": "hydraulics",
+            "layer": "body",
+            "kind": "box",
+            "size": [0.15, 0.03, 0.05],
+            "cornerRadius": 0.003,
+            "transform": {
+              "translation": [0.115, 0.075, 0.07]
+            }
+          },
+          {
+            "id": "th-pump-volute",
+            "bone": "casing",
+            "material": "brass",
+            "role": "body",
+            "tone": 0.4,
+            "region": "hydraulics",
+            "layer": "body",
+            "kind": "revolve",
+            "profile": [[0.045, 0], [0.045, 0.042], [0.052, 0.05], [0.088, 0.05], [0.095, 0.042], [0.095, 0]],
+            "axis": [0, 0, 1],
+            "origin": [0.125, 0.155, 0.0]
+          },
+          {
+            "id": "th-pump-neck",
+            "bone": "casing",
+            "material": "brass",
+            "role": "body",
+            "tone": 0.4,
+            "region": "hydraulics",
+            "layer": "body",
+            "kind": "revolve",
+            "profile": [[0.088, 0], [0.088, 0.014], [0.115, 0.014], [0.115, 0]],
+            "axis": [0, 1, 0],
+            "origin": [0.125, 0.0, 0.07]
+          },
+          {
+            "id": "th-pump-motor",
+            "bone": "casing",
+            "material": "brass",
+            "role": "body",
+            "tone": 0.45,
+            "region": "hydraulics",
+            "layer": "body",
+            "kind": "revolve",
+            "profile": [[-0.04, 0], [-0.04, 0.034], [-0.034, 0.04], [0.037, 0.04], [0.037, 0.047], [0.045, 0.047], [0.045, 0]],
+            "axis": [0, 0, 1],
+            "origin": [0.125, 0.155, 0.0]
+          },
+          {
+            "id": "th-pump-terminal",
+            "bone": "casing",
+            "material": "polycarbonate",
+            "role": "body",
+            "tone": 0.3,
+            "region": "hydraulics",
+            "layer": "body",
+            "kind": "box",
+            "size": [0.05, 0.022, 0.045],
+            "cornerRadius": 0.003,
+            "transform": {
+              "translation": [0.125, 0.205, -0.01]
+            }
+          },
+          {
+            "id": "th-diverter",
+            "bone": "casing",
+            "material": "brass",
+            "role": "body",
+            "tone": 0.4,
+            "region": "hydraulics",
+            "layer": "body",
+            "kind": "revolve",
+            "profile": [[0.088, 0], [0.088, 0.017], [0.16, 0.017], [0.16, 0]],
+            "axis": [0, 1, 0],
+            "origin": [-0.16, 0.0, 0.07]
+          },
+          {
+            "id": "th-diverter-motor",
+            "bone": "casing",
+            "material": "polycarbonate",
+            "role": "body",
+            "tone": 0.3,
+            "region": "hydraulics",
+            "layer": "body",
+            "kind": "box",
+            "size": [0.04, 0.045, 0.04],
             "cornerRadius": 0.004,
             "transform": {
-              "translation": [-0.025, 0.15, 0.03]
-            },
-            "region": "hydraulics",
-            "layer": "body"
+              "translation": [-0.16, 0.125, 0.035]
+            }
           },
           {
             "id": "th-plate-hx",
-            "kind": "box",
             "bone": "casing",
             "material": "stainless-steel",
             "role": "body",
-            "tone": 0.4,
-            "size": [0.07, 0.13, 0.045],
+            "tone": 0.45,
+            "region": "hydraulics",
+            "layer": "body",
+            "kind": "box",
+            "size": [0.075, 0.17, 0.04],
             "cornerRadius": 0.003,
             "transform": {
-              "translation": [0.1, 0.165, 0.02]
-            },
-            "region": "hydraulics",
-            "layer": "body"
+              "translation": [-0.06, 0.175, 0.05]
+            }
           },
           {
-            "id": "th-manifold",
-            "kind": "box",
+            "id": "th-gas-valve",
             "bone": "casing",
             "material": "brass",
             "role": "body",
             "tone": 0.4,
-            "size": [0.38, 0.03, 0.05],
-            "cornerRadius": 0.003,
+            "region": "hydraulics",
+            "layer": "body",
+            "kind": "box",
+            "size": [0.06, 0.06, 0.05],
+            "cornerRadius": 0.004,
             "transform": {
-              "translation": [0.0, 0.075, 0.07]
+              "translation": [0.03, 0.16, 0.0]
+            }
+          },
+          {
+            "id": "th-gas-solenoids",
+            "bone": "casing",
+            "material": "polycarbonate",
+            "role": "body",
+            "tone": 0.3,
+            "repeat": {
+              "count": 2,
+              "translation": [0.03, 0, 0]
             },
             "region": "hydraulics",
-            "layer": "body"
+            "layer": "body",
+            "kind": "revolve",
+            "profile": [[0.188, 0], [0.188, 0.013], [0.225, 0.013], [0.225, 0]],
+            "axis": [0, 1, 0],
+            "origin": [0.015, 0.0, 0.0]
+          },
+          {
+            "id": "th-gas-inlet",
+            "bone": "casing",
+            "material": "brass",
+            "role": "body",
+            "tone": 0.4,
+            "region": "hydraulics",
+            "layer": "body",
+            "kind": "capsule",
+            "p0": [0.0, 0.055, 0.07],
+            "p1": [0.0, 0.105, 0.07],
+            "r0": 0.0075,
+            "r1": 0.0075
+          },
+          {
+            "id": "th-gas-inlet-bend",
+            "bone": "casing",
+            "material": "brass",
+            "role": "body",
+            "tone": 0.4,
+            "region": "hydraulics",
+            "layer": "body",
+            "kind": "capsule",
+            "p0": [0.0, 0.105, 0.07],
+            "p1": [0.02, 0.135, 0.02],
+            "r0": 0.0075,
+            "r1": 0.0075
+          },
+          {
+            "id": "th-gas-pipe-low",
+            "bone": "casing",
+            "material": "brass",
+            "role": "body",
+            "tone": 0.4,
+            "region": "hydraulics",
+            "layer": "body",
+            "kind": "capsule",
+            "p0": [0.0, 0.165, -0.005],
+            "p1": [-0.19, 0.165, -0.02],
+            "r0": 0.0075,
+            "r1": 0.0075
+          },
+          {
+            "id": "th-gas-pipe-riser",
+            "bone": "casing",
+            "material": "brass",
+            "role": "body",
+            "tone": 0.4,
+            "region": "hydraulics",
+            "layer": "body",
+            "kind": "capsule",
+            "p0": [-0.19, 0.165, -0.02],
+            "p1": [-0.19, 0.5, -0.02],
+            "r0": 0.0075,
+            "r1": 0.0075
+          },
+          {
+            "id": "th-gas-pipe-top",
+            "bone": "casing",
+            "material": "brass",
+            "role": "body",
+            "tone": 0.4,
+            "region": "hydraulics",
+            "layer": "body",
+            "kind": "capsule",
+            "p0": [-0.19, 0.5, -0.02],
+            "p1": [-0.137, 0.5, -0.05],
+            "r0": 0.0075,
+            "r1": 0.0075
+          },
+          {
+            "id": "th-gas-pipe-venturi",
+            "bone": "casing",
+            "material": "brass",
+            "role": "body",
+            "tone": 0.4,
+            "region": "hydraulics",
+            "layer": "body",
+            "kind": "capsule",
+            "p0": [-0.137, 0.5, -0.05],
+            "p1": [-0.137, 0.585, -0.05],
+            "r0": 0.0075,
+            "r1": 0.0075
+          },
+          {
+            "id": "th-flow-pipe-out",
+            "bone": "casing",
+            "material": "brass",
+            "role": "body",
+            "tone": 0.4,
+            "region": "hydraulics",
+            "layer": "body",
+            "kind": "capsule",
+            "p0": [-0.105, 0.52, 0.0],
+            "p1": [-0.16, 0.5, 0.03],
+            "r0": 0.009,
+            "r1": 0.009
+          },
+          {
+            "id": "th-flow-pipe",
+            "bone": "casing",
+            "material": "brass",
+            "role": "body",
+            "tone": 0.4,
+            "region": "hydraulics",
+            "layer": "body",
+            "kind": "capsule",
+            "p0": [-0.16, 0.5, 0.03],
+            "p1": [-0.16, 0.2, 0.03],
+            "r0": 0.009,
+            "r1": 0.009
+          },
+          {
+            "id": "th-flow-pipe-in",
+            "bone": "casing",
+            "material": "brass",
+            "role": "body",
+            "tone": 0.4,
+            "region": "hydraulics",
+            "layer": "body",
+            "kind": "capsule",
+            "p0": [-0.16, 0.2, 0.03],
+            "p1": [-0.16, 0.155, 0.065],
+            "r0": 0.009,
+            "r1": 0.009
+          },
+          {
+            "id": "th-return-pipe-out",
+            "bone": "casing",
+            "material": "brass",
+            "role": "body",
+            "tone": 0.4,
+            "region": "hydraulics",
+            "layer": "body",
+            "kind": "capsule",
+            "p0": [0.15, 0.195, 0.07],
+            "p1": [0.15, 0.24, 0.055],
+            "r0": 0.009,
+            "r1": 0.009
+          },
+          {
+            "id": "th-return-pipe",
+            "bone": "casing",
+            "material": "brass",
+            "role": "body",
+            "tone": 0.4,
+            "region": "hydraulics",
+            "layer": "body",
+            "kind": "capsule",
+            "p0": [0.15, 0.24, 0.055],
+            "p1": [0.15, 0.53, 0.055],
+            "r0": 0.009,
+            "r1": 0.009
+          },
+          {
+            "id": "th-return-pipe-in",
+            "bone": "casing",
+            "material": "brass",
+            "role": "body",
+            "tone": 0.4,
+            "region": "hydraulics",
+            "layer": "body",
+            "kind": "capsule",
+            "p0": [0.15, 0.53, 0.055],
+            "p1": [0.108, 0.53, 0.02],
+            "r0": 0.009,
+            "r1": 0.009
           },
           {
             "id": "th-siphon",
-            "kind": "revolve",
             "bone": "casing",
             "material": "polycarbonate",
             "role": "body",
             "tone": 0.4,
-            "profile": [[0.07, 0.0], [0.07, 0.022], [0.17, 0.022], [0.17, 0.0]],
+            "region": "hydraulics",
+            "layer": "body",
+            "kind": "revolve",
+            "profile": [[0.1, 0], [0.1, 0.02], [0.2, 0.02], [0.2, 0]],
             "axis": [0, 1, 0],
-            "origin": [0.175, 0.0, 0.05],
-            "region": "hydraulics",
-            "layer": "body"
+            "origin": [0.18, 0.0, -0.09]
           },
           {
-            "id": "th-flow-pipe",
+            "id": "th-condensate-hose",
+            "bone": "casing",
+            "material": "polycarbonate",
+            "role": "body",
+            "tone": 0.4,
+            "region": "hydraulics",
+            "layer": "body",
             "kind": "capsule",
+            "p0": [0.0, 0.4, 0.032],
+            "p1": [0.18, 0.2, -0.09],
+            "r0": 0.006,
+            "r1": 0.006
+          },
+          {
+            "id": "th-vessel-hose",
             "bone": "casing",
             "material": "brass",
             "role": "body",
             "tone": 0.4,
-            "p0": [-0.06, 0.455, 0.0],
-            "p1": [-0.06, 0.09, 0.0],
-            "r0": 0.0075,
-            "r1": 0.0075,
             "region": "hydraulics",
-            "layer": "body"
-          },
-          {
-            "id": "th-return-pipe",
+            "layer": "body",
             "kind": "capsule",
-            "bone": "casing",
-            "material": "brass",
-            "role": "body",
-            "tone": 0.4,
-            "p0": [0.045, 0.455, 0.0],
-            "p1": [0.045, 0.19, 0.0],
-            "r0": 0.0075,
-            "r1": 0.0075,
-            "region": "hydraulics",
-            "layer": "body"
+            "p0": [0.0, 0.17, 0.12],
+            "p1": [0.08, 0.092, 0.08],
+            "r0": 0.005,
+            "r1": 0.005
           }
         ],
         "structure": [
@@ -4496,22 +4884,88 @@
             "part": "member"
           },
           {
-            "id": "member-hx-brackets-low",
-            "kind": "extrude",
+            "id": "member-hx-saddle",
             "bone": "casing",
             "material": "galvanised-steel",
             "role": "body",
             "tone": 0.7,
-            "profile": [[-0.095, 0.447], [-0.065, 0.447], [-0.065, 0.45], [-0.092, 0.45], [-0.092, 0.477], [-0.095, 0.477]],
-            "plane": "xy",
-            "repeat": {
-              "count": 2,
-              "translation": [0.16, 0, 0]
-            },
-            "from": 0.043,
-            "to": 0.1735,
             "member": "casing",
-            "part": "member"
+            "part": "member",
+            "kind": "extrude",
+            "profile": [
+              [-0.125, 0.425],
+              [0.125, 0.425],
+              [0.125, 0.445],
+              [0.06, 0.462],
+              [0.0422, 0.45195],
+              [0.02147, 0.446],
+              [0.0, 0.444],
+              [-0.02147, 0.446],
+              [-0.0422, 0.45195],
+              [-0.06, 0.462],
+              [-0.125, 0.445]
+            ],
+            "plane": "xy",
+            "from": -0.01,
+            "to": 0.02
+          },
+          {
+            "id": "member-hx-arms",
+            "bone": "casing",
+            "material": "galvanised-steel",
+            "role": "body",
+            "tone": 0.7,
+            "member": "casing",
+            "part": "member",
+            "kind": "extrude",
+            "profile": [[0.095, 0.428], [0.098, 0.428], [0.098, 0.445], [0.125, 0.445], [0.125, 0.425], [0.095, 0.425]],
+            "plane": "xy",
+            "from": 0.02,
+            "to": 0.1735
+          },
+          {
+            "id": "member-hx-arms-left",
+            "bone": "casing",
+            "material": "galvanised-steel",
+            "role": "body",
+            "tone": 0.7,
+            "member": "casing",
+            "part": "member",
+            "kind": "extrude",
+            "profile": [[-0.095, 0.425], [-0.125, 0.425], [-0.125, 0.445], [-0.098, 0.445], [-0.098, 0.428], [-0.095, 0.428]],
+            "plane": "xy",
+            "from": 0.02,
+            "to": 0.1735
+          },
+          {
+            "id": "member-block-flow",
+            "bone": "casing",
+            "material": "brass",
+            "role": "body",
+            "tone": 0.45,
+            "member": "casing",
+            "part": "member",
+            "kind": "box",
+            "size": [0.17, 0.03, 0.05],
+            "cornerRadius": 0.003,
+            "transform": {
+              "translation": [-0.105, 0.075, 0.07]
+            }
+          },
+          {
+            "id": "member-block-return",
+            "bone": "casing",
+            "material": "brass",
+            "role": "body",
+            "tone": 0.45,
+            "member": "casing",
+            "part": "member",
+            "kind": "box",
+            "size": [0.15, 0.03, 0.05],
+            "cornerRadius": 0.003,
+            "transform": {
+              "translation": [0.115, 0.075, 0.07]
+            }
           },
           {
             "id": "member-hx-brackets-high",
@@ -4554,21 +5008,6 @@
             "profile": [[0.66, 0.037], [0.66, 0.04], [0.77, 0.04], [0.77, 0.037], [0.66, 0.037]],
             "axis": [0, 1, 0],
             "origin": [0.0, 0.0, 0.04],
-            "member": "casing",
-            "part": "member"
-          },
-          {
-            "id": "member-manifold",
-            "kind": "box",
-            "bone": "casing",
-            "material": "brass",
-            "role": "body",
-            "tone": 0.45,
-            "size": [0.38, 0.03, 0.05],
-            "cornerRadius": 0.003,
-            "transform": {
-              "translation": [0.0, 0.075, 0.07]
-            },
             "member": "casing",
             "part": "member"
           },
@@ -4752,12 +5191,12 @@
             "de": "Körper: das Gehäuse der 20-kW-Klasse (720 x 440 x 330 mm) wie gebaut: eine gepresste weiße Stahlhaube mit 14 mm gerundeten Seitenkanten und scharfen Vorderkanten auf dem verzinkten Chassis, dessen hintere 20 mm hinter der Haubenfuge sichtbar sind; das Schauglas ist eine echte Öffnung mit 8 mm vorstehender Blende, 4 mm Borosilikatglas und dahinter der dunklen Brennkammer des Wärmeübertragers mit dem 52 mm Brennerbalken und zwei Flammenkronen aus je drei Zungen, 24 und 32 mm tief entlang des Brenners geloftet; die geformte Bedienblende steht 10 mm vor, mit Display, 52-mm-Betriebsartenknopf mit Schürze und Fase, 36-mm-Sollwertknopf und gewölbtem Manometer; der konzentrische Abgasadapter 80/125 ist ein Turm mit vertieftem Dichtungssitz und einem 80-mm-Polypropylenstutzen mit 64-mm-Lippendichtung; fünf 22-mm-Messingstutzen mit 31-mm-Sechskant-Überwurfmuttern. Türfuge, Lüftungsschlitze, Logo, Leuchte, Textzeilen, Marken, Zeiger, Kerbe und Nadel sind Textur auf ihren Flächen."
           },
           {
-            "en": "Thermal: the casing sheet is the closed hood with chassis, fascia frame and bezel (1.26 m2 total outer area, the back against the wall included); the controls are the 2 mm display plate, the two knobs and the gauge (0.025 m2); the sight glass counts only its front face (rim and back face lie in the bezel and against the chamber: section faces); the burner is the bar and the six flame tongues; the flue collar is turret and spigot with the outlet patch of the 60 mm flue gas flush in the bore; the connections are the open brass tubes with their nuts. Hidden regions are real internals: the stainless heat exchanger as a coil ring with burner door, back plate and the combustion chamber inside, plus its flue collector up to the collar; the premix fan with its duct to the burner door; the expansion vessel as two dished shells with a flange behind the heat exchanger; the hydraulic group of pump, gas valve, plate heat exchanger, manifold, siphon and the flow and return pipes. Every region has one layer, so each is one surface without nested shells.",
-            "de": "Thermik: das Gehäuseblech ist die geschlossene Haube mit Chassis, Blendenrahmen und Schauglasblende (1,26 m2 gesamte Außenfläche, die Rückseite an der Wand eingeschlossen); die Regelung sind die 2-mm-Displayplatte, die zwei Knöpfe und das Manometer (0,025 m2); das Schauglas zählt nur seine Vorderfläche (Rand und Rückseite liegen in der Blende und an der Kammer: Schnittflächen); der Brenner sind der Balken und die sechs Flammenzungen; der Abgasstutzen sind Turm und Rohrstutzen mit der Austrittsfläche des 60-mm-Abgases bündig in der Öffnung; die Anschlüsse sind die offenen Messingrohre mit ihren Muttern. Verborgene Regionen sind echte Innenteile: der Edelstahl-Wärmeübertrager als Rohrschlangenring mit Brennertür, Rückwand und der Brennkammer darin, dazu sein Abgassammler bis zum Stutzen; das Vormischgebläse mit seinem Kanal zur Brennertür; das Ausdehnungsgefäß als zwei gewölbte Schalen mit Flansch hinter dem Wärmeübertrager; die Hydraulikgruppe aus Pumpe, Gasarmatur, Plattenwärmeübertrager, Verteiler, Siphon sowie Vor- und Rücklaufrohr. Jede Region hat eine Schicht, also ist jede eine Fläche ohne verschachtelte Schalen."
+            "en": "Thermal: the casing sheet is the closed hood with chassis, fascia and bezel; behind it every hidden part is the real component in its place. Heat exchanger: a 2 mm stainless shell of 230 mm with the burner door, the insulated back plate, six turns of 21 mm coil tube at 184 mm coil diameter, the flue collector up to the collar and the condensate outlet. Premix fan on the left: a scroll that grows from 40 to 54 mm with its tangential outlet and the duct to the burner door, the flat motor outside and the gas-air venturi inside. Lower half: the 280 mm expansion vessel with its crimped seam at the back, the wet-rotor pump (volute, motor can, terminal box) on the return hydroblock, the diverter valve with its actuator on the flow hydroblock, the plate heat exchanger, the gas valve with two solenoids and its line through the venturi, flow and return pipes between heat exchanger and hydroblocks, the siphon with the condensate hose and the vessel hose. The burner is a 20 mm perforated cylinder on the chamber axis with the flames on its crown.",
+            "de": "Thermik: das Gehäuseblech ist die geschlossene Haube mit Chassis, Blende und Schauglasrahmen; dahinter ist jedes verdeckte Teil das wirkliche Bauteil an seinem Platz. Wärmeübertrager: ein 2 mm starker Edelstahlmantel von 230 mm mit Brennertür, gedämmter Rückwand, sechs Windungen Rohrschlange von 21 mm bei 184 mm Wickeldurchmesser, dem Abgassammler bis zum Stutzen und dem Kondensatablauf. Vormischgebläse links: eine Spirale, die von 40 auf 54 mm wächst, mit tangentialem Auslass und dem Kanal zur Brennertür, außen der flache Motor, innen das Gas-Luft-Venturi. Untere Hälfte: das Ausdehnungsgefäß von 280 mm mit gebördelter Naht an der Rückwand, die Nassläuferpumpe (Spiralgehäuse, Spaltrohrmotor, Klemmenkasten) auf dem Rücklauf-Hydroblock, das Umschaltventil mit Stellmotor auf dem Vorlauf-Hydroblock, der Plattenwärmeübertrager, die Gasarmatur mit zwei Magnetspulen und ihrer Leitung zum Venturi, Vor- und Rücklaufrohr zwischen Wärmeübertrager und Hydroblöcken, der Siphon mit Kondensatschlauch und der Schlauch des Gefäßes. Der Brenner ist ein gelochter Zylinder von 20 mm auf der Kammerachse mit den Flammen auf seinem Scheitel."
           },
           {
-            "en": "Structure: the load path of the real boiler, not its cladding: the galvanised chassis (1.5 mm back sheet with its folded side edges as one channel, the folded top and bottom edges as 20 mm angles) hangs on the wall rail at y 0.74 m; the heat exchanger sits on two pairs of 30 mm angle brackets and carries the flue collector and with it the collar spigot and turret, joined at the clamp flange on the hood top; the manifold rests on its angle on the bottom edge and holds the five 22 x 1.5 mm stub tubes through hex bulkheads; the knob turns on its shaft and the flames slide on the burner; the casing mass sits at its centre of mass 0.42 m high and 0.135 m in front of the wall. The front hood is cladding and absent.",
-            "de": "Tragwerk: der Lastweg des echten Kessels, nicht seine Verkleidung: das verzinkte Chassis (1,5-mm-Rückblech mit seinen gekanteten Seitenkanten als ein U-Profil, die gekanteten Ober- und Unterkanten als 20-mm-Winkel) hängt an der Wandschiene auf 0,74 m Höhe; der Wärmeübertrager sitzt auf zwei Paar 30-mm-Winkelkonsolen und trägt den Abgassammler und damit Rohrstutzen und Turm des Abgasadapters, verbunden am Klemmflansch auf der Haubenoberseite; der Verteiler ruht auf seinem Winkel an der Unterkante und hält die fünf Anschlussrohre 22 x 1,5 mm über Sechskant-Schottverschraubungen; der Knopf dreht auf seiner Welle und die Flammen gleiten auf dem Brenner; die Gehäusemasse sitzt in ihrem Schwerpunkt 0,42 m hoch und 0,135 m vor der Wand. Die Fronthaube ist Verkleidung und fehlt."
+            "en": "Structure: the load path of the real boiler, not its cladding: the galvanised back sheet with its folded edges hangs on the wall rail and leans on its lower edge; the heat exchanger hangs on the upper pair of angle brackets and sits in a saddle whose two arms run back to the sheet outside the expansion vessel; the flue collector and the collar stand on the heat exchanger, the two hydroblocks with the five stubs hang on the manifold angle of the bottom edge. The centre of mass is the magenta ball.",
+            "de": "Tragwerk: der Lastweg des wirklichen Kessels, nicht seine Verkleidung: das verzinkte Rückblech mit gekanteten Rändern hängt an der Wandschiene und lehnt an seiner Unterkante; der Wärmeübertrager hängt am oberen Paar Winkelkonsolen und liegt in einem Sattel, dessen zwei Arme außerhalb des Ausdehnungsgefäßes zum Blech zurücklaufen; Abgassammler und Stutzen stehen auf dem Wärmeübertrager, die zwei Hydroblöcke mit den fünf Stutzen hängen am Verteilerwinkel der Unterkante. Der Schwerpunkt ist die magentafarbene Kugel."
           }
         ]
       },
@@ -4984,15 +5423,14 @@
           },
           {
             "id": "burner-tube",
-            "kind": "box",
             "bone": "casing",
             "material": "burner-mesh",
             "role": "body",
             "tone": 0.45,
-            "size": [0.06, 0.015, 0.03],
-            "transform": {
-              "translation": [0.0, 0.5335, -0.12]
-            }
+            "kind": "revolve",
+            "profile": [[-0.14, 0], [-0.14, 0.01], [-0.035, 0.01], [-0.035, 0]],
+            "axis": [0, 0, 1],
+            "origin": [0.0, 0.531, 0.0]
           },
           {
             "id": "flame-tall",
@@ -5318,85 +5756,274 @@
             "layer": "tube"
           },
           {
-            "id": "th-hx",
-            "kind": "revolve",
+            "id": "th-hx-shell",
             "bone": "casing",
             "material": "stainless-steel",
             "role": "body",
             "tone": 0.5,
-            "profile": [[0.048, 0.0], [0.048, 0.115], [-0.147, 0.115], [-0.147, 0.0365], [-0.132, 0.0365], [-0.132, 0.065], [0.033, 0.065], [0.033, 0.0]],
-            "axis": [0, 0, 1],
-            "origin": [0.0, 0.56, 0.0],
             "region": "heat-exchanger",
-            "layer": "wall"
+            "layer": "wall",
+            "kind": "revolve",
+            "profile": [[-0.147, 0.0365], [-0.147, 0.115], [0.043, 0.115], [0.043, 0.0], [0.035, 0.0], [0.035, 0.112], [-0.139, 0.112], [-0.139, 0.0365], [-0.147, 0.0365]],
+            "axis": [0, 0, 1],
+            "origin": [0.0, 0.56, 0.0]
+          },
+          {
+            "id": "th-hx-coil",
+            "bone": "casing",
+            "material": "stainless-steel",
+            "role": "body",
+            "tone": 0.6,
+            "repeat": {
+              "count": 4,
+              "translation": [0, 0, 0.04]
+            },
+            "region": "heat-exchanger",
+            "layer": "wall",
+            "kind": "revolve",
+            "profile": [
+              [-0.103, 0.09],
+              [-0.10651, 0.09849],
+              [-0.115, 0.102],
+              [-0.12349, 0.09849],
+              [-0.127, 0.09],
+              [-0.12349, 0.08151],
+              [-0.115, 0.078],
+              [-0.10651, 0.08151],
+              [-0.103, 0.09]
+            ],
+            "axis": [0, 0, 1],
+            "origin": [0.0, 0.56, 0.0]
           },
           {
             "id": "th-hx-collector",
-            "kind": "revolve",
             "bone": "casing",
             "material": "stainless-steel",
             "role": "body",
             "tone": 0.5,
-            "profile": [[0.67, 0.0], [0.67, 0.04], [0.77, 0.04], [0.77, 0.0]],
-            "axis": [0, 1, 0],
-            "origin": [0.0, 0.0, 0.04],
             "region": "heat-exchanger",
-            "layer": "wall"
+            "layer": "wall",
+            "kind": "revolve",
+            "profile": [[0.665, 0], [0.665, 0.04], [0.77, 0.04], [0.77, 0]],
+            "axis": [0, 1, 0],
+            "origin": [0.0, 0.0, 0.04]
           },
           {
-            "id": "th-fan",
-            "kind": "revolve",
+            "id": "th-fan-volute",
             "bone": "casing",
             "material": "die-cast-aluminium",
             "role": "body",
             "tone": 0.6,
-            "profile": [[0.0, 0.0], [0.0, 0.045], [0.07, 0.045], [0.07, 0.0]],
-            "axis": [1, 0, 0],
-            "origin": [-0.205, 0.6, -0.05],
             "region": "fan",
-            "layer": "housing"
+            "layer": "housing",
+            "kind": "extrude",
+            "profile": [
+              [0.6, -0.091],
+              [0.62122, -0.08676],
+              [0.63801, -0.07194],
+              [0.64533, -0.05],
+              [0.64051, -0.02661],
+              [0.62411, -0.00824],
+              [0.6, -0.00033],
+              [0.57444, -0.00574],
+              [0.55449, -0.02372],
+              [0.546, -0.05],
+              [0.546, -0.105],
+              [0.572, -0.105],
+              [0.572, -0.089]
+            ],
+            "plane": "yz",
+            "from": -0.195,
+            "to": -0.15
+          },
+          {
+            "id": "th-fan-motor",
+            "bone": "casing",
+            "material": "die-cast-aluminium",
+            "role": "body",
+            "tone": 0.55,
+            "region": "fan",
+            "layer": "housing",
+            "kind": "revolve",
+            "profile": [[-0.217, 0], [-0.217, 0.032], [-0.195, 0.032], [-0.195, 0]],
+            "axis": [1, 0, 0],
+            "origin": [0.0, 0.6, -0.05]
+          },
+          {
+            "id": "th-fan-venturi",
+            "bone": "casing",
+            "material": "die-cast-aluminium",
+            "role": "body",
+            "tone": 0.6,
+            "region": "fan",
+            "layer": "housing",
+            "kind": "revolve",
+            "profile": [[-0.15, 0], [-0.15, 0.02], [-0.125, 0.02], [-0.125, 0]],
+            "axis": [1, 0, 0],
+            "origin": [0.0, 0.6, -0.05]
           },
           {
             "id": "th-vessel",
-            "kind": "revolve",
             "bone": "casing",
             "material": "painted-steel",
             "role": "body",
             "tone": 0.35,
-            "profile": [[0.065, 0.0], [0.07, 0.09], [0.085, 0.14], [0.105, 0.158], [0.125, 0.14], [0.14, 0.09], [0.145, 0.0]],
-            "axis": [0, 0, 1],
-            "origin": [0.0, 0.4, 0.0],
             "region": "expansion-vessel",
-            "layer": "shell"
+            "layer": "shell",
+            "kind": "revolve",
+            "profile": [[0.075, 0], [0.078, 0.09], [0.092, 0.128], [0.12, 0.14], [0.148, 0.128], [0.162, 0.09], [0.165, 0]],
+            "axis": [0, 0, 1],
+            "origin": [0.0, 0.32, 0.0]
           },
           {
-            "id": "th-hydraulics",
+            "id": "th-block-flow",
+            "bone": "casing",
+            "material": "brass",
+            "role": "body",
+            "tone": 0.4,
+            "region": "hydraulics",
+            "layer": "body",
             "kind": "box",
-            "bone": "casing",
-            "material": "brass",
-            "role": "body",
-            "tone": 0.4,
-            "size": [0.36, 0.12, 0.09],
-            "cornerRadius": 0.005,
+            "size": [0.17, 0.03, 0.05],
             "transform": {
-              "translation": [0.0, 0.13, 0.04]
-            },
-            "region": "hydraulics",
-            "layer": "body"
+              "translation": [-0.105, 0.075, 0.07]
+            }
           },
           {
-            "id": "th-pipes",
-            "kind": "capsule",
+            "id": "th-block-return",
             "bone": "casing",
             "material": "brass",
             "role": "body",
             "tone": 0.4,
-            "p0": [-0.01, 0.455, 0.0],
-            "p1": [-0.01, 0.18, 0.0],
-            "r0": 0.0175,
-            "r1": 0.0175,
             "region": "hydraulics",
-            "layer": "body"
+            "layer": "body",
+            "kind": "box",
+            "size": [0.15, 0.03, 0.05],
+            "transform": {
+              "translation": [0.115, 0.075, 0.07]
+            }
+          },
+          {
+            "id": "th-pump-volute",
+            "bone": "casing",
+            "material": "brass",
+            "role": "body",
+            "tone": 0.4,
+            "region": "hydraulics",
+            "layer": "body",
+            "kind": "revolve",
+            "profile": [[0.045, 0], [0.045, 0.05], [0.095, 0.05], [0.095, 0]],
+            "axis": [0, 0, 1],
+            "origin": [0.125, 0.155, 0.0]
+          },
+          {
+            "id": "th-pump-motor",
+            "bone": "casing",
+            "material": "brass",
+            "role": "body",
+            "tone": 0.45,
+            "region": "hydraulics",
+            "layer": "body",
+            "kind": "revolve",
+            "profile": [[-0.04, 0], [-0.04, 0.04], [0.045, 0.04], [0.045, 0]],
+            "axis": [0, 0, 1],
+            "origin": [0.125, 0.155, 0.0]
+          },
+          {
+            "id": "th-diverter",
+            "bone": "casing",
+            "material": "brass",
+            "role": "body",
+            "tone": 0.4,
+            "region": "hydraulics",
+            "layer": "body",
+            "kind": "revolve",
+            "profile": [[0.088, 0], [0.088, 0.017], [0.16, 0.017], [0.16, 0]],
+            "axis": [0, 1, 0],
+            "origin": [-0.16, 0.0, 0.07]
+          },
+          {
+            "id": "th-plate-hx",
+            "bone": "casing",
+            "material": "stainless-steel",
+            "role": "body",
+            "tone": 0.45,
+            "region": "hydraulics",
+            "layer": "body",
+            "kind": "box",
+            "size": [0.075, 0.17, 0.04],
+            "transform": {
+              "translation": [-0.06, 0.175, 0.05]
+            }
+          },
+          {
+            "id": "th-gas-valve",
+            "bone": "casing",
+            "material": "brass",
+            "role": "body",
+            "tone": 0.4,
+            "region": "hydraulics",
+            "layer": "body",
+            "kind": "box",
+            "size": [0.06, 0.09, 0.05],
+            "transform": {
+              "translation": [0.03, 0.175, 0.0]
+            }
+          },
+          {
+            "id": "th-gas-pipe-riser",
+            "bone": "casing",
+            "material": "brass",
+            "role": "body",
+            "tone": 0.4,
+            "region": "hydraulics",
+            "layer": "body",
+            "kind": "capsule",
+            "p0": [-0.19, 0.165, -0.02],
+            "p1": [-0.19, 0.5, -0.02],
+            "r0": 0.0075,
+            "r1": 0.0075
+          },
+          {
+            "id": "th-flow-pipe",
+            "bone": "casing",
+            "material": "brass",
+            "role": "body",
+            "tone": 0.4,
+            "region": "hydraulics",
+            "layer": "body",
+            "kind": "capsule",
+            "p0": [-0.16, 0.5, 0.03],
+            "p1": [-0.16, 0.16, 0.03],
+            "r0": 0.009,
+            "r1": 0.009
+          },
+          {
+            "id": "th-return-pipe",
+            "bone": "casing",
+            "material": "brass",
+            "role": "body",
+            "tone": 0.4,
+            "region": "hydraulics",
+            "layer": "body",
+            "kind": "capsule",
+            "p0": [0.15, 0.2, 0.055],
+            "p1": [0.15, 0.53, 0.055],
+            "r0": 0.009,
+            "r1": 0.009
+          },
+          {
+            "id": "th-siphon",
+            "bone": "casing",
+            "material": "polycarbonate",
+            "role": "body",
+            "tone": 0.4,
+            "region": "hydraulics",
+            "layer": "body",
+            "kind": "revolve",
+            "profile": [[0.1, 0], [0.1, 0.02], [0.2, 0.02], [0.2, 0]],
+            "axis": [0, 1, 0],
+            "origin": [0.18, 0.0, -0.09]
           }
         ],
         "structure": [
@@ -5415,6 +6042,38 @@
             "part": "member"
           },
           {
+            "id": "member-hx-saddle",
+            "bone": "casing",
+            "material": "galvanised-steel",
+            "role": "body",
+            "tone": 0.7,
+            "member": "casing",
+            "part": "member",
+            "kind": "box",
+            "size": [0.25, 0.02, 0.03],
+            "transform": {
+              "translation": [0.0, 0.435, 0.005]
+            }
+          },
+          {
+            "id": "member-hx-arms",
+            "bone": "casing",
+            "material": "galvanised-steel",
+            "role": "body",
+            "tone": 0.7,
+            "member": "casing",
+            "part": "member",
+            "repeat": {
+              "count": 2,
+              "translation": [-0.22, 0, 0]
+            },
+            "kind": "box",
+            "size": [0.03, 0.02, 0.154],
+            "transform": {
+              "translation": [0.11, 0.435, 0.097]
+            }
+          },
+          {
             "id": "member-chassis-edges",
             "kind": "extrude",
             "bone": "casing",
@@ -5429,24 +6088,6 @@
             },
             "from": -0.217,
             "to": 0.217,
-            "member": "casing",
-            "part": "member"
-          },
-          {
-            "id": "member-hx-brackets",
-            "kind": "extrude",
-            "bone": "casing",
-            "material": "galvanised-steel",
-            "role": "body",
-            "tone": 0.7,
-            "profile": [[-0.095, 0.447], [-0.065, 0.447], [-0.065, 0.451], [-0.091, 0.451], [-0.091, 0.477], [-0.095, 0.477]],
-            "plane": "xy",
-            "repeat": {
-              "count": 2,
-              "translation": [0.16, 0, 0]
-            },
-            "from": 0.043,
-            "to": 0.1735,
             "member": "casing",
             "part": "member"
           },
@@ -5612,12 +6253,12 @@
             "de": "Körper: neu für die Strukturgröße 15 mm erstellt: die Haube endet 20 mm vor der Wand an ihrer hinteren Fuge, wo das Chassisband sie schließt (die 1,5-mm-Chassisstufe liegt unter der Strukturgröße); das 78-mm-Fenster öffnet in eine 50 mm tiefe dunkle Kammer mit Brennerbalken und zwei einfachen Flammenkronen wie gezeichnet; die Blende ist ein glattes 10-mm-Band; der Betriebsartenknopf ist eine 56-mm-Scheibe; Blende des Schauglases, Sollwertknopf, Manometer, Display, Muttern und alle Striche sind zusammengefasst oder weggelassen, wie die Zeichnung 1:100 sie weglässt; der Stutzen besteht aus zwei vollen Stufen; die Anschlüsse sind 26-mm-Stäbe wie gezeichnet."
           },
           {
-            "en": "Thermal: the closed hood with the fascia (casing), the display plate and knob (controls), the window glass front face (sight glass), the burner bar and two flames, the collar with its flush outlet patch, the stubs; hidden: the heat exchanger ring with door, back plate and collector, the fan drum, the vessel as one lens, and the hydraulic group merged into one block with one riser pipe.",
-            "de": "Thermik: die geschlossene Haube mit der Blende (Gehäuse), die Displayplatte und der Knopf (Regelung), die Vorderfläche des Fensterglases (Schauglas), Brennerbalken und zwei Flammen, der Stutzen mit seiner bündigen Austrittsfläche, die Anschlüsse; verborgen: der Wärmeübertragerring mit Tür, Rückwand und Sammler, die Gebläsetrommel, das Gefäß als eine Linse und die Hydraulikgruppe zu einem Block mit einem Steigrohr zusammengefasst."
+            "en": "Thermal: authored for the 15 mm feature. The closed hood with the fascia (casing), display and knob (controls), sight glass, burner cylinder with flames, collar and stubs as at 1:50 in coarser parts; inside, the heat exchanger is one shell with door and back plate and four fat coil turns of 24 mm, the fan keeps scroll, motor and venturi, the vessel is a plain lens, pump (volute and motor), diverter valve, plate heat exchanger, gas valve, two hydroblocks, siphon and the three risers (gas, flow, return) of 15 to 18 mm stay; hoses and bends are below the feature.",
+            "de": "Thermik: für das Merkmal von 15 mm gezeichnet. Die geschlossene Haube mit Blende (Gehäuse), Display und Knopf (Bedienung), Schauglas, Brennerzylinder mit Flammen, Stutzen und Anschlüsse wie bei 1:50 in gröberen Teilen; innen ist der Wärmeübertrager ein Mantel mit Tür und Rückwand und vier dicken Rohrwindungen von 24 mm, das Gebläse behält Spirale, Motor und Venturi, das Gefäß ist eine schlichte Linse, Pumpe (Spiralgehäuse und Motor), Umschaltventil, Plattenwärmeübertrager, Gasarmatur, zwei Hydroblöcke, Siphon und die drei Steigleitungen (Gas, Vorlauf, Rücklauf) von 15 bis 18 mm bleiben; Schläuche und Bögen liegen unter dem Merkmal."
           },
           {
-            "en": "Structure: chassis channel with its two edge angles, one pair of brackets under the heat exchanger, the heat exchanger as a solid drum with its collector, the collar as one stepped tube with its flange, the manifold with its bracket merged, five stub tubes, the knob shaft, one flame slide, the rail and the mass.",
-            "de": "Tragwerk: Chassis-U-Profil mit seinen zwei Kantenwinkeln, ein Konsolenpaar unter dem Wärmeübertrager, der Wärmeübertrager als volle Trommel mit Sammler, der Stutzen als ein abgestuftes Rohr mit Flansch, der Verteiler mit seinem Winkel zusammengefasst, fünf Anschlussrohre, die Knopfwelle, eine Flammenführung, die Schiene und die Masse."
+            "en": "Structure: chassis channel with its two edge angles, the heat exchanger on a 20 mm saddle bar whose two arms run back to the sheet outside the vessel, flue collector, collar, connection bar and the two wall supports; the centre of mass as a ball.",
+            "de": "Tragwerk: Chassis-U mit seinen zwei Randwinkeln, der Wärmeübertrager auf einem Sattelstab von 20 mm, dessen zwei Arme außerhalb des Gefäßes zum Blech zurücklaufen, Abgassammler, Stutzen, Anschlussleiste und die zwei Wandauflager; der Schwerpunkt als Kugel."
           }
         ]
       },
@@ -5812,69 +6453,110 @@
           },
           {
             "id": "th-hx",
-            "kind": "revolve",
             "bone": "casing",
             "material": "stainless-steel",
             "role": "body",
             "tone": 0.5,
-            "profile": [[-0.14, 0.0], [-0.14, 0.115], [0.043, 0.115], [0.043, 0.0]],
-            "axis": [0, 0, 1],
-            "origin": [0.0, 0.56, 0.0],
             "region": "heat-exchanger",
-            "layer": "wall"
+            "layer": "wall",
+            "kind": "revolve",
+            "profile": [[-0.14, 0.0365], [-0.14, 0.115], [0.043, 0.115], [0.043, 0.0], [0.01, 0.0], [0.01, 0.0365]],
+            "axis": [0, 0, 1],
+            "origin": [0.0, 0.56, 0.0]
           },
           {
             "id": "th-hx-collector",
-            "kind": "revolve",
             "bone": "casing",
             "material": "stainless-steel",
             "role": "body",
             "tone": 0.5,
-            "profile": [[0.67, 0.0], [0.67, 0.04], [0.77, 0.04], [0.77, 0.0]],
-            "axis": [0, 1, 0],
-            "origin": [0.0, 0.0, 0.04],
             "region": "heat-exchanger",
-            "layer": "wall"
+            "layer": "wall",
+            "kind": "revolve",
+            "profile": [[0.665, 0], [0.665, 0.04], [0.77, 0.04], [0.77, 0]],
+            "axis": [0, 1, 0],
+            "origin": [0.0, 0.0, 0.04]
           },
           {
             "id": "th-fan",
-            "kind": "revolve",
             "bone": "casing",
             "material": "die-cast-aluminium",
             "role": "body",
             "tone": 0.6,
-            "profile": [[0.0, 0.0], [0.0, 0.046], [0.07, 0.046], [0.07, 0.0]],
-            "axis": [1, 0, 0],
-            "origin": [-0.205, 0.6, -0.05],
             "region": "fan",
-            "layer": "housing"
+            "layer": "housing",
+            "kind": "revolve",
+            "profile": [[-0.215, 0], [-0.215, 0.052], [-0.15, 0.052], [-0.15, 0]],
+            "axis": [1, 0, 0],
+            "origin": [0.0, 0.6, -0.05]
           },
           {
             "id": "th-vessel",
-            "kind": "revolve",
             "bone": "casing",
             "material": "painted-steel",
             "role": "body",
             "tone": 0.3,
-            "profile": [[0.065, 0.0], [0.07, 0.09], [0.085, 0.14], [0.105, 0.158], [0.125, 0.14], [0.14, 0.09], [0.145, 0.0]],
-            "axis": [0, 0, 1],
-            "origin": [0.0, 0.4, 0.0],
             "region": "expansion-vessel",
-            "layer": "shell"
+            "layer": "shell",
+            "kind": "revolve",
+            "profile": [[0.075, 0], [0.08, 0.1], [0.12, 0.14], [0.16, 0.1], [0.165, 0]],
+            "axis": [0, 0, 1],
+            "origin": [0.0, 0.32, 0.0]
           },
           {
-            "id": "th-hydraulics",
-            "kind": "box",
+            "id": "th-hydroblock",
             "bone": "casing",
             "material": "brass",
             "role": "body",
             "tone": 0.36,
-            "size": [0.36, 0.12, 0.09],
-            "transform": {
-              "translation": [0.0, 0.13, 0.04]
-            },
             "region": "hydraulics",
-            "layer": "body"
+            "layer": "body",
+            "kind": "box",
+            "size": [0.36, 0.03, 0.05],
+            "transform": {
+              "translation": [0.0, 0.075, 0.07]
+            }
+          },
+          {
+            "id": "th-pump",
+            "bone": "casing",
+            "material": "brass",
+            "role": "body",
+            "tone": 0.4,
+            "region": "hydraulics",
+            "layer": "body",
+            "kind": "revolve",
+            "profile": [[-0.04, 0], [-0.04, 0.045], [0.095, 0.045], [0.095, 0]],
+            "axis": [0, 0, 1],
+            "origin": [0.125, 0.155, 0.0]
+          },
+          {
+            "id": "th-plate-hx",
+            "bone": "casing",
+            "material": "stainless-steel",
+            "role": "body",
+            "tone": 0.45,
+            "region": "hydraulics",
+            "layer": "body",
+            "kind": "box",
+            "size": [0.075, 0.17, 0.04],
+            "transform": {
+              "translation": [-0.06, 0.175, 0.05]
+            }
+          },
+          {
+            "id": "th-gas-valve",
+            "bone": "casing",
+            "material": "brass",
+            "role": "body",
+            "tone": 0.4,
+            "region": "hydraulics",
+            "layer": "body",
+            "kind": "box",
+            "size": [0.06, 0.09, 0.05],
+            "transform": {
+              "translation": [0.03, 0.165, 0.0]
+            }
           }
         ],
         "structure": [
@@ -5893,18 +6575,36 @@
             "part": "member"
           },
           {
-            "id": "member-hx-brackets",
-            "kind": "box",
+            "id": "member-hx-shelf",
             "bone": "casing",
             "material": "galvanised-steel",
             "role": "body",
             "tone": 0.7,
-            "size": [0.22, 0.03, 0.13],
-            "transform": {
-              "translation": [0.0, 0.462, 0.108]
-            },
             "member": "casing",
-            "part": "member"
+            "part": "member",
+            "kind": "box",
+            "size": [0.25, 0.03, 0.045],
+            "transform": {
+              "translation": [0.0, 0.43, 0.02]
+            }
+          },
+          {
+            "id": "member-hx-arms",
+            "bone": "casing",
+            "material": "galvanised-steel",
+            "role": "body",
+            "tone": 0.7,
+            "member": "casing",
+            "part": "member",
+            "repeat": {
+              "count": 2,
+              "translation": [-0.22, 0, 0]
+            },
+            "kind": "box",
+            "size": [0.03, 0.03, 0.131],
+            "transform": {
+              "translation": [0.11, 0.43, 0.108]
+            }
           },
           {
             "id": "member-hx",
@@ -6010,12 +6710,12 @@
             "de": "Körper: eine neue Abstraktion für das Merkmal von 30 mm: die Haube ist ein Block mit ihren gerundeten Seitenkanten, das Bedienband ist ein Streifen von 30 mm, der wie gezeichnet 15 mm vor der Haubenfront steht, der Stutzen ist eine Trommel von 125 mm und die fünf Anschlüsse sind ein Anschlussbalken von 0,34 m; Fenster, Flammen und Knöpfe liegen unter dem, was der Maßstab zeigen kann, und entfallen wie in der Zeichnung."
           },
           {
-            "en": "Thermal: the hood (casing), the control band (controls), a flush window disc (sight glass), one merged burner block, the collar drum with its outlet patch, the connection bar, and the hidden regions in their real forms and places: the heat-exchanger drum with its collector, the premix fan drum, the expansion vessel as its 0.32 m lens of two dished shells, and the hydraulic group as one block: the hot core stays readable inside the casing.",
-            "de": "Thermik: die Haube (Gehäuse), das Bedienband (Bedienung), eine bündige Fensterscheibe (Schauglas), ein zusammengefasster Brennerblock, die Abgastrommel mit ihrer Austrittsfläche, der Anschlussbalken und die verborgenen Bereiche in ihrer wirklichen Form und Lage: die Wärmetauschertrommel mit ihrem Sammler, die Trommel des Vormischgebläses, das Ausdehnungsgefäß als seine Linse von 0,32 m aus zwei gewölbten Schalen und die Hydraulikgruppe als ein Block: der heiße Kern bleibt im Gehäuse lesbar."
+            "en": "Thermal: the hood (casing), the control band (controls), a flush window disc, the burner block, collar and connection bar; inside, for the 30 mm feature, the heat exchanger is one drum with the burner bore and the flue collector on it, the fan one 104 mm drum, the vessel a lens at the back, and the hydraulics are the pump as one drum, the plate heat exchanger, the gas valve block and one hydroblock bar.",
+            "de": "Thermik: die Haube (Gehäuse), das Bedienband (Bedienung), eine bündige Schauglasscheibe, der Brennerblock, Stutzen und Anschlussleiste; innen ist für das Merkmal von 30 mm der Wärmeübertrager eine Trommel mit Brennerbohrung und dem Abgassammler darauf, das Gebläse eine Trommel von 104 mm, das Gefäß eine Linse an der Rückwand, und die Hydraulik sind die Pumpe als eine Trommel, der Plattenwärmeübertrager, der Block der Gasarmatur und ein Hydroblock-Stab."
           },
           {
-            "en": "Structure: the chassis as a channel 30 mm deep at the wall, the bracket pair merged into one shelf under the heat-exchanger drum with its collector, the collar drum, the connection bar, the rail and the rest strip as 30 mm bars at their anchors, and the mass; every section is generalised to the 30 mm feature.",
-            "de": "Tragwerk: das Chassis als Kanal von 30 mm Tiefe an der Wand, das Konsolenpaar zu einer Konsole unter der Wärmetauschertrommel mit ihrem Sammler zusammengefasst, die Stutzentrommel, der Anschlussbalken, Schiene und Auflageleiste als Stäbe von 30 mm an ihren Ankern und die Masse; jeder Querschnitt ist auf das Merkmal von 30 mm verallgemeinert."
+            "en": "Structure: the chassis as a channel 30 mm deep at the wall, the heat exchanger drum on a 30 mm shelf with two arms back to the sheet outside the vessel, the flue collector, the collar, the connection bar and the two wall supports, with the centre of mass as a ball.",
+            "de": "Tragwerk: das Chassis als 30 mm tiefes U an der Wand, die Wärmeübertrager-Trommel auf einem Bord von 30 mm mit zwei Armen außerhalb des Gefäßes zurück zum Blech, Abgassammler, Stutzen, Anschlussleiste und die zwei Wandauflager, der Schwerpunkt als Kugel."
           }
         ]
       },
@@ -6139,56 +6839,69 @@
           },
           {
             "id": "th-hx",
-            "kind": "revolve",
             "bone": "casing",
             "material": "stainless-steel",
             "role": "body",
             "tone": 0.5,
-            "profile": [[-0.14, 0.0], [-0.14, 0.115], [0.043, 0.115], [0.043, 0.0]],
-            "axis": [0, 0, 1],
-            "origin": [0.0, 0.56, 0.0],
             "region": "heat-exchanger",
-            "layer": "wall"
+            "layer": "wall",
+            "kind": "revolve",
+            "profile": [[-0.14, 0], [-0.14, 0.115], [0.043, 0.115], [0.043, 0]],
+            "axis": [0, 0, 1],
+            "origin": [0.0, 0.56, 0.0]
           },
           {
             "id": "th-fan",
-            "kind": "revolve",
             "bone": "casing",
             "material": "die-cast-aluminium",
             "role": "body",
             "tone": 0.6,
-            "profile": [[0.0, 0.0], [0.0, 0.0375], [0.075, 0.0375], [0.075, 0.0]],
-            "axis": [1, 0, 0],
-            "origin": [-0.21, 0.6, -0.05],
             "region": "fan",
-            "layer": "housing"
+            "layer": "housing",
+            "kind": "revolve",
+            "profile": [[-0.215, 0], [-0.215, 0.05], [-0.14, 0.05], [-0.14, 0]],
+            "axis": [1, 0, 0],
+            "origin": [0.0, 0.6, -0.05]
           },
           {
             "id": "th-vessel",
-            "kind": "revolve",
             "bone": "casing",
             "material": "painted-steel",
             "role": "body",
             "tone": 0.3,
-            "profile": [[0.066, 0.0], [0.075, 0.12], [0.105, 0.158], [0.135, 0.12], [0.144, 0.0]],
-            "axis": [0, 0, 1],
-            "origin": [0.0, 0.36, 0.0],
             "region": "expansion-vessel",
-            "layer": "shell"
+            "layer": "shell",
+            "kind": "revolve",
+            "profile": [[0.075, 0], [0.085, 0.11], [0.12, 0.14], [0.155, 0.11], [0.165, 0]],
+            "axis": [0, 0, 1],
+            "origin": [0.0, 0.32, 0.0]
           },
           {
-            "id": "th-hydraulics",
-            "kind": "box",
+            "id": "th-pump",
+            "bone": "casing",
+            "material": "brass",
+            "role": "body",
+            "tone": 0.4,
+            "region": "hydraulics",
+            "layer": "body",
+            "kind": "revolve",
+            "profile": [[-0.04, 0], [-0.04, 0.05], [0.095, 0.05], [0.095, 0]],
+            "axis": [0, 0, 1],
+            "origin": [0.125, 0.155, 0.0]
+          },
+          {
+            "id": "th-hydroblock",
             "bone": "casing",
             "material": "brass",
             "role": "body",
             "tone": 0.36,
-            "size": [0.38, 0.12, 0.09],
-            "transform": {
-              "translation": [0.0, 0.13, 0.04]
-            },
             "region": "hydraulics",
-            "layer": "body"
+            "layer": "body",
+            "kind": "box",
+            "size": [0.25, 0.2, 0.075],
+            "transform": {
+              "translation": [-0.07, 0.16, 0.05]
+            }
           }
         ],
         "structure": [
@@ -6207,18 +6920,18 @@
             "part": "member"
           },
           {
-            "id": "member-hx-brackets",
-            "kind": "box",
+            "id": "member-hx-shelf",
             "bone": "casing",
             "material": "galvanised-steel",
             "role": "body",
             "tone": 0.7,
-            "size": [0.23, 0.02, 0.13],
-            "transform": {
-              "translation": [0.0, 0.437, 0.108]
-            },
             "member": "casing",
-            "part": "member"
+            "part": "member",
+            "kind": "box",
+            "size": [0.25, 0.03, 0.17],
+            "transform": {
+              "translation": [0.0, 0.43, 0.088]
+            }
           },
           {
             "id": "member-hx",
@@ -6311,12 +7024,12 @@
             "de": "Körper: eine digitale Miniatur für das Merkmal von 75 mm: die Haube ist ein scharfkantiger Block von 0,44 x 0,72 x 0,325 m von der Front bis zur Wand (Kantenradius und Chassisband liegen weit unter dem Merkmal), die Bedienleiste steht wie bei 1:200 15 mm vor, der Abgasadapter 80/125 ist eine volle Trommel von 125 mm und die fünf Stutzen sind ein Anschlussbalken; Fenster, Knöpfe und Muttern entfallen."
           },
           {
-            "en": "Thermal: hood, control strip, the window as a flush disc, one burner block, the flue drum with the flue-gas outlet patch on its top face, the connection bar, and every hidden region as one solid in its real place: the heat-exchanger drum, the fan drum on the left, the expansion vessel as a coarse lens behind, the hydraulic block above the stubs.",
-            "de": "Thermik: Haube, Bedienleiste, das Fenster als bündige Scheibe, ein Brennerblock, die Abgastrommel mit der Austrittsfläche des Abgases auf ihrer Oberseite, der Anschlussbalken und jeder verborgene Bereich als ein Körper an seiner wirklichen Stelle: die Wärmetauschertrommel, die Gebläsetrommel links, das Ausdehnungsgefäß als grobe Linse dahinter, der Hydraulikblock über den Stutzen."
+            "en": "Thermal: hood, control strip, the window as a flush disc, one burner block, collar and connection bar; inside, the heat exchanger drum, the fan drum of 100 mm, the vessel lens, the pump drum and one block for plate heat exchanger, valves and hydroblock: the four hidden regions stay separate bodies in their real places at the 75 mm feature.",
+            "de": "Thermik: Haube, Bedienstreifen, das Schauglas als bündige Scheibe, ein Brennerblock, Stutzen und Anschlussleiste; innen die Trommel des Wärmeübertragers, die Gebläsetrommel von 100 mm, die Linse des Gefäßes, die Pumpentrommel und ein Block für Plattenwärmeübertrager, Ventile und Hydroblock: die vier verdeckten Regionen bleiben beim Merkmal von 75 mm getrennte Körper an ihrem wirklichen Platz."
           },
           {
-            "en": "Structure: the real load path, generalised: the galvanised chassis channel to the wall, one bracket shelf under the heat-exchanger drum, collector and flue adapter as one stepped tube through the hood top, the connection bar on the bottom edge, the rail and the rest strip at the wall and the mass at the centre of mass; the hood is cladding and absent.",
-            "de": "Tragwerk: der wirkliche Lastpfad, verallgemeinert: der verzinkte Chassiskanal an der Wand, eine Konsole unter der Wärmetauschertrommel, Sammler und Abgasadapter als ein abgestuftes Rohr durch die Haubenoberseite, der Anschlussbalken an der Unterkante, Schiene und Auflageleiste an der Wand und die Masse im Schwerpunkt; die Haube ist Verkleidung und fehlt."
+            "en": "Structure: the real load path, generalised: the galvanised chassis channel at the wall, one shelf that carries the heat exchanger drum, the collar on it, the connection bar and the two wall supports; the centre of mass as a ball.",
+            "de": "Tragwerk: der wirkliche Lastweg, verallgemeinert: das verzinkte Chassis-U an der Wand, ein Bord, das die Wärmeübertrager-Trommel trägt, darauf der Stutzen, die Anschlussleiste und die zwei Wandauflager; der Schwerpunkt als Kugel."
           }
         ]
       }

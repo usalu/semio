@@ -70,56 +70,78 @@ impl DwgDrawing {
 
     /// 📐️ Recomputes the drawing extents from every entity; the reader calls it after decoding.
     pub fn recompute_extents(&mut self) {
-        let mut min = [f64::INFINITY; 3];
-        let mut max = [f64::NEG_INFINITY; 3];
-        let touch = |p: [f64; 3], min: &mut [f64; 3], max: &mut [f64; 3]| {
-            for axis in 0..3 {
-                min[axis] = min[axis].min(p[axis]);
-                max[axis] = max[axis].max(p[axis]);
-            }
-        };
+        let mut extents = DwgDrawingExtents::default();
         for entity in &self.entities {
-            match &entity.geometry {
-                DwgGeometry::Line { start, end } => {
-                    touch(*start, &mut min, &mut max);
-                    touch(*end, &mut min, &mut max);
+            extents.include(&entity.geometry);
+        }
+        extents.apply(self);
+    }
+}
+
+/// 📏️ Accumulates drawing extents without rescanning already projected geometry.
+pub struct DwgDrawingExtents {
+    min: [f64; 3],
+    max: [f64; 3],
+}
+
+impl Default for DwgDrawingExtents {
+    fn default() -> Self { Self { min: [f64::INFINITY; 3], max: [f64::NEG_INFINITY; 3] } }
+}
+
+impl DwgDrawingExtents {
+    /// 📍️ Expands the bounds with one projected drawing position.
+    pub fn include_point(&mut self, point: [f64; 3]) {
+        for (axis, coordinate) in point.into_iter().enumerate() {
+            self.min[axis] = self.min[axis].min(coordinate);
+            self.max[axis] = self.max[axis].max(coordinate);
+        }
+    }
+
+    pub fn include(&mut self, geometry: &DwgGeometry) {
+        let mut touch = |point| self.include_point(point);
+        match geometry {
+            DwgGeometry::Line { start, end } => {
+                touch(*start);
+                touch(*end);
+            }
+            DwgGeometry::Point { at } => touch(*at),
+            DwgGeometry::Circle { center, radius, .. } | DwgGeometry::Arc { center, radius, .. } => {
+                touch([center[0] - radius, center[1] - radius, center[2]]);
+                touch([center[0] + radius, center[1] + radius, center[2]]);
+            }
+            DwgGeometry::Ellipse { center, major_axis, .. } => {
+                let r = (major_axis[0] * major_axis[0] + major_axis[1] * major_axis[1]).sqrt();
+                touch([center[0] - r, center[1] - r, center[2]]);
+                touch([center[0] + r, center[1] + r, center[2]]);
+            }
+            DwgGeometry::LwPolyline { vertices, elevation, .. } => {
+                for v in vertices {
+                    touch([v[0], v[1], *elevation]);
                 }
-                DwgGeometry::Point { at } => touch(*at, &mut min, &mut max),
-                DwgGeometry::Circle { center, radius, .. } | DwgGeometry::Arc { center, radius, .. } => {
-                    touch([center[0] - radius, center[1] - radius, center[2]], &mut min, &mut max);
-                    touch([center[0] + radius, center[1] + radius, center[2]], &mut min, &mut max);
+            }
+            DwgGeometry::Spline { control_points, .. } | DwgGeometry::Polyline3d { vertices: control_points, .. } => {
+                for p in control_points {
+                    touch(*p);
                 }
-                DwgGeometry::Ellipse { center, major_axis, .. } => {
-                    let r = (major_axis[0] * major_axis[0] + major_axis[1] * major_axis[1]).sqrt();
-                    touch([center[0] - r, center[1] - r, center[2]], &mut min, &mut max);
-                    touch([center[0] + r, center[1] + r, center[2]], &mut min, &mut max);
+            }
+            DwgGeometry::PolyfaceMesh { vertices, .. } => {
+                for p in vertices {
+                    touch(*p);
                 }
-                DwgGeometry::LwPolyline { vertices, elevation, .. } => {
-                    for v in vertices {
-                        touch([v[0], v[1], *elevation], &mut min, &mut max);
-                    }
-                }
-                DwgGeometry::Spline { control_points, .. } | DwgGeometry::Polyline3d { vertices: control_points, .. } => {
-                    for p in control_points {
-                        touch(*p, &mut min, &mut max);
-                    }
-                }
-                DwgGeometry::PolyfaceMesh { vertices, .. } => {
-                    for p in vertices {
-                        touch(*p, &mut min, &mut max);
-                    }
-                }
-                DwgGeometry::Text { at, .. } => touch(*at, &mut min, &mut max),
-                DwgGeometry::Face3d { corners } => {
-                    for p in corners {
-                        touch(*p, &mut min, &mut max);
-                    }
+            }
+            DwgGeometry::Text { at, .. } => touch(*at),
+            DwgGeometry::Face3d { corners } => {
+                for p in corners {
+                    touch(*p);
                 }
             }
         }
-        if min[0].is_finite() {
-            self.extmin = min;
-            self.extmax = max;
+    }
+
+    pub fn apply(&self, drawing: &mut DwgDrawing) {
+        if self.min[0].is_finite() {
+            drawing.extmin = self.min;
+            drawing.extmax = self.max;
         }
     }
 }
@@ -132,51 +154,249 @@ impl DwgDrawing {
 /// DWG mesh handlers) that cannot depend on this plugin crate — see this wave's report for the
 /// resulting cross-layer gate on deleting the old `🔺️mesh` module outright.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn mesh_to_dwg_drawing(mesh: &semio_framework_mesh_engine::MeshData) -> DwgDrawing {
-    let vertices: Vec<[f64; 3]> = mesh.positions.as_chunks::<3>().0.iter().map(|c| [c[0] as f64, c[1] as f64, c[2] as f64]).collect();
-    let faces: Vec<[i32; 4]> = mesh.indices.as_chunks::<3>().0.iter().map(|tri| [tri[0] as i32 + 1, tri[1] as i32 + 1, tri[2] as i32 + 1, tri[2] as i32 + 1]).collect();
+pub fn mesh_to_dwg_drawing(mesh: &semio_framework_mesh_engine::MeshData) -> Result<DwgDrawing, String> {
+    let (positions, position_tail) = mesh.positions.as_chunks::<3>();
+    let (triangles, index_tail) = mesh.indices.as_chunks::<3>();
+    if !position_tail.is_empty() || !index_tail.is_empty() {
+        return Err("DWG mesh requires complete positions and triangles".into());
+    }
+    if !mesh.positions.iter().all(|value| value.is_finite()) {
+        return Err("DWG mesh requires finite positions".into());
+    }
+    if mesh.indices.iter().any(|&index| index as usize >= positions.len()) {
+        return Err("DWG triangle references a vertex outside the source mesh".into());
+    }
+
     let mut drawing = DwgDrawing::default();
     let layer = drawing.ensure_layer("0");
-    drawing.entities.push(DwgEntity { layer, color: DwgColor::ByLayer, geometry: DwgGeometry::PolyfaceMesh { vertices, faces } });
+    let mut emit = |vertices, faces| drawing.entities.push(DwgEntity {
+        layer, color: DwgColor::ByLayer, geometry: DwgGeometry::PolyfaceMesh { vertices, faces },
+    });
+    let vertex_limit = i16::MAX as usize;
+    let face_limit = u16::MAX as usize;
+    if positions.len() <= vertex_limit && triangles.len() <= face_limit {
+        let vertices = positions.iter().map(|position| position.map(f64::from)).collect();
+        let faces = triangles.iter().map(|triangle| {
+            let [a,b,c] = triangle.map(|index| index as i32 + 1);
+            [a,b,c,0]
+        }).collect();
+        emit(vertices, faces);
+    } else {
+        let mut vertices = Vec::new();
+        let mut faces = Vec::new();
+        let mut local = std::collections::HashMap::new();
+        let mut used = vec![false; positions.len()];
+        for triangle in triangles {
+            let additional = triangle.iter().enumerate()
+                .filter(|(slot, index)| !local.contains_key(*index) && !triangle[..*slot].contains(*index)).count();
+            if vertices.len() + additional > vertex_limit || faces.len() == face_limit {
+                emit(std::mem::take(&mut vertices), std::mem::take(&mut faces));
+                local.clear();
+            }
+            let [a,b,c] = triangle.map(|index| *local.entry(index).or_insert_with(|| {
+                let index = index as usize;
+                used[index] = true;
+                vertices.push(positions[index].map(f64::from));
+                vertices.len() as i32
+            }));
+            faces.push([a,b,c,0]);
+        }
+        for (position, used) in positions.iter().zip(used) {
+            if used { continue; }
+            if vertices.len() == vertex_limit {
+                emit(std::mem::take(&mut vertices), std::mem::take(&mut faces));
+            }
+            vertices.push(position.map(f64::from));
+        }
+        if !vertices.is_empty() {
+            emit(vertices, faces);
+        }
+    }
     drawing.recompute_extents();
-    drawing
+    Ok(drawing)
 }
 /// 🔺️ Collects polyface-mesh and 3dface entities into mesh data.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn dwg_drawing_to_mesh(drawing: &DwgDrawing) -> semio_framework_mesh_engine::MeshData {
-    let mut mesh = semio_framework_mesh_engine::MeshData::default();
-    for entity in &drawing.entities {
-        match &entity.geometry {
-            DwgGeometry::PolyfaceMesh { vertices, faces } => {
-                let base = mesh.vertex_count() as u32;
-                for v in vertices {
-                    mesh.positions.extend_from_slice(&[v[0] as f32, v[1] as f32, v[2] as f32]);
-                }
-                for face in faces {
-                    let idx: Vec<u32> = face.iter().map(|i| (i.unsigned_abs().saturating_sub(1)) + base).collect();
-                    if face[2] == face[3] {
-                        mesh.indices.extend_from_slice(&[idx[0], idx[1], idx[2]]);
-                    } else {
-                        mesh.indices.extend_from_slice(&[idx[0], idx[1], idx[2]]);
-                        mesh.indices.extend_from_slice(&[idx[0], idx[2], idx[3]]);
-                    }
-                }
-            }
-            DwgGeometry::Face3d { corners } => {
-                let base = mesh.vertex_count() as u32;
-                for c in corners {
-                    mesh.positions.extend_from_slice(&[c[0] as f32, c[1] as f32, c[2] as f32]);
-                }
-                mesh.indices.extend_from_slice(&[base, base + 1, base + 2]);
-                if corners[3] != corners[2] {
-                    mesh.indices.extend_from_slice(&[base, base + 2, base + 3]);
-                }
-            }
-            _ => {}
+pub fn dwg_drawing_to_mesh(drawing: &DwgDrawing) -> Result<semio_framework_mesh_engine::MeshData, String> {
+    dwg_entities_to_mesh(&drawing.entities)
+}
+
+/// 🧱️ Projects selected drawing entities with checked positions and face indices.
+pub fn dwg_entities_to_mesh<'a>(entities: impl IntoIterator<Item = &'a DwgEntity>) -> Result<semio_framework_mesh_engine::MeshData, String> {
+    let mut projection = DwgMeshProjection::new(entities.into_iter());
+    loop {
+        if let DwgMeshProjectionStep::Complete = projection.step()? {
+            return projection.take_mesh().ok_or_else(|| "DWG mesh projection is missing its result".into());
         }
     }
-    mesh.compute_normals();
-    mesh
+}
+
+/// 🔖️ One completed projection unit before the finished mesh can transfer.
+pub enum DwgMeshProjectionStep {
+    Entity,
+    Position,
+    Face,
+    Normal,
+    Complete,
+}
+
+enum DwgMeshProjectionPhase {
+    Entities,
+    Normals,
+    Complete,
+    Failed(String),
+}
+
+/// 🏗️ Converts original drawing entities to a triangle mesh without publishing partial geometry.
+pub struct DwgMeshProjection<Entities: Iterator> {
+    entities: Entities,
+    current: Option<Entities::Item>,
+    phase: DwgMeshProjectionPhase,
+    mesh: Option<semio_framework_mesh_engine::MeshData>,
+    entity_total: usize,
+    entities_done: usize,
+    vertex: usize,
+    face: usize,
+    base: u32,
+    vertex_count: u32,
+    normal: usize,
+}
+
+impl<Entities: Iterator> DwgMeshProjection<Entities>
+where
+    Entities::Item: std::borrow::Borrow<DwgEntity>,
+{
+    /// 🧺️ Holds either the original entity sequence or a borrowed sequence selected by the caller.
+    pub fn new(entities: Entities) -> Self {
+        let entity_total = entities.size_hint().1.unwrap_or(0);
+        Self {
+            entities, current: None, phase: DwgMeshProjectionPhase::Entities,
+            mesh: Some(Default::default()), entity_total, entities_done: 0, vertex: 0, face: 0, base: 0, vertex_count: 0, normal: 0,
+        }
+    }
+
+    /// 📈️ Reports progress through entity geometry and final vertex-normal normalization.
+    pub fn progress(&self) -> f32 {
+        match self.phase {
+            DwgMeshProjectionPhase::Entities => {
+                let current = self.current.as_ref().map_or(0.0, |entity| {
+                    let (positions, faces) = dwg_mesh_rows(&std::borrow::Borrow::<DwgEntity>::borrow(entity).geometry);
+                    (self.vertex + self.face) as f32 / (positions.len() + faces.len()).max(1) as f32
+                });
+                0.75 * ((self.entities_done as f32 + current) / self.entity_total.max(1) as f32).min(1.0)
+            }
+            DwgMeshProjectionPhase::Normals => {
+                let total = self.mesh.as_ref().map_or(0, |mesh| mesh.vertex_count());
+                0.75 + 0.25 * (self.normal as f32 / total.max(1) as f32)
+            }
+            DwgMeshProjectionPhase::Complete => 1.0,
+            DwgMeshProjectionPhase::Failed(_) => 0.0,
+        }
+    }
+
+    /// ⏭️ Advances one entity, one coordinate triplet, one face, or one normal.
+    pub fn step(&mut self) -> Result<DwgMeshProjectionStep, String> {
+        let result = match &self.phase {
+            DwgMeshProjectionPhase::Entities => self.advance_entity(),
+            DwgMeshProjectionPhase::Normals => Ok(self.advance_normal()),
+            DwgMeshProjectionPhase::Complete => Ok(DwgMeshProjectionStep::Complete),
+            DwgMeshProjectionPhase::Failed(error) => return Err(error.clone()),
+        };
+        if let Err(error) = &result {
+            self.phase = DwgMeshProjectionPhase::Failed(error.clone());
+        }
+        result
+    }
+
+    /// 📤️ Transfers the validated mesh after all position, face and normal rows are complete.
+    pub fn take_mesh(&mut self) -> Option<semio_framework_mesh_engine::MeshData> {
+        if matches!(self.phase, DwgMeshProjectionPhase::Complete) { self.mesh.take() } else { None }
+    }
+
+    fn advance_entity(&mut self) -> Result<DwgMeshProjectionStep, String> {
+        let mesh = self.mesh.as_mut().expect("pending DWG mesh projection owns its output");
+        if let Some(entity) = self.current.as_ref() {
+            let (vertices, faces) = dwg_mesh_rows(&std::borrow::Borrow::<DwgEntity>::borrow(entity).geometry);
+            if let Some(vertex) = vertices.get(self.vertex) {
+                let coordinates = vertex.map(|value| value as f32);
+                if !coordinates.iter().all(|coordinate| coordinate.is_finite()) {
+                    return Err("DWG mesh position is outside the finite mesh coordinate range".into());
+                }
+                mesh.positions.try_reserve(3).map_err(|_| "DWG mesh position allocation failed")?;
+                mesh.normals.try_reserve(3).map_err(|_| "DWG mesh normal allocation failed")?;
+                mesh.positions.extend_from_slice(&coordinates);
+                mesh.normals.extend_from_slice(&[0.0; 3]);
+                self.vertex += 1;
+                return Ok(DwgMeshProjectionStep::Position);
+            }
+            if let Some(face) = faces.get(self.face) {
+                append_dwg_face(mesh, self.base, self.vertex_count, *face)?;
+                self.face += 1;
+                return Ok(DwgMeshProjectionStep::Face);
+            }
+            self.current = None;
+            self.entities_done += 1;
+        }
+        let Some(entity) = self.entities.next() else {
+            self.phase = DwgMeshProjectionPhase::Normals;
+            return Ok(self.advance_normal());
+        };
+        let (vertices, _) = dwg_mesh_rows(&std::borrow::Borrow::<DwgEntity>::borrow(&entity).geometry);
+        self.base = u32::try_from(mesh.vertex_count()).map_err(|_| "DWG mesh has too many vertices")?;
+        self.vertex_count = u32::try_from(vertices.len()).map_err(|_| "DWG mesh has too many vertices")?;
+        self.base.checked_add(self.vertex_count).ok_or("DWG mesh has too many vertices")?;
+        self.current = Some(entity);
+        self.vertex = 0;
+        self.face = 0;
+        Ok(DwgMeshProjectionStep::Entity)
+    }
+
+    fn advance_normal(&mut self) -> DwgMeshProjectionStep {
+        let mesh = self.mesh.as_mut().expect("normal projection owns its output");
+        if self.normal == mesh.vertex_count() {
+            self.phase = DwgMeshProjectionPhase::Complete;
+            return DwgMeshProjectionStep::Complete;
+        }
+        mesh.normalize_vertex_normal(self.normal);
+        self.normal += 1;
+        DwgMeshProjectionStep::Normal
+    }
+}
+
+/// 🧾️ Returns source positions and local face records for mesh-producing entities.
+pub fn dwg_mesh_rows(geometry: &DwgGeometry) -> (&[[f64; 3]], &[[i32; 4]]) {
+    match geometry {
+        DwgGeometry::PolyfaceMesh { vertices, faces } => (vertices, faces),
+        DwgGeometry::Face3d { corners } if corners[3] == corners[2] => (&corners[..3], &[[1, 2, 3, 0]]),
+        DwgGeometry::Face3d { corners } => (corners, &[[1, 2, 3, 4]]),
+        _ => (&[], &[]),
+    }
+}
+
+/// 🔺️ Validates local DWG indices and triangulates one triangle or quadrilateral.
+pub fn dwg_face_triangles(base: u32, vertex_count: u32, face: [i32; 4]) -> Result<([u32; 3], Option<[u32; 3]>), String> {
+    let mut corners = face.map(i32::unsigned_abs);
+    let count = if corners[3] == 0 || corners[2] == corners[3] { 3 } else { 4 };
+    for index in &mut corners[..count] {
+        if *index == 0 || *index > vertex_count {
+            return Err(format!("DWG polyface vertex index {index} exceeds the local range 1..={vertex_count}"));
+        }
+        *index = base.checked_add(*index - 1).ok_or("DWG mesh has too many vertices")?;
+    }
+    let [a, b, c, d] = corners;
+    Ok(([a, b, c], (count == 4).then_some([a, c, d])))
+}
+
+fn append_dwg_face(mesh: &mut semio_framework_mesh_engine::MeshData, base: u32, vertex_count: u32, face: [i32; 4]) -> Result<(), String> {
+    let (first, second) = dwg_face_triangles(base, vertex_count, face)?;
+    mesh.indices.try_reserve(if second.is_some() { 6 } else { 3 }).map_err(|_| "DWG mesh index allocation failed")?;
+    mesh.indices.extend_from_slice(&first);
+    mesh.accumulate_triangle_normal(first);
+    if let Some(second) = second {
+        mesh.indices.extend_from_slice(&second);
+        mesh.accumulate_triangle_normal(second);
+    }
+    Ok(())
 }
 //#endregion DwgMeshBridge
 //#region DwgPathBridge

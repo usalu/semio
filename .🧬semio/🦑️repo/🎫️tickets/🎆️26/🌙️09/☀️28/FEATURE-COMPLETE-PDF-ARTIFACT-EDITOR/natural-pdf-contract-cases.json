@@ -1,0 +1,28 @@
+{
+  "selectedMaximum": 16777216,
+  "naturalTool": "import-natural-source",
+  "naturalSchema": "framework.reserved.import-natural-source.v1",
+  "ordinaryTool": "import-media",
+  "ordinarySchema": "framework.reserved.import-media.v1",
+  "baseline": [true, true, true, 9437877, 0, 8388608, 9437877, 9437184, 1, 10000, true, true],
+  "cases": [
+    { "name": "authentic PDF over eight MiB", "changes": {}, "accepted": true },
+    { "name": "ordinary key refused", "changes": { "naturalKey": false }, "accepted": false },
+    { "name": "ordinary schema refused", "changes": { "naturalSchema": false }, "accepted": false },
+    { "name": "ordinary contract refused", "changes": { "naturalContract": false }, "accepted": false },
+    { "name": "ordinary source refused for paged key", "changes": { "paged": false }, "accepted": false },
+    { "name": "raw body refused", "changes": { "raw": 1 }, "accepted": false },
+    { "name": "empty source refused", "changes": { "extent": 0, "previous": 0, "consumed": 0 }, "accepted": false },
+    { "name": "source selection at 16 MiB", "changes": { "extent": 16777216, "consumed": 16777216 }, "accepted": true },
+    { "name": "source selection above 16 MiB", "changes": { "extent": 16777217, "consumed": 16777217 }, "accepted": false },
+    { "name": "exact source overrun", "changes": { "consumed": 9437878, "complete": false }, "accepted": false },
+    { "name": "premature completion", "changes": { "consumed": 9437876 }, "accepted": false },
+    { "name": "source progress rollback", "changes": { "consumed": 8388607, "complete": false }, "accepted": false },
+    { "name": "decoded item cap", "changes": { "items": 8193 }, "accepted": false },
+    { "name": "exact retained output cap", "changes": { "output": 33554432 }, "accepted": true },
+    { "name": "retained output overflow", "changes": { "output": 33554433 }, "accepted": false },
+    { "name": "ordinary raw and output still at eight MiB", "changes": { "paged": false, "naturalKey": false, "naturalSchema": false, "naturalContract": false, "extent": 8388608, "consumed": 8388608, "output": 8388608 }, "accepted": true },
+    { "name": "ordinary output refuses PDF image", "changes": { "paged": false, "naturalKey": false, "naturalSchema": false, "naturalContract": false, "extent": 8388608, "consumed": 8388608 }, "accepted": false },
+    { "name": "ordinary source refuses large extent", "changes": { "paged": false, "naturalKey": false, "naturalSchema": false, "naturalContract": false, "output": 1 }, "accepted": false }
+  ]
+}

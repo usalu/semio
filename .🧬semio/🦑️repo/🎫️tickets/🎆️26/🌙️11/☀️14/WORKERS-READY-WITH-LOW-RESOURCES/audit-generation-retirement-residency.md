@@ -1,0 +1,13 @@
+# Generation Retirement Residency
+
+The ordinary whole-generation build publishes its pointer after closure qualification. When its claim is alone it then retires old immutable generation documents. The prior retirement scan retained the full decoded owner table and all target names from every manifest it validated until the final sweep. Physical manifest history can extend past the retention count during the 600,000 ms grace period and while retirement cannot run. A read-only count found one 6,352,438-byte archived manifest in the coordinator’s current generation directory. The old active whole-graph request remains before rebuild admission, so the retirement change addresses a separate producer phase.
+
+Retirement now validates every named manifest and preserves its original digest, closed shape and size checks before any removal. It collects just the referenced global and owner fragment, index and frontier digests for the four most recent generations and for the exact current manifest or quarantined parent. It keeps the original discovery order for manifests tied on generation, and leaves the existing age and custody rules unchanged. The collector can release each decoded owner table after extracting its references. The retained reference data is bounded by the retention window, with at most one additional manifest pinned by the pointer.
+
+The neutral fixture creates 32 manifests with 64 owners each. Six manifests share the maximum generation, and the quarantined pointer names a parent outside the four-generation window. The exact removal list equals a separate SQLite retention query using the original scan order. Before the change all 32 decoded owner tables remained reachable at the first sweep. The same check now finds zero. The decoded tables are tracked only in the private fixture using weak references. Existing corrupt and missing-manifest cases still check that the sweep makes no removals when validation cannot establish complete custody.
+
+The native retirement, generation-engine, closure-repair and multiwriter suites passed 55 tests with 11,014 assertions. The sampled whole-graph reader remained at PID 24613 waiting for 14,336 MiB, with 481 MiB measured, 7,858 MiB available to the gate over its 4,096 MiB floor, and 19,526 MiB swap in use.
+
+The producer still needs an admitted full rebuild or an authenticated compatible complete peer generation. This optimization does not measure the whole-workspace peak or alter the existing resource request.
+
+[Cold graph memory feasibility](audit-cold-graph-memory-feasibility.md) · [Cold publication stamp observations](audit-cold-publication-stamp-observations.md) · [Exact fact index residency](audit-exact-fact-index-residency.md)

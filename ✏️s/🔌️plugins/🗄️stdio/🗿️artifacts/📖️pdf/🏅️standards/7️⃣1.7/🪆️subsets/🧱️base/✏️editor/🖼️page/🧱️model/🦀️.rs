@@ -10,7 +10,14 @@ pub const INSPECTOR_BODY_KEY: &str = "pdf.object";
 
 pub const OBJECT_DOMAIN: &str = "objects";
 
-const PAGE_ACTIONS: [&str; 68] = [
+const PAGE_ACTIONS: [&str; 75] = [
+    "create-annotation",
+    "fill-form-field",
+    "replace-page",
+    "replace-page-pick",
+    "merge-document",
+    "merge-pick",
+    "extract-pages",
     "set-text",
     "move",
     "resize",
@@ -92,7 +99,7 @@ pub enum ObjectKind {
 }
 
 impl ObjectKind {
-    pub(super) fn letter(self) -> char {
+    pub fn letter(self) -> char {
         match self {
             Self::Text => 't',
             Self::Vector => 'v',
@@ -120,20 +127,20 @@ pub struct PageObject {
     pub text: String,
     pub font: String,
     pub font_size: f64,
-    pub(super) text_placement: Option<Box<TextPlacement>>,
+    pub text_placement: Option<Box<TextPlacement>>,
     pub fill: [f64; 3],
     pub stroke: [f64; 3],
     pub line_width: f64,
-    pub(super) vector_stroke: VectorStroke,
-    pub(super) path: Vec<VectorSegment>,
-    pub(super) clip_quads: std::sync::Arc<Vec<ClipQuad>>,
-    pub(super) clip_paths: std::sync::Arc<Vec<PathClip>>,
-    pub(super) text_transform: PdfMatrix,
-    pub(super) form_graphics: Option<Graphics>,
+    pub vector_stroke: VectorStroke,
+    pub path: Vec<VectorSegment>,
+    pub clip_quads: std::sync::Arc<Vec<ClipQuad>>,
+    pub clip_paths: std::sync::Arc<Vec<PathClip>>,
+    pub text_transform: PdfMatrix,
+    pub form_graphics: Option<Graphics>,
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub(super) struct TextPlacement {
+pub struct TextPlacement {
     pub matrix: PdfMatrix,
     pub line: PdfMatrix,
     pub next_origin: (f64, f64),
@@ -144,7 +151,7 @@ pub(super) struct TextPlacement {
     pub word_spacing: f64,
 }
 
-pub(super) use semio_s_artifact_stdio_pdf_page_coordinates::{ClipQuad, VectorSegment, VectorStroke};
+pub use semio_s_artifact_stdio_pdf_page_coordinates::{ClipQuad, VectorSegment, VectorStroke};
 
 /// ✏️ One end-user edit, already checked against the action's required arguments.
 #[derive(Clone, Debug, PartialEq)]

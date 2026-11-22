@@ -66,7 +66,7 @@ impl ShellDockState {
             })
             .collect();
         let active = windows.active_utility_by_window.get(window_id).map(String::as_str);
-        semio_ui_declaration::utilities::derive_utility_nodes(&session.app.controller_id, &specs, active)
+        window_utility_bar_nodes(&semio_ui_declaration::utilities::derive_utility_nodes(&session.app.controller_id, &specs, active))
     }
 }
 

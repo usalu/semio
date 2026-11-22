@@ -130,10 +130,15 @@ impl<'a> DwgBitReader<'a> {
     }
 
     pub fn skip_bits(&mut self, count: usize) -> Result<(), String> {
-        for _ in 0..count {
-            self.read_bit()?;
+        let position = self.bit_position();
+        let remaining = self.bytes.len().saturating_mul(8).saturating_sub(position);
+        let advanced = count.min(remaining);
+        if advanced != 0 {
+            let end = position + advanced;
+            self.byte_pos = end / 8;
+            self.bit = (end % 8) as u8;
         }
-        Ok(())
+        if advanced == count { Ok(()) } else { Err("dwg bitstream underflow".into()) }
     }
 
     pub fn bit_position(&self) -> usize {

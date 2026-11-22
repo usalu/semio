@@ -6,7 +6,7 @@ use semio_ui_tui_frame::chrome::{shell, ChromeState, FooterState, KeyHint, NavIt
 use semio_ui_tui_engine::Tui;
 use semio_ui_tui_core::event::{Event, Key, KeyEvent, MouseButton, MouseEvent, MouseKind};
 use semio_ui_tui_core::geometry::{Pos, Size};
-use semio_ui_tui_frame::layout::{push_window_to_stack, zoom_window, Constraint, Dimension, Direction, WindowLayout, WindowLayoutWindowNode};
+use semio_ui_tui_frame::layout::{push_window_to_stack, window_node, zoom_window, Axis, Constraint, Dimension, Direction, WindowLayout};
 use semio_ui_tui_widgets::menu::MenuItem;
 use semio_ui_tui_widgets::palette::{PaletteItem, PaletteState};
 use semio_ui_tui_frame::scene::{Node, NodeContent, NodeId};
@@ -39,8 +39,8 @@ struct World {
 
 fn build(size: Size) -> World {
     let mut tui = Tui::new(size, Theme::new(AppearanceName::Dark));
-    let mut layout = semio_ui_tui_frame::layout::create_default_layout(&["w1".into(), "w2".into(), "w3".into()], "row", None, Some(&["One".into(), "Two".into(), "Three".into()]));
-    push_window_to_stack(&mut layout, "w1", WindowLayoutWindowNode { window_kind_id: "w4".into(), title: Some("Four".into()), corner: None });
+    let mut layout = semio_ui_tui_frame::layout::create_default_layout(&["w1".into(), "w2".into(), "w3".into()], Axis::Horizontal, None, Some(&["One".into(), "Two".into(), "Three".into()]));
+    push_window_to_stack(&mut layout, "w1", window_node("w4".into(), Some("Four".into()), None));
     let nav = |id: &str| NavItem { id: id.into(), label: id.into(), active: false };
     let navbar = NavbarState { left: vec![nav("left"), nav("more")], center: vec![nav("centre")], right: vec![nav("right")] };
     let footer = FooterState { hints: vec![KeyHint { key: "q".into(), label: "quit".into() }, KeyHint { key: "z".into(), label: "zoom".into() }], status: "ready".into() };

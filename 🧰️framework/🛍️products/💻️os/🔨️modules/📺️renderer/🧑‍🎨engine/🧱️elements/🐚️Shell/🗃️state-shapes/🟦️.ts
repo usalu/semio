@@ -1,6 +1,7 @@
 /** 🗃️ Shell state shapes: every slice of the shell store (plugin runtime, windows, action panes, panels, layout, overlays, tutorial, preferences, sync, inference, merge, command panel) and the updatable field helpers. */
 import type { ShellDialogV1 } from "../../🏛️ShellHost/🗨️dialog-origin/🟦️.ts";
-import { type Anchor, type ElementsSurfaceAppearance, type IconName, type UiChromeLayout, type UiDriver, type UiLocale, type UiTheme, type WindowLayoutNode } from "@semio-tech/ui-react";
+import { type Anchor, type ElementsSurfaceAppearance, type IconName, type UiChromeLayout, type UiDriver, type UiLocale, type UiTheme } from "@semio-tech/ui-react";
+import type { WindowLayoutNode } from "@semio-tech/ui-layout";
 import { type AppRole, type Conflict, type ConflictId, type DockSkeleton, type MergePolicy, type AppCatalogue, type PluginAppLabelsOverlay, type Severity, type BuiltNode, type WindowEngagement, type WindowMeasure } from "@semio-tech/framework";
 import { type ArtifactSyncStatus } from "@semio-tech/framework/backbone";
 import { type InstalledServiceStatusV1 } from "@semio-tech/framework/inference/service";

@@ -1,0 +1,30 @@
+[
+  {
+    "name": "ordinary",
+    "instanceFeature": false,
+    "providerFeature": false,
+    "callerTest": false,
+    "output": "TimeTravel residue=Some(\"pending\")"
+  },
+  {
+    "name": "callerUnitTest",
+    "instanceFeature": false,
+    "providerFeature": false,
+    "callerTest": true,
+    "output": "TimeTravel residue=Some(\"pending\")"
+  },
+  {
+    "name": "providerFeatureUnifiedOnly",
+    "instanceFeature": false,
+    "providerFeature": true,
+    "callerTest": false,
+    "output": "TimeTravel residue=Some(\"pending\")"
+  },
+  {
+    "name": "explicitTestingFeature",
+    "instanceFeature": true,
+    "providerFeature": true,
+    "callerTest": false,
+    "output": "TimeTravel residue=Some(\"pending\") expanded frontier"
+  }
+]

@@ -10,7 +10,7 @@ import schema from"./🧬️schema/🔣️.json"with{type:"json"};
 /** 📜️ Bounds the immutable repair evidence and its exact fragment census. */
 export const CLOSURE_REPAIR_POLICY_V1=Object.freeze({...schema.definitions.Policy.const});
 const p=CLOSURE_REPAIR_POLICY_V1,utf8=new TextDecoder("utf-8",{fatal:true}),hex=/^[a-f0-9]{64}$/u;
-const compatible=(manifest,identity,implementation)=>manifest.identity===identity&&manifest.implementation===implementation;
+const compatible=(manifest,identity)=>manifest.identity===identity;
 const repairPointer=pointer=>pointer?.version===1&&pointer.manifest===null&&hex.test(pointer.parent??"")&&Number.isSafeInteger(pointer.generation)&&pointer.generation>0&&pointer.reason===p.reason&&pointer.verified===undefined;
 const compared=(a,b)=>canonicalJsonV1(a)===canonicalJsonV1(b);
 const referenceKey=({namespace,key})=>namespace+"/"+key;

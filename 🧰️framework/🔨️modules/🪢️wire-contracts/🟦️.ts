@@ -22,7 +22,7 @@ import { isPackInteger, packUIntSafeOrNull, type PackValue } from "../🎁️pac
 //#region 🔀️BackboneMessage
 export const BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES = 262_144;
 export const BACKBONE_GENESIS_MAXIMUM_BYTES = 4 * 1024 * 1024;
-export const DOCUMENT_ARCHIVE_MAXIMUM_BYTES = BACKBONE_GENESIS_MAXIMUM_BYTES;
+export const DOCUMENT_ARCHIVE_MAXIMUM_BYTES = 16 * 1024 * 1024;
 //#endregion 🔀️BackboneMessage
 //#endregion 🔖️Backbone
 
@@ -75,8 +75,10 @@ export type ChildHeadPackEntry = { readonly slot: string; readonly child_id: str
 export type WindowConfigPackEntry = { readonly window_id: string; readonly window_kind_id: string; readonly envelope_pack: readonly number[] };
 export type DocumentArchiveArtifactRef = { readonly artifact_id: string; readonly artifact_kind: string; readonly standard: string; readonly subset: string };
 export type DocumentArchiveOwnerRef = { readonly parent: DocumentArchiveArtifactRef; readonly slot: string; readonly child_id: string };
-export type OwnedDocumentMemberPackEntry = { readonly ordinal: number; readonly reference: DocumentArchiveArtifactRef; readonly owner: DocumentArchiveOwnerRef; readonly envelope_pack: readonly number[] };
-export type DocumentArchivePack = { readonly parent_pack: readonly number[]; readonly parent_spr: readonly number[]; readonly members: readonly OwnedDocumentMemberPackEntry[] };
+export type OwnedDocumentMemberPackEntry = { readonly ordinal: number; readonly reference: DocumentArchiveArtifactRef; readonly owner: DocumentArchiveOwnerRef; readonly envelope_pack: ArchiveBytes };
+/** 🧱️ Archive field bytes: always a `Uint8Array` when decoded, either form when authored. */
+export type ArchiveBytes = Uint8Array | readonly number[];
+export type DocumentArchivePack = { readonly parent_pack: ArchiveBytes; readonly parent_spr: ArchiveBytes; readonly members: readonly OwnedDocumentMemberPackEntry[] };
 export type DocumentArchiveLoadState = "pending" | "running" | "ready" | "cancelled" | "fault";
 export type DocumentArchiveLoadStatus = { readonly operation: number; readonly state: DocumentArchiveLoadState; readonly completed: number; readonly total: number; readonly ahead: number; readonly fault: readonly number[] };
 
@@ -306,9 +308,16 @@ export function writeDocumentArchive(out: number[], archive: DocumentArchivePack
     writeBytes(out, entry.envelope_pack);
   }
 }
+const readView = (bytes: Uint8Array, pos: [number]): Uint8Array => {
+  const length = readVarintU64(bytes, pos);
+  const view = bytes.subarray(pos[0], pos[0] + length);
+  if (view.length !== length) throw new Error("wire bytes: truncated");
+  pos[0] += length;
+  return view;
+};
 export function readDocumentArchive(bytes: Uint8Array, pos: [number]): DocumentArchivePack {
-  const parent_pack = readBytes(bytes, pos);
-  const parent_spr = readBytes(bytes, pos);
+  const parent_pack = readView(bytes, pos);
+  const parent_spr = readView(bytes, pos);
   const count = readVarintU64(bytes, pos);
   if (count > DOCUMENT_ARCHIVE_MAXIMUM_MEMBERS) throw new Error("document archive exceeds its fixed 1024-member authority");
   const members = Array.from({ length: count }, () => {
@@ -316,20 +325,57 @@ export function readDocumentArchive(bytes: Uint8Array, pos: [number]): DocumentA
     const reference = { artifact_id: readStr(bytes, pos), artifact_kind: readStr(bytes, pos), standard: readStr(bytes, pos), subset: readStr(bytes, pos) };
     const parent = { artifact_id: readStr(bytes, pos), artifact_kind: readStr(bytes, pos), standard: readStr(bytes, pos), subset: readStr(bytes, pos) };
     const owner = { parent, slot: readStr(bytes, pos), child_id: readStr(bytes, pos) };
-    return { ordinal, reference, owner, envelope_pack: readBytes(bytes, pos) };
+    return { ordinal, reference, owner, envelope_pack: readView(bytes, pos) };
   });
   return { parent_pack, parent_spr, members };
 }
 
-/** 🗃️ Canonical persisted recursive-document archive bytes: version byte plus the channel archive body. */
+const ARCHIVE_TEXT = new TextEncoder();
+const varintLength = (value: number): number => {
+  let length = 1;
+  for (let remaining = Math.floor(value / 128); remaining > 0; remaining = Math.floor(remaining / 128)) length += 1;
+  return length;
+};
+const ownedPackText = (entry: OwnedDocumentMemberPackEntry): readonly (Uint8Array | ArchiveBytes)[] => [
+  ARCHIVE_TEXT.encode(entry.reference.artifact_id), ARCHIVE_TEXT.encode(entry.reference.artifact_kind), ARCHIVE_TEXT.encode(entry.reference.standard), ARCHIVE_TEXT.encode(entry.reference.subset),
+  ARCHIVE_TEXT.encode(entry.owner.parent.artifact_id), ARCHIVE_TEXT.encode(entry.owner.parent.artifact_kind), ARCHIVE_TEXT.encode(entry.owner.parent.standard), ARCHIVE_TEXT.encode(entry.owner.parent.subset),
+  ARCHIVE_TEXT.encode(entry.owner.slot), ARCHIVE_TEXT.encode(entry.owner.child_id), entry.envelope_pack,
+];
+
+/** 🗃️ Canonical persisted recursive-document archive bytes: version byte plus the channel archive body, written once into one exactly sized `Uint8Array`. */
 export function encodeDocumentArchiveBytes(archive: DocumentArchivePack): Uint8Array {
-  const out = [1];
-  writeDocumentArchive(out, archive);
-  if (out.length > DOCUMENT_ARCHIVE_MAXIMUM_BYTES) throw new Error("document archive exceeds its fixed byte authority");
-  return Uint8Array.from(out);
+  if (archive.members.length > DOCUMENT_ARCHIVE_MAXIMUM_MEMBERS) throw new Error("document archive exceeds its fixed 1024-member authority");
+  const fields = archive.members.map(ownedPackText);
+  let length = 1 + varintLength(archive.parent_pack.length) + archive.parent_pack.length + varintLength(archive.parent_spr.length) + archive.parent_spr.length + varintLength(archive.members.length);
+  archive.members.forEach((entry, index) => {
+    length += varintLength(entry.ordinal);
+    for (const field of fields[index]!) length += varintLength(field.length) + field.length;
+  });
+  if (length > DOCUMENT_ARCHIVE_MAXIMUM_BYTES) throw new Error("document archive exceeds its fixed byte authority");
+  const out = new Uint8Array(length);
+  let at = 0;
+  const varint = (value: number) => {
+    let remaining = value;
+    for (;;) {
+      const byte = remaining & 0x7f;
+      remaining = Math.floor(remaining / 128);
+      if (remaining === 0) { out[at++] = byte; return; }
+      out[at++] = byte | 0x80;
+    }
+  };
+  const bytes = (field: ArchiveBytes) => { varint(field.length); out.set(field, at); at += field.length; };
+  out[at++] = 1;
+  bytes(archive.parent_pack);
+  bytes(archive.parent_spr);
+  varint(archive.members.length);
+  archive.members.forEach((entry, index) => {
+    varint(entry.ordinal);
+    for (const field of fields[index]!) bytes(field);
+  });
+  return out;
 }
 
-/** 🗃️ Decodes one exact persisted recursive-document archive and rejects trailing ownership. */
+/** 🗃️ Decodes one exact persisted recursive-document archive and rejects trailing ownership; every field is a zero-copy view of `bytes`. */
 export function decodeDocumentArchiveBytes(bytes: Uint8Array): DocumentArchivePack {
   if (bytes.length === 0 || bytes.length > DOCUMENT_ARCHIVE_MAXIMUM_BYTES) throw new Error("document archive exceeds its fixed byte authority");
   if (bytes[0] !== 1) throw new Error("document archive: unsupported or missing version");

@@ -34,7 +34,7 @@ impl ObjectScanCursor {
             if let Some(header) = self.candidate.as_mut() {
                 let previous = header.position();
                 let remaining = grant - work;
-                match header.advance(source, remaining) {
+                match header.advance(|position| source.get(position).copied(), remaining) {
                     Ok((used, HeaderStep::Complete { id, body_offset })) => {
                         let offset = self.position;
                         self.position = body_offset;

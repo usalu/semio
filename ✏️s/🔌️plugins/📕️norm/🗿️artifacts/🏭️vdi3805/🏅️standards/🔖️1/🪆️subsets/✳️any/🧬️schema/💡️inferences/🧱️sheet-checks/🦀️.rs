@@ -5,8 +5,79 @@ use super::*;
 #[path = "🌡️air-to-air-heat-pump/🦀️.rs"]
 mod air_to_air_heat_pump;
 
+#[path = "🎛️ventilation-unit-fields/🦀️.rs"]
+mod ventilation_unit_fields;
+
+#[path = "🚰️pipe-record-fields/🦀️.rs"]
+mod pipe_record_fields;
+
+#[path = "📑️corrected-fields/🦀️.rs"]
+mod corrected_fields;
+use corrected_fields::CorrectedFields;
 
 //#region 🔖️ComplianceReport
+fn published_record_field_remedy(product: &CatalogueProduct, index: usize) -> Remedy {
+    let mut remedy = Remedy::exactly(
+        SubjectRef::new(&product.id, format!("catalog.products[id={}].records[{index}]", product.id), copy("Product record", "Produktdatensatz")),
+        Quantity::new(QuantityKind::Dimensionless, 0.0),
+        Quantity::new(QuantityKind::Dimensionless, 1.0),
+        copy("Review the indicated positions against the applicable correction and re-import the supplier record.", "Die angegebenen Felder anhand der gültigen Berichtigung prüfen und den Herstellerdatensatz erneut importieren."),
+    );
+    remedy.applicable = false;
+    remedy
+}
+
+fn check_published_fields(
+    document: &Vdi3805Snapshot,
+    product: &CatalogueProduct,
+    section: &str,
+    assess: fn(&str, &[String], u32) -> Option<CorrectedFields>,
+) -> Vec<CheckResult> {
+    let date = document.correction_as_of.key();
+    let sheet = product.sheet.0;
+    product.records.iter().enumerate().filter_map(|(index, record)| {
+        let family = record.family.0.as_str();
+        let fields = assess(family, &record.fields, date)?;
+        let check = CheckResult::assess(
+            format!("{}.{}.{index}", fields.check_id, product.id),
+            part_label(sheet),
+            clause(&sheet.to_string(), section),
+            subject_product(product),
+            copy(format!("Published correction fields in record {family}"), format!("Veröffentlichte Berichtigungsfelder in Datensatz {family}")),
+        ).annex(ANNEX);
+        Some(if fields.invalid.is_empty() {
+            check.status(CheckStatus::Pass).explanation(copy(
+                format!("Fields {:?} match the published requirements in {}.", fields.positions, fields.correction),
+                format!("Die Felder {:?} entsprechen den veröffentlichten Vorgaben in {}.", fields.positions, fields.correction),
+            )).build()
+        } else {
+            check.status(CheckStatus::Fail).explanation(copy(
+                format!("Fields {:?} are missing or invalid for {}.", fields.invalid, fields.correction),
+                format!("Die Felder {:?} fehlen oder sind für {} ungültig.", fields.invalid, fields.correction),
+            )).remedy(published_record_field_remedy(product, index)).build()
+        })
+    }).collect()
+}
+
+fn check_retired_pipe_records(document: &Vdi3805Snapshot, product: &CatalogueProduct) -> Vec<CheckResult> {
+    if document.correction_as_of.key() < 202604 {
+        return Vec::new();
+    }
+    product.records.iter().enumerate()
+        .filter(|(_, record)| record.family.0 == "710.22")
+        .map(|(index, _)| CheckResult::assess(
+            format!("vdi3805.29.retired.71022.{}.{index}", product.id),
+            part_label(29),
+            clause("29", "5.2.3"),
+            subject_product(product),
+            copy("Retired fitting-layer record", "Aufgegebener Datensatz für Formstückschichten"),
+        ).annex(ANNEX).status(CheckStatus::Fail).explanation(copy(
+            "Correction 29-0007 withdraws record 710.22 from April 2026.",
+            "Berichtigung 29-0007 zieht Satzart 710.22 ab April 2026 zurück.",
+        )).remedy(published_record_field_remedy(product, index)).build())
+        .collect()
+}
+
 fn check_attributes_records_sync(product: &CatalogueProduct) -> Vec<CheckResult> {
     let article = product.id.as_str();
     let derived = attributes_from_records(product.sheet, &product.records);
@@ -270,7 +341,17 @@ pub(super) fn check_sheet_product(document: &Vdi3805Snapshot, product: &Catalogu
             out.extend(air_to_air_heat_pump::check_records(document, product));
             out.push(unverified_sheet_records(product, "5"));
         }
-        5 | 7 | 9 | 10 | 16 | 19 | 29 => out.push(unverified_sheet_records(product, "5")),
+        23 => {
+            out.extend(check_operative_sheet(document, product));
+            out.extend(check_published_fields(document, product, "5.3.3", ventilation_unit_fields::corrected_fields));
+            out.push(unverified_sheet_records(product, "5"));
+        }
+        29 => {
+            out.extend(check_retired_pipe_records(document, product));
+            out.extend(check_published_fields(document, product, "5.2.3", pipe_record_fields::corrected_fields));
+            out.push(unverified_sheet_records(product, "5"));
+        }
+        5 | 7 | 9 | 10 | 16 | 19 => out.push(unverified_sheet_records(product, "5")),
         8 | 60 | 65 | 66 => out.push(unverified_sheet_records(product, "4")),
         53 | 61..=64 => out.push(unverified_sheet_records(product, "1")),
         100 => {

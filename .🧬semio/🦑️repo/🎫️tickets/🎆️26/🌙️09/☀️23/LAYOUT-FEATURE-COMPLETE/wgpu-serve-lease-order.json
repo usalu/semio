@@ -1,0 +1,130 @@
+{
+  "directory": "/workspace/.cache/b/l/m/data",
+  "sequences": [
+    {
+      "id": "listener-held-publication",
+      "steps": [
+        {
+          "op": "acquire",
+          "resource": "artifact:/workspace/.cache/b/p/m/infinite/prototype/fonts",
+          "mode": "shared"
+        },
+        {
+          "op": "acquire",
+          "resource": "artifact:/workspace/.cache/b/p/m/renderer/513017abe154c7333be5/prototype/wasm",
+          "mode": "shared"
+        },
+        {
+          "op": "acquire",
+          "resource": "semio.compiler.host-capacity/v1",
+          "mode": "shared"
+        },
+        {
+          "op": "release",
+          "resource": "semio.compiler.host-capacity/v1"
+        },
+        {
+          "op": "acquire",
+          "resource": "semio.compiler.host-capacity/v1",
+          "mode": "shared"
+        },
+        {
+          "op": "release",
+          "resource": "semio.compiler.host-capacity/v1"
+        },
+        {
+          "op": "release",
+          "resource": "artifact:/workspace/.cache/b/p/m/renderer/513017abe154c7333be5/prototype/wasm"
+        },
+        {
+          "op": "release",
+          "resource": "artifact:/workspace/.cache/b/p/m/infinite/prototype/fonts"
+        }
+      ],
+      "violations": [
+        {
+          "kind": "out-of-order",
+          "held": "artifact:/workspace/.cache/b/p/m/infinite/prototype/fonts",
+          "requested": "semio.compiler.host-capacity/v1"
+        },
+        {
+          "kind": "out-of-order",
+          "held": "artifact:/workspace/.cache/b/p/m/infinite/prototype/fonts",
+          "requested": "semio.compiler.host-capacity/v1"
+        }
+      ]
+    },
+    {
+      "id": "private-captured-inputs",
+      "steps": [
+        {
+          "op": "acquire",
+          "resource": "artifact:/workspace/.cache/b/p/m/infinite/prototype/fonts",
+          "mode": "shared"
+        },
+        {
+          "op": "acquire",
+          "resource": "artifact:/workspace/.cache/b/p/m/renderer/513017abe154c7333be5/prototype/wasm",
+          "mode": "shared"
+        },
+        {
+          "op": "release",
+          "resource": "artifact:/workspace/.cache/b/p/m/renderer/513017abe154c7333be5/prototype/wasm"
+        },
+        {
+          "op": "release",
+          "resource": "artifact:/workspace/.cache/b/p/m/infinite/prototype/fonts"
+        },
+        {
+          "op": "acquire",
+          "resource": "semio.compiler.host-capacity/v1",
+          "mode": "shared"
+        },
+        {
+          "op": "release",
+          "resource": "semio.compiler.host-capacity/v1"
+        },
+        {
+          "op": "acquire",
+          "resource": "semio.compiler.host-capacity/v1",
+          "mode": "shared"
+        },
+        {
+          "op": "release",
+          "resource": "semio.compiler.host-capacity/v1"
+        }
+      ],
+      "violations": []
+    },
+    {
+      "id": "ranked-artifact-scratch-retained",
+      "steps": [
+        {
+          "op": "acquire",
+          "resource": "artifact-scratch-private:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "mode": "exclusive"
+        },
+        {
+          "op": "acquire",
+          "resource": "semio.compiler.host-capacity/v1",
+          "mode": "shared"
+        },
+        {
+          "op": "release",
+          "resource": "semio.compiler.host-capacity/v1"
+        },
+        {
+          "op": "release",
+          "resource": "artifact-scratch-private:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      ],
+      "violations": [
+        {
+          "kind": "out-of-order",
+          "held": "artifact-scratch-private:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "requested": "semio.compiler.host-capacity/v1"
+        }
+      ]
+    }
+  ]
+}

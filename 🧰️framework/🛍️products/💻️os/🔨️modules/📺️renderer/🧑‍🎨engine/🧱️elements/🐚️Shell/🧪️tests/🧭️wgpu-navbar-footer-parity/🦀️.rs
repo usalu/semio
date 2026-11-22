@@ -63,7 +63,7 @@ fn world_pane_shell() -> ShellState {
 /// 🎯️ A chip's hit row is DEFERRED to `pane_overlay_hits` and registered after the panels
 /// (`ShellChromeFramePhase::PaneOverlayHits`), so the pane's own overlay outranks a panel floating
 /// over it — the ledger this reads is the one that walk drains.
-fn paint_pane_chips(shell: &mut ShellState, theme: &Theme, window: Rect) -> Vec<String> {
+fn paint_pane_chips(mut shell: &mut ShellState, theme: &Theme, window: Rect) -> Vec<String> {
     let mut input = InputState::<ActionDescriptor>::default();
     let mut draw = DrawList::default();
     let mut atlas = FontAtlas::builtin();
@@ -121,11 +121,11 @@ fn the_projection_chip_folds_its_own_pane_and_switches_its_template() {
     let theme = Theme::light();
     let window = Rect::new(0.0, 0.0, 800.0, 600.0);
     let mut shell = world_pane_shell();
-    let press_chip = |shell: &mut ShellState, control_id: String| {
+    let press_chip = |mut shell: &mut ShellState, control_id: String| {
         let hit = HitTarget { rect: Rect::new(0.0, 0.0, 10.0, 10.0), event: None, control_id: Some(control_id), kind: HitKind::Toggle, drag_axis: None, drag_data: None };
         assert!(semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_shell_hit(&hit, &InputState::<ActionDescriptor>::default())).expect("a projection press never errors"), "🔀️ the shell claims its own projection chip");
     };
-    let select = |shell: &mut ShellState, template_id: &str| {
+    let select = |mut shell: &mut ShellState, template_id: &str| {
         semio_framework_async::block_on(ActionsCtx::of(&mut shell).dispatch_action(ActionDescriptor {
             controller_id: "framework".into(),
             action: "setWorldProjectionTemplate".into(),
@@ -136,7 +136,7 @@ fn the_projection_chip_folds_its_own_pane_and_switches_its_template() {
     assert!(shell.windows.projection_pane_folded("pane-top"), "🔀️ React's pane starts folded");
     assert_eq!(WindowPaneChip::Projection.control_id("pane-top", true), WindowPaneChip::Projection.control_id("pane-top", false), "🔀️ React derives ONE toggle id, never a fold-direction pair");
 
-    let rows = |shell: &mut ShellState| {
+    let mut rows = |mut shell: &mut ShellState| {
         let mut input = InputState::<ActionDescriptor>::default();
         let mut draw = DrawList::default();
         let mut atlas = FontAtlas::builtin();
@@ -206,9 +206,11 @@ fn the_projection_chip_folds_its_own_pane_and_switches_its_template() {
     assert_eq!(shell.windows.world_projection_template_id("pane-perspective", &shell.surfaces), WORLD_PROJECTION_DEFAULT_TEMPLATE_ID, "🔀️ the selection is per pane");
 
     shell.dock.layout_override = shell.docs.session.as_ref().unwrap().app.default_layout.clone();
-    if let semio_ui_layout::layout::WindowLayoutRoot::Axis(axis) = &mut shell.dock.layout_override.as_mut().unwrap().root {
-        if let semio_ui_layout::layout::WindowLayoutChild::Stack(stack) = &mut axis.children[0] {
-            stack.children[0].template_id = Some(format!("world-projection:{}", title_fixture["instances"][0]["initialProjection"]));
+    if let semio_ui_layout::layout::WindowLayoutNode::Split { children, .. } = &mut shell.dock.layout_override.as_mut().unwrap().root {
+        if let semio_ui_layout::layout::WindowLayoutNode::Stack { children: windows, .. } = &mut children[0] {
+            if let semio_ui_layout::layout::WindowLayoutNode::Window { template_id, .. } = &mut windows[0] {
+                *template_id = Some(format!("world-projection:{}", title_fixture["instances"][0]["initialProjection"]));
+            }
         }
     }
     shell.windows.world_projection_template.remove("pane-top");
@@ -290,7 +292,7 @@ fn a_pane_chip_press_over_an_engine_surface_belongs_to_the_shell() {
 fn an_unfolded_projection_pane_publishes_its_rows_within_one_frame_budget() {
     let mut caller=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
     let theme = Theme::light();
-    let body = |shell: &mut ShellState, window: Rect| {
+    let mut body = |mut shell: &mut ShellState, window: Rect| {
         let mut input = InputState::<ActionDescriptor>::default();
         let mut draw = DrawList::default();
         let mut atlas = FontAtlas::builtin();
@@ -412,14 +414,14 @@ fn the_navbar_title_is_the_apps_breadcrumb_not_its_dialect_id() {
     let mut app = test_app(Vec::new(), Vec::new());
     app.id = "fixture.scene@1/*#editor".into();
     app.breadcrumb = vec!["workspace".into(), "examples".into(), "scene".into()];
-    app.terminology_breadcrumbs = std::collections::HashMap::from([("reuse".to_string(), vec![semio_ui_locale::LocalizedLabel::native("Designing with Existing Stock", "Entwerfen mit Bestand"), semio_ui_locale::LocalizedLabel::data("Aggregator")])]);
+    app.terminology_breadcrumbs = std::collections::BTreeMap::from([("reuse".to_string(), vec![semio_ui_locale::LocalizedLabel::native("Designing with Existing Stock", "Entwerfen mit Bestand"), semio_ui_locale::LocalizedLabel::data("Aggregator")])]);
     assert_eq!(shell_navbar_title(&app, "native", semio_ui_locale::Locale::En), "workspace · examples · scene");
     assert_eq!(shell_navbar_title(&app, "reuse", semio_ui_locale::Locale::De), "Entwerfen mit Bestand · Aggregator", "🗺️ a terminology override replaces the WHOLE breadcrumb, as React's `terminologyBreadcrumbs` does");
     assert!(!shell_navbar_title(&app, "native", semio_ui_locale::Locale::En).contains(&app.id), "🗺️ the raw dialect id never reaches the navbar");
 
     let mut bare = app.clone();
     bare.breadcrumb = Vec::new();
-    bare.terminology_breadcrumbs = std::collections::HashMap::new();
+    bare.terminology_breadcrumbs = std::collections::BTreeMap::new();
     assert_eq!(shell_navbar_title(&bare, "native", semio_ui_locale::Locale::En), "", "🗺️ an app that declares no breadcrumb renders a nameless title rather than faulting — React's own `appBreadcrumb(undefined)` contract");
 }
 
@@ -654,7 +656,7 @@ fn bounded_example_control(label: String, minimum_rem: u16, maximum_rem: u16) ->
     ShellNavbarControl { control_id: "playground.navbar.fixture".into(), icon_id: Some("file"), label, active: false, width_policy: Some(ShellNavbarWidthPolicy::RootRemClamp { minimum_rem, maximum_rem }) }
 }
 
-fn painted_example_hit_width(shell: &mut ShellState, theme: &Theme, control: ShellNavbarControl, available_width: f32) -> f32 {
+fn painted_example_hit_width(mut shell: &mut ShellState, theme: &Theme, control: ShellNavbarControl, available_width: f32) -> f32 {
     let mut cursor = ShellChromeChildCursor { x: 40.0, right: 40.0 + available_width, ..Default::default() };
     let mut draw = DrawList::default();
     let mut atlas = FontAtlas::builtin();

@@ -1,0 +1,12 @@
+{"cases":[
+ {"args":["metadata","--format-version=1","--no-deps","--offline"],"free":true},
+ {"args":["metadata","--no-deps"],"free":true},
+ {"args":["metadata","--format-version=1"],"free":false},
+ {"args":["metadata","--format-version=1","--offline"],"free":false},
+ {"args":["tree","--no-deps"],"free":false},
+ {"args":["fetch","--locked"],"free":false},
+ {"args":["build","--no-deps"],"free":false},
+ {"args":["pkgid"],"free":false},
+ {"args":["+nightly","metadata","--no-deps"],"free":true},
+ {"args":[],"free":false}
+]}

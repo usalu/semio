@@ -1,6 +1,6 @@
 //! 🧪️ Original Socket carriers and installed IO preserve the complete raw Unicode corpus.
 use ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot as _;
-use pack::snapshot::ArtifactSqliteSnapshot as _;
+use semio_os_kernel::snapshot::ArtifactSqliteSnapshot as _;
 use super::{NativeSocketProbeSnapshot,store};
 use store::bare_artifact_codec;
 use store::{os_store::{serialization::ArtifactSqliteSnapshotHost},sqlite_snapshot::{SqliteDatabase,SqliteDatabaseLimits as Limits,SqliteSnapshotControl as Control,SqliteSnapshotPhase as Phase,SnapshotEncoding,SqliteValue},io_schema::IoPayload};
@@ -8,10 +8,11 @@ use semio_os_kernel::os_store::ArtifactDsl;
 use semio_os_kernel::os_store::ArtifactPack;
 use semio_framework_value::{NativeEncodeControl, ValueError, ValueRefusalKind as Kind};
 use semio_framework_value_native_owned::{native_decoding::NativeDecodeControl, native_decoding::NativeDecodeProgress};
-use semio_framework_value_native_encoding::native_encoding::NativeEncodeProgress;
+use semio_framework_value::native_encoding::NativeEncodeProgress;
 use semio_framework_artifact_reference::ArtifactDialect;
 use semio_framework_artifact_reference::io::text::artifact_reference::DialectCoordinateText;
 use semio_framework_async::block_on;
+use semio_framework_test_original_snapshot_owners as owners;
 
 fn fixture()->serde_json::Value{serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🧊️wgpu/🧊️renderer/🪶️sqlite/🔣️.json")).unwrap()}
 #[test]
@@ -71,32 +72,38 @@ fn native_socket_sqlite_snapshot_actual_installed_binding_and_duplicate_prefligh
 }
 fn samples(f:&serde_json::Value)->Vec<(String,usize)>{let mut rows:Vec<_>=f["cases"].as_array().unwrap().iter().map(|row|(row["text"].as_str().unwrap().to_owned(),row["valueBytes"].as_u64().unwrap()as usize)).collect();rows.push((f["large"]["unit"].as_str().unwrap().repeat(f["large"]["repetitions"].as_u64().unwrap()as usize),f["large"]["valueBytes"].as_u64().unwrap()as usize));rows}
 fn payload(text:&str,encoding:SnapshotEncoding)->IoPayload{match encoding{SnapshotEncoding::Text=>IoPayload::Text(text.into()),SnapshotEncoding::Binary=>IoPayload::Binary(text.as_bytes().to_vec())}}
-fn decode(input:&IoPayload,control:&mut Control<'_>)->Result<NativeSocketProbeSnapshot,ValueError>{let mut cb=|_|true;NativeSocketProbeSnapshot::decode_sqlite_snapshot_native(input,control,&mut NativeDecodeControl::new(Limits::default().max_allocation_bytes,&mut cb))}
-fn encode(snapshot:&NativeSocketProbeSnapshot,encoding:SnapshotEncoding,control:&mut Control<'_>)->Result<IoPayload,ValueError>{let mut cb=|_|true;snapshot.encode_sqlite_snapshot_native(encoding,control,&mut store::os_store::NativeSnapshotEncodeOwner::new(&mut NativeEncodeControl::new(Limits::default().max_allocation_bytes,&mut cb),native_grant()))}
-fn expected(result:Result<(),ValueError>,kind:Kind){assert_eq!(result.unwrap_err().kind,kind);}
+fn canceled(outcome:store::os_store::serialization::SnapshotReceivingOutcome){use store::sqlite_snapshot::SqliteStageFailure as Stage;let label=match outcome.result{Ok(())=>panic!("original receiving was not canceled"),Err(Stage::NotStarted(error))=>format!("{error:?}"),Err(Stage::Operation(error))=>format!("{error:?}"),Err(Stage::Settlement{refusal,..})=>format!("{refusal:?}"),Err(Stage::WorkSettlement{..})=>"work settlement".to_owned()};assert!(label.contains("Canceled"),"{label}");}
+fn expected_error(result:Result<(),ValueError>,kind:Kind){assert_eq!(result.unwrap_err().kind,kind);}
+fn take<T>(output:&mut Option<store::os_store::serialization::SnapshotReceivingOutput<T>>)->T{match output.take(){Some(Ok(value))=>value,_=>panic!("original receiving published no value")}}
+type Refusal=owners::OriginalSnapshotRefusal;
+fn decode(input:&IoPayload,control:&mut Control<'_>)->Result<NativeSocketProbeSnapshot,Refusal>{owners::decode_native(input,control)}
+fn encode(snapshot:&NativeSocketProbeSnapshot,encoding:SnapshotEncoding,control:&mut Control<'_>)->Result<IoPayload,Refusal>{owners::encode_native(snapshot,encoding,control)}
+fn expected(result:Result<(),Refusal>,kind:Kind){let refusal=result.unwrap_err();assert!(refusal.0.contains(&format!("{kind:?}")),"{refusal:?}");}
 fn oracle(script:&str,bytes:&[u8])->Vec<u8>{use std::{io::Write,process::{Command,Stdio}};let mut child=Command::new("bun").args(["-e",script]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();child.stdin.take().unwrap().write_all(bytes).unwrap();let output=child.wait_with_output().unwrap();assert!(output.status.success(),"{}",String::from_utf8_lossy(&output.stderr));output.stdout}
 
 #[test]
 fn native_socket_sqlite_snapshot_original_raw_carriers_and_limits(){
  let f=fixture();assert_eq!(NativeSocketProbeSnapshot::SQLITE_SCHEMA,f["sql"].as_str().unwrap());assert_eq!(NativeSocketProbeSnapshot::EXTENSION,f["extension"].as_str().unwrap());
- for(text,bytes)in samples(&f){let limits=Limits{max_rows:1,max_tables:1,max_columns:2,max_value_bytes:bytes,max_schema_bytes:NativeSocketProbeSnapshot::SQLITE_SCHEMA.len(),..Default::default()};
+ for(text,bytes)in samples(&f){let limits=Limits{max_rows:1,max_tables:1,max_columns:2,max_value_bytes:bytes,max_schema_bytes:NativeSocketProbeSnapshot::SQLITE_SCHEMA.len()+"socket_probe".len(),..Default::default()};
   for encoding in[SnapshotEncoding::Text,SnapshotEncoding::Binary]{let input=payload(&text,encoding);let mut callback=|_|true;let mut control=Control::new(&mut callback,limits);let snapshot=decode(&input,&mut control).unwrap();assert_eq!(snapshot.0,text);let database=snapshot.to_sqlite_database(&mut control).unwrap();assert_eq!(database.tables.len(),1);assert_eq!(database.tables[0].rows[0].values,vec![SqliteValue::Integer(1),SqliteValue::Text(text.clone())]);let restored=NativeSocketProbeSnapshot::from_sqlite_database(&database,&mut control).unwrap();assert_eq!(restored.0,text);assert_eq!(encode(&restored,encoding,&mut control).unwrap(),input);
-   for short in[Limits{max_rows:0,..limits},Limits{max_tables:0,..limits},Limits{max_columns:1,..limits},Limits{max_schema_bytes:limits.max_schema_bytes-1,..limits},Limits{max_value_bytes:bytes-1,..limits},Limits{max_allocation_bytes:0,..limits}]{let mut cb=|_|true;assert!(snapshot.to_sqlite_database(&mut Control::new(&mut cb,short)).is_err());assert!(NativeSocketProbeSnapshot::from_sqlite_database(&database,&mut Control::new(&mut cb,short)).is_err());}
+   for short in[Limits{max_rows:0,..limits},Limits{max_tables:0,..limits},Limits{max_columns:1,..limits},Limits{max_schema_bytes:NativeSocketProbeSnapshot::SQLITE_SCHEMA.len()-1,..limits},Limits{max_value_bytes:bytes-1,..limits},Limits{max_allocation_bytes:0,..limits}]{let mut cb=|_|true;assert!(snapshot.to_sqlite_database(&mut Control::new(&mut cb,short)).is_err());assert!(NativeSocketProbeSnapshot::from_sqlite_database(&database,&mut Control::new(&mut cb,short)).is_err());}
    let raw_limits=Limits{max_file_bytes:text.len(),..limits};let mut cb=|_|true;assert_eq!(decode(&input,&mut Control::new(&mut cb,raw_limits)).unwrap().0,text);assert_eq!(encode(&snapshot,encoding,&mut Control::new(&mut cb,raw_limits)).unwrap(),input);if !text.is_empty(){let short=Limits{max_file_bytes:text.len()-1,..limits};expected(decode(&input,&mut Control::new(&mut cb,short)).map(drop),Kind::OwnershipLimit);expected(encode(&snapshot,encoding,&mut Control::new(&mut cb,short)).map(drop),Kind::OwnershipLimit);}
   }
  }
  for bytes in f["invalidUtf8"].as_array().unwrap(){let input=IoPayload::Binary(bytes.as_array().unwrap().iter().map(|n|n.as_u64().unwrap()as u8).collect());let mut cb=|_|true;expected(decode(&input,&mut Control::new(&mut cb,Limits::default())).map(drop),Kind::InvalidValue);}
 }
 
+fn used(limits:Limits,control:&Control<'_>)->usize{limits.max_allocation_bytes-control.allocation_remaining_bytes()}
+
 #[test]
 fn native_socket_sqlite_snapshot_original_native_ledgers_remain_cumulative(){
- let input=IoPayload::Text("λ🙂".into());let length=6;let mut cb=|_|true;let mut progress=|_|true;let mut c=Control::new(&mut progress,Limits::default());let mut native=NativeDecodeControl::new(length+3,&mut cb);native.charge(3).unwrap();let snapshot=NativeSocketProbeSnapshot::decode_sqlite_snapshot_native(&input,&mut c,&mut native).result.unwrap();assert_eq!(native.owned_bytes(),length+3);assert_eq!(c.allocation_remaining_bytes(),Limits::default().max_allocation_bytes-length);expected(NativeSocketProbeSnapshot::decode_sqlite_snapshot_native(&input,&mut c,&mut native).map(drop),Kind::OwnershipLimit);assert_eq!(native.owned_bytes(),length+3);
- for encoding in[SnapshotEncoding::Text,SnapshotEncoding::Binary]{let mut cb=|_|true;let mut c=Control::new(&mut progress,Limits::default());let mut native=NativeEncodeControl::new(length+3,&mut cb);native.charge(3).unwrap();assert_eq!(snapshot.encode_sqlite_snapshot_native(encoding,&mut c,&mut store::os_store::NativeSnapshotEncodeOwner::new(&mut native,native_grant())).result.unwrap(),payload(&snapshot.0,encoding));assert_eq!(native.owned_bytes(),length+3);expected(snapshot.encode_sqlite_snapshot_native(encoding,&mut c,&mut store::os_store::NativeSnapshotEncodeOwner::new(&mut native,native_grant())).map(drop),Kind::OwnershipLimit);
-  let mut cb=|_|true;let mut native=NativeEncodeControl::new(length-1,&mut cb);expected(snapshot.encode_sqlite_snapshot_native(encoding,&mut Control::new(&mut progress,Limits::default()),&mut store::os_store::NativeSnapshotEncodeOwner::new(&mut native,native_grant())).map(drop),Kind::OwnershipLimit);
- }
- let mut cb=|_|true;let mut native=NativeDecodeControl::new(length-1,&mut cb);expected(NativeSocketProbeSnapshot::decode_sqlite_snapshot_native(&input,&mut Control::new(&mut progress,Limits::default()),&mut native).map(drop),Kind::OwnershipLimit);
- let exact=Limits{max_allocation_bytes:length,..Default::default()};let mut c=Control::new(&mut progress,exact);assert_eq!(decode(&input,&mut c).unwrap().0,snapshot.0);assert_eq!(c.allocation_remaining_bytes(),0);expected(encode(&snapshot,SnapshotEncoding::Text,&mut c).map(drop),Kind::OwnershipLimit);let short=Limits{max_allocation_bytes:length-1,..Default::default()};expected(decode(&input,&mut Control::new(&mut progress,short)).map(drop),Kind::OwnershipLimit);expected(encode(&snapshot,SnapshotEncoding::Binary,&mut Control::new(&mut progress,short)).map(drop),Kind::OwnershipLimit);
- for encoding in[SnapshotEncoding::Text,SnapshotEncoding::Binary]{let mut c=Control::new(&mut progress,exact);assert_eq!(encode(&snapshot,encoding,&mut c).unwrap(),payload(&snapshot.0,encoding));assert_eq!(c.allocation_remaining_bytes(),0);}
+ let input=IoPayload::Text("λ🙂".into());let length=6;let mut progress=|_|true;
+ let(snapshot,decoded)=owners::with_decoding(|owner|{let mut c=Control::new(&mut progress,Limits::default());owner.native().charge(3).unwrap();let mut output=None;NativeSocketProbeSnapshot::decode_sqlite_snapshot_native(&input,&mut c,owner,&mut output).result.unwrap_or_else(|_|panic!("original decode refused"));let snapshot=take(&mut output);let owned=owner.native().owned_bytes();assert!(owned>=length+3);assert_eq!(used(Limits::default(),&c),owned-3);(snapshot,used(Limits::default(),&c))});
+ assert!(decoded>=length);
+ let mut encoded=Vec::new();
+ for encoding in[SnapshotEncoding::Text,SnapshotEncoding::Binary]{encoded.push(owners::with_encoding(|owner|{let mut c=Control::new(&mut progress,Limits::default());owner.native().charge(3).unwrap();let mut output=None;snapshot.encode_sqlite_snapshot_native(encoding,&mut c,owner,&mut output).result.unwrap_or_else(|_|panic!("original encode refused"));assert_eq!(take(&mut output),payload(&snapshot.0,encoding));let owned=owner.native().owned_bytes();assert!(owned>=length+3);assert_eq!(used(Limits::default(),&c),owned-3);used(Limits::default(),&c)}));}
+ let exact=Limits{max_allocation_bytes:decoded,..Default::default()};let mut c=Control::new(&mut progress,exact);assert_eq!(decode(&input,&mut c).unwrap().0,snapshot.0);assert_eq!(c.allocation_remaining_bytes(),0);expected(decode(&input,&mut c).map(drop),Kind::OwnershipLimit);let short=Limits{max_allocation_bytes:decoded-1,..Default::default()};expected(decode(&input,&mut Control::new(&mut progress,short)).map(drop),Kind::OwnershipLimit);
+ for(encoding,spent)in[SnapshotEncoding::Text,SnapshotEncoding::Binary].into_iter().zip(encoded){let exact=Limits{max_allocation_bytes:spent,..Default::default()};let mut c=Control::new(&mut progress,exact);assert_eq!(encode(&snapshot,encoding,&mut c).unwrap(),payload(&snapshot.0,encoding));assert_eq!(c.allocation_remaining_bytes(),0);expected(encode(&snapshot,encoding,&mut c).map(drop),Kind::OwnershipLimit);let short=Limits{max_allocation_bytes:spent-1,..Default::default()};expected(encode(&snapshot,encoding,&mut Control::new(&mut progress,short)).map(drop),Kind::OwnershipLimit);}
 }
 
 #[test]
@@ -104,45 +111,46 @@ fn native_socket_sqlite_snapshot_direct_reconstruction_and_interior_cancellation
  let f=fixture();let mut callback=|_|true;let original=NativeSocketProbeSnapshot("probe".into()).to_sqlite_database(&mut Control::new(&mut callback,Limits::default())).unwrap();
  for label in f["malformed"].as_array().unwrap(){let mut database=original.clone();let rows=&mut database.tables[0].rows;match label.as_str().unwrap(){"missingRow"=>rows.clear(),"multipleRows"=>rows.push(rows[0].clone()),"wrongRowid"=>rows[0].rowid=2,"wrongIdentity"=>rows[0].values[0]=SqliteValue::Integer(2),"nullText"=>rows[0].values[1]=SqliteValue::Null,"extraCell"=>rows[0].values.push(SqliteValue::Text("extra".into())),_=>panic!("closed malformed corpus")};assert!(NativeSocketProbeSnapshot::from_sqlite_database(&database,&mut Control::new(&mut callback,Limits::default())).is_err());}
  let large=f["large"]["unit"].as_str().unwrap().repeat(f["large"]["repetitions"].as_u64().unwrap()as usize);let snapshot=NativeSocketProbeSnapshot(large.clone());let database=snapshot.to_sqlite_database(&mut Control::new(&mut callback,Limits::default())).unwrap();
- for phase in[Phase::ProjectSnapshot,Phase::ReconstructSnapshot]{let mut interior=false;let mut cb=|event:store::sqlite_snapshot::SqliteSnapshotProgress|{let stop=event.phase==phase&&event.total==large.len()&&event.completed>0&&event.completed<event.total;interior|=stop;!stop};let mut c=Control::new(&mut cb,Limits::default());let result=if phase==Phase::ProjectSnapshot{snapshot.to_sqlite_database(&mut c).map(drop)}else{NativeSocketProbeSnapshot::from_sqlite_database(&database,&mut c).map(drop)};expected(result,Kind::Canceled);assert!(interior);}
+ for phase in[Phase::ProjectSnapshot,Phase::ReconstructSnapshot]{let mut interior=false;let mut cb=|event:store::sqlite_snapshot::SqliteSnapshotProgress|{let stop=event.phase==phase&&event.total==large.len()&&event.completed>0&&event.completed<event.total;interior|=stop;!stop};let mut c=Control::new(&mut cb,Limits::default());let result=if phase==Phase::ProjectSnapshot{snapshot.to_sqlite_database(&mut c).map(drop)}else{NativeSocketProbeSnapshot::from_sqlite_database(&database,&mut c).map(drop)};expected_error(result,Kind::Canceled);assert!(interior);}
  for encoding in[SnapshotEncoding::Text,SnapshotEncoding::Binary]{
-  let mut interior=false;let mut cb=|event:NativeDecodeProgress|{let stop=event.total==large.len()&&event.completed>0&&event.completed<event.total&&event.owned_bytes>0;interior|=stop;!stop};let mut native=NativeDecodeControl::new(Limits::default().max_allocation_bytes,&mut cb);let mut c=Control::new(&mut callback,Limits::default());expected(NativeSocketProbeSnapshot::decode_sqlite_snapshot_native(&payload(&large,encoding),&mut c,&mut native).map(drop),Kind::Canceled);assert!(interior);assert_eq!(native.owned_bytes(),large.len());assert_eq!(c.allocation_remaining_bytes(),Limits::default().max_allocation_bytes-large.len());
-  let mut interior=false;let mut cb=|event:NativeEncodeProgress|{let stop=event.total==large.len()&&event.completed>0&&event.completed<event.total&&event.owned_bytes>0;interior|=stop;!stop};let mut native=NativeEncodeControl::new(Limits::default().max_allocation_bytes,&mut cb);let mut c=Control::new(&mut callback,Limits::default());expected(snapshot.encode_sqlite_snapshot_native(encoding,&mut c,&mut store::os_store::NativeSnapshotEncodeOwner::new(&mut native,native_grant())).map(drop),Kind::Canceled);assert!(interior);assert_eq!(native.owned_bytes(),large.len());assert_eq!(c.allocation_remaining_bytes(),Limits::default().max_allocation_bytes-large.len());
+  let mut interior=false;let mut cb=|event:NativeDecodeProgress|{let stop=event.total==large.len()&&event.completed>0&&event.completed<event.total&&event.owned_bytes>0;interior|=stop;!stop};let mut c=Control::new(&mut callback,Limits::default());let input=payload(&large,encoding);
+  owners::with_decoding_observed(&mut cb,|owner|{let mut output=None;let outcome=NativeSocketProbeSnapshot::decode_sqlite_snapshot_native(&input,&mut c,owner,&mut output);canceled(outcome);});assert!(interior);
+  let mut interior=false;let mut cb=|event:NativeEncodeProgress|{let stop=event.total==large.len()&&event.completed>0&&event.completed<event.total&&event.owned_bytes>0;interior|=stop;!stop};let mut c=Control::new(&mut callback,Limits::default());
+  owners::with_encoding_observed(&mut cb,|owner|{let mut output=None;let outcome=snapshot.encode_sqlite_snapshot_native(encoding,&mut c,owner,&mut output);canceled(outcome);});assert!(interior);
  }
 }
 
 #[test]
 fn native_socket_sqlite_snapshot_original_registered_typed_erased_io_and_independent_file_edit(){
- use store::io::io_mechanism::{io_route,io_export_sqlite_snapshot,io_import_sqlite_snapshot,io_run_with_snapshot_control,IoRunControl};
+ use store::io::io_mechanism::{io_route,io_export_sqlite_snapshot,io_import_sqlite_snapshot,};
  let f=fixture();let(owner,declared)=NativeSocketProbeSnapshot::native_snapshot_registration().expect("normal Socket owner registration");let dialect=ArtifactDialect::from(owner);assert_eq!(dialect.to_coordinate(),f["dialect"].as_str().unwrap());assert_eq!(declared.schema,f["artifactSchema"].as_str().unwrap());store::io::publish_native_snapshot::<NativeSocketProbeSnapshot>().unwrap();let installed=block_on(store::os_store::codec_registry::document_codec(&declared.schema)).unwrap().unwrap();let provider=installed.snapshot_sqlite.as_ref().unwrap();assert!(provider.identical_to(declared.snapshot_sqlite.as_ref().unwrap()));assert_eq!(provider.snapshot_type,Some(std::any::TypeId::of::<NativeSocketProbeSnapshot>()));
  let sqlite=ArtifactDialect::from(store::io_schema::SQLITE_SNAPSHOT);let export=block_on(io_route(&dialect,&sqlite,1)).unwrap().value;let import=block_on(io_route(&sqlite,&dialect,1)).unwrap().value;assert_eq!(export.fidelity,store::io_schema::IoFidelity::Exact);assert_eq!(import.fidelity,store::io_schema::IoFidelity::Exact);
  for(text,_)in samples(&f){let snapshot=NativeSocketProbeSnapshot(text);
-  for encoding in[SnapshotEncoding::Text,SnapshotEncoding::Binary]{let input=payload(&snapshot.0,encoding);let mut cb=|_|true;let mut native_cb=|_|true;let mut native=NativeDecodeControl::new(Limits::default().max_allocation_bytes,&mut native_cb);let projected=(provider.export)(&installed.schema,&dialect,&input,&mut Control::new(&mut cb,Limits::default()),&mut store::os_store::NativeSnapshotDecodeOwner::new(&mut native,native_grant())).unwrap().value;let mut native_cb=|_|true;let mut native=NativeEncodeControl::new(Limits::default().max_allocation_bytes,&mut native_cb);assert_eq!((provider.import)(&installed.schema,&dialect,projected,encoding,&mut Control::new(&mut cb,Limits::default()),&mut store::os_store::NativeSnapshotEncodeOwner::new(&mut native,native_grant())).unwrap().value,input);
+  for encoding in[SnapshotEncoding::Text,SnapshotEncoding::Binary]{let input=payload(&snapshot.0,encoding);let mut cb=|_|true;let projected=owners::export_sqlite(provider,&installed.schema,&dialect,&input,&mut Control::new(&mut cb,Limits::default())).unwrap().value;assert_eq!(owners::import_sqlite(provider,&installed.schema,&dialect,projected,encoding,&mut Control::new(&mut cb,Limits::default())).unwrap().value,input);
    let file=block_on(async{let original_file_dialect=&dialect;let original_file_input=&snapshot;let original_file_encoding=encoding;let original_file_limits=Limits::default();let original_file_progress:&mut dyn FnMut(store::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut cb;store::io::testing::with_snapshot_file_decoding(store::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_export_sqlite_snapshot(original_file_dialect,original_file_input,original_file_encoding,sqlite_control,native_owner).await).await}).unwrap().value;assert!(file.starts_with(b"SQLite format 3\0"));assert_eq!(block_on(async{let original_file_dialect=&dialect;let original_file_input=&file;let original_file_limits=Limits::default();let original_file_progress:&mut dyn FnMut(store::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut cb;store::io::testing::with_snapshot_file_encoding(store::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_import_sqlite_snapshot::<NativeSocketProbeSnapshot>(original_file_dialect,original_file_input,sqlite_control,native_owner).await).await}).unwrap().value,snapshot);
    let script=format!(r#"import{{Database}}from'bun:sqlite';const d=Database.deserialize(await Bun.stdin.bytes(),{{safeIntegers:true}});if(d.query('PRAGMA integrity_check').get().integrity_check!=='ok'||d.query('PRAGMA foreign_key_check').all().length)throw Error('integrity');if(d.query("SELECT COUNT(*) AS n FROM sqlite_schema WHERE type='table'").get().n!==2n)throw Error('complete entities');if(d.query('SELECT text FROM socket_probe').get().text!=={})throw Error('raw text');const m=d.query('SELECT artifact_kind,standard,subset FROM semio_snapshot').get();if(m.artifact_kind!=='native.socket-grant.probe'||m.standard!=='1'||m.subset!=='*')throw Error('declared metadata');d.query('UPDATE socket_probe SET text=? WHERE id=1').run({});await Bun.write(Bun.stdout,d.serialize());d.close();"#,serde_json::to_string(&snapshot.0).unwrap(),serde_json::to_string(f["edit"].as_str().unwrap()).unwrap());let edited=oracle(&script,&file);assert_eq!(block_on(async{let original_file_dialect=&dialect;let original_file_input=&edited;let original_file_limits=Limits::default();let original_file_progress:&mut dyn FnMut(store::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut cb;store::io::testing::with_snapshot_file_encoding(store::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_import_sqlite_snapshot::<NativeSocketProbeSnapshot>(original_file_dialect,original_file_input,sqlite_control,native_owner).await).await}).unwrap().value.0,f["edit"].as_str().unwrap());
-   let mut decode_cb=|_|true;let mut encode_cb=|_|true;let mut decode=NativeDecodeControl::new(Limits::default().max_allocation_bytes,&mut decode_cb);let mut encode=NativeEncodeControl::new(Limits::default().max_allocation_bytes,&mut encode_cb);let mut native=IoRunControl::new(&mut decode,&mut encode,native_grant());let mut control=Control::new(&mut cb,Limits::default());let physical=block_on(io_run_with_snapshot_control(&export,input.clone(),&mut native,&mut control)).unwrap().value;assert_eq!(block_on(io_run_with_snapshot_control(&import,physical,&mut native,&mut control)).unwrap().value,input);
-   let mut decode_cb=|_|true;let mut encode_cb=|_|true;let mut decode=NativeDecodeControl::new(Limits::default().max_allocation_bytes,&mut decode_cb);let mut encode=NativeEncodeControl::new(Limits::default().max_allocation_bytes,&mut encode_cb);assert_eq!(block_on(io_run_with_snapshot_control(&import,IoPayload::Binary(edited),&mut IoRunControl::new(&mut decode,&mut encode,native_grant()),&mut Control::new(&mut cb,Limits::default()))).unwrap().value,payload(f["edit"].as_str().unwrap(),encoding));
+   let physical=block_on(owners::io_run(&export,input.clone(),Limits::default(),&mut cb)).unwrap().value;assert_eq!(block_on(owners::io_run(&import,physical,Limits::default(),&mut cb)).unwrap().value,input);
+   assert_eq!(block_on(owners::io_run(&import,IoPayload::Binary(edited),Limits::default(),&mut cb)).unwrap().value,payload(f["edit"].as_str().unwrap(),encoding));
   }
  }
 }
 
 #[test]
 fn native_socket_snapshot_encode_borrows_the_original_grant_and_native_receipt() {
- let grant=native_grant();
  for encoding in [SnapshotEncoding::Text,SnapshotEncoding::Binary] {
   let snapshot=NativeSocketProbeSnapshot("original λ🙂\0".into());
-  let mut observe=|_|true;
-  let mut native=NativeEncodeControl::new(1024,&mut observe);
-  native.charge(3).unwrap();
-  let pointer=&native as *const _;
-  let mut owner=store::os_store::NativeSnapshotEncodeOwner::new(&mut native,grant);
-  assert_eq!(owner.native() as *const _,pointer);
-  let mut progress=|_|true;
-  let mut control=Control::new(&mut progress,Limits::default());
-  assert_eq!(snapshot.encode_sqlite_snapshot_native(encoding,&mut control,&mut owner).result.unwrap(),payload(&snapshot.0,encoding));
-  assert_eq!(owner.grant(),grant);
-  assert_eq!(owner.native() as *const _,pointer);
-  assert_eq!(owner.native().owned_bytes(),3+snapshot.0.len());
-  assert_eq!(owner.native().maximum_bytes(),1024);
+  owners::with_encoding(|owner| {
+   owner.native().charge(3).unwrap();
+   let grant=owner.grant();
+   let pointer=owner.native() as *const _;
+   let mut progress=|_|true;
+   let mut control=Control::new(&mut progress,Limits::default());
+   let mut output=None;
+   snapshot.encode_sqlite_snapshot_native(encoding,&mut control,owner,&mut output).result.unwrap_or_else(|_|panic!("original encode refused"));
+   assert_eq!(take(&mut output),payload(&snapshot.0,encoding));
+   assert_eq!(owner.grant(),grant);
+   assert_eq!(owner.native() as *const _,pointer);
+   assert!(owner.native().owned_bytes()>=3+snapshot.0.len());
+  });
  }
 }

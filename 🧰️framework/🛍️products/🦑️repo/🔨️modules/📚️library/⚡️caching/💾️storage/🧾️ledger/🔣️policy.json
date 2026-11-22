@@ -529,6 +529,7 @@
       },
       "writers": [
         "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🟨️.mjs",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🗄️analysis-store/🟨️.mjs",
         "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧹️cache-gc/🚰️reclaim/🟦️.ts"
       ],
       "purpose": {
@@ -707,7 +708,7 @@
       "directory": "semio/actions",
       "partition": "products",
       "budget": {
-        "basisPoints": 2000
+        "basisPoints": 1000
       },
       "managed": {
         "owner": "semio"
@@ -753,7 +754,8 @@
       "collect": {
         "unusedAgeMs": 7776000000,
         "quietMs": 3600000,
-        "custody": "quiet"
+        "custody": "quiet",
+        "pressure": "pinned"
       },
       "writers": [
         "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🌿️environment/🟦️.ts",
@@ -1381,6 +1383,46 @@
         "en": "Blob cache and private input roots of the workers of repo remote-execution, bounded and least recently used first.",
         "de": "Blob-Cache und private Eingabeverzeichnisse der Worker von repo remote-execution, begrenzt und die am längsten ungenutzten zuerst."
       }
+    },
+    {
+      "id": "fleet-cache-index",
+      "root": "native",
+      "kind": "nested",
+      "directory": "fleet/cache-server",
+      "partition": "products",
+      "budget": {
+        "basisPoints": 1000
+      },
+      "managed": {
+        "owner": "remote-cache"
+      },
+      "writers": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🛰️sidecar/🗄️cache/🟦️.ts"
+      ],
+      "purpose": {
+        "en": "Index of the fleet cache server of the group, a tenth of the products partition; its image is not logged by the file event service, so its many small writes do not grow it.",
+        "de": "Index des Flotten-Cacheservers der Gruppe, ein Zehntel der Produkt-Partition; ihr Image wird vom Dateiereignisdienst nicht protokolliert, so wachsen dessen viele kleine Schreibvorgänge ihn nicht."
+      }
+    },
+    {
+      "id": "remote-execution-worker",
+      "root": "native",
+      "kind": "nested",
+      "directory": "remote-execution",
+      "partition": "dependencies",
+      "budget": {
+        "basisPoints": 1000
+      },
+      "managed": {
+        "owner": "remote-execution"
+      },
+      "writers": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🛰️sidecar/👷️agent/🟦️.ts"
+      ],
+      "purpose": {
+        "en": "Blob cache and private action roots of this machine's remote execution worker, a tenth of the dependencies partition; its image is not logged by the file event service.",
+        "de": "Blob-Cache und private Aktionsverzeichnisse des Remote-Execution-Workers dieser Maschine, ein Zehntel der Abhängigkeits-Partition; ihr Image wird vom Dateiereignisdienst nicht protokolliert."
+      }
     }
   ],
   "needs": [
@@ -1470,6 +1512,26 @@
     }
   ],
   "retirements": [
+    {
+      "root": "native",
+      "directory": "f/source-analyses",
+      "within": "fleet-state",
+      "quietMs": 900000,
+      "reason": {
+        "en": "The source analyses moved into the graph partition (area graph-inference, directory sa beside the closure store).",
+        "de": "Die Quellanalysen liegen jetzt in der Graph-Partition (Bereich graph-inference, Verzeichnis sa neben dem Abschlussspeicher)."
+      }
+    },
+    {
+      "root": "native",
+      "directory": "f/cache-server",
+      "within": "fleet-state",
+      "quietMs": 900000,
+      "reason": {
+        "en": "The fleet cache index moved into the products partition (area fleet-cache-index).",
+        "de": "Der Index des Flotten-Caches liegt jetzt in der Produkt-Partition (Bereich fleet-cache-index)."
+      }
+    },
     {
       "root": "repository",
       "directory": "build-lock-closures",

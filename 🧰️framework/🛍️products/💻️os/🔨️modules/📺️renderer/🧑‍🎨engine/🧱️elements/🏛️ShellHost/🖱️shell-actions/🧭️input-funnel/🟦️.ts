@@ -1,9 +1,10 @@
+import { browserActorActionRefusalReasonV1 } from "@semio-tech/framework/browser-bundle/action-handoff/requests";
 import { ownedCallerViewContextV1 } from "../../📨️program-invocation/🟦️.ts";
 /** 🧭️ The staged body of the shell input funnel: recovery, shell-intercepted actions, dispatch target resolution and program dispatch.
  *
  * 🧱️ Child module of {@link ../🟦️.ts | useShellActions}: the body of the shell input funnel (`onAction`) after its ledger entry is issued, moved verbatim. */
 import { shellDialogSessionIsCurrentV1, type ShellDialogOriginV1 } from "../../🗨️dialog-origin/🟦️.ts";
-import { type ActionDispatchLifecycleV1, SURFACE_FAULT_CODES, RECORD_TUTORIAL_ACTION_ID, resolveWindowActions, SET_ACTIVE_TOOL_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID, EXPORT_ARTIFACT_DOCUMENT_ACTION_ID, EXPORT_MEDIA_FILE_ACTION_ID, EXPORT_SNAPSHOT_FILE_ACTION_ID, FOCUS_ROW_CONTROL_ACTION_ID, FOCUS_WINDOW_ACTION_ID, IMPORT_ARTIFACT_DOCUMENT_ACTION_ID, OPEN_ARTIFACT_FILE_ACTION_ID, SAVE_ARTIFACT_FILE_ACTION_ID, START_INTRODUCTION_ACTION_ID, START_TUTORIAL_ACTION_ID, hostArmedViewContext } from "@semio-tech/framework";
+import { type ActionDispatchLifecycleV1, SURFACE_FAULT_CODES, RECORD_TUTORIAL_ACTION_ID, resolveWindowActions, SET_ACTIVE_TOOL_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID, EXPORT_ARTIFACT_DOCUMENT_ACTION_ID, EXPORT_MEDIA_FILE_ACTION_ID, EXPORT_SNAPSHOT_FILE_ACTION_ID, FOCUS_ROW_CONTROL_ACTION_ID, NODE_GRAPH_FIT_ACTION_ID, FOCUS_WINDOW_ACTION_ID, IMPORT_ARTIFACT_DOCUMENT_ACTION_ID, OPEN_ARTIFACT_FILE_ACTION_ID, SAVE_ARTIFACT_FILE_ACTION_ID, START_INTRODUCTION_ACTION_ID, START_TUTORIAL_ACTION_ID, hostArmedViewContext } from "@semio-tech/framework";
 import { FRAMEWORK_SYNC_CONTROLLER_ID } from "@semio-tech/framework/backbone";
 import { spawnedProgramViewStateV1, guestWindowIdV1, spawnedIdOfWindowInstanceV1, programHistoryKeyV1 } from "../../🪟️spawned-program/🟦️.ts";
 import { INPUT_IDENTITY_SETTLE_BOUND_MS_V1, inputAwaitsHubIdentityV1, inputIdentitySettleNoticeTextV1, type InputCommitReceiptV1, type InputDiagnosticV1, type InputDraftDispositionV1, type InputOutcomeV1, type InputRefusalReasonV1, type ShellInputActionV1 } from "../../🎯️input-ledger/🟦️.ts";
@@ -22,6 +23,7 @@ import { typedOperationCancellationOwnerIsCurrentV1 } from "../../🏁️operati
 import type { ShellCoreAfterShellUriAndDocuments } from "../../🗄️shell-uri-documents/🟦️.ts";
 import { handleFocusRowControlAction } from "./🎯️focus-row-control/🟦️.ts";
 import { handleFocusWindowAction } from "./🎯️focus-window/🟦️.ts";
+import { handleFitGraphAction } from "./🔲️fit-graph/🟦️.ts";
 import { handleSetActiveToolAction, handleSetActiveUtilityAction } from "./🧰️utility-and-tool-activation/🟦️.ts";
 import { handleRecoveryAction, handleSetActivePanelTabAction, handleSyncCardAction, handleWorldNavigationAction } from "./🔄️recovery-navigation-sync-and-panel-actions/🟦️.ts";
 import { buildDispatchViewState, resolveDispatchTarget, routeRemoteUndo } from "./🎯️dispatch-target-and-view-state/🟦️.ts";
@@ -89,6 +91,7 @@ export async function runShellInput({ clipboardFragmentRef, primaryPluginId, dis
     }
     if (action.action === FOCUS_WINDOW_ACTION_ID) return handleFocusWindowAction({ action, session, core, refuse, applied });
     if (action.action === FOCUS_ROW_CONTROL_ACTION_ID) return handleFocusRowControlAction({ action, core, refuse, applied });
+    if (action.action === NODE_GRAPH_FIT_ACTION_ID) return handleFitGraphAction({ action, core, refuse, applied });
     if (action.action === START_INTRODUCTION_ACTION_ID) {
       dispatch({ type: "SET_INTRODUCTION_STEP", value: 0 });
       return applied();
@@ -152,20 +155,18 @@ export async function runShellInput({ clipboardFragmentRef, primaryPluginId, dis
     }
   }
 
-  let { targetSession, hostWindowId, targetSpawnedId, targetContributor } = resolveDispatchTarget({ hostMode, panel, loadedPlugins, activeWindowIdRef, spawnedIdsRef, contributorInstancesRef: core.contributorInstancesRef, session, action });
+  const { targetSession, hostWindowId, targetSpawnedId, targetContributor } = resolveDispatchTarget({ hostMode, panel, loadedPlugins, activeWindowIdRef, spawnedIdsRef, contributorInstancesRef: core.contributorInstancesRef, session, action });
   if (action.controllerId.startsWith("contributor:") && !targetContributor) return refuse("owner-mismatch", "extension actor lease is no longer mounted");
-  const undoOutcome = action.commandAddress ? undefined : routeRemoteUndo({ inferenceHistoryByRuntimeKeyRef, openDocumentSessionsRef, historyCanUndo, localHistoryOrderRef, verifiedSessionAuthorityRef, ensureBackboneWorker, action, targetSession, refuse, applied });
-  if (undoOutcome !== undefined) return undoOutcome;
-  if (!action.commandAddress && (action.action === "undo" || action.action === "redo")) {
-    const directNow = (() => { try { return directBrowserActorForSession(targetSession) !== null ? "yes" : "null"; } catch (error) { return `throw:${String(error)}`; } })();
-    const owners = [...openDocumentSessionsRef.current.values()].map((entry) => ({ pluginId: entry.session.pluginId, instanceId: entry.session.instanceId }));
-    if (directNow === "null") {
-      const documentOwners = [...openDocumentSessionsRef.current.values()].filter((entry) => entry.session.pluginId === targetSession.pluginId);
-      if (documentOwners.length === 1) {
-        targetSession = documentOwners[0]!.session;
-      }
-    }
+  let directBrowserActor: ReturnType<typeof directBrowserActorForSession>;
+  try {
+    directBrowserActor = directBrowserActorForSession(targetSession);
+  } catch (error) {
+    const outcome = refuse(browserActorActionRefusalReasonV1(error) ?? "owner-mismatch", String(error instanceof Error ? error.message : error));
+    if (propagateFailure) throw error;
+    return outcome;
   }
+  const undoOutcome = action.commandAddress ? undefined : routeRemoteUndo({ inferenceHistoryByRuntimeKeyRef, openDocumentSessionsRef, historyCanUndo, localHistoryOrderRef, verifiedSessionAuthorityRef, ensureBackboneWorker, action, targetSession, documentActorOwnsHistory: directBrowserActor !== null, refuse, applied });
+  if (undoOutcome !== undefined) return undoOutcome;
   if (requiredOperationOwner !== undefined && !typedOperationCancellationOwnerIsCurrentV1(requiredOperationOwner.session, targetSession, isCurrentEffectOwner(requiredOperationOwner))) {
     return refuse("owner-mismatch", "typed operation owner is no longer current");
   }
@@ -215,19 +216,21 @@ export async function runShellInput({ clipboardFragmentRef, primaryPluginId, dis
       .catch((error) => undefined);
     return applied();
   }
-  let directBrowserActor: ReturnType<typeof directBrowserActorForSession>;
-  try {
-    directBrowserActor = action.commandAddress ? null : directBrowserActorForSession(targetSession);
-  } catch (error) {
-    const outcome = refuse("owner-mismatch", `browser actor owner: ${String(error instanceof Error ? error.message : error)}`);
-    if (propagateFailure) throw error;
-    return outcome;
-  }
   const execute = async (action: ShellInputActionV1, expectedDocumentRevision?: string, stagedSignal?: AbortSignal) => {
     if (stagedSignal?.aborted) throw stagedSignal.reason??new Error("staging.cancelled");
     const stagedLifecycle=stagedSignal?{started:(operation:import("@semio-tech/framework").ActionOperationControlV1)=>{lifecycle?.started(operation);if(stagedSignal.aborted)void operation.cancel();else stagedSignal.addEventListener("abort",()=>{void operation.cancel();},{once:true});}}:lifecycle;
     if (!isCurrentEffectOwner(actionOwner) || !isCurrentDialogOrigin(actionOrigin) || uiLocaleRef.current !== uiLocale) return refuse("owner-mismatch", "staged action scope retired");
-    const directOutcome = action.commandAddress ? undefined : await dispatchDirectBrowserActorAction({ dispatchDirectBrowserActorCommand, uiTerminologyRef, directBrowserActor, targetSession, dispatchViewState, action, dispatchExtraInstances, dispatchWindowId, expectedDocumentRevision, applied, refusalReasonForError, core, refuse, propagateFailure: expectedDocumentRevision === undefined ? propagateFailure : true });
+    let actor = directBrowserActor;
+    if (actor === null) {
+      try {
+        actor = directBrowserActorForSession(targetSession);
+      } catch (error) {
+        const outcome = refuse(browserActorActionRefusalReasonV1(error) ?? "owner-mismatch", String(error instanceof Error ? error.message : error));
+        if (propagateFailure || expectedDocumentRevision !== undefined) throw error;
+        return outcome;
+      }
+    }
+    const directOutcome = await dispatchDirectBrowserActorAction({ dispatchDirectBrowserActorCommand, uiTerminologyRef, directBrowserActor: actor, targetSession, dispatchViewState, action, dispatchExtraInstances, dispatchWindowId, expectedDocumentRevision, inputSeq: entry.provenance.inputSeq, applied, refusalReasonForError, core, refuse, propagateFailure: expectedDocumentRevision === undefined ? propagateFailure : true });
     const outcome = directOutcome ?? await dispatchProgramAction({ sessionWorkRef, isCurrentEffectOwner, applyHistoryPatch, applyLeftoverInteractionView, historyStore, refreshHistorySnapshot, applyHostEffects, observeLocalInteraction, awaitOperationSettle, uiTerminologyRef, uiLocale, dropForSealedInstance, dropForRetiredInstance, targetSession, plugin, dispatchViewState, action, dispatchExtraInstances, dispatchWindowId, expectedDocumentRevision, entry, actionOwner, lifecycle: stagedLifecycle, onAction, actionOrigin, hostWindowId, core, applied, refuse, refusalReasonForError, propagateFailure: expectedDocumentRevision === undefined ? propagateFailure : true });
     if (action.action === SET_ACTIVE_EXAMPLE_ACTION_ID && outcome.kind === "applied") {
       const currentSession = core.shellStateRef.current.pluginRuntime.session;

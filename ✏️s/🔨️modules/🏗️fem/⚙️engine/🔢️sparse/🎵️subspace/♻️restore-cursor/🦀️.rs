@@ -256,7 +256,13 @@ impl SubspaceRestoreCursor {
         if context.should_yield() {
             return Ok(None);
         }
-        context.consume_fuel(1);
+        let before = context.original_work_units_spent();
+        let result = self.advance_work(context);
+        if context.original_work_units_spent() == before { context.consume_fuel(1); }
+        result
+    }
+
+    fn advance_work(&mut self, context: &mut StepContext<'_>) -> Result<Option<SubspaceIterationJob>, NumericalCheckpointFault> {
         if self.payload.is_none() {
             if !numerical_restore_admit(context, RetirementDemand { copy_bytes: size_of::<SubspaceCheckpoint>() + size_of::<SubspaceIterationJob>(), depth: 1, ..Default::default() })? { return Ok(None); }
             let state = self.state.take().ok_or(NumericalCheckpointFault::Truncated)?;

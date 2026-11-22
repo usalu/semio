@@ -118,3 +118,7 @@ No geometry change: the round 3 model already meets the bar; the only change is 
 
 - 1:200 and 1:500 bodies are both one 400 mm block (they differ in tone and bed); a homogeneous wall whose skins are 15 and 20 mm has nothing more to show under a 30 mm feature.
 - The mass sphere lies at the real centre of mass inside the opaque leaf and is hidden in opaque renders; brick tone is uniform.
+
+## Canonical component readback, 2026-11-21
+
+Canonical source `ce857f84c87b7fcd`. Twelve distinct bed joints, alternating rows of headers and stretchers, separate mortar and two real finish layers continue through the cut edge. The structure view tracks the actual bonded units. All twelve exported scenes reopened (607,980 bytes). The strict catalog source readback passed.

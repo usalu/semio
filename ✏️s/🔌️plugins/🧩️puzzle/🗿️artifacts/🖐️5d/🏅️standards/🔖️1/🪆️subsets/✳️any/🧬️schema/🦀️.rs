@@ -3,6 +3,7 @@
 use crate::Puzzle5dSnapshot;
 use crate::standards::v1::subsets::any::schema::kind_catalogs::{Puzzle5dKindCatalogsExtra};
 use crate::standards::v1::subsets::any::schema::document_records::{Puzzle5dTargetVolume};
+use crate::standards::v1::subsets::any::schema::snapshot::PagedList;
 
 
 
@@ -42,7 +43,7 @@ pub struct Puzzle5dArtifact {
     #[state(artifact)]
     pub kind_compatibility: Vec<Puzzle5dKindCompatibility>,
     #[state(artifact)]
-    pub parts: Vec<Puzzle5dPart>,
+    pub parts: PagedList<Puzzle5dPart, { usize::MAX }>,
     #[state(artifact)]
     pub fasteners: Vec<Puzzle5dFastener>,
     #[state(artifact)]

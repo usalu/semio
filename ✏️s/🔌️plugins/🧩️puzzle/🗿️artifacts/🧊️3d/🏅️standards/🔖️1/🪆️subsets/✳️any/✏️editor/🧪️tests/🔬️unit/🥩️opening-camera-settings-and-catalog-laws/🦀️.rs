@@ -248,13 +248,6 @@ async fn a_browser_shaped_pick_survives_every_render_route_and_both_mutating_dis
     );
 }
 
-fn object_flag(app: &Puzzle3dApp, object_id: &str, flag: &str) -> Option<bool> {
-    projection_of(app)
-        .get("objects")
-        .and_then(Value::as_array)
-        .and_then(|objects| objects.iter().find(|object| object.get("id").and_then(Value::as_str) == Some(object_id)).cloned())
-        .and_then(|object| object.get(flag).and_then(Value::as_bool))
-}
 //#endregion 🔬️B23RenderedVsMutatedDocument
 
 //#region 🔖️Pz2ShippedKindCatalog
@@ -300,7 +293,7 @@ fn the_initial_snapshot_costs_only_its_document() {
         work();
         semio_framework_trace::peak_heap_bytes_on_this_thread() - before
     };
-    let document = peak_of(&|| drop(Puzzle3dPlaySnapshot::new(crate::editor::puzzle3d::puzzle3d_snapshot_from_host_snapshot(&default_scene_snapshot()).expect("typed fixture admits"))));
+    let document = peak_of(&|| drop(Puzzle3dPlaySnapshot::new(semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_snapshot_from_host_snapshot(&default_scene_snapshot()).expect("typed fixture admits"))));
     let snapshot = peak_of(&|| drop(<Puzzle3dPlayApp as ArtifactEditor>::reference_birth().expect("explicit reference snapshot producer")().expect("the reference snapshot births")));
     assert!(document > 0, "the witness weighs the document conversion: {document}");
     assert!(snapshot <= document + 4096, "the initial snapshot peaked at {snapshot} B, its document at {document} B: it does work the document never reads");
@@ -310,10 +303,10 @@ fn the_initial_snapshot_costs_only_its_document() {
 /// 🛡️ The host twin carries every object of the typed document and refuses a scale the typed record cannot admit.
 #[test]
 fn puzzle3d_host_twin_round_trips_its_vocabulary_and_refuses_bad_scale() {
-    let document=crate::editor::puzzle3d::puzzle3d_snapshot_from_host_snapshot(&default_scene_snapshot()).expect("authored fixture admits");
+    let document=semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_snapshot_from_host_snapshot(&default_scene_snapshot()).expect("authored fixture admits");
     let mut host=puzzle3d_scene_snapshot_from_document(&document);
-    let admitted=crate::editor::puzzle3d::puzzle3d_snapshot_from_host_snapshot(&host).expect("the twin readmits");
+    let admitted=semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_snapshot_from_host_snapshot(&host).expect("the twin readmits");
     assert_eq!(admitted.objects.iter().map(|object|object.id.as_str()).collect::<Vec<_>>(),document.objects.iter().map(|object|object.id.as_str()).collect::<Vec<_>>());
     host.objects[0].scale=Some(semio_framework_value::DslValue::String("invalid".into()));
-    assert!(crate::editor::puzzle3d::puzzle3d_snapshot_from_host_snapshot(&host).is_err());
+    assert!(semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_snapshot_from_host_snapshot(&host).is_err());
 }

@@ -105,6 +105,77 @@ pub struct EditState {
     pub scroll_x: f32,
 }
 
+/// 📍️ One caret position of a laid-out edit text: the byte, the visual line it sits on and its pen on that line.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct EditTextStop {
+    pub byte: usize,
+    pub line: usize,
+    pub x: f32,
+}
+
+/// 📐️ The wrapped layout of an edit text: every caret position in byte order, relative to the node's own origin.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct EditTextLayout {
+    pub text: String,
+    pub inner: [f32; 4],
+    pub line_height: f32,
+    pub multi: bool,
+    pub lines: usize,
+    pub stops: Vec<EditTextStop>,
+    pub revealed_caret: Option<usize>,
+}
+
+impl EditTextLayout {
+    fn stop_of(&self, byte: usize) -> Option<EditTextStop> {
+        self.stops.binary_search_by_key(&byte, |stop| stop.byte).ok().map(|index| self.stops[index])
+    }
+
+    fn nearest(&self, line: usize, x: f32) -> Option<EditTextStop> {
+        self.stops.iter().filter(|stop| stop.line == line).min_by(|a, b| (a.x - x).abs().total_cmp(&(b.x - x).abs())).copied()
+    }
+
+    /// ↕️ The caret one visual line up or down, keeping `goal` (else the caret's own pen) as far as the line allows; `None` past the first or last line or in a single-row field.
+    pub fn vertical(&self, byte: usize, goal: Option<f32>, down: bool) -> Option<(usize, f32)> {
+        if !self.multi {
+            return None;
+        }
+        let stop = self.stop_of(byte)?;
+        let goal = goal.unwrap_or(stop.x);
+        let line = if down { stop.line.checked_add(1)? } else { stop.line.checked_sub(1)? };
+        (line < self.lines).then_some(())?;
+        Some((self.nearest(line, goal)?.byte, goal))
+    }
+
+    /// 👆️ The caret position nearest to a point given relative to the text box's origin, scroll already added.
+    pub fn byte_at(&self, x: f32, y: f32) -> usize {
+        let line = if self.multi && self.line_height > 0.0 { ((y / self.line_height).floor().max(0.0) as usize).min(self.lines.saturating_sub(1)) } else { 0 };
+        self.nearest(line, x).map_or(0, |stop| stop.byte)
+    }
+
+    /// 📜️ The largest scroll the text allows: down for a textarea, sideways for a single row.
+    pub fn max_scroll(&self) -> (f32, f32) {
+        if self.multi {
+            (0.0, (self.lines as f32 * self.line_height - self.inner[3]).max(0.0))
+        } else {
+            ((self.stops.last().map_or(0.0, |stop| stop.x) - self.inner[2] + 1.0).max(0.0), 0.0)
+        }
+    }
+
+    /// 🔭️ The least change to `scroll` that brings the caret at `byte` into view.
+    pub fn reveal(&self, byte: usize, scroll: (f32, f32)) -> (f32, f32) {
+        let Some(stop) = self.stop_of(byte) else { return scroll };
+        let (max_x, max_y) = self.max_scroll();
+        if self.multi {
+            let top = stop.line as f32 * self.line_height;
+            let y = if top < scroll.1 { top } else if top + self.line_height > scroll.1 + self.inner[3] { top + self.line_height - self.inner[3] } else { scroll.1 };
+            (0.0, y.clamp(0.0, max_y))
+        } else {
+            let x = if stop.x < scroll.0 { stop.x } else if stop.x + 1.0 > scroll.0 + self.inner[2] { stop.x + 1.0 - self.inner[2] } else { scroll.0 };
+            (x.clamp(0.0, max_x), 0.0)
+        }
+    }
+}
+
 /// 🎛️ Interactive per-node state that survives `reconcile::apply_tree` untouched (only `spec` is
 /// ever overwritten by reconciliation — see `reconcile::diff_and_update`), which is exactly the
 /// "focused buffer wins over a fresh incoming `value`" guarantee M5 `events` needs: as long as
@@ -128,6 +199,16 @@ pub struct WidgetState {
     /// text naming the bound, empty for an unlabelled one. While set the draft stays in `edit`, nothing is dispatched, and
     /// the control paints the draft in the error colour and the refusal where it has room; the next edit clears it.
     pub number_refusal: Option<String>,
+    /// 🔤️ Byte offset inside the IME preedit where the input method's own cursor sits, `Some` only mid-composition; the caret paints there.
+    pub composition_cursor: Option<usize>,
+    /// 📐️ Where the scalars of the live edit text were last laid out (wrapped lines and pens), written by the paint walk and read by pointer, wheel and vertical-motion routing; `None` until a frame laid the field out.
+    pub edit_layout: Option<EditTextLayout>,
+    /// 🎯️ The pen a run of ArrowUp/ArrowDown keeps while the caret crosses shorter lines.
+    pub caret_goal_x: Option<f32>,
+    /// 🚨️ Whether the last layout request already accounted for a refusal row under this input.
+    pub refusal_row_laid: bool,
+    /// 📏️ The height the wrapped lines of a `longText` input ask of its box, padding included: React's `field-sizing-content`. Written by the paint walk, read by mounted layout, `0.0` until a frame laid the text out.
+    pub textarea_grow: f32,
     pub stepper_hovered_segment: Option<i8>,
     /// 📜️ M5 `events` scroll routing's live offset for a `NodeFlags::SCROLLABLE` node.
     pub scroll_offset: (f32, f32),

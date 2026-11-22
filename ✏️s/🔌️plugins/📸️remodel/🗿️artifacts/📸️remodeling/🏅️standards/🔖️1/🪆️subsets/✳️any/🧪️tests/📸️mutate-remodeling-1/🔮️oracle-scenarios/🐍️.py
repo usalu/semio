@@ -8,7 +8,7 @@ import json
 from semio_repo_test import Context, Outcome
 
 from mutate_remodeling_1_vocabulary import doc_json, spec_of
-from mutate_remodeling_1_appliers import _mint_asset, APPLIERS
+from mutate_remodeling_1_appliers import APPLIERS
 from mutate_remodeling_1_rules import refusal_of, inverse_mutation, apply_inverse_step
 # endregion 🔖️Imports
 
@@ -27,11 +27,6 @@ def mutate(ctx: Context) -> Outcome:
         return Outcome(projection=base, raw=raw)
     assert verdict is None, f"mutate-{kind}: this reference refuses the vector with {verdict!r}, yet it declares no code"
     after = APPLIERS[kind](base, payload)
-    if kind == "create-asset":
-        key = payload["key"]
-        expected_child = expected_after["assets"][key]["childId"]
-        assert isinstance(expected_child, str) and expected_child.startswith("remodeling-asset-"), f"create-asset: committed childId {expected_child!r} does not look like a minted content-address handle"
-        after = _mint_asset(base, after, key, expected_child, payload["asset"])
     assert after == expected_after, f"mutate-{kind}: {after} != committed after-document {expected_after}"
     raw = json.dumps(after, sort_keys=True, separators=(",", ":")).encode("utf-8")
     return Outcome(projection=after, raw=raw)
@@ -50,8 +45,6 @@ def inverse(ctx: Context) -> Outcome:
         return Outcome(projection=base, raw=raw)
     assert verdict is None, f"inverse-{kind}: this reference refuses the vector, so undoing it would prove nothing"
     current = APPLIERS[kind](base, payload)
-    if kind == "create-asset":
-        current = _mint_asset(base, current, payload["key"], "remodeling-asset-minted", payload["asset"])
     assert current != base, f"inverse-{kind}: the forward mutation left the document untouched, so restoring it proves nothing"
     for step_kind, step_payload in inverse_mutation(kind, base, payload):
         current = apply_inverse_step(current, step_kind, step_payload)

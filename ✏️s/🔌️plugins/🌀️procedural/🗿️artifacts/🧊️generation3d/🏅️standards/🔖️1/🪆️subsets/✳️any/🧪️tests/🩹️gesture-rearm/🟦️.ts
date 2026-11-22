@@ -25,6 +25,13 @@ import { fileURLToPath } from "node:url";
 type RunState = "starting" | "running" | "paused" | "complete" | "finalizing" | "finalized" | "aborting" | "aborted" | "faulted";
 type RunRequest = "start" | "finalize";
 
+interface DocumentMovesRow {
+  id: string;
+  windows: string[];
+  servable: boolean;
+  polls: { content: number; provisional: number; owedAfterPoll: boolean; starts: number }[];
+}
+
 interface JobSupersessionRow {
   id: string;
   linkRun: number | null;
@@ -148,6 +155,7 @@ export function testGeneration3dGestureRearm(): void {
     version: number;
     gestureRearm: { note: string; rows: GestureRearmRow[] };
     jobSupersession: { note: string; rows: JobSupersessionRow[] };
+    documentMoves: { note: string; rows: DocumentMovesRow[] };
   };
   assert.equal(fixture.format, "semio.generation3d.preview-eval-run");
   assert.equal(fixture.version, 1);
@@ -235,6 +243,19 @@ export function testGeneration3dGestureRearm(): void {
     assert.equal(clearsPort, row.expected.clearsPort, `${row.id}: clears the link's port`);
     assert.equal(link.port === null, clearsPort, `${row.id}: a superseded job may never take the live run's port away`);
     console.log(`generation3d jobSupersession ${row.id} owns=${owns} cancels=${cancels} clearsPort=${clearsPort}`);
+  }
+
+  for (const row of fixture.documentMoves.rows) {
+    let held: { content: number; provisional: number } | null = null;
+    row.polls.forEach((poll, index) => {
+      const attached = row.windows.length > 0 && row.servable;
+      const moved = held !== null && (held.content !== poll.content || held.provisional !== poll.provisional);
+      const owed = attached && (held === null || moved);
+      held = { content: poll.content, provisional: poll.provisional };
+      assert.equal(owed, poll.owedAfterPoll, `${row.id}#${index}: a window owes an evaluation exactly when its first one is unpaid or the document stamp moved, an undo and a redo included`);
+      assert.equal(owed ? 1 : 0, poll.starts, `${row.id}#${index}: the debt costs one run start`);
+    });
+    console.log(`generation3d documentMoves ${row.id} polls=${row.polls.length}`);
   }
 
   const one = new Map([["only", new WindowLatch()]]);

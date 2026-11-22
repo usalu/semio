@@ -151,3 +151,7 @@ Things I had to learn and respect: the number of `member` shapes per bone must n
 Done. Catalog file `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🚜️vehicles/city-bicycle/🔣️.json` carries the root fixes, the drawings and the spliced volumes; source `volumes/vehicles/city-bicycle.json` equals the catalog volumes. To rebuild: `python3 r3-city-bicycle-build.py && python3 r3-city-bicycle-roots.py --park -2.02` (candidate under `🗑️generated/r3-city-bicycle/`), `$BUN r3-validate.ts --file <candidate>`, `$BUN r3-city-bicycle-suit.ts --file <candidate>`, then `python3 r3-city-bicycle-roots.py --park -2.02 --apply` and `python3 volumes-insert.py volumes/vehicles/city-bicycle.json <catalog file>`. Generated output of this asset was deleted at the end.
 
 The rack hoop and legs, fender, hub ends, stand pivot, tail light and pedal outlines now use scale-specific print widths. The full asset document passed.
+
+## November 21 running gear and moving joints
+
+Each wheel has 36 individually positioned crossed spokes with hub elbows and through-bored nipples. The rear rack retains its bolted stays. See the [measurements and installed revision](digital-running-gear.md).

@@ -8,6 +8,7 @@ interface events {
 
   record instance-open-event {
     instance: instance-id,
+    purpose: actor-instance-open-purpose,
     activation-generation: u64,
     request-sequence: u64,
     app-id: string,
@@ -145,6 +146,44 @@ interface events {
     params: request-params,
   }
 
+
+  record natural-source-launch {
+    declaration: natural-source-declaration,
+    extent: u32,
+  }
+  variant actor-instance-open-purpose {
+    ordinary,
+    natural-source(natural-source-launch),
+  }
+  record natural-source-declaration {
+    format-kind: string,
+    extension: string,
+    media-type: string,
+    binary: bool,
+  }
+  record natural-source-prepare {
+    instance-id: instance-id,
+    seq: u64,
+    declaration: natural-source-declaration,
+    extent: u32,
+  }
+  record natural-source-loan {
+    operation-id: string,
+    generation: string,
+    instance-id: instance-id,
+    declaration: natural-source-declaration,
+    extent: u32,
+  }
+  enum natural-source-control { begin, complete, cancel }
+  record natural-source-control-event {
+    loan: natural-source-loan,
+    owner: u64,
+    seq: u64,
+    kind: u8,
+    extent: u32,
+    control: natural-source-control,
+  }
+
   record original-media-loan {
     operation-id: string,
     generation: string,
@@ -168,6 +207,11 @@ interface events {
     kind: u8,
     extent: u32,
     control: original-media-control,
+  }
+
+  record folder-archive-load-event {
+    instance: u32,
+    request: pack,
   }
 
   variant event {
@@ -194,5 +238,8 @@ interface events {
     wake,
     request(request-event),
     original-media-control(original-media-control-event),
+    natural-source-prepare(natural-source-prepare),
+    natural-source-control(natural-source-control-event),
+    folder-archive-load(folder-archive-load-event),
   }
 }

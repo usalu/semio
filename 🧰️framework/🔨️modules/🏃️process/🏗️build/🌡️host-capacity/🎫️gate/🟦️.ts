@@ -8,7 +8,7 @@ import {homedir,uptime} from "node:os";
 import {isAbsolute,join} from "node:path";
 import {beginAdmissionWaitV1,liveChildPidsV1,onScriptProcessWaitEdgeV1,scriptProcessWaitEpisodeV1,waitingDelayV1 as delay} from "../../../🧭️routing/📥️invocation/🏃️process/🐕️watchdog/🟦️.ts";
 import {checkResourceLeaseControl,requireMaterializedPathV1,type ResourceLeaseControl} from "../../../🔒️leases/🎛️control/🟦️.ts";
-import {decideHostHandoverV1,describeHostBlockersV1,hostBlockersV1,hostBootAnchorV1,type HostBootAnchorV1,describeHostHandoverRefusalV1,describeHostReasonV1,evaluateHostCapacityV1,withUnmanagedHostV1,followHostGrantPlanV1,formatHostCapacityV1,hostCapacityErrorV1,isCurrentHostGrantV1,isHostCapacityV1,planHostCapacityV1,requireHostCapacityV1,resolveHostCapacityLanguageV1,softHostReasonV1,type HostCapacityPolicyV1,type HostEvaluationV1,type HostGrantV1,type HostGrowthSettleV1,type HostHandoverV1,type HostPlanV1,type HostRequestV1,type HostSampleV1,type HostWaiterV1,type HostDecisionV1,unsatisfiableHostRequestV1} from "../📏️decision/🟦️.ts";
+import {decideHostHandoverV1,describeHostBlockersV1,hostBlockersV1,hostBootAnchorV1,hostUnderPressureV1,type HostBootAnchorV1,describeHostHandoverRefusalV1,describeHostReasonV1,evaluateHostCapacityV1,withUnmanagedHostV1,followHostGrantPlanV1,formatHostCapacityV1,hostCapacityErrorV1,isCurrentHostGrantV1,isHostCapacityV1,planHostCapacityV1,requireHostCapacityV1,resolveHostCapacityLanguageV1,softHostReasonV1,hostWaitDeadlineMillisecondsV1,hostRequestNeverFitsV1,type HostCapacityPolicyV1,type HostEvaluationV1,type HostGrantV1,type HostGrowthSettleV1,type HostHandoverV1,type HostPlanV1,type HostRequestV1,type HostSampleV1,type HostWaiterV1,type HostDecisionV1,unsatisfiableHostRequestV1} from "../📏️decision/🟦️.ts";
 import {currentHostProbeV1,observeTreeMegabytesV1,readHostSampleV1,type HostSampleRecordV1} from "../📡️sampling/🟦️.ts";
 import {systemAncestryV1,WINDOWS_PROCESS_LISTING_V1} from "../../../🪪️agent-sessions/🧭️ancestry/🟦️.ts";
 import {hostDeclarationKeyV1} from "../🪞️profile/🟦️.ts";
@@ -115,6 +115,15 @@ export function ownsHostRebuildAskV1(directory:string,grant:HostGrantV1,askedAtM
   }
  }
  return false;
+}
+
+/** 🎟️ The megabytes the grant of this process holds for its booked rebuild right now (what the gate granted, which may be less than the rebuild asked for), so the farm of the graph build can be planned against it; undefined without a booked rebuild.
+ * @see requestHostRebuildCapacityV1 */
+export function readHostRebuildGrantMegabytesV1(environment:Readonly<Record<string,string|undefined>>):number|undefined{
+ const id=environment[protocol.grantEnvironment];
+ if(!id||!new RegExp(schema.definitions.Grant.properties.id.pattern,"u").test(id))return undefined;
+ const row=readJson(grantPath(hostCapacityDirectoryV1(environment),id));
+ return isHostCapacityV1("Grant",row)&&(row as HostGrantV1).rebuildBookedAtMs!==undefined?(row as HostGrantV1).reservedMegabytes:undefined;
 }
 
 /** 🏗️ Waits for an exact funded rebuild scope and returns its release after graph custody closes. */
@@ -283,7 +292,7 @@ export async function withHostCapacityV1<T>(options:HostCapacityOptionsV1,body:(
   &&readWaiters(directory,now(),policy,options.control.signal,false).length>=policy.wait.maximumWaiters)throw Error(schema.definitions.Messages.const[language].errors.queueFull);
  const arrivedAtMs=now(),waiterPath=queuePath(directory,arrivedAtMs,request.id),record:HostWaiterV1={request,arrivedAtMs,pid,...options.session===undefined?{}:{session:options.session.address,weight:options.session.weight}};
  writeJson(waiterPath,record);
- let grant:HostGrantV1|undefined,admittedHost:HostSampleV1|undefined,lastProgress=-Infinity,continuation:(()=>Promise<T>)|undefined;
+ let grant:HostGrantV1|undefined,admittedHost:HostSampleV1|undefined,lastProgress=-Infinity,continuation:(()=>Promise<T>)|undefined,lastWait:HostDecisionV1["reason"]|undefined;
  let sweptAtMs=-Infinity,split:string|undefined;
  const endAdmissionWait=beginAdmissionWaitV1();
  try{
@@ -305,10 +314,12 @@ export async function withHostCapacityV1<T>(options:HostCapacityOptionsV1,body:(
      const at=now(),ledger=readGrants(directory,at,policy,undefined,options.control.signal),waiters=readWaiters(directory,at,policy,options.control.signal);
      if(!waiters.some(row=>row.request.id===request.id)){writeJson(waiterPath,record);waiters.push(record);}
      const evaluation=evaluateHostCapacityV1(policy,withUnmanagedHostV1(host,ledger),ledger,waiters,at),found=evaluation.decisions.find(row=>row.id===request.id)!,drained=Math.min(host.availableMegabytes+ledger.reduce((sum,row)=>sum+(row.lentSinceMs===undefined?row.observedMegabytes??row.reservedMegabytes:0),0),host.totalMegabytes)-evaluation.floorMegabytes,asked=Math.min(request.fixedMegabytes+request.minimumJobs*request.perJobMegabytes,Math.max(0,host.totalMegabytes-evaluation.floorMegabytes)),lone=found.verdict==="wait"&&found.reason==="memory"&&evaluation.decisions.every(row=>row.verdict==="wait")&&evaluation.decisions[0]!.id===request.id&&unsatisfiableHostRequestV1(policy,{waitedMilliseconds:at-arrivedAtMs,roomMegabytes:evaluation.headroomMegabytes,drainedMegabytes:drained,needMegabytes:asked,admitted:0,replaced:false,quiet:request.quiet===true,elastic:request.elastic===true,pause:softHostReasonV1(policy,host)}),mine:HostDecisionV1=lone?Object.freeze({id:request.id,verdict:"admit",jobs:request.minimumJobs,reservedMegabytes:Math.min(asked,Math.floor(evaluation.headroomMegabytes)),reason:"reduced"}):found;
-     if(mine.verdict==="wait"&&(mine.reason==="never"||mine.reason==="starved")){
-      const total=host.totalMegabytes,floor=evaluation.floorMegabytes,minimum=request.minimumMegabytes??0;
-      throw hostCapacityErrorV1(mine.reason==="never"?"memoryNeverFits":"memoryStarved",{operation:request.operation,minimum,total,floor,capacity:Math.floor(Math.max(0,total-floor)*policy.memory.budgetBasisPoints/10000),needed:minimum+floor,spare:Math.max(0,evaluation.headroomMegabytes),seconds:Math.round((at-arrivedAtMs)/1000)},environment);
+     if(mine.verdict==="wait"&&(mine.reason==="never"||mine.reason==="starved"||hostRequestNeverFitsV1(policy,host,request))){
+      const total=host.totalMegabytes,floor=evaluation.floorMegabytes,minimum=request.minimumMegabytes??request.fixedMegabytes+request.minimumJobs*request.perJobMegabytes;
+      const held=mine.reason==="starved"&&ledger.some(row=>row.id!==request.id&&row.lentSinceMs===undefined);
+      throw hostCapacityErrorV1(mine.reason!=="starved"?"memoryNeverFits":held?"memoryWaitedOut":"memoryStarved",{operation:request.operation,minimum,total,floor,capacity:Math.floor(Math.max(0,total-floor)*policy.memory.budgetBasisPoints/10000),needed:minimum+floor,spare:Math.max(0,evaluation.headroomMegabytes),seconds:Math.round((at-arrivedAtMs)/1000),...held?{holders:describeHostBlockersV1(language,hostBlockersV1(policy,ledger,waiters,evaluation,request.id,at))}:{}},environment);
      }
+     const before=lastWait;if(mine.verdict==="wait")lastWait=mine.reason;
      if(mine.verdict==="admit"){
       if(!holdsLock(directory,pid))continue;
       grant=requireHostCapacityV1<HostGrantV1>("Grant",{id:request.id,operation:request.operation,jobs:mine.jobs,cpu:mine.jobs*request.cpuPerJob,reservedMegabytes:mine.reservedMegabytes,admittedAtMs:at,observedMegabytes:null,pid,bootAtMs:hostBootAtV1(directory,at),...options.session===undefined?{}:{session:options.session.address},...request.label===undefined?{}:{label:request.label},...request.holder===undefined||mine.reason!=="lent"?{}:{holder:request.holder},...request.rampMilliseconds===undefined?{}:{rampMilliseconds:request.rampMilliseconds},...request.rampSlot===undefined?{}:{rampSlot:request.rampSlot},...request.quiet===true?{quiet:true,arrivedAtMs}:{}});
@@ -317,11 +328,16 @@ export async function withHostCapacityV1<T>(options:HostCapacityOptionsV1,body:(
       if(lone)write(formatHostCapacityV1(language,"unsatisfiable",{operation:request.operation,seconds,reserved:mine.reservedMegabytes,asked,available:Math.max(0,drained),floor:evaluation.floorMegabytes}));
       else if(mine.reason==="override")write(formatHostCapacityV1(language,"override",{operation:request.operation,seconds,reason:describeHostReasonV1(language,softHostReasonV1(policy,host)??"load")}));
       else if(mine.reason==="lent")write(formatHostCapacityV1(language,"lent",{operation:request.operation,holder:ledger.find(row=>row.id===request.holder)?.label??request.holder??"",jobs:mine.jobs,reserved:mine.reservedMegabytes}));
-      else if(mine.reason==="shrunk")write(formatHostCapacityV1(language,"shrunk",{operation:request.operation,reserved:mine.reservedMegabytes,wanted:request.fixedMegabytes+request.minimumJobs*request.perJobMegabytes,spare:Math.max(0,evaluation.headroomMegabytes),floor:evaluation.floorMegabytes,minimum:request.minimumMegabytes??0}));
+      else if(mine.reason==="shrunk"){
+       const stopped=before!==undefined&&before!=="memory"&&before!=="queue-order"&&before!=="never"&&before!=="starved"&&at-arrivedAtMs>=hostWaitDeadlineMillisecondsV1(policy,request.priority),values={operation:request.operation,reserved:mine.reservedMegabytes,wanted:request.fixedMegabytes+request.minimumJobs*request.perJobMegabytes,spare:Math.max(0,evaluation.headroomMegabytes),floor:evaluation.floorMegabytes,minimum:request.minimumMegabytes??0};
+       write(stopped?formatHostCapacityV1(language,"shrunkStopped",{...values,seconds:Math.round((at-arrivedAtMs)/1000),limit:Math.round(hostWaitDeadlineMillisecondsV1(policy,request.priority)/1000),reason:describeHostReasonV1(language,before as Exclude<HostDecisionV1["reason"],"fits"|"reduced"|"override"|"shrunk"|"lent">)}):formatHostCapacityV1(language,"shrunk",values));
+      }
       else if(mine.reason==="reduced")write(formatHostCapacityV1(language,options.upgrade!==undefined&&options.upgrade.perJobMegabytes>0?"reducedGrows":"reduced",{operation:request.operation,jobs:mine.jobs,preferred:request.preferredJobs}));
       else write(formatHostCapacityV1(language,"admitted",{operation:request.operation,jobs:mine.jobs,reserved:mine.reservedMegabytes,available:host.availableMegabytes,floor:evaluation.floorMegabytes}));
      }else if(at-lastProgress>=policy.wait.progressMilliseconds){
-      lastProgress=at;write(hostWaitingLineV1(language,request,host,evaluation,ledger.length,Math.round((at-arrivedAtMs)/1000),policy,ledger,waiters,at,options.onWait===undefined?undefined:facts=>{waitFacts=facts;})+(split!==undefined&&mine.reason==="attaches"?"; "+split:""));progressAt=at;
+      lastProgress=at;
+      const limit=hostWaitDeadlineMillisecondsV1(policy,request.priority);
+      write(hostWaitingLineV1(language,request,host,evaluation,ledger.length,Math.round((at-arrivedAtMs)/1000),policy,ledger,waiters,at,options.onWait===undefined?undefined:facts=>{waitFacts=facts;})+(split!==undefined&&mine.reason==="attaches"?"; "+split:"")+(at-arrivedAtMs>=limit?formatHostCapacityV1(language,"pastDeadline",{limit:Math.round(limit/1000),holders:describeHostBlockersV1(language,hostBlockersV1(policy,ledger,waiters,evaluation,request.id,at))}):""));progressAt=at;
      }
     }finally{releaseLock(directory,pid);}
    }
@@ -356,7 +372,7 @@ async function holdHostGrantV1<T>(options:HostCapacityOptionsV1,held:HostGrantV1
  const plan=adopted?carried?.id===held.id?carried:requireHostCapacityV1<HostPlanV1>("Plan",{version:1,id:held.id,jobs:held.jobs,cpu:held.cpu,memoryMegabytes:held.reservedMegabytes,fixedMegabytes:0,floorMegabytes:0}):planHostCapacityV1(policy,admittedHost!,held.quiet===true&&options.upgrade!==undefined?options.upgrade:request,held.quiet===true&&options.upgrade!==undefined?options.upgrade.preferredJobs:held.jobs);
  const full=options.upgrade,quiet=held.quiet===true&&full!==undefined,growable=full!==undefined&&!adopted&&full.perJobMegabytes>0,upgradeFile=hostUpgradePathV1(directory,held.id);
  const rebuildScope=options.resize===undefined?undefined:newHostCapacityIdV1(),rebuildFolder=rebuildScope===undefined?undefined:rebuildRequestsPath(directory,held.id,rebuildScope);
- let growing=false,outgrown=false,settled:HostGrowthSettleV1|undefined,upgrading=false,rebuilding=false,stopped=false,attempted=-Infinity,holding=true,state:HostGrantV1=held,childless=false,checkedChildren=-Infinity,parked=false,peak=0,lentTotal=0,failure:unknown,failed=false,marks:(readonly [number,number,HostPhaseV1|undefined])[]=[],phase:HostPhaseV1|undefined,deferredPhase:HostPhaseV1|undefined,transitions:HostPhaseTransitionV1[]=[],markLines=0,markBytes=0;
+ let growing=false,outgrown=false,settled:HostGrowthSettleV1|undefined,upgrading=false,rebuilding=false,stopped=false,attempted=-Infinity,holding=true,state:HostGrantV1=held,childless=false,checkedChildren=-Infinity,parked=false,pressured=false,peak=0,lentTotal=0,failure:unknown,failed=false,marks:(readonly [number,number,HostPhaseV1|undefined])[]=[],phase:HostPhaseV1|undefined,deferredPhase:HostPhaseV1|undefined,transitions:HostPhaseTransitionV1[]=[],markLines=0,markBytes=0;
  const startedAt=now();
  const cleanup=()=>{holding=false;try{unlinkSync(path);}catch{}try{unlinkSync(attachedPath(directory,held.id));}catch{}try{unlinkSync(phasesPath(directory,held.id));}catch{}try{unlinkSync(upgradeFile);}catch{}if(rebuildFolder!==undefined)try{rmSync(rebuildFolder,{recursive:true,force:true});}catch{}try{const prefix=`${held.id}${protocol.waitSuffix}`;for(const name of readdirSync(join(directory,"grants")))if(name.startsWith(prefix))unlinkSync(join(directory,"grants",name));}catch{}};
  process.once("exit",cleanup);
@@ -369,9 +385,19 @@ async function holdHostGrantV1<T>(options:HostCapacityOptionsV1,held:HostGrantV1
    const requestPath=join(rebuildFolder,name),request=readRebuildRequest(requestPath,state);return request?.id===name&&!isHostCapacityV1("RebuildRefusal",readJson(rebuildReceiptPath(requestPath)))?[request]:[];
   }).sort((left,right)=>left.askedAtMs-right.askedAtMs||left.id.localeCompare(right.id));
  };
- const observeAll=async():Promise<number|null>=>{const observe=options.observe??observeTreeMegabytesV1,own=await observe(pid);if(own===null)return null;let total=own;for(const attached of readAttached(attachedPath(directory,held.id)))total+=await observe(attached).catch(()=>null)??0;return total;};
+ const observeAll=async():Promise<number|null>=>{
+  const attached=readAttached(attachedPath(directory,held.id)),observe=options.observe;
+  if(observe===undefined){
+   const graphPlans=readGrants(directory,now(),policy,undefined,options.control.signal,false)
+    .filter(grant=>grant.id!==held.id&&grant.operation==="graph-plan"&&grant.observedMegabytes!==null);
+   const excluded=new Set(graphPlans.flatMap(grant=>readAttached(attachedPath(directory,grant.id))));
+   return observeTreeMegabytesV1(pid,undefined,undefined,undefined,undefined,undefined,undefined,{attached,excluded});
+  }
+  const own=await observe(pid);if(own===null)return null;
+  let total=own;for(const worker of attached)total+=await observe(worker).catch(()=>null)??0;return total;
+ };
  const activeAt=(at:number):number=>Math.max(0,at-startedAt-lentTotal-(state.lentSinceMs===undefined?0:at-state.lentSinceMs));
- const heartbeat=(tag:HostPhaseV1|undefined=phase)=>{void observeAll().then(observed=>{if(holding&&observed!==null){peak=Math.max(peak,observed);marks.push([activeAt(now()),observed,tag]);if(marks.length>protocol.maximumPeakMarks)marks=marks.filter((_,index)=>index%2===0||index===marks.length-1);publish({...state,observedMegabytes:observed});if(quiet&&options.quietUpgradeRequiresRequest!==true&&state.quiet===true&&observed>state.reservedMegabytes)outgrown=true;}}).catch(()=>undefined);};
+ const heartbeat=(tag:HostPhaseV1|undefined=phase)=>{try{const cached=(readJson(join(directory,"sample.json")) as {host?:unknown}|undefined)?.host;if(isHostCapacityV1("Host",cached)&&now()-(cached as HostSampleV1).atMs<=2*policy.wait.heartbeatMilliseconds&&hostUnderPressureV1(policy,cached as HostSampleV1))pressured=true;}catch{}void observeAll().then(observed=>{if(holding&&observed!==null){peak=Math.max(peak,observed);marks.push([activeAt(now()),observed,tag]);if(marks.length>protocol.maximumPeakMarks)marks=marks.filter((_,index)=>index%2===0||index===marks.length-1);publish({...state,observedMegabytes:observed});if(quiet&&options.quietUpgradeRequiresRequest!==true&&state.quiet===true&&observed>state.reservedMegabytes)outgrown=true;}}).catch(()=>undefined);};
  const enter=(next:HostPhaseV1):void=>{
   if(next!=="rebuild"&&state.rebuildBookedAtMs!==undefined&&rebuildRequests().length>0){deferredPhase=next;return;}
   deferredPhase=undefined;
@@ -433,7 +459,7 @@ async function holdHostGrantV1<T>(options:HostCapacityOptionsV1,held:HostGrantV1
    if(ask===undefined)return;
    let resized:ReturnType<NonNullable<HostCapacityOptionsV1["resize"]>>;try{resized=options.resize?.("rebuild",{jobs:state.jobs,reservedMegabytes:state.reservedMegabytes,activeMilliseconds:activeAt(now())});}catch{resized=undefined;}
    const requested=():boolean=>readRebuildRequest(join(rebuildFolder,ask.id),state)?.id===ask.id;
-   const quote=Object.freeze({...request,id:state.id,minimumJobs:state.jobs,preferredJobs:state.jobs,fixedMegabytes:Math.max(state.reservedMegabytes,resized?.reservedMegabytes??0),perJobMegabytes:0,cpuPerJob:Math.max(1,Math.ceil(state.cpu/state.jobs)),rampMilliseconds:Math.max(resized?.rampMilliseconds??state.rampMilliseconds??policy.memory.rampMilliseconds,policy.wait.staleMilliseconds),rampSlot:state.rampSlot??false});
+   const quote=Object.freeze({...request,id:state.id,minimumJobs:state.jobs,preferredJobs:state.jobs,fixedMegabytes:Math.max(state.reservedMegabytes,resized?.reservedMegabytes??0),perJobMegabytes:0,...resized?.minimumMegabytes===undefined?{}:{minimumMegabytes:resized.minimumMegabytes},cpuPerJob:Math.max(1,Math.ceil(state.cpu/state.jobs)),rampMilliseconds:Math.max(resized?.rampMilliseconds??state.rampMilliseconds??policy.memory.rampMilliseconds,policy.wait.staleMilliseconds),rampSlot:state.rampSlot??false});
    rebuilding=true;
    void import("../🔼️upgrade/🟦️.ts").then(module=>module.upgradeHostGrantV1({ledger:Object.freeze({...custody(),readGrants,readWaiters,queuePath,sample:()=>currentSample(directory,policy,options.control,options,environment)}),directory,policy,request:quote,control:options.control,state:()=>state,publish:next=>{if(state.lentSinceMs!==undefined)lentTotal+=now()-state.lentSinceMs;publish(next);},requested,stopped:()=>stopped||!holding,now,pid,language:resolveHostCapacityLanguageV1(environment),write:options.write??(line=>process.stderr.write(line+"\n")),rebuildAskedAtMs:ask.askedAtMs,...options.session===undefined?{}:{session:options.session}})).then(result=>{
     if(typeof result!=="string"&&!stopped&&holding&&requested())writeJson(rebuildReceiptPath(join(rebuildFolder,ask.id)),requireHostCapacityV1<HostRebuildRefusalV1>("RebuildRefusal",{request:ask,...result}));
@@ -449,7 +475,7 @@ async function holdHostGrantV1<T>(options:HostCapacityOptionsV1,held:HostGrantV1
   throw error;
  }finally{
   stopped=true;clearTimeout(first);clearInterval(timer);clearInterval(lender);clearInterval(watcher);clearInterval(grower);clearInterval(rebuildWatcher);clearInterval(orphaned);process.removeListener("exit",cleanup);
-  if(options.learn&&!adopted&&!parked&&peak>0){const ended=now(),active=activeAt(ended),near=marks.find(([,megabytes])=>megabytes*10000>=peak*protocol.peakNearBasisPoints);readPhases();const phases=hostPhaseSegmentsV1(marks,transitions,active);try{await options.learn(Object.freeze({jobs:quiet&&state.quiet===true?full!.preferredJobs:state.jobs,peakMegabytes:peak,activeMilliseconds:active,peakAtMilliseconds:Math.min(near?.[0]??active,active),endedAtMs:ended,...phases.length===0?{}:{phases},...full===undefined?{}:{executed:state.upgradedAtMs!==undefined||outgrown||existsSync(upgradeFile)},status:!failed?"ok" as const:cancelledV1(failure,options.control)?"cancelled" as const:"failed" as const}));}catch{}}
+  if(options.learn&&!adopted&&!parked&&peak>0){const ended=now(),active=activeAt(ended),near=marks.find(([,megabytes])=>megabytes*10000>=peak*protocol.peakNearBasisPoints);readPhases();const phases=hostPhaseSegmentsV1(marks,transitions,active);try{await options.learn(Object.freeze({jobs:quiet&&state.quiet===true?full!.preferredJobs:state.jobs,peakMegabytes:peak,activeMilliseconds:active,peakAtMilliseconds:Math.min(near?.[0]??active,active),endedAtMs:ended,...phases.length===0?{}:{phases},...pressured?{pressured:true}:{},...full===undefined?{}:{executed:state.upgradedAtMs!==undefined||outgrown||existsSync(upgradeFile)},status:!failed?"ok" as const:cancelledV1(failure,options.control)?"cancelled" as const:"failed" as const}));}catch{}}
   if(parked)try{await(await import("./🤝️handover/🟦️.ts")).parkHostGrantV1(custody(),{options,path,state,plan,pid,now,cleanup,language:resolveHostCapacityLanguageV1(environment)});holding=false;}catch{cleanup();}else cleanup();
  }
 }

@@ -34,6 +34,34 @@ fn settle_value_poll(poll:semio_framework_value::RetainedWorkPoll)->Result<Retai
 #[doc(hidden)]
 pub fn progress(step:RetainedCloneStep)->RetainedCloneStep{RetainedCloneStep::Progress(step.progress())}
 impl<A:ArtifactApp> TimeTravelLedger<A> {
+ /// 📏️ Quotes the first live editing or projection field that must enter original retirement.
+ pub fn close_metadata_demand(&self)->Result<Option<RetirementDemand>,ValueError>{
+  if self.pending_command.is_some()||self.discard_cursor.is_some(){return Ok(None)}
+  let queue=&self.command_retirements;
+  macro_rules! quote {
+   ($($field:ident),*) => {$(if let Some(value)=self.$field.as_ref(){
+    return if queue.has_reserved_slot(){queue.admit_owned_demand(value)}else{queue.reserve_demand()}.map(Some)
+   })*}
+  }
+  quote!(editor,patch,reprojection_fault,deferred_history_row);
+  Ok(None)
+ }
+
+ /// 🧺️ Transfers one original editing or projection field into the existing paid retirement queue.
+ pub fn close_metadata_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneProgress,ValueError>{
+  let Some(demand)=self.close_metadata_demand()? else{return Ok(Default::default())};
+  if !permits(effect.grant(),demand){return Ok(Default::default())}
+  let queue=&mut self.command_retirements;
+  if !queue.has_reserved_slot(){return queue.reserve_step(effect).result}
+  macro_rules! admit {
+   ($($field:ident),*) => {$(if self.$field.is_some(){
+    return queue.admit_owned(&mut self.$field,effect).result.map(Option::unwrap_or_default)
+   })*}
+  }
+  admit!(editor,patch,reprojection_fault,deferred_history_row);
+  Ok(Default::default())
+ }
+
  fn session_transfer_copy_bytes()->usize{size_of::<TimeTravelSession>()*3+size_of::<ControlledRetirement<TimeTravelSession>>()*2+size_of::<Option<ControlledRetirement<TimeTravelSession>>>()}
  fn session_removal_copy_bytes()->usize{size_of::<Option<ControlledRetirement<TimeTravelSession>>>()*2+size_of::<bool>()}
  pub(super) fn pending_command_retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
@@ -89,8 +117,8 @@ impl<P,Mu> TimeTravelStoreState<P,Mu> where P: ::protocol::ArtifactPack + ::semi
   if let Some(owner)=self.preview_input_close.as_ref().or(self.preview_original_close.as_ref()){return factory_ticket_demands(owner,body);}
   if self.preview_cancelled&&self.preview_original.is_some(){return Ok(FactoryOwnedRetirement::<Mu>::original_admission_demands(&self.preview_original));}
   if self.preview_cancelled&&self.preview_input.is_some(){return Ok(RetirementDemand{capacity_bytes:size_of::<ControlledRetirement<protocol::InputReplacement>>(),depth:1,..Default::default()});}
-  if let Some(owner)=self.snapshot_close.as_ref(){return store::os_store::snapshot_read::artifact_retirement_box_demands(owner,body);}
   if self.preview_cancelled&&self.preview_base.is_some(){return Ok(store::os_store::snapshot_read::original_snapshot_alias_retirement_demand::<P>());}
+  if let Some(owner)=self.snapshot_close.as_ref(){return store::os_store::snapshot_read::artifact_retirement_box_demands(owner,body);}
   if self.snapshot_aliases.iter().any(Option::is_some){self.snapshot_issuers.as_ref().ok_or_else(||original_refusal("derived snapshot retains its original missing issuers"))?;return {let mut d=store::os_store::snapshot_read::original_snapshot_alias_retirement_demand::<P>();d.depth+=1;Ok(d)};}
   if self.snapshot_issuers.is_some(){return Ok(RetirementDemand{depth:1,..Default::default()});}
   if let Some(owner)=self.snapshot_issuer_close.iter().flatten().next(){return nested(owner.demands(body)?);}
@@ -116,8 +144,8 @@ impl<P,Mu> TimeTravelStoreState<P,Mu> where P: ::protocol::ArtifactPack + ::semi
   if self.preview_original_close.is_some(){return store::os_store::snapshot_read::settle_close_poll(semio_framework_value::close_factory_ticket(&mut self.preview_original_close,body,effect)).map(Some);}
   if self.preview_cancelled&&self.preview_original.is_some(){let factory=self.discarded_factory.as_ref().ok_or_else(||original_refusal("selected preview retains its original mutation cleanup issuer"))?;let mut issuer=Some(std::sync::Arc::clone(factory));return lifted(FactoryOwnedRetirement::<Mu>::admit_original(&mut self.preview_original,&mut issuer,&mut self.preview_original_close,effect)).map(|step|Some(progress(step)));}
   if self.preview_cancelled&&self.preview_input.is_some(){return Ok(Some(match semio_framework_value::retirement::admit_owned_retirement(&mut self.preview_input,effect).result?{Some((owner,p))=>{self.preview_input_close=Some(owner);RetainedCloneStep::Progress(p)},None=>RetainedCloneStep::Progress(Default::default())}));}
-  if self.snapshot_close.is_some(){return store::os_store::snapshot_read::settle_close_poll(store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.snapshot_close,effect.grant().maximum_copy_bytes,effect)).map(|step|Some(progress(step)));}
   if self.preview_cancelled&&self.preview_base.is_some(){let(snapshots,mutations)=self.snapshot_issuers.as_ref().ok_or_else(||original_refusal("selected preview retains its original base cleanup issuers"))?;let Some((owner,p))=store::os_store::snapshot_read::admit_original_snapshot_alias(&mut self.preview_base,snapshots,grant)?else{return Ok(Some(RetainedCloneStep::Progress(Default::default())))};*self.snapshot_close=Some(owner);return Ok(Some(RetainedCloneStep::Progress(p)));}
+  if self.snapshot_close.is_some(){return store::os_store::snapshot_read::settle_close_poll(store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.snapshot_close,effect.grant().maximum_copy_bytes,effect)).map(|step|Some(progress(step)));}
   if let Some(slot)=self.snapshot_aliases.iter_mut().find(|slot|slot.is_some()){
    let(snapshots,mutations)=self.snapshot_issuers.as_ref().unwrap();
    let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};

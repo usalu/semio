@@ -1,22 +1,56 @@
 /** 🧾️ Contract: every refusal a build or run raises when something it reads changed under it belongs to exactly one declared class (`reobserve`, `reexec`, `fatal`); the throw sites of a retried class use the constructor of that class, the sites of a fatal class never do, and the table names real sites; an independent Python scan of the sources agrees. */
 import {expect,test} from "bun:test";
-import {readFileSync} from "node:fs";
+import {readdirSync,readFileSync} from "node:fs";
 import {dirname,join} from "node:path";
 import {fileURLToPath} from "node:url";
 import Ajv from "ajv";
 import schema from "../../🧬️schema/🧾️refusals.json";
 import churn from "../../🧬️schema/🔣️.json";
 import {testPythonV1} from "../../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
-import {churnProtocolV1,concurrentEditOfV1,concurrentEditV1,concurrentEditWireV1,staleImplementationV1} from "../../🟦️.ts";
+import {churnProtocolV1,concurrentEditErrorOfV1,concurrentEditOfV1,concurrentEditV1,concurrentEditWireV1,staleImplementationV1} from "../../🟦️.ts";
 import {failureChurnOfTailsV1,refusalClassOfTextV1} from "../../🧾️refusals/🟦️.ts";
 import vectors from "./🔣️.json";
 
 type Row={id:string;disposition:"reobserve"|"reexec"|"fatal";layer?:string;markers:string[];messages:{text:string;sites:string[]}[];describe:Record<string,string>};
 const table=schema.definitions.Table.const as {version:1;constructors:string[];lookbehind:number;classes:Row[]};
 const python=testPythonV1(),here=dirname(fileURLToPath(import.meta.url)),root=fileURLToPath(new URL("../../../../../../../",import.meta.url)),protocol=churnProtocolV1();
-const answer=JSON.parse(Bun.spawnSync([python!,"-I",join(here,"🐍️.py"),root,join(here,"..","..","🧬️schema","🧾️refusals.json"),join(here,"..","..","🧬️schema","🔣️.json"),join(here,"🔣️.json")]).stdout.toString()) as {scan:Record<string,{occurrences:number;typed:number;marked:number}>;texts:Record<string,{class:string;disposition:string}|null>};
+const answer=JSON.parse(Bun.spawnSync([python!,"-I",join(here,"🐍️.py"),root,join(here,"..","..","🧬️schema","🧾️refusals.json"),join(here,"..","..","🧬️schema","🔣️.json"),join(here,"🔣️.json")]).stdout.toString()) as {law:{sites:number;missing:string[]};scan:Record<string,{occurrences:number;typed:number;marked:number}>;texts:Record<string,{class:string;disposition:string}|null>};
 const oracle=answer.scan;
 
+function argumentsOf(text:string,from:number):string[]{
+ const parts:string[]=[];let depth=1,quote="",current="",index=from;
+ for(;index<text.length&&depth>0;index++){
+  const char=text[index]!;
+  if(quote){current+=char;if(char==="\\"){current+=text[++index]??"";}else if(char===quote)quote="";continue;}
+  if(char==="\""||char==="'"||char==="`"){quote=char;current+=char;continue;}
+  if("([{".includes(char))depth++;else if(")]}".includes(char)){depth--;if(depth===0)break;}
+  if(char===","&&depth===1){parts.push(current.trim());current="";continue;}
+  current+=char;
+ }
+ parts.push(current.trim());return parts;
+}
+function litteralHead(argument:string):string|undefined{const found=/^"((?:[^"\\]|\\.)*)"|^`((?:[^`$\\]|\\.|\$(?!\{))*)/u.exec(argument);return found?(found[1]??found[2]):undefined;}
+/** The throws of the typed constructor from the `snapshot` or `build` layer in one source text, by the literal head of their message. */
+function layeredThrows(text:string):string[]{
+ const heads:string[]=[];
+ for(const call of text.matchAll(/concurrentEditV1\(/gu)){const args=argumentsOf(text,call.index+call[0].length);if(args.length<4||(args[3]!=='"snapshot"'&&args[3]!=='"build"'))continue;const head=litteralHead(args[2]!);if(head)heads.push(head);}
+ return heads;
+}
+function declaredFor(file:string,head:string):boolean{return table.classes.some(row=>row.messages.some(message=>message.sites.includes(file)&&head.includes(message.text)));}
+function law(){
+ const missing:string[]=[];let sites=0;
+ const walk=(folder:string):void=>{
+  for(const entry of readdirSync(folder,{withFileTypes:true})){
+   if(entry.isDirectory()){if(!["node_modules",".git","target","dist"].includes(entry.name)&&!entry.name.includes("tests")&&!entry.name.startsWith("🗑"))walk(join(folder,entry.name));continue;}
+   if(!/\.(ts|mjs|cjs)$/u.test(entry.name)||entry.name.endsWith(".d.ts"))continue;
+   const path=join(folder,entry.name),text=readFileSync(path,"utf8");if(!text.includes("concurrentEditV1("))continue;
+   const file=path.slice(root.length);
+   for(const head of layeredThrows(text)){sites++;if(!declaredFor(file,head))missing.push(file+"|"+head);}
+  }
+ };
+ walk(join(root,"🧰️framework"));
+ return {sites,missing:missing.sort()};
+}
 function scan(){
  const report:Record<string,{occurrences:number;typed:number;marked:number}>={};
  for(const row of table.classes)for(const message of row.messages)for(const site of message.sites){
@@ -50,6 +84,17 @@ test("every declared message exists at its declared site, and an independent Pyt
  for(const [key,row] of Object.entries(own))expect(row.occurrences,key).toBeGreaterThan(0);
 });
 
+test("no snapshot- or build-layer concurrent edit is raised without a class that declares its message at its file, and an independent Python scan agrees",()=>{
+ const own=law();
+ expect(own.sites).toBeGreaterThan(40);
+ expect(own.missing).toEqual([]);
+ expect(own).toEqual(answer.law);
+ const file="a/b.ts";
+ expect(layeredThrows('throw concurrentEditV1("length",path,"Original Cargo workspace Source length changed","snapshot");throw concurrentEditV1("bytes",path,`Head ${x} tail`,"build");throw concurrentEditV1("bytes",path,"read layer");throw concurrentEditV1("bytes",path,dynamic,"build")')).toEqual(["Original Cargo workspace Source length changed","Head "]);
+ expect(declaredFor(file,"Original Cargo workspace Source length changed")).toBe(false);
+ expect(declaredFor(table.classes.find(row=>row.id==="cargo-workspace-topology")!.messages[0]!.sites[0]!,"Original Cargo workspace Source length changed: /w")).toBe(true);
+});
+
 test("a class that is retried raises its messages through its own constructor and never through a plain Error; a fatal class never does",()=>{
  const report=scan();
  for(const row of table.classes)for(const message of row.messages)for(const site of message.sites){
@@ -73,6 +118,12 @@ test("a reader in any language raises a retried class through the wire form, and
  expect(concurrentEditOfV1(Object.assign(new Error("x"),{code:"OTHER",reason:"bytes",path:"/p"}))).toBeUndefined();
  expect(concurrentEditOfV1(concurrentEditV1("generation","/q"))?.reason).toBe("generation");
  expect(staleImplementationV1("x")).toBeInstanceOf(Error);
+ const first=concurrentEditV1("length","/w/Cargo.toml","Original Cargo workspace Source length changed","snapshot"),closed=new Error("Original process admission closed - first failure: "+first.message,{cause:first});
+ expect(concurrentEditErrorOfV1(first)).toBe(first);
+ expect(concurrentEditErrorOfV1(closed)).toBe(first);
+ expect(concurrentEditErrorOfV1(new Error("Cargo artifact build failed",{cause:new Error("plain")}))).toBeUndefined();
+ expect(concurrentEditErrorOfV1(undefined)).toBeUndefined();
+ expect(concurrentEditOfV1(closed,protocol.profiles.snapshot.rank)?.reason).toBe("length");
 });
 
 test("a text captured from a failed child is classified exactly like the independent oracle and like the vector says, in both languages",()=>{

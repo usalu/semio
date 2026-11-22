@@ -1,0 +1,9 @@
+# m05 dependency retry ingestion
+
+The completed Windows m05 dependency attempt lasted 799 seconds and ended at 19:44:06.620 UTC. Its producer reached cumulative ownership frontier operation 884,224 at 612 seconds. The child Bun process was observed through about 48 seconds. The failure left zero changed bindings, no unresolved Source transition and no retained capsules. The existing 400-character mirror clipped the installer stderr before the cause, so this record establishes the pre-installer ownership cost and a later Bun failure. The shared install store had no Windows manifests at the checkpoint.
+
+Before the scheduled 20:04:06.927 UTC retry, m05 attested beyond the exact installer diagnostic source PUT at author cursor `185:1051838` and the schema PUT at `185:1001341`. The source SHA-256 is `eabe8aad07542227e9abae9ac426c4d53194731d0fce7043d5277d557c4bb9f2`; the schema SHA-256 is `c51684b2317a7cc229bdd89337fbf731969161dd601ccad707a449bbdd0003b1`. Both local blobs matched their recorded hashes and contained the excerpt implementation or its byte-limit policy. The attested intake cursor covered those bytes. A new native child had yet to demonstrate which implementation it loaded.
+
+At 20:04:56 UTC m05 still reported `waiting/dependencies` with refusal `sidecar-restarting`. The old containment, live log, failed log and terminal timing were unchanged. The Ready state machine checks a pending supervisor restart before the backoff and memory decisions, so the scheduled time alone did not start a dependency retry. The replica separately reported 5,110 incoming entries and a live sync signal.
+
+As background, m07 had already completed its dependencies and entered workspace. At 20:01 UTC its waiting workspace graph reader reported a leader that advanced from 358 to 9,778 source observations and from 9,472 to 61,824 verified memo rows. Neither sample was an installer-state observation.

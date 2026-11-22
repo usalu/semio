@@ -1,5 +1,7 @@
 import {freeSpaceSyncV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🆓️free-space/🟦️.ts";
 import {volumeMountOfV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🆓️free-space/💽️disk-full/🟦️.ts";
+import {machineHostFloorV1} from "../../../⚡️caching/💾️storage/🧾️ledger/🎚️machine/🟦️.ts";
+import machinePolicy from "../../../⚡️caching/💾️storage/🧾️ledger/🎚️machine/🔣️policy.json" with {type:"json"};
 import {CAS_BUDGET_V1,CAS_RESERVE_FACTOR_V1,type CasBudgetV1,type CasPolicyV1} from "../🧬️schema/🟦️.ts";
 
 /** 🌡️ The partition that holds a path: its mount point, size and the bytes a writer may still use. */
@@ -41,7 +43,7 @@ export function decideCasEnforcementV1(input:CasEnforcementInputV1):CasEnforceme
  }
  if(input.storeBytes===undefined)return verdict("measure","unknown-usage");
  const held=input.storeBytes+input.incomingBytes;
- if(held>input.policy.capBytes&&!input.collected)return verdict("collect-now","cap-exceeded");
+ if(held>input.policy.capBytes&&!input.collected)return verdict(input.partition===undefined?"collect-now":"collect-background","cap-exceeded");
  if(held>input.policy.capBytes*input.policy.highWatermark&&!input.collected)return verdict("collect-background","cap-high");
  return verdict("allow","fits");
 }
@@ -56,10 +58,17 @@ export function casPartitionBudgetV1(totalBytes:number,budget:CasBudgetV1=CAS_BU
 }
 
 /** 🌡️ The policy a partition is judged by: the declared policy with the used shares replaced by the shares its derived budget gives (critical = 1 - cushion / size, high = 1 - reserve / size, low = 1 - (reserve + hysteresis) / size); a partition that cannot derive them, or an unmeasured one, keeps the declared shares. */
-export function casPartitionPolicyForV1(policy:CasPolicyV1,partition:Pick<CasPartitionV1,"totalBytes"> | undefined,budget:CasBudgetV1=CAS_BUDGET_V1,factor:number=CAS_RESERVE_FACTOR_V1):CasPolicyV1{
+export function casPartitionPolicyForV1(policy:CasPolicyV1,partition:(Pick<CasPartitionV1,"totalBytes">&Partial<Pick<CasPartitionV1,"freeBytes">>) | undefined,storeBytes?:number,budget:CasBudgetV1=CAS_BUDGET_V1,factor:number=CAS_RESERVE_FACTOR_V1):CasPolicyV1{
  if(partition===undefined)return policy;
- const derived=casPartitionBudgetV1(partition.totalBytes,budget,factor);
- if(!derived.derivable)return policy;
+ const cap=casEffectiveCapBytesV1(policy,partition,storeBytes),capped=cap===policy.capBytes?policy:Object.freeze({...policy,capBytes:cap}),derived=casPartitionBudgetV1(partition.totalBytes,budget,factor);
+ if(!derived.derivable)return capped;
  const total=partition.totalBytes;
- return Object.freeze({...policy,partition:Object.freeze({criticalUsedFraction:1-derived.cushionBytes/total,highUsedFraction:1-derived.reserveBytes/total,lowUsedFraction:1-(derived.reserveBytes+derived.hysteresisBytes)/total})});
+ return Object.freeze({...capped,partition:Object.freeze({criticalUsedFraction:1-derived.cushionBytes/total,highUsedFraction:1-derived.reserveBytes/total,lowUsedFraction:1-(derived.reserveBytes+derived.hysteresisBytes)/total})});
+}
+
+/** 🧯️ The cap in force on this partition: the declared cap, at most `capHostSharePercent` of the partition, and at most what the store holds plus what the host can still give above its free floor (the floor of the machine budget, `machineHostFloorV1`: the declared bytes bounded by a share of the volume), never below `minimumCapBytes` (and never above the declared cap), aligned down to the alignment step of the machine budget so that the cap does not move with every written byte. The store therefore shrinks as the disk fills instead of waiting for the critical share. An unknown store size leaves the room out. */
+export function casEffectiveCapBytesV1(policy:Pick<CasPolicyV1,"capBytes"|"capHostSharePercent"|"minimumCapBytes">,partition:Pick<CasPartitionV1,"totalBytes">&Partial<Pick<CasPartitionV1,"freeBytes">>,storeBytes?:number):number{
+ const floor=machineHostFloorV1(machinePolicy,partition.totalBytes),share=Math.floor(partition.totalBytes*policy.capHostSharePercent/100),room=storeBytes===undefined?Infinity:storeBytes+Math.max(0,(partition.freeBytes??0)-floor),step=machinePolicy.alignBytes;
+ const wanted=Math.max(policy.minimumCapBytes,Math.min(share,room)),aligned=Math.max(policy.minimumCapBytes,Math.floor(wanted/step)*step);
+ return Math.min(policy.capBytes,aligned);
 }

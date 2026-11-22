@@ -4,6 +4,7 @@ import{sayBuildV1}from"../../📖️texts/🟦️.ts";
 import {type BazelImplementationV1,type BazelRuntimeV1,type BazelTaskManifestV1,bazelBirthParametersAllowedV1,bazelCapturedImplementationV1,bazelTaskBaseEnvironmentV1,fileHash,initializeBazelControlTextV1,installBazelOrchestrationV1,issueBazelTaskEnvironmentV1,readBazelBirthFileV1,requireBazelImplementationV1,restoreBazelSnapshotV1,runBazelActionEntryV1,withBazelTaskCleanupV1} from "./🎬️executor/🟦️.ts";
 import{createIssuedResourceControlV1,requireIssuedResourceControlInvocationV1}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {buildOrchestrationContextV1,buildOrchestrationDelegatesV1} from "../../📥️caller/📤️orchestration/🟨️.mjs";
+import {startBazelRemoteCacheProxyV1} from "./🌐️remote-cache/🟦️.ts";
 import {bazelWorkspaceReclaimV1,withBazelStorageV1,requireBazelStorageV1,requireBazelSetupStorageV1,bazelCacheFlagsV1,bazelCacheLayoutV1,bazelModuleCatalogPathsV1,type BazelStorageV1,type BazelSetupStorageV1} from "./💾️storage/🟦️.ts";
 import {availableParallelism,homedir,tmpdir,totalmem} from "node:os";
 import {BAZEL_SESSION_POLICY_V1,bazelRepositoryContentsV1,bazelNestedServersV1,bazelServerOverrideV1,bazelSessionCommandV1,bazelSessionMessageV1,bazelSessionResourcesV1,bazelSessionStartupV1,bazelSessionWorkspaceV1,planBazelServersV1,withBazelSessionV1,type BazelServerPlanV1,type BazelSessionV1,type BazelSlotKindV1,type BazelSlotPortV1} from "./🧵️sessions/🟦️.ts";
@@ -782,7 +783,7 @@ repo_launch = rule(implementation = _launch_impl, executable = True, attrs = {"m
 /** ⚙️ Resolves the provisioned bun executables the hermetic actions of a plan run under, or nothing when the plan has none; a missing executable fails closed before Bazel starts. */
 export function bazelExecutionPlanV1(toolsRoot:string,emitted:ReadonlyMap<string,BazelActionV1>,environment:Readonly<Record<string,string|undefined>>,host=bazelExecutionPlatformV1(process.platform,process.arch)):BazelExecutionPlanV1|undefined{
  if(![...emitted.values()].some(action=>action.kind==="hermetic"))return undefined;
- const remote=bazelRemoteExecutionV1(environment),ids=[...new Set([host.id,...(remote?[remote.platform]:[])])];
+ const remote=bazelRemoteExecutionV1(environment,host),ids=[...new Set([host.id,...(remote?[remote.platform]:[])])];
  return{host:host.id,...(remote?{remote:{platform:remote.platform,properties:remote.properties}}:{}),tools:Object.fromEntries(ids.map(id=>{const path=bazelBunStorePathV1(toolsRoot,id);if(!existsSync(path))throw new Error(`Pinned Bun ${id} is not prepared for hermetic actions`);return [id,path];}))};
 }
 
@@ -988,7 +989,8 @@ async function runBazelTasksInStorageV1(root:string,graph:BuildGraphV1,request:B
  await collectBazelGarbageV1(hold,phaseControl);
  const {session,servers}=hold;
  return (async()=>{
-  const {workspace,plan,implementation,adapter,scopes}=await profilePhaseV1("bazel.publish",()=>publishBazelGraphV1(root,graph,request,invocation,storage,phaseControl,session.slot)),emitted=bazelActionsV1(graph,plan,request.skipCache===true,{hermetic:true}),hostPlan=bazelHostPlanV1(process.env),workers=planWorkersV1(workerPolicy,bazelGrantedWorkerHostV1(hostPlan,currentWorkerHostV1()),{demand:bazelWorkerDemandV1(emitted,plan),...(bazelStartJobsV1(request.parallel,hostPlan)?{jobs:bazelStartJobsV1(request.parallel,hostPlan)!}:{}),...(request.workers===undefined?{}:{workers:request.workers})}),settings=bazelWorkerSettingsV1(workers),cache=bazelCacheFlagsV1(storage.paths,session.slot,{environment:process.env,skipCache:request.skipCache,skipRemoteCache:request.skipRemoteCache,checkout:root}),profile=requireBazelPlatformProfileV1(cache,await readBazelPathsV1(workspace)),startup=bazelStartupOptionsV1(root,storage,cache,profile,servers),options=["--lockfile_mode=off","--incompatible_strict_action_env",...cache.command,...settings.flags,...(hostPlan?bazelHostResourceSettingsV1(hostPlan).flags:bazelSessionResourcesV1(servers)),...bazelSessionCommandV1(bazelRepositoryContentsV1(storage.paths.outputs))];
+  const proxy=await startBazelRemoteCacheProxyV1(process.env,{skip:request.skipRemoteCache===true});try{
+  const {workspace,plan,implementation,adapter,scopes}=await profilePhaseV1("bazel.publish",()=>publishBazelGraphV1(root,graph,request,invocation,storage,phaseControl,session.slot)),emitted=bazelActionsV1(graph,plan,request.skipCache===true,{hermetic:true}),hostPlan=bazelHostPlanV1(process.env),workers=planWorkersV1(workerPolicy,bazelGrantedWorkerHostV1(hostPlan,currentWorkerHostV1()),{demand:bazelWorkerDemandV1(emitted,plan),...(bazelStartJobsV1(request.parallel,hostPlan)?{jobs:bazelStartJobsV1(request.parallel,hostPlan)!}:{}),...(request.workers===undefined?{}:{workers:request.workers})}),settings=bazelWorkerSettingsV1(workers),cache=bazelCacheFlagsV1(storage.paths,session.slot,{environment:process.env,skipCache:request.skipCache,skipRemoteCache:request.skipRemoteCache,checkout:root,...(proxy.url===undefined?{}:{proxy:proxy.url})}),profile=requireBazelPlatformProfileV1(cache,await readBazelPathsV1(workspace)),startup=bazelStartupOptionsV1(root,storage,cache,profile,servers),options=["--lockfile_mode=off","--incompatible_strict_action_env",...cache.command,...settings.flags,...(hostPlan?bazelHostResourceSettingsV1(hostPlan).flags:bazelSessionResourcesV1(servers)),...bazelSessionCommandV1(bazelRepositoryContentsV1(storage.paths.outputs))];
   const continuous=Object.values(plan.tasks).filter(task=>task.definition.continuous),orchestrated=new Set(continuous.filter(task=>bazelTaskOrchestratedV1(graph,task)).map(task=>task.id)),assignments=continuous.length?bazelScopeAssignmentsV1(graph,plan,emitted):undefined;
   await planned?.();
   if(cache.helper){await mkdir(dirname(cache.helper.path),{recursive:true});await writeChanged(cache.helper.path,cache.helper.content);await chmod(cache.helper.path,cache.helper.mode);}
@@ -1020,6 +1022,7 @@ async function runBazelTasksInStorageV1(root:string,graph:BuildGraphV1,request:B
    await Promise.race([Promise.all(services.filter(service=>plan.selected.includes(service.task.id)).map(service=>service.completion)),failed]);
   },async()=>{controller.abort(Error("Bazel selected task closure completed"));await withBazelTaskCleanupV1(()=>control.stop(),async()=>{await Promise.allSettled([...services.map(service=>service.completion),...(building?[building]:[])]);signal.removeEventListener("abort",cancel);});});
   return 0;
+  }finally{await proxy.stop();}
  })();
 }
 

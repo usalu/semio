@@ -1,5 +1,5 @@
 import {ensureNativeTranspileV1} from "../../🌐️browser-bundle/🏗️materialization/🦀️native-transpile/📜️script.ts";
-import {checkDescriptorEmitterCapabilitiesV1,ensureDescriptorEmitterV1,withCompilerStoreDescriptorEmitterV1,type DescriptorEmitterV1} from "../../🖨️describe/🛠️emitter/🟦️.ts";
+import {checkDescriptorEmitterCapabilitiesV1,ensureFreshDescriptorEmitterV1,withCompilerStoreDescriptorEmitterV1,type DescriptorEmitterV1} from "../../🖨️describe/🛠️emitter/🟦️.ts";
 import{readNativeStorageReservationPolicyV1}from"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
 import {requireNativeStoragePathV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 import type{CargoCompilerInputsPortV1}from"@semio-tech/process/artifacts/native-build/inputs";
@@ -20,7 +20,7 @@ import { CATALOG_LANGUAGES_V1 } from "../../../../../../🔨️modules/🏃️pr
 import { mkdirSync, rmSync } from "node:fs";
 import { join,resolve } from "node:path";
 import { nativeBuildGenerationKindV1, nativeBuildPassInputRequestsV1, nativeBuildSchedulerInputRequestV1, runNativeBuildDriverV1, type LinkedComponentV1, type NativeBuildOutcomeV1, type NativeBuildDriverOptionsV1, type NativeBuildStageContextV1, type NativeBuildStageV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🧩️component-pass/🟦️.ts";
-import{type NativeBuildGenerationKindV1,type NativeBuildGenerationV1,type NativeBuildJobV1,type NativeBuildPipelineV1,type NativeBuildPlanV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🧩️component-pass/📋️contract/🟦️.ts";
+import{nativeReleaseWorkUnitsV1,type NativeBuildGenerationKindV1,type NativeBuildGenerationV1,type NativeBuildJobV1,type NativeBuildPipelineV1,type NativeBuildPlanV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🧩️component-pass/📋️contract/🟦️.ts";
 import { optimizeComponentCoresV1,publishComponentBrowserV1, transpileComponentModulesV1, type ComponentModuleWorkV1 } from "../../🌐️browser-bundle/🏗️materialization/🚀️commands/🟦️.ts";
 import { componentDeliverableV1, SHIPPED_COMPONENT_PROFILE, componentProfileV1, type ComponentReceiptV1 } from "../../🖨️describe/🏷️component-receipt/🟦️.ts";
 import { componentStageTargetV1, componentsDescribeArgumentsV1, settleComponentDescriptorV1, type ComponentDescribeModeV1 } from "../../🖨️describe/🧩️component-stage/🟦️.ts";
@@ -64,6 +64,12 @@ export function componentDriverStagesV1(repoRoot:string,invocation:ScriptInvocat
  };
 }
 
+/** 🛠️ Tells whether the plan itself builds the descriptor emitter as a job its `describe` stage waits for, so no prerequisite stage is needed. */
+function planBuildsEmitterV1(repoRoot:string,plan:NativeBuildPlanV1):boolean{
+ const emitterRoot=dirname(resolve(repoRoot,DESCRIPTOR_EMITTER_MANIFEST_V1));
+ return plan.jobs?.some(job=>job.cwd===emitterRoot&&job.command[0]==="repo"&&job.command[1]==="./📜️script.ts"&&job.command[2]==="build"&&plan.stageAfter?.describe?.includes(`job:${job.id}`))??false;
+}
+
 /** 🏪️ Runs one build driver over `plan` inside the repository's charged compiler store of `mode`, the one owner every component driver run goes through:
  * the store issues the native storage reservation, the configured Source boundary, the Cargo home, target and build directories and the stage cache root,
  * and the bounded registry custody of every pass manifest is held under the caller's own network grant BEFORE the compiler writer custody is taken, so the
@@ -73,16 +79,16 @@ export function componentDriverStagesV1(repoRoot:string,invocation:ScriptInvocat
  * @see ../../../../../../🔨️modules/🏃️process/🔒️leases/🧭️order/🔣️policy.json
  * @see ../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts
  * @see ../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts */
-async function runRepositoryComponentDriverV1(repoRoot: string, mode: BuildMode, plan: NativeBuildPlanV1, options: Readonly<{ invocation:ScriptInvocation;facet:ComponentStageFacetV1;describeMode:ComponentDescribeModeV1;network: CargoDependencyNetworkV1; control: CompilerAdmissionControl; environment: Readonly<Record<string, string | undefined>>; generation: NativeBuildGenerationKindV1; consume?:NativeBuildDriverOptionsV1["consume"];maximumObservationBytes?:number;retainCompilationBytes?:number; jobEnvironment?: (job: NativeBuildJobV1, generation: NativeBuildGenerationV1) => Readonly<Record<string, string>>; log?: (line: string) => void }>): Promise<NativeBuildOutcomeV1> {
+async function runRepositoryComponentDriverV1(repoRoot: string, mode: BuildMode, plan: NativeBuildPlanV1, options: Readonly<{ invocation:ScriptInvocation;facet:ComponentStageFacetV1;describeMode:ComponentDescribeModeV1;network: CargoDependencyNetworkV1; control: CompilerAdmissionControl; environment: Readonly<Record<string, string | undefined>>; generation: NativeBuildGenerationKindV1; emitterHeld?:true; releaseWorkUnits?: number; consume?:NativeBuildDriverOptionsV1["consume"];maximumObservationBytes?:number;retainCompilationBytes?:number; jobEnvironment?: (job: NativeBuildJobV1, generation: NativeBuildGenerationV1) => Readonly<Record<string, string>>; log?: (line: string) => void }>): Promise<NativeBuildOutcomeV1> {
   if (!plan.passes.length) throw Error("Component build driver requires declared Cargo passes");
   const targets=plan.passes.flatMap(pass=>pass.packages.map(row=>componentStageTargetV1(repoRoot,row.manifest)));
+  if(!options.emitterHeld&&!planBuildsEmitterV1(repoRoot,plan))await ensureFreshDescriptorEmitterV1(repoRoot,options.invocation,options.control,options.log);
   if(options.facet==="browser"&&targets.some(target=>target.directoryName!==undefined))await ensureNativeTranspileV1(repoRoot,options.invocation,options.control,options.environment);
   const declarations=targets.map(target=>({manifest:target.manifestPath,intent:{version:1 as const,mode,pluginId:target.pluginId,cratePath:target.cratePath},packageId:target.packageId,packageName:target.packageName}));
   return withRepositoryCacheStoreV1(repoRoot,"dependencies",options.invocation,options.control,(_store,storePhase)=>{
    const environment=scriptInvocationEnvironment(options.invocation,options.environment);
    return withRepositoryCompilerStoreV1(repoRoot,mode,storePhase,environment,async(store,control)=>{
-   const emitterRoot=dirname(resolve(repoRoot,DESCRIPTOR_EMITTER_MANIFEST_V1));
-   const buildsEmitter=plan.jobs?.some(job=>job.cwd===emitterRoot&&job.command[0]==="repo"&&job.command[1]==="./📜️script.ts"&&job.command[2]==="build"&&plan.stageAfter?.describe?.includes(`job:${job.id}`));
+   const buildsEmitter=planBuildsEmitterV1(repoRoot,plan);
    if(!buildsEmitter)await checkDescriptorEmitterCapabilitiesV1(repoRoot,options.invocation,store,control);
    const withProductLeaseTask=captureComponentProductLeaseTaskV1();
    const leaseDirectory=readNativeStorageReservationPolicyV1(store.storage,store.control).leaseDirectory;
@@ -104,7 +110,7 @@ async function runRepositoryComponentDriverV1(repoRoot: string, mode: BuildMode,
    const language=resolveLanguageV1(CATALOG_LANGUAGES_V1,[],process.env).language,say=(line:string)=>(options.log??console.log)(line);
    return retryAfterOutOfSpaceV1({store:store.root,language,report:say},()=>withUnitPressureRecheckV1(()=>relieveUnitStorageV1(store.root,{environment:store.environment,language,report:say}),()=>withRepositoryCargoPassInputsV1({...passInputs,control},requests,inputs=>runNativeBuildDriverV1({storage:store.storage,sourceBoundary:store.sourceBoundary,sourceMemo:repositoryCargoSourceMemoV1(store),decorateStageCache:stageFleetDecoratorV1({workspaceRoot:repoRoot,environment:store.environment,report:event=>say(stageFleetEventTextV1(language,event))}),withCargoInputs,withPassInputs:(rows,body)=>withRepositoryCargoPassInputsV1({...passInputs,control:inputs},rows,body),plan,cwd:repoRoot,cacheRoot:join(store.root,"components"),shared:{target:lane.target,build:lane.build},generation:options.generation,leaseDirectory:leaseDirectory,environment:store.environment,control:inputs,withCapacity:(async compile=>{const language=resolveLanguageV1(CATALOG_LANGUAGES_V1,[],process.env).language,report=options.log??console.log;await relieveUnitStorageV1(store.root,{environment:store.environment,language,report:line=>report(line)});const units=await compileUnitsForHostV1({environment:store.environment,signal:inputs.signal}),waitStart=Date.now(),operation="component build";report(describeCompileUnitsV1(language,"planned",{operation,preferred:units.decision.preferred,minimum:units.decision.minimum,cores:units.host.cores,reason:units.decision.reason}));return withCompilerWorkspaceSharedWriteV1(store.storage,leaseDirectory,inputs,writer=>withCompilerCapacityConsumptionV1({request:units.request,directory:leaseDirectory,control:writer,environment:store.environment},async(facts,held)=>{requireGrantedCompileUnitsV1(units.decision,facts.parallelism);report(describeCompileUnitsV1(language,"granted",{operation,granted:facts.parallelism,cores:units.host.cores,seconds:Math.round((Date.now()-waitStart)/1000)}));return withComponentModelPublicationV1({workspace:repoRoot,invocation:options.invocation,storage:store.storage,control:held,toolchain:store.toolchain,declarations,withProductLeaseTask},publisher=>compile(facts,held,publisher));}));}) as NonNullable<NativeBuildDriverOptionsV1["withCapacity"]>,withStageWriter:(phase,write)=>withCompilerWorkspaceStageWriteV1(store.storage,leaseDirectory,phase,write),reclaimStorage:({needBytes})=>reclaimUnitStorageV1(store.root,needBytes,{signal:inputs.signal,report:{language:resolveLanguageV1(CATALOG_LANGUAGES_V1,[],process.env).language,write:(line:string)=>(options.log??console.log)(line)}}).then(()=>undefined),stages:(component,publisher)=>componentDriverStagesV1(repoRoot,options.invocation,publisher as ComponentModelPublicationV1,options.facet,options.describeMode,withDescribe,withBrowserLeaseTask)(component).map(stage=>stage.name==="describe"||stage.capacity==="cleanup"?stage:{...stage,run:context=>withIssuedResourceOperationV1(context.control,()=>withCompilerWorkspaceSharedWriteV1(store.storage,leaseDirectory,context.control,()=>stage.run(context)))}),...(options.consume?{consume:options.consume,maximumObservationBytes:options.maximumObservationBytes,retainCompilationBytes:options.retainCompilationBytes}:{}),...(options.jobEnvironment?{jobEnvironment:options.jobEnvironment}:{}),...(options.log?{log:options.log}:{})}))));
    });
-   });
+   },options.releaseWorkUnits);
   });
 }
 
@@ -117,7 +123,7 @@ export function buildReleasePipelineV1(repoRoot: string, pipeline: NativeBuildPi
   requireIssuedResourceControlInvocationV1(options.control,options.invocation);
   const authority=readNativeCallerAuthorityV1(options.invocation.capabilities),mode=authority.original.buildMode;if(repoRoot!==authority.repositoryRoot)throw Error("Actual component driver workspace required");
   const { plan, jobEnvironment } = nativeBuildPipelinePlanV1(repoRoot, pipeline, mode, options.components);
-  return runRepositoryComponentDriverV1(repoRoot,mode, plan, { invocation:options.invocation,facet:options.facet,describeMode:mode==="release"?"verify":"local",network: options.network, control: options.control, environment: process.env, generation: nativeBuildGenerationKindV1(process.env), jobEnvironment });
+  return runRepositoryComponentDriverV1(repoRoot,mode, plan, { invocation:options.invocation,facet:options.facet,describeMode:mode==="release"?"verify":"local",network: options.network, control: options.control, environment: process.env, generation: nativeBuildGenerationKindV1(process.env), releaseWorkUnits:nativeReleaseWorkUnitsV1(plan), jobEnvironment });
 }
 
 /** 🛠️ Retains the exact selected packages and profile of each component Cargo pass. */
@@ -134,7 +140,7 @@ export function componentOwnerPreparationArgumentsV1(pass: Readonly<{
 /** 🎯️ Builds exactly `pluginIds` — the closure one dev launch serves — through the one build driver over the warm stores: only the passes and packages of
  * those components, each streamed through its cached stages into the one plugin-modules root. A launch never pays for components it does not load.
  * @see ../../../🧑‍💻dev/♻️activation/🧰️preparation/🟦️.ts */
-export async function buildComponentClosureV1(repoRoot: string, pluginIds: ReadonlySet<string>, options: Readonly<{invocation:ScriptInvocation;facet:ComponentStageFacetV1;network:CargoDependencyNetworkV1; control: CompilerAdmissionControl; prepareCargoOwners?:true; generation?:NativeBuildGenerationKindV1;consume?:NativeBuildDriverOptionsV1["consume"];maximumObservationBytes?:number;retainCompilationBytes?:number;log?: (line: string) => void }>): Promise<NativeBuildOutcomeV1> {
+export async function buildComponentClosureV1(repoRoot: string, pluginIds: ReadonlySet<string>, options: Readonly<{invocation:ScriptInvocation;facet:ComponentStageFacetV1;network:CargoDependencyNetworkV1; control: CompilerAdmissionControl; prepareCargoOwners?:true; emitterHeld?:true; generation?:NativeBuildGenerationKindV1;consume?:NativeBuildDriverOptionsV1["consume"];maximumObservationBytes?:number;retainCompilationBytes?:number;log?: (line: string) => void }>): Promise<NativeBuildOutcomeV1> {
   requireIssuedResourceControlInvocationV1(options.control,options.invocation);
   const authority=readNativeCallerAuthorityV1(options.invocation.capabilities),mode=authority.original.buildMode;if(repoRoot!==authority.repositoryRoot)throw Error("Actual component driver workspace required");
   const plan = componentPassPlanV1(repoRoot, pluginIds, mode), environment = buildModeEnvironment(mode);
@@ -145,7 +151,7 @@ export async function buildComponentClosureV1(repoRoot: string, pluginIds: Reado
         scriptInvocationEnvironment(options.invocation, environment), options.control);
     }
   }
-  return runRepositoryComponentDriverV1(repoRoot,mode,plan, { invocation:options.invocation,facet:options.facet,describeMode:mode==="release"?"verify":"local",network: options.network, control: options.control, environment, generation:options.generation??"warm",...(options.consume?{consume:options.consume,maximumObservationBytes:options.maximumObservationBytes,retainCompilationBytes:options.retainCompilationBytes}:{}), ...(options.log ? { log: options.log } : {}) });
+  return runRepositoryComponentDriverV1(repoRoot,mode,plan, { invocation:options.invocation,facet:options.facet,describeMode:mode==="release"?"verify":"local",network: options.network, control: options.control, environment, generation:options.generation??"warm",...(options.emitterHeld?{emitterHeld:true as const}:{}),...(options.consume?{consume:options.consume,maximumObservationBytes:options.maximumObservationBytes,retainCompilationBytes:options.retainCompilationBytes}:{}), ...(options.log ? { log: options.log } : {}) });
 }
 
 /** 🧭️ The components one playground variant loads: `boot` is the host closure a launch must serve before anything else (its app scope only), `full` is
@@ -163,7 +169,6 @@ export async function describeComponentsV1(repoRoot: string, invocation:ScriptIn
   requireIssuedResourceControlInvocationV1(control,invocation);const authority=readNativeCallerAuthorityV1(invocation.capabilities),mode=authority.original.buildMode;
   const {all,pluginIds,profile,facet}=componentsDescribeArgumentsV1(segments);if(repoRoot!==authority.repositoryRoot||profile!==componentProfileV1(buildModePolicy(mode).cargoProfile))throw Error("Describe selection must match its actual Original workspace and mode");
   const plan=componentPassPlanV1(repoRoot,all?undefined:new Set(pluginIds),mode);
-  await ensureDescriptorEmitterV1(repoRoot,invocation,control);
   const outcome=await runRepositoryComponentDriverV1(repoRoot,mode,plan,{invocation,facet,describeMode:"write",network,control,environment:buildModeEnvironment(mode),generation:"warm"});
   console.log(`components describe: ${outcome.staged.length} component(s) described from ${profile} bytes; report ${outcome.report}`);
 }

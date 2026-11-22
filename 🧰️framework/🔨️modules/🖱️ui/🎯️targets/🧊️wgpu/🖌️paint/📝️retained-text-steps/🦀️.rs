@@ -51,17 +51,7 @@ pub(super) fn retained_stepper_text_step(value: &str, mut bounds: Rect, color: R
 #[derive(Clone, Copy)]
 pub(super) enum RetainedCaretAlignment {
     Start,
-    Center,
     End,
-}
-
-/// 🪟️ The line of a multi-line text a single-row field shows — the one holding `caret` (the first without one) — and
-/// the caret's place inside it.
-pub fn text_line_view(text: &str, caret: Option<usize>) -> (&str, usize) {
-    let at = caret.filter(|caret| text.is_char_boundary(*caret)).unwrap_or(0).min(text.len());
-    let start = text[..at].rfind('\n').map_or(0, |index| index + 1);
-    let end = text[at..].find('\n').map_or(text.len(), |index| at + index);
-    (&text[start..end], at - start)
 }
 
 pub(super) fn retained_caret_step(value: &str, caret: usize, bounds: Rect, size: f32, alignment: RetainedCaretAlignment, color: Rgba, atlas: &mut FontAtlas, draw: &mut DrawList, cursor: &mut RetainedNodePaintCursor) -> RetainedNodePaintStep {
@@ -80,7 +70,6 @@ pub(super) fn retained_caret_step(value: &str, caret: usize, bounds: Rect, size:
     }
     let origin = match alignment {
         RetainedCaretAlignment::Start => bounds.x,
-        RetainedCaretAlignment::Center => bounds.x + (bounds.w - cursor.measure_width).max(0.0) * 0.5,
         RetainedCaretAlignment::End => bounds.x + (bounds.w - cursor.measure_width).max(0.0),
     };
     let height = (size * 1.2).min(bounds.h);
@@ -144,7 +133,7 @@ pub fn field_paint_metrics(tree: &UiTree, id: NodeId, field: &UiFieldNode, bound
     semio_ui_wgpu_layout::flex::field_chrome_metrics(description_height, control.map_or(0.0, |control| control.height), error_height, theme.gap_standard)
 }
 
-fn retained_tree_index(len: usize, index: usize, reversed: bool) -> Option<usize> {
+pub(super) fn retained_tree_index(len: usize, index: usize, reversed: bool) -> Option<usize> {
     if index >= len {
         return None;
     }
@@ -213,7 +202,7 @@ pub(super) fn retained_tree_item_at<'a>(tree: &'a UiTreeNode, cursor: &RetainedN
     Some(item)
 }
 
-fn retained_tree_item_node_at(retained: &UiTree, tree_id: NodeId, tree: &UiTreeNode, cursor: &RetainedNodePaintCursor, reversed: bool) -> Option<NodeId> {
+pub(super) fn retained_tree_item_node_at(retained: &UiTree, tree_id: NodeId, tree: &UiTreeNode, cursor: &RetainedNodePaintCursor, reversed: bool) -> Option<NodeId> {
     if cursor.depth == 0 {
         return None;
     }
@@ -293,9 +282,14 @@ pub(super) fn retained_table_header_step(
     let header = metrics.header_height;
     let actions = semio_ui_wgpu_mounted_layout::table_actions_width_of(tree, metrics);
     let columns = table.columns.len();
+    let scroll_left = retained.node(tree_id).map_or(0.0, |node| node.state.scroll_offset.0);
+    let content = semio_ui_wgpu_layout::table::table_content_width(columns, actions).max(bounds.w);
     let (label, rect) = match (table.columns.get(cursor.item), table.actions_label.as_ref()) {
-        (Some(label), _) => (label, semio_ui_wgpu_layout::layout::table_column_rect(bounds.w, header, cursor.item, columns, actions, metrics)),
-        (None, Some(label)) if cursor.item == columns && actions > 0.0 => (label, Rect::new(if inline.is_rtl() { 0.0 } else { bounds.w - actions }, 0.0, actions, header)),
+        (Some(label), _) => {
+            let rect = semio_ui_wgpu_layout::layout::table_column_rect(content, header, cursor.item, metrics);
+            (label, Rect::new(rect.x - scroll_left, rect.y, rect.w, rect.h))
+        }
+        (None, Some(label)) if cursor.item == columns && actions > 0.0 => (label, Rect::new(if inline.is_rtl() { 0.0 } else { content - actions } - scroll_left, 0.0, actions, header)),
         _ => {
             if !reversed {
                 cursor.row_y += header;
@@ -347,7 +341,7 @@ pub(super) fn retained_table_cells_step(
         cursor.next_part();
         return RetainedNodePaintStep::Pending;
     };
-    let column = semio_ui_wgpu_layout::layout::table_column_rect(row.w, row.h, index, columns, semio_ui_wgpu_mounted_layout::table_actions_width_of(tree, metrics), metrics);
+    let column = semio_ui_wgpu_layout::layout::table_column_rect(row.w, row.h, index, metrics);
     let color = foreground_on_fill(theme, theme.text_element, item.presence.selected, item.presence.state == UiState::Previewed || item.presence.hover);
     let color = if item.presence.state == UiState::Disabled { color.with_alpha(color.a * 0.5) } else { color };
     match retained_tree_text_step(text.as_str(), Rect::new(row.x + column.x, row.y + column.y, column.w, column.h), font_size, color, inline, atlas, draw, cursor) {

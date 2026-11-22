@@ -62,6 +62,15 @@ export function naturalFileNameV1(appId: string, extension: string, at: Date): s
   return `${kind}-${at.toISOString().replace(/[-:]/gu, "").replace(/\.\d{3}Z$/u, "Z")}${extension}`;
 }
 
+/** 🏷️ The file name a saved natural file carries: the original name of the file the document was opened from, its extension aligned to the declared representation (case-insensitive match keeps the original spelling), or the timestamped `naturalFileNameV1` for a document that never came from a file. */
+export function naturalFileSaveNameV1(originalName: string | undefined, appId: string, extension: string, at: Date): string {
+  const base = (originalName ?? "").split(/[/\\]/u).at(-1)?.replace(/[\u0000-\u001f<>:"|?*]/gu, "").trim() ?? "";
+  if (base === "" || base === "." || base === "..") return naturalFileNameV1(appId, extension, at);
+  if (base.toLowerCase().endsWith(extension.toLowerCase()) && base.length > extension.length) return base;
+  const stem = base.replace(/\.[^.]*$/u, "");
+  return stem === "" ? naturalFileNameV1(appId, extension, at) : `${stem}${extension}`;
+}
+
 /** 📄️ Exact natural representation mounted by one editor definition. */
 export type NaturalFileFormatV1 = Readonly<{ formatKind: string; extension: string; mediaType: string; binary: boolean }>;
 
@@ -154,6 +163,7 @@ export function bytesOfDataUrlV1(dataUrl: string): Uint8Array {
 export type DocumentTransferNoticeV1 =
   | "exported"
   | "export-failed"
+  | "export-cancelled"
   | "file-saved"
   | "file-save-failed"
   | "file-save-cancelled"
@@ -174,6 +184,7 @@ export type DocumentTransferNoticeV1 =
 /** 🗣️ Notice text per outcome, authored beside the code like `📣️replay-refusal`; `{file}` is the file name. */
 export const DOCUMENT_TRANSFER_NOTICE_LABELS_V1: Readonly<Record<DocumentTransferNoticeV1, { readonly en: string; readonly de: string }>> = {
   exported: { en: "Exported “{file}”.", de: "„{file}“ exportiert." },
+  "export-cancelled": { en: "Export of “{file}” cancelled.", de: "Export von „{file}“ abgebrochen." },
   "export-failed": { en: "The document could not be exported.", de: "Das Dokument konnte nicht exportiert werden." },
   "file-saved": { en: "Saved “{file}”.", de: "„{file}“ gespeichert." },
   "file-save-failed": { en: "The file could not be saved.", de: "Die Datei konnte nicht gespeichert werden." },
@@ -501,7 +512,7 @@ export function captureTutorialUiSnapshot(state: ShellState, interaction: Intera
     focusedWindowId: state.layout.activeWindowId ?? undefined,
     activeUtilityByWindowId,
     activeToolId: state.actionPane.activeToolId ?? undefined,
-    layout: captureCurrentFrameworkLayout(state.layout.shellLayout, state.layout.extraWindowInstances),
+    layout: captureCurrentFrameworkLayout(state.layout.shellLayout),
     activePanelTabByGroup,
     panelJson: session?.viewState.panelJson,
     interactionSelection: captureInteractionSelection(interaction),

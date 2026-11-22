@@ -1,0 +1,20 @@
+{
+  "scopes": [
+    "exact paths",
+    "directory"
+  ],
+  "directory": "nested",
+  "blocked": {
+    "path": "nested/held.txt",
+    "text": "durable after retry"
+  },
+  "published": {
+    "path": "nested/fast.txt",
+    "text": "published before exit"
+  },
+  "unchanged": "settled.txt",
+  "committed": [
+    "put",
+    "delete"
+  ]
+}

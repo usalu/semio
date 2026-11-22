@@ -50,11 +50,23 @@ fn wire_completion(result:&crate::wit_events::CompletionResult)->serde_json::Val
 fn wire_grant(grant:&crate::wit_capabilities::CapabilityGrant)->serde_json::Value{serde_json::json!({"token":{"id":grant.token.id,"token":grant.token.token},"scope":grant.scope,"expiresMs":grant.expires_ms})}
 fn wire_activation(reason:&crate::wit_events::ActivationEvent)->serde_json::Value{use crate::wit_events::ActivationEvent as A;match reason{A::OnCommand(id)=>serde_json::json!({"tag":"on-command","val":id}),A::OnViewVisible(id)=>serde_json::json!({"tag":"on-view-visible","val":id}),A::OnFileType(ext)=>serde_json::json!({"tag":"on-file-type","val":ext}),A::OnArtifactKind(kind)=>serde_json::json!({"tag":"on-artifact-kind","val":kind}),A::OnExtensionRequest(point)=>serde_json::json!({"tag":"on-extension-request","val":point}),A::OnStartupFinished=>serde_json::json!({"tag":"on-startup-finished"})}}
 fn wire_capability_change(change:&crate::wit_capabilities::CapabilityChange)->serde_json::Value{use crate::wit_capabilities::CapabilityChange as C;match change{C::Granted(grant)=>serde_json::json!({"tag":"granted","val":wire_grant(grant)}),C::Revoked(id)=>serde_json::json!({"tag":"revoked","val":id}),C::Narrowed(grant)=>serde_json::json!({"tag":"narrowed","val":wire_grant(grant)})}}
+fn wire_natural_declaration(declaration: &crate::wit_events::NaturalSourceDeclaration) -> serde_json::Value {
+    serde_json::json!({"formatKind":declaration.format_kind,"extension":declaration.extension,"mediaType":declaration.media_type,"binary":declaration.binary})
+}
+
+fn wire_open_purpose(purpose: &crate::wit_events::ActorInstanceOpenPurpose) -> serde_json::Value {
+    use crate::wit_events::ActorInstanceOpenPurpose;
+    match purpose {
+        ActorInstanceOpenPurpose::Ordinary => serde_json::json!({"tag":"ordinary"}),
+        ActorInstanceOpenPurpose::NaturalSource(source) => serde_json::json!({"tag":"natural-source","val":{"declaration":wire_natural_declaration(&source.declaration),"extent":source.extent}}),
+    }
+}
+
 /// 🎟️ The lowered form of one WIT `event` (`{ tag, val }`, camelCase fields) that the guest lifts back into its generated type.
 pub fn event_to_wire(event:&wit_reactor::Event)->serde_json::Value{
  use wit_reactor::Event as W;
  match event{
-  W::InstanceOpen(open)=>serde_json::json!({"tag":"instance-open","val":{"instance":open.instance,"activationGeneration":open.activation_generation,"requestSequence":open.request_sequence,"appId":open.app_id,"actor":open.actor,"config":open.config,"assets":open.assets.iter().map(|(name,bytes)|serde_json::json!([name,bytes])).collect::<Vec<_>>(),"capabilities":open.capabilities.iter().map(wire_grant).collect::<Vec<_>>(),"quotas":open.quotas}}),
+  W::InstanceOpen(open)=>serde_json::json!({"tag":"instance-open","val":{"instance":open.instance,"purpose":wire_open_purpose(&open.purpose),"activationGeneration":open.activation_generation,"requestSequence":open.request_sequence,"appId":open.app_id,"actor":open.actor,"config":open.config,"assets":open.assets.iter().map(|(name,bytes)|serde_json::json!([name,bytes])).collect::<Vec<_>>(),"capabilities":open.capabilities.iter().map(wire_grant).collect::<Vec<_>>(),"quotas":open.quotas}}),
   W::InstanceClose(close)=>serde_json::json!({"tag":"instance-close","val":{"lifetime":wire_lifetime(&close.lifetime),"requestSequence":close.request_sequence}}),
   W::InstanceLifecycleAck(receipt)=>{use crate::wit_lifetime::Receipt as R;let (tag,lifetime,request_sequence,close_generation)=match receipt{R::Captured(value)=>("captured",&value.lifetime,value.request_sequence,None),R::Accepted(value)=>("accepted",&value.lifetime,value.request_sequence,Some(value.close_generation)),R::Retired(value)=>("retired",&value.lifetime,value.request_sequence,Some(value.close_generation))};serde_json::json!({"tag":"instance-lifecycle-ack","val":{"tag":tag,"val":{"lifetime":wire_lifetime(lifetime),"requestSequence":request_sequence,"closeGeneration":close_generation}}})}
   W::Activate(activate)=>serde_json::json!({"tag":"activate","val":{"instance":activate.instance,"reason":wire_activation(&activate.reason)}}),
@@ -87,6 +99,17 @@ pub fn event_to_wire(event:&wit_reactor::Event)->serde_json::Value{
     "owner":event.owner,"seq":event.seq,"kind":event.kind,"extent":event.extent,"control":control,
    }})
   }
+  W::NaturalSourcePrepare(event)=>serde_json::json!({"tag":"natural-source-prepare","val":{"instanceId":event.instance_id,"seq":event.seq,"declaration":wire_natural_declaration(&event.declaration),"extent":event.extent}}),
+  W::NaturalSourceControl(event)=>{
+   use crate::wit_events::NaturalSourceControl;
+   let control=match event.control { NaturalSourceControl::Begin=>"begin", NaturalSourceControl::Complete=>"complete", NaturalSourceControl::Cancel=>"cancel" };
+   serde_json::json!({"tag":"natural-source-control","val":{
+    "loan":{"operationId":event.loan.operation_id,"generation":event.loan.generation,"instanceId":event.loan.instance_id,
+     "declaration":wire_natural_declaration(&event.loan.declaration),"extent":event.loan.extent},
+    "owner":event.owner,"seq":event.seq,"kind":event.kind,"extent":event.extent,"control":control,
+   }})
+  }
+  W::FolderArchiveLoad(event)=>serde_json::json!({"tag":"folder-archive-load","val":{"instance":event.instance,"request":event.request}}),
   W::Wake=>serde_json::json!({"tag":"wake"}),
   W::Request(request)=>serde_json::json!({"tag":"request","val":{"req":request.req,"params":{"origin":wire_endpoint(&request.params.origin),"capability":request.params.capability,"payload":request.params.payload}}}),
  }
@@ -115,6 +138,15 @@ mod input_tests{
    let mut expected=common.clone();
    expected["control"]=case.clone();
    assert_eq!(event_to_wire(&event),serde_json::json!({"tag":"original-media-control","val":expected}));
+  }
+ }
+ #[test]
+ fn folder_archive_load_preserves_its_instance_and_exact_request(){
+  let law:serde_json::Value=serde_json::from_str(include_str!("🧪️tests/folder-archive-load.json")).unwrap();
+  for case in law["cases"].as_array().unwrap(){
+   let request:Vec<u8>=case["request"].as_array().unwrap().iter().map(|byte|byte.as_u64().unwrap() as u8).collect();
+   let event=wit_reactor::Event::FolderArchiveLoad(crate::wit_events::FolderArchiveLoadEvent{instance:case["instance"].as_u64().unwrap() as u32,request});
+   assert_eq!(event_to_wire(&event),serde_json::json!({"tag":"folder-archive-load","val":case}));
   }
  }
  #[test]

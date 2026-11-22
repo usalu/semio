@@ -68,10 +68,101 @@ pub(super) fn inspector_fields(snapshot: &PdfSnapshot, object: &PageObject) -> V
                 fields.extend(color_fields("set-annotation-style", color, &[]));
                 let border = annotation.border.as_ref().map(|border| border.width).unwrap_or(0.0);
                 fields.push(placed("pdf-object-border", "Border", "Rahmen", "set-annotation-border", "x", border, &[]));
+                if let PdfAnnotationKind::Widget { field: Some(name), .. } = &annotation.kind {
+                    fields.push(InspectorField { id: "pdf-object-field-value", label_en: "Field value", label_de: "Feldwert", action: "fill-form-field", key: "text", kind: ui::InputKind::Text, value: form_field_value(snapshot, name), numbers: Vec::new(), text: None, object_key: Some(name.clone()) });
+                }
             }
         }
     }
     fields
+}
+
+fn form_field_value(snapshot: &PdfSnapshot, path: &str) -> String {
+    fn find<'a>(fields: &'a [PdfFormField], path: &str, prefix: &str) -> Option<&'a PdfFormField> {
+        fields.iter().find_map(|field| {
+            let full = if prefix.is_empty() { field.name.clone() } else { format!("{prefix}.{}", field.name) };
+            if full == path { Some(field) } else { find(&field.children, path, &full) }
+        })
+    }
+    let Some(field) = snapshot.acro_form.as_ref().and_then(|form| find(&form.fields, path, "")) else { return String::new() };
+    match &field.kind {
+        PdfFormFieldKind::Text { value, .. } | PdfFormFieldKind::Button { value, .. } => value.clone().unwrap_or_default(),
+        PdfFormFieldKind::Choice { values, .. } => values.join(","),
+        PdfFormFieldKind::Signature { .. } | PdfFormFieldKind::Container => String::new(),
+    }
+}
+
+/// ✍️ The page-level authoring controls: create annotations, link, merge, replace and extract; see [`create_annotation`].
+pub(super) fn authoring_controls(page: usize, size: (f64, f64), controller_id: &str, publication_revision: semio_plugin::UiPublicationRevision, locale: Locale) -> UiAssemblyResult<Vec<semio_ui_contract::BuiltNode>> {
+    let label = |en: &'static str, de: &'static str| if locale == Locale::De { de } else { en };
+    let top = (size.1 - 72.0).max(0.0);
+    let place = |width: f64, height: f64| vec![("x", 36.0), ("y", top), ("width", width), ("height", height)];
+    let strokes = format!("36,{top},156,{}", top + 20.0);
+    let mut buttons: Vec<(&str, &str, UiValue, &str)> = Vec::new();
+    for (id, kind, en, de, numbers, extra) in [
+        ("pdf-add-note", "note", "Add note", "Notiz hinzufügen", place(20.0, 20.0), ""),
+        ("pdf-add-highlight", "highlight", "Add highlight", "Hervorhebung hinzufügen", place(120.0, 14.0), ""),
+        ("pdf-add-underline", "underline", "Add underline", "Unterstreichung hinzufügen", place(120.0, 14.0), ""),
+        ("pdf-add-strikeout", "strikeOut", "Add strike-out", "Durchstreichung hinzufügen", place(120.0, 14.0), ""),
+        ("pdf-add-ink", "ink", "Add freehand stroke", "Freihandlinie hinzufügen", Vec::new(), strokes.as_str()),
+    ] {
+        let mut arguments = object_args(page, kind, "", &numbers)?;
+        if !extra.is_empty() {
+            arguments = insert_named_text_arg(arguments, "extra", extra)?;
+        }
+        buttons.push((id, label(en, de), arguments, "create-annotation"));
+    }
+    for (id, action, en, de, extra, number) in [
+        ("pdf-merge-pick", "merge-pick", "Insert pages from PDF", "Seiten aus PDF einfügen", String::new(), page + 1),
+        ("pdf-replace-pick", "replace-page-pick", "Replace page from PDF", "Seite aus PDF ersetzen", String::new(), page),
+        ("pdf-replace-blank", "replace-page", "Replace page with blank page", "Seite durch leere Seite ersetzen", String::new(), page),
+        ("pdf-extract-page", "extract-pages", "Extract page to PDF", "Seite als PDF extrahieren", (page + 1).to_string(), page),
+    ] {
+        let mut arguments = object_args(number, "", "", &[])?;
+        if !extra.is_empty() {
+            arguments = insert_named_text_arg(arguments, "extra", &extra)?;
+        }
+        buttons.push((id, label(en, de), arguments, action));
+    }
+    let mut nodes = Vec::new();
+    for (id, text, arguments, action) in buttons {
+        nodes.push(ui::button(ui::Label(UiText::clipped(text))).try_id(id).map_err(|_| inspector_error("pdf.object.authoring-id"))?
+            .try_on_with(ui::Trigger::Activate, inspector_action(controller_id, action)?, arguments).map_err(|_| inspector_error("pdf.object.authoring-binding"))?
+            .try_build().map_err(|_| inspector_error("pdf.object.authoring"))?);
+    }
+    let link = InspectorField { id: "pdf-add-link", label_en: "Add link (address or page:N)", label_de: "Link hinzufügen (Adresse oder page:N)", action: "create-annotation", key: "text", kind: ui::InputKind::Text, value: String::new(), numbers: place(120.0, 14.0), text: None, object_key: Some("link".into()) };
+    nodes.push(field_input(page, "", &link, controller_id, publication_revision, locale)?);
+    Ok(nodes)
+}
+
+fn lower_first(name: String) -> String {
+    let mut characters = name.chars();
+    characters.next().map(|first| first.to_lowercase().chain(characters).collect()).unwrap_or_default()
+}
+
+fn text_field(id: &'static str, label_en: &'static str, label_de: &'static str, action: &'static str, key: &'static str, value: String, numbers: Vec<(&'static str, f64)>, object_key: Option<&str>) -> InspectorField {
+    InspectorField { id, label_en, label_de, action, key, kind: ui::InputKind::Text, value, numbers, text: None, object_key: object_key.map(str::to_string) }
+}
+
+/// 📚 Document-level inputs: layout, mode, metadata, tagging, bookmark, destination, document id, open link and page label prefix.
+fn document_fields(snapshot: &PdfSnapshot) -> Vec<InspectorField> {
+    let flag = |value: bool| if value { 1.0 } else { 0.0 };
+    let mark = snapshot.mark_info.as_ref().map_or((0.0, 0.0, 0.0), |mark| (flag(mark.marked), flag(mark.user_properties), flag(mark.suspects)));
+    let identity = |index: usize| snapshot.document_id.as_ref().map(|id| String::from_utf8_lossy(&id[index]).into_owned()).unwrap_or_default();
+    vec![
+        text_field("pdf-doc-layout", "Page layout (singlePage, oneColumn, twoColumnLeft, twoColumnRight, twoPageLeft, twoPageRight)", "Seitenlayout (singlePage, oneColumn, twoColumnLeft, twoColumnRight, twoPageLeft, twoPageRight)", "set-page-layout", "text", snapshot.page_layout.as_ref().map(|layout| lower_first(format!("{layout:?}"))).unwrap_or_default(), Vec::new(), Some("")),
+        text_field("pdf-doc-mode", "Page mode (useNone, useOutlines, useThumbs, fullScreen, useOc, useAttachments)", "Seitenmodus (useNone, useOutlines, useThumbs, fullScreen, useOc, useAttachments)", "set-page-mode", "text", snapshot.page_mode.as_ref().map(|mode| lower_first(format!("{mode:?}"))).unwrap_or_default(), Vec::new(), Some("")),
+        text_field("pdf-doc-metadata", "XMP metadata", "XMP-Metadaten", "set-metadata", "text", snapshot.metadata.clone().unwrap_or_default(), Vec::new(), Some("")),
+        placed("pdf-doc-marked", "Tagged (1 yes, 0 no)", "Mit Tags (1 ja, 0 nein)", "set-mark-info", "x", mark.0, &[("y", mark.1), ("width", mark.2)]),
+        placed("pdf-doc-user-properties", "User properties (1 yes, 0 no)", "Benutzereigenschaften (1 ja, 0 nein)", "set-mark-info", "y", mark.1, &[("x", mark.0), ("width", mark.2)]),
+        placed("pdf-doc-suspects", "Suspects (1 yes, 0 no)", "Verdachtsfälle (1 ja, 0 nein)", "set-mark-info", "width", mark.2, &[("x", mark.0), ("y", mark.1)]),
+        text_field("pdf-doc-id-permanent", "Permanent document id", "Dauerhafte Dokumentkennung", "set-document-id", "text", identity(0), Vec::new(), Some("")),
+        text_field("pdf-doc-id-changing", "Changing document id", "Wechselnde Dokumentkennung", "set-document-id", "extra", identity(1), Vec::new(), Some("")),
+        text_field("pdf-doc-open-link", "Open action link address", "Adresse der Öffnen-Aktion", "set-open-action", "text", String::new(), Vec::new(), Some("uri")),
+        text_field("pdf-page-bookmark", "Add bookmark for this page", "Lesezeichen für diese Seite hinzufügen", "set-outline", "text", String::new(), vec![("x", -1.0)], Some("")),
+        text_field("pdf-page-destination", "Named destination for this page", "Benanntes Ziel für diese Seite", "set-named-destination", "object", String::new(), Vec::new(), Some("")),
+        text_field("pdf-page-label-prefix", "Page label prefix", "Präfix der Seitenbeschriftung", "set-page-label", "extra", String::new(), vec![("x", 1.0)], Some("")),
+    ]
 }
 
 pub(super) fn page_fields(snapshot: &PdfSnapshot, index: usize) -> Vec<InspectorField> {
@@ -95,7 +186,7 @@ pub(super) fn page_fields(snapshot: &PdfSnapshot, index: usize) -> Vec<Inspector
         placed("pdf-page-height", "Page height", "Seitenhöhe", "set-page-size", "height", height, &[("width", width)]),
         placed("pdf-page-rotation", "Rotation", "Drehung", "set-page-rotation", "x", rotation, &[]),
         placed("pdf-page-user-unit", "User unit scale", "Maßstab der Benutzereinheit", "set-page-user-unit", "x", user_unit, &[]),
-    ]).collect()
+    ]).chain(document_fields(snapshot)).collect()
 }
 
 pub(super) fn page_boundary_fields(page: &PdfPage) -> impl Iterator<Item = InspectorField> {
@@ -215,12 +306,16 @@ pub(super) fn object_args(page: usize, object_id: &str, field: &str, numbers: &[
 }
 
 fn insert_text_arg(arguments: UiValue, text: &str) -> UiAssemblyResult<UiValue> {
+    insert_named_text_arg(arguments, "text", text)
+}
+
+pub(super) fn insert_named_text_arg(arguments: UiValue, key: &str, text: &str) -> UiAssemblyResult<UiValue> {
     let UiValue::Map(map) = arguments else { return Err(inspector_error("pdf.object.args")) };
     let mut rebuilt = UiMapBuilder::try_new().ok_or_else(|| inspector_error("pdf.object.args"))?;
     for (key, value) in map.iter() {
         rebuilt.try_insert(key.as_str().to_string(), value.credited_clone().ok_or_else(|| inspector_error("pdf.object.arg"))?).map_err(|_| inspector_error("pdf.object.arg"))?;
     }
-    rebuilt.try_insert("text".to_string(), UiValue::Text(inspector_text(text)?)).map_err(|_| inspector_error("pdf.object.arg"))?;
+    rebuilt.try_insert(key.to_string(), UiValue::Text(inspector_text(text)?)).map_err(|_| inspector_error("pdf.object.arg"))?;
     Ok(UiValue::Map(rebuilt.finish()))
 }
 

@@ -3,7 +3,13 @@ import { devServeCommandV1 } from "@semio-tech/framework-os-dev/local-hub/execut
 import graphlib from "graphlib";
 import { resolveFrameworkOsCatalogConfigurationV1 } from "@semio-tech/framework-os/modules/renderer/engine/elements/Shell/catalog";
 import { prepareWgpuPluginModules, assertWgpuPluginPlan } from "@semio-tech/framework-renderer-wgpu/plugin-modules";
+import type { PluginPackageDescriptor } from "@semio-tech/framework-kernel/descriptor-admission";
 import { describe, expect, test } from "bun:test";
+import { Database } from "bun:sqlite";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import { pathToFileURL } from "node:url";
+import { findWorkspaceRoot } from "@semio-tech/process/routing";
 import Ajv from "ajv";
 import fixture from "../🧫️fixtures/🧩️composition/🔣️.json";
 import schema from "../../🧬️schema/🔣️.json";
@@ -82,6 +88,88 @@ describe("catalog worker receiving laws", () => {
     let reads = 0;
     await expect(prepareWgpuPluginModules(catalog, [{ pluginId: "custom.core", moduleUrl: "https://example.test/core.js" }], authoredReceiptSource, { deadlineMs: 0, now: () => 0, readDescriptor: async () => { reads++; throw new Error("unexpected fetch"); } })).rejects.toThrow("deadline");
     expect(reads).toBe(0);
+  });
+  test("standalone boot reads only its primary plugin, contributors and verified dependency closure", async () => {
+    const row = fixture.variantDescriptors;
+    const identity = (id: string) => `https://example.test/${id}.js`;
+    const modules = row.descriptors.map(({ id }) => ({ pluginId: id, moduleUrl: identity(id) }));
+    const catalog = pluginCatalogV1(admitPluginCatalogV1({
+      ...fixture.cases[0]!.input,
+      targets: row.descriptors.map(({ id, contributes, consumes }) => ({
+        pluginId: id, moduleUrl: identity(id), wasmOut: `${id}.wasm`, role: "plugin",
+        contributes, consumes, dependsOn: [], activationEvents: [], capabilities: [],
+      })),
+      playgrounds: [{ variant: row.variant, pluginId: "gis", app: row.app, aliases: [] }],
+    }, authority()));
+    const reads: string[] = [];
+    const prepared = await prepareWgpuPluginModules(catalog, modules, authoredReceiptSource, {
+      bootVariant: row.variant,
+      readDescriptor: async id => {
+        reads.push(id);
+        const descriptor = row.descriptors.find(candidate => candidate.id === id);
+        if (!descriptor?.published) throw new Error(`descriptor unpublished: ${id}`);
+        return { manifest: {
+          pluginId: id, version: "1.0.0", dependencies: descriptor.dependencies.map(pluginId => ({ pluginId, version: "=1.0.0" })),
+        } } as PluginPackageDescriptor;
+      },
+    });
+    const graph = new graphlib.Graph();
+    graph.setEdge("gis", "map-tools");
+    for (const { id, dependencies } of row.descriptors) for (const dependency of dependencies) graph.setEdge(id, dependency);
+    expect(reads).toEqual(row.expectedReads);
+    expect(graphlib.alg.preorder(graph, "gis")).toEqual(row.expectedReads);
+    const plan = resolvePlaygroundBoot(prepared.catalog, row.variant);
+    assertWgpuPluginPlan(plan, prepared, "variant");
+    expect(plan.defaultAppId).toBe(row.app);
+    expect([...plan.plugins.map(plugin => plugin.pluginId)].sort()).toEqual([...row.expectedReads].sort());
+    expect(catalog.moduleUrl("unrelated")).toBe(identity("unrelated"));
+  });
+  test("standalone GIS boot closure agrees with its packaged runtime dependencies", async () => {
+    const { catalog, manifest, descriptor, variants, dependencies, components } = fixture.gisBoot;
+    const workspace = findWorkspaceRoot(), publication = join(workspace, catalog);
+    const { playgroundComponentClosureV1 } = await import("../../../🏗️build/🧩️driver-stages/🟦️.ts");
+    const { PLUGIN_BUILD_TARGETS } = await import(pathToFileURL(join(publication, "🧩️plugins", "🟦️.ts")).href);
+    const authored = Bun.TOML.parse(readFileSync(join(workspace, manifest), "utf8")) as { package: { metadata: { semio: { "depends-on": string[] } } } };
+    const packaged = JSON.parse(readFileSync(join(workspace, descriptor), "utf8")).manifest;
+    const database = new Database(":memory:"), previousCatalog = process.env.SEMIO_PLUGIN_CATALOG;
+    process.env.SEMIO_PLUGIN_CATALOG = publication;
+    try {
+      const entries = readFileSync(join(publication, "🔌️plugins.json"), "utf8");
+      const sources = readFileSync(join(publication, "🗂️sources.json"), "utf8");
+      const direct = database.query(`SELECT value ->> '$.dependsOn' AS dependencies FROM json_each(?1) WHERE value ->> '$.pluginId' = 'gis'`);
+      const closure = database.query(`WITH RECURSIVE selected(id) AS (
+        SELECT 'gis' UNION SELECT dependency.value FROM selected
+        JOIN json_each(?1) AS component ON component.value ->> '$.pluginId' = selected.id
+        JOIN json_each(component.value -> '$.dependsOn') AS dependency
+      ) SELECT id FROM selected ORDER BY id`);
+      expect(authored.package.metadata.semio["depends-on"]).toEqual(dependencies);
+      expect(packaged.dependencies.map(({ pluginId }: { pluginId: string }) => pluginId)).toEqual(dependencies);
+      for (const projection of [entries, sources, JSON.stringify(PLUGIN_BUILD_TARGETS)]) {
+        expect(direct.get(projection)).toEqual({ dependencies: JSON.stringify(dependencies) });
+      }
+      expect(closure.all(entries)).toEqual(components.map(id => ({ id })));
+      for (const variant of variants) expect([...playgroundComponentClosureV1(variant, "boot")]).toEqual(components);
+    } finally {
+      database.close();
+      if (previousCatalog === undefined) delete process.env.SEMIO_PLUGIN_CATALOG;
+      else process.env.SEMIO_PLUGIN_CATALOG = previousCatalog;
+    }
+  });
+  for (const row of fixture.sessionRefresh) test(`GIS scoped session publication ${row.id}`, async () => {
+    const { readGeneratedCatalogProjection } = await import("../../📖️catalog-view/🟦️.ts");
+    const { buildPlaygroundSession, refreshPlaygroundSessionPublicationV1 } = await import("../../🎮️playground/🧭️session/🟦️.ts");
+    const expected = readGeneratedCatalogProjection(join(findWorkspaceRoot(), fixture.gisBoot.catalog));
+    const retained = row.retainedDependencies === null ? undefined : {
+      ...expected,
+      entries: expected.entries.map(entry =>
+        entry.pluginId === "gis" ? { ...entry, dependsOn: row.retainedDependencies! } : entry),
+    };
+    const publications: string[][] = [];
+    const changed = await refreshPlaygroundSessionPublicationV1(expected, async () => retained, async projection => {
+      publications.push(buildPlaygroundSession("gis2d", projection).plugins.map(plugin => plugin.pluginId));
+    });
+    expect(changed).toBe(row.refresh);
+    expect(publications).toEqual(row.refresh ? [fixture.gisBoot.components] : []);
   });
 });
 

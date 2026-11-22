@@ -145,13 +145,16 @@ test("the operations catalogue declares doctor with consistent flags, valid exam
  expect(renderBuildHelpV1(catalog as never,readBuildHelpRequestV1(catalog as never,["doctor"]),"de")).toContain("Eigentümer");
 });
 
-test("the doctor never takes a lease or a capacity grant: no probe or command source mentions an acquisition",async()=>{
+test("the doctor never waits for a lease or takes a capacity grant: only the image repair tries one image lease once, without waiting",async()=>{
  const root=join(import.meta.dir,"..","..");
  const sources=[...new Bun.Glob("**/🟦️.ts").scanSync({cwd:root})].filter(file=>!file.includes("🧪️tests"));
  expect(sources.length).toBeGreaterThan(10);
+ const allowed="🔎️probes/💾️storage/🔒️image-lease/🟦️.ts";
  for(const file of sources){
   const text=await Bun.file(join(root,file)).text();
-  expect(text,file).not.toMatch(/acquireResourceLease|acquireQueuedResourceLease|withResourceLeases|withHostCapacityV1|withBuildCapacityV1/u);
+  expect(text,file).not.toMatch(/acquireQueuedResourceLease|withResourceLeases|withHostCapacityV1|withBuildCapacityV1/u);
+  if(file===allowed){expect(text).toContain("timeoutMs:0");expect(text.match(/acquireResourceLease\(/gu)).toHaveLength(1);}
+  else expect(text,file).not.toMatch(/acquireResourceLease/u);
  }
  expect(doctorPortsV1(fresh(),{signal:new AbortController().signal}).platform).toMatch(/^(darwin|linux|win32)$/u);
 });

@@ -13,7 +13,6 @@ use std::future::Future;
 use semio_plugin_instance_extension::InstanceExtension;
 use store::{MemberFactory, Mutation, ReferenceSpaceMember};
 use protocol::OpText;
-use semio_plugin_decl_media::original_media::RawMediaInput;
 use semio_plugin_reactor_app::PluginApp;
 use crate::render_bundle::RenderCtx;
 use semio_ui_contract::*;
@@ -45,14 +44,14 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         owner.completion_birth.advance(&mut owner.completion,cx)
     }
     /// 📜️ Pages the actual action and argument tree into the canonical wire while retaining its original source.
-    pub fn prepare_reserved_action_wire(&mut self,action:&str,args:&mut Option<DslValue>,meta:&ActionMeta,maximum:usize,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+    pub fn prepare_reserved_action_wire(&mut self,action:&str,args:&mut Option<DslValue>,meta:&ActionMeta,contract:semio_framework::ToolExecutionContract,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         if !semio_plugin_instance_jobs::reserved_preparation::ReservedPreparation::<A>::admit(&mut self.pending.reserved_preparation,&mut self.pending.reserved_birth,self.stores.store.content_revision(),cx)?{return Ok(false)}
         if !self.pending.reserved_preparation.as_mut().unwrap().bind_meta(&meta.actor,meta.instance_id,meta.view_state.as_deref().map(|view|(view.locale,view.terminology)),cx)?{return Ok(false)}
         if !self.prepare_reserved_interaction_read(cx)?{return Ok(false)}
         if !self.prepare_reserved_header(action,meta,cx)?{return Ok(false)}
         let owner=self.pending.reserved_preparation.as_mut().ok_or_else(||semio_framework_value::ValueError::invariant("reserved preparation disappeared"))?;
-        if !owner.begin_action(args,cx)?{return Ok(false)}
-        owner.advance_action_wire(maximum,cx)
+        if !owner.begin_action(args,contract.max_decoded_items,cx)?{return Ok(false)}
+        owner.advance_action_wire(contract.max_raw_wire_bytes,cx)
     }
     /// 🖱️ Captures the original interaction read before paging or encoding the action.
     pub fn prepare_reserved_interaction_read(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
@@ -71,13 +70,12 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         owner.stage_header(4,cx)
     }
     /// 🎁️ Moves the supplied media and its paged port into the original input receiver.
-    /// A turn that first prepares the header can finish before the producer has offered the bytes.
     pub fn prepare_reserved_media_input(&mut self,media:&mut Option<Media>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         let owner=self.pending.reserved_preparation.as_mut().ok_or_else(||semio_framework_value::ValueError::invariant("reserved media requires its preparation"))?;
         owner.validate(self.stores.store.content_revision(),cx)?;if owner.input.is_some(){return if media.is_none(){Ok(true)}else{Err(semio_framework_value::ValueError::invariant("reserved media source was replaced after donation").into())}}
         if !owner.header_ready(4){return Ok(false)}
         if !Self::media_donation_funded(cx){return Ok(false)}
-        if media.is_none(){return Ok(false)}
+        if media.is_none(){return Err(semio_framework_value::ValueError::invariant("reserved media source is absent").into())}
         if owner.raw_wire.is_some(){return Err(semio_framework_value::ValueError::invariant("reserved media wire receiver is occupied").into())}
         let bytes=Self::MEDIA_DONATION_BYTES;
         let headers=owner.headers.as_mut().ok_or_else(||semio_framework_value::ValueError::invariant("reserved media port was already donated"))?;
@@ -116,60 +114,30 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
     }
     /// 🚪️ Admits the paged wire against the actual registered bus without cloning its key or schema.
     pub fn prepare_reserved_wire_admission(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
-        use semio_framework_job::OriginalConstructionStatus;
-        use semio_plugin_instance_jobs::reserved_preparation::ReservedWirePhase;
-        use semio_framework_value::{RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome,RetirementDemand,ValueError};
-        let owner=self.pending.reserved_preparation.as_mut().ok_or_else(||ValueError::invariant("reserved wire requires its preparation"))?;
-        owner.validate(self.stores.store.content_revision(),cx)?;
-        let Some(length)=owner.raw_wire.as_ref().map(Vec::len)else{return Ok(false)};
-        match owner.wire_phase{
-            ReservedWirePhase::Cursor=>{
-                if owner.wire_cursor.is_none()&&owner.wire_key.is_none()&&owner.wire_schema.is_none(){
-                    if ![5,6,7].into_iter().all(|field|owner.header_ready(field)){return Ok(false)}
-                    let bytes=size_of::<semio_framework::ToolFactoryKey>()+size_of::<String>();let grant=cx.retained_grant();
-                    if cx.should_yield()||cx.is_cancelled()||grant.maximum_items==0||grant.maximum_copy_bytes<bytes||grant.maximum_depth==0{return Ok(false)}
-                    let headers=owner.headers.as_mut().ok_or_else(||ValueError::invariant("reserved wire metadata was donated"))?;
-                    *owner.wire_key=Some(semio_framework::ToolFactoryKey::new(std::mem::take(&mut headers[5]),std::mem::take(&mut headers[6])));
-                    *owner.wire_schema=Some(std::mem::take(&mut headers[7]));
-                    cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);
-                    return Ok(false)
-                }
-                match semio_framework::action_bus::OriginalWireAdmission::admit(&mut owner.wire_key,&mut owner.wire_schema,length,cx,&mut owner.wire_construction,&mut owner.wire_cursor)?{
-                    OriginalConstructionStatus::Failed=>return Err(ValueError::invariant("reserved wire admission construction failed; its causes remain in the preparation").into()),
-                    OriginalConstructionStatus::Ready=>owner.advance_wire_phase(ReservedWirePhase::ResetCursor,cx)?,
-                    OriginalConstructionStatus::Pending=>{},
-                }
+        let owner=self.pending.reserved_preparation.as_mut().ok_or_else(||semio_framework_value::ValueError::invariant("reserved wire requires its preparation"))?;
+        owner.validate(self.stores.store.content_revision(),cx)?;let Some(raw)=owner.raw_wire.as_ref()else{return Ok(false)};let length=raw.len();
+        if owner.admission.is_some(){
+            if !owner.wire_construction.terminal_is_empty(){owner.wire_construction.retire_born_candidate_step(cx)?;return Ok(false)}
+            let Some(cursor)=owner.wire_cursor.as_mut()else{return Ok(true)};
+            if !cursor.terminal_is_empty(){cx.with_original_retirement(|cx|cursor.close_step(&*self.tools.tool_jobs,cx))?;return Ok(false)}
+            let bytes=std::mem::size_of::<Option<semio_framework::action_bus::OriginalWireAdmission>>();cx.with_original_retirement(|cx|semio_framework_job::close_original_retained_turn(cx,semio_framework_value::RetirementDemand{copy_bytes:bytes,depth:1,..Default::default()},|_|{owner.wire_cursor.take();semio_framework_value::RetainedWorkOutcome{result:Ok(semio_framework_value::RetainedCloneStep::Progress(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})),work:1}}))?;return Ok(false)        }
+        if let Some(cursor)=owner.wire_cursor.as_mut(){
+            if !owner.wire_cursor_ready{
+                owner.wire_cursor_ready=owner.wire_construction.retire_born_candidate_step(cx)?;
+            }else{
+                cursor.advance(&*self.tools.tool_jobs,cx,&mut owner.wire_construction,&mut owner.admission)?;
             }
-            ReservedWirePhase::ResetCursor=>{
-                if owner.wire_construction.reset_step(cx)?{owner.advance_wire_phase(ReservedWirePhase::Search,cx)?;}
-            }
-            ReservedWirePhase::Search=>{
-                let cursor=owner.wire_cursor.as_mut().ok_or_else(||ValueError::invariant("reserved wire search lost its original cursor"))?;
-                if cursor.advance(&*self.tools.tool_jobs,cx,&mut owner.wire_construction,&mut owner.admission)?{
-                    owner.advance_wire_phase(ReservedWirePhase::Close,cx)?;
-                }
-            }
-            ReservedWirePhase::Close=>{
-                if !owner.wire_construction.terminal_is_empty(){
-                    cx.with_original_retirement(|cx|owner.wire_construction.retire_step(cx))?;
-                    return Ok(false)
-                }
-                let Some(cursor)=owner.wire_cursor.as_mut()else{return Ok(owner.admission.is_some())};
-                if !cursor.terminal_is_empty(){
-                    cx.with_original_retirement(|cx|cursor.close_step(&*self.tools.tool_jobs,cx))?;
-                    return Ok(false)
-                }
-                let bytes=size_of::<Option<semio_framework::action_bus::OriginalWireAdmission>>();
-                let demand=RetirementDemand{copy_bytes:bytes,depth:1,..Default::default()};
-                cx.with_original_retirement(|cx|semio_framework_job::close_original_retained_turn(cx,demand,|_|{
-                    owner.wire_cursor.take();
-                    RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})),work:1}
-                }))?;
-            }
+            return Ok(false)
+        }
+        if owner.wire_key.is_none()&&owner.wire_schema.is_none(){
+            if ![5,6,7].into_iter().all(|field|owner.header_ready(field)){return Ok(false)}let bytes=std::mem::size_of::<semio_framework::ToolFactoryKey>()+std::mem::size_of::<String>();let grant=cx.retained_grant();if cx.should_yield()||cx.is_cancelled()||grant.maximum_items==0||grant.maximum_copy_bytes<bytes||grant.maximum_depth==0{return Ok(false)}
+            let headers=owner.headers.as_mut().ok_or_else(||semio_framework_value::ValueError::invariant("reserved wire metadata was donated"))?;*owner.wire_key=Some(semio_framework::ToolFactoryKey::new(std::mem::take(&mut headers[5]),std::mem::take(&mut headers[6])));*owner.wire_schema=Some(std::mem::take(&mut headers[7]));cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);return Ok(false)
+        }
+        if semio_framework::action_bus::OriginalWireAdmission::admit(&mut owner.wire_key,&mut owner.wire_schema,length,cx,&mut owner.wire_construction,&mut owner.wire_cursor)?==semio_framework_job::OriginalConstructionStatus::Failed{
+            return Err(semio_framework_value::ValueError::invariant("reserved wire admission construction failed; its causes remain in the preparation").into())
         }
         Ok(false)
     }
-
     /// 🎞️ Advances the original media request from its retained source through the concrete producer builder.
     pub fn advance_reserved_media(&mut self,port:&str,media:&mut Option<Media>,meta:&ActionMeta,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         if let Some(owner)=self.pending.reserved_preparation.as_mut(){owner.validate(self.stores.store.content_revision(),cx)?;if owner.job.is_some(){return Ok(true)}if owner.request.is_some()||owner.body.is_some(){return owner.advance_builder(cx)}}
@@ -180,43 +148,37 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         let mut no_external_admission=None;if !self.assemble_reserved_request("import-media",meta,&mut no_external_admission,1,cx)?{return Ok(false)}
         Ok(false)
     }
-    /// 🖼️ Gives the verified picker input to the registered import producer without recopying its pages.
-    pub fn advance_reserved_picker(&mut self, input: &mut Option<Box<RawMediaInput>>,
-        meta: &ActionMeta, cx: &mut semio_framework_job::StepContext<'_>,
-    ) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
-        if let Some(owner) = self.pending.reserved_preparation.as_mut() {
-            owner.validate(self.stores.store.content_revision(), cx)?;
-            if owner.job.is_some() { return Ok(true); }
-            if owner.request.is_some() || owner.body.is_some() { return owner.advance_builder(cx); }
-        }
-        if !self.prepare_reserved_header("import-media", meta, cx)? { return Ok(false); }
-        let owner = self.pending.reserved_preparation.as_mut()
-            .ok_or_else(|| semio_framework_value::ValueError::invariant("picker requires reserved preparation"))?;
-        if !owner.original_picker {
-            let Some(picked) = input.as_ref() else { return Ok(false); };
-            let origin = picked.loan();
-            if origin.instance_id != meta.instance_id || origin.document_id != self.stores.store.envelope().id
-                || origin.base_revision != &self.stores.store.content_revision() || owner.input.is_some() || owner.raw_wire.is_some()
-            {
-                return Err(semio_framework_value::ValueError::invariant("picker import changed its original destination").into());
-            }
-            let copied = size_of::<Option<ArtifactReservedToolInput>>() + size_of::<Option<Vec<u8>>>() + size_of::<bool>();
-            let progress = semio_framework_value::RetainedCloneProgress { copied_items: 1, copied_bytes: copied, ..Default::default() };
-            if cx.should_yield() || cx.is_cancelled() || cx.retained_grant().maximum_depth == 0 || !progress.fits(cx.retained_grant()) {
-                return Ok(false);
-            }
-            cx.consume_retained(progress)?;
-            cx.consume_fuel(1);
-            *owner.input = Some(ArtifactReservedToolInput::OriginalPicker { input: input.take().unwrap() });
-            *owner.raw_wire = Some(Vec::new());
-            owner.original_picker = true;
-            return Ok(false);
-        }
-        if !self.prepare_reserved_snapshot_read(cx)? || !self.prepare_reserved_wire_admission(cx)? { return Ok(false); }
-        self.assemble_reserved_request("import-media", meta, &mut None, 1, cx)?;
-        Ok(false)
+    /// 🖼️ Donates the verified picker input to the registered import producer without recopying its pages.
+    pub fn advance_reserved_picker(&mut self,input:&mut Option<Box<semio_plugin_decl_media::original_media::RawMediaInput>>,meta:&ActionMeta,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        let intact=input.as_ref().is_none_or(|picked|{let origin=picked.loan();origin.instance_id==meta.instance_id&&origin.document_id==self.stores.store.envelope().id&&origin.base_revision==&self.stores.store.content_revision()});
+        if !intact{return Err(semio_framework_value::ValueError::invariant("picker import changed its original destination").into())}
+        self.advance_reserved_paged("import-media",meta,cx,|owner,cx|{
+            if input.is_none(){return Ok(false)}
+            Self::donate_paged(owner,cx,ArtifactReservedToolInput::OriginalPicker{input:input.take().unwrap()})
+        })
     }
-
+    /// 🌐 Donates the sealed natural file source to the reserved natural import producer without recopying its pages.
+    pub fn advance_reserved_natural_source(&mut self,source:&mut Option<semio_plugin_decl_media::original_media::natural_source::NaturalFilePagedSource>,meta:&ActionMeta,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        self.advance_reserved_paged(semio_plugin_decl_app::tool_contract::NATURAL_SOURCE_TOOL_ID,meta,cx,|owner,cx|{
+            if source.is_none(){return Ok(false)}
+            Self::donate_paged(owner,cx,ArtifactReservedToolInput::NaturalPaged{port:semio_framework::NATURAL_FILE_PORT_ID.into(),source:source.take().unwrap()})
+        })
+    }
+    /// 🧱️ Drives the shared preparation of a paged original input with an empty wire until its concrete job is built.
+    fn advance_reserved_paged(&mut self,verb:&str,meta:&ActionMeta,cx:&mut semio_framework_job::StepContext<'_>,donate:impl FnOnce(&mut semio_plugin_instance_jobs::reserved_preparation::ReservedPreparation<A>,&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        if let Some(owner)=self.pending.reserved_preparation.as_mut(){owner.validate(self.stores.store.content_revision(),cx)?;if owner.job.is_some(){return Ok(true)}if owner.request.is_some()||owner.body.is_some(){return owner.advance_builder(cx)}}
+        if !self.prepare_reserved_header(verb,meta,cx)?{return Ok(false)}
+        let owner=self.pending.reserved_preparation.as_mut().ok_or_else(||semio_framework_value::ValueError::invariant("paged reserved input requires its preparation"))?;
+        if owner.input.is_none()&&!donate(owner,cx)?{return Ok(false)}
+        if !self.prepare_reserved_snapshot_read(cx)?||!self.prepare_reserved_wire_admission(cx)?{return Ok(false)}
+        let mut no_external_admission=None;self.assemble_reserved_request(verb,meta,&mut no_external_admission,1,cx)?;Ok(false)
+    }
+    fn donate_paged(owner:&mut semio_plugin_instance_jobs::reserved_preparation::ReservedPreparation<A>,cx:&mut semio_framework_job::StepContext<'_>,input:ArtifactReservedToolInput)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        if !Self::media_donation_funded(cx){return Ok(false)}
+        if owner.raw_wire.is_some(){return Err(semio_framework_value::ValueError::invariant("paged reserved wire receiver is occupied").into())}
+        *owner.input=Some(input);*owner.raw_wire=Some(Vec::new());
+        cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:Self::MEDIA_DONATION_BYTES,..Default::default()})?;cx.consume_fuel(1);Ok(true)
+    }
     /// 🎟️ Donates the complete staged request only after its exact registered wire admission.
     pub fn assemble_reserved_request(&mut self,action:&str,meta:&ActionMeta,admission:&mut Option<semio_framework::ToolWireAdmission>,decoded_items:usize,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         if let Some(owner)=self.pending.reserved_preparation.as_ref(){owner.validate(self.stores.store.content_revision(),cx)?;}
@@ -244,7 +206,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         }
         let Some(raw)=owner.raw_wire.as_ref()else{return Ok(false)};if raw.len()>contract.max_raw_wire_bytes{return Err(semio_framework_value::ValueError::invariant("reserved request exceeds its admitted wire bound").into())}
         if owner.input.is_none()||owner.snapshot_read.is_none()||owner.cache_roots.is_none()||owner.seed_output.is_none()||owner.completion.is_none()||owner.headers.is_none()||![0,1,2,3].into_iter().all(|field|owner.header_ready(field)){return Ok(false)}
-        let media=matches!(owner.input.as_ref(),Some(ArtifactReservedToolInput::Media{..}));if !media&&owner.action_returned.as_ref().is_none_or(|(_,args)|args.is_some()){return Ok(false)}
+        let media=matches!(owner.input.as_ref(),Some(ArtifactReservedToolInput::Media{..}|ArtifactReservedToolInput::OriginalPicker{..}|ArtifactReservedToolInput::NaturalPaged{..}));if !media&&owner.action_returned.as_ref().is_none_or(|(_,args)|args.is_some()){return Ok(false)}
         let bytes=std::mem::size_of::<ArtifactReservedToolJobRequest<A>>()+std::mem::size_of::<ArtifactToolCompletion<A>>()+std::mem::size_of::<ChildContentView>();let grant=cx.retained_grant();
         if cx.should_yield()||cx.is_cancelled()||grant.maximum_items==0||grant.maximum_copy_bytes<bytes||grant.maximum_depth==0{return Ok(false)}
         let headers=owner.headers.as_mut().unwrap();let controller_id=std::mem::take(&mut headers[0]);let media_tool=std::mem::take(&mut headers[1]);let payload_schema_id=std::mem::take(&mut headers[2]);let parent_document_id=std::mem::take(&mut headers[3]);
@@ -254,14 +216,13 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);Ok(true)
     }
     /// 🧾️ Drives the clipboard action through the stepped reserved preparation until its concrete job is built.
-    pub fn advance_reserved_action(&mut self,action:&str,args:Option<&DslValue>,decoded_items:usize,meta:&ActionMeta,maximum:usize,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+    pub fn advance_reserved_action(&mut self,action:&str,args:&mut Option<DslValue>,meta:&ActionMeta,contract:semio_framework::ToolExecutionContract,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         if let Some(owner)=self.pending.reserved_preparation.as_mut(){owner.validate(self.stores.store.content_revision(),cx)?;if owner.job.is_some(){return Ok(true)}if owner.request.is_some()||owner.body.is_some(){return owner.advance_builder(cx)}}
-        let started=self.pending.reserved_preparation.as_ref().is_some_and(|owner|owner.action_wire.is_some()||owner.action_returned.is_some());
-        let mut source=if started{None}else{args.cloned()};
-        if !self.prepare_reserved_action_wire(action,&mut source,meta,maximum,cx)?{return Ok(false)}
+        if !self.prepare_reserved_action_wire(action,args,meta,contract,cx)?{return Ok(false)}
         if !self.prepare_reserved_action_input(cx)?{return Ok(false)}
         if !self.prepare_reserved_snapshot_read(cx)?{return Ok(false)}
         if !self.prepare_reserved_wire_admission(cx)?{return Ok(false)}
+        let decoded_items=self.pending.reserved_preparation.as_ref().unwrap().admission_decoded;
         let mut no_external_admission=None;self.assemble_reserved_request(action,meta,&mut no_external_admission,decoded_items,cx)?;Ok(false)
     }
     /// 🤝️ Moves the built producer, its completion and its wire admission out of the preparation in one paid step.

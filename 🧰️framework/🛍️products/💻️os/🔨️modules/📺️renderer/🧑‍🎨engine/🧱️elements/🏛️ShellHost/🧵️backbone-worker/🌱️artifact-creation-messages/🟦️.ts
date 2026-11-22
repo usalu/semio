@@ -57,13 +57,13 @@ export function handleSpaceArtifactCreationStatusMessage({ spaceArtifactCreation
   const owner = spaceArtifactCreationOwnersRef.current.get(message.requestId);
   if (owner === undefined || !spaceArtifactCreationOwnerAcceptsStatus(owner, message)) return;
   const entry = openDocumentSessionsRef.current.get(owner.runtimeKey);
-  if (
+  if (owner.workflow !== undefined ? !owner.workflow.current() : (
     entry === undefined
     || entry.clientInstanceId !== owner.clientInstanceId
     || entry.session.instanceId !== owner.sessionInstanceId
     || entry.scope?.spaceId !== owner.spaceId
     || entry.scope.documentId !== SPACE_INDEX_DOCUMENT_ID
-  ) {
+  )) {
     spaceArtifactCreationOwnersRef.current.delete(owner.requestId);
     setSpaceArtifactCreationUi((current) => reduceArtifactCreationProgressUiV1(current, { kind: "cleared", requestId: owner.requestId }));
     if (message.phase !== "ready") worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "space-artifact-create-cancel", requestId: owner.requestId, spaceId: owner.spaceId }) });

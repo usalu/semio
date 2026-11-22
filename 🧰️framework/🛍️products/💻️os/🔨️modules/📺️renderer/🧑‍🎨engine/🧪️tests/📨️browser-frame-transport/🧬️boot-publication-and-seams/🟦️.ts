@@ -104,7 +104,8 @@ describe("browser frame worker transport", () => {
     expect(rustSource).toContain("DispatchEvent::TextEditStart");
     expect(rustSource).toContain("DispatchEvent::TextEditChunk");
     expect(rustSource).toContain("DispatchEvent::TextEditCommit");
-    expect(rustSource).toContain("pending_discrete.saturating_add(discrete_commits)");
+    expect(rustSource.indexOf("host.prepare_browser_events(events, metrics)")).toBeLessThan(rustSource.indexOf("for event in batch.events"));
+    expect(rustSource).toContain("host.enqueue_browser_event(event)");
     expect(rustSource).not.toContain("stream.text.push_str");
     const descriptorSource = readFileSync(join(root, "../../../🎯️targets/🧊️wgpu/🧭️boot-descriptor/🟦️.ts"), "utf8");
     expect(bootSource).not.toContain("new URLSearchParams");

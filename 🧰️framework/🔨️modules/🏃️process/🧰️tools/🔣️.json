@@ -802,8 +802,27 @@
           "RUST*",
           "SEMIO_CARGO_*"
         ],
-        "deny": [],
-        "set": {}
+        "deny": [
+          "RUSTFLAGS",
+          "RUSTDOCFLAGS",
+          "CARGO_ENCODED_RUSTFLAGS",
+          "CARGO_ENCODED_RUSTDOCFLAGS",
+          "CARGO_BUILD_RUSTFLAGS",
+          "CARGO_BUILD_RUSTDOCFLAGS",
+          "CARGO_BUILD_TARGET",
+          "CARGO_TARGET_*_RUSTFLAGS",
+          "CARGO_TARGET_*_LINKER",
+          "CARGO_TARGET_*_RUNNER",
+          "CARGO_PROFILE_*",
+          "CARGO_ALIAS_*",
+          "CARGO_BUILD_RUSTC",
+          "CARGO_BUILD_RUSTC_WRAPPER",
+          "CARGO_BUILD_RUSTC_WORKSPACE_WRAPPER"
+        ],
+        "set": {},
+        "rootVariables": [
+          "__CARGO_TEST_ROOT"
+        ]
       },
       "capacity": {
         "mode": "admit",
@@ -1935,7 +1954,10 @@
           "architecture": "architecture",
           "sha256": "sha256",
           "name": "archive",
-          "bytes": "bytes"
+          "bytes": "bytes",
+          "extras": [
+            "target"
+          ]
         }
       },
       "provision": {
@@ -1952,8 +1974,9 @@
           "kind": "provisioned",
           "partition": "tools",
           "segments": [
+            "print",
             "tectonic",
-            "{sha256}"
+            "{extra:target}"
           ],
           "executable": "tectonic"
         }

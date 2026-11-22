@@ -1,10 +1,10 @@
 //! 🏔️ Complete GIS reconstruction pays actual indexes, output containers and iterative frames.
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use super::{GisTerrainSnapshot, ImportedMap, ImportedProperty, SCALAR};
-use crate::schema::snapshot::ElevationSource;
+use crate::schema::snapshot::{ElevationSource, ELEVATION_MAX_SIDE, ELEVATION_MIN_SIDE};
 use semio_framework_value::{DslValue, Number, ValueError, ValueRefusalKind};
 use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
-use store::sqlite_snapshot::{SqliteDatabase, SqliteRow, SqliteSnapshotControl, SqliteSnapshotPhase, artifact::FloatRow};
+use store::sqlite_snapshot::{SqliteDatabase, SqliteRow, SqliteSnapshotControl, SqliteSnapshotPhase, SqliteValue, artifact::FloatRow};
 use std::{cmp::Ordering, ops::Range};
 
 const TABLES: [&str; 19] = ["gis_terrain_document", "gis_terrain_parameters", "gis_terrain_mesh_child", "gis_terrain_imported_map", "gis_terrain_value", "gis_terrain_position", "gis_terrain_route", "gis_terrain_region", "gis_terrain_property", "gis_terrain_array", "gis_terrain_member", "gis_terrain_boolean", "gis_terrain_unsigned", "gis_terrain_signed", "gis_terrain_float", "gis_terrain_text", "gis_terrain_bytes", "gis_terrain_elevation_source", "gis_terrain_elevation_sample"];
@@ -14,7 +14,6 @@ const ARRAY: usize = 9;
 const MEMBER: usize = 10;
 const ELEVATION_SOURCE: usize = 17;
 const ELEVATION_SAMPLE: usize = 18;
-const ELEVATION_SIDE: usize = 33;
 fn invalid(message: &'static str) -> ValueError { ValueError::new(ValueRefusalKind::InvalidValue, message) }
 fn overflow() -> ValueError { ValueError::new(ValueRefusalKind::OwnershipLimit, "terrain relational ownership overflow") }
 
@@ -110,19 +109,34 @@ fn elevation_source(rows: &mut Rows<'_>, id: i64, owner: &mut Owner<'_, '_>) -> 
   owner.scalar()?;
   *value = f64::from_bits(source.integer(index + 1)? as u64);
  }
+ owner.scalar()?;
+ let supported = ELEVATION_MIN_SIDE..=ELEVATION_MAX_SIDE;
+ let columns = usize::try_from(source.integer(5)?).ok().filter(|count| supported.contains(count))
+  .ok_or_else(|| invalid("GIS elevation column count differs"))?;
  let mut samples = rows.relation_range(ELEVATION_SAMPLE, id, owner)?;
- if samples.len() != ELEVATION_SIDE * ELEVATION_SIDE { return Err(invalid("GIS elevation sample count differs")); }
- let mut elevations = owner.allocate(ELEVATION_SIDE)?;
- for _ in 0..ELEVATION_SIDE {
-  let mut row = owner.allocate(ELEVATION_SIDE)?;
-  for sample in samples.by_ref().take(ELEVATION_SIDE) {
+ let height = samples.len() / columns;
+ if !samples.len().is_multiple_of(columns) || !supported.contains(&height) {
+  return Err(invalid("GIS elevation sample count differs"));
+ }
+ let mut elevations = owner.allocate(height)?;
+ for _ in 0..height {
+  let mut row = owner.allocate(columns)?;
+  for sample in samples.by_ref().take(columns) {
    owner.scalar()?;
-   let meters = rows.relation(sample, owner)?.integer(3)?;
-   row.push(i16::try_from(meters).map_err(|_| invalid("GIS elevation sample is outside the signed meter range"))?);
+   let millimetres = rows.relation(sample, owner)?.integer(3)?;
+   row.push(i32::try_from(millimetres).map_err(|_| invalid("GIS elevation sample is outside the signed millimetre range"))?);
   }
   elevations.push(row);
  }
- let source = ElevationSource { bounds, rows: elevations };
+ let missing_samples = match source.values.get(6) {
+  Some(SqliteValue::Null) => None,
+  _ => {
+   let text = source.text(6)?;
+   if text.len() != (columns * height).div_ceil(8) * 2 { return Err(invalid("GIS elevation mask size differs")); }
+   Some(owner.text(text)?)
+  }
+ };
+ let source = ElevationSource { bounds, rows_millimetres: elevations, missing_samples };
  if !source.is_valid() { return Err(invalid("invalid GIS elevation source")); }
  Ok(Some(source))
 }

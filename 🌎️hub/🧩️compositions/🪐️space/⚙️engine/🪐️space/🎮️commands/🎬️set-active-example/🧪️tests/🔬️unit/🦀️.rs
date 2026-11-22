@@ -15,7 +15,7 @@ async fn space_command_op_text_round_trips_every_variant() {
     store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::ExportStudioDsl(semio_hub_space_commands_media::export_studio_dsl::ExportStudioDsl {}));
     store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::ImportSpacePack(semio_hub_space_commands_media::import_space_pack::ImportSpacePack {}));
     store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::ImportSpacePackPayload(semio_hub_space_commands_media::import_space_pack_payload::ImportSpacePackPayload { payload: "data:...".into() }));
-    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::OpenSpace(semio_hub_space_commands_media::open_space::OpenSpace { space_id: "demo".into() }));
+    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::OpenSpace(semio_hub_space_commands_media::open_space::OpenSpace { space_id: "demo".into(), workflow_artifact_id: None }));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -29,8 +29,8 @@ async fn open_studio_loads_created_empty_catalog_studio() {
     crate::register_studio_port_for_test(&entry.id, port).await;
     let empty = empty_workflow_snapshot().await;
     let config = SpaceConfig::default();
-    let emit = studio_emit(&empty, &config, &SpaceCommand::OpenSpace(semio_hub_space_commands_media::open_space::OpenSpace { space_id: entry.id.clone() })).await.expect("handle");
-    assert!(emit.config_mutations.contains(&SpaceConfigMutation::SetSpaceId(SpaceIdSetting { space_id: Some(entry.id) })));
+    let emit = studio_emit(&empty, &config, &SpaceCommand::OpenSpace(semio_hub_space_commands_media::open_space::OpenSpace { space_id: entry.id.clone(), workflow_artifact_id: None })).await.expect("handle");
+    assert!(emit.config_mutations.contains(&SpaceConfigMutation::SetSpaceId(SpaceIdSetting { space_id: Some(entry.id), workflow_artifact_id: None })));
     assert!(emit.config_mutations.contains(&SpaceConfigMutation::SetActiveNode(ActiveNodeSetting { node_id: None })));
     assert!(emit.effects.iter().any(|effect| matches!(effect, Effect::LoadDocument { .. })));
     assert!(!emit.effects.iter().any(|effect| matches!(effect, Effect::Navigate { .. })));
@@ -40,7 +40,7 @@ async fn open_studio_loads_created_empty_catalog_studio() {
 async fn open_studio_unknown_id_returns_not_found() {
     let empty = empty_workflow_snapshot().await;
     let config = SpaceConfig::default();
-    let err = studio_emit(&empty, &config, &SpaceCommand::OpenSpace(semio_hub_space_commands_media::open_space::OpenSpace { space_id: "unknown-studio-id".into() })).await.err().expect("not found");
+    let err = studio_emit(&empty, &config, &SpaceCommand::OpenSpace(semio_hub_space_commands_media::open_space::OpenSpace { space_id: "unknown-studio-id".into(), workflow_artifact_id: None })).await.err().expect("not found");
     assert_eq!(err.code.0, "s.space.not-found");
 }
 
@@ -62,7 +62,7 @@ async fn load_document_snapshot(emit: &Emit<WorkflowMutation, SpaceConfigMutatio
 async fn open_studio_demo_explicit_loads_demo_fixture() {
     let empty = empty_workflow_snapshot().await;
     let config = SpaceConfig::default();
-    let emit = studio_emit(&empty, &config, &SpaceCommand::OpenSpace(semio_hub_space_commands_media::open_space::OpenSpace { space_id: "demo".into() })).await.expect("handle");
+    let emit = studio_emit(&empty, &config, &SpaceCommand::OpenSpace(semio_hub_space_commands_media::open_space::OpenSpace { space_id: "demo".into(), workflow_artifact_id: None })).await.expect("handle");
     let (projection, id) = load_document_snapshot(&emit).await;
     assert!(id.contains("demo-studio"));
     assert!(!projection.graph.nodes.is_empty());
@@ -92,7 +92,7 @@ async fn open_studio_loads_ephemeral_created_studio() {
         .expect("navigate");
     let empty = empty_workflow_snapshot().await;
     let config = SpaceConfig::default();
-    let emit = studio_emit(&empty, &config, &SpaceCommand::OpenSpace(semio_hub_space_commands_media::open_space::OpenSpace { space_id: space_id.clone() })).await.expect("handle");
+    let emit = studio_emit(&empty, &config, &SpaceCommand::OpenSpace(semio_hub_space_commands_media::open_space::OpenSpace { space_id: space_id.clone(), workflow_artifact_id: None })).await.expect("handle");
     let (projection, id) = load_document_snapshot(&emit).await;
     assert_eq!(id, space_id);
     assert!(projection.graph.nodes.is_empty());
@@ -134,8 +134,37 @@ async fn create_space_navigates_without_download_and_opens_empty() {
     let studio_doc = ArtifactView::new(&empty, &history);
     let studio_config = SpaceConfig::default();
     let studio_cfg = ConfigView { snapshot: &studio_config, window: None };
-    let open = SpaceCommand::OpenSpace(semio_hub_space_commands_media::open_space::OpenSpace { space_id: space_id.to_string() }).dispatch(&studio_doc, &studio_cfg).expect("handle");
+    let open = SpaceCommand::OpenSpace(semio_hub_space_commands_media::open_space::OpenSpace { space_id: space_id.to_string(), workflow_artifact_id: None }).dispatch(&studio_doc, &studio_cfg).expect("handle");
     assert!(open.effects.iter().any(|effect| matches!(effect, Effect::LoadDocument { .. })), "openSpace must load the created studio");
     assert!(!open.effects.iter().any(|effect| matches!(effect, Effect::Navigate { .. })));
     assert!(!open.effects.iter().any(|effect| matches!(effect, Effect::DownloadMediaExport { .. })));
+}
+
+#[semio_framework_async_macros::async_test]
+async fn host_open_space_binds_only_the_already_mounted_workflow_document() {
+    use semio_hub_space_commands_media::open_space::OpenSpace;
+    use semio_plugin::{AppOperationContext, ArtifactView, ConfigView};
+
+    let projection = crate::demo_space_projection().await;
+    let config = SpaceConfig::default();
+    let history = semio_hub_space_app::unit_tests::context::empty_history();
+    let document = ArtifactView::with_operation(&projection, &history, AppOperationContext {
+        app_instance_id: 1,
+        parent_document_id: "workflow-ready".into(),
+        operation_id: 1,
+        generation: 1,
+        canonical_base_revision: [0; 32],
+        retained: Default::default(),
+        authoring_seed: "opened".into(),
+    });
+    let config_view = ConfigView { snapshot: &config, window: None };
+    let payload = OpenSpace { space_id: "space-from-hub".into(), workflow_artifact_id: Some("workflow-ready".into()) };
+    let opened = SpaceCommand::OpenSpace(payload.clone()).dispatch(&document, &config_view).unwrap();
+    assert!(opened.effects.is_empty());
+    assert!(opened.artifact_mutations.is_empty());
+    let config = semio_hub_space_app::unit_tests::context::apply_config(&config, &opened.config_mutations).await;
+    assert_eq!(config.space_id.as_deref(), Some("space-from-hub"));
+    assert_eq!(config.workflow_artifact_id.as_deref(), Some("workflow-ready"));
+    let mismatched = SpaceCommand::OpenSpace(OpenSpace { workflow_artifact_id: Some("another-workflow".into()), ..payload });
+    assert!(mismatched.dispatch(&document, &config_view).is_err());
 }

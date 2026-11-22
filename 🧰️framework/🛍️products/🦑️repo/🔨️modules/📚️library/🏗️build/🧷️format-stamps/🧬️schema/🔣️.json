@@ -79,6 +79,10 @@
             "PrivateEngineImportMissingError"
           ],
           "syntaxErrorPrefix": "Export named ",
+          "ownerCodes": [
+            "BUILD_SOURCE_UNPARSEABLE"
+          ],
+          "unsettledPrefix": "replica not settled: ",
           "backoffMs": [
             250,
             1000,
@@ -87,6 +91,10 @@
             30000,
             30000
           ]
+        },
+        "danglingStore": {
+          "code": "SEMIO_DEPENDENCY_STORE_DANGLING",
+          "exitCode": 1
         },
         "editFailure": {
           "backoffMs": [
@@ -201,6 +209,7 @@
             "restart": "Restarting with the current implementation ({attempt} of {maximum}).",
             "busy": "The resident repo service is busy. Waiting {delay} ms, then asking again ({attempt} of {maximum}).",
             "loadfailure": "A source file was edited by another process while this command loaded it ({reason}). Waiting {delay} ms, then restarting ({attempt} of {maximum}).",
+            "danglingstore": "The package {package} cannot be resolved because {link} points to {target}, which does not exist: the storage image behind it is not attached or its store was removed. This is not a concurrent edit and no restart helps. Run `repo doctor --fix --only=storage` to attach or move the image back; it starts without this store.",
             "editfailure": "Another process kept editing {path} while this command read it ({reason}). Waiting {delay} ms, then starting the command again with a new snapshot ({attempt} of {maximum}).",
             "finalcause": "The last restart was asked for by: {cause}.",
             "final": "The stamps moved again after the restart: run the command again.",
@@ -216,6 +225,7 @@
             "restart": "Neustart mit der aktuellen Implementierung ({attempt} von {maximum}).",
             "busy": "Der residente Repo-Dienst ist ausgelastet. Warte {delay} ms, dann erneute Anfrage ({attempt} von {maximum}).",
             "loadfailure": "Eine Quelldatei wurde von einem anderen Prozess bearbeitet, während dieser Befehl sie lud ({reason}). Warte {delay} ms, dann Neustart ({attempt} von {maximum}).",
+            "danglingstore": "Das Paket {package} kann nicht aufgelöst werden, weil {link} auf {target} zeigt, das nicht existiert: das Speicher-Image dahinter ist nicht eingehängt oder sein Speicher wurde entfernt. Das ist keine gleichzeitige Bearbeitung und kein Neustart hilft. `repo doctor --fix --only=storage` hängt das Image ein oder bringt es zurück; es startet ohne diesen Speicher.",
             "editfailure": "Ein anderer Prozess bearbeitete {path} laufend, während dieser Befehl es las ({reason}). Warte {delay} ms, dann startet der Befehl mit einem neuen Schnappschuss erneut ({attempt} von {maximum}).",
             "finalcause": "Der letzte Neustart wurde angefordert durch: {cause}.",
             "final": "Die Stempel wechselten nach dem Neustart erneut: den Befehl noch einmal ausführen.",

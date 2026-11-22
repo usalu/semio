@@ -40,6 +40,7 @@ semio-os-infinite-world-cursors = { path = "../../../🧲️cursors/📦️packa
 semio-os-infinite-world-scene = { path = "../../../🧱️scene/📦️packages/🦀️rust" }
 semio-os-infinite-world-bridge = { path = "../../../🌉️bridge/📦️packages/🦀️rust" }
 semio-os-infinite-world-interaction = { path = "../../../🧵️interaction/📦️packages/🦀️rust" }
+semio-os-infinite-world-handle-drag = { path = "../../../🧲️handle-drag/📦️packages/🦀️rust" }
 
 [target.'cfg(not(all(target_arch = "wasm32", target_env = "p2")))'.dependencies]
 ui_gpu = { path = "../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/📦️packages/🦀️rust", package = "semio-ui-wgpu-render" }

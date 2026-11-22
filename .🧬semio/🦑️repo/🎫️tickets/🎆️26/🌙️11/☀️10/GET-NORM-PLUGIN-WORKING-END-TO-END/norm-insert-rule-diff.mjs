@@ -1,0 +1,11 @@
+import { readFileSync, readdirSync } from "node:fs";
+import { join, relative } from "node:path";
+const root = process.argv[2];
+const declaration = /InsertItemRule\s*\{\s*path:\s*"([^"]+)",\s*kind:\s*"([^"]+)",\s*selectors:\s*&\[([^\]]*)\],\s*index:\s*"([^"]+)",\s*item:\s*"([^"]+)"/g;
+const walk = d => readdirSync(d, { withFileTypes: true }).flatMap(e => { const p = join(d, e.name); return e.isDirectory() ? walk(p) : e.name.endsWith(".rs") && p.includes("🧭️edit-rules") ? [p] : []; });
+const actual = walk(join(root, "🗿️artifacts")).flatMap(p => [...readFileSync(p, "utf8").matchAll(declaration)].map(m => ({ source: relative(root, p), path: m[1], kind: m[2], selectors: [...m[3].matchAll(/SelectorKey::(?:Id|Index)\("([^"]+)"\)/g)].map(i => i[1]), index: m[4], item: m[5] })));
+const fixture = JSON.parse(readFileSync(join(root, "🧪️tests/📥️insert-bindings/🧫️cases/🔣️.json"), "utf8")).rules;
+const key = r => [r.source, r.path, r.kind, r.selectors.join(","), r.index, r.item].join("|");
+const fk = new Set(fixture.map(key)); const ak = new Set(actual.map(key));
+console.log("missing in fixture", actual.filter(r => !fk.has(key(r))).map(r => JSON.stringify(r)));
+console.log("extra in fixture", fixture.filter(r => !ak.has(key(r))).map(r => key(r)));

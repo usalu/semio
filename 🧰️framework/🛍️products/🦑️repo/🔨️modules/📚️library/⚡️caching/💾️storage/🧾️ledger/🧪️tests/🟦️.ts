@@ -68,6 +68,7 @@ test("budgets resolve exactly: explicit bytes, a share of the partition, and the
  const bytes=(id:string)=>cacheAreaBudgetBytesV1(ledger,ledger.areas.find(area=>area.id===id)!);
  expect(bytes("nx-artifacts")).toBe(3*1024**3);
  expect(bytes("bazel-actions")).toBe(Math.floor(budgetPolicy.partitions.products.maximumLogicalBytes*4000/10000));
+ expect(bytes("fleet-cache-index")).toBe(Math.floor(budgetPolicy.partitions.products.maximumLogicalBytes*1000/10000));
  expect(bytes("cargo-home")).toBe(3*1024**3);expect(bytes("unit-cache")).toBe(24*1024**3);expect(bytes("cargo-store")).toBe(budgetPolicy.partitions.rust.maximumLogicalBytes-31*1024**3);
  expect(bytes("rust")).toBe(Math.min(budgetPolicy.partitions.rust.capacityBytes,budgetPolicy.partitions.rust.maximumLogicalBytes));
  expect(bytes("control")).toBeNull();
@@ -167,4 +168,73 @@ test("the compact Rust image has an explicit disjoint ledger root",()=>{
  const strict=repositoryStrictStorageV1("/work/semio");expect(strict.directory).toBe(fixture.absoluteDirectory);expect((strict as {partition?:string}).partition).toBe(area.id);
  expect(ledger.areas.some(row=>row.id==="held-rust-image"),"the held rust image is retired: the rust partition is declared at "+area.directory).toBe(false);
  for(const row of fixture.cases)expect({kind:row.kind,...row.id?{id:row.id}:{}}).toEqual(classifyCachePathV1(ledger,area.root,row.path));
+});
+
+/** 📌️ A pinned tool install is provisioned only by a tool setup and recreated by nothing at launch, so host disk pressure never selects it, whatever its age, quiet time or the reclaim asked for; an independent Python model plans the same reclaim over the same targets, and the authored ledger pins the Playwright browsers. */
+test("pressure collection never selects a pinned tool area, and agrees with an independent Python model",()=>{
+ const now=fixtures.now,hour=3600000,mk=(id:string,units:CacheTargetV1["units"],pinned?:true):CacheTargetV1=>({id,kind:"area",budgetBytes:1e12,unusedAgeMs:null,quietMs:hour,...pinned?{pinned}:{},units});
+ const targets:CacheTargetV1[]=[mk("playwright",[{name:"chromium-1",bytes:900,recencyMs:now-400*hour},{name:"ffmpeg-2",bytes:50,recencyMs:now-300*hour}],true),mk("go",[{name:"a",bytes:100,recencyMs:now-10*hour},{name:"b",bytes:200,recencyMs:now-20*hour}])];
+ const model=`import json,sys
+targets,now,reclaim=json.loads(sys.argv[1]),int(sys.argv[2]),int(sys.argv[3])
+cand=sorted((u["recencyMs"],t["id"],u["name"],u["bytes"]) for t in targets if t["kind"]=="area" and not t.get("pinned") for u in t["units"] if now-u["recencyMs"]>=t["quietMs"])
+left=reclaim;out=[]
+for r,t,n,b in cand:
+    if left<=0: break
+    out.append(t+"/"+n);left-=b
+print(json.dumps(out))`;
+ for(const reclaim of[0,1,200,10**6]){
+  const run=Bun.spawnSync(["python3","-I","-c",model,JSON.stringify(targets),String(now),String(reclaim)]);expect(run.exitCode,run.stderr.toString()).toBe(0);
+  const plans=planCacheCollectionV1(targets,now,reclaim),pressured=plans.flatMap(plan=>plan.removals.filter(row=>row.reason==="pressure").map(row=>plan.id+"/"+row.name));
+  expect(pressured.sort(),String(reclaim)).toEqual((JSON.parse(run.stdout.toString()) as string[]).sort());
+  expect(plans.find(plan=>plan.id==="playwright")!.removals,String(reclaim)).toEqual([]);
+ }
+ const pinned=ledger.areas.filter(area=>area.collect?.pressure==="pinned");
+ expect(pinned.map(area=>area.directory)).toContain("tools/ms-playwright");
+ const authored:CacheTargetV1[]=pinned.map(area=>({id:area.id,kind:"area",budgetBytes:null,unusedAgeMs:null,quietMs:area.collect!.quietMs,pinned:true,units:[{name:"chromium-1",bytes:1e9,recencyMs:now-1000*hour}]}));
+ for(const plan of planCacheCollectionV1(authored,now,10**12))expect(plan.removals,plan.id).toEqual([]);
+});
+
+/** 🗜️ Under host disk pressure the stale or superseded units of declared areas are eligible however young their age and however far below budget the area is: oldest first across all areas, never a held or quiet unit, exactly as an independent Python model plans it. */
+test("pressure collection frees stale entries of build-owned areas oldest first and never a held or quiet unit, and agrees with an independent Python model",()=>{
+ const now=fixtures.now,hour=3600000,mk=(id:string,units:CacheTargetV1["units"],quietMs=hour):CacheTargetV1=>({id,kind:"area",budgetBytes:1e12,unusedAgeMs:30*24*hour,quietMs,units});
+ const targets:CacheTargetV1[]=[mk("dependencies",[{name:"g1",bytes:400,recencyMs:now-50*hour},{name:"g2",bytes:300,recencyMs:now-10*hour},{name:"g3",bytes:900,recencyMs:now-5*hour,held:"pid:1"},{name:"g4",bytes:200,recencyMs:now-30*60000}]),mk("tools",[{name:"t1",bytes:500,recencyMs:now-20*hour},{name:"t2",bytes:100,recencyMs:now-20*60000}]),{id:"repository:undeclared",kind:"undeclared",budgetBytes:null,unusedAgeMs:null,quietMs:hour,units:[{name:"u",bytes:50,recencyMs:now-90*hour}]}];
+ const frozen=JSON.stringify(targets);
+ const model=`import json,sys
+targets,now,reclaim=json.loads(sys.argv[1]),int(sys.argv[2]),int(sys.argv[3])
+cand=[]
+for t in targets:
+    if t["kind"]!="area" or t.get("heldBy"): continue
+    for u in t["units"]:
+        if u.get("held") is None and now-u["recencyMs"]>=t["quietMs"]: cand.append((u["recencyMs"],t["id"],u["name"],u["bytes"]))
+cand.sort()
+left=reclaim;out=[]
+for r,t,n,b in cand:
+    if left<=0: break
+    out.append([t,n]);left-=b
+print(json.dumps(out))`;
+ for(const reclaim of[0,1,400,401,700,1500,10**6]){
+  const run=Bun.spawnSync(["python3","-I","-c",model,JSON.stringify(targets),String(now),String(reclaim)]);expect(run.exitCode,run.stderr.toString()).toBe(0);
+  const expected=JSON.parse(run.stdout.toString()) as string[][],plans=planCacheCollectionV1(targets,now,reclaim),pressured=plans.flatMap(plan=>plan.removals.filter(row=>row.reason==="pressure").map(row=>[row.target,row.name]));
+  expect(pressured.map(row=>row.join("/")).sort(),String(reclaim)).toEqual(expected.map(row=>row.join("/")).sort());
+  const freed=plans.reduce((sum,plan)=>sum+plan.removals.reduce((inner,row)=>inner+row.bytes,0),0);
+  if(reclaim>0&&reclaim<=1000)expect(freed,String(reclaim)).toBeGreaterThanOrEqual(reclaim);
+  for(const plan of plans)for(const row of plan.removals)expect(["g3","g4","t2"].includes(row.name)&&row.reason==="pressure").toBe(false);
+ }
+ expect(JSON.stringify(targets)).toBe(frozen);expect(planCacheCollectionV1(targets,now,0)).toEqual(planCacheCollectionV1(targets,now));
+ expect(planCacheCollectionV1(targets,now,10**6).find(plan=>plan.id==="dependencies")!.removals.map(row=>row.name).sort()).toEqual(["g1","g2"]);
+});
+
+test("a retired path inside a control area is carved out of it: accepted only strictly inside a control area of its root, classified retired, and the rest of the area stays its own",()=>{
+ const carved=ledger.retirements.find(row=>row.within!==undefined&&row.directory==="f/cache-server")!;
+ expect(carved.directory).toBe("f/cache-server");
+ expect(classifyCachePathV1(ledger,"native","f/cache-server/v1/main/ab/cd").kind).toBe("retired");
+ expect(classifyCachePathV1(ledger,"native","f/boot/beat.json")).toMatchObject({kind:"area",id:"fleet-state"});
+ const without=clone(policy);without.retirements=without.retirements.map(row=>{const{within:_,...rest}=row as Record<string,unknown>;return rest;}) as never;
+ expect(()=>readCacheLedgerV1(without),"without within it overlaps the control area").toThrow();
+ const elsewhere=clone(policy);(elsewhere.retirements.find(row=>(row as {within?:string}).within!==undefined) as {within:string}).within="tools";
+ expect(()=>readCacheLedgerV1(elsewhere),"within names a partition, not a control").toThrow();
+ const wholeArea=clone(policy);(wholeArea.retirements.find(row=>(row as {within?:string}).within!==undefined) as {directory:string}).directory="f";
+ expect(()=>readCacheLedgerV1(wholeArea),"the area itself cannot be retired").toThrow();
+ const twice=clone(policy);twice.retirements.push(clone(twice.retirements.find(row=>(row as {within?:string}).within!==undefined)!) as never);
+ expect(()=>readCacheLedgerV1(twice),"the same carved-out path twice").toThrow();
 });

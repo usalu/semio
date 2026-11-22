@@ -20,3 +20,9 @@ An independent Node assertion checked that the registry custody wrapper recogniz
 Node again refused three test suites while loading retained Cargo source provenance. `CargoProvenanceSessionV1` and `CargoSourceWitnessV1` used constructor parameter properties. Both now declare and assign the same instance fields explicitly. The source witness and retention logic use the original argument values. The Play landing grid assertion was separately updated for the existing logical navbar padding. [Landing grid regression](play-landing-grid-test.md)
 
 After the two repairs all 81 Play Vitest tests passed in eight files. All 13 release routing tests passed, including the independent-client test for published status, MIME, body, cache and CORS. The CDN cohort and browser boot checks remained pending.
+
+## Second November 21 Rerun
+
+Play's normal Vitest command failed again while loading four suites. The loader trace identified a new `CargoSourceAttemptV1` constructor parameter property in the source witness. After the field assignment was made explicit, the Play release-plan budget fixture passed. The three remaining Node suites identified a second parameter property on `RemoteExecutionContentErrorV1`. Its constructor now assigns the same optional member and preserves the own property when the value is omitted.
+
+All three existing source witness tests passed with 51 assertions, including the mixed consumed-byte case. A direct Node assertion verified the remote content error's code, message and optional output field. The normal Play Vitest command passed **82 tests in eight files**, including the actual release cost fixture. The native release build remained active.

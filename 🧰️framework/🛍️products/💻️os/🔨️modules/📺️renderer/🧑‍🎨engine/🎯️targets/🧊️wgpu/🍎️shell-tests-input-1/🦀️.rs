@@ -10,7 +10,7 @@ use semio_framework::kernel::UiDirtyScope;
 use semio_framework_job::InteractiveJobCloseStep;
 use semio_renderer_wgpu_canvas2d_host::begin;
 use semio_renderer_wgpu_contracts::{AdmittedSurfaceMap, SCENE_SURFACE_CAPACITY, ui_document_close_pending, ui_document_close_pending_for};
-use semio_renderer_wgpu_dock::{DockDragKind, DockDragPayload, DockDragState, DockDropZone, DockStackTab, DockState, WindowSilhouette};
+use semio_renderer_wgpu_dock::{DockDragKind, DockDragPayload, DockDragState, DockDropZone, DockNode, DockStackTab, DockState, WindowSilhouette};
 use semio_renderer_wgpu_fixtures::shell::{
     boot_manifest, host_test_shell, mouse_pointer, paint_component_pointer_documents, paint_tree_pointer_documents, pointer_interaction, retained_world_sequence_probe, tree_pointer_record, world3d_pointer_record,
 };
@@ -28,15 +28,15 @@ use semio_renderer_wgpu_shell_actions::{ActionsCtx, select_boot_program};
 use semio_renderer_wgpu_shell_chrome_state::{RetainedContentFocus, ShellChromeBuildState};
 use semio_renderer_wgpu_shell_dock::{PanelAnchorState, ShellDock, dock_window_order};
 use semio_renderer_wgpu_shell_docs::note_shell_command_action;
-use semio_renderer_wgpu_shell_input::{OverlayState, PointerHitOwner, decode_window_template_drag, with_chrome_control_names};
-use semio_renderer_wgpu_shell_pointer::{PointerCtx, content_is_editing, ui_event_from_key_action};
+use semio_renderer_wgpu_shell_input::{OverlayState, PointerHitOwner, decode_window_template_drag};
+use semio_renderer_wgpu_shell_pointer::{PointerCtx, content_is_editing, is_context_menu_chord, ui_event_from_key_action};
 use semio_renderer_wgpu_shell_prefs::{DockTabNode, dsl_value_as_json, labels, refusals};
 use semio_renderer_wgpu_shell_session::{SessionCtx, WINDOW_TOPOLOGY_PUBLICATION_ATTEMPTS, panel_ui_records};
 use semio_renderer_wgpu_shell_state::ShellState;
 use semio_renderer_wgpu_shell_surfaces::ShellSettleStep;
-use semio_renderer_wgpu_shell_view_chrome::{ChromeViewCtx, ShellChromeChildCursor, note_dock_control_name};
+use semio_renderer_wgpu_shell_view_chrome::{ChromeViewCtx, ShellChromeChildCursor};
 use semio_renderer_wgpu_shell_view_overlays::intersect_content_rect;
-use semio_renderer_wgpu_shell_view_paint::{SHELL_WINDOW_PAINT_OPPORTUNITIES, scene_chrome_labels};
+use semio_renderer_wgpu_shell_view_paint::SHELL_WINDOW_PAINT_OPPORTUNITIES;
 use semio_renderer_wgpu_shell_view_panels::PanelsViewCtx;
 use semio_renderer_wgpu_shell_window_actions::BootSelectionRequest;
 use semio_renderer_wgpu_shell_windows::{PanelAnchor, section_fixtures};

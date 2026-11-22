@@ -9,6 +9,7 @@ use super::*;
 /// Fields keep the names they had on the former `ShellState`; the composer owns one value of this struct as `docs`.
 pub struct DocumentState {
     pub session: Option<ActiveSession>,
+    pub workspace_clipboard: Option<semio_framework::kernel::ClipboardFragment>,
     pub window_ui: HashMap<String, UiDocumentLease>,
     pub panel_documents: HashMap<String, UiDocumentLease>,
     pub spawned_ui: Option<UiDocumentLease>,
@@ -24,4 +25,20 @@ pub struct DocumentState {
     pub window_projection_documents: HashMap<String, UiDocumentLease>,
     /// 📏️ Each live window instance's projected Measures overlay document — see `//#region 📏️WindowMeasures`.
     pub window_measures_documents: HashMap<String, UiDocumentLease>,
+}
+
+impl DocumentState {
+    /// 📋️ Resolves the workspace fragment at paste dispatch and preserves the caller's placement.
+    pub fn bind_workspace_paste(&self, action: &mut ActionDescriptor) {
+        if action.action != "paste" || action.args.as_ref().and_then(|args| args.get("fragment")).is_some() {
+            return;
+        }
+        let Some(fragment) = self.workspace_clipboard.as_ref() else { return };
+        let mut args = match action.args.take() {
+            Some(semio_framework_value::DslValue::Object(entries)) => entries,
+            _ => Vec::new(),
+        };
+        args.push(("fragment".into(), semio_framework_value::ToValue::to_value(fragment)));
+        action.args = Some(semio_framework_value::DslValue::Object(args));
+    }
 }

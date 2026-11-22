@@ -1,14 +1,16 @@
 #!/usr/bin/env bash
 # 📦 Validate a built site folder, package it with its SHA256SUMS manifest as a UTC-timestamped tar.gz
-# Usage: package-site.sh <site-folder> [output-dir] [accepted-manifest]
+# Usage: package-site.sh <site-folder> <output-dir> <accepted-manifest>
 #   <site-folder>  built site root, must contain index.html, CNAME and .nojekyll
-#   [output-dir] [accepted-manifest]   defaults to <ticket>/🗑️generated
+#   <accepted-manifest> must come from the queue-verified static acceptance run
 # Refs: https://www.gnu.org/software/bash/manual/ https://www.gnu.org/software/coreutils/manual/
 set -euo pipefail
 
 TICKET="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SITE="$(cd "${1:?usage: package-site.sh <site-folder> [output-dir] [accepted-manifest]}" && pwd)"
-OUT_DIR="${2:-$TICKET/🗑️generated}"
+SITE="$(cd "${1:?usage: package-site.sh <site-folder> <output-dir> <accepted-manifest>}" && pwd)"
+OUT_DIR="${2:?output directory required}"
+ACCEPTED="${3:?accepted manifest required}"
+[[ -f "$ACCEPTED" ]] || { echo "accepted manifest missing: $ACCEPTED" >&2; exit 1; }
 REPO_ROOT="${REPO_ROOT:-$(cd "$TICKET/../../../../../../.." && pwd)}"
 python_tool() {
   if [[ -n "${PACKAGE_PYTHON:-}" ]]; then "$PACKAGE_PYTHON" "$@"; else repo tools exec python -- "$@"; fi
@@ -28,7 +30,7 @@ cleanup() {
 trap cleanup EXIT
 manifest="$scratch/SHA256SUMS"
 python_tool "$TICKET/site-manifest.py" "$SITE" "$REPO_ROOT" "$manifest"
-if [[ -n "${3:-}" ]]; then cmp "$3" "$manifest"; fi
+cmp "$ACCEPTED" "$manifest"
 
 mkdir -p "$OUT_DIR"
 OUT_DIR="$(cd "$OUT_DIR" && pwd)"
@@ -43,6 +45,6 @@ temporary="$(mktemp "$OUT_DIR/.site-XXXXXXXX")"
   done
   COPYFILE_DISABLE=1 tar -czf "$temporary" "${entries[@]}" -C "$scratch" ./SHA256SUMS
 )
-python_tool "$TICKET/verify-release-archive.py" "$temporary" "${3:-$manifest}"
+python_tool "$TICKET/verify-release-archive.py" "$temporary" "$ACCEPTED"
 mv "$temporary" "$archive"
 printf 'archive: %s\n' "$archive"

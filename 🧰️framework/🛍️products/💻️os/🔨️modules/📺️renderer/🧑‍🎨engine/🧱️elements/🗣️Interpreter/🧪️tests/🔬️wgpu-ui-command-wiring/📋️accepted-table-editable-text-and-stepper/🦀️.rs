@@ -57,6 +57,7 @@ fn accepted_table_editable_text_commits_enter_and_discards_escape() {
             semio_ui_declaration::ui::SurfaceKind::Table,
             rect,
             &semio_ui_wgpu_events::UiEvent::PointerDown { x: 100.0, y, button: semio_ui_wgpu_events::PointerButton::Primary, modifiers: Default::default() },
+            1,
             Some(ui_render::PointerId(18)),
             input,
         );
@@ -179,6 +180,7 @@ fn accepted_table_stepper_centre_owns_navigation_keys_and_a_missing_row_retires_
         semio_ui_declaration::ui::SurfaceKind::Table,
         rect,
         &semio_ui_wgpu_events::UiEvent::PointerDown { x: 100.0, y, button: semio_ui_wgpu_events::PointerButton::Primary, modifiers: Default::default() },
+        1,
         Some(ui_render::PointerId(17)),
         &mut input,
     );

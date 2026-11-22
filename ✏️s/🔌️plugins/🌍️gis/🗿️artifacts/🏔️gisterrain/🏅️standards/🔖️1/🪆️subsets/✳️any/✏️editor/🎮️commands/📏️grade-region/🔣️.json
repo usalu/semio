@@ -5,7 +5,19 @@
   "additionalProperties": false,
   "required": ["id", "height"],
   "properties": {
-    "id": { "type": "string", "minLength": 1, "maxLength": 128 },
-    "height": { "type": "integer", "minimum": -32768, "maximum": 32767 }
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "[^\\u0009-\\u000d\\u0020\\u0085\\u00a0\\u1680\\u2000-\\u200a\\u2028\\u2029\\u202f\\u205f\\u3000]",
+      "description": "Region ID with a maximum UTF-8 length of 128 bytes."
+    },
+    "height": {
+      "type": "number",
+      "minimum": -2147483.648,
+      "maximum": 2147483.647,
+      "multipleOf": 0.001,
+      "description": "Target elevation in metres, represented internally by signed millimetres."
+    }
   }
 }

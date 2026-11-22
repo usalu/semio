@@ -16,6 +16,7 @@ import {signFleetDocumentV1,syncFleetIdentityV1} from "../../../../../🏗️bui
 import {blobPathOf,fleetInstallIndexV1,fleetInstallSeedV1,fleetInstallFingerprintV1,fleetInstallLinkTextV1,rewriteFleetInstallLinksV1,pruneFleetInstallsV1,fleetInstallAcquireV1,fleetInstallKeyV1,fleetInstallManifestV1,fleetInstallPublishV1,fleetInstallRestoreV1,fleetInstallScopeV1,fleetInstallHostV1,fleetInstallRuntimeV1,type FleetInstallRuntimeV1,type FleetInstallRequestV1,type FleetInstallShapeV1} from "../🟦️.ts";
 import installSchema from "../../🧬️schema/🔣️.json" with {type:"json"};
 import hardlinkCorpus from "./🔗️.json" with {type:"json"};
+import metadataCorpus from "./📋️metadata.json" with {type:"json"};
 import {captureFleetInstallHardlinksV1} from "../🔗️hardlinks/🟦️.ts";
 
 const scratch:string[]=[];
@@ -112,6 +113,19 @@ test("a second publish of the same state is skipped",async()=>{
 test("a tree with an absolute symbolic link is never published",async()=>{
  const store=directory("store"),one=directory("one");populate(one);symlinkSync("/Users/someone/checkout/.cache/b/d",join(one,"node_modules","absolute"));
  expect(await fleetInstallPublishV1(request(one,store))).toBe(false);expect(existsSync(join(store,"v1","fleet","install"))).toBe(false);
+});
+
+test("publication rejects a link retargeted by the mandatory installed scan",async()=>{
+ const store=directory("store"),one=directory("before-metadata"),endpoint=join(one,"node_modules","changed");
+ populate(one);symlinkSync("pkg-3/index.js",endpoint);
+ const original=request(one,store),events:string[]=[];
+ const result=await fleetInstallPublishV1({...original,scan:async()=>{
+  const shape=await original.scan();rmSync(endpoint);symlinkSync("../../external",endpoint);
+  return shape;
+ },event:event=>events.push(event.detail)});
+ expect(result).toBe(false);
+ expect(events).toEqual(["non-relocatable link node_modules/changed"]);
+ expect(existsSync(join(store,"v1","fleet","install"))).toBe(false);
 });
 
 test("a tampered archive is refused and leaves the target without any placed root",async()=>{
@@ -423,4 +437,56 @@ test("wiring: the funding producer and the synchronisation build their request w
  expect(storage).toContain("fleetInstallRuntimeV1(");
  expect(producer).toContain("javascriptDependencyFleetRequestV1(");expect(producer).toContain("fleetInstallScopeV1(");
  expect(producer.indexOf("fleetInstallScopeV1(")).toBeLessThan(producer.indexOf("publishRepositoryDependencyProducedExportsV1(workspace,root,row"));
+});
+
+
+test("publication reads relocatability and the portable fingerprint in one metadata walk",async()=>{
+ const path=await import("node:path"),fs=await import("node:fs/promises"),source=readFileSync(new URL("../🟦️.ts",import.meta.url),"utf8"),tree=ts.createSourceFile("install.ts",source,ts.ScriptTarget.Latest,true);
+ const body=(name:string)=>{const node=tree.statements.find(row=>ts.isFunctionDeclaration(row)&&row.name?.text===name);expect(node,name).toBeDefined();return node!.getText(tree);};
+ const publish=body("fleetInstallPublishV1");
+ expect(publish).not.toContain("firstNonRelocatableLinkV1(");
+ expect(publish).not.toContain("fleetInstallFingerprintV1(");
+ expect(publish.indexOf("inspectFleetInstallMetadataV1(")).toBeGreaterThan(publish.indexOf("await request.scan()"));
+ expect(publish.indexOf("inspectFleetInstallMetadataV1(")).toBeLessThan(publish.indexOf("planFleetInstallPackV1("));
+ const code=ts.transpileModule([body("fleetInstallLinkRelocatableV1"),body("inspectFleetInstallMetadataV1"),"return inspectFleetInstallMetadataV1"].join("\n"),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
+ for(const row of metadataCorpus){
+  const owner=directory("metadata"),generation=join(owner,"generation"),storage=join(owner,"store"),outside=join(owner,"outside"),installed=join(generation,"node_modules"),physical=join(generation,"physical");
+  for(const root of [storage,outside,join(row.rootAlias?physical:installed,"pkg")])mkdirSync(root,{recursive:true});
+  if(row.rootAlias)symlinkSync(physical,installed,process.platform==="win32"?"junction":"dir");
+  writeFileSync(join(storage,"index.js"),"shared");
+  writeFileSync(join(outside,"index.js"),"external");
+  writeFileSync(join(installed,"pkg","index.js"),"module.exports=1");
+  symlinkSync(row.target.replace("{store}",storage).replace("{outside}",outside),join(installed,"link"));
+  const reads=new Map<string,number>(),charge=(kind:string,name:string)=>{const key=kind+" "+name;reads.set(key,(reads.get(key)??0)+1);};
+  const metadata=new Function("createHash","fleetInstallLinkTextV1","isAbsolute","join","posix","lstat","readdir","readlink",code)(createHash,fleetInstallLinkTextV1,path.isAbsolute,path.join,path.posix,async(name:string)=>{charge("stat",name);return fs.lstat(name);},async(name:string)=>{charge("list",name);return fs.readdir(name);},async(name:string)=>{charge("link",name);return fs.readlink(name);});
+  const actual=await metadata(generation,["node_modules"],storage,()=>{},process.platform,true);
+  const expectedBad=process.platform==="win32"&&row.id==="absolute-within-store"?"node_modules/link":row.bad;
+  expect(actual.bad??null,row.id).toBe(expectedBad);
+  expect([...reads.values()].every(count=>count===1),row.id).toBe(true);
+  if(expectedBad===null){
+   expect(reads.size,row.id).toBe(7);
+   const [independent]=await python(`import hashlib,os,stat,sys,json
+root,store,platform=json.loads(sys.argv[1])
+rows=["r node_modules"]
+def walk(directory,relative):
+ for name in sorted(os.listdir(directory)):
+  current=os.path.join(directory,name)
+  child=relative+"/"+name
+  info=os.lstat(current)
+  if stat.S_ISLNK(info.st_mode):
+   target=os.readlink(current)
+   if platform=="win32":
+    if target[:4]==chr(92)*2+"?"+chr(92):target=target[4:]
+    target=target.replace(chr(92),"/")
+   rows.append("l "+child+" "+("<store>"+target[len(store):] if target.startswith(store+"/") else target))
+  elif stat.S_ISDIR(info.st_mode):
+   rows.append("d "+child)
+   walk(current,child)
+  else: rows.append("f "+child+" "+str(info.st_size)+" "+str(int(bool(info.st_mode&0o111))))
+walk(os.path.join(root,"node_modules"),"node_modules")
+print(hashlib.sha256(chr(10).join(rows).encode()).hexdigest())`,JSON.stringify([generation,fleetInstallLinkTextV1(storage),process.platform]));
+   expect(actual.fingerprint,row.id).toBe(independent);
+   expect(await fleetInstallFingerprintV1(generation,["node_modules"],storage,()=>{}),row.id).toBe(independent);
+  }
+ }
 });

@@ -20,11 +20,10 @@ import { VIRTUAL_FILE_SYSTEM_DEMO_DESCRIPTOR_KINDS, VIRTUAL_FILE_SYSTEM_DEMO_FIL
 import { Canvas, HorizontalWindows, VerticalWindows, App, Ui, type AppModeDescriptor, type AppProps, type UiAppDescriptor, type UiProps } from "@semio-tech/ui/elements/Canvas";
 import { panelGhostSessionBridge, setPanelGhostSessionBridge } from "@semio-tech/ui/elements/PanelGhost";
 import { MODE_CANVAS_INSET_CLASS, Mode, type ModeProps } from "@semio-tech/ui/elements/Canvas";
-import { modeCollectWindowIds, removeWindowFromLayout, resolveStackPathForWindowId, reconcileWindows, normalizeLayoutToStacks, collapseLayout } from "@semio-tech/ui/elements/Canvas/layout";
-import { COMPOSE_WINDOW_TEMPLATE_MIME, MODE_TEMPLATE_PREVIEW_WINDOW_ID, beginWindowTemplateDrag, endWindowTemplateDrag, readActiveWindowTemplateDragSession, windowTemplatePointerDragRef, beginWindowTemplatePointerDrag, cancelWindowTemplatePointerDrag, windowTemplatePaletteTreeDragController, type ModeWindowDescriptor, type WindowTemplateDragSession, type ModeCanvasDropTarget, type WindowTemplateDropPayload } from "@semio-tech/ui/elements/Canvas/template-drag";
+import { COMPOSE_WINDOW_TEMPLATE_MIME, MODE_TEMPLATE_PREVIEW_WINDOW_ID, beginWindowTemplateDrag, endWindowTemplateDrag, readActiveWindowTemplateDragSession, windowTemplatePointerDragRef, beginWindowTemplatePointerDrag, cancelWindowTemplatePointerDrag, windowTemplatePaletteTreeDragController, type ModeWindowDescriptor, type WindowTemplateDragSession, type WindowTemplateDropPayload } from "@semio-tech/ui/elements/Canvas/template-drag";
 import { modeAxisIsPerpendicularChild, modePerpendicularJoinSeparators, modeJoinCornerSpecsForSeparator, modeJoinCornerSpecsForCrossSeparator, MODE_JOIN_CORNER_TOUCH_EPS, resolveJoinCornerPeerCrossAxes, applyAxisResizeDelta, resolveJoinCornerResizeDeltas, applyAxisGroupLayoutDelta, modeAxisGroupLayout, applyModeJoinCornerResize, type ModeJoinCornerCrossAxis } from "@semio-tech/ui/elements/Canvas/join-corners";
-import { insertWindowAtDropZone, applyModeDrop, computeModeDropZone, computeModeSplitPreviewInBody, resolveModeSplitSideInBody, computeTabInsertPreview, modeDockOutLayout, modeDockTabsWithInsertPreview, modeDockDragInsertTabs, resolveModeTabInsertPreview } from "@semio-tech/ui/elements/Canvas/drop";
-import { splitWithWindow, splitWithStack, extractStackFromLayout, mergeStackTabsIntoStack, WINDOW_STACK_CORNERS, resolveWindowCorner, modeStackTabsByCorner, insertWindowAsTabAtCorner, setWindowCornerInLayout } from "@semio-tech/ui/elements/Canvas/corners";
+import { applyModeDrop, computeModeDropZone, computeModeSplitPreviewInBody, resolveModeSplitSideInBody, computeTabInsertPreview, modeDockOutLayout, modeDockTabsWithInsertPreview, modeDockDragInsertTabs, resolveModeTabInsertPreview } from "@semio-tech/ui/elements/Canvas/drop";
+import { modeStackTabsByCorner, modePathKey, modePathFromKey, modePathEquals, resolveModeLayout, collectModeWindows, findModeWindow, applyModeSplitPercents } from "@semio-tech/ui/elements/Canvas/layout";
 import { Edges } from "@react-three/drei/core/Edges.js";
 import { GizmoHelper } from "@react-three/drei/core/GizmoHelper.js";
 import { GizmoViewport } from "@react-three/drei/core/GizmoViewport.js";
@@ -148,7 +147,6 @@ export {
 };
 export { type PaneHostProps, PaneHost, type PaneProps, Pane } from "@semio-tech/ui/elements/WindowPane";
 export { type EngagementOption, type EngagementStatus, type EngagementRingOption, type EngagementSliderControl, type EngagementStepperControl, type EngagementRingControl, type EngagementToggleGroupOption, type EngagementToggleGroupControl, type EngagementSelectItem, type EngagementSelectControl, type EngagementControl, UI_ENGAGEMENT, ENGAGEMENT_USER, type EngagementSpec, type EngagementProps, Engagement } from "@semio-tech/ui/elements/Engagement";
-export { type WindowStackCorner, type WindowLayoutWindowNode, type WindowLayoutStackNode, type WindowLayoutAxisNode, type WindowLayoutNode, createEvenWindowLayout } from "@semio-tech/ui/modules/window-layout";
 export { UI_WINDOW_SEARCH, type SearchInput, type SearchPossible, filterSearchPossibles, type SearchInlineCompletion, searchInlineCompletion, searchActiveInlineCompletion, searchHighlightedLabel, isUiTypingTarget, isWindowSearchTypingTarget, shouldRouteKeysToWindowSearch, queryWindowSearchInput, focusActiveSearchInput, type SearchLineEdit, SEARCH_LINE_EDIT_SENT_LIMIT, searchControlledLineV1, shouldActivateSearchPossibleOnConfirm, searchSpaceConfirmsLine, applySearchSpaceAction, routeWindowSearchSpace, routeWindowSearchKeydown, routeWindowSearchEscape, type SearchSpec, type SearchProps, normalizeEngagementActionText, Search } from "@semio-tech/ui/elements/WindowSearch";
 export { ContextMenuChrome } from "@semio-tech/ui/elements/ContextMenu/chrome";
 export { windowMeasuresDefaultWidthPx, windowMeasuresMinWidthPx, windowMeasuresMaxWidthPx, windowChromeClearedTopOffset, WINDOW_PANE_MEASURES_ICON, WINDOW_PANE_ACTIONS_ICON, WINDOW_PANE_SEARCH_ICON, WINDOW_PANE_UTILITIES_ICON } from "@semio-tech/ui/modules/window-measures";
@@ -165,7 +163,6 @@ export {
   panelGhostSessionBridge,
   setPanelGhostSessionBridge,
   MODE_CANVAS_INSET_CLASS,
-  modeCollectWindowIds,
   HorizontalWindows,
   VerticalWindows,
   COMPOSE_WINDOW_TEMPLATE_MIME,
@@ -188,17 +185,8 @@ export {
   applyAxisGroupLayoutDelta,
   modeAxisGroupLayout,
   applyModeJoinCornerResize,
-  insertWindowAtDropZone,
   Mode,
-  removeWindowFromLayout,
-  resolveStackPathForWindowId,
-  splitWithWindow,
-  splitWithStack,
-  extractStackFromLayout,
   applyModeDrop,
-  reconcileWindows,
-  normalizeLayoutToStacks,
-  collapseLayout,
   computeModeDropZone,
   computeModeSplitPreviewInBody,
   resolveModeSplitSideInBody,
@@ -206,18 +194,19 @@ export {
   modeDockOutLayout,
   modeDockTabsWithInsertPreview,
   modeDockDragInsertTabs,
-  mergeStackTabsIntoStack,
   resolveModeTabInsertPreview,
-  WINDOW_STACK_CORNERS,
-  resolveWindowCorner,
   modeStackTabsByCorner,
-  insertWindowAsTabAtCorner,
-  setWindowCornerInLayout,
+  modePathKey,
+  modePathFromKey,
+  modePathEquals,
+  resolveModeLayout,
+  collectModeWindows,
+  findModeWindow,
+  applyModeSplitPercents,
   App,
   Ui,
   type ModeWindowDescriptor,
   type WindowTemplateDragSession,
-  type ModeCanvasDropTarget,
   type WindowTemplateDropPayload,
   type ModeProps,
   type ModeJoinCornerCrossAxis,

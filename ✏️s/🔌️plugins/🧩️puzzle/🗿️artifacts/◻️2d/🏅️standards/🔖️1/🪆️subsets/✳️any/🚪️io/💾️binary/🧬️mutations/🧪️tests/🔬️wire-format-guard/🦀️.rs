@@ -1,9 +1,4 @@
-//! 🎫️ (ticket `26/08/12/SEMANTIC-MUTATIONS-OVERHAUL`). The pre-overhaul whole-record-upsert / whole-document-replace wire
-//! 🔒️ Byte-level `OpBinary` round-trip guard for the semantic-mutations-overhaul vocabulary
-//! bytes this guard used to freeze no longer exist — that vocabulary is banned outright, not
-//! preserved — so this now asserts the NEW operations' `OpText`/`OpBinary` round-trip
-//! (`print_op`/`parse_op`, `encode_op`/`decode_op`) instead of pinning byte literals for a wire
-//! shape this ticket deliberately changed.
+//! 🔒️ Puzzle 2D mutation text round trips, authored Pack tags and a shared byte fixture.
 use crate::standards::v1::subsets::any::io::binary::mutations::*;
 use crate::standards::v1::subsets::any::schema::mutations::change_manifest_id;
 use crate::standards::v1::subsets::any::schema::mutations::connect_handles;
@@ -17,6 +12,9 @@ use crate::standards::v1::subsets::any::schema::mutations::scale_selection;
 
 use crate::standards::v1::subsets::any::schema::records::Puzzle2dNode;
 use protocol::OpText;
+use semio_framework_dsl_record::DslVariants;
+use semio_framework_value::RetainedCloneGrant;
+use semio_os_kernel::original_receiving::{ReceivingStock, receive_to_completion};
 
 fn ops() -> Vec<Puzzle2dMutation> {
     let node = Puzzle2dNode {
@@ -52,12 +50,50 @@ fn ops() -> Vec<Puzzle2dMutation> {
 fn operations_round_trip_text_and_binary() {
     let operations = ops();
     assert!(!operations.is_empty());
+    let grant = RetainedCloneGrant {
+        maximum_items: 1 << 20,
+        maximum_copy_bytes: 1 << 24,
+        maximum_capacity_bytes: 1 << 24,
+        maximum_release_bytes: 1 << 24,
+        maximum_depth: 128,
+    };
     for operation in &operations {
         let line = operation.print_op();
         assert_eq!(&Puzzle2dMutation::parse_op(&line).expect("parse_op"), operation);
         let bytes = encode_op(operation).expect("encode");
         assert_eq!(&decode_op(&bytes).expect("decode"), operation);
+        let received = receive_to_completion::<Puzzle2dMutation>(
+            &bytes,
+            (0, bytes.len()),
+            ReceivingStock { stock: grant, quantum: grant, fuel: 1 << 20 },
+        ).expect("original binary receiving");
+        assert_eq!(&received, operation);
     }
+}
+
+/// 🪪️ Native receiving uses the same tags and concrete record body as the authored Pack wire.
+#[test]
+fn replacement_wire_matches_declared_tags_and_record_body() {
+    let authored = dsl::protocol_record::records(COMPONENT_PROTOCOL_SEMIO).collect::<Vec<_>>();
+    let variants = Puzzle2dMutation::variants();
+    assert_eq!(authored.len(), variants.len());
+    for ((tag, (kind, _)), (authored_kind, authored_tag)) in variants.iter().enumerate().zip(authored) {
+        assert_eq!((kind.as_str(), tag as u64), (authored_kind, authored_tag));
+    }
+
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("delete-node.json")).unwrap();
+    let operation = delete_node(fixture["id"].as_str().unwrap().into());
+    let bytes = encode_op(&operation).unwrap();
+    assert_eq!(u64::from(bytes[0]), fixture["format"].as_u64().unwrap());
+    assert_eq!(u64::from(bytes[1]), fixture["tag"].as_u64().unwrap());
+    let hex = bytes.iter().map(|byte| format!("{byte:02x}")).collect::<String>();
+    assert_eq!(hex, fixture["hex"].as_str().unwrap());
+    assert_eq!(decode_op(&bytes).unwrap(), operation);
+    let Some(store::ArtifactPreparedOperationSource::Pack { tag, spec, .. }) = prepared_operation_wire_source(&operation) else {
+        panic!("replacement comparison must borrow the authored Pack body");
+    };
+    assert_eq!(tag, fixture["tag"].as_u64().unwrap());
+    assert_eq!(spec.keyword, fixture["kind"].as_str());
 }
 
 /// 🏷️ The three selection transforms print under their own opcode and sit at their own protocol tags
@@ -65,11 +101,12 @@ fn operations_round_trip_text_and_binary() {
 /// tag varint, so the second byte names the kind.
 #[test]
 fn selection_transforms_print_their_opcode_and_carry_their_tag() {
-    for (operation, opcode, tag) in [
+    let cases: [(Puzzle2dMutation, &str, u8); 3] = [
         (drag_selection(vec!["n1".into()].into(), 1.0, 2.0), "drag-selection", 33u8),
         (rotate_selection(vec!["n1".into()].into(), 0.0, 0.0, 1.0), "rotate-selection", 34),
         (scale_selection(vec!["n1".into()].into(), 0.0, 0.0, 2.0), "scale-selection", 35),
-    ] {
+    ];
+    for (operation, opcode, tag) in cases {
         let line = operation.print_op();
         assert!(line.starts_with(&format!("{opcode} ")), "{line}");
         assert_eq!(encode_op(&operation).expect("encode")[1], tag, "{opcode} must sit at protocol tag {tag}");

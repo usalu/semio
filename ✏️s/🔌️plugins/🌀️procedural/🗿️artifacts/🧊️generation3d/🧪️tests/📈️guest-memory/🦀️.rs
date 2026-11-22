@@ -50,6 +50,7 @@ async fn drive_idle_poll_turns(component: &std::path::Path, turns: usize) -> (us
     let instances: u32 = std::env::var("SEMIO_POLL_TURN_LEAK_INSTANCES").ok().and_then(|value| value.parse().ok()).unwrap_or(1);
     let opens: Vec<Event> = (1..=instances)
         .map(|index| Event::InstanceOpen {
+            purpose: semio_framework::kernel::ActorInstanceOpenPurpose::Ordinary,
             request: semio_framework::kernel::ActorInstanceOpenRequest { activation_generation: 1, instance_id: index, request_sequence: index as u64 },
             app_id: semio_framework::AppInstanceId(app_id.clone()),
             actor: format!("poll-turn-memory-{index}"),
@@ -159,6 +160,7 @@ async fn drive_diagnostics_turns(component: &std::path::Path, turns: usize, arme
     let mut instance = runtime.instantiate(&compiled, RuntimeActorId(1), &[], &budget).await.expect("the staged actor component instantiates");
     let app_id = std::env::var("SEMIO_POLL_TURN_LEAK_APP").unwrap_or_else(|_| "s.procedural.generation3d@1/*#editor".to_string());
     let mut events: Vec<Event> = vec![Event::InstanceOpen {
+        purpose: semio_framework::kernel::ActorInstanceOpenPurpose::Ordinary,
         request: semio_framework::kernel::ActorInstanceOpenRequest { activation_generation: 1, instance_id: 1, request_sequence: 1 },
         app_id: semio_framework::AppInstanceId(app_id),
         actor: "poll-turn-diagnostics".to_string(),

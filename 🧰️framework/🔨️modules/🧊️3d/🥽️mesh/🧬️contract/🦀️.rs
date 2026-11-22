@@ -180,9 +180,9 @@ pub enum MeshIntersectionFace {
     Left(u32),
     RightPlane(u32),
     ReversedRightPlane(u32),
-    /// ◧️ Original left cap cut along its certified profile edges.
+    /// ◧️ Original left cap with a certified clipped profile.
     LeftBoundary(u32),
-    /// ◨️ Original right cap cut along its certified profile edges.
+    /// ◨️ Original right cap with a certified clipped profile.
     RightBoundary(u32),
 }
 

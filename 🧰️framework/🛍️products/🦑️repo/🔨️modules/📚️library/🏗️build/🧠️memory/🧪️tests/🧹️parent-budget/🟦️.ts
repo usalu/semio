@@ -146,3 +146,17 @@ test("R57 law: a cheap collection keeps the old pace: not twice within the minim
  held=4096*MB;clock+=policy.collectMinimumIntervalMilliseconds-1;collector.afterProject();expect(collector.afterProject()).toBe(false);
  clock+=1;collector.afterProject();expect(collector.afterProject()).toBe(true);expect(collections).toBe(2);
 });
+
+test("owners that run in farm children are held to the real free memory of the host, not to the managed budget of the parent: 12 GB free admit every lane, the parent budget admits three",async()=>{
+ const state={held:0,survives:0,collected:0},lane=async(budgetBytes?:number)=>{
+  const governor=createGraphParentMemoryGovernorV1({workers:8,ports:ports(state),headroom:()=>12*1024*MB,...budgetBytes===undefined?{}:{budgetBytes},estimate:()=>371*MB,report:()=>undefined,environment:{}});
+  let running=0,peak=0,release!:()=>void;const gate=new Promise<void>(done=>{release=done;});
+  const work=Array.from({length:12},(_,index)=>governor.run(async()=>{running++;peak=Math.max(peak,running);await gate;running--;},{kind:"project",key:"owner-"+index}));
+  await Bun.sleep(policy.admitMinimumMilliseconds*12+200);release();await Promise.all(work);governor.dispose();return peak;
+ };
+ expect(await lane(1398*MB)).toBeLessThanOrEqual(4);
+ expect(await lane(undefined)).toBe(8);
+ const source=await Bun.file(new URL("../../../🕸️graph/📥️inference/📦️project-nodes/🟨️.mjs",import.meta.url)).text();
+ expect(source).toContain("...farm===undefined?{budgetBytes:parentBytes}:{}");
+ expect(source).toContain("availableMegabytes:await hostAvailableMegabytesV1()");
+});

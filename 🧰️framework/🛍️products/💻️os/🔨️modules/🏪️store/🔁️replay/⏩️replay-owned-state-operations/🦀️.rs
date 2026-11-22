@@ -610,6 +610,12 @@ mod operation_preparation {
             }
             if let Some(retirement) = self.operation_retirement.as_mut() {
                 let control=control.ok_or_else(||VcsError::InverseRefused(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"native replay retirement requires its original decoder")))?;
+                if retirement.cursor.as_ref().is_some_and(|cursor| !cursor.terminal_is_empty())
+                    && (!control.has_retirement_failure_storage() || control.failure_storage_birth_pending())
+                {
+                    self.native_receipt = settle_poll(control.prepare_failure_storage(original))?.progress();
+                    return Ok(false);
+                }
                 let Some(polled)=replay_effect(original,Some(control),|control,effect|->Result<OriginalRetirementPoll,ValueError>{let control=control.ok_or_else(||ValueError::invariant("native replay retirement lost its decoder"))?;control.with_retirement(original,|receiving|Ok(retirement.close_step(effect,receiving)))})? else{return Ok(false)};
                 let step=settle_poll(polled.map_err(VcsError::InverseRefused)?)?;
                 self.native_receipt=step.progress();

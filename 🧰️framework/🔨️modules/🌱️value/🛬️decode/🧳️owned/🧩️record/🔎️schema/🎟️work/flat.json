@@ -1,0 +1,78 @@
+{
+  "fields": [
+    {
+      "name": "alpha",
+      "ordinal": 0
+    },
+    {
+      "name": "dup",
+      "ordinal": 7
+    },
+    {
+      "name": "dup",
+      "ordinal": 42
+    },
+    {
+      "name": "beta",
+      "ordinal": 7
+    },
+    {
+      "name": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaé",
+      "ordinal": 9
+    }
+  ],
+  "cases": [
+    {
+      "name": "alpha",
+      "kind": "field",
+      "field": 0,
+      "comparisons": 5
+    },
+    {
+      "name": "dup",
+      "kind": "ambiguous",
+      "field": null,
+      "comparisons": 3
+    },
+    {
+      "ordinal": 7,
+      "kind": "ambiguous",
+      "field": null,
+      "comparisons": 4
+    },
+    {
+      "ordinal": 42,
+      "kind": "field",
+      "field": 2,
+      "comparisons": 5
+    },
+    {
+      "ordinal": 999,
+      "kind": "missing",
+      "field": null,
+      "comparisons": 5
+    },
+    {
+      "name": "unknown",
+      "kind": "missing",
+      "field": null,
+      "comparisons": 5
+    },
+    {
+      "name": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaé",
+      "kind": "field",
+      "field": 4,
+      "comparisons": 6
+    },
+    {
+      "name": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaê",
+      "kind": "missing",
+      "field": null,
+      "comparisons": 6
+    }
+  ],
+  "cancelAfter": [
+    1,
+    5
+  ]
+}

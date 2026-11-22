@@ -87,6 +87,7 @@ semio-framework-job-payload = { workspace = true }
 semio-s-artifact-puzzle-3d-editor-session = { path = "../../../../../../../../../🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎟️session/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-value-clone-source-testing = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️testing/📦️packages/🦀️rust" }
 rstar = "0.12"
 semio-framework-async-macros = { workspace = true }
 semio-framework-io-base64 = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust" }

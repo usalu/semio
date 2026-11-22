@@ -112,6 +112,43 @@ fn encode_framed(
  RetainedWorkOutcome{result:turn.result.map_err(|error|Stage::Operation(settlement.refused_failure(native_owner.native().owned_bytes(),error))),work:turn.work}
 }
 
+/// 📜️ Emits a raw UTF-8 carrier through a retained-text body, settled against the caller's control.
+pub fn encode_sqlite_snapshot_raw_native(
+ encoding:SnapshotEncoding,
+ write:&mut impl FnMut(usize,&mut Option<String>,&mut NativeSnapshotEncodeOwner<'_,'_>)->RetainedWorkOutcome<(),NativeSnapshotFailure>,
+ control:&mut SqliteSnapshotControl<'_>,
+ native_owner:&mut NativeSnapshotEncodeOwner<'_,'_>,
+ output:&mut Option<SnapshotReceivingOutput<IoPayload>>,
+)->SnapshotReceivingOutcome{
+ let limit=control.limits().max_file_bytes;
+ let admitted=(||{
+  if output.is_some(){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"output slot occupied"))}
+  native_owner.native().checkpoint()?;
+  control.checkpoint(SqliteSnapshotPhase::EncodeNative,0,0)?;
+  let before=native_owner.native().owned_bytes();
+  let maximum=before.checked_add(control.allocation_remaining_bytes()).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"allowance overflow"))?;
+  Ok((before,maximum))
+ })();
+ let(before,maximum)=match admitted{Ok(admitted)=>admitted,Err(error)=>return RetainedWorkOutcome{result:Err(Stage::NotStarted(error)),work:0}};
+ let settlement=semio_framework_io_sqlite_snapshot::artifact::receiving::ReceivingSettlement::new(control,before,SqliteSnapshotPhase::EncodeNative);
+ let mut observer=|event:NativeEncodeProgress|settlement.observe(event.owned_bytes,event.completed,event.total);
+ let turn=native_owner.scoped_native(maximum,&mut observer,|owner|owner.receive_nested::<String,SnapshotReceivingOutput<IoPayload>,NativeSnapshotFailure>(output,&mut |slot,result,_marker,_unwind,owner|native_snapshot_turn(|work|{
+  let status=work.take(write(limit,slot,owner));
+  match(status,settlement.finish_body(owner.native().owned_bytes())){
+   (Err(primary),Ok(()))=>return Err(primary),
+   (Ok(()),Err(error))=>return Err(error.into()),
+   (Err(primary),Err(error))=>return Err(primary.with_settlement_refusal(error).expect("settlement slot")),
+   (Ok(()),Ok(()))=>{}
+  }
+  let bytes=size_of::<SnapshotReceivingOutput<IoPayload>>();
+  work.admit_encode(owner.native())?;
+  let text=slot.take().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"retained text lost"))?;
+  *result=Some(Ok(match encoding{SnapshotEncoding::Text=>IoPayload::Text(text),SnapshotEncoding::Binary=>IoPayload::Binary(text.into_bytes())}));
+  owner.record_progress(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;Ok(())
+ })));
+ RetainedWorkOutcome{result:turn.result.map_err(|error|Stage::Operation(settlement.refused_failure(native_owner.native().owned_bytes(),error))),work:turn.work}
+}
+
 #[cfg(test)]
 #[path="🧪️tests/🚪️control/🦀️.rs"]
 mod original_control_tests;

@@ -1,7 +1,7 @@
 //! 🧬 Rust-owned bounded PDF LZW dictionary and phrase expansion.
 
 use crate::{FlateCloseStep, FlateGrant, FlateStatus, FlateStep};
-use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
+use semio_framework_value::{ByteReadSource, RetirementDemand, ValueError, ValueRefusalKind};
 
 const FIRST: u16 = 258;
 const LIMIT: u16 = 4096;
@@ -54,7 +54,7 @@ impl PdfLzwCursor {
     pub fn owned_bytes(&self) -> usize { self.table.capacity() * size_of::<Entry>() + self.phrase.capacity() }
 
     /// ▶️ Charges one unit per input byte, extracted code, expanded prefix edge, or output byte.
-    pub fn advance(&mut self, source: &[u8], output: &mut [u8], grant: FlateGrant, cancelled: bool) -> FlateStep {
+    pub fn advance(&mut self, source: &(impl ByteReadSource + ?Sized), output: &mut [u8], grant: FlateGrant, cancelled: bool) -> FlateStep {
         if cancelled && self.life == Life::Decode { self.life = Life::Cancelled; }
         let mut step = FlateStep { status: Ok(FlateStatus::Yield), work: 0, allocated_bytes: 0, written_bytes: 0 };
         step.status = match self.life {
@@ -67,8 +67,8 @@ impl PdfLzwCursor {
         step
     }
 
-    fn decode(&mut self, source: &[u8], output: &mut [u8], grant: FlateGrant, step: &mut FlateStep) -> Result<FlateStatus, ValueError> {
-        if *self.source_len.get_or_insert(source.len()) != source.len() {
+    fn decode(&mut self, source: &(impl ByteReadSource + ?Sized), output: &mut [u8], grant: FlateGrant, step: &mut FlateStep) -> Result<FlateStatus, ValueError> {
+        if *self.source_len.get_or_insert(source.byte_len()) != source.byte_len() {
             return Err(ValueError::invariant("PDF LZW source length changed"));
         }
         while step.work < grant.work {
@@ -95,7 +95,10 @@ impl PdfLzwCursor {
                 step.work += 1;
             } else if self.available < self.width {
                 step.work += 1;
-                let byte = *source.get(self.input).ok_or_else(|| format_error("truncated PDF LZW stream before EOD"))?;
+                let byte = source.byte_at(self.input).ok_or_else(|| {
+                    if self.input < source.byte_len() { ValueError::invariant("PDF LZW source lost an admitted byte") }
+                    else { format_error("truncated PDF LZW stream before EOD") }
+                })?;
                 self.input += 1;
                 self.bits = (self.bits << 8) | u32::from(byte);
                 self.available += 8;

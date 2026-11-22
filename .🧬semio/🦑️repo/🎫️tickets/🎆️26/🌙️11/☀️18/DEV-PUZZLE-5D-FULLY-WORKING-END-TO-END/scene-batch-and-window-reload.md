@@ -1,0 +1,29 @@
+# Scene batches and Window Config reload
+
+The first paged Capsule Dream run passed the old single-allocation release stall. It advanced 5,025,886 Store units before the original caller had only 28 copy bytes left. Its other lifetime and per-turn grants still admitted work. Publication held two snapshot reads while the unchanged checkpoint (48, 192) reached the original stall guard.
+
+The example producer now groups up to eight separately checked scene splices in one Store operation. Each splice still carries at most 64 rows and is checked against the preceding intermediate scene. The group prepares one post snapshot and has one explicit inverse group, in reverse application order. The existing gesture edit still owns the whole scene change for undo. The new operation has binary tag 40, an authored text opcode and a localized payload schema. The scene fixture drives the exact forward and inverse groups across the native and prepared codecs and their independent AJV and SQLite checks. The repository Bun runner passed all four scene checks and 22 expectations.
+
+The mounted exact camera law originally passed camera isolation and rendering, then stalled while reopening its saved board configuration. A native breakpoint recorded the first refusal in `RetainedCloneSourceAdmission<Vec<u8>>::advance`. The selected identity projection has a separate original entry point. The Window receiver now quotes and runs that entry point and holds the same output slot across both Source transfer stages. Cancellation discards the settled non-owning projection and returns the bytes to the selected history row before retiring it.
+
+The native clipboard paste law reached controlled cleanup and found an unimplemented original reply for the owned string map. The core map and set cursors now use the same original reply mechanism as their existing ordered-map counterpart. The ordered set observes its final pending entry before reporting terminal-empty.
+
+The combined build is running with the new owners, operation and fixtures. The first build to read the new operation found an ambiguous empty mutation target. That target now declares its string type. The filesystem also ran out of space during overlapping builds. Reclamation removed completed private compiler generations while preserving source, receipts and the existing published WASM.
+
+The next native compile reached editor dispatch and found that its application error closure could not propagate a typed original custody failure from batch admission. Dispatch now propagates that failure through the worker turn. The Hub and editor builds are testing this revision, and the next native WASM build has started.
+
+The v10 native build passed both new Rust laws. The grouped edit agrees across text, cold binary, prepared binary and retained receiving. Its inverse restores the complete fixture snapshot. Each actual Capsule Dream parts batch encodes inside the Store's one-operation wire bound. The v10 mounted Nakagin law also passed switch, undo, redo and close.
+
+The Window camera case progressed through saved mutation Source admission and surfaced its next checked wire error. Its board mutation owner encoded JSON text as binary, whereas the installed original decoder receives a Pack value. The 5D Window mutation codec now follows the same Pack value encode, decode and numeric normalization as the 3D counterpart.
+
+## Late native verification
+
+The v11 build passed all 25 runnable base laws and all 21 v1 laws. The smoke tests also passed Nakagin composition, the registered example switch with exact undo and redo, and both context menus against a mounted Nakagin document. The groups now take up to 16 part splices or 32 fastener and compatibility splices per Store operation. Pack coverage verifies each real authored Capsule operation is below the one-item wire ceiling. The language-neutral test passed 22 expectations across English and German field resolution, AJV validation, and independent SQLite replay.
+
+Capsule Dream folded all eleven v11 operations, then ran out of original copy stock after 687,059 Store units. A hardware watchpoint on the actual Store batch advanced through cursor preparation and stopped at precommit preflight with ten copy bytes remaining. The canonical sealer spent most of that phase walking a roughly 3.5 MB edit through tiny output windows. Canonical JSON now encodes flat subtrees through a bounded temporary window, sized by the current copy, Work and depth grant. The edit sealer supplies its existing 1 KiB page. Existing corpus oracles compare the widened path with the one-event traversal and Serde output, and the framed digest law checks the exact SHA-256 contract. The mounted Capsule test still requires the original host budgets across all four physical axes and the computational axis.
+
+The Window replay trace showed that the owner registered the JSON-operation receiver for the Pack payload. The 5D window owner now installs the same binary receiver as its encoder. The 2D owner also supplies its own original bounded Pack snapshot pair and binary operation receiver.
+
+The targeted native canonical sealer test passed against the independently framed SHA-256 under both the exact one-event grant and the full paged grant. The canonical JSON tree companion still used an obsolete single-turn Source publication API. Its fixture now drives the authorized identity projection and both publication turns, then uses a paid projection and explicitly closes the original Source.
+
+The complete canonical JSON companion passed 26 native cases. It compares the widened traversal byte-for-byte with Serde and the one-event traversal, including nested values, exact grants, cancellation, and heap ownership. Its persistent-list case also caught missing original Work on immutable page validation. Leaf and branch admissions now debit each inspected slot before publishing their sealed page and report the performed Work receipt.

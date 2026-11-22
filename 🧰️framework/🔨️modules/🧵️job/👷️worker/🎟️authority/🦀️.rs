@@ -374,43 +374,16 @@ fn receive_original_effect_poll(cx:&mut StepContext<'_>,poll:semio_framework_val
 fn worker_payload_step(step:RetainedCloneStep)->WorkerJobCloseStep{WorkerJobCloseStep::Pending{progress:step.progress()}}
 fn worker_work_step(cx:&mut StepContext<'_>,turn:semio_framework_value::RetainedWorkOutcome)->Result<WorkerJobCloseStep,OriginalTurnFailure>{receive_original_retained_work(cx,turn).map(worker_payload_step)}
 
-/// 📪️ Posts only current wrapper effects still owed by its nested original caller.
-pub fn receive_original_worker_close_effects(
-    cx: &mut StepContext<'_>,
-    (before, reserved_before): (RetainedCloneProgress, RetainedCloneProgress),
-    step: WorkerJobCloseStep,
-) -> Result<WorkerJobCloseStep, OriginalTurnFailure> {
-    let posted = original_worker_current_progress(
-        before, cx.retained_progress(), reserved_before, cx.reserved_return_progress(),
-    )?;
-    let reported = step.progress();
-    let unposted = |reported: usize, posted: usize| {
-        reported.checked_sub(posted).ok_or_else(|| ValueError::literal(
-            ValueRefusalKind::InvariantViolated,
-            "original worker close reported fewer effects than its original recipient",
-        ))
-    };
-    let progress = RetainedCloneProgress {
-        copied_items: unposted(reported.copied_items, posted.copied_items)?,
-        copied_bytes: unposted(reported.copied_bytes, posted.copied_bytes)?,
-        retained_capacity_bytes: unposted(reported.retained_capacity_bytes, posted.retained_capacity_bytes)?,
-        released_bytes: unposted(reported.released_bytes, posted.released_bytes)?,
-    };
-    cx.consume_fuel(progress.copied_items as u64);
-    cx.consume_retained(progress)?;
-    Ok(step)
+/// 📪️ Posts only original wrapper effects not already charged by its nested original caller.
+pub fn receive_original_worker_close_effects(cx:&mut StepContext<'_>,before:(RetainedCloneProgress,RetainedCloneProgress),step:WorkerJobCloseStep)->Result<WorkerJobCloseStep,OriginalTurnFailure>{
+    let posted=original_worker_current_progress(before.0,cx.retained_progress(),before.1,cx.reserved_return_progress())?;
+    let report=step.progress();
+    let subtract=|reported:usize,posted:usize|reported.checked_sub(posted).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original worker close reported fewer effects than its original recipient"));
+    let progress=RetainedCloneProgress{copied_items:subtract(report.copied_items,posted.copied_items)?,copied_bytes:subtract(report.copied_bytes,posted.copied_bytes)?,retained_capacity_bytes:subtract(report.retained_capacity_bytes,posted.retained_capacity_bytes)?,released_bytes:subtract(report.released_bytes,posted.released_bytes)?};
+    cx.consume_fuel(progress.copied_items as u64);cx.consume_retained(progress)?;Ok(step)
 }
 
-pub fn receive_original_worker_close_result(
-    cx: &mut StepContext<'_>,
-    before: (RetainedCloneProgress, RetainedCloneProgress),
-    result: Result<WorkerJobCloseStep, ValueError>,
-) -> Result<WorkerJobCloseStep, OriginalTurnFailure> {
-    match result {
-        Ok(step) => receive_original_worker_close_effects(cx, before, step),
-        Err(error) => { cx.consume_fuel(1); Err(OriginalTurnFailure::debit_original(error, cx)) }
-    }
-}
+pub fn receive_original_worker_close_result(cx:&mut StepContext<'_>,before:(RetainedCloneProgress,RetainedCloneProgress),result:Result<WorkerJobCloseStep,ValueError>)->Result<WorkerJobCloseStep,OriginalTurnFailure>{match result{Ok(step)=>receive_original_worker_close_effects(cx,before,step),Err(error)=>{cx.consume_fuel(1);Err(OriginalTurnFailure::debit_original(error,cx))}}}
 
 
 impl<J> NativeWorkerAuthorityState<J>{

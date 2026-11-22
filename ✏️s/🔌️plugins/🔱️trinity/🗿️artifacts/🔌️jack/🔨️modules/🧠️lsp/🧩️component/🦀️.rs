@@ -20,6 +20,11 @@ mod browser {
             JackLspSession { session: JackLanguageSession::new() }
         }
 
+        #[wasm_bindgen(js_name = registerManifestJson)]
+        pub fn register_manifest_json(&mut self, id: &str, json: &str) -> Result<(), JsValue> {
+            self.session.register_manifest(id, json).map_err(|message| JsValue::from_str(&message))
+        }
+
         #[wasm_bindgen(js_name = loadSnapshotJson)]
         pub fn load_snapshot_json(&mut self, json: &str) -> Result<(), JsValue> {
             self.session.load_snapshot(json).map_err(|message| JsValue::from_str(&message))

@@ -9413,11 +9413,12 @@
             "iconId": "sparkles",
             "layout": {
               "root": {
-                "kind": "row",
+                "kind": "split",
+                "axis": "horizontal",
                 "children": [
                   {
                     "kind": "stack",
-                    "size": 22.0,
+                    "size": 0.22,
                     "children": [
                       {
                         "kind": "window",
@@ -9428,7 +9429,7 @@
                   },
                   {
                     "kind": "stack",
-                    "size": 43.0,
+                    "size": 0.43,
                     "children": [
                       {
                         "kind": "window",
@@ -9439,7 +9440,7 @@
                   },
                   {
                     "kind": "stack",
-                    "size": 35.0,
+                    "size": 0.35,
                     "children": [
                       {
                         "kind": "window",
@@ -9456,11 +9457,12 @@
         ],
         "defaultLayout": {
           "root": {
-            "kind": "row",
+            "kind": "split",
+            "axis": "horizontal",
             "children": [
               {
                 "kind": "stack",
-                "size": 68.0,
+                "size": 0.68,
                 "children": [
                   {
                     "kind": "window",
@@ -9471,7 +9473,7 @@
               },
               {
                 "kind": "stack",
-                "size": 32.0,
+                "size": 0.32,
                 "children": [
                   {
                     "kind": "window",

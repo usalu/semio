@@ -37,7 +37,84 @@
         "lineY2",
         "polygonX",
         "polygonY"
-      ]
+      ],
+      "x-semio-ui": {
+        "label": {
+          "en": "Shape coordinate",
+          "de": "Formkoordinate"
+        },
+        "widget": "select",
+        "options": {
+          "rectX": {
+            "en": "Rectangle X",
+            "de": "Rechteck-X"
+          },
+          "rectY": {
+            "en": "Rectangle Y",
+            "de": "Rechteck-Y"
+          },
+          "rectWidth": {
+            "en": "Rectangle width",
+            "de": "Rechteckbreite"
+          },
+          "rectHeight": {
+            "en": "Rectangle height",
+            "de": "Rechteckhöhe"
+          },
+          "ellipseCx": {
+            "en": "Ellipse center X",
+            "de": "Ellipsenmittelpunkt X"
+          },
+          "ellipseCy": {
+            "en": "Ellipse center Y",
+            "de": "Ellipsenmittelpunkt Y"
+          },
+          "ellipseRx": {
+            "en": "Ellipse radius X",
+            "de": "Ellipsenradius X"
+          },
+          "ellipseRy": {
+            "en": "Ellipse radius Y",
+            "de": "Ellipsenradius Y"
+          },
+          "circleCx": {
+            "en": "Circle center X",
+            "de": "Kreismittelpunkt X"
+          },
+          "circleCy": {
+            "en": "Circle center Y",
+            "de": "Kreismittelpunkt Y"
+          },
+          "circleR": {
+            "en": "Circle radius",
+            "de": "Kreisradius"
+          },
+          "lineX1": {
+            "en": "Line start X",
+            "de": "Linienanfang X"
+          },
+          "lineY1": {
+            "en": "Line start Y",
+            "de": "Linienanfang Y"
+          },
+          "lineX2": {
+            "en": "Line end X",
+            "de": "Linienende X"
+          },
+          "lineY2": {
+            "en": "Line end Y",
+            "de": "Linienende Y"
+          },
+          "polygonX": {
+            "en": "Polygon vertex X",
+            "de": "Polygonecke X"
+          },
+          "polygonY": {
+            "en": "Polygon vertex Y",
+            "de": "Polygonecke Y"
+          }
+        }
+      }
     },
     "index": {
       "type": [

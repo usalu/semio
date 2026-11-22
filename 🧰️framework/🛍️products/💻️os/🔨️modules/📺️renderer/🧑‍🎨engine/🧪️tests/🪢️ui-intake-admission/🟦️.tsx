@@ -56,7 +56,7 @@ export async function registerUiIntakeAdmissionTests(vitest: PluginRuntimeVitest
       const owner = client.captureInstanceLifecycle(actorId, fixture.instance);
       const lifetime = { activationGeneration: owner.activation.activationGeneration, instanceId: fixture.instance, guestLifetime: BigInt(fixture.guestLifetime) };
       const captured = { kind: "captured" as const, lifetime, requestSequence: owner.openRequest.requestSequence };
-      await answer(submitPluginLifecycleTurn(owner, { kind: "open", input: { appId: "fixture", actor: {}, config: new Uint8Array(), assets: [], capabilities: [], quotas: new Uint8Array() } }, "Interactive"), { ...plain, lifecycleReceipt: encodeActorInstanceLifecycle(captured) });
+      await answer(submitPluginLifecycleTurn(owner, { kind: "open", input: { appId: "fixture", purpose: { tag: "ordinary" }, actor: {}, config: new Uint8Array(), assets: [], capabilities: [], quotas: new Uint8Array() } }, "Interactive"), { ...plain, lifecycleReceipt: encodeActorInstanceLifecycle(captured) });
       const ui = new OwnedUiInstance(owner.activation, lifetime, { maxNodes: 128, maxDepth: 16, maxChildren: 32, maxTextBytes: 4096, maxPatchOps: 128, maxPatchBytes: 65536 }, { usizeBits: 32 });
       owner.bindHostRetirement(ui);
       await answer(submitPluginLifecycleTurn(owner, { kind: "receipt-ack", receipt: captured }, "Interactive"), plain);

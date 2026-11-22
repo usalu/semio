@@ -5,6 +5,20 @@ use semio_os_store_text_io::text_format::ArtifactTextFiles;
 use semio_os_store_sync::fixtures::*;
 use semio_os_store_sync::is_repository_root;
 use semio_os_store_sync::now_ms;
+#[cfg(not(target_arch = "wasm32"))]
+#[path = "📖️archive-source.rs"]
+mod archive_source;
+#[cfg(not(target_arch = "wasm32"))]
+pub use archive_source::{NativeFolderArchiveSource, NativeFolderArchiveSeal, FOLDER_ARCHIVE_PAGE_BYTES};
+#[cfg(not(target_arch = "wasm32"))]
+#[path = "📖️archive-readback.rs"]
+mod archive_readback;
+
+#[cfg(not(target_arch = "wasm32"))]
+fn extend_folder_checksum(checksum: u64, bytes: &[u8]) -> u64 {
+    bytes.iter().fold(checksum, |hash, byte| (hash ^ u64::from(*byte)).wrapping_mul(0x100000001b3))
+}
+
 //#region 🔖️Fixtures
 /// 📜️ Owned append-only folder event log. Documents are written as indivisible See [design notes](README.md).
 #[cfg(not(target_arch = "wasm32"))]
@@ -117,7 +131,7 @@ impl FolderEventLogStorage {
         self.folder.join(".semio").join("events.semio")
     }
     fn checksum(bytes: &[u8]) -> u64 {
-        bytes.iter().fold(0xcbf29ce484222325, |hash, byte| (hash ^ u64::from(*byte)).wrapping_mul(0x100000001b3))
+        extend_folder_checksum(0xcbf29ce484222325, bytes)
     }
 
     fn encode_event(event: &FolderEvent) -> Result<Vec<u8>, semio_os_vcs::VcsError> {
@@ -363,6 +377,22 @@ impl FolderEventLogStorage {
     /// 🗃️ Returns the exact recursive archive held by the current document event.
     pub async fn read_archive(&self, document_id: &str) -> Result<Option<Vec<u8>>, semio_os_vcs::VcsError> {
         Ok(self.latest_document_event(document_id)?.filter(|event| event.kind == DOCUMENT_ARCHIVE_PUT_EVENT).map(|event| event.primary))
+    }
+
+    /// 🔍 Verifies the current durable archive in bounded reads under the folder's shared lock.
+    pub fn archive_matches(
+        &self, document_id: &str, expected: &[u8], cancelled: impl Fn() -> bool,
+    ) -> Result<bool, semio_os_vcs::VcsError> {
+        let _guard = self.writer.lock().map_err(|error| semio_os_vcs::VcsError::Backbone(error.to_string()))?;
+        let mut file = match std::fs::File::open(self.event_path()) {
+            Ok(file) => file,
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(false),
+            Err(error) => return Err(semio_os_vcs::VcsError::Backbone(error.to_string())),
+        };
+        file.try_lock_shared().map_err(|error| semio_os_vcs::VcsError::Backbone(format!("folder event reader busy: {error}")))?;
+        let length = file.metadata().map_err(|error| semio_os_vcs::VcsError::Backbone(error.to_string()))?.len();
+        archive_readback::archive_matches(&mut file, length, document_id, expected, cancelled)
+            .map_err(|error| semio_os_vcs::VcsError::Backbone(error.to_string()))
     }
 
     /// 🪪️ Updates an exact pair/archive baseline while retaining every recursive member.

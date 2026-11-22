@@ -153,10 +153,10 @@ pub(super) fn collect_stack_corner_tab_bars(node: &DockNode, bounds: Rect, path:
     }
 }
 
-/// 🪟️ Wgpu-local adapter: builds the balanced fallback layout via
-/// `ui_wgpu::wgpu::even_window_layout` and converts it to a runtime `DockNode`.
+/// 🪟️ Builds the balanced fallback layout via the contract's `window_layout_ops::even_layout` and
+/// converts it to a runtime `DockNode`.
 pub fn even_layout(window_ids: &[String]) -> DockNode {
-    dock_from_window_layout(&even_window_layout(window_ids).root)
+    dock_from_window_layout(&semio_ui_declaration::layout::even_layout(window_ids))
 }
 
 pub(super) fn normalize_sizes(children: Vec<(DockNode, f32)>, axis_size: Option<f32>) -> Vec<(DockNode, f32)> {

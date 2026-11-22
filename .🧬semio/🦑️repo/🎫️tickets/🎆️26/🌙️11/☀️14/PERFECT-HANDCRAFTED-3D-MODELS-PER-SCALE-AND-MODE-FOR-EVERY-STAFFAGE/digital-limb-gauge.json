@@ -1,0 +1,43 @@
+{
+  "subjects": [
+    "elderly-with-cane",
+    "person-on-crutches",
+    "person-with-rollator",
+    "person-with-umbrella",
+    "person-with-white-cane",
+    "standing-phone-user",
+    "tour-guide",
+    "worker-carrying-box",
+    "cyclist",
+    "wheelchair-user",
+    "parent-with-stroller",
+    "courier-with-hand-truck",
+    "jogger",
+    "kneeling-gardener",
+    "leaning-person",
+    "person-cooking",
+    "pregnant-person",
+    "runner-with-blade-prosthesis",
+    "seated-guitarist",
+    "seated-office-worker",
+    "seated-reader",
+    "skateboarder",
+    "sleeping-person",
+    "standing-adult",
+    "walking-commuter"
+  ],
+  "pairedShafts": [
+    "femur",
+    "tibia",
+    "humerus",
+    "radius",
+    "ulna"
+  ],
+  "scales": [
+    50,
+    100,
+    200,
+    500
+  ],
+  "toleranceM": 0.0001
+}

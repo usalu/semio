@@ -28,7 +28,7 @@ use semio_renderer_wgpu_shell_plugins::PendingExtensionInvocation;
 use semio_renderer_wgpu_shell_prefs::{ActiveSession, PrefsState, ReplayRefusalReasonV1, dsl_value_as_json, labels, with_chrome_prefs};
 use semio_renderer_wgpu_shell_session::{SessionCtx, app_owns_command, declare_boot_subphase, download_media_export, panel_state_from_view, program_space_index, resident_census, staged_arg_row, staged_number};
 use semio_renderer_wgpu_shell_state::ShellState;
-use semio_renderer_wgpu_shell_surfaces::{PickedImport, SettleState, ShellRenderedRefresh, SurfaceState, TutorialCameraConverge, TutorialMode, TutorialPendingDocOp, TutorialRuntime, TutorialState, World3dComputeStatus, orbit_to_tutorial_camera, tutorial_apply_camera_pose, tutorial_capture_camera_pose};
+use semio_renderer_wgpu_shell_surfaces::{DeferredDocumentLoad, DeferredHostEffects, PickedImport, SettleState, ShellRenderedRefresh, SurfaceState, TutorialCameraConverge, TutorialMode, TutorialPendingDocOp, TutorialRuntime, TutorialState, World3dComputeStatus, orbit_to_tutorial_camera, tutorial_apply_camera_pose, tutorial_capture_camera_pose};
 #[cfg(not(target_arch = "wasm32"))]
 use semio_renderer_wgpu_shell_surfaces::ShellIoCompletion;
 use semio_renderer_wgpu_shell_sync::{ShellHubDocumentSeed, ShellSyncOwner, SyncState};

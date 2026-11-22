@@ -1,0 +1,134 @@
+{
+  "catalog": {
+    "spaceId": "fixture-space",
+    "catalogGenerationId": "fixture-generation",
+    "kinds": [
+      {
+        "kindId": "fixture.unrelated",
+        "schema": "fixture.counter",
+        "dialect": {
+          "artifactKind": "fixture.other",
+          "standard": "1",
+          "subset": "*"
+        },
+        "label": {
+          "en": "Other",
+          "de": "Andere"
+        }
+      },
+      {
+        "kindId": "fixture.counter",
+        "schema": "fixture.counter",
+        "dialect": {
+          "artifactKind": "fixture.counter",
+          "standard": "1",
+          "subset": "*"
+        },
+        "label": {
+          "en": "Counter",
+          "de": "Zähler"
+        }
+      }
+    ]
+  },
+  "drop": {
+    "pluginId": "fixture-plugin",
+    "appId": "fixture-editor",
+    "nodeId": "fixture-node",
+    "x": -14.5,
+    "y": 29
+  },
+  "target": {
+    "io": {
+      "artifactSchema": "fixture.counter"
+    },
+    "dialect": {
+      "artifactKind": "fixture.counter",
+      "standard": "1",
+      "subset": "*"
+    }
+  },
+  "expected": {
+    "kind": "space-artifact-create",
+    "requestId": "01111111111111111111111111111111",
+    "spaceId": "fixture-space",
+    "expectedCatalogGenerationId": "fixture-generation",
+    "kindId": "fixture.counter",
+    "name": "Counter"
+  },
+  "ready": {
+    "requestId": "01111111111111111111111111111111",
+    "spaceId": "fixture-space",
+    "catalogGenerationId": "fixture-generation",
+    "ready": {
+      "artifactId": "artifact-22222222222222222222222222222222",
+      "kindId": "fixture.counter",
+      "artifactSchema": "fixture.counter",
+      "parentDialect": {
+        "artifactKind": "fixture.counter",
+        "standard": "1",
+        "subset": "*"
+      }
+    }
+  },
+  "unrelatedStatuses": [
+    {
+      "spaceId": "other-space"
+    },
+    {
+      "catalogGenerationId": "other-generation"
+    },
+    {
+      "artifactSchema": "fixture.other"
+    },
+    {
+      "standard": "2"
+    }
+  ],
+  "foreignClientInstanceId": "00000000-0000-4000-8000-000000000001",
+  "studioEvents": [
+    {
+      "seq": 1,
+      "id": "fixture-event-1",
+      "spaceId": "fixture-space",
+      "body": {
+        "kind": "space.created",
+        "spaceId": "fixture-space"
+      }
+    },
+    {
+      "seq": 2,
+      "id": "fixture-event-2",
+      "spaceId": "fixture-space",
+      "body": {
+        "kind": "document.announced",
+        "descriptor": {
+          "spaceId": "fixture-space",
+          "documentId": "artifact-22222222222222222222222222222222",
+          "artifactKind": "fixture.counter",
+          "artifactSchema": "fixture.counter"
+        }
+      }
+    },
+    {
+      "seq": 3,
+      "id": "fixture-event-3",
+      "spaceId": "fixture-space",
+      "body": {
+        "kind": "document.indexed",
+        "scope": {
+          "spaceId": "fixture-space",
+          "documentId": "artifact-22222222222222222222222222222222"
+        },
+        "entry": {
+          "name": "Fixture",
+          "dialect": {
+            "artifactKind": "fixture.counter",
+            "standard": "1",
+            "subset": "*"
+          }
+        }
+      }
+    }
+  ]
+}

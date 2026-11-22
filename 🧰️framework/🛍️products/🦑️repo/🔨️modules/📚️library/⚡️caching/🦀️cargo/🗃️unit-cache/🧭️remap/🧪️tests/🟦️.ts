@@ -1,10 +1,10 @@
 import {expect,test} from "bun:test";
 import {spawnSync} from "node:child_process";
-import {mkdirSync,mkdtempSync,readFileSync,realpathSync,rmSync,writeFileSync} from "node:fs";
+import {existsSync,mkdirSync,mkdtempSync,readFileSync,realpathSync,rmSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
 import vectors from "./🔣️.json" with {type:"json"};
-import {appleLinkV1,installNameArgumentsV1,linkRootArgumentsV1,machineNeutralRemapV1,objectRootArgumentsV1,remappedNameV1,remapsOfV1} from "../🟦️.ts";
+import {appleLinkV1,installNameArgumentsV1,linkRootArgumentsV1,machineNeutralRemapV1,objectRootArgumentsV1,remappedNameV1,remapsOfV1,rustSourceRemapArgumentsV1} from "../🟦️.ts";
 
 const fromSpec=(specs:readonly string[])=>remapsOfV1(specs.map(spec=>"--remap-path-prefix="+spec));
 test("every vector gives the recorded name (TypeScript model)",()=>{for(const row of vectors.cases)expect(remappedNameV1(fromSpec(row.remaps),row.path),row.label).toBe(row.name);});
@@ -52,4 +52,21 @@ test("Apple's linker options are given to Mach-O links only: never to a wasm com
  expect(objectRootArgumentsV1(native,"/out/","darwin")).toEqual(["-Clink-arg=-Wl,-oso_prefix,/out/"]);expect(objectRootArgumentsV1(["--crate-type","cdylib"],"/out","darwin")).toEqual(["-Clink-arg=-Wl,-oso_prefix,/out/"]);
  expect(installNameArgumentsV1(host,"darwin")).toEqual(["-Clink-arg=-Wl,-install_name,@rpath/libplug.dylib"]);expect(installNameArgumentsV1([...host,"--target","wasm32-wasip2"],"darwin")).toEqual([]);
  expect(linkRootArgumentsV1(native,"/out","linux")).toEqual([]);
+});
+
+test("the standard library source is remapped for every unit: the rule is stated once, a remap that exists is not repeated, and the compiler itself records no sysroot path with the flag (oracle: rustc)",()=>{
+ const sysroot="/Users/a/.rustup/toolchains/t",commit="9f36de775bc636c8e88c31a173c2bcb6995956a0",from=sysroot+"/lib/rustlib/src/rust";
+ expect(rustSourceRemapArgumentsV1(["--crate-name","x"],sysroot,commit)).toEqual([`--remap-path-prefix=${from}=/rustc/${commit}`]);
+ expect(rustSourceRemapArgumentsV1(["--remap-path-prefix="+from+"=/rustc/"+commit],sysroot+"/",commit)).toEqual([]);
+ expect(rustSourceRemapArgumentsV1([],undefined,commit)).toEqual([]);expect(rustSourceRemapArgumentsV1([],sysroot,undefined)).toEqual([]);
+ expect(machineNeutralRemapV1(rustSourceRemapArgumentsV1([],sysroot,commit)[0]!)).toBe(`--remap-path-prefix=⟨rust-src⟩=/rustc/${commit}`);
+ const environment={...process.env,RUSTUP_TOOLCHAIN:"nightly-2026-07-20"},probe=spawnSync("rustc",["--print","sysroot"],{encoding:"utf8",env:environment}),real=probe.stdout.trim(),hash=/^commit-hash: ([0-9a-f]{40})$/mu.exec(spawnSync("rustc",["-vV"],{encoding:"utf8",env:environment}).stdout)?.[1];
+ if(probe.status!==0||hash===undefined||!existsSync(join(real,"lib","rustlib","src","rust","library")))return;
+ const base=realpathSync(mkdtempSync(join(realpathSync(tmpdir()),"rust-src-")));
+ try{
+  writeFileSync(join(base,"l.rs"),"pub fn f(x:u32)->u32{ x.wrapping_pow(3).rotate_left(5).saturating_add(x.pow(2)) }\npub fn g(v:&[u32])->u32{ v.iter().map(|x|x.wrapping_mul(3)).sum() }\n");
+  const build=(extra:readonly string[],out:string)=>{mkdirSync(join(base,out));const run=spawnSync("rustc",["--crate-name","l","--edition=2021","l.rs","--crate-type","lib","--emit=link","-C","debuginfo=2","-C","opt-level=1","-C","metadata=a","-C","extra-filename=-a","--remap-path-scope=all",`--remap-path-prefix=${base}=.`,...extra,"--out-dir",out],{cwd:base,encoding:"utf8",env:environment});expect(run.status,run.stderr).toBe(0);return readFileSync(join(base,out,"libl-a.rlib"));};
+  const plain=build([],"plain"),mapped=build(rustSourceRemapArgumentsV1([],real,hash),"mapped");
+  expect(plain.includes(Buffer.from(real)),"without the flag the sysroot path is in the unit").toBe(true);expect(mapped.includes(Buffer.from(real)),"with the flag no path of the machine is left").toBe(false);
+ }finally{rmSync(base,{recursive:true,force:true});}
 });

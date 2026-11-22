@@ -704,6 +704,21 @@ export function world3dInstanceHoverTargetsJson(instance: WorldInstanceRecord | 
   return WORLD_HOVER_TARGETS_JSON.get(instance);
 }
 
+/** 🖌️ Indexes instances sharing one authored pointer publication. */
+export function world3dInstanceHoverGroups(instances: readonly WorldInstanceRecord[]): ReadonlyMap<string, ReadonlySet<string>> {
+  const byTargets = new Map<string, Set<string>>();
+  const byInstance = new Map<string, ReadonlySet<string>>();
+  for (const instance of instances) {
+    const targets = world3dInstanceHoverTargetsJson(instance);
+    if (targets === undefined) continue;
+    let group = byTargets.get(targets);
+    if (!group) byTargets.set(targets, group = new Set());
+    group.add(instance.id);
+    byInstance.set(instance.id, group);
+  }
+  return byInstance;
+}
+
 /** 🎯️ Every rendered instance id resolved onto its interaction target, deduplicated and order-preserving,
  * each under its OWN granularity — the marquee's shape of {@link interactionTargetsForInstances}. */
 export function world3dInstanceInteractionTargets(instances: readonly WorldInstanceRecord[], ids: readonly string[], defaultGranularity: string): readonly { readonly granularity: string; readonly id: string }[] {
@@ -777,6 +792,9 @@ export function world3dSuggestionsKeyChord(event: Readonly<{ key: string; shiftK
   if (event.ctrlKey || event.metaKey) return false;
   return (event.key === "ContextMenu" && !event.altKey) || (event.key === "F10" && event.shiftKey && !event.altKey);
 }
+
+/** 👆️ The hold that asks a marker for suggestions; one value with the Rust `WORLD3D_SUGGESTIONS_HOLD_MS`, both checked against `🌪️vortex-suggestions.json`. */
+export const WORLD3D_SUGGESTIONS_LONG_PRESS_V1 = { holdMs: 500, slopPx: 10 } as const;
 
 /** 🗣️ Labels of the touch and keyboard routes to suggestions, authored in both languages. */
 export const WORLD3D_SUGGESTIONS_LABELS_V1 = {

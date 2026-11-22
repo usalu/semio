@@ -18,10 +18,7 @@ pub struct JackDiff {
     #[state(artifact)]
     pub name: Option<String>,
     #[state(artifact)]
-    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
-    pub manifest_id: Option<Option<String>>,
-    #[state(artifact)]
-    pub manifest: Option<crate::standards::v1::subsets::any::schema::manifest::Manifest>,
+    pub manifest_id: Option<String>,
     #[state(artifact)]
     pub camera: Option<Camera>,
     #[state(artifact)]
@@ -34,7 +31,7 @@ pub struct JackDiff {
 }
 //#endregion 🔖️Diff
 
-/// 🕳️ Tri-state decode of every `Option<Option<T>>` slot: a missing key is the unchanged slot (`None`) and a PRESENT `null`
+/// 🕳️ Tri-state decode of the `Option<Option<T>>` slot: a missing key is the unchanged slot (`None`) and a PRESENT `null`
 /// is the clear `Some(None)`, never the unchanged slot the blanket `Option<T>` decode would fold it into.
 fn deserialize_double_option<T: semio_framework_value::FromValue>(value: semio_framework_value::DslValue) -> Result<Option<Option<T>>, semio_framework_value::ValueError> {
     <Option<T> as semio_framework_value::FromValue>::from_value(value).map(Some)
@@ -57,7 +54,6 @@ impl protocol::ColdMutationDiff<JackSnapshot> for JackDiff {
         take!(schema);
         take!(name);
         take!(manifest_id);
-        take!(manifest);
         take!(camera);
         take!(content);
         take!(root_node_id);
@@ -75,9 +71,6 @@ impl protocol::ColdMutationDiff<JackSnapshot> for JackDiff {
         }
         if let Some(value) = &self.manifest_id {
             next.manifest_id = value.clone();
-        }
-        if let Some(value) = &self.manifest {
-            next.manifest = value.clone();
         }
         if let Some(value) = &self.camera {
             next.camera = value.clone();
@@ -98,7 +91,7 @@ impl protocol::ColdMutationDiff<JackSnapshot> for JackDiff {
 
 impl DiffAlgebra<JackSnapshot> for JackDiff {
     fn is_empty(&self) -> bool {
-        self.schema.is_none() && self.name.is_none() && self.manifest_id.is_none() && self.manifest.is_none() && self.camera.is_none() && self.content.is_none() && self.root_node_id.is_none() && self.query.is_none()
+        self.schema.is_none() && self.name.is_none() && self.manifest_id.is_none() && self.camera.is_none() && self.content.is_none() && self.root_node_id.is_none() && self.query.is_none()
     }
 }
 
@@ -108,7 +101,6 @@ impl protocol::ColdDiffAlgebra<JackSnapshot> for JackDiff {
             schema: self.schema.as_ref().map(|_| base.schema.clone()),
             name: self.name.as_ref().map(|_| base.name.clone()),
             manifest_id: self.manifest_id.as_ref().map(|_| base.manifest_id.clone()),
-            manifest: self.manifest.as_ref().map(|_| base.manifest.clone()),
             camera: self.camera.as_ref().map(|_| base.camera.clone()),
             content: self.content.as_ref().map(|_| base.content.clone()),
             root_node_id: self.root_node_id.as_ref().map(|_| base.root_node_id.clone()),

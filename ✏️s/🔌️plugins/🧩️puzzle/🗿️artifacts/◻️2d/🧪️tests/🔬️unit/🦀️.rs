@@ -1,8 +1,5 @@
 use super::*;
-use semio_s_artifact_puzzle_2d_records::standards::v1::subsets::any::schema::records::Puzzle2dEdge;
-use semio_s_artifact_puzzle_2d_records::standards::v1::subsets::any::schema::records::Puzzle2dNode;
-use semio_s_artifact_puzzle_2d_records::standards::v1::subsets::any::schema::records::Puzzle2dCompatSpecificity;
-use semio_s_artifact_puzzle_2d_records::standards::v1::subsets::any::schema::records::Puzzle2dKindCatalogs;
+use semio_s_artifact_puzzle_2d_records::standards::v1::subsets::any::schema::records::{Puzzle2dEdge, Puzzle2dNode, Puzzle2dNodeAnchor, Puzzle2dCompatSpecificity, Puzzle2dKindCatalogs, Puzzle2dKindCompatibility, Puzzle2dCatalogNodeKind, Puzzle2dRepresentation, Puzzle2dHandleTemplate, Puzzle2dAttribute, Puzzle2dAuthor, Puzzle2dCatalogHandleKind, Puzzle2dCatalogEdgeKind, Puzzle2dCatalogWireKind};
 
 #[test]
 fn puzzle2d_edge_connection_params_default_to_zero() {

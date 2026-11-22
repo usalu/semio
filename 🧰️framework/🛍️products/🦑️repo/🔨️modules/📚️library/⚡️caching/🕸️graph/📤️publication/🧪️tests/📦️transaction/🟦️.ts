@@ -48,6 +48,8 @@ import{readFileSync}from"node:fs";
 import rollbackCorpus from"./🔣️rollback.json";
 import rollbackSchema from"./🧬️rollback.json";
 import{privateRepositoryWorkspaceV1}from"../../../../../🧪️testing/🧫️private-repository/🟦️.ts";
+import {declareLibraryBuildTestEnvelopeV1} from "../../../../../🧪️testing/🪪️native-birth/🟦️.ts";
+declareLibraryBuildTestEnvelopeV1({suite:"graph-processes"});
 test("graph publication rollback Source preserves arbitrary primary and ordered recovery failure",()=>withBuildTestInvocationV1(async original=>{
  expect(new Ajv({strict:true}).validate(rollbackSchema,rollbackCorpus)).toBe(true);const path=fileURLToPath(new URL("../../📦️transaction/🟦️.ts",import.meta.url)),source=ts.createSourceFile(path,readFileSync(path,"utf8"),ts.ScriptTarget.Latest,true),definition=source.statements.find((row):row is ts.FunctionDeclaration=>ts.isFunctionDeclaration(row)&&row.name?.text==="applyGraphPublicationTransactionV1");if(!definition)throw Error("Actual publication transaction body required");const db=new Database(":memory:"),results=[];
  try{for(const row of rollbackCorpus.cases){const control=createIssuedResourceControlV1(original,"publication:rollback-source",20000),primary=row.primary==="undefined"?undefined:row.primary==="frozen"?Object.freeze(Error("frozen body")):Error("body"),secondary=Error("recovery"),rollback=row.rollback==="same"?primary:secondary;let recoveries=0,writes=0,cleanup=0;

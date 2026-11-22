@@ -1,7 +1,7 @@
 //! 📥️ Custody of decoded PDF stream bytes during a retained import.
 
 use crate::{FlateGrant, FlateStatus, PdfFlateCursor, PdfLzwCursor, PdfPredictorCursor};
-use semio_framework_value::{ValueError, ValueRefusalKind};
+use semio_framework_value::{ByteReadSource, ValueError, ValueRefusalKind};
 
 #[path = "✂️packet-filters/🦀️.rs"]
 mod packet_filters;
@@ -126,7 +126,7 @@ impl PdfStreamDataCursor {
     }
 
     /// ▶️ Drives one bounded turn against the same stable, already-framed source.
-    pub fn advance(&mut self, source: &[u8], grant: StreamDataGrant, cancelled: bool) -> StreamDataReceipt {
+    pub fn advance(&mut self, source: &(impl ByteReadSource + ?Sized), grant: StreamDataGrant, cancelled: bool) -> StreamDataReceipt {
         let mut receipt = StreamDataReceipt { status: Ok(StreamDataStatus::More), work: 0, allocated_bytes: 0, released_bytes: 0 };
         if self.phase == Phase::Decode && cancelled { self.phase = Phase::Cancelled; }
         receipt.status = match self.phase {
@@ -141,9 +141,9 @@ impl PdfStreamDataCursor {
         receipt
     }
 
-    fn drive(&mut self, source: &[u8], grant: StreamDataGrant, receipt: &mut StreamDataReceipt) -> Result<StreamDataStatus, ValueError> {
+    fn drive(&mut self, source: &(impl ByteReadSource + ?Sized), grant: StreamDataGrant, receipt: &mut StreamDataReceipt) -> Result<StreamDataStatus, ValueError> {
         while receipt.work < grant.work {
-            if *self.source_len.get_or_insert(source.len()) != source.len() {
+            if *self.source_len.get_or_insert(source.byte_len()) != source.byte_len() {
                 return Err(ValueError::invariant("PDF stream source length changed"));
             }
             if let Some(backing) = self.previous.as_ref() {
@@ -162,7 +162,11 @@ impl PdfStreamDataCursor {
             if self.staging_start < self.staging_end {
                 let available = self.output.capacity() - self.output.len();
                 if available == 0 {
-                    let desired = self.output.capacity().max(64).saturating_mul(2).min(self.maximum_output);
+                    let desired = if matches!(self.decoder, Decoder::Identity) {
+                        source.byte_len()
+                    } else {
+                        self.output.capacity().max(64).saturating_mul(2).min(self.maximum_output)
+                    };
                     if desired <= self.output.len() {
                         return Err(ValueError::literal(ValueRefusalKind::WorkLimit, "PDF stream data output ceiling exceeded"));
                     }
@@ -196,15 +200,18 @@ impl PdfStreamDataCursor {
             let decoder_grant = FlateGrant { work, allocation_bytes: grant.allocation_bytes - receipt.allocated_bytes };
             let outcome = match &mut self.decoder {
                 Decoder::Identity => {
-                    if source.len() > self.maximum_output {
+                    if source.byte_len() > self.maximum_output {
                         return Err(ValueError::literal(ValueRefusalKind::WorkLimit, "PDF stream data output ceiling exceeded"));
                     }
-                    let count = work.min(source.len() - self.input).min(self.staging.len());
-                    self.staging[..count].copy_from_slice(&source[self.input..self.input + count]);
+                    let count = work.min(source.byte_len() - self.input).min(self.staging.len());
+                    if source.read_bytes(self.input, &mut self.staging[..count]) != count {
+                        receipt.work += count;
+                        return Err(ValueError::invariant("PDF stream source lost an admitted fragment"));
+                    }
                     self.input += count;
                     receipt.work += count;
                     self.staging_end = count;
-                    self.decoder_done = self.input == source.len();
+                    self.decoder_done = self.input == source.byte_len();
                     continue;
                 }
                 Decoder::Simple(decoder) => {
@@ -213,6 +220,7 @@ impl PdfStreamDataCursor {
                     self.staging_end = step.written;
                     self.decoder_done = step.complete;
                     receipt.work += step.work;
+                    if step.source_changed { return Err(ValueError::invariant("PDF packet stream source lost an admitted byte")); }
                     continue;
                 }
                 Decoder::Ascii85(decoder) => {
@@ -220,6 +228,7 @@ impl PdfStreamDataCursor {
                     self.input = step.input;
                     self.staging_end = step.written;
                     receipt.work += step.work;
+                    if step.source_changed { return Err(ValueError::invariant("PDF packet stream source lost an admitted byte")); }
                     self.decoder_done = step.done.map_err(|reason| ValueError::literal(ValueRefusalKind::InvalidValue, reason))?;
                     continue;
                 }

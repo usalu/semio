@@ -60,7 +60,8 @@ pub fn admit_addressed_action_view<'a>(view: &'a ViewModel, address: &semio_fram
 /// accessors return `HashMap`s whose iteration order would otherwise change the retained text
 /// leaves (and therefore the surface hash) on every render without the section itself changing.
 // 🚫️async: E1 pure serialization consumed synchronously by `plugin_render_section` — see R9.
-fn canonical_section_json<T: Serialize>(section: &HashMap<String, T>) -> String {
+#[doc(hidden)]
+pub fn canonical_section_json<T: Serialize>(section: &HashMap<String, T>) -> String {
     let ordered: std::collections::BTreeMap<&str, &T> = section.iter().map(|(key, value)| (key.as_str(), value)).collect();
     serde_json::to_string(&ordered).unwrap_or_else(|_| String::from("{}"))
 }
@@ -71,18 +72,16 @@ fn canonical_section_json<T: Serialize>(section: &HashMap<String, T>) -> String 
 /// shell's `SET_WINDOW_MEASURES_BY_WINDOW_ID`/`SET_TOOL_MEASURES_BY_TOOL_ID`/
 /// `SET_WINDOW_ENGAGEMENTS_BY_WINDOW_ID` reducers receive the same shapes the deleted JSON
 /// `refreshUi` wire produced.
-// 🚫️async: E5 executor bridge — the accessors stay genuinely `async fn`; resolved synchronously
-// here for the same reason `plugin_render_surface`'s own `instance.app.render` call is.
 /// 🛍️ App-STATIC and view-independent: the catalogue is the app's own registered operator set,
 /// already canonical JSON authored by the app, so it needs neither `view_state` nor the
 /// `HashMap` key-ordering pass the three window-scoped sections above go through.
 #[doc(hidden)]
-pub fn original_render_section<PA: PluginApp>(app: &mut PA, section: semio_framework::UiRefreshSection, view_state: &ViewModel) -> Result<ComponentTree, Fault> {
+pub async fn original_render_section<PA: PluginApp>(app: &mut PA, section: semio_framework::UiRefreshSection, view_state: &ViewModel) -> Result<ComponentTree, Fault> {
     let payload = match section {
-        semio_framework::UiRefreshSection::Engagements => canonical_section_json(&::semio_framework_async::poll::resolve_ready(app.window_engagements(view_state))),
-        semio_framework::UiRefreshSection::Measures => canonical_section_json(&::semio_framework_async::poll::resolve_ready(app.window_measures(view_state))),
-        semio_framework::UiRefreshSection::Tools => canonical_section_json(&::semio_framework_async::poll::resolve_ready(app.tool_measures(view_state))),
-        semio_framework::UiRefreshSection::Catalogue => ::semio_framework_async::poll::resolve_ready(app.app_catalogue_json()),
+        semio_framework::UiRefreshSection::Engagements => canonical_section_json(&app.window_engagements(view_state).await),
+        semio_framework::UiRefreshSection::Measures => canonical_section_json(&app.window_measures(view_state).await),
+        semio_framework::UiRefreshSection::Tools => canonical_section_json(&app.tool_measures(view_state).await),
+        semio_framework::UiRefreshSection::Catalogue => app.app_catalogue_json().await,
     };
     semio_plugin_window_transient::section_component_tree(section, &payload).map_err(|error| plugin_internal_fault(error.to_string()))
 }

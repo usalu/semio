@@ -13,6 +13,8 @@ pub(super) mod dense_dump {
     use semio_s_artifact_remodel_remodeling_camera::editor::remodeling::engine::camera as remodeling_camera;
     use super::*;
 
+    const MAGIC: [u8; 4] = *b"RMD2";
+
     struct Writer(Vec<u8>);
     impl Writer {
         fn u64(&mut self, value: usize) {
@@ -44,7 +46,7 @@ pub(super) mod dense_dump {
     }
 
     pub(in super::super) fn encode(reconstruction: &remodeling_sfm::Reconstruction, dense: &[usize], maps: &[remodeling_dense::DepthMap]) -> Vec<u8> {
-        let mut w = Writer(Vec::new());
+        let mut w = Writer(MAGIC.to_vec());
         w.u64(reconstruction.cameras.len());
         for (frame, pose) in &reconstruction.cameras {
             w.u64(*frame);
@@ -103,6 +105,7 @@ pub(super) mod dense_dump {
 
     pub(super) fn decode(bytes: &[u8]) -> (remodeling_sfm::Reconstruction, Vec<usize>, Vec<remodeling_dense::DepthMap>) {
         let mut r = Reader(bytes, 0);
+        assert_eq!(r.take::<4>(), MAGIC, "dense dump fixture version");
         let mut intrinsics = std::collections::BTreeMap::new();
         let cameras = (0..r.u64())
             .map(|_| {

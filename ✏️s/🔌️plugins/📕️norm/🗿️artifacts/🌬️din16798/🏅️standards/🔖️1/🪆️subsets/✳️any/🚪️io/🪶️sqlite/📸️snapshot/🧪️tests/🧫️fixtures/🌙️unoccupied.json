@@ -1,0 +1,8 @@
+{
+  "operation": "nonResidentialPurge",
+  "assessedAreaM2": 0,
+  "zoneVolumeM3": 300,
+  "minutesBeforeOccupancy": 90,
+  "residentialDesignRateLPerSM2": 0,
+  "outdoorAirM3H": 205
+}

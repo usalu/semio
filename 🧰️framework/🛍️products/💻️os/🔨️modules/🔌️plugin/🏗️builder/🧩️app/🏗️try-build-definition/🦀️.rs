@@ -73,12 +73,15 @@ impl AppBuilder {
                 Vec::new(),
             ));
         }
+        for (label, layout) in self.default_layout.iter().map(|layout| ("default layout".to_string(), layout)).chain(self.named_layouts.iter().map(|named| (format!("named layout {}", named.id), &named.layout))) {
+            semio_ui_layout::layout::validate_window_layout(&layout.root).map_err(|reason| PluginAssemblyError::new("app-definition.invalid", format!("app {} {} violates the window layout schema: {}", self.id, label, reason)))?;
+        }
         let mut layout_window_ids = Vec::new();
         if let Some(layout) = &self.default_layout {
-            layout_window_ids.extend(collect_window_kind_ids_from_layout(layout));
+            layout_window_ids.extend(collect_window_kind_ids(&layout.root));
         }
         for named in &self.named_layouts {
-            layout_window_ids.extend(collect_window_kind_ids_from_layout(&named.layout));
+            layout_window_ids.extend(collect_window_kind_ids(&named.layout.root));
         }
         for window_kind_id in layout_window_ids {
             if !(window_kind_ids.contains(&window_kind_id)) {
@@ -550,6 +553,17 @@ impl AppBuilder {
                         window.actions.push(action.clone());
                     }
                 }
+            }
+        }
+        let fit = semio_framework::node_graph_fit_action_definition();
+        let mut fit_hosted = false;
+        for window in definition.window_kinds.iter_mut().filter(|window| window.actions.iter().any(|action| action.id == semio_framework::NODE_GRAPH_VIEWPORT_ACTION_ID) && !window.actions.iter().any(|action| action.id == fit.id)) {
+            window.actions.push(fit.clone());
+            fit_hosted = true;
+        }
+        if fit_hosted {
+            if bound_keys.insert(semio_framework::NODE_GRAPH_FIT_KEY.to_string()) {
+                definition.keybindings.push(Keybinding { keys: semio_framework::NODE_GRAPH_FIT_KEY.to_string(), action: KeybindingActionDescriptor { controller_id: definition.controller_id.clone(), action: fit.id, args: None } });
             }
         }
         Ok(definition)

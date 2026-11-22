@@ -1,0 +1,8 @@
+{
+  "outputBytes": 73129,
+  "alphabetStride": 73,
+  "boundaryBytes": 4096,
+  "prefixBytes": 2147,
+  "validZeroPaddingBytes": 4511,
+  "reedSolomonBlockBytes": 251
+}

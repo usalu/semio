@@ -11,8 +11,6 @@ extern crate semio_framework_value_derive as value_derive;
 //#region 🪢️Mounts
 #[path = "🏢️compliant-office/🦀️.rs"]
 pub mod compliant_office;
-#[path = "🎬️demo/🦀️.rs"]
-pub mod demo;
 #[path = "⚠️noncompliant-office/🦀️.rs"]
 pub mod noncompliant_office;
 #[path = "🏠️residential-method3/🦀️.rs"]

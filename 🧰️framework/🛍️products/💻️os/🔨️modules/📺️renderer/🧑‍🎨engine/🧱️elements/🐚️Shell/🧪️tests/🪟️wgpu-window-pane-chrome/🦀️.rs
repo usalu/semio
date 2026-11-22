@@ -10,7 +10,7 @@
 use semio_renderer_wgpu_fixtures::shell::{actions_shell, engaged_pane_shell, split_pane_app, split_pane_shell};
 use super::*;
 use semio_framework::UtilityDefinition;
-use semio_ui_layout::layout::{WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode};
+use semio_ui_layout::layout::{Axis, WindowLayout, WindowLayoutNode};
 use semio_ui_wgpu_input::InputState;
 
 fn pane_fixture() -> Value {
@@ -477,15 +477,15 @@ fn locale_roundtrip_preserves_instance_titles_and_localizes_singletons() {
     singleton.id = fixture["singleton"]["id"].as_str().unwrap().into();
     singleton.label = LocalizedLabel::native(fixture["singleton"]["en"].as_str().unwrap(), fixture["singleton"]["de"].as_str().unwrap());
     app.window_kinds.push(singleton);
-    let mut children: Vec<_> = fixture["instances"].as_array().unwrap().iter().map(|instance| WindowLayoutChild::Stack(WindowLayoutStackNode {
-        kind: "stack".into(), size: Some(30.0), active_window_kind_id: None,
-        children: vec![WindowLayoutWindowNode { kind: "window".into(), window_kind_id: kind_id.into(), title: Some(instance["title"].as_str().unwrap().into()), instance_id: Some(instance["id"].as_str().unwrap().into()), template_id: None, corner: None }],
-    })).collect();
-    children.push(WindowLayoutChild::Stack(WindowLayoutStackNode {
-        kind: "stack".into(), size: Some(40.0), active_window_kind_id: None,
-        children: vec![WindowLayoutWindowNode { kind: "window".into(), window_kind_id: fixture["singleton"]["id"].as_str().unwrap().into(), title: None, instance_id: None, template_id: None, corner: None }],
-    }));
-    app.default_layout = Some(WindowLayout { root: WindowLayoutRoot::Axis(WindowLayoutAxisNode { kind: "row".into(), size: None, children }) });
+    let mut children: Vec<_> = fixture["instances"].as_array().unwrap().iter().map(|instance| WindowLayoutNode::Stack {
+        size: Some(0.3), active_window_id: None,
+        children: vec![WindowLayoutNode::Window { window_kind_id: kind_id.into(), title: Some(instance["title"].as_str().unwrap().into()), instance_id: Some(instance["id"].as_str().unwrap().into()), template_id: None, corner: None }],
+    }).collect();
+    children.push(WindowLayoutNode::Stack {
+        size: Some(0.4), active_window_id: None,
+        children: vec![WindowLayoutNode::Window { window_kind_id: fixture["singleton"]["id"].as_str().unwrap().into(), title: None, instance_id: None, template_id: None, corner: None }],
+    });
+    app.default_layout = Some(WindowLayout { root: WindowLayoutNode::Split { axis: Axis::Horizontal, size: None, children } });
     let ids: Vec<&str> = fixture["instances"].as_array().unwrap().iter().map(|instance| instance["id"].as_str().unwrap()).chain(std::iter::once(fixture["singleton"]["id"].as_str().unwrap())).collect();
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     shell.docs.session = Some(ActiveSession { plugin_id: "instance-title-fixture".into(), instance_id: 1, app, view_state: ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) });
@@ -496,17 +496,16 @@ fn locale_roundtrip_preserves_instance_titles_and_localizes_singletons() {
         let expected: Vec<_> = transition["titles"].as_array().unwrap().iter().map(|title| title.as_str().unwrap()).collect();
         assert_eq!(ids.iter().map(|id| labels.get(*id).unwrap().as_str()).collect::<Vec<_>>(), expected);
         let identity = shell.dock.dock_input_identity.as_ref().unwrap().mode_layout.as_ref().unwrap();
-        let WindowLayoutRoot::Axis(axis) = &identity.root else { panic!("row identity") };
-        let leaves: Vec<_> = axis
-            .children
+        let WindowLayoutNode::Split { axis: Axis::Horizontal, children, .. } = &identity.root else { panic!("row identity") };
+        let leaves: Vec<_> = children
             .iter()
             .flat_map(|child| match child {
-                WindowLayoutChild::Stack(stack) => stack.children.iter().map(|leaf| (leaf.window_kind_id.as_str(), leaf.title.as_deref())).collect::<Vec<_>>(),
+                WindowLayoutNode::Stack { children: windows, .. } => windows.iter().map(|leaf| match leaf { WindowLayoutNode::Window { window_kind_id, title, .. } => (window_kind_id.as_str(), title.as_deref()), _ => panic!("window identity") }).collect::<Vec<_>>(),
                 _ => panic!("stack identity"),
             })
             .collect();
         assert_eq!(leaves, ids.iter().map(|id| (*id, None)).collect::<Vec<_>>(), "React Mode's identity keys every leaf by its instance id and carries no presentation title, so a locale switch never remounts it");
-        assert_eq!(axis.children.iter().map(|child| match child { WindowLayoutChild::Stack(stack) => stack.size, _ => None }).collect::<Vec<_>>(), [Some(30.0), Some(30.0), Some(40.0)]);
+        assert_eq!(children.iter().map(|child| match child { WindowLayoutNode::Stack { size, .. } => *size, _ => None }).collect::<Vec<_>>(), [Some(0.3), Some(0.3), Some(0.4)]);
     }
 }
 

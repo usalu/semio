@@ -171,3 +171,17 @@ test("the booking of a plan shows the memory of its worker tree once, not the wo
  for(let beat=0;beat<5;beat++){await new Promise(done=>setTimeout(done,30));expect(read()).toBe(oracle(7001));}
  reservation.release();expect(await until(()=>grants(directory).length===0)).toBe(true);
 },60000);
+
+test("on a 16 GB machine the graph is computed with a grant of at least its minimum and at most what it asked, whatever else the host holds, and the minimum is the one the policy derives for the rebuild",async()=>{
+ const minimum=buildPolicy.hostCapacity.estimates.rebuildMinimumMegabytes,graph=buildPolicy.hostCapacity.operations.find(row=>row.name==="graph")!;
+ expect(minimum,"the rebuild minimum is the least the graph operation itself runs with").toBe(graph.minimumMegabytes);
+ const small=(available:number)=>async()=>({host:host({totalMegabytes:16384,availableMegabytes:available}),swappedOutMegabytes:0});
+ for(const available of [2048+minimum!,2048+4000,2048+9000]){
+  const directory=fresh(),reservation=await reserveGraphPlanCapacityV1({megabytes:7168,minimumMegabytes:minimum,environment:{LANG:"en_US.UTF-8"},directory,policy:fast,write:()=>undefined,sample:small(available)});
+  expect(reservation.megabytes,String(available)).toBe(Math.min(7168,available-2048));
+  expect(reservation.megabytes).toBeGreaterThanOrEqual(minimum!);reservation.release();
+  expect(await until(()=>grants(directory).length===0)).toBe(true);
+ }
+ const refused=await reserveGraphPlanCapacityV1({megabytes:7168,minimumMegabytes:minimum,environment:{LANG:"en_US.UTF-8"},directory:fresh(),policy:fast,write:()=>undefined,sample:async()=>({host:host({totalMegabytes:3072,availableMegabytes:3000}),swappedOutMegabytes:0})}).then(()=>"",error=>(error as Error).message);
+ expect(refused,"a machine that can never give the minimum is refused at once, naming the numbers").toContain("3072");
+},60000);

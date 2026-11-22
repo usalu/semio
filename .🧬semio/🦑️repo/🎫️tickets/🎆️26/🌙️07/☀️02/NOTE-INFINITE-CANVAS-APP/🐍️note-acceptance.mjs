@@ -134,16 +134,18 @@ if (process.env.SEMIO_PROBE_ARCHIVE_TRACE === "1") {
           const operation = this.archiveTraceRequests.get(data?.requestId);
           if (!operation) return;
           this.archiveTraceRequests.delete(data.requestId);
-          console.info("[DEBUG] archive case worker result", data.requestId, operation, data.ok, data.error ?? data.value?.status?.tag ?? "");
+          console.info("[DEBUG] archive case worker result", data.requestId, operation, data.ok, data.error ?? data.value?.status?.tag ?? "",
+            data.timings?.drivePolls ?? "", data.timings?.driveStopped ?? "", data.value?.commandIngress?.tag ?? "");
         });
       }
       postMessage(message, ...args) {
         const events = message?.events?.map(event => event.kind) ?? [];
         const actorId = message?.actorId;
         const track = this.archiveTraceEnabled && message?.requestId && (message.kind === "activate" ||
-          (actorId !== undefined && events.length > 0 && (actorId !== "note#1" || events.includes("instance-close"))));
+          (actorId !== undefined && events.length > 0 && (actorId !== "note#1" || events.includes("instance-close"))) ||
+          (actorId === "note#2" && message.commandPage !== undefined));
         if (track) {
-          const operation = [message.kind, actorId, ...events].join(" ");
+          const operation = [message.kind, actorId, ...(message.commandPage === undefined ? [] : ["command-page"]), ...events].join(" ");
           this.archiveTraceRequests.set(message.requestId, operation);
           console.info("[DEBUG] archive case worker sent", message.requestId, operation);
         }
@@ -151,6 +153,26 @@ if (process.env.SEMIO_PROBE_ARCHIVE_TRACE === "1") {
       }
     };
   }, process.env.SEMIO_PROBE_ARCHIVE_STOCK === "1");
+  await context.route(address => decodeURIComponent(address.pathname).endsWith("/🧳️archive-transfer/🟦️.ts"), async route => {
+    const response = await route.fetch();
+    const source = await response.text();
+    const request = "const replyFrames = await this.ledger.send(step.command);";
+    const marker = "progress?.(answer.status);";
+    assert.ok(source.includes(marker) && source.includes(request), "The document archive exchange is not observable");
+    const traced = source.replace("let completed = 0;", "let completed = 0, observed = 0, priorStatus;")
+      .replace(request, `if (observed < 4 || observed % 128 === 0) {
+        console.info("[DEBUG] archive case command", seq, Object.keys(step.command).join(","));
+      }
+      ${request}`)
+      .replace(marker, `const status = JSON.stringify(answer.status);
+        observed++;
+        if (status !== priorStatus || observed % 128 === 0) {
+          console.info("[DEBUG] archive case status", observed, status);
+          priorStatus = status;
+        }
+        ${marker}`);
+    await route.fulfill({ response, body: traced });
+  });
   await context.route(address => {
     const path = decodeURIComponent(address.pathname);
     return path.includes("document-transfer-tabs/") && path.endsWith("scope/🟦️.tsx");
@@ -210,9 +232,62 @@ if (process.env.SEMIO_PROBE_ARCHIVE_TRACE === "1") {
     await route.fulfill({response, body: source});
   });
 }
+const tracePencil = process.env.SEMIO_PROBE_PENCIL_TRACE === "1";
+if (tracePencil) {
+  await context.addInitScript(() => {
+    performance.setResourceTimingBufferSize(10_000);
+    for (const type of ["pointerdown", "pointerup", "pointercancel", "lostpointercapture"]) {
+      document.addEventListener(type, (event) => {
+        const target = event.target instanceof Element ? event.target : null;
+        const surface = target?.closest("[data-surface-id]")?.getAttribute("data-surface-id");
+        const button = target?.closest("button")?.id;
+        if (surface || button) console.info("[DEBUG] pencil trace DOM", JSON.stringify({ type, surface, button, trusted: event.isTrusted, x: event.clientX, y: event.clientY }));
+      }, true);
+    }
+  });
+  await context.route(address => {
+    const path = decodeURIComponent(address.pathname);
+    return (path.includes("/🖋️InkCanvasHost/") && (path.endsWith("/🔶️abort-gesture/🟦️.ts") || path.endsWith("/🎬️ink-gestures/🟦️.ts") || path.endsWith("/🧰️ink-session-state/🟦️.ts"))) ||
+      path.endsWith("/🧰️utility-and-tool-activation/🟦️.ts") || path.endsWith("/⚡️host-effects/🟦️.ts") || path.endsWith("/🔁️contributions-refresh/🟦️.ts");
+  }, async route => {
+    const response = await route.fetch();
+    let source = await response.text();
+    const path = decodeURIComponent(route.request().url());
+    if (!path.includes("/🖋️InkCanvasHost/")) console.log("[DEBUG] pencil trace module", path.split("/").slice(-2).join("/"));
+    const traceBefore = (marker, trace) => {
+      if (!source.includes(marker)) console.log("[DEBUG] Pencil trace marker missing", marker);
+      source = source.replace(marker, trace + marker);
+    };
+    if (path.includes("/🧰️utility-and-tool-activation/")) {
+      traceBefore("const forwarded = ", 'console.info("[DEBUG] pencil activation", JSON.stringify({windowId, utilityGuestWindowId, utilitySpawnedId, controller: action.controllerId, appController: utilitySession.app.controllerId, next, refreshedBody, viewState}));');
+      traceBefore("applyHistoryPatch(response.historyPatch", 'console.info("[DEBUG] pencil activation response", JSON.stringify({uiScope:response.uiScope, effects:response.requestedEffects, current:isCurrentEffectOwner(primaryActionOwner)}));');
+      traceBefore('return refuse("dispatch-failed", String(error));', 'console.info("[DEBUG] pencil activation failed", String(error));');
+    } else if (path.includes("/⚡️host-effects/")) {
+      traceBefore("if (isSpawnedPluginSession) {", 'if (windowViewInputBody) console.info("[DEBUG] pencil host refresh", JSON.stringify({isSpawnedPluginSession, refreshScope, windowViewInputBody, viewState:nextViewState}));');
+    } else if (path.includes("/🔁️contributions-refresh/")) {
+      traceBefore("const request = browserActorForSessionV1", 'if (Object.values(viewState.activeUtilityByWindowId ?? {}).some(Boolean)) console.info("[DEBUG] pencil refresh request", JSON.stringify({scope, windows:built?.windows, replaceBodies, viewState}));');
+      traceBefore("applyUiRefreshResponseToCache(cache", 'if (Object.values(viewState.activeUtilityByWindowId ?? {}).some(Boolean)) console.info("[DEBUG] pencil refresh response", JSON.stringify((resolvedWindows ?? []).map(row => ({key: row.key, revision: row.revision, utility: JSON.stringify(row.value)?.match(/activeUtility.{0,25}/)?.[0]}))));');
+    } else if (path.includes("/🧰️ink-session-state/")) {
+      traceBefore("const windowUtility =", 'if (utilityRegister?.utilityId) console.info("[DEBUG] pencil register scope", JSON.stringify({surface: node.surfaceId, controller: node.controllerId, utilityRegister}));');
+    } else if (path.includes("/🔶️abort-gesture/")) {
+      const marker = "if (!rootRef.current || !doc || isNavigator || !interactive || isInkEditorTarget(event.target)) return;";
+      if (!source.includes(marker)) console.log("[DEBUG] Pencil pointer marker missing");
+      source = source.replace(marker, `console.info("[DEBUG] pencil trace pointer", JSON.stringify({utility, interactive, isNavigator, hasRoot: !!rootRef.current, hasDoc: !!doc, editor: isInkEditorTarget(event.target), trusted: event.isTrusted, button: event.button, pointerType: event.pointerType}));${marker}`);
+    } else {
+      const marker = "if (!node.controllerId) return;";
+      if (!source.includes(marker)) console.log("[DEBUG] Pencil dispatch marker missing");
+      source = source.replace(marker, `if (action !== "interactionHover") console.info("[DEBUG] pencil trace dispatch", JSON.stringify({action, controller: node.controllerId, surface: node.surfaceId, phase: args?.phase}));${marker}`);
+    }
+    await route.fulfill({ response, body: source });
+  });
+}
 const page = await context.newPage();
+let archiveLoadStarted = false;
+let sampleArchiveWorkers;
+let enableArchiveDebugging;
 const nativeBreaks = process.env.SEMIO_PROBE_WASM_BREAKS?.split(",").map(Number) ?? [];
-if (nativeBreaks.length) {
+const traceArchiveStacks = process.env.SEMIO_PROBE_ARCHIVE_STACKS === "1";
+if (nativeBreaks.length || traceArchiveStacks) {
   const session = await context.newCDPSession(page);
   const workers = new Set();
   const replies = new Map();
@@ -258,6 +333,17 @@ if (nativeBreaks.length) {
     })`});
     console.log("[DEBUG] native worker receipt memory", JSON.stringify(memory));
   };
+  const inspectConstructionGrant = async (sessionId, frame) => {
+    const locals = await Promise.all(Array.from({ length: 24 }, (_, index) => wasmLocal(sessionId, frame, "$var" + index)));
+    const numeric = locals.filter(Number.isSafeInteger);
+    const memory = await request(sessionId, "Runtime.evaluate", {returnByValue: true, expression: `(globalThis.__noteWasmMemory ?? []).map(memory => {
+      const data = new DataView(memory.buffer);
+      return ${JSON.stringify(numeric)}.map(address => address > 1024 && address + 96 <= data.byteLength ? {
+        address, words: Array.from({length: 24}, (_, index) => data.getUint32(address + index * 4, true))
+      } : address);
+    })`});
+    console.log("[DEBUG] native construction grant memory", JSON.stringify({locals, memory}));
+  };
   const inspectOriginalGrant = async (sessionId, frame) => {
     const address = await wasmLocal(sessionId, frame, "$var1");
     if (!Number.isSafeInteger(address)) return;
@@ -279,10 +365,22 @@ if (nativeBreaks.length) {
     })`});
     console.log("[DEBUG] native original grant memory", JSON.stringify(memory));
   };
+  if (traceArchiveStacks) sampleArchiveWorkers = () => {
+    for (const delay of [5_000, 12_000, 25_000]) {
+      setTimeout(() => {
+        if (page.isClosed()) return;
+        for (const sessionId of workers) void send(sessionId, "Debugger.pause");
+      }, delay).unref();
+    }
+  };
+  const delayDebugger = process.env.SEMIO_PROBE_BREAK_AFTER_ARCHIVE_OPEN === "1";
+  if (delayDebugger) enableArchiveDebugging = () => {
+    for (const sessionId of workers) void send(sessionId, "Debugger.enable");
+  };
   session.on("Target.attachedToTarget", ({sessionId, targetInfo}) => {
     if (targetInfo.type !== "worker" || !decodeURIComponent(targetInfo.url).includes("shard-worker.js")) return;
     workers.add(sessionId);
-    void send(sessionId, "Debugger.enable");
+    if (!delayDebugger || archiveLoadStarted) void send(sessionId, "Debugger.enable");
   });
   session.on("Target.receivedMessageFromTarget", ({sessionId, message}) => {
     if (!workers.has(sessionId)) return;
@@ -301,12 +399,26 @@ if (nativeBreaks.length) {
     if (packet.result?.breakpointId || packet.error) console.log("[DEBUG] native breakpoint receipt", JSON.stringify(packet));
     if (packet.method === "Debugger.paused") {
       const {callFrames, hitBreakpoints = []} = packet.params;
+      if (traceArchiveStacks && hitBreakpoints.length === 0) {
+        console.log("[DEBUG] active archive worker stack", JSON.stringify(callFrames.slice(0, 32).map(frame => [frame.functionName, frame.location.lineNumber, frame.location.columnNumber])));
+        void send(sessionId, "Debugger.resume");
+        return;
+      }
+      const inInitializer = callFrames.some(frame => frame.functionName === "$func68275" || frame.functionName === "$func69298");
+      if ((process.env.SEMIO_PROBE_BREAK_AFTER_ARCHIVE_OPEN === "1" && !archiveLoadStarted) ||
+          (process.env.SEMIO_PROBE_BREAK_INITIALIZER_ONLY === "1" && !inInitializer)) {
+        void send(sessionId, "Debugger.resume");
+        return;
+      }
       console.log("[DEBUG] native breakpoint stack", JSON.stringify(callFrames.map(frame => [frame.functionName, frame.location.lineNumber, frame.location.columnNumber])));
       const work = hitBreakpoints.map(breakpointId => send(sessionId, "Debugger.removeBreakpoint", {breakpointId}));
       if (process.env.SEMIO_PROBE_ORIGINAL_GRANT_MEMORY === "1" && callFrames[0]?.functionName === "$func10949") {
         work.push(inspectOriginalGrant(sessionId, callFrames[0]));
       }
-      if (process.env.SEMIO_PROBE_WORKER_RECEIPT_MEMORY === "1" && ["$func70277", "$func70322"].includes(callFrames[0]?.functionName)) {
+      if (process.env.SEMIO_PROBE_CONSTRUCTION_GRANT_MEMORY === "1" && callFrames[0]?.functionName === "$func12111") {
+        work.push(inspectConstructionGrant(sessionId, callFrames[0]));
+      }
+      if (process.env.SEMIO_PROBE_WORKER_RECEIPT_MEMORY === "1" && ["$func70277", "$func70322", "$func74776", "$func74791"].includes(callFrames[0]?.functionName)) {
         work.push(inspectWorkerReceipt(sessionId, callFrames[0]));
       }
       void Promise.all(work).then(() => send(sessionId, "Debugger.resume"));
@@ -317,6 +429,13 @@ if (nativeBreaks.length) {
 if (process.env.SEMIO_PROBE_DIAGNOSTICS === "1") await page.addInitScript(() => localStorage.setItem("SEMIO_RUNTIME_DIAGNOSTICS", "1"));
 page.on("console", (m) => {
   const content = m.text();
+  if (content === "[DEBUG] archive case stage load archive" && !archiveLoadStarted) {
+    archiveLoadStarted = true;
+    enableArchiveDebugging?.();
+    sampleArchiveWorkers?.();
+  }
+  if (process.env.SEMIO_PROBE_CLEANUP_TRACE_ONLY === "1" && /reactor more-work streak|reactor guest retained pressure|typed-operation phase/.test(content)) return;
+  if (process.env.SEMIO_PROBE_DIAGNOSTICS === "1" && /cleanup continuation|cleanup semantic failure|cleanup.*zero-progress|runtime close.*phase/.test(content)) console.log(content.slice(0, 2300));
   if (process.env.SEMIO_PROBE_CAPTURE_ERRORS === "1" && m.type() === "error" && /role switch|surface-document/.test(content)) {
     const error = m.args().at(-1);
     void error?.evaluate(value => {
@@ -328,12 +447,18 @@ page.on("console", (m) => {
       return envelope(value, 0);
     }).then(detail => console.log("[DEBUG] nested shell error", JSON.stringify(detail)), () => {});
   }
+  if (content.startsWith("[DEBUG] pencil ")) console.log(content.slice(0, 2300));
   if (content.startsWith("[DEBUG] archive case") || process.env.SEMIO_PROBE_ARCHIVE_TRACE === "1" && /native refusal|archive.*refus|panic|trap|shell.documentTransfer.import-failed/i.test(content)) console.log(content.slice(0, 1500));
   if (process.env.SEMIO_PROBE_DIAGNOSTICS === "1" && /reactor more-work streak|publication-stalled|typed-operation setCamera|command stalled/.test(content)) console.log(content.slice(0, 1500));
   if ((m.type() === "log" || m.type() === "debug") && /\[(TRACE|DEBUG)\]/.test(content) && !/typed.operation|publication-stalled|reactor more-work streak|cleanup continuation|(?:document|artifact)[ -]archive|archive[ -](?:load|replay|replace)/i.test(content)) return;
   lines.push(`${Date.now() - t0} ${m.type()} ${content.slice(0, m.type() === "error" || m.type() === "warning" ? 6000 : 800)}`);
 });
-page.on("pageerror", (e) => lines.push(`${Date.now() - t0} pageerror ${String(e).slice(0, 2000)}`));
+let bootstrapModuleError;
+page.on("pageerror", (error) => {
+  const message = String(error);
+  lines.push(`${Date.now() - t0} pageerror ${message.slice(0, 2000)}`);
+  if (/Failed to fetch dynamically imported module:|The requested module .* does not provide an export named/.test(message)) bootstrapModuleError = message;
+});
 const report = { url, exercisePencil, exerciseCamera, steps: [] };
 const faultLines = (from) => lines.slice(from).filter((l) => /trapped|panicked|action failed|shell fault|faults=|pageerror|unreachable|Fault \{|not-ui-safe|missing-owned|refused|invalid-args|unsupported/.test(l)).map((l) => l.slice(0, 500));
 const mod = process.platform === "darwin" ? "Meta" : "Control";
@@ -407,28 +532,54 @@ const submitAction = async (actionId, args) => {
   else if (opened.actionRows.includes(`action.${actionId}`)) clicked = await page.locator(`[id="action.${actionId}"]`).first().click({ timeout: 8000, force: true }).then(() => "ok").catch((e) => String(e).slice(0, 120));
   await page.waitForTimeout(1500);
   const filled = [];
+  const submit = page.locator(`[id$=".action.${actionId}.execute"]`).first();
+  const form = page.locator('[data-slot="window-action-pane"]').filter({ has: submit }).first();
   for (const [key, value] of Object.entries(args)) {
-    const picker = page.locator(`[id="${key}"][role="combobox"]`).first();
-    if (await picker.count()) {
+    const control = form.locator(`[id$=".action.${actionId}.arg.${key}.input"]`).first();
+    if (!await control.waitFor({ state: "visible", timeout: 12_000 }).then(() => true, () => false)) {
+      const fields = await form.evaluate(root => [...root.querySelectorAll('input,textarea,select,[role="combobox"]')].map(element => element.id)).catch(() => []);
+      console.log("[DEBUG] action form argument unavailable", JSON.stringify({actionId, key, fields}));
+      return { from, before: before.blocks, engagement, toggled, clicked, filled: [...filled, `${key}:absent`], submitted: "missing-argument-control", actionRows: opened.actionRows.slice(0, 40) };
+    }
+    if (await control.evaluate(element => element instanceof HTMLSelectElement)) {
+      await control.selectOption(String(value));
+    } else if (await control.getAttribute("role") === "combobox") {
       const label = String(value).replace(/^./, c => c.toUpperCase());
-      if ((await picker.innerText()).trim() !== label) {
-        await picker.click({ timeout: 8000 });
+      if ((await control.innerText()).trim() !== label) {
+        await control.click({ timeout: 8000 });
         await page.getByRole("option", { name: label, exact: true }).click({ timeout: 8000 });
       }
-      filled.push(`${key}=${(await picker.innerText()).trim()}`);
-      continue;
+    } else {
+      await control.fill(String(value));
     }
-    const select = page.locator(`select[id$="${key}"], select[name="${key}"]`).first();
-    if (await select.count()) { filled.push(await select.selectOption(String(value)).then(() => `${key}=${value}`).catch((e) => `${key}:${String(e).slice(0, 60)}`)); continue; }
-    const input = page.locator(`[id$="${key}"]:is(input,textarea), [name="${key}"]`).first();
-    filled.push((await input.count()) ? await input.fill(String(value)).then(() => `${key}=${value}`).catch((e) => `${key}:${String(e).slice(0, 60)}`) : `${key}:absent`);
+    filled.push(`${key}=${value}`);
   }
-  const submit = page.locator(`[id$=".action.${actionId}.execute"]`).first();
   const submitted = (await submit.count()) ? await submit.click({ timeout: 8000 }).then(() => "ok").catch((e) => String(e).slice(0, 120)) : "no-execute-control";
   return { from, before: before.blocks, engagement, toggled, clicked, filled, submitted, actionRows: opened.actionRows.slice(0, 40) };
 };
 
 const canvas = () => page.locator('[data-surface-id="window:note-composite"]').first();
+const blurEditorOnCanvas = async (host) => {
+  const point = await host.evaluate((surface) => {
+    const bounds = surface.getBoundingClientRect();
+    const left = Math.max(0, bounds.left);
+    const right = Math.min(innerWidth, bounds.right);
+    const top = Math.max(0, bounds.top);
+    const bottom = Math.min(innerHeight, bounds.bottom);
+    for (const horizontal of [0.78, 0.64, 0.50, 0.34, 0.22]) {
+      for (const vertical of [0.72, 0.82, 0.55, 0.34, 0.22]) {
+        const x = left + (right - left) * horizontal;
+        const y = top + (bottom - top) * vertical;
+        const hit = document.elementFromPoint(x, y);
+        if (hit?.closest("[data-surface-id]") === surface &&
+            !hit.closest("[data-ink-block-id], [data-ink-editor-overlay], button, input, textarea, [role=toolbar]")) return { x, y };
+      }
+    }
+    return null;
+  });
+  assert.ok(point, "The Canvas has no visible background outside the editor");
+  await page.mouse.click(point.x, point.y);
+};
 const wheelCanvas = async () => {
   const host = canvas();
   const initial = await state();
@@ -480,13 +631,13 @@ const allowEmptyDemoReplacement = (before) => {
 
 await page.goto(url, { waitUntil: "domcontentloaded" });
 let s = null;
-for (let i = 0; i < 240; i++) { await page.waitForTimeout(1000); s = await state(); if (s.ready && s.blocks !== null && i > 10) break; if (s.error) break; }
+for (let i = 0; i < 240; i++) { await page.waitForTimeout(1000); s = await state(); if (s.ready && s.blocks !== null && i > 10) break; if (s.error || bootstrapModuleError) break; }
 await page.waitForTimeout(4000);
 s = await state();
 await note("boot", s, 0);
 if (s.error || !s.ready || s.blocks === null) {
   await browser.close();
-  throw new Error(s.error ? `Note boot failed: ${s.error}` : s.loadingPlugins ? "Note boot stalled while loading plugins" : "Note canvas did not mount");
+  throw new Error(s.error ? `Note boot failed: ${s.error}` : bootstrapModuleError ?? (s.loadingPlugins ? "Note boot stalled while loading plugins" : "Note canvas did not mount"));
 }
 if (process.env.SEMIO_PROBE_IMPORT) {
   const from = lines.length;
@@ -535,6 +686,34 @@ if (process.env.SEMIO_PROBE_IMPORT) {
   process.exit(0);
 }
 let count = s.blocks;
+if (process.env.SEMIO_PROBE_HISTORY_ROUND_TRIP === "1") {
+  const from = lines.length;
+  const added = await submitAction("addBlock", { kind: "text", x: 315, y: 180 });
+  assert.equal(added.submitted, "ok");
+  assert.equal((await settle(value => value.blocks === 1)).blocks, 1);
+  await page.keyboard.press(`${mod}+z`);
+  assert.equal((await settle(value => value.blocks === 0)).blocks, 0);
+  await page.keyboard.press(`${mod}+Shift+z`);
+  assert.equal((await settle(value => value.blocks === 1)).blocks, 1);
+  if ((await state()).actionRows.length === 0) {
+    await page.locator('[id="framework.window.noteComposite.engagement.toggle"]').click();
+  }
+  const download = page.waitForEvent("download", { timeout: downloadTimeout });
+  await page.locator('[id="action.exportArtifactDocument"]').first().click();
+  const archive = join(outDir, "note-history.semio-archive");
+  await (await download).saveAs(archive);
+  await note("history-fixture-exported", { blocks: 1 }, from);
+  await page.reload({ waitUntil: "domcontentloaded" });
+  const demo = await settle(value => value.ready && value.blocks === 0 && value.example === "Demo");
+  assert.equal(demo.blocks, 0);
+  await importDocumentArchive(archive);
+  allowEmptyDemoReplacement(demo);
+  const reopened = await settle(value => value.blocks === 1);
+  await note("history-fixture-reopened", { restored: reopened.blocks === 1 }, from);
+  await browser.close();
+  assert.equal(reopened.blocks, 1, "Note could not reopen the text block after Undo and Redo");
+  process.exit(0);
+}
 if (process.env.SEMIO_PROBE_VIEWER_ONLY === "1") {
   const from = lines.length;
   const added = await submitAction("addBlock", { kind: "text", x: 300, y: 180 });
@@ -598,6 +777,11 @@ if (resizeOnly || process.env.SEMIO_PROBE_GEOMETRY_ONLY === "1") {
     assert.equal(action.submitted, "ok", "Could not submit the geometry fixture");
     const current = await settle((value) => value.blocks === count + 1);
     assert.equal(current.blocks, count + 1, "Geometry fixture block did not publish");
+    const positions = await canvas().locator("[data-ink-block-id]").evaluateAll(elements => elements.map(element => [
+      Number.parseFloat(element.style.left), Number.parseFloat(element.style.top),
+    ]));
+    await note("geometry-fixture", { coordinates: [x, y], filled: action.filled, positions }, action.from);
+    assert.deepEqual(positions.at(-1), [x, y], "Geometry fixture did not retain the submitted coordinates");
     count = current.blocks;
   }
   await page.locator('[id="framework.window.noteComposite.engagement.toggle"]').first().click();
@@ -753,7 +937,7 @@ if (!pencilOnly && !transferOnly) {
           (run.matches("b, strong") || run.style.fontWeight === "bold") && run.textContent === element.textContent),
       }), undefined, { timeout: 4000 });
       assert.equal(entered.active && entered.bold, true, "The formatting toolbar did not retain focus and mark the selected text");
-      await host.click({ position: { x: 820, y: 460 } });
+      await blurEditorOnCanvas(host);
     }
     const edited = await settle((x) => x.hasTextMarker && x.hasBoldMarker && x.blocks === count);
     const committed = edited.hasTextMarker && edited.hasBoldMarker && edited.blocks === count;
@@ -812,19 +996,35 @@ if (exercisePencil) {
   if (!pencilOnly) await togglePanel("Artifact");
   await page.waitForTimeout(800);
   const host = page.locator('[data-surface-id="window:note-composite"]').first();
-  const clickId = async (id) => { const el = page.locator(`[id="${id}"]`).first(); return (await el.count()) ? el.click({ timeout: 8000, force: true }).then(() => "ok").catch((e) => String(e).slice(0, 120)) : "absent"; };
+  const clickId = async (id) => { const el = page.locator(`[id="${id}"]`).first(); return (await el.count()) ? el.click({ timeout: 8000, force: !tracePencil }).then(() => "ok").catch((e) => String(e).slice(0, 120)) : "absent"; };
   const utilityToggle = await clickId("framework.window.noteComposite.utilityBar.unfold");
   await page.waitForTimeout(1200);
   const drawGroup = await clickId("ui.utilities.note-composite.group.group:Draw");
   await page.waitForTimeout(1200);
   const armed = `${drawGroup}/${await clickId("pencil")}`;
   await page.waitForTimeout(1500);
+  if (tracePencil) console.log("[DEBUG] pencil trace resources", await page.evaluate(() => performance.getEntriesByType("resource").map(({name}) => decodeURIComponent(name)).filter(url => /utility-and-tool-activation|host-effects|contributions-refresh/.test(url)).slice(0, 18)));
   const beforeStrokeCount = (await state()).navigatorStrokes;
   const hasStrokeCount = (value, count) => count !== null && value.strokes === count && value.navigatorStrokes === count;
   const box = await host.boundingBox();
   const strokeOrigin = box ? [box.x + box.width * 0.4, box.y + box.height * 0.6] : null;
   if (strokeOrigin) {
     const [x0, y0] = strokeOrigin;
+    if (tracePencil) {
+      const hit = await page.evaluate(({x, y}) => {
+        const pencil = document.getElementById("pencil");
+        return {
+          pressed: pencil?.getAttribute("aria-pressed"),
+          tool: pencil?.getAttribute("data-state"),
+          button: pencil?.tagName,
+          hits: document.elementsFromPoint(x, y).slice(0, 6).map(node => ({
+            id: node.id, slot: node.getAttribute("data-slot"), tag: node.tagName,
+            surface: node.closest("[data-surface-id]")?.getAttribute("data-surface-id"),
+          })),
+        };
+      }, {x: x0, y: y0});
+      console.log("[DEBUG] pencil trace origin", JSON.stringify(hit));
+    }
     await page.mouse.move(x0, y0);
     await page.mouse.down();
     for (let i = 1; i <= 12; i++) { await page.mouse.move(x0 + i * 12, y0 + Math.sin(i / 2) * 30); await page.waitForTimeout(30); }
@@ -876,18 +1076,24 @@ if (exercisePencil) {
     process.exit(0);
   }
   count = undone.blocks ?? count;
+  const activeUtility = page.locator(process.env.SEMIO_PROBE_ERASERS === "1" ? '[id="eraserStroke"][aria-pressed="true"]' : '[id="pencil"][aria-pressed="true"]').first();
+  if (await activeUtility.count()) await activeUtility.click();
+  const foldUtilities = page.locator('[id="framework.window.noteComposite.utilityBar.fold"]').first();
+  if (await foldUtilities.isVisible()) await foldUtilities.click();
 }
 if (!transferOnly) {
   const from = lines.length;
   const captured = await state();
   const added = await submitAction("addBlock", { kind: "table", x: 600, y: 350 });
-  await settle(value => value.tables === captured.tables + 1);
-  if ((await state()).actionRows.length > 0) await page.locator('[id="framework.window.noteComposite.engagement.toggle"]').first().click();
+  const prepared = await settle(value => value.tables === captured.tables + 1);
+  await note("prepare-archive-table-insert", { submitted: added.submitted, filled: added.filled, before: captured.tables, after: prepared.tables }, from);
+  assert.equal(prepared.tables, captured.tables + 1, "The archive fixture's Table block did not publish");
+  if (prepared.actionRows.length > 0) await page.locator('[id="framework.window.noteComposite.engagement.toggle"]').first().click();
   const host = page.locator('[data-surface-id="window:note-composite"]').first();
   await host.locator("table tbody").last().locator("td").first().dblclick();
   const editor = host.locator("#ink-table-cell-editor");
   await editor.fill(archiveCellMarker);
-  await host.click({ position: { x: 800, y: 520 } });
+  await blurEditorOnCanvas(host);
   const savedTable = await settle(value => value.tableCells.includes(archiveCellMarker));
   count = savedTable.blocks ?? count;
   await note("prepare-archive-table", { submitted: added.submitted, tableCells: savedTable.tableCells, retained: savedTable.tableCells.includes(archiveCellMarker) }, from);

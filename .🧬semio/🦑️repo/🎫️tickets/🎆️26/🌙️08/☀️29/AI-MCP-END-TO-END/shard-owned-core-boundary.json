@@ -1,0 +1,9 @@
+{
+  "exports": [
+    { "name": "semio_owned_admit_actor_context_v1", "bytePair": false, "authorityWords": 19 },
+    { "name": "semio_owned_admit_actor_input_v1", "bytePair": true, "authorityWords": 19 },
+    { "name": "semio_owned_poll_v1", "bytePair": false, "authorityWords": 19 },
+    { "name": "semio_owned_close_actor_output_v1", "bytePair": false, "authorityWords": 19 },
+    { "name": "semio_owned_close_actor_context_v1", "bytePair": false, "authorityWords": 19 }
+  ]
+}

@@ -1,0 +1,13 @@
+# Remodel in the development Hub catalog
+
+The ordinary local Hub owner and `os-hub:dev` both call `trustedBootstrapSelectPackages` with the shared development catalog. That list omitted Remodel, leaving the development Hub without its document authority even when its browser module can load. The shared catalog now includes `remodel` alongside the existing packages.
+
+The selection assertion failed before the change and passed after it. A neutral fixture and Ajv check cover the default membership and uniqueness. The production selector resolves that member as `semio:remodel`, marks it document-opening, and finds the expected `3d.remodeling` and `remodeling.scene` pair in the emitted descriptor. Running the production selection preflight over all real committed descriptors reported zero findings both before and after adding Remodel. The resolved profile is `local-stdio-gis-note-writer-draw-puzzle-remodel-open-v1`.
+
+The registered capacity check spent 150 seconds reading the project graph slice before its scheduled cancellation. The same owned renderer and publisher were executed directly through the registered Bun tool. Two independent render passes, including strict channel admission, produced identical bytes. The existing output shape exactly matched the result, so no paths needed removal. The 14 generated files now include 74 plugins, 158 playgrounds, and the Remodel entry. Every published byte was compared with the strict render.
+
+The actual trusted preflight then accepted the seven-package selection. It rejected Stdio's protocol-24 descriptor pack and found that all seven selected packages lacked a shipped release component and receipt in their expected directories. The canonical pair verifier also found a stale Writer pack. The [companion descriptor audit](./📓️hub-companion-descriptor-audit.md) records the exact stale values. No Hub process was started.
+
+The repository's descriptor verification and playground session validation passed for Remodel against the actual generated registry. The descriptor verifier's only warning was the missing shipped component and receipt. A fresh managed playground dry run reached project graph loading and was canceled at its 90-second bound.
+
+The managed release-model command for Remodel reached the registered repo graph service. Its 180-second bound expired after 140 seconds reading the graph slice. A separate direct invocation of the component driver returned immediately because the caller did not carry the repository's original Script envelope. The managed release target did not reach compilation or receipt publication.

@@ -22,7 +22,27 @@
           }
         }
       ]
+    },
+    "machineId": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "capabilityId": {
+      "type": [
+        "string",
+        "null"
+      ]
     }
   },
-  "additionalProperties": false
+  "additionalProperties": false,
+  "dependentRequired": {
+    "machineId": [
+      "capabilityId"
+    ],
+    "capabilityId": [
+      "machineId"
+    ]
+  }
 }

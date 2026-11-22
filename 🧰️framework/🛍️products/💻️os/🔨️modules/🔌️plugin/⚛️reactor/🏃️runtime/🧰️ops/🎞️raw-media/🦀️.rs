@@ -1,7 +1,13 @@
 //! 📥️ Diverts registered original-media pages before the generic command byte reader.
 
+#[path = "📥️natural-source.rs"]
+mod natural_source;
+pub use natural_source::drive_natural_source_format;
 #[path = "📤️picker.rs"]
 mod picker;
+#[path = "📥️folder-load.rs"]
+mod folder_load;
+pub use folder_load::{drive_folder_archive, is_folder_archive_event};
 pub use picker::continue_original_picker_effects;
 pub use semio_plugin_decl_media::original_media::issue::pending_picker_effect;
 
@@ -16,6 +22,9 @@ pub fn drive_raw_media<PA: PluginApp>(
     runtime: &PluginRuntime<PA>, events: &mut Option<Event>, command_page: &mut Option<(CommandPageCursor, FixedCommandPage)>,
     closing: &[u32], _identity: &mut EntityIdentityAuthority<'_>, cx: &mut StepContext<'_>,
 ) -> Result<Option<CommandIngressStatus>, OriginalTurnFailure> {
+    if !matches!(events.as_ref(), Some(Event::OriginalMediaControl(_))) {
+        if let Some(status) = natural_source::drive(runtime, events, command_page, closing, cx)? { return Ok(Some(status)); }
+    }
     if let Some(Event::OriginalMediaControl(event)) = events.as_ref() {
         if command_page.is_some() { return Err(reactor_close_fault("original media control shares a fixed-page turn").into()); }
         let grant = cx.retained_grant();

@@ -111,6 +111,19 @@ impl std::fmt::Display for ClipboardError {
 
 impl std::error::Error for ClipboardError {}
 
+/// 🗂️ Identifies the artifact document an instance opens.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+#[derive(semio_framework_value::RetireOwned, semio_framework_value::NativeReceive)]
+pub struct PluginDocumentTarget {
+    pub document_id: String,
+    pub schema: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub space_id: Option<String>,
+}
+
 /// 🐚️ A typed side effect the guest emits toward the host — `📓️design-abi.md` §2, replacing [Design notes](README.md#source-notes-114).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase", rename_all_fields = "camelCase")]
@@ -246,6 +259,9 @@ pub enum Effect {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[value(default, skip_serializing_if = "Option::is_none")]
         os_instance_id: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
+        document: Option<PluginDocumentTarget>,
     },
     /// 🧰️ Programmatically switches the host-owned active utility of a window instance — the effect
     /// form of `setActiveUtility`, letting a plugin change utilities without a user click.
@@ -650,6 +666,7 @@ pub enum MessageEndpoint {
 
 pub use ::replication::wire::command_ingress::{
     FixedCommandPage, CommandPageSet, PagedCommand, PagedCommandReader, CommandEnvelope, CommandBatch, CommandEnvelopeSet, RejectedCommandBuild, RejectedCommandBuildRegistry, CommandBatchProgress, CommandBatchDriver, CommandDriverRegistry, CommandPageCursor, CommandIngressStatus, COMMAND_PAGE_MAXIMUM_BYTES, COMMAND_MAXIMUM_BYTES, COMMAND_MAXIMUM_PAGES, COMMAND_BATCH_MAXIMUM_ITEMS, INVOCATION_RESULT_PACK_MAXIMUM_BYTES,
+    NATURAL_SOURCE_COMMAND_KIND, ActorInstanceOpenPurpose, NaturalSourcePrepare, NaturalSourceControlEvent, NaturalSourceWireDeclaration, NaturalSourceWireLoan, NaturalSourceWireControl, NaturalSourceWirePhase, NaturalSourceWireResult, NaturalSourceWireAck,
     OriginalMediaWireLoan, OriginalMediaWireControl, OriginalMediaControlEvent, OriginalMediaWirePhase, OriginalMediaWireResult, OriginalMediaWireAck, ORIGINAL_MEDIA_COMMAND_KIND
 };
 
@@ -664,6 +681,26 @@ mod cold_pair;
 
 pub use cold_pair::{ColdDocumentPairApplied, ColdDocumentPairCursor, ColdDocumentPairFrontier, ColdDocumentPairHeader, ColdDocumentPairPage, ColdPairIngressStatus, COLD_PAIR_MAXIMUM_BYTES, COLD_PAIR_MAXIMUM_PAGES, COLD_PAIR_PAGE_MAXIMUM_BYTES};
 
+/// 📂️ One scoped folder archive load request: its Shell instance and the exact `SEMIOL1I` wire that `semio-os-channel-archive-ingress` validates.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, semio_framework_value::NativeReceive, semio_framework_value::RetireOwned)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[value(crate="::semio_framework_value",rename_all="camelCase",deny_unknown_fields)]
+pub struct FolderArchiveLoadEvent {
+    pub instance: u32,
+    pub request: Vec<u8>,
+}
+
+impl FolderArchiveLoadEvent {
+    pub const REQUEST_MAGIC: &'static [u8; 8] = b"SEMIOL1I";
+    pub const REQUEST_MAXIMUM_BYTES: usize = 37 + 40 + 2 * 2048 + 4096;
+
+    /// 🪪️ The envelope the kernel can check without the archive crate: the request magic, a bounded extent and an instance that matches the key header.
+    pub fn is_authentic(&self) -> bool {
+        self.instance != 0 && (37..=Self::REQUEST_MAXIMUM_BYTES).contains(&self.request.len()) && self.request.starts_with(Self::REQUEST_MAGIC)
+            && self.request[8..12] == self.instance.to_le_bytes()
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", rename_all_fields = "camelCase", deny_unknown_fields)]
 #[expect(clippy::large_enum_variant, reason = "Command ingress carries one fixed bounded page inline; delivery must not allocate an indirect page owner.")]
@@ -677,6 +714,7 @@ pub enum Event {
     /// see the report's `🎭️actor` naming-hazard note).
     InstanceOpen {
         request: ActorInstanceOpenRequest,
+        purpose: ActorInstanceOpenPurpose,
         app_id: AppInstanceId,
         actor: String,
         config: Vec<u8>,
@@ -704,6 +742,9 @@ pub enum Event {
 
     ColdDocumentPairPage(ColdDocumentPairPage),
     OriginalMediaControl(OriginalMediaControlEvent),
+    NaturalSourcePrepare(NaturalSourcePrepare),
+    NaturalSourceControl(NaturalSourceControlEvent),
+    FolderArchiveLoad(FolderArchiveLoadEvent),
 
     /// 🎬️ `wit-flip` (26/08/20) — a user action against a UI node, `pack`-encoded
     /// `semio_ui_contract::UiIntent`. Separate from paged command ingress so the host can

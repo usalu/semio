@@ -101,11 +101,37 @@ fn an_admitted_source_publishes_exactly_one_pending_upload() {
 }
 
 #[test]
-fn a_url_source_is_deferred_to_the_host_and_a_jpeg_data_url_is_unsupported() {
+fn a_url_source_is_deferred_to_the_host_and_an_undecodable_data_url_is_not_admitted() {
     assert_eq!(admit_ui_image("https://example.test/picture.png"), UiImageAdmission::Deferred, "a fetch is the host asset pipeline's job, not this crate's");
     assert_eq!(admit_ui_image("assets/picture.png"), UiImageAdmission::Deferred);
-    assert_eq!(admit_ui_image("data:image/jpeg;base64,/9j/4AAQ"), UiImageAdmission::Unsupported, "no third-party JPEG codec may enter the runtime graph");
+    assert_eq!(admit_ui_image("data:image/jpeg;base64,/9j/4AAQ"), UiImageAdmission::Refused, "a JPEG payload the in-repo decoder rejects is refused, not deferred");
+    assert_eq!(admit_ui_image("data:image/webp;base64,AAAA"), UiImageAdmission::Unsupported, "a media type no in-repo decoder owns stays unsupported");
     assert_eq!(admit_ui_image(""), UiImageAdmission::Refused);
+}
+
+#[test]
+fn a_jpeg_data_url_decodes_through_the_in_repo_decoder_to_the_fixture_size() {
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../../🔲️pixels/📸️jpeg/📥️decode/🧪️tests/🧫️fixtures/🔣️.json")).expect("jpeg decode fixture");
+    for case in fixture["cases"].as_array().expect("jpeg cases") {
+        let src = format!("data:image/jpeg;base64,{}", case["base64"].as_str().expect("base64"));
+        let size = (u32::try_from(case["width"].as_u64().expect("width")).expect("width fits"), u32::try_from(case["height"].as_u64().expect("height")).expect("height fits"));
+        assert_eq!(admit_ui_image(&src), UiImageAdmission::Ready, "{}", case["name"]);
+        assert_eq!(ui_image_natural_size(&src), Some(size), "{}", case["name"]);
+    }
+}
+
+#[test]
+fn an_undecodable_image_paints_its_alt_text_and_never_the_node_id() {
+    let node = UiNode::Image(UiImageNode { source_page: None, id: "secret-node-id".into(), src: "data:image/webp;base64,AAAA".into(), alt: None, presence: UiPresence::default(), menu: None });
+    let (tree, root, theme, mut atlas) = setup(&node);
+    let draw = paint_retained_node_for_test(&tree, root, &theme, &mut atlas);
+    let glyphs = draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).filter(|instance| (instance.params[2] - KIND_GLYPH).abs() < 0.01).count();
+    assert_eq!(glyphs, 0, "no alt means no text: the record key is never visible copy");
+    let with_alt = UiNode::Image(UiImageNode { source_page: None, id: "secret-node-id".into(), src: "data:image/webp;base64,AAAA".into(), alt: Some(Label::data("alt")), presence: UiPresence::default(), menu: None });
+    let (tree, root, theme, mut atlas) = setup(&with_alt);
+    let draw = paint_retained_node_for_test(&tree, root, &theme, &mut atlas);
+    let glyphs = draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).filter(|instance| (instance.params[2] - KIND_GLYPH).abs() < 0.01).count();
+    assert_eq!(glyphs, 3, "the alt text is the only fallback copy");
 }
 
 /// 📐️ React's `<img className="max-h-64 max-w-full object-contain">` (`🗣️Interpreter/🟦️.tsx:1974`):

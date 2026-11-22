@@ -1,0 +1,40 @@
+{
+  "scales": [
+    50,
+    100,
+    200,
+    500
+  ],
+  "shaftWidthMm": {
+    "femur": [
+      13,
+      20
+    ],
+    "tibia": [
+      11,
+      18
+    ],
+    "humerus": [
+      10,
+      16
+    ],
+    "radius": [
+      7,
+      11
+    ],
+    "ulna": [
+      7,
+      12
+    ],
+    "fibula": [
+      7,
+      10
+    ]
+  },
+  "adultFemurMm": [
+    22,
+    34
+  ],
+  "maxChildAdultFemurRatio": 0.8,
+  "minRadiusUlnaCentreGapMm": 11
+}

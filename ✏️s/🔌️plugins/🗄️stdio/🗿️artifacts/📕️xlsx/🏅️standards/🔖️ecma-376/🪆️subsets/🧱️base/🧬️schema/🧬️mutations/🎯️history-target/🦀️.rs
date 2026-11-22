@@ -3,7 +3,7 @@
 use super::XlsxMutation;
 use semio_framework_value::{ValueError, ValueRefusalKind};
 use std::io::Write;
-use store::ArtifactOperationTargets;
+use store::{ArtifactOperationTargets, ArtifactOperationWire};
 
 struct ConflictPath<'a> {
     prefix: [&'a str; 4],
@@ -51,6 +51,11 @@ fn absent_segment() -> ValueError {
 }
 
 impl XlsxMutation {
+    /// 🎒️ The mounted XLSX profiles share the original Pack Value receiver and authored target.
+    pub fn install_original_history_wire(wire: ArtifactOperationWire<Self>) -> ArtifactOperationWire<Self> {
+        wire.with_original_pack_value_receiving().with_original_target(Self::original_conflict_target)
+    }
+
     fn conflict_path(&self) -> Option<ConflictPath<'_>> {
         use XlsxMutation::*;
         Some(match self {

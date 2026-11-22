@@ -76,6 +76,22 @@ test("patching refines an index whose classes outgrow its owners, like the in-me
  expect(decoded.classes.length).toBeLessThanOrEqual(decoded.owners.length*2+1024+decoded.rows.length);
 },60000);
 
+test("a cold index keeps exactly its encoded bytes and accepts the exact size limit",async()=>{
+ const owners=32,perOwner=16,length=4096,table=new Map<string,Row[]>();
+ for(let owner=0;owner<owners;owner++)table.set("p"+owner,Array.from({length:perOwner},(_,at)=>({kind:"file",path:owner.toString(36)+"/"+at.toString(36)+"/"+"x".repeat(length)+"é",fact:{time:at,exists:true}})));
+ const view=emptyFactIndexViewV1(),patch={upserts:table},raw=await patchFactIndexBytesV1(view,patch,{maximumBytes:LIMIT});
+ const decoded=decodeFactIndexV1(raw,{maximumBytes:LIMIT}),reference=encodeFactIndexV1(createFactIndexV1(table),{maximumBytes:LIMIT});
+ expect(new Map(factConsumersV1(decoded))).toEqual(new Map(factConsumersV1(decodeFactIndexV1(reference,{maximumBytes:LIMIT}))));
+ const binaryOracle=join(dirname(oracle),"..","..","🧮️fact-codec","🧪️tests","🐍️.py");
+ const encoded=Bun.spawnSync([python!,"-I",binaryOracle,"encode"],{stdin:Buffer.from(JSON.stringify(decoded))});
+ expect(encoded.exitCode).toBe(0);
+ expect(Buffer.compare(raw,Buffer.from(encoded.stdout.toString(),"hex"))).toBe(0);
+ expect(raw.length).toBeGreaterThan(2*1024*1024);
+ expect(raw.buffer.byteLength).toBe(raw.length);
+ expect(Buffer.compare(await patchFactIndexBytesV1(view,patch,{maximumBytes:raw.length}),raw)).toBe(0);
+ await expect(patchFactIndexBytesV1(view,patch,{maximumBytes:raw.length-1})).rejects.toThrow("Stored document exceeds its finite limit");
+},60000);
+
 test("patching owners whose rows arrive in batches holds a few bytes per owner-row incidence, not a list per owner",()=>{
  const owners=400,pooled=60000,per=15000,script=`
   const codec=await import(${JSON.stringify(new URL("../../🧮️fact-codec/🟨️.mjs",import.meta.url).href)}),patch=await import(${JSON.stringify(new URL("../../🌊️stream-patch/🟨️.mjs",import.meta.url).href)});

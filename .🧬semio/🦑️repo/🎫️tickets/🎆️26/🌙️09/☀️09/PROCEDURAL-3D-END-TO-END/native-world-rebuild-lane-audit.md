@@ -1,0 +1,7 @@
+# Native world host rebuild lane audit
+
+Read-only lane and witness inspection. No compiler or binary was invoked and no cache or production source was modified.
+
+The surviving .cache/b/r/m/u/l/p170eab/prototype/build contains 865 rlib/rmeta pairs overall, but semio-os-infinite-world-host/4dce7a8ac5a30626/out and fingerprint are empty. Its direct world dependencies semio-os-infinite-world-model, -components, -cursors, -scene, -bridge and -interaction also each have zero rlibs in their respective out directories. Some UI dependencies, including semio-ui-prepared and semio-ui-declaration, do have rlibs; that is insufficient to link a fresh host. The previous ticket native-hover-runtime-check.py selects exact metadata and dependency hashes from a completed host artifact in p9ded5f, a lane no longer present in the sampled unit root.
+
+A single-crate offline rustc rebuild into ticket generated cannot be established as coherent: it would first require rebuilding or restoring the missing dependency chain, and freshness/feature hashes must agree across that chain. No valid fresh host or current integrated pointer-gestures test result is claimed. The prior report 📓️native-grouped-hover.md documents four passing harness tests against an earlier production build; that result is historical and does not establish the current changed host. The separate paint witness exercises extracted source and is not a linked fresh-host runtime.

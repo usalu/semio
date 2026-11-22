@@ -62,3 +62,30 @@ Feature: Card grid on a short desktop or tablet
     Given the featured frieze needs two authored categories
     When the first category finishes while the second load is pending
     Then the second category keeps its original load
+
+  Scenario: The overview requests the assets its cards show
+    Given a desktop overview of a category with seven authored assets, a category with one, a planned asset and one featured asset
+    When every card has had the time it takes to warm
+    Then the four assets of the first frieze, the one of the second and the featured one were requested
+    And no category document and no planned asset was requested
+
+  Scenario: A desktop asset page requests that asset alone
+    Given a desktop viewport of 1280 by 800 opened directly on an asset address
+    When the overview cards behind the page have had the time they take to warm their categories
+    Then the selected asset was requested once and no category document was requested
+    When the reader goes up to the category
+    Then the category grid requests its category
+
+  Scenario: A loading asset says that it is loading, in the reader's language
+    Given a desktop opened directly on an asset address whose request has not finished
+    Then a live region says in English that the asset is loading and nothing calls it planned
+    And a German reader is told the same in German
+    When the request finishes without a document
+    Then the page says the asset is planned and not authored yet
+
+  Scenario: An asset is shown while its findings are still computed
+    Given a desktop opened on an authored asset whose check has not finished
+    Then the viewer shows the asset and a live region says how far the check is
+    When the check ends with a finding
+    Then the page lists the finding above the viewer, which keeps showing the asset
+

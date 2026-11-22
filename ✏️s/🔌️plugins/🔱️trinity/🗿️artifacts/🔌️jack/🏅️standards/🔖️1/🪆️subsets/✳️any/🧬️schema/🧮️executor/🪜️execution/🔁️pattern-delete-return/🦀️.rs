@@ -235,8 +235,7 @@ impl ReturnExecution {
                     let fixture = crate::standards::v1::subsets::any::schema::ast::JackQueryGraphSnapshot {
                         schema: JackSnapshot::SCHEMA.into(),
                         name,
-                        manifest_id: graph.manifest_id.take(),
-                        manifest: std::mem::take(&mut graph.manifest),
+                        manifest_id: std::mem::take(&mut graph.manifest_id),
                         camera: graph.camera.clone(),
                         nodes:std::mem::take(&mut self.nodes),
                         edges:std::mem::take(&mut self.edges),

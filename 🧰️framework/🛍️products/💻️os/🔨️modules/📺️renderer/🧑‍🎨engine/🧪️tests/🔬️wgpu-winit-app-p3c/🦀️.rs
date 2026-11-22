@@ -126,11 +126,11 @@ fn normalized_host_key_routes_the_platform_os_command_to_the_shell() {
     let restore = semio_renderer_wgpu_host_base::boot_descriptor();
     semio_renderer_wgpu_host_base::set_host_platform("MacIntel");
     let action = semio_ui_wgpu_input::KeyAction::Char("f".into());
-    let modifiers = semio_ui_wgpu_input::PointerModifiers { ctrl: true, meta: true, shift: false, alt: false };
+    let modifiers = semio_ui_wgpu_input::PointerModifiers { ctrl: true, meta: true, shift: false, alt: false, repeat: false };
     assert!(semio_renderer_wgpu_shell_docs::key_event_matches_chord(&action, &modifiers, &fixture.collision.matches));
     assert!(!semio_renderer_wgpu_shell_docs::key_event_matches_chord(&action, &modifiers, &fixture.collision.refuses), "control+meta+f must not be reserved by Find's mod+f row");
     let mut interaction = keyboard_interaction();
-    semio_framework_async::block_on(dispatch_normalized_event(&mut interaction, &mut DispatchEvent::KeyDown { key: "f".into(), modifiers: EventModifiers { shift: false, ctrl: true, alt: false, meta: true } }));
+    semio_framework_async::block_on(dispatch_normalized_event(&mut interaction, &mut DispatchEvent::KeyDown { key: "f".into(), modifiers: EventModifiers { shift: false, ctrl: true, alt: false, meta: true }, repeat: false }));
     assert!(interaction.shell.chrome.fullscreen_toggle_requested, "the real host ingress reaches apply_os_command");
     assert!(interaction.shell.settle.deferred_actions.is_empty(), "an OS command never enters the guest action lane");
 
@@ -148,7 +148,7 @@ fn normalized_host_key_routes_the_platform_os_command_to_the_shell() {
 #[test]
 fn normalized_pointer_and_wheel_snapshots_replace_stale_keyboard_modifiers() {
     let mut interaction = keyboard_interaction();
-    interaction.modifiers = semio_ui_wgpu_input::PointerModifiers { shift: true, ctrl: true, alt: true, meta: true };
+    interaction.modifiers = semio_ui_wgpu_input::PointerModifiers { shift: true, ctrl: true, alt: true, meta: true, repeat: false };
     interaction.input.modifiers = interaction.modifiers.clone();
     let pointer = PointerInfo { id: ui_render::PointerId(1), kind: ui_render::PointerKind::Mouse, pressure: None, tilt: None };
     let ctrl = EventModifiers { shift: false, ctrl: true, alt: false, meta: false };

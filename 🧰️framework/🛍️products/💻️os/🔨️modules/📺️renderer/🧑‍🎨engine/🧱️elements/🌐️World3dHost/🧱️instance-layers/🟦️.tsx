@@ -20,7 +20,7 @@ import { type WorldEnvironmentRecord, type WorldHoverComponent, type WorldInstan
 import { useThree } from "../🎨️mesh-render/🟦️.tsx";
 import { type MeshStylePalette } from "../🎨️mesh-render/🖌️mesh-style-palette/🟦️.ts";
 import { buildMeshVisuals, disposeMeshVisuals, type MeshVisuals, type VertexPickData } from "../🎨️mesh-render/🔺️mesh-geometry-and-appearance/🟦️.ts";
-import { world3dComponentInteractionTarget } from "../🔗️instance-selection/🟦️.ts";
+import { world3dComponentInteractionTarget, world3dInstanceHoverGroups } from "../🔗️instance-selection/🟦️.ts";
 import { applyGumballLivePreviewDeltaToPose, applyGumballLivePreviewPoseToObject3D, clearWorldGumballTransformPreview, GUMBALL_TRANSFORM_EPSILON, gumballLivePreviewDeltaBetweenPoses, isWorldInstanceRootObject3D, isWorldTransformGumballMode, setWorldGumballTransformPreview, worldGumballConfigForProjection, type WorldGumballLivePose, type WorldGumballTransformPreview, type WorldPaintOrigin } from "../🧮️gumball-math/🟦️.ts";
 import { componentPickMergeMode, resolveWorldMergeMode } from "../🎯️marquee-and-bridges/🟦️.tsx";
 import { SceneGumball } from "./🎛️scene-gumball/🟦️.tsx";
@@ -76,6 +76,7 @@ export function WorldInstancesLayer({
   meshes,
   selection,
   windowInstanceId,
+  interactionDomainId,
   persistentSelectionMode,
   palette,
   projectionSpec,
@@ -107,6 +108,7 @@ export function WorldInstancesLayer({
   readonly meshes: readonly WorldMeshRecord[];
   readonly selection: WorldSelectionRecord;
   readonly windowInstanceId?: string | null;
+  readonly interactionDomainId?: string | null;
   /** 🐚️ This shell's own `SelectionModeStore` value — see `resolveWorldMergeMode`'s doc. */
   readonly persistentSelectionMode: MergeMode;
   readonly palette: MeshStylePalette;
@@ -210,16 +212,18 @@ export function WorldInstancesLayer({
   const mergedInstanceIdsSet = mergedInstanceIds ? new Set(mergedInstanceIds) : null;
   const selectedIds = selection.ids ?? [];
   const instanceChromeStore = useMemo(() => createWorldInstanceChromeStore(windowInstanceId), [windowInstanceId]);
+  const localHoverGroups = useMemo(() => interactionDomainId ? world3dInstanceHoverGroups(instances) : undefined, [instances, interactionDomainId]);
   reactHostPort.useLayoutEffect(() => {
     instanceChromeStore.setSnapshot({
       selectedIds: new Set(selection.ids ?? []),
       hoveredId: selection.hoveredId ?? null,
       hoveredIds: selection.hoveredIds ? new Set(selection.hoveredIds) : null,
+      localHoverGroups,
       hoverSourceWindowId: selection.hoverSourceWindowId,
       hoveredKindId: selection.hoveredKindId ?? null,
       previewInstanceIds: mergedInstanceIdsSet,
     });
-  }, [instanceChromeStore, mergedInstanceIdsSet, selection.hoveredId, selection.hoveredIds, selection.hoverSourceWindowId, selection.hoveredKindId, selection.ids]);
+  }, [instanceChromeStore, localHoverGroups, mergedInstanceIdsSet, selection.hoveredId, selection.hoveredIds, selection.hoverSourceWindowId, selection.hoveredKindId, selection.ids]);
   const handleLocalInstancePointerMove = useCallback(
     (id: string | null) => {
       instanceChromeStore.setLocalHover(id);

@@ -133,6 +133,9 @@ use graph_edit::PngGraphEdit;
 #[path = "📬️format-work.rs"]
 mod format_work;
 pub use format_work::PngFormatWork;
+#[path = "📏️route.rs"]
+mod route;
+pub use route::{select_picked_raster_route, PickedRasterFormat, PickedRasterRoute, PAGED_DCT_MAXIMUM_BYTES, PAGED_DCT_MAXIMUM_PIXELS};
 #[path = "🧵️reserved-picker.rs"]
 mod reserved_picker;
 pub use reserved_picker::PickerPngWork;

@@ -19,6 +19,7 @@ component-kind = "plugin"
 
 [[package.metadata.semio.playground]]
 variant = "raster"
+devContribution = "✏️s/🧑‍💻dev/🎭️variants/🖨️raster/🧬️schema/🔣️.json"
 nativeLaunchPolicy = "🌎️hub/🧩️compositions/🖨️raster/🎟️native-policy/🔣️.json"
 compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.raster.raster@1/*#editor"

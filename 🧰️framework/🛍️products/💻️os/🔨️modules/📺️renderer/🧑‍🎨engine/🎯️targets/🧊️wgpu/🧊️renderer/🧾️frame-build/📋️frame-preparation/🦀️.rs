@@ -52,17 +52,19 @@ impl AppFramePreparation {
     }
 
     pub fn drive_step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<FramePreparationStep, semio_framework_job::OriginalTurnFailure> {
-        use semio_framework_job::{JobOutcomeView};
-use semio_framework_job_worker::{WorkerJobPoll};
+        use semio_framework_job::JobOutcomeView;
+        use semio_framework_job_worker::WorkerJobPoll;
         use semio_framework_value::{ValueError,ValueRefusalKind};
         let refuse=|message|ValueError::literal(ValueRefusalKind::InvariantViolated,message);
         if self.refused_receipt.is_some() { return Err(refuse("original prepared worker receipt remains refused").into()); }
         if self.job_rejected.is_some() { return Err(refuse("original prepared render admission remains rejected").into()); }
         if self.job.is_some() && self.params.is_none() {
             let mut cancel = None;
-            let admission = cx.admit_original_cancel_alias(&mut cancel);
-            self.params = cancel.map(|cancel| semio_framework_job_worker_authority::BatchJobParams { operation:cx.operation(),generation:cx.generation(),cancel,config:semio_framework_job_worker_authority::BatchDriveConfig { retained:self.retained,site:"os_renderer.prepare.worker",stage:semio_framework_job::InteractiveStage::BackgroundStep,fuel_per_step:1,step_budget_us:1000 },now_us:cx.clock_source() });
-            admission?;
+            let admitted = cx.admit_original_cancel_alias(&mut cancel);
+            if let Some(cancel) = cancel {
+                self.params = Some(semio_framework_job_worker_authority::BatchJobParams { operation:cx.operation(),generation:cx.generation(),cancel,config:semio_framework_job_worker_authority::BatchDriveConfig { retained:self.retained,site:"os_renderer.prepare.worker",stage:semio_framework_job::InteractiveStage::BackgroundStep,fuel_per_step:1,step_budget_us:1000 },now_us:cx.clock_source() });
+            }
+            admitted?;
             return Ok(FramePreparationStep::Pending);
         }
         if self.job.is_some() || !self.admission.terminal_is_empty() {
@@ -180,13 +182,13 @@ use semio_framework_job_worker::{WorkerJobPoll};
             if let Some(witness)=witness {
                 match session.has_original_cancel_alias_witness(witness) {
                     Ok(true) => {
-                        use semio_framework_job_worker::WorkerJobDemandError;
-                        let Some((turn, _)) = cx.with_original_effect(grant, |cx, effect| session.return_original_cancel_alias_step(cx.original_cancel_token(), effect))? else { return Ok(InteractiveJobCloseStep::Blocked); };
-                        let blocked = matches!(&turn.result, Ok(None) | Err(WorkerJobDemandError::Contention(_)));
+                        let turn = cx.with_original_effect(grant, |cx, effect| session.return_original_cancel_alias_step(cx.original_cancel_token(), effect))?
+                            .map_or(semio_framework_value::RetainedWorkOutcome { result: Ok(None), work: 0 }, |(turn, _)| turn);
+                        let blocked = matches!(&turn.result, Ok(None) | Err(semio_framework_job_worker::WorkerJobDemandError::Contention(_)));
                         let result = match turn.result {
                             Ok(Some(step)) => Ok(step),
-                            Ok(None) | Err(WorkerJobDemandError::Contention(_)) => Ok(semio_framework_value::RetainedCloneStep::Progress(Default::default())),
-                            Err(WorkerJobDemandError::Refused(error)) => Err(error),
+                            Ok(None) | Err(semio_framework_job_worker::WorkerJobDemandError::Contention(_)) => Ok(semio_framework_value::RetainedCloneStep::Progress(Default::default())),
+                            Err(semio_framework_job_worker::WorkerJobDemandError::Refused(error)) => Err(error),
                         };
                         let step = semio_framework_job::receive_original_retained_work(cx, semio_framework_value::RetainedWorkOutcome { result, work: turn.work })?;
                         return Ok(if blocked { InteractiveJobCloseStep::Blocked } else { InteractiveJobCloseStep::Pending { progress: step.progress() } });
@@ -245,6 +247,40 @@ use semio_framework_job_worker::{WorkerJobPoll};
 impl AppFramePresentation {
     pub fn discard_presented_input_candidate(&mut self, runtime: &AppMailbox) -> bool {
         discard_frame_input_candidate(runtime, &mut self.input_candidate)
+    }
+
+    /// 📏️ Quotes the next child in the presentation's retained close sequence.
+    pub fn next_close_demands(&self, copy: usize) -> Result<RetainedCloneGrant, semio_framework_value::ValueError> {
+        if self.input_candidate.is_some() {
+            return Ok(RetainedCloneGrant::default());
+        }
+        if let Some(packet) = self.packet.as_ref() {
+            return if packet.retirement_is_empty() {
+                semio_ui_prepared::retirement::prepared_owner_demands(false, Ok(0))
+            } else {
+                packet.next_close_demands(copy)
+            };
+        }
+        if !self.engine_packets.terminal_is_empty() {
+            if !self.engine_packets.is_empty() {
+                return frame_unpriced_child().map(|_| RetainedCloneGrant::default());
+            }
+            let demand = self.engine_packets.backing_retirement_demands();
+            return Ok(RetainedCloneGrant {
+                maximum_items: 1,
+                maximum_copy_bytes: demand.copy_bytes,
+                maximum_capacity_bytes: demand.capacity_bytes,
+                maximum_release_bytes: demand.release_bytes,
+                maximum_depth: demand.depth,
+            });
+        }
+        semio_ui_prepared::retirement::prepared_owner_demands(self.cursor_wake.is_none(), Ok(0))
+    }
+
+    /// 🎟️ Closes one discarded presentation child under its original caller's effect.
+    pub fn close_step_on_original(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<InteractiveJobCloseStep, semio_framework_job::OriginalTurnFailure> {
+        let demand = self.next_close_demands(cx.retained_grant().maximum_copy_bytes)?;
+        frame_prepared_close(cx, demand, |effect| self.close_step(effect))
     }
 
     pub fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<InteractiveJobCloseStep,semio_framework_value::RetirementPollExit> {

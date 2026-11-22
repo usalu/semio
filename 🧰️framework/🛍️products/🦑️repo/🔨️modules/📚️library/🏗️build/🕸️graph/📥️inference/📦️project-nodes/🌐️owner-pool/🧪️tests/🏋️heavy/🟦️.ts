@@ -72,7 +72,7 @@ async function wave(totalMegabytes:number,units:Unit[],tag:string){
  const environment={SEMIO_REMOTE_CACHE_ENDPOINT:server.url,SEMIO_REMOTE_CACHE_ACCESS:"read-write",SEMIO_REMOTE_CACHE_TOKEN:"w",SEMIO_REMOTE_CACHE_INSTANCE:"main"};
  try{
   const root=temp("root"),client=graphFleetClientV1(graphFleetSettingsV1(root,environment)!,{fetch:remoteCacheFetchV1(environment,{root})});
-  const partial={version:1 as const,identity:"identity-"+tag,globals:{projectAuthority:"a",registryDigest:"r",commandRevision:"c",late:false},publisher:"p:"+tag};
+  const partial={version:1 as const,identity:"identity-"+tag,globals:{registryDigest:"r",commandRevision:"c",late:false},publisher:"p:"+tag};
   const manifest:OwnerPoolManifestV1={head:{...partial,id:ownerPoolIdV1(partial,units),createdMs:Date.now()},session:Buffer.from(JSON.stringify({burnMilliseconds:5})),units};
   expect(await publishOwnerPoolV1({client,owner:"o",manifest})).toBe(true);
   const done:string[]=[];

@@ -9,6 +9,8 @@ import {createIssuedResourceControlV1,createRequestedIssuedResourceControlV1,req
 import {checkResourceLeaseControl,type ResourceLeaseControl} from "@semio-tech/process/leases";
 import fixture from "./🔣️.json" with {type:"json"};
 import schema from "./🧬️schema.json" with {type:"json"};
+import {declareLibraryBuildTestEnvelopeV1} from "../../../../../../🧪️testing/🪪️native-birth/🟦️.ts";
+declareLibraryBuildTestEnvelopeV1({suite:"graph",maximumElapsedMilliseconds:15000});
 test("selected producer fixture passes its genuine phase into actual inference admission",async()=>withBuildTestInvocationV1(async original=>{
  expect(new Ajv({strict:true}).compile(schema)(fixture)).toBe(true);
  const source=readFileSync(new URL("../🟦️.ts",import.meta.url),"utf8"),ast=ts.createSourceFile("selection.ts",source,ts.ScriptTarget.Latest,true),contexts:ts.Expression[]=[];

@@ -55,6 +55,7 @@ pub static ENTRIES: &[Entry] = &[
     Entry { id: "C93-29", part: "EN 1993-1-9", clause: "8 / Table 8.3", en: "Fatigue of transverse butt welds", de: "Ermüdung quer laufender Stumpfnähte", inputs: &["weld83_detail", "weld83_basis", "weld83_thickness", "weld83_thicker", "weld83_offset", "weld83_slope", "weld83_weld_width", "weld83_reinforcement", "weld83_end_distance", "weld83_fit", "weld83_length", "weld83_radius", "weld83_cross_reference", "weld83_flange", "weld83_range", "weld83_frequent", "weld83_perpendicular_range", "weld83_perpendicular_frequent", "fy", "gamma_ff", "gamma_mf"], eval: evaluators::transverse_butt_weld_fatigue },
     Entry { id: "C93-30", part: "EN 1993-1-9", clause: "8 / Table 8.2", en: "Fatigue of longitudinal welds in built-up sections", de: "Ermüdung von Längsnähten in zusammengesetzten Querschnitten", inputs: &["weld82_detail", "weld82_basis", "weld82_stop", "weld82_repair", "weld82_finish", "weld82_gap", "weld82_web_height", "weld82_cope_height", "weld82_cope_basis", "weld82_attachment_length", "weld82_attachment_thickness", "weld82_attachment_height", "weld82_wall", "weld82_ends", "weld82_ends_utilization", "weld82_range", "weld82_frequent", "fy", "gamma_ff", "gamma_mf"], eval: evaluators::built_up_weld_fatigue },
     Entry { id: "C93-31", part: "EN 1993-1-9", clause: "8 / Table 8.1", en: "Fatigue of plain members and mechanically fastened joints", de: "Ermüdung ungeschweißter Bauteile und mechanischer Verbindungen", inputs: &["detail81_detail", "detail81_basis", "detail81_steel", "detail81_diameter", "detail81_end_parallel", "detail81_edge_transverse", "detail81_pitch_parallel", "detail81_pitch_transverse", "detail81_reversal", "detail81_threads", "detail81_bolt_type", "detail81_bolt_grade", "detail81_first_moment", "detail81_inertia", "detail81_thickness", "detail81_shear_force", "detail81_frequent_force", "detail81_range", "detail81_frequent", "fy", "gamma_ff", "gamma_mf"], eval: evaluators::plain_and_fastened_fatigue },
+    Entry { id: "C93-32", part: "EN 1993-1-9:2005", clause: "3(2), 3(3), 3(7)", en: "Fatigue assessment method and maintenance basis", de: "Ermüdungsnachweiskonzept und Instandhaltungsgrundlagen", inputs: &["fatigue_method", "fatigue_rapid_failure", "fatigue_lifetime_maintenance", "fatigue_tolerance_basis", "fatigue_maintenance_record"], eval: evaluators::fatigue_method::evaluate },
 ];
 
 fn case_entry(e: &'static Entry) -> CaseEntry {
@@ -90,6 +91,14 @@ impl CaseCatalogue for En1993Cases {
 
     fn vocabulary() -> &'static [InputSpec] {
         case_inputs::VOCABULARY
+    }
+
+    fn new_document_case(entry: &CaseEntry, id: &str) -> DesignCase {
+        let mut case = design_case::seed::<Self>(entry, id);
+        if entry.id == "C93-32" {
+            case.values = design_case::CaseValues::default().with_text("fatigue_method", "unknown");
+        }
+        case
     }
 
     fn evaluate(entry: &CaseEntry, annex: AnnexChoice, case: &DesignCase) -> Vec<CheckResult> {

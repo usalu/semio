@@ -661,7 +661,7 @@ type ChangeStudRowAngle {
 type ChangeStudRowCount {
   memberId: String!
   studRowId: String!
-  newCount: Int!
+  newCount: UInt32!
 }
 type ChangeStudRowSpacingFirst {
   memberId: String!

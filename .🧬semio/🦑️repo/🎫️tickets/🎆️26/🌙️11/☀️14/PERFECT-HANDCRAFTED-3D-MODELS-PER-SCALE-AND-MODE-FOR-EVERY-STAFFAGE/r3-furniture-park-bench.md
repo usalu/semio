@@ -291,3 +291,9 @@ Checks: `r3-validate.ts furniture/park-bench --volumes` gives `VALID ... schema 
 Open points:
 - Inside the 1:100 band, between about 1:60 and 1:90, the 32 mm back gap is still a sub-0.15 mm sliver. Only the range ends are checked. A clean fix is to redraw the 1:100 back as two bands, or to widen the gap; both change the modelled construction.
 - The seat moment remains cantilevered by the tree solver (round 3, section 7).
+
+## Four-scale backrest review, 2026-11-21
+
+Source `0f7555a3acf0ae7f`. At 1:200 the two upper boards had merged. At 1:500 the entire raked backrest became a solid slab, and the cast frame stopped below the top of the back. Each repaired digital model has a lumbar, middle and upper oak board supported by the two cast ends and a pair of bolts per board. Three.js ray casts across a central section measure the timber in three bands with two intervening gaps. The front and rear presentation sheets show the spacing in body, numeric surface temperature and structure. The seat remains a grouped board at 1:200 and 1:500.
+
+The medium and coarse elevation, plan and end drawings use three closed subpaths in one timber ink shape. Both drawing bands retain their existing limits. The product-rendered 1:500 sheet resolves three strips in the solid side elevation. In the line elevation the pen visually joins the narrow upper gap. The canonical product check returned zero schema, asset, print and volume findings. Twelve independent GLB scenes reopened, totalling 897,464 bytes. All 30 maintained model-bounds tests passed.

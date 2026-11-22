@@ -66,7 +66,7 @@ pub(super) fn import(doc:&mut LayoutSnapshot,source:&XmlNode)->Result<String,Str
     let link=nodes(source,"Link")?.first().copied();let labels=nodes(source,"KeyValuePair")?.into_iter().filter(|node|attr(node,"Key")==Some("semio:image-link")).collect::<Vec<_>>();if labels.len()>1{return Err("layout.idml.image-link-label".into());}let id=labels.first().and_then(|node|attr(node,"Value")).map(str::to_string).or(link.map(identity).transpose()?).unwrap_or_else(||format!("image-{}",doc.links.len()+1));
     let uri=link.and_then(|link|attr(link,"LinkResourceURI")).unwrap_or("");let path=uri.strip_prefix("file:").unwrap_or(uri).to_string();let contents=nodes(source,"Contents")?.first().copied();let mut proxy=None;let mut width=1;let mut height=1;let format=link.and_then(|link|attr(link,"LinkResourceFormat")).or_else(||attr(source,"ImageTypeName")).unwrap_or("");let mut kind=if format.contains("PNG"){"s.stdio.png"}else if format.contains("JPEG"){"s.stdio.jpeg"}else{""}.to_string();
     let dpi=attr(source,"ActualPpi").map(|value|numbers(value,2)).transpose()?.map_or(72.0,|values|values[0]).round().clamp(1.0,9600.0)as u32;
-    if let Some(contents)=contents{let mut payload=String::new();text(contents,&mut payload);payload.retain(|character|!character.is_ascii_whitespace());let bytes=store::pack_rt::pack_value_from_base64(&payload).map_err(|error|error.to_string())?;if bytes.len()>MAX_INTERCHANGE_BYTES{return Err("layout.interchange.byte-limit".into());}let mime=if bytes.starts_with(b"\x89PNG\r\n\x1a\n"){if bytes.len()<24{return Err("layout.idml.png-header".into());}let w=u32::from_be_bytes(bytes[16..20].try_into().map_err(|_|"layout.idml.png-header")?);let h=u32::from_be_bytes(bytes[20..24].try_into().map_err(|_|"layout.idml.png-header")?);if u64::from(w)*u64::from(h)>4_194_304{return Err("layout.idml.image-pixel-limit".into());}let png=semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::project_png(&bytes)?;width=png.width;height=png.height;kind="s.stdio.png".into();"image/png"}else if bytes.starts_with(&[255,216,255]){kind="s.stdio.jpeg".into();"image/jpeg"}else{return Err("layout.idml.image-codec".into())};proxy=Some(format!("data:{mime};base64,{}",store::pack_rt::pack_value_to_base64(&bytes)));}
+    if let Some(contents)=contents{let mut payload=String::new();text(contents,&mut payload);payload.retain(|character|!character.is_ascii_whitespace());let bytes=semio_framework_io_base64::base64_standard_decode(&payload).map_err(|_|"layout.idml.image-base64")?;if bytes.len()>MAX_INTERCHANGE_BYTES{return Err("layout.interchange.byte-limit".into());}let mime=if bytes.starts_with(b"\x89PNG\r\n\x1a\n"){if bytes.len()<24{return Err("layout.idml.png-header".into());}let w=u32::from_be_bytes(bytes[16..20].try_into().map_err(|_|"layout.idml.png-header")?);let h=u32::from_be_bytes(bytes[20..24].try_into().map_err(|_|"layout.idml.png-header")?);if u64::from(w)*u64::from(h)>4_194_304{return Err("layout.idml.image-pixel-limit".into());}let png=semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::project_png(&bytes)?;width=png.width;height=png.height;kind="s.stdio.png".into();"image/png"}else if bytes.starts_with(&[255,216,255]){kind="s.stdio.jpeg".into();"image/jpeg"}else{return Err("layout.idml.image-codec".into())};proxy=Some(format!("data:{mime};base64,{}",semio_framework_io_base64::base64_standard_encode(&bytes)));}
     if let Some(bounds)=nodes(source,"GraphicBounds")?.first(){let left=attr(bounds,"Left").unwrap_or("0").parse::<f64>().map_err(|_|"layout.idml.graphic-bounds")?;let top=attr(bounds,"Top").unwrap_or("0").parse::<f64>().map_err(|_|"layout.idml.graphic-bounds")?;let right=attr(bounds,"Right").unwrap_or("1").parse::<f64>().map_err(|_|"layout.idml.graphic-bounds")?;let bottom=attr(bounds,"Bottom").unwrap_or("1").parse::<f64>().map_err(|_|"layout.idml.graphic-bounds")?;if kind!="s.stdio.png"||proxy.is_none(){width=((right-left)*f64::from(dpi)/72.0).round().max(1.0)as u32;height=((bottom-top)*f64::from(dpi)/72.0).round().max(1.0)as u32;}}
     let value=ImageLink{id:id.clone(),path,hash:String::new(),width,height,dpi,color_profile:None,state:Some(if proxy.is_some(){"ok"}else{"missing"}.into()),proxy_data_url:proxy,artifact_kind:kind,artifact_ref:String::new()};if let Some(existing)=doc.links.iter().find(|link|link.id==id){if existing!=&value{return Err("layout.idml.conflicting-image-link".into());}}else{doc.links.push(value);}Ok(id)
 }
@@ -78,7 +78,7 @@ use super::*;
 use semio_s_artifact_layout_layout_model::ParentPage;
 pub(crate) fn node(doc:&LayoutSnapshot,parent:&ParentPage)->Result<XmlNode,String>{let mut items=vec![element("Page",vec![("Self",format!("{}-page",parent.id)),("Name",parent.name.clone()),("GeometricBounds",format!("0 0 {} {}",parent.height,parent.width)),("ItemTransform","1 0 0 1 0 0".into()),("AppliedMaster","n".into())],Vec::new())];for frame in &parent.frames{let mut value=frame_node(doc,frame)?;if matches!(frame,Frame::Image{..}){assets::attach(doc,frame,&mut value)?;}items.push(value);}Ok(package("MasterSpread",element("MasterSpread",vec![("Self",parent.id.clone()),("Name",parent.name.clone()),("NamePrefix","A".into()),("BaseName",parent.name.clone()),("PageCount","1".into()),("ItemTransform","1 0 0 1 0 0".into())],items)))}
 pub(super) fn import(doc:&mut LayoutSnapshot,entries:&BTreeMap<String,Vec<u8>>,root:&XmlNode,global_layers:&[&XmlNode],colors:&BTreeMap<String,[f32;4]>,seen:&mut HashSet<String>)->Result<(),String>{
-    for reference in nodes(root,"MasterSpread")?{let Some(src)=attr(reference,"src")else{continue};let part=read_xml(entries,src)?;let spread=nodes(&part,"MasterSpread")?.first().copied().ok_or("layout.idml.master-spread")?;let id=identity(spread)?;if !seen.insert(format!("master:{id}")){return Err("layout.idml.duplicate-identity".into());}let pages=nodes(spread,"Page")?;if pages.len()!=1{return Err("layout.idml.multi-page-master".into());}let page=pages[0];if attr(page,"AppliedMaster").is_some_and(|id|id!="n"){return Err("layout.idml.nested-master".into());}let (bounds,_,_)=geometry(page)?;if bounds.rotation.abs()>1e-8{return Err("layout.idml.rotated-page".into());}check_dimensions(bounds.width,bounds.height)?;
+    for reference in nodes(root,"MasterSpread")?{let Some(src)=attr(reference,"src")else{continue};let part=read_xml(entries,src)?;let spread=single_part_record(&part,"MasterSpread","layout.idml.master-spread")?;let id=identity(spread)?;if !seen.insert(format!("master:{id}")){return Err("layout.idml.duplicate-identity".into());}let pages=nodes(spread,"Page")?;if pages.len()!=1{return Err("layout.idml.multi-page-master".into());}let page=pages[0];if attr(page,"AppliedMaster").is_some_and(|id|id!="n"){return Err("layout.idml.nested-master".into());}let (bounds,_,_)=geometry(page)?;if bounds.rotation.abs()>1e-8{return Err("layout.idml.rotated-page".into());}check_dimensions(bounds.width,bounds.height)?;
         let mut parent=ParentPage{id:id.clone(),name:attr(spread,"Name").unwrap_or(&id).into(),width:bounds.width,height:bounds.height,layer_ids:Vec::new(),layers:Vec::new(),frames:Vec::new()};
         parent.layers=if global_layers.is_empty(){vec![Layer{id:format!("{id}:content"),name:"Content".into(),visible:true,locked:false,object_ids:Vec::new()}]}else{global_layers.iter().map(|node|Ok(Layer{id:format!("{id}:{}",identity(node)?),name:attr(node,"Name").unwrap_or("Layer").into(),visible:attr(node,"Visible")!=Some("false"),locked:attr(node,"Locked")==Some("true"),object_ids:Vec::new()})).collect::<Result<Vec<_>,String>>()?};parent.layer_ids=parent.layers.iter().map(|layer|layer.id.clone()).collect();
         for source in children(spread).iter().filter(|node|matches!(local(node),"Rectangle"|"TextFrame")){let mut b=geometry(source)?.0;b.x-=bounds.x;b.y-=bounds.y;let frame_id=identity(source)?;if !seen.insert(format!("frame:{frame_id}")){return Err("layout.idml.duplicate-identity".into());}let layer=attr(source,"ItemLayer").and_then(|key|parent.layers.iter().position(|layer|layer.id==format!("{id}:{key}"))).unwrap_or(0);let layer_id=parent.layers[layer].id.clone();let locked=Some(attr(source,"Locked")==Some("true"));let visible=Some(attr(source,"Visible")!=Some("false"));let image=nodes(source,"Image")?.first().copied();let frame=if let Some(image)=image{Frame::Image{id:frame_id.clone(),layer_id,bounds:b,link_id:assets::import(doc,image)?,locked,visible}}else if local(source)=="TextFrame"{let story_id=attr(source,"ParentStory").ok_or("layout.idml.parent-story")?.to_string();if !doc.stories.iter().any(|story|story.id==story_id){return Err("layout.idml.missing-story".into());}let(columns,inset,wrap_mode)=text_styles::read_frame_preferences(source)?;Frame::Text{id:frame_id.clone(),layer_id,bounds:b,story_id,thread_next:attr(source,"NextTextFrame").filter(|id|*id!="n").map(str::to_string),columns,inset,wrap_mode,locked,visible}}else{Frame::Rect{id:frame_id.clone(),layer_id,bounds:b,fill:paint(source,"FillColor",colors)?,stroke:paint(source,"StrokeColor",colors)?,locked,visible}};parent.layers[layer].object_ids.push(frame_id);parent.frames.push(frame);}
@@ -139,6 +139,39 @@ fn find<'a>(node: &'a XmlNode, name: &str, out: &mut Vec<&'a XmlNode>, depth: us
     Ok(())
 }
 fn nodes<'a>(node: &'a XmlNode, name: &str) -> Result<Vec<&'a XmlNode>, String> { let mut out = Vec::new(); find(node, name, &mut out, 0)?; Ok(out) }
+/// 📦️ Selects genuine records inside an IDML packaging element or a bare part.
+fn part_records<'a>(root: &'a XmlNode, expected: &str) -> Result<Vec<&'a XmlNode>, String> {
+    let XmlNode::Element { name, .. } = root else { return Ok(Vec::new()); };
+    if name == expected && attr(root, "xmlns").unwrap_or("").is_empty() {
+        return Ok(vec![root]);
+    }
+    let packaging = if name == expected {
+        attr(root, "xmlns") == Some(NS)
+    } else {
+        let Some((prefix, local_name)) = name.split_once(':') else { return Ok(Vec::new()); };
+        local_name == expected && attr(root, &format!("xmlns:{prefix}")) == Some(NS)
+    };
+    if !packaging {
+        return Ok(Vec::new());
+    }
+    let mut records = Vec::new();
+    for child in children(root) {
+        if matches!(child, XmlNode::Element { name, .. } if name == expected)
+            && attr(child, "xmlns").or_else(|| attr(root, "xmlns")).unwrap_or("").is_empty()
+        {
+            if records.len() >= MAX_INTERCHANGE_ITEMS { return Err("layout.idml.node-limit".into()); }
+            records.push(child);
+        }
+    }
+    Ok(records)
+}
+fn single_part_record<'a>(root: &'a XmlNode, name: &str, error: &str) -> Result<&'a XmlNode, String> {
+    let records = part_records(root, name)?;
+    match records.as_slice() {
+        [record] => Ok(*record),
+        _ => Err(error.into()),
+    }
+}
 fn text(node: &XmlNode, out: &mut String) {
     match node { XmlNode::Text { text } | XmlNode::CData { text } => out.push_str(text), _ => for child in children(node) { text(child, out); } }
 }
@@ -223,7 +256,9 @@ pub(super) fn import(bytes: &[u8], name: &str, control: &mut InterchangeControl<
     for node in nodes(&root,"Story")? { if let Some(src)=attr(node,"src") {refs.push(src.to_string());} }
     for src in refs {
         let part=read_xml(&entries,&src)?;
-        for story in nodes(&part,"Story")? {
+        let stories = part_records(&part, "Story")?;
+        if stories.is_empty() { return Err("layout.idml.story".into()); }
+        for story in stories {
             let id=identity(story)?; if !seen.insert(format!("story:{id}")){return Err("layout.idml.duplicate-identity".into());}
             let imported=text_styles::import_story(story,&mut doc,&colors)?;doc.stories.push(imported);
         }
@@ -234,7 +269,7 @@ pub(super) fn import(bytes: &[u8], name: &str, control: &mut InterchangeControl<
         checkpoint(control,si,spreads.len())?;
         let src=attr(reference,"src").ok_or("layout.idml.spread-reference")?;
         let part=read_xml(&entries,src)?;
-        let spread=nodes(&part,"Spread")?.first().copied().ok_or("layout.idml.spread")?;
+        let spread=single_part_record(&part,"Spread","layout.idml.spread")?;
         let spread_id=identity(spread)?;let mut page_ids=Vec::new();let first=doc.pages.len();let mut origins=Vec::new();let mut recovered_overrides=HashSet::new();
         for source in nodes(spread,"Page")? {
             if doc.pages.len()>=MAX_INTERCHANGE_PAGES{return Err("layout.interchange.page-limit".into());}

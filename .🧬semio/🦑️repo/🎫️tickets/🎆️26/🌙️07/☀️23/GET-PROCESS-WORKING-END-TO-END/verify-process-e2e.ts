@@ -5,7 +5,7 @@ import { chromium } from "playwright";
 import { writeFileSync } from "node:fs";
 
 const baseUrl = process.env.PROCESS_URL ?? "http://127.0.0.1:6022/";
-const outDir = "/Users/ueli/Documents/semio/.repo/🎫️/26/07/23/GET-PROCESS-WORKING-END-TO-END";
+const outDir = process.env.OUT_DIR ?? "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️07/☀️23/GET-PROCESS-WORKING-END-TO-END/🗑️generated";
 
 async function main(): Promise<void> {
   const browser = await chromium.launch({
@@ -14,6 +14,8 @@ async function main(): Promise<void> {
   });
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
   const pageErrors: string[] = [];
+  const moduleReqs: { url: string; status: number }[] = [];
+  page.on("response", (r) => { if (r.url().includes("plugin-modules")) moduleReqs.push({ url: r.url().slice(0, 140), status: r.status() }); });
   const consoleMsgs: { type: string; text: string }[] = [];
   page.on("pageerror", (err) => pageErrors.push(String(err)));
   page.on("console", (msg) => {
@@ -26,6 +28,7 @@ async function main(): Promise<void> {
   console.log("[DEBUG] goto", baseUrl);
   await page.goto(baseUrl, { waitUntil: "networkidle", timeout: 120_000 });
   await page.waitForTimeout(12_000);
+  console.log("[DEBUG] plugin-module requests", JSON.stringify(moduleReqs));
 
   const bodyText = await page.locator("body").innerText();
   const hasRenderError = /Render error|Renderfehler|Could not load|Unexpected token/i.test(bodyText);

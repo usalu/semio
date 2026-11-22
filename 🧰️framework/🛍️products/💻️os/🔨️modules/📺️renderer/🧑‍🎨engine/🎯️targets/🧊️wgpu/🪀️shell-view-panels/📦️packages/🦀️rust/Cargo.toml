@@ -22,11 +22,12 @@ workspace = true
 path = "../../🦀️.rs"
 
 [features]
-testkit = ["semio-renderer-wgpu-contracts/testkit", "semio-renderer-wgpu-shell-async/testkit", "semio-renderer-wgpu-shell-chrome-state/testkit", "semio-renderer-wgpu-shell-docs/testkit", "semio-renderer-wgpu-shell-history/testkit", "semio-renderer-wgpu-shell-input/testkit", "semio-renderer-wgpu-shell-pointer/testkit", "semio-renderer-wgpu-shell-prefs/testkit", "semio-renderer-wgpu-shell-session/testkit", "semio-renderer-wgpu-shell-state/testkit", "semio-renderer-wgpu-shell-surfaces/testkit", "semio-renderer-wgpu-shell-sync/testkit", "semio-renderer-wgpu-shell-view-chrome/testkit", "semio-renderer-wgpu-shell-view-overlays/testkit", "semio-renderer-wgpu-shell-window-actions/testkit", "semio-renderer-wgpu-shell-windows/testkit", "semio-renderer-wgpu-ui-engine/testkit", "semio-renderer-wgpu-ui-engine-dump/testkit"]
+testkit = ["semio-renderer-wgpu-contracts/testkit", "semio-renderer-wgpu-shell-async/testkit", "semio-renderer-wgpu-shell-chrome-state/testkit", "semio-renderer-wgpu-shell-docs/testkit", "semio-renderer-wgpu-shell-history/testkit", "semio-renderer-wgpu-shell-input/testkit", "semio-renderer-wgpu-shell-pointer/testkit", "semio-renderer-wgpu-shell-prefs/testkit", "semio-renderer-wgpu-shell-session/testkit", "semio-renderer-wgpu-shell-state/testkit", "semio-renderer-wgpu-shell-surfaces/testkit", "semio-renderer-wgpu-shell-sync/testkit", "semio-renderer-wgpu-shell-view-chrome/testkit", "semio-renderer-wgpu-shell-view-chrome-overlays/testkit", "semio-renderer-wgpu-shell-view-overlays/testkit", "semio-renderer-wgpu-shell-window-actions/testkit", "semio-renderer-wgpu-shell-windows/testkit", "semio-renderer-wgpu-ui-engine/testkit", "semio-renderer-wgpu-ui-engine-dump/testkit"]
 
 [dependencies]
 semio-renderer-wgpu-contracts = { path = "../../../🤝️contracts/📦️packages/🦀️rust" }
 semio-renderer-wgpu-dock = { path = "../../../🛰️dock/📦️packages/🦀️rust" }
+semio-renderer-wgpu-engine-board = { path = "../../../🎲️engine-board/📦️packages/🦀️rust" }
 semio-renderer-wgpu-host-base = { path = "../../../🏛️host-base/📦️packages/🦀️rust" }
 semio-renderer-wgpu-hub-workspace = { path = "../../../🏘️hub-workspace/📦️packages/🦀️rust" }
 semio-renderer-wgpu-icon-host = { path = "../../../💠️icon-host/📦️packages/🦀️rust" }
@@ -50,6 +51,7 @@ semio-renderer-wgpu-shell-state = { path = "../../../🐙️shell-state/📦️p
 semio-renderer-wgpu-shell-surfaces = { path = "../../../🫧️shell-surfaces/📦️packages/🦀️rust" }
 semio-renderer-wgpu-shell-sync = { path = "../../../🔃️shell-sync/📦️packages/🦀️rust" }
 semio-renderer-wgpu-shell-view-chrome = { path = "../../../🍱️shell-view-chrome/📦️packages/🦀️rust" }
+semio-renderer-wgpu-shell-view-chrome-overlays = { path = "../../../🪧️shell-view-chrome-overlays/📦️packages/🦀️rust" }
 semio-renderer-wgpu-shell-view-overlays = { path = "../../../🗨️shell-view-overlays/📦️packages/🦀️rust" }
 semio-renderer-wgpu-shell-view-paint = { path = "../../../🖍️shell-view-paint/📦️packages/🦀️rust" }
 semio-renderer-wgpu-shell-vocab = { path = "../../../📖️shell-vocab/📦️packages/🦀️rust" }

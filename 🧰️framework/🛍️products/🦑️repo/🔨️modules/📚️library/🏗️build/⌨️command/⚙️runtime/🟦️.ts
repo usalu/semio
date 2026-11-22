@@ -46,8 +46,9 @@ async function runOwnedBuildInLeasesV1(root:string,args:readonly string[],parent
       const {readRepositoryCargoLaunchV1,launchRepositoryCargoV1}=await import("../../../🏃️process/🦀️cargo/🚪️launcher/🟦️.ts");
       process.exitCode=await launchRepositoryCargoV1(invocation,createIssuedResourceControlV1(invocation,"cargo:build-entry",0),root,readRepositoryCargoLaunchV1(resolved.args.slice(1),process.env),process.cwd(),process.env,{maximumMilliseconds:0,output:"stream"});return;
     }
-    const sealedProject=command==="show"&&resolved.args[1]==="project"&&selected.graphPolicy==="current"&&process.env.SEMIO_BUILD_REUSE_GRAPH!=="true"?resolved.args[2]:undefined;
-    if(sealedProject&&(await import("../../🕸️graph/📍️pin/🟦️.ts")).boundGenerationPinV1()===undefined){await runBuildGraphQueryV1(root,resolved.args,invocation,phaseControl,"current",sealedProject);return;}
+    const subject=resolved.args[1],sealedProject=command==="show"&&subject==="project"?resolved.args[2]:undefined;
+    const sealedQuery=command==="show"?Boolean(sealedProject)||subject==="projects"||subject==="targets":command==="graph"&&process.env.SEMIO_BUILD_GRAPH_VERIFY!=="1";
+    if(sealedQuery&&selected.graphPolicy==="current"&&process.env.SEMIO_BUILD_REUSE_GRAPH!=="true"&&(await import("../../🕸️graph/📍️pin/🟦️.ts")).boundGenerationPinV1()===undefined){await runBuildGraphQueryV1(root,resolved.args,invocation,phaseControl,"current",sealedProject);return;}
     await ensureTaskDependenciesV1(root,phaseControl,{capabilities,selected,resolved,original,ancestor,invocation,previous});
     if(command==="remote-execution"){
       const {runRemoteExecutionCommandV1}=await import("../../🌐️remote-execution/⌨️command/🟦️.ts");

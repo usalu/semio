@@ -36,7 +36,7 @@ fn close(cursor: &mut Puzzle2dMoveNodeInverseCursor) {
     test_source_custody::close_cursor(cursor,1_000_000,|cursor|{
         let copy=cursor.next_close_copy_byte_demand().unwrap();
         (copy,cursor.next_close_capacity_byte_demand(copy).unwrap(),cursor.next_close_release_byte_demand().unwrap(),cursor.next_close_depth_demand().unwrap())
-    },|cursor,grant|cursor.close_step(grant),|cursor|cursor.terminal_is_empty());
+    },|cursor,effect|cursor.close_step(effect),|cursor|cursor.terminal_is_empty());
 }
 
 fn retire(inverse: PagedList<Puzzle2dMutation, {usize::MAX}>) {
@@ -47,7 +47,7 @@ fn retire(inverse: PagedList<Puzzle2dMutation, {usize::MAX}>) {
     for turn in 0..1_000_000 {
         if owner.terminal_is_empty() { return; }
         let permit = grant(turn);
-        observed(permit, || owner.step(permit));
+        observed(permit, || test_source_custody::close_turn(permit, |effect| owner.step(4096, effect)));
     }
     panic!("returned inverse did not retire its native paged owner");
 }
@@ -68,11 +68,11 @@ fn history_edit_puzzle2d_owned_move_inverse_preserves_literal_ids_and_controlled
         let mut mutation = test_source_custody::admit();
         let (mut cursor, allocation) = semio_framework_trace::observe_heap_allocations_on_this_thread(Puzzle2dMoveNodeInverseCursor::default);
         assert!(!allocation.overflowed);assert_eq!(allocation.requested_bytes,0);assert_eq!(allocation.released_bytes,0);
-        assert_eq!(observed(RetainedCloneGrant::default(), || cursor.advance(source.borrow(&snapshot), mutation.borrow(&payload), RetainedCloneGrant::default())).progress(), RetainedCloneProgress::default());
+        assert_eq!(observed(RetainedCloneGrant::default(), || test_source_custody::run(RetainedCloneGrant::default(), |effect| cursor.advance(source.borrow(&snapshot), mutation.borrow(&payload), 4096, effect))).progress(), RetainedCloneProgress::default());
         let mut complete = false;
         for turn in 0..1_000_000 {
             let permit = grant(turn);
-            let step = observed(permit, || cursor.advance(source.borrow(&snapshot), mutation.borrow(&payload), permit));
+            let step = observed(permit, || test_source_custody::run(permit, |effect| cursor.advance(source.borrow(&snapshot), mutation.borrow(&payload), 4096, effect)));
             if matches!(step, RetainedCloneStep::Complete(_)) { complete = true; break; }
         }
         assert!(complete, "owned inverse did not complete");
@@ -94,7 +94,7 @@ fn history_edit_puzzle2d_owned_move_inverse_preserves_literal_ids_and_controlled
             for turn in 0..1_000_000 {
                 let copying = cancelled.phase == 2;
                 let permit = grant(turn);
-                let step = observed(permit, || cancelled.advance(source.borrow(&snapshot), mutation.borrow(&payload), permit));
+                let step = observed(permit, || test_source_custody::run(permit, |effect| cancelled.advance(source.borrow(&snapshot), mutation.borrow(&payload), 4096, effect)));
                 assert!(!matches!(step, RetainedCloneStep::Complete(_)));
                 if copying { copied += step.progress().copied_bytes; }
                 if copied >= corpus["inverseOwnership"]["cancelAfterBodyBytes"].as_u64().unwrap() as usize { break; }

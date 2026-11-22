@@ -1,0 +1,15 @@
+
+test("a retired path inside a control area is carved out of it: accepted only strictly inside a control area of its root, classified retired, and the rest of the area stays its own",()=>{
+ const carved=ledger.retirements.find(row=>row.within!==undefined)!;
+ expect(carved.directory).toBe("f/cache-server");
+ expect(classifyCachePathV1(ledger,"native","f/cache-server/v1/main/ab/cd").kind).toBe("retired");
+ expect(classifyCachePathV1(ledger,"native","f/boot/beat.json")).toMatchObject({kind:"area",id:"fleet-state"});
+ const without=clone(policy);without.retirements=without.retirements.map(row=>{const{within:_,...rest}=row as Record<string,unknown>;return rest;}) as never;
+ expect(()=>readCacheLedgerV1(without),"without within it overlaps the control area").toThrow();
+ const elsewhere=clone(policy);(elsewhere.retirements.find(row=>(row as {within?:string}).within!==undefined) as {within:string}).within="tools";
+ expect(()=>readCacheLedgerV1(elsewhere),"within names a partition, not a control").toThrow();
+ const wholeArea=clone(policy);(wholeArea.retirements.find(row=>(row as {within?:string}).within!==undefined) as {directory:string}).directory="f";
+ expect(()=>readCacheLedgerV1(wholeArea),"the area itself cannot be retired").toThrow();
+ const twice=clone(policy);twice.retirements.push(clone(twice.retirements.find(row=>(row as {within?:string}).within!==undefined)!) as never);
+ expect(()=>readCacheLedgerV1(twice),"the same carved-out path twice").toThrow();
+});

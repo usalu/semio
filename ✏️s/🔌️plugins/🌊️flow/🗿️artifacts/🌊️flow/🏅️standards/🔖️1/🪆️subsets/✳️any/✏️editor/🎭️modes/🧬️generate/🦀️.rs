@@ -3,7 +3,7 @@
 
 use crate::editor::flow::editor_vocabulary::{FLOW_PLAY_WINDOW_GENERATE_FORM, FLOW_PLAY_WINDOW_GENERATE_PREVIEW, FLOW_PLAY_WINDOW_GENERATIONS};
 use crate::editor::flow::modes::generate::windows::{form, generations, preview};
-use semio_plugin::create_default_layout;
+use semio_plugin::{create_default_layout, Axis};
 use semio_plugin::create_named_layout;
 use semio_plugin::ActionKind;
 use semio_plugin::CommandDefinition;
@@ -43,11 +43,9 @@ pub fn layout() -> NamedLayout {
         FLOW_PLAY_LAYOUT_GENERATE,
         "Generate",
         create_default_layout(
-            &[FLOW_PLAY_WINDOW_GENERATIONS.into(), FLOW_PLAY_WINDOW_GENERATE_FORM.into(), FLOW_PLAY_WINDOW_GENERATE_PREVIEW.into()],
-            "row",
-            Some(&[22.0, 43.0, 35.0]),
-            Some(&["Generations".into(), "Form".into(), "Preview".into()]),
-        ),
+            &[FLOW_PLAY_WINDOW_GENERATIONS.into(), FLOW_PLAY_WINDOW_GENERATE_FORM.into(), FLOW_PLAY_WINDOW_GENERATE_PREVIEW.into()], Axis::Horizontal,
+            Some(&[0.22, 0.43, 0.35]),
+            Some(&["Generations".into(), "Form".into(), "Preview".into()])),
         "builtin",
         Some("sparkles".into()),
         None,

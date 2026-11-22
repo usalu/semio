@@ -1,0 +1,70 @@
+{
+ "schema": "semio.document-archive.reopen-route/v1",
+ "contiguousMaximum": 4194304,
+ "authority": 16777216,
+ "cases": [
+  {
+   "name": "empty",
+   "extent": 0,
+   "first": 1,
+   "last": 0,
+   "route": "refused"
+  },
+  {
+   "name": "unknown version",
+   "extent": 1000,
+   "first": 2,
+   "last": 0,
+   "route": "refused"
+  },
+  {
+   "name": "small archive",
+   "extent": 1000,
+   "first": 1,
+   "last": 0,
+   "route": "contiguous"
+  },
+  {
+   "name": "small archive with members",
+   "extent": 1000,
+   "first": 1,
+   "last": 5,
+   "route": "contiguous"
+  },
+  {
+   "name": "exactly the contiguous ceiling",
+   "extent": 4194304,
+   "first": 1,
+   "last": 5,
+   "route": "contiguous"
+  },
+  {
+   "name": "one byte above, memberless",
+   "extent": 4194305,
+   "first": 1,
+   "last": 0,
+   "route": "paged"
+  },
+  {
+   "name": "large with members",
+   "extent": 4194305,
+   "first": 1,
+   "last": 3,
+   "route": "refused"
+  },
+  {
+   "name": "exact persisted authority, memberless",
+   "extent": 16777216,
+   "first": 1,
+   "last": 0,
+   "route": "paged"
+  },
+  {
+   "name": "above the persisted authority",
+   "extent": 16777217,
+   "first": 1,
+   "last": 0,
+   "route": "refused"
+  }
+ ]
+}

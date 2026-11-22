@@ -8,11 +8,12 @@ import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 export type FleetArgumentsV1=Readonly<{json:boolean;limit:number}>;
 const DEFAULT_LIMIT=20,both=(key:string,values:Readonly<Record<string,string|number>>={}):string=>fleetTextV1("en",key,values)+"\n"+fleetTextV1("de",key,values);
 
-/** 🧷️ Reads the options of `repo fleet status`; every unknown or repeated option is refused in both languages. */
+/** 🧷️ Reads the options of `repo fleet status`; the global `--lang <en|de>` / `--lang=<en|de>` is consumed here as it is for the language resolution (`--language` is no flag of `repo`), every unknown or repeated option is refused in both languages. */
 export function fleetArgumentsV1(args:readonly string[]):FleetArgumentsV1{
  if(args[0]!=="status")throw Error(both("error.syntax"));
- let json=false,limit=DEFAULT_LIMIT;const seen=new Set<string>();
- for(const argument of args.slice(1)){
+ let json=false,limit=DEFAULT_LIMIT;const seen=new Set<string>(),rest=args.slice(1);
+ for(let at=0;at<rest.length;at++)if(rest[at]==="--lang")rest.splice(at,2);else if(rest[at]!.startsWith("--lang="))rest.splice(at--,1);
+ for(const argument of rest){
   const name=argument.startsWith("--limit=")?"--limit":argument;
   if(seen.has(name)||name!=="--json"&&name!=="--limit")throw Error(both("error.syntax"));
   seen.add(name);

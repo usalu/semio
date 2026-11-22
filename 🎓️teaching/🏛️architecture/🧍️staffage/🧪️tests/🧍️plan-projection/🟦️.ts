@@ -29,10 +29,10 @@ type Vectors = {
   catalog: {
     assets: Record<string, string>;
     scales: number[];
-    armSpanM: { min: number; max: number; assets: string[]; pose: Record<string, string> };
+    armSpanM: { min: number; max: number; assets: string[]; bones: string[]; pose: Record<string, string> };
     car: { pose: string; lengthM: Extent2; widthM: Extent2 };
     stride: { asset: string; from: string; to: string; shape: string; minTravelM: number };
-    lean: { asset: string; from: string; to: string; shape: string; minTravelM: number };
+    lean: { asset: string; from: string; to: string; bone: string; minTravelM: number };
   };
   casts: { manifest: unknown; depthM: Record<string, { min: number; max: number }> };
 };
@@ -137,13 +137,13 @@ describe("🧍️ handcrafted plan drawings of the catalog", () => {
     });
 
   it("gives a person a plan arm span of about half a metre at every scale that draws arms", () => {
-    const { min, max, assets, pose } = vectors.catalog.armSpanM;
+    const { min, max, assets, pose, bones } = vectors.catalog.armSpanM;
     const measured: Record<string, { span: number; rings: number[][][] }> = {};
     for (const id of assets) {
       const asset = catalogAsset(id);
       for (const scale of [50, 100]) {
-        const arms = Object.values(planOf(asset, pose[id]!, scale)).filter((evaluated) => evaluated.shape.id.startsWith("upper-arm"));
-        expect(arms.length, `${id} 1:${scale}`).toBe(2);
+        const arms = Object.values(planOf(asset, pose[id]!, scale)).filter((evaluated) => bones.includes(evaluated.shape.bone));
+        expect([...new Set(arms.map((evaluated) => evaluated.shape.bone))].sort(), `${id} 1:${scale}: both upper arms are drawn`).toEqual([...bones].sort());
         const span = Math.max(...arms.map((a) => extentOf(a).maxY)) - Math.min(...arms.map((a) => extentOf(a).minY));
         expect(span, `${id} 1:${scale}`).toBeGreaterThan(min);
         expect(span, `${id} 1:${scale}`).toBeLessThan(max);
@@ -196,10 +196,15 @@ describe("🧍️ handcrafted plan drawings of the catalog", () => {
   });
 
   it("moves the seated worker's shoulders in plan when leaning back", () => {
-    const { asset: id, from, to, shape, minTravelM } = vectors.catalog.lean;
+    const { asset: id, from, to, bone, minTravelM } = vectors.catalog.lean;
     const asset = catalogAsset(id);
-    const before = extentOf(planOf(asset, from, 50)[shape]!);
-    const after = extentOf(planOf(asset, to, 50)[shape]!);
+    const shoulders = (pose: string) => {
+      const drawn = Object.values(planOf(asset, pose, 50)).filter((evaluated) => evaluated.shape.bone === bone);
+      expect(drawn.length, `${pose}: plan shapes on ${bone}`).toBeGreaterThan(0);
+      return extentOf({ ...drawn[0]!, rings: drawn.flatMap((evaluated) => evaluated.rings) });
+    };
+    const before = shoulders(from);
+    const after = shoulders(to);
     expect(before.minX - after.minX).toBeGreaterThan(minTravelM);
     expect(after.minX).toBeLessThan(before.minX);
   });

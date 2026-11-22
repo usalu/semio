@@ -5,6 +5,9 @@ use crate::{part_1, part_5};
 use semio_s_plugin_norm_compliance::design_case::DesignCase;
 use semio_s_plugin_norm_compliance::{CheckStatus, QuantityKind};
 
+#[path = "🧱️retrofit/🦀️.rs"]
+pub mod retrofit;
+
 /// 📏️ One verification row: what is demanded, what is available and the worked steps.
 pub struct Row {
     pub key: &'static str,
@@ -259,6 +262,186 @@ pub fn pipe_wave(q: &Inputs<'_>) -> Outcome {
         Row::new("compression", "Upper bound on compressive strain", "Obere Grenze der Druckdehnung", QuantityKind::Dimensionless,
             response.envelope_strain, response.compressive_strain_limit, steps),
     ])
+}
+
+fn pipe_basis(en: &'static str, de: &'static str) -> Row {
+    Row::new("basis", en, de, QuantityKind::Dimensionless, 0.0, 1.0, String::new())
+        .status(CheckStatus::UnverifiedBasis)
+}
+
+/// 🌍️ Verify the project response of an affected welded pipeline segment under §6.5.3(1)P.
+pub fn pipe_deformation(q: &Inputs<'_>) -> Outcome {
+    use crate::part_4::welded_pipe_strain_limits;
+    let evidence = || {
+        if q.t("pipe_deformation_basis").ok()? != "confirmed" {
+            return None;
+        }
+        let limits = welded_pipe_strain_limits(
+            q.n("pipe_deformation_radius").ok()?,
+            q.n("pipe_deformation_thickness").ok()?,
+        )?;
+        let tension = q.n("pipe_deformation_tension").ok()?;
+        let compression = q.n("pipe_deformation_compression").ok()?;
+        let global = q.n("pipe_deformation_global").ok()?;
+        [tension, compression, global].into_iter().all(|value| value.is_finite() && value >= 0.0)
+            .then_some((tension, compression, global, limits))
+    };
+    let Some((tension, compression, global, limits)) = evidence() else {
+        return Ok(vec![pipe_basis("Document the affected segment, ground movement analysis and global stability evidence",
+            "Betroffenen Abschnitt, Bodenbewegungsberechnung und Nachweis der globalen Stabilität dokumentieren")]);
+    };
+    Ok(vec![
+        Row::new("tension", "Maximum combined tensile strain", "Größte kombinierte Zugdehnung",
+            QuantityKind::Dimensionless, tension, limits.tensile,
+            format!("εt = {tension:.6}, εt,lim = {:.6}", limits.tensile)),
+        Row::new("local-buckling", "Local buckling under compression", "Lokales Knicken bei Druck",
+            QuantityKind::Dimensionless, compression, limits.compressive,
+            format!("|εc| = {compression:.6}, εc,lim = min(0.01, 0.20 t/r) = {:.6}", limits.compressive)),
+        Row::new("global-buckling", "Global buckling from the project analysis", "Globales Knicken nach Projektberechnung",
+            QuantityKind::Dimensionless, global, 1.0, format!("Ed/Rd = {global:.6}")),
+    ])
+}
+
+/// 🧱️ Verify combined seismic strain limits and the project leak-tightness criterion under §6.5.2(3)P–(4)P.
+pub fn pipe_concrete(q: &Inputs<'_>) -> Outcome {
+    let missing = || vec![pipe_basis("Document the applicable EN 1992 strain limits and the leak-tightness evidence",
+        "Anwendbare Dehnungsgrenzen nach EN 1992 und Dichtheitsnachweis dokumentieren")];
+    if q.t("pipe_concrete_basis").ok() != Some("confirmed") {
+        return Ok(missing());
+    }
+    let mut rows = Vec::with_capacity(4);
+    for (key, en, de, action, limit) in [
+        ("concrete-compression", "Concrete compression", "Betondruckdehnung", "pipe_concrete_compression", "pipe_concrete_compression_limit"),
+        ("steel-tension", "Reinforcement tension", "Bewehrungszugdehnung", "pipe_steel_tension", "pipe_steel_tension_limit"),
+        ("steel-compression", "Reinforcement compression", "Bewehrungsdruckdehnung", "pipe_steel_compression", "pipe_steel_compression_limit"),
+        ("leak-tightness", "Reinforcement tension under damage limitation", "Bewehrungszugdehnung unter Schadensbegrenzung", "pipe_dls_steel_tension", "pipe_dls_steel_limit"),
+    ] {
+        let (Ok(demand), Ok(capacity)) = (q.n(action), q.n(limit)) else { return Ok(missing()); };
+        if !demand.is_finite() || demand < 0.0 || !capacity.is_finite() || capacity <= 0.0 {
+            return Ok(missing());
+        }
+        rows.push(Row::new(key, en, de, QuantityKind::Dimensionless, demand, capacity,
+            format!("|εEd| = {demand:.6}, |εlim| = {capacity:.6}")));
+    }
+    Ok(rows)
+}
+
+/// 🔗️ Verify the documented damage tolerance for a coincident axial and rotational joint demand under §6.5.2(5)P.
+pub fn pipe_joint(q: &Inputs<'_>) -> Outcome {
+    let missing = || vec![pipe_basis("Document the joint rotation limit for the coincident axial displacement and applicable damage criterion",
+        "Verdrehungsgrenze der Rohrverbindung für die gleichzeitig auftretende Axialverschiebung und das geltende Schadenskriterium dokumentieren")];
+    if q.t("pipe_joint_basis").ok() != Some("confirmed") {
+        return Ok(missing());
+    }
+    let (Ok(displacement), Ok(rotation), Ok(capacity)) =
+        (q.n("pipe_joint_displacement"), q.n("pipe_joint_rotation"), q.n("pipe_joint_rotation_limit"))
+        else { return Ok(missing()); };
+    if !displacement.is_finite() || !rotation.is_finite() || rotation < 0.0 || !capacity.is_finite() || capacity <= 0.0 {
+        return Ok(missing());
+    }
+    Ok(vec![Row::new("combined-demand", "Rotation at the governing axial displacement", "Verdrehung bei maßgebender Axialverschiebung",
+        QuantityKind::Dimensionless, rotation, capacity,
+        format!("ΔEd = {displacement:.6} m, |θEd| = {rotation:.6} rad, θlim(ΔEd) = {capacity:.6} rad"))])
+}
+
+/// 🛤️ Review documented pipe protection extents against the design measures in EN 1998-4:2006 §6.6(6) and (8).
+pub fn pipe_fault_crossing(q: &Inputs<'_>) -> Outcome {
+    if q.t("pipe_fault_basis").ok() != Some("confirmed") {
+        return Ok(vec![pipe_basis("Identify the fault crossing and document the design measures",
+            "Verwerfungsquerung bestimmen und die konstruktiven Maßnahmen dokumentieren")]);
+    }
+
+    let assess = |key, en, de, input, distance, informational| {
+        let mut row = match q.n(input) {
+            Ok(length) if length.is_finite() && length >= 0.0 => {
+                if informational {
+                    Row::new(key, en, de, QuantityKind::Length, length, distance,
+                        format!("L = {length:.2} m, Lref ≈ {distance:.0} m")).status(CheckStatus::Info)
+                } else {
+                    Row::new(key, en, de, QuantityKind::Length, distance, length,
+                        format!("Lref = {distance:.0} m, L = {length:.2} m"))
+                }
+            }
+            _ => pipe_basis(en, de),
+        };
+        row.key = key;
+        row
+    };
+    let mut rows = vec![
+        assess("wall-a", "Thick-walled pipe on side A", "Dickwandiges Rohr auf Seite A", "pipe_fault_wall_a", 50.0, false),
+        assess("wall-b", "Thick-walled pipe on side B", "Dickwandiges Rohr auf Seite B", "pipe_fault_wall_b", 50.0, false),
+        assess("backfill-a", "Controlled backfill on side A", "Kontrollierte Verfüllung auf Seite A", "pipe_fault_backfill_a", 50.0, false),
+        assess("backfill-b", "Controlled backfill on side B", "Kontrollierte Verfüllung auf Seite B", "pipe_fault_backfill_b", 50.0, false),
+    ];
+    match q.t("pipe_fault_soil").ok() {
+        Some("different") => rows.extend([
+            assess("trench-a", "Widened trench on side A", "Verbreiterter Graben auf Seite A", "pipe_fault_trench_a", 15.0, true),
+            assess("trench-b", "Widened trench on side B", "Verbreiterter Graben auf Seite B", "pipe_fault_trench_b", 15.0, true),
+        ]),
+        Some("suitable") => {}
+        _ => {
+            let mut row = pipe_basis("Document the existing soil and whether the widened-trench recommendation applies",
+                "Vorhandenen Boden und Anwendbarkeit der Empfehlung zur Grabenverbreiterung dokumentieren");
+            row.key = "soil";
+            rows.push(row);
+        }
+    }
+    Ok(rows)
+}
+
+/// 🌾️ Apply the horizontal particulate pressure model to a documented silo wall plane.
+pub fn silo_wall_pressure(q: &Inputs<'_>) -> Outcome {
+    use crate::part_4::{SiloPressure, SiloPressureInput, SiloWall, SiloWallSection, granular_silo_pressure};
+
+    let pressure = || {
+        if q.t("silo_pressure_basis").ok()? != "confirmed" {
+            return None;
+        }
+        let wall = match q.t("silo_pressure_wall").ok()? {
+            "circular" => SiloWall::Circular { azimuth_deg: q.n("silo_pressure_azimuth").ok()? },
+            "leeward" => SiloWall::Leeward,
+            "windward" => SiloWall::Windward,
+            "parallel" => SiloWall::Parallel,
+            _ => return None,
+        };
+        let section = match q.t("silo_pressure_section").ok()? {
+            "flat-bottom" => SiloWallSection::VerticalFlatBottom,
+            "hopper" => SiloWallSection::Hopper { inclination_deg: q.n("silo_pressure_slope").ok()? },
+            _ => return None,
+        };
+        granular_silo_pressure(SiloPressureInput {
+            fill_height_m: q.n("silo_pressure_fill").ok()?,
+            width_m: q.n("silo_pressure_width").ok()?,
+            height_m: q.n("silo_pressure_height").ok()?,
+            acceleration_ratio: q.n("silo_pressure_acceleration").ok()?,
+            bulk_weight_n_m3: q.n("silo_pressure_weight").ok()?,
+            static_pressure_pa: q.n("silo_pressure_static").ok()?,
+            wall,
+            section,
+        })
+    };
+    let info = |key, en, de, value, steps| Row::new(key, en, de, QuantityKind::Pressure, value, 0.0, steps).status(CheckStatus::Info);
+    let unresolved = |key, en, de, steps| Row::new(key, en, de, QuantityKind::Pressure, 0.0, 0.0, steps).status(CheckStatus::UnverifiedBasis);
+    let rows = match pressure() {
+        Some(SiloPressure::Applicable { reference_pa, additional_pa, total_pa }) => vec![
+            info("reference", "Horizontal reference pressure", "Horizontaldruck-Bezugswert", reference_pa,
+                format!("Δp₀ = {reference_pa:.2} Pa")),
+            info("increment", "Signed seismic pressure increment", "Vorzeichenbehafteter seismischer Druckanteil", additional_pa,
+                format!("Δp = {additional_pa:.2} Pa")),
+            info("total", "Combined static and seismic pressure", "Kombinierter statischer und seismischer Druck", total_pa,
+                format!("p = pₛₜₐₜ + Δp = {total_pa:.2} Pa")),
+        ],
+        Some(SiloPressure::Redistribution { reference_pa }) => vec![
+            unresolved("redistribution", "Redistribute pressure to avoid suction and preserve the horizontal resultant",
+                "Druck zur Vermeidung von Sog bei unveränderter horizontaler Resultierenden umlagern",
+                format!("Δp₀ = {reference_pa:.2} Pa")),
+        ],
+        None => vec![
+            unresolved("basis", "Document geometry, uniform static pressure and response acceleration for the wall plane",
+                "Geometrie, gleichmäßigen statischen Druck und Antwortbeschleunigung in der Wandebene dokumentieren", String::new()),
+        ],
+    };
+    Ok(rows)
 }
 
 /// 🌉️ EN 1998-2:2005+A2:2011 §3.3 Set A per support in one direction.

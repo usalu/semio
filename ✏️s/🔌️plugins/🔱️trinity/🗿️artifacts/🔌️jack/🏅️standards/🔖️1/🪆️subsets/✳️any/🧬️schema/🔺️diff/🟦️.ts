@@ -1,12 +1,11 @@
 /** 🔺️ Jack sparse durable delta with whole child-handle replacement. */
 import { parseArtifactChild, type ArtifactChild } from "@semio-tech/framework/schema/artifact-reference";
-import { parseCamera, parseManifest, type Camera, type Manifest } from "../🟦️.ts";
+import { parseCamera, type Camera } from "../🟦️.ts";
 
 export interface JackDiff {
   /** 🔄️ @state artifact */ schema: string | null;
   /** ✏️ @state artifact */ name: string | null;
-  /** 📜️ @state artifact — a missing key leaves the id unchanged, `null` clears it */ manifestId?: string | null;
-  /** 🧾️ @state artifact */ manifest: Manifest | null;
+  /** 📜️ @state artifact */ manifestId: string | null;
   /** 📷️ @state artifact */ camera: Camera | null;
   /** 📄️ @state artifact @child capability=s.trinity.jack.graph */ content: ArtifactChild | null;
   /** 🌳️ @state artifact — a missing key leaves the id unchanged, `null` clears it */ rootNodeId?: string | null;
@@ -22,14 +21,13 @@ const nullableString = (value: unknown, at: string): string | null => {
 export function parseJackDiff(value: unknown, at = "$"): JackDiff {
   if (value === null || typeof value !== "object" || Array.isArray(value)) throw new Error(`${at}: diff must be an object`);
   const row = value as Record<string, unknown>;
-  const required = ["schema", "name", "manifest", "camera", "content", "query"];
-  const optional = ["manifestId", "rootNodeId"];
+  const required = ["schema", "name", "manifestId", "camera", "content", "query"];
+  const optional = ["rootNodeId"];
   if (Object.keys(row).some((key) => !required.includes(key) && !optional.includes(key)) || required.some((key) => !Object.hasOwn(row, key))) throw new Error(`${at}: fields do not match JackDiff`);
   return {
     schema: nullableString(row.schema, `${at}.schema`),
     name: nullableString(row.name, `${at}.name`),
-    manifestId: row.manifestId === undefined ? undefined : nullableString(row.manifestId, `${at}.manifestId`),
-    manifest: row.manifest === null ? null : parseManifest(row.manifest, `${at}.manifest`),
+    manifestId: nullableString(row.manifestId, `${at}.manifestId`),
     camera: row.camera === null ? null : parseCamera(row.camera, `${at}.camera`),
     content: row.content === null ? null : parseArtifactChild(row.content),
     rootNodeId: row.rootNodeId === undefined ? undefined : nullableString(row.rootNodeId, `${at}.rootNodeId`),

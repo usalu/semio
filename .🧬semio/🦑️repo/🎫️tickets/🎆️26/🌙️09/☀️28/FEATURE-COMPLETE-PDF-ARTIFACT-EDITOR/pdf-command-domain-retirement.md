@@ -1,0 +1,5 @@
+# PDF Command Domain Retirement
+
+`original_failed_open_keeps_the_paid_domain_through_ingress_retirement` puts a decoded Open Artifact command and a prepaid `OriginalClosureFailure` into each real command-ingress slot. Zero fuel and zero accepted items leave the original resident without work or allocation. An actual close refusal is returned while the original stays resident. Paid turns close the command and return the same domain projection and all four message allocations. Each subsequent close step compares its physical heap activity with its receipt, and the final retirement shell is empty.
+
+The independent SQLite model reproduces the three outcome rows from the neutral Rust fixture. It passed with `repo tools exec bun --` and the ticket's `pdf-command-failure-sqlite.ts` input. Both modified Rust files passed nightly `rustc -Zparse-crate-root-only`. The native regression binary was deferred while the governed deployment build held disk capacity. The Rust law exercises the retirement driver shared by the live exchange and retiring slots. The full live exchange remains a browser verification step.

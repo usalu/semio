@@ -2,7 +2,7 @@
  *
  * 🧱️ Child module of {@link ../../🟦️.ts | useShellActions}; the planning is the pure {@link ../../../🎯️focus-window/🟦️.ts | focus-window} module the language-agnostic fixture drives. */
 import { type LocalizedLabel, type ShellLocale, windowLayoutWindowIdsV1 } from "@semio-tech/framework";
-import { insertWindowAtDropZone, type WindowLayoutNode } from "@semio-tech/ui-react";
+import { type WindowLayoutNode, dropWindow } from "@semio-tech/ui-layout";
 import { type InputCommitReceiptV1, type InputDiagnosticV1, type InputDraftDispositionV1, type InputOutcomeV1, type InputRefusalReasonV1, type ShellInputActionV1 } from "../../../🎯️input-ledger/🟦️.ts";
 import { focusWindowArgsV1, focusWindowBodyV1, focusWindowNoticeV1, planFocusWindowV1, windowKindIdsOfLayoutV1, type FocusWindowDeviceV1 } from "../../../🎯️focus-window/🟦️.ts";
 import { withLocalizedWindowKindLabels } from "../../../🧱️built-node-stores/🟦️.ts";
@@ -38,7 +38,7 @@ export function handleFocusWindowAction({ action, session, core, refuse, applied
   const notice = focusWindowNoticeV1(plan, nameOf, locale);
   core.showTransientNoticeRef.current(notice.text, notice.severity, notice.code);
   if (plan.outcome === "refused") return refuse("not-applied", `window kind ${plan.windowKindId} ${plan.reason === "undeclared" ? "is not declared by the app" : `is not part of the ${plan.device} layout`}`, true);
-  if (plan.outcome === "opened") core.dispatch({ type: "SET_SHELL_LAYOUT", value: (current) => insertWindowAtDropZone(current ?? base, plan.windowId, { kind: "root-split", side: "right" }) });
+  if (plan.outcome === "opened") core.dispatch({ type: "SET_SHELL_LAYOUT", value: (current) => dropWindow(current ?? base, { kind: "window", windowKindId: extraInstances.find((instance) => instance.id === plan.windowId)?.windowKindId ?? plan.windowId, ...(extraInstances.some((instance) => instance.id === plan.windowId) ? { instanceId: plan.windowId } : {}) }, { kind: "rootSplit", side: "right" }) });
   core.dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: plan.windowId });
   void focusWindowBodyV1(plan.windowId);
   return applied();

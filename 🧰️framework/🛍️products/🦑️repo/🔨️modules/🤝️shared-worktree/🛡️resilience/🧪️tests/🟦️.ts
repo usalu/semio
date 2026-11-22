@@ -1,13 +1,16 @@
-import {afterAll,expect,setDefaultTimeout,test} from "bun:test";
+import {afterAll,expect,setDefaultTimeout,spyOn,test} from "bun:test";
+import * as fsPromises from "node:fs/promises";
 import Ajv from "ajv";
 import {appendFileSync,chmodSync,mkdirSync,mkdtempSync,readFileSync,rmSync,statSync,writeFileSync,existsSync,readdirSync,openSync,writeSync,closeSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {dirname,join} from "node:path";
 import {testPythonV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
+import attestSchema from "../../🩺️attest/🧬️schema/🔣️.json" with {type:"json"};
+import replicaSchema from "../../🔁️replica/🧬️schema/🔣️.json" with {type:"json"};
 import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};
 import {codeDigestV1} from "../../🩺️attest/🟦️.ts";
-import {codeDirectoryV1,createFailuresV1,noteRefusedPathV1,NO_REFUSED_PATHS_V1,readRefusedPathsV1,refusedPathsPathV1,REFUSED_PATH_LIMIT_V1,writeRefusedPathsV1,createStoreGuardV1,healthPathV1,importClosureV1,listCodeSnapshotsV1,moduleSourcesV1,pruneCodeSnapshotsV1,pruneLostV1,readHealthV1,requireResilienceShapeV1,restartJitterMillisecondsV1,rotateLogV1,runSelfCheckV1,sealCodeV1,selfCheckV1,StoreStalledV1,textsProblemV1,verifyCodeSnapshotV1,writeHealthV1,type StoreStateV1} from "../🟦️.ts";
+import {codeDirectoryV1,createFailuresV1,noteRefusedPathV1,NO_REFUSED_PATHS_V1,readRefusedPathsV1,refusedPathsPathV1,REFUSED_PATH_LIMIT_V1,writeRefusedPathsV1,createStoreGuardV1,healthPathV1,importClosureV1,listCodeSnapshotsV1,moduleSourcesV1,pruneCodeSnapshotsV1,pruneLostV1,readHealthV1,requireResilienceShapeV1,restartJitterMillisecondsV1,rotateLogV1,runSelfCheckV1,sealCodeV1,selfCheckV1,StoreStalledV1,textsProblemV1,verifyCodeSnapshotV1,writeHealthV1,type StoreStateV1,type TargetSharingCodeV1} from "../🟦️.ts";
 
 import {activityNamesV1,activityV1,blockedFailuresV1,installBootStageV1,listStoreCodeV1,publishCodeSnapshotV1,pruneStoreCodeV1,readBeatV1,readFallbackV1,storeCodeDirectoryV1,verifyCodeSnapshotV1,yieldingV1} from "../🟦️.ts";
 import {createHash} from "node:crypto";
@@ -47,6 +50,21 @@ test("the import closure of the fixture trees follows relative imports once and 
   const module=join(root,"mod");
   expect(await importClosureV1(module,item.entries),item.name).toEqual(item.expected);
  }
+});
+
+test("shared relative import targets need only one physical admission probe",async()=>{
+ const item=fixture.closure.find(row=>row.name==="outside imports, json and transitive files are followed once")!;
+ const root=temp("closure-probe"),module=join(root,"mod"),target=join(root,"shared","x.ts");
+ for(const file of item.files)put(root,file.path,file.text);
+ let reads=0;
+ const stat=fsPromises.stat,watch=spyOn(fsPromises,"stat").mockImplementation((path,options)=>{
+  if(path===target)reads++;
+  return stat(path,options);
+ });
+ try{
+  expect(await importClosureV1(module,item.entries)).toEqual(item.expected);
+  expect(reads).toBe(1);
+ }finally{watch.mockRestore();}
 });
 
 test("module sources are the code files without tests and the text verdicts match the fixture",async()=>{
@@ -252,11 +270,16 @@ test("an unreachable store (probe false) is reported as unreachable and recovers
 });
 
 test("replica diagnostics keep bounded classified block reasons alongside unchanged totals",()=>{
+ const attestFailures=ajv.compile({definitions:attestSchema.definitions,$ref:"#/definitions/Attestation/properties/failures"});
+ const statusFailures=ajv.compile({definitions:replicaSchema.definitions,$ref:"#/definitions/Status/properties/health/oneOf/1/properties/failures"});
  for(const row of fixture.blocked){let now=0;const tracker=createFailuresV1({now:()=>now,capacity:2});
-  for(const [key,reason,at] of row.events){now=Number(at);tracker.note(String(key),String(reason));}
+  for(const [key,reason,at,nativeCode,operation] of row.events){now=Number(at);tracker.note(String(key),String(reason),false,(nativeCode as TargetSharingCodeV1|null)??undefined,(operation as "unlink"|"rename"|null)??undefined);}
   expect(tracker.summary(row.limit),row.name).toEqual(row.totals);
-  expect(tracker.diagnostics(row.limit),row.name).toEqual(row.results);
-  for(const item of tracker.diagnostics(row.limit))requireResilienceShapeV1("Failure",item,row.name);
+  const diagnostics=tracker.diagnostics(row.limit);
+  expect(diagnostics,row.name).toEqual(row.results);
+  expect(attestFailures(diagnostics),row.name).toBe(true);
+  expect(statusFailures(diagnostics),row.name).toBe(true);
+  for(const item of diagnostics)requireResilienceShapeV1("Failure",item,row.name);
  }
 });
 

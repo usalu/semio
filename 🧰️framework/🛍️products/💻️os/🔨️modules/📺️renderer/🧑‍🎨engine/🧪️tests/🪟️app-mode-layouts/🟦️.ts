@@ -17,6 +17,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, it } from "vitest";
 import { EMPTY_APP_LABELS_OVERLAY, resolveLayoutForMode } from "@semio-tech/framework";
+import { type WindowLayout, type WindowLayoutPanel, collectWindowIds } from "@semio-tech/ui-layout";
 // 🔗️ `🐚️Shell` and `🛠️ShellHelpers` are mutually recursive modules (Shell calls `shellLabel` at its own
 // module scope), so entering the pair through ShellHelpers leaves Shell reading a half-initialised
 // binding. Every production entry reaches them through `🏛️ShellHost` → `🐚️Shell`, and so does this
@@ -26,10 +27,7 @@ import { resolveFrameworkLayoutSeed } from "../../🧱️elements/🛠️ShellHe
 
 //#region 🧫️Fixture
 type FixtureRect = { readonly x: number; readonly y: number; readonly w: number; readonly h: number };
-type FixtureWindowNode = { readonly kind: "window"; readonly windowKindId: string; readonly instanceId?: string; readonly title?: string };
-type FixtureStackNode = { readonly kind: "stack"; readonly size?: number; readonly activeWindowKindId?: string; readonly children: readonly FixtureWindowNode[] };
-type FixtureAxisNode = { readonly kind: "row" | "column"; readonly size?: number; readonly children: readonly (FixtureAxisNode | FixtureStackNode)[] };
-type FixtureLayout = { readonly root: FixtureAxisNode | FixtureStackNode };
+type FixtureLayout = WindowLayout;
 type FixtureCase = {
   readonly id: string;
   readonly activeModeId: string;
@@ -62,20 +60,20 @@ const EMPTY_OVERLAY = EMPTY_APP_LABELS_OVERLAY;
 //#region 🔮️Oracle
 /** 🔮️ An independent re-derivation of the same answers straight off the fixture's declarations —
  * no shell module involved, so a shipped regression cannot move both sides together. */
-function oracleStacks(node: FixtureAxisNode | FixtureStackNode, path: readonly number[], rect: FixtureRect): { path: string; windows: string[]; active: string; fraction: number; rect: [number, number, number, number] }[] {
+function oracleStacks(node: WindowLayoutPanel, path: readonly number[], rect: FixtureRect): { path: string; windows: string[]; active: string; fraction: number; rect: [number, number, number, number] }[] {
   if (node.kind === "stack") {
     const windows = node.children.map((child) => child.instanceId ?? child.windowKindId);
-    const active = windows.find((id) => id === node.activeWindowKindId) ?? node.children.find((child) => child.windowKindId === node.activeWindowKindId)?.windowKindId ?? windows[0] ?? "";
+    const active = windows.find((id) => id === node.activeWindowId) ?? windows[0] ?? "";
     return [{ path: path.join(","), windows, active, fraction: 1, rect: [rect.x, rect.y, rect.w, rect.h] }];
   }
   const sizes = node.children.map((child) => child.size ?? 1);
   const total = sizes.reduce((sum, size) => sum + size, 0) || 1;
   const rows: { path: string; windows: string[]; active: string; fraction: number; rect: [number, number, number, number] }[] = [];
-  let cursor = node.kind === "row" ? rect.x : rect.y;
+  let cursor = node.axis === "horizontal" ? rect.x : rect.y;
   node.children.forEach((child, index) => {
     const fraction = sizes[index]! / total;
-    const childRect = node.kind === "row" ? { x: cursor, y: rect.y, w: rect.w * fraction, h: rect.h } : { x: rect.x, y: cursor, w: rect.w, h: rect.h * fraction };
-    cursor += node.kind === "row" ? childRect.w : childRect.h;
+    const childRect = node.axis === "horizontal" ? { x: cursor, y: rect.y, w: rect.w * fraction, h: rect.h } : { x: rect.x, y: cursor, w: rect.w, h: rect.h * fraction };
+    cursor += node.axis === "horizontal" ? childRect.w : childRect.h;
     const nested = oracleStacks(child, [...path, index], childRect);
     if (child.kind === "stack") nested[0] = { ...nested[0]!, fraction };
     rows.push(...nested);
@@ -104,7 +102,7 @@ describe("🪟️ app mode layouts — one contract, both renderer targets", () 
       const namedMatch = kase.app.namedLayouts.find((named) => JSON.stringify(named.layout) === JSON.stringify(resolved))?.id ?? null;
       assert.equal(namedMatch, kase.expected.resolvedLayoutId, `${kase.id}: resolved layout identity`);
       assert.equal(JSON.stringify(resolved), JSON.stringify(oracleLayout(kase)), `${kase.id}: the oracle resolves the same layout`);
-      assert.equal(resolved!.root.kind, kase.expected.axis, `${kase.id}: root axis`);
+      assert.equal(resolved!.root.kind === "split" ? resolved!.root.axis : resolved!.root.kind, kase.expected.axis, `${kase.id}: root axis`);
     }
   });
 
@@ -112,17 +110,7 @@ describe("🪟️ app mode layouts — one contract, both renderer targets", () 
     for (const kase of fixture.cases) {
       const layout = resolveLayoutForMode(kase.app as never, kase.activeModeId);
       const seed = resolveFrameworkLayoutSeed(layout as never, windowKindsForSeed(kase), EMPTY_OVERLAY, "default", "en");
-      const seen: { id: string; windowKindId: string }[] = [];
-      const walk = (node: { kind: string; children?: readonly unknown[]; id?: string }) => {
-        if (node.kind === "window") {
-          const id = node.id!;
-          const extra = seed.extraInstances.find((entry) => entry.id === id);
-          seen.push({ id, windowKindId: extra?.windowKindId ?? id });
-          return;
-        }
-        for (const child of node.children ?? []) walk(child as { kind: string; children?: readonly unknown[]; id?: string });
-      };
-      walk(seed.modeLayout as never);
+      const seen = collectWindowIds(seed.modeLayout).map((id) => ({ id, windowKindId: seed.extraInstances.find((entry) => entry.id === id)?.windowKindId ?? id }));
       assert.deepEqual(seen, kase.expected.windowInstances.map((row) => ({ ...row })), `${kase.id}: window instances, in layout order`);
       const focus = kase.expected.stacks[0]!.active;
       assert.equal(focus, kase.expected.activeWindowId, `${kase.id}: focus is the first stack's active window — the dock's own \`from_app\` rule`);
@@ -187,13 +175,7 @@ describe("🪟️ app mode layouts — one contract, both renderer targets", () 
     const seedFor = (modeId: string) => {
       const layout = resolveLayoutForMode(edit.app as never, modeId);
       const seed = resolveFrameworkLayoutSeed(layout as never, windowKindsForSeed(edit), EMPTY_OVERLAY, "default", "en");
-      const ids: string[] = [];
-      const walk = (node: { kind: string; children?: readonly unknown[]; id?: string }) => {
-        if (node.kind === "window") return void ids.push(node.id!);
-        for (const child of node.children ?? []) walk(child as { kind: string; children?: readonly unknown[]; id?: string });
-      };
-      walk(seed.modeLayout as never);
-      return ids;
+      return collectWindowIds(seed.modeLayout);
     };
     assert.deepEqual(seedFor("edit"), edit.expected.windowInstances.map((row) => row.id));
     assert.deepEqual(seedFor("generate"), generate.expected.windowInstances.map((row) => row.id));

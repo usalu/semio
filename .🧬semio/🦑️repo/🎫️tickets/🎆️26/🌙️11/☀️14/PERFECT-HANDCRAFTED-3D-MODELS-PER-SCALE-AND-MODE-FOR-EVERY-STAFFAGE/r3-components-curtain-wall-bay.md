@@ -289,3 +289,7 @@ Script: `r5-curtain-wall-bay-volumes.py`. Renders (opened with Read) under `🗑
 - The renderer shows thermal regions that merge layers (1:100 to 1:500) in grey. The tool request was filed in round 3.
 - In the `--cut` sheets a large wedge shows through the thin glass shells. This is the cut-cap artefact.
 - The 1:500 section A-A in 2D is a full-depth strip. It does not show the transom steps, which are below the drawn difference.
+
+## Canonical component readback, 2026-11-21
+
+Canonical source `492e6b5f7cbf3c9c`. Two separate 6 mm panes enclose a 16 mm argon space. The perimeter seal remains outside that clear opening. Enamel glazing, mineral wool and the 1.5 mm folded steel backpan remain separately built in the spandrel. The coarser exterior thermograms show the enamel surface. All twelve exported scenes reopened (877,180 bytes). The strict catalog source readback passed.

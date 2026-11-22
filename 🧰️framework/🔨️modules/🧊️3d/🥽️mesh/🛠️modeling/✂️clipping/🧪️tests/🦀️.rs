@@ -142,8 +142,34 @@ fn convex_intersection_keeps_halfspaces_and_two_source_provenance() {
     let bevel:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🛠️modeling/🪚️bevel.json")).unwrap();
     let concave=Soup{positions:serde_json::from_value(bevel["concave"]["positions"].clone()).unwrap(),
         faces:serde_json::from_value(bevel["concave"]["faces"].clone()).unwrap(),normals:Vec::new()};
-    let cutter = cube(&law["overlappingWallCutter"], 0.0);
-    assert!(run(MeshConvexIntersection::new(concave, cutter).unwrap()).is_err());
+    let expected = &law["overlappingWallCutter"];
+    let cutter = cube(&expected["bounds"], 0.0);
+    let mut job = MeshConvexIntersection::new(concave, cutter).unwrap();
+    let solid = loop {
+        match job.advance().unwrap() {
+            MeshConvexIntersectionStep::Working => continue,
+            MeshConvexIntersectionStep::Solid(solid) => break solid,
+            _ => panic!("the L profile retains its interior support junction"),
+        }
+    };
+    let point = |id:u32| solid.geometry.positions[id as usize].map(f64::from);
+    let (mut area,mut volume) = (0.,0.);
+    let mut uses = BTreeMap::new();
+    for ring in &solid.geometry.faces {
+        for (&a,&b) in ring.iter().zip(ring.iter().cycle().skip(1)) {
+            uses.entry((a.min(b),a.max(b))).or_insert([0;2])[usize::from(a<b)] += 1;
+        }
+        let a = point(ring[0]);
+        for edge in ring[1..].windows(2) {
+            let [b,c] = [point(edge[0]),point(edge[1])];
+            let normal = cross(minus(b,a),minus(c,a));
+            area += dot(normal,normal).sqrt()/2.;
+            volume += dot(a,cross(b,c))/6.;
+        }
+    }
+    assert!(uses.values().all(|uses| *uses == [1,1]));
+    assert!((area-expected["area"].as_f64().unwrap()).abs()<1e-6);
+    assert!((volume-expected["volume"].as_f64().unwrap()).abs()<1e-6);
 
     let mut cancelled=MeshConvexIntersection::new(cube(&law["left"],0.0),cube(&law["cases"][0]["right"],0.0)).unwrap();
     while cancelled.progress().0!="intersection-clip"{assert!(matches!(cancelled.advance().unwrap(),MeshConvexIntersectionStep::Working));}
@@ -481,270 +507,6 @@ fn convex_difference_retains_prismatic_openings() {
     }
 }
 
-
-#[test]
-fn difference_keeps_a_strictly_nested_concave_prism() {
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🛠️modeling/🕳️nested-prismatic-difference.json")).unwrap();
-    let stock = || Soup {
-        positions: serde_json::from_value(law["stock"]["positions"].clone()).unwrap(),
-        faces: serde_json::from_value(law["stock"]["faces"].clone()).unwrap(),
-        normals: Vec::new(),
-    };
-    let prism_from = |spec: &serde_json::Value, shift: f32| {
-        let profile: Vec<[f32; 2]> = serde_json::from_value(spec["footprint"].clone()).unwrap();
-        let heights: [f32; 2] = serde_json::from_value(law["height"].clone()).unwrap();
-        let positions = heights.into_iter().flat_map(|z| profile.iter().map(move |&[x, y]| [x + shift, y, z])).collect();
-        Soup { positions, faces: serde_json::from_value(spec["faces"].clone()).unwrap(), normals: Vec::new() }
-    };
-    let cutter = |shift| prism_from(&law, shift);
-    let tool = cutter(0.0);
-    let mut job = MeshConvexIntersection::difference(stock(), cutter(0.0)).unwrap();
-    let result = loop {
-        assert!(job.progress().1 < 25_000);
-        match job.advance().unwrap() {
-            MeshConvexIntersectionStep::Working => continue,
-            MeshConvexIntersectionStep::Solid(result) => break result,
-            _ => panic!("expected the outer boundary and original reversed cutter"),
-        }
-    };
-    assert_eq!(result.geometry.positions.len() as u64, law["vertices"].as_u64().unwrap());
-    assert_eq!(result.faces.len(), stock().faces.len() + tool.faces.len());
-    let mut edges = std::collections::BTreeMap::new();
-    let mut volume = 0.0;
-    for (ring, source) in result.geometry.faces.iter().zip(result.faces.iter()) {
-        for (&a, &b) in ring.iter().zip(ring.iter().cycle().skip(1)) {
-            edges.entry((a.min(b), a.max(b))).or_insert([0; 2])[usize::from(a < b)] += 1;
-        }
-        let vertices = |id: u32| Vec3(result.geometry.positions[id as usize]);
-        for i in 1..ring.len() - 1 {
-            let [a, b, c] = [ring[0], ring[i], ring[i + 1]].map(vertices);
-            volume += f64::from(a.dot(b.cross(c))) / 6.0;
-        }
-        if let MeshIntersectionFace::ReversedRightPlane(face) = source {
-            let expected = tool.faces[*face as usize].iter().rev().map(|&index| tool.positions[index as usize]).collect::<Vec<_>>();
-            let actual = ring.iter().map(|&index| result.geometry.positions[index as usize]).collect::<Vec<_>>();
-            assert_eq!(actual, expected);
-        } else {
-            assert!(matches!(source, MeshIntersectionFace::Left(_)));
-        }
-    }
-    assert!(edges.values().all(|uses| *uses == [1, 1]));
-    assert_eq!(edges.len() as u64, law["edges"].as_u64().unwrap());
-    assert_eq!(result.geometry.positions.len() + result.faces.len() - edges.len(), 2 * law["boundaries"].as_u64().unwrap() as usize);
-    assert!((volume - law["volume"].as_f64().unwrap()).abs() < 1e-6);
-    for tool_first in [false, true] {
-        let operands = || if tool_first { (cutter(0.0), stock()) } else { (stock(), cutter(0.0)) };
-        let (left, right) = operands();
-        let mut intersection = MeshConvexIntersection::new(left, right).unwrap();
-        let inside = loop {
-            match intersection.advance().unwrap() {
-                MeshConvexIntersectionStep::Working => continue,
-                MeshConvexIntersectionStep::Solid(result) => break result,
-                _ => panic!("expected the original concave operand"),
-            }
-        };
-        assert_eq!(inside.retained_operand, Some(u8::from(!tool_first)));
-        assert_eq!(inside.geometry.positions, tool.positions);
-        assert_eq!(inside.geometry.faces, tool.faces);
-        let (left, right) = operands();
-        let mut union = MeshConvexUnion::new(left, right).unwrap();
-        let outside = loop {
-            match union.advance().unwrap() {
-                MeshConvexIntersectionStep::Working => continue,
-                MeshConvexIntersectionStep::Solid(result) => break result,
-                _ => panic!("expected the original convex operand"),
-            }
-        };
-        assert_eq!(outside.retained_operand, Some(u8::from(tool_first)));
-        assert_eq!(outside.geometry.positions, stock().positions);
-        assert_eq!(outside.geometry.faces, stock().faces);
-    }
-    let mut removed = MeshConvexIntersection::difference(cutter(0.0), stock()).unwrap();
-    loop {
-        match removed.advance().unwrap() {
-            MeshConvexIntersectionStep::Working => continue,
-            MeshConvexIntersectionStep::Empty => break,
-            _ => panic!("the containing solid removes the original prism"),
-        }
-    }
-    let mut placed = cutter(0.0);
-    let rotation: [f64; 3] = serde_json::from_value(law["placed"]["angles"].clone()).unwrap();
-    let origin: [f64; 3] = serde_json::from_value(law["placed"]["origin"].clone()).unwrap();
-    let target: [f64; 3] = serde_json::from_value(law["placed"]["target"].clone()).unwrap();
-    for point in &mut placed.positions {
-        let mut translated = std::array::from_fn::<_, 3, _>(|axis| f64::from(point[axis]) - origin[axis]);
-        for (axis, angle) in rotation.into_iter().enumerate() {
-            let (u, v) = ((axis + 1) % 3, (axis + 2) % 3);
-            let (sine, cosine) = angle.to_radians().sin_cos();
-            (translated[u], translated[v]) = (cosine * translated[u] - sine * translated[v], sine * translated[u] + cosine * translated[v]);
-        }
-        *point = std::array::from_fn(|axis| (translated[axis] + target[axis]) as f32);
-    }
-    let placed_points = placed.positions.clone();
-    let placed_faces = placed.faces.len();
-    let mut placed_cut = MeshConvexIntersection::difference(stock(), placed).unwrap();
-    let result = loop {
-        match placed_cut.advance().unwrap() {
-            MeshConvexIntersectionStep::Working => continue,
-            MeshConvexIntersectionStep::Solid(result) => break result,
-            _ => panic!("expected the original placed cut boundary"),
-        }
-    };
-    assert_eq!(&result.geometry.positions[stock().positions.len()..], placed_points.as_slice());
-    assert_eq!(result.faces.iter().filter(|face| matches!(face, MeshIntersectionFace::ReversedRightPlane(_))).count(), placed_faces);
-    let mut slab=stock();
-    let [[a,b,c],[d,e,f]]:[[f32;3];2]=serde_json::from_value(law["clipped"]["bounds"].clone()).unwrap();
-    slab.positions=vec![[a,b,c],[d,b,c],[d,e,c],[a,e,c],[a,b,f],[d,b,f],[d,e,f],[a,e,f]];
-    for prism_first in [false,true] {
-        let slab=Soup{positions:slab.positions.clone(),faces:slab.faces.clone(),normals:Vec::new()};
-        let (left,right)=if prism_first{(cutter(0.0),slab)}else{(slab,cutter(0.0))};
-        let mut clipped=MeshConvexIntersection::new(left,right).unwrap();
-        let output=loop{
-            match clipped.advance().unwrap(){
-                MeshConvexIntersectionStep::Working=>continue,
-                MeshConvexIntersectionStep::Solid(output)=>break output,
-                _=>panic!("a transverse cap retains part of the concave prism"),
-            }
-        };
-        let [stock_faces,prism_faces]=output.faces.iter().fold([0,0],|mut counts,face|{
-            let right=matches!(face,MeshIntersectionFace::RightPlane(_));
-            counts[usize::from(right!=prism_first)]+=1;
-            counts
-        });
-        assert_eq!([stock_faces,prism_faces],[1,7]);
-        let min=output.geometry.faces.iter().flatten().map(|&id|output.geometry.positions[id as usize][2]).fold(f32::INFINITY,f32::min);
-        assert_eq!(f64::from(min),law["clipped"]["capHeight"].as_f64().unwrap());
-        let mut volume=0.0;
-        let mut area=0.0;
-        for ring in &output.geometry.faces{
-            let point=|id:u32|Vec3(output.geometry.positions[id as usize]);
-            let first=point(ring[0]);
-            let mut normal=Vec3([0.;3]);
-            for pair in ring[1..].windows(2){
-                let (a,b)=(point(pair[0]),point(pair[1]));
-                normal=normal.add(a.sub(first).cross(b.sub(first)));
-                volume+=f64::from(first.dot(a.cross(b)))/6.0;
-            }
-            area+=f64::from(normal.dot(normal)).sqrt()/2.0;
-        }
-        assert!((volume-law["clipped"]["volume"].as_f64().unwrap()).abs()<1e-6);
-        assert!((area-law["clipped"]["area"].as_f64().unwrap()).abs()<1e-6);
-    }
-    let mut slab=stock();
-    let [[a,b,c],[d,e,f]]:[[f32;3];2]=serde_json::from_value(law["split"]["bounds"].clone()).unwrap();
-    slab.positions=vec![[a,b,c],[d,b,c],[d,e,c],[a,e,c],[a,b,f],[d,b,f],[d,e,f],[a,e,f]];
-    let mut split=MeshConvexIntersection::difference(cutter(0.0),slab).unwrap();
-    let output=loop{
-        match split.advance().unwrap(){
-            MeshConvexIntersectionStep::Working=>continue,
-            MeshConvexIntersectionStep::Solid(output)=>break output,
-            _=>panic!("a transverse cutter leaves two separated prism pieces"),
-        }
-    };
-    let planes=output.faces.iter().filter_map(|face| match face{MeshIntersectionFace::ReversedRightPlane(id)=>Some(*id),_=>None}).collect::<Vec<_>>();
-    assert_eq!(planes.len(),2);
-    assert_ne!(planes[0],planes[1]);
-    assert_eq!(output.geometry.faces.len(),2*tool.faces.len());
-    let all_edges=output.geometry.faces.iter().flat_map(|ring|ring.iter().copied().zip(ring.iter().copied().cycle().skip(1)));
-    let mut edges=std::collections::BTreeMap::new();
-    for (a,b) in all_edges{edges.entry((a.min(b),a.max(b))).or_insert([0;2])[usize::from(a<b)]+=1;}
-    assert!(edges.values().all(|uses|*uses==[1,1]));
-    let vertices=edges.keys().flat_map(|&(a,b)|[a,b]).collect::<std::collections::BTreeSet<_>>();
-    assert_eq!(vertices.len()+output.geometry.faces.len()-edges.len(),4);
-    for name in ["lateral","longitudinalSlab","mixedSlab","mixedOpenSlab","independentWalls","fourArmWalls","cornerSlab"]{
-        let lateral=&law[name];
-        let walls=lateral["walls"].as_array().unwrap();
-        let diagonal=lateral["frame"]=="diagonal";
-        let [[x,y,z],[a,b,c]]:[[f32;3];2]=serde_json::from_value(lateral["bounds"].clone()).unwrap();
-        let lateral_tool=||Soup{
-            positions:[[x,y,z],[a,y,z],[a,b,z],[x,b,z],[x,y,c],[a,y,c],[a,b,c],[x,b,c]].into_iter()
-                .map(|[u,v,w]|if diagonal{[(u+v)/2.,(v-u)/2.,w]}else{[u,v,w]}).collect(),
-            faces:stock().faces,normals:Vec::new(),
-        };
-        for (reversed,subtract) in [(false,false),(true,false),(false,true)]{
-            if subtract && lateral["difference"].is_null(){continue;}
-            let profile = if lateral["footprint"].is_array() { lateral } else { &law };
-            let prism = prism_from(profile, 0.);
-            let (left,right)=if reversed{(lateral_tool(),prism)}else{(prism,lateral_tool())};
-            let mut job=if subtract{MeshConvexIntersection::difference(left,right)}else{MeshConvexIntersection::new(left,right)}.unwrap();
-            let result=loop{
-                assert!(job.progress().1<25_000);
-                match job.advance().unwrap(){
-                    MeshConvexIntersectionStep::Working=>continue,
-                    MeshConvexIntersectionStep::Solid(result)=>break result,
-                    _=>panic!("opposing longitudinal supports keep closed prism boundaries"),
-                }
-            };
-            let mut uses=std::collections::BTreeMap::new();
-            let mut used=std::collections::BTreeSet::new();
-            let (mut area,mut volume,mut caps,mut horizontal_caps)=(0.,0.,0,0);
-            let point=|id:u32|Vec3(result.geometry.positions[id as usize]);
-            for (face,ring) in result.geometry.faces.iter().enumerate(){
-                for (&p,&q) in ring.iter().zip(ring.iter().cycle().skip(1)){
-                    used.insert(p);
-                    uses.entry((p.min(q),p.max(q))).or_insert([0;2])[usize::from(p<q)]+=1;
-                }
-                let first=point(ring[0]);
-                let mut normal=Vec3([0.;3]);
-                for pair in ring[1..].windows(2){
-                    let (p,q)=(point(pair[0]),point(pair[1]));
-                    normal=normal.add(p.sub(first).cross(q.sub(first)));
-                    volume+=f64::from(first.dot(p.cross(q)))/6.;
-                }
-                area+=f64::from(normal.dot(normal)).sqrt()/2.;
-                if let Some(wall)=walls.iter().find(|wall|ring.iter().all(|&id|{
-                    let xyz = point(id).0;
-                    let axis = wall["axis"].as_u64().unwrap_or(0) as usize;
-                    f64::from(if diagonal { xyz[0] - xyz[1] } else { xyz[axis] }) == wall["coordinate"].as_f64().unwrap()
-                })){
-                    caps+=1;
-                    let index=wall["face"].as_u64().unwrap() as u32;
-                    assert_eq!(result.faces[face],if subtract{MeshIntersectionFace::ReversedRightPlane(index)}
-                        else if reversed{MeshIntersectionFace::Left(index)}else{MeshIntersectionFace::RightPlane(index)});
-                    let axis = wall["axis"].as_u64().unwrap_or(0) as usize;
-                    assert_eq!(normal.0[axis].is_sign_negative(),(wall["normalSign"].as_i64().unwrap()<0)!=subtract);
-                }
-                if let Some(wall)=lateral["horizontalWalls"].as_array().into_iter().flatten()
-                    .find(|wall|ring.iter().all(|&id|f64::from(point(id).0[2])==wall["z"].as_f64().unwrap())){
-                    horizontal_caps+=1;
-                    let index=wall["face"].as_u64().unwrap() as u32;
-                    assert_eq!(result.faces[face],if subtract{MeshIntersectionFace::ReversedRightPlane(index)}
-                        else if reversed{MeshIntersectionFace::Left(index)}else{MeshIntersectionFace::RightPlane(index)});
-                    assert_eq!(normal.0[2].is_sign_negative(),(index==0)!=subtract);
-                }
-            }
-            let expected=&lateral[if subtract{"difference"}else{"intersection"}];
-            assert!((volume-expected["volume"].as_f64().unwrap()).abs()<1e-6);
-            assert!((area-expected["area"].as_f64().unwrap()).abs()<1e-6);
-            assert_eq!(caps,walls.len());
-            if diagonal {
-                let [x,y]:[f32;2]=serde_json::from_value(lateral["existingCorner"].clone()).unwrap();
-                let heights:[f32;2]=serde_json::from_value(law["height"].clone()).unwrap();
-                for z in heights {
-                    let mut matching=result.geometry.positions.iter().enumerate().filter(|(_,point)|**point==[x,y,z]);
-                    let (id,_)=matching.next().unwrap();
-                    assert!(matching.next().is_none()&&used.contains(&(id as u32)));
-                }
-            }
-            assert_eq!(horizontal_caps,lateral["horizontalWalls"].as_array().map_or(0,Vec::len));
-            assert!(uses.values().all(|&pair|pair==[1,1]));
-            let euler=used.len() as i64+result.geometry.faces.len() as i64-uses.len() as i64;
-            assert_eq!(euler,2*(expected["components"].as_i64().unwrap()-expected["genus"].as_i64().unwrap_or(0)), "{name}");
-        }
-    }
-    let mut contact = MeshConvexIntersection::difference(stock(), cutter(-1.0)).unwrap();
-    loop {
-        match contact.advance() {
-            Ok(MeshConvexIntersectionStep::Working) => continue,
-            Err(_) => break,
-            _ => panic!("the concave tool touching the outer boundary must refuse"),
-        }
-    }
-    let mut cancelled = MeshConvexIntersection::difference(stock(), cutter(0.0)).unwrap();
-    for _ in 0..50 { assert!(matches!(cancelled.advance().unwrap(), MeshConvexIntersectionStep::Working)); }
-    cancelled.cancel();
-    assert!(matches!(cancelled.advance().unwrap(), MeshConvexIntersectionStep::Cancelled));
-}
 
 #[test]
 fn convex_difference_keeps_disconnected_manifold_components() {

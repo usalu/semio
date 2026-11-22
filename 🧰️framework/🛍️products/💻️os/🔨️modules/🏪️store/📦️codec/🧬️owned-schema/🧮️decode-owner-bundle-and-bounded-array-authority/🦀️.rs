@@ -183,6 +183,46 @@ impl<T: Send + Sync + 'static> OwnedSchemaBoundedArrayAuthority<T> {
         }
     }
 
+    /// 📤️ Keeps the closing token resident until both original decoder capabilities are retired.
+    pub(super) fn accept_into(
+        &mut self,
+        target: &mut Option<ArtifactHistoryLedger<T>>,
+        token: OwnedSchemaToken,
+        terminal: bool,
+        source: &OwnedSchemaRecordCursor,
+        cx: &mut semio_framework_job::StepContext<'_>,
+    ) -> Result<ArtifactEnvelopeFieldDecodeStep, OwnedSchemaDecodeDiagnostic> {
+        if !self.taken {
+            let step = self.accept(token, terminal, source, cx)?;
+            if step != ArtifactEnvelopeFieldDecodeStep::FieldComplete {
+                return Ok(step);
+            }
+            if target.is_some() {
+                return Err(self.diagnostic("artifact-envelope.history-target-occupied", token));
+            }
+            let values = self.take_values().ok_or_else(|| self.diagnostic("artifact-envelope.vcs-history-not-taken", token))?;
+            *target = Some(values);
+            return Ok(ArtifactEnvelopeFieldDecodeStep::Pending);
+        }
+        let demand = self.close_demands(cx.retained_grant().maximum_copy_bytes)?;
+        let mut child_diagnostic = None;
+        semio_framework_job::close_original_effect_step(cx, demand, |effect| {
+            self.close_step(effect).map_err(|diagnostic| {
+                child_diagnostic = Some(diagnostic);
+                artifact_envelope_diagnostic_error(diagnostic)
+            })
+        }).map_err(|failure| {
+            let diagnostic = child_diagnostic.unwrap_or_else(|| self.diagnostic("artifact-envelope.history-publication-close", token));
+            let refusal_kind = failure.primary_value().map_or(diagnostic.refusal_kind, |error| error.kind);
+            OwnedSchemaDecodeDiagnostic { refusal_kind, ..diagnostic.with_progress(failure.retained_progress()) }
+        })?;
+        Ok(if self.terminal_is_empty() {
+            ArtifactEnvelopeFieldDecodeStep::TokenComplete
+        } else {
+            ArtifactEnvelopeFieldDecodeStep::Pending
+        })
+    }
+
     pub fn take_values(&mut self) -> Option<ArtifactHistoryLedger<T>> {
         if !matches!(self.state, OwnedSchemaBoundedArrayState::Complete) || self.taken || self.reservation.is_some() || self.active_decoder.is_some() || self.active_retirement.is_some() || self.rejected.is_some() {
             return None;
@@ -259,7 +299,7 @@ impl<T: Send + Sync + 'static> OwnedSchemaBoundedArrayAuthority<T> {
                 let step = artifact_envelope_close_resume_with(owner.step(grant.maximum_copy_bytes, &mut effect.nested(child)), |failure| artifact_envelope_failure_diagnostic(diagnostic, &failure))?;
                 admit_retained_clone_close(child, step, owner.terminal_is_empty(), "original schema history factory").map_err(|error| (diagnostic).with_native(error).with_progress(step.progress()))?;
                 if owner.terminal_is_empty() { drop(slot.take()); }
-                self.taken = self.factories_close.iter().all(Option::is_none);
+                self.taken |= self.factories_close.iter().all(Option::is_none);
                 return Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(step.progress()) } else { RetainedCloneStep::Progress(step.progress()) });
             }
             self.taken = true;

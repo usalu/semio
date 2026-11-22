@@ -4,6 +4,22 @@ import os
 import stat
 import sys
 
+PROFILE = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "../🪪️profile/🧬️schema/🔣️.json"), encoding="utf-8"))["$defs"]["Policy"]["const"]
+
+
+def profile(path, data):
+    if path.split("/")[-1] != PROFILE["fileName"] or len(data) > PROFILE["maximumBytes"]:
+        return None
+    try:
+        value = json.loads(data.decode("utf-8"))
+    except ValueError:
+        return None
+    if not isinstance(value, dict):
+        return None
+    kept = {k: v for k, v in value.items() if k not in PROFILE["excludedTopLevelFields"]}
+    return hashlib.sha256(json.dumps(kept, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode()).hexdigest()
+
+
 TIERS = "walk stamp, runtime, installer configuration files, installer inputs, workspace manifests"
 
 
@@ -42,7 +58,7 @@ def configuration(row, workspace, store):
     return {"kind": "file", "bytes": len(data), "sha256": sha(data)}
 
 
-def verify(receipt, workspace, store, stamp, runtime, maximum_source_bytes):
+def verify(receipt, workspace, store, stamp, runtime, maximum_source_bytes, environment):
     if receipt["walkStamp"] != stamp:
         return {"status": "mismatch", "class": "protocol-changed", "detail": receipt["walkStamp"]}
     for field in ["manager", "revision", "node", "platform", "arch", "sha256"]:
@@ -52,6 +68,19 @@ def verify(receipt, workspace, store, stamp, runtime, maximum_source_bytes):
         live = configuration(row, workspace, store)
         if (live["kind"], live["bytes"], live["sha256"]) != (row["kind"], row["bytes"], row["sha256"]):
             return {"status": "mismatch", "class": "configuration-changed", "path": row["path"]}
+    policy = environment["policy"]
+    recorded = {row["name"]: row["sha256"] for row in receipt["producer"]["environment"]}
+    live = {
+        name: sha(value.encode("utf-8"))
+        for name, value in environment["env"].items()
+        if name.upper() not in policy["environmentIgnored"]
+        and (name.upper() in policy["environmentNames"] or name.upper().startswith(tuple(policy["environmentPrefixes"])))
+    }
+    for name in sorted(live, key=str.encode):
+        if live[name] != recorded.get(name):
+            return {"status": "mismatch", "class": "configuration-changed", "path": "env:" + name}
+    for name in sorted(recorded.keys() - live.keys(), key=str.encode):
+        return {"status": "mismatch", "class": "configuration-changed", "path": "env:" + name}
     for group in receipt["inputs"]:
         for source in group["sources"]:
             path = resolve(source["path"], workspace, store)
@@ -61,10 +90,15 @@ def verify(receipt, workspace, store, stamp, runtime, maximum_source_bytes):
                     return {"status": "mismatch", "class": "input-changed", "path": source["path"], "detail": "appeared"}
                 continue
             wanted = stat.S_ISREG if source["kind"] == "file" else stat.S_ISDIR
-            if not facts or stat.S_ISLNK(facts.st_mode) or not wanted(facts.st_mode) or str(facts.st_dev) != source["dev"] or str(facts.st_ino) != source["ino"] or facts.st_mode != source["mode"]:
+            moved = not facts or str(facts.st_dev) != source["dev"] or str(facts.st_ino) != source["ino"] or facts.st_mode != source["mode"]
+            if not facts or stat.S_ISLNK(facts.st_mode) or not wanted(facts.st_mode) or moved and source["profileSha256"] is None:
                 return {"status": "mismatch", "class": "input-changed", "path": source["path"], "detail": "identity"}
-            if source["kind"] == "file" and (facts.st_size > maximum_source_bytes or sha(open(path, "rb").read()) != source["sha256"]):
-                return {"status": "mismatch", "class": "input-changed", "path": source["path"], "detail": "bytes"}
+            if source["kind"] == "file":
+                if facts.st_size > maximum_source_bytes:
+                    return {"status": "mismatch", "class": "input-changed", "path": source["path"], "detail": "bytes"}
+                data = open(path, "rb").read()
+                if sha(data) != source["sha256"] and (source["profileSha256"] is None or profile(path, data) != source["profileSha256"]):
+                    return {"status": "mismatch", "class": "input-changed", "path": source["path"], "detail": "bytes"}
     for text in receipt["membership"]["texts"]:
         path = os.path.join(workspace, text["path"])
         try:
@@ -72,7 +106,7 @@ def verify(receipt, workspace, store, stamp, runtime, maximum_source_bytes):
             data.decode("utf-8")
         except (OSError, UnicodeDecodeError):
             return {"status": "mismatch", "class": "manifest-changed", "path": text["path"], "detail": "unreadable"}
-        if sha(data) != text["sha256"]:
+        if sha(data) != text["sha256"] and (text["profileSha256"] is None or profile(text["path"], data) != text["profileSha256"]):
             return {"status": "mismatch", "class": "manifest-changed", "path": text["path"], "detail": "bytes"}
     return {"status": "match"}
 
@@ -91,13 +125,13 @@ def main():
     if command == "verify":
         receipt = json.load(open(sys.argv[2], encoding="utf-8"))
         protocol = json.load(open(sys.argv[6], encoding="utf-8"))["$defs"]["Protocol"]["const"]
-        print(json.dumps(verify(receipt, sys.argv[3], sys.argv[4], protocol["walkStamp"], json.loads(sys.argv[5]), protocol["maximumSourceFileBytes"]), ensure_ascii=False))
+        print(json.dumps(verify(receipt, sys.argv[3], sys.argv[4], protocol["walkStamp"], json.loads(sys.argv[5]), protocol["maximumSourceFileBytes"], json.loads(sys.argv[7])), ensure_ascii=False))
     elif command == "render":
         protocol = json.load(open(sys.argv[2], encoding="utf-8"))["$defs"]["Protocol"]["const"]
         rows = json.loads(sys.argv[3])
         print(json.dumps([{language: render(protocol["texts"], language, row, protocol) for language in protocol["languages"]} for row in rows], ensure_ascii=False))
     else:
-        raise SystemExit("usage: keying.oracle.py verify RECEIPT WORKSPACE STORE RUNTIME_JSON SCHEMA | render SCHEMA ROWS_JSON (" + TIERS + ")")
+        raise SystemExit("usage: keying.oracle.py verify RECEIPT WORKSPACE STORE RUNTIME_JSON SCHEMA ENVIRONMENT_JSON | render SCHEMA ROWS_JSON (" + TIERS + ")")
 
 
 main()

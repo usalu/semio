@@ -1,5 +1,7 @@
 //! 🌊️ Deterministic wave passage in a welded steel pipe on stable ground, EN 1998-4:2006 §6.5.2 and Annex B.
 
+use super::pipe_strain::welded_pipe_strain_limits;
+
 /// 📋️ Pipe geometry, material and documented uniform-ground wave amplitudes in SI units.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct PipeWaveInput {
@@ -34,9 +36,9 @@ pub fn bonded_pipe_wave_response(inputs: PipeWaveInput) -> Option<PipeWaveRespon
         transverse_wave_speed_m_s: c_trans, pipe_radius_m: radius, wall_thickness_m: thickness,
         elastic_modulus_pa: modulus, available_bond_shear_pa: available,
     } = inputs;
+    let limits = welded_pipe_strain_limits(radius, thickness)?;
     if ![velocity, a_long, a_trans, available].into_iter().all(|x| x.is_finite() && x >= 0.0)
-        || ![c_long, c_trans, radius, thickness, modulus].into_iter().all(|x| x.is_finite() && x > 0.0)
-        || thickness >= radius
+        || ![c_long, c_trans, modulus].into_iter().all(|x| x.is_finite() && x > 0.0)
     {
         return None;
     }
@@ -53,8 +55,8 @@ pub fn bonded_pipe_wave_response(inputs: PipeWaveInput) -> Option<PipeWaveRespon
         required_bond_shear_pa,
         bond_sufficient: available >= required_bond_shear_pa,
         envelope_strain,
-        tensile_strain_limit: 0.03,
-        compressive_strain_limit: (0.20 * (thickness / radius)).min(0.01),
+        tensile_strain_limit: limits.tensile,
+        compressive_strain_limit: limits.compressive,
     })
 }
 

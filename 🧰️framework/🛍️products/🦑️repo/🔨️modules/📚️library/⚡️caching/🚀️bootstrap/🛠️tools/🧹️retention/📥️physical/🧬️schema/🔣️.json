@@ -19,28 +19,6 @@
         }
       }
     },
-    "ReaderSourceCase": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "fault",
-        "accepted"
-      ],
-      "properties": {
-        "fault": {
-          "enum": [
-            "none",
-            "changed",
-            "missing",
-            "duplicate",
-            "extra"
-          ]
-        },
-        "accepted": {
-          "type": "boolean"
-        }
-      }
-    },
     "Observation": {
       "type": "object",
       "additionalProperties": false,
@@ -78,8 +56,7 @@
         "activation": "nx-tooling-activation",
         "registry": "nx-tooling-provision",
         "minimumInstallerAvailableBytes": 1610612736,
-        "maximumPublications": 64,
-        "readerEntry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📥️use/🟦️.ts"
+        "maximumPublications": 64
       }
     },
     "AdmissionIntent": {
@@ -540,7 +517,6 @@
           "enum": [
             "none",
             "identity",
-            "authorizer",
             "source-index",
             "shared-inode",
             "namespace-extra",
@@ -1702,8 +1678,7 @@
           "enum": [
             "install-identity",
             "marker-version",
-            "marker-digest",
-            "authorizer-receipt"
+            "marker-digest"
           ]
         },
         "inputMetadata": {
@@ -1721,7 +1696,7 @@
             "properties": {
               "name": {
                 "type": "string",
-                "pattern": "^(?:package[.]json|bun[.]lock|patches[/][a-f0-9]{64}[.]patch|[.]semio-authorizer-source[.]json|[.]semio-authorizer-compiler[.]json|[.]semio-sdk-material[.]json|[.]semio-nx-tooling[.]json)$"
+                "pattern": "^(?:package[.]json|bun[.]lock|patches[/][a-f0-9]{64}[.]patch|[.]semio-sdk-material[.]json|[.]semio-nx-tooling[.]json)$"
               },
               "sha256": {
                 "type": "string",
@@ -1752,7 +1727,6 @@
             "install-identity",
             "marker-version",
             "marker-digest",
-            "authorizer-receipt",
             "bad-identity",
             "too-many-inputs",
             "bad-input",

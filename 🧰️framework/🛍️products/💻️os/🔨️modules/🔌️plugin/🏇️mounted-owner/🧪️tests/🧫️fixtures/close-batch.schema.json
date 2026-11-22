@@ -1,0 +1,114 @@
+{
+  "type": "array",
+  "minItems": 1,
+  "items": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "string",
+        "minLength": 1
+      },
+      "items": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 64
+      },
+      "deadline": {
+        "type": "integer",
+        "minimum": 11
+      },
+      "actions": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "enum": [
+                "progress",
+                "complete"
+              ]
+            },
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "copy": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "capacity": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "release": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "now": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "kind",
+            "items",
+            "copy",
+            "capacity",
+            "release",
+            "now"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "expected": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "enum": [
+              "progress",
+              "complete"
+            ]
+          },
+          "calls": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "copy": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "capacity": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "release": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "kind",
+          "calls",
+          "items",
+          "copy",
+          "capacity",
+          "release"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "required": [
+      "id",
+      "items",
+      "deadline",
+      "actions",
+      "expected"
+    ],
+    "additionalProperties": false
+  }
+}

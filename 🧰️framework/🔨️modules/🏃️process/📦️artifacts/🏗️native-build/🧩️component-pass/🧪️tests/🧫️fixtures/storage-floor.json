@@ -1,0 +1,8 @@
+{
+  "pressure": [
+    {"available": 4096, "confirmed": 4096, "reserve": 2048, "stop": false, "rechecked": false},
+    {"available": 1024, "confirmed": 8192, "reserve": 2048, "stop": false, "rechecked": true},
+    {"available": 1024, "confirmed": 1536, "reserve": 2048, "stop": true, "rechecked": true}
+  ],
+  "log": {"limit": 6, "first": "α", "oversize": "abcd", "normal": "b"}
+}

@@ -2,7 +2,7 @@ import {afterAll,expect,setDefaultTimeout,test} from "bun:test";
 import {existsSync,mkdirSync,mkdtempSync,readFileSync,rmSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {dirname,join} from "node:path";
-import {readRefusalsV1} from "../../🚦️canary/🟦️.ts";
+import {publishRefusalV1,readRefusalsV1,transientBackoffMsV1,transientRefusalCountV1,transientStartV1} from "../../🚦️canary/🟦️.ts";
 import {appendEventsV1,formatHlcV1,storeBlobV1} from "../../📒️journal/🟦️.ts";
 import {codeDigestV1,readAttestationV1,writeAttestationV1} from "../../🩺️attest/🟦️.ts";
 import {silentLatencyV1} from "../../🎣️tiers/🟦️.ts";
@@ -79,6 +79,68 @@ test("the group server goes first when it is fresh, and the lowest fresh id when
  await closeReplicaV1(replica);await closeReplicaV1(sender);
 });
 
+test("churn does not restart the wait: a digest that changes every minute is adopted after fifteen minutes of continuous waiting, a refused one never, and the wait starts again only after the running digest was reached",async()=>{
+ const store=temp("store"),root=temp("w"),other=temp("o");
+ put(other,`${module_}/x/🟦️.ts`,"export const x=1;\n");
+ await seedV1({worktree:other,storeRoot:store,originId:"g1-m09",groupId:"g1",pollMilliseconds:10,persistMilliseconds:0,watch:false});
+ const options:ReplicaOptionsV1={worktree:root,storeRoot:store,originId:"g1-m12",groupId:"g1",pollMilliseconds:10,persistMilliseconds:0,watch:false};
+ mkdirSync(root,{recursive:true});await joinV1(options);
+ const replica=await openReplicaV1(options),sender=await openReplicaV1({worktree:other,storeRoot:store,originId:"g1-m09",groupId:"g1",pollMilliseconds:10,persistMilliseconds:0,watch:false});
+ await followOnceV1(replica);await applyQueue(replica,undefined);
+ const running=await codeDigestV1(join(root,module_));
+ await sealCodeV1({root,moduleRoot:join(root,module_),digest:running,digestOf:codeDigestV1});
+ let clock=Date.now();
+ const state=createAdmissionStateV1(),beat=async():Promise<void>=>{for(const who of ["g1-server","g1-m01","g1-m02","g1-m05"])await attest(store,who,running,clock);await attest(store,"g1-m12",running,clock);};
+ const digests:string[]=[],started=clock;
+ const edit=async(n:number):Promise<string>=>{put(other,`${module_}/x/🟦️.ts`,`export const x=${n+10};\n`);await publishOnceV1(sender);await followOnceV1(replica);await applyQueue(replica,undefined);const digest=await codeDigestV1(join(root,module_));digests.push(digest);return digest;};
+ const ask=(digest:string)=>admitCodeV1(replica,{digest,running,moduleRoot:join(root,module_),bounded,state,now:()=>clock});
+ let verdictAt=-1;
+ for(let minute=0;minute<=16;minute++){
+  clock=started+minute*60_000;await beat();
+  const digest=await edit(minute),verdict=await ask(digest);
+  if(verdict.ok){verdictAt=minute;break;}
+ }
+ expect(new Set(digests).size).toBe(digests.length);
+ expect(verdictAt).toBe(15);
+ const fresh=createAdmissionStateV1();
+ clock=started+16*60_000;await beat();
+ const refusedDigest=digests.at(-1)!;
+ await publishRefusalV1(store,"g1-m01",{digest:refusedDigest,reason:"self-check exited with 1: SyntaxError"},clock);
+ const refusedState=createAdmissionStateV1();
+ for(const minute of [0,20,40]){clock=started+16*60_000+minute*60_000;await beat();expect((await admitCodeV1(replica,{digest:refusedDigest,running,moduleRoot:join(root,module_),bounded,state:refusedState,now:()=>clock})).ok).toBe(false);}
+ expect(fresh.since).toBeUndefined();
+ expect((await admitCodeV1(replica,{digest:running,running,moduleRoot:join(root,module_),bounded,state,now:()=>clock})).ok).toBe(true);
+ expect(state.since).toBeUndefined();
+ await closeReplicaV1(replica);await closeReplicaV1(sender);
+},120_000);
+
+test("a refusal for a silent watchdog or a blocked loop is transient and expires with a growing back-off, a deterministic one stays",async()=>{
+ const store=temp("store"),digest="d".repeat(64),other="e".repeat(64);
+ expect(transientStartV1("the worktree code does not start: the watchdog of the daemon fell silent")).toBe(true);
+ expect(transientStartV1("the worktree code does not start: the daemon was not ready after 120 s")).toBe(true);
+ expect(transientStartV1("the worktree code does not start: exit 1")).toBe(false);
+ expect(transientStartV1("self-check exited with 1: SyntaxError")).toBe(false);
+ const independent=Bun.spawnSync(["python3","-I","-c","print([min(1800000,300000*2**max(0,n-1)) for n in (1,2,3,4,5,9)])"]).stdout.toString().trim();
+ expect(JSON.stringify([1,2,3,4,5,9].map(transientBackoffMsV1)).replaceAll(",",", ")).toBe(independent);
+ const silent="the worktree code does not start: the watchdog of the daemon fell silent";
+ let clock=1_000_000;
+ expect(await publishRefusalV1(store,"g1-m05",{digest,reason:silent},clock)).toBe(true);
+ expect(await publishRefusalV1(store,"g1-m05",{digest,reason:silent},clock+1000)).toBe(false);
+ expect(await publishRefusalV1(store,"g1-m05",{digest:other,reason:"self-check exited with 1: SyntaxError"},clock)).toBe(true);
+ expect(await publishRefusalV1(store,"g1-m05",{digest:other,reason:silent},clock+10*3_600_000)).toBe(false);
+ expect((await readRefusalsV1(store)).find(item=>item.digest===digest)!.reason.endsWith("[transient 1]")).toBe(true);
+ const peers:{originId:string;groupId:string;code:string;wallMs:number;sync:boolean;fallback:boolean}[]=[];
+ const {decideCanaryV1}=await import("../../🚦️canary/🟦️.ts");
+ const verdictAt=async(at:number)=>decideCanaryV1({digest,running:"r".repeat(64),originId:"g1-m05",groupId:"g1",now:at,waitedMs:0,authored:false,peers,retired:[],snapshots:[],refusals:await readRefusalsV1(store),healthy:{},limits:{freshMs:60_000,waitMs:120_000,turnMs:300_000,canaryMs:60_000}});
+ expect(await verdictAt(clock+299_000)).toMatchObject({ok:false,why:"refused"});
+ expect(await verdictAt(clock+300_000)).toMatchObject({ok:false,why:"mixed"});
+ clock+=300_000;
+ expect(await publishRefusalV1(store,"g1-m05",{digest,reason:silent},clock)).toBe(true);
+ expect(transientRefusalCountV1((await readRefusalsV1(store)).find(item=>item.digest===digest)!.reason)).toBe(2);
+ expect(await verdictAt(clock+599_000)).toMatchObject({ok:false,why:"refused"});
+ expect(await verdictAt(clock+600_000)).toMatchObject({ok:false,why:"mixed"});
+});
+
 test("a self-check that fails is refused for the whole fleet, one that only timed out is not, and a peer then no longer waits for the code but refuses it",async()=>{
  const store=temp("store"),check:{ok:false;reason:string}={ok:false,reason:"self-check exited with 1: SyntaxError"};
  const root=temp("code");put(root,"x/🟦️.ts","export const a=1;\n");
@@ -137,7 +199,7 @@ test("a code that the watchdog ended while it was new is refused and the daemon 
    await done;
    expect(events.some(event=>event.event==="restarting")).toBe(true);
    expect((await readRefusalsV1(store)).some(item=>item.digest===digest)).toBe(true);
-   expect((await readRunHistoryV1(worktree)).refused).toContain(digest);
+    expect((await readRunHistoryV1(worktree)).refused).not.toContain(digest);expect((await readRefusalsV1(store)).find(item=>item.digest===digest)!.reason).toMatch(/\[transient 1\]$/u);
   }else{
    await until(async()=>(await readAttestationV1(store,"a1"))!==undefined);
    await Bun.sleep(400);

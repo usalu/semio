@@ -7,7 +7,7 @@
   "required": [
     "schema",
     "name",
-    "manifest",
+    "manifestId",
     "camera",
     "content",
     "query"
@@ -23,10 +23,6 @@
     },
     "manifestId": {
       "type": "string",
-      "x-semio-state": "artifact"
-    },
-    "manifest": {
-      "$ref": "#/$defs/Manifest",
       "x-semio-state": "artifact"
     },
     "camera": {

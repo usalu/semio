@@ -11,13 +11,38 @@ fn build_render_scene_scales_for_device_pixel_ratio() {
 }
 
 #[test]
-fn build_vector_scene_respects_render_mode() {
-    let mut host = super::MapHost::new();
-    host.set_size(800, 600, 1.0);
-    host.set_render_mode("vector");
-    let _ = host.build_vector_scene();
-    host.set_render_mode("image");
-    let _ = host.build_vector_scene();
+fn basemap_layer_order_preserves_raster_under_vector_features() {
+    use super::canvas::draw_list::{DrawListOptions, scene_draw_list_json};
+    use serde_json::{Value, json};
+
+    let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/🖼️basemap-layer-order/🔣️.json")).expect("layer order fixture");
+    let mut descriptor = super::MapPolicyDescriptor::neutral();
+    descriptor.bands[0].land_wash = true;
+    descriptor.layers.push(super::MapSourceLayer { name: "landcover".into(), role: Some(super::MapLayerRole::LandCover), draw_rank: 0, label_rank: None });
+    let extension = super::Arc::new(super::DefaultMapExtension::with_policy(super::DescribedMapPolicy::new(descriptor)));
+    let raster = test_png_1x1();
+    let oracle = image::load_from_memory(&raster).expect("oracle PNG").to_rgba8();
+    assert_eq!(json!(oracle.as_raw()), fixture["rasterRgba"]);
+
+    for case in fixture["cases"].as_array().expect("cases") {
+        let mut host = super::MapHost::with_extension(extension.clone());
+        host.set_size(800, 600, 1.0);
+        host.fit_world_camera();
+        host.set_render_mode(case["mode"].as_str().expect("mode"));
+        if case["raster"] == true {
+            host.upload_tile(0, 0, 0, &raster).expect("raster tile");
+        }
+        if case["vector"] == true {
+            host.tiles.vector_tiles.insert("0/0/0".into(), synthetic_land_tile());
+        }
+        let scene = host.build_vector_scene();
+        let draw_list: Value = serde_json::from_str(&scene_draw_list_json(&scene, DrawListOptions::default())).expect("draw list");
+        let commands = draw_list["commands"].as_array().expect("commands");
+        assert_eq!(json!(commands.iter().map(|command| &command[0]).collect::<Vec<_>>()), case["commands"], "{case}");
+        for command in commands.iter().filter(|command| command[0] == "i") {
+            assert_eq!(command[3], fixture["rasterEncoding"]);
+        }
+    }
 }
 
 #[test]

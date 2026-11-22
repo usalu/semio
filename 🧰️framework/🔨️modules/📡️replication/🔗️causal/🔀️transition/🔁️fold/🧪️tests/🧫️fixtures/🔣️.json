@@ -23,6 +23,30 @@
     "noWorkAfterCancel": true,
     "terminalEmpty": true
   },
+  "terminalReceipts": {
+    "controlBackingBytes": 73,
+    "rejectionBackingBytes": 37,
+    "cases": [
+      {
+        "outcome": "Ready",
+        "controlReleaseTurn": "Pending",
+        "retainedRejectionBytes": 0
+      },
+      {
+        "outcome": "Rejected",
+        "controlReleaseTurn": "Rejected",
+        "retainedRejectionBytes": 37
+      }
+    ]
+  },
+  "originalStepWork": {
+    "bodyLimit": 4096,
+    "replyHandoff": 1,
+    "cases": [
+      { "available": 4096, "bodyPerformed": 0, "nativePerformed": 0 },
+      { "available": 4097, "bodyPerformed": 1, "nativePerformed": 2 }
+    ]
+  },
   "decodeCases": [
     {
       "payloadHex": "040741c3a9f09f988000",

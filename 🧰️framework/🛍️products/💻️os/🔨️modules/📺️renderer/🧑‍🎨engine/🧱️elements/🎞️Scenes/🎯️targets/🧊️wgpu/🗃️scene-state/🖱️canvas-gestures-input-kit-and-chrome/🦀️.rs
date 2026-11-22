@@ -140,11 +140,13 @@ pub struct SceneModifiers {
     pub ctrl: bool,
     pub alt: bool,
     pub meta: bool,
+    /// 🖱️ DOM `MouseEvent.detail` of the press a release belongs to (2 is a double click); `0` when unknown.
+    pub click_count: u32,
 }
 
 impl From<semio_ui_wgpu_events::EventModifiers> for SceneModifiers {
     fn from(modifiers: semio_ui_wgpu_events::EventModifiers) -> Self {
-        Self { shift: modifiers.shift, ctrl: modifiers.ctrl, alt: modifiers.alt, meta: modifiers.meta }
+        Self { shift: modifiers.shift, ctrl: modifiers.ctrl, alt: modifiers.alt, meta: modifiers.meta, click_count: 0 }
     }
 }
 
@@ -191,9 +193,13 @@ impl SceneListHit {
 
 //#region 🎨️SceneRenderKit
 //#region RenderEntry
-pub fn render_placeholder(kind: &str, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
+/// 🦴️ A surface whose payload has not arrived: the same two muted pulse blocks React's `elementSkeleton` shows for a busy node, motionless like `motion-reduce:animate-none`, so no developer-facing English ever stands in for content.
+pub fn render_placeholder(bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
     let theme = ctx.theme;
-    draw_text(ctx, &format!("{kind} host"), bounds.x + 12.0, bounds.y + 24.0, theme.font_size_body, theme.text_muted);
+    let fill = theme.text_muted.with_alpha(0.2);
+    let (x, width, line) = (bounds.x + theme.padding_standard, (bounds.w - theme.padding_standard * 2.0).max(0.0), theme.font_size_body);
+    ctx.draw.push_rounded([x, bounds.y + theme.padding_standard, width, line], fill, theme.border_radius);
+    ctx.draw.push_rounded([x, bounds.y + theme.padding_standard + line + theme.gap_standard, width * 0.8, line], fill, theme.border_radius);
 }
 
 /// 🎞️ Advances one retained scene identifier scalar or one pre-admitted chrome output item.
@@ -219,11 +225,26 @@ pub struct IconRenderChromeLabels {
     pub failed: &'static str,
 }
 
+/// 📊️ The table surface's empty-body text: React's `ui.common.noData`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct TableChromeLabels {
+    pub no_data: &'static str,
+}
+
+/// 🩹️ The tiled map's given-up notice: React's `ui.host.canvasUnavailable` and `ui.common.retry`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct MapChromeLabels {
+    pub canvas_unavailable: &'static str,
+    pub retry: &'static str,
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct SceneChromeLabels {
     pub virtual_file_system: VirtualFileSystemChromeLabels,
     pub block_list: BlockListChromeLabels,
     pub icon_render: IconRenderChromeLabels,
+    pub table: TableChromeLabels,
+    pub map: MapChromeLabels,
     /// 🌍️ Whether the labels are the German bundle; the world surface writes its annotation and legend text in the same language.
     pub german: bool,
 }
@@ -235,6 +256,8 @@ impl SceneChromeLabels {
             virtual_file_system: VirtualFileSystemChromeLabels { name: "Name", no_file_system_nodes: "No file system nodes", expand: "Expand", collapse: "Collapse" },
             block_list: BlockListChromeLabels { steps: "Steps", add_step: "Add Step", delete: "Delete" },
             icon_render: IconRenderChromeLabels { empty_scene: "No scene", rendering: "Rendering…", failed: "Icon rendering failed" },
+            table: TableChromeLabels { no_data: "No data" },
+            map: MapChromeLabels { canvas_unavailable: "Canvas unavailable", retry: "Retry" },
         }
     }
 }

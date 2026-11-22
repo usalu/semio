@@ -76,11 +76,11 @@ pub fn config_sun(cfg: &Process3dConfig) -> WorldSunConfig {
 /// 🖱️ `engagementSessionActive` gates the ground-click placement path used by the cut/drill/attach
 /// utilities; `faceDragActive` gates the push/pull drag gesture, only while the select utility is
 /// active (so a click-to-place utility doesn't also start a face drag).
-fn process3d_selection_json(active_utility: &str, selected: &[String]) -> String {
+fn process3d_selection_json(active_utility: &str, placement_active: bool, selected: &[String]) -> String {
     let mut value: semio_framework::DslValue = json::from_json_str(&world3d_selection_json("rectangle", selected, None), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|_| semio_framework::DslValue::Object(Vec::new()));
     if let semio_framework::DslValue::Object(entries) = &mut value {
         entries.retain(|(key, _)| key != "engagementSessionActive" && key != "faceDragActive");
-        entries.push(("engagementSessionActive".to_string(), semio_framework::DslValue::Bool(placement::placement_kind(active_utility).is_some())));
+        entries.push(("engagementSessionActive".to_string(), semio_framework::DslValue::Bool(placement_active)));
         entries.push(("faceDragActive".to_string(), semio_framework::DslValue::Bool(active_utility == "select")));
     }
     json::to_json_string(&value)
@@ -199,21 +199,26 @@ fn preview_readout(snapshot: &Process3dSnapshot, resolved_up_to: Option<usize>) 
 
 //#region 🔖️Render
 pub fn render(snapshot: &Process3dSnapshot, config: &Process3dConfig, active_utility: &str, selected_ids: &[String]) -> UiAssemblyResult<BuiltNode> {
-    render_with_placement(snapshot, config, active_utility, selected_ids, None)
+    render_with_placement(snapshot, config, active_utility, selected_ids, None, None)
 }
 
 /// 👆️ Renders the same workpiece with an optional local placement wireframe.
-pub fn render_with_placement(snapshot: &Process3dSnapshot, config: &Process3dConfig, active_utility: &str, selected_ids: &[String], position: Option<[f64; 3]>) -> UiAssemblyResult<BuiltNode> {
+pub fn render_with_placement(snapshot: &Process3dSnapshot, config: &Process3dConfig, active_utility: &str, selected_ids: &[String], position: Option<[f64; 3]>, chosen: Option<(&str, &str)>) -> UiAssemblyResult<BuiltNode> {
+    let placement_active = if active_utility == placement::PLACE_CAPABILITY_UTILITY {
+        chosen.is_some()
+    } else {
+        placement::is_placement_utility(active_utility)
+    };
     let (meshes_json, instances_json) = preview_payload_cached(snapshot, config.resolved_up_to);
     let selected = if selected_ids.contains(&snapshot.stock_id) && instances_json != "[]" { std::slice::from_ref(&snapshot.stock_id) } else { &[] };
     let mut scene = world3d_scene(
         world3d_camera_json(config.camera_position, config.camera_target, config.camera_fov),
         meshes_json,
         instances_json,
-        process3d_selection_json(active_utility, selected),
+        process3d_selection_json(active_utility, placement_active, selected),
         &config_sun(config),
     );
-    scene.engagement_preview_json = position.and_then(|position| placement::preview_json(snapshot, active_utility, position));
+    scene.engagement_preview_json = position.and_then(|position| placement::preview_json(snapshot, active_utility, chosen, position));
     scene.domain_id = Some(PROCESS3D_INTERACTION_DOMAIN.into());
     scene.domain_granularity_id = Some(PROCESS3D_GRANULARITY_OBJECT.into());
     scene_surface(PROCESS_3D_PLAY_WINDOW_MAIN, semio_plugin::app::SurfaceKind::World3d, &scene)
@@ -234,7 +239,7 @@ pub fn engagement(snapshot: &Process3dSnapshot, config: &Process3dConfig, active
         (None, false) => "Preview failed".into(),
     };
     WindowEngagement {
-        session_active: Some(placement::placement_kind(active_utility).is_some()),
+        session_active: Some(placement::is_placement_utility(active_utility)),
         options: None,
         input: Some(WindowEngagementInput {
             id: Some("process3d-engagement".into()),

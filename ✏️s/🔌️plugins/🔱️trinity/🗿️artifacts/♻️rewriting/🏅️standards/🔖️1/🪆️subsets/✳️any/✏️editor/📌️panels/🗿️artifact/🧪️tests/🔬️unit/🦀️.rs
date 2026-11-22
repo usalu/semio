@@ -14,7 +14,6 @@ use semio_plugin::{TreeWindowRequest, ViewModel, TREE_WINDOW_DEFAULT_ROWS};
 use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::graph::{Camera, Node};
 use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
 use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::content::JackWorkingScene;
-use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::manifest::Manifest;
 use semio_framework_graph_manifest::PropertyBag;
 use semio_s_artifact_trinity_jack_semio_content::SemioJackContent;
 
@@ -24,7 +23,7 @@ fn oversized_state(nodes: usize) -> RewritingSnapshot {
     let nodes: Vec<Node> = (0..nodes)
         .map(|index| Node { id: format!("node-{index}"), kind: "Piece".into(), name: format!("Piece {index}"), x: index as f64, y: 0.0, width: 80.0, height: 40.0, properties: PropertyBag::new(), ports: Vec::new() })
         .collect();
-    let fixture = JackSnapshot::with_content::<SemioJackContent>(JackSnapshot::SCHEMA.into(), "oversized".into(), Some("nakagin".into()), Manifest::nakagin_default(), Camera::default(), JackWorkingScene { nodes, edges: Vec::new() }, None);
+    let fixture = JackSnapshot::with_content::<SemioJackContent>(JackSnapshot::SCHEMA.into(), "oversized".into(), "nakagin".into(), Camera::default(), JackWorkingScene { nodes, edges: Vec::new() }, None);
     RewritingSnapshot { working_graph: fixture, ..Default::default() }
 }
 

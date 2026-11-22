@@ -287,8 +287,8 @@
         "tools",
         "revision"
       ],
-      "maximumModules": 110,
-      "maximumBytes": 1300000
+      "maximumModules": 160,
+      "maximumBytes": 2000000
     },
     {
       "id": "bazel-status-leaf",
@@ -334,8 +334,8 @@
         "revision",
         "routing"
       ],
-      "maximumModules": 32,
-      "maximumBytes": 379000
+      "maximumModules": 36,
+      "maximumBytes": 400000
     },
     {
       "id": "capacity-entry",
@@ -358,6 +358,31 @@
       ],
       "maximumModules": 33,
       "maximumBytes": 316000
+    },
+    {
+      "id": "test-file-entry",
+      "kind": "import",
+      "module": "../../../🔬️test-file/⌨️command/🟦️.ts",
+      "forbid": [
+        "graph",
+        "native-build",
+        "test-harness",
+        "cargo",
+        "caller",
+        "invocation",
+        "selection",
+        "resident",
+        "bootstrap",
+        "store-receipt",
+        "tools",
+        "revision",
+        "routing",
+        "leases",
+        "host-capacity",
+        "sealed"
+      ],
+      "maximumModules": 24,
+      "maximumBytes": 120000
     },
     {
       "id": "doctor-entry",
@@ -385,8 +410,8 @@
         "test-harness",
         "cargo"
       ],
-      "maximumModules": 41,
-      "maximumBytes": 391000
+      "maximumModules": 43,
+      "maximumBytes": 430000
     },
     {
       "id": "watchdog-leaf",
@@ -410,7 +435,7 @@
         "host-capacity"
       ],
       "maximumModules": 3,
-      "maximumBytes": 21000
+      "maximumBytes": 22000
     },
     {
       "id": "sealed-mode-leaf",

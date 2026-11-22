@@ -1,0 +1,151 @@
+{
+  "genre": "browser-actor-ownership",
+  "primary": {
+    "pluginId": "s.space",
+    "instanceId": 4,
+    "appId": "s.space.studio@1/os.workflow#editor",
+    "role": "editor"
+  },
+  "editor": {
+    "pluginId": "gis.gisterrain",
+    "instanceId": 12,
+    "appId": "gis.gisterrain.terrain@1/gis.terrain#editor",
+    "role": "editor"
+  },
+  "viewer": {
+    "pluginId": "gis.gisterrain",
+    "instanceId": 13,
+    "appId": "gis.gisterrain.terrain@1/gis.terrain#viewer",
+    "role": "viewer"
+  },
+  "scope": {
+    "spaceId": "space-1",
+    "documentId": "terrain-46"
+  },
+  "actor": {
+    "clientInstanceId": "client-1",
+    "activationGeneration": "generation-7"
+  },
+  "cases": [
+    {
+      "title": "primary published and focused",
+      "panel": null,
+      "focus": false,
+      "target": "primary",
+      "change": null,
+      "published": true,
+      "focused": true,
+      "attached": true
+    },
+    {
+      "title": "spawned editor published and focused",
+      "panel": "editor",
+      "focus": true,
+      "target": "editor",
+      "change": null,
+      "published": true,
+      "focused": true,
+      "attached": true
+    },
+    {
+      "title": "published editor behind Workflow",
+      "panel": "editor",
+      "focus": false,
+      "target": "editor",
+      "change": null,
+      "published": true,
+      "focused": false,
+      "attached": true
+    },
+    {
+      "title": "detached editor",
+      "panel": null,
+      "focus": false,
+      "target": "editor",
+      "change": null,
+      "published": false,
+      "focused": false,
+      "attached": true
+    },
+    {
+      "title": "replaced editor using same Workflow node",
+      "panel": "viewer",
+      "focus": true,
+      "target": "editor",
+      "change": null,
+      "published": false,
+      "focused": false,
+      "attached": true
+    },
+    {
+      "title": "mounted viewer using same Workflow node",
+      "panel": "viewer",
+      "focus": true,
+      "target": "viewer",
+      "change": null,
+      "published": true,
+      "focused": true,
+      "attached": true
+    },
+    {
+      "title": "matching artifact ID in foreign Space",
+      "panel": "editor",
+      "focus": true,
+      "target": "editor",
+      "change": "spaceId",
+      "published": true,
+      "focused": true,
+      "attached": false
+    },
+    {
+      "title": "different artifact in same Space",
+      "panel": "editor",
+      "focus": true,
+      "target": "editor",
+      "change": "documentId",
+      "published": true,
+      "focused": true,
+      "attached": false
+    },
+    {
+      "title": "previous client after replacement",
+      "panel": "viewer",
+      "focus": true,
+      "target": "viewer",
+      "change": "clientInstanceId",
+      "published": true,
+      "focused": true,
+      "attached": false
+    },
+    {
+      "title": "previous activation generation",
+      "panel": "editor",
+      "focus": true,
+      "target": "editor",
+      "change": "activationGeneration",
+      "published": true,
+      "focused": true,
+      "attached": false
+    },
+    {
+      "title": "unexpected verified surface",
+      "panel": "viewer",
+      "focus": true,
+      "target": "viewer",
+      "change": "verifiedSurfaceId",
+      "published": true,
+      "focused": true,
+      "attached": false
+    },
+    {
+      "title": "actor mount identity pending",
+      "panel": "editor",
+      "focus": true,
+      "target": "editor",
+      "change": "pending",
+      "published": true,
+      "focused": true,
+      "attached": false
+    }
+  ]
+}

@@ -65,9 +65,10 @@ export function createPinnedFsV1(options:{world:PinnedWorldSyncV1;workspaceRoot:
    return typed?rows.map(row=>dirent(path,row.name,row.directory?"directory":world.kindSync(target===""?row.name:target+"/"+row.name)!)):rows.map(row=>row.name);
   }) as unknown as ReadFsV1["readdirSync"],
  };
+ let canonicalRoot:string|undefined;
  const real=(path:string,opts?:unknown)=>{
   const inner=inside(path);if(inner===undefined)return (fallback.realpathSync as any)(path,opts);
-  const target=resolveLink(inner);kindOf(target,false,path);return target===""?root:join(root,...target.split("/"));
+  const target=resolveLink(inner);kindOf(target,false,path);canonicalRoot??=(()=>{try{return (fallback.realpathSync as any)(root);}catch{return root;}})();return target===""?canonicalRoot:join(canonicalRoot,...target.split("/"));
  };
  const realpathSync=Object.assign(real,{native:real}) as unknown as ReadFsV1["realpathSync"];
  return Object.freeze({...port,realpathSync}) as ReadFsV1;

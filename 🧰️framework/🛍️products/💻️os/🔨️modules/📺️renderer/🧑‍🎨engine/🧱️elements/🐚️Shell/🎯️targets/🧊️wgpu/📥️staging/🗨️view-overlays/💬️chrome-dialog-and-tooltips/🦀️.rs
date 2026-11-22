@@ -4,6 +4,19 @@
 
 use super::*;
 
+/// 🪟️ Salt of the dialog enter fade in the shared chrome motion registry.
+const CHROME_DIALOG_ENTER_SALT: u32 = 0x6469_616c;
+
+/// 👻️ The last open dialog kept while it fades and zooms out (`closed_at` is set from the frame it left the stack).
+struct DialogGhost {
+    request: ChromeDialogRequest,
+    closed_at: Option<f32>,
+}
+
+thread_local! {
+    static CHROME_DIALOG_GHOST: std::cell::RefCell<Option<DialogGhost>> = const { std::cell::RefCell::new(None) };
+}
+
 //#region ShellChrome
 impl<'ctx> OverlaysViewCtx<'ctx> {
     /// 🔐️ Paints the `/hub` workspace as the centered overlay React mounts outside `defaultDock`.
@@ -21,15 +34,16 @@ impl<'ctx> OverlaysViewCtx<'ctx> {
         world_resources: &mut infinite_world::world::World3dBuildContext,
         cx:&mut semio_framework_job::StepContext<'_>,
     ) -> bool {
-        if !self.directory.hub_workspace_open {
+        let route_page = !self.directory.hub_workspace_open && self.opening.route_not_found.is_some();
+        if !self.directory.hub_workspace_open && !route_page {
             close_chrome_overlay_glass_content(cursor, overlay);
             return true;
         }
-        let surface = semio_renderer_wgpu_hub_workspace::hub_connection::FRAMEWORK_HUB_PANEL_ID;
+        let surface = if route_page { semio_renderer_wgpu_shell_doc_open::ROUTE_NOT_FOUND_PANEL_ID } else { semio_renderer_wgpu_hub_workspace::hub_connection::FRAMEWORK_HUB_PANEL_ID };
         match cursor.phase {
             0 => {
                 overlay.push_glass([0.0, 0.0, width, height], 0.0, theme.veil_glass(Level::Dialog));
-                input.register_hit(HitTarget { rect: Rect::new(0.0, 0.0, width, height), event: None, control_id: Some("framework.hub.scrim".into()), kind: HitKind::Button, drag_axis: None, drag_data: None });
+                input.register_hit(HitTarget { rect: Rect::new(0.0, 0.0, width, height), event: None, control_id: Some(if route_page { "os.route-not-found.scrim" } else { "framework.hub.scrim" }.into()), kind: HitKind::Button, drag_axis: None, drag_data: None });
                 let card_w = (width - theme.padding_standard * 4.0).clamp(320.0, 960.0);
                 let card_h = (height - theme.navbar_height - theme.footer_height - theme.padding_standard * 4.0).clamp(240.0, 760.0);
                 let rect = Rect::new((width - card_w) * 0.5, (height - card_h) * 0.5, card_w, card_h);
@@ -241,22 +255,76 @@ impl<'ctx> OverlaysViewCtx<'ctx> {
     }
 
     pub fn render_chrome_dialog_step(&mut self, cursor: &mut ShellChromeChildCursor, overlay: &mut DrawList, atlas: &mut FontAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, width: f32, height: f32) -> bool {
-        let Some(request) = self.chrome.chrome_build.dialog_stack.last() else {
+        let now = semio_renderer_wgpu_shell_async::chrome_motion_seconds();
+        let live = self.chrome.chrome_build.dialog_stack.last();
+        if cursor.scalar == 0 {
+            CHROME_DIALOG_GHOST.with(|ghost| {
+                let mut ghost = ghost.borrow_mut();
+                match live {
+                    Some(request) => {
+                        if ghost.as_ref().is_some_and(|ghost| ghost.closed_at.is_some()) {
+                            semio_ui_draw_contract::chrome_enter_forget(CHROME_DIALOG_ENTER_SALT);
+                        }
+                        *ghost = Some(DialogGhost { request: request.clone(), closed_at: None });
+                    }
+                    None => {
+                        if let Some(ghost) = ghost.as_mut() {
+                            ghost.closed_at.get_or_insert(now);
+                        }
+                    }
+                }
+            });
+        }
+        let (request, closed_for) = match live {
+            Some(request) => (request.clone(), None),
+            None => match CHROME_DIALOG_GHOST.with(|ghost| ghost.borrow().as_ref().map(|ghost| (ghost.request.clone(), now - ghost.closed_at.unwrap_or(now)))) {
+                Some((request, elapsed)) => (request, Some(elapsed)),
+                None => {
+                    semio_ui_draw_contract::chrome_enter_forget(CHROME_DIALOG_ENTER_SALT);
+                    close_chrome_overlay_glass_content(cursor, overlay);
+                    return true;
+                }
+            },
+        };
+        let closing = closed_for.is_some();
+        let enter = match closed_for {
+            Some(elapsed) => 1.0 - semio_ui_draw_contract::enter_progress(elapsed.max(0.0), theme.dialog_enter_seconds, theme.dialog_enter_easing, overlay.reduced_motion()),
+            None => semio_ui_draw_contract::chrome_enter(CHROME_DIALOG_ENTER_SALT, self.chrome.chrome_build.dialog_stack.len() as u32, now, theme.dialog_enter_seconds, theme.dialog_enter_easing, overlay.reduced_motion()),
+        };
+        if closing && enter <= 0.0 {
+            CHROME_DIALOG_GHOST.with(|ghost| *ghost.borrow_mut() = None);
+            semio_ui_draw_contract::chrome_enter_forget(CHROME_DIALOG_ENTER_SALT);
             close_chrome_overlay_glass_content(cursor, overlay);
             return true;
-        };
-        let ops = chrome_dialog_paint_ops(request, width, height, theme, atlas);
+        }
+        if enter < 1.0 {
+            overlay.note_motion_pending();
+        }
+        let ops = chrome_dialog_paint_ops(&request, width, height, theme, atlas);
         let Some(op) = ops.get(cursor.scalar) else {
             close_chrome_overlay_glass_content(cursor, overlay);
             return true;
         };
+        let faded = |mut style: semio_ui_theme::GlassStyle| {
+            style.alpha *= enter;
+            style.blur_px *= enter;
+            style
+        };
+        let scale = semio_ui_draw_contract::dialog_zoom(enter, theme.dialog_enter_scale_from);
+        let (cx, cy) = ops.iter().find_map(|op| if let ChromeDialogPaintOp::Modal(rect) = op { Some((rect.x + rect.w * 0.5, rect.y + rect.h * 0.5)) } else { None }).unwrap_or((width * 0.5, height * 0.5));
+        let zoom_x = |x: f32| cx + (x - cx) * scale;
+        let zoom_y = |y: f32| cy + (y - cy) * scale;
+        let zoom = |rect: Rect| Rect::new(zoom_x(rect.x), zoom_y(rect.y), rect.w * scale, rect.h * scale);
         match op {
             ChromeDialogPaintOp::Scrim => {
-                overlay.push_glass([0.0, 0.0, width, height], 0.0, theme.veil_glass(Level::Dialog));
+                overlay.push_glass([0.0, 0.0, width, height], 0.0, faded(theme.veil_glass(Level::Dialog)));
             }
-            ChromeDialogPaintOp::Modal(rect) => open_chrome_overlay_glass_content(cursor, overlay, *rect, theme.border_radius, theme.glass(Level::Dialog)),
-            ChromeDialogPaintOp::Fill { rect, color } => overlay.push_rounded([rect.x, rect.y, rect.w, rect.h], *color, theme.border_radius),
-            ChromeDialogPaintOp::Text { value, x, y, max_w, size, color } => match chrome_text_complete_step(overlay, atlas, value, *x, *y, *max_w, *size, *color, &mut cursor.glyph) {
+            ChromeDialogPaintOp::Modal(rect) => open_chrome_overlay_glass_content(cursor, overlay, zoom(*rect), theme.border_radius * scale, faded(theme.glass(Level::Dialog))),
+            ChromeDialogPaintOp::Fill { rect, color } => {
+                let rect = zoom(*rect);
+                overlay.push_rounded([rect.x, rect.y, rect.w, rect.h], color.with_alpha(color.a * enter), theme.border_radius * scale)
+            }
+            ChromeDialogPaintOp::Text { value, x, y, max_w, size, color } => match chrome_text_complete_step(overlay, atlas, value, zoom_x(*x), zoom_y(*y), *max_w * scale, *size * scale, color.with_alpha(color.a * enter), &mut cursor.glyph) {
                 Ok(false) => return false,
                 Ok(true) => {}
                 Err(()) => {
@@ -264,6 +332,7 @@ impl<'ctx> OverlaysViewCtx<'ctx> {
                     cursor.glyph.reset();
                 }
             },
+            ChromeDialogPaintOp::Hit { .. } | ChromeDialogPaintOp::Segment { .. } | ChromeDialogPaintOp::Nudge { .. } | ChromeDialogPaintOp::Clicks { .. } if closing => {}
             ChromeDialogPaintOp::Hit { rect, control_id, event, kind, .. } => {
                 note_chrome_dialog_control(op);
                 input.register_hit(HitTarget { rect: *rect, event: event.clone(), control_id: Some(control_id.clone()), kind: *kind, drag_axis: None, drag_data: None });
@@ -369,7 +438,7 @@ impl<'ctx> OverlaysViewCtx<'ctx> {
             close_chrome_overlay_glass_content(cursor, overlay);
             return true;
         };
-        let Some(step_count) = self.docs.session.as_ref().and_then(|session| session.app.introduction.as_ref()).map(|introduction| introduction.steps.len()) else {
+        let Some(step_count) = self.docs.chrome_tour_definition(&self.chrome).map(|introduction| introduction.steps.len()) else {
             close_chrome_overlay_glass_content(cursor, overlay);
             return true;
         };
@@ -511,6 +580,32 @@ impl<'ctx> OverlaysViewCtx<'ctx> {
                 return true;
             }
             _ => {}
+        }
+        cursor.scalar += 1;
+        false
+    }
+
+    /// 💬️ Paints the covering narration cue as React's `TutorialCaptions`: a bottom-centre dialog-level glass box, hidden while captions are off or no cue covers the playhead.
+    pub fn render_tutorial_captions_step(&mut self, cursor: &mut ShellChromeChildCursor, overlay: &mut DrawList, atlas: &mut FontAtlas, theme: &Theme, width: f32, height: f32) -> bool {
+        let layout = self.tutorial.tutorial.as_ref().and_then(|runtime| semio_renderer_wgpu_shell_view_paint::tutorial_caption_layout(runtime, atlas, theme, self.prefs.active_terminology(), self.prefs.active_locale(), width, height));
+        let Some((text, rect, text_rect)) = layout else {
+            close_chrome_overlay_glass_content(cursor, overlay);
+            return true;
+        };
+        match cursor.scalar {
+            0 => open_chrome_overlay_glass_content(cursor, overlay, rect, theme.border_radius, theme.glass(Level::Dialog)),
+            1 => match chrome_text_wrapped_complete_step(overlay, atlas, &text, text_rect, theme.font_size_body, theme.text, &mut cursor.glyph) {
+                Ok(false) => return false,
+                Ok(true) => {}
+                Err(()) => {
+                    cursor.glyph.reset();
+                    self.chrome.error = Some("Shell tutorial caption exceeded the retained glyph boundary".to_string());
+                }
+            },
+            _ => {
+                close_chrome_overlay_glass_content(cursor, overlay);
+                return true;
+            }
         }
         cursor.scalar += 1;
         false

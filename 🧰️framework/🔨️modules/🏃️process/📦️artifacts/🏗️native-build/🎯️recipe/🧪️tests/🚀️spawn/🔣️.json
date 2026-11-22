@@ -1,11 +1,26 @@
 {
   "version": 1,
   "dependencies": [["descriptor", "used"]],
+  "capacity": {
+    "cores": 10,
+    "preferred": 4,
+    "minimum": 2,
+    "reason": "memory",
+    "granted": 2,
+    "waitMilliseconds": 2055000,
+    "planned": "[compile-units] cargo build: 4 of 10 cores planned (at least 2 to start; the free memory carries fewer compile units)",
+    "leased": "[compile-units] cargo build: compiler lease granted 2 of 10 cores after 2055s"
+  },
   "cases": [
     {"id": "stable", "mutation": "none", "package": null, "outcome": "spawn"},
+    {"id": "caller environment absent", "mutation": "none", "package": null, "outcome": "spawn", "ambientLanguage": true},
+    {"id": "external jobserver", "mutation": "none", "package": null, "outcome": "spawn", "jobserver": "-j1 --jobserver-auth=fifo:/pool"},
     {"id": "unrelated lock row changed while waiting", "mutation": "capacity", "package": "unrelated", "outcome": "spawn"},
     {"id": "selected lock row changed while waiting", "mutation": "capacity", "package": "used", "outcome": "retry"},
     {"id": "selected lock row changed by reconciliation", "mutation": "lock", "package": "used", "outcome": "retry"},
-    {"id": "cancelled after reconciliation", "mutation": "cancel", "package": null, "outcome": "cancel"}
+    {"id": "admitted source changed before capture", "mutation": "source", "package": null, "outcome": "retry"},
+    {"id": "parent cancelled before changed source settles", "mutation": "cancel-source", "package": null, "outcome": "cancel"},
+    {"id": "cancelled after reconciliation", "mutation": "cancel", "package": null, "outcome": "cancel"},
+    {"id": "cancelled during capacity wait", "mutation": "cancel-wait", "package": null, "outcome": "cancel"}
   ]
 }

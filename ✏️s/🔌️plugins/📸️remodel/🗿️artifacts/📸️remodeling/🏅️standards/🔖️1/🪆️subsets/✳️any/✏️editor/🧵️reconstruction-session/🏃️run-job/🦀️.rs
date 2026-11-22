@@ -260,6 +260,7 @@ impl ReconstructionRunJob {
     pub(super) fn ingest(&mut self) -> Result<Option<(u64, u64, ReconstructionRunReason)>, ()> {
         let RunPhase::Ingest { stream, frame, ingestion } = &mut self.phase else { return Err(()) };
         let scene = self.scene.as_ref().ok_or(())?;
+        let stream_ordinal = u32::try_from(*stream).map_err(|_| ())?;
         let Some(current) = ingestion.as_mut() else {
             let Some(stream_ref) = scene.streams.get(*stream) else {
                 self.scene = None;
@@ -272,7 +273,7 @@ impl ReconstructionRunJob {
                 return Ok(None);
             };
             let index = u64::from(frame_ref.index);
-            let entity = FrameCapture::entity(*stream as u32, frame_ref.index);
+            let entity = FrameCapture::entity(stream_ordinal, frame_ref.index);
             *frame += 1;
             return Ok(match frame_ingestion(scene, frame_ref) {
                 Some(next) => {
@@ -283,19 +284,40 @@ impl ReconstructionRunJob {
             });
         };
         let index = u64::from(current.frame.index);
-        let entity = FrameCapture::entity(*stream as u32, current.frame.index);
+        let entity = FrameCapture::entity(stream_ordinal, current.frame.index);
         if let Some(decoder) = current.decoder.as_mut() {
             match decoder.advance() {
                 BoundedDecodeProgress::Working => return Ok(None),
                 BoundedDecodeProgress::Complete(image) => {
                     current.decoder = None;
-                    current.image = Some(image);
+                    current.source_extent = [image.width, image.height];
+                    let [width, height] = frame_extent(image.width, image.height, scene.params.ingest.downscale_long_edge_px);
+                    if [width, height] == current.source_extent {
+                        current.image = Some(image);
+                    } else {
+                        let source = semio_framework_pixels::RasterImage { width: image.width, height: image.height, pixels: image.data };
+                        match semio_framework_pixels::editing::PixelEditJob::new(source, semio_framework_pixels::editing::PixelOperation::Resize { width, height, bilinear: true }, None) {
+                            Ok(resize) => current.resize = Some(resize),
+                            Err(_) => { *ingestion = None; return Ok(Some((entity, index, ReconstructionRunReason::FrameUnreadable))); }
+                        }
+                    }
                     return Ok(None);
                 }
                 BoundedDecodeProgress::Failed(_) => {
                     *ingestion = None;
                     return Ok(Some((entity, index, ReconstructionRunReason::FrameUnreadable)));
                 }
+            }
+        }
+        if let Some(resize) = current.resize.as_mut() {
+            match resize.advance_bounded(1024, 4096) {
+                Ok(progress) if !progress.done => return Ok(None),
+                Ok(_) => {
+                    let storage = current.resize.take().expect("completed resize").into_storage();
+                    current.image = Some(ImageRgba8 { width: storage.output.width, height: storage.output.height, data: storage.output.pixels });
+                    return Ok(None);
+                }
+                Err(_) => { *ingestion = None; return Ok(Some((entity, index, ReconstructionRunReason::FrameUnreadable))); }
             }
         }
         if !advance_frame_sharpness(current) {
@@ -307,7 +329,17 @@ impl ReconstructionRunJob {
         let sharpness = if pixels == 0 { 0.0 } else { (done.sharpness_sum / pixels as f64) as f32 };
         let engine = self.engine.as_mut().ok_or(())?;
         let stream_ref = &scene.streams[*stream];
-        let capture = FrameCapture { stream: *stream as u32, intrinsics: stream_intrinsics(&scene.calibration, stream_ref.camera_id.as_deref()) };
+        let mut intrinsics = stream_intrinsics(&scene.calibration, stream_ref.camera_id.as_deref());
+        if let Some(camera) = intrinsics.as_mut().filter(|_| [image.width, image.height] != done.source_extent) {
+            let sx = f64::from(image.width) / f64::from(done.source_extent[0]);
+            let sy = f64::from(image.height) / f64::from(done.source_extent[1]);
+            camera.fx *= sx;
+            camera.fy *= sy;
+            camera.skew *= sx;
+            camera.cx = (camera.cx + 0.5) * sx - 0.5;
+            camera.cy = (camera.cy + 0.5) * sy - 0.5;
+        }
+        let capture = FrameCapture { stream: stream_ordinal, intrinsics };
         Ok(Some((
             entity,
             index,
@@ -435,12 +467,20 @@ impl ReconstructionRunJob {
     fn settle<'a>(&'a mut self, cx: &mut StepContext<'_>, owed: Owed) -> Result<Option<JobOutcomeBorrow<'a>>, ValueError> {
         match owed {
             Owed::Checkpoint => {
+                self.owed.pop_front();
                 self.outbox.begin(JobPublicationKind::Checkpoint { applied_progress: self.decisions }, self.checkpoint().encode().to_vec());
                 cx.consume_fuel(1);
                 Ok(None)
             }
-            Owed::Complete => JobOutcomeBorrow::admit_complete(cx, None, None),
+            Owed::Complete => {
+                let outcome = JobOutcomeBorrow::admit_complete(cx, None, None)?;
+                if outcome.is_some() {
+                    self.owed.pop_front();
+                }
+                Ok(outcome)
+            }
             Owed::Fault => {
+                self.owed.pop_front();
                 self.outbox.begin(JobPublicationKind::Fault, Vec::new());
                 cx.consume_fuel(1);
                 Ok(None)
@@ -465,20 +505,28 @@ impl ReconstructionRunJob {
         }
         let mut advanced = false;
         loop {
+            if cx.fuel_exhausted() {
+                return Ok(None);
+            }
             let terminal = self.owed.iter().any(|owed| matches!(owed, Owed::Complete | Owed::Fault));
             if !self.owed.is_empty() && (self.live() || terminal) {
+                if cx.deadline_exceeded() {
+                    return Ok(None);
+                }
                 let state = if self.owed.contains(&Owed::Complete) { ToolRunState::Complete } else { ToolRunState::Running };
                 if self.begin_preview(state) {
                     cx.consume_fuel(1);
                     return Ok(None);
                 }
-                let owed = self.owed.pop_front().expect("owed outcome");
+                let owed = *self.owed.front().expect("owed outcome");
                 return self.settle(cx, owed).map_err(semio_framework_job::OriginalTurnFailure::from);
             }
             if !self.live() {
                 self.owed.clear();
             }
-            if advanced && (cx.deadline_exceeded() || (self.live() && (cx.fuel_exhausted() || self.writer.pending_bytes() >= TICK_FLUSH_BYTES))) {
+            let carried_preview = !advanced && self.live() && !self.writer.is_empty();
+            let reached_limit = advanced && (cx.deadline_exceeded() || (self.live() && self.writer.pending_bytes() >= TICK_FLUSH_BYTES));
+            if carried_preview || reached_limit {
                 if self.begin_preview(ToolRunState::Running) {
                     cx.consume_fuel(1);
                     return Ok(None);
@@ -513,7 +561,7 @@ impl InteractiveJob for ReconstructionRunJob {
         self.closing = true;
         let copy_bytes = self.next_close_copy_byte_demand()?;
         let demand = semio_framework_value::RetirementDemand { copy_bytes, capacity_bytes: self.next_close_capacity_byte_demand(copy_bytes)?, release_bytes: self.next_close_release_byte_demand()?, depth: self.next_close_depth_demand()? };
-        semio_framework_job::close_original_effect_step(cx, demand, |effect| {
+        let step = semio_framework_job::close_original_effect_step(cx, demand, |effect| {
             let grant = effect.grant();
             if grant.maximum_items == 0 || grant.maximum_depth == 0 {
                 return settled(effect, Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default())), false);
@@ -548,7 +596,8 @@ impl InteractiveJob for ReconstructionRunJob {
                     settled(effect, Err(error), false)
                 }
             }
-        })
+        })?;
+        Ok(if self.terminal_is_empty() { InteractiveJobCloseStep::Complete { progress: step.progress() } } else { step })
     }
 
     fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> {

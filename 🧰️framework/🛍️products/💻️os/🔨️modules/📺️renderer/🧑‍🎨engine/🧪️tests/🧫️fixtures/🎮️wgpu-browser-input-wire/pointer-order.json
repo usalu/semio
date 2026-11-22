@@ -1,0 +1,26 @@
+{
+  "sample": {"pointerKind":"mouse","y":20,"shift":false,"ctrl":false,"alt":false,"meta":false},
+  "rows": {
+    "down": {"kind":"pointer-down","pointerId":7,"button":"primary","x":10},
+    "early": {"kind":"pointer-move","pointerId":7,"x":20},
+    "peer": {"kind":"pointer-move","pointerId":8,"x":25},
+    "drag": {"kind":"pointer-move","pointerId":7,"x":30},
+    "up": {"kind":"pointer-up","pointerId":7,"button":"primary","x":40},
+    "hover": {"kind":"pointer-move","pointerId":7,"x":50},
+    "leave": {"kind":"pointer-leave","pointerId":7,"x":60},
+    "return": {"kind":"pointer-move","pointerId":7,"x":70},
+    "key": {"kind":"key-down","key":"Shift","repeat":false}
+  },
+  "cases": [
+    {
+      "name": "latest movement per pointer within each ordered segment",
+      "input": ["down","early","peer","drag","up","hover","leave","return"],
+      "pages": [["down","peer","drag","up","hover","leave","return"]]
+    },
+    {
+      "name": "movement after a full page follows every earlier barrier",
+      "input": ["key","key","key","key","key","key","key","key","key","key","key","key","key","key","key","key","down","drag","up","hover"],
+      "pages": [["key","key","key","key","key","key","key","key","key","key","key","key","key","key","key","key"],["down","drag","up","hover"]]
+    }
+  ]
+}

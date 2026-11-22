@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Pass reuse texts / Texte der Durchgangswiederverwendung",
+  "$defs": {
+    "Texts": {
+      "const": {
+        "boundary": {
+          "en": "Pass {pass} over the owners starts (round {round}): {moved} path(s) named stale, {evicted} owner(s) forgotten by name, {entries} owner(s) kept from the pass before and verified row by row when the pass reaches them; live heap {heap} MB.",
+          "de": "Durchgang {pass} über die Eigentümer beginnt (Runde {round}): {moved} Pfad(e) als veraltet genannt, {evicted} Eigentümer namentlich vergessen, {entries} Eigentümer aus dem vorigen Durchgang behalten und Zeile für Zeile geprüft, sobald der Durchgang sie erreicht; lebender Heap {heap} MB."
+        }
+      }
+    }
+  }
+}

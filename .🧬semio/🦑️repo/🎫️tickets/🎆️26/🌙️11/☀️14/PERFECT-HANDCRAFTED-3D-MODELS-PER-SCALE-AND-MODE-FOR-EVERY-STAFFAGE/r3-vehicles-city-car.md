@@ -166,3 +166,9 @@ Scripts: `r5_city_car_kit.py` (body-in-white writers on the round 3 master lines
 - 1:200 and 1:500 stay a step below 1:50 in detail (polygonal arches by design, glass mass at 1:200 and 1:500); structure lists unchanged from round 3 (tube idealisation).
 
 The 1:100 exhaust outlet uses a 0.20 mm paper outline. The complete drawing passed at 1:55, 1:75, 1:100, 1:125 and 1:150.
+
+## November 21 road wheels and body framing
+
+Five swept cast spokes attach each aluminium rim well to its hub. The steel A, B, C and D pillars and connecting roof rails complete the coarse cabin cage. The thermal view distinguishes the tyre carcass, wheel metal and brake. The measured metal surface totals 2.1191 m² across the four wheels. The full model passed schema and paper endpoint checks, all 52 scale rules and a twelve-scene independent GLB readback of 8,378,128 bytes. The outer, oblique and inner wheel detail views were inspected in the 1:500 body.
+
+Published source `fc967fdf7bcef9c2e3cbe245296a7fae3b77a2d881299bc10e62de0786eed8b9`.

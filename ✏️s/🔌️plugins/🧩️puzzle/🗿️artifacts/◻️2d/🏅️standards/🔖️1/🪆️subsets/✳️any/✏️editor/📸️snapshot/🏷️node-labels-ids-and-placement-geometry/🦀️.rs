@@ -16,13 +16,11 @@ pub fn puzzle2d_absolute_or_delta(args: Option<&Value>, current: f64) -> Option<
     args.and_then(|args| args.get("delta")).and_then(Value::as_f64).filter(|delta| delta.is_finite()).map(|delta| current + delta)
 }
 
-/// 🏷️ One node-kind catalog row's display name — the same `name` / `id` precedence the catalogue
-/// panel renders, resolved against the document's own `meta.kindCatalogs` else its inferred rows.
+/// 🏷️ One node-kind catalog row's label or name, with the kind identifier as the fallback.
 pub fn puzzle2d_kind_catalog_label(snapshot: &Value, kind_id: &str) -> String {
-    let inferred = inferred_kind_entries(snapshot, "nodes");
-    let entries = kind_catalog_entries(snapshot, "nodes").unwrap_or(inferred.as_slice());
-    entries
-        .iter()
+    kind_catalog_entries(snapshot, "nodes")
+        .into_iter()
+        .flatten()
         .find(|entry| entry.get("id").and_then(Value::as_str) == Some(kind_id))
         .and_then(|entry| entry.get("label").or_else(|| entry.get("name")).and_then(Value::as_str))
         .filter(|label| !label.is_empty())
@@ -94,30 +92,50 @@ fn puzzle2d_label_number(label: &str, root: &str) -> Option<u32> {
 /// brush commit, the fill placement, duplicate, paste) stamps this so a document never shows two rows
 /// reading the same word. Ported from `puzzle3d_next_object_label`.
 pub fn puzzle2d_next_node_label(nodes: &[Value], snapshot: &Value, kind_id: &str) -> String {
-    let catalog_base = puzzle2d_kind_catalog_label(snapshot, kind_id);
-    let peers: Vec<&Value> = nodes.iter().filter(|node| node.get("nodeKind").and_then(Value::as_str) == Some(kind_id)).collect();
-    if peers.is_empty() {
-        return catalog_base;
+    let mut labels = Puzzle2dNodeLabels::new(snapshot, kind_id);
+    for node in nodes.iter().filter(|node| node.get("nodeKind").and_then(Value::as_str) == Some(kind_id)) {
+        labels.include_node(node);
     }
-    let authored = |node: &&Value| node.get("label").or_else(|| node.get("text")).and_then(Value::as_str).filter(|label| !label.is_empty()).map(str::to_string);
-    let root = peers.iter().find_map(authored).map(|label| puzzle2d_label_root(&label)).unwrap_or(catalog_base);
-    let mut max = 0u32;
-    let mut unlabeled = 0u32;
-    for node in peers {
-        match authored(&node) {
-            Some(label) => {
-                if let Some(number) = puzzle2d_label_number(&label, &root) {
-                    max = max.max(number);
-                }
+    labels.next_label()
+}
+
+/// 🏷️ Tracks the labels of a kind while one gesture creates nodes.
+pub struct Puzzle2dNodeLabels {
+    catalog: String,
+    root: Option<String>,
+    highest: u32,
+    unlabeled: u32,
+}
+
+impl Puzzle2dNodeLabels {
+    /// 📋️ Initializes a sequence with the kind's catalog name.
+    pub fn new(snapshot: &Value, kind_id: &str) -> Self {
+        Self { catalog: puzzle2d_kind_catalog_label(snapshot, kind_id), root: None, highest: 0, unlabeled: 0 }
+    }
+
+    /// 🌱️ Accounts for the authored label of an existing node.
+    pub fn include_node(&mut self, node: &Value) {
+        let label = node.get("label").or_else(|| node.get("text")).and_then(Value::as_str).unwrap_or_default();
+        self.include_label(label);
+    }
+
+    /// 🔢️ Returns the next free label under the first authored root or the catalog name.
+    pub fn next_label(&self) -> String {
+        let root = self.root.as_deref().unwrap_or(&self.catalog);
+        let highest = self.highest.max(self.unlabeled);
+        if highest == 0 { root.to_owned() } else { format!("{root} {}", highest + 1) }
+    }
+
+    /// ✍️ Accounts for a label once the corresponding node exists.
+    pub fn include_label(&mut self, label: &str) {
+        if label.is_empty() {
+            self.unlabeled += 1;
+        } else {
+            let root = self.root.get_or_insert_with(|| puzzle2d_label_root(label));
+            if let Some(number) = puzzle2d_label_number(label, root) {
+                self.highest = self.highest.max(number);
             }
-            None => unlabeled += 1,
         }
-    }
-    max = max.max(unlabeled);
-    if max == 0 {
-        root
-    } else {
-        format!("{root} {}", max + 1)
     }
 }
 
@@ -249,19 +267,24 @@ pub fn puzzle2d_area_brush_extent_world(runtime: &Puzzle2dPlayRuntime) -> (f64, 
 
 /// 🎲️ Re-mints a node id when it collides with an existing one — client-side brush serials restart every session.
 pub fn unique_node_id(snapshot: &Value, candidate: String) -> String {
-    if board_snapshot_nodes(snapshot).iter().any(|node| node.get("id").and_then(|value| value.as_str()) == Some(candidate.as_str())) {
-        new_node_id("node")
-    } else {
-        candidate
-    }
+    unique_entity_id(board_snapshot_nodes(snapshot), candidate, "node")
 }
 
 pub fn unique_edge_id(snapshot: &Value, candidate: String) -> String {
-    if board_snapshot_edges(snapshot).iter().any(|edge| edge.get("id").and_then(|value| value.as_str()) == Some(candidate.as_str())) {
-        new_node_id("edge")
-    } else {
-        candidate
+    unique_entity_id(board_snapshot_edges(snapshot), candidate, "edge")
+}
+
+/// 🆔️ Preserves a free candidate and checks each replacement, including serials reused after wrap.
+fn unique_entity_id(rows: &[Value], mut candidate: String, prefix: &str) -> String {
+    let ids = rows.iter().filter_map(|row| row.get("id").and_then(Value::as_str));
+    if !ids.clone().any(|id| id == candidate) {
+        return candidate;
     }
+    let occupied: HashSet<_> = ids.collect();
+    while occupied.contains(candidate.as_str()) {
+        candidate = new_node_id(prefix);
+    }
+    candidate
 }
 
 /// 🔖️ The handles of a brush-placed node, each carrying the `"{node}:v{index}"` id the placed edge
@@ -400,8 +423,8 @@ pub fn puzzle2d_selected_node_ids<'a>(snapshot: &Value, selected: impl IntoItera
 /// 🔐️ Whether ANY addressed entity — node, handle, edge or target region — carries `locked: true`.
 /// The one predicate every destructive/moving verb asks before it touches the document, so a lock is
 /// the same promise for `deleteSelection`, a board drag, the rotate ring, the three transform verbs
-/// and an inspector patch. Wider than [`puzzle2d_selection_is_locked`], which only answers for the
-/// node/handle pair the clipboard's cut fragment is built from.
+/// and an inspector patch. Cuts also consider the edges they would remove through
+/// [`puzzle2d_selection_is_locked`].
 pub fn puzzle2d_addresses_locked_entity(snapshot: &Value, ids: &[String]) -> bool {
     if ids.is_empty() {
         return false;
@@ -415,10 +438,25 @@ pub fn puzzle2d_addresses_locked_entity(snapshot: &Value, ids: &[String]) -> boo
     node_locked || board_snapshot_edges(snapshot).iter().any(|edge| hits(edge) && locked(edge)) || snapshot_target_regions(snapshot).iter().any(|region| hits(region) && locked(region))
 }
 
-/// 🔒️ Whether any of these nodes (or one of their handles) refuses to be cut.
+/// 🔒️ Whether a cut would remove a locked node, handle, or incident edge.
 pub fn puzzle2d_selection_is_locked(snapshot: &Value, node_ids: &[String]) -> bool {
     let ids: HashSet<&str> = node_ids.iter().map(String::as_str).collect();
-    board_snapshot_nodes(snapshot).iter().filter(|node| node.get("id").and_then(Value::as_str).is_some_and(|id| ids.contains(id))).any(|node| {
-        node.get("locked").and_then(Value::as_bool) == Some(true) || node.get("handles").and_then(Value::as_array).into_iter().flatten().any(|handle| handle.get("locked").and_then(Value::as_bool) == Some(true))
+    let mut handles = HashSet::new();
+    let locked = |entity: &Value| entity.get("locked").and_then(Value::as_bool) == Some(true);
+    for node in board_snapshot_nodes(snapshot).iter().filter(|node| node.get("id").and_then(Value::as_str).is_some_and(|id| ids.contains(id))) {
+        if locked(node) {
+            return true;
+        }
+        for handle in node.get("handles").and_then(Value::as_array).into_iter().flatten() {
+            if locked(handle) {
+                return true;
+            }
+            handles.extend(handle.get("id").and_then(Value::as_str));
+        }
+    }
+    board_snapshot_edges(snapshot).iter().any(|edge| {
+        locked(edge) && ["source", "target"].into_iter().any(|key| {
+            edge.get(key).and_then(Value::as_str).is_some_and(|endpoint| ids.contains(endpoint) || handles.contains(endpoint))
+        })
     })
 }

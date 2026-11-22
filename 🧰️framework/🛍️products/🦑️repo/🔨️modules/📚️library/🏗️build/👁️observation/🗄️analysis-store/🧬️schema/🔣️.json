@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "The machine store of source analyses: the result of a parser provider for one source (its JSON image and the rows it observed) is kept under the digest of (provider id, provider revision, path relative to the workspace, content digest), with the workspace root replaced by a token, so that every process of a machine (and later every machine of a fleet) takes the result instead of parsing the file again. A result is only taken while its rows hold on the taker's tree.",
+  "definitions": {
+    "Policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "domain", "rootToken", "shardCharacters", "minimumSourceBytes", "maximumBytes", "lowWaterPercent", "entryMaximumBytes", "collectEveryWrites", "brotliQuality"],
+      "properties": {
+        "version": { "const": 1 },
+        "domain": { "type": "string" },
+        "rootToken": { "type": "string" },
+        "shardCharacters": { "type": "integer", "minimum": 1, "maximum": 4 },
+        "minimumSourceBytes": { "type": "integer", "minimum": 0 },
+        "maximumBytes": { "type": "integer", "minimum": 1048576 },
+        "lowWaterPercent": { "type": "integer", "minimum": 10, "maximum": 99 },
+        "entryMaximumBytes": { "type": "integer", "minimum": 1024 },
+        "collectEveryWrites": { "type": "integer", "minimum": 1 },
+        "brotliQuality": { "type": "integer", "minimum": 0, "maximum": 11 }
+      },
+      "const": { "version": 1, "domain": "source-analysis-store/1", "rootToken": "⟦semio-root⟧", "shardCharacters": 2, "minimumSourceBytes": 16384, "maximumBytes": 268435456, "lowWaterPercent": 80, "entryMaximumBytes": 1048576, "collectEveryWrites": 128, "brotliQuality": 4 }
+    },
+    "Entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "key", "image", "nestedObservations"],
+      "properties": {
+        "version": { "const": 1 },
+        "key": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "image": { "type": "string" },
+        "nestedObservations": { "type": "array" }
+      }
+    }
+  }
+}

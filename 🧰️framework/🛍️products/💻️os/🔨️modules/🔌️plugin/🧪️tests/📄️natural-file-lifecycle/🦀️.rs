@@ -223,3 +223,16 @@ fn natural_file_actions_publish_exact_paired_codec_metadata() {
     assert_eq!(fixture.lifecycle.expected.opened_instance_id, fixture.lifecycle.opened_instance_id);
     assert_eq!(fixture.lifecycle.expected.opened_history_entries, 0);
 }
+
+#[test]
+fn natural_file_hidden_arguments_carry_english_and_german_labels() {
+    let codec = semio_plugin_decl_app::NaturalFileCodec { format_kind: "s.stdio.csv@rfc4180", extension: ".csv", media_type: "text/csv", binary: false };
+    for action in semio_plugin_decl_app::natural_file_action_definitions(codec) {
+        let value = serde_json::to_value(action).expect("action serializes");
+        for (id, english, german) in [("formatKind", "Format kind", "Formatart"), ("extension", "File extension", "Dateiendung"), ("mediaType", "Media type", "Medientyp"), ("binary", "Binary", "Binär")] {
+            let argument = value["args"].as_array().expect("action args").iter().find(|argument| argument["id"] == id).expect("argument is declared");
+            let label = argument["label"].to_string();
+            assert!(label.contains(english) && label.contains(german), "{id} label {label} carries both languages");
+        }
+    }
+}

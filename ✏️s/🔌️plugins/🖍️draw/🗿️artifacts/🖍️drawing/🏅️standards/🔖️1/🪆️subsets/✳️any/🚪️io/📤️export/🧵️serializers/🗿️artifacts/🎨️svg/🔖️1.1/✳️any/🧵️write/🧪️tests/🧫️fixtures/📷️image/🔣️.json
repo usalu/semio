@@ -1,0 +1,23 @@
+{
+  "width": 2,
+  "height": 1,
+  "rgba": [
+    255,
+    0,
+    0,
+    255,
+    0,
+    0,
+    255,
+    128
+  ],
+  "id": "i<&\"🙂",
+  "escapedId": "i&lt;&amp;&quot;🙂",
+  "fuel": 1,
+  "pageBounds": {
+    "pageCapacity": 3072,
+    "allocatorCapacity": 4096,
+    "finalPageBytes": 64,
+    "excessBytes": 1
+  }
+}

@@ -1,9 +1,10 @@
 /** 🛑 Exercises cancellation of a live retained PDF image decode through the Page surface. */
 import assert from "node:assert/strict";
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { deflateSync } from "node:zlib";
 import type { ElementHandle, Locator } from "playwright";
+import { python } from "./📜️e2e-harness.ts";
 
 const [url, outputDirectory] = process.argv.slice(2);
 assert(url && outputDirectory, "Expected a shell URL (or --fixture-only) and the ticket output directory");
@@ -12,7 +13,19 @@ mkdirSync(output, { recursive: true });
 const corpus = JSON.parse(readFileSync(new URL("./image-authoring.json", import.meta.url), "utf8"));
 const pngBytes = maximumPng(corpus.bounds.maxFileBytes, corpus.bounds.maxPixels);
 writeFileSync(join(output, "decode-cancellation.png"), pngBytes);
-if (url !== "--fixture-only") await exercise();
+if (url !== "--fixture-only") {
+  obtainSource();
+  await exercise();
+}
+
+function obtainSource() {
+  const target = join(output, "image-source.pdf");
+  if (existsSync(target)) return;
+  const work = join(output, "oracle-source");
+  const made = Bun.spawnSync(python("📜️pdf-raw-png-history-oracle.py", work, "--self-test"), { stdout: "inherit", stderr: "inherit" });
+  assert.equal(made.exitCode, 0, "the PNG history oracle could not derive image-source.pdf");
+  copyFileSync(join(work, "oracle-proof", "image-source.pdf"), target);
+}
 
 function maximumPng(maxBytes: number, maxPixels: number): Buffer {
   const edge = Math.sqrt(maxPixels);

@@ -1,5 +1,6 @@
 /** ♻️ Shell slice reducers: the loaded program upsert and the reducer of every store slice. */
-import { ANCHORS, uiDataLabel, type Anchor, type WindowLayoutNode } from "@semio-tech/ui-react";
+import { ANCHORS, uiDataLabel, type Anchor } from "@semio-tech/ui-react";
+import { type WindowLayoutNode, windowIdOf } from "@semio-tech/ui-layout";
 import { DEFAULT_PANEL_WIDTH_PX } from "../../🛠️ShellHelpers/🔩️plumbing/🟦️.ts";
 import type { LoadedProgramState } from "../📦️program-sessions/🟦️.ts";
 import { type ActionPaneState, actionStageKey, type CommandPanelState, type InferenceState, type MergeState, type OverlayState, type PanelState, type PluginRuntimeState, resolveUpdatable, type ShellLayoutState, type SpawnedWindowState, type SyncState, type TutorialState, type UiPrefsState, type WindowUiState, withField } from "../🗃️state-shapes/🟦️.ts";
@@ -135,7 +136,7 @@ export function commandPanelReducer(state: CommandPanelState, action: ShellActio
 
 /** 🏷️ Updates the named leaf while retaining every unaffected branch and its layout geometry. */
 function withWindowLayoutTitle(node: WindowLayoutNode, windowId: string, title: string): WindowLayoutNode {
-  if (node.kind === "window") return node.id === windowId && node.title !== title ? { ...node, title: uiDataLabel(title) } : node;
+  if (node.kind === "window") return windowIdOf(node) === windowId && node.title !== title ? { ...node, title } : node;
   const children = node.children.map(child => withWindowLayoutTitle(child, windowId, title));
   return children.some((child, index) => child !== node.children[index]) ? { ...node, children } as WindowLayoutNode : node;
 }

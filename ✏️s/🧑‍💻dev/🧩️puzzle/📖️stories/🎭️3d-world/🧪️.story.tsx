@@ -295,7 +295,7 @@ function World3dStoryHost({ fixtureDsl }: { readonly fixtureDsl: string }): Reac
   }
 
   return (
-    <div style={{ display: "flex", height: "100%", width: "100%", flexDirection: "column" }}>
+    <div style={{ display: "flex", height: "100vh", width: "100%", flexDirection: "column" }}>
       <div style={{ position: "relative", flex: "1 1 auto", minHeight: 0 }}>
         <World3dHost node={node} onAction={onAction} />
       </div>

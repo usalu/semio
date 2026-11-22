@@ -64,18 +64,38 @@ pub(super) enum FrameGenerationHold {
 /// 📥️ The exact mounted event-callback core, split from `OsHost` only so its latency contract can
 /// be stress-tested without constructing a platform window or GPU surface.
 pub(super) fn enqueue_host_event(events: &mut ui_host::EventQueue, scheduler: &mut ui_render::FrameScheduler, ui_token: ui_host::UiThreadToken, frame_generation: &mut u64, hold: FrameGenerationHold, event: DispatchEvent) -> ui_host::EnqueueOutcome {
+    enqueue_host_input(events, scheduler, ui_token, frame_generation, hold, event, false)
+}
+
+fn enqueue_host_input(events: &mut ui_host::EventQueue, scheduler: &mut ui_render::FrameScheduler, ui_token: ui_host::UiThreadToken, frame_generation: &mut u64, hold: FrameGenerationHold, event: DispatchEvent, ordered: bool) -> ui_host::EnqueueOutcome {
     let _watchdog = semio_framework_trace::Watchdog::start("os_renderer_event", render_frame_operation_id(), semio_framework_trace::Generation(*frame_generation), semio_framework_trace::InteractiveStage::UiEvent);
     let mut next_generation = *frame_generation;
     if hold == FrameGenerationHold::Free && !advance_frame_generation(&mut next_generation) {
         return ui_host::EnqueueOutcome::Overflow;
     }
-    let outcome = events.enqueue(ui_token, event);
+    let outcome = if ordered { events.enqueue_ordered(ui_token, event) } else { events.enqueue(ui_token, event) };
     if outcome != ui_host::EnqueueOutcome::Accepted {
         return outcome;
     }
     *frame_generation = next_generation;
     scheduler.invalidate(InvalidationReason::INPUT_STATE);
     outcome
+}
+
+#[cfg(target_arch = "wasm32")]
+impl OsHost {
+    /// 🧾️ Reserves the queue and generation credits for a validated browser wire page.
+    pub fn prepare_browser_events(&mut self, events: usize, metrics: usize) -> bool {
+        let transitions = events.saturating_add(metrics);
+        (self.frame_generation_hold() != FrameGenerationHold::Free || self.frame_generation.checked_add(transitions as u64).is_some())
+            && self.events.prepare_ordered_batch(self.ui_token, events, metrics)
+    }
+
+    /// 🪢️ Admits a browser event at the position preserved by the transport's coalescer.
+    pub fn enqueue_browser_event(&mut self, event: DispatchEvent) -> ui_host::EnqueueOutcome {
+        let hold = self.frame_generation_hold();
+        enqueue_host_input(&mut self.events, &mut self.scheduler, self.ui_token, &mut self.frame_generation, hold, event, true)
+    }
 }
 
 /// 📐️ The mounted resize-callback core, isolated for the same window-free latency proof as
@@ -333,12 +353,6 @@ impl OsHost {
         #[cfg(not(target_arch = "wasm32"))]
         if self.hot_swap.is_due(now) {
             self.scheduler.request_deadline(now + semio_renderer_wgpu_host_plumbing::deadlines::NATIVE_HOT_SWAP_POLL_SECONDS, InvalidationReason::RESOURCE_READY);
-        }
-
-
-        #[cfg(not(target_arch = "wasm32"))]
-        if semio_renderer_wgpu_host_base::take_retained_image_raster_frame_request() {
-            self.scheduler.request_deadline(now + 1.0 / 60.0, InvalidationReason::RESOURCE_READY);
         }
 
         RedrawOutcome { cursor, ime }

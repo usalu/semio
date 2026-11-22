@@ -155,3 +155,7 @@ None. The asset was VALID and every sheet opened showed no defect that the round
 ### Remaining
 
 - Engine, alternator and radiator are not in `thermal` (no hidden regions declared; adding them would invent heat flows); `sectionFaces` on inward wall faces from round 3 remain where the C31 flood now also applies.
+
+## Digital working-stock readback, 2026-11-21
+
+Canonical source `7d5380a52c0f5739`. Four framed intakes pierce the side skins and the 50 mm acoustic lining. Each has fifteen inclined blades before three separated vertical acoustic splitters. The pressed steel roof is 2 mm thick with a folded eave and an opening below the discharge plenum. Folded 50 × 65 × 3 mm steel uprights carry the vent frames between the continuous top and bottom rails. The declared outside enclosure area includes the framed reveals. Both side elevations show the open banks. All twelve GLB scenes reopened (1,793,540 bytes) and all strict checks passed.

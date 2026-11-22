@@ -3,10 +3,11 @@ use super::*;
 /// 🤝️ Independently authored node properties remain independent during replay and inverse replay.
 #[test]
 fn concurrent_node_fields_preserve_both_authors_intent() {
-    let base = Fem3dSnapshot { nodes: vec![semio_s_fem_node::volumetric::FemNodeValue { id: "target".into(), x: 0.0, y: 0.0, z: 0.0 }], ..Default::default() };
+    let base = Fem3dSnapshotValue { nodes: vec![FemNodeValue { id: "target".into(), x: 0.0, y: 0.0, z: 0.0 }], ..Default::default() };
+    let persistent = Fem3dSnapshot::from_reference(base.clone()).expect("persistent base");
     let lower = |field: &str, value: &str| {
         let history = semio_plugin::HistoryView::empty();
-        let doc = ArtifactView::new(&base, &history);
+        let doc = ArtifactView::new(&persistent, &history);
         let config = NoConfig::default();
         handle(&PatchNode { id: "target".into(), field: field.into(), value: value.into() }, &doc, &ConfigView { snapshot: &config, window: None }).expect("field intent").artifact_mutations.remove(0)
     };
@@ -30,14 +31,16 @@ use semio_s_artifact_fem_3d_editor::editor::fem3d::Fem3dCommand;
 #[cfg(test)] use semio_plugin::component::ArtifactView;
 #[cfg(test)] use semio_plugin::component::NoConfig;
 #[cfg(test)] use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
-#[cfg(test)] use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
-#[cfg(test)] use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::patch_node::PatchNode;
+#[cfg(test)] use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::{Fem3dSnapshot, Fem3dSnapshotValue};
+#[cfg(test)] use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemNodeValue;
+#[cfg(test)] use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::patch_node::{handle, PatchNode};
+#[cfg(test)] use semio_plugin::ConfigView;
 #[cfg(test)] use semio_plugin::component::Emit;
 #[cfg(test)] use semio_plugin::component::NoConfigMutation;
 #[cfg(test)] use semio_framework::Fault;
 
 fn demo() -> Fem3dSnapshot {
-    semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::text::snapshot::fem3d_demo_snapshot()
+    semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::text::snapshot::fem3d_demo_snapshot().expect("demo snapshot")
 }
 
 fn emit(snapshot: &Fem3dSnapshot, payload: PatchNode) -> Result<Emit<Fem3dMutation, NoConfigMutation>, Fault> {
@@ -52,7 +55,7 @@ async fn patch_node_moves_an_ordinate_on_the_live_demo_3d() {
     let mut app = fem3d_demo_app().await;
     dispatch(&mut app, Fem3dCommand::PatchNode(PatchNode { id: "n20_l1".into(), field: "z".into(), value: "3.1".into() })).await;
     let snapshot = app.snapshot().expect("snapshot");
-    let node = snapshot.nodes.iter().find(|node| node.id == "n20_l1").expect("n20_l1 survives the patch");
+    let node = snapshot.nodes.iter().find(|node| node.id.as_str() == "n20_l1").expect("n20_l1 survives the patch");
     assert_eq!((node.x, node.y, node.z), (8.0, 0.0, 3.1), "the sparse authored ordinate preserves untouched coordinates");
 }
 

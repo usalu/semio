@@ -24,6 +24,12 @@
         "label": {
           "en": "Dimension",
           "de": "Abmessung"
+        },
+        "options": {
+          "depth": {
+            "en": "Depth",
+            "de": "Tiefe"
+          }
         }
       }
     },

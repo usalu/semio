@@ -1,5 +1,5 @@
 /** 🪐️ Actual named-package fields remain queryable and editable through independent SQLite. */
-import{spaceSnapshotToSqliteDatabase,spaceSnapshotFromSqliteDatabase,validateSpaceSnapshotSqliteDialect,type SSpaceSnapshot}from"@semio-tech/space-space";
+import{spaceSnapshotToSqliteDatabase,spaceSnapshotFromSqliteDatabase,validateSpaceSnapshotSqliteDialect,type SSpaceSnapshot}from"../../../../🟦️.ts";
 import{exportSqliteDatabase,importSqliteDatabase}from"@semio-tech/framework";
 import{Database}from"bun:sqlite";
 import{expect,test}from"bun:test";

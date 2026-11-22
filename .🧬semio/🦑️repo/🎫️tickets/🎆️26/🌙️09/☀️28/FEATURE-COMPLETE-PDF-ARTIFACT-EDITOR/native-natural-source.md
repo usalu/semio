@@ -1,0 +1,9 @@
+# Native Natural PDF Source Sender
+
+The staged WGPU Open path uses the selected file handle and its metadata to create an unpublished instance for the exact PDF declaration and extent. It sends Prepare before reading the file body. The sender holds a 4 KiB read buffer and offers one fixed command page at a time, retaining its bytes through retry or backpressure. It advances progress after each exact receipt and waits for accepted Complete before entering the existing document identity and archive readback path. The queue credits one fixed block per page and applies the kind-241 owner, generation and geometry checks. The existing kind-240 picker keeps its revision-bound owner and extent policy.
+
+Run `repo tools exec --light python -- <ticket-folder>/native-natural-source-check.py` from the workspace root. The checker generates the patch, checks its applicability, and compiles the staged sender and queue with the production fixed command page implementation and staged Rust wire records. The peer drives Prepare, Begin, pages, Complete, and Cancel. The six passing cases cover backpressure and retry on page zero, pending and idle Complete, cancellation with a pending page, a foreign receipt, refusal before reading, short and growing files, and the PNG queue's existing extent policy. The real 9,437,877-byte PDF transferred in 2,305 pages with a 693-byte tail. Ajv verified the fixture geometry and Node's SHA-256 matched the shared fixture and the received file.
+
+The patch remains in ticket staging for integration with the purpose-bearing InstanceOpen, guest loan issuer, retained decoder, and archive transport. The native product build, cancellation of a blocked operating-system file read, and full durable Open through the mounted guest remain unverified.
+
+[Stage generator](native-natural-source-stage.py) · [Sender](native-natural-source-pump.rs) · [Verification driver](native-natural-source-check.py) · [Fixtures](native-natural-source.json)

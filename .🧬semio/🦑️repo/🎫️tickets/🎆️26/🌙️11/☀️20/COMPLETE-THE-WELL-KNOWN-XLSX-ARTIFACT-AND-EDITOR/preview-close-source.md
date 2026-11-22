@@ -1,0 +1,22 @@
+# Rapid XLSX Preview Close
+
+The focused managed Base run reached the mounted Close after the rapid draft scenario. It failed in `close_registered_fixture_app` with zero reported effects and `value.refusal: source owner changed original Source or Work`. The message originates in `OriginalSourceOwner::authenticate`. Between settled actions a resident owner can follow a later effect carrying an actual Source. If a recorded reply remains pending, it requires the same Work scope, issuer and Source.
+
+The time-travel close dispatch already selects the Source-bearing StepContext effect for a standalone preview mutation source and for the initial preview's direct history loan. Its selection overlooked the native semantic task nested inside a closing derived preview. That task's captured snapshot uses `HoldCustody` and reaches the same Source authenticator on return. The generic time-travel retirement selector now follows its selected derived operation's existing `requires_original_control()` predicate. This is false for the bare base and task handoffs and true for a live native task retirement. Discard effects retain precedence, and a receipt-only derived phase cannot activate the later mutation Source. The directly closing initial preview also checks its derived operation's original-control predicate and keeps the established history-loan branch. Both use the live StepContext Work and Source. The authenticator and replay/withdraw branches are unchanged.
+
+The neutral fixture exercises six selected draft-close cases, four initial prefix-close cases, and four Work-binding cases including a pending native reader accepting only its original Work. The focused Bun test passed 3 tests with 14 assertions. A standalone pinned Rust check of the exact two production selector bodies and Work-binding method, compiled with minimal type fixtures, agreed with all 14 neutral cases. Both changed Rust files passed the pinned parser and the scoped whitespace check. The managed mounted regression remains the final integration gate.
+
+- [Draft preview selector](/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⏪️time-travel/🧱️store-owners-and-member-visitors/🦀️.rs)
+- [Initial preview selector](/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⏪️time-travel/🗄️store-state/🦀️.rs)
+- [Neutral cases](preview-close-source.json)
+- [Independent SQLite check](verify-history-source-returns.test.ts)
+
+## Failure-storage quote during normal preview advancement
+
+The combined native run passed the direct closure that originally masked the earlier failure. The captured Base executable reproduced the current quoted Work failure in the mounted acceptance pump in 9.75 seconds. Each dispatch applies an action label to its error. This error had an empty label and came from one of the intermediate publication pumps. The debugger found the Work guard but its owned launch remained stopped in debugserver. The process tree was cancelled. The captured executable remains available.
+
+The derived operation's normal advancement opened a generic effect using the native decoder's Work. The selected semantic task retirement then attempted to refill its empty failure-storage pool through that same decoder. The refill calls `prepare_for_action` with its own empty action slot. The outer effect still holds the actual Work reservation, so the guard refuses the second quote. Native Store initialization already handles this case by running the failure-storage birth before advancing that same kind of derived owner.
+
+The shared derived-operation advance now follows the selected owner's original-control predicate and runs an empty or pending failure-storage birth as its own decoder turn. That turn reports its actual work and receipt, and retains a pending birth until settled. Its return precedes the generic effect, so the child retirement can run on a subsequent turn. The original issuer, action identity checks, and decoder are unchanged.
+
+The existing derived-operation native law now covers a one-byte-short capacity and exact funded birth. It verifies zero child releases, the original Work count, the actual allocation receipt, and later normal retirement and failure-storage release. The independent SQLite check and the closed fixture schema passed as part of the four-test Bun suite with 16 assertions. Both Rust files passed the pinned parser and the scoped whitespace check. The new native law and mounted XLSX test still require their managed compilation and execution.

@@ -5,28 +5,28 @@ import * as React from "react";
 // 🧱️elements/🔌️Ports/🟦️.tsx's header comment for why the barrel import caused a real bug).
 import { reactHostPort } from "../../🔌️Ports/⚛️react/🟦️.ts";
 import { resolveTranslationLabel } from "../../🏷️Label/🟦️.tsx";
-import type { WindowLayoutAxisNode, WindowLayoutStackNode } from "../../../🔨️modules/🗺️window-layout/🟦️.ts";
+import { type WindowLayoutDropZone, type WindowLayoutPanel, WINDOW_STACK_CORNERS, type WindowLayoutStackNode, collectWindowIds, windowIdOf } from "@semio-tech/ui-layout";
 import { useControlKeybinding } from "../../../🔨️modules/🕹️control-keybinding-context/🟦️.tsx";
-import { COMPOSE_WINDOW_TEMPLATE_MIME, MODE_TEMPLATE_PREVIEW_WINDOW_ID, type ModeCanvasDropTarget, type WindowTemplateDropPayload, cancelWindowTemplatePointerDrag, endWindowTemplateDrag, readActiveWindowTemplateDragSession, windowTemplatePointerDragRef } from "../🪟️template-drag/🟦️.ts";
-import { type ModeLayoutPath, mapLayoutStacks, modeCollectWindowIds, resolveStackPathForWindowId } from "../🗺️layout/🟦️.ts";
-import { type ModeDragState, type ModeDropZone, type ModeStackDropTargets, computeModeDropZone, modeDockDragInsertTabs, modeDockOutLayout, resolveModeTabInsertPreview } from "../🎯️drop/🟦️.ts";
-import { WINDOW_STACK_CORNERS } from "../📐️corners/🟦️.ts";
+import { COMPOSE_WINDOW_TEMPLATE_MIME, MODE_TEMPLATE_PREVIEW_WINDOW_ID, type WindowTemplateDropPayload, cancelWindowTemplatePointerDrag, endWindowTemplateDrag, readActiveWindowTemplateDragSession, windowTemplatePointerDragRef } from "../🪟️template-drag/🟦️.ts";
+import { collectModeWindows, modePathEquals, modePathKey, modeStackPathOf, readModeStack } from "../🗺️layout/🟦️.ts";
+import { type ModeDragState, type ModeStackDropTargets, computeModeDropZone, modeDockDragInsertTabs, modeDockOutLayout, resolveModeTabInsertPreview } from "../🎯️drop/🟦️.ts";
 import { ModeDockContext, type ModeDockContextValue, ModeDockStack, type ModeRenderContext, renderModeDockNode } from "../⚓️dock/🟦️.tsx";
 import type { useModeLayoutState } from "../🧭️mode-layout-state-and-sync/🟦️.tsx";
 import type { useModeDragEffectsAndAxisCallbacks, useModeWindowCallbacks } from "../🖱️mode-drag-and-window-callbacks/🟦️.tsx";
 
 /** 🧺 Builds the template drop callbacks and effects and the drag preview values. */
-export function useModeTemplateDropAndPreview({ stackDropElementsRef, modeBodyRef, onTemplateDrop, clearTemplateDragPreview, setTemplateDrag, refreshDropZone, templateDrag, dragState, windowsById, dropZone, layoutState }: Pick<ReturnType<typeof useModeLayoutState>, "stackDropElementsRef" | "modeBodyRef" | "setTemplateDrag" | "templateDrag" | "dragState" | "windowsById" | "dropZone" | "layoutState"> & { readonly onTemplateDrop: ((payload: WindowTemplateDropPayload, target: ModeCanvasDropTarget) => void) | undefined } & Pick<ReturnType<typeof useModeDragEffectsAndAxisCallbacks>, "clearTemplateDragPreview"> & Pick<ReturnType<typeof useModeWindowCallbacks>, "refreshDropZone">) {
-  const resolveTemplateDropZone = reactHostPort.useCallback((clientX: number, clientY: number): ModeDropZone | null => {
-    const targets = new Map<ModeLayoutPath, ModeStackDropTargets>();
-    stackDropElementsRef.current.forEach((elements, path) => {
+export function useModeTemplateDropAndPreview({ stackDropElementsRef, modeBodyRef, onTemplateDrop, clearTemplateDragPreview, setTemplateDrag, refreshDropZone, templateDrag, dragState, windowsById, dropZone, layoutState }: Pick<ReturnType<typeof useModeLayoutState>, "stackDropElementsRef" | "modeBodyRef" | "setTemplateDrag" | "templateDrag" | "dragState" | "windowsById" | "dropZone" | "layoutState"> & { readonly onTemplateDrop: ((payload: WindowTemplateDropPayload, target: WindowLayoutDropZone) => void) | undefined } & Pick<ReturnType<typeof useModeDragEffectsAndAxisCallbacks>, "clearTemplateDragPreview"> & Pick<ReturnType<typeof useModeWindowCallbacks>, "refreshDropZone">) {
+  const resolveTemplateDropZone = reactHostPort.useCallback((clientX: number, clientY: number): WindowLayoutDropZone | null => {
+    const targets = new Map<string, ModeStackDropTargets>();
+    stackDropElementsRef.current.forEach((elements, key) => {
       const corners: ModeStackDropTargets["corners"] = {};
       for (const corner of WINDOW_STACK_CORNERS) {
         const element = elements.corners[corner];
         if (!element) continue;
         corners[corner] = { rect: element.getBoundingClientRect(), element };
       }
-      targets.set(path, {
+      targets.set(key, {
+        path: elements.path,
         corners,
         body: elements.body?.getBoundingClientRect() ?? null,
       });
@@ -126,7 +126,7 @@ export function useModeTemplateDropAndPreview({ stackDropElementsRef, modeBodyRe
     return {
       dragKind: "tab",
       windowId: MODE_TEMPLATE_PREVIEW_WINDOW_ID,
-      stackPath: "",
+      stackPath: [],
       tabIndex: -1,
       pointerId: -1,
       ghostLabel: templateDrag.label,
@@ -152,7 +152,7 @@ export function useModeTemplateDropAndPreview({ stackDropElementsRef, modeBodyRe
   }, [dragState, layoutState, templateDrag, windowsById]);
 
   const noopDrag = reactHostPort.useCallback(() => {}, []);
-  const canMaximize = modeCollectWindowIds(layoutState).length > 1;
+  const canMaximize = collectWindowIds(layoutState).length > 1;
   return { canMaximize, previewDragState, tabInsertPreview, draggedInsertTabs, noopDrag, handleExternalTemplateDragOver, handleExternalTemplateDrop, draggedPreviewTitle, draggedPreviewIconId };
 }
 
@@ -184,7 +184,7 @@ export function useModeShortcutsAndContexts({ canMaximize, maximizedStackPath, s
     "ui.window.focus",
     () => {
       if (!activeWindowId) return;
-      const stackPath = resolveStackPathForWindowId(layoutState, activeWindowId);
+      const stackPath = modeStackPathOf(layoutState, activeWindowId);
       if (stackPath === null) return;
       toggleMaximize(stackPath);
     },
@@ -227,19 +227,10 @@ export function useModeShortcutsAndContexts({ canMaximize, maximizedStackPath, s
 
   const dockOutLayout = reactHostPort.useMemo(() => (dragState ? modeDockOutLayout(layoutState, dragState) : layoutState), [layoutState, dragState]);
 
-  const maximizedStack =
-    maximizedStackPath !== null
-      ? (() => {
-          let found: WindowLayoutStackNode | null = null;
-          mapLayoutStacks(dockOutLayout, (stack, path) => {
-            if (path === maximizedStackPath) found = stack;
-            return stack;
-          });
-          return found;
-        })()
-      : null;
+  const maximizedStack = maximizedStackPath !== null ? readModeStack(dockOutLayout, maximizedStackPath) : null;
 
-  const orderedWindowIds = modeCollectWindowIds(dockOutLayout);
+  const orderedWindows = collectModeWindows(dockOutLayout);
+  const orderedWindowIds = orderedWindows.map(windowIdOf);
   const hasWindows = orderedWindowIds.length > 0;
   const emptyShellNotice = resolveTranslationLabel(modeT("ui.display.emptyShell"));
 
@@ -247,8 +238,8 @@ export function useModeShortcutsAndContexts({ canMaximize, maximizedStackPath, s
   const mobileFlatStack: WindowLayoutStackNode | null = mobile
     ? {
         kind: "stack",
-        children: orderedWindowIds.map((id) => ({ kind: "window", id })),
-        activeId: (activeWindowId && orderedWindowIds.includes(activeWindowId) ? activeWindowId : orderedWindowIds[0]) ?? undefined,
+        children: orderedWindows,
+        activeWindowId: (activeWindowId && orderedWindowIds.includes(activeWindowId) ? activeWindowId : orderedWindowIds[0]) ?? undefined,
       }
     : null;
 
@@ -257,7 +248,7 @@ export function useModeShortcutsAndContexts({ canMaximize, maximizedStackPath, s
     (mobile ? (
       mobileFlatStack && mobileFlatStack.children.length > 0 ? (
         <ModeDockContext.Provider value={dockContext}>
-          <ModeDockStack stackPath="" node={mobileFlatStack} windowsById={windowsById} activeWindowId={activeWindowId} mobile />
+          <ModeDockStack stackPath={[]} node={mobileFlatStack} windowsById={windowsById} activeWindowId={activeWindowId} mobile />
         </ModeDockContext.Provider>
       ) : null
     ) : maximizedStack ? (
@@ -265,7 +256,7 @@ export function useModeShortcutsAndContexts({ canMaximize, maximizedStackPath, s
         <ModeDockStack stackPath={maximizedStackPath!} node={maximizedStack} windowsById={windowsById} activeWindowId={activeWindowId} />
       </ModeDockContext.Provider>
     ) : (
-      <ModeDockContext.Provider value={dockContext}>{renderModeDockNode(dockOutLayout as WindowLayoutAxisNode | WindowLayoutStackNode, "", renderContext)}</ModeDockContext.Provider>
+      <ModeDockContext.Provider value={dockContext}>{renderModeDockNode(dockOutLayout as WindowLayoutPanel, [], renderContext)}</ModeDockContext.Provider>
     ));
   return { hasWindows, emptyShellNotice, body };
 }

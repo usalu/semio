@@ -83,9 +83,49 @@ if (mode === "draft" || mode === "verify") {
     throw new Error("The scanner roots differ from Cargo's declared source paths");
   }
   console.log("[DEBUG] Cargo target paths and locked test-only fixture dependency validated by Bun TOML");
+  if (!draft) {
+    const codec = "semio-framework-io-base64";
+    const codecManifest = join(root, "🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust/Cargo.toml");
+    const codecPackage = Bun.TOML.parse(await readFile(codecManifest, "utf8"));
+    if (codecPackage.package.name !== codec) throw new Error("Expected the owned RFC 4648 package");
+    const modelDirectory = resolve(io, "../🧬️schema/📦️packages/🦀️rust");
+    const model = Bun.TOML.parse(await readFile(join(modelDirectory, "Cargo.toml"), "utf8"));
+    for (const [directory, packageManifest] of [[owner.manifestDirectory, manifest], [modelDirectory, model]]) {
+      if (resolve(directory, packageManifest.dependencies[codec].path, "Cargo.toml") !== codecManifest) {
+        throw new Error("Layout manifest does not resolve the owned Base64 codec at " + directory);
+      }
+    }
+    for (const path of [
+      "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/Cargo.lock",
+      "✏️s/🔌️plugins/📏️layout/🏭️bridge/Cargo.lock",
+      "✏️s/🧑‍💻dev/🧹️fixture-sweep/Cargo.lock",
+      "🌎️hub/Cargo.lock",
+    ]) {
+      const entries = Bun.TOML.parse(await readFile(join(root, path), "utf8")).package;
+      for (const name of [manifest.package.name, model.package.name]) {
+        const packageRows = entries.filter(entry => entry.name === name);
+        if (packageRows.length !== 1 || packageRows[0].dependencies.filter(dependency => dependency === codec).length !== 1) {
+          throw new Error("Expected one locked Base64 edge for " + name + " in " + path);
+        }
+      }
+    }
+    console.log("[DEBUG] Both codec manifest paths and all eight locked dependency edges validated");
+  }
 }
 async function inspect(name, entry, test, draft) {
-  const cfg = process.argv[4] === "windows" ? ['target_arch="x86_64"', 'target_os="windows"', 'target_env="msvc"', 'target_family="windows"', 'target_vendor="pc"', 'target_pointer_width="64"', 'target_endian="little"', "windows", "debug_assertions"] : ['target_arch="aarch64"', 'target_os="macos"', 'target_env=""', 'target_family="unix"', 'target_vendor="apple"', 'target_pointer_width="64"', 'target_endian="little"', "unix", "debug_assertions"];
+  const platforms = {
+    macos: { arch: "aarch64", os: "macos", env: "", family: "unix", vendor: "apple" },
+    windows: { arch: "x86_64", os: "windows", env: "msvc", family: "windows", vendor: "pc" },
+    linux: { arch: "x86_64", os: "linux", env: "gnu", family: "unix", vendor: "unknown" },
+  } as const;
+  const platform = platforms[process.argv[4] as keyof typeof platforms] ?? platforms.macos;
+  const cfg = [
+    ...Object.entries(platform).map(([key, value]) => 'target_' + key + '="' + value + '"'),
+    'target_pointer_width="64"',
+    'target_endian="little"',
+    platform.family,
+    "debug_assertions",
+  ];
   if (test) cfg.push("test");
   const sources = await readRustSourceClosureV1([join(io, entry)], root, cfg, path => read(path, draft), owner, analysis);
   const bytes = sources.reduce((sum, file) => sum + file.bytes, 0);

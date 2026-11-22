@@ -7,7 +7,8 @@ impl SessionLivePublication{
  pub(super) fn matches(&self,source:&str)->bool{self.pointer==source.as_ptr()as usize&&self.length==source.len()}
  pub(super) fn demands(&self,source:&str,copy:usize)->Result<RetirementDemand,ValueError>{
   if !self.matches(source){return Err(ValueError::literal(ValueRefusalKind::Canceled,"original session publication source changed"))}
-  Ok(RetirementDemand{copy_bytes:if self.phase==1{copy.min(self.length-self.buffer.len())}else{0},capacity_bytes:match self.phase{0=>self.length,3=>semio_framework_value::retirement::arc_custody::shared_retirement_allocation_bytes::<String>(),_=>0},depth:1,..Default::default()})
+  if self.phase==3{return SharedOwner::<String>::source_admission_demand()}
+  Ok(RetirementDemand{copy_bytes:if self.phase==1{copy.min(self.length-self.buffer.len())}else{0},capacity_bytes:if self.phase==0{self.length}else{0},depth:1,..Default::default()})
  }
  pub(super) fn step(&mut self,source:&str,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneProgress,ValueError>{
   let grant=effect.grant();

@@ -8,7 +8,10 @@ footprint = json.load(open(sys.argv[3], encoding="utf-8"))["definitions"]["Polic
 child = policy["farmChildFootprintMegabytes"]["project-farm"]
 rows = []
 for case in fixture["cases"]:
-    hard = case["host"] * policy["treeShare"] * footprint["hardPercent"] / 100
+    host = case["host"] if "grant" not in case else min(case["host"], math.floor(case["grant"] / policy["treeShare"]))
+    if "available" in case:
+        host = min(case["host"], host + math.floor(max(0, case["available"] - policy["availableFloorMegabytes"]) / policy["treeShare"]))
+    hard = host * policy["treeShare"] * footprint["hardPercent"] / 100
     free = hard - policy["parentFootprintMegabytes"] - case["others"]
     rows.append(0 if free < child["capMegabytes"] else 1 + math.floor((free - child["capMegabytes"]) / child["typicalMegabytes"]))
 print(json.dumps(rows))

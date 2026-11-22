@@ -156,3 +156,7 @@ Working envelope (unchanged, `r3-excavator-kin.py`): reach at ground 9.85 m, dep
 `r3-validate.ts machinery/excavator --volumes`: VALID (schema 0, validateAsset 0, checkVolumes 0). `volumes-check.ts machinery/excavator --product`: PASS (691.5 s on a machine at load 39). Silhouette IoU elevation / front: 1:50 0.998 / 0.996, 1:100 0.998 / 0.999, 1:200 0.999 / 1.000, 1:500 0.999 / 1.000. An intermediate run found two 1:100 structure pins (stick cylinder, link) 18.8 mm outside the body in the front view and a 1:200 stick pin 45 mm outside in plan after the new stow; their spans were shortened to the lug widths (0.19 / 0.41 m at 1:100, 0.42 m at 1:200).
 
 The hood and radiator grille edges now use 0.20 mm at 1:100 and 1:200. The 1:150 and 1:350 paper endpoints, whole document, and affected silhouette, feature and cross-scale checks passed.
+
+## November 21 running gear and moving joints
+
+Both shoe belts retain their open track loop and eight lower rollers per side. The paired idler yoke cheeks have 2 mm radial clearance about their transverse pin. The adjuster rod enters its gland. The actual curved bucket shell, twin cheeks, lip and five digging teeth transmit load to the pinned bucket bracket at all four scales. See the [measurements and installed revision](digital-running-gear.md).

@@ -123,9 +123,11 @@
           "$ref": "#/definitions/Capabilities"
         },
         "scratch": {
+          "description": "Where the suite's artifact directory lives: a per-run sandbox outside the checkout, the checkout's sandbox below `.cache` (never source), or `checkout-test`, the declared test tree directory at the checkout root for tests that need a source tree inside the checkout (git-ignored, excluded from the replica, from every source closure and discovery unless the test declares its own subtree).",
           "enum": [
             "sandbox",
-            "checkout"
+            "checkout",
+            "checkout-test"
           ]
         },
         "fileLaunchers": {
@@ -250,6 +252,8 @@
           "node_modules"
         ],
         "checkoutScratchDirectory": ".cache/test-sandbox",
+        "treeScratchDirectory": ".test-scratch",
+        "treeDeclaration": "SEMIO_TEST_SOURCE_TREE",
         "output": {
           "maximumFileOutputBytes": 4194304,
           "maximumFileOutputLines": 65536,

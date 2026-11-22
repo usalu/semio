@@ -8,9 +8,7 @@ use crate::viewer::remodeling::modes::view::windows::model;
 use semio_ui_locale::LocalizedLabel;
 use semio_plugin::ModeDefinition;
 use semio_plugin::WindowLayout;
-use semio_plugin::WindowLayoutRoot;
-use semio_plugin::WindowLayoutStackNode;
-use semio_plugin::WindowLayoutWindowNode;
+use semio_plugin::WindowLayoutNode;
 
 pub const REMODELING_VIEW_MODE_VIEW: &str = "view";
 
@@ -23,12 +21,10 @@ pub fn definition() -> ModeDefinition {
 /// 🪟️ Single full-pane Model window — the read-only viewer has no capture/analyze layout to allocate.
 pub fn layout() -> WindowLayout {
     WindowLayout {
-        root: WindowLayoutRoot::Stack(WindowLayoutStackNode {
-            kind: "stack".into(),
-            size: None,
-            active_window_kind_id: None,
-            children: vec![WindowLayoutWindowNode { kind: "window".into(), window_kind_id: model::WINDOW_KIND_ID.into(), title: Some("Model".into()), instance_id: None, template_id: None, corner: None }],
-        }),
+        root: WindowLayoutNode::Stack { size: None,
+            active_window_id: None,
+            children: vec![WindowLayoutNode::Window { window_kind_id: model::WINDOW_KIND_ID.into(), title: Some("Model".into()), instance_id: None, template_id: None, corner: None }],
+        },
     }
 }
 //#endregion 🔖️Definition

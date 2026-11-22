@@ -13,13 +13,16 @@
 import { Component, useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties, KeyboardEvent, PointerEvent, ReactElement, ReactNode } from "react";
 import type { SceneFrame } from "../🧮️pipeline/🟦️.ts";
-import type { Asset, DepictionOptions, DisplayRange, DrawingScale, DrawingScene, Environment, EvaluatedState, EvaluationQuery, ForceQuantity, ItemValue, Language, RepresentationSelector, StructuralResult, ThermalField, ThermalQuantity, View, Viewpoint } from "@teaching/staffage";
+import { axonometricCamera, project } from "@teaching/staffage";
+import type { Asset, DepictionOptions, DisplayRange, DrawingScale, DrawingScene, Environment, EvaluatedState, EvaluationQuery, FlowField, FlowLayer, ForceQuantity, ItemValue, Language, RepresentationSelector, StructuralResult, ThermalField, ThermalQuantity, View, Viewpoint } from "@teaching/staffage";
 import type { StaffageClock } from "../⏱️clock/🧱️core/🟦️.ts";
 import { useHeldTime } from "../⏱️clock/🟦️.ts";
 import { useSvgMarkup } from "../🧮️pipeline/🧬️svg/🟦️.ts";
 import { describeScene, valueText, valuedItems, word } from "../🗣️labels/🟦️.ts";
 import { translator } from "../🌐️i18n/🟦️.ts";
-import { defaultQuery, figureFrame, inlineSvg, queryAt } from "../🧮️pipeline/🟦️.ts";
+import { defaultQuery, figureFrame, inlineSvg, queryAt, sceneExtent } from "../🧮️pipeline/🟦️.ts";
+import { flowFrameOf, flowsIn, unionFrame } from "../🌊️flow/🟦️.ts";
+import { FlowStage, type FlowStageOptions } from "../🌊️flow/🖥️stage/🟦️.ts";
 import { ViewpointGate } from "../🧮️pipeline/🦥️lazy/⚛️hook/🟦️.tsx";
 import { SpatialFigure } from "../🧊️spatial/🚪️gate/🟦️.tsx";
 import type { CameraPresetName } from "../🧊️spatial/🟦️.ts";
@@ -54,6 +57,9 @@ export type StaffageFigureProps = {
   patterns?: boolean;
   diagrams?: Partial<DepictionOptions["diagrams"]>;
   environment?: Environment;
+  /** 🌊️ The layers of the air flow drawn over the thermal view (none by default); the figure then takes the paper the flow needs around the asset. */
+  flow?: readonly FlowLayer[];
+  onFlow?: (flow: FlowField | null) => void;
   onEvaluated?: (frame: { state: EvaluatedState; thermal: ThermalField; structure: StructuralResult; scene: DrawingScene }) => void;
   onInspect?: (value: ItemValue | null, item: { bone?: string; region?: string } | null) => void;
   className?: string;
@@ -173,6 +179,8 @@ function ModelFace(props: StaffageFigureProps): ReactElement {
         {...(props.forceQuantity === undefined ? {} : { forceQuantity: props.forceQuantity })}
         {...(props.range === undefined ? {} : { range: props.range })}
         {...(props.theme === undefined ? {} : { theme: props.theme })}
+        {...(props.flow === undefined ? {} : { flow: props.flow })}
+        {...(props.onFlow === undefined ? {} : { onFlow: props.onFlow })}
         {...(props.background === undefined ? {} : { background: props.background })}
         {...(props.toolbar === undefined ? {} : { toolbar: props.toolbar })}
       />
@@ -207,12 +215,61 @@ function DrawnFigure(props: DrawnProps): ReactElement {
   const query = useMemo(() => queryAt(props.query ?? defaultQuery(asset, timeS), timeS), [asset, props.query, timeS]);
   const frame = useMemo(() => figureFrame(asset, query, request), [asset, query, requestKey]);
   const { scene } = frame;
-  const frameKey = props.frame === undefined ? "" : JSON.stringify(props.frame);
-  const markup = useMemo(() => inlineSvg(scene, props.frame), [scene, frameKey]);
+  const flowLayers = props.flow !== undefined && props.flow.length > 0 && flowsIn(asset, props.view) && query.kind !== "transition" ? props.flow : null;
+  const flowing = flowLayers !== null;
+  const paperWindow = useMemo(() => props.frame ?? (flowing ? unionFrame(sceneExtent(scene), flowFrameOf(frame.state, props.viewpoint, scene.metadata.mmPerMetre, props.viewpoint === "axonometric" ? axonometricCamera() : undefined)) : undefined), [props.frame, flowing, scene, frame.state, props.viewpoint]);
+  const frameKey = paperWindow === undefined ? "" : JSON.stringify(paperWindow);
+  const markup = useMemo(() => inlineSvg(scene, paperWindow), [scene, frameKey]);
   const inkRef = useRef<HTMLDivElement | null>(null);
   useSvgMarkup(inkRef, markup);
-  const widthMm = props.frame === undefined ? scene.widthMm : props.frame.maxX - props.frame.minX;
-  const heightMm = props.frame === undefined ? scene.heightMm : props.frame.maxY - props.frame.minY;
+  const widthMm = paperWindow === undefined ? scene.widthMm : paperWindow.maxX - paperWindow.minX;
+  const heightMm = paperWindow === undefined ? scene.heightMm : paperWindow.maxY - paperWindow.minY;
+  const flowStage = useRef<FlowStage | null>(null);
+  const placing = useRef({ scene, paperWindow, viewpoint: props.viewpoint });
+  placing.current = { scene, paperWindow, viewpoint: props.viewpoint };
+  const flowOptions = (): FlowStageOptions => ({
+    asset,
+    query: props.query ?? defaultQuery(asset, clock === undefined ? null : 0),
+    environment: props.environment ?? asset.thermal.environment,
+    clock: clock ?? null,
+    layers: flowLayers ?? [],
+    theme: props.theme ?? "light",
+    range: props.range ?? { mode: "shared" },
+    scale: props.scale.denominator,
+    language,
+    projection: () => {
+      const host = ref.current;
+      const { scene: drawn, paperWindow: box, viewpoint } = placing.current;
+      if (host === null || host.clientWidth === 0 || host.clientHeight === 0) return null;
+      const view = box === undefined ? { x: 0, y: 0, w: drawn.widthMm, h: drawn.heightMm } : { x: drawn.metadata.origin.xMm + box.minX, y: drawn.metadata.origin.yMm + box.minY, w: box.maxX - box.minX, h: box.maxY - box.minY };
+      const pxPerMm = Math.min(host.clientWidth / view.w, host.clientHeight / view.h);
+      const left = (host.clientWidth - view.w * pxPerMm) / 2;
+      const top = (host.clientHeight - view.h * pxPerMm) / 2;
+      const camera = viewpoint === "axonometric" ? axonometricCamera() : undefined;
+      const k = drawn.metadata.mmPerMetre;
+      return {
+        pxPerMm,
+        project: (at, out) => {
+          const q = project(viewpoint, at, camera);
+          out[0] = left + (drawn.metadata.origin.xMm + q.x * k - view.x) * pxPerMm;
+          out[1] = top + (drawn.metadata.origin.yMm - q.y * k - view.y) * pxPerMm;
+          return true;
+        },
+      };
+    },
+    ...(props.onFlow === undefined ? {} : { onFlow: props.onFlow }),
+  });
+  useEffect(() => {
+    if (!flowing || ref.current === null) return;
+    const mounted = new FlowStage(ref.current, flowOptions());
+    flowStage.current = mounted;
+    return () => {
+      mounted.dispose();
+      flowStage.current = null;
+      props.onFlow?.(null);
+    };
+  }, [flowing]);
+  useEffect(() => flowStage.current?.update(flowOptions()));
   const showValues = props.annotations?.legend !== false || onInspect !== undefined;
   const items = useMemo(() => (showValues ? valuedItems(scene) : []), [scene, showValues]);
   const ids = useMemo(() => new Set(items.map((item) => svgId(item.id))), [items]);
@@ -270,7 +327,7 @@ function DrawnFigure(props: DrawnProps): ReactElement {
       data-time={scene.metadata.timeS}
       data-width-mm={widthMm}
       data-height-mm={heightMm}
-      style={{ display: "block", ...(props.frame !== undefined && scene.background !== null ? { background: scene.background } : {}), ...size }}
+      style={{ display: "block", ...(paperWindow !== undefined && scene.background !== null ? { background: scene.background } : {}), ...size }}
       onPointerMove={onPointer}
       onPointerLeave={() => onInspect !== undefined && inspect(-1)}
       onKeyDown={onKey}

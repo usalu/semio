@@ -6,9 +6,9 @@ exec > "$LOG" 2>&1
 cd "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript"
 export NX_DAEMON=false
 export S_OS_PORT=6018
-export SEMIO_PLUGIN=generation3d SEMIO_RENDERER=react SEMIO_BUILD_MODE=dev SEMIO_VITE_HMR=0
+export SEMIO_PLUGIN=generation3d SEMIO_RENDERER=react SEMIO_BUILD_MODE=prototype SEMIO_VITE_HMR=0
 export VITE_SEMIO_PLUGIN=generation3d VITE_SEMIO_RENDERER=react
 date
-bun /Users/ueli/Documents/semio/node_modules/vite/bin/vite.js --configLoader bundle --config "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/🟦️.ts" --host 127.0.0.1 --port 6018 --strictPort
+bun /Users/ueli/Documents/semio/node_modules/vite/bin/vite.js --configLoader bundle --config "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/🟦️.ts" --host 127.0.0.1 --port 6018 --strictPort --mode prototype
 echo "EXIT=$?"
 date

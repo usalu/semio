@@ -301,7 +301,7 @@ impl<'ctx> PointerCtx<'ctx> {
     /// 🧯️ Packet W1j: React raises this through `showTransientNotice(..., "info",
     /// KEYBINDING_UNOWNED_CODE)`, not through a persistent error line — an unowned chord is a
     /// momentary "nothing here answers that", which is exactly what the banner is for.
-    pub async fn dispatch_app_keybinding(&mut self, descriptor: ActionDescriptor) -> Result<bool, String> {
+    pub async fn dispatch_app_keybinding(&mut self, mut descriptor: ActionDescriptor) -> Result<bool, String> {
         let Some(session) = self.docs.session.clone() else {
             return Ok(false);
         };
@@ -326,6 +326,11 @@ impl<'ctx> PointerCtx<'ctx> {
             self.windows.active_window_id = Some(window_id.clone());
         }
         let window_kind_id = mounted.iter().find(|instance| instance.id == window_id).map_or_else(|| window_id.clone(), |instance| instance.window_kind_id.clone());
+        if descriptor.action == "paste" && (self.docs.workspace_clipboard.is_some() || descriptor.args.as_ref().and_then(|args| args.get("fragment")).is_some()) {
+            scope_action_to_window(&mut descriptor, &window_id);
+            self.as_actions().dispatch_action(descriptor).await?;
+            return Ok(true);
+        }
         let action_def = window_action_definition(&session.app, &window_kind_id, &descriptor.action).cloned();
         let has_args = action_def.as_ref().is_some_and(|action| !action.args.is_empty());
         if !has_args {

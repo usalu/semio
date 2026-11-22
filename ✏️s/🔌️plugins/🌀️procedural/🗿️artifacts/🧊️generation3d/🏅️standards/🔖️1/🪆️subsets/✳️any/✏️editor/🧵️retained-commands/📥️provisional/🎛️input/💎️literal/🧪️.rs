@@ -4,9 +4,11 @@ use semio_framework_value::FromValue as _;
 use super::*;
 use super::super::retained_scratch_testing::ScratchCaller;
 use semio_framework_value::retirement::RetireOwned;
+use semio_framework_value::RetainedCloneGrant;
+use semio_framework_value_testing_effect_bank::{EffectBank,Wallet};
 fn policy()->serde_json::Value{serde_json::from_str(include_str!("../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🎟️caller/🧪️tests/🧫️fixtures/🎟️caller.json")).unwrap()}
 fn close(work:&mut TypedLiteralWork,caller:&mut ScratchCaller){
- work.begin_close();for _ in 0..32768{if work.terminal_is_empty(){return}caller.turn(|cx|cx.with_original_retirement(|same|{let d=work.next_close_demands(same.retained_grant().maximum_copy_bytes)?;semio_framework_job::close_original_retained_step(same,d,|g|work.close_step(g))?;Ok(())}));}panic!("typed literal did not reach physical terminal")
+ work.begin_close();for _ in 0..32768{if work.terminal_is_empty(){return}caller.turn(|cx|cx.with_original_retirement(|same|{let body=same.retained_grant().maximum_copy_bytes;let d=work.next_close_demands(body)?;semio_framework_job::close_original_effect_step(same,d,|effect|work.close_step(body,effect))?;Ok(())}));}panic!("typed literal did not reach physical terminal")
 }
 #[test]
 fn original_typed_literals_match_all_eleven_native_kinds_with_one_fuel_and_prefix_close(){
@@ -28,7 +30,7 @@ fn typed_literal_denials_preserve_original_source_and_physical_caller(){
  let policy=policy();let(input,seed)=semio_framework_trace::observe_heap_allocations_on_this_thread(||WidgetInputValue::Text("original 💠 text".into()));let mut caller=ScratchCaller::new(&policy,1,seed.requested_bytes-seed.released_bytes);let mut work=caller.turn(|cx|Ok(TypedLiteralWork::new(cx)));
  let g:RetainedCloneGrant=serde_json::from_value(policy["grant"].clone()).unwrap();let d=work.next_demands(&input,g.maximum_copy_bytes).unwrap();
  for denied in [RetainedCloneGrant{maximum_items:0,..g},RetainedCloneGrant{maximum_copy_bytes:d.copy_bytes-1,..g},RetainedCloneGrant{maximum_depth:0,..g}]{
-  let(turn,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||work.advance(&input,denied));assert!(!heap.overflowed);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(turn.work,0);assert!(!turn.result.unwrap());assert_eq!(work.step_progress(),Default::default());
+  let(turn,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||EffectBank::new(Wallet::new(g,1)).run_outcome(denied,1,|effect|work.advance(&input,effect)));assert!(!heap.overflowed);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(turn.work,0);assert!(!turn.result.unwrap());assert_eq!(work.step_progress(),Default::default());
  }
  let mut other=ScratchCaller::new(&policy,1,0);let foreign_refused=other.turn(|cx|{let before=(cx.fuel_remaining(),cx.retained_progress());let refused=work.step(&input,cx).is_err();Ok(refused&&before==(cx.fuel_remaining(),cx.retained_progress()))});other.finish();
  caller.turn(|cx|work.step(&input,cx));let same=WidgetInputValue::Text("original 💠 text".into());let refused=work.next_demands(&same,g.maximum_copy_bytes).is_err();same.retire_decoded();close(&mut work,&mut caller);caller.close(input);caller.finish();assert!(foreign_refused&&refused);

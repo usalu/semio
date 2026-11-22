@@ -9,9 +9,7 @@ extern crate semio_os_kernel as pack;
 #[macro_export]
 macro_rules! with_authoring_identity {
     (|$identity:ident| $body:expr) => {{
-        let mut __observer = |_: $crate::__value::native_encoding::NativeEncodeProgress| true;
-        let __observer: &mut $crate::__kernel::os_vcs::io::binary::entity_identity::control::Observer<'_> = &mut __observer;
-        let mut $identity = $crate::__kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1usize << 24, __observer).expect("test authoring identity admission");
+        let mut $identity = $crate::artifact_app_laws::fixture_identity();
         $body
     }};
 }

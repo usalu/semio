@@ -19,6 +19,9 @@ fn retained_operation() -> AppOperationContext {
     AppOperationContext { app_instance_id: 1, parent_document_id: "process3d-retained-test".into(), operation_id: 2, generation: 3, canonical_base_revision: [4; 32], retained: semio_plugin::artifact_app_laws::OriginalWorkFixture::stock(), authoring_seed: "authoring-seed-test".into() }
 }
 
+#[path = "../🪜️timeline-drop/🦀️.rs"]
+mod timeline_drop;
+
 type ResumableStep = Result<ArtifactCommandWorkStep<EditorApp<Process3dPlayApp>>, semio_framework_job::OriginalTurnFailure>;
 
 fn step_work(
@@ -66,8 +69,8 @@ fn retained_route_dispositions_are_exact_and_exhaustive() {
     let mut ids = PROCESS3D_BOUNDED_TOOL_IDS.iter().chain(PROCESS3D_MODEL_IMPORT_TOOL_IDS).chain(PROCESS3D_RESUMABLE_TOOL_IDS).copied().collect::<Vec<_>>();
     ids.sort_unstable();
     ids.dedup();
-    assert_eq!(ids.len(), 32);
-    assert_eq!(PROCESS3D_BOUNDED_TOOL_IDS.len(), 25);
+    assert_eq!(ids.len(), 34);
+    assert_eq!(PROCESS3D_BOUNDED_TOOL_IDS.len(), 27);
     assert_eq!(PROCESS3D_MODEL_IMPORT_TOOL_IDS, &["importModelFile"]);
     assert_eq!(process3d_retained_raw_bytes("moveStep"), 8_192);
     assert_eq!(process3d_retained_raw_bytes("importModelFile"), 33_856);
@@ -75,7 +78,7 @@ fn retained_route_dispositions_are_exact_and_exhaustive() {
     assert!(ids.iter().all(|tool_id| process3d_command_disposition(tool_id).is_some()));
     assert_eq!(process3d_command_disposition("nonsense"), None);
     let proofs = <Process3dPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs();
-    assert_eq!(proofs.len(), 32);
+    assert_eq!(proofs.len(), 34);
     for proof in proofs {
         assert_eq!(proof.factory_type_name.and_then(|name| name.rsplit("::").next()), Some(proof.factory), "{}", proof.tool_id);
     }
@@ -114,14 +117,14 @@ async fn every_declared_command_has_a_real_publication_lane() {
             contract.iter().all(|lane| matches!(lane, ArtifactToolPublicationLane::HostOnly | ArtifactToolPublicationLane::Artifact | ArtifactToolPublicationLane::Config | ArtifactToolPublicationLane::WindowTransient)),
             "{id} publishes on a lane this app owns no one-item preparation factory for: {contract:?}"
         );
-        assert_eq!(contract.contains(&ArtifactToolPublicationLane::WindowTransient), matches!(id, "engagementAbort" | "worldPointerDown" | "worldPointerMove"), "{id}");
+        assert_eq!(contract.contains(&ArtifactToolPublicationLane::WindowTransient), matches!(id, "engagementAbort" | "worldPointerDown" | "worldPointerMove" | "placeCapability"), "{id}");
         if id == "setContributions" {
             assert!(Process3dPlayApp::original_host_configuration(id).is_some());
             assert_eq!(contract, &[ArtifactToolPublicationLane::Config]);
         }
         assert_eq!(declared.get(id).copied(), Some(InteractiveJobClassification::Migrated), "{id} must declare migrated execution");
     }
-    assert_eq!(lanes.len(), 32);
+    assert_eq!(lanes.len(), 34);
     assert!(<Process3dPlayApp as ArtifactEditor>::build_artifact_store_one_item_preparation_factory().is_some(), "the Artifact lane is rejected outright without a document one-item preparation factory");
     assert!(<Process3dPlayApp as ArtifactEditor>::build_config_store_one_item_preparation_factory().is_some());
 }
@@ -280,7 +283,7 @@ async fn command_ids_are_unique_and_match_the_declared_manifest_actions() {
     sorted.sort_unstable();
     sorted.dedup();
     assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-    assert_eq!(ids.len(), 32, "every Process3dCommand row must be covered by every_command()");
+    assert_eq!(ids.len(), 34, "every Process3dCommand row must be covered by every_command()");
 }
 
 /// ⚖️ LAW: text and binary are two projections of the same command, for every single row.
@@ -308,6 +311,7 @@ async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
             "removeStep" => "remove-step",
             "removeSelectedStep" => "remove-selected-step",
             "moveStep" => "move-step",
+            "dropStep" => "drop-step",
             "updateStep" => "update-step",
             "setStepEnabled" => "set-step-enabled",
             "setStock" => "stock",
@@ -319,6 +323,7 @@ async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
             "engagementSubmit" => "engagement-submit",
             "worldPointerDown" => "world-pointer-down",
             "worldPointerMove" => "world-pointer-move",
+            "placeCapability" => "place-capability",
             "worldFaceDragEnd" => "world-face-drag-end",
             "importModelFile" => "import-model-file",
             "engagementInput" => "engagement-input",
@@ -356,6 +361,7 @@ pub(super) fn every_command() -> Vec<Process3dCommand> {
         Process3dCommand::RemoveStep(remove_step::RemoveStep { id: "cut-1".into() }),
         Process3dCommand::RemoveSelectedStep(remove_selected_step::RemoveSelectedStep {}),
         Process3dCommand::MoveStep(move_step::MoveStep { id: "cut-1".into(), index: 2 }),
+        Process3dCommand::DropStep(step::drop_step::DropStep { document_id: "example".into(), step_id: "cut-1".into(), target_id: "cut-2".into(), drop_position: "after".into() }),
         Process3dCommand::UpdateStep(update_step::UpdateStep {
             step_json: semio_framework_pack_json::to_json_string(&ProcessStep {
                 id: "cut-1".into(),
@@ -374,7 +380,6 @@ pub(super) fn every_command() -> Vec<Process3dCommand> {
         Process3dCommand::StepCursorForward(step_cursor_forward::StepCursorForward {}),
         Process3dCommand::EngagementSubmit(engagement_submit::EngagementSubmit {}),
         Process3dCommand::WorldPointerDown(world_pointer_down::WorldPointerDown { position: [1.0, 2.0, 3.0] }),
-        Process3dCommand::WorldPointerMove(world_pointer_move::WorldPointerMove { position: [1.0, 2.0, 3.0] }),
         Process3dCommand::WorldFaceDragEnd(world_face_drag_end::WorldFaceDragEnd { normal: [0.0, 0.0, 1.0], start_point: [0.5, 0.5, 1.0], distance: -0.5, face_extent: Some([1.0, 1.0]) }),
         Process3dCommand::ImportModelFile(import_model_file::ImportModelFile { name: "beam.step".into(), payload: "data:application/octet-stream;base64,AAAA".into() }),
         Process3dCommand::EngagementInput(engagement_input::EngagementInput { value: "cut".into() }),
@@ -387,6 +392,8 @@ pub(super) fn every_command() -> Vec<Process3dCommand> {
         Process3dCommand::SetContributions(set_contributions::SetContributions { json: "[]".into() }),
         Process3dCommand::ExportModel(export_model::ExportModel { format: "step".into() }),
         Process3dCommand::LoadModelRequest(load_model_request::LoadModelRequest {}),
+        Process3dCommand::WorldPointerMove(world_pointer_move::WorldPointerMove { position: [1.0, 2.0, 3.0] }),
+        Process3dCommand::PlaceCapability(place_capability::PlaceCapability { machine_id: "saw".into(), capability_id: "cut".into() }),
     ]
 }
 

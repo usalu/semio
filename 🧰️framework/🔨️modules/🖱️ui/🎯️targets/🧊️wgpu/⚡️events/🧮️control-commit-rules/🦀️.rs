@@ -1,34 +1,21 @@
 //! 🧮️ Control commit rules: the fired actions, the edit commit and refusal rules for text, number, stepper and slider controls, the press bindings and the bubbling. See [`super`].
 
-use super::*;
+use semio_framework_value::DslValue;
+use semio_ui_arena::NodeId;
+use semio_ui_declaration::layout::ActionDescriptor;
+use semio_ui_declaration::ui::{UiNode, UiNumberStepperNode, UiSliderNode, UiState};
+use semio_ui_retained_tree::tree::{Node, UiTree};
+use semio_ui_theme::geometry::Rect;
+use semio_ui_action::INTENT_VALUE_FIELD;
+use semio_ui_wgpu_layout::layout::{number_stepper_segments, ring_t_at, slider_control_presentation};
+use semio_ui_wgpu_widget_kit::constrain_number_input;
+use ui_contract::{FlowInline, Trigger};
 
 // #region events
 //#region 🔖️Commit
-// 🎬️ THE ONE commit authority for a retained document's form controls. Every `UiNode` variant that
-// carries a value — `Input`, `Toggle`, `Slider`, `NumberStepper`, `Ring`, `IconSelect` — turns its
-// own gesture into a `UiIntentCommand` addressed at the node that fired it (`EventRouter::
-// build_intent`), and hands it to the host as `UiCommand::App`. The host admits it by `seq` and then
-// collapses it to an address through `UiIntentCommand::descriptor`, which is where its authored args
-// and its trigger payload finally merge — `publish_retained_action` stamps `windowId` and reserves it
-// from there, exactly as it already did.
-//
-// 🌉️ The spec-carried `ActionDescriptor` never leaves this module on its own any more: it is the
-// CARRIER for `controller_id`/name/authored args, and the intent is the DISPATCH. React draws the
-// same line — `UiInterpreterContext.onAction` is reserved for its unowned scene hosts while every
-// semantic control goes through `onIntent` (`🗣️Interpreter/🟦️.tsx`).
-//
-// 🩸️ Before this region the retained router documented "committing the edited value via `on_change`
-// is not implemented", and the shell's own immediate-mode `commit_focused_input`/`stepper_metas`
-// system (`🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs`) only ever saw ids minted by the CHROME's immediate-mode
-// widget walk — never a retained document's. Editing a generation's parameters on wgpu was therefore
-// fully cosmetic: a live caret, a live knob, and nothing reaching the guest (ticket
-// 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️audit-wgpu-parity-2026-09-13.md` gaps #1/#6).
-//
-// Parity reference — React's own retained interpreter, NOT its older declarative-control path:
-// `🗣️Interpreter/🟦️.tsx`'s `dispatchTrigger` → `UiDocumentStore::emitIntent` → `🛠️ShellHelpers/🟦️.tsx`'s
-// `uiIntentPayload`/`uiInputField`. Two rules come from there and are reproduced verbatim below:
-// a scalar payload is NAMED by its trigger (`delta` for `Trigger::Delta`, `value` for every other),
-// and it is MERGED OVER the node's authored args rather than replacing them.
+// 🎬️ THE ONE commit authority for a retained document's form controls: every value-carrying `UiNode` turns its gesture into a `UiIntentCommand` addressed at the node that fired it (`EventRouter::build_intent`) and hands it to the host as `UiCommand::App`; the host collapses it through `UiIntentCommand::descriptor`, where authored args and the trigger payload merge.
+// 🌉️ The spec-carried `ActionDescriptor` is only the CARRIER for `controller_id`/name/authored args and the intent is the DISPATCH, the line React draws between `onAction` (unowned scene hosts) and `onIntent` (every semantic control, `🗣️Interpreter/🟦️.tsx`).
+// Parity reference is React's retained interpreter (`dispatchTrigger` → `emitIntent` → `uiIntentPayload`/`uiInputField`): a scalar payload is NAMED by its trigger (`delta` for `Trigger::Delta`, `value` otherwise) and MERGED OVER the node's authored args rather than replacing them.
 
 /// 🎬️ One gesture, before it is addressed: which `Trigger` fired, the spec-carried descriptor whose
 /// `controller_id`/`action`/AUTHORED args it inherits, and the trigger's own payload — kept apart
@@ -36,15 +23,15 @@ use super::*;
 /// [`UiIntentCommand::payload`] is the single place they merge, on the way to the host.
 #[derive(Clone, Debug, PartialEq)]
 pub struct FiredAction {
-    pub(super) trigger: Trigger,
-    pub(super) action: ActionDescriptor,
+    pub trigger: Trigger,
+    pub action: ActionDescriptor,
     pub input: Option<DslValue>,
 }
 
 /// 🪢️ One gesture against `action`'s binding. `None` when the node declares no binding for this
 /// trigger — `reconcile::record_action_or_inert` marks that by an EMPTY action name, which is exactly
 /// the condition React's `emitIntent` answers `undefined` for.
-pub(super) fn fired_action(action: &ActionDescriptor, trigger: Trigger, input: DslValue) -> Option<FiredAction> {
+pub fn fired_action(action: &ActionDescriptor, trigger: Trigger, input: DslValue) -> Option<FiredAction> {
     if action.action.is_empty() {
         return None;
     }
@@ -52,7 +39,7 @@ pub(super) fn fired_action(action: &ActionDescriptor, trigger: Trigger, input: D
 }
 
 /// 🎒️ A gesture that carries no payload of its own (`Activate`, a focus commit's own re-dispatch).
-pub(super) fn bare_action(action: &ActionDescriptor, trigger: Trigger) -> Option<FiredAction> {
+pub fn bare_action(action: &ActionDescriptor, trigger: Trigger) -> Option<FiredAction> {
     if action.action.is_empty() {
         return None;
     }
@@ -63,14 +50,12 @@ pub(super) fn bare_action(action: &ActionDescriptor, trigger: Trigger) -> Option
 /// published (chrome widgets, testkit trees) and for a binding the record no longer carries. The
 /// descriptor's `controller_id` IS the id's scope — the same identity React's
 /// `uiIntentToActionDescriptor` maps in the other direction.
-pub(super) fn descriptor_action_id(action: &ActionDescriptor) -> Option<ui_contract::ActionId> {
+pub fn descriptor_action_id(action: &ActionDescriptor) -> Option<ui_contract::ActionId> {
     ui_contract::ActionId::try_v1(&action.controller_id, &action.action)
 }
 
-/// ✍️ Which `UiNode` variants own a live `EditState` text buffer. `Input` is the obvious one;
-/// `IconSelect`'s value IS its icon string, which React edits through the `IconSelector`'s own
-/// textarea (`🎴️IconSelector/🟦️.tsx`'s `onEditorChange`), so the retained target edits it the same
-/// way rather than inventing a second gesture for it.
+/// ✍️ Which `UiNode` variants own a live `EditState` text buffer. `Input` is the obvious one; an icon selector's editor is
+/// its own `Input` cell (`UiNode::IconSelect` synthesizes it), so the selector itself edits nothing.
 pub fn editable_value(node: &UiNode) -> Option<String> {
     match node {
         UiNode::Input(input) if input.input_kind == "text" && input.commit.as_deref() == Some(UI_DECIMAL_QUAD_COMMIT) =>
@@ -79,7 +64,6 @@ pub fn editable_value(node: &UiNode) -> Option<String> {
             Some((_, stored)) => number_field_text(input, stored),
             None => input.value.clone(),
         }),
-        UiNode::IconSelect(select) => Some(select.value.clone()),
         UiNode::NumberStepper(stepper) => Some(semio_ui_wgpu_controls::stepper::stepper_value_text(stepper.value, stepper.precision, stepper.display_factor)),
         _ => None,
     }
@@ -87,7 +71,7 @@ pub fn editable_value(node: &UiNode) -> Option<String> {
 
 /// ⏎️ Whether an editable node commits only on Enter/blur (`Trigger::Commit`, `commit == "blur"`)
 /// rather than on every keystroke (`Trigger::Change`) — React's `InputView`'s own `commitOnBlur`.
-pub(super) fn commits_on_blur(node: &UiNode) -> bool {
+pub fn commits_on_blur(node: &UiNode) -> bool {
     matches!(node, UiNode::Input(input) if input_commits_on_blur(input.commit.as_deref()))
 }
 
@@ -98,16 +82,15 @@ pub(super) fn commits_on_blur(node: &UiNode) -> bool {
 /// (`🗣️Interpreter/🟦️.tsx`'s `InputView`). The trigger is the node's own commit moment: `Commit` for a
 /// `commit: "blur"` input, `Change` otherwise, exactly as `reconcile::input_commit_action` resolved
 /// the binding it is firing.
-pub(super) fn edit_commit_action(node: &Node, text: &str) -> Option<FiredAction> {
+pub fn edit_commit_action(node: &Node, text: &str) -> Option<FiredAction> {
     match &node.spec.0 {
         UiNode::Input(input) => {
             let value = if input.input_kind == "number" { DslValue::float(constrain_number_field(typed_number(text, input.display_factor, input.precision, current_stored(input), input.min, input.max, input.limits.as_ref()).ok()?, input)) } else if input.input_kind == "text" && input.commit.as_deref() == Some(UI_DECIMAL_QUAD_COMMIT) {
                 DslValue::String(decimal_quad_text(text)?)
-            } else { DslValue::String(text.to_string()) };
+            } else if let Some(mode) = input.icon_mode() { DslValue::String(semio_ui_declaration::ui::UiIconSelectNode::encode_for_mode(mode, text)) } else { DslValue::String(text.to_string()) };
             let trigger = if commits_on_blur(&node.spec.0) { Trigger::Commit } else { Trigger::Change };
             fired_action(&input.on_change, trigger, value)
         }
-        UiNode::IconSelect(select) => fired_action(&select.on_change, Trigger::Change, DslValue::String(text.to_string())),
         UiNode::NumberStepper(stepper) => typed_number(text, stepper.display_factor, stepper.precision, std::iter::once(stepper.value).chain(stepper.snaps.iter().copied()), stepper.min, stepper.max, stepper.limits.as_ref()).ok().map(|value| constrain_stepper_value(value, stepper)).and_then(|value| fired_action(&stepper.on_absolute, Trigger::Change, DslValue::float(value))),
         _ => None,
     }
@@ -123,7 +106,7 @@ pub(super) fn edit_commit_action(node: &Node, text: &str) -> Option<FiredAction>
 ///
 /// ⚖️ `None` for a node that binds nothing for this moment, which is precisely when the caller must
 /// fall through to the ordinary edit behaviour (Escape closes an overlay, Space types a space).
-pub(super) fn search_line_action(node: &Node, trigger: Trigger, text: &str) -> Option<FiredAction> {
+pub fn search_line_action(node: &Node, trigger: Trigger, text: &str) -> Option<FiredAction> {
     let UiNode::Input(input) = &node.spec.0 else { return None };
     match trigger {
         Trigger::Submit => fired_action(input.on_submit.as_ref()?, Trigger::Submit, DslValue::String(text.trim().to_string())),
@@ -147,7 +130,7 @@ pub fn constrain_number_field(value: f64, input: &semio_ui_declaration::ui::UiIn
     }
 }
 
-pub(super) fn constrain_stepper_value(value: f64, stepper: &UiNumberStepperNode) -> f64 {
+pub fn constrain_stepper_value(value: f64, stepper: &UiNumberStepperNode) -> f64 {
     let clamped = value.max(stepper.min.unwrap_or(f64::NEG_INFINITY)).min(stepper.max.unwrap_or(f64::INFINITY));
     match (stepper.precision, stepper.display_factor) {
         (None, _) => clamped,
@@ -158,16 +141,16 @@ pub(super) fn constrain_stepper_value(value: f64, stepper: &UiNumberStepperNode)
 
 /// 🦉️ A stepper's live stored value: its admitted edit buffer read back from display units (a candidate keeping its exact
 /// stored value), else its declared value — a refused draft is never a value.
-pub(super) fn number_stepper_live_value(node: &Node, stepper: &UiNumberStepperNode) -> f64 {
+pub fn number_stepper_live_value(node: &Node, stepper: &UiNumberStepperNode) -> f64 {
     node.state.edit.as_ref().and_then(|edit| typed_number(&edit.text, stepper.display_factor, stepper.precision, std::iter::once(stepper.value).chain(stepper.snaps.iter().copied()), stepper.min, stepper.max, stepper.limits.as_ref()).ok()).unwrap_or(stepper.value)
 }
 
-pub(super) fn slider_live_value(node: &Node, slider: &UiSliderNode) -> f64 {
+pub fn slider_live_value(node: &Node, slider: &UiSliderNode) -> f64 {
     node.state.slider_draft_value.unwrap_or(slider.value)
 }
 
 /// 🧲️ A detent is kept exactly (it may sit off the step ladder); every other value is stepped and clamped.
-pub(super) fn constrain_slider_value(value: f64, slider: &UiSliderNode) -> f64 {
+pub fn constrain_slider_value(value: f64, slider: &UiSliderNode) -> f64 {
     if slider.snaps.contains(&value) {
         return value;
     }
@@ -191,12 +174,12 @@ pub fn typed_number(text: &str, display_factor: Option<f64>, precision: Option<u
 }
 
 /// 🛰️ A number field's stored value and detents — the candidates a typed display value keeps exactly.
-pub(super) fn current_stored(input: &semio_ui_declaration::ui::UiInputNode) -> impl Iterator<Item = f64> + '_ {
+pub fn current_stored(input: &semio_ui_declaration::ui::UiInputNode) -> impl Iterator<Item = f64> + '_ {
     input.value.trim().parse::<f64>().ok().into_iter().chain(input.snaps.iter().copied())
 }
 
 /// 🧿️ The text a number field's edit buffer shows for a stored value: its display text at its precision.
-pub(super) fn number_field_text(input: &semio_ui_declaration::ui::UiInputNode, stored: f64) -> String {
+pub fn number_field_text(input: &semio_ui_declaration::ui::UiInputNode, stored: f64) -> String {
     ui_contract::ui_number_display_text(stored, input.display_factor, input.precision)
 }
 
@@ -214,7 +197,7 @@ pub fn edit_refusal(node: &Node) -> Option<String> {
     }
 }
 
-pub(super) fn number_stepper_sign_at(bounds: Rect, x: f32, y: f32, inline: FlowInline, border: f32) -> Option<f64> {
+pub fn number_stepper_sign_at(bounds: Rect, x: f32, y: f32, inline: FlowInline, border: f32) -> Option<f64> {
     let [decrement, _, increment] = number_stepper_segments(bounds, inline, border);
     if decrement.contains(x, y) {
         Some(-1.0)
@@ -225,7 +208,7 @@ pub(super) fn number_stepper_sign_at(bounds: Rect, x: f32, y: f32, inline: FlowI
     }
 }
 
-pub(super) fn number_stepper_can_step(node: &Node, stepper: &UiNumberStepperNode, sign: f64) -> bool {
+pub fn number_stepper_can_step(node: &Node, stepper: &UiNumberStepperNode, sign: f64) -> bool {
     let value = number_stepper_live_value(node, stepper);
     if sign < 0.0 {
         stepper.min.is_none_or(|min| value > min)
@@ -249,7 +232,7 @@ pub fn pointer_commit_action(node: &Node, bounds: Rect, x: f32, y: f32, inline: 
             let track = slider_control_presentation(bounds, slider.axis_position(slider.value), 0.0, 1.0, unit_width, control_gap, inline).slider.track_cell;
             track.contains(x, y).then(|| fired_action(&slider.on_change, Trigger::Change, DslValue::float(semio_ui_wgpu_controls::slider::slider_node_pointer_value(slider, track, x, y)))).flatten()
         }
-        UiNode::Ring(ring) => fired_action(&ring.on_change, Trigger::Change, DslValue::float(ring_t_at(bounds, x, y))),
+        UiNode::Ring(ring) => (ring.presence.state != UiState::Disabled).then(|| fired_action(&ring.on_change, Trigger::Change, DslValue::float(ring_t_at(bounds, x, y)))).flatten(),
         UiNode::NumberStepper(stepper) => {
             let sign = number_stepper_sign_at(bounds, x, y, inline, border)?;
             if !number_stepper_can_step(node, stepper, sign) {
@@ -265,7 +248,7 @@ pub fn pointer_commit_action(node: &Node, bounds: Rect, x: f32, y: f32, inline: 
 /// law (`ui_contract::slider_key_value`, pinned by `🧫️number-controls`), so React, the retained canvas and
 /// the shell dialog land a key on the same value. The inline pair arrives already mirrored for `rtl`
 /// (`mirrored_inline_key`) and `Shift` walks ten rungs. `None` for every other key, so it never swallows one.
-pub(super) fn slider_key_value_from(slider: &UiSliderNode, current: f64, key: &str, shift: bool) -> Option<f64> {
+pub fn slider_key_value_from(slider: &UiSliderNode, current: f64, key: &str, shift: bool) -> Option<f64> {
     let key = match key {
         "ArrowRight" | "ArrowUp" => ui_contract::SliderKey::Increment,
         "ArrowLeft" | "ArrowDown" => ui_contract::SliderKey::Decrement,
@@ -280,29 +263,6 @@ pub(super) fn slider_key_value_from(slider: &UiSliderNode, current: f64, key: &s
 
 pub fn slider_key_value(slider: &UiSliderNode, key: &str, shift: bool) -> Option<f64> {
     slider_key_value_from(slider, slider.value, key, shift)
-}
-
-/// 🧬️ The contract kind a retained input's kind name spells (`reconcile::input_kind`).
-fn text_input_kind(kind: &str) -> ui_contract::InputKind {
-    match kind {
-        "longText" => ui_contract::InputKind::LongText,
-        "number" => ui_contract::InputKind::Number,
-        "date" => ui_contract::InputKind::Date,
-        "color" => ui_contract::InputKind::Color,
-        "file" => ui_contract::InputKind::File,
-        _ => ui_contract::InputKind::Text,
-    }
-}
-
-/// 🖊️ What the shared text keyboard law (`ui_contract::text_input_key`, pinned by `🧫️text-controls`) makes of `key` on a
-/// retained text field of `kind`: `primary` is Ctrl or ⌘. `None` for a key that is not the field's.
-pub fn text_field_key(kind: &str, key: &str, modifiers: EventModifiers) -> Option<ui_contract::TextInputKeyAction> {
-    let key = match key {
-        "Enter" | "NumpadEnter" => ui_contract::TextInputKey::Enter,
-        "Escape" => ui_contract::TextInputKey::Escape,
-        _ => return None,
-    };
-    ui_contract::text_input_key(text_input_kind(kind), key, ui_contract::TextInputModifiers { primary: modifiers.ctrl || modifiers.meta, shift: modifiers.shift, alt: modifiers.alt })
 }
 
 /// 🎹️ The law key a physical key names on a stepper or a number field (design §18; the twin of `uiNumberFieldKey`, pinned by
@@ -323,14 +283,14 @@ pub fn number_field_key(key: &str, shift: bool, min: Option<f64>, max: Option<f6
 
 /// 🔘️ Whether the retained select `id` is published segmented — every option visible at once as a radio group, chosen
 /// without a popup.
-pub(super) fn select_is_segmented(tree: &UiTree, id: NodeId) -> bool {
-    tree.document_id(id).and_then(|document_id| tree.document().and_then(|document| document.record(document_id))).is_some_and(|record| matches!(&record.component, ui_contract::Component::Select(select) if select.appearance == ui_contract::SelectAppearance::Segmented))
+pub fn select_is_segmented(tree: &UiTree, id: NodeId) -> bool {
+    tree.node(id).is_some_and(|node| matches!(&node.spec.0, UiNode::Select(select) if select.appearance == ui_contract::SelectAppearance::Segmented))
 }
 
 /// 🪞️ What a value an assistive technology wrote into a control's mirror means: the control's own typed buffer (the path
 /// a keystroke takes), a slider's typed readout (the path its double-clicked readout takes), or a ready dispatch for a
 /// control that keeps no draft.
-pub(super) enum MirroredValue {
+pub enum MirroredValue {
     Buffer,
     Readout,
     Fired(Option<FiredAction>),
@@ -349,7 +309,7 @@ fn number_stepper_fired(node: &Node, stepper: &UiNumberStepperNode, sign: f64) -
 
 /// 🐙️ Whether a press on this variant keeps committing while the pointer drags — React delegates
 /// `Slider`/`Ring` to controls that report every intermediate value, not only the release.
-pub(super) fn commits_while_dragging(node: &UiNode) -> bool {
+pub fn commits_while_dragging(node: &UiNode) -> bool {
     matches!(node, UiNode::Slider(_) | UiNode::Ring(_))
 }
 
@@ -368,7 +328,7 @@ static SCRUB_PRESS_SERIAL: std::sync::atomic::AtomicU64 = std::sync::atomic::Ato
 /// 🎛️ Whether `node` is a continuous control whose value rides presses: a `Slider`, a `Ring`, a `NumberStepper`'s absolute
 /// value, or a number or colour `Input` without a commit policy (React's `SliderView`, `RingView`, `NumberStepperView` and
 /// `InputView` ride their continuous lane exactly then; a typed field's blur is the release).
-pub(super) fn is_continuous_control(node: &UiNode) -> bool {
+pub fn is_continuous_control(node: &UiNode) -> bool {
     match node {
         UiNode::Slider(_) | UiNode::Ring(_) | UiNode::NumberStepper(_) => true,
         UiNode::Input(input) => matches!(input.input_kind.as_str(), "number" | "color") && !commits_on_blur(node),
@@ -378,7 +338,7 @@ pub(super) fn is_continuous_control(node: &UiNode) -> bool {
 
 /// 🖱️ `fired` as one dispatch of the press `id` is in: its payload becomes `{value, gesture, commit}`. A press opens on
 /// its first dispatch; a release closes it, so a release with no open press is a one-shot press of its own.
-pub(super) fn pressed(tree: &mut UiTree, window_id: &str, id: NodeId, mut fired: FiredAction, release: bool) -> FiredAction {
+pub fn pressed(tree: &mut UiTree, window_id: &str, id: NodeId, mut fired: FiredAction, release: bool) -> FiredAction {
     let value = fired.input.take().unwrap_or(DslValue::Null);
     let Some(node) = tree.node_mut(id) else { return fired };
     let gesture = node.state.scrub_gesture.get_or_insert_with(|| format!("{window_id}/{}:{}", id.identity_parts().0, SCRUB_PRESS_SERIAL.fetch_add(1, std::sync::atomic::Ordering::Relaxed) + 1)).clone();
@@ -394,7 +354,7 @@ pub(super) fn pressed(tree: &mut UiTree, window_id: &str, id: NodeId, mut fired:
 
 /// 🧯️ The host cancel of `id`'s open press (`blur`, `captureLost`): `{gesture, abort}` on the control's own binding, the
 /// press closed; `None` when no press is open. The guest drops the press with zero trace.
-pub(super) fn cancelled_press(tree: &mut UiTree, id: NodeId, reason: &str) -> Option<FiredAction> {
+pub fn cancelled_press(tree: &mut UiTree, id: NodeId, reason: &str) -> Option<FiredAction> {
     let node = tree.node_mut(id)?;
     let gesture = node.state.scrub_gesture.take()?;
     node.state.scrub_offered = None;
@@ -413,19 +373,19 @@ fn press_binding(node: &UiNode) -> Option<&ActionDescriptor> {
 }
 
 /// 🪃️ The host cancel `{gesture, abort}` of the press `gesture` on `node`'s own binding.
-pub(super) fn press_cancel(node: &UiNode, gesture: String, reason: &str) -> Option<FiredAction> {
+pub fn press_cancel(node: &UiNode, gesture: String, reason: &str) -> Option<FiredAction> {
     fired_action(press_binding(node)?, Trigger::Change, DslValue::Object(vec![(SCRUB_GESTURE_ARG.to_string(), DslValue::String(gesture)), (SCRUB_ABORT_ARG.to_string(), DslValue::String(reason.to_string()))]))
 }
 
 /// 🏁️ The release `{value, gesture, commit: true}` of the press `gesture` on `node`'s own binding.
-pub(super) fn press_release(node: &UiNode, gesture: String, value: DslValue) -> Option<FiredAction> {
+pub fn press_release(node: &UiNode, gesture: String, value: DslValue) -> Option<FiredAction> {
     fired_action(press_binding(node)?, Trigger::Change, DslValue::Object(vec![(INTENT_VALUE_FIELD.to_string(), value), (SCRUB_GESTURE_ARG.to_string(), DslValue::String(gesture)), (SCRUB_COMMIT_ARG.to_string(), DslValue::Bool(true))]))
 }
 
 /// 📐️ One node's absolute painted rect: its own accepted layout plus every ancestor's origin — the
 /// same accumulation `scene_slots::collect_scene_slots`/`hit_test_node`/`paint::paint_node` each
 /// walk independently, resolved once here at dispatch time rather than by a whole-tree pass.
-pub(super) fn absolute_rect(tree: &UiTree, id: NodeId) -> Option<Rect> {
+pub fn absolute_rect(tree: &UiTree, id: NodeId) -> Option<Rect> {
     tree.absolute_rect(id)
 }
 //#endregion 🔖️Commit
@@ -444,7 +404,7 @@ pub fn bubble<F: FnMut(NodeId) -> bool>(tree: &UiTree, from: NodeId, mut handler
 }
 
 /// 🌳️ Whether `id` is `ancestor` itself or a descendant of it, walking the parent chain.
-pub(super) fn is_descendant(tree: &UiTree, id: NodeId, ancestor: NodeId) -> bool {
+pub fn is_descendant(tree: &UiTree, id: NodeId, ancestor: NodeId) -> bool {
     let mut found = false;
     bubble(tree, id, |current| {
         if current == ancestor {

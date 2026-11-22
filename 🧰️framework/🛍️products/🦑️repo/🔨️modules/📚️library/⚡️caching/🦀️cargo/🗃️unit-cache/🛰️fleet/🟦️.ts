@@ -42,17 +42,17 @@ export function unitToolchainOfV1(release:CompilerReleaseV1,unit:RustcUnitV1,arg
  return hostIndependentV1({release,unit,args})?"host-independent:"+(release.neutral??release.digest):own();
 }
 
-/** 🚦️ Why the fleet tier is not used for a unit although the machine has a cache configured: the breaker state (`down`, `denied`) or `error`; `undefined` when the tier is off or usable. */
-export function fleetSkipReasonV1(root:string,environment:Environment):string|undefined{
- try{const settings=readFleetSettingsV1(root,environment);if(!settings)return undefined;const state=createFleetClientV1(settings).state();return state==="ok"?"error":state;}catch{return "error";}
+/** 🚦️ Why a unit that this machine could share has no fleet identity (`prepareFleetV1` answered nothing) although a cache is configured: `no-compiler-identity` (the compiler build or the slot of the unit cannot be determined); `undefined` when no cache is configured. A breaker that is open is no reason: the unit is prepared anyway and its upload waits in the spool. */
+export function fleetUnidentifiedReasonV1(root:string,environment:Environment):string|undefined{
+ try{return readFleetSettingsV1(root,environment)?"no-compiler-identity":undefined;}catch{return "no-compiler-identity";}
 }
 
-/** 🛰️ Prepares the fleet tier for one cache-eligible unit; `undefined` when the tier is off, the server is known to be down for now, or the unit cannot be shared. Never throws. */
+/** 🛰️ Prepares the fleet tier for one cache-eligible unit, also while the breaker is open (lookup and claims then wait for the breaker, the upload of the compiled unit waits in the spool); `undefined` when the tier is off or the unit has no identity. Never throws. */
 export function prepareFleetV1(input:Readonly<{root:string;environment:Environment;basics:UnitBasicsV1;unit:RustcUnitV1;args:readonly string[];cwd:string;laneRoot:string|undefined;localKey:string;keyInput:Parameters<typeof unitKeyV1>[0];toolchain:string;crate:string;sensitive?:readonly string[];expected?:readonly string[]}>,world:Readonly<{client?:FleetClientV1}>={}):FleetUnitV1|undefined{
  try{
   const settings=readFleetSettingsV1(input.root,input.environment);if(!settings)return undefined;
   const workspace=input.environment.SEMIO_UNIT_CACHE_WORKSPACE_ROOT||undefined,identityRoot=workspace??fleetCacheRootV1(input.environment);
-  const client=world.client??createFleetClientV1(settings,identityRoot===undefined?{}:{fetch:remoteCacheFetchV1(input.environment,{root:identityRoot})});if(!client.usable())return undefined;
+  const client=world.client??createFleetClientV1(settings,identityRoot===undefined?{}:{fetch:remoteCacheFetchV1(input.environment,{root:identityRoot})});
   const platform=platformOfV1({release:input.basics.release,unit:input.unit,args:input.args,environment:input.environment,toolchain:input.toolchain}),roots=portableRootsV1({cwd:input.cwd,workspace,hints:[input.environment.CARGO_MANIFEST_DIR,input.environment.PWD]});
   return Object.freeze({client,root:input.root,environment:input.environment,localKey:input.localKey,key:remoteKeyV1(platform,input.keyInput,roots,input.sensitive),slot:input.basics.slot,slotParts:input.basics.slotParts,crate:input.crate,platform,roots,cwd:input.cwd,workspace,laneRoot:input.laneRoot,owner:fleetOwnerV1(),expected:input.expected??[]});
  }catch{return undefined;}
@@ -138,11 +138,17 @@ export async function rootHintV1(neutral:FleetUnitV1):Promise<readonly RootKindV
 
 /** 🌳️ Publishes the root hint of a unit (taking the unit under its neutral key) and answers the kinds in force: the ones given, or those of a hint that was there first. `undefined` when the fleet refused or cannot say. */
 export async function publishRootHintV1(neutral:FleetUnitV1,kinds:readonly string[]):Promise<readonly RootKindV1[]|undefined>{
+ return publishRootHintByKeyV1(neutral.client,neutral.key,kinds);
+}
+
+/** 🌳️ `publishRootHintV1` for a client and the neutral key of the unit (the upload worker publishes the hint of a unit that was compiled while the cache was unreachable). */
+export async function publishRootHintByKeyV1(client:FleetClientV1,neutralKey:string,kinds:readonly string[]):Promise<readonly RootKindV1[]|undefined>{
  try{
-  if(!neutral.client.settings.upload||!neutral.client.usable())return undefined;
-  const key=rootHintKeyV1(neutral.key),stored=await neutral.client.putResult(key,rootHintBytesV1(kinds),key);
+  if(!client.settings.upload||!client.usable())return undefined;
+  const key=rootHintKeyV1(neutralKey),stored=await client.putResult(key,rootHintBytesV1(kinds),key);
   if(stored===true)return parseRootHintV1(rootHintBytesV1(kinds));
-  return stored==="diverged"?await rootHintV1(neutral):undefined;
+  if(stored!=="diverged")return undefined;
+  const answer=await client.getResult(key);return typeof answer==="string"?undefined:parseRootHintV1(answer);
  }catch{return undefined;}
 }
 
@@ -194,12 +200,17 @@ export function offerFleetUnitV1(unit:FleetUnitV1):void{
  }catch{}
 }
 
-/** 📮️ After a successful compile that was published locally: queues the unit for upload and starts the worker; the claim, if held, is handed over (the worker keeps it alive and the server drops it when the result arrives). Never waits for the network. */
-export function shareFleetUnitV1(unit:FleetUnitV1,input:Readonly<{claimed:FleetHoldV1|undefined;costMs:number}>):boolean{
+/** 🚫️ Why a unit that was compiled and published locally did not enter the upload spool: `read-only` (this machine may not write to the fleet cache: nothing it compiles ever seeds the fleet), else `spool-full`. */
+export function unsharedReasonV1(unit:FleetUnitV1):string{
+ return unit.client.settings.upload?"spool-full":"read-only";
+}
+
+/** 📮️ After a successful compile that was published locally: queues the unit for upload (also while the breaker is open: the worker holds the job until the fleet cache answers or the job is too old) and starts the worker; the claim, if held, is handed over (the worker keeps it alive and the server drops it when the result arrives). Never waits for the network. */
+export function shareFleetUnitV1(unit:FleetUnitV1,input:Readonly<{claimed:FleetHoldV1|undefined;costMs:number;hint?:Readonly<{neutralKey:string;kinds:readonly string[]}>}>):boolean{
  try{
   rememberCostV1(unit,input.costMs);
-  if(!unit.client.settings.upload||!unit.client.usable())return false;
-  const queued=enqueueUploadV1(unit.root,{version:1,key:unit.key,localKey:unit.localKey,slot:unit.slot,crate:unit.crate,cwd:unit.cwd,workspace:unit.workspace??null,laneRoot:unit.laneRoot??null,owner:unit.owner,claimed:input.claimed!==undefined&&!input.claimed.lost(),costMs:Math.round(input.costMs),platform:unit.platform,queuedMs:Date.now()});
+  if(!unit.client.settings.upload)return false;
+  const queued=enqueueUploadV1(unit.root,{version:1,key:unit.key,localKey:unit.localKey,slot:unit.slot,crate:unit.crate,cwd:unit.cwd,workspace:unit.workspace??null,laneRoot:unit.laneRoot??null,owner:unit.owner,claimed:input.claimed!==undefined&&!input.claimed.lost(),costMs:Math.round(input.costMs),platform:unit.platform,queuedMs:Date.now(),...input.hint===undefined?{}:{hint:{neutralKey:input.hint.neutralKey,kinds:[...input.hint.kinds]}}});
   if(queued){input.claimed?.stop();startUploaderV1(unit.root,unit.environment);}
   return queued;
  }catch{return false;}

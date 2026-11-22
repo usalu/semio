@@ -11,9 +11,8 @@
 
 use semio_s_artifact_process_process3d_kit::axis_angle_from_up_to;
 use semio_s_artifact_process_process3d_config::{Process3dConfig, Process3dConfigMutation};
-use semio_s_artifact_process_process3d_modes::windows::workpiece::set_active_utility_effect;
+use semio_s_artifact_process_process3d_modes::windows::workpiece::{placement, set_active_utility_effect};
 use semio_s_artifact_process_process3d_kit::{editor::process3d::terminology::process3d_labels, editor::process3d::terminology::Process3dLabels};
-use semio_s_artifact_process_process3d_inferences::capability_for_measure_kind;
 use crate::step::insert_step_emit;
 use semio_s_artifact_process_process3d_model::next_step_id;
 use semio_s_artifact_process_process3d_mutations::Process3dMutation;
@@ -154,6 +153,27 @@ fn process3d_step_from_face_drag(fixture: &Process3dSnapshot, normal: [f64; 3], 
 }
 //#endregion 🔖️FaceDrag
 
+/// 🧲️ Arms the exact installed capability in the addressed Workpiece.
+pub mod place_capability {
+    use super::*;
+
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
+    #[dsl(keyword = "place-capability")]
+    pub struct PlaceCapability {
+        pub machine_id: String,
+        pub capability_id: String,
+    }
+
+    pub fn handle(payload: &PlaceCapability, doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>, ctx: &mut semio_s_artifact_process_process3d_kit::Process3dDispatchCtx) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
+        let utility = placement::PLACE_CAPABILITY_UTILITY;
+        let target = Some((payload.machine_id.as_str(), payload.capability_id.as_str()));
+        let effects = set_active_utility_effect(ctx.view_state().ok(), utility)
+            .filter(|_| placement::resolve_placement(doc.snapshot, utility, target, [0.0; 3], |_, _, _| ()).is_some())
+            .into_iter().collect();
+        Ok(Emit { effects, ..Default::default() })
+    }
+}
+
 //#region 🔖️WorldPointerDown
 pub mod world_pointer_down {
     use super::*;
@@ -171,14 +191,24 @@ pub mod world_pointer_down {
         cfg: &ConfigView<'_, Process3dConfig>,
         ctx: &mut semio_s_artifact_process_process3d_kit::Process3dDispatchCtx,
     ) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
+        handle_placement(payload, doc, cfg, ctx, None)
+    }
+
+    /// 🎯️ Commits only the captured window's live placement capability.
+    pub fn handle_placement(payload: &WorldPointerDown, doc: &ArtifactView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>, ctx: &semio_s_artifact_process_process3d_kit::Process3dDispatchCtx, chosen: Option<(&str, &str)>) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         validate_position("worldPointerDown", payload.position)?;
         let fixture = doc.snapshot;
-        let Some(measure_kind) = semio_s_artifact_process_process3d_modes::windows::workpiece::placement::placement_kind(ctx.active_utility()?) else { return Ok(Emit::default()); };
-        let (machine, capability) = capability_for_measure_kind(&fixture.workshop, measure_kind);
-        let origin = StepOrigin { machine_id: machine.id, capability_id: capability.id.clone() };
-        let step = ProcessStep { id: next_step_id(fixture), label: capability.label.clone(), enabled: true, origin: Some(origin), measure: semio_s_artifact_process_process3d_inferences::measure_for_capability(&capability, Some(payload.position)) };
+        let utility = ctx.active_utility()?;
+        let step = placement::resolve_placement(fixture, utility, chosen, payload.position, |machine_id, capability, measure| {
+            let origin = StepOrigin { machine_id: machine_id.into(), capability_id: capability.id.clone() };
+            ProcessStep { id: next_step_id(fixture), label: capability.label.clone(), enabled: true, origin: Some(origin), measure }
+        });
         let effects = set_active_utility_effect(Some(ctx.view_state()?), "select").into_iter().collect();
-        world_emit("worldPointerDown", doc, cfg, step, effects)
+        match step {
+            Some(step) => world_emit("worldPointerDown", doc, cfg, step, effects),
+            None if utility == placement::PLACE_CAPABILITY_UTILITY => Ok(Emit { effects, ..Default::default() }),
+            None => Ok(Emit::default()),
+        }
     }
 }
 //#endregion 🔖️WorldPointerDown

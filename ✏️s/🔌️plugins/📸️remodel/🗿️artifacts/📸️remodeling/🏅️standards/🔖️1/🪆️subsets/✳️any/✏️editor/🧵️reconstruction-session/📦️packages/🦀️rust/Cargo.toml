@@ -21,6 +21,7 @@ semio-framework-mesh-engine = { workspace = true }
 semio-framework-job = { workspace = true }
 semio-os-kernel = { workspace = true }
 semio-framework-pack-json = { workspace = true }
+semio-framework-pixels = { workspace = true }
 semio-framework-tool-run = { workspace = true }
 semio-ui-locale = { workspace = true }
 semio-framework-value = { workspace = true }
@@ -45,3 +46,4 @@ semio-s-artifact-remodel-remodeling-examples = { workspace = true }
 semio-s-artifact-remodel-remodeling-mut-calib = { workspace = true }
 semio-s-artifact-remodel-remodeling-mut-params = { workspace = true }
 serde_json = { workspace = true }
+image = { version = "0.25", default-features = false }

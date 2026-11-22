@@ -1,0 +1,16 @@
+{
+  "root": 10,
+  "attached": [12, 20, 99],
+  "separate": [13],
+  "rows": [
+    { "pid": 10, "parent": 1, "rssKilobytes": 1024 },
+    { "pid": 11, "parent": 10, "rssKilobytes": 2048 },
+    { "pid": 12, "parent": 10, "rssKilobytes": 4096 },
+    { "pid": 13, "parent": 11, "rssKilobytes": 8192 },
+    { "pid": 14, "parent": 13, "rssKilobytes": 16384 },
+    { "pid": 20, "parent": 1, "rssKilobytes": 32768 },
+    { "pid": 21, "parent": 20, "rssKilobytes": 65536 },
+    { "pid": 30, "parent": 1, "rssKilobytes": 131072 }
+  ],
+  "megabytes": 103
+}

@@ -72,6 +72,8 @@ test("runtime module references retain import and require resolution modes", asy
 });
 
 import { testImportEdgeEquality } from "../../../🧪️tests/🔗️import-edges/🟦️.ts";
+import {declareLibraryBuildTestEnvelopeV1} from "../../../../🧪️testing/🪪️native-birth/🟦️.ts";
+declareLibraryBuildTestEnvelopeV1({suite:"inference",maximumElapsedMilliseconds:15000});
 
 test("full registered repository import dependency equality remains intact", async () => {
   const output = process.env.SEMIO_TEST_ARTIFACT_DIR;

@@ -1,0 +1,30 @@
+--- a/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🗺️imported-map/🏔️elevation/🔗️.graphql
++++ b/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🗺️imported-map/🏔️elevation/🔗️.graphql
+@@ -1,11 +1,11 @@
+ type ElevationSource {
+   bounds: [Float!]!
+-  rows: [[Int!]!]!
++  rowsMillimetres: [[Int!]!]!
+ }
+ 
+ input ElevationSourceInput {
+   bounds: [Float!]!
+-  rows: [[Int!]!]!
++  rowsMillimetres: [[Int!]!]!
+ }
+ 
+ type ElevationSourceChange { value: ElevationSource }
+--- a/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🗺️imported-map/🏔️elevation/🛰️.proto
++++ b/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🗺️imported-map/🏔️elevation/🛰️.proto
+@@ -1,9 +1,9 @@
+ syntax = "proto3";
+ package semio.s.gis.gisterrain;
+ 
+-message ElevationRow { repeated sint32 height_meters = 1; }
++message ElevationRow { repeated sint32 height_millimetres = 1; }
+ message ElevationSource {
+   repeated double bounds = 1;
+-  repeated ElevationRow rows = 2;
++  repeated ElevationRow rows_millimetres = 2;
+ }
+ message ElevationSourceChange { optional ElevationSource value = 1; }

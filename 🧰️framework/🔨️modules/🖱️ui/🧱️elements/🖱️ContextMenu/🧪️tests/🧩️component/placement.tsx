@@ -67,7 +67,7 @@ describe("fused context menu placement", () => {
   it("keeps shell portal ownership and leaves the silhouette host unclipped", () => {
     const layer = document.createElement("div");
     document.body.append(layer);
-    const scope = { portalLayerRef: { current: layer } } as ShellScope;
+    const scope = { portalLayerRef: { current: layer } } as unknown as ShellScope;
     const { unmount } = render(<ShellScopeContext.Provider value={scope}><ContextMenuController open position={{ x: 10, y: 10 }} items={[{ id: "a", label: uiDataLabel("A") }]} title={uiDataLabel("Actions")} onOpenChange={() => undefined} /></ShellScopeContext.Provider>);
     const chrome = layer.querySelector<HTMLElement>('[data-slot="context-menu-content"]')!;
     expect(chrome.parentElement).toBe(layer);

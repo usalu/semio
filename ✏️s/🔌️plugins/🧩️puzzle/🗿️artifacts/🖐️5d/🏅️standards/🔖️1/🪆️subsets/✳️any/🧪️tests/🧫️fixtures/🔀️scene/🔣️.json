@@ -1,0 +1,55 @@
+{
+  "deletePartWire": [1, 1, 1, 1, 97, 1, 0, 6, 0],
+  "before": {
+    "schema": "puzzle.5d",
+    "domain": "architecture",
+    "label": "Scene splice fixture",
+    "meta": {"description": "Unchanged by row splices."},
+    "kindCompatibility": [
+      {"source": "kind-a", "target": "kind-b", "bidirectional": false, "important": false, "specificity": "general"},
+      {"source": "kind-b", "target": "kind-c", "bidirectional": true, "important": false, "specificity": "general"}
+    ],
+    "parts": [
+      {"id": "a", "2d": {"x": 0, "y": 0}, "3d": {"origin": [0, 0, 0]}, "grips": [{"id": "east", "2d": {"angle": 0}, "3d": {"position": [0, 0, 0]}}]},
+      {"id": "b", "2d": {"x": 2, "y": 0}, "3d": {"origin": [2, 0, 0]}, "grips": []},
+      {"id": "c", "2d": {"x": 4, "y": 0}, "3d": {"origin": [4, 0, 0]}, "grips": [{"id": "west", "2d": {"angle": 0}, "3d": {"position": [-1, 0, 0]}}, {"id": "east", "2d": {"angle": 0}, "3d": {"position": [1, 0, 0]}}]}
+    ],
+    "fasteners": [
+      {"id": "ac", "source": "a:east", "target": "c:west", "gap": 0, "shift": 0, "rise": 0, "rotation": 0, "turn": 0, "tilt": 0, "x": 0, "y": 0}
+    ],
+    "targetVolumes": [{"id": "envelope", "origin": [3, 1, 2], "scale": [6, 2, 4], "hidden": false, "locked": true}]
+  },
+  "steps": [
+    {
+      "forward": {"mutation": "spliceSceneRows", "table": "parts", "start": 1, "deleteCount": 1, "parts": [{"id": "x", "2d": {"x": 3, "y": 1}, "3d": {"origin": [3, 1, 0]}, "grips": [{"id": "east", "2d": {"angle": 0}, "3d": {"position": [1, 0, 0]}}]}]},
+      "inverse": {"mutation": "spliceSceneRows", "table": "parts", "start": 1, "deleteCount": 1, "parts": [{"id": "b", "2d": {"x": 2, "y": 0}, "3d": {"origin": [2, 0, 0]}, "grips": []}]}
+    },
+    {
+      "forward": {"mutation": "spliceSceneRows", "table": "kindCompatibility", "start": 0, "deleteCount": 1},
+      "inverse": {"mutation": "spliceSceneRows", "table": "kindCompatibility", "start": 0, "deleteCount": 0, "kindCompatibility": [{"source": "kind-a", "target": "kind-b", "bidirectional": false, "important": false, "specificity": "general"}]}
+    },
+    {
+      "forward": {"mutation": "spliceSceneRows", "table": "fasteners", "start": 1, "deleteCount": 0, "fasteners": [{"id": "xc", "source": "x:east", "target": "c:east", "gap": 1, "shift": -2, "rise": 3, "rotation": 4, "turn": 5, "tilt": 6, "x": 7, "y": 8}]},
+      "inverse": {"mutation": "spliceSceneRows", "table": "fasteners", "start": 1, "deleteCount": 1}
+    }
+  ],
+  "after": {
+    "schema": "puzzle.5d",
+    "domain": "architecture",
+    "label": "Scene splice fixture",
+    "meta": {"description": "Unchanged by row splices."},
+    "kindCompatibility": [
+      {"source": "kind-b", "target": "kind-c", "bidirectional": true, "important": false, "specificity": "general"}
+    ],
+    "parts": [
+      {"id": "a", "2d": {"x": 0, "y": 0}, "3d": {"origin": [0, 0, 0]}, "grips": [{"id": "east", "2d": {"angle": 0}, "3d": {"position": [0, 0, 0]}}]},
+      {"id": "x", "2d": {"x": 3, "y": 1}, "3d": {"origin": [3, 1, 0]}, "grips": [{"id": "east", "2d": {"angle": 0}, "3d": {"position": [1, 0, 0]}}]},
+      {"id": "c", "2d": {"x": 4, "y": 0}, "3d": {"origin": [4, 0, 0]}, "grips": [{"id": "west", "2d": {"angle": 0}, "3d": {"position": [-1, 0, 0]}}, {"id": "east", "2d": {"angle": 0}, "3d": {"position": [1, 0, 0]}}]}
+    ],
+    "fasteners": [
+      {"id": "ac", "source": "a:east", "target": "c:west", "gap": 0, "shift": 0, "rise": 0, "rotation": 0, "turn": 0, "tilt": 0, "x": 0, "y": 0},
+      {"id": "xc", "source": "x:east", "target": "c:east", "gap": 1, "shift": -2, "rise": 3, "rotation": 4, "turn": 5, "tilt": 6, "x": 7, "y": 8}
+    ],
+    "targetVolumes": [{"id": "envelope", "origin": [3, 1, 2], "scale": [6, 2, 4], "hidden": false, "locked": true}]
+  }
+}

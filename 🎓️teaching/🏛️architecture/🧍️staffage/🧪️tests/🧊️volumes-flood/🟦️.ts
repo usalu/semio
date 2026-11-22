@@ -21,7 +21,7 @@ import { python } from "../🧰️support/🐍️.ts";
 
 type Solid = { region: string; kind: "tube"; outerRadiusM: number; innerRadiusM: number; segments: number; from: number; to: number } | { region: string; kind: "box"; min: number[]; max: number[] };
 type Case = { name: string; hand: string; solids: Solid[]; target: string; areaM2: number; unfloodedM2?: number; transparent?: string[]; seenM2?: number; opaqueSeenM2?: number };
-type Vectors = { featureM: number; cellM: number; probeM: number; seamM: number; coverM: number; toleranceFraction: number; toleranceM2: number; cases: Case[]; sample: { scale: 50; region: string; remove: string; rod: { id: string }; tube: { id: string }; caps: { id: string }[]; open: string; openGainM2: number; toleranceFraction: number } };
+type Vectors = { featureM: number; cellM: number; probeM: number; seamM: number; coverM: number; toleranceFraction: number; toleranceM2: number; cases: Case[]; sample: { scale: 50; region: string; remove: string; rod: { id: string }; tube: { id: string }; caps: { id: string }[]; open: string; openGainM2: number; toleranceFraction: number; unresolvedPassageM: number; resolvedPassageM: number } };
 
 const vectors = fixture<Vectors>("🧊️volumes-flood");
 const sample: Asset = fixture<{ asset: Asset }>("👤️sample-figure").asset;
@@ -129,6 +129,18 @@ describe("🌊️ the thermal rule on the sample figure with a hollow arm", () =
   it("measures the arm closed by two discs like the solid rod and counts the bore once a disc is removed", () => {
     expect(Math.abs(outer(closed) / outer(rod) - 1)).toBeLessThan(s.toleranceFraction);
     expect(Math.abs((outer(open) - outer(closed)) / s.openGainM2 - 1)).toBeLessThan(3 * s.toleranceFraction);
+  });
+
+  it("fails when the budget of the flood cannot keep a third of the declared air passage as cell", () => {
+    const narrow = { ...closed, thermal: { ...closed.thermal, minimumAirPassageM: s.unresolvedPassageM } } as Asset;
+    const cell = measured(narrow).find((m) => m.name === "airPassageCellM")!;
+    expect(cell.limit).toBeCloseTo(s.unresolvedPassageM / 3, 9);
+    expect(cell.value).toBeGreaterThan(cell.limit);
+    expect(cell.ok).toBe(false);
+    const wide = { ...closed, thermal: { ...closed.thermal, minimumAirPassageM: s.resolvedPassageM } } as Asset;
+    const kept = measured(wide).find((m) => m.name === "airPassageCellM")!;
+    expect(kept.value).toBeCloseTo(s.resolvedPassageM / 3, 9);
+    expect(kept.ok).toBe(true);
   });
 
   it("reports the cell of the flood and stops when the signal is aborted", () => {

@@ -583,8 +583,7 @@
    "additionalProperties": false,
    "required": [
     "ageSeconds",
-    "anchorAlive",
-    "isDefault"
+    "anchorAlive"
    ],
    "properties": {
     "ageSeconds": {
@@ -592,9 +591,6 @@
      "minimum": 0
     },
     "anchorAlive": {
-     "type": "boolean"
-    },
-    "isDefault": {
      "type": "boolean"
     }
    }

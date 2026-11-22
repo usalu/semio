@@ -1,8 +1,9 @@
 import { fetchPackageDescriptor, type PluginPackageDescriptor } from "@semio-tech/framework-kernel/descriptor-admission";
 import { resolvePluginLoadOrder } from "@semio-tech/framework-kernel/plugin-graph";
 import { type PluginCatalog, type PluginCatalogTarget } from "@semio-tech/framework-kernel/plugin-catalog";
-import { type PluginDependency } from "@semio-tech/framework-kernel/plugin-registry";
-import { type PlaygroundBoot } from "@semio-tech/framework-kernel/playground-boot";
+import { expandPluginRegistry, resolvePluginHostConfig, resolvePluginRegistryId } from "@semio-tech/framework";
+import type { PluginDependency } from "@semio-tech/framework-kernel/plugin-registry";
+import type { PlaygroundBoot } from "@semio-tech/framework-kernel/playground-boot";
 import { type PackageReceiptSource } from "@semio-tech/framework-kernel/descriptor/package";
 import schema from "../../../🧬️schema/🧩️plugin-modules/🔣️.json" with { type: "json" };
 
@@ -30,7 +31,7 @@ function descriptorDependencies(descriptor: PluginPackageDescriptor): readonly P
 }
 
 /** 📇️ Reads trusted descriptors in withdrawable turns and restricts the planner to supplied modules. */
-export async function prepareWgpuPluginModules(catalog: PluginCatalog, modules: readonly WgpuPluginModule[], receiptSource:PackageReceiptSource, options: { readonly signal?: AbortSignal; readonly deadlineMs?: number; readonly now?: () => number; readonly maxDescriptors?: number; readonly readDescriptor?: typeof fetchPackageDescriptor; readonly progress?: (pluginId: string, index: number, count: number) => void; readonly yieldTurn?: () => Promise<void> } = {}): Promise<WgpuPreparedPluginModules> {
+export async function prepareWgpuPluginModules(catalog: PluginCatalog, modules: readonly WgpuPluginModule[], receiptSource:PackageReceiptSource, options: { readonly bootVariant?: string; readonly signal?: AbortSignal; readonly deadlineMs?: number; readonly now?: () => number; readonly maxDescriptors?: number; readonly readDescriptor?: typeof fetchPackageDescriptor; readonly progress?: (pluginId: string, index: number, count: number) => void; readonly yieldTurn?: () => Promise<void> } = {}): Promise<WgpuPreparedPluginModules> {
   const now = options.now ?? (() => performance.now());
   const start = now(), deadline = options.deadlineMs ?? start + 30000, maximum = options.maxDescriptors ?? schema.maxItems;
   if (!Number.isFinite(start) || !Number.isFinite(deadline) || deadline > start + 30000 || !Number.isSafeInteger(maximum) || maximum < 0 || maximum > schema.maxItems || modules.length > maximum) return refused("descriptor finite authority");
@@ -39,13 +40,21 @@ export async function prepareWgpuPluginModules(catalog: PluginCatalog, modules: 
   const packages = new Map<string, PluginPackageDescriptor>();
   const dependencies = new Map<string, readonly PluginDependency[]>();
   const targets: PluginCatalogTarget[] = [];
-  const urls = new Map(modules.map(row => [row.pluginId, row.moduleUrl]));
+  const modulesById = new Map(modules.map(row => [row.pluginId, row]));
   const known = new Map([...catalog.plugins, ...catalog.extensions].map(row => [row.pluginId, row]));
-  for (let index = 0; index < modules.length; index++) {
+  const primary = options.bootVariant && !resolvePluginHostConfig(catalog, options.bootVariant)
+    ? resolvePluginRegistryId(catalog, options.bootVariant)
+    : undefined;
+  const queue = primary ? [...expandPluginRegistry(modules.map(row => {
+    const metadata = known.get(row.pluginId);
+    return { ...row, contributes: metadata?.contributes, consumes: metadata?.consumes };
+  }), primary)] : [...modules];
+  const queued = new Set(queue.map(row => row.pluginId));
+  for (let index = 0; index < queue.length; index++) {
     check();
     await options.yieldTurn?.();
     check();
-    const row = modules[index]!;
+    const row = queue[index]!;
     const timeout = AbortSignal.timeout(Math.max(1, Math.ceil(deadline - now())));
     const signal = options.signal ? AbortSignal.any([options.signal, timeout]) : timeout;
     let withdraw: (() => void) | undefined;
@@ -57,12 +66,18 @@ export async function prepareWgpuPluginModules(catalog: PluginCatalog, modules: 
     check();
     if (descriptor.manifest.pluginId !== row.pluginId || typeof descriptor.manifest.version !== "string" || descriptor.manifest.version.length === 0 || descriptor.manifest.version.length > policy.maxVersionLength) return refused("descriptor identity or version");
     const edges = descriptorDependencies(descriptor);
+    for (const { pluginId } of edges) {
+      const dependency = modulesById.get(pluginId);
+      if (!dependency || queued.has(pluginId)) continue;
+      queued.add(pluginId);
+      queue.push(dependency);
+    }
     packages.set(row.pluginId, descriptor);
     dependencies.set(row.pluginId, edges);
     const metadata = known.get(row.pluginId);
     targets.push({ pluginId: row.pluginId, wasmOut: row.moduleUrl, role: metadata?.role ?? "plugin", contributes: metadata?.contributes ?? [], consumes: metadata?.consumes ?? [], dependsOn: edges.map(edge => edge.pluginId), activationEvents: metadata?.activationEvents, capabilities: metadata?.capabilities, extends: metadata?.extends, ...(descriptor.assets ? { assets: descriptor.assets } : {}) });
   }
-  const moduleUrl = (id: string) => urls.get(id) ?? refused(`module ${id} is absent`);
+  const moduleUrl = (id: string) => modulesById.get(id)?.moduleUrl ?? refused(`module ${id} is absent`);
   return { packages, dependencies, catalog: { plugins: targets.filter(row => row.role === "plugin"), extensions: targets.filter(row => row.role === "extension"), hosts: catalog.hosts, playgrounds: catalog.playgrounds, moduleUrl, extensionModuleUrl: moduleUrl } };
 }
 

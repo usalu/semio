@@ -28,6 +28,23 @@ const near = (actual: ArrayLike<number>, expected: ArrayLike<number>, digits = 6
 };
 
 describe("🧪️ GLB oracles", () => {
+  it("reuses small typed accessors in a large model", async () => {
+    const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/♊️shared-positions/🔣️.json", import.meta.url), "utf8"));
+    const template = vectors.find(v => v.name === "minimal-triangle")!;
+    const first = template.document.meshes[0]!, part = first.primitives[0]!;
+    const positions = Array.from({length:fixture.largeVertexCount},(_,i) => fixture.positions[i%3] as number[]).flat();
+    const prefix = {...part, positions, indices:Array.from({length:fixture.largeVertexCount},(_,i) => i)};
+    const distinct = {...part, positions:part.positions.map((x,i) => i===0 ? x+1 : x)};
+    const model = {...template.document, meshes:[{...first, primitives:[prefix,part,{...part},distinct]}]};
+    const bytes = encodeGlb(model,template.options,quiet);
+    const loaded = await new WebIO().readBinary(bytes);
+    const [,a,b,c] = loaded.getRoot().listMeshes()[0]!.listPrimitives();
+    expect(a!.getAttribute("POSITION")).toBe(b!.getAttribute("POSITION"));
+    expect(c!.getAttribute("POSITION")).not.toBe(b!.getAttribute("POSITION"));
+    expect(a!.getIndices()).toBe(c!.getIndices());
+    near(c!.getAttribute("POSITION")!.getArray()!,distinct.positions);
+  });
+
   it("shares identical positions while retaining different geometry across meshes", async () => {
     const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/♊️shared-positions/🔣️.json", import.meta.url), "utf8"));
     const template = vectors.find((vector) => vector.name === "minimal-triangle")!;

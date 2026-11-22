@@ -237,7 +237,7 @@ export function*payloadsV1(records:Iterable<WalRecordV1>,limit:number=frameLimit
 export function decodeRecordsV1(payload:Uint8Array):WalRecordV1[]{
  const view=new DataView(payload.buffer,payload.byteOffset,payload.byteLength),records:WalRecordV1[]=[];
  let position=0;
- const fail=():never=>{throw new StateCorruptV1("log record");};
+ const fail:()=>never=()=>{throw new StateCorruptV1("log record");};
  const text=(wide:boolean):string=>{
   const length=wide?view.getUint32(position,true):view.getUint16(position,true),from=position+(wide?4:2);
   if(from+length>payload.length)fail();

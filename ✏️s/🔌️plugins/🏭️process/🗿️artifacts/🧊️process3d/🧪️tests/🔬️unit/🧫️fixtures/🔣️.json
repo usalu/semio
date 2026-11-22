@@ -24,16 +24,13 @@
   },
   "deleteSteps": [
     {
-      "id": "",
-      "hex": "020100"
+      "id": ""
     },
     {
-      "id": "cad",
-      "hex": "020103636164"
+      "id": "cad"
     },
     {
-      "id": "🧪️",
-      "hex": "020107f09fa7aaefb88f"
+      "id": "🧪️"
     }
   ],
   "cursorInsertions": [
@@ -61,5 +58,6 @@
       "index": 3,
       "next": null
     }
-  ]
+  ],
+  "packMagicHex": "8953504b0d0a1a0a"
 }

@@ -9,7 +9,7 @@ use super::*;
 /// 🎟️ Document instances that may hold a live cache slot at once. Sized for real desktop use — a dozen
 /// open documents across split panes, with headroom — and deliberately unrelated to
 /// any fixed owner page.
-pub(super) const PUZZLE3D_SESSION_SLOTS: usize = 64;
+pub const PUZZLE3D_SESSION_SLOTS: usize = 64;
 
 /// 🎯️ Slots probed for one instance id before the registry gives up or evicts, mirroring
 /// `FillEnvelopeRegistry::begin_measurement`'s bounded candidate walk.
@@ -18,21 +18,21 @@ const PUZZLE3D_SESSION_PROBES: usize = 4;
 /// ⚖️ Process-wide ceiling on cached session bytes. A check-in whose census would cross it is dropped
 /// rather than admitted, so the next call for that instance pays exactly one cold rebuild — the
 /// pre-session baseline, never a correctness change.
-pub(super) const PUZZLE3D_SESSION_PROCESS_BYTES: usize = 96 * 1024 * 1024;
+pub const PUZZLE3D_SESSION_PROCESS_BYTES: usize = 96 * 1024 * 1024;
 
 /// 🧠 Everything one document instance keeps between two dispatches. It is boxed (like the whole
 /// state), so the fixed slot row itself never carries the multi-kilobyte payload inline.
 #[derive(Default)]
-pub(super) struct Puzzle3dSessionState {
+pub struct Puzzle3dSessionState {
     /// 🚚️ Wave B44: the per-object instance residency, so the record text an unchanged object already
     /// has survives a dispatch and a worker hop exactly as the whole-set blob used to.
-    pub(super) instances: Option<Box<Puzzle3dInstanceResidency>>,
-    pub(super) meshes: Option<(u64, String)>,
-    pub(super) collision: Option<Puzzle3dCollisionSession>,
+    pub instances: Option<Box<Puzzle3dInstanceResidency>>,
+    pub meshes: Option<(u64, String)>,
+    pub collision: Option<Puzzle3dCollisionSession>,
 }
 
 impl Puzzle3dSessionState {
-    pub(super) fn bytes(&self) -> usize {
+    pub fn bytes(&self) -> usize {
         self.instances
             .as_ref()
             .map_or(0, |residency| residency.bytes())
@@ -44,10 +44,10 @@ impl Puzzle3dSessionState {
 /// 🎟️ One slot of the fixed row. The cached state lives behind a pointer on purpose: the row is a
 /// `[Option<Puzzle3dSessionSlot>; PUZZLE3D_SESSION_SLOTS]` built by value, so an inline payload would be
 /// multiplied by every slot on the stack of whichever call first touches the registry.
-pub(super) struct Puzzle3dSessionSlot {
+pub struct Puzzle3dSessionSlot {
     app_instance_id: u32,
     artifact_id: Option<String>,
-    pub(super) bytes: usize,
+    pub bytes: usize,
     touched: u64,
     state: Option<Box<Puzzle3dSessionState>>,
 }
@@ -56,16 +56,16 @@ pub(super) struct Puzzle3dSessionSlot {
 /// instance id make it ABA-proof: a slot that was retired, evicted or re-keyed rejects the lease
 /// instead of adopting a cache built against a different document.
 #[derive(Clone, Copy)]
-pub(super) struct Puzzle3dSessionLease {
+pub struct Puzzle3dSessionLease {
     slot: usize,
     app_instance_id: u32,
-    pub(super) generation: u64,
+    pub generation: u64,
 }
 
-pub(super) struct Puzzle3dSessionRegistry {
+pub struct Puzzle3dSessionRegistry {
     slots: [Option<Puzzle3dSessionSlot>; PUZZLE3D_SESSION_SLOTS],
-    pub(super) generations: [u64; PUZZLE3D_SESSION_SLOTS],
-    pub(super) aggregate_bytes: usize,
+    pub generations: [u64; PUZZLE3D_SESSION_SLOTS],
+    pub aggregate_bytes: usize,
     sequence: u64,
 }
 
@@ -75,7 +75,7 @@ impl Default for Puzzle3dSessionRegistry {
     }
 }
 
-pub(super) fn puzzle3d_session_registry() -> &'static Mutex<Puzzle3dSessionRegistry> {
+pub fn puzzle3d_session_registry() -> &'static Mutex<Puzzle3dSessionRegistry> {
     static REGISTRY: OnceLock<Mutex<Puzzle3dSessionRegistry>> = OnceLock::new();
     REGISTRY.get_or_init(|| Mutex::new(Puzzle3dSessionRegistry::default()))
 }
@@ -122,7 +122,7 @@ impl Puzzle3dSessionRegistry {
         Some(evicted)
     }
 
-    pub(super) fn check_out(&mut self, app_instance_id: u32, artifact_id: Option<&str>) -> Option<(Puzzle3dSessionLease, Puzzle3dSessionState)> {
+    pub fn check_out(&mut self, app_instance_id: u32, artifact_id: Option<&str>) -> Option<(Puzzle3dSessionLease, Puzzle3dSessionState)> {
         let slot = self.resolve_slot(app_instance_id, artifact_id)?;
         self.sequence = self.sequence.saturating_add(1);
         let previous = self.slots[slot].take();
@@ -135,7 +135,7 @@ impl Puzzle3dSessionRegistry {
         Some((Puzzle3dSessionLease { slot, app_instance_id, generation: self.generations[slot] }, held.map_or_else(Puzzle3dSessionState::default, |state| *state)))
     }
 
-    pub(super) fn check_in(&mut self, lease: Puzzle3dSessionLease, state: Puzzle3dSessionState) {
+    pub fn check_in(&mut self, lease: Puzzle3dSessionLease, state: Puzzle3dSessionState) {
         if self.generations[lease.slot] != lease.generation {
             return;
         }
@@ -292,7 +292,7 @@ pub struct Puzzle3dSession {
     /// 🚚️ Wave B44: per-object instance residency — the ONE owner of the published instance text, and
     /// the source of the changed/removed id delta the world lane rides with.
     pub instance_residency: Mutex<Option<Box<Puzzle3dInstanceResidency>>>,
-    pub(super) mesh_cache: Mutex<Option<(u64, String)>>,
+    pub mesh_cache: Mutex<Option<(u64, String)>>,
 }
 
 impl Default for Puzzle3dSession {

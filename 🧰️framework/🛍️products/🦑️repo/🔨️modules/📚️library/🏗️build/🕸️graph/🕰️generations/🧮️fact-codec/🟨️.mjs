@@ -42,9 +42,17 @@ export function canonicalKeyV1(value,limit){
  hash.update(pending,"utf8");return"#"+hash.digest("hex");
 }
 
-/** ✍️ A growable byte sink that refuses to grow beyond the finite document limit; `size()` is the bytes written so far and `truncate(size)` takes the bytes back to an earlier size. */
-export function createFactSinkV1(maximumBytes){
- let buffer=Buffer.allocUnsafe(1<<20),length=0;
+/** 🧷️ Counts the bytes of an unsigned fact-index integer. */
+export function factVarintBytesV1(value){
+ if(!Number.isSafeInteger(value)||value<0)throw fail("Unsigned integer required in a fact index");
+ let length=1;
+ while(value>=128){value=Math.floor(value/128);length++;}
+ return length;
+}
+
+/** ✍️ A bounded byte sink with optional exact initial storage; `size()` counts the bytes written and `truncate(size)` returns to an earlier position. */
+export function createFactSinkV1(maximumBytes,initialBytes=1<<20){
+ let buffer=Buffer.allocUnsafe(initialBytes),length=0;
  const room=count=>{
   const needed=length+count;if(needed>maximumBytes)throw fail("Stored document exceeds its finite limit ("+needed+" bytes expanded, limit "+maximumBytes+")");
   if(needed>buffer.length){const grown=Buffer.allocUnsafe(Math.min(Math.max(buffer.length*2,needed),maximumBytes));buffer.copy(grown,0,0,length);buffer=grown;}
@@ -53,7 +61,7 @@ export function createFactSinkV1(maximumBytes){
   byte(value){room(1);buffer[length++]=value;},
   varint(value){
    if(!Number.isSafeInteger(value)||value<0)throw fail("Unsigned integer required in a fact index");
-   room(9);
+   if(length+9>buffer.length||length+9>maximumBytes)room(factVarintBytesV1(value));
    while(value>=128){buffer[length++]=value%128|128;value=Math.floor(value/128);}
    buffer[length++]=value;
   },

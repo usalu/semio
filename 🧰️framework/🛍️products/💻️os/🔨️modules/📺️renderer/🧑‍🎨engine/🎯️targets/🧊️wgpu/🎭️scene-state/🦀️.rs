@@ -115,6 +115,8 @@ pub struct SceneListTransferSession {
     pub source_rect: Rect,
     pub start_x: f32,
     pub start_y: f32,
+    pub current_x: f32,
+    pub current_y: f32,
     pub promoted: bool,
 }
 

@@ -118,6 +118,7 @@ pub enum HitKind {
     DockSplit,
     DockJoinCorner,
     ScrollRegion,
+    ScrollThumb,
     ContextMenu,
     DropdownItem,
     Generic,
@@ -129,6 +130,8 @@ pub struct PointerModifiers {
     pub ctrl: bool,
     pub alt: bool,
     pub meta: bool,
+    /// ⌨️ Whether the key event this snapshot rides on is the OS auto-repeat of a held key; always `false` on pointer events.
+    pub repeat: bool,
 }
 
 impl PointerModifiers {

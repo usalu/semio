@@ -6,6 +6,7 @@ use semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::
 use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxCell;
 use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSheet;
 use crate::viewer::xlsx::standards::v_ecma_376::subsets::base::render_xlsx_cell_value;
+use crate::viewer::xlsx::standards::v_ecma_376::subsets::base::xlsx_viewer_labels;
 use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
 use semio_plugin::app::{editable_table_window_row_at, tree_window_item, tree_window_section, TableWindowKit, WindowKit, WindowedEditableTableCell};
 use semio_plugin::plugin_app_close_prelude as ui;
@@ -42,16 +43,13 @@ fn render_sheet_grid(sheet: &XlsxSheet, shared_strings: &[String], sheet_ordinal
     let cells: BTreeMap<(u32, u32), &XlsxCell> = sheet.cells.iter().map(|cell| ((cell.row, cell.col), cell)).collect();
     let (row_total, column_total) = grid_extent(sheet);
     let table_id = format!("xlsx-viewer-sheet-{sheet_ordinal}-grid");
-    let (row_label, column_label) = match locale {
-        Locale::En => ("Row", "Column"),
-        Locale::De => ("Zeile", "Spalte"),
-    };
+    let labels = xlsx_viewer_labels(locale);
     TableWindowKit::render_indexed_matrix_with_id(
         windows,
         &table_id,
         &sheet.name,
-        row_label,
-        column_label,
+        labels.row.as_str(),
+        labels.column.as_str(),
         column_total,
         |column| UiLabel::try_from(column_letter(column as u32)).map_err(|_| PluginAssemblyError::new("xlsx.column-label", "column label exceeds the UI label bound")),
         None,
@@ -62,7 +60,7 @@ fn render_sheet_grid(sheet: &XlsxSheet, shared_strings: &[String], sheet_ordinal
             let projected = columns.map(|column_ordinal| {
                 let column = column_ordinal as u32;
                 let label = format!("{}{}", column_letter(column), row);
-                let value = cells.get(&(row, column)).map_or_else(String::new, |cell| render_xlsx_cell_value(&cell.value, shared_strings));
+                let value = cells.get(&(row, column)).map_or_else(String::new, |cell| render_xlsx_cell_value(&cell.value, shared_strings, locale));
                 WindowedEditableTableCell::read_only(value, label)
             });
             editable_table_window_row_at(&format!("xlsx-viewer-sheet-{sheet_ordinal}-row-{row}"), VIEWER_CONTROLLER_ID, locale, column_offset, projected, Vec::new(), None)

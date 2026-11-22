@@ -59,6 +59,10 @@ async fn the_session_conforms_to_every_shared_protocol_vector() {
             let message = if let Some(raw) = step.get("raw") {
                 raw.as_str().unwrap().to_string()
             } else if let Some(name) = step.get("loadSnapshot") {
+                let snapshot = &vector["snapshots"][name.as_str().unwrap()];
+                if let Some(id) = snapshot["manifestId"].as_str() {
+                    jack.register_manifest(id, &vector["manifests"][id].to_string()).unwrap();
+                }
                 json!({ "jsonrpc": "2.0", "id": step["id"], "method": "jack/loadSnapshot", "params": { "json": vector["snapshots"][name.as_str().unwrap()].to_string() } }).to_string()
             } else {
                 step["send"].to_string()
@@ -84,11 +88,11 @@ async fn every_declared_request_is_known_to_the_initialized_server() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn a_snapshot_with_an_invalid_manifest_is_refused_and_leaves_the_session_graphless() {
+async fn an_invalid_manifest_is_refused_and_leaves_the_session_graphless() {
     let mut engine = JackEngine::default();
     assert!(!engine.has_snapshot());
-    for broken in [r#"{"manifest":5,"nodes":[],"edges":[]}"#, r#"{"manifest":{"nodeKinds":[{"nope":1}]}}"#, r#"{"manifest":{"edgeKinds":"Connection"}}"#] {
-        let error = engine.load_snapshot(broken).unwrap_err();
+    for broken in [r#"5"#, r#"{"nodeKinds":[{"nope":1}]}"#, r#"{"edgeKinds":"Connection"}"#] {
+        let error = engine.register_manifest("broken", broken).unwrap_err();
         assert!(error.contains("manifest"), "{error}");
         assert!(!engine.has_snapshot());
     }
@@ -97,10 +101,10 @@ async fn a_snapshot_with_an_invalid_manifest_is_refused_and_leaves_the_session_g
 }
 
 #[semio_framework_async_macros::async_test]
-async fn a_manifest_that_disagrees_with_the_snapshot_identity_is_refused() {
+async fn a_snapshot_naming_an_unregistered_manifest_is_refused() {
     let mut engine = JackEngine::default();
-    let error = engine.load_snapshot(r#"{"manifestId":"a","manifest":{"id":"b","nodeKinds":[]},"nodes":[],"edges":[]}"#).unwrap_err();
-    assert!(!error.is_empty());
+    let error = engine.load_snapshot(r#"{"manifestId":"a","nodes":[],"edges":[]}"#).unwrap_err();
+    assert!(error.contains("unknown manifest id a"), "{error}");
     assert!(!engine.has_snapshot());
 }
 
@@ -109,7 +113,8 @@ async fn both_manifest_row_shapes_declare_the_same_kinds() {
     let mut jack = JackLanguageSession::new();
     jack.handle_message_json(r#"{"jsonrpc":"2.0","id":0,"method":"initialize","params":{}}"#);
     for manifest in [r#"{"nodeKinds":[{"name":"Beam"}]}"#, r#"{"schema":"s","id":"m","nodeKinds":[{"id":"Beam"}]}"#] {
-        jack.load_snapshot(&format!(r#"{{"manifest":{manifest},"nodes":[],"edges":[]}}"#)).unwrap();
+        jack.register_manifest("m", manifest).unwrap();
+        jack.load_snapshot(r#"{"manifestId":"m","nodes":[],"edges":[]}"#).unwrap();
         jack.handle_message_json(r#"{"jsonrpc":"2.0","method":"textDocument/didOpen","params":{"textDocument":{"uri":"u","version":1,"text":"MATCH (a:Beam) RETURN a"}}}"#);
         let reply: Json = serde_json::from_str(&jack.handle_message_json(r#"{"jsonrpc":"2.0","method":"textDocument/didChange","params":{"textDocument":{"uri":"u","version":2},"contentChanges":[{"text":"MATCH (a:Beam) RETURN a"}]}}"#)).unwrap();
         assert_eq!(reply[0]["params"]["diagnostics"], json!([]), "{manifest}");
@@ -209,11 +214,13 @@ async fn exit_ends_the_session_and_silences_it() {
 }
 
 const SHELL_SNAPSHOT: &str = include_str!("../../../../🐚️shell/🧪️tests/🧫️fixtures/🔱️mini-tower/🔣️.json");
+const NAKAGIN_MANIFEST: &str = include_str!("../../../../🛂️manifest.json");
 
 #[semio_framework_async_macros::async_test]
 async fn the_shell_example_snapshot_serves_its_nakagin_kinds_and_its_node() {
     let mut jack = JackLanguageSession::new();
     jack.handle_message_json(r#"{"jsonrpc":"2.0","id":0,"method":"initialize","params":{}}"#);
+    jack.register_manifest("nakagin", NAKAGIN_MANIFEST).unwrap();
     jack.load_snapshot(SHELL_SNAPSHOT).unwrap();
     jack.handle_message_json(r#"{"jsonrpc":"2.0","method":"textDocument/didOpen","params":{"textDocument":{"uri":"u","version":1,"text":"MATCH (a:"}}}"#);
     let reply: Json = serde_json::from_str(&jack.handle_message_json(r#"{"jsonrpc":"2.0","id":1,"method":"textDocument/completion","params":{"textDocument":{"uri":"u"},"position":{"line":0,"character":9}}}"#)).unwrap();

@@ -23,9 +23,9 @@ test("the next worker of a cut starts only after the stopped worker's terminatio
  expect(created).toHaveLength(2);listeners[1]!.message?.({type:"done",graph:{ok:true}});expect(await run).toEqual({graph:{ok:true}});await pool.close();
 });
 
-test("owner records and the receipt are written to a temporary file with exclusive create and renamed over the record",()=>{
+test("owner records and the receipt are published crash-safely through the durable publication helper, never by an unsynced write and rename",()=>{
  const source=readFileSync(new URL("../../../👁️observation/🟨️.mjs",import.meta.url),"utf8");
- expect(source).toContain("renameOverBusyFileSyncV1(temporary,cachePath)");
+ expect(source).toContain("publishFileDurablySyncV1(temporary,cachePath,packed)");expect(source).toContain("publishFileDurablySyncV1(temporary, receiptPath,");
  expect(source).toMatch(/\$\{cachePath\}\.\$\{process\.pid\}\.\$\{started\}\.tmp/u);
- expect((source.match(/flag:\s*"wx"/gu)??[]).length).toBeGreaterThanOrEqual(2);
+ expect(source).not.toMatch(/fs\.writeFileSync\(temporary/u);expect(source).not.toContain("renameOverBusyFileSyncV1");
 });

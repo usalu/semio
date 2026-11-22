@@ -138,7 +138,7 @@ export function listAgentSessionsV1(store:AgentSessionStoreV1,ports:AgentSession
  const found:{session:AgentSessionV1;state:AgentSessionStateV1;lastSeenMs:number}[]=[];
  for(const name of names.filter(row=>row.endsWith(files.record)).sort()){
   const session=readAgentSessionV1(store,name.slice(0,-files.record.length));if(session===undefined)continue;
-  const lastSeenMs=agentSessionLastSeenMsV1(store,session),state=agentSessionStateV1({ageSeconds:Math.max(0,(now-lastSeenMs)/1000),anchorAlive:session.anchors.some(row=>alive(row.pid)),isDefault:session.agent.origin==="default"});
+  const lastSeenMs=agentSessionLastSeenMsV1(store,session),state=agentSessionStateV1({ageSeconds:Math.max(0,(now-lastSeenMs)/1000),anchorAlive:session.anchors.some(row=>alive(row.pid))});
   found.push({session,state,lastSeenMs});
  }
  const shares=agentSessionSharesV1(found.filter(row=>row.state==="live").map(row=>({id:row.session.id,weight:row.session.budget.weight})));
@@ -185,11 +185,11 @@ export type AgentSessionReclaimV1=(session:AgentSessionV1)=>Readonly<{released:n
 /** 📚️ One collected session. */
 export type AgentSessionCollectionV1=Readonly<{session:AgentSessionV1;released:number;kept:number;removed:boolean}>;
 
-/** 🗑️ Collects the gone sessions: each one's resources are reclaimed first and the record goes only when nothing was kept; the default session is never collected. */
+/** 🗑️ Collects the gone sessions: each one's resources are reclaimed first and the record goes only when nothing was kept; the default session of an unused worktree is collected like any other and opened again on the next use. */
 export function collectAgentSessionsV1(store:AgentSessionStoreV1,reclaim:AgentSessionReclaimV1,options:AgentSessionPortsV1&Readonly<{dryRun?:boolean;only?:readonly string[];reason?:string}>={}):readonly AgentSessionCollectionV1[]{
  const now=options.now??Date.now(),rows:AgentSessionCollectionV1[]=[];
  for(const row of listAgentSessionsV1(store,options)){
-  if(row.state!=="gone"&&options.only===undefined||row.session.agent.origin==="default"||options.only!==undefined&&!options.only.includes(row.session.id))continue;
+  if(row.state!=="gone"&&options.only===undefined||options.only!==undefined&&!options.only.includes(row.session.id))continue;
   if(options.dryRun){rows.push({session:row.session,released:0,kept:0,removed:false});continue;}
   const result=reclaim(row.session),removed=result.kept===0&&closeAgentSessionV1(store,row.session.id,options.reason??"gone",now);
   if(removed)appendAgentSessionLedgerV1(store,{event:"collect",session:row.session.id,agent:row.session.agent.id,reason:options.reason??"gone"},now);

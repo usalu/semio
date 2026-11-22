@@ -3,6 +3,23 @@ import Ajv from"ajv";
 import{Database}from"bun:sqlite";
 import fixture from"./🧫️fixtures/🔣️.json"with{type:"json"};
 import schema from"../🧬️schema/🔣️.json"with{type:"json"};
+
+test("Core quiescence completes the actual actor-closure frontier", () => {
+  const db = new Database(":memory:");
+  try {
+    const actual = db.query(`
+      WITH receipt AS (
+        SELECT json_extract(value, '$.event') AS event, json_extract(value, '$.next') AS current,
+          lag(json_extract(value, '$.next')) OVER (ORDER BY key) AS previous
+        FROM json_each(?)
+      )
+      SELECT current, previous FROM receipt WHERE event = 'actor-core-quiescent'
+    `).get(JSON.stringify(fixture.cases[0].steps));
+    expect(actual).toEqual({ current: "complete", previous: "close-actor" });
+  } finally {
+    db.close();
+  }
+});
 test("cold job pages are contiguous and closed only after their declared extent is received",()=>{expect(new Ajv({strict:true}).compile(schema)(fixture)).toBe(true);const db=new Database(":memory:");try{for(const row of fixture.cases){const chunks=row.steps.filter(step=>step.event==="chunk"||step.event==="failure-chunk");let received=0;for(const chunk of chunks){const next=(db.query("SELECT ?=? AS contiguous").get((chunk as{offset:number}).offset,received)as{contiguous:number}).contiguous;expect(Boolean(next),row.id).toBe(chunk.next!=="refused");if(next)received+=(chunk as{length:number}).length;}const declared=row.steps.find(step=>step.event==="done"||step.event==="failed"||step.event==="failure-published")as{length:number}|undefined;if(row.steps.some(step=>step.event==="output-closed"||step.event==="failure-output-closed")){const final=row.steps.find(step=>step.event==="output-closed"||step.event==="failure-output-closed")!;expect(received===declared?.length,row.id).toBe(final.next!=="refused");}}}finally{db.close();}});
 
 test("start receipt source ownership is consistent",()=>{const db=new Database(":memory:");try{for(const row of fixture.startCases){const actual=(db.query("SELECT CASE WHEN ? THEN CASE WHEN NOT ? AND ? THEN 'publish-failure' ELSE 'refused' END WHEN ? AND NOT ? THEN 'step' WHEN NOT ? AND ? THEN 'start' ELSE 'refused' END AS next").get(row.refusal,row.admitted,row.returnedSource,row.admitted,row.returnedSource,row.admitted,row.returnedSource)as{next:string}).next;expect(actual).toBe(row.next);}}finally{db.close();}});

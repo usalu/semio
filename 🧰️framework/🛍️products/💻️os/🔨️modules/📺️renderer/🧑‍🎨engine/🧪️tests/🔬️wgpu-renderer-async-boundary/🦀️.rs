@@ -46,12 +46,21 @@ fn native_io_original_page_enters_world_without_copy_and_returns_to_its_live_sou
     }
     caller.close_job_origin(&mut origin);
     let pointer = pointer.expect("original native page read completed");
-    let mut reservation = caller.turn(|cx| Ok(RETURNS.reserve(cx)?.unwrap())).unwrap();
-    let page = caller.turn(|cx| {
-        let (answer, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| job.supply_result_last_page(&mut reservation, cx));
-        assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
-        Ok(answer?.unwrap())
-    }).unwrap();
+    let mut reserved = None;
+    for _ in 0..16 {
+        if caller.turn(|cx| RETURNS.reserve(&mut reserved, cx)).unwrap() { break; }
+    }
+    let mut reservation = reserved.expect("the original page reservation completes");
+    let mut supplied = None;
+    for _ in 0..16 {
+        let admitted = caller.turn(|cx| {
+            let (answer, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| job.supply_result_last_page(&mut reservation, &mut supplied, cx));
+            assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+            answer
+        }).unwrap();
+        if admitted { break; }
+    }
+    let page = supplied.expect("the original page reaches its supplier return");
     assert_eq!(page.source_identity(), source);
     assert_eq!(page.bytes().as_ptr(), pointer);
     let (world, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| WorldAssetResponsePage::try_from_original(page).unwrap());
@@ -83,7 +92,7 @@ struct OriginalRendererFixture { caller: Option<semio_framework_job::OriginalJob
 #[cfg(not(target_arch = "wasm32"))]
 impl OriginalRendererFixture {
     fn new() -> Self { Self::with_identity(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1)) }
-    fn with_identity(operation:semio_framework_job::OperationId,generation:semio_framework_job::Generation) -> Self { Self { caller: Some(semio_framework_job::OriginalJobFixtureCaller::admit(operation,generation,renderer_law_stock(),||Some(0),8000,1 << 48)), decoder:semio_framework_job::OriginalJobDecodeOwner::empty() } }
+    fn with_identity(operation:semio_framework_job::OperationId,generation:semio_framework_job::Generation) -> Self { Self { caller: Some(semio_framework_job::OriginalJobFixtureCaller::admit(operation,generation,renderer_law_stock(),||Some(0),u64::MAX,1 << 48)), decoder:semio_framework_job::OriginalJobDecodeOwner::empty() } }
     fn turn<R>(&mut self, run: impl FnOnce(&mut semio_framework_job::StepContext<'_>) -> Result<R,semio_framework_job::OriginalTurnFailure>) -> Result<R,semio_framework_job::OriginalTurnFailure> { self.limited(renderer_law_stock(),run) }
     fn limited<R>(&mut self, grant:semio_framework_job::RetainedCloneGrant, run:impl FnOnce(&mut semio_framework_job::StepContext<'_>)->Result<R,semio_framework_job::OriginalTurnFailure>)->Result<R,semio_framework_job::OriginalTurnFailure>{ self.caller.as_mut().unwrap().turn_with_decoder(grant,&mut self.decoder,run) }
     fn cancel(&self) { self.caller.as_ref().unwrap().cancel().cancel_now(); }
@@ -108,6 +117,7 @@ impl OriginalRendererFixture {
 #[cfg(not(target_arch = "wasm32"))]
 impl Drop for OriginalRendererFixture {
     fn drop(&mut self) {
+        if std::thread::panicking() { return; }
         let caller=self.caller.as_mut().unwrap();
         for _ in 0..65536 { if self.decoder.terminal_is_empty(){break} caller.turn(renderer_law_stock(),|cx| { let demand=self.decoder.retirement_demands(cx.retained_grant().maximum_copy_bytes)?;self.decoder.close_on_source(cx)?;Ok(()) }).unwrap(); }
         assert!(self.decoder.terminal_is_empty());

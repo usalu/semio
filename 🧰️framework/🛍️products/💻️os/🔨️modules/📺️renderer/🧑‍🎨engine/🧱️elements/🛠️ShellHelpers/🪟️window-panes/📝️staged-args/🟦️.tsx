@@ -1,6 +1,6 @@
 /** 📝️ Window panes, staged args: the staged argument controls (reference, color, vector, number) and the form gate of an action. */
 import { type ActionArgControl, type ActionDefinition, argControl, actionArgNumberFacets, type ActionArgNumberFacets, referenceIdText, referenceIdValue, type ReferenceIdType } from "@semio-tech/framework";
-import { Icon, IconSelector, Input, SharedBorderRow, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Slider, Stepper, Textarea, Toggle, ToggleGroup, uiDataLabel, type UIDialogFieldBinding, sharedBorderlessBoxProps } from "@semio-tech/ui-react";
+import { Icon, IconSelector, Input, SharedBorderRow, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Slider, Stepper, Textarea, Toggle, ToggleGroup, uiDataLabel, type TreeDataItem, type UIDialogFieldBinding, sharedBorderlessBoxProps } from "@semio-tech/ui-react";
 import { type ReactElement, useState } from "../../../⚛️react-port/🟦️.ts";
 import { parseUiColorHex, uiColorHex, uiNumberCrossedBound, uiNumberDisplay, uiNumberDisplayText, uiNumberFieldKey, uiNumberKeyValue, uiNumberTypedValue } from "@semio-tech/ui-contract/component";
 import type { InteractionState } from "@semio-tech/framework-interaction";
@@ -253,6 +253,18 @@ export function renderStagedArgControl(def: ResolvedActionArgDef, value: unknown
       </button>
     </div>
   );
+}
+
+/** 🏷️ Connects a staged tree row's visible label to its control and required state. */
+export function stagedArgTreeItem(id: string, def: ResolvedActionArgDef, value: unknown, onChange: (value: unknown) => void, disabled?: boolean, fieldScope = id): TreeDataItem {
+  const field = { id: `${fieldScope}.input`, labelledBy: `${fieldScope}.label`, required: def.required };
+  return {
+    id,
+    label: def.label,
+    labelId: field.labelledBy,
+    description: def.description,
+    control: renderStagedArgControl(def, value, onChange, disabled, field),
+  };
 }
 
 /** 🎛️ The value control of one staged argument, without the clear toggle a nullable input adds around it. */

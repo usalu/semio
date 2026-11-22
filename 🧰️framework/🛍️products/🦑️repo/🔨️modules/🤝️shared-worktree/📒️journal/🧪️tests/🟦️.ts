@@ -158,6 +158,47 @@ describe("journal store",()=>{
   expect(old.events.length).toBe(5);
  });
 
+ test("a multi-segment append validates before writing and exposes only its committed head",async()=>{
+  const store=join(temporary(),"store"),ms=1788000000000,first=[put("alpha",ms,0,"first.txt")],paths=storePathsV1(store);
+  const prior=await appendEventsV1(store,"alpha",first),cursor={segment:prior.segment,bytes:prior.bytes};
+  const directory=join(paths.origins,"alpha","segments"),segments=[0,1,2].map(index=>join(directory,`00000000000${index}.jsonl`));
+  const original=readFileSync(segments[0]!),flat=readdirSync(paths.heads);
+  let encoded=0;
+  const events=Array.from({length:9000},(_,index)=>{
+   const event=put("alpha",ms,index+1,`f/${index}.txt`);
+   return Object.defineProperty(event,"toJSON",{value:()=>{encoded++;return event;}});
+  });
+  await expect(appendEventsV1(store,"alpha",[...events,{...events[0]!,path:"../invalid"}])).rejects.toThrow();
+  await expect(appendEventsV1(store,"alpha",[...events,put("beta",ms,0,"foreign.txt")])).rejects.toThrow();
+  expect(readFileSync(segments[0]!)).toEqual(original);
+  expect(existsSync(segments[1]!)).toBe(false);
+  encoded=0;
+
+  mkdirSync(segments[2]!);
+  await expect(appendEventsV1(store,"alpha",events)).rejects.toThrow();
+  expect(statSync(segments[0]!).size).toBeGreaterThan(prior.bytes);
+  expect(statSync(segments[1]!).size).toBeGreaterThan(0);
+  expect(encoded).toBeLessThan(events.length);
+  expect(await readHeadV1(store,"alpha")).toEqual(prior);
+  expect(readdirSync(paths.heads)).toEqual(flat);
+  expect(await readEventsV1(store,"alpha",undefined)).toEqual({events:first,cursor});
+  expect(await readEventsV1(store,"alpha",cursor)).toEqual({events:[],cursor});
+
+  rmSync(segments[2]!,{recursive:true});
+  const retry=events.slice(0,8192).map(event=>({...event,path:`retry/${event.path}`}));
+  const head=await appendEventsV1(store,"alpha",retry);
+  expect(head).toEqual({version:1,segment:2,bytes:statSync(segments[2]!).size,events:1,hlc:retry.at(-1)!.hlc});
+  expect(await readEventsV1(store,"alpha",cursor)).toEqual({events:retry,cursor:{segment:2,bytes:head.bytes}});
+  const python=spawnSync(requireTestToolV1("python"),["-c",`import json, sys
+for path in sys.argv[1:]:
+ with open(path, encoding="utf-8") as segment:
+  for line in segment:
+   event = json.loads(line)
+   print(event["hlc"], event["path"])`,...segments],{encoding:"utf8"});
+  expect(python.status,python.stderr).toBe(0);
+  expect(python.stdout.replace(/\r\n/gu,"\n")).toBe([...first,...retry].map(event=>`${event.hlc} ${event.path}\n`).join(""));
+ });
+
  test("segments seal after 4 MiB",async()=>{
   const store=join(temporary(),"store"),target="t".repeat(4000),events=Array.from({length:1100},(_,index)=>link("alpha",1788000000000,index,`l${index}`,target));
   const head=await appendEventsV1(store,"alpha",events);

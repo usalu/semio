@@ -31,7 +31,7 @@ export type ToolLocatorV1 =
   | Readonly<{ kind: "script"; path: string; via: string; prefix?: readonly string[] }>
   | Readonly<{ kind: "path"; directories: readonly string[]; names?: readonly string[] }>;
 /** 🌿️ The environment policy of one tool. */
-export type ToolEnvironmentSpecV1 = Readonly<{ mode: "inherit" | "allowlist"; pass: readonly string[]; deny: readonly string[]; set: Readonly<Record<string, string>>; cacheDirectories?: Readonly<Record<string, readonly string[]>> }>;
+export type ToolEnvironmentSpecV1 = Readonly<{ mode: "inherit" | "allowlist"; pass: readonly string[]; deny: readonly string[]; set: Readonly<Record<string, string>>; rootVariables?: readonly string[]; cacheDirectories?: Readonly<Record<string, readonly string[]>> }>;
 /** 🎟️ How a tool takes part in machine capacity admission. */
 export type ToolCapacitySpecV1 = Readonly<{ mode: "none" | "inherit" | "admit"; operation?: string; kind?: "test" | "check" | "generate" | "build" | "script" | "service"; rules?: readonly Readonly<{ command: string; argumentsPrefix: readonly string[]; operation: string; kind: "test" | "check" | "generate" | "build" | "script" | "service" }>[] }>;
 /** 🧩️ One registered external tool. */

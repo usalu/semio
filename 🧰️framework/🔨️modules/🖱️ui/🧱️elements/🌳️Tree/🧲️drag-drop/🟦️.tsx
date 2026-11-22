@@ -13,6 +13,7 @@ export interface TreePointerPaletteDragController {
 }
 
 export interface TreeDragAndDropController {
+  rowReorderMime?: string;
   getDragData?: (context: { items: TreeDataItem[]; sourceItem: TreeDataItem; section: TreeDataSection }) => Record<string, string> | undefined;
   pointerPaletteDrag?: TreePointerPaletteDragController;
   onDragStart?: (context: { items: TreeDataItem[]; sourceItem: TreeDataItem; section: TreeDataSection }) => void;

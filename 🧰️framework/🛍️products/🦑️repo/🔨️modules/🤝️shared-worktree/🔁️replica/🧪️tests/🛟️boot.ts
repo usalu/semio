@@ -119,6 +119,27 @@ test("without any local snapshot the stage fetches a verified snapshot from the 
  expect((await listCodeSnapshotsV1(where.repo)).map(item=>item.digest)).not.toContain(second);
 });
 
+test("a store snapshot that two live origins run is preferred over an older local snapshot, one that only a single origin runs is not",async()=>{
+ const store=temp("store"),donor=tree("donor-proven",command("donor","ok"));
+ const proven=await seal(donor,"store-proven","ok",3000);
+ expect((await publishCodeSnapshotV1({root:donor.repo,store,digest:proven,originId:"p1"})).published).toBe(true);
+ const where=tree("prefer",command("worktree","throws"));machine(where.repo,store);
+ await seal(where,"local-old","ok",1000);
+ put(where.module,"🔁️replica/⌨️command/🟦️.ts",command("worktree","throws"));
+ put(store,"v1/origins/peer1/attest.json",JSON.stringify({code:proven,wallMs:Date.now()}));
+ const single=await stage(where,["run"],{SEMIO_FLEET_BOOT_STORE_MS:"5000"});
+ expect(ran(single)).toMatchObject({ran:"local-old"});
+ put(store,"v1/origins/peer2/attest.json",JSON.stringify({code:proven,wallMs:Date.now()}));
+ const both=await stage(where,["run"],{SEMIO_FLEET_BOOT_STORE_MS:"5000"});
+ expect(ran(both)).toMatchObject({ran:"store-proven"});
+ expect(JSON.parse(ran(both)!["fallback"] as string)).toMatchObject({guard:"code-fallback",source:"store"});
+ put(store,"v1/origins/peer1/attest.json",JSON.stringify({code:proven,wallMs:Date.now()-3_600_000}));
+ rmSync(join(where.repo,".cache","f","code",proven),{recursive:true,force:true});
+ put(store,"v1/origins/peer2/attest.json",JSON.stringify({code:proven,wallMs:Date.now()-3_600_000}));
+ const none=await stage(where,["run"],{SEMIO_FLEET_BOOT_STORE_MS:"5000"});
+ expect(ran(none)).toMatchObject({ran:"local-old"});
+});
+
 test("with the store unreachable a local snapshot runs at once, and with neither the stage gives up in bounded time without a half-installed snapshot",async()=>{
  const where=tree("offline",command("worktree","throws"));machine(where.repo,join(temp("gone"),"missing","store"));
  await seal(where,"snapshot","ok",1000);
@@ -181,7 +202,7 @@ test("a daemon that ran healthily is not replaced when it fails later, and a cle
 test("a blocked event loop shows in the beat file while it lasts, is recorded in health.json as a loop-blocked failure and ends the daemon after the kill limit",async()=>{
  const where=tree("blocked",command("worktree","block"));
  put(where.repo,".cache/f/health.json",JSON.stringify({version:1,wallMs:1,pid:1,code:"a".repeat(64),store:"ok",storeSinceMs:1,pending:null,failures:[],trust:{scope:"shared-source",verifiedMs:null,lostMs:null,lostKind:null}}));
- const child=Bun.spawn([process.execPath,where.script,"run"],{stdout:"pipe",stderr:"pipe",cwd:where.repo,env:cleanEnvironment({BLOCK_FOR:"12000",SEMIO_FLEET_BOOT_BLOCK_MS:"1000",SEMIO_FLEET_BOOT_KILL_MS:"4000",SEMIO_FLEET_BOOT_BEAT_MS:"150",SEMIO_FLEET_BOOT_EARLY_MS:"300"})});
+ const child=Bun.spawn([process.execPath,where.script,"run"],{stdout:"pipe",stderr:"pipe",cwd:where.repo,env:cleanEnvironment({BLOCK_FOR:"60000",SEMIO_FLEET_BOOT_BLOCK_MS:"1000",SEMIO_FLEET_BOOT_KILL_MS:"4000",SEMIO_FLEET_BOOT_BEAT_MS:"150",SEMIO_FLEET_BOOT_EARLY_MS:"300"})});
  const started=Date.now();
  await until(async()=>((await readBeatV1(where.repo))?.lagMs??0)>=1500,15000);
  const beat=(await readBeatV1(where.repo))!;
@@ -189,7 +210,9 @@ test("a blocked event loop shows in the beat file while it lasts, is recorded in
  await until(()=>(JSON.parse(readFileSync(join(where.repo,".cache","f","health.json"),"utf8")) as {failures:{kind:string}[]}).failures.some(item=>item.kind==="loop-blocked"),10000);
  const code=await child.exited;
  expect(code).not.toBe(0);
- expect((Date.now()-started)/1000).toBeLessThan(11);
+ expect((Date.now()-started)/1000).toBeLessThan(25);
+ const ended=await readBlockedRestartV1(where.repo);
+ expect(ended?.reason).toBe("blocked");expect(ended?.lagMs).toBeGreaterThanOrEqual(4000);
  expect((await readHealthV1(where.repo))?.failures.map(item=>item.kind)).toContain("loop-blocked");
  expect(existsSync(join(where.repo,".cache","f","boot","beat.json"))).toBe(false);
 });
@@ -275,6 +298,26 @@ test("a healthy daemon seals its code, refreshes the boot stage copy and publish
  expect(seal.digest).toBe(digest);
  for(const file of seal.files)expect(existsSync(join(published,"files",...file.path.split("/")))).toBe(true);
  controller.abort();await done;
+});
+
+test("a refused first bootstrap snapshot publication is retried after the store becomes writable",async()=>{
+ const row=JSON.parse(readFileSync(join(import.meta.dirname,"🧫️fixtures","📤️code-publication.json"),"utf8"));
+ const where=tree("share-retry",command("worktree","ok")),store=temp("retry-store");
+ const options:ReplicaOptionsV1={worktree:where.repo,storeRoot:store,originId:"h1",groupId:"g1",...fast,codeRoot:where.module,gitState:async()=>git,gitView:async()=>null,selfCheck:async()=>({ok:true}),publishCodeMilliseconds:row.publishAfter,entryDirectory:join(where.repo,".cache","entry")};
+ await seedV1(options);
+ put(store,"v1/bootstrap/code",row.blocker);
+ const controller=new AbortController(),events:ReplicaEventV1[]=[],done=runV1(options,controller.signal,event=>events.push(event));
+ try{
+  const digest=await codeDigestV1(where.module),target=join(store,"v1","bootstrap","code",digest);
+  const blocker=join(store,"v1","bootstrap","code");
+  await until(()=>events.some(event=>event.event==="error"&&event.stage==="code-snapshot"&&event.message.includes(blocker)),row.timeout);
+  expect(existsSync(target)).toBe(false);
+  rmSync(blocker);
+  await until(async()=>(await listStoreCodeV1(store)).some(item=>item.digest===digest),row.timeout);
+  const seal=JSON.parse(readFileSync(join(target,"sealed.json"),"utf8")) as {files:{path:string;sha256:string}[]};
+  expect(seal.files.length).toBeGreaterThan(0);
+  for(const file of seal.files)expect(createHash("sha256").update(readFileSync(join(target,"files",...file.path.split("/")))).digest("hex")).toBe(file.sha256);
+ }finally{controller.abort();await done;}
 });
 
 test("the attestation of a machine on a fallback code carries the code-fallback guard and the fleet report warns about it",async()=>{

@@ -1,0 +1,7 @@
+animals/labrador-dog
+animals/domestic-cat
+animals/red-squirrel
+animals/hedgehog
+animals/herring-gull
+animals/mallard-duck
+animals/pigeon

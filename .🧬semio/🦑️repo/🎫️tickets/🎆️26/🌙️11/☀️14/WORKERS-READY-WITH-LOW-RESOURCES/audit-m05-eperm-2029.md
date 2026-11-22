@@ -1,0 +1,7 @@
+# m05 Target EPERM Evidence at 20:29 UTC
+
+At 20:29:35 UTC m05 freshly attested replica `38fe8a5a335ef2d7e19fd3001a89e9982056787739d086030708f10e4dea26c2`, 5,138 incoming entries, and 5,069 `blocked-target-sharing-eperm` events. These are calls accumulated in the reporting process, not distinct paths or proof that 5,069 entries are blocked. The origin mirror exposes no current per-path queue diagnostic or Windows native error details.
+
+The current replica records these target error codes from two operations: delete uses `unlink` after an `lstat` indicated a non-directory; put uses `rename` from staged temporary to target after its separate directory handling. An existing directory is handled by `rmdir` and a separate `directory-in-the-way` reason if removal fails. A race can change a path after observation, but the aggregate does not distinguish operation, target type, read-only attribute, actual Win32 error, effective access or ACL. It cannot prove a directory unlink mismatch, read-only file materialization, or a C-drive permission scope.
+
+The distinguishing evidence is a bounded authenticated local observation of the queued path and operation, exact object type and attributes, underlying Windows error, and effective access for the replica identity on its target and parent. It need not mutate a queue entry or ACL. No remote action, target mutation or permission change was made.

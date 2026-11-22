@@ -11,6 +11,37 @@ async fn puzzle2d_editor_and_viewer_share_dialect() {
     assert_editor_and_viewer_share_dialect::<semio_s_artifact_puzzle_2d::editor::puzzle2d::Puzzle2dPlayApp, semio_s_artifact_puzzle_2d::viewer::puzzle2d::Puzzle2dViewer>().await;
 }
 
+/// 📥️ The Hub's Puzzle 2D editor receives authored commands with literal and paged payloads.
+#[test]
+fn puzzle2d_hub_receives_authored_mutation_frames() {
+    use semio_framework_value::RetainedCloneGrant;
+    use semio_os_kernel::{OpBinary, original_receiving::{ReceivingStock, receive_to_completion}};
+    use semio_s_artifact_puzzle_2d::standards::v1::subsets::any::schema::mutations::{
+        Puzzle2dMutation, delete_node, drag_selection,
+    };
+
+    let grant = RetainedCloneGrant {
+        maximum_items: 1 << 20,
+        maximum_copy_bytes: 1 << 24,
+        maximum_capacity_bytes: 1 << 24,
+        maximum_release_bytes: 1 << 24,
+        maximum_depth: 128,
+    };
+    let mutations: [Puzzle2dMutation; 2] = [
+        delete_node("node-a".into()),
+        drag_selection(vec!["node-a".into(), "node-b".into()].into(), 1.5, -2.0),
+    ];
+    for mutation in mutations {
+        let frame = mutation.encode_op().expect("authored mutation wire");
+        let original = receive_to_completion::<Puzzle2dMutation>(
+            &frame,
+            (0, frame.len()),
+            ReceivingStock { stock: grant, quantum: grant, fuel: 1 << 20 },
+        ).expect("original binary receiving");
+        assert_eq!(original, mutation);
+    }
+}
+
 #[semio_framework_async_macros::async_test]
 async fn puzzle3d_viewer_never_mutates() {
     assert_viewer_never_mutates::<semio_s_artifact_puzzle_3d_viewer::Puzzle3dViewer>(semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()).await;

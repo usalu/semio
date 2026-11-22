@@ -3,6 +3,7 @@ use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::sche
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::FrameRef;
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::MediaKind;
 use protocol::os_spr::protocol_laws::{assert_diff_algebra_inverse_law, assert_mutation_diff_absorb_law};
+use protocol::ColdMutationDiff;
 
 fn stream(id: &str) -> MediaStream {
     MediaStream { id: id.into(), name: id.into(), kind: MediaKind::ImageSequence, camera_id: None, sync_offset_ms: 0.0, fps_hint: 30.0, frames: vec![FrameRef { index: 1, timestamp_ms: 33.0, asset_id: "a1".into() }], source: None }
@@ -45,9 +46,12 @@ fn durable_content_neutral_cases_match_cold_reference() {
         }).collect();
         let original = base.clone();
         let streams = vec![MediaStream { sync_offset_ms: stream_before, ..stream("video") }];
-        let mut post = RemodelingSnapshot { durable_artifacts: base, id: before.into(), streams, ..default_remodeling_scene() };
+        let gcps = vec![GroundControlPoint { id: "survey".into(), ..Default::default() }];
+        let mut post = RemodelingSnapshot { durable_artifacts: base, id: before.into(), streams, gcps, ..default_remodeling_scene() };
+        let untouched_gcps = post.gcps.as_ptr();
         let diff = RemodelingDiff { durable_artifacts: Some(RemodelingContentDelta { rows }), id: Some(after.into()), ..sync("video", stream_after) };
         let actual = protocol::apply_diff_cold_into(&diff, &mut post);
+        assert_eq!(post.gcps.as_ptr(), untouched_gcps, "{} preserves untouched collection ownership", case["id"]);
         if case["refused"] == true {
             assert!(actual.is_err(), "{}", case["id"]);
             assert_eq!(post.durable_artifacts, original, "{} restores every prior row", case["id"]);
@@ -65,12 +69,31 @@ fn durable_content_neutral_cases_match_cold_reference() {
 
 #[test]
 fn retained_preflight_refuses_each_nonempty_keyed_delta_before_staging() {
-    use protocol::RetainedDiffApply;
-    use semio_framework_value::ValueRefusalKind;
-    use semio_framework_value_clone_source_testing::FixtureSource;
+    use super::retained_test_support::{grant, receipt};
+    use protocol::{RetainedDiffApply, RetainedDone, RetainedReply};
+    use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
+    use semio_framework_value_clone_source_testing::{FixtureSource, drive::drive_reply};
 
+    let close = |mut apply: RemodelingApply| -> Vec<RetirementDemand> {
+        apply.begin_close();
+        let mut demands = Vec::new();
+        for _ in 0..4096 {
+            if apply.terminal_is_empty() {
+                return demands;
+            }
+            let demand = apply.close_demand(4096).unwrap();
+            let work = apply.close_work_demand(4096).unwrap();
+            let outcome = drive_reply(grant(demand), work, receipt, |effect, reply: RetainedReply<'_>, recover| -> Result<RetainedDone<'_>, ValueError> {
+                apply.close_reply(None, 4096, effect, reply, recover)
+            });
+            assert!(outcome.result.unwrap().progress().fits(grant(demand)));
+            demands.push(demand);
+        }
+        panic!("unstarted Remodel diff did not close");
+    };
     let base = FixtureSource::from_owner(default_remodeling_scene());
     let post = FixtureSource::from_owner(default_remodeling_scene());
+    let untouched_close = close(RemodelingApply::new());
     for diff in [
         RemodelingDiff::stream_rows(vec![RemodelingRow::Remove { key: "stream".into() }]),
         RemodelingDiff::asset_rows(vec![RemodelingRow::Remove { key: "asset".into() }]),
@@ -83,7 +106,8 @@ fn retained_preflight_refuses_each_nonempty_keyed_delta_before_staging() {
         let apply = RemodelingApply::new();
         let error = apply.preflight_demand(diff.borrow(), base.borrow(), post.borrow(), 4096, 4096).unwrap_err();
         assert_eq!(error.kind, ValueRefusalKind::UnsupportedOwner);
-        assert!(apply.terminal_is_empty());
+        assert_eq!(error.retained_progress(), Default::default());
+        assert_eq!(close(apply), untouched_close);
     }
     let empty = FixtureSource::from_owner(RemodelingDiff {
         id: Some("supported assignment".into()),
@@ -94,7 +118,9 @@ fn retained_preflight_refuses_each_nonempty_keyed_delta_before_staging() {
         gcps: Some(Default::default()),
         ..Default::default()
     });
-    assert!(RemodelingApply::new().preflight_demand(empty.borrow(), base.borrow(), post.borrow(), 4096, 4096).is_ok());
+    let apply = RemodelingApply::new();
+    assert!(apply.preflight_demand(empty.borrow(), base.borrow(), post.borrow(), 4096, 4096).is_ok());
+    assert_eq!(close(apply), untouched_close);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -194,7 +220,7 @@ async fn absorb_equals_sequential_application() {
 #[semio_framework_async_macros::async_test]
 async fn the_negative_delta_restores_the_base() {
     let mut base = scene_with_streams(&["a", "b"]);
-    base.durable_artifacts.insert("held".into(), semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingDurableArtifact { kind: "sparse".into(), mime: None, width: 0, height: 0, chunks: vec![ByteBuffer::from_u8_slice(b"1"), ByteBuffer::from_u8_slice(b"2")] });
+    base.durable_artifacts.cold_insert("held".into(), RemodelingDurableArtifact { kind: "sparse".into(), mime: None, width: 0, height: 0, chunks: vec![ByteBuffer::from_u8_slice(b"1"), ByteBuffer::from_u8_slice(b"2")] });
     let mut diff = RemodelingDiff::stream_rows(vec![RemodelingRow::Remove { key: "a".into() }]);
     diff.absorb(RemodelingDiff::stream_rows(vec![RemodelingRow::Insert { entity: stream("z") }]));
     diff.absorb(frames("b", vec![frame(1)], vec![frame(5)]));

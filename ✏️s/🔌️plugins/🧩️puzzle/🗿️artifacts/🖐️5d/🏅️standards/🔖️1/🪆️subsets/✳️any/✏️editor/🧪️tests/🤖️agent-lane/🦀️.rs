@@ -208,6 +208,11 @@ async fn the_agent_lane_runs_the_puzzle5d_editors_own_tool_command_job() {
     for probe in &probes {
         assert!(!matches!(&probe.agent, Some(DeclaredVerbOutcome::Unreachable { code, .. }) if code != "interactive-job.agent-lane-uncarried"), "{} is refused before its job ran: {outcomes:#?}", probe.verb);
     }
+    for verb in ["patchGrip", "patchFastener"] {
+        let probe = declared_verb_probe(&probes, verb);
+        assert!(probe.windows.iter().all(|window| matches!(&window.staged, DeclaredVerbOutcome::Settled(effect) if effect.is_silent())), "{verb} settles its empty patch in every shell window: {outcomes:#?}");
+        assert!(matches!(&probe.agent, Some(DeclaredVerbOutcome::Settled(effect)) if effect.is_silent()), "{verb} previews its empty patch: {outcomes:#?}");
+    }
     let written = declared_verb_probe(&probes, "addPartKind");
     assert!(declared_verb_wrote_document(written.agent.as_ref().expect("addPartKind is agent-facing")), "addPartKind previews its document write: {outcomes:#?}");
     assert_eq!(declared_verb_agent_divergences(&probes), AGENT_LANE_DIVERGENCES, "agent-lane divergences: {outcomes:#?}");

@@ -1,0 +1,13 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+const root="/home/deck/semio/✏️s/🔌️plugins/🧩️puzzle";
+const f=JSON.parse(readFileSync(resolve(root,"🧪️tests/🧫️fixtures/🔏️publication-authority/🔣️.json"),"utf8"));
+const o=f.owners[0];const dir=resolve(root,o.source,"..");
+const src=[...o.mounted.map((p:string)=>readFileSync(resolve(dir,p),"utf8")),readFileSync(resolve(root,o.source),"utf8")].join("\n");
+const p=src.split("//#region 🧪️UnitTests")[0];
+const needles:string[]=JSON.parse(readFileSync(process.argv[2],"utf8"));
+for(const n of needles) if(!p.includes(n)) console.log("MISSING:",n);
+const pairs=[...p.matchAll(/\.action_interactive_job\("([^"]+)",\s*(?:semio_plugin::)?InteractiveJobClassification::(Migrated|BatchOnlyPendingRewrite)\)/g)].length;
+console.log("pairs",pairs, "routes", o.groups.flatMap((g:any)=>g.routes).length);
+for(const [re,n] of [["PUZZLE2D_RETAINED_TOOL_IDS: &\\[&str\\]","ids"],["impl (?:[A-Za-z_][A-Za-z0-9_]*::)*ArtifactOwnedToolJobFactory for Puzzle2dRetainedCommandJobFactory\\b","factory"],["bounded_first_step_tool_proofs!","proofs"],["type Owner = (?:[A-Za-z_][A-Za-z0-9_]*::)*EditorApp<Puzzle2dPlayApp>;","owner"]]) console.log(n,new RegExp(re).test(p));
+for(const s of ["registry.register(Puzzle2dRetainedCommandJobFactory::new(&controller))","fn build_artifact_store_one_item_preparation_factory()","fn build_config_store_one_item_preparation_factory()","//#endregion 🧵️RetainedCommands","build_draft_store_one_item_preparation_factory",'"setLocale"']) console.log(s,p.includes(s));

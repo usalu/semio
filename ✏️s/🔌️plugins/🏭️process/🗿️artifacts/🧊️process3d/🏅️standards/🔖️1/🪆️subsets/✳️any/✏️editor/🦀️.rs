@@ -117,11 +117,11 @@ use document::{set_active_example, set_snapshot};
 use engagement::{engagement_abort, engagement_input, engagement_submit};
 use inspector::patch_inspector;
 use media::{export_model, import_model_file, load_model_request};
-use step::{add_step, move_step, remove_selected_step, remove_step, set_step_enabled, update_step};
+use step::{add_step, drop_step, move_step, remove_selected_step, remove_step, set_step_enabled, update_step};
 use stock::set_stock;
 use sun::{set_sun_azimuth, set_sun_elevation, set_sun_intensity, toggle_sun};
 use workshop::{add_workshop_machine, remove_workshop_machine, update_workshop_machine};
-use world::{world_face_drag_end, world_pointer_down, world_pointer_move};
+use world::{place_capability, world_face_drag_end, world_pointer_down, world_pointer_move};
 #[path = "🫧️transient/👆️placement/🦀️.rs"]
 mod placement_hover;
 //#endregion 🔖️Commands
@@ -143,6 +143,7 @@ semio_plugin::app_commands! {
         "removeStep" as "remove-step" => remove_step::RemoveStep,
         "removeSelectedStep" as "remove-selected-step" => remove_selected_step::RemoveSelectedStep,
         "moveStep" as "move-step" => move_step::MoveStep,
+        "dropStep" as "drop-step" => drop_step::DropStep,
         "updateStep" as "update-step" => update_step::UpdateStep,
         "setStepEnabled" as "set-step-enabled" => set_step_enabled::SetStepEnabled,
         "setStock" as "stock" => set_stock::SetStock,
@@ -166,6 +167,7 @@ semio_plugin::app_commands! {
         "exportModel" as "export-model" => export_model::ExportModel,
         "loadModelRequest" as "load-model-request" => load_model_request::LoadModelRequest,
         "worldPointerMove" as "world-pointer-move" => world_pointer_move::WorldPointerMove,
+        "placeCapability" as "place-capability" => place_capability::PlaceCapability,
     }
 }
 //#endregion 🔖️Commands
@@ -214,6 +216,7 @@ impl Process3dBoundedProofs {
             "removeStep" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
             "removeSelectedStep" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
             "moveStep" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "dropStep" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
             "updateStep" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
             "setStepEnabled" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
             "setStock" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
@@ -221,6 +224,7 @@ impl Process3dBoundedProofs {
             "engagementSubmit" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
             "worldPointerDown" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
             "worldPointerMove" => process3d_bounded_contract(),
+            "placeCapability" => process3d_bounded_contract(),
             "worldFaceDragEnd" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
             "exportModel" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
             "setCursor" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
@@ -310,6 +314,11 @@ pub fn create_process3d_app() -> AppDefinition {
             .panel_tab_def(workshop_panel::definition())
             .panel_tab_def(inspection::definition())
             .mutation("addStep", LocalizedLabel::native("Add Step", "Schritt hinzufügen"))
+            .action_with(internal_action("placeCapability", LocalizedLabel::native("Place capability", "Fähigkeit platzieren"), ActionKind::View))
+            .action_args("placeCapability", vec![
+                ActionArgDef::text("machineId", LocalizedLabel::native("Machine", "Maschine")).required(),
+                ActionArgDef::text("capabilityId", LocalizedLabel::native("Capability", "Fähigkeit")).required(),
+            ])
             .mutation("setStock", LocalizedLabel::native("Set Stock", "Rohteil festlegen"))
             .action_with(ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::Mutation, "panel-left"))
             .action_destructive("setActiveExample")
@@ -328,6 +337,7 @@ pub fn create_process3d_app() -> AppDefinition {
             .action_with(internal_action("removeStep", LocalizedLabel::native("Remove Step", "Schritt entfernen"), ActionKind::Mutation))
             .action_destructive("removeStep")
             .action_with(internal_action("moveStep", LocalizedLabel::native("Move Step", "Schritt verschieben"), ActionKind::Mutation))
+            .action_with(internal_action("dropStep", LocalizedLabel::native("Drop Step", "Schritt ablegen"), ActionKind::Mutation))
             .action_with(internal_action("updateStep", LocalizedLabel::native("Update Step", "Schritt aktualisieren"), ActionKind::Mutation))
             .action_with(internal_action("setStepEnabled", LocalizedLabel::native("Set Step Enabled", "Schrittaktivierung festlegen"), ActionKind::Mutation))
             .action_with(internal_action("patchInspector", LocalizedLabel::native("Patch Inspector", "Inspektor aktualisieren"), ActionKind::Mutation))
@@ -422,6 +432,7 @@ pub fn create_process3d_app() -> AppDefinition {
             .action_describe("importModelFile", LocalizedLabel::native("Replaces the whole document with a stock read from the given model file (name and data-URL payload) and clears the process timeline.", "Ersetzt das gesamte Dokument durch ein Rohteil aus der angegebenen Modelldatei (Name und Data-URL-Inhalt) und leert die Prozesszeitleiste."))
             .action_describe("removeStep", LocalizedLabel::native("Removes one process step by id from the timeline.", "Entfernt einen Prozessschritt anhand seiner Id aus der Zeitleiste."))
             .action_describe("moveStep", LocalizedLabel::native("Moves one process step to a new position (index) in the timeline, changing the order in which it is applied.", "Verschiebt einen Prozessschritt an eine neue Position (Index) der Zeitleiste und ändert damit die Reihenfolge seiner Anwendung."))
+            .action_describe("dropStep", LocalizedLabel::native("Moves a dragged step before or after another step in the same timeline.", "Verschiebt einen gezogenen Schritt vor oder hinter einen anderen Schritt derselben Zeitleiste."))
             .action_describe("updateStep", LocalizedLabel::native("Updates one process step to the supplied definition, changing only the fields that differ.", "Aktualisiert einen Prozessschritt auf die übergebene Definition und ändert nur die abweichenden Felder."))
             .action_describe("setStepEnabled", LocalizedLabel::native("Sets one process step on or off, to exactly the value passed, so repeating it changes nothing; a disabled step stays in the timeline but is not applied to the stock.", "Schaltet einen Prozessschritt genau nach dem übergebenen Wert ein oder aus, sodass eine Wiederholung nichts ändert; ein deaktivierter Schritt bleibt in der Zeitleiste, wird aber nicht auf das Rohteil angewendet."))
             .action_describe("patchInspector", LocalizedLabel::native("Edits one inspector field of the stock, a process step or a workshop machine with a number or text value.", "Bearbeitet ein Inspektorfeld des Rohteils, eines Prozessschritts oder einer Werkstattmaschine mit einem Zahlen- oder Textwert."))

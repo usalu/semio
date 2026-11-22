@@ -12,7 +12,7 @@ const NAKAGIN_CHILD: &str = include_str!("../../🖼️assets/🎬️demo/🪆�
 pub fn nakagin_fixture() -> JackSnapshot {
     let child=semio_s_artifact_stdio_semio_graph::io::text::snapshot::decode_semio_graph_snapshot_json(NAKAGIN_CHILD).expect("declared complete Nakagin Semio child");
     let content=store::os_store::artifact_child::ArtifactChild::new("nakagin-jack-demo-content".into(),semio_framework_artifact_reference::ArtifactRef{artifact_id:"nakagin-jack-demo-content".into(),dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"s.stdio.semio".into(),standard:"v1".into(),subset:"graph".into()}});
-    let mut graph=JackSnapshot{schema:JackSnapshot::SCHEMA.into(),name:"Nakagin Capsule Tower".into(),manifest_id:Some("nakagin".into()),manifest:semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::manifest::Manifest::nakagin_default(),camera:semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::graph::Camera::default(),content,root_node_id:Some("7dc5b737-3b6b-4068-b315-b7bacc91c2e1".into()),query:semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::graph::TRINITY_JACK_DEFAULT_QUERY.into()};
+    let mut graph=JackSnapshot{schema:JackSnapshot::SCHEMA.into(),name:"Nakagin Capsule Tower".into(),manifest_id:"nakagin".into(),camera:semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::graph::Camera::default(),content,root_node_id:Some("7dc5b737-3b6b-4068-b315-b7bacc91c2e1".into()),query:semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::graph::TRINITY_JACK_DEFAULT_QUERY.into()};
     semio_s_artifact_trinity_jack_semio_content::materialize_jack_snapshot(&mut graph.content,child);
     graph
 }

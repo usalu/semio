@@ -297,3 +297,19 @@ fn the_default_document_publishes_an_accessible_node_for_every_check_handle_and_
     assert_eq!((counts.checks, counts.entities, counts.handles, counts.diagrams), (report.checks.len(), scene.entities.len(), handles.len(), diagrams.len()));
 }
 //#endregion ♿️ScreenReader
+
+#[test]
+fn visible_examples_have_distinct_bilingual_labels_and_documents() {
+    use semio_plugin::ArtifactEditor;
+    use semio_ui_locale::{Locale, Terminology};
+    let examples = Din16798PlayApp::examples();
+    let expected = include_str!("🧫️fixtures/examples.tsv").lines().map(|line| line.split('\t').collect::<Vec<_>>()).collect::<Vec<_>>();
+    assert_eq!(examples.len(), expected.len());
+    let mut bodies = std::collections::BTreeSet::new();
+    for (source, row) in examples.iter().zip(expected) {
+        assert_eq!(source.id(), row[0]);
+        assert_eq!(source.label().resolve(Terminology::Native, Locale::En), row[1]);
+        assert_eq!(source.label().resolve(Terminology::Native, Locale::De), row[2]);
+        assert!(bodies.insert(source.document()), "duplicated document for {}", source.id());
+    }
+}

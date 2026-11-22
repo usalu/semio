@@ -174,6 +174,73 @@ fn a_group_drag_records_every_unlocked_member_and_one_offset() {
     assert_eq!(host.scene.nodes.get("node-b").map(|node| (node.x, node.y)), Some((50.0, 5.0)), "every member previews the one offset");
 }
 
+#[test]
+fn drag_release_uses_its_own_sample_and_preserves_grab_and_group_offsets() {
+    let mut host = gesture_host();
+    set_selection_ids_silent(&mut host.scene, &mut host.focus, &mut host.outbox, &["node-a".to_string(), "node-b".to_string()]);
+    set_camera_silent(&mut host.scene, &mut host.outbox, 17.0, 29.0, 2.0);
+    let _ = gesture_rows(&mut host);
+    region_press(&mut host, -37.0, 4.0);
+    region_move_to(&mut host, -27.0, 9.0);
+    assert_eq!(host.scene.nodes.get("node-a").map(|node| (node.x, node.y)), Some((-30.0, 5.0)));
+    assert!(gesture_rows(&mut host).iter().all(|row| row["name"] == "nodeMove"));
+    region_move_to(&mut host, -27.0, 9.0);
+    assert!(gesture_rows(&mut host).is_empty());
+    region_release_at(&mut host, -21.0, 1.0);
+    let rows = gesture_rows(&mut host);
+    let record = rows.iter().find(|row| row["name"] == "gesture").expect("final drag record");
+    assert_eq!(record["payload"]["dx"].as_f64(), Some(16.0));
+    assert_eq!(record["payload"]["dy"].as_f64(), Some(-3.0));
+    assert_eq!(host.scene.nodes.get("node-a").map(|node| (node.x, node.y)), Some((-24.0, -3.0)));
+    assert_eq!(host.scene.nodes.get("node-b").map(|node| (node.x, node.y)), Some((56.0, -3.0)));
+    assert_eq!(rows.iter().filter(|row| row["name"] == "nodeMove").count(), 2);
+}
+
+#[test]
+fn a_stationary_click_leaves_an_off_grid_node_in_place() {
+    let mut host = gesture_host();
+    host.style.set_automatic_lod(false);
+    host.style.set_forced_draw_lod_label("normal");
+    host.style.set_grid_snap_enabled(true);
+    region_press(&mut host, -40.0, 0.0);
+    region_release_at(&mut host, -40.0, 0.0);
+    let rows = gesture_rows(&mut host);
+    assert_eq!(rows.len(), 1);
+    assert_eq!(rows[0]["name"], "select");
+    assert_eq!(host.scene.nodes.get("node-a").map(|node| (node.x, node.y)), Some((-40.0, 0.0)));
+}
+
+#[test]
+fn a_group_larger_than_the_event_queue_previews_and_restores_every_node() {
+    let count = BOARD_EVENT_ITEM_CAPACITY + 1;
+    let ids: Vec<_> = (0..count).map(|index| format!("node-{index:03}")).collect();
+    let nodes: Vec<_> = ids.iter().enumerate().map(|(index, id)| serde_json::json!({ "id": id, "x": index * 20, "y": 0, "shape": "circle", "radius": 6, "handles": [] })).collect();
+    let fixture = serde_json::json!({ "schema": "board.ports.directed.v1", "nodes": nodes, "edges": [] }).to_string();
+    let mut host = gesture_host();
+    let mut accepted = |_| true;
+    let mut control = NativeDecodeControl::new(64 * 1024 * 1024, &mut accepted);
+    assert!(load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox, &fixture, &mut control));
+    set_selection_ids_silent(&mut host.scene, &mut host.focus, &mut host.outbox, &ids);
+    let _ = gesture_rows(&mut host);
+
+    region_press(&mut host, 0.0, 0.0);
+    region_move_to(&mut host, 5.0, 8.0);
+    let moved = gesture_rows(&mut host);
+    assert_eq!(moved.iter().filter_map(|row| row["payload"]["moves"].as_array()).map(Vec::len).sum::<usize>(), count);
+    assert_eq!(host.scene.nodes["node-256"].y, 8.0);
+    assert!(host.pointer_cancel_screen());
+    let restored = gesture_rows(&mut host);
+    assert_eq!(restored.iter().filter_map(|row| row["payload"]["moves"].as_array()).map(Vec::len).sum::<usize>(), count);
+    assert_eq!(host.scene.nodes["node-256"].y, 0.0);
+
+    region_press(&mut host, 0.0, 0.0);
+    region_release_at(&mut host, 7.0, -3.0);
+    let rows = gesture_rows(&mut host);
+    let record = rows.iter().find(|row| row["name"] == "gesture").expect("final drag record");
+    assert_eq!(record["payload"]["targets"].as_array().map(Vec::len), Some(count));
+    assert_eq!(host.scene.nodes["node-256"].y, -3.0);
+}
+
 #[cfg(test)]
 /// ↩️ A cancelled drag leaves zero trace: positions AND the press's selection return, nothing dispatchable is
 /// published (only transient restore frames for the sibling panes), and the next drag opens a fresh gesture.
@@ -285,29 +352,36 @@ fn installed_naming_owns_brush_ids_and_fill_labels() {
     let mut ingress = BoardFillSnapshotIngress::new(0.0, &PROBE_NAMING);
     let snapshot = ingress.take_snapshot().expect("empty probe snapshot");
     assert!(std::ptr::eq(snapshot.naming, &PROBE_NAMING), "the ingress hands its naming to the snapshot");
-    let mut close_caller=close_source::caller(1,1);
-    let mut job = BoardFillJob::with_operation(snapshot, 0, semio_framework_job::Operation::new(semio_framework_job::OperationId(1), semio_framework_job::RevisionId(1), semio_framework_job::Generation(1), 1));
+    let mut close_caller = close_source::caller(1, 1);
+    let operation = semio_framework_job::Operation::new(semio_framework_job::OperationId(1), semio_framework_job::RevisionId(1), semio_framework_job::Generation(1), 1);
+    let mut construction = semio_framework_job::OriginalConstructionAdmission::default();
+    let mut decoder = semio_framework_job::OriginalJobDecodeOwner::empty();
+    let mut snapshot = Some(snapshot);
+    let mut output = None;
+    for _ in 0..64 {
+        if close_caller.turn_with_decoder(close_source::STOCK, &mut decoder, |cx| BoardFillJob::admit_original(&mut construction, &mut snapshot, 0, operation, &mut output, cx)).expect("probe fill job admission") {
+            break;
+        }
+    }
+    let mut job = output.expect("probe fill job");
+    while !construction.terminal_is_empty() {
+        close_caller.turn(close_source::STOCK, |cx| Ok(construction.close_step(cx)?)).expect("probe construction close");
+    }
     assert!(std::ptr::eq(job.naming, &PROBE_NAMING), "the job keeps the snapshot's naming");
     assert_eq!((job.naming.fill_stage_label)(job.stage()), "probe-complete");
-    close_probe_fill_job(&mut job,&mut close_caller);
+    close_probe_fill_job(&mut job, &mut close_caller);
+    while !decoder.terminal_is_empty() {
+        close_caller.turn(close_source::STOCK, |cx| cx.with_original_retirement(|cx| decoder.close_on_source(cx))).expect("probe decoder close");
+    }
     close_caller.retire(close_source::STOCK);
 }
 
 #[cfg(test)]
-fn close_probe_fill_job(job: &mut BoardFillJob,caller:&mut semio_framework_job::OriginalJobFixtureCaller) {
+fn close_probe_fill_job(job: &mut BoardFillJob, caller: &mut semio_framework_job::OriginalJobFixtureCaller) {
     use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep};
-    use semio_framework_value::retained_clone::RetainedCloneGrant;
     for turn in 0.. {
         assert!(turn < 64, "probe job close reaches terminal-empty");
-        let copy = job.next_close_copy_byte_demand().expect("job copy demand");
-        let exact = RetainedCloneGrant {
-            maximum_items: 1,
-            maximum_copy_bytes: copy,
-            maximum_capacity_bytes: job.next_close_capacity_byte_demand(copy).expect("job capacity demand"),
-            maximum_release_bytes: job.next_close_release_byte_demand().expect("job release demand"),
-            maximum_depth: job.next_close_depth_demand().expect("job depth demand"),
-        };
-        match caller.turn(exact, |cx| job.close_step(cx)).expect("original fixture close turn") {
+        match caller.turn(close_source::STOCK, |cx| cx.with_original_retirement(|cx| job.close_step(cx))).expect("original fixture close turn") {
             InteractiveJobCloseStep::Pending { .. } => {}
             InteractiveJobCloseStep::Complete { .. } => break,
             other => panic!("probe job close ended in {other:?}"),

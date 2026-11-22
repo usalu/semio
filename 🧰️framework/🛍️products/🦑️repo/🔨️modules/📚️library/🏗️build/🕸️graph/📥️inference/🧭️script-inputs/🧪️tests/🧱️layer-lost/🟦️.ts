@@ -10,7 +10,7 @@ import{INFERENCE_LIMITS_V1}from"../../../🧬️schema/🟨️.mjs";
 import schema from"../../../🧬️schema/🔣️.json";
 import{markReadParentV1}from"../../../../../👁️observation/🚧️read-parent/🟨️.mjs";
 const repository=await privateRepositoryWorkspaceV1("graph");
-declareLibraryBuildTestEnvelopeV1({suite:"build-inference",scratch:"checkout"});
+declareLibraryBuildTestEnvelopeV1({suite:"build-inference-script-inputs"});
 process.env.SEMIO_CLOSURE_FLEET="off";
 
 const inference=await import("../../../🟨️.mjs"),{createScriptInputCache,libraryBootstrap}=inference as any;

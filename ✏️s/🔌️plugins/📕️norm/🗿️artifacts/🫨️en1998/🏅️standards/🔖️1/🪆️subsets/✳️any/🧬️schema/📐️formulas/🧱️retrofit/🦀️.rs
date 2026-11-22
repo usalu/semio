@@ -1,4 +1,7 @@
-//! 🧱️ EN 1998-3:2005 with AC1, Annex A.4.2 and A.4.3 strengthening models.
+//! 🧱️ EN 1998-3:2005 Annex A strengthening models.
+
+#[path = "🧵️frp-shear/🦀️.rs"]
+pub mod frp_shear;
 
 /// 🧮️ Applies (A.17)–(A.20) to the capacities of the monolithic section before the overall Annex A factor.
 pub fn concrete_jacket(shear_n: f64, moment_nm: f64, yield_rotation: f64, ultimate_rotation: f64) -> Option<[f64; 4]> {

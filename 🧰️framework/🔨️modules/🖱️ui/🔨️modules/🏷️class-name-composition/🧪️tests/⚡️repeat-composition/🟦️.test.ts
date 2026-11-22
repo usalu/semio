@@ -5,7 +5,7 @@ import { cn } from "../../🟦️.ts";
 
 describe("repeat composition", () => {
   test("composes an already composed list without testing a single pattern, with the same result", () => {
-    const list = ["flex p-2 p-4 md:hover:text-sm text-[color:red] truncate", { "mt-1 mt-3": true }, ["gap-x-2 gap-4"]] as const;
+    const list = ["flex p-2 p-4 md:hover:text-sm text-[color:red] truncate", { "mt-1 mt-3": true }, ["gap-x-2 gap-4"]];
     const first = cn(...list);
     const test = spyOn(RegExp.prototype, "test");
     const second = cn(...list);

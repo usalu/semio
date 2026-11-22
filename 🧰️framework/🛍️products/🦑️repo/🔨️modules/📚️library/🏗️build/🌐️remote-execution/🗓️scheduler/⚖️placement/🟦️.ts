@@ -94,10 +94,17 @@ export function planDispatchV1(queue:readonly PlacementOperationV1[],workers:rea
  return plan;
 }
 
+/** 🔢️ How the registered workers stand for one action right now: all of them, those the platform key lets run it (never its requester, never one that failed it), those with headroom, and those that are both, the candidates. The one counting behind every answer to "is another machine idle": the check at submission and the answer the build door asks for. */
+export function placementIdleCountV1(operation:PlacementOperationV1,workers:readonly PlacementWorkerV1[],table:Pick<RemoteExecutionLoadTableV1,"get">,nowMs:number):Readonly<{workers:number;compatible:number;headroom:number;candidates:number}>{
+ const required=placementRequiredV1(operation.platform,operation.requester===undefined?undefined:table.get(operation.requester));
+ let compatible=0,headroom=0,candidates=0;
+ for(const worker of workers){const fits=placementCompatibleV1(operation,worker,required),room=placementHasHeadroomV1(worker,table.get(worker.origin),nowMs);if(fits)compatible++;if(room)headroom++;if(fits&&room)candidates++;}
+ return Object.freeze({workers:workers.length,compatible,headroom,candidates});
+}
+
 /** 🔭️ Whether any registered worker other than the requester could take the action right now (waiting or not): the question `semio-offload=if-idle` asks at submission. */
 export function placementIdleElsewhereV1(operation:PlacementOperationV1,workers:readonly PlacementWorkerV1[],table:Pick<RemoteExecutionLoadTableV1,"get">,nowMs:number):boolean{
- const required=placementRequiredV1(operation.platform,operation.requester===undefined?undefined:table.get(operation.requester));
- return workers.some(worker=>placementCompatibleV1(operation,worker,required)&&placementHasHeadroomV1(worker,table.get(worker.origin),nowMs));
+ return placementIdleCountV1(operation,workers,table,nowMs).candidates>0;
 }
 
 /** 🔁️ Whether any registered worker could still take the action although it failed on `tried` (used to fail back to the requester at once instead of waiting for a worker that does not exist). */

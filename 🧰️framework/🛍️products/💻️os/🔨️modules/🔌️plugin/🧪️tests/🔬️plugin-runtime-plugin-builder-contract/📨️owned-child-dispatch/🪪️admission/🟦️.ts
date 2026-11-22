@@ -24,9 +24,10 @@ test("reserved emission admission retains exact slots before producer ownership"
  const mediaStart=source.indexOf("pub async fn advance_original_reserved_media"),mediaStep=source.slice(mediaStart,mediaStart+700);
  expect(mediaStep.indexOf("advance_reserved_media(")).toBeLessThan(mediaStep.indexOf("advance_original_reserved_mount("));
  const builders=pluginSubtreeText("🧵️instance","🖼️render");
- expect(builders.match(/\n\s*source_binding,/gu)?.length).toBe(2);
- expect(builders).toContain("input: Some(ArtifactReservedToolInput::Action");
- expect(builders).toContain("input: Some(ArtifactReservedToolInput::Media");
+ expect(builders).toContain("*owner.input=Some(ArtifactReservedToolInput::Action");
+ expect(builders).toContain("*owner.input=Some(ArtifactReservedToolInput::Media");
+ expect(builders).toContain("ArtifactReservedToolJobRequest{source_binding:owner.source");
+ expect(builders).toContain("input:owner.input.take()");
 });
 
 test("reserved completed refusal retains original permit and output before returning authority",()=>{
@@ -54,6 +55,9 @@ test("reserved completion refusal keeps original fixed owners before checks",()=
  const source=pluginFamilyText();
  expect(source.includes("reserved_producer: Option<ArtifactReservedToolJob>")).toBe(true);
  const owner=pluginSubtreeText("🧵️instance","📨️dispatch");
- expect(owner.includes("mount_original_reserved_owners")).toBe(true);
+ const mount=owner.slice(owner.indexOf("async fn advance_original_reserved_mount"),owner.indexOf("pub async fn admit_framework_reserved_spawn"));
+ expect(mount).toContain("MountedTypedCommandFullOperation::<A>::admit_original_reserved(");
+ expect(mount).toContain("owner.terminal_is_empty()");
+ expect(mount).toContain("reserved_receipt.is_some_and(|receipt| receipt.operation(cx).is_ok())");
  expect(source.includes("finish_mounted_reserved_completion")).toBe(true);
 });

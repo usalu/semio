@@ -1,5 +1,7 @@
 /** 🔒️ Contract: a question about every project under the graph policy `current` is answered from the sealed generation of the whole workspace with its age stated, and never starts, queues for or joins a build; without a sealed generation it refuses with a typed bilingual text that names how far the whole read of this machine is. */
 import {expect,test} from "bun:test";
+import {Database} from "bun:sqlite";
+import queryCases from "./🧾️query-cases.json";
 import {mkdtempSync,realpathSync,rmSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {dirname,join} from "node:path";
@@ -85,7 +87,24 @@ test("a closure read under the policy current keeps its way: no whole-workspace 
  }finally{clean(dir);}
 });
 
-test("a current project query reads the sealed graph without selected facts custody or any fallback writer",async()=>{
+test("a single-project question under the policy current without a sealed generation refuses at once with a message that names the project, not every project, and builds nothing",async()=>{
+ for(const language of ["en","de"] as const){
+  const dir=scratch();
+  try{
+   await seed(dir,ringFiles(6));
+   const mock=createMockHost(dir,{language});
+   const failure=await loadGenerationGraphV1(mock.host,{policy:"current",closure:["p1"],sealedOnly:true}).then(()=>undefined,error=>error as Error&{code?:string});
+   expect(failure?.code).toBe("GENERATION_NONE_SEALED");
+   expect(failure!.message).toContain("p1");
+   expect(failure!.message).toContain("--graph-policy fresh");
+   expect(failure!.message).not.toContain(language==="en"?"every project":"alle Projekte");
+   expect(mock.events).toEqual(["shared"]);
+   expect(mock.log).toEqual([]);
+  }finally{clean(dir);}
+ }
+});
+
+test("explicit current queries use normal sealed readers without task preparation",async()=>{
  const dir=scratch(),name="@semio-tech/framework-os-dev",files=ringFiles(6),manifest="pkg/p2/project.json";
  try{
   files[manifest]=JSON.stringify({...JSON.parse(files[manifest]!),name});
@@ -93,37 +112,45 @@ test("a current project query reads the sealed graph without selected facts cust
   const runtime=new URL("../../../../../⌨️command/⚙️runtime/🟦️.ts",import.meta.url),source=await Bun.file(runtime).text(),tree=ts.createSourceFile(runtime.pathname,source,ts.ScriptTarget.Latest,true);
   const names=["runOwnedBuildInLeasesV1","runBuildGraphQueryV1"],functions=names.map(name=>tree.statements.find(node=>ts.isFunctionDeclaration(node)&&node.name?.text===name));
   const program=ts.transpileModule(functions.map(node=>node?.getText(tree)??"").join("\n"),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext}}).outputText.replace(/\bimport\(/gu,"load(").replaceAll("import.meta.dirname","''").replace(/\bexport \{\};\s*$/u,"");
-  const args=["show","project",name,"--graph-policy=current","--json"],selected=extractGraphPolicyV1(args,{}),invocation={control:{signal:new AbortController().signal}},phase={},packets:string[]=[],preGraph:string[]=[];
-  const refuse=()=>{throw Error("Current project query attempted writer admission");};
-  async function query(mock:ReturnType<typeof createMockHost>){
-   Object.assign(mock.host,{withBuilder:refuse,membership:refuse,exchange:{ahead:refuse,upload:true,publish:refuse},settleClosure:refuse,sealed:refuse});
+  const projectArgs=["show","project",name,"--graph-policy=current","--json"],invocation={control:{signal:new AbortController().signal}},phase={},packets:string[]=[],preGraph:string[]=[];
+  const refuse=()=>{throw Error("Current graph query attempted writer admission");};
+  type GraphOptions=Parameters<typeof loadGenerationGraphV1>[1];
+  async function query(mock:ReturnType<typeof createMockHost>,args:readonly string[]=projectArgs,environment:Readonly<Record<string,string|undefined>>={},pinned=false,observe?:(graph:GraphOptions,reuse:boolean)=>unknown){
+   const selected=extractGraphPolicyV1(args,environment);
+   Object.assign(mock.host,{withBuilder:refuse,membership:refuse,settleClosure:refuse});
+   if(args[1]==="project")Object.assign(mock.host,{exchange:{ahead:refuse,upload:true,publish:refuse},sealed:refuse});
    const load=async(specifier:string)=>{
     if(specifier.endsWith("/🚀️bootstrap/⌨️cli/🟦️.ts"))return {runNativeRepoRecoveryV1:async()=>false};
     if(specifier.endsWith("/🚀️bootstrap/⌨️cli/🔌️ports/🟦️.ts"))return {};
-    if(specifier.endsWith("/🕸️graph/📍️pin/🟦️.ts"))return {boundGenerationPinV1};
-    if(specifier.endsWith("/📥️opening/🏪️store/🟦️.ts"))return {withRepositoryCacheStoreV1:async(_root:string,_partition:string,_invocation:unknown,_control:unknown,body:(store:unknown,phase:unknown)=>unknown)=>body({},phase)};
+    if(specifier.endsWith("/🕸️graph/📍️pin/🟦️.ts"))return {boundGenerationPinV1:pinned?()=>({generation:1}):boundGenerationPinV1};
+    if(specifier.endsWith("/📥️opening/🏪️store/🟦️.ts"))return {withRepositoryCacheStoreV1:async(_root:string,_partition:string,_invocation:unknown,_control:unknown,body:(store:unknown,phase:unknown)=>unknown)=>{preGraph.push("store");return body({},phase);}};
     if(specifier.endsWith("/🕸️graph/🚪️admission/🟦️.ts"))return {buildInvocationGraphSelectionV1,readBuildOwnerRegistryV1};
     if(specifier.endsWith("/📥️options/🟦️.ts"))return {selectLiteralBuildProjectsV1};
     if(specifier.endsWith("/📥️inference/🟨️.mjs"))return {readBuildOwnerRegistrySourceV1:()=>JSON.stringify({version:1,owners:[{name,root:"pkg/p2",manifest:"pkg/p2/📋️project.json",packages:[]}],catalogProviders:[]})};
-    if(specifier.endsWith("/🕸️graph/🟦️.ts"))return {loadBuildGraphV1:async(_root:string,_original:unknown,_control:unknown,options:{selection:unknown;graph:Parameters<typeof loadGenerationGraphV1>[1]})=>{
-     if(JSON.stringify(options.selection)!=='{"kind":"all"}')throw Error("Current project query requested selected graph facts");
-     return (await loadGenerationGraphV1(mock.host,options.graph)).graph;
+    if(specifier.endsWith("/🕸️graph/🟦️.ts"))return {loadBuildGraphV1:async(_root:string,_original:unknown,_control:unknown,options:{selection:unknown;graph:GraphOptions;reuse:boolean})=>{
+     if(JSON.stringify(options.selection)!=='{"kind":"all"}')throw Error("Current graph query requested selected graph facts");
+     return observe?observe(options.graph,options.reuse):(await loadGenerationGraphV1(mock.host,options.graph)).graph;
     }};
     if(specifier.endsWith("/🧭️selection/🟦️.ts"))return {buildOptionV1:()=>undefined};
     if(specifier.endsWith("/🌊️json-stream/🟨️.mjs"))return {writeJsonStreamV1};
     throw Error("Unexpected current query import "+specifier);
    };
-   const ports={load,process:{env:{}},profilePhaseV1:(_name:string,fn:()=>unknown)=>fn(),profileMarkV1:()=>{},markBuildCapacityPhaseV1:async()=>{},ensureTaskDependenciesV1:async()=>{preGraph.push("dependencies");},maintainTaskStoresV1:async()=>{preGraph.push("maintenance");},withRepositoryCommandEnvironmentV1:(_root:string,_args:unknown,_original:unknown,_phase:unknown,body:(context:unknown)=>unknown)=>body({selected:{graphPolicy:selected.policy},resolved:{args:selected.args},invocation}),machineOutputV1:{write:(text:string,callback?:(error?:Error)=>void)=>{packets.push(text);callback?.();}}};
+   const ports={load,process:{env:environment},profilePhaseV1:(_name:string,fn:()=>unknown)=>fn(),profileMarkV1:()=>{},markBuildCapacityPhaseV1:async()=>{},ensureTaskDependenciesV1:async()=>{preGraph.push("dependencies");},maintainTaskStoresV1:async()=>{preGraph.push("maintenance");},withRepositoryCommandEnvironmentV1:(_root:string,_args:unknown,_original:unknown,_phase:unknown,body:(context:unknown)=>unknown)=>body({selected:{graphPolicy:selected.explicit?selected.policy:undefined},resolved:{args:selected.args},invocation}),machineOutputV1:{write:(text:string,callback?:(error?:Error)=>void)=>{packets.push(text);callback?.();}}};
    const run=new Function(...Object.keys(ports),program+";return runOwnedBuildInLeasesV1")(...Object.values(ports));
    await run(dir,args,invocation,phase);
   }
   const empty=createMockHost(dir);
   await expect(query(empty)).rejects.toMatchObject({code:"GENERATION_NONE_SEALED"});
   expect(empty.events).toEqual(["shared"]);expect(empty.holdsLog).toEqual([]);expect(empty.log).toEqual([]);expect(packets).toEqual([]);
-  await loadGenerationGraphV1(createMockHost(dir).host);
-  const expected=pythonGraph(dir).projects[name],pointer=join(dir,".gen","current.json"),before=await Bun.file(pointer).text();
+  const producer=createMockHost(dir),discover=producer.host.discoverPart,targets=Object.fromEntries(queryCases.targets.map(name=>[name,{}]));
+  producer.host.discoverPart=async(...args)=>{
+   const part=await discover(...args);
+   return {...part,owners:part.owners.map(owner=>owner.node?{...owner,node:{...(owner.node as object),targets}}:owner)};
+  };
+  await loadGenerationGraphV1(producer.host);
+  const originalProject=pythonGraph(dir).projects[name],expected={...originalProject,targets},pointer=join(dir,".gen","current.json"),before=await Bun.file(pointer).text();
   await applyOps(dir,[{op:"write",path:"pkg/p2/src/index.ts",content:'import "@syn/p4";\nexport const changed=2;\n'}]);
-  expect(pythonGraph(dir).projects[name]).not.toEqual(expected);
+  expect(pythonGraph(dir).projects[name]).not.toEqual(originalProject);
   const current=createMockHost(dir);
   await query(current);
   expect(JSON.parse(packets.join(""))).toEqual(expected);
@@ -133,6 +160,48 @@ test("a current project query reads the sealed graph without selected facts cust
   await expect(query(broken)).rejects.toMatchObject({code:"closure-missing",missingClosure:key});
   expect(broken.events).toEqual(["shared"]);expect(broken.holdsLog).toEqual([]);expect(broken.log).toEqual([]);
   expect(await Bun.file(pointer).text()).toBe(before);expect(preGraph).toEqual([]);
+
+  using oracle=new Database(":memory:");
+  const route=oracle.query(`SELECT
+   $explicit AND NOT $pinned AND NOT $reuse AND ($command='show' OR NOT $verify) AS direct,
+   $command='show' AS lean`);
+  const expectedGraph=pythonGraph(dir);
+  const guardedGraph={...expectedGraph,projects:Object.fromEntries(Object.entries(expectedGraph.projects).map(([name,project])=>[name,{...(project as object),targets}]))};
+  for(const row of queryCases.cases){
+   const {args,environment,pinned}=row,explicit=(args.find(arg=>arg.startsWith("--graph-policy="))?.split("=")[1]??environment.SEMIO_BUILD_GRAPH_POLICY)==="current";
+   const read=route.get({$explicit:+explicit,$pinned:+pinned,$reuse:+(environment.SEMIO_BUILD_REUSE_GRAPH==="true"),$command:args[0]!, $verify:+(environment.SEMIO_BUILD_GRAPH_VERIFY==="1")}) as {direct:number;lean:number};
+   packets.length=0;preGraph.length=0;
+   const checked=createMockHost(dir);
+   await query(checked,args,environment,pinned,(graph,reuse)=>{
+    expect(graph?.sealedOnly,row.name).toBeUndefined();
+    expect(graph?.closure,row.name).toBeUndefined();
+    expect(Boolean(graph?.lean),row.name).toBe(Boolean(read.lean));
+    expect(reuse,row.name).toBe(environment.SEMIO_BUILD_REUSE_GRAPH==="true");
+    if(read.direct){
+     expect(graph?.policy,row.name).toBe("current");
+     return loadGenerationGraphV1(checked.host,graph).then(value=>value.graph);
+    }
+    return guardedGraph;
+   });
+   expect(preGraph,row.name).toEqual(read.direct?[]:["dependencies","store","maintenance"]);
+   const output=JSON.parse(packets.join(""));
+   if(args[1]==="projects")expect(output,row.name).toEqual(Object.keys(expectedGraph.projects).sort());
+   else if(args[1]==="targets")expect(output,row.name).toEqual(queryCases.targets);
+   else expect(Object.keys(output.projects).sort(),row.name).toEqual(Object.keys(expectedGraph.projects).sort());
+
+   if(read.direct){
+    const noSeal=scratch();
+    try{
+     await seed(noSeal,ringFiles(3));
+     const emptyWhole=createMockHost(noSeal);
+     Object.assign(emptyWhole.host,{wholeReadProgress:async()=>"Current whole-read progress from the runtime fixture."});
+     preGraph.length=0;
+     await expect(query(emptyWhole,args,environment,pinned)).rejects.toMatchObject({code:"GENERATION_NONE_SEALED",message:expect.stringContaining("Current whole-read progress from the runtime fixture.")});
+     expect(preGraph,row.name).toEqual([]);
+     expect(emptyWhole.events,row.name).toEqual(["shared"]);
+    }finally{clean(noSeal);}
+   }
+  }
  }finally{clean(dir);}
 });
 

@@ -17,6 +17,8 @@ import{checkResourceLeaseControl}from"../../../../../../../../../../../../🔨�
 import fixture from"../📦️physical.json";
 import schema from"../📦️schema.json";
 import{privateRepositoryWorkspaceV1}from"../../../../../../../../🧪️testing/🧫️private-repository/🟦️.ts";
+import {declareLibraryBuildTestEnvelopeV1} from "../../../../../../../../🧪️testing/🪪️native-birth/🟦️.ts";
+declareLibraryBuildTestEnvelopeV1({suite:"storage-opening-processes"});
 const repository=await privateRepositoryWorkspaceV1();
 
 test.skipIf(process.platform!=="darwin")("actual native rebudget retains two reader fences and checkpoint current identity",async()=>withBuildTestInvocationV1(original=>withRepositoryCacheStoreV1(repository.root,"diagnostics",original,createIssuedResourceControlV1(original,"cache:rebudget-fixture",0),async(host,hostPhase)=>withRequestedIssuedResourceControlV1(hostPhase,fixture.phaseMilliseconds,async control=>{

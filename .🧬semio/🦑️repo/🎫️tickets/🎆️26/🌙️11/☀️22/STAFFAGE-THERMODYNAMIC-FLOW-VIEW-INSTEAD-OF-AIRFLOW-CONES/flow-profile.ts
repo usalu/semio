@@ -1,0 +1,24 @@
+/** ⏱️ Profiles the parts of a developed flow solve of one asset: transport slices, the next frame without and with the flow field, and the marks. Usage: bun flow-profile.ts <category/slug> [pose] */
+import { readFileSync } from "node:fs";
+import { dirname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+const S = resolve(dirname(fileURLToPath(import.meta.url)), "../../../../../../../🎓️teaching/🏛️architecture/🧍️staffage");
+const transport = await import(join(S, "🔨️modules/💨️transport/🟦️.ts"));
+const asset = JSON.parse(readFileSync(join(S, "🗂️catalog", process.argv[2]!, "🔣️.json"), "utf8")).asset;
+const query = { kind: "pose", pose: process.argv[3] ?? asset.presentation.defaultPose };
+const env = asset.thermal.environment;
+const cpu = (): number => process.cpuUsage().user / 1000;
+const base = { maxAgeS: 16, pathlines: false, streamlines: false };
+let c = cpu();
+for (let t = 0.5; t <= 16; t += 0.5) transport.solveTransport(asset, { ...query, timeS: t }, env, base);
+console.log("develop cpu ms", (cpu() - c).toFixed(0));
+c = cpu();
+for (let i = 1; i <= 10; i++) transport.solveTransport(asset, { ...query, timeS: 16 + i / 30 }, env, base);
+console.log("10 frames no flow cpu ms", (cpu() - c).toFixed(0));
+c = cpu();
+let field;
+for (let i = 11; i <= 20; i++) field = transport.solveTransport(asset, { ...query, timeS: 16 + i / 30 }, env, { ...base, flow: true });
+console.log("10 frames with flow cpu ms", (cpu() - c).toFixed(0), "streams", field.flow.streams.length, "parcels", field.parcels.length);
+c = cpu();
+for (let i = 0; i < 100; i++) transport.flowMarks(field.flow, 16 + i / 30, transport.flowDetailOf(50));
+console.log("100 marks cpu ms", (cpu() - c).toFixed(0));

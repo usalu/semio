@@ -33,16 +33,22 @@ pub fn restore_gesture_selection(scene: &mut BoardSceneState, focus: &mut BoardF
 
 /// ↩️ Abandons a live node drag with zero trace: every member returns to its grab-time position, the
 /// press's staged selection is undone, and nothing reaches the document. The restored positions go out as
-/// transient `nodeMove` preview rows only, so sibling panes that mirrored the drag snap back too.
+/// transient preview rows only, so sibling panes that mirrored the drag snap back too.
 pub fn cancel_node_drag(scene: &mut BoardSceneState, focus: &mut BoardFocusState, outbox: &mut BoardOutboxState, start_positions: BTreeMap<String, (f64, f64)>, gesture: GestureStage) {
+    let individual_previews = outbox.events.reserve(start_positions.len(), 0).is_ok();
     for (id, (x, y)) in &start_positions {
         if let Some(node) = scene.nodes.get_mut(id) {
             node.x = *x;
             node.y = *y;
-            if let Ok(reservation) = BoardOwnedEvent::node_move(id, *x, *y).map_err(|_| ()).and_then(|event| outbox.events.reserve_event(event).map_err(|_| ())) {
-                outbox.publish_event_reservation(reservation);
+            if individual_previews {
+                if let Ok(event) = BoardOwnedEvent::node_move(id, *x, *y) {
+                    let _ = outbox.events.push(event);
+                }
             }
         }
+    }
+    if !individual_previews {
+        outbox.publish_transform_previews(start_positions.iter().filter_map(|(id, _)| scene.nodes.get(id).map(|node| (id.as_str(), node.x, node.y))));
     }
     restore_gesture_selection(scene, focus, gesture);
     scene.bump_content_scene_generation();

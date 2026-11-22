@@ -7051,26 +7051,23 @@
         "namedLayouts": [],
         "defaultLayout": {
           "root": {
-            "kind": "row",
+            "kind": "split",
+            "axis": "horizontal",
             "children": [
               {
-                "kind": "column",
+                "kind": "stack",
                 "size": 0.34,
                 "children": [
                   {
-                    "kind": "stack",
-                    "children": [
-                      {
-                        "kind": "window",
-                        "windowKindId": "sourcing-pool",
-                        "title": "Pool"
-                      }
-                    ]
+                    "kind": "window",
+                    "windowKindId": "sourcing-pool",
+                    "title": "Pool"
                   }
                 ]
               },
               {
-                "kind": "column",
+                "kind": "split",
+                "axis": "vertical",
                 "size": 0.33,
                 "children": [
                   {
@@ -7098,18 +7095,13 @@
                 ]
               },
               {
-                "kind": "column",
+                "kind": "stack",
                 "size": 0.33,
                 "children": [
                   {
-                    "kind": "stack",
-                    "children": [
-                      {
-                        "kind": "window",
-                        "windowKindId": "sourcing-grid",
-                        "title": "Grid"
-                      }
-                    ]
+                    "kind": "window",
+                    "windowKindId": "sourcing-grid",
+                    "title": "Grid"
                   }
                 ]
               }
@@ -8081,17 +8073,12 @@
         "namedLayouts": [],
         "defaultLayout": {
           "root": {
-            "kind": "row",
+            "kind": "stack",
             "children": [
               {
-                "kind": "stack",
-                "children": [
-                  {
-                    "kind": "window",
-                    "windowKindId": "framework.window.table",
-                    "title": "Pool"
-                  }
-                ]
+                "kind": "window",
+                "windowKindId": "framework.window.table",
+                "title": "Pool"
               }
             ]
           }

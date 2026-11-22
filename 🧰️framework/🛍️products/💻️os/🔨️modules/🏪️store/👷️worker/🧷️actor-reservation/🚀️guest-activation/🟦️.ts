@@ -93,6 +93,7 @@ export class ReservationGuestActivation {
               tag: "instance-open",
               val: {
                 instance: request.instanceId,
+                purpose: { tag: "ordinary" },
                 activationGeneration: request.activationGeneration,
                 requestSequence: BigInt(request.requestSequence),
                 appId: fields.surface.appId,

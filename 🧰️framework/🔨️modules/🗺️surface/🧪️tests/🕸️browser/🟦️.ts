@@ -9,6 +9,7 @@ import corpus from "../🧫️fixtures/🔌️ownership/🔣️.json";
 import overlayFixture from "../../🏔️terrain/🗺️overlay/🧪️tests/🧫️fixtures/🔣️.json";
 import overlaySchema from "../../🏔️terrain/🗺️overlay/🧬️schema/🔣️.json";
 import elevationGridFixture from "../../🏔️terrain/🧪️tests/🧫️fixtures/📦️elevation-grid/🔣️.json";
+import rectangularElevationGrid from "../../🏔️terrain/🧪️tests/🧫️fixtures/📐️rectangular-elevation-grid/🔣️.json";
 import terrainPickSchema from "../../🏔️terrain/🎯️pick/🧬️schema/🔣️.json";
 
 const files = new Map<string, string>(JSON.parse(process.env.SEMIO_SURFACE_WASM_PACKAGE ?? "[]"));
@@ -92,10 +93,10 @@ test("An embedded artifact elevation grid draws and drapes without tile uploads"
  try {
   session.set_project_origin(origin[0], origin[1]);
   session.set_exaggeration(exaggeration);
-  expect(session.set_elevation_grid_json(JSON.stringify({ bounds, rows: [[40]] }))).toBe(false);
-  const rows = Array.from({ length: samples.size }, (_, row) => Array.from({ length: samples.size }, (_, column) =>
-   samples.southwest + row * samples.northwardStep + column * samples.eastwardStep));
-  expect(session.set_elevation_grid_json(JSON.stringify({ bounds, rows }))).toBe(true);
+  expect(session.set_elevation_grid_json(JSON.stringify({ bounds, rowsMillimetres: [[40_000]] }))).toBe(false);
+  const rowsMillimetres = Array.from({ length: samples.size }, (_, row) => Array.from({ length: samples.size }, (_, column) =>
+   1_000 * (samples.southwest + row * samples.northwardStep + column * samples.eastwardStep)));
+  expect(session.set_elevation_grid_json(JSON.stringify({ bounds, rowsMillimetres }))).toBe(true);
   const [visible] = JSON.parse(session.visible_terrain_tiles_json("{}"));
   expect(JSON.parse(session.visible_terrain_tiles_json("{}"))).toHaveLength(1);
   const { z, x, y } = visible;
@@ -144,11 +145,11 @@ test("An embedded terrain pick agrees with Three.js on the rendered triangles", 
  try {
   session.set_project_origin(origin[0], origin[1]);
   session.set_exaggeration(exaggeration);
-  const rows = Array.from({ length: samples.size }, (_, row) => Array.from({ length: samples.size }, (_, column) =>
-   samples.southwest + row * samples.northwardStep + column * samples.eastwardStep));
+  const rowsMillimetres = Array.from({ length: samples.size }, (_, row) => Array.from({ length: samples.size }, (_, column) =>
+   1_000 * (samples.southwest + row * samples.northwardStep + column * samples.eastwardStep)));
   const raised = pick.raisedSample;
-  rows[raised.row]![raised.column]! += raised.meters;
-  expect(session.set_elevation_grid_json(JSON.stringify({ bounds: [west, south, east, north], rows }))).toBe(true);
+  rowsMillimetres[raised.row]![raised.column]! += 1_000 * raised.meters;
+  expect(session.set_elevation_grid_json(JSON.stringify({ bounds: [west, south, east, north], rowsMillimetres }))).toBe(true);
   const data = JSON.parse(session.terrain_tile_mesh_json(0, 0, 0));
   geometry.setAttribute("position", new Float32BufferAttribute(data.positions, 3));
   geometry.setIndex(data.indices);
@@ -175,6 +176,96 @@ test("An embedded terrain pick agrees with Three.js on the rendered triangles", 
  } finally {
   material.dispose();
   geometry.dispose();
+  session.free();
+ }
+});
+
+
+test("A fractional rectangular authored grid drapes and picks against the browser surface", async () => {
+ const { grid, origin, exaggeration, expected, overlays } = rectangularElevationGrid;
+ const module = await import(fileUrl(file("framework_surface.js")).href);
+ await module.default({ module_or_path: await WebAssembly.compile(readFileSync(file("framework_surface_bg.wasm"))) });
+ const session = new module.TerrainSession();
+ const geometry = new BufferGeometry();
+ const material = new MeshBasicMaterial({ side: DoubleSide });
+ try {
+  session.set_project_origin(origin[0], origin[1]);
+  session.set_exaggeration(exaggeration);
+  expect(session.set_elevation_grid_json(JSON.stringify(grid))).toBe(true);
+  const data = JSON.parse(session.terrain_tile_mesh_json(0, 0, 0));
+  expect(data.indices).toEqual(expected.indices);
+  expect(data.positions[2]).toBeCloseTo(expected.northwestHeight, 6);
+  expect(data.positions.at(-1)).toBeCloseTo(expected.southeastHeight, 6);
+  geometry.setAttribute("position", new Float32BufferAttribute(data.positions, 3));
+  geometry.setIndex(data.indices);
+  const mesh = new Mesh(geometry, material);
+  const ray = { origin: [0, 0, 20], direction: [0, 0, -1] };
+  const hit = JSON.parse(session.pickElevationGridJson(JSON.stringify(ray)));
+  expect(hit.sample).toEqual(expected.originSample);
+  expect(hit.position[2]).toBeCloseTo(expected.originHeight, 5);
+  expect(new Raycaster(new Vector3(0, 0, 20), new Vector3(0, 0, -1)).intersectObject(mesh)[0]!.point.z).toBeCloseTo(hit.position[2], 5);
+  const draped = JSON.parse(session.terrain_overlay_tile_json(0, 0, 0, JSON.stringify(overlays)));
+  expect(draped.positions[0].point[2]).toBeCloseTo(expected.originHeight, 5);
+  for (const path of [...draped.routes, ...draped.regions]) {
+   expect(path.segments.length).toBeGreaterThan(3);
+   for (const [a, b] of path.segments) {
+    const [x, y, z] = a.map((value: number, axis: number) => (value + b[axis]) / 2);
+    const oracle = new Raycaster(new Vector3(x, y, 20), new Vector3(0, 0, -1)).intersectObject(mesh)[0];
+    expect(oracle!.point.z).toBeCloseTo(z, 5);
+   }
+  }
+ } finally {
+  material.dispose();
+  geometry.dispose();
+  session.free();
+ }
+});
+
+test("NoData terrain keeps triangle gaps in the browser surface and Three raycaster", async () => {
+ const cases = (await import("../../🏔️terrain/🧪️tests/🧫️fixtures/🕳️nodata/🔣️.json")).default;
+ const module = await import(fileUrl(file("framework_surface.js")).href);
+ await module.default({ module_or_path: await WebAssembly.compile(readFileSync(file("framework_surface_bg.wasm"))) });
+ const session = new module.TerrainSession();
+ const geometry = new BufferGeometry();
+ const material = new MeshBasicMaterial({ side: DoubleSide });
+ try {
+  for (const entry of cases) {
+   const [west, , , north] = entry.source.bounds;
+   session.set_project_origin(west!, north!);
+   expect(session.set_elevation_grid_json(JSON.stringify(entry.source))).toBe(true);
+   const data = JSON.parse(session.terrain_tile_mesh_json(0, 0, 0));
+   expect(data.indices).toEqual(entry.facesNorthFirst.flat());
+   if (!data.indices.length) {
+    expect(data.positions).toEqual([]);
+    expect(JSON.parse(session.pickElevationGridJson(JSON.stringify({ origin: [0, 0, 10], direction: [0, 0, -1] })))).toBeNull();
+    continue;
+   }
+   geometry.setAttribute("position", new Float32BufferAttribute(data.positions, 3));
+   geometry.setIndex(data.indices);
+   const mesh = new Mesh(geometry, material);
+   const width = entry.source.rowsMillimetres[0]!.length;
+   const height = entry.source.rowsMillimetres.length;
+   for (const query of entry.surfaceQueriesNorthFirst ?? []) {
+    const [x, y] = query.xy;
+    const column = Math.min(Math.floor(x!), width - 2);
+    const row = Math.min(Math.floor(y!), height - 2);
+    const i = 3 * (row * width + column);
+    const [fx, fy] = [x! - column, y! - row];
+    const corner = (offset: number, axis: number) => data.positions[i + 3 * offset + axis];
+    const bilinear = (axis: number) => (1 - fy) * ((1 - fx) * corner(0, axis) + fx * corner(1, axis)) + fy * ((1 - fx) * corner(width, axis) + fx * corner(width + 1, axis));
+    const point = [Math.fround(bilinear(0)), Math.fround(bilinear(1)), 3_000_000] as const;
+    const hit = JSON.parse(session.pickElevationGridJson(JSON.stringify({ origin: point, direction: [0, 0, -1] })));
+    if (query.millimetres === null) {
+     expect(hit).toBeNull();
+     expect(new Raycaster(new Vector3(...point), new Vector3(0, 0, -1)).intersectObject(mesh)).toHaveLength(0);
+    } else {
+     expect(hit.position[2]).toBeCloseTo(query.millimetres / 1000, 2);
+    }
+   }
+  }
+ } finally {
+  geometry.dispose();
+  material.dispose();
   session.free();
  }
 });

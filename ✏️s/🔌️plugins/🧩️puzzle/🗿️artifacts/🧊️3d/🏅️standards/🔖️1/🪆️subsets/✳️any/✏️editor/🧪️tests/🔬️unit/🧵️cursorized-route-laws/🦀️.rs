@@ -54,12 +54,11 @@ fn suggestion_and_precompute_routes_are_cursorized(source: &str) -> bool {
     ]
     .into_iter()
     .all(|marker| source.contains(marker))
-        && !source.contains(r#""acceptSuggestion" => Box::new(crate::retained_command::BoundedFirstStepCommandWork"#)
-        && !source.contains(r#""cycleBrushCandidate" => Box::new(crate::retained_command::BoundedFirstStepCommandWork"#)
-        && !source.contains(r#""fillBuildTick" => Box::new(crate::retained_command::BoundedFirstStepCommandWork"#)
-        && !source.contains(r#""registerBrushMesh" => Box::new(crate::retained_command::BoundedFirstStepCommandWork"#)
-        && !source.contains(r#""setFillCount" => Box::new(crate::retained_command::BoundedFirstStepCommandWork"#)
-        && !source.contains(r#""targetBrushSuggestions" => Box::new(crate::retained_command::BoundedFirstStepCommandWork"#)
+        && !routes_to_one_grant_reducer(source, "acceptSuggestion")
+        && !routes_to_one_grant_reducer(source, "cycleBrushCandidate")
+        && !routes_to_one_grant_reducer(source, "registerBrushMesh")
+        && !routes_to_one_grant_reducer(source, "setFillCount")
+        && !routes_to_one_grant_reducer(source, "targetBrushSuggestions")
 }
 
 #[test]
@@ -68,10 +67,10 @@ fn suggestion_and_precompute_hostile_static_law_rejects_one_grant_reducers_and_m
     assert!(suggestion_and_precompute_routes_are_cursorized(source));
     let direct_accept = source.replace(
         r#""acceptSuggestion" => owned!(Puzzle3dAcceptSuggestionWork, |request, scope| Puzzle3dAcceptSuggestionWork::from_original_construction(scope).map(|(work, progress)| (work.bound(Puzzle3dInstanceBinding { app_instance_id: request.app_instance_id, parent_document_id: String::new(), owner: request.instance_operation_owner.clone() }), progress)))"#,
-        r#""acceptSuggestion" => work!(|request| crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle3d_retained_reduce, puzzle3d_retained_extent))"#,
+        r#""acceptSuggestion" => work!(|request| semio_s_plugin_puzzle_retained::BoundedFirstStepCommandWork::new(tool_id, semio_s_artifact_puzzle_3d_retained_action::puzzle3d_retained_reduce::<Self>, semio_s_artifact_puzzle_3d_retained_action::puzzle3d_retained_extent))"#,
     );
     assert!(!suggestion_and_precompute_routes_are_cursorized(&direct_accept));
-    let direct_precompute = source.replace("=> bound!(|request, instance| Puzzle3dPrecomputeCommandWork::new(tool_id).bound(instance))", "=> work!(|request| crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle3d_retained_reduce, puzzle3d_retained_extent))");
+    let direct_precompute = source.replace("=> bound!(|request, instance| Puzzle3dPrecomputeCommandWork::new(tool_id).bound(instance))", "=> work!(|request| semio_s_plugin_puzzle_retained::BoundedFirstStepCommandWork::new(tool_id, semio_s_artifact_puzzle_3d_retained_action::puzzle3d_retained_reduce::<Self>, semio_s_artifact_puzzle_3d_retained_action::puzzle3d_retained_extent))");
     assert!(!suggestion_and_precompute_routes_are_cursorized(&direct_precompute));
     for marker in [
         "Puzzle3dAcceptSuggestionStage::Target",
@@ -100,8 +99,8 @@ fn selection_transforms_run_the_transform_tool(source: &str) -> bool {
         && source.contains("Puzzle3dRelocateScan::begin(document")
         && source.contains("Puzzle3dTransformStage::Commit")
         && source.contains("puzzle3d_transform_tool_commit(self.tool_id")
-        && !source.contains(r#""translateSelection" => Box::new(crate::retained_command::BoundedFirstStepCommandWork"#)
-        && !source.contains(r#""worldRelocate" => Box::new(crate::retained_command::BoundedFirstStepCommandWork"#)
+        && !routes_to_one_grant_reducer(source, "translateSelection")
+        && !routes_to_one_grant_reducer(source, "worldRelocate")
 }
 
 /// 🛠️ Every selection transform — the three gumball verbs, the target-volume relocate and the Relocate
@@ -113,7 +112,7 @@ fn selection_transform_hostile_static_law_rejects_one_grant_reducers_and_bypasse
     assert!(selection_transforms_run_the_transform_tool(source));
     let direct = source.replace(
         r#""translateSelection" | "rotateSelection" | "scaleSelection" | "worldRelocate" | "relocateTargetVolume" => seed!(|request, seed| Puzzle3dTransformWork::new(tool_id, seed))"#,
-        r#""translateSelection" | "rotateSelection" | "scaleSelection" | "worldRelocate" | "relocateTargetVolume" => work!(|request| crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle3d_retained_reduce, puzzle3d_retained_extent))"#,
+        r#""translateSelection" | "rotateSelection" | "scaleSelection" | "worldRelocate" | "relocateTargetVolume" => work!(|request| semio_s_plugin_puzzle_retained::BoundedFirstStepCommandWork::new(tool_id, semio_s_artifact_puzzle_3d_retained_action::puzzle3d_retained_reduce::<Self>, semio_s_artifact_puzzle_3d_retained_action::puzzle3d_retained_extent))"#,
     );
     assert!(!selection_transforms_run_the_transform_tool(&direct), "hostile old-reducer replacement must fail closed");
     for marker in ["Puzzle3dTransformStage::Read", "Puzzle3dTransformStage::Scan", "Puzzle3dRelocateScan::begin(document", "Puzzle3dTransformStage::Commit", "puzzle3d_transform_tool_commit(self.tool_id"] {
@@ -127,7 +126,7 @@ fn focus_selection_is_cursorized(source: &str) -> bool {
         && source.contains("Puzzle3dFocusSelectionStage::SumObjects")
         && source.contains("Puzzle3dFocusSelectionStage::DistanceObjects")
         && source.contains("Puzzle3dFocusSelectionStage::Publish")
-        && !source.contains(r#""focusSelection" => Box::new(crate::retained_command::BoundedFirstStepCommandWork"#)
+        && !routes_to_one_grant_reducer(source, "focusSelection")
 }
 
 #[test]
@@ -135,7 +134,7 @@ fn focus_selection_hostile_static_law_rejects_hidden_whole_collection_work() {
     let source: &str = &editor_source();
     assert!(focus_selection_is_cursorized(source));
     let direct = source
-        .replace(r#""focusSelection" => work!(|request| Puzzle3dFocusSelectionWork::default())"#, r#""focusSelection" => work!(|request| crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle3d_retained_reduce, puzzle3d_retained_extent))"#);
+        .replace(r#""focusSelection" => work!(|request| Puzzle3dFocusSelectionWork::default())"#, r#""focusSelection" => work!(|request| semio_s_plugin_puzzle_retained::BoundedFirstStepCommandWork::new(tool_id, semio_s_artifact_puzzle_3d_retained_action::puzzle3d_retained_reduce::<Self>, semio_s_artifact_puzzle_3d_retained_action::puzzle3d_retained_extent))"#);
     assert!(!focus_selection_is_cursorized(&direct));
     for marker in ["Puzzle3dFocusSelectionStage::Selection", "Puzzle3dFocusSelectionStage::SumObjects", "Puzzle3dFocusSelectionStage::DistanceObjects", "Puzzle3dFocusSelectionStage::Publish"] {
         assert!(!focus_selection_is_cursorized(&source.replace(marker, "cursor-removed")), "missing focus cursor was falsely accepted: {marker}");
@@ -151,7 +150,7 @@ fn patch_inspector_is_cursorized(source: &str) -> bool {
         && source.contains("Puzzle3dPatchInspectorStage::AttractionReconnect")
         && source.contains("Puzzle3dPatchInspectorStage::References")
         && source.contains("Puzzle3dPatchInspectorStage::Volumes")
-        && !source.contains(r#""patchInspector" => Box::new(crate::retained_command::BoundedFirstStepCommandWork"#)
+        && !routes_to_one_grant_reducer(source, "patchInspector")
 }
 
 #[test]
@@ -159,7 +158,7 @@ fn patch_inspector_hostile_static_law_rejects_old_reducer_and_hidden_collection_
     let source: &str = &editor_source();
     assert!(patch_inspector_is_cursorized(source));
     let direct = source
-        .replace(r#""patchInspector" => owned!(Puzzle3dPatchInspectorWork, |request, scope| Puzzle3dPatchInspectorWork::from_original_construction(scope))"#, r#""patchInspector" => work!(|request| crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle3d_retained_reduce, puzzle3d_retained_extent))"#);
+        .replace(r#""patchInspector" => owned!(Puzzle3dPatchInspectorWork, |request, scope| Puzzle3dPatchInspectorWork::from_original_construction(scope))"#, r#""patchInspector" => work!(|request| semio_s_plugin_puzzle_retained::BoundedFirstStepCommandWork::new(tool_id, semio_s_artifact_puzzle_3d_retained_action::puzzle3d_retained_reduce::<Self>, semio_s_artifact_puzzle_3d_retained_action::puzzle3d_retained_extent))"#);
     assert!(!patch_inspector_is_cursorized(&direct));
     for marker in [
         "Puzzle3dPatchInspectorStage::Selection",
@@ -181,7 +180,7 @@ fn create_attraction_is_cursorized(source: &str) -> bool {
         && source.contains("Puzzle3dCreateAttractionStage::Attracted")
         && source.contains("Puzzle3dCreateAttractionStage::Compatibility")
         && source.contains("Puzzle3dCreateAttractionStage::Publish")
-        && !source.contains(r#""createAttraction" => Box::new(crate::retained_command::BoundedFirstStepCommandWork"#)
+        && !routes_to_one_grant_reducer(source, "createAttraction")
 }
 
 #[test]
@@ -190,7 +189,7 @@ fn create_attraction_hostile_static_law_rejects_nested_whole_scans() {
     assert!(create_attraction_is_cursorized(source));
     let direct = source.replace(
         r#""createAttraction" => work!(|request| Puzzle3dCreateAttractionWork::default())"#,
-        r#""createAttraction" => work!(|request| crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle3d_retained_reduce, puzzle3d_retained_extent))"#,
+        r#""createAttraction" => work!(|request| semio_s_plugin_puzzle_retained::BoundedFirstStepCommandWork::new(tool_id, semio_s_artifact_puzzle_3d_retained_action::puzzle3d_retained_reduce::<Self>, semio_s_artifact_puzzle_3d_retained_action::puzzle3d_retained_extent))"#,
     );
     assert!(!create_attraction_is_cursorized(&direct));
     for marker in ["Puzzle3dCreateAttractionStage::Existing", "Puzzle3dCreateAttractionStage::Attracting", "Puzzle3dCreateAttractionStage::Attracted", "Puzzle3dCreateAttractionStage::Compatibility", "Puzzle3dCreateAttractionStage::Publish"] {
@@ -211,7 +210,7 @@ fn set_active_example_is_cursorized(source: &str) -> bool {
         && source.contains("Puzzle3dSetActiveExampleStage::CreateReferences")
         && source.contains("Puzzle3dSetActiveExampleStage::CreateCompatibility")
         && source.contains("Puzzle3dSetActiveExampleStage::Publish")
-        && !source.contains(r#""setActiveExample" => Box::new(crate::retained_command::BoundedFirstStepCommandWork"#)
+        && !routes_to_one_grant_reducer(source, "setActiveExample")
 }
 
 #[test]
@@ -220,7 +219,7 @@ fn set_active_example_hostile_static_law_rejects_whole_document_reset() {
     assert!(set_active_example_is_cursorized(source));
     let direct = source.replace(
         r#""setActiveExample" => owned!(Puzzle3dSetActiveExampleWork, |request, scope| Puzzle3dSetActiveExampleWork::from_original_construction(scope))"#,
-        r#""setActiveExample" => work!(|request| crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle3d_retained_reduce, puzzle3d_retained_extent))"#,
+        r#""setActiveExample" => work!(|request| semio_s_plugin_puzzle_retained::BoundedFirstStepCommandWork::new(tool_id, semio_s_artifact_puzzle_3d_retained_action::puzzle3d_retained_reduce::<Self>, semio_s_artifact_puzzle_3d_retained_action::puzzle3d_retained_extent))"#,
     );
     assert!(!set_active_example_is_cursorized(&direct));
     for marker in [

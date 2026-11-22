@@ -1,0 +1,22 @@
+{
+  "title": "Staffage Thermodynamic Flow View Instead of Airflow Cones",
+  "emoji": "💨",
+  "status": "open",
+  "description": "staffage: the airflow preview is currently extremely undersophisticated by showing cones, etc. Show proper thermodynamic view (different depending on the humidity and temperature with proper streams, particles and flow directions, etc). Replace the cone-style airflow preview of the staffage product with a physically grounded thermodynamic flow view end to end: streamlines and advected particles from the computed transport field, moisture, condensation, in 2D views, 3D stage and exports, with oracle-checked tests.",
+  "goal": "animate",
+  "sessions": [
+    "b5605501-eee7-47f2-8699-50620e83779b"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-22 13:03:13",
+      "author": "",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "staffage: the airflow preview is currently extremely undersophisticated by showing cones, etc. Show proper thermodynamic view (different depending on the humidity and temperature with proper streams, particles and flow directions, etc). Replace the cone-style airflow preview of the staffage product with a physically grounded thermodynamic flow view end to end: streamlines and advected particles from the computed transport field, moisture, condensation, in 2D views, 3D stage and exports, with oracle-checked tests.",
+      "llm": "fable-5-2"
+    }
+  ]
+}

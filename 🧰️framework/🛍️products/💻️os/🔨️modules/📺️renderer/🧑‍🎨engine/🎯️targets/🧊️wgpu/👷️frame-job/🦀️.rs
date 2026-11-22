@@ -2,6 +2,8 @@
 //!
 //! 🧭️ The files WP3 staged for this crate (`wp3-tools/crate-map.json`) are mounted here from their place in the renderer tree; the renderer root re-exports this crate.
 
+#![recursion_limit = "256"]
+
 use semio_renderer_wgpu_app_runtime::{AppFramePreparation, AppFramePresentation, AppHandle, AppMailbox, FramePreparationStep, frame_child_step, frame_inline_gate, frame_inline_progress, frame_receive_close, frame_received_child, frame_worker_child_step};
 use semio_renderer_wgpu_frame_actions::{FrameBuildInputs, FrameDirectives};
 use semio_renderer_wgpu_frame_transaction::{AppFrameTransactionStep, FrameTransaction};

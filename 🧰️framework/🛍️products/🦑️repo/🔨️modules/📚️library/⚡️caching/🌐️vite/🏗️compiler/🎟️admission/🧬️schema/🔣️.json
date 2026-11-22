@@ -1,0 +1,12 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Vite Service Compiler Policy",
+  "description": "Selects exact one-core compiler admission for private projected services with no Vite dependency optimization, transform warmup, or watcher-driven restart.",
+  "type": "string",
+  "const": "projected-no-optimizer",
+  "definitions": {
+    "parallelism": {
+      "const": 1
+    }
+  }
+}

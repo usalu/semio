@@ -3,14 +3,18 @@ import {link,mkdir,open,readdir,readFile,rename,rm,stat,unlink,utimes,writeFile}
 import {join} from "node:path";
 import {requireRemoteCacheShapeV1} from "../🟦️.ts";
 import type {CasStoreV1} from "../../🗄️cas/🗃️store/🟦️.ts";
-import {liveRemoteCacheReferencesV1,planRemoteCacheCollectionV1,removeRemoteCacheEntryV1,scanRemoteCacheDirectoryV1,type RemoteCacheStepV1} from "../🧹️collector/🟦️.ts";
+import {acquireRemoteCacheLockV1,liveRemoteCacheReferencesV1,planRemoteCacheCollectionV1,REMOTE_CACHE_COLLECTOR_LOCK_V1,removeRemoteCacheEntryV1,scanRemoteCacheDirectoryV1,type RemoteCacheStepV1} from "../🧹️collector/🟦️.ts";
 import {parseRemoteCacheActionResultV1} from "../🔬️action-result/🟦️.ts";
 import {readRemoteCacheReferencesV1,removeRemoteCacheMetaV1,scanRemoteCacheMetaV1,writeRemoteCacheMetaV1,type RemoteCacheMetaV1} from "../🏷️retention/🟦️.ts";
 import {classifySlotsV1,SLOT_GRACE_MILLISECONDS_V1} from "../../🪢️slots/🟦️.ts";
 import {reclaimCasObjectsV1} from "../../🗄️cas/🪦️reclaim/🟦️.ts";
+import {remoteCacheFileBudgetOfMachineV1,remoteCacheWidthV1} from "../📏️fd-budget/🟦️.ts";
 
-/** 🗂️ Names the three keyspaces one store partitions: Bazel action results, Bazel content blobs and Nx task archives. */
-export type RemoteCacheKindV1="ac"|"cas"|"nx";
+/** 🗂️ Names the three keyspaces one store partitions: Bazel action results, Bazel content blobs and Nx task archives; the only place that spells them, so every other module reads them from here. */
+export const REMOTE_CACHE_KINDS_V1={ac:"ac",cas:"cas",nx:"nx"} as const;
+
+/** 🧺️ One keyspace name of {@link REMOTE_CACHE_KINDS_V1}. */
+export type RemoteCacheKindV1=typeof REMOTE_CACHE_KINDS_V1[keyof typeof REMOTE_CACHE_KINDS_V1];
 
 /** 📮️ Reports why one write ended: stored, replaced an older value, found an equal or protected value, or was refused. */
 export type RemoteCachePutOutcomeV1="created"|"replaced"|"exists"|"digest-mismatch"|"length-mismatch"|"too-large"|"capacity"|"aborted";
@@ -19,7 +23,7 @@ export type RemoteCachePutOutcomeV1="created"|"replaced"|"exists"|"digest-mismat
 export type RemoteCacheStoreEventV1=Readonly<{stage:"scan";entries:number;bytes:number}>|Readonly<{stage:"evict";entries:number;bytes:number}>|Readonly<{stage:"reclaim";entries:number;bytes:number}>|Readonly<{stage:"ready";entries:number;bytes:number}>;
 
 /** 🧱️ Authors the finite bounds of one store: total bytes, bytes per entry and the idle age after which an entry without a slot is dropped (0 keeps entries until space is needed), the supersession grace in milliseconds (default ten minutes), the predicate of entries an active claim holds and a hook that tests use to simulate a crash between the steps of a removal. */
-export type RemoteCacheStoreOptionsV1=Readonly<{directory:string;maximumBytes:number;maximumEntryBytes:number;maximumAgeMilliseconds:number;host?:CasStoreV1;graceMilliseconds?:number;claimed?:(namespace:string,kind:RemoteCacheKindV1,key:string)=>boolean;onStep?:(point:RemoteCacheStepV1)=>void;signal?:AbortSignal;onEvent?:(event:RemoteCacheStoreEventV1)=>void}>;
+export type RemoteCacheStoreOptionsV1=Readonly<{fileBudget?:number;scanRetryMilliseconds?:number;writeBudgetMilliseconds?:number;directory:string;startupScan?:"await"|"background";maximumBytes:number;maximumEntryBytes:number;maximumAgeMilliseconds:number;host?:CasStoreV1;pinBudgetBytes?():number|undefined;graceMilliseconds?:number;claimed?:(namespace:string,kind:RemoteCacheKindV1,key:string)=>boolean;onStep?:(point:RemoteCacheStepV1)=>void;signal?:AbortSignal;onEvent?:(event:RemoteCacheStoreEventV1)=>void}>;
 
 /** 📏️ Describes the current fill of one store. */
 export type RemoteCacheStoreUsageV1=Readonly<{entries:number;bytes:number;reservedBytes:number;maximumBytes:number;maximumEntryBytes:number;slotted:number;evictedEntries:number;evictedBytes:number}>;
@@ -71,7 +75,9 @@ export class RemoteCacheStoreV1{
   await mkdir(store.root,{recursive:true});await mkdir(join(store.root,".tmp"),{recursive:true});
   for(const name of await readdir(join(store.root,".tmp")))if(!alive(Number.parseInt(name,10)))await rm(join(store.root,".tmp",name),{recursive:true,force:true});
   await mkdir(store.temporary,{recursive:true});
-  await store.refresh();options.onEvent?.({stage:"ready",entries:store.index.size,bytes:store.bytes});return store;
+  const scanned=store.exclusively(()=>store.refresh(options.startupScan==="background"?4:32)).then(()=>{options.onEvent?.({stage:"ready",entries:store.index.size,bytes:store.bytes});});
+  if(options.startupScan==="background")void scanned.catch(()=>undefined);else await scanned;
+  return store;
  }
 
  /** 📁️ The versioned root below the store directory. */
@@ -83,7 +89,7 @@ export class RemoteCacheStoreV1{
  private tick():number{return this.clock=Math.max(Date.now(),this.clock+1);}
 
 
- private referenced(namespace:string,kind:RemoteCacheKindV1):boolean{return kind==="nx"&&this.options.host!==undefined;}
+ private referenced(namespace:string,kind:RemoteCacheKindV1):boolean{return kind===REMOTE_CACHE_KINDS_V1.nx&&this.options.host!==undefined;}
  private async reference(relative:string):Promise<string|undefined>{
   const path=this.path(relative);let text;try{text=await readFile(path,"utf8");}catch{return undefined;}
   try{const row=JSON.parse(text) as {hash?:unknown};if(typeof row.hash==="string"&&/^[0-9a-f]{64}$/u.test(row.hash))return row.hash;}catch{}
@@ -100,11 +106,26 @@ export class RemoteCacheStoreV1{
  }
 
  /** 🔄️ Rebuilds the index from the files on disk, so values collected or removed by another process stop counting, then collects what exceeds the bounds. */
- async refresh():Promise<void>{
-  const found=await scanRemoteCacheDirectoryV1(this.root,{...this.options.signal?{signal:this.options.signal}:{},onProgress:(_stage,entries,bytes)=>this.options.onEvent?.({stage:"scan",entries,bytes})});
+ /** 🔒️ Runs a full scan only while no other process of this directory scans (the successor of a handover and the process it replaces never scan at the same time): the collector lock is the turn, taken again every `scanRetryMilliseconds` until it is free. */
+ async exclusively(work:()=>Promise<void>):Promise<void>{
+  for(;;){
+   this.checkpoint();
+   const lock=await acquireRemoteCacheLockV1(this.root,REMOTE_CACHE_COLLECTOR_LOCK_V1);
+   if(!lock.held){try{await work();}finally{await lock.release();}return;}
+   await new Promise<void>(done=>{const wait=setTimeout(done,this.options.scanRetryMilliseconds??2000);wait.unref();});
+  }
+ }
+
+ async refresh(requested:number=4):Promise<void>{
+  const width=remoteCacheWidthV1(requested,this.options.fileBudget??remoteCacheFileBudgetOfMachineV1());
+  const began=Date.now(),found=await scanRemoteCacheDirectoryV1(this.root,{concurrency:width,...this.options.signal?{signal:this.options.signal}:{},onProgress:(_stage,entries,bytes)=>this.options.onEvent?.({stage:"scan",entries,bytes})});
+  const metas=await scanRemoteCacheMetaV1(this.root,{has:(relative:string)=>found.has(relative)||this.index.has(relative)},this.options.signal,width);
+  const touched=[...this.index].filter(([,row])=>row.accessed>=began),stored=[...this.slots].filter(([,meta])=>meta.storedAt>=began);
   this.index.clear();this.slots.clear();this.bytes=0;
-  for(const[relative,row]of found){this.index.set(relative,row);this.clock=Math.max(this.clock,row.accessed);this.bytes+=row.size;}
-  for(const[relative,meta]of await scanRemoteCacheMetaV1(this.root,found,this.options.signal)){this.slots.set(relative,meta);this.storedClock=Math.max(this.storedClock,meta.storedAt);}
+  for(const[relative,row]of found)this.index.set(relative,row);
+  for(const[relative,row]of touched)this.index.set(relative,row);
+  for(const row of this.index.values()){this.clock=Math.max(this.clock,row.accessed);this.bytes+=row.size;}
+  for(const[relative,meta]of [...metas,...stored]){this.slots.set(relative,meta);this.storedClock=Math.max(this.storedClock,meta.storedAt);}
   await this.collect();
  }
 
@@ -193,11 +214,19 @@ export class RemoteCacheStoreV1{
   this.collecting=this.collecting.then(run,run);return this.collecting;
  }
 
- /** 📌️ Pins the blobs of the synchronized state (every slotted entry that is current or still within its grace) in the host store under this process's holder, so the host store's own eviction by age, cap or partition pressure, which knows no entries, cannot take a blob a live entry needs; the pin lives one hour at most and is renewed by every collection (the maintenance timer), and a dead process loses it at once. Answers the number of pinned blobs. */
+ /** 📌️ Pins the blobs of the synchronized state (the newest slotted entries that are current or still within their grace, until `pinBudgetBytes` of blobs are pinned: the older ones stay unpinned, so the host store's own eviction can take them before the partition is ever critical and the entry then misses) in the host store under this process's holder, so the host store's own eviction by age, cap or partition pressure, which knows no entries, cannot take a blob a live entry needs; the pin lives one hour at most and is renewed by every collection (the maintenance timer), and a dead process loses it at once. Answers the number of pinned blobs. */
  async pinLive():Promise<number>{
   const host=this.options.host;if(!host)return 0;
   const verdicts=classifySlotsV1([...this.slots].map(([key,meta])=>({key,slot:meta.slot,storedAt:meta.storedAt,accessed:0,size:0})),{now:Date.now(),graceMilliseconds:this.grace}),hashes=new Set<string>();
-  for(const[key,meta]of this.slots){const state=verdicts.get(key)?.state;if(state==="current"||state==="retained")for(const hash of meta.refs)hashes.add(hash);}
+  const budget=this.options.pinBudgetBytes?.(),live=[...this.slots].filter(([key])=>{const state=verdicts.get(key)?.state;return state==="current"||state==="retained";}).sort((left,right)=>right[1].storedAt-left[1].storedAt);
+  let pinned=0;
+  for(const[,meta]of live){
+   if(budget!==undefined&&pinned>=budget)break;
+   for(const hash of meta.refs){
+    if(hashes.has(hash))continue;hashes.add(hash);
+    if(budget!==undefined)pinned+=await stat(host.objectPath(hash)).then(info=>info.size,()=>0);
+   }
+  }
   await host.pin(`remote-cache-live-${process.pid}`,[...hashes],3600000);return hashes.size;
  }
 
@@ -234,18 +263,23 @@ export class RemoteCacheStoreV1{
   }finally{if(slotted)this.inflight.delete(relative);}
  }
 
+ private writeSignal():AbortSignal{return AbortSignal.any([...this.options.signal===undefined?[]:[this.options.signal],AbortSignal.timeout(this.options.writeBudgetMilliseconds??10000)]);}
  private async store(namespace:string,kind:RemoteCacheKindV1,key:string,body:AsyncIterable<Uint8Array>|null,input:Readonly<{mode:RemoteCachePutModeV1;verify?:boolean;declaredLength?:number|undefined}>,relative:string):Promise<RemoteCachePutOutcomeV1>{
   const declared=input.declaredLength;
   if(kind==="cas"&&this.options.host){
    if(declared!==undefined&&declared>this.options.maximumEntryBytes)return "too-large";
-   const result=await this.options.host.putChecked(body??[],{hash:key,maxBytes:this.options.maximumEntryBytes,...(declared===undefined?{}:{size:declared})},this.options.signal);
+   let result;
+   try{result=await this.options.host.putChecked(body??[],{hash:key,maxBytes:this.options.maximumEntryBytes,...(declared===undefined?{}:{size:declared})},this.writeSignal());}
+   catch(error){if(this.options.signal?.aborted)throw error;return "capacity";}
    return result.outcome==="exists"?"exists":result.outcome;
   }
   if(this.referenced(namespace,kind)){
    const known=input.mode!=="replace"&&await this.has(namespace,kind,key);
    if(known)return "exists";
    if(declared!==undefined&&declared>this.options.maximumEntryBytes)return "too-large";
-   const result=await this.options.host!.putChecked(body??[],{maxBytes:this.options.maximumEntryBytes,...(declared===undefined?{}:{size:declared})},this.options.signal);
+   let result;
+   try{result=await this.options.host!.putChecked(body??[],{maxBytes:this.options.maximumEntryBytes,...(declared===undefined?{}:{size:declared})},this.writeSignal());}
+   catch(error){if(this.options.signal?.aborted)throw error;return "capacity";}
    if(!result.digest)return result.outcome as RemoteCachePutOutcomeV1;
    const target=this.path(relative),temporary=join(this.temporary,randomUUID());
    await mkdir(this.path(`${namespace}/${kind}/${key.slice(0,2)}`),{recursive:true});

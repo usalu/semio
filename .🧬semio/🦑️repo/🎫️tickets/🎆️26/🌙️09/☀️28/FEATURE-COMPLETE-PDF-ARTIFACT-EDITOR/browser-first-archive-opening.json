@@ -1,0 +1,98 @@
+[
+  {
+    "name": "ordinary",
+    "mode": "ordinary",
+    "fault": "none",
+    "expected": [
+      "identity",
+      "archive",
+      "persist",
+      "attach",
+      "record",
+      "publish"
+    ]
+  },
+  {
+    "name": "first",
+    "mode": "first",
+    "fault": "none",
+    "expected": [
+      "identity",
+      "persist",
+      "attach",
+      "record",
+      "publish"
+    ]
+  },
+  {
+    "name": "missing document",
+    "mode": "first",
+    "fault": "identity",
+    "expected": [
+      "identity"
+    ]
+  },
+  {
+    "name": "missing data folder",
+    "mode": "first",
+    "fault": "folder",
+    "expected": [
+      "identity"
+    ]
+  },
+  {
+    "name": "persist refused",
+    "mode": "first",
+    "fault": "persist",
+    "expected": [
+      "identity",
+      "persist"
+    ]
+  },
+  {
+    "name": "cancel after persistence",
+    "mode": "first",
+    "fault": "cancel",
+    "expected": [
+      "identity",
+      "persist"
+    ]
+  },
+  {
+    "name": "attachment refused",
+    "mode": "first",
+    "fault": "attach",
+    "expected": [
+      "identity",
+      "persist",
+      "attach"
+    ]
+  },
+  {
+    "name": "catalog retry cleanup",
+    "mode": "first",
+    "fault": "catalog",
+    "expected": [
+      "identity",
+      "persist",
+      "attach",
+      "record",
+      "close",
+      "unlist"
+    ]
+  },
+  {
+    "name": "panel unavailable",
+    "mode": "first",
+    "fault": "panel",
+    "expected": [
+      "identity",
+      "persist",
+      "attach",
+      "record",
+      "publish",
+      "close",
+      "unlist"
+    ]
+  }
+]

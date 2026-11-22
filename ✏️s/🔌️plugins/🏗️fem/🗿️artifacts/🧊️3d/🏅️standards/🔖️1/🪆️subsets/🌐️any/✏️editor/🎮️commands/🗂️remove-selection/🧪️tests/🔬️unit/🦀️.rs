@@ -6,7 +6,10 @@ use protocol::{ColdMutation, Mutation};
 use semio_os_command::SemanticMutation;
 
 use semio_framework_value::DslValue;
-use semio_framework_value_derive::FromValue;
+use semio_framework_value::FromValue;
+use semio_plugin::ConfigView;
+use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::remove_selection::{handle, RemoveSelection};
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::{fem3d_entity_target, FEM3D_GRANULARITY_NODE, FEM3D_GRANULARITY_SOLID};
 #[cfg(test)] use semio_plugin::component::ArtifactView;
 #[cfg(test)] use semio_plugin::component::NoConfig;
 #[cfg(test)] use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
@@ -68,7 +71,7 @@ fn selected_loads_remove_once_without_removing_their_case_or_geometry() {
 async fn remove_selection_covers_solids_3d() {
     let mut app = fem3d_empty_app().await;
     dispatch(&mut app, Fem3dCommand::AddMaterial(semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::add_material::AddMaterial { name: "Concrete".into(), e: 3.0e10, g: 1.25e10 })).await;
-    let material_id = app.snapshot().expect("snapshot").materials[0].id.clone();
+    let material_id = app.snapshot().expect("snapshot").materials[0].id.to_string();
     dispatch(&mut app, Fem3dCommand::AddSolid(semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::add_solid::AddSolid { x: 0.0, y: 0.0, width: 1.0, depth: 1.0, height: 1.0, material_id, base_z: None, layers: None, mesh_size: None, axis: None })).await;
     let solid_id = app.snapshot().expect("snapshot").solids[0].id.clone();
     dispatch(&mut app, Fem3dCommand::RemoveSelection(RemoveSelection { ids: vec![fem3d_entity_target(FEM3D_GRANULARITY_SOLID, &solid_id).unwrap()] })).await;

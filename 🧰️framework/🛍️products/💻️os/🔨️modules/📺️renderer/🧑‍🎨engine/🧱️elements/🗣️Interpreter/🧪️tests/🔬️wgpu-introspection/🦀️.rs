@@ -31,19 +31,6 @@ fn path_segments_use_kind_index_and_declared_id() {
 }
 
 #[test]
-fn card_path_segments_use_the_declared_wire_tag_and_id() {
-    let stack = serde_json::json!({"type":"cardStack","id":"deck","children":[]});
-    let card = serde_json::json!({"type":"overviewCard","id":"summary","title":"Summary","children":[]});
-    for (index, wire) in [stack, card].into_iter().enumerate() {
-        let node: UiNode = serde_json::from_value(wire.clone()).expect("declared card wire format");
-        let kind = wire["type"].as_str().unwrap();
-        let id = wire["id"].as_str().unwrap();
-        assert_eq!(ui_node_kind_tag(&node), kind);
-        assert_eq!(ui_node_path_segment(&node, index), format!("{kind}[{index}]#{id}"));
-    }
-}
-
-#[test]
 fn walk_dump_accumulates_absolute_rects_and_builds_full_paths() {
     let mut tree = semio_ui_retained_tree::tree::UiTree::new();
     let root_id = tree.insert_child(None, Node::new(NodeKey::Explicit("root".into()), WidgetSpec(stack_node(Some("root"), vec![]))));
@@ -155,7 +142,10 @@ fn mesh_stats_publish_one_row_per_published_mesh_with_its_role_and_bounds() {
         {"id": "eval-axis@vector#0", "data": {"positions": [0.0, 0.0, 0.0], "indices": [], "edgePositions": []}}
     ])
     .to_string();
-    let instances_json = serde_json::json!([{"id": "extrude@solid#0", "meshId": "eval-extrude@solid#0", "interactionId": "extrude@solid"}]).to_string();
+    let instances_json = serde_json::json!([
+        {"id": "extrude@solid#0", "meshId": "eval-extrude@solid#0", "interactionId": "extrude@solid", "position": [4.0, 5.0, 6.0], "rotation": [0.5, 0.5, 0.5, 0.5], "scale": [1.0, 2.0, 3.0]},
+        {"id": "axis#0", "meshId": "eval-axis@vector#0", "position": [1.0, 2.0], "rotation": [0, 0, "bad", 1]}
+    ]).to_string();
     let selection_json = serde_json::json!({"ids": ["extrude@solid#0"], "hoveredId": "extrude@solid#0"}).to_string();
     let node = semio_ui_declaration::ui::build_world_3d_scene("procedural-preview", "controller", semio_ui_scene_world3d::World3dScene::base("{\"position\": [4.0, 4.0, 4.0]}".into(), meshes_json, instances_json, selection_json));
     let UiNode::ComponentScene(scene) = &node else { unreachable!("build_world_3d_scene answers a component scene") };
@@ -171,7 +161,11 @@ fn mesh_stats_publish_one_row_per_published_mesh_with_its_role_and_bounds() {
     assert_eq!(surface.meshes[1].bbox_min, Some([-1.0, 0.0, 0.0]), "a wire body with no vertices is bounded by its edge polyline");
     assert_eq!(surface.bbox_min, Some([-1.0, 0.0, 0.0]), "the surface bounds are the union a camera fit must frame");
     assert_eq!(surface.bbox_max, Some([2.0, 2.0, 3.0]));
-    assert_eq!(surface.instances.iter().map(|instance| instance.interaction_id.as_str()).collect::<Vec<_>>(), vec!["extrude@solid"], "the topology target a hover/select observation is addressed by");
+    assert_eq!(surface.instances.iter().map(|instance| instance.interaction_id.as_str()).collect::<Vec<_>>(), vec!["extrude@solid", "axis#0"], "the topology target a hover/select observation is addressed by");
+    assert_eq!(serde_json::to_value(&surface.instances).unwrap(), serde_json::json!([
+        {"id": "extrude@solid#0", "meshId": "eval-extrude@solid#0", "interactionId": "extrude@solid", "position": [4.0, 5.0, 6.0], "rotation": [0.5, 0.5, 0.5, 0.5], "scale": [1.0, 2.0, 3.0]},
+        {"id": "axis#0", "meshId": "eval-axis@vector#0", "interactionId": "axis#0"}
+    ]));
     assert_eq!(surface.selected, vec!["extrude@solid#0".to_string()]);
     assert_eq!(surface.hovered.as_deref(), Some("extrude@solid#0"));
 }

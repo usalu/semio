@@ -106,7 +106,7 @@ export function useFlowPickAndSpotlight(core: FlowCoreAfterFlowSessionAttach) {
           const hover = await decodeDagHoverJson(flowJsonText(channelValue), nodeGraphInputDecodeControl(isCurrent, () => schedulerRef.current?.invalidate()));
           const hoveredId = hover.channel?.widgetId ?? (typeof hoveredValue === "string" ? hoveredValue : undefined);
           if (!isCurrent()) return;
-          const portId = hover.channel && projectedFlowPortCode(sceneRef.current.nodes, hover.channel);
+          const portId = (hover.channel && projectedFlowPortCode(sceneRef.current.nodes, hover.channel)) ?? undefined;
           const edgeId = hover.edge ?? undefined;
           if (interactionLedger.publishHover({ hoveredId, portId, edgeId }, sceneHoverRevision)) publishNodeGraphHover(dispatch, sceneRef.current.interactionDomain, hoveredId, portId, edgeId);
         }).catch(() => {});

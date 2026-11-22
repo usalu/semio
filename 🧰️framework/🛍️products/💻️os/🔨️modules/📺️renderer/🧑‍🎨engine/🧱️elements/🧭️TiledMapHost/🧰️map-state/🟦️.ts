@@ -66,10 +66,13 @@ export function useMapState({ node, onAction, requestContextMenu }: ComponentSce
   const clampCamera = useCallback((next: MapCamera): MapCamera => ({ x: next.x, y: next.y, zoom: clampMapZoom(next.zoom) }), [clampMapZoom]);
 
   const mirrorSessionCameraToReact = useCallback(() => {
-    const parsed = rendererRef.current?.readCameraFromSession();
-    if (!parsed) return;
-    rendererRef.current!.camera = parsed;
-    dispatchCamera(parsed);
+    const renderer = rendererRef.current;
+    if (!renderer) return;
+    const camera = renderer.readCameraFromSession();
+    if (!camera) return;
+    renderer.camera = camera;
+    renderer.invalidate();
+    dispatchCamera(camera);
   }, [dispatchCamera]);
 
   const clientToLocal = useCallback((clientX: number, clientY: number): SelectionMarqueePoint => {

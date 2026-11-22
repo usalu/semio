@@ -1,0 +1,847 @@
+{
+  "schema": "semio.os.utility-tree/v1",
+  "description": "Language-agnostic law for the utility tree model: category grouping, ribbon segments, active-path reconciliation and the row buckets of the stacked ribbon.",
+  "grouping": [
+    {
+      "name": "default order, uncategorized defaults to utilities",
+      "nodes": [
+        {
+          "kind": "toggle",
+          "id": "sel",
+          "iconId": "mouse-pointer",
+          "label": "sel",
+          "onChange": {
+            "controllerId": "x",
+            "action": "setActiveUtility",
+            "args": {
+              "utilityId": "sel"
+            }
+          },
+          "category": "selection"
+        },
+        {
+          "kind": "button",
+          "id": "hist",
+          "iconId": "undo",
+          "label": "hist",
+          "onPress": {
+            "controllerId": "x",
+            "action": "run"
+          },
+          "category": "history"
+        },
+        {
+          "kind": "button",
+          "id": "act",
+          "iconId": "sparkles",
+          "label": "act",
+          "onPress": {
+            "controllerId": "x",
+            "action": "run"
+          }
+        },
+        {
+          "kind": "toggle",
+          "id": "tool",
+          "iconId": "pencil",
+          "label": "tool",
+          "onChange": {
+            "controllerId": "x",
+            "action": "setActiveUtility",
+            "args": {
+              "utilityId": "tool"
+            }
+          }
+        },
+        {
+          "kind": "toggle",
+          "id": "sync",
+          "iconId": "cloud",
+          "label": "sync",
+          "onChange": {
+            "controllerId": "x",
+            "action": "setActiveUtility",
+            "args": {
+              "utilityId": "sync"
+            }
+          },
+          "category": "sync"
+        },
+        {
+          "kind": "separator",
+          "id": "sep"
+        }
+      ],
+      "categories": null,
+      "expected": [
+        {
+          "id": "selection",
+          "kind": "collection",
+          "iconId": "mouse-pointer",
+          "text": "selection",
+          "order": 0,
+          "category": "selection",
+          "childIds": [
+            "sel"
+          ]
+        },
+        {
+          "id": "utilities",
+          "kind": "collection",
+          "iconId": "wrench",
+          "text": "utilities",
+          "order": 1,
+          "category": "utilities",
+          "childIds": [
+            "act",
+            "tool",
+            "sep"
+          ]
+        },
+        {
+          "id": "history",
+          "kind": "collection",
+          "iconId": "undo",
+          "text": "history",
+          "order": 2,
+          "category": "history",
+          "childIds": [
+            "hist"
+          ]
+        },
+        {
+          "id": "sync",
+          "kind": "collection",
+          "iconId": "cloud",
+          "text": "sync",
+          "order": 3,
+          "category": "sync",
+          "childIds": [
+            "sync"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "separator-only bucket is dropped",
+      "nodes": [
+        {
+          "kind": "separator",
+          "id": "sep"
+        }
+      ],
+      "categories": null,
+      "expected": []
+    },
+    {
+      "name": "single collection is reused, numbered by position",
+      "nodes": [
+        {
+          "kind": "collection",
+          "id": "lowpoly-tools-selection",
+          "iconId": "mouse-pointer",
+          "label": "lowpoly-tools-selection",
+          "children": [
+            {
+              "kind": "toggle",
+              "id": "mesh",
+              "iconId": "box",
+              "label": "mesh",
+              "onChange": {
+                "controllerId": "x",
+                "action": "setActiveUtility",
+                "args": {
+                  "utilityId": "mesh"
+                }
+              }
+            }
+          ],
+          "category": "selection"
+        }
+      ],
+      "categories": null,
+      "expected": [
+        {
+          "id": "lowpoly-tools-selection",
+          "kind": "collection",
+          "iconId": "mouse-pointer",
+          "order": 0,
+          "category": "selection",
+          "childIds": [
+            "mesh"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "categories filter and renumber",
+      "nodes": [
+        {
+          "kind": "toggle",
+          "id": "sel",
+          "iconId": "mouse-pointer",
+          "label": "sel",
+          "onChange": {
+            "controllerId": "x",
+            "action": "setActiveUtility",
+            "args": {
+              "utilityId": "sel"
+            }
+          },
+          "category": "selection"
+        },
+        {
+          "kind": "button",
+          "id": "hist",
+          "iconId": "undo",
+          "label": "hist",
+          "onPress": {
+            "controllerId": "x",
+            "action": "run"
+          },
+          "category": "history"
+        },
+        {
+          "kind": "button",
+          "id": "act",
+          "iconId": "sparkles",
+          "label": "act",
+          "onPress": {
+            "controllerId": "x",
+            "action": "run"
+          }
+        },
+        {
+          "kind": "toggle",
+          "id": "tool",
+          "iconId": "pencil",
+          "label": "tool",
+          "onChange": {
+            "controllerId": "x",
+            "action": "setActiveUtility",
+            "args": {
+              "utilityId": "tool"
+            }
+          }
+        },
+        {
+          "kind": "toggle",
+          "id": "sync",
+          "iconId": "cloud",
+          "label": "sync",
+          "onChange": {
+            "controllerId": "x",
+            "action": "setActiveUtility",
+            "args": {
+              "utilityId": "sync"
+            }
+          },
+          "category": "sync"
+        },
+        {
+          "kind": "separator",
+          "id": "sep"
+        }
+      ],
+      "categories": [
+        "sync"
+      ],
+      "expected": [
+        {
+          "id": "sync",
+          "kind": "collection",
+          "iconId": "cloud",
+          "text": "sync",
+          "order": 0,
+          "category": "sync",
+          "childIds": [
+            "sync"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "window categories keep selection and utilities only",
+      "nodes": [
+        {
+          "kind": "toggle",
+          "id": "sel",
+          "iconId": "mouse-pointer",
+          "label": "sel",
+          "onChange": {
+            "controllerId": "x",
+            "action": "setActiveUtility",
+            "args": {
+              "utilityId": "sel"
+            }
+          },
+          "category": "selection"
+        },
+        {
+          "kind": "button",
+          "id": "hist",
+          "iconId": "undo",
+          "label": "hist",
+          "onPress": {
+            "controllerId": "x",
+            "action": "run"
+          },
+          "category": "history"
+        },
+        {
+          "kind": "button",
+          "id": "act",
+          "iconId": "sparkles",
+          "label": "act",
+          "onPress": {
+            "controllerId": "x",
+            "action": "run"
+          }
+        },
+        {
+          "kind": "toggle",
+          "id": "tool",
+          "iconId": "pencil",
+          "label": "tool",
+          "onChange": {
+            "controllerId": "x",
+            "action": "setActiveUtility",
+            "args": {
+              "utilityId": "tool"
+            }
+          }
+        },
+        {
+          "kind": "toggle",
+          "id": "sync",
+          "iconId": "cloud",
+          "label": "sync",
+          "onChange": {
+            "controllerId": "x",
+            "action": "setActiveUtility",
+            "args": {
+              "utilityId": "sync"
+            }
+          },
+          "category": "sync"
+        },
+        {
+          "kind": "separator",
+          "id": "sep"
+        }
+      ],
+      "categories": [
+        "selection",
+        "utilities"
+      ],
+      "expected": [
+        {
+          "id": "selection",
+          "kind": "collection",
+          "iconId": "mouse-pointer",
+          "text": "selection",
+          "order": 0,
+          "category": "selection",
+          "childIds": [
+            "sel"
+          ]
+        },
+        {
+          "id": "utilities",
+          "kind": "collection",
+          "iconId": "wrench",
+          "text": "utilities",
+          "order": 1,
+          "category": "utilities",
+          "childIds": [
+            "act",
+            "tool",
+            "sep"
+          ]
+        }
+      ]
+    }
+  ],
+  "dedupe": {
+    "lists": [
+      [
+        {
+          "kind": "button",
+          "id": "a",
+          "iconId": "box",
+          "label": "a",
+          "onPress": {
+            "controllerId": "x",
+            "action": "run"
+          }
+        },
+        {
+          "kind": "button",
+          "id": "b",
+          "iconId": "box",
+          "label": "b",
+          "onPress": {
+            "controllerId": "x",
+            "action": "run"
+          }
+        }
+      ],
+      [
+        {
+          "kind": "button",
+          "id": "b",
+          "iconId": "box",
+          "label": "b",
+          "onPress": {
+            "controllerId": "x",
+            "action": "run"
+          }
+        },
+        {
+          "kind": "button",
+          "id": "c",
+          "iconId": "box",
+          "label": "c",
+          "onPress": {
+            "controllerId": "x",
+            "action": "run"
+          }
+        }
+      ]
+    ],
+    "expected": [
+      "a",
+      "b",
+      "c"
+    ]
+  },
+  "tree": [
+    {
+      "kind": "collection",
+      "id": "g1",
+      "iconId": "box",
+      "label": "g1",
+      "children": [
+        {
+          "kind": "button",
+          "id": "b1",
+          "iconId": "box",
+          "label": "b1",
+          "onPress": {
+            "controllerId": "x",
+            "action": "run"
+          },
+          "order": 1
+        },
+        {
+          "kind": "collection",
+          "id": "g2",
+          "iconId": "box",
+          "label": "g2",
+          "children": [
+            {
+              "kind": "toggle",
+              "id": "selectLasso",
+              "iconId": "mouse-pointer",
+              "label": "selectLasso",
+              "onChange": {
+                "controllerId": "x",
+                "action": "setActiveUtility",
+                "args": {
+                  "utilityId": "selectLasso",
+                  "expectedGeneration": 7
+                }
+              },
+              "pressed": true
+            },
+            {
+              "kind": "toggle",
+              "id": "t2",
+              "iconId": "box",
+              "label": "t2",
+              "onChange": {
+                "controllerId": "x",
+                "action": "setActiveUtility",
+                "args": {
+                  "utilityId": "t2"
+                }
+              }
+            }
+          ],
+          "order": 2
+        }
+      ],
+      "order": 2
+    },
+    {
+      "kind": "collection",
+      "id": "g0",
+      "iconId": "box",
+      "label": "g0",
+      "children": [
+        {
+          "kind": "button",
+          "id": "x",
+          "iconId": "box",
+          "label": "x",
+          "onPress": {
+            "controllerId": "x",
+            "action": "run"
+          }
+        }
+      ],
+      "order": 1
+    },
+    {
+      "kind": "collection",
+      "id": "gd",
+      "iconId": "box",
+      "label": "gd",
+      "children": [
+        {
+          "kind": "button",
+          "id": "y",
+          "iconId": "box",
+          "label": "y",
+          "onPress": {
+            "controllerId": "x",
+            "action": "run"
+          }
+        }
+      ],
+      "disabled": true
+    },
+    {
+      "kind": "button",
+      "id": "l1",
+      "iconId": "box",
+      "label": "l1",
+      "onPress": {
+        "controllerId": "x",
+        "action": "run"
+      },
+      "order": 5
+    },
+    {
+      "kind": "separator",
+      "id": "ls",
+      "order": 6
+    }
+  ],
+  "segments": [
+    {
+      "path": [],
+      "expected": [
+        {
+          "kind": "picker",
+          "depth": 0,
+          "ids": [
+            "g0",
+            "g1"
+          ]
+        },
+        {
+          "kind": "utilities",
+          "depth": 0,
+          "ids": [
+            "l1",
+            "ls"
+          ]
+        }
+      ]
+    },
+    {
+      "path": [
+        "g1"
+      ],
+      "expected": [
+        {
+          "kind": "picker",
+          "depth": 0,
+          "ids": [
+            "g0",
+            "g1"
+          ]
+        },
+        {
+          "kind": "utilities",
+          "depth": 0,
+          "ids": [
+            "l1",
+            "ls"
+          ]
+        },
+        {
+          "kind": "picker",
+          "depth": 1,
+          "ids": [
+            "g2"
+          ]
+        },
+        {
+          "kind": "utilities",
+          "depth": 1,
+          "ids": [
+            "b1"
+          ]
+        }
+      ]
+    },
+    {
+      "path": [
+        "g1",
+        "g2"
+      ],
+      "expected": [
+        {
+          "kind": "picker",
+          "depth": 0,
+          "ids": [
+            "g0",
+            "g1"
+          ]
+        },
+        {
+          "kind": "utilities",
+          "depth": 0,
+          "ids": [
+            "l1",
+            "ls"
+          ]
+        },
+        {
+          "kind": "picker",
+          "depth": 1,
+          "ids": [
+            "g2"
+          ]
+        },
+        {
+          "kind": "utilities",
+          "depth": 1,
+          "ids": [
+            "b1"
+          ]
+        },
+        {
+          "kind": "utilities",
+          "depth": 2,
+          "ids": [
+            "selectLasso",
+            "t2"
+          ]
+        }
+      ]
+    }
+  ],
+  "reconcile": [
+    {
+      "path": [
+        "g1",
+        "g2"
+      ],
+      "expected": [
+        "g1",
+        "g2"
+      ]
+    },
+    {
+      "path": [
+        "g1",
+        "nope",
+        "g2"
+      ],
+      "expected": [
+        "g1"
+      ]
+    },
+    {
+      "path": [
+        "gd"
+      ],
+      "expected": []
+    },
+    {
+      "path": [
+        "g2"
+      ],
+      "expected": []
+    }
+  ],
+  "pressed": {
+    "leafId": "selectLasso",
+    "groupPaths": {
+      "selectLasso": [
+        "g1",
+        "g2"
+      ],
+      "l1": [],
+      "missing": null
+    },
+    "selection": {
+      "treeId": "ui.utilities.w1",
+      "activeUtilityId": "selectLasso",
+      "windowId": "w1",
+      "generation": 7
+    }
+  },
+  "rows": [
+    {
+      "direction": "inline",
+      "path": [
+        "g1",
+        "g2"
+      ],
+      "utilityOptions": false,
+      "selectionRenderer": true,
+      "expected": [
+        "picker-0-g0-g1",
+        "utilities-1-l1-ls",
+        "picker-1-g2",
+        "utilities-3-b1",
+        "utilities-4-selectLasso-t2"
+      ]
+    },
+    {
+      "direction": "up",
+      "path": [
+        "g1",
+        "g2"
+      ],
+      "utilityOptions": false,
+      "selectionRenderer": false,
+      "expected": [
+        "row-0",
+        "row-1",
+        "row-2"
+      ]
+    },
+    {
+      "direction": "up",
+      "path": [
+        "g1",
+        "g2"
+      ],
+      "utilityOptions": false,
+      "selectionRenderer": true,
+      "expected": [
+        "row-0",
+        "row-1",
+        "row-2",
+        "row-selection-options"
+      ]
+    },
+    {
+      "direction": "down",
+      "path": [
+        "g1"
+      ],
+      "utilityOptions": true,
+      "selectionRenderer": true,
+      "expected": [
+        "row-0",
+        "row-1",
+        "row-utility-options"
+      ]
+    },
+    {
+      "direction": "inline",
+      "path": [],
+      "utilityOptions": true,
+      "selectionRenderer": true,
+      "expected": [
+        "picker-0-g0-g1",
+        "utilities-1-l1-ls"
+      ]
+    }
+  ],
+  "windowBar": {
+    "description": "React's utilityBarNode: group by selection+utilities, then unwrap each bucket and any Select group; history and sync are not in the window bar.",
+    "nodes": [
+      {
+        "kind": "button",
+        "id": "a",
+        "iconId": "box",
+        "label": "a",
+        "onPress": {
+          "controllerId": "x",
+          "action": "run"
+        }
+      },
+      {
+        "kind": "collection",
+        "id": "group:Select",
+        "iconId": "box",
+        "label": "group:Select",
+        "children": [
+          {
+            "kind": "button",
+            "id": "s1",
+            "iconId": "box",
+            "label": "s1",
+            "onPress": {
+              "controllerId": "x",
+              "action": "run"
+            }
+          },
+          {
+            "kind": "button",
+            "id": "s2",
+            "iconId": "box",
+            "label": "s2",
+            "onPress": {
+              "controllerId": "x",
+              "action": "run"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "button",
+        "id": "h",
+        "iconId": "box",
+        "label": "h",
+        "onPress": {
+          "controllerId": "x",
+          "action": "run"
+        },
+        "category": "history"
+      },
+      {
+        "kind": "button",
+        "id": "y",
+        "iconId": "box",
+        "label": "y",
+        "onPress": {
+          "controllerId": "x",
+          "action": "run"
+        },
+        "category": "sync"
+      },
+      {
+        "kind": "collection",
+        "id": "g",
+        "iconId": "box",
+        "label": "g",
+        "children": [
+          {
+            "kind": "button",
+            "id": "c",
+            "iconId": "box",
+            "label": "c",
+            "onPress": {
+              "controllerId": "x",
+              "action": "run"
+            }
+          }
+        ]
+      }
+    ],
+    "expected": [
+      "a",
+      "s1",
+      "s2",
+      "g"
+    ]
+  }
+}

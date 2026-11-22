@@ -276,3 +276,16 @@ test("a private artifact scratch claim may wait for the toolchain, a shared one 
  expect(checkLeaseOrderV1(policy,held("artifact-scratch-private:"+hash),{...request,resource:"cargo:registry:/x"} as never)?.kind,"the exemption is only for the toolchain").toBe("out-of-order");
  const edge=policy.allowed.find(row=>row.from==="artifact"&&row.to==="toolchain")!;expect(edge.binding).toEqual({kind:"held-prefix",fromPrefix:"artifact-scratch-private:"});expect(edge.reason.en.length).toBeGreaterThan(100);expect(edge.reason.de.length).toBeGreaterThan(100);
 });
+
+/** 🛠️ The tools partition image is the store every managed-tooling operation runs in: provision registry and SDK snapshot requests under it are declared; the Cargo configuration publication and view stay ordered before the compiler writer image and the registry, which the code honours by taking no publication lease and opening views first. */
+test("the authored policy declares the tools image to tool singleton nesting and still refuses the Cargo orders the code no longer produces",()=>{
+ const live=readLeaseOrderPolicyV1(authored),directory="/w/.cache/b/l/m/data",held=(resource:string,mode:"shared"|"exclusive")=>[{directory,resource,mode,atMs:1,task:1}],request=(resource:string,mode:"shared"|"exclusive")=>({directory,resource,mode,nonblocking:false});
+ const image="native-fixed-image:/w/.cache/b/t",snapshot="nx-sdk-snapshot:"+"e".repeat(64);
+ for(const heldMode of ["shared","exclusive"] as const)for(const [resource,mode] of [["nx-tooling-provision","exclusive"],["nx-tooling-provision","shared"],[snapshot,"shared"]] as const)expect(checkLeaseOrderV1(live,held(image,heldMode),request(resource,mode)),`${heldMode} image then ${resource}`).toBeUndefined();
+ const edge=live.allowed.find(row=>row.from==="image"&&row.to==="tool-singleton")!;expect(edge.binding).toBeUndefined();expect(edge.reason.en.length).toBeGreaterThan(100);expect(edge.reason.de.length).toBeGreaterThan(100);
+ expect(checkHoldAndWaitV1(live,held(image,"exclusive"),request("nx-tooling-provision","exclusive"),60000)).toBeUndefined();
+ expect(checkLeaseOrderV1(live,held("repo:compiler-writer:/w/.cache/b/r/m","shared"),request("cargo:configuration-publication","exclusive"))?.kind).toBe("out-of-order");
+ expect(checkLeaseOrderV1(live,held("cargo:registry:/w/.cache/b/r/m/cargo/home","shared"),request("cargo:configuration-view:2","shared"))?.kind).toBe("out-of-order");
+ expect(checkLeaseOrderV1(live,held("cargo:configuration-view:2","shared"),request("cargo:registry:/w/.cache/b/r/m/cargo/home","shared"))).toBeUndefined();
+ expect(checkLeaseOrderV1(live,held(image,"exclusive"),request("cargo:registry:/h","shared"))?.kind,"the edge is only for the tool singletons").toBe("out-of-order");
+});

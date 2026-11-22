@@ -20,14 +20,14 @@ export function useBoardPointerAndKeyboard(core: BoardCore3) {
   const localPresenceActor = useLocalPresenceActorIdV1(presenceRuntimeKey);
   useEffect(() => presenceRuntimeKey ? () => clearLocalPresenceWindowViewV1(presenceWindowId, presenceRuntimeKey) : undefined, [presenceWindowId, presenceRuntimeKey]);
   const publishBoardPresenceView = useCallback((screenPoint: { readonly x: number; readonly y: number } | null) => {
+    if (!presenceRuntimeKey) return;
     const now = Date.now();
-    if (now - presencePublishAtRef.current < PRESENCE_VIEW_PUBLISH_MIN_INTERVAL_MS) return;
+    if (screenPoint && now - presencePublishAtRef.current < PRESENCE_VIEW_PUBLISH_MIN_INTERVAL_MS) return;
     presencePublishAtRef.current = now;
-    const cameraJson = sceneRef.current?.cameraJson ?? "";
+    const cameraJson = sessionRef.current?.cameraJson() ?? sceneRef.current?.cameraJson ?? "";
     const camera = parseBoardCamera(cameraJson) ?? { x: 0, y: 0, zoom: 1 };
     const size = readContainerSize();
     const world = screenPoint ? boardScreenToWorld(cameraJson, size, screenPoint) : null;
-    if (!presenceRuntimeKey) return;
     publishLocalPresenceWindowViewV1(presenceRuntimeKey, presenceWindowId, {
       windowId: presenceWindowId,
       space: "canvas",
@@ -47,22 +47,30 @@ export function useBoardPointerAndKeyboard(core: BoardCore3) {
       const rect = canvas.getBoundingClientRect();
       return { x: board2dFloat32Decimal(clientX) - rect.left, y: board2dFloat32Decimal(clientY) - rect.top };
     };
+    const ownsPointer = (event: PointerEvent): boolean => gestureRecognizer.pointers.some(({ pointerId }) => pointerId === event.pointerId);
 
     /** 🤏️ Abandons the single-pointer lane the moment a SECOND contact lands: the marquee/pick
      * gesture the first finger started must not keep growing under a pinch, and its pointer capture must
      * not swallow the second finger's moves. */
     const yieldToPinch = (session: Board2dWasmSession, point: { x: number; y: number }): void => {
-      session.cancelAreaSelect?.();
-      session.pointerUpScreen(point.x, point.y, false, false, false);
+      if (session.cancelAreaSelect?.()) session.pointerUpScreen(point.x, point.y, false, false, false);
+      else session.pointerCancelScreen();
       for (const tracked of gestureRecognizer.pointers) {
         if (canvas.hasPointerCapture?.(tracked.pointerId)) canvas.releasePointerCapture(tracked.pointerId);
       }
+      endBoardPeerGesture(peerScope, node.controllerId, node.surfaceId, peerRef.current);
+      const flushed = settleGestureEnd(session);
+      dispatchBufferedEvents();
+      notifyBoardPeersGestureEnded(peerScope, node.controllerId, node.surfaceId, flushed);
+      scheduleRender();
     };
 
     const onPointerDown = (event: PointerEvent): void => {
+      if (event.button !== 0 && event.button !== 1) return;
       event.stopPropagation();
       const session = sessionRef.current;
       if (!session) return;
+      hoverActiveRef.current = true;
       const point = clientToLocal(event.clientX, event.clientY);
       const verdict = gestureRecognizer.down({ pointerId: event.pointerId, x: point.x, y: point.y });
       if (verdict.kind === "pinchBegin") {
@@ -71,19 +79,17 @@ export function useBoardPointerAndKeyboard(core: BoardCore3) {
         return;
       }
       if (verdict.kind !== "single") return;
-      if (event.button === 0 || event.button === 1) {
-        canvas.setPointerCapture?.(event.pointerId);
-      }
+      canvas.setPointerCapture?.(event.pointerId);
       beginBoardPeerGesture(peerScope, node.controllerId, node.surfaceId, peerRef.current);
       session.pointerDownScreen(point.x, point.y, event.button, event.shiftKey, event.metaKey || event.ctrlKey);
       scheduleRender();
     };
 
     const onPointerMove = (event: PointerEvent): void => {
+      if (!ownsPointer(event) && (gestureRecognizer.pointers.length > 0 || event.target !== canvas)) return;
       const session = sessionRef.current;
       if (!session) return;
       const point = clientToLocal(event.clientX, event.clientY);
-      publishBoardPresenceView(point);
       const verdict = gestureRecognizer.move({ pointerId: event.pointerId, x: point.x, y: point.y });
       if (verdict.kind === "pinch") {
         beginCameraInteraction();
@@ -92,16 +98,19 @@ export function useBoardPointerAndKeyboard(core: BoardCore3) {
         if (session.setCameraSilent) session.setCameraSilent(camera.x, camera.y, camera.zoom);
         else session.setCamera(camera.x, camera.y, camera.zoom);
         pendingCameraDispatchRef.current = { camera };
+        publishBoardPresenceView(point);
         scheduleRender();
         return;
       }
       if (verdict.kind !== "single") return;
       session.pointerMoveScreen(point.x, point.y, event.shiftKey, event.metaKey || event.ctrlKey, event.altKey);
+      publishBoardPresenceView(point);
       scheduleRender();
       drainAndMaybeFlush();
     };
 
     const onPointerUp = (event: PointerEvent): void => {
+      if (!ownsPointer(event)) return;
       const session = sessionRef.current;
       if (!session) return;
       const verdict = gestureRecognizer.up(event.pointerId);
@@ -109,6 +118,7 @@ export function useBoardPointerAndKeyboard(core: BoardCore3) {
       if (verdict.kind !== "single") return;
       const point = clientToLocal(event.clientX, event.clientY);
       session.pointerUpScreen(point.x, point.y, event.shiftKey, event.metaKey || event.ctrlKey, event.altKey);
+      if (!hoverActiveRef.current) session.pointerLeaveScreen?.(event.altKey);
       endBoardPeerGesture(peerScope, node.controllerId, node.surfaceId, peerRef.current);
       const flushed = settleGestureEnd(session);
       scheduleRender();
@@ -117,6 +127,7 @@ export function useBoardPointerAndKeyboard(core: BoardCore3) {
     };
 
     const onPointerCancel = (event: PointerEvent): void => {
+      if (!ownsPointer(event)) return;
       const session = sessionRef.current;
       const verdict = gestureRecognizer.up(event.pointerId);
       if (canvas.hasPointerCapture?.(event.pointerId)) canvas.releasePointerCapture(event.pointerId);
@@ -134,6 +145,9 @@ export function useBoardPointerAndKeyboard(core: BoardCore3) {
       scheduleRender();
       notifyBoardPeersGestureEnded(peerScope, node.controllerId, node.surfaceId, false);
     };
+    const onLostPointerCapture = (event: PointerEvent): void => {
+      if (!gestureRecognizer.latched) onPointerCancel(event);
+    };
 
     const onPointerEnter = (): void => {
       hoverActiveRef.current = true;
@@ -141,6 +155,8 @@ export function useBoardPointerAndKeyboard(core: BoardCore3) {
 
     const onPointerLeave = (event: PointerEvent): void => {
       hoverActiveRef.current = false;
+      publishBoardPresenceView(null);
+      if (gestureRecognizer.pointers.length > 0) return;
       const session = sessionRef.current;
       if (!session) return;
       session.pointerLeaveScreen?.(event.altKey);
@@ -164,12 +180,13 @@ export function useBoardPointerAndKeyboard(core: BoardCore3) {
       scheduleRender();
       const cameraArgs = board2dCameraActionArgs(session.cameraJson());
       if (cameraArgs) pendingCameraDispatchRef.current = cameraArgs;
-      drainIntoBuffer();
+      drainIntoBuffer(false);
     };
 
     canvas.addEventListener("pointerdown", onPointerDown);
     canvas.addEventListener("pointerenter", onPointerEnter);
     canvas.addEventListener("pointerleave", onPointerLeave);
+    canvas.addEventListener("lostpointercapture", onLostPointerCapture);
     window.addEventListener("pointermove", onPointerMove);
     window.addEventListener("pointerup", onPointerUp);
     window.addEventListener("pointercancel", onPointerCancel);
@@ -178,12 +195,13 @@ export function useBoardPointerAndKeyboard(core: BoardCore3) {
       canvas.removeEventListener("pointerdown", onPointerDown);
       canvas.removeEventListener("pointerenter", onPointerEnter);
       canvas.removeEventListener("pointerleave", onPointerLeave);
+      canvas.removeEventListener("lostpointercapture", onLostPointerCapture);
       window.removeEventListener("pointermove", onPointerMove);
       window.removeEventListener("pointerup", onPointerUp);
       window.removeEventListener("pointercancel", onPointerCancel);
       container.removeEventListener("wheel", onWheel);
     };
-  }, [peerScope, applyPendingSnapshotIfReady, applyPendingSelectionIfReady, beginCameraInteraction, dispatch, dispatchBufferedEvents, drainAndMaybeFlush, drainIntoBuffer, node.controllerId, node.surfaceId, publishBoardVitals, readContainerSize, scheduleRender, scene?.activeUtility, scene?.interactive, settleGestureEnd, publishBoardPresenceView]);
+  }, [peerScope, applyPendingSnapshotIfReady, applyPendingSelectionIfReady, beginCameraInteraction, dispatchBufferedEvents, drainAndMaybeFlush, drainIntoBuffer, node.controllerId, node.surfaceId, publishBoardVitals, readContainerSize, scheduleRender, scene?.interactive, settleGestureEnd, publishBoardPresenceView]);
   //#endregion Pointer
 
   //#region Keyboard

@@ -26,10 +26,11 @@
         ],
         "defaultLayout": {
           "root": {
-            "kind": "row",
+            "kind": "split",
+            "axis": "horizontal",
             "children": [
-              { "kind": "stack", "size": 68.0, "children": [{ "kind": "window", "windowKindId": "procedural-main", "title": "Flow" }] },
-              { "kind": "stack", "size": 32.0, "children": [{ "kind": "window", "windowKindId": "procedural-preview", "title": "Preview" }] }
+              { "kind": "stack", "size": 0.68, "children": [{ "kind": "window", "windowKindId": "procedural-main", "title": "Flow" }] },
+              { "kind": "stack", "size": 0.32, "children": [{ "kind": "window", "windowKindId": "procedural-preview", "title": "Preview" }] }
             ]
           }
         },
@@ -38,11 +39,12 @@
             "id": "generation3d-generate",
             "layout": {
               "root": {
-                "kind": "row",
+                "kind": "split",
+                "axis": "horizontal",
                 "children": [
-                  { "kind": "stack", "size": 22.0, "children": [{ "kind": "window", "windowKindId": "generation3d-generations", "title": "Generations" }] },
-                  { "kind": "stack", "size": 43.0, "children": [{ "kind": "window", "windowKindId": "generation3d-generate-form", "title": "Form" }] },
-                  { "kind": "stack", "size": 35.0, "children": [{ "kind": "window", "windowKindId": "generation3d-generate-preview", "title": "Preview" }] }
+                  { "kind": "stack", "size": 0.22, "children": [{ "kind": "window", "windowKindId": "generation3d-generations", "title": "Generations" }] },
+                  { "kind": "stack", "size": 0.43, "children": [{ "kind": "window", "windowKindId": "generation3d-generate-form", "title": "Form" }] },
+                  { "kind": "stack", "size": 0.35, "children": [{ "kind": "window", "windowKindId": "generation3d-generate-preview", "title": "Preview" }] }
                 ]
               }
             }
@@ -51,7 +53,7 @@
       },
       "expected": {
         "resolvedLayoutId": null,
-        "axis": "row",
+        "axis": "horizontal",
         "windowInstances": [
           { "id": "procedural-main", "windowKindId": "procedural-main" },
           { "id": "procedural-preview", "windowKindId": "procedural-preview" }
@@ -81,10 +83,11 @@
         ],
         "defaultLayout": {
           "root": {
-            "kind": "row",
+            "kind": "split",
+            "axis": "horizontal",
             "children": [
-              { "kind": "stack", "size": 68.0, "children": [{ "kind": "window", "windowKindId": "procedural-main", "title": "Flow" }] },
-              { "kind": "stack", "size": 32.0, "children": [{ "kind": "window", "windowKindId": "procedural-preview", "title": "Preview" }] }
+              { "kind": "stack", "size": 0.68, "children": [{ "kind": "window", "windowKindId": "procedural-main", "title": "Flow" }] },
+              { "kind": "stack", "size": 0.32, "children": [{ "kind": "window", "windowKindId": "procedural-preview", "title": "Preview" }] }
             ]
           }
         },
@@ -93,11 +96,12 @@
             "id": "generation3d-generate",
             "layout": {
               "root": {
-                "kind": "row",
+                "kind": "split",
+                "axis": "horizontal",
                 "children": [
-                  { "kind": "stack", "size": 22.0, "children": [{ "kind": "window", "windowKindId": "generation3d-generations", "title": "Generations" }] },
-                  { "kind": "stack", "size": 43.0, "children": [{ "kind": "window", "windowKindId": "generation3d-generate-form", "title": "Form" }] },
-                  { "kind": "stack", "size": 35.0, "children": [{ "kind": "window", "windowKindId": "generation3d-generate-preview", "title": "Preview" }] }
+                  { "kind": "stack", "size": 0.22, "children": [{ "kind": "window", "windowKindId": "generation3d-generations", "title": "Generations" }] },
+                  { "kind": "stack", "size": 0.43, "children": [{ "kind": "window", "windowKindId": "generation3d-generate-form", "title": "Form" }] },
+                  { "kind": "stack", "size": 0.35, "children": [{ "kind": "window", "windowKindId": "generation3d-generate-preview", "title": "Preview" }] }
                 ]
               }
             }
@@ -106,7 +110,7 @@
       },
       "expected": {
         "resolvedLayoutId": "generation3d-generate",
-        "axis": "row",
+        "axis": "horizontal",
         "windowInstances": [
           { "id": "generation3d-generations", "windowKindId": "generation3d-generations" },
           { "id": "generation3d-generate-form", "windowKindId": "generation3d-generate-form" },
@@ -155,10 +159,11 @@
         ],
         "defaultLayout": {
           "root": {
-            "kind": "row",
+            "kind": "split",
+            "axis": "horizontal",
             "children": [
-              { "kind": "stack", "size": 68.0, "children": [{ "kind": "window", "windowKindId": "procedural-main", "title": "Flow" }] },
-              { "kind": "stack", "size": 32.0, "children": [{ "kind": "window", "windowKindId": "procedural-preview", "title": "Preview" }] }
+              { "kind": "stack", "size": 0.68, "children": [{ "kind": "window", "windowKindId": "procedural-main", "title": "Flow" }] },
+              { "kind": "stack", "size": 0.32, "children": [{ "kind": "window", "windowKindId": "procedural-preview", "title": "Preview" }] }
             ]
           }
         },
@@ -166,7 +171,7 @@
       },
       "expected": {
         "resolvedLayoutId": null,
-        "axis": "row",
+        "axis": "horizontal",
         "windowInstances": [
           { "id": "procedural-main", "windowKindId": "procedural-main" },
           { "id": "procedural-preview", "windowKindId": "procedural-preview" }
@@ -187,10 +192,11 @@
         "windowKinds": [{ "id": "procedural-preview", "label": "Preview" }],
         "defaultLayout": {
           "root": {
-            "kind": "column",
+            "kind": "split",
+            "axis": "vertical",
             "children": [
-              { "kind": "stack", "size": 60.0, "children": [{ "kind": "window", "windowKindId": "procedural-preview", "title": "Top" }] },
-              { "kind": "stack", "size": 40.0, "children": [{ "kind": "window", "windowKindId": "procedural-preview", "instanceId": "procedural-preview-2", "title": "Perspective" }] }
+              { "kind": "stack", "size": 0.6, "children": [{ "kind": "window", "windowKindId": "procedural-preview", "title": "Top" }] },
+              { "kind": "stack", "size": 0.4, "children": [{ "kind": "window", "windowKindId": "procedural-preview", "instanceId": "procedural-preview-2", "title": "Perspective" }] }
             ]
           }
         },
@@ -198,7 +204,7 @@
       },
       "expected": {
         "resolvedLayoutId": null,
-        "axis": "column",
+        "axis": "vertical",
         "windowInstances": [
           { "id": "procedural-preview", "windowKindId": "procedural-preview" },
           { "id": "procedural-preview-2", "windowKindId": "procedural-preview" }
@@ -224,7 +230,7 @@
         "defaultLayout": {
           "root": {
             "kind": "stack",
-            "activeWindowKindId": "procedural-preview",
+            "activeWindowId": "procedural-preview",
             "children": [
               { "kind": "window", "windowKindId": "procedural-main", "title": "Flow" },
               { "kind": "window", "windowKindId": "procedural-preview", "title": "Preview" }

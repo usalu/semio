@@ -15,6 +15,20 @@ use semio_framework_2d_compute::EngineHandles;
 use semio_framework::kernel::ClipboardFragment;
 use semio_framework::kernel::ClipboardError;
 use semio_framework::kernel::PastePlacement;
+use semio_framework_value::retained_clone::RetainedCloneBirthDemand;
+use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress, RetirementDemand, ValueError};
+use store::os_store::document_store_owners::{self, DocumentStoreOwners, DocumentStoreOwnersAdmissionError};
+use std::sync::Arc;
+
+type Puzzle2dHistoryPreparation = store::os_store::ColdMutationApplyFactory<Puzzle2dPlaySnapshot, Puzzle2dMutation>;
+
+fn puzzle2d_document_semantic_birth() -> RetainedCloneBirthDemand {
+    RetainedCloneBirthDemand {
+        capacity_bytes: semio_framework_value::factory_arc_birth_bytes::<Puzzle2dArtifactStorePreparationFactory>()
+            + semio_framework_value::factory_arc_birth_bytes::<Puzzle2dHistoryPreparation>(),
+        depth: 1,
+    }
+}
 
 //#region 🔖️PlayApp
 //#region 🧵️ReservedJobs
@@ -79,6 +93,26 @@ impl ArtifactEditor for Puzzle2dPlayApp {
 
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
         Some(std::sync::Arc::new(Puzzle2dArtifactStorePreparationFactory))
+    }
+
+    fn document_store_owners_source_demands() -> Result<RetirementDemand, ValueError> {
+        let mut demand = document_store_owners::bounded_artifact_store_owners_source_demands::<Self::Snapshot, Self::Mutation>()?;
+        let semantics = puzzle2d_document_semantic_birth();
+        demand.capacity_bytes = demand.capacity_bytes.checked_add(semantics.capacity_bytes)
+            .ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "Puzzle2d document catalog capacity overflows"))?;
+        demand.depth = demand.depth.max(semantics.depth);
+        Ok(demand)
+    }
+
+    fn build_document_store_owners(grant: RetainedCloneGrant) -> Option<Result<(DocumentStoreOwners<Self::Snapshot, Self::Mutation>, RetainedCloneProgress), DocumentStoreOwnersAdmissionError<Self::Snapshot, Self::Mutation>>> {
+        Some(document_store_owners::bounded_artifact_store_owners_with_semantic_preparations(grant, puzzle2d_document_semantic_birth(), || {
+            (Arc::new(Puzzle2dArtifactStorePreparationFactory), Arc::new(Puzzle2dHistoryPreparation::default()))
+        }).map(|(mut owners, progress)| {
+            owners.operation_wire = owners.operation_wire
+                .with_original_target(Self::Mutation::original_conflict_target)
+                .with_original_pack_value_receiving();
+            (owners, progress)
+        }))
     }
 
     fn build_document_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {

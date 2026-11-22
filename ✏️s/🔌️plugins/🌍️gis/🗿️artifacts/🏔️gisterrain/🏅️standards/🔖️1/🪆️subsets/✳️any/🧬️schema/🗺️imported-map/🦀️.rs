@@ -182,7 +182,7 @@ pub fn terrain_grid_origin([west, south, east, north]: [f64; 4]) -> TerrainProje
 pub fn gis_terrain_mesh_buffers(document: &GisTerrainSnapshot) -> Result<TerrainTileMeshJson, &'static str> {
     let grid = gis_terrain_elevation_grid(document)?;
     let origin = terrain_grid_origin(grid.bounds);
-    grid.mesh(origin.lon, origin.lat, document.exaggeration)
+    grid.compact_mesh(origin.lon, origin.lat, document.exaggeration)
         .ok_or("Terrain elevation cannot be projected in the defined world coordinates")
 }
 

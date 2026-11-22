@@ -4,7 +4,7 @@ import {readFileSync,statSync} from "node:fs";
 import {mkdir,readdir,readFile,rename,rm,writeFile} from "node:fs/promises";
 import {networkInterfaces} from "node:os";
 import {dirname,join} from "node:path";
-import {validateJsonSchemaSubset} from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
+import {compileJsonSchemaSubset,type CompiledJsonSchemaSubset} from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 
 /** 🎭️ The five roles of the fleet, each with its own key so one leaked key is one role: `cache-read` and `cache-write` for the cache, `submit` for handing actions to the scheduler, `worker` for executing them, `admin` for the group server only. */
@@ -29,9 +29,11 @@ export const FLEET_CONTENT_HEADER_V1=CONTENT_HEADER;
 /** 🕰️ The response header with the server's clock, so a client with a skewed clock can correct itself once. */
 export const FLEET_TIME_HEADER_V1=TIME_HEADER;
 
+const shapes=new Map<string,CompiledJsonSchemaSubset>(),shapeOf=(definition:string):CompiledJsonSchemaSubset=>{let check=shapes.get(definition);if(!check){check=compileJsonSchemaSubset({$ref:`#/definitions/${definition}`},schema);shapes.set(definition,check);}return check;};
+
 /** 🛡️ Validates one value against a named definition of the identity schema and names the first problem. */
-export function requireFleetIdentityShapeV1(definition:"Registration"|"Pins"|"Divergences",value:unknown,message:string):void{
- const errors=validateJsonSchemaSubset({$ref:`#/definitions/${definition}`},value,schema);
+export function requireFleetIdentityShapeV1(definition:"Registration"|"Pins"|"Divergences"|"Consumption",value:unknown,message:string):void{
+ const errors=shapeOf(definition).validate(value);
  if(errors.length)throw Error(`${message}: ${errors[0]}`);
 }
 

@@ -328,6 +328,16 @@
           }
         }
       ]
+    },
+    {
+      "name": "declared thin sheet",
+      "patch": [
+        {
+          "op": "add",
+          "path": "/volumes/50/body/id=head/sheet",
+          "value": true
+        }
+      ]
     }
   ],
   "invalid": [
@@ -483,6 +493,30 @@
           "op": "replace",
           "path": "/volumes/50/thermal/id=head-head/slender",
           "value": true
+        }
+      ]
+    },
+    {
+      "name": "thermal reference that declares itself a sheet",
+      "rule": "volume-field",
+      "schema": "rejects",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/volumes/50/thermal/id=head-head/sheet",
+          "value": true
+        }
+      ]
+    },
+    {
+      "name": "sheet declaration that is not a boolean",
+      "rule": null,
+      "schema": "rejects",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/volumes/50/body/id=head/sheet",
+          "value": "yes"
         }
       ]
     },

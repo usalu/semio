@@ -1,0 +1,13 @@
+{
+  "rounds": 4103,
+  "faultCeiling": 4096,
+  "streams": [
+    { "instance": 1, "operation": 7, "skipBefore": 0, "progressEvery": 0, "genesis": false, "streak": 4103, "firstFault": 4096 },
+    { "instance": 1, "operation": 8, "skipBefore": 0, "progressEvery": 1, "genesis": false, "streak": 0, "firstFault": null },
+    { "instance": 2, "operation": 7, "skipBefore": 20, "progressEvery": 0, "genesis": false, "streak": 4083, "firstFault": null },
+    { "instance": 3, "operation": 7, "skipBefore": 0, "progressEvery": 0, "genesis": true, "streak": 0, "firstFault": null },
+    { "instance": 3, "operation": 8, "skipBefore": 4103, "progressEvery": 0, "genesis": false, "streak": 0, "firstFault": null },
+    { "instance": 1, "operation": 9, "skipBefore": 0, "progressEvery": 4095, "genesis": false, "streak": 8, "firstFault": null },
+    { "instance": 1, "operation": 10, "skipBefore": 0, "progressEvery": 0, "receiptEvery": 96, "genesis": false, "streak": 71, "firstFault": null }
+  ]
+}

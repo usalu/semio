@@ -1,0 +1,6 @@
+case	sheet	date	record	withdrawn
+before-correction	29	202603	710.22	false
+at-correction	29	202604	710.22	true
+after-correction	29	202611	710.22	true
+other-pipe-record	29	202604	710.02	false
+other-sheet	23	202604	710.22	false

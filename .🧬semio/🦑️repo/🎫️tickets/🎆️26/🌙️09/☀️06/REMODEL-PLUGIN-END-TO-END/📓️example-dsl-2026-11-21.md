@@ -1,0 +1,7 @@
+# Canonical Remodel example references
+
+The native session suite reached a real example-open fault. The synthetic-orbit fixture put the mesh target in a named block. The Rust record parser expected a keyed inline record and refused its required `target` field. The demo and demo-session had the same field spelling.
+
+The actual Rust printer produced `child_id=remodeling-mesh-constant-box target=artifact-id="remodeling-mesh-constant:box" artifact-kind=s.stdio.semio standard=v1 subset=mesh`. The three examples now carry that line. The authored grammar describes the four artifact identity fields. A native probe linked against the compiled Remodel and Pack libraries checked every actual file against the default printer's line, parsed its text, checked the mesh identity, reprinted it, and parsed the result again. All three passed.
+
+The TypeScript reader now consumes the same inline record and rejects the former braced spelling, malformed identity records and duplicate complete targets. Its SQLite Text suite passed all 27 tests with 989 assertions. Chromium executed the rebuilt guest and returned all three corrected embedded texts byte for byte. The checked-in descriptor pair was refreshed from that canonical pack and verified with the catalog pair verifier. See [the TypeScript verification](./📓️inline-artifact-reference.md) and [the browser proof](./📓️browser-acceptance-2026-11-21.md).

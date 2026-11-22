@@ -7,7 +7,7 @@ import{join}from"node:path";
 import{fileURLToPath}from"node:url";
 import schema from"../🧬️schema/🔣️.json"with{type:"json"};
 import fixture from"./🔣️.json"with{type:"json"};
-import{UnportableV1,aboveRootV1,bundleKeysV1,closureKeyV1,dependencyGenerationV1,hostOfRootV1,localBundleV1,localPathV1,localRecordV1,localRowsV1,neutralBundleV1,neutralPathV1,neutralRecordV1,neutralTextV1,localTextV1,portableRowsPolicyV1,portableRowsV1,type ClosureBundleV1,type PortableRecordV1}from"../🟦️.ts";
+import{UnportableV1,installRowsV1,aboveRootV1,bundleKeysV1,closureKeyV1,dependencyGenerationV1,hostOfRootV1,localBundleV1,localPathV1,localRecordV1,localRowsV1,neutralBundleV1,neutralPathV1,neutralRecordV1,neutralTextV1,localTextV1,portableRowsPolicyV1,portableRowsV1,type ClosureBundleV1,type PortableRecordV1}from"../🟦️.ts";
 
 /** 🧳️ Contract: a record is published without the facts that name the producer's machine and in a neutral form of the host's spelling (root token, forward slashes, provider owner token, neutral closure keys), and is replayed in the spelling of the taker with its own dependency generation, providers and closure keys. The fixture is language-agnostic; a Python oracle with its own Windows path semantics and its own digest derives the same forms from the schema alone. */
 const validate=new Ajv({strict:false}).compile({$ref:"#/definitions/Fixture",definitions:schema.definitions});
@@ -136,4 +136,15 @@ test("the Python oracle with its own Windows path semantics and digest derives t
  const cases=fixture.records as unknown as RecordCase[];
  expect(oracle.records.map(row=>row.neutral===null?null:parsedImage(row.neutral))).toEqual(cases.map(row=>{try{return parsedImage(neutralRecordV1(row.producer,hostOfRootV1(row.root)).record);}catch{return null;}}));
  expect(oracle.records.map(row=>row.takers.map(taker=>parsedImage(taker.local!)))).toEqual(cases.map(row=>row.neutral===null?[]:row.takers.map(taker=>parsedImage(localRecordV1(neutralRecordV1(row.producer,hostOfRootV1(row.root)).record,hostOfRootV1(taker.root),{providers:taker.providers,generation:taker.generation??undefined}).record))));
+});
+
+test("two machines of one dependency install write the same rows whatever they probed in node_modules, a machine of another install writes another row before the generation becomes the token, and a record without probes is untouched",()=>{
+ const [first,second]=fixture.cases.slice(-2) as unknown as {root:string;rows:{kind:string;path:string;fact?:unknown}[];portable:unknown}[];
+ expect(portableRowsV1(first!.rows,first!.root)).toEqual(portableRowsV1(second!.rows,second!.root));
+ const other=first!.rows.map(row=>JSON.parse(JSON.stringify(row).replaceAll("86415d695aa883fffc22","0123456789abcdef0123"))),base=first!.root,policy=portableRowsPolicyV1;
+ const named=(rows:readonly {kind:string;path:string;fact?:unknown}[])=>installRowsV1(rows,base,policy).filter(row=>row.kind==="exists"&&row.path.endsWith("/node_modules")&&row.path.includes(policy.dependencyRoot)).map(row=>row.path);
+ expect(named(first!.rows)).toEqual([`${base}/.cache/b/d/m/j/86415d695aa883fffc22/node_modules`]);expect(named(other)).toEqual([`${base}/.cache/b/d/m/j/0123456789abcdef0123/node_modules`]);
+ const calm=[{kind:"exists",path:`${base}/a/package.json`,fact:true},{kind:"lstat",path:`${base}/.cache/b/d/m/j/86415d695aa883fffc22/node_modules/ajv`,fact:"directory"}];
+ expect(installRowsV1(calm,base,policy)).toEqual(calm);
+ const bare=[{kind:"directoryExists",path:`${base}/node_modules`,fact:false}];expect(installRowsV1(bare,base,policy)).toEqual([]);
 });

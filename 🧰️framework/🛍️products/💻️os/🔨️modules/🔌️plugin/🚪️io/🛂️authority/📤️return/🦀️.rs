@@ -36,7 +36,17 @@ macro_rules! return_walk_template {
         Effect::SetActiveTool(value)=>text(&value.tool_id,reserve),
         Effect::ReplayShellCommand(value)=>{text(&value.action_id,reserve)?;optional_bytes(&value.args,reserve)},
         Effect::SpawnPluginInstance(value)=>{text(&value.params.plugin_id,reserve)?;text(&value.params.app_id,reserve)?;optional_text(&value.params.os_instance_id,reserve)?;optional_text(&value.params.label,reserve)?;optional_text(&value.params.artifact_json,reserve)},
-        Effect::OpenPluginInstance(value)=>{text(&value.plugin_id,reserve)?;text(&value.app_id,reserve)?;optional_text(&value.os_instance_id,reserve)},
+        Effect::OpenPluginInstance(value)=>{
+            text(&value.plugin_id,reserve)?;
+            text(&value.app_id,reserve)?;
+            optional_text(&value.os_instance_id,reserve)?;
+            if let Some(document)=&value.document {
+                text(&document.document_id,reserve)?;
+                text(&document.schema,reserve)?;
+                optional_text(&document.space_id,reserve)?;
+            }
+            Ok(())
+        },
         Effect::OpenDialog(value)=>{text(&value.params.dialog_id,reserve)?;optional_bytes(&value.params.args,reserve)},
         Effect::IconRenderExport(value)=>bytes(&value.items,reserve),
         Effect::DownloadMediaExport(value)=>{text(&value.filename,reserve)?;text(&value.mime_type,reserve)?;text(&value.data,reserve)?;optional_text(&value.encoding,reserve)},

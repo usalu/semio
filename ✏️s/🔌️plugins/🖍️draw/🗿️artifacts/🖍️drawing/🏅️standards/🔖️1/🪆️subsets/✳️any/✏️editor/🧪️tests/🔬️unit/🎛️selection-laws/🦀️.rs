@@ -22,7 +22,7 @@ async fn selected_group_and_layer_drag_preserves_selection_and_one_history_edit(
         semio_s_artifact_draw_drawing_model::layer_base_mut(&mut other).attributes.fill=Some(semio_s_artifact_draw_drawing_model::FillStyle::Solid {color:[0.0,0.0,1.0,1.0]});
         semio_s_artifact_draw_drawing_model::layer_base_mut(&mut other).transform.x=400.0;
         let before=DrawingSnapshot { id:"selection-drag".into(),layers:vec![group,other].into(),..Default::default() };
-        load_drawing_fixture(&mut app,&before);
+        load_drawing_fixture(&mut app,&before).await;
         settled(&mut app,DrawingCommand::SetCamera(set_camera::SetCamera { camera:store::Viewport2d { x:0.0,y:0.0,zoom:1.0 } }),&meta).await;
         let ids=vec!["group".to_string(),"child".to_string(),"other".to_string()];
         let targets=serde_json::to_string(&ids.iter().map(|id|serde_json::json!({"granularity":DRAWING_INTERACTION_GRANULARITY,"id":id})).collect::<Vec<_>>()).unwrap();
@@ -129,7 +129,7 @@ async fn text_content_and_size_each_undo_as_one_selection_edit() {
             let DrawingLayerNode::Text(text) = layer else { unreachable!() };
             if field == "textContent" { text.content = value.into(); } else { text.size = 36.0; }
         }
-        load_drawing_fixture(&mut app, &before);
+        load_drawing_fixture(&mut app, &before).await;
         artifact_laws::assert_undo_redo_round_trip(&mut app.0, DrawingCommand::PatchLayers(patch_layers::PatchLayers { index:None, layer_ids: vec!["first".into(), "second".into()], field: field.into(), value: value.into() }), |app| app.snapshot().unwrap(), before, after, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
     }
 }
@@ -141,7 +141,7 @@ async fn select_all_discovers_unvisited_layers_and_prunes_deleted_selection() {
     let second = semio_s_artifact_draw_drawing_model::create_drawing_text_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Second")).to_string().into()).expect("nonempty authored identity"), "Second");
     let ids = vec![layer_id(&first).to_string(), layer_id(&second).to_string()];
     let snapshot = DrawingSnapshot { id: "select-all-topology".into(), layers: vec![first, second].into(), ..Default::default() };
-    load_drawing_fixture(&mut app, &snapshot);
+    load_drawing_fixture(&mut app, &snapshot).await;
     let admission=semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "selectAll", None, &meta, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("Select All admission");
     semio_plugin::app::settle_framework_reserved_admission(&mut app.0, admission, app.1.cx()).await.expect("Select All publication");
     assert_eq!(selected_strokes(&app).await, ids);
@@ -168,7 +168,7 @@ async fn transform_handles_render_and_commit_once_through_the_registered_editor(
             let DrawingLayerNode::Group(group)=&mut parent else {unreachable!()};
             group.children.push(child);
             let before=DrawingSnapshot {id:"handle-gesture".into(),layers:vec![parent].into(),..Default::default()};
-            load_drawing_fixture(&mut app,&before);
+            load_drawing_fixture(&mut app,&before).await;
             settled(&mut app,DrawingCommand::SetCamera(set_camera::SetCamera {camera:store::Viewport2d {x:0.0,y:0.0,zoom:1.0}}),&meta).await;
             let targets=serde_json::to_string(&[serde_json::json!({"granularity":DRAWING_INTERACTION_GRANULARITY,"id":"child"})]).unwrap();
             let admission=semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, semio_framework::INTERACTION_SELECT_ACTION_ID, Some(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({"domainId":DRAWING_INTERACTION_DOMAIN,"targets":targets,"merge":"replace","method":"pick"}))), &meta, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap();
@@ -218,7 +218,7 @@ async fn node_drag_previews_without_mutation_and_commits_one_undoable_edit() {
         semio_s_artifact_draw_drawing_model::layer_base_mut(&mut path).id="curve".into();
         semio_s_artifact_draw_drawing_model::layer_base_mut(&mut path).transform.scale_x=2.0;
         let before=DrawingSnapshot {id:"node-drag".into(),layers:vec![path].into(),..Default::default()};
-        load_drawing_fixture(&mut app,&before);
+        load_drawing_fixture(&mut app,&before).await;
         settled(&mut app,DrawingCommand::SetCamera(set_camera::SetCamera {camera:store::Viewport2d {x:0.0,y:0.0,zoom:1.0}}),&meta).await;
         let targets=serde_json::to_string(&vec![serde_json::json!({"granularity":DRAWING_INTERACTION_GRANULARITY,"id":"curve"})]).unwrap();
         let admission=semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, semio_framework::INTERACTION_SELECT_ACTION_ID, Some(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({"domainId":DRAWING_INTERACTION_DOMAIN,"targets":targets,"merge":"replace","method":"pick"}))), &meta, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap();

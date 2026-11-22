@@ -22,6 +22,11 @@ use window_sync_and_search::shell_chrome_window_sync_and_search;
 mod check_in_and_palette;
 use check_in_and_palette::shell_chrome_check_in_and_palette;
 
+#[path = "🧵️task-manager-and-route-vocab/🦀️.rs"]
+mod task_manager_and_route;
+use task_manager_and_route::shell_chrome_task_manager_and_route;
+pub use task_manager_and_route::shell_chrome_format;
+
 //#region 🗣️ChromeI18n
 /// 🗣️ EN/DE lookup for a curated subset of previously-hardcoded chrome strings, byte-identical to
 /// `ui/js/react/index.tsx`'s `uiChromeTranslationBundles.{en,de}.translation.ui.*` "normal" labels
@@ -55,6 +60,7 @@ pub fn shell_chrome_string(key: &'static str, is_de: bool) -> &'static str {
         .or_else(|| shell_chrome_marketplace_chat_and_panel(key, is_de))
         .or_else(|| shell_chrome_window_sync_and_search(key, is_de))
         .or_else(|| shell_chrome_check_in_and_palette(key, is_de))
+        .or_else(|| shell_chrome_task_manager_and_route(key, is_de))
         .unwrap_or(key)
 }
 //#endregion 🗣️ChromeI18n

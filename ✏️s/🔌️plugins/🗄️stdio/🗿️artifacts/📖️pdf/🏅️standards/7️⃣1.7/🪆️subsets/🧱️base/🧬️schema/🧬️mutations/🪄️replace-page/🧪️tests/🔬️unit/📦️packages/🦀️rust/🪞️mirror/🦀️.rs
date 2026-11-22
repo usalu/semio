@@ -119,13 +119,7 @@ pub mod standards {
                                 #[path = "../../../../../../../../../🧾️vt/🚪️io/📝️text/🧬️mutations/🎬️insert-media-annotation/🧪️tests/🔬️unit/🦀️.rs"]
                                 pub mod tests;
                             }
-                            #[path = "."]
-                            pub mod remove_trim_box {
-                                pub use semio_s_artifact_stdio_pdf_mut_vt::standards::v1_7::subsets::vt::io::text::mutations::remove_trim_box::*;
-                                #[cfg(test)]
-                                #[path = "../../../../../../../../../🧾️vt/🚪️io/📝️text/🧬️mutations/✂️remove-trim-box/🧪️tests/🔬️unit/🦀️.rs"]
-                                pub mod tests;
-                            }
+                            pub use semio_s_artifact_stdio_pdf_mut_vt::standards::v1_7::subsets::vt::io::text::mutations::remove_trim_box;
                             #[path = "."]
                             pub mod set_dpart_metadata {
                                 pub use semio_s_artifact_stdio_pdf_mut_vt::standards::v1_7::subsets::vt::io::text::mutations::set_dpart_metadata::*;
@@ -168,13 +162,7 @@ pub mod standards {
                                 #[path = "../../../../../../../../../🧾️vt/🚪️io/📝️text/🧬️mutations/🔓️remove-encryption-dictionary/🧪️tests/🔬️unit/🦀️.rs"]
                                 pub mod tests;
                             }
-                            #[path = "."]
-                            pub mod set_trim_box {
-                                pub use semio_s_artifact_stdio_pdf_mut_vt::standards::v1_7::subsets::vt::io::text::mutations::set_trim_box::*;
-                                #[cfg(test)]
-                                #[path = "../../../../../../../../../🧾️vt/🚪️io/📝️text/🧬️mutations/📐️set-trim-box/🧪️tests/🔬️unit/🦀️.rs"]
-                                pub mod tests;
-                            }
+                            pub use semio_s_artifact_stdio_pdf_mut_vt::standards::v1_7::subsets::vt::io::text::mutations::set_trim_box;
                             #[path = "."]
                             pub mod embed_font_file {
                                 pub use semio_s_artifact_stdio_pdf_mut_vt::standards::v1_7::subsets::vt::io::text::mutations::embed_font_file::*;

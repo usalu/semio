@@ -15,6 +15,9 @@ workspace = true
 [lib]
 path = "🦀️.rs"
 
+[features]
+testkit = ["semio-s-artifact-puzzle-2d-board-host/testkit", "semio-s-artifact-puzzle-2d-engine/testkit", "semio-s-artifact-puzzle-2d-graph-manifest/testkit", "semio-s-artifact-puzzle-2d-interaction/testkit", "semio-s-artifact-puzzle-2d-mut-any/testkit", "semio-s-artifact-puzzle-2d-mut-any-10/testkit", "semio-s-artifact-puzzle-2d-mut-any-2/testkit", "semio-s-artifact-puzzle-2d-mut-any-6/testkit", "semio-s-artifact-puzzle-2d-mut-any-7/testkit", "semio-s-artifact-puzzle-2d-mut-any-8/testkit", "semio-s-artifact-puzzle-2d-mutations/testkit", "semio-s-artifact-puzzle-2d-records/testkit", "semio-s-artifact-puzzle-2d-snapshot/testkit", "semio-s-artifact-puzzle-2d-tests/testkit", "semio-s-artifact-puzzle-2d-text-inverse/testkit"]
+
 [dependencies]
 machine = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🔄️machine/📦️packages/🦀️rust", package = "semio-framework-machine" }
 pack = { workspace = true }
@@ -68,7 +71,6 @@ semio-s-artifact-puzzle-2d-tests = { path = "../../../../🧬️schema/🧬️mu
 semio-s-artifact-puzzle-2d-text-inverse = { path = "../../../../🧬️schema/🧬️mutations/🔤️text/↩️inverse/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-3d = { workspace = true }
 semio-s-artifact-puzzle-3d-inferences = { workspace = true }
-semio-s-artifact-stdio-dwg = { workspace = true }
 semio-s-artifact-stdio-dxf = { workspace = true }
 semio-s-artifact-stdio-json = { workspace = true }
 semio-s-artifact-stdio-pdf = { workspace = true }
@@ -98,6 +100,21 @@ semio-s-plugin-puzzle-jobs = { workspace = true, features = ["testing"] }
 semio-s-plugin-puzzle-retained = { workspace = true, features = ["testing"] }
 serde = { workspace = true }
 serde_json = { workspace = true }
+semio-s-artifact-puzzle-2d-board-host = { path = "../../../⚙️engine/🎲️board-host/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-puzzle-2d-engine = { path = "../../../⚙️engine/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-puzzle-2d-graph-manifest = { path = "../../../../../../../../🛂️manifest/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-puzzle-2d-interaction = { path = "../../../🕹️interaction/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-puzzle-2d-mut-any = { path = "../../../../🧬️schema/🧬️mutations/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-puzzle-2d-mut-any-10 = { path = "../../../../🧬️schema/🧬️mutations/✋️selection/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-puzzle-2d-mut-any-2 = { path = "../../../../🧬️schema/🧬️mutations/🟢️node/🔒change-node-locked/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-puzzle-2d-mut-any-6 = { path = "../../../../🧬️schema/🧬️mutations/🟢️node/🧊replace-node-geometry/🧪️tests/🚫️rejects/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-puzzle-2d-mut-any-7 = { path = "../../../../🧬️schema/🧬️mutations/🟢️node/⚓change-node-anchor/🧪️tests/⚓️derives/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-puzzle-2d-mut-any-8 = { path = "../../../../🧬️schema/🧬️mutations/〰️edge/🧮replace-edge-geometry/🧪️tests/📍️repositions-edge-1/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-puzzle-2d-mutations = { path = "../../../../🧬️schema/📸️snapshot/🧪️tests/🧬️retained-clone/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-puzzle-2d-records = { path = "../../../../🧬️schema/🧱️records/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-puzzle-2d-snapshot = { path = "../../../../🧬️schema/📸️snapshot/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-puzzle-2d-tests = { path = "../../../../🧬️schema/🧬️mutations/🔌️handle/🪢️connect-handles/🎮️prepare/🧪️tests/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-puzzle-2d-text-inverse = { path = "../../../../🧬️schema/🧬️mutations/🔤️text/↩️inverse/📦️packages/🦀️rust", features = ["testkit"] }
 
 [target.'cfg(all(target_arch = "wasm32", not(target_env = "p2")))'.dependencies]
 js-sys = { workspace = true }

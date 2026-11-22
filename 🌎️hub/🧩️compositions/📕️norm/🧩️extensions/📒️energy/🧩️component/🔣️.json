@@ -12023,10 +12023,12 @@
             "label": "Desktop",
             "layout": {
               "root": {
-                "kind": "row",
+                "kind": "split",
+                "axis": "horizontal",
                 "children": [
                   {
-                    "kind": "column",
+                    "kind": "split",
+                    "axis": "vertical",
                     "size": 0.22,
                     "children": [
                       {
@@ -12062,7 +12064,8 @@
                     ]
                   },
                   {
-                    "kind": "column",
+                    "kind": "split",
+                    "axis": "vertical",
                     "size": 0.26,
                     "children": [
                       {
@@ -12098,7 +12101,7 @@
             "layout": {
               "root": {
                 "kind": "stack",
-                "activeWindowKindId": "norm-din18599-viewport",
+                "activeWindowId": "norm-din18599-viewport",
                 "children": [
                   {
                     "kind": "window",
@@ -12130,7 +12133,8 @@
             "label": "Tablet",
             "layout": {
               "root": {
-                "kind": "row",
+                "kind": "split",
+                "axis": "horizontal",
                 "children": [
                   {
                     "kind": "stack",
@@ -12145,7 +12149,7 @@
                   {
                     "kind": "stack",
                     "size": 0.4,
-                    "activeWindowKindId": "norm-din18599-properties",
+                    "activeWindowId": "norm-din18599-properties",
                     "children": [
                       {
                         "kind": "window",
@@ -12173,10 +12177,12 @@
         ],
         "defaultLayout": {
           "root": {
-            "kind": "row",
+            "kind": "split",
+            "axis": "horizontal",
             "children": [
               {
-                "kind": "column",
+                "kind": "split",
+                "axis": "vertical",
                 "size": 0.22,
                 "children": [
                   {
@@ -12212,7 +12218,8 @@
                 ]
               },
               {
-                "kind": "column",
+                "kind": "split",
+                "axis": "vertical",
                 "size": 0.26,
                 "children": [
                   {
@@ -19648,11 +19655,12 @@
             "label": "Desktop",
             "layout": {
               "root": {
-                "kind": "row",
+                "kind": "split",
+                "axis": "horizontal",
                 "children": [
                   {
                     "kind": "stack",
-                    "size": 0.6666666666666666,
+                    "size": 0.666667,
                     "children": [
                       {
                         "kind": "window",
@@ -19661,8 +19669,9 @@
                     ]
                   },
                   {
-                    "kind": "column",
-                    "size": 0.3333333333333333,
+                    "kind": "split",
+                    "axis": "vertical",
+                    "size": 0.333333,
                     "children": [
                       {
                         "kind": "stack",
@@ -19697,7 +19706,7 @@
             "layout": {
               "root": {
                 "kind": "stack",
-                "activeWindowKindId": "norm-din18599-viewport",
+                "activeWindowId": "norm-din18599-viewport",
                 "children": [
                   {
                     "kind": "window",
@@ -19721,7 +19730,8 @@
             "label": "Tablet",
             "layout": {
               "root": {
-                "kind": "row",
+                "kind": "split",
+                "axis": "horizontal",
                 "children": [
                   {
                     "kind": "stack",
@@ -19736,7 +19746,7 @@
                   {
                     "kind": "stack",
                     "size": 0.4,
-                    "activeWindowKindId": "norm-din18599-checks",
+                    "activeWindowId": "norm-din18599-checks",
                     "children": [
                       {
                         "kind": "window",
@@ -19756,11 +19766,12 @@
         ],
         "defaultLayout": {
           "root": {
-            "kind": "row",
+            "kind": "split",
+            "axis": "horizontal",
             "children": [
               {
                 "kind": "stack",
-                "size": 0.6666666666666666,
+                "size": 0.666667,
                 "children": [
                   {
                     "kind": "window",
@@ -19769,8 +19780,9 @@
                 ]
               },
               {
-                "kind": "column",
-                "size": 0.3333333333333333,
+                "kind": "split",
+                "axis": "vertical",
+                "size": 0.333333,
                 "children": [
                   {
                     "kind": "stack",

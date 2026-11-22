@@ -34,12 +34,12 @@ pub struct NativeSnapshotPackExportJob<A:ArtifactApp> where A::Snapshot:Borrowed
  page:Option<Vec<u8>>,pending:ManuallyDrop<Option<Result<ArtifactMediaExportResult,semio_framework::MediaError>>>,pending_close:ManuallyDrop<Option<ControlledRetirement<Result<ArtifactMediaExportResult,semio_framework::MediaError>>>>,
  binding:Option<OriginalSourceBinding>,source_identity:(semio_framework_job::OperationId,semio_framework_job::Generation),prefix:usize,encoded:bool,published:bool,completed:bool,closing:bool,units:u64,
  publication:RetainedJobPublication,delivered:bool,publish_progress:bool,
- construction:MediaConstruction,unit:Option<()>,stash:Option<Stash>,
+ construction:MediaConstruction,unit:Option<()>,stash:ManuallyDrop<Option<Stash>>,stash_close:ManuallyDrop<Option<ControlledRetirement<Stash>>>,
 }
 impl<A:ArtifactApp> NativeSnapshotPackExportJob<A> where A::Snapshot:BorrowedDslRecord+FieldProjectionSource{
  pub fn admit_original(request:&mut Option<ArtifactMediaExportJobRequest<A>>,body:&mut Option<Box<dyn ArtifactReservedJob+Send>>,admission:&mut MediaConstruction,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   cx.original_source_parent()?;if cx.should_yield()||cx.is_cancelled(){return Ok(false)}
-  if body.is_none(){let source=request.as_ref().ok_or_else(||invalid("native Pack factory requires its original request"))?;if source.port!=SNAPSHOT_PACK_PORT||source.tool_id!=SNAPSHOT_PACK_TOOL{return Err(invalid("native Pack factory received a foreign port").into())}let source_identity=source.source_identity;let bytes=size_of::<Self>();return admission.built(cx,body,construction(RetirementDemand{capacity_bytes:bytes,..demand(bytes)}),||{let pointer=std::ptr::NonNull::new(unsafe{std::alloc::alloc(std::alloc::Layout::new::<Self>())}.cast::<Self>()).ok_or_else(||ValueError::literal(ValueRefusalKind::AllocationFailed,"native Pack body allocation refused"))?;let owner=Self{snapshot:None,lease:None,cursor:None,metadata:ManuallyDrop::new(None),metadata_close:ManuallyDrop::new(None),outputs:ManuallyDrop::new(None),outputs_close:ManuallyDrop::new(None),page:None,pending:ManuallyDrop::new(None),pending_close:ManuallyDrop::new(None),binding:None,source_identity,prefix:0,encoded:false,published:false,completed:false,closing:false,units:0,publication:RetainedJobPublication::new(),delivered:false,publish_progress:false,construction:Default::default(),unit:None,stash:None};let boxed:Box<dyn ArtifactReservedJob+Send>=unsafe{pointer.as_ptr().write(owner);Box::from_raw(pointer.as_ptr())};Ok((boxed,RetainedCloneProgress{copied_items:1,copied_bytes:bytes,retained_capacity_bytes:bytes,..Default::default()}))}).map(|_|false)}
+  if body.is_none(){let source=request.as_ref().ok_or_else(||invalid("native Pack factory requires its original request"))?;if source.port!=SNAPSHOT_PACK_PORT||source.tool_id!=SNAPSHOT_PACK_TOOL{return Err(invalid("native Pack factory received a foreign port").into())}let source_identity=source.source_identity;let bytes=size_of::<Self>();return admission.built(cx,body,construction(RetirementDemand{capacity_bytes:bytes,..demand(bytes)}),||{let pointer=std::ptr::NonNull::new(unsafe{std::alloc::alloc(std::alloc::Layout::new::<Self>())}.cast::<Self>()).ok_or_else(||ValueError::literal(ValueRefusalKind::AllocationFailed,"native Pack body allocation refused"))?;let owner=Self{snapshot:None,lease:None,cursor:None,metadata:ManuallyDrop::new(None),metadata_close:ManuallyDrop::new(None),outputs:ManuallyDrop::new(None),outputs_close:ManuallyDrop::new(None),page:None,pending:ManuallyDrop::new(None),pending_close:ManuallyDrop::new(None),binding:None,source_identity,prefix:0,encoded:false,published:false,completed:false,closing:false,units:0,publication:RetainedJobPublication::new(),delivered:false,publish_progress:false,construction:Default::default(),unit:None,stash:ManuallyDrop::new(None),stash_close:ManuallyDrop::new(None)};let boxed:Box<dyn ArtifactReservedJob+Send>=unsafe{pointer.as_ptr().write(owner);Box::from_raw(pointer.as_ptr())};Ok((boxed,RetainedCloneProgress{copied_items:1,copied_bytes:bytes,retained_capacity_bytes:bytes,..Default::default()}))}).map(|_|false)}
   if admission.settling(){admission.settle(cx)?;return Ok(false)}
   let owner=(&mut**body.as_mut().unwrap()as &mut dyn std::any::Any).downcast_mut::<Self>().ok_or_else(||invalid("native Pack factory requires its exact body"))?;
   if owner.snapshot.is_some(){return if request.is_none(){Ok(true)}else{Err(invalid("native Pack source cannot be overwritten").into())}}
@@ -47,6 +47,8 @@ impl<A:ArtifactApp> NativeSnapshotPackExportJob<A> where A::Snapshot:BorrowedDsl
  }
  fn advance(&mut self,cx:&mut StepContext<'_>)->Result<(),OriginalTurnFailure>{
   if self.binding.is_none(){self.binding=Some(OriginalSourceBinding::borrow(cx));}if !self.binding.unwrap().matches(cx)||self.source_identity!=(cx.operation(),cx.generation()){return Err(invalid("native Pack writer lost its original operation source").into())}
+  if self.construction.settling(){self.construction.settle(cx)?;return Ok(())}
+  if self.unit.is_some(){let d=demand(size_of::<Option<()>>()+size_of::<u64>()+size_of::<bool>());let grant=cx.retained_grant();if grant.maximum_items==0||!plugin_grant_funds(d,grant){return Ok(())}self.unit=None;self.units+=1;self.publish_progress=self.units.is_multiple_of(4096);cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})?;cx.consume_fuel(1);return Ok(())}
   if self.pending.is_some()||self.published{self.completed=self.outputs.as_ref().unwrap().2.complete_original(&mut self.pending,&mut self.published,cx)?;return Ok(())}
   if self.cursor.is_none(){let prefix=store::os_store::semio_format::declared_envelope_prefix_len(store::os_store::serialization::ArtifactStoreSnapshot::native_pack_source(self.snapshot.as_deref().ok_or_else(||invalid("native Pack writer lost its original snapshot"))?).ok_or_else(||invalid("native Pack writer snapshot declares no Pack source"))?.envelope,store::os_store::semio_format::Component::Pack,1)?;let maximum=ArtifactOutputChunks::MAXIMUM_TOTAL_BYTES.checked_sub(SNAPSHOT_PACK_SCHEMA.len()).and_then(|maximum|maximum.checked_sub(prefix)).ok_or_else(||invalid("native snapshot prefix exceeds output authority"))?;let bytes=size_of::<BorrowedPackDocumentCursor>();self.construction.built(cx,&mut self.cursor,construction(RetirementDemand{capacity_bytes:bytes,..demand(bytes)}),||Ok((Box::new(BorrowedPackDocumentCursor::with_maximum_file_len(maximum)),RetainedCloneProgress{copied_items:1,copied_bytes:bytes,retained_capacity_bytes:bytes,..Default::default()})))?;return Ok(())}
   if self.page.as_ref().is_some_and(|page|page.len()==ArtifactOutputChunks::CHUNK_BYTES||(self.encoded&&!page.is_empty())){let outputs=self.outputs.as_ref().unwrap();outputs.1.as_ref().unwrap().push_original(&mut self.page,Some(&outputs.0),cx)?;return Ok(())}
@@ -58,11 +60,12 @@ impl<A:ArtifactApp> NativeSnapshotPackExportJob<A> where A::Snapshot:BorrowedDsl
   let envelope=store::os_store::serialization::ArtifactStoreSnapshot::native_pack_source(self.snapshot.as_deref().ok_or_else(||invalid("native Pack writer lost its original snapshot"))?).ok_or_else(||invalid("native Pack writer snapshot declares no Pack source"))?.envelope;
   if let Some(byte)=store::os_store::semio_format::declared_binary_prefix_byte(envelope,store::os_store::semio_format::Component::Pack,1,self.prefix)?{let d=demand(1+size_of::<usize>());if plugin_grant_funds(d,cx.retained_grant())&&cx.retained_grant().maximum_items>0{self.page.as_mut().unwrap().push(byte);self.prefix+=1;cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})?;cx.consume_fuel(1);}return Ok(())}
   let cursor=self.cursor.as_ref().unwrap();let d=RetirementDemand{copy_bytes:cursor.next_copy_byte_demand()?.checked_add(1).ok_or_else(||invalid("native Pack copy quote overflow"))?,capacity_bytes:cursor.next_capacity_byte_demand()?,depth:cursor.next_depth_demand()?+1,..Default::default()};let grant=cx.retained_grant();
-  if self.stash.is_none()&&self.unit.is_none(){
+  if self.stash.is_none(){
+   if grant.maximum_items==0||grant.maximum_copy_bytes==0||grant.maximum_depth==0{return Ok(())}
    let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-1,maximum_depth:grant.maximum_depth-1,..grant};let mut byte=[0u8];
    let snapshot=self.snapshot.as_deref().ok_or_else(||invalid("native Pack writer lost its original snapshot"))?;let cursor=self.cursor.as_mut().ok_or_else(||invalid("native Pack writer lost its original cursor"))?;
    match cx.with_original_effect(child,|_,effect|cursor.advance(snapshot,<A::Snapshot as BorrowedDslRecord>::RECORD,&mut byte,effect))?{
-    Some((result,performed))=>{cx.consume_work(performed);self.stash=Some(match result{Ok(step)=>(byte[0],step.written_bytes,step.progress,step.complete,None),Err(failure)=>(byte[0],failure.written_bytes,failure.reason.retained_progress(),false,Some(failure.reason))});},
+    Some((result,performed))=>{cx.consume_work(performed);*self.stash=Some(match result{Ok(step)=>(byte[0],step.written_bytes,step.progress,step.complete,None),Err(failure)=>(byte[0],failure.written_bytes,failure.reason.retained_progress(),false,Some(failure.reason))});},
     None=>return Ok(()),
    }
   }
@@ -74,8 +77,8 @@ impl<A:ArtifactApp> NativeSnapshotPackExportJob<A> where A::Snapshot:BorrowedDsl
    if let Some(error)=error{return Err(error.with_retained_progress(progress))}
    self.encoded=complete;Ok(((),progress))
   });
-  if stashed.is_some(){self.stash=stashed;}
-  if ready?{self.unit=None;self.units+=1;self.publish_progress=self.units.is_multiple_of(4096);}
+  if stashed.is_some(){*self.stash=stashed;}
+  ready?;
   Ok(())
  }
  fn step_turn<'a>(&'a mut self,cx:&mut StepContext<'_>)->Result<Option<JobOutcomeBorrow<'a>>,OriginalTurnFailure>{
@@ -86,6 +89,8 @@ impl<A:ArtifactApp> NativeSnapshotPackExportJob<A> where A::Snapshot:BorrowedDsl
  }
  fn close_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{
   if !self.construction.terminal_is_empty(){return self.construction.close_demand(body)}
+  if self.stash.is_some()||self.stash_close.is_some(){return plugin_typed_owner_demand(&self.stash,&self.stash_close,body)}
+  if self.unit.is_some(){return Ok(demand(size_of::<Option<()>>()))}
   if !self.publication.terminal_is_empty(){return self.publication.retirement_demands()}
   if self.delivered{return Ok(demand(1))}
   if let Some(cursor)=self.cursor.as_ref(){if !cursor.terminal_is_empty(){return cursor.retirement_demands()}return Ok(RetirementDemand{release_bytes:size_of::<BorrowedPackDocumentCursor>(),..demand(size_of::<Option<Box<BorrowedPackDocumentCursor>>>())})}
@@ -98,6 +103,8 @@ impl<A:ArtifactApp> NativeSnapshotPackExportJob<A> where A::Snapshot:BorrowedDsl
  }
  fn close_unit(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{
   let grant=effect.grant();let d=self.close_demand(grant.maximum_copy_bytes)?;if grant.maximum_items==0||!plugin_grant_funds(d,grant){return Ok(RetainedCloneStep::Progress(Default::default()))}let item=RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()};
+  if self.stash.is_some()||self.stash_close.is_some(){return settle_close_poll(plugin_typed_owner_original(&mut self.stash,&mut self.stash_close,effect))}
+  if self.unit.is_some(){if !effect.performed(1)?{return Ok(RetainedCloneStep::Progress(Default::default()))}self.unit=None;return Ok(RetainedCloneStep::Progress(item))}
   if !self.publication.terminal_is_empty(){return self.publication.close_step(effect).result}if self.delivered{self.delivered=false;return Ok(RetainedCloneStep::Progress(item))}
   if let Some(cursor)=self.cursor.as_mut(){if !cursor.terminal_is_empty(){return cursor.close(effect).map(|step|RetainedCloneStep::Progress(step.progress)).map_err(|failure|failure.reason)}self.cursor.take();return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{released_bytes:d.release_bytes,..item}))}
   if self.page.is_some(){self.page.take();return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{released_bytes:d.release_bytes,..item}))}
@@ -121,7 +128,7 @@ impl<A:ArtifactApp> InteractiveJob for NativeSnapshotPackExportJob<A> where A::S
   if let Some(progress)=self.construction.close_step(cx)?{return Ok(if self.terminal_is_empty(){InteractiveJobCloseStep::Complete{progress}}else{InteractiveJobCloseStep::Pending{progress}})}
   let d=self.close_demand(cx.retained_grant().maximum_copy_bytes)?;let step=close_original_retained_effect_step(cx,d,|effect|self.close_unit(effect))?;Ok(if self.terminal_is_empty(){InteractiveJobCloseStep::Complete{progress:step.progress()}}else{step})
  }
- fn terminal_is_empty(&self)->bool{self.cursor.is_none()&&self.page.is_none()&&self.snapshot.is_none()&&self.lease.is_none()&&self.outputs.is_none()&&self.outputs_close.is_none()&&self.metadata.is_none()&&self.metadata_close.is_none()&&self.pending.is_none()&&self.pending_close.is_none()&&self.publication.terminal_is_empty()&&!self.delivered&&self.construction.terminal_is_empty()&&self.unit.is_none()&&self.stash.is_none()}
+ fn terminal_is_empty(&self)->bool{self.cursor.is_none()&&self.page.is_none()&&self.snapshot.is_none()&&self.lease.is_none()&&self.outputs.is_none()&&self.outputs_close.is_none()&&self.metadata.is_none()&&self.metadata_close.is_none()&&self.pending.is_none()&&self.pending_close.is_none()&&self.publication.terminal_is_empty()&&!self.delivered&&self.construction.terminal_is_empty()&&self.unit.is_none()&&self.stash.is_none()&&self.stash_close.is_none()}
 }
 impl<A:ArtifactApp> ArtifactReservedJob for NativeSnapshotPackExportJob<A> where A::Snapshot:BorrowedDslRecord+FieldProjectionSource{}
 impl<A:ArtifactApp> Drop for NativeSnapshotPackExportJob<A> where A::Snapshot:BorrowedDslRecord+FieldProjectionSource{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"native Pack export requires original paid close");}}

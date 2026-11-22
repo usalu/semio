@@ -3,6 +3,8 @@
  * 🧱️ Child module of `🎠️kernel`; importers import this module directly, and the kernel package entry {@link ../📦️packages/🟦️typescript/🟦️.ts} lists its public names.
  */
 
+import { type WindowLayoutNode, collectWindowIds } from "@semio-tech/ui-layout";
+
 // #region 🎠️Kernel
 //#region InvocationResponse
 /**
@@ -67,10 +69,6 @@ export function uiDirtyScopeAsksForNothing(scope: UiDirtyScope): boolean {
   return scope.kind === "none";
 }
 
-/** 🏗️ Structural shape of a mode-layout node, read here so a caller that only asks "which windows are
- * mounted?" does not take a dependency on a renderer's whole layout type surface. */
-type ModeLayoutNodeLikeV1 = { readonly kind: string; readonly id?: string; readonly children?: readonly ModeLayoutNodeLikeV1[] };
-
 /** 🪟️ Every window id the mode layout actually mounts, background tabs of a stack included.
  *
  * 🐢️ This is the difference between the windows an app DECLARES and the windows the user is looking
@@ -79,18 +77,8 @@ type ModeLayoutNodeLikeV1 = { readonly kind: string; readonly id?: string; reado
  * included — twice per `flowEvalTick` hop while the user sat in edit mode
  * (`📓️react-hop-latency-2026-09-14.md`). It lives beside the dirty-scope predicates because both
  * shells owe the same rule: the wgpu `refresh_ui` window walk has the identical choice to make. */
-export function windowLayoutWindowIdsV1(layout: unknown): ReadonlySet<string> {
-  const ids = new Set<string>();
-  const walk = (node: ModeLayoutNodeLikeV1 | null | undefined): void => {
-    if (!node || typeof node !== "object") return;
-    if (node.kind === "window" && typeof node.id === "string") {
-      ids.add(node.id);
-      return;
-    }
-    for (const child of node.children ?? []) walk(child);
-  };
-  walk(layout as ModeLayoutNodeLikeV1 | null | undefined);
-  return ids;
+export function windowLayoutWindowIdsV1(layout: WindowLayoutNode | null | undefined): ReadonlySet<string> {
+  return new Set(layout ? collectWindowIds(layout) : []);
 }
 
 /** ✂️ Splits the declared window instances into the ones a refresh pass must fetch and the ones

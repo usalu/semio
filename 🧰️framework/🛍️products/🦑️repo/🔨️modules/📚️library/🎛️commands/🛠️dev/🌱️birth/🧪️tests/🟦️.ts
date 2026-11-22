@@ -9,6 +9,7 @@ import schema from "../🧬️schema/🔣️.json" with { type: "json" };
 import cases from "../🧫️fixtures/🔣️.json" with { type: "json" };
 
 import playgroundCases from "../🧫️fixtures/playground.json" with { type: "json" };
+import coldPlaygroundCases from "../🧫️fixtures/playground-cold-start.json" with { type: "json" };
 import stagingCases from "../🧫️fixtures/playground-staging.json" with { type: "json" };
 import descriptorCases from "../🧫️fixtures/descriptor-emitter.json" with { type: "json" };
 import transpilerCases from "../🧫️fixtures/native-transpiler.json" with { type: "json" };
@@ -347,5 +348,65 @@ test("fresh native root retries only after failed Original custody is retired", 
     db.close();
     if (previousWire === undefined) delete process.env[SCRIPT_PROCESS_INVOCATION_ENV];
     else process.env[SCRIPT_PROCESS_INVOCATION_ENV] = previousWire;
+  }
+});
+
+test("cold playground retains the original runtime through import, closed stores and serve", async () => {
+  const ts = await import("typescript");
+  const source = readFileSync(new URL("../../🟦️.ts", import.meta.url), "utf8");
+  const tree = ts.createSourceFile("dev.ts", source, ts.ScriptTarget.Latest, true);
+  const actual: string[] = [];
+  const visit = (node: import("typescript").Node): void => {
+    if (ts.isCallExpression(node)) {
+      const name = node.expression.getText(tree);
+      if (name === "withRepositoryCompilerRuntimeEntriesV1") {
+        expect(node.arguments.slice(0, 3).map(argument => argument.getText(tree))).toEqual(["original.codeRoot", "this.invocation", "control"]);
+        actual.push("open:runtime");
+        ts.forEachChild(node, visit);
+        actual.push("close:runtime");
+        return;
+      }
+      if (name === "withRepositoryCacheStoreV1") {
+        const partition = node.arguments[1];
+        if (partition && ts.isStringLiteral(partition)) {
+          if (partition.text === "dependencies") expect(ts.isAwaitExpression(node.parent)).toBe(true);
+          actual.push(`open:${partition.text}`);
+          ts.forEachChild(node, visit);
+          actual.push(`close:${partition.text}`);
+          return;
+        }
+      }
+      if (name === "import" && node.arguments[0]?.getText(tree).includes("🎮️playground")) actual.push("import");
+      if (name === "serveRootPlaygroundV1") actual.push("serve");
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(tree);
+  const database = new Database(":memory:");
+  try {
+    const oracle = database.query(`
+      WITH transitions AS (SELECT key AS position, value AS step FROM json_each($steps))
+      SELECT
+        (SELECT position FROM transitions WHERE step = 'open:runtime') <
+        (SELECT position FROM transitions WHERE step = 'open:dependencies') AND
+        (SELECT position FROM transitions WHERE step = 'open:dependencies') <
+        (SELECT position FROM transitions WHERE step = 'open:products') AND
+        (SELECT position FROM transitions WHERE step = 'open:products') <
+        (SELECT position FROM transitions WHERE step = 'import') AND
+        (SELECT position FROM transitions WHERE step = 'import') <
+        (SELECT position FROM transitions WHERE step = 'close:products') AND
+        (SELECT position FROM transitions WHERE step = 'close:products') <
+        (SELECT position FROM transitions WHERE step = 'close:dependencies') AND
+        (SELECT position FROM transitions WHERE step = 'close:dependencies') <
+        (SELECT position FROM transitions WHERE step = 'serve') AND
+        (SELECT position FROM transitions WHERE step = 'serve') <
+        (SELECT position FROM transitions WHERE step = 'close:runtime') AS valid
+    `);
+    for (const row of coldPlaygroundCases) {
+      expect(oracle.get({ $steps: JSON.stringify(row.steps) }), row.id).toEqual({ valid: Number(row.valid) });
+    }
+    expect(actual).toEqual(coldPlaygroundCases.find(row => row.valid)?.steps);
+  } finally {
+    database.close();
   }
 });

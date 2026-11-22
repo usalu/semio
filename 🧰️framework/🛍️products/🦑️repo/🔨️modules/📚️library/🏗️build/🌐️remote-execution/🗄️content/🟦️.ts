@@ -13,7 +13,15 @@ export interface RemoteExecutionContentV1{
 }
 
 /** 🚧️ The store refused or could not take the request. `code` is a gRPC status code and `missingOutput` names a blob explicitly rejected during action-result validation. */
-export class RemoteExecutionContentErrorV1 extends Error{readonly code:number;constructor(code:number,message:string,readonly missingOutput?:string){super(message);this.code=code;}}
+export class RemoteExecutionContentErrorV1 extends Error{
+ readonly code:number;
+ readonly missingOutput?:string|undefined;
+ constructor(code:number,message:string,missingOutput?:string){
+  super(message);
+  this.code=code;
+  this.missingOutput=missingOutput;
+ }
+}
 
 /** ⚙️ How to reach the shared store over its HTTP protocol (`/<instance>/cas/<sha256>`, `/<instance>/ac/<sha256>`, bearer token). */
 export type RemoteExecutionHttpContentOptionsV1=Readonly<{endpoint:string;token?:string|undefined;fetch?:typeof fetch;concurrency?:number;timeoutSeconds?:number;retries?:number}>;

@@ -1,0 +1,52 @@
+{
+  "descriptor": {
+    "action": "moveOverlayPosition"
+  },
+  "marker": {
+    "id": "center",
+    "coordinates": [
+      2,
+      3
+    ],
+    "label": "Center",
+    "elevation": 167
+  },
+  "cases": [
+    {
+      "name": "move",
+      "rayIndex": 1,
+      "action": {
+        "id": "center",
+        "longitude": 2.00015625,
+        "latitude": 3.000375
+      }
+    },
+    {
+      "name": "off-grid",
+      "rayIndex": 4
+    },
+    {
+      "name": "missing-data",
+      "rayIndex": 1,
+      "missingSample": [
+        16,
+        17
+      ]
+    },
+    {
+      "name": "cancel",
+      "rayIndex": 1,
+      "cancel": true
+    },
+    {
+      "name": "stale-source",
+      "rayIndex": 1,
+      "stale": true
+    },
+    {
+      "name": "no-travel",
+      "rayIndex": 1,
+      "noTravel": true
+    }
+  ]
+}

@@ -71,7 +71,7 @@ fn docking_window_handle_tooltips_follow_dashboard_language() {
 
 #[test]
 fn docking_tabs_reach_all_four_corners_with_preview_and_identity_owned_controls() {
-  use tuilayout::{stack_hosting};
+  use tuilayout::{stack_hosting, stack_windows, window_corner_set, window_id};
   use dock::{DockPlacement, WindowStackCorner};
   use semio_ui_tui_frame::chrome::WindowHit;
   let corners = [WindowStackCorner::TopLeft, WindowStackCorner::TopRight, WindowStackCorner::BottomLeft, WindowStackCorner::BottomRight];
@@ -92,8 +92,8 @@ fn docking_tabs_reach_all_four_corners_with_preview_and_identity_owned_controls(
     press(&mut dashboard, &mut tui, &[pointer(MouseKind::Up(MouseButton::Left), drop)]);
     assert_committed_ghost(&dashboard, &mut tui, &source, &ghost);
     let stack = stack_hosting(&dashboard.layout, &source).unwrap();
-    let index = stack.children.iter().position(|node| node.window_kind_id == source).unwrap();
-    assert_eq!(stack.children[index].corner, Some(corner));
+    let index = stack_windows(&stack).iter().position(|node| window_id(node) == source).unwrap();
+    assert_eq!(window_corner_set(&stack_windows(&stack)[index]), Some(corner));
     assert_eq!(dashboard.windows[1].root, root);
     let node = dashboard.windows[1].chrome;
     let rect = tui.scene.rect(node);
@@ -108,7 +108,7 @@ fn docking_tabs_reach_all_four_corners_with_preview_and_identity_owned_controls(
 
 #[test]
 fn docking_interleaved_layout_events_keep_the_held_tab_identity() {
-  use tuilayout::stack_hosting;
+  use tuilayout::{stack_hosting, stack_windows, window_id};
   let (mut dashboard, mut tui) = view();
   dashboard.perform(&mut tui, Action::NewTask);
   dashboard.perform(&mut tui, Action::NewTask);
@@ -124,13 +124,13 @@ fn docking_interleaved_layout_events_keep_the_held_tab_identity() {
   let drop = tab_position(&dashboard, &tui, &target);
   press(&mut dashboard, &mut tui, &[pointer(MouseKind::Drag(MouseButton::Left), drop), pointer(MouseKind::Up(MouseButton::Left), drop)]);
   let group = stack_hosting(&dashboard.layout, &source).unwrap();
-  assert_eq!(group.children.iter().map(|node| node.window_kind_id.as_str()).collect::<Vec<_>>(), vec![source.as_str(), target.as_str(), other.as_str()]);
+  assert_eq!(stack_windows(&group).iter().map(window_id).collect::<Vec<_>>(), vec![source.as_str(), target.as_str(), other.as_str()]);
   assert_eq!(dashboard.windows[1].root, body);
 }
 
 #[test]
 fn docking_corner_pointer_moves_between_groups_and_orders_within_the_chosen_corner() {
-  use tuilayout::{dock_window, stack_hosting};
+  use tuilayout::{dock_window, stack_hosting, stack_windows, window_corner, window_corner_set, window_id};
   use dock::{DockPlacement, WindowStackCorner::*};
   for corner in [TopLeft, TopRight, BottomLeft, BottomRight] {
     let (mut dashboard, mut tui) = view();
@@ -147,8 +147,8 @@ fn docking_corner_pointer_moves_between_groups_and_orders_within_the_chosen_corn
     press(&mut dashboard, &mut tui, &[pointer(MouseKind::Up(MouseButton::Left), drop)]);
     assert_committed_ghost(&dashboard, &mut tui, &source, &ghost);
     let group = stack_hosting(&dashboard.layout, &target).unwrap();
-    assert_eq!(group.children.len(), 2);
-    assert_eq!(group.children.iter().find(|node| node.window_kind_id == source).unwrap().corner, Some(corner));
+    assert_eq!(stack_windows(&group).len(), 2);
+    assert_eq!(window_corner_set(stack_windows(&group).iter().find(|node| window_id(node) == source).unwrap()), Some(corner));
     assert_eq!(dashboard.windows[1].root, body);
     assert_eq!(dashboard.focused_index(&tui), 1);
     dashboard.perform(&mut tui, Action::NewTask);
@@ -156,14 +156,14 @@ fn docking_corner_pointer_moves_between_groups_and_orders_within_the_chosen_corn
     assert!(dock_window(&mut dashboard.layout, &other, &target, DockPlacement::Corner(corner), Some(0)));
     assert!(dock_window(&mut dashboard.layout, &source, &target, DockPlacement::Corner(corner), Some(0)));
     let group = stack_hosting(&dashboard.layout, &target).unwrap();
-    let order: Vec<_> = group.children.iter().filter(|node| node.corner.unwrap_or_default() == corner).map(|node| node.window_kind_id.as_str()).collect();
+    let order: Vec<_> = stack_windows(&group).iter().filter(|node| window_corner(node) == corner).map(window_id).collect();
     assert_eq!(&order[..2], &[source.as_str(), other.as_str()]);
   }
 }
 
 #[test]
 fn docking_corner_contract_covers_cross_group_and_sole_tab_moves() {
-  use tuilayout::{create_default_layout, dock_window, stack_hosting};
+  use tuilayout::{create_default_layout, dock_window, stack_hosting, stack_windows, window_corner_set, window_id, Axis};
   use dock::{DockPlacement};
   use geo::Rect;
   let vectors = docking_vectors();
@@ -175,19 +175,19 @@ fn docking_corner_contract_covers_cross_group_and_sole_tab_moves() {
     assert_eq!(DockPlacement::at(area, Pos { x: vector["point"][0].as_u64().unwrap() as u16, y: vector["point"][1].as_u64().unwrap() as u16 }), Some(placement));
     let DockPlacement::Corner(corner) = placement else { panic!("corner") };
     for ids in [vec!["a".into()], vec!["a".into(), "b".into()]] {
-      let mut layout = create_default_layout(&ids, "row", None, None);
+      let mut layout = create_default_layout(&ids, Axis::Horizontal, None, None);
       let target = ids.last().unwrap();
       assert!(dock_window(&mut layout, "a", target, placement, Some(0)));
       let stack = stack_hosting(&layout, "a").unwrap();
-      assert_eq!(stack.children.iter().find(|node| node.window_kind_id == "a").unwrap().corner, Some(corner));
-      assert_eq!(stack.children.len(), ids.len());
+      assert_eq!(window_corner_set(stack_windows(&stack).iter().find(|node| window_id(node) == "a").unwrap()), Some(corner));
+      assert_eq!(stack_windows(&stack).len(), ids.len());
     }
   }
 }
 
 #[test]
 fn keyboard_docking_places_tabs_in_all_corners_and_localizes_every_action() {
-  use tuilayout::{stack_hosting};
+  use tuilayout::{stack_hosting, stack_windows, window_corner_set, window_id};
   use dock::{WindowStackCorner::*};
   for (action, corner) in [(Action::TabTopLeft, TopLeft), (Action::TabTopRight, TopRight), (Action::TabBottomLeft, BottomLeft), (Action::TabBottomRight, BottomRight)] {
     for language in ["en", "de"] {
@@ -198,7 +198,7 @@ fn keyboard_docking_places_tabs_in_all_corners_and_localizes_every_action() {
       assert!(dashboard.keymap.keys_label(dashboard_preferences::keymap::Scope::Prefix, action.id()).is_some());
       let digit = match action { Action::TabTopLeft => '1', Action::TabTopRight => '2', Action::TabBottomLeft => '3', _ => '4' };
       press(&mut dashboard, &mut tui, &[ctrl('b'), Event::Key(KeyEvent { key: Key::Char(digit), mods: mods::ALT })]);
-      assert_eq!(stack_hosting(&dashboard.layout, &id).unwrap().children[0].corner, Some(corner));
+      assert_eq!(window_corner_set(&stack_windows(&stack_hosting(&dashboard.layout, &id).unwrap())[0]), Some(corner));
       assert_eq!(dashboard.focused_index(&tui), 0);
     }
   }
@@ -257,7 +257,7 @@ fn docking_fullscreen_and_close_on_an_inactive_tab_target_its_identity() {
 #[test]
 fn docking_preview_matches_the_committed_split_geometry_in_every_zone() {
   use geo::Rect;
-  use tuilayout::{create_default_layout, dock_window, push_window_to_stack, solve_window_layout, WindowLayoutWindowNode};
+  use tuilayout::{create_default_layout, dock_window, push_window_to_stack, solve_window_layout, window_node, Axis};
   use dock::{DockPlacement};
   let vectors = docking_vectors();
   let area = Rect::new(10, 4, 80, 40);
@@ -268,8 +268,8 @@ fn docking_preview_matches_the_committed_split_geometry_in_every_zone() {
     }
     let preview = placement.preview(area);
     assert_eq!(serde_json::json!([preview.x, preview.y, preview.width, preview.height]), vector["rect"]);
-    let mut layout = create_default_layout(&["b".into()], "row", None, None);
-    push_window_to_stack(&mut layout, "b", WindowLayoutWindowNode { window_kind_id: "a".into(), title: Some("Held task".into()), corner: None });
+    let mut layout = create_default_layout(&["b".into()], Axis::Horizontal, None, None);
+    push_window_to_stack(&mut layout, "b", window_node("a".into(), Some("Held task".into()), None));
     assert!(dock_window(&mut layout, "a", "b", placement, None));
     let measures = solve_window_layout(&layout, area);
     let held = measures.iter().find(|measure| measure.window_kind_id == "a").unwrap();
@@ -284,16 +284,16 @@ fn docking_preview_matches_the_committed_split_geometry_in_every_zone() {
 
 #[test]
 fn docking_commands_preserve_windows_prune_empty_groups_and_reject_invalid_targets() {
-  use tuilayout::{create_default_layout, dock_window, push_window_to_stack, stack_hosting, WindowLayoutRoot, WindowLayoutWindowNode};
+  use tuilayout::{create_default_layout, dock_window, push_window_to_stack, stack_hosting, stack_windows, window_id, window_node, Axis};
   let vectors = docking_vectors();
-  let mut layout = create_default_layout(&["a".into()], "row", None, None);
-  for id in ["b", "c"] { push_window_to_stack(&mut layout, "a", WindowLayoutWindowNode { window_kind_id: id.into(), title: Some(id.into()), corner: None }); }
+  let mut layout = create_default_layout(&["a".into()], Axis::Horizontal, None, None);
+  for id in ["b", "c"] { push_window_to_stack(&mut layout, "a", window_node(id.into(), Some(id.into()), None)); }
   for command in vectors["commands"].as_array().unwrap() {
     assert!(dock_window(&mut layout, command["source"].as_str().unwrap(), command["target"].as_str().unwrap(), docking_placement(command["placement"].as_str().unwrap()), command["tabIndex"].as_u64().map(|value| value as usize)));
   }
-  assert!(matches!(layout.root, WindowLayoutRoot::Stack(_)));
+  assert!(matches!(layout.root, tuilayout::WindowLayoutNode::Stack { .. }));
   let group = stack_hosting(&layout, "b").unwrap();
-  assert_eq!(serde_json::json!(group.children.iter().map(|node| node.window_kind_id.clone()).collect::<Vec<_>>()), vectors["finalTabs"]);
+  assert_eq!(serde_json::json!(stack_windows(&group).iter().map(|node| window_id(node).to_string()).collect::<Vec<_>>()), vectors["finalTabs"]);
   for command in vectors["invalid"].as_array().unwrap() {
     let before = layout.clone();
     assert!(!dock_window(&mut layout, command["source"].as_str().unwrap(), command["target"].as_str().unwrap(), docking_placement(command["placement"].as_str().unwrap()), None));
@@ -434,11 +434,11 @@ fn docking_survives_zoom_and_removing_the_held_window_cancels_its_preview() {
 #[test]
 fn nested_splits_preserve_the_weight_of_their_existing_sibling_slot() {
   use geo::Rect;
-  use tuilayout::{create_default_layout, solve_window_layout, split_window};
-  let mut layout = create_default_layout(&["a".into(), "b".into()], "row", Some(&[4.0, 1.0]), None);
+  use tuilayout::{create_default_layout, solve_window_layout, split_window, Axis};
+  let mut layout = create_default_layout(&["a".into(), "b".into()], Axis::Horizontal, Some(&[4.0, 1.0]), None);
   let area = Rect::new(0, 0, 160, 48);
   let before = solve_window_layout(&layout, area).into_iter().find(|window| window.window_kind_id == "b").unwrap().rect;
-  assert!(split_window(&mut layout, "a", "column", "c", None));
+  assert!(split_window(&mut layout, "a", Axis::Vertical, "c", None));
   let after = solve_window_layout(&layout, area).into_iter().find(|window| window.window_kind_id == "b").unwrap().rect;
   assert_eq!(before, after);
 }
@@ -463,7 +463,7 @@ fn splitter_drag_keeps_its_capture_across_each_layout_remount() {
   dashboard.perform(&mut tui, Action::SplitRight);
   dashboard.frame(&mut tui);
   let left = tui.scene.rect(dashboard.windows[0].chrome);
-  let start = Pos { x: left.x + left.width, y: left.y + left.height / 2 };
+  let start = Pos { x: left.x + left.width - 1, y: left.y + left.height / 2 };
   press(&mut dashboard, &mut tui, &[pointer(MouseKind::Down(MouseButton::Left), start)]);
   for delta in [3, 7, 5] {
     press(&mut dashboard, &mut tui, &[pointer(MouseKind::Drag(MouseButton::Left), Pos { x: start.x + delta, ..start })]);

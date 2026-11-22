@@ -1,5 +1,8 @@
 //! ✏️ The logical drawing: its object graph and the standard handles of a new document.
 
+use semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::schema::geometry::{DwgColor, DwgDrawing, DwgDrawingExtents, DwgEntity, DwgGeometry};
+use std::collections::HashMap;
+
 use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgArcEntity;
 use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgBlockBeginEntity;
 use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgBlockEndEntity;
@@ -653,102 +656,248 @@ impl DwgLogicalDrawing {
     }
 
     pub fn entities(&self) -> Vec<DwgLogicalEntity> {
-        let by_handle: std::collections::HashMap<u64, &DwgEntityBody> = self
-            .objects
-            .iter()
-            .filter_map(|object| match object.body.as_ref() {
-                Some(DwgLogicalObjectBody::Entity(body)) => Some((object.handle, body)),
-                _ => None,
-            })
-            .collect();
-        let point = |values: &[f64]| -> [f64; 3] { [values.first().copied().unwrap_or_default(), values.get(1).copied().unwrap_or_default(), values.get(2).copied().unwrap_or_default()] };
-        let vertex_points = |handles: &[u64]| -> Vec<[f64; 3]> {
-            handles
-                .iter()
-                .filter_map(|handle| match by_handle.get(handle) {
-                    Some(DwgEntityBody::Vertex(vertex)) => Some(point(&vertex.point)),
-                    _ => None,
-                })
-                .collect()
-        };
-        let layer_handles: Vec<u64> = self
-            .objects
-            .iter()
-            .filter_map(|candidate| match candidate.body.as_ref() {
-                Some(DwgLogicalObjectBody::TableRecord(DwgTableRecordBody::Layer(_))) => Some(candidate.handle),
-                _ => None,
-            })
-            .collect();
-        self.objects
-            .iter()
-            .filter_map(|object| {
-                let Some(DwgLogicalObjectBody::Entity(body)) = object.body.as_ref() else { return None };
-                let (common, geometry) = match body {
-                    DwgEntityBody::Line(line) => (&line.common, semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::schema::geometry::DwgGeometry::Line { start: point(&line.start), end: point(&line.end) }),
-                    DwgEntityBody::Point(value) => (&value.common, semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::schema::geometry::DwgGeometry::Point { at: point(&value.point) }),
-                    DwgEntityBody::Circle(circle) => (&circle.common, semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::schema::geometry::DwgGeometry::Circle { center: point(&circle.center), radius: circle.radius, normal: point(&circle.extrusion) }),
-                    DwgEntityBody::Arc(arc) => (&arc.common, semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::schema::geometry::DwgGeometry::Arc { center: point(&arc.center), radius: arc.radius, start_angle: arc.start_angle, end_angle: arc.end_angle, normal: point(&arc.extrusion) }),
-                    DwgEntityBody::Ellipse(ellipse) => (
-                        &ellipse.common,
-                        semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::schema::geometry::DwgGeometry::Ellipse { center: point(&ellipse.center), major_axis: point(&ellipse.major_axis), ratio: ellipse.axis_ratio, start_param: ellipse.start_parameter, end_param: ellipse.end_parameter, normal: point(&ellipse.extrusion) },
-                    ),
-                    DwgEntityBody::LwPolyline(polyline) => (
-                        &polyline.common,
-                        semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::schema::geometry::DwgGeometry::LwPolyline {
-                            closed: polyline.closed,
-                            elevation: polyline.elevation,
-                            vertices: polyline.vertices.iter().map(|vertex| [vertex.point.first().copied().unwrap_or_default(), vertex.point.get(1).copied().unwrap_or_default()]).collect(),
-                            bulges: polyline.vertices.iter().map(|vertex| vertex.bulge).collect(),
-                        },
-                    ),
-                    DwgEntityBody::Spline(spline) => (
-                        &spline.common,
-                        semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::schema::geometry::DwgGeometry::Spline { degree: spline.degree, control_points: spline.control_points.as_chunks::<3>().0.iter().map(|chunk| *chunk).collect(), knots: spline.knots.clone(), weights: spline.weights.clone() },
-                    ),
-                    DwgEntityBody::Text(text) => (
-                        &text.common,
-                        semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::schema::geometry::DwgGeometry::Text { at: [text.insertion.first().copied().unwrap_or_default(), text.insertion.get(1).copied().unwrap_or_default(), text.elevation], height: text.height, rotation: text.rotation, content: text.value.clone() },
-                    ),
-                    DwgEntityBody::Face3d(face) => {
-                        let corners = face.corners.as_chunks::<3>().0;
-                        (&face.common, semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::schema::geometry::DwgGeometry::Face3d { corners: [0, 1, 2, 3].map(|corner| corners.get(corner).copied().unwrap_or_default()) })
-                    }
-                    DwgEntityBody::Polyline3d(polyline) => (&polyline.common, semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::schema::geometry::DwgGeometry::Polyline3d { closed: polyline.flags & 1 != 0, vertices: vertex_points(&polyline.vertex_handles) }),
-                    DwgEntityBody::PolyfaceMesh(mesh) => (
-                        &mesh.common,
-                        semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::schema::geometry::DwgGeometry::PolyfaceMesh {
-                            vertices: vertex_points(&mesh.vertex_handles),
-                            faces: mesh
-                                .vertex_handles
-                                .iter()
-                                .filter_map(|handle| match by_handle.get(handle) {
-                                    Some(DwgEntityBody::PolyfaceFace(face)) => Some([0, 1, 2, 3].map(|slot| i32::from(face.indices.get(slot).copied().unwrap_or_default()))),
-                                    _ => None,
-                                })
-                                .collect(),
-                        },
-                    ),
-                    DwgEntityBody::BlockBegin(_) | DwgEntityBody::BlockEnd(_) | DwgEntityBody::Insert(_) | DwgEntityBody::DimensionLinear(_) | DwgEntityBody::Viewport(_) | DwgEntityBody::Vertex(_) | DwgEntityBody::PolyfaceFace(_) | DwgEntityBody::SequenceEnd(_) => return None,
-                };
-                let color = match common.color.kind {
-                    DwgEntityColorKind::ByLayer => -1,
-                    DwgEntityColorKind::ByBlock => -2,
-                    DwgEntityColorKind::Index => common.color.index as i16,
-                    DwgEntityColorKind::TrueColor => return None,
-                };
-                let layer = layer_handles.iter().position(|handle| *handle == common.layer_handle).unwrap_or(0);
-                Some(DwgLogicalEntity { layer, color, geometry: DwgLogicalGeometry::from_native(&geometry) })
-            })
-            .collect()
+        let index = self.entity_projection();
+        (0..self.objects.len()).filter_map(|row| index.entity_parts(&self.objects, row).expect("DWG entity projection")).map(|(layer, color, geometry)| {
+            DwgLogicalEntity { layer, color, geometry: DwgLogicalGeometry::from_native(&geometry) }
+        }).collect()
     }
 
-    pub fn to_native(&self) -> Result<semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::schema::geometry::DwgDrawing, String> {
-        Ok(semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::schema::geometry::DwgDrawing {
-            layers: self.layers.iter().map(|layer| semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::schema::geometry::DwgLayer { name: layer.name.clone(), color: layer.color }).collect(),
-            entities: self.entities().iter().map(DwgLogicalEntity::to_native).collect::<Result<_, _>>()?,
+    pub fn to_native(&self) -> Result<DwgDrawing, String> {
+        let index = self.entity_projection();
+        let mut entities = Vec::new();
+        for row in 0..self.objects.len() {
+            if let Some((layer, color, geometry)) = index.entity_parts(&self.objects, row)? {
+                entities.push(dwg_projected_entity(layer, color, geometry)?);
+            }
+        }
+        Ok(DwgDrawing {
+            layers: self.layers.iter().map(DwgLogicalLayer::to_native).collect(),
+            entities,
             extmin: vec3(&self.extmin)?,
             extmax: vec3(&self.extmax)?,
         })
+    }
+
+    fn entity_projection(&self) -> DwgEntityProjection {
+        let mut projection = DwgEntityProjection::default();
+        for (index, object) in self.objects.iter().enumerate() {
+            projection.index(index, object);
+        }
+        projection
+    }
+}
+
+/// 📍️ Resolves original layer and vertex handles for one-object-at-a-time drawing projection.
+#[derive(Default)]
+pub struct DwgEntityProjection {
+    by_handle: HashMap<u64, usize>,
+    layer_handles: HashMap<u64, usize>,
+    layer_count: usize,
+}
+
+impl DwgEntityProjection {
+    pub fn index(&mut self, index: usize, object: &DwgLogicalObject) {
+        match object.body.as_ref() {
+            Some(DwgLogicalObjectBody::Entity(_)) => { self.by_handle.insert(object.handle, index); }
+            Some(DwgLogicalObjectBody::TableRecord(DwgTableRecordBody::Layer(_))) => {
+                self.layer_handles.entry(object.handle).or_insert(self.layer_count);
+                self.layer_count += 1;
+            }
+            _ => {}
+        }
+    }
+
+    fn entity_parts(&self, objects: &[DwgLogicalObject], row: usize) -> Result<Option<(usize, i16, DwgGeometry)>, String> {
+        let Some(mut cursor) = self.begin(objects, row) else { return Ok(None) };
+        while !cursor.advance(self, objects, None)? {}
+        Ok(cursor.geometry.map(|geometry| (cursor.layer, cursor.color, geometry)))
+    }
+
+    fn body_at<'a>(&self, objects: &'a [DwgLogicalObject], handle: u64) -> Option<&'a DwgEntityBody> {
+        dwg_entity_body(objects.get(*self.by_handle.get(&handle)?)?)
+    }
+
+    /// 🧵️ Prepares one native entity and its source row for cooperative reference resolution.
+    pub fn begin(&self, objects: &[DwgLogicalObject], row: usize) -> Option<DwgEntityRead> {
+        let body = dwg_entity_body(objects.get(row)?)?;
+        let completion = match body {
+            DwgEntityBody::Polyline3d(polyline) => polyline.vertex_handles.len(),
+            DwgEntityBody::PolyfaceMesh(mesh) => mesh.vertex_handles.len(),
+            DwgEntityBody::LwPolyline(polyline) => polyline.vertices.len(),
+            DwgEntityBody::Spline(spline) => spline.control_points.len() / 3 + spline.knots.len() + spline.weights.len(),
+            DwgEntityBody::Text(text) => text.value.len(),
+            _ => 0,
+        };
+        let point = dwg_projected_point;
+        let (common, geometry) = match body {
+            DwgEntityBody::Line(line) => (&line.common, DwgGeometry::Line { start: point(&line.start), end: point(&line.end) }),
+            DwgEntityBody::Point(value) => (&value.common, DwgGeometry::Point { at: point(&value.point) }),
+            DwgEntityBody::Circle(circle) => (&circle.common, DwgGeometry::Circle { center: point(&circle.center), radius: circle.radius, normal: point(&circle.extrusion) }),
+            DwgEntityBody::Arc(arc) => (&arc.common, DwgGeometry::Arc { center: point(&arc.center), radius: arc.radius, start_angle: arc.start_angle, end_angle: arc.end_angle, normal: point(&arc.extrusion) }),
+            DwgEntityBody::Ellipse(ellipse) => (
+                &ellipse.common,
+                DwgGeometry::Ellipse { center: point(&ellipse.center), major_axis: point(&ellipse.major_axis), ratio: ellipse.axis_ratio, start_param: ellipse.start_parameter, end_param: ellipse.end_parameter, normal: point(&ellipse.extrusion) },
+            ),
+            DwgEntityBody::LwPolyline(polyline) => (
+                &polyline.common,
+                DwgGeometry::LwPolyline {
+                    closed: polyline.closed,
+                    elevation: polyline.elevation,
+                    vertices: Vec::new(),
+                    bulges: Vec::new(),
+                },
+            ),
+            DwgEntityBody::Spline(spline) => (
+                &spline.common,
+                DwgGeometry::Spline { degree: spline.degree, control_points: Vec::new(), knots: Vec::new(), weights: Vec::new() },
+            ),
+            DwgEntityBody::Text(text) => (
+                &text.common,
+                DwgGeometry::Text { at: [text.insertion.first().copied().unwrap_or_default(), text.insertion.get(1).copied().unwrap_or_default(), text.elevation], height: text.height, rotation: text.rotation, content: String::new() },
+            ),
+            DwgEntityBody::Face3d(face) => {
+                let corners = face.corners.as_chunks::<3>().0;
+                (&face.common, DwgGeometry::Face3d { corners: [0, 1, 2, 3].map(|corner| corners.get(corner).copied().unwrap_or_default()) })
+            }
+            DwgEntityBody::Polyline3d(polyline) => (
+                &polyline.common, DwgGeometry::Polyline3d { closed: polyline.flags & 1 != 0, vertices: Vec::new() },
+            ),
+            DwgEntityBody::PolyfaceMesh(mesh) => (
+                &mesh.common, DwgGeometry::PolyfaceMesh { vertices: Vec::new(), faces: Vec::new() },
+            ),
+            DwgEntityBody::BlockBegin(_) | DwgEntityBody::BlockEnd(_) | DwgEntityBody::Insert(_) | DwgEntityBody::DimensionLinear(_) | DwgEntityBody::Viewport(_) | DwgEntityBody::Vertex(_) | DwgEntityBody::PolyfaceFace(_) | DwgEntityBody::SequenceEnd(_) => return None,
+        };
+        let color = match common.color.kind {
+            DwgEntityColorKind::ByLayer => -1,
+            DwgEntityColorKind::ByBlock => -2,
+            DwgEntityColorKind::Index => common.color.index as i16,
+            DwgEntityColorKind::TrueColor => return None,
+        };
+        let layer = self.layer_handles.get(&common.layer_handle).copied().unwrap_or(0);
+        Some(DwgEntityRead { row, layer, color, geometry: Some(geometry), next: 0, completion })
+    }
+}
+
+fn dwg_entity_body(object: &DwgLogicalObject) -> Option<&DwgEntityBody> {
+    let DwgLogicalObjectBody::Entity(body) = object.body.as_ref()? else { return None };
+    Some(body)
+}
+
+fn dwg_projected_point(values: &[f64]) -> [f64; 3] {
+    std::array::from_fn(|axis| values.get(axis).copied().unwrap_or_default())
+}
+
+fn dwg_projected_entity(layer: usize, color: i16, geometry: DwgGeometry) -> Result<DwgEntity, String> {
+    let color = match color {
+        -1 => DwgColor::ByLayer,
+        -2 => DwgColor::ByBlock,
+        value => DwgColor::Index(u8::try_from(value).map_err(|_| format!("invalid logical DWG color {value}"))?),
+    };
+    Ok(DwgEntity { layer, color, geometry })
+}
+
+/// 📐️ Retains one logical entity projection and advances its coordinates, references, and text independently.
+pub struct DwgEntityRead {
+    row: usize,
+    layer: usize,
+    color: i16,
+    geometry: Option<DwgGeometry>,
+    next: usize,
+    completion: usize,
+}
+
+impl DwgEntityRead {
+    /// 📈 Reports work completed within the entity in rows or UTF-8 bytes.
+    pub fn progress(&self) -> (usize, usize) { (self.next, self.completion) }
+
+    /// ⏭️ Projects one row or up to 4,096 text bytes, including its contribution to the drawing bounds.
+    pub fn step(&mut self, index: &DwgEntityProjection, objects: &[DwgLogicalObject], extents: &mut DwgDrawingExtents) -> Result<std::task::Poll<DwgEntity>, String> {
+        if !self.advance(index, objects, Some(extents))? { return Ok(std::task::Poll::Pending); }
+        let geometry = self.geometry.take().ok_or("DWG entity projection was already consumed")?;
+        Ok(std::task::Poll::Ready(dwg_projected_entity(self.layer, self.color, geometry)?))
+    }
+
+    fn advance(&mut self, index: &DwgEntityProjection, objects: &[DwgLogicalObject], extents: Option<&mut DwgDrawingExtents>) -> Result<bool, String> {
+        let geometry = self.geometry.as_mut().ok_or("DWG entity projection was already consumed")?;
+        if self.completion == 0 {
+            if let Some(extents) = extents { extents.include(geometry); }
+            return Ok(true);
+        }
+        let body = objects.get(self.row).and_then(dwg_entity_body);
+        let position = self.next;
+        let mut next = position + 1;
+        let point = match (body, geometry) {
+            (Some(DwgEntityBody::Polyline3d(source)), DwgGeometry::Polyline3d { vertices, .. }) =>
+                dwg_project_link(index, objects, source.vertex_handles.get(position), vertices, None)?,
+            (Some(DwgEntityBody::PolyfaceMesh(source)), DwgGeometry::PolyfaceMesh { vertices, faces }) =>
+                dwg_project_link(index, objects, source.vertex_handles.get(position), vertices, Some(faces))?,
+            (Some(DwgEntityBody::LwPolyline(source)), DwgGeometry::LwPolyline { elevation, vertices, bulges, .. }) => {
+                let row = source.vertices.get(position).ok_or("DWG polyline source changed while projecting")?;
+                let [x, y, _] = dwg_projected_point(&row.point);
+                dwg_reserve_projection(vertices)?;
+                dwg_reserve_projection(bulges)?;
+                vertices.push([x, y]);
+                bulges.push(row.bulge);
+                Some([x, y, *elevation])
+            }
+            (Some(DwgEntityBody::Spline(source)), DwgGeometry::Spline { control_points, knots, weights, .. }) => {
+                let points = source.control_points.as_chunks::<3>().0;
+                if let Some(&point) = points.get(position) {
+                    dwg_reserve_projection(control_points)?;
+                    control_points.push(point);
+                    Some(point)
+                } else {
+                    let offset = position - points.len();
+                    if let Some(&knot) = source.knots.get(offset) {
+                        dwg_reserve_projection(knots)?;
+                        knots.push(knot);
+                    } else {
+                        let weight = *source.weights.get(offset - source.knots.len()).ok_or("DWG spline source changed while projecting")?;
+                        dwg_reserve_projection(weights)?;
+                        weights.push(weight);
+                    }
+                    None
+                }
+            }
+            (Some(DwgEntityBody::Text(source)), DwgGeometry::Text { at, content, .. }) => {
+                if source.value.len() != self.completion { return Err("DWG text source changed while projecting".into()); }
+                next = position.saturating_add(4096).min(self.completion);
+                while !source.value.is_char_boundary(next) { next -= 1; }
+                let chunk = source.value.get(position..next).ok_or("invalid DWG text projection boundary")?;
+                content.try_reserve(chunk.len()).map_err(|_| "cannot reserve projected DWG text")?;
+                content.push_str(chunk);
+                (next == self.completion).then_some(*at)
+            }
+            _ => return Err("DWG entity source changed while projecting".into()),
+        };
+        if let (Some(extents), Some(point)) = (extents, point) { extents.include_point(point); }
+        self.next = next;
+        Ok(self.next == self.completion)
+    }
+}
+
+fn dwg_reserve_projection<T>(values: &mut Vec<T>) -> Result<(), String> {
+    values.try_reserve(1).map_err(|_| "cannot reserve projected DWG entity data".into())
+}
+
+fn dwg_project_link(
+    index: &DwgEntityProjection, objects: &[DwgLogicalObject], handle: Option<&u64>,
+    vertices: &mut Vec<[f64; 3]>, faces: Option<&mut Vec<[i32; 4]>>,
+) -> Result<Option<[f64; 3]>, String> {
+    let handle = *handle.ok_or("DWG linked entity references changed while projecting")?;
+    match (index.body_at(objects, handle), faces) {
+        (Some(DwgEntityBody::Vertex(vertex)), _) => {
+            let point = dwg_projected_point(&vertex.point);
+            dwg_reserve_projection(vertices)?;
+            vertices.push(point);
+            Ok(Some(point))
+        }
+        (Some(DwgEntityBody::PolyfaceFace(face)), Some(faces)) => {
+            dwg_reserve_projection(faces)?;
+            faces.push(std::array::from_fn(|slot| i32::from(face.indices.get(slot).copied().unwrap_or_default())));
+            Ok(None)
+        }
+        _ => Ok(None),
     }
 }
 /// 🗂️ Handles of the standard objects [`DwgLogicalDrawing::from_native`] gives a new document,

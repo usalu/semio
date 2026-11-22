@@ -5,11 +5,11 @@ import {mkdirSync,readFileSync,readdirSync,writeFileSync} from "node:fs";
 import {dirname,join} from "node:path";
 import {cargoInputClosureV1,HERMETIC_TEXTS_V1,hermeticRootsV1,hermeticStateRootV1,runHermeticCargoV1,runHermeticV1,type HermeticOutcomeV1} from "../🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
-import {removeV1,scratchV1,snapshotV1} from "../../🧪️tests/🧰️world/🟦️.ts";
+import {removeV1,shortScratchV1,snapshotV1} from "../../🧪️tests/🧰️world/🟦️.ts";
 
 const cargo=Bun.which("cargo"),pinned="nightly-2026-07-20",usable=cargo!==null&&Bun.spawnSync([cargo,"--version"],{env:{...process.env,RUSTUP_TOOLCHAIN:pinned}}).exitCode===0;
 const scratch:string[]=[];
-const world=(tag:string)=>{const root=scratchV1(tag);scratch.push(root);return root;};
+const world=(tag:string)=>{const root=shortScratchV1(tag);scratch.push(root);return root;};
 afterAll(()=>{for(const root of scratch)removeV1(root);});
 const put=(root:string,files:Record<string,string>)=>{for(const[path,text]of Object.entries(files)){mkdirSync(dirname(join(root,path)),{recursive:true});writeFileSync(join(root,path),text);}};
 const sha=(path:string)=>createHash("sha256").update(readFileSync(path)).digest("hex");

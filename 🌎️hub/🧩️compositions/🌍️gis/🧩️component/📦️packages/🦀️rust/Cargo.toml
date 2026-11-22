@@ -16,6 +16,7 @@ package = "semio:gis"
 role = "hub"
 deployment-directory = "🌍️gis"
 component-kind = "plugin"
+depends-on = ["stdio"]
 
 [[package.metadata.semio.playground]]
 variant = "gis2d"

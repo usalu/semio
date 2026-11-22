@@ -112,8 +112,8 @@
   ],
   "closeGrant": {
     "maximumItems": 1,
-    "maximumCopyBytes": 4096,
-    "maximumCapacityBytes": 4096,
+    "maximumCopyBytes": 8192,
+    "maximumCapacityBytes": 8192,
     "maximumReleaseBytes": 67108864,
     "maximumDepth": 4096
   }

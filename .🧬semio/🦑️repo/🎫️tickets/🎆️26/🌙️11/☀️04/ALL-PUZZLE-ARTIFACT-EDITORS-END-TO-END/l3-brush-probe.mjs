@@ -1,0 +1,17 @@
+import {chromium} from "@playwright/test";
+const b = await chromium.launch({args:["--enable-unsafe-webgpu","--enable-features=Vulkan,WebGPU","--use-angle=swiftshader","--use-vulkan=swiftshader","--use-webgpu-adapter=swiftshader","--enable-unsafe-swiftshader","--ignore-gpu-blocklist"]});
+const p = await b.newPage({viewport:{width:1280,height:720}});
+p.on("console", m => { if (m.type()==="error") console.log("CONSOLE", m.text().slice(0,300)); });
+await p.goto(`http://localhost:6010/iframe.html?id=${process.argv[2]}&viewMode=story`);
+const host = p.locator(".semio-board-2d-host");
+await host.waitFor({timeout:60000});
+await p.waitForFunction(()=>document.querySelector(".semio-board-2d-host")?.getAttribute("data-board-snapshot-parsed")==="true",null,{timeout:60000});
+const cv = p.locator('.semio-board-2d-host canvas:not([aria-hidden="true"])');
+const box = await cv.boundingBox();
+const dbg = JSON.parse(await p.getByTestId("puzzle2d-board-debug").innerText());
+const x = box.x + (0-dbg.camera.x)*dbg.camera.zoom + box.width/2, y = box.y + (0-dbg.camera.y)*dbg.camera.zoom + box.height/2;
+await p.mouse.move(x,y);
+await p.keyboard.down("Alt"); await p.mouse.move(box.x-20, box.y-20); await p.keyboard.up("Alt");
+await p.waitForTimeout(4000);
+console.log("REFUSED", await p.evaluate(()=>globalThis.__semioBoard2dRefusedSnapshot));
+await b.close();

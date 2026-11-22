@@ -1,3 +1,4 @@
+//! 🧳️ Original JSON operation bytes become typed native projections without a cold conversion.
 use crate::{ArtifactCanonicalJsonTree,ArtifactCanonicalJsonTreeCursor,JsonGrammarCursor,JsonMemberPolicy,JsonError};
 use semio_framework_value::{DslValue, RetainedWorkOutcome, RetainedWorkPoll, RetirementDemand, ValueError, ValueRefusalKind, ArtifactOwnedValueRetirementFactory, FactoryAuthority, retained_clone::{RetainedCloneSource, RetainedCloneSourceAdmission, RetainedOwnedProjection, RetainedOwnedProjectionAdmission, RetainedCloneClose, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, retained_clone_grant_admits}};
 use semio_framework_value_native_owned::{native_decoding::NativeDecodeControl, native_decoding::NativeReceive, native_decoding::NativeReceivingFailure, native_decoding::OriginalReceivingPrimary,};
@@ -11,7 +12,6 @@ use std::{mem::{ManuallyDrop,size_of},sync::Arc};
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub enum Phase{Header,Parse,Source,Shell,Receive,TakeReceived,CloseReceived,Authority,TypedSource,TypedProjection,CanonicalProjection,CanonicalBirth,Canonical,Ready}
 
-/// 🧳️ Original JSON operation bytes become typed native projections without a cold conversion.
 pub struct OriginalJsonReceiving<M:NativeReceive<DslValue>+Sync>{
  ledger:NativeAllocationIdentity,recipient:Option<u64>,header:&'static[u8],pub wire:ManuallyDrop<Option<RetainedOwnedProjection<Vec<u8>>>>,
  parser:ManuallyDrop<Option<JsonGrammarCursor<DslValue>>>,parsed:ManuallyDrop<Option<DslValue>>,
@@ -153,7 +153,7 @@ impl<M:NativeReceive<DslValue>+Sync> OriginalJsonReceiving<M>{
     let copy=64+size_of::<usize>();let canonical_child=RetainedCloneGrant{maximum_copy_bytes:child.maximum_copy_bytes-copy,..child};
     let canonical=self.canonical.as_mut().ok_or_else(||invalid("original JSON canonical cursor is absent"))?;let wire=&self.wire;let offset=&mut self.offset;let faulted=&mut self.faulted;
     let poll=Self::local(&mut self.action,&mut self.local_authority,control,d,g,q,maximum_work_units,8,|_,effect|{
-     let mut bytes=[0;64];let step=match canonical.advance(&mut bytes,&mut effect.nested(canonical_child)){Ok(step)=>step,Err(e)=>return Complete(RetainedWorkOutcome{result:Err(e),work:0})};let work=u128::from(canonical.last_turn_work());
+     let mut bytes=[0;64];let step=canonical.advance(&mut bytes,&mut effect.nested(canonical_child));let work=u128::from(canonical.last_turn_work());let step=match step{Ok(step)=>step,Err(e)=>return Complete(RetainedWorkOutcome{result:Err(e),work})};
      if step.written_bytes==0&&matches!(&step.ownership,RetainedCloneStep::Progress(p) if *p==RetainedCloneProgress::default()){return Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work})}
      let result=(||{let input=wire.as_ref().ok_or_else(||invalid("original JSON wire is absent"))?.borrow()?;let next=offset.checked_add(step.written_bytes).ok_or_else(||invalid("original JSON canonical offset overflow"))?;let equal=input.get().get(*offset..next)==Some(&bytes[..step.written_bytes]);*offset=next;let mut p=step.ownership.progress();p.copied_bytes=p.copied_bytes.checked_add(step.written_bytes+size_of::<usize>()).ok_or_else(||invalid("original JSON canonical receipt overflow"))?;if !equal||canonical.is_complete()&&*offset!=input.get().len(){*faulted=true;p.copied_bytes+=size_of::<Phase>();return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original JSON operation is not canonically encoded").with_retained_progress(p));}Ok(RetainedCloneStep::Progress(p))})();
      Complete(RetainedWorkOutcome{result,work})
@@ -331,3 +331,15 @@ impl<M:NativeReceive<DslValue>+Sync> OriginalJsonReceiving<M>{
  pub fn terminal_is_empty(&self)->bool{self.closing&&self.wire.is_none()&&self.parser.is_none()&&self.parsed.is_none()&&self.parsed_source.is_none()&&self.source_admission.is_none()&&self.typed_admission.is_none()&&self.receiver.is_none()&&self.typed.is_none()&&self.authority.is_none()&&self.typed_source.is_none()&&self.typed_alias.is_none()&&self.canonical_alias.is_none()&&self.typed_frame.is_none()&&self.frame_action.is_none()&&self.output.is_none()&&self.canonical_projection.is_none()&&self.canonical.is_none()&&self.factory.is_none()&&self.factory_close.is_none()&&self.error.is_none()&&self.local_authority.is_none()&&self.action.terminal_is_empty()&&self.retirement.is_empty()}
 }
 impl<M:NativeReceive<DslValue>+Sync> Drop for OriginalJsonReceiving<M>{fn drop(&mut self){assert!(self.terminal_is_empty()||std::thread::panicking(),"original JSON receiving requires funded closure of all source and typed owners");}}
+
+#[cfg(test)]
+#[path="🧪️tests/🧰️support/🦀️.rs"]
+mod test_support;
+
+#[cfg(test)]
+#[path="🧪️tests/🦀️.rs"]
+mod tests;
+
+#[cfg(test)]
+#[path="🎟️close/🧪️tests/🦀️.rs"]
+mod close_work_tests;

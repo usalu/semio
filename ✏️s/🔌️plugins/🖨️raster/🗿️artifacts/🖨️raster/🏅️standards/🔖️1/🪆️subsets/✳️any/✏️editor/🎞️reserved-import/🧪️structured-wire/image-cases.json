@@ -1,4 +1,10 @@
 {
+  "stagedPngAncillary": {
+    "type": "raSt",
+    "dataBytes": 49152,
+    "dataByte": 0,
+    "crc32": 2300022239
+  },
   "cases": [
     {
       "name": "rgba-with-ordered-duplicate-text",

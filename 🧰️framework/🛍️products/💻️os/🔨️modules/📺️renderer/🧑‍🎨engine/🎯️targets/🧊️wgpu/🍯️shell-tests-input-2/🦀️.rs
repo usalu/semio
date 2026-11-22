@@ -89,3 +89,9 @@ mod command_registry_tests;
 mod shell_shortcuts_palette_tests;
 #[path = "../../../🧱️elements/🐚️Shell/🧪️tests/🎯️presented-input-authority/🦀️.rs"]
 mod presented_input_authority_tests;
+
+#[path = "../../../🧱️elements/🐚️Shell/🧪️tests/📐️retained-tree-reorder/🦀️.rs"]
+mod retained_tree_reorder_tests;
+
+#[path = "../../../🧱️elements/🐚️Shell/🧪️tests/🔬️wgpu-shell-input/🏷️scene-labels-and-dock-tabs/🦀️.rs"]
+mod scene_labels_and_dock_tabs_tests;

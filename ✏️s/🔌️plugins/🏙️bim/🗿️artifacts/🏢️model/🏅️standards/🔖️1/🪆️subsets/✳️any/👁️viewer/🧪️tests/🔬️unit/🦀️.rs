@@ -1,3 +1,4 @@
+use semio_plugin::WindowLayoutNode;
 use semio_s_artifact_bim_model_tests_5::render::world::{ELEMENT_DOMAIN, ELEMENT_GRANULARITY};
 use semio_s_artifact_bim_model_family_tests::viewer::bim::modes::view::windows::{plan, world};
 use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::BIM_MODEL_DIALECT;
@@ -33,7 +34,7 @@ use crate::viewer::bim::{BIM_VIEW_TOOL_IDS, view_emit, command_from_action};
 use crate::viewer::bim::*;
 use semio_s_artifact_bim_model_tests::viewer::bim::terminology;
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::io::text::snapshot::{parse_dsl, BIM_EXAMPLE_TEXT};
-use semio_plugin::{artifact_app_laws, ActionMeta, App, HistoryView, PluginApp, VcsArtifactApp, ViewWindowInstance, WindowLayoutChild, WindowLayoutRoot};
+use semio_plugin::{artifact_app_laws, ActionMeta, App, HistoryView, PluginApp, VcsArtifactApp, ViewWindowInstance, Axis};
 use semio_ui_locale::{Locale, Terminology};
 use semio_framework_value::ToValue;
 
@@ -106,14 +107,13 @@ impl SurfaceKindTag {
 #[semio_framework_async_macros::async_test]
 async fn the_default_layout_splits_world_and_plan_side_by_side() {
     let layout = create_bim_viewer().default_layout.expect("a default layout");
-    let WindowLayoutRoot::Axis(axis) = layout.root else { panic!("the layout is a split") };
-    assert_eq!(axis.kind, "row");
-    let order: Vec<String> = axis
-        .children
+    let WindowLayoutNode::Split { axis, children, .. } = layout.root else { panic!("the layout is a split") };
+    assert_eq!(axis, Axis::Horizontal);
+    let order: Vec<String> = children
         .iter()
         .map(|child| match child {
-            WindowLayoutChild::Stack(stack) => stack.children[0].window_kind_id.clone(),
-            WindowLayoutChild::Axis(_) => panic!("a stack per window"),
+            WindowLayoutNode::Stack { children, .. } => semio_plugin::collect_window_kind_ids(&children[0]).remove(0),
+            _ => panic!("a stack per window"),
         })
         .collect();
     assert_eq!(order, vec![world::WINDOW_KIND_ID.to_string(), plan::WINDOW_KIND_ID.to_string()]);
@@ -345,7 +345,7 @@ async fn the_viewer_speaks_both_languages_from_its_one_label_block() {
 
 #[semio_framework_async_macros::async_test]
 async fn the_layout_tabs_are_the_localized_window_labels_not_english_text() {
-    assert_eq!(view::layout(), semio_plugin::create_default_layout(&[world::WINDOW_KIND_ID.into(), plan::WINDOW_KIND_ID.into()], "row", Some(&[60.0, 40.0]), None), "no tab titles of its own: the windows' labels name the tabs");
+    assert_eq!(view::layout(), semio_plugin::create_default_layout(&[world::WINDOW_KIND_ID.into(), plan::WINDOW_KIND_ID.into()], Axis::Horizontal, Some(&[0.6, 0.4]), None), "no tab titles of its own: the windows' labels name the tabs");
 }
 
 #[semio_framework_async_macros::async_test]

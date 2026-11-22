@@ -8,4 +8,4 @@ export interface ChangeFastenedJointPerRow {
   newPerRow: number;
 }
 
-export const parseChangeFastenedJointPerRow: NormWireReader<ChangeFastenedJointPerRow> = normWireObject<ChangeFastenedJointPerRow>({ id: normWireRequired(normWireString), newPerRow: normWireRequired(normWireRange(normWireInteger, {"minimum":0})) });
+export const parseChangeFastenedJointPerRow: NormWireReader<ChangeFastenedJointPerRow> = normWireObject<ChangeFastenedJointPerRow>({ id: normWireRequired(normWireString), newPerRow: normWireRequired(normWireRange(normWireInteger, {"minimum":0,"maximum":4294967295})) });

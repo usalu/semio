@@ -17,3 +17,48 @@ test("generation retirement refuses unproved manifests before any physical remov
  const retained=new Set((db.query("with kept as(select digest from(select digest from manifests order by seq desc limit ?1) union select digest from manifests where current=1) select ?2 kind,digest from kept union select r.kind,r.digest from refs r join kept k on k.digest=r.manifest").all(P.retainGenerations,P.manifests)as{kind:string;digest:string}[]).map(value=>value.kind+":"+value.digest)),expected=documents.filter(doc=>!retained.has(doc.kind+":"+doc.digest)).map(doc=>doc.path).sort();expect(expected.length,row.id).toBeGreaterThan(0);expect(removals.sort(),row.id).toEqual(expected);const current=await store.read();expect(current!.manifest!.generation,row.id).toBe(selected.manifest.generation);const owner=Object.values(selected.manifest.owners)[0] as Parameters<typeof store.readFragment>[0];expect(await store.readFragment(owner),row.id).toBeDefined();
  }finally{db.close();await rm(root,{recursive:true,force:true});}}
 },120000);
+
+test("generation retirement keeps references from the stable retention window and the quarantined parent without retaining decoded owner tables",async()=>{
+ const P=GENERATION_POLICY_V1,{manifests,ownersPerManifest,generationsInTie}=corpus.boundedHistory,root=join("virtual","bounded-retirement"),identity=hash("bounded-retirement"),env=hash("e");
+ const db=new Database(":memory:"),original=JSON.parse,seen:WeakRef<object>[]=[],paths=new Map<string,{bytes:Buffer;kind:string;digest:string}>(),removed:string[]=[];
+ db.exec("create table manifests(digest text primary key, generation integer, scan integer, aligned integer); create table refs(manifest text, kind text, digest text)");
+ let liveOwnerTables=-1;
+ try{
+  const save=(kind:string,digest:string,bytes:Buffer,extension:string)=>{paths.set(join(root,kind,digest+extension),{bytes,kind,digest});};
+  for(let i=0;i<manifests;i++){
+   const generation=i<generationsInTie?manifests:i,owners=Object.fromEntries(Array.from({length:ownersPerManifest},(_,owner)=>["owner-"+owner,{root:"owner-"+owner,kind:"project",fragment:hash("owner-"+i+"/"+owner),bytes:1,edgesEnv:env,targets:["target-"+i+"/"+owner]}]));
+   const manifest={version:1,generation,parent:null,identity,implementation:hash("implementation"),env,membership:hash("membership"),frontier:hash("frontier-"+i),factIndex:hash("fact-"+i),global:hash("global-"+i),owners,built:{kind:"cold",base:null,dirty:[]}};
+   const bytes=Buffer.from(canonicalJsonV1(manifest)),digest=hash(bytes),parent=i===manifests-1;
+   db.query("insert into manifests values(?,?,?,?)").run(digest,generation,i,parent?1:0);
+   save(P.manifests,digest,bytes,".json");
+   if(parent)paths.set(join(root,P.pointer),{bytes:Buffer.from(canonicalJsonV1({version:1,generation:generation+1,manifest:null,parent:digest,reason:"closure-missing"})),kind:"pointer",digest});
+   const references=[[P.fragments,manifest.global,".json.br"],[P.indexes,manifest.factIndex,".facts.br"],[P.frontiers,manifest.frontier,".json.br"],...Object.values(owners).map(owner=>[P.fragments,owner.fragment,".json.br"])];
+   for(const[kind,ref,extension]of references){db.query("insert into refs values(?,?,?)").run(digest,kind!,ref!);save(kind!,ref!,Buffer.from("present"),extension!);}
+  }
+  JSON.parse=((text:string,reviver?:Parameters<typeof JSON.parse>[1])=>{
+   const value=original(text,reviver);
+   if(value?.identity===identity)seen.push(new WeakRef(value.owners));
+   return value;
+  }) as typeof JSON.parse;
+  const port=createNodeFilePortV1(),store=createGenerationStoreV1({root,holds:async()=>true,resources:{facts:"bounded-retirement"},now:()=>P.graceMilliseconds+1,fs:{...port,
+   async read(path:string){return paths.get(path)?.bytes;},
+   async list(directory:string){
+    if(directory===join(root,P.manifests)&&seen.length===manifests&&liveOwnerTables<0){
+     for(let turn=0;turn<8;turn++){
+      await new Promise(resolve=>setTimeout(resolve,5));Bun.gc(true);
+      liveOwnerTables=seen.filter(owner=>owner.deref()!==undefined).length;
+      if(liveOwnerTables===0)break;
+     }
+    }
+    return [...paths].filter(([path])=>path.startsWith(directory+"/")||path.startsWith(directory+"\\")).map(([path])=>({name:path.slice(directory.length+1),modifiedMs:0}));
+   },
+   async remove(path:string){removed.push(path);paths.delete(path);}
+  }});
+  const retained=db.query("with kept as (select digest from (select digest from manifests order by generation desc, scan limit ?1) union select digest from manifests where aligned=1) select ?2 kind,digest from kept union select r.kind,r.digest from refs r join kept k on k.digest=r.manifest").all(P.retainGenerations,P.manifests) as {kind:string;digest:string}[];
+  const keys=new Set(retained.map(row=>row.kind+":"+row.digest)),expected=[...paths].filter(([,row])=>row.kind!=="pointer"&&!keys.has(row.kind+":"+row.digest)).map(([path])=>path).sort();
+  await store.retire();
+  expect(removed.sort()).toEqual(expected);
+  expect(seen.length).toBe(manifests);
+  expect(liveOwnerTables).toBe(0);
+ }finally{JSON.parse=original;db.close();}
+},30000);

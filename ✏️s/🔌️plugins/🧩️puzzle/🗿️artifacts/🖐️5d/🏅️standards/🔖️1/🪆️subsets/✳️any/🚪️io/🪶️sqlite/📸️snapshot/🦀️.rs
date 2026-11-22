@@ -1,6 +1,6 @@
 //! 🧩️ Complete Puzzle5d entities and literal owned relationships.
 use pack::snapshot::ArtifactSqliteSnapshot as _;
-use crate::standards::v1::subsets::any::schema::snapshot::Puzzle5dSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::{Puzzle5dParts, Puzzle5dSnapshot};
 use crate::standards::v1::subsets::any::schema::document_records::{Puzzle5dAttribute, Puzzle5dAuthor, Puzzle5dCompatSpecificity, Puzzle5dFastener, Puzzle5dGrip, Puzzle5dGrip2d, Puzzle5dGrip3d, Puzzle5dGripTemplate, Puzzle5dKindCompatibility, Puzzle5dMeta, Puzzle5dPart, Puzzle5dPart2d, Puzzle5dPart3d, Puzzle5dPartAnchor, Puzzle5dRepresentation, Puzzle5dScale, Puzzle5dTargetVolume};
 use crate::standards::v1::subsets::any::schema::kind_catalogs::{Puzzle5dCatalogFastenerKindExtra, Puzzle5dCatalogGripKindExtra, Puzzle5dCatalogPartKindExtra, Puzzle5dCatalogRopeKindExtra, Puzzle5dKindCatalogsExtra};
 use std::collections::BTreeMap;
@@ -144,14 +144,15 @@ fn reconstruct(d:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->Result<Puzzl
   for row in rows.take(13,extra.rowid,c)?{let mut value=Cursor::new(row,3,c);ropes.push(Puzzle5dCatalogRopeKindExtra{id:value.text()?,name:value.text()?,label:value.text()?,default_fastener_kind:value.text()?});value.done()?;}
   Some(Puzzle5dKindCatalogsExtra{parts,grips,fasteners,ropes})
  }else{None};
- let(mut kind_compatibility,mut parts,mut fasteners,mut target_volumes)=(Vec::new(),Vec::new(),Vec::new(),Vec::new());
+ let(mut kind_compatibility,mut fasteners,mut target_volumes)=(Vec::new(),Vec::new(),Vec::new());
+ let mut parts=Puzzle5dParts::new();
  for row in rows.take(14,doc.rowid,c)?{let mut value=Cursor::new(row,3,c);let source=value.text()?;let target=value.text()?;let bidirectional=value.boolean()?;let important=value.boolean()?;let specificity=match value.borrowed()?{"general"=>Puzzle5dCompatSpecificity::General,"part"=>Puzzle5dCompatSpecificity::Part,"fastener"=>Puzzle5dCompatSpecificity::Fastener,"grip"=>Puzzle5dCompatSpecificity::Grip,"rope"=>Puzzle5dCompatSpecificity::Rope,_=>return Err(invalid("Puzzle5d compatibility variant differs"))};value.done()?;kind_compatibility.push(Puzzle5dKindCompatibility{source,target,bidirectional,important,specificity});}
  for row in rows.take(15,doc.rowid,c)?{
   let mut value=Cursor::new(row,3,c);let id=value.text()?;let part_kind=value.optional_text()?;let anchor=match value.borrowed()?{"fixed"=>Puzzle5dPartAnchor::Fixed,"derived"=>Puzzle5dPartAnchor::Derived,_=>return Err(invalid("Puzzle5d anchor variant differs"))};value.done()?;
   let mut b=Cursor::new(rows.one(16,row.rowid,true)?.ok_or_else(||invalid("Puzzle5d board missing"))?,2,c);let part_2d=Puzzle5dPart2d{x:b.f64()?,y:b.f64()?,shape:b.optional_text()?,radius:b.optional_float()?,width:b.optional_float()?,height:b.optional_float()?,text:b.optional_text()?,icon_kind:b.optional_text()?,hidden:b.optional_bool()?,locked:b.optional_bool()?};b.done()?;
   let mut w=Cursor::new(rows.one(17,row.rowid,true)?.ok_or_else(||invalid("Puzzle5d world missing"))?,2,c);let origin=w.xyz()?;let mesh_url=w.optional_text()?;let orientation=w.orientation()?;let label=w.optional_text()?;w.done()?;let part_3d=Puzzle5dPart3d{origin,mesh_url,orientation,label,scale:rows.scale(18,row.rowid,c)?};let mut grips=Vec::new();
   for row in rows.take(19,row.rowid,c)?{let mut value=Cursor::new(row,3,c);let id=value.text()?;let grip_kind=value.optional_text()?;value.done()?;let mut b=Cursor::new(rows.one(20,row.rowid,true)?.ok_or_else(||invalid("Puzzle5d grip board missing"))?,2,c);let grip_2d=Puzzle5dGrip2d{angle:b.f64()?,grip_kind:b.optional_text()?,radius:b.optional_float()?};b.done()?;let mut w=Cursor::new(rows.one(21,row.rowid,true)?.ok_or_else(||invalid("Puzzle5d grip world missing"))?,2,c);let grip_3d=Puzzle5dGrip3d{position:w.xyz()?,direction:w.direction()?,radius:w.optional_float()?,label:w.optional_text()?};w.done()?;grips.push(Puzzle5dGrip{id,grip_kind,grip_2d,grip_3d});}
-  parts.push(Puzzle5dPart{id,part_kind,anchor,part_2d,part_3d,grips});
+  parts.try_push(Puzzle5dPart{id,part_kind,anchor,part_2d,part_3d,grips})?;
  }
  for row in rows.take(22,doc.rowid,c)?{let mut value=Cursor::new(row,3,c);fasteners.push(Puzzle5dFastener{id:value.text()?,source:value.text()?,target:value.text()?,fastener_kind:value.optional_text()?,gap:value.f64()?,shift:value.f64()?,rise:value.f64()?,rotation:value.f64()?,turn:value.f64()?,tilt:value.f64()?,x:value.f64()?,y:value.f64()?});value.done()?;}
  for row in rows.take(23,doc.rowid,c)?{let mut value=Cursor::new(row,3,c);let id=value.text()?;let origin=value.xyz()?;let orientation=value.orientation()?;let hidden=value.boolean()?;let locked=value.boolean()?;value.done()?;let scale=rows.scale(24,row.rowid,c)?;target_volumes.push(Puzzle5dTargetVolume{id,origin,orientation,scale,hidden,locked});}

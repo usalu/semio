@@ -63,12 +63,30 @@ fn section_plane(origin:[f64;3],normal:[f64;3])->Result<(Pnt3,Vec3),&'static str
     Ok((Pnt3::from_array(origin),axis))
 }
 
+#[derive(Clone, Copy)]
+struct PlanarFace {
+    edges: [u8; MAX_EDGES],
+    offsets: [u8; MAX_VOIDS + 2],
+    ring_count: usize,
+}
+
+impl PlanarFace {
+    const EMPTY: Self = Self { edges: [0; MAX_EDGES], offsets: [0; MAX_VOIDS + 2], ring_count: 0 };
+
+    fn edges(&self) -> &[u8] { &self.edges[..usize::from(self.offsets[self.ring_count])] }
+
+    fn rings(&self) -> impl Iterator<Item = &[u8]> {
+        self.offsets[..=self.ring_count].windows(2).map(|range| {
+            &self.edges[usize::from(range[0])..usize::from(range[1])]
+        })
+    }
+}
+
 struct PlanarShell {
     points: [Pnt3; MAX_VERTICES],
     supports: [(Pnt3, Vec3); MAX_FACES],
     endpoints: [[u8; 2]; MAX_EDGES],
-    face_edges: [[u8; MAX_VERTICES]; MAX_FACES],
-    face_sizes: [usize; MAX_FACES],
+    faces: [PlanarFace; MAX_FACES],
     vertex_count: usize,
     face_count: usize,
     edge_count: usize,
@@ -89,68 +107,71 @@ fn planar_shell(body: &Body, id: ShellId, tolerance: f64) -> Option<PlanarShell>
     let mut points = [Pnt3::default(); MAX_VERTICES];
     let mut edges = [None::<(EdgeId, bool, bool)>; MAX_EDGES];
     let mut endpoints = [[0; 2]; MAX_EDGES];
-    let mut face_edges = [[0; MAX_VERTICES]; MAX_FACES];
-    let mut face_sizes = [0; MAX_FACES];
+    let mut faces = [PlanarFace::EMPTY; MAX_FACES];
     let mut vertex_count = 0;
     let mut edge_count = 0;
     for (face_index, &id) in shell.faces.iter().enumerate() {
         let face = body.faces.get(id)?;
         let Surface::Plane { frame } = body.surfaces.get(face.surface)? else { return None; };
-        if !face.inners.is_empty() { return None; }
+        if face.inners.len() > MAX_VOIDS { return None; }
         let outward = frame.x.cross(frame.y).normalized()?;
         let outward = if face.flipped { -outward } else { outward };
         supports[face_index] = (frame.origin, outward);
-        let loop_id = face.outer?;
-        let ring = body.loops.get(loop_id)?;
-        if ring.face != id { return None; }
-        let mut index = ring.first;
-        let mut previous = None;
-        let mut start = None;
-        let mut count = 0;
-        loop {
-            if count == MAX_VERTICES { return None; }
-            let op = body.coedges.get(index)?;
-            let edge = body.edges.get(op.edge)?;
-            if op.loop_id != loop_id || !matches!(body.curves3.get(edge.curve)?, Curve3::Line { .. }) { return None; }
-            let (from, to) = if op.forward { (edge.v0, edge.v1) } else { (edge.v1, edge.v0) };
-            if from == to || previous.is_some_and(|end| end != from) { return None; }
-            start.get_or_insert(from);
-            previous = Some(to);
-            let mut vertex_index = |id| {
-                if let Some(position) = vertices[..vertex_count].iter().position(|&existing| existing == Some(id)) {
-                    return Some(position as u8);
-                }
-                *vertices.get_mut(vertex_count)? = Some(id);
-                points[vertex_count] = body.vertices.get(id)?.position;
-                vertex_count += 1;
-                Some((vertex_count - 1) as u8)
-            };
-            let a = vertex_index(from)?;
-            let b = vertex_index(to)?;
-            let z = (points[usize::from(a)] - frame.origin).dot(outward).abs();
-            if !(z <= tolerance) { return None; }
-            let edge_index = if let Some(position) = edges[..edge_count].iter().position(|entry| entry.is_some_and(|e| e.0 == op.edge)) {
-                let (_, forward, paired) = edges[position].as_mut()?;
-                if *paired || *forward == op.forward { return None; }
-                *paired = true;
-                position
-            } else {
-                let position = edge_count;
-                *edges.get_mut(position)? = Some((op.edge, op.forward, false));
-                endpoints[position] = [a, b];
-                edge_count += 1;
-                position
-            };
-            face_edges[face_index][count] = edge_index as u8;
-            count += 1;
-            index = op.next;
-            if index == ring.first { break; }
+        let boundary = &mut faces[face_index];
+        for loop_id in std::iter::once(face.outer?).chain(face.inners.iter().copied()) {
+            let offset = usize::from(boundary.offsets[boundary.ring_count]);
+            let ring = body.loops.get(loop_id)?;
+            if ring.face != id { return None; }
+            let mut index = ring.first;
+            let mut previous = None;
+            let mut start = None;
+            let mut count = 0;
+            loop {
+                if count == MAX_VERTICES { return None; }
+                let op = body.coedges.get(index)?;
+                let edge = body.edges.get(op.edge)?;
+                if op.loop_id != loop_id || !matches!(body.curves3.get(edge.curve)?, Curve3::Line { .. }) { return None; }
+                let (from, to) = if op.forward { (edge.v0, edge.v1) } else { (edge.v1, edge.v0) };
+                if from == to || previous.is_some_and(|end| end != from) { return None; }
+                start.get_or_insert(from);
+                previous = Some(to);
+                let mut vertex_index = |id| {
+                    if let Some(position) = vertices[..vertex_count].iter().position(|&existing| existing == Some(id)) {
+                        return Some(position as u8);
+                    }
+                    *vertices.get_mut(vertex_count)? = Some(id);
+                    points[vertex_count] = body.vertices.get(id)?.position;
+                    vertex_count += 1;
+                    Some((vertex_count - 1) as u8)
+                };
+                let a = vertex_index(from)?;
+                let b = vertex_index(to)?;
+                let z = (points[usize::from(a)] - frame.origin).dot(outward).abs();
+                if !(z <= tolerance) { return None; }
+                let edge_index = if let Some(position) = edges[..edge_count].iter().position(|entry| entry.is_some_and(|e| e.0 == op.edge)) {
+                    let (_, forward, paired) = edges[position].as_mut()?;
+                    if *paired || *forward == op.forward { return None; }
+                    *paired = true;
+                    position
+                } else {
+                    let position = edge_count;
+                    *edges.get_mut(position)? = Some((op.edge, op.forward, false));
+                    endpoints[position] = [a, b];
+                    edge_count += 1;
+                    position
+                };
+                *boundary.edges.get_mut(offset + count)? = edge_index as u8;
+                count += 1;
+                index = op.next;
+                if index == ring.first { break; }
+            }
+            if count < 3 || start != previous { return None; }
+            boundary.ring_count += 1;
+            boundary.offsets[boundary.ring_count] = (offset + count) as u8;
         }
-        if count < 3 || start != previous { return None; }
-        face_sizes[face_index] = count;
     }
     if edges[..edge_count].iter().any(|entry| !entry.is_some_and(|edge| edge.2)) { return None; }
-    let shell = PlanarShell { points, supports, endpoints, face_edges, face_sizes, vertex_count, face_count: shell.faces.len(), edge_count };
+    let shell = PlanarShell { points, supports, endpoints, faces, vertex_count, face_count: shell.faces.len(), edge_count };
     closed_planar_manifold(&shell).then_some(shell)
 }
 
@@ -166,22 +187,31 @@ fn edge_link_connected(edges: u64, links: &[u64; MAX_EDGES]) -> bool {
 }
 
 fn closed_planar_manifold(shell: &PlanarShell) -> bool {
-    let Some(twice_genus) = (shell.edge_count + 2).checked_sub(shell.vertex_count + shell.face_count) else { return false; };
+    let faces = &shell.faces[..shell.face_count];
+    let hole_count: usize = faces.iter().map(|face| face.ring_count - 1).sum();
+    let Some(twice_genus) = (shell.edge_count + 2 + hole_count).checked_sub(shell.vertex_count + shell.face_count) else { return false; };
     if twice_genus % 2 != 0 { return false; }
     let mut incident = [0_u64; MAX_VERTICES];
     for (edge, &vertices) in shell.endpoints[..shell.edge_count].iter().enumerate() {
         for vertex in vertices { incident[usize::from(vertex)] |= 1 << edge; }
     }
     let mut links = [0_u64; MAX_EDGES];
-    for (face, &count) in shell.face_edges[..shell.face_count].iter().zip(&shell.face_sizes) {
-        let ring = &face[..count];
+    for ring in faces.iter().flat_map(PlanarFace::rings) {
         for (&a, &b) in ring.iter().zip(ring.iter().cycle().skip(1)) {
             if a == b { return false; }
             links[usize::from(a)] |= 1 << b;
             links[usize::from(b)] |= 1 << a;
         }
     }
-    if !edge_link_connected((1 << shell.edge_count) - 1, &links) { return false; }
+    let mut connected = links;
+    for face in faces {
+        for ring in face.rings().skip(1) {
+            let (outer, inner) = (usize::from(face.edges[0]), usize::from(ring[0]));
+            connected[outer] |= 1 << inner;
+            connected[inner] |= 1 << outer;
+        }
+    }
+    if !edge_link_connected((1 << shell.edge_count) - 1, &connected) { return false; }
     incident[..shell.vertex_count].iter().all(|&edges| {
         let degree = edges.count_ones();
         let neighbors = (degree.saturating_sub(1)).min(2);
@@ -199,29 +229,33 @@ pub fn planar_section(
     if solid.inners.len() > MAX_VOIDS { return None; }
     let shell = planar_shell(body, solid.outer, tolerance)?;
     let (anchor,axis)=match section_plane(origin,normal){Ok(plane)=>plane,Err(error)=>return Some(Err(error))};
-    let result=section_on_shell(&shell,origin,normal,anchor,axis,tolerance)?;
-    let section=match result{Ok(section)=>section,Err(error)=>return Some(Err(error))};
-    let mut voids:[Option<SectionPolygon>;MAX_VOIDS]=std::array::from_fn(|_|None);
-    for (index,&id) in solid.inners.iter().enumerate(){
-        let inner=planar_shell(body,id,tolerance)?;
-        if !inner.crosses_interior(anchor,axis,tolerance){continue;}
-        let result=section_on_shell(&inner,origin,normal.map(|value|-value),anchor,-axis,tolerance)?;
-        match result.and_then(finished_ring){Ok(ring)=>voids[index]=Some(ring),Err(error)=>return Some(Err(error))}
-    }
-    if voids.iter().all(Option::is_none){return Some(Ok(section));}
-    let mut regions = match section {
-        PlanarSection::Regions(regions) => regions,
-        PlanarSection::Region(region) => PlanarSectionRegions::one(region),
-        single => {
-            let outer = match finished_ring(single) { Ok(ring) => ring, Err(error) => return Some(Err(error)) };
-            PlanarSectionRegions::one(PlanarSectionRegion { outer, holes: [const { None }; MAX_VOIDS] })
-        }
+    let mut section = match section_on_shell(&shell, origin, normal, anchor, axis, tolerance)? {
+        Ok(section) => section,
+        Err(error) => return Some(Err(error)),
     };
-    let frame = Frame3::from_normal(anchor,axis)?;
-    for hole in voids.into_iter().flatten() {
-        if let Err(error) = regions.add_void(hole, &frame) { return Some(Err(error)); }
+    let frame = Frame3::from_normal(anchor, axis)?;
+    for &id in &solid.inners {
+        let inner = planar_shell(body, id, tolerance)?;
+        if !inner.crosses_interior(anchor, axis, tolerance) { continue; }
+        let void = section_on_shell(&inner, origin, normal.map(|value| -value), anchor, -axis, tolerance)?;
+        section = match void.and_then(|void| subtract_void_section(section, void, &frame)) {
+            Ok(section) => section,
+            Err(error) => return Some(Err(error)),
+        };
     }
-    Some(regions.finish())
+    Some(Ok(section))
+}
+
+fn subtract_void_section(material: PlanarSection, void: PlanarSection, frame: &Frame3) -> Result<PlanarSection, &'static str> {
+    let mut material = finished_regions(material)?;
+    for void in finished_regions(void)?.into_regions() {
+        material.add_void(void.outer, frame)?;
+        for island in void.holes.into_iter().flatten() {
+            let slot = material.0.iter_mut().find(|region| region.is_none()).ok_or("section material region limit")?;
+            *slot = Some(PlanarSectionRegion { outer: island, holes: [const { None }; MAX_VOIDS] });
+        }
+    }
+    material.finish()
 }
 
 fn section_on_shell(
@@ -230,7 +264,9 @@ fn section_on_shell(
     let (points, endpoints, supports) = (
         &shell.points[..shell.vertex_count], &shell.endpoints[..shell.edge_count], &shell.supports[..shell.face_count],
     );
-    if supports.iter().all(|&(anchor, axis)| points.iter().all(|&point| (point - anchor).dot(axis) <= tolerance)) {
+    if shell.faces[..shell.face_count].iter().all(|face| face.ring_count == 1)
+        && supports.iter().all(|&(anchor, axis)| points.iter().all(|&point| (point - anchor).dot(axis) <= tolerance))
+    {
         return Some(BoxSectionDraft::convex_edges(points, endpoints, origin, normal).map(PlanarSection::Convex));
     }
     let crossings = section_crossings(points, endpoints, anchor, axis, tolerance)?;
@@ -252,28 +288,29 @@ fn section_on_shell(
     let mut coplanar_outside=[0;MAX_EDGES];
     let aligned=|edge:u8|crossings.on_edge(endpoints[usize::from(edge)]);
     for (index, &(_, outward)) in supports.iter().enumerate() {
-        let ring = &shell.face_edges[index][..shell.face_sizes[index]];
-        if ring.iter().copied().any(|edge|aligned(edge)){
-            let sides=ring.iter().flat_map(|&edge|endpoints[usize::from(edge)]).fold(0,|mask,vertex|{
+        let face = &shell.faces[index];
+        if face.edges().iter().copied().any(|edge|aligned(edge)){
+            let sides=face.edges().iter().flat_map(|&edge|endpoints[usize::from(edge)]).fold(0,|mask,vertex|{
                 let distance=crossings.sides[usize::from(vertex)];
                 mask|u8::from(distance>0.)|u8::from(distance<0.)<<1
             });
             if sides==3 {return None;}
             let outside = if outward.dot(axis)>0. {1} else {2};
-            for edge in ring.iter().copied().filter(|&edge|aligned(edge)){
+            for edge in face.edges().iter().copied().filter(|&edge|aligned(edge)){
                 if sides==0 { coplanar_outside[usize::from(edge)]|=outside; }
                 else { aligned_sides[usize::from(edge)]|=sides; }
             }
             continue;
         }
-        let mut hits = [0; MAX_VERTICES];
+        let mut hits = [0; MAX_CROSSINGS];
         let mut size = 0;
-        for (index, &edge) in ring.iter().enumerate() {
-            if crossing[usize::from(edge)].is_some() { *hits.get_mut(size)? = edge; size += 1; }
-            let prior=usize::from(ring[(index+ring.len()-1)%ring.len()]);
-            if let Some(vertex)=crossings.corner(endpoints[prior],endpoints[usize::from(edge)]) {
-                *hits.get_mut(size)?=vertex;
-                size+=1;
+        for ring in face.rings() {
+            for (&previous, &edge) in std::iter::once(ring.last()?).chain(ring).zip(ring) {
+                if crossing[usize::from(edge)].is_some() { *hits.get_mut(size)? = edge; size += 1; }
+                if let Some(vertex) = crossings.corner(endpoints[usize::from(previous)], endpoints[usize::from(edge)]) {
+                    *hits.get_mut(size)? = vertex;
+                    size += 1;
+                }
             }
         }
         if size == 0 { continue; }
@@ -417,15 +454,17 @@ fn group_rings(
     regions.finish()
 }
 
-fn finished_ring(section:PlanarSection)->Result<SectionPolygon,&'static str>{
-    match section{
-        PlanarSection::Polygon(ring)=>Ok(ring),
-        PlanarSection::Region(_) | PlanarSection::Regions(_) => Err("section void shell must form one simple contour"),
-        PlanarSection::Convex(mut draft)=>{
-            while draft.has_edge(){draft.advance_edge()?;}
-            draft.finish()
+fn finished_regions(section: PlanarSection) -> Result<PlanarSectionRegions, &'static str> {
+    let outer = match section {
+        PlanarSection::Regions(regions) => return Ok(regions),
+        PlanarSection::Region(region) => return Ok(PlanarSectionRegions::one(region)),
+        PlanarSection::Polygon(ring) => ring,
+        PlanarSection::Convex(mut draft) => {
+            while draft.has_edge() { draft.advance_edge()?; }
+            draft.finish()?
         }
-    }
+    };
+    Ok(PlanarSectionRegions::one(PlanarSectionRegion { outer, holes: [const { None }; MAX_VOIDS] }))
 }
 
 struct RingChart{

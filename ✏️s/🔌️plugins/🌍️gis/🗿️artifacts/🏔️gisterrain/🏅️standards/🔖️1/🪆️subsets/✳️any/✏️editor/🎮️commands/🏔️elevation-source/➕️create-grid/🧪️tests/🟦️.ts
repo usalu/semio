@@ -11,7 +11,7 @@ test("flat terrain grid matches the geographic and raster oracle", () => {
   expect(validate(fixture.invalidHeight)).toBe(false);
   expect(fixture.invalidOrder.west).toBeGreaterThan(fixture.invalidOrder.east);
   expect([command.west, command.south, command.east, command.north]).toEqual(expected.bounds);
-  const raster = map(zeros([expected.rows, expected.columns]), () => command.height);
-  expect(size(raster)).toEqual([33, 33]);
-  expect(sum(raster)).toBe(expected.rows * expected.columns * expected.height);
+  const raster = map(zeros([expected.rows, expected.columns]), () => Math.round(command.height * 1000));
+  expect(size(raster)).toEqual([command.rows, command.columns]);
+  expect(sum(raster)).toBe(expected.rows * expected.columns * expected.heightMillimetres);
 });

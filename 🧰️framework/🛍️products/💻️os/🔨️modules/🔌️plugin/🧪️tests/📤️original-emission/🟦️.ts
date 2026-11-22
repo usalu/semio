@@ -7,7 +7,7 @@ import schema from "./🧬️.json";
 const plugin=resolve(import.meta.dir,"../..");
 const compact=(value:string)=>value.replace(/\s+/g,"");
 function method(source:string,name:string):string{
- const start=source.indexOf("fn "+name+"(");expect(start,"actual method "+name).toBeGreaterThanOrEqual(0);
+ const start=source.search(new RegExp("fn "+name+"(?:<[^>]+>)?\\("));expect(start,"actual method "+name).toBeGreaterThanOrEqual(0);
  let at=source.indexOf("{",start),depth=1,end=at+1;while(depth&&end<source.length){if(source[end]==="{")depth++;else if(source[end]==="}")depth--;end++;}expect(depth).toBe(0);return compact(source.slice(at+1,end-1));
 }
 test("two authoring modes and cancellation agree with independent SQLite",()=>{
@@ -21,16 +21,28 @@ test("genuine original emission borrows and revalidates the parent without minti
  const advance=await Bun.file(resolve(plugin,"🧵️instance/🧾️typed-operations/📥️staging/📬️publication/🔁️stall-witness-and-unit-advance/🦀️.rs")).text();
  const revalidate=method(advance,"revalidate_mounted_publication");expect(revalidate).toContain("mounted."+fixture.validator+"(cx)?");expect(revalidate).toContain("revalidate_interaction_on_document_change(meta,identity)");
  const unit=method(advance,"advance_typed_operation_publication_unit");expect(unit).toContain("mounted."+fixture.predicate+"()");expect(unit).toContain("revalidate_mounted_publication(&mutmounted,identity,cx)");
- const pump=method(source,"publish_mounted_typed_operation_pump");expect(pump).toContain("ifcx.is_cancelled(){ifletSome(lease)=mounted.cancellation_lease.as_ref(){lease.cancel();}}");expect(pump).toContain("lease.publication_is_cancelled()");expect(pump).toContain("!acknowledged_page&&!cancelled");
+ const pump=method(source,"publish_mounted_typed_operation_pump");expect(pump).toContain("ifcx.is_cancelled(){ifletSome(lease)=mounted.cancellation_lease.as_ref(){lease.cancel();}}");expect(pump).toContain("lease.publication_is_cancelled()");expect(pump).toContain("!acknowledged_page&&!custody&&!cancelled");
  expect(borrowed.indexOf("lease.publication_is_cancelled()")).toBeLessThan(borrowed.indexOf("follow_derivable_children"));
  expect(revalidate.indexOf("cx.is_cancelled()")).toBeLessThan(revalidate.indexOf("letmeta=&mounted.meta"));
- expect(borrowed).toContain("publish_mounted_typed_operation_run_admitted(mounted,identity,cx,retained)");
+ expect(borrowed).toContain("publish_mounted_typed_operation_run_admitted(mounted,Some(&mut*identity),cx,retained)");
  expect(borrowed).toContain("follow_derivable_children(&mut*self.stores,identity)");
  expect(borrowed).not.toContain("NativeEncodeControl::new");expect(borrowed).not.toContain("EntityIdentityAuthority::new");
  expect(borrowed).not.toContain("take_authoring_identity");
- const owned=method(source,fixture.ownedMethod);expect(owned).toContain("take_authoring_identity");expect(owned).toContain("EntityIdentityAuthority::resume");
+ const owned=method(source,fixture.ownedMethod);expect(owned).toContain("take_authoring_identity");expect(owned).toContain("publish_mounted_typed_operation_run_admitted(mounted,None,cx,retained)");expect(owned).toContain("with_mounted_publication_authoring(mounted,None,cx");
+});
+
+test("mounted authoring lends current-turn Work and settles it even when the interaction call fails",async()=>{
+ const source=await Bun.file(resolve(plugin,"🧵️instance/🧾️typed-operations/📥️staging/📬️publication/🏃️mounted-run-and-pump/🦀️.rs")).text();
+ const scope=method(source,"with_mounted_publication_authoring");
+ const steps=["returnrun(mounted,identity).await","mounted.identity.take()","cx.native_encoder_work()","EntityIdentityAuthority::resume(receipt","with_work_lender(Box::new(MountedIdentityWork(&mutwork)))","letresult=run(mounted,&mutidentity).await","identity.pause()","cx.consume_fuel(work.performed())","mounted.identity=Some(receipt.map_err"];
+ let previous=-1;for(const step of steps){const next=scope.indexOf(step);expect(next,step).toBeGreaterThan(previous);previous=next;}
+ const interaction=method(source,"publish_mounted_typed_interaction_unit");
+ expect(interaction).toContain("with_mounted_publication_authoring(mounted,identity,cx,async|mounted,identity|{self.as_render().apply_interaction_writes(&writes,&mounted.meta,identity).await}");
+ expect(interaction.indexOf("emit.interaction_writes=writes")).toBeGreaterThan(interaction.indexOf("ifletErr(fault)=result"));
+ const pump=method(source,"publish_mounted_typed_operation_pump");
+ expect(pump).toContain("with_mounted_publication_authoring(mounted,identity.as_deref_mut(),cx,async|mounted,identity|{self.publish_mounted_typed_inline_interaction_unit(mounted,identity).await}");
 });
 
 test("native fixture reaches actual intake, pump and paid ACK without a substituted producer",async()=>{
- const source=await Bun.file(resolve(import.meta.dir,"🦀️.rs")).text();for(const port of ["dispatch_original_emission","advance_typed_operation_publication","OriginalFixtureScope::admit","observe_heap_allocations_on_this_thread","original_lifecycle_delta","present_fixture_mounted_page","close_original_retained_step","acknowledge_result_page","take_typed_operation_preparation_receipt","take_typed_operation_retirement_receipt"])expect(source).toContain(port);for(const bypass of ["install_authoring_identity","NativeEncodeControl::new","MountedTypedCommandFullOperation {","renew_turn","renew_payload_page_grant","retire_fixture_acknowledged_mounted_page"])expect(source).not.toContain(bypass);
+ const source=await Bun.file(resolve(import.meta.dir,"🦀️.rs")).text();for(const port of ["dispatch_original_emission","advance_typed_operation_publication","OriginalFixtureScope::admit","observe_heap_allocations_on_this_thread","original_lifecycle_delta","present_fixture_mounted_page","close_original_retained_effect_step","acknowledge_result_page","take_typed_operation_preparation_receipt","take_typed_operation_retirement_receipt"])expect(source).toContain(port);for(const bypass of ["install_authoring_identity","NativeEncodeControl::new","MountedTypedCommandFullOperation {","renew_turn","renew_payload_page_grant","retire_fixture_acknowledged_mounted_page"])expect(source).not.toContain(bypass);
 });

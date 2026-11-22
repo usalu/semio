@@ -6,6 +6,27 @@
   "Oid": {"type": "string", "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$"},
   "Hlc": {"type": "string", "pattern": "^[0-9]{13}-[0-9]{6}-[a-z0-9][a-z0-9-]{0,39}$"},
   "StageObservation": {"enum": ["index-changed", "index-missing", "locked-snapshot-failed", "write-tree-failed", "ref-changed", "observation-failed"]},
+  "PresenceFixture": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["version", "cases"],
+   "properties": {
+    "version": {"const": 1},
+    "cases": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["root", "gitAccepts", "observation"],
+      "properties": {
+       "root": {"enum": ["missing", "empty", "invalid-head", "invalid-marker", "warm-invalid-config"]},
+       "gitAccepts": {"type": "boolean"},
+       "observation": {"oneOf": [{"type": "null"}, {"$ref": "#/definitions/StageObservation"}]}
+      }
+     }
+    }
+   }
+  },
   "Mode": {"enum": ["100644", "100755", "120000"]},
   "StageRecord": {
    "type": "object",

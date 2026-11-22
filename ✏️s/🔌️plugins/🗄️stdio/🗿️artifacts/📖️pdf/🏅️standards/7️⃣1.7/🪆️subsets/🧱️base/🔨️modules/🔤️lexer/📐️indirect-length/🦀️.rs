@@ -19,7 +19,12 @@ impl PdfIndirectLengthCursor {
         Self { expected, header: IndirectHeaderCursor::new(offset), value: None, length: None, position: offset, phase: Phase::Header }
     }
 
-    pub fn advance(&mut self, data: &[u8], mut grant: CosGrant, cancelled: bool) -> CosReceipt {
+    pub fn advance(&mut self, data: &[u8], grant: CosGrant, cancelled: bool) -> CosReceipt {
+        self.advance_bytes(|position| data.get(position).copied(), grant, cancelled)
+    }
+
+    /// 🎚️ Reads the exact indirect-length owner over segmented original bytes.
+    pub fn advance_bytes(&mut self, byte_at: impl Fn(usize) -> Option<u8>, mut grant: CosGrant, cancelled: bool) -> CosReceipt {
         if cancelled && !matches!(self.phase, Phase::Closing | Phase::Closed) { self.phase = Phase::Cancelled; }
         let mut spent = 0;
         loop {
@@ -31,7 +36,7 @@ impl PdfIndirectLengthCursor {
                 _ if grant.work == 0 => return step(CosStatus::More, spent),
                 Phase::Header => {
                     let before = self.header.position();
-                    match self.header.advance(data, grant.work) {
+                    match self.header.advance(&byte_at, grant.work) {
                         Ok((used, HeaderStep::Complete { id, body_offset })) => {
                             spent += used;
                             grant.work -= used;
@@ -48,7 +53,7 @@ impl PdfIndirectLengthCursor {
                 Phase::Seek { comment } => {
                     spent += 1;
                     grant.work -= 1;
-                    match data.get(self.position).copied() {
+                    match byte_at(self.position) {
                         Some(byte) if comment || is_ws(byte) || byte == b'%' => {
                             self.position += 1;
                             self.phase = Phase::Seek { comment: byte == b'%' || comment && !matches!(byte, b'\r' | b'\n') };
@@ -62,7 +67,7 @@ impl PdfIndirectLengthCursor {
                 }
                 Phase::Scalar => {
                     let value = self.value.as_mut().expect("active indirect length token");
-                    let mut result = value.advance(data, grant, false);
+                    let mut result = value.advance_bytes(&byte_at, grant, false);
                     result.work += spent;
                     if let Ok(CosStatus::Complete { end }) = result.status {
                         self.length = value.ready_value().and_then(super::PdfObject::as_i64).and_then(|length| usize::try_from(length).ok());

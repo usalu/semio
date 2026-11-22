@@ -70,8 +70,7 @@ where
 /// because they parse, print, reduce and replay through `ArtifactStore`; the table itself stays engine-free vocabulary.
 ///
 /// 🚫️async: E4 fn-pointer erasure-table thunks — every bridge goes into an `ArtifactCodec` `fn` slot (unnameable if
-/// `async fn`), so each wraps its real async body in `Box::pin` per R1(ii); `schema_hash` is matched explicitly because
-/// `Option::map`'s closure is sync (R10 shape 1).
+/// `async fn`), so each wraps its real async body in `Box::pin` per R1(ii).
 pub fn bare_artifact_codec<P, Mutation>(schema: impl Into<String>) -> ArtifactCodec
 where
     P: Clone + PartialEq + ToValue + FromValue + ArtifactDsl + ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + Sync,
@@ -230,10 +229,7 @@ where
         extension: P::EXTENSION,
         native_identity: ArtifactNativeSnapshotIdentity::typed::<P>(),
         snapshot_sqlite: P::sqlite_snapshot_codec(),
-        pack_schema_hash: match P::record_spec() {
-            Some(spec) => pack::record::schema_hash(&spec),
-            None => [0u8; 32],
-        },
+        pack_schema_hash: <P as pack::snapshot::ArtifactPackMetadata>::native_pack_schema_hash().unwrap_or([0; 32]),
         reference:Some(ArtifactCodecReference{
         compile_dsl: compile_dsl_impl::<P, Mutation>,
         print_mirror: print_mirror_impl::<P, Mutation>,

@@ -2,7 +2,7 @@
 //! (graph canvas + compiled script + DSL).
 
 use crate::editor::sequence::modes::edit::windows::{compiled, main, script};
-use semio_plugin::create_default_layout;
+use semio_plugin::{create_default_layout, Axis};
 use semio_ui_locale::LocalizedLabel;
 use semio_plugin::ModeDefinition;
 use semio_plugin::WindowLayout;
@@ -19,11 +19,9 @@ pub fn definition() -> ModeDefinition {
 /// the app-level `default_layout`.
 pub fn layout() -> WindowLayout {
     create_default_layout(
-        &[main::SEQUENCE_PLAY_WINDOW_MAIN.into(), script::SEQUENCE_PLAY_WINDOW_SCRIPT.into(), compiled::SEQUENCE_PLAY_WINDOW_COMPILED.into()],
-        "row",
-        Some(&[50.0, 25.0, 25.0]),
-        Some(&["Sequence".into(), "Script".into(), "DSL".into()]),
-    )
+        &[main::SEQUENCE_PLAY_WINDOW_MAIN.into(), script::SEQUENCE_PLAY_WINDOW_SCRIPT.into(), compiled::SEQUENCE_PLAY_WINDOW_COMPILED.into()], Axis::Horizontal,
+        Some(&[0.5, 0.25, 0.25]),
+        Some(&["Sequence".into(), "Script".into(), "DSL".into()]))
 }
 //#endregion 🔖️Definition
 

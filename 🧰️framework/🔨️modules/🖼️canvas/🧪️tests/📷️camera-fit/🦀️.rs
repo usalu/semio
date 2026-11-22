@@ -131,3 +131,38 @@ fn a_camera_that_frames_nothing_is_never_reported_as_framing_something() {
     assert!(fitted, "a camera that shows none of the graph must lose to the fit");
     assert!(close(camera::content_coverage(&content, &opened, &view), 1.0));
 }
+
+/// 🔲️ The union of the node boxes of one `fitRows` row — centre ± half extent, the law `DagHost::content_world_bounds` and `dagContentBounds` share.
+fn node_bounds(nodes: &Value) -> Option<camera::ContentBounds> {
+    nodes.as_array()?.iter().map(|node| {
+        let (x, y, half_w, half_h) = (node["x"].as_f64().expect("x"), node["y"].as_f64().expect("y"), node["width"].as_f64().expect("width") / 2.0, node["height"].as_f64().expect("height") / 2.0);
+        camera::ContentBounds { min_x: x - half_w, min_y: y - half_h, max_x: x + half_w, max_y: y + half_h }
+    }).reduce(|left, right| camera::ContentBounds { min_x: left.min_x.min(right.min_x), min_y: left.min_y.min(right.min_y), max_x: left.max_x.max(right.max_x), max_y: left.max_y.max(right.max_y) })
+}
+
+/// 🔲️ The explicit `fitGraph` action installs `fit_camera` for every row — and, unlike the opening camera, never defers to a stored one; an empty graph has nothing to frame.
+#[test]
+fn every_fit_row_installs_the_camera_the_explicit_fit_names() {
+    let document = fixture();
+    let rows = document["fitRows"].as_array().expect("fitRows");
+    assert!(rows.len() >= 8, "the fit action needs more than a happy path");
+    for row in rows {
+        let name = row["name"].as_str().expect("row name");
+        let view = viewport(&row["viewport"]);
+        let expected = &row["expect"]["camera"];
+        let Some(content) = node_bounds(&row["nodes"]) else {
+            assert!(expected.is_null(), "{name}: an empty graph must answer no camera");
+            continue;
+        };
+        let fitted = camera::fit_camera(&content, &view, camera::CONTENT_FIT_PADDING_PX);
+        for (axis, got) in [("x", fitted.x), ("y", fitted.y), ("zoom", fitted.zoom)] {
+            assert!(close(got, expected[axis].as_f64().expect("expected axis")), "{name}: camera {axis} {got} != {}", expected[axis]);
+        }
+        if row["storedAdoptedByStartup"].as_bool().unwrap_or(false) {
+            let stored_camera = stored(&row["stored"]).expect("stored camera");
+            let (opened, was_fitted) = camera::startup_camera(Some(&stored_camera), Some(&content), &view, camera::CONTENT_FIT_PADDING_PX, camera::CONTENT_FRAMED_MIN_COVERAGE);
+            assert!(!was_fitted && close(opened.zoom, stored_camera.zoom), "{name}: the opening law must adopt the stored camera");
+            assert!(!close(fitted.zoom, stored_camera.zoom), "{name}: the explicit fit must not defer to it");
+        }
+    }
+}

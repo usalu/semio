@@ -6,6 +6,14 @@ use semio_plugin::plugin_app_close_prelude::*;
 use semio_plugin::{ExecutionMode, Plugin, PluginApp};
 use semio_plugin::PluginBuilder;
 
+/// 🎟️ Draw funds an atomic encoded export through its admitted size and terminal release.
+pub const DRAW_MOUNTED_OWNER_POLICY: semio_plugin::MountedOwnerPolicyV1 = {
+    let mut policy = semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT;
+    policy.preparation.maximum_capacity_bytes = semio_s_artifact_draw_drawing::DRAW_EXPORT_MAXIMUM_BYTES;
+    policy.close.maximum_release_bytes = policy.preparation.maximum_capacity_bytes;
+    policy
+};
+
 //#region 🗃️Apps
 semio_framework_dispatch_macros::dyn_enum_close! {
     /// 🗃️ Closed runtime app fleet for the draw editor and viewer.

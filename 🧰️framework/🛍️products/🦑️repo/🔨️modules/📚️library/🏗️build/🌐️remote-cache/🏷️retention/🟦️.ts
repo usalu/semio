@@ -40,17 +40,20 @@ export async function removeRemoteCacheMetaV1(root:string,relative:string):Promi
 }
 
 /** 🚶️ Reads every sidecar below a root, keyed by the entry key; names that are not 64-hex-or-key sidecars and malformed documents are skipped, and sidecars whose entry is not in `present` are removed (a crash between the removal of an entry and its sidecar leaves exactly that). */
-export async function scanRemoteCacheMetaV1(root:string,present:ReadonlyMap<string,unknown>,signal?:AbortSignal):Promise<Map<string,RemoteCacheMetaV1>>{
+export async function scanRemoteCacheMetaV1(root:string,present:Readonly<{has(relative:string):boolean}>,signal?:AbortSignal,width:number=64):Promise<Map<string,RemoteCacheMetaV1>>{
  const found=new Map<string,RemoteCacheMetaV1>(),base=join(root,REMOTE_CACHE_META_DIRECTORY_V1);
  const walk=async(directory:string,depth:number,prefix:readonly string[]):Promise<void>=>{
   signal?.throwIfAborted();let rows;try{rows=await readdir(directory,{withFileTypes:true});}catch{return;}
+  const files:{relative:string;name:string}[]=[];
   for(const row of rows){
    if(depth<3){if(row.isDirectory())await walk(join(directory,row.name),depth+1,[...prefix,row.name]);continue;}
    if(!row.isFile()||!row.name.endsWith(".json"))continue;
-   const relative=[...prefix,row.name.slice(0,-5)].join("/");
-   if(!present.has(relative)){await unlink(join(directory,row.name)).catch(()=>undefined);continue;}
-   const meta=await readRemoteCacheMetaV1(root,relative);if(meta)found.set(relative,meta);
+   files.push({relative:[...prefix,row.name.slice(0,-5)].join("/"),name:row.name});
   }
+  for(let at=0;at<files.length;at+=width){if(at>0&&width<=16)await new Promise<void>(done=>{setImmediate(done);});await Promise.all(files.slice(at,at+width).map(async({relative,name})=>{
+   if(!present.has(relative)){await unlink(join(directory,name)).catch(()=>undefined);return;}
+   const meta=await readRemoteCacheMetaV1(root,relative);if(meta)found.set(relative,meta);
+  }));}
  };
  await walk(base,0,[]);return found;
 }

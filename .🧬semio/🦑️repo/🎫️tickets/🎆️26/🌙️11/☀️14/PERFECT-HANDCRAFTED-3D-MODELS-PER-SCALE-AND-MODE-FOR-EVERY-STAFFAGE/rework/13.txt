@@ -1,0 +1,8 @@
+vegetation/japanese-maple
+vegetation/date-palm
+vegetation/hornbeam-hedge
+vegetation/bamboo-clump
+vegetation/miscanthus-grass
+vegetation/hosta-clump
+vegetation/agave
+vegetation/ivy-on-trellis

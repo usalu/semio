@@ -862,7 +862,7 @@ async fn neutral_mesh_export_triangle_agrees_with_independent_gltf() {
 
 #[semio_framework_async_macros::async_test]
 async fn checked_mesh_media_export_is_resumable_and_matches_independent_gltf() {
-    use semio_plugin::artifact_app_laws::{ensure_fixture_cancellation_issuer, fixture_close_grant, poll_fixture_media_export, retain_fixture_media_export_result, take_fixture_media_export_chunk, OriginalFixtureCaller};
+    use semio_plugin::artifact_app_laws::{ensure_fixture_cancellation_issuer, fixture_close_grant, poll_fixture_media_export, retain_fixture_media_export_result, retire_fixture_owned, take_fixture_media_export_chunk, OriginalFixtureCaller};
     use semio_plugin::{ArtifactMediaExportPoll, PluginApp};
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎞️mesh-export/🔣️.json")).unwrap();
     let cases = std::iter::once((None, false))
@@ -870,11 +870,12 @@ async fn checked_mesh_media_export_is_resumable_and_matches_independent_gltf() {
         .chain(std::iter::once((None, true)));
     for (cut, empty) in cases {
         let mut app = app().await;
-        ensure_fixture_cancellation_issuer(&mut app.0, app.1.cx()).expect("mount the original cancellation issuer");
         if empty {
             assert_eq!(fixture["emptyMesh"], "refused");
             let cleared = dispatch(&mut app, RemodelingCommand::ClearMeshResult(clear_mesh_result::ClearMeshResult {})).await;
             assert!(cleared.edited_document());
+        } else {
+            ensure_fixture_cancellation_issuer(&mut app.0, app.1.cx()).expect("mount the original cancellation issuer");
         }
         let before = app.snapshot().expect("original mesh snapshot");
         let expected = semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::resolve_bounded_remodeling_mesh(&before.durable_artifacts, &before.results.mesh.mesh).expect("original mesh");
@@ -896,6 +897,7 @@ async fn checked_mesh_media_export_is_resumable_and_matches_independent_gltf() {
                 Ok(poll) => poll,
                 Err(failure) if empty => {
                     assert!(failure.primary.message().contains("No mesh is available to export"), "{failure:?}");
+                    assert!(retire_fixture_owned(&mut Some(failure), &mut None, close, app.1.cx()).expect("retire the original empty mesh refusal"));
                     terminal = true;
                     break;
                 }
@@ -918,6 +920,8 @@ async fn checked_mesh_media_export_is_resumable_and_matches_independent_gltf() {
                     let reader = primitive.reader(|buffer| (buffer.index() == 0).then_some(glb.blob.as_deref().unwrap()));
                     assert_eq!(reader.read_positions().expect("positions").flatten().collect::<Vec<_>>(), expected.positions);
                     assert_eq!(reader.read_indices().expect("indices").into_u32().collect::<Vec<_>>(), expected.indices);
+                    let uvs = reader.read_tex_coords(0).map(|coordinates| coordinates.into_f32().flatten().collect::<Vec<_>>()).unwrap_or_default();
+                    assert_eq!(uvs, expected.uvs);
                     terminal = true; break;
                 }
                 ArtifactMediaExportPoll::Failed(reason) => panic!("mesh export failed: {reason}"),

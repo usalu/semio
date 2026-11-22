@@ -8,4 +8,4 @@ export interface ChangeJointPlatePlateCount {
   newPlateCount: number;
 }
 
-export const parseChangeJointPlatePlateCount: NormWireReader<ChangeJointPlatePlateCount> = normWireObject<ChangeJointPlatePlateCount>({ id: normWireRequired(normWireString), newPlateCount: normWireRequired(normWireRange(normWireInteger, {"minimum":0})) });
+export const parseChangeJointPlatePlateCount: NormWireReader<ChangeJointPlatePlateCount> = normWireObject<ChangeJointPlatePlateCount>({ id: normWireRequired(normWireString), newPlateCount: normWireRequired(normWireRange(normWireInteger, {"minimum":0,"maximum":4294967295})) });

@@ -1,0 +1,9 @@
+# Process3d native history edit
+
+The native editor pane run beginning at byte 66216420 of the supervised log printed three distinct history failures. Its input-schema law refused ResizeStock with `OptionLabelMissing` at `/field` for `depth`. The schema declares `width`, `depth`, `height` and `radius`. The input readers use labels from the schema’s option map or the shared glossary, which covers the other three values. The schema now supplies `Depth` and `Tiefe` and preserves the existing wire values and numeric constraints.
+
+The TypeScript `mutationInputDefs` reader reproduced the exact refusal when the option metadata was removed from an in-memory copy of the schema. With the authored metadata it resolved all four options in both locales and terminologies. Python jsonschema’s Draft 7 validator accepted the updated schema, the committed ResizeStock fixture and all four dimension values, and rejected `length`. The native input test executable predates the schema edit.
+
+The end-to-end history law panicked in fixture cleanup while receiving unused original action arguments. The current fixture source already contains a concurrent fix that renews receiving and retirement turns. Its added `unused_action_inputs_retire_after_a_spent_dispatch_turn` test exhausts a turn’s item grant before cleanup and verifies that the original recipient identity survives. The observed editor artifact used a test-law library built at 17:55 UTC, before the updated source at 19:05 UTC.
+
+The conflict case fails while reloading its archive, during `DecodeForward` with `Replay: truncated at offset 6`. Process3d’s writer emits its handcrafted format byte, variant tag and fields. The history hydration uses `OpBinaryReceiving` for the same payload, and the mutation aggregate selects a generic Pack-value receiver. The codec repair is tracked with the envelope work.

@@ -1,10 +1,13 @@
 {
   "version": 1,
-  "languages": ["en", "de"],
+  "languages": [
+    "en",
+    "de"
+  ],
   "messages": {
     "error.syntax": {
-      "en": "Expected repo remote-cache serve|status|gc|rotate.",
-      "de": "Erwartet wird repo remote-cache serve|status|gc|rotate."
+      "en": "Expected repo remote-cache serve|status|gc|rotate|evidence.",
+      "de": "Erwartet wird repo remote-cache serve|status|gc|rotate|evidence."
     },
     "error.option": {
       "en": "Unknown option for remote-cache {operation}: {option}",
@@ -162,6 +165,26 @@
       "en": "Cancelled; entries removed so far stay removed.",
       "de": "Abgebrochen; bisher entfernte Einträge bleiben entfernt."
     },
+    "status.fault.unreachable": {
+      "en": "The cache server did not answer the status request in time.",
+      "de": "Der Cache-Server hat die Statusanfrage nicht rechtzeitig beantwortet."
+    },
+    "status.fault.denied": {
+      "en": "The cache server refused the status request (HTTP {status}): this machine's signature or role is not accepted.",
+      "de": "Der Cache-Server hat die Statusanfrage abgelehnt (HTTP {status}): Signatur oder Rolle dieser Maschine werden nicht akzeptiert."
+    },
+    "status.fault.unsupported": {
+      "en": "The cache server does not offer a status route (HTTP {status}).",
+      "de": "Der Cache-Server bietet keine Statusroute an (HTTP {status})."
+    },
+    "status.fault.failed": {
+      "en": "The cache server failed the status request (HTTP {status}).",
+      "de": "Der Cache-Server ist bei der Statusanfrage fehlgeschlagen (HTTP {status})."
+    },
+    "status.fault.malformed": {
+      "en": "The cache server answered the status request with a document that is not a server status.",
+      "de": "Der Cache-Server hat die Statusanfrage mit einem Dokument beantwortet, das kein Serverstatus ist."
+    },
     "status.off": {
       "en": "The remote cache is off: set SEMIO_REMOTE_CACHE_ENDPOINT to an http or https origin.",
       "de": "Der Remote-Cache ist aus: Setze SEMIO_REMOTE_CACHE_ENDPOINT auf einen http- oder https-Ursprung."
@@ -169,6 +192,22 @@
     "warning.unreachable": {
       "en": "Warning: the remote cache {endpoint} is unreachable or refuses access; this run uses the local cache only.",
       "de": "Warnung: Der Remote-Cache {endpoint} ist nicht erreichbar oder verweigert den Zugriff; dieser Lauf nutzt nur den lokalen Cache."
+    },
+    "evidence.syntax": {
+      "en": "Expected repo remote-cache evidence [list|show <id>].",
+      "de": "Erwartet wird repo remote-cache evidence [list|show <id>]."
+    },
+    "evidence.off": {
+      "en": "No remote cache endpoint is configured, so there is no evidence to read.",
+      "de": "Es ist kein Remote-Cache-Endpunkt konfiguriert, daher gibt es keine Belege zu lesen."
+    },
+    "evidence.fault": {
+      "en": "The cache server did not deliver its evidence (status {status}; 0 means it did not answer).",
+      "de": "Der Cache-Server hat seine Belege nicht geliefert (Status {status}; 0 bedeutet, er hat nicht geantwortet)."
+    },
+    "evidence.unknown": {
+      "en": "No evidence {id}; repo remote-cache evidence list shows the ids.",
+      "de": "Kein Beleg {id}; repo remote-cache evidence list zeigt die Ids."
     }
   }
 }

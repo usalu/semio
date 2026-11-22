@@ -27,15 +27,17 @@
  "deadline": [
   {"name": "the cold workspace is making progress when the 16 GiB worker reached its old deadline", "stage": "workspace", "elapsedMs": 14402200, "softMs": 3600000, "sinceProgressMs": 12000, "verdict": "extended"},
   {"name": "stopped inventory counters still end the same cold workspace", "stage": "workspace", "elapsedMs": 14402200, "softMs": 3600000, "sinceProgressMs": 600001, "verdict": "stalled"},
-  {"name": "a productive cold workspace eventually reaches its finite bound", "stage": "workspace", "elapsedMs": 28800001, "softMs": 3600000, "sinceProgressMs": 0, "verdict": "timeout"},
-  {"name": "a different productive stage retains the default hard bound", "stage": "tools", "elapsedMs": 14402200, "softMs": 3600000, "sinceProgressMs": 12000, "verdict": "timeout"},
+  {"name": "a productive cold workspace past its hard cap goes on while it moves", "stage": "workspace", "elapsedMs": 28800001, "softMs": 3600000, "sinceProgressMs": 0, "verdict": "extended"}, {"name": "a productive stage eventually reaches the progress ceiling", "stage": "workspace", "elapsedMs": 86400001, "softMs": 3600000, "sinceProgressMs": 0, "verdict": "timeout"}, {"name": "a workspace past its hard cap with standing counters is stopped", "stage": "workspace", "elapsedMs": 28800001, "softMs": 3600000, "sinceProgressMs": 700000, "verdict": "timeout"},
+  {"name": "a different productive stage past its hard cap goes on while it moves", "stage": "tools", "elapsedMs": 14402200, "softMs": 3600000, "sinceProgressMs": 12000, "verdict": "extended"}, {"name": "a tools stage past its hard cap with standing counters is stopped", "stage": "tools", "elapsedMs": 14402200, "softMs": 3600000, "sinceProgressMs": 700000, "verdict": "timeout"},
   {"name": "inside the soft cap it runs", "elapsedMs": 1000000, "softMs": 3600000, "sinceProgressMs": 0, "verdict": "run"},
   {"name": "exactly at the soft cap it runs", "elapsedMs": 3600000, "softMs": 3600000, "sinceProgressMs": 1000000000, "verdict": "run"},
   {"name": "past the soft cap with a counter that moved a moment ago it goes on", "elapsedMs": 4000000, "softMs": 3600000, "sinceProgressMs": 1000, "verdict": "extended"},
   {"name": "past the soft cap with the counters still for longer than the limit it is stopped as stalled", "elapsedMs": 4000000, "softMs": 3600000, "sinceProgressMs": 700000, "verdict": "stalled"},
   {"name": "a counter that moved exactly the limit ago still counts", "elapsedMs": 4000000, "softMs": 3600000, "sinceProgressMs": 600000, "verdict": "extended"},
   {"name": "at the hard cap with progress it goes on", "elapsedMs": 14400000, "softMs": 3600000, "sinceProgressMs": 0, "verdict": "extended"},
-  {"name": "past the hard cap it is stopped whatever the counters do", "elapsedMs": 14400001, "softMs": 3600000, "sinceProgressMs": 0, "verdict": "timeout"}
+  {"name": "past the hard cap it goes on while a counter moves", "elapsedMs": 14400001, "softMs": 3600000, "sinceProgressMs": 0, "verdict": "extended"},
+  {"name": "past the hard cap it is stopped when the counters stand still", "elapsedMs": 14400001, "softMs": 3600000, "sinceProgressMs": 600001, "verdict": "timeout"},
+  {"name": "past the progress ceiling it is stopped whatever the counters do", "elapsedMs": 86400001, "softMs": 3600000, "sinceProgressMs": 0, "verdict": "timeout"}
  ],
  "progress": [
   {"name":"settled Source bindings report canonical and changed actions","lines":["[script] {\"activity\":{\"resource\":\"dependencies:sync-bindings:1/4:canonical:1:changed:0\",\"mode\":\"exclusive\",\"elapsedMs\":0}}","[script] {\"activity\":{\"resource\":\"dependencies:sync-bindings:2/4:canonical:1:changed:1\",\"mode\":\"exclusive\",\"elapsedMs\":0}}","[repository:command] still running after 140 s"],"key":"dependencies:sync-bindings:2/4:canonical:1:changed:1"},

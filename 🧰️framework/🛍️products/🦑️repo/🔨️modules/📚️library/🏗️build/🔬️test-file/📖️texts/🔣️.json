@@ -1,0 +1,111 @@
+{
+  "version": 1,
+  "id": "test-file",
+  "languages": ["en", "de"],
+  "messages": {
+    "usage": {
+      "en": "Expected: repo test-file [--json] [--bail] [--dry-run] [--] <path>... (one or more test files)",
+      "de": "Erwartet: repo test-file [--json] [--bail] [--dry-run] [--] <Pfad>... (eine oder mehrere Testdateien)"
+    },
+    "option.unknown": {
+      "en": "Unknown option for test-file: {option}",
+      "de": "Unbekannte Option für test-file: {option}"
+    },
+    "option.repeated": {
+      "en": "Repeated option: {option}",
+      "de": "Wiederholte Option: {option}"
+    },
+    "option.value": {
+      "en": "Option {option} needs a value",
+      "de": "Option {option} braucht einen Wert"
+    },
+    "language.unknown": {
+      "en": "Unknown language: {value} (en|de)",
+      "de": "Unbekannte Sprache: {value} (en|de)"
+    },
+    "files.too-many": {
+      "en": "At most {maximum} files per call, got {count}",
+      "de": "Höchstens {maximum} Dateien pro Aufruf, erhalten {count}"
+    },
+    "file.missing": {
+      "en": "No such file: {file}",
+      "de": "Datei nicht gefunden: {file}"
+    },
+    "file.not-file": {
+      "en": "Not a regular file: {file}",
+      "de": "Keine reguläre Datei: {file}"
+    },
+    "file.outside": {
+      "en": "File is outside the checkout: {file}",
+      "de": "Datei liegt außerhalb des Checkouts: {file}"
+    },
+    "file.helper": {
+      "en": "Not a test file: {file} is a declared helper (child program) of the {table} suite table",
+      "de": "Keine Testdatei: {file} ist ein deklarierter Helfer (Kindprogramm) der Suite-Tabelle {table}"
+    },
+    "file.not-test": {
+      "en": "Not a TypeScript or JavaScript test file (expected {extensions}): {file}",
+      "de": "Keine TypeScript- oder JavaScript-Testdatei (erwartet {extensions}): {file}"
+    },
+    "table.invalid": {
+      "en": "The suite table {table} is not readable: {reason}",
+      "de": "Die Suite-Tabelle {table} ist nicht lesbar: {reason}"
+    },
+    "result.invalid": {
+      "en": "The test-file result violates its schema: {details}",
+      "de": "Das test-file-Ergebnis verletzt sein Schema: {details}"
+    },
+    "plan.row": {
+      "en": "{file}: {mode} {suite}, typecheck {typecheck}, budget {seconds} s{extras}",
+      "de": "{file}: {mode} {suite}, Typprüfung {typecheck}, Budget {seconds} s{extras}"
+    },
+    "plan.extra-python": {
+      "en": ", managed Python",
+      "de": ", verwaltetes Python"
+    },
+    "plan.extra-launcher": {
+      "en": ", launcher {launcher}",
+      "de": ", Starter {launcher}"
+    },
+    "plan.extra-skipped": {
+      "en": ", skipped on this host",
+      "de": ", auf diesem Rechner übersprungen"
+    },
+    "run.start": {
+      "en": "[test-file] {index}/{total} {file} ({mode} {suite})",
+      "de": "[test-file] {index}/{total} {file} ({mode} {suite})"
+    },
+    "run.python-unavailable": {
+      "en": "[test-file] managed Python is unavailable ({reason}); running without it",
+      "de": "[test-file] Verwaltetes Python ist nicht verfügbar ({reason}); Lauf ohne es"
+    },
+    "row.passed": {
+      "en": "passed  {file} ({suite}, {seconds} s{counts})",
+      "de": "bestanden  {file} ({suite}, {seconds} s{counts})"
+    },
+    "row.failed": {
+      "en": "FAILED  {file} ({suite}, {seconds} s{counts})",
+      "de": "FEHLGESCHLAGEN  {file} ({suite}, {seconds} s{counts})"
+    },
+    "row.skipped": {
+      "en": "SKIPPED (not passed)  {file} ({suite}: not declared for this host)",
+      "de": "ÜBERSPRUNGEN (nicht bestanden)  {file} ({suite}: für diesen Rechner nicht deklariert)"
+    },
+    "row.not-run": {
+      "en": "not run  {file} ({suite}: stopped after the first failure)",
+      "de": "nicht ausgeführt  {file} ({suite}: nach dem ersten Fehler gestoppt)"
+    },
+    "row.counts": {
+      "en": ", {pass} pass, {fail} fail",
+      "de": ", {pass} bestanden, {fail} fehlgeschlagen"
+    },
+    "totals.passed": {
+      "en": "test-file: {passed} passed, {failed} failed, {skipped} SKIPPED (not passed), {notRun} not run, {seconds} s",
+      "de": "test-file: {passed} bestanden, {failed} fehlgeschlagen, {skipped} ÜBERSPRUNGEN (nicht bestanden), {notRun} nicht ausgeführt, {seconds} s"
+    },
+    "totals.failed": {
+      "en": "test-file: FAILED, {passed} passed, {failed} failed, {skipped} SKIPPED (not passed), {notRun} not run, {seconds} s",
+      "de": "test-file: FEHLGESCHLAGEN, {passed} bestanden, {failed} fehlgeschlagen, {skipped} ÜBERSPRUNGEN (nicht bestanden), {notRun} nicht ausgeführt, {seconds} s"
+    }
+  }
+}

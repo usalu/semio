@@ -4,7 +4,7 @@
 
 #![cfg(any(test, not(all(target_arch = "wasm32", target_env = "p2"))))]
 
-use semio_os_infinite_world_model::{tool_run_trace, World3dBuildContext, World3dScalarFieldStatus, WORLD_INTERACTION_TOPOLOGY_BYTE_CAPACITY, world_reference_width, world_scene_raster_pool, WorldDrawRebuildDescriptor, WorldDynamicFault, WorldInteractionState, WorldReferenceRecord, WorldSessionState};
+use semio_os_infinite_world_model::{WorldMeshRefusal, WorldMeshRefusalReason, WORLD_DYNAMIC_MESH_CAPACITY, tool_run_trace, World3dBuildContext, World3dScalarFieldStatus, WORLD_INTERACTION_TOPOLOGY_BYTE_CAPACITY, world_reference_width, world_scene_raster_pool, WorldDrawRebuildDescriptor, WorldDynamicFault, WorldInteractionState, WorldReferenceRecord, WorldSessionState};
 use semio_os_infinite_world_components::{world3d_offers_transform_gumball, World3dCameraBoundsCursor, World3dCameraFitOwner, World3dPreparedStatus, World3dSnapshotApplyCursor, WorldCameraState, WorldFaceOverlayMeshCursor, WorldFaceOverlayMeshStep, WorldFaceOverlayPhase, WorldGumballState, WorldOverlayState, WorldPlaceholderKind, WorldPlaceholderMeshCursor, WorldPlaceholderOwner, WorldSceneState, WorldSelectionState, WorldTraceState};
 use semio_os_infinite_world_cursors::{live_world3d_mesh_version, render_pick_viewport, world_merge_mode, world_pick_rect, WorldInteractionAuthorityStep};
 use semio_os_infinite_world_scene::{apply_terrain_style_if_changed, CELEBRATE_CONIC_SPIN_SECONDS, environment_light_dir, environment_scene_material, GUMBALL_PLANE_MESH, instance_chunk_visible, mesh_style_paint, MeshStyleKind, offer_missing_mesh_fetches, parse_color, publish_world3d_mesh_lease, reserve_world3d_asset_request, resolve_mesh_style, retain_ensured_world_draws, retain_ensured_world_material_draws, retire_world_mesh, scene_lod, sync_mesh_pool, sync_world3d_brush_mesh_feedback, update_visible_chunks, world3d_scene_digest, world3d_style_paint, world_instance_style, WORLD_LOD_EPSILON, WorldAssetRequestKind, WorldAssetsState, WorldTerrainState};
@@ -15,7 +15,8 @@ use semio_os_infinite_world_bridge::{advance_world3d_view_revision, append_compo
 use semio_os_infinite_world_bridge::{gumball_commit_action, is_click_gesture, pick_gumball_handle_at, reset_gumball_preview};
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 use semio_os_infinite_world_bridge::world3d_standard_material_for_mesh;
-use semio_os_infinite_world_interaction::{append_box_wireframe, append_vortex_arrow_draws, begin_world_placeholder_mesh, brush_preview_mesh_id, declare_scene_mesh_source, environment_authored_material, environment_clear_color, environment_explicit_clear_color, environment_scene_lighting, ghost_mesh_id, mark_world_dynamic_fault, preview_scale, retained_gumball_preview_model, pump_world_placeholder_mesh, step_world_placeholder_mesh_batch, sync_terrain, world_interaction_active_census, world_marquee_overlay_points, WorldAuthorityState, WorldHandleBindings};
+use semio_os_infinite_world_interaction::{append_box_wireframe, append_vortex_arrow_draws, begin_world_placeholder_mesh, brush_preview_mesh_id, declare_scene_mesh_source, environment_authored_material, environment_clear_color, environment_explicit_clear_color, environment_scene_lighting, ghost_mesh_id, mark_world_dynamic_fault, preview_scale, retained_gumball_preview_model, pump_world_placeholder_mesh, step_world_placeholder_mesh_batch, sync_terrain, world_interaction_active_census, world_marquee_overlay_points, WorldAuthorityState};
+use semio_os_infinite_world_handle_drag::WorldHandleBindings;
 #[cfg(any(test, feature = "testkit"))]
 use semio_os_infinite_world_interaction::{marquee_select_action, pick_instance_at, pick_paint_hit, pick_select_action, pick_surface_at, pick_vortex_at, start_gumball_drag};
 use semio_ui_declaration::layout::ActionDescriptor;
@@ -244,6 +245,11 @@ impl World3dState {
     /// scene bridge is still building.
     pub fn snapshot_fault(&self) -> Option<World3dSnapshotFault> {
         self.session.snapshot_fault
+    }
+
+    /// 🚫️ The meshes the last scene parse refused, each named with its typed reason.
+    pub fn mesh_refusals(&self) -> &[WorldMeshRefusal] {
+        &self.session.mesh_refusals
     }
 
     /// 🔺️ The published geometry one draw's `mesh_key` resolves to — the lease `render_world_3d`

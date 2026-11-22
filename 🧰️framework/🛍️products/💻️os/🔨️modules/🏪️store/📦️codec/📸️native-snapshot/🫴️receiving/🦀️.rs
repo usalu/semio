@@ -6,7 +6,7 @@ use semio_framework_value::{OriginalRetirementFailure, OriginalRetirementPoll, R
 use semio_framework_dsl_record::receiving::owned::OwnedAdvanceSelection;
 use semio_framework_value_native_owned::native_decoding::{NativeDecodeControl,OriginalReceivingPrimary};
 use std::mem::size_of;
-use protocol::PackLimits;
+use protocol::{OriginalWireSourceIdentity, PackLimits, RetainedWireByteSource};
 use pack::record::RetainedRecordReceiving;
 
 /// 🗿️ Native genesis declares a required persistent original receiver independently of cold Pack decoding.
@@ -30,7 +30,7 @@ pub trait OriginalArtifactSnapshotReceiving<P>:Send {
 
 /// 📸️ The caller retains the original full Pack bytes until typed output and all receiving metadata close.
 pub struct OriginalSnapshotRecordReceiving<T:DslOwnedReceivingRecord+BorrowedDslRecord>{
- source:(usize,usize),control:(NativeAllocationIdentity,Option<u64>),envelope:&'static str,prefix:usize,position:usize,phase:u8,limits:PackLimits,
+ source:OriginalWireSourceIdentity,control:(NativeAllocationIdentity,Option<u64>),envelope:&'static str,prefix:usize,position:usize,phase:u8,limits:PackLimits,
  record:Option<RetainedRecordReceiving>,generic:OwnedSlot<FieldValue>,binding:<T as DslOwnedReceivingField>::Cursor,output:OwnedSlot<T>,closing:bool,closed:bool,
 }
 fn invalid(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvalidValue,message)}
@@ -44,15 +44,16 @@ fn funds(grant:RetainedCloneGrant,demand:RetirementDemand)->bool{grant.maximum_i
 fn receipt(demand:RetirementDemand)->RetainedCloneProgress{RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}}
 impl<T:DslOwnedReceivingRecord+BorrowedDslRecord> OriginalSnapshotRecordReceiving<T>{
  /// 🎟️ Binds actual immutable source and static schema without constructing a second wire or record.
- pub fn admit(source:&[u8],envelope:&'static str,limits:PackLimits,native:&NativeDecodeControl<'_>,grant:RetainedCloneGrant)->Result<Option<(Self,RetainedCloneProgress)>,ValueError>{
+ pub fn admit<S:RetainedWireByteSource+?Sized>(source:&S,envelope:&'static str,limits:PackLimits,native:&NativeDecodeControl<'_>,grant:RetainedCloneGrant)->Result<Option<(Self,RetainedCloneProgress)>,ValueError>{
   let demand=metadata::<Self>();if !funds(grant,demand){return Ok(None)}let prefix=semio_os_semio::declared_envelope_prefix_len(envelope,semio_os_semio::Component::Pack,1)?;
-  if source.len()<prefix||source.len()as u64>limits.max_file_len{return Err(invalid("original snapshot Pack is outside its declared source extent"))}
-  Ok(Some((Self{source:(source.as_ptr()as usize,source.len()),control:(native.ledger_identity(),native.retirement_recipient_identity()),envelope,prefix,position:0,phase:0,limits,record:None,generic:Default::default(),binding:T::receiving_cursor(),output:Default::default(),closing:false,closed:false},receipt(demand))))
+  let source=source.original_source_identity();
+  if source.extent<prefix||source.extent as u64>limits.max_file_len{return Err(invalid("original snapshot Pack is outside its declared source extent"))}
+  Ok(Some((Self{source,control:(native.ledger_identity(),native.retirement_recipient_identity()),envelope,prefix,position:0,phase:0,limits,record:None,generic:Default::default(),binding:T::receiving_cursor(),output:Default::default(),closing:false,closed:false},receipt(demand))))
  }
- fn validate(&self,source:&[u8])->Result<(),ValueError>{if self.source!=(source.as_ptr()as usize,source.len()){return Err(invalid("original snapshot Pack source identity changed"))}Ok(())}
+ fn validate<S:RetainedWireByteSource+?Sized>(&self,source:&S)->Result<(),ValueError>{if self.source!=source.original_source_identity(){return Err(invalid("original snapshot Pack source identity changed"))}Ok(())}
  fn validate_control(&self,native:&dyn NativeDecodeCloseControl)->Result<(),ValueError>{if self.control!=(native.ledger_identity(),native.retirement_recipient_identity()){return Err(invalid("original snapshot receiving changed its actual receiving owner"))}Ok(())}
  /// 📐️ Quotes one envelope byte, original Pack action, field binding or fixed output transfer.
- pub fn demands(&self,source:&[u8],body:usize)->Result<RetirementDemand,ValueError>{
+ pub fn demands<S:RetainedWireByteSource+?Sized>(&self,source:&S,body:usize)->Result<RetirementDemand,ValueError>{
   self.validate(source)?;if self.closing||self.closed{return Ok(Default::default())}match self.phase{
    0=>Ok(metadata::<u8>()),1=>Ok(RetirementDemand{depth:2,..Default::default()}),
    2=>if self.record.as_ref().unwrap().is_ready(){Ok(nested(metadata::<FieldValue>())?)}else{nested(self.record.as_ref().unwrap().demands(source)?)},
@@ -61,15 +62,15 @@ impl<T:DslOwnedReceivingRecord+BorrowedDslRecord> OriginalSnapshotRecordReceivin
   }
  }
  /// 🪜️ Runs inside the caller's one original effect; a denied frontier preserves every source and partial destination.
- pub fn step(&mut self,source:&[u8],native:&mut NativeDecodeControl<'_>,body:usize,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome<RetainedCloneProgress,OriginalReceivingPrimary>{
+ pub fn step<S:RetainedWireByteSource+?Sized>(&mut self,source:&S,native:&mut NativeDecodeControl<'_>,body:usize,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome<RetainedCloneProgress,OriginalReceivingPrimary>{
   let result=self.step_action(source,native,body,effect);RetainedWorkOutcome{result,work:effect.performed_work()}
  }
- fn step_action(&mut self,source:&[u8],native:&mut NativeDecodeControl<'_>,body:usize,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneProgress,OriginalReceivingPrimary>{
+ fn step_action<S:RetainedWireByteSource+?Sized>(&mut self,source:&S,native:&mut NativeDecodeControl<'_>,body:usize,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneProgress,OriginalReceivingPrimary>{
   self.validate_control(native)?;let grant=effect.grant();let demand=self.demands(source,body)?;if self.phase>=4||self.closing||self.closed||!funds(grant,demand){return Ok(Default::default())}
   let child=child(grant);
   match self.phase{
-   0=>{native.checkpoint()?;perform(effect,1)?;let expected=semio_os_semio::declared_binary_prefix_byte(self.envelope,semio_os_semio::Component::Pack,1,self.position)?;if source.get(self.position).copied()!=expected{return Err(invalid("original snapshot Pack envelope differs from its authored identity").into())}self.position+=1;if self.position==self.prefix{self.phase=1;}Ok(receipt(demand))},
-   1=>{let turn=RetainedRecordReceiving::admit_document(source,(self.prefix,source.len()),T::RECORD,self.limits.clone(),child);perform(effect,turn.work)?;let Some((record,progress))=turn.result?else{return Ok(Default::default())};self.record=Some(record);self.phase=2;Ok(progress)},
+   0=>{native.checkpoint()?;perform(effect,1)?;let expected=semio_os_semio::declared_binary_prefix_byte(self.envelope,semio_os_semio::Component::Pack,1,self.position)?;if source.byte_at(self.position)!=expected{return Err(invalid("original snapshot Pack envelope differs from its authored identity").into())}self.position+=1;if self.position==self.prefix{self.phase=1;}Ok(receipt(demand))},
+   1=>{let turn=RetainedRecordReceiving::admit_document(source,(self.prefix,self.source.extent),T::RECORD,self.limits.clone(),child);perform(effect,turn.work)?;let Some((record,progress))=turn.result?else{return Ok(Default::default())};self.record=Some(record);self.phase=2;Ok(progress)},
    2=>{let record=self.record.as_mut().ok_or_else(||invalid("native snapshot record is absent"))?;if !record.is_ready(){return record.step(source,native,&mut effect.nested(child)).result}let mut original=None;let turn=record.take_into(&mut original,child);perform(effect,turn.work)?;let progress=turn.result?;if let Some(record)=original{*self.generic.value=Some(FieldValue::Record(record));self.phase=3;}Ok(progress)},
    3=>{
     if !self.binding.is_ready(){return match self.binding.select_advance(&self.generic.value,body,effect.maximum_work_units())?{

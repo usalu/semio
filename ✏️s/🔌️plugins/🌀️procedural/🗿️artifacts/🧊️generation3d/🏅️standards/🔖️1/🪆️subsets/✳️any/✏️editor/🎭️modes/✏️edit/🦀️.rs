@@ -7,7 +7,7 @@ extern crate semio_os_kernel as store;
 
 use crate::windows::flow;
 use crate::windows::preview;
-use semio_plugin::create_default_layout;
+use semio_plugin::{create_default_layout, Axis};
 use semio_ui_locale::LocalizedLabel;
 use semio_plugin::ModeDefinition;
 use semio_plugin::ToolRef;
@@ -33,7 +33,7 @@ pub fn definition() -> ModeDefinition {
 }
 
 pub fn layout() -> WindowLayout {
-    create_default_layout(&[flow::GENERATION_3D_PLAY_WINDOW_MAIN.into(), preview::GENERATION_3D_PLAY_WINDOW_PREVIEW.into()], "row", Some(&[68.0, 32.0]), Some(&["Flow".into(), "Preview".into()]))
+    create_default_layout(&[flow::GENERATION_3D_PLAY_WINDOW_MAIN.into(), preview::GENERATION_3D_PLAY_WINDOW_PREVIEW.into()], Axis::Horizontal, Some(&[0.68, 0.32]), Some(&["Flow".into(), "Preview".into()]))
 }
 //#endregion 🔖️Definition
 

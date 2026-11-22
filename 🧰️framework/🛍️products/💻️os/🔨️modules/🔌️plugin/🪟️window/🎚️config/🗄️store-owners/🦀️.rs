@@ -519,8 +519,20 @@ impl<O: WindowConfigOwner> ErasedWindowConfigStoreOwner for TypedWindowConfigSto
             if owner.terminal_is_empty() { self.partition_address_retirement = None; }
             return Ok(PluginLifecycleStep::retained(step, false));
         }
-        if let Some(partition)=self.partitions.get_index_mut(self.partition_close_cursor){if !partition.original_terminal(){return partition.original_close_step(effect);}self.partition_close_cursor+=1;return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}));}
+        if let Some(partition) = self.partitions.get_index_mut(self.partition_close_cursor) {
+            if !partition.original_terminal() {
+                return partition.original_close_step(effect);
+            }
+            if !crate::owner_registry::perform_window_close_step(effect)? {
+                return Ok(PluginLifecycleStep::Progress(Default::default()));
+            }
+            self.partition_close_cursor += 1;
+            return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }));
+        }
         if !self.partitions.is_empty() {
+            if !crate::owner_registry::perform_window_close_step(effect)? {
+                return Ok(PluginLifecycleStep::Progress(Default::default()));
+            }
             let Some(((address, partition), progress)) = self.partitions.pop_original(grant).map_err(ValueError::into_fault)? else { return Ok(PluginLifecycleStep::Progress(Default::default())); };
             assert!(partition.disposer.is_none() && !partition.preview_retirement_pending() && !partition.returned_read_pending());
             drop(partition);

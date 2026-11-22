@@ -3,7 +3,10 @@ use semio_plugin_reactor_turn::{receive_retained_extension_invocation, retained_
 use semio_plugin_reactor_turn::invocation_failure_fixture::{take_extension_invocation, with_command_ingress};
 use semio_framework::kernel::MessageEndpoint;
 use semio_plugin_reactor_lifecycle::instance_lifetime;
-use semio_framework_job::{close_original_effect_step, OriginalTurnFailure};
+use semio_framework_job::{
+    admit_original_domain_failure, close_original_effect_step, OriginalClosureFailure,
+    OriginalDomainProjection, OriginalDomainReservation, OriginalDomainView, OriginalTurnFailure,
+};
 use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress, RetirementDemand, ValueError, ValueRefusalKind};
 use semio_framework_value::retirement::controlled::ControlledRetirement;
 use semio_framework::Effect;
@@ -16,6 +19,195 @@ fn retirement_grant(demand: RetirementDemand) -> RetainedCloneGrant {
         maximum_capacity_bytes: demand.capacity_bytes,
         maximum_release_bytes: demand.release_bytes,
         maximum_depth: demand.depth.max(1),
+    }
+}
+
+fn closure_messages(projection: &dyn OriginalDomainProjection) -> [&str; 4] {
+    assert_eq!(projection.projection_key(&[], 0).unwrap(), "initial");
+    assert_eq!(projection.projection_key(&[], 1).unwrap(), "closure");
+    [&[0, 0, 1, 1][..], &[0, 1, 1], &[1, 0, 1, 1], &[1, 1, 1]]
+        .map(|path| {
+            let OriginalDomainView::IntrinsicText(text) = projection.projection_view(path).unwrap() else {
+                panic!("expected an original closure message");
+            };
+            text
+        })
+}
+
+#[test]
+fn original_failed_open_keeps_the_paid_domain_through_ingress_retirement() {
+    let input: serde_json::Value = serde_json::from_str(include_str!("🔣️.json")).unwrap();
+    let policy: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️testing/🎟️caller/🧪️tests/🧫️fixtures/🎟️caller.json")).unwrap();
+    let stock: RetainedCloneGrant = serde_json::from_value(policy["grant"].clone()).unwrap();
+    let maximum = policy["maximumTurns"].as_u64().unwrap();
+    let loan = RetainedCloneGrant {
+        maximum_items: 1,
+        ..semio_plugin_mounted_owner::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close
+    };
+    let denied = RetainedCloneGrant { maximum_items: 0, ..loan };
+    let cases = input["cases"].as_array().unwrap();
+    let [pending, refused, failed] = cases.as_slice() else {
+        panic!("expected pending, refused and failed cases");
+    };
+    assert_eq!([pending["step"].as_str(), refused["step"].as_str(), failed["step"].as_str()],
+        [Some("pending"), Some("refused"), Some("failed")]);
+    let closure = &input["closure"];
+    let expected = [
+        failed["cause"].as_str().unwrap(),
+        closure["receipt"].as_str().unwrap(),
+        closure["primary"].as_str().unwrap(),
+        closure["context"].as_str().unwrap(),
+    ];
+    let open = &input["open"];
+    let seq = open["seq"].as_u64().unwrap();
+
+    for slot in [COMMAND_INGRESS_LIVE_SLOT, COMMAND_INGRESS_RETIRING_SLOT] {
+        let mut caller = semio_framework_job::OriginalJobFixtureCaller::admit(
+            semio_framework_job::OperationId(policy["operation"].as_u64().unwrap()),
+            semio_framework_job::Generation(policy["generation"].as_u64().unwrap()),
+            stock, || Some(1000), policy["deadlineUs"].as_u64().unwrap(), policy["fuel"].as_u64().unwrap(),
+        );
+        caller.retain_dispatch().unwrap();
+        caller.admit_return_table();
+        caller.refreshed_turn(stock, |cx| {
+            cx.acknowledge_return_rows_locally();
+            assert_eq!(retained_command_ingress_occupancy(), 0);
+            let mut reservation = OriginalDomainReservation::<OriginalClosureFailure>::new();
+            assert!(reservation.prepare(cx)?);
+            let ((initial, closure, command), birth) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| {
+                let mut initial = OriginalTurnFailure::from(ValueError::new(ValueRefusalKind::InvalidValue, expected[0]));
+                initial.receipt_refusal = Some(ValueError::new(ValueRefusalKind::OwnershipLimit, expected[1]));
+                let mut closure = OriginalTurnFailure::from(ValueError::new(ValueRefusalKind::AllocationFailed, expected[2]));
+                closure.context_refusal = Some(ValueError::new(ValueRefusalKind::DepthLimit, expected[3]));
+                let command = semio_os_kernel::DecodedAppCommandOwner::new(semio_os_kernel::AppCommand::OpenArtifact {
+                    seq,
+                    artifact_ref: open["artifact"].as_str().unwrap().into(),
+                    role: u8::try_from(open["role"].as_u64().unwrap()).unwrap(),
+                    plugin_id: open["plugin"].as_str().unwrap().into(),
+                    app_id: open["app"].as_str().unwrap().into(),
+                });
+                (initial, closure, command)
+            });
+            cx.consume_retained(RetainedCloneProgress { copied_items: 1, retained_capacity_bytes: birth.requested_bytes, ..Default::default() })?;
+            cx.consume_fuel(1);
+            assert!(reservation.capture_original(cx, || OriginalClosureFailure { initial, closure })?);
+            let projection = reservation.pending_projection().unwrap();
+            let identity = projection.projection_identity();
+            let messages = closure_messages(projection);
+            assert_eq!(messages, expected);
+            let pointers = messages.map(str::as_ptr);
+            let failure = admit_original_domain_failure(&mut reservation, cx)?.unwrap();
+            assert!(reservation.terminal_is_empty());
+            let close_failure = ValueError::literal(ValueRefusalKind::InvariantViolated, "retirement refused");
+            let cursor = semio_framework::kernel::CommandPageCursor {
+                owner: 7, generation: 11, command_index: 0, command_count: 1, instance: 13,
+                seq, kind: 22, page_index: 0, page_count: 1, item_count: 0, metadata: 0,
+            };
+            let state = CommandIngressOwner::Generic {
+                cursor,
+                command: Some((seq, semio_plugin_runtime_ops::ops_ingress::PluginCommandIngress::FailedDecoded {
+                    owner: semio_plugin_runtime_ops::ops_ingress::OriginalDecodedPluginCommand::from_wire(command),
+                    failure: Some(failure),
+                    identity: (cx.operation(), cx.generation()),
+                    close_failure: Some(close_failure.into()),
+                    compound: None,
+                    raw_media: None,
+                })),
+                exchange: None, exchange_close: None, output: None, output_close: None,
+            };
+            let mut returned = None;
+            with_command_ingress(slot, instance_lifetime::NativeCloseKey::fixture(13, 1), state, maximum, cx, |retained, cx| {
+                let before = (cx.retained_progress(), cx.fuel_remaining());
+                let deadline = cx.deadline_us();
+                let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| {
+                    cx.with_retained_loan(denied, |same| {
+                        same.with_original_work_loan(0, deadline, |same| retained.retire_step(same))
+                    })
+                });
+                result?;
+                assert!(pending["cause"].is_null());
+                assert_eq!(Some(retained.has_owner()), pending["kept"].as_bool());
+                assert_eq!((cx.retained_progress(), cx.fuel_remaining()), before);
+                assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+                let refusal = cx.with_retained_loan(loan, |same| retained.retire_step(same)).unwrap_err();
+                assert_eq!(Some(refusal.primary.message()), refused["cause"].as_str());
+                assert_eq!(Some(retained.has_owner()), refused["kept"].as_bool());
+                assert_eq!(retained.failed_original().unwrap().primary_domain().unwrap().projection().projection_identity(), identity);
+                for _ in 0..maximum {
+                    cx.with_retained_loan(loan, |same| {
+                        returned = retained.retire_step(same).err();
+                        Ok(())
+                    })?;
+                    if returned.is_some() {
+                        break;
+                    }
+                }
+                assert_eq!(Some(retained.has_owner()), failed["kept"].as_bool());
+                Ok(())
+            })?;
+            let failure = returned.expect("the paid ingress lane returns its original domain");
+            let domain = failure.primary_domain().unwrap();
+            assert_eq!(domain.code(), "original.source-closure");
+            let projection = domain.projection();
+            assert_eq!(projection.projection_identity(), identity);
+            let messages = closure_messages(projection);
+            assert_eq!(messages, expected);
+            assert_eq!(messages.map(str::as_ptr), pointers);
+            let mut closing = ControlledRetirement::new(failure).unwrap();
+            for _ in 0..maximum {
+                if closing.terminal_is_empty() {
+                    break;
+                }
+                let demand = closing.selected_demand(64)?;
+                let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| {
+                    cx.with_original_retirement(|cx| cx.with_retained_loan(retirement_grant(demand), |same| {
+                        close_original_effect_step(same, demand, |effect| closing.step(64, effect)).map(|step| step.progress())
+                    }))
+                });
+                let progress = result?;
+                assert_eq!((heap.requested_bytes, heap.released_bytes), (progress.retained_capacity_bytes, progress.released_bytes));
+            }
+            assert!(closing.terminal_is_empty());
+            let (_, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| drop(closing));
+            assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+            assert_eq!(retained_command_ingress_occupancy(), 0);
+            Ok(())
+        }).unwrap();
+        caller.retire(stock);
+    }
+}
+
+/// 🛑️ Interrupting output retirement with a bounded grant hands the whole generic owner to the retirement ladder: the exchange guard refuses to run or replace it until every controlled retirement is terminal empty, which is the state whose replacement trapped the mounted Open in `Drop`.
+#[test]
+fn original_guest_failure_debit_interrupted_output_retirement_holds_the_exchange_until_terminal_empty(){
+    let policy:serde_json::Value=serde_json::from_str(include_str!("../../../../🧪️testing/🎟️caller/🧪️tests/🧫️fixtures/🎟️caller.json")).unwrap();
+    let stock:RetainedCloneGrant=serde_json::from_value(policy["grant"].clone()).unwrap();let maximum=policy["maximumTurns"].as_u64().unwrap();
+    let loan=RetainedCloneGrant{maximum_items:1,..semio_plugin_mounted_owner::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close};
+    for slot in [COMMAND_INGRESS_LIVE_SLOT,COMMAND_INGRESS_RETIRING_SLOT]{
+        let mut caller=semio_framework_job::OriginalJobFixtureCaller::admit(semio_framework_job::OperationId(policy["operation"].as_u64().unwrap()),semio_framework_job::Generation(policy["generation"].as_u64().unwrap()),stock,||Some(1000),policy["deadlineUs"].as_u64().unwrap(),policy["fuel"].as_u64().unwrap());
+        caller.retain_dispatch().unwrap();caller.admit_return_table();
+        caller.refreshed_turn(stock,|cx|{
+            cx.acknowledge_return_rows_locally();
+            assert_eq!(retained_command_ingress_occupancy(),0);
+            let(state,birth)=semio_framework_trace::observe_heap_allocations_on_this_thread(||{
+                let cursor=semio_framework::kernel::CommandPageCursor{owner:7,generation:11,command_index:0,command_count:1,instance:13,seq:17,kind:19,page_index:0,page_count:1,item_count:0,metadata:0};
+                CommandIngressOwner::Generic{cursor,command:None,exchange:Some(semio_plugin_runtime_ops::ops_ingress::OriginalCommandExchangeState::empty()),exchange_close:None,output:Some(semio_plugin_runtime_ops::ops_ingress::PluginExchangeOutput{frames:vec![vec![5;300];4],..Default::default()}),output_close:None}
+            });
+            cx.consume_retained(RetainedCloneProgress{copied_items:1,retained_capacity_bytes:birth.requested_bytes,..Default::default()})?;cx.consume_fuel(1);
+            with_command_ingress(slot,instance_lifetime::NativeCloseKey::fixture(13,1),state,maximum,cx,|retained,cx|{
+                assert!(retained.exchange_may_run(&[]));assert!(retained.exchange_may_run(&[14]));assert!(!retained.exchange_may_run(&[13]));
+                let mut interrupted=0;
+                for _ in 0..maximum{
+                    cx.with_retained_loan(loan,|same|retained.retire_step(same))?;
+                    if !retained.has_owner(){break}
+                    if retained.output_retiring(){interrupted+=1;assert!(!retained.exchange_may_run(&[]));}
+                }
+                assert!(!retained.has_owner(),"the paid close completes the interrupted owner");assert!(interrupted>0,"a bounded grant interrupts output retirement");
+                Ok(())
+            })?;
+            assert_eq!(retained_command_ingress_occupancy(),0);Ok(())
+        }).unwrap();
+        caller.retire(stock);
     }
 }
 

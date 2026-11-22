@@ -45,7 +45,7 @@ export function buildPluginHandle({ pluginId, manifest, packageId, componentSha2
         const lifecycle = shardClient.captureInstanceLifecycle(actorId, instanceId);
         lifecycleByInstance.set(instanceId, lifecycle);
         const execute = executeFor(actorId);
-        const opened = await execute(() => lifecycle.open({ appId, actor: "local", config: [], assets: [], capabilities: [], quotas: Array.from(encodePackValue({})) }, DEFAULT_SHARD_BUDGET));
+        const opened = await execute(() => lifecycle.open({ appId, purpose: { tag: "ordinary" }, actor: "local", config: [], assets: [], capabilities: [], quotas: Array.from(encodePackValue({})) }, DEFAULT_SHARD_BUDGET));
         const captureTurn = await continueOpeningTurns(opened, () => {
           requireOpening();
           return lifecycle.progress().kind === "opening" && !lifecycle.pendingReceipt;

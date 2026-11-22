@@ -45,8 +45,7 @@ router.register("test-approval-request-fixture", ApprovalRequestFixtureScript);
 class NativeStagingSourceScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("test-native-staging accepts no arguments");
-    const root = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp");
-    await runBudgetedTestCommand(process.execPath, ["test", join(root, "📡️stdio/🏗️staging/🧪️tests/🟦️.ts"), join(root, "🧪️tests/📇️plugin-catalog-argument/🟦️.ts")], { cwd: this.repoRoot, env: process.env, budgetMs: 15_000, throwOnFailure: true });
+    await runBudgetedTestCommand(process.execPath, ["test", join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📡️stdio/🏗️staging/🧪️tests/🟦️.ts"), join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧪️tests/📇️plugin-catalog-argument/🟦️.ts")], { cwd: this.repoRoot, env: process.env, budgetMs: 15_000, throwOnFailure: true });
   }
 }
 

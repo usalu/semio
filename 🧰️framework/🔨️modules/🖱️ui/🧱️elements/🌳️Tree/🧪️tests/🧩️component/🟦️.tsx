@@ -1007,7 +1007,7 @@ describe("Tree empty state reading direction", () => {
 
 describe("Tree shared-border consolidation", () => {
   it("stacks file cards without margin or padding around framed content and renders row actions as direct cells", () => {
-    const view = render(<><Tree.Files title="Files" nodes={[{ name: "a.ts", path: "a.ts", type: "file" } as never]} /><Tree.Files title="More" nodes={[]} /></>);
+    const view = render(<><Tree.Files title={uiDataLabel("Files")} nodes={[{ name: "a.ts", path: "a.ts", type: "file" } as never]} /><Tree.Files title={uiDataLabel("More")} nodes={[]} /></>);
     const cards = [...view.container.querySelectorAll<HTMLElement>('[data-slot="tree-files"]')];
     expect(cards).toHaveLength(2);
     for (const card of cards) expect(card.className).not.toMatch(/(^|\s)(my|mt|mb|p|rounded)-/);

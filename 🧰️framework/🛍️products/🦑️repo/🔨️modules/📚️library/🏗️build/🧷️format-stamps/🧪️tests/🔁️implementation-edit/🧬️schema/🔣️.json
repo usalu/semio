@@ -19,6 +19,7 @@
       "properties": {
         "name": {"type": "string"},
         "code": {"type": "string"},
+        "replicaUnsettled": {"type": "boolean"},
         "message": {"type": "string"},
         "reason": {"type": "string"},
         "path": {"type": "string"},

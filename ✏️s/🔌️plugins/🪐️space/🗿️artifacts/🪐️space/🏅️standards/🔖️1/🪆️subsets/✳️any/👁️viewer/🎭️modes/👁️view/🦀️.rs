@@ -1,5 +1,6 @@
 //! 👁️ SpaceIndexViewer — the `view` mode: a single full-pane read-only artifact table.
 
+use semio_plugin::Axis;
 use crate::viewer::space_index::modes::view::windows::main;
 use semio_plugin::{ModeDefinition, WindowLayout};
 
@@ -11,7 +12,7 @@ pub fn definition() -> ModeDefinition {
 }
 
 pub fn layout() -> WindowLayout {
-    semio_plugin::create_default_layout(&[main::WINDOW_KIND_ID.into()], "row", Some(&[100.0]), Some(&["Artifacts".into()]))
+    semio_plugin::create_default_layout(&[main::WINDOW_KIND_ID.into()], Axis::Horizontal, Some(&[1.0]), Some(&["Artifacts".into()]))
 }
 //#endregion 🔖️Definition
 

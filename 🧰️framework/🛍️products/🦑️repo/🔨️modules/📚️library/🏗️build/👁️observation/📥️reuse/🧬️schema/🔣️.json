@@ -12,7 +12,11 @@
         "maximumReferences": 65536,
         "maximumInventoryBytes": 4294967296,
         "maximumPathUnits": 256,
-        "changeAttempts": 3
+        "changeAttempts": 3,
+        "sessionLingerMilliseconds": 150,
+        "sessionMaximumMilliseconds": 20000,
+        "sessionOverheadFactor": 4,
+        "sessionCeilingMilliseconds": 120000
       }
     },
     "ConsumerTimings": {

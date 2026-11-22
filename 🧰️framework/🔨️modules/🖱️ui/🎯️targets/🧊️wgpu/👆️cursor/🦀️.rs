@@ -79,7 +79,7 @@ pub fn resolve_semio_cursor<E>(hit: Option<&HitTarget<E>>, drag: CursorDragState
         HitKind::TreeDropTarget => SemioCursor::Move,
         HitKind::World3d | HitKind::ComponentScene => SemioCursor::Default,
         HitKind::Button | HitKind::Toggle | HitKind::NumberStepper | HitKind::PanelTab | HitKind::NavbarItem | HitKind::ContextMenu | HitKind::DropdownItem => SemioCursor::Selectable,
-        HitKind::ScrollRegion | HitKind::PanelResize | HitKind::DockSplit | HitKind::DockJoinCorner => SemioCursor::Default,
+        HitKind::ScrollRegion | HitKind::ScrollThumb | HitKind::PanelResize | HitKind::DockSplit | HitKind::DockJoinCorner => SemioCursor::Default,
         HitKind::Generic => SemioCursor::Selectable,
     }
 }
@@ -90,7 +90,7 @@ fn cursor_for_active_drag(kind: Option<HitKind>, axis: Option<DragAxis>) -> Semi
         Some(HitKind::PanelResize) => SemioCursor::EwResize,
         Some(HitKind::DockSplit) => axis.map_or(SemioCursor::Default, axis_cursor),
         Some(HitKind::DockJoinCorner) => SemioCursor::Move,
-        Some(HitKind::ScrollRegion) => axis.map_or(SemioCursor::Default, axis_cursor),
+        Some(HitKind::ScrollRegion | HitKind::ScrollThumb) => axis.map_or(SemioCursor::Default, axis_cursor),
         _ => axis.map_or(SemioCursor::Grabbing, axis_cursor),
     }
 }

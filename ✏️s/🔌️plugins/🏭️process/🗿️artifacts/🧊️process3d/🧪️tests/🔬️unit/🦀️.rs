@@ -18,7 +18,7 @@ fn inserted_step_cursor_matches_neutral_json_oracle() {
         let mut snapshot = empty_process3d_snapshot();
         snapshot.step_payloads = (0..count).map(|index| step(index.to_string())).collect();
         let config = Process3dConfig { resolved_up_to: cursor, ..Process3dConfig::default() };
-        let emit = insert_step_emit(&snapshot, &config, step("inserted".into()));
+        let emit = insert_step_emit(&snapshot, &config, step("inserted".into())).expect("insert step emit");
         assert!(matches!(&emit.artifact_mutations[..], [Process3dMutation::CreateStep(payload)] if payload.index == case["index"].as_u64().unwrap() as usize));
         let expected = if next == cursor { Vec::new() } else { vec![Process3dConfigMutation::SetCursor(Process3dConfigSetCursor{ value: next })] };
         assert_eq!(emit.config_mutations, expected);
@@ -50,21 +50,18 @@ fn tagged_field_borrowed_schema_matches_neutral_cases() {
     }
 }
 
-/// 📦️ The current binary mutation frame agrees with independently encoded LEB128 UTF-8 lengths.
+/// 📦️ The binary mutation is one canonical Pack document: magic header, exact decode round trip and refusal of trailing bytes.
 #[test]
-fn delete_step_binary_matches_neutral_leb128_oracle() {
+fn delete_step_binary_is_one_canonical_pack_document() {
     use semio_s_artifact_process_process3d_mutations::{standards::v1::subsets::any::io::binary::mutations::decode_op, standards::v1::subsets::any::io::binary::mutations::encode_op};
     use semio_s_artifact_process_process3d_mut_steps::delete_step::DeleteStep;
     let fixture: serde_json::Value = serde_json::from_str(std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧪️tests/🔬️unit/🧫️fixtures/🔣️.json")).expect("../../🧪️tests/🔬️unit/🧫️fixtures/🔣️.json").leak()).unwrap();
+    let magic: Vec<u8> = (0..fixture["packMagicHex"].as_str().unwrap().len()).step_by(2).map(|at| u8::from_str_radix(&fixture["packMagicHex"].as_str().unwrap()[at..at + 2], 16).unwrap()).collect();
     for case in fixture["deleteSteps"].as_array().unwrap() {
         let id = case["id"].as_str().unwrap();
         let mutation = Process3dMutation::DeleteStep(DeleteStep { id: id.into() });
         let actual = encode_op(&mutation).expect("current binary mutation");
-        let mut oracle = vec![2, 1];
-        leb128::write::unsigned(&mut oracle, id.len() as u64).unwrap();
-        oracle.extend_from_slice(id.as_bytes());
-        assert_eq!(actual, oracle);
-        assert_eq!(actual.iter().map(|byte| format!("{byte:02x}")).collect::<String>(), case["hex"].as_str().unwrap());
+        assert!(actual.starts_with(&magic));
         assert_eq!(decode_op(&actual).expect("current decode"), mutation);
         let mut extra = actual.clone();
         extra.push(0);

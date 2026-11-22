@@ -371,18 +371,23 @@ func (catalogue Catalogue) summary(operation CatalogueOperation, subcommand stri
 	return operation.Summary, operation.Synopsis
 }
 
+// 🆓️placeholderWords name a free value in a value set: `ids|all` lists the literal `all` beside any number of ids, so it is no closed set.
+var placeholderWords = []string{"ids", "id", "names", "name", "paths", "path", "files", "file", "projects", "targets", "n", "number", "text"}
+
+// 🔒️enumOf answers the closed value set a value name lists (`on|off`), and nil when the name is no set or mixes free placeholders (`ids|all`) with literals.
 func enumOf(valueName string) []string {
 	if !strings.Contains(valueName, "|") {
 		return nil
 	}
 	values := strings.Split(valueName, "|")
 	for _, value := range values {
-		if value == "" || strings.ContainsAny(value, "[]<>=, ") {
+		if value == "" || strings.ContainsAny(value, "[]<>=, ") || slices.Contains(placeholderWords, value) {
 			return nil
 		}
 	}
 	return values
 }
+
 
 // 🧮️Derive builds every exposed tool from the catalogue and the policy, and refuses a policy that names something the catalogue does not have, a flag no row accepts, or a row that is neither exposed nor excluded.
 func Derive(catalogue Catalogue, policy Policy) ([]BuildTool, error) {

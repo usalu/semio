@@ -141,7 +141,7 @@ VECTORS = {
 SCHEMAS = {kind: json.loads((Path(__file__).resolve().parents[2] / "🧬️schema" / "🧬️mutations" / VECTORS[kind][0] / "🧬️schema" / "🔣️.json").read_text(encoding="utf-8")) for kind in KINDS}
 
 #: 🗣️ The real committed DIN EN 16798 document, read where the domain already keeps it.
-DSL_ASSET = "asset://🎬️demo/🗣️.dsl.semio"
+DSL_ASSET = "asset://🏢️compliant-office/🗣️.dsl.semio"
 
 #: ✉️ The envelope token that artifact's text preamble must carry.
 ENVELOPE = "norm.din16798.dsl"

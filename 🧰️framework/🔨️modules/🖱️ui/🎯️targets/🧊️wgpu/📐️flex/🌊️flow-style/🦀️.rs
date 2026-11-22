@@ -193,10 +193,11 @@ pub(super) fn flow_for(kind: LayoutNodeKind, parent_kind: Option<LayoutNodeKind>
     if matches!(parent_kind, Some(LayoutNodeKind::TableRow { .. })) {
         let mut cell = flow_for(kind, None, authored, metrics);
         cell.absolute = false;
-        cell.grow = 1.0;
-        cell.shrink = 1.0;
-        cell.width = Dim::Length(0.0);
-        cell.min_width = 0.0;
+        let column = crate::table::table_column_text_span(0.0, 0, metrics.gap, false).1;
+        cell.grow = 0.0;
+        cell.shrink = 0.0;
+        cell.width = Dim::Length(column);
+        cell.min_width = column;
         cell.height = match kind {
             LayoutNodeKind::Control { height, .. } => Dim::Length(height),
             _ => Dim::Fill,
@@ -233,14 +234,15 @@ pub(super) fn flow_for(kind: LayoutNodeKind, parent_kind: Option<LayoutNodeKind>
         }
         LayoutNodeKind::TreeRow { row, height, reversed, lead, .. } => FlowStyle { lead, ..band(height, row, reversed) },
         LayoutNodeKind::TreeDetail { height } => FlowStyle { width: Dim::Fill, height: Dim::Length(height), shrink: 0.0, ..FlowStyle::default() },
-        LayoutNodeKind::TableRow { height, actions, lead } => {
+        LayoutNodeKind::TableRow { height, actions, content, lead } => {
             let (left, right) = if metrics.inline.is_rtl() { (actions, metrics.gap) } else { (metrics.gap, actions) };
             FlowStyle {
                 row: true,
                 reverse: metrics.inline.is_rtl(),
-                gap_main: metrics.gap,
+                gap_main: metrics.gap * 2.0,
                 align: Align::Center,
                 height: Dim::Length(height),
+                min_width: content,
                 shrink: 0.0,
                 padding: EdgePx { left, right, ..EdgePx::default() },
                 clips: true,
@@ -257,6 +259,7 @@ pub(super) fn flow_for(kind: LayoutNodeKind, parent_kind: Option<LayoutNodeKind>
             }
             flow
         }
+        LayoutNodeKind::IconControl { height, width } => FlowStyle { width: Dim::Length(width), height: Dim::Length(height), min_height: height, min_width: width, shrink: 0.0, ..authored.map_or_else(FlowStyle::default, flow_from_spec) },
         LayoutNodeKind::OverlayRow { rect } => FlowStyle { absolute: true, inset: [Some(rect.y), None, None, Some(rect.x)], width: Dim::Length(rect.width), height: Dim::Length(rect.height), shrink: 0.0, text: true, ..FlowStyle::default() },
         LayoutNodeKind::HostContent { height } => FlowStyle { height: Dim::Length(height), min_height: height, clips: true, ..authored.map_or_else(FlowStyle::default, flow_from_spec) },
         LayoutNodeKind::EngineSurface => {

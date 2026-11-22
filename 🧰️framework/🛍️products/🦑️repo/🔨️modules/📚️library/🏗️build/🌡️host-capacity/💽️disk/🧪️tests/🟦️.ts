@@ -1,9 +1,9 @@
 /** 🧪️ Contract: a heavy command is admitted to the cache partition before it writes anything. Above the high share a collection starts in the background, at the critical share the command waits for it (with a localized progress line) and is refused with the typed `disk.low-space` refusal when that frees too little, the partition of another workspace is held to the same critical share, and a light or foreign environment is left alone. */
-import {afterAll,expect,test} from "bun:test";
+import {afterAll,expect,spyOn,test} from "bun:test";
 import {mkdtempSync,rmSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
-import {readHostCapacityPolicyV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🌡️host-capacity/🟦️.ts";
+import {readHostCapacityPolicyV1,type HostSampleV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🌡️host-capacity/🟦️.ts";
 import {renderRepoErrorV1,isRepoErrorV1} from "../../../../../../../../🔨️modules/🏃️process/🏗️build/🗣️language/🚨️error/🟦️.ts";
 import buildPolicy from "../../../🔣️policy.json" with {type:"json"};
 import {createCasGuardV1,resetCasGuardsV1} from "../../../🗄️cas/🚦️guard/🟦️.ts";
@@ -11,6 +11,11 @@ import type {CasCollectionV1} from "../../../🗄️cas/🧹️collector/🟦️
 import type {CasPartitionV1} from "../../../🗄️cas/🌡️partition/🟦️.ts";
 import {withBuildCapacityV1} from "../../🟦️.ts";
 import {admitBuildDiskV1,expectedDiskGrowthBytesV1} from "../🟦️.ts";
+import {Database} from "bun:sqlite";
+import {CAS_BUDGET_V1,CAS_RESERVE_FACTOR_V1} from "../../../🗄️cas/🧬️schema/🟦️.ts";
+import {DISK_WRITERS_V1} from "../../🧹️disk-recovery/🟦️.ts";
+import * as realDiskRecovery from "../../🧹️disk-recovery/🔌️real/🟦️.ts";
+import fixture from "../../🧹️disk-recovery/🖼️image-slack/🧪️tests/♻️reclaim/🔣️receipts.json" with {type:"json"};
 
 const roots:string[]=[],fresh=()=>{const root=mkdtempSync(join(tmpdir(),"disk-admit-"));roots.push(root);return root;};
 afterAll(()=>{for(const root of roots)rmSync(root,{recursive:true,force:true});});
@@ -59,13 +64,19 @@ test("an environment that is no real user session leaves the host alone, and the
  await admitBuildDiskV1({},{partition:()=>volume(1),mount:path=>path});
  const directory=fresh(),environment={...real("en"),SEMIO_HOST_CAPACITY_DIRECTORY:directory,LANG:"en_US.UTF-8"};
  const policy=readHostCapacityPolicyV1({...buildPolicy.hostCapacity,wait:{...buildPolicy.hostCapacity.wait,pollMilliseconds:10,progressMilliseconds:20,heartbeatMilliseconds:20,sampleMaximumAgeMilliseconds:0}});
- let ran=false;
+ let ran=false,samples=0;
+ const sample=async()=>{
+  samples++;
+  const host:HostSampleV1={version:1,atMs:Date.now(),platform:"darwin",cores:8,totalMegabytes:16384,availableMegabytes:14000,pressure:"normal",swapUsedMegabytes:0,swapOutMegabytesPerSecond:0,load:1,openFiles:8000,openFilesMaximum:245760,attachedImages:0};
+  return {host,swappedOutMegabytes:0};
+ };
+ const admission={directory,policy,strip:(args:readonly string[])=>args,tool:"bazel",write:()=>undefined,sample,observe:async()=>500};
  const guard=createCasGuardV1({root:environment.SEMIO_CAS_ROOT,partition:()=>volume(10),usage:async()=>0,collect:async()=>stub});
- const failure=await withBuildCapacityV1(["run","@x/y:build","--parallel=2"],environment,async()=>{ran=true;},{directory,policy,strip:(args:readonly string[])=>args,tool:"bazel",write:()=>undefined,disk:{guard,partition:()=>volume(10),mount:path=>path}}).then(()=>undefined,reason=>reason);
- expect(ran).toBe(false);expect(failure.key).toBe("process.disk.low-space");
+ const failure=await withBuildCapacityV1(["run","@x/y:build","--parallel=2"],environment,async()=>{ran=true;},{...admission,disk:{guard,partition:()=>volume(10),mount:path=>path}}).then(()=>undefined,reason=>reason);
+ expect(ran).toBe(false);expect(failure.key).toBe("process.disk.low-space");expect(samples).toBe(0);
  const roomy=createCasGuardV1({root:environment.SEMIO_CAS_ROOT+"2",partition:()=>volume(500),usage:async()=>0,collect:async()=>stub});
- await withBuildCapacityV1(["run","@x/y:build","--parallel=2"],environment,async()=>{ran=true;},{directory,policy,strip:(args:readonly string[])=>args,tool:"bazel",write:()=>undefined,disk:{guard:roomy,partition:()=>volume(500),mount:()=>"/same"}});
- expect(ran).toBe(true);
+ await withBuildCapacityV1(["run","@x/y:build","--parallel=2"],environment,async()=>{ran=true;},{...admission,disk:{guard:roomy,partition:()=>volume(500),mount:()=>"/same"}});
+ expect(ran).toBe(true);expect(samples).toBeGreaterThan(0);
 });
 
 test("the expected growth of a command counts before it starts: a partition 96% used admits nothing that would cross 97%, while a no-growth command is admitted",async()=>{
@@ -83,4 +94,35 @@ test("expected growth: 4 GiB for a Cargo build, an explicit environment value wi
  expect(expectedDiskGrowthBytesV1({},"show")).toBe(0);
  expect(expectedDiskGrowthBytesV1({SEMIO_BUILD_EXPECTED_DISK_BYTES:"123"},"cargo")).toBe(123);
  expect(expectedDiskGrowthBytesV1({SEMIO_BUILD_EXPECTED_DISK_BYTES:"junk"},"cargo")).toBe(4*1024**3);
+});
+
+
+test("automatic build intake carries same-volume in-place reclaim pressure and the existing reserve",async()=>{
+ resetCasGuardsV1();
+ const environment=real("en"),sample=fixture.buildIngress,GIB=1024**3;
+ const needed=sample.needGiB*GIB;
+ using oracle=new Database(":memory:");
+ const {target}=oracle.query("select ?1+?2*?3 target").get(needed,CAS_BUDGET_V1.largestNeedBytes,CAS_RESERVE_FACTOR_V1) as {target:number};
+ const cacheMount=join(environment.HOME,"measured-cache-volume"),workspace=join(environment.HOME,"separate-workspace");
+ let free=sample.startGiB*GIB,runs=0,mounted=cacheMount;
+ const measure=(path:string):CasPartitionV1=>path===environment.SEMIO_CAS_ROOT?{partition:mounted,totalBytes:sample.totalGiB*GIB,freeBytes:free}:{partition:workspace,totalBytes:sample.totalGiB*GIB,freeBytes:sample.otherGiB*GIB};
+ const guard=createCasGuardV1({root:environment.SEMIO_CAS_ROOT,partition:measure,usage:async()=>0,collect:async()=>stub});
+ const writers=spyOn(realDiskRecovery,"realDiskWritersV1").mockImplementation(context=>{
+  expect(context.reclaimPressure).toMatchObject({path:cacheMount,requiredFreeBytes:target});
+  expect(context.pressure).toBeUndefined();
+  expect(context.reclaimPressure?.freeBytes()).toBe(sample.startGiB*GIB);
+  const row=DISK_WRITERS_V1.find(row=>row.id==="image-slack")!;
+  return[{row,root:workspace,measure:()=>0,collect:async({needBytes})=>{
+   expect(needBytes).toBe(target-sample.startGiB*GIB);
+   mounted=workspace;
+   expect(context.reclaimPressure?.freeBytes()).toBeUndefined();
+   mounted=cacheMount;
+   free=target;
+   expect(context.reclaimPressure?.freeBytes()).toBe(target);
+   runs++;return needBytes;
+  }}];
+ });
+ try{await admitBuildDiskV1(environment,{guard,partition:measure,mount:path=>measure(path).partition,workspace,expectedBytes:needed,write:()=>{}});}
+ finally{writers.mockRestore();}
+ expect(runs).toBe(1);
 });

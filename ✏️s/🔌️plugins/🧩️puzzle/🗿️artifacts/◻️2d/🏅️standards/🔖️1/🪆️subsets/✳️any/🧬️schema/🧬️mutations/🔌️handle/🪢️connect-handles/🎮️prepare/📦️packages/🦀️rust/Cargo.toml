@@ -64,7 +64,6 @@ semio-s-artifact-puzzle-2d-snapshot = { path = "../../../../../../📸️snapsho
 semio-s-artifact-puzzle-2d-text-inverse = { path = "../../../../../🔤️text/↩️inverse/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-3d = { workspace = true }
 semio-s-artifact-puzzle-3d-inferences = { workspace = true }
-semio-s-artifact-stdio-dwg = { workspace = true }
 semio-s-artifact-stdio-dxf = { workspace = true }
 semio-s-artifact-stdio-json = { workspace = true }
 semio-s-artifact-stdio-pdf = { workspace = true }
@@ -98,10 +97,21 @@ semio-s-plugin-puzzle-retained = { workspace = true, features = ["testing"] }
 serde = { workspace = true }
 serde_json = { workspace = true }
 semio-plugin-ownership = { workspace = true }
+semio-s-artifact-puzzle-2d-board-host = { path = "../../../../../../../✏️editor/⚙️engine/🎲️board-host/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-puzzle-2d-engine = { path = "../../../../../../../✏️editor/⚙️engine/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-puzzle-2d-mut-any = { path = "../../../../../📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-puzzle-2d-mut-any-10 = { path = "../../../../../✋️selection/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-puzzle-2d-mut-any-2 = { path = "../../../../../🟢️node/🔒change-node-locked/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-puzzle-2d-mut-any-4 = { path = "../../../📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-puzzle-2d-mut-any-5 = { path = "../../../../../🧭️pose/📍move-node/🎮️prepare/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-puzzle-2d-mutations = { path = "../../../../../../📸️snapshot/🧪️tests/🧬️retained-clone/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-puzzle-2d-schema = { path = "../../../../../../📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-puzzle-2d-snapshot = { path = "../../../../../../📸️snapshot/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-puzzle-2d-text-inverse = { path = "../../../../../🔤️text/↩️inverse/📦️packages/🦀️rust", features = ["testkit"] }
 
 [target.'cfg(all(target_arch = "wasm32", not(target_env = "p2")))'.dependencies]
 js-sys = { workspace = true }
 web-sys = { version = "0.3.98", features = ["HtmlCanvasElement"] }
 
 [features]
-testkit = []
+testkit = ["semio-s-artifact-puzzle-2d-board-host/testkit", "semio-s-artifact-puzzle-2d-engine/testkit", "semio-s-artifact-puzzle-2d-mut-any/testkit", "semio-s-artifact-puzzle-2d-mut-any-10/testkit", "semio-s-artifact-puzzle-2d-mut-any-2/testkit", "semio-s-artifact-puzzle-2d-mut-any-4/testkit", "semio-s-artifact-puzzle-2d-mut-any-5/testkit", "semio-s-artifact-puzzle-2d-mutations/testkit", "semio-s-artifact-puzzle-2d-records/testkit", "semio-s-artifact-puzzle-2d-schema/testkit", "semio-s-artifact-puzzle-2d-snapshot/testkit", "semio-s-artifact-puzzle-2d-text-inverse/testkit"]

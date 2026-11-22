@@ -1,0 +1,8 @@
+vegetation/english-oak
+vegetation/small-leaved-lime
+vegetation/london-plane-pollarded
+vegetation/lombardy-poplar
+vegetation/scots-pine
+vegetation/multi-stem-birch
+vegetation/weeping-willow
+vegetation/apple-tree

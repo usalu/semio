@@ -9,6 +9,7 @@ import { spawnSync } from "node:child_process";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { createHash } from "node:crypto";
 import {blake3} from "@noble/hashes/blake3.js";
+import {sha256} from "@noble/hashes/sha2.js";
 import Ajv from "ajv";
 import {runCargoRelayV1} from "../🌊️relay/🟦️.ts";
 import {actualCargoCompilerPlanningPortV1} from "../🕸️units/📥️capture/🟦️.ts";
@@ -78,6 +79,7 @@ for(const vector of fixture.vectors){const name=`captured native artifacts: ${ve
   const sourcePath=join(source,"main.rs");writeFileSync(sourcePath,"fn main() {}\n");
   const primary={reason:"compiler-artifact",manifest_path:manifest,package_id:`path+${pathToFileURL(source).href}#${packageName}@0.1.0`,target:{kind:["bin"],name:packageName,src_path:sourcePath},filenames:[join(emitted,fixture.files[0].name)],executable:join(emitted,fixture.files[0].name)};
   const compilerRuns = join(root, "calls");
+  const staleCompletion = join(root, "stale-completion");
   const observationOutput = vector.observationOutput ? {version:1 as const,directory:join(root,"b","semio-cargo-observations","result")} : undefined;
   const published = observationOutput?.directory ?? publishedCargoArtifactDirectoryV1(held.storage.backing.root,manifest,"prototype");
   const publishedPath = join(published,fixture.files[0].name);
@@ -95,6 +97,8 @@ for(const vector of fixture.vectors){const name=`captured native artifacts: ${ve
     : vector.mode === "empty" ? 'process.stdout.write("compiler empty\\n")'
     : vector.mode === "fail" ? measureRuns + "process.exit(19)"
     : vector.mode === "source-edit" ? measureRuns + "if(first){fs.writeFileSync(" + JSON.stringify(sourcePath) + "," + JSON.stringify(vector.replacementSource) + ");process.exit(19);}" + emit
+    : vector.mode === "running-source-edit" ? measureRuns + `if(first){${editSource}setTimeout(()=>{fs.writeFileSync(${JSON.stringify(staleCompletion)},"linked");${emit};},${vector.finishDelayMs});}else{${emit};}`
+    : vector.mode === "planning-source-edit" ? measureRuns + emit
     : vector.mode === "verified-source-edit" ? measureRuns+emit+`;setTimeout(()=>{${editSource}setTimeout(()=>{},1000);},1000)`
     : vector.mode === "verified-source-edit-before-announcement" ? measureRuns+editSource+`setTimeout(()=>{${emit};},1600)`
     : vector.mode === "successful-source-edit" ? measureRuns
@@ -119,7 +123,10 @@ for(const vector of fixture.vectors){const name=`captured native artifacts: ${ve
     planningPort: {
       async capture(_program: string, args: readonly string[]) {
         if (args[0] === "metadata") return metadata;
-        if (args.includes("--unit-graph")) { graphCaptures++; return graph; }
+        if (args.includes("--unit-graph")) {
+          if (++graphCaptures === vector.editOnGraphCapture) writeFileSync(editPath, replacement);
+          return graph;
+        }
         return {};
       },
       async cfg() { return []; },
@@ -145,7 +152,7 @@ for(const vector of fixture.vectors){const name=`captured native artifacts: ${ve
     expect(readFileSync(publishedPath)).toEqual(bytes);
     const changed=observation.units.flatMap(unit=>unit.inputs).find(input=>input.path===editPath)??observation.invocationInputs.find(input=>input.path===editPath);
     const observedSource=vector.consumedSource??replacement;
-    expect(changed?.sha256).toBe(createHash("sha256").update(observedSource).digest("hex"));
+    expect(changed?.sha256).toBe(Buffer.from(sha256(Buffer.from(observedSource))).toString("hex"));
     if(vector.retainCompilationBytes!==undefined)await withCapturedCargoCompilationTaskV1(capture,async compilation=>{
       expect(compilation.observationSha256).toBe(view.observationSha256);
       const index=JSON.parse(readFileSync(compilation.files.get("index.json")!.path,"utf8"));
@@ -167,6 +174,7 @@ for(const vector of fixture.vectors){const name=`captured native artifacts: ${ve
   if(vector.accepted){expect(failure).toBeUndefined();const bytes=readFileSync(publishedPath);expect(bytes.toString("hex")).toBe(fixture.files[0].hex);expect(createHash("sha256").update(bytes).digest("hex")).toBe(Buffer.from(await crypto.subtle.digest("SHA-256",Buffer.from(fixture.files[0].hex,"hex"))).toString("hex"));}else{expect(failure).toBeInstanceOf(Error);expect(existsSync(join(publishedCargoArtifactDirectoryV1(held.storage.backing.root,manifest,"prototype"),fixture.files[0].name))).toBe(false);}
   if (vector.graphCaptures !== undefined) expect(graphCaptures).toBe(vector.graphCaptures);
   if (vector.compilerRuns !== undefined) expect(readFileSync(compilerRuns, "utf8").length).toBe(vector.compilerRuns);
+  if (vector.staleCompletion !== undefined) expect(existsSync(staleCompletion)).toBe(vector.staleCompletion);
   if (vector.consumerRuns !== undefined) {expect(consumerRuns).toBe(vector.consumerRuns);expect(receipts).toBe(vector.consumerRuns);}
   if (vector.expectedFailure !== undefined) expect(String(failure)).toContain(vector.expectedFailure);
   if (replacement !== undefined) expect(readFileSync(editPath, "utf8")).toBe(replacement);

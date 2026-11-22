@@ -181,14 +181,39 @@ impl EventRouter {
     //#region 🔖️OverlayApi
     /// 🪟️ Opens an overlay: flags `root` `NodeFlags::OVERLAY` (hit-test priority — see 🔖️HitTest) and
     /// pushes it onto the z-ordered stack with `kind`'s default placement/dismissal policy.
-    /// `Dialog`/`CommandPalette` become focus-trap scopes automatically.
-    pub fn open_overlay(&mut self, tree: &mut UiTree, root: NodeId, kind: OverlayKind, anchor: OverlayAnchor) {
+    /// `Dialog`/`CommandPalette` become focus-trap scopes and, with `Popover`, move focus to their first focusable (React's `onOpenAutoFocus` default); a modal also makes everything outside it inert to the pointer.
+    pub fn open_overlay(&mut self, tree: &mut UiTree, root: NodeId, kind: OverlayKind, anchor: OverlayAnchor) -> Vec<UiCommand> {
         if let Some(node) = tree.node_mut(root) {
             node.flags.set(NodeFlags::OVERLAY, true);
         }
         tree.mark_dirty(root, NodeFlags::DIRTY_PAINT);
         let focus_trap = matches!(kind, OverlayKind::Dialog | OverlayKind::CommandPalette);
-        self.overlays.open(OpenOverlay { root, kind, anchor, placement: kind.default_placement(), dismiss: kind.dismiss_policy(), focus_trap });
+        let return_focus = self.focus.focused.filter(|focused| !is_descendant(tree, *focused, root));
+        self.overlays.open(OpenOverlay { root, kind, anchor, placement: kind.default_placement(), dismiss: kind.dismiss_policy(), focus_trap, return_focus, veto: OverlayVeto::default() });
+        let mut out = Vec::new();
+        let first = matches!(kind, OverlayKind::Dialog | OverlayKind::CommandPalette | OverlayKind::Popover).then(|| self.focus.first_tab_stop(tree, root)).flatten();
+        if let Some(first) = first {
+            if let Some((blurred, fired)) = self.focus.set_focus(tree, Some(first), self.focus_visible) {
+                self.push_app_command(tree, blurred, fired, &mut out);
+            }
+            out.push(UiCommand::FocusChanged { window_id: self.window_id.clone(), node: Some(first) });
+        }
+        out
+    }
+
+    /// 🛑️ Records which dismissals the owner of the overlay rooted at `root` prevented; `false` when no such overlay is open.
+    pub fn set_overlay_veto(&mut self, root: NodeId, veto: OverlayVeto) -> bool {
+        self.overlays.open.iter_mut().find(|overlay| overlay.root == root).map(|overlay| overlay.veto = veto).is_some()
+    }
+
+    /// 🔙️ Where focus goes when `overlay` closes: its trigger (an anchor node outside it) when focusable, else whatever held focus at open, and only a node still in the tree.
+    fn focus_return_target(&self, tree: &UiTree, overlay: &OpenOverlay) -> Option<NodeId> {
+        let outside = |id: &NodeId| *id != overlay.root && !is_descendant(tree, *id, overlay.root) && node_is_focusable(tree, *id);
+        let trigger = match overlay.anchor {
+            OverlayAnchor::Node(id) => Some(id),
+            OverlayAnchor::Point { .. } => None,
+        };
+        trigger.filter(outside).or(overlay.return_focus.filter(outside))
     }
 
     pub fn close_overlay(&mut self, tree: &mut UiTree, root: NodeId) -> Vec<UiCommand> {
@@ -256,7 +281,13 @@ impl EventRouter {
         }
         tree.mark_dirty(overlay.root, NodeFlags::DIRTY_PAINT);
         let mut out = vec![UiCommand::OverlayClosed { window_id: self.window_id.clone(), root: overlay.root, kind: overlay.kind }];
-        if let Some(focused) = self.focus.focused {
+        let returns_focus = !overlay.veto.focus_return && matches!(overlay.kind, OverlayKind::Dialog | OverlayKind::CommandPalette | OverlayKind::Popover | OverlayKind::ContextMenu);
+        if let Some(target) = returns_focus.then(|| self.focus_return_target(tree, &overlay)).flatten() {
+            if let Some((blurred, fired)) = self.focus.set_focus(tree, Some(target), self.focus_visible) {
+                self.push_app_command(tree, blurred, fired, &mut out);
+            }
+            out.push(UiCommand::FocusChanged { window_id: self.window_id.clone(), node: Some(target) });
+        } else if let Some(focused) = self.focus.focused {
             if is_descendant(tree, focused, overlay.root) {
                 if overlay.kind == OverlayKind::SelectPopup {
                     if focused != overlay.root {
@@ -282,6 +313,9 @@ impl EventRouter {
     pub(super) fn dismiss_topmost_if_outside_press(&mut self, tree: &mut UiTree, x: f32, y: f32) -> Option<Vec<UiCommand>> {
         let top = self.overlays.topmost()?;
         if !top.dismiss.outside_press_swallow {
+            return None;
+        }
+        if top.veto.outside_press {
             return None;
         }
         let overlay_root = top.root;

@@ -9,6 +9,8 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { describe, expect, it } from "vitest";
+import { browserFrameEventFromDom, browserFrameEventIsReplaceable, browserFrameWheelDomEvent } from "@semio-tech/framework-renderer-wgpu/browser-frame-transport/dom-events";
+import { FakeWorker, transport } from "../📨️browser-frame-transport/🧰️transport-test-support/🟦️.ts";
 
 const suiteRoot = dirname(fileURLToPath(import.meta.url));
 const fixturePath = resolve(suiteRoot, "../🧫️fixtures/🖱️wheel-application-point/🔣️.json");
@@ -33,9 +35,13 @@ const fixtureValue: unknown = JSON.parse(readFileSync(fixturePath, "utf8"));
 const fixture = fixtureValue as Fixture;
 
 /** 🖱️ Mounts a browser event receiver and records the owned value copied from every WheelEvent. */
-const receive = (events: readonly InputRow[]): Application[] => {
+const receive = (events: readonly InputRow[]): { readonly applications: readonly Application[]; readonly transferred: readonly Application[] } => {
   const receiver = document.createElement("canvas");
+  const worker = new FakeWorker();
+  const subject = transport(worker, { now: () => 0 });
+  worker.reply({ kind: "booted", lifecycle: 1 });
   const applications: Application[] = [];
+  const admissions: boolean[] = [];
   receiver.addEventListener("wheel", (event) => {
     applications.push({
       x: event.clientX,
@@ -44,6 +50,8 @@ const receive = (events: readonly InputRow[]): Application[] => {
       delta: event.deltaY,
       modifiers: { shift: event.shiftKey, ctrl: event.ctrlKey, meta: event.metaKey, alt: event.altKey },
     });
+    const wire = browserFrameEventFromDom(browserFrameWheelDomEvent(event), 1);
+    admissions.push(browserFrameEventIsReplaceable(wire) ? subject.enqueueReplaceable(wire) : subject.enqueueLossless(wire));
   });
   document.body.append(receiver);
   for (const row of events) {
@@ -67,7 +75,16 @@ const receive = (events: readonly InputRow[]): Application[] => {
     );
   }
   receiver.remove();
-  return applications;
+  expect(admissions).toEqual(applications.map(() => true));
+  expect(subject.flush()).toBe(true);
+  const batch = worker.messages.at(-1);
+  if (batch?.kind !== "batch") throw new Error("wheel input page missing");
+  const transferred = batch.events.flatMap((event) => {
+    if (event.kind !== "wheel") return [];
+    const { x, y, deltaX, deltaY, shift, ctrl, alt, meta } = event;
+    return [{ x, y, deltaX, delta: deltaY, modifiers: { shift, ctrl, alt, meta } }];
+  });
+  return { applications, transferred };
 };
 
 describe("🖱️ owned Scroll dispatch", () => {
@@ -78,9 +95,10 @@ describe("🖱️ owned Scroll dispatch", () => {
 
   for (const testCase of fixture.cases) {
     it(`copies every browser wheel sample into one owned dispatch — ${testCase.name}`, () => {
-      const applications = receive(testCase.events);
+      const { applications, transferred } = receive(testCase.events);
       const scrollCount = testCase.events.filter((row) => row.kind === "scroll").length;
       expect(applications).toEqual(testCase.applications);
+      expect(transferred).toEqual(testCase.applications);
       expect(applications).toHaveLength(scrollCount);
       expect(new Set(applications).size).toBe(applications.length);
 

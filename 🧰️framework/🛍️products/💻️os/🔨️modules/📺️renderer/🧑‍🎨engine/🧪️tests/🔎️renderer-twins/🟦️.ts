@@ -10,6 +10,9 @@ import { nodeGraphConnectionIsValid, portValueTypes, portValueTypesCompatible, w
 import { canvasCameraFitFixture as cameraFitFixture, canvasLabelFitFixture as labelFitFixture } from "@semio-tech/framework-canvas-ts/testing/fixtures";
 import { flowPortTypesFixture as portTypesFixture } from "../../../../🌊️flow/🧪️tests/🧫️fixtures/🟦️.ts";
 import "../🧰️engine-contract-helpers/🟦️.ts";
+import { NODE_GRAPH_FIT_ACTION_ID, NODE_GRAPH_FIT_KEY, NODE_GRAPH_VIEWPORT_ACTION_ID, type ShellLocale } from "@semio-tech/framework";
+import { fitGraphCameraV1, registerNodeGraphFitV1, runNodeGraphFitV1 } from "../../🧱️elements/🕸️NodeGraph/🎯️fit-graph/🟦️.ts";
+import { NODE_GRAPH_FIT_REFUSED_CODE_V1, fitGraphNoticeV1, surfaceIdsInWindowV1 } from "../../🧱️elements/🏛️ShellHost/🖱️shell-actions/🧭️input-funnel/🔲️fit-graph/🟦️.ts";
 
 
 //#region 📷️CameraAndLabelFitTwins
@@ -162,6 +165,55 @@ describe("node-graph opening camera (renderer twin)", () => {
     const moved = [{ id: "a", x: 900, y: 0, width: 40, height: 20, inputs: [], outputs: [] }];
     expect(nodeGraphContentSignature(nodes)).toBe(nodeGraphContentSignature(same));
     expect(nodeGraphContentSignature(nodes)).not.toBe(nodeGraphContentSignature(moved));
+  });
+});
+
+describe("node-graph fitGraph action (renderer twin)", () => {
+  const records = (nodes: typeof cameraFitFixture.fitRows[number]["nodes"]) => nodes.map((node) => ({ ...node, inputs: [], outputs: [] }));
+
+  it("declares the one action the shared fixture names", () => {
+    const action = cameraFitFixture.fitAction;
+    expect([NODE_GRAPH_FIT_ACTION_ID, NODE_GRAPH_FIT_KEY, NODE_GRAPH_VIEWPORT_ACTION_ID]).toEqual([action.id, action.key, action.persistsAs]);
+    expect(action.label).toEqual({ en: "Fit graph", de: "Graph einpassen" });
+  });
+
+  it("installs the camera the shared law names for every fit row, and nothing for an empty graph", () => {
+    expect(cameraFitFixture.fitRows.length).toBeGreaterThanOrEqual(8);
+    for (const row of cameraFitFixture.fitRows) {
+      expect([row.name, fitGraphCameraV1(records(row.nodes), row.viewport.width, row.viewport.height)]).toEqual([row.name, row.expect.camera]);
+    }
+  });
+
+  it("fits over a stored camera that the opening law would have adopted", () => {
+    const row = cameraFitFixture.fitRows.find((candidate) => "storedAdoptedByStartup" in candidate)!;
+    const content = dagContentBounds(records(row.nodes))!;
+    const opened = dagStartupCamera((row as { stored: { x: number; y: number; zoom: number } }).stored, content, row.viewport.width, row.viewport.height);
+    expect(opened.fitted).toBe(false);
+    expect(fitGraphCameraV1(records(row.nodes), row.viewport.width, row.viewport.height)).not.toEqual(opened.camera);
+  });
+
+  it("runs only the canvas that owns the surface and stops once it unmounts", () => {
+    const ran: string[] = [];
+    const leaveA = registerNodeGraphFitV1("graph-a", () => (ran.push("a"), true));
+    const leaveB = registerNodeGraphFitV1("graph-b", () => (ran.push("b"), false));
+    expect([runNodeGraphFitV1("graph-a"), runNodeGraphFitV1("graph-b"), runNodeGraphFitV1("graph-c")]).toEqual([true, false, false]);
+    const replaced = registerNodeGraphFitV1("graph-a", () => (ran.push("a2"), true));
+    leaveA();
+    expect(runNodeGraphFitV1("graph-a")).toBe(true);
+    replaced();
+    leaveB();
+    expect([runNodeGraphFitV1("graph-a"), ran]).toEqual([false, ["a", "b", "a2"]]);
+  });
+
+  it("finds the graph surfaces inside the active window body and refuses in the interface language", () => {
+    const body = { querySelectorAll: () => [{ dataset: { surfaceId: "graph-a" } }, { dataset: {} }, { dataset: { surfaceId: "preview" } }] };
+    const tab = { dataset: { windowId: "procedural-main", stackActive: "true" }, querySelector: () => ({ getAttribute: () => "panel-1" }) };
+    const root = { querySelectorAll: () => [tab], getElementById: (id: string) => (id === "panel-1" ? body : null) } as unknown as Document;
+    expect(surfaceIdsInWindowV1("procedural-main", root)).toEqual(["graph-a", "preview"]);
+    expect(surfaceIdsInWindowV1("other", root)).toEqual([]);
+    const refusals = (["en", "de"] as ShellLocale[]).map((locale) => fitGraphNoticeV1(locale));
+    expect(refusals.map((notice) => notice.text)).toEqual(["No node graph to fit in this window", "In diesem Fenster gibt es keinen Knotengraphen zum Einpassen"]);
+    expect(refusals.every((notice) => notice.code === NODE_GRAPH_FIT_REFUSED_CODE_V1)).toBe(true);
   });
 });
 

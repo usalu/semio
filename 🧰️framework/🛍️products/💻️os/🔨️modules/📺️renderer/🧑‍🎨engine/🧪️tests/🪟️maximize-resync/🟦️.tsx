@@ -4,7 +4,8 @@ import React from "react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import Ajv2020 from "ajv/dist/2020";
 import { cleanup, fireEvent, render } from "@semio-tech/ui-react/test";
-import { Mode, uiDataLabel, type WindowLayoutNode } from "@semio-tech/ui-react";
+import { Mode, uiDataLabel } from "@semio-tech/ui-react";
+import type { WindowLayoutNode } from "@semio-tech/ui-layout";
 import { resolveFrameworkLayoutSeed, retitleWindowLayoutNode } from "../../🧱️elements/🛠️ShellHelpers/🛣️route-and-chrome/🟦️.tsx";
 import fixture from "../../🧱️elements/🐚️Shell/🧪️tests/🧫️fixtures/🪟️maximize-resync/🔣️.json";
 
@@ -16,9 +17,9 @@ it("React locale retitling preserves authored extra-window titles and maximize",
   const row = fixture.localeRetitle;
   const kinds = fixture.windows.map(id => ({ id, label: id === "a" ? "A" : row.resolvedTitle }));
   const extra = [{ id: row.extraId, windowKindId: row.kindId, title: row.bakedTitle }];
-  const initial: WindowLayoutNode = { kind: "row", children: [
-    { kind: "stack", size: 0.5, children: [{ kind: "window", id: "a", title: uiDataLabel("A") }] },
-    { kind: "stack", size: 0.5, children: [{ kind: "window", id: "b", title: uiDataLabel(row.resolvedTitle) }, { kind: "window", id: row.extraId, title: uiDataLabel(row.bakedTitle) }] },
+  const initial: WindowLayoutNode = { kind: "split", axis: "horizontal", children: [
+    { kind: "stack", size: 0.5, children: [{ kind: "window", windowKindId: "a", title: "A" }] },
+    { kind: "stack", size: 0.5, children: [{ kind: "window", windowKindId: "b", title: row.resolvedTitle }, { kind: "window", windowKindId: row.kindId, instanceId: row.extraId, title: row.bakedTitle }] },
   ] };
   const mode = (layout: WindowLayoutNode) => <Mode windows={[...kinds, { id: row.extraId, label: row.bakedTitle }].map(entry => ({ id: entry.id, title: uiDataLabel(entry.label), iconId: "app-window", children: <div>{entry.id}</div> }))} layout={layout} activeWindowId="b" onActiveWindowChange={() => {}} />;
   const { container, rerender } = render(mode(initial));
@@ -37,7 +38,7 @@ afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 for (const row of fixture.ingressCases) it(`React Mode reconciles ${row.id}`, () => {
   const kinds = fixture.windows.map(id => ({ id, label: id.toUpperCase() }));
   const labels = { windowKindLabels: {}, panelTabLabels: {}, modeLabels: {}, actionLabels: {}, utilityLabels: {}, exampleLabels: {}, actionArgLabels: {}, dialogLabels: {}, introductionLabels: {}, groupLabels: {} };
-  const resolveSeed = (stacks: typeof row.stacks) => resolveFrameworkLayoutSeed({ root: { kind: "row", children: stacks.map(children => ({ kind: "stack", children: children.map(leaf => ({ kind: "window", ...leaf })) })) } }, kinds, labels, "native", "en");
+  const resolveSeed = (stacks: typeof row.stacks) => resolveFrameworkLayoutSeed({ root: { kind: "split", axis: "horizontal", children: stacks.map(children => ({ kind: "stack", children: children.map(leaf => ({ kind: "window", ...leaf })) })) } }, kinds, labels, "native", "en");
   const seed = resolveSeed(row.stacks);
   expect(seed.extraInstances.map(instance => instance.id)).toEqual(row.extras);
   expect(Object.fromEntries(seed.pendingProjections.map(entry => [entry.windowId, entry.templateId]))).toEqual(row.templates);
@@ -58,7 +59,8 @@ for (const row of fixture.cases) it(`React Mode replays ${row.id}`, () => {
       activeWindowId="b"
       onActiveWindowChange={() => {}}
       layout={resolveFrameworkLayoutSeed({ root: {
-        kind: "row",
+        kind: "split",
+        axis: "horizontal",
         children: fixture.windows.map((id, index) => ({ kind: "stack" as const, size: weights[index], children: [
           { kind: "window" as const, windowKindId: id, ...(updated && templateId && id === "b" ? { templateId } : {}) },
           ...(updated && extraId && id === "b" ? [{ kind: "window" as const, windowKindId: "b", instanceId: extraId }] : []),

@@ -30,7 +30,7 @@ export interface RuntimeChildV1 { readonly pid: number; readonly exited: Promise
 export interface RuntimeSpawnSyncResultV1 { readonly exitCode: number | null; readonly signalCode: string | null; readonly success: boolean; readonly stdout: Buffer; readonly stderr: Buffer }
 
 /** 🌍️ Options of one HTTP server; the handler speaks web `Request` and `Response`. */
-export interface RuntimeServeOptionsV1 { readonly hostname?: string; readonly port?: number; readonly idleTimeoutSeconds?: number; readonly maximumRequestBodyBytes?: number; readonly tls?: Readonly<{ certificate: string; key: string }>; readonly fetch: (request: Request, peer?: string) => Response | Promise<Response> }
+export interface RuntimeServeOptionsV1 { readonly hostname?: string; readonly port?: number; readonly idleTimeoutSeconds?: number; readonly maximumRequestBodyBytes?: number; readonly reusePort?: boolean; readonly tls?: Readonly<{ certificate: string; key: string }>; readonly fetch: (request: Request, peer?: string) => Response | Promise<Response> }
 /** 🌍️ One listening HTTP server. */
 export interface RuntimeServerV1 { readonly port: number; readonly hostname: string; stop(force?: boolean): Promise<void> }
 

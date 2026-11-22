@@ -89,7 +89,10 @@ impl ShellState {
             },
             settle: SettleState {
                 deferred_actions: Vec::new(),
+                deferred_document_load: None,
+                held_host_effects: std::collections::VecDeque::new(),
                 touch_gestures: Vec::new(),
+                suggestion_holds: Vec::new(),
                 settling: false,
                 owed_refresh_scope: UiDirtyScope::None,
                 settle_pump: ShellSettlePump::default(),
@@ -138,6 +141,7 @@ impl ShellState {
                 theme_save_label: String::new(),
                 merge_policy: SHELL_DEFAULT_MERGE_POLICY.to_string(),
                 pending_theme_import: false,
+                pending_icon_import: None,
                 open_conflicts: Vec::new(),
                 selected_conflict_id: None,
                 conflicts_seeded: false,
@@ -201,6 +205,7 @@ impl ShellState {
             },
             docs: DocumentState {
                 session: None,
+                workspace_clipboard: None,
                 window_ui: HashMap::new(),
                 panel_documents: HashMap::new(),
                 spawned_ui: None,
@@ -230,6 +235,10 @@ impl ShellState {
                 document_services: Vec::new(),
                 document_opening: None,
                 icon_export: None,
+                runtime_actors: None,
+                runtime_tasks: Vec::new(),
+                runtime_requests: Vec::new(),
+                route_not_found: None,
                 document_execution_target_lease: None,
             },
             windows: WindowState {
@@ -307,6 +316,7 @@ impl ShellState {
             },
             input: ShellInputState {
                 scroll_offsets: HashMap::new(),
+                scroll_thumb_drag: None,
                 overlay_state: OverlayState::None,
                 collapsed_sections: HashMap::new(),
                 tree_open_states: BTreeMap::new(),

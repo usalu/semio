@@ -1,0 +1,13 @@
+# Running gear and moving joints
+
+Each installed catalog revision below passed all thirteen volume checks at each of the four scales, document and print validation, and independent geometry and GLB readback across twelve scenes. Wheel and linkage dimensions are in model space. The scissor and excavator regressions additionally probe their through-bores with Three.js.
+
+| Model | Installed geometry | Twelve-scene GLB bytes | SHA-256 prefix |
+| --- | --- | ---: | --- |
+| concrete-mixer-truck | The two steering axles have single tyres. The rear two driven axles have inner and outer tyres and distinct hubs on both sides. All twelve tyres carry their own structural and thermal surfaces. | 7,680,860 | `cf8b029bbfd7d50c` |
+| forklift | Four solid industrial tyres and their rims carry the mast and chassis at every scale. The hub retainers have individually chamfered wrench flats. The chassis and wheel-metal exchange area measured 14.921 m². | 3,577,556 | `a3dba217f2bf2fe0` |
+| excavator | Both shoe belts retain their open track loop and eight lower rollers per side. The paired idler yoke cheeks have 2 mm radial clearance about their transverse pin. The adjuster rod enters its gland. The actual curved bucket shell, twin cheeks, lip and five digging teeth transmit load to the pinned bucket bracket at all four scales. | 5,237,916 | `7e562fe1a07f7668` |
+| scissor-lift | All eight lifting arms have opposing 6 mm walls, three transverse bores and a 40.5 mm bore in each sleeve for a 40 mm pin. The physical and structural crossing links stay separate throughout the lift. The closed arm and sleeve area measured 14.681–14.727 m² in the four poses. Air reaches 13.907–13.946 m². The working platform and the extension deck retain their separate posts, perimeter rails and gate in the load-path view. | 2,490,360 | `ab77a970704e2520` |
+| motor-scooter | Both cast wheels retain their five windows. The fork, two controls, curved brake levers and hollow steering tube follow the steering joint. The grooved rubber grips have a measured component area of 0.05032 m² and 0.02990 m² exchanges with air in the eleven authored postures. Two clamping halves, a bored steerer socket and twin pinch bolts join the 22 mm handlebar to the steering column. | 4,088,120 | `5626503bc13460d2` |
+| electric-kick-scooter | The rear wheel has five openings and two 14 × 32 × 9 mm bearing cartridges on the axle. The front wheel keeps its hub motor, separate from the rear disc brake. | 1,553,260 | `057c3f0d8113d288` |
+| city-bicycle | Each wheel has 36 individually positioned crossed spokes with hub elbows and through-bored nipples. The rear rack retains its bolted stays. | 4,275,224 | `666f8c73b7119a92` |

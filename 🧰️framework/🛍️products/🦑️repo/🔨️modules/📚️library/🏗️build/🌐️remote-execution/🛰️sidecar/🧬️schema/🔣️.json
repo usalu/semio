@@ -2,18 +2,20 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "semio:build:remote-execution:sidecar:restart:v1",
   "title": "When and how a build sidecar restarts for new code",
-  "description": "A sidecar restarts only when a byte of the files it actually loads (its import closure) differs from the closure it started with. Fleet machines receive edits of the build module continuously, so the restart waits until the closure was quiet for quietMilliseconds (a closure that is edited without a pause restarts after maximumDeferralMilliseconds at the latest), stops taking new work (drain), lets the work in flight finish for up to graceMilliseconds and then exits with status 75 so that its launcher starts it again with the new code. The `ready` role never defers its restart for a stage in flight (`serveDeferralMilliseconds` 0): its stage is a detached process that the next child adopts, so new code reaches a machine whose stage waits for hours at once, instead of after an hour. An edit that is reverted before the restart cancels it. The closure is looked at every watchMilliseconds. The restart is logged with the changed files and the time it was deferred. A role that holds a long computation whose results are keyed by the implementation that produced them (the graph server while it serves held requests) does not restart for a code change while that work is in flight: the restart waits until the work is done, for serveDeferralMilliseconds at the latest counted from the first change, takes no new work while it waits and restarts at once when the work ends; the other roles keep the rule above.",
+  "description": "A sidecar restarts only when a byte of the files it actually loads (its import closure) differs from the closure it started with. Fleet machines receive edits of the build module continuously, so a burst of landings is coalesced into one restart: it waits until the closure was quiet for quietMilliseconds (a closure that is edited without a pause restarts after maximumDeferralMilliseconds at the latest), and two restarts are at least minimumIntervalMilliseconds apart, so ten landings in an hour cause one or two restarts, never ten, stops taking new work (drain), lets the work in flight finish for up to graceMilliseconds and then exits with status 75 so that its launcher starts it again with the new code. The `ready` role never defers its restart for a stage in flight (`serveDeferralMilliseconds` 0): its stage is a detached process that the next child adopts, so new code reaches a machine whose stage waits for hours at once, instead of after an hour. An edit that is reverted before the restart cancels it. The closure is looked at every watchMilliseconds. The restart is logged with the changed files and the time it was deferred. A role that holds a long computation whose results are keyed by the implementation that produced them (the graph server while it serves held requests) does not restart for a code change while that work is in flight: the restart waits until the work is done, for serveDeferralMilliseconds (8 h, used only for a role that reports no progress) at the latest counted from the first change, and a role that reports its progress (`work.progressAtMs`, the modification time of the progress file of its read) is never restarted while that progress advanced within progressStallMilliseconds: a long read is never cancelled by a clock, only by a stall, takes no new work while it waits and restarts at once when the work ends; the other roles keep the rule above.",
   "definitions": {
     "Restart": {
       "const": {
         "watchMilliseconds": 30000,
-        "quietMilliseconds": 90000,
-        "maximumDeferralMilliseconds": 600000,
+        "quietMilliseconds": 300000,
+        "maximumDeferralMilliseconds": 1800000,
         "graceMilliseconds": 300000,
-        "serveDeferralMilliseconds": 3600000,
-        "minimumIntervalMilliseconds": 0,
+        "serveDeferralMilliseconds": 28800000,
+        "progressStallMilliseconds": 600000,
+        "minimumIntervalMilliseconds": 1800000,
         "pool": {"watchMilliseconds": 5000, "quietMilliseconds": 90000, "maximumDeferralMilliseconds": 600000, "serveDeferralMilliseconds": 600000, "minimumIntervalMilliseconds": 600000},
-        "ready": {"serveDeferralMilliseconds": 0},
+        "ready": {"quietMilliseconds": 90000, "maximumDeferralMilliseconds": 600000, "serveDeferralMilliseconds": 0, "minimumIntervalMilliseconds": 0},
+        "cache": {"serveDeferralMilliseconds": 0},
         "agent": {"drainMaximumMilliseconds": 7200000, "drainPollMilliseconds": 5000}
       }
     },

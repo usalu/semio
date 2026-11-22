@@ -13,6 +13,8 @@ import {nativeDirectoryRuntimeEntryV1} from "../../../../../../../../../../../�
 import {withRepositoryCompilerRuntimeEntriesV1,withRepositoryRuntimeEntriesV1} from "../../../../../../../🏗️build/📥️source/🔏️closure/🚪️command/🔌️runtime/🟦️.ts";
 import corpus from "./🔣️.json";
 import schema from "./🧬️schema/🔣️.json";
+import {declareLibraryBuildTestEnvelopeV1} from "../../../../../../../🧪️testing/🪪️native-birth/🟦️.ts";
+declareLibraryBuildTestEnvelopeV1({suite:"nx-output-observation"});
 
 const validate=new Ajv({strict:false}).compile(schema.definitions.Case);
 

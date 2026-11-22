@@ -1,0 +1,19 @@
+{
+  "origin": 71,
+  "observations": [1000, 1246],
+  "replyHex": "0100000000000000e803000000000000",
+  "steps": [
+    { "name": "prepare", "items": 1, "bytes": 64, "work": 2 },
+    { "name": "deliver", "items": 2, "bytes": 64, "work": 4 },
+    { "name": "settle", "items": 1, "bytes": 64, "work": 2 }
+  ],
+  "cases": [
+    { "name": "funded", "turnItems": [4, 4, 4], "attempts": [3, 1], "refused": 0, "observed": 1 },
+    { "name": "no initial stock", "turnItems": [0, 4, 4, 4], "attempts": [4, 2], "refused": 1, "observed": 1 },
+    { "name": "retained sample across narrow turns", "turnItems": [1, 2, 1], "attempts": [3, 3], "refused": 0, "observed": 1 },
+    { "name": "cancellation before observation", "turnItems": [4, 4, 4], "attempts": [3, 3], "refused": 3, "observed": 0, "cancelAt": 0 },
+    { "name": "cancellation after observation retains its exact unpaid reply", "turnItems": [1, 4, 4], "attempts": [3, 3], "refused": 2, "observed": 1, "cancelAt": 1 },
+    { "name": "cancellation between phases of one callback", "turnItems": [4, 4, 4], "attempts": [3, 3], "refused": 2, "observed": 1, "cancelAfter": 1 },
+    { "name": "actual clock returned no observation", "turnItems": [4, 4, 4], "attempts": [1, 1], "refused": 1, "observed": 1, "clockUnavailable": true }
+  ]
+}

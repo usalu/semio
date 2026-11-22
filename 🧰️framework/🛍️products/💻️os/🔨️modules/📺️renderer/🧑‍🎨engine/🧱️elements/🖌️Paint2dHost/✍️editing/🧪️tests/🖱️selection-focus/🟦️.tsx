@@ -104,7 +104,7 @@ for(const tool of ["Color picker","Magic wand"])test(tool+(tool==="Color picker"
   vi.stubGlobal("createImageBitmap",bitmap);
   vi.spyOn(HTMLCanvasElement.prototype,"getContext").mockImplementation(function(this:HTMLCanvasElement){
     return this.width===row.width&&this.height===row.height?{drawImage:vi.fn(),getImageData:()=>({data}),createImageData:()=>({data:new Uint8ClampedArray(data.length)}),putImageData:vi.fn()} as unknown as CanvasRenderingContext2D:null;
-  });
+  } as unknown as HTMLCanvasElement["getContext"]);
   const host=document.createElement("div"),dispatch=vi.fn();host.getBoundingClientRect=()=>({left:0,top:0,width:100,height:100} as DOMRect);
   const view=render(<PixelEditingOverlay documentJson={JSON.stringify({layers:[{kind:"pixel",id:"p",width:row.width,height:row.height,imageKey:"source"}]})} assetsJson={JSON.stringify({source:{mime:"image/png",data:png.toString("base64")}})} assetExtentsJson={JSON.stringify({source:{width:row.width,height:row.height}})} selectionJson='["p"]' activeUtility="select" brushSize={1} brushOpacity={1} brushColor="#000000" brushHardness={1} camera={{current:{x:0,y:0,zoom:1}}} container={{current:host}} dispatch={dispatch} onWheel={()=>{}} onCameraChange={()=>{}}/>);
   fireEvent.click(view.getByRole("button",{name:tool,exact:true}));

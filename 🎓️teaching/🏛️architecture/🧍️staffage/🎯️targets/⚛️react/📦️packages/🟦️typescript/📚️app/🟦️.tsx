@@ -19,11 +19,11 @@ import { Bar, Button, ButtonLink, Segmented, SharedBorderRow, SharedBorderRowCel
 import { useBreakpoint, type Breakpoint } from "../../../🔨️modules/🥞️levels/🟦️.tsx";
 import { RootLevel } from "../../../🔨️modules/🏠️overview/🟦️.tsx";
 import { ArchiveStore, STORAGE_VERSION, browserStorage, useArchiveState, type StorageArea, type Theme } from "../../../🔨️modules/💾️persistence/🟦️.ts";
-import { CatalogStore, bundledCatalog, type CatalogSource } from "../../../🔨️modules/📚️catalog/🟦️.ts";
+import { CatalogStore, bundledCatalog, type AssetCheck, type CatalogSource } from "../../../🔨️modules/📚️catalog/🟦️.ts";
 import { formatAddress, parentRoute, recallParams, routePath, useAddress } from "../../../🔨️modules/🗺️routing/🟦️.ts";
 
-/** ⚙️ What a host may replace: storage (tests), the browser's language list, the catalog source. */
-export type ArchiveOptions = { readonly storage?: StorageArea; readonly durable?: boolean; readonly languages?: readonly string[]; readonly catalog?: CatalogSource };
+/** ⚙️ What a host may replace: storage (tests), the browser's language list, the catalog source and how the findings of an asset are found. */
+export type ArchiveOptions = { readonly storage?: StorageArea; readonly durable?: boolean; readonly languages?: readonly string[]; readonly catalog?: CatalogSource; readonly check?: AssetCheck };
 
 const ROUTE_TITLES = { overview: "nav.overview", all: "all.title", category: "nav.category", asset: "nav.asset", collections: "collections.title", compare: "compare.title", playground: "playground.title" } as const;
 
@@ -251,7 +251,7 @@ function Client(props: { readonly store: ArchiveStore; readonly catalog: Catalog
 export function mountArchive(root: HTMLElement, options: ArchiveOptions = {}): () => void {
   const host = options.storage === undefined ? browserStorage() : { area: options.storage, durable: options.durable ?? true };
   const store = new ArchiveStore(host.area, VIEWS, host.durable);
-  const catalog = new CatalogStore(options.catalog ?? bundledCatalog);
+  const catalog = new CatalogStore(options.catalog ?? bundledCatalog, options.check);
   bootstrapElementsSurfaceChromeDocument(store.getSnapshot().preferences.theme);
   const languages = options.languages ?? (typeof navigator === "undefined" ? [] : navigator.languages);
   const reactRoot = createRoot(root);

@@ -5,7 +5,7 @@ extern crate semio_os_kernel as store;
 
 use crate::windows::flow;
 use crate::windows::preview;
-use semio_plugin::create_default_layout;
+use semio_plugin::{create_default_layout, Axis};
 use semio_ui_locale::LocalizedLabel;
 use semio_plugin::ModeDefinition;
 use semio_plugin::ToolRef;
@@ -31,7 +31,7 @@ pub fn definition() -> ModeDefinition {
 /// 🪟️ The app's default window layout — this mode is the app's `default_mode_id`, so its layout IS the
 /// app-level `default_layout`.
 pub fn layout() -> WindowLayout {
-    create_default_layout(&[flow::GENERATION2D_PLAY_WINDOW_MAIN.into(), preview::GENERATION2D_PLAY_WINDOW_PREVIEW.into()], "row", Some(&[55.0, 45.0]), Some(&["Main".into(), "Preview".into()]))
+    create_default_layout(&[flow::GENERATION2D_PLAY_WINDOW_MAIN.into(), preview::GENERATION2D_PLAY_WINDOW_PREVIEW.into()], Axis::Horizontal, Some(&[0.55, 0.45]), Some(&["Main".into(), "Preview".into()]))
 }
 //#endregion 🔖️Definition
 

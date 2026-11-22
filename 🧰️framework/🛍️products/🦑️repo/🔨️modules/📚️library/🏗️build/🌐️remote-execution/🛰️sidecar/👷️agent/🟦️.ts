@@ -1,4 +1,5 @@
 import{machinePathV1}from"../../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
+import {cacheAreaHomeV1} from "../../../../⚡️caching/💾️storage/🧾️ledger/🟦️.ts";
 import {existsSync} from "node:fs";
 import {availableParallelism,homedir} from "node:os";
 import {delimiter,join} from "node:path";
@@ -13,7 +14,8 @@ import {detectWorkerRustcV1} from "../../🚀️offload/🧰️toolchain/🟦️
 import {remoteExecutionWorkerWhyV1} from "../../🌡️load/🔎️why/🟦️.ts";
 import {checkRemoteExecutionAgentReadinessV1} from "../../🛰️agent/🩺️readiness/🟦️.ts";
 import {readRemoteExecutionPolicyV1} from "../../🟦️.ts";
-import {type RemoteExecutionSidecarContextV1,sleep,remoteExecutionPortsV1,remoteExecutionWorkerApiV1,remoteExecutionSchedulerEndpointV1} from "../🧰️shared/🟦️.ts";
+import {type RemoteExecutionSidecarContextV1,sleep,remoteExecutionPortsV1,remoteExecutionWorkerApiV1} from "../🧰️shared/🟦️.ts";
+import {resolveRemoteExecutionEndpointV1} from "../../🧭️endpoint/🟦️.ts";
 
 /** 🌱️ Runs the graph server as a child process of the agent with a closure of its own: an edit of the graph code (hundreds of files) restarts only this child, never the agent and its workers, and the child resumes from its state file. It is started again with a back-off when it ends (at once after status 75, which means new code), is asked to end (SIGTERM, it saves its state) when the agent stops or restarts, and is not started at all with `SEMIO_GRAPH_SERVER=off`. */
 export function superviseGraphChildV1(context:RemoteExecutionSidecarContextV1,entry:string,role:"graph"|"pool"|"ready"="graph",options:Readonly<{graceMilliseconds?:number}>={}):Readonly<{stop():Promise<void>}>{
@@ -48,11 +50,11 @@ export async function runAgent(context:RemoteExecutionSidecarContextV1):Promise<
  const ready=context.environment.SEMIO_FLEET_ORIGIN!==undefined&&context.environment.SEMIO_FLEET_ORIGIN===`${context.environment.SEMIO_FLEET_GROUP}-server`?undefined:superviseGraphChildV1(context,join(import.meta.dir,"..","🟦️.ts"),"ready");
  await syncFleetIdentityV1({root:context.root}).then(result=>{if(result.error!==undefined)say(`fleet identity: ${result.error}`);},()=>undefined);
  while(!context.signal.aborted){
-  let endpoint=remoteExecutionSchedulerEndpointV1(context);
+  let endpoint=resolveRemoteExecutionEndpointV1(context)?.endpoint;
   while(endpoint===undefined&&!context.signal.aborted){
    say("waiting for the fleet facts to name a scheduler");
    await refreshFleetCacheFactsV1({root:context.root,force:true}).catch(()=>undefined);
-   endpoint=remoteExecutionSchedulerEndpointV1(context);
+   endpoint=resolveRemoteExecutionEndpointV1(context)?.endpoint;
    if(endpoint===undefined)await sleep(15_000,context.signal);
   }
   if(endpoint===undefined)return;
@@ -64,12 +66,12 @@ export async function runAgent(context:RemoteExecutionSidecarContextV1):Promise<
   const watch=setInterval(()=>{
    mirror();
    void refreshFleetCacheFactsV1({root:context.root}).catch(()=>undefined).then(()=>{
-    const next=remoteExecutionSchedulerEndpointV1(context);
+    const next=resolveRemoteExecutionEndpointV1(context)?.endpoint;
     if(next!==undefined&&next!==endpoint){say("the scheduler moved, joining the new one");controller.abort();}
    });
   },30_000);
   const rustc=detectWorkerRustcV1(context.root,{...environment,PATH:[environment.PATH,join(homedir(),".cargo","bin")].filter(Boolean).join(delimiter)});
-  const directory=machinePathV1(context.root,".cache","f","remote-execution"),why=checkRemoteExecutionAgentReadinessV1({root:context.root,policy:policy.worker})??(rustc===undefined?remoteExecutionWorkerWhyV1("no-toolchain","no rustc answers in the checkout"):undefined);
+  const directory=cacheAreaHomeV1(context.root,"remote-execution-worker").directory,why=checkRemoteExecutionAgentReadinessV1({root:context.root,policy:policy.worker})??(rustc===undefined?remoteExecutionWorkerWhyV1("no-toolchain","no rustc answers in the checkout"):undefined);
   say(`joining ${scheduler}${why!==undefined?` without a worker: ${why.en}`:` offering rustc for ${rustc!.toolchain.targets.length} target(s)`}`);
   const recheck=why===undefined?undefined:setTimeout(()=>{controller.abort();},15_000);
   try{

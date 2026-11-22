@@ -65,10 +65,19 @@
   "AS-08",
   "AS-09",
   "AS-10",
+  "AS-11",
+  "AS-12",
+  "AS-13",
+  "AS-14",
   "ST-01",
   "ST-02",
   "ST-03",
   "ST-04",
+  "ST-05",
+  "ST-06",
+  "ST-07",
+  "ST-08",
+  "ST-09",
   "TW-01",
   "TW-02",
   "TW-03",
@@ -1005,13 +1014,13 @@
    "realisation": {
     "kind": "not-modelled",
     "reason": {
-     "en": "the table row names retrofit strengthening schemes (jackets, FRP), design values of new materials and interface checks without any equation or value, so no kernel is written and none is guessed; the chord rotation and cyclic shear checks offer the strengthening remedies (stirrup spacing, compression reinforcement, characteristic resistance, shear demand limit) as the only retrofit design aid",
-     "de": "die Tabellenzeile nennt Ertüchtigungsmaßnahmen (Mäntel, FRP), Bemessungswerte neuer Baustoffe und Fugennachweise ohne Gleichung oder Wert, daher ist kein Kern geschrieben und keiner geraten; die Nachweise von Sehnendrehwinkel und zyklischer Querkraft bieten die Verstärkungsabhilfen (Bügelabstand, Druckbewehrung, charakteristischer Widerstand, Grenze der Querkraftbeanspruchung) als einzige Bemessungshilfe der Ertüchtigung"
+     "en": "Jacket adjustments, steel jacket shear and clamping, and the FRP shear branches under A.4.4.2(1)–(8) are available. Cyclic FRP hinge shear, confinement and splice improvement, other materials, the jacket interface and the complete intervention procedure still require checks.",
+     "de": "Mantelkorrekturen, Schub und Klemmung bei Stahlmänteln sowie Faserverbund-Querkraft nach A.4.4.2(1)–(8) sind verfügbar. Zyklische Querkraft im Fließgelenk, Umschnürung und verbesserte Übergreifungsstöße mit Faserverbund, andere Werkstoffe, Mantelfugen und das gesamte Ertüchtigungsverfahren erfordern weitere Nachweise."
     }
    },
    "description": {
-    "en": "Retrofit strengthening schemes (jackets, FRP), design values of new materials and interface checks (not modelled: the spec row carries no equations)",
-    "de": "Ertüchtigungsmaßnahmen (Mäntel, FRP), Bemessungswerte neuer Baustoffe und Fugennachweise (nicht modelliert: die Spezifikationszeile enthält keine Gleichungen)"
+    "en": "Jacket adjustments, steel jacket shear and clamping, and the FRP shear branches under A.4.4.2(1)–(8) are available. Cyclic FRP hinge shear, confinement and splice improvement, other materials, the jacket interface and the complete intervention procedure still require checks.",
+    "de": "Mantelkorrekturen, Schub und Klemmung bei Stahlmänteln sowie Faserverbund-Querkraft nach A.4.4.2(1)–(8) sind verfügbar. Zyklische Querkraft im Fließgelenk, Umschnürung und verbesserte Übergreifungsstöße mit Faserverbund, andere Werkstoffe, Mantelfugen und das gesamte Ertüchtigungsverfahren erfordern weitere Nachweise."
    }
   },
   {
@@ -1031,6 +1040,58 @@
    }
   },
   {
+   "id": "AS-11",
+   "clause": "EN 1998-3:2005+AC1 A.4.2.2",
+   "entity": "CaseRow",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "C98-15"
+   },
+   "description": {
+    "en": "Adjust the stated monolithic shear resistance, yield moment and chord-rotation capacities with the corrigendum.",
+    "de": "Monolithischen Schubwiderstand, Fließmoment und Sehnenrotationen nach der Berichtigung anpassen."
+   }
+  },
+  {
+   "id": "AS-12",
+   "clause": "EN 1998-3:2005+AC1 A.4.3.2",
+   "entity": "CaseRow",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "C98-16"
+   },
+   "description": {
+    "en": "Calculate the additive shear resistance of an elastic steel jacket for straps or continuous plates.",
+    "de": "Zusätzlichen Schubwiderstand eines elastischen Stahlmantels mit Bändern oder durchgehenden Blechen berechnen."
+   }
+  },
+  {
+   "id": "AS-13",
+   "clause": "EN 1998-3:2005+AC1 A.4.3.3",
+   "entity": "CaseRow",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "C98-17"
+   },
+   "description": {
+    "en": "Verify steel jacket length and bolt-row layout for a lap splice in the entered loading direction.",
+    "de": "Stahlmantellänge und Schraubenreihen eines Übergreifungsstoßes in der angegebenen Lastrichtung prüfen."
+   }
+  },
+  {
+   "id": "AS-14",
+   "clause": "EN 1998-3:2005+AC1 A.4.4.2(1)–(8)",
+   "entity": "CaseRow",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "C98-18"
+   },
+   "description": {
+    "en": "FRP shear contribution for closed, U-shaped and side-bonded rectangular sections and wrapped circular columns, with the applicable diagonal compression caps.",
+    "de": "Querkraftanteil des Faserverbunds für geschlossene, U-förmige und seitlich verklebte Rechteckquerschnitte sowie umwickelte Rundstützen mit den maßgebenden Druckstrebengrenzen."
+   }
+  },
+  {
    "id": "ST-01",
    "clause": "EN 1998-4 §3",
    "entity": "silos",
@@ -1042,8 +1103,8 @@
     ]
    },
    "description": {
-    "en": "silo: filled mass with the storage psi_E, shell axial demand N_Ed = m (g + 0.9 a_g) against N_Rd and the base shear F_h = m S_d(T) against the anchorage V_Rd (silo q); not modelled: the seismic pressure of the granular content on the silo wall (EN 1998-4 wall pressure increase, wall friction F_wall = mu N), because the repository spec text states only the force-level formulas and no pressure formula, so no kernel, check or 3D pressure is drawn and none is guessed",
-    "de": "Silo: gefüllte Masse mit dem Lagerungs-psi_E, axialer Schalenbeanspruchung N_Ed = m (g + 0,9 a_g) gegenüber N_Rd und Fußquerkraft F_h = m S_d(T) gegenüber der Verankerung V_Rd (Silo-q); nicht modelliert: der seismische Druck des Schüttguts auf die Silowand (EN 1998-4 Wanddruckerhöhung, Wandreibung F_wall = mu N), weil der Spezifikationstext des Repositorys nur die Kraftformeln und keine Druckformel nennt, daher werden weder Kern, Nachweis noch 3D-Druck erzeugt oder geraten"
+    "en": "Silo shell axial force and support anchorage from the stated filled mass and design acceleration. ST-09 handles local normal pressure of granular contents. Wall friction and shell resistance under the resulting membrane forces remain open.",
+    "de": "Axialkraft der Siloschale und Verankerung der Auflager aus angegebener Füllmasse und Bemessungsbeschleunigung. ST-09 erfasst den örtlichen Normaldruck des Schüttguts. Wandreibung und Schalentragfähigkeit unter den resultierenden Membrankräften bleiben offen."
    }
   },
   {
@@ -1069,8 +1130,8 @@
    "realisation": {
     "kind": "not-modelled",
     "reason": {
-     "en": "The stable homogeneous soil wave case is covered in ST-04. Concrete pipes, unwelded joints, global buckling, permanent ground deformation and fault crossings require dedicated inputs and models.",
-     "de": "Der Wellenfall auf stabilem homogenem Baugrund ist in ST-04 erfasst. Betonrohre, ungeschweißte Verbindungen, globales Knicken, bleibende Bodenverformungen und Verwerfungsquerungen erfordern eigene Eingaben und Modelle."
+     "en": "ST-04 through ST-08 cover wave passage, project limit checks and specified fault-crossing protection extents. Deriving the site response and project-specific capacities, and verifying qualitative crossing design measures, require additional models.",
+     "de": "ST-04 bis ST-08 erfassen den Wellendurchgang, Projektnachweise und die vorgegebenen Schutzlängen an Verwerfungsquerungen. Standortreaktion, projektbezogene Grenzwerte und qualitative konstruktive Maßnahmen erfordern zusätzliche Modelle."
     }
    },
    "description": {
@@ -1089,6 +1150,71 @@
    "description": {
     "en": "The documented welded-steel pipe on stable soil checks Annex B wave passage, the perfect-bond demand, and the §6.5.2 tensile and compressive limits for the axial and bending strain envelope.",
     "de": "Für das dokumentierte geschweißte Stahlrohr auf stabilem Baugrund werden der Wellendurchgang nach Anhang B, der Verbundbedarf und die Zug- und Druckdehnungsgrenzen nach 6.5.2 geprüft."
+   }
+  },
+  {
+   "id": "ST-05",
+   "clause": "EN 1998-4:2006 §6.5.3(1)P and §6.5.2(2)P",
+   "entity": "CaseRow",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "C98-19"
+   },
+   "description": {
+    "en": "Welded steel pipe under differential soil movement: verify project tensile and compressive strain envelopes and global buckling utilization for the affected segment.",
+    "de": "Geschweißtes Stahlrohr bei unterschiedlichen Bodenbewegungen: Nachweis der Zug- und Druckdehnung sowie der Ausnutzung für globales Knicken des betroffenen Abschnitts anhand der Projektberechnung."
+   }
+  },
+  {
+   "id": "ST-06",
+   "clause": "EN 1998-4:2006 §6.5.2(3)P and (4)P",
+   "entity": "CaseRow",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "C98-20"
+   },
+   "description": {
+    "en": "Concrete and reinforcement strain under the governing combined seismic response and the reinforcement tension limit derived from project residual cracking and leak-tightness evidence.",
+    "de": "Beton- und Bewehrungsdehnungen bei maßgebender kombinierter Erdbebenbeanspruchung sowie die Bewehrungszugdehnungsgrenze aus dem projektbezogenen Nachweis verbleibender Risse und der Dichtheit."
+   }
+  },
+  {
+   "id": "ST-07",
+   "clause": "EN 1998-4:2006 §6.5.2(1)P and (5)P",
+   "entity": "CaseRow",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "C98-21"
+   },
+   "description": {
+    "en": "Verify the rotation demand against the documented joint limit at the same axial displacement and applicable damage criterion.",
+    "de": "Nachweis der Verdrehungsbeanspruchung gegen die dokumentierte Grenze der Rohrverbindung bei derselben Axialverschiebung und dem anwendbaren Schadenskriterium."
+   }
+  },
+  {
+   "id": "ST-08",
+   "clause": "EN 1998-4:2006 §6.6(6) and (8)",
+   "entity": "CaseRow",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "C98-22"
+   },
+   "description": {
+    "en": "Review thick-walled pipe and controlled backfill for 50 m on each side of a fault, and report widened trench lengths against the approximate 15 m guidance when existing soil differs substantially.",
+    "de": "Dickwandige Rohre und kontrollierte Verfüllung über 50 m auf jeder Seite einer Verwerfung prüfen und bei wesentlich abweichendem Boden die Länge des verbreiterten Grabens mit dem Richtwert von etwa 15 m vergleichen."
+   }
+  },
+  {
+   "id": "ST-09",
+   "clause": "EN 1998-4:2006 §3.3(5)–(9) and (11)–(12)",
+   "entity": "CaseRow",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "C98-23"
+   },
+   "description": {
+    "en": "Report the signed horizontal seismic pressure increment and combined pressure on circular and rectangular vertical walls over flat bottoms and within hoppers at a plane of uniform static pressure. Identify when resultant-preserving redistribution is required.",
+    "de": "Vorzeichenbehafteten seismischen Horizontaldruckanteil und Gesamtdruck an runden und rechteckigen senkrechten Silowänden über Flachböden und in Trichtern bei gleichmäßigem statischem Druck in der betrachteten Ebene angeben. Erforderliche Umlagerung bei gleicher Resultierenden kennzeichnen."
    }
   },
   {

@@ -33,6 +33,21 @@ impl FlowHost {
         self.evaluate_cold_step_with_seeds(budget, source_required, |_| {})
     }
 
+    /// 📨️ Keeps the preview wave and its outstanding nodes with the same pending publication.
+    pub fn prepare_preview_evaluation(
+        &mut self,
+        budget: EvalStepBudget,
+        source_required: &dyn Fn(u64) -> bool,
+        project: impl FnOnce(&mut HashMap<String, Dictionary>),
+    ) -> Result<(), ValueError> {
+        let remaining = self.evaluate_cold_step_with_seeds(budget, source_required, project)?;
+        if let Some(publication) = self.pending_baseline_publication.as_mut() {
+            publication.remaining = remaining;
+            publication.pending = std::mem::take(&mut self.pending_extension_evals);
+        }
+        Ok(())
+    }
+
     /// 🌱️ Runs the cold diagnostic walk with caller-projected source values.
     pub fn evaluate_cold_step_with_seeds(
         &mut self,

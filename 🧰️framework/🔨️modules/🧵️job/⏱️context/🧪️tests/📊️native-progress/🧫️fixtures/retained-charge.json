@@ -1,0 +1,16 @@
+[
+  {"name":"exact fit","grant":[1,2,3,4,1],"quote":[2,3,4],"fuel":1,"clock":9,"retirement":false,"loan":false,"accepted":true,"sampled":true},
+  {"name":"one scalar item","grant":[1,0,0,0,1],"quote":[0,0,0],"fuel":1,"clock":9,"retirement":false,"loan":false,"accepted":true,"sampled":true},
+  {"name":"item shortage","grant":[0,2,3,4,1],"quote":[2,3,4],"fuel":1,"clock":9,"retirement":false,"loan":false,"accepted":false,"sampled":true},
+  {"name":"copy shortage","grant":[1,1,3,4,1],"quote":[2,3,4],"fuel":1,"clock":9,"retirement":false,"loan":false,"accepted":false,"sampled":true},
+  {"name":"capacity shortage","grant":[1,2,2,4,1],"quote":[2,3,4],"fuel":1,"clock":9,"retirement":false,"loan":false,"accepted":false,"sampled":true},
+  {"name":"release shortage","grant":[1,2,3,3,1],"quote":[2,3,4],"fuel":1,"clock":9,"retirement":false,"loan":false,"accepted":false,"sampled":true},
+  {"name":"depth shortage","grant":[1,2,3,4,0],"quote":[2,3,4],"fuel":1,"clock":9,"retirement":false,"loan":false,"accepted":false,"sampled":true},
+  {"name":"fuel shortage","grant":[1,2,3,4,1],"quote":[2,3,4],"fuel":0,"clock":9,"retirement":false,"loan":false,"accepted":false,"sampled":false},
+  {"name":"unknown clock","grant":[1,2,3,4,1],"quote":[2,3,4],"fuel":1,"clock":null,"retirement":false,"loan":false,"accepted":false,"sampled":true},
+  {"name":"deadline reached","grant":[1,2,3,4,1],"quote":[2,3,4],"fuel":1,"clock":10,"retirement":false,"loan":false,"accepted":false,"sampled":true},
+  {"name":"ordinary even under loan","grant":[1,2,3,4,1],"quote":[2,3,4],"fuel":1,"clock":10,"retirement":false,"loan":true,"accepted":false,"sampled":true},
+  {"name":"retirement still needs original loan","grant":[1,2,3,4,1],"quote":[2,3,4],"fuel":1,"clock":10,"retirement":true,"loan":false,"accepted":false,"sampled":true},
+  {"name":"paid retirement under original loan","grant":[1,2,3,4,1],"quote":[2,3,4],"fuel":1,"clock":null,"retirement":true,"loan":true,"accepted":true,"sampled":false},
+  {"name":"retirement needs fuel under original loan","grant":[1,2,3,4,1],"quote":[2,3,4],"fuel":0,"clock":null,"retirement":true,"loan":true,"accepted":false,"sampled":false}
+]

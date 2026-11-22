@@ -1,5 +1,5 @@
 import type { IntroductionStepDefinition, ModeWindowDescriptor, UiDriver } from "@semio-tech/ui-react/source";
-import type { WindowLayoutNode } from "../../../🔨️modules/🗺️window-layout/🟦️.ts";
+import type { WindowLayoutNode } from "@semio-tech/ui-layout";
 import * as ui from "@semio-tech/ui-react/source";
 import { createBrowserStoragePort } from "../../../🔨️modules/🗄️storage-port/🟦️.ts";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -209,10 +209,10 @@ export async function registerUidriverAndMoreTests(vitest: Tests2Vitest, depende
         { id: "b", title: uiDataLabel("B"), iconId: "app-window", children: <div>B body</div> },
       ];
       const splitLayout: WindowLayoutNode = {
-        kind: "row",
+        kind: "split", axis: "horizontal",
         children: [
-          { kind: "stack", children: [{ kind: "window", id: "a" }], activeId: "a" },
-          { kind: "stack", children: [{ kind: "window", id: "b" }], activeId: "b" },
+          { kind: "stack", children: [{ kind: "window", windowKindId: "a" }], activeWindowId: "a" },
+          { kind: "stack", children: [{ kind: "window", windowKindId: "b" }], activeWindowId: "b" },
         ],
       };
   
@@ -236,8 +236,8 @@ export async function registerUidriverAndMoreTests(vitest: Tests2Vitest, depende
       it("drops the Focus control out of the unshrinkable per-tab chrome grid even with many windows — windows always take the full space on mobile", () => {
         const manyWindows: ModeWindowDescriptor[] = ["a", "b", "c", "d"].map((id) => ({ id, title: uiDataLabel(`semio · cad · ${id}`), iconId: "app-window", children: <div>{id} body</div> }));
         const manyLayout: WindowLayoutNode = {
-          kind: "row",
-          children: manyWindows.map((window) => ({ kind: "stack", children: [{ kind: "window", id: window.id }], activeId: window.id })),
+          kind: "split", axis: "horizontal",
+          children: manyWindows.map((window) => ({ kind: "stack", children: [{ kind: "window", windowKindId: window.id }], activeWindowId: window.id })),
         };
         const markup = renderToStaticMarkup(<Mode mobile windows={manyWindows} activeWindowId="a" layout={manyLayout} />);
         expect(markup).not.toContain('data-slot="mode-dock-chrome-column"');

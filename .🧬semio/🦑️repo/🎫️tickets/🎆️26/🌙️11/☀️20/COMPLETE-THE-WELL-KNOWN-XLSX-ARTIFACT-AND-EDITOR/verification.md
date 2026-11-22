@@ -6,10 +6,10 @@
 | --- | --- |
 | Public kind and file recognition | The published Office descriptor registers the editor and viewer for all three `s.stdio.xlsx` profiles. The production file resolver and all 282 natural-file contract tests passed with 985 assertions. |
 | XLSX TypeScript package and history input | The package and route tests passed 14 cases with 136 assertions. The history input audit passed. |
-| Native workbook creation, import, export and history | The latest four-package run passed 91 of 97, including the generic tool proof and file codecs. The isolated history tests exposed a preview cancellation defect and a retained reader source defect. A focused Base replay is running after both fixes. |
+| Native workbook creation, import, export and history | The latest four-package run passed 91 of 97, including the generic tool proof and file codecs. The isolated history tests exposed preview cancellation and retained reader Source defects. The current fixes passed Rust type checking through the XLSX test crate. Code generation hit a full compiler image. The image recovered 20 GiB and the same Base selection restarted. |
 | Independent mutation differential | The genuine Rust subject and independent oracle each passed 18 scenarios. The production comparator and pair coordinator found all 18 equivalent. The standard Nx target has no successful terminal result. See [parity verification](xlsx-parity-host-profile.md). |
-| Rendered editor and durable file round trip | The standalone session, catalogs, Office WASIp2 build and semantic descriptor publication passed. Chromium independently loaded the transpiled Office guest and returned the native descriptor bytes. Managed browser publication is pending. The full S English and German journeys, Hub I/O matrix and standalone editor journey await their respective hosts. |
-| Graph authority repair | The compact receipt passed 40 focused tests with the existing size limit. The full observation and repair replay passed 84 tests. The managed XLSX host is exercising the live implementation. |
+| Rendered editor and durable file round trip | The standalone session, catalogs, Office WASIp2 build and semantic descriptor publication passed. Chromium independently loaded the transpiled Office guest and returned the native descriptor bytes. The previous managed hosts and Office publication stopped while a graph module was arriving in the shared checkout. All three restarted after the module appeared. The full S English and German journeys, Hub I/O matrix and standalone editor journey await their respective hosts. |
+| Graph authority repair | The compact receipt passed 40 focused tests and the observation replay passed 84. The owner checkpoint passed seven tests. The worker startup recovery passed 22 tests, including the bounded missing-module retry. See [the worker recovery record](slice-bootstrap-recovery.md). |
 
 ## Observed results
 
@@ -165,3 +165,7 @@ The latest native suite reached all four packages and passed 91 of 97 tests. The
 The retained parity adapter replay could not use a restored third-party Rust metadata artifact. The next run uses the repository's isolated target store and shared registry. The same invocation automatically refreshed its generated lock after concurrent Media manifest changes and restarted. Its previous terminal 17-of-18 comparison and independent oracle are preserved while the corrected adapter awaits its verdict.
 
 The full S plan finished its long development, Puzzle and S composition project checks. The shared graph continues its remaining owner and memo verification and still holds the Office component publisher and exact descriptor emitter behind the same source authority.
+
+## Verification after the storage and graph recoveries
+
+The published descriptor still matches both captured Office outputs byte for byte. The XLSX TypeScript and routing suites passed 14 tests with 136 assertions on the live checkout, and the full natural-file contract passed 282 with 985 assertions. The history input audit and both independent Source-return cases passed. The production parity coordinator again paired all 36 native result rows and matched all 18 projections. The compiler and browser jobs are tracked separately above.

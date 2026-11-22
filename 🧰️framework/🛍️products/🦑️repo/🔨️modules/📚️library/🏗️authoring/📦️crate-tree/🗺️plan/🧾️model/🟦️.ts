@@ -4,6 +4,7 @@ import type { MirrorImport } from "../../📝️render/🟦️.ts";
 import type { RustModuleNode, RustSourceTree } from "../../🌳️module-tree/🟦️.ts";
 import type { CrateBudget } from "../💰️budget/🟦️.ts";
 import type { TestTransformOptions } from "../../🧪️test-closure/🟢️harness/🟦️.ts";
+import type { CarvedLayout } from "../../🧱️carved-layout/🟦️.ts";
 
 /** 📐️ Measured closure of one crate in one cfg. */
 export type CrateMeasure = Readonly<{ files: number; bytes: number; lines: number; embedded: number; paths: readonly string[]; sourcePaths: readonly string[]; entries: ReadonlyMap<string, FileMeasure> }>;
@@ -54,6 +55,7 @@ export type ArtifactCratePlan = {
   readonly problems: readonly string[];
   readonly blockers: readonly PlanBlocker[];
   readonly packing: PackingStats;
+  readonly carved: CarvedLayout | null;
 };
 
 /** ✏️ An edit of the artifact root; edits that replace a carved declaration remember it so the facade can weave children into the replacement. */
@@ -69,7 +71,7 @@ export type PlanBlocker = { readonly slices: number; readonly files: number; rea
 export type PackingStats = { pruned: number; measured: number; merged: number };
 
 /** 🧮️ Options of the planner. */
-export type PlanOptions = Readonly<{ target?: CrateBudget; hard?: CrateBudget; tests?: TestTransformOptions; mutationFamilies?: "off" | "on" | "auto"; inlineRootModules?: boolean; weave?: boolean; incrementalMeasure?: boolean; lift?: readonly string[] }>;
+export type PlanOptions = Readonly<{ target?: CrateBudget; hard?: CrateBudget; tests?: TestTransformOptions; mutationFamilies?: "off" | "on" | "auto"; inlineRootModules?: boolean; weave?: boolean; incrementalMeasure?: boolean; lift?: readonly string[]; carved?: CarvedLayout | null }>;
 
 export type SliceInfo = {
   slice: CarveSlice;

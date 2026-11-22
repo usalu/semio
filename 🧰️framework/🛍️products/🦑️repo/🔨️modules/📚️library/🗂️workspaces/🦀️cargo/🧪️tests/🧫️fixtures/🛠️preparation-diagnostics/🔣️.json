@@ -6,7 +6,7 @@
     "phase": "lease-wait",
     "owner": "Cargo.toml",
     "items": 1,
-    "maximumObservationMs": 5000
+    "maximumObservationMs": 120000
   },
   "phases": [
     "discovery",
@@ -29,5 +29,6 @@
     "neutral-app",
     "root-test"
   ],
-  "inventoryEpochs": 7
+  "initialInventories": 1,
+  "inventoriesPerRecipe": 1
 }

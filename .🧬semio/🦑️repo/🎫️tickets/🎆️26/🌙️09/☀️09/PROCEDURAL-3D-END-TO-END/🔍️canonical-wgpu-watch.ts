@@ -1,5 +1,9 @@
 /** 🌐️ Starts the retained WGPU Chromium journey when the canonical route serves its page. */
 import { join } from "node:path";
+import { deadlineMs, runId } from "./🔍️watch-evidence.mjs";
+
+const id = runId(process.env.SEMIO_PROBE_RUN_ID);
+const deadline = Date.now() + deadlineMs(process.env.SEMIO_PROBE_DEADLINE);
 
 const url = "http://127.0.0.1:6118/?plugin=generation3d";
 async function serves() {
@@ -12,14 +16,21 @@ async function serves() {
     return false;
   }
 }
-while (!await serves()) await Bun.sleep(5000);
+while (!await serves()) {
+  if (Date.now() >= deadline) throw Error("Canonical route did not become ready before the deadline");
+  await Bun.sleep(Math.min(5000, Math.max(1, deadline - Date.now())));
+}
 console.log("[DEBUG] Canonical WGPU HTTP route is accepting requests");
 const child = Bun.spawn([
   "repo", "tools", "exec", "--light", "bun", "--", join(import.meta.dir, "🐍️wgpu-journey-probe.mjs"),
 ], {
   stdout: "inherit",
   stderr: "inherit",
-  env: { ...process.env, SEMIO_PROBE_URL: url, SEMIO_PROBE_OUT: "wgpu-journey/canonical-live", SEMIO_PROBE_BOOT: "300" },
+  env: { ...process.env, SEMIO_PROBE_URL: url, SEMIO_PROBE_OUT: "wgpu-journey/canonical-" + id, SEMIO_PROBE_BOOT: "300" },
 });
 process.on("SIGINT", () => child.kill("SIGINT"));
-process.exitCode = await child.exited;
+let expired = false;
+const timer = setTimeout(() => { expired = true; child.kill("SIGTERM"); setTimeout(() => child.kill("SIGKILL"), 5000).unref(); }, Math.max(1, deadline - Date.now()));
+const code = await child.exited;
+clearTimeout(timer);
+process.exitCode = expired ? 1 : code;

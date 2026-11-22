@@ -1,6 +1,8 @@
 
     use super::*;
     use {semio_s_artifact_puzzle_3d_editor_snapshot::empty_scene_snapshot, semio_s_artifact_puzzle_3d_editor_config::PUZZLE3D_VORTEX_SHOW_SELECTED};
+    use semio_s_artifact_puzzle_3d_editor_session::{mesh_lane, world_meshes_json};
+    use semio_s_artifact_puzzle_3d_editor_snapshot::{PUZZLE3D_FALLBACK_MESH_KIND, VORTEX_MARKER_MESH_KIND};
 
     fn forest_table_object() -> Puzzle3dObject {
         let positions = [

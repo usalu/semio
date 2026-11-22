@@ -10,11 +10,12 @@ import Ajv from"ajv";
 import{filter,sortBy}from"lodash";
 import fixture from"./🔣️.json";
 import schema from"./📋️schema.json";
-import{declareBuildTestEnvelopeV1,withBuildTestInvocationV1}from"../../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts";
+import {withBuildTestInvocationV1} from "../../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts";
+import {declareLibraryBuildTestEnvelopeV1} from "../../../../🧪️testing/🪪️native-birth/🟦️.ts";
 import{createIssuedResourceControlV1}from"../../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import{captureNxAuthorizerSourcesV1}from"../../../🚀️bootstrap/🛠️tools/🔏️authorizers/🟦️.ts";
 import{snapshotNxAuthorizerSourcesV1,compileNxAuthorizerSnapshotV1}from"../../../🚀️bootstrap/🛠️tools/🔏️authorizers/📦️snapshot/🟦️.ts";
-declareBuildTestEnvelopeV1({owner:"source-discovery-bundle",maximumElapsedMilliseconds:120000,capabilities:{artifacts:true}});
+declareLibraryBuildTestEnvelopeV1({suite:"source-discovery",maximumElapsedMilliseconds:120000});
 test("relocated captured discovery preserves policy identity and source selection",()=>withBuildTestInvocationV1(async original=>{
  expect(new Ajv({strict:true}).compile(schema)(fixture)).toBe(true);
  const root=process.cwd(),entry="🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🔍️discovery/📂️source/🟦️.ts",control=createIssuedResourceControlV1(original,"fixture:discovery-bundle",120000),captured=await captureNxAuthorizerSourcesV1(root,entry,new AbortController().signal),snapshot=snapshotNxAuthorizerSourcesV1(captured),compiled=await compileNxAuthorizerSnapshotV1(root,snapshot,control,"runtime","module"),output=join(process.env.SEMIO_TEST_ARTIFACT_DIR!,"discovery-relocated","module.mjs");

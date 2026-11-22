@@ -30,7 +30,7 @@ pub fn text_layer_window_definition() -> WindowKindDefinition {
     }
 }
 
-fn pick(locale: Locale, en: &str, de: &str) -> String {
+pub fn pick(locale: Locale, en: &str, de: &str) -> String {
     match locale {
         Locale::De => de.to_string(),
         Locale::En => en.to_string(),

@@ -85,6 +85,7 @@ const KINDS: &[&str] = &[
     "drag-selection3d",
     "rotate-selection3d",
     "scale-selection3d",
+    "splice-scene-rows",
 ];
 
 /// 🔀️ Snapshot field → the diff field(s) allowed to declare it. `Puzzle5dDiff` mirrors `Puzzle5dSnapshot` name for name — including the `parts`/`fasteners` pair — so the table is empty; the sibling `🖐️5d` BLOCK subset, whose diff renames the same two facets to `part2d`/`part3d`, carries real rows here.

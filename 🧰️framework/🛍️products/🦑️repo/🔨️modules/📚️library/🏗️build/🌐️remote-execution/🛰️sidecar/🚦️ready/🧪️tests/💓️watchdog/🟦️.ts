@@ -8,7 +8,7 @@ import corpus from"./🔣️.json"with{type:"json"};
 import{READY_POLICY_V1 as P,READY_STAGES_V1 as STAGES,readyTreeMegabytesV1,runReadyStageV1,type ReadyInflightV1}from"../../🟦️.ts";
 import{READY_TREE_POLICY_V1 as TREE}from"../../🌲️process-tree/🟦️.ts";
 
-const CHILD=`const fs=require("node:fs");const [log,end,busy,stop]=process.argv.slice(1);fs.writeFileSync(log,busy==="step"?"Reading the project graph slice (4000 s): waiting for owners / Warte auf Projekte 9000 of 2.\\n":"taken 1 of 9 owners\\n");
+const CHILD=`const fs=require("node:fs");const [log,end,busy,stop]=process.argv.slice(1);fs.writeFileSync(log,busy==="step"?"Reading the project graph slice (9000 s, beyond the expected 2 s): waiting for owners / Warte auf Projekte.\\n":"taken 1 of 9 owners\\n");
 const finish=exit=>{fs.writeFileSync(end,JSON.stringify({exit,signal:null,spawnFailed:false}));process.exit(exit);};
 process.on("SIGTERM",()=>finish(143));process.on("SIGINT",()=>finish(130));
 if(busy==="cpu")setInterval(()=>{const until=performance.now()+90;while(performance.now()<until){}const cpu=process.cpuUsage();fs.writeFileSync(stop+".cpu",String((cpu.user+cpu.system)/1000));},100);

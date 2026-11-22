@@ -38,6 +38,14 @@
     "capacity",
     "depth"
   ],
+  "constructorFunding": [
+    {"name":"exact-registered-quote","items":1,"capacityDelta":0,"depth":1,"accepted":true},
+    {"name":"capacity-one-byte-short","items":1,"capacityDelta":-1,"depth":1,"accepted":false},
+    {"name":"no-item-authority","items":0,"capacityDelta":0,"depth":1,"accepted":false},
+    {"name":"no-depth-authority","items":1,"capacityDelta":0,"depth":0,"accepted":false},
+    {"name":"additional-caller-headroom","items":2,"capacityDelta":1,"depth":2,"accepted":true}
+  ],
+  "pngOriginalFunding": {"width": 2048, "height": 2048, "capacity": 19007840, "deniedCapacity": 16777216, "encodedBytes": 167503},
   "deniedHandoff": [
     "items",
     "depth"

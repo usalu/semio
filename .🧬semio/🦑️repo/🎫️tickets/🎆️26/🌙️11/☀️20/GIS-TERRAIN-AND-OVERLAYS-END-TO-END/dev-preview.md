@@ -1,5 +1,13 @@
 # GIS Terrain in s Dev
 
+## Testing now
+
+Open the [registered Terrain editor](http://127.0.0.1:6083/?example=demo) or the [registered Terrain viewer](http://127.0.0.1:6083/?example=demo&role=viewer). The demo shows the Liège elevation model and its authored pins, route and region. The live editor passed Esri ASCII and GeoJSON exchange, manual elevation editing, and region grading with an exact Undo and Redo round trip.
+
+Viewport drawing with the brush, Undo on the contour-generated overlays, and archive reopening still need a passing live run. Port 6070 is the ordinary s landing shell and is still building.
+
+## Development log
+
 The normal workspace command `repo ./📜️script.ts dev playground s react prototype` staged the registered s plugin roster for port 6070. Its boot build reached a compiler error in the Space component's Store preparation interface. The same launcher with `gis3d` staged the scoped s GIS Terrain editor for port 6083 and proceeded to Cargo planning after compiler admission. The generated session selects `s.gis.gisterrain@1/*#editor` from the GIS plugin.
 
 The scoped browser can select the fixture at `http://127.0.0.1:6083/?example=demo` when its server is ready. The Demo action resolves its fixture inside the current GIS component. The checked-in Hub catalog also embeds an older Demo body. A separate descriptor build was paused while it was waiting for resources so the browser and editor test builds have priority.
@@ -43,3 +51,37 @@ Node Graph finished. The general s and GIS Map development entries also register
 The bottom-left Utilities toolbar unfolds before its brush controls can be selected. A browser probe observed Raise Terrain selected in the host UI and a World3d interaction carrying the active ID without its typed edit binding. The direct utility handler now explicitly earns a guest body refresh and replacement when it changes the host register. The follow-up browser interaction check is running. The full s launcher started after the scoped editor came up, and the Puzzle graph generator published its two missing manifest sources through the owning target.
 
 The registered read-only Viewer also mounted the same authored scene and all four GIS features on the role-selected route. The utility follow-up reached the GIS component and reported a WebAssembly trap during guest body refresh. The current browser publication remains useful for viewing the Liège example. The warm updated GIS component is linking in the original launcher on port 6083. The secondary full s build was stopped after reaching 716 compiled units to free memory for that link. Its warm units remain available for the next launch.
+
+The updated owned GIS component now serves the registered Terrain editor at [Dev](http://127.0.0.1:6083/?example=demo) and the read-only [Viewer](http://127.0.0.1:6083/?example=demo&role=viewer). Its browser receipt identifies WebAssembly SHA-256 `125c04c15010f7bb6d961cfb0eed61f1bf887c3977b58bc985c05096bc26621f`. The publisher checked the canonical descriptors against its proven model and found no drift.
+
+The live editor cleared its saved elevation, wrote the typed mutation in History, restored the 3D surface and four overlay labels with Undo, and cleared it again with Redo. A separate disposable browser imported a WGS84 Esri raster and verified all 1,089 samples through checkpoints and checksums, followed by exact exported bytes after Undo and Redo. It imported and exported three GeoJSON features through the registered UI and preserved integer ID `9007199254740993` in the file. In both cases the file picker went through the shell task and the artifact's registered file callback. The full s landing route still awaits component build capacity and browser verification.
+
+The live **Actions → Edit Elevation** form then changed 69 samples, including the exact 25-metre raise in its centre. One typed History row represented the edit. Undo and Redo restored the original and edited ASCII bytes respectively. All 22 current mounted native laws passed after the sequential workflow export test returned the first export's completed lease through the same maintenance path as the app.
+
+The standard full s build exposed a Space Store borrow error and then a fixture-only job driver in its production Wasm compilation. Space now borrows its prepared mutation within the retained turn before taking ownership. The reactor exposes its fixture driver through the existing artifact-testing feature. The full s build resumed on port 6070 and the updated GIS component build resumed separately. Dev on port 6083 continues to serve the verified raster and overlay workflow.
+
+The live **Generate Terrain Contours** action produced seven GeoJSON lines, and every exported coordinate matched its elevation on the independent planar raster. In this browser component, undoing that generated overlay reset the instance to the initial demo. The paired Store owner and conflict-path changes need verification in the updated component before the contour workflow can pass.
+
+The browser exported a document archive after the raster import. Importing that archive back into the disposable Terrain session failed to restore the previous overlays on the current component. Archive reopening remains part of the replacement-component acceptance.
+
+The registered **Grade Region** action on the independent survey polygon changed 447 samples. The 81 samples in its hole and the samples outside the polygon kept their prior heights. Undo and Redo restored both exact ASCII downloads. The action pane and command registry now bind each inline field to its translated visible label and window-scoped control ID. The browser reran grading by the Region ID accessible name, and the DOM accessibility oracle checked English and German fields in separate windows.
+
+The browser archive picker decoded the selected archive and created a new Terrain instance. The guest kept reporting `running` at 483 of 484 steps over more than 1,500 polls. It never reached the host's document-adoption step. The version currently serving port 6083 predates the newer Store issuer pair, so the replacement component must rerun this case before attributing the last-step stall.
+
+The shell now reads selected archive bytes through the existing bounded file reader and the wire format’s declared size limit. Archive loading exposes byte progress and cancellation as soon as the chooser returns. The two file-transfer suites passed 41 tests, including rejecting an oversized file before reading and cancelling between slices before creating a program. The final staged-field implementation also passed live grading again with the Region ID input selected by its accessible name.
+
+The updated native History build passed schema-input resolution and the exaggeration fold oracle. It still found four failures. An independent probe of its actual compiled libraries identified a 34,625-byte receiver initialization for the 34-byte exaggeration operation under the mounted 32,768-byte copy quantum. The exact operation replays with a 49,152-byte quantum. The shared receiver now quotes and initializes each vacant enum receiver field in the existing paid resident storage. The test fixture also renews the original caller turn before receiving and retiring unused action arguments. The replacement component and native replay still need to verify these changes.
+
+The rebuilt enum expansion initialized the actual Terrain variants’ 34,624-byte receiver in 11 separate fields. The largest field was 15,936 bytes. The standalone probe verifies that the resulting receiver is empty and can be dropped. Mounted replay and browser archive adoption remain separate checks.
+
+The ordinary navbar Viewer button was present and clickable after exact browser dataset Undo and Redo. The current GIS component did not publish the Viewer role after 90 seconds. Direct editor and viewer URLs mount independently. The same-document role acceptance now checks the visible feature list, history action sequence, and raster bytes across Editor → Viewer → Editor.
+
+The native receiving suite passed all eight source, quote, exact-publication, and cancellation regressions. The broader derive library command compiled and ran five tests. Three passed. Its factory clone-namespace and projection-work assertions are still failing in their separate modules. The focused test of the modified enum expansion passed with the concrete Terrain variant types.
+
+The shared fixture caller passed four original-turn renewal laws, including retiring unused action arguments after the dispatch turn used its last item. The scoped Catalogue grouping probe compiled the production selection logic and confirmed both role rows from the published GIS descriptor. The full Catalogue law and standard shell build remain queued with the repository compiler.
+
+The shared retained-slot fix now preserves an original reader’s terminal completion. Direct native sampling established the stalled phase as the Terrain preview’s original scrub ledger walk. The regression was red against the pre-fix source and all 11 focused retained-slot cases passed against the new source. A mounted Terrain press run and browser viewport run are still needed for those hosts.
+
+The rectangular elevation model, exact 1 mm arithmetic, height bounds and larger segmented exchange are now in the live checkout. The standard brush action accepts metre values with three decimal places and the per-window saved brush settings store exact millimetres. The live source probes passed. Port 6083 continues to serve the currently published 33×33 demo component while the replacement compiles.
+
+The latest live-source fixture run passed 17 tests with 323 assertions across grid creation, signed millimetre edits, grade, SQLite, and History. GDAL and the compiled native ASCII codec verified that the exact 64 KiB, 65×65 raster preserves signed extrema and exports identically. The picker carries the assembled raster through the registered typed command. Space now publishes the Workflow instance ID that the Flow window uses for double-click and its context menu. The browser acceptance script follows the real Home and Demo Studio routes when the full shell is available.

@@ -22,6 +22,7 @@ pub(super) const SPACE_BOUNDED_TOOL_IDS: &[&str] = &[
     "goHome",
     "navigateVirtualFileSystemNode",
     "spawnApp",
+    "finishSpawnApp",
     "deleteSelection",
     "openSpace",
     "openInstance",
@@ -88,7 +89,7 @@ fn space_bounded_reduce(
     let doc = ArtifactView::with_operation(snapshot, history, operation.clone());
     let selected = || interaction.selection.get(S_PLAY_INTERACTION_DOMAIN).map_or_else(Vec::new, |selection| selection.ids.clone());
     if let SpaceCommand::OpenInstance(payload) = command {
-        return Ok(semio_hub_space_operations::resolve_future(semio_hub_space_commands_authoring::open_instance::open_with_selection(payload, &doc, config, &selected())));
+        return semio_hub_space_operations::resolve_future(semio_hub_space_commands_authoring::open_instance::open_with_selection(payload, &doc, config, &selected()));
     }
     if let SpaceCommand::DeleteSelection(_) = command {
         return Ok(semio_hub_space_operations::resolve_future(semio_hub_space_commands_authoring::delete_selection::delete_selected(config, &selected())));
@@ -162,6 +163,7 @@ impl semio_plugin::ArtifactOwnedToolJobFactory for SpaceCommandJobFactory {
         semio_plugin::ArtifactToolPublicationContract { tool_id: "goHome", lanes: &[semio_plugin::ArtifactToolPublicationLane::HostOnly] },
         semio_plugin::ArtifactToolPublicationContract { tool_id: "navigateVirtualFileSystemNode", lanes: &[semio_plugin::ArtifactToolPublicationLane::HostOnly] },
         semio_plugin::ArtifactToolPublicationContract { tool_id: "spawnApp", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact, semio_plugin::ArtifactToolPublicationLane::Config] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "finishSpawnApp", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact, semio_plugin::ArtifactToolPublicationLane::Config] },
         semio_plugin::ArtifactToolPublicationContract { tool_id: "deleteSelection", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact, semio_plugin::ArtifactToolPublicationLane::Config] },
         semio_plugin::ArtifactToolPublicationContract { tool_id: "openSpace", lanes: &[semio_plugin::ArtifactToolPublicationLane::Config] },
         semio_plugin::ArtifactToolPublicationContract { tool_id: "openInstance", lanes: &[semio_plugin::ArtifactToolPublicationLane::Config] },
@@ -239,6 +241,7 @@ impl ArtifactApp for SpaceApp {
             "goHome",
             "navigateVirtualFileSystemNode",
             "spawnApp",
+            "finishSpawnApp",
             "deleteSelection",
             "openSpace",
             "openInstance",
@@ -349,6 +352,20 @@ impl ArtifactApp for SpaceApp {
                 x: f64_field("x").unwrap_or(0.0),
                 y: f64_field("y").unwrap_or(0.0),
             })),
+            "finishSpawnApp" => {
+                let required = |key| str_field(key).ok_or_else(|| Fault::from("s.space.invalid-workflow-artifact-completion"));
+                Ok(SpaceCommand::FinishSpawnApp(semio_hub_space_commands_authoring::spawn_app::finish_spawn_app::FinishSpawnApp {
+                    plugin_id: required("pluginId")?,
+                    app_id: required("appId")?,
+                    node_id: required("nodeId")?,
+                    x: f64_field("x").ok_or_else(|| Fault::from("s.space.invalid-workflow-artifact-completion"))?,
+                    y: f64_field("y").ok_or_else(|| Fault::from("s.space.invalid-workflow-artifact-completion"))?,
+                    artifact_id: required("artifactId")?,
+                    artifact_schema: required("artifactSchema")?,
+                    space_id: required("spaceId")?,
+                    name: required("name")?,
+                }))
+            },
             "moveMediaNode" => Ok(SpaceCommand::MoveMediaNode(semio_hub_space_commands_authoring::move_media_node::MoveMediaNode { node_id: node_id().unwrap_or_default(), x: f64_field("x").unwrap_or(0.0), y: f64_field("y").unwrap_or(0.0) })),
             "connectMediaPorts" => Ok(SpaceCommand::ConnectMediaPorts(semio_hub_space_commands_media::connect_media_ports::ConnectMediaPorts {
                 source_node_id: str_field("sourceNodeId").or_else(|| str_field("source_node_id")).unwrap_or_default(),
@@ -409,7 +426,10 @@ impl ArtifactApp for SpaceApp {
             "exportStudioDsl" => Ok(SpaceCommand::ExportStudioDsl(semio_hub_space_commands_media::export_studio_dsl::ExportStudioDsl {})),
             "importSpacePack" => Ok(SpaceCommand::ImportSpacePack(semio_hub_space_commands_media::import_space_pack::ImportSpacePack {})),
             "importSpacePackPayload" => Ok(SpaceCommand::ImportSpacePackPayload(semio_hub_space_commands_media::import_space_pack_payload::ImportSpacePackPayload { payload: str_field("payload").or_else(|| str_field("dsl")).unwrap_or_default() })),
-            "openSpace" => Ok(SpaceCommand::OpenSpace(semio_hub_space_commands_media::open_space::OpenSpace { space_id: str_field("spaceId").or_else(|| str_field("space_id")).unwrap_or_default() })),
+            "openSpace" => Ok(SpaceCommand::OpenSpace(semio_hub_space_commands_media::open_space::OpenSpace {
+                space_id: str_field("spaceId").or_else(|| str_field("space_id")).unwrap_or_default(),
+                workflow_artifact_id: str_field("workflowArtifactId"),
+            })),
             "openInstance" => Ok(SpaceCommand::OpenInstance(semio_hub_space_commands_authoring::open_instance::OpenInstance { node_id: node_id() })),
             "closeFocusedInstance" => Ok(SpaceCommand::CloseFocusedInstance(semio_hub_space_commands_authoring::close_focused_instance::CloseFocusedInstance {})),
             "goHome" => Ok(SpaceCommand::GoHome(semio_hub_space_commands_media::go_home::GoHome {})),

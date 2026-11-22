@@ -195,3 +195,26 @@ test("a real bun install against a mirror whose upstream fetch is down is sent t
   expect(up.code,up.log).toBe(0);expect(up.installed).toBe(true);expect(seen.length).toBeGreaterThan(upstreamBefore);
  }finally{direct.stop(true);}
 },60000);
+
+test("a very large npm packument is rewritten in slices off the event loop, byte for byte as python's str.replace would, and the rewritten copy serves the next requests without a second pass",async()=>{
+ const chunk=1048576,dir=directory("big");let document="";
+ const upstreamBig=Bun.serve({port:0,hostname:"127.0.0.1",fetch:()=>new Response(document,{headers:{etag:'"big"',"content-type":"application/json"}})}),needle=`http://127.0.0.1:${upstreamBig.port}/`,pieces:string[]=[];
+ for(let at=0;at<40;at++){pieces.push("x".repeat(chunk-needle.length-3+(at%5)*7));pieces.push(needle+"π".repeat(at%3)+`big/-/big-${at}.tgz`);}
+ document=pieces.join("");
+ const rows=MIRROR_ECOSYSTEMS_V1.map(row=>({...row,upstream:`http://127.0.0.1:${upstreamBig.port}`})),handler=createMirrorHandlerV1({directory:dir,ecosystems:rows,now:()=>Date.now()});
+ const server=Bun.serve({port:0,hostname:"127.0.0.1",fetch:async request=>(await handler(request))??new Response("outside",{status:404})}),base=`http://127.0.0.1:${server.port}`;
+ try{
+  expect((await fetch(base+"/mirror/npm/big")).status).toBe(200);
+  const gaps:number[]=[];let last=performance.now();const probe=setInterval(()=>{const at=performance.now();gaps.push(at-last);last=at;},2);
+  const first=await fetch(base+"/mirror/npm/big"),text=await first.text();clearInterval(probe);
+  expect(Math.max(...gaps),"the longest time the event loop did not come back while 40 MB were rewritten").toBeLessThan(250);
+  expect(Buffer.byteLength(text)).toBeGreaterThan(40*chunk);
+  const child=Bun.spawn(["python3","-I","-c","import sys\nd=sys.stdin.buffer.read().decode('utf8')\nsys.stdout.buffer.write(d.replace(sys.argv[1],sys.argv[2]).encode('utf8'))",needle,`${base}/mirror/npm/`],{stdin:new TextEncoder().encode(document),stdout:"pipe",stderr:"pipe"}),expected=await new Response(child.stdout).text();
+  expect(await child.exited).toBe(0);
+  expect(sha(text),"identical to python").toBe(sha(expected));
+  expect(text.includes(needle)).toBe(false);
+  const rewrittenFiles=readdirSync(join(dir,readdirSync(dir).find(name=>name.length===2)!)).filter(name=>name.includes(".rw-"));
+  expect(rewrittenFiles.length,"one rewritten copy, kept for the next request").toBe(1);
+  expect(await (await fetch(base+"/mirror/npm/big")).text()).toBe(text);
+ }finally{server.stop(true);upstreamBig.stop(true);}
+},180000);

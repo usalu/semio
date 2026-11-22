@@ -2,14 +2,14 @@
 import type { ProgramRetirementOwnerV1 } from "../../🚪️program-retirement/🟦️.ts";
 import { NATURAL_FILE_PORT_ID, parseSurfaceAppId, type AppDefinition, type Severity } from "@semio-tech/framework";
 import { decodePackValue } from "@semio-tech/framework/packs";
-import { decodeDocumentArchiveBytes, encodeDocumentArchiveBytes, type DocumentArchivePack } from "@semio-tech/framework/wire-contracts";
+import { DOCUMENT_ARCHIVE_MAXIMUM_BYTES, decodeDocumentArchiveBytes, encodeDocumentArchiveBytes, type DocumentArchivePack } from "@semio-tech/framework/wire-contracts";
 import { type ActiveSession } from "../../../🐚️Shell/📦️program-sessions/🟦️.ts";
-import { DOCUMENT_ARCHIVE_FILE_EXTENSION, DOCUMENT_ARCHIVE_MEDIA_TYPE, documentArchiveFileNameV1, beginDocumentTransferV1, naturalFileNameV1, naturalFileFormatV1, naturalMediaDescriptorMatchesV1, naturalFileMediaInputV1, openNaturalFileOwnerV1, bytesOfDataUrlV1, documentTransferNoticeTextV1, documentTransferNoticeCodeV1, type DocumentTransferNoticeV1 } from "../../../🛠️ShellHelpers/🧾️transfer-checkin-tutorial/🟦️.ts";
-import { NATURAL_FILE_BROWSER_READ_CHUNK_BYTES_V1, readBlobBytesBoundedV1, requestFileSelectionV1, downloadMediaExportBytes, shellSegmentedDownloadSinkFactory, requestFileOpen } from "../../../🛠️ShellHelpers/🔩️plumbing/📥️downloads-and-file-requests/🟦️.ts";
+import { DOCUMENT_ARCHIVE_FILE_EXTENSION, DOCUMENT_ARCHIVE_MEDIA_TYPE, documentArchiveFileNameV1, beginDocumentTransferV1, naturalFileSaveNameV1, naturalFileFormatV1, naturalMediaDescriptorMatchesV1, naturalFileMediaInputV1, openNaturalFileOwnerV1, documentTransferNoticeTextV1, documentTransferNoticeCodeV1, type DocumentTransferNoticeV1 } from "../../../🛠️ShellHelpers/🧾️transfer-checkin-tutorial/🟦️.ts";
+import { NATURAL_FILE_BROWSER_READ_CHUNK_BYTES_V1, readBlobBytesBoundedV1, requestFileSelectionV1, downloadMediaExportBytes, shellSegmentedDownloadSinkFactory } from "../../../🛠️ShellHelpers/🔩️plumbing/📥️downloads-and-file-requests/🟦️.ts";
 import { buildSpacePanelState, parsePanelState, studioPanelFocusingSpawned } from "../../../🛠️ShellHelpers/📌️panel/🟦️.ts";
 import { type PluginWasmHandle } from "../../../🔌️PluginRuntime/🟦️.tsx";
 import { documentTransferTasksV1, type TaskManagerDocumentTransferV1 } from "../../../🧵️TaskManager/🟦️.tsx";
-import { openPickedFileV1, pickedFileRefusalCodeV1, pickedFileRefusalTextV1, readPickedFileHeadV1, routePickedFileV1 } from "../../📂️picked-file-opening/🟦️.ts";
+import { openPickedFileV1, pickedFileRefusalCodeV1, pickedFileRefusalTextV1, readPickedFileHeadV1, readPickedFileRangeV1, routePickedFileV1 } from "../../📂️picked-file-opening/🟦️.ts";
 import { requiredHostPanelLeafId } from "../../🧱️built-node-stores/🟦️.ts";
 import type { ShellCoreAfterThemeDriverSettings } from "../../🎨️theme-driver-settings/🟦️.tsx";
 import { admitLocalDocument, retireLocalDocument, type LocalDocument } from "@semio-tech/framework/config/mutations";
@@ -18,6 +18,7 @@ import { spawnedProgramViewStateV1 } from "../../🪟️spawned-program/🟦️.
 import { localCatalogBindingV1 } from "../../🗂️local-catalog/🟦️.ts";
 import { LOCAL_CATALOG_WRITE_DEADLINE_MS_V1, sameLocalDocumentArchiveV1 } from "../../🗂️local-catalog/🟦️.ts";
 import { awaitVerifiedReadbackV1 } from "../../🗂️local-catalog/💾️acknowledgment/🟦️.ts";
+import { readSignedDocumentArchiveV1 } from "../📦️signed-archive/🟦️.ts";
 import { readOwnedDocumentArchiveV1 } from "../../🗄️shell-uri-documents/🔸️open-document/🔏️archive-owner/🟦️.ts";
 import { encodeBackboneWorkerRequest } from "@semio-tech/framework/backbone";
 import { declaredMediaFileExportV1, declaredNaturalMediaFileExportV1, downloadDeclaredMediaFileV1, deliverNaturalMediaFileV1, type MediaFileExportActionIdV1 } from "../../../../🎬️media/📤️file/🟦️.ts";
@@ -92,13 +93,28 @@ export function buildScopeState({ core }: { readonly core: ShellCoreAfterThemeDr
     const owned = documentTransferTarget();
     if (owned === null) return notifyDocumentTransfer("no-document", "", "info");
     const file = documentArchiveFileNameV1(owned.target.app.id, new Date());
+    const task = trackDocumentTransfer(file, owned.target.pluginId);
     try {
-      if (!owned.handle.readAppDocumentArchive) throw new Error("document-backbone.archive-reader-unavailable");
-      downloadMediaExportBytes(file, DOCUMENT_ARCHIVE_MEDIA_TYPE, encodeDocumentArchiveBytes(await owned.handle.readAppDocumentArchive(owned.target.instanceId)));
+      const actor = core.directBrowserActorForSession(owned.target);
+      let bytes: Uint8Array;
+      if (actor === null) {
+        if (!owned.handle.readAppDocumentArchive) throw new Error("document-backbone.archive-reader-unavailable");
+        bytes = encodeDocumentArchiveBytes(await owned.handle.readAppDocumentArchive(owned.target.instanceId));
+      } else {
+        const { entry, current } = actor;
+        if (entry.scope === undefined) throw new Error("document-backbone.archive-owner-unavailable");
+        bytes = await readSignedDocumentArchiveV1(core.ensureBackboneWorker(), entry.scope, entry.clientInstanceId, current, task.signal, task.progress);
+        if (!current()) throw new Error("document-backbone.archive-owner-retired");
+      }
+      task.signal.throwIfAborted();
+      downloadMediaExportBytes(file, DOCUMENT_ARCHIVE_MEDIA_TYPE, bytes);
       notifyDocumentTransfer("exported", file, "info");
     } catch (error) {
+      if (task.signal.aborted) return notifyDocumentTransfer("export-cancelled", file, "info");
       console.error(`[os-shell] ${documentTransferNoticeCodeV1("export-failed")} ${owned.target.pluginId}#${owned.target.instanceId}`, error);
       notifyDocumentTransfer("export-failed", file, "error");
+    } finally {
+      task.finish();
     }
   };
   /** 📥️ Import Document: a picked archive opens as a NEW document of the focused program, loaded with progress and
@@ -106,9 +122,9 @@ export function buildScopeState({ core }: { readonly core: ShellCoreAfterThemeDr
   const importDocumentArchive = async (): Promise<void> => {
     const owned = documentTransferTarget();
     if (owned === null || session === null) return notifyDocumentTransfer("no-document", "", "info");
-    let picked: Awaited<ReturnType<typeof requestFileOpen>>[number] | undefined;
+    let picked: File | undefined;
     try {
-      [picked] = await requestFileOpen(`${DOCUMENT_ARCHIVE_FILE_EXTENSION},${DOCUMENT_ARCHIVE_MEDIA_TYPE}`, "dataUrl", false);
+      [picked] = await requestFileSelectionV1(`${DOCUMENT_ARCHIVE_FILE_EXTENSION},${DOCUMENT_ARCHIVE_MEDIA_TYPE}`);
     } catch (error) {
       console.warn(`[os-shell] ${documentTransferNoticeCodeV1("import-failed")} file selection`, error);
       return notifyDocumentTransfer("import-failed", "", "error");
@@ -121,25 +137,31 @@ export function buildScopeState({ core }: { readonly core: ShellCoreAfterThemeDr
       transferInFlightRef.current = false;
     }
   };
-  const importDocumentArchiveOnce = async (owned: NonNullable<ReturnType<typeof documentTransferTarget>>, hostOwner: ActiveSession, picked: { readonly name: string; readonly contents: string }): Promise<void> => {
+  const importDocumentArchiveOnce = async (owned: NonNullable<ReturnType<typeof documentTransferTarget>>, hostOwner: ActiveSession, picked: File): Promise<void> => {
     const current = (): boolean => {
       const host = core.sessionRef.current;
       return host?.pluginId === hostOwner.pluginId && host.app.id === hostOwner.app.id && host.instanceId === hostOwner.instanceId && core.loadedPluginsRef.current.some(entry => entry.handle === owned.handle) && !core.pluginOpInFlightRef.current.has(owned.handle.pluginId);
     };
     const load = owned.handle.loadAppDocumentArchive;
-    let archive: DocumentArchivePack;
-    try {
-      archive = decodeDocumentArchiveBytes(bytesOfDataUrlV1(picked.contents));
-    } catch (error) {
-      console.warn(`[os-shell] ${documentTransferNoticeCodeV1("import-unreadable")} ${picked.name}`, error);
-      return notifyDocumentTransfer("import-unreadable", picked.name, "warning");
-    }
     const task = trackDocumentTransfer(picked.name, owned.target.pluginId);
     let instanceId: number | null = null;
     let published = false;
     try {
       if (!current()) throw new Error("archive-file.owner-retired");
       if (!load) throw new Error("document-backbone.archive-loader-unavailable");
+      let archive: DocumentArchivePack;
+      try {
+        const bytes = await readBlobBytesBoundedV1(picked, {
+          signal: task.signal, maximumBytes: DOCUMENT_ARCHIVE_MAXIMUM_BYTES, chunkBytes: NATURAL_FILE_BROWSER_READ_CHUNK_BYTES_V1, progress: task.progress,
+        });
+        task.signal.throwIfAborted();
+        archive = decodeDocumentArchiveBytes(bytes);
+      } catch (error) {
+        task.signal.throwIfAborted();
+        console.warn(`[os-shell] ${documentTransferNoticeCodeV1("import-unreadable")} ${picked.name}`, error);
+        return notifyDocumentTransfer("import-unreadable", picked.name, "warning");
+      }
+      if (!current()) throw new Error("archive-file.owner-retired");
       instanceId = await owned.handle.createApp(owned.target.app.id);
       if (!current() || task.signal.aborted) throw task.signal.reason ?? new Error("archive-file.owner-retired");
       await load(instanceId, archive, task.signal, (status) => task.progress(status.completed, status.total > 0 ? status.total : null));
@@ -249,7 +271,7 @@ export function buildScopeState({ core }: { readonly core: ShellCoreAfterThemeDr
           core.localDocumentOwnersRef.current.set(entry.clientInstanceId, observer);
           return () => { if (core.localDocumentOwnersRef.current.get(entry.clientInstanceId) === observer) core.localDocumentOwnersRef.current.delete(entry.clientInstanceId); };
         },
-        submit: () => worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "send", documentId: entry.documentId, clientInstanceId: entry.clientInstanceId, ...(entry.scope === undefined ? {} : { spaceId: entry.scope.spaceId }), message: { kind: "localDocumentArchive", archive: Array.from(expected) } }) }),
+        submit: () => { const wire = encodeBackboneWorkerRequest({ kind: "send", documentId: entry.documentId, clientInstanceId: entry.clientInstanceId, ...(entry.scope === undefined ? {} : { spaceId: entry.scope.spaceId }), message: { kind: "localDocumentArchive", archive: expected } }); worker.postMessage({ wire }, [wire.buffer]); },
         probe: () => worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "send", documentId: entry.documentId, clientInstanceId: entry.clientInstanceId, ...(entry.scope === undefined ? {} : { spaceId: entry.scope.spaceId }), message: { kind: "externalChanged" } }) }),
       });
       if (readback === null) throw signal.reason ?? new Error("natural-file.archive-not-persisted");
@@ -312,7 +334,8 @@ export function buildScopeState({ core }: { readonly core: ShellCoreAfterThemeDr
     if (owned === null) return notifyDocumentTransfer("no-document", "", "info");
     const format = naturalFileFormatV1(owned.target.app);
     const exportMedia = owned.handle.exportAppMedia;
-    const file = format === null ? "" : naturalFileNameV1(owned.target.app.id, format.extension, new Date());
+    const keptName = core.localCatalogRef.current.documents.find((document) => [...core.openDocumentSessionsRef.current.values()].some((entry) => entry.plugin === owned.handle && entry.session.instanceId === owned.target.instanceId && entry.session.app.id === owned.target.app.id && entry.documentId === document.documentId))?.name;
+    const file = format === null ? "" : naturalFileSaveNameV1(keptName, owned.target.app.id, format.extension, new Date());
     const declaration = format === null ? null : declaredNaturalMediaFileExportV1(owned.target.app, format, file);
     if (!beginDocumentTransferV1(transferInFlightRef)) return notifyDocumentTransfer("transfer-busy", file, "info");
     const task = trackDocumentTransfer(file, owned.target.pluginId);
@@ -424,18 +447,18 @@ export function buildScopeState({ core }: { readonly core: ShellCoreAfterThemeDr
     }
   };
   /** 📂️ Opens an imported natural file through durable storage before publishing its editor. */
-  const openNaturalFile = (): Promise<void> => {
+  const openNaturalFile = (dropped?: File): Promise<void> => {
     const catalog = core.hostPorts?.formatCatalog;
     const acceptedExtensions = catalog === undefined ? "" : catalog.descriptors().flatMap((descriptor) => descriptor.extensions).join(",");
     if (session === null) return Promise.resolve(notifyDocumentTransfer("no-document", "", "info"));
     const hostSession = core.sessionRef.current;
     let pickedName = "";
     return openPickedFileV1<{ readonly handle: PluginWasmHandle; readonly app: AppDefinition }, File>({
-      select: async () => (await requestFileSelectionV1(acceptedExtensions))[0],
+      select: async () => dropped ?? (await requestFileSelectionV1(acceptedExtensions))[0],
       claim: () => beginDocumentTransferV1(transferInFlightRef),
       release: () => { transferInFlightRef.current = false; },
       track: (name) => trackDocumentTransfer(name, "open-file"),
-      route: (picked, signal) => routePickedFileV1(catalog, picked, (bytes) => readPickedFileHeadV1(picked, bytes, signal)),
+      route: (picked, signal) => routePickedFileV1(catalog, picked, (bytes) => readPickedFileHeadV1(picked, bytes, signal), { source: { size: picked.size, read: (start, end) => readPickedFileRangeV1(picked, start, end, signal) }, signal }),
       resolveOwner: async (route) => {
         const opening = await core.resolveArtifactOpeningWithActivationRef.current("os.open-artifact", { artifactRef: route.artifactRef, role: "editor" });
         const owner = opening === null ? undefined : core.loadedPluginsRef.current.find((entry) => entry.handle.pluginId === opening.app.pluginId);

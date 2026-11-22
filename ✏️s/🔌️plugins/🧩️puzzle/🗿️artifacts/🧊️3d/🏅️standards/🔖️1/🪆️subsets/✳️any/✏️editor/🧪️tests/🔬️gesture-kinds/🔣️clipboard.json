@@ -1,0 +1,11 @@
+{
+  "selected": ["a", "b"],
+  "position": [12, -4, 2],
+  "origins": [[11.5, -4, 2], [12.5, -4, 2]],
+  "internalAttraction": "t1",
+  "excludedAttraction": "t2",
+  "qualifiedVortices": ["b:left:port", "external:left:port", "left:port"],
+  "clonedVortexSuffixes": ["left:port", "external:left:port", "left:port-2"],
+  "uniformScale": 2.5,
+  "gap": 0.25
+}

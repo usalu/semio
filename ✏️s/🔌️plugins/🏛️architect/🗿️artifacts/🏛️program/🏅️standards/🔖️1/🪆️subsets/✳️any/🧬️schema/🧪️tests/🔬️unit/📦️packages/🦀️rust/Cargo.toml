@@ -56,6 +56,7 @@ semio-s-artifact-stdio-xlsx-base-model = { workspace = true }
 semio-s-artifact-stdio-zip = { workspace = true }
 
 [dev-dependencies]
+semio-s-artifact-architect-program-schema = { path = "../../../../📦️packages/🦀️rust" }
 serde.workspace = true
 serde_json.workspace = true
 csv = "1"

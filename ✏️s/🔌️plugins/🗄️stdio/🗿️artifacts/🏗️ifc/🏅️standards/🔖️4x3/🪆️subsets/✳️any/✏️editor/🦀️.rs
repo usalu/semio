@@ -228,7 +228,7 @@ impl editing::SnapshotEditingEditor for Ifc4x3AnyEditor {
 
 pub fn create_ifc4x3_any_editor() -> semio_plugin::AppDefinition {
     let mode = semio_plugin::ModeDefinition { id: "edit".into(), label: LocalizedLabel::native("Edit", "Bearbeiten"), icon_id: "pencil".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() };
-    let layout = editing::snapshot_details_split_layout(MeshWindowKit::KIND_ID, "Main");
+    let layout = editing::snapshot_details_split_layout(MeshWindowKit::KIND_ID);
     editing::snapshot_edit_actions_with(
         semio_plugin::Editor::builder(IFC4X3_ANY_DIALECT)
             .document(["stdio", "ifc4x3"])

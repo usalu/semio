@@ -7,7 +7,7 @@
  * @see https://unicode.org/reports/tr15/ — normalisation behind accent folding
  */
 import { CATEGORIES, COMPLETION, formatNumber, totalPowerW } from "@teaching/staffage";
-import type { Asset, CategoryId, Completion, Revision, Issue, Language, ManifestEntry } from "@teaching/staffage";
+import type { Asset, CategoryId, Completion, Revision, Issue, Language, ManifestEntry, Text } from "@teaching/staffage";
 
 /** 🧮️ The analyses an asset can offer. */
 export const ANALYTICS = ["thermal", "structural"] as const;
@@ -39,8 +39,9 @@ export type Filters = {
 /** 🧹️ No narrowing, ordered by name. */
 export const NO_FILTERS: Filters = { q: "", categories: [], analytics: [], heightMinM: null, heightMaxM: null, powerMinW: null, powerMaxW: null, rootMotion: false, completion: [], sort: "name", descending: false };
 
-/** 🗂️ One catalog row: the manifest entry, and the asset once its category is loaded and valid. `pending`: its category is not loaded yet; `missing`: loaded, but the asset is not authored; `failed`: its category file could not be read; `invalid`: authored, but it fails validation (`issues` say why). */
-export type Row = { readonly entry: ManifestEntry; readonly status: "ready" | "pending" | "invalid" | "missing" | "failed"; readonly asset?: Asset; readonly revision?: Revision; readonly issues?: readonly Issue[] };
+/** 🗂️ One catalog row: the manifest entry, and the asset once it is loaded and valid. `pending`: neither the asset nor its category is loaded yet; `missing`: loaded, but the asset is not authored; `failed`: its file could not be read; `invalid`: authored, but it fails validation (`issues` say why).
+ * A `ready` row carries `check` while the findings of its asset are still being computed: how many parts of the check are done, of how many, and which part was last; and `findings` once such a check ended with findings, beside the asset that stays offered. */
+export type Row = { readonly entry: ManifestEntry; readonly status: "ready" | "pending" | "invalid" | "missing" | "failed"; readonly asset?: Asset; readonly revision?: Revision; readonly issues?: readonly Issue[]; readonly check?: { readonly done: number; readonly total: number; readonly label?: Text }; readonly findings?: readonly Issue[] };
 
 function list<T extends string>(value: string | null, allowed: readonly T[]): readonly T[] {
   return (value ?? "")

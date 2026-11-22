@@ -99,11 +99,11 @@ impl DeterministicTextWorker{
     pub(super) fn next_close_release_bytes(&self)->Result<usize,semio_framework_value::ValueError>{
         if self.kerning.terminal_is_empty(){Ok(0)}else{Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original layout kerning requires its controlled issuer"))}}
     pub(super) fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
-        use semio_framework_job::{InteractiveJobCloseStep as Step,OriginalTurnFailure,RetainedCloneProgress};
+        use semio_framework_job::{InteractiveJobCloseStep as Step,OriginalTurnFailure};
         if self.terminal_is_empty(){return Ok(Step::Complete{progress:Default::default()})}
         let grant=cx.retained_grant();if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(Step::Pending{progress:Default::default()})}
         #[cfg(test)]{
-            let metadata=RetainedCloneProgress{copied_items:1,..Default::default()};
+            let metadata=semio_framework_job::RetainedCloneProgress{copied_items:1,..Default::default()};
             if self.cancel_after_shape.is_some(){
                 cx.consume_retained(metadata)?;self.cancel_retirement=Some(semio_framework_async::CancelTokenRetirement::from_token(self.cancel_after_shape.take().expect("retained original text alias")));cx.consume_fuel(1);return Ok(Step::Pending{progress:metadata})
             }

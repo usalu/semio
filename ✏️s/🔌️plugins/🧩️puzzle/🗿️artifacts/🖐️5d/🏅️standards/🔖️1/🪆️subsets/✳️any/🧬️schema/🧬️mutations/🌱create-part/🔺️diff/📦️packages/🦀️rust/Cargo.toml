@@ -80,7 +80,11 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 wasm-bindgen = { workspace = true }
 
+[features]
+testkit = []
+
 [dev-dependencies]
+semio-s-artifact-puzzle-5d-document-records = { path = "../../../../../🧱️document-records/📦️packages/🦀️rust", features = ["testkit"] }
 rstar = "0.12"
 semio-framework-async-macros = { workspace = true }
 semio-framework-io-base64 = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust" }

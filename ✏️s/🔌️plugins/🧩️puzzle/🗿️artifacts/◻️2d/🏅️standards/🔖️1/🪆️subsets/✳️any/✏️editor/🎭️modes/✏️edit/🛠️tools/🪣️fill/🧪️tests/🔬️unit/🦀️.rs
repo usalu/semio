@@ -11,7 +11,7 @@ use semio_plugin::WindowMeasure;
 #[allow(unused_imports)]
 use semio_framework_tool_run::{JobKindId, ToolRunCounterDefinition, ToolRunDefinition, ToolRunReasonDefinition, ToolRunRebasePolicy, ToolRunReconfigurePolicy, ToolRunSettingsReads, ToolRunStageDefinition, ToolRunTraceKind};
 use crate::editor::puzzle2d::modes::edit::tools::fill::*;
-use crate::editor::puzzle2d::config::Puzzle2dPlayRuntime;
+use crate::editor::puzzle2d::config::{Puzzle2dPlayRuntime, PUZZLE2D_DEFAULT_FILL_COUNT};
 use crate::editor::puzzle2d::snapshot::empty_board_snapshot;
 use crate::editor::puzzle2d::engine::board_host::puzzle_board_host;
 use crate::editor::puzzle2d::modes::edit::canvas::puzzle2d_engagement;

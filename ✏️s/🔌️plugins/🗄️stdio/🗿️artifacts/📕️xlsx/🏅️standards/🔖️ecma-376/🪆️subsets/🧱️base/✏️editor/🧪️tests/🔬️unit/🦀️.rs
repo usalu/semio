@@ -1,4 +1,5 @@
 use super::*;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxCell;
 
 #[semio_framework_async_macros::async_test]
 async fn create_xlsx_editor_builds_a_definition_for_the_editor_role() {
@@ -36,22 +37,22 @@ async fn editor_declares_the_main_window() {
 #[semio_framework_async_macros::async_test]
 async fn render_value_resolves_shared_strings_and_exposes_editable_formula_source() {
     let strings = vec!["hello".to_string()];
-    assert_eq!(render_xlsx_cell_value(&XlsxCellValue::SharedString(0), &strings), "hello");
-    assert_eq!(render_xlsx_cell_value(&XlsxCellValue::SharedString(9), &strings), "#9");
-    assert_eq!(render_xlsx_cell_value(&XlsxCellValue::Formula { expr: "SUM(A1:A2)".into(), cached: Some(Box::new(XlsxCellValue::Number(3.0))) }, &strings), "=SUM(A1:A2)");
-    assert_eq!(render_xlsx_cell_value(&XlsxCellValue::Empty, &strings), "");
+    assert_eq!(render_xlsx_cell_value(&XlsxCellValue::SharedString(0), &strings, None), "hello");
+    assert_eq!(render_xlsx_cell_value(&XlsxCellValue::SharedString(9), &strings, None), "#9");
+    assert_eq!(render_xlsx_cell_value(&XlsxCellValue::Formula { expr: "SUM(A1:A2)".into(), cached: Some(Box::new(XlsxCellValue::Number(3.0))) }, &strings, None), "=SUM(A1:A2)");
+    assert_eq!(render_xlsx_cell_value(&XlsxCellValue::Empty, &strings, None), "");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn parse_cell_value_detects_bool_and_number_before_falling_back_to_inline_string() {
-    assert_eq!(parse_xlsx_cell_value(""), XlsxCellValue::Empty);
-    assert_eq!(parse_xlsx_cell_value("=SUM(A1:A2)"), XlsxCellValue::Formula { expr: "SUM(A1:A2)".into(), cached: None });
-    assert_eq!(parse_xlsx_cell_value("'=literal"), XlsxCellValue::InlineString("=literal".into()));
-    assert_eq!(parse_xlsx_cell_value("true"), XlsxCellValue::Boolean(true));
-    assert_eq!(parse_xlsx_cell_value("false"), XlsxCellValue::Boolean(false));
-    assert_eq!(parse_xlsx_cell_value("3.5"), XlsxCellValue::Number(3.5));
-    assert_eq!(parse_xlsx_cell_value("NaN"), XlsxCellValue::InlineString("NaN".into()));
-    assert_eq!(parse_xlsx_cell_value("hello"), XlsxCellValue::InlineString("hello".into()));
+    assert_eq!(parse_xlsx_cell_value("", None), XlsxCellValue::Empty);
+    assert_eq!(parse_xlsx_cell_value("=SUM(A1:A2)", None), XlsxCellValue::Formula { expr: "SUM(A1:A2)".into(), cached: None });
+    assert_eq!(parse_xlsx_cell_value("'=literal", None), XlsxCellValue::InlineString("=literal".into()));
+    assert_eq!(parse_xlsx_cell_value("true", None), XlsxCellValue::Boolean(true));
+    assert_eq!(parse_xlsx_cell_value("false", None), XlsxCellValue::Boolean(false));
+    assert_eq!(parse_xlsx_cell_value("3.5", None), XlsxCellValue::Number(3.5));
+    assert_eq!(parse_xlsx_cell_value("NaN", None), XlsxCellValue::InlineString("NaN".into()));
+    assert_eq!(parse_xlsx_cell_value("hello", None), XlsxCellValue::InlineString("hello".into()));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -87,10 +88,10 @@ async fn stable_cell_edit_targets_identity_and_rejects_a_stale_revision() {
     });
     let address = semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::cell_address::xlsx_cell_address(&snapshot, "Sheet 1", 41, 7).unwrap();
     let command = XlsxEditorCommand::SetCell { sheet_name: "Sheet 1".into(), row: 41, column: 7, revision: address.revision.clone(), value: "2".into() };
-    let emit = xlsx_set_cell_emit(&snapshot, &command).expect("matching revision emits a mutation");
+    let emit = xlsx_set_cell_emit(&snapshot, &command, None).expect("matching revision emits a mutation");
     assert_eq!(emit.artifact_mutations, vec![XlsxMutation::SetCell(set_cell::SetCell { address, value: XlsxCellValue::Number(2.0), node: None })]);
     let stale = XlsxEditorCommand::SetCell { sheet_name: "Sheet 1".into(), row: 41, column: 7, revision: "stale".into(), value: "2".into() };
-    assert!(xlsx_set_cell_emit(&snapshot, &stale).is_err());
+    assert!(xlsx_set_cell_emit(&snapshot, &stale, None).is_err());
 }
 
 #[semio_framework_async_macros::async_test]
@@ -107,7 +108,7 @@ async fn blank_cell_command_inserts_canonical_xml_saves_for_calamine_and_inverts
     let base = build_minimal_xlsx(XlsxWorkbook { sheets: vec![XlsxSheet { name: "Blank".into(), cells: Vec::new() }], ..Default::default() });
     let vacancy = xlsx_cell_vacancy_address(&base, "Blank", 1, 0).unwrap();
     let command = XlsxEditorCommand::SetCell { sheet_name: "Blank".into(), row: 1, column: 0, revision: vacancy.worksheet.revision.clone(), value: "42".into() };
-    let emitted = xlsx_set_cell_emit(&base, &command).unwrap();
+    let emitted = xlsx_set_cell_emit(&base, &command, None).unwrap();
     let mutation = XlsxMutation::InsertCell(insert_cell::InsertCell { address: vacancy, value: XlsxCellValue::Number(42.0), node: None });
     assert_eq!(emitted.artifact_mutations, vec![mutation.clone()]);
     let mut edited = base.clone();
@@ -163,7 +164,7 @@ async fn unchanged_cell_drafts_preserve_types_and_cached_values() {
         });
         let revision = semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::cell_address::xlsx_cell_address(&snapshot, "Sheet", 1, 0).unwrap().revision;
         let command = XlsxEditorCommand::SetCell { sheet_name: "Sheet".into(), row: 1, column: 0, revision, value: case["draft"].as_str().unwrap().into() };
-        let emitted = xlsx_set_cell_emit(&snapshot, &command).unwrap();
+        let emitted = xlsx_set_cell_emit(&snapshot, &command, None).unwrap();
         assert!(emitted.artifact_mutations.is_empty(), "unchanged draft must not rewrite {}", case["id"]);
         assert_eq!(snapshot.project_workbook().unwrap().sheets[0].cells[0].value, original);
     }
@@ -177,12 +178,12 @@ async fn unchanged_cell_drafts_preserve_types_and_cached_values() {
         &mut snapshot,
         &XlsxMutation::SetSharedString(semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::set_shared_string::SetSharedString { index: 1, value: "unrelated change".into(), node: None }),
     );
-    assert!(xlsx_set_cell_emit(&snapshot, &command).is_ok(), "unrelated shared strings do not invalidate this cell");
+    assert!(xlsx_set_cell_emit(&snapshot, &command, None).is_ok(), "unrelated shared strings do not invalidate this cell");
     semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::apply_xlsx_mutation(
         &mut snapshot,
         &XlsxMutation::SetSharedString(semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::set_shared_string::SetSharedString { index, value: conflict["replacement"].as_str().unwrap().into(), node: None }),
     );
-    assert!(xlsx_set_cell_emit(&snapshot, &command).is_err(), "referenced text changes invalidate the draft");
+    assert!(xlsx_set_cell_emit(&snapshot, &command, None).is_err(), "referenced text changes invalidate the draft");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -437,27 +438,48 @@ async fn natural_file_route_preserves_canonical_xlsx_xml_and_reopens() {
 semio_plugin::history_edit_acceptance_law!("stdio", super::XlsxEditor, || semio_plugin::App { definition: super::create_xlsx_editor(), examples: Vec::new() }, "../..");
 
 #[test]
-fn latest_preview_history_edits_end_to_end() {
-    use calamine::Reader;
-    use semio_framework_value::{DslValue, FromValue};
-    use semio_plugin::app::history_edit_acceptance::{assert_latest_history_preview, block_on_acceptance, __EditorApp};
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📊️sheet-grid/🔣️.json")).unwrap();
-    let preview = &fixture["historyPreview"];
-    let edits = preview["inputs"].as_array().unwrap().iter().map(|input| {
-        (input["path"].as_str().unwrap(), DslValue::int(input["value"].as_i64().unwrap()))
-    }).collect::<Vec<_>>();
-    let fixtures = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🧪️tests/🧫️fixtures/🧬️mutations/➕️insert-cell");
-    let latest = block_on_acceptance(assert_latest_history_preview::<__EditorApp<XlsxEditor>, <XlsxEditor as ArtifactEditor>::Members>(
-        || semio_plugin::App { definition: create_xlsx_editor(), examples: Vec::new() }, &fixtures, &edits,
-    ));
-    let snapshot = FromValue::from_value(latest).unwrap();
-    let bytes = XlsxEditor::encode_natural_file(&snapshot).unwrap();
-    let mut workbook: calamine::Xlsx<_> = calamine::open_workbook_from_rs(std::io::Cursor::new(bytes)).unwrap();
-    let worksheet = workbook.worksheet_range(preview["sheetName"].as_str().unwrap()).unwrap();
-    let expected = &preview["expected"];
-    let position = (expected["row"].as_u64().unwrap() as u32, expected["column"].as_u64().unwrap() as u32);
-    assert_eq!(worksheet.get_value(position), Some(&calamine::Data::Float(expected["value"].as_f64().unwrap())));
-    assert!(matches!(worksheet.get_value((position.0, position.1 - 1)), None | Some(calamine::Data::Empty)));
+fn original_xlsx_replacement_projects_the_exact_pack_document() {
+    use pack::record::BorrowedPackDocumentCursor;
+    use semio_framework_value::{AuthoringWallet, RetainedCloneGrant};
+    use semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::rename_sheet::RenameSheet;
+
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📊️stable-cell-edit/🔣️.json")).unwrap();
+    let mutation = XlsxMutation::RenameSheet(RenameSheet {
+        name: fixture["sheetName"].as_str().unwrap().into(),
+        new_name: fixture["value"].as_str().unwrap().into(),
+    });
+    let mut authored = protocol::OpBinary::encode_op(&mutation).unwrap();
+    let codec = XlsxMutation::install_original_history_wire(store::os_store::ArtifactOperationWire::semantic::<XlsxSnapshot>());
+    let source = codec.original_pack_value(&mutation).expect("installed Pack Value projection");
+    let mut cursor = BorrowedPackDocumentCursor::with_maximum_file_len(authored.len());
+    let grant = RetainedCloneGrant {
+        maximum_items: 1,
+        maximum_copy_bytes: 32768,
+        maximum_capacity_bytes: 16 * 1024 * 1024,
+        maximum_release_bytes: 16 * 1024 * 1024,
+        maximum_depth: 64,
+    };
+    let mut wallet = AuthoringWallet::new(grant, 1 << 38);
+    let mut projected = Vec::with_capacity(authored.len());
+    for _ in 0..262144 {
+        let mut byte = [0];
+        let turn = wallet.run(grant, 1 << 20, |effect| cursor.advance(source, store::pack_rt::wire_value_spec(), &mut byte, effect)).unwrap().unwrap();
+        let step = turn.output.expect("bounded replacement should encode");
+        assert!(step.progress.fits(grant));
+        projected.extend_from_slice(&byte[..step.written_bytes]);
+        if step.complete { break; }
+    }
+    assert!(cursor.is_complete());
+    for _ in 0..262144 {
+        if cursor.terminal_is_empty() { break; }
+        let turn = wallet.run(grant, 1 << 20, |effect| cursor.close(effect)).unwrap().unwrap();
+        assert!(turn.output.expect("bounded replacement projection should retire").progress.fits(grant));
+    }
+    assert!(cursor.terminal_is_empty());
+    assert_eq!(projected, authored);
+    assert_eq!(<XlsxMutation as protocol::OpBinary>::decode_op(&projected).unwrap(), mutation);
+    *authored.last_mut().unwrap() ^= 1;
+    assert!(<XlsxMutation as protocol::OpBinary>::decode_op(&authored).is_err());
 }
 
 #[test]
@@ -478,4 +500,71 @@ fn generated_edit_proofs_name_the_factory_and_keep_exact_editor_type() {
         assert_eq!(proof.factory_type_id, Some(type_id));
         assert_eq!(proof.factory_type_name, Some(name));
     }
+}
+
+fn notation_locale(name: &str) -> Option<Locale> {
+    match name {
+        "en" => Some(Locale::En),
+        "de" => Some(Locale::De),
+        _ => None,
+    }
+}
+
+#[semio_framework_async_macros::async_test]
+async fn number_notation_fixture_parses_and_displays_by_locale_and_agrees_with_serde_json() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📊️sheet-grid/🔣️.json")).unwrap();
+    for case in fixture["numberNotation"]["cases"].as_array().unwrap() {
+        let locale = notation_locale(case["locale"].as_str().unwrap());
+        let text = case["text"].as_str().unwrap();
+        let parsed = parse_xlsx_cell_value(text, locale);
+        match case["canonical"].as_str() {
+            Some(canonical) => {
+                let oracle: f64 = serde_json::from_str(canonical).unwrap();
+                assert_eq!(parsed, XlsxCellValue::Number(oracle), "{text} in {locale:?}");
+                assert_eq!(render_xlsx_cell_value(&parsed, &[], locale), case["display"].as_str().unwrap(), "{text} in {locale:?}");
+            }
+            None => assert_eq!(parsed, XlsxCellValue::InlineString(text.into()), "{text} in {locale:?}"),
+        }
+    }
+}
+
+#[semio_framework_async_macros::async_test]
+async fn german_decimal_comma_edit_stores_the_canonical_number() {
+    let snapshot = semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx(XlsxWorkbook {
+        sheets: vec![XlsxSheet { name: "Sheet 1".into(), cells: vec![XlsxCell { row: 1, col: 0, value: XlsxCellValue::Number(2.0) }] }],
+        ..Default::default()
+    });
+    let address = xlsx_cell_address(&snapshot, "Sheet 1", 1, 0).unwrap();
+    let command = XlsxEditorCommand::SetCell { sheet_name: "Sheet 1".into(), row: 1, column: 0, revision: address.revision.clone(), value: "1,5".into() };
+    let german = xlsx_set_cell_emit(&snapshot, &command, Some(Locale::De)).unwrap();
+    assert_eq!(german.artifact_mutations, vec![XlsxMutation::SetCell(set_cell::SetCell { address: address.clone(), value: XlsxCellValue::Number(1.5), node: None })]);
+    let english = xlsx_set_cell_emit(&snapshot, &command, Some(Locale::En)).unwrap();
+    assert_eq!(english.artifact_mutations, vec![XlsxMutation::SetCell(set_cell::SetCell { address, value: XlsxCellValue::InlineString("1,5".into()), node: None })]);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn unchanged_localized_number_draft_emits_nothing() {
+    let snapshot = semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx(XlsxWorkbook {
+        sheets: vec![XlsxSheet { name: "Sheet 1".into(), cells: vec![XlsxCell { row: 1, col: 0, value: XlsxCellValue::Number(1.5) }] }],
+        ..Default::default()
+    });
+    let address = xlsx_cell_address(&snapshot, "Sheet 1", 1, 0).unwrap();
+    let command = XlsxEditorCommand::SetCell { sheet_name: "Sheet 1".into(), row: 1, column: 0, revision: address.revision, value: "1,5".into() };
+    assert!(xlsx_set_cell_emit(&snapshot, &command, Some(Locale::De)).unwrap().artifact_mutations.is_empty());
+}
+
+#[semio_framework_async_macros::async_test]
+async fn labels_resolve_in_both_languages_from_the_catalog() {
+    assert_eq!(xlsx_editor_labels(Locale::En).row.as_str(), "Row");
+    assert_eq!(xlsx_editor_labels(Locale::De).row.as_str(), "Zeile");
+    assert_eq!(xlsx_editor_labels(Locale::En).column.as_str(), "Column");
+    assert_eq!(xlsx_editor_labels(Locale::De).column.as_str(), "Spalte");
+    assert_eq!(xlsx_editor_labels(Locale::En).unknown_body.fill(&[("body", "x")]).as_str(), "Unknown body: x");
+    assert_eq!(xlsx_editor_labels(Locale::De).unknown_body.fill(&[("body", "x")]).as_str(), "Unbekannter Bereich: x");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn edit_layout_titles_come_from_the_localized_window_kind_label() {
+    let semio_plugin::WindowLayoutNode::Stack { children, .. } = edit::layout().root else { panic!("expected a stack layout") };
+    assert!(children.iter().all(|window| matches!(window, semio_plugin::WindowLayoutNode::Window { title: None, .. })));
 }

@@ -626,6 +626,12 @@
               "directoryName": "🧱️zero-factor"
             }
           ]
+        },
+        {
+          "mutationId": "splice-scene-rows",
+          "sourceMutationDirectoryName": "🔀️splice-scene-rows",
+          "mutationDirectoryName": "🔀️splice-scene-rows",
+          "scenarios": [{ "id": "replaces-middle-part", "directoryName": "🔀️middle" }]
         }
       ],
       "kinds": [
@@ -667,7 +673,8 @@
         "drag-selection2d",
         "drag-selection3d",
         "rotate-selection3d",
-        "scale-selection3d"
+        "scale-selection3d",
+        "splice-scene-rows"
       ]
     }
   ],
@@ -1485,6 +1492,14 @@
               "qualifyingKind": "verified-native-second-implementation"
             }
           ]
+        },
+        {
+          "id": "splice-scene-rows",
+          "capability": "puzzle-5d-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": ["applied", "rejected"],
+          "productionDispatch": { "operation": "splice-scene-rows", "bridgeVersion": 1, "variant": "SpliceSceneRows" },
+          "oracleRequirements": [{ "capability": "puzzle-5d-1-mutate", "qualifyingKind": "verified-native-second-implementation" }]
         }
       ]
     }

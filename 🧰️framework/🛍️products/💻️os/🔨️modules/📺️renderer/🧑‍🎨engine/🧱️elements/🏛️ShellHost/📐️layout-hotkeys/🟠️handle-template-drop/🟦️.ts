@@ -3,7 +3,8 @@ import { useCallback, useMemo, useRef } from "../../../⚛️react-port/🟦️.
 import { type LocalizedLabel, createNamedLayout } from "@semio-tech/framework";
 import { setNamedLayout } from "@semio-tech/framework/config/mutations";
 import { decodeWorldProjectionTemplateId, worldProjectionSpecIconId, worldProjectionSpecLabel } from "@semio-tech/framework/infinite/world/r3f";
-import { type IconName, insertWindowAtDropZone, type ModeCanvasDropTarget, type WindowTemplateDropPayload } from "@semio-tech/ui-react";
+import { type IconName, type WindowTemplateDropPayload } from "@semio-tech/ui-react";
+import { type WindowLayoutDropZone, dropWindow } from "@semio-tech/ui-layout";
 import { registerPendingWorldProjection } from "../../../🌐️World3dHost/🪟️window-view-store/🟦️.tsx";
 import { captureCurrentFrameworkLayout, resolveFrameworkLayoutSeed } from "../../../🛠️ShellHelpers/🛣️route-and-chrome/🟦️.tsx";
 import { shellLabelTextV1 } from "../../../🛠️ShellHelpers/🔩️plumbing/🆔️action-ids/🟦️.ts";
@@ -17,7 +18,7 @@ import type { useApplyNamedLayoutState } from "../🔸️apply-named-layout/🟦
 /** 🟡 Builds handleTemplateDrop, displayHostRef, displayLayoutAppId, displayUserLayouts of useDirectoryLaneAndLayout. */
 export function useHandleTemplateDropState({ session, focusedSpawnedId, extraWindowCounterRef, appLabelsOverlay, uiTerminology, uiLocale, extraWindowInstancesRef, dispatch, refreshUi, reportRefreshFault, noteShellCommand, focusedApp, uiNamedLayouts, shellLayout, extraWindowInstances, applyNamedLayout, commitUiPreferenceRef }: Pick<ReturnType<typeof useScopeState>, "session" | "focusedSpawnedId" | "extraWindowCounterRef" | "appLabelsOverlay" | "uiTerminology" | "uiLocale" | "extraWindowInstancesRef" | "dispatch" | "refreshUi" | "reportRefreshFault" | "noteShellCommand" | "focusedApp" | "uiNamedLayouts" | "shellLayout" | "extraWindowInstances" | "commitUiPreferenceRef"> & Pick<ReturnType<typeof useApplyNamedLayoutState>, "applyNamedLayout">) {
   const handleTemplateDrop = useCallback(
-    (payload: WindowTemplateDropPayload, target: ModeCanvasDropTarget) => {
+    (payload: WindowTemplateDropPayload, target: WindowLayoutDropZone) => {
       if (!session) return;
       if (focusedSpawnedId !== null) {
         console.warn(`[os-shell] window template drop refused: ${focusedSpawnedId} is a spawned program and has no split lane yet (kind ${payload.windowKindId})`);
@@ -44,7 +45,7 @@ export function useHandleTemplateDropState({ session, focusedSpawnedId, extraWin
           const base =
             current ??
             resolveFrameworkLayoutSeed(session.app.defaultLayout, withLocalizedWindowKindLabels(session.app.windowKinds), appLabelsOverlay, uiTerminology, uiLocale).modeLayout;
-          return insertWindowAtDropZone(base, instanceId, target);
+          return dropWindow(base, { kind: "window", windowKindId: payload.windowKindId, instanceId, ...(payload.templateId ? { templateId: payload.templateId } : {}) }, target);
         },
       });
       dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: instanceId });
@@ -63,7 +64,7 @@ export function useHandleTemplateDropState({ session, focusedSpawnedId, extraWin
     appId: displayLayoutAppId,
     windowKinds: focusedApp?.windowKinds.map((kind) => ({ ...kind, label: resolveAppLabel(appLabelsOverlay, "windowKind", kind.id, resolveManifestLabel(kind.label as LocalizedLabel | string, uiTerminology, uiLocale)) })) ?? [],
     builtinLayouts: focusedApp?.namedLayouts ?? [],
-    currentLayout: captureCurrentFrameworkLayout(shellLayout, extraWindowInstances, session?.app.defaultLayout),
+    currentLayout: captureCurrentFrameworkLayout(shellLayout, session?.app.defaultLayout),
     onApplyLayout: applyNamedLayout,
     userLayouts: displayUserLayouts,
     onSaveUserLayout: (layoutId, label, layout) => commitUiPreferenceRef.current(setNamedLayout(displayLayoutAppId, layoutId, { label, layout })),

@@ -9,6 +9,10 @@ pub(crate) mod bridge;
 pub(crate) mod command_owner;
 #[path = "🛂️guest.rs"]
 pub(crate) mod guest;
+#[path = "🪪️natural-source-gate.rs"]
+pub mod natural_source_gate;
+#[path = "📥️natural-source.rs"]
+pub mod natural_source;
 #[path = "🧾️picker.rs"]
 pub(crate) mod raw_picker;
 #[path = "📦️capsule.rs"]

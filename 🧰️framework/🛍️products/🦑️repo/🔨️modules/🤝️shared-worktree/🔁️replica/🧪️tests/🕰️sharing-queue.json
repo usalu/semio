@@ -22,6 +22,12 @@
       "other": 0
     }
   ],
+  "cohort": {
+    "blockedPaths": 71,
+    "maximumRetriesPerTurn": 64,
+    "firstRetryMilliseconds": 500,
+    "unrelatedPath": "ready-next-turn.txt"
+  },
   "settledClash": {
     "path": "incoming/held.txt",
     "first": "incoming held item",

@@ -1,0 +1,34 @@
+{
+  "retryRounds": 4,
+  "racyMilliseconds": 2000,
+  "cases": [
+    {"name": "no failure answers at once", "attempts": [{"fails": false}], "expect": {"outcome": "value", "attempts": 1}},
+    {"name": "a failure on rows that held and are old is the stable failure of the owner", "attempts": [{"fails": true, "rowsHold": true, "young": false}], "expect": {"outcome": "stable", "attempts": 1}},
+    {"name": "a failure whose rows changed is observed again and then answers", "attempts": [{"fails": true, "rowsHold": false, "young": false}, {"fails": false}], "expect": {"outcome": "value", "attempts": 2}},
+    {"name": "a failure on young rows that held is observed again once they are calm", "attempts": [{"fails": true, "rowsHold": true, "young": true}, {"fails": false}], "expect": {"outcome": "value", "attempts": 2}},
+    {"name": "a failure that reproduces after the rows settled is the stable failure", "attempts": [{"fails": true, "rowsHold": false, "young": false}, {"fails": true, "rowsHold": true, "young": false}], "expect": {"outcome": "stable", "attempts": 2}},
+    {"name": "rows that keep changing through every round name the unsettled failure", "attempts": [{"fails": true, "rowsHold": false, "young": false}, {"fails": true, "rowsHold": false, "young": false}, {"fails": true, "rowsHold": false, "young": false}, {"fails": true, "rowsHold": false, "young": false}], "expect": {"outcome": "unsettled", "attempts": 4}},
+    {"name": "a foreign failure is thrown unchanged at the first attempt", "attempts": [{"fails": true, "rowsHold": false, "young": false, "foreign": "BUILD_AUTHORITY_CHANGED"}], "expect": {"outcome": "foreign", "attempts": 1}},
+    {"name": "a withheld source stays the business of its own follow-up", "attempts": [{"fails": true, "rowsHold": false, "young": true, "foreign": "BUILD_SOURCE_UNPARSEABLE"}], "expect": {"outcome": "foreign", "attempts": 1}},
+    {"name": "young rows through every round never stay silent", "attempts": [{"fails": true, "rowsHold": true, "young": true}, {"fails": true, "rowsHold": true, "young": true}, {"fails": true, "rowsHold": true, "young": true}, {"fails": true, "rowsHold": true, "young": true}], "expect": {"outcome": "stable", "attempts": 4}}
+  ],
+  "revalidation": {"cooldownMilliseconds": 300000, "attempts": 3},
+  "decisionCases": [
+    {"name": "a foreign failure is never the owner's own", "foreign": true, "moved": true, "young": true, "round": 1, "expect": "foreign"},
+    {"name": "held and old rows make the failure stable at once", "foreign": false, "moved": false, "young": false, "round": 1, "expect": "stable"},
+    {"name": "moved rows are observed again", "foreign": false, "moved": true, "young": false, "round": 1, "expect": "retry"},
+    {"name": "young held rows are observed again", "foreign": false, "moved": false, "young": true, "round": 3, "expect": "retry"},
+    {"name": "moved rows in the last round are unsettled", "foreign": false, "moved": true, "young": true, "round": 4, "expect": "unsettled"},
+    {"name": "young held rows in the last round are stable", "foreign": false, "moved": false, "young": true, "round": 4, "expect": "stable"},
+    {"name": "stable stays stable in the last round", "foreign": false, "moved": false, "young": false, "round": 4, "expect": "stable"}
+  ],
+  "revalidationCases": [
+    {"name": "the first sighting only starts the cool-down", "fragment": "a", "now": 1000, "expect": {"revalidate": false, "entry": {"fragment": "a", "attempts": 0, "at": 1000}}},
+    {"name": "before the cool-down nothing is inferred again", "entry": {"fragment": "a", "attempts": 0, "at": 1000}, "fragment": "a", "now": 200000, "expect": {"revalidate": false, "entry": {"fragment": "a", "attempts": 0, "at": 1000}}},
+    {"name": "after the cool-down the owner is inferred again once", "entry": {"fragment": "a", "attempts": 0, "at": 1000}, "fragment": "a", "now": 301000, "expect": {"revalidate": true, "entry": {"fragment": "a", "attempts": 1, "at": 301000}}},
+    {"name": "the cool-down restarts after every attempt", "entry": {"fragment": "a", "attempts": 1, "at": 301000}, "fragment": "a", "now": 400000, "expect": {"revalidate": false, "entry": {"fragment": "a", "attempts": 1, "at": 301000}}},
+    {"name": "the last attempt is still taken", "entry": {"fragment": "a", "attempts": 2, "at": 0}, "fragment": "a", "now": 300000, "expect": {"revalidate": true, "entry": {"fragment": "a", "attempts": 3, "at": 300000}}},
+    {"name": "after the declared attempts the withholding stays until a row changes", "entry": {"fragment": "a", "attempts": 3, "at": 0}, "fragment": "a", "now": 9000000, "expect": {"revalidate": false, "entry": {"fragment": "a", "attempts": 3, "at": 0}}},
+    {"name": "another withholding of the same owner starts over", "entry": {"fragment": "a", "attempts": 3, "at": 0}, "fragment": "b", "now": 9000000, "expect": {"revalidate": false, "entry": {"fragment": "b", "attempts": 0, "at": 9000000}}}
+  ]
+}

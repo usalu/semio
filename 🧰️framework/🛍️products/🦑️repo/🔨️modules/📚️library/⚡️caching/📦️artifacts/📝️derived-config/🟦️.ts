@@ -106,13 +106,13 @@ export async function writeNextestConfig(workspace: string): Promise<string[]> {
 
 /** 🧾️ Checks the authored aggregate against the current closed route authorities. */
 export function canonicalTestAggregateProblemsV1(workspace:string):string[]{
- try{const policy=canonicalTestAggregatePolicyV1,project=JSON.parse(readFileSync(join(workspace,policy.manifest),"utf8"));requireCanonicalTestAggregateV1(project,policy.root);return [];}catch(error){return [String(error)];}
+ try{const policy=canonicalTestAggregatePolicyV1,project=JSON.parse(readFileSync(join(workspace,policy.manifest),"utf8"));requireCanonicalTestAggregateV1(project,policy.root,path=>readFileSync(join(workspace,path),"utf8"));return [];}catch(error){return [String(error)];}
 }
 
 /** ✍️ Rewrites each derived owner from its current Source declaration. */
 export async function writeDerivedConfig(workspace:string):Promise<string[]>{
  const changed=await writeNextestConfig(workspace),policy=canonicalTestAggregatePolicyV1,file=join(workspace,policy.manifest),source=readFileSync(file,"utf8"),project=JSON.parse(source);
- project.targets[policy.target]=deriveCanonicalTestAggregateV1({...project,root:policy.root});
+ project.targets[policy.target]=deriveCanonicalTestAggregateV1({...project,root:policy.root},path=>readFileSync(join(workspace,path),"utf8"));
  const next=JSON.stringify(project,null,2)+"\n";
  if(normalize(source)!==next){writeFileSync(file,next);changed.push(policy.manifest);}
  return changed;

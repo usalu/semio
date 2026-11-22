@@ -1,0 +1,52 @@
+{
+  "cases": [
+    {
+      "name": "true if executes else as an empty-result exit",
+      "body": [0, 32, 0, 4, 64, 65, 17, 33, 0, 5, 65, 29, 33, 0, 11, 32, 0, 11],
+      "args": [1],
+      "expected": 17
+    },
+    {
+      "name": "false if executes an empty-result end",
+      "body": [0, 32, 0, 4, 64, 65, 17, 33, 0, 5, 65, 29, 33, 0, 11, 32, 0, 11],
+      "args": [0],
+      "expected": 29
+    },
+    {
+      "name": "direct branch discards inner operands and preserves the outer operand",
+      "body": [0, 65, 19, 2, 64, 65, 27, 12, 0, 0, 11, 11],
+      "args": [0],
+      "expected": 19
+    },
+    {
+      "name": "taken conditional branch consumes the condition and discards inner operands",
+      "body": [0, 65, 19, 2, 64, 65, 27, 32, 0, 13, 0, 26, 65, 31, 33, 0, 11, 32, 0, 106, 11],
+      "args": [3],
+      "expected": 22
+    },
+    {
+      "name": "untaken conditional branch consumes only the condition",
+      "body": [0, 65, 19, 2, 64, 65, 27, 32, 0, 13, 0, 26, 65, 31, 33, 0, 11, 32, 0, 106, 11],
+      "args": [0],
+      "expected": 50
+    },
+    {
+      "name": "taken conditional loop branch retains the loop label",
+      "body": [0, 3, 64, 32, 0, 65, 1, 107, 34, 0, 13, 0, 11, 65, 13, 11],
+      "args": [3],
+      "expected": 13
+    },
+    {
+      "name": "nonempty branch moves the result before label retirement",
+      "body": [0, 2, 127, 65, 37, 32, 0, 12, 0, 11, 11],
+      "args": [31],
+      "expected": 31
+    },
+    {
+      "name": "outer branch retires multiple labels",
+      "body": [0, 2, 64, 2, 64, 12, 1, 11, 11, 65, 31, 11],
+      "args": [0],
+      "expected": 31
+    }
+  ]
+}

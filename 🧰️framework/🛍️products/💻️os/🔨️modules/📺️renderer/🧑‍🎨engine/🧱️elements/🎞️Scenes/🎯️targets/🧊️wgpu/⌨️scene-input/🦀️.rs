@@ -714,6 +714,8 @@ fn arm_scene_list_transfer(pointer_id: ui_render::PointerId, window_id: &str, sc
             source_rect: start.rect,
             start_x: x,
             start_y: y,
+            current_x: x,
+            current_y: y,
             promoted: false,
         });
         true
@@ -782,6 +784,8 @@ fn update_scene_list_transfer(pointer_id: ui_render::PointerId, window_id: &str,
         if active.pointer_id != pointer_id || active.source_window_id != window_id || active.source_host_id != surface_id {
             return;
         }
+        active.current_x = x;
+        active.current_y = y;
         let dx = x - active.start_x;
         let dy = y - active.start_y;
         if dx * dx + dy * dy > SCENE_TRANSFER_DRAG_SLOP_SQUARED {
@@ -885,6 +889,9 @@ pub fn passive_scene_pointer_button(
         }
     }
     if !pointer_was_down {
+        return Ok(true);
+    }
+    if scene.component_kind == SurfaceKind::Table && modifiers.click_count >= 2 {
         return Ok(true);
     }
     if let Some(action) = scene_double_click_action(scene, bounds, x, y) {

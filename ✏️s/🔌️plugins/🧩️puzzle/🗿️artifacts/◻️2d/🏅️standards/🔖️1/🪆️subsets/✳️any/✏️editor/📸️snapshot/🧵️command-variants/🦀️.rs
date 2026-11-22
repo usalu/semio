@@ -62,7 +62,7 @@ macro_rules! puzzle2d_command_variants {
                 let args=value.get("args").cloned().filter(|value|!value.is_null());
                 Self::try_from_action(action,args,window_id)
             }
-            #[cfg(test)]
+            #[cfg(any(test, feature = "testkit"))]
             pub fn from_action(action: &str, args: Option<Value>, window_id: Option<String>) -> Self {
                 Self::try_from_action(action, args, window_id)
                     .unwrap_or_else(|| panic!("unknown puzzle2d action id in test: {action}"))

@@ -38,8 +38,8 @@ test("Law: what a runner held teaches its class, the next plan fits more workers
   expect(Object.keys(stored.classes).sort()).toEqual(["test-worker-vitest","test-worker-vitest:course"]);
   expect(await recordTestWorkersV1(sandbox.learning,after,"course",{status:"failed",peakMegabytes:Math.round(after.declaredMegabytes*0.1),peakAtMilliseconds:10,activeMilliseconds:20})).toBe(false);
   expect(learnedTestWorkerRatioV1(sandbox.learning,"vitest","course")).toBe(ratio);
-  expect(await recordTestWorkersV1(sandbox.learning,after,"course",{status:"failed",peakMegabytes:after.declaredMegabytes*3,peakAtMilliseconds:10,activeMilliseconds:20})).toBe(true);
-  expect(learnedTestWorkerRatioV1(sandbox.learning,"vitest","course")).toBeGreaterThan(ratio);
+  expect(await recordTestWorkersV1(sandbox.learning,after,"course",{status:"failed",peakMegabytes:after.declaredMegabytes*3,peakAtMilliseconds:10,activeMilliseconds:20})).toBe(false);
+  expect(learnedTestWorkerRatioV1(sandbox.learning,"vitest","course")).toBe(ratio);
   expect(await recordTestWorkersV1(sandbox.learning,after,"course",{status:"ok",peakMegabytes:0,peakAtMilliseconds:0,activeMilliseconds:20})).toBe(false);
   expect(estimateHostRatioV1(host,stored,testWorkerLineageV1("vitest","course"),2_000_000).ratioBasisPoints).toBe(ratio);
  }finally{sandbox.remove();}

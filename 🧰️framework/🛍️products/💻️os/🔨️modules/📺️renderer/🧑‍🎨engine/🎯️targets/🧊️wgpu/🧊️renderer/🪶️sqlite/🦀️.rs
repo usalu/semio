@@ -1,7 +1,7 @@
 //! 🪶️ Raw Socket text owns one explicit relational entity and its exact UTF-8 carriers.
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use super::{NativeSocketProbeSnapshot,store};
-use store::{os_store::{serialization::ArtifactSqliteSnapshotHost,ArtifactNativeSnapshot,NativeSnapshotInput,NativeSnapshotEncoding},sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase as Phase,SnapshotEncoding,artifact::{Projection,Cell,reconstruct_text},validate_sqlite_database_schema_controlled},io_schema::IoPayload};
+use store::{os_store::{serialization::{ArtifactSqliteSnapshotHost,SnapshotReceivingOutcome,SnapshotReceivingOutput},ArtifactNativeSnapshot,NativeSnapshotInput,NativeSnapshotEncoding},sqlite_snapshot::{SqliteStageFailure,SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase as Phase,SnapshotEncoding,artifact::{Projection,Cell,reconstruct_text},validate_sqlite_database_schema_controlled},io_schema::IoPayload};
 use pack::snapshot::ArtifactPack;
 use semio_framework_value::{NativeEncodeControl, ValueError, ValueRefusalKind as Kind};
 use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
@@ -16,9 +16,7 @@ fn semantics(length:usize,phase:Phase,control:&mut SqliteSnapshotControl<'_>)->R
 fn physical(length:usize,phase:Phase,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{
  semantics(length,phase,control)?;if length>control.limits().max_file_bytes{return Err(ValueError::new(Kind::OwnershipLimit,"Socket native file exceeds caller limit"))}Ok(())
 }
-fn maximum(before:usize,control:&SqliteSnapshotControl<'_>)->Result<usize,ValueError>{
- before.checked_add(control.allocation_remaining_bytes()).ok_or_else(||ValueError::new(Kind::OwnershipLimit,"Socket native admission overflow"))
-}
+fn refused(error:ValueError)->SnapshotReceivingOutcome{semio_framework_value::RetainedWorkOutcome{result:Err(SqliteStageFailure::NotStarted(error)),work:0}}
 
 impl ArtifactNativeSnapshot for NativeSocketProbeSnapshot{
  fn decode_native_snapshot(payload:NativeSnapshotInput<'_>,control:&mut NativeDecodeControl<'_>)->Result<Self,ValueError>{
@@ -30,20 +28,15 @@ impl ArtifactNativeSnapshot for NativeSocketProbeSnapshot{
 }
 
 impl ArtifactSqliteSnapshotHost for NativeSocketProbeSnapshot{
- 
- 
- 
- fn decode_sqlite_snapshot_native(payload:&IoPayload,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut store::NativeSnapshotDecodeOwner<'_,'_>)->semio_framework_value::RetainedWorkOutcome<Self,store::NativeSnapshotFailure>{store::native_snapshot_turn(|work|{
- let native=native_owner.native();work.performed();
-  let input=match payload{IoPayload::Binary(bytes)=>NativeSnapshotInput::Binary(bytes),IoPayload::Text(text)=>NativeSnapshotInput::Text(text)};
-  let length=match input{NativeSnapshotInput::Binary(bytes)=>bytes.len(),NativeSnapshotInput::Text(text)=>text.len()};physical(length,Phase::DecodeNative,control)?;
-  let before=native.owned_bytes();let result=native.scoped_maximum(maximum(before,control)?,|native|Self::decode_native_snapshot(input,native));control.admit_allocation_bytes(native.owned_bytes()-before)?;result.map_err(Into::into)
- })}
- fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,owner:&mut store::os_store::NativeSnapshotEncodeOwner<'_, '_>)->semio_framework_value::RetainedWorkOutcome<IoPayload,store::NativeSnapshotFailure>{store::native_snapshot_turn(|work|{
-  let native=owner.native();work.performed();
-  self.preflight_sqlite_snapshot_encoding(encoding,control)?;let encoding=match encoding{SnapshotEncoding::Binary=>NativeSnapshotEncoding::Binary,SnapshotEncoding::Text=>NativeSnapshotEncoding::Text};
-  let before=native.owned_bytes();let result=native.scoped_maximum(maximum(before,control)?,|native|self.encode_native_snapshot(encoding,native));control.admit_allocation_bytes(native.owned_bytes()-before)?;result.map_err(Into::into)
- })}
+ fn decode_sqlite_snapshot_native(payload:&IoPayload,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut store::NativeSnapshotDecodeOwner<'_,'_>,output:&mut Option<SnapshotReceivingOutput<Self>>)->SnapshotReceivingOutcome{
+  let length=match payload{IoPayload::Binary(bytes)=>bytes.len(),IoPayload::Text(text)=>text.len()};
+  if let Err(error)=physical(length,Phase::DecodeNative,control){return refused(error)}
+  store::decode_sqlite_snapshot_raw_native(payload,&mut |text,slot,owner|store::native_snapshot_turn(|work|{*slot=Some(Self(work.measured(owner.native(),|native|native.copy_text(text))?));Ok(())}),control,native_owner,output)
+ }
+ fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut store::NativeSnapshotEncodeOwner<'_,'_>,output:&mut Option<SnapshotReceivingOutput<IoPayload>>)->SnapshotReceivingOutcome{
+  if let Err(error)=self.preflight_sqlite_snapshot_encoding(encoding,control){return refused(error)}
+  store::encode_sqlite_snapshot_raw_native(encoding,&mut |_,slot,owner|store::native_snapshot_turn(|work|{*slot=Some(work.measured_encode(owner.native(),|native|native.copy_text(&self.0))?);Ok(())}),control,native_owner,output)
+ }
  fn preflight_sqlite_snapshot_encoding(&self,_encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{physical(self.0.len(),Phase::EncodeNative,control)}
 }
 impl pack::snapshot::ArtifactSqliteSnapshot for NativeSocketProbeSnapshot {

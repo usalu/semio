@@ -247,6 +247,36 @@
       }
     ]
   },
+  "scopeWork": {
+    "members": [
+      "packages/**"
+    ],
+    "targets": 4,
+    "noise": [
+      20,
+      120
+    ],
+    "maximumGrowth": 1.5
+  },
+  "replayWork": {
+    "members": [
+      "packages/**"
+    ],
+    "groups": 6,
+    "leaves": 30,
+    "maximumReplayedReaddirs": 0
+  },
+  "custodyWork": {
+    "members": [
+      "packages/**"
+    ],
+    "depths": [
+      6,
+      18
+    ],
+    "breadth": 12,
+    "maximumGrowth": 3
+  },
   "discoveryWork": {
     "members": [
       "packages/**"
@@ -312,7 +342,7 @@
   ],
   "originalProcess": {
     "buildMode": "prototype",
-    "maximumElapsedMilliseconds": 10000,
+    "maximumElapsedMilliseconds": 300000,
     "transport": {
       "maximumBytes": 134217728,
       "maximumLines": 65536

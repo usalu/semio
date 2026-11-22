@@ -10,18 +10,18 @@ fn embedded_elevation_pick_uses_visible_triangles_and_southwest_sample_order() {
     let samples = &fixture["samples"];
     let size = samples["size"].as_i64().unwrap();
     let grid = &fixture["pick"]["raisedSample"];
-    let rows: Vec<Vec<i16>> = (0..size).map(|row| (0..size).map(|column| {
+    let rows_millimetres: Vec<Vec<i32>> = (0..size).map(|row| (0..size).map(|column| {
         let base = samples["southwest"].as_i64().unwrap()
             + row * samples["northwardStep"].as_i64().unwrap()
             + column * samples["eastwardStep"].as_i64().unwrap();
         let raised = grid["column"].as_i64() == Some(column) && grid["row"].as_i64() == Some(row);
-        (base + if raised { grid["meters"].as_i64().unwrap() } else { 0 }) as i16
+        ((base + if raised { grid["meters"].as_i64().unwrap() } else { 0 }) * 1000) as i32
     }).collect()).collect();
     let mut session = TerrainSessionCore::default();
     session.set_project_origin(lon, lat);
     session.set_exaggeration(fixture["exaggeration"].as_f64().unwrap());
     assert!(session.pick_elevation_grid([0.0, 0.0, 1000.0], [0.0, 0.0, -1.0]).is_none());
-    assert!(session.set_elevation_grid(Some(TerrainElevationGrid { bounds, rows })));
+    assert!(session.set_elevation_grid(Some(TerrainElevationGrid { missing_samples: None, bounds, rows_millimetres })));
     let cells = (size - 1) as f64;
     for ray in fixture["pick"]["rays"].as_array().unwrap() {
         let [column, row, z]: [f64; 3] = serde_json::from_value(ray["originSample"].clone()).unwrap();
@@ -51,15 +51,15 @@ fn embedded_elevation_grid_publishes_one_mesh_and_samples_its_origin() {
     let origin: [f64; 2] = serde_json::from_value(fixture["origin"].clone()).unwrap();
     let samples = &fixture["samples"];
     let size = samples["size"].as_i64().unwrap();
-    let rows = (0..size).map(|row| (0..size).map(|column| {
-        samples["southwest"].as_i64().unwrap()
+    let rows_millimetres = (0..size).map(|row| (0..size).map(|column| {
+        1000 * (samples["southwest"].as_i64().unwrap()
             + row * samples["northwardStep"].as_i64().unwrap()
-            + column * samples["eastwardStep"].as_i64().unwrap()
+            + column * samples["eastwardStep"].as_i64().unwrap())
     }).collect::<Vec<_>>()).collect::<Vec<_>>();
     let mut session = TerrainSessionCore::default();
     session.set_project_origin(origin[0], origin[1]);
     session.set_exaggeration(fixture["exaggeration"].as_f64().unwrap());
-    assert!(session.set_elevation_grid_json(&serde_json::json!({"bounds": fixture["bounds"], "rows": rows}).to_string()));
+    assert!(session.set_elevation_grid_json(&serde_json::json!({"bounds": fixture["bounds"], "rowsMillimetres": rows_millimetres}).to_string()));
     let visible: serde_json::Value = serde_json::from_str(&session.visible_terrain_tiles_json("{}")).unwrap();
     assert_eq!(visible, serde_json::json!([{"z":0,"x":0,"y":0,"key":"0/0/0"}]));
     let mesh: TerrainTileMeshJson = serde_json::from_str(&session.terrain_tile_mesh_json(0, 0, 0)).unwrap();
@@ -302,4 +302,197 @@ fn terrain_tile_mesh_json_is_deterministic_for_the_same_cached_tile() {
     let first = session.terrain_tile_mesh_json(12, 2000, 1300);
     let second = session.terrain_tile_mesh_json(12, 2000, 1300);
     assert_eq!(first, second, "mesh build over an unchanged cached tile must be byte-identical across calls");
+}
+
+
+#[test]
+fn rectangular_fractional_grid_agrees_across_mesh_pick_and_drape() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📐️rectangular-elevation-grid/🔣️.json")).unwrap();
+    let shape: [u32; 2] = serde_json::from_value(fixture["shape"].clone()).unwrap();
+    let [lon, lat]: [f64; 2] = serde_json::from_value(fixture["origin"].clone()).unwrap();
+    let grid: TerrainElevationGrid = from_json_str(&fixture["grid"].to_string(), JsonMemberPolicy::Reject).unwrap();
+    assert_eq!(grid.dimensions(), Some(shape));
+    assert!(grid.is_valid());
+    let mut session = TerrainSessionCore::default();
+    session.set_project_origin(lon, lat);
+    session.set_exaggeration(fixture["exaggeration"].as_f64().unwrap());
+    assert!(session.set_elevation_grid_json(&fixture["grid"].to_string()));
+    let mesh = session.terrain_tile_mesh(0, 0, 0).unwrap();
+    let expected = &fixture["expected"];
+    assert_eq!(serde_json::json!(mesh.indices), expected["indices"]);
+    let near = |value: f64, key: &str| {
+        assert!((value - expected[key].as_f64().unwrap()).abs() < 1e-5, "{key}: {value}");
+    };
+    near(f64::from(mesh.positions[2]), "northwestHeight");
+    near(f64::from(*mesh.positions.last().unwrap()), "southeastHeight");
+    near(f64::from(session.terrain_origin_elevation(0, 0, 0).unwrap()), "originHeight");
+    let hit = session.pick_elevation_grid([0.0, 0.0, 10.0], [0.0, 0.0, -1.0]).unwrap();
+    assert_eq!(serde_json::json!(hit.sample), expected["originSample"]);
+    near(hit.position[2], "originHeight");
+    let overlays = session.overlay_tile(0, 0, 0, &from_json_str(&fixture["overlays"].to_string(), JsonMemberPolicy::Reject).unwrap()).unwrap();
+    near(f64::from(overlays.positions[0].point[2]), "originHeight");
+    for path in overlays.routes.iter().chain(&overlays.regions) {
+        assert!(path.segments.len() > 3);
+        for [a, b] in &path.segments {
+            let [x, y, z] = std::array::from_fn(|axis| (f64::from(a[axis]) + f64::from(b[axis])) * 0.5);
+            let hit = session.pick_elevation_grid([x, y, 20.0], [0.0, 0.0, -1.0]).unwrap();
+            assert!((hit.position[2] - z).abs() < 1e-5);
+        }
+    }
+}
+
+#[test]
+fn authored_grid_width_height_and_storage_are_bounded() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📐️rectangular-elevation-grid/🔣️.json")).unwrap();
+    let [width, height]: [usize; 2] = serde_json::from_value(fixture["maximumShape"].clone()).unwrap();
+    let bounds = serde_json::from_value(fixture["grid"]["bounds"].clone()).unwrap();
+    let mut grid = TerrainElevationGrid { missing_samples: None, bounds, rows_millimetres: vec![vec![i32::MIN; width]; height] };
+    grid.rows_millimetres[0][0] = i32::MAX;
+    let mesh = grid.mesh(5.556, 50.586, 1.0).unwrap();
+    assert_eq!(mesh.indices.len(), (width - 1) * (height - 1) * 6);
+    let bytes = 4 * (mesh.positions.len() + mesh.normals.len() + mesh.indices.len() + mesh.uvs.len());
+    assert_eq!(bytes as u64, fixture["maximumBytes"].as_u64().unwrap());
+    for [width, height] in [[1, 2], [2, 1], [66, 2], [2, 66]] {
+        grid.rows_millimetres = vec![vec![0; width]; height];
+        assert!(!grid.is_valid());
+        assert!(grid.mesh(5.556, 50.586, 1.0).is_none());
+    }
+    grid.rows_millimetres = vec![vec![0; 2], vec![0; 3]];
+    assert!(!grid.is_valid());
+    let mut session = TerrainSessionCore::default();
+    for invalid in [
+        r#"{"bounds":[0,0,1,1],"rowsMillimetres":[[0,0],[0,2147483648]]}"#,
+        r#"{"bounds":[0,0,1,1],"rowsMillimetres":[[0,0],[0,-2147483649]]}"#,
+        r#"{"bounds":[0,0,1,1],"rowsMillimetres":[[0,0],[0,0.1]]}"#,
+        r#"{"bounds":[0,0,1,1],"rows":[[0,0],[0,0]]}"#,
+    ] {
+        assert!(!session.set_elevation_grid_json(invalid));
+    }
+}
+
+#[test]
+fn missing_terrain_keeps_existing_diagonals_for_mesh_picks_and_drape() {
+    use super::overlay::{TerrainOverlayPosition, TerrainOverlayRoute, TerrainOverlays};
+    let cases: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🕳️nodata/🔣️.json")).unwrap();
+    for case in cases.as_array().unwrap() {
+        let source: TerrainElevationGrid = from_json_str(&case["source"].to_string(), JsonMemberPolicy::Reject).unwrap();
+        let [west, south, east, north] = source.bounds;
+        let [width, height] = source.dimensions().unwrap();
+        let mut session = TerrainSessionCore::default();
+        session.set_project_origin(west, north);
+        assert!(session.set_elevation_grid(Some(source.clone())));
+        let mesh = session.terrain_tile_mesh(0, 0, 0).unwrap();
+        let expected: Vec<[u32; 3]> = serde_json::from_value(case["facesNorthFirst"].clone()).unwrap();
+        assert_eq!(mesh.indices, expected.iter().flatten().copied().collect::<Vec<_>>(), "{}", case["name"]);
+        let compact = source.compact_mesh(west, north, 1.0).unwrap();
+        assert_eq!(compact.indices.len(), mesh.indices.len());
+        if mesh.indices.is_empty() {
+            assert!(mesh.positions.is_empty() && mesh.normals.is_empty() && mesh.uvs.is_empty());
+            assert!(session.terrain_origin_elevation(0, 0, 0).is_none());
+            assert!(session.pick_elevation_grid([0.0, 0.0, 10.0], [0.0, 0.0, -1.0]).is_none());
+        }
+        let geographic = |x, y| [west + (east - west) * x / f64::from(width - 1), north - (north - south) * y / f64::from(height - 1)];
+        if let Some(queries) = case["surfaceQueriesNorthFirst"].as_array() {
+            for query in queries {
+                let [x, y]: [f64; 2] = serde_json::from_value(query["xy"].clone()).unwrap();
+                let coordinate = geographic(x, y);
+                let overlays = TerrainOverlays { positions: vec![TerrainOverlayPosition {
+                    id: "point".into(), name: "Point".into(), coordinates: coordinate, elevation: None
+                }], ..Default::default() };
+                let drape = session.overlay_tile(0, 0, 0, &overlays).unwrap();
+                let row = y.floor().min(f64::from(height - 2)) as usize;
+                let column = x.floor().min(f64::from(width - 2)) as usize;
+                let i = row * width as usize + column;
+                let u = x - column as f64;
+                let v = y - row as f64;
+                let px = f64::from(mesh.positions[3 * i]) * (1.0 - u) + f64::from(mesh.positions[3 * (i + 1)]) * u;
+                let py = f64::from(mesh.positions[3 * i + 1]) * (1.0 - v) + f64::from(mesh.positions[3 * (i + width as usize) + 1]) * v;
+                let hit = session.pick_elevation_grid([px, py, 3_000_000.0], [0.0, 0.0, -1.0]);
+                if let Some(mm) = query["millimetres"].as_f64() {
+                    assert!((f64::from(drape.positions[0].point[2]) - mm / 1000.0).abs() < 0.01, "{query}");
+                    let hit = hit.expect("surviving face hit");
+                    assert!((hit.position[2] - mm / 1000.0).abs() < 0.01, "{query}");
+                    assert!(!missing_samples::is_missing(source.missing_samples.as_deref(), (hit.sample[1] * width + hit.sample[0]) as usize));
+                } else {
+                    assert!(drape.positions.is_empty() && hit.is_none(), "{query}");
+                }
+            }
+        }
+        if let Some(routes) = case["horizontalDrapeNorthFirst"].as_array() {
+            for route in routes {
+                let y = route["y"].as_f64().unwrap();
+                let expected: Vec<[f64; 2]> = serde_json::from_value(route["intervals"].clone()).unwrap();
+                for reverse in [false, true] {
+                    let mut coordinates = vec![geographic(0.0, y), geographic(f64::from(width - 1), y)];
+                    if reverse { coordinates.reverse(); }
+                    let input = TerrainOverlays { routes: vec![TerrainOverlayRoute {
+                        id: "route".into(), name: "Route".into(), coordinates,
+                    }], ..Default::default() };
+                    let output = session.overlay_tile(0, 0, 0, &input).unwrap();
+                    let segments = &output.routes[0].segments;
+                    let position = |x: f32| f64::from(x) / f64::from(mesh.positions[3 * (width - 1) as usize]) * f64::from(width - 1);
+                    let mut actual: Vec<[f64; 2]> = segments.iter().map(|[a, b]| {
+                        let (a, b) = (position(a[0]), position(b[0]));
+                        [a.min(b), a.max(b)]
+                    }).collect();
+                    actual.sort_by(|a, b| a[0].total_cmp(&b[0]));
+                    let mut merged: Vec<[f64; 2]> = Vec::new();
+                    for [start, end] in actual {
+                        if let Some(last) = merged.last_mut().filter(|last| start <= last[1] + 1.0e-6) {
+                            last[1] = last[1].max(end);
+                        } else {
+                            merged.push([start, end]);
+                        }
+                    }
+                    assert_eq!(merged.len(), expected.len(), "{route}");
+                    for (actual, expected) in merged.iter().flatten().zip(expected.iter().flatten()) {
+                        assert!((actual - expected).abs() < 1.0e-6, "{route}");
+                    }
+                }
+            }
+        }
+        if case["name"] == "isolated-valid-extreme" {
+            assert!(mesh.positions.iter().skip(2).step_by(3).all(|z| *z <= 4.0));
+            assert!(!compact.positions.contains(&(i32::MAX as f32 / 1000.0)));
+        }
+    }
+}
+
+#[test]
+fn json_published_mesh_points_pick_the_surviving_face_exactly() {
+    let cases: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🕳️nodata/🔣️.json")).unwrap();
+    for case in cases.as_array().unwrap() {
+        let Some(queries) = case["surfaceQueriesNorthFirst"].as_array() else { continue };
+        let source = case["source"].to_string();
+        let grid: TerrainElevationGrid = from_json_str(&source, JsonMemberPolicy::Reject).unwrap();
+        let [west, _, _, north] = grid.bounds;
+        let [width, _] = grid.dimensions().unwrap();
+        let mut session = TerrainSessionCore::default();
+        session.set_project_origin(west, north);
+        assert!(session.set_elevation_grid_json(&source));
+        let mesh: serde_json::Value = serde_json::from_str(&session.terrain_tile_mesh_json(0, 0, 0)).unwrap();
+        let positions: Vec<f64> = serde_json::from_value(mesh["positions"].clone()).unwrap();
+        for query in queries {
+            let [x, y]: [f64; 2] = serde_json::from_value(query["xy"].clone()).unwrap();
+            let column = x.floor().min(f64::from(width - 2)) as usize;
+            let row = y.floor().min(f64::from(grid.dimensions().unwrap()[1] - 2)) as usize;
+            let i = 3 * (row * width as usize + column);
+            let (fx, fy) = (x - column as f64, y - row as f64);
+            let corner = |offset: usize, axis: usize| positions[i + 3 * offset + axis];
+            let bilinear = |axis: usize| (1.0 - fy) * ((1.0 - fx) * corner(0, axis) + fx * corner(1, axis))
+                + fy * ((1.0 - fx) * corner(width as usize, axis) + fx * corner(width as usize + 1, axis));
+            let (px, py) = (f64::from(bilinear(0) as f32), f64::from(bilinear(1) as f32));
+            let hit = session.pick_elevation_grid_json(&format!(
+                r#"{{"origin":[{px},{py},3000000],"direction":[0,0,-1]}}"#
+            ));
+            let hit: serde_json::Value = serde_json::from_str(&hit).unwrap();
+            match query["millimetres"].as_f64() {
+                None => assert!(hit.is_null(), "{query}"),
+                Some(mm) => {
+                    let z = hit["position"][2].as_f64().unwrap_or_else(|| panic!("{query}: {hit}"));
+                    assert!((z - mm / 1000.0).abs() < 0.01, "{query}: {hit}");
+                }
+            }
+        }
+    }
 }

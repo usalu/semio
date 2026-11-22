@@ -17,7 +17,6 @@ use crate::standards::v1::subsets::any::schema::language_service::{parse, comple
 use crate::standards::v1::subsets::any::schema::lexer::{lex, tokenize, Token, TokenClass};
 use crate::standards::v1::subsets::any::schema::graph::Camera;
 use crate::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
-use crate::standards::v1::subsets::any::schema::manifest::Manifest;
 use semio_framework_value::retained_clone::RetainedCloneGrant;
 use semio_framework_value::{OriginalRetirementPoll, RetainedAllocationEffect, RetainedCloneProgress, RetainedWorkPoll};
 
@@ -38,7 +37,7 @@ fn mini_graph() -> Graph {
     let graph = &fixture["graph"];
     let nodes = semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(graph["nodes"].clone())).unwrap();
     let edges = semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(graph["edges"].clone())).unwrap();
-    let fixture = JackSnapshot::with_content::<crate::test_support::FixtureComposition>(JackSnapshot::SCHEMA.into(), graph["name"].as_str().unwrap().into(), Some(graph["manifestId"].as_str().unwrap().into()), Manifest::nakagin_default(), Camera::default(), JackWorkingScene { nodes: nodes, edges: edges }, Some(graph["rootNodeId"].as_str().unwrap().into()));
+    let fixture = JackSnapshot::with_content::<crate::test_support::FixtureComposition>(JackSnapshot::SCHEMA.into(), graph["name"].as_str().unwrap().into(), graph["manifestId"].as_str().unwrap().into(), Camera::default(), JackWorkingScene { nodes: nodes, edges: edges }, Some(graph["rootNodeId"].as_str().unwrap().into()));
     Graph::from_snapshot(fixture).unwrap()
 }
 
@@ -207,13 +206,7 @@ async fn lex_not_equal() {
 async fn query_ownership_resumable_matches_neutral_results_and_single_mutation_publication() {
     let fixture: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧮️executor/🪜️resumable-query/🔣️.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
-        let mut graph = if case["inlineManifest"] == true {
-            let mut snapshot = mini_graph().to_snapshot::<crate::test_support::FixtureComposition>();
-            snapshot.manifest_id = None;
-            Graph::from_snapshot(snapshot).unwrap()
-        } else {
-            mini_graph()
-        };
+        let mut graph = mini_graph();
         if case["portlessEndpoints"] == true {
             let edge = graph.edges.get_mut("e1").expect("fixture edge");
             edge.source = "root".into();
@@ -272,7 +265,8 @@ async fn query_ownership_resumable_matches_neutral_results_and_single_mutation_p
             assert_eq!(serde_json::to_value(&graph.manifest_id).unwrap(), *case.get("manifestId").unwrap_or(&fixture["graph"]["manifestId"]));
             let graph_json = graph.to_json().unwrap();
             let projected: serde_json::Value = serde_json::from_str(&graph_json).unwrap();
-            assert_eq!(projected["manifest"], serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&graph.manifest)).unwrap());
+            assert_eq!(projected["manifestId"], serde_json::to_value(&graph.manifest_id).unwrap());
+            assert!(projected.get("manifest").is_none());
             assert_eq!(JackQueryGraphSnapshot::from_json(&graph_json).unwrap(), **graph);
         }
         assert_eq!(actual.1.len(), case["mutations"].as_u64().unwrap() as usize);

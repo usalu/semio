@@ -6,10 +6,10 @@ import {join} from "node:path";
 import {CACHE_GC_LIMITS_V1} from "../🧬️schema/🟦️.ts";
 import {cacheSizeChargeV1,CACHE_RUNTIME_V1,cacheAreaDirectoryV1,cacheLedgerV1,cacheRootDirectoryV1,cacheTextV1,formatCacheBytesV1,formatCacheReportV1,type CacheLanguageV1,type CacheLedgerV1,type CachePartitionBudgetsV1,type CacheSizeRecordV1} from "../../../⚡️caching/💾️storage/🧾️ledger/🟦️.ts";
 import type {MemberScanControlV1,MemberVerifyReportV1} from "../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🗂️members/🔎️scan/🟦️.ts";
-import {formatMachinePlanV1,machinePolicyV1,planMachineBudgetV1,resolveMachineTotalV1,type MachinePolicyV1} from "../../../⚡️caching/💾️storage/🧾️ledger/🎚️machine/🟦️.ts";
+import {formatMachinePlanV1,machinePolicyV1,parseMachineBytesV1,planMachineBudgetV1,resolveMachineTotalV1,type MachinePolicyV1} from "../../../⚡️caching/💾️storage/🧾️ledger/🎚️machine/🟦️.ts";
 import {dedupeTreeV1} from "../👯️dedupe/🟦️.ts";
 import {collectMachineBoundsV1} from "../../🌡️host-capacity/🧹️disk-recovery/🔌️real/🟦️.ts";
-import {cacheRunnerPortsV1,collectCacheV1,loadCacheSizesV1,machineHostFreeBytesV1,machineUsesV1,removeCacheTreeV1,reportCacheLedgerV1,type CacheRunnerPortsV1} from "../🏃️runner/🟦️.ts";
+import {cacheRunnerPortsV1,collectCacheV1,loadCacheSizesV1,machineHostFreeBytesV1,machineHostTotalBytesV1,machineUsesV1,removeCacheTreeV1,reportCacheLedgerV1,type CacheRunnerPortsV1} from "../🏃️runner/🟦️.ts";
 import type {CargoGcControlV1} from "../../../⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/📏️tree/🟦️.ts";
 import type {MachinePlanV1} from "../../../⚡️caching/💾️storage/🧾️ledger/🎚️machine/🟦️.ts";
 import {resolveLanguageV1} from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
@@ -18,9 +18,9 @@ import {writeResultLineV1} from "../../../../../../../🔨️modules/🏃️proc
 import {nativeFreeSpaceSyncV1,nativeStorageBackendOfDirectoryV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 
 /** 📝️ The closed arguments of `repo cache status|gc|verify`. */
-export type CacheArgumentsV1=Readonly<{operation:"status"|"gc"|"verify"|"dedupe";json:boolean;deep:boolean;dryRun:boolean;only:ReadonlySet<string>|undefined;language:string|undefined;budget:string|undefined}>;
+export type CacheArgumentsV1=Readonly<{operation:"status"|"gc"|"verify"|"dedupe";json:boolean;deep:boolean;dryRun:boolean;only:ReadonlySet<string>|undefined;language:string|undefined;budget:string|undefined;reclaimBytes?:number|undefined}>;
 const both=(key:string,variables:Readonly<Record<string,string|number>>={}):string=>cacheTextV1("en",key,variables)+"\n"+cacheTextV1("de",key,variables);
-const valued=Object.freeze(["--area","--lang","--budget"]),plain=Object.freeze(["--json","--dry-run","--deep"]);
+const valued=Object.freeze(["--area","--lang","--budget","--reclaim"]),plain=Object.freeze(["--json","--dry-run","--deep"]);
 
 /** 🧷️ Reads `status|gc|verify` with its options; every unknown or repeated option is refused in both languages. */
 export function cacheArgumentsV1(args:readonly string[],ledger:CacheLedgerV1=cacheLedgerV1(),declared:MachinePolicyV1=machinePolicyV1()):CacheArgumentsV1{
@@ -30,14 +30,14 @@ export function cacheArgumentsV1(args:readonly string[],ledger:CacheLedgerV1=cac
   const argument=args[index]!,cut=argument.indexOf("="),name=cut<0?argument:argument.slice(0,cut);
   if(seen.has(name))throw Error(both("error.repeated",{option:name}));
   seen.add(name);
-  if(valued.includes(name)&&!(operation==="verify"&&(name==="--area"||name==="--budget"))&&!(operation==="dedupe"&&name==="--budget")){const value=cut<0?args[++index]:argument.slice(cut+1);if(!value||value.startsWith("--"))throw Error(both("error.value",{option:name}));values[name]=value;}
+  if(valued.includes(name)&&!(operation==="verify"&&(name==="--area"||name==="--budget"))&&!(operation==="dedupe"&&name==="--budget")&&!(name==="--reclaim"&&operation!=="gc")){const value=cut<0?args[++index]:argument.slice(cut+1);if(!value||value.startsWith("--"))throw Error(both("error.value",{option:name}));values[name]=value;}
   else if(plain.includes(name)&&cut<0&&(name!=="--dry-run"||operation==="gc"||operation==="dedupe")&&(name!=="--deep"||operation!=="gc"&&operation!=="dedupe")){if(name==="--json")json=true;else if(name==="--deep")deep=true;else dryRun=true;}
   else throw Error(both("error.option",{option:argument}));
  }
  if(operation==="verify"&&!deep)throw Error(both("error.verify"));
  const ids=new Set(operation==="dedupe"?declared.dedupe.map(target=>target.id):[...ledger.areas.map(area=>area.id),"retired","undeclared"]),only=values["--area"]?new Set(values["--area"].split(",")):undefined;
  for(const id of only??[]){if(!id)throw Error(both("error.areaEmpty"));if(!ids.has(id))throw Error(both("error.area",{id}));}
- return Object.freeze({operation,json,deep,dryRun,only,language:values["--lang"],budget:values["--budget"]});
+ return Object.freeze({operation,json,deep,dryRun,only,language:values["--lang"],budget:values["--budget"],reclaimBytes:values["--reclaim"]===undefined?undefined:parseMachineBytesV1(values["--reclaim"])});
 }
 
 /** 🎛️ What the command needs besides the runner ports: the workspace, the environment, the output and the ledger. */
@@ -79,7 +79,7 @@ export async function runCacheLedgerCommandV1(args:readonly string[],context:Cac
  const ledger=context.ledger??cacheLedgerV1(),parsed=cacheArgumentsV1(args,ledger,context.machinePolicy),language:CacheLanguageV1=resolveLanguageV1(CATALOG_LANGUAGES_V1,args,context.environment).language;
  try{
   if(parsed.operation==="status"){
-   const report=await reportCacheLedgerV1(context.workspace,ledger,ports,context.partitions,parsed.only,{deep:parsed.deep}),total=await machineTotalV1(context,parsed,ledger),machine=planMachineBudgetV1({totalBytes:total.bytes,hostFreeBytes:machineHostFreeBytesV1(context.workspace),uses:machineUsesV1(report)});
+   const report=await reportCacheLedgerV1(context.workspace,ledger,ports,context.partitions,parsed.only,{deep:parsed.deep}),total=await machineTotalV1(context,parsed,ledger),machine=planMachineBudgetV1({totalBytes:total.bytes,hostFreeBytes:machineHostFreeBytesV1(context.workspace),hostTotalBytes:machineHostTotalBytesV1(context.workspace),uses:machineUsesV1(report)});
    if(parsed.json)context.write(JSON.stringify({...report,machine:{...machine,source:total.source}},null,2));else{for(const line of formatCacheReportV1(language,report,ledger))context.write(line);context.write("");for(const line of formatMachinePlanV1(language,machine,total.source))context.write(line);}
    return 0;
   }
@@ -93,7 +93,7 @@ export async function runCacheLedgerCommandV1(args:readonly string[],context:Cac
    return report.mismatches||report.closureMismatches?1:0;
   }
   if(parsed.operation==="dedupe")return runDedupeV1(context,parsed,language,ports);
-  const total=await machineTotalV1(context,parsed,ledger),result=await collectCacheV1(context.workspace,ledger,{dryRun:parsed.dryRun,only:parsed.only,machine:{totalBytes:total.bytes,source:total.source}},ports,{language,write:parsed.json?()=>{}:context.write},context.partitions);
+  const total=await machineTotalV1(context,parsed,ledger),result=await collectCacheV1(context.workspace,ledger,{dryRun:parsed.dryRun,only:parsed.only,...parsed.reclaimBytes===undefined?{}:{reclaimBytes:parsed.reclaimBytes},machine:{totalBytes:total.bytes,source:total.source}},ports,{language,write:parsed.json?()=>{}:context.write},context.partitions);
   const host=parsed.only===undefined?await collectHostStoreV1(context,ledger,language,parsed,ports,result.sizeUpdates):undefined,bounds=parsed.only===undefined?await collectMachineBoundsOfCommandV1(context,language,parsed,ports):undefined;
   if(parsed.json)context.write(JSON.stringify({version:1,dryRun:result.dryRun,freedBytes:result.freedBytes,kept:result.kept,removed:result.removed,failed:result.failed,delegated:result.delegated,machine:result.machine,...result.fleetStatePartial?{fleetStatePartial:true}:{},plans:result.plans,hostStore:host,machineBounds:bounds?.freed},null,2));
   else{for(const failure of result.failed)context.write(failure.target+"/"+failure.name+": "+failure.message);if(host)context.write(host.line);for(const line of bounds?.lines??[])context.write(line);}
@@ -118,7 +118,7 @@ async function collectHostStoreV1(context:CacheCommandContextV1,ledger:CacheLedg
 /** 🧺️ Applies the in-process bounds of the machine after the host store: the owner-pool waves, the footprint logs, the read verdicts, the staging and temporary directories of gone owners and the files the replica overwrote, each by its declared age and count; a dry run only reports what would go. A bound that fails is skipped, never the command. @see ../../🌡️host-capacity/🧹️disk-recovery/🧺️bounds/🟦️.ts */
 async function collectMachineBoundsOfCommandV1(context:CacheCommandContextV1,language:CacheLanguageV1,parsed:CacheArgumentsV1,ports:CacheRunnerPortsV1):Promise<{lines:readonly string[];freed:Readonly<Record<string,number>>}|undefined>{
  const{homedir,tmpdir}=await import("node:os");
- try{return await collectMachineBoundsV1({workspace:context.workspace,home:context.environment.HOME??(context.environment===process.env?homedir():context.workspace),tmp:context.environment.TMPDIR??(context.environment===process.env?tmpdir():join(context.workspace,".cache","none")),uid:process.getuid?.()??0,environment:context.environment,dryRun:parsed.dryRun},language==="de"?"de":"en",ports.signal);}
+ try{return await collectMachineBoundsV1({workspace:context.workspace,home:context.environment.HOME??(context.environment===process.env?homedir():context.workspace),tmp:context.environment.TMPDIR??(context.environment===process.env?tmpdir():join(context.workspace,".cache","scratch")),uid:process.getuid?.()??0,environment:context.environment,dryRun:parsed.dryRun},language==="de"?"de":"en",ports.signal);}
  catch(error){if(ports.signal.aborted)throw error;return undefined;}
 }
 
@@ -220,12 +220,27 @@ export async function runCacheLedgerV1(root:string,args:readonly string[],invoca
   }
  });
  const verify=async(control:import("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🗂️members/🔎️scan/🟦️.ts").MemberScanControlV1)=>{const scan=await import("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🗂️members/🔎️scan/🟦️.ts"),image=await partitions.openRepositoryCachePartitionV1(root,"graph",phaseControl);try{return await scan.verifyBuildGraphMembersDeepV1(image.root,control);}finally{await image.close();}};
+ const wholeGc=args[0]==="gc"&&!args.some(arg=>arg==="--area"||arg.startsWith("--area="));
+ const idleOnly=args.includes("--idle"),reclaimImages=async(order:readonly("rust"|"dependencies"|"graph"|"products"|"tools"|"diagnostics"|"nx")[])=>{
+  const reclaimDue=(await import("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🟦️.ts")).repositoryPartitionReclaimDueV1,{createHash}=await import("node:crypto"),{tmpdir}=await import("node:os"),{mkdirSync,readFileSync,writeFileSync}=await import("node:fs"),{compactOnIdleV1}=await import("../🛌️idle/🟦️.ts");
+  const stamps=join(tmpdir(),"semio-idle-compaction-"+createHash("sha256").update(root).digest("hex").slice(0,16));
+  if(args.includes("--dry-run")){for(const partition of order)if(reclaimDue(root,partition))writeResultLineV1("Would reclaim the host blocks of image "+partition);return;}
+  const results=await compactOnIdleV1({partitions:order,minimumIntervalMilliseconds:idleOnly?CACHE_GC_LIMITS_V1.idleCompactionIntervalMilliseconds:0,maximumMilliseconds:CACHE_GC_LIMITS_V1.idleCompactionMaximumMilliseconds,signal:invocation.control.signal,ports:{
+   now:Date.now,due:partition=>reclaimDue(root,partition),
+   lastAt:partition=>{try{return (JSON.parse(readFileSync(join(stamps,partition+".json"),"utf8")) as {at:number}).at;}catch{return undefined;}},
+   stamp:(partition,at)=>{try{mkdirSync(stamps,{recursive:true});writeFileSync(join(stamps,partition+".json"),JSON.stringify({at}));}catch{}},
+   reclaim:async partition=>{
+    const outcome=await partitions.reclaimImageIfQuiescentV1(invocation,phaseControl,partition,(done,total)=>routing.advanceScriptInvocation(invocation,"cache:reclaim-"+partition+"-"+done+"-"+total,"running"));
+    return outcome.outcome==="skipped"?{outcome:"skipped",reason:outcome.reason}:{outcome:"reclaimed",beforeBytes:outcome.beforeBytes,afterBytes:outcome.afterBytes};
+   }}});
+  for(const row of results){
+   if(row.result==="compacted")writeResultLineV1("Reclaimed image "+row.partition+": "+formatCacheBytesV1(row.beforeBytes!)+" -> "+formatCacheBytesV1(row.afterBytes!)+" on the host");
+   else if(row.result==="busy"||row.result==="failed")writeResultLineV1("Image "+row.partition+" not compacted: "+(row.message??row.result)+" / Image "+row.partition+" nicht verdichtet: "+(row.message??row.result));
+  }
+ };
+ if(idleOnly){await reclaimImages(["rust","dependencies","graph","products","tools","diagnostics","nx"]);return;}
+ if(wholeGc&&!args.includes("--dry-run"))await reclaimImages(["rust"]);
  const code=await runCacheLedgerCommandV1(args,{workspace:root,environment:process.env,write:writeResultLineV1,verify},ports);
  if(code!==0)process.exitCode=code;
- else if(args[0]==="gc"&&!args.some(arg=>arg==="--area"||arg.startsWith("--area=")))for(const partition of["rust","dependencies","graph","products","tools","diagnostics","nx"]as const){
-  invocation.control.signal.throwIfAborted();
-  if(args.includes("--dry-run")){if((await import("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🟦️.ts")).repositoryPartitionReclaimDueV1(root,partition))writeResultLineV1("Would reclaim the host blocks of image "+partition);continue;}
-  const outcome=await partitions.reclaimImageIfQuiescentV1(invocation,phaseControl,partition,(done,total)=>routing.advanceScriptInvocation(invocation,"cache:reclaim-"+partition+"-"+done+"-"+total,"running"));
-  if(outcome)writeResultLineV1("Reclaimed image "+partition+": "+formatCacheBytesV1(outcome.beforeBytes)+" -> "+formatCacheBytesV1(outcome.afterBytes)+" on the host"+(outcome.settled?"":" (still shrinking)"));
- }
+ else if(wholeGc)await reclaimImages(["rust","dependencies","graph","products","tools","diagnostics","nx"]);
 }

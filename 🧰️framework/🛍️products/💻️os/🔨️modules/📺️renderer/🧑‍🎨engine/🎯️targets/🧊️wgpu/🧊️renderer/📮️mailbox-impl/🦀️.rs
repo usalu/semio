@@ -30,7 +30,11 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
         }
         if slot.as_ref().unwrap().empty() {
             let demand = slot.as_ref().unwrap().release_demand();
-            let step = semio_framework_job::close_original_retained_step(cx, demand, |grant| FrameOriginalRecovery::release_empty(&mut slot, grant))?;
+            let step = semio_framework_job::close_original_retained_step(cx, demand, |grant| {
+                let result = FrameOriginalRecovery::release_empty(&mut slot, grant);
+                let work = result.as_ref().map_or(0, |step| step.progress().copied_items as u128);
+                semio_framework_value::RetainedWorkOutcome { result, work }
+            })?;
             return Ok(step.progress() != Default::default());
         }
         let original = slot.as_mut().unwrap();
@@ -74,6 +78,7 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
             }).unwrap_or(Ok(false)),
         }
     }
+
 }
 
 #[path = "⏳️pending-work-deadlines-and-spawns/🦀️.rs"]
@@ -91,7 +96,7 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
         let available = runtime.interaction_available();
         let head = queue.head_requires_interaction();
         let owner = queue.interaction_owner_outstanding();
-        let admission = runtime.interaction_checkout_mut().admit(head, available, owner);
+        let admission = runtime.admit_interaction_checkout(head, available, owner);
         let Some(index) = queue.first_applicable(available) else {
             if admission == runtime_mailbox_core::InteractionCheckoutStep::Abandoned {
                 return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "original interaction checkout has no return owner").into());
@@ -139,7 +144,7 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
         let owner = queue.interaction_owner_outstanding();
         #[cfg(not(target_arch = "wasm32"))]
         let owner = owner || !self.0.original_recovery.try_lock().is_ok_and(|owner| owner.is_none()) || runtime.pending_frame_maintenance_refusal().is_some() || self.0.frame_maintenance_executions.state.load(Ordering::Acquire) != 0 || self.0.frame_deferred_executions.state.load(Ordering::Acquire) != 0;
-        if owner { PresenterInteractionStep::Waiting { site: runtime.interaction_checkout().site().unwrap_or("unknown"), request: semio_renderer_wgpu_host_base::host_io_request_trace_label() } } else { PresenterInteractionStep::Abandoned }
+        if owner { PresenterInteractionStep::Waiting { site: runtime.interaction_checkout_site().unwrap_or("unknown"), request: semio_renderer_wgpu_host_base::host_io_request_trace_label() } } else { PresenterInteractionStep::Abandoned }
     }
 
     /// 🤝️ Restores the actual interaction in place while its remaining cursor stays in the same bounded queue.

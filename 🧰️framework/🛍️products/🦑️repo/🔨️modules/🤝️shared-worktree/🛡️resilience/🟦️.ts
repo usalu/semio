@@ -20,7 +20,16 @@ export type CodeSnapshotV1=Readonly<{digest:string;createdMs:number;directory:st
 /** 🩹️ What the daemon shows about itself without asking the store: the store state, the refused new code and the recurring failures per kind. */
 export type HealthV1=Readonly<{version:1;wallMs:number;pid:number;code:string;store:"ok"|"stalled"|"unreachable";storeSinceMs:number;pending:Readonly<{code:string;ok:false;reason:string}>|null;failures:readonly FailureSummaryV1[];trust:TrustV1;sidecars?:readonly SidecarStateV1[]}>;
 
-/** 🔁️ A recurring failure: its kind (the first part of its key), how often it happened and when it happened last. */
+/** 🔤️ The native runtime error codes treated as sharing failures by target mutations. */
+export type TargetSharingCodeV1=keyof typeof targetSharingKindsV1;
+
+/** 🧷️ The failed native target mutation. */
+export type TargetSharingOperationV1=keyof typeof targetSharingOperationKindsV1;
+
+/** 🪪️ The last sampled target metadata for an EPERM from a staged rename. */
+export type RenameEpermTargetV1=keyof typeof renameEpermTargetKindsV1;
+
+/** 🔁️ A recurring failure: its kind, lifetime count and latest timestamp. */
 export type FailureSummaryV1=Readonly<{kind:string;count:number;lastMs:number}>;
 
 /** 🧪️ A pure verdict on a deadline-bounded store state. */
@@ -69,11 +78,9 @@ export async function moduleSourcesV1(root:string):Promise<string[]>{
 
 /** 🕸️ The files the module sources import beyond themselves, directly or through each other, as sorted `/` paths relative to `root` (outside the module they start with `..`): TypeScript sources, JSON schemas and catalogues. Only relative specifiers are followed, because the module has no other kind of runtime import. */
 export async function importClosureV1(root:string,sources:readonly string[]):Promise<string[]>{
- const own=new Set(sources),seen=new Set<string>(),extra:string[]=[],queue=sources.map(path=>resolve(root,...path.split("/")));
+ const own=new Set(sources),extra:string[]=[],scheduled=new Set(sources.map(path=>resolve(root,...path.split("/")))),queue=[...scheduled];
  for(let index=0;index<queue.length;index++){
   const file=queue[index]!;
-  if(seen.has(file))continue;
-  seen.add(file);
   const path=posix(relative(root,file));
   if(!own.has(path))extra.push(path);
   if(!file.endsWith(".ts")&&!file.endsWith(".js")&&!file.endsWith(".mjs"))continue;
@@ -83,9 +90,9 @@ export async function importClosureV1(root:string,sources:readonly string[]):Pro
    const name=match[1]??match[2]??match[3]!;
    if(!name.startsWith("."))continue;
    const target=resolve(dirname(file),name);
-   if(seen.has(target))continue;
+   if(scheduled.has(target))continue;
    const info=await stat(target).catch(()=>undefined);
-   if(info?.isFile())queue.push(target);
+   if(info?.isFile()){scheduled.add(target);queue.push(target);}
   }
  }
  return extra.sort(bytewise);
@@ -301,16 +308,27 @@ export type StoreTurnV1<T>=Readonly<{status:"done";value:T}>|Readonly<{status:"s
 /** 🚧️ A deadline guard around a store that may hang: a blocked filesystem call cannot be cancelled in Node or Bun (it holds a worker thread until the kernel returns), so the guard never waits for one. `reachable` probes the store with at most one outstanding probe and answers `false` once a probe is older than the deadline; `turn` runs a body of store work with an abort signal and abandons it (aborting the signal, so no new call starts once the blocked one returns) as soon as a probe has been outstanding for the deadline and the work has not called `beat` within the deadline either (an upload that moves bytes, flushes or verifies is alive, whatever a probe on the same saturated mount says; a multi-gigabyte pack was abandoned and restarted from zero in a loop before); `call` runs one store call under the deadline. While the state is not `ok` no turn and no call starts, so at most the already blocked calls plus one probe are outstanding. When a probe answers again and the abandoned work has returned the state is `ok` again without a restart. */
 export type StoreGuardV1={state():StoreStateV1;since():number;beat():void;reachable():Promise<boolean>;turn<T>(work:(signal:AbortSignal)=>Promise<T>,outer?:AbortSignal):Promise<StoreTurnV1<T>>;call<T>(work:()=>Promise<T>):Promise<T>;outstanding():number};
 
-/** 🏭️ Creates a store guard. */
+const leakedCallsMaximumV1=4;
+
+/** 🏭️ Creates a store guard. A call or probe that never returns holds a worker thread for ever: it is abandoned and forgotten at once, so it cannot hold the guard (`turn` and `call` are free again as soon as the store answers a probe, five deadlines after the abandonment), but at most four such leaked threads are tolerated before the guard stays stalled, because the thread pool must keep threads for the calls that work; a probe that has not answered after three deadlines is orphaned the same way and a new one is started, so a store that hangs one call does not stay stalled for ever. */
 export function createStoreGuardV1(options:StoreGuardOptionsV1):StoreGuardV1{
- let state:StoreStateV1="ok",since=options.now(),beatMs=options.now(),probing:Readonly<{promise:Promise<void>;startedAt:number}>|undefined,turning=false,calling=false,abandoned=0,abandonedAt=0;
+ let state:StoreStateV1="ok",since=options.now(),beatMs=options.now(),probing:{promise:Promise<void>;startedAt:number;orphan:boolean}|undefined,turning=false,calling=false,abandoned=0,abandonedAt=0,leaked=0;
  const set=(next:StoreStateV1):void=>{if(next===state)return;state=next;since=options.now();options.changed(next);};
  const wait=(milliseconds:number):Readonly<{promise:Promise<"late">;cancel:()=>void}>=>{let timer:ReturnType<typeof setTimeout>|undefined;return {promise:new Promise<"late">(done=>{timer=setTimeout(()=>{done("late");},Math.max(0,milliseconds));timer.unref?.();}),cancel:()=>{clearTimeout(timer);}};};
  const mayRecover=():boolean=>abandoned===0||options.now()-abandonedAt>5*options.deadlineMs;
  const startProbe=():void=>{
-  if(probing!==undefined)return;
-  const promise:Promise<void>=Promise.resolve().then(options.probe).then(ok=>{probing=undefined;if(ok){if(state!=="ok"&&mayRecover())set("ok");}else set("unreachable");},()=>{probing=undefined;set("unreachable");});
-  probing={promise,startedAt:options.now()};
+  if(probing!==undefined){
+   if(options.now()-probing.startedAt<=3*options.deadlineMs||leaked>=leakedCallsMaximumV1)return;
+   probing.orphan=true;leaked++;probing=undefined;
+  }
+  const entry:{promise:Promise<void>;startedAt:number;orphan:boolean}={promise:Promise.resolve(),startedAt:options.now(),orphan:false};
+  const settle=(ok:boolean):void=>{
+   if(entry.orphan){leaked--;return;}
+   probing=undefined;
+   if(ok){if(state!=="ok"&&mayRecover())set("ok");}else set("unreachable");
+  };
+  entry.promise=Promise.resolve().then(options.probe).then(settle,()=>{settle(false);});
+  probing=entry;
  };
  const abandon=():void=>{abandoned++;abandonedAt=options.now();set("stalled");};
  return {
@@ -329,7 +347,7 @@ export function createStoreGuardV1(options:StoreGuardOptionsV1):StoreGuardV1{
    return state==="ok";
   },
   async turn<T>(work:(signal:AbortSignal)=>Promise<T>,outer?:AbortSignal):Promise<StoreTurnV1<T>>{
-   if(state!=="ok")return {status:"stalled"};
+   if(state!=="ok"||leaked>=leakedCallsMaximumV1)return {status:"stalled"};
    if(turning)return {status:"busy"};
    turning=true;
    const controller=new AbortController(),relay=():void=>{controller.abort(outer?.reason);};
@@ -337,14 +355,14 @@ export function createStoreGuardV1(options:StoreGuardOptionsV1):StoreGuardV1{
    const running=Promise.resolve().then(()=>work(controller.signal));
    let stopped=false,handedOff=false,timer:ReturnType<typeof setTimeout>|undefined;
    const release=():void=>{turning=false;outer?.removeEventListener("abort",relay);};
-   const finish=():void=>{abandoned--;release();startProbe();};
+   const finish=():void=>{abandoned--;leaked--;release();startProbe();};
    try{
     return await new Promise<StoreTurnV1<T>>((resolveTurn,rejectTurn)=>{
      const watch=():void=>{
       if(stopped)return;
       startProbe();
       if(probing!==undefined&&options.now()-probing.startedAt>=options.deadlineMs&&options.now()-beatMs>=options.deadlineMs){
-       stopped=true;handedOff=true;abandon();controller.abort(new StoreStalledV1());
+       stopped=true;handedOff=true;abandon();leaked++;turning=false;controller.abort(new StoreStalledV1());
        running.then(finish,finish);
        resolveTurn({status:"stalled"});return;
       }
@@ -356,10 +374,10 @@ export function createStoreGuardV1(options:StoreGuardOptionsV1):StoreGuardV1{
    }finally{if(!handedOff)release();}
   },
   async call<T>(work:()=>Promise<T>):Promise<T>{
-   if(state!=="ok"||calling)throw new StoreStalledV1();
+   if(state!=="ok"||calling||leaked>=leakedCallsMaximumV1)throw new StoreStalledV1();
    calling=true;
    const running=Promise.resolve().then(work).then(value=>({value}),error=>({error})),timer=wait(options.deadlineMs),first=await Promise.race([running,timer.promise]);
-   if(first==="late"){abandon();running.then(()=>{abandoned--;calling=false;startProbe();});throw new StoreStalledV1();}
+   if(first==="late"){abandon();leaked++;calling=false;running.then(()=>{abandoned--;leaked--;startProbe();});throw new StoreStalledV1();}
    timer.cancel();calling=false;
    if("error" in first)throw first.error;
    return first.value;
@@ -371,26 +389,36 @@ export function createStoreGuardV1(options:StoreGuardOptionsV1):StoreGuardV1{
 export type FailuresOptionsV1=Readonly<{now:()=>number;windowMs?:number;capacity?:number}>;
 
 /** 🔁️ Counts failures per key so that a recurring one never goes silent: the first occurrence is announced, a repeat only once per window (with its total count); `clear` forgets the key when the operation worked again, `summary` lists the failure kinds with their lifetime count and last time. */
-export type FailuresV1={note(key:string,message:string,incomingWorktree?:boolean):Readonly<{announce:boolean;count:number}>;clear(key:string):void;has(key:string):boolean;summary(limit?:number):readonly FailureSummaryV1[];diagnostics(limit?:number):readonly FailureSummaryV1[];size():number;forgetOlderThan(milliseconds:number):number};
+export type FailuresV1={note(key:string,message:string,incomingWorktree?:boolean,nativeCode?:TargetSharingCodeV1,operation?:TargetSharingOperationV1,target?:RenameEpermTargetV1):Readonly<{announce:boolean;count:number}>;clear(key:string):void;has(key:string):boolean;summary(limit?:number):readonly FailureSummaryV1[];diagnostics(limit?:number):readonly FailureSummaryV1[];size():number;forgetOlderThan(milliseconds:number):number};
 
-const blockedReasonKindsV1=new Set<string>(schema.definitions.BlockedReasons.const);
+const blockedReasonKindsV1=new Set<string>(schema.definitions.BlockedReasons.const),targetSharingKindsV1=schema.definitions.TargetSharingKinds.const,targetSharingOperationKindsV1=schema.definitions.TargetSharingOperationKinds.const,renameEpermTargetKindsV1=schema.definitions.RenameEpermTargetKinds.const;
 
-/** 🏭️ Creates a recurrence tracker. Supplemental blocked details, including the ordinary incoming target-sharing subset, fill spare report slots after the existing totals. */
+/** 🏭️ Creates a recurrence tracker. Supplemental blocked details fill spare report slots after totals. Native target sharing codes and operations follow the existing reasons and incoming subset. */
 export function createFailuresV1(options:FailuresOptionsV1):FailuresV1{
  const window=options.windowMs??60_000,capacity=options.capacity??256,entries=new Map<string,{count:number;lastMs:number;announcedMs:number}>(),kinds=new Map<string,{count:number;lastMs:number}>(),blocked=new Map<string,{count:number;lastMs:number}>();
+ const sharingReason="blocked-sharing-violation";
+ const sharingCodes=new Map<string,{count:number;lastMs:number}>(),sharingOperations=new Map<string,{count:number;lastMs:number}>(),renameEpermTargets=new Map<string,{count:number;lastMs:number}>();
+ const record=(counts:Map<string,{count:number;lastMs:number}>,kind:string,lastMs:number):void=>{counts.set(kind,{count:(counts.get(kind)?.count??0)+1,lastMs});};
  const incomingSharing={kind:schema.definitions.IncomingWorktreeSharingKind.const,count:0,lastMs:0};
  const rank=(left:FailureSummaryV1,right:FailureSummaryV1):number=>right.lastMs-left.lastMs||(left.kind<right.kind?-1:1);
  const rows=(items:ReadonlyMap<string,{count:number;lastMs:number}>):FailureSummaryV1[]=>[...items].map(([kind,value])=>({kind,...value}));
  const summary=(limit=8):readonly FailureSummaryV1[]=>[...rows(kinds).filter(item=>item.kind!=="loop-blocked"),...blockedFailuresV1()].sort(rank).slice(0,limit);
  const kindOf=(key:string):string=>{const head=key.split(":")[0]!.toLowerCase().replace(/[^a-z0-9-]/gu,"-").replace(/^[^a-z]+/u,"");return (head===""?"failure":head).slice(0,40);};
  return {
-  note(key,message,incomingWorktree){
+  note(key,message,incomingWorktree,nativeCode,operation,target){
    const now=options.now(),category=kindOf(key),entry=entries.get(key)??{count:0,lastMs:now,announcedMs:-Infinity},kind=kinds.get(category)??{count:0,lastMs:now};
    entry.count++;entry.lastMs=now;kind.count++;kind.lastMs=now;
    if(category==="blocked"){
     const candidate=message.length<=32?message.toLowerCase():"other",reason="blocked-"+(blockedReasonKindsV1.has(candidate)?candidate:"other");
-    blocked.set(reason,{count:(blocked.get(reason)?.count??0)+1,lastMs:now});
-    if(incomingWorktree&&reason==="blocked-sharing-violation"){incomingSharing.count++;incomingSharing.lastMs=now;}
+    record(blocked,reason,now);
+    if(reason===sharingReason){
+     if(nativeCode!==undefined){
+      record(sharingCodes,targetSharingKindsV1[nativeCode],now);
+      if(operation!==undefined)record(sharingOperations,targetSharingOperationKindsV1[operation],now);
+      if(nativeCode==="EPERM"&&operation==="rename"&&target!==undefined)record(renameEpermTargets,renameEpermTargetKindsV1[target],now);
+     }
+     if(incomingWorktree){incomingSharing.count++;incomingSharing.lastMs=now;}
+    }
    }
    const announce=entry.count===1||now-entry.announcedMs>=window;
    if(announce)entry.announcedMs=now;
@@ -407,7 +435,8 @@ export function createFailuresV1(options:FailuresOptionsV1):FailuresV1{
    if(totals.length>=limit||!totals.some(row=>row.kind==="blocked"))return totals;
    const details=[...totals,...rows(blocked).sort(rank).slice(0,limit-totals.length)];
    if(details.length<limit&&incomingSharing.count>0)details.push({...incomingSharing});
-   return details;
+   const targetRows=rows(renameEpermTargets).sort((left,right)=>right.count-left.count||rank(left,right));
+   return [...details,...[...rows(sharingCodes).sort(rank),...rows(sharingOperations).sort(rank),...targetRows].slice(0,limit-details.length)];
   },
   forgetOlderThan(milliseconds){
    const limit=options.now()-milliseconds;
@@ -644,6 +673,9 @@ export async function listStoreCodeV1(store:string):Promise<CodeSnapshotV1[]>{
  }
  return found.sort((left,right)=>right.createdMs-left.createdMs||(left.digest<right.digest?-1:1));
 }
+
+/** ⏲️ Maximum interval between retries of an otherwise eligible snapshot publication. */
+export const CODE_SNAPSHOT_PUBLICATION_RETRY_MAXIMUM_V1=schema.definitions.CodeSnapshotPublicationPolicy.const.retryMaximumMilliseconds;
 
 /** 📤️ Publishes the sealed local snapshot of `digest` to the store so that a machine whose worktree code and local snapshots are all unusable can fetch working code: the files are re-verified against their seal, copied into a private `.tmp-` directory next to the target with `sealed.json` written last, and renamed into `<store>/v1/bootstrap/code/<digest>`, so a snapshot in the store either is complete or does not exist. A present intact snapshot is left alone, a damaged one is replaced. */
 export async function publishCodeSnapshotV1(options:Readonly<{root:string;store:string;digest:string;originId:string}>):Promise<Readonly<{published:boolean;reason:string|null}>>{

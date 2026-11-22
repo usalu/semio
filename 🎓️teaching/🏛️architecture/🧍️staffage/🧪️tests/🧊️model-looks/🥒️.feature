@@ -46,3 +46,9 @@ Feature: The seven views are looks of one geometry, painted by the rules of the 
     Given the glyph solids of the model
     When the variants are read
     Then every glyph material is fully transparent in the base look and bound by exactly one analytic variant
+
+  Scenario: A moment arc appears only when its joint transmits a visible moment
+    Given one joint with zero moment throughout and a second joint with successive moments of 0, 5 and 0 newton metres
+    When the three structural frames share a glyph registry
+    Then the unloaded joint contributes no arc geometry
+    And the other joint first appears in the loaded frame and hides again at release

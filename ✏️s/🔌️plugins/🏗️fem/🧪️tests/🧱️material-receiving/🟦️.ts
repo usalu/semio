@@ -2,7 +2,7 @@ import {readFileSync} from "node:fs";
 import {resolve,dirname} from "node:path";
 import {fileURLToPath} from "node:url";
 import {it,expect} from "vitest";
-import Ajv from "ajv/dist/2020";
+import Ajv from "ajv";
 
 it("native material construction retains one canonical explicit value boundary",()=>{
  const root=resolve(dirname(fileURLToPath(import.meta.url)),"../../⚙️engine/🧱️material");const fixture=JSON.parse(readFileSync(resolve(root,"🧪️tests/🧫️fixtures/🔣️.json"),"utf8"));const schema=JSON.parse(readFileSync(resolve(root,"🧬️schema/🔣️.json"),"utf8"));const ajv=new Ajv({strict:true});expect(ajv.compile(schema)(fixture)).toBe(true);const valid=ajv.compile(schema.$defs.material);

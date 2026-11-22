@@ -10,11 +10,26 @@ use semio_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault, FaultCode, Fau
 #[dsl(keyword = "open-space")]
 pub struct OpenSpace {
     pub space_id: String,
+    pub workflow_artifact_id: Option<String>,
 }
 
-pub fn handle(payload: &OpenSpace, _doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+pub fn handle(payload: &OpenSpace, doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
     use semio_hub_space_operations::resolve_future;
     let space_id = &payload.space_id;
+    if let Some(workflow_artifact_id) = &payload.workflow_artifact_id {
+        if !semio_hub_space_operations::workflow_artifact_identity(space_id)
+            || !semio_hub_space_operations::workflow_artifact_identity(workflow_artifact_id)
+            || doc.operation_optional().is_some_and(|operation| operation.parent_document_id != *workflow_artifact_id)
+        {
+            return Err(Fault::from("s.space.workflow-artifact-scope-changed"));
+        }
+        return Ok(Emit::config(vec![
+            SpaceConfigMutation::SetSpaceId(SpaceIdSetting { space_id: Some(space_id.clone()), workflow_artifact_id: Some(workflow_artifact_id.clone()) }),
+            SpaceConfigMutation::SetFocusedNode(FocusedNodeSetting { node_id: None }),
+            SpaceConfigMutation::SetClipboard(ClipboardSetting { node_ids: Vec::new() }),
+            SpaceConfigMutation::SetActiveNode(ActiveNodeSetting { node_id: doc.snapshot.graph.nodes.first().map(|node| node.id.clone()) }),
+        ]));
+    }
     let document = resolve_future(crate::resolve_studio_document(space_id)).or_else(|| {
         if space_id == "demo" {
             let name = {
@@ -34,7 +49,7 @@ pub fn handle(payload: &OpenSpace, _doc: &ArtifactView<'_, WorkflowSnapshot>, _c
     let Some(document) = document else {
         return Err(Fault::new(FaultOrigin::App, FaultCode::new("s.space.not-found"), format!("studio `{space_id}` not found")));
     };
-    let mut config_mutations = vec![SpaceConfigMutation::SetSpaceId(SpaceIdSetting { space_id: Some(space_id.clone()) }), SpaceConfigMutation::SetFocusedNode(FocusedNodeSetting { node_id: None }), SpaceConfigMutation::SetClipboard(ClipboardSetting { node_ids: Vec::new() })];
+    let mut config_mutations = vec![SpaceConfigMutation::SetSpaceId(SpaceIdSetting { space_id: Some(space_id.clone()), workflow_artifact_id: None }), SpaceConfigMutation::SetFocusedNode(FocusedNodeSetting { node_id: None }), SpaceConfigMutation::SetClipboard(ClipboardSetting { node_ids: Vec::new() })];
     let is_demo_space = space_id == "demo" || document.name == crate::DEMO_STUDIO_NAME;
     let workflow_snapshot = resolve_future(semio_s_artifact_space_space::index::resolve_workflow_artifact_document(space_id, &document)).or_else(|| is_demo_space.then(|| resolve_future(crate::parse_demo_space_document()))).unwrap_or_else(|| resolve_future(crate::empty_workflow_artifact_document(space_id, &document.name)));
     let active_node_id = workflow_snapshot.vcs.genesis.facts().snapshot().graph.nodes.first().map(|node| node.id.clone());

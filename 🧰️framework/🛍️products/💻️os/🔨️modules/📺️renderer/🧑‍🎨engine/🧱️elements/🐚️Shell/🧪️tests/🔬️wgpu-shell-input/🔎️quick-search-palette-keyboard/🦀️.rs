@@ -3,7 +3,7 @@
 //#region 🔎️QuickSearchPaletteKeyboard
 /// ⌨️ `mod+p`, as the browser delivers it.
 fn palette_chord() -> (semio_ui_wgpu_input::KeyAction, PointerModifiers) {
-    (semio_ui_wgpu_input::KeyAction::Char("p".into()), PointerModifiers { shift: false, ctrl: true, alt: false, meta: false })
+    (semio_ui_wgpu_input::KeyAction::Char("p".into()), PointerModifiers { shift: false, ctrl: true, alt: false, meta: false, repeat: false })
 }
 
 /// ⚖️ LAW: the shell's own overlay query fields are CHROME, not content.

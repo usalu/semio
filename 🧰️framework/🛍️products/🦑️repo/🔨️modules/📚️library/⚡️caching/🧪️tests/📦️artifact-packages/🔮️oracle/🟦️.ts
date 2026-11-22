@@ -1,7 +1,7 @@
 import { test, expect } from "bun:test";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import Ajv2020 from "ajv/dist/2020.js";
+import Ajv from "ajv";
 import { Validator } from "jsonschema";
 
 const root = resolve(import.meta.dir, "../../..");
@@ -9,7 +9,7 @@ const contract = JSON.parse(readFileSync(resolve(root, "📦️artifacts/🧭️
 const examples = JSON.parse(readFileSync(resolve(root, "🧪️tests/🧫️fixtures/artifact-packages/🔣️.json"), "utf8"));
 
 test("validates actual artifact inventory payloads through two independent schema engines", () => {
-  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(contract);
+  const validate = new Ajv({ strict: true, allErrors: true }).compile(contract);
   const oracle = new Validator();
   const observed = [];
   for (const value of examples.accepted) {

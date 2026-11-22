@@ -29,3 +29,23 @@ fn generated_original_closure_ports_preserve_actual_pending_types(){
   let plan=quote!(#plan).to_string();for getter in ["record_child (","sequence_child (","variant_payload (","as_source ("]{assert!(!plan.contains(getter),"{plan}");}
  }
 }
+
+#[test]
+fn native_flat_tables_are_generated_only_for_plain_named_records() {
+ for (source,flat) in [
+  ("struct Record { #[value(rename=\"wire\")] first: String, second: u64 }",true),
+  ("struct Flattened { #[value(flatten)] child: Child, second: u64 }",false),
+  ("struct Tuple(String, u64);",false),
+  ("enum Unit { First, Second }",false),
+ ] {
+  let input:syn::DeriveInput=syn::parse_str(source).unwrap();
+  let output=expand(&input).unwrap();
+  let _:syn::File=syn::parse2(output.clone()).unwrap();
+  let generated=output.to_string().replace(' ',"");
+  assert_eq!(generated.contains("NativeRecordMatcher::new_flat("),flat);
+  if flat{
+   assert!(generated.contains("NativeSchemaLeaf{name:\"wire\",ordinal:0u32}"));
+   assert!(generated.contains("NativeSchemaLeaf{name:\"second\",ordinal:1u32}"));
+  }
+ }
+}

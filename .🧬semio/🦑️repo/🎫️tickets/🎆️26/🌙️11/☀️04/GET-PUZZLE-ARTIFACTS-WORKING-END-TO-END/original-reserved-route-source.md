@@ -1,0 +1,7 @@
+# Original Reserved Route Source Verification
+
+The focused source suite initially passed 9 tests and failed 9. The positive framework and Puzzle witnesses still looked for a single producer dispatcher that had been split into staged preparation and mounted execution. Six neutral mutations referenced removed call spellings, so they did not edit the actual route.
+
+The verifier follows the public action entry into clipboard preparation and the common original reserved mount. The mount proof checks the exact caller, registry, factory, cancellation lease, construction-before-insertion order and issued receipt. Media preparation must validate the original caller, fund the donation, move the retained media input and advance the registered wire before assembly. Configuration checks the original worker and terminal witness, then verifies caller identity and lease cancellation before store dispatch. Worker checks follow the current retained work loan, refused-session custody and original outcome acknowledgement. The neutral fixture compares the full evidence result against an independent JSON Patch mutation validated by Ajv. The Puzzle fixture now mutates the current host ACK and parent loan.
+
+The focused test ran with the cached Bun 1.4.2 runtime from the checkout root because the repo task backend timed out. Bun requires the `./` prefix for this file's path. The suite passed all 19 tests, including 17 neutral host cases and 37 Puzzle source assertions. No Rust source was edited or rebuilt.

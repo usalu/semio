@@ -32,7 +32,7 @@
     "Policy": {
       "const": {
         "version": 1,
-        "maximumPoolBytes": 939524096,
+        "maximumPoolBytes": 1207959552,
         "maximumNamespaceBytes": 536870912,
         "minimumFreeBytes": 1073741824,
         "hardFreeBytes": 268435456,
@@ -109,13 +109,13 @@
           "items": {
             "type": "integer",
             "minimum": 0,
-            "maximum": 939524096
+            "maximum": 1207959552
           }
         },
         "extraBytes": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 939524096
+          "maximum": 1207959552
         },
         "availableBytes": {
           "type": "integer",
@@ -162,8 +162,9 @@
     "NativePolicy": {
       "const": {
         "version": 1,
-        "maximumPhysicalBytes": 67108864,
-        "filesystemBytes": 66060288,
+        "sizing": {"fileMapBaselineBytes": 50331648, "factor": 3, "imageOverheadBytes": 1048576, "alignBytes": 16777216},
+        "maximumPhysicalBytes": 167772160,
+        "filesystemBytes": 166723584,
         "directory": "native",
         "environment": "SEMIO_NX_NATIVE_GRAPH_DIRECTORY",
         "fundingOwner": "repository:nx-namespace",
@@ -192,7 +193,7 @@
           "maxLength": 256
         },
         "maximumPhysicalBytes": {
-          "const": 67108864
+          "const": 167772160
         }
       }
     },

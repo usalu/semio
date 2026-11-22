@@ -29,11 +29,11 @@ export function observeTestWorkerPeakV1(pid:number=process.pid,intervalMilliseco
  return Object.freeze({stop:async()=>{clearInterval(timer);sample();await pending;return Object.freeze({peakMegabytes:Math.round(peak),peakAtMilliseconds:marks.find(([,megabytes])=>megabytes>=peak*0.95)?.[0]??0});}});
 }
 
-/** ✍️ Teaches the classes of a runner what one finished run held against the size the plan declared; a failed run teaches only when it already exceeded the estimate, a platform that cannot observe teaches nothing, and a store that cannot be written never fails the run. */
+/** ✍️ Teaches the classes of a runner what one finished run held against the size the plan declared; a failed or cancelled run teaches nothing, a platform that cannot observe teaches nothing, and a store that cannot be written never fails the run. */
 export async function recordTestWorkersV1(learning:TestWorkerLearningV1,plan:TestWorkerPlanV1,specific:string|undefined,run:Readonly<{status:HostRunStatusV1;peakMegabytes:number;peakAtMilliseconds:number;activeMilliseconds:number}>):Promise<boolean>{
  if(run.peakMegabytes<=0)return false;
- const lineage=testWorkerLineageV1(plan.runner,specific),now=learning.now??Date.now,ratio=Math.max(1,Math.round(run.peakMegabytes*10000/plan.declaredMegabytes));
- if(!learnableHostRunV1(run.status,ratio,estimateHostRatioV1(learning.policy,readHostEstimateStoreV1(learning.directory),lineage,now())))return false;
+ const lineage=testWorkerLineageV1(plan.runner,specific),now=learning.now??Date.now;
+ if(!learnableHostRunV1(run.status))return false;
  return updateHostEstimateStoreV1(learning.directory,learning.policy,store=>recordHostOutcomeV1(learning.policy,store,lineage,{operation:`${protocol.estimateOperation}-${plan.runner}`,jobs:plan.workers,peakMegabytes:run.peakMegabytes,defaultMegabytes:plan.declaredMegabytes,activeMilliseconds:run.activeMilliseconds,peakAtMilliseconds:run.peakAtMilliseconds,endedAtMs:now()}),{now}).catch(()=>false);
 }
 

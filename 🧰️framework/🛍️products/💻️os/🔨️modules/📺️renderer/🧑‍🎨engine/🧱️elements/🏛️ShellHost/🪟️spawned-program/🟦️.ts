@@ -19,6 +19,7 @@
  * instance — two spawned instances of the same app declare the same window kinds. */
 // #endregion 🧲️Header
 
+import { type WindowLayoutNode, windowIdOf } from "@semio-tech/ui-layout";
 import { localizedLabelTextV1 } from "../📣️replay-refusal/🟦️.ts";
 
 //#region 🪟️SpawnedWindowIdentity
@@ -152,27 +153,21 @@ export function guestActiveUtilityByWindowIdV1(
 //#endregion 🪟️SpawnedWindowIdentity
 
 //#region 🪟️SpawnedLayout
-/** 🪟️ The layout shapes {@link renameLayoutWindowIdsV1} walks — structurally the renderer's
- * `WindowLayoutNode` (`🖱️ui/🎯️targets/⚛️react`), restated here so this unit imports no UI target. */
-export type SpawnedLayoutNodeV1 =
-  | { readonly kind: "window"; readonly id: string }
-  | { readonly kind: "stack"; readonly activeId?: string; readonly children: readonly { readonly kind: "window"; readonly id: string }[] }
-  | { readonly kind: "row" | "column"; readonly children: readonly SpawnedLayoutNodeV1[] };
-
-/** 🪟️ Rewrites every window id in a layout tree through `rename`, preserving structure, sizes,
- * titles, corners and the per-stack `activeId`. This is what turns the spawned app's OWN declared
- * default layout — whose leaves are bare window-kind ids — into a layout over that instance's
- * namespaced window ids, so a spawned program opens in the arrangement its author declared instead
- * of a synthesized stack. A leaf `rename` does not answer for is left untouched. */
-export function renameLayoutWindowIdsV1<T extends SpawnedLayoutNodeV1>(node: T, rename: (windowId: string) => string | undefined): T {
+/** 🪟️ Rewrites every window id (`instanceId ?? windowKindId`) in a contract layout tree through `rename` by
+ * binding the renamed id as the window's `instanceId`, preserving structure, sizes, titles, corners and the
+ * per-stack `activeWindowId`. This is what turns the spawned app's OWN declared default layout — whose leaves
+ * are bare window-kind ids — into a layout over that instance's namespaced window ids, so a spawned program
+ * opens in the arrangement its author declared instead of a synthesized stack. A leaf `rename` does not
+ * answer for is left untouched. */
+export function renameLayoutWindowIdsV1<T extends WindowLayoutNode>(node: T, rename: (windowId: string) => string | undefined): T {
   if (node.kind === "window") {
-    const next = rename(node.id);
-    return next === undefined ? node : ({ ...node, id: next } as T);
+    const next = rename(windowIdOf(node));
+    return next === undefined ? node : ({ ...node, instanceId: next } as T);
   }
   if (node.kind === "stack") {
-    const children = node.children.map((child) => ({ ...child, id: rename(child.id) ?? child.id }));
-    const activeId = node.activeId === undefined ? undefined : (rename(node.activeId) ?? node.activeId);
-    return { ...node, children, ...(node.activeId === undefined ? {} : { activeId }) } as T;
+    const children = node.children.map((child) => renameLayoutWindowIdsV1(child, rename));
+    const activeWindowId = node.activeWindowId === undefined ? undefined : (rename(node.activeWindowId) ?? node.activeWindowId);
+    return { ...node, children, ...(node.activeWindowId === undefined ? {} : { activeWindowId }) } as T;
   }
   return { ...node, children: node.children.map((child) => renameLayoutWindowIdsV1(child, rename)) } as T;
 }

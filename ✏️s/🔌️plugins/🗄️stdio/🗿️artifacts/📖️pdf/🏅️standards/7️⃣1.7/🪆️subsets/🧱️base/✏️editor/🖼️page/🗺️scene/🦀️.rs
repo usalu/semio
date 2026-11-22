@@ -5,8 +5,11 @@ use super::*;
 #[path = "🔡️type3-text/🦀️.rs"]
 mod type3_text;
 
+#[path = "🖍️annotation-default/🦀️.rs"]
+mod annotation_default;
+
 #[path = "🔠️truetype-text/🦀️.rs"]
-pub(super) mod truetype_text;
+pub mod truetype_text;
 
 //#region 🗺️Scene
 /// 👁 Every addressable object in painting order.
@@ -14,7 +17,7 @@ pub fn objects(snapshot: &PdfSnapshot) -> Vec<PageObject> {
     measured_objects(snapshot, &mut FontMeasurements::new(snapshot))
 }
 
-pub(super) fn measured_objects(snapshot: &PdfSnapshot, metrics: &mut FontMeasurements<'_>) -> Vec<PageObject> {
+pub fn measured_objects(snapshot: &PdfSnapshot, metrics: &mut FontMeasurements<'_>) -> Vec<PageObject> {
     let mut found = Vec::new();
     for (page_index, page) in snapshot.pages.iter().enumerate() {
         found.extend(page_objects(snapshot, page_index, page, metrics));
@@ -139,6 +142,7 @@ fn paint_object<'a>(snapshot: &'a PdfSnapshot, page: &PdfPage, content: &[PdfOp]
             }
             layers.push(layer);
         }
+        ObjectKind::Annotation if page.annotations.get(item.object.start).is_some_and(|annotation| annotation_default::paint_default_annotation(snapshot, page, item, annotation, layers)) => {}
         ObjectKind::Image | ObjectKind::Form | ObjectKind::Shading | ObjectKind::Annotation => {
             let preview = match item.object.kind {
                 ObjectKind::Image => image_layer(snapshot, content, item),
@@ -243,7 +247,7 @@ fn canvas_form_quad(page: &PdfPage, item: &Placed, form: &PdfFormXObject, ctm: P
 
 use semio_s_artifact_stdio_pdf_page_coordinates::{quad_contains, stroke_contains, vector_contains};
 
-pub(super) fn constrain_clip(layer: &mut Value, clip: [f64; 4]) {
+pub fn constrain_clip(layer: &mut Value, clip: [f64; 4]) {
     let current = layer.get("clipRect").and_then(|rect| {
         Some([rect[0].as_f64()?, rect[1].as_f64()?, rect[2].as_f64()?, rect[3].as_f64()?])
     });

@@ -1,0 +1,24 @@
+case	station	slope	height	width	offset	factor	weight	angle	static	status	reference	additional	total
+circular-leeward	circular		8	4	4	0.5	8000	0	10000	ready	8000	8000	18000
+circular-windward	circular		8	4	4	0.5	8000	180	10000	ready	8000	-8000	2000
+three-x-governs	circular		8	4	0.2	0.5	8000	60	3000	ready	2400	1200	4200
+fill-height-governs	circular		1	4	0.6	0.4	5000	120	3000	ready	2000	-1000	2000
+circular-redistribution	circular		8	4	4	0.5	8000	0	4000	redistribute	8000		
+circular-zero-total	circular		8	4	4	0.5	8000	180	8000	ready	8000	-8000	0
+rectangular-leeward	leeward		5	8	2	0.5	10000	0	20000	ready	20000	20000	40000
+rectangular-windward	windward		5	8	2	0.5	10000	0	21000	ready	20000	-20000	1000
+rectangular-parallel	parallel		5	8	2	0.5	10000	0	21000	ready	20000	0	21000
+parallel-still-needs-redistribution	parallel		5	8	2	0.5	10000	0	10000	redistribute	20000		
+zero-horizontal-action	circular		5	4	2	0	10000	18	0	ready	0	0	0
+flat-bottom	circular		5	4	0	0.5	10000	18	0	ready	0	0	0
+invalid-azimuth	circular		5	4	2	0.5	10000	360	14000	invalid			
+invalid-pressure	circular		5	4	2	0.5	10000	0	-1	invalid			
+invalid-contact	circular		5	4	6	0.5	10000	0	14000	invalid			
+nonfinite-response	circular		5	4	2	inf	10000	0	14000	invalid			
+invalid-size	circular		5	0	0	0.5	10000	0	14000	invalid			
+conical-hopper	circular	60	7	4	1	0.5	8000	0	20000	ready	16000	16000	36000
+pyramidal-hopper	windward	60	7	4	1	0.5	8000	0	20000	ready	16000	-16000	4000
+hopper-apex-datum	circular	60	1	4	1.2	0.5	8000	0	10000	ready	8000	8000	18000
+hopper-suction	leeward	60	7	4	1	0.5	8000	0	15999	redistribute	16000		
+invalid-hopper-angle	leeward	90	7	4	1	0.5	8000	0	100000	invalid			
+nonpositive-hopper-angle	circular	0	7	4	1	0.5	8000	0	10000	invalid			

@@ -63,8 +63,8 @@ test("failed decoded ingress retirement preserves the same original caller and w
 
 /** 🪜️ Public app fixtures retain the same pending invocation and full domain cause. */
 test("public fixture preview and lifecycle helpers preserve their original source",()=>{
- const source=pluginSubtreeText("🧪️testing"),start=source.indexOf("async fn preview_fixture_on_original"),end=source.indexOf("    /// 🤖️ Previews",start),body=source.slice(start,end);
- expect(start).toBeGreaterThanOrEqual(0);expect(body).toContain("app.command_ctx().preview_addressed_action(invocation,meta,cx).await?");expect(body).toContain("OriginalFixtureCaller::maximum_turns()");expect(body).toContain("cx.should_yield()");expect(body).not.toContain("StepContext::new");expect(body).not.toContain("into_message");expect(source).toContain("bounded_ownership::PluginLifecyclePrimary::Domain(domain)");expect(source).toContain("failure:Some(failure)");expect(source).toContain("PluginApp::maintenance_step(app,same,loan)?");
+ const source=pluginSubtreeText("🧪️testing"),start=source.indexOf("async fn preview_fixture_on_original"),end=source.indexOf("/// 🤖️ Previews",start),body=source.slice(start,end);
+ expect(start).toBeGreaterThanOrEqual(0);expect(end).toBeGreaterThan(start);expect(body).toContain("app.handle_command_frame(&frame,&meta,identity,cx).await?");expect(body).toContain("OriginalFixtureCaller::maximum_turns()");expect(body).toContain("cx.original_turn_ceiling()");expect(body).toContain("fixture_renew_turn(cx,fresh_fuel,fresh_grant)?");expect(body).not.toContain("StepContext::new");expect(body).not.toContain("into_message");expect(source).toContain("bounded_ownership::PluginLifecyclePrimary::Domain(domain)");expect(source).toContain("failure:Some(failure)");expect(source).toContain("PluginApp::maintenance_step(app,same,loan)?");
 });
 
 /** 🧬️ Checks the owned response contract against independent exact integer and JSON output. */

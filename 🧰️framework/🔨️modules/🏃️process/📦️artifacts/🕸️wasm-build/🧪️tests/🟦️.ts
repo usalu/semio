@@ -55,8 +55,8 @@ test("the retained WASM consumer retries only transient observation changes agai
    const {consumeProducedWasmPackageV1:consume,withProducedWasmPackageTaskV1:task}=new Function(...Object.keys(dependencies),code+";return {consumeProducedWasmPackageV1,withProducedWasmPackageTaskV1};")(...Object.values(dependencies));
    const attempt=consume(new Map([[row.name,path]]),{},{
     storage:{backing:{root:directory},recheck:noOp},control:{signal:new AbortController().signal},
-    consume:(token:unknown)=>task(token,async(view:{recheck():Promise<void>})=>{probing=true;try{await view.recheck();}finally{probing=false;}}),
-   },noOp);
+    consume:(token:unknown)=>task(token,async(view:{recheck():Promise<void>;sources:unknown})=>{expect(view.sources).toEqual(fixture.provenance);probing=true;try{await view.recheck();}finally{probing=false;}}),
+   },noOp,fixture.provenance);
    if(row.expected.length){
     const failure=await attempt.catch((error:Error)=>error);
     expect(failure).toBeInstanceOf(Error);

@@ -48,7 +48,7 @@ describe("catalog handler and durable recorder", () => {
     const calls = status.mock.calls.length;
     view.deliver({ kind: "status", persisted: true, pendingMutations: 0 }, "stale");
     expect(status).toHaveBeenCalledTimes(calls);
-    view.deliver({ kind: "documentArchiveReplaced", archive: Array.from(archive({ documents: [document("a")] })) }, "stale");
+    view.deliver({ kind: "documentArchiveReplaced", archive: archive({ documents: [document("a")] }) }, "stale");
     expect(read).not.toHaveBeenCalled();
     expect(view.localCatalogRef.current.documents).toEqual([]);
   });
@@ -56,7 +56,7 @@ describe("catalog handler and durable recorder", () => {
     const view = setup(), catalog = { documents: [document("a")] };
     const read = vi.fn(() => { expect(view.localCatalogRef.current).toEqual(catalog); });
     view.localDocumentOwnersRef.current.set(view.localCatalogClientInstanceIdRef.current!, { archive: read });
-    view.deliver({ kind: "documentArchiveReplaced", archive: Array.from(archive(catalog)) });
+    view.deliver({ kind: "documentArchiveReplaced", archive: archive(catalog) });
     expect(read).toHaveBeenCalledTimes(1);
     expect(view.setLocalCatalog).toHaveBeenCalledWith(catalog);
   });
@@ -73,11 +73,11 @@ describe("catalog handler and durable recorder", () => {
     expect(view.probes()).toHaveLength(probes);
     view.deliver({ kind: "remoteMutations", envelopes: [] });
     expect(firstDone).toBe(false);
-    view.deliver({ kind: "documentArchiveReplaced", archive: Array.from(archive({ documents: [document("a"), document("concurrent")] })) });
+    view.deliver({ kind: "documentArchiveReplaced", archive: archive({ documents: [document("a"), document("concurrent")] }) });
     expect((await first)?.documents).toHaveLength(2);
     await vi.waitFor(() => expect(view.writes()).toHaveLength(2));
     expect(secondDone).toBe(false);
-    view.deliver({ kind: "documentArchiveReplaced", archive: Array.from(archive({ documents: [document("a"), document("b"), document("concurrent")] })) });
+    view.deliver({ kind: "documentArchiveReplaced", archive: archive({ documents: [document("a"), document("b"), document("concurrent")] }) });
     expect((await second)?.documents).toHaveLength(3);
   });
   it("does not move queued writes into a replacement catalog generation", async () => {

@@ -1,10 +1,6 @@
 use super::*;
 fn drain<T: RetireOwned>(value: T) {
-    let mut owner = semio_framework_value::retirement::controlled::ControlledRetirement::new(value).ok().unwrap();
-    let grant = RetainedCloneGrant { maximum_items: 10_000_000, maximum_copy_bytes: 256 * 1048576, maximum_capacity_bytes: 256 * 1048576, maximum_release_bytes: 256 * 1048576, maximum_depth: 128 };
-    while !owner.terminal_is_empty() {
-        owner.step(grant).unwrap();
-    }
+    semio_s_fem_receiving::testkit::retire(value)
 }
 #[test]
 fn bundled_examples_load_non_empty_through_the_editor_boot_path() {

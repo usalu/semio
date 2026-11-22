@@ -156,7 +156,9 @@
           "angleDeg": 141.5,
           "lengthM": 1.383598,
           "joint": {
-            "type": "fixed"
+            "type": "revolute",
+            "minDeg": 0,
+            "maxDeg": 31.5
           },
           "mass": {
             "kg": 1.89,
@@ -175,6 +177,57 @@
               "en": "Two box rails 45 x 20 x 1.2 mm",
               "de": "Zwei Kastenholme 45 x 20 x 1,2 mm"
             }
+          }
+        },
+        {
+          "id": "spreader-rear",
+          "parent": "rear-frame",
+          "title": {
+            "en": "Rear spreader links (rail pivot to knuckle)",
+            "de": "Hintere Spreizglieder (Stützholmbolzen bis Kniegelenk)"
+          },
+          "x": 0.83224,
+          "y": 0.0,
+          "angleDeg": 106.0,
+          "lengthM": 0.280384,
+          "joint": {
+            "type": "revolute",
+            "minDeg": 0,
+            "maxDeg": 90
+          }
+        },
+        {
+          "id": "spreader-front",
+          "parent": "front-frame",
+          "title": {
+            "en": "Front spreader links (stile pivot to knuckle)",
+            "de": "Vordere Spreizglieder (Holmbolzen bis Kniegelenk)"
+          },
+          "x": 0.573668,
+          "y": 0.0,
+          "angleDeg": 67.5,
+          "lengthM": 0.280384,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -90,
+            "maxDeg": 0
+          }
+        },
+        {
+          "id": "platform",
+          "parent": "front-frame",
+          "title": {
+            "en": "Platform on its axle",
+            "de": "Plattform auf ihrer Achse"
+          },
+          "x": 1.128935,
+          "y": 0.0,
+          "angleDeg": 67.5,
+          "lengthM": 0.244,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -62.0,
+            "maxDeg": 0
           }
         }
       ]
@@ -304,7 +357,7 @@
             },
             {
               "id": "platform",
-              "bone": "front-frame",
+              "bone": "platform",
               "role": "body",
               "z": 2.4,
               "filled": true,
@@ -313,12 +366,12 @@
               "region": "platform",
               "material": "alu-mill",
               "kind": "poly",
-              "points": [[1.20406, 0.20489], [1.10839, -0.02608], [1.13241, -0.03603], [1.22808, 0.19494]],
+              "points": [[0.21804, 0.009], [-0.03196, 0.009], [-0.03196, -0.017], [0.21804, -0.017]],
               "closed": true
             },
             {
-              "id": "spreader",
-              "bone": "front-frame",
+              "id": "spreader-rear",
+              "bone": "spreader-rear",
               "role": "body",
               "z": 2.7,
               "filled": false,
@@ -326,7 +379,20 @@
               "penMm": 0.1,
               "region": "spreaders",
               "kind": "poly",
-              "points": [[0.7787, 0.49498], [0.58323, 0.0231]],
+              "points": [[0.0, 0.0], [0.28038, 0.0]],
+              "closed": false
+            },
+            {
+              "id": "spreader-front",
+              "bone": "spreader-front",
+              "role": "body",
+              "z": 2.7,
+              "filled": false,
+              "tone": 0.3,
+              "penMm": 0.1,
+              "region": "spreaders",
+              "kind": "poly",
+              "points": [[0.0, 0.0], [0.28038, 0.0]],
               "closed": false
             },
             {
@@ -495,7 +561,7 @@
             },
             {
               "id": "platform",
-              "bone": "front-frame",
+              "bone": "platform",
               "role": "body",
               "z": 3.3,
               "filled": true,
@@ -634,8 +700,8 @@
               "closed": false
             },
             {
-              "id": "spreader-l",
-              "bone": "front-frame",
+              "id": "spreader-rear-l",
+              "bone": "spreader-rear",
               "role": "body",
               "z": 2.2,
               "filled": false,
@@ -643,12 +709,12 @@
               "penMm": 0.1,
               "region": "spreaders",
               "kind": "poly",
-              "points": [[-0.2917, 0.18851], [0.21907, 0.18851]],
+              "points": [[-0.2917, 0.18851], [-0.03632, 0.18851]],
               "closed": false
             },
             {
-              "id": "spreader-r",
-              "bone": "front-frame",
+              "id": "spreader-front-l",
+              "bone": "spreader-front",
               "role": "body",
               "z": 2.2,
               "filled": false,
@@ -656,12 +722,38 @@
               "penMm": 0.1,
               "region": "spreaders",
               "kind": "poly",
-              "points": [[-0.2917, -0.18851], [0.21907, -0.18851]],
+              "points": [[-0.03632, 0.18851], [0.21907, 0.18851]],
+              "closed": false
+            },
+            {
+              "id": "spreader-rear-r",
+              "bone": "spreader-rear",
+              "role": "body",
+              "z": 2.2,
+              "filled": false,
+              "tone": 0.35,
+              "penMm": 0.1,
+              "region": "spreaders",
+              "kind": "poly",
+              "points": [[-0.2917, -0.18851], [-0.03632, -0.18851]],
+              "closed": false
+            },
+            {
+              "id": "spreader-front-r",
+              "bone": "spreader-front",
+              "role": "body",
+              "z": 2.2,
+              "filled": false,
+              "tone": 0.35,
+              "penMm": 0.1,
+              "region": "spreaders",
+              "kind": "poly",
+              "points": [[-0.03632, -0.18851], [0.21907, -0.18851]],
               "closed": false
             },
             {
               "id": "platform",
-              "bone": "front-frame",
+              "bone": "platform",
               "role": "body",
               "z": 3.5,
               "filled": true,
@@ -837,7 +929,7 @@
             },
             {
               "id": "platform",
-              "bone": "front-frame",
+              "bone": "platform",
               "role": "body",
               "z": 2.4,
               "filled": true,
@@ -846,12 +938,12 @@
               "region": "platform",
               "material": "alu-mill",
               "kind": "poly",
-              "points": [[1.20406, 0.20489], [1.10839, -0.02608], [1.13241, -0.03603], [1.22808, 0.19494]],
+              "points": [[0.218, 0.012], [-0.032, 0.012], [-0.032, -0.044], [0.218, -0.044]],
               "closed": true
             },
             {
-              "id": "spreader",
-              "bone": "front-frame",
+              "id": "spreader-rear",
+              "bone": "spreader-rear",
               "role": "body",
               "z": 2.7,
               "filled": false,
@@ -859,7 +951,20 @@
               "penMm": 0.1,
               "region": "spreaders",
               "kind": "poly",
-              "points": [[0.78444, 0.50884], [0.57749, 0.00924]],
+              "points": [[0.0, 0.0], [0.28038, 0.0]],
+              "closed": false
+            },
+            {
+              "id": "spreader-front",
+              "bone": "spreader-front",
+              "role": "body",
+              "z": 2.7,
+              "filled": false,
+              "tone": 0.3,
+              "penMm": 0.1,
+              "region": "spreaders",
+              "kind": "poly",
+              "points": [[0.0, 0.0], [0.28038, 0.0]],
               "closed": false
             },
             {
@@ -901,7 +1006,16 @@
               "region": "feet",
               "material": "rubber-black",
               "kind": "poly",
-              "points": [[1.39462, -0.03845], [1.37368, 0.03461], [1.3656, 0.03229], [1.36384, 0.02538], [1.32951, 0.02538], [1.34406, -0.02538], [1.37839, -0.02538], [1.38655, -0.04077]],
+              "points": [
+                [1.39462, -0.03845],
+                [1.37368, 0.03461],
+                [1.3656, 0.03229],
+                [1.36384, 0.02538],
+                [1.32951, 0.02538],
+                [1.34406, -0.02538],
+                [1.37839, -0.02538],
+                [1.38655, -0.04077]
+              ],
               "closed": true
             },
             {
@@ -915,7 +1029,16 @@
               "region": "feet",
               "material": "rubber-black",
               "kind": "poly",
-              "points": [[0.01646, 0.03973], [-0.01722, -0.04157], [-0.00946, -0.04479], [-0.00059, -0.03277], [0.04055, -0.03277], [0.06769, 0.03277], [0.02656, 0.03277], [0.02422, 0.03651]],
+              "points": [
+                [0.01646, 0.03973],
+                [-0.01722, -0.04157],
+                [-0.00946, -0.04479],
+                [-0.00059, -0.03277],
+                [0.04055, -0.03277],
+                [0.06769, 0.03277],
+                [0.02656, 0.03277],
+                [0.02422, 0.03651]
+              ],
               "closed": true
             }
           ],
@@ -1071,7 +1194,7 @@
             },
             {
               "id": "platform",
-              "bone": "front-frame",
+              "bone": "platform",
               "role": "body",
               "z": 3.3,
               "filled": true,
@@ -1080,7 +1203,7 @@
               "region": "platform",
               "material": "alu-mill",
               "kind": "poly",
-              "points": [[-0.145, 1.034], [0.145, 1.034], [0.145, 1.06], [-0.145, 1.06]],
+              "points": [[-0.145, 1.006], [0.145, 1.006], [0.145, 1.062], [-0.145, 1.062]],
               "closed": true
             },
             {
@@ -1223,8 +1346,8 @@
               "closed": false
             },
             {
-              "id": "spreader-l",
-              "bone": "front-frame",
+              "id": "spreader-rear-l",
+              "bone": "spreader-rear",
               "role": "body",
               "z": 2.2,
               "filled": false,
@@ -1232,12 +1355,12 @@
               "penMm": 0.1,
               "region": "spreaders",
               "kind": "poly",
-              "points": [[-0.3067, 0.18851], [0.23407, 0.18851]],
+              "points": [[-0.3067, 0.18851], [-0.03632, 0.18851]],
               "closed": false
             },
             {
-              "id": "spreader-r",
-              "bone": "front-frame",
+              "id": "spreader-front-l",
+              "bone": "spreader-front",
               "role": "body",
               "z": 2.2,
               "filled": false,
@@ -1245,7 +1368,33 @@
               "penMm": 0.1,
               "region": "spreaders",
               "kind": "poly",
-              "points": [[-0.3067, -0.18851], [0.23407, -0.18851]],
+              "points": [[-0.03632, 0.18851], [0.23407, 0.18851]],
+              "closed": false
+            },
+            {
+              "id": "spreader-rear-r",
+              "bone": "spreader-rear",
+              "role": "body",
+              "z": 2.2,
+              "filled": false,
+              "tone": 0.35,
+              "penMm": 0.1,
+              "region": "spreaders",
+              "kind": "poly",
+              "points": [[-0.3067, -0.18851], [-0.03632, -0.18851]],
+              "closed": false
+            },
+            {
+              "id": "spreader-front-r",
+              "bone": "spreader-front",
+              "role": "body",
+              "z": 2.2,
+              "filled": false,
+              "tone": 0.35,
+              "penMm": 0.1,
+              "region": "spreaders",
+              "kind": "poly",
+              "points": [[-0.03632, -0.18851], [0.23407, -0.18851]],
               "closed": false
             },
             {
@@ -1306,7 +1455,7 @@
             },
             {
               "id": "platform",
-              "bone": "front-frame",
+              "bone": "platform",
               "role": "body",
               "z": 3.5,
               "filled": true,
@@ -1464,7 +1613,7 @@
             },
             {
               "id": "platform",
-              "bone": "front-frame",
+              "bone": "platform",
               "role": "body",
               "z": 2.4,
               "filled": true,
@@ -1473,12 +1622,12 @@
               "region": "platform",
               "material": "alu-mill",
               "kind": "poly",
-              "points": [[1.20406, 0.20489], [1.11069, -0.02054], [1.11393, -0.02838], [1.13241, -0.03603], [1.22808, 0.19494]],
+              "points": [[0.21804, 0.009], [-0.02596, 0.009], [-0.03196, 0.003], [-0.03196, -0.017], [0.21804, -0.017]],
               "closed": true
             },
             {
-              "id": "spreader",
-              "bone": "front-frame",
+              "id": "spreader-rear",
+              "bone": "spreader-rear",
               "role": "body",
               "z": 2.7,
               "filled": false,
@@ -1486,7 +1635,20 @@
               "penMm": 0.2,
               "region": "spreaders",
               "kind": "poly",
-              "points": [[0.78444, 0.50884], [0.57749, 0.00924]],
+              "points": [[0.0, 0.0], [0.28038, 0.0]],
+              "closed": false
+            },
+            {
+              "id": "spreader-front",
+              "bone": "spreader-front",
+              "role": "body",
+              "z": 2.7,
+              "filled": false,
+              "tone": 0.3,
+              "penMm": 0.2,
+              "region": "spreaders",
+              "kind": "poly",
+              "points": [[0.0, 0.0], [0.28038, 0.0]],
               "closed": false
             },
             {
@@ -1543,7 +1705,16 @@
               "region": "feet",
               "material": "rubber-black",
               "kind": "poly",
-              "points": [[1.39462, -0.03845], [1.37368, 0.03461], [1.36358, 0.03171], [1.36072, 0.02538], [1.32951, 0.02538], [1.34406, -0.02538], [1.37527, -0.02538], [1.38453, -0.04134]],
+              "points": [
+                [1.39462, -0.03845],
+                [1.37368, 0.03461],
+                [1.36358, 0.03171],
+                [1.36072, 0.02538],
+                [1.32951, 0.02538],
+                [1.34406, -0.02538],
+                [1.37527, -0.02538],
+                [1.38453, -0.04134]
+              ],
               "closed": true
             },
             {
@@ -1557,7 +1728,16 @@
               "region": "feet",
               "material": "rubber-black",
               "kind": "poly",
-              "points": [[0.01646, 0.03973], [-0.01722, -0.04157], [-0.00752, -0.04559], [0.00266, -0.03277], [0.04055, -0.03277], [0.06769, 0.03277], [0.02981, 0.03277], [0.02616, 0.03571]],
+              "points": [
+                [0.01646, 0.03973],
+                [-0.01722, -0.04157],
+                [-0.00752, -0.04559],
+                [0.00266, -0.03277],
+                [0.04055, -0.03277],
+                [0.06769, 0.03277],
+                [0.02981, 0.03277],
+                [0.02616, 0.03571]
+              ],
               "closed": true
             }
           ],
@@ -1730,7 +1910,7 @@
             },
             {
               "id": "platform",
-              "bone": "front-frame",
+              "bone": "platform",
               "role": "body",
               "z": 3.3,
               "filled": true,
@@ -1895,8 +2075,8 @@
               "closed": false
             },
             {
-              "id": "spreader-l",
-              "bone": "front-frame",
+              "id": "spreader-rear-l",
+              "bone": "spreader-rear",
               "role": "body",
               "z": 2.2,
               "filled": false,
@@ -1904,12 +2084,12 @@
               "penMm": 0.1,
               "region": "spreaders",
               "kind": "poly",
-              "points": [[-0.3117, 0.18851], [0.23907, 0.18851]],
+              "points": [[-0.3117, 0.18851], [-0.03632, 0.18851]],
               "closed": false
             },
             {
-              "id": "spreader-r",
-              "bone": "front-frame",
+              "id": "spreader-front-l",
+              "bone": "spreader-front",
               "role": "body",
               "z": 2.2,
               "filled": false,
@@ -1917,7 +2097,33 @@
               "penMm": 0.1,
               "region": "spreaders",
               "kind": "poly",
-              "points": [[-0.3117, -0.18851], [0.23907, -0.18851]],
+              "points": [[-0.03632, 0.18851], [0.23907, 0.18851]],
+              "closed": false
+            },
+            {
+              "id": "spreader-rear-r",
+              "bone": "spreader-rear",
+              "role": "body",
+              "z": 2.2,
+              "filled": false,
+              "tone": 0.35,
+              "penMm": 0.1,
+              "region": "spreaders",
+              "kind": "poly",
+              "points": [[-0.3117, -0.18851], [-0.03632, -0.18851]],
+              "closed": false
+            },
+            {
+              "id": "spreader-front-r",
+              "bone": "spreader-front",
+              "role": "body",
+              "z": 2.2,
+              "filled": false,
+              "tone": 0.35,
+              "penMm": 0.1,
+              "region": "spreaders",
+              "kind": "poly",
+              "points": [[-0.03632, -0.18851], [0.23907, -0.18851]],
               "closed": false
             },
             {
@@ -1978,7 +2184,7 @@
             },
             {
               "id": "platform",
-              "bone": "front-frame",
+              "bone": "platform",
               "role": "body",
               "z": 3.5,
               "filled": true,
@@ -2144,7 +2350,7 @@
             },
             {
               "id": "platform",
-              "bone": "front-frame",
+              "bone": "platform",
               "role": "body",
               "z": 2.4,
               "filled": true,
@@ -2153,12 +2359,12 @@
               "region": "platform",
               "material": "alu-mill",
               "kind": "poly",
-              "points": [[1.20406, 0.20489], [1.11069, -0.02054], [1.11393, -0.02838], [1.13241, -0.03603], [1.22808, 0.19494]],
+              "points": [[0.21804, 0.009], [-0.02596, 0.009], [-0.03196, 0.003], [-0.03196, -0.017], [0.21804, -0.017]],
               "closed": true
             },
             {
               "id": "spreader-front",
-              "bone": "front-frame",
+              "bone": "spreader-front",
               "role": "body",
               "z": 2.7,
               "filled": true,
@@ -2167,12 +2373,12 @@
               "region": "spreaders",
               "material": "steel-zinc",
               "kind": "poly",
-              "points": [[0.67632, 0.27395], [0.55984, -0.00726], [0.57831, -0.01491], [0.6948, 0.2663]],
+              "points": [[0.29238, 0.01], [-0.012, 0.01], [-0.012, -0.00999], [0.29238, -0.01]],
               "closed": true
             },
             {
               "id": "spreader-rear",
-              "bone": "rear-frame",
+              "bone": "spreader-rear",
               "role": "body",
               "z": 2.9,
               "filled": true,
@@ -2181,12 +2387,12 @@
               "region": "spreaders",
               "material": "steel-zinc",
               "kind": "poly",
-              "points": [[0.84516, -0.00878], [0.76126, 0.28381], [0.74204, 0.2783], [0.82593, -0.01429]],
+              "points": [[-0.012, -0.01], [0.29238, -0.01], [0.29238, 0.01], [-0.012, 0.01]],
               "closed": true
             },
             {
               "id": "spreader-knuckle",
-              "bone": "front-frame",
+              "bone": "spreader-front",
               "role": "detail",
               "z": 3.6,
               "filled": true,
@@ -2195,8 +2401,8 @@
               "region": "spreaders",
               "material": "steel-zinc",
               "kind": "ellipse",
-              "cx": 0.68097,
-              "cy": 0.25904,
+              "cx": 0.280384,
+              "cy": 0.0,
               "rx": 0.007,
               "ry": 0.007
             },
@@ -2452,7 +2658,7 @@
             },
             {
               "id": "spreader-l",
-              "bone": "front-frame",
+              "bone": "spreader-front",
               "role": "body",
               "z": 2.9,
               "filled": false,
@@ -2520,7 +2726,7 @@
             },
             {
               "id": "spreader-r",
-              "bone": "front-frame",
+              "bone": "spreader-front",
               "role": "body",
               "z": 2.9,
               "filled": false,
@@ -2616,7 +2822,7 @@
             },
             {
               "id": "platform",
-              "bone": "front-frame",
+              "bone": "platform",
               "role": "body",
               "z": 3.3,
               "filled": true,
@@ -2786,7 +2992,7 @@
             },
             {
               "id": "spreader-front-l",
-              "bone": "front-frame",
+              "bone": "spreader-front",
               "role": "body",
               "z": 2.2,
               "filled": false,
@@ -2799,7 +3005,7 @@
             },
             {
               "id": "spreader-rear-l",
-              "bone": "rear-frame",
+              "bone": "spreader-rear",
               "role": "body",
               "z": 2.25,
               "filled": false,
@@ -2812,7 +3018,7 @@
             },
             {
               "id": "spreader-front-r",
-              "bone": "front-frame",
+              "bone": "spreader-front",
               "role": "body",
               "z": 2.2,
               "filled": false,
@@ -2825,7 +3031,7 @@
             },
             {
               "id": "spreader-rear-r",
-              "bone": "rear-frame",
+              "bone": "spreader-rear",
               "role": "body",
               "z": 2.25,
               "filled": false,
@@ -3038,7 +3244,7 @@
             },
             {
               "id": "platform",
-              "bone": "front-frame",
+              "bone": "platform",
               "role": "body",
               "z": 3.5,
               "filled": true,
@@ -3052,7 +3258,7 @@
             },
             {
               "id": "platform-rib-1",
-              "bone": "front-frame",
+              "bone": "platform",
               "role": "texture",
               "z": 3.6,
               "filled": false,
@@ -3064,7 +3270,7 @@
             },
             {
               "id": "platform-rib-2",
-              "bone": "front-frame",
+              "bone": "platform",
               "role": "texture",
               "z": 3.6,
               "filled": false,
@@ -3076,7 +3282,7 @@
             },
             {
               "id": "platform-rib-3",
-              "bone": "front-frame",
+              "bone": "platform",
               "role": "texture",
               "z": 3.6,
               "filled": false,
@@ -3088,7 +3294,7 @@
             },
             {
               "id": "platform-rib-4",
-              "bone": "front-frame",
+              "bone": "platform",
               "role": "texture",
               "z": 3.6,
               "filled": false,
@@ -3100,7 +3306,7 @@
             },
             {
               "id": "platform-rib-5",
-              "bone": "front-frame",
+              "bone": "platform",
               "role": "texture",
               "z": 3.6,
               "filled": false,
@@ -3112,7 +3318,7 @@
             },
             {
               "id": "platform-rib-6",
-              "bone": "front-frame",
+              "bone": "platform",
               "role": "texture",
               "z": 3.6,
               "filled": false,
@@ -3124,7 +3330,7 @@
             },
             {
               "id": "platform-rib-7",
-              "bone": "front-frame",
+              "bone": "platform",
               "role": "texture",
               "z": 3.6,
               "filled": false,
@@ -3136,7 +3342,7 @@
             },
             {
               "id": "platform-rib-8",
-              "bone": "front-frame",
+              "bone": "platform",
               "role": "texture",
               "z": 3.6,
               "filled": false,
@@ -3240,12 +3446,7 @@
         },
         "bones": {},
         "ground": "auto",
-        "contacts": [
-          "foot-front-left",
-          "foot-front-right",
-          "foot-rear-left",
-          "foot-rear-right"
-        ],
+        "contacts": ["foot-front-left", "foot-front-right", "foot-rear-left", "foot-rear-right"],
         "thermal": {
           "regions": {
             "front-rails": {
@@ -3289,12 +3490,7 @@
         },
         "bones": {},
         "ground": "auto",
-        "contacts": [
-          "foot-front-left",
-          "foot-front-right",
-          "foot-rear-left",
-          "foot-rear-right"
-        ],
+        "contacts": ["foot-front-left", "foot-front-right", "foot-rear-left", "foot-rear-right"],
         "thermal": {
           "regions": {
             "front-rails": {
@@ -3365,12 +3561,7 @@
         },
         "bones": {},
         "ground": "auto",
-        "contacts": [
-          "foot-front-left",
-          "foot-front-right",
-          "foot-rear-left",
-          "foot-rear-right"
-        ],
+        "contacts": ["foot-front-left", "foot-front-right", "foot-rear-left", "foot-rear-right"],
         "thermal": {
           "regions": {
             "front-rails": {
@@ -3428,6 +3619,493 @@
             "reference": "en-131-2"
           }
         ]
+      },
+      {
+        "id": "folding-1",
+        "title": {
+          "en": "Folding, rear frame closed by 0.5 degrees",
+          "de": "Beim Zusammenklappen, Stützrahmen um 0,5 Grad geschlossen"
+        },
+        "description": {
+          "en": "In-between key of the folding clip: knuckles lifted, platform rising, all four shoes on the ground.",
+          "de": "Zwischenstellung des Klapp-Clips: Kniegelenke angehoben, Plattform steigt, alle vier Schuhe am Boden."
+        },
+        "bones": {
+          "rear-frame": {
+            "angleDeg": 0.5
+          },
+          "spreader-front": {
+            "angleDeg": -8.8501
+          },
+          "spreader-rear": {
+            "angleDeg": 8.7581
+          },
+          "platform": {
+            "angleDeg": -0.9841
+          }
+        },
+        "ground": "auto",
+        "contacts": ["foot-front-left", "foot-front-right", "foot-rear-left", "foot-rear-right"],
+        "thermal": {
+          "regions": {
+            "front-rails": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.5
+            },
+            "treads": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.4
+            },
+            "platform": {
+              "exposedFraction": 1,
+              "sunlitFraction": 1
+            },
+            "rear-frame": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.3
+            },
+            "spreaders": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.2
+            },
+            "feet": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            }
+          },
+          "emitters": {}
+        },
+        "loads": [],
+        "root": {
+          "angleDeg": -0.2039
+        },
+        "key": true
+      },
+      {
+        "id": "folding-2",
+        "title": {
+          "en": "Folding, rear frame closed by 2 degrees",
+          "de": "Beim Zusammenklappen, Stützrahmen um 2,0 Grad geschlossen"
+        },
+        "description": {
+          "en": "In-between key of the folding clip: knuckles lifted, platform rising, all four shoes on the ground.",
+          "de": "Zwischenstellung des Klapp-Clips: Kniegelenke angehoben, Plattform steigt, alle vier Schuhe am Boden."
+        },
+        "bones": {
+          "rear-frame": {
+            "angleDeg": 2.0
+          },
+          "spreader-front": {
+            "angleDeg": -17.3759
+          },
+          "spreader-rear": {
+            "angleDeg": 16.9932
+          },
+          "platform": {
+            "angleDeg": -3.9365
+          }
+        },
+        "ground": "auto",
+        "contacts": ["foot-front-left", "foot-front-right", "foot-rear-left", "foot-rear-right"],
+        "thermal": {
+          "regions": {
+            "front-rails": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.5
+            },
+            "treads": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.4
+            },
+            "platform": {
+              "exposedFraction": 1,
+              "sunlitFraction": 1
+            },
+            "rear-frame": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.3
+            },
+            "spreaders": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.2
+            },
+            "feet": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            }
+          },
+          "emitters": {}
+        },
+        "loads": [],
+        "root": {
+          "angleDeg": -0.8086
+        },
+        "key": true
+      },
+      {
+        "id": "folding-3",
+        "title": {
+          "en": "Folding, rear frame closed by 5 degrees",
+          "de": "Beim Zusammenklappen, Stützrahmen um 5,0 Grad geschlossen"
+        },
+        "description": {
+          "en": "In-between key of the folding clip: knuckles lifted, platform rising, all four shoes on the ground.",
+          "de": "Zwischenstellung des Klapp-Clips: Kniegelenke angehoben, Plattform steigt, alle vier Schuhe am Boden."
+        },
+        "bones": {
+          "rear-frame": {
+            "angleDeg": 5.0
+          },
+          "spreader-front": {
+            "angleDeg": -27.0188
+          },
+          "spreader-rear": {
+            "angleDeg": 25.9795
+          },
+          "platform": {
+            "angleDeg": -9.8413
+          }
+        },
+        "ground": "auto",
+        "contacts": ["foot-front-left", "foot-front-right", "foot-rear-left", "foot-rear-right"],
+        "thermal": {
+          "regions": {
+            "front-rails": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.5
+            },
+            "treads": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.4
+            },
+            "platform": {
+              "exposedFraction": 1,
+              "sunlitFraction": 1
+            },
+            "rear-frame": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.3
+            },
+            "spreaders": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.2
+            },
+            "feet": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            }
+          },
+          "emitters": {}
+        },
+        "loads": [],
+        "root": {
+          "angleDeg": -1.9803
+        },
+        "key": true
+      },
+      {
+        "id": "folding-4",
+        "title": {
+          "en": "Folding, rear frame closed by 10 degrees",
+          "de": "Beim Zusammenklappen, Stützrahmen um 10,0 Grad geschlossen"
+        },
+        "description": {
+          "en": "In-between key of the folding clip: knuckles lifted, platform rising, all four shoes on the ground.",
+          "de": "Zwischenstellung des Klapp-Clips: Kniegelenke angehoben, Plattform steigt, alle vier Schuhe am Boden."
+        },
+        "bones": {
+          "rear-frame": {
+            "angleDeg": 10.0
+          },
+          "spreader-front": {
+            "angleDeg": -37.8243
+          },
+          "spreader-rear": {
+            "angleDeg": 35.3951
+          },
+          "platform": {
+            "angleDeg": -19.6825
+          }
+        },
+        "ground": "auto",
+        "contacts": ["foot-front-left", "foot-front-right", "foot-rear-left", "foot-rear-right"],
+        "thermal": {
+          "regions": {
+            "front-rails": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.5
+            },
+            "treads": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.4
+            },
+            "platform": {
+              "exposedFraction": 1,
+              "sunlitFraction": 1
+            },
+            "rear-frame": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.3
+            },
+            "spreaders": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.2
+            },
+            "feet": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            }
+          },
+          "emitters": {}
+        },
+        "loads": [],
+        "root": {
+          "angleDeg": -3.7853
+        },
+        "key": true
+      },
+      {
+        "id": "folding-5",
+        "title": {
+          "en": "Folding, rear frame closed by 15 degrees",
+          "de": "Beim Zusammenklappen, Stützrahmen um 15,0 Grad geschlossen"
+        },
+        "description": {
+          "en": "In-between key of the folding clip: knuckles lifted, platform rising, all four shoes on the ground.",
+          "de": "Zwischenstellung des Klapp-Clips: Kniegelenke angehoben, Plattform steigt, alle vier Schuhe am Boden."
+        },
+        "bones": {
+          "rear-frame": {
+            "angleDeg": 15.0
+          },
+          "spreader-front": {
+            "angleDeg": -46.4179
+          },
+          "spreader-rear": {
+            "angleDeg": 42.0262
+          },
+          "platform": {
+            "angleDeg": -29.5238
+          }
+        },
+        "ground": "auto",
+        "contacts": ["foot-front-left", "foot-front-right", "foot-rear-left", "foot-rear-right"],
+        "thermal": {
+          "regions": {
+            "front-rails": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.5
+            },
+            "treads": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.4
+            },
+            "platform": {
+              "exposedFraction": 1,
+              "sunlitFraction": 1
+            },
+            "rear-frame": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.3
+            },
+            "spreaders": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.2
+            },
+            "feet": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            }
+          },
+          "emitters": {}
+        },
+        "loads": [],
+        "root": {
+          "angleDeg": -5.3041
+        },
+        "key": true
+      },
+      {
+        "id": "folding-6",
+        "title": {
+          "en": "Folding, rear frame closed by 20 degrees",
+          "de": "Beim Zusammenklappen, Stützrahmen um 20,0 Grad geschlossen"
+        },
+        "description": {
+          "en": "In-between key of the folding clip: knuckles lifted, platform rising, all four shoes on the ground.",
+          "de": "Zwischenstellung des Klapp-Clips: Kniegelenke angehoben, Plattform steigt, alle vier Schuhe am Boden."
+        },
+        "bones": {
+          "rear-frame": {
+            "angleDeg": 20.0
+          },
+          "spreader-front": {
+            "angleDeg": -54.3275
+          },
+          "spreader-rear": {
+            "angleDeg": 46.9432
+          },
+          "platform": {
+            "angleDeg": -39.3651
+          }
+        },
+        "ground": "auto",
+        "contacts": ["foot-front-left", "foot-front-right", "foot-rear-left", "foot-rear-right"],
+        "thermal": {
+          "regions": {
+            "front-rails": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.5
+            },
+            "treads": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.4
+            },
+            "platform": {
+              "exposedFraction": 1,
+              "sunlitFraction": 1
+            },
+            "rear-frame": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.3
+            },
+            "spreaders": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.2
+            },
+            "feet": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            }
+          },
+          "emitters": {}
+        },
+        "loads": [],
+        "root": {
+          "angleDeg": -6.3078
+        },
+        "key": true
+      },
+      {
+        "id": "folding-7",
+        "title": {
+          "en": "Folding, rear frame closed by 25 degrees",
+          "de": "Beim Zusammenklappen, Stützrahmen um 25,0 Grad geschlossen"
+        },
+        "description": {
+          "en": "In-between key of the folding clip: knuckles lifted, platform rising, all four shoes on the ground.",
+          "de": "Zwischenstellung des Klapp-Clips: Kniegelenke angehoben, Plattform steigt, alle vier Schuhe am Boden."
+        },
+        "bones": {
+          "rear-frame": {
+            "angleDeg": 25.0
+          },
+          "spreader-front": {
+            "angleDeg": -62.6059
+          },
+          "spreader-rear": {
+            "angleDeg": 50.0838
+          },
+          "platform": {
+            "angleDeg": -49.2063
+          }
+        },
+        "ground": "auto",
+        "contacts": ["foot-front-left", "foot-front-right", "foot-rear-left", "foot-rear-right"],
+        "thermal": {
+          "regions": {
+            "front-rails": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.5
+            },
+            "treads": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.4
+            },
+            "platform": {
+              "exposedFraction": 1,
+              "sunlitFraction": 1
+            },
+            "rear-frame": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.3
+            },
+            "spreaders": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.2
+            },
+            "feet": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            }
+          },
+          "emitters": {}
+        },
+        "loads": [],
+        "root": {
+          "angleDeg": -6.2388
+        },
+        "key": true
+      },
+      {
+        "id": "folded",
+        "title": {
+          "en": "Folded",
+          "de": "Zusammengeklappt"
+        },
+        "description": {
+          "en": "Closed for carrying and storing: the rear frame lies 7 degrees off the stiles behind the treads, the spreader knuckles stand up, the platform is turned up; it still stands on its four shoes, 0.18 m apart.",
+          "de": "Zum Tragen und Lagern geschlossen: der Stützrahmen liegt 7 Grad neben den Holmen hinter den Stufen, die Kniegelenke der Spreizen stehen nach oben, die Plattform ist hochgeklappt; sie steht noch auf ihren vier Schuhen, 0,18 m auseinander."
+        },
+        "bones": {
+          "rear-frame": {
+            "angleDeg": 31.5
+          },
+          "spreader-front": {
+            "angleDeg": -77.757
+          },
+          "spreader-rear": {
+            "angleDeg": 48.3301
+          },
+          "platform": {
+            "angleDeg": -62.0
+          }
+        },
+        "ground": "auto",
+        "contacts": ["foot-front-left", "foot-front-right", "foot-rear-left", "foot-rear-right"],
+        "thermal": {
+          "regions": {
+            "front-rails": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.5
+            },
+            "treads": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.4
+            },
+            "platform": {
+              "exposedFraction": 1,
+              "sunlitFraction": 1
+            },
+            "rear-frame": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.3
+            },
+            "spreaders": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.2
+            },
+            "feet": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            }
+          },
+          "emitters": {}
+        },
+        "loads": [],
+        "root": {
+          "angleDeg": -1.0363
+        }
       }
     ],
     "clips": [
@@ -3742,6 +4420,126 @@
             ]
           }
         ]
+      },
+      {
+        "id": "fold-up",
+        "title": {
+          "en": "Fold up",
+          "de": "Zusammenklappen"
+        },
+        "description": {
+          "en": "The spreader knuckles are lifted, the rear frame swings in on the head hinge and the platform turns up; 4 s, then the ladder stands closed.",
+          "de": "Die Kniegelenke der Spreizen werden angehoben, der Stützrahmen schwenkt am Kopfgelenk ein und die Plattform klappt hoch; 4 s, danach steht die Leiter geschlossen."
+        },
+        "durationS": 5,
+        "fps": 15,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "open-empty",
+            "ease": "linear"
+          },
+          {
+            "t": 0.556,
+            "pose": "folding-1",
+            "ease": "linear"
+          },
+          {
+            "t": 0.722,
+            "pose": "folding-2",
+            "ease": "linear"
+          },
+          {
+            "t": 1.056,
+            "pose": "folding-3",
+            "ease": "linear"
+          },
+          {
+            "t": 1.611,
+            "pose": "folding-4",
+            "ease": "linear"
+          },
+          {
+            "t": 2.167,
+            "pose": "folding-5",
+            "ease": "linear"
+          },
+          {
+            "t": 2.722,
+            "pose": "folding-6",
+            "ease": "linear"
+          },
+          {
+            "t": 3.278,
+            "pose": "folding-7",
+            "ease": "linear"
+          },
+          {
+            "t": 4.0,
+            "pose": "folded",
+            "ease": "linear"
+          },
+          {
+            "t": 5,
+            "pose": "folded",
+            "ease": "linear"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "foot-front-left",
+            "fromS": 0,
+            "toS": 5
+          },
+          {
+            "anchor": "foot-front-right",
+            "fromS": 0,
+            "toS": 5
+          },
+          {
+            "anchor": "foot-rear-left",
+            "fromS": 0,
+            "toS": 5
+          },
+          {
+            "anchor": "foot-rear-right",
+            "fromS": 0,
+            "toS": 5
+          }
+        ],
+        "phases": [
+          {
+            "id": "unlock",
+            "fromS": 0,
+            "toS": 0.7,
+            "title": {
+              "en": "Lifting the knuckles",
+              "de": "Kniegelenke anheben"
+            }
+          },
+          {
+            "id": "close",
+            "fromS": 0.7,
+            "toS": 4,
+            "title": {
+              "en": "Closing the frames",
+              "de": "Rahmen schließen"
+            }
+          },
+          {
+            "id": "closed",
+            "fromS": 4,
+            "toS": 5,
+            "title": {
+              "en": "Closed",
+              "de": "Geschlossen"
+            }
+          }
+        ],
+        "events": [],
+        "tracks": []
       }
     ],
     "thermal": {
@@ -4312,84 +5110,84 @@
           {
             "id": "platform-deck",
             "kind": "extrude",
-            "bone": "front-frame",
+            "bone": "platform",
             "material": "alu-mill",
             "role": "body",
             "tone": 0.6,
             "profile": [
-              [1.112086, -0.027612],
-              [1.109538, -0.02331],
-              [1.129864, -0.031729],
-              [1.223238, 0.193698],
-              [1.202913, 0.202117],
-              [1.204061, 0.204888],
-              [1.228082, 0.194939],
-              [1.22349, 0.183852],
-              [1.221642, 0.184617],
-              [1.219346, 0.179074],
-              [1.221194, 0.178309],
-              [1.218132, 0.170918],
-              [1.216284, 0.171683],
-              [1.213988, 0.16614],
-              [1.215836, 0.165374],
-              [1.212775, 0.157983],
-              [1.210927, 0.158749],
-              [1.208631, 0.153205],
-              [1.210478, 0.15244],
-              [1.207417, 0.145049],
-              [1.205569, 0.145814],
-              [1.203273, 0.140271],
-              [1.205121, 0.139506],
-              [1.202059, 0.132115],
-              [1.200212, 0.13288],
-              [1.197916, 0.127337],
-              [1.199763, 0.126571],
-              [1.196702, 0.11918],
-              [1.194854, 0.119946],
-              [1.192558, 0.114403],
-              [1.194406, 0.113637],
-              [1.191344, 0.106246],
-              [1.189497, 0.107012],
-              [1.1872, 0.101468],
-              [1.189048, 0.100703],
-              [1.185987, 0.093312],
-              [1.184139, 0.094077],
-              [1.181843, 0.088534],
-              [1.183691, 0.087769],
-              [1.180629, 0.080378],
-              [1.178781, 0.081143],
-              [1.176485, 0.0756],
-              [1.178333, 0.074834],
-              [1.175272, 0.067443],
-              [1.173424, 0.068209],
-              [1.171128, 0.062665],
-              [1.172976, 0.0619],
-              [1.169914, 0.054509],
-              [1.168066, 0.055274],
-              [1.16577, 0.049731],
-              [1.167618, 0.048966],
-              [1.164556, 0.041575],
-              [1.162709, 0.04234],
-              [1.160413, 0.036797],
-              [1.16226, 0.036031],
-              [1.159199, 0.02864],
-              [1.157351, 0.029406],
-              [1.155055, 0.023862],
-              [1.156903, 0.023097],
-              [1.153841, 0.015706],
-              [1.151994, 0.016471],
-              [1.149697, 0.010928],
-              [1.151545, 0.010163],
-              [1.148484, 0.002772],
-              [1.146636, 0.003537],
-              [1.14434, -0.002006],
-              [1.146188, -0.002772],
-              [1.143126, -0.010163],
-              [1.141278, -0.009397],
-              [1.138982, -0.014941],
-              [1.14083, -0.015706],
-              [1.133559, -0.03326],
-              [1.129639, -0.034883]
+              [-0.031958, 0.005],
+              [-0.028959, 0.009],
+              [-0.028958, -0.013],
+              [0.215042, -0.013],
+              [0.215042, 0.009],
+              [0.218041, 0.009],
+              [0.218042, -0.017],
+              [0.206042, -0.017],
+              [0.206041, -0.015],
+              [0.200042, -0.015],
+              [0.200042, -0.017],
+              [0.192042, -0.017],
+              [0.192041, -0.015],
+              [0.186042, -0.015],
+              [0.186041, -0.017],
+              [0.178041, -0.017001],
+              [0.178042, -0.015],
+              [0.172041, -0.015],
+              [0.172041, -0.017],
+              [0.164042, -0.017],
+              [0.164041, -0.015],
+              [0.158041, -0.015],
+              [0.158042, -0.017],
+              [0.150042, -0.017],
+              [0.150042, -0.015],
+              [0.144042, -0.015],
+              [0.144041, -0.017],
+              [0.136041, -0.017],
+              [0.136042, -0.015],
+              [0.130042, -0.015],
+              [0.130042, -0.017],
+              [0.122041, -0.017],
+              [0.122042, -0.015],
+              [0.116041, -0.015],
+              [0.116042, -0.017],
+              [0.108042, -0.017],
+              [0.108041, -0.015],
+              [0.102042, -0.015],
+              [0.102042, -0.017],
+              [0.094042, -0.017],
+              [0.094042, -0.015],
+              [0.088042, -0.015],
+              [0.088041, -0.017],
+              [0.080042, -0.017],
+              [0.080042, -0.015],
+              [0.074041, -0.015],
+              [0.074042, -0.017],
+              [0.066042, -0.017],
+              [0.066041, -0.015],
+              [0.060042, -0.015],
+              [0.060042, -0.017],
+              [0.052042, -0.016999],
+              [0.052042, -0.015],
+              [0.046042, -0.015],
+              [0.046041, -0.017],
+              [0.038041, -0.017],
+              [0.038042, -0.015],
+              [0.032041, -0.015],
+              [0.032042, -0.017],
+              [0.024042, -0.017],
+              [0.024042, -0.015001],
+              [0.018041, -0.015],
+              [0.018042, -0.017],
+              [0.010042, -0.017],
+              [0.010042, -0.015],
+              [0.004042, -0.015],
+              [0.004041, -0.017],
+              [-0.003959, -0.017],
+              [-0.003958, -0.015],
+              [-0.009959, -0.015],
+              [-0.009958, -0.017],
+              [-0.028959, -0.017],
+              [-0.031958, -0.014]
             ],
             "plane": "xy",
             "from": -0.145,
@@ -4398,11 +5196,11 @@
           {
             "id": "platform-cheek-l",
             "kind": "extrude",
-            "bone": "front-frame",
+            "bone": "platform",
             "material": "alu-mill",
             "role": "body",
             "tone": 0.5,
-            "profile": [[1.224703, 0.192008], [1.208074, 0.198897], [1.197938, 0.190106], [1.116044, -0.007604], [1.115464, -0.024682], [1.132094, -0.03157]],
+            "profile": [[0.214041, -0.015], [0.214042, 0.003], [0.202041, 0.009], [-0.011958, 0.009], [-0.027958, 0.003], [-0.027958, -0.015]],
             "plane": "xy",
             "from": 0.137,
             "to": 0.145
@@ -4410,11 +5208,11 @@
           {
             "id": "platform-cheek-r",
             "kind": "extrude",
-            "bone": "front-frame",
+            "bone": "platform",
             "material": "alu-mill",
             "role": "body",
             "tone": 0.5,
-            "profile": [[1.224703, 0.192008], [1.208074, 0.198897], [1.197938, 0.190106], [1.116044, -0.007604], [1.115464, -0.024682], [1.132094, -0.03157]],
+            "profile": [[0.214041, -0.015], [0.214042, 0.003], [0.202041, 0.009], [-0.011958, 0.009], [-0.027958, 0.003], [-0.027958, -0.015]],
             "plane": "xy",
             "from": -0.145,
             "to": -0.137
@@ -4446,18 +5244,14 @@
           {
             "id": "spreader-front-l",
             "kind": "extrude",
-            "bone": "front-frame",
+            "bone": "spreader-front",
             "material": "steel-zinc",
             "role": "body",
             "tone": 0.35,
-            "profile": [[-0.01, -0.004], [0.01, -0.004], [0.01, 0.004], [0.008, 0.004], [0.008, -0.002], [-0.008, -0.002], [-0.008, 0.004], [-0.01, 0.004]],
-            "plane": "xy",
-            "from": 0.0,
-            "to": 0.304384,
-            "transform": {
-              "translation": [0.685558, 0.270127, 0.183964],
-              "rotation": [0.69352, -0.13795, -0.13795, 0.69352]
-            }
+            "profile": [[-0.01, 0.17996], [0.01, 0.17996], [0.01, 0.18796], [0.008, 0.18796], [0.008, 0.18196], [-0.008, 0.18196], [-0.008, 0.18796], [-0.01, 0.18796]],
+            "plane": "yz",
+            "from": -0.012,
+            "to": 0.29238
           },
           {
             "id": "spreader-pivot-front-l",
@@ -4473,7 +5267,7 @@
           {
             "id": "spreader-knuckle-l",
             "kind": "revolve",
-            "bone": "front-frame",
+            "bone": "spreader-front",
             "material": "steel-zinc",
             "role": "detail",
             "tone": 0.3,
@@ -4490,7 +5284,7 @@
               [0.025087, 0.0]
             ],
             "axis": [0.0, 0.0, 1.0],
-            "origin": [0.680966, 0.259041, 0.175964]
+            "origin": [0.280384, 0.0, 0.175964]
           },
           {
             "id": "shoe-front-l",
@@ -4516,18 +5310,14 @@
           {
             "id": "spreader-front-r",
             "kind": "extrude",
-            "bone": "front-frame",
+            "bone": "spreader-front",
             "material": "steel-zinc",
             "role": "body",
             "tone": 0.35,
-            "profile": [[-0.01, -0.004], [0.01, -0.004], [0.01, 0.004], [0.008, 0.004], [0.008, -0.002], [-0.008, -0.002], [-0.008, 0.004], [-0.01, 0.004]],
-            "plane": "xy",
-            "from": 0.0,
-            "to": 0.304384,
-            "transform": {
-              "translation": [0.685558, 0.270127, -0.183964],
-              "rotation": [0.69352, -0.13795, -0.13795, 0.69352]
-            }
+            "profile": [[-0.01, -0.18796], [0.01, -0.18796], [0.01, -0.17996], [0.008, -0.17996], [0.008, -0.18596], [-0.008, -0.18596], [-0.008, -0.17996], [-0.01, -0.17996]],
+            "plane": "yz",
+            "from": -0.012,
+            "to": 0.29238
           },
           {
             "id": "spreader-pivot-front-r",
@@ -4543,7 +5333,7 @@
           {
             "id": "spreader-knuckle-r",
             "kind": "revolve",
-            "bone": "front-frame",
+            "bone": "spreader-front",
             "material": "steel-zinc",
             "role": "detail",
             "tone": 0.3,
@@ -4560,7 +5350,7 @@
               [0.025087, 0.0]
             ],
             "axis": [0.0, 0.0, 1.0],
-            "origin": [0.680966, 0.259041, -0.201052]
+            "origin": [0.280384, 0.0, -0.201052]
           },
           {
             "id": "shoe-front-r",
@@ -4746,18 +5536,14 @@
           {
             "id": "spreader-rear-l",
             "kind": "extrude",
-            "bone": "rear-frame",
+            "bone": "spreader-rear",
             "material": "steel-zinc",
             "role": "body",
             "tone": 0.35,
-            "profile": [[-0.01, -0.004], [0.01, -0.004], [0.01, 0.004], [0.008, 0.004], [0.008, -0.002], [-0.008, -0.002], [-0.008, 0.004], [-0.01, 0.004]],
-            "plane": "xy",
-            "from": 0.0,
-            "to": 0.304384,
-            "transform": {
-              "translation": [0.835547, -0.011535, 0.193052],
-              "rotation": [-0.09841, 0.700225, 0.700225, -0.09841]
-            }
+            "profile": [[-0.01, 0.18905], [0.01, 0.18905], [0.01, 0.19705], [0.008, 0.19705], [0.008, 0.19105], [-0.008, 0.19105], [-0.008, 0.19705], [-0.01, 0.19705]],
+            "plane": "yz",
+            "from": -0.012,
+            "to": 0.29238
           },
           {
             "id": "spreader-pivot-rear-l",
@@ -4805,18 +5591,14 @@
           {
             "id": "spreader-rear-r",
             "kind": "extrude",
-            "bone": "rear-frame",
+            "bone": "spreader-rear",
             "material": "steel-zinc",
             "role": "body",
             "tone": 0.35,
-            "profile": [[-0.01, -0.004], [0.01, -0.004], [0.01, 0.004], [0.008, 0.004], [0.008, -0.002], [-0.008, -0.002], [-0.008, 0.004], [-0.01, 0.004]],
-            "plane": "xy",
-            "from": 0.0,
-            "to": 0.304384,
-            "transform": {
-              "translation": [0.835547, -0.011535, -0.193052],
-              "rotation": [-0.09841, 0.700225, 0.700225, -0.09841]
-            }
+            "profile": [[-0.01, -0.19705], [0.01, -0.19705], [0.01, -0.18905], [0.008, -0.18905], [0.008, -0.19505], [-0.008, -0.19505], [-0.008, -0.18905], [-0.01, -0.18905]],
+            "plane": "yz",
+            "from": -0.012,
+            "to": 0.29238
           },
           {
             "id": "spreader-pivot-rear-r",
@@ -5342,7 +6124,7 @@
           {
             "id": "st-platform-deck",
             "of": "platform-deck",
-            "member": "front-frame",
+            "member": "platform",
             "part": "member"
           },
           {
@@ -5461,13 +6243,13 @@
           {
             "id": "st-spreader-front-l",
             "of": "spreader-front-l",
-            "member": "front-frame",
+            "member": "spreader-front",
             "part": "member"
           },
           {
             "id": "st-spreader-rear-l",
             "of": "spreader-rear-l",
-            "member": "rear-frame",
+            "member": "spreader-rear",
             "part": "member"
           },
           {
@@ -5479,7 +6261,7 @@
           {
             "id": "st-spreader-knuckle-l",
             "of": "spreader-knuckle-l",
-            "member": "front-frame",
+            "member": "spreader-front",
             "part": "joint"
           },
           {
@@ -5525,13 +6307,13 @@
           {
             "id": "st-spreader-front-r",
             "of": "spreader-front-r",
-            "member": "front-frame",
+            "member": "spreader-front",
             "part": "member"
           },
           {
             "id": "st-spreader-rear-r",
             "of": "spreader-rear-r",
-            "member": "rear-frame",
+            "member": "spreader-rear",
             "part": "member"
           },
           {
@@ -5543,7 +6325,7 @@
           {
             "id": "st-spreader-knuckle-r",
             "of": "spreader-knuckle-r",
-            "member": "front-frame",
+            "member": "spreader-front",
             "part": "joint"
           },
           {
@@ -5719,6 +6501,10 @@
           {
             "en": "Structure: the load path of the ladder: hollow stiles (wall 1.5 mm) and hollow rear rails (wall 1.2 mm), the treads as hollow box members with a joint at each riveted end, the hollow grab bar, the platform deck on its axle (joints at the stiles) and on the hollow rest tube (joints at the rails), the hollow braces, the spreader links as ties with their pivots and knuckles, the hinge bolts as joints, a contact pad under each shoe and the two bone masses as half masses on the stiles and rails at the height of each centre of mass; caps, cheeks and shoes are absent.",
             "de": "Tragwerk: der Lastpfad der Leiter: hohle Holme (Wand 1,5 mm) und hohle Hinterholme (Wand 1,2 mm), die Stufen als hohle Kastenstäbe mit einem Knoten an jedem genieteten Ende, der hohle Haltebügel, das Plattformdeck auf seiner Achse (Knoten an den Holmen) und auf dem hohlen Auflagerohr (Knoten an den Hinterholmen), die hohlen Traversen, die Spreizenglieder als Zugbänder mit Drehpunkten und Knien, die Gelenkbolzen als Knoten, je Schuh eine Kontaktplatte und die zwei Segmentmassen als Halbmassen auf Holmen und Hinterholmen in Höhe des jeweiligen Schwerpunkts; Kappen, Wangen und Schuhe fehlen."
+          },
+          {
+            "en": "The ladder folds: rear frame on the head hinge (0 to 31.5 degrees), each spreader as two links on their own bones meeting in the knuckle, the platform on its axle bone; pose `folded` and clip `fold-up` use them.",
+            "de": "Die Leiter klappt: Stützrahmen am Kopfgelenk (0 bis 31,5 Grad), jede Spreize als zwei Glieder an eigenen Knochen, die sich im Kniegelenk treffen, die Plattform an ihrem Achsknochen; Pose `folded` und Clip `fold-up` nutzen sie."
           }
         ]
       },
@@ -5904,11 +6690,11 @@
           {
             "id": "platform",
             "kind": "extrude",
-            "bone": "front-frame",
+            "bone": "platform",
             "material": "alu-mill",
             "role": "body",
             "tone": 0.6,
-            "profile": [[1.204061, 0.204888], [1.110686, -0.020538], [1.113933, -0.028378], [1.132411, -0.036031], [1.228082, 0.194939]],
+            "profile": [[0.218041, 0.009], [-0.025958, 0.009], [-0.031959, 0.003], [-0.031958, -0.017], [0.218042, -0.017]],
             "plane": "xy",
             "from": -0.145,
             "to": 0.145
@@ -5994,33 +6780,55 @@
             "origin": [0.0, 0.0, 0.13645]
           },
           {
-            "id": "spreader-l",
+            "id": "spreader-rear-l",
             "kind": "extrude",
-            "bone": "front-frame",
+            "bone": "spreader-rear",
             "material": "steel-zinc",
             "role": "body",
             "tone": 0.35,
             "profile": [
-              [0.01, 0.002],
-              [0.009414, 0.003414],
-              [0.008, 0.004],
-              [-0.008, 0.004],
-              [-0.009414, 0.003414],
-              [-0.01, 0.002],
-              [-0.01, -0.002],
-              [-0.009414, -0.003414],
-              [-0.008, -0.004],
-              [0.008, -0.004],
-              [0.009414, -0.003414],
-              [0.01, -0.002]
+              [0.01, 0.19051],
+              [0.00941, 0.19192],
+              [0.008, 0.19251],
+              [-0.008, 0.19251],
+              [-0.00941, 0.19192],
+              [-0.01, 0.19051],
+              [-0.01, 0.18651],
+              [-0.00941, 0.18509],
+              [-0.008, 0.18451],
+              [0.008, 0.18451],
+              [0.00941, 0.18509],
+              [0.01, 0.18651]
             ],
-            "plane": "xy",
-            "from": 0.0,
-            "to": 0.584767,
-            "transform": {
-              "translation": [0.792856, 0.529168, 0.188508],
-              "rotation": [0.69352, -0.13795, -0.13795, 0.69352]
-            },
+            "plane": "yz",
+            "from": -0.012,
+            "to": 0.29238,
+            "slender": true
+          },
+          {
+            "id": "spreader-front-l",
+            "kind": "extrude",
+            "bone": "spreader-front",
+            "material": "steel-zinc",
+            "role": "body",
+            "tone": 0.35,
+            "profile": [
+              [0.01, 0.19051],
+              [0.00941, 0.19192],
+              [0.008, 0.19251],
+              [-0.008, 0.19251],
+              [-0.00941, 0.19192],
+              [-0.01, 0.19051],
+              [-0.01, 0.18651],
+              [-0.00941, 0.18509],
+              [-0.008, 0.18451],
+              [0.008, 0.18451],
+              [0.00941, 0.18509],
+              [0.01, 0.18651]
+            ],
+            "plane": "yz",
+            "from": -0.012,
+            "to": 0.29238,
             "slender": true
           },
           {
@@ -6077,33 +6885,55 @@
             "origin": [0.0, 0.0, -0.13645]
           },
           {
-            "id": "spreader-r",
+            "id": "spreader-rear-r",
             "kind": "extrude",
-            "bone": "front-frame",
+            "bone": "spreader-rear",
             "material": "steel-zinc",
             "role": "body",
             "tone": 0.35,
             "profile": [
-              [0.01, 0.002],
-              [0.009414, 0.003414],
-              [0.008, 0.004],
-              [-0.008, 0.004],
-              [-0.009414, 0.003414],
-              [-0.01, 0.002],
-              [-0.01, -0.002],
-              [-0.009414, -0.003414],
-              [-0.008, -0.004],
-              [0.008, -0.004],
-              [0.009414, -0.003414],
-              [0.01, -0.002]
+              [0.01, -0.18651],
+              [0.00941, -0.18509],
+              [0.008, -0.18451],
+              [-0.008, -0.18451],
+              [-0.00941, -0.18509],
+              [-0.01, -0.18651],
+              [-0.01, -0.19051],
+              [-0.00941, -0.19192],
+              [-0.008, -0.19251],
+              [0.008, -0.19251],
+              [0.00941, -0.19192],
+              [0.01, -0.19051]
             ],
-            "plane": "xy",
-            "from": 0.0,
-            "to": 0.584767,
-            "transform": {
-              "translation": [0.792856, 0.529168, -0.188508],
-              "rotation": [0.69352, -0.13795, -0.13795, 0.69352]
-            },
+            "plane": "yz",
+            "from": -0.012,
+            "to": 0.29238,
+            "slender": true
+          },
+          {
+            "id": "spreader-front-r",
+            "kind": "extrude",
+            "bone": "spreader-front",
+            "material": "steel-zinc",
+            "role": "body",
+            "tone": 0.35,
+            "profile": [
+              [0.01, -0.18651],
+              [0.00941, -0.18509],
+              [0.008, -0.18451],
+              [-0.008, -0.18451],
+              [-0.00941, -0.18509],
+              [-0.01, -0.18651],
+              [-0.01, -0.19051],
+              [-0.00941, -0.19192],
+              [-0.008, -0.19251],
+              [0.008, -0.19251],
+              [0.00941, -0.19192],
+              [0.01, -0.19051]
+            ],
+            "plane": "yz",
+            "from": -0.012,
+            "to": 0.29238,
             "slender": true
           },
           {
@@ -6221,11 +7051,6 @@
             "region": "rear-frame"
           },
           {
-            "id": "th-spreader-l",
-            "of": "spreader-l",
-            "region": "spreaders"
-          },
-          {
             "id": "th-shoe-front-l",
             "of": "shoe-front-l",
             "region": "feet"
@@ -6241,11 +7066,6 @@
             "region": "rear-frame"
           },
           {
-            "id": "th-spreader-r",
-            "of": "spreader-r",
-            "region": "spreaders"
-          },
-          {
             "id": "th-shoe-front-r",
             "of": "shoe-front-r",
             "region": "feet"
@@ -6254,6 +7074,26 @@
             "id": "th-shoe-rear-r",
             "of": "shoe-rear-r",
             "region": "feet"
+          },
+          {
+            "id": "th-spreader-front-l",
+            "of": "spreader-front-l",
+            "region": "spreaders"
+          },
+          {
+            "id": "th-spreader-rear-l",
+            "of": "spreader-rear-l",
+            "region": "spreaders"
+          },
+          {
+            "id": "th-spreader-front-r",
+            "of": "spreader-front-r",
+            "region": "spreaders"
+          },
+          {
+            "id": "th-spreader-rear-r",
+            "of": "spreader-rear-r",
+            "region": "spreaders"
           }
         ],
         "structure": [
@@ -6349,12 +7189,6 @@
               ]
             ],
             "member": "rear-frame",
-            "part": "member"
-          },
-          {
-            "id": "st-spreader-l",
-            "of": "spreader-l",
-            "member": "front-frame",
             "part": "member"
           },
           {
@@ -6480,12 +7314,6 @@
             "part": "member"
           },
           {
-            "id": "st-spreader-r",
-            "of": "spreader-r",
-            "member": "front-frame",
-            "part": "member"
-          },
-          {
             "id": "joint-hinge-r",
             "kind": "ellipsoid",
             "bone": "rear-frame",
@@ -6590,7 +7418,7 @@
           {
             "id": "st-platform",
             "of": "platform",
-            "member": "front-frame",
+            "member": "platform",
             "part": "member"
           },
           {
@@ -6730,6 +7558,30 @@
             },
             "member": "rear-frame",
             "part": "mass"
+          },
+          {
+            "id": "st-spreader-front-l",
+            "of": "spreader-front-l",
+            "member": "spreader-front",
+            "part": "member"
+          },
+          {
+            "id": "st-spreader-rear-l",
+            "of": "spreader-rear-l",
+            "member": "spreader-rear",
+            "part": "member"
+          },
+          {
+            "id": "st-spreader-front-r",
+            "of": "spreader-front-r",
+            "member": "spreader-front",
+            "part": "member"
+          },
+          {
+            "id": "st-spreader-rear-r",
+            "of": "spreader-rear-r",
+            "member": "spreader-rear",
+            "part": "member"
           }
         ],
         "decisions": [
@@ -6744,6 +7596,10 @@
           {
             "en": "Structure: hollow stiles and rails (wall drawn 3 mm), hollow tread boxes, grab bar, platform, rest tube and braces as the members they are, the spreader straps as ties, joints at the hinges and at the platform rest, a contact pad under each shoe and the half masses on stiles and rails.",
             "de": "Tragwerk: hohle Holme und Hinterholme (Wand 3 mm gezeichnet), hohle Stufenkästen, Haltebügel, Plattform, Auflagerohr und Traversen als die Stäbe, die sie sind, die Spreizbänder als Zugbänder, Knoten an den Gelenken und am Plattformauflager, je Schuh eine Kontaktplatte und die Halbmassen auf Holmen und Hinterholmen."
+          },
+          {
+            "en": "The ladder folds: rear frame on the head hinge (0 to 31.5 degrees), each spreader as two links on their own bones meeting in the knuckle, the platform on its axle bone; pose `folded` and clip `fold-up` use them.",
+            "de": "Die Leiter klappt: Stützrahmen am Kopfgelenk (0 bis 31,5 Grad), jede Spreize als zwei Glieder an eigenen Knochen, die sich im Kniegelenk treffen, die Plattform an ihrem Achsknochen; Pose `folded` und Clip `fold-up` nutzen sie."
           }
         ]
       },
@@ -6758,7 +7614,20 @@
             "material": "alu-mill",
             "role": "body",
             "tone": 0.55,
-            "profile": [[0.03, 0.007], [0.028828, 0.009828], [0.026, 0.011], [-0.026, 0.011], [-0.028828, 0.009828], [-0.03, 0.007], [-0.03, -0.007], [-0.028828, -0.009828], [-0.026, -0.011], [0.026, -0.011], [0.028828, -0.009828], [0.03, -0.007]],
+            "profile": [
+              [0.03, 0.007],
+              [0.028828, 0.009828],
+              [0.026, 0.011],
+              [-0.026, 0.011],
+              [-0.028828, 0.009828],
+              [-0.03, 0.007],
+              [-0.03, -0.007],
+              [-0.028828, -0.009828],
+              [-0.026, -0.011],
+              [0.026, -0.011],
+              [0.028828, -0.009828],
+              [0.03, -0.007]
+            ],
             "plane": "xy",
             "from": 0.0,
             "to": 1.793773,
@@ -6775,7 +7644,20 @@
             "material": "alu-mill",
             "role": "body",
             "tone": 0.5,
-            "profile": [[0.0225, 0.006], [0.021328, 0.008828], [0.0185, 0.01], [-0.0185, 0.01], [-0.021328, 0.008828], [-0.0225, 0.006], [-0.0225, -0.006], [-0.021328, -0.008828], [-0.0185, -0.01], [0.0185, -0.01], [0.021328, -0.008828], [0.0225, -0.006]],
+            "profile": [
+              [0.0225, 0.006],
+              [0.021328, 0.008828],
+              [0.0185, 0.01],
+              [-0.0185, 0.01],
+              [-0.021328, 0.008828],
+              [-0.0225, 0.006],
+              [-0.0225, -0.006],
+              [-0.021328, -0.008828],
+              [-0.0185, -0.01],
+              [0.0185, -0.01],
+              [0.021328, -0.008828],
+              [0.0225, -0.006]
+            ],
             "plane": "xy",
             "from": 0.0,
             "to": 1.361515,
@@ -6792,7 +7674,20 @@
             "material": "alu-mill",
             "role": "body",
             "tone": 0.55,
-            "profile": [[0.03, 0.007], [0.028828, 0.009828], [0.026, 0.011], [-0.026, 0.011], [-0.028828, 0.009828], [-0.03, 0.007], [-0.03, -0.007], [-0.028828, -0.009828], [-0.026, -0.011], [0.026, -0.011], [0.028828, -0.009828], [0.03, -0.007]],
+            "profile": [
+              [0.03, 0.007],
+              [0.028828, 0.009828],
+              [0.026, 0.011],
+              [-0.026, 0.011],
+              [-0.028828, 0.009828],
+              [-0.03, 0.007],
+              [-0.03, -0.007],
+              [-0.028828, -0.009828],
+              [-0.026, -0.011],
+              [0.026, -0.011],
+              [0.028828, -0.009828],
+              [0.03, -0.007]
+            ],
             "plane": "xy",
             "from": 0.0,
             "to": 1.793773,
@@ -6809,7 +7704,20 @@
             "material": "alu-mill",
             "role": "body",
             "tone": 0.5,
-            "profile": [[0.0225, 0.006], [0.021328, 0.008828], [0.0185, 0.01], [-0.0185, 0.01], [-0.021328, 0.008828], [-0.0225, 0.006], [-0.0225, -0.006], [-0.021328, -0.008828], [-0.0185, -0.01], [0.0185, -0.01], [0.021328, -0.008828], [0.0225, -0.006]],
+            "profile": [
+              [0.0225, 0.006],
+              [0.021328, 0.008828],
+              [0.0185, 0.01],
+              [-0.0185, 0.01],
+              [-0.021328, 0.008828],
+              [-0.0225, 0.006],
+              [-0.0225, -0.006],
+              [-0.021328, -0.008828],
+              [-0.0185, -0.01],
+              [0.0185, -0.01],
+              [0.021328, -0.008828],
+              [0.0225, -0.006]
+            ],
             "plane": "xy",
             "from": 0.0,
             "to": 1.361515,
@@ -6826,7 +7734,20 @@
             "material": "alu-mill",
             "role": "body",
             "tone": 0.5,
-            "profile": [[0.014, 0.0], [0.012124, 0.007], [0.007, 0.012124], [0.0, 0.014], [-0.007, 0.012124], [-0.012124, 0.007], [-0.014, 0.0], [-0.012124, -0.007], [-0.007, -0.012124], [-0.0, -0.014], [0.007, -0.012124], [0.012124, -0.007]],
+            "profile": [
+              [0.014, 0.0],
+              [0.012124, 0.007],
+              [0.007, 0.012124],
+              [0.0, 0.014],
+              [-0.007, 0.012124],
+              [-0.012124, 0.007],
+              [-0.014, 0.0],
+              [-0.012124, -0.007],
+              [-0.007, -0.012124],
+              [-0.0, -0.014],
+              [0.007, -0.012124],
+              [0.012124, -0.007]
+            ],
             "plane": "xy",
             "from": 0.0,
             "to": 0.312179,
@@ -6886,11 +7807,11 @@
           {
             "id": "platform",
             "kind": "extrude",
-            "bone": "front-frame",
+            "bone": "platform",
             "material": "alu-mill",
             "role": "body",
             "tone": 0.6,
-            "profile": [[1.112086, -0.027612], [1.109538, -0.02331], [1.129864, -0.031729], [1.223238, 0.193698], [1.202913, 0.202117], [1.204061, 0.204888], [1.228082, 0.194939], [1.133559, -0.03326], [1.129639, -0.034883]],
+            "profile": [[0.218, 0.012], [-0.032, 0.012], [-0.032, -0.044], [0.218, -0.044]],
             "plane": "xy",
             "from": -0.145,
             "to": 0.145
@@ -6902,7 +7823,20 @@
             "material": "alu-mill",
             "role": "body",
             "tone": 0.5,
-            "profile": [[0.015, 0.011], [0.013828, 0.013828], [0.011, 0.015], [-0.011, 0.015], [-0.013828, 0.013828], [-0.015, 0.011], [-0.015, -0.011], [-0.013828, -0.013828], [-0.011, -0.015], [0.011, -0.015], [0.013828, -0.013828], [0.015, -0.011]],
+            "profile": [
+              [0.015, 0.011],
+              [0.013828, 0.013828],
+              [0.011, 0.015],
+              [-0.011, 0.015],
+              [-0.013828, 0.013828],
+              [-0.015, 0.011],
+              [-0.015, -0.011],
+              [-0.013828, -0.013828],
+              [-0.011, -0.015],
+              [0.011, -0.015],
+              [0.013828, -0.013828],
+              [0.015, -0.011]
+            ],
             "plane": "xy",
             "from": 0.0,
             "to": 0.362694,
@@ -6912,20 +7846,55 @@
             }
           },
           {
-            "id": "spreader-l",
+            "id": "spreader-rear-l",
             "kind": "extrude",
-            "bone": "front-frame",
+            "bone": "spreader-rear",
             "material": "steel-zinc",
             "role": "body",
             "tone": 0.35,
-            "profile": [[0.01, 0.002], [0.009414, 0.003414], [0.008, 0.004], [-0.008, 0.004], [-0.009414, 0.003414], [-0.01, 0.002], [-0.01, -0.002], [-0.009414, -0.003414], [-0.008, -0.004], [0.008, -0.004], [0.009414, -0.003414], [0.01, -0.002]],
-            "plane": "xy",
-            "from": 0.0,
-            "to": 0.584767,
-            "transform": {
-              "translation": [0.792856, 0.529168, 0.188508],
-              "rotation": [0.69352, -0.13795, -0.13795, 0.69352]
-            },
+            "profile": [
+              [0.01, 0.19051],
+              [0.00941, 0.19192],
+              [0.008, 0.19251],
+              [-0.008, 0.19251],
+              [-0.00941, 0.19192],
+              [-0.01, 0.19051],
+              [-0.01, 0.18651],
+              [-0.00941, 0.18509],
+              [-0.008, 0.18451],
+              [0.008, 0.18451],
+              [0.00941, 0.18509],
+              [0.01, 0.18651]
+            ],
+            "plane": "yz",
+            "from": -0.012,
+            "to": 0.29238,
+            "slender": true
+          },
+          {
+            "id": "spreader-front-l",
+            "kind": "extrude",
+            "bone": "spreader-front",
+            "material": "steel-zinc",
+            "role": "body",
+            "tone": 0.35,
+            "profile": [
+              [0.01, 0.19051],
+              [0.00941, 0.19192],
+              [0.008, 0.19251],
+              [-0.008, 0.19251],
+              [-0.00941, 0.19192],
+              [-0.01, 0.19051],
+              [-0.01, 0.18651],
+              [-0.00941, 0.18509],
+              [-0.008, 0.18451],
+              [0.008, 0.18451],
+              [0.00941, 0.18509],
+              [0.01, 0.18651]
+            ],
+            "plane": "yz",
+            "from": -0.012,
+            "to": 0.29238,
             "slender": true
           },
           {
@@ -6935,7 +7904,16 @@
             "material": "rubber-black",
             "role": "body",
             "tone": 0.12,
-            "profile": [[0.016455, 0.039727], [-0.017221, -0.041575], [-0.00946, -0.044789], [-0.000586, -0.032772], [0.040545, -0.032772], [0.067694, 0.032772], [0.026563, 0.032772], [0.024216, 0.036512]],
+            "profile": [
+              [0.016455, 0.039727],
+              [-0.017221, -0.041575],
+              [-0.00946, -0.044789],
+              [-0.000586, -0.032772],
+              [0.040545, -0.032772],
+              [0.067694, 0.032772],
+              [0.026563, 0.032772],
+              [0.024216, 0.036512]
+            ],
             "plane": "xy",
             "from": 0.197,
             "to": 0.235
@@ -6947,26 +7925,70 @@
             "material": "rubber-black",
             "role": "body",
             "tone": 0.12,
-            "profile": [[1.394624, -0.03845], [1.373675, 0.034605], [1.365601, 0.03229], [1.363836, 0.025384], [1.329506, 0.025384], [1.344063, -0.025384], [1.378393, -0.025384], [1.386549, -0.040766]],
+            "profile": [
+              [1.394624, -0.03845],
+              [1.373675, 0.034605],
+              [1.365601, 0.03229],
+              [1.363836, 0.025384],
+              [1.329506, 0.025384],
+              [1.344063, -0.025384],
+              [1.378393, -0.025384],
+              [1.386549, -0.040766]
+            ],
             "plane": "xy",
             "from": 0.182,
             "to": 0.214
           },
           {
-            "id": "spreader-r",
+            "id": "spreader-rear-r",
             "kind": "extrude",
-            "bone": "front-frame",
+            "bone": "spreader-rear",
             "material": "steel-zinc",
             "role": "body",
             "tone": 0.35,
-            "profile": [[0.01, 0.002], [0.009414, 0.003414], [0.008, 0.004], [-0.008, 0.004], [-0.009414, 0.003414], [-0.01, 0.002], [-0.01, -0.002], [-0.009414, -0.003414], [-0.008, -0.004], [0.008, -0.004], [0.009414, -0.003414], [0.01, -0.002]],
-            "plane": "xy",
-            "from": 0.0,
-            "to": 0.584767,
-            "transform": {
-              "translation": [0.792856, 0.529168, -0.188508],
-              "rotation": [0.69352, -0.13795, -0.13795, 0.69352]
-            },
+            "profile": [
+              [0.01, -0.18651],
+              [0.00941, -0.18509],
+              [0.008, -0.18451],
+              [-0.008, -0.18451],
+              [-0.00941, -0.18509],
+              [-0.01, -0.18651],
+              [-0.01, -0.19051],
+              [-0.00941, -0.19192],
+              [-0.008, -0.19251],
+              [0.008, -0.19251],
+              [0.00941, -0.19192],
+              [0.01, -0.19051]
+            ],
+            "plane": "yz",
+            "from": -0.012,
+            "to": 0.29238,
+            "slender": true
+          },
+          {
+            "id": "spreader-front-r",
+            "kind": "extrude",
+            "bone": "spreader-front",
+            "material": "steel-zinc",
+            "role": "body",
+            "tone": 0.35,
+            "profile": [
+              [0.01, -0.18651],
+              [0.00941, -0.18509],
+              [0.008, -0.18451],
+              [-0.008, -0.18451],
+              [-0.00941, -0.18509],
+              [-0.01, -0.18651],
+              [-0.01, -0.19051],
+              [-0.00941, -0.19192],
+              [-0.008, -0.19251],
+              [0.008, -0.19251],
+              [0.00941, -0.19192],
+              [0.01, -0.19051]
+            ],
+            "plane": "yz",
+            "from": -0.012,
+            "to": 0.29238,
             "slender": true
           },
           {
@@ -6976,7 +7998,16 @@
             "material": "rubber-black",
             "role": "body",
             "tone": 0.12,
-            "profile": [[0.016455, 0.039727], [-0.017221, -0.041575], [-0.00946, -0.044789], [-0.000586, -0.032772], [0.040545, -0.032772], [0.067694, 0.032772], [0.026563, 0.032772], [0.024216, 0.036512]],
+            "profile": [
+              [0.016455, 0.039727],
+              [-0.017221, -0.041575],
+              [-0.00946, -0.044789],
+              [-0.000586, -0.032772],
+              [0.040545, -0.032772],
+              [0.067694, 0.032772],
+              [0.026563, 0.032772],
+              [0.024216, 0.036512]
+            ],
             "plane": "xy",
             "from": -0.235,
             "to": -0.197
@@ -6988,7 +8019,16 @@
             "material": "rubber-black",
             "role": "body",
             "tone": 0.12,
-            "profile": [[1.394624, -0.03845], [1.373675, 0.034605], [1.365601, 0.03229], [1.363836, 0.025384], [1.329506, 0.025384], [1.344063, -0.025384], [1.378393, -0.025384], [1.386549, -0.040766]],
+            "profile": [
+              [1.394624, -0.03845],
+              [1.373675, 0.034605],
+              [1.365601, 0.03229],
+              [1.363836, 0.025384],
+              [1.329506, 0.025384],
+              [1.344063, -0.025384],
+              [1.378393, -0.025384],
+              [1.386549, -0.040766]
+            ],
             "plane": "xy",
             "from": -0.214,
             "to": -0.182
@@ -7051,11 +8091,6 @@
             "region": "rear-frame"
           },
           {
-            "id": "th-spreader-l",
-            "of": "spreader-l",
-            "region": "spreaders"
-          },
-          {
             "id": "th-shoe-front-l",
             "of": "shoe-front-l",
             "region": "feet"
@@ -7066,11 +8101,6 @@
             "region": "feet"
           },
           {
-            "id": "th-spreader-r",
-            "of": "spreader-r",
-            "region": "spreaders"
-          },
-          {
             "id": "th-shoe-front-r",
             "of": "shoe-front-r",
             "region": "feet"
@@ -7079,6 +8109,26 @@
             "id": "th-shoe-rear-r",
             "of": "shoe-rear-r",
             "region": "feet"
+          },
+          {
+            "id": "th-spreader-front-l",
+            "of": "spreader-front-l",
+            "region": "spreaders"
+          },
+          {
+            "id": "th-spreader-rear-l",
+            "of": "spreader-rear-l",
+            "region": "spreaders"
+          },
+          {
+            "id": "th-spreader-front-r",
+            "of": "spreader-front-r",
+            "region": "spreaders"
+          },
+          {
+            "id": "th-spreader-rear-r",
+            "of": "spreader-rear-r",
+            "region": "spreaders"
           }
         ],
         "structure": [
@@ -7092,12 +8142,6 @@
             "id": "st-rail-l",
             "of": "rail-l",
             "member": "rear-frame",
-            "part": "member"
-          },
-          {
-            "id": "st-spreader-l",
-            "of": "spreader-l",
-            "member": "front-frame",
             "part": "member"
           },
           {
@@ -7124,12 +8168,6 @@
             "id": "st-rail-r",
             "of": "rail-r",
             "member": "rear-frame",
-            "part": "member"
-          },
-          {
-            "id": "st-spreader-r",
-            "of": "spreader-r",
-            "member": "front-frame",
             "part": "member"
           },
           {
@@ -7173,7 +8211,7 @@
           {
             "id": "st-platform",
             "of": "platform",
-            "member": "front-frame",
+            "member": "platform",
             "part": "member"
           },
           {
@@ -7301,6 +8339,30 @@
             },
             "member": "rear-frame",
             "part": "mass"
+          },
+          {
+            "id": "st-spreader-front-l",
+            "of": "spreader-front-l",
+            "member": "spreader-front",
+            "part": "member"
+          },
+          {
+            "id": "st-spreader-rear-l",
+            "of": "spreader-rear-l",
+            "member": "spreader-rear",
+            "part": "member"
+          },
+          {
+            "id": "st-spreader-front-r",
+            "of": "spreader-front-r",
+            "member": "spreader-front",
+            "part": "member"
+          },
+          {
+            "id": "st-spreader-rear-r",
+            "of": "spreader-rear-r",
+            "member": "spreader-rear",
+            "part": "member"
           }
         ],
         "decisions": [
@@ -7315,6 +8377,14 @@
           {
             "en": "Structure: the slender stiles, rails and straps are the members themselves, with the treads, the platform and the brace; a joint at each hinge, a contact pad under each shoe and the half masses on stiles and rails.",
             "de": "Tragwerk: die schlanken Holme, Hinterholme und Bänder sind selbst die Stäbe, dazu Stufen, Plattform und Traverse; ein Knoten je Gelenk, je Schuh eine Kontaktplatte und die Halbmassen auf Holmen und Hinterholmen."
+          },
+          {
+            "en": "The platform is drawn and modelled 56 mm deep (deck with its side cheeks) so that it prints over the whole band.",
+            "de": "Die Plattform ist 56 mm stark gezeichnet und modelliert (Deck mit Seitenwangen), damit sie im ganzen Band druckt."
+          },
+          {
+            "en": "The ladder folds: rear frame on the head hinge (0 to 31.5 degrees), each spreader as two links on their own bones meeting in the knuckle, the platform on its axle bone; pose `folded` and clip `fold-up` use them.",
+            "de": "Die Leiter klappt: Stützrahmen am Kopfgelenk (0 bis 31,5 Grad), jede Spreize als zwei Glieder an eigenen Knochen, die sich im Kniegelenk treffen, die Plattform an ihrem Achsknochen; Pose `folded` und Clip `fold-up` nutzen sie."
           }
         ]
       },
@@ -7329,7 +8399,20 @@
             "material": "alu-mill",
             "role": "body",
             "tone": 0.55,
-            "profile": [[0.03, 0.007], [0.028828, 0.009828], [0.026, 0.011], [-0.026, 0.011], [-0.028828, 0.009828], [-0.03, 0.007], [-0.03, -0.007], [-0.028828, -0.009828], [-0.026, -0.011], [0.026, -0.011], [0.028828, -0.009828], [0.03, -0.007]],
+            "profile": [
+              [0.03, 0.007],
+              [0.028828, 0.009828],
+              [0.026, 0.011],
+              [-0.026, 0.011],
+              [-0.028828, 0.009828],
+              [-0.03, 0.007],
+              [-0.03, -0.007],
+              [-0.028828, -0.009828],
+              [-0.026, -0.011],
+              [0.026, -0.011],
+              [0.028828, -0.009828],
+              [0.03, -0.007]
+            ],
             "plane": "xy",
             "from": 0.0,
             "to": 1.793773,
@@ -7346,7 +8429,20 @@
             "material": "alu-mill",
             "role": "body",
             "tone": 0.5,
-            "profile": [[0.0225, 0.006], [0.021328, 0.008828], [0.0185, 0.01], [-0.0185, 0.01], [-0.021328, 0.008828], [-0.0225, 0.006], [-0.0225, -0.006], [-0.021328, -0.008828], [-0.0185, -0.01], [0.0185, -0.01], [0.021328, -0.008828], [0.0225, -0.006]],
+            "profile": [
+              [0.0225, 0.006],
+              [0.021328, 0.008828],
+              [0.0185, 0.01],
+              [-0.0185, 0.01],
+              [-0.021328, 0.008828],
+              [-0.0225, 0.006],
+              [-0.0225, -0.006],
+              [-0.021328, -0.008828],
+              [-0.0185, -0.01],
+              [0.0185, -0.01],
+              [0.021328, -0.008828],
+              [0.0225, -0.006]
+            ],
             "plane": "xy",
             "from": 0.0,
             "to": 1.361515,
@@ -7363,7 +8459,20 @@
             "material": "alu-mill",
             "role": "body",
             "tone": 0.55,
-            "profile": [[0.03, 0.007], [0.028828, 0.009828], [0.026, 0.011], [-0.026, 0.011], [-0.028828, 0.009828], [-0.03, 0.007], [-0.03, -0.007], [-0.028828, -0.009828], [-0.026, -0.011], [0.026, -0.011], [0.028828, -0.009828], [0.03, -0.007]],
+            "profile": [
+              [0.03, 0.007],
+              [0.028828, 0.009828],
+              [0.026, 0.011],
+              [-0.026, 0.011],
+              [-0.028828, 0.009828],
+              [-0.03, 0.007],
+              [-0.03, -0.007],
+              [-0.028828, -0.009828],
+              [-0.026, -0.011],
+              [0.026, -0.011],
+              [0.028828, -0.009828],
+              [0.03, -0.007]
+            ],
             "plane": "xy",
             "from": 0.0,
             "to": 1.793773,
@@ -7380,7 +8489,20 @@
             "material": "alu-mill",
             "role": "body",
             "tone": 0.5,
-            "profile": [[0.0225, 0.006], [0.021328, 0.008828], [0.0185, 0.01], [-0.0185, 0.01], [-0.021328, 0.008828], [-0.0225, 0.006], [-0.0225, -0.006], [-0.021328, -0.008828], [-0.0185, -0.01], [0.0185, -0.01], [0.021328, -0.008828], [0.0225, -0.006]],
+            "profile": [
+              [0.0225, 0.006],
+              [0.021328, 0.008828],
+              [0.0185, 0.01],
+              [-0.0185, 0.01],
+              [-0.021328, 0.008828],
+              [-0.0225, 0.006],
+              [-0.0225, -0.006],
+              [-0.021328, -0.008828],
+              [-0.0185, -0.01],
+              [0.0185, -0.01],
+              [0.021328, -0.008828],
+              [0.0225, -0.006]
+            ],
             "plane": "xy",
             "from": 0.0,
             "to": 1.361515,
@@ -7457,30 +8579,65 @@
           {
             "id": "platform",
             "kind": "extrude",
-            "bone": "front-frame",
+            "bone": "platform",
             "material": "alu-mill",
             "role": "body",
             "tone": 0.6,
-            "profile": [[1.204061, 0.204888], [1.20253, 0.201193], [1.222856, 0.192774], [1.130246, -0.030805], [1.109921, -0.022386], [1.10839, -0.026082], [1.132411, -0.036031], [1.228082, 0.194939]],
+            "profile": [[0.218041, 0.009], [0.214042, 0.009], [0.214042, -0.013], [-0.027958, -0.013], [-0.027958, 0.009], [-0.031959, 0.009], [-0.031958, -0.017], [0.218042, -0.017]],
             "plane": "xy",
             "from": -0.145,
             "to": 0.145
           },
           {
-            "id": "spreader-l",
+            "id": "spreader-rear-l",
             "kind": "extrude",
-            "bone": "front-frame",
+            "bone": "spreader-rear",
             "material": "steel-zinc",
             "role": "body",
             "tone": 0.35,
-            "profile": [[0.01, 0.002], [0.009414, 0.003414], [0.008, 0.004], [-0.008, 0.004], [-0.009414, 0.003414], [-0.01, 0.002], [-0.01, -0.002], [-0.009414, -0.003414], [-0.008, -0.004], [0.008, -0.004], [0.009414, -0.003414], [0.01, -0.002]],
-            "plane": "xy",
-            "from": 0.0,
-            "to": 0.584767,
-            "transform": {
-              "translation": [0.792856, 0.529168, 0.188508],
-              "rotation": [0.69352, -0.13795, -0.13795, 0.69352]
-            },
+            "profile": [
+              [0.01, 0.19051],
+              [0.00941, 0.19192],
+              [0.008, 0.19251],
+              [-0.008, 0.19251],
+              [-0.00941, 0.19192],
+              [-0.01, 0.19051],
+              [-0.01, 0.18651],
+              [-0.00941, 0.18509],
+              [-0.008, 0.18451],
+              [0.008, 0.18451],
+              [0.00941, 0.18509],
+              [0.01, 0.18651]
+            ],
+            "plane": "yz",
+            "from": -0.012,
+            "to": 0.29238,
+            "slender": true
+          },
+          {
+            "id": "spreader-front-l",
+            "kind": "extrude",
+            "bone": "spreader-front",
+            "material": "steel-zinc",
+            "role": "body",
+            "tone": 0.35,
+            "profile": [
+              [0.01, 0.19051],
+              [0.00941, 0.19192],
+              [0.008, 0.19251],
+              [-0.008, 0.19251],
+              [-0.00941, 0.19192],
+              [-0.01, 0.19051],
+              [-0.01, 0.18651],
+              [-0.00941, 0.18509],
+              [-0.008, 0.18451],
+              [0.008, 0.18451],
+              [0.00941, 0.18509],
+              [0.01, 0.18651]
+            ],
+            "plane": "yz",
+            "from": -0.012,
+            "to": 0.29238,
             "slender": true
           },
           {
@@ -7508,20 +8665,55 @@
             "to": 0.214
           },
           {
-            "id": "spreader-r",
+            "id": "spreader-rear-r",
             "kind": "extrude",
-            "bone": "front-frame",
+            "bone": "spreader-rear",
             "material": "steel-zinc",
             "role": "body",
             "tone": 0.35,
-            "profile": [[0.01, 0.002], [0.009414, 0.003414], [0.008, 0.004], [-0.008, 0.004], [-0.009414, 0.003414], [-0.01, 0.002], [-0.01, -0.002], [-0.009414, -0.003414], [-0.008, -0.004], [0.008, -0.004], [0.009414, -0.003414], [0.01, -0.002]],
-            "plane": "xy",
-            "from": 0.0,
-            "to": 0.584767,
-            "transform": {
-              "translation": [0.792856, 0.529168, -0.188508],
-              "rotation": [0.69352, -0.13795, -0.13795, 0.69352]
-            },
+            "profile": [
+              [0.01, -0.18651],
+              [0.00941, -0.18509],
+              [0.008, -0.18451],
+              [-0.008, -0.18451],
+              [-0.00941, -0.18509],
+              [-0.01, -0.18651],
+              [-0.01, -0.19051],
+              [-0.00941, -0.19192],
+              [-0.008, -0.19251],
+              [0.008, -0.19251],
+              [0.00941, -0.19192],
+              [0.01, -0.19051]
+            ],
+            "plane": "yz",
+            "from": -0.012,
+            "to": 0.29238,
+            "slender": true
+          },
+          {
+            "id": "spreader-front-r",
+            "kind": "extrude",
+            "bone": "spreader-front",
+            "material": "steel-zinc",
+            "role": "body",
+            "tone": 0.35,
+            "profile": [
+              [0.01, -0.18651],
+              [0.00941, -0.18509],
+              [0.008, -0.18451],
+              [-0.008, -0.18451],
+              [-0.00941, -0.18509],
+              [-0.01, -0.18651],
+              [-0.01, -0.19051],
+              [-0.00941, -0.19192],
+              [-0.008, -0.19251],
+              [0.008, -0.19251],
+              [0.00941, -0.19192],
+              [0.01, -0.19051]
+            ],
+            "plane": "yz",
+            "from": -0.012,
+            "to": 0.29238,
             "slender": true
           },
           {
@@ -7601,11 +8793,6 @@
             "region": "platform"
           },
           {
-            "id": "th-spreader-l",
-            "of": "spreader-l",
-            "region": "spreaders"
-          },
-          {
             "id": "th-shoe-front-l",
             "of": "shoe-front-l",
             "region": "feet"
@@ -7616,11 +8803,6 @@
             "region": "feet"
           },
           {
-            "id": "th-spreader-r",
-            "of": "spreader-r",
-            "region": "spreaders"
-          },
-          {
             "id": "th-shoe-front-r",
             "of": "shoe-front-r",
             "region": "feet"
@@ -7629,6 +8811,26 @@
             "id": "th-shoe-rear-r",
             "of": "shoe-rear-r",
             "region": "feet"
+          },
+          {
+            "id": "th-spreader-front-l",
+            "of": "spreader-front-l",
+            "region": "spreaders"
+          },
+          {
+            "id": "th-spreader-rear-l",
+            "of": "spreader-rear-l",
+            "region": "spreaders"
+          },
+          {
+            "id": "th-spreader-front-r",
+            "of": "spreader-front-r",
+            "region": "spreaders"
+          },
+          {
+            "id": "th-spreader-rear-r",
+            "of": "spreader-rear-r",
+            "region": "spreaders"
           }
         ],
         "structure": [
@@ -7642,12 +8844,6 @@
             "id": "st-rail-l",
             "of": "rail-l",
             "member": "rear-frame",
-            "part": "member"
-          },
-          {
-            "id": "st-spreader-l",
-            "of": "spreader-l",
-            "member": "front-frame",
             "part": "member"
           },
           {
@@ -7674,12 +8870,6 @@
             "id": "st-rail-r",
             "of": "rail-r",
             "member": "rear-frame",
-            "part": "member"
-          },
-          {
-            "id": "st-spreader-r",
-            "of": "spreader-r",
-            "member": "front-frame",
             "part": "member"
           },
           {
@@ -7723,7 +8913,7 @@
           {
             "id": "st-platform",
             "of": "platform",
-            "member": "front-frame",
+            "member": "platform",
             "part": "member"
           },
           {
@@ -7845,6 +9035,30 @@
             },
             "member": "rear-frame",
             "part": "mass"
+          },
+          {
+            "id": "st-spreader-front-l",
+            "of": "spreader-front-l",
+            "member": "spreader-front",
+            "part": "member"
+          },
+          {
+            "id": "st-spreader-rear-l",
+            "of": "spreader-rear-l",
+            "member": "spreader-rear",
+            "part": "member"
+          },
+          {
+            "id": "st-spreader-front-r",
+            "of": "spreader-front-r",
+            "member": "spreader-front",
+            "part": "member"
+          },
+          {
+            "id": "st-spreader-rear-r",
+            "of": "spreader-rear-r",
+            "member": "spreader-rear",
+            "part": "member"
           }
         ],
         "decisions": [
@@ -7859,6 +9073,10 @@
           {
             "en": "Structure: the slender stiles, rails and straps are the members themselves, with the tread bars and the platform; a joint at each hinge, a contact pad under each shoe and the half masses on stiles and rails.",
             "de": "Tragwerk: die schlanken Holme, Hinterholme und Bänder sind selbst die Stäbe, dazu Stufenstäbe und Plattform; ein Knoten je Gelenk, je Schuh eine Kontaktplatte und die Halbmassen auf Holmen und Hinterholmen."
+          },
+          {
+            "en": "The ladder folds: rear frame on the head hinge (0 to 31.5 degrees), each spreader as two links on their own bones meeting in the knuckle, the platform on its axle bone; pose `folded` and clip `fold-up` use them.",
+            "de": "Die Leiter klappt: Stützrahmen am Kopfgelenk (0 bis 31,5 Grad), jede Spreize als zwei Glieder an eigenen Knochen, die sich im Kniegelenk treffen, die Plattform an ihrem Achsknochen; Pose `folded` und Clip `fold-up` nutzen sie."
           }
         ]
       }

@@ -125,7 +125,7 @@ fn composed_window_keeps_the_silhouette_when_the_body_paints() {
     let mut tui = semio_ui_tui_engine::Tui::new(Size { width: 60, height: 40 }, Theme::new(AppearanceName::Dark));
     let navbar = NavbarState { left: vec![], center: vec![NavItem { id: "d".into(), label: "dashboard".into(), active: false }], right: vec![] };
     let footer = FooterState { hints: vec![], status: String::new() };
-    let layout = create_default_layout(&["w1".into()], "row", None, Some(&["Commands".into()]));
+    let layout = create_default_layout(&["w1".into()], Axis::Horizontal, None, Some(&["Commands".into()]));
     let mut built = shell(&mut tui.scene, navbar, footer, &layout);
     let (_id, chrome) = built.windows[0].clone();
     let widget = tui.scene.add(chrome, Node::new(NodeContent::Widget(WidgetState::Wizard(WizardState::new(vec!["alpha".into()])))));

@@ -27,7 +27,7 @@ fn every_admitted_wheel_reaches_dispatch_at_its_original_point() {
         let mut actual = Vec::new();
         while !queue.is_empty() {
             let page = queue.drain_page(ui_host::WorkerContext::new(queue.current_generation()));
-            let mut caller=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);let original=caller.turn(super::RuntimeDispatchSource::admit).unwrap().unwrap();
+            let mut caller=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(semio_framework_job::RetainedCloneGrant { maximum_items: 1 << 24, maximum_copy_bytes: 1 << 30, maximum_capacity_bytes: 1 << 30, maximum_release_bytes: 1 << 30, maximum_depth: 4096 });let mut source=None;for _ in 0..16{if caller.turn_funded(64,|cx|super::RuntimeDispatchSource::admit(&mut source,cx)).unwrap(){break}}let original=source.expect("the original dispatch source admits within bounded turns");
             let mut cursor = super::RuntimeDispatchCursor::new_for_generation(page, 1,original);
             while let Some(event) = cursor.take_next() {
                 if let DispatchEvent::Scroll { x, y, delta_x, delta_y, modifiers } = event {

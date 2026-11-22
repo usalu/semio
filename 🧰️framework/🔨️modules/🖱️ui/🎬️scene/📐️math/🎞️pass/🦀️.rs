@@ -223,6 +223,7 @@ pub struct ScenePass3d {
     pub shadow_draws: Vec<SceneDraw3d>,
     pub draws: Vec<SceneDraw3d>,
     pub line_draws: Vec<LineDraw3d>,
+    pub point_draws: Vec<PointDraw3d>,
     pub translucent_draws: Vec<SceneDraw3d>,
     pub material_draws: Vec<SceneMaterialDraw3d>,
     pub textured_draws: Vec<TexturedDraw3d>,
@@ -283,6 +284,24 @@ pub struct LineVertex3d {
 #[derive(Clone, Debug, Default)]
 pub struct LineDraw3d {
     pub vertices: Vec<LineVertex3d>,
+}
+
+/// ☁️ Point sprites a prepared GPU command encodes per step (bounds one cursor step's draw bytes).
+pub const POINT_CHUNK_VERTICES: usize = 1024;
+
+/// ☁️ One point-cloud vertex: a world position and its straight-alpha linear color.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct PointVertex3d {
+    pub position: [f32; 3],
+    pub color: [f32; 4],
+}
+
+/// ☁️ One unlit point-cloud layer (three's `Points` + `PointsMaterial`): every vertex is a square sprite of `size` pixels, shrinking with depth when `size_attenuation` is set.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct PointDraw3d {
+    pub vertices: Vec<PointVertex3d>,
+    pub size: f32,
+    pub size_attenuation: bool,
 }
 
 #[derive(Clone, Debug)]

@@ -10,6 +10,31 @@ export function clipboardWriteFragmentFromEffect(effect: unknown): unknown | und
 
 export type ClipboardActionDescriptor = { readonly action: string; readonly args?: unknown };
 
+/** 🧷️ Identifies the framework workspace clipboard actions. */
+export function isWorkspaceClipboardAction(action: ClipboardActionDescriptor & { readonly commandAddress?: unknown }): boolean {
+  return action.commandAddress === undefined && (action.action === "copy" || action.action === "cut" || action.action === "paste");
+}
+
+/** 🔃️ Orders clipboard operations by submission through their settled effects. */
+export class ClipboardActionQueue {
+  #tail: Promise<unknown> | undefined;
+
+  get pending(): boolean {
+    return this.#tail !== undefined;
+  }
+
+  run<T>(action: ClipboardActionDescriptor & { readonly commandAddress?: unknown }, dispatch: (clipboard: boolean) => Promise<T>): Promise<T> {
+    if (!isWorkspaceClipboardAction(action)) return dispatch(false);
+    const submit = () => dispatch(true);
+    const result = this.#tail === undefined ? submit() : this.#tail.then(submit, submit);
+    const tail = result.finally(() => {
+      if (this.#tail === tail) this.#tail = undefined;
+    });
+    this.#tail = tail;
+    return tail;
+  }
+}
+
 /** 📋 Named `fragment` on a paste descriptor, when the args object carries one. */
 export function pasteArgsFragment(action: { readonly args?: unknown }): unknown | undefined {
   const args = action.args;

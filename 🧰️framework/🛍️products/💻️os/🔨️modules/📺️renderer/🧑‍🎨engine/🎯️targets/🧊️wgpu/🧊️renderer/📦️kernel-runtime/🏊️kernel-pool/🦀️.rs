@@ -13,6 +13,9 @@ mod app_lifecycle_and_realm_close;
 #[path = "🔄️exchange-and-turn-settling/🦀️.rs"]
 mod exchange_and_turn_settling;
 
+#[path = "🎛️runtime-observation/🦀️.rs"]
+mod runtime_observation;
+
 #[path = "🚀️turn-dispatch-and-pool-runner/🦀️.rs"]
 mod turn_dispatch_and_pool_runner;
 pub use turn_dispatch_and_pool_runner::run_kernel_pool;

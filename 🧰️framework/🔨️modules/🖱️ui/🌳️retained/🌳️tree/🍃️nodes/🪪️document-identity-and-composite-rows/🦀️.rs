@@ -205,8 +205,12 @@ impl UiTree {
     /// `None`, so the reconcile retires the row and the gesture terminates without dispatch.
     pub fn surviving_composite_owner(&self, row: NodeId) -> Option<NodeId> {
         let owner = self.composite_rows.iter().find_map(|(owner, candidate)| (*candidate == row).then_some(*owner))?;
-        let document_id = self.document_id(owner)?;
-        self.document.as_ref().and_then(|document| document.record(document_id)).filter(|record| matches!(&record.component, ui_contract::Component::Select(_))).map(|_| owner)
+        let record_of = |id: NodeId| self.document_id(id).and_then(|document_id| self.document.as_ref().and_then(|document| document.record(document_id)));
+        if self.is_icon_select_cell_owner(owner) && self.node(owner).is_some_and(|node| matches!(&node.spec.0, UiNode::Select(_))) {
+            let selector = self.node(owner).and_then(|node| node.parent)?;
+            return record_of(selector).filter(|record| matches!(&record.component, ui_contract::Component::IconSelect(_))).map(|_| owner);
+        }
+        record_of(owner).filter(|record| matches!(&record.component, ui_contract::Component::Select(_))).map(|_| owner)
     }
 
     /// ❔️ Whether `owner` already has its synthesized rows this generation.
@@ -217,11 +221,19 @@ impl UiTree {
     /// 🗑️ Retires one synthesized row outside `preserved_owner`. `true` means only that captured
     /// owner's rows remain, or the ledger is empty.
     pub fn retire_composite_row_except_step(&mut self, preserved_owner: Option<NodeId>) -> bool {
-        let Some(index) = self.composite_rows.iter().rposition(|(owner, _)| Some(*owner) != preserved_owner) else { return true };
+        let Some(index) = self.composite_rows.iter().rposition(|(owner, _)| Some(*owner) != preserved_owner && !self.is_icon_select_cell_owner(*owner)) else { return true };
         let (owner, row) = self.composite_rows.remove(index);
         self.detach_child(owner, row);
         self.remove(row);
         false
+    }
+
+    /// 🖼️ Whether `owner` is an icon selector or one of its cells. An icon selector's four cells are long-lived (a focused editor's edit
+    /// buffer, an open mode popup), so a document republish keeps them, and the rows a cell owns (the mode popup's options), exactly as a
+    /// pointer-captured Select keeps its own.
+    pub fn is_icon_select_cell_owner(&self, owner: NodeId) -> bool {
+        let is_icon_select = |id: NodeId| self.node(id).is_some_and(|node| matches!(&node.spec.0, UiNode::IconSelect(_)));
+        is_icon_select(owner) || self.node(owner).and_then(|node| node.parent).is_some_and(is_icon_select)
     }
 
     /// ⛓️ Restores a preserved owner's synthesized child chain after the document relink cleared

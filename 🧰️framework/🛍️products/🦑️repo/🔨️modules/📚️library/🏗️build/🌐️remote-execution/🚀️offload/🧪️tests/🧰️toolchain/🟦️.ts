@@ -36,7 +36,7 @@ for(const row of fixture.cases)test(row.name,()=>{
   expect(offer).toEqual({
    tools:{rustc:{path:compiler,readable:[sysroot]}},
    toolchain:{commit:fixture.commit,host:row.host,digest:digest.stdout.trim(),targets:row.targets},
-   properties:row.targets.map(target=>({name:"semio-rustc-target-"+target,value:"1"})),
+   properties:[{name:"semio-offload-format",value:"argv-1"},...row.targets.map(target=>({name:"semio-rustc-target-"+target,value:"1"}))],
   });
  }finally{rmSync(root,{recursive:true,force:true});}
 });

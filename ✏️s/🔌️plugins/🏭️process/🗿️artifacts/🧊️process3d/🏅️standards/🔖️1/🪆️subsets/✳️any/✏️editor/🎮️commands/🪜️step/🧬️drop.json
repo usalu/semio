@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/process/process3d/editor/drop-step/schema.json",
+  "title": "Process3d Timeline Step Drop",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "documentId",
+    "stepId",
+    "targetId",
+    "dropPosition"
+  ],
+  "properties": {
+    "documentId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "stepId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "targetId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "dropPosition": {
+      "enum": [
+        "before",
+        "after"
+      ]
+    }
+  }
+}

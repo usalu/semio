@@ -8,13 +8,27 @@ pub fn register_framework_reserved_action_factories<A: ArtifactApp>(bus: &semio_
     register_framework_reserved_factories(&mut registry)
 }
 
-/// 🧲️ Re-polls one pending-aware media import until it settles; refuses once its fixture scope is no longer funded.
+/// 🧲️ Drives the media admission under one fixture source until the mounted operation is announced.
 pub async fn import_media<P: PluginApp>(app: &mut P, port: &str, media: semio_framework::Media, meta: &ActionMeta, cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework::kernel::InvocationResult, semio_framework_job::OriginalTurnFailure> {
     let mut media = Some(media);
-    while !cx.is_cancelled() && !cx.should_yield() {
+    let fuel = OriginalFixtureCaller::turn_fuel();
+    let (grant, _) = cx.original_turn_ceiling();
+    for turn in 0..OriginalFixtureCaller::maximum_turns() {
+        fixture_renew_turn(cx, fuel, grant)?;
+        if cx.is_cancelled() || cx.should_yield() {
+            break;
+        }
         if let Some(result) = app.import_media(port, &mut media, meta, cx).await? { return Ok(result) }
+        if turn == 0 {
+            app.history_snapshot().await?;
+            ensure_fixture_cancellation_issuer(app, cx)?;
+        }
+        app.maintenance_step(cx, fixture_mounted_policy().maintenance).map_err(semio_framework_job::OriginalTurnFailure::from)?;
     }
-    Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit, "fixture media import was not funded to settle").into())
+    Err(semio_framework_value::ValueError::new(
+        semio_framework_value::ValueRefusalKind::WorkLimit,
+        format!("fixture media import on {port} exceeded its authored turn bound: {}", app.typed_operation_diagnostic()),
+    ).into())
 }
 
 /// 🧲️ Re-polls one pending-aware media consumption until it settles; refuses once its fixture scope is no longer funded.
@@ -365,15 +379,11 @@ pub fn retain_original_ownership_receipts<P: PluginApp>(app: &mut P, policy: sem
     }
     if let Some((operation, grant, progress)) = app.take_typed_operation_preparation_receipt() {
         if grant.restricted_by(policy.preparation) != grant { return Err(semio_framework::Fault::from("registered fixture preparation receipt grant exceeds its original caller authority")); }
-        if !progress.fits(grant) || grant.maximum_depth == 0 && progress != RetainedCloneProgress::default() {
-            return Err(semio_framework::Fault::from(format!("registered fixture preparation receipt for {operation:?} exceeds its original grant: receipt {progress:?}, grant {grant:?}")));
-        }
+        if !progress.fits(grant) || grant.maximum_depth == 0 && progress != RetainedCloneProgress::default() { return Err(semio_framework::Fault::from("registered fixture preparation receipt progress exceeds its original caller grant")); }
         recipient.push(TypedOperationFixtureOwnershipReceipt::Preparation { operation, grant, progress });
     }
     if let Some((operation, grant, progress)) = app.take_typed_operation_retirement_receipt() {
-        if grant.restricted_by(policy.close) != grant || !progress.fits(grant) || grant.maximum_depth == 0 && progress != RetainedCloneProgress::default() {
-            return Err(semio_framework::Fault::from(format!("registered fixture Close receipt for {operation:?} exceeds its original authority: receipt {progress:?}, grant {grant:?}, policy {:?}", policy.close)));
-        }
+        if grant != policy.close || !progress.fits(grant) || grant.maximum_depth == 0 && progress != RetainedCloneProgress::default() { return Err(semio_framework::Fault::from("registered fixture Close receipt differs from its original caller authority")); }
         recipient.push(TypedOperationFixtureOwnershipReceipt::Retirement { operation, grant, progress });
     }
     if let Some((grant, progress)) = app.take_history_command_receipt() {
@@ -461,28 +471,49 @@ pub fn fixture_close_grant(mounted_policy: semio_plugin_mounted_owner::MountedOw
     mounted_policy.close
 }
 
-/// 🧹️ Closes one registered fixture through the exact retained app close state machine.
+/// 🧹️ Closes one registered fixture through the retained app close state machine, with a renewed caller turn for every step.
 pub fn close_registered_fixture_app<A: PluginApp>(app: &mut A, mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1,cx:&mut semio_framework_job::StepContext<'_>) -> Result<Vec<TypedOperationFixtureOwnershipReceipt>,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
     fixture_end_turn(cx)?;
+    let (fresh_grant, _) = cx.original_turn_ceiling();
+    let fresh_fuel = OriginalFixtureCaller::turn_fuel();
     let mut pending_authority = None;
     let mut last_quote = None;
-    let mut close_turn = 0usize;let maximum_turns=OriginalFixtureCaller::maximum_turns();
+    let mut close_turn = 0usize;
+    let maximum_turns = OriginalFixtureCaller::maximum_close_turns();
+    let maximum_idle_turns = OriginalFixtureCaller::maximum_idle_turns();
+    let mut active_turns = 0usize;
+    let mut idle_streak = 0usize;
     let mut ownership_receipts = Vec::new();
     retain_original_ownership_receipts(app, mounted_policy, &mut ownership_receipts)?;
-    while close_turn<maximum_turns {
+    while close_turn < maximum_turns && idle_streak < maximum_idle_turns {
         if app.close_terminal_is_empty() { return Ok(ownership_receipts); }
-        let grant = fixture_close_grant(mounted_policy);
-        if semio_framework_job::testkit::return_source_pinned(cx).is_some() {
-            fixture_renew_turn(cx, OriginalFixtureCaller::turn_fuel(), grant)?;
-        }
+        fixture_renew_turn(cx, fresh_fuel, fresh_grant)?;
         if cx.retirement_should_yield(){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original fixture close exhausted its caller opportunity").into())}
-        let demand = app.close_retirement_demands(grant.maximum_copy_bytes)?;
-        let available = semio_plugin_ownership::bounded_ownership::original_lifecycle_grant(cx, grant);
-        last_quote = Some((demand, available, cx.fuel_remaining()));
-        let step = semio_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,grant| {
-            let step = app.close_step(same, grant)?;
-            Ok((step, app.close_terminal_is_empty()))
-        })?;
+        let grant = fixture_close_grant(mounted_policy);
+        let work_before = cx.original_work_units_spent();
+        let mut batch_progress = RetainedCloneProgress::default();
+        let mut step;
+        let mut batched = 0usize;
+        loop {
+            let demand = app.close_retirement_demands(grant.maximum_copy_bytes)?;
+            let available = semio_plugin_ownership::bounded_ownership::original_lifecycle_grant(cx, grant);
+            last_quote = Some((demand, available, cx.fuel_remaining()));
+            step = semio_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,grant| {
+                let step = app.close_step(same, grant)?;
+                Ok((step, app.close_terminal_is_empty()))
+            })?;
+            let progress = step.progress().unwrap_or_default();
+            batched += 1;
+            if progress != RetainedCloneProgress::default() { batch_progress = progress; }
+            let advanced = progress != RetainedCloneProgress::default();
+            if !advanced || matches!(step, semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Complete(_)) || batched >= grant.maximum_items || cx.retirement_should_yield() { break; }
+        }
+        if batch_progress != RetainedCloneProgress::default() || cx.original_work_units_spent().saturating_sub(work_before) > 1 {
+            active_turns += 1;
+            idle_streak = 0;
+        } else {
+            idle_streak += 1;
+        }
         retain_original_ownership_receipts(app, mounted_policy, &mut ownership_receipts)?;
         match step {
             semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(progress) | semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Complete(progress) => {
@@ -497,6 +528,6 @@ pub fn close_registered_fixture_app<A: PluginApp>(app: &mut A, mounted_policy: s
         }
         close_turn = close_turn.saturating_add(1);
     }
-    assert!(app.close_terminal_is_empty(), "registered fixture did not reach its exact terminal-empty witness{}{}", pending_authority.map(|reason| format!(", last pending close authority: {reason}")).unwrap_or_default(), last_quote.map(|(demand, grant, fuel)| format!(", last close quote {demand:?} against remaining grant {grant:?} and {fuel} fuel on rung {}", app.close_diagnostic())).unwrap_or_default());
+    assert!(app.close_terminal_is_empty(), "registered fixture did not reach its exact terminal-empty witness after {close_turn} turns ({active_turns} active, {idle_streak} consecutive idle){}{}", pending_authority.map(|reason| format!(", last pending close authority: {reason}")).unwrap_or_default(), last_quote.map(|(demand, grant, fuel)| format!(", last close quote {demand:?} against remaining grant {grant:?} and {fuel} fuel on rung {}", app.close_diagnostic())).unwrap_or_default());
     Ok(ownership_receipts)
 }

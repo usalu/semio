@@ -42,8 +42,17 @@ export function emitUnitEventV1(root:string,event:Omit<UnitEventV1,"version"|"at
  try{const directory=ensure(join(root,layout.events)),file=join(directory,event.lane+".jsonl");appendFileSync(file,JSON.stringify({version:1,atMs:Date.now(),pid:process.pid,...event})+"\n");}catch{}
 }
 
+/** 🔬️ The portable text behind the digests of one lookup, recorded only when `SEMIO_UNIT_CACHE_TRACE_KEYS` is set: the normalized arguments, the observed environment and the platform identity, so the keys of one crate on two machines can be diffed by value (see {@link traceDifferencesV1}). */
+export type UnitTraceV1={args:string[];environment:Array<[string,string]>;platform?:string};
+
+/** 🔬️ What the traced keys of one crate do not share: every argument and every environment entry that is absent from at least one key, with the number of keys it is in. */
+export function traceDifferencesV1(rows:readonly Readonly<{trace?:UnitTraceV1}>[]):{keys:number;arguments:Array<{text:string;in:number}>;environment:Array<{text:string;in:number}>;platform:string[]}{
+ const traced=rows.map(row=>row.trace).filter((trace):trace is UnitTraceV1=>trace!==undefined),count=(lists:string[][])=>{const found=new Map<string,number>();for(const list of lists)for(const text of new Set(list))found.set(text,(found.get(text)??0)+1);return[...found].filter(([,seen])=>seen<lists.length).map(([text,seen])=>({text,in:seen})).sort((left,right)=>left.text.localeCompare(right.text));};
+ return{keys:traced.length,arguments:count(traced.map(trace=>trace.args)),environment:count(traced.map(trace=>trace.environment.map(([name,value])=>name+"="+value))),platform:[...new Set(traced.map(trace=>trace.platform).filter((text):text is string=>text!==undefined))]};
+}
+
 /** 🔎️ One unit lookup with the named components of its key (`Lookup` in the schema). */
-export type UnitLookupV1={version:1;atMs:number;lane:string;pid:number;crate:string;key:string;remote?:string;outcome:"local-hit"|"fleet-hit"|"miss";components:Record<string,string>;values?:Record<string,string>};
+export type UnitLookupV1={version:1;atMs:number;lane:string;pid:number;crate:string;key:string;remote?:string;outcome:"local-hit"|"fleet-hit"|"miss";slot?:string;components:Record<string,string>;values?:Record<string,string>;trace?:UnitTraceV1};
 
 const logFiles=(root:string,name:string):[string,string]=>{const directory=join(root,layout.lookups);return[join(directory,name),join(directory,name.replace(/\.jsonl$/u,".1.jsonl"))];};
 const lookupFiles=(root:string):[string,string]=>logFiles(root,policy.lookups.file);
@@ -94,7 +103,7 @@ export function readLookupsV1(root:string,sinceMs=0):UnitLookupV1[]{
 }
 
 /** 🔀️ The churn of a window of lookups: how they ended, and for every crate that was looked up under more than one key, WHICH named components differ between its keys (with the texts seen for the small classes), plus the crates grouped by the set of differing components, most frequent first. A key is the fleet key when the lookup knew it, else the local key. */
-export type ChurnReportV1={lookups:number;outcomes:Record<string,number>;crates:number;multiKey:number;causes:{components:string[];crates:number;examples:string[]}[];perCrate:{crate:string;keys:number;differs:string[];samples:Record<string,string[]>}[]};
+export type ChurnReportV1={lookups:number;outcomes:Record<string,number>;crates:number;multiKey:number;causes:{components:string[];crates:number;examples:string[]}[];perCrate:{crate:string;keys:number;differs:string[];samples:Record<string,string[]>;trace?:ReturnType<typeof traceDifferencesV1>}[]};
 
 export function churnReportV1(rows:readonly UnitLookupV1[],limit=50):ChurnReportV1{
  const outcomes:Record<string,number>={},byCrate=new Map<string,Map<string,UnitLookupV1>>();
@@ -104,7 +113,7 @@ export function churnReportV1(rows:readonly UnitLookupV1[],limit=50):ChurnReport
   if(keys.size<2)continue;
   const list=[...keys.values()],differs=differingComponentsV1(list.map(row=>row.components)),samples:Record<string,string[]>={};
   for(const name of differs){const seen=[...new Set(list.map(row=>row.values?.[name]).filter((value):value is string=>value!==undefined))];if(seen.length>0)samples[name]=seen.slice(0,4);}
-  perCrate.push({crate,keys:keys.size,differs,samples});
+  const trace=traceDifferencesV1(list);perCrate.push({crate,keys:keys.size,differs,samples,...trace.keys>1?{trace}:{}});
   const id=differs.join(","),cause=causes.get(id)??{components:differs,crates:[]};cause.crates.push(crate);causes.set(id,cause);
  }
  perCrate.sort((left,right)=>right.keys-left.keys||left.crate.localeCompare(right.crate));

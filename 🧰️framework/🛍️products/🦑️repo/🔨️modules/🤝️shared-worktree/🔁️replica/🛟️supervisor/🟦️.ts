@@ -14,6 +14,8 @@ type Context=Readonly<{root:string;environment:Readonly<Record<string,string|und
 type Run=(args:readonly string[],context:Context)=>Promise<{exitCode:number}>;
 type Seal=Readonly<{digest:string;createdMs:number;files:readonly Readonly<{path:string;bytes:number;sha256:string}>[]}>;
 type Snapshot=Readonly<{digest:string;createdMs:number;directory:string}>;
+type Offer=Snapshot&Readonly<{healthy:number}>;
+const provenOriginsV1=2;
 type Outcome=Readonly<{kind:"exit";code:number}>|Readonly<{kind:"early";code:number;reason:string}>;
 type Watch=Readonly<{shared:SharedArrayBuffer;beat:string;health:string;parent:number;startedMs:number;base:string;source:string;blockMs:number;beatMs:number}>;
 type Beat=Readonly<{pid?:number;wallMs?:number;phase?:string;lagMs?:number;activity?:string;longestMs?:number;longestActivity?:string}>;
@@ -72,17 +74,17 @@ function snapshotsOf(root:string):Snapshot[]{
  return found.sort((left,right)=>right.createdMs-left.createdMs||(left.digest<right.digest?-1:1));
 }
 
-async function storeOffers(root:string,limits:BootLimitsV1,now:number):Promise<Readonly<{store:string;offers:Snapshot[]}>|undefined>{
+async function storeOffers(root:string,limits:BootLimitsV1,now:number):Promise<Readonly<{store:string;offers:Offer[]}>|undefined>{
  const machine=readJson(join(root,".cache","f","machine.json")) as {storeRoot?:unknown}|undefined;
  if(typeof machine?.storeRoot!=="string")return undefined;
  const store=machine.storeRoot,refused=refusedOf(root);
  try{
-  const names=(await timed(readdir(join(store,"v1","bootstrap","code")),limits.storeMs)).filter(name=>/^[0-9a-f]{64}$/u.test(name)&&!refused.has(name)),offers:Snapshot[]=[],attested=new Map<string,number>();
+  const names=(await timed(readdir(join(store,"v1","bootstrap","code")),limits.storeMs)).filter(name=>/^[0-9a-f]{64}$/u.test(name)&&!refused.has(name)),offers:Offer[]=[],attested=new Map<string,number>();
   for(const origin of await timed(readdir(join(store,"v1","origins")),limits.storeMs).catch(()=>[] as string[])){
    try{const value=JSON.parse(await timed(readFile(join(store,"v1","origins",origin,"attest.json"),"utf8"),limits.storeMs)) as {code?:unknown;wallMs?:unknown};if(typeof value.code==="string"&&typeof value.wallMs==="number"&&now-value.wallMs<600_000)attested.set(value.code,(attested.get(value.code)??0)+1);}catch{}
   }
   for(const name of names){
-   try{const seal=JSON.parse(await timed(readFile(join(store,"v1","bootstrap","code",name,"sealed.json"),"utf8"),limits.storeMs)) as Seal;if(seal.digest===name)offers.push({digest:name,createdMs:Number(seal.createdMs)||0,directory:join(store,"v1","bootstrap","code",name)});}catch{}
+   try{const seal=JSON.parse(await timed(readFile(join(store,"v1","bootstrap","code",name,"sealed.json"),"utf8"),limits.storeMs)) as Seal;if(seal.digest===name)offers.push({digest:name,createdMs:Number(seal.createdMs)||0,directory:join(store,"v1","bootstrap","code",name),healthy:attested.get(name)??0});}catch{}
   }
   return {store,offers:offers.sort((left,right)=>(attested.get(right.digest)??0)-(attested.get(left.digest)??0)||right.createdMs-left.createdMs||(left.digest<right.digest?-1:1))};
  }catch{return undefined;}
@@ -254,30 +256,49 @@ async function recordBlock(root:string,pid:number,beat:Beat,reason:"blocked"|"si
  try{for(const stale of readdirSync(bootDirectory(root)).filter(item=>/^loop-blocked-\d+\.sample\.txt$/u.test(item)&&item!==name).sort().slice(0,-2))rmSync(join(bootDirectory(root),stale),{force:true});}catch{}
 }
 
+type SilenceModuleV1={readySidecarSilenceV1(input:{status:unknown;nowMs:number}):{state:string;missedBeats:number;ageMs:number};readySilenceWatchV1():{observe(status:unknown,nowMs:number):"wait"|"restart"};readySilenceNoticeV1(silence:{state:"silent";missedBeats:number;ageMs:number}):string};
+const silenceModuleRelativeV1=["🧰️framework","🛍️products","🦑️repo","🔨️modules","📚️library","🏗️build","🌐️remote-execution","🛰️sidecar","🚦️ready","💔️silence","🟦️.ts"];
+
+/** 💔️ The `ready.json` of this machine's readiness sidecar (`<store>/v1/origins/<origin>/ready.json`), `undefined` without a fleet store. */
+function readyStatusFileV1(root:string,environment:Readonly<Record<string,string|undefined>>):string|undefined{
+ const store=environment.SEMIO_FLEET_STORE_ROOT;
+ if(store===undefined||store==="")return undefined;
+ const explicit=environment.SEMIO_FLEET_ORIGIN,recorded=(readJson(join(root,".cache","f","machine.json")) as {originId?:unknown}|undefined)?.originId,origin=explicit!==undefined&&explicit!==""?explicit:typeof recorded==="string"?recorded:undefined;
+ return origin===undefined||!/^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/u.test(origin)?undefined:join(store,"v1","origins",origin,"ready.json");
+}
+
 function candidate(args:readonly string[],root:string,environment:Readonly<Record<string,string|undefined>>,limits:BootLimitsV1,signal:AbortSignal,notice:Sink,base:string,source:"worktree"|"snapshot"|"store",reason:string,force:boolean):Promise<Outcome>{
  return new Promise<Outcome>(done=>{
   const startedAt=Date.now(),beatFile=join(bootDirectory(root),"beat.json"),readyFile=join(bootDirectory(root),"ready.json");
   let ready=false,waiting=false,stopping=false,finished=false,killed="",termTimer:ReturnType<typeof setTimeout>|undefined;
   const proc=spawn(process.execPath,[fileURLToPath(import.meta.url),"--boot-child",...args],{env:{...environment,SEMIO_FLEET_BOOT_BASE:base,SEMIO_FLEET_BOOT_SOURCE:source,SEMIO_FLEET_BOOT_REASON:reason,SEMIO_FLEET_BOOT_FORCE:force?"1":""} as NodeJS.ProcessEnv,stdio:"inherit",windowsHide:true});
-  let recording=false;
+  let recording=false,ownedBeat:Beat|undefined,ownedBeatAt=startedAt,silenceRule:SilenceModuleV1|undefined,silenceWatch:ReturnType<SilenceModuleV1["readySilenceWatchV1"]>|undefined;
+  const statusFile=readyStatusFileV1(root,environment);
+  if(statusFile!==undefined)void import(pathToFileURL(join(root,...silenceModuleRelativeV1)).href).then(module=>{silenceRule=module as SilenceModuleV1;silenceWatch=silenceRule.readySilenceWatchV1();}).catch(()=>undefined);
   const pid=proc.pid??0,kill=(why:string,beat?:Beat,reason?:"blocked"|"silent"):void=>{
    killed=killed||why;
    if(beat!==undefined&&reason!==undefined&&beat.phase==="run"){
     if(recording)return;
     recording=true;
-    void recordBlock(root,pid,beat,reason).catch(()=>{}).finally(()=>{try{proc.kill("SIGKILL");}catch{}});
+    void recordBlock(root,pid,beat,reason).catch(()=>{}).finally(()=>{if(!finished&&!stopping)try{proc.kill("SIGKILL");}catch{}});
     return;
    }
    try{proc.kill("SIGKILL");}catch{}
   };
   const watch=setInterval(()=>{
-   const beat=readJson(beatFile) as Beat|undefined,now=Date.now();
+   const seen=readJson(beatFile) as Beat|undefined,now=Date.now();
    const marker=readJson(readyFile) as {pid?:number;waiting?:boolean}|undefined;
    if(marker?.pid===pid){ready=marker.waiting!==true;waiting=marker.waiting===true;}
-   if(beat?.pid===pid){
+   if(seen?.pid===pid&&typeof seen.wallMs==="number"&&Number.isFinite(seen.wallMs)&&seen.wallMs>=ownedBeatAt&&seen.wallMs<=now){ownedBeat=seen;ownedBeatAt=seen.wallMs;}
+   const beat=ownedBeat;
+   if(beat!==undefined){
     if(beat.phase==="run")ready=true;
-    if(now-(beat.wallMs??now)>30_000)kill("the watchdog of the daemon fell silent",beat,"silent");
-    else if(beat.phase==="run"&&(beat.lagMs??0)>=limits.killMs)kill(`the event loop was blocked for ${Math.round((beat.lagMs??0)/1000)} s${beat.activity===undefined||beat.activity==="idle"?"":` in ${beat.activity}`}`,beat,"blocked");
+    if(!stopping&&now-ownedBeatAt>30_000)kill("the watchdog of the daemon fell silent",beat,"silent");
+    else if(!stopping&&beat.phase==="run"&&(beat.lagMs??0)>=limits.killMs)kill(`the event loop was blocked for ${Math.round((beat.lagMs??0)/1000)} s${beat.activity===undefined||beat.activity==="idle"?"":` in ${beat.activity}`}`,beat,"blocked");
+   }
+   if(statusFile!==undefined&&silenceRule!==undefined&&silenceWatch!==undefined&&ready&&!stopping){
+    const status=readJson(statusFile);
+    if(silenceWatch.observe(status,now)==="restart"){const silence=silenceRule.readySidecarSilenceV1({status,nowMs:now});notice(silenceRule.readySilenceNoticeV1({state:"silent",missedBeats:silence.missedBeats,ageMs:silence.ageMs}));kill("the readiness sidecar fell silent");}
    }
    if(!ready&&!waiting&&now-startedAt>limits.readyMs&&!stopping)kill(`the daemon was not ready after ${Math.round(limits.readyMs/1000)} s`);
   },Math.max(20,Math.min(1000,limits.beatMs)));
@@ -317,19 +338,27 @@ async function supervise(args:readonly string[],root:string,module:string,enviro
   refuse(root,digest);
   return undefined;
  };
+ const offered=await storeOffers(root,limits,Date.now());
+ const fetchOffer=async(offer:Offer):Promise<number|undefined>=>{
+  if(signal.aborted)return 143;
+  if(tried.has(offer.digest))return undefined;
+  const directory=await install(root,offer,limits);
+  if(directory===undefined){notice(`The code ${offer.digest.slice(0,12)} of the store could not be fetched / Der Code ${offer.digest.slice(0,12)} des Stores konnte nicht geholt werden`);return undefined;}
+  return run(directory,offer.digest,"store");
+ };
+ if(offered!==undefined)for(const offer of offered.offers.filter(item=>item.healthy>=provenOriginsV1)){
+  const code=await fetchOffer(offer);
+  if(code!==undefined)return code;
+ }
  for(const snapshot of snapshotsOf(root)){
   if(signal.aborted)return 143;
+  if(tried.has(snapshot.digest))continue;
   if(intact(snapshot.directory)===undefined){notice(`The sealed code ${snapshot.directory} is damaged and skipped / Der versiegelte Code ${snapshot.directory} ist beschädigt und wird übersprungen`);continue;}
   const code=await run(snapshot.directory,snapshot.digest,"snapshot");
   if(code!==undefined)return code;
  }
- const offered=await storeOffers(root,limits,Date.now());
  if(offered!==undefined)for(const offer of offered.offers){
-  if(signal.aborted)return 143;
-  if(tried.has(offer.digest))continue;
-  const directory=await install(root,offer,limits);
-  if(directory===undefined){notice(`The code ${offer.digest.slice(0,12)} of the store could not be fetched / Der Code ${offer.digest.slice(0,12)} des Stores konnte nicht geholt werden`);continue;}
-  const code=await run(directory,offer.digest,"store");
+  const code=await fetchOffer(offer);
   if(code!==undefined)return code;
  }
  if(rejected){

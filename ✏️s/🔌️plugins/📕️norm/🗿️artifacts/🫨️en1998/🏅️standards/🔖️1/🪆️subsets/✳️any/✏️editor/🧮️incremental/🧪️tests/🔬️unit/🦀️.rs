@@ -24,7 +24,14 @@ fn archived_design_cases_reach_the_seismic_report() {
     let document = En1998Snapshot { cases, ..En1998Snapshot::default() };
     let full = evaluate(&document);
     let live = semio_s_artifact_norm_en1998_inferences::live::report(&document);
-    for key in ["en1998.c98-11.bond.buried-pipe", "en1998.c98-12.set-a.bridge-spatial"] {
+    for key in [
+        "en1998.c98-11.bond.buried-pipe",
+        "en1998.c98-12.set-a.bridge-spatial",
+        "en1998.c98-19.global-buckling.pipe-differential",
+        "en1998.c98-22.backfill-a.pipe-fault-crossing",
+        "en1998.c98-22.trench-b.pipe-fault-crossing",
+        "en1998.c98-23.increment.granular-silo",
+    ] {
         assert!(full.checks.iter().any(|check| check.id == key), "{key}");
         assert!(live.checks.iter().any(|check| check.id == key), "{key}");
     }

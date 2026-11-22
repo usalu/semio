@@ -2,8 +2,6 @@
 
 use crate::editor::page;
 use crate::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
-use semio_ui_locale::Locale;
-use semio_plugin::TreeWindows;
 use semio_plugin::WindowKindDefinition;
 use semio_ui_contract::BuiltNode;
 
@@ -20,10 +18,9 @@ pub fn render(document: &PdfSnapshot) -> semio_plugin::UiAssemblyResult<BuiltNod
     page::render_window(document)
 }
 
-/// 🖼️ Paints the document. Locale and tree chrome do not change the page geometry.
-pub fn render_windowed(document: &PdfSnapshot, windows: &TreeWindows<'_>, locale: Locale) -> semio_plugin::UiAssemblyResult<BuiltNode> {
-    let _ = (windows, locale);
-    page::render_window(document)
+/// 🖼️ Paints the document through the ephemeral local view (zoom and anchored page) with search highlights on top.
+pub fn render_windowed(document: &PdfSnapshot, view: &page::ViewState, viewport: (f64, f64), highlights: Vec<page::OverlayLayer>) -> semio_plugin::UiAssemblyResult<BuiltNode> {
+    page::render_view(document, None, view, viewport, highlights)
 }
 
 

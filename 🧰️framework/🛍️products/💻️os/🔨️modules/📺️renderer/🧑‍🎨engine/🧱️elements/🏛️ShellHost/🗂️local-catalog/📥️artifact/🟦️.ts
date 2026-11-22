@@ -3,7 +3,7 @@ import type { LocalDocumentSurface } from "@semio-tech/framework/config/mutation
 import type { LocalCatalogAdmissionV1, LocalCatalogRefusalV1 } from "../🟦️.ts";
 
 const utf8 = new TextEncoder();
-const STORAGE_SUFFIX_CAPACITY = 64;
+const STORAGE_SUFFIX_CAPACITY = "/.semio/.genesis-4294967295-ffffffffffffffff.stage".length;
 const bounded = (value: string, empty = false): boolean => (empty || value.length > 0) && value.trim() === value && utf8.encode(value).length <= 256 && !/[\u0000-\u001f\u007f]/u.test(value);
 
 /** 📥️ Keeps the imported document's real identity, selected surface and complete recursive archive. */

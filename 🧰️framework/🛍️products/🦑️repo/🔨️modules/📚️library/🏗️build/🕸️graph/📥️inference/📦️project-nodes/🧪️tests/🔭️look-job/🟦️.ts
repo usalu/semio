@@ -15,7 +15,7 @@ test("the parent asks the look queue before it derives anything and takes native
  expect(body).toContain("nativeCandidate=looked!==undefined?looked.native:existsSync(");
  expect(body).toContain("pipeline=looked!==undefined?looked.pipeline:");
  expect(body).toContain("assemblyAuthority=looked!==undefined?undefined:native||pipeline?");
- expect(body).toContain("head=looked!==undefined?looked.head:[");
+ expect(body).toContain("head=looked!==undefined?looked.head:ownerRecordHeadV1(");
  expect(body).toContain("STAGE_LOOK_V1");
 });
 

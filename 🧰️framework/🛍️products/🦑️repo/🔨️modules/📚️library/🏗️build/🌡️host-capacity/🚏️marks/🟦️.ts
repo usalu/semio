@@ -14,7 +14,11 @@ export async function upgradeBuildCapacityBeforeRebuildV1(environment:Readonly<R
  try{
   const outcome=await upgradeBuildCapacityV1(wait,environment,reuse);
   if(outcome==="absent"||outcome==="reused")return undefined;
-  if(environment["SEMIO_HOST_CAPACITY_PHASE_MARKS"]!=="off")return await(await import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🌡️host-capacity/🟦️.ts")).requestHostRebuildCapacityV1(environment,wait,reuse);
-  return undefined;
+  if(environment["SEMIO_HOST_CAPACITY_PHASE_MARKS"]==="off")return undefined;
+  const capacity=await import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🌡️host-capacity/🟦️.ts"),release=await capacity.requestHostRebuildCapacityV1(environment,wait,reuse);
+  if(release===undefined)return undefined;
+  const granted=capacity.readHostRebuildGrantMegabytesV1(environment),name="SEMIO_HOST_CAPACITY_REBUILD_MEGABYTES",mutable=environment as Record<string,string|undefined>;
+  if(granted!==undefined)mutable[name]=String(granted);
+  return()=>{delete mutable[name];release();};
  }finally{waiting?.dispose();}
 }

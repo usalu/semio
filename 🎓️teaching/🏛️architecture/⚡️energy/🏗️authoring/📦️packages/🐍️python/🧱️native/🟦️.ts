@@ -145,6 +145,33 @@ export function buildEnvironment(prefix: string, base: NodeJS.ProcessEnv = proce
   };
 }
 
+/** 📍️ The pinned `micromamba` binary of a host and the row that pins it, or `undefined` when the host needs none. */
+export function micromambaLocation(options: Pick<NativeOptions, "manifest" | "toolsRoot" | "platform" | "architecture"> = {}): { readonly binary: string; readonly installer: NativeInstaller; readonly release: string } | undefined {
+  const subdir = hostSubdir(options.platform ?? process.platform, options.architecture ?? process.arch);
+  if (!subdir) return undefined;
+  const manifest = options.manifest ?? readManifest();
+  const installer = manifest.micromamba.assets.find(asset => asset.subdir === subdir);
+  if (!installer) throw new Error(`The native manifest has no rows for ${subdir}`);
+  const binary = join(options.toolsRoot ?? toolsPartition(), "native", "micromamba", manifest.micromamba.version, `${installer.platform}-${installer.architecture}-${installer.sha256.slice(0, 16)}`, (options.platform ?? process.platform) === "win32" ? "micromamba.exe" : "micromamba");
+  return { binary, installer, release: manifest.micromamba.release };
+}
+
+/** 🔎️ Whether the pinned `micromamba` of a host is installed and equals its pin byte for byte. */
+export async function verifyMicromamba(options: Pick<NativeOptions, "manifest" | "toolsRoot" | "platform" | "architecture"> = {}): Promise<boolean> {
+  const location = micromambaLocation(options);
+  return location === undefined || (existsSync(location.binary) && (await sha256File(location.binary)) === location.installer.sha256);
+}
+
+/** 📥️ Provisions only the pinned `micromamba` binary below the tools partition (no package prefix); returns its path, or `undefined` when the host needs none. */
+export async function provisionMicromamba(options: NativeOptions = {}): Promise<string | undefined> {
+  const location = micromambaLocation(options);
+  if (!location) return undefined;
+  mkdirSync(join(location.binary, ".."), { recursive: true });
+  await fetchVerified(`${location.release}/${location.installer.name}`, location.binary, location.installer.sha256, location.installer.bytes, { fetcher: options.fetcher, signal: options.signal, onProgress: options.onProgress });
+  await chmod(location.binary, 0o755);
+  return location.binary;
+}
+
 /** 🧱 Makes the pinned native libraries available and returns the environment additions for `uv`. Idempotent: a prefix whose marker carries the current fingerprint is reused without any network access. Returns `undefined` on hosts that need nothing (Linux, Windows). Throws on a digest mismatch before unpacking anything. */
 export async function provisionNative(options: NativeOptions = {}): Promise<NativeEnvironment | undefined> {
   const subdir = hostSubdir(options.platform ?? process.platform, options.architecture ?? process.arch);
@@ -161,11 +188,8 @@ export async function provisionNative(options: NativeOptions = {}): Promise<Nati
   if (!installer || packages.length === 0) throw new Error(`The native manifest has no rows for ${subdir}`);
   const downloads = join(root, "downloads");
   mkdirSync(downloads, { recursive: true });
-  const binary = join(options.toolsRoot ?? toolsPartition(), "native", "micromamba", manifest.micromamba.version, `${installer.platform}-${installer.architecture}-${installer.sha256.slice(0, 16)}`, process.platform === "win32" ? "micromamba.exe" : "micromamba");
-  mkdirSync(join(binary, ".."), { recursive: true });
   const verified = { fetcher: options.fetcher, signal: options.signal, onProgress: options.onProgress };
-  await fetchVerified(`${manifest.micromamba.release}/${installer.name}`, binary, installer.sha256, installer.bytes, verified);
-  await chmod(binary, 0o755);
+  const binary = (await provisionMicromamba(options))!;
   for (const row of packages) await fetchVerified(row.url, join(downloads, row.archive), row.sha256, row.bytes, verified);
   const explicit = join(root, `explicit-${subdir}.txt`);
   writeFileSync(explicit, ["@EXPLICIT", ...packages.map(row => `${pathToFileURL(join(downloads, row.archive)).href}#${row.md5}`), ""].join("\n"));
@@ -194,7 +218,9 @@ if (import.meta.main) {
     seen.set(step, decile);
     process.stderr.write(`[native] ${step}${fraction === undefined ? "" : ` ${decile * 10}%`}\n`);
   };
-  provisionNative({ signal: controller.signal, onProgress: report }).then(result => {
+  const mode = process.argv[2];
+  const task = mode === "verify-micromamba" ? verifyMicromamba().then(ok => { if (!ok) throw new Error("The pinned micromamba is missing or differs from its pin"); return undefined; }) : mode === "prepare-micromamba" ? provisionMicromamba({ signal: controller.signal, onProgress: report }) : provisionNative({ signal: controller.signal, onProgress: report });
+  task.then(result => {
     process.stdout.write(`${JSON.stringify(result ?? null)}\n`);
   }, (error: Error) => {
     process.stderr.write(`${error.message}\n`);

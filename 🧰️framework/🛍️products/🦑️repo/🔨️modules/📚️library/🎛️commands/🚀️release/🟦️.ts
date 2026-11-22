@@ -42,19 +42,30 @@ export class PublishScript extends Script {
 export class ComponentsScript extends Script {
   async run(segments: string[]): Promise<void> {
     const [subcommand, ...rest] = segments;
-    if (subcommand === "describe") {
-      const [{ describeComponentsV1 }, { repositoryCargoNetworkV1 }] = await Promise.all([
-        import("../../../../../💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/🏗️build/🧩️driver-stages/🟦️.ts"),
-        import("../../🏃️process/🦀️cargo/📥️dependencies/🟦️.ts"),
-      ]);
-      const network = repositoryCargoNetworkV1(this.invocation, this.repoRoot);
-      return describeComponentsV1(
-        this.repoRoot, this.invocation, rest, scriptCompilerAdmissionControlV1(this.invocation, "components:describe", 0), network,
-      );
+    if (subcommand !== "describe" && subcommand !== "profile-independence" && !(subcommand === "iterate" && rest.length === 1)) {
+      throw new Error("usage: components describe <plugin-id…>|--all [--profile release|prototype] [--facet model|browser] | components iterate <plugin-id> | components profile-independence [--sample <n>] [--seed <n>]|<plugin-id…>");
     }
-    if (subcommand === "profile-independence") return await (await import("../../../../../💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/📦️model/⚖️comparison/🟦️.ts")).profileIndependenceV1(this.repoRoot,this.invocation,rest,scriptCompilerAdmissionControlV1(this.invocation,"components:profile",0));
-    if (subcommand === "iterate" && rest.length === 1) return await (await import("../../../../../💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/🏗️build/📦️materialization/🟦️.ts")).iterateComponentV1(this.repoRoot,this.invocation,rest[0]!, scriptCompilerAdmissionControlV1(this.invocation, "components:iterate", 0),(await import("../../🏃️process/🦀️cargo/📥️dependencies/🟦️.ts")).repositoryCargoNetworkV1(this.invocation,this.repoRoot));
-    throw new Error("usage: components describe <plugin-id…>|--all [--profile release|prototype] [--facet model|browser] | components iterate <plugin-id> | components profile-independence [--sample <n>] [--seed <n>]|<plugin-id…>");
+    const [{ withRepositoryCompilerRuntimeEntriesV1 }, { readNativeCallerAuthorityV1 }] = await Promise.all([
+      import("../../🏗️build/📥️source/🔏️closure/🚪️command/🔌️runtime/🟦️.ts"),
+      import("../../📦️packages/🟦️typescript/📦️artifacts/🟦️.ts"),
+    ]);
+    const invocation = this.invocation;
+    const control = scriptCompilerAdmissionControlV1(invocation, `components:${subcommand === "profile-independence" ? "profile" : subcommand}`, 0);
+    const { codeRoot } = readNativeCallerAuthorityV1(invocation.capabilities);
+    return withRepositoryCompilerRuntimeEntriesV1(codeRoot, invocation, control, async () => {
+      if (subcommand === "profile-independence") {
+        const { profileIndependenceV1 } = await import("../../../../../💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/📦️model/⚖️comparison/🟦️.ts");
+        return profileIndependenceV1(this.repoRoot, invocation, rest, control);
+      }
+      const { repositoryCargoNetworkV1 } = await import("../../🏃️process/🦀️cargo/📥️dependencies/🟦️.ts");
+      const network = repositoryCargoNetworkV1(invocation, this.repoRoot);
+      if (subcommand === "describe") {
+        const { describeComponentsV1 } = await import("../../../../../💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/🏗️build/🧩️driver-stages/🟦️.ts");
+        return describeComponentsV1(this.repoRoot, invocation, rest, control, network);
+      }
+      const { iterateComponentV1 } = await import("../../../../../💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/🏗️build/📦️materialization/🟦️.ts");
+      return iterateComponentV1(this.repoRoot, invocation, rest[0]!, control, network);
+    });
   }
 }
 //#endregion 🔖️ComponentsScript

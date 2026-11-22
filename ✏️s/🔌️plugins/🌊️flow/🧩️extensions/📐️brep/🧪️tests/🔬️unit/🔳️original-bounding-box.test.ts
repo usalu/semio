@@ -48,3 +48,40 @@ test("Manifold verifies the placed torus world bounds", () => {
   checkBounds(moved.boundingBox(), expected.minimum, expected.maximum);
   for (const item of [moved, rotated, torus, profile, circle]) item.delete();
 });
+
+
+test("Manifold checks exact annular supports and trimmed sector bounds", () => {
+  for (const row of fixture.annular) {
+    if (row.operator === "brep.sweep.revolve") {
+      const rectangle = CrossSection.square([row.outer! - row.inner!, row.height!]);
+      const profile = rectangle.translate([row.inner!, 0]);
+      const sweep = row.angle!;
+      const swept = profile.revolve(1536, Math.abs(sweep) * 180 / Math.PI);
+      const oriented = sweep < 0 ? swept.mirror([0, 1, 0]) : swept;
+      const placed = oriented.translate(row.origin as Vec3);
+      try {
+        checkBounds(placed.boundingBox(), row.bounds[0], row.bounds[1]);
+      } finally {
+        if (oriented !== swept) oriented.delete();
+        for (const value of [placed, swept, profile, rectangle]) value.delete();
+      }
+    } else {
+      const cylinder = (spec: { radius: number; height: number; origin: number[] }) => {
+        const raw = Manifold.cylinder(spec.height, spec.radius, spec.radius, 1536);
+        const translated = raw.translate(spec.origin as Vec3);
+        raw.delete();
+        return translated;
+      };
+      const a = cylinder(row.a!);
+      const b = cylinder(row.b!);
+      const material = row.operator === "brep.bool.cut" ? a.subtract(b) : a.add(b);
+      const rotated = material.rotate([0, (row.rotation ?? 0) * 180 / Math.PI, 0]);
+      const placed = rotated.translate((row.offset ?? [0, 0, 0]) as Vec3);
+      try {
+        checkBounds(placed.boundingBox(), row.bounds[0], row.bounds[1]);
+      } finally {
+        for (const value of [placed, rotated, material, b, a]) value.delete();
+      }
+    }
+  }
+});

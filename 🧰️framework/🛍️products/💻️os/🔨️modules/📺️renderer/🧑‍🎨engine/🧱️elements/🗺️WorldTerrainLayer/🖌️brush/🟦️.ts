@@ -15,6 +15,10 @@ export function parseTerrainBrushAction(value: unknown): TerrainBrushAction | un
   const args = value.arguments;
   if (!object(args) || Object.keys(args).length !== 3) return undefined;
   const { operation, radius, value: strength } = args;
-  if (!identifier(operation) || !integer(radius, 0, 32) || !integer(strength, -32768, 32767)) return undefined;
+  if (!identifier(operation) || !integer(radius, 0, 32) || typeof strength !== "number") return undefined;
+  const valid = operation === "smooth"
+    ? integer(strength, 0, 100)
+    : strength >= -32768 && strength <= 32767 && Math.round(strength * 1000) / 1000 === strength;
+  if (!valid) return undefined;
   return { action: value.action, arguments: { operation, radius, value: strength } };
 }

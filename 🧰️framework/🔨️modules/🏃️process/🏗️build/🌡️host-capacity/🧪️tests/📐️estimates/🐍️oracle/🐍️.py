@@ -2,7 +2,7 @@
 import json,math,os,random,re,sys
 
 MINIMUM_RAMP = 60000
-POLICY = {"halfLifeMilliseconds": 259200000, "quantileBasisPoints": 9000, "marginBasisPoints": 2500, "minimumSamples": 3, "maximumSamples": 16, "maximumClasses": 256, "minimumRatioBasisPoints": 3000, "maximumRatioBasisPoints": 20000, "minimumMegabytes": 512, "quickMilliseconds": 120000, "maximumShareBasisPoints": 5000, "fallbackCeilingMegabytes": 8192, "defaultRampMilliseconds": 300000, "maximumRampMilliseconds": 1800000, "phaseReferenceMegabytes": 1024, "rebuildPriorMegabytes": 4096, "rebuildShareBasisPoints": 5000, "maximumRebuildSlots": 4, "quietReferenceMegabytes": 2048, "quietMaximumMegabytes": 4096, "quietFollowUpMilliseconds": 0}
+POLICY = {"halfLifeMilliseconds": 259200000, "quantileBasisPoints": 9000, "marginBasisPoints": 2500, "minimumSamples": 3, "maximumSamples": 16, "maximumClasses": 256, "minimumRatioBasisPoints": 3000, "maximumRatioBasisPoints": 20000, "minimumMegabytes": 512, "quickMilliseconds": 120000, "maximumShareBasisPoints": 5000, "fallbackCeilingMegabytes": 8192, "defaultRampMilliseconds": 300000, "maximumRampMilliseconds": 1800000, "phaseReferenceMegabytes": 1024, "rebuildPriorMegabytes": 4096, "rebuildShareBasisPoints": 5000, "rebuildMinimumMegabytes": 2304, "rebuildQuantileBasisPoints": 5000, "maximumRebuildSlots": 4, "quietReferenceMegabytes": 2048, "quietMaximumMegabytes": 4096, "quietFollowUpMilliseconds": 0}
 
 def _round(x):
     return math.floor(x + 0.5)
@@ -116,8 +116,8 @@ def ramp_request(base, scaled, estimate, measured=False):
     shrunk = scaled["fixedMegabytes"] < base["fixedMegabytes"] or scaled["perJobMegabytes"] < base["perJobMegabytes"]
     return {**scaled, "rampMilliseconds": estimate["rampMilliseconds"], "rampSlot": shrunk and not measured}
 
-def learnable(status, peak_ratio, estimate_ratio):
-    return status == "ok" or peak_ratio > estimate_ratio
+def learnable(status, limited, pressured):
+    return (not pressured) and (status == "ok" or limited)
 
 def priority(base, standing, quick):
     return "interactive" if base == "interactive" or standing == "interactive" or quick else "batch"
@@ -155,7 +155,7 @@ def generate():
         scaled_case = scale(policy, base, estimate_case["ratioBasisPoints"], rng.choice([28000, 12000]))
         ramps.append({"base": base, "scaled": scaled_case, "estimate": estimate_case, "expect": ramp_request(base, scaled_case, estimate_case)})
     ramps += [{**item, "measured": True, "expect": ramp_request(item["base"], item["scaled"], item["estimate"], True)} for item in ramps[:16]]
-    learns = [{"status": s, "peakRatioBasisPoints": r, "estimateRatioBasisPoints": e, "expect": learnable(s, r, e)} for s in ("ok", "failed", "cancelled") for r in (900, 3000, 3001, 10000, 25000) for e in (3000, 10000)]
+    learns = [{"status": s, "limited": l, "pressured": p, "expect": learnable(s, l, p)} for s in ("ok", "failed", "cancelled") for l in (False, True) for p in (False, True)]
     priorities = [{"base": b, "standing": c, "quick": q, "expect": priority(b, c, q)} for b in ("batch", "interactive") for c in (None, "agent", "background", "interactive") for q in (False, True)]
     store = {"version": 1, "classes": {}}
     for index in range(300):

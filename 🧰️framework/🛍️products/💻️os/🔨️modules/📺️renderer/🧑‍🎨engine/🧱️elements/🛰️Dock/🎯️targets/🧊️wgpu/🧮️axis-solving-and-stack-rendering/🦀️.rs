@@ -99,7 +99,20 @@ pub(super) fn render_node(state: &DockState, ctx: &mut DockRenderContext<'_>, no
 
 const SPLIT_VIS_PX: f32 = 6.0;
 
-const SPLIT_HIT_MIN_PX: f32 = 20.0;
+/// ↔️ React's `RESIZABLE_HIT_TARGET_MIN_FINE_PX` (`🧱️elements/↔️Resizable/🟦️.tsx`).
+pub const SPLIT_HIT_MIN_FINE_PX: f32 = 20.0;
+
+/// 🖐️ React's `RESIZABLE_HIT_TARGET_MIN_COARSE_PX`.
+pub const SPLIT_HIT_MIN_COARSE_PX: f32 = 28.0;
+
+/// 🎯️ The splitter hit extent for the pointer class driving the dock.
+pub const fn split_hit_extent(coarse_pointer: bool) -> f32 {
+    if coarse_pointer {
+        SPLIT_HIT_MIN_COARSE_PX
+    } else {
+        SPLIT_HIT_MIN_FINE_PX
+    }
+}
 
 fn render_axis(state: &DockState, ctx: &mut DockRenderContext<'_>, children: &[(DockNode, f32)], bounds: Rect, path: &[usize], horizontal: bool, body_fill: bool, render_body: &mut dyn FnMut(Rect, &str), outer_split: Option<(DockPath, usize, bool)>) {
     for slot in dock_axis_slots(children, bounds, horizontal, 0.0) {
@@ -124,7 +137,7 @@ fn walk_resize_axis(state: &DockState, ctx: &mut DockRenderContext<'_>, children
         child_path.push(slot.index);
         walk_resize_hits(state, ctx, slot.node, slot.rect, &child_path, Some((path.to_vec(), slot.index, horizontal)));
         if let Some(separator) = slot.separator_after {
-            let handle = centered_axis_hit(bounds, separator, horizontal, SPLIT_HIT_MIN_PX.max(SPLIT_VIS_PX));
+            let handle = centered_axis_hit(bounds, separator, horizontal, split_hit_extent(state.coarse_pointer).max(SPLIT_VIS_PX));
             register_split_hit(ctx, path, slot.index, handle, if horizontal { DragAxis::Horizontal } else { DragAxis::Vertical });
             if let Some((parent_path, parent_index, parent_horizontal)) = &outer_split {
                 if *parent_horizontal != horizontal {

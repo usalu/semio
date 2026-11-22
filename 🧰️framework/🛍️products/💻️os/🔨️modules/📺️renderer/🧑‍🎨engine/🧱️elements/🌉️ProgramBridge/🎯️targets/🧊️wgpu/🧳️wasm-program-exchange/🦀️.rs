@@ -364,7 +364,10 @@ use semio_framework_value::ToValue;
     /// guest's own cancel), which the guest's `Cancelled` terminal reports with the previous document unchanged; that outcome
     /// and a `Fault` are refused by name. Progress reaches the person as the guest's `HistoryPatch.reprojection` (`kind: load`).
     pub async fn load_app_document_archive(client: &KernelClient, instance_id: u32, archive: &protocol::DocumentArchivePack) -> Result<(), ProgramFault> {
-        let mut host = protocol::DocumentArchiveLoadHost::new(archive.clone());
+        drive_app_document_archive(client, instance_id, protocol::DocumentArchiveLoadHost::new(archive.clone())).await
+    }
+
+    pub(crate) async fn drive_app_document_archive(client: &KernelClient, instance_id: u32, mut host: protocol::DocumentArchiveLoadHost) -> Result<(), ProgramFault> {
         loop {
             let (seq, command) = match host.step(next_seq) {
                 protocol::DocumentArchiveLoadStep::Send { seq, command } => (seq, command),

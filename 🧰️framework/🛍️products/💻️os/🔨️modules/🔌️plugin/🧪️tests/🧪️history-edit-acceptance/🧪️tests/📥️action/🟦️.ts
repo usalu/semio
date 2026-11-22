@@ -21,5 +21,16 @@ test("history action source remains pending until its original receiving turn ac
   expect(outcome).toBe(row.expected);expect(db.query("SELECT * FROM publication").all()).toEqual(row.expected==="accepted"?[row.input]:[]);db.close();
  }
  const source=readModuleTreeSource(resolve(import.meta.dir,"../../🦀️.rs")),body=source.slice(source.indexOf("async fn acceptance_verb"),source.indexOf("async fn acceptance_pump"));
- expect(body).toContain("handle_action(action,&mut args,&meta,&mut identity,cx)");expect(body).toContain("if let Some(result)=result");expect(body).toContain("OriginalFixtureCaller::maximum_turns()");expect(body).toContain("ControlledRetirement::new(args)");expect(body).toContain("close_original_retained_step(same");expect(body).toContain("original acceptance action remains pending");
+ expect(body).toContain("dispatch_fixture_action(app, action, Some(args), &meta, &mut identity, cx");
+ const dispatchSource=readFileSync(resolve(import.meta.dir,"../../../../🧪️testing/🧪️artifact-app-laws/🎟️fixture-dispatch-steps-and-document-loading/🦀️.rs"),"utf8");
+ const dispatch=dispatchSource.slice(dispatchSource.indexOf("pub async fn dispatch_fixture_action"),dispatchSource.indexOf("pub async fn dispatch_fixture_command"));
+ expect(dispatch).toContain("OriginalFixtureCaller::maximum_turns()");
+ expect(dispatch).toContain("handle_action(action,&mut original_args,&mut original_meta,identity,cx)");
+ expect(dispatch).toContain("if !matches!(result,Ok(None)){break}");
+ expect(dispatch).toContain("app.maintenance_step(cx,close_loan)");
+ expect(dispatch).toContain("close_fixture_action_inputs(original_args,None,cx,close_loan)");
+ const close=dispatchSource.slice(dispatchSource.indexOf("fn close_fixture_action_inputs"),dispatchSource.indexOf("pub async fn with_document_view"));
+ expect(close).toContain("ActionIngressRecord::receive(&mut receiving,&mut original_caller,cx)");
+ expect(close).toContain("owner.close_original_step(same)");
+ expect(close).toContain("assert!(owner.terminal_is_empty()");
 });

@@ -12,7 +12,7 @@ pub fn register() {}
 
 pub fn deserialize(from: &DwgSnapshot) -> Result<LowpolySnapshot, semio_framework_diagnostic::TextError> {
     let drawing = from.drawing.to_native().map_err(|e| text_error(format!("dwg->lowpoly: {e}")))?;
-    let mesh = dwg_drawing_to_mesh(&drawing);
+    let mesh = dwg_drawing_to_mesh(&drawing).map_err(|error| text_error(format!("dwg->lowpoly: {error}")))?;
     if mesh.indices.len() < 3 || mesh.positions.len() < 9 {
         return Err(text_error("dwg->lowpoly: the drawing contains no polyface mesh faces to import"));
     }

@@ -53,6 +53,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> V
             && self.media.pending_reserved_producer_permit.is_none()
             && self.media.reserved_mount.is_none()
             && self.media.original_picker.is_none()
+            && self.media.natural_source.is_none()
             && self.media.reserved_receipt.is_none()
             && self.media.reserved_mount_construction.terminal_is_empty()
             && self.tools.tool_operations.is_empty()
@@ -136,6 +137,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> V
             self.tools.pending_tool_lease_admission.is_none(),
             self.media.pending_reserved_producer_permit.is_none(),
             self.media.reserved_mount.is_none(),
+            self.media.natural_source.is_none(),
             self.media.reserved_receipt.is_none(),
             self.media.reserved_mount_construction.terminal_is_empty(),
             self.tools.tool_operations.is_empty(),

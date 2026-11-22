@@ -1,19 +1,29 @@
 //! ⬚️ Publishes strictly nested Difference shells with opposite winding.
 
 use super::*;
+use super::profile_opening::certify_links;
 
 #[derive(semio_framework_value::RetireOwned)]
 pub(super) struct NestedDifference {
-    output:MeshIntersectionSolid,outer_faces:usize,
+    output:MeshIntersectionSolid,outer_faces:usize,apertures:Vec<usize>,
     face:usize,corner:usize,phase:u8,volume:[f64;2],
 }
 
 impl NestedDifference {
-    pub(super) fn new(mut geometry:Soup,faces:Vec<MeshIntersectionFace>,points:Vec<SourceVertex>)->Self{
+    pub(super) fn new(mut geometry:Soup,mut faces:Vec<MeshIntersectionFace>,points:Vec<SourceVertex>, openings:Vec<AxialAperture>)->Self{
+        let mut apertures=Vec::new();
+        for AxialAperture { stock,cutter,rings:[first,second] } in openings {
+            let owner=MeshIntersectionFace::LeftBoundary(stock as u32);
+            geometry.faces[stock]=first;
+            faces[stock]=owner;
+            geometry.faces.push(second);
+            faces.push(owner);
+            apertures.push(cutter);
+        }
         let outer_faces=geometry.faces.len();
         geometry.normals.clear();
         let output=MeshIntersectionSolid{geometry,faces,points,right_points:Vec::new(),right_interpolations:Vec::new(),retained_operand:None};
-        Self{output,outer_faces,face:0,corner:0,phase:0,volume:[0.0;2]}
+        Self{output,outer_faces,apertures,face:0,corner:0,phase:0,volume:[0.0;2]}
     }
 
     pub(super) fn advance(&mut self,right:&Soup,epsilon:f32)->MeshResult<bool>{
@@ -27,6 +37,7 @@ impl NestedDifference {
                 }else{self.phase=1;}
             },
             1=>{
+                if self.apertures.contains(&self.face){self.face+=1;return Ok(false);}
                 if let Some(ring)=right.faces.get(self.face){
                     if self.corner==0{
                         out.geometry.faces.push(Vec::new());
@@ -42,7 +53,8 @@ impl NestedDifference {
                 if let Some(ring)=out.geometry.faces.get(self.face){
                     let shell=usize::from(self.face>=self.outer_faces);
                     let point=|id:u32|out.geometry.positions[id as usize];
-                    let anchor=point(out.geometry.faces[shell*self.outer_faces][0]);
+                    let anchor_face=if self.apertures.is_empty(){shell*self.outer_faces}else{0};
+                    let anchor=point(out.geometry.faces[anchor_face][0]);
                     let a=point(ring[0]);
                     let b=point(ring[self.corner]);
                     let c=point(ring[(self.corner+1)%ring.len()]);
@@ -52,6 +64,11 @@ impl NestedDifference {
                 }else{
                     let tolerance=f64::from(epsilon).powi(3);
                     let [outer,inner]=self.volume;
+                    if !self.apertures.is_empty() {
+                        if outer+inner<=tolerance {return Err(invalid("nested opening has no positive volume"));}
+                        certify_links(out.geometry.faces.iter().map(Vec::as_slice))?;
+                        return Ok(true);
+                    }
                     if outer<=tolerance||inner>= -tolerance||outer+inner<=tolerance{
                         return Err(invalid("nested difference requires opposite closed shell volumes and positive net volume"));
                     }

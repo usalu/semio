@@ -5,7 +5,7 @@ use semio_ui_tui_frame::chrome::{shell, window_chip_layout, ChromeLabels, Chrome
 use semio_ui_tui_engine::Tui;
 use semio_ui_tui_core::event::{Event, Key, KeyEvent, MouseButton, MouseEvent, MouseKind};
 use semio_ui_tui_core::geometry::{Pos, Size};
-use semio_ui_tui_frame::layout::{create_default_layout, push_window_to_stack, resize_split, solve_window_layout, zoom_window, Constraint, Dimension, Direction, WindowLayout, WindowLayoutWindowNode};
+use semio_ui_tui_frame::layout::{create_default_layout, push_window_to_stack, resize_split, solve_window_layout, stack_windows, window_id, window_node, zoom_window, Axis, Constraint, Dimension, Direction, WindowLayout};
 use semio_ui_tui_frame::scene::{Node, NodeContent, NodeId};
 use semio_ui_tui_core::theme::Theme;
 use semio_ui_tui_widgets::widget::{Align, InputState, LabelState, ListState, TabsState, WidgetState, WizardState};
@@ -62,7 +62,7 @@ fn a_click_focuses_the_containing_focusable_and_labels_never_take_focus() {
 #[test]
 fn clicking_a_window_focuses_its_first_widget_and_names_the_window() {
     let mut tui = Tui::new(Size { width: 80, height: 40 }, Theme::new(AppearanceName::Dark));
-    let layout = create_default_layout(&["w1".into(), "w2".into()], "row", None, None);
+    let layout = create_default_layout(&["w1".into(), "w2".into()], Axis::Horizontal, None, None);
     let mut built = shell(&mut tui.scene, NavbarState { left: vec![], center: vec![], right: vec![] }, FooterState { hints: vec![], status: String::new() }, &layout);
     let widgets: Vec<NodeId> = built.windows.iter().map(|(_, window)| tui.scene.add(*window, Node::new(NodeContent::Widget(list("x"))))).collect();
     for widget in &widgets {
@@ -97,7 +97,7 @@ fn a_removed_focus_target_never_dangles() {
 #[test]
 fn hidden_widgets_leave_the_ring_and_zoom_hides_the_other_windows() {
     let mut tui = Tui::new(Size { width: 80, height: 40 }, Theme::new(AppearanceName::Dark));
-    let mut layout = create_default_layout(&["w1".into(), "w2".into(), "w3".into()], "row", None, None);
+    let mut layout = create_default_layout(&["w1".into(), "w2".into(), "w3".into()], Axis::Horizontal, None, None);
     let mut built = shell(&mut tui.scene, NavbarState { left: vec![], center: vec![], right: vec![] }, FooterState { hints: vec![], status: String::new() }, &layout);
     let widgets: Vec<NodeId> = built.windows.iter().map(|(_, window)| tui.scene.add(*window, Node::new(NodeContent::Widget(list("x"))))).collect();
     built.remount(&mut tui.scene, &layout);
@@ -243,9 +243,9 @@ fn hit_testing_uses_the_layout_of_the_change_that_just_happened() {
 
 fn two_stacks(labels: bool) -> (Tui, Shell, WindowLayout, Vec<NodeId>) {
     let mut tui = Tui::new(Size { width: 80, height: 40 }, Theme::new(AppearanceName::Dark));
-    let mut layout = create_default_layout(&["w1".into(), "w2".into()], "row", None, Some(&["alpha".into(), "delta".into()]));
+    let mut layout = create_default_layout(&["w1".into(), "w2".into()], Axis::Horizontal, None, Some(&["alpha".into(), "delta".into()]));
     for (id, title) in [("w3", "beta"), ("w4", "gamma")] {
-        push_window_to_stack(&mut layout, "w1", WindowLayoutWindowNode { window_kind_id: id.into(), title: Some(title.into()), corner: None });
+        push_window_to_stack(&mut layout, "w1", window_node(id.into(), Some(title.into()), None));
     }
     semio_ui_tui_frame::layout::activate_stack_tab(&mut layout, "w1");
     let mut built = shell(&mut tui.scene, NavbarState { left: vec![], center: vec![], right: vec![] }, FooterState { hints: vec![], status: String::new() }, &layout);
@@ -319,7 +319,7 @@ fn dragging_a_tab_onto_another_reports_a_move_on_release() {
     assert_eq!(state.drop_target, None);
     assert!(semio_ui_tui_frame::layout::dock_window(&mut layout, "w1", "w3", semio_ui_tui_core::docking::DockPlacement::Corner(semio_ui_tui_core::docking::WindowStackCorner::TopLeft), Some(2)));
     let stack = semio_ui_tui_frame::layout::stack_hosting(&layout, "w1").unwrap();
-    assert_eq!(stack.children.iter().map(|c| c.window_kind_id.as_str()).collect::<Vec<_>>(), vec!["w3", "w4", "w1"]);
+    assert_eq!(stack_windows(&stack).iter().map(window_id).collect::<Vec<_>>(), vec!["w3", "w4", "w1"]);
 }
 
 #[test]
@@ -361,12 +361,12 @@ fn shared_splitter_geometry_matches_language_neutral_fixture() {
     assert!(include_str!("../📏️shared-splitters/🥒️.feature").starts_with("@capability-tui-shared-splitters"));
     let fixture = parse(include_str!("../🧫️fixtures/📏️shared-splitters/🔣️.json"), JsonMemberPolicy::Reject).unwrap();
     for case in fixture.get("cases").unwrap().as_array().unwrap() {
-        let axis = case.get("axis").unwrap().as_str().unwrap();
+        let axis = if case.get("axis").unwrap().as_str().unwrap() == "row" { Axis::Horizontal } else { Axis::Vertical };
         let extent = case.get("extent").unwrap().as_u64().unwrap() as u16;
         let count = case.get("count").unwrap().as_u64().unwrap() as usize;
         let ids: Vec<String> = (0..count).map(|index| index.to_string()).collect();
         let layout = create_default_layout(&ids, axis, None, None);
-        let area = if axis == "row" { Rect::new(0, 0, extent, 8) } else { Rect::new(0, 0, 8, extent) };
+        let area = if axis == Axis::Horizontal { Rect::new(0, 0, extent, 8) } else { Rect::new(0, 0, 8, extent) };
         let measures = solve_window_layout(&layout, area);
         let mut scene = semio_ui_tui_frame::scene::Scene::new();
         let root = scene.root();
@@ -378,7 +378,7 @@ fn shared_splitter_geometry_matches_language_neutral_fixture() {
         let starts = case.get("starts").unwrap().as_array().unwrap();
         let sizes = case.get("sizes").unwrap().as_array().unwrap();
         for (index, measure) in measures.iter().enumerate() {
-            let (start, size) = if axis == "row" { (measure.rect.x, measure.rect.width) } else { (measure.rect.y, measure.rect.height) };
+            let (start, size) = if axis == Axis::Horizontal { (measure.rect.x, measure.rect.width) } else { (measure.rect.y, measure.rect.height) };
             assert_eq!((start, size), (starts[index].as_u64().unwrap() as u16, sizes[index].as_u64().unwrap() as u16));
             assert_eq!(scene.rect(windows[index].1), measure.rect);
         }
@@ -407,8 +407,8 @@ fn docking_preview_geometry_matches_the_independent_taffy_solver() {
             let expected = oracle.layout(children[usize::from(!first)]).unwrap();
             let area = Rect::new(10, 4, width, height);
             let rect = Rect::new(10 + expected.location.x.round() as u16, 4 + expected.location.y.round() as u16, expected.size.width.round() as u16 + row as u16, expected.size.height.round() as u16 + (!row) as u16);
-            let mut layout = create_default_layout(&["a".into()], "row", None, None);
-            push_window_to_stack(&mut layout, "a", WindowLayoutWindowNode { window_kind_id: "b".into(), title: None, corner: None });
+            let mut layout = create_default_layout(&["a".into()], Axis::Horizontal, None, None);
+            push_window_to_stack(&mut layout, "a", window_node("b".into(), None, None));
             assert!(dock_window(&mut layout, "a", "b", placement, None));
             assert_eq!(placement.preview(area), rect);
             assert_eq!(solve_window_layout(&layout, area).into_iter().find(|window| window.window_kind_id == "a").unwrap().rect, rect);
@@ -525,7 +525,7 @@ fn tooltips_open_after_the_dwell_time_and_close_when_the_pointer_moves_on() {
 #[test]
 fn an_elided_tab_shows_its_full_title_as_a_tooltip_and_a_node_tooltip_works_anywhere() {
     let mut tui = Tui::new(Size { width: 80, height: 40 }, Theme::new(AppearanceName::Dark));
-    let layout = create_default_layout(&["w1".into()], "row", None, Some(&["a very long task title that cannot fit a tab".into()]));
+    let layout = create_default_layout(&["w1".into()], Axis::Horizontal, None, Some(&["a very long task title that cannot fit a tab".into()]));
     let mut built = shell(&mut tui.scene, NavbarState { left: vec![], center: vec![], right: vec![] }, FooterState { hints: vec![], status: String::new() }, &layout);
     let node = tui.scene.add(built.windows[0].1, Node::new(NodeContent::Widget(list("x"))));
     tui.scene.node_mut(node).set_constraint(Constraint { width: Dimension::Weight(1), height: Dimension::Weight(1), ..Default::default() });

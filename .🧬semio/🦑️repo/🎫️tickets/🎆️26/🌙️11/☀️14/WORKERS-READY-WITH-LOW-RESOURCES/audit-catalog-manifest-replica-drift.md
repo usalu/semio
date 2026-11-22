@@ -1,0 +1,11 @@
+# Catalog Manifest Replica Drift
+
+At 19:42:39 UTC m02 recorded a workspace exit 1. Its resident graph process received `ENOENT` from native catalog manifest discovery while looking up the retained-cursors Cargo manifest. m07 independently reported a membership-directory change for the same retained-cursors directory minutes earlier. The current coordinator tree has neither that native manifest nor a corresponding current owner registry row. This establishes the mismatch between the m02 inference input and the current coordinator Source. The mirrored receipts do not identify when m02's registry or file view changed. At 19:46 m02 was already in a naturally supervised new workspace attempt.
+
+Catalog discovery formerly passed a missing manifest through as an ordinary filesystem error even when the pinned registry explicitly declared that manifest or its native root. The existing project-inference repair applies only to a closed set of named owner faults. Catalog discovery now attaches the exact relative manifest to that existing missing-owner fault when an explicitly declared path yields ENOENT or ENOTDIR. Its graph custody finishes before registry following can read or refresh authority. An undeclared optional candidate still contributes nothing when absent. Access failures and inappropriate file types retain their own failures. No catalog result or completeness assertion is published when a declared input has vanished.
+
+The language-neutral SQLite fixture reproduced a plain terminal error before the fix, and then verified named repair after custody had settled for both direct and nested native declarations. It separately exercised optional absence, access refusal, a symbolic link, and an admitted file. The broader owner-discovery, Source matching and inventory suite passed 15 cases with 367 assertions. The physical worker retry was created by its existing supervisor, independently of this patch.
+
+The separate native registry-follow, pending crate, process farm and catalog suite passed 24 tests and 198 assertions. All five exact current file digests appeared in committed origin events and all nine fresh workers reached them.
+
+[Existing registry-follow handling](audit-owner-admission-frontier.md)

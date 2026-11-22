@@ -2,10 +2,10 @@
 
 use semio_s_plugin_norm_compliance::spec_trace::{Realisation, SpecText, SpecTrace, SpecTraceTable};
 
-/// 🧭️ Traceability of the DIN EN 16798 target spec: 21 ids, each with its clause, entity and realisation.
+/// 🧭️ Traceability of the DIN EN 16798 target spec: 22 ids, each with its clause, entity and realisation.
 pub const TABLE: SpecTraceTable = SpecTraceTable { code: "din16798", standard: "DIN EN 16798", spec: ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️26/NORM-ARTIFACTS-FEATURE-COMPLETE-COMPLIANCE-ASSESSMENTS/din16798-normative-scope-2026-11-21.md", spec_ids: SPEC_IDS, items: ITEMS };
 
-const SPEC_IDS: &[&str] = &["VE-01", "VE-02", "VE-03", "VE-04", "VE-05", "VE-06", "VE-07", "VE-08", "VE-09", "VE-10", "VE-11", "VE-12", "VE-13", "VE-14", "VE-15", "VE-16", "VE-17", "VE-18", "VE-19", "VE-20", "VE-21"];
+const SPEC_IDS: &[&str] = &["VE-01", "VE-02", "VE-03", "VE-04", "VE-05", "VE-06", "VE-07", "VE-08", "VE-09", "VE-10", "VE-11", "VE-12", "VE-13", "VE-14", "VE-15", "VE-16", "VE-17", "VE-18", "VE-19", "VE-20", "VE-21", "VE-22"];
 
 const ITEMS: &[SpecTrace] = &[
     SpecTrace::new("VE-01", "DIN EN 16798-1:2022-03", "Zone", Realisation::Check(&["din16798-1.top.summer.", "din16798-1.top.winter.", "din16798-1.adaptive.", "din16798-1.pmv.summer.", "din16798-1.ppd.summer."]), SpecText::new("The checks cover the implemented seasonal, adaptive and PMV/PPD models.", "Die Prüfungen erfassen die implementierten saisonalen, adaptiven sowie PMV-/PPD-Modelle.")),
@@ -29,4 +29,5 @@ const ITEMS: &[SpecTrace] = &[
     SpecTrace::new("VE-19", "EN 16798-1:2019 Table B.16 / DIN EN 16798-1:2022-03 Table NA.10", "Zone", Realisation::Check(&["din16798-1.rh."]), SpecText::new("The report and diagram show the applicable relative-humidity design setpoints. Operator evidence of an installed humidifier enables the lower-bound assessment.", "Bericht und Diagramm zeigen die zutreffenden relativen Feuchtesollwerte. Eine hinterlegte installierte Befeuchtung aktiviert die Prüfung der Untergrenze.")),
     SpecTrace::new("VE-20", "EN 16798-1:2019 Table B.3 / DIN EN 16798-1:2022-03 Table NA.4", "Zone", Realisation::Check(&["din16798-1.draught."]), SpecText::new("The draught prediction uses the annex-specific rate limit and checks the local air model range. A speed remedy respects the same formula and limit.", "Die Zugluftprognose verwendet den anhangbezogenen Grenzwert und prüft den Anwendungsbereich des Luftmodells. Die Abhilfe zur Luftgeschwindigkeit hält dieselbe Formel und denselben Grenzwert ein.")),
     SpecTrace::new("VE-21", "EN 16798-1:2019 Tables B.18 and B.20 / DIN EN 16798-1:2022-03 NA.7 and Table NA.11", "Zone", Realisation::Check(&["din16798-1.illuminance.", "din16798-1.noise."]), SpecText::new("The report uses the representative visual-task illuminance and continuous equipment sound levels applicable to the modelled room profiles.", "Der Bericht verwendet die repräsentative Beleuchtungsstärke der Sehaufgabe und die anwendbaren Dauerschallpegel gebäudetechnischer Anlagen für die modellierten Räume.")),
+    SpecTrace::new("VE-22", "EN 16798-1:2019 B.3.1.5 and B.3.2.5", "Zone", Realisation::Check(&["din16798-1.vent.unoccupied."]), SpecText::new("Checks a documented non-residential purge, reduced room airflow or residential reduced flow using the selected Annex B basis, separately from occupied design flow.", "Prüft die dokumentierte Vorspülung in Nichtwohngebäuden, abgesenkte Raumlüftung oder abgesenkte Wohnungslüftung nach Anhang B getrennt vom Auslegungsvolumenstrom bei Belegung.")),
 ];

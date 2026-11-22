@@ -73,22 +73,39 @@ function waitForDocumentCheckIn(operation: DocumentCheckInOperationV1, ms: numbe
 
 /** ⏳️ The document's acknowledged head once nothing local is still unacknowledged, or `null` when the
  * document is not hub-bound, not this client's, or never quiesces in time. */
-async function documentCheckInHead(operation: DocumentCheckInOperationV1): Promise<WireFrontierSummary | null> {
+async function acknowledgedDocumentHeadV1(owner: { readonly scope: DocumentScope; readonly clientInstanceId: string }, current: () => boolean): Promise<WireFrontierSummary | null> {
   const quiescentBy = Date.now() + DOCUMENT_CHECK_IN_QUIESCENCE_MS;
-  while (documentCheckInCurrent(operation) && !operation.cancelRequested) {
-    const state = artifactState(operation.request.scope.documentId, operation.request.scope.spaceId);
-    if (state === undefined || state.closed || state.openClientInstanceId !== operation.request.clientInstanceId) return null;
-    if (state.frontier !== null && state.pendingBatches.size === 0 && state.outbox.length === 0 && state.pendingMutations.length === 0) return state.frontier;
+  const mounted = artifactState(owner.scope.documentId, owner.scope.spaceId);
+  while (current()) {
+    const state = artifactState(owner.scope.documentId, owner.scope.spaceId);
+    if (state === undefined || state !== mounted || state.closed || state.openClientInstanceId !== owner.clientInstanceId) return null;
+    if (state.frontier !== null && state.status.remote.kind === "live" && state.pendingBatches.size === 0 && state.outbox.length === 0 && state.pendingMutations.length === 0) return state.frontier;
     if (Date.now() >= quiescentBy) return null;
-    await waitForDocumentCheckIn(operation, DOCUMENT_CHECK_IN_POLL_MS);
+    await new Promise<void>(resolve => setTimeout(resolve, DOCUMENT_CHECK_IN_POLL_MS));
   }
   return null;
+}
+
+const settlingDocuments = new Set<string>();
+
+/** 🚦️ Confirms that the mounted document has no unacknowledged changes before its role is replaced. */
+export async function settleDocumentForRoleV1(request: Extract<BackboneWorkerRequest, { readonly kind: "document-settle" }>): Promise<void> {
+  const { scope, clientInstanceId, requestId } = request;
+  const key = JSON.stringify([scope.spaceId, scope.documentId, clientInstanceId]);
+  const answer = (settled: boolean) => post({ kind: "document-settled", scope, clientInstanceId, requestId, settled });
+  if (settlingDocuments.has(key) || settlingDocuments.size >= DOCUMENT_CHECK_IN_CAPACITY) return answer(false);
+  settlingDocuments.add(key);
+  try {
+    answer(await acknowledgedDocumentHeadV1(request, () => true) !== null);
+  } finally {
+    settlingDocuments.delete(key);
+  }
 }
 
 /** 📌️ Names the acknowledged head, posts the Check In, and follows the hub's status to a terminal
  * phase, relaying every status; a cancellation reaches the hub as its own cancel command. */
 async function driveDocumentCheckIn(operation: DocumentCheckInOperationV1): Promise<void> {
-  const head = await documentCheckInHead(operation);
+  const head = await acknowledgedDocumentHeadV1(operation.request, () => documentCheckInCurrent(operation) && !operation.cancelRequested);
   if (!documentCheckInCurrent(operation)) return;
   if (operation.cancelRequested) {
     postDocumentCheckIn(operation, documentCheckInLocalStatus(operation.request.requestId, "cancelled"));

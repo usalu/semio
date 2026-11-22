@@ -2450,6 +2450,34 @@
       "expected": "cache-link-refused"
     },
     {
+      "id": "install-failed-extracting-tarball",
+      "status": 1,
+      "signal": null,
+      "stderr": "bun install v1.3.14\nerror: InstallFailed extracting tarball from nx\n\nerror: InstallFailed extracting tarball from shebang-regex\n\nUnexpected: failed copying files from cache to destination for package hls.js\n",
+      "expected": "cache-link-refused"
+    },
+    {
+      "id": "copy-from-cache-failed-alone",
+      "status": 1,
+      "signal": null,
+      "stderr": "Unexpected: failed copying files from cache to destination for package hls.js\n",
+      "expected": "cache-link-refused"
+    },
+    {
+      "id": "install-failed-with-terminal-colors",
+      "status": 1,
+      "signal": null,
+      "stderr": "\u001b[31m\u001b[1merror\u001b[0m\u001b[2m:\u001b[0m InstallFailed extracting tarball from \u001b[1mnx\u001b[0m\n",
+      "expected": "cache-link-refused"
+    },
+    {
+      "id": "install-failed-mentioned-mid-line",
+      "status": 1,
+      "signal": null,
+      "stderr": "warn: a log says error: InstallFailed extracting tarball from nx\n",
+      "expected": "other"
+    },
+    {
       "id": "eperm-link-after-noise",
       "status": 1,
       "signal": null,

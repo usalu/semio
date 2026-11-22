@@ -5,9 +5,7 @@ use crate::editor::pptx::standards::v_ecma_376::subsets::base::modes::edit::wind
 use semio_ui_locale::LocalizedLabel;
 use semio_plugin::ModeDefinition;
 use semio_plugin::WindowLayout;
-use semio_plugin::WindowLayoutRoot;
-use semio_plugin::WindowLayoutStackNode;
-use semio_plugin::WindowLayoutWindowNode;
+use semio_plugin::WindowLayoutNode;
 
 pub const PPTX_EDIT_MODE_ID: &str = "edit";
 
@@ -22,12 +20,10 @@ pub fn definition() -> ModeDefinition {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn layout() -> WindowLayout {
     WindowLayout {
-        root: WindowLayoutRoot::Stack(WindowLayoutStackNode {
-            kind: "stack".into(),
-            size: None,
-            active_window_kind_id: None,
-            children: vec![WindowLayoutWindowNode { kind: "window".into(), window_kind_id: main::WINDOW_KIND_ID.into(), title: Some("Slides".into()), instance_id: None, template_id: None, corner: None }],
-        }),
+        root: WindowLayoutNode::Stack { size: None,
+            active_window_id: None,
+            children: vec![WindowLayoutNode::Window { window_kind_id: main::WINDOW_KIND_ID.into(), title: Some("Slides".into()), instance_id: None, template_id: None, corner: None }],
+        },
     }
 }
 //#endregion 🔖️Definition

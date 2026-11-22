@@ -360,6 +360,82 @@ impl DirectoryState {
         self.hub_sign_in_task.is_none() && self.hub_spaces_task.is_none()
     }
 
+    /// 🤖️ One `/auth/agent-delegations` call of the delegations pane: the twin builds the path and body, this carries
+    /// them with the shell's own session capability and classifies every ending into the pane's closed error codes.
+    async fn agent_delegation_exchange(&mut self, method: semio_os_kernel::os_directory::client::HttpMethod, path: &str, body: Option<Vec<u8>>) -> Result<(u16, String), semio_renderer_wgpu_hub_workspace::agent_delegations::AgentErrorCode> {
+        use semio_renderer_wgpu_hub_workspace::agent_delegations::AgentErrorCode;
+        let Some(client) = self.directory_client.clone() else { return Err(AgentErrorCode::InvalidDelegation) };
+        match client.agent_delegation_call(&self.directory_command_ctx(), method, path, body).await {
+            Ok((status, text)) if (200..300).contains(&status) => Ok((status, text)),
+            Ok((status, text)) => Err(semio_renderer_wgpu_hub_workspace::agent_delegations::agent_error_from_response(status, &text)),
+            Err(DirectoryClientError::Unauthorized) => Err(AgentErrorCode::InvalidDelegation),
+            Err(DirectoryClientError::Cancelled | DirectoryClientError::Transport(semio_os_kernel::os_directory::client::TransportError::Cancelled)) => Err(AgentErrorCode::Cancelled),
+            Err(_) => Err(AgentErrorCode::Unreachable),
+        }
+    }
+
+    /// 🤖️ Reads the open space's delegations. A space no one has open has none; a failed read keeps the rows on screen.
+    pub async fn run_hub_agents_reload_turn(&mut self) {
+        use semio_renderer_wgpu_hub_workspace::agent_delegations::{agent_delegation_list_path, parse_agent_delegation_list, AgentErrorCode};
+        let Some(space_id) = self.hub_workspace.open_space_id.clone() else { return };
+        self.hub_workspace.agents.begin_load(&space_id);
+        let Ok(path) = agent_delegation_list_path(&space_id) else { return self.hub_workspace.agents.failed(AgentErrorCode::MalformedRequest) };
+        match self.agent_delegation_exchange(semio_os_kernel::os_directory::client::HttpMethod::Get, &path, None).await {
+            Ok((_, text)) => self.hub_workspace.agents.loaded(&parse_agent_delegation_list(&text), directory_now_ms() as i64),
+            Err(code) => self.hub_workspace.agents.failed(code),
+        }
+    }
+
+    /// 🤖️ Mints one delegation from the create form; the receipt's token is held only as the one-time credential.
+    pub async fn run_hub_agent_create_turn(&mut self) {
+        use semio_renderer_wgpu_hub_workspace::agent_delegations::{create_agent_delegation_body, parse_agent_delegation_receipt, AgentErrorCode, AgentPhase};
+        let Some(space_id) = self.hub_workspace.open_space_id.clone() else { return };
+        let agents = &self.hub_workspace.agents;
+        let Ok(body) = create_agent_delegation_body(&space_id, &agents.name_draft, agents.audience, agents.ttl_secs) else { return self.hub_workspace.agents.failed(AgentErrorCode::MalformedRequest) };
+        let origin = self.hub_workspace.origin().to_string();
+        self.hub_workspace.agents.phase = AgentPhase::Submitting;
+        self.hub_workspace.agents.error = None;
+        let path = semio_renderer_wgpu_hub_workspace::agent_delegations::agent_delegation_create_path();
+        match self.agent_delegation_exchange(semio_os_kernel::os_directory::client::HttpMethod::Post, path, Some(body.into_bytes())).await {
+            Ok((_, text)) => match parse_agent_delegation_receipt(&text).map(|receipt| self.hub_workspace.agents.minted(receipt, &origin)) {
+                Ok(Ok(())) => self.run_hub_agents_reload_turn().await,
+                _ => self.hub_workspace.agents.failed(AgentErrorCode::Unreachable),
+            },
+            Err(code) => self.hub_workspace.agents.failed(code),
+        }
+    }
+
+    /// 🤖️ Withdraws one delegation, then re-reads the list so the row shows its new state.
+    pub async fn run_hub_agent_revoke_turn(&mut self, delegation_id: &str) {
+        use semio_renderer_wgpu_hub_workspace::agent_delegations::{agent_delegation_revoke_path, AgentErrorCode, AgentPhase};
+        let Ok(path) = agent_delegation_revoke_path(delegation_id) else { return self.hub_workspace.agents.failed(AgentErrorCode::MalformedRequest) };
+        self.hub_workspace.agents.phase = AgentPhase::Submitting;
+        self.hub_workspace.agents.error = None;
+        match self.agent_delegation_exchange(semio_os_kernel::os_directory::client::HttpMethod::Post, &path, None).await {
+            Ok(_) => self.run_hub_agents_reload_turn().await,
+            Err(code) => self.hub_workspace.agents.failed(code),
+        }
+    }
+
+    /// 🤖️ Applies one agent-delegation panel verb; answers whether the verb belongs to the agents panel.
+    pub async fn run_hub_agent_action(&mut self, verb: &str, value: String, delegation_id: &str) -> bool {
+        use semio_renderer_wgpu_hub_workspace::{agent_delegations::{agent_ttl_choices_secs, AgentAudience}, hub_connection::action as hub_action};
+        let agents = &mut self.hub_workspace.agents;
+        match verb {
+            hub_action::AGENT_REFRESH => self.run_hub_agents_reload_turn().await,
+            hub_action::AGENT_SET_NAME => agents.name_draft = value,
+            hub_action::AGENT_SET_AUDIENCE => if let Some(audience) = AgentAudience::parse(&value) { agents.audience = audience },
+            hub_action::AGENT_SET_EXPIRY => if let Some(ttl) = value.parse::<u64>().ok().filter(|ttl| agent_ttl_choices_secs().contains(ttl)) { agents.ttl_secs = ttl },
+            hub_action::AGENT_CREATE => if agents.can_create() { self.run_hub_agent_create_turn().await },
+            hub_action::AGENT_DISMISS => agents.dismiss_credential(),
+            hub_action::AGENT_REVOKE_ASK => agents.ask_revoke(delegation_id),
+            hub_action::AGENT_REVOKE_CANCEL => agents.cancel_revoke(),
+            hub_action::AGENT_REVOKE_CONFIRM => if let Some(id) = agents.confirm_revoke() { self.run_hub_agent_revoke_turn(&id).await },
+            _ => return false,
+        }
+        true
+    }
+
     /// 👥️ The open space's roster, joined with the hub identities this shell's presence lane sees.
     /// A public page carries no roster at all, which is an EMPTY roster and never an error.
     pub async fn reload_hub_members(&mut self, space_id: &str) {

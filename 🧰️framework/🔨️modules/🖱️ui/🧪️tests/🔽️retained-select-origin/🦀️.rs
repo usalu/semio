@@ -38,7 +38,7 @@ fn assert_rect(actual: [f32; 4], expected: Rect, label: &str) {
 
 fn select_node(item_count: usize) -> UiSelectNode {
     let labels = ["Alpha", "Beta", "Gamma"];
-    UiSelectNode {
+    UiSelectNode { appearance: Default::default(),
         id: "fixture.select".into(),
         value: "alpha".into(),
         items: labels.iter().take(item_count).map(|label| UiSelectItem { value: label.to_lowercase(), label: Label::data(*label) }).collect(),

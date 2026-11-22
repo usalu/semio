@@ -1,7 +1,8 @@
 import {createHash,randomBytes} from "node:crypto";
 import {createReadStream,createWriteStream} from "node:fs";
 import {mkdir,readdir,readFile,rename,rm,stat,utimes,writeFile} from "node:fs/promises";
-import {dirname,join} from "node:path";
+import {once} from "node:events";
+import {basename,dirname,join} from "node:path";
 import {Readable} from "node:stream";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 
@@ -42,8 +43,38 @@ export function createMirrorHandlerV1(options:MirrorOptionsV1):(request:Request)
    }
    if(total<=maximumBytes)return;
    rows.sort((left,right)=>left.at-right.at);
-   for(const row of rows){if(total<=maximumBytes*policy.lowWaterPercent/100)break;await rm(row.path,{force:true});await rm(row.path.replace(/\.body$/u,".json"),{force:true});total-=row.size;}
+   for(const row of rows){if(total<=maximumBytes*policy.lowWaterPercent/100)break;await rm(row.path,{force:true});await rm(row.path.replace(/\.body$/u,".json"),{force:true});await dropRewrites(basename(row.path,".body"));total-=row.size;}
   }catch{}finally{pruning=false;}
+ };
+ const rewrites=new Map<string,Promise<Readonly<{path:string;bytes:number}>>>();
+ const dropRewrites=async(key:string,keep?:string):Promise<void>=>{
+  const folder=dirname(files(key).body),prefix=`${key}.body.rw-`;
+  for(const name of await readdir(folder).catch(()=>[] as string[]))if(name.startsWith(prefix)&&join(folder,name)!==keep)await rm(join(folder,name),{force:true}).catch(()=>undefined);
+ };
+ const cut=(text:string,needle:string):number=>{
+  const end=Math.max(0,text.length-needle.length+1),at=text.indexOf(needle,Math.max(0,end-needle.length+1));
+  return at>=0&&at<end?at:end;
+ };
+ const rewritten=(key:string,meta:MirrorEntryMetaV1,needle:string,replacement:string):Promise<Readonly<{path:string;bytes:number}>>=>{
+  const path=`${files(key).body}.rw-${digest(`${meta.etag??meta.fetchedAtMs}\n${meta.bytes}\n${replacement}`).slice(0,16)}`,running=rewrites.get(path);
+  if(running)return running;
+  const task=(async()=>{
+   const known=await stat(path).catch(()=>undefined);if(known)return {path,bytes:known.size};
+   const temporary=`${path}.${randomBytes(6).toString("hex")}.tmp`,sink=createWriteStream(temporary,{flags:"wx"});
+   try{
+    const emit=async(text:string):Promise<void>=>{if(text!==""&&!sink.write(text.split(needle).join(replacement)))await once(sink,"drain");};
+    let carry="";
+    for await(const chunk of createReadStream(files(key).body,{encoding:"utf8",highWaterMark:1048576})){
+     const text=carry+String(chunk),at=cut(text,needle);
+     await emit(text.slice(0,at));carry=text.slice(at);
+    }
+    await emit(carry);
+    await new Promise<void>((finish,reject)=>sink.end((error?:Error|null)=>error?reject(error):finish()));
+    await rename(temporary,path);await dropRewrites(key,path);
+    return {path,bytes:(await stat(path)).size};
+   }catch(error){sink.destroy();await rm(temporary,{force:true}).catch(()=>undefined);throw error;}
+  })().finally(()=>{rewrites.delete(path);});
+  rewrites.set(path,task);return task;
  };
  const hostOf=(value:string):string=>new URL(value).hostname,registrable=(host:string):string=>host.split(".").slice(-2).join(".");
  const bounded=async(first:string,headers:Record<string,string>):Promise<Response>=>{
@@ -105,7 +136,13 @@ export function createMirrorHandlerV1(options:MirrorOptionsV1):(request:Request)
   const range=request.headers.get("range")?.match(/^bytes=(\d*)-(\d*)$/u),headers:Record<string,string>={"content-type":meta.contentType,"accept-ranges":"bytes","x-semio-mirror":"hit"};
   void utimes(files(key).body,new Date(),new Date()).catch(()=>{});
   const rewrite=ecosystems.find(row=>row.id===ecosystem)?.rewrite;
-  if(rewrite==="npm-tarball"&&!meta.immutable){const upstreamBase=ecosystems.find(row=>row.id===ecosystem)!.upstream,raw=meta.bytes>policy.maximumMetadataBytes?"":(await readFile(files(key).body,"utf8")).split(upstreamBase+"/").join(`${origin}${policy.prefix}${ecosystem}/`);return new Response(request.method==="HEAD"?null:raw,{headers:{...headers,"content-length":String(Buffer.byteLength(raw))}});}
+  if(rewrite==="npm-tarball"&&!meta.immutable){
+   const upstreamBase=ecosystems.find(row=>row.id===ecosystem)!.upstream;
+   try{
+    const done=await rewritten(key,meta,upstreamBase+"/",`${origin}${policy.prefix}${ecosystem}/`);
+    return new Response(request.method==="HEAD"?null:Readable.toWeb(createReadStream(done.path)) as unknown as ReadableStream<Uint8Array>,{headers:{...headers,"content-length":String(done.bytes)}});
+   }catch{return text(502,"Mirror rewrite failed");}
+  }
   if(range&&(range[1]!==""||range[2]!=="")){
    const first=range[1]===""?Math.max(0,meta.bytes-Number(range[2])):Number(range[1]),last=range[1]===""?meta.bytes-1:range[2]===""?meta.bytes-1:Math.min(Number(range[2]),meta.bytes-1);
    if(first>last||first>=meta.bytes)return new Response(null,{status:416,headers:{"content-range":`bytes */${meta.bytes}`}});

@@ -17,7 +17,7 @@ import {join,isAbsolute} from "node:path";
 import {repositoryCachePartitionRootV1,repositoryLeaseDirectoryV1} from "../../../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
 
 /** 🏗️ Authors the original repository launcher above the reusable Cargo storage port. */
-export function repositoryCargoPreparationStorageV1(root:string):CargoPreparationStorageV1{if(!isAbsolute(root))throw Error("Repository storage root must be absolute");return parseCargoPreparationStorageV1({version:1,directory:join(repositoryCachePartitionRootV1(root,"rust"),"cargo/preparation"),leaseDirectory:repositoryLeaseDirectoryV1(root),program:join(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/📜️script.ts")});}
+export function repositoryCargoPreparationStorageV1(root:string,codeRoot:string=root):CargoPreparationStorageV1{if(!isAbsolute(root)||!isAbsolute(codeRoot))throw Error("Repository storage root must be absolute");return parseCargoPreparationStorageV1({version:1,directory:join(repositoryCachePartitionRootV1(root,"rust"),"cargo/preparation"),leaseDirectory:repositoryLeaseDirectoryV1(root),program:join(codeRoot,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/📜️script.ts")});}
 
 import {withRepositoryCompilerStoreV1} from "../../../../💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts";
 import {withCompilerWorkspaceSharedWriteV1} from "../../../../💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🟦️.ts";
@@ -30,13 +30,13 @@ import {mkdirSync} from "node:fs";
 
 /** 🏪️ Opens authentic Rust storage before selected preparation writes and retains it through child settlement. */
 export async function withRepositoryCargoPreparationV1<T>(workspace:string,root:string,invocation:ScriptInvocation,parent:import("../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts").ResourceLeaseControl,environment:Readonly<Record<string,string|undefined>>,body:(environment:Readonly<Record<string,string|undefined>>,phase:NativeCallerPhaseV1,store:import("../../../../💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts").RepositoryCompilerStoreV1,storeControl:import("../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts").ResourceLeaseControl,install:CargoInstallationV1)=>Promise<T>):Promise<T>{
- const original=nativeCallerPhaseV1(invocation,root,parent),mode=original.authority.original.buildMode;
+ const original=nativeCallerPhaseV1(invocation,workspace,parent),mode=original.authority.original.buildMode;
  return withRepositoryCompilerRuntimeEntriesV1(readNativeCallerAuthorityV1(invocation.capabilities).codeRoot,invocation,parent,()=>withRequestedIssuedResourceControlV1(original.leaseControl,0,phaseControl=>withRepositoryCompilerStoreV1(workspace,mode,phaseControl,environment,(store,control)=>withRequestedIssuedResourceControlV1(control,0,async actual=>{
   const targetDirectory=store.environment.CARGO_TARGET_DIR;
   if(!targetDirectory)throw Error("Original Cargo preparation target required");
   requireNativeStoragePathV1(store.root,targetDirectory);
-  const declaration=repositoryCargoPreparationStorageV1(workspace),storage=environment.SEMIO_CARGO_PREPARATION_STORAGE?parseCargoPreparationStorageV1(JSON.parse(environment.SEMIO_CARGO_PREPARATION_STORAGE)):declaration;if(storage.leaseDirectory!==declaration.leaseDirectory||storage.program!==declaration.program)throw Error("Preparation queue and executable belong to repository admission");requireNativeStoragePathV1(store.root,storage.directory);await store.storage.recheck();mkdirSync(storage.directory,{recursive:true});
-  const admitted=nativeCallerPhaseV1(invocation,root,actual);
+  const declaration=repositoryCargoPreparationStorageV1(workspace,original.authority.codeRoot),storage=environment.SEMIO_CARGO_PREPARATION_STORAGE?parseCargoPreparationStorageV1(JSON.parse(environment.SEMIO_CARGO_PREPARATION_STORAGE)):declaration;if(storage.leaseDirectory!==declaration.leaseDirectory||storage.program!==declaration.program)throw Error("Preparation queue and executable belong to repository admission");requireNativeStoragePathV1(store.root,storage.directory);await store.storage.recheck();mkdirSync(storage.directory,{recursive:true});
+  const admitted=nativeCallerPhaseV1(invocation,workspace,actual);
   let live=true;
   const check=()=>{if(!live)throw Error("Original Cargo preparation scope retired");};
   const bounded=scriptResourceProcessEnvironmentV1(admitted.leaseControl,{...store.environment,SEMIO_CARGO_PREPARATION_STORAGE:JSON.stringify(storage),CARGO_NET_OFFLINE:String(admitted.authority.network.offline)});

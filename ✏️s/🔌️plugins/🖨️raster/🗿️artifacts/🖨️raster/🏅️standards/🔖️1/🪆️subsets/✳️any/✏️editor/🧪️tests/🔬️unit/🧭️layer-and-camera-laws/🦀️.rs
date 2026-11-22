@@ -252,17 +252,26 @@ async fn raster_file_picker_imports_png_as_one_undoable_layer() {
 
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🎞️reserved-import/🧪️structured-wire/image-cases.json")).unwrap();
     let encoded = fixture["cases"][0]["base64"].as_str().unwrap();
+    let mut png = semio_framework_io_base64::base64_standard_decode(encoded.as_bytes()).unwrap();
+    let iend = png.split_off(png.len() - 12);
+    let chunk = &fixture["stagedPngAncillary"];
+    let bytes = u32::try_from(chunk["dataBytes"].as_u64().unwrap()).unwrap();
+    png.extend_from_slice(&bytes.to_be_bytes());
+    png.extend_from_slice(chunk["type"].as_str().unwrap().as_bytes());
+    png.resize(png.len() + bytes as usize, u8::try_from(chunk["dataByte"].as_u64().unwrap()).unwrap());
+    png.extend_from_slice(&u32::try_from(chunk["crc32"].as_u64().unwrap()).unwrap().to_be_bytes());
+    png.extend_from_slice(&iend);
+    let encoded = semio_framework_io_base64::base64_standard_encode(png);
     let payload = format!("data:application/octet-stream;base64,{encoded}");
-    let boundary = payload.find(',').unwrap() + 1;
-    let chunks = [&payload[..boundary], &payload[boundary..]].into_iter().enumerate().map(|(chunk, payload)| {
-        semio_framework::kernel::ImportChunk { payload: payload.into(), chunk, chunk_count: 2 }
-    });
+    assert!(payload.len() > semio_plugin::RUNTIME_COMMAND_WIRE_MAXIMUM);
+    let chunks = semio_framework::kernel::import_payload_chunks(&payload);
+    assert!(chunks.len() >= 3);
     let meta = artifact_app_laws::meta("local");
     let policy = semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT;
     for chunk in chunks {
         let args = semio_framework::kernel::import_chunk_arguments("example.png", &chunk, None);
         artifact_app_laws::dispatch_fixture_action(&mut app.0, "importPngFile", Some(args), &meta, &mut artifact_app_laws::fixture_identity(), app.1.cx(), policy.close).await.expect("staged PNG callback dispatch");
-        if chunk.chunk == 0 {
+        if chunk.chunk + 1 < chunk.chunk_count {
             let pending = app.snapshot().unwrap();
             assert!(pending.layers.is_empty() && pending.assets.is_empty());
             semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot(pending);

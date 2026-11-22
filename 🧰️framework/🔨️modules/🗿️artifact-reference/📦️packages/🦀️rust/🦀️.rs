@@ -4,6 +4,10 @@
 pub mod schema;
 pub use schema::*;
 
+#[path = "../../🌳️selection/🦀️.rs"]
+mod selection;
+pub use selection::{MostGeneralDialect, most_general_dialect};
+
 const SCHEMA_EXPORTS:[semio_framework_schema_registry::SchemaExport;1]=[semio_framework_schema_registry::SchemaExport{id:"artifact-reference",leaves:semio_framework_schema_registry::FacetLeaves{rust:include_str!("../../../🧬️schema/🗿️artifact-reference/🦀️.rs"),typescript:include_str!("../../../🧬️schema/🗿️artifact-reference/🟦️.ts"),graphql:include_str!("../../../🧬️schema/🗿️artifact-reference/🔗️.graphql"),json_schema:include_str!("../../../🧬️schema/🗿️artifact-reference/🔣️.json"),proto:include_str!("../../../🧬️schema/🗿️artifact-reference/🛰️.proto")}}];
 
 /// 📇️ Registers the canonical semantic reference contract for all native and artifact clients.

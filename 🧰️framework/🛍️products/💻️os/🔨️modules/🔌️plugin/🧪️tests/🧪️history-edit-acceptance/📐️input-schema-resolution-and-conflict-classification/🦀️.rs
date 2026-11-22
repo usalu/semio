@@ -138,7 +138,7 @@ where
     match Box::pin(acceptance_verb(app, HISTORY_EDIT_WITHDRAW_ACTION_ID, vec![(HISTORY_EDIT_ARG_MUTATION_ID, DslValue::String(id.to_string()))],cx)).await {
         Ok(()) => {}
         Err(refusal) if refusal.message.ends_with(semio_framework_time_travel::TIME_TRAVEL_NOT_WITHDRAWABLE_CODE) => return Ok(false),
-        Err(refusal) => return Err(AcceptanceVerdict::Fail(refusal.context("the withdraw of {id} does not open".into()))),
+        Err(refusal) => return Err(AcceptanceVerdict::Fail(refusal.context(format!("the withdraw of {id} does not open")))),
     }
     Box::pin(acceptance_verb(app, HISTORY_EDIT_ACCEPT_ACTION_ID, Vec::new(),cx)).await.map_err(|refusal| AcceptanceVerdict::Fail(refusal.context("the withdrawal of {id} is not accepted".into())))?;
     Box::pin(acceptance_pump(app, |app| app.time_travel.status().is_none_or(|status| status.stage != HistoryTimeTravelStage::Replaying),cx)).await.map_err(|reason|AcceptanceVerdict::Fail(reason.into()))?;

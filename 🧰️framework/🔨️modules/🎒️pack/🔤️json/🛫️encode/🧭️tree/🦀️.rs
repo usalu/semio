@@ -1,6 +1,6 @@
 //! 🧭️ Native ordinal canonical traversal retains real root-backed projections and paged frontier ownership.
 use crate::{ArtifactCanonicalJsonNode as Node, ArtifactCanonicalJsonText, ArtifactCanonicalJsonScalarBytes as ScalarBytes, canonical_escaped_byte};
-use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind, paged::{PagedMap, PagedUtf8}, retained_clone::{OriginalEffectReply, RetainedCloneBinding, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef, RetainedCloneStep, RetainedOwnedProjection, RetainedOwnedProjectionAdmission}};
+use semio_framework_value::{RetainedAllocationEffect, RetirementDemand, ValueError, ValueRefusalKind, paged::{PagedMap, PagedUtf8}, retained_clone::{OriginalEffectReply, RetainedCloneBinding, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef, RetainedCloneStep, RetainedOwnedProjection, RetainedOwnedProjectionAdmission}};
 use semio_framework_value_persistent::list::{PagedList,PagedListReleaseFailure,PagedListReleaseOutcome,PagedListReservationFailure,PagedListReservationOutcome};
 use std::mem::size_of;
 
@@ -25,6 +25,9 @@ pub fn retained_alias<T:?Sized+Sync>(child:RetainedCloneRef<'_,T>,effect:&mut se
 }
 
 fn refusal(reason: &'static str) -> ValueError { ValueError::literal(ValueRefusalKind::InvariantViolated, reason) }
+fn pay_traversal(effect: &mut RetainedAllocationEffect<'_>) -> Result<(), ValueError> {
+    if effect.performed(1)? { Ok(()) } else { Err(ValueError::literal(ValueRefusalKind::WorkLimit, "canonical traversal unit exceeded its original work")) }
+}
 pub(super) fn work_u64(work:u128)->Result<u64,ValueError>{u64::try_from(work).map_err(|_|refusal("canonical native traversal work exceeds its u64 receipt"))}
 pub(super) fn settled<V>(poll:semio_framework_value::OriginalRetirementPoll<V>)->Result<(V,u128),ValueError>{match poll{
  semio_framework_value::RetainedWorkPoll::Pending{..}=>Err(refusal("canonical child close left its producer reply pending inside the step")),
@@ -321,6 +324,8 @@ impl ArtifactCanonicalJsonTree for semio_framework_value::DslValue {
 }
 
 const FLAT_MINIMUM_BYTES: usize = 32;
+const FLAT_MAXIMUM_BYTES: usize = 1024;
+const FLAT_BYTES_PER_WORK_UNIT: usize = 64;
 const FLAT_DEPTH: usize = 16;
 
 fn put(output: &mut [u8], at: &mut usize, byte: u8) -> bool {
@@ -338,24 +343,25 @@ fn flat_text(text: ArtifactCanonicalJsonText<'_>, output: &mut [u8]) -> Result<O
 }
 
 fn flat_encode(tree: &dyn ArtifactCanonicalJsonTree, output: &mut [u8], depth: usize) -> Result<Option<usize>, ValueError> {
-    if depth > FLAT_DEPTH { return Ok(None); }
     let mut at = 0;
     match tree.canonical_tree_node()? {
         Node::Array(length) => {
+            if depth == 0 && length != 0 { return Ok(None); }
             if !put(output, &mut at, b'[') { return Ok(None); }
             for ordinal in 0..length {
                 if ordinal != 0 && !put(output, &mut at, b',') { return Ok(None); }
-                match flat_encode(tree.canonical_tree_child(ordinal)?, &mut output[at..], depth + 1)? { Some(written) => at += written, None => return Ok(None) }
+                match flat_encode(tree.canonical_tree_child(ordinal)?, &mut output[at..], depth - 1)? { Some(written) => at += written, None => return Ok(None) }
             }
             Ok(put(output, &mut at, b']').then_some(at))
         }
         Node::Object(length) => {
+            if depth == 0 && length != 0 { return Ok(None); }
             if !put(output, &mut at, b'{') { return Ok(None); }
             for ordinal in 0..length {
                 if ordinal != 0 && !put(output, &mut at, b',') { return Ok(None); }
                 match flat_text(tree.canonical_tree_key(ordinal)?, &mut output[at..])? { Some(written) => at += written, None => return Ok(None) }
                 if !put(output, &mut at, b':') { return Ok(None); }
-                match flat_encode(tree.canonical_tree_child(ordinal)?, &mut output[at..], depth + 1)? { Some(written) => at += written, None => return Ok(None) }
+                match flat_encode(tree.canonical_tree_child(ordinal)?, &mut output[at..], depth - 1)? { Some(written) => at += written, None => return Ok(None) }
             }
             Ok(put(output, &mut at, b'}').then_some(at))
         }
@@ -369,17 +375,28 @@ fn flat_encode(tree: &dyn ArtifactCanonicalJsonTree, output: &mut [u8], depth: u
     }
 }
 
-fn flat_run(frame: &mut NativeFrame, output: &mut [u8], grant: RetainedCloneGrant) -> Result<Option<usize>, ValueError> {
-    let window = output.len().min(grant.maximum_copy_bytes);
+fn flat_run(frame: &mut NativeFrame, output: &mut [u8], fallback_work: u64, effect: &mut RetainedAllocationEffect<'_>) -> Result<Option<usize>, ValueError> {
+    let limit = effect.grant();
+    let work = effect.remaining_work_units()?.saturating_sub(fallback_work);
+    let work_bytes = usize::try_from(work).unwrap_or(usize::MAX).saturating_mul(FLAT_BYTES_PER_WORK_UNIT);
+    let window = output.len().min(limit.maximum_copy_bytes).min(FLAT_MAXIMUM_BYTES).min(work_bytes);
     if window < FLAT_MINIMUM_BYTES { return Ok(None); }
-    let output = &mut output[..window];
-    match frame.phase {
+    let depth = limit.maximum_depth.saturating_sub(1).min(FLAT_DEPTH);
+    let mut scratch = [0; FLAT_MAXIMUM_BYTES];
+    let bytes = &mut scratch[..window];
+    let pay = |effect: &mut RetainedAllocationEffect<'_>| {
+        if effect.performed(window.div_ceil(FLAT_BYTES_PER_WORK_UNIT) as u64)? { return Ok(()); }
+        Err(ValueError::literal(ValueRefusalKind::WorkLimit, "canonical flat traversal exceeded its original Work"))
+    };
+    let written: Result<Option<usize>, ValueError> = match frame.phase {
         Phase::Inspect => {
-            let written = { let reference = frame.owner.borrow()?; flat_encode(reference.get(), output, 0)? };
+            pay(effect)?;
+            let written = { let reference = frame.owner.borrow()?; flat_encode(reference.get(), bytes, depth)? };
             if written.is_some() { frame.phase = Phase::Complete; }
             Ok(written)
         }
-        Phase::ArrayNext if frame.ordinal < frame.length => {
+        Phase::ArrayNext if frame.ordinal < frame.length && depth != 0 => {
+            pay(effect)?;
             let (mut at, mut count) = (0, 0);
             {
                 let reference = frame.owner.borrow()?;
@@ -387,14 +404,15 @@ fn flat_run(frame: &mut NativeFrame, output: &mut [u8], grant: RetainedCloneGran
                 while frame.ordinal + count < frame.length {
                     let ordinal = frame.ordinal + count;
                     let start = at;
-                    if ordinal != 0 && !put(output, &mut at, b',') { break; }
-                    match flat_encode(array.canonical_tree_child(ordinal)?, &mut output[at..], 0)? { Some(written) => { at += written; count += 1; } None => { at = start; break; } }
+                    if ordinal != 0 && !put(bytes, &mut at, b',') { break; }
+                    match flat_encode(array.canonical_tree_child(ordinal)?, &mut bytes[at..], depth - 1)? { Some(written) => { at += written; count += 1; } None => { at = start; break; } }
                 }
             }
             frame.ordinal += count;
             Ok((count != 0).then_some(at))
         }
-        Phase::ObjectNext if frame.ordinal < frame.length => {
+        Phase::ObjectNext if frame.ordinal < frame.length && depth != 0 => {
+            pay(effect)?;
             let (mut at, mut count, mut prefixed) = (0, 0, false);
             {
                 let reference = frame.owner.borrow()?;
@@ -402,10 +420,10 @@ fn flat_run(frame: &mut NativeFrame, output: &mut [u8], grant: RetainedCloneGran
                 while frame.ordinal + count < frame.length {
                     let ordinal = frame.ordinal + count;
                     let start = at;
-                    if ordinal != 0 && !put(output, &mut at, b',') { break; }
-                    match flat_text(object.canonical_tree_key(ordinal)?, &mut output[at..])? { Some(written) => at += written, None => { at = start; break; } }
-                    if !put(output, &mut at, b':') { at = start; break; }
-                    match flat_encode(object.canonical_tree_child(ordinal)?, &mut output[at..], 0)? {
+                    if ordinal != 0 && !put(bytes, &mut at, b',') { break; }
+                    match flat_text(object.canonical_tree_key(ordinal)?, &mut bytes[at..])? { Some(written) => at += written, None => { at = start; break; } }
+                    if !put(bytes, &mut at, b':') { at = start; break; }
+                    match flat_encode(object.canonical_tree_child(ordinal)?, &mut bytes[at..], depth - 1)? {
                         Some(written) => { at += written; count += 1; }
                         None if start == 0 => { prefixed = true; break; }
                         None => { at = start; break; }
@@ -417,15 +435,21 @@ fn flat_run(frame: &mut NativeFrame, output: &mut [u8], grant: RetainedCloneGran
             Ok((at != 0).then_some(at))
         }
         Phase::Text => {
+            pay(effect)?;
             let reference = frame.owner.borrow()?;
             let text = match reference.get().canonical_tree_node()? { Node::String(text) => text.into(), Node::Text(text) => text, _ => return Err(refusal("canonical native text role changed")) };
             let mut at = 0;
-            while at < output.len() && frame.text.phase != 3 { if let Some(byte) = frame.text.step(text)? { output[at] = byte; at += 1; } }
+            while at < bytes.len() && frame.text.phase != 3 { if let Some(byte) = frame.text.step(text)? { bytes[at] = byte; at += 1; } }
             if frame.text.phase == 3 { frame.phase = Phase::Complete; }
             Ok((at != 0).then_some(at))
         }
         _ => Ok(None),
+    };
+    let written = written?;
+    if let Some(length) = written {
+        output[..length].copy_from_slice(&bytes[..length]);
     }
+    Ok(written)
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -459,7 +483,10 @@ pub struct NativeFrame {
     pub text: TextState,
 }
 impl NativeFrame {
-    fn child_demand(&self) -> Result<RetirementDemand, ValueError> { let ordinal = self.ordinal; retained_alias_demand(self.owner.borrow()?.try_project(ordinal, |node| node.canonical_tree_child(ordinal))?) }
+    fn child_pending(&self) -> bool {
+        matches!(self.phase, Phase::ArrayChild | Phase::ObjectChild)
+            || self.phase == Phase::ArrayNext && self.ordinal == 0 && self.ordinal < self.length
+    }
     fn new(owner: RetainedOwnedProjection<dyn ArtifactCanonicalJsonTree>) -> Self { Self { owner, phase: Phase::Inspect, ordinal: 0, length: 0, scalar: ScalarBytes { bytes: [0; 64], length: 0 }, offset: 0, text: TextState::default() } }
     fn closure_demand(&self) -> Result<RetirementDemand, ValueError> {
         let copy_bytes = self.owner.next_close_copy_byte_demand()?;
@@ -504,10 +531,9 @@ impl ArtifactCanonicalJsonTreeCursor {
                 if frame.owner.terminal_is_empty() { return Ok(RetirementDemand { depth: 1, ..Default::default() }); }
                 return frame.closure_demand();
             }
+            if frame.child_pending() { return retained_alias_demand(frame.owner.borrow()?); }
             let copy_bytes = match frame.phase {
-                Phase::Inspect => match frame.owner.borrow()?.get().canonical_tree_node()? { Node::Array(_) | Node::Object(_) | Node::String(_) | Node::Text(_) => 0, _ => 64 },
-                Phase::ArrayChild | Phase::ObjectChild => return frame.child_demand(),
-                Phase::ArrayNext if frame.ordinal < frame.length && frame.ordinal == 0 => return frame.child_demand(),
+                Phase::Inspect => frame.scalar.bytes.len(),
                 Phase::ObjectNext if frame.ordinal < frame.length && frame.ordinal == 0 => 0,
                 _ => 1,
             };
@@ -521,34 +547,51 @@ impl ArtifactCanonicalJsonTreeCursor {
     pub fn terminal_is_empty(&self) -> bool { self.pending.is_none() && self.frames.is_empty() && self.frames.allocated_bytes() == 0 }
     pub fn is_complete(&self) -> bool { !self.closing && self.terminal_is_empty() }
 
-    pub fn advance(&mut self, output: &mut [u8], effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<ArtifactCanonicalJsonTreeStep, ValueError> {
-        let grant=effect.grant();self.last_turn_work=0;let started=effect.performed_work();
+    pub fn advance(&mut self, output: &mut [u8], effect: &mut RetainedAllocationEffect<'_>) -> Result<ArtifactCanonicalJsonTreeStep, ValueError> {
+        let started = effect.performed_work();
+        let result = self.advance_one(output, effect);
+        self.last_turn_work = work_u64(effect.performed_work() - started)?;
+        result
+    }
+
+    fn advance_one(&mut self, output: &mut [u8], effect: &mut RetainedAllocationEffect<'_>) -> Result<ArtifactCanonicalJsonTreeStep, ValueError> {
+        let grant = effect.grant();
+        let pending = || ArtifactCanonicalJsonTreeStep { ownership: RetainedCloneStep::Progress(Default::default()), written_bytes: 0 };
         if self.terminal_is_empty() { return Ok(ArtifactCanonicalJsonTreeStep { ownership: RetainedCloneStep::Complete(Default::default()), written_bytes: 0 }); }
-        if grant.maximum_items == 0||grant.maximum_depth==0 { return Ok(ArtifactCanonicalJsonTreeStep { ownership: RetainedCloneStep::Progress(Default::default()), written_bytes: 0 }); }
+        if grant.maximum_items == 0 || grant.maximum_depth == 0 || effect.remaining_work_units()? == 0 { return Ok(pending()); }
         let demand = self.next_demand()?;
-        if !Self::admitted(demand, grant) { return Ok(ArtifactCanonicalJsonTreeStep { ownership: RetainedCloneStep::Progress(Default::default()), written_bytes: 0 }); }
+        if !Self::admitted(demand, grant) { return Ok(pending()); }
         let mut progress = RetainedCloneProgress { copied_items: 1, ..Default::default() };
         let mut written_bytes = 0;
         if self.pending.is_some() {
             if self.closing {
-                if let Some(pending)=self.pending.as_mut().filter(|pending|!pending.terminal_is_empty()) { let (step,work)=settled(pending.close_step(demand.copy_bytes,effect))?;self.last_turn_work=work_u64(work)?;progress=step.progress(); }
-                else { self.pending = None; progress.copied_bytes = demand.copy_bytes; }
+                if let Some(pending)=self.pending.as_mut().filter(|pending|!pending.terminal_is_empty()) { progress=settled(pending.close_step(demand.copy_bytes,effect))?.0.progress(); }
+                else { pay_traversal(effect)?; self.pending = None; progress.copied_bytes = demand.copy_bytes; }
             } else if !self.frames.has_reserved_slot() {
-                let turn=self.frames.reserve_one(effect);self.last_turn_work=work_u64(turn.work)?;
+                let turn=self.frames.reserve_one(effect);
                 progress=match turn.result{Ok(PagedListReservationOutcome::Denied)=>Default::default(),Ok(PagedListReservationOutcome::Ready(step))=>RetainedCloneProgress{copied_items:usize::from(step.progressed),copied_bytes:step.placed_bytes,retained_capacity_bytes:step.allocated_bytes,..Default::default()},Err(PagedListReservationFailure::Work(error))=>return Err(error),Err(PagedListReservationFailure::Allocation{error,..})=>{let progress=RetainedCloneProgress{retained_capacity_bytes:error.allocated_bytes,..Default::default()};return Err(ValueError::from(error.refusal()).with_retained_progress(progress))}};
             } else {
+                pay_traversal(effect)?;
                 let frame = NativeFrame::new(self.pending.take().unwrap());
                 self.frames.push_reserved(frame).unwrap_or_else(|_| unreachable!("canonical frontier reserved its exact native slot"));
                 progress.copied_bytes = demand.copy_bytes;
             }
         } else if let Some(frame) = self.frames.last_mut() {
             if self.closing || frame.phase == Phase::Complete {
-                if frame.owner.terminal_is_empty() { drop(self.frames.pop().unwrap()); progress.copied_bytes = demand.copy_bytes; }
-                else { let (step,work)=settled(frame.owner.close_step(demand.copy_bytes,effect))?;self.last_turn_work=work_u64(work)?;progress=step.progress(); }
-            } else if let Some(written) = flat_run(frame, output, grant)? {
-                progress.copied_bytes = written;
-                written_bytes = written;
+                if frame.owner.terminal_is_empty() { pay_traversal(effect)?; drop(self.frames.pop().unwrap()); progress.copied_bytes = demand.copy_bytes; }
+                else { progress=settled(frame.owner.close_step(demand.copy_bytes,effect))?.0.progress(); }
             } else {
+                let child_pending = frame.child_pending();
+                let work = if child_pending {
+                    retained_alias_work_demand(frame.owner.borrow()?)?.checked_add(1).ok_or_else(|| refusal("canonical child traversal work overflow"))?
+                } else { 1 };
+                if effect.remaining_work_units()? < work { return Ok(pending()); }
+                if let Some(written_bytes) = flat_run(frame, output, work, effect)? {
+                    progress.copied_bytes = written_bytes;
+                    return Ok(ArtifactCanonicalJsonTreeStep { ownership: RetainedCloneStep::Progress(progress), written_bytes });
+                }
+                if output.is_empty() && frame.phase != Phase::Inspect && !child_pending { return Ok(pending()); }
+                pay_traversal(effect)?;
                 let byte = match frame.phase {
                     Phase::Inspect => {
                         let reference = frame.owner.borrow()?;
@@ -561,10 +604,10 @@ impl ArtifactCanonicalJsonTreeCursor {
                         }
                         None
                     }
-                    Phase::ArrayChild | Phase::ObjectChild | Phase::ArrayNext if frame.phase != Phase::ArrayNext || frame.ordinal == 0 && frame.ordinal < frame.length => {
+                    _ if child_pending => {
                         let ordinal = frame.ordinal;
                         let projected = frame.owner.borrow()?.try_project(ordinal, |node| node.canonical_tree_child(ordinal))?;
-                        let Some((child, alias_progress)) = retained_alias(projected, effect)? else { return Ok(ArtifactCanonicalJsonTreeStep { ownership: RetainedCloneStep::Progress(Default::default()), written_bytes: 0 }); };
+                        let Some((child, alias_progress)) = retained_alias(projected, effect)? else { return Err(refusal("canonical child alias was denied after admission")); };
                         self.pending = Some(child);
                         progress = alias_progress;
                         frame.ordinal += 1;
@@ -572,7 +615,6 @@ impl ArtifactCanonicalJsonTreeCursor {
                         progress.copied_bytes = demand.copy_bytes;
                         None
                     }
-                    _ if output.is_empty() => { self.last_turn_work=0;return Ok(ArtifactCanonicalJsonTreeStep { ownership: RetainedCloneStep::Progress(Default::default()), written_bytes: 0 }); }
                     Phase::Scalar => {
                         let byte = frame.scalar.bytes[frame.offset]; frame.offset += 1;
                         if frame.offset == frame.scalar.length { frame.phase = Phase::Complete; }
@@ -606,11 +648,9 @@ impl ArtifactCanonicalJsonTreeCursor {
                 if let Some(byte) = byte { output[0] = byte; written_bytes = 1; }
             }
         } else {
-            let turn=self.frames.release_empty_page(effect);self.last_turn_work=work_u64(turn.work)?;
+            let turn=self.frames.release_empty_page(effect);
             match turn.result{Ok(PagedListReleaseOutcome::Denied)=>progress=Default::default(),Ok(PagedListReleaseOutcome::Ready(step))=>progress.released_bytes=step.released_allocation_bytes,Err(PagedListReleaseFailure::Work(error))=>return Err(error),Err(PagedListReleaseFailure::Release(error))=>return Err(ValueError::from(error))}
         }
-        let done=effect.performed_work().saturating_sub(started);
-        if done==0&&progress!=RetainedCloneProgress::default() { if !effect.performed(1)? { return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"canonical traversal unit exceeded its original work")) } self.last_turn_work=1; } else { self.last_turn_work=work_u64(done)?; }
         Ok(ArtifactCanonicalJsonTreeStep { ownership: if self.terminal_is_empty() { RetainedCloneStep::Complete(progress) } else { RetainedCloneStep::Progress(progress) }, written_bytes })
     }
 

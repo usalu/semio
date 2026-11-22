@@ -1,15 +1,18 @@
 //! 🔺️ Sparse diff builder for `DeleteAsset`. A missing key ⇒ Error `mutation.target-missing`; an
 //! asset any stream frame, the mesh texture or a geo product still names ⇒ Error
 //! `mutation.target-referenced` — the same ownership rule `delete-stream` and `delete-camera-calibration`
-//! follow, so the document never keeps a reference to a leaf that is gone. The accepted branch drops
-//! the durable leaf the handle owned together with the `assets` entry, which is what makes
-//! `create-asset` its exact inverse.
+//! follow. Removing the last asset binding also releases the durable leaf.
 use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any::schema::diff::RemodelingContentDelta;
 use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any::schema::diff::RemodelingContentRow;
 use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any::schema::diff::RemodelingDiff;
 use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any::schema::diff::RemodelingRow;
 use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any::schema::diff::RemodelingRows;
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingDurableArtifact;
+
+pub(crate) fn unshared_asset_content<'a>(base: &'a RemodelingSnapshot, key: &str, content_id: &str) -> Option<&'a RemodelingDurableArtifact> {
+    base.durable_artifacts.get(content_id).filter(|_| !base.assets.iter().any(|(other, handle)| other != key && handle.child_id == content_id))
+}
 
 //#region 🔖️Diff
 pub fn diff(payload: &crate::standards::v1::subsets::any::schema::mutations::delete_asset::component::DeleteAsset, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
@@ -30,7 +33,7 @@ pub fn diff(payload: &crate::standards::v1::subsets::any::schema::mutations::del
     if !referencing.is_empty() {
         return protocol::MutationOutcome::error("mutation.target-referenced", format!("Asset \"{}\" is still referenced by {} place(s) in the document.", payload.key, referencing.len()), referencing);
     }
-    let content = base.durable_artifacts.get(&handle.child_id).is_some().then(|| vec![RemodelingContentRow::Truncate { id: handle.child_id.clone(), from: 0 }]);
+    let content = unshared_asset_content(base, &payload.key, &handle.child_id).map(|_| vec![RemodelingContentRow::Truncate { id: handle.child_id.clone(), from: 0 }]);
     protocol::MutationOutcome::new(RemodelingDiff {
         assets: Some(RemodelingRows { rows: vec![RemodelingRow::Remove { key: payload.key.clone() }] }),
         durable_artifacts: content.map(|rows| RemodelingContentDelta { rows }),

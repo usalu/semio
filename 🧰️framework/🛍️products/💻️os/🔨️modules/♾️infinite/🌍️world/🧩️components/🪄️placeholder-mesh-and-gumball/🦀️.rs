@@ -1,17 +1,42 @@
 //! 🪄️ World3d relocate session, gumball handles, the placeholder mesh authority and mesh buffer helpers.
 
 use super::*;
+use semio_ui_viewport::{Viewport3dOrthographicView, Viewport3dProjectionOrientation};
+use ui_scene::math::Mat4;
 
 //#region WorldRelocateGesture
-/// 🚚️ One live relocate drag. `origin` is where the grabbed object sat when the press landed and
-/// `from` is the ground point under that press; the commit applies the ground-plane travel
-/// `from → to` to `origin`, never an incremental pose delta — React's `World3dRelocateSession`
-/// (`🌐️World3dHost/🟦️.tsx:4752`).
-#[derive(Clone, Debug, PartialEq)]
+/// 🧭️ The coordinate held fixed by a relocate gesture.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum World3dRelocatePlane {
+    X,
+    Y,
+    Z,
+}
+
+impl World3dRelocatePlane {
+    pub fn from_projection(projection: Viewport3dProjectionSpec) -> Self {
+        use Viewport3dOrthographicView::{Back, Front, Left, Right};
+        match projection.orientation {
+            Viewport3dProjectionOrientation::Cardinal { view: Left | Right } => Self::X,
+            Viewport3dProjectionOrientation::Cardinal { view: Front | Back } => Self::Y,
+            _ => Self::Z,
+        }
+    }
+
+    pub fn axis(self) -> usize {
+        self as usize
+    }
+}
+
+/// 🚚️ A relocate drag owns its press-time object, projection plane, and preview model.
+#[derive(Debug)]
 pub struct World3dRelocateSession {
     pub object_id: String,
     pub origin: [f32; 3],
     pub from: [f32; 3],
+    pub plane: World3dRelocatePlane,
+    pub mesh_key: String,
+    pub preview_model: Mat4,
 }
 
 #[derive(Deserialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]

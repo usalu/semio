@@ -82,6 +82,7 @@ test("plans and grants are described in English and German",()=>{
  expect(describeCompileUnitsV1("en","planned",values)).toBe("[compile-units] cargo: 5 of 10 cores planned (at least 3 to start; the free memory carries fewer compile units)");
  expect(describeCompileUnitsV1("de","granted",values)).toContain("4 von 10 Kernen nach 12 s zugeteilt");
  expect(describeCompileUnitsV1("de","waiting",values)).toContain("mindestens 3 freie Kerne von 10");
+ expect(describeCompileUnitsV1("de","leased",values)).toBe("[compile-units] cargo: Compiler-Lease hat nach 12 s 4 von 10 Kernen zugeteilt");
 });
 test("real core leases admit the planned compiles side by side in first come first served order like the Python queue model",()=>withBuildTestInvocationV1(async original=>{invocation=original;
  const cores=availableParallelism();if(cores<2)return;

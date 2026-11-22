@@ -25,6 +25,8 @@ export function splitStaleConsumersV1(index:FactIndexV1,classes:readonly number[
 export function holdersOfDerivedV1(index:FactIndexV1,pseudoOwners:Iterable<string>):Map<string,Set<string>>;
 /** ✅️ The suspects a verification scoped to `names` asks again: the pseudo owners whose derived fact one of those projects holds; the others stay stale for the verification that selects their holders. */
 export function suspectsWithinV1(index:FactIndexV1,suspects:Iterable<string>,names:ReadonlySet<string>):Set<string>;
+/** 🪙️ The suspects that a project outside `rebuilt` holds; a question whose holders are all rebuilt anyway is left to the inference. */
+export function suspectsWithCleanHolderV1(index:FactIndexV1,suspects:Iterable<string>,rebuilt:ReadonlySet<string>):Set<string>;
 /** 🧾️ The derived row of each suspect pseudo owner. */
 export function suspectRowsV1(index:FactIndexV1,suspects:Iterable<string>):Map<string,GenerationRowV1>;
 /** 🧱️ The rows of the pseudo owners a build writes: the fresh facts with their support and the supports of the questions that still held. */

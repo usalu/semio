@@ -98,17 +98,22 @@ function stubLayout(container: HTMLElement): void {
   }
 }
 
-async function mountBoard(session: Board2dWasmSession): Promise<{ readonly canvas: HTMLCanvasElement; readonly actions: { action: string; args?: unknown }[] }> {
+async function mountBoard(session: Board2dWasmSession) {
   const actions: { action: string; args?: unknown }[] = [];
   const factory = { pluginId: "test", appId: "test", instanceId: 1, create: async () => session, scope: createBoardPeerScope() };
-  const view = render(
-    createElement(BoardSessionFactoryContext.Provider, { value: factory }, createElement(Board2dHost, { node: boardSceneNode(), onAction: (descriptor: ActionDescriptor) => void actions.push({ action: descriptor.action, args: descriptor.args }) })),
-  );
+  const onAction = (descriptor: ActionDescriptor) => void actions.push({ action: descriptor.action, args: descriptor.args });
+  const board = (node: UiComponentSceneNode) => createElement(BoardSessionFactoryContext.Provider, { value: factory }, createElement(Board2dHost, { node, onAction }));
+  const node = boardSceneNode();
+  const view = render(board(node));
   const canvas = view.container.querySelector("canvas")!;
   stubLayout(view.container as HTMLElement);
   await new Promise<void>((resolve) => setTimeout(resolve, 0));
   act(() => {});
-  return { canvas, actions };
+  return {
+    canvas,
+    actions,
+    resyncSnapshot: (snapshotJson: string): void => view.rerender(board({ ...node, board2d: { ...node.board2d!, snapshotJson } })),
+  };
 }
 
 /** 🧪️ Dispatches a batch of pointer events inside ONE React update transaction. */
@@ -268,6 +273,25 @@ describe("🤏️ board 2d two-finger gesture", () => {
     expect(gestureCalls).not.toContain("setCameraSilent");
   });
 
+  it("keeps the live zoom when a pending document snapshot is applied after pinch", async () => {
+    const session = createStubSession();
+    const { canvas, resyncSnapshot } = await mountBoard(session);
+    vi.useFakeTimers();
+    pointerBatch(() => {
+      canvas.dispatchEvent(pointer("pointerdown", 1, 300, 300));
+      canvas.dispatchEvent(pointer("pointerdown", 2, 500, 300));
+      window.dispatchEvent(pointer("pointermove", 2, 700, 300));
+    });
+    const live = { ...session.camera };
+    resyncSnapshot(JSON.stringify({ nodes: [{ id: "new-node" }], edges: [] }));
+    pointerBatch(() => {
+      window.dispatchEvent(pointer("pointerup", 2, 700, 300));
+      window.dispatchEvent(pointer("pointerup", 1, 300, 300));
+    });
+    await act(async () => vi.advanceTimersByTimeAsync(350));
+    expect(session.camera).toEqual(live);
+  });
+
   it("retires the owned board gesture without synthesizing an up and admits the next contact", async () => {
     const session = createStubSession();
     const { canvas } = await mountBoard(session);
@@ -278,6 +302,24 @@ describe("🤏️ board 2d two-finger gesture", () => {
     expect(session.calls.slice(callsBeforeCancel)).toEqual(expect.arrayContaining(["pointerCancelScreen"]));
     pointerBatch(() => canvas.dispatchEvent(pointer("pointerdown", 8, 340, 300)));
     expect(session.calls.filter((call) => call === "pointerDownScreen")).toHaveLength(2);
+  });
+
+  it("ignores another pane's pointer and keeps its own captured drag through leave", async () => {
+    const session = createStubSession();
+    const { canvas } = await mountBoard(session);
+    pointerBatch(() => {
+      window.dispatchEvent(pointer("pointermove", 9, 900, 300));
+      window.dispatchEvent(pointer("pointerup", 9, 900, 300));
+      window.dispatchEvent(pointer("pointercancel", 9, 900, 300));
+    });
+    expect(session.calls.filter((call) => call.startsWith("pointer"))).toEqual([]);
+    pointerBatch(() => {
+      canvas.dispatchEvent(pointer("pointerdown", 7, 300, 300));
+      canvas.dispatchEvent(pointer("pointerleave", 7, 900, 300));
+      window.dispatchEvent(pointer("pointermove", 7, 910, 300));
+      window.dispatchEvent(pointer("pointerup", 7, 920, 300));
+    });
+    expect(session.calls.filter((call) => call.startsWith("pointer"))).toEqual(["pointerDownScreen", "pointerMoveScreen", "pointerUpScreen", "pointerLeaveScreen"]);
   });
 });
 // #endregion 🤏️PinchLaws

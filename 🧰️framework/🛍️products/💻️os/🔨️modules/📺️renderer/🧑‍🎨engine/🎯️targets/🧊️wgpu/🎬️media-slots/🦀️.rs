@@ -210,3 +210,7 @@ pub mod original_slot;
 
 #[path="🎟️collect/🦀️.rs"]
 pub mod original_collect;
+
+#[path="🎞️shell-tutorial-video/🦀️.rs"]
+pub mod shell_tutorial_video;
+pub use shell_tutorial_video::*;

@@ -31,7 +31,8 @@ cell = PLACEHOLDER
 
 assets-map = "assets" "=" "{" asset-entry* "}"
 asset-entry = name "=" child-handle
-child-handle = "child_id" "=" name "target" "=" TEXT
+child-handle = "child_id" "=" name "target" "=" artifact-reference
+artifact-reference = "artifact-id" "=" name "artifact-kind" "=" name "standard" "=" name "subset" "=" name
 durable-artifacts-map = "durable-artifacts" "=" "{" durable-entry* "}"
 durable-entry = name "=" durable-field+
 durable-field = "kind" "=" name | "mime" "=" name | "width" "=" INT | "height" "=" INT | "chunks" "=" octet-list

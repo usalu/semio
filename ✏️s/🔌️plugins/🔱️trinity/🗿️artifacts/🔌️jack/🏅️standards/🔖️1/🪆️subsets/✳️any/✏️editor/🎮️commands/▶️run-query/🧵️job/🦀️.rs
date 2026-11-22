@@ -232,7 +232,7 @@ impl<C:crate::standards::v1::subsets::any::schema::composition::JackComposition>
     }
     fn extent(&self, _: &TrinityJackCommand, snapshot: &JackSnapshot, _interaction: &protocol::InteractionState, context: Option<&ArtifactOwnedToolJobContext<Owner<C>>>) -> Option<usize> {
         let scene = C::bind(snapshot, &context?.children).ok()?;
-        (scene.node_count() <= 16_384 && scene.edge_count() <= 16_384 && snapshot.manifest.node_kinds.len() <= 16_384 && snapshot.manifest.edge_kinds.len() <= 16_384 && snapshot.manifest.port_kinds.len() <= 16_384).then_some(1)
+        (scene.node_count() <= 16_384 && scene.edge_count() <= 16_384 && snapshot.manifest().is_ok()).then_some(1)
     }
     fn receive_original_command(&mut self, command: &mut TrinityJackCommand, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
         if self.preparation.is_none() {

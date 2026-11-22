@@ -284,6 +284,24 @@
                 "sites": [
                   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts"
                 ]
+              },
+              {
+                "text": "Original Cargo workspace Source length changed",
+                "sites": [
+                  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts"
+                ]
+              },
+              {
+                "text": "Original Cargo workspace Source disappeared",
+                "sites": [
+                  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts"
+                ]
+              },
+              {
+                "text": "Original Cargo workspace Source changed",
+                "sites": [
+                  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts"
+                ]
               }
             ],
             "describe": {
@@ -315,6 +333,377 @@
             "describe": {
               "en": "A compiler output replaced while it is retained is observed and copied again.",
               "de": "Eine Compilerausgabe, die während der Aufbewahrung ersetzt wird, wird erneut beobachtet und kopiert."
+            }
+          },
+          {
+            "id": "failed-task-inputs",
+            "disposition": "reobserve",
+            "layer": "build",
+            "markers": [
+              "concurrentEditV1("
+            ],
+            "messages": [
+              {
+                "text": "A task failed because its inputs were edited while it ran",
+                "sites": [
+                  "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🧾️refusals/🟦️.ts"
+                ]
+              }
+            ],
+            "describe": {
+              "en": "A task failed and its inputs were edited while it ran: the lane runs the build again, bounded.",
+              "de": "Eine Aufgabe scheiterte und ihre Eingaben wurden bearbeitet, während sie lief: die Bahn führt den Build erneut aus, begrenzt."
+            }
+          },
+          {
+            "id": "current-physical-source",
+            "disposition": "reobserve",
+            "layer": "snapshot",
+            "markers": [
+              "concurrentEditV1("
+            ],
+            "messages": [
+              {
+                "text": "Current physical file vanished before transfer",
+                "sites": [
+                  "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📁️current/🟦️.ts",
+                  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts"
+                ]
+              },
+              {
+                "text": "Current physical absent input appeared",
+                "sites": [
+                  "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📁️current/🟦️.ts"
+                ]
+              },
+              {
+                "text": "Current physical bytes changed",
+                "sites": [
+                  "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📁️current/🟦️.ts"
+                ]
+              },
+              {
+                "text": "Current directory changed before transfer",
+                "sites": [
+                  "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📁️current/🟦️.ts"
+                ]
+              },
+              {
+                "text": "Current physical absent input appeared before transfer",
+                "sites": [
+                  "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📁️current/🟦️.ts"
+                ]
+              },
+              {
+                "text": "Current physical file appeared before transfer",
+                "sites": [
+                  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts"
+                ]
+              },
+              {
+                "text": "Current physical bytes changed before transfer",
+                "sites": [
+                  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts"
+                ]
+              },
+              {
+                "text": "Source vanished while the batch read it",
+                "sites": [
+                  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🧮️digest/📥️read/🟨️.mjs"
+                ]
+              },
+              {
+                "text": "Source appeared while the batch read it",
+                "sites": [
+                  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🧮️digest/📥️read/🟨️.mjs"
+                ]
+              },
+              {
+                "text": "Source changed while the batch read it",
+                "sites": [
+                  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🧮️digest/📥️read/🟨️.mjs"
+                ]
+              }
+            ],
+            "describe": {
+              "en": "A source or directory read for a snapshot is edited, replaced or deleted between its observation and the transfer of its bytes: the snapshot is taken again as a whole.",
+              "de": "Eine Quelle oder ein Verzeichnis, das für einen Schnappschuss gelesen wird, wird zwischen Beobachtung und Übertragung der Bytes bearbeitet, ersetzt oder gelöscht: der Schnappschuss wird als Ganzes neu genommen."
+            }
+          },
+          {
+            "id": "cargo-lock-closure",
+            "disposition": "reobserve",
+            "layer": "snapshot",
+            "markers": [
+              "concurrentEditV1("
+            ],
+            "messages": [
+              {
+                "text": "Cargo.lock kept changing while it was read",
+                "sites": [
+                  "🧰️framework/🔨️modules/🏃️process/🦀️cargo-workspace/🔒️lock/📐️closure/🟦️.ts"
+                ]
+              }
+            ],
+            "describe": {
+              "en": "Cargo.lock is edited while its closure is read: it is read again with a new snapshot.",
+              "de": "Cargo.lock wird bearbeitet, während sein Abschluss gelesen wird: sie wird mit einem neuen Schnappschuss erneut gelesen."
+            }
+          },
+          {
+            "id": "admitted-cargo-plan",
+            "disposition": "reobserve",
+            "layer": "build",
+            "markers": [
+              "concurrentEditV1("
+            ],
+            "messages": [
+              {
+                "text": "Completed Cargo Source differs from admitted artifact plan: ",
+                "sites": [
+                  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts"
+                ]
+              },
+              {
+                "text": "Admitted source digests disagree",
+                "sites": [
+                  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts"
+                ]
+              },
+              {
+                "text": "Running Cargo Source differs from admitted artifact plan: ",
+                "sites": [
+                  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts"
+                ]
+              },
+              {
+                "text": "Admitted compiler source vanished before capture",
+                "sites": [
+                  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧾️receipt/📎️source-witness/🟦️.ts"
+                ]
+              },
+              {
+                "text": "Admitted compiler source changed before capture",
+                "sites": [
+                  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧾️receipt/📎️source-witness/🟦️.ts"
+                ]
+              },
+              {
+                "text": "An input of the failed Cargo pass changed after it was read",
+                "sites": [
+                  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🔁️failure-churn/🟦️.ts"
+                ]
+              },
+              {
+                "text": "An input of the failed Cargo pass vanished after it was read",
+                "sites": [
+                  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🔁️failure-churn/🟦️.ts"
+                ]
+              },
+              {
+                "text": "An input of the failed Cargo pass was modified after Cargo started",
+                "sites": [
+                  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🔁️failure-churn/🟦️.ts"
+                ]
+              },
+              {
+                "text": "Cargo lockfile changed before unit graph observation",
+                "sites": [
+                  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🔁️failure-churn/🟦️.ts"
+                ]
+              },
+              {
+                "text": "Running WASM Cargo Source differs from admission: ",
+                "sites": [
+                  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🕸️wasm-build/🟦️.ts"
+                ]
+              },
+              {
+                "text": "Native host Cargo Source changed",
+                "sites": [
+                  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎮️playground/🖥️native-host/🔁️churn/🟦️.ts"
+                ]
+              }
+            ],
+            "describe": {
+              "en": "A Source or lockfile a Cargo build admitted into its plan differs when the build checks it against the running or completed compiler, or an input of a failed Cargo pass moved after it was read: the lane that runs the actions runs the build again with fresh inputs, bounded.",
+              "de": "Eine Quelle oder Lock-Datei, die ein Cargo-Build in seinen Plan aufnahm, weicht ab, wenn der Build sie gegen den laufenden oder abgeschlossenen Compiler prüft, oder eine Eingabe eines gescheiterten Cargo-Durchlaufs änderte sich nach dem Lesen: die Bahn, die die Aktionen ausführt, führt den Build mit frischen Eingaben erneut aus, begrenzt."
+            }
+          },
+          {
+            "id": "compiler-source-custody",
+            "disposition": "reobserve",
+            "layer": "snapshot",
+            "markers": [
+              "concurrentEditV1("
+            ],
+            "messages": [
+              {
+                "text": "Compiler source changed after its consumed bytes were checked",
+                "sites": [
+                  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts"
+                ]
+              },
+              {
+                "text": "Original compiler output bytes changed before retained claim transfer",
+                "sites": [
+                  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts"
+                ]
+              },
+              {
+                "text": "Contradictory compiler output transfer",
+                "sites": [
+                  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts"
+                ]
+              },
+              {
+                "text": "Compiler output claim changed after transfer",
+                "sites": [
+                  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts"
+                ]
+              },
+              {
+                "text": "Compiler dep-info describes inconsistent source bytes",
+                "sites": [
+                  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts"
+                ]
+              },
+              {
+                "text": "Compiler consumed bytes have no matching retained source witness",
+                "sites": [
+                  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧾️receipt/📎️source-witness/🟦️.ts"
+                ]
+              },
+              {
+                "text": "Compiler consumed inconsistent source versions (",
+                "sites": [
+                  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧾️receipt/📎️source-witness/🟦️.ts"
+                ]
+              },
+              {
+                "text": "Compilation source short read",
+                "sites": [
+                  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧾️receipt/📦️retention/📁️copy/🟦️.ts"
+                ]
+              },
+              {
+                "text": "Actual compilation source extent changed",
+                "sites": [
+                  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧾️receipt/📦️retention/📁️copy/🟦️.ts"
+                ]
+              },
+              {
+                "text": "Actual compilation source digest changed",
+                "sites": [
+                  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧾️receipt/📦️retention/📁️copy/🟦️.ts"
+                ]
+              },
+              {
+                "text": "Duplicate retained compiler reference differs",
+                "sites": [
+                  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧾️receipt/📦️retention/📥️snapshot/🟦️.ts"
+                ]
+              }
+            ],
+            "describe": {
+              "en": "A source or output a compiler consumed, or a retained copy of it, is edited, replaced or found inconsistent while its bytes are checked, claimed or copied: the snapshot is taken again and the step runs again.",
+              "de": "Eine Quelle oder Ausgabe, die ein Compiler verbrauchte, oder eine aufbewahrte Kopie davon, wird bearbeitet, ersetzt oder inkonsistent befunden, während ihre Bytes geprüft, beansprucht oder kopiert werden: der Schnappschuss wird neu genommen und der Schritt läuft erneut."
+            }
+          },
+          {
+            "id": "unadmitted-source",
+            "disposition": "reobserve",
+            "layer": "build",
+            "markers": [
+              "concurrentEditV1("
+            ],
+            "messages": [
+              {
+                "text": "source.missing-input",
+                "sites": [
+                  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🟦️.ts"
+                ]
+              },
+              {
+                "text": "source.unresolved-module",
+                "sites": [
+                  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🟦️.ts"
+                ]
+              }
+            ],
+            "describe": {
+              "en": "A Source a build needs is missing or no longer resolves because a peer is editing the tree: the build runs again once the tree holds still.",
+              "de": "Eine Quelle, die ein Build braucht, fehlt oder löst sich nicht mehr auf, weil ein Peer den Baum bearbeitet: der Build läuft erneut, sobald der Baum stillhält."
+            }
+          },
+          {
+            "id": "cargo-profile-policy",
+            "disposition": "reobserve",
+            "layer": "build",
+            "markers": [
+              "concurrentEditV1("
+            ],
+            "messages": [
+              {
+                "text": "Cargo profile policy Source disappeared",
+                "sites": [
+                  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🚪️ingress/⚙️configuration/🟦️.ts"
+                ]
+              },
+              {
+                "text": "Original consumed Cargo profile Source length changed",
+                "sites": [
+                  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🚪️ingress/⚙️configuration/🟦️.ts"
+                ]
+              },
+              {
+                "text": "Original consumed Cargo profile Source disappeared",
+                "sites": [
+                  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🚪️ingress/⚙️configuration/🟦️.ts"
+                ]
+              },
+              {
+                "text": "Original consumed Cargo profile Source changed",
+                "sites": [
+                  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🚪️ingress/⚙️configuration/🟦️.ts"
+                ]
+              }
+            ],
+            "describe": {
+              "en": "The Cargo profile policy Source a compiler ingress consumed is edited, shortened or deleted while it is read: the build runs again with the current policy.",
+              "de": "Die Cargo-Profilrichtlinie, die ein Compiler-Eingang verbrauchte, wird bearbeitet, verkürzt oder gelöscht, während sie gelesen wird: der Build läuft erneut mit der aktuellen Richtlinie."
+            }
+          },
+          {
+            "id": "cargo-preparation-custody",
+            "disposition": "reobserve",
+            "layer": "build",
+            "markers": [
+              "concurrentEditV1("
+            ],
+            "messages": [
+              {
+                "text": "Prepared source disappeared",
+                "sites": [
+                  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🟦️.ts"
+                ]
+              },
+              {
+                "text": "Prepared source changed",
+                "sites": [
+                  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🟦️.ts"
+                ]
+              },
+              {
+                "text": "Preparation custody changed",
+                "sites": [
+                  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🧾️custody/🟦️.ts"
+                ]
+              }
+            ],
+            "describe": {
+              "en": "A Source a Cargo preparation prepared or holds in custody is edited or deleted before the build used it: the build runs again with fresh inputs.",
+              "de": "Eine Quelle, die eine Cargo-Vorbereitung vorbereitete oder verwahrt, wird bearbeitet oder gelöscht, bevor der Build sie nutzte: der Build läuft erneut mit frischen Eingaben."
             }
           },
           {
@@ -410,18 +799,6 @@
                 "text": "Stale loaded Graph consumer implementation; restart required",
                 "sites": [
                   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🔧️custody/🟨️.mjs"
-                ]
-              },
-              {
-                "text": "Stale loaded Graph reader policy; restart required",
-                "sites": [
-                  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🟦️.ts"
-                ]
-              },
-              {
-                "text": "Stale loaded selected Rust graph assembly; restart required",
-                "sites": [
-                  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🦀️rust/🧩️assembly/🟦️.ts"
                 ]
               },
               {

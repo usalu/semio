@@ -91,6 +91,7 @@ semio-s-artifact-puzzle-3d-precompute = { workspace = true, features = ["testkit
 semio-s-artifact-puzzle-3d-precompute-brush = { workspace = true, features = ["testing"] }
 semio-s-plugin-puzzle-jobs = { workspace = true, features = ["testing"] }
 semio-s-plugin-puzzle-retained = { workspace = true, features = ["testing"] }
+semio-plugin-window-config = { path = "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/📦️packages/🦀️rust" }
 serde_json = { workspace = true }
 
 [[test]]

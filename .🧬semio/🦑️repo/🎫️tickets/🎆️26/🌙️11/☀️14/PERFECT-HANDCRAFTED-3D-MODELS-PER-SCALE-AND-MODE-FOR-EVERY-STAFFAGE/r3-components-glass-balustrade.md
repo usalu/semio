@@ -84,3 +84,7 @@ Final checks: `volumes-check.ts components/glass-balustrade --product`: PASS, ev
 None of the points above is a defect of the model; body, thermal and structure are grade A by my own look at every scale.
 
 State: DONE
+
+## Canonical component readback, 2026-11-21
+
+Canonical source `63b1103ae294592f`. Two drilled 10 mm glass panes surround 1.5 mm PVB. Seven cross bolts run through the clamping cheeks. Two separate five-stud rows go through the perforated 15 mm base plate. All twelve exported scenes reopened (1,035,088 bytes). The strict catalog source readback passed.

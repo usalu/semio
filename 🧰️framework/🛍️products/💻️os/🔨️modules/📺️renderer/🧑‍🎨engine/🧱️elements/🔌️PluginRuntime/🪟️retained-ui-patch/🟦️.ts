@@ -168,7 +168,7 @@ export function wireEffectToFriendly(effect: WireVariant): Effect | null {
     case "spawn-plugin-instance":
       return { spawnPluginInstance: { req: num("req"), pluginId: paramStr("pluginId"), appId: paramStr("appId"), osInstanceId: paramText("osInstanceId"), label: paramText("label"), artifactJson: paramText("artifactJson") } };
     case "open-plugin-instance":
-      return { openPluginInstance: { pluginId: str("pluginId"), appId: str("appId"), osInstanceId: val.osInstanceId as string | undefined } };
+      return actorWireEffectToFriendly(effect, (bytes) => decodeWirePack(bytes, "wire.params.args"));
     case "send-message": {
       if (isRoutedWireSendMessage(effect)) return null;
       console.warn(`wireEffectToFriendly: send-message to "${wireSendMessageTargetTag(effect) || "no endpoint"}" has no host route — only ${WIRE_SEND_MESSAGE_ROUTED_TARGETS.join("/")} are consumed`);

@@ -17,6 +17,8 @@
     "@semio-tech/infinite-world-r3f": "workspace:*"
   },
   "devDependencies": {
+    "@semio-tech/plugin-registry": "workspace:*",
+    "smol-toml": "1.6.1",
     "typescript": "^5.9.3"
   },
   "author": {

@@ -110,8 +110,7 @@ pub mod editor {
             #[path = "../../../../✏️editor/🎚️config/🧪️tests/🔬️unit/🦀️.rs"]
             pub mod tests;
         }
-        #[path = "../../../../✏️editor/🪟️window/🦀️.rs"]
-        pub mod window;
+        pub use semio_s_artifact_puzzle_2d_window::editor::puzzle2d::window;
         #[path = "."]
         pub mod terminology {
             pub use semio_s_artifact_puzzle_2d_records::editor::puzzle2d::terminology::*;

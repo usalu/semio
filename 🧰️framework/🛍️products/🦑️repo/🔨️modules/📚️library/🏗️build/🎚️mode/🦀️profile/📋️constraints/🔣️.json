@@ -64,6 +64,10 @@
           "optLevel": "3"
         },
         {
+          "package": "semio-plugin-interpreter-numeric",
+          "optLevel": "3"
+        },
+        {
           "package": "wasmparser",
           "optLevel": "3"
         },
@@ -716,6 +720,10 @@
           "optLevel": "3"
         },
         {
+          "package": "semio-plugin-interpreter-numeric",
+          "optLevel": "3"
+        },
+        {
           "package": "wasmparser",
           "optLevel": "3"
         },
@@ -987,6 +995,10 @@
         },
         {
           "package": "semio-plugin-interpreter",
+          "optLevel": "3"
+        },
+        {
+          "package": "semio-plugin-interpreter-numeric",
           "optLevel": "3"
         },
         {

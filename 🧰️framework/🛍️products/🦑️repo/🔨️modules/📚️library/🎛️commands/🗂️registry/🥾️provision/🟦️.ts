@@ -1,3 +1,4 @@
+import { statSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { advanceScriptInvocation, SCRIPT_PROCESS_INVOCATION_ENV, type ScriptInvocation } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runOwnedCommand } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
@@ -6,6 +7,7 @@ import type { RootCommandGateV1, RootCommandRegistryV1, RootCommandV1 } from "..
 
 /** 🔌️ The effects of provisioning, replaceable by a law that must not install anything. */
 export type DependencyProvisionPortsV1 = Readonly<{
+  available(root: string): boolean;
   run(command: string, args: readonly string[], cwd: string, label: string, environment: Readonly<Record<string, string | undefined>>, signal: AbortSignal): Promise<void>;
   write(line: string): void;
   now(): number;
@@ -13,6 +15,7 @@ export type DependencyProvisionPortsV1 = Readonly<{
 
 /** 🏃️ Runs the owner of provisioning as an owned child: its output is prefixed and goes to stderr like every line of the gate, because stdout belongs to the command that follows (an MCP server speaks JSON-RPC on it); its progress repeats every 10 s, and cancellation ends its process tree. */
 export const dependencyProvisionPortsV1: DependencyProvisionPortsV1 = {
+  available: (root) => statSync(join(root, "node_modules"), { throwIfNoEntry: false })?.isDirectory() ?? false,
   run: (command, args, cwd, label, environment, signal) => runOwnedCommand(command, [...args], cwd, label, 0, { env: environment, signal, outputStyle: "stream", stdout: "stderr" }),
   write: (line) => console.error(line),
   now: () => Date.now(),
@@ -20,7 +23,7 @@ export const dependencyProvisionPortsV1: DependencyProvisionPortsV1 = {
 
 const ENVELOPE_VARIABLES: readonly string[] = [SCRIPT_PROCESS_INVOCATION_ENV, "SEMIO_SCRIPT_POLICY", "SEMIO_SCRIPT_CAPABILITIES"];
 
-/** 🪪️ Whether the build CLI issued this invocation: it ensures the dependencies itself before it starts any task. */
+/** 🪪️ Whether the build CLI issued this invocation for the selected workspace. */
 export function buildOwnedInvocationV1(root: string, invocation: ScriptInvocation): boolean {
   const owned = invocation.capabilities as Readonly<{ workspaceRoot?: unknown; repositoryRoot?: unknown }>;
   return [owned.workspaceRoot, owned.repositoryRoot].some((value) => typeof value === "string" && resolve(value) === resolve(root));
@@ -36,7 +39,7 @@ export function dependencyGateV1(root: string, registry: RootCommandRegistryV1, 
   const owner = registry.commands.find((command) => command.id === "repo")!;
   const say = (name: string, values: Readonly<Record<string, string>>): string => Object.entries(values).reduce((text, [key, value]) => text.replaceAll(`{${key}}`, value), registry.labels[name]![resolveBuildHelpLanguageV1(registry.languages, [], environment, osLanguages)]!);
   return async (command: RootCommandV1, invocation: ScriptInvocation): Promise<void> => {
-    if (command.requires === "none" || buildOwnedInvocationV1(root, invocation)) return;
+    if (command.requires === "none" || (buildOwnedInvocationV1(root, invocation) && ports.available(root))) return;
     ports.write(say("provisioning", { command: command.id }));
     await advanceScriptInvocation(invocation, `dependencies:${command.id}`, "running");
     const started = ports.now();

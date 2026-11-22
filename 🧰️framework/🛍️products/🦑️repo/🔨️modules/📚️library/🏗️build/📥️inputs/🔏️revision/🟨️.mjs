@@ -44,7 +44,7 @@ function settledCapture(path,maximumBytes,retainText,first){
 }
 function capture(path,maximumBytes,retainText){globalThis[Symbol.for("semio.sourceTrace.v1")]?.record("p",path);return retryOnConcurrentEditSyncV1("read",()=>{const first=captureOnce(path,maximumBytes,retainText);return capturedSources?first:settledCapture(path,maximumBytes,retainText,first);});}
 function captureOnce(path,maximumBytes,retainText){
- const expected=capturedSources?.sources.get(path);if(capturedSources&&!expected)throw Error("Undeclared compiler-captured physical Source read refused: "+JSON.stringify(capturedReadRefusalV1(capturedSources,path)));
+ const expected=capturedSources?.sources.get(path);if(capturedSources&&!expected){const refusal=capturedReadRefusalV1(capturedSources,path),message="Undeclared compiler-captured physical Source read refused: "+JSON.stringify(refusal);throw refusal.scope==="workspace"?staleImplementationV1(message):Error(message);}
  const image=capturedSources?.images.get(path);if(image&&(!retainText||image.text!==undefined)){if(image.byteLength>maximumBytes)throw Error("Compiler-captured admitted Source image identity required");return Object.freeze({sha256:expected,byteLength:image.byteLength,text:retainText?image.text:null});}
  if(capturedSources){const bytes=readFileSync(path);if(bytes.length>maximumBytes||createHash("sha256").update(bytes).digest("hex")!==expected)throw Error("Compiler-captured admitted Source image identity required");return Object.freeze({sha256:expected,byteLength:bytes.length,text:retainText?new TextDecoder("utf-8",{fatal:true,ignoreBOM:true}).decode(bytes):null});}
  return capturePhysicalOnce(path,maximumBytes,retainText);

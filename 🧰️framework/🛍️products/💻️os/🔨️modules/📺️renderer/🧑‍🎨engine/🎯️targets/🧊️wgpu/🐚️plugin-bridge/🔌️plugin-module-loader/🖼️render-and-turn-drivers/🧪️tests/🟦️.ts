@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import { Database } from "bun:sqlite";
 import { readFileSync } from "node:fs";
 import ts from "typescript";
-import { drainTypedOperationTurns, scanTypedOperationPages, TYPED_OPERATION_PAGE_MAGIC, wireTurnStatusTag } from "../../../../../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🔖️turn-result/🟦️.ts";
+import { drainTypedOperationBatches, scanTypedOperationPages, TYPED_OPERATION_PAGE_MAGIC, wireTurnStatusTag } from "../../../../../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🔖️turn-result/🟦️.ts";
 import fixture from "./🔣️.json";
 
 function definition(path: string, name: string): string {
@@ -37,7 +37,7 @@ for (const sample of fixture.cases) test(sample.name, async () => {
   const settled=Promise.withResolvers<{error?:Error;frames?:Uint8Array[]}>();
   const ports={
     WGPU_TYPED_OPERATION_SETTLE_LIMIT:64, WGPU_TYPED_OPERATION_DRAIN_BUDGET:4096, WGPU_TYPED_OPERATION_EFFECT_CAPACITY:4096,
-    WGPU_SPAWNED_JOB_ROUNDS:2, drainTypedOperationTurns, wireTurnStatusTag, scanTypedOperationPages,
+    WGPU_SPAWNED_JOB_ROUNDS:2, drainTypedOperationBatches, wireTurnStatusTag, scanTypedOperationPages,
     createTurnOutcomeBroadcast:()=>({push:settled.resolve,stream:null}), createShardCommandIngressPages:()=>pages,
     serializeWgpuActorCall:(_actor:string,work:()=>Promise<void>)=>work(), yieldWgpuUi:async()=>undefined,
     getShardClient:()=>({}), takeSpawnedJobs:()=>[], forgetSpawnedJobs:()=>{}, shellFrameBytes:()=>null,

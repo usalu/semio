@@ -1,6 +1,7 @@
 /** 🌐️ Exercises the served Draw guest through real pointer input and independently parses its export. */
 import assert from "node:assert/strict";
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { setTimeout as delay } from "node:timers/promises";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
@@ -25,7 +26,9 @@ const url = new URL(flag("--serve"));
 url.searchParams.set("plugin", "draw");
 const report = { url: url.href, locale: flag("--locale"), steps: [], errors: [] };
 const browser = await chromium.launch({ headless: true, args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--enable-unsafe-webgpu"] });
+const cancellation = new AbortController();
 const cancel = signal => {
+  cancellation.abort();
   report.failure = `Cancelled by ${signal}`;
   process.exitCode = 1;
   void browser.close().catch(() => undefined);
@@ -45,16 +48,38 @@ page.on("worker", worker => {
   }).catch(error => errors.push(`Worker observation failed: ${error}`)));
 });
 page.on("pageerror", error => errors.push(String(error)));
-page.on("console", message => { if (message.type() === "error") errors.push(message.text()); });
-const state = () => page.evaluate(() => {
-  const status = document.body.innerText.match(/(\d+) (?:layers?|Ebenen?) · (\d+) (?:selected|ausgewählt)/);
-  return { ready: document.documentElement.dataset.semioOsReady, error: document.documentElement.dataset.semioOsError, layers: status ? Number(status[1]) : null, locale: status ? (status[0].includes("ausgewählt") ? "de" : "en") : null };
+page.on("console", message => {
+  const value = message.text();
+  if (message.type() === "error" || message.type() === "warning" && value.includes("refused: dispatch-failed")) errors.push(value);
 });
-const waitLayers = async expected => {
-  await page.waitForFunction(count => {
-    const status = document.body.innerText.match(/(\d+) (?:layers?|Ebenen?) · (\d+) (?:selected|ausgewählt)/);
-    return status && Number(status[1]) === count;
-  }, expected, { timeout: 30000 });
+const engagement = page.locator('[id^="framework.window."][id$=".engagement.toggle"]').first();
+const statusSelector = '[id="drawing-composite"] [data-slot="engagement-status"]';
+const status = page.locator(statusSelector);
+const setEngagement = async open => {
+  if (await status.isVisible() !== open) await engagement.click({ timeout: 15000 });
+  await status.waitFor({ state: open ? "visible" : "hidden", timeout: 15000 });
+};
+const state = () => page.evaluate(selector => {
+  const status = document.querySelector(selector)?.textContent?.match(/(\d+) (?:layers?|Ebenen?) · (\d+) (?:selected|ausgewählt)/);
+  return { ready: document.documentElement.dataset.semioOsReady, error: document.documentElement.dataset.semioOsError, layers: status ? Number(status[1]) : null, locale: status ? (status[0].includes("ausgewählt") ? "de" : "en") : null };
+}, statusSelector);
+const waitLayers = async (expected, minimum = false) => {
+  await setEngagement(true);
+  await page.waitForFunction(({ selector, expected, minimum }) => {
+    const status = document.querySelector(selector)?.textContent?.match(/(\d+) (?:layers?|Ebenen?) · (\d+) (?:selected|ausgewählt)/);
+    if (!status) return false;
+    const layers = Number(status[1]);
+    return minimum ? layers >= expected : layers === expected;
+  }, { selector: statusSelector, expected, minimum }, { timeout: 30000 });
+};
+const initialEventLogBytes = async path => {
+  const deadline = Date.now() + 30000;
+  while (Date.now() < deadline) {
+    const bytes = statSync(path, { throwIfNoEntry: false })?.size ?? 0;
+    if (bytes > 0) return bytes;
+    await delay(100, undefined, { signal: cancellation.signal });
+  }
+  throw Error("Attaching the folder did not write its initial event log");
 };
 const click = id => page.locator(`[id="${id}"]`).first().click({ timeout: 15000 });
 const openFolderCard = async () => {
@@ -71,19 +96,21 @@ const waitSaved = async () => {
 const note = async step => {
   await Promise.all(workerObservers);
   assert.equal(errors.length, 0, errors.join("\n"));
+  await setEngagement(true);
   const current = await state();
   assert.equal(current.ready, fixture.ready, JSON.stringify(current));
   assert.equal(current.error, undefined, JSON.stringify(current));
   assert.equal(current.locale, report.locale, "Draw must render the explicitly requested language");
   report.steps.push({ step, ...current });
   writeFileSync(join(output, "report.json"), JSON.stringify(report, null, 2));
+  await setEngagement(false);
   if (step === "rectangle" || step === "reload") await page.screenshot({ path: join(output, `${step}.png`) });
   console.log(`[draw-browser] ${step}`);
 };
 const exportPdf = async name => {
-  await page.locator('[id^="framework.window."][id$=".engagement.toggle"]').first().click({ timeout: 15000 });
+  await setEngagement(true);
   await click("action.exportDocument");
-  await page.locator('[id="format"][role="combobox"]').first().click({ timeout: 15000 });
+  await page.locator('[id$=".action.exportDocument.arg.format.input"][role="combobox"]').first().click({ timeout: 15000 });
   await page.getByRole("option", { name: "PDF", exact: true }).click({ timeout: 15000 });
   console.log("[draw-browser] waiting for PDF export");
   const [download] = await Promise.all([
@@ -94,7 +121,7 @@ const exportPdf = async name => {
   await download.saveAs(pdfPath);
   assert.equal(await download.failure(), null);
   const pixels = await assertPdfPainting(readFileSync(pdfPath), fixture.export.pages);
-  await page.locator('[id^="framework.window."][id$=".engagement.toggle"]').first().click({ timeout: 15000 });
+  await setEngagement(false);
   return pixels;
 };
 await page.addInitScript(faults => {
@@ -115,17 +142,15 @@ try {
   await page.goto(url.href, { waitUntil: "domcontentloaded", timeout: 60000 });
   await page.waitForFunction(() => document.documentElement.dataset.semioOsReady || document.documentElement.dataset.semioOsError, undefined, { timeout: 90000 });
   assert.equal((await state()).ready, fixture.ready, JSON.stringify(await state()));
-  const canvas = page.locator('[data-surface-id="drawing.play.composite"] canvas').first();
+  const canvas = page.locator('[data-surface-role="editor"] [data-ui-node-key="drawing.play.composite"] canvas').first();
   await canvas.waitFor({ state: "visible", timeout: 30000 });
-  await page.waitForFunction(minimum => {
-    const status = document.body.innerText.match(/(\d+) (?:layers?|Ebenen?) · \d+ (?:selected|ausgewählt)/);
-    return status && Number(status[1]) >= minimum;
-  }, fixture.minimumBootLayers, { timeout: 30000 });
-  const before = (await state()).layers;
   const picker = page.locator('[id="playground.navbar.fixture"]').first();
-  assert((await picker.innerText()).includes(fixture.example.label), "Default Draw example must be selected");
+  await picker.getByText(fixture.example.label, { exact: true }).waitFor({ state: "visible", timeout: 60000 });
+  await waitLayers(fixture.minimumBootLayers, true);
+  const before = (await state()).layers;
+  await setEngagement(false);
   const labels = report.locale === "de"
-    ? { artifact: "Artefakt", catalogue: "Katalog", inspection: "Inspektion", addPath: "Pfad hinzufügen", path: "Pfad" }
+    ? { artifact: "Dokument", catalogue: "Katalog", inspection: "Inspektion", addPath: "Pfad hinzufügen", path: "Pfad" }
     : { artifact: "Artifact", catalogue: "Catalogue", inspection: "Inspection", addPath: "Add Path", path: "Path" };
   const openPanel = async (id, name) => {
     const button = page.locator(`button[id="${id}"]`).first();
@@ -137,18 +162,18 @@ try {
   };
   const layersPanel = await openPanel("framework.panel.artifact", labels.artifact);
   await layersPanel.getByText(labels.addPath, { exact: true }).first().waitFor({ state: "visible", timeout: 15000 });
-  const layerRow = layersPanel.locator(`[role="treeitem"][id^="drawing-play-layers."]:not([id^="drawing-play-layers.add."]):not([id="drawing-play-layers.empty"])`).first();
+  const layerRow = layersPanel.locator(`[role="treeitem"][id^="panel:framework.panel.artifact/drawing-play-layers."]:not([id^="panel:framework.panel.artifact/drawing-play-layers.add."]):not([id$="/drawing-play-layers.empty"])`).first();
   await layerRow.click({ timeout: 15000 });
   const inspectionPanel = await openPanel("framework.panel.inspection", labels.inspection);
-  await inspectionPanel.locator(`[id^="drawing-inspector."]`).first().waitFor({ state: "visible", timeout: 15000 });
+  await inspectionPanel.locator(`[id*="/drawing-inspector."]`).first().waitFor({ state: "visible", timeout: 15000 });
   const cataloguePanel = await openPanel("framework.panel.catalogue", labels.catalogue);
   await cataloguePanel.getByText(labels.path, { exact: true }).first().waitFor({ state: "visible", timeout: 15000 });
   await openPanel("framework.panel.artifact", labels.artifact);
   await note("boot");
   await picker.click({ timeout: 15000 });
   await page.getByRole("option", { name: fixture.example.label, exact: true }).waitFor({ state: "visible", timeout: 15000 });
-  assert.equal(await page.getByRole("option").count(), 2, "Draw advertises Demo and the framework's blank option");
-  await page.getByRole("option").filter({ hasNotText: fixture.example.label }).click({ timeout: 15000 });
+  assert.equal(await page.getByRole("option").count(), 2, "Draw advertises Demo and Blank Drawing");
+  await page.getByRole("option", { name: fixture.blankExample.labels[report.locale], exact: true }).click({ timeout: 15000 });
   await waitLayers(0);
   await note("blank");
   await picker.click({ timeout: 15000 });
@@ -159,15 +184,14 @@ try {
   await openFolderCard();
   await page.locator('[id="framework.sync.folder.path"]').fill(folder);
   await page.getByRole("button", { name: /^(attach|verbinden)$/i }).click({ timeout: 15000 });
-  await waitSaved();
+  await page.locator('[id="framework.sync.folder.path"]').waitFor({ state: "hidden", timeout: 15000 });
+  await openFolderCard();
+  await page.getByRole("button", { name: /^(detach|trennen)$/i }).waitFor({ state: "visible", timeout: 15000 });
   await page.keyboard.press("Escape");
   await note("attach");
   const eventPath = join(folder, ".semio", "events.semio");
+  const beforeEventBytes = await initialEventLogBytes(eventPath);
   const beforePixels = await exportPdf("before.pdf");
-  await openFolderCard();
-  await waitSaved();
-  await page.keyboard.press("Escape");
-  const beforeEventBytes = readFileSync(eventPath).byteLength;
   await page.locator('[id^="framework.window."][id$=".utilityBar.unfold"]').first().click({ timeout: 15000 });
   await page.locator('[id^="ui.utilities."][id$=".group.group:Drawing"]').first().click({ timeout: 15000 });
   for (const pressed of fixture.utilityPressStates) {
@@ -185,16 +209,19 @@ try {
   await page.mouse.up();
   await waitLayers(before + fixture.layerDelta);
   await note("rectangle");
+  const canvasSurface = page.locator('[data-surface-role="editor"] [data-ui-node-key="drawing.play.composite"]').first();
   const mod = process.platform === "darwin" ? "Meta" : "Control";
+  await canvasSurface.focus();
   await page.keyboard.press(`${mod}+z`);
   await waitLayers(before);
   await note("undo");
+  await canvasSurface.focus();
   await page.keyboard.press(`${mod}+Shift+z`);
   await waitLayers(before + fixture.layerDelta);
   await note("redo");
   await openFolderCard();
   await waitSaved();
-  report.persistence = { folder, beforeEventBytes, eventLogBytes: readFileSync(eventPath).byteLength };
+  report.persistence = { folder, beforeEventBytes, eventLogBytes: statSync(eventPath).size };
   assert(report.persistence.eventLogBytes - beforeEventBytes >= fixture.persistence.minimumEventGrowthBytes, "Current rectangle/history events must grow the fresh folder log");
   await page.keyboard.press("Escape");
   await note("persisted");

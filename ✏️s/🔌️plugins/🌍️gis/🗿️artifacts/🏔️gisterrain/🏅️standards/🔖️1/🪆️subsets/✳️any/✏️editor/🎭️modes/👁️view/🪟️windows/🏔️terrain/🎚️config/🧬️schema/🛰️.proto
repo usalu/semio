@@ -8,6 +8,6 @@ message GisTerrainWindowConfig {
 }
 message TerrainBrushSettings {
   uint32 radius = 1;
-  uint32 elevation_step = 2;
+  uint32 elevation_step_millimetres = 2;
   uint32 smooth_strength = 3;
 }

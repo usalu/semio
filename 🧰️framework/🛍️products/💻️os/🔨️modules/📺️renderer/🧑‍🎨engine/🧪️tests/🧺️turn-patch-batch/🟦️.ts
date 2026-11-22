@@ -49,7 +49,7 @@ async function fixture(actorId: string) {
   const lease = client.captureInstanceLifecycle(actorId, INSTANCE);
   const lifetime = { activationGeneration: lease.activation.activationGeneration, instanceId: INSTANCE, guestLifetime: 3n };
   const captured = { kind: "captured" as const, lifetime, requestSequence: lease.openRequest.requestSequence };
-  await answer(lease.open({ appId: "fixture", actor: {}, config: new Uint8Array(), assets: [], capabilities: [], quotas: new Uint8Array() }, MAINTENANCE_LANE_DEFAULT_BUDGET), { ...plain, lifecycleReceipt: encodeActorInstanceLifecycle(captured) });
+  await answer(lease.open({ appId: "fixture", purpose: { tag: "ordinary" }, actor: {}, config: new Uint8Array(), assets: [], capabilities: [], quotas: new Uint8Array() }, MAINTENANCE_LANE_DEFAULT_BUDGET), { ...plain, lifecycleReceipt: encodeActorInstanceLifecycle(captured) });
   const owner = new OwnedUiInstance(lease.activation, lifetime, { maxNodes: 128, maxDepth: 16, maxChildren: 32, maxTextBytes: 4096, maxPatchOps: 128, maxPatchBytes: 65_536 }, { usizeBits: 32 });
   lease.bindHostRetirement(owner);
   await answer(lease.acknowledge(captured, MAINTENANCE_LANE_DEFAULT_BUDGET), plain);

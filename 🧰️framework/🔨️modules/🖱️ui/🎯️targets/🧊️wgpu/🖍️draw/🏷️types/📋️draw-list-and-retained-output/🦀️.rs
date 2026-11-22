@@ -20,6 +20,7 @@ pub struct DrawLayer {
     pub scissor: Option<ScissorRect>,
     pub clip: Option<ClipRegion>,
     pub foreground_of: Option<usize>,
+    pub group: Option<GroupAlpha>,
     pub ui_instances: Vec<UiInstance>,
     pub raster_instances: Vec<(String, UiInstance)>,
     pub vector_vertices: Vec<VectorVertex>,
@@ -40,6 +41,9 @@ pub struct DrawList {
     pub(super) glass_content_stack: Vec<usize>,
     pub(super) screen_h: f32,
     pub(super) clock_seconds: f32,
+    pub(super) reduced_motion: bool,
+    pub(super) motion_pending: bool,
+    pub(super) active_group: Option<GroupAlpha>,
     pub(super) retained_output: Option<RetainedOutputGrant>,
     pub(super) prepared_items: usize,
     pub(super) prepared_bytes: usize,
@@ -66,7 +70,7 @@ impl Clone for DrawList {
         Self {
             scene_passes: self.scene_passes.clone(), layers, shared_borders: self.shared_borders.clone(), glass_regions: self.glass_regions.clone(),
             scissor_stack: self.scissor_stack.clone(), clip_stack: self.clip_stack.clone(), glass_content_stack: self.glass_content_stack.clone(),
-            screen_h: self.screen_h, clock_seconds: self.clock_seconds, retained_output: self.retained_output,
+            screen_h: self.screen_h, clock_seconds: self.clock_seconds, reduced_motion: self.reduced_motion, motion_pending: self.motion_pending, active_group: self.active_group, retained_output: self.retained_output,
             prepared_items: self.prepared_items, prepared_bytes: self.prepared_bytes, border_finalize,
             border_retained_bytes: 0, border_finalized: self.border_finalized,
             retained_append: self.retained_append.clone(), append_sequence: self.append_sequence,
@@ -111,6 +115,9 @@ impl Default for DrawList {
             glass_content_stack: Vec::new(),
             screen_h: 720.0,
             clock_seconds: 0.0,
+            reduced_motion: false,
+            motion_pending: false,
+            active_group: None,
             retained_output: None,
             prepared_items: 0,
             prepared_bytes: 0,
@@ -225,6 +232,10 @@ pub(super) fn prepared_scene_pass_usage(pass: &ScenePass3d) -> Option<(usize, us
     for draw in &pass.line_draws {
         include(draw.vertices.len(), draw.vertices.capacity().checked_mul(size_of::<semio_ui_scene_pass::LineVertex3d>())?)?;
     }
+    include(pass.point_draws.len(), pass.point_draws.capacity().checked_mul(size_of::<semio_ui_scene_pass::PointDraw3d>())?)?;
+    for draw in &pass.point_draws {
+        include(draw.vertices.len().div_ceil(semio_ui_scene_pass::POINT_CHUNK_VERTICES), draw.vertices.capacity().checked_mul(size_of::<semio_ui_scene_pass::PointVertex3d>())?)?;
+    }
     include(pass.textured_draws.len(), pass.textured_draws.capacity().checked_mul(size_of::<semio_ui_scene_pass::TexturedDraw3d>())?)?;
     for draw in &pass.textured_draws {
         include(draw.instances.len(), draw.instances.capacity().checked_mul(size_of::<semio_ui_scene_pass::TexturedInstance3d>())?)?;
@@ -278,6 +289,9 @@ impl DrawList {
             glass_content_stack: Vec::new(),
             screen_h: 0.0,
             clock_seconds: 0.0,
+            reduced_motion: false,
+            motion_pending: false,
+            active_group: None,
             retained_output: None,
             prepared_items: 0,
             prepared_bytes: 0,
@@ -424,10 +438,11 @@ impl DrawList {
                 return Ok(text(&draw.mesh_key))
             }
             if let Some(draw)=pass.translucent_draws.last(){if let Some(instance)=draw.instances.last(){return Ok(text(&instance.id))}if draw.instances.capacity()!=0{return bytes(&draw.instances)}return Ok(text(&draw.mesh_key))}
+            if let Some(draw)=pass.point_draws.last(){return if !draw.vertices.is_empty(){Ok(0)}else{bytes(&draw.vertices)}}
             if let Some(draw)=pass.line_draws.last(){return if !draw.vertices.is_empty(){Ok(0)}else{bytes(&draw.vertices)}}
             if let Some(draw)=pass.draws.last(){if let Some(instance)=draw.instances.last(){return Ok(text(&instance.id))}if draw.instances.capacity()!=0{return bytes(&draw.instances)}return Ok(text(&draw.mesh_key))}
             if let Some(draw)=pass.shadow_draws.last(){if let Some(instance)=draw.instances.last(){return Ok(text(&instance.id))}if draw.instances.capacity()!=0{return bytes(&draw.instances)}return Ok(text(&draw.mesh_key))}
-            if pass.textured_draws.capacity()!=0{return bytes(&pass.textured_draws)}if pass.material_draws.capacity()!=0{return bytes(&pass.material_draws)}if pass.translucent_draws.capacity()!=0{return bytes(&pass.translucent_draws)}if pass.line_draws.capacity()!=0{return bytes(&pass.line_draws)}if pass.draws.capacity()!=0{return bytes(&pass.draws)}if pass.shadow_draws.capacity()!=0{return bytes(&pass.shadow_draws)}return Ok(0)
+            if pass.textured_draws.capacity()!=0{return bytes(&pass.textured_draws)}if pass.material_draws.capacity()!=0{return bytes(&pass.material_draws)}if pass.translucent_draws.capacity()!=0{return bytes(&pass.translucent_draws)}if pass.point_draws.capacity()!=0{return bytes(&pass.point_draws)}if pass.line_draws.capacity()!=0{return bytes(&pass.line_draws)}if pass.draws.capacity()!=0{return bytes(&pass.draws)}if pass.shadow_draws.capacity()!=0{return bytes(&pass.shadow_draws)}return Ok(0)
         }
         if !self.shared_borders.is_empty(){return Ok(0)}
         if !self.shared_borders.terminal_is_empty(){return page(&self.shared_borders)}

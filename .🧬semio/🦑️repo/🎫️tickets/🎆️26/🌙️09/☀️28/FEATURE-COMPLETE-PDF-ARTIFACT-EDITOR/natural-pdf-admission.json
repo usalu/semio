@@ -1,0 +1,263 @@
+{
+  "trusted": {
+    "operation": "000000000000004c",
+    "generation": "00000000000000bd",
+    "instance": 17,
+    "fresh": true,
+    "declaration": {
+      "formatKind": "s.stdio.pdf@1.7",
+      "extension": ".pdf",
+      "mediaType": "application/pdf",
+      "binary": true
+    },
+    "maximum": 16777216
+  },
+  "offer": {
+    "declaration": {
+      "formatKind": "s.stdio.pdf@1.7",
+      "extension": ".pdf",
+      "mediaType": "application/pdf",
+      "binary": true
+    },
+    "extent": 9437877
+  },
+  "begin": {
+    "loan": {
+      "operation": "000000000000004c",
+      "generation": "00000000000000bd",
+      "instance": 17,
+      "declaration": {
+        "formatKind": "s.stdio.pdf@1.7",
+        "extension": ".pdf",
+        "mediaType": "application/pdf",
+        "binary": true
+      },
+      "extent": 9437877
+    },
+    "owner": 17,
+    "seq": "0020000000000001",
+    "kind": 241,
+    "extent": 9437877
+  },
+  "page": {
+    "owner": 17,
+    "generation": "00000000000000bd",
+    "commandIndex": 0,
+    "commandCount": 1,
+    "instance": 17,
+    "seq": "0020000000000001",
+    "kind": 241,
+    "pageIndex": 0,
+    "pageCount": 2305,
+    "itemCount": 1,
+    "metadata": 9437877,
+    "len": 4096,
+    "nextPage": 0
+  },
+  "completion": [
+    { "name": "Complete Before Begin", "stage": "Prepared", "acknowledged": 0, "pendingPage": false, "expected": "Stale" },
+    { "name": "One Page Still Absent", "stage": "Receive", "acknowledged": 2304, "pendingPage": false, "expected": "Refused" },
+    { "name": "Backing Still Awaiting Retirement", "stage": "Receive", "acknowledged": 2305, "pendingPage": true, "expected": "Refused" },
+    { "name": "Exact Retained Coverage", "stage": "Receive", "acknowledged": 2305, "pendingPage": false, "expected": "Pending" },
+    { "name": "Sealed For Format", "stage": "Sealed", "acknowledged": 2305, "pendingPage": false, "expected": "Pending" },
+    { "name": "Decoder Has Original Source", "stage": "Lent", "acknowledged": 2305, "pendingPage": false, "expected": "Pending" },
+    { "name": "Cancellation Retiring", "stage": "Closing", "acknowledged": 2305, "pendingPage": false, "expected": "Stale" },
+    { "name": "Cancelled Completion", "stage": "Cancelled", "acknowledged": 2305, "pendingPage": false, "expected": "Stale" },
+    { "name": "Actual Format Publication", "stage": "Published", "acknowledged": 2305, "pendingPage": false, "expected": "Accepted" },
+    { "name": "Format Publication Failed", "stage": "Failed", "acknowledged": 2305, "pendingPage": false, "expected": "Refused" }
+  ],
+  "cases": [
+    {
+      "name": "Ordinary One Page PDF Beyond 8 MiB",
+      "expected": "accepted"
+    },
+    {
+      "name": "Exact Declared Ingress Budget",
+      "expected": "accepted",
+      "trusted": {
+        "maximum": 9437877
+      }
+    },
+    {
+      "name": "One Byte Beyond Declared Ingress Budget",
+      "expected": "refused",
+      "trusted": {
+        "maximum": 9437876
+      }
+    },
+    {
+      "name": "Stale Generation",
+      "expected": "refused",
+      "begin": {
+        "loan": {
+          "generation": "00000000000000bc"
+        }
+      }
+    },
+    {
+      "name": "Wrong Operation",
+      "expected": "refused",
+      "begin": {
+        "loan": {
+          "operation": "000000000000004d"
+        }
+      }
+    },
+    {
+      "name": "Wrong Guest Instance",
+      "expected": "refused",
+      "begin": {
+        "loan": {
+          "instance": 18
+        }
+      }
+    },
+    {
+      "name": "Wrong Transport Owner",
+      "expected": "refused",
+      "begin": {
+        "owner": 18
+      }
+    },
+    {
+      "name": "Published Owner",
+      "expected": "refused",
+      "trusted": {
+        "fresh": false
+      }
+    },
+    {
+      "name": "Wrong Selected Format",
+      "expected": "refused",
+      "offer": {
+        "declaration": {
+          "formatKind": "s.stdio.pdf@1.4"
+        }
+      }
+    },
+    {
+      "name": "Wrong Echoed Declaration",
+      "expected": "refused",
+      "begin": {
+        "loan": {
+          "declaration": {
+            "mediaType": "image/png"
+          }
+        }
+      }
+    },
+    {
+      "name": "Wrong Selected Binary Mode",
+      "expected": "refused",
+      "offer": {
+        "declaration": {
+          "binary": false
+        }
+      }
+    },
+    {
+      "name": "Smaller Extent In Loan",
+      "expected": "refused",
+      "begin": {
+        "loan": {
+          "extent": 9437876
+        }
+      }
+    },
+    {
+      "name": "Larger Extent In Control",
+      "expected": "refused",
+      "begin": {
+        "extent": 9437878
+      }
+    },
+    {
+      "name": "PNG Picker Kind",
+      "expected": "refused",
+      "begin": {
+        "kind": 240
+      }
+    },
+    {
+      "name": "Zero Sequence",
+      "expected": "refused",
+      "begin": {
+        "seq": "0000000000000000"
+      }
+    },
+    {
+      "name": "No Source Body",
+      "expected": "refused",
+      "offer": {
+        "extent": 0
+      }
+    },
+    {
+      "name": "Transport Limit Exceeded",
+      "expected": "refused",
+      "trusted": {
+        "maximum": 536870913
+      },
+      "offer": {
+        "extent": 536870913
+      },
+      "begin": {
+        "loan": {
+          "extent": 536870913
+        },
+        "extent": 536870913
+      }
+    },
+    {
+      "name": "Unexpected Revision Fields",
+      "wireOnly": true,
+      "expected": "refused",
+      "begin": {
+        "loan": {
+          "documentId": "placeholder",
+          "baseRevision": "0000000000000000000000000000000000000000000000000000000000000000"
+        }
+      }
+    },
+    {
+      "name": "Exact Trailing Page Beyond Command Budget",
+      "expected": "accepted",
+      "page": { "pageIndex": 2304, "nextPage": 2304, "len": 693 }
+    },
+    {
+      "name": "Truncated Trailing Page",
+      "expected": "refused",
+      "page": { "pageIndex": 2304, "nextPage": 2304, "len": 692 }
+    },
+    {
+      "name": "Trailing Byte After Exact Extent",
+      "expected": "refused",
+      "page": { "pageIndex": 2304, "nextPage": 2304, "len": 694 }
+    },
+    {
+      "name": "Out Of Order Page",
+      "expected": "refused",
+      "page": { "pageIndex": 1 }
+    },
+    {
+      "name": "Duplicate Prior Page",
+      "expected": "refused",
+      "page": { "nextPage": 1 }
+    },
+    {
+      "name": "Foreign Page Sequence",
+      "expected": "refused",
+      "page": { "seq": "0020000000000002" }
+    },
+    {
+      "name": "Old Generation After Accepted Begin",
+      "expected": "refused",
+      "live": { "generation": "00000000000000be" }
+    },
+    {
+      "name": "Publication After Accepted Begin",
+      "expected": "refused",
+      "live": { "fresh": false }
+    }
+  ]
+}

@@ -11,7 +11,7 @@ impl OpeningState {
     /// document's sync status to name an acknowledged head, submits it, then polls or cancels to a
     /// terminal status. Answers whether the footer's status changed.
     #[cfg(not(target_arch = "wasm32"))]
-    pub async fn pump_hub_check_in(&mut self, directory: &DirectoryState, sync: &mut SyncState) -> bool {
+    pub async fn pump_hub_check_in(&mut self, directory: &mut DirectoryState, sync: &mut SyncState) -> bool {
         use semio_os_kernel::os_directory::{DocumentCheckInPhaseV1, DocumentCheckInRefusalV1, DocumentCheckInV1, DOCUMENT_CHECK_IN_SCHEMA_V1};
         let Some(operation) = sync.hub_check_in.clone() else { return false };
         if operation.status.as_ref().is_some_and(|status| status.phase.is_terminal()) {

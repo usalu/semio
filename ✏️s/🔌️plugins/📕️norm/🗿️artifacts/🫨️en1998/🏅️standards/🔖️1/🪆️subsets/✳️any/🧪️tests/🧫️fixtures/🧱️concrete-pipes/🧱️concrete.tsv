@@ -1,0 +1,12 @@
+id	basis	pipe_concrete_compression	pipe_concrete_compression_limit	pipe_steel_tension	pipe_steel_tension_limit	pipe_steel_compression	pipe_steel_compression_limit	pipe_dls_steel_tension	pipe_dls_steel_limit	results
+verified	confirmed	0.0025	0.0035	0.015	0.025	0.002	0.0035	0.001	0.0015	1111
+exact	confirmed	0.0035	0.0035	0.025	0.025	0.0035	0.0035	0.0015	0.0015	1111
+crush	confirmed	0.0036	0.0035	0.015	0.025	0.002	0.0035	0.001	0.0015	0111
+steel-tension	confirmed	0.0025	0.0035	0.026	0.025	0.002	0.0035	0.001	0.0015	1011
+steel-compression	confirmed	0.0025	0.0035	0.015	0.025	0.0036	0.0035	0.001	0.0015	1101
+dls	confirmed	0.0025	0.0035	0.015	0.025	0.002	0.0035	0.0016	0.0015	1110
+unconfirmed	unconfirmed	0.0025	0.0035	0.015	0.025	0.002	0.0035	0.001	0.0015	U
+absent-dls	confirmed	0.0025	0.0035	0.015	0.025	0.002	0.0035	0.001		U
+zero-capacity	confirmed	0.0025	0	0.015	0.025	0.002	0.0035	0.001	0.0015	U
+negative-strain	confirmed	0.0025	0.0035	0.015	0.025	-0.002	0.0035	0.001	0.0015	U
+nonfinite	confirmed	0.0025	0.0035	0.015	0.025	0.002	0.0035	inf	0.0015	U

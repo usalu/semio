@@ -17,6 +17,11 @@ Feature: The outer area of a thermal region is the surface the air from outside 
     When the outer area of each region is measured
     Then faces covered by a solid the air reaches count, faces that look at an enclosed solid or into the closed cavity do not
 
+  Scenario: A part that passes through a closed shell covers nothing inside it
+    Given a casing of six panels and a bar of another region that comes from outside through one panel and ends 2 mm above the floor
+    When the outer area of the casing is measured
+    Then it is the outside of the casing alone: beyond the bar lies the closed cavity, so neither the floor under it nor the inside of the panel counts
+
   Scenario: The flood equals an independent implementation
     Given the triangles of every case
     When trimesh and scipy flood a voxel grid of the same cell
@@ -31,3 +36,8 @@ Feature: The outer area of a thermal region is the surface the air from outside 
     Given a box with 6 mm walls and a 14 mm open slit in its lid
     Then the inside of its floor exchanges heat with outside air at 1:500
     And shutting the slit encloses the same floor
+
+  Scenario: A declared air passage the flood cannot resolve
+    Given the sample figure with `thermal.minimumAirPassageM` of 0.12 mm and of 3 mm
+    When the thermal coverage is measured
+    Then the cell of 1 mm keeps a third of the 3 mm passage and the 0.12 mm passage, whose cell the budget of the flood raises, is a finding

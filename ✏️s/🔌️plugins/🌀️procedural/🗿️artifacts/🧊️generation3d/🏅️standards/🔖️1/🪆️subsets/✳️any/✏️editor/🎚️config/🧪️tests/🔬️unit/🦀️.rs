@@ -11,11 +11,11 @@ fn generation3d_config_default_matches_the_former_runtime_defaults() {
 }
 
 fn config_round_trip(base: &Generation3dConfig, operation: &Generation3dConfigMutation) -> Generation3dConfig {
-    let forward = operation.diff(base).into_parts().0;
+    let forward = protocol::apply_diff_cold(&operation.diff(base).into_parts().0, base).expect("forward diff applies");
     let backwards = operation.inverse(base).expect("valid retained mutation inverse fixture");
     let mut restored = forward.clone();
     for back in &backwards {
-        restored = back.diff(&restored).into_parts().0;
+        restored = protocol::apply_diff_cold(&back.diff(&restored).into_parts().0, &restored).expect("inverse diff applies");
     }
     assert_eq!(&restored, base, "backwards() must exactly restore the pre-operation config");
     forward
@@ -27,7 +27,7 @@ fn config_set_camera_no_ops_when_unchanged() {
     let same = Generation3dConfigMutation::SetCamera(SetCamera { camera: base.camera.clone() });
     let outcome = same.diff(&base);
     assert!(outcome.messages().iter().any(|message| message.code.0 == "mutation.no-op"));
-    assert_eq!(outcome.into_parts().0, base);
+    assert!(protocol::DiffAlgebra::is_empty(&outcome.into_parts().0));
 }
 
 #[test]
@@ -36,7 +36,7 @@ fn config_set_preview_camera_no_ops_when_unchanged() {
     let same = Generation3dConfigMutation::SetPreviewCamera(SetPreviewCamera { camera: base.preview_camera.clone() });
     let outcome = same.diff(&base);
     assert!(outcome.messages().iter().any(|message| message.code.0 == "mutation.no-op"));
-    assert_eq!(outcome.into_parts().0, base);
+    assert!(protocol::DiffAlgebra::is_empty(&outcome.into_parts().0));
 }
 
 #[test]

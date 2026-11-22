@@ -1,0 +1,324 @@
+{
+  "$comment": "🎬️ Language-agnostic tutorial presentation contract shared with React `🎥️tutorial-ui` and `🎞️tutorial-engine`: cue windows are half-open `[at, at+durationMs)`, the video overlay resyncs past 300 ms of drift, chapter ticks sit at `atMs / durationMs`, the ghost pointer lerps for drag and bows along a quadratic arc for orbit, and the ghost paints at opacity 0.9 at twice the spacing unit.",
+  "cueWindows": [
+    {
+      "spans": [
+        [
+          1000,
+          500
+        ],
+        [
+          2000,
+          500
+        ]
+      ],
+      "playheadMs": 999,
+      "expect": null
+    },
+    {
+      "spans": [
+        [
+          1000,
+          500
+        ],
+        [
+          2000,
+          500
+        ]
+      ],
+      "playheadMs": 1000,
+      "expect": 0
+    },
+    {
+      "spans": [
+        [
+          1000,
+          500
+        ],
+        [
+          2000,
+          500
+        ]
+      ],
+      "playheadMs": 1499.9,
+      "expect": 0
+    },
+    {
+      "spans": [
+        [
+          1000,
+          500
+        ],
+        [
+          2000,
+          500
+        ]
+      ],
+      "playheadMs": 1500,
+      "expect": null
+    },
+    {
+      "spans": [
+        [
+          1000,
+          500
+        ],
+        [
+          2000,
+          500
+        ]
+      ],
+      "playheadMs": 2250,
+      "expect": 1
+    },
+    {
+      "spans": [
+        [
+          1000,
+          1000
+        ],
+        [
+          1500,
+          1000
+        ]
+      ],
+      "playheadMs": 1600,
+      "expect": 0
+    }
+  ],
+  "chapterFractions": [
+    {
+      "atMs": 0,
+      "durationMs": 60000,
+      "expect": 0.0
+    },
+    {
+      "atMs": 15000,
+      "durationMs": 60000,
+      "expect": 0.25
+    },
+    {
+      "atMs": 90000,
+      "durationMs": 60000,
+      "expect": 1.0
+    },
+    {
+      "atMs": 5,
+      "durationMs": 0,
+      "expect": 0.0
+    }
+  ],
+  "videoRect": [
+    {
+      "normalized": [
+        0.72,
+        0.7,
+        0.24,
+        0.24
+      ],
+      "viewport": [
+        1000,
+        500
+      ],
+      "expect": [
+        720.0,
+        350.0,
+        240.0,
+        120.0
+      ]
+    },
+    {
+      "normalized": [
+        0,
+        0,
+        1,
+        1
+      ],
+      "viewport": [
+        800,
+        600
+      ],
+      "expect": [
+        0.0,
+        0.0,
+        800.0,
+        600.0
+      ]
+    }
+  ],
+  "videoLocalTime": [
+    {
+      "playheadMs": 5000,
+      "cueAtMs": 3000,
+      "sourceOffsetMs": 250,
+      "expect": 2250.0
+    }
+  ],
+  "videoReseek": [
+    {
+      "currentMs": 1000.0,
+      "targetMs": 1200.0,
+      "expect": false
+    },
+    {
+      "currentMs": 1000.0,
+      "targetMs": 1300.0,
+      "expect": false
+    },
+    {
+      "currentMs": 1000.0,
+      "targetMs": 1300.5,
+      "expect": true
+    },
+    {
+      "currentMs": 2000.0,
+      "targetMs": 1600.0,
+      "expect": true
+    }
+  ],
+  "ghostProgress": [
+    {
+      "playheadMs": 1000,
+      "cueAtMs": 1000,
+      "durationMs": 500,
+      "expect": 0.0
+    },
+    {
+      "playheadMs": 1250,
+      "cueAtMs": 1000,
+      "durationMs": 500,
+      "expect": 0.5
+    },
+    {
+      "playheadMs": 1600,
+      "cueAtMs": 1000,
+      "durationMs": 500,
+      "expect": 1.0
+    },
+    {
+      "playheadMs": 1000,
+      "cueAtMs": 1000,
+      "durationMs": 0,
+      "expect": 0.0
+    }
+  ],
+  "ghostArc": [
+    {
+      "from": [
+        0,
+        0
+      ],
+      "to": [
+        100,
+        0
+      ],
+      "t": 0,
+      "expect": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "from": [
+        0,
+        0
+      ],
+      "to": [
+        100,
+        0
+      ],
+      "t": 0.25,
+      "expect": [
+        25.0,
+        13.125
+      ]
+    },
+    {
+      "from": [
+        0,
+        0
+      ],
+      "to": [
+        100,
+        0
+      ],
+      "t": 0.5,
+      "expect": [
+        50.0,
+        17.5
+      ]
+    },
+    {
+      "from": [
+        0,
+        0
+      ],
+      "to": [
+        100,
+        0
+      ],
+      "t": 1,
+      "expect": [
+        100.0,
+        0.0
+      ]
+    },
+    {
+      "from": [
+        10,
+        10
+      ],
+      "to": [
+        10,
+        410
+      ],
+      "t": 0.5,
+      "expect": [
+        -22.0,
+        210.0
+      ]
+    }
+  ],
+  "ghostOpacity": 0.9,
+  "ghostSizeUiSpacing": 2.0,
+  "defaultCursors": {
+    "leftClick": "pointer",
+    "rightClick": "pointer",
+    "doubleClick": "pointer",
+    "drag": "grab",
+    "scroll": "default",
+    "orbit": "move"
+  },
+  "rates": [
+    0.5,
+    1.0,
+    1.5,
+    2.0
+  ],
+  "captionMaxWidthPx": 672.0,
+  "controls": [
+    "ui.tutorial.play",
+    "ui.tutorial.stop",
+    "ui.tutorial.scrubber",
+    "ui.tutorial.rate",
+    "ui.tutorial.mute",
+    "ui.tutorial.captions"
+  ],
+  "defaults": {
+    "muted": false,
+    "captionsOn": true
+  },
+  "recording": {
+    "reactControls": { "record": { "id": "ui.tutorial.record", "icon": "circle-dot" }, "addChapter": { "id": "ui.tutorial.addChapter", "icon": "plus" }, "indicator": "ui.tutorial.recordingIndicator" },
+    "labels": {
+      "tutorial.record": { "en": "Record", "de": "Aufnehmen" },
+      "tutorial.recording": { "en": "Recording", "de": "Aufnahme läuft" },
+      "tutorial.addChapter": { "en": "Add Chapter", "de": "Kapitel setzen" }
+    },
+    "chapterCases": [
+      { "existing": 0, "playheadMs": 1234.6, "id": "chapter-1", "at": 1235, "title": "Chapter 1" },
+      { "existing": 2, "playheadMs": 0.0, "id": "chapter-3", "at": 0, "title": "Chapter 3" },
+      { "existing": 0, "playheadMs": -5.0, "id": "chapter-1", "at": 0, "title": "Chapter 1" }
+    ]
+  }
+}

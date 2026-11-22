@@ -379,8 +379,13 @@ fn escape_cancels_the_rotate_ring_and_restores_the_geometry() {
     assert!(host.gestures.transform_drag.is_none(), "and end it");
     let after = (host.scene.nodes.get("node-a").expect("node-a").x, host.scene.nodes.get("node-a").expect("node-a").y, host.scene.handles.get("node-a:v0").expect("handle").angle);
     assert_eq!(before, after, "a cancel restores position AND handle angle");
-    let names = board_event_names(&host.outbox.drain_events_json());
+    let events = host.outbox.drain_events_json();
+    let names = board_event_names(&events);
     assert!(!names.iter().any(|name| name == "gesture"), "a cancelled gesture commits nothing: {names:?}");
+    let rows = serde_json::from_str::<Vec<serde_json::Value>>(&events).expect("events parse");
+    let restored = rows.iter().rev().find(|row| row["name"] == "transformPreview").expect("restore preview for peer panes");
+    let node = &restored["payload"]["moves"][0];
+    assert_eq!((node["id"].as_str(), node["x"].as_f64(), node["y"].as_f64()), (Some("node-a"), Some(before.0), Some(before.1)));
 }
 
 #[cfg(test)]

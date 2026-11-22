@@ -201,6 +201,9 @@ export function createMemoryGovernorV1({workers,headroom,attributable,measure,co
     const spacing=lastAdmit+policy.admitMinimumMilliseconds-now();
     if(owners.size>0&&spacing>0){await sleep(spacing,signal);continue;}
     if(owners.size>0&&hold?.()===true){await sleep(policy.admitMinimumMilliseconds,signal);continue;}
+    const capped=row=>{const limit=policy.kindLimits?.[row.kind];return limit!==undefined&&[...owners].filter(owner=>owner.kind===row.kind).length>=limit;},open=queue.findIndex(row=>!capped(row));
+    if(open<0){await sleep(policy.pollMilliseconds,signal);continue;}
+    if(open>0)queue.unshift(...queue.splice(open,1));
     const free=sample(),head=queue[0],waitedMilliseconds=now()-Math.max(head.since,lastAdmit,lastDone),shown=Math.max(0,free);
     let next=head,known=knownOf(next),estimate=costOf(next),state={headroom:free,running:owners.size,inflight:inflight(),estimate,learned:known},forced=false;
     const describe=()=>({key:next.key??next.kind,kind:next.kind,seconds:Math.round((now()-Math.max(head.since,lastAdmit,lastDone))/1000),need:megabytes(estimate),limit:Math.round(policy.waitBoundMilliseconds/1000),available:megabytes(grantBytes),count:queue.length});
@@ -212,11 +215,11 @@ export function createMemoryGovernorV1({workers,headroom,attributable,measure,co
       continue;
      }
      if(owners.size>1&&waitedMilliseconds>=policy.waitBoundMilliseconds){
-      const smallest=queue.reduce((best,row)=>costOf(row)<costOf(best)?row:best,head),need=costOf(smallest);
+      const smallest=queue.filter(row=>!capped(row)).reduce((best,row)=>costOf(row)<costOf(best)?row:best,head),need=costOf(smallest);
       if(need<=grantBytes&&need<=free){next=smallest;known=knownOf(next);estimate=need;state={...state,estimate,learned:known};forced=true;say("admittedAlone",{...describe(),key:next.key??next.kind,kind:next.kind,need:megabytes(need),used:megabytes(need),budget:megabytes(shown)});}
      }
      if(owners.size<=1&&waitedMilliseconds>=policy.waitBoundMilliseconds){
-      next=queue.reduce((best,row)=>costOf(row)<costOf(best)?row:best,head);known=knownOf(next);estimate=costOf(next);state={...state,estimate,learned:known};
+      next=queue.filter(row=>!capped(row)).reduce((best,row)=>costOf(row)<costOf(best)?row:best,head);known=knownOf(next);estimate=costOf(next);state={...state,estimate,learned:known};
       const fields={...describe(),used:megabytes(estimate),budget:megabytes(shown)};
       if(estimate>grantBytes&&estimate>free){say("refused",fields);throw new GraphMemoryRefusedErrorV1({key:fields.key,needBytes:estimate,availableBytes:grantBytes,freeBytes:shown,seconds:fields.seconds,message:renderGraphMemoryMessagesV1("refused",{running:owners.size,...fields},environment).join("\n")});}
       if(estimate<=grantBytes){forced=true;say("admittedAlone",fields);}

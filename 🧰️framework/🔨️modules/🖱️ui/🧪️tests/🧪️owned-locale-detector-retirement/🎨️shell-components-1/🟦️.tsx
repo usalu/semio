@@ -379,10 +379,10 @@ describe("Shell components", () => {
               { id: "right", title: uiDataLabel("Right"), iconId: "app-window", children: <div>Right Pane</div> },
             ]}
             layout={{
-              kind: "row",
+              kind: "split", axis: "horizontal",
               children: [
-                { kind: "stack", children: [{ kind: "window", id: "left" }], activeId: "left" },
-                { kind: "stack", children: [{ kind: "window", id: "right" }], activeId: "right" },
+                { kind: "stack", children: [{ kind: "window", windowKindId: "left" }], activeWindowId: "left" },
+                { kind: "stack", children: [{ kind: "window", windowKindId: "right" }], activeWindowId: "right" },
               ],
             }}
             activeWindowId="left"

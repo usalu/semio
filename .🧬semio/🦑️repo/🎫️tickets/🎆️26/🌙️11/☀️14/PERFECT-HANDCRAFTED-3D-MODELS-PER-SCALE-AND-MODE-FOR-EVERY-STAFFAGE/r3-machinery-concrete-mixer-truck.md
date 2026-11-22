@@ -77,3 +77,7 @@ Not opened: the 1:100 body sheet and the 1:500 structure sheet were rendered but
 - During this run a repeated `--apply` once re-transformed the poses and clips (the root script was not idempotent). I restored them from a copy of the original catalog file taken before the first write, made the script idempotent, and verified three consecutive applies write nothing. No other file was touched.
 
 The fuel tank and intake contours remain printable at 1:150, 1:200 and 1:350. The native 1:200 feature, silhouette and cross-scale measurements also passed.
+
+## November 21 running gear and moving joints
+
+The two steering axles have single tyres. The rear two driven axles have inner and outer tyres and distinct hubs on both sides. All twelve tyres carry their own structural and thermal surfaces. See the [measurements and installed revision](digital-running-gear.md).

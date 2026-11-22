@@ -1,7 +1,7 @@
 //! 🌀️ Resumes PDF Flate streams without claiming a flat decoded buffer.
 
 use semio_framework_deflate::{InflateOutcome, Inflater, RetainedInflateCloseStep};
-use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
+use semio_framework_value::{ByteReadSource, RetirementDemand, ValueError, ValueRefusalKind};
 
 #[path = "🧮️predictor/🦀️.rs"]
 mod predictor;
@@ -104,7 +104,7 @@ impl PdfFlateCursor {
 
     /// ➡️ Advances against the same admitted source on each turn and fills caller-owned staging space.
     /// The caller may publish the output after a checksum-verified completion.
-    pub fn advance(&mut self, source: &[u8], output: &mut [u8], grant: FlateGrant, cancelled: bool) -> FlateStep {
+    pub fn advance(&mut self, source: &(impl ByteReadSource + ?Sized), output: &mut [u8], grant: FlateGrant, cancelled: bool) -> FlateStep {
         let mut step = FlateStep { status: Ok(FlateStatus::Yield), work: 0, allocated_bytes: 0, written_bytes: 0 };
         step.status = match self.lifecycle {
             Lifecycle::Decoding if cancelled => {
@@ -122,8 +122,8 @@ impl PdfFlateCursor {
         step
     }
 
-    fn decode(&mut self, source: &[u8], output: &mut [u8], grant: FlateGrant, step: &mut FlateStep) -> Result<FlateStatus, ValueError> {
-        if self.source_len.is_some_and(|length| length != source.len()) {
+    fn decode(&mut self, source: &(impl ByteReadSource + ?Sized), output: &mut [u8], grant: FlateGrant, step: &mut FlateStep) -> Result<FlateStatus, ValueError> {
+        if self.source_len.is_some_and(|length| length != source.byte_len()) {
             return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "PDF Flate source extent changed"));
         }
         while step.work < grant.work {
@@ -134,7 +134,7 @@ impl PdfFlateCursor {
                     FlateFraming::Raw => (0, semio_framework_deflate::RETAINED_INFLATE_WINDOW_BYTES),
                 };
                 self.inflater = Some(Inflater::try_new_retained(window, window).map_err(inflate_error)?);
-                self.source_len = Some(source.len());
+                self.source_len = Some(source.byte_len());
                 self.source_offset = offset;
                 continue;
             };
@@ -156,12 +156,12 @@ impl PdfFlateCursor {
             if step.written_bytes == output.len() && self.expanded_bytes < self.maximum_output_bytes {
                 return Ok(FlateStatus::NeedsOutput);
             }
-            let raw_end = source.len() - if self.framing == FlateFraming::Zlib { 4 } else { 0 };
+            let raw_end = source.byte_len() - if self.framing == FlateFraming::Zlib { 4 } else { 0 };
+            step.work += 1;
             if self.pending_input.is_none() && self.source_offset < raw_end {
-                self.pending_input = Some(source[self.source_offset]);
+                self.pending_input = Some(source.byte_at(self.source_offset).ok_or_else(missing_source)?);
                 self.source_offset += 1;
             }
-            step.work += 1;
             match inflater.advance(&mut self.pending_input, self.source_offset == raw_end).map_err(inflate_error)? {
                 InflateOutcome::NeedInput => {}
                 InflateOutcome::Wrote(byte) => {
@@ -180,8 +180,10 @@ impl PdfFlateCursor {
                         if self.pending_input.is_some() || self.source_offset.checked_sub(unused) != Some(raw_end) {
                             return Err(ValueError::literal(ValueRefusalKind::InvalidValue, "PDF Flate payload has trailing data"));
                         }
-                        let expected = u32::from_be_bytes(source[raw_end..].try_into().expect("four-byte RFC 1950 checksum"));
-                        self.source_offset = source.len();
+                        let mut checksum = [0; 4];
+                        if source.read_bytes(raw_end, &mut checksum) != checksum.len() { return Err(missing_source()); }
+                        let expected = u32::from_be_bytes(checksum);
+                        self.source_offset = source.byte_len();
                         if (self.adler_b << 16) | self.adler_a != expected {
                             return Err(ValueError::literal(ValueRefusalKind::InvalidValue, "PDF Flate Adler-32 checksum differs"));
                         }
@@ -324,12 +326,14 @@ pub fn encode_tiff(data: &[u8], columns: u32, colors: u32, bits: u32) -> Result<
     predictor::transform_tiff(data, columns, colors, bits, true)
 }
 
-fn zlib_window(source: &[u8]) -> Result<usize, ValueError> {
-    if source.len() < 6 {
+fn missing_source() -> ValueError { ValueError::invariant("PDF Flate source lost an admitted byte") }
+
+fn zlib_window(source: &(impl ByteReadSource + ?Sized)) -> Result<usize, ValueError> {
+    if source.byte_len() < 6 {
         return Err(ValueError::literal(ValueRefusalKind::InvalidValue, "PDF Flate frame is too short"));
     }
-    let cmf = source[0];
-    let flg = source[1];
+    let cmf = source.byte_at(0).ok_or_else(missing_source)?;
+    let flg = source.byte_at(1).ok_or_else(missing_source)?;
     if cmf & 15 != 8 || cmf >> 4 > 7 || !u16::from_be_bytes([cmf, flg]).is_multiple_of(31) {
         return Err(ValueError::literal(ValueRefusalKind::InvalidValue, "invalid PDF Flate zlib header"));
     }

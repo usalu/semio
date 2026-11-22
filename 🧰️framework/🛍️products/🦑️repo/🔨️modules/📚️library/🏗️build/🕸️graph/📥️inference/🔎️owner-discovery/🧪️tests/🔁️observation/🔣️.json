@@ -33,5 +33,13 @@
       "component": false,
       "expected": "authored"
     }
+  ],
+  "catalog": [
+    {"scope": "manifest", "status": "ENOENT", "expected": "registry"},
+    {"scope": "native-root", "status": "ENOTDIR", "expected": "registry"},
+    {"scope": "implicit", "status": "ENOENT", "expected": "omitted"},
+    {"scope": "manifest", "status": "EACCES", "expected": "error"},
+    {"scope": "native-root", "status": "symlink", "expected": "unsafe"},
+    {"scope": "manifest", "status": "file", "expected": "admitted"}
   ]
 }

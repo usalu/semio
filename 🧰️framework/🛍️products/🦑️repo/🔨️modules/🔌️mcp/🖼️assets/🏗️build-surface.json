@@ -27,6 +27,16 @@
   "set": { "NO_COLOR": "1", "FORCE_COLOR": "0" },
   "flagTypes": {
     "--parallel": { "type": "integer", "minimum": 1, "maximum": 256 },
+    "--slo": { "type": "list" },
+    "--limit": { "type": "integer", "minimum": 1, "maximum": 1000000 },
+    "--local-workers": { "type": "integer", "minimum": 1, "maximum": 256 },
+    "--max-bytes": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
+    "--port": { "type": "integer", "minimum": 0, "maximum": 65535 },
+    "--grpc-port": { "type": "integer", "minimum": 0, "maximum": 65535 },
+    "--worker-port": { "type": "integer", "minimum": 0, "maximum": 65535 },
+    "--load-interval": { "type": "integer", "minimum": 1, "maximum": 86400 },
+    "--client-pid": { "type": "integer", "minimum": 1, "maximum": 4194304 },
+    "--owner-pid": { "type": "integer", "minimum": 1, "maximum": 4194304 },
     "--projects": { "type": "list" },
     "--exclude": { "type": "list" },
     "--targets": { "type": "list" },
@@ -150,6 +160,21 @@
       "kind": "query",
       "positional": [{ "name": "target", "pattern": "^[^\\s:-][^\\s:]*:[^\\s:]+(:[^\\s:]+)?$", "description": { "en": "Task as project:target[:configuration].", "de": "Task als Projekt:Target[:Konfiguration]." } }]
     },
+    {
+      "operation": "test-file",
+      "kind": "execute",
+      "bind": { "--json": true },
+      "positional": [
+        {
+          "name": "files",
+          "argv": true,
+          "description": {
+            "en": "Test files as an array of paths, relative to the checkout or absolute; each runs as its suite runner would run it, without reading the project graph (the result lists one row per file with status, counts and, for a failure, the tail of its output).",
+            "de": "Testdateien als Array von Pfaden, relativ zum Checkout oder absolut; jede läuft so, wie ihr Suite-Runner sie ausführen würde, ohne den Projektgraphen zu lesen (das Ergebnis führt eine Zeile je Datei mit Status, Zählern und bei einem Fehler dem Ende ihrer Ausgabe auf)."
+          }
+        }
+      ]
+    },
     { "operation": "preflight", "kind": "query" },
     { "operation": "leases", "subcommand": "status", "kind": "query", "bind": { "--json": true } },
     { "operation": "capacity", "subcommand": "status", "kind": "query", "bind": { "--json": true } },
@@ -157,6 +182,16 @@
     { "operation": "cache", "subcommand": "status", "kind": "query", "bind": { "--json": true } },
     { "operation": "cache", "subcommand": "verify", "kind": "query", "bind": { "--json": true } },
     { "operation": "remote-cache", "subcommand": "status", "kind": "query", "flags": [] },
+    {
+      "operation": "remote-cache",
+      "subcommand": "evidence",
+      "kind": "query",
+      "flags": [],
+      "positional": [
+        { "name": "action", "optional": true, "enum": ["list", "show"], "description": { "en": "list (default) names the evidence entries, show compares the kept and the refused result of one.", "de": "list (Standard) nennt die Belege, show vergleicht das behaltene und das abgelehnte Ergebnis eines Belegs." } },
+        { "name": "id", "optional": true, "pattern": "^[0-9A-Za-z._-]{1,160}$", "description": { "en": "Evidence id from list; required for show.", "de": "Beleg-Id aus list; für show erforderlich." } }
+      ]
+    },
     { "operation": "remote-execution", "subcommand": "status", "kind": "query", "flags": [] },
     { "operation": "doctor", "kind": "query", "flags": ["--only", "--strict", "--json"], "bind": { "--json": true } },
     {

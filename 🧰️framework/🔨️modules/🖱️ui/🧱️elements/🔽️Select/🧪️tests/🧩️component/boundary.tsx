@@ -8,7 +8,7 @@ import { ShellScopeContext, type ShellScope } from "../../../🐚️ShellScope/�
 afterEach(() => vi.restoreAllMocks());
 
 function Fixture({ windowed = false, offset }: { windowed?: boolean; offset?: number }) {
-  return <div data-window-silhouette={windowed ? "" : undefined}><Select defaultOpen><SelectTrigger aria-label="Mode"><SelectValue /></SelectTrigger><SelectContent sideOffset={offset}><SelectItem value="alpha">Alpha</SelectItem><SelectItem value="beta">Beta</SelectItem></SelectContent></Select></div>;
+  return <div data-window-silhouette={windowed ? "" : undefined}><Select id="boundary-select" defaultOpen><SelectTrigger aria-label="Mode"><SelectValue /></SelectTrigger><SelectContent sideOffset={offset}><SelectItem value="alpha">Alpha</SelectItem><SelectItem value="beta">Beta</SelectItem></SelectContent></Select></div>;
 }
 
 describe("select shared boundaries", () => {
@@ -46,7 +46,7 @@ describe("select shared boundaries", () => {
   it("keeps the shell portal and listbox focus and keyboard contract", () => {
     const layer = document.createElement("div");
     document.body.append(layer);
-    const scope = { portalLayerRef: { current: layer } } as ShellScope;
+    const scope = { portalLayerRef: { current: layer } } as unknown as ShellScope;
     const { getByRole, unmount } = render(<ShellScopeContext.Provider value={scope}><div style={{ overflow: "hidden" }}><Fixture windowed /></div></ShellScopeContext.Provider>);
     const content = getByRole("listbox");
     const trigger = getByRole("combobox");

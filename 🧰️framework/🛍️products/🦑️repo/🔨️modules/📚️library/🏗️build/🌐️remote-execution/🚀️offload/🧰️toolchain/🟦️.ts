@@ -32,7 +32,7 @@ export function detectWorkerRustcV1(cwd:string,environment:Environment=process.e
  return Object.freeze({
   tools:Object.freeze({[policy.tool.name]:Object.freeze({path,readable:Object.freeze([root])})}),
   toolchain:Object.freeze({...parsed,targets}),
-  properties:Object.freeze(targets.map(target=>({name:p.targetPrefix+target,value:"1"}))),
+  properties:Object.freeze([{name:p.format,value:p.formatValue},...targets.map(target=>({name:p.targetPrefix+target,value:"1"}))]),
  });
 }
 

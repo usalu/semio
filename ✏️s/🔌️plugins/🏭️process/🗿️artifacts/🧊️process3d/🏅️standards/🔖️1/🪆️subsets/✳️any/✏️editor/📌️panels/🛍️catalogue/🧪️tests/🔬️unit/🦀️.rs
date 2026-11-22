@@ -33,6 +33,7 @@ async fn catalogue_lists_workshop_wood_machines() {
 /// 🪚️ Equivalent analytic and imported solids admit the same capability rows.
 #[semio_framework_async_macros::async_test]
 async fn catalogue_flags_a_violated_max_rule_and_not_a_satisfied_one() {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     use semio_s_artifact_process_process3d_model::snapshot::{brep_snapshot_for_working_solid, pack_imported_brep, CapabilityParameter, CapabilityRule, MeasureRecipe, Stock, StockQuantity, Workshop};
     let law: serde_json::Value = serde_json::from_str(include_str!("stock-capabilities.json")).unwrap();
     let [width, depth, height] = std::array::from_fn(|axis| law["stockSizeMetres"][axis].as_f64().unwrap());
@@ -63,7 +64,14 @@ async fn catalogue_flags_a_violated_max_rule_and_not_a_satisfied_one() {
         let rows = projection["children"][0]["children"].as_array().unwrap();
         for (expected, row) in capabilities.iter().zip(rows) {
             assert_eq!(row["key"].as_str().unwrap(), format!("process3d-catalogue.saw.{}", expected["id"].as_str().unwrap()));
-            assert_eq!(row["component"]["target"]["activation"].as_str() == Some("addStep"), expected["available"].as_bool().unwrap(), "{row}");
+            let available = expected["available"].as_bool().unwrap();
+            let component = &row["component"];
+            assert_eq!(component["target"]["activation"].as_str() == Some("addStep"), available, "{row}");
+            let placement = component["rowActions"].as_array().and_then(|actions| actions.iter().find(|action| action["verb"] == "placeCapability"));
+            assert_eq!(placement.is_some(), available, "{row}");
+            if available {
+                assert_eq!(component["target"]["args"], serde_json::json!({ "machineId": "saw", "capabilityId": expected["id"] }));
+            }
         }
         assert_eq!(rows.len(), capabilities.len());
         assert!(rendered.contains("needs stock height"));
@@ -140,6 +148,7 @@ fn window_view(node_key: &str, open: Option<bool>, offset: u32, rows: u32) -> Vi
 /// never summarises the remainder as a `+n` / `…more` continuation row.
 #[test]
 fn an_oversized_catalogue_stamps_its_full_capability_count() {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     let json = project(&oversized_workshop(), &TreeWindows::unhosted());
     let (total, offset, rows) = container_of(&json, PROCESS_3D_PLAY_CATALOGUE_WORKSHOP);
     assert_eq!(total, 80, "the workshop section stamps every capability: {json}");
@@ -153,6 +162,7 @@ fn an_oversized_catalogue_stamps_its_full_capability_count() {
 /// section authors itself CLOSED, so it is already the closed case on a first paint.
 #[test]
 fn a_closed_catalogue_section_stamps_its_total_with_no_rows() {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     let json = project(&oversized_workshop(), &TreeWindows::unhosted());
     let (total, offset, rows) = container_of(&json, PROCESS_3D_PLAY_CATALOGUE_STOCK);
     assert_eq!(total, 4, "the author-closed stock section still states its four kinds: {json}");
@@ -170,6 +180,7 @@ fn a_closed_catalogue_section_stamps_its_total_with_no_rows() {
 /// row's own `{machine}.{capability}` id.
 #[test]
 fn a_catalogue_window_request_materialises_exactly_its_slice() {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     let view = window_view(PROCESS_3D_PLAY_CATALOGUE_WORKSHOP, Some(true), 40, 6);
     let json = project(&oversized_workshop(), &TreeWindows::for_body(&view, PROCESS_3D_PLAY_BODY_CATALOGUE));
     let (total, offset, rows) = container_of(&json, PROCESS_3D_PLAY_CATALOGUE_WORKSHOP);
@@ -184,6 +195,7 @@ fn a_catalogue_window_request_materialises_exactly_its_slice() {
 /// `addStep` activation (the domain-pick form of law (d) is pinned on `📌️panels/🗿️artifact`).
 #[test]
 fn catalogue_rows_are_action_rows_not_domain_pick_targets() {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     let view = window_view(PROCESS_3D_PLAY_CATALOGUE_WORKSHOP, Some(true), 0, 4);
     let json = project(&oversized_workshop(), &TreeWindows::for_body(&view, PROCESS_3D_PLAY_BODY_CATALOGUE));
     let projection: serde_json::Value = serde_json::from_str(&json).expect("catalogue projection json");

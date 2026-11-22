@@ -31,6 +31,22 @@ mod retained_retirement;
 #[path = "🖊️draw-list-queries-and-push/🦀️.rs"]
 mod draw_list_queries_and_push;
 
+#[path = "🫥️group-alpha/🦀️.rs"]
+mod group_alpha;
+pub use group_alpha::{GroupAlpha, GroupAlphaMark};
+
+#[cfg(test)]
+#[path = "🫥️group-alpha-tests/🦀️.rs"]
+mod group_alpha_tests;
+
+#[path = "🎞️chrome-motion/🦀️.rs"]
+mod chrome_motion;
+pub use chrome_motion::{chrome_enter, chrome_enter_forget, chrome_transition, chrome_transition_pending, cubic_bezier, dialog_zoom, enter_progress, introduced_pulse_opacity, transition_key, Transitions};
+
+#[cfg(test)]
+#[path = "🎞️chrome-motion-tests/🦀️.rs"]
+mod chrome_motion_tests;
+
 pub use semio_framework_value_paged_list::{PagedList, PagedListError};
 /// 📚 Bounded draw-owned paged storage.
 pub type PagedVec<T> = PagedList<T, 262144>;

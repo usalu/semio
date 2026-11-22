@@ -18,8 +18,108 @@ use super::*;
 /// `paint::sync_interactive_state_node_step`'s `SelectMint` phase, through
 /// `UiTree::mint_composite_row`.
 pub fn select_item_row(select: &UiSelectNode, item: &UiSelectItem) -> UiNode {
-    UiNode::Button(UiButtonNode { id: Some(item.value.clone()), icon_id: IconName::CircleDot, label: item.label.clone(), action: with_item_value_arg(&select.on_change, &item.value), style: None, presence: UiPresence::default(), menu: None })
+    select_item_row_committing(select, item, &item.value)
 }
+
+/// ☑️ [`select_item_row`] whose click commits `commit` instead of the item's own `value` — the row's key stays the item value, so two
+/// rows may commit the same string (an icon selector's mode rows migrate the stored icon, which is empty for several modes).
+pub fn select_item_row_committing(select: &UiSelectNode, item: &UiSelectItem, commit: &str) -> UiNode {
+    UiNode::Button(UiButtonNode { id: Some(item.value.clone()), icon_id: IconName::CircleDot, label: item.label.clone(), action: with_item_value_arg(&select.on_change, commit), style: None, presence: UiPresence::default(), menu: None })
+}
+
+/// 🏷️ What choosing the item `item_value` of the retained select `id` commits: the item value itself, except for an icon selector's mode
+/// select (a synthesized cell, see [`icon_select_cell`]) whose rows commit React's `migrateIconKindToIconSelectorMode` result. The ONE
+/// answer the row builder, the keyboard commit and the assistive-technology option dispatch share.
+pub fn select_commit_value(tree: &UiTree, id: NodeId, item_value: &str) -> String {
+    let icon = tree.node(id).and_then(|node| node.parent).and_then(|parent| tree.node(parent)).and_then(|parent| match &parent.spec.0 {
+        UiNode::IconSelect(icon) => Some(icon),
+        _ => None,
+    });
+    match (icon, semio_ui_declaration::ui::IconSelectorMode::from_id(item_value)) {
+        (Some(icon), Some(mode)) if tree.node(id).is_some_and(|node| matches!(&node.key, NodeKey::Explicit(key) if *key == icon_select_cell_key(icon, 0))) => UiIconSelectNode::migrate_mode(&icon.value, mode),
+        _ => item_value.to_string(),
+    }
+}
+
+//#region 🖼️IconSelectCells
+/// 🧩️ How many cells an icon selector synthesizes: the mode select, the editor and the import and clear buttons.
+pub const ICON_SELECT_CELLS: usize = 4;
+
+/// 🔑️ The key of cell `index` (`mode`, `field`, `import`, `clear`) — React's `${id}.mode`, `${id}.field`; the buttons follow the same shape.
+pub fn icon_select_cell_key(select: &UiIconSelectNode, index: usize) -> String {
+    format!("{}.{}", select.id, ["mode", "field", "import", "clear"][index.min(ICON_SELECT_CELLS - 1)])
+}
+
+/// 🏷️ The localized mode names (`ui.iconSelector.mode.*`); empty while the host named no locale — there is no default language.
+pub fn icon_select_mode_label(locale: Option<semio_ui_locale::Locale>, mode: semio_ui_declaration::ui::IconSelectorMode) -> &'static str {
+    use semio_ui_declaration::ui::IconSelectorMode::*;
+    locale.map_or("", |locale| {
+        let labels = <semio_ui_locale::UiIconSelectorLabels as semio_ui_locale::AppLabels>::labels(locale, semio_ui_locale::Terminology::Native);
+        match mode {
+            Url => labels.url,
+            Shortcode => labels.shortcode,
+            Math => labels.math,
+            Data => labels.data,
+            Emoji => labels.emoji,
+            Text => labels.text,
+            Vector => labels.vector,
+        }
+        .as_str()
+    })
+}
+
+/// 🧩️ Cell `index` of an icon selector as the retained node React's `IconSelector` renders there: the mode `Select` (its rows commit the
+/// migrated icon through [`select_commit_value`]), the mono `longText` editor (its commit policy encodes the typed text under the stored
+/// icon's mode), the Import button (the shell's file-picker verb) and the Clear button (`""`). A locked selector disables all four.
+pub fn icon_select_cell(select: &UiIconSelectNode, index: usize, locale: Option<semio_ui_locale::Locale>) -> (String, UiNode) {
+    use semio_ui_declaration::ui::IconSelectorMode;
+    let key = icon_select_cell_key(select, index);
+    let presence = UiPresence { state: if select.locked() { UiState::Disabled } else { UiState::Normal }, ..UiPresence::default() };
+    let (mode, inner) = if select.uniform { UiIconSelectNode::decode_mode(&select.value) } else { (UiIconSelectNode::decode_mode(&select.value).0, String::new()) };
+    let common = |pick: fn(&semio_ui_locale::UiCommonLabels) -> semio_ui_locale::LabelText| -> &'static str {
+        locale.map_or("", |locale| pick(<semio_ui_locale::UiCommonLabels as semio_ui_locale::AppLabels>::labels(locale, semio_ui_locale::Terminology::Native)).as_str())
+    };
+    let node = match index {
+        0 => UiNode::Select(UiSelectNode {
+            appearance: Default::default(),
+            id: key.clone(),
+            value: mode.id().to_string(),
+            items: IconSelectorMode::ALL.iter().map(|mode| UiSelectItem { value: mode.id().to_string(), label: Label::data(icon_select_mode_label(locale, *mode)) }).collect(),
+            placeholder: None,
+            on_change: select.on_change.clone(),
+            presence,
+            menu: None,
+        }),
+        1 => UiNode::Input(UiInputNode {
+            id: key.clone(),
+            input_kind: "longText".into(),
+            value: inner,
+            placeholder: Some(Label::data(icon_select_editor_placeholder(mode))),
+            commit: Some(format!("{}{}", UiInputNode::ICON_MODE_COMMIT, mode.id())),
+            on_change: select.on_change.clone(),
+            presence,
+            ..Default::default()
+        }),
+        2 => UiNode::Button(UiButtonNode { id: Some(key.clone()), icon_id: IconName::from("folder-open"), label: Label::data(common(|labels| labels.import_file)), action: select.import_action(), style: None, presence, menu: None }),
+        _ => UiNode::Button(UiButtonNode { id: Some(key.clone()), icon_id: IconName::from("x"), label: Label::data(common(|labels| labels.clear)), action: with_item_value_arg(&select.on_change, ""), style: None, presence, menu: None }),
+    };
+    (key, node)
+}
+
+/// 💬️ React's editor placeholders, verbatim (`🎴️IconSelector/🟦️.tsx`).
+fn icon_select_editor_placeholder(mode: semio_ui_declaration::ui::IconSelectorMode) -> &'static str {
+    use semio_ui_declaration::ui::IconSelectorMode::*;
+    match mode {
+        Url => "https://example.com/icon.png",
+        Shortcode => "Shortcode (emoji alias, UI icon, or catalog id — stored as :name:)",
+        Math => "Typst markup (e.g. $x^2$)",
+        Data => "data:image/png;base64,… or other data:… URL",
+        Emoji => "Emoji or Typst emoji body (stored as emoji:…)",
+        Text => "Short label (stored as text:…)",
+        Vector => "Catalog id or inline <svg …>",
+    }
+}
+//#endregion 🖼️IconSelectCells
 
 /// 🏷️ Clones `action`, merging a `"value"` key into its JSON `args` object (creating one if absent)
 /// so a click on one synthesized `Select` row is distinguishable from any other row once a later

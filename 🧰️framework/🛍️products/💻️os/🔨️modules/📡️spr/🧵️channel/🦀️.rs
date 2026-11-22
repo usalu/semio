@@ -54,11 +54,9 @@ pub use wire_entries::{AppDocumentIdentity, ChildHeadPackEntry, ChildPackEntry, 
 
 
 //#region 🔖️DocumentArchive
-#[path="📦️archive/🧬️schema/🦀️.rs"]
-pub mod archive_schema;
+pub use semio_os_channel_archive::{archive_decoding,archive_reopen_route,archive_schema};
+pub use semio_os_channel_archive_ingress as archive_ingress;
 pub use archive_schema::{DocumentArchiveArtifactRef,DocumentArchiveOwnerRef,OwnedDocumentMemberPackEntry,DocumentArchivePack,DOCUMENT_ARCHIVE_MAXIMUM_MEMBERS,DOCUMENT_ARCHIVE_MAXIMUM_BYTES,DOCUMENT_ARCHIVE_VERSION};
-#[path="📦️archive/🛬️decode/🦀️.rs"]
-pub mod archive_decoding;
 pub use archive_decoding::{decode_document_archive_bytes_controlled,decode_document_archive_head_controlled};
 
 #[path = "🚚️archive-load/🦀️.rs"]

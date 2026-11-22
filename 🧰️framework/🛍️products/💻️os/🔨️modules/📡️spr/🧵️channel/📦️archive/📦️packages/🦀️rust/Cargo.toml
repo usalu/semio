@@ -1,0 +1,36 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-os-channel-archive"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "App channel document archive schema, decoding and bounded receiving"
+
+[package.metadata.semio]
+role = "framework"
+id = "os-channel-archive"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-hash = { workspace = true }
+semio-framework-value-persistent = { path = "../../../../../../../../🔨️modules/🌱️value/📋️list/🔗️persistent/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-native-owned = { path = "../../../../../../../../🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
+semio-framework-io-control = { path = "../../../../../../../../🔨️modules/🚪️io/⏱️control/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+serde_json = "1.0.140"
+
+[[test]]
+name = "reopen-route"
+path = "../../🧪️tests/🧭️reopen-route/🦀️.rs"

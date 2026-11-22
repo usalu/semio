@@ -334,5 +334,95 @@
    "observable": "none",
    "rustc": false
   }
- ]
+ ],
+ "closure": {
+   "crate": "hashbrown-115f633071e2d1af",
+   "expectedSvh": "de0a7a8908fde68700ed4d9139cf8e81",
+   "cases": [
+     {
+       "label": "missing declared workspace library",
+       "paths": [
+         "build/hashbrown/115f633071e2d1af/out"
+       ],
+       "artifacts": [],
+       "code": false,
+       "metadata": false
+     },
+     {
+       "label": "same-named sysroot library is insufficient",
+       "paths": [
+         "build/hashbrown/115f633071e2d1af/out",
+         "sysroot"
+       ],
+       "artifacts": [
+         {
+           "path": "sysroot/libhashbrown-fc967dc9b21ca6b7.rmeta",
+           "hash": "b99338b1ed8e53e6bb0a766ea35dedb7"
+         }
+       ],
+       "code": false,
+       "metadata": false
+     },
+     {
+       "label": "directory outside Cargo layout",
+       "paths": [
+         "other/115f633071e2d1af/out"
+       ],
+       "artifacts": [],
+       "code": true,
+       "metadata": true
+     },
+     {
+       "label": "unrelated Cargo unit",
+       "paths": [
+         "build/hashbrown/fc967dc9b21ca6b7/out"
+       ],
+       "artifacts": [],
+       "code": true,
+       "metadata": true
+     },
+     {
+       "label": "present matching metadata",
+       "paths": [
+         "build/hashbrown/115f633071e2d1af/out"
+       ],
+       "artifacts": [
+         {
+           "path": "build/hashbrown/115f633071e2d1af/out/libhashbrown-115f633071e2d1af.rmeta",
+           "hash": "de0a7a8908fde68700ed4d9139cf8e81"
+         }
+       ],
+       "code": true,
+       "metadata": true
+     },
+     {
+       "label": "present stale metadata",
+       "paths": [
+         "build/hashbrown/115f633071e2d1af/out"
+       ],
+       "artifacts": [
+         {
+           "path": "build/hashbrown/115f633071e2d1af/out/libhashbrown-115f633071e2d1af.rmeta",
+           "hash": "a99338b1ed8e53e6bb0a766ea35dedb7"
+         }
+       ],
+       "code": false,
+       "metadata": true
+     },
+     {
+       "label": "archive that can contain metadata",
+       "paths": [
+         "build/hashbrown/115f633071e2d1af/out"
+       ],
+       "artifacts": [
+         {
+           "path": "build/hashbrown/115f633071e2d1af/out/libhashbrown-115f633071e2d1af.rlib",
+           "hash": "de0a7a8908fde68700ed4d9139cf8e81"
+         }
+       ],
+       "code": true,
+       "metadata": true
+     }
+   ]
+ }
 }

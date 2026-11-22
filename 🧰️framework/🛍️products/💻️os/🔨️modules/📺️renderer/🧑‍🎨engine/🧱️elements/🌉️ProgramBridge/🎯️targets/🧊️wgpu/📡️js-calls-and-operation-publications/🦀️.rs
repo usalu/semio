@@ -228,14 +228,12 @@ pub struct OperationPublication {
 }
 
 /// 🧯️ What an unreadable bridge answer becomes: a fault the shell tells, and a re-read of everything it may have hidden.
-#[cfg(any(target_arch = "wasm32", test))]
 fn unreadable_operation_publication(detail: String) -> OperationPublication {
     OperationPublication { completed: false, ui_scope: semio_framework::kernel::UiDirtyScope::Full, history_patch: None, fault: Some(format!("wgpu-bridge.operation-publication.unreadable: {detail}")), resync: true }
 }
 
 /// 🏁️ Reads the bridge's publication array (`takeOperationPublications`). An array or an entry this host cannot read is
 /// answered as a fault publication naming what was unreadable — nothing a guest published is dropped in silence.
-#[cfg(any(target_arch = "wasm32", test))]
 pub fn operation_publications_from_json(text: &str) -> Vec<OperationPublication> {
     match serde_json::from_str::<serde_json::Value>(text) {
         Ok(serde_json::Value::Array(entries)) => entries.iter().map(|entry| operation_publication_from_json(entry).unwrap_or_else(unreadable_operation_publication)).collect(),
@@ -245,7 +243,6 @@ pub fn operation_publications_from_json(text: &str) -> Vec<OperationPublication>
 }
 
 /// 🏁️ One entry of [`operation_publications_from_json`]: an absent or null scope asks for nothing, an absent patch is none.
-#[cfg(any(target_arch = "wasm32", test))]
 fn operation_publication_from_json(entry: &serde_json::Value) -> Result<OperationPublication, String> {
     let member = |name: &str| entry.get(name).filter(|value| !value.is_null());
     let ui_scope = match member("uiScope") {

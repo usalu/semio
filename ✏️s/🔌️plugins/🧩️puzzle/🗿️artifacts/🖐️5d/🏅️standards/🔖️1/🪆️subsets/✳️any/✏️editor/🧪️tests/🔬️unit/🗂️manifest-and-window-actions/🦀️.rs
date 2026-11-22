@@ -252,11 +252,16 @@ async fn add_part_kind_materializes_the_declared_kind_default() {
 #[semio_framework_async_macros::async_test]
 async fn set_active_utility_emits_no_ops_and_no_history_entry() {
     let mut app = app_with_registry();
-    let before = projection_of(&app);
-    let result = dispatch(&mut app, SET_ACTIVE_UTILITY_ACTION_ID, Some(&semio_framework_pack_json::json!({ "utilityId": "brush" })), None).expect("switch utility");
-    assert!(result.mutations.is_empty(), "utility switching never emits document operations");
-    assert!(result.requested_effects.is_empty(), "a user utility switch does not re-emit SetActiveUtility");
-    assert_eq!(projection_of(&app), before, "utility switching does not mutate the document");
+    let before = app.document_text().await.expect("document before tool switches");
+    for (action, args) in [
+        (SET_ACTIVE_UTILITY_ACTION_ID, semio_framework_pack_json::json!({ "utilityId": "brush" })),
+        (semio_framework::SET_ACTIVE_TOOL_ACTION_ID, semio_framework_pack_json::json!({ "toolId": "fill" })),
+    ] {
+        let result = dispatch(&mut app, action, Some(&args), None).expect("switch active tool or utility");
+        assert!(result.mutations.is_empty());
+        assert!(result.requested_effects.is_empty());
+    }
+    assert_eq!(app.document_text().await.expect("document after tool switches"), before);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -265,13 +270,20 @@ async fn exact_window_cameras_isolate_render_and_reload_without_document_or_app_
     let mut reopened = Box::new(app_with_registry());
     let window_a = "puzzle5d-board-a";
     let window_b = "puzzle5d-board-b";
+    let world = "puzzle5d-world-a";
     let view_a = window_view(board2d::WINDOW_KIND_ID, window_a);
     let view_b = window_view(board2d::WINDOW_KIND_ID, window_b);
     let before = projection_of(&app);
     let app_config_before = app.config_pack().await.expect("app config before window publications");
+    assert_eq!(app.window_config_generation(&view_a).await.expect("window a before publication"), None);
+    assert_eq!(app.window_config_generation(&view_b).await.expect("window b before publication"), None);
     let result_a = dispatch(&mut app, "setCamera2d", Some(&semio_framework_pack_json::json!({ "camera": { "x": 12.5, "y": -6.5, "zoom": 3.5 } })), Some(window_a)).expect("setCamera2d a");
+    let generation_a = app.window_config_generation(&view_a).await.expect("window a generation").expect("window a published its config");
+    assert!(generation_a > 0);
+    assert_eq!(app.window_config_generation(&view_b).await.expect("window b before publication"), None);
     let result_b = dispatch(&mut app, "setCamera2d", Some(&semio_framework_pack_json::json!({ "camera": { "x": -42.5, "y": 7.5, "zoom": 1.5 } })), Some(window_b)).expect("setCamera2d b");
-    assert!(result_a.mutations.is_empty() && result_b.mutations.is_empty());
+    let result_world = dispatch(&mut app, "setSunIntensity", Some(&semio_framework_pack_json::json!({ "value": 0.42 })), Some(world)).expect("set the world's sun intensity");
+    assert!(result_a.mutations.is_empty() && result_b.mutations.is_empty() && result_world.mutations.is_empty());
     assert_eq!(projection_of(&app), before);
     let app_config_after = app.config_pack().await.expect("app config after window publications");
     assert_eq!((app_config_after.pack, app_config_after.spr), (app_config_before.pack, app_config_before.spr));
@@ -279,15 +291,19 @@ async fn exact_window_cameras_isolate_render_and_reload_without_document_or_app_
     let board_b = render_window(&mut app, board2d::BODY_KEY, window_b);
     assert!(board_a.contains("12.5") && board_a.contains("-6.5"));
     assert!(board_b.contains("-42.5") && board_b.contains("7.5"));
-    assert_eq!(app.window_config_generation(&view_a).await.expect("window a generation"), Some(1));
-    assert_eq!(app.window_config_generation(&view_b).await.expect("window b generation"), Some(1));
-    let packs = app.window_config_packs().await.expect("two exact window packs");
-    assert_eq!(packs.len(), 2);
+    assert_eq!(app.window_config_generation(&view_a).await.expect("window a generation"), Some(generation_a));
+    assert!(app.window_config_generation(&view_b).await.expect("window b generation").is_some_and(|generation| generation > 0));
+    let world_config = world_window_config(&mut app, world).await;
+    assert_eq!(world_config.sun.intensity, 0.42);
+    let packs = app.window_config_packs().await.expect("three exact window packs");
+    assert_eq!(packs.len(), 3);
     for pack in packs {
-        semio_plugin::restore_fixture_window_config(&mut reopened.0, pack, reopened.1.cx()).await.expect("reload exact window pack");
+        let Puzzle5dTestApp(app, scope) = reopened.as_mut();
+        semio_plugin::restore_fixture_window_config(app, pack, scope.cx()).await.expect("reload exact window pack");
     }
     assert_eq!(render_window(&mut reopened, board2d::BODY_KEY, window_a), board_a);
     assert_eq!(render_window(&mut reopened, board2d::BODY_KEY, window_b), board_b);
+    assert_eq!(world_window_config(&mut reopened, world).await, world_config);
     close_app(&mut reopened);
     close_app(&mut app);
 }

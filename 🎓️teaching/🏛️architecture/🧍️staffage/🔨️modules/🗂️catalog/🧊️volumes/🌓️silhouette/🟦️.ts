@@ -35,7 +35,7 @@ export type AxisFrame = { readonly u: { readonly x: number; readonly y: number; 
 type SeparateCopies = { readonly coordinatesPerCopy: number; readonly indices: Uint32Array };
 
 /** 🧊️ A posed triangle mesh with its bone frame and authored presentation attributes. Exact body references may share the same geometry. */
-export type World = { readonly geometrySource?: World; readonly separateCopies?: SeparateCopies; readonly id: string; readonly bone?: string; readonly positions: Float64Array; readonly indices: Uint32Array; readonly frame?: AxisFrame; readonly slender?: boolean; readonly penM?: number; readonly copyVertices?: number; readonly envelope?: boolean; readonly emitter?: boolean; readonly texture?: boolean; readonly soft?: boolean; readonly sectionFaces?: readonly string[] };
+export type World = { readonly geometrySource?: World; readonly separateCopies?: SeparateCopies; readonly id: string; readonly bone?: string; readonly material?: string; readonly positions: Float64Array; readonly indices: Uint32Array; readonly frame?: AxisFrame; readonly slender?: boolean; readonly penM?: number; readonly copyVertices?: number; readonly envelope?: boolean; readonly emitter?: boolean; readonly texture?: boolean; readonly soft?: boolean; readonly sectionFaces?: readonly string[] };
 type Vec = readonly [number, number, number];
 
 /** 🧭️ The cut axis (world x, y, z) and the sign of the retained side of the section of each viewpoint: the elevation is seen from -z (what lies at larger z remains), the front from +x (smaller x), the plan from +y (smaller y); a section with `retained: "near"` keeps the opposite side. */
@@ -49,7 +49,7 @@ const meshBytes = (key: string, mesh: CopyMesh): number => 192 + key.length * 2 
 
 /** 🧊️ The mesh of one copy of a solid in its bone frame after `transform` (without `repeat`), tessellated once by the kernel per distinct geometry and quality and cached. */
 export function copyMesh(solid: VolumeSolid, quality: { readonly chordM: number; readonly minSegments: number; readonly maxSegments: number }): { readonly positions: Float64Array; readonly indices: Uint32Array } {
-  const { id: _id, bone, material: _material, role: _role, tone: _tone, weights: _weights, tags: _tags, repeat: _repeat, slender: _slender, envelope: _envelope, texture: _texture, sectionFaces: _sectionFaces, ...geometry } = solid as VolumeSolid & Record<string, unknown>;
+  const { id: _id, bone, material: _material, role: _role, tone: _tone, weights: _weights, tags: _tags, repeat: _repeat, slender: _slender, sheet: _sheet, envelope: _envelope, texture: _texture, sectionFaces: _sectionFaces, ...geometry } = solid as VolumeSolid & Record<string, unknown>;
   const key = JSON.stringify([geometry, quality]);
   const hit = MESHES.get(key);
   if (hit) {
@@ -206,7 +206,7 @@ export function worldSolids(asset: Asset, bones: Readonly<Record<string, { reado
       if (maps.length > 1 && !solid.repeat?.rotationRad && disjointTranslations(positions, per)) separateCopies = { coordinatesPerCopy: per, indices: base.indices };
       copyVertices = per / 3;
     }
-    return { ...(source ? { geometrySource: source } : {}), ...(separateCopies ? { separateCopies } : {}), id: solid.id, bone: solid.bone, positions, indices, frame: solid.weights?.length && solid.sectionFaces?.length ? sectionAxes(f) : { u: f.u, v: f.v, w: f.w }, ...(solid.slender === true ? { slender: true, copyVertices, ...(((pens[solid.role] ?? pens.body) ?? 0) > 0 ? { penM: (((pens[solid.role] ?? pens.body) as number) * scale) / 1000 } : {}) } : {}), ...(solid.envelope === true ? { envelope: true } : {}), ...(solid.tags?.some((tag) => tag === "emitter" || emitters.has(tag)) === true ? { emitter: true } : {}), ...(solid.texture === true ? { texture: true } : {}), ...(solid.sectionFaces === undefined ? {} : { sectionFaces: solid.sectionFaces }) };
+    return { ...(source ? { geometrySource: source } : {}), ...(separateCopies ? { separateCopies } : {}), id: solid.id, bone: solid.bone, material: solid.material, positions, indices, frame: solid.weights?.length && solid.sectionFaces?.length ? sectionAxes(f) : { u: f.u, v: f.v, w: f.w }, ...(solid.slender === true ? { slender: true, copyVertices, ...(((pens[solid.role] ?? pens.body) ?? 0) > 0 ? { penM: (((pens[solid.role] ?? pens.body) as number) * scale) / 1000 } : {}) } : {}), ...(solid.envelope === true ? { envelope: true } : {}), ...(solid.tags?.some((tag) => tag === "emitter" || emitters.has(tag)) === true ? { emitter: true } : {}), ...(solid.texture === true ? { texture: true } : {}), ...(solid.sectionFaces === undefined ? {} : { sectionFaces: solid.sectionFaces }) };
   });
 }
 
@@ -327,14 +327,14 @@ export function clipTriangle(t: readonly Vec[], axis: number, plane: number, kee
 }
 
 /** ✏️ The 2D shapes of one viewpoint as the slender solids follow them: the bone, whether the shape is closed and filled, its rings and the pen width in metres at the scale (the shape's own `penMm`, else the pen of its role). */
-export type Drawn = readonly { readonly bone: string; readonly closed: boolean; readonly filled: boolean; readonly rings: readonly Ring[]; readonly penM: number }[];
+export type Drawn = readonly { readonly bone: string; readonly material?: string; readonly closed: boolean; readonly filled: boolean; readonly rings: readonly Ring[]; readonly penM: number }[];
 
 const DRAWN = new WeakMap<object, Drawn>();
 
 /** ✏️ {@link Drawn} of the evaluated shapes of one viewpoint at 1:`scale`, memoised per array. */
-export function drawnOf(evaluated: readonly { readonly shape: { readonly bone?: string; readonly role: string; readonly penMm?: number; readonly filled?: boolean }; readonly rings: readonly Ring[]; readonly closed: boolean }[], scale: number, pens: Readonly<Record<string, number | null>>): Drawn {
+export function drawnOf(evaluated: readonly { readonly shape: { readonly bone?: string; readonly material?: string; readonly role: string; readonly penMm?: number; readonly filled?: boolean }; readonly rings: readonly Ring[]; readonly closed: boolean }[], scale: number, pens: Readonly<Record<string, number | null>>): Drawn {
   let hit = DRAWN.get(evaluated);
-  if (hit === undefined) DRAWN.set(evaluated, (hit = evaluated.map((s) => ({ bone: s.shape.bone ?? "", closed: s.closed, filled: s.shape.filled !== false, rings: s.rings, penM: (((s.shape.penMm ?? pens[s.shape.role]) ?? 0) * scale) / 1000 }))));
+  if (hit === undefined) DRAWN.set(evaluated, (hit = evaluated.map((s) => ({ bone: s.shape.bone ?? "", ...(s.shape.material === undefined ? {} : { material: s.shape.material }), closed: s.closed, filled: s.shape.filled !== false, rings: s.rings, penM: (((s.shape.penMm ?? pens[s.shape.role]) ?? 0) * scale) / 1000 }))));
   return hit;
 }
 
@@ -371,11 +371,11 @@ function stripOf(points: readonly Point[]): { readonly line: readonly Point[]; r
   return { line: [{ x: cx + ux * lo, y: cy + uy * lo }, { x: cx + ux * hi, y: cy + uy * hi }], length: hi - lo, width: right - left };
 }
 
-/** 🪡️ The width a slender solid is drawn with (C24 refined): of the 2D shape it follows, found by bone and by the nearest centre line (the mean distance of the projected centre line of the solid to the centre line of the shape): an open stroke or an unfilled outline draws its own pen width, a filled strip (at least three times as long as wide) its own width; `undefined` when the viewpoint draws no such shape for the bone. */
-export function followedWidth(bone: string | undefined, centre: readonly Point[], drawn: Drawn): number | undefined {
+/** 🪡️ The width a slender solid is drawn with (C24 refined): of the 2D shape it follows, found on the same bone and material where the projected centre line lies within half the drawn width on average and within half the physical width of a filled strip: an open stroke or an unfilled outline draws its own pen width (the caller leaves out the outlines that are the edge of a body, {@link strokeDrawings}), a filled strip (at least three times as long as wide) its own width; `undefined` when the viewpoint draws no such shape for the bone. */
+export function followedWidth(bone: string | undefined, centre: readonly Point[], drawn: Drawn, material?: string, projectedWidthM = Infinity): number | undefined {
   let [best, width] = [Infinity, undefined as number | undefined];
   for (const d of drawn) {
-    if (d.bone !== bone || d.rings.length === 0) continue;
+    if (d.bone !== bone || d.rings.length === 0 || (material !== undefined && d.material !== undefined && material !== d.material)) continue;
     let [lines, w] = [polylines(d), d.penM];
     if (d.closed && d.filled) {
       const strip = stripOf(d.rings.flat());
@@ -384,7 +384,8 @@ export function followedWidth(bone: string | undefined, centre: readonly Point[]
     }
     if (!(w > 0)) continue;
     const mean = centre.reduce((t, p) => t + distanceToPolylines(p, lines), 0) / centre.length;
-    if (mean < best) [best, width] = [mean, w];
+    const reach = d.closed && d.filled ? Math.min(w, projectedWidthM) : w;
+    if (mean <= reach / 2 && mean < best) [best, width] = [mean, w];
   }
   return width;
 }
@@ -399,7 +400,7 @@ export function strokesOf(view: Viewpoint, solid: World, drawn?: Drawn): readonl
   for (let c = 0; c < copies; c++) {
     const vertices = Array.from({ length: per }, (_, i) => project(view, solid.positions[(c * per + i) * 3]!, solid.positions[(c * per + i) * 3 + 1]!, solid.positions[(c * per + i) * 3 + 2]!));
     if (line === undefined) {
-      out.push(...axisStroke(vertices, drawn === undefined ? solid.penM ?? 0 : followedWidth(solid.bone, vertices, drawn) ?? 0));
+      out.push(...axisStroke(vertices, drawn === undefined ? solid.penM ?? 0 : followedWidth(solid.bone, vertices, drawn, solid.material, stripOf(vertices).width) ?? 0));
       continue;
     }
     const centre = clusterPoints(line, solid.positions, c * per).map((q) => project(view, q[0], q[1], q[2]));
@@ -407,7 +408,7 @@ export function strokesOf(view: Viewpoint, solid: World, drawn?: Drawn): readonl
     const step = Math.max(1, Math.ceil(vertices.length / 300));
     const offsets = vertices.filter((_, i) => i % step === 0).map((v) => Math.min(...segments.map(([a, b]) => distanceToPolylines(v, [[a, b]])))).sort((x, y) => x - y);
     const truth = Math.max(1e-4, 2 * (offsets[Math.floor(0.9 * (offsets.length - 1))] ?? 0));
-    const followed = drawn === undefined ? undefined : followedWidth(solid.bone, centre, drawn);
+    const followed = drawn === undefined ? undefined : followedWidth(solid.bone, centre, drawn, solid.material, truth);
     const width = followed ?? (drawn === undefined ? Math.max(solid.penM ?? 0, truth) : truth);
     for (const [a, b] of segments) out.push(strokeQuad(a, b, width));
   }
@@ -435,9 +436,10 @@ export function referenceOf(view: Viewpoint, solids: readonly World[], section: 
   const visible: Group[] = section === undefined ? cut : [];
   const full: Group[] = section === undefined ? cut : [];
   const side = { axis: CUT[view].axis, retained: section?.retained === "near" ? -CUT[view].retained : CUT[view].retained };
+  const followable = geometry === "drawing" && section === undefined && drawn !== undefined ? strokeDrawings(view, solids, drawn) : drawn;
   for (const whole of solids) {
     if (geometry === "drawing" && section === undefined && whole.slender === true) {
-      for (const ring of strokesOf(view, whole, drawn)) cut.push([ring]);
+      for (const ring of strokesOf(view, whole, followable)) cut.push([ring]);
       continue;
     }
     const p = whole.positions;
@@ -1044,6 +1046,28 @@ const REFERENCES = new WeakMap<readonly World[], WeakMap<object, Map<string, Ret
 const SOFT = new WeakMap<readonly World[], readonly World[]>();
 const NO_DRAWN: object = {};
 
+const MESHES_PROJECTED = new WeakMap<readonly World[], Map<Viewpoint, readonly Group[]>>();
+
+/** 🗃️ The projected triangles of the solids as they are (a slender solid at its true section, never widened to a pen), memoised per solid list and view: what an unfilled closed outline is asked about in {@link bodyOutline}. */
+function meshProjected(view: Viewpoint, solids: readonly World[]): readonly Group[] {
+  let byView = MESHES_PROJECTED.get(solids);
+  if (byView === undefined) MESHES_PROJECTED.set(solids, (byView = new Map()));
+  let hit = byView.get(view);
+  if (hit === undefined) byView.set(view, (hit = referenceOf(view, solids, undefined, undefined, "mesh").cut));
+  return hit;
+}
+
+/** 🫙️ Whether an unfilled closed outline is the edge of a body: the solids as they are fill at least half of what it encloses ({@link encloses}). Its centre line is then the body edge and the pen is drawing convention on both sides of the comparison: the drawing counts as filled up to the centre line, and a slender solid that runs along it (a rim wire, an edge band) keeps its true width instead of the pen. An outline around a void (a hoop, a frame) is geometry at pen width (C24). */
+export function bodyOutline(view: Viewpoint, solids: readonly World[], rings: Group): boolean {
+  return enclosesCached(rings, meshProjected(view, solids), solids);
+}
+
+/** 🖊️ The drawn shapes a slender solid may follow ({@link followedWidth}): all but the unfilled closed outlines that are the edge of a body ({@link bodyOutline}). */
+export function strokeDrawings(view: Viewpoint, solids: readonly World[], drawn: Drawn): Drawn {
+  if (!solids.some((solid) => solid.slender === true) || !drawn.some((d) => d.closed && !d.filled && d.penM > 0)) return drawn;
+  return drawn.filter((d) => !(d.closed && !d.filled && bodyOutline(view, solids, d.rings)));
+}
+
 /** 🗃️ {@link referenceOf} memoised per solid list, drawing, view and section plane, so that the tiles of one measurement project the triangles once. */
 function referenceCached(view: Viewpoint, solids: readonly World[], section: ViewSection | undefined, drawn?: Drawn): ReturnType<typeof referenceOf> {
   let byDrawn = REFERENCES.get(solids);
@@ -1072,6 +1096,12 @@ function enclosesCached(rings: Group, groups: readonly Group[], key: object): bo
   if (hit === undefined) byGroups.set(key, (hit = encloses(rings, groups)));
   return hit;
 }
+/** 🔎️ How many cells the raster of a rule comparison has at least along the long side of what it compares: an object of a few features (a valve of 60 mm at 1:50, most assets at 1:500) is otherwise drawn with a few dozen cells, and the cells along its outline, half of each in doubt, weigh several percent of its area. */
+export const SMALL_OBJECT_CELLS = 256;
+
+/** 📏️ The cell of the raster on which a rule compares a drawing with a volume: a quarter of the smallest feature, finer for an object whose long side `longM` would have fewer than {@link SMALL_OBJECT_CELLS} cells, never below 0.05 mm. The limits of the rules stay in smallest features; only the error of the raster shrinks with the object. */
+export const comparisonCell = (featureM: number, longM: number): number => Math.max(5e-5, Math.min(featureM / 4, Number.isFinite(longM) && longM > 0 ? longM / SMALL_OBJECT_CELLS : Infinity));
+
 /** 🔬️ Compares one view of an evaluated pose with the reference of the volume on one raster of `cells` cells across the long side (by default 800, more where a cell would be coarser than 20 mm, at most 4000). */
 export function measureView(asset: Asset, state: Evaluated, solids: readonly World[], view: Viewpoint, scale: number, cells?: number, featureM?: number, tileCells: number = TILE_CELLS, wantEdge = false, window?: { readonly core: Box; readonly box: Box; readonly cell: number; readonly prepared?: { readonly reference: readonly Group[]; readonly visible: readonly Group[]; readonly full: readonly Group[]; readonly evaluated: readonly EvaluatedShape[] } }): Measured {
   const rep = asset.representations[String(scale) as unknown as keyof Asset["representations"]] as unknown as { readonly pens: Record<string, number | null>; readonly sections?: Partial<Record<Viewpoint, ViewSection>> };
@@ -1098,7 +1128,7 @@ export function measureView(asset: Asset, state: Evaluated, solids: readonly Wor
   }
   void grow;
   const long = Math.max(bounds.maxX - bounds.minX, bounds.maxY - bounds.minY);
-  const cell = window?.cell ?? Math.max(2e-4, featureM !== undefined && cells === undefined ? featureM / 4 : long / (cells ?? Math.min(GATE.cellsMax, Math.max(GATE.cells, Math.round(long / GATE.cellM)))));
+  const cell = window?.cell ?? (featureM !== undefined && cells === undefined ? comparisonCell(featureM, long) : Math.max(2e-4, long / (cells ?? Math.min(GATE.cellsMax, Math.max(GATE.cells, Math.round(long / GATE.cellM))))));
   const frame: Box = { minX: bounds.minX - 2 * cell, minY: bounds.minY - 2 * cell, maxX: bounds.maxX + 2 * cell, maxY: bounds.maxY + 2 * cell };
   if (window === undefined && Math.max(frame.maxX - frame.minX, frame.maxY - frame.minY) / cell > tileCells) return measureBanded(asset, state, solids, view, scale, featureM, tileCells, frame, cell);
   const box: Box = window?.box ?? frame;
@@ -1121,8 +1151,11 @@ export function measureView(asset: Asset, state: Evaluated, solids: readonly Wor
     if (s.shape.filled !== false) return true;
     let known = solid.get(s);
     if (known === undefined) {
-      const whole = referenceCached(view, solids, section, drawnFor(asset, state, view, scale));
-      known = enclosesCached(s.rings, section === undefined ? whole.cut : [...whole.cut, ...whole.visible], whole.cut);
+      if (section === undefined) known = bodyOutline(view, solids, s.rings);
+      else {
+        const whole = referenceCached(view, solids, section, drawnFor(asset, state, view, scale));
+        known = enclosesCached(s.rings, [...whole.cut, ...whole.visible], whole.cut);
+      }
       solid.set(s, known);
     }
     return known;

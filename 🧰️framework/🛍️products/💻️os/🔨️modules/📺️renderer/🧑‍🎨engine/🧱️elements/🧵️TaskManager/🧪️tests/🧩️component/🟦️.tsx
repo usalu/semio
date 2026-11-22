@@ -17,6 +17,7 @@ import { buildTaskManagerTableScene, createTaskManagerDispatcher, installTasksV1
 import { type SpawnedJobRowV1 } from "../../../🔌️PluginRuntime/💼️job-ledger/🟦️.ts";
 import { type AgentConversationEntry } from "../../../🔗️AgentBridge/🟢️shared/🟦️.tsx";
 import runningTasks from "../🧫️fixtures/🏃️running-tasks.json";
+import actorTable from "../🧫️fixtures/🧵️actor-table.json";
 import { ActivationRegistry } from "@semio-tech/framework";
 import { ShardClient } from "@semio-tech/framework/actor/shard-client";
 import { type ShardBudget } from "@semio-tech/framework/actor/shard-client/wire";
@@ -90,6 +91,14 @@ describe("buildTaskManagerTableScene", () => {
     expect(() => JSON.parse(scene.columnsJson)).not.toThrow();
     expect(() => JSON.parse(scene.rowsJson)).not.toThrow();
     expect((JSON.parse(scene.rowsJson) as unknown[]).length).toBe(2);
+  });
+});
+describe("actor table fixture", () => {
+  it("replays the language-agnostic actor table law: snapshot rows, twelve columns and the table scene rows", () => {
+    const rows = runtimeMetricsRowsV1({ actors: actorTable.snapshot.actors } as unknown as Parameters<typeof runtimeMetricsRowsV1>[0]);
+    expect(rows).toEqual(actorTable.rows);
+    expect(taskManagerColumns(LABELS)).toEqual(actorTable.columns.en);
+    expect(taskManagerRows(rows, LABELS)).toEqual(actorTable.tableRows.en);
   });
 });
 //#endregion 🔖️PureBuilders

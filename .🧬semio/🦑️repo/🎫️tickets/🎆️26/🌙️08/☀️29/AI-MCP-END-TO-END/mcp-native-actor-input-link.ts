@@ -3,7 +3,11 @@ import { basename, dirname, join, resolve } from "node:path";
 
 const generated = resolve(import.meta.dirname, "🗑️generated");
 const build = join(generated, "native-host", "debug", "build");
-const originalTest = "semio-plugin-actor-input/16449bd215be69a1/fingerprint/test-lib-semio_plugin_actor_input.json";
+const arguments_ = process.argv.slice(2);
+const variantFlag = arguments_.find(argument => argument.startsWith("--linked-variant="));
+const variant = variantFlag?.slice("--linked-variant=".length) ?? "16449bd215be69a1";
+if (!/^[0-9a-f]{16}$/u.test(variant)) throw Error("Exact hexadecimal ActorInput Cargo variant required");
+const originalTest = `semio-plugin-actor-input/${variant}/fingerprint/test-lib-semio_plugin_actor_input.json`;
 const library = new Map<string, { directory: string; fingerprint: string; artifact: string }>();
 const native = new Set<string>();
 for (const packageName of readdirSync(build)) {
@@ -66,4 +70,4 @@ for (const directory of native) args.push("-L", `native=${directory}`);
 console.log("[DEBUG] Relinking Actor Input test against", visited.size, "exact Rust dependencies");
 const compiled = Bun.spawn([rustup, ...args], { env: { ...process.env, CARGO_MANIFEST_DIR: dirname(manifest), CARGO_PKG_NAME: basename(manifest) }, stdout: "inherit", stderr: "inherit" });
 if (await compiled.exited) throw Error("Exact Actor Input relink failed");
-process.exitCode = await Bun.spawn([executable, ...process.argv.slice(2)], { env: process.env, stdout: "inherit", stderr: "inherit" }).exited;
+process.exitCode = await Bun.spawn([executable, ...arguments_.filter(argument => argument !== variantFlag)], { env: process.env, stdout: "inherit", stderr: "inherit" }).exited;

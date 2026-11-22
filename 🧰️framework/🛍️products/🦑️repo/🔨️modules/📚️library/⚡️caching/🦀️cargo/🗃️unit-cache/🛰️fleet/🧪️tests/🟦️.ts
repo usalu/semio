@@ -268,11 +268,12 @@ test("a refusal is re-checked as soon as the credential changes, a unit that ski
  const server=await serve({tokens:{write:"w-token"}}),m=machine("d1","a"),workspaceRoot=directory("dwork");
  const first=await build(m,{...remote(server,"wrong-token"),SEMIO_UNIT_CACHE_WORKSPACE_ROOT:workspaceRoot},["-p","app"]);expect(first.code,first.output).toBe(0);
  expect(statSync(join(m.cache,fleet.layout.state,fleet.layout.denied)).isFile()).toBe(true);
- const skipped=events(m).filter(row=>row.kind==="remote-skip");expect(skipped.some(row=>row.reason==="breaker: denied")).toBe(true);
- expect(statSync(join(workspaceRoot,".cache","f","unit-counters","skipped")).size,"skipped units are counted").toBeGreaterThan(0);
+ const skipped=events(m).filter(row=>row.kind==="remote-skip");expect(skipped.some(row=>(row.reason??"").startsWith("breaker: denied"))).toBe(true);
+ expect(spoolLengthV1(m.cache),"the compiled units wait in the spool, none is dropped").toBeGreaterThan(0);expect(existsSync(join(workspaceRoot,".cache","f","unit-counters","skipped")),"waiting is no skip").toBe(false);
  const before=count(events(m),"remote-publish");
  const second=await build(m,{...remote(server,"w-token"),SEMIO_UNIT_CACHE_WORKSPACE_ROOT:workspaceRoot},["-p","app"],{lane:"l2"});expect(second.code,second.output).toBe(0);
- await waitForUploader(m);expect(count(events(m),"remote-publish"),"the right credential is used at once, not after the window").toBeGreaterThan(before);
+ const casBefore=process.env.SEMIO_CAS_ROOT;process.env.SEMIO_CAS_ROOT=m.cas;
+ try{await settled(m,{...remote(server,"w-token"),SEMIO_UNIT_CACHE_WORKSPACE_ROOT:workspaceRoot});}finally{if(casBefore===undefined)delete process.env.SEMIO_CAS_ROOT;else process.env.SEMIO_CAS_ROOT=casBefore;}expect(count(events(m),"remote-publish"),"the right credential is used at once, not after the window").toBeGreaterThan(before);
  const fault=join(directory("blocked"),"file");writeFileSync(fault,"x");const faulty=machine("d3","a");
  const casFault=await build(faulty,{SEMIO_CAS_ROOT:fault},["-p","app"]);expect(casFault.code,casFault.output).toBe(0);
  const skips=events(faulty).filter(row=>row.kind==="publish-skip");expect(skips.length).toBeGreaterThanOrEqual(7);expect(skips.every(row=>(row.reason??"").startsWith("error"))).toBe(true);
@@ -307,3 +308,31 @@ test("a second upload that the server refuses as a divergence is reported as suc
   expect(seen).toEqual(["PUT ac"]);
  }finally{stub.stop(true);}
 });
+
+test("the contract's timeoutSeconds and retries bound every call and the ride-through of the fleet client, and a slow or failing cache falls back at once",async()=>{
+ let hits=0,slow=true;
+ const stub=Bun.serve({port:0,async fetch(){hits++;if(slow)await Bun.sleep(4000);return new Response("{}",{status:404});}});
+ const environment={SEMIO_REMOTE_CACHE_ENDPOINT:`http://127.0.0.1:${stub.port}`,SEMIO_REMOTE_CACHE_INSTANCE:"main",SEMIO_REMOTE_CACHE_ACCESS:"read-write",SEMIO_REMOTE_CACHE_TOKEN:"w-token"};
+ try{
+  expect(readFleetSettingsV1(directory("absent"),environment)).toMatchObject({timeoutMilliseconds:undefined,retries:undefined});
+  expect(readFleetSettingsV1(directory("garbage"),{...environment,SEMIO_REMOTE_CACHE_TIMEOUT_SECONDS:"soon",SEMIO_REMOTE_CACHE_RETRIES:"-1"})).toMatchObject({timeoutMilliseconds:undefined,retries:undefined});
+  const settings=readFleetSettingsV1(directory("bounded"),{...environment,SEMIO_REMOTE_CACHE_TIMEOUT_SECONDS:"1",SEMIO_REMOTE_CACHE_RETRIES:"0"})!;
+  expect(settings).toMatchObject({timeoutMilliseconds:1000,retries:0});
+  const client=createFleetClientV1(settings),started=Date.now();
+  expect(await client.getResult("a".repeat(64)),"the 3 s lookup budget is cut to the contract's one second").toBe("down");
+  expect(Date.now()-started).toBeLessThan(2500);
+  const unbounded=createFleetClientV1(readFleetSettingsV1(directory("policy"),environment)!),policyStarted=Date.now();
+  expect(await unbounded.getResult("b".repeat(64))).toBe("down");expect(Date.now()-policyStarted,"without the contract the policy's own 3 s apply").toBeGreaterThan(2500);
+  slow=false;
+  const flaky=Bun.serve({port:0,fetch(){hits++;return new Response("{}",{status:404});}});
+  const reach=readFleetSettingsV1(directory("retry"),{...environment,SEMIO_REMOTE_CACHE_ENDPOINT:`http://127.0.0.1:${flaky.port}`,SEMIO_REMOTE_CACHE_RETRIES:"0"})!;
+  expect(await createFleetClientV1(reach).getResult("c".repeat(64))).toBe("miss");flaky.stop(true);
+  let attempts=0;const failing=(async()=>{attempts++;throw Error("connection reset");}) as unknown as typeof fetch;
+  const ride=directory("ride");mkdirSync(join(ride,fleet.layout.state),{recursive:true});writeFileSync(join(ride,fleet.layout.state,fleet.layout.reachable),"");
+  for(const [retries,expected] of [[0,1],[2,3]] as const){
+   attempts=0;rmSync(join(ride,fleet.layout.state,fleet.layout.down),{force:true});writeFileSync(join(ride,fleet.layout.state,fleet.layout.reachable),"");
+   const counted=createFleetClientV1(readFleetSettingsV1(ride,{...environment,SEMIO_REMOTE_CACHE_RETRIES:String(retries)})!,{fetch:failing});
+   expect(await counted.getResult("d".repeat(64))).toBe("down");expect(attempts,`retries=${retries}`).toBe(expected);
+  }
+ }finally{stub.stop(true);}
+},30000);

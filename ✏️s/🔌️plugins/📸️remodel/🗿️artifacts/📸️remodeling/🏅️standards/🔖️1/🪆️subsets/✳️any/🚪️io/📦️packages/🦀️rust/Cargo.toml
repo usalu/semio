@@ -23,7 +23,7 @@ pack = { workspace = true }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-async = { workspace = true }
 semio-framework-diagnostic = { workspace = true }
-semio-os = { workspace = true }
+semio-os-host-workflow = { workspace = true }
 semio-os-kernel = { workspace = true }
 semio-framework-pack-json = { workspace = true }
 semio-plugin = { workspace = true }
@@ -33,13 +33,9 @@ semio-s-artifact-remodel-remodeling-model-diff = { workspace = true }
 semio-s-artifact-stdio-las = { workspace = true }
 semio-s-artifact-stdio-ply = { workspace = true }
 semio-s-artifact-stdio-png = { workspace = true }
-semio-s-artifact-stdio-semio = { workspace = true }
 semio-s-artifact-stdio-semio-base = { workspace = true }
-semio-s-artifact-stdio-semio-drawing-export = { workspace = true }
-semio-s-artifact-stdio-semio-drawing-import = { workspace = true }
 semio-s-artifact-stdio-semio-image = { workspace = true }
 semio-s-artifact-stdio-semio-image-export = { workspace = true }
 semio-s-artifact-stdio-semio-image-import = { workspace = true }
 semio-s-artifact-stdio-semio-mesh = { workspace = true }
 semio-s-artifact-stdio-semio-mesh-export = { workspace = true }
-semio-s-artifact-stdio-semio-mesh-import = { workspace = true }

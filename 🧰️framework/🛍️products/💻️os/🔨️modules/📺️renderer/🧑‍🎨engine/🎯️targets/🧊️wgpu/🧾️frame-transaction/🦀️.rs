@@ -5,7 +5,7 @@
 extern crate infinite_canvas as infinite_world;
 use semio_renderer_wgpu_app_runtime::{AppFrameAfterChrome, AppFrameBuild, AppHandle, AppMailbox, AppRuntime, FrameBuildBoundaryStep, FrameBuildCursor, FrameFinishBoundaryStep, FrameFinishCursor, discard_frame_input_candidate, frame_child_step, frame_inline_gate, frame_inline_progress, frame_receive_close, frame_received_child, frame_unpriced_child, step_world3d_camera_fit_after_snapshot, world3d_ingest_trace, world3d_interaction_trace};
 use semio_renderer_wgpu_frame_actions::{AppInteractionState, FrameActionOwners, FrameDirectives, FrameInputActionStep, WORLD3D_DEADLINE_ID_BYTES, transfer_frame_input_action};
-use semio_renderer_wgpu_frame_presentation::{AppPresentStallWatch, AppPresenter};
+use semio_renderer_wgpu_frame_presentation::AppPresenter;
 use semio_renderer_wgpu_runtime_mailbox::{EFFECT_STORM_BUDGET, RuntimeApply, RuntimeMailbox, RuntimePresentationWitness};
 use semio_renderer_wgpu_shell_input::PointerCapture;
 use semio_renderer_wgpu_shell_prefs::shell_language_axes;

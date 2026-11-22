@@ -27,7 +27,12 @@ pub fn update_transform_drag(scene: &mut BoardSceneState, outbox: &mut BoardOutb
     let Some(mut drag) = gestures.transform_drag.take() else {
         return;
     };
-    drag.radians = snap_transform_angle(transform_ring_angle_delta(drag.pivot, drag.grab, world), snap);
+    let radians = snap_transform_angle(transform_ring_angle_delta(drag.pivot, drag.grab, world), snap);
+    if radians == drag.radians {
+        gestures.transform_drag = Some(drag);
+        return;
+    }
+    drag.radians = radians;
     for (id, (x0, y0)) in &drag.start_positions {
         let rotated = rotate_point_about(drag.pivot, Point::new(*x0, *y0), drag.radians);
         if let Some(node) = scene.nodes.get_mut(id) {
@@ -40,14 +45,9 @@ pub fn update_transform_drag(scene: &mut BoardSceneState, outbox: &mut BoardOutb
             handle.angle = angle0 + drag.radians;
         }
     }
-    let preview = BoardOwnedEvent::transform_preview(drag.start_positions.keys().filter_map(|id| scene.nodes.get(id).map(|node| (id.as_str(), node.x, node.y))));
+    outbox.publish_transform_previews(drag.start_positions.keys().filter_map(|id| scene.nodes.get(id).map(|node| (id.as_str(), node.x, node.y))));
     gestures.transform_drag = Some(drag);
     scene.bump_content_scene_generation();
-    if let Ok(event) = preview {
-        if let Ok(reservation) = outbox.events.reserve_event(event) {
-            outbox.publish_event_reservation(reservation);
-        }
-    }
 }
 
 /// 🏁️ Ends the gesture with ONE `rotate` gesture record carrying the turned ids, the pivot and the

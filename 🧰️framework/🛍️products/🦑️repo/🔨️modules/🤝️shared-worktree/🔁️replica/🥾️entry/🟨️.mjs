@@ -7,7 +7,7 @@ import {dirname,extname,join,posix,resolve,win32} from "node:path";
 import {fileURLToPath} from "node:url";
 
 /** 🔢️ Version of the installed boot program, which moves forward only after its own self-test. */
-export const bootVersionV1=7;
+export const bootVersionV1=8;
 
 /** 🧭️ Where the module lives below the repository root. */
 export const moduleRelativeV1="🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree";
@@ -131,25 +131,27 @@ function launch(spec,context){
  const {root,moduleRel,environment,limits,signal,state,say}=context;
  return new Promise(done=>{
   const boot=join(root,".cache","f","boot"),beatFile=join(boot,"beat.json"),readyFile=join(boot,"ready.json"),startedAt=Date.now(),replica=join(root,...moduleRel.split("/"),"🔁️replica"),reloadToken=randomBytes(16).toString("hex");
-  let ready=false,waiting=false,stopping=false,finished=false,recording=false,killed="",termTimer;
+  let ready=false,waiting=false,stopping=false,finished=false,recording=false,killed="",termTimer,ownedBeat,ownedBeatAt=startedAt;
   const proc=spawn(process.execPath,[spec.script,"--boot-child",...context.args],{cwd:existsSync(replica)?replica:root,env:{...environment,SEMIO_FLEET_ENTRY:"boot",SEMIO_FLEET_BOOT_ROOT:root,SEMIO_FLEET_BOOT_BASE:spec.base,SEMIO_FLEET_BOOT_SOURCE:spec.source,SEMIO_FLEET_BOOT_REASON:spec.reason,SEMIO_FLEET_BOOT_FORCE:spec.force?"1":"",SEMIO_FLEET_BOOT_RELOAD_TOKEN:reloadToken,...spec.watch===undefined?{}:{SEMIO_FLEET_CODE_WATCH:spec.watch}},stdio:"inherit",windowsHide:true});
   const pid=proc.pid??0,kill=(why,beat,reason)=>{
    killed=killed||why;
    if(beat!==undefined&&reason!==undefined&&beat.phase==="run"){
     if(recording)return;
     recording=true;
-    recordBlock(root,pid,beat,reason).catch(()=>{}).finally(()=>{try{proc.kill("SIGKILL");}catch{}});
+    recordBlock(root,pid,beat,reason).catch(()=>{}).finally(()=>{if(!finished&&!stopping)try{proc.kill("SIGKILL");}catch{}});
     return;
    }
    try{proc.kill("SIGKILL");}catch{}
   };
   const watch=setInterval(()=>{
-   const beat=readJson(beatFile),marker=readJson(readyFile),now=Date.now();
+   const seen=readJson(beatFile),marker=readJson(readyFile),now=Date.now();
    if(marker?.pid===pid){ready=marker.waiting!==true;waiting=marker.waiting===true;}
-   if(beat?.pid===pid){
+   if(seen?.pid===pid&&Number.isFinite(seen.wallMs)&&seen.wallMs>=ownedBeatAt&&seen.wallMs<=now){ownedBeat=seen;ownedBeatAt=seen.wallMs;}
+   const beat=ownedBeat;
+   if(beat!==undefined){
     if(beat.phase==="run")ready=true;
-    if(now-(beat.wallMs??now)>limits.silentMs)kill("the watchdog of the daemon fell silent",beat,"silent");
-    else if(beat.phase==="run"&&(beat.lagMs??0)>=limits.killMs)kill(`the event loop was blocked for ${Math.round((beat.lagMs??0)/1000)} s${beat.activity===undefined||beat.activity==="idle"?"":` in ${beat.activity}`}`,beat,"blocked");
+    if(!stopping&&now-ownedBeatAt>limits.silentMs)kill("the watchdog of the daemon fell silent",beat,"silent");
+    else if(!stopping&&beat.phase==="run"&&(beat.lagMs??0)>=limits.killMs)kill(`the event loop was blocked for ${Math.round((beat.lagMs??0)/1000)} s${beat.activity===undefined||beat.activity==="idle"?"":` in ${beat.activity}`}`,beat,"blocked");
    }
    if((ready||waiting)&&state.get().phase==="starting")state.set({phase:waiting?"waiting":"running"});
    if(!ready&&!waiting&&now-startedAt>limits.readyMs&&!stopping)kill(`the daemon was not ready after ${Math.round(limits.readyMs/1000)} s`);

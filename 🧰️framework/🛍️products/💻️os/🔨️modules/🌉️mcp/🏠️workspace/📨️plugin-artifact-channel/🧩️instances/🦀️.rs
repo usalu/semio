@@ -43,6 +43,7 @@ impl PluginArtifactChannel {
         let origin = crate::compiled_components::native_instance_origin(self.compiled.package_hash).map_err(|error| Self::not_wired("guest poll origin", format!("{error:?}")))?;
         let mut guest = self.issue_native_poll(actor, origin, scope)?;
         let mut owed = vec![semio_framework::kernel::Event::InstanceOpen {
+            purpose: semio_framework::kernel::ActorInstanceOpenPurpose::Ordinary,
             request: semio_framework::kernel::ActorInstanceOpenRequest { activation_generation: 1, instance_id: instance, request_sequence: 1 },
             app_id: semio_framework::kernel::AppInstanceId(self.app_ref.app_id.clone()),
             actor: self.actor_label.clone(),

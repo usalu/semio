@@ -66,15 +66,16 @@ pub fn evaluate(
     retained_eval: Option<&str>,
     turn_started_us: Option<u64>,
     effect: &mut semio_framework_value::RetainedAllocationEffect<'_>,
-) -> Result<(Emit<Generation3dMutation, Generation3dConfigMutation>, FlowEvalPublication), Fault> {
+    mounted: Option<&mut preview_eval::MountedPreviewTick>,
+) -> Result<(Option<(Emit<Generation3dMutation, Generation3dConfigMutation>, FlowEvalPublication)>, semio_framework_value::RetainedCloneProgress), semio_framework_value::ValueError> {
     let generate = window_kind_id == semio_s_artifact_procedural_3d_mode_generate::windows::preview::GENERATION_3D_PLAY_WINDOW_GENERATE_PREVIEW;
     let state = doc.snapshot.generation.as_state();
     let selected = if generate {
         let generation = semio_s_artifact_procedural_3d_model::generation_by_id(state, cfg.snapshot.selected_generation_id.as_deref());
         if generation.is_none() {
-            session.begin_window_tick(window_id, effect.grant()).map_err(|error| Fault::from(error.to_string()))?;
-            session.note_window_tick_outcome(window_id, false, effect.grant()).map_err(|error| Fault::from(error.to_string()))?;
-            return Ok((Emit { ui_scope: chain_ui_scope(window_kind_id, false), ..Default::default() }, FlowEvalPublication::Changed(None)));
+            session.begin_window_tick(window_id, effect.grant())?;
+            session.note_window_tick_outcome(window_id, false, effect.grant())?;
+            return Ok((Some((Emit { ui_scope: chain_ui_scope(window_kind_id, false), ..Default::default() }, FlowEvalPublication::Changed(None))), Default::default()));
         }
         generation
     } else {
@@ -83,19 +84,24 @@ pub fn evaluate(
     let patched = selected.map(|generation| semio_s_artifact_procedural_3d_model::generation_host_snapshot_for(&doc.snapshot.host_snapshot, state, Some(&generation.id)));
     let host_snapshot = patched.as_ref().unwrap_or(&doc.snapshot.host_snapshot);
     let source = if generate { preview_eval::PreviewEvaluationSource::Current } else { preview_eval::PreviewEvaluationSource::WithFallback };
-    let outcome = preview_eval::evaluate_tick_with_seeds(window_id, window_kind_id, host_snapshot, preview_eval::preview_tolerance(&cfg.snapshot.lod_mode), session, retained_eval, source, turn_started_us, effect, |seeds| {
+    let project = |seeds: &mut _| {
         if let Some(generation) = selected {
             semio_os_flow::forms_bridge::add_generation_variable_seeds(host_snapshot, |id| generation.values.get(id), seeds);
         }
-    });
+    };
+    let tolerance = preview_eval::preview_tolerance(&cfg.snapshot.lod_mode);
+    let outcome = match mounted {
+        Some(mounted) => mounted.step(window_id, window_kind_id, host_snapshot, tolerance, session, retained_eval, source, turn_started_us, effect, project),
+        None => preview_eval::evaluate_tick_with_seeds(window_id, window_kind_id, host_snapshot, tolerance, session, retained_eval, source, turn_started_us, effect, project).map(|outcome| (Some(outcome), Default::default())),
+    };
     if let Some(displaced) = patched {
         displaced.retire_cold();
     }
-    let outcome = outcome.map_err(|error| Fault::from(error.to_string()))?;
-    Ok((
+    let (outcome, progress) = outcome?;
+    Ok((outcome.map(|outcome| (
         Emit { extension_invocations: outcome.extension_invocations, ui_scope: chain_ui_scope(window_kind_id, outcome.census_moved), ..Default::default() },
         outcome.publication,
-    ))
+    )), progress))
 }
 
 /// 🔁️ The wave a just-folded extension answer unblocked, run INLINE inside that answer's own guest
@@ -124,7 +130,9 @@ pub fn continue_inline(
         return Ok((Emit { ui_scope: chain_ui_scope(window_kind_id, false), ..Default::default() }, FlowEvalPublication::Retained));
     }
     session.arm_window_tick(window_id, effect.grant()).map_err(|error| Fault::from(error.to_string()))?;
-    evaluate(window_id, window_kind_id, doc, cfg, session, retained_eval, turn_started_us, effect)
+    evaluate(window_id, window_kind_id, doc, cfg, session, retained_eval, turn_started_us, effect, None)
+        .map_err(|error| Fault::from(error.to_string()))?
+        .0.ok_or_else(|| Fault::from("generation3d-inline-preview-did-not-complete"))
 }
 
 pub fn handle(_payload: &FlowEvalTick, _doc: &ArtifactView<'_, Generation3dSnapshot>, _cfg: &ConfigView<'_, Generation3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {

@@ -194,6 +194,10 @@ pub trait PluginApp: Send + 'static {
     fn close_diagnostic(&self) -> String {
         String::new()
     }
+    /// 🔭️ The archive load phase and store replacement state a stalled live cleanup is parked on, quoted against `grant`.
+    fn document_load_diagnostic(&self, _grant: RetainedCloneGrant) -> String {
+        String::new()
+    }
     /// ▶️ Whether this app still owes the host a typed-operation round trip — the sole source the
     /// reactor turn folds into `TurnStatus::MoreWork` for typed operations, and so the only thing a
     /// host call that reads nothing but the status (the eventless drain poll, a `refresh-ui` settle)
@@ -419,6 +423,18 @@ pub trait PluginApp: Send + 'static {
     /// id — what a reader that composes on read takes beside the parent (design §20.15), e.g. the `child:<slot>/<childId>`
     /// dependencies of an inference request on this document.
     async fn child_head_packs(&self) -> Result<Vec<protocol::ChildHeadPackEntry>, Fault>;
+    /// 📎 Authorizes a durable folder record against the exact document and schema of this mounted app.
+    fn validate_folder_archive_target(&self, _document: &str, _schema: &str) -> bool { false }
+
+    /// 🫴 Accepts the verified original pages into this app's retained load registry.
+    fn begin_paged_document_archive_load(
+        &mut self, _operation: u64,
+        _archive: &mut Option<protocol::channel::archive_ingress::VerifiedDocumentArchiveParent>,
+        _cx: &mut semio_framework_job::StepContext<'_>,
+    ) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
+        Err(document_load_fault(DOCUMENT_LOAD_UNAVAILABLE_CODE, "paged document hydration is unavailable for this app").into())
+    }
+
     /// 🎟️ Transfers one recursive archive owner into a fixed operation slot before decode.
     fn begin_document_archive_load(&mut self, _operation:u64, _archive:&mut protocol::DocumentArchivePack, _admission:&mut semio_plugin_document_media::OriginalDocumentArchiveAdmission, _cx:&mut semio_framework_job::StepContext<'_>) -> Result<bool,semio_framework_job::OriginalTurnFailure> {
         Err(document_load_fault(DOCUMENT_LOAD_UNAVAILABLE_CODE, "recursive document archive loading is unavailable for this app").into())
@@ -586,6 +602,20 @@ pub trait PluginApp: Send + 'static {
     fn original_media_live_document(&self) -> Option<semio_plugin_decl_media::original_media::runtime::RawLiveDocument<'_>> { None }
     /// 🚪️ Whether the app has returned all owners of a picker format operation.
     fn original_media_format_closed(&self) -> bool { true }
+
+    /// 🌿 Advertises a mounted decoder that accepts the paid paged natural source.
+    fn natural_source_capability(&self) -> Option<(semio_plugin_decl_media::original_media::natural_source_gate::NaturalSourceDeclaration<'static>, u32)> {
+        None
+    }
+
+    /// 🕊️ Reports whether the mounted natural format owner has reached terminal retirement.
+    fn natural_source_format_closed(&self) -> bool { true }
+
+    /// 💾 Advances the registered paged decoder, Store publication and Original source retirement.
+    async fn advance_natural_source_format(
+        &mut self, _source: &mut semio_plugin_decl_media::original_media::natural_source::NaturalFileSourceGuest,
+        _cx: &mut semio_framework_job::StepContext<'_>,
+    ) -> Result<(), semio_framework_job::OriginalTurnFailure> { Ok(()) }
     /// 🧾️ Posts the original publication receipt once the document edit commits.
     fn observe_original_media_commit(&mut self, _picker: &mut semio_plugin_decl_media::original_media::RawMediaPicker, _cx: &semio_framework_job::StepContext<'_>) -> Result<(), semio_framework_job::OriginalTurnFailure> { Ok(()) }
     /// 🗂️ Advances one retained picker format operation on its original source.

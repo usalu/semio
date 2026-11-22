@@ -18,7 +18,7 @@ import {eventuallyV1,writeHostViewV1} from "../../../../🧪️tests/🧰️clus
 import {createTestCheckoutV1,externHash,testHostProbeV1,testRustEnvironmentV1,type TestCheckoutV1} from "../../🧰️workspace/🟦️.ts";
 
 /** 🔏️ The whole fleet on one machine with real processes, scratch ports and an explicit scratch store: the signed cache server is the real server module on a real socket (in this process: the sidecar entry builds a CAS host store whose disk guard refuses writes on a nearly full disk), the scheduler and two agents are the replica daemon's sidecar entries as real processes, the requester and a third machine are unit-cache wrapper calls. A unit is offloaded to an agent (signed gRPC and worker API), uploaded under the requester's key with its slot through a claim, and taken by the third machine without any compiler; no secret exists anywhere in the scratch store. */
-const bun=registeredToolExecutableV1("bun"),sidecar=fileURLToPath(new URL("../../../../🛰️sidecar/🟦️.ts",import.meta.url)),scratch=realpathSync(mkdtempSync(join(tmpdir(),"signed-fleet-")));
+const bun=registeredToolExecutableV1("bun"),sidecar=fileURLToPath(new URL("../../../../🛰️sidecar/🟦️.ts",import.meta.url)),scratch=realpathSync(mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir(),"signed-fleet-")));
 const store=join(scratch,"store"),children:ReturnType<typeof Bun.spawn>[]=[],roots=new Map<string,string>();
 const freePort=async():Promise<number>=>{for(;;){const port=21000+Math.floor(Math.random()*20000);if(await new Promise<boolean>(done=>{const server=createServer();server.once("error",()=>{done(false);});server.listen(port,"127.0.0.1",()=>{server.close(()=>{done(true);});});}))return port;}};
 const NETWORK="127.0.0.0/8";
@@ -52,7 +52,7 @@ afterAll(async()=>{await cache?.stop().catch(()=>{});for(const child of children
 const countingRustc=(directory:string):{path:string;log:string}=>{
  mkdirSync(directory,{recursive:true});
  const path=join(directory,"counting-rustc.sh"),log=join(directory,"rustc-calls.log");
- writeFileSync(path,`#!/bin/sh\ncase " $* " in *" -vV "*) ;; *) echo call >> '${log}';; esac\nexec rustc "$@"\n`);chmodSync(path,0o755);
+ writeFileSync(path,`#!/bin/sh\ncase " $* " in *" -vV "*|*" -Z ls="*) ;; *) echo call >> '${log}';; esac\nexec rustc "$@"\n`);chmodSync(path,0o755);
  return{path,log};
 };
 const callsOf=(log:string):number=>existsSync(log)?readFileSync(log,"utf8").split("\n").filter(Boolean).length:0;

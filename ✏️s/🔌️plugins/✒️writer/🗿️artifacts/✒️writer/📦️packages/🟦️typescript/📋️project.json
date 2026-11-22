@@ -77,5 +77,14 @@
         "command": "repo ./📜️script.ts verify snapshot-sqlite-source"
       }
     }
+  },
+  "metadata": {
+    "semio": {
+      "artifactPackage": {
+        "kind": "typescript-artifact-package",
+        "source": "../../🟦️.ts",
+        "target": "build"
+      }
+    }
   }
 }

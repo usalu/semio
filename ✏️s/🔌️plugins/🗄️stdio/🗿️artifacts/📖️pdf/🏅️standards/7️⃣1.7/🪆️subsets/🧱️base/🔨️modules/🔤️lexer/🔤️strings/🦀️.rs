@@ -36,6 +36,10 @@ impl PdfByteStringCursor {
 
     /// 📥️ Decode into caller-owned storage and account for every transition, including refusals.
     pub fn advance(&mut self, source: &[u8], output: &mut [u8], budget: usize) -> StringReceipt {
+        self.advance_bytes(|position| source.get(position).copied(), output, budget)
+    }
+
+    pub(super) fn advance_bytes(&mut self, byte_at: impl Fn(usize) -> Option<u8>, output: &mut [u8], budget: usize) -> StringReceipt {
         let mut written = 0;
         let mut work = 0;
         let status = loop {
@@ -51,7 +55,7 @@ impl PdfByteStringCursor {
             } else {
                 if work == budget { break Ok(StringStep::More); }
                 work += 1;
-                let Some(&byte) = source.get(self.position) else { break Err("unterminated PDF byte string"); };
+                let Some(byte) = byte_at(self.position) else { break Err("unterminated PDF byte string"); };
                 match self.read(byte) {
                     Ok(true) => self.position += 1,
                     Ok(false) => {}

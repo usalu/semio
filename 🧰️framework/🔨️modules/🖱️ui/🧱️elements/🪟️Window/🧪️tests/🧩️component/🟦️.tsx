@@ -22,12 +22,15 @@ import paneEdges from "../🧫️fixtures/pane-edges.json";
 import { Pane } from "../../../📌️WindowPane/🟦️.tsx";
 import { type Anchor } from "../../../../🔨️modules/⚓️panel-anchor/🟦️.ts";
 import Decimal from "decimal.js";
+import * as clippingModule from "polygon-clipping";
+import { WindowChrome } from "../../../🗂️WindowChrome/🟦️.tsx";
+import expandedActionsClip from "../🧫️fixtures/expanded-actions-clip.json";
 // #endregion 🔌️Adapters
 
 it("attaches actual Window pane chrome to its host edges in either direction and fold state", () => {
   for (const direction of paneEdges.directions) for (const folded of paneEdges.folds) {
     const view = render(<div dir={direction}><Window id="edge-window" fill utilityBar={<div>Tools</div>} utilityBarFolded={folded} actionPane={<div>Actions</div>} actionsFolded={folded} measures={<div>Options</div>} measuresFolded={folded} search={{ input: { placeholder: uiDataLabel("Search") } }}>
-      {paneEdges.anchors.map(row => <Pane key={row.anchor} id={`edge-${row.anchor}`} anchor={row.anchor as Anchor} icon="app-window" label="Pane" folded={folded}><div>Pane content</div></Pane>)}
+      {paneEdges.anchors.map(row => <Pane key={row.anchor} id={`edge-${row.anchor}`} anchor={row.anchor as Anchor} icon="app-window" label={uiDataLabel("Pane")} folded={folded}><div>Pane content</div></Pane>)}
     </Window></div>);
     try {
       for (const row of [...paneEdges.windowPanes, ...paneEdges.anchors.map(row => ({ ...row, slot: undefined }))]) {
@@ -171,7 +174,7 @@ describe("Dock accessible names", () => {
         <UiI18nProvider instance={i18n}>
           <Mode
             windows={dockNames.windows.map(window => ({ id: window.id, title: uiDataLabel(window.title), iconId: "app-window", children: <div>{window.title} body</div> }))}
-            layout={stacked ? { kind: "stack", children: dockNames.windows.map(window => ({ kind: "window", id: window.id })), activeId: dockNames.stackedActiveId } : { kind: "row", children: dockNames.windows.map(window => ({ kind: "stack", children: [{ kind: "window", id: window.id }], activeId: window.id })) }}
+            layout={stacked ? { kind: "stack", children: dockNames.windows.map(window => ({ kind: "window", windowKindId: window.id })), activeWindowId: dockNames.stackedActiveId } : { kind: "split", axis: "horizontal", children: dockNames.windows.map(window => ({ kind: "stack", children: [{ kind: "window", windowKindId: window.id }], activeWindowId: window.id })) }}
             activeWindowId={dockNames.windows[0].id}
             onActiveWindowChange={() => {}}
           />
@@ -243,4 +246,42 @@ it("anchors window controls on the window edge as one gapless cells group", () =
     expect(overlay.className).not.toMatch(/\b(gap-|top-1|right-1)/);
     expect(group.querySelector(':scope > [data-shared-border-frame]')).not.toBeNull();
   } finally { view.unmount(); }
+});
+
+it("remeasures the expanded Actions clip before the next observer frame", () => {
+  const { folded, expanded, action } = expandedActionsClip;
+  const geometry = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (this: HTMLElement) {
+    if (this.hasAttribute("data-window-silhouette")) {
+      const stack = this.querySelector('[data-slot="window-chrome-cap"]') ? expanded : folded;
+      return new DOMRect(0, 0, stack.width, stack.height);
+    }
+    if (this.hasAttribute("data-window-silhouette-chip")) return new DOMRect(0, 0, folded.width, folded.height);
+    if (["window-chrome-cap", "window-chrome-gap"].includes(this.dataset.slot ?? "")) return new DOMRect(0, 0, expanded.width, folded.height);
+    return new DOMRect();
+  });
+  const clipping = "default" in clippingModule ? clippingModule.default as typeof clippingModule : clippingModule;
+  const target: clippingModule.Ring = [
+    [action.x, action.y], [action.x + action.width, action.y],
+    [action.x + action.width, action.y + action.height], [action.x, action.y + action.height], [action.x, action.y],
+  ];
+  const view = render(<WindowChrome chipOnly titleChips={<button>Actions</button>} />);
+  try {
+    const stack = view.container.querySelector("[data-window-silhouette]");
+    for (const open of [true, false, true]) {
+      view.rerender(<WindowChrome chipOnly={!open} titleChips={<button>Actions</button>} body={<button>Import PNG</button>} />);
+      expect(view.container.querySelector("[data-window-silhouette]")).toBe(stack);
+      if (!open) {
+        expect(view.queryByRole("button", { name: "Import PNG" })).toBeNull();
+        continue;
+      }
+      const plane = view.getByRole("button", { name: "Import PNG" }).closest<HTMLElement>("[data-window-silhouette-content]")!;
+      const clip: clippingModule.Ring = [...plane.style.clipPath.matchAll(/(-?\d+(?:\.\d+)?)px\s+(-?\d+(?:\.\d+)?)px/gu)]
+        .map(([, x, y]) => [Number(x), Number(y)]);
+      expect(clip.length).toBeGreaterThanOrEqual(4);
+      expect(clipping.intersection([clip], [target])).toEqual([[target]]);
+    }
+  } finally {
+    view.unmount();
+    geometry.mockRestore();
+  }
 });

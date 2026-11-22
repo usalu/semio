@@ -125,7 +125,7 @@
         },
         {
          "name": "hermetic-root",
-         "units": 246
+         "units": 230
         },
         {
          "name": "snapshot",
@@ -134,9 +134,9 @@
        ],
        "worst": {
         "name": "hermetic-root",
-        "units": 246
+        "units": 230
        },
-       "slack": 10,
+       "slack": 26,
        "fits": true
       },
       {
@@ -241,7 +241,7 @@
        "families": [
         {
          "name": "host-source",
-         "units": 243
+         "units": 227
         },
         {
          "name": "alias-source",
@@ -258,9 +258,9 @@
        ],
        "worst": {
         "name": "host-source",
-        "units": 243
+        "units": 227
        },
-       "slack": 13,
+       "slack": 29,
        "fits": true
       },
       {
@@ -413,7 +413,7 @@
         },
         {
          "name": "hermetic-root",
-         "units": 246
+         "units": 230
         },
         {
          "name": "snapshot",
@@ -422,9 +422,9 @@
        ],
        "worst": {
         "name": "hermetic-root",
-        "units": 246
+        "units": 230
        },
-       "slack": 10,
+       "slack": 26,
        "fits": true
       },
       {
@@ -529,7 +529,7 @@
        "families": [
         {
          "name": "host-source",
-         "units": 242
+         "units": 226
         },
         {
          "name": "alias-source",
@@ -546,9 +546,9 @@
        ],
        "worst": {
         "name": "host-source",
-        "units": 242
+        "units": 226
        },
-       "slack": 14,
+       "slack": 30,
        "fits": true
       },
       {
@@ -685,7 +685,7 @@
         },
         {
          "name": "hermetic-root",
-         "units": 242
+         "units": 226
         },
         {
          "name": "snapshot",
@@ -694,9 +694,9 @@
        ],
        "worst": {
         "name": "hermetic-root",
-        "units": 242
+        "units": 226
        },
-       "slack": 14,
+       "slack": 30,
        "fits": true
       },
       {
@@ -777,7 +777,7 @@
        "families": [
         {
          "name": "host-source",
-         "units": 250
+         "units": 234
         },
         {
          "name": "alias-source",
@@ -790,9 +790,9 @@
        ],
        "worst": {
         "name": "host-source",
-        "units": 250
+        "units": 234
        },
-       "slack": 6,
+       "slack": 22,
        "fits": true
       },
       {
@@ -924,7 +924,7 @@
         },
         {
          "name": "hermetic-root",
-         "units": 242
+         "units": 226
         },
         {
          "name": "snapshot",
@@ -933,9 +933,9 @@
        ],
        "worst": {
         "name": "hermetic-root",
-        "units": 242
+        "units": 226
        },
-       "slack": 14,
+       "slack": 30,
        "fits": true
       },
       {
@@ -1016,7 +1016,7 @@
        "families": [
         {
          "name": "host-source",
-         "units": 250
+         "units": 234
         },
         {
          "name": "alias-source",
@@ -1029,9 +1029,9 @@
        ],
        "worst": {
         "name": "host-source",
-        "units": 250
+        "units": 234
        },
-       "slack": 6,
+       "slack": 22,
        "fits": true
       },
       {
@@ -1163,7 +1163,7 @@
         },
         {
          "name": "hermetic-root",
-         "units": 242
+         "units": 226
         },
         {
          "name": "snapshot",
@@ -1172,9 +1172,9 @@
        ],
        "worst": {
         "name": "hermetic-root",
-        "units": 242
+        "units": 226
        },
-       "slack": 14,
+       "slack": 30,
        "fits": true
       },
       {
@@ -1255,7 +1255,7 @@
        "families": [
         {
          "name": "host-source",
-         "units": 250
+         "units": 234
         },
         {
          "name": "alias-source",
@@ -1268,9 +1268,9 @@
        ],
        "worst": {
         "name": "host-source",
-        "units": 250
+        "units": 234
        },
-       "slack": 6,
+       "slack": 22,
        "fits": true
       },
       {
@@ -1386,14 +1386,14 @@
        "families": [
         {
          "name": "hermetic-root",
-         "units": 242
+         "units": 226
         }
        ],
        "worst": {
         "name": "hermetic-root",
-        "units": 242
+        "units": 226
        },
-       "slack": 14,
+       "slack": 30,
        "fits": true
       },
       {
@@ -1446,14 +1446,14 @@
        "families": [
         {
          "name": "host-source",
-         "units": 250
+         "units": 234
         }
        ],
        "worst": {
         "name": "host-source",
-        "units": 250
+        "units": 234
        },
-       "slack": 6,
+       "slack": 22,
        "fits": true
       },
       {
@@ -1558,14 +1558,14 @@
        "families": [
         {
          "name": "hermetic-root",
-         "units": 246
+         "units": 230
         }
        ],
        "worst": {
         "name": "hermetic-root",
-        "units": 246
+        "units": 230
        },
-       "slack": 10,
+       "slack": 26,
        "fits": true
       },
       {

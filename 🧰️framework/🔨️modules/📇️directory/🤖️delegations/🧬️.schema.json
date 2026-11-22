@@ -1,0 +1,966 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.os.agent-delegations/v1",
+  "title": "AgentDelegationsV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "paths",
+    "schemas",
+    "bounds",
+    "ttlChoicesSecs",
+    "defaultTtlIndex",
+    "audiences",
+    "defaultAudience",
+    "controls",
+    "fields",
+    "labels"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.os.agent-delegations/v1"
+    },
+    "paths": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "delegations",
+        "install"
+      ],
+      "properties": {
+        "delegations": {
+          "type": "string",
+          "pattern": "^/"
+        },
+        "install": {
+          "type": "string",
+          "pattern": "^/"
+        }
+      }
+    },
+    "schemas": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "create",
+        "receipt",
+        "list",
+        "credential",
+        "installRequest",
+        "installReceipt"
+      ],
+      "properties": {
+        "create": {
+          "type": "string"
+        },
+        "receipt": {
+          "type": "string"
+        },
+        "list": {
+          "type": "string"
+        },
+        "credential": {
+          "type": "string"
+        },
+        "installRequest": {
+          "type": "string"
+        },
+        "installReceipt": {
+          "type": "string"
+        }
+      }
+    },
+    "bounds": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "labelMaxBytes",
+        "minTtlSecs",
+        "maxTtlSecs",
+        "pageMax",
+        "identifierMax"
+      ],
+      "properties": {
+        "labelMaxBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "minTtlSecs": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maxTtlSecs": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "pageMax": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "identifierMax": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "ttlChoicesSecs": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "integer",
+        "minimum": 60
+      }
+    },
+    "defaultTtlIndex": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 2
+    },
+    "audiences": {
+      "const": [
+        "read",
+        "edit"
+      ]
+    },
+    "defaultAudience": {
+      "enum": [
+        "read",
+        "edit"
+      ]
+    },
+    "controls": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "create",
+        "download",
+        "dismiss",
+        "mcpInstall",
+        "mcpCopy",
+        "refresh",
+        "revoke",
+        "revokeConfirm",
+        "revokeCancel"
+      ],
+      "properties": {
+        "create": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "icon",
+            "variant"
+          ],
+          "properties": {
+            "id": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+            },
+            "icon": {
+              "type": "string",
+              "minLength": 1
+            },
+            "variant": {
+              "enum": [
+                "outline",
+                "ghost"
+              ]
+            }
+          }
+        },
+        "download": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "icon",
+            "variant"
+          ],
+          "properties": {
+            "id": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+            },
+            "icon": {
+              "type": "string",
+              "minLength": 1
+            },
+            "variant": {
+              "enum": [
+                "outline",
+                "ghost"
+              ]
+            }
+          }
+        },
+        "dismiss": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "icon",
+            "variant"
+          ],
+          "properties": {
+            "id": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+            },
+            "icon": {
+              "type": "string",
+              "minLength": 1
+            },
+            "variant": {
+              "enum": [
+                "outline",
+                "ghost"
+              ]
+            }
+          }
+        },
+        "mcpInstall": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "icon",
+            "variant"
+          ],
+          "properties": {
+            "id": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+            },
+            "icon": {
+              "type": "string",
+              "minLength": 1
+            },
+            "variant": {
+              "enum": [
+                "outline",
+                "ghost"
+              ]
+            }
+          }
+        },
+        "mcpCopy": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "icon",
+            "variant"
+          ],
+          "properties": {
+            "id": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+            },
+            "icon": {
+              "type": "string",
+              "minLength": 1
+            },
+            "variant": {
+              "enum": [
+                "outline",
+                "ghost"
+              ]
+            }
+          }
+        },
+        "refresh": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "icon",
+            "variant"
+          ],
+          "properties": {
+            "id": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+            },
+            "icon": {
+              "type": "string",
+              "minLength": 1
+            },
+            "variant": {
+              "enum": [
+                "outline",
+                "ghost"
+              ]
+            }
+          }
+        },
+        "revoke": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "icon",
+            "variant"
+          ],
+          "properties": {
+            "id": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+            },
+            "icon": {
+              "type": "string",
+              "minLength": 1
+            },
+            "variant": {
+              "enum": [
+                "outline",
+                "ghost"
+              ]
+            }
+          }
+        },
+        "revokeConfirm": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "icon",
+            "variant"
+          ],
+          "properties": {
+            "id": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+            },
+            "icon": {
+              "type": "string",
+              "minLength": 1
+            },
+            "variant": {
+              "enum": [
+                "outline",
+                "ghost"
+              ]
+            }
+          }
+        },
+        "revokeCancel": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "icon",
+            "variant"
+          ],
+          "properties": {
+            "id": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+            },
+            "icon": {
+              "type": "string",
+              "minLength": 1
+            },
+            "variant": {
+              "enum": [
+                "outline",
+                "ghost"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "fields": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "audience",
+        "expiry",
+        "list"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "audience": {
+          "type": "string"
+        },
+        "expiry": {
+          "type": "string"
+        },
+        "list": {
+          "type": "string"
+        }
+      }
+    },
+    "labels": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "en",
+        "de"
+      ],
+      "properties": {
+        "en": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "title",
+            "description",
+            "signedOut",
+            "noSpace",
+            "notAuthor",
+            "createTitle",
+            "name",
+            "audience",
+            "audienceRead",
+            "audienceEdit",
+            "expiry",
+            "expiryDay",
+            "expiryWeek",
+            "expiryMonth",
+            "create",
+            "ready",
+            "download",
+            "downloaded",
+            "downloadFailed",
+            "dismiss",
+            "permission",
+            "command",
+            "principal",
+            "mcpTitle",
+            "mcpInstall",
+            "mcpInstalling",
+            "mcpReady",
+            "mcpCopy",
+            "mcpCopied",
+            "mcpUnavailable",
+            "mcpFailed",
+            "mcpRevocable",
+            "list",
+            "empty",
+            "loading",
+            "submitting",
+            "failed",
+            "refresh",
+            "created",
+            "expires",
+            "lastUsed",
+            "lastUsedNever",
+            "stateLive",
+            "stateExpired",
+            "stateRevoked",
+            "revoke",
+            "revokeConfirmTitle",
+            "revokeConfirmBody",
+            "revokeConfirm",
+            "revokeCancel",
+            "errorForbidden",
+            "errorRateLimited",
+            "errorUnreachable",
+            "errorRefused"
+          ],
+          "properties": {
+            "title": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": {
+              "type": "string",
+              "minLength": 1
+            },
+            "signedOut": {
+              "type": "string",
+              "minLength": 1
+            },
+            "noSpace": {
+              "type": "string",
+              "minLength": 1
+            },
+            "notAuthor": {
+              "type": "string",
+              "minLength": 1
+            },
+            "createTitle": {
+              "type": "string",
+              "minLength": 1
+            },
+            "name": {
+              "type": "string",
+              "minLength": 1
+            },
+            "audience": {
+              "type": "string",
+              "minLength": 1
+            },
+            "audienceRead": {
+              "type": "string",
+              "minLength": 1
+            },
+            "audienceEdit": {
+              "type": "string",
+              "minLength": 1
+            },
+            "expiry": {
+              "type": "string",
+              "minLength": 1
+            },
+            "expiryDay": {
+              "type": "string",
+              "minLength": 1
+            },
+            "expiryWeek": {
+              "type": "string",
+              "minLength": 1
+            },
+            "expiryMonth": {
+              "type": "string",
+              "minLength": 1
+            },
+            "create": {
+              "type": "string",
+              "minLength": 1
+            },
+            "ready": {
+              "type": "string",
+              "minLength": 1
+            },
+            "download": {
+              "type": "string",
+              "minLength": 1
+            },
+            "downloaded": {
+              "type": "string",
+              "minLength": 1
+            },
+            "downloadFailed": {
+              "type": "string",
+              "minLength": 1
+            },
+            "dismiss": {
+              "type": "string",
+              "minLength": 1
+            },
+            "permission": {
+              "type": "string",
+              "minLength": 1
+            },
+            "command": {
+              "type": "string",
+              "minLength": 1
+            },
+            "principal": {
+              "type": "string",
+              "minLength": 1
+            },
+            "mcpTitle": {
+              "type": "string",
+              "minLength": 1
+            },
+            "mcpInstall": {
+              "type": "string",
+              "minLength": 1
+            },
+            "mcpInstalling": {
+              "type": "string",
+              "minLength": 1
+            },
+            "mcpReady": {
+              "type": "string",
+              "minLength": 1
+            },
+            "mcpCopy": {
+              "type": "string",
+              "minLength": 1
+            },
+            "mcpCopied": {
+              "type": "string",
+              "minLength": 1
+            },
+            "mcpUnavailable": {
+              "type": "string",
+              "minLength": 1
+            },
+            "mcpFailed": {
+              "type": "string",
+              "minLength": 1
+            },
+            "mcpRevocable": {
+              "type": "string",
+              "minLength": 1
+            },
+            "list": {
+              "type": "string",
+              "minLength": 1
+            },
+            "empty": {
+              "type": "string",
+              "minLength": 1
+            },
+            "loading": {
+              "type": "string",
+              "minLength": 1
+            },
+            "submitting": {
+              "type": "string",
+              "minLength": 1
+            },
+            "failed": {
+              "type": "string",
+              "minLength": 1
+            },
+            "refresh": {
+              "type": "string",
+              "minLength": 1
+            },
+            "created": {
+              "type": "string",
+              "minLength": 1
+            },
+            "expires": {
+              "type": "string",
+              "minLength": 1
+            },
+            "lastUsed": {
+              "type": "string",
+              "minLength": 1
+            },
+            "lastUsedNever": {
+              "type": "string",
+              "minLength": 1
+            },
+            "stateLive": {
+              "type": "string",
+              "minLength": 1
+            },
+            "stateExpired": {
+              "type": "string",
+              "minLength": 1
+            },
+            "stateRevoked": {
+              "type": "string",
+              "minLength": 1
+            },
+            "revoke": {
+              "type": "string",
+              "minLength": 1
+            },
+            "revokeConfirmTitle": {
+              "type": "string",
+              "minLength": 1
+            },
+            "revokeConfirmBody": {
+              "type": "string",
+              "minLength": 1
+            },
+            "revokeConfirm": {
+              "type": "string",
+              "minLength": 1
+            },
+            "revokeCancel": {
+              "type": "string",
+              "minLength": 1
+            },
+            "errorForbidden": {
+              "type": "string",
+              "minLength": 1
+            },
+            "errorRateLimited": {
+              "type": "string",
+              "minLength": 1
+            },
+            "errorUnreachable": {
+              "type": "string",
+              "minLength": 1
+            },
+            "errorRefused": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "de": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "title",
+            "description",
+            "signedOut",
+            "noSpace",
+            "notAuthor",
+            "createTitle",
+            "name",
+            "audience",
+            "audienceRead",
+            "audienceEdit",
+            "expiry",
+            "expiryDay",
+            "expiryWeek",
+            "expiryMonth",
+            "create",
+            "ready",
+            "download",
+            "downloaded",
+            "downloadFailed",
+            "dismiss",
+            "permission",
+            "command",
+            "principal",
+            "mcpTitle",
+            "mcpInstall",
+            "mcpInstalling",
+            "mcpReady",
+            "mcpCopy",
+            "mcpCopied",
+            "mcpUnavailable",
+            "mcpFailed",
+            "mcpRevocable",
+            "list",
+            "empty",
+            "loading",
+            "submitting",
+            "failed",
+            "refresh",
+            "created",
+            "expires",
+            "lastUsed",
+            "lastUsedNever",
+            "stateLive",
+            "stateExpired",
+            "stateRevoked",
+            "revoke",
+            "revokeConfirmTitle",
+            "revokeConfirmBody",
+            "revokeConfirm",
+            "revokeCancel",
+            "errorForbidden",
+            "errorRateLimited",
+            "errorUnreachable",
+            "errorRefused"
+          ],
+          "properties": {
+            "title": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": {
+              "type": "string",
+              "minLength": 1
+            },
+            "signedOut": {
+              "type": "string",
+              "minLength": 1
+            },
+            "noSpace": {
+              "type": "string",
+              "minLength": 1
+            },
+            "notAuthor": {
+              "type": "string",
+              "minLength": 1
+            },
+            "createTitle": {
+              "type": "string",
+              "minLength": 1
+            },
+            "name": {
+              "type": "string",
+              "minLength": 1
+            },
+            "audience": {
+              "type": "string",
+              "minLength": 1
+            },
+            "audienceRead": {
+              "type": "string",
+              "minLength": 1
+            },
+            "audienceEdit": {
+              "type": "string",
+              "minLength": 1
+            },
+            "expiry": {
+              "type": "string",
+              "minLength": 1
+            },
+            "expiryDay": {
+              "type": "string",
+              "minLength": 1
+            },
+            "expiryWeek": {
+              "type": "string",
+              "minLength": 1
+            },
+            "expiryMonth": {
+              "type": "string",
+              "minLength": 1
+            },
+            "create": {
+              "type": "string",
+              "minLength": 1
+            },
+            "ready": {
+              "type": "string",
+              "minLength": 1
+            },
+            "download": {
+              "type": "string",
+              "minLength": 1
+            },
+            "downloaded": {
+              "type": "string",
+              "minLength": 1
+            },
+            "downloadFailed": {
+              "type": "string",
+              "minLength": 1
+            },
+            "dismiss": {
+              "type": "string",
+              "minLength": 1
+            },
+            "permission": {
+              "type": "string",
+              "minLength": 1
+            },
+            "command": {
+              "type": "string",
+              "minLength": 1
+            },
+            "principal": {
+              "type": "string",
+              "minLength": 1
+            },
+            "mcpTitle": {
+              "type": "string",
+              "minLength": 1
+            },
+            "mcpInstall": {
+              "type": "string",
+              "minLength": 1
+            },
+            "mcpInstalling": {
+              "type": "string",
+              "minLength": 1
+            },
+            "mcpReady": {
+              "type": "string",
+              "minLength": 1
+            },
+            "mcpCopy": {
+              "type": "string",
+              "minLength": 1
+            },
+            "mcpCopied": {
+              "type": "string",
+              "minLength": 1
+            },
+            "mcpUnavailable": {
+              "type": "string",
+              "minLength": 1
+            },
+            "mcpFailed": {
+              "type": "string",
+              "minLength": 1
+            },
+            "mcpRevocable": {
+              "type": "string",
+              "minLength": 1
+            },
+            "list": {
+              "type": "string",
+              "minLength": 1
+            },
+            "empty": {
+              "type": "string",
+              "minLength": 1
+            },
+            "loading": {
+              "type": "string",
+              "minLength": 1
+            },
+            "submitting": {
+              "type": "string",
+              "minLength": 1
+            },
+            "failed": {
+              "type": "string",
+              "minLength": 1
+            },
+            "refresh": {
+              "type": "string",
+              "minLength": 1
+            },
+            "created": {
+              "type": "string",
+              "minLength": 1
+            },
+            "expires": {
+              "type": "string",
+              "minLength": 1
+            },
+            "lastUsed": {
+              "type": "string",
+              "minLength": 1
+            },
+            "lastUsedNever": {
+              "type": "string",
+              "minLength": 1
+            },
+            "stateLive": {
+              "type": "string",
+              "minLength": 1
+            },
+            "stateExpired": {
+              "type": "string",
+              "minLength": 1
+            },
+            "stateRevoked": {
+              "type": "string",
+              "minLength": 1
+            },
+            "revoke": {
+              "type": "string",
+              "minLength": 1
+            },
+            "revokeConfirmTitle": {
+              "type": "string",
+              "minLength": 1
+            },
+            "revokeConfirmBody": {
+              "type": "string",
+              "minLength": 1
+            },
+            "revokeConfirm": {
+              "type": "string",
+              "minLength": 1
+            },
+            "revokeCancel": {
+              "type": "string",
+              "minLength": 1
+            },
+            "errorForbidden": {
+              "type": "string",
+              "minLength": 1
+            },
+            "errorRateLimited": {
+              "type": "string",
+              "minLength": 1
+            },
+            "errorUnreachable": {
+              "type": "string",
+              "minLength": 1
+            },
+            "errorRefused": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    }
+  }
+}

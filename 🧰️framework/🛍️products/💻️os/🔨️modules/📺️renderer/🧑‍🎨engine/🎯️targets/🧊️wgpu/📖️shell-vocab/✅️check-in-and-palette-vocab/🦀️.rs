@@ -57,6 +57,8 @@ pub(super) fn shell_chrome_check_in_and_palette(key: &'static str, is_de: bool) 
         ("window.focus.device.tablet", true) => Some("Tablet"),
         ("row.control.refused", false) => Some("This row has nothing to edit"),
         ("row.control.refused", true) => Some("Diese Zeile lässt sich nicht bearbeiten"),
+        ("world3d.suggestions.noTarget", false) => Some("No marker is focused, so there are no suggestions."),
+        ("world3d.suggestions.noTarget", true) => Some("Keine Markierung ist fokussiert, daher gibt es keine Vorschläge."),
         ("palette.group.windows", false) => Some("Windows"),
         ("palette.group.windows", true) => Some("Fenster"),
         ("palette.group.catalogue", false) => Some("Catalogue"),

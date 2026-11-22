@@ -1,6 +1,8 @@
 //! ⏱️ Tick and resolve of the preview evaluation: the evaluation tick, the invocation resolution and the release hops. See [`super`].
 
 use super::*;
+use semio_framework_value::{RetainedAllocationEffect, RetainedCloneProgress, RetainedCloneStep, RetainedWorkOutcome, RetirementDemand, ValueError};
+use semio_os_flow::{FlowHost, FlowHostCloseSlot};
 
 //#region ⏱️Tick
 /// ⏱️ What one evaluation tick owes its caller: the extension work it declared and whether the
@@ -14,6 +16,119 @@ pub struct FlowEvalTickOutcome {
     /// expensive body in the app and only its computing chrome depends on the chain, so it is
     /// republished exactly when that chrome moved (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
     pub census_moved: bool,
+}
+
+/// 🎛️ Owns the original Host between funded preview publication turns.
+#[derive(Default)]
+pub struct MountedPreviewTick {
+    host: Option<Box<FlowHost>>,
+    close: FlowHostCloseSlot,
+    census_before: u64,
+}
+
+impl MountedPreviewTick {
+    fn birth_demands() -> RetirementDemand {
+        RetirementDemand {
+            copy_bytes: std::mem::size_of::<Option<Box<FlowHost>>>() + std::mem::size_of::<u64>(),
+            capacity_bytes: std::mem::size_of::<FlowHost>(),
+            depth: 1,
+            ..Default::default()
+        }
+    }
+
+    pub fn demands(&self, session: &FlowEvalSession, copy: usize) -> Result<RetirementDemand, ValueError> {
+        match self.host.as_ref() {
+            Some(host) if !host.baseline_publication_terminal_is_empty() => host.next_baseline_publication_demands(copy),
+            Some(host) => session.preview_tick_finish_demands(host, copy),
+            None => Ok(Self::birth_demands()),
+        }
+    }
+
+    /// 🪙️ Separates the original publication from re-reading the window's snapshot and seeds.
+    pub fn advance_publication(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> Option<Result<RetainedCloneProgress, ValueError>> {
+        let host = self.host.as_mut()?;
+        if host.baseline_publication_terminal_is_empty() {
+            return None;
+        }
+        Some(host.baseline_publication_step(effect).map(|step| step.progress()))
+    }
+
+    /// 🪜️ Offers one phase on the mounted command's original effect.
+    pub fn step(
+        &mut self,
+        window_id: &str,
+        window_kind_id: &str,
+        host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot,
+        tolerance: f64,
+        session: &mut FlowEvalSession,
+        retained_eval: Option<&str>,
+        source: PreviewEvaluationSource,
+        turn_started_us: Option<u64>,
+        effect: &mut RetainedAllocationEffect<'_>,
+        project: impl FnOnce(&mut std::collections::HashMap<String, semio_framework_artifact_flow_flow::neural::Dictionary>),
+    ) -> Result<(Option<FlowEvalTickOutcome>, RetainedCloneProgress), ValueError> {
+        let grant = effect.grant();
+        let demand = self.demands(session, grant.maximum_copy_bytes)?;
+        if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant, demand) {
+            return Ok((None, Default::default()));
+        }
+        if let Some(progress) = self.advance_publication(effect) {
+            return Ok((None, progress?));
+        }
+        if let Some(host) = self.host.as_mut() {
+            let (more, progress) = session.finish_preview_tick(host, matches!(source, PreviewEvaluationSource::WithFallback), effect)?;
+            let Some(more) = more else { return Ok((None, progress)); };
+            session.begin_window_tick(window_id, grant).map_err(|error| error.with_retained_progress(progress))?;
+            let outcome = finish_tick(window_id, window_kind_id, host_snapshot, tolerance, session, retained_eval, source, effect, self.census_before, more, host.take_pending_extension_evals())
+                .map_err(|error| error.with_retained_progress(progress))?;
+            return Ok((Some(outcome), progress));
+        }
+        if !effect.performed(1)? {
+            return Ok((None, Default::default()));
+        }
+        let mut host = match host_with_session(host_snapshot, session, grant) {
+            Ok(host) => host,
+            Err((error, host)) => {
+                semio_s_artifact_procedural_3d_model::close_host(host)?;
+                return Err(error);
+            }
+        };
+        let prepared = session.prepare_preview_tick(&mut host, turn_started_us, project);
+        self.census_before = node_census_digest(session.status_json());
+        self.host = Some(Box::new(host));
+        let progress = RetainedCloneProgress {
+            copied_items: 1, copied_bytes: demand.copy_bytes, retained_capacity_bytes: demand.capacity_bytes, ..Default::default()
+        };
+        prepared.map_err(|error| error.with_retained_progress(progress))?;
+        Ok((None, progress))
+    }
+
+    pub fn close_demands(&self, copy: usize) -> Result<RetirementDemand, ValueError> {
+        if self.host.is_some() {
+            return Ok(FlowHostCloseSlot::intake_demand());
+        }
+        self.close.next_demand(copy)
+    }
+
+    pub fn close_step(&mut self, cx: &mut StepContext<'_>) -> Result<InteractiveJobCloseStep, semio_framework_job::OriginalTurnFailure> {
+        let demand = self.close_demands(cx.retained_grant().maximum_copy_bytes)?;
+        if self.host.is_some() {
+            return semio_framework_job::close_original_retained_step(cx, demand, |grant| RetainedWorkOutcome {
+                result: self.close.retain(&mut self.host, grant).map(RetainedCloneStep::Progress), work: 1,
+            });
+        }
+        if self.terminal_is_empty() {
+            return Ok(InteractiveJobCloseStep::Complete { progress: Default::default() });
+        }
+        let step = semio_framework_job::close_original_retained_effect_step(cx, demand, |effect| self.close.close_step(effect))?;
+        Ok(if self.terminal_is_empty() {
+            InteractiveJobCloseStep::Complete { progress: step.progress() }
+        } else {
+            step
+        })
+    }
+
+    pub fn terminal_is_empty(&self) -> bool { self.host.is_none() && self.close.terminal_is_empty() }
 }
 
 /// 🐢️ What ONE evaluation hop of the chain actually invalidates: the preview window it is addressed
@@ -108,6 +223,27 @@ pub fn evaluate_tick_with_seeds(
     };
     let pending_extension_evals = host.take_pending_extension_evals();
     semio_s_artifact_procedural_3d_model::close_host(host)?;
+    let outcome = finish_tick(window_id, window_kind_id, host_snapshot, tolerance, session, retained_eval, source, effect, census_before, more, pending_extension_evals)?;
+    if let (Some(started_us), Some(finished_us)) = (started_us, started_us.and_then(|_| semio_framework_job::default_now_us())) {
+        semio_os_flow::record_flow_eval_step(finished_us.saturating_sub(started_us));
+    }
+    Ok(outcome)
+}
+
+fn finish_tick(
+    window_id: &str,
+    window_kind_id: &str,
+    host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot,
+    tolerance: f64,
+    session: &mut FlowEvalSession,
+    retained_eval: Option<&str>,
+    source: PreviewEvaluationSource,
+    effect: &mut RetainedAllocationEffect<'_>,
+    census_before: u64,
+    more: bool,
+    pending_extension_evals: Vec<semio_framework_artifact_flow_flow::neural::PendingExtensionEval>,
+) -> Result<FlowEvalTickOutcome, ValueError> {
+    let retained_grant = effect.grant();
     let mut extension_invocations = Vec::new();
     for pending in pending_extension_evals {
         let resume = session.has_evaluation_progress(pending.node_hash);
@@ -124,9 +260,6 @@ pub fn evaluate_tick_with_seeds(
         session.abandon_window_tick(window_id, retained_grant)?;
     }
     let publication = preview_eval_publication_for(session, host_snapshot, retained_eval, source);
-    if let (Some(started_us), Some(finished_us)) = (started_us, started_us.and_then(|_| semio_framework_job::default_now_us())) {
-        semio_os_flow::record_flow_eval_step(finished_us.saturating_sub(started_us));
-    }
     Ok(FlowEvalTickOutcome { extension_invocations, publication, census_moved: node_census_digest(session.status_json()) != census_before })
 }
 

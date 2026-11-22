@@ -39,7 +39,13 @@
       }
     },
     "imageKey": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "label": {
+          "en": "Image asset",
+          "de": "Bildressource"
+        }
+      }
     },
     "width": {
       "type": "number",

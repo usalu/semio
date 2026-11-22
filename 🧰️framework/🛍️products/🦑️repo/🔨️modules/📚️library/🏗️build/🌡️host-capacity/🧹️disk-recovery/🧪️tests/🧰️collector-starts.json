@@ -1,0 +1,15 @@
+{
+  "initialMiB": 5153,
+  "requiredMiB": 6144,
+  "writers": [
+    { "id": "cas-lru", "priority": 70, "relief": "host", "measuredMiB": 1000 },
+    { "id": "leaked-images", "priority": 61, "relief": "host", "measuredMiB": 0 },
+    { "id": "dependency-generations", "priority": 50, "relief": "image", "measuredMiB": 9999 },
+    { "id": "compile-caches", "priority": 62, "relief": "host", "measuredMiB": 0 },
+    { "id": "replica-lost", "priority": 80, "relief": "host", "measuredMiB": 9999 }
+  ],
+  "starts": {
+    "en": "Starting collector {id}.",
+    "de": "Sammler {id} startet."
+  }
+}

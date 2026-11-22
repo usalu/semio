@@ -1,5 +1,7 @@
 /** 🍃 Alternate double-toothed, pleated hornbeam blades on six separately clipped and wind-bent stools. */
 import {readFileSync,writeFileSync} from 'node:fs'
+import {clippedCrown} from './digital-hornbeam-crown.ts'
+import {drawSway} from './digital-hornbeam-projections.ts'
 const doc=JSON.parse(readFileSync(process.argv[2],'utf8')),a=doc.asset,spec=JSON.parse(readFileSync(new URL('./digital-hornbeam-flush.json',import.meta.url),'utf8')),rad=Math.PI/180,r=x=>+x.toFixed(6)
 for(const pose of a.poses){
  if(!['windy','storm'].includes(pose.id))continue
@@ -19,14 +21,23 @@ for(const [scale,vol] of Object.entries(a.volumes)){
   }
   for(const [j,shoot] of plant.shoots.entries()){
    if(scale==='100'&&j===2||scale==='200'&&![0,2,4].includes(j)||scale==='500'&&j!==2)continue
-   const vertices=[],triangles=[]
-   const strip=rings=>{
+   const strip=(rings,part,side)=>{
+    const vertices=[],triangles=[]
     const start=vertices.length,n=rings[0].length;vertices.push(...rings.flat().map(p=>p.map(r)))
     for(let i=0;i+1<rings.length;i++)for(let z=0;z<n;z++){
      const a=start+n*i+z,b=start+n*i+(z+1)%n
      triangles.push([a,b,a+n],[b,b+n,a+n])
     }
-    for(let z=1;z<n-1;z++){triangles.push([start,start+z+1,start+z]);const end=start+n*(rings.length-1);triangles.push([end,end+z,end+z+1])}
+    const caps=n===6?[[0,1,4],[0,4,5],[1,2,3],[1,3,4]]:[[0,1,2],[0,2,3]],end=start+n*(rings.length-1)
+    for(const [a,b,c] of caps)triangles.push([start+a,start+c,start+b],[end+a,end+b,end+c])
+    const signed=triangles.reduce((sum,[a,b,c])=>{
+     const p=vertices[a],q=vertices[b],s=vertices[c]
+     return sum+p[0]*(q[1]*s[2]-q[2]*s[1])+p[1]*(q[2]*s[0]-q[0]*s[2])+p[2]*(q[0]*s[1]-q[1]*s[0])
+    },0)
+    if(signed<0)for(const face of triangles)[face[1],face[2]]=[face[2],face[1]]
+    const id='leaf-spray-'+(k+1)+'-'+(j+1)+'-'+(side>0?'near':'far')+'-'+part
+    vol.body.push({id,kind:'polyhedron',bone,material:'hornbeam-leaf',role:'detail',texture:true,tone:r(.36+.065*((plant.phase+j+(typeof part==='number'?part:0))%5)),vertices,triangles})
+    vol.thermal.push({id:'th-'+id,of:id,region:'leaf-face'})
    }
    const flush=spec.flushes[(plant.phase+j)%3],sections=scale==='50'?spec.toothWidths.map((_,i)=>i):scale==='100'?[0,3,5,7,10,13,15,17,19]:scale==='200'?[0,5,8,13,17,19]:[0,7,13,19]
    for(const side of [-1,1]){
@@ -37,7 +48,7 @@ for(const [scale,vol] of Object.entries(a.volumes)){
     strip(nodes.map(([x,y],i)=>{
      const z=side*(skin(x,y)+.001),radius=.0018-.00095*i/(nodes.length-1)
      return [[x,y-radius,z],[x,y,z+radius],[x,y+radius,z],[x,y,z-radius]]
-    }))
+    }),'shoot',side)
     for(const [i,[pos,cant,length,width]] of flush.entries()){
      if(scale==='200'&&i%2||scale==='500'&&![1,3,6].includes(i))continue
      const [x,y]=nodes[i],angle=rotation+cant*side*rad,mid=i%2===0?.18:-.14
@@ -50,15 +61,19 @@ for(const [scale,vol] of Object.entries(a.volumes)){
        const half=amplitude*asym*sign,dx=-Math.sin(angle)*half,dy=Math.cos(angle)*half
        return [cx+dx,cy+dy,crest-side*(Math.abs(half)*(.18+.1*(idx%2))+meridian*side*.22)]
       }
-      return [edge(-1,1.07),[cx,cy,crest],edge(1,.93),[cx,cy,crest-meridian]]
+      const upper=[edge(-1,1.07),[cx,cy,crest],edge(1,.93)]
+      const lower=upper.map(([x,y,z],j)=>[x,y,z-(j===1?meridian:side*.00028)])
+      return [...upper,...lower.reverse()]
      })
-     strip(rings)
+     strip(rings,i+1,side)
     }
    }
-   const id='leaf-spray-'+(k+1)+'-'+(j+1)
-   vol.body.push({id,kind:'polyhedron',bone,material:'hornbeam-leaf',role:'body',tone:r(.40+.052*((plant.phase+j)%5)),vertices,triangles})
-   vol.thermal.push({id:'th-'+id,of:id,region:'leaf-face'})
+
   }
+  vol.body[vol.body.indexOf(panel)]=clippedCrown(panel,k,scale)
  }
+ for(const crown of vol.body.filter(s=>s.kind==='polyhedron'&&(s.id.startsWith('leaf-spray-')||s.id.startsWith('block-'))))for(const v of crown.vertices)v[2]=r(v[2]*.935)
+ vol.body=vol.body.filter(q=>!q.id.startsWith('flush-'));vol.thermal=vol.thermal.filter(q=>!q.of?.startsWith('flush-'))
 }
+drawSway(a)
 writeFileSync(process.argv[3],JSON.stringify(doc))

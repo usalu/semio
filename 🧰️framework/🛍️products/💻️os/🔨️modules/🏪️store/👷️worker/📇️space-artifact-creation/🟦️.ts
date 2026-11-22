@@ -43,17 +43,18 @@ function spaceArtifactCreationCatalogStatus(spaceId: string, clientInstanceId: s
 }
 
 export async function openSpaceArtifactCreationCatalog(spaceId: string, clientInstanceId: string): Promise<void> {
-  const prior = spaceArtifactCreationCatalogOperations.get(spaceId);
+  const operationKey = JSON.stringify([spaceId, clientInstanceId]);
+  const prior = spaceArtifactCreationCatalogOperations.get(operationKey);
   prior?.abort.abort(new Error("space artifact creation catalog: superseded"));
-  spaceArtifactCreationCatalogOperations.delete(spaceId);
+  spaceArtifactCreationCatalogOperations.delete(operationKey);
   if (spaceArtifactCreationCatalogOperations.size >= SPACE_ARTIFACT_CREATION_CATALOG_CAPACITY) {
     post(spaceArtifactCreationCatalogPresentation(spaceId, clientInstanceId, "unavailable"));
     return;
   }
   const operation = { abort: new AbortController(), clientInstanceId, workerEpoch: directoryWorkerEpoch };
-  spaceArtifactCreationCatalogOperations.set(spaceId, operation);
+  spaceArtifactCreationCatalogOperations.set(operationKey, operation);
   post(spaceArtifactCreationCatalogPresentation(spaceId, clientInstanceId, "loading"));
-  const current = (): boolean => spaceArtifactCreationCatalogOperations.get(spaceId) === operation && operation.workerEpoch === directoryWorkerEpoch && !operation.abort.signal.aborted;
+  const current = (): boolean => spaceArtifactCreationCatalogOperations.get(operationKey) === operation && operation.workerEpoch === directoryWorkerEpoch && !operation.abort.signal.aborted;
   try {
     const encodedSpaceId = encodeURIComponent(spaceId);
     if (!/^[A-Za-z0-9][A-Za-z0-9._:-]{0,255}$/u.test(spaceId) || encodedSpaceId !== spaceId) throw new Error("space artifact creation catalog: invalid scope");
@@ -78,7 +79,7 @@ export async function openSpaceArtifactCreationCatalog(spaceId: string, clientIn
   } catch {
     if (current()) post(spaceArtifactCreationCatalogPresentation(spaceId, clientInstanceId, "unavailable"));
   } finally {
-    if (spaceArtifactCreationCatalogOperations.get(spaceId) === operation) spaceArtifactCreationCatalogOperations.delete(spaceId);
+    if (spaceArtifactCreationCatalogOperations.get(operationKey) === operation) spaceArtifactCreationCatalogOperations.delete(operationKey);
   }
 }
 

@@ -160,7 +160,7 @@ pub fn os_workflow_to_flow_host_snapshot_json(graph: &Workflow, camera: &OsWorkf
                 "inputPorts": node.inputs.iter().map(|port| &port.id).collect::<Vec<_>>(),
                 "outputPorts": node.outputs.iter().map(|port| &port.id).collect::<Vec<_>>(),
                 "params": {
-                    "nodeId": node.id,
+                    "instanceId": node.id,
                     "pluginId": node.plugin_id,
                     "appId": node.app_id,
                 },

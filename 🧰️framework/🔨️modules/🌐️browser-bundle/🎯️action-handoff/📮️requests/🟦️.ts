@@ -1,6 +1,6 @@
 /** 📮️ Bounded, in-order action replies owned by one displayed browser-actor lifetime. */
 import type { ActionInvocation, CommandInvocation, UiIntent, PluginViewState } from "@semio-tech/framework";
-import { browserActorActionOwnerMatchesV1, parseBrowserActorActionResultV1, type BrowserActorActionOwnerV1, type BrowserActorActionRequestV1, type BrowserActorActionResultV1 } from "../🟦️.ts";
+import { browserActorActionOwnerMatchesV1, parseBrowserActorActionRequestV1, parseBrowserActorActionResultV1, type BrowserActorActionOwnerV1, type BrowserActorActionRequestV1, type BrowserActorActionResultV1 } from "../🟦️.ts";
 import { createBrowserActorAppCommandRequestV1 } from "../🎛️command/🟦️.ts";
 import { createBrowserActorUiIntentRequestV1 } from "../🧭️intent/🟦️.ts";
 
@@ -53,6 +53,16 @@ export class BrowserActorActionMailboxV1 {
   /** 🎛️ Captures a complete catalog invocation and view state on the same in-order owner. */
   async dispatchCommand(owner: Omit<BrowserActorActionOwnerV1, "actionSequence">, invocation: ActionInvocation | CommandInvocation, viewState: PluginViewState): Promise<BrowserActorActionResultV1> {
     return await this.dispatchRequest(actionSequence => createBrowserActorAppCommandRequestV1({ ...owner, actionSequence }, invocation, viewState));
+  }
+
+  /** 💾️ Takes the next page from one export lease on the same in-order actor. */
+  async takeSegmentedDownloadChunk(owner: Omit<BrowserActorActionOwnerV1, "actionSequence">, operationId: bigint): Promise<Uint8Array | undefined> {
+    const result = await this.dispatchRequest(actionSequence => parseBrowserActorActionRequestV1({
+      ...owner, actionSequence, kind: "browser-actor-action",
+      payload: { kind: "segmented-download", operationId: operationId.toString() },
+    }));
+    const chunk = result.downloadChunk?.bytes;
+    return chunk == null ? undefined : Uint8Array.from(chunk);
   }
 
   /** 📊️ Requests not yet settled: the waiting queue plus the one in flight. */
@@ -121,6 +131,10 @@ export class BrowserActorActionMailboxV1 {
     }
     const current = this.inFlight;
     if (!browserActorActionOwnerMatchesV1(current.request, result)) return false;
+    if (result.outcome === "guest-applied") {
+      const payload = current.request.payload;
+      if (payload.kind === "segmented-download" ? result.downloadChunk?.operationId !== payload.operationId : result.downloadChunk !== undefined) return false;
+    }
     this.retire(current);
     if (result.outcome === "rejected") current.reject(new Error(result.reason));
     else current.resolve(result);

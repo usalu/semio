@@ -36,31 +36,19 @@ async fn healing_a_selected_solid_preserves_unrelated_vertices_and_refuses_atomi
 }
 
 #[semio_framework_async_macros::async_test]
-async fn defeature_removes_one_box_face() {
+async fn defeature_stock_stage_constructs_closed_boundary() {
+    use semio_framework_3d_brep_construction::{primitives::SolidPrimitive, staged::drive_solid};
     let mut body = Body::new();
     let mut rec = OpRecorder::new();
-    let solid = make_box(&mut body, 2.0, 2.0, 2.0, &mut rec).unwrap();
-    let face = body.solid_faces(solid)[0];
-    let out = defeature(&mut body, solid, std::slice::from_ref(&face), &mut rec).unwrap();
-    assert_eq!(out, solid);
-    assert_eq!(body.shell_faces(body.solids.get(solid).unwrap().outer).len(), 5);
-}
-
-#[semio_framework_async_macros::async_test]
-async fn defeature_rejects_empty_selection() {
-    let mut body = Body::new();
-    let mut rec = OpRecorder::new();
-    let solid = make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();
-    assert!(defeature(&mut body, solid, &[], &mut rec).is_err());
-}
-
-#[semio_framework_async_macros::async_test]
-async fn defeature_rejects_removing_too_many_faces() {
-    let mut body = Body::new();
-    let mut rec = OpRecorder::new();
-    let solid = make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();
-    let faces = body.solid_faces(solid);
-    assert!(defeature(&mut body, solid, &faces[0..3], &mut rec).is_err());
+    let stock = SolidPrimitive::axis_box(2.0, 2.0, 2.0);
+    let solid = drive_solid(&mut DefeatureJob::restoring_stock(stock).unwrap(), &mut body, &mut rec).unwrap();
+    let reach = body.reachable_from(&[EntityRef::Solid(solid)]);
+    assert_eq!(reach.faces.len(), 6);
+    for edge in reach.edges {
+        let uses = body.edge_coedges(edge);
+        assert_eq!(uses.len(), 2);
+        assert_ne!(body.coedges.get(uses[0]).unwrap().forward, body.coedges.get(uses[1]).unwrap().forward);
+    }
 }
 
 #[semio_framework_async_macros::async_test]

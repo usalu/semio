@@ -1,6 +1,6 @@
 /** 🏔️ Complete imported intrinsic trees and independent mesh identities. */
 import type {GisTerrainArtifact,ImportedMap} from "../../../🧬️schema/🟦️.ts";
-import {parseElevationSource} from "../../../🧬️schema/🗺️imported-map/🏔️elevation/🟦️.ts";
+import {ELEVATION_MAX_SIDE, ELEVATION_MIN_SIDE, parseElevationSource} from "../../../🧬️schema/🗺️imported-map/🏔️elevation/🟦️.ts";
 import type {IntrinsicValue} from "@semio-tech/framework/value/schema";
 import type { ArtifactDialect } from "@semio-tech/framework/schema/artifact-reference";
 import {sqliteOperation,type SqliteDatabase,type SqliteRow,type SqliteValue} from "@semio-tech/framework/io/sqlite-snapshot";
@@ -10,7 +10,6 @@ import sql from "./🗄️.sql" with {type:"text"};
 export const GIS_TERRAIN_SQLITE_SCHEMA:string=sql;
 const SCALAR=[{index:1,width:64}]as const;
 const roles=["position","route","region"]as const;
-const elevationSide = 33;
 const elevationWord = new DataView(new ArrayBuffer(8));
 
 function encodeElevationBound(value: number): bigint {
@@ -27,12 +26,13 @@ export async function gisTerrainSnapshotToSqliteDatabase(snapshot:GisTerrainArti
  options=sqliteOperation(options);const p=await ArtifactSqliteProjection.create(sql,options),put=(name:string,cells:readonly SqliteValue[],id?:bigint)=>p.insert("gis_terrain_"+name,cells,id);
  await put("document",[],1n);await put("parameters",encodeIeee754Cells([1n,snapshot.exaggeration],SCALAR,options.maxColumns).slice(1),1n);
  if (snapshot.elevationSource !== undefined) {
-  const {bounds, rows} = parseElevationSource(snapshot.elevationSource);
-  p.checkRowsAdditional(1 + elevationSide * elevationSide);
-  await put("elevation_source", bounds.map(encodeElevationBound), 1n);
+  const { bounds, rowsMillimetres, missingSamples } = parseElevationSource(snapshot.elevationSource);
+  const columns = rowsMillimetres[0]!.length;
+  p.checkRowsAdditional(1 + columns * rowsMillimetres.length);
+  await put("elevation_source", [...bounds.map(encodeElevationBound), BigInt(columns), missingSamples ?? null], 1n);
   let ordinal = 0;
-  for (const row of rows) {
-   for (const meters of row) await put("elevation_sample", [1n, BigInt(ordinal++), BigInt(meters)]);
+  for (const row of rowsMillimetres) {
+   for (const millimetres of row) await put("elevation_sample", [1n, BigInt(ordinal++), BigInt(millimetres)]);
   }
  }
  if(snapshot.mesh){const c=snapshot.mesh;await put("mesh_child",[c.childId,c.target.artifactId,c.target.dialect.artifactKind,c.target.dialect.standard,c.target.dialect.subset],1n);}
@@ -56,7 +56,7 @@ export async function gisTerrainSnapshotToSqliteDatabase(snapshot:GisTerrainArti
 }
 /** 📥️ Consuming each row exactly once proves dense ordered ownership and variant exclusivity. */
 export async function gisTerrainSnapshotFromSqliteDatabase(database:SqliteDatabase,options:ArtifactSqliteOptions={}):Promise<GisTerrainArtifact>{
- const operation=sqliteOperation(options);options=operation;const rows=await artifactSqliteTables(database,sql,options),names=["document","parameters","mesh_child","imported_map","value","position","route","region","property","boolean","unsigned","signed","float","text","bytes","array","member","elevation_source","elevation_sample"],widths=[1,4,6,1,2,4,4,4,5,2,2,2,4,2,2,4,5,5,4],tables=new Map<string,Map<bigint,SqliteRow>>();
+ const operation=sqliteOperation(options);options=operation;const rows=await artifactSqliteTables(database,sql,options),names=["document","parameters","mesh_child","imported_map","value","position","route","region","property","boolean","unsigned","signed","float","text","bytes","array","member","elevation_source","elevation_sample"],widths=[1,4,6,1,2,4,4,4,5,2,2,2,4,2,2,4,5,7,4],tables=new Map<string,Map<bigint,SqliteRow>>();
  for(let i=0;i<names.length;i++){const map=new Map<bigint,SqliteRow>();for(let j=0;j<rows[i]!.length;j++){const r=rows[i]![j]!;if(r.values.length!==widths[i]||integer(r,0)!==r.rowid||map.has(r.rowid))throw Error("GIS terrain row identity differs");map.set(r.rowid,r);if((j+1)%256===0)await artifactSqliteCheckpoint(options,"reconstructSnapshot",j+1,rows[i]!.length);}tables.set(names[i]!,map);}
  const table=(name:string)=>tables.get(name)!,take=(name:string,id:bigint)=>{const row=table(name).get(id);if(!row)throw Error("dangling or multiply owned GIS terrain relation");table(name).delete(id);return row;};
  const grouped=new Map<string,Map<bigint,SqliteRow[]>>();
@@ -65,14 +65,19 @@ export async function gisTerrainSnapshotFromSqliteDatabase(database:SqliteDataba
  if (table("elevation_source").size) {
   const source = take("elevation_source", doc.rowid);
   const bounds = [1, 2, 3, 4].map(index => decodeElevationBound(integer(source, index)));
+  const columns = Number(integer(source, 5));
+  if (columns < ELEVATION_MIN_SIDE || columns > ELEVATION_MAX_SIDE) throw Error("GIS elevation column count differs");
   const samples = await list("elevation_sample", doc.rowid);
-  if (samples.length !== elevationSide * elevationSide) throw Error("GIS elevation sample count differs");
-  const rows: number[][] = [];
-  for (let row = 0; row < elevationSide; row++) {
-   const start = row * elevationSide;
-   rows.push(samples.slice(start, start + elevationSide).map(sample => Number(integer(sample, 3))));
+  const height = samples.length / columns;
+  if (!Number.isInteger(height) || height < ELEVATION_MIN_SIDE || height > ELEVATION_MAX_SIDE) {
+   throw Error("GIS elevation sample count differs");
   }
-  result.elevationSource = parseElevationSource({bounds, rows});
+  const rowsMillimetres: number[][] = [];
+  for (let start = 0; start < samples.length; start += columns) {
+   rowsMillimetres.push(samples.slice(start, start + columns).map(sample => Number(integer(sample, 3))));
+  }
+  const missingSamples = source.values[6] === null ? undefined : text(source, 6);
+  result.elevationSource = parseElevationSource(missingSamples === undefined ? { bounds, rowsMillimetres } : { bounds, rowsMillimetres, missingSamples });
  }
  if(table("mesh_child").size){const r=take("mesh_child",doc.rowid);result.mesh={childId:text(r,1),target:{artifactId:text(r,2),dialect:{artifactKind:text(r,3),standard:text(r,4),subset:text(r,5)}}};}
  if(table("imported_map").size){take("imported_map",doc.rowid);const map:ImportedMap={positions:[],routes:[],regions:[],properties:[]},pending:{id:bigint;attach:(v:IntrinsicValue)=>void}[]=[];

@@ -1,0 +1,10 @@
+{"mode":[
+{"optOut":null,"demoted":false,"expect":"on"},
+{"optOut":"off","demoted":false,"expect":"off"},
+{"optOut":null,"demoted":true,"expect":"off"},
+{"optOut":"on","demoted":false,"expect":"on"}],
+"demotes":[
+{"mode":"on","status":1,"elapsedMs":5000,"earlyMs":120000,"expect":true},
+{"mode":"on","status":0,"elapsedMs":5000,"earlyMs":120000,"expect":false},
+{"mode":"on","status":1,"elapsedMs":600000,"earlyMs":120000,"expect":false},
+{"mode":"off","status":1,"elapsedMs":5000,"earlyMs":120000,"expect":false}]}

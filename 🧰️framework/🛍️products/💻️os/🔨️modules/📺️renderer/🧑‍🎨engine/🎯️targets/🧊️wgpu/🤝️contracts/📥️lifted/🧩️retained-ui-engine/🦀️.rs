@@ -94,6 +94,14 @@ pub fn install_ui_engine_locale(locale: semio_ui_locale::Locale) {
     }
 }
 
+/// 🚗️ Hands the installed retained UI engine the resolved UI driver — the `labels` axis decides whether retained buttons and segmented selects paint their captions beside the icon or icon-only. The engine exists once its locale is resolved, which every driver resolution follows.
+pub fn set_ui_engine_driver(driver: semio_ui_wgpu_layout::chrome::UiDriverChrome) {
+    let mut engine = UI_ENGINE.0.borrow();
+    if let Some(ui) = engine.as_mut() {
+        ui.set_driver(driver);
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct UiDocumentCloseOwner {
     pub window_id: SurfaceId,

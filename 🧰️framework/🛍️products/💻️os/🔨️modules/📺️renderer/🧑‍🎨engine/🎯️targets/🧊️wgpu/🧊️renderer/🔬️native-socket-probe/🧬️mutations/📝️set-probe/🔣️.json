@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🔬️native-socket-probe/🧬️mutations/📝️set-probe",
+  "semanticKind": "set-probe",
+  "displayName": "Set Probe",
+  "emoji": "📝️",
+  "aggregateVariant": "SetProbe",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "set-probe",
+  "binaryTag": 1,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

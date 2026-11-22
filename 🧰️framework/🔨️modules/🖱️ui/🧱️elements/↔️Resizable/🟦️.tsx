@@ -6,6 +6,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
+import type { WindowLayoutAxis } from "@semio-tech/ui-layout";
 import * as React from "react";
 import * as ResizablePrimitive from "react-resizable-panels";
 import { domSizePx } from "@semio-tech/ui-styling";
@@ -130,7 +131,7 @@ export type ResizableJoinEdgeSide = "leading" | "trailing";
 
 /** 📕️ Corner join wiring for a main-axis separator and a cross-axis child split. */
 export interface ResizableJoinCornerSpec {
-  parentKind: "row" | "column";
+  parentAxis: WindowLayoutAxis;
   mainAxisPath: string;
   mainSeparatorIndex: number;
   crossAxisPath: string;

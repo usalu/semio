@@ -1,0 +1,11 @@
+{
+  "schema": "s.puzzle3d.wgpu-clipboard.v1",
+  "variant": "puzzle3d",
+  "windowId": "puzzle3d-main-perspective",
+  "surfaceId": "puzzle.3d.play.viewport",
+  "palette": { "en": "Add Object", "de": "Objekt hinzufügen" },
+  "grid": [0.5, 0.4, 0.6, 0.3, 0.7, 0.2, 0.8],
+  "clipboardOffset": [0.5, 0.5, 0.0],
+  "tolerance": 0.001,
+  "pickTimeoutMs": 1200
+}

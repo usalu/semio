@@ -5,7 +5,8 @@
   "required": [
     "version",
     "retention",
-    "cases"
+    "cases",
+    "boundedHistory"
   ],
   "properties": {
     "version": {
@@ -63,6 +64,29 @@
               "refuse"
             ]
           }
+        }
+      }
+    },
+    "boundedHistory": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "manifests",
+        "ownersPerManifest",
+        "generationsInTie"
+      ],
+      "properties": {
+        "manifests": {
+          "type": "integer",
+          "minimum": 2
+        },
+        "ownersPerManifest": {
+          "type": "integer",
+          "minimum": 2
+        },
+        "generationsInTie": {
+          "type": "integer",
+          "minimum": 2
         }
       }
     }

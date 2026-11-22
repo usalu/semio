@@ -8,4 +8,4 @@ export interface ChangeJointPlateShearPlanes {
   newShearPlanes: number;
 }
 
-export const parseChangeJointPlateShearPlanes: NormWireReader<ChangeJointPlateShearPlanes> = normWireObject<ChangeJointPlateShearPlanes>({ id: normWireRequired(normWireString), newShearPlanes: normWireRequired(normWireRange(normWireInteger, {"minimum":0})) });
+export const parseChangeJointPlateShearPlanes: NormWireReader<ChangeJointPlateShearPlanes> = normWireObject<ChangeJointPlateShearPlanes>({ id: normWireRequired(normWireString), newShearPlanes: normWireRequired(normWireRange(normWireInteger, {"minimum":0,"maximum":4294967295})) });

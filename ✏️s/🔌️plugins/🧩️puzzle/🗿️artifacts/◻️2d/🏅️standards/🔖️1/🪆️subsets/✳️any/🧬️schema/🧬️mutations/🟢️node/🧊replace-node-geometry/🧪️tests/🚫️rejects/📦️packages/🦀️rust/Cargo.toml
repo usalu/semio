@@ -15,6 +15,9 @@ workspace = true
 [lib]
 path = "🦀️.rs"
 
+[features]
+testkit = ["semio-s-artifact-puzzle-2d-interaction/testkit", "semio-s-artifact-puzzle-2d-mutations/testkit", "semio-s-artifact-puzzle-2d-schema/testkit", "semio-s-artifact-puzzle-2d-snapshot/testkit", "semio-s-artifact-puzzle-2d-tests/testkit"]
+
 [dependencies]
 machine = { path = "../../../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🔄️machine/📦️packages/🦀️rust", package = "semio-framework-machine" }
 pack = { workspace = true }
@@ -55,7 +58,6 @@ semio-s-artifact-puzzle-2d-snapshot = { path = "../../../../../../../📸️snap
 semio-s-artifact-puzzle-2d-tests = { path = "../../../../../../🔌️handle/🪢️connect-handles/🎮️prepare/🧪️tests/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-3d = { workspace = true }
 semio-s-artifact-puzzle-3d-inferences = { workspace = true }
-semio-s-artifact-stdio-dwg = { workspace = true }
 semio-s-artifact-stdio-dxf = { workspace = true }
 semio-s-artifact-stdio-json = { workspace = true }
 semio-s-artifact-stdio-pdf = { workspace = true }
@@ -86,6 +88,11 @@ semio-s-plugin-puzzle-jobs = { workspace = true, features = ["testing"] }
 semio-s-plugin-puzzle-retained = { workspace = true, features = ["testing"] }
 serde = { workspace = true }
 serde_json = { workspace = true }
+semio-s-artifact-puzzle-2d-interaction = { path = "../../../../../../../../✏️editor/🕹️interaction/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-puzzle-2d-mutations = { path = "../../../../../../../📸️snapshot/🧪️tests/🧬️retained-clone/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-puzzle-2d-schema = { path = "../../../../../../../📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-puzzle-2d-snapshot = { path = "../../../../../../../📸️snapshot/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-puzzle-2d-tests = { path = "../../../../../../🔌️handle/🪢️connect-handles/🎮️prepare/🧪️tests/📦️packages/🦀️rust", features = ["testkit"] }
 
 [target.'cfg(all(target_arch = "wasm32", not(target_env = "p2")))'.dependencies]
 js-sys = { workspace = true }

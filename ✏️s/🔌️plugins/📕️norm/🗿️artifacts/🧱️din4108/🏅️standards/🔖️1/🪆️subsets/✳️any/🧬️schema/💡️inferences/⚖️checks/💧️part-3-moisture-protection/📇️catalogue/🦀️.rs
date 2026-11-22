@@ -2,6 +2,7 @@
 
 use super::{AnnexADryingExposure, annex_a_elevation_in_scope};
 use super::material_limits::CondensateMaterials;
+use super::construction_cases::ventilated_roof::{Opening, Outlet, VentilatedRoof};
 use super::construction_cases::{
     AtticCeiling, attic_ceiling_limits, interior_wall_limit, internal_slab_sd_recommendation,
     perimeter_slab_limit, unventilated_roof_limit, unventilated_roof_minimum_sd,
@@ -18,6 +19,7 @@ pub const ATTIC_ENTRY: &str = "DINA-04";
 const PERIMETER_ENTRY: &str = "DINA-05";
 const WALL_ENTRY: &str = "DINA-06";
 const UNVENTILATED_ROOF_ENTRY: &str = "DINA-07";
+const VENTILATED_ROOF_ENTRY: &str = "DINA-09";
 
 const ENTRIES: &[CaseEntry] = &[
     CaseEntry {
@@ -59,6 +61,13 @@ const ENTRIES: &[CaseEntry] = &[
         id: MATERIAL_ENTRY, part: STANDARD, clause: "5.2.2",
         en: "Materials at condensation interfaces", de: "Baustoffe an Tauwasserebenen",
         inputs: &["condensate_element", "condensate_capillarity", "condensate_damage", "condensate_timber_increase", "condensate_wood_product_increase"], geometry: None,
+    },
+    CaseEntry {
+        id: VENTILATED_ROOF_ENTRY, part: STANDARD, clause: "5.3.4, Figures 15 and 16",
+        en: "Ventilated roof without a calculated moisture proof", de: "Nachweisfreies belüftetes Dach",
+        inputs: &["vent_roof_basis", "vent_slope", "vent_outlet_type", "vent_channel_area", "vent_channel_width", "vent_length", "vent_height",
+            "vent_inlet_tributary", "vent_inlet_length", "vent_inlet_free", "vent_outlet_tributary", "vent_outlet_length", "vent_outlet_free", "vent_sd", "vent_inboard_r"],
+        geometry: None,
     },
 ];
 
@@ -137,6 +146,28 @@ const INPUTS: &[InputSpec] = &[
         .range(0.0, 1000.0).example(0.0).scope(MATERIAL_ENTRY),
     InputSpec::number("condensate_wood_product_increase", "Maximum non-exempt wood-product moisture increase, 0 if none exposed", "Höchste Feuchtezunahme bei nicht ausgenommenen Holzwerkstoffen, 0 ohne solche", UnitId::Percent)
         .range(0.0, 1000.0).example(0.0).scope(MATERIAL_ENTRY),
+    InputSpec::choice("vent_roof_basis", "Figure 15 or 16 build-up and continuous airflow", "Aufbau nach Bild 15 oder 16 und durchgehende Belüftung", &[
+        InputChoice::new("confirmed", "Assembly, unobstructed airflow accounting for tolerances and §5.3.1 confirmed", "Aufbau, freie Anströmung mit Toleranzen und 5.3.1 bestätigt"),
+        InputChoice::new("unconfirmed", "Roof construction or ventilation path unconfirmed", "Dachaufbau oder Luftweg unbestätigt"),
+    ]).example_text("confirmed").scope(VENTILATED_ROOF_ENTRY),
+    InputSpec::number("vent_slope", "Roof slope", "Dachneigung", UnitId::Degree).example(4.0).scope(VENTILATED_ROOF_ENTRY),
+    InputSpec::choice("vent_outlet_type", "Opening at the other end of the airflow path", "Öffnung am anderen Ende des Luftwegs", &[
+        InputChoice::new("opposite", "Opposing edge of a low-slope roof", "Gegenüberliegender Rand eines flach geneigten Daches"),
+        InputChoice::new("mono", "Eave or mono-pitch roof termination", "Traufe oder Pultdachabschluss"),
+        InputChoice::new("ridge", "Ridge or hip", "First oder Grat"),
+    ]).example_text("opposite").scope(VENTILATED_ROOF_ENTRY),
+    InputSpec::number("vent_channel_area", "Low slope, tributary sloped area of the air path", "Flache Neigung, zugehörige geneigte Dachfläche des Luftwegs", UnitId::SquareMetre).example(80.0).scope(VENTILATED_ROOF_ENTRY),
+    InputSpec::number("vent_channel_width", "Low slope, clear width of the air path section", "Flache Neigung, lichte Breite des Luftquerschnitts", UnitId::Metre).example(10.0).scope(VENTILATED_ROOF_ENTRY),
+    InputSpec::number("vent_length", "Low slope, distance between the openings", "Flache Neigung, Abstand der Lüftungsöffnungen", UnitId::Metre).example(8.0).scope(VENTILATED_ROOF_ENTRY),
+    InputSpec::number("vent_height", "Free air layer height", "Freie Lüftungshöhe", UnitId::Metre).example(0.06).scope(VENTILATED_ROOF_ENTRY),
+    InputSpec::number("vent_inlet_tributary", "Sloped roof area belonging to the eave or first edge", "Geneigte Dachfläche zur Traufe oder zum ersten Rand", UnitId::SquareMetre).example(80.0).scope(VENTILATED_ROOF_ENTRY),
+    InputSpec::number("vent_inlet_length", "Length of the eave or first edge", "Länge der Traufe oder des ersten Rands", UnitId::Metre).example(8.0).scope(VENTILATED_ROOF_ENTRY),
+    InputSpec::number("vent_inlet_free", "Free opening area at the eave or first edge", "Freier Öffnungsquerschnitt an Traufe oder erstem Rand", UnitId::SquareMetre).example(0.18).scope(VENTILATED_ROOF_ENTRY),
+    InputSpec::number("vent_outlet_tributary", "Sloped roof area belonging to the other opening", "Geneigte Dachfläche zur anderen Öffnung", UnitId::SquareMetre).example(80.0).scope(VENTILATED_ROOF_ENTRY),
+    InputSpec::number("vent_outlet_length", "Length of the other opening edge", "Randlänge der anderen Öffnung", UnitId::Metre).example(8.0).scope(VENTILATED_ROOF_ENTRY),
+    InputSpec::number("vent_outlet_free", "Free opening area at the other edge", "Freier Öffnungsquerschnitt am anderen Rand", UnitId::SquareMetre).example(0.18).scope(VENTILATED_ROOF_ENTRY),
+    InputSpec::number("vent_sd", "Room-side diffusion-equivalent thickness s_d,i", "Raumseitige diffusionsäquivalente Luftschichtdicke s_d,i", UnitId::Metre).example(110.0).scope(VENTILATED_ROOF_ENTRY),
+    InputSpec::number("vent_inboard_r", "Low slope, thermal resistance share room-side of the diffusion control layer", "Flache Neigung, Wärmedurchlasswiderstandsanteil raumseitig der diffusionsbegrenzenden Schicht", UnitId::One).example(0.15).scope(VENTILATED_ROOF_ENTRY),
 ];
 
 /// 📚️ DIN 4108 design cases for determining the scope and summer boundary conditions of Annex A.
@@ -166,6 +197,7 @@ impl CaseCatalogue for Din4108PeriodCases {
             PERIMETER_ENTRY => "perimeter_build_up",
             WALL_ENTRY => "wall_build_up",
             UNVENTILATED_ROOF_ENTRY => "table3_roof_build_up",
+            VENTILATED_ROOF_ENTRY => "vent_roof_basis",
             MATERIAL_ENTRY => "condensate_capillarity",
             _ => "roof_exposure",
         };
@@ -226,6 +258,9 @@ impl CaseCatalogue for Din4108PeriodCases {
 }
 
 fn construction_case(entry: &str, values: &CaseValues) -> (CheckStatus, LocalizedCopy) {
+    if entry == VENTILATED_ROOF_ENTRY {
+        return ventilated_roof_case(values);
+    }
     let number = |key: &str| values.numbers.get(key).copied().unwrap_or(f64::NAN);
     let confirmed = |key: &str| values.texts.get(key).is_some_and(|value| value == "confirmed");
     if entry == SLAB_ENTRY {
@@ -374,4 +409,40 @@ pub fn period_basis(cases: impl IntoIterator<Item = DesignCase>, element_id: &st
     if roof_cases != 1 { basis.roof_exposure = None; }
     if material_cases != 1 { basis.materials = None; }
     basis
+}
+
+fn ventilated_roof_case(values: &CaseValues) -> (CheckStatus, LocalizedCopy) {
+    let text = |key| values.texts.get(key).map(String::as_str);
+    let number = |key| values.numbers.get(key).copied().unwrap_or(f64::NAN);
+    let missing = || (CheckStatus::NotApplicable, LocalizedCopy::new(
+        "Confirm the construction and provide the applicable geometry, openings and diffusion inputs.",
+        "Aufbau bestätigen und zutreffende Geometrie, Öffnungen und Diffusionskennwerte eingeben.",
+    ));
+    if text("vent_roof_basis") != Some("confirmed") {
+        return missing();
+    }
+    let outlet_type = match text("vent_outlet_type") {
+        Some("opposite") => Outlet::OppositeEdge,
+        Some("mono") => Outlet::EaveOrMonoPitch,
+        Some("ridge") => Outlet::RidgeOrHip,
+        _ => return missing(),
+    };
+    let roof = VentilatedRoof {
+        slope_deg: number("vent_slope"), channel_roof_area_m2: number("vent_channel_area"),
+        channel_width_m: number("vent_channel_width"), path_length_m: number("vent_length"),
+        free_height_m: number("vent_height"),
+        inlet: Opening { roof_area_m2: number("vent_inlet_tributary"), length_m: number("vent_inlet_length"), free_m2: number("vent_inlet_free") },
+        outlet: Opening { roof_area_m2: number("vent_outlet_tributary"), length_m: number("vent_outlet_length"), free_m2: number("vent_outlet_free") },
+        outlet_type, inboard_sd_m: number("vent_sd"), inboard_r_fraction: number("vent_inboard_r"),
+    };
+    let Some(limits) = roof.evaluate() else { return missing() };
+    let extra = if limits.low_slope {
+        (" Opposing edges, at most 10 m airflow length and at most 20% room-side thermal resistance are also required.",
+         " Zusätzlich sind gegenüberliegende Ränder, höchstens 10 m Luftweglänge und höchstens 20 % raumseitiger Wärmedurchlasswiderstand erforderlich.")
+    } else { ("", "") };
+    let status = if limits.complies { CheckStatus::Pass } else { CheckStatus::Fail };
+    (status, LocalizedCopy::new(
+        format!("The free height must reach {:.3} m, free openings {:.4} and {:.4} m², and room-side s_d at least {:.0} m.{}", limits.height_m, limits.inlet_m2, limits.outlet_m2, limits.inboard_sd_m, extra.0),
+        format!("Die freie Höhe muss {:.3} m, die freien Öffnungen {:.4} und {:.4} m² und der raumseitige s_d-Wert mindestens {:.0} m erreichen.{}", limits.height_m, limits.inlet_m2, limits.outlet_m2, limits.inboard_sd_m, extra.1),
+    ))
 }

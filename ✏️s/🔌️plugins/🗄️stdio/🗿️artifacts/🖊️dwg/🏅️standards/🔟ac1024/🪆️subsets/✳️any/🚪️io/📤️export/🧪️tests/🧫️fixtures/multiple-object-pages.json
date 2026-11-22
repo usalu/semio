@@ -1,0 +1,40 @@
+{
+  "version": "AC1024",
+  "faceCount": 1200,
+  "layer": "Procedural solid",
+  "baseCorners": [
+    [
+      0.25,
+      1.375,
+      0.625
+    ],
+    [
+      3.125,
+      -0.875,
+      2.75
+    ],
+    [
+      4.375,
+      3.625,
+      7.875
+    ],
+    [
+      -0.125,
+      5.375,
+      2.5
+    ]
+  ],
+  "step": [
+    2,
+    3,
+    1
+  ],
+  "minimumObjectPages": 2,
+  "recordCrc": {
+    "payloadBytes": 73129,
+    "offsetBytes": 13,
+    "objectHandle": 53,
+    "typeCode": 19,
+    "maximumBytesPerTurn": 4096
+  }
+}

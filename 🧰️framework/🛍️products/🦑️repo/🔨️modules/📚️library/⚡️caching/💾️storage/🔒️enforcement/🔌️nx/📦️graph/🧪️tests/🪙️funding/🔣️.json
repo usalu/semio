@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "charge": 67239936,
-  "policySha256": "c07a5c3c5bdf1fc49339d3e845f4cad2b8ca8d85b2242a5b04cdaeb63df13b86",
+  "charge": 167903232,
+  "policySha256": "389bce3fc59658739d4d63e76b9c874c20096bf0e34fa1d6d69923f8f03d77da",
   "capacityCases": [
     {
       "id": "observed-all-phase-pool-short-by-two-mib",
@@ -13,105 +13,51 @@
           "kind": "artifact-publication"
         },
         {
-          "bytes": 67239936,
+          "bytes": 167903232,
           "phase": "committed",
           "owner": "repository:nx-namespace",
           "kind": "compiler-state"
         },
         {
-          "bytes": 67239936,
+          "bytes": 167903232,
           "phase": "committed",
           "owner": "repository:nx-namespace",
           "kind": "compiler-state"
         },
         {
-          "bytes": 67239936,
+          "bytes": 167903232,
           "phase": "committed",
           "owner": "repository:nx-namespace",
           "kind": "compiler-state"
         },
         {
-          "bytes": 67239936,
+          "bytes": 167903232,
           "phase": "committed",
           "owner": "repository:nx-namespace",
           "kind": "compiler-state"
         },
         {
-          "bytes": 67239936,
+          "bytes": 167903232,
           "phase": "committed",
           "owner": "repository:nx-namespace",
           "kind": "compiler-state"
         },
         {
-          "bytes": 67239936,
-          "phase": "committed",
-          "owner": "repository:nx-namespace",
-          "kind": "compiler-state"
-        },
-        {
-          "bytes": 67239936,
-          "phase": "committed",
-          "owner": "repository:nx-namespace",
-          "kind": "compiler-state"
-        },
-        {
-          "bytes": 67239936,
-          "phase": "committed",
-          "owner": "repository:nx-namespace",
-          "kind": "compiler-state"
-        },
-        {
-          "bytes": 67239936,
-          "phase": "committed",
-          "owner": "repository:nx-namespace",
-          "kind": "compiler-state"
-        },
-        {
-          "bytes": 67239936,
-          "phase": "committed",
-          "owner": "repository:nx-namespace",
-          "kind": "compiler-state"
-        },
-        {
-          "bytes": 67239936,
-          "phase": "committed",
-          "owner": "repository:nx-namespace",
-          "kind": "compiler-state"
-        },
-        {
-          "bytes": 67239936,
-          "phase": "committed",
-          "owner": "repository:nx-namespace",
-          "kind": "compiler-state"
-        },
-        {
-          "bytes": 67239936,
-          "phase": "committed",
-          "owner": "repository:nx-namespace",
-          "kind": "compiler-state"
-        },
-        {
-          "bytes": 67239936,
-          "phase": "committed",
-          "owner": "repository:nx-namespace",
-          "kind": "compiler-state"
-        },
-        {
-          "bytes": 67239936,
+          "bytes": 167903232,
           "phase": "reserved",
           "owner": "repository:nx-namespace",
           "kind": "compiler-state"
         }
       ],
-      "effectiveCapacityBytes": 1610612736,
-      "requestedBytes": 67239936,
+      "effectiveCapacityBytes": 1710096384,
+      "requestedBytes": 167903232,
       "namespaceBytes": [
         4096
       ],
       "namespaceLimits": [
         4198400
       ],
-      "extraBytes": 71303168,
+      "extraBytes": 171966464,
       "availableBytes": 4294967296,
       "admitted": false
     },
@@ -125,99 +71,45 @@
           "kind": "artifact-publication"
         },
         {
-          "bytes": 67239936,
+          "bytes": 167903232,
           "phase": "committed",
           "owner": "repository:nx-namespace",
           "kind": "compiler-state"
         },
         {
-          "bytes": 67239936,
+          "bytes": 167903232,
           "phase": "committed",
           "owner": "repository:nx-namespace",
           "kind": "compiler-state"
         },
         {
-          "bytes": 67239936,
+          "bytes": 167903232,
           "phase": "committed",
           "owner": "repository:nx-namespace",
           "kind": "compiler-state"
         },
         {
-          "bytes": 67239936,
+          "bytes": 167903232,
           "phase": "committed",
           "owner": "repository:nx-namespace",
           "kind": "compiler-state"
         },
         {
-          "bytes": 67239936,
-          "phase": "committed",
-          "owner": "repository:nx-namespace",
-          "kind": "compiler-state"
-        },
-        {
-          "bytes": 67239936,
-          "phase": "committed",
-          "owner": "repository:nx-namespace",
-          "kind": "compiler-state"
-        },
-        {
-          "bytes": 67239936,
-          "phase": "committed",
-          "owner": "repository:nx-namespace",
-          "kind": "compiler-state"
-        },
-        {
-          "bytes": 67239936,
-          "phase": "committed",
-          "owner": "repository:nx-namespace",
-          "kind": "compiler-state"
-        },
-        {
-          "bytes": 67239936,
-          "phase": "committed",
-          "owner": "repository:nx-namespace",
-          "kind": "compiler-state"
-        },
-        {
-          "bytes": 67239936,
-          "phase": "committed",
-          "owner": "repository:nx-namespace",
-          "kind": "compiler-state"
-        },
-        {
-          "bytes": 67239936,
-          "phase": "committed",
-          "owner": "repository:nx-namespace",
-          "kind": "compiler-state"
-        },
-        {
-          "bytes": 67239936,
-          "phase": "committed",
-          "owner": "repository:nx-namespace",
-          "kind": "compiler-state"
-        },
-        {
-          "bytes": 67239936,
-          "phase": "committed",
-          "owner": "repository:nx-namespace",
-          "kind": "compiler-state"
-        },
-        {
-          "bytes": 67239936,
+          "bytes": 167903232,
           "phase": "reserved",
           "owner": "repository:nx-namespace",
           "kind": "compiler-state"
         }
       ],
       "effectiveCapacityBytes": 1610612736,
-      "requestedBytes": 67239936,
+      "requestedBytes": 167903232,
       "namespaceBytes": [
         4096
       ],
       "namespaceLimits": [
         4198400
       ],
-      "extraBytes": 71303168,
+      "extraBytes": 171966464,
       "availableBytes": 4294967296,
       "admitted": true
     },
@@ -231,15 +123,15 @@
           "kind": "artifact-publication"
         }
       ],
-      "effectiveCapacityBytes": 67240036,
-      "requestedBytes": 67239936,
+      "effectiveCapacityBytes": 167903332,
+      "requestedBytes": 167903232,
       "namespaceBytes": [
         4096
       ],
       "namespaceLimits": [
         4198400
       ],
-      "extraBytes": 71303168,
+      "extraBytes": 171966464,
       "availableBytes": 4294967296,
       "admitted": true
     },
@@ -253,15 +145,15 @@
           "kind": "artifact-publication"
         }
       ],
-      "effectiveCapacityBytes": 67240036,
-      "requestedBytes": 67239936,
+      "effectiveCapacityBytes": 167903332,
+      "requestedBytes": 167903232,
       "namespaceBytes": [
         4096
       ],
       "namespaceLimits": [
         4198400
       ],
-      "extraBytes": 71303168,
+      "extraBytes": 171966464,
       "availableBytes": 4294967296,
       "admitted": false
     },
@@ -301,7 +193,7 @@
       "namespaceLimits": [
         4198400
       ],
-      "extraBytes": 71303168,
+      "extraBytes": 171966464,
       "availableBytes": 4294967296,
       "admitted": false
     },
@@ -337,15 +229,15 @@
           "kind": "artifact-publication"
         }
       ],
-      "effectiveCapacityBytes": 67239936,
-      "requestedBytes": 67239936,
+      "effectiveCapacityBytes": 167903232,
+      "requestedBytes": 167903232,
       "namespaceBytes": [
         4096
       ],
       "namespaceLimits": [
         4198400
       ],
-      "extraBytes": 71303168,
+      "extraBytes": 171966464,
       "availableBytes": 16777215,
       "admitted": false
     },
@@ -359,13 +251,15 @@
           "kind": "artifact-publication"
         }
       ],
-      "effectiveCapacityBytes": 67239936,
-      "requestedBytes": 67239936,
+      "effectiveCapacityBytes": 167903232,
+      "requestedBytes": 167903232,
       "namespaceBytes": [
+        536870912,
         536870912,
         536870912
       ],
       "namespaceLimits": [
+        536870912,
         536870912,
         536870912
       ],
@@ -387,16 +281,16 @@
               "id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
               "owner": "repository:nx-namespace",
               "kind": "compiler-state",
-              "bytes": 67239936,
+              "bytes": 167903232,
               "phase": "committed",
               "child": {
                 "version": 1,
                 "allocation": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
                 "parentIdentity": "[\"linux\",1,2,1610612736,\"mapping\"]",
                 "directory": "/pool/shard/native",
-                "filesystemBytes": 66060288,
-                "maximumPhysicalBytes": 67108864,
-                "policySha256": "c07a5c3c5bdf1fc49339d3e845f4cad2b8ca8d85b2242a5b04cdaeb63df13b86"
+                "filesystemBytes": 166723584,
+                "maximumPhysicalBytes": 167772160,
+                "policySha256": "389bce3fc59658739d4d63e76b9c874c20096bf0e34fa1d6d69923f8f03d77da"
               },
               "namespace": {
                 "directory": "/pool/shard",
@@ -437,16 +331,16 @@
               "id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
               "owner": "repository:nx-namespace",
               "kind": "compiler-state",
-              "bytes": 67239936,
+              "bytes": 167903232,
               "phase": "committed",
               "child": {
                 "version": 1,
                 "allocation": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
                 "parentIdentity": "[\"linux\",1,2,1610612736,\"mapping\"]",
                 "directory": "/pool/shard/native",
-                "filesystemBytes": 66060288,
-                "maximumPhysicalBytes": 67108864,
-                "policySha256": "c07a5c3c5bdf1fc49339d3e845f4cad2b8ca8d85b2242a5b04cdaeb63df13b86"
+                "filesystemBytes": 166723584,
+                "maximumPhysicalBytes": 167772160,
+                "policySha256": "389bce3fc59658739d4d63e76b9c874c20096bf0e34fa1d6d69923f8f03d77da"
               },
               "namespace": {
                 "directory": "/pool/shard",
@@ -491,7 +385,7 @@
         "birthDirectoryPresent": false
       },
       "status": "new",
-      "requestedBytes": 67239936,
+      "requestedBytes": 167903232,
       "admitted": true
     },
     {
@@ -510,109 +404,46 @@
               "id": "00000000000000000000000000000001"
             },
             {
-              "bytes": 67239936,
+              "bytes": 167903232,
               "phase": "committed",
               "owner": "repository:nx-namespace",
               "kind": "compiler-state",
               "id": "00000000000000000000000000000002"
             },
             {
-              "bytes": 67239936,
+              "bytes": 167903232,
               "phase": "committed",
               "owner": "repository:nx-namespace",
               "kind": "compiler-state",
               "id": "00000000000000000000000000000003"
             },
             {
-              "bytes": 67239936,
+              "bytes": 167903232,
               "phase": "committed",
               "owner": "repository:nx-namespace",
               "kind": "compiler-state",
               "id": "00000000000000000000000000000004"
             },
             {
-              "bytes": 67239936,
+              "bytes": 167903232,
               "phase": "committed",
               "owner": "repository:nx-namespace",
               "kind": "compiler-state",
               "id": "00000000000000000000000000000005"
             },
             {
-              "bytes": 67239936,
+              "bytes": 167903232,
               "phase": "committed",
               "owner": "repository:nx-namespace",
               "kind": "compiler-state",
               "id": "00000000000000000000000000000006"
             },
             {
-              "bytes": 67239936,
+              "bytes": 167903232,
               "phase": "committed",
               "owner": "repository:nx-namespace",
               "kind": "compiler-state",
               "id": "00000000000000000000000000000007"
-            },
-            {
-              "bytes": 67239936,
-              "phase": "committed",
-              "owner": "repository:nx-namespace",
-              "kind": "compiler-state",
-              "id": "00000000000000000000000000000008"
-            },
-            {
-              "bytes": 67239936,
-              "phase": "committed",
-              "owner": "repository:nx-namespace",
-              "kind": "compiler-state",
-              "id": "00000000000000000000000000000009"
-            },
-            {
-              "bytes": 67239936,
-              "phase": "committed",
-              "owner": "repository:nx-namespace",
-              "kind": "compiler-state",
-              "id": "0000000000000000000000000000000a"
-            },
-            {
-              "bytes": 67239936,
-              "phase": "committed",
-              "owner": "repository:nx-namespace",
-              "kind": "compiler-state",
-              "id": "0000000000000000000000000000000b"
-            },
-            {
-              "bytes": 67239936,
-              "phase": "committed",
-              "owner": "repository:nx-namespace",
-              "kind": "compiler-state",
-              "id": "0000000000000000000000000000000c"
-            },
-            {
-              "bytes": 67239936,
-              "phase": "committed",
-              "owner": "repository:nx-namespace",
-              "kind": "compiler-state",
-              "id": "0000000000000000000000000000000d"
-            },
-            {
-              "bytes": 67239936,
-              "phase": "committed",
-              "owner": "repository:nx-namespace",
-              "kind": "compiler-state",
-              "id": "0000000000000000000000000000000e"
-            },
-            {
-              "bytes": 67239936,
-              "phase": "committed",
-              "owner": "repository:nx-namespace",
-              "kind": "compiler-state",
-              "id": "0000000000000000000000000000000f"
-            },
-            {
-              "bytes": 67239936,
-              "phase": "reserved",
-              "owner": "repository:nx-namespace",
-              "kind": "compiler-state",
-              "id": "00000000000000000000000000000010"
             }
           ]
         },
@@ -623,7 +454,7 @@
         "birthDirectoryPresent": false
       },
       "status": "new",
-      "requestedBytes": 67239936,
+      "requestedBytes": 167903232,
       "admitted": false
     },
     {
@@ -638,16 +469,16 @@
               "id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
               "owner": "repository:nx-namespace",
               "kind": "compiler-state",
-              "bytes": 67239936,
+              "bytes": 167903232,
               "phase": "reserved",
               "child": {
                 "version": 1,
                 "allocation": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
                 "parentIdentity": "[\"linux\",1,2,1610612736,\"mapping\"]",
                 "directory": "/pool/shard/native",
-                "filesystemBytes": 66060288,
-                "maximumPhysicalBytes": 67108864,
-                "policySha256": "c07a5c3c5bdf1fc49339d3e845f4cad2b8ca8d85b2242a5b04cdaeb63df13b86"
+                "filesystemBytes": 166723584,
+                "maximumPhysicalBytes": 167772160,
+                "policySha256": "389bce3fc59658739d4d63e76b9c874c20096bf0e34fa1d6d69923f8f03d77da"
               },
               "namespace": {
                 "directory": "/pool/shard",
@@ -688,16 +519,16 @@
               "id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
               "owner": "repository:nx-namespace",
               "kind": "compiler-state",
-              "bytes": 67239936,
+              "bytes": 167903232,
               "phase": "retiring",
               "child": {
                 "version": 1,
                 "allocation": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
                 "parentIdentity": "[\"linux\",1,2,1610612736,\"mapping\"]",
                 "directory": "/pool/shard/native",
-                "filesystemBytes": 66060288,
-                "maximumPhysicalBytes": 67108864,
-                "policySha256": "c07a5c3c5bdf1fc49339d3e845f4cad2b8ca8d85b2242a5b04cdaeb63df13b86"
+                "filesystemBytes": 166723584,
+                "maximumPhysicalBytes": 167772160,
+                "policySha256": "389bce3fc59658739d4d63e76b9c874c20096bf0e34fa1d6d69923f8f03d77da"
               },
               "namespace": {
                 "directory": "/pool/shard",
@@ -738,16 +569,16 @@
               "id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
               "owner": "repository:nx-namespace",
               "kind": "compiler-state",
-              "bytes": 67239936,
+              "bytes": 167903232,
               "phase": "committed",
               "child": {
                 "version": 1,
                 "allocation": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
                 "parentIdentity": "[\"linux\",1,2,1610612736,\"mapping\"]",
                 "directory": "/pool/shard/native",
-                "filesystemBytes": 66060288,
-                "maximumPhysicalBytes": 67108864,
-                "policySha256": "c07a5c3c5bdf1fc49339d3e845f4cad2b8ca8d85b2242a5b04cdaeb63df13b86"
+                "filesystemBytes": 166723584,
+                "maximumPhysicalBytes": 167772160,
+                "policySha256": "389bce3fc59658739d4d63e76b9c874c20096bf0e34fa1d6d69923f8f03d77da"
               },
               "namespace": {
                 "directory": "/pool/shard",
@@ -826,16 +657,16 @@
               "id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
               "owner": "foreign",
               "kind": "compiler-state",
-              "bytes": 67239936,
+              "bytes": 167903232,
               "phase": "committed",
               "child": {
                 "version": 1,
                 "allocation": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
                 "parentIdentity": "[\"linux\",1,2,1610612736,\"mapping\"]",
                 "directory": "/pool/shard/native",
-                "filesystemBytes": 66060288,
-                "maximumPhysicalBytes": 67108864,
-                "policySha256": "c07a5c3c5bdf1fc49339d3e845f4cad2b8ca8d85b2242a5b04cdaeb63df13b86"
+                "filesystemBytes": 166723584,
+                "maximumPhysicalBytes": 167772160,
+                "policySha256": "389bce3fc59658739d4d63e76b9c874c20096bf0e34fa1d6d69923f8f03d77da"
               },
               "namespace": {
                 "directory": "/pool/shard",
@@ -876,16 +707,16 @@
               "id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
               "owner": "repository:nx-namespace",
               "kind": "artifact-publication",
-              "bytes": 67239936,
+              "bytes": 167903232,
               "phase": "committed",
               "child": {
                 "version": 1,
                 "allocation": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
                 "parentIdentity": "[\"linux\",1,2,1610612736,\"mapping\"]",
                 "directory": "/pool/shard/native",
-                "filesystemBytes": 66060288,
-                "maximumPhysicalBytes": 67108864,
-                "policySha256": "c07a5c3c5bdf1fc49339d3e845f4cad2b8ca8d85b2242a5b04cdaeb63df13b86"
+                "filesystemBytes": 166723584,
+                "maximumPhysicalBytes": 167772160,
+                "policySha256": "389bce3fc59658739d4d63e76b9c874c20096bf0e34fa1d6d69923f8f03d77da"
               },
               "namespace": {
                 "directory": "/pool/shard",
@@ -926,16 +757,16 @@
               "id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
               "owner": "repository:nx-namespace",
               "kind": "compiler-state",
-              "bytes": 67239937,
+              "bytes": 167903233,
               "phase": "committed",
               "child": {
                 "version": 1,
                 "allocation": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
                 "parentIdentity": "[\"linux\",1,2,1610612736,\"mapping\"]",
                 "directory": "/pool/shard/native",
-                "filesystemBytes": 66060288,
-                "maximumPhysicalBytes": 67108864,
-                "policySha256": "c07a5c3c5bdf1fc49339d3e845f4cad2b8ca8d85b2242a5b04cdaeb63df13b86"
+                "filesystemBytes": 166723584,
+                "maximumPhysicalBytes": 167772160,
+                "policySha256": "389bce3fc59658739d4d63e76b9c874c20096bf0e34fa1d6d69923f8f03d77da"
               },
               "namespace": {
                 "directory": "/pool/shard",
@@ -976,16 +807,16 @@
               "id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
               "owner": "repository:nx-namespace",
               "kind": "compiler-state",
-              "bytes": 67239936,
+              "bytes": 167903232,
               "phase": "committed",
               "child": {
                 "version": 1,
                 "allocation": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
                 "parentIdentity": "[\"linux\",1,2,1610612736,\"mapping\"]",
                 "directory": "/pool/shard/native",
-                "filesystemBytes": 66060288,
-                "maximumPhysicalBytes": 67108864,
-                "policySha256": "c07a5c3c5bdf1fc49339d3e845f4cad2b8ca8d85b2242a5b04cdaeb63df13b86"
+                "filesystemBytes": 166723584,
+                "maximumPhysicalBytes": 167772160,
+                "policySha256": "389bce3fc59658739d4d63e76b9c874c20096bf0e34fa1d6d69923f8f03d77da"
               },
               "namespace": {
                 "directory": "/pool/shard",
@@ -1026,16 +857,16 @@
               "id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
               "owner": "repository:nx-namespace",
               "kind": "compiler-state",
-              "bytes": 67239936,
+              "bytes": 167903232,
               "phase": "committed",
               "child": {
                 "version": 1,
                 "allocation": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
                 "parentIdentity": "[\"linux\",1,99,1610612736,\"mapping\"]",
                 "directory": "/pool/shard/native",
-                "filesystemBytes": 66060288,
-                "maximumPhysicalBytes": 67108864,
-                "policySha256": "c07a5c3c5bdf1fc49339d3e845f4cad2b8ca8d85b2242a5b04cdaeb63df13b86"
+                "filesystemBytes": 166723584,
+                "maximumPhysicalBytes": 167772160,
+                "policySha256": "389bce3fc59658739d4d63e76b9c874c20096bf0e34fa1d6d69923f8f03d77da"
               },
               "namespace": {
                 "directory": "/pool/shard",
@@ -1076,16 +907,16 @@
               "id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
               "owner": "repository:nx-namespace",
               "kind": "compiler-state",
-              "bytes": 67239936,
+              "bytes": 167903232,
               "phase": "committed",
               "child": {
                 "version": 1,
                 "allocation": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
                 "parentIdentity": "[\"linux\",1,2,1610612736,\"mapping\"]",
                 "directory": "/pool/shard/native",
-                "filesystemBytes": 66060287,
-                "maximumPhysicalBytes": 67108864,
-                "policySha256": "c07a5c3c5bdf1fc49339d3e845f4cad2b8ca8d85b2242a5b04cdaeb63df13b86"
+                "filesystemBytes": 166723583,
+                "maximumPhysicalBytes": 167772160,
+                "policySha256": "389bce3fc59658739d4d63e76b9c874c20096bf0e34fa1d6d69923f8f03d77da"
               },
               "namespace": {
                 "directory": "/pool/shard",
@@ -1126,16 +957,16 @@
               "id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
               "owner": "repository:nx-namespace",
               "kind": "compiler-state",
-              "bytes": 67239936,
+              "bytes": 167903232,
               "phase": "committed",
               "child": {
                 "version": 1,
                 "allocation": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
                 "parentIdentity": "[\"linux\",1,2,1610612736,\"mapping\"]",
                 "directory": "/pool/shard/native",
-                "filesystemBytes": 66060288,
-                "maximumPhysicalBytes": 67108863,
-                "policySha256": "c07a5c3c5bdf1fc49339d3e845f4cad2b8ca8d85b2242a5b04cdaeb63df13b86"
+                "filesystemBytes": 166723584,
+                "maximumPhysicalBytes": 167772159,
+                "policySha256": "389bce3fc59658739d4d63e76b9c874c20096bf0e34fa1d6d69923f8f03d77da"
               },
               "namespace": {
                 "directory": "/pool/shard",
@@ -1165,7 +996,7 @@
       "admitted": false
     },
     {
-      "id": "wrong-policySha256",
+      "id": "previous-format-policySha256",
       "request": {
         "effectiveCapacityBytes": 1610612736,
         "state": {
@@ -1176,15 +1007,15 @@
               "id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
               "owner": "repository:nx-namespace",
               "kind": "compiler-state",
-              "bytes": 67239936,
+              "bytes": 167903232,
               "phase": "committed",
               "child": {
                 "version": 1,
                 "allocation": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
                 "parentIdentity": "[\"linux\",1,2,1610612736,\"mapping\"]",
                 "directory": "/pool/shard/native",
-                "filesystemBytes": 66060288,
-                "maximumPhysicalBytes": 67108864,
+                "filesystemBytes": 166723584,
+                "maximumPhysicalBytes": 167772160,
                 "policySha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
               },
               "namespace": {
@@ -1210,9 +1041,9 @@
         "childPresent": true,
         "birthDirectoryPresent": true
       },
-      "status": "protected",
-      "requestedBytes": 0,
-      "admitted": false
+      "status": "stale",
+      "requestedBytes": 167903232,
+      "admitted": true
     },
     {
       "id": "wrong-namespace",
@@ -1226,16 +1057,16 @@
               "id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
               "owner": "repository:nx-namespace",
               "kind": "compiler-state",
-              "bytes": 67239936,
+              "bytes": 167903232,
               "phase": "committed",
               "child": {
                 "version": 1,
                 "allocation": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
                 "parentIdentity": "[\"linux\",1,2,1610612736,\"mapping\"]",
                 "directory": "/pool/shard/native",
-                "filesystemBytes": 66060288,
-                "maximumPhysicalBytes": 67108864,
-                "policySha256": "c07a5c3c5bdf1fc49339d3e845f4cad2b8ca8d85b2242a5b04cdaeb63df13b86"
+                "filesystemBytes": 166723584,
+                "maximumPhysicalBytes": 167772160,
+                "policySha256": "389bce3fc59658739d4d63e76b9c874c20096bf0e34fa1d6d69923f8f03d77da"
               },
               "namespace": {
                 "directory": "/pool/foreign",
@@ -1276,16 +1107,16 @@
               "id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
               "owner": "repository:nx-namespace",
               "kind": "compiler-state",
-              "bytes": 67239936,
+              "bytes": 167903232,
               "phase": "reserved",
               "child": {
                 "version": 1,
                 "allocation": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
                 "parentIdentity": "[\"linux\",1,2,1610612736,\"mapping\"]",
                 "directory": "/pool/shard/native",
-                "filesystemBytes": 66060288,
-                "maximumPhysicalBytes": 67108864,
-                "policySha256": "c07a5c3c5bdf1fc49339d3e845f4cad2b8ca8d85b2242a5b04cdaeb63df13b86"
+                "filesystemBytes": 166723584,
+                "maximumPhysicalBytes": 167772160,
+                "policySha256": "389bce3fc59658739d4d63e76b9c874c20096bf0e34fa1d6d69923f8f03d77da"
               },
               "namespace": {
                 "directory": "/pool/shard",
@@ -1326,16 +1157,16 @@
               "id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
               "owner": "repository:nx-namespace",
               "kind": "compiler-state",
-              "bytes": 67239936,
+              "bytes": 167903232,
               "phase": "reserved",
               "child": {
                 "version": 1,
                 "allocation": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
                 "parentIdentity": "[\"linux\",1,2,1610612736,\"mapping\"]",
                 "directory": "/pool/shard/native",
-                "filesystemBytes": 66060288,
-                "maximumPhysicalBytes": 67108864,
-                "policySha256": "c07a5c3c5bdf1fc49339d3e845f4cad2b8ca8d85b2242a5b04cdaeb63df13b86"
+                "filesystemBytes": 166723584,
+                "maximumPhysicalBytes": 167772160,
+                "policySha256": "389bce3fc59658739d4d63e76b9c874c20096bf0e34fa1d6d69923f8f03d77da"
               },
               "namespace": {
                 "directory": "/pool/shard",
@@ -1376,16 +1207,16 @@
               "id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
               "owner": "repository:nx-namespace",
               "kind": "compiler-state",
-              "bytes": 67239936,
+              "bytes": 167903232,
               "phase": "committed",
               "child": {
                 "version": 1,
                 "allocation": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
                 "parentIdentity": "[\"linux\",1,2,1610612736,\"mapping\"]",
                 "directory": "/pool/shard/native",
-                "filesystemBytes": 66060288,
-                "maximumPhysicalBytes": 67108864,
-                "policySha256": "c07a5c3c5bdf1fc49339d3e845f4cad2b8ca8d85b2242a5b04cdaeb63df13b86"
+                "filesystemBytes": 166723584,
+                "maximumPhysicalBytes": 167772160,
+                "policySha256": "389bce3fc59658739d4d63e76b9c874c20096bf0e34fa1d6d69923f8f03d77da"
               },
               "namespace": {
                 "directory": "/pool/shard",
@@ -1406,16 +1237,16 @@
               "id": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
               "owner": "repository:nx-namespace",
               "kind": "compiler-state",
-              "bytes": 67239936,
+              "bytes": 167903232,
               "phase": "committed",
               "child": {
                 "version": 1,
                 "allocation": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
                 "parentIdentity": "[\"linux\",1,2,1610612736,\"mapping\"]",
                 "directory": "/pool/shard/native",
-                "filesystemBytes": 66060288,
-                "maximumPhysicalBytes": 67108864,
-                "policySha256": "c07a5c3c5bdf1fc49339d3e845f4cad2b8ca8d85b2242a5b04cdaeb63df13b86"
+                "filesystemBytes": 166723584,
+                "maximumPhysicalBytes": 167772160,
+                "policySha256": "389bce3fc59658739d4d63e76b9c874c20096bf0e34fa1d6d69923f8f03d77da"
               },
               "namespace": {
                 "directory": "/pool/shard",

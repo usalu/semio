@@ -119,3 +119,7 @@ Defects seen before: the softshell jacket pinched into the lumbar hollow (back 0
 - No cloth folds; face plain; 1:200 / 1:500 not remodelled beyond the jacket.
 
 The rear carrier is now a welded tubular rack at all four scales. The pair of 330 mm deck rails is 136 mm apart at 735 mm above the ground. The steelwork provides at least 23 mm vertical clearance over the rear mudguard envelope. The legs reach the dropout mounting points, two stays connect to the frame, and each crossbar connects both rails. The models retain five, five, four and three crossbars at the four scales. Their thermal and load-bearing references follow the actual stock. The saddle and rear carrier remain distinct in the 1:350 drawing. All twelve outlines, the four scale, thermal and structural checks and the full paper document passed. Independent GLB readback measured 6,025,592 bytes across twelve scenes.
+
+## Pedal crank at 1:500 reviewed November 21
+
+Both fine-model crank forgings now survive at the coarsest scale. The left arm had been missing while its structural capsule remained. Each crank now drives its physical, thermal and structural shapes from the same rotating bone. The four strict scales, drawing and scene export checks all passed.

@@ -4,3 +4,5 @@ export function readInventoryRecordLeanV1(directory:string,key:string,maximumByt
 export function rememberInventoryRecordV1(root:string,directory:string,key:string,stamp:string):void;
 export function inventoryRecordStillHoldsV1(root:string,directory:string,key:string):boolean;
 export function forgetInventoryRecordsV1():void;
+export const INVENTORY_CORRUPT_CODE_V1:"BUILD_INVENTORY_CORRUPT";
+export function inventoryRecordCorruptV1(error:unknown):boolean;

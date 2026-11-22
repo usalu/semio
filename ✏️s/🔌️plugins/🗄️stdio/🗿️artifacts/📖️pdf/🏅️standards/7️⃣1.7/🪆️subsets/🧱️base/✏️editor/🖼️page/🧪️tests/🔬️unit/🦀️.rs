@@ -52,15 +52,10 @@ use semio_plugin::WindowKindDefinition;
 #[allow(unused_imports)]
 use semio_plugin::WindowLayout;
 #[allow(unused_imports)]
-use semio_plugin::WindowLayoutAxisNode;
 #[allow(unused_imports)]
-use semio_plugin::WindowLayoutChild;
 #[allow(unused_imports)]
-use semio_plugin::WindowLayoutRoot;
 #[allow(unused_imports)]
-use semio_plugin::WindowLayoutStackNode;
 #[allow(unused_imports)]
-use semio_plugin::WindowLayoutWindowNode;
 #[allow(unused_imports)]
 use semio_plugin::WindowOptions;
 #[allow(unused_imports)]
@@ -118,7 +113,7 @@ fn page_lists_text_vector_and_image() {
     assert!((image.x - 60.0).abs() < 0.01 && (image.y - 70.0).abs() < 0.01);
     assert!((image.width - 50.0).abs() < 0.01 && (image.height - 40.0).abs() < 0.01);
     let layers = canvas_layers(&snapshot, Some(&text.id));
-    assert!(layers.contains("Hello"));
+    assert!(layers.contains(&format!("\"id\":\"{}\"", text.id)));
     assert!(layers.contains(&format!("{}.selection", text.id)));
     assert!(layers.contains(&image.id));
     assert!(layers.contains(&vector.id));
@@ -814,7 +809,7 @@ fn canvas_repaints_image_samples_after_replacement() {
 }
 
 #[test]
-fn canvas_text_uses_a_catalog_face_and_pdf_baseline() {
+fn canvas_paints_base14_glyph_outlines_at_the_pdf_baseline() {
     let fixture: Value = serde_json::from_str(include_str!("🧪️text-paint.json")).unwrap();
     let mut page = PdfPage::new(fixture["page"][0].as_f64().unwrap(), fixture["page"][1].as_f64().unwrap());
     let expected = &fixture["expected"];
@@ -832,17 +827,14 @@ fn canvas_text_uses_a_catalog_face_and_pdf_baseline() {
     snapshot.fonts.push(PdfFont::standard("F1", fixture["baseFont"].as_str().unwrap()));
     let scene: Value = serde_json::from_str(&canvas_layers(&snapshot, None)).unwrap();
     let layer = &scene[1];
-    for key in ["content", "fontFamily"] {
-        assert_eq!(layer["text"][key], expected["text"][key]);
-    }
-    assert_eq!(layer["text"]["size"].as_f64(), expected["text"]["size"].as_f64());
-    for key in ["x", "y"] {
-        assert_eq!(layer[key].as_f64(), expected[key].as_f64());
-    }
+    assert_eq!(layer["fillRule"], expected["fillRule"]);
+    let segments = layer["segments"].as_array().expect("Base 14 outline paths");
+    assert!(segments.iter().any(|segment| segment["kind"] == "cubic"));
+    assert_eq!(segments.iter().filter(|segment| segment["kind"] == "close").count(), expected["contours"].as_u64().unwrap() as usize);
     for axis in 0..6 {
         assert_eq!(layer["transform"][axis].as_f64(), expected["transform"][axis].as_f64());
     }
-    render_window(&snapshot).expect("catalog text scene admission");
+    render_window(&snapshot).expect("Base 14 outline scene admission");
 }
 
 #[test]
@@ -1266,7 +1258,8 @@ fn text_render_modes_select_fill_stroke_and_invisible_text() {
     let scene: Value = serde_json::from_str(&canvas_layers(&doc, None)).unwrap();
     assert_eq!(objects(&doc).len(), 8);
     for mode in fixture["modes"].as_array().unwrap() {
-        let layer = scene.as_array().unwrap().iter().find(|layer| layer["text"]["content"].as_str() == Some(mode["label"].as_str().unwrap()));
+        let id = objects(&doc).into_iter().find(|object| object.text == mode["label"].as_str().unwrap()).map(|object| object.id).unwrap();
+        let layer = scene.as_array().unwrap().iter().find(|layer| layer["id"].as_str() == Some(id.as_str()));
         if mode["fill"] == false && mode["stroke"] == false {
             assert!(layer.is_none());
         } else {
@@ -1542,3 +1535,132 @@ fn canvas_paints_the_embedded_true_type_program_as_curved_outlines() {
 
 #[path = "🔆️coded-image/🦀️.rs"]
 mod coded_image;
+
+#[path = "🌈️paint-fidelity/🦀️.rs"]
+mod paint_fidelity;
+
+fn navigation_fixture() -> (Value, PdfSnapshot) {
+    let fixture: Value = serde_json::from_str(include_str!("🧪️viewer-navigation.json")).unwrap();
+    let mut snapshot = PdfSnapshot::default();
+    for spec in fixture["pages"].as_array().unwrap() {
+        let mut page = PdfPage::new(spec["width"].as_f64().unwrap(), spec["height"].as_f64().unwrap());
+        page.content.push(PdfOp::BeginText);
+        page.content.push(PdfOp::SetFont { name: "F1".into(), size: 12.0 });
+        for (line, text) in spec["texts"].as_array().unwrap().iter().enumerate() {
+            page.content.push(PdfOp::SetTextMatrix { matrix: [1.0, 0.0, 0.0, 1.0, 15.0, 250.0 - 30.0 * line as f64] });
+            page.content.push(PdfOp::ShowText { text: PdfTextString::text(text.as_str().unwrap()) });
+        }
+        page.content.push(PdfOp::EndText);
+        snapshot.pages.push(page);
+    }
+    (fixture, snapshot)
+}
+
+#[test]
+fn zoom_modes_and_steps_match_the_fixture() {
+    let (fixture, snapshot) = navigation_fixture();
+    let viewport = (fixture["viewport"][0].as_f64().unwrap(), fixture["viewport"][1].as_f64().unwrap());
+    for case in fixture["fit"].as_array().unwrap() {
+        let mode = match case["mode"].as_str().unwrap() {
+            "fit-width" => ZoomMode::FitWidth,
+            "fit-page" => ZoomMode::FitPage,
+            "actual-size" => ZoomMode::ActualSize,
+            _ => ZoomMode::Factor(case["factor"].as_f64().unwrap()),
+        };
+        let view = ViewState { mode, page: case["page"].as_u64().unwrap() as usize, ..ViewState::default() };
+        assert!((resolve_zoom(&snapshot, &view, viewport) - case["zoom"].as_f64().unwrap()).abs() < 1e-9, "{case}");
+    }
+    for pair in fixture["zoom_in"].as_array().unwrap() {
+        assert_eq!(zoom_in(pair[0].as_f64().unwrap()), pair[1].as_f64().unwrap());
+    }
+    for pair in fixture["zoom_out"].as_array().unwrap() {
+        assert_eq!(zoom_out(pair[0].as_f64().unwrap()), pair[1].as_f64().unwrap());
+    }
+    let view = ViewState { mode: ZoomMode::Factor(2.0), page: 1, ..ViewState::default() };
+    let scene = scene_for_view(&snapshot, &canvas_layers(&snapshot, None), &view, viewport, Vec::new());
+    assert_eq!((scene.zoom, scene.camera_x, scene.camera_y), (2.0, 300.0, page_top(&snapshot, 1) + 200.0));
+    assert!(scene.framing.is_none());
+    let fit = scene_for_view(&snapshot, &canvas_layers(&snapshot, None), &ViewState { mode: ZoomMode::FitPage, page: 1, revision: 4, ..ViewState::default() }, viewport, Vec::new()).framing.unwrap();
+    assert_eq!((fit.revision, fit.bounds[2], fit.bounds[3] - fit.bounds[1]), (4, 600.0, 400.0));
+    let width = scene_for_view(&snapshot, &canvas_layers(&snapshot, None), &ViewState { mode: ZoomMode::FitWidth, ..ViewState::default() }, viewport, Vec::new()).framing.unwrap();
+    assert_eq!(width.bounds[3], width.bounds[1]);
+    assert!(page_top(&snapshot, 1) > 300.0);
+}
+
+#[test]
+fn search_finds_every_hit_and_matches_the_oracle_fixture() {
+    let (fixture, snapshot) = navigation_fixture();
+    for case in fixture["search"].as_array().unwrap() {
+        let mut progress = Vec::new();
+        let outcome = search(&snapshot, case["query"].as_str().unwrap(), case["match_case"].as_bool().unwrap(), &mut SearchControl { cancelled: &|| false, progress: &mut |done, total| progress.push((done, total)) });
+        let hits: Vec<Value> = outcome.hits.iter().map(|hit| json!([hit.page, hit.offset])).collect();
+        assert_eq!(Value::Array(hits), case["hits"], "{case}");
+        assert!(outcome.completed);
+        assert_eq!(progress.last(), Some(&(3, 3)));
+    }
+}
+
+#[test]
+fn search_cancellation_stops_before_the_next_page_and_keeps_the_hits_so_far() {
+    let (_, snapshot) = navigation_fixture();
+    let scanned = std::cell::Cell::new(0);
+    let outcome = search(&snapshot, "o", false, &mut SearchControl { cancelled: &|| scanned.get() >= 1, progress: &mut |done, _| scanned.set(done) });
+    assert!(!outcome.completed);
+    assert!(!outcome.hits.is_empty() && outcome.hits.iter().all(|hit| hit.page == 0));
+}
+
+#[test]
+fn hit_navigation_wraps_and_highlights_layer_per_hit() {
+    let (fixture, snapshot) = navigation_fixture();
+    for step in fixture["steps"].as_array().unwrap() {
+        assert_eq!(step_hit(step[0].as_u64().unwrap() as usize, step[1].as_u64().map(|at| at as usize), step[2].as_bool().unwrap()), step[3].as_u64().map(|at| at as usize));
+    }
+    let outcome = search(&snapshot, "world", false, &mut SearchControl { cancelled: &|| false, progress: &mut |_, _| {} });
+    let layers = hit_layers(&snapshot, &outcome.hits, Some(1));
+    assert_eq!(layers.len(), 2);
+    assert_ne!(layers[0]["fill"]["color"], layers[1]["fill"]["color"]);
+}
+
+#[test]
+fn thumbnails_scale_each_page_and_reorder_through_move_page() {
+    let (fixture, snapshot) = navigation_fixture();
+    for (thumbnail, expected) in thumbnails(&snapshot, THUMBNAIL_EDGE).iter().zip(fixture["thumbnails"].as_array().unwrap()) {
+        assert_eq!((thumbnail.width, thumbnail.height), (expected[0].as_f64().unwrap(), expected[1].as_f64().unwrap()));
+        assert_eq!(thumbnail.target, format!("p{}:paper", thumbnail.page));
+    }
+    for case in fixture["reorder"].as_array().unwrap() {
+        let expected = case[3].as_array().map(|pair| (pair[0].as_u64().unwrap() as usize, pair[1].as_u64().unwrap() as usize));
+        assert_eq!(reorder_args(case[0].as_u64().unwrap() as usize, case[1].as_u64().unwrap() as usize, case[2].as_u64().unwrap() as usize), expected);
+    }
+    let _ui_arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
+    for locale in [Locale::En, Locale::De] {
+        assert!(render_thumbnail_strip(&snapshot, "s.stdio.pdf@1.7/*#editor", OBJECT_DOMAIN, locale).is_ok());
+    }
+}
+
+#[test]
+fn view_intents_reduce_to_the_fixture_script() {
+    let (fixture, snapshot) = navigation_fixture();
+    let viewport = (fixture["viewport"][0].as_f64().unwrap(), fixture["viewport"][1].as_f64().unwrap());
+    let mut view = ViewState::default();
+    for step in fixture["script"].as_array().unwrap() {
+        let hits = search(&snapshot, &view.query, view.match_case, &mut SearchControl { cancelled: &|| false, progress: &mut |_, _| {} }).hits;
+        let intent = match step["intent"].as_str().unwrap() {
+            "zoom-in" => ViewIntent::ZoomIn,
+            "zoom-out" => ViewIntent::ZoomOut,
+            "fit-page" => ViewIntent::FitPage,
+            "fit-width" => ViewIntent::FitWidth,
+            "actual-size" => ViewIntent::ActualSize,
+            "go-to-page" => ViewIntent::GoToPage(step["arg"].as_u64().unwrap() as usize),
+            "set-query" => ViewIntent::SetQuery(step["arg"].as_str().unwrap().into()),
+            "toggle-match-case" => ViewIntent::ToggleMatchCase,
+            "next-hit" => ViewIntent::NextHit,
+            _ => ViewIntent::PreviousHit,
+        };
+        view = reduce_view(&snapshot, &view, &intent, viewport, &hits);
+        let expect = &step["expect"];
+        let mode = match view.mode { ZoomMode::Factor(factor) => { assert_eq!(Some(factor), expect["factor"].as_f64(), "{step}"); "factor" } ZoomMode::FitPage => "fit-page", ZoomMode::FitWidth => "fit-width", ZoomMode::ActualSize => "actual-size" };
+        assert_eq!(mode, expect["mode"], "{step}");
+        assert_eq!((view.page as u64, view.revision as u64, view.query.as_str(), view.match_case, view.active.map(|at| at as u64)), (expect["page"].as_u64().unwrap(), expect["revision"].as_u64().unwrap(), expect["query"].as_str().unwrap(), expect["match_case"].as_bool().unwrap(), expect["active"].as_u64()), "{step}");
+    }
+}

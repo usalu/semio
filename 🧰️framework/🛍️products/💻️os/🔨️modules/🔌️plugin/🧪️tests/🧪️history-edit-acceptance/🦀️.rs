@@ -108,7 +108,7 @@ pub use acceptance_policy_pump_and_drive::{assert_latest_history_preview, assert
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use acceptance_policy_pump_and_drive::{
     acceptance_close, acceptance_context, acceptance_drive, acceptance_head, acceptance_meta, acceptance_policy,
-    acceptance_pump, acceptance_seeded, acceptance_verb,
+    acceptance_pump, acceptance_seeded, acceptance_verb, with_acceptance_caller,
 };
 
 #[cfg(any(test, feature = "artifact-app-testing"))]
@@ -123,7 +123,7 @@ pub use withdraw_restore_and_alternative_scenarios::acceptance_withdraw_only_kin
 #[path = "🔢️end-to-end-assertion-census-and-search/🦀️.rs"]
 mod end_to_end_assertion_census_and_search;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-pub use end_to_end_assertion_census_and_search::assert_history_edits_end_to_end;
+pub use end_to_end_assertion_census_and_search::{assert_closes_live_history_session, assert_history_edits_end_to_end};
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use end_to_end_assertion_census_and_search::{acceptance_search, AcceptanceSearch};
 
@@ -170,6 +170,15 @@ use semio_framework::history_edit::{HISTORY_EDIT_ACCEPT_ACTION_ID, HISTORY_EDIT_
 /// manifest directory (the artifact tree: `"../.."`).
 #[macro_export]
 macro_rules! history_edit_acceptance_law {
+    (@close $editor:ty, $manifest:expr, $fixtures:literal, $case:literal) => {
+        #[test]
+        fn closes_live_history_session() {
+            let fixtures = ::std::path::Path::new(::core::env!("CARGO_MANIFEST_DIR")).join($fixtures);
+            $crate::block_on_acceptance($crate::assert_closes_live_history_session::<$crate::__EditorApp<$editor>, <$editor as $crate::__ArtifactEditor>::Members>(
+                $manifest, &fixtures, $case,
+            ));
+        }
+    };
     ($plugin:literal, $editor:ty, $manifest:expr, fixtures_root = $fixtures:expr) => {
         $crate::history_edit_acceptance_law!(@impl $plugin, $editor, $manifest, $fixtures);
     };

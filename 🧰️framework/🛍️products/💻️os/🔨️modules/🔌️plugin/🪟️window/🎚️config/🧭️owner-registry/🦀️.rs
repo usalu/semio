@@ -32,12 +32,27 @@ pub fn window_actor_demands(actor: &Option<protocol::ActorId>, retirement: &Opti
     retirement.as_ref().map_or(Ok(RetirementDemand { copy_bytes: if actor.is_some() { size_of::<protocol::ActorId>() } else { 0 }, depth: usize::from(actor.is_some()), ..Default::default() }), |owner| controlled_owner_demands(owner, body))
 }
 
+/// 🧾️ Charges one original Work unit before changing a paid Window retirement cursor or owner.
+pub(super) fn perform_window_close_step(effect: &mut RetainedAllocationEffect<'_>) -> Result<bool, Fault> {
+    if effect.remaining_work_units().map_err(ValueError::into_fault)? == 0 {
+        return Ok(false);
+    }
+    if !effect.performed(1).map_err(ValueError::into_fault)? {
+        return Err(ValueError::literal(ValueRefusalKind::WorkLimit, "original Window close exceeded its work grant").into_fault());
+    }
+    Ok(true)
+}
+
 pub fn close_window_actor(actor: &mut Option<protocol::ActorId>, retirement: &mut Option<ControlledRetirement<semio_framework_value::SharedUtf8>>, effect: &mut RetainedAllocationEffect<'_>) -> Result<PluginLifecycleStep, Fault> {
     let grant = effect.grant();
     if actor.is_none() && retirement.is_none() { return Ok(PluginLifecycleStep::Complete(Default::default())); }
     let demand = window_actor_demands(actor, retirement, grant.maximum_copy_bytes).map_err(ValueError::into_fault)?;
     if !registry::fits(grant, demand) { return Ok(PluginLifecycleStep::Progress(Default::default())); }
-    if let Some(actor) = actor.take() {
+    if actor.is_some() {
+        if !perform_window_close_step(effect)? {
+            return Ok(PluginLifecycleStep::Progress(Default::default()));
+        }
+        let actor = actor.take().unwrap();
         *retirement = Some(ControlledRetirement::new(actor.0).map_err(|(error, _)| error).expect("original actor address has controlled retirement"));
         return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }));
     }
@@ -278,12 +293,18 @@ impl WindowConfigOwnerRegistry {
         if !registry::fits(grant, demand) { return Ok(PluginLifecycleStep::Progress(Default::default())); }
         if let Some(owner) = self.owners.get_index_mut(self.owner_close_cursor) {
             if owner.terminal_is_empty() {
+                if !perform_window_close_step(effect)? {
+                    return Ok(PluginLifecycleStep::Progress(Default::default()));
+                }
                 self.owner_close_cursor += 1;
                 return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }));
             }
             return owner.close_step(effect).map(|step| match step { PluginLifecycleStep::Complete(progress) => PluginLifecycleStep::Progress(progress), other => other });
         }
         if !self.owners.is_empty() {
+            if !perform_window_close_step(effect)? {
+                return Ok(PluginLifecycleStep::Progress(Default::default()));
+            }
             let Some(((kind, owner), mut progress)) = self.owners.pop_original(grant).map_err(ValueError::into_fault)? else { return Ok(PluginLifecycleStep::Progress(Default::default())); };
             assert!(owner.terminal_is_empty());
             drop((kind, owner));

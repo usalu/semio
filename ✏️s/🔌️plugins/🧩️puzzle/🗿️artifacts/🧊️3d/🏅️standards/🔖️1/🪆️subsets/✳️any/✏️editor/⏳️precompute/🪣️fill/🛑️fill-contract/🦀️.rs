@@ -38,7 +38,7 @@ pub enum FillPlanEnd {
 }
 
 /// 🧊️ The planner's own spatial index answered for another owner: an invariant break the planner faults on.
-pub(super) struct StaleSpatialIndex;
+pub struct StaleSpatialIndex;
 
 /// 🧭️ What one planner transition needs from its caller: the collision budget seam plus identity,
 /// stage and fault payloads. The job context forwards everything; the fill run job
@@ -77,7 +77,7 @@ pub enum FillRunEvent {
 }
 
 /// 📏️ Uniform trace scale of an object scale value: a number, the first component of a vector, else 1.
-pub(super) fn fill_run_scale(scale: &Option<semio_framework_value::DslValue>) -> f32 {
+pub fn fill_run_scale(scale: &Option<semio_framework_value::DslValue>) -> f32 {
     scale.as_ref().and_then(|value| value.as_f64().or_else(|| value.as_array().and_then(|values| values.first()).and_then(semio_framework_value::DslValue::as_f64))).map_or(1.0, |value| value as f32)
 }
 

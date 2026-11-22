@@ -34,7 +34,16 @@ impl JpgStepDecoder {
     /// 🧾️ Transfers exact native observations after the decoded content completed.
     pub fn take_observations(&mut self)->Option<JpgNativeObservations>{self.observations.take()}
     pub fn new(data: &dyn JpgByteSource) -> Result<Self, JpgError> {
-        Self::from_header(parse_jpg_header(data,false)?, true)
+        Self::with_pixel_limit(data, u64::MAX)
+    }
+
+    /// 🧮️ Checks the decoded raster extent before reserving any component planes.
+    pub fn with_pixel_limit(data: &dyn JpgByteSource, maximum_pixels: u64) -> Result<Self, JpgError> {
+        let header = parse_jpg_header(data, false)?;
+        if u64::from(header.frame.width) * u64::from(header.frame.height) > maximum_pixels {
+            return Err(JpgError::Malformed(format!("JPEG exceeds the bounded {maximum_pixels}-pixel decoder envelope")));
+        }
+        Self::from_header(header, true)
     }
 
     pub(crate) fn from_header(header: JpgHeader, initialize: bool) -> Result<Self, JpgError> {

@@ -70,18 +70,21 @@ fn retained_document_page_budget_refusal_preserves_the_cursor_and_retries_the_sa
         let mut admitted_retained = semio_framework_job::RetainedCloneProgress::default();
         let mut admitted = semio_framework_job::StepContext::new(semio_framework_job::OperationId(1), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(1, u64::MAX, UNBOUNDED_STEP_GRANT), cancel.clone(), || Some(0), &mut sequence, &mut admitted_retained);
         engine.begin_document("budget-refusal", header, &mut admitted).unwrap();
+        drop(admitted);
         if cancelled {
             cancel.cancel_now();
         }
         let mut refused_retained = semio_framework_job::RetainedCloneProgress::default();
         let mut refused = semio_framework_job::StepContext::new(semio_framework_job::OperationId(1), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(fuel, deadline, UNBOUNDED_STEP_GRANT), cancel.clone(), clock, &mut sequence, &mut refused_retained);
         apply_retained_document_page(&mut engine, &mut cursor, "budget-refusal", document.read_node_page(0).unwrap().unwrap(), &mut refused);
+        drop(refused);
         assert!(!cursor.terminal_is_fault(), "a refused opportunity must retain the page cursor for a fresh grant");
         assert!(matches!(engine.document_status("budget-refusal", 1), semio_ui_wgpu_engine_surface::UiDocumentIngressStatus::Pending { next_page: 0, .. }));
         let mut retry_retained = semio_framework_job::RetainedCloneProgress::default();
         let mut retry =
             semio_framework_job::StepContext::new(semio_framework_job::OperationId(1), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(1, u64::MAX, UNBOUNDED_STEP_GRANT), semio_framework_job::CancelToken::root_now(), || Some(0), &mut sequence, &mut retry_retained);
         apply_retained_document_page(&mut engine, &mut cursor, "budget-refusal", document.read_node_page(0).unwrap().unwrap(), &mut retry);
+        drop(retry);
         assert!(!cursor.terminal_is_fault());
         assert!(matches!(engine.document_status("budget-refusal", 1), semio_ui_wgpu_engine_surface::UiDocumentIngressStatus::Pending { next_page: 1, .. }));
         while !document.close_step() {}
@@ -98,6 +101,7 @@ fn retained_document_page_with_a_live_wrong_generation_remains_a_terminal_fault(
     let mut admitted_retained = semio_framework_job::RetainedCloneProgress::default();
     let mut admitted = semio_framework_job::StepContext::new(semio_framework_job::OperationId(1), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(1, u64::MAX, UNBOUNDED_STEP_GRANT), cancel.clone(), || Some(0), &mut sequence, &mut admitted_retained);
     engine.begin_document("wrong-generation", document.header().unwrap(), &mut admitted).unwrap();
+    drop(admitted);
     let mut stale_retained = semio_framework_job::RetainedCloneProgress::default();
     let mut stale = semio_framework_job::StepContext::new(semio_framework_job::OperationId(2), semio_framework_job::Generation(2), semio_framework_job::StepBudget::new(1, u64::MAX, UNBOUNDED_STEP_GRANT), cancel, || Some(0), &mut sequence, &mut stale_retained);
     apply_retained_document_page(&mut engine, &mut cursor, "wrong-generation", document.read_node_page(0).unwrap().unwrap(), &mut stale);

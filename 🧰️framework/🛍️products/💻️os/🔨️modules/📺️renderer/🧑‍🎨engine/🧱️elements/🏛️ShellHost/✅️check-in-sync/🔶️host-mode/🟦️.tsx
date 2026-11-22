@@ -35,7 +35,9 @@ export function useHostModeState({ core }: { readonly core: ShellCoreAfterDocume
   } = core;
   //#region FrameworkOsShell
   //#region 🔖️CheckIn — ticket §C5 "when the user edits an artifact, the mutations are saved and
-  const currentDocumentId = currentDocumentRuntimeKey === null ? null : (openDocumentSessionsRef.current.get(currentDocumentRuntimeKey)?.documentId ?? null);
+  const currentDocument = currentDocumentRuntimeKey === null ? undefined : openDocumentSessionsRef.current.get(currentDocumentRuntimeKey);
+  const currentDocumentId = currentDocument?.documentId ?? null;
+  const checkpointSession = currentDocument?.session ?? session;
   const selectedSpaceArtifactCreationCatalog = useMemo(() => selectedSpaceArtifactCreationCatalogV1(
     spaceArtifactCreationCatalog,
     spaceArtifactCreationCatalogUi,
@@ -87,7 +89,7 @@ export function useHostModeState({ core }: { readonly core: ShellCoreAfterDocume
    * member the directory does not know. */
   const hubOnlineUserIds = useMemo(() => [...new Set(presencePeers.flatMap((peer) => (typeof peer.userId === "string" && peer.userId.length > 0 ? [peer.userId] : [])))], [presencePeers]);
 
-  const isEditorSession = canCheckIn(session?.app.role);
+  const isEditorSession = canCheckIn(focusedApp?.role);
 
   useEffect(() => {
     void backgroundSpaceIndexSessionsRef.current.retain(owned => identity !== null && owned.hubBaseUrl === identity.hubBaseUrl && owned.userId === identity.userId && loadedPlugins.some(entry => entry.handle === owned.plugin) && openDocumentSessionsRef.current.get(owned.runtimeKey)?.clientInstanceId === owned.clientInstanceId)
@@ -190,7 +192,7 @@ export function useHostModeState({ core }: { readonly core: ShellCoreAfterDocume
   const currentCheckIn = currentDocumentRuntimeKey === null ? undefined : documentCheckInUi[currentDocumentRuntimeKey];
   const dispatchCheckpoint = useCallback(
     (message: string): boolean => {
-      if (!session) return false;
+      if (focusedApp === null || !canCheckIn(focusedApp.role)) return false;
       const gate = checkpointGateV1(focusedHistoryV1().timeTravel, message);
       if (gate === "frozen") {
         const notice = historyRefusalNoticeV1("timeTravel.frozen");
@@ -198,18 +200,18 @@ export function useHostModeState({ core }: { readonly core: ShellCoreAfterDocume
       }
       if (gate !== "dispatch") return false;
       if (message === "auto") {
-        const attached = [...openDocumentSessionsRef.current.values()].find((entry) => entry.session.pluginId === session.pluginId && entry.session.instanceId === session.instanceId);
+        const attached = currentDocumentRuntimeKey === null ? undefined : openDocumentSessionsRef.current.get(currentDocumentRuntimeKey);
         const loading = focusedHistoryV1().reprojection?.kind === "load" || attached?.replacements.pending === true;
         if (automaticCheckinWaitsV1({ loading, attached: attached !== undefined, bound: attached !== undefined && attached.port !== null && !attached.port.closing })) return false;
       }
       checkpointDispatchedRef.current = true;
       const authors = identityRef.current ? [{ id: identityRef.current.userId, name: identityRef.current.displayName }] : [];
-      onAction({ controllerId: session.app.controllerId, action: "commitCheckpoint", args: { message, authors } });
+      onAction({ controllerId: focusedApp.controllerId, action: "commitCheckpoint", args: { message, authors } });
       return true;
     },
-    [focusedHistoryV1, session, onAction],
+    [currentDocumentRuntimeKey, focusedApp, focusedHistoryV1, onAction],
   );
 
   const previousCheckpointIdRef = useRef<string | undefined>(undefined);
-  return { currentSavedState, previousCheckpointIdRef, historyCheckpointId, checkpointDispatchedRef, currentDocumentRuntimeKey, requestHubCheckIn, openSpaceIdRef, currentDocumentId, touchSpaceIndexArtifact, isEditorSession, dispatchCheckpoint, focusedHistoryV1, historyStore, session, dispatchCheckpointRef, uiTerminology, uiLocale, focusedApp, focusedPanelBodyStores, onAction, appLabelsOverlay, treeWindowHost, panelTreeConfigCacheRef, focusedBrowserActorPanels, treeWindowGeneration, shellState, syncBackboneUri, syncStatusByDocumentId, syncPillState, syncCardKind, syncDraftPath, dispatch, attachSyncTarget, detachSyncBackbone, browseSyncBackbonePath, selectedSpaceArtifactCreationCatalog, selectedSpaceArtifactKinds, artifactCreationChoiceRevisionRef, presencePeers, rowActionRefusals, timeTravelPeers, hubConnectionStatuses, hubSessionPresence, hubLink, openHubWorkspace, routeAdmission, routeAdmissionNotice, hubOnlineUserIds, cancelHubCheckIn, dismissHubCheckIn, currentCheckIn };
+  return { currentSavedState, previousCheckpointIdRef, historyCheckpointId, checkpointDispatchedRef, currentDocumentRuntimeKey, requestHubCheckIn, openSpaceIdRef, currentDocumentId, touchSpaceIndexArtifact, isEditorSession, dispatchCheckpoint, focusedHistoryV1, historyStore, session: checkpointSession, dispatchCheckpointRef, uiTerminology, uiLocale, focusedApp, focusedPanelBodyStores, onAction, appLabelsOverlay, treeWindowHost, panelTreeConfigCacheRef, focusedBrowserActorPanels, treeWindowGeneration, shellState, syncBackboneUri, syncStatusByDocumentId, syncPillState, syncCardKind, syncDraftPath, dispatch, attachSyncTarget, detachSyncBackbone, browseSyncBackbonePath, selectedSpaceArtifactCreationCatalog, selectedSpaceArtifactKinds, artifactCreationChoiceRevisionRef, presencePeers, rowActionRefusals, timeTravelPeers, hubConnectionStatuses, hubSessionPresence, hubLink, openHubWorkspace, routeAdmission, routeAdmissionNotice, hubOnlineUserIds, cancelHubCheckIn, dismissHubCheckIn, currentCheckIn };
 }

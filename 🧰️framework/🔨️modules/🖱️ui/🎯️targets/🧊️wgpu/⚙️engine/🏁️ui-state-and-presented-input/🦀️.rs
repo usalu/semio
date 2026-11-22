@@ -8,17 +8,15 @@ use super::*;
 /// tick: `apply_tree` runs `reconcile`, `frame` runs `flex` (dirty-gated) then `paint` then hands
 /// `scene_slots` to an optional `SceneHost`, `dispatch_event` runs `events::EventRouter`, and
 /// `needs_frame` reads the same dirty flags `frame` itself gates on. One `UiWindow` per window id
-/// (app-content trees); window-chrome (dock/split/tab) is the separate `🐚️Shell` this façade also owns,
-/// since `shell`'s own doc comment models it as independent of any single window's content tree.
+/// (app-content trees).
 /// Never submits to the GPU itself — `frame` returns a `&DrawList` for the caller to hand to the
-/// existing `gpu::GpuContext::render_frame`, exactly like the immediate-mode `widgets` path's callers
-/// already do; wiring that hand-off into a real host event loop is later, renderer-thinning work.
+/// renderer's GPU presentation.
 pub struct Ui {
     pub windows: UiSurfaceRegistry,
     pub(super) document_generation: u64,
-    pub(super) shell: Shell,
     pub theme: Theme,
-    pub(super) driver_drag: UiDriverDrag,
+    pub(super) driver: UiDriverChrome,
+    pub(super) locale: semio_ui_locale::Locale,
     pub(super) pending_commands: Vec<UiCommand>,
     sealed_visibility_candidate: Option<UiSealedVisibilityCandidate>,
     pub layout_queues: [SurfaceLaneRing; 3],
@@ -50,9 +48,9 @@ impl Ui {
         Self {
             windows: UiSurfaceRegistry::default(),
             document_generation: 0,
-            shell: Shell::new(locale),
             theme: Theme::default(),
-            driver_drag: UiDriverDrag::Handle,
+            driver: UiDriverChrome::DEFAULT,
+            locale,
             pending_commands: Vec::new(),
             sealed_visibility_candidate: None,
             layout_queues: std::array::from_fn(|_| SurfaceLaneRing::default()),
@@ -66,7 +64,14 @@ impl Ui {
 
     /// 🌐️ Re-sets the language the engine's own chrome strings resolve in — the host's resolved locale changed.
     pub fn set_locale(&mut self, locale: semio_ui_locale::Locale) {
-        self.shell.set_locale(locale);
+        if self.locale != locale {
+            self.locale = locale;
+            for window in self.windows.values_mut().filter(|window| window.closing.is_none()) {
+                if let Some(root) = window.tree.root {
+                    window.tree.mark_dirty(root, NodeFlags::DIRTY_PAINT);
+                }
+            }
+        }
     }
 
     pub fn set_theme(&mut self, theme: Theme) {
@@ -82,11 +87,31 @@ impl Ui {
         }
     }
 
+    pub(super) fn presentation(&self) -> semio_ui_wgpu_paint::RetainedPaintPresentation {
+        semio_ui_wgpu_paint::RetainedPaintPresentation { driver: self.driver, locale: Some(self.locale) }
+    }
+
+    pub fn set_driver(&mut self, driver: UiDriverChrome) {
+        if self.driver.labels != driver.labels {
+            self.driver.labels = driver.labels;
+            for window in self.windows.values_mut().filter(|window| window.closing.is_none()) {
+                let Some(next_revision) = window.theme_revision.checked_add(1) else { continue };
+                window.theme_revision = next_revision;
+                if let Some(root) = window.tree.root {
+                    window.tree.mark_dirty(root, NodeFlags::DIRTY_LAYOUT);
+                }
+                window.layout_generation = window.layout_generation.saturating_add(1);
+                window.intrinsic_content_height = f32::NAN;
+            }
+        }
+        self.set_driver_drag(driver.drag);
+    }
+
     pub fn set_driver_drag(&mut self, driver_drag: UiDriverDrag) {
-        if self.driver_drag == driver_drag {
+        if self.driver.drag == driver_drag {
             return;
         }
-        self.driver_drag = driver_drag;
+        self.driver.drag = driver_drag;
         let metrics = TreeRowMetrics::from_theme(&self.theme);
         let mut commands = Vec::new();
         for window in self.windows.values_mut().filter(|window| window.closing.is_none()) {
@@ -104,7 +129,7 @@ impl Ui {
     }
 
     pub fn driver_drag(&self) -> UiDriverDrag {
-        self.driver_drag
+        self.driver.drag
     }
 
     #[expect(clippy::result_large_err, reason = "Surface and document admission return the exact refused identity or page without allocating a rejection wrapper.")]

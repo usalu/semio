@@ -41,7 +41,7 @@ pub(super) fn is_glyph_instance(instance: &semio_ui_draw_contract::UiInstance) -
 pub struct TableStepperAccessibilityEntry {
     pub scene_node: NodeId,
     pub host_id: String,
-    depth: usize,
+    pub depth: usize,
     pub cell: semio_renderer_wgpu_scene_state::TableStepperAccessibilityCell,
 }
 
@@ -108,13 +108,13 @@ pub(super) fn append_table_stepper_accessibility_nodes(window_id: &str, tree: &s
             multiline: false,
             controls: None,
             active_descendant: None,
-            level: None,
+            level: None, multiselectable: false,
             rect: Some([entry.cell.rect.x, entry.cell.rect.y, entry.cell.rect.w, entry.cell.rect.h]),
             value_min: Some(entry.cell.min),
             value_max: Some(entry.cell.max),
             value_now: Some(entry.cell.value),
             value_text: Some(entry.cell.value.to_string()),
-            busy: false,
+            busy: false, sort: None,
         });
     }
 }
@@ -122,7 +122,7 @@ pub(super) fn append_table_stepper_accessibility_nodes(window_id: &str, tree: &s
 pub struct TableEditableTextAccessibilityEntry {
     pub scene_node: NodeId,
     pub host_id: String,
-    depth: usize,
+    pub depth: usize,
     pub cell: semio_renderer_wgpu_scene_state::TableEditableTextAccessibilityCell,
 }
 
@@ -189,13 +189,13 @@ pub(super) fn append_table_editable_text_accessibility_nodes(window_id: &str, tr
             multiline: true,
             controls: None,
             active_descendant: None,
-            level: None,
+            level: None, multiselectable: false,
             rect: Some([entry.cell.rect.x, entry.cell.rect.y, entry.cell.rect.w, entry.cell.rect.h]),
             value_min: None,
             value_max: None,
             value_now: None,
             value_text: Some(focused_table_editable_text_draft(window_id, entry.scene_node, &entry.host_id, &entry.cell.target.row_id, &entry.cell.target.column_id).unwrap_or(entry.cell.target.value)),
-            busy: focus.as_ref().is_some_and(|focus| focus.0 == window_id && focus.2 == entry.scene_node && focus.3 == entry.host_id && focus.4 == entry.cell.target.row_id && focus.5 == entry.cell.target.column_id && focus.8.is_some()),
+            busy: focus.as_ref().is_some_and(|focus| focus.0 == window_id && focus.2 == entry.scene_node && focus.3 == entry.host_id && focus.4 == entry.cell.target.row_id && focus.5 == entry.cell.target.column_id && focus.8.is_some()), sort: None,
         });
     }
 }
@@ -203,7 +203,7 @@ pub(super) fn append_table_editable_text_accessibility_nodes(window_id: &str, tr
 pub struct TableButtonAccessibilityEntry {
     pub scene_node: NodeId,
     pub host_id: String,
-    depth: usize,
+    pub depth: usize,
     pub cell: semio_renderer_wgpu_scene_state::TableButtonAccessibilityCell,
 }
 
@@ -235,7 +235,41 @@ pub fn table_button_accessibility_entries(tree: &semio_ui_retained_tree::tree::U
     entries
 }
 
+fn collect_table_header_accessibility_nodes(tree: &semio_ui_retained_tree::tree::UiTree, node: NodeId, depth: usize, nodes: &mut Vec<ui_contract::AccessibilityProjectionNode>) {
+    let Some(retained) = tree.node(node) else { return };
+    if let UiNode::ComponentScene(scene) = &retained.spec.0 {
+        if scene.component_kind == semio_ui_declaration::ui::SurfaceKind::Table && scene.presence.visible() && !semio_renderer_wgpu_scene_state::scene_host_retiring(&scene.host_id) {
+            let columns = scene.table.as_ref().and_then(|table| serde_json::from_str::<Vec<semio_renderer_wgpu_scene_tables::TableColumn>>(&table.columns_json).ok()).unwrap_or_default();
+            for column in columns {
+                if nodes.len() >= ui_contract::UI_DOCUMENT_NODES {
+                    return;
+                }
+                let key = format!("{}.header.{}", scene.host_id, column.id);
+                nodes.push(ui_contract::AccessibilityProjectionNode {
+                    node_id: scene_virtual_accessibility_node_id(&key),
+                    key,
+                    role: "columnheader".into(),
+                    depth: depth.saturating_add(1),
+                    label: (!column.label.trim().is_empty()).then(|| column.label.clone()),
+                    live: ui_contract::liveness_name(ui_contract::Liveness::Off).into(),
+                    sort: semio_renderer_wgpu_scene_tables::table_column_aria_sort(scene, &column.id).map(str::to_string),
+                    ..Default::default()
+                });
+            }
+        }
+    }
+    if depth >= semio_ui_wgpu_hosting::accessibility::UI_ACCESSIBILITY_PROJECTION_DEPTH {
+        return;
+    }
+    for child in tree.children(node) {
+        collect_table_header_accessibility_nodes(tree, child, depth.saturating_add(1), nodes);
+    }
+}
+
 pub(super) fn append_table_button_accessibility_nodes(tree: &semio_ui_retained_tree::tree::UiTree, nodes: &mut Vec<ui_contract::AccessibilityProjectionNode>) {
+    if let Some(root) = tree.root {
+        collect_table_header_accessibility_nodes(tree, root, 0, nodes);
+    }
     for entry in table_button_accessibility_entries(tree) {
         if nodes.len() >= ui_contract::UI_DOCUMENT_NODES {
             break;
@@ -268,13 +302,13 @@ pub(super) fn append_table_button_accessibility_nodes(tree: &semio_ui_retained_t
             multiline: false,
             controls: None,
             active_descendant: None,
-            level: None,
+            level: None, multiselectable: false,
             rect: Some([entry.cell.rect.x, entry.cell.rect.y, entry.cell.rect.w, entry.cell.rect.h]),
             value_min: None,
             value_max: None,
             value_now: None,
             value_text: None,
-            busy: false,
+            busy: false, sort: None,
         });
     }
 }

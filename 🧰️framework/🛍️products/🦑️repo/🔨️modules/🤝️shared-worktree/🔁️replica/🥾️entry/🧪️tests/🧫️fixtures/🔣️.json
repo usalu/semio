@@ -1,5 +1,9 @@
 {
  "version": 1,
+ "watchdogSilence": [
+  {"name": "missing-beat", "pidOffset": null},
+  {"name": "foreign-beat", "pidOffset": 1}
+ ],
  "directories": [
   {
    "platform": "darwin",

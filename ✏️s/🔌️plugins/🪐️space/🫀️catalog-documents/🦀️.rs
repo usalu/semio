@@ -629,12 +629,15 @@ where
             return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
         }
         let base = self.owners.base.as_ref().ok_or_else(|| space_refusal("s.space.retained.base-owner-missing"))?;
-        let mutation = self.owners.mutation.as_ref().ok_or_else(|| space_refusal("s.space.retained.mutation-owner-missing"))?;
+        if self.owners.mutation.is_none() {
+            return Err(space_refusal("s.space.retained.mutation-owner-missing").into());
+        }
         let authority = self.owners.authority.as_ref().ok_or_else(|| space_refusal("s.space.retained.authority-missing"))?;
         if !receiving.prepare_work(1)? {
             return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
         }
         let result = (|| {
+            let mutation = self.owners.mutation.as_ref().ok_or_else(|| space_refusal("s.space.retained.mutation-owner-missing"))?;
             let (post, inverse) = prepare_space_retained_one_item(base.get(), mutation, self.maximum_bytes)?;
             let forward = self.owners.mutation.take().ok_or_else(|| space_refusal("s.space.retained.mutation-owner-missing"))?;
             let edit = authority.next_edit(forward, inverse);

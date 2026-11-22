@@ -1,0 +1,18 @@
+import { join, sep } from "node:path";
+const claimsCount = Number(process.argv[2] ?? 10000), pathsCount = Number(process.argv[3] ?? 10000);
+const root = join("C:/semio/.cache/b/r/m/u/l/qc4d6d2/prototype/build");
+const originalClaims = new Set<string>();
+for (let index = 0; index < claimsCount; index++) originalClaims.add(join("C:/semio/framework/modules/crate" + (index % 500), "src", `file${index}.rs`));
+const paths = Array.from({ length: pathsCount }, (_, index) => join(root, "pkg" + index, "hash", "out", "absent" + index));
+const keep = (path: string): boolean => [...originalClaims].some((claim) => claim.startsWith(path + sep));
+const start = performance.now(), cpu0 = process.cpuUsage();
+let kept = 0;
+for (const path of paths) if (keep(path)) kept++;
+const cpu = process.cpuUsage(cpu0);
+console.log(JSON.stringify({ claimsCount, pathsCount, kept, ms: Math.round(performance.now() - start), cpuMs: Math.round((cpu.user + cpu.system) / 1000) }));
+const claimDirectories = (claims: Iterable<string>): Set<string> => { const directories = new Set<string>(); for (const claim of claims) for (let index = claim.indexOf(sep); index >= 0; index = claim.indexOf(sep, index + 1)) directories.add(claim.slice(0, index)); return directories; };
+const after = performance.now();
+const directories = claimDirectories(originalClaims);
+let keptAfter = 0;
+for (const path of paths) if (directories.has(path)) keptAfter++;
+console.log(JSON.stringify({ after: true, keptAfter, ms: Math.round(performance.now() - after) }));

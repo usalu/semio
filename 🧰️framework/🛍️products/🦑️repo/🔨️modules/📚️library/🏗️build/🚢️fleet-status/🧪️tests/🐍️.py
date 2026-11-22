@@ -241,6 +241,18 @@ def summarize(facts,language):
     for e in sealed:
         if "blocked" in e: say("sealed-blocked","alert",e["entry"],{"entry":e["entry"],"first":e["blocked"].get("first",str(e["blocked"]["rows"]))})
         elif e["fresh"] is False: say("sealed-drifted","info",e["entry"],{"entry":e["entry"],"changed":e["changed"]})
+    for m in (facts.get("fleet") or {}).get("machines",[]):
+        reasons=m.get("cacheSkipReasons") or {}
+        if reasons.get("upload-expired-denied",0)>0: say("unit-cache-denied","alert",m["origin"],{"origin":m["origin"],"count":reasons["upload-expired-denied"]})
+        if reasons.get("read-only",0)>0: say("unit-cache-read-only","warn",m["origin"],{"origin":m["origin"],"count":reasons["read-only"]})
+    for d in ((facts.get("fleet") or {}).get("keys") or {}).get("diffs",[]):
+        if d["sameSource"]: say("unit-key-machine-dependent","warn",d["crate"],{"crate":d["crate"],"origins":",".join(d["origins"]),"components":",".join(d["differs"])})
+    for w in (facts.get("workers") or {}).get("rows",[]):
+        ages=[a for a in (w["recordAgeSeconds"],w["heartbeatAgeSeconds"]) if a is not None]
+        values={"origin":w["origin"],"age":duration(language,min(ages) if ages else 0),"recorded":w["recorded"] if w["recorded"] is not None else "-","stage":w["stage"] if w["stage"] is not None else "-"}
+        if w["liveness"]=="offline": say("worker-offline","warn",w["origin"],values)
+        elif w["liveness"]=="silent": say("worker-silent","warn",w["origin"],dict(values,age=duration(language,w["recordAgeSeconds"] or 0)))
+        elif w["liveness"]=="absent" and (w["heartbeatAgeSeconds"] is None or w["heartbeatAgeSeconds"]>=facts["workers"]["offlineSeconds"]): say("worker-absent","info",w["origin"],{"origin":w["origin"]})
     for s in facts["sources"]:
         if not s["ok"]: say("source-failed","warn",s["id"],{"section":s["id"],"reason":s.get("error","?")})
     sev={"alert":0,"warn":1,"info":2}
@@ -253,7 +265,23 @@ def summarize(facts,language):
      "bazel":{"slots":len(servers),"live":len([s for s in servers if s["live"]]),"held":len([s for s in servers if s["held"]]),"rssMegabytes":sum(s["treeMegabytes"] or 0 for s in servers),"servers":servers},
      "storage":{"hostFreeBytes":st["hostFreeBytes"] if st else None,"hostFreeFloorBytes":st["hostFreeFloorBytes"] if st else 0,"machine":st["machine"] if st else {"totalBytes":0,"effectiveTotalBytes":0,"usedBytes":0,"footprintBytes":0,"overBytes":0,"evictBytes":0,"blockedBytes":0,"source":"default"},"overAreas":sorted(st["overAreas"]) if st else [],"images":images},
      "sealed":{"mode":(facts.get("sealed") or {}).get("mode","live"),"drifted":len([e for e in sealed if e["fresh"] is False]),"blocked":len([e for e in sealed if "blocked" in e]),"entries":sealed},
-     "generation":generation,"findings":findings[:POLICY["findings"]["maximum"]],"sources":facts["sources"]}
+     "generation":generation,"findings":findings[:POLICY["findings"]["maximum"]],"sources":facts["sources"],**fleet_section(facts),**workers_section(facts)}
+
+def fleet_section(facts):
+    f=facts.get("fleet")
+    if not f: return {}
+    ms=sorted(f["machines"],key=lambda m:m["origin"])
+    out={"scheduler":f["scheduler"],"machines":ms,"queued":f["queued"],"executing":f["executing"],"offloadedIn":sum(m["offloadedIn"] for m in ms),"offloadedOut":sum(m["offloadedOut"] for m in ms),"refused":f["refused"],"declined":f["offloadRejected"],"retried":f["retried"],"cacheHit":sum(m["cacheHit"] for m in ms),"cacheMiss":sum(m["cacheMiss"] for m in ms)}
+    if "cache" in f: out["cache"]=f["cache"]
+    if "claims" in f: out["claims"]=f["claims"]
+    if "keys" in f: out["keys"]=f["keys"]
+    return {"fleet":out}
+
+def workers_section(facts):
+    f=facts.get("workers")
+    if not f: return {}
+    rows=sorted(f["rows"],key=lambda r:r["origin"]);count=lambda state:len([r for r in rows if r["liveness"]==state])
+    return {"workers":{"offlineSeconds":f["offlineSeconds"],"counts":{k:count(k) for k in ("ready","working","idle","silent","offline","absent")},"rows":rows}}
 
 def generate(seed,count):
     rnd=random.Random(seed);out=[]
@@ -319,6 +347,29 @@ def generate(seed,count):
          "sealed":{"mode":rnd.choice(["sealed","live","promote"]),"entries":[dict({"entry":"e%d"%i,"digest":"d"*64,"files":rnd.randint(100,2000),"bytes":rnd.randint(10**6,2*10**7),"promotedAtMs":at-rnd.randint(0,10**8),"fresh":rnd.choice([True,False,None]),"changed":rnd.randint(0,5)},**({"blocked":{"atMs":at-5,"rows":rnd.randint(1,4)}} if rnd.random()<0.2 else {}),**({"last":{"atMs":at-9,"added":1,"removed":0,"changed":2}} if rnd.random()<0.5 else {})) for i in range(rnd.randint(0,3))]},
          "generation":rnd.choice([None,{"number":rnd.randint(1,900),"built":{"kind":rnd.choice(["cold","delta","refresh"]),"dirty":rnd.randint(0,50)},"owners":4019,"implementation":"f"*64,"publishedAtMs":rnd.choice([None,at-rnd.randint(0,10**7)]),"verified":rnd.choice([None,{"atMs":at-rnd.randint(0,10**6),"covered":rnd.randint(0,4019),"count":4019}])}]),
          "sources":[{"id":name,"ok":rnd.random()>0.1,"milliseconds":rnd.randint(0,300),**({"error":"boom"} if rnd.random()<0.2 else {})} for name in ["leases","capacity","bazel","storage","sealed","generation"]]}
+        fr=random.Random(seed*7919+index)
+        if fr.random()<0.5:
+            names=fr.sample(["g1-m01","g1-m02","g1-m03","g1-m10","g1-server"],fr.randint(1,4))
+            def machine(origin):
+                m={"origin":origin,"platform":"macos-arm64-0123456789abcdef","pressure":fr.choice(["normal","warn","critical"]),"load":fr.choice([None,1.5,9.25]),"cores":fr.choice([8,10]),"running":fr.randint(0,5),"queued":fr.randint(0,3),"headroom":fr.random()<0.7,"ageSeconds":fr.randint(0,60),"worker":fr.choice(["absent","idle","busy","refusing"]),"offloadedIn":fr.randint(0,9),"offloadedOut":fr.randint(0,9),"refused":fr.randint(0,3),"cacheHit":fr.randint(0,500),"cacheMiss":fr.randint(0,500)}
+                if fr.random()<0.7:
+                    reasons={name:fr.randint(1,40) for name in fr.sample(["upload-expired-denied","upload-expired-down","read-only","path-dependent","upload-dropped","root-key-failed"],fr.randint(0,4))}
+                    m["cacheSkipped"]=sum(reasons.values());
+                    if reasons: m["cacheSkipReasons"]=reasons
+                return m
+            facts["fleet"]={"scheduler":"http://cache.g1.semio.internal:8981","expireSeconds":15,"machines":[machine(n) for n in names],"queued":fr.randint(0,4),"executing":fr.randint(0,4),"offloadRejected":fr.randint(0,4),"refused":fr.randint(0,4),"retried":fr.randint(0,4)}
+            if fr.random()<0.5: facts["fleet"]["cache"]={"hits":fr.randint(0,99),"misses":fr.randint(0,99),"puts":fr.randint(0,99)}
+            if fr.random()<0.5:
+                ds=[{"crate":"c%d"%i,"slot":"a"*64,"origins":["g1-m01","g1-m02"],"differs":fr.sample(["args.metadata","platform","source","extern:x"],fr.randint(1,3)),"sameSource":fr.random()<0.5} for i in range(fr.randint(0,4))]
+                facts["fleet"]["keys"]={"origins":2,"units":len(ds),"diffs":ds,"byComponent":{"platform":1}}
+            if fr.random()<0.5: facts["fleet"]["claims"]={"active":fr.randint(0,5),"waiting":fr.randint(0,5),"oldestSeconds":fr.randint(0,300)}
+        wr=random.Random(seed*104729+index)
+        if wr.random()<0.5:
+            def worker(origin):
+                live=wr.choice(["absent","offline","silent","working","ready","idle"])
+                none=live=="absent"
+                return {"origin":origin,"platform":None if none and wr.random()<0.5 else wr.choice(["linux","macos","windows"]),"liveness":live,"recorded":None if none else wr.choice(["running","waiting","backoff","ready","observing"]),"stage":None if none else wr.choice(["tools","workspace","dependencies",None]),"stageIndex":0 if none else wr.randint(0,5),"stageCount":0 if none else 5,"attempts":0 if none else wr.randint(0,60),"recordAgeSeconds":None if none else wr.choice([0,5,95,599,600,7200,86400]),"heartbeatAgeSeconds":wr.choice([None,0,3,700,86400]),"refusal":wr.choice([None,{"code":"stage-timeout","en":"timed out","de":"Zeit überschritten"}])}
+            facts["workers"]={"offlineSeconds":600,"rows":[worker(n) for n in wr.sample(["g1-m01","g1-m04","g1-m09","g1-m12","g1-server"],wr.randint(1,5))]}
         for s in facts["sources"]:
             if s["ok"]: s.pop("error",None)
         if facts["generation"] is None: del facts["generation"]

@@ -1,0 +1,9 @@
+{
+  "version": "AC1021",
+  "handles": [0, 2, 0, 0],
+  "objectPages": [[19, 23, 29], [31, 37]],
+  "secondObjectPageOffset": 32775,
+  "declaredTrailingPadding": 1,
+  "zeroBackReference": [32, 0, 0, 1, 120, 33, 0, 0, 0],
+  "unrelatedSection": "AcDb:SummaryInfo"
+}

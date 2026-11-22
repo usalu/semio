@@ -11,7 +11,7 @@ import { createProjectFleetPortV1 } from "../../../../../🪪️graph-state/📦
 import { stagedLeafPortV1 } from "../../../../../🪪️graph-state/📦️project-records/🍃️leaves/🟦️.ts";
 import { workspaceClosurePortV1 } from "../../../../../🕸️graph/🕰️generations/🌐️remote-exchange/🟦️.ts";
 import { remoteCacheFetchV1 } from "../../../../../🌐️remote-cache/🛰️fleet/🟦️.ts";
-import { ownerJobV1, ownerRecordKeyTextV1, projectRecordKeyV1 } from "../../🟨️.mjs";
+import { analysisStoreDirectoryOfV1, ownerJobV1, ownerRecordKeyTextV1, projectRecordKeyV1 } from "../../🟨️.mjs";
 import { OWNER_POOL_POLICY_V1 as P, ownerPoolStagingDirectoryV1, publishOwnerPoolFailureV1, readOwnerPoolFailureV1 } from "../🟦️.ts";
 import { OWNER_POOL_STAGING_POLICY_V1, ownerPoolStagingIoV1, ownerPoolStagingSweepV1, writeOwnerPoolStagingOwnerV1 } from "../🧹️staging-sweep/🟦️.ts";
 
@@ -30,7 +30,7 @@ export async function openOwnerPoolInferenceV1({ root, fleetRoot = root, environ
   const service = await import("../../🏊️project-farm/👷️service/🟨️.mjs"), stagingRoot = ownerPoolStagingDirectoryV1([realpathSync(tmpdir()), machinePathV1(fleetRoot, ".cache", "f", P.stagingFallbackDirectory)], { probe: (directory, megabytes) => { mkdirSync(directory, { recursive: true }); const file = join(directory, ".probe-" + process.pid); try { writeFileSync(file, Buffer.alloc(megabytes * 1048576, 1)); } finally { rmSync(file, { force: true }); } } }), base = (mkdirSync(stagingRoot, { recursive: true }), mkdtempSync(join(stagingRoot, OWNER_POOL_STAGING_POLICY_V1.prefix)));
   writeOwnerPoolStagingOwnerV1(base);
   ownerPoolStagingSweepV1({ parents: [realpathSync(tmpdir()), machinePathV1(fleetRoot, ".cache", "f", P.stagingFallbackDirectory)], own: base, io: ownerPoolStagingIoV1 });
-  const session = { ...deserialize(bytes), workspaceRoot: root, closureStore: undefined, stagingBase: base, authority: undefined };
+  const sent = deserialize(bytes), session = { ...sent, workspaceRoot: root, closureStore: undefined, analysisStore: analysisStoreDirectoryOfV1(sent.closureStore), stagingBase: base, authority: undefined };
   await service.open(session, { slot: 0, generation: 1 });
   const port = ownerPoolFleetPortV1({ root, environment, client, staging: service.stagingDirectoryV1() });
   if (port === undefined) throw new Error("no fleet port");
@@ -51,7 +51,7 @@ export async function openOwnerPoolInferenceV1({ root, fleetRoot = root, environ
       return { state: "granted", digest: answer.digest, why: () => answer.why(), code: () => answer.code(), deterministic: () => answer.deterministic(), publish: async () => { try { return await answer.publish(); } finally { forget(unit.name); } }, abandon: async () => { try { await answer.abandon(); } finally { forget(unit.name); } } };
     },
     async run(unit) { const reply = await service.run(jobs.get(unit.name)); leaves.set(unit.name, [...reply.names, "inference/np/" + jobs.get(unit.name).cacheKey + ".json.records"]); return true; },
-    fail(name, message, deterministic) { if (deterministic && digests.has(name)) void publishOwnerPoolFailureV1({ client, owner: hostname() + ":" + process.pid, origin: hostname(), recordDigest: digests.get(name), revision, cause: message }); },
+    fail(name, message, deterministic) { if (deterministic && digests.has(name)) { const recordDigest = digests.get(name); void readOwnerPoolFailureV1(client, recordDigest, revision).catch(() => undefined).then(live => live === undefined ? publishOwnerPoolFailureV1({ client, owner: hostname() + ":" + process.pid, origin: hostname(), recordDigest, revision, cause: message }) : undefined); } },
     resend: options => port.resend(options),
     stats: () => port.stats(),
     close() { rmSync(base, { recursive: true, force: true }); },

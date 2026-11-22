@@ -1,0 +1,13 @@
+{
+  "instanceId": 9004,
+  "operation": "18446744073709551614",
+  "unrelatedOperation": "18446744073709551613",
+  "generation": "1",
+  "fragment": { "kind": "puzzle3d", "objects": ["α"] },
+  "actions": [
+    { "action": "copy", "timing": "inline" },
+    { "action": "copy", "timing": "early-completion" },
+    { "action": "copy", "timing": "background-completion" },
+    { "action": "cut", "timing": "background-completion" }
+  ]
+}

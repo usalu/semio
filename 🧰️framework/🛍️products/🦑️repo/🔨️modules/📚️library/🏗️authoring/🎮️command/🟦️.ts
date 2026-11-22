@@ -146,6 +146,12 @@ export class CleanMechanismNewScript extends Script {
     const lift = [...flags].find((flag) => flag.startsWith("--lift="))?.slice("--lift=".length).split(",").filter(Boolean);
     const plan = await planArtifactCrates(this.root, packageDir, { mutationFamilies: mode, lift, ...crateBudgetFlags(flags), inlineRootModules: flags.has("--inline-root-modules"), tests: flags.has("--no-test-rewrites") ? undefined : { fixtures: true, aggregate: !flags.has("--no-test-aggregate"), hoist: true, detach: true } });
     for (const crate of plan.crates) console.log(`crate ${crate.name}  ${crate.packageDir}  lib ${crate.lib?.files}/${crate.lib?.bytes}/${crate.lib?.lines}  test ${crate.test?.files}/${crate.test?.bytes}/${crate.test?.lines}  deps [${crate.dependsOn.map((id) => plan.crates.find((entry) => entry.id === id)?.name).join(", ")}]`);
+    if (plan.carved) {
+      const { crateUnchanged, supersededCrates } = await import("../📦️crate-tree/♻️recarve-delta/🟦️.ts");
+      const kept = plan.crates.filter((crate) => crateUnchanged(plan, crate)).length;
+      console.log(`re-carve: ${kept} carved crate(s) unchanged, ${plan.crates.filter((crate) => plan.carved!.crates.some((known) => known.signed && known.name === crate.name)).length - kept} changed, ${plan.crates.filter((crate) => !plan.carved!.crates.some((known) => known.name === crate.name)).length} added, ${supersededCrates(plan).length} superseded`);
+      for (const crate of supersededCrates(plan)) console.log(`  superseded ${crate.name}  ${crate.packageDir}`);
+    }
     for (const note of plan.overlay.notes) console.log(`note: ${note}`);
     if (plan.problems.length) {
       for (const problem of plan.problems) console.error(`problem: ${problem}`);

@@ -403,6 +403,10 @@
       "name": "semio-renderer-wgpu-shell-actions"
     },
     {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🚰️shell-frame-pumps/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-shell-frame-pumps"
+    },
+    {
       "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⏳️shell-async/📦️packages/🦀️rust/Cargo.toml",
       "name": "semio-renderer-wgpu-shell-async"
     },
@@ -525,6 +529,10 @@
     {
       "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🍱️shell-view-chrome/📦️packages/🦀️rust/Cargo.toml",
       "name": "semio-renderer-wgpu-shell-view-chrome"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🪧️shell-view-chrome-overlays/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-shell-view-chrome-overlays"
     },
     {
       "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🗨️shell-view-overlays/📦️packages/🦀️rust/Cargo.toml",
@@ -741,10 +749,6 @@
       "name": "semio-ui-wgpu-layout"
     },
     {
-      "manifest": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🪀️widgets/📦️packages/🦀️rust/Cargo.toml",
-      "name": "semio-ui-wgpu-widgets"
-    },
-    {
       "manifest": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🪀️widgets/🧰️kit/📦️packages/🦀️rust/Cargo.toml",
       "name": "semio-ui-wgpu-widget-kit"
     },
@@ -943,6 +947,10 @@
     {
       "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧲️cursors/📦️packages/🦀️rust/Cargo.toml",
       "name": "semio-os-infinite-world-cursors"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧲️handle-drag/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-infinite-world-handle-drag"
     },
     {
       "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧵️interaction/📦️packages/🦀️rust/Cargo.toml",

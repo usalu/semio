@@ -2,7 +2,7 @@
   "layout": {
     "root": {
       "kind": "stack",
-      "activeWindowKindId": "canvas-copy",
+      "activeWindowId": "canvas-copy",
       "children": [
         { "kind": "window", "windowKindId": "canvas" },
         { "kind": "window", "windowKindId": "canvas", "instanceId": "canvas-copy" }

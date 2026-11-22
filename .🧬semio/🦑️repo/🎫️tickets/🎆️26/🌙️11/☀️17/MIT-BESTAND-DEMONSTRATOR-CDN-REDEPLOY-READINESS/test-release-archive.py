@@ -62,6 +62,7 @@ with tempfile.TemporaryDirectory(dir=ticket / "🗑️generated") as temp:
     accepted.write_bytes(b"".join(f"{hashlib.sha256(files[name]).hexdigest()}  {name}\n".encode() for name in sorted(files) if name != "SHA256SUMS"))
     command = ["bash", str(ticket / "package-site.sh"), str(source), str(destination), str(accepted)]
     environment = {**os.environ, "PACKAGE_PYTHON": sys.executable}
+    assert subprocess.run(command[:-1], env=environment, capture_output=True).returncode != 0, "unaccepted site must not be packaged"
     subprocess.run(command, env=environment, check=True, capture_output=True)
     packaged, = destination.glob("site-*.tar.gz")
     assert verify(packaged, accepted) == (3, sum(map(len, (page, b"example.test"))))

@@ -54,9 +54,9 @@
     }
   ],
   "history": {
-    "archiveLimit": 4194304,
-    "historyAllocationLimit": 8388608,
-    "transportLimit": 8388608,
+    "archiveLimit": 16777216,
+    "historyAllocationLimit": 33554432,
+    "transportLimit": 25165824,
     "cases": [
       {
         "name": "former payload limit plus one",
@@ -73,31 +73,38 @@
         "accepted": true
       },
       {
+        "name": "above the former four mebibyte ceiling",
+        "archiveBytes": 9437877,
+        "frameBodyBytes": 9437845,
+        "binaryBytes": 9437184,
+        "accepted": true
+      },
+      {
         "name": "within exact archive ceiling",
-        "archiveBytes": 4194304,
-        "frameBodyBytes": 4194272,
-        "binaryBytes": 4194240,
+        "archiveBytes": 16777216,
+        "frameBodyBytes": 16777184,
+        "binaryBytes": 16777152,
         "accepted": true
       },
       {
         "name": "archive too large",
-        "archiveBytes": 4194305,
+        "archiveBytes": 16777217,
         "frameBodyBytes": 2097152,
         "binaryBytes": 2097088,
         "accepted": false
       },
       {
         "name": "frame too large",
-        "archiveBytes": 4194304,
-        "frameBodyBytes": 4194305,
-        "binaryBytes": 4194240,
+        "archiveBytes": 16777216,
+        "frameBodyBytes": 16777217,
+        "binaryBytes": 16777152,
         "accepted": false
       },
       {
         "name": "binary payload too large",
-        "archiveBytes": 4194304,
-        "frameBodyBytes": 4194304,
-        "binaryBytes": 4194305,
+        "archiveBytes": 16777216,
+        "frameBodyBytes": 16777216,
+        "binaryBytes": 16777217,
         "accepted": false
       }
     ],

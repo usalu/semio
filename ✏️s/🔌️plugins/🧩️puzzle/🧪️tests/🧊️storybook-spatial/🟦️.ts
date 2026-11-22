@@ -45,7 +45,7 @@ async function expectStoryLoads(page: Page, title: string, name: string): Promis
 
 async function expectWorldInstances(page: Page, count: number): Promise<void> {
   const host = page.locator(".semio-world-3d-host");
-  await expect(host.locator("canvas")).toBeVisible();
+  await expect(host.locator(`canvas:not([aria-hidden="true"])`)).toBeVisible();
   await expect.poll(async () => JSON.parse(await host.getAttribute("data-instances-json") ?? "[]").length).toBe(count);
 }
 
@@ -65,7 +65,7 @@ async function clickCanvasPoint(page: Page, canvas: Locator, x: number, y: numbe
 
 async function clickFirstWorldInstance(page: Page, expectedId: string): Promise<void> {
   const host = page.locator(".semio-world-3d-host");
-  const canvas = host.locator("canvas");
+  const canvas = host.locator(`canvas:not([aria-hidden="true"])`);
   const box = await canvas.boundingBox();
   expect(box).toBeTruthy();
   const instances = JSON.parse(await host.getAttribute("data-instances-json") ?? "[]") as { id: string; position: WorldPoint }[];
@@ -86,7 +86,7 @@ async function clickFirstWorldInstance(page: Page, expectedId: string): Promise<
 }
 
 async function clickWorldBackground(page: Page): Promise<void> {
-  const canvas = page.locator(".semio-world-3d-host canvas");
+  const canvas = page.locator(".semio-world-3d-host canvas:not([aria-hidden=\"true\"])");
   const box = await canvas.boundingBox();
   expect(box).toBeTruthy();
   await clickCanvasPoint(page, canvas, box!.x + worldCorpus.emptyCornerInset, box!.y + worldCorpus.emptyCornerInset);
@@ -99,7 +99,7 @@ test("puzzle2d fixtures nakagin: real 180-node/179-edge fixture round-trips thro
   expect(debug.nodeCount).toBe(180);
   expect(debug.edgeCount).toBe(179);
   await expect(page.locator(".semio-board-2d-host")).toHaveAttribute("data-board-snapshot-parsed", "true");
-  await expect(page.locator(".semio-board-2d-host canvas")).toBeVisible();
+  await expect(page.locator(".semio-board-2d-host canvas:not([aria-hidden=\"true\"])")).toBeVisible();
   assertNoErrors();
 });
 
@@ -109,7 +109,7 @@ test("puzzle2d fixtures concrete forest: real fixture round-trips through Board2
   expect(debug.nodeCount).toBe(1);
   expect(debug.edgeCount).toBe(0);
   await expect(page.locator(".semio-board-2d-host")).toHaveAttribute("data-board-snapshot-parsed", "true");
-  await expect(page.locator(".semio-board-2d-host canvas")).toBeVisible();
+  await expect(page.locator(".semio-board-2d-host canvas:not([aria-hidden=\"true\"])")).toBeVisible();
   assertNoErrors();
 });
 //#endregion puzzle/2d Fixtures

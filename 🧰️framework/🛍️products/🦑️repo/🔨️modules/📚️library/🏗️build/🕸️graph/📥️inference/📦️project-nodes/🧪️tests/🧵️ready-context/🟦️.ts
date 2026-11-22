@@ -13,7 +13,7 @@ test("a loop started from a foreign callback keeps the creator's async context w
 
 test("the farm's ready callback starts loops through the bound starter",()=>{
  const source=readFileSync(join(import.meta.dir,"..","..","🟨️.mjs"),"utf8");
- expect(source).toMatch(/grow=AsyncResource\.bind\(\(\)=>loop\([^)]*\)\)/u);
+ expect(source).toMatch(/grow=AsyncResource\.bind\(\(\)=>startLoop\([^)]*\)\)/u);
  expect(source).toMatch(/farm\?\.onReady\(loops=>\{[^}]*workers\.push\(grow\(\)\)/u);
  expect(source).not.toMatch(/farm\?\.onReady\(loops=>\{[^}]*workers\.push\(loop\(/u);
 });

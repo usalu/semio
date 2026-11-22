@@ -56,7 +56,7 @@ test("source: inside a pool pass the namespace lease is only try-locked",()=>{
  expect(text.indexOf("poolWithRoom(")).toBeLessThan(text.indexOf("tryNamespaceLeaseV1(store,directory)"));
 });
 test("source: attachment takes no pool and eviction only reads the roster under it and only try-locks victims",()=>{
- const attach=body(fixture.sourceLaws.attachFunction);expect(attach).not.toContain("pool(");expect(attach).toContain("observeNativeStorageStateV1(");expect(attach).toContain('phase!=="committed"');
+ const attach=body(fixture.sourceLaws.attachFunction);expect(attach).not.toContain("pool(");expect(attach).toContain("nativeFundingSnapshotV1(");expect(attach).toContain('funded.status!=="funded"');
  const evict=body(fixture.sourceLaws.evictFunction);
  expect(evict.split("pool(store").length-1).toBe(fixture.sourceLaws.evictPoolCalls);
  expect(evict.split("timeoutMs:0").length-1).toBe(fixture.sourceLaws.evictTryLocks);

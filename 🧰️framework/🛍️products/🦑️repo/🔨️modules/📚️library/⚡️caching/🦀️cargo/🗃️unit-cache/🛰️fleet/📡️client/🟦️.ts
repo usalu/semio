@@ -6,15 +6,17 @@ import {FLEET_POLICY_V1} from "../🪪️identity/🟦️.ts";
 const fleet=FLEET_POLICY_V1,EMPTY=createHash("sha256").digest("hex");
 type Environment=Readonly<Record<string,string|undefined>>;
 
-/** ⚙️ Where the fleet cache is and what this machine may do there. */
-export type FleetSettingsV1=Readonly<{endpoint:string;instance:string;token:string|undefined;upload:boolean;stateDirectory:string;signedRoot:string|undefined;identity:string}>;
+/** ⚙️ Where the fleet cache is and what this machine may do there; `timeoutMilliseconds` (`SEMIO_REMOTE_CACHE_TIMEOUT_SECONDS`) caps the time of every call and `retries` (`SEMIO_REMOTE_CACHE_RETRIES`) the ride-through attempts after a failed one, both from the remote cache contract (absent: the fleet policy alone decides). */
+export type FleetSettingsV1=Readonly<{endpoint:string;instance:string;token:string|undefined;upload:boolean;timeoutMilliseconds:number|undefined;retries:number|undefined;stateDirectory:string;signedRoot:string|undefined;identity:string}>;
+
+const whole=(value:string|undefined,minimum:number):number|undefined=>{const number=value===undefined||!/^\d{1,6}$/u.test(value)?NaN:Number(value);return Number.isInteger(number)&&number>=minimum?number:undefined;};
 
 /** ⚙️ Reads the fleet tier's settings from the environment the launcher exports (`SEMIO_REMOTE_CACHE_*`, the variables of the remote cache contract); `undefined` when the tier is off: no endpoint, `SEMIO_UNIT_CACHE_REMOTE=off`, or a read-only access that never claims or uploads still downloads, so only the endpoint decides. */
 export function readFleetSettingsV1(root:string,environment:Environment):FleetSettingsV1|undefined{
  const endpoint=environment.SEMIO_REMOTE_CACHE_ENDPOINT;
  if(!endpoint||environment.SEMIO_UNIT_CACHE_REMOTE==="off"||environment.SEMIO_UNIT_CACHE==="off")return undefined;
  const access=environment.SEMIO_REMOTE_CACHE_ACCESS??"read-only";
- return Object.freeze({endpoint:endpoint.replace(/\/+$/u,""),instance:environment.SEMIO_REMOTE_CACHE_INSTANCE||"main",token:environment.SEMIO_REMOTE_CACHE_TOKEN||undefined,upload:access==="read-write"&&environment.SEMIO_REMOTE_CACHE_UPLOAD!=="false",stateDirectory:join(root,fleet.layout.state),signedRoot:environment.SEMIO_REMOTE_CACHE_SIGNED==="1"?environment.SEMIO_UNIT_CACHE_WORKSPACE_ROOT||undefined:undefined,identity:endpoint+"|"+(environment.SEMIO_REMOTE_CACHE_GENERATION??"")+"|"+(environment.SEMIO_REMOTE_CACHE_TOKEN?createHash("sha256").update(environment.SEMIO_REMOTE_CACHE_TOKEN).digest("hex").slice(0,8):"")});
+ return Object.freeze({endpoint:endpoint.replace(/\/+$/u,""),instance:environment.SEMIO_REMOTE_CACHE_INSTANCE||"main",token:environment.SEMIO_REMOTE_CACHE_TOKEN||undefined,upload:access==="read-write"&&environment.SEMIO_REMOTE_CACHE_UPLOAD!=="false",timeoutMilliseconds:whole(environment.SEMIO_REMOTE_CACHE_TIMEOUT_SECONDS,1)===undefined?undefined:whole(environment.SEMIO_REMOTE_CACHE_TIMEOUT_SECONDS,1)!*1000,retries:whole(environment.SEMIO_REMOTE_CACHE_RETRIES,0),stateDirectory:join(root,fleet.layout.state),signedRoot:environment.SEMIO_REMOTE_CACHE_SIGNED==="1"?environment.SEMIO_UNIT_CACHE_WORKSPACE_ROOT||undefined:undefined,identity:endpoint+"|"+(environment.SEMIO_REMOTE_CACHE_GENERATION??"")+"|"+(environment.SEMIO_REMOTE_CACHE_TOKEN?createHash("sha256").update(environment.SEMIO_REMOTE_CACHE_TOKEN).digest("hex").slice(0,8):"")});
 }
 
 /** 🚦️ Why a request did not give an answer: the server is unreachable or failing, refuses the credential, or does not know the route. */
@@ -41,6 +43,7 @@ export interface FleetClientV1{
  await(key:string,timeoutMilliseconds:number):Promise<"stored"|"lapsed"|"timeout"|"fault">;
 }
 
+const sendable=(bytes:Uint8Array):Uint8Array<ArrayBuffer>=>bytes.buffer instanceof ArrayBuffer?new Uint8Array(bytes.buffer,bytes.byteOffset,bytes.byteLength):new Uint8Array(bytes);
 function fresh(path:string,windowMs:number):boolean{try{return Date.now()-statSync(path).mtimeMs<windowMs;}catch{return false;}}
 function stamp(directory:string,name:string,identity=""):void{try{mkdirSync(directory,{recursive:true});const path=join(directory,name);writeFileSync(path,identity);const now=new Date();utimesSync(path,now,now);}catch{}}
 
@@ -49,6 +52,7 @@ export function createFleetClientV1(settings:FleetSettingsV1,world:Readonly<{fet
  let signing:Promise<typeof fetch>|undefined;
  const signedFetch=(): Promise<typeof fetch>=>signing??=import("../../../../../🏗️build/🌐️remote-cache/🛰️fleet/🪪️identity/🟦️.ts").then(module=>module.fleetSignedFetchV1({root:settings.signedRoot!,audience:"cache"}));
  const request:typeof fetch=world.fetch??(settings.signedRoot===undefined?fetch:(((input:RequestInfo|URL,init?:RequestInit)=>signedFetch().then(send=>send(input,init))) as typeof fetch)),base=`${settings.endpoint}/${settings.instance}`,headers=(extra:Record<string,string>={}):Record<string,string>=>({...(settings.token?{authorization:"Bearer "+settings.token}:{}),...extra});
+ const bounded=(milliseconds:number):number=>settings.timeoutMilliseconds===undefined?milliseconds:Math.min(milliseconds,settings.timeoutMilliseconds);
  const downNow=():boolean=>{try{const now=Date.now();return readFileSync(join(settings.stateDirectory,fleet.layout.down),"utf8").split("\n").filter(Boolean).filter(at=>now-Number(at)<fleet.breaker.downMilliseconds).length>=fleet.breaker.downFaults;}catch{return false;}};
  const deniedNow=():boolean=>{const path=join(settings.stateDirectory,fleet.layout.denied);if(!fresh(path,fleet.breaker.deniedMilliseconds))return false;try{return readFileSync(path,"utf8")===settings.identity;}catch{return false;}};
  const mark=(fault:FleetFaultV1)=>{
@@ -62,23 +66,24 @@ export function createFleetClientV1(settings:FleetSettingsV1,world:Readonly<{fet
  let stampedAt=0;
  const reachable=():void=>{const at=Date.now();if(at-stampedAt<5000)return;stampedAt=at;stamp(settings.stateDirectory,fleet.layout.reachable);};
  const pause=(milliseconds:number)=>new Promise<void>(done=>{setTimeout(done,milliseconds);});
- async function call(method:string,url:string,timeout:number,init:{body?:BodyInit;headers?:Record<string,string>}={}):Promise<{status:number;response:Response}|FleetFaultV1>{
+ async function call(method:string,url:string,timeout:number,init:{body?:BodyInit;headers?:Record<string,string>;transfer?:boolean}={}):Promise<{status:number;response:Response}|FleetFaultV1>{
   const started=Date.now(),budget=reachableNow()?fleet.timeouts.rideThroughMilliseconds:0;
   for(let attempt=0;;attempt++){
    try{
-    const response=await request(url,{method,headers:headers(init.headers),signal:AbortSignal.timeout(timeout),...(init.body===undefined?{}:{body:init.body})});
+    const response=await request(url,{method,headers:headers(init.headers),signal:AbortSignal.timeout(init.transfer?timeout:bounded(timeout)),...(init.body===undefined?{}:{body:init.body})});
     reachable();
+    if(response.status===401)mark("denied");
     return {status:response.status,response};
    }catch{
     const wait=Math.min(fleet.timeouts.rideThroughMaximumMilliseconds,fleet.timeouts.rideThroughInitialMilliseconds*2**attempt)*(0.5+Math.random());
-    if(Date.now()-started+wait>budget){try{rmSync(reachablePath,{force:true});}catch{}mark("down");return "down";}
+    if(attempt>=(settings.retries??Infinity)||Date.now()-started+wait>budget){try{rmSync(reachablePath,{force:true});}catch{}mark("down");return "down";}
     await pause(wait);
    }
   }
  }
  const json=async<T>(response:Response):Promise<T|undefined>=>{try{return await response.json() as T;}catch{return undefined;}};
- const blobTimeout=(size:number)=>fleet.timeouts.blobMilliseconds+Math.ceil(size/fleet.timeouts.blobBytesPerSecond*1000);
- return Object.freeze({
+ const blobTimeout=(size:number)=>bounded(fleet.timeouts.blobMilliseconds)+Math.ceil(size/fleet.timeouts.blobBytesPerSecond*1000);
+ return Object.freeze<FleetClientV1>({
   settings,
   state(){return downNow()?"down":deniedNow()?"denied":"ok";},
   usable(){return!downNow()&&!deniedNow();},
@@ -97,7 +102,7 @@ export function createFleetClientV1(settings:FleetSettingsV1,world:Readonly<{fet
   },
   async getBlob(hash,size){
    if(hash===EMPTY)return new Uint8Array(0);
-   const answer=await call("GET",`${base}/cas/${hash}`,blobTimeout(size));
+   const answer=await call("GET",`${base}/cas/${hash}`,blobTimeout(size),{transfer:true});
    if(typeof answer==="string"||answer.status!==200)return undefined;
    try{
     const bytes=new Uint8Array(await answer.response.arrayBuffer());
@@ -112,11 +117,11 @@ export function createFleetClientV1(settings:FleetSettingsV1,world:Readonly<{fet
   },
   async putBlob(hash,bytes){
    if(hash===EMPTY)return true;
-   const answer=await call("PUT",`${base}/cas/${hash}`,blobTimeout(bytes.length),{body:bytes,headers:{"content-type":"application/octet-stream"}});
+   const answer=await call("PUT",`${base}/cas/${hash}`,blobTimeout(bytes.length),{body:sendable(bytes),headers:{"content-type":"application/octet-stream"},transfer:true});
    return typeof answer!=="string"&&answer.status===200;
   },
   async putResult(key,bytes,slot){
-   const answer=await call("PUT",`${base}/ac/${key}`,fleet.timeouts.claimMilliseconds*4,{body:bytes,headers:{"content-type":"application/octet-stream",[fleet.slotHeader]:slot}});
+   const answer=await call("PUT",`${base}/ac/${key}`,fleet.timeouts.claimMilliseconds*4,{body:sendable(bytes),headers:{"content-type":"application/octet-stream",[fleet.slotHeader]:slot}});
    return typeof answer!=="string"&&answer.status===409?"diverged":typeof answer!=="string"&&answer.status===200;
   },
   async claim(key,owner,ttlMilliseconds,expectedMilliseconds){

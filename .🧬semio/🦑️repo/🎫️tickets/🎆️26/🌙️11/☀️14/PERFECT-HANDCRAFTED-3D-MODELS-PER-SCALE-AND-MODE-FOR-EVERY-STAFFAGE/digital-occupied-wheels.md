@@ -1,0 +1,23 @@
+# Occupied wheels and rider contact
+
+The original catalog source hashes for the cyclist, wheelchair occupant and rollator user were respectively `59656079ffd00b660f5e033fd4173ca405106d8a1c793bf4338834cb07030515`, `d97ce0fb43f1a1f71df3600dfddb3aa8af646b6ccd547196fede4f4cf258972f` and `714c7b40c0330048131c6dadea1d82ac47b3dae63bc23e6130171554a8aec59b`.
+
+| Subject | Shipped geometry | Fitted physical assembly at all four scales |
+|---|---|---|
+| Cyclist | The wheel had 36 fine spokes, 12 at 1:100, six at 1:200 and none at 1:500. The coarsest rider also lacked pedal platforms and external spindles. | Each of the two 680 mm wheels carries 36 tangential spokes. Leading and trailing sets touch both hub flanges and the rim. The paired foot platforms, spindle mounts, soles and fingers keep contact in riding poses. |
+| Wheelchair occupant | No rear-wheel spokes remained at 1:500. The rubber tyre widened to 75 mm, and the separate handrim disappeared. | The 610 mm rear wheels carry 24 dished spokes, 33.6 mm tyres, separate handrims and connecting tabs. The parked rider rests their hands clear. The complete gloves, exposed fingers and internal phalanges follow the rotating wrists. Contact returns in the two push poses and on the ramp. |
+| Rollator user | All four fine five-web mouldings became closed discs from 1:100 through 1:500. | Each 200 mm wheel has its tread, hub, rim and five open nylon webs. The occupied-wheel geometry leaves the wearer’s current skeleton intact. |
+
+The language-independent fixture is `digital-occupied-wheel-case.json`. The independent `digital-occupied-wheel-check.ts` oracle cuts the posed triangles at four wheel radii and collects material and void in 1,800 angular sectors. It checks the count of openings, the physical tyre dimensions, flange-to-rim attachment, the direction of the lacing and the thermal and mechanical references. It samples both sides, two poses and four scales. At 1:500 the middle band of the cyclist's rim is approximately 6–7% metal, the wheelchair is 4.7% and the five-web rollator is 19.2%.
+
+The separate `digital-occupied-contact.ts` oracle uses posed triangle surfaces from the human and the equipment. It checks both sides of all four named poses at each scale. The rider's gloves and soles meet the grips and pedals within 0.5 mm throughout seated riding, standing and coasting. After dismount, hand contact remains and the shoes clear the left/right platforms by 197 and 255 mm. The wheelchair handrim is within 0.5 mm at active hands and 234 mm from resting hands. At 0.4 s in the push cycle, before the wrist repair, the coarsest hand was 66–72 mm away while fine fingers cleared the handrim by 2–3 mm. The fitted hands clear it by 3–4 mm. The maximum change in clearance across the six drive/recovery samples is 2 mm. The rollator user grasps both handles when standing and walking, then clears the handles by 321–393 mm when resting on the seat or stooping to the basket.
+
+The 1:500 elevation of the bicycle uses a filled tyre envelope and separate silhouettes for toes, palms and tread. This permits comparison between the fraction-of-a-millimetre wheel on printed paper and the underlying physical geometry. At print scale only selected spoke strokes are drawn.
+
+## Canonical publication
+
+Rollator user `3008608374aaaec8a4788bb458f159f6bbd025e0b8cf0d0bb3dddd0650917367`. All 52 native scale checks, print checks and the 12 GLB scenes passed, totalling 7,835,992 bytes. The standing and seated reverse-angle presentations show the five-window hubs at each scale. The separate axial/oblique sheet confirms the tread and five webs remain open on their outer and inner faces. The 1:500 fork partly covers the nearest hub in the seated view.
+
+Cyclist `5d2073b5b9f2e7773c43fa82a2638e8af3198c24736b10e4cae5b88901a18309`. The 12 GLB scenes total 5,806,448 bytes. Both wire wheels remain open in the riding and standing sheets. Subpixel sampling makes individual slender wires appear dotted in an overall view. The fourfold-supersampled axial/oblique close-up shows the continuous crossing geometry. Eight pedalling samples retain both hand and shoe contacts to within 0.5 mm at 1:50 and 1:500.
+
+Wheelchair occupant `11cc33f9896fdc35317837fa1a42f33de3b0a5977dd6e50e84bcf24e8f1c1e63`. The 12 GLB scenes total 6,161,132 bytes. The 24-wire pattern, narrow dark tyre and separate pushrim are present in the seated and ramp presentations. Both hands show four exposed fingertips and an opposing thumb. Triangle checks at each scale connect each fingertip to its fingerless-glove cuff and internal phalangeal geometry. The unloaded hands rest 234 mm from the pushrims. Both files passed the 52 scale rules and print checks.

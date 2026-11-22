@@ -9,11 +9,11 @@ export type BenchToolV1="nx"|"bazel";
 /** 🌳️ What an objective is measured with: one implementation, or `neutral` for a command that does not depend on it. */
 export type BenchSloToolV1=BenchToolV1|"neutral";
 /** 🌰️ The kinds of probe. */
-export type BenchKindV1="cli-help"|"noop"|"edit"|"peer"|"graph"|"cache"|"concurrency"|"planning";
+export type BenchKindV1="cli-help"|"noop"|"edit"|"peer"|"graph"|"cache"|"concurrency"|"planning"|"fleet";
 /** 🌴️ The path a command takes: one process per command, or the resident service. */
 export type BenchLaneV1="oneshot"|"resident";
 /** 🌵️ What a probe measures. */
-export type BenchMetricV1="wallMs"|"startMs"|"greenMs"|"peakRssBytes"|"hitRatio"|"makespanMs"|"maxUnrelatedWaitMs"|"speedup"|"queueMs"|"graphMs"|"executeMs"|"executedActions"|"inferredProjects"|"closuresVerified"|"closuresReused"|"staleFacts"|"swapBytes"|"availableBytes"|"oomKills"|"storeBytes";
+export type BenchMetricV1="wallMs"|"startMs"|"greenMs"|"peakRssBytes"|"hitRatio"|"makespanMs"|"maxUnrelatedWaitMs"|"speedup"|"queueMs"|"graphMs"|"executeMs"|"executedActions"|"inferredProjects"|"closuresVerified"|"closuresReused"|"staleFacts"|"swapBytes"|"availableBytes"|"oomKills"|"storeBytes"|"divergentWrites"|"offloadMs"|"fallbackMs"|"offloadedUnits"|"capacityBreaches"|"reservedBytes"|"firstTaskMs"|"readyRatio";
 /** 🌲️ The unit a metric is measured in. */
 export type BenchUnitNameV1="ms"|"bytes"|"ratio"|"count";
 /** 🌶️ How the samples of a series are condensed to one number. */
@@ -31,7 +31,7 @@ export type BenchStartKindV1="marker"|"first-output"|"exit";
 /** 🌼️ A source file edit that makes one language unit rebuild: the file, the kind of edit and the target that must follow it. */
 export type BenchUnitV1=Readonly<{id:string;language:"ts"|"rs"|"go"|"py";target:string;file:string;op:"comment"|"private-body"|"public-api";title:BenchTextV1}>;
 /** 🌽️ One measurement: a kind, the target or unit it works on, how often it runs and how it starts. */
-export type BenchProbeV1=Readonly<{id:string;kind:BenchKindV1;title:BenchTextV1;lane?:BenchLaneV1;target?:string;peer?:string;unit?:string;workload?:string;sessions?:number;runs:number;warmup:number;cold?:boolean;memory?:boolean}>;
+export type BenchProbeV1=Readonly<{id:string;kind:BenchKindV1;title:BenchTextV1;lane?:BenchLaneV1;target?:string;peer?:string;unit?:string;workload?:string;scenario?:string;sessions?:number;runs:number;warmup:number;cold?:boolean;memory?:boolean}>;
 /** 🌾️ The allowed drift against a baseline: a share of the baseline value plus an absolute margin in the unit of the metric. */
 export type BenchToleranceV1=Readonly<{relative:number;absolute:number}>;
 /** 🌿️ One objective: the statistic of a metric of a probe, its goal and its gate, who enforces it and how far it may drift. */
@@ -190,7 +190,7 @@ export function benchSloIssuesV1(value:unknown):string[]{
  }
  for(const probe of set.probes){
   const need=(field:keyof BenchProbeV1,wanted:boolean)=>{if((probe[field]!==undefined)!==wanted)found.push(`${probe.id}: ${field} ${wanted?"is required":"is not allowed"} for ${probe.kind}`);};
-  const planning=probe.kind==="planning";need("target",probe.kind==="noop"||probe.kind==="graph"||probe.kind==="cache"||probe.kind==="peer"||planning&&probe.unit===undefined);need("unit",probe.kind==="edit"||probe.kind==="peer"||planning&&probe.target===undefined);if(probe.peer!==undefined&&!planning)found.push(`${probe.id}: peer is only allowed for planning`);need("workload",probe.kind==="concurrency");need("sessions",probe.kind==="concurrency");need("lane",probe.kind==="noop"||probe.kind==="edit"||probe.kind==="peer"||probe.kind==="graph"||planning);
+  const planning=probe.kind==="planning";need("target",probe.kind==="noop"||probe.kind==="graph"||probe.kind==="cache"||probe.kind==="peer"||planning&&probe.unit===undefined);need("unit",probe.kind==="edit"||probe.kind==="peer"||planning&&probe.target===undefined);if(probe.peer!==undefined&&!planning)found.push(`${probe.id}: peer is only allowed for planning`);need("workload",probe.kind==="concurrency");need("scenario",probe.kind==="fleet");need("sessions",probe.kind==="concurrency");need("lane",probe.kind==="noop"||probe.kind==="edit"||probe.kind==="peer"||probe.kind==="graph"||planning);
   if(probe.unit!==undefined&&!units.has(probe.unit))found.push(`${probe.id}: unknown unit ${probe.unit}`);
   if(probe.lane==="resident"&&(probe.kind==="graph"||probe.kind==="planning"))found.push(`${probe.id}: a ${probe.kind} probe has no resident lane`);
   if(probe.cold&&probe.kind!=="graph"&&probe.kind!=="noop"&&probe.kind!=="planning")found.push(`${probe.id}: only a graph, planning or no-op probe can be cold`);
@@ -207,7 +207,7 @@ export function benchSloIssuesV1(value:unknown):string[]{
   if(slo.goal!==null&&slo.gate===null)found.push(`${slo.id}: a goal needs a gate`);
   if(slo.goal!==null&&slo.gate!==null&&(slo.direction==="lower"?slo.goal>slo.gate:slo.goal<slo.gate))found.push(`${slo.id}: the goal lies beyond the gate`);
   if(slo.enforcement==="blocking"&&slo.gate===null)found.push(`${slo.id}: a blocking objective needs a gate`);
-  if(slo.tools.includes("neutral")!==(probe.kind==="cli-help")||probe.kind==="cli-help"&&slo.tools.length!==1)found.push(`${slo.id}: neutral belongs to cli-help probes only`);
+  const neutral=probe.kind==="cli-help"||probe.kind==="fleet";if(slo.tools.includes("neutral")!==neutral||neutral&&slo.tools.length!==1)found.push(`${slo.id}: neutral belongs to cli-help and fleet probes only`);
  }
  return found;
 }
@@ -246,10 +246,10 @@ const trim=(value:number,digits:number)=>String(Number(value.toFixed(digits)));
 /** 🥧️ Formats a value for its metric: milliseconds with one decimal, bytes in MiB, the hit ratio as a percentage, other ratios with two decimals. */
 export function benchFormatV1(metric:BenchMetricV1,value:number|null):string{
  if(value===null)return "-";
- if(metric==="hitRatio")return `${trim(value*100,1)} %`;
- if(metric==="peakRssBytes"||metric==="swapBytes"||metric==="availableBytes"||metric==="storeBytes")return `${trim(value/1048576,1)} MiB`;
+ if(metric==="hitRatio"||metric==="readyRatio")return `${trim(value*100,1)} %`;
+ if(metric==="peakRssBytes"||metric==="swapBytes"||metric==="availableBytes"||metric==="storeBytes"||metric==="reservedBytes")return `${trim(value/1048576,1)} MiB`;
  if(metric==="speedup")return trim(value,2);
- if(metric==="executedActions"||metric==="inferredProjects"||metric==="closuresVerified"||metric==="closuresReused"||metric==="staleFacts"||metric==="oomKills")return String(Math.round(value));
+ if(metric==="executedActions"||metric==="inferredProjects"||metric==="closuresVerified"||metric==="closuresReused"||metric==="staleFacts"||metric==="oomKills"||metric==="divergentWrites"||metric==="offloadedUnits"||metric==="capacityBreaches")return Number.isInteger(value)?String(value):trim(value,2);
  return trim(value,value<10?2:1);
 }
 
@@ -353,6 +353,12 @@ export function benchHistoryLatestV1(files:readonly string[],hostClass:string,be
  if(before!==null&&limit===null)return null;
  const found=files.filter(name=>{const at=stamp(name);return at!==null&&(limit===null||at<limit);}).sort((left,right)=>order(stamp(left)!,stamp(right)!)||order(left,right));
  return found.length?found[found.length-1]!:null;
+}
+
+/** 🧹️ Names the history files of one host class that exceed the newest `keep` ones, oldest first, so that the default history stays within its budget; files of other host classes and other names are never named. */
+export function benchHistoryPruneV1(files:readonly string[],hostClass:string,keep:number):string[]{
+ const pattern=new RegExp(policy.history.name,"u"),own=files.flatMap(name=>{const match=pattern.exec(name);return match&&match[2]===hostClass?[{name,stamp:match[1]!}]:[];}).sort((left,right)=>order(left.stamp,right.stamp)||order(left.name,right.name));
+ return own.slice(0,Math.max(0,own.length-keep)).map(row=>row.name);
 }
 
 /** 🌴️ Collects the objectives of a report that missed their gate (the budget); the blocking ones are what fails a comparison. */

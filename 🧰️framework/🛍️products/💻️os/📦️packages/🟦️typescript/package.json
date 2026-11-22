@@ -173,6 +173,7 @@
     "./modules/renderer/engine/elements/WorldTerrainLayer": "./🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗺️WorldTerrainLayer/🟦️.tsx",
     "./modules/renderer/engine/media/browser": "./🔨️modules/📺️renderer/🧑‍🎨engine/🎬️media/🌐️browser/🟦️.ts",
     "./modules/renderer/engine/media/browser/host": "./🔨️modules/📺️renderer/🧑‍🎨engine/🎬️media/🌐️browser/🎛️host/🟦️.ts",
+    "./modules/renderer/engine/media/browser/tutorial-video": "./🔨️modules/📺️renderer/🧑‍🎨engine/🎬️media/🌐️browser/🎞️tutorial-video/🟦️.ts",
     "./modules/renderer/engine/media/channel": "./🔨️modules/📺️renderer/🧑‍🎨engine/🎬️media/📡️channel/🟦️.ts",
     "./modules/renderer/engine/media/lifecycle": "./🔨️modules/📺️renderer/🧑‍🎨engine/🎬️media/🚚️lifecycle/🟦️.ts",
     "./modules/renderer/engine/schema/boot-lifecycle.json": "./🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/⏳️boot-lifecycle/🔣️json/🟦️.ts",
@@ -237,6 +238,7 @@
     "@semio-tech/schema-validator-ts": "workspace:*",
     "@semio-tech/ui": "workspace:*",
     "@semio-tech/ui-contract": "workspace:*",
+    "@semio-tech/ui-layout": "workspace:*",
     "@semio-tech/ui-styling": "workspace:*",
     "@semio-tech/value-ts": "workspace:*"
   },

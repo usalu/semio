@@ -77,7 +77,7 @@ fn default_voxel_dims() -> [u32; 3] {
 //#endregion 🔖️Defaults
 
 //#region 🔖️Cameras
-#[derive(Clone, Debug, PartialEq, Default, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, Default, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree, semio_framework_value::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle5dCamera2d {
@@ -89,7 +89,7 @@ pub struct Puzzle5dCamera2d {
     pub zoom: f64,
 }
 
-#[derive(Clone, Debug, PartialEq, Default, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, Default, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree, semio_framework_value::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle5dCamera3d {
@@ -108,7 +108,7 @@ pub struct Puzzle5dCamera3d {
     /// 🎥️ The full classical projection taxonomy this pane's camera renders through — the same
     /// framework state puzzle3d's `Puzzle3dCamera::projection` carries, driven by
     /// `setProjection`/`setProjectionParam`.
-    #[value(default)]
+    #[value(default = "WorldProjectionConfig::default")]
     #[dsl(block)]
     pub projection: WorldProjectionConfig,
 }
@@ -132,7 +132,7 @@ pub const PUZZLE5D_CAMERA3D_DEFAULT_DISTANCE: f64 = 13.856_406_460_551_018;
 //#region 🔖️Selection
 /// 🎯️ Which entity kinds a pick in either pane may even reach — the 5d twin of
 /// `Puzzle3dSelectableKinds`, in this artifact's part/grip/fastener vocabulary.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree, semio_framework_value::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle5dSelectableKinds {
@@ -548,6 +548,10 @@ pub enum Puzzle5dConfigMutation {
 
 impl protocol::Mutation<Puzzle5dConfig> for Puzzle5dConfigMutation {
     type Diff = Puzzle5dConfigDiff;
+
+    fn may_emit_foreign_steps(&self) -> bool {
+        false
+    }
 
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[
         protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config", semantic_kind: "set-fill-count", display_name: "Set Puzzle 5D Fill Count", emoji: "🎚️", aggregate_variant: "SetFillCount", payload_schema: "puzzle.5dconfig", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },

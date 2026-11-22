@@ -858,3 +858,53 @@ pub fn reference_page_operator_names(input:&[u8])->Result<Vec<Vec<String>>,Strin
     let document=lopdf::Document::load_mem(input).map_err(|error|error.to_string())?;
     document.get_pages().values().map(|page|lopdf::content::Content::decode(&document.get_page_content(*page)).map(|content|content.operations.into_iter().map(|operation|operation.operator).collect()).map_err(|error|error.to_string())).collect()
 }
+
+fn reference_resolve<'a>(document: &'a lopdf::Document, object: &'a lopdf::Object) -> &'a lopdf::Object {
+    object.as_reference().ok().and_then(|id| document.get_object(id).ok()).unwrap_or(object)
+}
+
+fn reference_text(object: &lopdf::Object) -> String {
+    object.as_name().map(|name| String::from_utf8_lossy(name).into_owned()).or_else(|_| object.as_str().map(|text| String::from_utf8_lossy(text).into_owned())).unwrap_or_default()
+}
+
+fn reference_annotation_dictionaries(document: &lopdf::Document) -> Vec<Vec<&lopdf::Dictionary>> {
+    document.get_pages().values().map(|page| {
+        let page = document.get_dictionary(*page).ok();
+        let annots = page.and_then(|page| page.get(b"Annots").ok()).map(|annots| reference_resolve(document, annots));
+        annots.and_then(|annots| annots.as_array().ok()).map(|items| items.iter().filter_map(|item| reference_resolve(document, item).as_dict().ok()).collect()).unwrap_or_default()
+    }).collect()
+}
+
+/// 📌️ Lists each page's annotation subtypes through the independent PDF reader.
+pub fn reference_annotation_subtypes(input: &[u8]) -> Result<Vec<Vec<String>>, String> {
+    let document = lopdf::Document::load_mem(input).map_err(|error| error.to_string())?;
+    Ok(reference_annotation_dictionaries(&document).into_iter().map(|page| page.into_iter().map(|annotation| annotation.get(b"Subtype").map(reference_text).unwrap_or_default()).collect()).collect())
+}
+
+/// 📝️ Lists `(field name, value)` of every top-level form field through the independent PDF reader.
+pub fn reference_field_values(input: &[u8]) -> Result<Vec<(String, String)>, String> {
+    let document = lopdf::Document::load_mem(input).map_err(|error| error.to_string())?;
+    let form = document.catalog().map_err(|error| error.to_string())?.get(b"AcroForm").map(|form| reference_resolve(&document, form)).map_err(|error| error.to_string())?;
+    let fields = form.as_dict().and_then(|form| form.get(b"Fields")).map(|fields| reference_resolve(&document, fields)).map_err(|error| error.to_string())?;
+    Ok(fields.as_array().map_err(|error| error.to_string())?.iter().filter_map(|field| reference_resolve(&document, field).as_dict().ok()).map(|field| (field.get(b"T").map(reference_text).unwrap_or_default(), field.get(b"V").map(reference_text).unwrap_or_default())).collect())
+}
+
+/// 🖼️ Lists `(subtype, appearance state, decoded appearance content)` of every widget normal appearance through the independent PDF reader.
+pub fn reference_widget_appearances(input: &[u8]) -> Result<Vec<(String, String)>, String> {
+    let document = lopdf::Document::load_mem(input).map_err(|error| error.to_string())?;
+    let mut found = Vec::new();
+    for annotation in reference_annotation_dictionaries(&document).into_iter().flatten() {
+        let Ok(normal) = annotation.get(b"AP").map(|ap| reference_resolve(&document, ap)).and_then(|ap| ap.as_dict()).and_then(|ap| ap.get(b"N")).map(|normal| reference_resolve(&document, normal)) else { continue };
+        let state = annotation.get(b"AS").map(reference_text).unwrap_or_default();
+        match normal {
+            lopdf::Object::Stream(stream) => found.push((state, String::from_utf8_lossy(&stream.get_plain_content().unwrap_or_default()).into_owned())),
+            lopdf::Object::Dictionary(states) => states.iter().for_each(|(key, value)| {
+                if let Ok(stream) = reference_resolve(&document, value).as_stream() {
+                    found.push((format!("{}={}", state, String::from_utf8_lossy(key)), String::from_utf8_lossy(&stream.get_plain_content().unwrap_or_default()).into_owned()));
+                }
+            }),
+            _ => {}
+        }
+    }
+    Ok(found)
+}

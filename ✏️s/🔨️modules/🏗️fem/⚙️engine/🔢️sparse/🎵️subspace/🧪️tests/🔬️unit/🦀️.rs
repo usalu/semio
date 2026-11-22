@@ -9,7 +9,6 @@ use super::*;
 use semio_s_fem_test_support::close_turn;
 use semio_s_fem_test_support::OriginalNumericalFixture;
 use semio_s_fem_test_support::checkpoint_payload;
-use semio_s_fem_test_support::close_job;
 use semio_s_fem_test_support::close_payload;
 use semio_s_fem_test_support::close_writer;
 use semio_s_fem_test_support::grant_of;
@@ -343,7 +342,7 @@ fn subspace_factor_cursor_matches_numpy_for_three_nondiagonal_right_hand_sides()
     }
     let terminal = job.state.work.stage == SubspaceStage::ShiftOperatorColumnRow;
     let observed: Vec<Vec<f64>> = (0..3).map(|row| (0..3).map(|column| job.state.work.solved.get(row, column)).collect()).collect();
-    close_job(&mut job);
+    with_original(|original| original.close(&mut job));
     assert!(InteractiveJob::terminal_is_empty(&job));
     assert!(terminal && scalar_steps && retained);
     assert_eq!(observed, expected);
@@ -375,16 +374,15 @@ fn subspace_publication_restarts_at_zero_and_commits_convergence_after_the_last_
         job.state.work.first = modes;
         let pointer = job.state.final_theta.backing_ptr(0);
         let capacity = job.state.final_theta.capacity();
-        let mut sequence = 0;
+        let mut original = OriginalNumericalFixture::new(operation);
         let mut observations = Vec::new();
         for fuel in fuels.iter().copied() {
-            let mut sequence_receipt = RetainedCloneProgress::default();
-            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(fuel, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
-            let yielded = matches!(seen_of(job.step_plain(&mut context)), Seen::Yield);
-            observations.push((yielded && context.fuel_remaining() == 0, job.state.final_theta.iter().copied().collect::<Vec<_>>(), job.state.converged, job.state.work.first, job.state.iteration, job.state.final_theta.backing_ptr(0) == pointer && job.state.final_theta.capacity() == capacity, job.terminal_writer.is_none()));
+            let (yielded, drained) = original.turn(TEST_GRANT, fuel, u64::MAX, |cx| Ok((matches!(seen_of(job.step_plain(cx)), Seen::Yield), cx.fuel_remaining() == 0))).expect("same original subspace publication turn");
+            observations.push((yielded && drained, job.state.final_theta.iter().copied().collect::<Vec<_>>(), job.state.converged, job.state.work.first, job.state.iteration, job.state.final_theta.backing_ptr(0) == pointer && job.state.final_theta.capacity() == capacity, job.terminal_writer.is_none()));
         }
         let solution = job.solution();
-        close_job(&mut job);
+        original.close(&mut job);
+        original.finish();
         assert!(InteractiveJob::terminal_is_empty(&job));
         for (index, (yielded, values, converged, cursor, iteration, retained, no_terminal)) in observations.into_iter().enumerate() {
             assert!(yielded && retained && no_terminal, "publication opportunity {index}, modes {modes}: yielded={yielded}, retained={retained}, no_terminal={no_terminal}");
@@ -639,20 +637,18 @@ mod long {
 }
 // #endregion 🔖️LongTests
 
+thread_local! { static ORIGINAL: &'static std::cell::RefCell<OriginalNumericalFixture> = Box::leak(Box::new(std::cell::RefCell::new(OriginalNumericalFixture::new(test_operation(9997))))); }
+
+fn with_original<T>(run: impl FnOnce(&mut OriginalNumericalFixture) -> T) -> T {
+    ORIGINAL.with(|original| run(&mut original.borrow_mut()))
+}
+
 fn restore_close(grant: RetainedCloneGrant, close: impl FnOnce(&mut StepContext<'_>) -> Result<InteractiveJobCloseStep, OriginalTurnFailure>) -> Result<InteractiveJobCloseStep, OriginalTurnFailure> {
-    let operation = test_operation(9997);
-    let mut sequence = 0;
-    let mut receipt = RetainedCloneProgress::default();
-    let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(u64::MAX, u64::MAX, grant), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut receipt);
-    close(&mut context)
+    with_original(|original| original.turn(grant, 1, u64::MAX, |cx| cx.with_original_retirement(close)))
 }
 
 fn test_funded_restore<T>(step: impl FnOnce(&mut StepContext<'_>) -> T) -> T {
-    let operation = test_operation(9998);
-    let mut sequence = 0;
-    let mut receipt = RetainedCloneProgress::default();
-    let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut receipt);
-    step(&mut context)
+    with_original(|original| original.turn(TEST_GRANT, 1, u64::MAX, |cx| Ok(step(cx)))).expect("same original subspace restore turn")
 }
 
 fn empty_paged_backing<T>(count: usize) -> PagedList<T, SPARSE_INDEX_SPACE> {

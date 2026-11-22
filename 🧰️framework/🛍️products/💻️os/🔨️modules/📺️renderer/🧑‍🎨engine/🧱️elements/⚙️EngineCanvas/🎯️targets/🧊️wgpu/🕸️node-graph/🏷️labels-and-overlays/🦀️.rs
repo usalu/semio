@@ -1,6 +1,8 @@
 //! 🏷️ Labels and overlays: the label chrome, the legible font clamp, the overlay rows, the node graph labels, the overlay snapshot and the selection marquee and bounds. See [`super`].
 
 use super::*;
+use semio_renderer_wgpu_engine_board::paint2d::paint2d_pixel_selection_progress;
+use semio_ui_wgpu_widget_kit::draw_text;
 
 //#region NodeGraph
 const DAG_LABEL_SCREEN_PX: f32 = 11.0;
@@ -204,13 +206,13 @@ fn paint_node_graph_selection_marquee(ctx: &mut FrameworkWidgetContext<'_>, inne
     semio_ui_draw_contract::paint_selection_marquee(&mut ctx.draw, theme, crossing, lasso, &global, true);
 }
 
-/// 🖌️🧭️ The two paint-2d overlays React layers OVER its canvas: a live marquee
+/// 🖌️🧭️ Paints the canvas overlays with the same placement React uses for a live marquee
 /// (`SelectionMarquee`, `🖌️Paint2dHost/🟦️.tsx:178`) and the navigator's "you are here" viewport
 /// rectangle (`overlayRect`, `:275`). Both are chrome — neither belongs in the vello raster the
-/// composite phase pushes — so they are painted here, in the scene's own overlay phase.
-pub fn paint_paint2d_overlays(ctx: &mut FrameworkWidgetContext<'_>, scene: &UiComponentSceneNode, inner: Rect) {
+/// composite phase pushes. The progress indicator belongs to the same overlay phase.
+pub fn paint_paint2d_overlays(ctx: &mut FrameworkWidgetContext<'_>, scene: &UiComponentSceneNode, inner: Rect) -> bool {
     let Some(paint) = scene.paint_2d.as_ref() else {
-        return;
+        return true;
     };
     let theme = *ctx.theme;
     if let Some(rect) = paint2d_navigator_overlay_rect(scene) {
@@ -220,11 +222,24 @@ pub fn paint_paint2d_overlays(ctx: &mut FrameworkWidgetContext<'_>, scene: &UiCo
         ctx.draw.push_line(bounds[0], bounds[1] + bounds[3], bounds[0] + bounds[2], bounds[1] + bounds[3], theme.accent, theme.stroke_hairline);
         ctx.draw.push_line(bounds[0], bounds[1], bounds[0], bounds[1] + bounds[3], theme.accent, theme.stroke_hairline);
         ctx.draw.push_line(bounds[0] + bounds[2], bounds[1], bounds[0] + bounds[2], bounds[1] + bounds[3], theme.accent, theme.stroke_hairline);
-        return;
-    }
-    if let Some((points, crossing, lasso)) = paint2d_marquee_overlay(&scene.host_id, &paint.active_utility) {
+    } else if let Some((points, crossing, lasso)) = paint2d_marquee_overlay(&scene.host_id, &paint.active_utility) {
         semio_ui_draw_contract::paint_selection_marquee(ctx.draw, &theme, crossing, lasso, &points, true);
     }
+    if let Some((completed, total)) = paint2d_pixel_selection_progress(&scene.host_id) {
+        if ctx.draw.try_reserve_retained_items(128).is_err() {
+            return false;
+        }
+        let width = (inner.w - 24.0).clamp(0.0, 220.0);
+        let x = inner.x + 12.0;
+        let y = inner.y + 12.0;
+        let fraction = if total == 0 { 0.0 } else { completed as f32 / total as f32 };
+        let panel = [x, y, width, 32.0];
+        ctx.draw.push_rounded(panel, theme.panel, theme.border_radius);
+        ctx.draw.push_loading_border(panel, theme.accent, theme.border_radius, theme.stroke_hairline);
+        ctx.draw.push_solid([x + 4.0, y + 27.0, (width - 8.0).max(0.0) * fraction, 2.0], theme.accent);
+        draw_text(ctx, &format!("{:.0}% · ⎋", fraction * 100.0), x + 8.0, y + 21.0, theme.font_size_small, theme.text);
+    }
+    true
 }
 
 fn paint_node_graph_selection_bounds(ctx: &mut FrameworkWidgetContext<'_>, inner: Rect, bounds_json: &str, theme: &Theme) {

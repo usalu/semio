@@ -1,0 +1,20 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:bun-manifest-profile:v1",
+  "$defs": {
+    "Policy": {
+      "const": {
+        "version": 1,
+        "fileName": "package.json",
+        "excludedTopLevelFields": ["scripts"],
+        "maximumBytes": 8388608
+      }
+    },
+    "Profile": {
+      "anyOf": [
+        {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        {"type": "null"}
+      ]
+    }
+  }
+}

@@ -76,7 +76,7 @@ pub mod value_text;
             }),
             "single" => {
                 let items = question.options.as_ref().map(|options| options.iter().map(|option| UiSelectItem { value: option.value.clone(), label: Label::data(option.label.clone()) }).collect()).unwrap_or_default();
-                UiControlNode::Select(UiSelectNode {
+                UiControlNode::Select(UiSelectNode { appearance: Default::default(),
                     id: format!("{field_id}.select"),
                     value: value.as_str().unwrap_or_default().to_string(),
                     items,

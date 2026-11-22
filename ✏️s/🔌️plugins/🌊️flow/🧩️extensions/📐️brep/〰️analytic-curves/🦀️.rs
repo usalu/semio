@@ -3,7 +3,7 @@
 use std::mem::{size_of, take};
 
 use neural_engine::{Atom, BudgetedOwnedEntry, Dictionary, EvalError, OperatorJob, OperatorJobStep, OperatorPlanAdmission, OperatorProgress, OperatorWorkFailure, Value};
-use semio_framework_3d_brep_engine::{AnalyticCurveParameters, AnalyticPublication, AnalyticTransform, BooleanOperand, BooleanOperation, BooleanPreparation, CertifiedBooleanResult, BoxFinish, BoxSectionDraft, SectionPolygon, ShellDraft, ConicFacePublication, CuboidSew, HelixWireRecipe, HullDraft, LoftDraft, LoftPlan, PolygonFacePublication, PolygonSectionSet, PolygonWirePublication, PolygonWireRecipe, PrismDraft, PlanarExtrusion, PlanarMeasureJob, WireLengthJob, SECTION_FACE_LIMIT, SectionPlan, SolidPrimitive, SolidPublication, VertexPublication};
+use semio_framework_3d_brep_engine::{AnalyticCurveParameters, AnalyticPublication, AnalyticTransform, BooleanOperand, BooleanOperation, BooleanPreparation, CertifiedBooleanResult, BoxFinish, Brep, BoxSectionDraft, SectionPolygon, ShellDraft, ConicFacePublication, CuboidSew, HelixWireRecipe, HullDraft, LoftDraft, LoftPlan, PolygonFacePublication, PolygonSectionSet, PolygonWirePublication, PolygonWireRecipe, PrismDraft, PlanarExtrusion, PlanarMeasureJob, WireLengthJob, SECTION_FACE_LIMIT, SectionPlan, SolidPrimitive, SolidPublication, VertexPublication};
 use semio_framework_job::StepContext;
 use semio_framework_3d_brep_engine::CompoundPublication;
 use semio_framework_3d_brep_engine::{SolidPatternPublication, SolidPatternRecipe};
@@ -12,7 +12,7 @@ use semio_framework_value::{OriginalRetirementPoll, RetainedAllocationEffect, Re
 use semio_framework_value::retained_clone::retained_clone_grant_admits;
 use semio_framework_value::retirement::controlled::ControlledRetirement;
 use semio_s_artifact_stdio_step_geometry::geometry::{StepWrite, StepSolid, StepSolidDecode, StepWriteSource};
-use semio_s_spatial_kernel_semio_session::{NativeMeshExport,NativeValidationReport,Session,SessionCapture,classify_number};
+use semio_s_spatial_kernel_semio_session::{NativeMeshExport,NativeValidationReport,SolidHealing,Session,SessionCapture,classify_number};
 
 #[path = "🧾️topology-output/🦀️.rs"]
 mod topology_output;
@@ -98,11 +98,13 @@ pub enum GeometryOperation {
     Shell,
     Sew,
     ConvertToNurbs,
+    Heal,
     ChamferAll,
     FilletAll,
     ChamferEdges,
     FilletEdges,
     Draft,
+    Defeature,
     Section,
     Split,
     ConvexHull,
@@ -188,9 +190,11 @@ impl GeometryOperation {
             Self::Shell => "shell-source",
             Self::Sew => "sew-source",
             Self::ConvertToNurbs => "nurbs-cuboid-source",
+            Self::Heal => "healing-source",
             Self::ChamferAll | Self::ChamferEdges => "box-chamfer-source",
             Self::FilletAll | Self::FilletEdges => "box-fillet-source",
             Self::Draft => "box-draft-source",
+            Self::Defeature => "rectangular-stock-feature-source",
             Self::Section => "section-source",
             Self::Split => "split-source",
             Self::ConvexHull => "convex-hull-source",
@@ -205,7 +209,11 @@ impl GeometryOperation {
         }
     }
 
-    fn output_bytes(self) -> usize {
+    fn sweep_guide(self, input: &Dictionary) -> Option<&str> {
+        matches!(self, Self::Pipe).then(|| geometry_handle_value(input.get("guide"))).flatten()
+    }
+
+    fn output_bytes(self, input: &Dictionary) -> usize {
         match self {
             Self::Rectangle | Self::RegularPolygon => 2 * size_of::<f64>(),
             Self::Polyline | Self::PlanarFacePoints => 2 * size_of::<[f64; 3]>(),
@@ -230,17 +238,19 @@ impl GeometryOperation {
             Self::SurfaceSurface => 14 * size_of::<f64>(),
             Self::OffsetSolid => size_of::<SolidPrimitive>() + size_of::<f64>(),
             Self::Shell => 16 * size_of::<f64>(),
-            Self::Sew => size_of::<f64>(),
+            Self::Sew | Self::Heal => size_of::<f64>(),
             Self::ConvertToNurbs => size_of::<SolidPrimitive>(),
             Self::FilletAll => 12 * size_of::<f64>(),
             Self::ChamferAll => 16 * size_of::<f64>(),
             Self::ChamferEdges | Self::FilletEdges => 16 * size_of::<f64>(),
             Self::Draft => 15 * size_of::<f64>(),
+            Self::Defeature => size_of::<SolidPrimitive>(),
             Self::Section => 16 * size_of::<f64>(),
             Self::Split => 12 * size_of::<f64>(),
             Self::ClassifyPoint => 4 * size_of::<f64>(),
             Self::Distance => 13 * size_of::<f64>(),
             Self::BoundingBox => 16 * size_of::<f64>(),
+            Self::Pipe if self.sweep_guide(input).is_some() => 24 * size_of::<f64>(),
             Self::ExtrudeWire | Self::ExtrudeFace | Self::Sweep | Self::Pipe | Self::Loft => 16 * size_of::<f64>(),
             Self::Revolve => 14 * size_of::<f64>(),
             Self::HelicalSweep => 10 * size_of::<f64>(),
@@ -267,6 +277,7 @@ impl GeometryOperation {
     fn output_capacity(self)->usize{
         match self {
             Self::Validate => size_of::<NativeValidationReport>(),
+            Self::Heal => size_of::<SolidHealing>(),
             Self::ExportObj | Self::ExportStl => size_of::<NativeMeshExport>(),
             Self::ImportStep => size_of::<StepSolidDecode>(),
             Self::ExportStep => size_of::<StepWrite>(),
@@ -290,7 +301,7 @@ impl GeometryOperation {
             }
             Self::Validate=>{
                 let handle=geometry_handle(input,"geometry")?;
-                return session.plan_validation_report(handle).map(|report|GeometryOutput::Validation(Box::new(report)));
+                return session.with_original_geometry_query(|kernel| NativeValidationReport::new(kernel, handle)).map(|report|GeometryOutput::Validation(Box::new(report)));
             }
             Self::Compound=>return session.plan_compound(compound_members(input)?.len().saturating_sub(1)).map(GeometryOutput::Compound),
             Self::LinearPattern | Self::CircularPattern | Self::GridPattern => {
@@ -450,12 +461,9 @@ impl GeometryOperation {
                 return Ok(loft);
             }
             Self::Sweep | Self::Pipe => {
-                if matches!(self, Self::Pipe) && geometry_handle_value(input.get("guide")).is_some() {
-                    return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner, "original straight Pipe requires an absent guide"));
-                }
                 let profile = geometry_handle(input, "profile")?;
                 let path = geometry_handle(input, "path")?;
-                let swept = match session.plan_straight_sweep(profile, path)? {
+                let swept = match session.plan_straight_sweep(profile, path, self.sweep_guide(input))? {
                     PlanarExtrusion::Solid(shape) => GeometryOutput::Solid(shape, "solid"),
                     PlanarExtrusion::Prism(draft) => GeometryOutput::Prism(draft),
                 };
@@ -534,6 +542,10 @@ impl GeometryOperation {
                     else { BoxFinish::ChamferAll(number(input, "distance", "value")?) };
                 return session.plan_box_finish(source, &[], finish).map(|solid| GeometryOutput::Solid(solid, "solid"));
             }
+            Self::Defeature => {
+                let (shape, members, count, _) = defeature_source(input)?;
+                return session.plan_defeature(shape, &members[..count]).map(|solid| GeometryOutput::Solid(solid, "solid"));
+            }
             Self::ChamferEdges | Self::FilletEdges | Self::Draft => {
                 let (shape,members,count)=box_finish_source(input,self)?;
                 let finish = if matches!(self,Self::Draft) {
@@ -547,6 +559,12 @@ impl GeometryOperation {
                 let list = sew_faces(input)?;
                 if list.len() != 7 { return Err(invalid_sew_input()); }
                 return CuboidSew::new(number(input, "tolerance", "value")?).map(GeometryOutput::Sew);
+            }
+            Self::Heal => {
+                let source = geometry_handle(input, "geometry")?;
+                let tolerance = number(input, "tolerance", "value")?;
+                return session.with_original_geometry_query(|kernel| kernel.plan_healing(source, tolerance))
+                    .map(|job| GeometryOutput::Healing(Box::new(job)));
             }
             Self::ConvertToNurbs => return session.plan_nurbs_cuboid(geometry_handle(input, "geometry")?)
                 .map(|solid| GeometryOutput::Solid(solid, "geometryOut")),
@@ -606,7 +624,7 @@ impl GeometryOperation {
 
     fn geometry_source(self, input: &Dictionary) -> Result<Option<&str>, ValueError> {
         let channel = match self {
-            Self::Length | Self::Volume | Self::Area | Self::CenterOfMass | Self::Label | Self::ClosestPoint | Self::Validate | Self::Translate | Self::Rotate | Self::RotateAbout | Self::Scale | Self::Mirror | Self::Copy | Self::OffsetSolid | Self::ChamferAll | Self::FilletAll | Self::BoundingBox | Self::Shell | Self::ConvertToNurbs | Self::LinearPattern | Self::CircularPattern | Self::GridPattern => "geometry",
+            Self::Length | Self::Volume | Self::Area | Self::CenterOfMass | Self::Label | Self::ClosestPoint | Self::Validate | Self::Heal | Self::Translate | Self::Rotate | Self::RotateAbout | Self::Scale | Self::Mirror | Self::Copy | Self::OffsetSolid | Self::ChamferAll | Self::FilletAll | Self::BoundingBox | Self::Shell | Self::ConvertToNurbs | Self::LinearPattern | Self::CircularPattern | Self::GridPattern => "geometry",
             Self::ExtrudeWire | Self::ConicFace | Self::PlanarConicFace => "wire",
             Self::ExtrudeFace | Self::Revolve | Self::Thicken | Self::OffsetFace => "face",
             Self::Sweep | Self::Pipe | Self::HelicalSweep => "profile",
@@ -627,6 +645,11 @@ impl GeometryOperation {
         }
         if matches!(self, Self::ConvexHull | Self::Deconstruct) { return Ok(dictionary_depth(input)); }
         if matches!(self, Self::ChamferAll | Self::FilletAll) { return session.box_finish_depth(geometry_handle(input, "geometry")?, &[]); }
+        if matches!(self, Self::Defeature) {
+            let (shape, members, count, input_depth) = defeature_source(input)?;
+            let native_depth = session.with_original_geometry_query(|kernel| kernel.defeature_depth(shape, &members[..count]))?;
+            return Ok(input_depth.max(native_depth));
+        }
         if matches!(self, Self::ChamferEdges | Self::FilletEdges | Self::Draft) {
             let (shape,members,count)=box_finish_source(input,self)?;
             return session.box_finish_depth(shape,&members[..count]);
@@ -661,7 +684,7 @@ impl GeometryOperation {
             return session.loft_depth(loft_profiles(input)?);
         }
         if matches!(self, Self::Sweep | Self::Pipe) {
-            return session.straight_sweep_depth(geometry_handle(input, "profile")?, geometry_handle(input, "path")?);
+            return session.straight_sweep_depth(geometry_handle(input, "profile")?, geometry_handle(input, "path")?, self.sweep_guide(input));
         }
         if matches!(self, Self::Translate | Self::Rotate | Self::RotateAbout | Self::Scale | Self::Mirror | Self::Copy) {
             return session.planar_face_boundary_depth(geometry_handle(input, "geometry")?);
@@ -789,6 +812,7 @@ enum GeometryOutput {
     MeshPublication(MeshPublication),
     MeshExport(Box<NativeMeshExport>),
     Validation(Box<NativeValidationReport>),
+    Healing(Box<SolidHealing>),
     TopologyList(Box<TopologyOutput>),
     Solid(SolidPublication, &'static str),
     Boolean { first: BooleanOperand, operation: BooleanOperation },
@@ -921,12 +945,16 @@ impl GeometryOutput {
             Self::PolygonFace(shape, _) => Some(shape.handle()),
             Self::Wire(shape, _) => Some(shape.handle()),
             Self::Vertex(shape, _) => Some(shape.handle()),
-            Self::Query { .. } | Self::Validation(_) | Self::TopologyList(_) | Self::PlanarClosest(..) | Self::PlanarMeasure(..) | Self::Prism(_) | Self::Loft(_) | Self::Shell { .. } | Self::Sew(_) | Self::Hull(_) | Self::Section(_) | Self::SectionFaces(_) | Self::SolidPair(_) | Self::WireLength(_) => None,
+            Self::Query { .. } | Self::Validation(_) | Self::Healing(_) | Self::TopologyList(_) | Self::PlanarClosest(..) | Self::PlanarMeasure(..) | Self::Prism(_) | Self::Loft(_) | Self::Shell { .. } | Self::Sew(_) | Self::Hull(_) | Self::Section(_) | Self::SectionFaces(_) | Self::SolidPair(_) | Self::WireLength(_) => None,
         }
     }
 
-    fn field(&self, index: usize) -> Option<(&'static str, Field<'_>)> {
+    fn field<'a>(&'a self, index: usize, input: &'a Dictionary) -> Option<(&'static str, Field<'a>)> {
         match (self, index) {
+            (Self::Healing(_), 0) => Some(("$schema", Field::Text("geometry"))),
+            (Self::Healing(_), 1) => geometry_handle(input, "geometry").ok().map(|handle| ("handle", Field::Text(handle))),
+            (Self::Healing(_), 2) => Some(("kind", Field::Text("solid"))),
+            (Self::Healing(_), 3) => Some(("solid", Field::Payload)),
             (Self::MeshPublication(_), 0) => Some(("$schema", Field::Text("geometry"))),
             (Self::MeshPublication(shape), 1) => shape.handle().map(|key| ("handle", Field::Text(key))),
             (Self::MeshPublication(shape), 2) => Some(("kind", Field::Text(shape.kind()))),
@@ -996,6 +1024,7 @@ struct GeometryOutputData {
     retired_analytic: Option<AnalyticPublication>,
     retired_compound:Option<CompoundPublication>,
     retired_validation:Option<Box<NativeValidationReport>>,
+    retired_healing:Option<Box<SolidHealing>>,
     retired_topology_list: Option<Box<TopologyOutput>>,
     owned_text:Option<String>,
     retired_mesh_export:Option<Box<NativeMeshExport>>,
@@ -1042,6 +1071,7 @@ impl OriginalGeometryJob {
             retired_analytic:None,
             retired_compound:None,
             retired_validation:None,
+            retired_healing:None,
             retired_topology_list: None,
             owned_text:None,
             retired_mesh_export:None,
@@ -1070,7 +1100,7 @@ impl OriginalGeometryJob {
         let data = self.data.as_mut().expect("active geometry producer has its input owner");
         let session = self.session.as_ref().expect("active geometry producer has a session");
         if self.result.is_none() {
-            let bytes = self.kind.output_bytes();
+            let bytes = self.kind.output_bytes(&data.input);
             let capacity=self.kind.output_capacity();
             if grant.maximum_capacity_bytes<capacity||grant.maximum_copy_bytes < bytes || grant.maximum_depth < self.kind.source_depth(session, &data.input)? || !effect.performed(1)? { return Ok((None, empty)); }
             self.result = Some(self.kind.output(session, &data.input)?);
@@ -1088,6 +1118,7 @@ impl OriginalGeometryJob {
                 GeometryOutput::MeshPublication(_) => self.progress.phase = "mesh-topology",
                 GeometryOutput::MeshExport(export) => self.progress.phase = export.phase(),
                 GeometryOutput::Validation(report)=>self.progress.phase=report.phase(),
+                GeometryOutput::Healing(job) => self.progress.phase = job.phase(),
                 GeometryOutput::TopologyList(output) => self.progress.phase = output.phase(),
                 GeometryOutput::Query { .. } => self.progress.phase = "geometry-query-output",
                 GeometryOutput::PlanarClosest(..) => self.progress.phase = "planar-closest-point",
@@ -1138,7 +1169,7 @@ impl OriginalGeometryJob {
         }
         if let GeometryOutput::Validation(report)=result{
             let handle=geometry_handle(&data.input,"geometry")?;
-            let (text,receipt)=session.step_validation_report(report,handle,effect)?;
+            let (text,receipt)=session.with_original_geometry_query(|kernel| report.step(kernel,handle,effect))?;
             self.progress.phase=report.phase();
             if let Some(text)=text{
                 let replacement=GeometryOutput::Query{channel:"report",value:QueryOutput::Text};
@@ -1147,6 +1178,13 @@ impl OriginalGeometryJob {
                 data.owned_text=Some(text);
             }
             return Ok((None,receipt));
+        }
+        if let GeometryOutput::Healing(job) = result {
+            if !job.ready() {
+                let receipt = session.with_original_geometry_query(|kernel| job.step(kernel.representation(), kernel.healing_revision(), effect))?;
+                self.progress.phase = job.phase();
+                return Ok((None, receipt));
+            }
         }
         if let GeometryOutput::Compound(shape)=result{
             if !shape.complete(){
@@ -1467,7 +1505,7 @@ impl OriginalGeometryJob {
             let receipt = entry.step_progress();
             if let RetainedWorkPoll::Complete(outcome) = poll {
                 if let Some(dictionary) = outcome.result.map_err(|error| error.into_value_error())? {
-                    match result.field(self.field) {
+                    match result.field(self.field, &data.input) {
                         Some((_, Field::Payload | Field::SectionPayload)) => data.output = Some(dictionary),
                         Some((_, Field::SectionMember | Field::SectionSchema)) => data.section_list = Some(dictionary),
                         _ => data.geometry = Some(dictionary),
@@ -1477,7 +1515,7 @@ impl OriginalGeometryJob {
             }
             return Ok((None, receipt));
         }
-        if let Some((key, field)) = result.field(self.field) {
+        if let Some((key, field)) = result.field(self.field, &data.input) {
             if data.key.len() < key.len() {
                 return write_text(&mut data.key, key, effect).map(|progress| (None, progress));
             }
@@ -1513,6 +1551,10 @@ impl OriginalGeometryJob {
             let (ready, receipt) = split::step(session, pair, data, &mut self.split_staged, effect)?;
             return Ok((if ready { data.output.take() } else { None }, receipt));
         }
+        if let GeometryOutput::Healing(job) = result {
+            let (ready, receipt) = session.commit_healing(geometry_handle(&data.input, "geometry")?, job, effect)?;
+            return Ok((if ready { data.output.take() } else { None }, receipt));
+        }
         let Some(handle) = result.handle() else {
             if !effect.performed(1)? { return Ok((None, empty)); }
             return Ok((data.output.take(), item()));
@@ -1545,7 +1587,7 @@ impl OriginalGeometryJob {
             GeometryOutput::PolygonFace(face, _) => session.step_polygon_face_publication(face, &mut data.live_key, &mut data.claim_key, &mut self.claim_staged, effect)?,
             GeometryOutput::Vertex(vertex, _) => session.step_vertex_publication(vertex, &mut data.live_key, &mut data.claim_key, &mut self.claim_staged, effect)?,
             GeometryOutput::Wire(wire, _) => session.step_polygon_wire_publication(wire, &mut data.live_key, &mut data.claim_key, &mut self.claim_staged, effect)?,
-            GeometryOutput::Query { .. } | GeometryOutput::Validation(_) | GeometryOutput::TopologyList(_) | GeometryOutput::PlanarClosest(..) | GeometryOutput::PlanarMeasure(..) | GeometryOutput::Boolean { .. } | GeometryOutput::BooleanPreparation(_) | GeometryOutput::CompoundCut(_) | GeometryOutput::Prism(_) | GeometryOutput::Loft(_) | GeometryOutput::Shell { .. } | GeometryOutput::Sew(_) | GeometryOutput::Hull(_) | GeometryOutput::Section(_) | GeometryOutput::SectionFaces(_) | GeometryOutput::SolidPair(_) | GeometryOutput::WireLength(_) | GeometryOutput::Transform(_) => unreachable!("only geometry handles need a session claim"),
+            GeometryOutput::Query { .. } | GeometryOutput::Validation(_) | GeometryOutput::Healing(_) | GeometryOutput::TopologyList(_) | GeometryOutput::PlanarClosest(..) | GeometryOutput::PlanarMeasure(..) | GeometryOutput::Boolean { .. } | GeometryOutput::BooleanPreparation(_) | GeometryOutput::CompoundCut(_) | GeometryOutput::Prism(_) | GeometryOutput::Loft(_) | GeometryOutput::Shell { .. } | GeometryOutput::Sew(_) | GeometryOutput::Hull(_) | GeometryOutput::Section(_) | GeometryOutput::SectionFaces(_) | GeometryOutput::SolidPair(_) | GeometryOutput::WireLength(_) | GeometryOutput::Transform(_) => unreachable!("only geometry handles need a session claim"),
         };
         Ok((if ready { data.output.take() } else { None }, progress))
     }
@@ -1556,7 +1598,7 @@ impl OriginalGeometryJob {
         let data = self.data.as_ref().expect("active geometry producer has its input owner");
         let session = self.session.as_ref().unwrap();
         let Some(result) = self.result.as_ref() else {
-            return Ok(RetirementDemand {copy_bytes:self.kind.output_bytes(),capacity_bytes:self.kind.output_capacity(),depth:self.kind.source_depth(session,&data.input)?,..empty});
+            return Ok(RetirementDemand {copy_bytes:self.kind.output_bytes(&data.input),capacity_bytes:self.kind.output_capacity(),depth:self.kind.source_depth(session,&data.input)?,..empty});
         };
         if matches!(result, GeometryOutput::Transform(_)) {
             return transform_source_demand(session, geometry_handle(&data.input, "geometry")?);
@@ -1565,10 +1607,14 @@ impl OriginalGeometryJob {
             return output.demand(session, &data.input, copy);
         }
         if let GeometryOutput::Validation(report)=result{
-            return session.validation_report_demand(report,geometry_handle(&data.input,"geometry")?,copy);
+            let source = geometry_handle(&data.input, "geometry")?;
+            return session.with_original_geometry_query(|kernel| report.demand(kernel, source, copy));
         }
         if let GeometryOutput::Geometry(shape,_) = result {
             if let Some(demand)=shape.construction_demand(){return Ok(demand);}
+        }
+        if let GeometryOutput::Healing(job) = result {
+            if !job.ready() { return session.with_original_geometry_query(|kernel| job.demand(kernel.representation(), kernel.healing_revision(), copy)); }
         }
         if let GeometryOutput::Compound(shape)=result{
             if !shape.complete(){
@@ -1663,7 +1709,7 @@ impl OriginalGeometryJob {
         if let Some(entry) = &data.entry {
             return if self.closing_entry { entry.next_close_demands(copy) } else { entry.next_demands(copy) };
         }
-        if let Some((key, field)) = result.field(self.field) {
+        if let Some((key, field)) = result.field(self.field, &data.input) {
             if data.key.len() < key.len() { return Ok(text_demand(&data.key, key)); }
             if let Some(text) = field.text().filter(|text| data.text.len() < text.len()) { return Ok(text_demand(&data.text, text)); }
             return Ok(match field {
@@ -1676,6 +1722,9 @@ impl OriginalGeometryJob {
         }
         if let GeometryOutput::SolidPair(pair) = result {
             return split::demand(session, pair, data, self.split_staged, copy);
+        }
+        if let GeometryOutput::Healing(job) = result {
+            return session.with_original_geometry_query(|kernel| job.demand(kernel.representation(), kernel.healing_revision(), copy));
         }
         let Some(handle) = result.handle() else { return Ok(empty); };
         if data.live_key.len() < handle.len() { return Ok(text_demand(&data.live_key, handle)); }
@@ -1694,7 +1743,7 @@ impl OriginalGeometryJob {
             }
             GeometryOutput::Wire(wire, _) => session.polygon_wire_demand(wire, self.claim_staged, copy),
             GeometryOutput::Vertex(vertex, _) => session.vertex_publication_demand(vertex, self.claim_staged, copy),
-            GeometryOutput::Query { .. } | GeometryOutput::Validation(_) | GeometryOutput::TopologyList(_) | GeometryOutput::PlanarClosest(..) | GeometryOutput::PlanarMeasure(..) | GeometryOutput::Boolean { .. } | GeometryOutput::BooleanPreparation(_) | GeometryOutput::CompoundCut(_) | GeometryOutput::Prism(_) | GeometryOutput::Loft(_) | GeometryOutput::Shell { .. } | GeometryOutput::Sew(_) | GeometryOutput::Hull(_) | GeometryOutput::Section(_) | GeometryOutput::SectionFaces(_) | GeometryOutput::SolidPair(_) | GeometryOutput::WireLength(_) | GeometryOutput::Transform(_) => unreachable!("only geometry handles need a session claim"),
+            GeometryOutput::Query { .. } | GeometryOutput::Validation(_) | GeometryOutput::Healing(_) | GeometryOutput::TopologyList(_) | GeometryOutput::PlanarClosest(..) | GeometryOutput::PlanarMeasure(..) | GeometryOutput::Boolean { .. } | GeometryOutput::BooleanPreparation(_) | GeometryOutput::CompoundCut(_) | GeometryOutput::Prism(_) | GeometryOutput::Loft(_) | GeometryOutput::Shell { .. } | GeometryOutput::Sew(_) | GeometryOutput::Hull(_) | GeometryOutput::Section(_) | GeometryOutput::SectionFaces(_) | GeometryOutput::SolidPair(_) | GeometryOutput::WireLength(_) | GeometryOutput::Transform(_) => unreachable!("only geometry handles need a session claim"),
         }
     }
 
@@ -1856,6 +1905,7 @@ impl OriginalGeometryJob {
                 Some(GeometryOutput::Geometry(shape,_))=>data.retired_analytic=Some(shape),
                 Some(GeometryOutput::Compound(shape))=>data.retired_compound=Some(shape),
                 Some(GeometryOutput::Validation(report))=>data.retired_validation=Some(report),
+                Some(GeometryOutput::Healing(job)) => data.retired_healing = Some(job),
                 Some(GeometryOutput::MeshExport(export))=>data.retired_mesh_export=Some(export),
                 Some(GeometryOutput::TopologyList(output)) => data.retired_topology_list = Some(output),
                 _=>{}
@@ -2045,6 +2095,24 @@ fn box_finish_source(input:&Dictionary,operation:GeometryOperation)->Result<(&st
         *member=geometry_atom_handle(Some(value))?;
     }
     Ok((geometry_handle(input,"geometry")?,members,count))
+}
+
+fn defeature_source(input: &Dictionary) -> Result<(&str, [&str; Brep::DEFEATURE_FACE_COUNT], usize, usize), ValueError> {
+    let invalid = || ValueError::literal(ValueRefusalKind::InvalidValue, "defeature requires the bore wall and any floor or all twenty distinct fillet faces");
+    let list = input.get("faces").and_then(Value::as_dictionary)
+        .filter(|list| list.schema() == Some("list")).ok_or_else(invalid)?;
+    let count = list.len().saturating_sub(1);
+    if !matches!(count, 1 | 2 | Brep::DEFEATURE_FACE_COUNT) { return Err(invalid()); }
+    let mut depth = dictionary_depth(input).max(dictionary_depth(list));
+    let shape = input.get("geometry");
+    if let Some(dictionary) = shape.and_then(Value::as_dictionary) { depth = depth.max(dictionary_depth(dictionary)); }
+    let mut members = [""; Brep::DEFEATURE_FACE_COUNT];
+    for (index, member) in members[..count].iter_mut().enumerate() {
+        let value = list.get(list_key(index, &mut [0; 20]));
+        if let Some(dictionary) = value.and_then(Value::as_dictionary) { depth = depth.max(dictionary_depth(dictionary)); }
+        *member = geometry_atom_handle(value).map_err(|_| invalid())?;
+    }
+    Ok((geometry_atom_handle(shape)?, members, count, depth))
 }
 
 fn invalid_sew_input() -> ValueError {

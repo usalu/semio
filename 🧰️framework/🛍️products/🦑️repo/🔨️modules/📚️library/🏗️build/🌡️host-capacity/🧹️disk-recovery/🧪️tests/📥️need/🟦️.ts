@@ -1,6 +1,7 @@
 /** 📥️ Contract: `recoverNeedV1` frees the need of a waiting stage in registry priority order, judging by the need alone on any volume size, reads the volume after each collector, isolates failures, honours cancellation and answers the largest consumers with their commands when nothing collectable remains; lines come in one language or both. */
 import{expect,test}from"bun:test";
-import{DISK_WRITERS_V1,diskTextV1,recoverNeedV1,type DiskWriterV1}from"../../🟦️.ts";
+import{DISK_WRITERS_V1,diskReliefV1,diskTextV1,recoverNeedV1,sweepDiskV1,type DiskWriterV1}from"../../🟦️.ts";
+import{realDiskWritersV1}from"../../🔌️real/🟦️.ts";
 
 const MIB=1048576,GIB=1024*MIB;
 const rowOf=(id:string)=>DISK_WRITERS_V1.find(row=>row.id===id)!;
@@ -54,4 +55,24 @@ test("progress lines come in English, German or both joined by a slash, and none
   for(const line of lines){expect(line).not.toContain("{");expect(line.includes(" / ")).toBe(language==="both");}
  }
  expect(diskTextV1("recovery.step","en",{id:"x",freed:"1 GiB",free:"2 GiB"})).not.toBe(diskTextV1("recovery.step","de",{id:"x",freed:"1 GiB",free:"2 GiB"}));
+});
+
+/** 🪟️ Contract: on a platform whose partitions are plain directories the writers that relieve the image give host bytes directly, so a stage that needs space frees the superseded dependency generations, tool generations and closure layers (through the ledger collector, told how many bytes to free) instead of finding nothing eligible; on an image platform they stay out of the host-relief order. */
+test("directory-backed hosts collect the image-relief writers, asking the ledger for the shortfall, and image hosts do not",async()=>{
+ for(const row of DISK_WRITERS_V1){expect(diskReliefV1(row,true),row.id).toBe(row.relief);expect(diskReliefV1(row,false),row.id).toBe(row.relief==="image"?"host":row.relief);}
+ const context=(imageBacked:boolean,calls:number[])=>({workspace:"/ws",home:"/home",tmp:"/tmp",uid:1,environment:{},dryRun:true,imageBacked,ledger:async(_signal?:AbortSignal,need?:number)=>{calls.push(need??-1);}});
+ for(const imageBacked of[false,true]){
+  const calls:number[]=[],writers=realDiskWritersV1(context(imageBacked,calls)),v=volume(256,4937),outcome=await recoverNeedV1({facts:()=>({partition:"C:",totalBytes:v.total,freeBytes:v.free}),needBytes:6144*MIB,writers,language:"en",budgetMilliseconds:2000});
+  const collectable=writers.filter(item=>item.row.relief==="host"&&item.collect!==undefined&&item.row.collector==="ledger").map(item=>item.row.id).sort();
+  expect(collectable.includes("dependency-generations"),String(imageBacked)).toBe(!imageBacked);expect(collectable.includes("compile-caches")).toBe(true);
+  expect(calls.length,String(imageBacked)).toBe(1);expect(calls[0],String(imageBacked)).toBe(6144*MIB-4937*MIB);expect(outcome.verdict).toBe("refuse");
+ }
+});
+
+/** 🧹️ Contract: a stage that failed with "no space left" inside an image or a quota sweeps every collector once, the image-relief writers included, whatever the host volume says in between, and names the consumers when nothing ran. */
+test("a sweep runs every collector once even when the host volume gains nothing",async()=>{
+ const v=volume(256,50000),log:string[]=[],image=(id:string):DiskWriterV1=>({row:rowOf(id),root:"/w/"+id,measure:()=>10*MIB,collect:async()=>{log.push(id);return 0;}});
+ const outcome=await sweepDiskV1({facts:()=>({partition:"vol",totalBytes:v.total,freeBytes:v.free}),needBytes:4096*MIB,writers:[image("stale-waves"),image("tool-generations"),image("dependency-generations"),image("cas-lru")],language:"en"});
+ expect(log).toEqual(["tool-generations","stale-waves","dependency-generations","cas-lru"]);expect(outcome.verdict).toBe("admit");expect(outcome.steps.length).toBe(4);
+ const none=await sweepDiskV1({facts:()=>({partition:"vol",totalBytes:v.total,freeBytes:v.free}),needBytes:4096*MIB,writers:[],language:"en"});expect(none.verdict).toBe("refuse");
 });

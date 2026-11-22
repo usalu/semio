@@ -106,6 +106,24 @@ impl From<&ui_render::LineVertex3> for WorldLineGpuVertex {
     }
 }
 
+/// ☁️ Mirrors `WORLD3D_POINTS_SHADER`'s per-instance `PointInstance` (`position`/`color`/`extent`).
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
+pub(crate) struct WorldPointGpuInstance {
+    pub position: [f32; 3],
+    pub color: [f32; 4],
+    pub extent: [f32; 4],
+}
+
+/// ☁️ The clip-space `extent` of one point sprite (three's `PointsMaterial` law; equal to `world3d_point_extent` of the wgpu target): half-side in clip units, and whether it scales with `w`.
+pub(crate) fn world3d_point_extent(size: f32, size_attenuation: bool, viewport_width: f32, viewport_height: f32) -> [f32; 4] {
+    if size_attenuation {
+        [size * viewport_height / (2.0 * viewport_width), size / 2.0, 0.0, 0.0]
+    } else {
+        [size / viewport_width, size / viewport_height, 1.0, 0.0]
+    }
+}
+
 //#endregion 🔖️GpuUniforms
 
 //#region Tests

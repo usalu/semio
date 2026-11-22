@@ -1,5 +1,8 @@
 //! 📐 DIN 4108-3:2024-03 prescriptive floor, wall, roof and attic ceiling constructions.
 
+#[path = "🌬️ventilated-roof/🦀️.rs"]
+pub mod ventilated_roof;
+
 /// 🧱 Room-side ground slab recommendation in §5.3.3.3 after the construction prerequisites are established.
 pub fn internal_slab_sd_recommendation(sd_m: f64) -> Option<bool> {
     (sd_m.is_finite() && sd_m >= 0.0).then_some(sd_m >= 20.0)

@@ -6,8 +6,8 @@ export type RemoteCacheDigestV1=Readonly<{hash:string;size:number}>;
 /** 📦️ What an action result points at: blobs it needs in the content store (outputs and streams that are not inline) and the output trees whose files it needs as well. */
 export type RemoteCacheActionResultV1=Readonly<{references:readonly RemoteCacheDigestV1[];trees:readonly RemoteCacheDigestV1[]}>;
 
-/** 🔖️ An action result with the references split by whether they are volatile: `stable` holds the digests of every output except the files named as volatile (their bytes carry times), `manifest` says whether such a file was present. */
-export type RemoteCacheStableResultV1=Readonly<{references:readonly RemoteCacheDigestV1[];trees:readonly RemoteCacheDigestV1[];stable:readonly RemoteCacheDigestV1[];manifest:boolean;paths:readonly string[]}>;
+/** 🔖️ An action result with the references split by whether they are volatile: `stable` holds the digests of every output except the files named as volatile (their bytes carry times), `manifest` says whether such a file was present, `named` the path and digest of every other output file, so two results of one key can name the outputs that differ. */
+export type RemoteCacheStableResultV1=Readonly<{references:readonly RemoteCacheDigestV1[];trees:readonly RemoteCacheDigestV1[];stable:readonly RemoteCacheDigestV1[];manifest:boolean;paths:readonly string[];named:readonly Readonly<{path:string;hash:string}>[]}>;
 
 /** 🚦️ How far an uploaded action result is checked: not at all, for a well-formed message, or additionally for every blob it names. */
 export type RemoteCacheValidationV1="off"|"structure"|"complete";
@@ -72,7 +72,7 @@ export function parseRemoteCacheActionResultV1(bytes:Uint8Array):RemoteCacheActi
 export function parseRemoteCacheStableResultV1(bytes:Uint8Array,volatile:readonly string[]):RemoteCacheStableResultV1{return decodeActionResult(bytes,volatile);}
 
 function decodeActionResult(bytes:Uint8Array,volatile:readonly string[]):RemoteCacheStableResultV1{
- const references:RemoteCacheDigestV1[]=[],trees:RemoteCacheDigestV1[]=[],stable:RemoteCacheDigestV1[]=[],paths:string[]=[];let manifest=false;
+ const references:RemoteCacheDigestV1[]=[],trees:RemoteCacheDigestV1[]=[],stable:RemoteCacheDigestV1[]=[],paths:string[]=[],rows:{path:string;hash:string}[]=[];let manifest=false;
  const reference=(value:RemoteCacheDigestV1,named=false):void=>{if(value.size>0){references.push(value);if(!named)stable.push(value);}};
  for(const field of fields(bytes)){
   if(field.number===2){
@@ -85,6 +85,7 @@ function decodeActionResult(bytes:Uint8Array,volatile:readonly string[]):RemoteC
    }
    if(path==="")fail("output_files.path is required");
    paths.push(path);
+   if(entry!==undefined&&!volatile.includes(path))rows.push({path,hash:entry.hash});
    if(entry===undefined)fail("output_files.digest is required");
    else if(contents!==undefined){if(contents.length!==entry.size||createHash("sha256").update(contents).digest("hex")!==entry.hash)fail("output_files.contents does not match its digest");}
    else{const named=volatile.includes(path);manifest||=named;reference(entry,named);}
@@ -108,7 +109,7 @@ function decodeActionResult(bytes:Uint8Array,volatile:readonly string[]):RemoteC
    if(path==="")fail("output_symlinks.path is required");
   }
  }
- return Object.freeze({references:Object.freeze(references),trees:Object.freeze(trees),stable:Object.freeze(stable),manifest,paths:Object.freeze(paths)});
+ return Object.freeze({references:Object.freeze(references),trees:Object.freeze(trees),stable:Object.freeze(stable),manifest,paths:Object.freeze(paths),named:Object.freeze(rows)});
 }
 
 /** 🌳️ Decodes a `Tree` blob (a root directory and its children) and returns the digests of every file inside; directory nodes are checked for shape only because their content travels inside the tree. Throws with the first problem. */

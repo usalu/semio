@@ -19,3 +19,9 @@ The construction catalogue also checks the 20% resistance share above waterproof
 Element-specific condensate evidence now selects the 0.5 or 1.0 kg/m² cap and verifies material durability and the 5% and 3% wood moisture increases. A recorded case names the element ID. Duplicate rows with that ID leave the assessment unverified. Independent SQLite and Rust agreed across 19 material cases. The existing design-case owner now routes every period, construction and material entry through the same declared catalogue. [DIN 4108-3:2024-03 §5.2.2 and §5.2.3](https://de.scribd.com/document/929890470/DIN4108-3)
 
 The 2026 airtightness concept collects the four planning and quality-assurance references for technical review. Seven independent evidence cases passed. The recorded evidence alone does not verify execution or pressure results. [DIN 4108-7:2026-04](https://www.dinmedia.de/de/norm/din-4108-7/398456216) · [FLiB planning guide](https://flib.de/publikationen/09_leitfaden/FLiB_Leitfaden_Luftdichtheitskonzept.pdf)
+
+## Ventilated roofs
+
+Case DINA-09 takes the declared ventilated assembly, dimensions, openings and diffusion inputs. At roof slopes below 5°, it checks opposing free openings, the airflow length and cross section, room-side diffusion thickness and resistance share. At 5° and above, it applies the separate minimum free height and distinguishes eaves or the mono-pitch termination from a ridge or hip. Both branches apply the corresponding sloped roof area in the opening formulas. The calculation uses free areas after the effect of obstructions. [DIN 4108-3:2024-03 §5.3.4](https://de.scribd.com/document/929890470/DIN4108-3)
+
+The independent SQLite projection and production Rust evaluator agreed on 18 vectors covering both slope ranges, threshold values and missing or ineligible geometry. Native and browser execution remain pending.

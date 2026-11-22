@@ -25,7 +25,8 @@ impl ArtifactSqliteSnapshotHost for GisTerrainSnapshot{
   if let Some(source) = &self.elevation_source {
    if !source.is_valid() { return Err(invalid("invalid GIS elevation source")); }
    bound.add(512)?;
-   bound.repeated(source.rows.iter().map(Vec::len).sum::<usize>(), 64)?;
+   if let Some(mask) = &source.missing_samples { bound.add(mask.len())?; }
+   bound.repeated(source.rows_millimetres.iter().map(Vec::len).sum::<usize>(), 64)?;
   }
   bound.finish()
  }
@@ -35,7 +36,7 @@ impl ArtifactSqliteSnapshotHost for GisTerrainSnapshot{
   control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,0).map_err(store::io_schema::IoError::from_value_error)?;if dialect.artifact_kind!="s.gis.gisterrain"||dialect.standard!="1"||dialect.subset!="*"{return Err(store::io_schema::IoError::from_value_error(ValueError::new(ValueRefusalKind::UnsupportedOwner,"GIS terrain does not own this semantic subset")))}let restored=Self::from_sqlite_database(database,control).map_err(store::io_schema::IoError::from_value_error)?;let maps=match(&self.imported_map,&restored.imported_map){(None,None)=>true,(Some(a),Some(b))=>a.same(b),_=>false};
   let sources = match (&self.elevation_source, &restored.elevation_source) {
    (None, None) => true,
-   (Some(a), Some(b)) => a.bounds.map(f64::to_bits) == b.bounds.map(f64::to_bits) && a.rows == b.rows,
+   (Some(a), Some(b)) => a == b,
    _ => false,
   };
   if self.exaggeration.to_bits()!=restored.exaggeration.to_bits()||!maps||self.mesh!=restored.mesh||!sources{return Err(store::io_schema::IoError::from_value_error(invalid("GIS terrain owned identity differs")))}Ok(store::io_schema::IoOutcome::clean(()))

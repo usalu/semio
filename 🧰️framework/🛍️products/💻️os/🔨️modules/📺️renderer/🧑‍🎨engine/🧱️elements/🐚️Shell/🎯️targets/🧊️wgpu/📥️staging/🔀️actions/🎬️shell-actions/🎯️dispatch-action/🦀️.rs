@@ -188,6 +188,9 @@ impl<'ctx> ActionsCtx<'ctx> {
             if action.action == semio_framework::FOCUS_ROW_CONTROL_ACTION_ID {
                 return self.framework_focus_row_control(&action);
             }
+            if action.action == semio_framework::NODE_GRAPH_FIT_ACTION_ID {
+                return self.framework_fit_node_graph(&action).await;
+            }
             if action.action == semio_framework::onboarding::START_TUTORIAL_ACTION_ID {
                 if let Some(tutorial_id) = action.args.as_ref().and_then(|args| args.get("tutorialId")).and_then(|v| v.as_str()) {
                     self.as_window_actions().tutorial_start(tutorial_id);
@@ -242,8 +245,24 @@ impl<'ctx> ActionsCtx<'ctx> {
                     }
                 }
             }
+            if action.controller_id == TASK_MANAGER_CONTROLLER_ID {
+                if self.opening.queue_task_manager_request(&action) {
+                    self.opening.forward_actor_requests();
+                    if self.opening.take_install_cancel_requests() > 0 {
+                        self.plugins.cancel_plugin_install();
+                    }
+                }
+                return Ok(());
+            }
             if action.controller_id == "framework" {
                 match action.action.as_str() {
+                    NAVIGATE_SHELL_URI_ACTION => {
+                        if let Some(uri) = action.args.as_ref().and_then(|args| args.get("uri")).and_then(semio_framework_value::DslValue::as_str).map(str::to_string) {
+                            self.opening.push_uri(uri.clone());
+                            return self.apply_shell_uri(&uri).await;
+                        }
+                        return Ok(());
+                    }
                     "setAppearance" => return self.framework_set_appearance(&action).await,
                     "setDriver" => return self.framework_set_driver(&action).await,
                     "setDriverField" => return self.framework_set_driver_field(&action).await,
@@ -291,6 +310,7 @@ impl<'ctx> ActionsCtx<'ctx> {
                     "installExtensionFile" => return self.framework_install_extension_file().await,
                     "setExtensionEnabled" => return self.framework_set_extension_enabled(&action).await,
                     "uninstallExtension" => return self.framework_uninstall_extension(&action).await,
+                    semio_ui_declaration::ui::UiIconSelectNode::IMPORT_ACTION => return self.framework_import_icon_file(&action).await,
                     "setChatDraft" => return self.framework_set_chat_draft(&action).await,
                     "sendChatDraft" => return self.framework_send_chat_draft().await,
                     "cancelToolCall" => return self.framework_cancel_tool_call(&action).await,
@@ -337,6 +357,7 @@ impl<'ctx> ActionsCtx<'ctx> {
             let Some(session) = self.docs.action_session(&action, &self.plugins).cloned() else {
                 return Err("action has no mounted app owner".into());
             };
+            self.docs.bind_workspace_paste(&mut action);
             let live_view_state = self.as_session().live_view_state(&session);
             let program = self.plugins.plugins.iter().find(|p| p.plugin_id == session.plugin_id).ok_or("action program missing")?;
             let invocation = self.prefs.session_action_invocation(&session, &action, &live_view_state)?;

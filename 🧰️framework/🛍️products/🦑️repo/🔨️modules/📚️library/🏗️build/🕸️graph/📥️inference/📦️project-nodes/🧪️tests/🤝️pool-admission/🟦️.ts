@@ -10,7 +10,7 @@ const scratch:string[]=[];
 afterAll(()=>{for(const path of scratch)rmSync(path,{recursive:true,force:true});});
 const workspaceRoot=mkdtempSync(join(tmpdir(),"pool-admission-"));scratch.push(workspaceRoot);
 const environment={workspaceRoot,projectsByRoot:new Map(),componentRoots:new Map(),nativeCache:new Map(),nativeClosures:new Map()};
-const globals={projectAuthority:"a",registryDigest:"r",commandRevision:"c",late:false};
+const globals={registryDigest:"r",commandRevision:"c",late:false};
 const json={name:"p",root:"libs/p",targets:{build:{executor:"x"},test:{executor:"y"}}};
 const admission={targets:{p:["build"]},inputs:{p:["b","a","a"]}};
 

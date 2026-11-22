@@ -9,9 +9,9 @@ const unpinned=text.slice(text.indexOf("async function loadBuildGraphUnpinnedV1"
 test("the attempt of a selected scope runs through the fleet exchange inside the graph custody, the unselected read does not",()=>{
  expect(text).toContain('import {loadSelectedThroughFleetV1} from "./🤝️selected-exchange/🔌️attempt/🟦️.ts";');
  const call=unpinned.indexOf("selectedThroughFleetV1({root,invocation,scope,staging,attempt})");expect(call).toBeGreaterThan(0);
- expect(unpinned.slice(0,call)).toContain("withBuildGraphStateV1(root,invocation,phaseControl,async(store,actualControl)=>{");
+ expect(unpinned.slice(0,call)).toContain("withBuildGraphStateV1(root,invocation,phaseControl,async(store,actualControl,critical)=>{");
  expect(unpinned.slice(call-40,call)).toContain("scope===undefined?attempt():");
- expect(unpinned).toContain("const attempt=()=>loadBuildGraphAttemptV1(root,invocation,actualControl,options,registry,scope);");
+ expect(unpinned).toContain("const attempt=()=>loadBuildGraphAttemptV1(root,invocation,actualControl,options,registry,scope,critical);");
  const helper=text.slice(text.indexOf("function selectedThroughFleetV1"),text.indexOf("async function readSealedBuildGraphV1"));
  expect(helper).toContain('path:join(input.staging,input.scope+".json"),authorityPath:join(input.staging,input.scope+".authority.json")');
  expect(helper).toContain("holds:rows=>buildGraphSourceFactsHoldV1(rows,input.invocation)");

@@ -74,7 +74,6 @@ pub(crate) mod context {
 }
 
 use crate::*;
-use semio_plugin::PluginApp;
 
 #[test]
 fn retained_command_dispositions_match_the_language_neutral_oracle() {
@@ -245,42 +244,37 @@ fn a_picked_entity_selects_its_governing_check_in_every_window() {
 semio_plugin::history_edit_acceptance_law!("norm", crate::En1993PlayApp, || semio_plugin::App { definition: crate::create_en1993_app(), examples: Vec::new() }, "../../🏅️standards/🔖️1/🪆️subsets/✳️any");
 
 //#region 📱️Devices
-fn window_roles(child: &semio_plugin::WindowLayoutChild) -> Vec<String> {
-    use semio_plugin::WindowLayoutChild;
-    match child {
-        WindowLayoutChild::Stack(stack) => stack.children.iter().map(|w| w.window_kind_id.trim_start_matches("norm-en1993-").to_owned()).collect(),
-        WindowLayoutChild::Axis(axis) => axis.children.iter().flat_map(window_roles).collect(),
-    }
+fn window_roles(child: &semio_plugin::WindowLayoutNode) -> Vec<String> {
+    semio_plugin::collect_window_kind_ids(child).iter().map(|id| id.trim_start_matches("norm-en1993-").to_owned()).collect()
 }
 
 /// 📱️ End to end per device class: the manifest's named layout is the pane tree, the focus order walks exactly the windows of that tree, and the checks the editor evaluates carry spoken names in both languages.
 #[semio_framework_async_macros::async_test]
 async fn the_editor_adapts_pane_tree_focus_order_and_accessible_names_to_every_device_class() {
-    use semio_plugin::{WindowLayoutChild, WindowLayoutRoot};
     use semio_s_plugin_norm_app_surface::accessibility::focus_order::{focus_order, Region};
     use semio_s_plugin_norm_app_surface::device_profiles::{device_profile, PRIORITY};
     use semio_s_plugin_norm_app_surface::viewport3d::config::DeviceClass;
     let definition = create_en1993_app();
     let default = definition.default_layout.as_ref().expect("default layout");
-    let WindowLayoutRoot::Axis(default_row) = &default.root else { panic!("row") };
-    assert_eq!(default_row.children.iter().flat_map(window_roles).collect::<Vec<_>>(), ["outliner", "properties", "viewport", "checks", "diagrams"]);
+    assert!(matches!(&default.root, semio_plugin::WindowLayoutNode::Split { axis: semio_plugin::Axis::Horizontal, .. }), "row");
+    assert_eq!(window_roles(&default.root), ["outliner", "properties", "viewport", "checks", "diagrams"]);
     let mut app = context::app_with_registry().await;
     let report = <En1993Family as semio_s_plugin_norm_compliance::NormFamily>::live_report(&app.snapshot().expect("projection"));
     assert!(!report.checks.is_empty());
     for device in PRIORITY {
         let named = definition.named_layouts.iter().find(|n| n.id == semio_s_plugin_norm_app_surface::visual_layout_id(device)).unwrap_or_else(|| panic!("named layout for {device:?}"));
         let (tree, in_tree): (Vec<String>, Vec<String>) = match (&named.layout.root, device) {
-            (WindowLayoutRoot::Axis(row), DeviceClass::Desktop) => {
-                assert_eq!((row.kind.as_str(), row.children.len()), ("row", 3));
-                (row.children.iter().flat_map(window_roles).collect(), ["outliner", "properties", "viewport", "checks", "diagrams"].map(String::from).to_vec())
+            (row @ semio_plugin::WindowLayoutNode::Split { axis: semio_plugin::Axis::Horizontal, children, .. }, DeviceClass::Desktop) => {
+                assert_eq!(children.len(), 3);
+                (window_roles(row), ["outliner", "properties", "viewport", "checks", "diagrams"].map(String::from).to_vec())
             }
-            (WindowLayoutRoot::Stack(tabs), DeviceClass::Mobile) => {
-                assert_eq!(tabs.active_window_kind_id.as_deref(), Some("norm-en1993-viewport"));
-                (tabs.children.iter().map(|w| w.window_kind_id.trim_start_matches("norm-en1993-").to_owned()).collect(), ["viewport", "properties", "checks", "diagrams"].map(String::from).to_vec())
+            (tabs @ semio_plugin::WindowLayoutNode::Stack { active_window_id, .. }, DeviceClass::Mobile) => {
+                assert_eq!(active_window_id.as_deref(), Some("norm-en1993-viewport"));
+                (window_roles(tabs), ["viewport", "properties", "checks", "diagrams"].map(String::from).to_vec())
             }
-            (WindowLayoutRoot::Axis(row), DeviceClass::Tablet) => {
-                assert_eq!(row.children.len(), 2);
-                (row.children.iter().flat_map(window_roles).collect(), ["viewport", "properties", "checks", "diagrams"].map(String::from).to_vec())
+            (row @ semio_plugin::WindowLayoutNode::Split { children, .. }, DeviceClass::Tablet) => {
+                assert_eq!(children.len(), 2);
+                (window_roles(row), ["viewport", "properties", "checks", "diagrams"].map(String::from).to_vec())
             }
             (root, device) => panic!("unexpected pane tree {root:?} for {device:?}"),
         };

@@ -1,0 +1,12 @@
+appliances/vacuum-cleaner
+appliances/server-rack
+appliances/tower-server
+appliances/laptop
+appliances/desktop-monitor
+appliances/toaster
+appliances/electric-kettle
+appliances/gas-hob
+appliances/kitchen-extractor-hood
+appliances/pendant-lamp
+appliances/shower-head
+appliances/electric-fan-heater

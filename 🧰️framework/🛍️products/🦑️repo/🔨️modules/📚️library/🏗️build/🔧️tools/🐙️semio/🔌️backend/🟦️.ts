@@ -57,7 +57,7 @@ const remote:RemoteCacheToolV1=Object.freeze<RemoteCacheToolV1>({
  tool:"semio",
  protocol:"nx-self-hosted",
  probePath:"/v1/cache/semio-"+"0".repeat(64),
- render:(contract)=>Object.freeze({mechanism:"semio-engine",applied:Object.freeze([`url=${remoteCacheBaseUrlV1(contract)}`,`upload=${remoteCacheEffectiveUploadV1(contract)}`]),unsupported:Object.freeze(["compression","download","timeoutSeconds","retries"] as const),uploadEnforcedBy:remoteCacheEffectiveUploadV1(contract)?"none":"client"} as const)
+ render:(contract)=>Object.freeze({mechanism:"semio-engine",applied:Object.freeze([`url=${remoteCacheBaseUrlV1(contract)}`,`upload=${remoteCacheEffectiveUploadV1(contract)}`,`timeoutSeconds=${contract.timeoutSeconds}`,`retries=${contract.retries}`]),unsupported:Object.freeze(["compression","download"] as const),uploadEnforcedBy:remoteCacheEffectiveUploadV1(contract)?"none":"client"} as const)
 });
 
 /** 🪪️ Binds a request to the mode of the original caller, so every planned task carries it in its id. */
@@ -77,7 +77,7 @@ async function run(context:BackendExecutionContextV1,request:BuildTaskRequestV1,
  const {root,invocation,graph,phase}=context,caller=await import("../../../📥️caller/🟦️.ts"),orchestration=await import("../../../📥️caller/📤️orchestration/🟨️.mjs") as {buildOrchestrationContextV1(projects:unknown,selection:unknown):unknown;buildOrchestrationDelegatesV1(execution:unknown):boolean};
  await refreshFleetCacheFactsV1({root});
  const resolved=resolveRemoteCacheV1({...process.env,SEMIO_WORKSPACE_ROOT:process.env.SEMIO_WORKSPACE_ROOT??root}),contract=resolved?.contract,token=resolved?.token;
- const client:SemioRemoteV1|undefined=contract?semioHttpRemoteV1({url:remoteCacheBaseUrlV1(contract),...(token?{token}:{}),fetch:remoteCacheFetchV1({...process.env,SEMIO_WORKSPACE_ROOT:process.env.SEMIO_WORKSPACE_ROOT??root},{root})}):undefined,upload=contract?remoteCacheEffectiveUploadV1(contract):false;
+ const client:SemioRemoteV1|undefined=contract?semioHttpRemoteV1({url:remoteCacheBaseUrlV1(contract),timeoutMilliseconds:contract.timeoutSeconds*1000,retries:contract.retries,...(token?{token}:{}),fetch:remoteCacheFetchV1({...process.env,SEMIO_WORKSPACE_ROOT:process.env.SEMIO_WORKSPACE_ROOT??root},{root})}):undefined,upload=contract?remoteCacheEffectiveUploadV1(contract):false;
  const remoteClient:SemioRemoteV1|undefined=client&&{get:client.get,put:upload?client.put:async()=>{}};
  const authorized=semioAuthorizedRequestV1(request,(readIssuedScriptProcessEnvelopeV1(invocation).capabilities as {buildMode?:string}).buildMode),plan=planBuildTasksV1(graph,authorized);
  const namespace=hash(JSON.stringify({selected:plan.selected,args:authorized.args,configuration:authorized.configuration})).slice(0,16),chain=(process.env.SEMIO_BUILD_SELECTION_CHAIN??"").split(":").filter(Boolean);

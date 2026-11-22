@@ -1,7 +1,7 @@
 /** 🎓️ TypeScript twin of `semio_framework::onboarding` (`🦀️.rs` beside this file): the introduction and tutorial
  * declarations and the reserved action ids that start or record them. Exported through `@semio-tech/framework`. */
 import type { IntroductionCursor as GeneratedIntroductionCursor, IntroductionDefinition as GeneratedIntroductionDefinition, IntroductionDemonstration as GeneratedIntroductionDemonstration, IntroductionGesture as GeneratedIntroductionGesture, IntroductionInteraction as GeneratedIntroductionInteraction, IntroductionInteractionKind as GeneratedIntroductionInteractionKind, IntroductionKeyModifier as GeneratedIntroductionKeyModifier, IntroductionLogo as GeneratedIntroductionLogo, IntroductionPlacement as GeneratedIntroductionPlacement, IntroductionPoint as GeneratedIntroductionPoint, IntroductionPointerButton as GeneratedIntroductionPointerButton, IntroductionStepDefinition as GeneratedIntroductionStepDefinition, TutorialAssetSrc as GeneratedTutorialAssetSrc, TutorialBase as GeneratedTutorialBase, TutorialCameraKeyframe as GeneratedTutorialCameraKeyframe, TutorialCameraState as GeneratedTutorialCameraState, TutorialCaption as GeneratedTutorialCaption, TutorialChapter as GeneratedTutorialChapter, TutorialDefinition as GeneratedTutorialDefinition, TutorialDocumentEvent as GeneratedTutorialDocumentEvent, TutorialDocumentEventKind as GeneratedTutorialDocumentEventKind, TutorialEasing as GeneratedTutorialEasing, TutorialEvent as GeneratedTutorialEvent, TutorialEventKind as GeneratedTutorialEventKind, TutorialGestureCue as GeneratedTutorialGestureCue, TutorialNarrationCue as GeneratedTutorialNarrationCue, TutorialOverlayRect as GeneratedTutorialOverlayRect, TutorialUiChange as GeneratedTutorialUiChange, TutorialUiKeyframe as GeneratedTutorialUiKeyframe, TutorialUiSnapshot as GeneratedTutorialUiSnapshot, TutorialVideoCue as GeneratedTutorialVideoCue } from "../../🛂️manifest/🤖️generated/🪪️manifest/🟦️.ts";
-import type { WindowLayout } from "../🗺️window-layout/🟦️.ts";
+import type { WindowLayout } from "@semio-tech/ui-layout";
 
 /** 🚀️ The reserved action id apps dispatch (or the shell auto-injects into the command palette)
  * to (re)start an app's introduction — mirrors Rust `START_INTRODUCTION_ACTION_ID`. */
@@ -74,9 +74,7 @@ export type TutorialEvent = Omit<GeneratedTutorialEvent, "at"> & { readonly at: 
 
 /** 🧮️ Renderer-neutral restore point for chrome/UI state — see the Rust doc comment on
  * `TutorialUiSnapshot` for why this is deliberately NOT a serialization of `ShellState`. `layout` is
- * narrowed to this file's own hand-refined `WindowLayout` — same reason and same override
- * (`applyFrameworkLayoutSeed` below requires the narrower `"row" | "column" | "stack" | "window"`
- * literal `kind`) as `AppDefinition.defaultLayout`. */
+ * the contract `WindowLayout` (`@semio-tech/ui-layout`), the one layout model. */
 export type TutorialUiSnapshot = Omit<GeneratedTutorialUiSnapshot, "layout"> & { readonly layout?: WindowLayout };
 
 export type TutorialUiChange = Exclude<GeneratedTutorialUiChange, { readonly kind: "layout" }> | { readonly kind: "layout"; readonly layout: WindowLayout };

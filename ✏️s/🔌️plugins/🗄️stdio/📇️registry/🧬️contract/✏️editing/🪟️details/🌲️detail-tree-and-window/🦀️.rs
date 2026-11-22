@@ -1,5 +1,6 @@
 //! 🌲️ Collection and item controls, the detail tree, the details window and its rendering.
 
+use semio_plugin::{WindowLayoutNode, Axis};
 use super::*;
 
 /// 📝️ Renders an artifact's natural file source beside its structured canvas, with an explicit
@@ -334,16 +335,15 @@ pub fn snapshot_details_window_definition() -> WindowKindDefinition {
     definition
 }
 
-pub fn snapshot_details_split_layout(main_window_kind_id: &str, main_title: &str) -> WindowLayout {
-    let stack = |size, window_kind_id: &str, title: &str| {
-        WindowLayoutChild::Stack(WindowLayoutStackNode {
-            kind: "stack".into(),
-            size: Some(size),
-            active_window_kind_id: None,
-            children: vec![WindowLayoutWindowNode { kind: "window".into(), window_kind_id: window_kind_id.into(), title: Some(title.into()), instance_id: None, template_id: None, corner: None }],
-        })
+/// 🪟 Split layout of one main window and the details window; both titles fall back to the localized window-kind labels from the catalog.
+pub fn snapshot_details_split_layout(main_window_kind_id: &str) -> WindowLayout {
+    let stack = |size, window_kind_id: &str| {
+        WindowLayoutNode::Stack { size: Some(size),
+            active_window_id: None,
+            children: vec![WindowLayoutNode::Window { window_kind_id: window_kind_id.into(), title: None, instance_id: None, template_id: None, corner: None }],
+        }
     };
-    WindowLayout { root: WindowLayoutRoot::Axis(WindowLayoutAxisNode { kind: "row".into(), size: None, children: vec![stack(0.68, main_window_kind_id, main_title), stack(0.32, SNAPSHOT_DETAILS_WINDOW_KIND_ID, "Details")] }) }
+    WindowLayout { root: WindowLayoutNode::Split { axis: Axis::Horizontal, size: None, children: vec![stack(0.68, main_window_kind_id), stack(0.32, SNAPSHOT_DETAILS_WINDOW_KIND_ID)] } }
 }
 
 fn render_snapshot_details_provider_at_revision<P: SnapshotDetailsProvider + ?Sized>(

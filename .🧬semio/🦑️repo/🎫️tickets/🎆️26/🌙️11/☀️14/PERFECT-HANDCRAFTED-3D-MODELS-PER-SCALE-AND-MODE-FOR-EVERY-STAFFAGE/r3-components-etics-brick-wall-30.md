@@ -112,3 +112,7 @@ No geometry change: the round 3 model already meets the bar; the only change is 
 - Board adhesive and the base/finish split of the render are not modelled: the declared build-up has no such layers; adding them would change `dimensions` and the thermal layers without a datum.
 - Mineral wool density 60 kg/m3 is at the low end of approved ETICS carrier boards (DIBt approvals list about 60 to 400 kg/m3); kept as declared.
 - The mass sphere lies at the real centre of mass inside the opaque leaf and is hidden in opaque renders; brick tone is uniform.
+
+## Canonical component readback, 2026-11-21
+
+Canonical source `ab9131b3af0c87be`. The end cut shows 15 mm room plaster, a 365 mm bonded brick-and-mortar leaf, 300 mm of wool and 20 mm of render. The wool is visibly wider than on the 120 mm specimen. The four headed restraint anchors remain in the force view. All twelve exported scenes reopened (657,736 bytes). The strict catalog source readback passed.

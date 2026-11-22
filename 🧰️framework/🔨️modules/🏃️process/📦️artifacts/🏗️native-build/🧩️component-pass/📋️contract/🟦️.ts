@@ -19,6 +19,13 @@ export type NativeBuildPipelineV1 = Readonly<{ prerequisites: readonly string[];
 /** 🗺️ Every Cargo pass and job one native build driver owns (`NativeBuildPlanV1`). */
 export type NativeBuildPlanV1 = Readonly<{ version: 1; passes: readonly NativeBuildPassV1[]; jobs?: readonly NativeBuildJobV1[]; stageAfter?: Readonly<Record<string, readonly string[]>> }>;
 
+/** 🧮️ Counts selected component packages and prerequisite jobs once for the release deadline. */
+export function nativeReleaseWorkUnitsV1(plan: NativeBuildPlanV1): number {
+  const units = plan.passes.reduce((total, pass) => total + pass.packages.length, plan.jobs?.length ?? 0);
+  if (validateJsonSchemaSubset(schema.definitions.ReleaseWorkUnitsV1, units).length) throw Error("Valid native release work count required");
+  return units;
+}
+
 /** 🌡️ A warm generation reuses the shared compiler store and stage cache; a fresh one compiles cold into a new generation directory with its own stage cache. */
 export type NativeBuildGenerationKindV1 = "warm" | "fresh";
 

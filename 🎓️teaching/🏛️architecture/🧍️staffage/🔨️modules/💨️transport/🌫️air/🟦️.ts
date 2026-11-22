@@ -79,3 +79,16 @@ export const moistDensity = (tC: number, wv: number, pressurePa: number): number
 
 /** 🔥️ Latent heat of vaporisation (J/kg) at a temperature in °C. */
 export const latentHeat = (tC: number): number => LATENT_HEAT_0C - 2361 * tC;
+
+/** 🌧️ Dew point (°C) of air with vapour ratio `wv` at a total pressure: the temperature at which {@link saturationRatio} equals `wv` (bisection between −80 and 100 °C to 1e-9 K); −80 for air drier than saturation there. */
+export function dewPointC(wv: number, pressurePa: number): number {
+  let lo = -80;
+  let hi = 100;
+  if (saturationRatio(lo, pressurePa) >= wv) return lo;
+  for (let i = 0; i < 60 && hi - lo > 1e-9; i++) {
+    const mid = (lo + hi) / 2;
+    if (saturationRatio(mid, pressurePa) < wv) lo = mid;
+    else hi = mid;
+  }
+  return (lo + hi) / 2;
+}

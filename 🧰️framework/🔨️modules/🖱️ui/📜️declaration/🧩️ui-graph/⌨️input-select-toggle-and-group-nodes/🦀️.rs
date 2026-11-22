@@ -89,6 +89,9 @@ pub struct UiSelectItem {
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct UiSelectNode {
+    #[serde(default, skip_serializing_if = "ui_contract::SelectAppearance::is_menu")]
+    #[value(default, skip_serializing_if = "ui_contract::SelectAppearance::is_menu")]
+    pub appearance: ui_contract::SelectAppearance,
     pub id: String,
     pub value: String,
     pub items: Vec<UiSelectItem>,

@@ -6,7 +6,7 @@ use semio_ui_tui_frame::chrome::{shell, window_chip_layout, ChromeState, FooterS
 use semio_ui_tui_engine::Tui;
 use semio_ui_tui_core::event::{Event, MouseButton, MouseEvent, MouseKind};
 use semio_ui_tui_core::geometry::{Pos, Size};
-use semio_ui_tui_frame::layout::{Constraint, Dimension, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode};
+use semio_ui_tui_frame::layout::{axis_node, stack_node, window_node, Axis, Constraint, Dimension, WindowLayout};
 use semio_ui_tui_core::docking::{DockPlacement, WindowStackCorner};
 use semio_ui_tui_frame::scene::{Node, NodeContent, NodeId};
 use semio_ui_tui_core::theme::Theme;
@@ -50,13 +50,9 @@ fn build(scene: &Value) -> Fixture {
     let mut stacks = Vec::new();
     for stack in field(field(scene, "layout"), "stacks").as_array().expect("stacks") {
         let windows = field(stack, "windows").as_array().expect("windows");
-        stacks.push(WindowLayoutChild::Stack(WindowLayoutStackNode {
-            size: None,
-            active_window_kind_id: Some(text(stack, "active").to_string()),
-            children: windows.iter().map(|w| WindowLayoutWindowNode { window_kind_id: text(w, "id").to_string(), title: Some(text(w, "title").to_string()), corner: None }).collect(),
-        }));
+        stacks.push(stack_node(None, Some(text(stack, "active").to_string()), windows.iter().map(|w| window_node(text(w, "id").to_string(), Some(text(w, "title").to_string()), None)).collect()));
     }
-    let layout = WindowLayout { root: WindowLayoutRoot::Axis(WindowLayoutAxisNode { kind: text(field(scene, "layout"), "kind").to_string(), size: None, children: stacks }), zoomed: None };
+    let layout = WindowLayout { root: axis_node(if text(field(scene, "layout"), "kind") == "row" { Axis::Horizontal } else { Axis::Vertical }, None, stacks), zoomed: None };
     let mut built = shell(&mut tui.scene, NavbarState { left: vec![], center: vec![], right: vec![] }, FooterState { hints: vec![], status: String::new() }, &layout);
     let canvas = built.canvas;
     let mut names = BTreeMap::new();

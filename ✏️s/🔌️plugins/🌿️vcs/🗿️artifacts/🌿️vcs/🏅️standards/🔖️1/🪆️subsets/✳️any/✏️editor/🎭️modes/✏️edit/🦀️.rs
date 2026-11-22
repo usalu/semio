@@ -1,7 +1,7 @@
 //! ✏️ VCS play app — the `edit` mode: the app's only mode, a two-window authoring layout (editor + history).
 
 use crate::editor::vcs::modes::edit::windows::{editor, history};
-use semio_plugin::create_default_layout;
+use semio_plugin::{create_default_layout, Axis};
 use semio_ui_locale::LocalizedLabel;
 use semio_plugin::ModeDefinition;
 use semio_plugin::WindowLayout;
@@ -17,7 +17,7 @@ pub fn definition() -> ModeDefinition {
 /// 🪟️ The app's default window layout — this mode is the app's `default_mode_id`, so its layout IS the
 /// app-level `default_layout`.
 pub fn layout() -> WindowLayout {
-    create_default_layout(&[editor::VCS_PLAY_WINDOW_EDITOR.into(), history::VCS_PLAY_WINDOW_HISTORY.into()], "row", Some(&[30.0, 70.0]), Some(&["Editor".into(), "History".into()]))
+    create_default_layout(&[editor::VCS_PLAY_WINDOW_EDITOR.into(), history::VCS_PLAY_WINDOW_HISTORY.into()], Axis::Horizontal, Some(&[0.3, 0.7]), Some(&["Editor".into(), "History".into()]))
 }
 //#endregion 🔖️Definition
 

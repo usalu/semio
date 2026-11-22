@@ -274,6 +274,40 @@ async fn sweep_circle_along_line_is_a_cylinder() {
 }
 
 #[semio_framework_async_macros::async_test]
+async fn straight_guided_pipe_matches_the_exact_retained_envelope() {
+    use semio_framework_3d_brep_representation::topology::EntityRef;
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🧪️tests/🔬️unit/🔣️original-straight-sweeps.json")).unwrap();
+    for row in fixture["cases"].as_array().unwrap().iter().filter(|row| row["guide"].is_array()) {
+        let point = |value: &serde_json::Value| Pnt3::new(value[0].as_f64().unwrap(),
+            value[1].as_f64().unwrap(), value[2].as_f64().unwrap());
+        let rail = |name| [point(&row[name][0]), point(&row[name][1])];
+        let mut body = Body::new();
+        let mut rec = OpRecorder::new();
+        let wire = make_rectangle_wire(&mut body, row["size"][0].as_f64().unwrap(),
+            row["size"][1].as_f64().unwrap(), &mut rec).unwrap();
+        let profile = make_planar_face_from_wire(&mut body, &wire, point(&row["profileFrame"][0]), Vec3::Z, &mut rec).unwrap();
+        let path = make_polyline_wire_for_test(&mut body, &rail("path"), &mut rec);
+        let guide = make_polyline_wire_for_test(&mut body, &rail("guide"), &mut rec);
+        let solid = pipe(&mut body, profile, &path, Some(&guide), &mut rec).unwrap();
+        let reached = body.reachable_from(&[EntityRef::Solid(solid)]);
+        let [low, high] = rail("bounds");
+        let mut min = [f64::INFINITY; 3];
+        let mut max = [f64::NEG_INFINITY; 3];
+        for id in reached.vertices {
+            let p = body.vertices.get(id).unwrap().position;
+            for (axis, value) in [p.x, p.y, p.z].into_iter().enumerate() {
+                min[axis] = min[axis].min(value);
+                max[axis] = max[axis].max(value);
+            }
+        }
+        for (value, expected) in min.into_iter().chain(max).zip([low.x, low.y, low.z, high.x, high.y, high.z]) {
+            assert!((value - expected).abs() < 1e-10);
+        }
+        assert!((solid_volume(&body, solid, 1e-3).unwrap() - row["volume"].as_f64().unwrap()).abs() < 1e-8);
+    }
+}
+
+#[semio_framework_async_macros::async_test]
 async fn pipe_polygon_along_polyline_with_guide_stays_valid() {
     let mut body = Body::new();
     let mut rec = OpRecorder::new();

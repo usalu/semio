@@ -89,7 +89,8 @@ export function wireBrowserKeyboard(root: HTMLElement, canvas: HTMLCanvasElement
       if (!modifier) event.preventDefault();
     }
     heldModifiers = [["Shift", event.shiftKey], ["Control", event.ctrlKey], ["Alt", event.altKey], ["Meta", event.metaKey]].filter(([, held]) => held).map(([key]) => key as string);
-    admit({ type, key: event.key, shift: event.shiftKey, ctrl: event.ctrlKey, alt: event.altKey, meta: event.metaKey });
+    const fields = { key: event.key, shift: event.shiftKey, ctrl: event.ctrlKey, alt: event.altKey, meta: event.metaKey };
+    admit(type === "keydown" ? { type, ...fields, repeat: event.repeat } : { type, ...fields });
   };
   const down = (event: KeyboardEvent) => key(event, "keydown");
   const up = (event: KeyboardEvent) => key(event, "keyup");

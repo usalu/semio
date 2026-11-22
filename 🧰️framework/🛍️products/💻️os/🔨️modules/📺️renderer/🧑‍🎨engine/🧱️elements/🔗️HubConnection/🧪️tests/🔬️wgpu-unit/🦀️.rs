@@ -412,6 +412,7 @@ fn every_verb_the_surface_dispatches_is_one_of_the_declared_hub_actions() {
     state.open_space_id = Some("a1".into());
     let declared = [
         action::CLOSE_WORKSPACE,
+        action::REPLAY_FIRST_RUN,
         action::REFRESH_SPACES,
         action::SELECT_CONNECTION,
         action::ADD_CONNECTION,
@@ -436,6 +437,18 @@ fn every_verb_the_surface_dispatches_is_one_of_the_declared_hub_actions() {
         action::CREATE_ARTIFACT,
         action::CANCEL_ARTIFACT_CREATION,
         action::OPEN_CREATED_ARTIFACT,
+        action::AGENT_REFRESH,
+        action::AGENT_SET_NAME,
+        action::AGENT_SET_AUDIENCE,
+        action::AGENT_SET_EXPIRY,
+        action::AGENT_CREATE,
+        action::AGENT_DOWNLOAD,
+        action::AGENT_DISMISS,
+        action::AGENT_INSTALL_MCP,
+        action::AGENT_COPY_MCP,
+        action::AGENT_REVOKE_ASK,
+        action::AGENT_REVOKE_CONFIRM,
+        action::AGENT_REVOKE_CANCEL,
     ];
     let mut seen = Vec::new();
     verbs(&build_hub_workspace_ui(&state, Locale::En), &mut seen);
@@ -792,4 +805,45 @@ fn the_creation_door_follows_the_shared_polling_contract() {
     assert!(!space_artifact_creation_unreachable(1_000, 1_000 + bound - 1), "an answer inside the bound keeps the creation followed");
     assert!(space_artifact_creation_unreachable(1_000, 1_000 + bound), "a hub silent for the whole bound is unreachable");
     assert!(!space_artifact_creation_unreachable(1_000, 500), "a clock read before the answer is never unreachable");
+}
+
+#[test]
+fn the_workspace_opens_with_the_replay_then_the_close_button_exactly_as_react_composes_them() {
+    for (locale, replay, close) in [(Locale::En, "How this works", "Cancel sign-in"), (Locale::De, "So funktioniert das", "Anmeldung abbrechen")] {
+        let UiNode::Stack(root) = build_hub_workspace_ui(&workspace(), locale) else { panic!("the workspace is one stack") };
+        let buttons: Vec<&UiButtonNode> = root.children.iter().take(2).map(|node| if let UiNode::Button(button) = node { button } else { panic!("the first two children are the buttons") }).collect();
+        assert_eq!(buttons[0].id.as_deref(), Some("os.hub.firstRun.replay"));
+        assert_eq!(buttons[1].id.as_deref(), Some("os.hub.signIn.cancel"));
+        assert_eq!((buttons[0].icon_id, buttons[1].icon_id), (IconName::GraduationCap, IconName::X));
+        assert_eq!((buttons[0].label.as_str(), buttons[1].label.as_str()), (replay, close));
+        assert_eq!(buttons[0].style.as_ref().and_then(|style| style.variant.as_deref()), Some("ghost"));
+        assert_eq!(buttons[1].style.as_ref().and_then(|style| style.variant.as_deref()), Some("outline"));
+        assert_eq!((buttons[0].action.action.as_str(), buttons[1].action.action.as_str()), (action::REPLAY_FIRST_RUN, action::CLOSE_WORKSPACE));
+    }
+}
+
+#[test]
+fn the_workspace_composes_the_agent_delegations_pane_last_as_react_does_and_inside_the_node_budget() {
+    let mut state = signed_in(workspace());
+    state.rows = vec![row("a1", SpaceAccess::Author)];
+    state.open_space_id = Some("a1".into());
+    state.agents.begin_load("a1");
+    let summaries: Vec<_> = (0..40)
+        .map(|index| crate::agent_delegations::AgentDelegationSummary { delegation_id: format!("d-{index}"), agent_label: format!("agent {index}"), space_id: "a1".into(), audience: crate::agent_delegations::AgentAudience::Edit, created_at_ms: index, expires_at_ms: 9_000_000_000_000, revoked: false, last_used_at_ms: None })
+        .collect();
+    state.agents.loaded(&summaries, 10);
+    let UiNode::Stack(root) = build_hub_workspace_ui(&state, Locale::En) else { panic!("the workspace is one stack") };
+    let UiNode::Stack(last) = root.children.last().unwrap() else { panic!("the last section is a stack") };
+    assert_eq!(last.id.as_deref(), Some("os.hub.agent"));
+    assert!(crate::agent_delegations::node_count(&UiNode::Stack(root)) <= 128, "one retained panel document holds at most 128 nodes");
+    let mut ids = Vec::new();
+    control_ids(&build_hub_workspace_ui(&state, Locale::En), &mut ids);
+    assert!(ids.contains(&"os.hub.agent.create".to_string()) && ids.contains(&"os.hub.agent.name".to_string()));
+}
+
+#[test]
+fn every_agent_verb_the_surface_dispatches_is_declared_and_routes_through_the_hub_prefix() {
+    for verb in [action::AGENT_REFRESH, action::AGENT_SET_NAME, action::AGENT_SET_AUDIENCE, action::AGENT_SET_EXPIRY, action::AGENT_CREATE, action::AGENT_DOWNLOAD, action::AGENT_DISMISS, action::AGENT_INSTALL_MCP, action::AGENT_COPY_MCP, action::AGENT_REVOKE_ASK, action::AGENT_REVOKE_CONFIRM, action::AGENT_REVOKE_CANCEL] {
+        assert!(verb.starts_with("hub"), "{verb}");
+    }
 }

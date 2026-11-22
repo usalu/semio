@@ -1,0 +1,22 @@
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import { pathToFileURL } from "node:url";
+import Ajv from "ajv";
+import expected from "./🧫️development-hub-catalog.json";
+
+const root = process.cwd();
+const fromRoot = (path: string) => pathToFileURL(join(root, path)).href;
+const { LOCAL_HUB_DEVELOPMENT_CATALOG_PACKAGES } = await import(fromRoot("🌎️hub/🚀️local-bootstrap/🏃️execution/🟦️.ts"));
+const { trustedBootstrapSelectPackages, trustedBootstrapProfileIdV1, trustedBootstrapDescriptorKindsV1 } = await import(fromRoot("🌎️hub/🏗️bootstrap/🧾️provenance/🧭️bootstrap-selection/🟦️.ts"));
+const selected = trustedBootstrapSelectPackages(LOCAL_HUB_DEVELOPMENT_CATALOG_PACKAGES);
+const packageIds = selected.map((entry: { pluginId: string }) => entry.pluginId);
+const admits = new Ajv().compile({ type: "array", uniqueItems: true, contains: { const: expected.pluginId } });
+assert.ok(admits(packageIds), JSON.stringify(admits.errors));
+const remodel = selected.find((entry: { pluginId: string }) => entry.pluginId === expected.pluginId);
+assert.ok(remodel?.opensDocuments);
+assert.equal(remodel.componentPackageId, expected.packageId);
+assert.ok(trustedBootstrapProfileIdV1(selected).split("-").includes(expected.pluginId));
+const descriptor = JSON.parse(readFileSync(join(root, "🌎️hub/🧩️compositions/📸️remodel/🧩️component/🔣️.json"), "utf8"));
+assert.equal(descriptor.packageId, expected.packageId);
+assert.ok(trustedBootstrapDescriptorKindsV1(descriptor).some((kind: { id: string; schema: string }) => kind.id === expected.artifactKind && kind.schema === expected.artifactSchema));

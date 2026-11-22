@@ -2,18 +2,35 @@ import {expect,test} from "bun:test";
 import {spawnSync} from "node:child_process";
 import {copyFileSync,existsSync,mkdirSync,mkdtempSync,readFileSync,readdirSync,realpathSync,rmSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
-import {dirname,join} from "node:path";
+import {dirname,join,sep} from "node:path";
 import {linkRootArgumentsV1} from "../../../../../⚡️caching/🦀️cargo/🗃️unit-cache/🧭️remap/🟦️.ts";
 import {PATH_NEUTRAL_FLAGS_V1} from "../../../../../⚡️caching/🦀️cargo/🗃️unit-cache/📜️script.ts";
 import {OFFLOAD_POLICY_V1} from "../../📐️policy/🟦️.ts";
-import {planOffloadV1} from "../../🗺️paths/🟦️.ts";
-import {validateRemoteExecutionRustcActionV1} from "../../../🧱️actions/🟦️.ts";
+import {moduleRemapArgumentsV1,planOffloadV1,type OffloadPlanV1} from "../../🗺️paths/🟦️.ts";
+import {offloadCommandV1} from "../../📜️action/🟦️.ts";
+import {expandRemoteExecutionRootV1,validateRemoteExecutionRustcActionV1} from "../../../🧱️actions/🟦️.ts";
 import {testRustEnvironmentV1} from "../🧰️workspace/🟦️.ts";
 
 const policy=OFFLOAD_POLICY_V1,scratch:string[]=[];
 const cleanup=():void=>{for(const path of scratch.splice(0))rmSync(path,{recursive:true,force:true});};
 const rustc=spawnSync("rustc",["--print","sysroot"],{encoding:"utf8",env:testRustEnvironmentV1()}).stdout.trim()+"/bin/rustc";
 const wasmInstalled=existsSync(rustc.replace("/bin/rustc","/lib/rustlib/wasm32-unknown-unknown"));
+const HOST=/^host: (\S+)$/mu.exec(spawnSync(rustc,["-vV"],{encoding:"utf8",env:testRustEnvironmentV1()}).stdout)?.[1]??"";
+
+/** 👷️ Runs one planned unit the way a worker does: the argv form is validated, its inputs are placed in a fresh input root, `@root` is expanded and the compiler is spawned without a shell. */
+function runAction(plan:OffloadPlanV1,root:string):string{
+ const built=offloadCommandV1(plan,HOST),refusal=validateRemoteExecutionRustcActionV1({arguments:[...built.arguments],environment_variables:built.environment.map(([name,value])=>({name,value})),output_paths:[policy.virtual.out,policy.virtual.root],working_directory:""});
+ if(refusal!==undefined)throw Error("the worker policy refuses what the planner sends: "+refusal);
+ mkdirSync(root,{recursive:true});mkdirSync(join(root,".tmp"),{recursive:true});for(const directory of policy.root.directories)mkdirSync(join(root,directory),{recursive:true});
+ for(const [path,real] of plan.files){const target=join(root,path);mkdirSync(dirname(target),{recursive:true});copyFileSync(real,target);}
+ const env:Record<string,string>={};
+ for(const [name,value] of built.environment)if(name!==policy.root.report)env[name]=expandRemoteExecutionRootV1(value,root,{join,sep});
+ const argv=built.arguments.map(argument=>expandRemoteExecutionRootV1(argument,root,{join,sep}));
+ const result=spawnSync(rustc,argv.slice(1),{cwd:root,encoding:"utf8",env:{...testRustEnvironmentV1(),...env}});
+ if(result.status!==0)throw Error(result.stderr);
+ return join(root,policy.virtual.out);
+}
+
 type Kind=Readonly<{label:string;type:string;target?:string}>;
 
 /** 📁️ A checkout in the module layout of the repository: a unit `d` (a generic inline function and a macro) and the unit `t` under test, whose one-line shim includes the code of the module directory above its manifest and which uses `d`. */
@@ -47,15 +64,7 @@ function local(root:string,kind:Kind):string{
 function worker(requester:string,kind:Kind,base:string):string{
  const plan=planOffloadV1({args:unitArguments(requester,kind),environment:environmentOf(requester,"t"),cwd:requester});
  if("declined" in plan)throw Error(JSON.stringify(plan));
- const refusal=validateRemoteExecutionRustcActionV1({arguments:["/bin/sh","-c",policy.script,"semio-rustc",...plan.arguments],environment_variables:Object.entries(plan.environment).map(([name,value])=>({name,value})),output_paths:[policy.virtual.out,policy.virtual.root],working_directory:""});
- if(refusal!==undefined)throw Error("the worker policy refuses what the planner sends: "+refusal);
- const root=join(base,"work","🧱️root");mkdirSync(root,{recursive:true});
- for(const [path,real] of plan.files){const target=join(root,path);mkdirSync(dirname(target),{recursive:true});copyFileSync(real,target);}
- const env:Record<string,string>={PATH:process.env.PATH??"/usr/bin:/bin",...plan.environment};
- for(const name of Object.keys(env))if(env[name]==="@tool")env[name]=rustc;
- const result=spawnSync("/bin/sh",["-c",policy.script,"semio-rustc",...plan.arguments],{cwd:root,encoding:"utf8",env:{...testRustEnvironmentV1(),...env}});
- if(result.status!==0)throw Error(result.stderr);
- return join(root,policy.virtual.out);
+ return runAction(plan,join(base,"work","🧱️root"));
 }
 
 const cases:Kind[]=[{label:"lib",type:"lib"},{label:"proc-macro",type:"proc-macro"},...(wasmInstalled?[{label:"wasm32",type:"lib",target:"wasm32-unknown-unknown"} as Kind]:[])];
@@ -74,6 +83,32 @@ for(const kind of cases){
   }finally{cleanup();}
  },180000);
 }
+
+const packageArguments=(root:string,kind:Kind,names:readonly string[]):string[]=>{
+ const manifest=join(root,"t","📦️packages","🦀️rust"),out=join(root,"out");
+ const kept=unitArguments(root,kind).filter(argument=>argument!==`--remap-path-prefix=${root}=.`).map(argument=>argument==="t/📦️packages/🦀️rust/🦀️.rs"?"🦀️.rs":argument.startsWith("d=")?`d=${join(out,"libd-abc123.rmeta")}`:argument);
+ return [...kept,`--remap-path-prefix=${manifest}=${names[0]}`];
+};
+test("lib: a unit compiled in its package directory whose module directory above the manifest no remap of Cargo covers gets its own remap from the launcher and has the same bytes (crate hash included) locally and in a worker",()=>{
+ try{
+  const kind:Kind={label:"lib",type:"lib"},a=checkout("m",kind),manifest=join(a.root,"t","📦️packages","🦀️rust"),base=realpathSync(mkdtempSync(join(realpathSync(tmpdir()),"determinism-m-")));scratch.push(base);
+  mkdirSync(join(a.root,"out"),{recursive:true});
+  const dependency=spawnSync(rustc,common(a.root,{label:"d",type:"lib"},"d","abc123"),{cwd:a.root,encoding:"utf8",env:testRustEnvironmentV1(environmentOf(a.root,"d"))});
+  if(dependency.status!==0)throw Error(dependency.stderr);
+  const cargoGave=packageArguments(a.root,kind,["."]),linked=[...moduleRemapArgumentsV1(cargoGave,environmentOf(a.root,"t"),manifest,a.root)??cargoGave],here=spawnSync(rustc,[...linked,...linkRootArgumentsV1(linked,join(a.root,"out"))],{cwd:manifest,encoding:"utf8",env:testRustEnvironmentV1(environmentOf(a.root,"t"))});
+  if(here.status!==0)throw Error(here.stderr);
+  expect(linked.length,"the launcher added the remap of the module directory").toBe(cargoGave.length+1);
+  expect(linked.some(argument=>argument===`--remap-path-prefix=${join(a.root,"t")}=t`)).toBe(true);
+  const plan=planOffloadV1({args:linked,environment:environmentOf(a.root,"t"),cwd:manifest});
+  if("declined" in plan)throw Error(JSON.stringify(plan));
+  const remote=runAction(plan,join(base,"work","🧱️root"));
+  expect(names(join(a.root,"out")).length).toBeGreaterThan(1);
+  for(const name of names(join(a.root,"out"))){
+   if(name.endsWith(".d"))continue;
+   expect(Buffer.compare(readFileSync(join(a.root,"out",name)),readFileSync(join(remote,name))),name).toBe(0);
+  }
+ }finally{cleanup();}
+},180000);
 
 type Source=Readonly<{label:string;below:string;remap:string;crate:string}>;
 const SOURCES:readonly Source[]=[
@@ -110,13 +145,7 @@ function compileHere(m:Machine,source:Source,which:"reg"|"w"):void{
 function compileThere(requester:Machine,source:Source,which:"reg"|"w",base:string,label:string):string{
  const registryUnit=which==="reg",cwd=registryUnit?requester.pkg:requester.checkout,plan=planOffloadV1({args:registryUnit?registryArguments(requester,source):dependantArguments(requester,source),environment:registryUnit?registryEnvironment(requester):dependantEnvironment(requester),cwd});
  if("declined" in plan)throw Error(JSON.stringify(plan));
- const root=join(base,"work",label,"🧱️root");mkdirSync(root,{recursive:true});
- for(const [path,real] of plan.files){const target=join(root,path);mkdirSync(dirname(target),{recursive:true});copyFileSync(real,target);}
- const env:Record<string,string>={PATH:process.env.PATH??"/usr/bin:/bin",...plan.environment};
- for(const name of Object.keys(env))if(env[name]==="@tool")env[name]=rustc;
- const result=spawnSync("/bin/sh",["-c",policy.script,"semio-rustc",...plan.arguments],{cwd:root,encoding:"utf8",env:{...testRustEnvironmentV1(),...env}});
- if(result.status!==0)throw Error(result.stderr);
- return join(root,policy.virtual.out);
+ return runAction(plan,join(base,"work",label,"🧱️root"));
 }
 for(const source of SOURCES){
  test(`${source.label}: compiled on two machines with different user, cargo home, rustup home and checkout, and through the planner in a worker root, gives the same rmeta and rlib; so does a workspace unit with a build script output that uses it`,()=>{

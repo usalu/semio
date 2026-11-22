@@ -12,7 +12,7 @@ use semio_ui_tui_core::event::MouseButton;
 use semio_ui_tui_core::event::MouseEvent;
 use semio_ui_tui_core::event::MouseKind;
 use semio_ui_tui_core::geometry::{Pos, Size};
-use semio_ui_tui_frame::layout::{create_default_layout, dock_window, push_window_to_stack, WindowLayout, WindowLayoutWindowNode};
+use semio_ui_tui_frame::layout::{create_default_layout, dock_window, push_window_to_stack, stack_windows, window_node, Axis, WindowLayout};
 use semio_ui_tui_frame::scene::NodeContent;
 use semio_ui_tui_frame::scene::NodeId;
 use semio_ui_tui_core::theme::GlyphSet;
@@ -36,18 +36,18 @@ fn world(size: Size, weights: [f64; 2], peer: bool, same_stack: bool, compact: b
     let mut theme = Theme::new(AppearanceName::Dark);
     theme.set_glyphs(glyphs);
     let mut tui = Tui::new(size, theme);
-    let mut layout = create_default_layout(&if same_stack { vec!["source".into()] } else { vec!["source".into(), "target".into()] }, "row", Some(&weights), Some(&["Source".into(), "Target".into()]));
-    if same_stack { push_window_to_stack(&mut layout, "source", WindowLayoutWindowNode { window_kind_id: "target".into(), title: Some("Target".into()), corner: None }); }
-    if peer { push_window_to_stack(&mut layout, "source", WindowLayoutWindowNode { window_kind_id: "peer".into(), title: Some("Peer".into()), corner: None }); }
+    let mut layout = create_default_layout(&if same_stack { vec!["source".into()] } else { vec!["source".into(), "target".into()] }, Axis::Horizontal, Some(&weights), Some(&["Source".into(), "Target".into()]));
+    if same_stack { push_window_to_stack(&mut layout, "source", window_node("target".into(), Some("Target".into()), None)); }
+    if peer { push_window_to_stack(&mut layout, "source", window_node("peer".into(), Some("Peer".into()), None)); }
     if overflow {
         for index in 0..8 {
-            push_window_to_stack(&mut layout, "target", WindowLayoutWindowNode { window_kind_id: format!("extra{index}"), title: Some(format!("Long target label {index}")), corner: None });
+            push_window_to_stack(&mut layout, "target", window_node(format!("extra{index}"), Some(format!("Long target label {index}")), None));
         }
     }
     let mut ids = vec!["source".into(), "target".into()];
     if peer { ids.push("peer".into()); }
     if overflow { ids.extend((0..8).map(|index| format!("extra{index}"))); }
-    let initial = create_default_layout(&ids, "row", None, None);
+    let initial = create_default_layout(&ids, Axis::Horizontal, None, None);
     let mut built = shell(&mut tui.scene, NavbarState { left: vec![], center: vec![], right: vec![] }, FooterState { hints: vec![], status: String::new() }, &initial);
     semio_ui_tui_frame::layout::activate_stack_tab(&mut layout, "target");
     semio_ui_tui_frame::layout::activate_stack_tab(&mut layout, "source");
@@ -190,7 +190,7 @@ fn cancelling_a_visible_destination_tab_preview_keeps_the_layout() {
     tui.dispatch(&Event::Key(KeyEvent { key: Key::Esc, mods: 0 }));
     assert!(!tui.dragging_window());
     assert!(tui.docking_preview().is_none());
-    assert_eq!(semio_ui_tui_frame::layout::stack_hosting(&layout, "source").unwrap().children.len(), 1);
+    assert_eq!(stack_windows(&semio_ui_tui_frame::layout::stack_hosting(&layout, "source").unwrap()).len(), 1);
 }
 
 #[test]
@@ -250,7 +250,7 @@ fn held_destination_tab_refreshes_after_a_title_status_and_mount_change() {
 #[test]
 fn repeated_local_window_ids_project_within_their_own_mounted_canvas() {
     let (mut tui, _first, first_layout, first_source, _) = world(Size { width: 160, height: 60 }, [1.0, 3.0], false, false, false, GlyphSet::Unicode, false);
-    let mut layout = create_default_layout(&["source".into(), "target".into()], "row", Some(&[1.0, 3.0]), Some(&["Second source".into(), "Second target".into()]));
+    let mut layout = create_default_layout(&["source".into(), "target".into()], Axis::Horizontal, Some(&[1.0, 3.0]), Some(&["Second source".into(), "Second target".into()]));
     let mut built = shell(&mut tui.scene, NavbarState { left: vec![], center: vec![], right: vec![] }, FooterState { hints: vec![], status: String::new() }, &layout);
     built.remount(&mut tui.scene, &layout);
     tui.render_full();
@@ -283,7 +283,7 @@ fn repeated_local_window_ids_project_within_their_own_mounted_canvas() {
         }
     }
     assert_eq!(tui.scene.rect(first_source), first_rect);
-    assert_eq!(semio_ui_tui_frame::layout::stack_hosting(&first_layout, "source").unwrap().children.len(), 1);
+    assert_eq!(stack_windows(&semio_ui_tui_frame::layout::stack_hosting(&first_layout, "source").unwrap()).len(), 1);
     let (_, first_grip) = active_chip(&tui, first_source);
     tui.dispatch(&pointer(MouseKind::Down(MouseButton::Left), first_grip));
     assert!(tui.dragging_window());

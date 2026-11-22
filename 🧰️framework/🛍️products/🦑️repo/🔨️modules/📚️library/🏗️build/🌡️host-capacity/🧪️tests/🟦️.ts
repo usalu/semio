@@ -159,7 +159,7 @@ test("Measured demand closes the loop: runs report their peak, the class learns 
  expect(other[0]).toBeLessThan(reserved[0]!);
 },60000);
 
-test("Law: failed, cancelled and non-zero-exit runs never lower what a class learned, a failed run that already exceeds the estimate can raise it, and a completed run records when it peaked",async()=>{
+test("Law: failed, cancelled and non-zero-exit runs teach a class nothing, however high their partial peak, and a completed run records when it peaked",async()=>{
  const directory=fresh(),learning=readHostCapacityPolicyV1({...buildPolicy.hostCapacity,wait:{...buildPolicy.hostCapacity.wait,pollMilliseconds:10,progressMilliseconds:20,sampleMaximumAgeMilliseconds:0,heartbeatMilliseconds:20}});
  let peak=3000,code:number|undefined=0;
  const ports=()=>({directory,policy:learning,strip,write:()=>undefined,sample:async()=>({host:host({availableMegabytes:30000}),swappedOutMegabytes:0}),observe:async()=>peak,now:Date.now,exitCode:()=>code}),args=["run","@x/y:typecheck","--parallel=1"],samples=()=>(JSON.parse(readFileSync(join(directory,"estimates.json"),"utf8")).classes["run"].samples as {ratioBasisPoints:number;peakAtMilliseconds?:number;activeMilliseconds:number}[]);
@@ -176,8 +176,13 @@ test("Law: failed, cancelled and non-zero-exit runs never lower what a class lea
  expect(samples().length,"a cancelled run with a small peak teaches nothing").toBe(4);
  peak=16000;
  await expect(withBuildCapacityV1(args,{LANG:"en_US.UTF-8"},async()=>{await sleep(100);throw Error("died late");},ports())).rejects.toThrow("died late");
- expect(samples().length,"a failed run whose partial peak already exceeds the estimate raises the class").toBe(5);
- expect(Math.max(...samples().map(row=>row.ratioBasisPoints))).toBeGreaterThan(10000);
+ expect(samples().length,"a failed run whose partial peak exceeds the estimate teaches nothing: no early death can inflate a reservation").toBe(4);
+ code=1;
+ await withBuildCapacityV1(args,{LANG:"en_US.UTF-8"},async()=>{await sleep(100);},ports());
+ expect(samples().length,"a run with a high peak that exited non-zero teaches nothing").toBe(4);
+ code=0;peak=3000;
+ await withBuildCapacityV1(args,{LANG:"en_US.UTF-8"},async()=>{await sleep(100);},ports());
+ expect(samples().length,"a completed run teaches again").toBe(5);
 },30000);
 
 test("The floor scales with the memory of the machine, and a 16 GB machine carries several measured runs where the fixed 20 % floor of before admitted one",()=>{

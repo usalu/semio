@@ -29,16 +29,10 @@ here transcribes a fixture path: the 2026-09-05 repo-wide path-shortening pass r
 directory under this subset, and a hard-coded table of those names is exactly the drift that broke
 this case before.
 
-🔑 `create-asset` — the ONE genuine content-address hazard in this vocabulary. Production mints a
-NEW `assets.<key>.childId` via `image_asset_child_handle`, which hashes the raw `ImageAsset` bytes
-through `std::collections::hash_map::DefaultHasher` — an algorithm the Rust standard library
-EXPLICITLY documents as unspecified and not portable, even across compiler versions. This reference
-therefore compares every field EXCEPT that one opaque digest exactly, and only checks the digest's
-SHAPE (`remodeling-asset-` followed by hex) — an honest, narrow scope limit, not a silent pass. It
-does state the DURABLE leaf that digest keys independently and in full: the bounded 4 KiB chunking of
-the payload's own base64 content, its mime and its declared raster size are all recomputed here, and
-only the key they are filed under is adopted. `delete-asset`'s inverse sidesteps the hazard entirely:
-`assets[key]` in the committed BEFORE-document is already a fully-formed captured handle.
+🔑 `create-asset` addresses both the handle and its durable leaf with `remodeling-asset-` followed
+by the first 16 lowercase hex digits of SHA-256 over the UTF-8 MIME type, U+001F, and the exact
+Base64 text. The reference derives that ID with `hashlib` and decodes the payload into 4 KiB octet
+arrays. Overwrite and deletion inverses restore the captured handle and leaf.
 
 ⛓️ OWNERSHIP AND ORDER, the two rules every verb here is read against. A record may be removed with
 what it OWNS (a stream carries its frames, a GCP carries its observations) but never with what merely

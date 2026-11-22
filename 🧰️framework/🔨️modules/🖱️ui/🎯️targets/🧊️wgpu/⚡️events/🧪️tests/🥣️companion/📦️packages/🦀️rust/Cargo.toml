@@ -35,6 +35,7 @@ semio-ui-select-behavior = { path = "../../../../../../../🧱️elements/🔽�
 semio-ui-theme = { path = "../../../../../../../🎨️styling/🎭️theme/📦️packages/🦀️rust" }
 semio-ui-wgpu-controls = { path = "../../../../../🔘️controls/📦️packages/🦀️rust" }
 semio-ui-wgpu-events = { path = "../../../../📦️packages/🦀️rust" }
+semio-ui-wgpu-events-commit = { path = "../../../../🧮️control-commit-rules/📦️packages/🦀️rust" }
 semio-ui-wgpu-layout = { path = "../../../../../🧱️layout-stack/📦️packages/🦀️rust" }
 semio-ui-wgpu-paint = { path = "../../../../../🖌️paint/📦️packages/🦀️rust", features = ["testkit"] }
 semio-ui-wgpu-widget-kit = { path = "../../../../../🪀️widgets/🧰️kit/📦️packages/🦀️rust" }

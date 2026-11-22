@@ -1,0 +1,18 @@
+{
+  "mediaSide": 216,
+  "imageSide": 3072,
+  "shellCommandBytes": 8388608,
+  "grayscale": [
+    30,
+    100,
+    170,
+    240
+  ],
+  "rotation": 90,
+  "sourceBytes": 9437877,
+  "sourceSha256": "654f85dff8894a9eb8972a1bc8185ba60eefb67340a24a73147d631706fa621a",
+  "headerOffset": 0,
+  "version": "1.7",
+  "catalogOffset": 15,
+  "xrefOffset": 9437690
+}

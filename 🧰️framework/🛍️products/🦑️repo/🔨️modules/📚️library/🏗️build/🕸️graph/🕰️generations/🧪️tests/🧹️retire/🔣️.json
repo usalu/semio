@@ -90,5 +90,10 @@
       "current": "latest",
       "expected": "refuse"
     }
-  ]
+  ],
+  "boundedHistory": {
+    "manifests": 32,
+    "ownersPerManifest": 64,
+    "generationsInTie": 6
+  }
 }

@@ -12,29 +12,64 @@
   ],
   "allocationLimits": [
     {
-      "bytes": 0,
-      "native": 0,
-      "wasm32": 0
+      "bytes": "0",
+      "native": "0",
+      "wasm32": 0,
+      "admitted": false
     },
     {
-      "bytes": 65536,
-      "native": 65536,
-      "wasm32": 65536
+      "bytes": "65536",
+      "native": "65536",
+      "wasm32": 65536,
+      "admitted": true
     },
     {
-      "bytes": 4294967295,
-      "native": 4294967295,
-      "wasm32": 4294967295
+      "bytes": "2147483647",
+      "native": "2147483647",
+      "wasm32": 2147483647,
+      "admitted": true
     },
     {
-      "bytes": 4294967296,
-      "native": 4294967296,
-      "wasm32": 4294967295
+      "bytes": "2147483648",
+      "native": "2147483648",
+      "wasm32": 2147483647,
+      "admitted": true
     },
     {
-      "bytes": 8589934592,
-      "native": 8589934592,
-      "wasm32": 4294967295
+      "bytes": "4294967295",
+      "native": "4294967295",
+      "wasm32": 2147483647,
+      "admitted": true
+    },
+    {
+      "bytes": "4294967296",
+      "native": "4294967296",
+      "wasm32": 2147483647,
+      "admitted": true
+    },
+    {
+      "bytes": "8589934592",
+      "native": "8589934592",
+      "wasm32": 2147483647,
+      "admitted": true
+    },
+    {
+      "bytes": "9223372036854775807",
+      "native": "9223372036854775807",
+      "wasm32": 2147483647,
+      "admitted": true
+    },
+    {
+      "bytes": "9223372036854775808",
+      "native": "9223372036854775807",
+      "wasm32": 2147483647,
+      "admitted": true
+    },
+    {
+      "bytes": "18446744073709551615",
+      "native": "9223372036854775807",
+      "wasm32": 2147483647,
+      "admitted": true
     }
   ]
 }

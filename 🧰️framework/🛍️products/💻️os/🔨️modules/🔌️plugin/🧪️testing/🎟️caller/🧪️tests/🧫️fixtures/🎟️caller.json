@@ -6,10 +6,11 @@
   "clockUs": 1000,
   "deadlineUs": 3600000000,
   "maximumTurns": 32768,
+  "maximumCloseTurns": 4194304,
   "maximumIdleTurns": 4096,
   "grant": {
     "maximumItems": 16777216,
-    "maximumCopyBytes": 134217728,
+    "maximumCopyBytes": 528482304,
     "maximumCapacityBytes": 268435456,
     "maximumReleaseBytes": 536870912,
     "maximumDepth": 4096

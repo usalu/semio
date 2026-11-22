@@ -10,7 +10,7 @@ use semio_framework_value::{RetainedAllocationEffect, RetainedCloneProgress, Ret
 use semio_framework_value::retirement::controlled::ControlledRetirement;
 use semio_plugin::{ArtifactApp, ArtifactMediaExportJobRequest, ArtifactOwnedToolJobFactory, ArtifactReservedJob, ArtifactReservedToolJob, ArtifactToolPublicationContract, ArtifactToolPublicationLane, MediaConstruction};
 use semio_plugin::app::{ArtifactMediaExportCompletion, ArtifactMediaExportCredit, ArtifactMediaExportResult, ArtifactOutputChunks, ArtifactSnapshotCloseLease};
-use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::{RemodelingDurableArtifact, RemodelingDurableArtifactStore, RemodelingMeshChild, RemodelingSnapshot};
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::{RemodelingDurableArtifactStore, RemodelingMeshChild, RemodelingSnapshot};
 use source::{HandleCountCursor, MeshIndex, OriginalMeshLookup};
 use std::{mem::{size_of, ManuallyDrop}, sync::Arc};
 
@@ -225,8 +225,10 @@ impl<A: ArtifactApp> MeshExportJob<A> where A::Snapshot: MeshExportSnapshot {
         }
         if self.cursor.is_none() {
             let bytes = size_of::<GlbCursor>();
-            if cx.fuel_remaining() < bytes as u64 { return Ok(()); }
-            let result = self.construction.built(cx, &mut self.cursor, construction(RetirementDemand { capacity_bytes: bytes, ..demand(bytes) }), || {
+            let quote = construction(RetirementDemand { capacity_bytes: bytes, ..demand(bytes) });
+            let (_, frame_work) = semio_framework_job::original_construction_settled_quote::<Box<GlbCursor>>(quote, 1)?;
+            if cx.fuel_remaining() < frame_work + bytes as u64 - 1 { return Ok(()); }
+            let result = self.construction.built(cx, &mut self.cursor, quote, || {
                 let cursor = allocate(GlbCursor::new(&source).map_err(invalid)?)?;
                 Ok((cursor, RetainedCloneProgress { copied_items: 1, copied_bytes: bytes, retained_capacity_bytes: bytes, ..Default::default() }))
             });

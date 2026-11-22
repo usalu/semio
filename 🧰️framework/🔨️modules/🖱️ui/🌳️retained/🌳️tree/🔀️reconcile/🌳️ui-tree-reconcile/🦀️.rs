@@ -109,12 +109,14 @@ impl UiTree {
                     cursor.phase = UiDocumentReconcilePhase::Retire;
                     return UiDocumentReconcileStep::Pending;
                 };
-                let (key, mut spec, layout_spec, intent) = {
+                let (key, mut spec, layout_spec, intent, is_table) = {
                     let Some(document) = self.document() else { return cursor.refuse(UiDocumentReconcileFault::MissingRecord) };
                     let Some(record) = document.record(planned.id) else { return cursor.refuse(UiDocumentReconcileFault::MissingRecord) };
-                    (NodeKey::Explicit(record.key.as_str().to_string()), WidgetSpec(ui_node_from_record(document, record, surface, controller)), record.layout.clone(), record_intent_bindings(record, surface, document.revision().0))
+                    (NodeKey::Explicit(record.key.as_str().to_string()), WidgetSpec(ui_node_from_record(document, record, surface, controller)), record.layout.clone(), record_intent_bindings(record, surface, document.revision().0), matches!(record.component, ui_contract::Component::Table(_)))
                 };
-                let routing = layout_routing_flags(&layout_spec);
+                let mut routing = layout_routing_flags(&layout_spec);
+                routing.scrollable |= is_table;
+                routing.clips |= is_table;
                 let presented_component = presented.and_then(|tree| {
                     let node = tree.document_node(planned.id)?;
                     let retained = tree.node(node)?;
@@ -235,7 +237,7 @@ impl UiTree {
                         self.attach_child(parent_node, node);
                     }
                 }
-                if Some(node) == preserved_composite_owner {
+                if Some(node) == preserved_composite_owner || self.is_icon_select_cell_owner(node) {
                     self.reattach_composite_rows(node);
                 }
                 cursor.mount += 1;

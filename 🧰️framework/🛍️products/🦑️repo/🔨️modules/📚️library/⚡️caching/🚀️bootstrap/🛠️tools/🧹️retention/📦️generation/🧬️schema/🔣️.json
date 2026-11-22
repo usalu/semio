@@ -28,16 +28,13 @@
         "maximumBytes": 8589934592,
         "maximumPath": 256,
         "rootEntries": [
-          ".semio-authorizer-compiler.json",
-          ".semio-authorizer-source.json",
           ".semio-nx-sdk-binaries.json",
           ".semio-nx-tooling.json",
           ".semio-sdk-material.json",
           "bun.lock",
           "node_modules",
           "package.json",
-          "patches",
-          "semio-authorizers.mjs"
+          "patches"
         ]
       }
     }

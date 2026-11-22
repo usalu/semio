@@ -4182,7 +4182,8 @@
         "namedLayouts": [],
         "defaultLayout": {
           "root": {
-            "kind": "row",
+            "kind": "split",
+            "axis": "horizontal",
             "children": [
               {
                 "kind": "stack",
@@ -9257,7 +9258,8 @@
         "namedLayouts": [],
         "defaultLayout": {
           "root": {
-            "kind": "row",
+            "kind": "split",
+            "axis": "horizontal",
             "children": [
               {
                 "kind": "stack",
@@ -14332,7 +14334,8 @@
         "namedLayouts": [],
         "defaultLayout": {
           "root": {
-            "kind": "row",
+            "kind": "split",
+            "axis": "horizontal",
             "children": [
               {
                 "kind": "stack",
@@ -22987,6 +22990,789 @@
                 }
               },
               {
+                "id": "create-annotation",
+                "label": {
+                  "native": {
+                    "en": "Create Annotation",
+                    "de": "Anmerkung erstellen"
+                  },
+                  "reuse": {
+                    "en": "Create Annotation",
+                    "de": "Anmerkung erstellen"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "sparkles",
+                "args": [
+                  {
+                    "id": "page",
+                    "label": {
+                      "native": {
+                        "en": "Page",
+                        "de": "Seite"
+                      },
+                      "reuse": {
+                        "en": "Page",
+                        "de": "Seite"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "object",
+                    "label": {
+                      "native": {
+                        "en": "Kind (note, highlight, underline, strikeOut, squiggly, ink, link)",
+                        "de": "Art (note, highlight, underline, strikeOut, squiggly, ink, link)"
+                      },
+                      "reuse": {
+                        "en": "Kind (note, highlight, underline, strikeOut, squiggly, ink, link)",
+                        "de": "Art (note, highlight, underline, strikeOut, squiggly, ink, link)"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 1
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "text",
+                    "label": {
+                      "native": {
+                        "en": "Contents or link",
+                        "de": "Inhalt oder Link"
+                      },
+                      "reuse": {
+                        "en": "Contents or link",
+                        "de": "Inhalt oder Link"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 0
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "extra",
+                    "label": {
+                      "native": {
+                        "en": "Quad points or ink strokes",
+                        "de": "Quadpunkte oder Freihandstriche"
+                      },
+                      "reuse": {
+                        "en": "Quad points or ink strokes",
+                        "de": "Quadpunkte oder Freihandstriche"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 0
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "x",
+                    "label": {
+                      "native": {
+                        "en": "X",
+                        "de": "X"
+                      },
+                      "reuse": {
+                        "en": "X",
+                        "de": "X"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "y",
+                    "label": {
+                      "native": {
+                        "en": "Y",
+                        "de": "Y"
+                      },
+                      "reuse": {
+                        "en": "Y",
+                        "de": "Y"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "width",
+                    "label": {
+                      "native": {
+                        "en": "Width",
+                        "de": "Breite"
+                      },
+                      "reuse": {
+                        "en": "Width",
+                        "de": "Breite"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "height",
+                    "label": {
+                      "native": {
+                        "en": "Height",
+                        "de": "Höhe"
+                      },
+                      "reuse": {
+                        "en": "Height",
+                        "de": "Höhe"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "red",
+                    "label": {
+                      "native": {
+                        "en": "Red",
+                        "de": "Rot"
+                      },
+                      "reuse": {
+                        "en": "Red",
+                        "de": "Rot"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "green",
+                    "label": {
+                      "native": {
+                        "en": "Green",
+                        "de": "Grün"
+                      },
+                      "reuse": {
+                        "en": "Green",
+                        "de": "Grün"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "blue",
+                    "label": {
+                      "native": {
+                        "en": "Blue",
+                        "de": "Blau"
+                      },
+                      "reuse": {
+                        "en": "Blue",
+                        "de": "Blau"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": false
+                  }
+                ],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "fill-form-field",
+                "label": {
+                  "native": {
+                    "en": "Fill Form Field",
+                    "de": "Formularfeld ausfüllen"
+                  },
+                  "reuse": {
+                    "en": "Fill Form Field",
+                    "de": "Formularfeld ausfüllen"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "sparkles",
+                "args": [
+                  {
+                    "id": "object",
+                    "label": {
+                      "native": {
+                        "en": "Field name",
+                        "de": "Feldname"
+                      },
+                      "reuse": {
+                        "en": "Field name",
+                        "de": "Feldname"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 1
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "text",
+                    "label": {
+                      "native": {
+                        "en": "Value",
+                        "de": "Wert"
+                      },
+                      "reuse": {
+                        "en": "Value",
+                        "de": "Wert"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 0
+                    },
+                    "required": false
+                  }
+                ],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "replace-page",
+                "label": {
+                  "native": {
+                    "en": "Replace Page",
+                    "de": "Seite ersetzen"
+                  },
+                  "reuse": {
+                    "en": "Replace Page",
+                    "de": "Seite ersetzen"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "sparkles",
+                "args": [
+                  {
+                    "id": "page",
+                    "label": {
+                      "native": {
+                        "en": "Page",
+                        "de": "Seite"
+                      },
+                      "reuse": {
+                        "en": "Page",
+                        "de": "Seite"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "payload",
+                    "label": {
+                      "native": {
+                        "en": "PDF Data",
+                        "de": "PDF-Daten"
+                      },
+                      "reuse": {
+                        "en": "PDF Data",
+                        "de": "PDF-Daten"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 0
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "extra",
+                    "label": {
+                      "native": {
+                        "en": "Source Page",
+                        "de": "Quellseite"
+                      },
+                      "reuse": {
+                        "en": "Source Page",
+                        "de": "Quellseite"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 0
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "width",
+                    "label": {
+                      "native": {
+                        "en": "Width",
+                        "de": "Breite"
+                      },
+                      "reuse": {
+                        "en": "Width",
+                        "de": "Breite"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "height",
+                    "label": {
+                      "native": {
+                        "en": "Height",
+                        "de": "Höhe"
+                      },
+                      "reuse": {
+                        "en": "Height",
+                        "de": "Höhe"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": false
+                  }
+                ],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "replace-page-pick",
+                "label": {
+                  "native": {
+                    "en": "Replace Page from PDF",
+                    "de": "Seite aus PDF ersetzen"
+                  },
+                  "reuse": {
+                    "en": "Replace Page from PDF",
+                    "de": "Seite aus PDF ersetzen"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "sparkles",
+                "args": [
+                  {
+                    "id": "page",
+                    "label": {
+                      "native": {
+                        "en": "Page",
+                        "de": "Seite"
+                      },
+                      "reuse": {
+                        "en": "Page",
+                        "de": "Seite"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "extra",
+                    "label": {
+                      "native": {
+                        "en": "Source Page",
+                        "de": "Quellseite"
+                      },
+                      "reuse": {
+                        "en": "Source Page",
+                        "de": "Quellseite"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 0
+                    },
+                    "required": false
+                  }
+                ],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "merge-document",
+                "label": {
+                  "native": {
+                    "en": "Merge PDF Pages",
+                    "de": "PDF-Seiten zusammenführen"
+                  },
+                  "reuse": {
+                    "en": "Merge PDF Pages",
+                    "de": "PDF-Seiten zusammenführen"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "sparkles",
+                "args": [
+                  {
+                    "id": "page",
+                    "label": {
+                      "native": {
+                        "en": "Page",
+                        "de": "Seite"
+                      },
+                      "reuse": {
+                        "en": "Page",
+                        "de": "Seite"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "payload",
+                    "label": {
+                      "native": {
+                        "en": "PDF Data",
+                        "de": "PDF-Daten"
+                      },
+                      "reuse": {
+                        "en": "PDF Data",
+                        "de": "PDF-Daten"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 1
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "extra",
+                    "label": {
+                      "native": {
+                        "en": "Source Pages",
+                        "de": "Quellseiten"
+                      },
+                      "reuse": {
+                        "en": "Source Pages",
+                        "de": "Quellseiten"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 0
+                    },
+                    "required": false
+                  }
+                ],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "merge-pick",
+                "label": {
+                  "native": {
+                    "en": "Insert Pages from PDF",
+                    "de": "Seiten aus PDF einfügen"
+                  },
+                  "reuse": {
+                    "en": "Insert Pages from PDF",
+                    "de": "Seiten aus PDF einfügen"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "sparkles",
+                "args": [
+                  {
+                    "id": "page",
+                    "label": {
+                      "native": {
+                        "en": "Page",
+                        "de": "Seite"
+                      },
+                      "reuse": {
+                        "en": "Page",
+                        "de": "Seite"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "extra",
+                    "label": {
+                      "native": {
+                        "en": "Source Pages",
+                        "de": "Quellseiten"
+                      },
+                      "reuse": {
+                        "en": "Source Pages",
+                        "de": "Quellseiten"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 0
+                    },
+                    "required": false
+                  }
+                ],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "extract-pages",
+                "label": {
+                  "native": {
+                    "en": "Extract Pages to PDF",
+                    "de": "Seiten als PDF extrahieren"
+                  },
+                  "reuse": {
+                    "en": "Extract Pages to PDF",
+                    "de": "Seiten als PDF extrahieren"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "sparkles",
+                "args": [
+                  {
+                    "id": "extra",
+                    "label": {
+                      "native": {
+                        "en": "Pages (1-3,5; next file after ;)",
+                        "de": "Seiten (1-3,5; weitere Datei nach ;)"
+                      },
+                      "reuse": {
+                        "en": "Pages (1-3,5; next file after ;)",
+                        "de": "Seiten (1-3,5; weitere Datei nach ;)"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 1
+                    },
+                    "required": true
+                  }
+                ],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
                 "id": "cancelTypedOperation",
                 "label": {
                   "native": {
@@ -26822,7 +27608,8 @@
         "namedLayouts": [],
         "defaultLayout": {
           "root": {
-            "kind": "row",
+            "kind": "split",
+            "axis": "horizontal",
             "children": [
               {
                 "kind": "stack",
@@ -35490,6 +36277,789 @@
                 }
               },
               {
+                "id": "create-annotation",
+                "label": {
+                  "native": {
+                    "en": "Create Annotation",
+                    "de": "Anmerkung erstellen"
+                  },
+                  "reuse": {
+                    "en": "Create Annotation",
+                    "de": "Anmerkung erstellen"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "sparkles",
+                "args": [
+                  {
+                    "id": "page",
+                    "label": {
+                      "native": {
+                        "en": "Page",
+                        "de": "Seite"
+                      },
+                      "reuse": {
+                        "en": "Page",
+                        "de": "Seite"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "object",
+                    "label": {
+                      "native": {
+                        "en": "Kind (note, highlight, underline, strikeOut, squiggly, ink, link)",
+                        "de": "Art (note, highlight, underline, strikeOut, squiggly, ink, link)"
+                      },
+                      "reuse": {
+                        "en": "Kind (note, highlight, underline, strikeOut, squiggly, ink, link)",
+                        "de": "Art (note, highlight, underline, strikeOut, squiggly, ink, link)"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 1
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "text",
+                    "label": {
+                      "native": {
+                        "en": "Contents or link",
+                        "de": "Inhalt oder Link"
+                      },
+                      "reuse": {
+                        "en": "Contents or link",
+                        "de": "Inhalt oder Link"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 0
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "extra",
+                    "label": {
+                      "native": {
+                        "en": "Quad points or ink strokes",
+                        "de": "Quadpunkte oder Freihandstriche"
+                      },
+                      "reuse": {
+                        "en": "Quad points or ink strokes",
+                        "de": "Quadpunkte oder Freihandstriche"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 0
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "x",
+                    "label": {
+                      "native": {
+                        "en": "X",
+                        "de": "X"
+                      },
+                      "reuse": {
+                        "en": "X",
+                        "de": "X"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "y",
+                    "label": {
+                      "native": {
+                        "en": "Y",
+                        "de": "Y"
+                      },
+                      "reuse": {
+                        "en": "Y",
+                        "de": "Y"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "width",
+                    "label": {
+                      "native": {
+                        "en": "Width",
+                        "de": "Breite"
+                      },
+                      "reuse": {
+                        "en": "Width",
+                        "de": "Breite"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "height",
+                    "label": {
+                      "native": {
+                        "en": "Height",
+                        "de": "Höhe"
+                      },
+                      "reuse": {
+                        "en": "Height",
+                        "de": "Höhe"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "red",
+                    "label": {
+                      "native": {
+                        "en": "Red",
+                        "de": "Rot"
+                      },
+                      "reuse": {
+                        "en": "Red",
+                        "de": "Rot"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "green",
+                    "label": {
+                      "native": {
+                        "en": "Green",
+                        "de": "Grün"
+                      },
+                      "reuse": {
+                        "en": "Green",
+                        "de": "Grün"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "blue",
+                    "label": {
+                      "native": {
+                        "en": "Blue",
+                        "de": "Blau"
+                      },
+                      "reuse": {
+                        "en": "Blue",
+                        "de": "Blau"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": false
+                  }
+                ],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "fill-form-field",
+                "label": {
+                  "native": {
+                    "en": "Fill Form Field",
+                    "de": "Formularfeld ausfüllen"
+                  },
+                  "reuse": {
+                    "en": "Fill Form Field",
+                    "de": "Formularfeld ausfüllen"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "sparkles",
+                "args": [
+                  {
+                    "id": "object",
+                    "label": {
+                      "native": {
+                        "en": "Field name",
+                        "de": "Feldname"
+                      },
+                      "reuse": {
+                        "en": "Field name",
+                        "de": "Feldname"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 1
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "text",
+                    "label": {
+                      "native": {
+                        "en": "Value",
+                        "de": "Wert"
+                      },
+                      "reuse": {
+                        "en": "Value",
+                        "de": "Wert"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 0
+                    },
+                    "required": false
+                  }
+                ],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "replace-page",
+                "label": {
+                  "native": {
+                    "en": "Replace Page",
+                    "de": "Seite ersetzen"
+                  },
+                  "reuse": {
+                    "en": "Replace Page",
+                    "de": "Seite ersetzen"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "sparkles",
+                "args": [
+                  {
+                    "id": "page",
+                    "label": {
+                      "native": {
+                        "en": "Page",
+                        "de": "Seite"
+                      },
+                      "reuse": {
+                        "en": "Page",
+                        "de": "Seite"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "payload",
+                    "label": {
+                      "native": {
+                        "en": "PDF Data",
+                        "de": "PDF-Daten"
+                      },
+                      "reuse": {
+                        "en": "PDF Data",
+                        "de": "PDF-Daten"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 0
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "extra",
+                    "label": {
+                      "native": {
+                        "en": "Source Page",
+                        "de": "Quellseite"
+                      },
+                      "reuse": {
+                        "en": "Source Page",
+                        "de": "Quellseite"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 0
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "width",
+                    "label": {
+                      "native": {
+                        "en": "Width",
+                        "de": "Breite"
+                      },
+                      "reuse": {
+                        "en": "Width",
+                        "de": "Breite"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "height",
+                    "label": {
+                      "native": {
+                        "en": "Height",
+                        "de": "Höhe"
+                      },
+                      "reuse": {
+                        "en": "Height",
+                        "de": "Höhe"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": false
+                  }
+                ],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "replace-page-pick",
+                "label": {
+                  "native": {
+                    "en": "Replace Page from PDF",
+                    "de": "Seite aus PDF ersetzen"
+                  },
+                  "reuse": {
+                    "en": "Replace Page from PDF",
+                    "de": "Seite aus PDF ersetzen"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "sparkles",
+                "args": [
+                  {
+                    "id": "page",
+                    "label": {
+                      "native": {
+                        "en": "Page",
+                        "de": "Seite"
+                      },
+                      "reuse": {
+                        "en": "Page",
+                        "de": "Seite"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "extra",
+                    "label": {
+                      "native": {
+                        "en": "Source Page",
+                        "de": "Quellseite"
+                      },
+                      "reuse": {
+                        "en": "Source Page",
+                        "de": "Quellseite"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 0
+                    },
+                    "required": false
+                  }
+                ],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "merge-document",
+                "label": {
+                  "native": {
+                    "en": "Merge PDF Pages",
+                    "de": "PDF-Seiten zusammenführen"
+                  },
+                  "reuse": {
+                    "en": "Merge PDF Pages",
+                    "de": "PDF-Seiten zusammenführen"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "sparkles",
+                "args": [
+                  {
+                    "id": "page",
+                    "label": {
+                      "native": {
+                        "en": "Page",
+                        "de": "Seite"
+                      },
+                      "reuse": {
+                        "en": "Page",
+                        "de": "Seite"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "payload",
+                    "label": {
+                      "native": {
+                        "en": "PDF Data",
+                        "de": "PDF-Daten"
+                      },
+                      "reuse": {
+                        "en": "PDF Data",
+                        "de": "PDF-Daten"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 1
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "extra",
+                    "label": {
+                      "native": {
+                        "en": "Source Pages",
+                        "de": "Quellseiten"
+                      },
+                      "reuse": {
+                        "en": "Source Pages",
+                        "de": "Quellseiten"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 0
+                    },
+                    "required": false
+                  }
+                ],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "merge-pick",
+                "label": {
+                  "native": {
+                    "en": "Insert Pages from PDF",
+                    "de": "Seiten aus PDF einfügen"
+                  },
+                  "reuse": {
+                    "en": "Insert Pages from PDF",
+                    "de": "Seiten aus PDF einfügen"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "sparkles",
+                "args": [
+                  {
+                    "id": "page",
+                    "label": {
+                      "native": {
+                        "en": "Page",
+                        "de": "Seite"
+                      },
+                      "reuse": {
+                        "en": "Page",
+                        "de": "Seite"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "extra",
+                    "label": {
+                      "native": {
+                        "en": "Source Pages",
+                        "de": "Quellseiten"
+                      },
+                      "reuse": {
+                        "en": "Source Pages",
+                        "de": "Quellseiten"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 0
+                    },
+                    "required": false
+                  }
+                ],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "extract-pages",
+                "label": {
+                  "native": {
+                    "en": "Extract Pages to PDF",
+                    "de": "Seiten als PDF extrahieren"
+                  },
+                  "reuse": {
+                    "en": "Extract Pages to PDF",
+                    "de": "Seiten als PDF extrahieren"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "sparkles",
+                "args": [
+                  {
+                    "id": "extra",
+                    "label": {
+                      "native": {
+                        "en": "Pages (1-3,5; next file after ;)",
+                        "de": "Seiten (1-3,5; weitere Datei nach ;)"
+                      },
+                      "reuse": {
+                        "en": "Pages (1-3,5; next file after ;)",
+                        "de": "Seiten (1-3,5; weitere Datei nach ;)"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 1
+                    },
+                    "required": true
+                  }
+                ],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
                 "id": "cancelTypedOperation",
                 "label": {
                   "native": {
@@ -40093,7 +41663,8 @@
         "namedLayouts": [],
         "defaultLayout": {
           "root": {
-            "kind": "row",
+            "kind": "split",
+            "axis": "horizontal",
             "children": [
               {
                 "kind": "stack",
@@ -48765,6 +50336,789 @@
                 }
               },
               {
+                "id": "create-annotation",
+                "label": {
+                  "native": {
+                    "en": "Create Annotation",
+                    "de": "Anmerkung erstellen"
+                  },
+                  "reuse": {
+                    "en": "Create Annotation",
+                    "de": "Anmerkung erstellen"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "sparkles",
+                "args": [
+                  {
+                    "id": "page",
+                    "label": {
+                      "native": {
+                        "en": "Page",
+                        "de": "Seite"
+                      },
+                      "reuse": {
+                        "en": "Page",
+                        "de": "Seite"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "object",
+                    "label": {
+                      "native": {
+                        "en": "Kind (note, highlight, underline, strikeOut, squiggly, ink, link)",
+                        "de": "Art (note, highlight, underline, strikeOut, squiggly, ink, link)"
+                      },
+                      "reuse": {
+                        "en": "Kind (note, highlight, underline, strikeOut, squiggly, ink, link)",
+                        "de": "Art (note, highlight, underline, strikeOut, squiggly, ink, link)"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 1
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "text",
+                    "label": {
+                      "native": {
+                        "en": "Contents or link",
+                        "de": "Inhalt oder Link"
+                      },
+                      "reuse": {
+                        "en": "Contents or link",
+                        "de": "Inhalt oder Link"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 0
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "extra",
+                    "label": {
+                      "native": {
+                        "en": "Quad points or ink strokes",
+                        "de": "Quadpunkte oder Freihandstriche"
+                      },
+                      "reuse": {
+                        "en": "Quad points or ink strokes",
+                        "de": "Quadpunkte oder Freihandstriche"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 0
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "x",
+                    "label": {
+                      "native": {
+                        "en": "X",
+                        "de": "X"
+                      },
+                      "reuse": {
+                        "en": "X",
+                        "de": "X"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "y",
+                    "label": {
+                      "native": {
+                        "en": "Y",
+                        "de": "Y"
+                      },
+                      "reuse": {
+                        "en": "Y",
+                        "de": "Y"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "width",
+                    "label": {
+                      "native": {
+                        "en": "Width",
+                        "de": "Breite"
+                      },
+                      "reuse": {
+                        "en": "Width",
+                        "de": "Breite"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "height",
+                    "label": {
+                      "native": {
+                        "en": "Height",
+                        "de": "Höhe"
+                      },
+                      "reuse": {
+                        "en": "Height",
+                        "de": "Höhe"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "red",
+                    "label": {
+                      "native": {
+                        "en": "Red",
+                        "de": "Rot"
+                      },
+                      "reuse": {
+                        "en": "Red",
+                        "de": "Rot"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "green",
+                    "label": {
+                      "native": {
+                        "en": "Green",
+                        "de": "Grün"
+                      },
+                      "reuse": {
+                        "en": "Green",
+                        "de": "Grün"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "blue",
+                    "label": {
+                      "native": {
+                        "en": "Blue",
+                        "de": "Blau"
+                      },
+                      "reuse": {
+                        "en": "Blue",
+                        "de": "Blau"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": false
+                  }
+                ],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "fill-form-field",
+                "label": {
+                  "native": {
+                    "en": "Fill Form Field",
+                    "de": "Formularfeld ausfüllen"
+                  },
+                  "reuse": {
+                    "en": "Fill Form Field",
+                    "de": "Formularfeld ausfüllen"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "sparkles",
+                "args": [
+                  {
+                    "id": "object",
+                    "label": {
+                      "native": {
+                        "en": "Field name",
+                        "de": "Feldname"
+                      },
+                      "reuse": {
+                        "en": "Field name",
+                        "de": "Feldname"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 1
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "text",
+                    "label": {
+                      "native": {
+                        "en": "Value",
+                        "de": "Wert"
+                      },
+                      "reuse": {
+                        "en": "Value",
+                        "de": "Wert"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 0
+                    },
+                    "required": false
+                  }
+                ],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "replace-page",
+                "label": {
+                  "native": {
+                    "en": "Replace Page",
+                    "de": "Seite ersetzen"
+                  },
+                  "reuse": {
+                    "en": "Replace Page",
+                    "de": "Seite ersetzen"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "sparkles",
+                "args": [
+                  {
+                    "id": "page",
+                    "label": {
+                      "native": {
+                        "en": "Page",
+                        "de": "Seite"
+                      },
+                      "reuse": {
+                        "en": "Page",
+                        "de": "Seite"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "payload",
+                    "label": {
+                      "native": {
+                        "en": "PDF Data",
+                        "de": "PDF-Daten"
+                      },
+                      "reuse": {
+                        "en": "PDF Data",
+                        "de": "PDF-Daten"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 0
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "extra",
+                    "label": {
+                      "native": {
+                        "en": "Source Page",
+                        "de": "Quellseite"
+                      },
+                      "reuse": {
+                        "en": "Source Page",
+                        "de": "Quellseite"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 0
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "width",
+                    "label": {
+                      "native": {
+                        "en": "Width",
+                        "de": "Breite"
+                      },
+                      "reuse": {
+                        "en": "Width",
+                        "de": "Breite"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "height",
+                    "label": {
+                      "native": {
+                        "en": "Height",
+                        "de": "Höhe"
+                      },
+                      "reuse": {
+                        "en": "Height",
+                        "de": "Höhe"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": false
+                  }
+                ],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "replace-page-pick",
+                "label": {
+                  "native": {
+                    "en": "Replace Page from PDF",
+                    "de": "Seite aus PDF ersetzen"
+                  },
+                  "reuse": {
+                    "en": "Replace Page from PDF",
+                    "de": "Seite aus PDF ersetzen"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "sparkles",
+                "args": [
+                  {
+                    "id": "page",
+                    "label": {
+                      "native": {
+                        "en": "Page",
+                        "de": "Seite"
+                      },
+                      "reuse": {
+                        "en": "Page",
+                        "de": "Seite"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "extra",
+                    "label": {
+                      "native": {
+                        "en": "Source Page",
+                        "de": "Quellseite"
+                      },
+                      "reuse": {
+                        "en": "Source Page",
+                        "de": "Quellseite"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 0
+                    },
+                    "required": false
+                  }
+                ],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "merge-document",
+                "label": {
+                  "native": {
+                    "en": "Merge PDF Pages",
+                    "de": "PDF-Seiten zusammenführen"
+                  },
+                  "reuse": {
+                    "en": "Merge PDF Pages",
+                    "de": "PDF-Seiten zusammenführen"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "sparkles",
+                "args": [
+                  {
+                    "id": "page",
+                    "label": {
+                      "native": {
+                        "en": "Page",
+                        "de": "Seite"
+                      },
+                      "reuse": {
+                        "en": "Page",
+                        "de": "Seite"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "payload",
+                    "label": {
+                      "native": {
+                        "en": "PDF Data",
+                        "de": "PDF-Daten"
+                      },
+                      "reuse": {
+                        "en": "PDF Data",
+                        "de": "PDF-Daten"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 1
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "extra",
+                    "label": {
+                      "native": {
+                        "en": "Source Pages",
+                        "de": "Quellseiten"
+                      },
+                      "reuse": {
+                        "en": "Source Pages",
+                        "de": "Quellseiten"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 0
+                    },
+                    "required": false
+                  }
+                ],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "merge-pick",
+                "label": {
+                  "native": {
+                    "en": "Insert Pages from PDF",
+                    "de": "Seiten aus PDF einfügen"
+                  },
+                  "reuse": {
+                    "en": "Insert Pages from PDF",
+                    "de": "Seiten aus PDF einfügen"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "sparkles",
+                "args": [
+                  {
+                    "id": "page",
+                    "label": {
+                      "native": {
+                        "en": "Page",
+                        "de": "Seite"
+                      },
+                      "reuse": {
+                        "en": "Page",
+                        "de": "Seite"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "extra",
+                    "label": {
+                      "native": {
+                        "en": "Source Pages",
+                        "de": "Quellseiten"
+                      },
+                      "reuse": {
+                        "en": "Source Pages",
+                        "de": "Quellseiten"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 0
+                    },
+                    "required": false
+                  }
+                ],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "extract-pages",
+                "label": {
+                  "native": {
+                    "en": "Extract Pages to PDF",
+                    "de": "Seiten als PDF extrahieren"
+                  },
+                  "reuse": {
+                    "en": "Extract Pages to PDF",
+                    "de": "Seiten als PDF extrahieren"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "sparkles",
+                "args": [
+                  {
+                    "id": "extra",
+                    "label": {
+                      "native": {
+                        "en": "Pages (1-3,5; next file after ;)",
+                        "de": "Seiten (1-3,5; weitere Datei nach ;)"
+                      },
+                      "reuse": {
+                        "en": "Pages (1-3,5; next file after ;)",
+                        "de": "Seiten (1-3,5; weitere Datei nach ;)"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 1
+                    },
+                    "required": true
+                  }
+                ],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
                 "id": "cancelTypedOperation",
                 "label": {
                   "native": {
@@ -52600,7 +54954,8 @@
         "namedLayouts": [],
         "defaultLayout": {
           "root": {
-            "kind": "row",
+            "kind": "split",
+            "axis": "horizontal",
             "children": [
               {
                 "kind": "stack",
@@ -61268,6 +63623,789 @@
                 }
               },
               {
+                "id": "create-annotation",
+                "label": {
+                  "native": {
+                    "en": "Create Annotation",
+                    "de": "Anmerkung erstellen"
+                  },
+                  "reuse": {
+                    "en": "Create Annotation",
+                    "de": "Anmerkung erstellen"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "sparkles",
+                "args": [
+                  {
+                    "id": "page",
+                    "label": {
+                      "native": {
+                        "en": "Page",
+                        "de": "Seite"
+                      },
+                      "reuse": {
+                        "en": "Page",
+                        "de": "Seite"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "object",
+                    "label": {
+                      "native": {
+                        "en": "Kind (note, highlight, underline, strikeOut, squiggly, ink, link)",
+                        "de": "Art (note, highlight, underline, strikeOut, squiggly, ink, link)"
+                      },
+                      "reuse": {
+                        "en": "Kind (note, highlight, underline, strikeOut, squiggly, ink, link)",
+                        "de": "Art (note, highlight, underline, strikeOut, squiggly, ink, link)"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 1
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "text",
+                    "label": {
+                      "native": {
+                        "en": "Contents or link",
+                        "de": "Inhalt oder Link"
+                      },
+                      "reuse": {
+                        "en": "Contents or link",
+                        "de": "Inhalt oder Link"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 0
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "extra",
+                    "label": {
+                      "native": {
+                        "en": "Quad points or ink strokes",
+                        "de": "Quadpunkte oder Freihandstriche"
+                      },
+                      "reuse": {
+                        "en": "Quad points or ink strokes",
+                        "de": "Quadpunkte oder Freihandstriche"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 0
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "x",
+                    "label": {
+                      "native": {
+                        "en": "X",
+                        "de": "X"
+                      },
+                      "reuse": {
+                        "en": "X",
+                        "de": "X"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "y",
+                    "label": {
+                      "native": {
+                        "en": "Y",
+                        "de": "Y"
+                      },
+                      "reuse": {
+                        "en": "Y",
+                        "de": "Y"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "width",
+                    "label": {
+                      "native": {
+                        "en": "Width",
+                        "de": "Breite"
+                      },
+                      "reuse": {
+                        "en": "Width",
+                        "de": "Breite"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "height",
+                    "label": {
+                      "native": {
+                        "en": "Height",
+                        "de": "Höhe"
+                      },
+                      "reuse": {
+                        "en": "Height",
+                        "de": "Höhe"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "red",
+                    "label": {
+                      "native": {
+                        "en": "Red",
+                        "de": "Rot"
+                      },
+                      "reuse": {
+                        "en": "Red",
+                        "de": "Rot"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "green",
+                    "label": {
+                      "native": {
+                        "en": "Green",
+                        "de": "Grün"
+                      },
+                      "reuse": {
+                        "en": "Green",
+                        "de": "Grün"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "blue",
+                    "label": {
+                      "native": {
+                        "en": "Blue",
+                        "de": "Blau"
+                      },
+                      "reuse": {
+                        "en": "Blue",
+                        "de": "Blau"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": false
+                  }
+                ],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "fill-form-field",
+                "label": {
+                  "native": {
+                    "en": "Fill Form Field",
+                    "de": "Formularfeld ausfüllen"
+                  },
+                  "reuse": {
+                    "en": "Fill Form Field",
+                    "de": "Formularfeld ausfüllen"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "sparkles",
+                "args": [
+                  {
+                    "id": "object",
+                    "label": {
+                      "native": {
+                        "en": "Field name",
+                        "de": "Feldname"
+                      },
+                      "reuse": {
+                        "en": "Field name",
+                        "de": "Feldname"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 1
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "text",
+                    "label": {
+                      "native": {
+                        "en": "Value",
+                        "de": "Wert"
+                      },
+                      "reuse": {
+                        "en": "Value",
+                        "de": "Wert"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 0
+                    },
+                    "required": false
+                  }
+                ],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "replace-page",
+                "label": {
+                  "native": {
+                    "en": "Replace Page",
+                    "de": "Seite ersetzen"
+                  },
+                  "reuse": {
+                    "en": "Replace Page",
+                    "de": "Seite ersetzen"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "sparkles",
+                "args": [
+                  {
+                    "id": "page",
+                    "label": {
+                      "native": {
+                        "en": "Page",
+                        "de": "Seite"
+                      },
+                      "reuse": {
+                        "en": "Page",
+                        "de": "Seite"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "payload",
+                    "label": {
+                      "native": {
+                        "en": "PDF Data",
+                        "de": "PDF-Daten"
+                      },
+                      "reuse": {
+                        "en": "PDF Data",
+                        "de": "PDF-Daten"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 0
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "extra",
+                    "label": {
+                      "native": {
+                        "en": "Source Page",
+                        "de": "Quellseite"
+                      },
+                      "reuse": {
+                        "en": "Source Page",
+                        "de": "Quellseite"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 0
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "width",
+                    "label": {
+                      "native": {
+                        "en": "Width",
+                        "de": "Breite"
+                      },
+                      "reuse": {
+                        "en": "Width",
+                        "de": "Breite"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "height",
+                    "label": {
+                      "native": {
+                        "en": "Height",
+                        "de": "Höhe"
+                      },
+                      "reuse": {
+                        "en": "Height",
+                        "de": "Höhe"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": false
+                  }
+                ],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "replace-page-pick",
+                "label": {
+                  "native": {
+                    "en": "Replace Page from PDF",
+                    "de": "Seite aus PDF ersetzen"
+                  },
+                  "reuse": {
+                    "en": "Replace Page from PDF",
+                    "de": "Seite aus PDF ersetzen"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "sparkles",
+                "args": [
+                  {
+                    "id": "page",
+                    "label": {
+                      "native": {
+                        "en": "Page",
+                        "de": "Seite"
+                      },
+                      "reuse": {
+                        "en": "Page",
+                        "de": "Seite"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "extra",
+                    "label": {
+                      "native": {
+                        "en": "Source Page",
+                        "de": "Quellseite"
+                      },
+                      "reuse": {
+                        "en": "Source Page",
+                        "de": "Quellseite"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 0
+                    },
+                    "required": false
+                  }
+                ],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "merge-document",
+                "label": {
+                  "native": {
+                    "en": "Merge PDF Pages",
+                    "de": "PDF-Seiten zusammenführen"
+                  },
+                  "reuse": {
+                    "en": "Merge PDF Pages",
+                    "de": "PDF-Seiten zusammenführen"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "sparkles",
+                "args": [
+                  {
+                    "id": "page",
+                    "label": {
+                      "native": {
+                        "en": "Page",
+                        "de": "Seite"
+                      },
+                      "reuse": {
+                        "en": "Page",
+                        "de": "Seite"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "payload",
+                    "label": {
+                      "native": {
+                        "en": "PDF Data",
+                        "de": "PDF-Daten"
+                      },
+                      "reuse": {
+                        "en": "PDF Data",
+                        "de": "PDF-Daten"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 1
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "extra",
+                    "label": {
+                      "native": {
+                        "en": "Source Pages",
+                        "de": "Quellseiten"
+                      },
+                      "reuse": {
+                        "en": "Source Pages",
+                        "de": "Quellseiten"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 0
+                    },
+                    "required": false
+                  }
+                ],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "merge-pick",
+                "label": {
+                  "native": {
+                    "en": "Insert Pages from PDF",
+                    "de": "Seiten aus PDF einfügen"
+                  },
+                  "reuse": {
+                    "en": "Insert Pages from PDF",
+                    "de": "Seiten aus PDF einfügen"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "sparkles",
+                "args": [
+                  {
+                    "id": "page",
+                    "label": {
+                      "native": {
+                        "en": "Page",
+                        "de": "Seite"
+                      },
+                      "reuse": {
+                        "en": "Page",
+                        "de": "Seite"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "extra",
+                    "label": {
+                      "native": {
+                        "en": "Source Pages",
+                        "de": "Quellseiten"
+                      },
+                      "reuse": {
+                        "en": "Source Pages",
+                        "de": "Quellseiten"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 0
+                    },
+                    "required": false
+                  }
+                ],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "extract-pages",
+                "label": {
+                  "native": {
+                    "en": "Extract Pages to PDF",
+                    "de": "Seiten als PDF extrahieren"
+                  },
+                  "reuse": {
+                    "en": "Extract Pages to PDF",
+                    "de": "Seiten als PDF extrahieren"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "sparkles",
+                "args": [
+                  {
+                    "id": "extra",
+                    "label": {
+                      "native": {
+                        "en": "Pages (1-3,5; next file after ;)",
+                        "de": "Seiten (1-3,5; weitere Datei nach ;)"
+                      },
+                      "reuse": {
+                        "en": "Pages (1-3,5; next file after ;)",
+                        "de": "Seiten (1-3,5; weitere Datei nach ;)"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 1
+                    },
+                    "required": true
+                  }
+                ],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
                 "id": "cancelTypedOperation",
                 "label": {
                   "native": {
@@ -65103,7 +68241,8 @@
         "namedLayouts": [],
         "defaultLayout": {
           "root": {
-            "kind": "row",
+            "kind": "split",
+            "axis": "horizontal",
             "children": [
               {
                 "kind": "stack",
@@ -73771,6 +76910,789 @@
                 }
               },
               {
+                "id": "create-annotation",
+                "label": {
+                  "native": {
+                    "en": "Create Annotation",
+                    "de": "Anmerkung erstellen"
+                  },
+                  "reuse": {
+                    "en": "Create Annotation",
+                    "de": "Anmerkung erstellen"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "sparkles",
+                "args": [
+                  {
+                    "id": "page",
+                    "label": {
+                      "native": {
+                        "en": "Page",
+                        "de": "Seite"
+                      },
+                      "reuse": {
+                        "en": "Page",
+                        "de": "Seite"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "object",
+                    "label": {
+                      "native": {
+                        "en": "Kind (note, highlight, underline, strikeOut, squiggly, ink, link)",
+                        "de": "Art (note, highlight, underline, strikeOut, squiggly, ink, link)"
+                      },
+                      "reuse": {
+                        "en": "Kind (note, highlight, underline, strikeOut, squiggly, ink, link)",
+                        "de": "Art (note, highlight, underline, strikeOut, squiggly, ink, link)"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 1
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "text",
+                    "label": {
+                      "native": {
+                        "en": "Contents or link",
+                        "de": "Inhalt oder Link"
+                      },
+                      "reuse": {
+                        "en": "Contents or link",
+                        "de": "Inhalt oder Link"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 0
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "extra",
+                    "label": {
+                      "native": {
+                        "en": "Quad points or ink strokes",
+                        "de": "Quadpunkte oder Freihandstriche"
+                      },
+                      "reuse": {
+                        "en": "Quad points or ink strokes",
+                        "de": "Quadpunkte oder Freihandstriche"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 0
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "x",
+                    "label": {
+                      "native": {
+                        "en": "X",
+                        "de": "X"
+                      },
+                      "reuse": {
+                        "en": "X",
+                        "de": "X"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "y",
+                    "label": {
+                      "native": {
+                        "en": "Y",
+                        "de": "Y"
+                      },
+                      "reuse": {
+                        "en": "Y",
+                        "de": "Y"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "width",
+                    "label": {
+                      "native": {
+                        "en": "Width",
+                        "de": "Breite"
+                      },
+                      "reuse": {
+                        "en": "Width",
+                        "de": "Breite"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "height",
+                    "label": {
+                      "native": {
+                        "en": "Height",
+                        "de": "Höhe"
+                      },
+                      "reuse": {
+                        "en": "Height",
+                        "de": "Höhe"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "red",
+                    "label": {
+                      "native": {
+                        "en": "Red",
+                        "de": "Rot"
+                      },
+                      "reuse": {
+                        "en": "Red",
+                        "de": "Rot"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "green",
+                    "label": {
+                      "native": {
+                        "en": "Green",
+                        "de": "Grün"
+                      },
+                      "reuse": {
+                        "en": "Green",
+                        "de": "Grün"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "blue",
+                    "label": {
+                      "native": {
+                        "en": "Blue",
+                        "de": "Blau"
+                      },
+                      "reuse": {
+                        "en": "Blue",
+                        "de": "Blau"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": false
+                  }
+                ],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "fill-form-field",
+                "label": {
+                  "native": {
+                    "en": "Fill Form Field",
+                    "de": "Formularfeld ausfüllen"
+                  },
+                  "reuse": {
+                    "en": "Fill Form Field",
+                    "de": "Formularfeld ausfüllen"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "sparkles",
+                "args": [
+                  {
+                    "id": "object",
+                    "label": {
+                      "native": {
+                        "en": "Field name",
+                        "de": "Feldname"
+                      },
+                      "reuse": {
+                        "en": "Field name",
+                        "de": "Feldname"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 1
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "text",
+                    "label": {
+                      "native": {
+                        "en": "Value",
+                        "de": "Wert"
+                      },
+                      "reuse": {
+                        "en": "Value",
+                        "de": "Wert"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 0
+                    },
+                    "required": false
+                  }
+                ],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "replace-page",
+                "label": {
+                  "native": {
+                    "en": "Replace Page",
+                    "de": "Seite ersetzen"
+                  },
+                  "reuse": {
+                    "en": "Replace Page",
+                    "de": "Seite ersetzen"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "sparkles",
+                "args": [
+                  {
+                    "id": "page",
+                    "label": {
+                      "native": {
+                        "en": "Page",
+                        "de": "Seite"
+                      },
+                      "reuse": {
+                        "en": "Page",
+                        "de": "Seite"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "payload",
+                    "label": {
+                      "native": {
+                        "en": "PDF Data",
+                        "de": "PDF-Daten"
+                      },
+                      "reuse": {
+                        "en": "PDF Data",
+                        "de": "PDF-Daten"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 0
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "extra",
+                    "label": {
+                      "native": {
+                        "en": "Source Page",
+                        "de": "Quellseite"
+                      },
+                      "reuse": {
+                        "en": "Source Page",
+                        "de": "Quellseite"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 0
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "width",
+                    "label": {
+                      "native": {
+                        "en": "Width",
+                        "de": "Breite"
+                      },
+                      "reuse": {
+                        "en": "Width",
+                        "de": "Breite"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "height",
+                    "label": {
+                      "native": {
+                        "en": "Height",
+                        "de": "Höhe"
+                      },
+                      "reuse": {
+                        "en": "Height",
+                        "de": "Höhe"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": false
+                  }
+                ],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "replace-page-pick",
+                "label": {
+                  "native": {
+                    "en": "Replace Page from PDF",
+                    "de": "Seite aus PDF ersetzen"
+                  },
+                  "reuse": {
+                    "en": "Replace Page from PDF",
+                    "de": "Seite aus PDF ersetzen"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "sparkles",
+                "args": [
+                  {
+                    "id": "page",
+                    "label": {
+                      "native": {
+                        "en": "Page",
+                        "de": "Seite"
+                      },
+                      "reuse": {
+                        "en": "Page",
+                        "de": "Seite"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "extra",
+                    "label": {
+                      "native": {
+                        "en": "Source Page",
+                        "de": "Quellseite"
+                      },
+                      "reuse": {
+                        "en": "Source Page",
+                        "de": "Quellseite"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 0
+                    },
+                    "required": false
+                  }
+                ],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "merge-document",
+                "label": {
+                  "native": {
+                    "en": "Merge PDF Pages",
+                    "de": "PDF-Seiten zusammenführen"
+                  },
+                  "reuse": {
+                    "en": "Merge PDF Pages",
+                    "de": "PDF-Seiten zusammenführen"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "sparkles",
+                "args": [
+                  {
+                    "id": "page",
+                    "label": {
+                      "native": {
+                        "en": "Page",
+                        "de": "Seite"
+                      },
+                      "reuse": {
+                        "en": "Page",
+                        "de": "Seite"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "payload",
+                    "label": {
+                      "native": {
+                        "en": "PDF Data",
+                        "de": "PDF-Daten"
+                      },
+                      "reuse": {
+                        "en": "PDF Data",
+                        "de": "PDF-Daten"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 1
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "extra",
+                    "label": {
+                      "native": {
+                        "en": "Source Pages",
+                        "de": "Quellseiten"
+                      },
+                      "reuse": {
+                        "en": "Source Pages",
+                        "de": "Quellseiten"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 0
+                    },
+                    "required": false
+                  }
+                ],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "merge-pick",
+                "label": {
+                  "native": {
+                    "en": "Insert Pages from PDF",
+                    "de": "Seiten aus PDF einfügen"
+                  },
+                  "reuse": {
+                    "en": "Insert Pages from PDF",
+                    "de": "Seiten aus PDF einfügen"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "sparkles",
+                "args": [
+                  {
+                    "id": "page",
+                    "label": {
+                      "native": {
+                        "en": "Page",
+                        "de": "Seite"
+                      },
+                      "reuse": {
+                        "en": "Page",
+                        "de": "Seite"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "extra",
+                    "label": {
+                      "native": {
+                        "en": "Source Pages",
+                        "de": "Quellseiten"
+                      },
+                      "reuse": {
+                        "en": "Source Pages",
+                        "de": "Quellseiten"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 0
+                    },
+                    "required": false
+                  }
+                ],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "extract-pages",
+                "label": {
+                  "native": {
+                    "en": "Extract Pages to PDF",
+                    "de": "Seiten als PDF extrahieren"
+                  },
+                  "reuse": {
+                    "en": "Extract Pages to PDF",
+                    "de": "Seiten als PDF extrahieren"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "sparkles",
+                "args": [
+                  {
+                    "id": "extra",
+                    "label": {
+                      "native": {
+                        "en": "Pages (1-3,5; next file after ;)",
+                        "de": "Seiten (1-3,5; weitere Datei nach ;)"
+                      },
+                      "reuse": {
+                        "en": "Pages (1-3,5; next file after ;)",
+                        "de": "Seiten (1-3,5; weitere Datei nach ;)"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 1
+                    },
+                    "required": true
+                  }
+                ],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
                 "id": "cancelTypedOperation",
                 "label": {
                   "native": {
@@ -77606,7 +81528,8 @@
         "namedLayouts": [],
         "defaultLayout": {
           "root": {
-            "kind": "row",
+            "kind": "split",
+            "axis": "horizontal",
             "children": [
               {
                 "kind": "stack",
@@ -86274,6 +90197,789 @@
                 }
               },
               {
+                "id": "create-annotation",
+                "label": {
+                  "native": {
+                    "en": "Create Annotation",
+                    "de": "Anmerkung erstellen"
+                  },
+                  "reuse": {
+                    "en": "Create Annotation",
+                    "de": "Anmerkung erstellen"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "sparkles",
+                "args": [
+                  {
+                    "id": "page",
+                    "label": {
+                      "native": {
+                        "en": "Page",
+                        "de": "Seite"
+                      },
+                      "reuse": {
+                        "en": "Page",
+                        "de": "Seite"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "object",
+                    "label": {
+                      "native": {
+                        "en": "Kind (note, highlight, underline, strikeOut, squiggly, ink, link)",
+                        "de": "Art (note, highlight, underline, strikeOut, squiggly, ink, link)"
+                      },
+                      "reuse": {
+                        "en": "Kind (note, highlight, underline, strikeOut, squiggly, ink, link)",
+                        "de": "Art (note, highlight, underline, strikeOut, squiggly, ink, link)"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 1
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "text",
+                    "label": {
+                      "native": {
+                        "en": "Contents or link",
+                        "de": "Inhalt oder Link"
+                      },
+                      "reuse": {
+                        "en": "Contents or link",
+                        "de": "Inhalt oder Link"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 0
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "extra",
+                    "label": {
+                      "native": {
+                        "en": "Quad points or ink strokes",
+                        "de": "Quadpunkte oder Freihandstriche"
+                      },
+                      "reuse": {
+                        "en": "Quad points or ink strokes",
+                        "de": "Quadpunkte oder Freihandstriche"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 0
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "x",
+                    "label": {
+                      "native": {
+                        "en": "X",
+                        "de": "X"
+                      },
+                      "reuse": {
+                        "en": "X",
+                        "de": "X"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "y",
+                    "label": {
+                      "native": {
+                        "en": "Y",
+                        "de": "Y"
+                      },
+                      "reuse": {
+                        "en": "Y",
+                        "de": "Y"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "width",
+                    "label": {
+                      "native": {
+                        "en": "Width",
+                        "de": "Breite"
+                      },
+                      "reuse": {
+                        "en": "Width",
+                        "de": "Breite"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "height",
+                    "label": {
+                      "native": {
+                        "en": "Height",
+                        "de": "Höhe"
+                      },
+                      "reuse": {
+                        "en": "Height",
+                        "de": "Höhe"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "red",
+                    "label": {
+                      "native": {
+                        "en": "Red",
+                        "de": "Rot"
+                      },
+                      "reuse": {
+                        "en": "Red",
+                        "de": "Rot"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "green",
+                    "label": {
+                      "native": {
+                        "en": "Green",
+                        "de": "Grün"
+                      },
+                      "reuse": {
+                        "en": "Green",
+                        "de": "Grün"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "blue",
+                    "label": {
+                      "native": {
+                        "en": "Blue",
+                        "de": "Blau"
+                      },
+                      "reuse": {
+                        "en": "Blue",
+                        "de": "Blau"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": false
+                  }
+                ],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "fill-form-field",
+                "label": {
+                  "native": {
+                    "en": "Fill Form Field",
+                    "de": "Formularfeld ausfüllen"
+                  },
+                  "reuse": {
+                    "en": "Fill Form Field",
+                    "de": "Formularfeld ausfüllen"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "sparkles",
+                "args": [
+                  {
+                    "id": "object",
+                    "label": {
+                      "native": {
+                        "en": "Field name",
+                        "de": "Feldname"
+                      },
+                      "reuse": {
+                        "en": "Field name",
+                        "de": "Feldname"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 1
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "text",
+                    "label": {
+                      "native": {
+                        "en": "Value",
+                        "de": "Wert"
+                      },
+                      "reuse": {
+                        "en": "Value",
+                        "de": "Wert"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 0
+                    },
+                    "required": false
+                  }
+                ],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "replace-page",
+                "label": {
+                  "native": {
+                    "en": "Replace Page",
+                    "de": "Seite ersetzen"
+                  },
+                  "reuse": {
+                    "en": "Replace Page",
+                    "de": "Seite ersetzen"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "sparkles",
+                "args": [
+                  {
+                    "id": "page",
+                    "label": {
+                      "native": {
+                        "en": "Page",
+                        "de": "Seite"
+                      },
+                      "reuse": {
+                        "en": "Page",
+                        "de": "Seite"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "payload",
+                    "label": {
+                      "native": {
+                        "en": "PDF Data",
+                        "de": "PDF-Daten"
+                      },
+                      "reuse": {
+                        "en": "PDF Data",
+                        "de": "PDF-Daten"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 0
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "extra",
+                    "label": {
+                      "native": {
+                        "en": "Source Page",
+                        "de": "Quellseite"
+                      },
+                      "reuse": {
+                        "en": "Source Page",
+                        "de": "Quellseite"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 0
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "width",
+                    "label": {
+                      "native": {
+                        "en": "Width",
+                        "de": "Breite"
+                      },
+                      "reuse": {
+                        "en": "Width",
+                        "de": "Breite"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "height",
+                    "label": {
+                      "native": {
+                        "en": "Height",
+                        "de": "Höhe"
+                      },
+                      "reuse": {
+                        "en": "Height",
+                        "de": "Höhe"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": false
+                  }
+                ],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "replace-page-pick",
+                "label": {
+                  "native": {
+                    "en": "Replace Page from PDF",
+                    "de": "Seite aus PDF ersetzen"
+                  },
+                  "reuse": {
+                    "en": "Replace Page from PDF",
+                    "de": "Seite aus PDF ersetzen"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "sparkles",
+                "args": [
+                  {
+                    "id": "page",
+                    "label": {
+                      "native": {
+                        "en": "Page",
+                        "de": "Seite"
+                      },
+                      "reuse": {
+                        "en": "Page",
+                        "de": "Seite"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "extra",
+                    "label": {
+                      "native": {
+                        "en": "Source Page",
+                        "de": "Quellseite"
+                      },
+                      "reuse": {
+                        "en": "Source Page",
+                        "de": "Quellseite"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 0
+                    },
+                    "required": false
+                  }
+                ],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "merge-document",
+                "label": {
+                  "native": {
+                    "en": "Merge PDF Pages",
+                    "de": "PDF-Seiten zusammenführen"
+                  },
+                  "reuse": {
+                    "en": "Merge PDF Pages",
+                    "de": "PDF-Seiten zusammenführen"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "sparkles",
+                "args": [
+                  {
+                    "id": "page",
+                    "label": {
+                      "native": {
+                        "en": "Page",
+                        "de": "Seite"
+                      },
+                      "reuse": {
+                        "en": "Page",
+                        "de": "Seite"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "payload",
+                    "label": {
+                      "native": {
+                        "en": "PDF Data",
+                        "de": "PDF-Daten"
+                      },
+                      "reuse": {
+                        "en": "PDF Data",
+                        "de": "PDF-Daten"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 1
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "extra",
+                    "label": {
+                      "native": {
+                        "en": "Source Pages",
+                        "de": "Quellseiten"
+                      },
+                      "reuse": {
+                        "en": "Source Pages",
+                        "de": "Quellseiten"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 0
+                    },
+                    "required": false
+                  }
+                ],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "merge-pick",
+                "label": {
+                  "native": {
+                    "en": "Insert Pages from PDF",
+                    "de": "Seiten aus PDF einfügen"
+                  },
+                  "reuse": {
+                    "en": "Insert Pages from PDF",
+                    "de": "Seiten aus PDF einfügen"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "sparkles",
+                "args": [
+                  {
+                    "id": "page",
+                    "label": {
+                      "native": {
+                        "en": "Page",
+                        "de": "Seite"
+                      },
+                      "reuse": {
+                        "en": "Page",
+                        "de": "Seite"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "extra",
+                    "label": {
+                      "native": {
+                        "en": "Source Pages",
+                        "de": "Quellseiten"
+                      },
+                      "reuse": {
+                        "en": "Source Pages",
+                        "de": "Quellseiten"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 0
+                    },
+                    "required": false
+                  }
+                ],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "extract-pages",
+                "label": {
+                  "native": {
+                    "en": "Extract Pages to PDF",
+                    "de": "Seiten als PDF extrahieren"
+                  },
+                  "reuse": {
+                    "en": "Extract Pages to PDF",
+                    "de": "Seiten als PDF extrahieren"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "sparkles",
+                "args": [
+                  {
+                    "id": "extra",
+                    "label": {
+                      "native": {
+                        "en": "Pages (1-3,5; next file after ;)",
+                        "de": "Seiten (1-3,5; weitere Datei nach ;)"
+                      },
+                      "reuse": {
+                        "en": "Pages (1-3,5; next file after ;)",
+                        "de": "Seiten (1-3,5; weitere Datei nach ;)"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 1
+                    },
+                    "required": true
+                  }
+                ],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
                 "id": "cancelTypedOperation",
                 "label": {
                   "native": {
@@ -90109,7 +94815,8 @@
         "namedLayouts": [],
         "defaultLayout": {
           "root": {
-            "kind": "row",
+            "kind": "split",
+            "axis": "horizontal",
             "children": [
               {
                 "kind": "stack",
@@ -98777,6 +103484,789 @@
                 }
               },
               {
+                "id": "create-annotation",
+                "label": {
+                  "native": {
+                    "en": "Create Annotation",
+                    "de": "Anmerkung erstellen"
+                  },
+                  "reuse": {
+                    "en": "Create Annotation",
+                    "de": "Anmerkung erstellen"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "sparkles",
+                "args": [
+                  {
+                    "id": "page",
+                    "label": {
+                      "native": {
+                        "en": "Page",
+                        "de": "Seite"
+                      },
+                      "reuse": {
+                        "en": "Page",
+                        "de": "Seite"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "object",
+                    "label": {
+                      "native": {
+                        "en": "Kind (note, highlight, underline, strikeOut, squiggly, ink, link)",
+                        "de": "Art (note, highlight, underline, strikeOut, squiggly, ink, link)"
+                      },
+                      "reuse": {
+                        "en": "Kind (note, highlight, underline, strikeOut, squiggly, ink, link)",
+                        "de": "Art (note, highlight, underline, strikeOut, squiggly, ink, link)"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 1
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "text",
+                    "label": {
+                      "native": {
+                        "en": "Contents or link",
+                        "de": "Inhalt oder Link"
+                      },
+                      "reuse": {
+                        "en": "Contents or link",
+                        "de": "Inhalt oder Link"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 0
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "extra",
+                    "label": {
+                      "native": {
+                        "en": "Quad points or ink strokes",
+                        "de": "Quadpunkte oder Freihandstriche"
+                      },
+                      "reuse": {
+                        "en": "Quad points or ink strokes",
+                        "de": "Quadpunkte oder Freihandstriche"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 0
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "x",
+                    "label": {
+                      "native": {
+                        "en": "X",
+                        "de": "X"
+                      },
+                      "reuse": {
+                        "en": "X",
+                        "de": "X"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "y",
+                    "label": {
+                      "native": {
+                        "en": "Y",
+                        "de": "Y"
+                      },
+                      "reuse": {
+                        "en": "Y",
+                        "de": "Y"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "width",
+                    "label": {
+                      "native": {
+                        "en": "Width",
+                        "de": "Breite"
+                      },
+                      "reuse": {
+                        "en": "Width",
+                        "de": "Breite"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "height",
+                    "label": {
+                      "native": {
+                        "en": "Height",
+                        "de": "Höhe"
+                      },
+                      "reuse": {
+                        "en": "Height",
+                        "de": "Höhe"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "red",
+                    "label": {
+                      "native": {
+                        "en": "Red",
+                        "de": "Rot"
+                      },
+                      "reuse": {
+                        "en": "Red",
+                        "de": "Rot"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "green",
+                    "label": {
+                      "native": {
+                        "en": "Green",
+                        "de": "Grün"
+                      },
+                      "reuse": {
+                        "en": "Green",
+                        "de": "Grün"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "blue",
+                    "label": {
+                      "native": {
+                        "en": "Blue",
+                        "de": "Blau"
+                      },
+                      "reuse": {
+                        "en": "Blue",
+                        "de": "Blau"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": false
+                  }
+                ],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "fill-form-field",
+                "label": {
+                  "native": {
+                    "en": "Fill Form Field",
+                    "de": "Formularfeld ausfüllen"
+                  },
+                  "reuse": {
+                    "en": "Fill Form Field",
+                    "de": "Formularfeld ausfüllen"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "sparkles",
+                "args": [
+                  {
+                    "id": "object",
+                    "label": {
+                      "native": {
+                        "en": "Field name",
+                        "de": "Feldname"
+                      },
+                      "reuse": {
+                        "en": "Field name",
+                        "de": "Feldname"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 1
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "text",
+                    "label": {
+                      "native": {
+                        "en": "Value",
+                        "de": "Wert"
+                      },
+                      "reuse": {
+                        "en": "Value",
+                        "de": "Wert"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 0
+                    },
+                    "required": false
+                  }
+                ],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "replace-page",
+                "label": {
+                  "native": {
+                    "en": "Replace Page",
+                    "de": "Seite ersetzen"
+                  },
+                  "reuse": {
+                    "en": "Replace Page",
+                    "de": "Seite ersetzen"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "sparkles",
+                "args": [
+                  {
+                    "id": "page",
+                    "label": {
+                      "native": {
+                        "en": "Page",
+                        "de": "Seite"
+                      },
+                      "reuse": {
+                        "en": "Page",
+                        "de": "Seite"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "payload",
+                    "label": {
+                      "native": {
+                        "en": "PDF Data",
+                        "de": "PDF-Daten"
+                      },
+                      "reuse": {
+                        "en": "PDF Data",
+                        "de": "PDF-Daten"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 0
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "extra",
+                    "label": {
+                      "native": {
+                        "en": "Source Page",
+                        "de": "Quellseite"
+                      },
+                      "reuse": {
+                        "en": "Source Page",
+                        "de": "Quellseite"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 0
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "width",
+                    "label": {
+                      "native": {
+                        "en": "Width",
+                        "de": "Breite"
+                      },
+                      "reuse": {
+                        "en": "Width",
+                        "de": "Breite"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "height",
+                    "label": {
+                      "native": {
+                        "en": "Height",
+                        "de": "Höhe"
+                      },
+                      "reuse": {
+                        "en": "Height",
+                        "de": "Höhe"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": false
+                  }
+                ],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "replace-page-pick",
+                "label": {
+                  "native": {
+                    "en": "Replace Page from PDF",
+                    "de": "Seite aus PDF ersetzen"
+                  },
+                  "reuse": {
+                    "en": "Replace Page from PDF",
+                    "de": "Seite aus PDF ersetzen"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "sparkles",
+                "args": [
+                  {
+                    "id": "page",
+                    "label": {
+                      "native": {
+                        "en": "Page",
+                        "de": "Seite"
+                      },
+                      "reuse": {
+                        "en": "Page",
+                        "de": "Seite"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "extra",
+                    "label": {
+                      "native": {
+                        "en": "Source Page",
+                        "de": "Quellseite"
+                      },
+                      "reuse": {
+                        "en": "Source Page",
+                        "de": "Quellseite"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 0
+                    },
+                    "required": false
+                  }
+                ],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "merge-document",
+                "label": {
+                  "native": {
+                    "en": "Merge PDF Pages",
+                    "de": "PDF-Seiten zusammenführen"
+                  },
+                  "reuse": {
+                    "en": "Merge PDF Pages",
+                    "de": "PDF-Seiten zusammenführen"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "sparkles",
+                "args": [
+                  {
+                    "id": "page",
+                    "label": {
+                      "native": {
+                        "en": "Page",
+                        "de": "Seite"
+                      },
+                      "reuse": {
+                        "en": "Page",
+                        "de": "Seite"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "payload",
+                    "label": {
+                      "native": {
+                        "en": "PDF Data",
+                        "de": "PDF-Daten"
+                      },
+                      "reuse": {
+                        "en": "PDF Data",
+                        "de": "PDF-Daten"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 1
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "extra",
+                    "label": {
+                      "native": {
+                        "en": "Source Pages",
+                        "de": "Quellseiten"
+                      },
+                      "reuse": {
+                        "en": "Source Pages",
+                        "de": "Quellseiten"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 0
+                    },
+                    "required": false
+                  }
+                ],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "merge-pick",
+                "label": {
+                  "native": {
+                    "en": "Insert Pages from PDF",
+                    "de": "Seiten aus PDF einfügen"
+                  },
+                  "reuse": {
+                    "en": "Insert Pages from PDF",
+                    "de": "Seiten aus PDF einfügen"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "sparkles",
+                "args": [
+                  {
+                    "id": "page",
+                    "label": {
+                      "native": {
+                        "en": "Page",
+                        "de": "Seite"
+                      },
+                      "reuse": {
+                        "en": "Page",
+                        "de": "Seite"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "extra",
+                    "label": {
+                      "native": {
+                        "en": "Source Pages",
+                        "de": "Quellseiten"
+                      },
+                      "reuse": {
+                        "en": "Source Pages",
+                        "de": "Quellseiten"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 0
+                    },
+                    "required": false
+                  }
+                ],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "extract-pages",
+                "label": {
+                  "native": {
+                    "en": "Extract Pages to PDF",
+                    "de": "Seiten als PDF extrahieren"
+                  },
+                  "reuse": {
+                    "en": "Extract Pages to PDF",
+                    "de": "Seiten als PDF extrahieren"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "sparkles",
+                "args": [
+                  {
+                    "id": "extra",
+                    "label": {
+                      "native": {
+                        "en": "Pages (1-3,5; next file after ;)",
+                        "de": "Seiten (1-3,5; weitere Datei nach ;)"
+                      },
+                      "reuse": {
+                        "en": "Pages (1-3,5; next file after ;)",
+                        "de": "Seiten (1-3,5; weitere Datei nach ;)"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 1
+                    },
+                    "required": true
+                  }
+                ],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
                 "id": "cancelTypedOperation",
                 "label": {
                   "native": {
@@ -102612,7 +108102,8 @@
         "namedLayouts": [],
         "defaultLayout": {
           "root": {
-            "kind": "row",
+            "kind": "split",
+            "axis": "horizontal",
             "children": [
               {
                 "kind": "stack",

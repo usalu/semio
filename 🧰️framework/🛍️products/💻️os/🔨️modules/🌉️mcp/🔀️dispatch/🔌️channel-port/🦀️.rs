@@ -158,28 +158,35 @@ pub struct InferCommand {
     pub cancel: InferenceCancel,
 }
 
-/// 🛑️ The caller's live cancellation for one inference run. `inference_run` binds it to its job, so
-/// `job_cancel` and `notifications/cancelled` stop the in-flight guest job through the plugin host's
-/// cold relay instead of waiting for the solve to finish. Two handles compare equal when they are in
-/// the same state — the token itself has no identity a frame log could print.
+/// 🛑️ The inference job's cancellation and activation reporting scope.
 #[derive(Clone)]
-pub struct InferenceCancel(pub semio_framework_async::CancelToken);
+pub struct InferenceCancel(std::sync::Arc<ActivationScope>);
 
 impl Default for InferenceCancel {
     fn default() -> Self {
-        Self(semio_framework_async::CancelToken::root_now())
+        Self(std::sync::Arc::new(ActivationScope::detached()))
+    }
+}
+
+impl InferenceCancel {
+    pub fn activation(&self) -> &ActivationScope {
+        &self.0
+    }
+
+    pub fn with_activation_report(&self, report: impl Fn(ActivationPhase, f64) + Send + Sync + 'static) -> Self {
+        Self(std::sync::Arc::new(ActivationScope::new(self.activation().cancel().clone(), report)))
     }
 }
 
 impl std::fmt::Debug for InferenceCancel {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(formatter, "InferenceCancel(cancelled: {})", self.0.is_cancelled_now())
+        write!(formatter, "InferenceCancel(cancelled: {})", self.activation().cancel().is_cancelled_now())
     }
 }
 
 impl PartialEq for InferenceCancel {
     fn eq(&self, other: &Self) -> bool {
-        self.0.is_cancelled_now() == other.0.is_cancelled_now()
+        self.activation().cancel().is_cancelled_now() == other.activation().cancel().is_cancelled_now()
     }
 }
 

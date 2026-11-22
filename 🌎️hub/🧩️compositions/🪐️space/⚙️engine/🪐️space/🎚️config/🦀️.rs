@@ -76,6 +76,7 @@ pub struct SpaceConfig {
     pub active_panel_tab: String,
     /// 🌱️ The currently open studio document's catalog id.
     pub space_id: Option<String>,
+    pub workflow_artifact_id: Option<String>,
 }
 
 //#region 🔖️ArtifactCodec
@@ -142,6 +143,7 @@ impl Default for SpaceConfig {
             pending_import_format: None,
             active_panel_tab: S_PLAY_CATALOGUE_TAB_ID.into(),
             space_id: None,
+            workflow_artifact_id: None,
         }
     }
 }
@@ -161,6 +163,7 @@ store::config_diff! {
         pending_import_format: Option<String>,
         active_panel_tab: String,
         space_id: Option<String>,
+        workflow_artifact_id: Option<String>,
     },
     keyed: { camera: SpaceWindowCamera },
 }
@@ -300,6 +303,7 @@ pub struct PendingImportSetting {
 #[dsl(keyword = "space-id")]
 pub struct SpaceIdSetting {
     pub space_id: Option<String>,
+    pub workflow_artifact_id: Option<String>,
 }
 
 /// 👁️ The active panel tab a setting installs; its wire record is exactly the former variant's fields.
@@ -617,7 +621,11 @@ fn diff(&self, base: &SpaceConfig) -> protocol::MutationOutcome<SpaceConfigDiff>
                 pending_import_format: (base.pending_import_format != *format).then(|| format.clone()),
                 ..Default::default()
             },
-            SpaceConfigMutation::SetSpaceId(SpaceIdSetting { space_id }) => SpaceConfigDiff { space_id: (base.space_id != *space_id).then(|| space_id.clone()), ..Default::default() },
+            SpaceConfigMutation::SetSpaceId(SpaceIdSetting { space_id, workflow_artifact_id }) => SpaceConfigDiff {
+                space_id: (base.space_id != *space_id).then(|| space_id.clone()),
+                workflow_artifact_id: (base.workflow_artifact_id != *workflow_artifact_id).then(|| workflow_artifact_id.clone()),
+                ..Default::default()
+            },
             SpaceConfigMutation::SetActivePanelTab(ActivePanelTabSetting { tab_id }) => SpaceConfigDiff { active_panel_tab: (base.active_panel_tab != *tab_id).then(|| tab_id.clone()), ..Default::default() },
         })
     }
@@ -639,7 +647,7 @@ fn inverse(&self, base: &SpaceConfig) -> Result<Vec<Self>, semio_framework_value
             SpaceConfigMutation::SetWorkflowEngagementInput(_) => SpaceConfigMutation::SetWorkflowEngagementInput(WorkflowEngagementInputSetting { value: base.workflow_engagement_input.clone() }),
             SpaceConfigMutation::SetCompiledDagEngagementInput(_) => SpaceConfigMutation::SetCompiledDagEngagementInput(CompiledDagEngagementInputSetting { value: base.compiled_dag_engagement_input.clone() }),
             SpaceConfigMutation::SetPendingImport(_) => SpaceConfigMutation::SetPendingImport(PendingImportSetting { node_id: base.pending_import_node_id.clone(), format: base.pending_import_format.clone() }),
-            SpaceConfigMutation::SetSpaceId(_) => SpaceConfigMutation::SetSpaceId(SpaceIdSetting { space_id: base.space_id.clone() }),
+            SpaceConfigMutation::SetSpaceId(_) => SpaceConfigMutation::SetSpaceId(SpaceIdSetting { space_id: base.space_id.clone(), workflow_artifact_id: base.workflow_artifact_id.clone() }),
             SpaceConfigMutation::SetActivePanelTab(_) => SpaceConfigMutation::SetActivePanelTab(ActivePanelTabSetting { tab_id: base.active_panel_tab.clone() }),
         }])
     }

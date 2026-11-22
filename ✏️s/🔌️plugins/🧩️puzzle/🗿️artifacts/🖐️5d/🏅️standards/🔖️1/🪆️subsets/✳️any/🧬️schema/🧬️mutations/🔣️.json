@@ -119,6 +119,9 @@
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/mutation/scale-selection3d/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/mutation/splice-scene-rows/schema.json"
     }
   ]
 }

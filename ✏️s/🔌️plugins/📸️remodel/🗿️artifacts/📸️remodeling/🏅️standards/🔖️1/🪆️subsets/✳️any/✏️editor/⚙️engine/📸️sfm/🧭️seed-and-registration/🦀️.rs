@@ -420,10 +420,10 @@ impl IncrementalSfm {
             }
             RegistrationPhase::TwoViewSolve => {
                 const FIVE_POINT_THRESHOLD: f64 = 0.005;
-                let a = &self.intrinsics[fallback.reference];
-                let b = &self.intrinsics[preparation.frame];
                 let frame = preparation.frame;
                 let fallback = preparation.two_view.as_mut().expect("two-view fallback");
+                let a = &self.intrinsics[fallback.reference];
+                let b = &self.intrinsics[frame];
                 let seed = (frame as u64).wrapping_mul(0x9E37_79B9_7F4A_7C15) ^ fallback.attempts as u64;
                 let candidates = [
                     estimate_essential_five_point_bounded(&fallback.correspondences, a, b, FIVE_POINT_THRESHOLD, seed, INTERACTIVE_TWO_VIEW_HYPOTHESES_PER_CALL, 0),

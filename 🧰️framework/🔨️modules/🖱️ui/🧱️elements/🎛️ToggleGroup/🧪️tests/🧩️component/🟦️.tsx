@@ -253,7 +253,7 @@ describe("ToggleGroup", () => {
 describe("shared control border ownership", () => {
   const fixtures = {
     buttons: <ButtonGroup><ButtonGroupItem icon="x" text="First" variant="outline" /><ButtonGroupItem icon="x" text="Second" /></ButtonGroup>,
-    toggle: <Toggle icon="x" text="Toggle" />,
+    toggle: <Toggle id="toggle" icon="x" text="Toggle" />,
     "toggle-actions": <ToggleGroup items={[{ value: "a", icon: "x", text: "First", action: <Action icon="x" text="Secondary" /> }, { value: "b", icon: "x", text: "Second" }]} />,
     actions: <ActionGroup><ActionGroupItem icon="x" text="First" /><ActionGroupItem icon="x" text="Second" /></ActionGroup>,
     navbar: <Navbar items={[]} showFullscreenToggle={false} label="Navigation" />,

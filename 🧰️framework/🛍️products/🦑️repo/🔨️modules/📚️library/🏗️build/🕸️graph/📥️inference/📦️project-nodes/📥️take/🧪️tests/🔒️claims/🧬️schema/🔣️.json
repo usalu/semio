@@ -1,0 +1,24 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["staleMilliseconds", "pids", "steps"],
+  "properties": {
+    "staleMilliseconds": { "type": "integer", "minimum": 1 },
+    "pids": { "type": "object", "additionalProperties": { "type": "boolean" } },
+    "steps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["who", "pid", "op", "stem", "at"],
+        "properties": {
+          "who": { "type": "string" },
+          "pid": { "type": "integer", "minimum": 1 },
+          "op": { "enum": ["claim", "release"] },
+          "stem": { "type": "string", "minLength": 1 },
+          "at": { "type": "integer", "minimum": 0 }
+        }
+      }
+    }
+  }
+}

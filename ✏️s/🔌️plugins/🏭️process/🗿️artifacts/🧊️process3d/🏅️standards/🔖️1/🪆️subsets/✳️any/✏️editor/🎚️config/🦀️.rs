@@ -382,6 +382,11 @@ protocol::original_ordinal_operation_receiving!(Process3dConfigMutation);
 impl Mutation<Process3dConfig> for Process3dConfigMutation {
     type Diff = Process3dConfigDiff;
 
+    /// 🏠️ Configuration setters emit only local field changes.
+    fn may_emit_foreign_steps(&self) -> bool {
+        false
+    }
+
     /// 🧾️ Leaf metadata for the view-state vocabulary. ⚠️ PROVISIONAL: none of the six `owner`
     /// paths below name a directory that exists on disk — this enum has no `🎚️config/<slug>` leaf
     /// triads of its own (every field lives flat in this file), so every entry is a metadata

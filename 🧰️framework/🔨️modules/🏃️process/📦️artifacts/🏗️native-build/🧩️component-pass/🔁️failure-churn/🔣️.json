@@ -4,5 +4,5 @@
   "maximumReadBytes": 262144,
   "maximumProbeMilliseconds": 10000,
   "readChunkBytes": 65536,
-  "dependencyErrorCodes": ["E0308", "E0425", "E0432", "E0433", "E0599", "E0609"]
+  "dependencyErrorCodes": ["E0308", "E0407", "E0425", "E0432", "E0433", "E0599", "E0609"]
 }

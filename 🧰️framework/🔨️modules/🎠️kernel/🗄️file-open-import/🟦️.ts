@@ -78,6 +78,18 @@ export function importChunkArguments(name: string, chunk: ImportChunk, fanOut?: 
   }
   return args;
 }
+
+/** 🔢️ Carries the file-open envelope's natural numbers into the guest's exact unsigned fields. */
+export function importChunkWithIntegerCarriers(args: Readonly<Record<string, unknown>>, unsigned: (value: bigint) => unknown): Readonly<Record<string, unknown>> {
+  if (typeof args[IMPORT_ARGUMENT_NAME] !== "string" || typeof args[IMPORT_ARGUMENT_PAYLOAD] !== "string" || !(IMPORT_ARGUMENT_CHUNK in args) || !(IMPORT_ARGUMENT_CHUNK_COUNT in args)) return args;
+  const positions = [IMPORT_ARGUMENT_CHUNK, IMPORT_ARGUMENT_CHUNK_COUNT, IMPORT_ARGUMENT_INDEX, IMPORT_ARGUMENT_TOTAL];
+  const result = { ...args };
+  for (const field of positions) {
+    const value = result[field];
+    if (typeof value === "number" && Number.isSafeInteger(value) && value >= 0) result[field] = unsigned(BigInt(value));
+  }
+  return result;
+}
 //#endregion 📤️FileOpenImport
 //#endregion InvocationResponse
 // #endregion 🎠️Kernel

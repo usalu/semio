@@ -1,0 +1,6 @@
+[
+  {"resource":"capture","failure":"directory","failures":2,"published":true,"captureAttempts":3,"destinationAttempts":1},
+  {"resource":"destination","failure":"directory","failures":1,"published":true,"captureAttempts":1,"destinationAttempts":2},
+  {"resource":"capture","failure":"directory","failures":3,"published":false,"captureAttempts":3,"destinationAttempts":0},
+  {"resource":"destination","failure":"resource","failures":1,"published":false,"captureAttempts":1,"destinationAttempts":1}
+]

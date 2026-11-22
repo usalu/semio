@@ -12,27 +12,21 @@
  * Ticket 26/09/09/PROCEDURAL-3D-END-TO-END. */
 // #endregion 🧲️Header
 
+import { type WindowLayoutNode, windowIdOf } from "@semio-tech/ui-layout";
 import { localizedLabelTextV1 } from "../📣️replay-refusal/🟦️.ts";
 
 //#region 🪟️DockSeed
 /** 🪟️ One tab stack of a seeded mode layout, in layout order: the window instance ids it holds and
- * the one its tab bar shows. Deliberately a projection and not the renderer's `WindowLayoutNode`, so
+ * the one its tab bar shows. Deliberately a projection and not the contract `WindowLayoutNode`, so
  * the wgpu shell's Rust twin and a fixture row describe the same thing. */
 export type WindowScopeStackV1 = { readonly windowIds: readonly string[]; readonly activeWindowId?: string | null };
 
-/** 🪟️ The layout shapes {@link modeLayoutStacksV1} walks — structurally the renderer's
- * `WindowLayoutNode` (`🖱️ui/🎯️targets/⚛️react`), restated here so this unit imports no UI target. */
-export type WindowScopeLayoutNodeV1 =
-  | { readonly kind: "window"; readonly id: string }
-  | { readonly kind: "stack"; readonly activeId?: string; readonly children: readonly { readonly id: string }[] }
-  | { readonly kind: "row" | "column"; readonly children: readonly WindowScopeLayoutNodeV1[] };
-
-/** 🪟️ Flattens a mode layout into its tab stacks, in layout order. A bare window leaf counts as a
- * one-window stack, which is what `normalizeLayoutToStacks` makes of it downstream. */
-export function modeLayoutStacksV1(node: WindowScopeLayoutNodeV1 | null | undefined): readonly WindowScopeStackV1[] {
+/** 🪟️ Flattens a mode layout (the contract `WindowLayoutNode`) into its tab stacks, in layout order. A bare window leaf counts as a
+ * one-window stack, which is what the contract `reconcileWindows` makes of it downstream. */
+export function modeLayoutStacksV1(node: WindowLayoutNode | null | undefined): readonly WindowScopeStackV1[] {
   if (!node) return [];
-  if (node.kind === "window") return [{ windowIds: [node.id], activeWindowId: node.id }];
-  if (node.kind === "stack") return [{ windowIds: node.children.map((child) => child.id), activeWindowId: node.activeId ?? node.children[0]?.id ?? null }];
+  if (node.kind === "window") return [{ windowIds: [windowIdOf(node)], activeWindowId: windowIdOf(node) }];
+  if (node.kind === "stack") return [{ windowIds: node.children.map(windowIdOf), activeWindowId: node.activeWindowId ?? (node.children[0] && windowIdOf(node.children[0])) ?? null }];
   return node.children.flatMap((child) => modeLayoutStacksV1(child));
 }
 

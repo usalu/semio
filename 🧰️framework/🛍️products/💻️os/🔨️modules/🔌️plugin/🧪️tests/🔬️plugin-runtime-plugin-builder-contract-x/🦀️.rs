@@ -372,6 +372,7 @@ pub fn reactor_native_lifecycle_budget() -> Budget {
 #[doc(hidden)]
 pub fn reactor_native_lifecycle_open(instance: u32, request_sequence: u64, actor: String) -> Event {
     Event::InstanceOpen {
+        purpose: semio_framework::kernel::ActorInstanceOpenPurpose::Ordinary,
         request: ActorInstanceOpenRequest { activation_generation: 41, instance_id: instance, request_sequence },
         app_id: AppInstanceId(TestApp::<false>::APP_ID.into()),
         actor, config: Vec::new(), assets: Vec::new(), capabilities: Vec::new(), quotas: Default::default(),

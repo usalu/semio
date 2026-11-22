@@ -11,7 +11,7 @@ function referenceStates(boxes: readonly StateBox[], pointer: string | null, foc
   const chain = (id: string | null): StateBox[] => id === null ? [] : [byId[id]!, ...chain(byId[id]!.parent)];
   const pointerChain = chain(pointer);
   const hovered = lodash.find(pointerChain, box => box.interactive && !box.disabled)?.id;
-  const enclosed = new Set(lodash.filter(pointerChain, box => box.hoverWithin && !box.disabled).map(box => box.id));
+  const enclosed = new Set(pointerChain.filter(box => box.hoverWithin && !box.disabled).map(box => box.id));
   const focused = lodash.find(chain(focusVisible), box => box.interactive)?.id;
   return lodash.mapValues(byId, box => lodash.maxBy<BorderState>([...box.marks, "normal", ...(box.id === hovered || enclosed.has(box.id) ? ["hover" as const] : []), ...(box.id === focused ? ["focus" as const] : [])], state => borderStatePriority[state])!);
 }

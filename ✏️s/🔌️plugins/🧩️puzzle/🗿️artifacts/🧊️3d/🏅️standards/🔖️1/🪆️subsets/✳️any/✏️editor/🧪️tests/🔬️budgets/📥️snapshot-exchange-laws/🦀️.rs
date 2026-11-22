@@ -74,30 +74,6 @@ async fn export_snapshot_downloads_round_trippable_json() {
     assert_eq!(exported.get("objects").and_then(Value::as_array).map(Vec::len), before.get("objects").and_then(Value::as_array).map(Vec::len));
 }
 
-/// 🧬️ Identity of imported objects without scene_snapshot/snapshot projection twins (anchor / null scale).
-fn object_cores(value: &Value) -> Vec<(String, String, String, Value, Vec<String>)> {
-    value
-        .get("objects")
-        .and_then(Value::as_array)
-        .into_iter()
-        .flatten()
-        .filter_map(|object| {
-            let id = object.get("id").and_then(Value::as_str)?.to_string();
-            let kind = object.get("objectKind").and_then(Value::as_str).unwrap_or_default().to_string();
-            let mesh = object.get("meshUrl").and_then(Value::as_str).unwrap_or_default().to_string();
-            let origin = object.get("origin").cloned().unwrap_or(Value::Null);
-            let vortices = object
-                .get("vortices")
-                .and_then(Value::as_array)
-                .into_iter()
-                .flatten()
-                .filter_map(|vortex| vortex.get("id").and_then(Value::as_str).map(str::to_string))
-                .collect();
-            Some((id, kind, mesh, origin, vortices))
-        })
-        .collect()
-}
-
 /// 📥️ Wave W-Y: importing that JSON reproduces the document as one Mutation edit.
 #[semio_framework_async_macros::async_test]
 async fn import_snapshot_reproduces_the_exported_document() {

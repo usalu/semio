@@ -5,12 +5,12 @@ import subprocess
 import sys
 
 ticket = Path(__file__).parent
-prepare = ticket / "prepare-terrain-renderer-resolution.py"
-env = {"__file__": str(prepare)}
-source = prepare.read_text(encoding="utf-8")
-exec(source[:source.index("patch = []")], env)
-terrain, projection, pick, overlay, *_, fixture = env["changed"].values()
-case = json.loads(fixture)
+surface = Path("🧰️framework/🔨️modules/🗺️surface/🏔️terrain")
+terrain = (surface / "🦀️.rs").read_text(encoding="utf-8")
+projection = (surface / "📐️grid-projection/🦀️.rs").read_text(encoding="utf-8")
+pick = (surface / "🎯️pick/🦀️.rs").read_text(encoding="utf-8")
+overlay = (surface / "🗺️overlay/🦀️.rs").read_text(encoding="utf-8")
+case = json.loads((surface / "🧪️tests/🧫️fixtures/📐️rectangular-elevation-grid/🔣️.json").read_text(encoding="utf-8"))
 bounds = case["grid"]["bounds"]
 samples = case["grid"]["rowsMillimetres"]
 origin = case["origin"]
@@ -98,11 +98,11 @@ rust += "mod overlay { use super::{TerrainSessionCore, TERRAIN_GRID_RESOLUTION, 
 # The fixture uses JSON arrays, which also spell Rust array literals.
 generated = ticket / "🗑️generated"
 generated.mkdir(exist_ok=True)
-binary = generated / ("terrain-renderer.exe" if sys.platform == "win32" else "terrain-renderer")
+binary = generated / ("terrain-renderer-current.exe" if sys.platform == "win32" else "terrain-renderer-current")
 try:
     subprocess.run(["rustup", "run", "nightly-2026-07-20", "rustc", "--edition", "2024", "-Awarnings", "-o", str(binary), "-"], input=rust, text=True, check=True)
     actual = json.loads(subprocess.check_output([str(binary)], text=True))
-    subprocess.run(["repo", "tools", "exec", "node", "--", str(ticket / "verify-terrain-renderer-oracle.mjs")],
+    subprocess.run(["repo", "tools", "exec", "--light", "node", "--", str(ticket / "verify-terrain-renderer-oracle.mjs")],
                    input=json.dumps({"fixture": case, "actual": actual}), text=True, check=True)
 finally:
     binary.unlink(missing_ok=True)

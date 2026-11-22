@@ -6,22 +6,22 @@ The current goal is complete coverage of the provisions in every Norm family shi
 
 | Family | Repository target IDs | Check | Data | Design case | Explicit gaps |
 | --- | ---: | ---: | ---: | ---: | --- |
-| DIN EN 16798 | 21 | 16 | 0 | 0 | VE-04, VE-06, VE-08, VE-10, VE-12 |
+| DIN EN 16798 | 22 | 17 | 0 | 0 | VE-04, VE-06, VE-08, VE-10, VE-12 |
 | DIN V 18599 | 23 | 17 | 0 | 0 | DE-03, DE-09, DE-10, DE-12, DE-14, DE-15 |
-| DIN 4108 | 28 | 9 | 0 | 13 | D-05, D-07, D-09, D-10, D-12, D-14 |
+| DIN 4108 | 29 | 9 | 0 | 14 | D-05, D-07, D-09, D-10, D-12, D-14 |
 | EN 1990 | 30 | 29 | 0 | 1 | — |
 | EN 1991 | 110 | 77 | 0 | 32 | E17.10 |
 | EN 1992 | 160 | 63 | 1 | 96 | — |
-| EN 1993 | 181 | 158 | 5 | 16 | V-506, V-609 |
+| EN 1993 | 181 | 158 | 5 | 17 | V-609 |
 | EN 1994 | 57 | 50 | 3 | 4 | — |
 | EN 1995 | 68 | 34 | 0 | 34 | — |
 | EN 1996 | 37 | 37 | 0 | 0 | — |
 | EN 1997 | 61 | 61 | 0 | 0 | — |
-| EN 1998 | 71 | 58 | 5 | 6 | AS-09, ST-03 |
+| EN 1998 | 80 | 58 | 5 | 15 | AS-09, ST-03 |
 | EN 1999 | 42 | 41 | 1 | 0 | — |
-| ISO 16757 | 10 | 6 | 0 | 0 | ISO-03, ISO-05, ISO-07, ISO-09 |
-| VDI 3805 | 38 | 9 | 21 | 0 | VD-02, VD-08, VD-11, VD-12, VD-20, VD-30, VD-67, VD-101 |
-| **Total** | **937** | **665** | **36** | **202** | **34 explicit target gaps** |
+| ISO 16757 | 12 | 8 | 0 | 0 | ISO-03, ISO-05, ISO-07, ISO-09 |
+| VDI 3805 | 45 | 16 | 21 | 0 | VD-02, VD-08, VD-11, VD-12, VD-20, VD-30, VD-67, VD-101 |
+| **Total** | **957** | **675** | **36** | **213** | **33 explicit target gaps** |
 
 `audit-norm-spec-traces.py` derives the inventory from the 15 artifact declarations and 15 actual trace rosters. A trace mapped to a check substring or design case still needs to demonstrate the applicable branches and outcomes for the selected edition. Independent worked examples are especially important where related target IDs map to the same check family. EN 1990 E90.08 now identifies the characteristic-action calculation itself. The catalogue distinguishes a qualified mean from two statistical or prescribed bounds, and 21 cases matched SciPy.
 
@@ -60,4 +60,18 @@ Exact verification of VDI Part 66 §4 and Part 100 §5 requires the full publish
 
 EN 1994 C-46 now includes Table 4.6 for partially encased columns through the design-case editor. Other tables and automatic validation of the fire load ratio remain in scope. [EN 1994 fire tables](en1994-fire-tables-2026-11-21.md)
 
-Fresh native tests are pending. The attempted DIN EN 16798 scene check exited at the storage gate with 716.51 MiB available against a 5.5 GiB requirement. The workspace has no configured remote executor and the expected Play staging path has no component build to verify. The completion audit remains open across the 15 trace rosters. Remaining scope includes the 34 explicit targets, edition and annex provenance, and the clauses absent from the repository rosters.
+EN 1993 V-506 records the fatigue assessment method, the associated lifetime programme and the evidence supporting damage tolerance. The production selector and SQLite agreed on 13 vectors. [Fatigue method evidence](en1993-fatigue-method-2026-11-21.md)
+
+EN 1998 exposes four editable cases for Annex A, covering concrete jacket adjustments, elastic steel jacket shear, lap-splice clamping and four FRP shear arrangements. The exact Rust formulas matched SQLite in 23 jacket and 15 FRP vectors. Editable bridge and pipe cases have passed archive and wire tests. The differential movement case adds a tensile strain limit, local buckling limit and a separate check of the supplied project global buckling assessment. Its 15 verification cases and the existing 18 wave passage cases agree with the independent SQLite calculation. The concrete pipe and unwelded joint cases additionally passed 20 vectors for strain limits, leak-tightness evidence and coincident axial and rotational demand. Signed browser delivery and native editor verification are pending. [Annex A retrofit cases](en1998-retrofit-2026-11-21.md) [Bridge and pipe cases](en1998-bridge-and-pipe-2026-11-21.md)
+
+DIN 4108 D-30 covers the ventilated roof criteria for Figures 15 and 16 and the opening checks for Figures 1–3. The Rust formulas and SQLite agreed on all 18 ventilated roof cases. [Ventilated roof evidence](din4108-annex-a-period-2026-11-21.md)
+
+ISO 16757 adds the modeled overall-envelope check under Part 2 §5.3. Rust and SQLite agreed on 14 fixtures for the modeled overall envelope and on 11 dictionary subtype graph cases. [ISO scope and implementation evidence](iso16757-normative-scope-2026-11-21.md)
+
+DIN EN 16798 has standalone verified arithmetic for unoccupied ventilation and German hourly comfort. The two models passed 19 and seven independent vectors respectively. Archive, editor and report integration remain open under VE-04. [Unoccupied ventilation evidence](din16798-unoccupied-ventilation-2026-11-21.md) [Hourly comfort evidence](din16798-thermal-criteria-2026-11-21.md)
+
+VDI 3805 now exposes three Part 23 correction checks in normal report evaluation. The exact Rust validator matched SQLite across 19 fixtures. The native report regression and fresh browser proof remain pending. The full sheet still carries the unverified record requirements. [VDI evidence and coverage](vdi3805-published-sheet-scope-2026-11-21.md)
+
+VDI 3805 also reports the withdrawal of the Part 29 fitting-layer record at the April 2026 correction date. All five date and applicability fixtures matched SQLite. Native report execution and the remaining published amendments still need verification. [Part 29 evidence](vdi3805-published-sheet-scope-2026-11-21.md)
+
+The current fleet shares eligible dependency compilation and transpiled browser output. Native linking, exact source provenance and signing are still in progress for the refreshed Play components. A new run of all 500 SQLite archive tests passed. The remaining scope includes the 33 explicit targets, edition and annex provenance, and clauses absent from the repository rosters.

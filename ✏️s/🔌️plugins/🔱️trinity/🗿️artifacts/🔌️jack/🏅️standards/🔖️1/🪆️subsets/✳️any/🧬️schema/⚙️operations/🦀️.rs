@@ -81,10 +81,11 @@ pub fn validate_graph_effect(effect: &GraphEffect, graph: &Graph) -> Result<(), 
             if graph.nodes.contains_key(&node.id) {
                 return Err(TrinityRamError::NodeAlreadyExists(node.id.clone()));
             }
-            validate_node_kind_trinity(&graph.manifest, &node.kind)?;
-            if let Some(node_def) = graph.manifest.node_kind(&node.kind) {
+            let manifest = graph.manifest()?;
+            validate_node_kind_trinity(&manifest, &node.kind)?;
+            if let Some(node_def) = manifest.node_kind(&node.kind) {
                 for port in &node.ports {
-                    validate_port_kind_trinity(&graph.manifest, &port.kind)?;
+                    validate_port_kind_trinity(&manifest, &port.kind)?;
                     if !node_def.port_kinds.is_empty() && !node_def.port_kinds.iter().any(|p| p == &port.kind) {
                         return Err(TrinityRamError::PortKindNotDeclaredOnMutation { node_id: node.id.clone(), port_id: port.id.clone(), port_kind: port.kind.clone(), node_kind: node.kind.clone() });
                     }
@@ -100,8 +101,9 @@ pub fn validate_graph_effect(effect: &GraphEffect, graph: &Graph) -> Result<(), 
             if graph.edges.contains_key(&edge.id) {
                 return Err(TrinityRamError::EdgeAlreadyExists(edge.id.clone()));
             }
-            validate_edge_kind_trinity(&graph.manifest, &edge.kind)?;
-            validate_edge_properties_trinity(&graph.manifest, &edge.kind, &edge.properties)?;
+            let manifest = graph.manifest()?;
+            validate_edge_kind_trinity(&manifest, &edge.kind)?;
+            validate_edge_properties_trinity(&manifest, &edge.kind, &edge.properties)?;
             validate_endpoint(graph, &edge.source, TrinityRamError::InvalidSourcePortKey, TrinityRamError::SourceNodeNotFound)?;
             validate_endpoint(graph, &edge.target, TrinityRamError::InvalidTargetPortKey, TrinityRamError::TargetNodeNotFound)?;
         }
@@ -244,14 +246,15 @@ fn validate_entity(graph: &Graph, entity: &EntityRef) -> Result<(), crate::stand
 
 fn validate_set_data_property(graph: &Graph, entity: &EntityRef, key: &str, value: &PropertyValue) -> Result<(), crate::standards::v1::subsets::any::schema::errors::TrinityRamError> {
     use crate::standards::v1::subsets::any::schema::errors::TrinityRamError;
+    let manifest = graph.manifest()?;
     let (defs, path_prefix) = match entity {
         EntityRef::Node(id) => {
             let node = graph.nodes.get(id).ok_or_else(|| TrinityRamError::NodeNotFound(id.clone()))?;
-            (graph.manifest.node_kind(&node.kind).map(|def| &def.properties[..]), format!("nodes/{id}/properties/{key}"))
+            (manifest.node_kind(&node.kind).map(|def| &def.properties[..]), format!("nodes/{id}/properties/{key}"))
         }
         EntityRef::Edge(id) => {
             let edge = graph.edges.get(id).ok_or_else(|| TrinityRamError::EdgeNotFound(id.clone()))?;
-            (graph.manifest.edge_kind(&edge.kind).map(|def| &def.properties[..]), format!("edges/{id}/properties/{key}"))
+            (manifest.edge_kind(&edge.kind).map(|def| &def.properties[..]), format!("edges/{id}/properties/{key}"))
         }
     };
     let Some(defs) = defs else {

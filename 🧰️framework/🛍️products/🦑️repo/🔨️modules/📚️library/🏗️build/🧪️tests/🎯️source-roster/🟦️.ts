@@ -39,7 +39,7 @@ test("three supplemental Source declarations retain selected runtime and real ty
 
 /** 💾️ Real checkout absence and process/resource assertions always execute under the current host. */
 test("Source0 host and absence assertions retain an uncached live classification", () => {
- const bytes=readFileSync(resolve(root,"📋️project.json"),"utf8"),target=JSON.parse(bytes).targets["test-workspace-build"],expected={version:1,class:"live",reason:"exercises-host-resources"};
+ const bytes=readFileSync(resolve(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json"),"utf8"),target=JSON.parse(bytes).targets["test-workspace-build"],expected={version:1,class:"live",reason:"exercises-host-resources"};
  const cache=JSON.parse(readFileSync(resolve(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏃️execution/🧬️schema/💾️cache.json"),"utf8")),validate=new AjvDraft07({strict:true}).compile(cache.definitions.Live);
  expect(target.cache).toBe(false);expect(target.metadata.semio.cache).toEqual(expected);expect(validate(target.metadata.semio.cache),JSON.stringify(validate.errors)).toBe(true);
  const database=new Database(":memory:");

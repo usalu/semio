@@ -151,6 +151,7 @@ fn acadrust_reads_what_this_subset_writes() {
 
 #[test]
 fn this_subset_reads_what_acadrust_writes() {
+    use semio_s_artifact_stdio_dwg_read::standards::v_ac1024::subsets::any::io::import::{DwgDrawingRead, DwgDrawingReadStep};
     use acadrust::entities::{Arc, Circle, Ellipse, Face3D, Line, LwPolyline, Point, PolyfaceMesh, Polyline3D, Spline, Text};
     for version in [DxfVersion::AC1018, DxfVersion::AC1021, DxfVersion::AC1024, DxfVersion::AC1027, DxfVersion::AC1032] {
         let mut document = acadrust::CadDocument::new();
@@ -197,7 +198,26 @@ fn this_subset_reads_what_acadrust_writes() {
         let bytes = acadrust::DwgWriter::write_to_vec(&document).expect("acadrust writes the DWG");
         let expected = theirs(&acadrust_read(&bytes));
         assert_eq!(expected.len(), 11, "{version:?}: acadrust reads back its own eleven entities");
-        assert_eq!(ours(&dwg_from_bytes(&bytes).unwrap_or_else(|error| panic!("{version:?}: {error}"))), expected, "{version:?}");
+        let mut read = DwgDrawingRead::open(&bytes).unwrap_or_else(|error| panic!("{version:?}: {error}"));
+        let mut pages = 0;
+        let mut records = 0;
+        let mut projected = 0;
+        let mut progress = 0.0;
+        let drawing = loop {
+            let step = read.step().unwrap_or_else(|error| panic!("{version:?}: {error}"));
+            assert!(read.progress() >= progress, "{version:?}");
+            progress = read.progress();
+            match step {
+                DwgDrawingReadStep::Page => pages += 1,
+                DwgDrawingReadStep::Record => records += 1,
+                DwgDrawingReadStep::Geometry => projected += 1,
+                DwgDrawingReadStep::Padding | DwgDrawingReadStep::PageData | DwgDrawingReadStep::RecordData | DwgDrawingReadStep::Directory => {},
+                DwgDrawingReadStep::Complete(drawing) => break drawing,
+            }
+        };
+        assert!(pages >= 2 && records >= expected.len() && projected >= expected.len(), "{version:?}: {pages} pages, {records} records, {projected} projections");
+        assert_eq!(ours(&drawing), expected, "{version:?}");
+        assert!(read.step().is_err());
     }
 }
 
@@ -221,4 +241,195 @@ fn a_written_document_reads_back_entity_for_entity_and_re_encodes_byte_for_byte(
     assert_eq!(snapshot.application_history, written.application_history);
     assert_eq!(semio_s_artifact_stdio_dwg_snapshot::standards::v_ac1024::subsets::any::schema::snapshot::DwgSnapshot { drawing: written.drawing.clone(), ..snapshot.clone() }, written);
     assert_eq!(crate::standards::v_ac1024::subsets::any::io::export::encode_dwg(&snapshot).expect("re-encode"), bytes);
+}
+
+#[test]
+fn object_pages_preserve_all_authored_faces() {
+    use semio_s_artifact_stdio_dwg_write_objects::standards::v_ac1024::subsets::any::io::export::objects::{ObjectRecordStep, ObjectRecords};
+    let case: serde_json::Value = serde_json::from_slice(include_bytes!("../🧫️fixtures/multiple-object-pages.json")).unwrap();
+    let corners: [[f64; 3]; 4] = serde_json::from_value(case["baseCorners"].clone()).unwrap();
+    let step: [f64; 3] = serde_json::from_value(case["step"].clone()).unwrap();
+    let count = case["faceCount"].as_u64().unwrap() as usize;
+    let mut drawing = DwgDrawing::default();
+    let layer = drawing.ensure_layer(case["layer"].as_str().unwrap());
+    for index in 0..count {
+        let corners = corners.map(|point| std::array::from_fn(|axis| point[axis] + step[axis] * index as f64));
+        drawing.entities.push(DwgEntity { layer, color: DwgColor::ByLayer, geometry: DwgGeometry::Face3d { corners } });
+    }
+    let bytes = dwg_to_bytes(&drawing).expect("write drawing across object pages");
+    assert_eq!(&bytes[..6], case["version"].as_str().unwrap().as_bytes());
+    let snapshot = DwgSnapshot::from_drawing(&drawing).expect("admit drawing objects");
+    let objects = &snapshot.drawing.objects;
+    let mut cursor = ObjectRecords::new(objects);
+    let mut framed = vec![0xca, 0x0d, 0x00, 0x00];
+    let mut indexed = 0;
+    let mut written = Vec::new();
+    loop {
+        match cursor.step(objects).unwrap() {
+            ObjectRecordStep::Indexed => {
+                assert!(written.is_empty());
+                indexed += 1;
+            }
+            ObjectRecordStep::Frame { handle, bytes } => {
+                assert_eq!(indexed, objects.len());
+                written.push(handle);
+                framed.extend(bytes);
+            }
+            ObjectRecordStep::Complete => break,
+        }
+    }
+    assert_eq!(written, objects.iter().map(|object| object.handle).collect::<Vec<_>>());
+    assert!(matches!(cursor.step(objects).unwrap(), ObjectRecordStep::Complete));
+    let decoded = decode_r2004_sections(&bytes).expect("decode data pages");
+    let records = decoded.iter().find(|section| section.name == "AcDb:AcDbObjects").unwrap();
+    assert_eq!(r2004_section_data(records).unwrap(), framed);
+    let sections = locate_r2004_sections(&bytes).expect("read section directory");
+    let objects = sections.iter().find(|section| section.name == "AcDb:AcDbObjects").unwrap();
+    assert!(objects.pages.len() >= case["minimumObjectPages"].as_u64().unwrap() as usize);
+    for (index, page) in objects.pages.iter().enumerate() {
+        assert_eq!(page.start_offset, index as u64 * u64::from(objects.max_decomp_size));
+    }
+    let expected = ours(&drawing);
+    assert_eq!(ours(&dwg_from_bytes(&bytes).expect("read drawing")), expected);
+    assert_eq!(theirs(&acadrust_read(&bytes)), expected);
+}
+
+
+#[test]
+fn object_record_cursor_refuses_invalid_handle_rosters_before_framing() {
+    use semio_s_artifact_stdio_dwg_write_objects::standards::v_ac1024::subsets::any::io::export::objects::{ObjectRecordStep, ObjectRecords};
+    let snapshot = DwgSnapshot::from_drawing(&every_entity_kind()).unwrap();
+    let mut objects = snapshot.drawing.objects;
+    let original = objects[1].handle;
+    for invalid in [0, objects[0].handle] {
+        objects[1].handle = invalid;
+        let mut cursor = ObjectRecords::new(&objects);
+        assert!(matches!(cursor.step(&objects).unwrap(), ObjectRecordStep::Indexed));
+        assert!(cursor.step(&objects).is_err());
+        assert!(cursor.step(&objects).is_err());
+    }
+    objects[1].handle = original;
+    let mut cursor = ObjectRecords::new(&objects);
+    assert!(cursor.step(&objects.clone()).is_err());
+    assert!(matches!(cursor.step(&objects).unwrap(), ObjectRecordStep::Indexed));
+}
+
+#[test]
+fn handle_block_reader_covers_unsigned_handles_and_keeps_page_boundaries() {
+    use semio_s_artifact_stdio_dwg_write_objects::standards::v_ac1024::subsets::any::io::export::objects::materialize_r2004_handles;
+    let case: serde_json::Value = serde_json::from_slice(include_bytes!("../🧫️fixtures/handle-blocks.json")).unwrap();
+    let locations: Vec<_> = case["locations"].as_array().unwrap().iter().map(|row| {
+        (u64::from_str_radix(row[0].as_str().unwrap(), 16).unwrap(), row[1].as_u64().unwrap() as usize)
+    }).collect();
+    let bytes = materialize_r2004_handles(&locations).unwrap();
+    assert_eq!(decode_r2004_handle_map(&bytes).unwrap(), locations);
+    let independent = acadrust::io::dwg::dwg_stream_readers::handle_reader::read_handles(&bytes).unwrap();
+    assert_eq!(independent, locations.iter().map(|&(handle, offset)| (handle, offset as i64)).collect());
+    let short: Vec<u8> = serde_json::from_value(case["shortBlock"].clone()).unwrap();
+    assert!(decode_r2004_handle_map(&short).is_err());
+}
+
+#[test]
+fn wide_handle_row_keeps_the_handle_block_size_bounded() {
+    use semio_s_artifact_stdio_dwg_write_objects::standards::v_ac1024::subsets::any::io::export::objects::materialize_r2004_handles;
+    let fixture: serde_json::Value = serde_json::from_slice(include_bytes!("../🧫️fixtures/handle-blocks.json")).unwrap();
+    let row = &fixture["boundary"];
+    let mut expected: Vec<_> = (1..=row["count"].as_u64().unwrap()).map(|handle| (handle, 0)).collect();
+    let handle = u64::from_str_radix(row["lastHandle"].as_str().unwrap(), 16).unwrap();
+    let address = u64::from_str_radix(row["lastAddress"].as_str().unwrap(), 16).unwrap();
+    expected.push((handle, usize::try_from(address).unwrap_or(usize::MAX)));
+    let encoded = materialize_r2004_handles(&expected).unwrap();
+    assert!(u64::from(u16::from_be_bytes(encoded[..2].try_into().unwrap())) <= row["maximumBlock"].as_u64().unwrap());
+    assert_eq!(decode_r2004_handle_map(&encoded).unwrap(), expected);
+    let independent = acadrust::io::dwg::dwg_stream_readers::handle_reader::read_handles(&encoded).unwrap();
+    assert_eq!(independent, expected.iter().map(|&(key, offset)| (key, offset as i64)).collect());
+}
+
+#[test]
+fn polyface_mesh_preserves_triangle_markers_and_checked_vertex_indices() {
+    use acadrust::entities::PolyfaceFace;
+    let case: serde_json::Value = serde_json::from_slice(include_bytes!("../🧫️fixtures/polyface-mesh.json")).unwrap();
+    let vertices: Vec<[f64; 3]> = serde_json::from_value(case["vertices"].clone()).unwrap();
+    let drawing_with = |face| {
+        let mut drawing = DwgDrawing::default();
+        let layer = drawing.ensure_layer("0");
+        drawing.entities.push(DwgEntity { layer, color: DwgColor::ByLayer, geometry: DwgGeometry::PolyfaceMesh {
+            vertices: vertices.clone(), faces: vec![face],
+        } });
+        drawing
+    };
+    for row in case["faces"].as_array().unwrap() {
+        let corners: [i32; 4] = serde_json::from_value(row["corners"].clone()).unwrap();
+        let expected: Vec<u32> = serde_json::from_value(row["triangles"].clone()).unwrap();
+        let [a,b,c,d] = corners.map(|index| index as i16);
+        let oracle = PolyfaceFace::quad(a,b,c,d);
+        let oracle_indices: Vec<_> = oracle.vertex_indices().into_iter().map(|index| index as u32 - 1).collect();
+        assert_eq!(oracle.vertex_count(), if expected.len() == 3 { 3 } else { 4 });
+        assert_eq!(&oracle_indices[..3], &expected[..3]);
+        let authored = drawing_with(corners);
+        let bytes = dwg_to_bytes(&authored).unwrap();
+        let drawing = dwg_from_bytes(&bytes).unwrap();
+        assert_eq!(theirs(&acadrust_read(&bytes)), ours(&authored));
+        let mesh = dwg_drawing_to_mesh(&drawing).unwrap();
+        assert_eq!(mesh.indices, expected);
+        assert_eq!(mesh.positions, vertices.iter().flatten().map(|&value| value as f32).collect::<Vec<_>>());
+    }
+    for row in case["invalidFaces"].as_array().unwrap() {
+        let corners = serde_json::from_value(row.clone()).unwrap();
+        assert!(dwg_drawing_to_mesh(&drawing_with(corners)).is_err());
+    }
+}
+
+#[test]
+fn large_polyface_export_is_readable_without_losing_triangles() {
+    let case: serde_json::Value = serde_json::from_slice(include_bytes!("../🧫️fixtures/polyface-mesh.json")).unwrap();
+    for row in case["exports"].as_array().unwrap() {
+        let count = row["triangles"].as_u64().unwrap() as usize;
+        let unique = row["distinctVertices"].as_bool().unwrap();
+        let mut mesh = semio_framework_mesh_engine::MeshData::default();
+        for triangle in 0..if unique { count } else { 1 } {
+            let offset = triangle as f32 * 3.;
+            mesh.positions.extend([offset,0.,0., offset+1.,0.,0., offset,1.,0.]);
+        }
+        for triangle in 0..count {
+            let offset = if unique { 3 * triangle as u32 } else { 0 };
+            mesh.indices.extend([offset, offset + 1, offset + 2]);
+        }
+        let drawing = mesh_to_dwg_drawing(&mesh).unwrap();
+        let expected: Vec<(usize, usize)> = serde_json::from_value(row["partSizes"].clone()).unwrap();
+        let sizes: Vec<_> = drawing.entities.iter().filter_map(|entity| match &entity.geometry {
+            DwgGeometry::PolyfaceMesh { vertices, faces } => Some((vertices.len(), faces.len())),
+            _ => None,
+        }).collect();
+        assert_eq!(sizes, expected);
+        if unique {
+            let bytes = dwg_to_bytes(&drawing).unwrap();
+            let independent = acadrust_read(&bytes);
+            let sizes: Vec<_> = independent.entities().filter_map(|entity| match entity {
+                EntityType::PolyfaceMesh(mesh) => {
+                    assert!(mesh.faces.iter().all(|face| face.is_triangle()));
+                    Some((mesh.vertices.len(), mesh.faces.len()))
+                }
+                _ => None,
+            }).collect();
+            assert_eq!(sizes, expected);
+            use semio_s_artifact_stdio_dwg_read::standards::v_ac1024::subsets::any::io::import::{DwgDrawingRead, DwgDrawingReadStep};
+            let mut reader = DwgDrawingRead::open(&bytes).unwrap();
+            let mut projections = 0;
+            let mut progress = 0.0;
+            let restored = loop {
+                let step = reader.step().unwrap();
+                assert!(reader.progress() >= progress);
+                progress = reader.progress();
+                match step {
+                    DwgDrawingReadStep::Geometry => projections += 1,
+                    DwgDrawingReadStep::Complete(restored) => break restored,
+                    _ => {}
+                }
+            };
+            assert!(projections >= expected.iter().map(|(vertices, faces)| vertices + faces).sum::<usize>());
+            let imported = dwg_drawing_to_mesh(&restored).unwrap();
+            assert_eq!(imported.triangle_count(), count);
+        }
+    }
 }

@@ -9,6 +9,7 @@ import { BundleScript } from "../../../../../../../🔨️modules/🏃️process
 import { retryOnConcurrentEditV1 } from "../../../../../../../🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
+import { isDeepStrictEqual } from "node:util";
 import { MODULE_BRIDGE_FILE, MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE, moduleDirectoryName } from "../../📦️deployment/🟦️.ts";
 import { PLAYGROUND_SESSION_ARTIFACT_KEY,playgroundSessionsRootV1, playgroundSessionOutputPath, playgroundSessionStagedOutputPath } from "../../../../🧑‍💻dev/📦️packages/🟦️typescript/♻️activation/🟦️.ts";
 export { PLAYGROUND_SESSION_ARTIFACT_KEY } from "../../../../🧑‍💻dev/📦️packages/🟦️typescript/♻️activation/🟦️.ts";
@@ -135,6 +136,17 @@ export function writePlaygroundSession(variant: string, outPath: string, project
 export function playgroundSessionPublicationV1(variant:string,projection:GeneratedCatalogProjection):readonly Readonly<{path:string;text:string}>[]{
  const copied=readScriptProcessJsonV1({projection}).projection as unknown as GeneratedCatalogProjection,names=schema.definitions.Protocol.const.files,texts=[renderPlaygroundSessionTypeScript(variant,copied),JSON.stringify(copied.entries)+"\n",JSON.stringify(copied.playgrounds)+"\n"];
  return Object.freeze(texts.map((text,index)=>{if(Buffer.byteLength(text)>publicationSchema.definitions.Protocol.const.maximumManifestBytes)throw Error("Finite session file extent required");return Object.freeze({path:names[index]!,text});}));
+}
+
+/** ♻️ Refreshes the session only when its retained catalog differs from the selected publication. */
+export async function refreshPlaygroundSessionPublicationV1(
+  current: GeneratedCatalogProjection,
+  readRetained: () => Promise<GeneratedCatalogProjection | undefined>,
+  publish: (projection: GeneratedCatalogProjection) => Promise<void>,
+): Promise<boolean> {
+  if (isDeepStrictEqual(await readRetained(), current)) return false;
+  await publish(current);
+  return true;
 }
 
 /** 🎮️ Stages one variant below its semantic session owner without changing the canonical default session. */

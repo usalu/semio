@@ -48,7 +48,18 @@ impl<T:Send+Sync+'static> RetainedOriginalRead<T>{
   self.authenticate(effect)?;let invocation=effect.invocation().ok_or_else(||fault("original slot read lacks its native invocation"))?;
   if invocation.mode()!=if recover{OriginalEffectCallbackMode::Recover}else{OriginalEffectCallbackMode::Receive}{return Err(fault("original slot callback mode changed"))}
   let key=(invocation.identity(),mode,body);if recover&&self.route!=Some(key)||!recover&&self.route.is_some(){return Err(fault("original slot read route changed"))}
-  if !recover&&self.inner.is_none()&&self.owner.demand(mode,body)?.is_some(){let quote=self.quoted(mode,body)?;if effect.remaining_work_units()?<self.owner.work_demand(mode,body)?||!crate::retained_clone_grant_admits(effect.grant(),quote){return Ok(reply.complete(Ok(RetainedCloneStep::Progress(Default::default()))))}}
+   if !recover&&self.inner.is_none(){
+    match self.owner.demand(mode,body)? {
+     None if mode==OriginalSourceMode::Original=>return Ok(reply.complete(Ok(RetainedCloneStep::Complete(Default::default())))),
+     Some(_)=>{
+      let quote=self.quoted(mode,body)?;
+      if effect.remaining_work_units()?<self.owner.work_demand(mode,body)?||!crate::retained_clone_grant_admits(effect.grant(),quote){
+       return Ok(reply.complete(Ok(RetainedCloneStep::Progress(Default::default()))))
+      }
+     }
+     None=>{}
+    }
+   }
   let state=self;let mut scope=reply.progress().scope(&mut state.route,key)?;
   if state.owner.projection_drive_required_for(mode)?{
    let frame=state.owner.projection_frame(effect)?;let mut context=frame.context()?;let ready=frame.authority()?.drive(&mut context,effect,&mut state.inner)?;

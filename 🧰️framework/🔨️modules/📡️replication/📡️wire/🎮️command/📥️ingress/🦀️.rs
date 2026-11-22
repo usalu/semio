@@ -27,6 +27,9 @@ pub const COMMAND_MAXIMUM_PAGES: usize = COMMAND_MAXIMUM_BYTES / COMMAND_PAGE_MA
 pub const COMMAND_BATCH_MAXIMUM_ITEMS: usize = 64;
 pub const INVOCATION_RESULT_PACK_MAXIMUM_BYTES: usize = COMMAND_MAXIMUM_BYTES;
 
+#[path = "📥️natural-source.rs"]
+mod natural_source;
+pub use natural_source::{NATURAL_SOURCE_COMMAND_KIND, ActorInstanceOpenPurpose, NaturalSourcePrepare, NaturalSourceControlEvent, NaturalSourceWireDeclaration, NaturalSourceWireLoan, NaturalSourceWireControl, NaturalSourceWirePhase, NaturalSourceWireResult, NaturalSourceWireAck};
 #[path = "🎞️original-media.rs"]
 mod original_media;
 pub use original_media::*;
@@ -250,6 +253,7 @@ pub enum CommandIngressStatus {
     CommandPending(CommandPageCursor),
     CommandComplete(CommandPageCursor),
     OriginalMediaAck(OriginalMediaWireAck),
+    NaturalSourceAck(NaturalSourceWireAck),
     Fault { cursor: CommandPageCursor, fault: Vec<u8> },
 }
 //#endregion 🔖️PagedCommandIngress

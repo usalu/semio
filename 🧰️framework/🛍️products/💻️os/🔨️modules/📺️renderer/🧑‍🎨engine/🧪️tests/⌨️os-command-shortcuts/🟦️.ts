@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, test } from "vitest";
 import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
+import { SHELL_KEYBINDINGS } from "@semio-tech/ui/modules/control-keybinding-context";
 import { buildOsCommands } from "../../🧱️elements/🛠️ShellHelpers/🎛️command-registry/🟦️.tsx";
 import {
   keyboardEventMatchesChord,
@@ -68,6 +69,11 @@ describe("⌨️ OS command shortcut ownership", () => {
     const command = buildOsCommands([], [], false).find(({ id }) => id === fixture.commandId);
     expect(command?.keybindings).toEqual(fixture.bindings);
     expect(command?.keybindings.some(({ chord }) => chord === fixture.retiredChord)).toBe(false);
+  });
+
+  test("the command registry alone owns the fullscreen chord, the shell table carries no row for it", () => {
+    expect(fixture.commandId in SHELL_KEYBINDINGS).toBe(false);
+    expect(Object.values(SHELL_KEYBINDINGS)).not.toContain(fixture.retiredChord);
   });
 
   test("React's matcher keeps the explicit Mac chord distinct from the Find mod chord", () => {

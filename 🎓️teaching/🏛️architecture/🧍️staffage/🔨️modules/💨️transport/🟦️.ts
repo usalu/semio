@@ -21,13 +21,18 @@ import { type Resolved, type Track, createTrack, parcelsAt } from "./🧮️parc
 import { STEPS_PER_S, emitterStates } from "./🔥️sources/🟦️.ts";
 import { breathPatternAt, respirationState, respirationSubjects, routeShares } from "./🫁️respiration/🟦️.ts";
 import { type Sink, streamlineSeeds, streamlinesAt } from "./〰️streamlines/🟦️.ts";
+import { type FlowOptions, flowAt, flowDomainOf } from "./🌊️flow/🟦️.ts";
 import { queryKey } from "./🫁️respiration/🟦️.ts";
 
 export { breathAt, breathPatternAt, exhaledAir, exhaledVolumeM3, respirationOffsets, respirationState, respirationSubjects, respiratoryHeat, routeShares, emitterOwner } from "./🫁️respiration/🟦️.ts";
 export { environmentAt } from "../🌡️thermal/🌤️environment/🟦️.ts";
 export { STEPS_PER_S } from "./🔥️sources/🟦️.ts";
+export { ENTRAINMENT_SEED_RADII, INTERIOR_SEED_RADII, PASSIVE_SPEED_MS, FAR_RADII, FLOW_MIN_SPEED_MS, GROUP_SLICES, TRACER_EXPOSURE_S, TRACER_GAP_STREAKS, TRACER_PERIOD_S, entrainmentOf, flowAt, flowDetailOf, flowDomainOf, flowMarks, flowSampler, flowSeeds, streamAt, streamFrom, streamOf, thinPuffs, thinStreams, traceStream } from "./🌊️flow/🟦️.ts";
+export type { FlowDetail, FlowDomain, FlowOptions, FlowSample } from "./🌊️flow/🟦️.ts";
+export { dewPointC } from "./🌫️air/🟦️.ts";
 
 /** 🎛️ Options of {@link solveTransport}. Defaults: parcels live 30 s, no period (`periodS`: the length of a looping clip; the random walk and the exhale spread then repeat with it, so the field is periodic and a loop wraps without a jump), seed 1, uniform wind, turbulence intensity 0.1 with a 0.03 m/s floor and T_L = 1 s, pathlines and streamlines on.
+ * `flow` (off by default) adds the thermodynamic flow field of the instant (`true` or its {@link FlowOptions}).
  * `evaluate` and `thermal` replace the asset evaluation and the thermal solver (the plume and transpiration strengths come from `thermal`). */
 export type TransportOptions = JobControl & {
   readonly maxAgeS?: number;
@@ -37,6 +42,7 @@ export type TransportOptions = JobControl & {
   readonly turbulence?: Turbulence;
   readonly pathlines?: boolean;
   readonly streamlines?: boolean;
+  readonly flow?: boolean | FlowOptions;
   readonly evaluate?: (asset: Asset, query: EvaluationQuery) => EvaluatedState;
   readonly thermal?: (state: EvaluatedState, environment: Environment) => ThermalField;
 };
@@ -109,6 +115,7 @@ export function solveTransport(asset: Asset, query: EvaluationQuery, environment
   }
   const streamlines = options.streamlines === false ? [] : streamlinesAt(streamlineSeeds(emitters, asset.thermal.emitters, ambient, sinks), ambient, parcels, sinks);
   const condensation = parcels.filter((p: Parcel) => p.condensateKgPerKg > 0).map((p) => ({ at: p.at, radiusM: p.radiusM, condensateKgPerKg: p.condensateKgPerKg }));
+  const flow = options.flow === undefined || options.flow === false ? null : flowAt(timeS, parcels, emitters, asset.thermal.emitters, ambient, sinks, { domain: flowDomainOf(track.world.stateAt(timeS).bounds, asset.dimensions.widthM / 2), ...(options.flow === true ? {} : options.flow) });
   return {
     timeS,
     emitters,
@@ -116,6 +123,7 @@ export function solveTransport(asset: Asset, query: EvaluationQuery, environment
     pathlines,
     streamlines,
     condensation,
+    flow,
     respiration,
     model: { stepS: 1 / STEPS_PER_S, maxAgeS: settings.maxAgeS, seed: settings.seed },
     notes: [
@@ -129,4 +137,33 @@ export function solveTransport(asset: Asset, query: EvaluationQuery, environment
       ),
     ],
   };
+}
+
+/** ⏳️ How {@link developTransport} reaches a time: the history from `fromS` (default: one parcel life `maxAgeS` before the query time, the oldest parcel that can still be alive) is integrated in slices of `sliceS` seconds (default 0.25) with a pause between two slices (`pause`, default a macrotask) so the caller stays responsive. */
+export type DevelopOptions = TransportOptions & { readonly fromS?: number; readonly sliceS?: number; readonly pause?: () => Promise<void> };
+
+const macrotask = (): Promise<void> => new Promise((resolve) => setTimeout(resolve, 0));
+
+/** 🕰️ The time on the transport timeline at which the field of a query has developed for `developS` seconds: the query time moved on by that history, in whole periods when the field is periodic (`periodS`, a looping clip) so the pose of the instant stays the same. */
+export function developedTimeS(timeS: number, developS: number, periodS = 0): number {
+  return periodS > 0 ? timeS + Math.ceil(developS / periodS - 1e-9) * periodS : timeS + developS;
+}
+
+/** 🌱️ {@link solveTransport} at the query time without blocking: the history before it is integrated slice by slice, each slice reports progress (`done` of `total` slices) and the signal is checked between slices (a cancelled run rejects with the signal's reason). The slices only warm the solver's cache, so the result is bit-identical to one cold `solveTransport` at that time. */
+export async function developTransport(asset: Asset, query: EvaluationQuery, environment: Environment | EnvironmentTimeline, options: DevelopOptions = {}): Promise<TransportField> {
+  const { fromS, sliceS = 0.25, pause = macrotask, signal, progress, ...solver } = options;
+  const target = Math.max(0, query.timeS ?? 0);
+  const from = Math.min(target, Math.max(0, fromS ?? target - (options.maxAgeS ?? 30)));
+  const total = Math.max(1, Math.ceil((target - from) / sliceS - 1e-9));
+  const label = note("Developing the air flow", "Luftströmung wird entwickelt");
+  for (let i = 1; i < total; i++) {
+    if (signal?.aborted) throw signal.reason ?? new DOMException("transport solve cancelled", "AbortError");
+    solveTransport(asset, { ...query, timeS: from + i * sliceS } as EvaluationQuery, environment, { ...solver, pathlines: false, streamlines: false, flow: false });
+    progress?.(i, total, label);
+    await pause();
+  }
+  if (signal?.aborted) throw signal.reason ?? new DOMException("transport solve cancelled", "AbortError");
+  const field = solveTransport(asset, { ...query, timeS: target } as EvaluationQuery, environment, { ...solver, ...(signal === undefined ? {} : { signal }) });
+  progress?.(total, total, label);
+  return field;
 }

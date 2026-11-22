@@ -8,7 +8,7 @@ import type { ActorReturnResult, ActorReturnPageReceipt, ActorReturnOrigin, Acto
 import type { ActorBytePage } from "../../📃️page/🟦️.ts";
 import type { ShardWorkerLike } from "../🚨️quota/🟦️.ts";
 import type { ShardHeartbeatState } from "../💓️heartbeat/🟦️.ts";
-import type { ShardAsset, ShardBudget, ShardCapabilityGrant, ShardCommandIngressPage, ShardEventEnvelope } from "../📜️wire/🟦️.ts";
+import type { ShardAsset, ShardBudget, ShardCapabilityGrant, ShardCommandIngressPage, ShardEventEnvelope, ShardInstanceOpenPurpose } from "../📜️wire/🟦️.ts";
 import type { OwnedNativeUiPatchAuthority, OwnedNativeUiPatchSubmissionReceipt, OwnedUiPatchAcknowledgementEntry } from "../🩹️ui-patch/🟦️.ts";
 import { returnContentMatches } from "../../../🖱️ui/🧬️contract/🧵️retained/🔌️host/📦️return-content/🟦️.ts";
 /** 📦️ The decoded content a consumer binds to a published return; the actor holds it opaquely and never calls into it. */
@@ -80,6 +80,7 @@ export type ShardSlot = {
 /** 🧾️ Supplies the authored open payload without permitting arbitrary event submission. */
 export interface ShardInstanceOpenInput {
   readonly appId: string;
+  readonly purpose: ShardInstanceOpenPurpose;
   readonly actor: unknown;
   readonly config: Uint8Array | readonly number[];
   readonly assets: readonly ShardAsset[];

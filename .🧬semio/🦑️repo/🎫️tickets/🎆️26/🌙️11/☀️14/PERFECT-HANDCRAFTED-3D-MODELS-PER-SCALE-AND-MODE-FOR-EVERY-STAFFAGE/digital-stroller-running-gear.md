@@ -1,0 +1,15 @@
+# Stroller running gear and passenger contact
+
+The source was the parent-with-stroller catalog document at SHA-256 `20bc27b692bbaf8441a7b9897c3dddfda7502fca8e070891afeb15b710cb8e09`. At 1:50 the rear wheels have six moulded webs and the casters have five. Circular cuts of the posed surfaces show that the web and opening pattern is replaced by a completely solid disc at 1:100, 1:200 and 1:500. This affects both sides and both wheel sizes. The front bumper which the child holds disappears at 1:200. The parent’s left checking hand also changes shape enough to alter its clearance from the actual padded grip.
+
+The four fitted wheels have a 318.4 mm rear diameter and 159.2 mm caster diameter. Rear tyres are 44 mm wide. Caster tyres are 32 mm wide. The independent Three.js test casts four concentric cylinders through each posed mesh. Each rear spans six material sectors, each caster five, for both a level pushing pose and the tilted kerb pose at 1:50, 1:100, 1:200 and 1:500. At the coarsest scale, the hub-to-rim field contains 15.7% material on the rear wheels and 21.9% on the casters. Triangle-edge intersections check the axle and prongs enter their hubs. The structural wheels, axle, forks and bumper follow the corresponding external solids.
+
+The contact check samples 14 named poses and four intermediate animation frames. Each adult hand touches the padded grip in a pushing pose. When checking the child, the adult’s left hand clears the grip by 85 mm and the right stays on it at all four scales. The child’s left hand clears the bumper by 44 mm at that instant and the right remains in contact. The child stays seated within 1 mm of the sling across all samples. The kerb clip produces 10 mm right-hand clearance from the bumper at 1.4 s. The same clearances are seen at both end scales.
+
+The source-matched inputs are `digital-stroller-wheels.ts`, `digital-stroller-contact.ts`, `digital-surface-distance.ts`, `digital-occupied-wheel-case.json` and `digital-occupied-wheel-check.ts`. The six/five wheel counts, wheel-face shapes and real wheel section widths are separately specified in the case file. The visual study includes a reverse-side view of the child under the hood and an axial/oblique rear-wheel crop.
+
+The coarsest printed plan uses a 0.11 mm pen for the open chassis and front-leg lines and separately draws the padded grip, bumper and parent’s hand contours. At 1:500 the projected chassis and the paper plan overlap by an IoU of 0.895, with a 37.5 mm maximum boundary distance and 18.75 mm at the 95th percentile. The dimensions above come from the 3D wheels.
+
+## Published stroller
+
+The installed SHA-256 is `27ab476f6e1e8fce3fbfda08885494e882bf8b6166f2a4dea72e4e7511ac4831`. All 52 native scale rules and office-print checks passed. Twelve independently read GLB scenes total 7,686,248 bytes. Regenerating the fitted geometry from the installed catalog reproduces the same asset. The two shaded presentation sheets and four-scale close-up show the open wheels throughout. The reverse checking view partly hides the child behind the hood and seat back. The front-side pushing sheet resolves the seated torso, hands and feet.

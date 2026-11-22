@@ -168,8 +168,8 @@ export function measureWindowSilhouetteMetrics(stack: HTMLElement): WindowSilhou
   return measureContextMenuFusion(stack, stackRect, base, scale);
 }
 
-/** 📐️ Coalesced owned-chip measurement shared by silhouette content, glass, border, and hit clipping. */
-export function useWindowSilhouetteGeometry(stack: HTMLElement | null, enabled = true): WindowSilhouetteGeometry {
+/** 📐️ Measures the current chip or body layout before paint, then coalesces later geometry changes for hit clipping, glass, and borders. */
+export function useWindowSilhouetteGeometry(stack: HTMLElement | null, enabled = true, chipOnly = false): WindowSilhouetteGeometry {
   const [geometry, setGeometry] = reactHostPort.useState<WindowSilhouetteGeometry>(() => createWindowSilhouetteGeometry(null));
   reactHostPort.useLayoutEffect(() => {
     if (!stack || !enabled) return;
@@ -221,7 +221,7 @@ export function useWindowSilhouetteGeometry(stack: HTMLElement | null, enabled =
       mutationObserver?.disconnect();
       stack.removeEventListener("scroll", schedule, true);
     };
-  }, [enabled, stack]);
+  }, [enabled, stack, chipOnly]);
   return geometry;
 }
 
@@ -495,7 +495,7 @@ export const WindowChrome = reactHostPort.forwardRef<HTMLDivElement, WindowChrom
     );
     reactHostPort.useLayoutEffect(() => (capEl ? observeChipRowAbuts(capEl) : undefined), [capEl]);
     reactHostPort.useLayoutEffect(() => (footerEl ? observeChipRowAbuts(footerEl) : undefined), [footerEl]);
-    const geometry = useWindowSilhouetteGeometry(stackEl);
+    const geometry = useWindowSilhouetteGeometry(stackEl, true, chipOnly);
     const silhouetteVars = {
       "--window-silhouette-top-clearance": `${geometry.safeClearances.top}px`,
       "--window-silhouette-bottom-clearance": `${geometry.safeClearances.bottom}px`,

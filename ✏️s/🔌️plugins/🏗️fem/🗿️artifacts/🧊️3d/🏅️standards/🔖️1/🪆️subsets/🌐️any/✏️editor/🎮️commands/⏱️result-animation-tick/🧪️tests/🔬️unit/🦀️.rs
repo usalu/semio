@@ -171,7 +171,7 @@ async fn transport_wire(app: &mut Fem3dApp, args: serde_json::Value) {
     use semio_plugin::PluginApp as _;
     let aborting = args.get("abort").is_some();
     let mut meta = semio_plugin::artifact_app_laws::meta("local");
-    meta.view_state = Some(results_view());
+    meta.view_state = Some(std::sync::Arc::new(results_view()));
     let args = semio_plugin::DslValue::from(&args);
     semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "setResultAnimation", Some(args.clone()), &meta, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap_or_else(|fault| panic!("setResultAnimation: {fault:?}"));
     if !aborting {
@@ -190,7 +190,7 @@ async fn history_rows(app: &mut Fem3dApp) -> usize {
 /// nothing; no playback edit is ever a history row; and the batch route refuses a tick it has no transient for.
 #[semio_framework_async_macros::async_test]
 async fn playback_presses_are_one_config_edit_and_never_a_history_row() {
-    let doc = semio_s_artifact_fem_3d_io::standards::v1::subsets::any::io::fem3d_boot_snapshot();
+    let doc = semio_s_artifact_fem_3d_io::standards::v1::subsets::any::io::fem3d_boot_snapshot().expect("boot snapshot");
     let history = semio_plugin::HistoryView::empty();
     let view = ArtifactView::new(&doc, &history);
     let config = NoConfig::default();

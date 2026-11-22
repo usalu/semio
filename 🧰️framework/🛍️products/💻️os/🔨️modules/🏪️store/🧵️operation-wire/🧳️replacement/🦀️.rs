@@ -26,7 +26,8 @@ impl<M:Sync+'static> OriginalReplacementReceiving<M>{
  pub fn borrow_payload(&self)->Result<semio_framework_value::RetainedCloneRef<'_,Vec<u8>>,ValueError>{if self.closing{return Err(invalid())}self.source.as_ref().ok_or_else(invalid)?.try_borrow()}
  /// 📏️ Prices one actual source capture, wire alias, receiver birth or native receiving step.
  pub fn demands(&self,codec:&ArtifactOperationWire<M>,body:usize)->Result<RetirementDemand,ValueError>{
-  if self.source.is_none(){if let Some(admission)=self.admission.as_ref(){return match admission.phase(){"ready"=>Ok(header::<Option<RetainedCloneSource<Vec<u8>>>>()),"projectionStart"=>admission.owned_projection_demand(),_=>admission.next_demand()}}let mut d=header::<Self>();d.copy_bytes+=size_of::<Vec<u8>>();return Ok(d)}
+   if let Some(admission)=self.admission.as_ref(){return if admission.phase()=="projectionStart"{admission.owned_projection_demand()}else{admission.next_demand()}}
+   if self.source.is_none(){let mut d=header::<Self>();d.copy_bytes+=size_of::<Vec<u8>>();return Ok(d)}
   if self.wire.is_none()&&self.receiver.is_none(){return retained_alias_demand(self.source.as_ref().ok_or_else(invalid)?.try_borrow()?)}
   if self.receiver.is_none(){return Ok((codec.original_receiving.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"installed operation wire has no original receiving capability"))?.demands)())}
   let receiver=self.receiver.as_ref().unwrap();if receiver.ready(){return Ok(header::<Option<RetainedOwnedProjection<M>>>())}receiver.demands(body)
@@ -57,10 +58,10 @@ impl<M:Sync+'static> OriginalReplacementReceiving<M>{
  /// ⏳️ Observes the cumulative work of receives that are still pending; it is never a debit, the committed work is.
  pub fn pending_receive_work(&self)->Option<u128>{self.pending_work}
  fn advance_local(&mut self,row:&mut InputReplacement,identity:(NativeAllocationIdentity,u64,usize),d:RetirementDemand,child:RetainedCloneGrant,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneProgress,ValueError>{
-  if self.source.is_none(){
-   let Some(admission)=self.admission.as_mut()else{let InputReplacement::Input{payload,..}=row else{return Err(invalid())};pay(effect,1)?;let bytes=std::mem::take(payload);self.admission=Some(RetainedCloneSource::<Vec<u8>>::admission_owned(bytes,()));self.binding=Some(identity);return Ok(progress(d))};
-   match admission.phase(){"ready"=>{let step=admission.take_output(&mut self.source,&mut effect.nested(child)).result?;if admission.terminal_is_empty(){self.admission=None;}return Ok(step.progress())},"projectionStart"=>return Ok(admission.project_owned(&mut effect.nested(child)).result?.progress()),_=>return Ok(admission.advance(&mut effect.nested(child)).result?.progress())}
-  }
+   if let Some(admission)=self.admission.as_mut(){
+    return match admission.phase(){"ready"=>{let step=admission.take_output(&mut self.source,&mut effect.nested(child)).result?;if admission.terminal_is_empty(){self.admission=None;}Ok(step.progress())},"projectionStart"=>Ok(admission.project_owned(&mut effect.nested(child)).result?.progress()),_=>Ok(admission.advance(&mut effect.nested(child)).result?.progress())}
+   }
+   if self.source.is_none(){let InputReplacement::Input{payload,..}=row else{return Err(invalid())};pay(effect,1)?;let bytes=std::mem::take(payload);self.admission=Some(RetainedCloneSource::<Vec<u8>>::admission_owned(bytes,()));self.binding=Some(identity);return Ok(progress(d))}
   let Some((wire,p))=retained_alias(self.source.as_ref().ok_or_else(||ValueError::invariant("source absent"))?.try_borrow()?,&mut effect.nested(child))? else{return Ok(Default::default())};self.wire=Some(wire);Ok(p)
  }
  /// 🤝️ Transfers only the original typed projection after authenticating the same decoder and input recipient.
@@ -69,11 +70,15 @@ impl<M:Sync+'static> OriginalReplacementReceiving<M>{
  pub fn begin_close(&mut self){self.closing=true;if let Some(receiver)=self.receiver.as_mut(){receiver.begin_close();}}
  /// 📏️ Includes actual receiver release, source handback and the original binding header.
  pub fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
-  if let Some(admission)=self.admission.as_ref(){return admission.next_return_demand()}
+   if let Some(admission)=self.admission.as_ref(){return match admission.phase(){"ready"=>Ok(admission.take_output_demand()),"projectionStart"=>admission.owned_projection_demand(),_=>admission.next_return_demand()}}
   if let Some(input)=self.input.as_ref(){return if input.terminal_is_empty(){Ok(header::<Option<RetainedOwnedProjection<M>>>())}else{input.close_demand(body)}}
   if let Some(receiver)=self.receiver.as_ref(){return if receiver.terminal_is_empty(){Ok(RetirementDemand{release_bytes:receiver.allocation_bytes(),..header::<Option<Box<dyn ArtifactOriginalOperationReceiving<M>>>>()})}else{receiver.close_demands(body)}}
   if let Some(wire)=self.wire.as_ref(){return if wire.terminal_is_empty(){Ok(header::<Option<RetainedOwnedProjection<Vec<u8>>>>())}else{wire.close_demand(body)}}
-  if let Some(source)=self.source.as_ref(){return if source.terminal_is_empty(){Ok(header::<Option<RetainedCloneSource<Vec<u8>>>>())}else{source.next_take_demand(body)}}
+   if let Some(source)=self.source.as_ref(){
+    return if source.terminal_is_empty()&&!self.take_pending{
+     Ok(header::<(Option<RetainedCloneSource<Vec<u8>>>,Option<Vec<u8>>,Vec<u8>)>())
+    }else{source.next_take_demand(body)}
+   }
   Ok(header::<Option<(u64,u64,usize)>>())
  }
  /// ↩️ Restores the same original Vec to the exact source row after every typed and wire alias has closed.
@@ -85,23 +90,46 @@ impl<M:Sync+'static> OriginalReplacementReceiving<M>{
    if let Some(input)=self.input.as_mut(){if input.terminal_is_empty(){self.input=None;return Ok(RetainedCloneStep::Progress(progress(d)))}control.charge(d.capacity_bytes)?;return Ok(RetainedCloneStep::Progress(RetirementPollExit::resume(input.close_step(grant.maximum_copy_bytes,effect))?.progress()))}
    if let Some(receiver)=self.receiver.as_mut(){if !receiver.terminal_is_empty(){return Ok(RetainedCloneStep::Progress(RetirementPollExit::resume(receiver.close_step(control,effect))?.progress()))}self.receiver=None;return Ok(RetainedCloneStep::Progress(progress(d)))}
    if let Some(wire)=self.wire.as_mut(){if wire.terminal_is_empty(){self.wire=None;return Ok(RetainedCloneStep::Progress(progress(d)))}control.charge(d.capacity_bytes)?;return Ok(RetainedCloneStep::Progress(RetirementPollExit::resume(wire.close_step(grant.maximum_copy_bytes,effect))?.progress()))}
-   if let Some(source)=self.source.as_mut(){if source.terminal_is_empty()&&!self.take_pending{self.source=None;return Ok(RetainedCloneStep::Progress(progress(d)))}let InputReplacement::Input{payload,..}=row else{return Err(invalid().into())};if !payload.is_empty()||payload.capacity()!=0{return Err(invalid().into())}if !self.take_pending{control.charge(d.capacity_bytes)?;}if self.take_reply.is_none(){let reply=OriginalEffectReply::borrow(&mut self.take_reply)?;let done=if self.take_pending{source.recover_take_authority_into(&mut self.returned,grant.maximum_copy_bytes,effect,reply)?}else{source.take_authority_into(&mut self.returned,grant.maximum_copy_bytes,effect,reply)?};drop(done);}return match self.take_reply.take(){None=>{self.take_pending=true;Err(RetirementPollExit::Pending(0))},Some(result)=>{self.take_pending=false;let step=result?;if let Some(bytes)=self.returned.take(){*payload=bytes;}Ok(RetainedCloneStep::Progress(step.progress()))}}}
+    if let Some(source)=self.source.as_mut(){
+     let InputReplacement::Input{payload,..}=row else{return Err(invalid().into())};
+     if !payload.is_empty()||payload.capacity()!=0{return Err(invalid().into())}
+     if source.terminal_is_empty()&&!self.take_pending{
+      if self.returned.is_none(){return Err(ValueError::invariant("original replacement source closed without handing back its payload").into())}
+      pay(effect,1)?;
+      *payload=self.returned.take().unwrap();
+      self.source=None;
+      return Ok(RetainedCloneStep::Progress(progress(d)))
+     }
+     if !self.take_pending{control.charge(d.capacity_bytes)?;}
+     if self.take_reply.is_none(){
+      let reply=OriginalEffectReply::borrow(&mut self.take_reply)?;
+      let done=if self.take_pending{source.recover_take_authority_into(&mut self.returned,grant.maximum_copy_bytes,effect,reply)?}else{source.take_authority_into(&mut self.returned,grant.maximum_copy_bytes,effect,reply)?};
+      drop(done);
+     }
+     return match self.take_reply.take(){
+      None=>{self.take_pending=true;Err(RetirementPollExit::Pending(0))},
+      Some(result)=>{self.take_pending=false;Ok(RetainedCloneStep::Progress(result?.progress()))}
+     }
+    }
    self.binding=None;Ok(RetainedCloneStep::Complete(progress(d)))
   })();
   RetirementPollExit::settle(effect,result)
  }
  /// 🧾️ Settles one finished receiving scope; the scope's accepted physical spend is its receipt.
  fn settled(cx:&mut semio_framework_job::StepContext<'_>,outcome:Option<semio_framework_job::OriginalNativeReceivingOutcome>,stepped:Option<Result<RetainedCloneProgress,ValueError>>)->Result<RetainedCloneProgress,semio_framework_job::OriginalTurnFailure>{
-  let outcome=outcome.ok_or_else(invalid)?;cx.settle_receiving_scope()?;let progress=outcome.retained_progress();
-  if outcome.source_refusal.is_some()||outcome.call.is_err(){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original replacement receiving scope refused").with_retained_progress(progress).into())}
-  Ok(stepped.ok_or_else(invalid)??)
+   let outcome=outcome.ok_or_else(invalid)?;
+   if outcome.source_refusal.is_some()||outcome.call.is_err(){cx.settle_receiving_scope()?;outcome.into_result()?;}
+   let stepped=stepped.ok_or_else(invalid)?;
+   let progress=match &stepped{Ok(progress)=>*progress,Err(error)=>error.retained_progress()};
+   if let Some(issued)=cx.receiving_issued_grant(){cx.consume_receiving_retained(issued,progress)?}else{cx.consume_retained(progress)?}
+   Ok(stepped?)
  }
  /// 🧵️ The initializer's actual Job boundary forwards its original receiving continuation and reconciles the same receipt.
  pub fn advance(&mut self,row:&mut InputReplacement,codec:&ArtifactOperationWire<M>,factory:&Arc<dyn ArtifactOwnedValueRetirementFactory<M>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
   if cx.should_yield(){return Ok(false)}let grant=cx.retained_grant();if grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}
-  let maximum_work=cx.fuel_remaining();let mut outcome=None;let mut stepped=None;let mut committed=0;
-  if !cx.with_native_receiving(&mut outcome,|control,grant|{let before=control.actual_work();stepped=Some(self.advance_native(row,codec,factory,control,grant,maximum_work));committed=control.actual_work().saturating_sub(before);Ok(())})?{return Ok(false)}
-  cx.consume_fuel(u64::try_from(committed).unwrap_or(u64::MAX));Self::settled(cx,outcome,stepped)?;if self.pending_work.is_some(){return Ok(false)}Ok(self.ready())
+   let mut outcome=None;let mut stepped=None;
+   if !cx.with_native_receiving_work(&mut outcome,|control,grant,work|{stepped=Some(self.advance_native(row,codec,factory,control,grant,work.saturating_sub(semio_framework_value::ORIGINAL_INVOCATION_WORK)));Ok(())})?{return Ok(false)}
+   Self::settled(cx,outcome,stepped)?;if self.pending_work.is_some(){return Ok(false)}Ok(self.ready())
  }
  /// 🤝️ Transfers the already authenticated original typed projection under the same Job receiving continuation.
  pub fn take_input(&mut self,output:&mut Option<RetainedOwnedProjection<M>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
@@ -115,7 +143,7 @@ impl<M:Sync+'static> OriginalReplacementReceiving<M>{
   if self.terminal_is_empty(){return Ok(true)}
   cx.with_original_retirement(|cx|{
    let grant=cx.retained_grant();if grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}
-   let Some((poll,performed))=cx.with_original_effect(grant,|cx,effect|cx.with_native_retirement(|control|Ok::<_,ValueError>(self.close_native(row,control,effect))))? else{return Ok(false)};
+    let Some((poll,performed))=cx.with_original_source_effect(grant,|cx,effect|cx.with_native_retirement(|control|Ok::<_,ValueError>(self.close_native(row,control,effect))))? else{return Ok(false)};
    let result=polled(poll?);let progress=match &result{Ok(progress)=>*progress,Err(error)=>error.retained_progress()};
    cx.consume_fuel(u64::try_from(performed).unwrap_or(u64::MAX));cx.consume_retained(progress)?;result?;Ok(self.terminal_is_empty())
   })

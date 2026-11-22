@@ -1,5 +1,5 @@
 import{afterAll,expect,test}from"bun:test";
-import{copyFileSync,mkdirSync,mkdtempSync,readFileSync,rmSync,writeFileSync}from"node:fs";
+import{copyFileSync,mkdirSync,mkdtempSync,readFileSync,realpathSync,rmSync,writeFileSync}from"node:fs";
 import{tmpdir}from"node:os";
 import{join}from"node:path";
 import{pathToFileURL}from"node:url";
@@ -7,7 +7,7 @@ import{createHash}from"node:crypto";
 
 const source=join(import.meta.dir,"..","..","🟨️.mjs"),schemaPath=join(import.meta.dir,"..","..","🧬️schema","🔣️.json"),scratch:string[]=[];
 afterAll(()=>{for(const path of scratch)rmSync(path,{recursive:true,force:true});});
-const temp=(label:string)=>{const path=mkdtempSync(join(tmpdir(),`record-revision-${label}-`));scratch.push(path);return path;};
+const temp=(label:string)=>{const path=mkdtempSync(join(realpathSync(tmpdir()),`record-revision-${label}-`));scratch.push(path);return path;};
 
 /** 🆔️ The text the module names its record revision with when its own bytes are `edit`ed (a trailing comment) and its schema is `stamp`ed: the module is loaded from the real path and told by a loader plugin that its physical source is the edited copy. */
 async function revisionOf(label:string,edit:string,stamp?:string):Promise<string>{

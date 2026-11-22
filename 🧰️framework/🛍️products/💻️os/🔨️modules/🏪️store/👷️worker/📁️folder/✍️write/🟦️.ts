@@ -21,9 +21,9 @@ export async function retireCurrentFolderCanonicalBootstrapMirror(state: Artifac
   if (state.canonicalFolderMirror === owner) state.canonicalFolderMirror = null;
 }
 
-export async function writeFolder(state: ArtifactState, binding: Extract<PersistenceBinding, { kind: "folder", dataClass: "persistedLocalOnly" }>, archive: readonly number[]): Promise<void> {
+export async function writeFolder(state: ArtifactState, binding: Extract<PersistenceBinding, { kind: "folder", dataClass: "persistedLocalOnly" }>, archive: Uint8Array): Promise<void> {
   await retireCurrentFolderCanonicalBootstrapMirror(state);
-  const bytes = Uint8Array.from(archive);
+  const bytes = archive;
   if (bytes.length > DOCUMENT_ARCHIVE_MAXIMUM_BYTES) throw new Error("document archive exceeds its fixed byte authority");
   decodeDocumentArchiveBytes(bytes);
   if (state.folderArchive !== null && equalByteArrays(state.folderArchive, bytes)) return;
@@ -37,14 +37,14 @@ export async function writeFolder(state: ArtifactState, binding: Extract<Persist
   state.folderBootstrapped = true;
 }
 
-type ArchiveWrite = Readonly<{ archive: readonly number[]; covered: readonly MutationEnvelope[] }>;
+type ArchiveWrite = Readonly<{ archive: Uint8Array; covered: readonly MutationEnvelope[] }>;
 type ArchiveWriteQueue = { running: Promise<void> | null; next: ArchiveWrite | null; failures: number; retry: ReturnType<typeof setTimeout> | null };
 const archiveWriteQueues = new WeakMap<ArtifactState, ArchiveWriteQueue>();
 const ARCHIVE_RETRY_BASE_MS = 200;
 const ARCHIVE_RETRY_MAXIMUM_MS = 5_000;
 
 /** 💾️ The one acknowledged archive write of a folder document. Writes of one document run one at a time in submission order and a newer archive supersedes a queued older one, so a slower older PUT can never land after a newer one. Only the mutations the archive covered leave `pendingMutations`, and `persisted` turns true only when none remain; an edit admitted while the write was in flight stays unsaved. A refused write keeps the edit pending, reports `persisted: false` and retries the newest archive with backoff until the folder acknowledges it. */
-export function persistFolderArchive(state: ArtifactState, binding: Extract<PersistenceBinding, { kind: "folder", dataClass: "persistedLocalOnly" }>, archive: readonly number[], covered: readonly MutationEnvelope[] = [...state.pendingMutations]): Promise<void> {
+export function persistFolderArchive(state: ArtifactState, binding: Extract<PersistenceBinding, { kind: "folder", dataClass: "persistedLocalOnly" }>, archive: Uint8Array, covered: readonly MutationEnvelope[] = [...state.pendingMutations]): Promise<void> {
   const queue = archiveWriteQueues.get(state) ?? { running: null, next: null, failures: 0, retry: null };
   archiveWriteQueues.set(state, queue);
   if (queue.retry !== null) clearTimeout(queue.retry);

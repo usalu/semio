@@ -10,13 +10,20 @@
  * The canvas half is driven against the REAL `Mode` renderer, not an oracle of it: the pruning that
  * emptied the shell is `resolveModeLayout` → `reconcileWindows` inside that component. */
 import { cleanup, render } from "@semio-tech/ui-react/test";
-import { Mode, type ModeWindowDescriptor, type WindowLayoutNode } from "@semio-tech/ui-react";
-import { afterEach, describe, expect, it } from "vitest";
+import { Mode, type ModeWindowDescriptor } from "@semio-tech/ui-react";
+import { type WindowLayoutNode, collectWindowIds } from "@semio-tech/ui-layout";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import Ajv from "ajv";
 import { manifestUtilitiesInitialFixture as initialUtilityCases, manifestViewContextSchema as viewContextSchema } from "@semio-tech/framework-manifest/testing/fixtures";
 import { parseResolvedPluginViewState } from "@semio-tech/framework-manifest/view-state-and-public-invocation";
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
+import { replaceSpawnedSurfaceV1 } from "../../🧱️elements/🏛️ShellHost/🛫️spawned-session/👁️switch-spawned-role/🟦️.ts";
+import { windowDocumentScopeV1, windowIdentityAttributesV1 } from "../../🧱️elements/🏛️ShellHost/📋️panel-hosting/🪪️window-identity/🟦️.ts";
+import { prepareDocumentSurfaceV1 } from "../../🧱️elements/🏛️ShellHost/🔀️surface-switch/📄️document/🟦️.ts";
+import { parkDocumentOpeningReplacementV1, settleDocumentOpeningReplacementV1 } from "../../🧱️elements/🏛️ShellHost/🗨️dialog-origin/🛂️admission/📄️document/🟦️.ts";
+import { buildSpacePanelState, type SpawnedAppEntry } from "../../🧱️elements/🛠️ShellHelpers/📌️panel/🟦️.ts";
+
 import {
   contributionsReceiverSessionV1,
   focusedProgramKeyV1,
@@ -40,7 +47,6 @@ import {
   spawnProgramRefusalCodeV1,
   spawnProgramRefusalNoticeTextV1,
   SPAWN_PROGRAM_REFUSAL_LABELS_V1,
-  type SpawnedLayoutNodeV1,
 } from "../../🧱️elements/🏛️ShellHost/🪟️spawned-program/🟦️.ts";
 import {
   applyUiRefreshResponseToCache,
@@ -59,6 +65,8 @@ import { resolveAppSurfaceSessionFactory } from "../../🧱️elements/🪪️Wa
 import { type AppSurfaceSessionFactory } from "@semio-tech/framework/canvas/react-renderer";
 
 afterEach(cleanup);
+beforeEach(() => vi.stubGlobal("ResizeObserver", class { observe(): void {} unobserve(): void {} disconnect(): void {} }));
+afterEach(() => vi.unstubAllGlobals());
 
 const DRAW_KINDS = [
   { id: "draw-main", bodyKey: "draw.canvas" },
@@ -163,11 +171,12 @@ describe("🪟️ focused program", () => {
 });
 
 describe("🪟️ spawned layout seed", () => {
-  const declared: SpawnedLayoutNodeV1 = {
-    kind: "row",
+  const declared: WindowLayoutNode = {
+    kind: "split",
+    axis: "horizontal",
     children: [
-      { kind: "stack", activeId: "draw-main", children: [{ kind: "window", id: "draw-main" }] },
-      { kind: "stack", children: [{ kind: "window", id: "draw-layers" }] },
+      { kind: "stack", activeWindowId: "draw-main", children: [{ kind: "window", windowKindId: "draw-main" }] },
+      { kind: "stack", children: [{ kind: "window", windowKindId: "draw-layers" }] },
     ],
   };
 
@@ -175,11 +184,11 @@ describe("🪟️ spawned layout seed", () => {
     const renamed = renameLayoutWindowIdsV1(declared, spawnedLayoutRenameV1(SPAWNED_ID, DRAW_KINDS));
     expect(JSON.stringify(renamed)).toContain("draw-7::draw-main");
     expect(JSON.stringify(renamed)).toContain("draw-7::draw-layers");
-    expect((renamed as Extract<SpawnedLayoutNodeV1, { kind: "row" | "column" }>).children[0]).toMatchObject({ activeId: "draw-7::draw-main" });
+    expect((renamed as Extract<WindowLayoutNode, { kind: "split" }>).children[0]).toMatchObject({ activeWindowId: "draw-7::draw-main" });
   });
 
   it("leaves a leaf the app does not declare alone rather than minting a window", () => {
-    const stray: SpawnedLayoutNodeV1 = { kind: "stack", children: [{ kind: "window", id: "not-a-kind" }] };
+    const stray: WindowLayoutNode = { kind: "stack", children: [{ kind: "window", windowKindId: "not-a-kind" }] };
     expect(renameLayoutWindowIdsV1(stray, spawnedLayoutRenameV1(SPAWNED_ID, DRAW_KINDS))).toEqual(stray);
   });
 });
@@ -196,7 +205,7 @@ describe("🪟️ spawned declared instances", () => {
     readonly renamedLayoutWindowIds: readonly string[];
   };
   const labelled = fixture.windowKinds.map((kind) => ({ ...kind, label: kind.id }));
-  const layoutWindowIds = (node: WindowLayoutNode): string[] => (node.kind === "window" ? [node.id] : node.kind === "stack" ? node.children.map((child) => child.id) : node.children.flatMap(layoutWindowIds));
+  const layoutWindowIds = collectWindowIds;
 
   it("reads the declared instances off the program's own default layout, skipping undeclared kinds", () => {
     expect(frameworkLayoutDeclaredInstances(fixture.layout, fixture.windowKinds)).toEqual(fixture.declaredInstances);
@@ -215,14 +224,14 @@ describe("🪟️ spawned declared instances", () => {
 
   it("renames the seeded default layout onto the declared instances, leaving a stray leaf alone", () => {
     const seed = resolveFrameworkLayoutSeed(fixture.layout, labelled, EMPTY_APP_LABELS_OVERLAY, "native", "en");
-    const renamed = renameLayoutWindowIdsV1(seed.modeLayout as SpawnedLayoutNodeV1, spawnedLayoutRenameV1(fixture.spawnedId, fixture.windowKinds, fixture.declaredInstances)) as unknown as WindowLayoutNode;
+    const renamed = renameLayoutWindowIdsV1(seed.modeLayout, spawnedLayoutRenameV1(fixture.spawnedId, fixture.windowKinds, fixture.declaredInstances));
     expect(layoutWindowIds(renamed)).toEqual(fixture.renamedLayoutWindowIds);
   });
 
   it("REGRESSION: without the declared instances the Mode renderer prunes every view and the shell is empty", () => {
     const seed = resolveFrameworkLayoutSeed({ root: { kind: "stack", children: [{ kind: "window", windowKindId: "puzzle3d-main", instanceId: "puzzle3d-main-top" }] } } as Parameters<typeof frameworkLayoutDeclaredInstances>[0], labelled, EMPTY_APP_LABELS_OVERLAY, "native", "en");
     const kindOnly = spawnedProgramWindowInstancesV1(fixture.spawnedId, fixture.windowKinds).map((instance) => windowDescriptor(instance.id, instance.windowKindId));
-    const legacyLayout = renameLayoutWindowIdsV1(seed.modeLayout as SpawnedLayoutNodeV1, spawnedLayoutRenameV1(fixture.spawnedId, fixture.windowKinds)) as unknown as WindowLayoutNode;
+    const legacyLayout = renameLayoutWindowIdsV1(seed.modeLayout, spawnedLayoutRenameV1(fixture.spawnedId, fixture.windowKinds));
     render(<Mode windows={kindOnly} layout={legacyLayout} activeWindowId={layoutWindowIds(legacyLayout)[0]!} />);
     expect(document.querySelector('[data-slot="mode-empty"]')).not.toBe(null);
   });
@@ -231,7 +240,7 @@ describe("🪟️ spawned declared instances", () => {
     const views = { root: { kind: "stack", children: fixture.declaredInstances.map((instance) => ({ kind: "window", windowKindId: instance.windowKindId, instanceId: instance.id })) } } as Parameters<typeof frameworkLayoutDeclaredInstances>[0];
     const seed = resolveFrameworkLayoutSeed(views, labelled, EMPTY_APP_LABELS_OVERLAY, "native", "en");
     const windows = spawnedProgramWindowInstancesV1(fixture.spawnedId, fixture.windowKinds, fixture.declaredInstances).map((instance) => windowDescriptor(instance.id, instance.windowKindId));
-    const layout = renameLayoutWindowIdsV1(seed.modeLayout as SpawnedLayoutNodeV1, spawnedLayoutRenameV1(fixture.spawnedId, fixture.windowKinds, fixture.declaredInstances)) as unknown as WindowLayoutNode;
+    const layout = renameLayoutWindowIdsV1(seed.modeLayout, spawnedLayoutRenameV1(fixture.spawnedId, fixture.windowKinds, fixture.declaredInstances));
     render(<Mode windows={windows} layout={layout} activeWindowId={spawnedWindowInstanceIdV1(fixture.spawnedId, "puzzle3d-main-perspective")} />);
     expect(document.querySelector('[data-slot="mode-empty"]')).toBe(null);
     const mounted = [...document.querySelectorAll("[data-window-id]")].map((element) => element.getAttribute("data-window-id"));
@@ -241,7 +250,7 @@ describe("🪟️ spawned declared instances", () => {
 
 describe("🪟️ the canvas, driven against the real Mode renderer", () => {
   const spawnedWindows = spawnedProgramWindowInstancesV1(SPAWNED_ID, DRAW_KINDS).map((instance) => windowDescriptor(instance.id, instance.windowKindId));
-  const hostLayout: WindowLayoutNode = { kind: "stack", activeId: "s-home-main", children: [{ kind: "window", id: "s-home-main" }] };
+  const hostLayout: WindowLayoutNode = { kind: "stack", activeWindowId: "s-home-main", children: [{ kind: "window", windowKindId: "s-home-main" }] };
   const mountedWindowIds = () => [...document.querySelectorAll("[data-window-id]")].map((element) => element.getAttribute("data-window-id"));
 
   it("REGRESSION: the host app's layout prunes every spawned window away and the shell is empty", () => {
@@ -253,9 +262,9 @@ describe("🪟️ the canvas, driven against the real Mode renderer", () => {
 
   it("the spawned program's own seeded layout puts every one of its windows on the canvas", () => {
     const seeded = renameLayoutWindowIdsV1(
-      { kind: "stack", activeId: DRAW_KINDS[0]!.id, children: DRAW_KINDS.map((kind) => ({ kind: "window" as const, id: kind.id })) },
+      { kind: "stack", activeWindowId: DRAW_KINDS[0]!.id, children: DRAW_KINDS.map((kind) => ({ kind: "window" as const, windowKindId: kind.id })) },
       spawnedLayoutRenameV1(SPAWNED_ID, DRAW_KINDS),
-    ) as unknown as WindowLayoutNode;
+    );
     render(<Mode windows={spawnedWindows} layout={seeded} activeWindowId={spawnedWindows[0]!.id} />);
     expect(document.querySelector('[data-slot="mode-empty"]')).toBe(null);
     expect(mountedWindowIds()).toEqual(spawnedWindows.map((instance) => instance.id));
@@ -561,4 +570,60 @@ describe("🧩️ contributions receiver session", () => {
     expect(shellHostSource).not.toContain("{ ...live, pluginId: deferredPluginId, instanceId: deferredInstanceId }");
     expect(shellHostSource).not.toMatch(/dispatchDeferredEffects[\s\S]{0,600}\.catch\(\(error\) => undefined\)/u);
   });
+});
+
+it("retargets a Workflow node through both roles while keeping its single document owner", async () => {
+  const fixture = JSON.parse(readFileSync(join(import.meta.dirname, "🧫️fixtures", "👁️mounted-role", "🔣️.json"), "utf8"));
+  const node: SpawnedAppEntry = fixture.node;
+  const scope = { spaceId: fixture.spaceId, documentId: fixture.documentId };
+  const documentOwner = (instanceId: number) => ({ clientInstanceId: `client-${instanceId}`, plugin: node.pluginId, session: { instanceId } });
+  const attachments = new Map([[fixture.documentId, documentOwner(node.instanceId)]]);
+  let current = node;
+  let panel = buildSpacePanelState([node, fixture.sibling], "catalogue", node.id);
+  for (const { role, appId, instanceId } of fixture.switches) {
+    const archived = { ref: { ...scope, schema: fixture.schema }, operations: ["artifact-mutation"] };
+    const next = await prepareDocumentSurfaceV1({
+      current: () => panel.spawnedApps[0] === current,
+      capture: async () => archived,
+      create: async () => ({ appId, instanceId }),
+      restore: async (_target, archive) => expect(archive).toEqual(archived),
+      attach: async (target) => {
+        expect(panel.spawnedApps[0]).toBe(current);
+        const previous = documentOwner(current.instanceId);
+        const opening = { runtimeKey: fixture.documentId, plugin: node.pluginId, instanceId: target.instanceId, background: false };
+        const successor = documentOwner(target.instanceId);
+        expect(parkDocumentOpeningReplacementV1({ ...opening, predecessorClientInstanceId: null }, attachments, successor)).toBeNull();
+        expect(parkDocumentOpeningReplacementV1({ ...opening, predecessorClientInstanceId: "retired-client" }, attachments, successor)).toBeNull();
+        const admitted = { ...opening, predecessorClientInstanceId: previous.clientInstanceId };
+        const tentative = parkDocumentOpeningReplacementV1(admitted, attachments, successor)!;
+        expect(settleDocumentOpeningReplacementV1(attachments, tentative, false)).toEqual([]);
+        expect(attachments.get(fixture.documentId)).toEqual(previous);
+        const parked = parkDocumentOpeningReplacementV1(admitted, attachments, successor)!;
+        expect(settleDocumentOpeningReplacementV1(attachments, parked, true)).toEqual([[fixture.documentId, previous]]);
+        expect(attachments.get(fixture.documentId)).toEqual(successor);
+      },
+      release: async () => { throw new Error("The mounted successor should succeed"); },
+    });
+    const predecessor = current;
+    const background = buildSpacePanelState(panel.spawnedApps, panel.activePanelTab, fixture.sibling.id);
+    expect(replaceSpawnedSurfaceV1(background, predecessor, next.appId, next.instanceId).activeSpawnedId).toBe(fixture.sibling.id);
+    panel = replaceSpawnedSurfaceV1(panel, current, next.appId, next.instanceId);
+    current = panel.spawnedApps[0];
+    expect(panel.activeSpawnedId).toBe(node.id);
+    expect(panel.spawnedApps[1]).toBe(fixture.sibling);
+    expect(replaceSpawnedSurfaceV1(panel, predecessor, next.appId, next.instanceId)).toBe(panel);
+    const owners = [{ session: { pluginId: current.pluginId, app: { id: next.appId }, instanceId: next.instanceId }, scope }];
+    const mounted = windowDocumentScopeV1(owners, current);
+    const attributes = windowIdentityAttributesV1({ app: current.appId, role, instance: current.instanceId, window: `${node.id}::main`, kind: "main", document: mounted });
+    const valid = new Ajv().compile({
+      type: "object",
+      required: ["data-surface-role", "data-surface-space-id", "data-surface-document-id"],
+      properties: {
+        "data-surface-role": { const: role },
+        "data-surface-space-id": { const: scope.spaceId },
+        "data-surface-document-id": { const: scope.documentId },
+      },
+    });
+    expect(valid(attributes)).toBe(true);
+  }
 });

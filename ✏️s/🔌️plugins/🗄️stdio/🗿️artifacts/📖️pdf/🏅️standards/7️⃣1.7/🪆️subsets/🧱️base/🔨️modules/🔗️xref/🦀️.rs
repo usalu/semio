@@ -195,7 +195,7 @@ fn recover_xref(data: &[u8], entries: &mut XrefIndex, trailer: &mut Vec<PdfDictE
 pub fn startxref_offset(data: &[u8]) -> Option<usize> {
     let mut cursor = FooterCursor::new(data.len());
     loop {
-        if let FooterStep::Complete(offset) = cursor.advance(data, 4096) {
+        if let FooterStep::Complete(offset) = cursor.advance(|position| data.get(position).copied(), 4096) {
             return offset;
         }
     }
@@ -641,7 +641,7 @@ mod retained_graph_tests {
         let rows = structured_xref(source).unwrap().entries;
         let mut validation = XrefOffsetCursor::default();
         loop {
-            let (work, status) = validation.advance(source, &rows, 1, false);
+            let (work, status) = validation.advance(|position| source.get(position).copied(), &rows, 1, false);
             assert!(work <= 1);
             if status == XrefOffsetStatus::Complete { break; }
             assert_eq!(status, XrefOffsetStatus::More);
@@ -652,7 +652,7 @@ mod retained_graph_tests {
         rows.insert_row(XrefRow { number: 1, entry: Some(XrefEntry::Normal { offset, gen: wrong.gen }) }, false).unwrap();
         let mut validation = XrefOffsetCursor::default();
         loop {
-            let (work, status) = validation.advance(source, &rows, 1, false);
+            let (work, status) = validation.advance(|position| source.get(position).copied(), &rows, 1, false);
             assert!(work <= 1);
             match status {
                 XrefOffsetStatus::More => {}
@@ -663,7 +663,7 @@ mod retained_graph_tests {
                 other => panic!("unexpected validation result {other:?}"),
             }
         }
-        assert_eq!(XrefOffsetCursor::default().advance(source, &rows, 1, true), (0, XrefOffsetStatus::Cancelled));
+        assert_eq!(XrefOffsetCursor::default().advance(|position| source.get(position).copied(), &rows, 1, true), (0, XrefOffsetStatus::Cancelled));
     }
 
     #[test]

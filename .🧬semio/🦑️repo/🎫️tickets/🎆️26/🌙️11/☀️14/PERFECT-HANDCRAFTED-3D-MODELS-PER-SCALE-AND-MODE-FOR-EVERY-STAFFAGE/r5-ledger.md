@@ -112,3 +112,9 @@ objects/tealight | A- at 1:50/1:100, 1:200 B (spindle flame with collar), 1:500 
 ## November 21 visual and measurement follow-up
 
 The [cat review](r3-animals-domestic-cat.md), [passenger study](digital-passenger-review.md) and [cervical studies](digital-cervical-review.md) record later individual corrections. The [152-source render index](digital-art-index.md) and [strict results](digital-volume-status.md) track catalog coverage. Individual visual findings are still being resolved.
+
+The November 21 [visual follow-up](digital-art-survey.md) records the resolved goat torso, hornbeam leaf relief and cross-row sway, the gull’s flight feathers and the physical attachment corrections. The remaining doe browsing issue, Labrador shoulder transitions and sheep fleece still require individual review.
+
+The doe's soft-tissue attachment, separate gland surfaces and pose-dependent thermal exposure were reviewed in the published browsing pose at four scales. [Model measurements](r3-animals-goat.md)
+
+Later standing and seated Labrador checks, the skateboard’s running gear, restored sheep wool and the heater’s transport bearings are documented in their individual reports. [Latest catalog survey](digital-art-survey.md)

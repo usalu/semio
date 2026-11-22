@@ -24,7 +24,7 @@ try {
       console.log("[DEBUG]", phase, "admitting attempt", attempt, path);
       try {
         child = Bun.spawn(["repo","tools","exec","bun","--",runner,phase], {
-          env: {...process.env,CARGO_NET_OFFLINE:"false"}, stdout:descriptor,stderr:descriptor,
+          env: {...process.env,CARGO_NET_OFFLINE:process.env.CARGO_NET_OFFLINE ?? "false"}, stdout:descriptor,stderr:descriptor,
         });
         const status = await child.exited;
         console.log("[DEBUG]", phase, "finished with", status);

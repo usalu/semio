@@ -33,6 +33,12 @@
       2
     ]
   ],
+  "openShell": {"faces": 2, "edges": 5, "boundaryEdges": 4},
+  "lateRefusal": {
+    "triangle": [1, 2, 3],
+    "sharedEdge": [1, 2],
+    "message": "triangle import requires manifold coherent winding"
+  },
   "firstTriangleArea": 3,
   "facesBeforeCancellation": 1,
   "rollbackFaceDelta": 1,

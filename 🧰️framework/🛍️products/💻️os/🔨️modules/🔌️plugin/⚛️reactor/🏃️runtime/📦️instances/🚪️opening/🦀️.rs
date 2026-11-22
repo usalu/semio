@@ -19,11 +19,11 @@ fn retired(cx:&mut semio_framework_job::StepContext<'_>,demand:semio_framework_v
 fn settled(effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,result:Result<semio_framework_value::RetainedCloneStep,semio_framework_value::ValueError>)->semio_framework_value::OriginalRetirementPoll{semio_framework_value::RetirementPollExit::settle(effect,result.map_err(Into::into))}
 /// 🪪️ Retains original request inputs before factory work; a denied issuer never erases the partial app.
 #[doc(hidden)]
-pub async fn plugin_open_actor_instance<PA:PluginApp>(runtime:&PluginRuntime<PA>,request:semio_framework::kernel::ActorInstanceOpenRequest,app_id:String,actor:String,identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+pub async fn plugin_open_actor_instance<PA:PluginApp>(runtime:&PluginRuntime<PA>,request:semio_framework::kernel::ActorInstanceOpenRequest,app_id:String,actor:String,purpose:semio_framework::kernel::ActorInstanceOpenPurpose,identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
  let mut lifetimes=runtime.guest_lifetimes.try_borrow_mut().map_err(|_|plugin_internal_fault("lifecycle authority busy"))?;let slot=lifetimes.get_mut(request.instance_id).filter(|slot|slot.cell.matches_open(request)).ok_or_else(||plugin_internal_fault("exact opening lifecycle missing"))?;
  if slot.native_created||slot.cell.owner().is_some(){return Err(plugin_internal_fault("native opening already captured").into())}
  if slot.pending_creation.is_some(){return Err(plugin_internal_fault("original opening inputs already remain owned").into())}
- *slot.pending_creation=Some(PendingNativeCreation{request,source:std::mem::ManuallyDrop::new(Some((app_id,actor))),app:std::mem::ManuallyDrop::new(None),construction:std::mem::ManuallyDrop::new(None),birth:Default::default(),native_factory:None,identity_bound:false,birth_construction:Default::default(),authority_construction:Default::default(),loan:std::mem::ManuallyDrop::new(None),identity:(cx.operation(),cx.generation()),parent:cx.original_source_parent()?.source_identity()?,returning_loan:false,authority:None,issuer_ready:false,closing:false,failure:std::mem::ManuallyDrop::new(None),metadata_source:std::mem::ManuallyDrop::new(None),metadata_closing:std::mem::ManuallyDrop::new(None),source_closing:std::mem::ManuallyDrop::new(None)});drop(lifetimes);
+ *slot.pending_creation=Some(PendingNativeCreation{request,source:std::mem::ManuallyDrop::new(Some((app_id,actor,purpose))),natural_launch:None,app:std::mem::ManuallyDrop::new(None),construction:std::mem::ManuallyDrop::new(None),birth:Default::default(),native_factory:None,identity_bound:false,birth_construction:Default::default(),authority_construction:Default::default(),loan:std::mem::ManuallyDrop::new(None),identity:(cx.operation(),cx.generation()),parent:cx.original_source_parent()?.source_identity()?,returning_loan:false,authority:None,issuer_ready:false,closing:false,failure:std::mem::ManuallyDrop::new(None),metadata_source:std::mem::ManuallyDrop::new(None),metadata_closing:std::mem::ManuallyDrop::new(None),source_closing:std::mem::ManuallyDrop::new(None)});drop(lifetimes);
  plugin_resume_actor_opening(runtime,request.instance_id,identity,cx).await
 }
 async fn plugin_resume_actor_opening<PA:PluginApp>(runtime:&PluginRuntime<PA>,instance_id:u32,identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
@@ -62,6 +62,20 @@ async fn plugin_advance_actor_opening<PA:PluginApp>(runtime:&PluginRuntime<PA>,i
  }
  if !(opening.identity_bound&&opening.issuer_ready){let source=opening.source.as_ref().ok_or_else(||plugin_internal_fault("original opening identity source missing"))?;let mut birth=semio_plugin_reactor_app::InstanceBirth{identity_bound:opening.identity_bound,issuer_ready:opening.issuer_ready,construction:std::mem::take(&mut opening.birth_construction)};let paid=opening.app.as_mut().unwrap().advance_instance_birth(&mut birth,instance_id,&source.1,cx);opening.identity_bound=birth.identity_bound;opening.issuer_ready=birth.issuer_ready;opening.birth_construction=birth.construction;paid?;return Ok(false)}
  }
+ if !opening.closing && opening.natural_launch.is_none() {
+  if let Some((_, _, semio_framework::kernel::ActorInstanceOpenPurpose::NaturalSource { declaration, extent })) = opening.source.as_ref() {
+   let (mounted, maximum) = opening.app.as_ref().and_then(PluginApp::natural_source_capability)
+       .ok_or_else(||plugin_internal_fault("mounted app has no paged natural source decoder"))?;
+   let launch = semio_plugin_reactor_lifecycle::instance_lifetime::NaturalSourceLaunchGrant::project(mounted, maximum, declaration, *extent)
+       .ok_or_else(||plugin_internal_fault("natural source launch does not match the mounted decoder declaration and extent"))?;
+   let progress = RetainedCloneProgress { copied_items: 1, copied_bytes: size_of_val(&opening.natural_launch), ..Default::default() };
+   if cx.retained_grant().maximum_depth == 0 || cx.fuel_remaining() == 0 || !progress.fits(cx.retained_grant()) { return Ok(false); }
+   cx.consume_retained(progress)?;
+   cx.consume_fuel(1);
+   opening.natural_launch = Some(launch);
+   return Ok(false);
+  }
+ }
  if let Some(source)=opening.source_closing.as_mut(){
   if !source.terminal_is_empty(){{let body=cx.retained_grant().maximum_copy_bytes;retired_poll(cx,source.selected_demand(body)?,|effect|source.step(body,effect))?;}return Ok(false)}
   if cx.retained_grant().maximum_items==0||cx.retained_grant().maximum_depth==0{return Ok(false)}opening.source_closing.take();cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);return Ok(false)
@@ -85,7 +99,18 @@ async fn plugin_advance_actor_opening<PA:PluginApp>(runtime:&PluginRuntime<PA>,i
  if cx.should_yield()||cx.retained_grant().maximum_items==0||cx.retained_grant().maximum_depth==0{return Ok(false)}
  if opening.closing{let failure=opening.failure.take();slot.pending_creation.take();lifetimes.remove_uncreated(instance_id).map_err(plugin_internal_fault)?;cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);return match failure{Some(failure)=>Err(failure),None=>Ok(false)}}
  let mut instances=runtime.instances.try_borrow_mut().map_err(|_|plugin_internal_fault("runtime instance authority busy"))?;let mut actors=runtime.instance_actors.try_borrow_mut().map_err(|_|plugin_internal_fault("runtime actor authority busy"))?;
- let actor=opening.authority.take().ok_or_else(||plugin_internal_fault("original opening actor authority missing"))?;let app=opening.app.take().unwrap();let cell=std::sync::Arc::new(RuntimeAppCell::new(AppInstance{id:instance_id,app,surface_contexts:Default::default()},runtime.mounted_policy));let lease=PluginInstanceCloseLease::from_cell(instance_id,&cell);let owner=semio_plugin_reactor_lifecycle::instance_lifetime::NativeLifetimeOwner::from_lease(slot.cell.lifetime(),lease).expect("preflighted exact native lifetime");slot.cell.install_owner(owner).unwrap_or_else(|_|panic!("preflighted opening owner slot"));instances.insert_admitted(instance_id,cell);actors.insert_admitted(instance_id,actor);slot.native_created=true;slot.pending_creation.take();cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);Ok(true)
+ let launch_progress = RetainedCloneProgress {
+  copied_items: usize::from(opening.natural_launch.is_some()),
+  copied_bytes: opening.natural_launch.as_ref().map_or(0, size_of_val),
+  ..Default::default()
+ };
+ if opening.natural_launch.is_some() {
+  if cx.fuel_remaining() < 2 || cx.retained_grant().maximum_items < 2 || !launch_progress.fits(cx.retained_grant()) { return Ok(false); }
+  cx.consume_retained(launch_progress)?;
+  cx.consume_fuel(1);
+ }
+ let launch = opening.natural_launch.take();
+ let actor=opening.authority.take().ok_or_else(||plugin_internal_fault("original opening actor authority missing"))?;let app=opening.app.take().unwrap();let cell=std::sync::Arc::new(RuntimeAppCell::new(AppInstance{id:instance_id,app,surface_contexts:Default::default()},runtime.mounted_policy));let lease=PluginInstanceCloseLease::from_cell(instance_id,&cell);let owner=semio_plugin_reactor_lifecycle::instance_lifetime::NativeLifetimeOwner::from_lease(slot.cell.lifetime(),lease).expect("preflighted exact native lifetime");slot.cell.install_owner(owner).unwrap_or_else(|_|panic!("preflighted opening owner slot"));instances.insert_admitted(instance_id,cell);actors.insert_admitted(instance_id,actor);if let Some(launch)=launch{slot.install_natural_source_launch(launch);}slot.native_created=true;slot.pending_creation.take();cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);Ok(true)
 }
 /// 🔁️ Resumes the original allocation-bound opening once per supplied caller turn without running its factory again.
 #[doc(hidden)]

@@ -1,0 +1,9 @@
+{
+  "pageBytes": 4096,
+  "pageCount": 2305,
+  "tailBytes": 693,
+  "instance": 42,
+  "sequence": "0020000000000005",
+  "generation": "0020000000000006",
+  "operation": "0020000000000007"
+}

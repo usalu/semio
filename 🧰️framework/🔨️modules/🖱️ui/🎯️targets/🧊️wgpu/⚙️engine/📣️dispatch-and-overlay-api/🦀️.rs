@@ -1,6 +1,7 @@
 //! 📣️ Dispatch and overlay API: the layout queries, the paint census, the event, pointer and accessibility dispatch, the overlay API, the clock and the commands. See [`super`].
 
 use super::*;
+use semio_ui_wgpu_input::TreeDropPosition;
 
 // #region engine
 //#region 🔖️Ui
@@ -96,6 +97,7 @@ impl Ui {
                 RetainedPaintPhase::Overlays => "overlays",
                 RetainedPaintPhase::Paint => "paint",
                 RetainedPaintPhase::Scenes => "scenes",
+                RetainedPaintPhase::Scrollbars => "scrollbars",
                 RetainedPaintPhase::Tooltip => "tooltip",
                 RetainedPaintPhase::Hits => "hits",
                 RetainedPaintPhase::Borders => "borders",
@@ -130,7 +132,7 @@ impl Ui {
     pub fn dispatch_event(&mut self, window_id: &str, event: UiEvent) -> Vec<UiCommand> {
         let reset_caret = matches!(&event, UiEvent::PointerDown { .. } | UiEvent::KeyDown { .. } | UiEvent::TextInput { .. } | UiEvent::Paste { .. } | UiEvent::Ime(_));
         let metrics = TreeRowMetrics::from_theme(&self.theme);
-        let driver_drag = self.driver_drag;
+        let driver_drag = self.driver.drag;
         let Some(surface) = self.windows.token(window_id) else { return Vec::new() };
         let Some(window) = self.windows.get_mut(window_id).filter(|window| window.closing.is_none()) else { return Vec::new() };
         let presented = window.presented_ready;
@@ -147,6 +149,7 @@ impl Ui {
             let mut commands = router.set_tree_drag_policy(tree, driver_drag, metrics.with_inline(inline));
             commands.extend(router.dispatch(tree, root, &event));
             router.synchronize_retained_caret(tree, reset_caret);
+            semio_ui_wgpu_paint::sync_input_refusal_rows(tree, root);
             (commands, tree.take_disclosure_changed())
         };
         if layout_changed {
@@ -169,7 +172,7 @@ impl Ui {
     pub fn dispatch_pointer_event(&mut self, window_id: &str, pointer_id: u64, event: UiEvent) -> Vec<UiCommand> {
         let reset_caret = matches!(&event, UiEvent::PointerDown { .. });
         let metrics = TreeRowMetrics::from_theme(&self.theme);
-        let driver_drag = self.driver_drag;
+        let driver_drag = self.driver.drag;
         let Some(surface) = self.windows.token(window_id) else { return Vec::new() };
         let Some(window) = self.windows.get_mut(window_id).filter(|window| window.closing.is_none()) else { return Vec::new() };
         let presented = window.presented_ready;
@@ -186,6 +189,7 @@ impl Ui {
             let mut commands = router.set_tree_drag_policy(tree, driver_drag, metrics.with_inline(inline));
             commands.extend(router.dispatch_pointer(tree, root, pointer_id, &event));
             router.synchronize_retained_caret(tree, reset_caret);
+            semio_ui_wgpu_paint::sync_input_refusal_rows(tree, root);
             (commands, tree.take_disclosure_changed())
         };
         if layout_changed {
@@ -207,7 +211,7 @@ impl Ui {
 
     pub fn dispatch_accessibility_event(&mut self, window_id: &str, window_generation: u64, node_id: u64, node_key: &str, event: AccessibilityUiEvent) -> Option<Vec<UiCommand>> {
         let metrics = TreeRowMetrics::from_theme(&self.theme);
-        let driver_drag = self.driver_drag;
+        let driver_drag = self.driver.drag;
         let surface = self.windows.token(window_id)?;
         let window = self.windows.get_mut(window_id).filter(|window| window.closing.is_none())?;
         let presented = window.presented_ready;
@@ -269,9 +273,21 @@ impl Ui {
     /// façade-level entry point for React's `Popover`/`Dialog`/`CommandPalette` portals
     /// (`🧱️elements/🗨️Popover/🟦️.tsx`, `🧱️elements/💬️Dialog/🟦️.tsx`). Placement, escape/outside-press
     /// dismissal and the `Dialog`/`CommandPalette` focus trap all come from `events`' own policy.
-    pub fn open_overlay(&mut self, window_id: &str, root: NodeId, kind: OverlayKind, anchor: OverlayAnchor) {
-        let Some(window) = self.windows.get_mut(window_id).filter(|window| window.closing.is_none()) else { return };
-        window.router.open_overlay(&mut window.tree, root, kind, anchor);
+    pub fn open_overlay(&mut self, window_id: &str, root: NodeId, kind: OverlayKind, anchor: OverlayAnchor) -> Vec<UiCommand> {
+        let Some(window) = self.windows.get_mut(window_id).filter(|window| window.closing.is_none()) else { return Vec::new() };
+        window.router.open_overlay(&mut window.tree, root, kind, anchor)
+    }
+
+    /// 🔒️ The document node of `window_id`'s topmost open modal overlay (a `Dialog` or `CommandPalette`), whose accessibility projection hides everything outside it.
+    pub fn modal_overlay_document_id(&self, window_id: &str) -> Option<ui_contract::UiNodeId> {
+        let window = self.windows.get(window_id)?;
+        let modal = window.router.open_overlays().iter().rev().find(|overlay| overlay.focus_trap)?;
+        window.tree.document_id(modal.root)
+    }
+
+    /// 🛑️ Records the dismissals the owner of the overlay rooted at `root` prevented — React's `preventDefault` inside `onEscapeKeyDown`, `onPointerDownOutside` and `onCloseAutoFocus`.
+    pub fn set_overlay_veto(&mut self, window_id: &str, root: NodeId, veto: semio_ui_wgpu_events::OverlayVeto) -> bool {
+        self.windows.get_mut(window_id).filter(|window| window.closing.is_none()).is_some_and(|window| window.router.set_overlay_veto(root, veto))
     }
 
     /// 🚪️ Closes one open overlay by its content root.
@@ -434,12 +450,6 @@ impl Ui {
     }
     //#endregion 🪟️OverlayApi
 
-    /// 🗺️ Routes `event` through the shared `🐚️Shell`'s own hit-testing, surfacing chrome-level
-    /// `ShellEvent`s (tab activation today; drag/drop is `Shell::dispatch`'s own documented gap).
-    pub fn dispatch_shell_event(&mut self, event: &UiEvent) -> Vec<ShellEvent> {
-        self.shell.dispatch(event)
-    }
-
     /// 📥️ Drains every `UiCommand` queued by `dispatch_event` calls since the last drain.
     pub fn drain_commands(&mut self) -> Vec<UiCommand> {
         std::mem::take(&mut self.pending_commands)
@@ -460,6 +470,36 @@ impl Ui {
             }
         }
         sessions
+    }
+
+    /// 📏️ The clipped insertion line in the presented surface's local coordinates.
+    pub fn tree_row_reorder_marker(&self, window_id: &str) -> Option<semio_ui_theme::geometry::Rect> {
+        use semio_ui_theme::geometry::Rect;
+        let window = self.windows.get(window_id).filter(|window| window.presented_ready && window.closing.is_none())?;
+        let drag = window.presented_router.drag_session().filter(|drag| drag.payload.contains_key(ui_contract::TREE_ROW_REORDER_MIME))?;
+        let target = drag.drop_target.filter(|target| *target != drag.source)?;
+        let tree = &window.presented_tree;
+        let row = tree.absolute_rect(target)?;
+        let height = row.h.min(2.0);
+        let y = match tree_row_reorder_position(row, drag.pointer_y) {
+            TreeDropPosition::Before => row.y,
+            TreeDropPosition::After => row.y + row.h - height,
+            TreeDropPosition::Inside => return None,
+        };
+        let clip = retained_node_clip(tree, target).unwrap_or(row);
+        let (left, top) = (row.x.max(clip.x), y.max(clip.y));
+        let (right, bottom) = ((row.x + row.w).min(clip.x + clip.w), (y + height).min(clip.y + clip.h));
+        (left < right && top < bottom).then_some(Rect::new(left, top, right - left, bottom - top))
+    }
+}
+
+/// 🎯️ The physical row edge shared by drag feedback and release.
+pub fn tree_row_reorder_position(row: semio_ui_theme::geometry::Rect, y: f32) -> TreeDropPosition {
+    let fraction = (y - row.y) / row.h.max(1.0);
+    match fraction {
+        fraction if (0.0..0.25).contains(&fraction) => TreeDropPosition::Before,
+        fraction if fraction > 0.75 && fraction <= 1.0 => TreeDropPosition::After,
+        _ => TreeDropPosition::Inside,
     }
 }
 //#endregion 🔖️Ui

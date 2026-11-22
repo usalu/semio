@@ -26,6 +26,16 @@ impl NativeMediaDeclaration {
         Some(Self { port: port.into(), format_kind: kind.into(), mime: mime.into(), media_type, filename: filename.into(), reference })
     }
 
+    /// 🎟️ Selects the mounted ordinary PDF binary source declaration.
+    pub fn natural_pdf_source(&self) -> Option<semio_framework::kernel::NaturalSourceWireDeclaration> {
+        (self.reference && self.format_kind == "s.stdio.pdf@1.7"
+            && self.mime == "application/pdf" && self.extension() == Some("pdf"))
+            .then(|| semio_framework::kernel::NaturalSourceWireDeclaration {
+                format_kind: self.format_kind.clone(), media_type: self.mime.clone(),
+                extension: ".pdf".to_owned(), binary: true,
+            })
+    }
+
     pub fn filename(&self) -> &str { &self.filename }
 
     /// 📂 Uses the manifest-owned extension in the native Save picker.

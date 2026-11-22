@@ -1,6 +1,5 @@
 /** ⏳️ Busy dependency store: a child that finds the funding parent or the producer held by a sibling waits with a progress line and a bound, it never fails. */
 import{test,expect}from"bun:test";
-import "../../../🔒️bindings/🧪️tests/🟦️.ts";
 import{existsSync,mkdirSync,mkdtempSync,realpathSync,rmSync,writeFileSync}from"node:fs";
 import{execSync,spawn}from"node:child_process";
 import{leaseRegistryFolderV1}from"../../../../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🧭️order/🗂️registry/🟦️.ts";
@@ -40,8 +39,8 @@ test("the real process ancestry equals an independent walk with ps, and the real
   const independent:number[]=[];for(let pid=process.ppid;pid>1&&!independent.includes(pid)&&independent.length<64;pid=Number.parseInt(execSync("ps -o ppid= -p "+pid,{encoding:"utf8"}),10))independent.push(pid);
   expect(processAncestorsV1(pid=>{try{return Number.parseInt(execSync("ps -o ppid= -p "+pid,{encoding:"utf8"}),10);}catch{return undefined;}},process.ppid)).toEqual(independent);
   process.env.SEMIO_LEASE_REGISTRY_DIRECTORY=join(root,"registry");const folder=leaseRegistryFolderV1(join(root,"registry"),directory);mkdirSync(folder,{recursive:true});
-  const write=(pid:number,startedAtMs:number,command:string,mode:"shared"|"exclusive")=>writeFileSync(join(folder,pid+"-"+startedAtMs+".json"),JSON.stringify({version:1,pid,startedAtMs,updatedAtMs:Date.now(),command,directory,standing:{version:1},holds:[{resource,mode,sinceMs:1000+pid,task:1}],waits:[]}));
-  write(process.ppid,1,"the parent","shared");write(stranger.pid!,1,"the stranger","shared");write(process.pid,1,"this process","shared");write(dead.pid!,1,"the dead","exclusive");
+  const started=(pid:number)=>{const text=execSync("ps -o etime= -p "+pid,{encoding:"utf8"}).trim(),[clock,days]=text.split("-").reverse(),parts=clock!.split(":").map(Number).reverse(),seconds=(parts[0]??0)+(parts[1]??0)*60+(parts[2]??0)*3600+Number(days??0)*86400;return Date.now()-seconds*1000;};const write=(pid:number,startedAtMs:number,command:string,mode:"shared"|"exclusive",registered=startedAtMs)=>writeFileSync(join(folder,pid+"-"+startedAtMs+".json"),JSON.stringify({version:1,pid,startedAtMs:registered,updatedAtMs:Date.now(),command,directory,standing:{version:1},holds:[{resource,mode,sinceMs:1000+pid,task:1}],waits:[]}));
+  write(process.ppid,1,"the parent","shared",started(process.ppid));write(stranger.pid!,1,"the stranger","shared",started(stranger.pid!));write(process.pid,1,"this process","shared");write(dead.pid!,1,"the dead","exclusive");
   const first=observeDependencyStoreHoldersV1(directory,resource);
   expect(first.live.map(row=>[row.command,row.ancestor]).sort()).toEqual([["the parent",true],["the stranger",false],["this process",true]].sort());
   expect(first.gone.map(row=>[row.pid,row.command,row.mode])).toEqual([[dead.pid,"the dead","exclusive"]]);

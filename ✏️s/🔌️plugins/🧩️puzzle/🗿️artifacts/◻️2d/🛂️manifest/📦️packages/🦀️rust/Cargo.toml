@@ -9,15 +9,14 @@ description = "Graph manifest registry of the 2D puzzle: the manifests generated
 [package.metadata.semio]
 role = "library"
 
-[package.metadata.semio.preparation]
-script = "../../../📦️packages/🦀️rust/📜️script.ts"
-command = ["graph-generate"]
-
 [lints]
 workspace = true
 
 [lib]
 path = "🦀️.rs"
+
+[features]
+testkit = ["semio-s-artifact-puzzle-2d-records/testkit"]
 
 [dependencies]
 machine = { path = "../../../../../../../../🧰️framework/🔨️modules/🔄️machine/📦️packages/🦀️rust", package = "semio-framework-machine" }
@@ -55,15 +54,11 @@ semio-ui-scene = { workspace = true }
 semio-framework-value = { path = "../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-puzzle-2d-records = { path = "../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧱️records/📦️packages/🦀️rust" }
-semio-s-artifact-puzzle-3d = { workspace = true }
 semio-s-artifact-puzzle-3d-inferences = { workspace = true }
-semio-s-artifact-stdio-dwg = { workspace = true }
 semio-s-artifact-stdio-dxf = { workspace = true }
 semio-s-artifact-stdio-json = { workspace = true }
-semio-s-artifact-stdio-pdf = { workspace = true }
 semio-s-artifact-stdio-png = { workspace = true }
 semio-s-artifact-stdio-semio-drawing = { workspace = true }
-semio-s-artifact-stdio-semio-drawing-export = { workspace = true }
 semio-s-artifact-stdio-svg = { workspace = true }
 semio-s-artifact-stdio-txt = { workspace = true }
 semio-s-plugin-puzzle-board-scene = { workspace = true }
@@ -87,6 +82,7 @@ semio-s-plugin-puzzle-jobs = { workspace = true, features = ["testing"] }
 semio-s-plugin-puzzle-retained = { workspace = true, features = ["testing"] }
 serde = { workspace = true }
 serde_json = { workspace = true }
+semio-s-artifact-puzzle-2d-records = { path = "../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧱️records/📦️packages/🦀️rust", features = ["testkit"] }
 
 [target.'cfg(all(target_arch = "wasm32", not(target_env = "p2")))'.dependencies]
 js-sys = { workspace = true }

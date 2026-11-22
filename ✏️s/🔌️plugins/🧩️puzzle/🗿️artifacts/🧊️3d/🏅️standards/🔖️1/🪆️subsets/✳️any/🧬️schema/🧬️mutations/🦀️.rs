@@ -77,6 +77,105 @@ pub enum Puzzle3dMutation {
 
 dsl::original_ordinal_operation_receiving!(Puzzle3dMutation);
 
+use semio_framework_value::{ValueError, ValueRefusalKind};
+use semio_os_kernel::os_store::ArtifactOperationTargets;
+
+enum ConflictPath<'a> {
+    Document,
+    Entity(&'a str),
+    Nested(&'a str, &'a str),
+    Selection(&'a [String]),
+}
+
+impl<'a> ConflictPath<'a> {
+    fn segment(self, index: usize) -> Result<&'a str, ValueError> {
+        match (self, index) {
+            (Self::Entity(id) | Self::Nested(id, _), 0) => Some(id),
+            (Self::Nested(_, id), 1) => Some(id),
+            (Self::Selection(ids), index) => ids.get(index).map(String::as_str),
+            _ => None,
+        }
+        .ok_or_else(|| ValueError::literal(ValueRefusalKind::InvalidValue, "Puzzle3d conflict path segment is absent"))
+    }
+}
+
+impl Puzzle3dMutation {
+    fn conflict_path(&self) -> ConflictPath<'_> {
+        match self {
+            Self::CreateObject(payload) => ConflictPath::Entity(payload.object.id.as_str()),
+            Self::DeleteObject(payload) => ConflictPath::Entity(payload.id.as_str()),
+            Self::MoveObject(payload) => ConflictPath::Entity(payload.id.as_str()),
+            Self::RotateObject(payload) => ConflictPath::Entity(payload.id.as_str()),
+            Self::ScaleObject(payload) => ConflictPath::Entity(payload.id.as_str()),
+            Self::ChangeObjectMesh(payload) => ConflictPath::Entity(payload.id.as_str()),
+            Self::EditObjectLabel(payload) => ConflictPath::Entity(payload.id.as_str()),
+            Self::ChangeObjectKind(payload) => ConflictPath::Entity(payload.id.as_str()),
+            Self::ChangeObjectAnchor(payload) => ConflictPath::Entity(payload.id.as_str()),
+            Self::ChangeObjectHidden(payload) => ConflictPath::Entity(payload.id.as_str()),
+            Self::ChangeObjectLocked(payload) => ConflictPath::Entity(payload.id.as_str()),
+            Self::AddObjectVortex(payload) => ConflictPath::Nested(payload.object_id.as_str(), payload.vortex.id.as_str()),
+            Self::RemoveObjectVortex(payload) => ConflictPath::Nested(payload.object_id.as_str(), payload.vortex_id.as_str()),
+            Self::ReplaceObjectVortex(payload) => ConflictPath::Nested(payload.object_id.as_str(), payload.vortex_id.as_str()),
+            Self::ConnectVortices(payload) => ConflictPath::Entity(payload.id.as_str()),
+            Self::DisconnectVortices(payload) => ConflictPath::Entity(payload.id.as_str()),
+            Self::ReplaceAttractionGeometry(payload) => ConflictPath::Entity(payload.id.as_str()),
+            Self::CreateTargetVolume(payload) => ConflictPath::Entity(payload.target_volume.id.as_str()),
+            Self::DeleteTargetVolume(payload) => ConflictPath::Entity(payload.id.as_str()),
+            Self::MoveTargetVolume(payload) => ConflictPath::Entity(payload.id.as_str()),
+            Self::RotateTargetVolume(payload) => ConflictPath::Entity(payload.id.as_str()),
+            Self::ScaleTargetVolume(payload) => ConflictPath::Entity(payload.id.as_str()),
+            Self::ChangeTargetVolumeHidden(payload) => ConflictPath::Entity(payload.id.as_str()),
+            Self::ChangeTargetVolumeLocked(payload) => ConflictPath::Entity(payload.id.as_str()),
+            Self::CreateReference(payload) => ConflictPath::Entity(payload.reference.id.as_str()),
+            Self::DeleteReference(payload) => ConflictPath::Entity(payload.id.as_str()),
+            Self::MoveReference(payload) => ConflictPath::Entity(payload.id.as_str()),
+            Self::ResizeReference(payload) => ConflictPath::Entity(payload.id.as_str()),
+            Self::ReplaceReferenceSource(payload) => ConflictPath::Entity(payload.id.as_str()),
+            Self::ChangeReferenceHidden(payload) => ConflictPath::Entity(payload.id.as_str()),
+            Self::ChangeReferenceLocked(payload) => ConflictPath::Entity(payload.id.as_str()),
+            Self::ChangeDomain(_) => ConflictPath::Document,
+            Self::ConnectKindCompatibility(payload) => ConflictPath::Nested(payload.source.as_str(), payload.target.as_str()),
+            Self::DisconnectKindCompatibility(payload) => ConflictPath::Nested(payload.source.as_str(), payload.target.as_str()),
+            Self::ReplaceKindCatalogs(_) => ConflictPath::Document,
+            Self::DragSelection(payload) => ConflictPath::Selection(&payload.targets),
+            Self::RotateSelection(payload) => ConflictPath::Selection(&payload.targets),
+            Self::ScaleSelection(payload) => ConflictPath::Selection(&payload.targets),
+        }
+    }
+
+    /// 🎯️ Borrows the original document conflict path from the mutation's authored fields.
+    pub fn original_conflict_target(&self) -> Option<&dyn ArtifactOperationTargets> {
+        match self.conflict_path() {
+            ConflictPath::Document => None,
+            _ => Some(self),
+        }
+    }
+}
+
+impl ArtifactOperationTargets for Puzzle3dMutation {
+    fn len(&self) -> usize {
+        match self.conflict_path() {
+            ConflictPath::Document => 0,
+            ConflictPath::Entity(_) => 1,
+            ConflictPath::Nested(..) => 2,
+            ConflictPath::Selection(ids) => ids.len(),
+        }
+    }
+
+    fn segment_len(&self, index: usize) -> Result<usize, ValueError> {
+        Ok(self.conflict_path().segment(index)?.len())
+    }
+
+    fn read_segment(&self, index: usize, offset: usize, output: &mut [u8]) -> Result<usize, ValueError> {
+        let text = self.conflict_path().segment(index)?;
+        let bytes = text.as_bytes().get(offset..)
+            .ok_or_else(|| ValueError::literal(ValueRefusalKind::InvalidValue, "Puzzle3d conflict path offset exceeds its segment"))?;
+        let count = bytes.len().min(output.len());
+        output[..count].copy_from_slice(&bytes[..count]);
+        Ok(count)
+    }
+}
+
 //#region 🏷️Kinds
 /// 🏷️ The kebab-case spelling of every [`Puzzle3dMutation`] variant, in declaration order — the exact
 /// vocabulary the `puzzle-3d-1-any` mutation catalog (`../../🔣️oracle.json`) declares and
@@ -137,7 +236,7 @@ use semio_s_artifact_puzzle_3d_mutations_reference::change_reference_locked::mut
 use semio_s_artifact_puzzle_3d_mutations_volume::change_target_volume_hidden::mutation::ChangeTargetVolumeHidden;
 use semio_s_artifact_puzzle_3d_mutations_volume::change_target_volume_locked::mutation::ChangeTargetVolumeLocked;
 use semio_s_artifact_puzzle_3d_mutations_catalog::connect_kind_compatibility::mutation::ConnectKindCompatibility;
-use semio_s_artifact_puzzle_3d_mutations_vortex::connect_vortices::mutation::ConnectVortices;
+pub use semio_s_artifact_puzzle_3d_mutations_vortex::connect_vortices::mutation::{connect_vortices, ConnectVortices};
 use semio_s_artifact_puzzle_3d_mutations_object::create_object::mutation::CreateObject;
 use semio_s_artifact_puzzle_3d_mutations_reference::create_reference::mutation::CreateReference;
 use semio_s_artifact_puzzle_3d_mutations_volume::create_target_volume::mutation::CreateTargetVolume;

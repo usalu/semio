@@ -89,5 +89,19 @@
         "draft": "9"
       }
     }
-  ]
+  ],
+  "numberNotation": {
+    "cases": [
+      { "locale": "en", "text": "1.5", "canonical": "1.5", "display": "1.5" },
+      { "locale": "de", "text": "1,5", "canonical": "1.5", "display": "1,5" },
+      { "locale": "de", "text": "-0,25", "canonical": "-0.25", "display": "-0,25" },
+      { "locale": "de", "text": "42", "canonical": "42", "display": "42" },
+      { "locale": "en", "text": "1e3", "canonical": "1000", "display": "1000" },
+      { "locale": "invariant", "text": "2.75", "canonical": "2.75", "display": "2.75" },
+      { "locale": "en", "text": "1,5", "canonical": null },
+      { "locale": "de", "text": "1.5", "canonical": null },
+      { "locale": "de", "text": "1,5,2", "canonical": null },
+      { "locale": "de", "text": "nan", "canonical": null }
+    ]
+  }
 }

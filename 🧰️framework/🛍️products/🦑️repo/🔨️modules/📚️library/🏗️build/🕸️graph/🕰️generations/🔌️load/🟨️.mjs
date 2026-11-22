@@ -57,6 +57,7 @@ export const GENERATION_MESSAGES_V1=Object.freeze({
   resumedWaves:"graph: {done} of {total} projects were derived by a command that was cut off, deriving the rest",
   sealing:"graph: fact index merged, packing and publishing generation {generation}",
   sealedAge:"graph: answering from sealed generation {generation} ({owners} projects), {age} old, without verification and without inference (graph policy current)",
+  projectNeverSealed:"graph: this machine holds no sealed generation of the workspace to answer {project} from, and a question about one project under graph policy current never starts the inference that would seal one. Start the whole read on purpose (repo graph --graph-policy fresh).",
   neverSealed:"graph: this machine holds no sealed generation of the whole workspace, and a question about every project never starts the hours of inference it would need.{fleet} {progress} Ask about one project (repo show project <name>), or start the whole read on purpose (repo graph --graph-policy fresh).",
   fleetHolds:" The fleet cache holds a sealed generation; the whole read fetches it first.",
   progressRunning:"The whole read of this machine is at {phase}, {done} of {total}, running for {held}.",
@@ -106,6 +107,7 @@ export const GENERATION_MESSAGES_V1=Object.freeze({
   resumedWaves:"Graph: {done} von {total} Projekten wurden von einem abgebrochenen Befehl abgeleitet, der Rest wird abgeleitet",
   sealing:"Graph: Faktenindex zusammengeführt, Generation {generation} wird verpackt und veröffentlicht",
   sealedAge:"Graph: Antwort aus der versiegelten Generation {generation} ({owners} Projekte), {age} alt, ohne Prüfung und ohne Ableitung (Graph-Richtlinie current)",
+  projectNeverSealed:"Graph: Diese Maschine hat keine versiegelte Generation des Arbeitsbereichs, aus der {project} beantwortet werden könnte, und eine Frage nach einem Projekt unter der Graph-Richtlinie current startet nie die Ableitung, die eine versiegelte Generation erzeugen würde. Starte das ganze Lesen absichtlich (repo graph --graph-policy fresh).",
   neverSealed:"Graph: Diese Maschine hat keine versiegelte Generation des ganzen Arbeitsbereichs, und eine Frage über alle Projekte startet nie die stundenlange Ableitung, die sie bräuchte.{fleet} {progress} Frage nach einem Projekt (repo show project <Name>) oder starte das ganze Lesen absichtlich (repo graph --graph-policy fresh).",
   fleetHolds:" Der Flotten-Cache hält eine versiegelte Generation; das ganze Lesen holt sie zuerst.",
   progressRunning:"Das ganze Lesen dieser Maschine steht bei {phase}, {done} von {total}, seit {held}.",
@@ -348,6 +350,15 @@ const progressSinksV1=new Set();
 /** 📡️ Registers a listener of the phase counters of every generation load of this process (a worker reports them to its service): `{phase, done, total}` at most once per `progressReportMilliseconds` and on every completed phase. Returns the function that removes it. */
 export function onGenerationProgressV1(listener){progressSinksV1.add(listener);return()=>progressSinksV1.delete(listener);}
 
+/** 🫀️ Hands every counted phase event of a build also to the claim that holds the build (the door board judges a holder by the last advance of its claim, not by the rows the sidecar watch reads), so no stage of a whole read is silent to either. A build without a claim object, and the running-owner lists, pass through unchanged. */
+export function custodyProgressV1(builder,emit){
+ if(typeof builder!=="object"||builder===null||typeof builder.progress!=="function")return emit;
+ return event=>{
+  if(event.running===undefined&&typeof event.phase==="string"&&Number.isSafeInteger(event.done))Promise.resolve(builder.progress({phase:event.phase,done:event.done,total:event.total})).catch(()=>undefined);
+  return emit(event);
+ };
+}
+
 export function createGenerationProgressV1(clock){
  const active=new Set(),seen=new Map();let chain=Promise.resolve(),reportedAt=-Infinity;
  const apply=async({phase,done,total,running,decision})=>{
@@ -581,11 +592,16 @@ export async function loadGenerationGraphV1(host,{policy="fresh",closure,sealedO
  if(sealedOnly&&(policy!=="current"||closure===undefined||slice!==undefined||pin!==undefined))throw Error("A current unpinned generation closure is required");
  host.scope?.(roots===undefined&&pin===undefined);
  const answersByRoot=new Map(),deniedRepairs=new Set();let pointer,published=false,repairs=0,carried,sealedAgeSeconds,fetchOnly=false;
- const attempt=async(builder,store,control,expectedHead,repair)=>{
+ const attempt=async(builder,store,control,expectedHead,repair,localHead)=>{
   const options=host.storeOptions(store,control),writer=builder&&!fetchOnly;
-  if(!sealedOnly&&!builder&&host.exchange?.ahead&&pin===undefined&&!wholeCurrent&&await host.exchange.ahead({root:options.root,fs:options.fs??createNodeFilePortV1(),signal:host.signal,implementation}).catch(()=>false))return{needsBuild:true,pending:{generation:-1,dirty:[],roots:{},structural:true},generation:-1};
+  if(localHead){
+   const bytes=await (options.fs??createNodeFilePortV1()).read(join(options.root,GENERATION_POLICY_V1.pointer));
+   const current=bytes&&readGenerationPointerV1(bytes);
+   if(current?.generation!==localHead.generation||current.manifest!==localHead.manifest)return;
+  }
+  if(!localHead&&!sealedOnly&&!builder&&host.exchange?.ahead&&pin===undefined&&!wholeCurrent&&await host.exchange.ahead({root:options.root,fs:options.fs??createNodeFilePortV1(),signal:host.signal,implementation}).catch(()=>false))return{needsBuild:true,pending:{generation:-1,dirty:[],roots:{},structural:true},generation:-1};
   let answers=answersByRoot.get(options.root);if(!answers)answersByRoot.set(options.root,answers=createAnswersV1({root:options.root,fs:options.fs,durable:options.durableAnswers!==false,workspaceRoot:host.workspaceRoot}));
-  const engine=createGenerationStoreV1({...options,answers,workspaceRoot:host.workspaceRoot,say:(key,fields)=>host.say(key,fields)}),progress=createGenerationProgressV1(host.clock(control));
+  const engine=createGenerationStoreV1({...options,answers,workspaceRoot:host.workspaceRoot,say:(key,fields)=>host.say(key,fields)}),progress=custodyProgressV1(builder,createGenerationProgressV1(host.clock(control)));
    const closeStore={root:options.root,fs:options.fs??createNodeFilePortV1(),signal:host.signal,progress:(done,total)=>done%64===0||done===total?progress({phase:"closures",done,total}):undefined},verifyClosure=host.verifyClosure?.bind(host);
    let stagedDelta;
    const prepare=async(expected,missing)=>{
@@ -616,7 +632,7 @@ export async function loadGenerationGraphV1(host,{policy="fresh",closure,sealedO
    }
    if(wholeCurrent)sealedAgeSeconds=await generationAgeSecondsV1(fs,options.root,sealed.pointer.manifest,Date.now());
   }
-  const ownerProgress=typeof builder==="object"&&typeof builder.progress==="function"?async(done,total)=>{try{await builder.progress({phase:"inference",done,total});}catch{}}:undefined;
+  const ownerProgress=typeof builder==="object"&&typeof builder.progress==="function"?async(done,total,phase="inference")=>{try{await builder.progress({phase,done,total});}catch{}}:undefined;
   let reached=0;const owners=(done,total,more)=>progress({phase:"owners",done:reached=Math.max(reached,done),total,...more});
   const compute=writer?async(spec,signal)=>{announceGenerationBuildV1(host,spec,rows);const wanted=spec.owners.length+spec.discover.length,before=spec.done??0,overall=(spec.total??spec.owners.length)+spec.discover.length;let inferred=0;if(wanted)await owners(before,overall);const cutAt=Date.now();await host.releaseCutoff?.();const cutMs=Date.now()-cutAt;const discover=active=>host.discoverPart(spec,active,control,()=>{if(wanted&&inferred<wanted-1)owners(before+ ++inferred,overall).catch(()=>undefined);},(running,decision)=>owners(before+inferred,overall,{running,decision}).catch(()=>undefined),ownerProgress);const part=spec.cold&&builder?.handover?await discoverWithCustodyV1(builder,signal,discover):await discover(signal);if(wanted)await owners(before+wanted,overall);announceWithheldProjectsV1(host,part);const releaseAt=Date.now();await host.release?.({more:spec.more===true});const shaped=shapeComputeResultV1({workspaceRoot:host.workspaceRoot,separator:host.separator,part,stubs:spec.stubs,implementation:scoped});return{...shaped,phases:{...shaped.phases,cutoff:cutMs,release:Date.now()-releaseAt}};}:async()=>{throw Error("A shared graph reader never computes");};
   pointer=join(options.root,GENERATION_POLICY_V1.pointer);
@@ -647,6 +663,11 @@ export async function loadGenerationGraphV1(host,{policy="fresh",closure,sealedO
    }
   engine.dropIndexes();if(typeof builder==="object")await builder.release();
   if(result.served==="built"&&result.published)published=true;
+  if(localHead){
+   const current=result.current;
+   if(result.needsBuild||current?.manifest?.identity!==identity||current.manifest.implementation!==implementation)return;
+   if(current.pointer.manifest!==localHead.manifest&&(!result.published||current.manifest.parent!==localHead.manifest))return;
+  }
   if(result.needsBuild)return{needsBuild:true,pending:result.pending,planned:result.planned,generation:(await engine.read(host.signal))?.pointer.generation??-1};
   const generation=result.current.manifest.generation;
   if(result.served==="current"){host.say(result.current.manifest.implementation===implementation?"current":"stale",{generation});if(roots===undefined&&sealedAgeSeconds!==undefined)host.say("sealedAge",{generation,owners:Object.keys(result.current.manifest.owners).length,age:generationAgeTextV1(sealedAgeSeconds)});}
@@ -662,6 +683,7 @@ export async function loadGenerationGraphV1(host,{policy="fresh",closure,sealedO
   try{projects=await expandStreamV1(stream.nodes(),chunk=>host.expand(chunk,control),limits);}
   catch(error){
    const missing=missingClosureOfV1(error);if(missing===undefined)throw error;
+   if(localHead)return;
    if(sealedOnly||wholeCurrent||fetchOnly||repairs>=CLOSURE_REPAIR_ROUNDS_V1)throw error.code==="closure-missing"?error:closureMissingErrorV1({namespace:error.missingNamespace??"build-input-closures",key:missing,projects:error.missingProjects??[],cause:error});
    const owners=result.current.manifest.owners,projects=(Array.isArray(error.missingProjects)?error.missingProjects:[]).filter(name=>Object.hasOwn(owners,name)),generation=result.current.manifest.generation;
     const repair=builder||verifyClosure!==undefined?{pointer:result.current.pointer,key:missing,namespace:error.missingNamespace??"build-input-closures",projects,round:repairs++}:undefined;
@@ -673,7 +695,7 @@ export async function loadGenerationGraphV1(host,{policy="fresh",closure,sealedO
   if(!sealedOnly&&host.sealed){const manifest=result.current.manifest,owners=Object.keys(manifest.owners).sort(compareCodePointsV1);host.sealed({generation:manifest.generation,manifest:result.current.pointer.manifest,owners,covered:pin!==undefined?decodeVerifiedScopeV1(owners,pin.covered):result.names,atMs:pin!==undefined?pin.covered.atMs:requestedAt});}
   return{graph,result,stats:generationLoadStatsV1(result,Date.now()-started)};
  };
- const readerAt=Date.now(),readShared=()=>host.withShared((store,control)=>attempt(false,store,control));
+ const readerAt=Date.now(),readShared=local=>host.withShared((store,control)=>attempt(false,store,control,undefined,undefined,local));
  let first=await readShared();
  carriedStagesV1["start.reader"]=(carriedStagesV1["start.reader"]??0)+Date.now()-readerAt;
  if(first.repair&&host.refetchClosure){
@@ -695,20 +717,61 @@ export async function loadGenerationGraphV1(host,{policy="fresh",closure,sealedO
    fetchOnly=true;
    try{const fetched=await host.withBuilder((store,control,claim)=>attempt(claim??true,store,control),{dirty:[],structural:true},undefined,"restore");if(!fetched.needsBuild){await host.release?.();return{graph:fetched.graph,stats:fetched.stats};}}finally{fetchOnly=false;}
   }
-  const progress=sealedOnly?undefined:await Promise.resolve(host.wholeReadProgress?.()).catch(()=>undefined);throw Object.assign(Error(renderGenerationMessageV1("neverSealed",{fleet:first.fleetHolds?renderGenerationMessageV1("fleetHolds",{},host.language):"",progress:progress??""},host.language)),{code:"GENERATION_NONE_SEALED"});}
+  if(sealedOnly)throw Object.assign(Error(renderGenerationMessageV1("projectNeverSealed",{project:(closure??[]).join(", ")},host.language)),{code:"GENERATION_NONE_SEALED"});
+  const progress=await Promise.resolve(host.wholeReadProgress?.()).catch(()=>undefined);throw Object.assign(Error(renderGenerationMessageV1("neverSealed",{fleet:first.fleetHolds?renderGenerationMessageV1("fleetHolds",{},host.language):"",progress:progress??""},host.language)),{code:"GENERATION_NONE_SEALED"});}
  carried=first.planned;
  const request=first.pending?.dirty.length?{generation:first.pending.generation,dirty:first.pending.dirty,roots:first.pending.roots,structural:first.pending.structural,implementation}:undefined;
  const now=host.now??Date.now,headRetries=new Map();
- let nextLook=0,expectedHead;
+ let nextLook=0,nextLocalLook=-Infinity,expectedHead,expectedLocal,localCandidate;
+ const localWhileWaiting=policy==="fresh"&&pin===undefined,localPollMilliseconds=Math.max(1,host.waitNoticeMilliseconds??GENERATION_POLICY_V1.waitNoticeMilliseconds);
+ const deferLocal=candidate=>{
+  candidate.delay=Math.min(GENERATION_POLICY_V1.headRetryMilliseconds,candidate.delay*2);
+  candidate.retryAt=now()+candidate.delay;
+ };
+ const localSeal=async()=>{
+  if(now()<nextLocalLook)return;
+  nextLocalLook=now()+localPollMilliseconds;
+  try{
+   return await host.withShared(async(store,control)=>{
+    const options=host.storeOptions(store,control),fs=options.fs??createNodeFilePortV1();
+    const bytes=await fs.read(join(options.root,GENERATION_POLICY_V1.pointer)),head=bytes&&readGenerationPointerV1(bytes);
+    if(!head||head.generation<=first.generation||head.generation<(localCandidate?.generation??-1))return;
+    if(!localCandidate||head.generation>localCandidate.generation)
+     localCandidate={generation:head.generation,manifest:head.manifest,retryAt:-Infinity,delay:localPollMilliseconds};
+    const candidate=localCandidate;
+    if(head.manifest===null||head.manifest!==candidate.manifest||now()<candidate.retryAt)return;
+    const manifest=await createGenerationStoreV1(options).readManifestAt(head.manifest,host.signal).catch(()=>undefined);
+    host.signal?.throwIfAborted();
+    if(!manifest){deferLocal(candidate);return;}
+    candidate.retryAt=Infinity;
+    if(manifest.generation===head.generation&&manifest.identity===identity&&manifest.implementation===implementation)return candidate;
+   });
+  }catch{host.signal?.throwIfAborted();}
+ };
  const canRestoreHead=look=>look?.state==="complete"&&look.ahead&&look.candidate!==undefined&&now()>=(headRetries.get(canonicalJsonV1(look.candidate))??-Infinity);
- const publishedWhileWaiting=host.exchange?.look===undefined?undefined:{
+ const publishedWhileWaiting=!localWhileWaiting&&host.exchange?.look===undefined?undefined:{
   available:async()=>{
-   if(now()<nextLook)return false;
+   if(localWhileWaiting){
+    const local=await localSeal();
+    host.signal?.throwIfAborted();
+    if(local){expectedLocal=local;return true;}
+   }
+   if(host.exchange?.look===undefined||now()<nextLook)return false;
    nextLook=now()+(host.waitNoticeMilliseconds??GENERATION_POLICY_V1.waitNoticeMilliseconds);
    const look=await fleetLookV1(host,implementation,true);if(!canRestoreHead(look))return false;
    expectedHead=look.candidate;return true;
   },
   restore:async()=>{
+   if(expectedLocal){
+    const local=expectedLocal;expectedLocal=undefined;
+    try{const reused=await readShared(local);if(reused)return reused;}
+    catch(error){
+     host.signal?.throwIfAborted();
+     if(!["GENERATION_CORRUPT","GENERATION_INCOMPLETE","ENOENT"].includes(error?.code))throw error;
+    }
+    deferLocal(local);
+    return;
+   }
    const selected=expectedHead,key=canonicalJsonV1(selected);
    headRetries.delete(key);
    if(headRetries.size>=GENERATION_POLICY_V1.headRetryLimit)headRetries.delete(headRetries.keys().next().value);
@@ -723,7 +786,7 @@ export async function loadGenerationGraphV1(host,{policy="fresh",closure,sealedO
  if(host.attach&&request){const attached=await host.attach(request,async()=>{const again=await host.withShared((store,control)=>attempt(false,store,control));return again.needsBuild?undefined:again;});if(attached){await host.release?.();await publishRemoteGenerationV1(host,true);return{graph:attached.graph,stats:attached.stats};}}
  if(host.prefetch&&request&&!await host.builderIdle?.(request)){host.carryClosures?.(true);const prefetchAt=Date.now();try{const fetched=await host.prefetch(request,undefined,publishedWhileWaiting);if(fetched?.graph!==undefined){await host.release?.();return{graph:fetched.graph,stats:fetched.stats};}}finally{host.carryClosures?.(false);carriedStagesV1["start.prefetch"]=(carriedStagesV1["start.prefetch"]??0)+Date.now()-prefetchAt;}}
  let restored;
- const managed=host.prepareWholeRebuild&&host.wholeGate&&publishedWhileWaiting&&roots===undefined&&pin===undefined&&policy!=="current"?{
+ const managed=host.prepareWholeRebuild&&host.wholeGate&&host.exchange?.look&&publishedWhileWaiting&&roots===undefined&&pin===undefined&&policy!=="current"?{
   look:async()=>{
    const seen=await fleetLookV1(host,implementation);
    if(seen?.state!=="complete"||!seen.ahead)return seen;

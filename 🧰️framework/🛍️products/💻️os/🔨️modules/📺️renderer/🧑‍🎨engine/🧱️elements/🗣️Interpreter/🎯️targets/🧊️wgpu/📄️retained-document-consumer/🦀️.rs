@@ -88,6 +88,11 @@ impl UiDocumentFrameCursor {
     }
 }
 
+/// 🚗️ Hands the engine the resolved UI driver — the `labels` axis decides whether retained buttons and segmented selects paint their captions beside the icon or icon-only, as React's `useControlInlineText` does.
+pub fn set_ui_driver(driver: semio_ui_wgpu_layout::chrome::UiDriverChrome) {
+    UI_ENGINE.with(|cell| cell.borrow_mut().set_driver(driver));
+}
+
 /// 🧭️ Sets one retained surface's logical flow — the wgpu twin of React's `FlowProvider`, which
 /// `🖼️Panel/🟦️.tsx:516` wraps every anchored panel in with `flowFromAnchor(anchor)`. A surface with
 /// no anchor (a window body, a dialog) gets no provider on React either and stays at
@@ -114,7 +119,7 @@ pub fn stamp_ui_document_tree_selected_item(window_id: &str, generation: u64, se
     UI_ENGINE.with(|cell| cell.borrow_mut().stamp_tree_selected_item(window_id, generation, selected_key))
 }
 
-/// 🪪️ Reads the surface generation used by the retained window paint owner.
+/// 🔢️ The generation of the surface mounted for `window_id`, `None` when none is: the owner check of an action that names a mounted window.
 pub fn ui_document_window_generation(window_id: &str) -> Option<u64> {
     UI_ENGINE.with(|cell| cell.borrow().surface_generation(window_id))
 }
@@ -313,7 +318,6 @@ pub fn render_ui_document_step(
             UiDocumentFramePhase::Paint => {
                 let progress_before = engine.paint_frame_progress(window_id);
                 let document_generation = engine.tree_revision(window_id).unwrap_or(generation);
-                let window_generation = engine.surface_generation(window_id).unwrap_or(generation);
                 let mut scene_host = FrameworkSceneHost {
                     input: ctx.input,
                     theme: ctx.theme,
@@ -324,19 +328,26 @@ pub fn render_ui_document_step(
                     window_id,
                     driver_drag,
                     document_generation,
-                    window_generation,
+                    window_generation: engine.surface_generation(window_id).unwrap_or(generation),
                     world3d_states: &mut *hosts.world3d_states,
                     world_resources: &mut *hosts.world_resources,
                 };
                 let viewport = semio_ui_theme::geometry::Rect { x: bounds.x, y: bounds.y, w: viewport_w, h: viewport_h };
-                let demand = match engine.frame_into_next_retained_demand(window_id, viewport, ctx.draw) { Ok(demand) => demand, Err(_) => { cursor.phase = UiDocumentFramePhase::Fault; return false; } };
+                let Ok(demand) = engine.frame_into_next_retained_demand(window_id, viewport, ctx.draw) else {
+                    cursor.phase = UiDocumentFramePhase::Fault;
+                    return false;
+                };
                 let grant = step.retained_grant();
-                if demand.maximum_items > grant.maximum_items || demand.maximum_copy_bytes > grant.maximum_copy_bytes || demand.maximum_capacity_bytes > grant.maximum_capacity_bytes || demand.maximum_release_bytes > grant.maximum_release_bytes || demand.maximum_depth > grant.maximum_depth { return false; }
+                if demand.maximum_items > grant.maximum_items || demand.maximum_copy_bytes > grant.maximum_copy_bytes || demand.maximum_capacity_bytes > grant.maximum_capacity_bytes || demand.maximum_release_bytes > grant.maximum_release_bytes || demand.maximum_depth > grant.maximum_depth {
+                    return false;
+                }
                 let (paint, receipt) = engine.frame_into_step(window_id, viewport, ctx.atlas, ctx.icons, Some(&mut scene_host), ctx.draw, grant);
-                if step.consume_retained(receipt).is_err() { cursor.phase = UiDocumentFramePhase::Fault; return false; }
+                if step.consume_retained(receipt).is_err() {
+                    cursor.phase = UiDocumentFramePhase::Fault;
+                    return false;
+                }
                 match paint {
                     semio_ui_wgpu_engine_surface::UiFrameStep::Ready | semio_ui_wgpu_engine_surface::UiFrameStep::Missing => {
-                        semio_renderer_wgpu_scene_canvas2d::ui_image_loading::close_hidden_window_image_resource(ctx, window_id, window_generation, document_generation);
                         cursor.stalled = 0;
                         cursor.phase = UiDocumentFramePhase::Complete;
                     }

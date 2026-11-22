@@ -54,7 +54,21 @@ mod original_host{
   fn result_type(&self)->Option<semio_plugin_interpreter::ValueType>{use semio_plugin_interpreter::ValueType;match self{Self::Monotonic|Self::NowMs|Self::RandomWord=>Some(ValueType::I64),Self::ContextGet|Self::StreamNew(_)|Self::PureProgress(_)|Self::PureAllocation(_)|Self::PureFinish(_)|Self::PureReserve(_,_)=>Some(ValueType::I32),_=>None}}
  }
  /// ▶️ Host work follows its actual VM call receipt; no instruction budget or Source is issued here.
- pub fn advance(state:&mut OriginalHostState,core:&mut CoreInstanceOpening,module:&Arc<CoreModule>,mut receiver:Option<&mut dyn OriginalOperationReceiving>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
+ pub fn advance(state:&mut OriginalHostState,core:&mut CoreInstanceOpening,module:&Arc<CoreModule>,receiver:Option<&mut dyn OriginalOperationReceiving>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
+  let mut before=source_clock_reply_frontier(state);
+  if advance_once(state,core,module,receiver,cx)?{return Ok(true)}
+  for _ in 0..2{
+   let after=source_clock_reply_frontier(state);
+   if after.is_none()||after==before||cx.retained_grant().maximum_items==0||cx.fuel_remaining()==0{return Ok(false)}
+   before=after;
+   if advance_once(state,core,module,None,cx)?{return Ok(true)}
+  }
+  Ok(false)
+ }
+ fn source_clock_reply_frontier(state:&OriginalHostState)->Option<(usize,bool)>{
+  state.reply.as_ref().filter(|reply|reply.cleanup_clock).map(|reply|(reply.copied,reply.completed))
+ }
+ fn advance_once(state:&mut OriginalHostState,core:&mut CoreInstanceOpening,module:&Arc<CoreModule>,mut receiver:Option<&mut dyn OriginalOperationReceiving>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   core.validate_original_context(module,cx)?;state.validate(cx)?;let retirement=cx.original_retirement_active();if retirement{if let Some(reply)=state.reply.as_ref(){if !reply.cleanup_clock{return Err(refused("original cleanup cannot resume a semantic host reply").into())}}else{let call=core.original_host_call(module,cx)?.ok_or_else(||refused("original cleanup requires its actual clock import"))?;if !matches!(Request::parse(&call)?,Request::SourceClock(..)){return Err(refused("original cleanup cannot begin a semantic host import").into())}}}if (cx.is_cancelled()&&!retirement)||cx.should_yield(){return Ok(false)}
   if state.reply.is_none(){
    let call=core.original_host_call(module,cx)?.ok_or_else(||refused("original host advance has no actual pending import"))?;let request=Request::parse(&call)?;if call.arguments.len()!=request.argument_count(){return Err(refused("original host import argument count differs from its declared actual ABI").into())}let expected=request.result_type();if call.results.len()!=usize::from(expected.is_some())||expected.is_some_and(|ty|call.results[0]!=ty){return Err(refused("original host import result differs from its declared actual type").into())}

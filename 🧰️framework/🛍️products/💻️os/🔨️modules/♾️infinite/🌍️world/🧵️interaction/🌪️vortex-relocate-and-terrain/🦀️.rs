@@ -190,15 +190,15 @@ pub(super) fn pick_reference_at(session_state: &WorldSessionState, camera_state:
 /// the relocate gesture landed: `world3d_begin_relocate_drag` needs the grabbed object's origin to
 /// apply React's `origin + (to - from)` travel (`world3dRelocateDispatchArgsV1`).
 pub(super) fn object_world_position(scene_state: &WorldSceneState, object_id: &str) -> Option<[f32; 3]> {
-    for draw in &scene_state.draws {
-        for instance in &draw.instances {
-            if instance.id == object_id {
-                let translation = instance.model.cols[3];
-                return Some([translation[0], translation[1], translation[2]]);
-            }
-        }
-    }
-    None
+    object_world_instance(scene_state, object_id).map(|(_, model)| {
+        let translation = model.cols[3];
+        [translation[0], translation[1], translation[2]]
+    })
+}
+
+/// 🧊️ The mesh key and model matrix of the instance carrying `object_id`.
+fn object_world_instance<'a>(scene_state: &'a WorldSceneState, object_id: &str) -> Option<(&'a str, Mat4)> {
+    scene_state.draws.iter().find_map(|draw| draw.instances.iter().find(|instance| instance.id == object_id).map(|instance| (draw.mesh_key.as_str(), instance.model)))
 }
 
 #[cfg(any(test, feature = "testkit"))]
@@ -237,8 +237,9 @@ pub fn world3d_relocate_drag_target(pressed_id: Option<&str>, selected_ids: &[St
 /// lands within [`WORLD_RELOCATE_EPSILON`] of where it started answers `None`, so a click without
 /// travel never writes a document edit.
 pub fn world3d_relocate_dispatch_args(session: &World3dRelocateSession, to: [f32; 3], grid_snap_enabled: bool, grid_factor: f64) -> Option<[f64; 3]> {
-    let moved = [session.origin[0] + (to[0] - session.from[0]), session.origin[1] + (to[1] - session.from[1]), session.origin[2] + (to[2] - session.from[2])];
-    let position = snap_world_point_to_grid(moved, grid_snap_enabled, grid_factor);
+    let moved = [0, 1, 2].map(|axis| session.origin[axis] + (to[axis] - session.from[axis]));
+    let mut position = snap_world_point_to_grid(moved, grid_snap_enabled, grid_factor);
+    position[session.plane.axis()] = f64::from(session.origin[session.plane.axis()]);
     let unchanged = (0..3).all(|axis| (position[axis] - f64::from(session.origin[axis])).abs() < WORLD_RELOCATE_EPSILON);
     (!unchanged).then_some(position)
 }
@@ -264,27 +265,25 @@ pub fn world3d_begin_relocate_drag(session_state: &mut WorldSessionState, camera
     let Some(origin) = object_world_position(scene_state, &object_id) else {
         return false;
     };
-    let Some(from) = world3d_ground_plane_pick(session_state, camera_state, x, y, origin[2]) else {
+    let plane = World3dRelocatePlane::from_projection(camera_state.projection_spec);
+    let Some(from) = world3d_axis_plane_pick(session_state, camera_state, x, y, plane.axis(), origin[plane.axis()]) else {
         return false;
     };
-    gumball_state.relocate = Some(World3dRelocateSession { object_id, origin, from });
+    let Some((mesh_key, preview_model)) = object_world_instance(scene_state, &object_id).map(|(mesh_key, model)| (mesh_key.to_owned(), model)) else {
+        return false;
+    };
+    gumball_state.relocate = Some(World3dRelocateSession { object_id, origin, from, plane, mesh_key, preview_model });
     true
 }
 
-/// 🚚️ Moves the relocate ghost. React previews the travel with the SAME catalogue-drop ghost a drop
-/// from the catalogue uses (`setWorldCatalogueDropPreview`, `🌐️World3dHost/🟦️.tsx:6851`) and
-/// dispatches nothing until the release.
+/// 🚚️ Moves the relocate ghost: the grabbed instance's own mesh and model, translated along the plane captured at the press. Nothing is dispatched until the release.
 pub fn world3d_update_relocate_drag(session_state: &mut WorldSessionState, camera_state: &mut WorldCameraState, gumball_state: &mut WorldGumballState, scene_state: &mut WorldSceneState, x: f32, y: f32) -> bool {
-    let Some(session) = gumball_state.relocate.clone() else {
+    let Some(session) = gumball_state.relocate.as_mut() else {
         return false;
     };
-    let origin = world3d_ground_plane_pick(session_state, camera_state, x, y, session.origin[2]).and_then(|to| world3d_relocate_dispatch_args(&session, to, scene_state.lod.grid_snap_enabled, scene_state.lod.grid_factor)).unwrap_or([
-        f64::from(session.origin[0]),
-        f64::from(session.origin[1]),
-        f64::from(session.origin[2]),
-    ]);
-    let object_kind = gumball_state.relocate.as_ref().map(|session| session.object_id.clone()).unwrap_or_default();
-    gumball_state.catalogue_drop_preview = Some(WorldCatalogueDropPreviewRecord { object_kind, mesh_url: world3d_mesh_url_for_object(scene_state, &session.object_id), origin });
+    let axis = session.plane.axis();
+    let position = world3d_axis_plane_pick(session_state, camera_state, x, y, axis, session.origin[axis]).and_then(|to| world3d_relocate_dispatch_args(session, to, scene_state.lod.grid_snap_enabled, scene_state.lod.grid_factor)).unwrap_or_else(|| session.origin.map(f64::from));
+    session.preview_model.cols[3] = [position[0] as f32, position[1] as f32, position[2] as f32, 1.0];
     true
 }
 
@@ -295,7 +294,8 @@ pub fn world3d_end_relocate_drag(session_state: &mut WorldSessionState, camera_s
     let session = gumball_state.relocate.take()?;
     gumball_state.catalogue_drop_preview = None;
     let (x, y) = to?;
-    let point = world3d_ground_plane_pick(session_state, camera_state, x, y, session.origin[2])?;
+    let axis = session.plane.axis();
+    let point = world3d_axis_plane_pick(session_state, camera_state, x, y, axis, session.origin[axis])?;
     let position = world3d_relocate_dispatch_args(&session, point, scene_state.lod.grid_snap_enabled, scene_state.lod.grid_factor)?;
     Some((session.object_id, position))
 }
@@ -315,17 +315,6 @@ pub fn world3d_cancel_relocate_drag(session_state: &mut WorldSessionState, camer
 /// 🚚️ Whether a relocate drag is live on this surface.
 pub fn world3d_relocate_active(gumball_state: &WorldGumballState) -> bool {
     gumball_state.relocate.is_some()
-}
-
-/// 🥽️ The mesh url the relocate ghost should draw with — the grabbed instance's own mesh, so the
-/// preview is the object being moved rather than a stand-in box.
-fn world3d_mesh_url_for_object(scene_state: &WorldSceneState, object_id: &str) -> Option<String> {
-    for draw in &scene_state.draws {
-        if draw.instances.iter().any(|instance| instance.id == object_id) {
-            return scene_state.mesh_source_urls.get(&draw.mesh_key).cloned();
-        }
-    }
-    None
 }
 
 /// 🚚️ The `worldRelocate` plan a finished relocate drag publishes.
@@ -539,8 +528,8 @@ pub fn sync_terrain_state(session_state: &mut WorldSessionState, authority_state
             if !terrain_state.terrain_session.has_elevation_tile(z, x, y) {
                 reserve_terrain_tile_fetch(session_state, terrain_state, assets_state, &tile_url_template, (z, x, y));
             } else if terrain_state.terrain_build.is_none() && terrain_state.terrain_pending.is_none() && scene_state.dynamic_mesh_close.is_none() && scene_state.dynamic_blocked_mesh.is_none() && session_state.snapshot_fault.is_none() {
-                let mesh_json = terrain_state.terrain_session.terrain_tile_mesh_json(z, x, y);
-                if let Ok(mesh_payload) = serde_json::from_str::<TerrainTileMeshPayload>(&mesh_json) {
+                if let Some(mesh) = terrain_state.terrain_session.terrain_tile_mesh(z, x, y) {
+                    let mesh_payload = TerrainTileMeshPayload { positions: mesh.positions, normals: mesh.normals, indices: mesh.indices, uvs: mesh.uvs };
                     let next = scene_state.placeholder_generation.checked_add(1);
                     if let Some(next) = next {
                         scene_state.placeholder_generation=next;
@@ -599,23 +588,59 @@ pub fn sync_terrain(session_state: &mut WorldSessionState, authority_state: &mut
 pub fn append_terrain_overlay_lines(terrain: &mut WorldTerrainState, tile: (u32, u32, u32), camera: &Camera3d, viewport: Rect, lines: &mut Vec<LineVertex3d>) {
     let Some(overlays) = terrain.tile_overlays(tile) else { return };
     let color = |[r, g, b]: [u8; 3]| [srgb_byte_to_linear(r), srgb_byte_to_linear(g), srgb_byte_to_linear(b), 1.0];
-    let bias = (40_075_200.0 / (1_u64 << tile.0) as f32 * 0.0002).clamp(0.1, 20.0);
+    let bias = terrain_overlay_bias(tile.0);
     for (paths, color) in [(&overlays.regions, color([0x4f, 0xd4, 0xe8])), (&overlays.routes, color([0xf7, 0xf4, 0xe8]))] {
         lines.extend(paths.iter().flat_map(|path| path.segments.iter().flatten()).map(|[x, y, z]| LineVertex3d { position: [*x, *y, z + bias], color }));
     }
-    let forward = camera.target.sub(camera.position).normalize();
-    let right = forward.cross(camera.up);
-    let right = if right.length() > 1e-6 { right.normalize() } else { Vec3::new(1.0, 0.0, 0.0) };
-    let up = right.cross(forward);
+    let [forward, right, up] = terrain_marker_axes(camera);
     let color = color([0xf8, 0xd9, 0x4e]);
     for marker in &overlays.positions {
-        let [x, y, z] = marker.point;
-        let tip = Vec3::new(x, y, z + bias);
-        let pixel = world_units_per_pixel(camera, viewport, tip.sub(camera.position).dot(forward));
+        let (tip, pixel) = terrain_marker_tip(camera, viewport, marker.point, bias, forward);
         let shoulder = tip.add(up.scale(7.0 * pixel));
         let points = [tip, shoulder.add(right.scale(4.0 * pixel)), tip.add(up.scale(12.0 * pixel)), shoulder.sub(right.scale(4.0 * pixel)), tip];
         lines.extend(points.windows(2).flatten().map(|point| LineVertex3d { position: point.to_array(), color }));
     }
+}
+
+fn terrain_overlay_bias(zoom: u32) -> f32 {
+    (40_075_200.0 / (1_u64 << zoom) as f32 * 0.0002).clamp(0.1, 20.0)
+}
+
+fn terrain_marker_axes(camera: &Camera3d) -> [Vec3; 3] {
+    let forward = camera.target.sub(camera.position).normalize();
+    let right = forward.cross(camera.up);
+    let right = if right.length() > 1e-6 { right.normalize() } else { Vec3::new(1.0, 0.0, 0.0) };
+    [forward, right, right.cross(forward)]
+}
+
+fn terrain_marker_tip(camera: &Camera3d, viewport: Rect, [x, y, z]: [f32; 3], bias: f32, forward: Vec3) -> (Vec3, f32) {
+    let tip = Vec3::new(x, y, z + bias);
+    let pixel = world_units_per_pixel(camera, viewport, tip.sub(camera.position).dot(forward));
+    (tip, pixel)
+}
+
+pub(super) fn pick_terrain_position_marker<'a>(terrain: &'a WorldTerrainState, camera: &Camera3d, viewport: Rect, origin: Vec3, direction: Vec3, terrain_depth: Option<f32>) -> Option<&'a str> {
+    let [forward, right, up] = terrain_marker_axes(camera);
+    let alignment = direction.dot(forward);
+    if alignment <= 1e-6 {
+        return None;
+    }
+    terrain.visible_overlay_tiles()
+        .flat_map(|((zoom, _, _), tile)| tile.positions.iter().map(move |marker| (zoom, marker)))
+        .filter_map(|(zoom, marker)| {
+            let (tip, pixel) = terrain_marker_tip(camera, viewport, marker.point, terrain_overlay_bias(zoom), forward);
+            let depth = tip.sub(origin).dot(forward) / alignment;
+            if marker.id.is_empty() || marker.id.len() > 256 || !depth.is_finite() || depth < 0.0 || terrain_depth.is_some_and(|ground| ground < depth) {
+                return None;
+            }
+            let offset = origin.add(direction.scale(depth)).sub(tip);
+            let height = offset.dot(up) / pixel;
+            let width = offset.dot(right).abs() / pixel;
+            let half_width = 4.0 * (height / 7.0).min((12.0 - height) / 5.0);
+            (width <= half_width + 2.0 && (-2.0..=14.0).contains(&height)).then_some((depth, marker.id.as_str()))
+        })
+        .min_by(|(depth_a, id_a), (depth_b, id_b)| depth_a.total_cmp(depth_b).then_with(|| id_a.cmp(id_b)))
+        .map(|(_, id)| id)
 }
 //#endregion Terrain
 

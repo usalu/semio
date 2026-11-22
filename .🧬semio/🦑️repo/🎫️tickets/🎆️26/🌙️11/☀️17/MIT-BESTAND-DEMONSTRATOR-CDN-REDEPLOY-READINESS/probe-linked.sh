@@ -17,6 +17,7 @@ case "$module" in
   fem) pane=statik ;;
   *) exit 2 ;;
 esac
+pane="${PROBE_PANE_PATTERN:-$pane}"
 runs="$root/.cache/b/r/m/components/runs"
 intermediate="$runs/$run/w/semio-hub-$module-component/transpiled"
 base="semio_hub_${module}_component"
@@ -30,7 +31,7 @@ if [[ -z "${PROBE_JS:-}" || -z "${PROBE_CORE:-}" ]]; then
     sleep 5
   done
 fi
-site="$(python3 "$ticket/captured-site.py" "$root" "$generated/native-site.log")"
+site="${PROBE_SITE:-$(python3 "$ticket/captured-site.py" "$root" "${PROBE_SITE_LOG:-$generated/native-site.log}")}"
 modules="$root/.cache/b/p/m/browser/release/modules"
 stage=( "$modules/"*️"$module" )
 folder="$(basename "${stage[0]}")"
@@ -61,7 +62,10 @@ for file in "$probe/$base.js" "$probe/"*.wasm "$probe/🌉️bridge.js" "$probe/
   url="$(node -e 'console.log(process.argv[1].split("/").map(encodeURIComponent).join("/"))' "🔌️plugin-modules/$folder/$asset")"
   node "$ticket/probe-custody.mjs" verify "$probe/$asset" "http://127.0.0.1:$port/$url"
 done
+if [[ -n "${PROBE_LINKED_READY_MARKER:-}" ]]; then
+  printf '%s\n' "$run" > "$PROBE_LINKED_READY_MARKER"
+fi
 cd "$root/♻️mit-bestand/🧺️demonstrator"
 cli="$(dirname "$(node -p 'require.resolve("@playwright/test/package.json")')")/cli.js"
-repo capacity run --memory=4096 -- env DEMONSTRATOR_VERIFY_CDN=1 PLAYWRIGHT_BASE_URL="http://cdn.localhost:$port" PLAYWRIGHT_BROWSERS_PATH="$root/.🧬semio/🦑️repo/⚡️cache/tools/ms-playwright" \
+repo capacity run --memory="${PROBE_MEMORY_MB:-4096}" -- env DEMONSTRATOR_VERIFY_CDN=1 PLAYWRIGHT_BASE_URL="http://cdn.localhost:$port" PLAYWRIGHT_BROWSERS_PATH="$root/.🧬semio/🦑️repo/⚡️cache/tools/ms-playwright" \
   node "$cli" test --config "./🔨️modules/🧪️e2e/🎚️config/🟦️.ts" --workers=1 "${projects[@]}" --grep "($pane) boot$" --output "$generated/probe-$run-$$-pw" --reporter=list

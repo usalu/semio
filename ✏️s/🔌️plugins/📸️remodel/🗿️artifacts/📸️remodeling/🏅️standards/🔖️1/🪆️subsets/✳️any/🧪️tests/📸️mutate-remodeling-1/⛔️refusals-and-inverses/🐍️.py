@@ -20,6 +20,8 @@ from mutate_remodeling_1_appliers import (
     mesh_content_handle,
     leaf,
     content_complete,
+    asset_content_id,
+    durable_leaf,
     apply_commit_reconstruction,
     APPLIERS,
 )
@@ -90,7 +92,11 @@ def refusal_of(kind, base, payload):
             raw = base64.b64decode(payload["asset"]["data"], validate=True)
         except ValueError:
             return "mutation.invariant"
-        return "mutation.invariant" if len(raw) > RASTER_CONTENT_BYTES else None
+        if len(raw) > RASTER_CONTENT_BYTES:
+            return "mutation.invariant"
+        asset = payload["asset"]
+        held = base["durableArtifacts"].get(asset_content_id(asset))
+        return "mutation.target-mismatch" if held is not None and held != durable_leaf(asset) else None
     if kind == "delete-asset":
         if payload["key"] not in base["assets"]:
             return "mutation.target-missing"
@@ -247,7 +253,7 @@ def refuses_commit(base, payload):
 # region 🔖️Vocabulary — inverse rule
 def inverse_mutation(kind, base, payload):
     """↩️ Every inverse is computed from BASE, never from the payload. Returns a LIST of
-    `(appliers_key, payload)` steps, applied in order. Every kind returns exactly one, and it restores
+    `(appliers_key, payload)` steps, applied in order. It restores
     the member's POSITION as well as its presence (`taxonomy.md` rule 5) because the forward verbs
     insert at a canonical key position rather than appending."""
     if kind == "create-stream":
@@ -270,9 +276,20 @@ def inverse_mutation(kind, base, payload):
         _, s = _find(base["streams"], payload["id"])
         return [("replace-stream-source", {"id": payload["id"], "source": s.get("source")})]
     if kind == "create-asset":
-        if payload["key"] not in base["assets"]:
-            return [("delete-asset", {"key": payload["key"]})]
-        return [("__restore-asset-handle", _captured_asset(base, payload["key"]))]
+        key = payload["key"]
+        child_id = asset_content_id(payload["asset"])
+        already_held = child_id in base["durableArtifacts"]
+        if key not in base["assets"]:
+            if not already_held:
+                return [("delete-asset", {"key": key})]
+            result = {slot: base["results"][slot] for slot in ("sparse", "trajectory", "mesh", "geo", "qc")}
+            return [("commit-reconstruction", {**result, "assets": [{"id": key, "contentId": None}]})]
+        captured = _captured_asset(base, key)
+        if captured["handle"]["childId"] == child_id:
+            return []
+        if not already_held:
+            captured["releaseContent"] = child_id
+        return [("__restore-asset-handle", captured)]
     if kind == "delete-asset":
         return [("__restore-asset-handle", _captured_asset(base, payload["key"]))]
     if kind == "create-camera-calibration":
@@ -326,8 +343,7 @@ def inverse_mutation(kind, base, payload):
 
 
 def _captured_asset(base, key):
-    """🔑 The handle AND the durable leaf the document carries for one asset key — the pair
-    `create-asset` writes and `delete-asset` drops together."""
+    """💾 Captures an asset binding and its durable leaf."""
     handle = base["assets"][key]
     return {"key": key, "handle": handle, "leaf": base["durableArtifacts"][handle["childId"]]}
 
@@ -336,7 +352,7 @@ def apply_inverse_step(doc, step_kind, step_payload):
     """↩️ Applies one inverse step. Every step is a real verb of this vocabulary: since a `create`/`add`
     inserts at its member's canonical key position rather than appending, restoring a member removed
     from the middle takes no synthetic move step, and `taxonomy.md` rule 5's POSITION requirement is
-    met by the forward verbs themselves. The one narrowing left is `__restore-asset-handle`, which
-    adopts a committed `DefaultHasher` content-address this reference cannot specify."""
+    met by the forward verbs themselves. `__restore-asset-handle` restores the captured handle and
+    durable leaf for an asset that already existed in the before-document."""
     return APPLIERS[step_kind](doc, step_payload)
 # endregion 🔖️Vocabulary — inverse rule

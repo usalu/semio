@@ -1,0 +1,77 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Owned Core Poll request limits",
+  "description": "Fixed guest-facing limits, in declaration order. The authenticated scalar loan is supplied separately.",
+  "type": "array",
+  "minItems": 11,
+  "maxItems": 11,
+  "items": [
+    {
+      "type": "integer",
+      "title": "maximumItems",
+      "minimum": 0,
+      "maximum": 4294967295
+    },
+    {
+      "type": "integer",
+      "title": "maximumCopyBytes",
+      "minimum": 0,
+      "maximum": 4294967295
+    },
+    {
+      "type": "integer",
+      "title": "maximumCapacityBytes",
+      "minimum": 0,
+      "maximum": 4294967295
+    },
+    {
+      "type": "integer",
+      "title": "maximumReleaseBytes",
+      "minimum": 0,
+      "maximum": 4294967295
+    },
+    {
+      "type": "integer",
+      "title": "maximumDepth",
+      "minimum": 0,
+      "maximum": 4294967295
+    },
+    {
+      "type": "integer",
+      "title": "workFuel",
+      "minimum": 0,
+      "maximum": 18446744073709551615
+    },
+    {
+      "type": "integer",
+      "title": "fuel",
+      "minimum": 0,
+      "maximum": 18446744073709551615
+    },
+    {
+      "type": "integer",
+      "title": "deadlineUs",
+      "minimum": 0,
+      "maximum": 18446744073709551615
+    },
+    {
+      "type": "integer",
+      "title": "maxEffects",
+      "minimum": 0,
+      "maximum": 4294967295
+    },
+    {
+      "type": "integer",
+      "title": "maxPatchBytes",
+      "minimum": 0,
+      "maximum": 4294967295
+    },
+    {
+      "type": "integer",
+      "title": "maxFrames",
+      "minimum": 0,
+      "maximum": 4294967295
+    }
+  ],
+  "additionalItems": false
+}

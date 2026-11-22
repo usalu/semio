@@ -58,11 +58,7 @@ use semio_plugin::WindowEngagementInput;
 use semio_plugin::WindowEngagementPossible;
 use semio_plugin::WindowEngagementStatus;
 use semio_plugin::WindowLayout;
-use semio_plugin::WindowLayoutAxisNode;
-use semio_plugin::WindowLayoutChild;
-use semio_plugin::WindowLayoutRoot;
-use semio_plugin::WindowLayoutStackNode;
-use semio_plugin::WindowLayoutWindowNode;
+use semio_plugin::{WindowLayoutNode, Axis};
 use semio_plugin::World3dScene;
 use std::hash::{Hash, Hasher};
 
@@ -75,30 +71,24 @@ pub fn definition() -> ModeDefinition {
 }
 
 /// 🪟️ One quadrant of the quad layout: a stack holding a single window kind.
-fn cad_window_stack(window_kind_id: &str, title: &str, size: Option<f64>) -> WindowLayoutChild {
-    WindowLayoutChild::Stack(WindowLayoutStackNode {
-        kind: "stack".into(),
-        size,
-        active_window_kind_id: None,
-        children: vec![WindowLayoutWindowNode { kind: "window".into(), window_kind_id: window_kind_id.into(), title: Some(title.into()), instance_id: None, template_id: None, corner: None }],
-    })
+fn cad_window_stack(window_kind_id: &str, title: &str, size: Option<f64>) -> WindowLayoutNode {
+    WindowLayoutNode::Stack { size,
+        active_window_id: None,
+        children: vec![WindowLayoutNode::Window { window_kind_id: window_kind_id.into(), title: Some(title.into()), instance_id: None, template_id: None, corner: None }],
+    }
 }
 
 /// 🪟️ Quad play layout: shape/building left column, energy/structure classic right column.
 pub fn layout() -> WindowLayout {
     WindowLayout {
-        root: WindowLayoutRoot::Axis(WindowLayoutAxisNode {
-            kind: "row".into(),
-            size: None,
+        root: WindowLayoutNode::Split { axis: Axis::Horizontal, size: None,
             children: vec![
-                WindowLayoutChild::Axis(WindowLayoutAxisNode { kind: "column".into(), size: Some(0.5), children: vec![cad_window_stack(shape::WINDOW_KIND_ID, "Shape", Some(0.5)), cad_window_stack(building::WINDOW_KIND_ID, "Building", Some(0.5))] }),
-                WindowLayoutChild::Axis(WindowLayoutAxisNode {
-                    kind: "column".into(),
-                    size: Some(0.5),
+                WindowLayoutNode::Split { axis: Axis::Vertical, size: Some(0.5), children: vec![cad_window_stack(shape::WINDOW_KIND_ID, "Shape", Some(0.5)), cad_window_stack(building::WINDOW_KIND_ID, "Building", Some(0.5))] },
+                WindowLayoutNode::Split { axis: Axis::Vertical, size: Some(0.5),
                     children: vec![cad_window_stack(energy::WINDOW_KIND_ID, "Energy", Some(0.5)), cad_window_stack(structure_classic::WINDOW_KIND_ID, "Structure Classic", Some(0.5))],
-                }),
+                },
             ],
-        }),
+        },
     }
 }
 //#endregion 🔖️Definition

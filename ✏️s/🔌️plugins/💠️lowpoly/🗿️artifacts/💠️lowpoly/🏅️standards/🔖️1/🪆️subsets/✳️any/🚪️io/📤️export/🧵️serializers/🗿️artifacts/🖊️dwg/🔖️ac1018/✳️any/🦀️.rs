@@ -29,7 +29,7 @@ pub fn serialize(snapshot: &LowpolySnapshot) -> Result<DwgSnapshot, semio_framew
             }
         }
     }
-    let drawing = mesh_to_dwg_drawing(&mesh);
+    let drawing = mesh_to_dwg_drawing(&mesh).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1)))?;
     DwgSnapshot::from_drawing(&drawing).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1)))
 }
 

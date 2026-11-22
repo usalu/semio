@@ -53,7 +53,7 @@
     },
     {
       "document": "orbit-short",
-      "description": "The first eight views of the committed calibrated orbit ingested at 160 px: every frame is accepted, matches are accepted, ratio-rejected, cross-check-rejected and geometry-rejected, all eight cameras register, the sparse cloud, the dense fusion and a mesh are produced, and the run completes with the content leaves and one commit.",
+      "description": "The first eight views of the committed calibrated orbit at their authored 320 px resolution: every frame is accepted, matches are accepted, ratio-rejected, cross-check-rejected and geometry-rejected, all eight cameras register, the sparse cloud, the dense fusion and a mesh are produced, and the run completes with the content leaves and one commit.",
       "final": "complete",
       "verdictPrefix": [
         "success:frameAccepted",
@@ -81,16 +81,16 @@
         "success:matchAccepted",
         "success:matchAccepted"
       ],
-      "verdicts": 8483,
+      "verdicts": 8486,
       "counters": {
         "cameras": 8,
         "densePoints": 512,
         "framesAccepted": 8,
         "framesRejected": 0,
         "keypoints": 2513,
-        "matchesAccepted": 1492,
-        "matchesRejected": 6720,
-        "sparsePoints": 431
+        "matchesAccepted": 1489,
+        "matchesRejected": 6718,
+        "sparsePoints": 434
       },
       "stagesVisited": [
         "ingest",
@@ -143,25 +143,22 @@
         "success:frameAccepted",
         "success:frameAccepted"
       ],
-      "verdicts": 119519,
+      "verdicts": 119521,
       "counters": {
         "cameras": 36,
         "densePoints": 512,
         "framesAccepted": 36,
         "framesRejected": 0,
         "keypoints": 11310,
-        "matchesAccepted": 15060,
-        "matchesRejected": 112990,
-        "sparsePoints": 1631
+        "matchesAccepted": 15057,
+        "matchesRejected": 112983,
+        "sparsePoints": 1633
       },
       "stagesVisited": [
-        "ingest",
         "features",
         "matching",
         "poses",
-        "bundle",
         "dense",
-        "fusion",
         "products"
       ],
       "appendContentOps": 6,

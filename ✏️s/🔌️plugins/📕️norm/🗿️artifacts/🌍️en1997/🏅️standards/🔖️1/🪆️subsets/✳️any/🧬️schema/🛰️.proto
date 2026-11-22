@@ -6,9 +6,9 @@ message En1997Artifact {
   // @state artifact
   uint32 geotechnical_category = 2;
   // @state artifact
-  string design_situation = 3;
+  SituationChoice design_situation = 3;
   // @state artifact
-  string design_approach = 4;
+  ApproachChoice design_approach = 4;
   // @state artifact
   string annex = 5;
   // @state artifact
@@ -343,4 +343,12 @@ message CharacteristicBasis {
   string layer_id = 2;
   CharacteristicParameter parameter = 3;
   ParameterBasis basis = 4;
+}
+enum ApproachChoice {
+  APPROACH_CHOICE_DA1_STR = 0;
+  APPROACH_CHOICE_DA1_GEO = 1;
+  APPROACH_CHOICE_DA2 = 2;
+  APPROACH_CHOICE_DA2_STAR = 3;
+  APPROACH_CHOICE_DA3 = 4;
+  APPROACH_CHOICE_GEO3 = 5;
 }

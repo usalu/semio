@@ -28,7 +28,7 @@ fn an_independent_decoder_job_recovers_its_response_from_an_unadmitted_session()
     use semio_plugin_ownership::reserved_job_session::RefusedWorkerSource;
     struct Occupied;
     impl InteractiveJob for Occupied {
-        fn step<'a>(&'a mut self,cx:&mut StepContext<'_>)->Result<Option<JobOutcomeBorrow<'a>>,OriginalTurnFailure>{JobOutcomeBorrow::admit_yield(cx).map_err(Into::into)}
+        fn step<'a>(&'a mut self,cx:&mut StepContext<'_>,_:&mut OriginalJobReturnClaim<'_>)->InteractiveJobStep<'a>{InteractiveJobStep::from_callback(JobOutcomeBorrow::admit_yield(cx).map_err(OriginalTurnFailure::from))}
         fn borrow_outcome<'a>(&'a self,descriptor:&'a JobOutcomeDescriptor)->Result<JobOutcomeView<'a>,semio_framework_value::ValueError>{descriptor.yielded()}
         fn begin_close(&mut self){}
         fn close_step(&mut self,_:&mut StepContext<'_>)->Result<InteractiveJobCloseStep,OriginalTurnFailure>{Ok(InteractiveJobCloseStep::Complete{progress:Default::default()})}
@@ -150,7 +150,7 @@ fn native_asset_response_transfers_each_credited_page_without_losing_its_bytes()
         let observed=fetch.owner().received_bytes();let source_released=rejected.is_none();let retained_source=rejected.as_ref().map_or(0,Vec::len);
         if accepted{let RendererAssetFetchOwner::Shared(owner)=&mut fetch else{unreachable!()};owner.seal().unwrap();let decoded=owner.decode_page().unwrap().unwrap().bytes();assert_eq!(decoded.len(),length);assert!(decoded.iter().enumerate().all(|(index,byte)|*byte==(index%period)as u8));}
         fetch.begin_close();let RendererAssetFetchOwner::Shared(owner)=fetch else{unreachable!()};assert!(authority.return_owner(owner).is_ok());authority.begin_close();for _ in 0..4096{if authority.close_step(){break}}assert!(authority.terminal_is_empty());
-        if let Some(bytes)=rejected.as_ref(){let capacity=bytes.capacity();let mut caller=OriginalRendererFixture::new();caller.turn(|cx|{semio_framework_job::close_original_retained_step(cx,semio_framework_value::RetirementDemand{release_bytes:capacity,depth:1,..Default::default()},|_|{rejected.take();Ok(semio_framework_value::RetainedCloneStep::Progress(semio_framework_value::RetainedCloneProgress{copied_items:1,released_bytes:capacity,..Default::default()}))})?;Ok(())}).unwrap();assert!(rejected.is_none());}
+        if let Some(bytes)=rejected.as_ref(){let capacity=bytes.capacity();let mut caller=OriginalRendererFixture::new();caller.turn(|cx|{semio_framework_job::close_original_retained_step(cx,semio_framework_value::RetirementDemand{release_bytes:capacity,depth:1,..Default::default()},|_|{rejected.take();semio_framework_value::RetainedWorkOutcome{result:Ok(semio_framework_value::RetainedCloneStep::Progress(semio_framework_value::RetainedCloneProgress{copied_items:1,released_bytes:capacity,..Default::default()})),work:1}})?;Ok(())}).unwrap();assert!(rejected.is_none());}
         assert_eq!(accepted,case["accepted"].as_bool().unwrap());assert_eq!(observed as u64,case["transferredBytes"].as_u64().unwrap());assert_eq!(source_released,accepted);assert_eq!(retained_source,if accepted{0}else{length});
     }
 }
@@ -197,7 +197,7 @@ fn a_frame_candidate_never_advances_the_independently_owned_asset_decoder() {
     let mut probe = runtime.0.asset_probe.lock().unwrap().take().expect("the decoder retains its exact response");
     let observed = probe.observed_bytes;
     for _ in 0..4096 {
-        if candidate.close_step() {
+        if matches!(caller.turn(|cx| candidate.close_step(cx)).unwrap(), semio_framework_job::InteractiveJobCloseStep::Complete { .. }) {
             break;
         }
     }

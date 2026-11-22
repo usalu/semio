@@ -5,6 +5,7 @@ import { repositoryCachePartitionRootV1 } from "../../../../../../../🦑️repo
 import {readBuildMode} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { join, resolve } from "node:path";
+import { pathToFileURL } from "node:url";
 import { BundleScript, ScriptRouter } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { serveVite } from "../../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🎮️playground/🟦️.ts";
 import { playgroundCompositionPathV1 } from "../../../../../🔌️plugin/📇️registry/🎮️playground/🧩️composition/🟦️.ts";
@@ -33,7 +34,11 @@ export class ServeScript extends BundleScript {
     process.once("SIGINT", cancel);
     process.once("SIGTERM", cancel);
     try {
-      await serveVite({control:scriptCompilerAdmissionControlV1(this.invocation,"vite:entry",0), invocation: this.invocation, mode: readBuildMode(profile), artifactInputs: frameworkOsViteArtifactInputsV1(repositoryCachePartitionRootV1(this.repoRoot, "products"), {version:1,mode:readBuildMode(profile),renderer:"wgpu",command:"serve",engines:"none"}), root: import.meta.dirname, config: composition, configLoader: "native", host, port, signal: this.invocation.control.signal, ready: url => console.log("WGPU browser ready: " + url + "?plugin=" + variant) });
+      await serveVite({control:scriptCompilerAdmissionControlV1(this.invocation,"vite:entry",0), invocation: this.invocation, mode: readBuildMode(profile), artifactInputs: frameworkOsViteArtifactInputsV1(repositoryCachePartitionRootV1(this.repoRoot, "products"), {version:1,mode:readBuildMode(profile),renderer:"wgpu",command:"serve",engines:"none"}), root: import.meta.dirname, config: composition, configLoader: "native", compilerPolicy: "projected-no-optimizer", projectArtifactConfig: async capture => {
+        const { createCapturedWgpuConfigurationV1 } = await import(pathToFileURL(composition).href);
+        if (typeof createCapturedWgpuConfigurationV1 !== "function") throw Error("WGPU composition must project its admitted artifact roots");
+        return createCapturedWgpuConfigurationV1(capture, variant);
+      }, host, port, signal: AbortSignal.any([this.invocation.control.signal, controller.signal]), ready: url => console.log("WGPU browser ready: " + url + "?plugin=" + variant) });
     } finally { process.off("SIGINT", cancel); process.off("SIGTERM", cancel); }
   }
 }

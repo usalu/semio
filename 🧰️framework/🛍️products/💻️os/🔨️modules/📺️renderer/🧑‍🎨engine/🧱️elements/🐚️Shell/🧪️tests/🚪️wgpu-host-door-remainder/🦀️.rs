@@ -148,7 +148,7 @@ fn the_shell_reads_its_platform_from_the_host_platform_door() {
 #[test]
 fn the_undo_redo_chords_match_reacts_gate_and_stay_shadowable() {
     let key = |character: char| semio_ui_wgpu_input::KeyAction::Char(character.to_string());
-    let modifiers = |ctrl: bool, meta: bool, shift: bool, alt: bool| PointerModifiers { ctrl, meta, shift, alt };
+    let modifiers = |ctrl: bool, meta: bool, shift: bool, alt: bool| PointerModifiers { ctrl, meta, shift, alt, repeat: false };
 
     for (meta, ctrl) in [(true, false), (false, true)] {
         assert_eq!(shell_edit_verb_for(&key('z'), &modifiers(ctrl, meta, false, false)), Some(ShellEditVerb::Undo));

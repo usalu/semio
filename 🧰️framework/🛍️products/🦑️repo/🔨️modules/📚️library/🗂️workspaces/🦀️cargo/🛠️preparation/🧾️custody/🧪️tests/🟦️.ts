@@ -9,7 +9,7 @@ import {fileURLToPath} from "node:url";
 import {createHash} from "node:crypto";
 import Ajv from "ajv";
 import{cargoPreparationSourceOracleV1}from"./🔭️oracle/🟦️.ts";
-import {cargoPreparationInputV1,cargoPreparationProgramSourcesV1,admitCargoPreparationObservationV1,assertCargoPreparationObservationCurrentV1} from "../🟦️.ts";
+import {boundCargoDiagnosticV1,cargoPreparationInputV1,cargoPreparationProgramSourcesV1,admitCargoPreparationObservationV1,assertCargoPreparationObservationCurrentV1} from "../🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with { type: "json" };
 import fixture from "./🧫️fixtures/🔣️.json";
 
@@ -34,4 +34,13 @@ registerBuildTestLawV1("Cargo custody actual preparation program binds distinct 
  const artifacts=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!artifacts)throw Error("Explicit custody artifact root required");const root=join(artifacts,"r"),sourceRoot=process.cwd(),custody=fileURLToPath(new URL("../🟦️.ts",import.meta.url)),producer=fileURLToPath(new URL("../../📜️script.ts",import.meta.url)),entry=join(root,"📜️script.ts");mkdirSync(root,{recursive:true});writeFileSync(entry,fixture.program.replace("{CUSTODY}",JSON.stringify(custody.replaceAll("\\","/"))));
  const bytes=readFileSync(entry),row={version:1,root,sourceRoot,script:entry,command:fixture.command,sources:[{path:entry,kind:"file",sha256:createHash("sha256").update(bytes).digest("hex")}],resolverInputs:[],inputs:[],outputs:[],resolutions:[]},validate=new Ajv({strict:true}).addSchema(schema).getSchema(`${schema.$id}#/$defs/CargoPreparationObservationV1`)!;expect(validate(row),JSON.stringify(validate.errors)).toBe(true);for(const key of fixture.missing){const changed:Record<string,unknown>={...row};delete changed[key];expect(validate(changed)).toBe(false);}
  const expected=await cargoPreparationSourceOracleV1(sourceRoot,[entry,producer],join(root,"esbuild"));const program=await cargoPreparationProgramSourcesV1(root,entry,control);expect(program.sourceRoot).toBe(sourceRoot);expect(program.sources.map(source=>source.path).sort()).toEqual(expected);for(const source of program.sources)expect(source.sha256).toBe(new Bun.CryptoHasher("sha256").update(readFileSync(source.path)).digest("hex"));const observed=admitCargoPreparationObservationV1({...row,...program});await assertCargoPreparationObservationCurrentV1(observed,control);expect(program.resolverInputs.some(input=>dirname(input.path)===sourceRoot)).toBe(true);expect(program.sources.some(source=>source.path===custody)).toBe(true);
+});
+
+test("bounded Cargo diagnostics keep the error head and the tail",()=>{
+ const text="error: failed to select a version\n"+"x".repeat(10000)+"\nlast cause";
+ const bounded=boundCargoDiagnosticV1(text);
+ expect(bounded.startsWith("error: failed to select a version")).toBe(true);
+ expect(bounded.endsWith("last cause")).toBe(true);
+ expect(bounded.length).toBeLessThan(4300);expect(bounded).toContain("characters omitted");
+ expect(boundCargoDiagnosticV1("short")).toBe("short");
 });

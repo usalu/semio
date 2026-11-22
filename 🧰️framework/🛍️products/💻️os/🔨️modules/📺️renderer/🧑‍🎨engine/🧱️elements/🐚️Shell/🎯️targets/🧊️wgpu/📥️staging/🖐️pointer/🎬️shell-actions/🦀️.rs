@@ -47,16 +47,16 @@ impl<'ctx> PointerCtx<'ctx> {
         let shell_io_changed = self.as_session().poll_shell_io() | self.as_window_actions().poll_original_media().await;
         #[cfg(target_arch = "wasm32")]
         let shell_io_changed = false;
-        let directory_changed = self.as_actions().pump_directory_events().await || shell_io_changed;
+        let directory_changed = self.as_frame_pumps().pump_directory_events().await || shell_io_changed;
         #[cfg(not(target_arch = "wasm32"))]
         let directory_changed = self.as_session().poll_time_travel_progress().await || directory_changed;
-        let directory_changed = self.as_actions().drain_operation_publications().await || directory_changed;
+        let directory_changed = self.as_frame_pumps().drain_operation_publications().await || directory_changed;
         let directory_changed = self.directory.publish_peer_time_travel_notes(&self.chrome, &self.history, &self.prefs) || directory_changed;
-        let directory_changed = self.as_actions().reattach_remembered_local_folder().await || directory_changed;
+        let directory_changed = self.as_frame_pumps().reattach_remembered_local_folder().await || directory_changed;
         #[cfg(target_arch = "wasm32")]
         let directory_changed = self.as_session().flush_host_route_folder().await || directory_changed;
-        self.as_actions().poll_auto_checkin().await;
-        let directory_changed = self.as_actions().advance_document_opening().await || directory_changed;
+        self.as_frame_pumps().poll_auto_checkin().await;
+        let directory_changed = self.as_frame_pumps().advance_document_opening().await || directory_changed;
         let directory_changed = self.as_session().advance_sync_reseed().await || directory_changed;
         if let Some(error) = self.sync.sync_terminal_fault.take() {
             debug_log(&format!("[TRACE] wgpu shell retired document-backbone owner after terminal fault: {error}"));

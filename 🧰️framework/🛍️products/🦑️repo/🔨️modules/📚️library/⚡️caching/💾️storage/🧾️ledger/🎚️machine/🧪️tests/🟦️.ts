@@ -6,7 +6,7 @@ import {mkdtempSync,rmSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
 import budgetPolicy from "../../../🔒️enforcement/📦️budget/🔣️policy.json" with {type:"json"};
-import {formatMachinePlanV1,machineCapacityV1,machinePolicyV1,parseMachineBytesV1,planMachineBudgetV1,readMachinePolicyV1,resolveMachineTotalV1,splitMachineBudgetV1,type MachinePolicyV1,type MachineUseV1} from "../🟦️.ts";
+import {formatMachinePlanV1,machineCapacityV1,machineHostFloorV1,machinePolicyV1,parseMachineBytesV1,planMachineBudgetV1,readMachinePolicyV1,resolveMachineTotalV1,splitMachineBudgetV1,type MachinePolicyV1,type MachineUseV1} from "../🟦️.ts";
 import admission from "../../../../🦀️cargo/🗃️unit-cache/🧹️gc/🏦️headroom/🧬️schema/🔣️.json" with {type:"json"};
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import policy from "../🔣️policy.json" with {type:"json"};
@@ -14,14 +14,14 @@ import policy from "../🔣️policy.json" with {type:"json"};
 const GIB=1024**3,clone=<T>(value:T):T=>JSON.parse(JSON.stringify(value)),declared=machinePolicyV1();
 function generator(seed:number):()=>number{let state=seed>>>0;return()=>{state=(state+0x6d2b79f5)>>>0;let value=state;value=Math.imul(value^value>>>15,value|1);value^=value+Math.imul(value^value>>>7,value|61);return((value^value>>>14)>>>0)/4294967296;};}
 
-function corpus(count:number):Array<{totalBytes:number;hostFreeBytes:number|null;uses:MachineUseV1[]}>{
+function corpus(count:number):Array<{totalBytes:number;hostFreeBytes:number|null;hostTotalBytes:number|null;uses:MachineUseV1[]}>{
  const random=generator(20261026),out=[];
  for(let index=0;index<count;index++){
   const heavy=random()<0.5,uses=declared.stores.map(store=>{
    const empty=random()<0.1,used=empty?0:Math.floor(random()*(heavy?30:6)*GIB*(store.loose?1:random()<0.5?1:0.1)),image=random()<0.2?null:used+Math.floor(random()*8*GIB)+(store.admitsCommands?40*GIB:0);
    return {id:store.id,usedBytes:used,envelopeBytes:store.loose?null:image,evictableBytes:random()<0.4?null:Math.floor(used*random())};
   });
-  out.push({totalBytes:Math.max(declared.stores.reduce((sum,store)=>sum+store.floorBytes,0),Math.floor((4+random()*90)*GIB)),hostFreeBytes:random()<0.2?null:random()<0.3?Math.floor(random()*declared.hostFreeFloorBytes):Math.floor((15+random()*200)*GIB),uses});
+  out.push({totalBytes:Math.max(declared.stores.reduce((sum,store)=>sum+store.floorBytes,0),Math.floor((4+random()*90)*GIB)),hostFreeBytes:random()<0.2?null:random()<0.3?Math.floor(random()*declared.hostFreeFloorBytes):Math.floor((15+random()*200)*GIB),hostTotalBytes:random()<0.4?null:Math.floor((30+random()*500)*GIB),uses});
  }
  return out;
 }
@@ -84,7 +84,7 @@ test("the split is exact: floors, demands, weights, spare and rounding",()=>{
 test("the plan equals an independent exact-rational oracle on 400 seeded machines",()=>{
  const cases=corpus(400),directory=mkdtempSync(join(tmpdir(),"mb-")),file=join(directory,"cases.json");
  try{
-  writeFileSync(file,JSON.stringify({admission:admission.definitions.Policy.const,stores:declared.stores,hostFreeFloorBytes:declared.hostFreeFloorBytes,alignBytes:declared.alignBytes,toleranceBytes:declared.toleranceBytes,cases}));
+  writeFileSync(file,JSON.stringify({admission:admission.definitions.Policy.const,stores:declared.stores,hostFreeFloorBytes:declared.hostFreeFloorBytes,hostFreeFloorPercent:declared.hostFreeFloorPercent,alignBytes:declared.alignBytes,toleranceBytes:declared.toleranceBytes,cases}));
   const run=spawnSync("python3",["-I",join(import.meta.dir,"🐍️.py"),file],{encoding:"utf8",maxBuffer:1<<28});
   expect(run.status,run.stderr).toBe(0);
   const expected=JSON.parse(run.stdout) as Array<Record<string,unknown>>;
@@ -152,4 +152,14 @@ test("the quota of an image that admits build commands never exceeds the image m
  }
  expect(machineCapacityV1({},image)).toBe(image);expect(machineCapacityV1({admitsCommands:true},null)).toBe(Infinity);expect(machineCapacityV1({admitsCommands:true},GIB)).toBe(0);
  expect(declared.stores.filter(store=>store.admitsCommands).map(store=>store.id)).toEqual(["rust"]);
+});
+
+/** 🧯️ Contract: the free-space floor of the host is a fraction of the volume with the declared bytes as its upper bound, so a 60 GB volume never demands 15 GiB kept free and a 256 GB one keeps the bound; an unknown volume size keeps the declared bytes; the same decision is made by the independent oracle in `🐍️.py` for every seeded machine above. */
+test("the host free floor is a share of the volume bounded by the declared bytes",()=>{
+ expect(declared.hostFreeFloorPercent).toBeGreaterThan(0);
+ for(const[total,expected]of[[60*10**9,Math.floor(60*10**9*declared.hostFreeFloorPercent!/100/declared.alignBytes)*declared.alignBytes],[400*10**9,declared.hostFreeFloorBytes],[2**40,declared.hostFreeFloorBytes],[GIB,declared.alignBytes]]as const)expect(machineHostFloorV1(declared,total),String(total)).toBe(expected);
+ expect(machineHostFloorV1(declared,null)).toBe(declared.hostFreeFloorBytes);expect(machineHostFloorV1(declared,undefined)).toBe(declared.hostFreeFloorBytes);expect(machineHostFloorV1({...declared,hostFreeFloorPercent:undefined},60*10**9)).toBe(declared.hostFreeFloorBytes);
+ const uses=declared.stores.map(store=>({id:store.id,usedBytes:3*GIB,envelopeBytes:store.loose?null:6*GIB,evictableBytes:null}));
+ expect(planMachineBudgetV1({totalBytes:60*GIB,hostFreeBytes:5*GIB,hostTotalBytes:60*10**9,uses}).pressureBytes).toBe(0);
+ expect(planMachineBudgetV1({totalBytes:60*GIB,hostFreeBytes:5*GIB,hostTotalBytes:400*10**9,uses}).pressureBytes).toBe(declared.hostFreeFloorBytes-5*GIB);
 });

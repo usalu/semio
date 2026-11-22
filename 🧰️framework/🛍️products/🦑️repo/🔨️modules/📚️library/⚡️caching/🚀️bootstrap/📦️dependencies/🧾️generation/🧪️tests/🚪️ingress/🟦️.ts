@@ -144,9 +144,9 @@ test("ingress replay: the walk's own recorded observations confirm an unchanged 
   const replay=(startedAt:number)=>glue.replayJavascriptDependencyGenerationWalkV1(root,context,phase,()=>{},walk as never,startedAt,walked,subject);
   expect(await replay(later)).toEqual({status:"match",sha256});
   expect(await replay(Date.now())).toMatchObject({status:"deferred",reason:"provider-observation-unsettled"});
-  writeFileSync(join(root,"package.json"),readFileSync(join(root,"package.json"),"utf8")+" ");
+  writeFileSync(join(root,"package.json"),readFileSync(join(root,"package.json"),"utf8").replace('"version": "0.0.0"','"version": "0.0.1"'));
   expect(await replay(later)).toMatchObject({status:"mismatch",class:"input-changed"});
-  writeFileSync(join(root,"package.json"),readFileSync(join(root,"package.json"),"utf8").slice(0,-1));
+  writeFileSync(join(root,"package.json"),readFileSync(join(root,"package.json"),"utf8").replace('"version": "0.0.1"','"version": "0.0.0"'));
   expect(await replay(later)).toEqual({status:"match",sha256});
  }finally{rmSync(root,{recursive:true,force:true});}
 }),60000);

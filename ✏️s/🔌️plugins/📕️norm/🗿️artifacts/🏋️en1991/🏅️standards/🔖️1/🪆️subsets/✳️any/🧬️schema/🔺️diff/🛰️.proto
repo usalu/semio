@@ -222,13 +222,13 @@ message En1991Diff {
   // @state artifact
   En1991RailDerailmentDelta rail_derailments = 110;
   // @state artifact
-  optional En1991FatigueModelDelta fatigue_models = 111;
+  En1991FatigueModelDelta fatigue_models = 111;
   // @state artifact
-  optional En1991SupportCollisionDelta support_collisions = 112;
+  En1991SupportCollisionDelta support_collisions = 112;
   // @state artifact
-  optional En1991LocalFireDelta local_fires = 113;
+  En1991LocalFireDelta local_fires = 113;
   // @state artifact
-  optional En1991SnowGuardDelta snow_guards = 114;
+  En1991SnowGuardDelta snow_guards = 114;
 }
 message En1991FatigueModelPatch {
   optional string model = 1;

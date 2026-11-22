@@ -1,0 +1,14 @@
+
+/** 🩺️ What a fleet reader may say about one worker: `absent` (no readable record), `offline` (neither its record nor any heartbeat of its machine was written within `offlineMilliseconds`, so the record is stale evidence and not a running worker), `silent` (the machine lives but a worker at work missed `silentBeatsMaximum` beats), `working`, `ready` or `idle` (a state that writes no beat). */
+export type ReadyLivenessV1=Readonly<{liveness:"absent"|"offline"|"silent"|"working"|"ready"|"idle";ageMs:number|null;heartbeatAgeMs:number|null;missedBeats:number}>;
+
+/** 🩺️ Judges one worker for a reader on another machine: the record alone cannot say a worker lives, because a machine that went away leaves its last `running` record behind, so the newest of the record and the heartbeats of the machine (the files named by `heartbeatNames`, written every few seconds by every live origin) decides `offline` first. A pure function.
+ * @see ./🧪️tests/🟦️.ts, ./🧪️tests/🐍️.py the independent oracle */
+export function readyWorkerLivenessV1(input:Readonly<{status:unknown;heartbeatMs:number|null;nowMs:number;policy?:typeof P}>):ReadyLivenessV1{
+ const policy=input.policy??P,silence=readySidecarSilenceV1({status:input.status,nowMs:input.nowMs,policy}),heartbeatAgeMs=input.heartbeatMs===null?null:Math.max(0,input.nowMs-input.heartbeatMs);
+ if(silence.state==="absent")return{liveness:"absent",ageMs:null,heartbeatAgeMs,missedBeats:0};
+ const newest=Math.min(silence.ageMs,heartbeatAgeMs??Infinity);
+ if(newest>=policy.offlineMilliseconds)return{liveness:"offline",ageMs:silence.ageMs,heartbeatAgeMs,missedBeats:silence.missedBeats};
+ const ready=(input.status as {ready?:unknown}).ready===true,liveness=silence.state==="silent"?"silent":silence.state==="fresh"?"working":ready?"ready":"idle";
+ return{liveness,ageMs:silence.ageMs,heartbeatAgeMs,missedBeats:silence.missedBeats};
+}

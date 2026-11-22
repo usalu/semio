@@ -6,6 +6,7 @@ import {expect,test} from "bun:test";
 import budgetPolicy from "../../../🔒️enforcement/📦️budget/🔣️policy.json" with {type:"json"};
 import quota from "../../../../../🏗️build/📥️inputs/💾️storage/🧬️schema/🔣️.json" with {type:"json"};
 import policy from "../../🔣️policy.json" with {type:"json"};
+import ledgerSchema from "../../🧬️schema/🔣️.json" with {type:"json"};
 import cachingPolicy from "../../../../🔣️policy.json" with {type:"json"};
 import unitCacheSchema from "../../../../🦀️cargo/🗃️unit-cache/🧬️schema/🔣️.json" with {type:"json"};
 import {cacheAreaBudgetBytesV1,cacheNeedRequiredBytesV1,readCacheLedgerV1,type CacheNeedV1} from "../../🟦️.ts";
@@ -61,6 +62,15 @@ test("the Bazel workspaces reclaim rule may aim beyond the graph headroom schema
  expect(()=>readCacheLedgerV1(beyond)).toThrow();
  const inverted:any=clone(policy);Object.assign(inverted.areas.find((row:any)=>row.id==="bazel-workspaces").reclaim,{softAvailableBytes:rule.targetAvailableBytes,targetAvailableBytes:rule.softAvailableBytes});
  expect(()=>readCacheLedgerV1(inverted)).toThrow();
+});
+
+test("the shares of a partition leave its reclaiming area at least the soft free space on the authored capacity, so a sibling added without taking a share from the others is refused",()=>{
+ const rule=policy.areas.find(row=>row.id==="bazel-workspaces")!,partition=budgetPolicy.partitions.products,nested=policy.areas.filter(row=>row.kind==="nested"&&row.partition==="products");
+ const shares=nested.reduce((sum,row)=>sum+((row.budget as {basisPoints?:number}).basisPoints??0),0),explicit=nested.reduce((sum,row)=>sum+((row.budget as {bytes?:number}).bytes??0),0);
+ const room=partition.capacityBytes-ledgerSchema.$defs.runtime.const.imageOverheadBytes-explicit-Math.floor(partition.maximumLogicalBytes*shares/10000);
+ expect(room).toBeGreaterThanOrEqual(rule.reclaim!.softAvailableBytes);expect(shares).toBeLessThan(10000);
+ const grown:any=clone(policy);grown.areas.find((row:any)=>row.id==="semio-actions").budget={basisPoints:2700};
+ expect(()=>readCacheLedgerV1(grown)).toThrow("soft reclaim threshold of bazel-workspaces");
 });
 
 test("the envelope an image was born with is read from its image.json, and nothing else counts",async()=>{

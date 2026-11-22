@@ -8,7 +8,16 @@
     {"name":"branch table default","args":[4],"body":[0,2,64,2,64,32,0,14,1,0,1,11,65,3,15,11,65,5,11],"expected":5},
     {"name":"select","args":[0],"body":[0,65,1,65,2,32,0,27,11],"expected":2},
     {"name":"actual table indirect call","args":[7],"body":[0,32,0,65,0,17,0,0,11],"callee":[0,65,33,11],"expected":33},
-    {"name":"settled block continues within the same grant","args":[21],"body":[0,2,64,1,11,32,0,11],"expected":21,"continuation":"settledControl","executionFuel":8},
-    {"name":"retired callee continues within the same grant","args":[21],"body":[0,32,0,16,1,65,2,106,11],"callee":[0,32,0,65,1,106,11],"expected":24,"continuation":"retiredCallee","executionFuel":8}
+    {"name":"settled block continues within the same grant","args":[21],"body":[0,2,127,32,0,11,11],"expected":21,"continuation":"settledControl","executionFuel":8},
+    {"name":"deep typed labels retain a conditional operand on admission","args":[21],"body":[0,2,127,32,0,4,127,2,127,2,127,2,127,2,127,2,127,2,127,2,127,2,127,2,127,2,127,2,127,2,127,2,127,2,127,2,127,2,127,2,127,2,127,2,127,2,127,2,127,2,127,2,127,2,127,2,127,2,127,2,127,2,127,2,127,2,127,2,127,32,0,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,5,65,9,11,11,11],"expected":21,"labelPeak":34},
+    {"name":"retired callee continues within the same grant","args":[21],"body":[0,32,0,16,1,65,2,106,11],"callee":[0,32,0,65,1,106,11],"expected":24,"continuation":"retiredCallee","executionFuel":8},
+    {"name":"true if executes else as an empty-result exit","args":[1],"body":[0,32,0,4,64,65,17,33,0,5,65,29,33,0,11,32,0,11],"expected":17,"atomicTransfer":{"before":8,"after":14,"retireLabel":true,"prefixFuel":4,"expectedFuel":7}},
+    {"name":"false if executes an empty-result end","args":[0],"body":[0,32,0,4,64,65,17,33,0,5,65,29,33,0,11,32,0,11],"expected":29,"atomicTransfer":{"before":13,"after":14,"retireLabel":true,"prefixFuel":4,"expectedFuel":7}},
+    {"name":"direct branch discards inner operands and preserves the outer operand","args":[0],"body":[0,65,19,2,64,65,27,12,0,0,11,11],"expected":19,"atomicTransfer":{"before":6,"after":10,"retireLabel":true,"prefixFuel":3,"expectedFuel":5}},
+    {"name":"taken conditional branch consumes the condition and discards inner operands","args":[3],"body":[0,65,19,2,64,65,27,32,0,13,0,26,65,31,33,0,11,32,0,106,11],"expected":22,"atomicTransfer":{"before":8,"after":17,"retireLabel":true,"prefixFuel":4,"expectedFuel":8}},
+    {"name":"untaken conditional branch consumes only the condition","args":[0],"body":[0,65,19,2,64,65,27,32,0,13,0,26,65,31,33,0,11,32,0,106,11],"expected":50},
+    {"name":"taken conditional loop branch retains the loop label and its result type","args":[3],"body":[0,3,127,32,0,65,1,107,34,0,13,0,65,13,11,11],"expected":13,"atomicTransfer":{"before":9,"after":2,"retireLabel":false,"prefixFuel":5,"expectedFuel":19}},
+    {"name":"nonempty branch moves the result before label retirement","args":[31],"body":[0,2,127,65,37,32,0,12,0,11,11],"expected":31},
+    {"name":"outer branch retires multiple labels","args":[0],"body":[0,2,64,2,64,12,1,11,11,65,31,11],"expected":31}
   ]
 }

@@ -398,7 +398,25 @@
       "gapStandardUiSpacing": 1.0,
       "paddingStandardUiSpacing": 1.0,
       "panelInsetUiSpacing": 1.0,
-      "celebrateBorderDurationSeconds": 1.2
+      "celebrateBorderDurationSeconds": 1.2,
+      "loadingBorderDurationSeconds": 1.6,
+      "waitingBorderDurationSeconds": 3.2,
+      "introducedBorderDurationSeconds": 1.6,
+      "transitionDurationMs": 150.0,
+      "transitionEasing": [
+        0.4,
+        0.0,
+        0.2,
+        1.0
+      ],
+      "dialogEnterDurationMs": 200.0,
+      "dialogEnterEasing": [
+        0.25,
+        0.1,
+        0.25,
+        1.0
+      ],
+      "dialogEnterScaleFrom": 0.95
     },
     "typography": {
       "text2xsPx": 9.6,

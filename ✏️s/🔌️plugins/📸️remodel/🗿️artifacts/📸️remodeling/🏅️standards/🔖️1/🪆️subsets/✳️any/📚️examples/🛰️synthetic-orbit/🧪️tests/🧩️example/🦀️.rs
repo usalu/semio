@@ -432,11 +432,8 @@ fn residual(sim: &Sim3, recovered: &[[f64; 3]], truth: &[[f64; 3]], assignment: 
     recovered.iter().zip(assignment).map(|(point, index)| norm3(sub3(sim.act(*point), truth[*index])).powi(2)).sum::<f64>()
 }
 
-/// 📌️ Sim(3) registration of the recovered camera centres onto the truth orbit WITHOUT a known
-/// correspondence: `terminal_sparse_chunk` exposes poses in registration order only (see
-/// `camera_pose_preview`'s own docstring), so the correspondence is searched. Every ordered triple of
-/// truth cameras seeds a three-point Umeyama fit; each seed is then refined by two nearest-assignment
-/// rounds, and the lowest-residual result wins.
+/// 📌️ Sim(3) registration by geometry alone. Every ordered triple of truth cameras seeds a
+/// three-point Umeyama fit, followed by two nearest-assignment rounds. The lowest-residual fit wins.
 fn align_to_truth(recovered: &[[f64; 3]], truth: &[[f64; 3]]) -> Option<(Sim3, Vec<usize>)> {
     if recovered.len() < 3 || truth.len() < 3 || recovered.len() > truth.len() {
         return None;

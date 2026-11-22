@@ -97,7 +97,11 @@ for case in FIXTURE["blocked"]:
     totals=Counter()
     reasons=Counter()
     last={}
-    for key,message,now in case["events"]:
+    native_codes=Counter()
+    operations=Counter()
+    native_kinds=SCHEMA["definitions"]["TargetSharingKinds"]["const"]
+    operation_kinds=SCHEMA["definitions"]["TargetSharingOperationKinds"]["const"]
+    for key,message,now,native_code,operation in case["events"]:
         kind=key.partition(":")[0]
         totals[kind]+=1
         last[kind]=now
@@ -106,11 +110,20 @@ for case in FIXTURE["blocked"]:
             detail="blocked-"+(reason if reason in BLOCKED_REASONS else "other")
             reasons[detail]+=1
             last[detail]=now
+            if detail=="blocked-sharing-violation" and native_code is not None:
+                native_kind=native_kinds[native_code]
+                native_codes[native_kind]+=1
+                last[native_kind]=now
+                if operation is not None:
+                    operation_kind=operation_kinds[operation]
+                    operations[operation_kind]+=1
+                    last[operation_kind]=now
     def ranked(counts):
         return [{"kind":kind,"count":counts[kind],"lastMs":last[kind]} for kind in sorted(counts,key=lambda kind:(-last[kind],kind))]
     summary=ranked(totals)[:case["limit"]]
     details=ranked(reasons)[:case["limit"]-len(summary)]
-    check(summary==case["totals"] and summary+details==case["results"],"blocked "+case["name"])
+    supplemental=(ranked(native_codes)+ranked(operations))[:case["limit"]-len(summary)-len(details)]
+    check(summary==case["totals"] and summary+details+supplemental==case["results"],"blocked "+case["name"])
 
 try:
     import jsonschema

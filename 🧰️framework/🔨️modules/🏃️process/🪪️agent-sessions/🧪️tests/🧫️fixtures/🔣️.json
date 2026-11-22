@@ -535,74 +535,65 @@
   {
    "facts": {
     "ageSeconds": 5,
-    "anchorAlive": false,
-    "isDefault": false
+    "anchorAlive": false
    },
    "state": "live"
   },
   {
    "facts": {
     "ageSeconds": 600,
-    "anchorAlive": false,
-    "isDefault": false
+    "anchorAlive": false
    },
    "state": "live"
   },
   {
    "facts": {
     "ageSeconds": 601,
-    "anchorAlive": false,
-    "isDefault": false
+    "anchorAlive": false
    },
    "state": "idle"
   },
   {
    "facts": {
     "ageSeconds": 3600,
-    "anchorAlive": false,
-    "isDefault": false
+    "anchorAlive": false
    },
    "state": "idle"
   },
   {
    "facts": {
     "ageSeconds": 3601,
-    "anchorAlive": false,
-    "isDefault": false
+    "anchorAlive": false
    },
    "state": "gone"
   },
   {
    "facts": {
     "ageSeconds": 3601,
-    "anchorAlive": true,
-    "isDefault": false
+    "anchorAlive": true
    },
    "state": "idle"
   },
   {
    "facts": {
     "ageSeconds": 86400,
-    "anchorAlive": true,
-    "isDefault": false
+    "anchorAlive": true
    },
    "state": "idle"
   },
   {
    "facts": {
     "ageSeconds": 86401,
-    "anchorAlive": true,
-    "isDefault": false
+    "anchorAlive": true
    },
    "state": "gone"
   },
   {
    "facts": {
     "ageSeconds": 999999,
-    "anchorAlive": false,
-    "isDefault": true
+    "anchorAlive": false
    },
-   "state": "live"
+   "state": "gone"
   }
  ],
  "shares": [

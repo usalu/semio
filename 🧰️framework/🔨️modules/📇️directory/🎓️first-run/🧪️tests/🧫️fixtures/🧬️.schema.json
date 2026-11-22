@@ -1,0 +1,347 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.os.hub-first-run-vectors/v1",
+  "title": "HubFirstRunVectorsV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "stages",
+    "stateVectors",
+    "projectionVectors",
+    "seenVectors",
+    "lifecycleVectors",
+    "completionVectors",
+    "replayStep",
+    "dismiss"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.os.hub-first-run-vectors/v1"
+    },
+    "stages": {
+      "const": [
+        "welcome",
+        "signIn",
+        "space",
+        "invite",
+        "done"
+      ]
+    },
+    "stateVectors": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "state",
+          "stage",
+          "stepIndex"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "state": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "signedIn",
+              "spaceCount",
+              "openSpaceId",
+              "canInvite"
+            ],
+            "properties": {
+              "signedIn": {
+                "type": "boolean"
+              },
+              "spaceCount": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "openSpaceId": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "canInvite": {
+                "type": "boolean"
+              }
+            }
+          },
+          "stage": {
+            "enum": [
+              "welcome",
+              "signIn",
+              "space",
+              "invite",
+              "done"
+            ]
+          },
+          "stepIndex": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4
+          }
+        }
+      }
+    },
+    "projectionVectors": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "sessionPhase",
+          "rows",
+          "activeSpaceId",
+          "state"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "sessionPhase": {
+            "type": "string"
+          },
+          "rows": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "access"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "access": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "activeSpaceId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "state": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "signedIn",
+              "spaceCount",
+              "openSpaceId",
+              "canInvite"
+            ],
+            "properties": {
+              "signedIn": {
+                "type": "boolean"
+              },
+              "spaceCount": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "openSpaceId": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "canInvite": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    },
+    "seenVectors": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "stored",
+          "storeAvailable",
+          "seen"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "stored": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "storeAvailable": {
+            "type": "boolean"
+          },
+          "seen": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "lifecycleVectors": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "stored",
+          "surfaceOpen",
+          "state",
+          "autoOpenStep"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "stored": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "surfaceOpen": {
+            "type": "boolean"
+          },
+          "state": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "signedIn",
+              "spaceCount",
+              "openSpaceId",
+              "canInvite"
+            ],
+            "properties": {
+              "signedIn": {
+                "type": "boolean"
+              },
+              "spaceCount": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "openSpaceId": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "canInvite": {
+                "type": "boolean"
+              }
+            }
+          },
+          "autoOpenStep": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0,
+            "maximum": 4
+          }
+        }
+      }
+    },
+    "replayStep": {
+      "const": 0
+    },
+    "dismiss": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "storageKey",
+        "storedValue"
+      ],
+      "properties": {
+        "storageKey": {
+          "type": "string"
+        },
+        "storedValue": {
+          "type": "string"
+        }
+      }
+    },
+    "completionVectors": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "stage",
+          "state",
+          "inviteReady",
+          "done"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "stage": {
+            "enum": [
+              "welcome",
+              "signIn",
+              "space",
+              "invite",
+              "done"
+            ]
+          },
+          "state": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "signedIn",
+              "spaceCount",
+              "openSpaceId",
+              "canInvite"
+            ],
+            "properties": {
+              "signedIn": {
+                "type": "boolean"
+              },
+              "spaceCount": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "openSpaceId": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "canInvite": {
+                "type": "boolean"
+              }
+            }
+          },
+          "inviteReady": {
+            "type": "boolean"
+          },
+          "done": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

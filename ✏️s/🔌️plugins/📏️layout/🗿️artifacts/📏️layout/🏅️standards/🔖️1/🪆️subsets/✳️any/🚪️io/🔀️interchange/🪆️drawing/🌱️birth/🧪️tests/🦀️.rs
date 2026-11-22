@@ -131,8 +131,21 @@ fn parent_reference_copy_preserves_the_exact_original_birth_and_physical_ledger(
                 assert_eq!(step(&mut bank, &mut owner, grant, work - 1), Default::default());
                 assert_eq!(owner.demand(BODY).unwrap(), demand);
             }
-            step(&mut bank, &mut owner, grant, work);
+            let progress = step(&mut bank, &mut owner, grant, work);
+            if progress == RetainedCloneProgress::default() && !owner.ready() {
+                assert_ne!(
+                    (owner.demand(BODY).unwrap(), owner.work_demand(BODY).unwrap()),
+                    (demand, work),
+                    "the exactly funded Drawing birth turn must advance",
+                );
+            }
         }
+        assert!(
+            owner.ready(),
+            "Drawing birth did not finish in {TURN_LIMIT} turns: next demand {:?}, next Work {:?}",
+            owner.demand(BODY),
+            owner.work_demand(BODY),
+        );
         let mut output = None;
         let demand = owner.take_demand().unwrap();
         let grant = demand_grant(demand);
@@ -182,6 +195,7 @@ fn birth_admission_quotes_actual_heap_and_preserves_every_undergranted_original(
         let member = input.as_ref().unwrap().member.handle.child_id.as_ptr();
         let payload = input.as_ref().unwrap().initial.as_ptr();
         let mut owner = DrawingBirthPreparation::default();
+        assert!(owner.terminal_is_empty());
         for (denial, work) in denials(grant, demand).map(|denial| (denial, 1)).chain([(grant, 0)]) {
             assert_eq!(admit(&mut bank, &mut owner, &mut input, denial, work), Default::default());
             assert_eq!(input.as_ref().unwrap().member.handle.child_id.as_ptr(), member);

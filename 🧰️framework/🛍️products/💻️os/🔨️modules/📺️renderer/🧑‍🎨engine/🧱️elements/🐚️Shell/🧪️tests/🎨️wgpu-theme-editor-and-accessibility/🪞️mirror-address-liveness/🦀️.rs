@@ -12,7 +12,7 @@ fn generation_rule_hit(rect_key: &str) -> HitTarget<ActionDescriptor> {
     HitTarget { rect: Rect::new(rect[0], rect[1], rect[2], rect[3]), event: None, control_id: Some(rule["controlId"].as_str().expect("generation rule control").to_string()), kind: HitKind::Toggle, drag_axis: None, drag_data: None }
 }
 
-fn settings_toggle_address(shell: &ShellState, input: &InputState<ActionDescriptor>) -> ui_render::AccessibilityTarget {
+fn settings_toggle_address(mut shell: &ShellState, input: &InputState<ActionDescriptor>) -> ui_render::AccessibilityTarget {
     let control = accessibility_fixture()["presentedChrome"]["generationRule"]["controlId"].as_str().expect("generation rule control").to_string();
     let node = PanelsViewCtx::of(&mut shell).chrome_accessibility_nodes(input.hits()).into_iter().find(|node| node.key == control).expect("Settings mirror node");
     ui_render::AccessibilityTarget { window_id: semio_renderer_wgpu_ui_engine_dump::chrome_ledger::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID.to_string(), window_generation: shell.chrome.presented_chrome_accessibility_generation, node_id: node.node_id, node_key: node.key }

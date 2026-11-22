@@ -184,15 +184,23 @@ impl HeadlessWorkspace {
                 }
                 None => Err(GatewayError::new(GatewayErrorCode::NotFound, format!("no such artifact: {artifact_id}"))),
             },
-            Some("schema") => match (self.open_probes.lock().unwrap_or_else(std::sync::PoisonError::into_inner).contains_key(artifact_id), self.plugin_artifact_binding(artifact_id)) {
-                (true, _) => Ok(vec![ResourceContent { uri: uri.to_string(), mime_type: Some("application/json".to_string()), text: Some(serde_json::json!({ "artifactId": artifact_id, "schema": PROBE_SCHEMA }).to_string()), blob: None }]),
-                (false, Some(binding)) => Ok(vec![ResourceContent {
-                    uri: uri.to_string(),
-                    mime_type: Some("application/json".to_string()),
-                    text: Some(serde_json::json!({ "artifactId": artifact_id, "schema": binding.schema, "pluginId": binding.plugin_id, "appId": binding.app_id }).to_string()),
-                    blob: None,
-                }]),
-                (false, None) => Err(GatewayError::new(GatewayErrorCode::PluginUnavailable, format!("`{artifact_id}` has no schema this workspace can answer for — the real wire protocol has no schema/describe/manifest query command yet, and this is neither an open probe artifact nor one created here with a declared kind")).retryable()),
+            Some("schema") => {
+                let open_probe = self.open_probes.lock().unwrap_or_else(std::sync::PoisonError::into_inner).contains_key(artifact_id);
+                let body = if open_probe {
+                    serde_json::json!({ "artifactId": artifact_id, "schema": PROBE_SCHEMA })
+                } else if let Some(binding) = self.plugin_artifact_binding(artifact_id) {
+                    serde_json::json!({ "artifactId": artifact_id, "schema": binding.schema, "pluginId": binding.plugin_id, "appId": binding.app_id })
+                } else {
+                    let schema = match self.read_open_artifact_bytes(artifact_id)? {
+                        Some((_, spr)) => semio_framework_async::block_on(store::os_store::codec_registry::lane_schema_from_spr(&spr)),
+                        None => None,
+                    };
+                    let Some(schema) = schema else {
+                        return Err(GatewayError::new(GatewayErrorCode::PluginUnavailable, format!("`{artifact_id}` has no schema this workspace can answer for — the real wire protocol has no schema/describe/manifest query command yet, and this is neither an open probe artifact nor one created here with a declared kind")).retryable());
+                    };
+                    serde_json::json!({ "artifactId": artifact_id, "schema": schema })
+                };
+                Ok(vec![ResourceContent { uri: uri.to_string(), mime_type: Some("application/json".to_string()), text: Some(body.to_string()), blob: None }])
             },
             Some("history") => match self.open_probes.lock().unwrap_or_else(std::sync::PoisonError::into_inner).get(artifact_id) {
                 Some(probe_store) => Ok(vec![ResourceContent {

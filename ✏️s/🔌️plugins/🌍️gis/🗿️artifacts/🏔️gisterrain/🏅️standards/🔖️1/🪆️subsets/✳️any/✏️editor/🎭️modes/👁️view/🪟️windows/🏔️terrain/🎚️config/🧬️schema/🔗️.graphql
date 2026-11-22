@@ -7,6 +7,6 @@ type GisTerrainWindowConfig {
 
 type TerrainBrushSettings {
   radius: Int!
-  elevationStep: Int!
+  elevationStepMillimetres: Int!
   smoothStrength: Int!
 }

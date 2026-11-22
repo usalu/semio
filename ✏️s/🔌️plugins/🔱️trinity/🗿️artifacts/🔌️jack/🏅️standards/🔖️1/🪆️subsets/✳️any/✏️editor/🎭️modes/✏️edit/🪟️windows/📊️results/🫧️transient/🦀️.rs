@@ -80,7 +80,7 @@ fn query_result_retained_bytes(result: &crate::standards::v1::subsets::any::sche
         }
     }
     if let Some(fixture) = result.graph_snapshot.as_deref() {
-        bytes = bytes.saturating_add(size_of::<crate::standards::v1::subsets::any::schema::ast::JackQueryGraphSnapshot>()).saturating_add(fixture.name.len()).saturating_add(fixture.manifest_id.as_ref().map_or(0, String::len));
+        bytes = bytes.saturating_add(size_of::<crate::standards::v1::subsets::any::schema::ast::JackQueryGraphSnapshot>()).saturating_add(fixture.name.len()).saturating_add(fixture.manifest_id.len());
         for node in &fixture.nodes {
             bytes = bytes.saturating_add(size_of::<crate::standards::v1::subsets::any::schema::graph::Node>()).saturating_add(node.id.len()).saturating_add(node.kind.len()).saturating_add(node.name.len());
             bytes = node.properties.iter().fold(bytes, |bytes, (key, value)| bytes.saturating_add(key.len()).saturating_add(property_value_retained_bytes(value)));

@@ -119,7 +119,9 @@ impl KernelPoolState {
     /// extension actors." `wasm_path` is always `<modules_root>/<plugin_id>/<file>.wasm`
     /// (`program_bridge::load_wasm_plugins`'s own layout convention), so the extensions' own
     /// wasm artifacts live as siblings under the same `modules_root`.
-    pub(super) async fn create_app(&mut self, owner:CreateAppRequestOwner) -> Result<u32, ProgramFault> {
+    pub(super) async fn create_app(
+        &mut self, owner: CreateAppRequestOwner, purpose: semio_framework::kernel::ActorInstanceOpenPurpose,
+    ) -> Result<u32, ProgramFault> {
         let (wasm_path,plugin_id,app_id,artifact_schema)=(owner.path(),owner.plugin(),owner.app(),owner.schema());
         let replay_route_index = self.replay_routes.iter().position(Option::is_none).ok_or_else(|| "kernel: fixed replay route registry is full".to_string())?;
         let component = read_native_component(&wasm_path).await.map_err(|error|error.to_string())?;
@@ -156,6 +158,7 @@ impl KernelPoolState {
         self.instances.insert(instance_id, actor);
         let assets = semio_plugin_host::package_assets::package_assets_beside_module(&wasm_path).map_err(|message| format!("kernel: package assets of `{plugin_id}`: {message}"))?;
         let open = Event::InstanceOpen {
+            purpose,
             request: semio_framework::kernel::ActorInstanceOpenRequest { activation_generation: 1, instance_id, request_sequence: 1 },
             app_id: semio_framework::kernel::AppInstanceId(app_id.to_owned()),
             actor: "local".to_string(),

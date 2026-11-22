@@ -326,6 +326,14 @@ pub fn list_visible_row_capacity(bounds: Rect, row_h: f32) -> usize {
 /// list kind. The retained hit registry cannot carry it: a `ComponentScene` leaf registers exactly
 /// ONE entry (`retained_scene_hit`), minted AFTER this paint stages its own rows, so
 /// `InputState::hovered_id` always answers the surface itself and never one of its rows.
+pub fn scene_table_focused_row(surface_id: &str) -> Option<String> {
+    SCENE_STATE.with(|cell| cell.borrow().get(surface_id).and_then(|state| state.table_focused_row.clone()))
+}
+
+pub fn set_scene_table_focused_row(surface_id: &str, row: Option<String>) {
+    mutate_scene_state(surface_id, |state| state.table_focused_row = row);
+}
+
 pub fn scene_hovered_control_id(surface_id: &str) -> Option<String> {
     SCENE_STATE.with(|cell| cell.borrow().get(surface_id).and_then(|state| state.hovered_control_id.clone()))
 }

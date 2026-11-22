@@ -145,11 +145,21 @@ fn local_stdio_gis_profile_is_exact_two_packages_thirty_one_codecs_and_opens_eve
 
 /// 🧭️ Editors of committed descriptors that author no persisted document of their own, each with the reason; every
 /// other editor surface must open at least one kind through the one rule (coordinator decision, session 12).
-const EDITORS_WITHOUT_A_DOCUMENT: [(&str, &str); 3] = [
+const EDITORS_WITHOUT_A_DOCUMENT: [(&str, &str); 2] = [
     ("s.space.home@1/*#editor", "the launcher: its snapshot holds only the catalog generation it lists (`SHomeSnapshot { schema, catalog_generation }`), never user content"),
-    ("s.space.studio@1/*#editor", "the `s` shell's studio: it edits the running shell's OS-owned workflow (`semio_os::WorkflowSnapshot`) and has no artifact kind of its own"),
     ("s.playbook.procedural@1/*#editor", "a `playbook.blockKind` module: its snapshot is the host playbook block's render payload (foreign document codec), never a document of its own"),
 ];
+
+#[test]
+fn studio_opens_its_workflow_through_the_trusted_descriptor_rule() {
+    let descriptor = decode_package_descriptor(include_bytes!("../../../../../🧩️compositions/🪐️space/🧩️component/🛂️.descriptor.semio")).expect("committed Space descriptor");
+    let targets = descriptor_open_targets(&descriptor);
+    let workflow: Vec<_> = targets.into_iter().filter(|target| target.artifact_kind == "s.space.studio").collect();
+    let [target] = workflow.as_slice() else { panic!("Studio Workflow must have exactly one canonical editor target") };
+    assert_eq!(target.surface_id, "s.space.studio@1/*#editor");
+    assert_eq!(target.artifact_schema, "os.workflow");
+    assert!(target.grant.read && target.grant.write && target.grant.observe);
+}
 
 /// 🔗️ The `(artifact kind, schema)` pairs each hub-LINKED package owns: the committed registries the hub's linked native
 /// providers and the publisher's `linkedCodecRegistry` read (`🌎️hub/🏗️bootstrap/🧾️provenance/🧭️bootstrap-selection/🟦️.ts`).
@@ -169,7 +179,7 @@ fn linked_codec_registries() -> std::collections::BTreeMap<&'static str, BTreeSe
 #[test]
 fn every_committed_editor_that_edits_a_document_opens_a_kind_through_the_one_rule() {
     let mut pending = vec![fixture_path!("../../../../../../../✏️s/🔌️plugins")];
-    let mut descriptors = Vec::new();
+    let mut descriptors = vec![fixture_path!("../../../../../../../🌎️hub/🧩️compositions/🪐️space/🧩️component/🛂️.descriptor.semio")];
     while let Some(directory) = pending.pop() {
         for entry in std::fs::read_dir(&directory).unwrap_or_else(|error| panic!("{}: {error}", directory.display())) {
             let path = entry.expect("plugin tree entry").path();

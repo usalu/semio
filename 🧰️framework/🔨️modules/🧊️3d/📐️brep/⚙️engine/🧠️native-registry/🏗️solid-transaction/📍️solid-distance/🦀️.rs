@@ -11,8 +11,8 @@ impl SolidProvenance {
         Ok(match self {
             Self::Primitive(source)=>source.primitive.signed_boundary_distance(point),
             Self::Bore(source)=>source.signed_boundary_distance(point.to_array()),
-            Self::Orthogonal(source)=>source.signed_boundary_distance(point.to_array()),
-            Self::PlacedOrthogonal(source,frame)=>source.signed_boundary_distance(frame.to_local(point).to_array()),
+            Self::Orthogonal(source)=>source.nearest_boundary(point.to_array()).1,
+            Self::PlacedOrthogonal(source,frame)=>source.nearest_boundary(frame.to_local(point).to_array()).1,
             Self::SphericalCaps(source,_)=>source.signed_boundary_distance(point),
             Self::RoundedBox(source,_)=>source.signed_boundary_distance(point.to_array()),
             Self::ClippedBox(source)=>source.signed_boundary_distance(point).ok_or_else(invalid)?,

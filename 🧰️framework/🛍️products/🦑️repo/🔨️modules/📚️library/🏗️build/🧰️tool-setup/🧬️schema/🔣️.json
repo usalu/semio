@@ -500,6 +500,18 @@
         "summary": {
           "$ref": "#/definitions/Text"
         },
+        "platforms": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "darwin",
+              "linux",
+              "win32"
+            ]
+          }
+        },
         "pin": {
           "$ref": "#/definitions/Pin"
         },

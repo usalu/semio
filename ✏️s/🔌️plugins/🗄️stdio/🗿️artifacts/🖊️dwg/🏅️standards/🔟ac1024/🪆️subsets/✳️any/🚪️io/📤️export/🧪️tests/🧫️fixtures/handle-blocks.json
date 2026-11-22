@@ -1,0 +1,33 @@
+{
+  "locations": [
+    [
+      "1",
+      130
+    ],
+    [
+      "8000000000000000",
+      65
+    ],
+    [
+      "ffffffffffffffff",
+      66
+    ]
+  ],
+  "shortBlock": [
+    0,
+    3,
+    129,
+    0,
+    0,
+    0,
+    2,
+    0,
+    0
+  ],
+  "boundary": {
+    "count": 1014,
+    "lastHandle": "ffffffffffffffff",
+    "lastAddress": "7fffffffffffffff",
+    "maximumBlock": 2048
+  }
+}

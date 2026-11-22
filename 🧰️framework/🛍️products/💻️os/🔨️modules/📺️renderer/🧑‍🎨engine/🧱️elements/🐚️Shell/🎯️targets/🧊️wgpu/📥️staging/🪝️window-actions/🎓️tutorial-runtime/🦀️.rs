@@ -118,48 +118,6 @@ pub fn tutorial_apply_ui_change_to_shell(state: &mut WindowActionsCtx<'_>, chang
 }
 
 //#endregion 🧮️UiSnapshot
-//#region 👻️GestureOverlay
-fn tutorial_gesture_endpoints(gesture: &semio_framework::onboarding::IntroductionGesture) -> (semio_framework::onboarding::IntroductionPoint, semio_framework::onboarding::IntroductionPoint) {
-    use semio_framework::onboarding::IntroductionGesture as G;
-    match gesture {
-        G::LeftClick { at } | G::RightClick { at } | G::DoubleClick { at } => (at.clone(), at.clone()),
-        G::Scroll { at, .. } => (at.clone(), at.clone()),
-        G::Drag { from, to, .. } | G::Orbit { from, to, .. } => (from.clone(), to.clone()),
-    }
-}
-
-/// 👻️ Paints a simple ghost-cursor dot at the active `TutorialGestureCue`'s interpolated position (linear
-/// by playhead progress within the cue) — the minimal demonstration painter neither this shell nor its
-/// introduction mechanism had before (verified: no `demonstration`/ghost-cursor renderer existed here).
-pub fn render_tutorial_gesture_overlay_node(chrome: &ChromeState, surfaces: &SurfaceState, dock: &ShellDockState, tutorial: &TutorialState, overlay: &mut DrawList, theme: &Theme) {
-    let Some(runtime) = tutorial.tutorial.as_ref() else {
-        return;
-    };
-    if !matches!(runtime.mode, TutorialMode::Playing | TutorialMode::Paused | TutorialMode::Deviated) {
-        return;
-    }
-    let playhead = runtime.playhead_ms;
-    let Some(cue) = runtime.definition.tracks.gestures.iter().find(|cue| {
-        let at = cue.at as f64;
-        playhead >= at && playhead <= at + cue.duration_ms as f64
-    }) else {
-        return;
-    };
-    let (from, to) = tutorial_gesture_endpoints(&cue.gesture);
-    let Some((fx, fy)) = tutorial_resolve_gesture_point(chrome, surfaces, dock, &from) else {
-        return;
-    };
-    let (tx, ty) = tutorial_resolve_gesture_point(chrome, surfaces, dock, &to).unwrap_or((fx, fy));
-    let t = if cue.duration_ms == 0 { 1.0 } else { ((playhead - cue.at as f64) / cue.duration_ms as f64).clamp(0.0, 1.0) as f32 };
-    let x = fx + (tx - fx) * t;
-    let y = fy + (ty - fy) * t;
-    let size = 18.0;
-    overlay.push_rounded([x - size * 0.5, y - size * 0.5, size, size], theme.selected, size * 0.5);
-    let inner = size - 6.0;
-    overlay.push_rounded([x - inner * 0.5, y - inner * 0.5, inner, inner], theme.background, inner * 0.5);
-}
-
-//#endregion 👻️GestureOverlay
 //#region 📅️Provenance
 /// 📅️ Howard Hinnant's `civil_from_days` algorithm (http://howardhinnant.github.io/date_algorithms.html)
 /// — days-since-1970-01-01 → proleptic-Gregorian `(year, month, day)`, dependency-free (no date crate in
@@ -260,6 +218,8 @@ impl<'ctx> WindowActionsCtx<'ctx> {
             mode: TutorialMode::Playing,
             playhead_ms: 0.0,
             rate: 1.0,
+            muted: false,
+            captions_on: true,
             applied_ms: 0.0,
             pre_sandbox_document_dsl,
             pre_sandbox_ui,
@@ -300,6 +260,8 @@ impl<'ctx> WindowActionsCtx<'ctx> {
             mode: TutorialMode::Recording,
             playhead_ms: 0.0,
             rate: 1.0,
+            muted: false,
+            captions_on: true,
             applied_ms: 0.0,
             pre_sandbox_document_dsl: None,
             pre_sandbox_ui: ui.clone(),
@@ -334,6 +296,23 @@ impl<'ctx> WindowActionsCtx<'ctx> {
                     self.tutorial.tutorial_pending_document_ops.push(TutorialPendingDocOp::LoadArtifactDsl(document_dsl));
                 }
             }
+        }
+    }
+
+    /// ⏺️ React's `toggleTutorialRecording`: a recording ends and saves; otherwise any playback ends (the one runtime slot) and a recording of the live document starts.
+    pub fn tutorial_toggle_recording(&mut self) {
+        let was_recording = self.tutorial.tutorial.as_ref().is_some_and(|runtime| runtime.mode == TutorialMode::Recording);
+        self.tutorial_stop();
+        if !was_recording {
+            self.tutorial_start_recording();
+        }
+    }
+
+    /// 📖️ React's `addTutorialChapter`: marks the recording's elapsed time as the next chapter, nothing otherwise.
+    pub fn tutorial_add_chapter(&mut self) {
+        let Some(runtime) = self.tutorial.tutorial.as_mut() else { return };
+        if let Some(chapter) = runtime.next_chapter() {
+            runtime.definition.chapters.push(chapter);
         }
     }
 

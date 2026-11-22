@@ -17,12 +17,19 @@ struct Piece {
 }
 
 #[derive(semio_framework_value::RetireOwned)]
+struct TransverseSupports {
+    axis: usize,
+    faces: [usize; 2],
+}
+
+#[derive(semio_framework_value::RetireOwned)]
 pub(super) struct PrismClip {
     side: usize,
     subtract: bool,
     outside: Option<usize>,
     remaining: Option<Piece>,
     lateral: Option<LongitudinalClip>,
+    transverse: Option<TransverseSupports>,
     interval: [f64; 2],
     caps: [Option<usize>; 2],
     samples: [f64; 2],
@@ -41,10 +48,21 @@ fn height(point: [f32; 3], plane: Plane) -> f64 {
 
 impl PrismClip {
     pub(super) fn new(side: usize, subtract: bool) -> Self {
-        Self { side, subtract, outside: None, remaining: None, lateral: None, interval: [0., 1.], caps: [None; 2], samples: [f64::INFINITY, f64::NEG_INFINITY], plane: 0,
+        Self { side, subtract, outside: None, remaining: None, lateral: None, transverse: None, interval: [0., 1.], caps: [None; 2], samples: [f64::INFINITY, f64::NEG_INFINITY], plane: 0,
             cursor: 0, face: 0, corner: 0, mapped: [0; 2 * MAX_PROFILE], stage: 0,
             result: MeshIntersectionSolid { geometry: Soup::default(), faces: Vec::new(), points: Vec::new(),
                 right_points: Vec::new(), right_interpolations: Vec::new(), retained_operand: None } }
+    }
+
+    pub(super) fn transverse(axis: usize, faces: [usize;2], subtract: bool) -> Self {
+        let mut clip = Self::new(0, subtract);
+        clip.transverse = Some(TransverseSupports { axis, faces });
+        clip
+    }
+
+    fn support(&self, planes: &[Plane]) -> Option<(usize, Plane)> {
+        let id = if let Some(transverse) = &self.transverse { *transverse.faces.get(self.plane)? } else { self.plane };
+        planes.get(id).copied().map(|plane| (id, plane))
     }
 
     fn start_piece(&mut self,piece:Piece){
@@ -79,16 +97,15 @@ impl PrismClip {
         PrismClipStep::More
     }
 
-    fn restrict(&mut self, source: &Soup, prism: &NestedPrism, normal: [f64; 3], planes: &[Plane], epsilon: f64) -> MeshResult<bool> {
-        let plane = planes[self.plane];
+    fn restrict(&mut self, source: &Soup, prism: &NestedPrism, normal: [f64; 3], (face, plane): (usize, Plane), epsilon: f64) -> MeshResult<bool> {
         let [min, max] = self.samples;
         if max <= epsilon { return Ok(true); }
         if min >= -epsilon { return Ok(false); }
         let [low, high] = prism.pair(source, 0).map(|id| height(source.positions[id as usize], plane));
         let slope = high - low;
         if slope.abs() <= epsilon {
-            if let Some(lateral) = &mut self.lateral { lateral.add_plane(self.plane)?; }
-            else { self.lateral = Some(LongitudinalClip::new(self.plane)); }
+            if let Some(lateral) = &mut self.lateral { lateral.add_plane(face)?; }
+            else { self.lateral = Some(LongitudinalClip::new(face)); }
             return Ok(true);
         }
         if dot(normal, plane.normal.0.map(f64::from)).abs() < 1.0 - 1e-6 {
@@ -98,7 +115,7 @@ impl PrismClip {
         let side = usize::from(slope > 0.);
         if (side == 0 && t > self.interval[0]) || (side == 1 && t < self.interval[1]) {
             self.interval[side] = t;
-            self.caps[side] = Some(self.plane);
+            self.caps[side] = Some(face);
         }
         Ok(true)
     }
@@ -111,7 +128,10 @@ impl PrismClip {
         if let Some(cap) = self.caps[side] {
             let t = self.interval[side];
             let [first,last] = [a,b].map(|id| source.positions[id as usize].map(f64::from));
-            let point = std::array::from_fn(|axis| (first[axis] + (last[axis] - first[axis]) * t) as f32);
+            let mut point = std::array::from_fn(|axis| (first[axis] + (last[axis] - first[axis]) * t) as f32);
+            if let Some(transverse) = &self.transverse {
+                point[transverse.axis] = planes[cap].origin.0[transverse.axis];
+            }
             if height(point, planes[cap]).abs() > epsilon { return Err(invalid("concave prism cap lost its supporting plane")); }
             let id = self.result.geometry.positions.len() as u32;
             let recipe = SourceVertex::Edge { a, b, t };
@@ -154,13 +174,13 @@ impl PrismClip {
         match self.stage {
             0 => {
                 let normal = source_planes[prism.caps()[1]].normal.0.map(f64::from);
-                if let Some(&plane) = outer.get(self.plane) {
+                if let Some((face, plane)) = self.support(outer) {
                     if let Some(&point) = source.positions.get(self.cursor) {
                         let d = height(point, plane);
                         self.samples = [self.samples[0].min(d), self.samples[1].max(d)];
                         self.cursor += 1;
                     } else {
-                        if !self.restrict(source, prism, normal, outer, epsilon)? { return Ok(self.outside_result()); }
+                        if !self.restrict(source, prism, normal, (face, plane), epsilon)? { return Ok(self.outside_result()); }
                         self.plane += 1;
                         self.cursor = 0;
                         self.samples = [f64::INFINITY, f64::NEG_INFINITY];
@@ -203,14 +223,15 @@ impl PrismClip {
                     if height(point,outer[outside]) < -epsilon { return Err(invalid("concave prism Difference left material inside its cutter")); }
                     self.cursor+=1;
                 }else{
-                    if height(point, outer[self.plane]) > epsilon { return Err(invalid("concave prism vertex exceeds its enclosing support")); }
+                    if height(point, self.support(outer).unwrap().1) > epsilon { return Err(invalid("concave prism vertex exceeds its enclosing support")); }
                     self.plane += 1;
-                    if self.plane == outer.len() { self.plane = 0; self.cursor += 1; }
+                    if self.support(outer).is_none() { self.plane = 0; self.cursor += 1; }
                 }
             }
             5 => {
                 let lateral=self.lateral.as_mut().unwrap();
                 let input=LongitudinalSource{source,prism,planes:outer,mapped:&self.mapped,caps:self.caps,
+                    stock_normal:source_planes[prism.caps()[0]].normal.0.map(f64::from),
                     interval:self.interval,side:self.side,subtract:self.subtract,epsilon};
                 if lateral.advance(input,&mut self.result)? {
                     return Ok(self.take_result());

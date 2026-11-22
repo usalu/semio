@@ -30,7 +30,6 @@ use semio_s_fem_payload_turns::NumericalStep;
 
 use semio_framework_job::RevisionId;
 
-use semio_framework_job::StepBudget;
 
 use semio_framework_job::StepContext;
 
@@ -89,27 +88,6 @@ pub fn job_close_demand(job: &impl InteractiveJob) -> RetirementDemand {
     RetirementDemand { copy_bytes, capacity_bytes: job.next_close_capacity_byte_demand(copy_bytes).expect("capacity quote"), release_bytes: job.next_close_release_byte_demand().expect("release quote"), depth: job.next_close_depth_demand().expect("depth quote") }
 }
 
-/// 🧹️ Closes a locally owned job through its own quoted grants until it is terminal-empty.
-pub fn close_job(job: &mut impl InteractiveJob) {
-    job.begin_close();
-    for _ in 0..10_000_000 {
-        if job.terminal_is_empty() {
-            return;
-        }
-        let step = close_turn(job, close_grant(job_close_demand(job)));
-        assert!(matches!(step, Ok(InteractiveJobCloseStep::Pending { .. } | InteractiveJobCloseStep::Complete { .. })), "a locally owned job close has no external owner and no refusal");
-    }
-    panic!("the job close ladder never reached terminal-empty");
-}
-
-/// 🧹️ Closes an owned payload through its own quoted grants.
-pub fn close_payload(mut payload: RetainedJobPayload) {
-    while !payload.terminal_is_empty() {
-        let demand = payload.retirement_demands().expect("a locally owned payload quotes its close demand");
-        payload_close(&mut payload, demand);
-    }
-}
-
 thread_local! { static BANK: std::cell::RefCell<EffectBank> = std::cell::RefCell::new(EffectBank::new(Wallet::new(RetainedCloneGrant { maximum_items: 1 << 30, maximum_copy_bytes: 1 << 30, maximum_capacity_bytes: 1 << 30, maximum_release_bytes: 1 << 30, maximum_depth: 1 << 20 }, 1 << 40))); }
 
 /// 🎟️ Runs one body inside the genuine original effect of the shared effect bank, funded with exactly `grant`.
@@ -122,66 +100,6 @@ pub fn granted<R>(grant: RetainedCloneGrant, run: impl FnOnce(&mut semio_framewo
         });
         output.expect("the shared effect bank ran its original action")
     })
-}
-
-/// 🎟️ Closes one payload frontier inside the shared bank's original effect that grants exactly its quote.
-fn payload_close(payload: &mut RetainedJobPayload, demand: RetirementDemand) -> semio_framework_job::RetainedCloneStep {
-    granted(close_grant(demand), |effect| payload.close_step(effect).result).expect("a locally owned payload close has no external owner")
-}
-
-/// 🪪️ Runs one body inside a fresh single-fuel step context under the shared test wallet.
-fn with_context<T>(operation: Operation, run: impl FnOnce(&mut StepContext<'_>) -> T) -> T {
-    let mut sequence = 0;
-    let mut receipt = RetainedCloneProgress::default();
-    let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut receipt);
-    run(&mut context)
-}
-
-/// 🔁️ Re-enters one shared funded builder turn under fresh contexts until it reports completion.
-fn until_done(operation: Operation, mut turn: impl FnMut(&mut StepContext<'_>) -> Result<bool, ValueError>) {
-    for _ in 0..10_000 {
-        if with_context(operation, |context| turn(context)).expect("a locally owned builder turn is admitted by the test wallet") {
-            return;
-        }
-    }
-    panic!("a locally owned builder turn never completed");
-}
-
-/// 🧱️ Rebuilds an owned payload from copied pages so a restore cursor can consume it.
-pub fn payload_from_pages(operation: Operation, stream: JobPayloadStream, pages: &[Vec<u8>]) -> RetainedJobPayload {
-    let mut slot: NumericalPayloadSlot = None;
-    let mut output = None;
-    until_done(operation, |cx| numerical_open_writer(&mut slot, stream, cx));
-    for page in pages {
-        until_done(operation, |cx| numerical_begin_page(slot.as_deref_mut().expect("boxed builder"), cx));
-        until_done(operation, |cx| { let turn = slot.as_deref_mut().expect("boxed builder").write_staged_source_funded(cx, page.as_slice()); numerical_post(cx, turn) });
-        until_done(operation, |cx| numerical_commit_page(slot.as_deref_mut().expect("boxed builder"), cx));
-    }
-    until_done(operation, |cx| numerical_finish_writer(&mut slot, &mut output, cx));
-    output.expect("rebuilt payload builder hands its sealed payload over")
-}
-
-/// 🧹️ Closes a locally owned writer slot through its own quoted grants, then releases its box.
-pub fn close_writer(writer: &mut NumericalPayloadSlot) {
-    let operation = test_operation(0);
-    while writer.is_some() {
-        let grant = match numerical_writer_demand(writer) { Some(demand) => close_grant(demand.expect("a locally owned builder quotes its close demand")), None => break };
-        if granted(grant, |effect| numerical_writer_close(writer, effect)).is_none() { break; }
-    }
-}
-
-/// 🧹️ Closes an owned payload and returns the page backing bytes it released, excluding the operation ledger.
-pub fn close_payload_page_bytes(mut payload: RetainedJobPayload) -> usize {
-    let mut released = 0;
-    while !payload.terminal_is_empty() {
-        let demand = payload.retirement_demands().expect("a locally owned payload quotes its close demand");
-        let pages = payload.page_count();
-        let step = payload_close(&mut payload, demand);
-        if payload.page_count() < pages {
-            released += step.progress().released_bytes;
-        }
-    }
-    released
 }
 
 /// 🪪️ The fixed operation identity every engine contract test steps under.
@@ -198,11 +116,6 @@ pub fn grant_of(items: usize, bytes: usize) -> RetainedCloneGrant {
 pub fn tuple_of(step: InteractiveJobCloseStep) -> (bool, usize, usize) {
     let progress = step.progress();
     (matches!(step, InteractiveJobCloseStep::Complete { .. }), progress.copied_items, progress.released_bytes)
-}
-
-/// 🧱️ Rebuilds a checkpoint-state payload from copied pages.
-pub fn checkpoint_payload(operation: Operation, pages: &[Vec<u8>]) -> RetainedJobPayload {
-    payload_from_pages(operation, JobPayloadStream::CheckpointState, pages)
 }
 
 /// 🧮️ Drives a close ladder to completion and reports (retired bytes, every turn exact, every turn bounded, complete).
@@ -223,13 +136,6 @@ pub fn accounted_close<C>(owner: &mut C, mut step: impl FnMut(&mut C) -> Interac
         }
     }
     (retired, exact, bounded, complete)
-}
-
-/// 🎟️ One original-context close turn of a locally owned job whose caller wallet is exactly `grant`.
-pub fn close_turn<J: InteractiveJob>(job: &mut J, grant: RetainedCloneGrant) -> Result<InteractiveJobCloseStep, OriginalTurnFailure> {
-    let (mut sequence, mut receipt) = (0, RetainedCloneProgress::default());
-    let mut context = StepContext::new(OperationId(0), Generation(0), StepBudget::new(u64::MAX, u64::MAX, grant), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut receipt);
-    job.close_step(&mut context)
 }
 
 /// 🧫️ A committed language-agnostic fixture read once at test time, `$path` relative to the calling package's manifest

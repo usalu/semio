@@ -1,0 +1,74 @@
+[
+  {
+    "name": "closing an archive can spend its one item before the next action",
+    "issued": [
+      64,
+      32768
+    ],
+    "prior": [
+      1,
+      512
+    ],
+    "spent": [
+      1,
+      510
+    ],
+    "source": [
+      48,
+      12000
+    ],
+    "demand": [
+      3,
+      1024
+    ],
+    "enters": true
+  },
+  {
+    "name": "previous turn's copy remainder does not cap a fresh dispatch",
+    "issued": [
+      64,
+      32768
+    ],
+    "prior": [
+      4,
+      512
+    ],
+    "spent": [
+      1,
+      511
+    ],
+    "source": [
+      48,
+      12000
+    ],
+    "demand": [
+      3,
+      1024
+    ],
+    "enters": true
+  },
+  {
+    "name": "renewal cannot lend items or bytes already spent by the same Source",
+    "issued": [
+      64,
+      32768
+    ],
+    "prior": [
+      1,
+      512
+    ],
+    "spent": [
+      1,
+      511
+    ],
+    "source": [
+      2,
+      1023
+    ],
+    "demand": [
+      3,
+      1024
+    ],
+    "enters": false
+  }
+]

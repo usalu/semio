@@ -1,7 +1,7 @@
 semio norm.din16798.dsl v1
 annex=de theta-rm-c=15 outdoor-co2-ppm=400 envelope-n50-h-inv=1.5 envelope-volume-m3=600m3 cellar-area-m2=0m2 cellar-ventilation-m3-h=0 night-setback-k=4K
-zones [id:TEXT name:TEXT usage-type:TEXT floor-area-m2:QTY occupants:UINT comfort-category:TEXT pollution-class:TEXT comfort-model:TEXT t-op-winter-c:NUM t-op-summer-c:NUM air-speed-m-s:QTY clothing-clo:NUM metabolic-rate-met:NUM rh-percent:QTY outdoor-air-supplied-m3-h:NUM co2-ppm:NUM illuminance-lx:NUM noise-db:NUM turbulence-intensity-percent:NUM vent-method:TEXT vent-system-id:TEXT] {
-  zone-office "Open office" office 200m2 20 II low fixed_hvac 22 24.5 0.1m/s 0.5 1.2 45pct 1008 900 500 34 40 method_1_perceived_air_quality vent-central
+zones [id:TEXT name:TEXT usage-type:TEXT floor-area-m2:QTY occupants:UINT comfort-category:TEXT pollution-class:TEXT comfort-model:TEXT t-op-winter-c:NUM t-op-summer-c:NUM air-speed-m-s:QTY clothing-clo:NUM metabolic-rate-met:NUM rh-percent:QTY outdoor-air-supplied-m3-h:NUM co2-ppm:NUM illuminance-lx:NUM noise-db:NUM turbulence-intensity-percent:NUM vent-method:TEXT vent-system-id:TEXT unoccupied-ventilation:REC] {
+  zone-office "Open office" office 200m2 20 II low fixed_hvac 22 24.5 0.1m/s 0.5 1.2 45pct 1008 900 500 34 40 method_1_perceived_air_quality vent-central _
 }
 vent-systems [id:TEXT name:TEXT system-type:TEXT sfp-w-m3-s:NUM sfp-required-class:UINT heat-recovery-eta:NUM oda-class:TEXT filter-sup-class:TEXT years-since-inspection:UINT humidification-required-kg-h:NUM humidification-provided-kg-h:NUM fan-q-v-m3-s:NUM fan-t-run-h:QTY duct-class:TEXT duct-test-pressure-pa:QTY duct-leakage-m3-s-m2:NUM design-airflow-m3-h:NUM] {
   vent-central "Central AHU" central_mech 950 3 0.75 ODA2 ePM1_55 1 0 0 0.28 2500h C 400Pa 0.08 1008

@@ -6,6 +6,7 @@ import { cn } from "@semio-tech/ui/modules/class-name-composition";
 import { surfaceClass } from "@semio-tech/ui/modules/surface-presentation";
 import { borderNormalClass } from "@semio-tech/ui/modules/border-presentation";
 import { usePanelGhost } from "@semio-tech/ui/elements/PanelGhost";
+import chromeParityConstants from "../../../🧬️schema/📐️chrome-parity-constants/🧮️values.json";
 import { reactHostPort } from "@semio-tech/ui/elements/Ports/react";
 
 /** 🌱️ One draggable tree granule inside a leaf tab — dockable between leaf tabs, rendered as its own collapsible section. */
@@ -193,7 +194,7 @@ export function computeTabDockDropZone(pointerX: number, pointerY: number, rows:
       const buttonRect = button.getBoundingClientRect();
       if (pointerX < buttonRect.left || pointerX > buttonRect.right) continue;
       const fraction = buttonRect.width > 0 ? (pointerX - buttonRect.left) / buttonRect.width : 0.5;
-      if (button.dataset.tabKind === "branch" && fraction > 0.3 && fraction < 0.7) {
+      if (button.dataset.tabKind === "branch" && fraction > chromeParityConstants.panelDrop.nestMinFraction && fraction < chromeParityConstants.panelDrop.nestMaxFraction) {
         return { kind: "child", anchor: row.anchor, parentId: button.dataset.tabId! };
       }
       return { kind: "insert", anchor: row.anchor, parentPath: row.parentPath, index: index + (fraction >= 0.5 ? 1 : 0) };

@@ -130,6 +130,44 @@ fn decode_framed<T:semio_framework_value::retirement::RetireOwned>(
  RetainedWorkOutcome{result:turn.result.map_err(|error|Stage::Operation(settlement.refused_failure(native_owner.native().owned_bytes(),error))),work:turn.work}
 }
 
+/// 📜️ Receives a raw UTF-8 carrier through a retained-output body, settled against the caller's control.
+pub fn decode_sqlite_snapshot_raw_native<T:semio_framework_value::retirement::RetireOwned>(
+ payload:&semio_framework_io_schema::IoPayload,
+ receive:&mut impl FnMut(&str,&mut Option<T>,&mut NativeSnapshotDecodeOwner<'_,'_>)->RetainedWorkOutcome<(),NativeSnapshotFailure>,
+ control:&mut SqliteSnapshotControl<'_>,
+ native_owner:&mut NativeSnapshotDecodeOwner<'_,'_>,
+ output:&mut Option<SnapshotReceivingOutput<T>>,
+)->SnapshotReceivingOutcome{
+ let admitted=(||{
+  if output.is_some(){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"output slot occupied"))}
+  native_owner.native().checkpoint()?;
+  control.checkpoint(SqliteSnapshotPhase::DecodeNative,0,0)?;
+  let text=match payload{semio_framework_io_schema::IoPayload::Text(text)=>text.as_str(),semio_framework_io_schema::IoPayload::Binary(bytes)=>std::str::from_utf8(bytes).map_err(|_|ValueError::literal(ValueRefusalKind::InvalidValue,"input is not UTF8"))?};
+  if text.len()>control.limits().max_file_bytes{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"input exceeds file limit"))}
+  let before=native_owner.native().owned_bytes();
+  let maximum=before.checked_add(control.allocation_remaining_bytes()).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"allowance overflow"))?;
+  Ok((text,before,maximum))
+ })();
+ let(text,before,maximum)=match admitted{Ok(admitted)=>admitted,Err(error)=>return RetainedWorkOutcome{result:Err(Stage::NotStarted(error)),work:0}};
+ let settlement=semio_framework_io_sqlite_snapshot::artifact::receiving::ReceivingSettlement::new(control,before,SqliteSnapshotPhase::DecodeNative);
+ let mut observer=|event:NativeDecodeProgress|settlement.observe(event.owned_bytes,event.completed,event.total);
+ let turn=native_owner.scoped_native(maximum,&mut observer,|owner|owner.receive_nested::<T,SnapshotReceivingOutput<T>,NativeSnapshotFailure>(output,&mut |slot,result,_marker,_unwind,owner|native_snapshot_turn(|work|{
+  let status=work.take(receive(text,slot,owner));
+  match(status,settlement.finish_body(owner.native().owned_bytes())){
+   (Err(primary),Ok(()))=>return Err(primary),
+   (Ok(()),Err(error))=>return Err(error.into()),
+   (Err(primary),Err(error))=>return Err(primary.with_settlement_refusal(error).expect("settlement slot")),
+   (Ok(()),Ok(()))=>{}
+  }
+  let bytes=size_of::<SnapshotReceivingOutput<T>>();
+  let grant=owner.admit_constructed(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:bytes,maximum_depth:1,..Default::default()})?;work.admit(owner.native())?;
+  let received=slot.take().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"retained snapshot lost"))?;
+  *result=Some(Ok(received));
+  owner.record_constructed_progress(grant,RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;Ok(())
+ })));
+ RetainedWorkOutcome{result:turn.result.map_err(|error|Stage::Operation(settlement.refused_failure(native_owner.native().owned_bytes(),error))),work:turn.work}
+}
+
 #[cfg(test)]
 #[path="🧪️tests/🚪️control/🦀️.rs"]
 mod original_control_tests;

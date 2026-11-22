@@ -1,11 +1,11 @@
 {
  "locks": {
-  "registry": "version = 3\n\n[[package]]\nname = \"serde\"\nversion = \"1.0.0\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"00\"\n\n[[package]]\nname = \"app\"\nversion = \"0.1.0\"\ndependencies = [\"serde\"]\n",
-  "sparse": "version = 3\n\n[[package]]\nname = \"serde\"\nversion = \"1.0.0\"\nsource = \"sparse+https://index.crates.io/\"\nchecksum = \"00\"\n",
+  "registry": "version = 3\n\n[[package]]\nname = \"serde\"\nversion = \"1.0.0\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"f5fe331d2367a7a67ee20bd579c77b929ae49439d8b0d8e9c3b98609797b6b69\"\n\n[[package]]\nname = \"app\"\nversion = \"0.1.0\"\ndependencies = [\"serde\"]\n",
+  "sparse": "version = 3\n\n[[package]]\nname = \"serde\"\nversion = \"1.0.0\"\nsource = \"sparse+https://index.crates.io/\"\nchecksum = \"f5fe331d2367a7a67ee20bd579c77b929ae49439d8b0d8e9c3b98609797b6b69\"\n",
   "git": "version = 3\n\n[[package]]\nname = \"dep\"\nversion = \"0.1.0\"\nsource = \"git+https://example.test/dep#abc\"\n",
   "path": "version = 3\n\n[[package]]\nname = \"app\"\nversion = \"0.1.0\"\n",
   "broken": "version = [\n",
-  "other": "version = 3\n\n[[package]]\nname = \"serde\"\nversion = \"1.0.1\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"00\"\n\n[[package]]\nname = \"app\"\nversion = \"0.1.0\"\ndependencies = [\"serde\"]\n"
+  "other": "version = 3\n\n[[package]]\nname = \"serde\"\nversion = \"1.0.1\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"f5fe331d2367a7a67ee20bd579c77b929ae49439d8b0d8e9c3b98609797b6b69\"\n\n[[package]]\nname = \"app\"\nversion = \"0.1.0\"\ndependencies = [\"serde\"]\n"
  },
  "classes": {
   "registry": "registry",
@@ -91,13 +91,55 @@
    "expect": true
   },
   {
-   "op": "replaceCrate",
+   "op": "touchCrate",
    "name": "serde-1.0.0.crate",
    "index": "idx2"
   },
   {
    "op": "holds",
+   "expect": true
+  },
+  {
+   "op": "recreateCrate",
+   "name": "serde-1.0.0.crate",
+   "index": "idx2"
+  },
+  {
+   "op": "holds",
+   "expect": true
+  },
+  {
+   "op": "moveCrate",
+   "name": "serde-1.0.0.crate",
+   "index": "idx2",
+   "to": "idx"
+  },
+  {
+   "op": "holds",
+   "expect": true
+  },
+  {
+   "op": "corruptCrate",
+   "name": "serde-1.0.0.crate",
+   "index": "idx"
+  },
+  {
+   "op": "holds",
    "expect": false
+  },
+  {
+   "op": "capture",
+   "lock": "registry",
+   "defined": false
+  },
+  {
+   "op": "recreateCrate",
+   "name": "serde-1.0.0.crate",
+   "index": "idx"
+  },
+  {
+   "op": "holds",
+   "expect": true
   },
   {
    "op": "capture",
@@ -111,7 +153,7 @@
   {
    "op": "removeCrate",
    "name": "serde-1.0.0.crate",
-   "index": "idx2"
+   "index": "idx"
   },
   {
    "op": "holds",
@@ -176,5 +218,14 @@
    "mutate": "none",
    "admitted": true
   }
- ]
+ ],
+ "checksum": "f5fe331d2367a7a67ee20bd579c77b929ae49439d8b0d8e9c3b98609797b6b69",
+ "sources": {
+  "name": "serde-1.0.0",
+  "files": {
+   "Cargo.toml": "[package]\nname = \"serde\"\nversion = \"1.0.0\"\n",
+   "src/lib.rs": "pub fn one() -> u8 { 1 }\n",
+   "src/deep/mod.rs": "pub mod nested {}\n"
+  }
+ }
 }

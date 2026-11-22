@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "format",
+    "document",
+    "schema",
+    "archiveMaximum",
+    "packMaximum",
+    "sprMaximum",
+    "cases"
+  ],
+  "properties": {
+    "format": {
+      "const": 1
+    },
+    "document": {
+      "type": "string",
+      "minLength": 1
+    },
+    "schema": {
+      "type": "string",
+      "minLength": 1
+    },
+    "archiveMaximum": {
+      "type": "integer",
+      "minimum": 4194305
+    },
+    "packMaximum": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "sprMaximum": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 7,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "exactCommit",
+          "foreignSchema",
+          "unknownDocument",
+          "independentExtent",
+          "cancelledRead",
+          "foreignGuestLifetime",
+          "supersededBeforePublication"
+        ]
+      }
+    }
+  }
+}

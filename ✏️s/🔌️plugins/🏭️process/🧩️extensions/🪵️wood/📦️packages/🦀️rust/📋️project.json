@@ -8,7 +8,7 @@
     ],
     "nativeSources": [
       "{workspaceRoot}/✏️s/🔌️plugins/🏭️process/**/*.{ts,tsx,json,semio,wit,sql}",
-      "{workspaceRoot}/✏️s/🔌️plugins/🏭️process/🧩️extensions/🪵️wood/🧩️component/📦️packages/🦀️rust/**/*"
+      "{workspaceRoot}/✏️s/🔌️plugins/🏭️process/🧩️extensions/🪵️wood/**/*.{toml,json,semio,wit}"
     ]
   },
   "targets": {

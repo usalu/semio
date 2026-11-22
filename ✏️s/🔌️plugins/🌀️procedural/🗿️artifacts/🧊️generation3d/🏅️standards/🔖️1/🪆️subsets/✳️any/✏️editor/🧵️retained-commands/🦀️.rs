@@ -1,5 +1,5 @@
 //! 🧵️ Generation3d retained provisional commands: typed input landing, relative transforms and the original mutation dispatch.
-pub use semio_s_artifact_procedural_retained_source::{GenerationPlayState,retained_generation_fold,retained_host_scratch,retained_native_provisional_fold,retained_scratch_driver,retained_scratch_scan};
+pub use semio_s_artifact_procedural_retained_source::{GenerationPlayState,retained_generation_fold,retained_host_scratch,retained_native_provisional_fold,retained_scratch_driver,retained_scratch_lookup,retained_scratch_scan};
 #[cfg(test)]
 pub use semio_s_artifact_procedural_retained_source::retained_scratch_testing;
 pub use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;

@@ -4,9 +4,10 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use crate::editor::gis3d::{Gis3dCommand, Gis3dPlayApp};
 use crate::mutations::{ChangeImportedFeatures, GisTerrainMutation};
-use crate::schema::imported_map::{ImportedMap, terrain_grid_origin};
+use crate::schema::imported_map::ImportedMap;
 use crate::schema::snapshot::ElevationSource;
 use crate::GisTerrainSnapshot;
+use semio_framework_surface::terrain::TerrainGridTopology;
 use semio_framework_value::{DslValue, ToValue};
 use semio_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
 use semio_plugin::{ActionArgDef, ArgSchema, ArtifactView, ConfigView, EditorApp, Emit, Fault, FaultCode, FaultOrigin, NoConfig, NoConfigMutation};
@@ -153,21 +154,21 @@ fn contour_paths(segments: BTreeSet<Segment>) -> Vec<Vec<Endpoint>> {
 
 fn contours(source: &ElevationSource, interval: f64, canceled: impl Fn() -> bool) -> Result<Vec<DslValue>, Fault> {
     if !source.is_valid() { return Err(ContourFault::InvalidSource.fault()); }
-    let grid = source.grid();
-    let origin = terrain_grid_origin(grid.bounds);
-    let mesh = grid.mesh(origin.lon, origin.lat, 1.0).ok_or_else(|| ContourFault::InvalidSource.fault())?;
-    let heights = source.rows.iter().rev().flatten().copied().map(f64::from).collect::<Vec<_>>();
-    let (minimum, maximum) = heights.iter().fold((f64::INFINITY, f64::NEG_INFINITY), |(low, high), &height| (low.min(height), high.max(height)));
+    let (width, height) = source.dimensions().ok_or_else(|| ContourFault::InvalidSource.fault())?;
+    let topology = TerrainGridTopology::new([width as u32, height as u32], source.missing_samples.as_deref());
+    let heights = source.rows_millimetres.iter().rev().flatten().map(|&sample| f64::from(sample) / 1000.0).collect::<Vec<_>>();
+    let mut surface_heights = topology.faces().flat_map(|face| face.vertices.map(|vertex| heights[vertex as usize]));
+    let Some(first_height) = surface_heights.next() else { return Ok(Vec::new()); };
+    let (minimum, maximum) = surface_heights.fold((first_height, first_height), |(low, high), height| (low.min(height), high.max(height)));
     let first = (minimum / interval).floor() as i64 + 1;
     let last = (maximum / interval).ceil() as i64 - 1;
     if last - first + 1 > MAXIMUM_LEVELS {
         return Err(ContourFault::Density.fault());
     }
-    let width = source.rows.len();
     let [west, south, east, north] = source.bounds;
     let coordinate = |vertex: usize| {
         let column = (vertex % width) as f64 / (width - 1) as f64;
-        let row = (vertex / width) as f64 / (width - 1) as f64;
+        let row = (vertex / width) as f64 / (height - 1) as f64;
         [west + column * (east - west), north + row * (south - north)]
     };
     let mut routes = Vec::new();
@@ -177,9 +178,8 @@ fn contours(source: &ElevationSource, interval: f64, canceled: impl Fn() -> bool
         let level = index as f64 * interval;
         if !(minimum < level && level < maximum) { continue; }
         let mut segments = BTreeSet::new();
-        for triangle in mesh.indices.chunks_exact(3) {
-            let vertices = [triangle[0] as usize, triangle[1] as usize, triangle[2] as usize];
-            if let Some(segment) = contour_segment(vertices, level, &heights) {
+        for face in topology.faces() {
+            if let Some(segment) = contour_segment(face.vertices.map(|vertex| vertex as usize), level, &heights) {
                 segments.insert(segment);
             }
         }
@@ -299,13 +299,13 @@ mod tests {
     use crate::editor::gis3d::modes::view::windows::terrain::GIS3D_PLAY_BODY_COMPOSITE;
 
     fn fixture_source(surface: &str, bounds: [f64; 4]) -> ElevationSource {
-        let rows = (0..33).map(|row| (0..33).map(|column| match surface {
+        let rows: Vec<Vec<i32>> = (0..33).map(|row| (0..33).map(|column| match surface {
             "eastwardRamp" => column - 12,
             "isolatedHill" if (row, column) == (16, 16) => 32,
             "isolatedHill" | "flat" => 0,
             _ => panic!("unknown fixture surface {surface}"),
         }).collect()).collect();
-        ElevationSource { bounds, rows }
+        ElevationSource { missing_samples: None, bounds, rows_millimetres: rows.into_iter().map(|row: Vec<i32>| row.into_iter().map(|height| height * 1000).collect()).collect() }
     }
 
     fn points(route: &DslValue) -> Vec<[f64; 2]> {
@@ -313,6 +313,23 @@ mod tests {
             let point = point.as_array().unwrap();
             [point[0].as_f64().unwrap(), point[1].as_f64().unwrap()]
         }).collect()
+    }
+
+    #[test]
+    fn rectangular_ramp_preserves_fractional_contour_levels_and_latitude_extent() {
+        let source = ElevationSource {
+            missing_samples: None,
+            bounds: [1.0, 1.0, 4.0, 3.0],
+            rows_millimetres: vec![vec![0, 10_000, 20_000, 30_000]; 3],
+        };
+        let lines = contours(&source, 7.5, || false).unwrap();
+        assert_eq!(lines.len(), 3);
+        for (line, longitude) in lines.iter().zip([1.75, 2.5, 3.25]) {
+            let coordinates = points(line);
+            assert!(coordinates.iter().all(|point| (point[0] - longitude).abs() < 1e-12));
+            assert!(coordinates.iter().any(|point| (point[1] - 1.0).abs() < 1e-12));
+            assert!(coordinates.iter().any(|point| (point[1] - 3.0).abs() < 1e-12));
+        }
     }
 
     fn canonical(mut path: Vec<[f64; 2]>) -> Vec<[f64; 2]> {

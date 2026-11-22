@@ -42,6 +42,7 @@ semio_ui_locale::app_labels! {
         kind_field: native_en "Kind", native_de "Art", reuse_en "Kind", reuse_de "Art";
         axis_field: native_en "Axis", native_de "Achse", reuse_en "Axis", reuse_de "Achse";
         machine_field: native_en "Machine", native_de "Maschine", reuse_en "Machine", reuse_de "Maschine";
+        place_capability: native_en "Place capability", native_de "Fähigkeit platzieren", reuse_en "Place capability", reuse_de "Fähigkeit platzieren";
         capability_field: native_en "Capability", native_de "Fähigkeit", reuse_en "Capability", reuse_de "Fähigkeit";
         icon_field: native_en "Icon", native_de "Icon", reuse_en "Icon", reuse_de "Icon";
         stock_kind_imported_mesh: native_en "Imported Mesh", native_de "Importiertes Netz", reuse_en "Imported Mesh", reuse_de "Importiertes Netz";

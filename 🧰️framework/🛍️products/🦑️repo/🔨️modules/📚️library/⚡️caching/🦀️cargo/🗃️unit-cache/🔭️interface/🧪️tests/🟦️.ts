@@ -259,3 +259,26 @@ real("compiler law (closure): a restored unit is admitted only against the depen
  for(const name of readdirSync(old.deps).filter(name=>!name.endsWith(policy.sidecars.dependencies)))copyFileSync(join(old.deps,name),join(absent.deps,name));
  expect(restoredClosureViolationV1(input(absent)),"without its sidecar the compiler is asked and the closure still matches").toBeUndefined();
 },180000);
+
+test("a missing library in a declared Cargo unit directory prevents cache reuse",()=>{
+ const fixture=vectors.closure,oracle=spawnSync("python3",["-I",join(here,"🐍️.py"),join(here,"🔣️.json"),join(here,"../🧬️schema/🔣️.json"),"closure"],{encoding:"utf8"});
+ expect(oracle.status,oracle.stderr).toBe(0);
+ const actual=fixture.cases.map(row=>{
+  const root=directory("closure-path"),output=join(root,"consumer.rmeta");
+  const dirs=row.paths.map(path=>join(root,path));
+  for(const path of dirs)mkdirSync(path,{recursive:true});
+  writeFileSync(output,svhBytesV1(fixture.expectedSvh));
+  writeFileSync(dependenciesFileV1(output),JSON.stringify({version:1,svh:fixture.expectedSvh,dependencies:[[fixture.crate,fixture.expectedSvh]]}));
+  for(const artifact of row.artifacts){
+   const path=join(root,artifact.path),content=Buffer.from(artifact.hash);
+   writeFileSync(path,content);
+   writeFileSync(identityFileV1(path),JSON.stringify({version:1,sha256:sha(content),svh:artifact.hash}));
+  }
+  const input={outputs:[output],directories:dirs,digest:fileDigest,inner:["false"],environment};
+  const code=restoredClosureViolationV1(input)===undefined;
+  const metadata=rebaseRestoredUnitV1(input);
+  expect({code,metadata},row.label).toEqual({code:row.code,metadata:row.metadata});
+  return {code,metadata};
+ });
+ expect(actual).toEqual(JSON.parse(oracle.stdout));
+});

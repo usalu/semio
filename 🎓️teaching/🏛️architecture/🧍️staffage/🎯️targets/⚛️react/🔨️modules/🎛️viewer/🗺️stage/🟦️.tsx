@@ -8,7 +8,7 @@
  */
 import { useCallback, useEffect, useId, useRef, useState, type KeyboardEvent, type PointerEvent, type ReactElement } from "react";
 import { CSS_PX_PER_MM } from "@teaching/staffage";
-import type { Asset, DepictionOptions, DisplayRange, DrawingScene, EvaluatedState, StructuralResult, ThermalField, EvaluationQuery, ForceQuantity, ItemValue, Language, ThermalQuantity, View, Viewpoint, Environment } from "@teaching/staffage";
+import type { Asset, DepictionOptions, DisplayRange, DrawingScene, EvaluatedState, FlowField, FlowLayer, StructuralResult, ThermalField, EvaluationQuery, ForceQuantity, ItemValue, Language, ThermalQuantity, View, Viewpoint, Environment } from "@teaching/staffage";
 import type { StaffageClock } from "../../⏱️clock/🟦️.ts";
 import { StaffageFigure } from "../../🧍️figure/🟦️.tsx";
 import { useSize } from "../../🥞️levels/🟦️.tsx";
@@ -47,6 +47,8 @@ export type StageProps = {
   readonly patterns: boolean;
   readonly diagrams: DepictionOptions["diagrams"];
   readonly environment: Environment | undefined;
+  readonly flow?: readonly FlowLayer[];
+  readonly onFlow?: (flow: FlowField | null) => void;
   readonly onEvaluated: (frame: { state: EvaluatedState; thermal: ThermalField; structure: StructuralResult; scene: DrawingScene }) => void;
   readonly onInspect: (value: ItemValue | null, item: { bone?: string; region?: string } | null) => void;
   readonly onFit?: (zoom: number) => void;
@@ -169,6 +171,8 @@ export function Stage(props: StageProps): ReactElement {
             patterns={props.patterns}
             diagrams={props.diagrams}
             {...(props.environment === undefined ? {} : { environment: props.environment })}
+            {...(props.flow === undefined ? {} : { flow: props.flow })}
+            {...(props.onFlow === undefined ? {} : { onFlow: props.onFlow })}
             live
             onEvaluated={props.onEvaluated}
             onInspect={props.onInspect}

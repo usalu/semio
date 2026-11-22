@@ -29,6 +29,14 @@ pub struct OpeningState {
     /// ([`Self::advance_document_opening`]) and painted as its own band with a cancel control.
     pub document_opening: Option<ShellDocumentOpening>,
     pub icon_export: Option<IconExportBatch>,
+    /// 📈️ The latest runtime actor snapshot; `None` while no actor runtime is attached.
+    pub runtime_actors: Option<Vec<RuntimeActorSample>>,
+    /// 🏃️ Runtime-owned running tasks beside the shell's own transfers.
+    pub runtime_tasks: Vec<TaskManagerTask>,
+    /// 🎛️ Task Manager control presses awaiting the runtime bridge.
+    pub runtime_requests: Vec<TaskManagerRequest>,
+    /// 🧭️ The path the shell renders as not found, if the current route is none of its own.
+    pub route_not_found: Option<String>,
     /// 🪪️ The verified execution-target lease fields for the open document. Native document opening
     /// retains only a canonical surface-id preference today — `document_socket_surface_from_descriptor`
     /// was deliberately downgraded from a forgeable partial authority by the execution-target-lease

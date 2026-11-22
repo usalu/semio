@@ -4,7 +4,6 @@
 #[path = "📤️sink.rs"] mod sink;
 #[path = "📎️reference.rs"] mod reference;
 #[path = "📂️open.rs"] mod open;
-pub use open::NATIVE_DOCUMENT_FILE_MAXIMUM;
 pub(crate) use open::import_media;
 #[path = "🔁️peer.rs"] mod peer;
 pub use declaration::NativeMediaDeclaration;

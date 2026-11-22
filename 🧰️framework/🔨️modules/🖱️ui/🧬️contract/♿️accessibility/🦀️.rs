@@ -142,6 +142,9 @@ pub struct AccessibilityProjectionNode {
     pub active_descendant: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub level: Option<usize>,
+    /// ☑️ A tree that picks more than one row at a time (`aria-multiselectable`): one that carries an interaction domain.
+    #[serde(default, skip_serializing_if = "is_default")]
+    pub multiselectable: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub rect: Option<[f32; 4]>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -169,6 +172,9 @@ pub struct AccessibilityProjectionNode {
     /// 🚦️ The semantic tone a tree row paints ([`accessibility_tone`]); never the only cue of a state.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub tone: Option<String>,
+    /// 🔀️ A sorted column header's direction (`aria-sort`): `ascending` or `descending`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub sort: Option<String>,
 }
 
 /// 📶️ The range semantics a component announces: `aria-valuemin`/`max`/`now`/`valuetext` for a
@@ -316,6 +322,7 @@ pub fn accessibility_projection_node(record: &crate::UiNodeRecord, depth: usize)
         controls: None,
         active_descendant: None,
         level: matches!(record.component, crate::Component::TreeItem(_)).then_some(depth.saturating_add(1)),
+        multiselectable: matches!(&record.component, crate::Component::Tree(props) if props.interaction_domain.is_some()),
         rect: None,
         value_min: value.min,
         value_max: value.max,
@@ -326,7 +333,7 @@ pub fn accessibility_projection_node(record: &crate::UiNodeRecord, depth: usize)
         invalid: false,
         set_size: None,
         pos_in_set: None,
-        tone: accessibility_tone(record).map(str::to_string),
+        tone: accessibility_tone(record).map(str::to_string), sort: None,
     }
 }
 //#endregion 🔖️AccessibilityProjection

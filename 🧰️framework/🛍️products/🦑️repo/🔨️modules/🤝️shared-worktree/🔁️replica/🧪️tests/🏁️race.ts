@@ -1,14 +1,18 @@
 import {afterAll,expect,mock,test} from "bun:test";
 import {Database} from "bun:sqlite";
+import ts from "typescript";
 import sharingQueue from "./🕰️sharing-queue.json" with {type:"json"};
+import renameEpermFixture from "./🧫️fixtures/🧾️rename-eperm.json" with {type:"json"};
+import windowsReplaceFixture from "./🧫️fixtures/🪟️windows-replace.json" with {type:"json"};
 import * as real from "node:fs/promises";
-import {existsSync,mkdirSync,mkdtempSync,readdirSync,readFileSync,rmSync,symlinkSync,utimesSync,writeFileSync} from "node:fs";
+import {chmodSync,existsSync,lstatSync,mkdirSync,mkdtempSync,readdirSync,readFileSync,rmSync,symlinkSync,utimesSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {dirname,join} from "node:path";
 import {appendEventsV1,blobPathV1,formatHlcV1,readEventsV1,readHeadV1,storeBlobV1} from "../../📒️journal/🟦️.ts";
 import spellingFixture from "./🧫️fixtures/🧺️spelling.json" with {type:"json"};
 import outboundFixture from "./🧫️fixtures/⏩️outbound.json" with {type:"json"};
-import {writeHintV1} from "../../🎣️tiers/🟦️.ts";
+import durableFixture from "./🧫️fixtures/📬️durable-hints.json" with {type:"json"};
+import {hintsPathV1,writeHintV1} from "../../🎣️tiers/🟦️.ts";
 import {createStoreGuardV1} from "../../🛡️resilience/🟦️.ts";
 import {createHash} from "node:crypto";
 import type {ReplicaEventV1} from "../🟦️.ts";
@@ -63,7 +67,7 @@ async function pair(){
 const put=(who:{worktree:string},path:string,text:string)=>{const file=join(who.worktree,path);mkdirSync(dirname(file),{recursive:true});writeFileSync(file,text);};
 
 for(const code of ["EBUSY","EPERM","EACCES"]){
- test(`a delete that fails with ${code} (file held open by another process) is queued, reported once as blocked, survives a restart and is applied after the release`,async()=>{
+ test(`a delete that fails with ${code} is queued, reported once as blocked, survives a restart and is applied after the release`,async()=>{
   const {store,a,b,clock,events}=await pair();
   put(a,"held.txt","content");
   const first=await openReplicaV1(a);await publishOnceV1(first);
@@ -76,7 +80,10 @@ for(const code of ["EBUSY","EPERM","EACCES"]){
   expect(faults[0]!.left).toBe(999);
   expect(events.filter(event=>event.event==="blocked"&&event.path==="held.txt")).toEqual([{version:1,event:"blocked",path:"held.txt",reason:"sharing-violation"}]);
   expect(second.failures.diagnostics()).toContainEqual({kind:"blocked-sharing-violation",count:1,lastMs:clock.ms});
+  expect(second.failures.diagnostics()).toContainEqual({kind:`blocked-target-sharing-${code.toLowerCase()}`,count:1,lastMs:clock.ms});
   expect(second.failures.diagnostics()).toContainEqual({kind:"blocked-incoming-worktree-sharing",count:1,lastMs:clock.ms});
+  expect(second.failures.diagnostics()).toContainEqual({kind:"blocked-target-sharing-unlink",count:1,lastMs:clock.ms});
+  expect(second.failures.diagnostics().some(row=>row.kind==="blocked-target-sharing-rename")).toBe(false);
   expect(events.filter(event=>event.event==="error")).toEqual([]);
   expect(existsSync(join(b.worktree,"held.txt"))).toBe(true);
   const head=(await readHeadV1(store,"a"))!;
@@ -116,6 +123,9 @@ test("a sharing-blocked put spends one rename attempt per queue turn and does no
     expect(faults[0]!.left).toBe(row.remaining);
     const details=second.failures.diagnostics();
     expect(details).toContainEqual({kind:"blocked-incoming-worktree-sharing",count:row.sharingCount,lastMs:started+row.sharingAt});
+    expect(details).toContainEqual({kind:"blocked-target-sharing-ebusy",count:row.sharingCount,lastMs:started+row.sharingAt});
+    expect(details).toContainEqual({kind:"blocked-target-sharing-rename",count:row.sharingCount,lastMs:started+row.sharingAt});
+    expect(details.some(item=>item.kind==="blocked-target-sharing-unlink")).toBe(false);
     expect(second.failures.summary()).toContainEqual({kind:"blocked",count:row.sharingCount,lastMs:started+row.sharingAt});
     expect(second.failures.summary()).not.toContainEqual({kind:"blocked-incoming-worktree-sharing",count:row.sharingCount,lastMs:started+row.sharingAt});
     expect(second.failures.diagnostics(2)).toEqual(details.slice(0,2));
@@ -127,6 +137,143 @@ test("a sharing-blocked put spends one rename attempt per queue turn and does no
  }finally{hook=undefined;faults=[];await closeReplicaV1(first);await closeReplicaV1(second);}
 },60000);
 
+
+
+test("ordinary sharing retry cohorts yield to the next follow and keep overdue paths eligible",async()=>{
+ const {a,b,clock}=await pair(),first=await openReplicaV1(a),second=await openReplicaV1(b),db=new Database(":memory:"),fixture=sharingQueue.cohort;
+ try{
+  const paths=Array.from({length:fixture.blockedPaths},(_,at)=>"cohort-held/"+at+".txt");
+  for(const path of paths)put(a,path,"held");
+  await publishOnceV1(first);
+  faults=[{op:"rename",match:"cohort-held",code:"EBUSY",left:fixture.blockedPaths*3}];
+  expect(await followOnceV1(second)).toMatchObject({events:fixture.blockedPaths,applied:0,queued:fixture.blockedPaths});
+  expect(faults[0]!.left).toBe(fixture.blockedPaths*2);
+  clock.ms+=fixture.firstRetryMilliseconds;
+  put(a,fixture.unrelatedPath,"fresh");await publishOnceV1(first,undefined,[fixture.unrelatedPath]);
+  const expected=db.query<{handled:number},[number,number]>(`with recursive runs(i,remaining) as (
+    values(0,?1) union all select i+1,max(0,remaining-?2) from runs where i<3
+  ) select ?1-remaining handled from runs where i>0 order by i`).all(fixture.blockedPaths,fixture.maximumRetriesPerTurn);
+  for(const [at,row] of expected.entries()){
+   expect(await followOnceV1(second)).toMatchObject({applied:at===0?1:0,queued:fixture.blockedPaths});
+   expect(fixture.blockedPaths*2-faults[0]!.left).toBe(row.handled);
+  }
+  expect(readFileSync(join(b.worktree,fixture.unrelatedPath),"utf8")).toBe("fresh");
+  faults=[];clock.ms+=2*fixture.firstRetryMilliseconds;
+  for(const [at,row] of expected.entries()){
+   expect(await followOnceV1(second)).toMatchObject({applied:row.handled-(expected[at-1]?.handled??0),queued:fixture.blockedPaths-row.handled});
+  }
+  expect(paths.every(path=>readFileSync(join(b.worktree,path),"utf8")==="held")).toBe(true);
+ }finally{faults=[];db.close();await closeReplicaV1(first);await closeReplicaV1(second);}
+},60000);
+
+for(const row of renameEpermFixture.cases){
+ const nativeTest=row.target==="link"&&process.platform==="win32"?test.skip:test;
+ nativeTest(`a staged rename ${row.code} records only observed target metadata (${row.target}/${row.mode})`,async()=>{
+  const {a,b,clock}=await pair(),first=await openReplicaV1(a),targetName="metadata-target.txt",target=join(b.worktree,targetName);
+  if(row.target==="file"){put(a,targetName,"old content");await publishOnceV1(first);}
+  const second=await openReplicaV1(b);
+  const db=new Database(":memory:");
+  try{
+   await followOnceV1(second);
+   if(row.target==="file")chmodSync(target,row.mode!);
+   if(row.target==="link"){symlinkSync("seed.txt",target);clock.ms+=1_000;}
+   put(a,targetName,"new content");await publishOnceV1(first);
+   const expected=db.query(`select case when ?1<>'EPERM' then null
+     when ?2='unseen' then 'unseen' when ?2<>'file' then 'other'
+     when (?3 & 128)>0 then 'write' else 'no-write' end as bucket`)
+     .get(row.code,row.target,row.mode) as {bucket:string|null};
+   expect(expected.bucket===null?null:`blocked-rename-eperm-target-${expected.bucket}`).toBe(row.kind);
+   let denied=false,targetReadsAfterDeny=0;
+   hook=(op,paths)=>{
+    const [from,to]=paths.split("\0");
+    if(op==="rename"&&to===target&&!from!.includes("displaced-")){denied=true;throw Object.assign(Error("Fixture target rename refusal"),{code:row.code});}
+    if(denied&&op==="lstat"&&from===target)targetReadsAfterDeny++;
+   };
+   expect(await followOnceV1(second)).toMatchObject({applied:0,queued:1});
+   expect(denied).toBe(true);expect(targetReadsAfterDeny).toBe(0);
+   expect(second.failures.diagnostics().filter(item=>item.kind.startsWith("blocked-rename-eperm-target-")))
+    .toEqual(row.kind===null?[]:[{kind:row.kind,count:1,lastMs:clock.ms}]);
+   expect(existsSync(target)).toBe(row.target!=="unseen");
+  }finally{
+   hook=undefined;db.close();
+   if(row.target==="file")chmodSync(target,0o644);
+   await closeReplicaV1(first);await closeReplicaV1(second);
+  }
+ },60_000);
+}
+
+for(const row of windowsReplaceFixture.cases){
+ test(`a staged put over a Windows-semantics target replaces it or keeps the original intact (${row.name})`,async()=>{
+  const {a,b,clock}=await pair(),first=await openReplicaV1(a),name="replace-target.exe",target=join(b.worktree,name);
+  put(a,name,"old content");await publishOnceV1(first);
+  const second=await openReplicaV1(b),db=new Database(":memory:");
+  try{
+   await followOnceV1(second);
+   if(row.readOnly)chmodSync(target,0o444);
+   let late=row.lateFailures;
+   hook=(op,paths)=>{
+    if(op!=="rename")return;
+    const [from,to]=paths.split("\0");
+    if(from!.includes("displaced-"))return;
+    if(from===target&&to!.includes("displaced-")){if(row.asideBlocked)throw Object.assign(Error("EPERM: held open without delete sharing"),{code:"EPERM"});return;}
+    if(to!==target)return;
+    if(existsSync(target)&&(row.running||(lstatSync(target).mode&0o200)===0))throw Object.assign(Error("EPERM: access denied"),{code:"EPERM"});
+    if(!existsSync(target)&&late>0){late--;throw Object.assign(Error("EPERM: access denied"),{code:"EPERM"});}
+   };
+   put(a,name,"new content, longer");await publishOnceV1(first);
+   const expected=db.query(`select case when (?1=1 and ?2=1) or (?1=1 and ?3>0) then 'blocked' else 'installed' end as outcome`)
+    .get(row.running?1:0,row.asideBlocked?1:0,row.lateFailures) as {outcome:string};
+   const installed=expected.outcome==="installed";
+   expect(await followOnceV1(second)).toMatchObject({applied:installed?1:0,queued:installed?0:1});
+   expect(readFileSync(target,"utf8")).toBe(installed?"new content, longer":"old content");
+   expect((lstatSync(target).mode&0o200)!==0).toBe(installed||!row.readOnly);
+   expect(readdirSync(second.paths.tmp).filter(file=>file.startsWith("displaced-"))).toEqual([]);
+   if(installed)expect(readdirSync(second.paths.tmp)).toEqual([]);
+   else expect(readdirSync(second.paths.tmp)).toHaveLength(1);
+   if(!installed){
+    hook=undefined;chmodSync(target,0o644);clock.ms+=60_000;
+    expect(await followOnceV1(second)).toMatchObject({applied:1,queued:0});
+    expect(readFileSync(target,"utf8")).toBe("new content, longer");
+   }
+  }finally{hook=undefined;db.close();await closeReplicaV1(first);await closeReplicaV1(second);}
+ },60_000);
+}
+
+test("a delete of a read-only target clears the attribute and removes it, and a refused removal puts the attribute back",async()=>{
+ const {a,b,clock}=await pair(),first=await openReplicaV1(a),second=await openReplicaV1(b),target=join(b.worktree,"gone.txt");
+ try{
+  put(a,"gone.txt","bye");await publishOnceV1(first);await followOnceV1(second);
+  chmodSync(target,0o444);
+  rmSync(join(a.worktree,"gone.txt"));await publishOnceV1(first);
+  hook=(op,paths)=>{if(op==="unlink"&&paths===target&&(lstatSync(target).mode&0o200)===0)throw Object.assign(Error("EPERM: read-only"),{code:"EPERM"});};
+  expect(await followOnceV1(second)).toMatchObject({applied:1,queued:0});
+  expect(existsSync(target)).toBe(false);
+  put(a,"gone2.txt","bye");await publishOnceV1(first);await followOnceV1(second);
+  const other=join(b.worktree,"gone2.txt");
+  chmodSync(other,0o444);rmSync(join(a.worktree,"gone2.txt"));await publishOnceV1(first);
+  hook=(op,paths)=>{if(op==="unlink"&&paths===other)throw Object.assign(Error("EPERM: held"),{code:"EPERM"});};
+  clock.ms+=1000;
+  expect(await followOnceV1(second)).toMatchObject({applied:0,queued:1});
+  expect(lstatSync(other).mode&0o200).toBe(0);
+ }finally{hook=undefined;await closeReplicaV1(first);await closeReplicaV1(second);}
+},60_000);
+
+test("the files of the daemon's own module are applied before a backlog of ordinary files",async()=>{
+ const {a,b}=await pair(),first=await openReplicaV1(a),module="🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree";
+ for(let n=0;n<30;n++)put(a,`a-backlog/${String(n).padStart(2,"0")}.txt`,`backlog ${n}`);
+ put(a,`${module}/🔁️replica/🟦️.ts`,"export const code=1;\n");put(a,`${module}/🚦️canary/🟦️.ts`,"export const canary=1;\n");
+ await publishOnceV1(first);
+ const second=await openReplicaV1({...b,concurrency:1}),order:string[]=[];
+ hook=(op,paths)=>{if(op!=="rename")return;const to=paths.split("\0")[1]!;if(to.startsWith(b.worktree))order.push(to.slice(b.worktree.length+1));};
+ try{
+  await followOnceV1(second);
+  const codeAt=order.map((name,at)=>name.startsWith(module)?at:-1).filter(at=>at>=0),backlogAt=order.map((name,at)=>name.startsWith("a-backlog")?at:-1).filter(at=>at>=0);
+  expect(codeAt).toHaveLength(2);expect(backlogAt.length).toBeGreaterThanOrEqual(30);
+  expect(Math.max(...codeAt)).toBeLessThan(Math.min(...backlogAt));
+  const independent=Bun.spawnSync(["python3","-I","-c","import json,sys; order=json.loads(sys.argv[1]); code=[i for i,n in enumerate(order) if n.startswith(sys.argv[2])]; rest=[i for i,n in enumerate(order) if n.startswith('a-backlog')]; print(max(code)<min(rest))",JSON.stringify(order),module]).stdout.toString().trim();
+  expect(independent).toBe("True");
+ }finally{hook=undefined;await closeReplicaV1(first);await closeReplicaV1(second);}
+},60000);
 
 test("a Git input rename sharing violation stays outside the ordinary worktree diagnostic",async()=>{
  const {a,b,clock,store}=await pair(),second=await openReplicaV1(b),path=".git/refs/tags/fixture";
@@ -141,6 +288,7 @@ test("a Git input rename sharing violation stays outside the ordinary worktree d
   expect(second.queue.has(path)).toBe(true);
   const details=second.failures.diagnostics();
   expect(details).toContainEqual({kind:"blocked-sharing-violation",count:1,lastMs:clock.ms});
+  expect(details).toContainEqual({kind:"blocked-target-sharing-ebusy",count:1,lastMs:clock.ms});
   expect(details.some(item=>item.kind==="blocked-incoming-worktree-sharing")).toBe(false);
  }finally{faults=[];await closeReplicaV1(second);}
 },60000);
@@ -320,6 +468,7 @@ test("a write into the staging file that fails with EACCES is reported as blocke
  expect(events.filter(event=>event.event==="blocked"&&event.path==="new.txt").map(event=>event.reason)).toEqual(["EACCES"]);
  expect(second.failures.summary()).toContainEqual({kind:"blocked",count:1,lastMs:clock.ms});
  expect(second.failures.diagnostics()).toContainEqual({kind:"blocked-eacces",count:1,lastMs:clock.ms});
+ expect(second.failures.diagnostics().some(item=>item.kind.startsWith("blocked-target-sharing-"))).toBe(false);
  expect(second.failures.diagnostics().some(item=>item.kind==="blocked-incoming-worktree-sharing")).toBe(false);
  expect(events.filter(event=>event.event==="error")).toEqual([]);
  faults=[];clock.ms+=60_000;
@@ -491,6 +640,84 @@ for(const {replace} of outboundFixture.cases)test("an ordinary large outbound pr
  }
 },35000);
 
+
+for(const scope of durableFixture.scopes)test("an incomplete "+scope+" hint survives a replica restart",async()=>{
+ const artifactRoot=process.env.SEMIO_TEST_ARTIFACT_DIR;
+ if(!artifactRoot)throw Error("Original ticket or process-test artifact root required");
+ const base=mkdtempSync(join(artifactRoot,"lh-"));scratch.push(base);
+ const worktree=join(base,"w"),storeRoot=join(base,"s"),options={worktree,storeRoot,originId:"g1-server",groupId:"g1",watch:false,lock:false,pollMilliseconds:10,scanSeconds:3600,debounceMilliseconds:5,persistMilliseconds:0,hintMilliseconds:15};
+ const {blocked,published,unchanged,directory}=durableFixture;
+ for(const path of [blocked.path,published.path,unchanged])put(options,path,"seed");
+ await seedV1(options);
+ const head=await readHeadV1(storeRoot,options.originId),lookup=async()=>(await readEventsV1(storeRoot,options.originId,head??undefined)).events;
+ const until=async(check:()=>boolean|Promise<boolean>)=>{const end=Date.now()+5000;do{if(await check())return true;await Bun.sleep(20);}while(Date.now()<end);return false;};
+ const database=new Database(":memory:"),first=new AbortController(),second=new AbortController();
+ let running=runV1(options,first.signal),failed=false;
+ try{
+  expect(await until(()=>existsSync(join(worktree,".cache","f","health.json")))).toBe(true);
+  hook=(operation,path)=>{if(operation==="open"&&path.split("\0")[0]===join(worktree,blocked.path)){failed=true;throw Object.assign(Error("Fixture sharing conflict"),{code:"EBUSY"});}};
+  put(options,blocked.path,blocked.text);put(options,published.path,published.text);
+  const pending=join(hintsPathV1(worktree),await writeHintV1(worktree,scope==="directory"?[directory]:[blocked.path,published.path]));
+  const settled=join(hintsPathV1(worktree),await writeHintV1(worktree,[unchanged]));
+  expect(await until(async()=>failed&&!existsSync(settled)&&(await lookup()).some(row=>row.path===published.path))).toBe(true);
+  expect((await lookup()).some(row=>row.path===blocked.path)).toBe(false);
+  first.abort();await running;
+  expect(existsSync(pending)).toBe(true);
+  hook=undefined;
+  running=runV1(options,second.signal);
+  expect(await until(()=>!existsSync(pending))).toBe(true);
+  const expected=database.query("select json_extract(value, '$.path') path, json_extract(value, '$.text') body from json_each(?1) order by key").all(JSON.stringify([published,blocked])) as {path:string;body:string}[];
+  expect((await lookup()).map(row=>[row.path,row.operation==="put"?row.sha256:null])).toEqual(expected.map(row=>[row.path,createHash("sha256").update(row.body).digest("hex")]));
+ }finally{hook=undefined;first.abort();second.abort();await running;database.close();}
+},18000);
+
+
+
+test("only committed outbound event batches renew the store guard",async()=>{
+ const {a,store}=await pair(),replica=await openReplicaV1(a),database=new Database(":memory:");
+ const head=await readHeadV1(store,a.originId),path=durableFixture.published.path;
+ const beats:number[]=[];
+ replica.beat=()=>{beats.push(replica.cursors[a.originId]!.bytes);};
+ try{
+  put(a,path,durableFixture.published.text);
+  faults=[{op:"rename",match:join(a.originId,"head.json"),code:"EBUSY",left:5}];
+  expect((await publishOnceV1(replica,undefined,[path])).retry).toEqual([path]);
+  expect(beats).toEqual([]);
+  await publishOnceV1(replica,undefined,[path]);
+  await publishOnceV1(replica,undefined,[path]);
+  rmSync(join(a.worktree,path));
+  await publishOnceV1(replica,undefined,[path]);
+  const events=(await readEventsV1(store,a.originId,head??undefined)).events;
+  const proof=database.query("select value from json_each(?1) order by key").all(JSON.stringify(durableFixture.committed)).map(row=>(row as {value:string}).value);
+  expect(events.map(row=>row.operation)).toEqual(proof);
+  expect(beats).toHaveLength(proof.length);
+  expect(beats[0]!).toBeGreaterThan(head!.bytes);
+  expect(beats[1]!).toBe((await readHeadV1(store,a.originId))!.bytes);
+ }finally{faults=[];await closeReplicaV1(replica);database.close();}
+},20000);
+
+test("a directory hint remains pending for an incoming descendant missing from disk",async()=>{
+ const {a,b,clock}=await pair(),first=await openReplicaV1(a),second=await openReplicaV1(b),database=new Database(":memory:");
+ const {blocked,published,directory}=durableFixture;
+ const confirm=(paths:readonly string[])=>publishOnceV1(second,undefined,paths,undefined,undefined,undefined,undefined,true);
+ try{
+  put(a,published.path,published.text);
+  await publishOnceV1(first,undefined,[published.path]);
+  expect((await followOnceV1(second)).applied).toBe(1);
+  put(a,blocked.path,blocked.text);
+  await publishOnceV1(first,undefined,[blocked.path]);
+  faults=[{op:"rename",match:join(b.worktree,blocked.path),code:"EBUSY",left:1}];
+  expect((await followOnceV1(second)).queued).toBe(1);
+  expect(existsSync(join(b.worktree,blocked.path))).toBe(false);
+  const requested=[directory,blocked.path,durableFixture.unchanged];
+  const expected=database.query("select value path from json_each(?1) where value=?2 or substr(?2,1,length(value)+1)=value||'/' order by value").all(JSON.stringify(requested),blocked.path).map(row=>(row as {path:string}).path);
+  expect([...(new Set((await confirm(requested)).retry))].sort()).toEqual(expected);
+  clock.ms+=60_000;
+  expect((await followOnceV1(second)).queued).toBe(0);
+  expect((await confirm(requested)).retry).toEqual([]);
+ }finally{faults=[];await closeReplicaV1(first);await closeReplicaV1(second);database.close();}
+},20000);
+
 /** 🧺 Enumerates exact Unicode spellings once per physical directory version during targeted publication. */
 for(const row of spellingFixture.cases)test("targeted publication shares an exact spelling snapshot for "+row.id,async()=>{
  const artifactRoot=process.env.SEMIO_TEST_ARTIFACT_DIR;
@@ -525,7 +752,7 @@ for(const row of spellingFixture.cases)test("targeted publication shares an exac
 },20000);
 
 /** 🧮️ Keeps an unchanged cooling queue's structural proof until a new register changes its authority. */
-test("a cooling incoming queue reuses a settled clash pass and rechecks a new winner",async()=>{
+test("a cooling incoming queue reuses its clash pass and decodes only materialisable entries",async()=>{
  const artifacts=process.env.SEMIO_TEST_ARTIFACT_DIR;
  if(!artifacts)throw Error("Original ticket or process-test artifact root required");
  const root=mkdtempSync(join(artifacts,"qc-"));scratch.push(root);
@@ -535,8 +762,9 @@ test("a cooling incoming queue reuses a settled clash pass and rechecks a new wi
  await seedV1(a);await joinV1(b);
  const first=await openReplicaV1(a),second=await openReplicaV1(b),oracle=new Database(":memory:");
  const sample=sharingQueue.settledClash,path=sample.path;
- let queries=0;
- const find=second.folds.find.bind(second.folds);
+ let queries=0,decodes=0;
+ const find=second.folds.find.bind(second.folds),entryAt=second.manifest.entryAt.bind(second.manifest);
+ second.manifest.entryAt=(id)=>{if(second.book.name(id)===path)decodes++;return entryAt(id);};
  second.folds.find=(path)=>{queries++;return find(path);};
  try{
   put(a,path,sample.first);
@@ -547,9 +775,9 @@ test("a cooling incoming queue reuses a settled clash pass and rechecks a new wi
   const kept=faults[0]!.left;
   const frozen=oracle.query("select value as queued, 0 as reads from json_each(?1)").all(JSON.stringify(sample.cooling)) as {queued:number;reads:number}[];
   for(const state of frozen){
-   queries=0;
+   queries=0;decodes=0;
    expect(await followOnceV1(second)).toMatchObject({events:0,applied:0,queued:state.queued});
-   expect(queries).toBe(state.reads);
+   expect(queries).toBe(state.reads);expect(decodes).toBe(state.reads);
    expect(faults[0]!.left).toBe(kept);
   }
   faults=[];clock.ms++;
@@ -561,3 +789,29 @@ test("a cooling incoming queue reuses a settled clash pass and rechecks a new wi
   expect(readFileSync(join(b.worktree,path),"utf8")).toBe(sample.replacement);
  }finally{faults=[];oracle.close();await closeReplicaV1(first);await closeReplicaV1(second);}
 },30000);
+
+test("ordinary file sweeps leave incoming paths to the retry that owns them",()=>{
+ const source=ts.createSourceFile("replica.ts",readFileSync(new URL("../🟦️.ts",import.meta.url),"utf8"),ts.ScriptTarget.Latest,true);
+ const declaration=source.statements.find(node=>ts.isFunctionDeclaration(node)&&node.name?.text==="hotChanged");
+ if(declaration===undefined)throw Error("Actual replica file sweep required");
+ const script=ts.transpileModule(declaration.getText(source),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
+ const rows=JSON.parse(readFileSync(new URL("./🧫️fixtures/🧹️sweep-queue.json",import.meta.url),"utf8"));
+ const db=new Database(":memory:"),workspace=mkdtempSync(join(tmpdir(),"sweep-queue-"));
+ let probes=0;
+ const changed=new Function("lstatSync","absolute","gone","linkless","sharedV1",script+"\nreturn hotChanged;")(
+  (path:string)=>{probes++;return lstatSync(path);},join,(error:NodeJS.ErrnoException)=>error.code==="ENOENT",()=>false,()=>true);
+ try{
+  for(const [index,row] of rows.entries()){
+   const path="path-"+index+".txt",target=join(workspace,path);
+   if(row.present)writeFileSync(target,"physical value");
+   const stamp=row.present?lstatSync(target):undefined,id=row.known?0:undefined,owner={settings:{worktree:workspace,modeless:true},book:{find:()=>id},
+    queue:{has:()=>row.queued,hasId:()=>row.queued},files:{live:()=>row.known,operationAt:()=>"put",bytes:[(stamp?.size??0)+(row.settled?0:1)],mtime:[stamp?.mtimeMs],racyAt:()=>false}};
+   const expected=db.query<{probes:number;changed:number},[number,number,number,number]>(
+    "select (not ?2) as probes, (not ?2 and case when ?1 then (not ?3 or not ?4) else ?3 end) as changed"
+   ).get(Number(row.known),Number(row.queued),Number(row.present),Number(row.settled))!;
+   const before=probes;
+   expect(changed(owner,path,Date.now(),target),row.name).toBe(Boolean(expected.changed));
+   expect(probes-before,row.name).toBe(expected.probes);
+  }
+ }finally{db.close();rmSync(workspace,{recursive:true,force:true});}
+});

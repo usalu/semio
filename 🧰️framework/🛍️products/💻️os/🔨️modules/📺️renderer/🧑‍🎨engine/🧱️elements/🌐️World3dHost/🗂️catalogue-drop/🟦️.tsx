@@ -3,25 +3,16 @@
  * 🧱️ Child module of {@link ../🟦️.tsx | World3dHost}, which re-exports every public name below so import specifiers stay unchanged.
  */
 
-import { useLayoutEffect, Suspense } from "../../⚛️react-port/🟦️.ts";
+import { useLayoutEffect, useSyncExternalStore, Suspense, type RefObject } from "../../⚛️react-port/🟦️.ts";
 import type { ThreeCamera } from "@semio-tech/ui-react";
-import { type WorldMeshRecord } from "../🔭️scene-schema/🟦️.ts";
 import { useThree } from "../🎨️mesh-render/🟦️.tsx";
+import type { MeshVisuals } from "../🎨️mesh-render/🔺️mesh-geometry-and-appearance/🟦️.ts";
 import { type MeshStylePalette } from "../🎨️mesh-render/🖌️mesh-style-palette/🟦️.ts";
 import { GlbInstanceMesh } from "../🧩️glb-surface/🟦️.tsx";
 import { GUMBALL_TRANSFORM_EPSILON } from "../🧮️gumball-math/🟦️.ts";
-import { DemandInvalidateOnToken, raycastGroundPoint, worldGhostMeshUrl } from "../🎯️marquee-and-bridges/🟦️.tsx";
+import { raycastGroundPoint } from "../🎯️marquee-and-bridges/🟦️.tsx";
 
 //#region 🔖️World3dHost
-/** 🎞️ Demand-frameloop kick when the shared catalogue-drop preview store changes — HTML5 drags never fire pointermove, so the ghost must invalidate on dragover-driven store updates alone. */
-export function CatalogueDropPreviewInvalidate({ preview }: { readonly preview: Puzzle3dCatalogueDropPreview | null }) {
-  const invalidate = useThree((state) => state.invalidate);
-  useLayoutEffect(() => {
-    if (preview) invalidate();
-  }, [invalidate, preview]);
-  return null;
-}
-
 //#region CatalogueDrop
 type Puzzle3dCatalogueDropPayload = {
   readonly objectKind: string;
@@ -30,6 +21,10 @@ type Puzzle3dCatalogueDropPayload = {
 
 type Puzzle3dCatalogueDropPreview = Puzzle3dCatalogueDropPayload & {
   readonly origin: readonly [number, number, number];
+  readonly owner?: symbol;
+  readonly meshId?: string;
+  readonly rotation?: readonly [number, number, number, number];
+  readonly scale?: readonly [number, number, number];
 };
 
 export function parsePuzzle3dCatalogueDragPayload(encoded: string | null | undefined): Puzzle3dCatalogueDropPayload | null {
@@ -89,22 +84,25 @@ export function world3dRelocateDispatchArgsV1(
   origin: readonly [number, number, number],
   from: readonly [number, number, number],
   to: readonly [number, number, number],
-  snap?: { readonly gridSnapEnabled: boolean; readonly gridFactor: number },
+  snap?: { readonly gridSnapEnabled: boolean; readonly gridFactor: number; readonly planeAxis?: 0 | 1 | 2 },
 ): { readonly objectId: string; readonly position: readonly [number, number, number] } | null {
-  const moved: [number, number, number] = [origin[0] + (to[0] - from[0]), origin[1] + (to[1] - from[1]), origin[2] + (to[2] - from[2])];
+  const delta = [to[0] - from[0], to[1] - from[1], to[2] - from[2]] as const;
+  if (delta.every((value) => Math.abs(value) < GUMBALL_TRANSFORM_EPSILON)) return null;
+  const moved: [number, number, number] = [origin[0] + delta[0], origin[1] + delta[1], origin[2] + delta[2]];
   const position = snap ? snapWorldPointToGrid(moved, snap.gridSnapEnabled, snap.gridFactor) : moved;
+  if (snap?.planeAxis !== undefined) position[snap.planeAxis] = origin[snap.planeAxis];
   if (Math.abs(position[0] - origin[0]) < GUMBALL_TRANSFORM_EPSILON && Math.abs(position[1] - origin[1]) < GUMBALL_TRANSFORM_EPSILON && Math.abs(position[2] - origin[2]) < GUMBALL_TRANSFORM_EPSILON) {
     return null;
   }
   return { objectId, position };
 }
 
-export type World3dRelocateSession = {
+export type World3dRelocateSession = Puzzle3dCatalogueDropPreview & {
   readonly objectId: string;
-  readonly origin: readonly [number, number, number];
+  readonly owner: symbol;
+  readonly pointerId: number;
   readonly from: readonly [number, number, number];
-  readonly objectKind: string;
-  readonly meshUrl?: string;
+  readonly planeAxis: 0 | 1 | 2;
 };
 //#endregion WorldRelocateGesture
 
@@ -143,7 +141,8 @@ const worldCatalogueDropHostHitTests = new Map<string, { readonly controllerId: 
 function worldCatalogueDropPreviewsEqual(a: Puzzle3dCatalogueDropPreview | null | undefined, b: Puzzle3dCatalogueDropPreview | null | undefined): boolean {
   if (a === b) return true;
   if (!a || !b) return false;
-  return a.objectKind === b.objectKind && a.meshUrl === b.meshUrl && a.origin[0] === b.origin[0] && a.origin[1] === b.origin[1] && a.origin[2] === b.origin[2];
+  return a.owner === b.owner && a.objectKind === b.objectKind && a.meshId === b.meshId && a.meshUrl === b.meshUrl && a.rotation === b.rotation && a.scale === b.scale &&
+    a.origin[0] === b.origin[0] && a.origin[1] === b.origin[1] && a.origin[2] === b.origin[2];
 }
 
 function notifyWorldCatalogueDropPreviewListeners(): void {
@@ -178,8 +177,9 @@ export function setWorldCatalogueDropPreview(controllerId: string, preview: Puzz
 }
 
 /** 👻️ Clears the shared catalogue-drop ghost across all World3d panes of `controllerId`. */
-export function clearWorldCatalogueDropPreview(controllerId: string): void {
-  setWorldCatalogueDropPreview(controllerId, null);
+export function clearWorldCatalogueDropPreview(controllerId: string, owner?: symbol): void {
+  const preview = getWorldCatalogueDropPreview(controllerId);
+  if (preview && preview.owner === owner) setWorldCatalogueDropPreview(controllerId, null);
 }
 
 /** 🎯️ Registers a World3d pane's hit-test so shared clear logic can tell whether the pointer is over *any* pane of that controller. */
@@ -201,24 +201,40 @@ export function worldCatalogueDropHostContainsPoint(controllerId: string, client
 }
 //#endregion WorldCatalogueDropPreviewStore
 
-export function CatalogueDropGhost({ preview, meshes, palette }: { readonly preview: Puzzle3dCatalogueDropPreview; readonly meshes: readonly WorldMeshRecord[]; readonly palette: MeshStylePalette }) {
+/** 👻️ Keeps per-pointer ghost updates inside the canvas and invalidates its demand frame on appearance, motion and removal. */
+export function CatalogueDropGhost({ controllerId, hostRef, meshVisuals, palette }: { readonly controllerId: string; readonly hostRef: RefObject<HTMLDivElement | null>; readonly meshVisuals: ReadonlyMap<string, MeshVisuals>; readonly palette: MeshStylePalette }) {
+  const preview = useSyncExternalStore(
+    subscribeWorldCatalogueDropPreview,
+    () => getWorldCatalogueDropPreview(controllerId),
+    () => getWorldCatalogueDropPreviewServerSnapshot(controllerId),
+  );
+  const invalidate = useThree((state) => state.invalidate);
+  useLayoutEffect(() => {
+    invalidate();
+  }, [invalidate, preview]);
+  const active = preview !== null;
+  useLayoutEffect(() => {
+    const host = hostRef.current;
+    host?.toggleAttribute("data-puzzle3d-fixture-drag-active", active);
+    return () => host?.removeAttribute("data-puzzle3d-fixture-drag-active");
+  }, [active, hostRef]);
+  if (!preview) return null;
   const style = palette.highlighted;
-  const url = worldGhostMeshUrl(preview, meshes);
-  const position = preview.origin as [number, number, number];
-  const invalidateToken = `${preview.objectKind}:${url ?? ""}:${position.join(",")}`;
+  const visuals = preview.meshId ? meshVisuals.get(preview.meshId) : undefined;
+  const url = preview.meshUrl ?? visuals?.record.url;
+  const fallback = (
+    <mesh geometry={visuals?.geometry ?? undefined} raycast={() => null}>
+      {visuals?.geometry ? null : <boxGeometry args={[1, 1, 1]} />}
+      <meshBasicMaterial color={style.meshColor} transparent opacity={0.42} depthWrite={false} />
+    </mesh>
+  );
   return (
-    <group position={position} raycast={() => null}>
-      <DemandInvalidateOnToken token={invalidateToken} />
+    <group position={preview.origin as [number, number, number]} quaternion={preview.rotation as [number, number, number, number] | undefined} scale={preview.scale as [number, number, number] | undefined} raycast={() => null}>
       {url ? (
-        <Suspense fallback={null}>
+        <Suspense fallback={fallback}>
           <GlbInstanceMesh url={url} color={style.meshColor} emissive={style.meshColor} emissiveIntensity={0.6} opacity={0.88} borderColor={palette.neutral.lineColor} revision="highlighted" pickEnabled={false} />
         </Suspense>
-      ) : (
-        <mesh raycast={() => null}>
-          <boxGeometry args={[1, 1, 1]} />
-          <meshBasicMaterial color={style.meshColor} transparent opacity={0.42} depthWrite={false} />
-        </mesh>
-      )}
+      ) : fallback}
     </group>
   );
 }

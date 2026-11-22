@@ -113,3 +113,13 @@ Seen: body at all scales, structure and thermal cut at all scales, three poses a
 ### Open points
 
 - 1:500 keeps a dark screen inset in the lid at the 75 mm feature (digital only), structure there is two plates on one hinge axle (B+).
+
+## Four desk contacts, 21 November
+
+In the previous four-scale render the 1:200 structure showed a green rectangle beneath the bottom frame. The structural model used a 190 × 280 mm support plate at each scale. At 1:100, 1:200 and 1:500 the full underside of the body touched the desk. At 1:50 the rubber feet were visible in the body but the structure included both the feet and the plate.
+
+The laptop now bears on four 12 mm rubber feet with 10.4 mm contact diameters. Their centres span 178 × 268 mm. The chassis underside clears the desk by 2 mm. Each foot has a separate contact anchor in all three named poses and both clips. The total nominal rubber contact area is 339.79 mm². This gives a desk-contact fraction of 0.004997 for the 0.068 m² underside region, previously 0.06. The two intermediate paper elevations and front views show the supports, with a 0.21 mm pen. The previously green area inside the 1:200 perimeter now shows its metal floor and mass centre.
+
+The maintained model-bounds scenario measures coplanar triangles with Three.js and checks each sole position, area, housing clearance and anchor. The original model failed at every scale. All 13 model-bounds tests passed after publication. The canonical laptop passed JSON Schema, the asset validator and all measured volume rules. The independent reader reopened its 12 GLB scenes, 1,116,392 bytes total, with zero findings. The refreshed four-scale body, surface-temperature and structure render was inspected in the open pose. Candidate and catalog data matched, and both authored volume documents parsed identically.
+
+Reviewed canonical SHA-256 `9feb534af108f046f25588c6159ed5ca11395c719a4c40b905c30e9e7708c314`. The model-bounds scenario and tests live under `🧪️tests/🧊️model-bounds` in staffage.

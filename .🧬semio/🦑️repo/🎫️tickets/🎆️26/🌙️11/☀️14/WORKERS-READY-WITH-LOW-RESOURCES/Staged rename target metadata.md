@@ -1,0 +1,9 @@
+# Staged rename target metadata
+
+On m05 the 20:51:20.476 UTC replica attestation reported 44,252 EPERM failures, all of them native staged renames, and 5,115 incoming entries. By 20:54:01.876 UTC it reported 62,187 identical EPERM/rename counts and 5,087 incoming. The origin's latest Ready heartbeat remained separate. It had completed the final writer, with 5.08 GiB free and a 6,144 MB requirement, and had not started a new dependency try.
+
+The target diagnostic classifies only the already held metadata of a staged rename that returned EPERM. It distinguishes an unseen target, a present regular file with or without the owner-write mode bit, and another present entry. The preceding observation does not establish target custody at failure or a Windows access-control decision. There is no new filesystem read, filename, permission or replacement operation. The fixed categories fill spare diagnostic rows after existing totals, native codes and operation counts, with the most frequent target observations shown first.
+
+A neutral fixture plus independent SQLite output covers the four categories and excludes EACCES. The red route tests showed four missing rows. The green tests exercise the native staged-rename fault with the actual prior filesystem observation and assert zero further target metadata reads after refusal. All 43 replica race tests and 343 assertions passed. All 26 resilience tests and 360 assertions passed. The scoped diff check passed.
+
+At the terminal checkpoint 21:12:20.986 UTC, m05's latest replica attestation was 21:11:30.486 UTC on the prior rename-counter digest `e3e9e32d044406facd0c95ae39f1dedc00100821a7fa4643e6e1d7a3e903b67e`, with 5,091 incoming and 162,150 native EPERM renames. Only one sharing event was in the ordinary worktree subset, with staging inputs and Git materialization grouped separately. No target metadata row or new live digest had appeared.

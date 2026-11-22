@@ -1,8 +1,10 @@
-import{afterAll,expect,test}from"bun:test";
+import{afterAll,expect,spyOn,test}from"bun:test";
 import{chmodSync,existsSync,mkdirSync,mkdtempSync,readdirSync,readFileSync,renameSync,rmSync,utimesSync,writeFileSync}from"node:fs";
 import{tmpdir}from"node:os";
 import{join}from"node:path";
 import{spawnSync}from"node:child_process";
+import{findWorkspaceRoot}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+const workspaceRootV1=findWorkspaceRoot(import.meta.dir);
 import{READY_CONTAINMENT_POLICY_V1 as CONTAIN,readyContainmentStatusV1}from"../🌲️process-tree/🧹️containment/🟦️.ts";
 import{validateJsonSchemaSubset}from"../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from"../🧬️schema/🔣️.json"with{type:"json"};
@@ -59,11 +61,11 @@ test("selected Nx materials invalidate only workspace and a restarted observer r
 test("the Ready workspace roster follows the unique patch selected by the Nx tool recipe",()=>{
  const workspace=STAGES.find(stage=>stage.name==="workspace")!;
  const recipe=workspace.inputs.find(path=>path.endsWith("/🚀️bootstrap/🛠️tools/package.json"))!;
- const manifest=JSON.parse(readFileSync(join(process.cwd(),recipe),"utf8")) as {semio:{toolPatches:Record<string,string>}};
+ const manifest=JSON.parse(readFileSync(join(workspaceRootV1,recipe),"utf8")) as {semio:{toolPatches:Record<string,string>}};
  const patches=Object.entries(manifest.semio.toolPatches).filter(([name])=>name.startsWith("nx@")).map(([,path])=>path);
  expect(patches).toHaveLength(1);
  expect(workspace.inputs.filter(path=>/(?:^|\/)nx@[^/]+\.patch$/u.test(path))).toEqual(patches);
- expect(existsSync(join(process.cwd(),patches[0]!))).toBe(true);
+ expect(existsSync(join(workspaceRootV1,patches[0]!))).toBe(true);
 });
 
 test("Ready input hashing observes original bytes after stale path identity, miss and restart",async()=>{
@@ -363,7 +365,7 @@ test("the output of a stage and its timings are mirrored into the store: at most
  const origin=join(store,"v1","origins","g1-m97");
  ports.mirror!("tools",Array.from({length:200},(_all,index)=>`line ${index} ${"x".repeat(600)}`));
  const text=readFileSync(join(origin,`${P.mirrorPrefix}tools.txt`),"utf8");
- expect(text.length).toBeLessThanOrEqual(P.mirrorBytes);expect(text.trimEnd().endsWith("x")).toBe(true);
+ expect(text.length).toBeLessThanOrEqual(P.mirrorBytes);expect(text).toContain("x".repeat(100));expect(text).toContain("Plattenfakten");expect(text.slice(0,text.indexOf("disk facts"))).toMatch(/x\n$/u);expect(text.trimEnd().split("\n").at(-1)).toContain(root);
  ports.mirror!("native",["a","b"]);
  expect(readFileSync(join(origin,`${P.mirrorPrefix}native.txt`),"utf8")).toContain("a\nb");
  for(let index=0;index<P.timingsKept+5;index++)ports.timing!({stage:"tools",startedMs:1000*index,endedMs:1000*index+5000,seconds:5,exit:index%2,outcome:index%2?"stage-failed":"ok",peakMegabytes:null,attempts:index%2,digest:"abc"});
@@ -531,6 +533,42 @@ posix("a stage that only counts seconds is stopped with every process below it a
   expect((()=>{try{process.kill(sleeper,0);return false;}catch{return true;}})(),"the sleeper below the stage is gone").toBe(true);
  }finally{counting.restore();}
 },90000);
+
+posix("a long exact dependency binding refusal keeps all three paths in the failed stage mirror",async()=>{
+ const fixturePath=join(import.meta.dir,"🧫️fixtures","🔗️binding-log.json");
+ const fixture=JSON.parse(readFileSync(fixturePath,"utf8"));
+ const {prefix,binding,ordinary,ordinaryLength}=fixture;
+ const raw=prefix+JSON.stringify(binding),noise=ordinary+"x".repeat(ordinaryLength);
+ expect(raw.length).toBeGreaterThan(P.mirrorLineCharacters);
+ const home=fakeHome("#!/bin/sh\nprintf '%s\\n' '"+raw+"' '"+noise+"'\nexit 1\n");
+ try{
+  const result=await runReadyStageV1({home:home.home,root:temp("binding-log"),environment:{},stage:stageOf("dependencies",600000),signal:new AbortController().signal,jobs:1,onLine:()=>undefined});
+  expect(result.exit).toBe(1);
+  const rows=result.failure??[],diagnostic=rows.find(line=>line.startsWith(prefix))??"";
+  const independent=spawnSync("python3",["-I","-c","import json,sys; fixture=json.load(open(sys.argv[1],encoding='utf-8')); print(json.dumps(json.loads(sys.stdin.read().removeprefix(fixture['prefix'])) == fixture['binding']))",fixturePath],{input:diagnostic,encoding:"utf8"});
+  expect(independent.status,independent.stderr).toBe(0);
+  expect(JSON.parse(independent.stdout)).toBe(true);
+  expect(rows.find(line=>line.startsWith(ordinary))?.length).toBe(P.mirrorLineCharacters);
+ }finally{home.restore();}
+});
+
+posix("a failed stage mirror keeps the first error lines whole and the last lines when a flood of other lines follows",async()=>{
+ const diagnostic='[DATA] Store dependency installer failed {"version":1,"purpose":"current-dependency-installer-failure","status":1,"stderrBytes":188,"stdoutSha256":"'+"b".repeat(64)+'","stderrSha256":"'+"a".repeat(64)+'","stderrTail":"Resolving dependencies\\nResolved, downloaded and extracted 9\\nerror: EPERM: Operation not permitted, rename"}';
+ expect(diagnostic.length).toBeGreaterThan(P.mirrorLineCharacters);
+ const home=fakeHome("#!/bin/sh\nprintf '%s\\n' 'Internal error: first cause EPERM at start' '"+diagnostic+"'\ni=0\nwhile [ $i -lt 400 ]; do i=$((i+1)); echo \"ordinary line $i\"; done\necho 'last words'\nexit 1\n");
+ try{
+  const result=await runReadyStageV1({home:home.home,root:temp("first-errors"),environment:{},stage:stageOf("dependencies",600000),signal:new AbortController().signal,jobs:1,onLine:()=>undefined});
+  expect(result.exit).toBe(1);
+  const rows=result.failure??[];
+  expect(rows).toContain("Internal error: first cause EPERM at start");
+  expect(rows).toContain(diagnostic);
+  expect(rows.some(line=>/earlier lines left out/u.test(line))).toBe(true);
+  expect(rows).toContain("ordinary line 400");expect(rows).toContain("last words");
+  expect(rows.length).toBeLessThanOrEqual(P.mirrorLines+2);
+  const independent=spawnSync("python3",["-I","-c","import sys; rows=sys.stdin.read().split('\\n'); print(sum(1 for r in rows if r.startswith('[DATA] Store dependency installer failed ') and len(r)>400))"],{input:rows.join("\n"),encoding:"utf8"});
+  expect(independent.stdout.trim()).toBe("1");
+ }finally{home.restore();}
+});
 
 test("a stage that failed because the disk or the quota is full is a store-full refusal naming the path in English and German, a plain failure stays stage-failed",async()=>{
  const full="Internal error: No space left (EDQUOT) in /home/deck/.cache/semio/leases: the disk or the quota of the user holding it is full; free space there. / Kein Platz mehr (EDQUOT) in /home/deck/.cache/semio/leases: der Datenträger oder die Quote des Benutzers ist voll; dort Platz freigeben.";
@@ -783,6 +821,57 @@ test("a long loop backoff renews only its stated wait up to the original retry d
  expect(offsets).toHaveLength(loopBackoff.expectedPublications);
  expect(offsets.at(-1)).toBe(loopBackoff.expectedLastMs);
  expect(offsets.every((at,index)=>at===index*heartbeatMs)).toBe(true);
+});
+
+test("disk recovery renews only its scoped wait and mirrors actual progress",async()=>{
+ const fixture=heartbeatFixture.diskRecovery;
+ const oracle=spawnSync("python3",["-I","-c",`import json,sys
+fixture=json.loads(sys.argv[1])
+written=[0]
+for event in fixture["events"]:
+ period=fixture["heartbeatMs"] if event["action"]=="beat" else fixture["intervalMs"]
+ if event["at"]-written[-1]>=period:written.append(event["at"])
+print(json.dumps(written))`,JSON.stringify(fixture)],{encoding:"utf8"});
+ expect(oracle.status).toBe(0);
+ expect(JSON.parse(oracle.stdout)).toEqual(fixture.expectedPublicationsMs);
+ for(const cancel of [false,true]){
+  const probe=world(),stages=Object.fromEntries(probe.digest.stages.filter(row=>row.name!==fixture.stage).map(row=>[row.name,{digest:row.digest,doneMs:1}]));
+  const w=world({state:{...emptyReadyStateV1(),stages}}),store=temp("disk-heartbeat"),origin="g1-m99",file=join(store,"v1","origins",origin,"ready.json"),started=w.shared.now,receipts:ReadyStatusV1[]=[];
+  const read=()=>JSON.parse(readFileSync(file,"utf8")) as ReadyStatusV1;
+  const status=createReadyStatusV1({store,origin,platform:"linux",now:()=>w.shared.now,rename(from,to){renameSync(from,to);const doc=read();if(doc.refusal?.code==="disk-collecting")receipts.push(doc);}});
+  const interval=globalThis.setInterval,clear=globalThis.clearInterval;
+  const token={unref:()=>{}} as ReturnType<typeof setInterval>;
+  let pulse:(()=>void)|undefined,report:((line:string)=>void)|undefined,cleared=false,recovered=false,ran=false;
+  const timer=spyOn(globalThis,"setInterval").mockImplementation(((handler:()=>void,period:number)=>{
+   if(period!==P.statusHeartbeatMilliseconds)return interval(handler,period);
+   pulse=handler;return token;
+  })as typeof setInterval);
+  const cancelTimer=spyOn(globalThis,"clearInterval").mockImplementation(((handle:ReturnType<typeof setInterval>)=>{
+   if(handle===token){cleared=true;return;}
+   clear(handle);
+  })as typeof clearInterval);
+  try{
+   await runReadyV1({...w.ports,status,disk:()=>recovered?null:{path:"C:\\semio\\.cache",resource:"space",needed:fixture.needed,free:fixture.free},recover:async request=>{
+    report=request.report;expect(request.signal).toBe(w.controller.signal);
+    for(const event of fixture.events){w.shared.now=started+event.at;if(event.action==="report")request.report(event.line!);else pulse?.();}
+    if(cancel){w.controller.abort();request.report("late after cancellation");}
+    recovered=true;return{fits:true,consumers:[]};
+   },run:async(_stage,options)=>{
+    ran=true;expect(cleared).toBe(true);
+    w.shared.now=started+fixture.closedAt;
+    pulse?.();report?.("late after recovery");
+    expect(read().tail).toEqual([]);
+    w.controller.abort();
+    return{exit:null,timedOut:false,spawnFailed:false,cancelled:false,stalled:false,detached:true,startedMs:w.shared.now,peakMegabytes:null,tail:[]};
+   }},w.controller.signal);
+  }finally{timer.mockRestore();cancelTimer.mockRestore();}
+  expect(receipts.map(row=>row.updatedMs-started)).toEqual(fixture.expectedPublicationsMs);
+  expect(receipts.every(row=>row.state==="waiting"&&!row.ready&&row.stage===fixture.stage)).toBe(true);
+  expect(receipts.at(-1)?.tail).toEqual([fixture.events.find(row=>row.action==="report")!.line!]);
+  expect(cleared).toBe(true);expect(ran).toBe(!cancel);
+  expect(w.said).not.toContain("late after cancellation");
+  expect(w.said).not.toContain("late after recovery");
+ }
 });
 
 test("late movement from a failed stage cannot renew its replacement's running receipt",async()=>{

@@ -55,3 +55,10 @@ fn original_fixture_caller_work_loan_preserves_actual_fuel_deadline_clock_and_re
  }).unwrap();assert_eq!(caller.fuel_remaining(),law["workLoans"].as_array().unwrap().last().unwrap()["remaining"].as_u64().unwrap());let(released,heap)=observe(||caller.retire(grant()));assert_eq!(heap.1,released);assert_eq!(heap.1-heap.0,born);
 }
 fn observe_heap<T>(run:impl FnOnce()->T)->(T,(usize,usize)){let(value,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(run);(value,(heap.requested_bytes,heap.released_bytes))}
+
+#[test]
+fn original_fixture_caller_closes_a_scarce_item_stock_by_funding_each_closing_step_its_own_item(){
+ NOW.with(|now|now.set(Some(1000)));let scarce=Grant{maximum_items:16,..grant()};let mut caller=OriginalJobFixtureCaller::admit(OperationId(941),Generation(17),scarce,clock,2000,64);
+ while caller.remaining_grant().maximum_items>0{caller.turn(Grant{maximum_items:1,..grant()},|cx|{cx.consume_retained(Progress{copied_items:1,..Default::default()})?;Ok(())}).unwrap()}
+ assert_eq!(caller.remaining_grant().maximum_items,0);let born=caller.born_bytes();assert_eq!(caller.retire(scarce),born);
+}

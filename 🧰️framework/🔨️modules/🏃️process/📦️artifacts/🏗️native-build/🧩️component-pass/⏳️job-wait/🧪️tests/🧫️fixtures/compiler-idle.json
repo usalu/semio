@@ -1,0 +1,68 @@
+{
+  "stallMilliseconds": 1000,
+  "cases": [
+    {
+      "label": "slow Cargo planning",
+      "children": 1,
+      "planning": 1,
+      "runningUnits": 0,
+      "runningStages": 0,
+      "idleMilliseconds": 2800,
+      "stalled": false
+    },
+    {
+      "label": "stalled compiler",
+      "children": 1,
+      "planning": 0,
+      "runningUnits": 0,
+      "runningStages": 0,
+      "idleMilliseconds": 2800,
+      "stalled": true
+    },
+    {
+      "label": "stalled compiler alongside planning",
+      "children": 2,
+      "planning": 1,
+      "runningUnits": 0,
+      "runningStages": 0,
+      "idleMilliseconds": 2800,
+      "stalled": true
+    },
+    {
+      "label": "recent compiler activity",
+      "children": 1,
+      "planning": 0,
+      "runningUnits": 0,
+      "runningStages": 0,
+      "idleMilliseconds": 900,
+      "stalled": false
+    },
+    {
+      "label": "running compiler unit",
+      "children": 1,
+      "planning": 0,
+      "runningUnits": 1,
+      "runningStages": 0,
+      "idleMilliseconds": 2800,
+      "stalled": false
+    },
+    {
+      "label": "running component stage",
+      "children": 1,
+      "planning": 0,
+      "runningUnits": 0,
+      "runningStages": 1,
+      "idleMilliseconds": 2800,
+      "stalled": false
+    },
+    {
+      "label": "all children retired",
+      "children": 0,
+      "planning": 0,
+      "runningUnits": 0,
+      "runningStages": 0,
+      "idleMilliseconds": 2800,
+      "stalled": false
+    }
+  ]
+}

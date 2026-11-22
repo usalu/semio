@@ -28,7 +28,8 @@ where
         Err(refusal) => return Err(AcceptanceVerdict::Fail(refusal.context("the row's withdraw does not open".into()))),
     }
     Box::pin(acceptance_verb(app, HISTORY_EDIT_ACCEPT_ACTION_ID, Vec::new(),cx)).await.map_err(|refusal| AcceptanceVerdict::Fail(refusal.context("the withdrawn draft is not accepted".into())))?;
-    Box::pin(acceptance_pump(app, |app| app.time_travel.status().is_some_and(|status| status.stage != HistoryTimeTravelStage::Replaying),cx)).await.map_err(|reason|AcceptanceVerdict::Fail(reason.into()))?;
+    Box::pin(acceptance_pump(app, |app| app.time_travel.status().is_some_and(|status| status.stage != HistoryTimeTravelStage::Replaying),cx)).await
+        .map_err(|reason| AcceptanceVerdict::Fail(reason.context("after accepting history withdrawal".into())))?;
     let status = app.time_travel.status().ok_or_else(|| AcceptanceVerdict::Fail("accepting the withdrawal closed the session".into()))?;
     if status.stage != HistoryTimeTravelStage::Reviewing || !matches!(status.review, Some(HistoryTimeTravelReview::Ready | HistoryTimeTravelReview::Blocked)) {
         return Err(AcceptanceVerdict::Fail((format!("the replay of the withdrawal ends at {:?}/{:?}, not a review with a report", status.stage, status.review)).into()));
@@ -107,7 +108,16 @@ where
 /// another, both heads against a fresh fold of the edited log, the edited row's label in every locale. With `reload` both
 /// sessions run on the seeded document after it was saved and loaded into a fresh instance ([`acceptance_reloaded`]). With `kind`
 /// the overwrite drafts an input of that control kind only ([`ACCEPTANCE_CONTROL_KINDS`]).
-pub(super) async fn acceptance_scenario<A, M>(manifest: fn() -> App, case: &AcceptanceCase<A::Mutation>, downstream: Option<&A::Mutation>, reload: bool, kind: Option<usize>,cx:&mut semio_framework_job::StepContext<'_>) -> AcceptanceVerdict
+pub(super) async fn acceptance_scenario<A, M>(manifest: fn() -> App, case: &AcceptanceCase<A::Mutation>, downstream: Option<&A::Mutation>, reload: bool, kind: Option<usize>) -> AcceptanceVerdict
+where
+    A: ArtifactApp + Default,
+    M: ReferenceSpaceMember + MemberFactory + Send + 'static,
+    <A as ArtifactApp>::Snapshot: pack::snapshot::ArtifactDsl,
+{
+    with_acceptance_caller(async |cx| Box::pin(acceptance_scenario_on_caller::<A, M>(manifest, case, downstream, reload, kind, cx)).await).await
+}
+
+async fn acceptance_scenario_on_caller<A, M>(manifest: fn() -> App, case: &AcceptanceCase<A::Mutation>, downstream: Option<&A::Mutation>, reload: bool, kind: Option<usize>, cx: &mut semio_framework_job::StepContext<'_>) -> AcceptanceVerdict
 where
     A: ArtifactApp + Default,
     M: ReferenceSpaceMember + MemberFactory + Send + 'static,
@@ -153,6 +163,9 @@ where
     let (change, edited) = match session {
         Ok(done) => done,
         Err(verdict) => {
+            if matches!(verdict, AcceptanceVerdict::Fail(_)) {
+                eprintln!("[DEBUG] primary history acceptance failure in {}\n{}", case.directory, verdict.text());
+            }
             Box::pin(acceptance_close(&mut overwrite,cx)).await;
             return verdict;
         }
@@ -205,6 +218,9 @@ where
                     Err(reason) => AcceptanceVerdict::Fail(reason.context("the alternative instance does not reload".into())),
                     Ok(mut branched) => {
                         let verdict = Box::pin(acceptance_alternative(&mut branched, manifest, &change, &fold, &label, downstream.is_some(), &as_of, trail,cx)).await;
+                        if matches!(verdict, AcceptanceVerdict::Fail(_)) {
+                            eprintln!("[DEBUG] alternative history acceptance failure in {}\n{}", case.directory, verdict.text());
+                        }
                         Box::pin(acceptance_close(&mut branched,cx)).await;
                         verdict
                     }
@@ -212,6 +228,9 @@ where
             }
             Ok(mut branched) => {
                 let verdict = Box::pin(acceptance_alternative(&mut branched, manifest, &change, &fold, &label, downstream.is_some(), &as_of, trail,cx)).await;
+                if matches!(verdict, AcceptanceVerdict::Fail(_)) {
+                    eprintln!("[DEBUG] alternative history acceptance failure in {}\n{}", case.directory, verdict.text());
+                }
                 Box::pin(acceptance_close(&mut branched,cx)).await;
                 verdict
             }
@@ -268,7 +287,7 @@ where
 /// on the same document, then alone; a case whose own operation does not seed, and every case on a document that does not load,
 /// is skipped at once. `Ok(Some)` names the passing case, `Ok(None)` means every case was skipped (reasons appended to `skipped`),
 /// `Err` is a broken mechanism.
-pub(super) async fn acceptance_first_pass<A, M>(plugin: &str, manifest: fn() -> App, cases: &[AcceptanceCase<A::Mutation>], skipped: &mut Vec<String>, reload: bool,cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<String>, AcceptanceError>
+pub(super) async fn acceptance_first_pass<A, M>(plugin: &str, manifest: fn() -> App, cases: &[AcceptanceCase<A::Mutation>], skipped: &mut Vec<String>, reload: bool) -> Result<Option<String>, AcceptanceError>
 where
     A: ArtifactApp + Default,
     M: ReferenceSpaceMember + MemberFactory + Send + 'static,
@@ -282,7 +301,7 @@ where
         let leaf = protocol::SemanticMutation::<A::Snapshot>::semantics(&case.op).kind;
         let downstream: Vec<&A::Mutation> = cases.iter().filter(|other| other.base_key == case.base_key && other.directory != case.directory).map(|other| &other.op).take(ACCEPTANCE_DOWNSTREAM_PER_LEAF).collect();
         for next in downstream.into_iter().map(Some).chain(std::iter::once(None)) {
-            match Box::pin(acceptance_scenario::<A, M>(manifest, case, next, reload, None,cx)).await {
+            match Box::pin(acceptance_scenario::<A, M>(manifest, case, next, reload, None)).await {
                 AcceptanceVerdict::Pass(summary) => return Ok(Some(format!("{plugin}: {leaf} ({}) — {summary}", case.directory))),
                 AcceptanceVerdict::Skip(reason) => skipped.push(format!("{leaf} ({}): {reason}", case.directory)),
                 AcceptanceVerdict::SkipCase(reason) => {

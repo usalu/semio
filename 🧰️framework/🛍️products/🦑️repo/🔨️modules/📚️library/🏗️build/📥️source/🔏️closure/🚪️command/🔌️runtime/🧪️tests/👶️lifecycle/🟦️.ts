@@ -4,7 +4,8 @@ import{Database}from"bun:sqlite";
 import{mkdtemp,writeFile}from"node:fs/promises";
 import{join,relative}from"node:path";
 import{fileURLToPath,pathToFileURL}from"node:url";
-import{declareBuildTestEnvelopeV1,withBuildTestInvocationV1}from"../../../../../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts";
+import {withBuildTestInvocationV1} from "../../../../../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts";
+import {declareLibraryBuildTestEnvelopeV1} from "../../../../../../../🧪️testing/🪪️native-birth/🟦️.ts";
 import{createIssuedResourceControlV1,scriptResourceProcessEnvironmentV1}from"../../../../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import{captureOwnedCommandResultV1}from"../../../../../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/📥️capture/🟦️.ts";
 import{captureNxAuthorizerSourcesV1}from"../../../../../../../⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/🟦️.ts";
@@ -13,7 +14,7 @@ import fixture from"./🔣️.json"with{type:"json"};
 import schema from"./📋️schema.json"with{type:"json"};
 import{existsSync as existsRootV1}from"node:fs";import{dirname as dirnameRootV1,join as joinRootV1}from"node:path";
 const repositoryRootV1=(()=>{let directory=import.meta.dir;while(!existsRootV1(joinRootV1(directory,"MODULE.bazel"))&&dirnameRootV1(directory)!==directory)directory=dirnameRootV1(directory);return directory;})();
-declareBuildTestEnvelopeV1({owner:"test:full-fixed-disposable-lifecycle",maximumElapsedMilliseconds:180000,capabilities:{artifacts:true}});
+declareLibraryBuildTestEnvelopeV1({suite:"build-source-closure",maximumElapsedMilliseconds:180000,scratch:"checkout"});
 test("relocated public fixed parent and disposable child retain captured cleanup through actual retirement",async()=>withBuildTestInvocationV1(async original=>{
  expect(new Ajv({strict:true}).compile(schema)(fixture)).toBe(true);const db=new Database(":memory:");try{for(const geometry of[fixture.parent,fixture.child])expect(db.query("select ? >= ? + 1048576 as valid").get(geometry.maximumPhysicalBytes,geometry.filesystemBytes)).toEqual({valid:1});}finally{db.close();}
  const control=createIssuedResourceControlV1(original,"test:compile-full-fixed-lifecycle",150000),root=repositoryRootV1,entry=relative(root,fileURLToPath(new URL("./📜️script.ts",import.meta.url))).replaceAll("\\","/"),captured=await captureNxAuthorizerSourcesV1(root,entry,control.signal,{installed:true}),compiled=await compileNxAuthorizerSnapshotV1(root,snapshotNxAuthorizerSourcesV1(captured),control,"runtime","program"),area=await mkdtemp(join(process.env.SEMIO_TEST_ARTIFACT_DIR!,"life-")),program=join(area,"parent.mjs");await writeFile(program,compiled.bytes,{flag:"wx",mode:0o444});

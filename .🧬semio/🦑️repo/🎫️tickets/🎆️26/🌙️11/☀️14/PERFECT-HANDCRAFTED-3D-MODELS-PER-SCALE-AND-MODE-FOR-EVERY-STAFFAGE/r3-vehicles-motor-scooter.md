@@ -134,3 +134,7 @@ Final: `r3-validate.ts vehicles/motor-scooter --catalog-only` VALID (schema 0, v
 Seen after (1:50 body sheet, 1:200 and 1:500 body sheets): the rear shell flows down from the seat into the floor, the plate sits under the tail lamp, footrests show as small bars at the floor edges, the 1:500 has its mudguard crescent; nothing floats.
 
 Still imperfect: 1:500 handlebar is one 0.74 m spindle with raised ends standing for the mirrors (75 mm floor); 1:200/1:500 wheels are plain discs; the rear-shock halves are rigid (no telescopic bone), so in the extreme swing the spring leaves a 13 mm visible step on the damper body; the brake hose is not in the thermal list (its 0.006 m² would push `brake-disc` over 15 %).
+
+## November 21 running gear and moving joints
+
+Both cast wheels retain their five windows. The fork, two controls, curved brake levers and hollow steering tube follow the steering joint. The grooved rubber grips have a measured component area of 0.05032 m² and 0.02990 m² exchanges with air in the eleven authored postures. Two clamping halves, a bored steerer socket and twin pinch bolts join the 22 mm handlebar to the steering column. See the [measurements and installed revision](digital-running-gear.md).

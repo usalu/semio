@@ -15,7 +15,8 @@ with (artifact/"🧪️tests/🧫️fixtures/🌊️buried-pipe-wave/🔣️.tsv
     fixtures = [dict(case=row[0], inputs=list(map(float,row[1:10])), expected=list(map(float,row[10:])) or None) for row in rows]
 binary = ticket/"🗑️generated/en1998-buried-pipe-wave"
 source = binary.with_suffix(".rs")
-source.write_text(f'#[path = {json.dumps(str(module),ensure_ascii=False)}] mod pipe_wave;\n' + r'''
+strain = module.parents[1]/"📏️pipe-strain/🦀️.rs"
+source.write_text(f'#[path = {json.dumps(str(strain),ensure_ascii=False)}] mod pipe_strain;\n#[path = {json.dumps(str(module),ensure_ascii=False)}] mod pipe_wave;\n' + r'''
 use pipe_wave::*;
 use std::io::{self, BufRead};
 

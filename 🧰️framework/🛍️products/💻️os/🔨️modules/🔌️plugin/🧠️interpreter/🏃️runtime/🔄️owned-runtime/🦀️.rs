@@ -138,7 +138,8 @@ impl OwnedRuntime {
                 event => ordinary_events.push(event),
             }
         }
-        let input = identity.encode(|control|operation::input::encode_json_input(&OwnedPollInput { events: &ordinary_events, command_page, cold_pair_page, budget },control)).map_err(identity_turn_fault)?;
+        let poll = OwnedPollInput::with_budget(&ordinary_events, command_page, cold_pair_page, budget).map_err(identity_turn_fault)?;
+        let input = identity.encode(|control|operation::input::encode_json_input(&poll,control)).map_err(identity_turn_fault)?;
         identity.encode(|control|control.charge(input.len())).map_err(identity_turn_fault)?;
         begin_owned_operation(state, OwnedOperation::Poll, Some(input))?;
         }

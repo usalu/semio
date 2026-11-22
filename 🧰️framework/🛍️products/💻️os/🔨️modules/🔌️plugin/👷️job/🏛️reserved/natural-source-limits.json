@@ -1,0 +1,11 @@
+{
+  "sourceBytes": 9437877,
+  "imageBytes": 9437184,
+  "selectedMaximumBytes": 16777216,
+  "ordinaryOutputBytes": 8388608,
+  "naturalRawWireBytes": 1,
+  "naturalDecodedItems": 8192,
+  "naturalWorkUnitsPerStep": 4096,
+  "naturalOutputBytes": 33554432,
+  "outputPerSourceByte": 2
+}

@@ -62,7 +62,7 @@ export const DiagramSkeleton: React.FC<DiagramSkeletonProps> = ({ nodeCount = 5,
         position: { x: (i % 3) * 150 + 50, y: Math.floor(i / 3) * 150 + 50 },
         data: { label: " " },
         draggable: false,
-        domAttributes: { ...sharedBorderlessBoxProps },
+        domAttributes: { ...sharedBorderlessBoxProps } as unknown as Node["domAttributes"],
       })),
     [nodeCount],
   );

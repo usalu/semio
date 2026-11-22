@@ -10,7 +10,7 @@ use dashboard_preferences::Change;
 use dashboard_preferences::keymap::{KeyName, KeySpec, Scope};
 use semio_ui_tui_engine::Tui;
 use semio_ui_tui_core::event::{mods, Event, Key, KeyEvent, KeypadKey, MouseButton, MouseEvent, MouseKind};
-use semio_ui_tui_frame::layout::{dock_window, reorder_stack_tab, resize_split, resize_window, zoom_window};
+use semio_ui_tui_frame::layout::{dock_window, Axis, reorder_stack_tab, resize_split, resize_window, zoom_window};
 use semio_ui_tui_core::docking::{DockPlacement};
 use semio_ui_tui_frame::scene::NodeId;
 use semio_ui_tui_core::signal::WidgetSignal;
@@ -509,7 +509,7 @@ impl Dashboard {
             Action::ToggleLanguage => self.queue_preference(Change { language: Some(if self.preferences.language.as_deref() == Some("en") { "de" } else { "en" }.into()), ..Default::default() }),
             Action::NextWindow => self.cycle_window(tui, 1),
             Action::PreviousWindow => self.cycle_window(tui, -1),
-            Action::SplitDown | Action::SplitRight => { let created = self.create_window(tui, Kind::Launcher, Place::Split(if action == Action::SplitDown { "column" } else { "row" })); self.focus_window(tui, created); }
+            Action::SplitDown | Action::SplitRight => { let created = self.create_window(tui, Kind::Launcher, Place::Split(if action == Action::SplitDown { Axis::Vertical } else { Axis::Horizontal })); self.focus_window(tui, created); }
             Action::DockLeft | Action::DockRight | Action::DockTop | Action::DockBottom | Action::JoinWindow => {
                 let source = self.windows[index].id.clone();
                 let order = self.window_order();

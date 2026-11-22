@@ -1,8 +1,6 @@
 //! 🎨️ Scene surface context menu and the component scene render entry.
 
 use super::*;
-use semio_renderer_wgpu_engine_board::paint2d::{advance_paint2d_pixel_selection_into, paint2d_pixel_selection_progress};
-use semio_ui_wgpu_widget_kit::draw_text;
 
 //#region 🖱️SurfaceContextMenu
 /** 🖱️ One component scene's answer to a right-click: the `surface` half of the context-menu
@@ -247,6 +245,7 @@ pub fn render_component_scene_step(
             SurfaceKind::Canvas2d => return render_canvas_2d_step(scene, bounds, ctx, cursor),
             SurfaceKind::InkCanvas => return render_ink_canvas_step(scene, bounds, ctx, cursor),
             SurfaceKind::IconRender => return render_icon_render_step(scene, bounds, ctx, cursor, hosts),
+            SurfaceKind::TiledMap if semio_renderer_wgpu_engine_board::tiled_map::tiled_map_unavailable(&scene.host_id) => return render_map_unavailable_step(scene, bounds, ctx, cursor, hosts.chrome_labels),
             kind if scene_kind_is_list(kind) => return render_list_scene_step(scene, bounds, ctx, cursor, hosts.chrome_labels, hosts.window_id, driver_drag, document_generation),
             _ => {}
         }
@@ -316,11 +315,10 @@ pub fn render_component_scene_step(
             semio_ui_wgpu_hosting::scene_slots::ScenePaintStep::Pending
         }
         5 => {
-            if scene.component_kind==SurfaceKind::Paint2d {
-                match advance_paint2d_pixel_selection_into(scene,hosts.window_id,ctx.input){
-                    Err(_)=>return semio_ui_wgpu_hosting::scene_slots::ScenePaintStep::Fault,
-                    _=>{}
-                }
+            if scene.component_kind == SurfaceKind::Paint2d
+                && semio_renderer_wgpu_engine_board::paint2d::advance_paint2d_pixel_selection_into(scene, hosts.window_id, ctx.input).is_err()
+            {
+                return semio_ui_wgpu_hosting::scene_slots::ScenePaintStep::Fault;
             }
             let progress = advance_raster_composite(scene);
             if cursor.observe_external_progress(progress.completed).is_err() {
@@ -369,20 +367,11 @@ pub fn render_component_scene_step(
             }
             if scene.component_kind == SurfaceKind::Paint2d {
                 ctx.draw.push_scissor(bounds);
-                paint_paint2d_overlays(ctx, scene, bounds);
-                if let Some((completed,total))=paint2d_pixel_selection_progress(&scene.host_id){
-                    if ctx.draw.try_reserve_retained_items(128).is_err() {
-                        ctx.draw.pop_scissor();
-                        return semio_ui_wgpu_hosting::scene_slots::ScenePaintStep::Fault;
-                    }
-                    let width=(bounds.w-24.0).clamp(0.0,220.0);let x=bounds.x+12.0;let y=bounds.y+12.0;
-                    let fraction=if total==0{0.0}else{completed as f32/total as f32};
-                    ctx.draw.push_rounded([x,y,width,32.0],ctx.theme.panel,ctx.theme.border_radius);
-                    ctx.draw.push_loading_border([x,y,width,32.0],ctx.theme.accent,ctx.theme.border_radius,ctx.theme.stroke_hairline);
-                    ctx.draw.push_solid([x+4.0,y+27.0,(width-8.0).max(0.0)*fraction,2.0],ctx.theme.accent);
-                    draw_text(ctx,&format!("{:.0}% · ⎋",fraction*100.0),x+8.0,y+21.0,ctx.theme.font_size_small,ctx.theme.text);
-                }
+                let painted = paint_paint2d_overlays(ctx, scene, bounds);
                 ctx.draw.pop_scissor();
+                if !painted {
+                    return semio_ui_wgpu_hosting::scene_slots::ScenePaintStep::Fault;
+                }
             }
             if cursor.advance_phase().is_err() {
                 return semio_ui_wgpu_hosting::scene_slots::ScenePaintStep::Fault;
@@ -439,7 +428,7 @@ fn render_list_scene_step(
         return semio_ui_wgpu_hosting::scene_slots::ScenePaintStep::Fault;
     }
     match scene.component_kind {
-        SurfaceKind::Table => render_table(scene, bounds, ctx, driver_drag),
+        SurfaceKind::Table => render_table(scene, bounds, ctx, driver_drag, chrome_labels.table),
         SurfaceKind::VirtualFileSystem => render_vfs(scene, bounds, ctx, chrome_labels.virtual_file_system),
         SurfaceKind::GraphTimeline => render_graph_timeline(scene, bounds, ctx),
         SurfaceKind::BlockList => render_block_list(scene, bounds, ctx, driver_drag, chrome_labels.block_list),
@@ -523,6 +512,26 @@ fn render_icon_render_step(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut
         _ => cursor.finish(),
     }
 }
+
+/// 🩹️ The given-up tiled map: one paint step for the notice and its Retry button, then the surface is done.
+fn render_map_unavailable_step(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, cursor: &mut semio_ui_wgpu_hosting::scene_slots::ScenePaintCursor, chrome_labels: SceneChromeLabels) -> semio_ui_wgpu_hosting::scene_slots::ScenePaintStep {
+    match cursor.phase() {
+        ENGINE_PHASE => {
+            if ctx.draw.try_reserve_retained_items(MAP_UNAVAILABLE_RESERVE_ITEMS).is_err() {
+                return semio_ui_wgpu_hosting::scene_slots::ScenePaintStep::Fault;
+            }
+            render_map_unavailable(scene, bounds, ctx, chrome_labels.map);
+            if cursor.advance_phase().is_err() {
+                return semio_ui_wgpu_hosting::scene_slots::ScenePaintStep::Fault;
+            }
+            semio_ui_wgpu_hosting::scene_slots::ScenePaintStep::Pending
+        }
+        _ => cursor.finish(),
+    }
+}
+
+/// 🧾️ Backdrop, message glyphs, button fill, icon and label glyphs.
+const MAP_UNAVAILABLE_RESERVE_ITEMS: usize = 256;
 
 /// 🧾️ Frame border strips, badge chip, badge text and footer caption.
 const ICON_RENDER_RESERVE_ITEMS: usize = 256;

@@ -201,3 +201,64 @@ The archived hunk in `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗�
 - **124.** Recorded the second descriptor snapshot's live rebuilt and fresh Cargo message counts. [Warm retry evidence](📓️2026-11-21-descriptor-retry-evidence.md#generation-w73s37w)
 - **125.** Recorded the concurrent Pack JSON repair, exact Job source-plan mismatch, descriptor job retry and live spawn-recipe check. Added the ticket-only `json-output-validation-work-cursor.md` source audit. [Compiler and retry evidence](📓️2026-11-21-descriptor-retry-evidence.md#generation-w73s37w) · [JSON source audit](json-output-validation-work-cursor.md)
 - **126.** Added the ticket-only `view-model-ordered-map-scoped-alias.md` audit and recorded the concurrent view-model source change and snapshot retry. [Alias ownership evidence](view-model-ordered-map-scoped-alias.md)
+- **127.** Recorded fresh Rust artifacts for both prior compiler failures and an exact Store source/receipt mismatch in the two existing descriptor reports. [Store checksum evidence](descriptor-source-witness-integration.md#snapshot-2-accepted-compiler-evidence-and-correctly-refused-store-drift)
+- **128.** Recorded descriptor publication, reopening of the products partition and native transpile start in the existing reports. [Descriptor evidence](📓️2026-11-21-descriptor-retry-evidence.md#generation-w73s37w) · [Products storage evidence](products-retirement-live.md)
+- **129.** Documented the live native-transpiler CPU wait, process ownership, and the boundary between jobserver transport rotation and the retained compiler lease. [Capacity evidence](descriptor-nested-capacity-wait.md#native-transpiler-wait-in-w73s37w)
+- **130.** Recorded the end of the transpiler capacity wait and the first actual compiler artifacts. [Admission outcome](descriptor-nested-capacity-wait.md#native-transpiler-admission-outcome)
+- **131.** Recorded successful transpiler compilation, release executable publication, and the start of font assets. [Admission outcome](descriptor-nested-capacity-wait.md#native-transpiler-admission-outcome)
+- **132.** Added localized compiler lease diagnostics to artifact capture and tests for success, cancellation, and the effective environment. [Diagnostics evidence](descriptor-nested-capacity-wait.md#artifact-compiler-capacity-diagnostics)
+  - `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts`
+  - `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎯️recipe/🧪️tests/🚀️spawn/🟦️.ts`
+  - `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎯️recipe/🧪️tests/🚀️spawn/🔣️.json`
+  - `🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🧮️units/🟦️.ts`
+  - `🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🧮️units/🧬️schema/🔣️.json`
+  - `🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🧮️units/🧪️tests/🟦️.ts`
+- **133.** Recorded font-assets compiler completion and automatic retry after the concurrent profile constraints file update. [Font assets evidence](descriptor-nested-capacity-wait.md#font-assets-profile-update)
+- **134.** Added the ticket-only audit of the concurrently registered numeric crate and the live Flow dependency closure. [Dependency and boundary evidence](interpreter-numeric-play-selection.md)
+- **135.** Recorded both successful asset prerequisite jobs, the first use of the new compiler capacity messages and the Flow WASM job start. [Diagnostics evidence](descriptor-nested-capacity-wait.md#artifact-compiler-capacity-diagnostics)
+- **136.** Recorded active Flow source admission, real Cargo start, and the exact concurrent Store codec source mismatch and retry. [Flow retry evidence](📓️2026-11-20-flow-wasm-source-drift.md#generation-w73s37w)
+- **137.** Recorded the second concrete Flow source retry and the installed wrapper's separate Cargo evidence boundary. [Flow evidence](📓️2026-11-20-flow-wasm-source-drift.md#generation-w73s37w)
+- **138.** Recorded the PNG source digest change, an independently observed later digest and the fourth Flow attempt. [Flow retry evidence](📓️2026-11-20-flow-wasm-source-drift.md#generation-w73s37w)
+- **139.** Added the release driver deadline analysis and recorded the supervisor's next site attempt. [Deadline evidence](release-driver-preparation-deadline.md)
+- **140.** Added plan-derived compiler-store timing, the Play cost census, and the issued-control lifetime regressions. [Release deadline repair](release-driver-progress-deadline.md)
+  - `🧰️framework/🔨️modules/🏃️process/⏱️budget/🧬️schema/🔣️.json`
+  - `🧰️framework/🔨️modules/🏃️process/⏱️budget/🧪️tests/🧫️fixtures/🔣️.json`
+  - `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🧬️schema/🔣️.json`
+  - `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/📋️contract/🟦️.ts`
+  - `🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🧩️component-pass/📋️contract/🟦️.ts`
+  - `🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/⏲️expiry/🧪️tests/⏳️progress/🟦️.ts`
+  - `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts`
+  - `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🧩️driver-stages/🟦️.ts`
+  - `🏢️semio-tech/🎡️play/🧪️tests/🧪️playfreshbuild/🟦️.ts`
+  - `🏢️semio-tech/🎡️play/🧪️tests/🧪️playfreshbuild/🧫️fixtures/🔣️.json`
+- **141.** Added the ticket-only check of the earlier descriptor executable, compiler lane and current input digests. [Descriptor reuse evidence](descriptor-1913-reuse-evidence.md)
+- **142.** Replaced the two constructor parameter properties that prevented the actual Play Vitest suites from loading in Node. [Node verification](play-vitest-node-strip-only.md#second-november-21-rerun)
+  - `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧾️receipt/📎️source-witness/🟦️.ts`
+  - `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🗄️content/🟦️.ts`
+- **143.** Recorded the replacement plan, component CPU grant and actual registered Hub Stdio producer completion. [Replacement generation](release-driver-preparation-deadline.md#replacement-generation)
+- **144.** Recorded successful replacement font and canvas jobs, descriptor CPU grant, rebuilt descriptor units and the separate transpiler queue. [Replacement generation](release-driver-preparation-deadline.md#replacement-generation)
+- **145.** Added the ticket-only comparison of standalone generated-input diagnostics with actual Cargo admission and the live OS DSL derive result. [Generated inputs audit](preflight-generated-observer-audit.md)
+- **146.** Recorded compiler artifact progress and the pending proof for 16 concurrently edited descriptor source paths. [Replacement generation evidence](release-driver-preparation-deadline.md#replacement-generation)
+- **147.** Recorded the scoped source-boundary validation of four Interpreter owners in the descriptor's live host selection. [Interpreter boundary evidence](interpreter-numeric-play-selection.md)
+- **148.** Recorded the finished native transpiler and ongoing descriptor compilation in the replacement generation. [Replacement generation evidence](release-driver-preparation-deadline.md#replacement-generation)
+- **149.** Added the ticket-only Actor Job wire interface audit and wire fixture cross-check for the concurrent E0599 errors. [Actor wire evidence](actor-job-wire-header-descriptor-drift.md)
+- **150.** Added the directory admission gate audit with the exact Darwin lock owner and the descriptor's waiting state. [Directory gate evidence](descriptor-resource-directory-gate.md)
+- **151.** Added a ticket-only sample interpretation for the live graph worker and retained the direct lock query result. [Graph worker evidence](graph-admission-gate-observation.md)
+- **152.** Recorded natural admission gate release, exact source-plan evidence, and the descriptor's in-process snapshot retry. [Gate release and source plan](descriptor-resource-directory-gate.md#gate-release-and-source-plan)
+- **153.** Recorded the pre-spawn Store replay mismatch, repeated inner refusal and fresh descriptor job retry. [Descriptor retry evidence](descriptor-resource-directory-gate.md#store-replay-and-the-next-job-process)
+- **154.** Reused the pre-spawn recoverable edit boundary for retained source capture and verified the existing scope settles before a retry. [Retry repair](descriptor-precompile-plan-retries.md#pre-spawn-source-witness-retry)
+  - `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts`
+  - `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎯️recipe/🧪️tests/🚀️spawn/🟦️.ts`
+  - `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎯️recipe/🧪️tests/🚀️spawn/🔣️.json`
+
+### Items 96–127 file-list review
+
+The generated draft `🗑️generated/closeout-96-127.json` includes explicit source changes, all 42 DIN paths from item 116, and candidate ticket reports. The scoped ticket status listed four modified tracked records at review. The reports provide the edit attribution for those records and for generated or ignored paths.
+
+### Consolidated file-list draft
+
+`🗑️generated/closeout-combined-through-143.json` deduplicates 321 paths with recorded ticket work, including historical and moved-from paths. It also retains 141 unique candidates that require corroboration before inclusion. Add any subsequent report and implementation paths to the final closeout list, then remove the generated drafts with the ticket's other generated output.
+
+### Items 1–95 file-list draft
+
+`🗑️generated/closeout-1-95.json` records explicit full paths and their linked evidence through item 95, including five removed or moved-from paths. The `closeout-1-25-reconciled.json` supplement adds 26 anchored paths and records gaps in older reports. The `closeout-26-49-reconciled.json` supplement records 59 verified live edited paths, two historical Note paths and eight descriptor outputs. Item 41 has 13 documented hand edits and a 132-path archive with overlapping contributions. Item 51 supplies 11 candidates and four shared paths. Use the per-item evidence and the older coordinator inventory to resolve shared attribution at closure.

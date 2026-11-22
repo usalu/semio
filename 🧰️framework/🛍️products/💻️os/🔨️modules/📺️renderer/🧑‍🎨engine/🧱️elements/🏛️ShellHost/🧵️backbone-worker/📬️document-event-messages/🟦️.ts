@@ -30,7 +30,7 @@ export function handleLocalCatalogEventMessage({ localCatalogClientInstanceIdRef
   const catalogEvent = message.event;
   const waiter = localDocumentOwnersRef.current.get(message.clientInstanceId);
   if (catalogEvent.kind === "documentArchiveReplaced") {
-    const archive = new Uint8Array(catalogEvent.archive);
+    const archive = catalogEvent.archive;
     const decoded = decodeLocalCatalogArchiveV1(archive);
     if (decoded !== undefined) {
       localCatalogRef.current = decoded;
@@ -55,7 +55,7 @@ export function routeLocalDocumentObserverV1({ localDocumentOwnersRef, openDocum
   const owner = localDocumentOwnersRef.current.get(message.clientInstanceId);
   if (owner === undefined) return false;
   if (message.event.kind === "status") owner.status?.(message.event.persisted && message.event.pendingMutations === 0 && message.event.writeFailure === undefined);
-  else if (message.event.kind === "documentArchiveReplaced") owner.archive?.(new Uint8Array(message.event.archive));
+  else if (message.event.kind === "documentArchiveReplaced") owner.archive?.(message.event.archive);
   const runtimeKey = message.scope === undefined ? message.documentId : scopeRuntimeKey(message);
   const attached = runtimeKey === null ? undefined : openDocumentSessionsRef.current.get(runtimeKey);
   return attached?.clientInstanceId !== message.clientInstanceId;
@@ -68,7 +68,7 @@ export function handleIdentityEventMessage({ identityClientInstanceIdRef, verifi
   if (identityClientInstanceIdRef.current !== message.clientInstanceId) return;
   const identityEvent = message.event;
   if (identityEvent.kind === "documentArchiveReplaced") {
-    const archive = decodeDocumentArchiveBytes(new Uint8Array(identityEvent.archive));
+    const archive = decodeDocumentArchiveBytes(identityEvent.archive);
     const decoded = decodeIdentityValue(decodePackValue(new Uint8Array(archive.parent_pack)));
     if (decoded !== undefined) {
       if (verifiedSessionAuthorityRef.current === null) setIdentity(decoded);
@@ -114,7 +114,7 @@ export function handleDocumentEventMessage({ openDocumentSessionsRef, dispatch, 
       owners: core.localDocumentOwnerRegistry, sources: core.localSourceRevisions,
       refresh: (plugin, instanceId) => core.localSourceRefreshRef.current(plugin, instanceId),
     }, { pluginId: entry.session.pluginId, appId: entry.session.app.id, sessionInstanceId: entry.session.instanceId, runtimeKey, clientInstanceId: entry.clientInstanceId }, entry.plugin);
-    const archiveBytes = new Uint8Array(event.archive);
+    const archiveBytes = event.archive;
     void (async () => {
       try {
         const archive = decodeDocumentArchiveBytes(archiveBytes);

@@ -1522,6 +1522,16 @@
     },
     {
       "family": "🧱️din4108",
+      "path": "cases",
+      "kind": "insert-case",
+      "selectors": [],
+      "index": "index",
+      "item": "case",
+      "source": "🗿️artifacts/🧱️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🧱️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-case/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🧱️din4108",
       "path": "elements",
       "kind": "insert-element",
       "selectors": [],
@@ -2263,6 +2273,16 @@
       "item": "system",
       "source": "🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
       "schema": "🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-system/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🫨️en1998",
+      "path": "cases",
+      "kind": "insert-case",
+      "selectors": [],
+      "index": "index",
+      "item": "case",
+      "source": "🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-case/🧬️schema/🔣️.json"
     },
     {
       "family": "🫨️en1998",

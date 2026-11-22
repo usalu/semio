@@ -1,0 +1,8 @@
+{
+  "stamp": "semio.graph-record/2",
+  "owners": [
+    { "root": "🧰️framework/🔨️modules/🏃️process", "head": ["a1b2c3", "d4e5f6", null, null, "closure-references/4"], "json": { "name": "process", "root": "🧰️framework/🔨️modules/🏃️process", "targets": { "build": { "executor": "nx:noop" } } }, "selectedTargets": null, "selectedInputs": [] },
+    { "root": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust", "head": ["a1b2c3", "d4e5f6", "0f0f0f", "9e9e9e", "closure-references/4"], "json": { "name": "@semio-tech/jack-rs", "root": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust", "tags": ["language:cargo", "discovery:manifest"], "targets": { "test": { "options": { "command": "cargo test" } } } }, "selectedTargets": ["test", "build"], "selectedInputs": ["Cargo.toml", "src/lib.rs"] },
+    { "root": "plain", "head": ["a1b2c3", "d4e5f6", null, "5a5a5a", "closure-references/4"], "json": { "name": "plain", "root": "plain", "targets": {} }, "selectedTargets": [], "selectedInputs": ["x"] }
+  ]
+}

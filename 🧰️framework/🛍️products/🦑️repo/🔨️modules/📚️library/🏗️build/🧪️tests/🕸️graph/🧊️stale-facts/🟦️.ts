@@ -7,6 +7,8 @@ import{readFileSync}from"node:fs";
 import{fileURLToPath}from"node:url";
 import{join,dirname}from"node:path";
 import ts from"typescript";
+import{graphInventoryTextV1,graphRetryTextV1,graphSettleTextV1,membershipChangePathsV1,followedPathsV1}from"../../../🕸️graph/📥️load/🧲️membership-follow/🟦️.ts";
+import{observeOwnerWithRetryV1,ownerWithheldTextV1}from"../../../🕸️graph/📥️load/🛟️owner-isolation/🟦️.ts";
 
 const LOAD=process.env.R151_LOAD_SOURCE??fileURLToPath(new URL("../../../🕸️graph/📥️load/🟦️.ts",import.meta.url));
 const limits=JSON.parse(readFileSync(process.env.R151_SCHEMA??fileURLToPath(new URL("../../../🕸️graph/🧬️schema/🔣️.json",import.meta.url)),"utf8")) as {definitions:{Limits:{const:Record<string,number>};LimitsDescriptions:{const:{en:Record<string,string>;de:Record<string,string>}}}};
@@ -27,7 +29,7 @@ const world=(owners:number,scenario:{onDiscover?:(call:number,tree:Map<string,nu
  tree.set("tooling/shared.ts",1);tree.set("elsewhere/unrelated.ts",1);
  const lines:string[]=[],stack:Map<string,Row>[]=[],observed:Record<string,number>={},counts={closes:0,discovered:0,holds:0,memoWrites:0};
  const record=(path:string)=>{const row:Row={kind:"file",path,fact:{version:scenario.pinned?.has(path)?1:tree.get(path)??0}};for(const each of stack)each.set(path,row);};
-  const observation={
+  const observation={requirePinnedImplementationFactsV1:()=>{},
   observedFs:{readFileSync:(path:string|URL)=>{record(typeof path==="string"?path:path.pathname);return"";}},
   captureObservedSourceInputsV1:async(body:()=>Promise<unknown>,_failure?:unknown,authority=true)=>{const mine=new Map<string,Row>(),parent=stack.at(-1);stack.push(mine);try{const value=await body();return{value,observations:[...mine.values()],authorityObservations:authority?[]:[]};}finally{stack.pop();if(parent)for(const[path,row]of mine)parent.set(path,row);}},
   settleObservedComputationV1:async(body:()=>Promise<unknown>)=>body(),
@@ -53,13 +55,13 @@ const world=(owners:number,scenario:{onDiscover?:(call:number,tree:Map<string,nu
   closeBuildOwnerAdmissionV1:async(_selection:unknown,_registry:unknown,inspect:(owner:{name:string},targets:string[],inputs:string[])=>Promise<unknown>)=>{counts.closes++;for(const name of names)await inspect({name},[],[]);return admitted();},
   buildGraphMembershipV1:async()=>scenario.digestAt?.(counts.discovered)??"membership",buildGraphMembersV1:(files:string[])=>files,workspaceBuildFilesV1:async()=>[],inventoryDirectoriesV1:new WeakMap(),
   readFile:async()=>{throw Object.assign(Error("absent"),{code:"ENOENT"});},
-  discoverBuildGraphV1:async()=>{counts.discovered++;for(const name of names)observation.observedFs.readFileSync(name+"/src");scenario.onDiscover?.(counts.discovered,tree);return{version:1,projects:{},dependencies:[]};},
+  createPassReuseV1:()=>({memo:undefined,carried:{recycles:0,round:0,passes:0,owners:0,heapMegabytes:0},boundary:()=>{}}),discoverBuildGraphV1:async()=>{counts.discovered++;for(const name of names)observation.observedFs.readFileSync(name+"/src");scenario.onDiscover?.(counts.discovered,tree);return{version:1,projects:{},dependencies:[]};},
   buildGraphSourceFactsHoldV1:async(rows:readonly Row[],_invocation?:unknown,onStale?:(row:Row)=>void)=>{counts.holds++;const stale=rows.filter(row=>(tree.get(row.path)??0)!==row.fact.version);for(const row of stale)onStale?.(row);return stale.length===0;},
   mkdir:async()=>{},writeFile:async()=>{},sealVerdictV1,reportSealV1,sliceReadStepV1:(_id:string,run:()=>unknown)=>run(),rename:async()=>{},rm:async()=>{},createHash:()=>({update:()=>({digest:()=>"digest"})}),randomUUID:()=>"nonce",
   graphSnapshotPolicyV1:{maximumSnapshotBytes:1<<30},portableInputs:async(_root:string,value:unknown)=>value,readBuildGraphV1:(value:unknown)=>value,
-  GRAPH_LIMITS_V1:limits.definitions.Limits.const,observeOwnerFactsMemoizedV1:undefined as unknown,
+  GRAPH_LIMITS_V1:limits.definitions.Limits.const,observeOwnerFactsMemoizedV1:undefined as unknown,evictOwnerFactsReferencingV1:()=>0,graphInventoryTextV1,graphRetryTextV1,graphSettleTextV1,membershipChangePathsV1,followedPathsV1,ownerWithheldTextV1,
  };
- if(source.includes("function observeOwnerFactsMemoizedV1"))bindings.observeOwnerFactsMemoizedV1=Function("ownerFactsMemoV1","GRAPH_LIMITS_V1",extract("rememberOwnerFactsV1")+";"+extract("observeOwnerFactsMemoizedV1")+";return observeOwnerFactsMemoizedV1;")(new Map(),limits.definitions.Limits.const);
+ if(source.includes("function observeOwnerFactsMemoizedV1"))bindings.observeOwnerFactsMemoizedV1=Function("ownerFactsMemoV1","GRAPH_LIMITS_V1","observeOwnerWithRetryV1",extract("rememberOwnerFactsV1")+";"+extract("observeOwnerFactsMemoizedV1")+";return observeOwnerFactsMemoizedV1;")(new Map(),limits.definitions.Limits.const,observeOwnerWithRetryV1);
  const run=async()=>{const execute=Function(...Object.keys(bindings),extract("createGraphInventoryAwaitReportV1")+";"+extract("loadBuildGraphAttemptV1")+";return loadBuildGraphAttemptV1;")(...Object.values(bindings));return execute("/owned",{control:{signal:new AbortController().signal}},{},{selection:{kind:"tasks",tasks:[{project:"owner-0",target:"build"}]}},registry,"scope");};
  return{run,tree,observed,counts,names,lines};
 };

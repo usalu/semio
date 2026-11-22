@@ -1463,58 +1463,32 @@ type ChangeTieBeamWidth {
   id: String!
   newWidth: Float!
 }
-
 type InsertCase {
   index: Int!
   case: CaseRow!
 }
-
 type RemoveCase {
   id: String!
 }
-
 type ChangeCaseNumber {
   caseId: String!
   key: String!
   value: Float
 }
-
 type ChangeCaseText {
   caseId: String!
   key: String!
   value: String
 }
-
 type ChangeCaseLabelEn {
   caseId: String!
   newValue: String!
 }
-
 type ChangeCaseLabelDe {
   caseId: String!
   newValue: String!
 }
-
 type ChangeCaseEntryId {
   caseId: String!
   newValue: String!
-}
-
-type CaseNumber {
-  id: String!
-  value: Float!
-}
-
-type CaseText {
-  id: String!
-  value: String!
-}
-
-type CaseRow {
-  id: String!
-  labelEn: String!
-  labelDe: String!
-  entryId: String!
-  numbers: [CaseNumber!]!
-  texts: [CaseText!]!
 }

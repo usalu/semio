@@ -79,6 +79,12 @@ impl<'ctx> PointerCtx<'ctx> {
                 debug_log(&format!("[TRACE] wgpu-shell touch gesture failed: {error}"));
             }
         }
+        for (x, y) in std::mem::take(&mut self.settle.suggestion_holds) {
+            worked = worked.saturating_add(1);
+            if let Err(error) = self.open_world3d_suggestions_at(x, y).await {
+                debug_log(&format!("[TRACE] wgpu-shell vortex suggestions failed: {error}"));
+            }
+        }
         for _ in 0..SHELL_DEFERRED_CHAIN_ROUNDS {
             let actions = std::mem::take(&mut self.settle.deferred_actions);
             #[cfg(target_arch = "wasm32")]
@@ -90,6 +96,10 @@ impl<'ctx> PointerCtx<'ctx> {
             #[cfg(not(target_arch = "wasm32"))]
             let file_opens: Vec<()> = Vec::new();
             if actions.is_empty() && invocations.is_empty() && file_opens.is_empty() {
+                if self.as_window_actions().poll_deferred_document_effects() {
+                    worked = worked.saturating_add(1);
+                    continue;
+                }
                 break;
             }
             worked = worked.saturating_add(actions.len()).saturating_add(invocations.len()).saturating_add(file_opens.len());
@@ -137,7 +147,8 @@ impl<'ctx> PointerCtx<'ctx> {
         let parked = !self.plugins.pending_extension_invocations.is_empty() || !self.opening.pending_file_opens.is_empty();
         #[cfg(not(target_arch = "wasm32"))]
         let parked = false;
-        let armed_work = !self.settle.deferred_actions.is_empty() || !self.settle.touch_gestures.is_empty() || self.opening.pending_shell_uri_apply || parked || host_window_blur_pending() || !self.opening.import_transfers.is_empty();
+        let armed_work = !self.settle.deferred_actions.is_empty() || !self.settle.touch_gestures.is_empty() || !self.settle.suggestion_holds.is_empty() || self.opening.pending_shell_uri_apply || parked || host_window_blur_pending() || !self.opening.import_transfers.is_empty()
+            || self.settle.deferred_document_load.is_some() || !self.settle.held_host_effects.is_empty();
         let computing = self.surfaces.live_compute_surfaces().any(|(surface_id, _)| !self.settle.settle_pump.watches.get(&surface_id).is_some_and(|watch| watch.standing));
         self.opening.icon_export.as_ref().is_some_and(IconExportBatch::running) || semio_renderer_wgpu_ui_engine::retained_ui_engine::ui_document_close_pending() || settle_pump_owes(self.settle.settling, self.docs.session.is_some(), armed_work, &self.settle.owed_refresh_scope, self.settle.settle_pump.owed, computing)
     }

@@ -84,3 +84,89 @@ fn shell_owned_retained_document_closure_includes_sync_and_task_manager() {
         assert!(!records.is_empty(), "{id} retained document");
     }
 }
+
+fn doc_open_fixture() -> Value {
+    serde_json::from_str(include_str!("../../../🧵️TaskManager/🧪️tests/🧫️fixtures/🧵️actor-table.json")).expect("actor table fixture")
+}
+
+#[test]
+fn task_manager_leaf_lists_the_runtime_actors_with_all_three_row_actions() {
+    use semio_renderer_wgpu_shell_doc_open::{RuntimeActorSample, TaskManagerActionKind};
+    let mut shell = host_test_shell();
+    let actors: Vec<RuntimeActorSample> = doc_open_fixture()["snapshot"]["actors"].as_array().expect("actors").iter().map(|actor| serde_json::from_value(actor.clone()).expect("actor")).collect();
+    shell.opening.set_runtime_actors(Some(actors));
+    let body = serde_json::to_value(shell.opening.build_task_manager_ui(&shell.prefs)).expect("task manager body");
+    assert!(find_id(&body, "os.task-manager.no-runtime").is_none(), "an attached runtime is not the no-runtime state");
+    let text = body.to_string();
+    for needle in ["\"type\":\"table\"", "\"cells\"", "actor-1", "actor-2", "os.task-manager"] {
+        assert!(text.contains(needle), "retained table misses {needle}");
+    }
+    assert!(!text.contains("columnsJson"), "the actor table is a retained table, not a TableScene surface");
+    for kind in TaskManagerActionKind::ALL {
+        assert!(text.contains(kind.tag()), "row action {}", kind.tag());
+    }
+    for label in ["Actor", "Package", "Lane", "p95 wall (µs)", "Mailbox", "Maintenance", "Suspended", "healthy", "—"] {
+        assert!(text.contains(label), "missing {label}");
+    }
+    shell.opening.set_runtime_actors(Some(Vec::new()));
+    let empty = serde_json::to_value(shell.opening.build_task_manager_ui(&shell.prefs)).expect("empty body");
+    assert!(find_id(&empty, "os.task-manager.no-actors").is_some() && find_id(&empty, "os.task-manager.no-runtime").is_none());
+}
+
+#[test]
+fn task_manager_actor_table_projects_to_retained_table_records_with_one_row_target() {
+    use semio_renderer_wgpu_shell_doc_open::{RuntimeActorSample, TaskManagerActionKind};
+    let mut shell = host_test_shell();
+    let actors: Vec<RuntimeActorSample> = doc_open_fixture()["snapshot"]["actors"].as_array().expect("actors").iter().map(|actor| serde_json::from_value(actor.clone()).expect("actor")).collect();
+    let count = actors.len();
+    shell.opening.set_runtime_actors(Some(actors));
+    let body = shell.opening.build_task_manager_ui(&shell.prefs);
+    let records = panel_ui_records(FRAMEWORK_TASK_MANAGER_PANEL_ID, &body).expect("task manager retained projection");
+    let table = records.iter().find_map(|record| match &record.component { ui_contract::Component::Table(props) => Some((record, props)), _ => None }).expect("one retained Table record");
+    assert_eq!(table.1.columns.len(), 11, "eleven text columns, the actions column is the table's actions label");
+    assert!(table.1.actions_label.is_some());
+    let rows: Vec<_> = records.iter().filter_map(|record| match &record.component { ui_contract::Component::TableRow(props) => Some((record, props)), _ => None }).collect();
+    assert_eq!(rows.len(), count);
+    assert_eq!(table.0.children.len(), count);
+    for (record, props) in rows {
+        assert_eq!(props.cells.len(), 11, "cells are positional to the columns");
+        assert!(record.key.as_str().ends_with(props.cells.get(0).expect("actor id cell").as_str()), "row key is the actor id");
+        let verbs: Vec<&str> = props.row_actions.iter().map(|action| action.verb.as_str()).collect();
+        assert_eq!(verbs, TaskManagerActionKind::ALL.iter().map(|kind| kind.tag()).collect::<Vec<_>>());
+        let target = props.target.as_ref().expect("the one row target");
+        assert!(target.activation.is_none(), "an action-only row has no activation");
+    }
+}
+
+#[test]
+fn task_manager_actor_and_task_presses_queue_requests_for_the_runtime_bridge() {
+    use semio_renderer_wgpu_shell_doc_open::{TaskManagerActionKind, TaskManagerRequest};
+    let mut shell = host_test_shell();
+    for (action, args) in [("suspend", json_args("actorId", "actor-1")), ("resume", json_args("task", "toolRun:wfc#1"))] {
+        semio_framework_async::block_on(ActionsCtx::of(&mut shell).dispatch_action(ActionDescriptor { controller_id: TASK_MANAGER_ID.into(), action: action.into(), args })).expect("task manager press");
+    }
+    assert_eq!(shell.opening.take_task_manager_requests(), vec![TaskManagerRequest { kind: TaskManagerActionKind::Resume, actor_id: None, task_id: Some("toolRun:wfc#1".into()) }]);
+    let controls = semio_renderer_wgpu_host_base::take_actor_controls();
+    assert!(controls.iter().any(|control| control.actor_id == "actor-1" && control.kind == semio_renderer_wgpu_host_base::ActorControlKind::Suspend), "the actor press reaches the kernel pool port");
+}
+
+fn json_args(key: &str, value: &str) -> Option<semio_framework::DslValue> {
+    semio_renderer_wgpu_host_base::action_args_json!({ key: value })
+}
+
+const TASK_MANAGER_ID: &str = "os.task-manager";
+
+#[test]
+fn unknown_shell_route_is_recorded_and_known_routes_clear_it() {
+    let mut shell = host_test_shell();
+    for (uri, not_found) in [("/nope", Some("/nope")), ("/hub", None), ("/", None), ("/spaces/s1/extra/1", Some("/spaces/s1/extra/1"))] {
+        let _ = semio_framework_async::block_on(ActionsCtx::of(&mut shell).apply_shell_uri(uri));
+        assert_eq!(shell.opening.route_not_found.as_deref(), not_found, "{uri}");
+    }
+    let fixture = doc_open_fixture();
+    let page = serde_json::to_value(shell.opening.build_route_not_found_ui("/nope", &shell.prefs)).expect("route not found page");
+    assert!(find_id(&page, "os.route-not-found").is_some());
+    assert!(page.to_string().contains(fixture["routeNotFound"]["en"].as_str().expect("en")));
+    let home = find_id(&page, "os.route-not-found.home").expect("home button").to_string();
+    assert!(home.contains("navigateShellUri"));
+}

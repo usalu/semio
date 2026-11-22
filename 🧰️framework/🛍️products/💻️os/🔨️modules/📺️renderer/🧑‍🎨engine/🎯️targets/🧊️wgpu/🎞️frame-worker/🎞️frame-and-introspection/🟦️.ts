@@ -6,6 +6,7 @@ import type { BrowserFrameUiMessage, BrowserFrameWorkerMessage } from "../../�
 import { cancelPageImageDecode, hasReferencePageImageDecode } from "../🖼️page-image-decode/🟦️.ts";
 import { scheduleAssetPump } from "../📦️assets-and-host-io/🟦️.ts";
 import type { BrowserMediaCommand } from "@semio-tech/framework-os/modules/renderer/engine/media/browser";
+import { splitShellMediaSlots } from "@semio-tech/framework-os/modules/renderer/engine/media/browser/tutorial-video";
 
 export function runFrameTurn(): boolean {
   if (!runtime || !frameInput || closed || closing || failed || quarantined) return false;
@@ -16,10 +17,12 @@ export function runFrameTurn(): boolean {
     const originalFrameOutput=ownedStep("frame-step",()=>originalFrameSource!.tick(input.timestampMs,BigInt(frameSequence),BigInt(input.generation)));
     if(originalFrameOutput===undefined)return true;
     if(typeof originalFrameOutput!=="string"){setPendingFault({code:"original-frame-failure",detail:"original native failure retained",originalFailure:originalFrameOutput});setFailed(true);beginClose();return false;}
-    const result = JSON.parse(originalFrameOutput) as Omit<Extract<BrowserFrameWorkerMessage, { kind: "frame" }>, "kind" | "lifecycle" | "frameSequence" | "generation" | "workerDurationMs"> & { readonly continueFrame: boolean;readonly presentationGeneration:string };
+    const result = JSON.parse(originalFrameOutput) as Omit<Extract<BrowserFrameWorkerMessage, { kind: "frame" }>, "kind" | "lifecycle" | "frameSequence" | "generation" | "workerDurationMs" | "tutorialVideo"> & { readonly continueFrame: boolean;readonly presentationGeneration:string };
     const presentationGeneration=Number(BigInt(result.presentationGeneration));
     if(!Number.isSafeInteger(presentationGeneration)||presentationGeneration<0)throw Error("original-frame.presentation-generation-refused");
-    let mediaSlots = mediaRegistry.accept(result.quarantined ? [] : result.mediaSlots);
+    const shellSlots = splitShellMediaSlots(result.quarantined ? [] : result.mediaSlots);
+    let tutorialVideo = shellSlots.tutorialVideo;
+    let mediaSlots = mediaRegistry.accept(shellSlots.transport);
     const outcome = lastStepOutcome;
     setLastFrame({ cursor: result.cursor, fullscreen: result.fullscreen });
     const assetCancellationStep = assetCancellation.step({
@@ -33,8 +36,8 @@ export function runFrameTurn(): boolean {
     if (result.quarantined) setQuarantined({ code: result.faultCode ?? "renderer-quarantine", detail: result.faultDetail ?? "renderer quarantined its own frame step" });
     const sustained = outcome?.verdict === "sustained-overrun";
     const degrade = quarantined ?? (sustained ? { code: "worker-step-overrun", detail: `frame step executed ${outcome!.executingMs.toFixed(3)} ms for ${outcome!.consecutive} consecutive steps` } : undefined);
-    if (degrade) mediaSlots = mediaRegistry.accept([]);
-    post({ kind: "frame", mediaSlots, lifecycle, frameSequence, generation: presentationGeneration, cursor: result.cursor, fullscreen: result.fullscreen, requestFrame: result.requestFrame, nextDeadlineDelayMs: result.nextDeadlineDelayMs, progress: result.progress, workerDurationMs: performance.now() - startedAt, workerExecutingMs: outcome?.executingMs ?? 0, workerStepVerdict: outcome?.verdict ?? "clock-fault", quarantined: degrade !== undefined, faultCode: degrade?.code, faultDetail: degrade?.detail });
+    if (degrade) { mediaSlots = mediaRegistry.accept([]); tutorialVideo = null; }
+    post({ kind: "frame", mediaSlots, tutorialVideo, lifecycle, frameSequence, generation: presentationGeneration, cursor: result.cursor, fullscreen: result.fullscreen, requestFrame: result.requestFrame, nextDeadlineDelayMs: result.nextDeadlineDelayMs, progress: result.progress, workerDurationMs: performance.now() - startedAt, workerExecutingMs: outcome?.executingMs ?? 0, workerStepVerdict: outcome?.verdict ?? "clock-fault", quarantined: degrade !== undefined, faultCode: degrade?.code, faultDetail: degrade?.detail });
     publishWorld3dAcceptedFrameDiagnostic(input.generation);
     if (quarantined) requestFault((quarantined as { readonly code: string; readonly detail: string }).code, (quarantined as { readonly code: string; readonly detail: string }).detail);
     else if (assetCancellationStep === "idle") scheduleAssetPump();

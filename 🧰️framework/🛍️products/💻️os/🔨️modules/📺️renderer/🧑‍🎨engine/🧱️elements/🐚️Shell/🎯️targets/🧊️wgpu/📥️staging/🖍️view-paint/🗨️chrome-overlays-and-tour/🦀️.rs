@@ -14,10 +14,6 @@ use super::*;
 /// centred (`left-1/2 -translate-x-1/2`).
 pub const TRANSIENT_NOTICE_TOP_GAP: f32 = 8.0;
 
-/// 📐️ Width cap before the message wraps to the banner's own width — the banner is `px-double
-/// py-single` around one line of `text-sm` on the React side.
-pub const TRANSIENT_NOTICE_MAX_WIDTH: f32 = 520.0;
-
 /// 🆔️ The banner's own dismiss control.
 pub const TRANSIENT_NOTICE_CLOSE_CONTROL_ID: &str = "shell.notice.close";
 

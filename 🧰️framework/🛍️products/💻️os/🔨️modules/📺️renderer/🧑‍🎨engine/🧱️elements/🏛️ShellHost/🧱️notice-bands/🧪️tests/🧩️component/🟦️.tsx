@@ -9,8 +9,8 @@ describe("shell notice bands", () => {
   it("stacks notices as cells of one shared frame without a native border, box padding or gap", () => {
     const view = render(
       <NoticeStack data-semio-notice-stack="bootstrap" className="top-workbench left-1/2 bg-menu">
-        <NoticeCell><BootstrapStatusNotice status={{ kind: "artifact-bootstrap-progress", documentId: "doc-a", receivedBytes: 1, totalBytes: 4 }} locale="en" onCancel={() => undefined} /></NoticeCell>
-        <NoticeCell><BootstrapStatusNotice status={{ kind: "artifact-bootstrap-progress", documentId: "doc-b", receivedBytes: 2, totalBytes: 4 }} locale="en" onCancel={() => undefined} /></NoticeCell>
+        <NoticeCell><BootstrapStatusNotice status={{ kind: "artifact-bootstrap-progress", documentId: "doc-a", clientInstanceId: "canvas-a", receivedBytes: 1, totalBytes: 4, receivedChunks: 1, totalChunks: 4 }} locale="en" onCancel={() => undefined} /></NoticeCell>
+        <NoticeCell><BootstrapStatusNotice status={{ kind: "artifact-bootstrap-progress", documentId: "doc-b", clientInstanceId: "canvas-b", receivedBytes: 2, totalBytes: 4, receivedChunks: 2, totalChunks: 4 }} locale="en" onCancel={() => undefined} /></NoticeCell>
       </NoticeStack>,
     );
     const stack = view.container.querySelector<HTMLElement>("[data-semio-notice-stack]")!;
@@ -61,6 +61,8 @@ describe("shell notice bands", () => {
       expect(row.children[1]!.getAttribute("data-slot")).toBe("button-group");
     }
     expect(stack.querySelector("[data-semio-plugin-install-cancel]")).toBeTruthy();
-    expect(NoticeActionRow({ text: "x", action: null }).props.children[1]).toBeNull();
+    const withoutAction = render(<NoticeStack orientation="horizontal"><NoticeActionRow text="x" action={null} /></NoticeStack>);
+    expect(withoutAction.container.querySelector("[data-orientation=horizontal]")).toBeTruthy();
+    expect(withoutAction.container.querySelector("button")).toBeNull();
   });
 });

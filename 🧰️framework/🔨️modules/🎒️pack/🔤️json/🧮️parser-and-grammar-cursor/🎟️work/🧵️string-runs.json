@@ -1,0 +1,35 @@
+{
+  "maximumTurnWork": 256,
+  "cases": [
+    {
+      "name": "plain text",
+      "source": "\"ordinary ASCII with punctuation !#$%&'()*+,-./0123456789\"",
+      "decoded": "ordinary ASCII with punctuation !#$%&'()*+,-./0123456789"
+    },
+    {
+      "name": "escape and scalar boundaries",
+      "source": "\"ordinary prefix \\n after line \\\" after quote \\\\ after slash é after scalar \\uD83D\\uDE80 after surrogate\"",
+      "decoded": "ordinary prefix \n after line \" after quote \\ after slash é after scalar 🚀 after surrogate"
+    },
+    {
+      "name": "bounded across multiple turns",
+      "repeat": 33,
+      "decoded": "0123456789"
+    },
+    {
+      "name": "control byte",
+      "source": "\"ordinary prefix \u001f suffix\"",
+      "error": "control character 0x1f in string at offset 17"
+    },
+    {
+      "name": "invalid escape",
+      "source": "\"ordinary prefix \\q suffix\"",
+      "error": "invalid escape sequence at offset 17"
+    },
+    {
+      "name": "unclosed string",
+      "source": "\"ordinary prefix",
+      "error": "unexpected end of input"
+    }
+  ]
+}

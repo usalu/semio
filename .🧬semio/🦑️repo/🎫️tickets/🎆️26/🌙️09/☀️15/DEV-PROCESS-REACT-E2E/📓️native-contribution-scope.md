@@ -9,3 +9,7 @@ The Rust scope fixture reads the actual Concrete, Metal, Robotic and Wood packag
 After a successful addressed native call, the shell logs `[TRACE] setContributions native settled` with the app, instance ID, receiver plugin, pack encoding, returned effect count, and public provider IDs. The ticket verifier accepts the native smoke log as an optional argument and requires all four authored providers for the Process3d editor.
 
 The updated native runtime manifest requires its new registry field. Existing staged products regain it by running the canonical prepare target.
+
+After restarting the launch checks, the current checkout's independent Bun/Ajv scope oracle revalidated the four authored providers at 17:46 UTC. Native delivery remains pending in the isolated focused test and the canonical native smoke run.
+
+The current native trace is emitted after `ProgramBridgeEntry::handle_command` completes the correlated guest exchange. The exchange returns a fault for a matching `AppFrame::Error` and requires an `Invocation` with the same sequence before publishing the result. The trace and boot receipt will verify delivery and acknowledgement at the native shell boundary. The Workshop integration and browser probes cover the visible catalogue after installation.

@@ -3,7 +3,7 @@
 use semio_s_artifact_stdio_pdf_inferences::standards::v1_7::subsets::base::modules::filters::{decode_stream, PdfDecodedStreamCursor, StreamDataGrant, StreamDataStatus};
 use semio_s_artifact_stdio_pdf_lexer::{CosGrant, CosLimits, IndirectFrameCursor, IndirectFrameStatus, StreamSpan, StreamSpanCursor};
 use semio_s_artifact_stdio_pdf_snapshot_2::standards::v1_7::subsets::base::schema::snapshot::{PdfDictEntry, PdfObject};
-use semio_framework_value::{ValueError, ValueRefusalKind};
+use semio_framework_value::{ByteReadRange, ByteReadSource, ValueError, ValueRefusalKind};
 use semio_s_artifact_stdio_pdf_model::standards::v1_7::subsets::base::io::error::{malformed, PResult};
 use crate::{XrefEntry, XrefStreamRowCursor};
 
@@ -80,7 +80,7 @@ impl XrefStreamSectionCursor {
     }
 
     /// ▶️ Advances at most one child stage and publishes at most one xref row.
-    pub fn advance(&mut self, source: &[u8], grant: CosGrant, cancelled: bool) -> XrefStreamReceipt {
+    pub fn advance(&mut self, source: &(impl ByteReadSource + ?Sized), grant: CosGrant, cancelled: bool) -> XrefStreamReceipt {
         if cancelled && matches!(self.phase, Phase::Frame | Phase::Fields | Phase::Span(_) | Phase::Decode(_) | Phase::Rows | Phase::ReleaseBody) {
             self.phase = Phase::Cancelled;
         }
@@ -98,10 +98,10 @@ impl XrefStreamSectionCursor {
         receipt
     }
 
-    fn advance_stage(&mut self, source: &[u8], grant: CosGrant, receipt: &mut XrefStreamReceipt) -> Result<XrefStreamEvent, XrefStreamError> {
+    fn advance_stage(&mut self, source: &(impl ByteReadSource + ?Sized), grant: CosGrant, receipt: &mut XrefStreamReceipt) -> Result<XrefStreamEvent, XrefStreamError> {
         match &mut self.phase {
             Phase::Frame => {
-                let result = self.frame.advance(source, grant, false);
+                let result = self.frame.advance_bytes(|position| source.byte_at(position), grant, false);
                 receipt.work = result.work;
                 receipt.allocated_bytes = result.allocated_bytes;
                 receipt.released_bytes = result.released_bytes;
@@ -112,18 +112,19 @@ impl XrefStreamSectionCursor {
                 }
                 Ok(frame_status(status))
             }
-            Phase::Fields => self.plan_fields(source.len(), grant.work, receipt).map_err(XrefStreamError::Structure),
+            Phase::Fields => self.plan_fields(source.byte_len(), grant.work, receipt).map_err(XrefStreamError::Structure),
             Phase::Span(cursor) => {
-                let result = cursor.advance(source, grant.work);
+                let result = cursor.advance_bytes(source.byte_len(), |position| source.byte_at(position), grant.work);
                 receipt.work = result.inspected;
+                if result.source_changed { return Err(XrefStreamError::Structure("xref stream source lost an admitted byte")); }
                 if let Some(span) = result.span { self.phase = Phase::Decode(span); }
                 Ok(XrefStreamEvent::More)
             }
             Phase::Decode(span) => {
                 let span = *span;
                 let dict = dictionary(&self.frame).map_err(XrefStreamError::Structure)?;
-                let raw = source.get(span.start..span.end).ok_or(XrefStreamError::Structure("xref stream source changed"))?;
-                let result = self.decoder.advance(dict, raw, stream_grant(grant), false);
+                let raw = span.end.checked_sub(span.start).and_then(|length| ByteReadRange::new(source, span.start, length)).ok_or(XrefStreamError::Structure("xref stream source changed"))?;
+                let result = self.decoder.advance(dict, &raw, stream_grant(grant), false);
                 receipt.work = result.work;
                 receipt.allocated_bytes = result.allocated_bytes;
                 receipt.released_bytes = result.released_bytes;

@@ -93,8 +93,20 @@ impl KernelClient {
     /// none: the mounted component becomes that kind's codec in this process
     /// ([`semio_os_kernel::os_store::codec_registry::register_component_document_codec`]).
     pub async fn create_app(&self, wasm_path: &std::path::Path, plugin_id: &str, app_id: &str, artifact_schema: &str) -> Result<u32, ProgramFault> {
+        self.create_app_with_purpose(wasm_path, plugin_id, app_id, artifact_schema,
+            semio_framework::kernel::ActorInstanceOpenPurpose::Ordinary).await
+    }
+
+    /// 🎟️ Carries one publication purpose through native instance admission.
+    pub async fn create_app_with_purpose(
+        &self, wasm_path: &std::path::Path, plugin_id: &str, app_id: &str, artifact_schema: &str,
+        purpose: semio_framework::kernel::ActorInstanceOpenPurpose,
+    ) -> Result<u32, ProgramFault> {
+        if !semio_renderer_wgpu_kernel_protocol::valid_instance_open_purpose(&purpose) {
+            return Err("kernel: invalid instance open purpose".into());
+        }
         let owner=open_create_app_source(CreateAppBorrowed{path:wasm_path,plugin:plugin_id,app:app_id,schema:artifact_schema}).await.map_err(ProgramFault::from)?;
-        match self.submit(KernelRequest::CreateApp { owner }).await {
+        match self.submit(KernelRequest::CreateApp { owner, purpose }).await {
             KernelOutcome::Created(result) => result,
             KernelOutcome::Exchanged(_) => Err("kernel: unexpected Exchanged response for create_app".into()),
             KernelOutcome::ProductReplayMounted(_) => Err("kernel: unexpected product replay response for create_app".into()),

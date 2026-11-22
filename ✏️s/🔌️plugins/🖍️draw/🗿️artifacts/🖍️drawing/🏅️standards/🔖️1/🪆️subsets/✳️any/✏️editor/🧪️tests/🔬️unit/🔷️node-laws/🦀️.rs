@@ -14,7 +14,7 @@ async fn point_click_persists_and_local_position_rebinds_but_topology_edit_prune
     let mut layer=semio_s_artifact_draw_drawing_model::create_drawing_path_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Line")).to_string().into()).expect("nonempty authored identity"), "Line",vec![semio_s_artifact_draw_drawing_model::PathSegment::Move {to:[0.0,0.0]},semio_s_artifact_draw_drawing_model::PathSegment::Line {to:[10.0,0.0]}].into());
     semio_s_artifact_draw_drawing_model::layer_base_mut(&mut layer).id="path".into();
     let before=DrawingSnapshot {id:"point-selection".into(),layers:vec![layer].into(),..Default::default()};
-    load_drawing_fixture(&mut app,&before);
+    load_drawing_fixture(&mut app,&before).await;
     settled(&mut app,DrawingCommand::SetCamera(set_camera::SetCamera {camera:store::Viewport2d {x:0.0,y:0.0,zoom:1.0}}),&meta).await;
     let targets=serde_json::to_string(&vec![serde_json::json!({"granularity":DRAWING_INTERACTION_GRANULARITY,"id":"path"})]).unwrap();
     let admission=semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, semio_framework::INTERACTION_SELECT_ACTION_ID, Some(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({"domainId":DRAWING_INTERACTION_DOMAIN,"targets":targets,"merge":"replace","method":"pick"}))), &meta, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap();
@@ -45,7 +45,7 @@ async fn every_keyboard_nudge_moves_document_axes_and_undoes_once() {
         let mut layer=semio_s_artifact_draw_drawing_model::create_layer_by_kind(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("shape:rect")).to_string().into()).expect("nonempty authored identity"), "shape:rect");
         semio_s_artifact_draw_drawing_model::layer_base_mut(&mut layer).id="shape".into();
         let before=DrawingSnapshot {id:"nudge".into(),layers:vec![layer].into(),..Default::default()};
-        load_drawing_fixture(&mut app,&before);
+        load_drawing_fixture(&mut app,&before).await;
         let targets=serde_json::to_string(&[serde_json::json!({"granularity":DRAWING_INTERACTION_GRANULARITY,"id":"shape"})]).unwrap();
         let admission=semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, semio_framework::INTERACTION_SELECT_ACTION_ID, Some(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({"domainId":DRAWING_INTERACTION_DOMAIN,"targets":targets,"merge":"replace","method":"pick"}))), &meta, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap();
         semio_plugin::app::settle_framework_reserved_admission(&mut app.0, admission, app.1.cx()).await.unwrap();
@@ -77,7 +77,7 @@ async fn node_keyboard_nudges_rebind_selection_and_use_parent_axes() {
         group.base.id="group".into();group.base.transform.rotation=std::f64::consts::FRAC_PI_2;group.base.transform.scale_x=2.0;group.base.transform.scale_y=4.0;group.base.transform.x=100.0;group.base.transform.y=200.0;group.children=vec![path].into();
     }
     let before=DrawingSnapshot {id:"point-nudge".into(),layers:vec![group].into(),..Default::default()};
-    load_drawing_fixture(&mut app,&before);
+    load_drawing_fixture(&mut app,&before).await;
     let point=interaction::points::point_id("path",&interaction::points::geometry_id(&source).unwrap(),1,semio_s_artifact_draw_drawing_geometry::editing::PathPoint::Anchor).unwrap();
     for (domain,granularity,id) in [(DRAWING_INTERACTION_DOMAIN,DRAWING_INTERACTION_GRANULARITY,"path".to_owned()),(DRAWING_POINT_DOMAIN,DRAWING_POINT_GRANULARITY,point)] {
         let targets=serde_json::to_string(&[serde_json::json!({"granularity":granularity,"id":id})]).unwrap();
@@ -114,7 +114,7 @@ async fn modified_node_picks_and_combined_drag_preserve_layers_and_one_history_e
         let mut second=semio_s_artifact_draw_drawing_model::create_drawing_path_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Second")).to_string().into()).expect("nonempty authored identity"), "Second",segments.into());
         let base=semio_s_artifact_draw_drawing_model::layer_base_mut(&mut second);base.id="second".into();base.transform.x=40.0;base.transform.scale_x=2.0;base.transform.scale_y=2.0;
         let before=DrawingSnapshot {id:"multi-node-drag".into(),layers:vec![first,second].into(),..Default::default()};
-        load_drawing_fixture(&mut app,&before);
+        load_drawing_fixture(&mut app,&before).await;
         settled(&mut app,DrawingCommand::SetCamera(set_camera::SetCamera {camera:store::Viewport2d {x:0.0,y:0.0,zoom:1.0}}),&meta).await;
         let targets=serde_json::to_string(&[serde_json::json!({"granularity":DRAWING_INTERACTION_GRANULARITY,"id":"first"}),serde_json::json!({"granularity":DRAWING_INTERACTION_GRANULARITY,"id":"second"})]).unwrap();
         let admission=semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, semio_framework::INTERACTION_SELECT_ACTION_ID, Some(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({"domainId":DRAWING_INTERACTION_DOMAIN,"targets":targets,"merge":"replace","method":"pick"}))), &meta, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap();
@@ -162,7 +162,7 @@ async fn fill_rule_selection_edit_undoes_as_one_history_entry() {
     let mut after=before.clone();
     for layer in &mut after.layers {semio_s_artifact_draw_drawing_model::layer_base_mut(layer).attributes.fill_rule=semio_s_artifact_draw_drawing_model::fill_rule::FillRule::Nonzero;}
     let ids=before.layers.iter().map(|layer|semio_s_artifact_draw_drawing_model::layer_id(layer).to_string()).collect();
-    load_drawing_fixture(&mut app,&before);
+    load_drawing_fixture(&mut app,&before).await;
     artifact_laws::assert_undo_redo_round_trip(&mut app.0, DrawingCommand::PatchLayers(patch_layers::PatchLayers { index:None,layer_ids:ids,field:"fillRule".into(),value:"nonzero".into()}), |app|app.snapshot().unwrap(), before, after, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
 }
 
@@ -182,7 +182,7 @@ async fn alignment_across_groups_undoes_as_one_history_entry() {
     let mut after=before.clone();
     let DrawingLayerNode::Group(body)=&mut after.layers[0] else {unreachable!()};
     for layer in &mut body.children {semio_s_artifact_draw_drawing_model::layer_base_mut(layer).transform.x=-10.0;}
-    load_drawing_fixture(&mut app,&before);
+    load_drawing_fixture(&mut app,&before).await;
     artifact_laws::assert_undo_redo_round_trip(&mut app.0, DrawingCommand::EditSelection(edit_selection::EditSelection {ids:vec!["first".into(),"second".into(),"third".into()],operation:"alignLeft".into()}), |app|app.snapshot().unwrap(), before, after, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
 }
 
@@ -196,7 +196,7 @@ async fn layer_stack_steps_undo_as_one_history_entry() {
         }).collect::<Vec<_>>();
         let before=DrawingSnapshot {id:"stack-history".into(),layers:layers.into_iter().collect(),..Default::default()};
         let after=DrawingSnapshot {layers:order.into_iter().map(|id|before.layers.iter().find(|layer|semio_s_artifact_draw_drawing_model::layer_id(layer)==id).unwrap().clone()).collect(),..before.clone()};
-        load_drawing_fixture(&mut app,&before);
+        load_drawing_fixture(&mut app,&before).await;
         artifact_laws::assert_undo_redo_round_trip(&mut app.0, DrawingCommand::EditSelection(edit_selection::EditSelection {ids:vec!["c".into(),"b".into()],operation:operation.into()}), |app|app.snapshot().unwrap(), before, after, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
     }
 }
@@ -215,7 +215,7 @@ async fn ungroup_selects_promoted_children_and_undoes_as_one_history_entry() {
     semio_s_artifact_draw_drawing_model::layer_base_mut(&mut first).transform.x=7.0;
     semio_s_artifact_draw_drawing_model::layer_base_mut(&mut second).transform.x=5.0;
     let after=DrawingSnapshot {layers:vec![first,second].into(),..before.clone()};
-    load_drawing_fixture(&mut app,&before);
+    load_drawing_fixture(&mut app,&before).await;
     let (_,receipt)=settled(&mut app,DrawingCommand::EditSelection(edit_selection::EditSelection {ids:vec!["group".into()],operation:"ungroup".into()}),&meta).await;
     assert_one_artifact_publication(&receipt);
     assert_eq!(app.snapshot().unwrap(),after);
@@ -229,7 +229,7 @@ async fn group_isolation_selection_edit_undoes_as_one_history_entry() {
     let mut app=drawing_app().await;
     let before:DrawingSnapshot=serde_json::from_str(fixture_text!("../../../../../../🎨️style/🧪️tests/🧫️fixtures/🧬️mutations/🧩️set-group-isolation/🧩️pass/📸️snapshot/⬅️before/🔣️.json")).unwrap();
     let after:DrawingSnapshot=serde_json::from_str(fixture_text!("../../../../../../🎨️style/🧪️tests/🧫️fixtures/🧬️mutations/🧩️set-group-isolation/🧩️pass/📸️snapshot/➡️after/🔣️.json")).unwrap();
-    load_drawing_fixture(&mut app,&before);
+    load_drawing_fixture(&mut app,&before).await;
     artifact_laws::assert_undo_redo_round_trip(&mut app.0, DrawingCommand::PatchLayers(patch_layers::PatchLayers { index:None,layer_ids:vec!["group-a".into()],field:"isolation".into(),value:"true".into()}), |app|app.snapshot().unwrap(), before, after, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
 }
 
@@ -241,7 +241,7 @@ async fn deleting_selected_nodes_commits_once_clears_points_and_undoes_exactly()
     let mut path=semio_s_artifact_draw_drawing_model::create_drawing_path_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Path")).to_string().into()).expect("nonempty authored identity"), "Path",segments.clone().into());
     semio_s_artifact_draw_drawing_model::layer_base_mut(&mut path).id="path".into();
     let before=DrawingSnapshot {id:"node-delete-history".into(),layers:vec![path].into(),..Default::default()};
-    load_drawing_fixture(&mut app,&before);
+    load_drawing_fixture(&mut app,&before).await;
     let geometry=interaction::points::geometry_id(&segments).unwrap();
     let points=[0,1].iter().map(|index|interaction::points::point_id("path",&geometry,*index,semio_s_artifact_draw_drawing_geometry::editing::PathPoint::Anchor).unwrap()).collect::<Vec<_>>();
     for (domain,granularity,ids) in [(DRAWING_INTERACTION_DOMAIN,DRAWING_INTERACTION_GRANULARITY,vec!["path".into()]),(DRAWING_POINT_DOMAIN,DRAWING_POINT_GRANULARITY,points)] {
@@ -270,7 +270,7 @@ async fn node_marquee_preserves_layers_and_supports_merge_and_cancellation() {
         let geometry=interaction::points::geometry_id(&segments).unwrap();
         let point=|index|interaction::points::point_id("path",&geometry,index,semio_s_artifact_draw_drawing_geometry::editing::PathPoint::Anchor).unwrap();
         let mut path=semio_s_artifact_draw_drawing_model::create_drawing_path_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Path")).to_string().into()).expect("nonempty authored identity"), "Path",segments.into());semio_s_artifact_draw_drawing_model::layer_base_mut(&mut path).id="path".into();
-        let before=DrawingSnapshot {id:"node-marquee".into(),layers:vec![path].into(),..Default::default()};load_drawing_fixture(&mut app,&before);
+        let before=DrawingSnapshot {id:"node-marquee".into(),layers:vec![path].into(),..Default::default()};load_drawing_fixture(&mut app,&before).await;
         settled(&mut app,DrawingCommand::SetCamera(set_camera::SetCamera {camera:store::Viewport2d {x:0.0,y:0.0,zoom:1.0}}),&meta).await;
         for (domain,granularity,ids) in [(DRAWING_INTERACTION_DOMAIN,DRAWING_INTERACTION_GRANULARITY,vec!["path".into()]),(DRAWING_POINT_DOMAIN,DRAWING_POINT_GRANULARITY,initial.iter().copied().map(point).collect())] {
             let targets=serde_json::to_string(&ids.into_iter().map(|id|serde_json::json!({"granularity":granularity,"id":id})).collect::<Vec<_>>()).unwrap();
@@ -288,14 +288,14 @@ async fn node_marquee_preserves_layers_and_supports_merge_and_cancellation() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn mounted_vector_editor_closes_its_registered_read_without_a_live_maintenance_tick(){let mut app=drawing_app().await;let layer=semio_s_artifact_draw_drawing_model::create_drawing_shape_layer_rect(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Registered geometry")).to_string().into()).expect("nonempty authored identity"), "Registered geometry");let snapshot=DrawingSnapshot{id:"mounted-read-close".into(),layers:vec![layer].into(),..Default::default()};load_drawing_fixture(&mut app,&snapshot);let view=ViewModel::new(semio_ui_locale::Locale::En,semio_ui_locale::Terminology::Native);let scene=canvas_scene(rendered_drawing_canvas(&mut app,None,&view).await.unwrap());let records:serde_json::Value=serde_json::from_str(&scene.layers_json).unwrap();assert!(records.as_array().unwrap().iter().any(|record|record["id"].as_str().is_some_and(|id|layer_id(&snapshot.layers[0]).eq_str(id))));semio_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");assert!(app.close_terminal_is_empty());}
+async fn mounted_vector_editor_closes_its_registered_read_without_a_live_maintenance_tick(){let mut app=drawing_app().await;let layer=semio_s_artifact_draw_drawing_model::create_drawing_shape_layer_rect(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Registered geometry")).to_string().into()).expect("nonempty authored identity"), "Registered geometry");let snapshot=DrawingSnapshot{id:"mounted-read-close".into(),layers:vec![layer].into(),..Default::default()};load_drawing_fixture(&mut app,&snapshot).await;let view=ViewModel::new(semio_ui_locale::Locale::En,semio_ui_locale::Terminology::Native);let scene=canvas_scene(rendered_drawing_canvas(&mut app,None,&view).await.unwrap());let records:serde_json::Value=serde_json::from_str(&scene.layers_json).unwrap();assert!(records.as_array().unwrap().iter().any(|record|record["id"].as_str().is_some_and(|id|layer_id(&snapshot.layers[0]).eq_str(id))));semio_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");assert!(app.close_terminal_is_empty());}
 
 #[semio_framework_async_macros::async_test]
 async fn registered_pointer_yields_while_real_scene_job_is_pending_and_then_selects_once(){
     use semio_plugin::reactor::jobs::{registry_driver::RegistryJobDriver,JobStep};
     let(mut app,mut meta)=inline_selection_app().await;std::sync::Arc::make_mut(meta.view_state.as_mut().unwrap()).active_utility_id=Some("selectDirect".into());
     let mut layer=semio_s_artifact_draw_drawing_model::create_drawing_shape_layer_rect(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Pending paint")).to_string().into()).expect("nonempty authored identity"), "Pending paint");semio_s_artifact_draw_drawing_model::layer_base_mut(&mut layer).attributes.fill=Some(semio_s_artifact_draw_drawing_model::FillStyle::Solid{color:[0.0,0.0,0.0,1.0]});let selected=layer_id(&layer).to_string();
-    let before=DrawingSnapshot{id:"pending-pointer".into(),layers:vec![layer].into(),..Default::default()};load_drawing_fixture(&mut app,&before);
+    let before=DrawingSnapshot{id:"pending-pointer".into(),layers:vec![layer].into(),..Default::default()};load_drawing_fixture(&mut app,&before).await;
     let mut geometry=None;for effect in artifact_laws::fixture_pending_effects(&mut app.0,meta.view_state.as_deref()).await.expect("registered Drawing pending effects").unwrap_or_default(){match effect{Effect::CancelJob{job}=>{RegistryJobDriver::generous(job).cancel().expect("registered Drawing geometry cancels");},Effect::SpawnJob{job,kind,input,..}if kind=="semio.draw.mounted-vector"=>{let mut driver=RegistryJobDriver::generous(job);driver.start(&kind,input,None).expect("registered Drawing geometry admits");assert!(geometry.replace(driver).is_none());},_=>{}}}let mut geometry=geometry.unwrap();
     assert!(matches!(geometry.step().expect("registered Drawing geometry steps"),JobStep::Running(_)));
     semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &DrawingCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown{x:400.0,y:300.0,width:800.0,height:600.0,..Default::default()}), &meta, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap();
@@ -309,7 +309,7 @@ async fn registered_pointer_yields_while_real_scene_job_is_pending_and_then_sele
 #[semio_framework_async_macros::async_test]
 async fn png_export_command_publishes_one_real_download_from_the_registered_factory(){
  let sources:Vec<serde_json::Value>=serde_json::from_str(fixture_text!("../../../../../🧪️tests/🧫️fixtures/🎬️scene/📋️prepare/🔣️.json")).unwrap();let mut samples:Vec<serde_json::Value>=serde_json::from_str(fixture_text!("../../../../🎮️commands/📤️export-document/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let styles:Vec<serde_json::Value>=serde_json::from_str(fixture_text!("../../../../🎮️commands/📤️export-document/🧪️tests/🧫️fixtures/🎨️styles/🔣️.json")).unwrap();for style in styles{samples.push(serde_json::json!({"name":style["name"],"source":"rectangle","width":2,"height":1,"transparent":true,"expected":style["expected"],"layers":style["layers"],"channelTolerance":style["channelTolerance"]}));}
- for sample in samples{let row=sources.iter().find(|row|row["name"]==sample["source"]).unwrap();let mut authored=row["document"].clone();if let Some(layers)=sample.get("layers"){authored["layers"]=layers.clone();}authored["artboard"]=serde_json::json!({"width":2,"height":1});let document:DrawingSnapshot=serde_json::from_value(authored).unwrap();let(mut app,meta)=inline_selection_app().await;load_drawing_fixture(&mut app,&document);let before=app.snapshot().unwrap();let edits=app.history_snapshot().await.unwrap().edit_count;let command=export_document::ExportDocument{format:"png".into(),width:Some(2),height:Some(1),transparent:Some(sample["transparent"].as_bool().unwrap())};let(result,receipt)=settled(&mut app,DrawingCommand::ExportDocument(command),&meta).await;
+ for sample in samples{let row=sources.iter().find(|row|row["name"]==sample["source"]).unwrap();let mut authored=row["document"].clone();if let Some(layers)=sample.get("layers"){authored["layers"]=layers.clone();}authored["artboard"]=serde_json::json!({"width":2,"height":1});let document:DrawingSnapshot=serde_json::from_value(authored).unwrap();let(mut app,meta)=inline_selection_app().await;load_drawing_fixture(&mut app,&document).await;let before=app.snapshot().unwrap();let edits=app.history_snapshot().await.unwrap().edit_count;let command=export_document::ExportDocument{format:"png".into(),width:Some(2),height:Some(1),transparent:Some(sample["transparent"].as_bool().unwrap())};let(result,receipt)=settled(&mut app,DrawingCommand::ExportDocument(command),&meta).await;
   assert!(result.mutations.is_empty());assert_eq!(receipt.completions,1);assert!(!receipt.lanes.contains(&semio_plugin::app::TypedOperationResultLane::Artifact));let[Effect::DownloadMediaExport{filename,mime_type,data,encoding}]=receipt.effects.as_slice()else{panic!("one sealed PNG download required")};assert!(filename.ends_with(".png"));assert_eq!(mime_type,"image/png");assert_eq!(encoding.as_deref(),Some("base64"));let bytes=base64_codec::base64_standard_decode(data).unwrap();let mut decoder=png::Decoder::new(std::io::Cursor::new(&bytes)).read_info().unwrap();let mut pixels=vec![0;decoder.output_buffer_size()];let info=decoder.next_frame(&mut pixels).unwrap();assert_eq!((info.width,info.height),(2,1));let expected:Vec<u8>=serde_json::from_value(sample["expected"].clone()).unwrap();let tolerance=sample["channelTolerance"].as_u64().unwrap_or(0)as u8;assert_eq!(info.buffer_size(),expected.len());for(actual,expected)in pixels[..info.buffer_size()].iter().zip(expected.iter()){assert!(actual.abs_diff(*expected)<=tolerance);}assert_eq!(app.snapshot().unwrap(),before);assert_eq!(app.history_snapshot().await.unwrap().edit_count,edits);artifact_laws::close_registered_fixture_app(&mut app.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");assert!(app.close_terminal_is_empty());
  }
 }

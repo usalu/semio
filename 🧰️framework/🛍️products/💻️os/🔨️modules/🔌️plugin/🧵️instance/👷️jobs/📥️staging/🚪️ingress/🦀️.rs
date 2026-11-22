@@ -54,6 +54,16 @@ impl<A: ArtifactApp> ToolOperations<A> {
 
 
     pub fn qualified_tool_proof(&self, stores: &InstanceStores<A>, verb: &str) -> Result<QualifiedToolView<'_>, Fault> {
+        use semio_plugin_decl_app::tool_contract::{NATURAL_SOURCE_TOOL_CONTRACT, NATURAL_SOURCE_TOOL_ID, NATURAL_SOURCE_TOOL_SCHEMA};
+        if verb == NATURAL_SOURCE_TOOL_ID {
+            return self.framework_registration(verb)
+                .filter(|row| row.key.tool_id == NATURAL_SOURCE_TOOL_ID && row.schema_id == NATURAL_SOURCE_TOOL_SCHEMA
+                    && row.contract == NATURAL_SOURCE_TOOL_CONTRACT
+                    && row.factory_type_id == std::any::TypeId::of::<semio_plugin_job::reserved_jobs::FrameworkImportNaturalSourceJobFactory<A>>())
+                .map(QualifiedToolView::FrameworkOwned)
+                .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.missing-factory"),
+                    "paged natural source has no registered original decoder factory"));
+        }
         if let Some(lane) = stores.unsupported_publication_contracts.get(verb) {
             return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.publication-authority-missing"), format!("typed command '{verb}' declares the unsupported {lane} publication lane")));
         }

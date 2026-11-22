@@ -353,4 +353,22 @@ pub fn paint_retained_tooltip(draw: &mut DrawList, atlas: &mut FontAtlas, toolti
     paint_tooltip(draw, atlas, &tooltip.label, (offset.0 + tooltip.x, offset.1 + tooltip.y), theme);
     draw.end_overlay_route();
 }
+
+/// 📜️ Paints `node`'s scrollbar thumbs (vertical, then horizontal) when it is a scroll host that overflows and is hovered or being dragged; `true` unless the retained output refused one.
+pub fn paint_retained_scrollbar(tree: &UiTree, router: &EventRouter, draw: &mut DrawList, node: NodeId, offset: (f32, f32), theme: &Theme) -> bool {
+    if !tree.node(node).is_some_and(|node| node.flags.contains(NodeFlags::SCROLLABLE)) {
+        return true;
+    }
+    let pointer = router.hover_pointer();
+    let hovered = pointer.zip(semio_ui_wgpu_events::node_abs_rect(tree, node)).is_some_and(|((x, y), host)| host.contains(x, y));
+    [true, false].into_iter().filter_map(|vertical| semio_ui_wgpu_events::scrollbar_for(tree, node, vertical, router.flow_inline() == FlowInline::Rtl)).all(|bar| {
+        let axis = if bar.vertical { ScrollAxis::Vertical } else { ScrollAxis::Horizontal };
+        let dragging = router.capture() == Some((node, CaptureKind::ScrollThumb(axis)));
+        if !(dragging || hovered) {
+            return true;
+        }
+        let hot = dragging || pointer.is_some_and(|(x, y)| bar.thumb.contains(x, y));
+        retained_scrollbar_step(draw, Rect::new(bar.thumb.x + offset.0, bar.thumb.y + offset.1, bar.thumb.w, bar.thumb.h), hot, theme)
+    })
+}
 //#endregion 🔖️UiWindow

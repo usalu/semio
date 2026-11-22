@@ -1,0 +1,83 @@
+[
+  {
+    "id": "mounted-pressure-and-material-slack",
+    "hostFreeGiB": 55,
+    "hostTotalGiB": 1000,
+    "mountedFreeGiB": 2,
+    "allocatedGiB": 35,
+    "usedGiB": 23,
+    "due": true
+  },
+  {
+    "id": "mounted-pressure-and-exact-slack",
+    "hostFreeGiB": 48,
+    "hostTotalGiB": 1000,
+    "mountedFreeGiB": 5,
+    "allocatedGiB": 31,
+    "usedGiB": 23,
+    "due": true
+  },
+  {
+    "id": "mounted-pressure-below-floor",
+    "hostFreeGiB": 55,
+    "hostTotalGiB": 1000,
+    "mountedFreeGiB": 2,
+    "allocatedGiB": 30.99,
+    "usedGiB": 23,
+    "due": false
+  },
+  {
+    "id": "mounted-at-pressure-boundary",
+    "hostFreeGiB": 55,
+    "hostTotalGiB": 1000,
+    "mountedFreeGiB": 6,
+    "allocatedGiB": 35,
+    "usedGiB": 23,
+    "due": false
+  },
+  {
+    "id": "host-pressure-keeps-reduced-floor",
+    "hostFreeGiB": 47,
+    "hostTotalGiB": 1000,
+    "mountedFreeGiB": 9,
+    "allocatedGiB": 1.5,
+    "usedGiB": 0.5,
+    "due": true
+  },
+  {
+    "id": "host-pressure-ignores-ratio-while-host-is-tight",
+    "hostFreeGiB": 47,
+    "hostTotalGiB": 1000,
+    "mountedFreeGiB": 9,
+    "allocatedGiB": 25,
+    "usedGiB": 23,
+    "due": true
+  },
+  {
+    "id": "host-free-at-threshold-with-healthy-mount",
+    "hostFreeGiB": 48,
+    "hostTotalGiB": 1000,
+    "mountedFreeGiB": 6,
+    "allocatedGiB": 40,
+    "usedGiB": 10,
+    "due": false
+  },
+  {
+    "id": "host-free-at-total-volume",
+    "hostFreeGiB": 32,
+    "hostTotalGiB": 32,
+    "mountedFreeGiB": 9,
+    "allocatedGiB": 40,
+    "usedGiB": 10,
+    "due": false
+  },
+  {
+    "id": "missing-mounted-used-measurement",
+    "hostFreeGiB": 55,
+    "hostTotalGiB": 1000,
+    "mountedFreeGiB": 2,
+    "allocatedGiB": 35,
+    "usedGiB": null,
+    "due": false
+  }
+]

@@ -10,6 +10,8 @@ import { createLiveFilesystemJournalV1 } from "@semio-tech/framework-filesystem/
 import { nxGraphSourceMembershipV2 } from "../../🟦️.ts";
 import fixture from "./🧫️fixtures/🔣️.json";
 import type { FilesystemJournalChangeV1, FilesystemJournalControlV1 } from "@semio-tech/framework-filesystem/observation/journal";
+import {declareLibraryBuildTestEnvelopeV1} from "../../../../../../🧪️testing/🪪️native-birth/🟦️.ts";
+declareLibraryBuildTestEnvelopeV1({suite:"journal-source",maximumElapsedMilliseconds:15000});
 
 test("repository journal joins installed native watcher, Git census and no-follow scope", async () => {
  const artifact = process.env.SEMIO_TEST_ARTIFACT_DIR; if (!artifact) throw Error("Ticket artifact directory required");

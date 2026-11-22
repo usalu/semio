@@ -43,10 +43,12 @@ def phase_class(phase):
     return "phase:"+phase
 
 def record(policy,store,lineage,operation,default,run):
-    ceiling=run.get("ceilingMegabytes")
-    if ceiling is not None:
-        run={**run,"peakMegabytes":min(run["peakMegabytes"],max(0,ceiling))}
-        if run.get("phases"):run["phases"]=[{**row,"peakMegabytes":min(row["peakMegabytes"],max(0,ceiling))} for row in run["phases"]]
+    ceiling=run.get("ceilingMegabytes");share=run.get("rebuildCeilingMegabytes")
+    def cap(megabytes):return megabytes if ceiling is None else min(megabytes,max(0,ceiling))
+    def cap_row(row):return min(cap(row["peakMegabytes"]),max(0,share)) if row["phase"]=="rebuild" and share is not None else cap(row["peakMegabytes"])
+    if ceiling is not None or share is not None:
+        run={**run,"peakMegabytes":cap(run["peakMegabytes"])}
+        if run.get("phases"):run["phases"]=[{**row,"peakMegabytes":cap_row(row)} for row in run["phases"]]
     phases=run.get("phases") or []
     if not phases:
         return base.record(policy,store,lineage,{"operation":operation,"jobs":run["jobs"],"peakMegabytes":run["peakMegabytes"],"defaultMegabytes":default,"activeMilliseconds":run["activeMilliseconds"],"peakAtMilliseconds":run["peakAtMilliseconds"],"endedAtMs":run["endedAtMs"]})
@@ -75,7 +77,8 @@ def estimate_phase(policy,store,phase,prior,now):
     effective=total/1e6
     trust=min(1.0,effective/rules["minimumSamples"])
     margin=10000+rules["marginBasisPoints"]
-    learned=_round(base.weighted_quantile(samples,weight,"ratioBasisPoints",rules["quantileBasisPoints"])*margin*rules["phaseReferenceMegabytes"]/100000000)
+    quantile=rules.get("rebuildQuantileBasisPoints",rules["quantileBasisPoints"]) if phase=="rebuild" else rules["quantileBasisPoints"]
+    learned=_round(base.weighted_quantile(samples,weight,"ratioBasisPoints",quantile)*margin*rules["phaseReferenceMegabytes"]/100000000)
     late=_round(base.weighted_quantile(samples,weight,"peakAtMilliseconds",rules["quantileBasisPoints"])*margin/10000)
     return {"megabytes":max(rules["minimumMegabytes"],_round(trust*learned+(1-trust)*prior)),"rampMilliseconds":clamp(MINIMUM_RAMP,_round(trust*late+(1-trust)*rules["defaultRampMilliseconds"]),rules["maximumRampMilliseconds"]),"samples":_round(effective)}
 
@@ -86,10 +89,14 @@ def estimate(policy,store,lineage,req,now):
     bound,source=base.class_bound(policy,store,lineage,now)
     grow=execution["ratioBasisPoints"] if preferred<=0 else max(1,min(execution["ratioBasisPoints"],bound*10000//preferred))
     if not (source=="fallback" and execution["samples"]==0):execution={**execution,"ratioBasisPoints":grow}
+    declared=base.class_ceiling(policy,lineage[-1]);least=policy["estimates"].get("rebuildMinimumMegabytes",policy["estimates"]["minimumMegabytes"])
     learned={}
     for phase in ("assembly","plan","rebuild"):
         size=estimate_phase(policy,store,phase,policy["estimates"]["rebuildPriorMegabytes"] if phase=="rebuild" else prior,now)
-        if size:learned[phase]={"megabytes":size["megabytes"],"rampMilliseconds":size["rampMilliseconds"]}
+        if size:
+            megabytes=size["megabytes"]
+            if phase=="rebuild" and declared is not None:megabytes=max(min(megabytes,declared),min(megabytes,least))
+            learned[phase]={"megabytes":megabytes,"rampMilliseconds":size["rampMilliseconds"]}
     scaled={"megabytes":_round(preferred*execution["ratioBasisPoints"]/10000),"rampMilliseconds":execution["rampMilliseconds"]}
     floor=max(learned.get("assembly",{"megabytes":0})["megabytes"],learned.get("plan",{"megabytes":0})["megabytes"])
     decisive=None
@@ -107,8 +114,9 @@ def resize(policy,req,est,capacity,phase,context):
     def ramp(ms):return clamp(MINIMUM_RAMP,ms,rules["maximumRampMilliseconds"])
     if phase=="rebuild":
         build=est["phases"].get("rebuild")
-        wanted=0 if build is None else min(capacity*policy["estimates"]["rebuildShareBasisPoints"]//10000,build["megabytes"])
-        if build is not None and wanted>context["reservedMegabytes"]:return {"reservedMegabytes":wanted,"rampMilliseconds":ramp(build["rampMilliseconds"])}
+        least=rules.get("rebuildMinimumMegabytes",rules["minimumMegabytes"])
+        wanted=0 if build is None else max(least,min(capacity*rules["rebuildShareBasisPoints"]//10000,build["megabytes"]))
+        if build is not None and wanted>context["reservedMegabytes"]:return {"reservedMegabytes":wanted,"rampMilliseconds":ramp(build["rampMilliseconds"]),"minimumMegabytes":least}
         return None
     order=["assembly","plan","execution"]
     rest=[]
@@ -251,6 +259,22 @@ def generate():
     for name,ratios in (("the live incident: a rebuild of 25 times and one of 1.16 times",[250518,11563]),("a rebuild spike among four ordinary ones",[250518,11000,12000,11500,10500]),("two heavy rebuilds are a heavy tail",[250518,240000,11563]),("a lone heavy rebuild",[250518])):
         store={"version":1,"classes":{"phase:rebuild":{"samples":[{"atMs":1_000_000-index*1000,"ratioBasisPoints":ratio,"activeMilliseconds":48347,"peakAtMilliseconds":20983} for index,ratio in enumerate(ratios)]}}}
         out["outliers"].append({"name":name,"store":store,"prior":base.POLICY["rebuildPriorMegabytes"],"nowMs":1_000_000,"expect":estimate_phase(policy,store,"rebuild",base.POLICY["rebuildPriorMegabytes"],1_000_000)})
+    out["pinCases"]=[]
+    ordinary=[19000,21000,24000,26000,28000,30000,32000,35000,38000,41000,44000,47000,50000,52000]
+    for name,extra in (("one cold run of 28 times and one of 11 times among ordinary ones",[280000,116318]),("one cold run of 28 times",[280000]),("only ordinary runs",[])):
+        ratios=extra+ordinary
+        store={"version":1,"classes":{"phase:rebuild":{"samples":[{"atMs":1_000_000-index*1000,"ratioBasisPoints":ratio,"activeMilliseconds":540993,"peakAtMilliseconds":300000} for index,ratio in enumerate(ratios)]}}}
+        out["pinCases"].append({"name":name,"store":store,"nowMs":1_000_000,"expect":estimate_phase(policy,store,"rebuild",base.POLICY["rebuildPriorMegabytes"],1_000_000)})
+    out["shareCases"]=[];ceilings=[{"name":"read-parent","pattern":"^(?:show|graph)(?::|$)","megabytes":4096}];out["classCeilings"]=ceilings;ceilinged={**policy,"classCeilings":ceilings}
+    for total,floor in ((32768,4096),(16384,2048)):
+        capacity=total-floor;share=capacity*base.POLICY["rebuildShareBasisPoints"]//10000
+        history=[{"lineage":["show","show:projects"],"operation":"show","defaultMegabytes":5120,"run":{"jobs":1,"peakMegabytes":28000,"activeMilliseconds":2001580,"peakAtMilliseconds":1645087,"endedAtMs":1_000_000+index*1000,"ceilingMegabytes":capacity,"rebuildCeilingMegabytes":share,"phases":[{"phase":"assembly","startMilliseconds":0,"activeMilliseconds":4000,"peakMegabytes":380,"peakAtMilliseconds":2000},{"phase":"rebuild","startMilliseconds":4000,"activeMilliseconds":1990000,"peakMegabytes":28000,"peakAtMilliseconds":1645087}]}} for index in range(4)]
+        store={"version":1,"classes":{}}
+        for step in history:store=record(policy,store,step["lineage"],step["operation"],step["defaultMegabytes"],step["run"])
+        est=estimate(ceilinged,store,["show","show:projects"],{"id":"aaaaaaaa1","operation":"show","priority":"batch","minimumJobs":1,"preferredJobs":1,"fixedMegabytes":3072,"perJobMegabytes":0,"cpuPerJob":2},1_000_000+10_000)
+        request={"id":"aaaaaaaa1","operation":"show","priority":"batch","minimumJobs":1,"preferredJobs":1,"fixedMegabytes":3072,"perJobMegabytes":0,"cpuPerJob":2}
+        context={"jobs":1,"reservedMegabytes":2747,"activeMilliseconds":60000}
+        out["shareCases"].append({"name":f"{total} MB host","totalMegabytes":total,"capacityMegabytes":capacity,"shareMegabytes":share,"history":history,"nowMs":1_000_000+10_000,"request":request,"expect":store,"estimate":est,"context":context,"resize":resize(ceilinged,request,est,capacity,"rebuild",context)})
     return out
 
 if __name__=="__main__":

@@ -38,6 +38,7 @@ use semio_renderer_wgpu_kernel_protocol::CANCELLED_KERNEL_TURNS;
 use semio_renderer_wgpu_program_bridge::ProgramFixtureDocument;
 #[cfg(not(target_arch = "wasm32"))]
 use semio_renderer_wgpu_program_bridge::{load_resolved_program, load_wasm_plugins};
+use semio_renderer_wgpu_shell_frame_pumps::FramePumpsCtx;
 use semio_renderer_wgpu_shell_actions::{
     ActionsCtx, SHELL_DOCUMENT_TRANSPORTS, SYNC_DOCUMENT_UNIDENTIFIED_CODE, document_bindings_admitted, parse_remote_backbone_uri, select_boot_program, should_checkpoint_before_detach, uncommitted_edit_count,
 };

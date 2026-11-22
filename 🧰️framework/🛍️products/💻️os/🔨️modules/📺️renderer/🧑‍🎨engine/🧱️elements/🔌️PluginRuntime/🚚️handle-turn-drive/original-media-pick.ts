@@ -31,11 +31,13 @@ export async function pickOriginalMedia(
     });
     return "complete";
   } catch (failure) {
-    if (!cancel) {
-      try { await cancelIssued(); }
-      catch (error) { throw new AggregateError([failure, error], "original-media.transfer-close"); }
+    const retirementIssued = cancel !== undefined;
+    try { await cancelIssued(); }
+    catch (error) {
+      if (!retirementIssued) throw new AggregateError([failure, error], "original-media.transfer-close");
+      throw failure;
     }
-    if (!owned() && !(failure instanceof AggregateError) && await cancel.then(() => true, () => false)) return "cancelled";
+    if (!owned() && !(failure instanceof AggregateError)) return "cancelled";
     throw failure;
   } finally {
     task?.finish();

@@ -1,5 +1,5 @@
 import { lstat } from "node:fs/promises";
-import { validateJsonSchemaSubset } from "@semio-tech/schema-validator-ts";
+import { validateJsonSchemaSubset } from "../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import { fileDigest, readArtifactBytesV1, readArtifactPrefixV1 } from "../../🌐️browser-bundle/📦️distribution/📋️inventory/🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with { type: "json" };
 import wire from "../../🧠️interpreter/🏗️instance/🧊️prepared/🧵️image-wire/🧬️schema/prepared-image.json" with { type: "json" };

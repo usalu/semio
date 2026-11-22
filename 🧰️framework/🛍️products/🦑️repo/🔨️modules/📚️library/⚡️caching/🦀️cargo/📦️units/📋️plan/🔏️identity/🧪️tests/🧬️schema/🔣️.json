@@ -72,14 +72,14 @@
         {
           "mode": "prototype",
           "plans": 3,
-          "bytes": 11400,
-          "sha256": "aa2c96d4aecf82b173ef1e9087785b79ae5490745f36f811ebe7c47f29085a55"
+          "bytes": 11190,
+          "sha256": "c385e2146ff789d6ad910457f7aecb61f0ee6d5b250bb040df2751aa99ce2162"
         },
         {
           "mode": "release",
           "plans": 3,
-          "bytes": 11340,
-          "sha256": "4736a6cde4f50cb2fc1d71d3860556c9d9905e3c10b5b909d3d670506c97f35c"
+          "bytes": 11130,
+          "sha256": "d142b0b045064dc972c67402677215de1386d3130c9bbcb4e2ee343e4d8a1366"
         }
       ]
     }

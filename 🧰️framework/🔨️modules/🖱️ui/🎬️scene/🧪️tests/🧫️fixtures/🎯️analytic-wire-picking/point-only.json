@@ -34,16 +34,29 @@
     200,
     200
   ],
-  "variants": [
-    {
-      "vertexIds": [],
-      "semantic": false
-    },
-    {
-      "vertexIds": [
-        0
-      ],
-      "semantic": true
+  "layer": {
+    "positionsB64": "AAAgQAAAoL8AAIBA",
+    "size": 4,
+    "sizeAttenuation": false
+  },
+  "expected": {
+    "layers": 1,
+    "vertices": [
+      [
+        2.5,
+        -1.25,
+        4,
+        1,
+        1,
+        1,
+        1
+      ]
+    ],
+    "size": 4,
+    "sizeAttenuation": false,
+    "meshRefusal": {
+      "meshId": "point",
+      "reason": "unlabelledPointsOnly"
     }
-  ]
+  }
 }

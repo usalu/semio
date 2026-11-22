@@ -1,0 +1,38 @@
+{
+  "subject": "sleeping-person",
+  "poses": [
+    "supine",
+    "side",
+    "curled"
+  ],
+  "scales": [
+    50,
+    100,
+    200,
+    500
+  ],
+  "headHemM": 0.59,
+  "footHemM": 1.84,
+  "bedHeightM": 0.46,
+  "edgeHalfWidthM": 0.525,
+  "contactRiseM": [
+    0.012,
+    0.11
+  ],
+  "bodyBones": [
+    "torso",
+    "pelvis",
+    "thigh-l",
+    "thigh-r",
+    "shank-l",
+    "shank-r"
+  ],
+  "minCoveredFraction": 0.97,
+  "turnOverSeconds": [
+    2.625,
+    3.375,
+    5.375,
+    5.8125
+  ],
+  "seamLimitM": 0.003
+}

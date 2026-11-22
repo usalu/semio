@@ -1,4 +1,4 @@
-import { BufferAttribute, DoubleSide } from "@semio-tech/ui-react";
+import { BufferAttribute, DoubleSide, type ThreeEvent } from "@semio-tech/ui-react";
 import { useMemo } from "../../⚛️react-port/🟦️.ts";
 
 type Point = [number, number, number];
@@ -33,17 +33,25 @@ export function parseTerrainOverlayDescriptor(json: string | undefined): Terrain
   }
 }
 
-export function TerrainMapFeatures({ tile, tileWidth, onFeatureHover }: { readonly tile: TerrainOverlayTile; readonly tileWidth: number; readonly onFeatureHover?: (name: string | null) => void }) {
+export function TerrainMapFeatures({ tile, tileWidth, onFeatureHover, onPositionDown, onPositionMove, onPositionUp }: {
+  readonly tile: TerrainOverlayTile;
+  readonly tileWidth: number;
+  readonly onFeatureHover?: (name: string | null) => void;
+  readonly onPositionDown?: (id: string, event: ThreeEvent<PointerEvent>) => void;
+  readonly onPositionMove?: (event: ThreeEvent<PointerEvent>) => void;
+  readonly onPositionUp?: (event: ThreeEvent<PointerEvent>) => void;
+}) {
   const lift = tileWidth * 0.003;
   const radius = tileWidth * 0.004;
   const show = (feature: TerrainFeature) => () => onFeatureHover?.(feature.name || null);
   const hide = () => onFeatureHover?.(null);
+  const positions = useMemo(() => [...tile.positions].sort((a, b) => a.id < b.id ? -1 : Number(a.id > b.id)), [tile.positions]);
   return (
     <group>
-      {tile.positions.map((feature) => {
+      {positions.map((feature) => {
         const [x, y, z] = feature.point;
         return (
-          <mesh key={feature.id} name={feature.name} position={[x, y, z + radius * 2]} scale={[radius, radius, radius * 2]} onPointerOver={show(feature)} onPointerOut={hide}>
+          <mesh key={feature.id} name={feature.name} position={[x, y, z + radius * 2]} scale={[radius, radius, radius * 2]} onPointerOver={show(feature)} onPointerOut={hide} onPointerDown={onPositionDown && ((event) => onPositionDown(feature.id, event))} onPointerMove={onPositionMove} onPointerUp={onPositionUp}>
             <octahedronGeometry args={[1]} />
             <meshBasicMaterial color="#f8d94e" toneMapped={false} />
           </mesh>

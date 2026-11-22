@@ -17065,17 +17065,17 @@
         "tone": 0.9,
         "sections": [
           {
-            "at": [0.394, -0.04664, 0.0],
+            "at": [0.394, -0.04664, 0],
             "rx": 0.0075,
             "ry": 0.0075
           },
           {
-            "at": [0.325, -0.07853, 0.0],
+            "at": [0.325, -0.07853, 0],
             "rx": 0.0075,
             "ry": 0.0075
           },
           {
-            "at": [0.25, -0.08671, 0.0],
+            "at": [0.25, -0.08671, 0],
             "rx": 0.0075,
             "ry": 0.0075
           }
@@ -17141,116 +17141,6 @@
         "r0": 0.012,
         "r1": 0.012,
         "member": "pelvis",
-        "part": "member"
-      },
-      {
-        "id": "femur-neck-l",
-        "kind": "capsule",
-        "bone": "thigh-l",
-        "material": "bone",
-        "role": "body",
-        "tone": 0.62,
-        "p0": [0, 0, 0],
-        "p1": [0.034, -0.006, 0.052],
-        "r0": 0.0155,
-        "r1": 0.0165,
-        "member": "thigh-l",
-        "part": "member"
-      },
-      {
-        "id": "femur-l",
-        "kind": "loft",
-        "bone": "thigh-l",
-        "material": "bone",
-        "role": "body",
-        "tone": 0.62,
-        "sections": [
-          {
-            "at": [0.038, -0.005, 0.056],
-            "rx": 0.016,
-            "ry": 0.016
-          },
-          {
-            "at": [0.17, 0.01, 0.034],
-            "rx": 0.0132,
-            "ry": 0.0132
-          },
-          {
-            "at": [0.3, 0.008, 0.012],
-            "rx": 0.0134,
-            "ry": 0.0134
-          },
-          {
-            "at": [0.394, 0, -0.002],
-            "rx": 0.016,
-            "ry": 0.016
-          }
-        ],
-        "capStart": true,
-        "capEnd": true,
-        "member": "thigh-l",
-        "part": "member"
-      },
-      {
-        "id": "femur-condyles-l",
-        "kind": "ellipsoid",
-        "bone": "thigh-l",
-        "material": "bone",
-        "role": "body",
-        "tone": 0.62,
-        "radii": [0.02, 0.029, 0.038],
-        "transform": {
-          "translation": [0.405, -0.004, -0.005]
-        },
-        "member": "thigh-l",
-        "part": "member"
-      },
-      {
-        "id": "tibia-l",
-        "kind": "loft",
-        "bone": "shank-l",
-        "material": "bone",
-        "role": "body",
-        "tone": 0.62,
-        "sections": [
-          {
-            "at": [0.008, 0, -0.005],
-            "rx": 0.028,
-            "ry": 0.028
-          },
-          {
-            "at": [0.048, 0.006, -0.006],
-            "rx": 0.016,
-            "ry": 0.016
-          },
-          {
-            "at": [0.19, 0.011, -0.004],
-            "rx": 0.0118,
-            "ry": 0.0118
-          },
-          {
-            "at": [0.398, 0.002, -0.002],
-            "rx": 0.0136,
-            "ry": 0.0136
-          }
-        ],
-        "capStart": true,
-        "capEnd": true,
-        "member": "shank-l",
-        "part": "member"
-      },
-      {
-        "id": "fibula-l",
-        "kind": "capsule",
-        "bone": "shank-l",
-        "material": "bone",
-        "role": "body",
-        "tone": 0.62,
-        "p0": [0.04, -0.017, 0.027],
-        "p1": [0.413, -0.011, 0.027],
-        "r0": 0.0075,
-        "r1": 0.0075,
-        "member": "shank-l",
         "part": "member"
       },
       {
@@ -17324,68 +17214,6 @@
         "part": "member"
       },
       {
-        "id": "humerus-l",
-        "kind": "loft",
-        "bone": "arm-l",
-        "material": "bone",
-        "role": "body",
-        "tone": 0.62,
-        "sections": [
-          {
-            "at": [0, 0, 0],
-            "rx": 0.0215,
-            "ry": 0.0215
-          },
-          {
-            "at": [0.028, 0, 0],
-            "rx": 0.012,
-            "ry": 0.012
-          },
-          {
-            "at": [0.19, 0.004, 0],
-            "rx": 0.01,
-            "ry": 0.01
-          },
-          {
-            "at": [0.305, 0, 0],
-            "rx": 0.014,
-            "ry": 0.014
-          }
-        ],
-        "capStart": true,
-        "capEnd": true,
-        "member": "arm-l",
-        "part": "member"
-      },
-      {
-        "id": "ulna-l",
-        "kind": "capsule",
-        "bone": "forearm-l",
-        "material": "bone",
-        "role": "body",
-        "tone": 0.62,
-        "p0": [-0.011, -0.016, 0],
-        "p1": [0.238, -0.013, 0],
-        "r0": 0.008,
-        "r1": 0.0075,
-        "member": "forearm-l",
-        "part": "member"
-      },
-      {
-        "id": "radius-l",
-        "kind": "capsule",
-        "bone": "forearm-l",
-        "material": "bone",
-        "role": "body",
-        "tone": 0.62,
-        "p0": [0.009, 0.015, 0],
-        "p1": [0.242, 0.011, 0],
-        "r0": 0.0075,
-        "r1": 0.0085,
-        "member": "forearm-l",
-        "part": "member"
-      },
-      {
         "id": "clavicle-r",
         "kind": "capsule",
         "bone": "torso",
@@ -17441,116 +17269,6 @@
         "r0": 0.012,
         "r1": 0.012,
         "member": "pelvis",
-        "part": "member"
-      },
-      {
-        "id": "femur-neck-r",
-        "kind": "capsule",
-        "bone": "thigh-r",
-        "material": "bone",
-        "role": "body",
-        "tone": 0.62,
-        "p0": [0, 0, 0],
-        "p1": [0.034, -0.006, -0.052],
-        "r0": 0.0155,
-        "r1": 0.0165,
-        "member": "thigh-r",
-        "part": "member"
-      },
-      {
-        "id": "femur-r",
-        "kind": "loft",
-        "bone": "thigh-r",
-        "material": "bone",
-        "role": "body",
-        "tone": 0.62,
-        "sections": [
-          {
-            "at": [0.038, -0.005, -0.056],
-            "rx": 0.016,
-            "ry": 0.016
-          },
-          {
-            "at": [0.17, 0.01, -0.034],
-            "rx": 0.0132,
-            "ry": 0.0132
-          },
-          {
-            "at": [0.3, 0.008, -0.012],
-            "rx": 0.0134,
-            "ry": 0.0134
-          },
-          {
-            "at": [0.394, 0, 0.002],
-            "rx": 0.016,
-            "ry": 0.016
-          }
-        ],
-        "capStart": true,
-        "capEnd": true,
-        "member": "thigh-r",
-        "part": "member"
-      },
-      {
-        "id": "femur-condyles-r",
-        "kind": "ellipsoid",
-        "bone": "thigh-r",
-        "material": "bone",
-        "role": "body",
-        "tone": 0.62,
-        "radii": [0.02, 0.029, 0.038],
-        "transform": {
-          "translation": [0.405, -0.004, 0.005]
-        },
-        "member": "thigh-r",
-        "part": "member"
-      },
-      {
-        "id": "tibia-r",
-        "kind": "loft",
-        "bone": "shank-r",
-        "material": "bone",
-        "role": "body",
-        "tone": 0.62,
-        "sections": [
-          {
-            "at": [0.008, 0, 0.005],
-            "rx": 0.028,
-            "ry": 0.028
-          },
-          {
-            "at": [0.048, 0.006, 0.006],
-            "rx": 0.016,
-            "ry": 0.016
-          },
-          {
-            "at": [0.19, 0.011, 0.004],
-            "rx": 0.0118,
-            "ry": 0.0118
-          },
-          {
-            "at": [0.398, 0.002, 0.002],
-            "rx": 0.0136,
-            "ry": 0.0136
-          }
-        ],
-        "capStart": true,
-        "capEnd": true,
-        "member": "shank-r",
-        "part": "member"
-      },
-      {
-        "id": "fibula-r",
-        "kind": "capsule",
-        "bone": "shank-r",
-        "material": "bone",
-        "role": "body",
-        "tone": 0.62,
-        "p0": [0.04, -0.017, -0.027],
-        "p1": [0.413, -0.011, -0.027],
-        "r0": 0.0075,
-        "r1": 0.0075,
-        "member": "shank-r",
         "part": "member"
       },
       {
@@ -17621,68 +17339,6 @@
         "capStart": true,
         "capEnd": true,
         "member": "toe-r",
-        "part": "member"
-      },
-      {
-        "id": "humerus-r",
-        "kind": "loft",
-        "bone": "arm-r",
-        "material": "bone",
-        "role": "body",
-        "tone": 0.62,
-        "sections": [
-          {
-            "at": [0, 0, 0],
-            "rx": 0.0215,
-            "ry": 0.0215
-          },
-          {
-            "at": [0.028, 0, 0],
-            "rx": 0.012,
-            "ry": 0.012
-          },
-          {
-            "at": [0.19, 0.004, 0],
-            "rx": 0.01,
-            "ry": 0.01
-          },
-          {
-            "at": [0.305, 0, 0],
-            "rx": 0.014,
-            "ry": 0.014
-          }
-        ],
-        "capStart": true,
-        "capEnd": true,
-        "member": "arm-r",
-        "part": "member"
-      },
-      {
-        "id": "ulna-r",
-        "kind": "capsule",
-        "bone": "forearm-r",
-        "material": "bone",
-        "role": "body",
-        "tone": 0.62,
-        "p0": [-0.011, -0.016, 0],
-        "p1": [0.238, -0.013, 0],
-        "r0": 0.008,
-        "r1": 0.0075,
-        "member": "forearm-r",
-        "part": "member"
-      },
-      {
-        "id": "radius-r",
-        "kind": "capsule",
-        "bone": "forearm-r",
-        "material": "bone",
-        "role": "body",
-        "tone": 0.62,
-        "p0": [0.009, 0.015, 0],
-        "p1": [0.242, 0.011, 0],
-        "r0": 0.0075,
-        "r1": 0.0085,
-        "member": "forearm-r",
         "part": "member"
       },
       {
@@ -18339,6 +17995,528 @@
         },
         "member": "foot-r",
         "part": "mass"
+      },
+      {
+        "id": "femur-neck-l",
+        "kind": "capsule",
+        "bone": "thigh-l",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "p0": [0, 0, 0],
+        "p1": [0.034, -0.006, 0.052],
+        "r0": 0.0155,
+        "r1": 0.0165,
+        "member": "thigh-l",
+        "part": "member"
+      },
+      {
+        "id": "femur-trochanter-l",
+        "kind": "ellipsoid",
+        "bone": "thigh-l",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "radii": [0.022, 0.017, 0.014],
+        "transform": {
+          "translation": [0.03, -0.008, 0.06]
+        },
+        "member": "thigh-l",
+        "part": "member"
+      },
+      {
+        "id": "femur-l",
+        "kind": "loft",
+        "bone": "thigh-l",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "sections": [
+          {
+            "at": [0.045, -0.005, 0.056],
+            "rx": 0.0145,
+            "ry": 0.0145
+          },
+          {
+            "at": [0.123, 0.006, 0.042],
+            "rx": 0.0132,
+            "ry": 0.0132
+          },
+          {
+            "at": [0.218, 0.012, 0.026],
+            "rx": 0.0126,
+            "ry": 0.0126
+          },
+          {
+            "at": [0.312, 0.008, 0.01],
+            "rx": 0.0132,
+            "ry": 0.0132
+          },
+          {
+            "at": [0.394, 0, -0.002],
+            "rx": 0.016,
+            "ry": 0.016
+          }
+        ],
+        "capStart": true,
+        "capEnd": true,
+        "member": "thigh-l",
+        "part": "member"
+      },
+      {
+        "id": "femur-condyles-l",
+        "kind": "ellipsoid",
+        "bone": "thigh-l",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "radii": [0.02, 0.029, 0.038],
+        "transform": {
+          "translation": [0.405, -0.006, -0.005]
+        },
+        "member": "thigh-l",
+        "part": "member"
+      },
+      {
+        "id": "patella-l",
+        "kind": "ellipsoid",
+        "bone": "thigh-l",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "radii": [0.02, 0.009, 0.019],
+        "transform": {
+          "translation": [0.403, 0.039, -0.005]
+        },
+        "member": "thigh-l",
+        "part": "member"
+      },
+      {
+        "id": "tibia-plateau-l",
+        "kind": "ellipsoid",
+        "bone": "shank-l",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "radii": [0.014, 0.025, 0.036],
+        "transform": {
+          "translation": [0.02, -0.002, -0.005]
+        },
+        "member": "shank-l",
+        "part": "member"
+      },
+      {
+        "id": "tibia-l",
+        "kind": "loft",
+        "bone": "shank-l",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "sections": [
+          {
+            "at": [0.03, 0.004, -0.007],
+            "rx": 0.016,
+            "ry": 0.016
+          },
+          {
+            "at": [0.126, 0.011, -0.005],
+            "rx": 0.0127,
+            "ry": 0.0127
+          },
+          {
+            "at": [0.262, 0.009, -0.003],
+            "rx": 0.0113,
+            "ry": 0.0113
+          },
+          {
+            "at": [0.392, 0.002, -0.002],
+            "rx": 0.0127,
+            "ry": 0.0127
+          }
+        ],
+        "capStart": true,
+        "capEnd": true,
+        "member": "shank-l",
+        "part": "member"
+      },
+      {
+        "id": "malleolus-l",
+        "kind": "ellipsoid",
+        "bone": "shank-l",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "radii": [0.013, 0.011, 0.009],
+        "transform": {
+          "translation": [0.406, 0, -0.025]
+        },
+        "member": "shank-l",
+        "part": "member"
+      },
+      {
+        "id": "fibula-l",
+        "kind": "capsule",
+        "bone": "shank-l",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "p0": [0.04, -0.017, 0.027],
+        "p1": [0.415, -0.011, 0.027],
+        "r0": 0.0064,
+        "r1": 0.0068,
+        "member": "shank-l",
+        "part": "member"
+      },
+      {
+        "id": "humerus-head-l",
+        "kind": "ellipsoid",
+        "bone": "arm-l",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "radii": [0.0215, 0.0215, 0.0215],
+        "transform": {
+          "translation": [0.002, 0, 0]
+        },
+        "member": "arm-l",
+        "part": "member"
+      },
+      {
+        "id": "humerus-l",
+        "kind": "loft",
+        "bone": "arm-l",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "sections": [
+          {
+            "at": [0.013, 0, 0],
+            "rx": 0.0112,
+            "ry": 0.0112
+          },
+          {
+            "at": [0.104, 0.004, 0],
+            "rx": 0.01,
+            "ry": 0.01
+          },
+          {
+            "at": [0.208, 0.003, 0],
+            "rx": 0.0097,
+            "ry": 0.0097
+          },
+          {
+            "at": [0.299, 0, 0],
+            "rx": 0.0117,
+            "ry": 0.0117
+          }
+        ],
+        "capStart": true,
+        "capEnd": true,
+        "member": "arm-l",
+        "part": "member"
+      },
+      {
+        "id": "humerus-condyles-l",
+        "kind": "ellipsoid",
+        "bone": "arm-l",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "radii": [0.0115, 0.013, 0.029],
+        "transform": {
+          "translation": [0.308, 0, 0]
+        },
+        "member": "arm-l",
+        "part": "member"
+      },
+      {
+        "id": "ulna-l",
+        "kind": "capsule",
+        "bone": "forearm-l",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "p0": [-0.013, -0.016, 0],
+        "p1": [0.238, -0.013, 0],
+        "r0": 0.0077,
+        "r1": 0.0049,
+        "member": "forearm-l",
+        "part": "member"
+      },
+      {
+        "id": "radius-l",
+        "kind": "capsule",
+        "bone": "forearm-l",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "p0": [0.009, 0.014, 0],
+        "p1": [0.242, 0.01, 0],
+        "r0": 0.0056,
+        "r1": 0.0082,
+        "member": "forearm-l",
+        "part": "member"
+      },
+      {
+        "id": "femur-neck-r",
+        "kind": "capsule",
+        "bone": "thigh-r",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "p0": [0, 0, 0],
+        "p1": [0.034, -0.006, -0.052],
+        "r0": 0.0155,
+        "r1": 0.0165,
+        "member": "thigh-r",
+        "part": "member"
+      },
+      {
+        "id": "femur-trochanter-r",
+        "kind": "ellipsoid",
+        "bone": "thigh-r",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "radii": [0.022, 0.017, 0.014],
+        "transform": {
+          "translation": [0.03, -0.008, -0.06]
+        },
+        "member": "thigh-r",
+        "part": "member"
+      },
+      {
+        "id": "femur-r",
+        "kind": "loft",
+        "bone": "thigh-r",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "sections": [
+          {
+            "at": [0.045, -0.005, -0.056],
+            "rx": 0.0145,
+            "ry": 0.0145
+          },
+          {
+            "at": [0.123, 0.006, -0.042],
+            "rx": 0.0132,
+            "ry": 0.0132
+          },
+          {
+            "at": [0.218, 0.012, -0.026],
+            "rx": 0.0126,
+            "ry": 0.0126
+          },
+          {
+            "at": [0.312, 0.008, -0.01],
+            "rx": 0.0132,
+            "ry": 0.0132
+          },
+          {
+            "at": [0.394, 0, 0.002],
+            "rx": 0.016,
+            "ry": 0.016
+          }
+        ],
+        "capStart": true,
+        "capEnd": true,
+        "member": "thigh-r",
+        "part": "member"
+      },
+      {
+        "id": "femur-condyles-r",
+        "kind": "ellipsoid",
+        "bone": "thigh-r",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "radii": [0.02, 0.029, 0.038],
+        "transform": {
+          "translation": [0.405, -0.006, 0.005]
+        },
+        "member": "thigh-r",
+        "part": "member"
+      },
+      {
+        "id": "patella-r",
+        "kind": "ellipsoid",
+        "bone": "thigh-r",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "radii": [0.02, 0.009, 0.019],
+        "transform": {
+          "translation": [0.403, 0.039, 0.005]
+        },
+        "member": "thigh-r",
+        "part": "member"
+      },
+      {
+        "id": "tibia-plateau-r",
+        "kind": "ellipsoid",
+        "bone": "shank-r",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "radii": [0.014, 0.025, 0.036],
+        "transform": {
+          "translation": [0.02, -0.002, 0.005]
+        },
+        "member": "shank-r",
+        "part": "member"
+      },
+      {
+        "id": "tibia-r",
+        "kind": "loft",
+        "bone": "shank-r",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "sections": [
+          {
+            "at": [0.03, 0.004, 0.007],
+            "rx": 0.016,
+            "ry": 0.016
+          },
+          {
+            "at": [0.126, 0.011, 0.005],
+            "rx": 0.0127,
+            "ry": 0.0127
+          },
+          {
+            "at": [0.262, 0.009, 0.003],
+            "rx": 0.0113,
+            "ry": 0.0113
+          },
+          {
+            "at": [0.392, 0.002, 0.002],
+            "rx": 0.0127,
+            "ry": 0.0127
+          }
+        ],
+        "capStart": true,
+        "capEnd": true,
+        "member": "shank-r",
+        "part": "member"
+      },
+      {
+        "id": "malleolus-r",
+        "kind": "ellipsoid",
+        "bone": "shank-r",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "radii": [0.013, 0.011, 0.009],
+        "transform": {
+          "translation": [0.406, 0, 0.025]
+        },
+        "member": "shank-r",
+        "part": "member"
+      },
+      {
+        "id": "fibula-r",
+        "kind": "capsule",
+        "bone": "shank-r",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "p0": [0.04, -0.017, -0.027],
+        "p1": [0.415, -0.011, -0.027],
+        "r0": 0.0064,
+        "r1": 0.0068,
+        "member": "shank-r",
+        "part": "member"
+      },
+      {
+        "id": "humerus-head-r",
+        "kind": "ellipsoid",
+        "bone": "arm-r",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "radii": [0.0215, 0.0215, 0.0215],
+        "transform": {
+          "translation": [0.002, 0, 0]
+        },
+        "member": "arm-r",
+        "part": "member"
+      },
+      {
+        "id": "humerus-r",
+        "kind": "loft",
+        "bone": "arm-r",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "sections": [
+          {
+            "at": [0.013, 0, 0],
+            "rx": 0.0112,
+            "ry": 0.0112
+          },
+          {
+            "at": [0.104, 0.004, 0],
+            "rx": 0.01,
+            "ry": 0.01
+          },
+          {
+            "at": [0.208, 0.003, 0],
+            "rx": 0.0097,
+            "ry": 0.0097
+          },
+          {
+            "at": [0.299, 0, 0],
+            "rx": 0.0117,
+            "ry": 0.0117
+          }
+        ],
+        "capStart": true,
+        "capEnd": true,
+        "member": "arm-r",
+        "part": "member"
+      },
+      {
+        "id": "humerus-condyles-r",
+        "kind": "ellipsoid",
+        "bone": "arm-r",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "radii": [0.0115, 0.013, 0.029],
+        "transform": {
+          "translation": [0.308, 0, 0]
+        },
+        "member": "arm-r",
+        "part": "member"
+      },
+      {
+        "id": "ulna-r",
+        "kind": "capsule",
+        "bone": "forearm-r",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "p0": [-0.013, -0.016, 0],
+        "p1": [0.238, -0.013, 0],
+        "r0": 0.0077,
+        "r1": 0.0049,
+        "member": "forearm-r",
+        "part": "member"
+      },
+      {
+        "id": "radius-r",
+        "kind": "capsule",
+        "bone": "forearm-r",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "p0": [0.009, 0.014, 0],
+        "p1": [0.242, 0.01, 0],
+        "r0": 0.0056,
+        "r1": 0.0082,
+        "member": "forearm-r",
+        "part": "member"
       }
     ],
     "decisions": [
@@ -18349,6 +18527,10 @@
       {
         "en": "Thermal at 1:100: one surface per region in its outer layer (layers merged), jeans as open tubes, hips below the hem, face skin without the hair-covered back of the head. Structure: merged skeleton with six paired rib courses, ischiopubic bars, jaw, hand plates and the index finger, the cane tube and its support.",
         "de": "Thermik bei 1:100: je Region eine Fläche in ihrer äußeren Lage (Lagen zusammengelegt), Jeans als offene Röhren, Hüfte unter dem Saum, Gesichtshaut ohne den haarbedeckten Hinterkopf. Struktur: zusammengefasstes Skelett mit sechs beidseitige Rippenzügen, Sitz-Schambein-Stäben, Kiefer, Handplatten und dem Zeigefinger, das Stockrohr und sein Lager."
+      },
+      {
+        "en": "The paired radii and ulnae, knee and shoulder ends and individual long-bone shafts keep this figure’s dimensions through each pose. The joints turn in the same skeleton at every display scale.",
+        "de": "Speichen und Ellen, Knie- und Schulterenden sowie die Schäfte der langen Knochen behalten die Maße dieser Figur in jeder Haltung. Die Gelenke drehen in allen Darstellungsmaßstäben im selben Skelett."
       }
     ]
   },
@@ -20324,17 +20506,17 @@
         "tone": 0.9,
         "sections": [
           {
-            "at": [0.394, -0.04664, 0.0],
+            "at": [0.394, -0.04664, 0],
             "rx": 0.003,
             "ry": 0.003
           },
           {
-            "at": [0.325, -0.07853, 0.0],
+            "at": [0.325, -0.07853, 0],
             "rx": 0.003,
             "ry": 0.003
           },
           {
-            "at": [0.25, -0.08671, 0.0],
+            "at": [0.25, -0.08671, 0],
             "rx": 0.003,
             "ry": 0.003
           }
@@ -20371,54 +20553,6 @@
         "origin": [0.03588, 0.02, 0],
         "lateralScale": 1.55,
         "member": "pelvis",
-        "part": "member"
-      },
-      {
-        "id": "femur-l",
-        "kind": "loft",
-        "bone": "thigh-l",
-        "material": "bone",
-        "role": "body",
-        "tone": 0.62,
-        "sections": [
-          {
-            "at": [0, 0, 0],
-            "rx": 0.019,
-            "ry": 0.019
-          },
-          {
-            "at": [0.038, -0.004, 0.052],
-            "rx": 0.016,
-            "ry": 0.016
-          },
-          {
-            "at": [0.19, 0.01, 0.03],
-            "rx": 0.015,
-            "ry": 0.015
-          },
-          {
-            "at": [0.402, 0, -0.004],
-            "rx": 0.019,
-            "ry": 0.019
-          }
-        ],
-        "capStart": true,
-        "capEnd": true,
-        "member": "thigh-l",
-        "part": "member"
-      },
-      {
-        "id": "tibia-l",
-        "kind": "capsule",
-        "bone": "shank-l",
-        "material": "bone",
-        "role": "body",
-        "tone": 0.62,
-        "p0": [0.01, 0.002, -0.004],
-        "p1": [0.4, 0.002, 0],
-        "r0": 0.019,
-        "r1": 0.015,
-        "member": "shank-l",
         "part": "member"
       },
       {
@@ -20485,82 +20619,6 @@
         "part": "member"
       },
       {
-        "id": "humerus-l",
-        "kind": "capsule",
-        "bone": "arm-l",
-        "material": "bone",
-        "role": "body",
-        "tone": 0.62,
-        "p0": [0, 0, 0],
-        "p1": [0.306, 0, 0],
-        "r0": 0.018,
-        "r1": 0.015,
-        "member": "arm-l",
-        "part": "member"
-      },
-      {
-        "id": "radius-ulna-l",
-        "kind": "capsule",
-        "bone": "forearm-l",
-        "material": "bone",
-        "role": "body",
-        "tone": 0.62,
-        "p0": [0, 0, 0],
-        "p1": [0.24, 0, 0],
-        "r0": 0.016,
-        "r1": 0.015,
-        "member": "forearm-l",
-        "part": "member"
-      },
-      {
-        "id": "femur-r",
-        "kind": "loft",
-        "bone": "thigh-r",
-        "material": "bone",
-        "role": "body",
-        "tone": 0.62,
-        "sections": [
-          {
-            "at": [0, 0, 0],
-            "rx": 0.019,
-            "ry": 0.019
-          },
-          {
-            "at": [0.038, -0.004, -0.052],
-            "rx": 0.016,
-            "ry": 0.016
-          },
-          {
-            "at": [0.19, 0.01, -0.03],
-            "rx": 0.015,
-            "ry": 0.015
-          },
-          {
-            "at": [0.402, 0, 0.004],
-            "rx": 0.019,
-            "ry": 0.019
-          }
-        ],
-        "capStart": true,
-        "capEnd": true,
-        "member": "thigh-r",
-        "part": "member"
-      },
-      {
-        "id": "tibia-r",
-        "kind": "capsule",
-        "bone": "shank-r",
-        "material": "bone",
-        "role": "body",
-        "tone": 0.62,
-        "p0": [0.01, 0.002, 0.004],
-        "p1": [0.4, 0.002, 0],
-        "r0": 0.019,
-        "r1": 0.015,
-        "member": "shank-r",
-        "part": "member"
-      },
-      {
         "id": "tarsus-r",
         "kind": "loft",
         "bone": "foot-r",
@@ -20621,34 +20679,6 @@
         "capStart": true,
         "capEnd": true,
         "member": "toe-r",
-        "part": "member"
-      },
-      {
-        "id": "humerus-r",
-        "kind": "capsule",
-        "bone": "arm-r",
-        "material": "bone",
-        "role": "body",
-        "tone": 0.62,
-        "p0": [0, 0, 0],
-        "p1": [0.306, 0, 0],
-        "r0": 0.018,
-        "r1": 0.015,
-        "member": "arm-r",
-        "part": "member"
-      },
-      {
-        "id": "radius-ulna-r",
-        "kind": "capsule",
-        "bone": "forearm-r",
-        "material": "bone",
-        "role": "body",
-        "tone": 0.62,
-        "p0": [0, 0, 0],
-        "p1": [0.24, 0, 0],
-        "r0": 0.016,
-        "r1": 0.015,
-        "member": "forearm-r",
         "part": "member"
       },
       {
@@ -20782,7 +20812,7 @@
         "material": "bone",
         "role": "body",
         "tone": 0.4,
-        "radii": [0.021, 0.021, 0.021],
+        "radii": [0.018, 0.018, 0.018],
         "transform": {
           "translation": [0, 0, -0.005]
         },
@@ -20824,7 +20854,7 @@
         "material": "bone",
         "role": "body",
         "tone": 0.4,
-        "radii": [0.018, 0.018, 0.018],
+        "radii": [0.0145, 0.0145, 0.0145],
         "transform": {
           "translation": [0, 0, 0]
         },
@@ -20866,7 +20896,7 @@
         "material": "bone",
         "role": "body",
         "tone": 0.4,
-        "radii": [0.021, 0.021, 0.021],
+        "radii": [0.018, 0.018, 0.018],
         "transform": {
           "translation": [0, 0, 0.005]
         },
@@ -20908,7 +20938,7 @@
         "material": "bone",
         "role": "body",
         "tone": 0.4,
-        "radii": [0.018, 0.018, 0.018],
+        "radii": [0.0145, 0.0145, 0.0145],
         "transform": {
           "translation": [0, 0, 0]
         },
@@ -20998,6 +21028,528 @@
         },
         "member": "thigh-r",
         "part": "mass"
+      },
+      {
+        "id": "femur-neck-l",
+        "kind": "capsule",
+        "bone": "thigh-l",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "p0": [0, 0, 0],
+        "p1": [0.034, -0.006, 0.052],
+        "r0": 0.0155,
+        "r1": 0.0165,
+        "member": "thigh-l",
+        "part": "member"
+      },
+      {
+        "id": "femur-trochanter-l",
+        "kind": "ellipsoid",
+        "bone": "thigh-l",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "radii": [0.022, 0.017, 0.014],
+        "transform": {
+          "translation": [0.03, -0.008, 0.06]
+        },
+        "member": "thigh-l",
+        "part": "member"
+      },
+      {
+        "id": "femur-l",
+        "kind": "loft",
+        "bone": "thigh-l",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "sections": [
+          {
+            "at": [0.045, -0.005, 0.056],
+            "rx": 0.0145,
+            "ry": 0.0145
+          },
+          {
+            "at": [0.123, 0.006, 0.042],
+            "rx": 0.0132,
+            "ry": 0.0132
+          },
+          {
+            "at": [0.218, 0.012, 0.026],
+            "rx": 0.0126,
+            "ry": 0.0126
+          },
+          {
+            "at": [0.312, 0.008, 0.01],
+            "rx": 0.0132,
+            "ry": 0.0132
+          },
+          {
+            "at": [0.394, 0, -0.002],
+            "rx": 0.016,
+            "ry": 0.016
+          }
+        ],
+        "capStart": true,
+        "capEnd": true,
+        "member": "thigh-l",
+        "part": "member"
+      },
+      {
+        "id": "femur-condyles-l",
+        "kind": "ellipsoid",
+        "bone": "thigh-l",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "radii": [0.02, 0.029, 0.038],
+        "transform": {
+          "translation": [0.405, -0.006, -0.005]
+        },
+        "member": "thigh-l",
+        "part": "member"
+      },
+      {
+        "id": "patella-l",
+        "kind": "ellipsoid",
+        "bone": "thigh-l",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "radii": [0.02, 0.009, 0.019],
+        "transform": {
+          "translation": [0.403, 0.039, -0.005]
+        },
+        "member": "thigh-l",
+        "part": "member"
+      },
+      {
+        "id": "tibia-plateau-l",
+        "kind": "ellipsoid",
+        "bone": "shank-l",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "radii": [0.014, 0.025, 0.036],
+        "transform": {
+          "translation": [0.02, -0.002, -0.005]
+        },
+        "member": "shank-l",
+        "part": "member"
+      },
+      {
+        "id": "tibia-l",
+        "kind": "loft",
+        "bone": "shank-l",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "sections": [
+          {
+            "at": [0.03, 0.004, -0.007],
+            "rx": 0.016,
+            "ry": 0.016
+          },
+          {
+            "at": [0.126, 0.011, -0.005],
+            "rx": 0.0127,
+            "ry": 0.0127
+          },
+          {
+            "at": [0.262, 0.009, -0.003],
+            "rx": 0.0113,
+            "ry": 0.0113
+          },
+          {
+            "at": [0.392, 0.002, -0.002],
+            "rx": 0.0127,
+            "ry": 0.0127
+          }
+        ],
+        "capStart": true,
+        "capEnd": true,
+        "member": "shank-l",
+        "part": "member"
+      },
+      {
+        "id": "malleolus-l",
+        "kind": "ellipsoid",
+        "bone": "shank-l",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "radii": [0.013, 0.011, 0.009],
+        "transform": {
+          "translation": [0.406, 0, -0.025]
+        },
+        "member": "shank-l",
+        "part": "member"
+      },
+      {
+        "id": "fibula-l",
+        "kind": "capsule",
+        "bone": "shank-l",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "p0": [0.04, -0.017, 0.027],
+        "p1": [0.415, -0.011, 0.027],
+        "r0": 0.0064,
+        "r1": 0.0068,
+        "member": "shank-l",
+        "part": "member"
+      },
+      {
+        "id": "humerus-head-l",
+        "kind": "ellipsoid",
+        "bone": "arm-l",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "radii": [0.0215, 0.0215, 0.0215],
+        "transform": {
+          "translation": [0.002, 0, 0]
+        },
+        "member": "arm-l",
+        "part": "member"
+      },
+      {
+        "id": "humerus-l",
+        "kind": "loft",
+        "bone": "arm-l",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "sections": [
+          {
+            "at": [0.013, 0, 0],
+            "rx": 0.0112,
+            "ry": 0.0112
+          },
+          {
+            "at": [0.104, 0.004, 0],
+            "rx": 0.01,
+            "ry": 0.01
+          },
+          {
+            "at": [0.208, 0.003, 0],
+            "rx": 0.0097,
+            "ry": 0.0097
+          },
+          {
+            "at": [0.299, 0, 0],
+            "rx": 0.0117,
+            "ry": 0.0117
+          }
+        ],
+        "capStart": true,
+        "capEnd": true,
+        "member": "arm-l",
+        "part": "member"
+      },
+      {
+        "id": "humerus-condyles-l",
+        "kind": "ellipsoid",
+        "bone": "arm-l",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "radii": [0.0115, 0.013, 0.029],
+        "transform": {
+          "translation": [0.308, 0, 0]
+        },
+        "member": "arm-l",
+        "part": "member"
+      },
+      {
+        "id": "ulna-l",
+        "kind": "capsule",
+        "bone": "forearm-l",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "p0": [-0.013, -0.016, 0],
+        "p1": [0.238, -0.013, 0],
+        "r0": 0.0077,
+        "r1": 0.0049,
+        "member": "forearm-l",
+        "part": "member"
+      },
+      {
+        "id": "radius-l",
+        "kind": "capsule",
+        "bone": "forearm-l",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "p0": [0.009, 0.014, 0],
+        "p1": [0.242, 0.01, 0],
+        "r0": 0.0056,
+        "r1": 0.0082,
+        "member": "forearm-l",
+        "part": "member"
+      },
+      {
+        "id": "femur-neck-r",
+        "kind": "capsule",
+        "bone": "thigh-r",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "p0": [0, 0, 0],
+        "p1": [0.034, -0.006, -0.052],
+        "r0": 0.0155,
+        "r1": 0.0165,
+        "member": "thigh-r",
+        "part": "member"
+      },
+      {
+        "id": "femur-trochanter-r",
+        "kind": "ellipsoid",
+        "bone": "thigh-r",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "radii": [0.022, 0.017, 0.014],
+        "transform": {
+          "translation": [0.03, -0.008, -0.06]
+        },
+        "member": "thigh-r",
+        "part": "member"
+      },
+      {
+        "id": "femur-r",
+        "kind": "loft",
+        "bone": "thigh-r",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "sections": [
+          {
+            "at": [0.045, -0.005, -0.056],
+            "rx": 0.0145,
+            "ry": 0.0145
+          },
+          {
+            "at": [0.123, 0.006, -0.042],
+            "rx": 0.0132,
+            "ry": 0.0132
+          },
+          {
+            "at": [0.218, 0.012, -0.026],
+            "rx": 0.0126,
+            "ry": 0.0126
+          },
+          {
+            "at": [0.312, 0.008, -0.01],
+            "rx": 0.0132,
+            "ry": 0.0132
+          },
+          {
+            "at": [0.394, 0, 0.002],
+            "rx": 0.016,
+            "ry": 0.016
+          }
+        ],
+        "capStart": true,
+        "capEnd": true,
+        "member": "thigh-r",
+        "part": "member"
+      },
+      {
+        "id": "femur-condyles-r",
+        "kind": "ellipsoid",
+        "bone": "thigh-r",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "radii": [0.02, 0.029, 0.038],
+        "transform": {
+          "translation": [0.405, -0.006, 0.005]
+        },
+        "member": "thigh-r",
+        "part": "member"
+      },
+      {
+        "id": "patella-r",
+        "kind": "ellipsoid",
+        "bone": "thigh-r",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "radii": [0.02, 0.009, 0.019],
+        "transform": {
+          "translation": [0.403, 0.039, 0.005]
+        },
+        "member": "thigh-r",
+        "part": "member"
+      },
+      {
+        "id": "tibia-plateau-r",
+        "kind": "ellipsoid",
+        "bone": "shank-r",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "radii": [0.014, 0.025, 0.036],
+        "transform": {
+          "translation": [0.02, -0.002, 0.005]
+        },
+        "member": "shank-r",
+        "part": "member"
+      },
+      {
+        "id": "tibia-r",
+        "kind": "loft",
+        "bone": "shank-r",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "sections": [
+          {
+            "at": [0.03, 0.004, 0.007],
+            "rx": 0.016,
+            "ry": 0.016
+          },
+          {
+            "at": [0.126, 0.011, 0.005],
+            "rx": 0.0127,
+            "ry": 0.0127
+          },
+          {
+            "at": [0.262, 0.009, 0.003],
+            "rx": 0.0113,
+            "ry": 0.0113
+          },
+          {
+            "at": [0.392, 0.002, 0.002],
+            "rx": 0.0127,
+            "ry": 0.0127
+          }
+        ],
+        "capStart": true,
+        "capEnd": true,
+        "member": "shank-r",
+        "part": "member"
+      },
+      {
+        "id": "malleolus-r",
+        "kind": "ellipsoid",
+        "bone": "shank-r",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "radii": [0.013, 0.011, 0.009],
+        "transform": {
+          "translation": [0.406, 0, 0.025]
+        },
+        "member": "shank-r",
+        "part": "member"
+      },
+      {
+        "id": "fibula-r",
+        "kind": "capsule",
+        "bone": "shank-r",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "p0": [0.04, -0.017, -0.027],
+        "p1": [0.415, -0.011, -0.027],
+        "r0": 0.0064,
+        "r1": 0.0068,
+        "member": "shank-r",
+        "part": "member"
+      },
+      {
+        "id": "humerus-head-r",
+        "kind": "ellipsoid",
+        "bone": "arm-r",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "radii": [0.0215, 0.0215, 0.0215],
+        "transform": {
+          "translation": [0.002, 0, 0]
+        },
+        "member": "arm-r",
+        "part": "member"
+      },
+      {
+        "id": "humerus-r",
+        "kind": "loft",
+        "bone": "arm-r",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "sections": [
+          {
+            "at": [0.013, 0, 0],
+            "rx": 0.0112,
+            "ry": 0.0112
+          },
+          {
+            "at": [0.104, 0.004, 0],
+            "rx": 0.01,
+            "ry": 0.01
+          },
+          {
+            "at": [0.208, 0.003, 0],
+            "rx": 0.0097,
+            "ry": 0.0097
+          },
+          {
+            "at": [0.299, 0, 0],
+            "rx": 0.0117,
+            "ry": 0.0117
+          }
+        ],
+        "capStart": true,
+        "capEnd": true,
+        "member": "arm-r",
+        "part": "member"
+      },
+      {
+        "id": "humerus-condyles-r",
+        "kind": "ellipsoid",
+        "bone": "arm-r",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "radii": [0.0115, 0.013, 0.029],
+        "transform": {
+          "translation": [0.308, 0, 0]
+        },
+        "member": "arm-r",
+        "part": "member"
+      },
+      {
+        "id": "ulna-r",
+        "kind": "capsule",
+        "bone": "forearm-r",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "p0": [-0.013, -0.016, 0],
+        "p1": [0.238, -0.013, 0],
+        "r0": 0.0077,
+        "r1": 0.0049,
+        "member": "forearm-r",
+        "part": "member"
+      },
+      {
+        "id": "radius-r",
+        "kind": "capsule",
+        "bone": "forearm-r",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "p0": [0.009, 0.014, 0],
+        "p1": [0.242, 0.01, 0],
+        "r0": 0.0056,
+        "r1": 0.0082,
+        "member": "forearm-r",
+        "part": "member"
       }
     ],
     "decisions": [
@@ -21008,6 +21560,10 @@
       {
         "en": "Structure at 1:200: skull, cervical bar, spine, three paired rib courses, shoulder girdle bar, pelvic ring, one bone per limb segment, foot and toe bones, hand bones, the cane rods and their support, joints and five masses.",
         "de": "Struktur bei 1:200: Schädel, Halsstab, Wirbelsäule, drei beidseitige Rippenzüge, Schultergürtelstab, Beckenring, ein Knochen je Gliedsegment, Fuß- und Zehenknochen, Handknochen, die Stockstäbe und ihr Lager, Gelenke und fünf Massen."
+      },
+      {
+        "en": "The paired radii and ulnae, knee and shoulder ends and individual long-bone shafts keep this figure’s dimensions through each pose. The joints turn in the same skeleton at every display scale.",
+        "de": "Speichen und Ellen, Knie- und Schulterenden sowie die Schäfte der langen Knochen behalten die Maße dieser Figur in jeder Haltung. Die Gelenke drehen in allen Darstellungsmaßstäben im selben Skelett."
       }
     ]
   },
@@ -22674,17 +23230,17 @@
         "tone": 0.9,
         "sections": [
           {
-            "at": [0.394, -0.04664, 0.0],
+            "at": [0.394, -0.04664, 0],
             "rx": 0.003,
             "ry": 0.003
           },
           {
-            "at": [0.325, -0.07853, 0.0],
+            "at": [0.325, -0.07853, 0],
             "rx": 0.003,
             "ry": 0.003
           },
           {
-            "at": [0.25, -0.08671, 0.0],
+            "at": [0.25, -0.08671, 0],
             "rx": 0.003,
             "ry": 0.003
           }
@@ -22724,34 +23280,6 @@
         "part": "member"
       },
       {
-        "id": "femur-l",
-        "kind": "capsule",
-        "bone": "thigh-l",
-        "material": "bone",
-        "role": "body",
-        "tone": 0.62,
-        "p0": [0.01, 0, 0.008],
-        "p1": [0.4, 0.002, -0.004],
-        "r0": 0.0375,
-        "r1": 0.0375,
-        "member": "thigh-l",
-        "part": "member"
-      },
-      {
-        "id": "tibia-l",
-        "kind": "capsule",
-        "bone": "shank-l",
-        "material": "bone",
-        "role": "body",
-        "tone": 0.62,
-        "p0": [0.015, 0, -0.004],
-        "p1": [0.385, 0, 0],
-        "r0": 0.0375,
-        "r1": 0.0375,
-        "member": "shank-l",
-        "part": "member"
-      },
-      {
         "id": "foot-bones-l",
         "kind": "loft",
         "bone": "foot-l",
@@ -22787,62 +23315,6 @@
         "part": "member"
       },
       {
-        "id": "humerus-l",
-        "kind": "capsule",
-        "bone": "arm-l",
-        "material": "bone",
-        "role": "body",
-        "tone": 0.62,
-        "p0": [0.01, 0, 0],
-        "p1": [0.3, 0, 0],
-        "r0": 0.0375,
-        "r1": 0.0375,
-        "member": "arm-l",
-        "part": "member"
-      },
-      {
-        "id": "radius-ulna-l",
-        "kind": "capsule",
-        "bone": "forearm-l",
-        "material": "bone",
-        "role": "body",
-        "tone": 0.62,
-        "p0": [0.01, 0, 0],
-        "p1": [0.226, 0, 0],
-        "r0": 0.0375,
-        "r1": 0.0375,
-        "member": "forearm-l",
-        "part": "member"
-      },
-      {
-        "id": "femur-r",
-        "kind": "capsule",
-        "bone": "thigh-r",
-        "material": "bone",
-        "role": "body",
-        "tone": 0.62,
-        "p0": [0.01, 0, -0.008],
-        "p1": [0.4, 0.002, 0.004],
-        "r0": 0.0375,
-        "r1": 0.0375,
-        "member": "thigh-r",
-        "part": "member"
-      },
-      {
-        "id": "tibia-r",
-        "kind": "capsule",
-        "bone": "shank-r",
-        "material": "bone",
-        "role": "body",
-        "tone": 0.62,
-        "p0": [0.015, 0, 0.004],
-        "p1": [0.385, 0, 0],
-        "r0": 0.0375,
-        "r1": 0.0375,
-        "member": "shank-r",
-        "part": "member"
-      },
-      {
         "id": "foot-bones-r",
         "kind": "loft",
         "bone": "foot-r",
@@ -22875,34 +23347,6 @@
         "capStart": true,
         "capEnd": true,
         "member": "foot-r",
-        "part": "member"
-      },
-      {
-        "id": "humerus-r",
-        "kind": "capsule",
-        "bone": "arm-r",
-        "material": "bone",
-        "role": "body",
-        "tone": 0.62,
-        "p0": [0.01, 0, 0],
-        "p1": [0.3, 0, 0],
-        "r0": 0.0375,
-        "r1": 0.0375,
-        "member": "arm-r",
-        "part": "member"
-      },
-      {
-        "id": "radius-ulna-r",
-        "kind": "capsule",
-        "bone": "forearm-r",
-        "material": "bone",
-        "role": "body",
-        "tone": 0.62,
-        "p0": [0.01, 0, 0],
-        "p1": [0.226, 0, 0],
-        "r0": 0.0375,
-        "r1": 0.0375,
-        "member": "forearm-r",
         "part": "member"
       },
       {
@@ -22994,7 +23438,7 @@
         "material": "bone",
         "role": "body",
         "tone": 0.4,
-        "radii": [0.043, 0.043, 0.043],
+        "radii": [0.023, 0.023, 0.023],
         "transform": {
           "translation": [0, 0, 0]
         },
@@ -23008,9 +23452,9 @@
         "material": "bone",
         "role": "body",
         "tone": 0.4,
-        "radii": [0.04, 0.04, 0.04],
+        "radii": [0.018, 0.018, 0.018],
         "transform": {
-          "translation": [0, 0, 0]
+          "translation": [0, 0, -0.005]
         },
         "member": "shank-l",
         "part": "joint"
@@ -23022,7 +23466,7 @@
         "material": "bone",
         "role": "body",
         "tone": 0.4,
-        "radii": [0.043, 0.043, 0.043],
+        "radii": [0.023, 0.023, 0.023],
         "transform": {
           "translation": [0.002, 0, 0]
         },
@@ -23036,7 +23480,7 @@
         "material": "bone",
         "role": "body",
         "tone": 0.4,
-        "radii": [0.04, 0.04, 0.04],
+        "radii": [0.0145, 0.0145, 0.0145],
         "transform": {
           "translation": [0, 0, 0]
         },
@@ -23050,7 +23494,7 @@
         "material": "bone",
         "role": "body",
         "tone": 0.4,
-        "radii": [0.043, 0.043, 0.043],
+        "radii": [0.023, 0.023, 0.023],
         "transform": {
           "translation": [0, 0, 0]
         },
@@ -23064,9 +23508,9 @@
         "material": "bone",
         "role": "body",
         "tone": 0.4,
-        "radii": [0.04, 0.04, 0.04],
+        "radii": [0.018, 0.018, 0.018],
         "transform": {
-          "translation": [0, 0, 0]
+          "translation": [0, 0, 0.005]
         },
         "member": "shank-r",
         "part": "joint"
@@ -23078,7 +23522,7 @@
         "material": "bone",
         "role": "body",
         "tone": 0.4,
-        "radii": [0.043, 0.043, 0.043],
+        "radii": [0.023, 0.023, 0.023],
         "transform": {
           "translation": [0.002, 0, 0]
         },
@@ -23092,7 +23536,7 @@
         "material": "bone",
         "role": "body",
         "tone": 0.4,
-        "radii": [0.04, 0.04, 0.04],
+        "radii": [0.0145, 0.0145, 0.0145],
         "transform": {
           "translation": [0, 0, 0]
         },
@@ -23126,6 +23570,528 @@
         },
         "member": "torso",
         "part": "mass"
+      },
+      {
+        "id": "femur-neck-l",
+        "kind": "capsule",
+        "bone": "thigh-l",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "p0": [0, 0, 0],
+        "p1": [0.034, -0.006, 0.052],
+        "r0": 0.0155,
+        "r1": 0.0165,
+        "member": "thigh-l",
+        "part": "member"
+      },
+      {
+        "id": "femur-trochanter-l",
+        "kind": "ellipsoid",
+        "bone": "thigh-l",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "radii": [0.022, 0.017, 0.014],
+        "transform": {
+          "translation": [0.03, -0.008, 0.06]
+        },
+        "member": "thigh-l",
+        "part": "member"
+      },
+      {
+        "id": "femur-l",
+        "kind": "loft",
+        "bone": "thigh-l",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "sections": [
+          {
+            "at": [0.045, -0.005, 0.056],
+            "rx": 0.0145,
+            "ry": 0.0145
+          },
+          {
+            "at": [0.123, 0.006, 0.042],
+            "rx": 0.0132,
+            "ry": 0.0132
+          },
+          {
+            "at": [0.218, 0.012, 0.026],
+            "rx": 0.0126,
+            "ry": 0.0126
+          },
+          {
+            "at": [0.312, 0.008, 0.01],
+            "rx": 0.0132,
+            "ry": 0.0132
+          },
+          {
+            "at": [0.394, 0, -0.002],
+            "rx": 0.016,
+            "ry": 0.016
+          }
+        ],
+        "capStart": true,
+        "capEnd": true,
+        "member": "thigh-l",
+        "part": "member"
+      },
+      {
+        "id": "femur-condyles-l",
+        "kind": "ellipsoid",
+        "bone": "thigh-l",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "radii": [0.02, 0.029, 0.038],
+        "transform": {
+          "translation": [0.405, -0.006, -0.005]
+        },
+        "member": "thigh-l",
+        "part": "member"
+      },
+      {
+        "id": "patella-l",
+        "kind": "ellipsoid",
+        "bone": "thigh-l",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "radii": [0.02, 0.009, 0.019],
+        "transform": {
+          "translation": [0.403, 0.039, -0.005]
+        },
+        "member": "thigh-l",
+        "part": "member"
+      },
+      {
+        "id": "tibia-plateau-l",
+        "kind": "ellipsoid",
+        "bone": "shank-l",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "radii": [0.014, 0.025, 0.036],
+        "transform": {
+          "translation": [0.02, -0.002, -0.005]
+        },
+        "member": "shank-l",
+        "part": "member"
+      },
+      {
+        "id": "tibia-l",
+        "kind": "loft",
+        "bone": "shank-l",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "sections": [
+          {
+            "at": [0.03, 0.004, -0.007],
+            "rx": 0.016,
+            "ry": 0.016
+          },
+          {
+            "at": [0.126, 0.011, -0.005],
+            "rx": 0.0127,
+            "ry": 0.0127
+          },
+          {
+            "at": [0.262, 0.009, -0.003],
+            "rx": 0.0113,
+            "ry": 0.0113
+          },
+          {
+            "at": [0.392, 0.002, -0.002],
+            "rx": 0.0127,
+            "ry": 0.0127
+          }
+        ],
+        "capStart": true,
+        "capEnd": true,
+        "member": "shank-l",
+        "part": "member"
+      },
+      {
+        "id": "malleolus-l",
+        "kind": "ellipsoid",
+        "bone": "shank-l",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "radii": [0.013, 0.011, 0.009],
+        "transform": {
+          "translation": [0.406, 0, -0.025]
+        },
+        "member": "shank-l",
+        "part": "member"
+      },
+      {
+        "id": "fibula-l",
+        "kind": "capsule",
+        "bone": "shank-l",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "p0": [0.04, -0.017, 0.027],
+        "p1": [0.415, -0.011, 0.027],
+        "r0": 0.0064,
+        "r1": 0.0068,
+        "member": "shank-l",
+        "part": "member"
+      },
+      {
+        "id": "humerus-head-l",
+        "kind": "ellipsoid",
+        "bone": "arm-l",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "radii": [0.0215, 0.0215, 0.0215],
+        "transform": {
+          "translation": [0.002, 0, 0]
+        },
+        "member": "arm-l",
+        "part": "member"
+      },
+      {
+        "id": "humerus-l",
+        "kind": "loft",
+        "bone": "arm-l",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "sections": [
+          {
+            "at": [0.013, 0, 0],
+            "rx": 0.0112,
+            "ry": 0.0112
+          },
+          {
+            "at": [0.104, 0.004, 0],
+            "rx": 0.01,
+            "ry": 0.01
+          },
+          {
+            "at": [0.208, 0.003, 0],
+            "rx": 0.0097,
+            "ry": 0.0097
+          },
+          {
+            "at": [0.299, 0, 0],
+            "rx": 0.0117,
+            "ry": 0.0117
+          }
+        ],
+        "capStart": true,
+        "capEnd": true,
+        "member": "arm-l",
+        "part": "member"
+      },
+      {
+        "id": "humerus-condyles-l",
+        "kind": "ellipsoid",
+        "bone": "arm-l",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "radii": [0.0115, 0.013, 0.029],
+        "transform": {
+          "translation": [0.308, 0, 0]
+        },
+        "member": "arm-l",
+        "part": "member"
+      },
+      {
+        "id": "ulna-l",
+        "kind": "capsule",
+        "bone": "forearm-l",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "p0": [-0.013, -0.016, 0],
+        "p1": [0.238, -0.013, 0],
+        "r0": 0.0077,
+        "r1": 0.0049,
+        "member": "forearm-l",
+        "part": "member"
+      },
+      {
+        "id": "radius-l",
+        "kind": "capsule",
+        "bone": "forearm-l",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "p0": [0.009, 0.014, 0],
+        "p1": [0.242, 0.01, 0],
+        "r0": 0.0056,
+        "r1": 0.0082,
+        "member": "forearm-l",
+        "part": "member"
+      },
+      {
+        "id": "femur-neck-r",
+        "kind": "capsule",
+        "bone": "thigh-r",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "p0": [0, 0, 0],
+        "p1": [0.034, -0.006, -0.052],
+        "r0": 0.0155,
+        "r1": 0.0165,
+        "member": "thigh-r",
+        "part": "member"
+      },
+      {
+        "id": "femur-trochanter-r",
+        "kind": "ellipsoid",
+        "bone": "thigh-r",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "radii": [0.022, 0.017, 0.014],
+        "transform": {
+          "translation": [0.03, -0.008, -0.06]
+        },
+        "member": "thigh-r",
+        "part": "member"
+      },
+      {
+        "id": "femur-r",
+        "kind": "loft",
+        "bone": "thigh-r",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "sections": [
+          {
+            "at": [0.045, -0.005, -0.056],
+            "rx": 0.0145,
+            "ry": 0.0145
+          },
+          {
+            "at": [0.123, 0.006, -0.042],
+            "rx": 0.0132,
+            "ry": 0.0132
+          },
+          {
+            "at": [0.218, 0.012, -0.026],
+            "rx": 0.0126,
+            "ry": 0.0126
+          },
+          {
+            "at": [0.312, 0.008, -0.01],
+            "rx": 0.0132,
+            "ry": 0.0132
+          },
+          {
+            "at": [0.394, 0, 0.002],
+            "rx": 0.016,
+            "ry": 0.016
+          }
+        ],
+        "capStart": true,
+        "capEnd": true,
+        "member": "thigh-r",
+        "part": "member"
+      },
+      {
+        "id": "femur-condyles-r",
+        "kind": "ellipsoid",
+        "bone": "thigh-r",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "radii": [0.02, 0.029, 0.038],
+        "transform": {
+          "translation": [0.405, -0.006, 0.005]
+        },
+        "member": "thigh-r",
+        "part": "member"
+      },
+      {
+        "id": "patella-r",
+        "kind": "ellipsoid",
+        "bone": "thigh-r",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "radii": [0.02, 0.009, 0.019],
+        "transform": {
+          "translation": [0.403, 0.039, 0.005]
+        },
+        "member": "thigh-r",
+        "part": "member"
+      },
+      {
+        "id": "tibia-plateau-r",
+        "kind": "ellipsoid",
+        "bone": "shank-r",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "radii": [0.014, 0.025, 0.036],
+        "transform": {
+          "translation": [0.02, -0.002, 0.005]
+        },
+        "member": "shank-r",
+        "part": "member"
+      },
+      {
+        "id": "tibia-r",
+        "kind": "loft",
+        "bone": "shank-r",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "sections": [
+          {
+            "at": [0.03, 0.004, 0.007],
+            "rx": 0.016,
+            "ry": 0.016
+          },
+          {
+            "at": [0.126, 0.011, 0.005],
+            "rx": 0.0127,
+            "ry": 0.0127
+          },
+          {
+            "at": [0.262, 0.009, 0.003],
+            "rx": 0.0113,
+            "ry": 0.0113
+          },
+          {
+            "at": [0.392, 0.002, 0.002],
+            "rx": 0.0127,
+            "ry": 0.0127
+          }
+        ],
+        "capStart": true,
+        "capEnd": true,
+        "member": "shank-r",
+        "part": "member"
+      },
+      {
+        "id": "malleolus-r",
+        "kind": "ellipsoid",
+        "bone": "shank-r",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "radii": [0.013, 0.011, 0.009],
+        "transform": {
+          "translation": [0.406, 0, 0.025]
+        },
+        "member": "shank-r",
+        "part": "member"
+      },
+      {
+        "id": "fibula-r",
+        "kind": "capsule",
+        "bone": "shank-r",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "p0": [0.04, -0.017, -0.027],
+        "p1": [0.415, -0.011, -0.027],
+        "r0": 0.0064,
+        "r1": 0.0068,
+        "member": "shank-r",
+        "part": "member"
+      },
+      {
+        "id": "humerus-head-r",
+        "kind": "ellipsoid",
+        "bone": "arm-r",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "radii": [0.0215, 0.0215, 0.0215],
+        "transform": {
+          "translation": [0.002, 0, 0]
+        },
+        "member": "arm-r",
+        "part": "member"
+      },
+      {
+        "id": "humerus-r",
+        "kind": "loft",
+        "bone": "arm-r",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "sections": [
+          {
+            "at": [0.013, 0, 0],
+            "rx": 0.0112,
+            "ry": 0.0112
+          },
+          {
+            "at": [0.104, 0.004, 0],
+            "rx": 0.01,
+            "ry": 0.01
+          },
+          {
+            "at": [0.208, 0.003, 0],
+            "rx": 0.0097,
+            "ry": 0.0097
+          },
+          {
+            "at": [0.299, 0, 0],
+            "rx": 0.0117,
+            "ry": 0.0117
+          }
+        ],
+        "capStart": true,
+        "capEnd": true,
+        "member": "arm-r",
+        "part": "member"
+      },
+      {
+        "id": "humerus-condyles-r",
+        "kind": "ellipsoid",
+        "bone": "arm-r",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "radii": [0.0115, 0.013, 0.029],
+        "transform": {
+          "translation": [0.308, 0, 0]
+        },
+        "member": "arm-r",
+        "part": "member"
+      },
+      {
+        "id": "ulna-r",
+        "kind": "capsule",
+        "bone": "forearm-r",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "p0": [-0.013, -0.016, 0],
+        "p1": [0.238, -0.013, 0],
+        "r0": 0.0077,
+        "r1": 0.0049,
+        "member": "forearm-r",
+        "part": "member"
+      },
+      {
+        "id": "radius-r",
+        "kind": "capsule",
+        "bone": "forearm-r",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.62,
+        "p0": [0.009, 0.014, 0],
+        "p1": [0.242, 0.01, 0],
+        "r0": 0.0056,
+        "r1": 0.0082,
+        "member": "forearm-r",
+        "part": "member"
       }
     ],
     "decisions": [
@@ -23136,6 +24102,10 @@
       {
         "en": "Structure at 1:500: a stick skeleton at 75 mm (skull, neck, spine, shoulder and pelvic girdle, limb sticks, foot and hand bones), the cane rods and their support, eight joints and two masses. The torso shows two paired rib courses and a sternal bar.",
         "de": "Struktur bei 1:500: ein Stabskelett mit 75 mm (Schädel, Hals, Wirbelsäule, Schulter- und Beckengürtel, Gliederstäbe, Fuß- und Handknochen), die Stockstäbe und ihr Lager, acht Gelenke und zwei Massen. Der Rumpf zeigt zwei beidseitige Rippenzüge und ein Brustbeinstab."
+      },
+      {
+        "en": "The paired radii and ulnae, knee and shoulder ends and individual long-bone shafts keep this figure’s dimensions through each pose. The joints turn in the same skeleton at every display scale.",
+        "de": "Speichen und Ellen, Knie- und Schulterenden sowie die Schäfte der langen Knochen behalten die Maße dieser Figur in jeder Haltung. Die Gelenke drehen in allen Darstellungsmaßstäben im selben Skelett."
       }
     ]
   }

@@ -119,8 +119,12 @@ impl OpeningState {
         let idle = self.import_transfers.is_empty();
         #[cfg(not(target_arch = "wasm32"))]
         let idle = idle && self.native_media_save.is_none() && self.active_original_media().is_none();
-        if idle {
-            children.push(settings_text_row(&pick("No task is running.", "Es läuft keine Aufgabe.")));
+        if idle && self.runtime_tasks.is_empty() {
+            children.push(settings_text_row(shell_chrome_string("taskManager.tasks.empty", is_de)));
+        }
+        let now_ms = chrome_now_ms() as u64;
+        for task in &self.runtime_tasks {
+            children.extend(self.runtime_task_nodes(task, now_ms, is_de));
         }
         for transfer in &self.import_transfers {
             let task = format!("documentTransfer:{}", transfer.id);
@@ -256,4 +260,56 @@ pub async fn present_media_export_bytes_cancellable(filename: String, mime_type:
     if cancel.is_cancelled_now() { return Ok(false); }
     std::fs::write(path, bytes).map_err(|error| error.to_string())?;
     Ok(true)
+}
+
+/// 💾️ Hands one small text file to the host's save door (native save dialog, browser download); `false` when the user
+/// cancelled or the host refused, which the delegations pane reports as its "could not save" ending.
+pub async fn save_text_file(filename: String, mime_type: &str, contents: String) -> bool {
+    present_media_export_bytes_cancellable(filename, mime_type.to_string(), contents.into_bytes(), CancelToken::root_now()).await.unwrap_or(false)
+}
+
+/// 🔌️ Posts one MCP credential install request to the page's loopback route (`endpoint`) and answers the HTTP status and body
+/// (`None` status = the page never answered). A native shell has no loopback host, so it answers the route's own 404 and the
+/// block ends `unavailable`, exactly as React's static deployment does.
+#[cfg(target_arch = "wasm32")]
+pub async fn post_agent_credential_install(endpoint: &str, body: String) -> (Option<u16>, String) {
+    let request = serde_json::json!({ "op": "directory-http", "method": "POST", "url": endpoint, "timeoutMs": 5_000, "body": body }).to_string();
+    let Ok(answer) = host_io_call(&request, None).await else { return (None, String::new()) };
+    let value: serde_json::Value = serde_json::from_str(&answer).unwrap_or_default();
+    (value["status"].as_u64().and_then(|status| u16::try_from(status).ok()), value["body"].as_str().unwrap_or_default().to_string())
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+pub async fn post_agent_credential_install(_endpoint: &str, _body: String) -> (Option<u16>, String) {
+    (Some(404), String::new())
+}
+
+/// 📋️ Hands text to the page's clipboard door; `false` when the host has none (native) or refused, which leaves the press inert.
+#[cfg(target_arch = "wasm32")]
+pub async fn write_clipboard_text(text: &str) -> bool {
+    host_io_call(&serde_json::json!({ "op": "write-clipboard", "text": text }).to_string(), None).await.is_ok()
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+pub async fn write_clipboard_text(_text: &str) -> bool {
+    false
+}
+
+/// 🖼️ What an icon selector stores for one picked image (React's `onPickFiles`): an SVG as its trimmed text, any other
+/// image as its trimmed `data:image/<type>;base64,` URL. `None` for a file that is neither an accepted image nor readable.
+pub fn icon_import_value(name: &str, data_url: &str) -> Option<String> {
+    let payload = data_url.split_once(',')?.1;
+    let extension = name.rsplit_once('.').map(|(_, extension)| extension.to_ascii_lowercase())?;
+    if extension == "svg" {
+        let bytes = semio_framework_io_base64::base64_standard_decode(payload).ok()?;
+        return Some(String::from_utf8(bytes).ok()?.trim().to_string());
+    }
+    let mime = match extension.as_str() {
+        "png" => "image/png",
+        "jpg" | "jpeg" => "image/jpeg",
+        "webp" => "image/webp",
+        "gif" => "image/gif",
+        _ => return None,
+    };
+    Some(format!("data:{mime};base64,{payload}").trim().to_string())
 }

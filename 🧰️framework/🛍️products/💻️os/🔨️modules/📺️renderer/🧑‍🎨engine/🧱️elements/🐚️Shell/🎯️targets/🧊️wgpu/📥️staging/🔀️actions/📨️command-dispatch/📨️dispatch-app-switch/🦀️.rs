@@ -231,7 +231,7 @@ impl<'ctx> ActionsCtx<'ctx> {
                 home.view_state = current.view_state.clone();
             }
         }
-        let instance_id = semio_s_plugin_space.create_app(&app.id).await.map_err(|fault| fault.to_string())?;
+        let instance_id = semio_s_plugin_space.create_app(&app.id).await.map_err(|error| error.to_string())?;
         let panel_state = self.as_session().default_host_panel_state()?;
         let default_view_state = ViewModel {
             active_mode_id: Some(app.default_mode_id.clone()),
@@ -256,7 +256,7 @@ impl<'ctx> ActionsCtx<'ctx> {
         if app_id == cfg.landing_app_id {
             self.opening.open_space_id = None;
         }
-        self.docs.session = Some(ActiveSession { plugin_id: cfg.plugin_id.to_owned(), instance_id, app, view_state: next_view_state });
+        self.docs.session = Some(ActiveSession { plugin_id: cfg.plugin_id.to_string(), instance_id, app, view_state: next_view_state });
         self.as_window_actions().refresh_ui(UiDirtyScope::Full).await
     }
 
@@ -426,6 +426,10 @@ impl<'ctx> ActionsCtx<'ctx> {
                 if self.directory.hub_workspace.session.phase == HubSessionPhase::SignedIn {
                     self.directory.start_hub_spaces_reload();
                 }
+                return self.as_window_actions().refresh_ui(UiDirtyScope::Full).await;
+            }
+            let not_found = self.opening.note_shell_route(path);
+            if not_found {
                 return self.as_window_actions().refresh_ui(UiDirtyScope::Full).await;
             }
             let Some(cfg) = self.plugins.host_config() else {

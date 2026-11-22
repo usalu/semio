@@ -1,5 +1,5 @@
 import{machinePathV1}from"../../../🏗️build/🏠️machine-state/🟦️.ts";
-import { resolve } from "node:path";
+import { join, resolve } from "node:path";
 import { attachedDiskImagesV1 } from "../🖼️images/🟦️.ts";
 import { classifyAttachedImagesV1, sweepLeakedSandboxImagesV1 } from "./🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with { type:"json" };
@@ -13,7 +13,7 @@ function main(argv: readonly string[]): void {
     console.log(JSON.stringify({ dryRun: true, total: rows.length, ours: rows.filter(row => row.kind === "ours").length, leaked: rows.filter(row => row.kind === "leaked").length, foreign: rows.filter(row => row.kind === "foreign").length }));
     return;
   }
-  console.log(JSON.stringify(sweepLeakedSandboxImagesV1(workspaceOnly?{under:root}:{parents:[machinePathV1(root,".cache","test-sandbox")]})));
+  console.log(JSON.stringify(sweepLeakedSandboxImagesV1(workspaceOnly?{under:root}:{parents:[machinePathV1(root,".cache","test-sandbox"),join(root,".test-scratch")]})));
 }
 
 try { main(process.argv.slice(2)); } catch (error) { console.error(error instanceof Error ? error.message : String(error)); process.exit(1); }

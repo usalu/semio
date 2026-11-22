@@ -45,7 +45,7 @@ impl StructuredMediaSource for TerrainMedia {
         ArtifactToolPublicationContract { tool_id: TOOLS[1], lanes: &[ArtifactToolPublicationLane::HostOnly] },
     ];
     const MAX_BYTES: usize = 1_048_576;
-    const PREPARATION_COPY_BYTES: usize = 33 * size_of::<i16>() + size_of::<TerrainSceneRange>();
+    const PREPARATION_COPY_BYTES: usize = TerrainSceneRange::ROW_COPY_BYTES;
 
     fn descriptor(port: &str) -> Option<(MediaType, &'static str)> {
         match port {
@@ -63,13 +63,16 @@ impl StructuredMediaSource for TerrainMedia {
         if !((-180.0..east).contains(&west) && east <= 180.0 && (-90.0..north).contains(&south) && north <= 90.0) {
             return Err(if port == "elevation:out" { "no authored elevation source" } else { "The authored terrain elevation grid is invalid" });
         }
-        let complete = state.step(&source.rows).map_err(|_| if port == "elevation:out" { "no authored elevation source" } else { "The authored terrain elevation grid is invalid" })?;
-        if port == "scene:out" && complete {
-            if !(0.0..=f64::from(f32::MAX) / f64::from(i16::MIN.unsigned_abs())).contains(&snapshot.exaggeration) {
+        let (width, height) = source.dimensions().ok_or("The authored terrain elevation grid is invalid")?;
+        if port == "elevation:out" { return Ok(true); }
+        let complete = state.step(&source.rows_millimetres, width, source.missing_samples.as_deref())
+            .map_err(|_| "The authored terrain elevation grid is invalid")?;
+        if complete {
+            if !(0.0..=f64::from(f32::MAX) * 1000.0 / f64::from(i32::MIN.unsigned_abs())).contains(&snapshot.exaggeration) {
                 return Err("Terrain elevation cannot be projected in the defined world coordinates");
             }
             let origin = terrain_grid_origin(source.bounds);
-            state.geometry = Some(TerrainGridMeshProjection::from_bounds(source.bounds, [origin.lon, origin.lat], snapshot.exaggeration));
+            state.geometry = Some(TerrainGridMeshProjection::from_bounds(source.bounds, [origin.lon, origin.lat], snapshot.exaggeration, [width as u32, height as u32]));
         }
         Ok(complete)
     }
@@ -81,7 +84,8 @@ impl StructuredMediaSource for TerrainMedia {
             return Ok(TerrainJsonView::Elevation(ElevationJsonView(source)));
         }
         let projection = range.geometry.ok_or_else(|| ValueError::invariant("the prepared terrain mesh has no geometry"))?;
-        Ok(TerrainJsonView::Scene(TerrainSceneView { rows: &source.rows, projection, range: *range }))
+        let dimensions = source.dimensions().ok_or_else(|| ValueError::invariant("the prepared terrain mesh dimensions are invalid"))?;
+        Ok(TerrainJsonView::Scene(TerrainSceneView { rows: &source.rows_millimetres, dimensions, projection, range, missing: source.missing_samples.as_deref() }))
     }
 }
 

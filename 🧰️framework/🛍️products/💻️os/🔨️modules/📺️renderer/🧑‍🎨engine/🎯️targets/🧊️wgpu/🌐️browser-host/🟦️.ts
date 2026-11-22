@@ -21,6 +21,7 @@ export type WgpuBrowserHostOptions = {
 };
 import { admitWgpuPluginModules, admitWgpuPluginRegistrySelection, type WgpuPluginModule, type WgpuPluginRegistrySelection } from "../🧩️plugin-modules/🛂️admission/🟦️.ts";
 import { createBrowserMediaOverlay } from "@semio-tech/framework-os/modules/renderer/engine/media/browser/host";
+import { createBrowserTutorialVideoOverlay } from "@semio-tech/framework-os/modules/renderer/engine/media/browser/tutorial-video";
 import { BrowserFrameTransport } from "../🚚️browser-frame-transport/🟦️.ts";
 import { browserFrameEventFromDom, browserFrameEventIsReplaceable, browserFramePointerDomEvent, browserFrameWheelDomEvent, type BrowserFrameDomEvent } from "../🚚️browser-frame-transport/🖱️dom-events/🟦️.ts";
 import { type BrowserFrameFallbackState, type BrowserFrameIntrospectionProbe, type BrowserFrameWorkerFaultCode, type BrowserFrameWorkerStepReport, type BrowserHubDocumentRemote } from "../🚚️browser-frame-transport/📋️contract/🟦️.ts";
@@ -319,6 +320,7 @@ async function createWgpuBrowserHost(root: HTMLElement, options: WgpuBrowserHost
         readonly dispose: () => void;
     } | undefined;
     let mediaOverlay: ReturnType<typeof createBrowserMediaOverlay> | undefined;
+    let tutorialVideoOverlay: ReturnType<typeof createBrowserTutorialVideoOverlay> | undefined;
     const transport = new BrowserFrameTransport({
         originalWorkStock: rendererOriginalWorkStock(),
         worker,
@@ -346,6 +348,7 @@ async function createWgpuBrowserHost(root: HTMLElement, options: WgpuBrowserHost
             if (options.pageBindings)
                 detachIntrospection = attachIntrospectionBindings(transport);
             mediaOverlay = createBrowserMediaOverlay(root, (slot) => transport.mediaPort(slot.token), (slot) => (action, args) => { void transport.applyMediaAction(slot.token, action, args).catch((error: unknown) => console.warn("[wgpu-host] media action refused", error)); });
+            tutorialVideoOverlay = createBrowserTutorialVideoOverlay(root);
             accessibility = createAccessibilityMirror(root, transport, options.locale, canvas, (surface, node) => mediaOverlay?.owns(surface.windowId, node.nodeId, node.key) === true, options.pageBindings ? undefined : "semio-wgpu-accessibility-" + options.mountId);
             accessibility.refresh();
             cleanupInput = wireInput(root, canvas, transport);
@@ -356,8 +359,9 @@ async function createWgpuBrowserHost(root: HTMLElement, options: WgpuBrowserHost
                 canvas.focus({ preventScroll: true });
             resolveReady();
         },
-        onDirectives: ({ cursor, fullscreen, mediaSlots }) => {
+        onDirectives: ({ cursor, fullscreen, mediaSlots, tutorialVideo }) => {
             mediaOverlay?.accept(mediaSlots);
+            tutorialVideoOverlay?.accept(tutorialVideo);
             canvas.style.cursor = cursor;
             if (typeof fullscreen === "boolean")
                 void fullscreenOwner.set(fullscreen).catch(() => { });
@@ -370,6 +374,7 @@ async function createWgpuBrowserHost(root: HTMLElement, options: WgpuBrowserHost
             fullscreenOwner.dispose();
             detachIntrospection();
             mediaOverlay?.dispose();
+            tutorialVideoOverlay?.dispose();
             accessibility?.dispose();
             renderFault(root, code, detail, fallback);
             rejectReady(new Error(code + ": " + detail));
@@ -427,6 +432,7 @@ async function createWgpuBrowserHost(root: HTMLElement, options: WgpuBrowserHost
         fullscreenOwner.dispose();
         detachIntrospection();
         mediaOverlay?.dispose();
+        tutorialVideoOverlay?.dispose();
         accessibility?.dispose();
         if (previousInteractiveJobPort)
             setInteractiveJobPort(previousInteractiveJobPort);

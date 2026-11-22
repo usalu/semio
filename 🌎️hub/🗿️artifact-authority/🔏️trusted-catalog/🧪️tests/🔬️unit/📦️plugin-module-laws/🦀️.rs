@@ -162,7 +162,7 @@ fn the_most_general_dialect_rule_answers_the_shared_fixture() {
             serde_json::Value::String(answer) if answer == "none" => MostGeneralDialect::Empty,
             other => panic!("{name}: unknown answer {other}"),
         };
-        let answer = |candidates: Vec<(usize, semio_framework::ArtifactDialect)>| match most_general_dialect(candidates, |(_, dialect)| dialect) {
+        let answer = |candidates: Vec<(usize, semio_framework::ArtifactDialect)>| match most_general_dialect(candidates, |(_, dialect)| (&dialect.artifact_kind, &dialect.standard, &dialect.subset)) {
             MostGeneralDialect::One((index, _)) => MostGeneralDialect::One(index),
             MostGeneralDialect::Ambiguous => MostGeneralDialect::Ambiguous,
             MostGeneralDialect::Empty => MostGeneralDialect::Empty,

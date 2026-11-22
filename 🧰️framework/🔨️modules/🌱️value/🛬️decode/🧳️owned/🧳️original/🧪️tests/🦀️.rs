@@ -131,6 +131,34 @@ fn close_all<I:Sync+'static,T:NativeReceive<I>>(owner:NativeReceivingOriginal<I,
  }
  close_all(owner,&mut wallet,&mut payer,&mut control,&mut Vec::new());
 }
+#[test]
+fn original_receiving_quotes_each_native_template_part() {
+    type Value = SealedShared<Row>;
+    let mut wallet = stock();
+    let mut bank = scratch();
+    let mut owner = NativeReceivingOriginal::<DslValue, Value>::new(row_source(&mut bank));
+    let mut payer = Authorities::new();
+    let mut allow = |_| true;
+    let mut control = NativeDecodeControl::new(1 << 20, &mut allow);
+    let template = <Value as NativeReceive<DslValue>>::receiver_template(false).unwrap();
+    let mut parts = 0;
+
+    while !owner.receiver.initialized() {
+        let demand = owner.demands(BODY, wallet.remaining_work()).unwrap();
+        if owner.receiver.reserved() {
+            assert_eq!(demand, owner.receiver.template_seed_demand(template).unwrap());
+            parts += 1;
+        }
+        let grant = RetainedCloneGrant { maximum_items: 1, ..quoted(&wallet, demand) };
+        let (turn, heap) = advance(&mut owner, &mut control, &mut payer, &wallet, grant);
+        wallet.post(progress(&turn), turn.work, grant, heap);
+        turn.result.unwrap();
+        assert!(parts <= template.part_count());
+    }
+    assert_eq!(parts, template.part_count());
+    close_all(owner, &mut wallet, &mut payer, &mut control, &mut Vec::new());
+}
+
 #[test]fn native_persistent_list_original_vector_owner_batches_actions_under_a_wide_grant(){
  use semio_framework_value_persistent::list::persistent::PersistentList;
  type ListOwner=NativeReceivingOriginal<Vec<DslValue>,PersistentList<Row>>;

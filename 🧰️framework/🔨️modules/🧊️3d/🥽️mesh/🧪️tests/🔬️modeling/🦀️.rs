@@ -141,7 +141,7 @@ fn partitioned_difference_projects_authored_cutter_faces() {
         maximum_items: 100_000, maximum_copy_bytes: 1<<27, maximum_capacity_bytes: 1<<27,
         maximum_release_bytes: 1<<27, maximum_depth: 256,
     };
-    macro_rules! run_authored {
+    macro_rules! try_authored {
         ($job:expr) => {{
             let mut job=$job;
             let mut wallet=AuthoringWallet::new(wallet_stock,1<<28);
@@ -149,13 +149,19 @@ fn partitioned_difference_projects_authored_cutter_faces() {
                 let d=job.demand(256).unwrap();
                 let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:d.copy_bytes,
                     maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth};
-                let output=wallet.run(grant,32,|effect|job.step(effect)).unwrap().unwrap().output.unwrap();
+                let outcome=wallet.run(grant,32,|effect|job.step(effect)).unwrap().unwrap().output;
                 let receipt=job.take_progress();
                 assert!(receipt.fits(grant));
                 wallet.post(receipt).unwrap();
-                output
-            }).expect("authored Boolean publishes its complete polygon source")
+                match outcome {
+                    Ok(output) => output.map(Ok),
+                    Err(error) => Some(Err(error)),
+                }
+            }).expect("authored Boolean settles")
         }};
+    }
+    macro_rules! run_authored {
+        ($job:expr) => { try_authored!($job).unwrap() };
     }
     let reimport=|projected|{
         let mut import = HalfedgeMesh::polygon_source_job(projected).unwrap();
@@ -284,17 +290,18 @@ fn partitioned_difference_projects_authored_cutter_faces() {
         }
         mesh
     };
-    for lateral in [&nested["lateral"],&nested["longitudinalSlab"],&nested["cornerSlab"]]{
-        let tool=||{
-            let mut vertices=cube(&lateral["bounds"]);
-            if lateral["frame"]=="diagonal" {
-                for point in &mut vertices {
-                    let [u,v,z]=*point;
-                    *point=[(u+v)/2.,(v-u)/2.,z];
-                }
+    let oriented_cube=|row:&serde_json::Value| {
+        let mut vertices=cube(&row["bounds"]);
+        if row["frame"]=="diagonal" {
+            for point in &mut vertices {
+                let [u,v,z]=*point;
+                *point=[(u+v)/2.,(v-u)/2.,z];
             }
-            source(vertices,faces.clone(),"cutter",8.)
-        };
+        }
+        vertices
+    };
+    for lateral in [&nested["lateral"],&nested["longitudinalSlab"],&nested["cornerSlab"]]{
+        let tool=||source(oriented_cube(lateral),faces.clone(),"cutter",8.);
         for (reversed,subtract) in [(false,false),(true,false),(false,true)]{
             let out=if subtract{run_authored!(MeshAuthoredDifference::new(prism(),tool()))}
                 else if reversed{run_authored!(MeshAuthoredIntersection::new(tool(),prism()))}
@@ -332,39 +339,244 @@ fn partitioned_difference_projects_authored_cutter_faces() {
         }).collect();
         mesh
     };
-    for kind in ["mixedSlab", "mixedOpenSlab", "independentWalls", "fourArmWalls"] {
+    for kind in ["mixedSlab", "mixedOpenSlab", "independentWalls", "fourArmWalls", "disjointSupport", "disjointSupportInverse", "disjointSupportWithCaps", "disjointAndSingleSupports", "grazingSupport", "grazingEdge", "reflexSupport", "reflexSupportInverse", "reflexSupportWithCaps", "reflexSupportOpenTail", "reflexJoinsBothTails", "reflexJoinsOneTail", "multipleReflexContacts", "reflexOpposedBaseBand", "reflexOpposedTipBand", "reflexOpposedBaseTails", "reflexOpposedTipTails", "reflexNonparallelSupports", "reflexOnBothSupports", "reflexOnBothSupportsWithTails", "joinedReflexRight", "joinedReflexLeft", "joinedReflexDiagonal", "joinedReflexRightSlab", "joinedReflexDiagonalTail", "joinedReflexLeftTail", "joinedInteriorSlab", "joinedInteriorDiagonalSlab", "joinedInteriorStationaryCap", "joinedInteriorStockCaps", "joinedThreeSupportSlab", "joinedThreeSupportStockCaps", "threeNonparallelSlab", "threeNonparallelStockCaps", "threeNonparallelStationaryCap", "fourInteriorSupportsSlab", "fourInteriorSupportsStockCaps", "fourInteriorSupportsRotatedPocket", "pentagonalInteriorSlab", "pentagonalInteriorStockCaps", "hexagonalInteriorPocket", "maskedReflexHexagonalPocket", "maskedCoincidentTriangle"] {
         let mixed = &nested[kind];
         let spec = if mixed["footprint"].is_array() { mixed } else { &nested };
         let domain: Vec<[f32; 2]> = serde_json::from_value(spec["footprint"].clone()).unwrap();
-        let simple_prism = || with_raw_uv(source(heights.into_iter().flat_map(|z| domain.iter().map(move |&[x,y]| [x,y,z])).collect(),
-            serde_json::from_value(spec["faces"].clone()).unwrap(), "stock", 0.));
-        let slab=||with_raw_uv(source(cube(&mixed["bounds"]),faces.clone(),"cutter",8.));
+        let with_vertex_sample = |mut source: PolygonMeshSource| {
+            if mixed["generatedContact"] == true {
+                source.attributes.insert("stock-sample".into(), MeshAttribute {
+                    domain: MeshAttributeDomain::Vertex, semantic: MeshAttributeSemantic::Custom,
+                    interpolation: MeshAttributeInterpolation::Linear,
+                    values: source.vertices.iter().map(|point| {
+                        let [x,y,z] = point.map(f64::from);
+                        DslValue::float(2.*x+3.*y-z)
+                    }).collect(),
+                    indices: None,
+                });
+            }
+            source
+        };
+        let simple_prism = || with_vertex_sample(with_raw_uv(source(heights.into_iter().flat_map(|z| domain.iter().map(move |&[x,y]| [x,y,z])).collect(),
+            serde_json::from_value(spec["faces"].clone()).unwrap(), "stock", 0.)));
+        let slab=|| {
+            let (points,cutter_faces) = if mixed["cutterProfile"].is_array() {
+                let profile: Vec<[f32;2]> = serde_json::from_value(mixed["cutterProfile"].clone()).unwrap();
+                let levels = [0,1].map(|end| mixed["bounds"][end][2].as_f64().unwrap() as f32);
+                (levels.into_iter().flat_map(|z|profile.iter().map(move |&[x,y]|[x,y,z])).collect(),
+                    serde_json::from_value(mixed["cutterFaces"].clone()).unwrap())
+            } else { (oriented_cube(mixed),faces.clone()) };
+            with_vertex_sample(with_raw_uv(source(points,cutter_faces,"cutter",8.)))
+        };
+        if kind == "joinedInteriorStationaryCap" {
+            let mut nonaffine = simple_prism();
+            nonaffine.attributes.get_mut(&"uv".to_string()).unwrap().values[5] = tuple(&[70.,80.]);
+            let refusal = try_authored!(MeshAuthoredIntersection::new(nonaffine,slab())).err().unwrap();
+            assert!(refusal.to_string().contains("nonaffine named channel"));
+        }
         let cutter_faces=mixed["walls"].as_array().unwrap().iter().chain(mixed["horizontalWalls"].as_array().unwrap())
-            .map(|wall|format!("cutter-{}",wall["face"].as_u64().unwrap())).collect::<std::collections::BTreeSet<_>>();
+            .map(|wall|(format!("cutter-{}",wall["face"].as_u64().unwrap()),wall["segments"].as_u64().unwrap_or(1))).collect::<std::collections::BTreeMap<_,_>>();
         for (reversed, subtract) in [(false,false),(true,false),(false,true)]{
+            if subtract && mixed["difference"].is_null() { continue; }
             let out=if subtract{run_authored!(MeshAuthoredDifference::new(simple_prism(),slab()))}
                 else if reversed{run_authored!(MeshAuthoredIntersection::new(slab(),simple_prism()))}
                 else{run_authored!(MeshAuthoredIntersection::new(simple_prism(),slab()))};
-            let mut observed=std::collections::BTreeSet::new();
+            let mut observed=std::collections::BTreeMap::new();
+            let grazing_face=mixed["grazingFace"].as_u64().map(|index|format!("stock-{index}"));
+            let mut grazes=0;
             let corner_uvs = out.surface.iter().filter(|row| row.kind == semio_framework_mesh_engine::PolygonSurfaceKind::CornerUv)
                 .map(|row| (row.index as usize, row.uv.unwrap())).collect::<std::collections::BTreeMap<_, _>>();
             let mut corner=0;
             for (face,ring) in out.faces.iter().enumerate(){
                 let name=out.attributes.get("material").unwrap().value_at(face).unwrap().as_str().unwrap();
+                grazes+=usize::from(grazing_face.as_deref()==Some(name));
                 let (side,row)=name.split_once('-').unwrap();
-                let bias=16.*row.parse::<f64>().unwrap()+if side=="cutter"{observed.insert(name.to_owned());8.}else{0.};
+                let bias=16.*row.parse::<f64>().unwrap()+if side=="cutter"{*observed.entry(name.to_owned()).or_insert(0)+=1;8.}else{0.};
                 for &id in ring{
                     let [x,y,z]=out.vertices[id as usize].map(f64::from);
                     let uv=out.attributes.get("uv").unwrap().value_at(corner).unwrap().as_array().unwrap();
                     let expected = [bias + x, y + z];
                     assert!(uv.iter().zip(expected).all(|(value, want)| (value.as_f64().unwrap() - want).abs() < 1e-7));
-                    assert_eq!(corner_uvs[&corner], expected.map(|value| (value + 0.125) as f32));
+                    let raw = expected.map(|value| (value + 0.125) as f32);
+                    let ulps = mixed["rawUvUlps"].as_u64().unwrap_or(0) as u32;
+                    assert!(corner_uvs[&corner].into_iter().zip(raw).all(|(value,want)| {
+                        value.to_bits().abs_diff(want.to_bits()) <= ulps
+                    }), "{kind} raw corner {corner}: {:?} instead of {raw:?}", corner_uvs[&corner]);
                     corner+=1;
                 }
             }
-            assert_eq!(observed,cutter_faces);
             let expected=&mixed[if subtract{"difference"}else{"intersection"}];
-            assert_edit_surface(&reimport(out),expected["area"].as_f64(),expected["volume"].as_f64());
+            for opening in expected["stockCapOpenings"].as_array().into_iter().flatten() {
+                let z = opening["z"].as_f64().unwrap() as f32;
+                let owner = format!("stock-{}",opening["face"].as_u64().unwrap());
+                let cap_materials: Vec<_> = out.faces.iter().enumerate().filter(|(_,ring)| ring.iter().all(|&id| out.vertices[id as usize][2] == z))
+                    .map(|(face,_)| out.attributes.get("material").unwrap().value_at(face).unwrap().as_str().unwrap()).collect();
+                assert_eq!(cap_materials,[owner.as_str();2]);
+            }
+            let mut owners=cutter_faces.clone();
+            for wall in mixed["walls"].as_array().unwrap() {
+                if let Some(segments)=wall[if subtract {"differenceSegments"} else {"intersectionSegments"}].as_u64() {
+                    let face=wall["face"].as_u64().unwrap();
+                    *owners.get_mut(&format!("cutter-{face}")).unwrap()=segments;
+                }
+            }
+            if let Some(segments)=expected["wallSegments"].as_u64() {
+                let face=mixed["walls"][0]["face"].as_u64().unwrap();
+                *owners.get_mut(&format!("cutter-{face}")).unwrap()=segments;
+            }
+            if !expected["contactCopies"].is_null() {
+                let contact_heights:Vec<f32>=expected.get("contactHeights").map(|raw|serde_json::from_value(raw.clone()).unwrap()).unwrap_or_else(||heights.to_vec());
+                let used:std::collections::BTreeSet<_>=out.faces.iter().flatten().copied().collect();
+                for raw in mixed["pinches"].as_array().unwrap() {
+                    let [x,y]:[f32;2]=serde_json::from_value(raw.clone()).unwrap();
+                    for (level,&z) in contact_heights.iter().enumerate() {
+                        let count=used.iter().filter(|&&id|out.vertices[id as usize]==[x,y,z]).count();
+                        let copies=&expected["contactCopies"];
+                        assert_eq!(count as u64,copies.as_u64().or_else(||copies[level].as_u64()).unwrap());
+                    }
+                }
+            }
+            assert_eq!(observed,owners);
+            assert_eq!(grazes,usize::from(subtract && grazing_face.is_some()));
+            let mesh=reimport(out);
+            if !expected["contactCopies"].is_null() {
+                let (points,faces)=mesh.polygon_soup();
+                if mixed["generatedContact"] == true {
+                    let attributes = mesh.attributes();
+                    let sample = &attributes["stock-sample"];
+                    for (corner,&id) in faces.iter().flatten().enumerate() {
+                        let [x,y,z] = points[id as usize].map(f64::from);
+                        let row = if sample.domain == MeshAttributeDomain::Vertex {id as usize} else {corner};
+                        let value = sample.value_at(row).unwrap().as_f64().unwrap();
+                        assert!((value-(2.*x+3.*y-z)).abs() < 1e-7);
+                    }
+                }
+                let edges=faces.iter().map(Vec::len).sum::<usize>()/2;
+                let euler=points.len() as i64+faces.len() as i64-edges as i64;
+                let mut neighbors=vec![Vec::new();points.len()];
+                for face in faces {
+                    for (&a,&b) in face.iter().zip(face.iter().cycle().skip(1)) {
+                        neighbors[a as usize].push(b as usize);
+                        neighbors[b as usize].push(a as usize);
+                    }
+                }
+                let mut unseen:std::collections::BTreeSet<_>=(0..points.len()).collect();
+                let mut shells=0;
+                while let Some(seed)=unseen.pop_first() {
+                    shells+=1;
+                    let mut frontier=vec![seed];
+                    while let Some(id)=frontier.pop() {
+                        frontier.extend(neighbors[id].iter().copied().filter(|peer|unseen.remove(peer)));
+                    }
+                }
+                assert_eq!(shells,expected["components"].as_u64().unwrap());
+                assert_eq!(euler,2*(shells as i64-expected["genus"].as_i64().unwrap_or(0)));
+            }
+            assert_edit_surface(&mesh,expected["area"].as_f64(),expected["volume"].as_f64());
+        }
+    }
+    let axial_profile: Vec<[f32; 2]> = serde_json::from_value(nested["footprint"].clone()).unwrap();
+    let axial_faces: Vec<Vec<u32>> = serde_json::from_value(nested["faces"].clone()).unwrap();
+    for row in ["axialPairs","nestedConcavePairs","separatedConcavePairs","capCoincidentConcavePairs"].into_iter().flat_map(|key|nested[key].as_array().unwrap()) {
+        let axis = row["axis"].as_u64().unwrap() as usize;
+        let rotation = row["cutterRotation"].as_u64().unwrap() as usize;
+        let prism = |key: &str, shift, prefix, bias| {
+            let levels: [f32; 2] = serde_json::from_value(row[key].clone()).unwrap();
+            let (profile_key,faces_key)=if key=="cutter"{("cutterProfile","cutterFaces")}else{("stockProfile","stockFaces")};
+            let own_profile = row[profile_key].is_array();
+            let authored_profile: Vec<[f32;2]> = if own_profile {
+                serde_json::from_value(row[profile_key].clone()).unwrap()
+            } else { Vec::new() };
+            let profile = if own_profile { &authored_profile } else { &axial_profile };
+            let positions = levels.into_iter().flat_map(|z| profile.iter().cycle().skip(shift).take(profile.len())
+                .map(move |&[x,y]| [0,1,2].map(|i| [x,y,z][(i+2+3-axis)%3]))).collect();
+            let mut faces=if own_profile { serde_json::from_value(row[faces_key].clone()).unwrap() }
+                else { axial_faces.clone() };
+            if key=="cutter" && row["reverseCutterCaps"]==true { faces.swap(0,1); }
+            let mut result = with_raw_uv(source(positions, faces, prefix, bias));
+            result.attributes.insert("axial-sample".into(),MeshAttribute {
+                domain: MeshAttributeDomain::Vertex, semantic: MeshAttributeSemantic::Custom,
+                interpolation: MeshAttributeInterpolation::Linear, indices: None,
+                values: result.vertices.iter().map(|point| {
+                    let [x,y,z]=point.map(f64::from);
+                    DslValue::float(bias+2.*x-y+3.*z)
+                }).collect(),
+            });
+            result
+        };
+        if let Some(offset) = row["mismatchedProfileOffset"].as_f64() {
+            for union in [false,true] {
+                let source=prism("stock",0,"stock",0.);
+                let mut shifted=prism("cutter",rotation,"cutter",8.);
+                for point in &mut shifted.vertices { point[(axis+1)%3] += offset as f32; }
+                let outcome=if union { try_authored!(MeshAuthoredUnion::new(source,shifted)) }
+                    else { try_authored!(MeshAuthoredIntersection::new(source,shifted)) };
+                assert!(outcome.err().unwrap().to_string().contains("matching orthogonal prism profiles"));
+            }
+        }
+        for (operation,reversed,subtract,union) in [("intersection",false,false,false),
+            ("reversedIntersection",true,false,false),("difference",false,true,false),
+            ("reversedDifference",true,true,false),("union",false,false,true),("reversedUnion",true,false,true)] {
+            if row[operation].is_null() { continue; }
+            let (left,right) = if reversed {
+                (prism("cutter",rotation,"stock",0.),prism("stock",0,"cutter",8.))
+            } else { (prism("stock",0,"stock",0.),prism("cutter",rotation,"cutter",8.)) };
+            let out = if union { run_authored!(MeshAuthoredUnion::new(left,right)) }
+                else if subtract { run_authored!(MeshAuthoredDifference::new(left,right)) }
+                else { run_authored!(MeshAuthoredIntersection::new(left,right)) };
+            let expected=&row[operation];
+            if expected["components"]==0 {
+                assert!(out.vertices.is_empty() && out.faces.is_empty());
+                continue;
+            }
+            let mut cutter_caps=Vec::new();
+            let mut stock_faces=Vec::new();
+            let mut corner=0;
+            let raw = out.surface.iter().filter(|sample|sample.kind==semio_framework_mesh_engine::PolygonSurfaceKind::CornerUv)
+                .map(|sample|(sample.index as usize,sample.uv.unwrap())).collect::<std::collections::BTreeMap<_,_>>();
+            for (face,ring) in out.faces.iter().enumerate() {
+                let name=out.attributes.get("material").unwrap().value_at(face).unwrap().as_str().unwrap();
+                let (operand,id)=name.split_once('-').unwrap();
+                let id=id.parse::<u32>().unwrap();
+                let bias=16.*f64::from(id)+if operand=="cutter" {cutter_caps.push(id);8.}
+                    else {stock_faces.push(id);0.};
+                for &vertex in ring {
+                    let [x,y,z]=out.vertices[vertex as usize].map(f64::from);
+                    let expected=[bias+x,y+z];
+                    let uv=out.attributes.get("uv").unwrap().value_at(corner).unwrap().as_array().unwrap();
+                    assert!(uv.iter().zip(expected).all(|(v,w)|(v.as_f64().unwrap()-w).abs()<1e-7));
+                    assert_eq!(raw[&corner], expected.map(|v|(v+0.125) as f32));
+                    corner+=1;
+                }
+            }
+            for face in expected["openStockFaces"].as_array().into_iter().flatten() {
+                assert_eq!(stock_faces.iter().filter(|&&owner|Some(u64::from(owner))==face.as_u64()).count(),2);
+            }
+            cutter_caps.sort_unstable();
+            assert_eq!(serde_json::to_value(cutter_caps).unwrap(),expected[if union {"cutterFaces"} else {"cutterCaps"}]);
+            if union {
+                stock_faces.sort_unstable();
+                assert_eq!(serde_json::to_value(stock_faces).unwrap(),expected["stockFaces"]);
+            }
+            let mesh=reimport(out);
+            let (points,rings)=mesh.polygon_soup();
+            let attributes=mesh.attributes();
+            let samples=&attributes["axial-sample"];
+            let mut corner=0;
+            for (face,ring) in rings.iter().enumerate() {
+                let material=attributes["material"].value_at(face).unwrap().as_str().unwrap();
+                let bias=if material.starts_with("cutter-"){8.}else{0.};
+                for &vertex in ring {
+                    let [x,y,z]=points[vertex as usize].map(f64::from);
+                    let row=if samples.domain == MeshAttributeDomain::Vertex {vertex as usize}else{corner};
+                    let actual=samples.value_at(row).unwrap().as_f64().unwrap();
+                    assert!((actual-(bias+2.*x-y+3.*z)).abs()<1e-7);
+                    corner+=1;
+                }
+            }
+            let edges=rings.iter().map(Vec::len).sum::<usize>()/2;
+            assert_eq!(points.len() as i64+rings.len() as i64-edges as i64,2*(expected["components"].as_i64().unwrap()-expected["genus"].as_i64().unwrap_or(0)));
+            assert_edit_surface(&mesh,expected["area"].as_f64(),expected["volume"].as_f64());
         }
     }
     for row in pocket["cases"].as_array().unwrap().iter().filter(|row|row["splitStockOpening"].is_u64()||row["recess"]==true){

@@ -820,6 +820,7 @@
         "@semio-tech/schema-ts": "workspace:*",
         "@semio-tech/ui": "workspace:*",
         "@semio-tech/ui-contract": "workspace:*",
+        "@semio-tech/ui-layout": "workspace:*",
         "@semio-tech/value-ts": "workspace:*"
       },
       "devDependencies": {
@@ -1087,6 +1088,9 @@
     "../🧰️framework/🔨️modules/🎓️onboarding": {
       "name": "@semio-tech/framework-onboarding",
       "version": "0.1.0",
+      "dependencies": {
+        "@semio-tech/ui-layout": "workspace:*"
+      },
       "devDependencies": {
         "immer": "10.1.1"
       }
@@ -1109,6 +1113,7 @@
         "@semio-tech/schema-ts": "workspace:*",
         "@semio-tech/schema-validator-ts": "workspace:*",
         "@semio-tech/ui-contract": "workspace:*",
+        "@semio-tech/ui-layout": "workspace:*",
         "@semio-tech/value-ts": "workspace:*"
       },
       "devDependencies": {
@@ -1342,6 +1347,7 @@
         "@semio-tech/framework-transient": "workspace:*",
         "@semio-tech/schema-validator-ts": "workspace:*",
         "@semio-tech/ui-contract": "workspace:*",
+        "@semio-tech/ui-layout": "workspace:*",
         "@xyflow/react": "12.12.0",
         "react": "^19.2.3",
         "react-dom": "^19.2.3",
@@ -1488,6 +1494,13 @@
         "jsdom": "^24.1.3",
         "typescript": "^5.9.3",
         "web-tree-sitter": "0.20.8"
+      }
+    },
+    "../🧰️framework/🔨️modules/🖱️ui/🧬️contract/🖼️presentation/📐️layout": {
+      "name": "@semio-tech/ui-layout",
+      "version": "0.1.0",
+      "devDependencies": {
+        "ajv": "8.20.0"
       }
     },
     "../🧰️framework/🔨️modules/🖱️ui/🪟️viewport/📦️packages/🟦️typescript": {
@@ -1724,7 +1737,8 @@
       "version": "0.1.0",
       "dependencies": {
         "@semio-tech/framework-effect": "workspace:*",
-        "@semio-tech/framework-onboarding": "workspace:*"
+        "@semio-tech/framework-onboarding": "workspace:*",
+        "@semio-tech/ui-layout": "workspace:*"
       },
       "devDependencies": {
         "@semio-tech/ui-contract": "workspace:*",
@@ -1947,6 +1961,7 @@
         "@semio-tech/schema-validator-ts": "workspace:*",
         "@semio-tech/ui": "workspace:*",
         "@semio-tech/ui-contract": "workspace:*",
+        "@semio-tech/ui-layout": "workspace:*",
         "@semio-tech/ui-styling": "workspace:*",
         "@semio-tech/value-ts": "workspace:*"
       },
@@ -2797,6 +2812,8 @@
         "@semio-tech/ui-styling": "workspace:*"
       },
       "devDependencies": {
+        "@semio-tech/plugin-registry": "workspace:*",
+        "smol-toml": "1.6.1",
         "typescript": "^5.9.3"
       }
     },
@@ -8812,6 +8829,9 @@
     ],
     "@semio-tech/ui-contract": [
       "@semio-tech/ui-contract@workspace:../🧰️framework/🔨️modules/🖱️ui/🧬️contract"
+    ],
+    "@semio-tech/ui-layout": [
+      "@semio-tech/ui-layout@workspace:../🧰️framework/🔨️modules/🖱️ui/🧬️contract/🖼️presentation/📐️layout"
     ],
     "@semio-tech/ui-locale-rs": [
       "@semio-tech/ui-locale-rs@workspace:../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust"

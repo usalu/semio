@@ -9,7 +9,7 @@
  * @see ../🧮️evaluation/🟦️.ts — `evaluate`, used for the extent and plant checks
  */
 import { CATEGORIES, PARAMETER_SOURCES, POWER_BASES, SCALE_BANDS, SCALE_DENOMINATORS, UNAVAILABLE_CAUSES, PLANAR_VIEWPOINTS, operatingKeyOf } from "../../🧬️schema/🟦️.ts";
-import type { Asset, AuthoredRepresentation, BoneOffset, ScaleDenominator, Environment, EnvironmentPreset, Manifest, PrintProfile, Shape, Slug, SymbolRepresentation, Text, PlanarViewpoint } from "../../🧬️schema/🟦️.ts";
+import type { Asset, AuthoredRepresentation, BoneOffset, ScaleDenominator, VolumeSolid, Environment, EnvironmentPreset, Manifest, PrintProfile, Shape, Slug, SymbolRepresentation, Text, PlanarViewpoint } from "../../🧬️schema/🟦️.ts";
 import type { EvaluatedState } from "../🔗️contracts/🟦️.ts";
 import { VIEWPOINT_CAPTIONS } from "../🎨️depiction/✂️section/🟦️.ts";
 import { sampleClip, samplePose } from "../🎞️animation/🟦️.ts";
@@ -17,6 +17,8 @@ import { evaluate, flattenGeometry } from "../🧮️evaluation/🟦️.ts";
 import { exportIssues, volumeIssues, weightIssues } from "./🧊️volume/🟦️.ts";
 import { POWER_TOLERANCE_W, totalPowerW } from "../🌡️thermal/⚡️power/🟦️.ts";
 import { analyticRules } from "./🧊️volumes/🧱️rules/🟦️.ts";
+import { copyMesh, repeatMaps } from "./🧊️volumes/🌓️silhouette/🟦️.ts";
+import { qualityOf } from "../🧊️volume/⏱️job/🟦️.ts";
 import { compareRepresentations } from "../🖨️representation/🪞️copies/🟦️.ts";
 import { DEFAULT_PRINT_PROFILE, measureSuitability, measureSymbolSuitability } from "../🖨️representation/🟦️.ts";
 import { effectiveOffset, restFrames, solveChain } from "../🦴️rig/🟦️.ts";
@@ -35,6 +37,30 @@ export const EXTENT_TOLERANCE_M = 0.015;
 /** 🎞️ The instants per clip at which the tilt of a bone out of the plane of its shapes is sampled. */
 const TILT_SAMPLES = 9;
 
+/** 📐️ The largest tilt of a bone against the paper in radians and the largest paper displacement of a point one metre beside the plane of its flat shapes. */
+type Lean = { readonly theta: number; readonly lean: number };
+const UPRIGHT: Lean = { theta: 0, lean: 0 };
+
+/** 🫥️ The determinant of the projected rest axes below which the plane of a bone stands edge-on to the paper: nothing drawn in it can be seen. */
+const EDGE_ON = 1e-6;
+
+type Axes = { readonly u: readonly number[]; readonly v: readonly number[]; readonly w: readonly number[] };
+
+/** 🪟️ How far the side elevation of a point one metre beside the (`u`, `v`) plane of a bone leaves the place its flat drawing gives it.
+ *
+ * The rest placement of the rig puts a flat elevation shape in the bone's own plane and the paper shows that plane as it rests, so the rest drawing is exact whatever the inclination. A pose carries
+ * the drawing by `A = [u₁ v₁]·[u₀ v₀]⁻¹` (paper projections of the axes at rest and now) and a point `c` beside the plane by `c·(w₁ − A·w₀)` more; the result is the length of that vector, which is
+ * `sin θ` for a bone that rests in the paper. A plane that rests edge-on has no drawing at all: 1.
+ *
+ * @see ../🦴️rig/🟦️.ts — `restFrames`, `solveChain` */
+export function plateLean(rest: Axes, now: Axes): number {
+  const det = rest.u[0]! * rest.v[1]! - rest.u[1]! * rest.v[0]!;
+  if (Math.abs(det) < EDGE_ON) return 1;
+  const a = (rest.w[0]! * rest.v[1]! - rest.w[1]! * rest.v[0]!) / det;
+  const b = (rest.u[0]! * rest.w[1]! - rest.u[1]! * rest.w[0]!) / det;
+  return Math.sqrt((now.w[0]! - a * now.u[0]! - b * now.v[0]!) ** 2 + (now.w[1]! - a * now.u[1]! - b * now.v[1]!) ** 2);
+}
+
 /** 🏷️ The names of the three viewpoints in validator messages (terminology R1). */
 const VIEWPOINT_NAMES: Readonly<Record<PlanarViewpoint, Text>> = Object.fromEntries(PLANAR_VIEWPOINTS.map((viewpoint) => [viewpoint, { en: VIEWPOINT_CAPTIONS[viewpoint].en.toLowerCase(), de: VIEWPOINT_CAPTIONS[viewpoint].de }])) as Record<PlanarViewpoint, Text>;
 
@@ -51,8 +77,11 @@ export const ADVANCE_TOLERANCE_M = 0.002;
 export const SUM_TOLERANCE = 0.02;
 export const PHASE_TOLERANCE = 1e-3;
 
-/** 🌐️ What a single asset cannot know alone: the ids of the other assets, to resolve `asset` alternatives. */
-export type AssetContext = { readonly assets?: ReadonlyMap<Slug, Asset>; readonly environments?: ReadonlySet<Slug> };
+/** 🌐️ What a single asset cannot know alone: the ids of the other assets, to resolve `asset` alternatives, and the ids of the environment presets. `progress` is told after each of the {@link VALIDATION_PHASES} parts of the check which part is done, so a caller that runs the check on a thread of its own can show how far it is. */
+export type AssetContext = { readonly assets?: ReadonlyMap<Slug, Asset>; readonly environments?: ReadonlySet<Slug>; readonly progress?: (done: number, total: number, label: Text) => void };
+
+/** 🪜️ The parts `validateAsset` reports progress after: rig and references, drawings, symbols, thermal model, poses and clips, volumes. */
+export const VALIDATION_PHASES = 6;
 
 /** 🌤️ The environment a standalone thermal view solves under. Precedence: the caller's explicit preset id (`explicit`), else the asset's `thermal.referenceEnvironment` (a preset id or an inline environment), else `undefined`:
  * the solver then applies the asset's own `thermal.environment`. Unknown ids throw an error that names the known presets. */
@@ -178,6 +207,7 @@ export function validateAsset(source: Asset, context: AssetContext = {}): readon
   const need = (path: string, id: string | undefined, known: ReadonlySet<string>, what: string): void => {
     if (id !== undefined && !known.has(id)) add(path, "unresolved-reference", `${what} "${id}" does not exist.`, `${what} "${id}" existiert nicht.`);
   };
+  const phase = (done: number, en: string, de: string): void => context.progress?.(done, VALIDATION_PHASES, text(en, de));
   textIssues(asset, "$", out);
 
   const bones = new Set(asset.rig.bones.map((bone) => bone.id));
@@ -278,8 +308,8 @@ export function validateAsset(source: Asset, context: AssetContext = {}): readon
     need(`${path}.reference`, material.reference, references, "Reference");
   });
 
-  const tilts = new Map<PlanarViewpoint, Map<Slug, number>>();
-  const tiltOf = (bone: Slug, viewpoint: PlanarViewpoint): number => {
+  const tilts = new Map<PlanarViewpoint, Map<Slug, Lean>>();
+  const tiltOf = (bone: Slug, viewpoint: PlanarViewpoint): Lean => {
     let table = tilts.get(viewpoint);
     if (table === undefined) {
       table = new Map();
@@ -293,14 +323,38 @@ export function validateAsset(source: Asset, context: AssetContext = {}): readon
           const r = rest[id]!.frame;
           const n = now[id]!.frame;
           const dotWith = (a: readonly number[]): number => a[0]! * normal[0] + a[1]! * normal[1] + a[2]! * normal[2];
-          const carried = [0, 1, 2].map((axis) => n.u[axis]! * dotWith(r.u) + n.v[axis]! * dotWith(r.v) + n.w[axis]! * dotWith(r.w));
+          const carried = viewpoint === "elevation" ? n.w : [0, 1, 2].map((axis) => n.u[axis]! * dotWith(r.u) + n.v[axis]! * dotWith(r.v) + n.w[axis]! * dotWith(r.w));
           const cosine = Math.min(1, Math.max(-1, carried[0]! * normal[0] + carried[1]! * normal[1] + carried[2]! * normal[2]));
-          table.set(id, Math.max(table.get(id) ?? 0, portable.acos(cosine)));
+          const theta = portable.acos(cosine);
+          const before = table.get(id) ?? UPRIGHT;
+          table.set(id, { theta: Math.max(before.theta, theta), lean: Math.max(before.lean, viewpoint === "elevation" ? plateLean(r, n) : portable.sin(theta)) });
         }
       }
     }
-    return table.get(bone) ?? 0;
+    return table.get(bone) ?? UPRIGHT;
   };
+  const reaches = new Map<number, Map<Slug, number>>();
+  const reachOf = (denominator: number, bone: Slug): number => {
+    let table = reaches.get(denominator);
+    if (table === undefined) {
+      table = new Map();
+      reaches.set(denominator, table);
+      const volume = (asset.volumes as Partial<Record<string, { readonly status: string; readonly body?: readonly VolumeSolid[] }>> | undefined)?.[String(denominator)];
+      try {
+        for (const solid of volume?.status === "authored" ? (volume.body ?? []) : []) {
+          const { positions } = copyMesh(solid, qualityOf(asset));
+          let reach = table.get(solid.bone) ?? 0;
+          for (const { a, b } of solid.repeat === undefined ? [{ a: [1, 0, 0, 0, 1, 0, 0, 0, 1], b: [0, 0, 0] }] : repeatMaps(solid.repeat)) for (let i = 0; i < positions.length; i += 3) reach = Math.max(reach, Math.abs(a[6]! * positions[i]! + a[7]! * positions[i + 1]! + a[8]! * positions[i + 2]! + b[2]!));
+          table.set(solid.bone, reach);
+        }
+      } catch {
+        table.clear();
+      }
+    }
+    return table.get(bone) ?? Infinity;
+  };
+  let restTiltedSet: Set<Slug> | undefined;
+  const restTilted = (): Set<Slug> => (restTiltedSet ??= new Set(Object.entries(restFrames(asset.rig)).filter(([, solved]) => solved.affected).map(([id]) => id)));
   let spreadSet: Set<Slug> | undefined;
   const spreadBones = (): Set<Slug> => {
     if (spreadSet !== undefined) return spreadSet;
@@ -365,13 +419,13 @@ export function validateAsset(source: Asset, context: AssetContext = {}): readon
         if (shape.solid.kind === "extruded" && shape.solid.weights) weightIssues({ id: shape.id, weights: shape.solid.weights }, `${sp}.solid`, bones, add);
         if (shape.solid.kind === "extruded" && !(shape.solid.z0 < shape.solid.z1)) add(`${sp}.solid`, "solid-extent", `Shape "${shape.id}" needs z0 < z1 in its extruded solid.`, `Form "${shape.id}" braucht z0 < z1 in ihrem extrudierten Körper.`);
       }
-      if (shape.solid === undefined && shape.role !== "ground" && !path.startsWith("symbols") && bones.has(shape.bone) && !out.some((issue) => issue.code.startsWith("rig-") || issue.code === "duplicate-id") && spreadBones().has(shape.bone)) {
-        const viewpoint = path.endsWith(".geometry.front") ? "front" : path.endsWith(".geometry.plan") ? "plan" : "elevation";
-        const theta = tiltOf(shape.bone, viewpoint);
+      const viewpoint = path.endsWith(".geometry.front") ? "front" : path.endsWith(".geometry.plan") ? "plan" : "elevation";
+      if (shape.solid === undefined && shape.role !== "ground" && !path.startsWith("symbols") && bones.has(shape.bone) && !out.some((issue) => issue.code.startsWith("rig-") || issue.code === "duplicate-id") && (spreadBones().has(shape.bone) || (viewpoint === "elevation" && restTilted().has(shape.bone)))) {
+        const { theta, lean } = tiltOf(shape.bone, viewpoint);
         const rings = flattenGeometry(shape).rings.flat();
         const extent = rings.length === 0 ? 0 : Math.max(Math.max(...rings.map((p) => p.x)) - Math.min(...rings.map((p) => p.x)), Math.max(...rings.map((p) => p.y)) - Math.min(...rings.map((p) => p.y)));
         const denominator = Number(/representations\.(\d+)\./u.exec(path)?.[1] ?? 0);
-        const errorMm = denominator > 0 ? (extent * portable.sin(theta) * 1000) / denominator : 0;
+        const errorMm = denominator > 0 ? ((viewpoint === "elevation" ? Math.min(extent, reachOf(denominator, shape.bone)) : extent) * lean * 1000) / denominator : 0;
         if (errorMm > DEFAULT_PRINT_PROFILE.minFeatureMm) {
           const entry = ambiguous.get(shape.bone) ?? ambiguous.set(shape.bone, { ids: new Set(), where: new Set(), thetaDeg: 0, errorMm: 0 }).get(shape.bone)!;
           entry.ids.add(shape.id);
@@ -435,6 +489,7 @@ export function validateAsset(source: Asset, context: AssetContext = {}): readon
     if (!within(width, asset.dimensions.widthM)) add(`${path}.geometry`, "extent-width", `The default-pose width ${width.toFixed(3)} m of the 1:${rep.denominator} drawing differs from dimensions.widthM ${asset.dimensions.widthM} m by more than max(2 % of the declared value, 15 mm).`, `Die Breite ${width.toFixed(3)} m der Zeichnung 1:${rep.denominator} in der Standardpose weicht um mehr als max(2 % des deklarierten Werts, 15 mm) von dimensions.widthM ${asset.dimensions.widthM} m ab.`);
   };
 
+  phase(1, "Rig and references checked", "Rig und Verweise geprüft");
   const drawable: { readonly path: string; readonly denominator: number; readonly paperMm: number; readonly offered: readonly Slug[] }[] = [];
   const representationPending: AuthoredRepresentation[] = [];
   for (const denominator of SCALE_DENOMINATORS) {
@@ -515,6 +570,7 @@ export function validateAsset(source: Asset, context: AssetContext = {}): readon
       const similarity = compareRepresentations(coarseFirst[i]!, coarseFirst[j]!);
       if (similarity.kind !== "distinct") add(`representations.${coarseFirst[i]!.denominator}`, "representation-copied", `The drawing 1:${coarseFirst[i]!.denominator} is a copy of 1:${coarseFirst[j]!.denominator} (${similarity.kind}: ${similarity.sharedShapes} of ${similarity.coarseShapes} shapes identical); every scale must be redrawn.`, `Die Zeichnung 1:${coarseFirst[i]!.denominator} ist eine Kopie von 1:${coarseFirst[j]!.denominator} (${similarity.kind}: ${similarity.sharedShapes} von ${similarity.coarseShapes} Formen identisch); jeder Maßstab muss neu gezeichnet werden.`);
     }
+  phase(2, "Drawings checked", "Zeichnungen geprüft");
   asset.symbols.forEach((symbol, index) => {
     const path = `symbols[${index}]`;
     if (SYMBOL_UNITS[symbol.semantics] !== symbol.units) add(`${path}.units`, "symbol-units", `A symbol of semantics "${symbol.semantics}" must use units "${SYMBOL_UNITS[symbol.semantics]}".`, `Ein Symbol der Semantik "${symbol.semantics}" muss die Einheit "${SYMBOL_UNITS[symbol.semantics]}" verwenden.`);
@@ -538,7 +594,7 @@ export function validateAsset(source: Asset, context: AssetContext = {}): readon
     }
   });
 
-  for (const [bone, { ids, where, thetaDeg, errorMm }] of ambiguous) add("representations", "lateral-ambiguous", `${ids.size} flat shape(s) (${[...ids].slice(0, 6).join(", ")}${ids.size > 6 ? ", ..." : ""}) on bone "${bone}" would be drawn up to ${errorMm.toFixed(2)} mm wrong on paper (above the ${DEFAULT_PRINT_PROFILE.minFeatureMm} mm print minimum) in ${[...where].join(", ")}: the bone leaves the shapes' plane by up to ${thetaDeg.toFixed(1)} degrees in a pose or clip, so author them as solids (extruded or revolved).`, `${ids.size} flache Form(en) (${[...ids].slice(0, 6).join(", ")}${ids.size > 6 ? ", ..." : ""}) am Knochen "${bone}" würden auf dem Papier um bis zu ${errorMm.toFixed(2)} mm falsch gezeichnet (über dem Druckminimum von ${DEFAULT_PRINT_PROFILE.minFeatureMm} mm) in ${[...where].join(", ")}: der Knochen verlässt die Ebene der Formen in einer Pose oder einem Clip um bis zu ${thetaDeg.toFixed(1)} Grad, daher als Körper (extrudiert oder rotiert, solid) zeichnen.`, { bone, shapes: [...ids], bands: [...where], thetaMaxDeg: Number(thetaDeg.toFixed(2)), errorMm: Number(errorMm.toFixed(3)) });
+  for (const [bone, { ids, where, thetaDeg, errorMm }] of ambiguous) add("representations", "lateral-ambiguous", `${ids.size} flat shape(s) (${[...ids].slice(0, 6).join(", ")}${ids.size > 6 ? ", ..." : ""}) on bone "${bone}" would be drawn up to ${errorMm.toFixed(2)} mm wrong on paper (above the ${DEFAULT_PRINT_PROFILE.minFeatureMm} mm print minimum) in ${[...where].join(", ")}: the plane of the bone stands up to ${thetaDeg.toFixed(1)} degrees against the paper and a pose or clip turns it against its rest placement (or it rests edge-on), so author them as solids (extruded or revolved).`, `${ids.size} flache Form(en) (${[...ids].slice(0, 6).join(", ")}${ids.size > 6 ? ", ..." : ""}) am Knochen "${bone}" würden auf dem Papier um bis zu ${errorMm.toFixed(2)} mm falsch gezeichnet (über dem Druckminimum von ${DEFAULT_PRINT_PROFILE.minFeatureMm} mm) in ${[...where].join(", ")}: die Ebene des Knochens steht bis zu ${thetaDeg.toFixed(1)} Grad gegen das Papier und eine Pose oder ein Clip dreht sie gegen ihre Ruhelage (oder sie ruht in Kantenansicht), daher als Körper (extrudiert oder rotiert, solid) zeichnen.`, { bone, shapes: [...ids], bands: [...where], thetaMaxDeg: Number(thetaDeg.toFixed(2)), errorMm: Number(errorMm.toFixed(3)) });
   for (const { path, denominator, paperMm, offered } of drawable) {
     const satisfied = offered.some((id) => {
       const index = asset.symbols.findIndex((symbol) => symbol.id === id);
@@ -548,6 +604,7 @@ export function validateAsset(source: Asset, context: AssetContext = {}): readon
     });
     if (!satisfied) add(path, "unavailable-but-drawable", `The asset measures ${paperMm.toFixed(1)} mm on paper at 1:${denominator}, at least ${UNAVAILABLE_MIN_PAPER_MM} mm: draw it, or offer a true-extent symbol that has all three views and passes the extent and print-minimum checks.`, `Das Asset misst bei 1:${denominator} ${paperMm.toFixed(1)} mm auf dem Papier, mindestens ${UNAVAILABLE_MIN_PAPER_MM} mm: zeichnen, oder ein maßstäbliches Symbol (true-extent) mit allen drei Ansichten anbieten, das die Ausdehnungs- und die Druckminimum-Prüfung besteht.`);
   }
+  phase(3, "Symbols checked", "Symbole geprüft");
   asset.thermal.regions.forEach((region, index) => {
     const path = `thermal.regions[${index}]`;
     need(`${path}.material`, region.material, materials, "Material");
@@ -630,6 +687,7 @@ export function validateAsset(source: Asset, context: AssetContext = {}): readon
       if (Math.abs(sum - 1) > PHASE_TOLERANCE) add(`thermal.passengers[${index}].respiration.patterns[${at}]`, "phase-fractions", `The phase fractions of pattern "${pattern.id}" sum to ${sum.toFixed(4)}, not 1.`, `Die Phasenanteile des Musters "${pattern.id}" summieren sich zu ${sum.toFixed(4)}, nicht zu 1.`);
     });
   });
+  phase(4, "Thermal model checked", "Thermisches Modell geprüft");
   asset.structure.supports.forEach((support, index) => need(`structure.supports[${index}]`, support, anchors, "Anchor"));
   need("presentation.defaultPose", asset.presentation.defaultPose, poses, "Pose");
   need("presentation.defaultClip", asset.presentation.defaultClip, clips, "Clip");
@@ -760,7 +818,9 @@ export function validateAsset(source: Asset, context: AssetContext = {}): readon
     if (region.ratedPowerW === undefined || !(Number.isFinite(region.ratedPowerW) && region.ratedPowerW >= 0) || region.ratedPowerBasis === undefined || !(POWER_BASES as readonly string[]).includes(region.ratedPowerBasis) || (region.ratedPowerBasis === "passive") !== (region.ratedPowerW === 0))
       add(`${path}.ratedPowerW`, "power-rated-invalid", `Region "${region.id}": ratedPowerW (a finite number of at least 0 W) and ratedPowerBasis (${POWER_BASES.join(", ")}) go together, and "passive" means exactly 0 W.`, `Region "${region.id}": ratedPowerW (eine endliche Zahl von mindestens 0 W) und ratedPowerBasis (${POWER_BASES.join(", ")}) gehören zusammen, und "passive" bedeutet genau 0 W.`);
   }
+  phase(5, "Poses and clips checked", "Posen und Clips geprüft");
   out.push(...volumeIssues(asset), ...(asset.volumes === undefined ? [] : analyticRules(asset)), ...exportIssues(asset));
+  phase(6, "Volumes checked", "Volumen geprüft");
   const { heightM, widthM, depthM, massKg } = asset.dimensions;
   if (!(heightM > 0 && widthM > 0 && depthM > 0 && massKg > 0)) add("dimensions", "dimension-invalid", "Dimensions and mass must be positive.", "Abmessungen und Masse müssen positiv sein.");
   return out;

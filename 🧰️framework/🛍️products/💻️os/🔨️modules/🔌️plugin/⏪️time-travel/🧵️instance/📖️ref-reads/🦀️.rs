@@ -38,25 +38,43 @@ impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: I
 
     pub fn time_travel_retirement_demands(&self, body: usize) -> Result<RetirementDemand,ValueError> {
         if self.time_travel.owners().any(TimeTravelOwners::finalizing){if let Some(TimeTravelQueryOutput::CommitCloseDemand(demand))=self.time_travel_query(TimeTravelStoreQuery::CommitCloseDemand(body)){return demand}}
-        if self.time_travel.closing {
-            let selected: &dyn TimeTravelOwners = match &self.time_travel.member {
-                Some(member) => member.owners.as_deref().unwrap_or(&self.time_travel.document),
-                None => &self.time_travel.document,
-            };
-            if let Some(demand) = selected.close_handoff_demand() { return Ok(demand); }
-            let queue = &self.time_travel.command_retirements;
-            let may_admit = self.time_travel.pending_command.is_none() && self.time_travel.discard_cursor.is_none();
-            if may_admit && (self.time_travel.editor.is_some() || self.time_travel.patch.is_some()) {
-                if !queue.has_reserved_slot() { return queue.reserve_demand(); }
-                if let Some(editor) = self.time_travel.editor.as_ref() { return queue.admit_owned_demand(editor); }
-                if let Some(patch) = self.time_travel.patch.as_ref() { return queue.admit_owned_demand(patch); }
-            }
-        }
         if self.time_travel.document.discard_issuer_missing(){self.stores.store.owned_mutation_retirement_factory()?;return Ok(RetirementDemand{depth:1,..Default::default()});}
         let demand=self.time_travel.retirement_demands(body)?;if demand!=RetirementDemand::default(){return Ok(demand);}
         if let Some(demand)=self.member_subject_retirement_demands(body)?{return Ok(demand)}
         if self.time_travel.closing&&!self.time_travel.terminal_is_empty(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"time travel close retains an undeclared original session editor preview or authoring frontier"));}
         Ok(Default::default())
+    }
+
+    /// 📏️ Selects the next shutdown action while the typed Store still owns the session sources.
+    pub fn time_travel_close_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
+        if !self.time_travel.closing { return Ok(self.time_travel.begin_close_demand()); }
+        if self.time_travel.finalize_outcome.is_some() {
+            return Ok(RetirementDemand {
+                copy_bytes: size_of::<Option<TimeTravelCommit>>() + size_of::<bool>(), depth: 1,
+                ..Default::default()
+            });
+        }
+        if self.time_travel.owners().any(TimeTravelOwners::finalizing) {
+            return self.time_travel_retirement_demands(body);
+        }
+        if self.time_travel.authoring.is_some()
+            || self.time_travel.owners().any(TimeTravelOwners::original_sources_close_pending)
+        {
+            return Ok(RetirementDemand { depth: 1, ..Default::default() });
+        }
+        if let Some(demand) = self.time_travel.owners().find_map(TimeTravelOwners::close_session_handoff_demand) {
+            return Ok(demand);
+        }
+        if let Some(demand) = self.time_travel.close_metadata_demand()? { return Ok(demand); }
+        if self.time_travel.pending_command.is_some() || self.time_travel.discard_cursor.is_some()
+            || self.time_travel.review_children_pending()
+        {
+            return Ok(RetirementDemand { depth: 1, ..Default::default() });
+        }
+        if !self.time_travel.command_retirements.terminal_is_empty() {
+            return self.time_travel.command_retirements.next_demand(body);
+        }
+        self.time_travel_retirement_demands(body)
     }
 
     /// 🧲️ Resolves every editor row's `snapSource` to concrete numbers before the panel is built

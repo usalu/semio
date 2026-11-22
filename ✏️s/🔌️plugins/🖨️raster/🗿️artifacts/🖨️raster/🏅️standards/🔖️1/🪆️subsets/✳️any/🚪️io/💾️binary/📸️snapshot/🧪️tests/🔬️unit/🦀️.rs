@@ -3,7 +3,7 @@ use semio_s_artifact_raster_raster_model::io::binary::snapshot::*;
 use semio_s_artifact_raster_raster_mutations_layers::create_layer;
 use semio_s_artifact_raster_raster_mutations::RasterMutation;
 use semio_s_artifact_raster_raster_model::RasterOwnedMap;
-use semio_s_artifact_raster_raster_model::{RasterImageAsset, RasterLayerMask, RasterLayerNode, RasterTransform, RASTER_DOCUMENT_SCHEMA};
+use semio_s_artifact_raster_raster_model::{mint_raster_image_child, RasterLayerMask, RasterLayerNode, RasterTransform, RASTER_DOCUMENT_SCHEMA};
 
 #[semio_framework_async_macros::async_test]
 async fn mask_asset_and_transform_round_trip_through_text_and_pack() {
@@ -33,8 +33,13 @@ async fn pack_round_trips_and_agrees_with_dsl() {
 
 #[semio_framework_async_macros::async_test]
 async fn pack_round_trips_representative_document() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧬️schema/🔑️content-hash/🧪️tests/🔣️.json")).unwrap();
+    let image: semio_s_artifact_raster_raster_model::SemioImageSnapshot =
+        semio_framework_pack_json::from_json_str(&fixture["image"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let child = mint_raster_image_child("asset-1", &image);
+    assert_eq!(child.child_id, format!("raster-asset-{}", fixture["digest"].as_str().unwrap()));
     let mut assets = RasterOwnedMap::new();
-    assets.insert("asset-1".into(), semio_s_artifact_raster_raster_model::image_asset_child_handle("asset-1", &RasterImageAsset { mime: "image/png".into(), data: b"abc".to_vec() }).with_local_owner(std::sync::Arc::new(semio_s_artifact_stdio_semio_image::schema::snapshot::SemioImageSnapshot::default()))).expect("bounded fixture operation succeeds");
+    assets.insert("asset-1".into(), child).expect("bounded fixture operation succeeds");
     let mut params = RasterOwnedMap::new();
     params.insert("brightness".into(), semio_framework_value::DslValue::float(0.06)).expect("bounded fixture operation succeeds");
     params.insert("label".into(), semio_framework_value::DslValue::String("Warm \"Curve\"".to_string())).expect("bounded fixture operation succeeds");
@@ -51,7 +56,7 @@ async fn pack_round_trips_representative_document() {
         )
         .expect("bounded fixture operation succeeds");
     params.insert("nested".into(), semio_framework_value::DslValue::Object(vec![("inner".to_string(), semio_framework_value::DslValue::float(1.5))])).expect("bounded fixture operation succeeds");
-    let document = RasterSnapshot {
+    let mut document = RasterSnapshot {
         schema: RASTER_DOCUMENT_SCHEMA.into(),
         id: "doc-1".into(),
         title: Some("Representative \"Doc\"".into()),
@@ -100,12 +105,23 @@ async fn pack_round_trips_representative_document() {
     let spec = <RasterSnapshot as pack::snapshot::ArtifactPack>::record_spec().expect("raster declares its pack record spec");
     assert_ne!(pack::record::schema_hash(&spec), [0u8; 32]);
     let decoded = decode(&encode(&document)).expect("decode");
-    let image = |snapshot: &RasterSnapshot| snapshot.assets.iter().next().and_then(|(_, child)| child.local_owner::<semio_s_artifact_stdio_semio_image::schema::snapshot::SemioImageSnapshot>()).map(|image| image.as_ref().clone());
-    let (before, after) = (image(&document), image(&decoded));
+    let restored_image = semio_s_artifact_raster_raster_model::raster_image(&decoded.assets, "asset-1");
     semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot(decoded);
+
+    let mut changed = image.clone();
+    changed.frames[0].rgba8[0] ^= 1;
+    document.assets.get_mut("asset-1").unwrap().set_local_owner(std::sync::Arc::new(changed));
+    let tampered = encode(&document);
     semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot(document);
-    assert!(before.is_some(), "the fixture asset carries its composed image");
-    assert_eq!(after, before, "the pack carries the composed image content beside its handle");
+    assert_eq!(restored_image.as_ref(), Some(&image), "the pack carries the composed image content beside its handle");
+    let refusal = match decode(&tampered) {
+        Ok(snapshot) => {
+            semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot(snapshot);
+            panic!("a changed image must not be restored under its old identity");
+        }
+        Err(refusal) => refusal,
+    };
+    assert!(refusal.to_string().contains("Raster image body does not match its child ID"));
 }
 
 //#region 🔖️CommandEnvelopeTests

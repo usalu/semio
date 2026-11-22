@@ -1,6 +1,6 @@
 use super::*;
 use semio_ui_declaration::layout::ActionDescriptor;
-use semio_ui_declaration::ui::{UiFieldNode, UiNumberStepperNode, UiSectionNode, UiSeparatorNode, UiSliderNode, UiStackNode, UiTreeItemAction, UiTreeSectionNode};
+use semio_ui_declaration::ui::{IconSelectorMode, UiIconSelectNode, UiRingNode, UiFieldNode, UiNumberStepperNode, UiSectionNode, UiSeparatorNode, UiSliderNode, UiStackNode, UiTreeItemAction, UiTreeSectionNode};
 use semio_ui_draw_contract::{KIND_GLYPH, KIND_LOADING_BORDER, KIND_ROUNDED, KIND_SOLID, KIND_WAITING_BORDER};
 use semio_ui_wgpu_controls::select::arm_retained_select_scroll_at;
 use semio_ui_select_behavior::{select_scroll_step, select_scroll_viewport_height, SELECT_COLLISION_PADDING};
@@ -14,3 +14,5 @@ include!("✍️input-caret-and-focus-ring-paint-laws/🦀️.rs");
 include!("🧵️retained-paint-grant-laws/🦀️.rs");
 include!("📶️progress-and-image-paint-laws/🦀️.rs");
 include!("🦴️skeleton-celebrate-and-chrome-paint-laws/🦀️.rs");
+include!("🎴️ring-slider-and-icon-select-state-paint-laws/🦀️.rs");
+include!("🔘️segmented-select-button-labels-and-default-captions-laws/🦀️.rs");

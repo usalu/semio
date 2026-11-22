@@ -21,7 +21,7 @@ export function useScopeState({ core }: { readonly core: ShellCoreAfterTutorialO
     showTransientNoticeRef, presenceConnectedAtMsRef, presenceBeatTriggersRef, openDocumentSessionsRef,
     spaceDirectoryHistoriesRef, foldSpaceDirectoryRef, sharedSpaceAccessRef, loadedPluginsRef, reportRefreshFault,
     canGoBack, canGoForward, canGoUp, goBack, goForward, goUp, focusedApp, focusedSpawnedId, refreshUi,
-    switchToPluginApp, noteShellCommand, onActionRef
+    switchToPluginApp, switchSpawnedRole, noteShellCommand, onActionRef
   } = core;
   //#region FrameworkOsShell
   //#region 🔖️DirectoryLane
@@ -179,5 +179,5 @@ export function useScopeState({ core }: { readonly core: ShellCoreAfterTutorialO
     [canGoBack, goBack],
     { overrides: uiKeybindingOverrides },
   );
-  return { canGoForward, goForward, uiKeybindingOverrides, canGoUp, goUp, dispatch, session, appLabelsOverlay, uiTerminology, uiLocale, extraWindowInstancesRef, extraWindowCounterRef, refreshUi, reportRefreshFault, sessionRef, loadedPluginsRef, openDocumentSessionsRef, sharedSpaceAccessRef, showTransientNoticeRef, uiLocaleRef, switchToPluginApp, focusedSpawnedId, noteShellCommand, focusedApp, uiNamedLayouts, shellLayout, extraWindowInstances, commitUiPreferenceRef };
+  return { canGoForward, goForward, uiKeybindingOverrides, canGoUp, goUp, dispatch, session, appLabelsOverlay, uiTerminology, uiLocale, extraWindowInstancesRef, extraWindowCounterRef, refreshUi, reportRefreshFault, sessionRef, loadedPluginsRef, openDocumentSessionsRef, sharedSpaceAccessRef, showTransientNoticeRef, uiLocaleRef, switchToPluginApp, switchSpawnedRole, focusedSpawnedId, noteShellCommand, focusedApp, uiNamedLayouts, shellLayout, extraWindowInstances, commitUiPreferenceRef };
 }

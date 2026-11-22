@@ -46,7 +46,7 @@ fn layout_padding_and_gap() {
 
 #[test]
 fn window_layout_row_of_stacks_shares_one_border_cell() {
-    let layout = create_default_layout(&["a".to_string(), "b".to_string()], "row", Some(&[1.0, 1.0]), None);
+    let layout = create_default_layout(&["a".to_string(), "b".to_string()], Axis::Horizontal, Some(&[1.0, 1.0]), None);
     let measures = solve_window_layout(&layout, Rect::new(0, 0, 100, 10));
     assert_eq!(measures.len(), 2);
     assert_eq!(measures[0].rect.width + measures[1].rect.width - 1, 100);
@@ -57,11 +57,7 @@ fn window_layout_row_of_stacks_shares_one_border_cell() {
 #[test]
 fn window_layout_stack_exposes_tabs() {
     let layout = WindowLayout {
-        root: WindowLayoutRoot::Stack(WindowLayoutStackNode {
-            size: None,
-            active_window_kind_id: Some("b".into()),
-            children: vec![WindowLayoutWindowNode { window_kind_id: "a".into(), title: None, corner: None }, WindowLayoutWindowNode { window_kind_id: "b".into(), title: None, corner: None }],
-        }),
+        root: stack_node(None, Some("b".into()), vec![window_node("a".into(), None, None), window_node("b".into(), None, None)]),
         zoomed: None,
     };
     let measures = solve_window_layout(&layout, Rect::new(0, 0, 40, 10));
@@ -180,7 +176,7 @@ fn shell_window_wizard_body_paints_options_after_remount() {
     let mut tui = semio_ui_tui_engine::Tui::new(Size { width: 60, height: 16 }, Theme::new(AppearanceName::Dark));
     let navbar = NavbarState { left: vec![], center: vec![], right: vec![] };
     let footer = FooterState { hints: vec![], status: String::new() };
-    let layout = create_default_layout(&["w1".into()], "row", None, Some(&["wizard".into()]));
+    let layout = create_default_layout(&["w1".into()], Axis::Horizontal, None, Some(&["wizard".into()]));
     let mut built = shell(&mut tui.scene, navbar, footer, &layout);
     let (_id, chrome) = built.windows[0].clone();
     let widget = tui.scene.add(chrome, Node::new(NodeContent::Widget(WidgetState::Wizard(WizardState::new(vec!["dev".into(), "build".into(), "test".into()])))));

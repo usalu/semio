@@ -68,8 +68,8 @@ pub(super) struct TessellationJobRegistry {
 pub(super) struct TessellationCancellation {pub(super) slot:usize}
 semio_framework_value::artifact_retire_leaf!(TessellationCancellation);
 semio_framework_value::artifact_retire_struct!(TessellationJobRegistry {admission,admission_closing,source_cancellation,jobs,clock,retire_slot,closing,cancellation});
-pub(super) struct CachedMesh {pub(super) mesh:semio_framework::MeshData,pub(super) valid:bool}
-semio_framework_value::artifact_retire_struct!(CachedMesh {mesh,valid});
+pub(super) struct CachedMesh {pub(super) mesh:semio_framework::MeshData,pub(super) valid:bool,pub(super) revision:u64}
+semio_framework_value::artifact_retire_struct!(CachedMesh {mesh,valid,revision});
 #[derive(Default)]
 pub(super) struct AuthorityClaims {pub(super) handles:HistoryFoldIndex<String,bool>,pub(super) active:bool}
 impl AuthorityClaims {

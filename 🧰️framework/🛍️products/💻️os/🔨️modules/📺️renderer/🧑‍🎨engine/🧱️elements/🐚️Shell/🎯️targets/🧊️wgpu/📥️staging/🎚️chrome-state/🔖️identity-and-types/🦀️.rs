@@ -38,6 +38,8 @@ pub struct ShellChromeBuildState {
     pub previous_pointer_down: bool,
     pub clicked_this_frame: bool,
     pub tour_reveal_latch: Option<String>,
+    /// 🎓️ Whether the hub first-run tour was already decided for the current opening of the hub surface.
+    pub hub_first_run_latch: bool,
     pub element_rects: HashMap<String, ChromeElementRectEntry>,
     pub introduction_seen: HashMap<String, bool>,
     pub introduction_seen_writes: Vec<String>,

@@ -182,7 +182,7 @@ test("vector fills and silhouette edges share materialized instance and morph ge
     });
     expect(points).toEqual(vectorMeshes.expected);
     expect(owned).toHaveLength(1);
-    expect(new Vector3().fromBufferAttribute(geometry.getAttribute("position"), 0).toArray()).toEqual(vectorMeshes.positions[0]!);
+    expect(new Vector3().fromBufferAttribute(geometry.getAttribute("position"), 0).toArray()).toEqual([...vectorMeshes.positions[0]!]);
   } finally {
     for (const mesh of owned) mesh.dispose();
     instances.dispose();

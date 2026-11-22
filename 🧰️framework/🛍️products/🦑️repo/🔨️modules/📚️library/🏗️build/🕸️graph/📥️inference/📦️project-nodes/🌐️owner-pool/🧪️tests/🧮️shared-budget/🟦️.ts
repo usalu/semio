@@ -71,16 +71,17 @@ for(const h of hosts){
  });
 
  test(`${h.name}: swap shrinks the pool in proportion before the gate stops the farm, and ends it where the gate stops`,()=>{
-  expect(P.swapActiveMegabytesPerSecond).toBe(policy.hostCapacity.swap.activeMegabytesPerSecond);
-  expect(P.swapOutMegabytesPerSecond).toBe(policy.hostCapacity.swap.outMegabytesPerSecond);
+  expect(P.swapActiveBasisPointsPerSecond).toBe(policy.hostCapacity.swap.activeBasisPointsPerSecond);
+  expect(P.swapOutBasisPointsPerSecond).toBe(policy.hostCapacity.swap.outBasisPointsPerSecond);
+  const lowSwap=h.total*P.swapActiveBasisPointsPerSecond/10000,highSwap=h.total*P.swapOutBasisPointsPerSecond/10000;
   let before=h.cores;
-  for(let swap=0;swap<=P.swapOutMegabytesPerSecond;swap++){
+  for(let swap=0;swap<=Math.ceil(highSwap);swap++){
    const sizing=ownerPoolSizingV1({host:hostAt(h,h.total-h.other,{idleCores:h.cores,swapOutMegabytesPerSecond:swap}),children:h.cores,childMegabytes:h.child});
    expect(sizing.children,String(swap)).toBeLessThanOrEqual(before);before=sizing.children;
-   if(swap>P.swapActiveMegabytesPerSecond&&swap<P.swapOutMegabytesPerSecond)expect(sizing.children,"cut before the gate stops anything").toBeLessThan(h.cores);
+   if(swap>lowSwap&&swap<highSwap)expect(sizing.children,"cut before the gate stops anything").toBeLessThan(h.cores);
   }
   expect(before).toBe(0);
-  const grown=ownerPoolSizingV1({host:hostAt(h,h.total-h.other,{idleCores:h.cores,swapOutMegabytesPerSecond:P.swapActiveMegabytesPerSecond+1}),children:0,childMegabytes:h.child});
+  const grown=ownerPoolSizingV1({host:hostAt(h,h.total-h.other,{idleCores:h.cores,swapOutMegabytesPerSecond:lowSwap+1}),children:0,childMegabytes:h.child});
   expect(grown.children,"no growth while it swaps").toBe(0);
  });
 

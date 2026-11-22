@@ -71,6 +71,11 @@ fn dispatch_json(event: &DispatchEvent) -> Value {
         Value::Object(object)
     };
     let key_json = |kind: &str, key: &str, modifiers: &ui_render::EventModifiers| serde_json::json!({ "kind": kind, "key": key, "shift": modifiers.shift, "ctrl": modifiers.ctrl, "alt": modifiers.alt, "meta": modifiers.meta });
+    let key_down_json = |key: &str, modifiers: &ui_render::EventModifiers, repeat: bool| {
+        let mut value = key_json("key-down", key, modifiers);
+        value["repeat"] = Value::from(repeat);
+        value
+    };
     match event {
         DispatchEvent::PointerCancel { pointer } => serde_json::json!({ "kind": "pointer-cancel", "pointerId": pointer.id.0, "pointerKind": pointer_kind_name(pointer.kind), "pressure": pointer.pressure, "tilt": pointer.tilt }),
         DispatchEvent::PointerLeave { pointer } => serde_json::json!({ "kind": "pointer-leave", "pointerId": pointer.id.0, "pointerKind": pointer_kind_name(pointer.kind), "pressure": pointer.pressure, "tilt": pointer.tilt }),
@@ -80,7 +85,7 @@ fn dispatch_json(event: &DispatchEvent) -> Value {
         DispatchEvent::Scroll { x, y, delta_x, delta_y, modifiers } => {
             serde_json::json!({ "kind": "scroll", "x": f64::from(*x), "y": f64::from(*y), "deltaX": f64::from(*delta_x), "deltaY": f64::from(*delta_y), "shift": modifiers.shift, "ctrl": modifiers.ctrl, "alt": modifiers.alt, "meta": modifiers.meta })
         }
-        DispatchEvent::KeyDown { key, modifiers } => key_json("key-down", key, modifiers),
+        DispatchEvent::KeyDown { key, modifiers, repeat } => key_down_json(key, modifiers, *repeat),
         DispatchEvent::KeyUp { key, modifiers } => key_json("key-up", key, modifiers),
         DispatchEvent::Ime(ImeEvent::Start) => serde_json::json!({ "kind": "ime-start" }),
         DispatchEvent::Ime(ImeEvent::Cancel) => serde_json::json!({ "kind": "ime-cancel" }),
@@ -122,8 +127,8 @@ fn every_wire_event_projects_onto_the_fixture_dispatch() {
     for row in rows {
         let id = row["id"].as_str().expect("row declares an id").to_string();
         let wire_text = serde_json::to_string(&row["wire"]).expect("row wire re-serializes");
-        let batch: BrowserBatch = serde_json::from_str(&format!("{{\"replaceable\":[{wire_text}],\"lossless\":[]}}")).unwrap_or_else(|error| panic!("{id}: wire bytes must decode into BrowserWireEvent: {error}"));
-        let event = batch.replaceable.into_iter().next().expect("one decoded wire event");
+        let batch: BrowserBatch = serde_json::from_str(&format!("{{\"events\":[{wire_text}]}}")).unwrap_or_else(|error| panic!("{id}: wire bytes must decode into BrowserWireEvent: {error}"));
+        let event = batch.events.into_iter().next().expect("one decoded wire event");
         match (stateless_dispatch(&event), &row["dispatch"]) {
             (Some(dispatch), expected) => {
                 let projected = dispatch_json(&dispatch);
@@ -131,6 +136,35 @@ fn every_wire_event_projects_onto_the_fixture_dispatch() {
             }
             (None, Value::Null) => {}
             (None, expected) => panic!("{id}: fixture expects {expected} but the wire event projects onto no dispatch"),
+        }
+    }
+}
+
+#[test]
+fn ordered_browser_pages_decode_without_lane_reordering() {
+    let law: Value = serde_json::from_str(include_str!("../🧫️fixtures/🎮️wgpu-browser-input-wire/pointer-order.json")).expect("pointer order fixture");
+    for scenario in law["cases"].as_array().unwrap() {
+        for page in scenario["pages"].as_array().unwrap() {
+            let ids = page.as_array().unwrap();
+            let events = ids.iter().map(|id| {
+                let row = &law["rows"][id.as_str().unwrap()];
+                let mut event = law["sample"].as_object().unwrap().clone();
+                event.extend(row.as_object().unwrap().clone());
+                Value::Object(event)
+            }).collect::<Vec<_>>();
+            let page = serde_json::to_string(&serde_json::json!({ "events": events })).unwrap();
+            let batch: BrowserBatch = serde_json::from_str(&page).unwrap();
+            assert!(batch.within_item_credits());
+            let projected: Vec<_> = batch.events.iter().map(|event| dispatch_json(&stateless_dispatch(event).expect("ordered dispatch"))).collect();
+            assert_eq!(projected.len(), ids.len());
+            for (event, id) in projected.iter().zip(ids) {
+                let row = &law["rows"][id.as_str().unwrap()];
+                assert_eq!(event["kind"], row["kind"]);
+                if row["kind"] == "pointer-move" {
+                    assert_eq!(event["pointerId"], row["pointerId"]);
+                    assert_eq!(event["x"].as_f64(), row["x"].as_f64());
+                }
+            }
         }
     }
 }

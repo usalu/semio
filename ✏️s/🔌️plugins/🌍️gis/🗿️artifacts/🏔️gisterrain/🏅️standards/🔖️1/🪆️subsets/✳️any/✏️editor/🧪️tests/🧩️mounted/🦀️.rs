@@ -15,6 +15,9 @@ use serde_json::{Value, json};
 #[path = "../🧰️context/🦀️.rs"]
 mod context;
 
+#[path = "📦️archive/🦀️.rs"]
+mod archive;
+
 use context::{app, close, dispatch, gis3d_app_manifest_for_tests, render};
 
 static RETAINED_LIMITS: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../🧪️tests/🧫️fixtures/🧫️retained-command-limits/🔣️.json"));
@@ -44,14 +47,14 @@ fn every_command() -> Vec<Gis3dCommand> {
             coordinates: "[[5.55,50.62],[5.56,50.63]]".into(), label: None,
         }),
         Gis3dCommand::MoveOverlayPosition(move_overlay_position::MoveOverlayPosition { id: "marker".into(), longitude: 5.56, latitude: 50.63 }),
-        Gis3dCommand::CreateElevationGrid(create_elevation_grid::CreateElevationGrid { west: 5.55, south: 50.58, east: 5.61, north: 50.64, height: -30 }),
+        Gis3dCommand::CreateElevationGrid(create_elevation_grid::CreateElevationGrid { west: 5.55, south: 50.58, east: 5.61, north: 50.64, columns: 4, rows: 3, height_millimetres: -30_125 }),
         Gis3dCommand::ExportElevationGrid(import_elevation::export::ExportElevationGrid {}),
-        Gis3dCommand::GradeTerrainRegion(artifact::editor::gis3d::commands::grade_region::GradeTerrainRegion { id: "region".into(), height: 100 }),
+        Gis3dCommand::GradeTerrainRegion(artifact::editor::gis3d::commands::grade_region::GradeTerrainRegion { id: "region".into(), height_millimetres: 100_000 }),
         Gis3dCommand::ImportGeoJson(geojson::ImportGeoJson {}),
         Gis3dCommand::ImportGeoJsonFile(geojson::file::ImportGeoJsonFile { payload: geojson_fixture().into() }),
         Gis3dCommand::ExportGeoJson(geojson::export::ExportGeoJson {}),
         Gis3dCommand::GenerateTerrainContours(artifact::editor::gis3d::commands::contours::GenerateTerrainContours { interval_metres: 25.0 }),
-        Gis3dCommand::ConfigureTerrainBrush(configure_terrain_brush::ConfigureTerrainBrush { radius: 7, elevation_step: 31, smooth_strength: 65 }),
+        Gis3dCommand::ConfigureTerrainBrush(configure_terrain_brush::ConfigureTerrainBrush { radius: 7, elevation_step_millimetres: 31, smooth_strength: 65 }),
     ]
 }
 
@@ -274,7 +277,8 @@ async fn registered_elevation_import_persists_and_replays_authored_sources() {
     let mut app = app().await;
     let initial = app.snapshot().unwrap().elevation_source;
     for (revision, intrinsic) in [(&law["first"], true), (&law["second"], false)] {
-        let expected = json!({ "bounds": revision["bounds"], "rows": vec![vec![&revision["heightMeters"]; size]; size] });
+        let height_millimetres = revision["heightMeters"].as_i64().unwrap() * 1000;
+        let expected = json!({ "bounds": revision["bounds"], "rowsMillimetres": vec![vec![height_millimetres; size]; size] });
         let schema = law["schema"].as_str().unwrap().into();
         let json = expected.to_string();
         let payload = if intrinsic {
@@ -302,7 +306,7 @@ async fn registered_elevation_import_persists_and_replays_authored_sources() {
             context::history_verb(&mut app, verb).await;
             let snapshot = app.snapshot().unwrap();
             if let Some(height) = height.as_i64() {
-                assert_eq!(snapshot.elevation_source.map(|source| i64::from(source.rows[0][0])), Some(height));
+                assert_eq!(snapshot.elevation_source.map(|source| i64::from(source.rows_millimetres[0][0])), Some(height * 1000));
             } else {
                 assert_eq!(snapshot.elevation_source, initial);
             }
@@ -347,11 +351,12 @@ async fn interrupted_media_export_preparation_retires_under_mounted_policy() {
 
 #[semio_framework_async_macros::async_test]
 async fn registered_terrain_exports_publish_elevation_and_scene_media() {
-    use semio_plugin::ArtifactMediaExportPoll;
-    use semio_plugin::artifact_app_laws::{poll_fixture_media_export, retain_fixture_media_export_result, take_fixture_media_export_chunk};
+    use semio_plugin::{ArtifactMediaExportPoll, MountedOwnerPolicyV1, PluginApp};
+    use semio_plugin::artifact_app_laws::{OriginalFixtureCaller, poll_fixture_media_export, retain_fixture_media_export_result, take_fixture_media_export_chunk};
 
     let mut app = app().await;
     let initial = app.snapshot().unwrap();
+    let maintenance = MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance;
     for (port, expected_schema) in [("elevation:out", "gis.elevation-grid"), ("scene:out", "mesh.document")] {
         let handle = submit_terrain_media(&mut app, port).await;
         let mut result = None;
@@ -370,15 +375,25 @@ async fn registered_terrain_exports_publish_elevation_and_scene_media() {
         while let Some(chunk) = take_fixture_media_export_chunk(&mut *app.0, &handle, &mut terminal, app.1.cx()).await.unwrap() {
             output.extend(chunk);
         }
+        assert!(terminal, "Terrain media download {port} reached its terminal chunk");
         let actual: Value = serde_json::from_slice(&output).unwrap();
         if port == "elevation:out" {
             let source = initial.elevation_source.as_ref().expect("seeded authored elevation");
-            assert_eq!(actual, json!({ "bounds": source.bounds, "rows": &source.rows }));
+            assert_eq!(actual, json!({ "bounds": source.bounds, "rowsMillimetres": &source.rows_millimetres }));
         } else {
             assert_eq!(actual["schema"], expected_schema);
             let MediaPayload::Structured { json: expected, .. } = gis3d_scene_media(&initial).unwrap().payload else { unreachable!() };
             assert_eq!(actual, serde_json::from_str::<Value>(&expected).unwrap());
         }
+        let operation = handle.operation_id.0;
+        for _ in 0..OriginalFixtureCaller::maximum_turns() {
+            if app.0.media.snapshot_retirements.get(operation).is_none() {
+                break;
+            }
+            app.renew_turn();
+            app.0.maintenance_step(app.1.cx(), maintenance).expect("retire the completed Terrain media download");
+        }
+        assert!(app.0.media.snapshot_retirements.get(operation).is_none(), "Terrain media download {port} returned its original snapshot");
     }
     assert_eq!(app.snapshot().unwrap(), initial);
     close(&mut app);
@@ -531,7 +546,7 @@ async fn mounted_esri_ascii_picker_imports_through_the_artifact_store_and_histor
     let imported = app.snapshot().expect("terrain with the local elevation grid");
     let source = imported.elevation_source.as_ref().expect("imported elevation grid");
     assert_eq!(json!(source.bounds), fixture["bounds"]);
-    assert_eq!(source.rows.iter().flatten().map(|&height| i64::from(height)).sum::<i64>(), fixture["checksum"].as_i64().unwrap());
+    assert_eq!(source.rows_millimetres.iter().flatten().map(|&height| i64::from(height)).sum::<i64>(), fixture["checksum"].as_i64().unwrap() * 1000);
     assert_eq!(imported.exaggeration, original.exaggeration);
     assert_eq!(imported.imported_map, original.imported_map);
 
@@ -548,6 +563,64 @@ async fn mounted_esri_ascii_picker_imports_through_the_artifact_store_and_histor
     }).expect("native ASCII Grid download");
     assert!(exported.starts_with("NCOLS 33\nNROWS 33\nXLLCENTER 6.625\nYLLCENTER 44.625\nCELLSIZE 0.015625\n"));
     assert_eq!(app.snapshot().expect("terrain after download"), imported);
+    context::close(&mut app);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn mounted_maximum_ascii_picker_publishes_one_history_edit() {
+    use artifact::editor::gis3d::commands::import_elevation;
+    use semio_framework::kernel::{import_chunk_arguments, import_payload_chunks};
+    use semio_plugin::artifact_app_laws as laws;
+
+    let fixture: Value = serde_json::from_str(fixture_text!("../../🎮️commands/📥️import-elevation/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let maximum = &fixture["maximumPicker"];
+    let side = maximum["side"].as_u64().unwrap() as usize;
+    let size = maximum["bytes"].as_u64().unwrap() as usize;
+    assert_eq!(size, import_elevation::MAX_FILE_BYTES as usize);
+    let mut payload = format!(
+        "NCOLS {side}\nNROWS {side}\nXLLCENTER {}\nYLLCENTER {}\nCELLSIZE {}\nNODATA_VALUE {}\n",
+        maximum["west"], maximum["south"], maximum["cellSize"], maximum["noData"].as_str().unwrap()
+    );
+    for row in 0..side {
+        let elevation = maximum[if row == 0 { "northSample" } else { "otherSample" }].as_str().unwrap();
+        payload.push_str(&vec![elevation; side].join(" "));
+        payload.push('\n');
+    }
+    payload.extend(std::iter::repeat_n(' ', size - payload.len()));
+    let chunks = import_payload_chunks(&payload);
+    assert_eq!(chunks.len(), maximum["chunkCount"].as_u64().unwrap() as usize);
+
+    let mut app = context::app().await;
+    let actor = laws::meta("local");
+    let policy = semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT;
+    let original = app.snapshot().expect("initial terrain");
+    for chunk in &chunks {
+        let args = import_chunk_arguments("signed-maximum.asc", chunk, None);
+        app.renew_turn();
+        let admitted = laws::dispatch_fixture_action(
+            &mut *app.0, import_elevation::FILE_ACTION, Some(args), &actor,
+            &mut laws::fixture_identity(), app.1.cx(), policy.close,
+        ).await.expect("admit picker chunk");
+        assert!(admitted.mutations.is_empty());
+        assert_eq!(app.snapshot().unwrap(), original);
+    }
+    app.renew_turn();
+    let completed = laws::settle_registered_typed_operation(
+        &mut *app.0, actor.instance_id, policy, &mut laws::fixture_identity(), app.1.cx(),
+    ).await.expect("publish complete ASCII Grid");
+    assert_eq!(completed.completions, 1);
+    let imported = app.snapshot().unwrap();
+    let source = imported.elevation_source.as_ref().unwrap();
+    assert_eq!(json!(source.bounds), maximum["bounds"]);
+    assert_eq!(source.rows_millimetres.len(), side);
+    for (index, row) in source.rows_millimetres.iter().enumerate() {
+        let expected = maximum[if index + 1 == side { "northMillimetres" } else { "otherMillimetres" }].as_i64().unwrap() as i32;
+        assert_eq!(row.as_slice(), vec![expected; side]);
+    }
+    context::history_verb(&mut app, "undo").await;
+    assert_eq!(app.snapshot().unwrap(), original);
+    context::history_verb(&mut app, "redo").await;
+    assert_eq!(app.snapshot().unwrap(), imported);
     context::close(&mut app);
 }
 
@@ -618,6 +691,57 @@ mod geojson_exchange {
         assert_eq!(app.snapshot().unwrap(), original);
         context::history_verb(&mut app, "redo").await;
         assert_eq!(app.snapshot().unwrap(), imported);
+        context::close(&mut app);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn viewport_position_move_has_one_undoable_overlay_publication() {
+        use artifact::editor::gis3d::commands::{elevation_source::create_elevation_grid::CreateElevationGrid, overlays::add_overlay_position::AddOverlayPosition};
+        use artifact::editor::gis3d::Gis3dCommand;
+        use semio_framework_test_fixtures::repo_text;
+        use semio_plugin::artifact_app_laws as laws;
+        let fixture: serde_json::Value = serde_json::from_str(repo_text!("🧰️framework/🔨️modules/🗺️surface/🏔️terrain/🗺️overlay/🧪️tests/🧫️fixtures/🖱️move-position.json")).unwrap();
+        let marker = &fixture["marker"];
+        let id = marker["id"].as_str().unwrap();
+        let action = fixture["descriptor"]["action"].as_str().unwrap();
+        let drop = &fixture["cases"][0]["action"];
+        let mut app = context::app().await;
+        let grid: serde_json::Value = serde_json::from_str(repo_text!("🧰️framework/🔨️modules/🗺️surface/🏔️terrain/🧪️tests/🧫️fixtures/📦️elevation-grid/🔣️.json")).unwrap();
+        let [west, south, east, north] = serde_json::from_value(grid["bounds"].clone()).unwrap();
+        context::dispatch(&mut app, Gis3dCommand::CreateElevationGrid(CreateElevationGrid {
+            west, south, east, north, columns: 33, rows: 33, height_millimetres: 40_000,
+        })).await;
+        context::dispatch(&mut app, Gis3dCommand::AddOverlayPosition(AddOverlayPosition {
+            id: id.into(),
+            longitude: marker["coordinates"][0].as_f64().unwrap(),
+            latitude: marker["coordinates"][1].as_f64().unwrap(),
+            label: marker["label"].as_str().map(str::to_owned),
+            elevation: marker["elevation"].as_f64(),
+        })).await;
+        let before = app.snapshot().unwrap();
+        let actor = laws::meta("local");
+        let policy = MountedOwnerPolicyV1::INTERACTIVE_COMPONENT;
+        app.renew_turn();
+        let args = semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({
+            "id": id, "longitude": drop["longitude"].as_f64().unwrap(), "latitude": drop["latitude"].as_f64().unwrap(),
+            "windowId": "gis3d-main", "surfaceId": "gis3d.play.composite"
+        }));
+        laws::dispatch_fixture_action(&mut *app.0, action, Some(args), &actor, &mut laws::fixture_identity(), app.1.cx(), policy.close).await.expect("admit viewport move");
+        laws::settle_registered_typed_operation(&mut *app.0, actor.instance_id, policy, &mut laws::fixture_identity(), app.1.cx()).await.expect("publish viewport move");
+
+        let moved = app.snapshot().unwrap();
+        assert_eq!(moved.elevation_source, before.elevation_source);
+        let data = codec::encode(moved.imported_map.as_ref()).unwrap();
+        let geojson: serde_json::Value = serde_json::from_str(&data).unwrap();
+        let feature = geojson["features"].as_array().unwrap().iter().find(|entry| entry["id"] == id).expect("moved GeoJSON pin");
+        assert_eq!(feature["geometry"]["coordinates"], serde_json::json!([drop["longitude"], drop["latitude"], marker["elevation"]]));
+        let pins = &moved.imported_map.as_ref().unwrap().positions;
+        let pin = pins.iter().find(|feature| feature.get("id").and_then(DslValue::as_str) == Some(id)).unwrap();
+        assert_eq!(pin.get("label").and_then(DslValue::as_str), marker["label"].as_str());
+        context::history_verb(&mut app, "undo").await;
+        assert_eq!(app.snapshot().unwrap(), before);
+        context::history_verb(&mut app, "redo").await;
+        assert_eq!(app.snapshot().unwrap(), moved);
         context::close(&mut app);
     }
 

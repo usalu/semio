@@ -2,7 +2,7 @@
 
 use semio_s_artifact_norm_iso16757_checks_common::{Section, ALL_FACETS, assess, copy, fail, na, pass, q_dim, subject, controlled_ordinal, reference_slot_score};
 use semio_s_plugin_norm_compliance::{CheckReport, CheckResult, CheckStatus, ClauseId, Remedy, RemedyBound};
-use semio_s_artifact_norm_iso16757_model::part_5::{ExchangeProcess, PartNumberRule};
+use semio_s_artifact_norm_iso16757_model::part_5::{ExchangeProcess, PartNumberRule, ScriptLimits};
 use semio_s_artifact_norm_iso16757_checks_common::part_libraries::part_5::ScriptRuntime;
 use semio_s_artifact_norm_iso16757_checks_common::part_libraries::part_5 as helpers;
 use semio_s_artifact_norm_iso16757_model::CatalogueValue;
@@ -173,8 +173,8 @@ fn check_ifc_exchange(doc: &Iso16757Snapshot, report: &mut CheckReport) {
     );
     let result = match helpers::export_ifc_step(&doc.catalogue) {
         Ok(_) => projection.informative(q_dim(count as f64)).explanation(copy(
-            format!("The IFC4 projection contains {count} catalogue product types with their identifiers, names and class memberships."),
-            format!("Die IFC4-Projektion enthält {count} Katalogprodukttypen mit Kennungen, Namen und Klassenzuordnungen."),
+            format!("The IFC4 projection contains {count} catalogue product types with their identifiers, names and class memberships. It exports eligible scalar properties and their supplied dictionary GUIDs."),
+            format!("Die IFC4-Projektion enthält {count} Katalogprodukttypen mit Kennungen, Namen und Klassenzuordnungen. Sie exportiert geeignete skalare Eigenschaften und ihre angegebenen Wörterbuch-GUIDs."),
         )),
         Err(error) => {
             let (en, de) = error.messages();
@@ -362,6 +362,26 @@ fn check_script_limits(doc: &Iso16757Snapshot, report: &mut CheckReport) {
     let (steps_max, recursion_max, timeout_max) = SCRIPT_CEILINGS;
     let load = (f64::from(limits.max_steps) / steps_max).max(f64::from(limits.max_recursion) / recursion_max).max(limits.timeout_ms as f64 / timeout_max);
     let positive = limits.max_steps > 0 && limits.max_recursion > 0 && limits.timeout_ms > 0;
+    let defaults = ScriptLimits::default();
+    let fields = [
+        ("maxSteps", "Script step limit", "Skript-Schrittgrenze", f64::from(limits.max_steps), f64::from(defaults.max_steps), steps_max),
+        ("maxRecursion", "Script recursion limit", "Skript-Rekursionsschranke", f64::from(limits.max_recursion), f64::from(defaults.max_recursion), recursion_max),
+        ("timeoutMs", "Script timeout", "Skript-Zeitlimit", limits.timeout_ms as f64, defaults.timeout_ms as f64, timeout_max),
+    ];
+    let remedies: Vec<Remedy> = fields
+        .into_iter()
+        .filter_map(|(field, en, de, current, default, ceiling)| {
+            let target = subject("scriptLimits", format!("scriptLimits.{field}"), en, de);
+            let action = copy(format!("Set {en} within 1 and its sandbox ceiling."), format!("{de} zwischen 1 und der Sandbox-Obergrenze setzen."));
+            if current < 1.0 {
+                Some(Remedy::at_least(target, q_dim(current), q_dim(default), action))
+            } else if current > ceiling {
+                Some(Remedy::at_most(target, q_dim(current), q_dim(ceiling), action))
+            } else {
+                None
+            }
+        })
+        .collect();
     report.push(assess(
         "iso16757.5.8.scriptLimits.capacity",
         "5",
@@ -375,7 +395,7 @@ fn check_script_limits(doc: &Iso16757Snapshot, report: &mut CheckReport) {
         if positive && load <= 1.0 { CheckStatus::Pass } else { CheckStatus::Fail },
         q_dim(load),
         q_dim(1.0),
-        Vec::new(),
+        if positive && load <= 1.0 { Vec::new() } else { remedies },
     ));
     report.push(assess(
         "iso16757.5.8.scriptLimits.recursion",

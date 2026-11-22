@@ -1,5 +1,5 @@
 """🔏️ Independent Python oracle of the Rust unit cache key (standard library only): it re-reads rustc command lines (options, crate types, emit kinds, externs, native links), decides the bypass, normalizes the command line, derives the key with hashlib over compact JSON, selects the environment, parses dependency files and build script directives, expands response files and derives the broker facts, from the authored policy passed in the request. Requests arrive as JSON on stdin."""
-import hashlib, json, posixpath, re, sys
+import hashlib, json, os, posixpath, re, sys
 
 VALUE_FLAGS = {"--crate-name", "--crate-type", "--emit", "--out-dir", "--target", "--edition", "--extern", "-L", "-l", "-C", "--cfg", "--check-cfg", "--cap-lints", "--error-format", "--json", "--diagnostic-width", "--remap-path-prefix", "-A", "-W", "-D", "-F", "--force-warn", "-Z", "--codegen", "--sysroot", "--print", "--explain", "-o", "--color", "--allow", "--warn", "--deny", "--forbid", "--emit-dep-info"}
 
@@ -112,6 +112,17 @@ def normalize(args, digests, root, policy):
         if argument.startswith("--diagnostic-width="):
             index += 1
             continue
+        if argument == "--color":
+            index += 2
+            continue
+        if argument.startswith("--color="):
+            index += 1
+            continue
+        if argument == "--json" or argument.startswith("--json="):
+            hit, value, index = take("--json", argument, index)
+            result.append("--json=" + ",".join(w for w in value.split(",") if w not in ("diagnostic-rendered-ansi", "diagnostic-short")))
+            index += 1
+            continue
         if argument == "--extern" or argument.startswith("--extern="):
             hit, value, index = take("--extern", argument, index)
             equals = value.find("=")
@@ -125,8 +136,13 @@ def normalize(args, digests, root, policy):
     return result
 
 
-def select_env(environment, root, names, prefixes, policy):
-    return [[name, neutral(environment[name], root, policy)] for name in sorted(environment) if name in names or any(name.startswith(p) for p in prefixes)]
+def sdk_identity(path):
+    real = os.path.realpath(path)
+    return posixpath.basename(re.sub(r"[\\/]+$", "", real))
+
+
+def select_env(environment, root, names, prefixes, policy, machine=False):
+    return [[name, ("\u27e8sdk\u27e9" + sdk_identity(neutral(environment[name], root, policy))) if machine and name == "SDKROOT" else neutral(environment[name], root, policy)] for name in sorted(environment) if name in names or any(name.startswith(p) for p in prefixes)]
 
 
 def depinfo(text):
@@ -189,7 +205,7 @@ elif op == "lanes":
     print(json.dumps([{"neutral": neutral(row["text"], row["root"], policy), "restored": (neutral(row["text"], row["root"], policy).replace(policy["key"]["laneToken"], row["root"]) if row["root"] else row["text"])} for row in request["rows"]]))
 elif op == "environments":
     root = request["laneRoot"]
-    print(json.dumps([{"key": select_env(env, root, set(policy["key"]["environmentNames"]), policy["key"]["environmentPrefixes"], policy), "build": select_env(env, root, set(policy["buildScript"]["environmentNames"]), policy["buildScript"]["environmentPrefixes"], policy)} for env in request["rows"]]))
+    print(json.dumps([{"key": select_env(env, root, set(policy["key"]["environmentNames"]), policy["key"]["environmentPrefixes"], policy, True), "build": select_env(env, root, set(policy["buildScript"]["environmentNames"]), policy["buildScript"]["environmentPrefixes"], policy)} for env in request["rows"]]))
 elif op == "depinfo":
     print(json.dumps([depinfo(t) for t in request["rows"]]))
 elif op == "directives":

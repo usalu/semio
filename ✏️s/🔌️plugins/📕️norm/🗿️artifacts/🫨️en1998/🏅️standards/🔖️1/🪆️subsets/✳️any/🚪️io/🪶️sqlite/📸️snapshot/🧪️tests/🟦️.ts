@@ -82,9 +82,15 @@ test("EN1998 project design cases round-trip through the canonical archive", asy
  const db = Database.deserialize(bytes);
  try {
   expect(db.query("SELECT entry_id FROM en1998_case ORDER BY ordinal").all()).toEqual([
-   {entry_id:"C98-11"},{entry_id:"C98-12"},
+   {entry_id:"C98-11"},{entry_id:"C98-12"},{entry_id:"C98-19"},{entry_id:"C98-22"},{entry_id:"C98-23"},
   ]);
-  expect(db.query("SELECT count(*) AS count FROM en1998_case_number").get()).toEqual({count:14});
-  expect(db.query("SELECT count(*) AS count FROM en1998_case_text").get()).toEqual({count:2});
+  expect(db.query("SELECT count(*) AS count FROM en1998_case_number").get()).toEqual({count:32});
+  expect(db.query("SELECT count(*) AS count FROM en1998_case_text").get()).toEqual({count:8});
+  expect(db.query("SELECT n.value AS ratio FROM en1998_case_number n JOIN en1998_case c ON n.case_id=c.id WHERE c.entry_id=? AND n.logical_id=?")
+   .get("C98-19","pipe_deformation_global")).toEqual({ratio:0.85});
+  expect(db.query("SELECT t.value AS soil FROM en1998_case_text t JOIN en1998_case c ON t.case_id=c.id WHERE c.entry_id=? AND t.logical_id=?")
+   .get("C98-22","pipe_fault_soil")).toEqual({soil:"different"});
+  expect(db.query("SELECT n.value AS pressure FROM en1998_case_number n JOIN en1998_case c ON n.case_id=c.id WHERE c.entry_id=? AND n.logical_id=?")
+   .get("C98-23","silo_pressure_static")).toEqual({pressure:10000});
  } finally { db.close(); }
 });

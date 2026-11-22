@@ -6,7 +6,6 @@ use crate::standards::v1::subsets::any::schema::lexer::{lex, lex_spanned, Spanne
 use crate::standards::v1::subsets::any::schema::graph::{port_node_id, port_port_id, Camera, Edge, Node, Port};
 use crate::standards::v1::subsets::any::schema::memory::Graph;
 use crate::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
-use crate::standards::v1::subsets::any::schema::manifest::Manifest;
 use semio_framework_graph_manifest::{PortDirection, PropertyBag, PropertyValue};
 use semio_framework_graph_dsl::{QueryableEdge, QueryableGraph};
 use std::collections::BTreeSet;

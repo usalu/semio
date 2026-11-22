@@ -24,13 +24,16 @@ export function readCrateSource({ options, repoRoot, packageDirRel }: { readonly
   const manifest = runtimeParseTomlV1(readFileSync(manifestPath, "utf8")) as { package?: { workspace?: string } };
   const oldRootDir = dirname(lib.entry);
   const artifactDir = resolve(dirname(manifestPath), manifest.package?.workspace ?? ".");
-  const folded = inlineMountTreeFiles(lib.entry, readFileSync(lib.entry, "utf8"), (absolute) => (existsSync(absolute) ? readFileSync(absolute, "utf8") : null));
+  const carved = options.carved ?? null;
+  const readDisk = (absolute: string): string | null => carved?.overlay.get(absolute) ?? (existsSync(absolute) ? readFileSync(absolute, "utf8") : null);
+  const folded = inlineMountTreeFiles(lib.entry, carved?.rootSource ?? readFileSync(lib.entry, "utf8"), readDisk);
   const originalRootSource = folded.rootSource;
   const originalTree = parseRustSourceTree(originalRootSource);
   const rootItemNames = new Set<string>([...topLevelNames(originalRootSource, originalTree.items)].filter(([, item]) => item.kind !== "use").map(([name]) => name));
   for (const node of originalTree.modules) if (!node.inline) rootItemNames.add(node.name);
   const testTransform = options.tests ? transformTestClosure(repoRoot, lib.entry, originalRootSource, rootItemNames, options.tests) : null;
-  const lifted = options.lift?.length ? liftModuleKids(testTransform, lib.entry, originalRootSource, options.lift) : testTransform;
+  const declared = carved ? { rootSource: originalRootSource, edits: new Map(carved.overlay), creates: new Map<string, string>(), deletes: new Set<string>(), notes: [...carved.notes] } : testTransform;
+  const lifted = options.lift?.length ? liftModuleKids(declared, lib.entry, originalRootSource, options.lift) : declared;
   const transform = options.inlineRootModules ? inlineRootFileModules(lifted, lib.entry, originalRootSource) : lifted;
   const rootSource = transform?.rootSource ?? originalRootSource;
   const tree = parseRustSourceTree(rootSource);

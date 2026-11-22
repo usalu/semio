@@ -19,6 +19,8 @@ import {acquireResourceLease} from "@semio-tech/process/leases";
 import {readFileSync} from "node:fs";
 import {createRequire} from "node:module";
 import{privateRepositoryWorkspaceV1}from"../../../../../../🧪️testing/🧫️private-repository/🟦️.ts";
+import {declareLibraryBuildTestEnvelopeV1} from "../../../../../../🧪️testing/🪪️native-birth/🟦️.ts";
+declareLibraryBuildTestEnvelopeV1({suite:"toolkit-outputs"});
 const repository=await privateRepositoryWorkspaceV1();
 test("Nx output custody closes partitions and shares the actual producer resource",()=>{const validate=new Ajv({strict:true}).compile(schema),database=new Database(":memory:");try{for(const row of fixture.cases){const actual=classifyNxOutputV1(fixture.roots,row.path);expect(validate(actual)).toBe(true);expect(String(actual.partition)).toBe(row.partition);expect(actual.resource).toBe(row.prefix+row.path);expect((database.query("SELECT instr(?,?)=1 AS inside").get(row.path,fixture.roots[row.partition as keyof typeof fixture.roots]+"/") as {inside:number}).inside).toBe(1);}for(const path of fixture.invalid)expect(()=>classifyNxOutputV1(fixture.roots,path)).toThrow();}finally{database.close();}});
 test("Nx pinned and unpinned namespace paths match independent SHA and closed schema oracles",()=>{

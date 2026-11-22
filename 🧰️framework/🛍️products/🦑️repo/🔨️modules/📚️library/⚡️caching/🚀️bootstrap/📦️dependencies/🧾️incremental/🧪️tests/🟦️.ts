@@ -177,6 +177,26 @@ test("incremental decisions equal the Python tables",()=>{
  }
 });
 
+/** 🧷 Verifies that a moved directory descriptor aborts the first observation and lets a new exact observation start. */
+test("incremental dependency sync retries an exact descriptor refusal with fresh custody",async()=>{
+ const {withArtifactRelativeDirectoryV1}=await import("@semio-tech/framework-filesystem/observation/descriptor"),root=scratch(),message=process.platform==="win32"?"Current exact Windows relative path descriptor changed":"Current exact relative path descriptor changed";
+ try{
+  mkdirSync(join(root,"child"));
+  let entered=0;
+  const capture=(move:boolean):Promise<void>=>withArtifactRelativeDirectoryV1(root,()=>{},async directory=>{
+   const identity=await directory.entry("child");
+   if(!identity||identity.kind!=="directory")throw Error("Private directory fixture missing");
+   if(move)mkdirSync(join(root,"child","new"));
+   await directory.withDirectoryPath([{name:"child",identity}],async child=>{entered++;expect(await child.names()).toEqual(["new"]);});
+  });
+  let observed:string|undefined;
+  try{await capture(true);}catch(error){observed=(error as Error).message;}
+  expect(observed).toBe(message);expect(entered).toBe(0);
+  expect(core.retryableSyncFailureV1(observed!,{aborted:false,unresolved:false,attempt:0})).toBe(true);
+  await capture(false);expect(entered).toBe(1);
+ }finally{rmSync(root,{recursive:true,force:true});}
+});
+
 /** 🔗️ Reproduces the second name of a tracked manifest with a real hardlink and refuses it through the same invariant the synchronization applies. */
 test("incremental single-link invariant sees a real second name",()=>{
  const root=scratch();try{
@@ -327,7 +347,7 @@ test("incremental wiring laws over the storage module",async()=>{
  expect(producer.indexOf("verifyJavascriptDependencySyncCurrentV1(")).toBeLessThan(producer.indexOf("withPublishedBunWorkspaceOwnershipV1(workspace"));
  expect(producer.indexOf("attempt=()=>withPublishedBunWorkspaceOwnershipV1(")).toBeGreaterThan(0);
  expect(producer.indexOf("retryableSyncFailureV1(")).toBeGreaterThan(producer.indexOf("attempt=()=>"));
- expect(producer.indexOf("writeJavascriptDependencyOwnershipIndexV1(")).toBeGreaterThan(producer.indexOf("retryableSyncFailureV1("));
+ expect(producer.lastIndexOf("await writeOwnershipIndex()")).toBeGreaterThan(producer.indexOf("retryableSyncFailureV1("));
  expect(producer).toContain("retryState.unresolved=sourceTransitionMayBeUnresolved");
  expect(producer.split("requireJavascriptDependencyInstalledPathsIncrementalV1(workspace,context,control,row.plan.generation,checkpoint)").length-1).toBe(3);
  expect(producer).not.toContain("requireJavascriptDependencyInstalledPathsReadV1(");

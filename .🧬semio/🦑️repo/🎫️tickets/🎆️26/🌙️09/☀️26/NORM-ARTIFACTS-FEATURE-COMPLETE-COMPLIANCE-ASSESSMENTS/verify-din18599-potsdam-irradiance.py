@@ -9,10 +9,18 @@ workspace=next(p.parent for p in ticket.parents if p.name==".🧬semio")
 a=next((workspace/"✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599").glob("🏅*/🔖*/🪆*/✳*"))
 model=(a/"🧬️schema/📸️snapshot/🦀️.rs").read_text()
 horizontal=next(line for line in model.splitlines() if line.startswith("pub const POTSDAM_HORIZONTAL_IRRADIANCE_W_M2"))
-text=(a/"🧬️schema/💡️inferences/⚖️checks/☀️potsdam-irradiance/🦀️.rs").read_text()
-binary=ticket/"🗑️generated/din18599-potsdam-irradiance"
+module=a/"🧬️schema/💡️inferences/⚖️checks/☀️potsdam-irradiance/🦀️.rs"
+binary=ticket/"🗑️generated/din18599-potsdam-irradiance.exe"
 source=binary.with_suffix(".rs")
-source.write_text("use std::io::{self, BufRead};\n"+horizontal+"\n"+text[text.index("const TILTS_DEG:"):]+r"""
+relative_module=Path("../"*len(source.parent.relative_to(workspace).parts))/module.relative_to(workspace)
+source.write_text(
+    "extern crate self as semio_s_artifact_norm_din18599_model;\n"
+    + horizontal
+    + f'\n#[path = "{relative_module.as_posix()}"]\nmod potsdam;\n'
+    + r"""
+use std::io::{self, BufRead};
+use potsdam::potsdam_irradiance_w_m2;
+
 fn main() {
     for row in io::stdin().lock().lines() {
         let row = row.unwrap();
@@ -24,7 +32,7 @@ fn main() {
         }
     }
 }
-""")
+""", encoding="utf-8")
 subprocess.run(["repo","tools","exec","--light","rustup","--","run","stable","rustc","--edition","2024",str(source),"-o",str(binary)],check=True,cwd=workspace)
 data=(a/"🧪️tests/🧫️fixtures/☀️potsdam-irradiance/🔣️.tsv").read_text().splitlines()[1:]
 observed=subprocess.check_output([binary],input="\n".join(data)+"\n",text=True).splitlines()

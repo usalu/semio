@@ -220,12 +220,32 @@ async fn plugin_assembly_succeeds_and_registers_all_five_surfaces() {
     assert_eq!(ids, ["s.space.home@1/*#editor", "s.space.home@1/*#viewer", "s.space.space@1/*#editor", "s.space.space@1/*#viewer", "s.space.studio@1/*#editor"].iter().map(|id| (*id).to_string()).collect::<BTreeSet<_>>());
 }
 
+#[test]
+fn workflow_uses_the_studio_surface_and_its_existing_document_codec() {
+    let fixture = identity_fixture();
+    let workflow = &fixture["workflow"];
+    let kind = workflow["artifactKind"].as_str().unwrap();
+    let schema = workflow["schema"].as_str().unwrap();
+    let surface = workflow["surfaceId"].as_str().unwrap();
+    let plugin = assembled_plugin();
+    let studio = plugin.manifest.apps.iter().find(|app| app.id == surface).unwrap();
+    assert_eq!(studio.dialect.artifact_kind, kind);
+    assert_eq!(studio.role, semio_plugin::AppRole::Editor);
+    assert_eq!(studio.io.artifact_schema, schema);
+    assert_eq!(plugin.app_document_schema(surface), Some(schema));
+    let codec = plugin.app_codec(surface).expect("Studio codec");
+    let existing = semio_os_kernel::bare_artifact_codec::<semio_os::WorkflowSnapshot, semio_os::WorkflowMutation>(semio_os::S_WORKFLOW_SCHEMA);
+    assert_ne!(existing.pack_schema_hash, [0; 32]);
+    assert_eq!((codec.pack_schema_hash)(), Some(existing.pack_schema_hash));
+    assert!(plugin.manifest.artifact_kinds.iter().any(|row| row.id == kind && row.schema == schema));
+}
+
 /// 🧰️ The build-time completeness gate, run for real: `VcsArtifactApp::with_registry` calls
 /// `tool_job_registration`, which joins every migrated id to a live registered factory by owner
 /// witness, controller id, document schema and exact contract equality, and every declared
 /// publication lane to its installed store preparation factory. A mismatch is a panic here, the
 /// same panic the guest takes on its first turn. The pinned counts are each app's
-/// `bounded_first_step_tool_proofs!` list: the studio's 40, Home's 18 (ticket 26/09/18 S4 retained
+/// `bounded_first_step_tool_proofs!` list: the studio's 41, Home's 18 (ticket 26/09/18 S4 retained
 /// `applyDirectoryEventPage` and `createStudio`; the data-classification lane added
 /// `promoteToHubSpace` (HostOnly) and `persistLocally` (Artifact); presence added
 /// `presenceHeartbeat`; the IO-owning catalog jobs added `bindSpaceFile`, `importSpace` and
@@ -235,7 +255,7 @@ async fn every_app_instance_constructs_against_its_registered_proof_catalog() {
     let mut studio = VcsArtifactApp::<semio_hub_space_app::SpaceApp>::with_registry(Default::default(), AppActionRegistry::from_definition(&semio_hub_space_app::create_space_app().await.definition), semio_os_kernel::ActorId(semio_os_kernel::os_spr::LOCAL_ACTOR_ID.into())).await.expect("the reference snapshot births");
     let mut home = VcsArtifactApp::<EditorApp<semio_s_artifact_space_home::editor::home::HomeApp>>::with_registry(Default::default(), AppActionRegistry::from_definition(&semio_s_artifact_space_home::editor::home::create_home_app().await), semio_os_kernel::ActorId(semio_os_kernel::os_spr::LOCAL_ACTOR_ID.into())).await.expect("the reference snapshot births");
     let mut index = VcsArtifactApp::<EditorApp<semio_s_artifact_space_space::editor::space_index::SpaceIndexEditor>>::with_registry(Default::default(), AppActionRegistry::from_definition(&semio_s_artifact_space_space::editor::space_index::create_space_index_editor()), semio_os_kernel::ActorId(semio_os_kernel::os_spr::LOCAL_ACTOR_ID.into())).await.expect("the reference snapshot births");
-    assert_eq!(<semio_hub_space_app::SpaceApp as ArtifactApp>::bounded_first_step_tool_proofs().len(), 40);
+    assert_eq!(<semio_hub_space_app::SpaceApp as ArtifactApp>::bounded_first_step_tool_proofs().len(), 41);
     assert_eq!(<EditorApp<semio_s_artifact_space_home::editor::home::HomeApp> as ArtifactApp>::bounded_first_step_tool_proofs().len(), 18);
     assert_eq!(<EditorApp<semio_s_artifact_space_space::editor::space_index::SpaceIndexEditor> as ArtifactApp>::bounded_first_step_tool_proofs().len(), 14);
     artifact_app_laws::close_registered_fixture_app(&mut studio);

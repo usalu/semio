@@ -1,7 +1,7 @@
 /** ✏️ Renders the three 2D drawings of one scale alone (side elevation, front elevation, plan), exactly as the product draws them: `evaluate`, `depict` and the SVG export of the staffage modules, rasterised by sharp (librsvg). Two rows: the line view with every stroke, pen and hatch, and the solid view with the tones.
  *
  * Usage: `bun r3-2d.ts <category>/<slug> --scale N [--pose ID] [--clip ID --t S] [--file <asset document json>] [--views light-line,light-solid] [--svg]`
- * Output: `🗑️generated/r3-2d/<category>/<slug>.s<N>[.<pose>|.<clip>-t<S>].png` (and the SVG of every panel next to it with `--svg`). `--file` draws a candidate asset document as it is instead of the catalog asset.
+ * Output: `🗑️generated/r3-2d/<category>/<slug>.s<N>[.<pose>|.<clip>-t<S>][.<view>+<view>…].png` (the last part only with `--views`; the `--file` form carries the same suffixes under `r3-2d/file/<folder name of the file>`) (and the SVG of every panel next to it with `--svg`). `--file` draws a candidate asset document as it is instead of the catalog asset.
  * @see ./r3-tools.md
  * @see ../../../../../../../🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🎨️depiction/🟦️.ts */
 import { mkdirSync, writeFileSync } from "node:fs";
@@ -38,7 +38,7 @@ if (import.meta.main) {
   const rows = (flag("--views") ?? "light-line,light-solid").split(",");
   const [pw, ph, top] = [800, 700, 30];
   const tag = query.kind === "pose" ? (flag("--pose") === undefined ? "" : `.${query.pose}`) : `.${query.clip}-t${query.timeS}`;
-  const path = r3Out("r3-2d", entry as never, `${entry.slug}.s${scale}${tag}.png`);
+  const path = r3Out("r3-2d", entry as never, `${entry.slug}.s${scale}${tag}${flag("--views") === undefined ? "" : `.${rows.join("+")}`}.png`);
   mkdirSync(dirname(path), { recursive: true });
   const parts: { input: Buffer; left: number; top: number }[] = [];
   let failed = 0;

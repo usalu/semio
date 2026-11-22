@@ -121,3 +121,9 @@ Opened: 1:50 body sheet (six views, twice), right side alone, three-quarter fron
 - Reference figures are from memory, not looked up; the front axle share has no table citation.
 - `r3-sheet.ts` shows a lighter wedge on the flat side panels around the rear arch (area-weighted vertex normals of the tool, not geometry) and draws layerless thermal solids grey; both are in `tool-requests.md`.
 - The three coarser lists were written after the 1:50 list from the same kit; each has its own sections, chord counts and merged parts, but they share the panel layout.
+
+## November 21 road wheels and body framing
+
+The dished 8 mm steel wheel web has eight through openings. The mounting pad rises above the rim seat. Both cant rails are joined to the pillars and roof headers. The thermal view distinguishes the tyre carcass, wheel metal and brake. The measured metal surface totals 2.9441 m² across the four wheels. The full model passed schema and paper endpoint checks, all 52 scale rules and a twelve-scene independent GLB readback of 8,044,528 bytes. The outer, oblique and inner wheel detail views were inspected in the 1:500 body.
+
+Published source `e3a1daa411f83e3da31fbd9dc9fe9979b69f2723ad03678bcaeca82918f6b265`.

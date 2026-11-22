@@ -16,8 +16,8 @@ fn each_footer_phase_resumes_on_a_one_byte_grant() {
     ] {
         for budget in [1, 3, 8, 32] {
             let mut cursor = FooterCursor::new(file.len());
-            assert!(matches!(cursor.advance(file, 0), FooterStep::More));
-            let found = (0..file.len() * 2 + 2).find_map(|_| match cursor.advance(file, budget) {
+            assert!(matches!(cursor.advance(|position| file.get(position).copied(), 0), FooterStep::More));
+            let found = (0..file.len() * 2 + 2).find_map(|_| match cursor.advance(|position| file.get(position).copied(), budget) {
                 FooterStep::More => None,
                 FooterStep::Complete(value) => Some(value),
             }).expect("footer finishes within the finite input");

@@ -1,7 +1,7 @@
 //! 🏗️ Router construction and intents: the `EventRouter` constructor, the interaction transfer, the close step, the flow and tree drag settings, the intent API and the hover updates. See [`super`].
 
 use super::*;
-use crate::event_model_and_focus::node_state_box;
+use semio_ui_wgpu_events_focus::node_state_box;
 
 fn hover_card_stack(tree: &UiTree, card: NodeId) -> Option<NodeId> {
     let node = tree.node(card)?;
@@ -30,7 +30,6 @@ impl EventRouter {
             tree_drag_handle_press: None,
             drag_payloads: BTreeMap::new(),
             drop_accept: BTreeMap::new(),
-            scroll_thumbs: BTreeMap::new(),
             retiring_payload: None,
             thumb_start: None,
             clock_seconds: 0.0,
@@ -40,6 +39,9 @@ impl EventRouter {
             tooltip_dismiss_at: None,
             select_typeahead: None,
             stepper_repeat: None,
+            click_chain: None,
+            text_drag: None,
+            text_pending: None,
             caret: None,
             intents: UiIntentSequencer::default(),
             flow: UiFlow::DEFAULT,
@@ -56,6 +58,9 @@ impl EventRouter {
         self.focus.focused = presented.focus.focused.and_then(remap);
         self.focus.tab_order.clear();
         self.focus.tab_order.extend(presented.focus.tab_order.iter().filter_map(|node| remap(*node)));
+        self.focus.tree_roving = presented.focus.tree_roving.iter().filter_map(|(owner, key)| Some((remap(*owner)?, key.clone()))).collect();
+        self.focus.tree_anchor = presented.focus.tree_anchor.iter().filter_map(|(owner, key)| Some((remap(*owner)?, key.clone()))).collect();
+        self.click_chain = presented.click_chain;
         self.hovered = presented.hovered.and_then(remap);
         self.hover_pointer = self.hovered.and(presented.hover_pointer);
         self.hover_chain.clear();
@@ -68,7 +73,7 @@ impl EventRouter {
                 OverlayAnchor::Node(node) => OverlayAnchor::Node(remap(node)?),
                 point => point,
             };
-            Some(OpenOverlay { root, anchor, ..*overlay })
+            Some(OpenOverlay { root, anchor, return_focus: overlay.return_focus.and_then(remap), ..*overlay })
         }));
         self.drag = presented
             .drag
@@ -155,7 +160,7 @@ impl EventRouter {
             self.retiring_payload = Some(RetiringDragPayload::new(payload));
             return false;
         }
-        if self.drop_accept.pop_first().is_some() || self.scroll_thumbs.pop_first().is_some() {
+        if self.drop_accept.pop_first().is_some() {
             return false;
         }
         if let Some((query, _)) = self.select_typeahead.as_mut() {
@@ -350,7 +355,9 @@ impl EventRouter {
     }
 
     pub fn hit_test(&self, tree: &UiTree, root: NodeId, x: f32, y: f32) -> Option<NodeId> {
-        hit_test_node(tree, root, 0.0, 0.0, x, y, self.flow.block.is_reversed(), Some(&self.tree_drag_metrics))
+        let hit = hit_test_node(tree, root, 0.0, 0.0, x, y, self.flow.block.is_reversed(), Some(&self.tree_drag_metrics));
+        let Some(modal) = self.overlays.topmost_focus_trap_root() else { return hit };
+        hit.filter(|id| self.overlays.as_slice().iter().skip_while(|overlay| overlay.root != modal).any(|overlay| is_descendant(tree, *id, overlay.root)))
     }
 
     pub(super) fn hit_test_subtree(&self, tree: &UiTree, subtree_root: NodeId, x: f32, y: f32) -> Option<NodeId> {

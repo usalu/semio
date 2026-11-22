@@ -68,19 +68,22 @@
       }
     },
     "Divergences": {
-      "description": "The cache server's record of a unit key that two origins produced differently: the first stays, the later one was refused. Both hashes are kept as evidence.",
+      "description": "The cache server's record of a key that two origins produced differently: the first stays, the later one was refused. Both fingerprints are kept as evidence, with the class of the result and the output paths that differ. `total` and `classes` count every divergence since `since` (the newest 1000 rows are kept). Notes and ledgers that two machines write differently by design are no divergence.",
       "type": "object",
       "additionalProperties": false,
-      "required": ["version", "rows"],
+      "required": ["version", "since", "total", "classes", "rows"],
       "properties": {
         "version": { "const": 1 },
+        "since": { "$ref": "#/definitions/Milliseconds" },
+        "total": { "type": "integer", "minimum": 0 },
+        "classes": { "type": "object", "additionalProperties": { "type": "integer", "minimum": 0 } },
         "rows": {
           "type": "array",
           "maxItems": 1000,
           "items": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["namespace", "kind", "key", "keptOrigin", "keptSha256", "refusedOrigin", "refusedSha256", "atMs"],
+            "required": ["namespace", "kind", "key", "keptOrigin", "keptSha256", "refusedOrigin", "refusedSha256", "sort", "differing", "atMs"],
             "properties": {
               "namespace": { "type": "string" },
               "kind": { "enum": ["ac", "cas", "nx"] },
@@ -89,6 +92,8 @@
               "keptSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
               "refusedOrigin": { "type": "string" },
               "refusedSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+              "sort": { "type": "string", "description": "unit, project-inference, closure or other" },
+              "differing": { "type": "array", "maxItems": 16, "items": { "type": "string" }, "description": "The output paths whose digests differ between the kept and the refused result." },
               "atMs": { "$ref": "#/definitions/Milliseconds" }
             }
           }

@@ -1,0 +1,47 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Retirement custody for a failed decoded command",
+  "type": "object",
+  "required": [
+    "cases"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "step",
+          "kept",
+          "cause",
+          "faultBytes"
+        ],
+        "properties": {
+          "step": {
+            "enum": [
+              "pending",
+              "refused",
+              "failed"
+            ]
+          },
+          "kept": {
+            "type": "boolean"
+          },
+          "cause": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "faultBytes": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

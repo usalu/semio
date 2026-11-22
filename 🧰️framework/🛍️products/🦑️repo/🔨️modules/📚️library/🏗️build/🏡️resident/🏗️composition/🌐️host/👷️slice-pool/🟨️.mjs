@@ -3,32 +3,39 @@
 import {createProcessWorkerV1,errorOfMessageV1,workerCauseV1} from "./🧵️process/🟨️.mjs";
 import {GRAPH_MEMORY_POLICY_V1} from "../../../../🧠️memory/🟨️.mjs";
 import {GRAPH_CUT_POLICY_V1,graphCutAfterV1,graphCutEnvironmentV1,graphCutLearnedV1,graphCutStartLevelV1,graphCutV1} from "../../../../🧠️memory/✂️cut/🟨️.mjs";
+import {SLICE_RECYCLE_POLICY_V1,sliceRecycleEnvironmentV1} from "../../../../🧠️memory/♻️recycle/🟨️.mjs";
 import {graphChildEnvironmentV1} from "../../../../🧠️memory/🐏️child-environment/🟨️.mjs";
 import {READY_SLICE_REPORT_POLICY_V1,SLICE_REPORT_SAMPLE_MILLISECONDS_V1} from "../../../../🧠️memory/📋️slice-report/🏷️owner/🟦️.ts";
 import {hostProfileV1} from "../../../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🪞️profile/🟦️.ts";
-import {createBoundedCacheV1} from "../../../../🧊️bounded/🟨️.mjs";
 import {HOST_POLICY_V1,renderBothV1} from "../../../📨️protocol/🎚️policy/🟨️.mjs";
+import formatStampSchema from "../../../../🧷️format-stamps/🧬️schema/🔣️.json" with {type:"json"};
+
+/** ⏳ What a slice worker says first when it ends because a source a peer just edited imports a module that is not there yet: the replica has not settled, so the restart is waited for (bounded by the settle budget) and never counted as the same deterministic failure. */
+const UNSETTLED_PREFIX_V1=formatStampSchema.$defs.Protocol.const.loadFailure.unsettledPrefix;
 import {planGuardVerdictV1,sliceAdmissionV1,sliceBookingV1,sliceCeilingMegabytesV1,sliceLimitPolicyV1,slicePlanCeilingMegabytesV1} from "./🧱️limit/🟨️.mjs";
 import {createPressureWatchV1,hostPressureLevelV1} from "./🌡️pressure/🟨️.mjs";
 import {SLICE_JOB_VARIABLE_V1,createReaperV1,deadServiceRowV1,listProcessesV1,sliceJobTokenV1} from "./🧹️reap/🟨️.mjs";
 
 /** 🔑 The identity of a slice load: loads with the same root, arguments, tool and graph policy produce the same slice, so they are one load. */
+/** 🚦 The urgency of a slice load (0 is most urgent, 5 when a client names none): the pool serves the most urgent waiter first, equal urgency in arrival order. */
+export const slicePriorityV1=priority=>Number.isInteger(priority)&&priority>=0&&priority<=9?priority:5;
+
 export const shareKeyV1=request=>JSON.stringify([String(request.root),request.arguments??null,request.tool??null,request.graphPolicy??null]);
 
-export function createSlicePoolV1({workerUrl,maximum=2,heartbeatMilliseconds=2000,budgetMegabytes=Infinity,marginMegabytes=0,elasticity={},headroom=()=>({limitBytes:Infinity,currentBytes:process.memoryUsage().rss}),sampleMilliseconds=1000,note=()=>undefined,createWorker=(url,data,env)=>createProcessWorkerV1(url,data,env,graceMilliseconds===undefined?{}:{graceMilliseconds}),pressure=()=>createPressureWatchV1(),limiter,learned={read:()=>0,write:()=>undefined},reserve,observe,unlearnedMegabytes=0,hostMegabytes=hostProfileV1().totalMegabytes,graceMilliseconds,reaper=createReaperV1(graceMilliseconds===undefined?{}:{graceMilliseconds}),planGuard=HOST_POLICY_V1.slicePlanGuard,restartPolicy={backoffMilliseconds:HOST_POLICY_V1.sliceRestartBackoffMilliseconds,settleMilliseconds:HOST_POLICY_V1.sliceRestartSettleMilliseconds,progressMilliseconds:HOST_POLICY_V1.sliceRestartProgressMilliseconds,totalMaximum:HOST_POLICY_V1.sliceRestartTotalMaximum,sameCauseMaximum:HOST_POLICY_V1.sliceRestartSameCauseMaximum},cutPolicy=GRAPH_CUT_POLICY_V1,hostPressure=()=>hostPressureLevelV1(),report=line=>{try{process.stderr.write(line+"\n");}catch{}},now=()=>performance.now(),planLimitMegabytes=hostMegabytes>0&&hostMegabytes<GRAPH_MEMORY_POLICY_V1.serveHostMegabytes&&process.env.SEMIO_GRAPH_PLAN_LIMIT_MB!=="off"?sliceCeilingMegabytesV1({hostMegabytes,hostCapBasisPoints:elasticity.hostCapBasisPoints,maximumMegabytes:elasticity.maximumMegabytes}):Infinity}){
+export function createSlicePoolV1({workerUrl,maximum=2,heartbeatMilliseconds=2000,budgetMegabytes=Infinity,marginMegabytes=0,elasticity={},headroom=()=>({limitBytes:Infinity,currentBytes:process.memoryUsage().rss}),sampleMilliseconds=1000,note=()=>undefined,createWorker=(url,data,env)=>createProcessWorkerV1(url,data,env,graceMilliseconds===undefined?{}:{graceMilliseconds}),pressure=()=>createPressureWatchV1(),limiter,learned={read:()=>0,write:()=>undefined},reserve,observe,unlearnedMegabytes=0,hostMegabytes=hostProfileV1().totalMegabytes,graceMilliseconds,reaper=createReaperV1(graceMilliseconds===undefined?{}:{graceMilliseconds}),planGuard=HOST_POLICY_V1.slicePlanGuard,restartPolicy={backoffMilliseconds:HOST_POLICY_V1.sliceRestartBackoffMilliseconds,settleMilliseconds:HOST_POLICY_V1.sliceRestartSettleMilliseconds,progressMilliseconds:HOST_POLICY_V1.sliceRestartProgressMilliseconds,totalMaximum:HOST_POLICY_V1.sliceRestartTotalMaximum,sameCauseMaximum:HOST_POLICY_V1.sliceRestartSameCauseMaximum},cutPolicy=GRAPH_CUT_POLICY_V1,recycle=SLICE_RECYCLE_POLICY_V1,hostPressure=()=>hostPressureLevelV1(),report=line=>{try{process.stderr.write(line+"\n");}catch{}},now=()=>performance.now(),planLimitMegabytes=hostMegabytes>0&&hostMegabytes<GRAPH_MEMORY_POLICY_V1.serveHostMegabytes&&process.env.SEMIO_GRAPH_PLAN_LIMIT_MB!=="off"?sliceCeilingMegabytesV1({hostMegabytes,hostCapBasisPoints:elasticity.hostCapBasisPoints,maximumMegabytes:elasticity.maximumMegabytes}):Infinity}){
  if(!Number.isSafeInteger(maximum)||maximum<1)throw new Error("Positive worker maximum required");
  if(!Number.isFinite(marginMegabytes)||marginMegabytes<0||!(budgetMegabytes>=0))throw new Error("Finite memory margin and budget required");
- const tails=createBoundedCacheV1({name:"host:slice-roots",maxEntries:64,maxBytes:64}),waiting=[],counters={started:0,completed:0,failed:0,cancelled:0,overBudget:0,pressured:0};
+ const waiting=[],counters={started:0,completed:0,failed:0,cancelled:0,overBudget:0,pressured:0};
  const learnedPeak=()=>Math.min(learned.read(),sliceCeilingMegabytesV1({hostMegabytes,hostCapBasisPoints:elasticity.hostCapBasisPoints,maximumMegabytes:elasticity.maximumMegabytes}));
- let active=0,sequence=0,recent=[],learnedLevel;const sharing=new Map(),leads=new Map();const running=new Map(),loads=new Map(),stale=deadServiceRowV1(),reaping=new Set();
+ let active=0,sequence=0,recent=[],learnedLevel;const sharing=new Map();const running=new Map(),loads=new Map(),stale=deadServiceRowV1(),reaping=new Set();
  const scopeOf=load=>({pids:load.pids,match:row=>row.token===load.token||process.platform==="win32"&&running.size===0&&row.ppid===process.pid&&!load.baseline.has(row.pid)});
  const reaped=load=>{const task=reaper.reap(scopeOf(load)).catch(()=>0).finally(()=>reaping.delete(task));reaping.add(task);return task;};
  const sweepAtExit=()=>{for(const load of loads.values())reaper.killNow(scopeOf(load));reaper.killNow({match:stale});};
  process.once("exit",sweepAtExit);
  void reaper.reap({match:stale}).catch(()=>0);
- const slot=signal=>new Promise((resolve,reject)=>{
+ const slot=(signal,rank=()=>5)=>new Promise((resolve,reject)=>{
   signal?.throwIfAborted();
-  const entry={resolve:()=>{signal?.removeEventListener("abort",entry.abort);resolve();},abort:()=>{const at=waiting.indexOf(entry);if(at>=0)waiting.splice(at,1);reject(signal.reason);}};
+  const entry={rank,resolve:()=>{signal?.removeEventListener("abort",entry.abort);resolve();},abort:()=>{const at=waiting.indexOf(entry);if(at>=0)waiting.splice(at,1);reject(signal.reason);}};
   signal?.addEventListener("abort",entry.abort,{once:true});
   if(active<maximum){active++;entry.resolve();}else waiting.push(entry);
  });
@@ -38,7 +45,7 @@ export function createSlicePoolV1({workerUrl,maximum=2,heartbeatMilliseconds=200
   const say=granted=>{
    if(signal?.aborted)return;
    announced=true;note();
-   try{onProgress?.(Math.round(performance.now()-started),{phase:"reservation",reservation:{requested:megabytes,...granted!==undefined?{granted}:wait!==undefined?{wait}:{}}});}catch{}
+   try{onProgress?.(Math.round(performance.now()-started),{phase:"reservation",reservation:{requested:megabytes,...granted!==undefined?{granted}:wait!==undefined?{wait}:{}}},granted!==undefined);}catch{}
   };
   const beat=setInterval(say,heartbeatMilliseconds);beat.unref?.();
   try{
@@ -47,16 +54,16 @@ export function createSlicePoolV1({workerUrl,maximum=2,heartbeatMilliseconds=200
    return result;
   }finally{clearInterval(beat);}
  };
- const release=()=>{const next=waiting.shift();if(next)next.resolve();else active--;};
+ const release=()=>{let at=0;for(let index=1;index<waiting.length;index++)if(waiting[index].rank()<waiting[at].rank())at=index;const next=waiting.splice(at,1)[0];if(next)next.resolve();else active--;};
  /** ⏳ Keeps a queued load audible: while it waits for the load ahead or for a free worker it reports a heartbeat decision to its client, and leaves the wait when the client goes away. */
  const holding=(wait,signal,onProgress,decision)=>{
-  const started=performance.now(),beat=onProgress===undefined?undefined:setInterval(()=>{note();const row=decision();onProgress(Math.round(performance.now()-started),{phase:"queue",done:row.done??0,total:row.total??0,running:[],decision:row});},heartbeatMilliseconds);beat?.unref?.();
+  const started=performance.now(),beat=onProgress===undefined?undefined:setInterval(()=>{note();const row=decision();onProgress(Math.round(performance.now()-started),{phase:"queue",done:row.done??0,total:row.total??0,running:[],decision:row},false);},heartbeatMilliseconds);beat?.unref?.();
   const gate=signal===undefined?wait:new Promise((resolve,reject)=>{if(signal.aborted){reject(signal.reason);return;}const abort=()=>reject(signal.reason);signal.addEventListener("abort",abort,{once:true});wait.then(resolve,reject).finally(()=>signal.removeEventListener("abort",abort));});
   return gate.finally(()=>clearInterval(beat));
  };
- const runWorker=(request,signal,onProgress,limit,reservation,booked,waveBasisPoints=10000,cut=graphCutV1(0,cutPolicy),outcome={},wantsReport=()=>false)=>new Promise((resolve,reject)=>{
+ const runWorker=(request,signal,onProgress,limit,reservation,booked,waveBasisPoints=10000,cut=graphCutV1(0,cutPolicy),outcome={},wantsReport=()=>false,carried=undefined)=>new Promise((resolve,reject)=>{
   const environment={...process.env};delete environment[READY_SLICE_REPORT_POLICY_V1.grantEnvironment];
-  counters.started++;const index=++sequence,token=sliceJobTokenV1(process.pid,index),load={token,pids:new Set(),baseline:new Set(process.platform==="win32"?listProcessesV1().filter(row=>row.ppid===process.pid).map(row=>row.pid):[])},worker=createWorker(workerUrl,{...request,heartbeatMilliseconds},{...environment,SEMIO_SLICE_WAVE_BASIS_POINTS:String(waveBasisPoints),...graphChildEnvironmentV1(),...graphCutEnvironmentV1(cut,cutPolicy),...reservation?.megabytes>0&&reservation.megabytes<booked?{[GRAPH_MEMORY_POLICY_V1.budgetEnvironment]:String(Math.max(GRAPH_MEMORY_POLICY_V1.minimumBudgetMegabytes,Math.floor(reservation.megabytes*GRAPH_MEMORY_POLICY_V1.grantShare)))}:{},...Number.isFinite(planLimitMegabytes)?{[GRAPH_MEMORY_POLICY_V1.planCeilingEnvironment]:String(Math.floor(planLimitMegabytes))}:{},[HOST_POLICY_V1.memoryPurge.environmentVariable]:String(HOST_POLICY_V1.memoryPurge.delayMilliseconds),[SLICE_JOB_VARIABLE_V1]:token}),started=now(),entry={index,sample:undefined};running.set(index,entry);loads.set(token,load);outcome.started=true;
+  counters.started++;const index=++sequence,token=sliceJobTokenV1(process.pid,index),load={token,pids:new Set(),baseline:new Set(process.platform==="win32"?listProcessesV1().filter(row=>row.ppid===process.pid).map(row=>row.pid):[])},worker=createWorker(workerUrl,{...request,heartbeatMilliseconds},{...environment,SEMIO_SLICE_WAVE_BASIS_POINTS:String(waveBasisPoints),...graphChildEnvironmentV1(),...graphCutEnvironmentV1(cut,cutPolicy),...recycle===null?{}:sliceRecycleEnvironmentV1(carried,recycle),...reservation?.megabytes>0&&reservation.megabytes<booked?{[GRAPH_MEMORY_POLICY_V1.budgetEnvironment]:String(Math.max(GRAPH_MEMORY_POLICY_V1.minimumBudgetMegabytes,Math.floor(reservation.megabytes*GRAPH_MEMORY_POLICY_V1.grantShare)))}:{},...Number.isFinite(planLimitMegabytes)?{[GRAPH_MEMORY_POLICY_V1.planCeilingEnvironment]:String(Math.floor(planLimitMegabytes))}:{},[HOST_POLICY_V1.memoryPurge.environmentVariable]:String(HOST_POLICY_V1.memoryPurge.delayMilliseconds),[SLICE_JOB_VARIABLE_V1]:token}),started=now(),entry={index,sample:undefined};running.set(index,entry);loads.set(token,load);outcome.started=true;
   let settled=false;
   const finish=(done,value)=>{if(settled)return;settled=true;outcome.peakMegabytes=entry.peakMegabytes??0;if(entry.peakMegabytes&&(done===resolve||value?.code==='memory-budget'))learned.write(Math.round(entry.peakMegabytes*(value?.code==='memory-budget'?(elasticity.learnedGrowthBasisPoints??10000)/10000:1)));running.delete(index);if(entry.sample!==undefined)recent=[{index,sample:entry.sample},...recent].slice(0,maximum);clearInterval(beat);clearInterval(guard);signal?.removeEventListener("abort",abort);const gone=Promise.resolve(worker.terminate?.()).catch(()=>undefined).then(()=>reaped(load)).then(()=>limit?.release()).catch(()=>undefined).finally(()=>{loads.delete(token);reservation?.release();});if(done===reject&&value!==null&&typeof value==="object"){try{Object.defineProperty(value,"gone",{value:gone,enumerable:false,configurable:true});}catch{}}done(value);};
   const abort=()=>{counters.cancelled++;finish(reject,signal.reason??new Error("cancelled"));};
@@ -82,8 +89,8 @@ export function createSlicePoolV1({workerUrl,maximum=2,heartbeatMilliseconds=200
     judge(megabytes);
    },()=>{treeSamplePending=false;});
   };
-  let detail,lastReportAt=-Infinity;const watch=pressure(),base=headroom().currentBytes,beat=setInterval(()=>{
-   note();onProgress?.(Math.round(performance.now()-started),detail);
+  let detail,workerObserved=false,lastReportAt=-Infinity;const watch=pressure(),base=headroom().currentBytes,beat=setInterval(()=>{
+   note();const observed=workerObserved;workerObserved=false;onProgress?.(Math.round(performance.now()-started),detail,observed);
    if(wantsReport()&&now()-lastReportAt>=SLICE_REPORT_SAMPLE_MILLISECONDS_V1)worker.send?.({type:"slice-report"});
   },heartbeatMilliseconds),guard=setInterval(()=>{if(worker.pid!==undefined&&observe!==undefined&&!treeSamplePending)sampleTree(worker.pid);const verdict=watch.sample();if(verdict.tripped){counters.pressured++;finish(reject,Object.assign(new Error("Slice load stalled by memory pressure"),{code:"memory-pressure",kind:verdict.kind,value:verdict.value,limit:verdict.limit,seconds:verdict.seconds}));return;}const{limitBytes,currentBytes}=headroom(),grown=Math.round((currentBytes-base)/1048576),current=Math.round(currentBytes/1048576),peak=(entry.peakMegabytes=Math.max(entry.peakMegabytes??0,grown)),limit=limitBytes===Infinity?Infinity:Math.round(limitBytes/1048576);if(grown>budgetMegabytes||current+marginMegabytes>limit){counters.overBudget++;finish(reject,Object.assign(new Error("Slice load would cross the memory limit"),{code:"memory-budget",currentMegabytes:current,limitMegabytes:limit===Infinity?budgetMegabytes:limit,marginMegabytes,grownMegabytes:grown}));}},sampleMilliseconds);beat.unref?.();guard.unref?.();
   signal?.addEventListener("abort",abort,{once:true});
@@ -94,8 +101,10 @@ export function createSlicePoolV1({workerUrl,maximum=2,heartbeatMilliseconds=200
     if(!settled&&wantsReport()&&typeof message.report==="string"&&Buffer.byteLength(message.report)<=READY_SLICE_REPORT_POLICY_V1.fileBytes){lastReportAt=now();onProgress?.(0,{sliceReport:message.report});}
     return;
    }
+   if(message?.type==="recycle"){note();finish(reject,Object.assign(new Error("Slice worker recycled at a pass boundary"),{code:"slice-recycle",recycle:message.state}));return;}
    note();if(message?.type==="child"&&Number.isSafeInteger(message.pid)){load.pids.add(message.pid);return;}
-   if(message?.type==="progress"){detail={phase:message.phase,done:message.done,total:message.total,...message.running===undefined?{}:{running:message.running,...message.decision===undefined?{}:{decision:message.decision}}};return;}
+   if(message?.type==="progress"&&message.decision?.key==="round"){workerObserved=true;onProgress?.(0,{phase:message.phase,done:message.done,total:message.total,running:[],decision:message.decision},true);return;}
+   if(message?.type==="progress"){workerObserved=true;detail={phase:message.phase,done:message.done,total:message.total,...message.leaseWait===undefined?{}:{leaseWait:message.leaseWait},...message.running===undefined?{}:{running:message.running,...message.decision===undefined?{}:{decision:message.decision}}};return;}
    if(message?.type==="settled"){if(settling!==undefined)settling.answered=true;return;}
    if(message?.type==="stage"){entry.stage=String(message.stage);entry.operation=String(message.operation??message.stage);return;}
    if(message?.type==="memory"){entry.sample={heapMb:message.heapMb,extraMb:message.extraMb,objectCount:message.objectCount,objectTypes:message.objectTypes,at:Date.now()};return;}
@@ -105,12 +114,15 @@ export function createSlicePoolV1({workerUrl,maximum=2,heartbeatMilliseconds=200
   worker.on("error",error=>{counters.failed++;finish(reject,error);});
   worker.on("exit",code=>{if(!settled){counters.failed++;finish(reject,Object.assign(new Error("Slice worker exited with code "+code),{exit:code,restart:code===HOST_POLICY_V1.sliceRestartExitCode,ranMilliseconds:Math.round(now()-started),workerCause:typeof worker.stderrTail==="function"?workerCauseV1(worker.stderrTail()):""}));}});
  });
- const execute=async(request,{signal,onProgress,wantsReport}={})=>{
-  const key=String(request.root),previous=(tails.get(key)??Promise.resolve()).catch(()=>undefined),turn=holding(previous,signal,onProgress,()=>{const lead=leads.get(key);return lead===undefined?{key:"queued-root",used:active,budget:maximum,limit:0}:{key:"queued-leader",used:active,budget:maximum,limit:0,kind:lead.phase,done:lead.done,total:lead.total};}).then(async()=>{
-   await holding(slot(signal),undefined,onProgress,()=>({key:"queued-pool",used:active,budget:maximum,limit:waiting.length}));
-   let heavyHandoffs=0,totalRestarts=0,churnSince,streak=0,lastCause="",sameCause=0;
+ const execute=async(request,{signal,onProgress,wantsReport,rank}={})=>{
+  const turn=(async()=>{
+   let ownsSlot=false,heavyHandoffs=0,recycles=0,carried,totalRestarts=0,churnSince,streak=0,lastCause="",sameCause=0;
    let level=learnedLevel??Math.min(cutPolicy.levels,graphCutStartLevelV1({limitMegabytes:planLimitMegabytes},cutPolicy));
    try{for(let restarts=0;;restarts++){
+   if(!ownsSlot){
+    await holding(slot(signal,rank),undefined,onProgress,()=>({key:"queued-pool",used:active,budget:maximum,limit:waiting.length}));
+    ownsSlot=true;
+   }
    signal?.throwIfAborted();
    let reservation,limit;
    try{
@@ -122,7 +134,7 @@ export function createSlicePoolV1({workerUrl,maximum=2,heartbeatMilliseconds=200
     limit=policy===undefined?undefined:await limiter.create(policy,"slice-"+(sequence+1)).catch(()=>undefined);
     signal?.throwIfAborted();
     const granted=Number(reservation?.megabytes),waveBasisPoints=Number.isFinite(granted)&&granted>0?Math.min(admission.waveBasisPoints,Math.max(500,Math.floor(granted*10000/booked))):admission.waveBasisPoints;
-    const cut=graphCutV1(level,cutPolicy),outcome={},work=runWorker(request,signal,onProgress,limit,reservation,booked,Math.min(waveBasisPoints,cut.waveBasisPoints),cut,outcome,wantsReport);
+    const cut=graphCutV1(level,cutPolicy),outcome={},work=runWorker(request,signal,onProgress,limit,reservation,booked,Math.min(waveBasisPoints,cut.waveBasisPoints),cut,outcome,wantsReport,carried);
     if(outcome.started){reservation=undefined;limit=undefined;}
     const answer=await work;
     learnedLevel=graphCutLearnedV1({level,peakMegabytes:outcome.peakMegabytes??0,limitMegabytes:planLimitMegabytes},cutPolicy);
@@ -132,24 +144,33 @@ export function createSlicePoolV1({workerUrl,maximum=2,heartbeatMilliseconds=200
     reservation?.release();
     await error?.gone;
     if(error?.code==="plan-cut"&&!signal?.aborted){level=error.cutTo;restarts--;note();onProgress?.(0,{phase:"reservation",done:0,total:0,running:[],decision:{key:"cut",used:level,budget:cutPolicy.levels,kind:String(error.currentMegabytes),limit:error.limitMegabytes}});continue;}
+    if(error?.code==="slice-recycle"&&recycle!==null&&!signal?.aborted&&recycles<recycle.maximumRecycles){recycles++;carried=error.recycle;restarts--;note();onProgress?.(0,{phase:"reservation",done:0,total:0,running:[],decision:{key:"recycled",used:recycles,budget:recycle.maximumRecycles,kind:String(carried?.heapMegabytes??""),limit:recycle.heapMegabytes}});continue;}
     if(error?.key==="build.graph.owner-too-heavy"&&!signal?.aborted&&Number(error.values?.producers)!==0&&heavyHandoffs<cutPolicy.heavyHandoffs){heavyHandoffs++;restarts--;note();onProgress?.(0,{phase:"reservation",done:0,total:0,running:[],decision:{key:"handoff",used:heavyHandoffs,budget:cutPolicy.heavyHandoffs,kind:String(error.values?.named??"")}});continue;}
     const squeezed=(error?.code==="memory-budget"||error?.code==="memory-pressure")&&!signal?.aborted?graphCutAfterV1({level,treeMegabytes:Number(error.currentMegabytes),limitMegabytes:Number(error.limitMegabytes)},cutPolicy):undefined;
     if(squeezed!==undefined){level=squeezed;restarts--;note();onProgress?.(0,{phase:"reservation",done:0,total:0,running:[],decision:{key:"cut",used:level,budget:cutPolicy.levels,kind:String(error.currentMegabytes??""),limit:error.limitMegabytes??0}});continue;}
     if(error?.restart!==true||signal?.aborted)throw error;
     totalRestarts++;
     const lasted=error.ranMilliseconds>=restartPolicy.progressMilliseconds;
-    const cause=String(error.workerCause??"");sameCause=cause!==""&&cause===lastCause?sameCause+1:cause!==""?1:0;lastCause=cause;
+    const cause=String(error.workerCause??""),unsettled=cause.includes(UNSETTLED_PREFIX_V1);sameCause=unsettled?0:cause!==""&&cause===lastCause?sameCause+1:cause!==""?1:0;lastCause=cause;
     if(cause!==""&&sameCause>=(restartPolicy.sameCauseMaximum??Infinity))throw Object.assign(new Error(Object.values(renderBothV1("host-slice-worker-failing",{count:sameCause,exit:error.exit,cause})).join("\n")),{code:"slice-worker-failing",cause,count:sameCause,exit:error.exit});
     if(lasted){churnSince=now();streak=0;}
     churnSince??=now()-(error.ranMilliseconds??0);
     const settleWaited=now()-churnSince;
     if(!lasted&&settleWaited>=restartPolicy.settleMilliseconds||totalRestarts>restartPolicy.totalMaximum)throw Object.assign(new Error(Object.values(renderBothV1("host-slice-restarts",{restarts:totalRestarts,exit:error.exit})).join("\n")),{code:"slice-restarts",restarts:totalRestarts,exit:error.exit});
     const pause=restartPolicy.backoffMilliseconds[Math.min(streak++,restartPolicy.backoffMilliseconds.length-1)],decision={key:cause===""?"restarted":"restarted-cause",used:Math.round(settleWaited/1000),budget:Math.round(restartPolicy.settleMilliseconds/1000),kind:String(error.exit),limit:Math.round(pause/1000),...cause===""?{}:{cause}};
-    for(let waited=0;waited<pause&&!signal?.aborted;waited+=heartbeatMilliseconds){note();onProgress?.(0,{phase:"reservation",done:0,total:0,running:[],decision});await new Promise(done=>{const timer=setTimeout(done,Math.min(heartbeatMilliseconds,pause-waited));signal?.addEventListener("abort",()=>{clearTimeout(timer);done();},{once:true});});}
+    ownsSlot=false;release();
+    for(let waited=0;waited<pause&&!signal?.aborted;waited+=heartbeatMilliseconds){
+     note();onProgress?.(0,{phase:"reservation",done:0,total:0,running:[],decision},waited===0);
+     await new Promise(done=>{
+      if(signal?.aborted){done();return;}
+      const finish=()=>{clearTimeout(timer);signal?.removeEventListener("abort",finish);done();};
+      const timer=setTimeout(finish,Math.min(heartbeatMilliseconds,pause-waited));
+      signal?.addEventListener("abort",finish,{once:true});
+     });
+    }
    }
-   }}finally{release();}
-  });
-  tails.set(key,previous.then(()=>turn.catch(()=>undefined)));
+   }}finally{if(ownsSlot)release();}
+  })();
   return turn;
  };
 
@@ -159,17 +180,17 @@ export function createSlicePoolV1({workerUrl,maximum=2,heartbeatMilliseconds=200
   const key=shareKeyV1(request),root=String(request.root);
   let load=sharing.get(key);
   if(load===undefined){
-   const controller=new AbortController(),clients=new Set(),mine={clients,controller,last:undefined};
-   const lead=(milliseconds,detail)=>{
+   const controller=new AbortController(),clients=new Set(),mine={clients,controller,last:undefined,priority:slicePriorityV1(request.priority)};
+   const lead=(milliseconds,detail,observed)=>{
     if(detail?.sliceReport!==undefined){for(const client of clients)if(client.wantsReport?.())client.onProgress?.(milliseconds,detail);return;}
-    mine.last=[milliseconds,detail];if(detail!==undefined&&detail.phase!=="queue"&&detail.phase!=="reservation")leads.set(root,{phase:String(detail.phase),done:Number(detail.done)||0,total:Number(detail.total)||0,owner:mine});for(const client of[...clients])client.onProgress?.(milliseconds,detail);
+    mine.last=[milliseconds,detail];for(const client of[...clients])client.onProgress?.(milliseconds,detail,observed);
    };
-   mine.promise=execute(request,{signal:controller.signal,onProgress:lead,wantsReport:()=>[...clients].some(client=>client.wantsReport?.())});
-   const clear=()=>{if(sharing.get(key)===mine)sharing.delete(key);if(leads.get(root)?.owner===mine)leads.delete(root);};
+   mine.promise=execute(request,{rank:()=>mine.priority,signal:controller.signal,onProgress:lead,wantsReport:()=>[...clients].some(client=>client.wantsReport?.())});
+   const clear=()=>{if(sharing.get(key)===mine)sharing.delete(key);};
    mine.promise.then(clear,clear);sharing.set(key,mine);load=mine;
   }
   return new Promise((resolve,reject)=>{
-   const client={onProgress,wantsReport};
+   const client={onProgress,wantsReport};load.priority=Math.min(load.priority,slicePriorityV1(request.priority));
    const leave=()=>{
     load.clients.delete(client);
     const reason=signal.reason??new Error("cancelled");
@@ -180,7 +201,7 @@ export function createSlicePoolV1({workerUrl,maximum=2,heartbeatMilliseconds=200
    };
    load.clients.add(client);
    signal?.addEventListener("abort",leave,{once:true});
-   if(load.last!==undefined)onProgress?.(...load.last);
+   if(load.last!==undefined)onProgress?.(...load.last,false);
    load.promise.then(resolve,reject).finally(()=>signal?.removeEventListener("abort",leave));
   });
  };

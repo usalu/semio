@@ -36,6 +36,14 @@
         {"retained": false, "attempts": 2}
       ]
     },
+    "failedSpan": {
+      "keepGoingMilliseconds": 1100,
+      "cases": [
+        {"name":"edited primary span","changed":true,"primary":true,"retired":true,"attempts":2},
+        {"name":"unchanged primary span","changed":false,"primary":true,"retired":false,"attempts":1},
+        {"name":"edited secondary span","changed":true,"primary":false,"retired":false,"attempts":2}
+      ]
+    },
     "cases": [
       { "mutation": "source", "timing": "after-observation", "publishesReceipt": false },
       { "mutation": "source", "timing": "after-compiler-checksum", "publishesReceipt": true },

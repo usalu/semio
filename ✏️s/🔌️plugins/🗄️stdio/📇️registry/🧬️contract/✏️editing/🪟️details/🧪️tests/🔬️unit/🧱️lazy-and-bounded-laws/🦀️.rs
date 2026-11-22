@@ -108,6 +108,7 @@ fn native_details_use_shape_key_and_scalar_projections_without_materializing_the
 
 #[test]
 fn lazy_collection_renders_a_bounded_page_without_materializing_every_pixel() {
+    let _arena = ui_arena();
     let provider = LazyPixels { count: 16_000_000 };
     let result = render_snapshot_details_provider_revisioned(&provider, semio_ui_contract::UiPublicationRevision(1), Locale::En, "s.stdio.png@test/*#editor", &TreeWindows::unhosted());
     assert!(result.is_ok());
@@ -115,6 +116,7 @@ fn lazy_collection_renders_a_bounded_page_without_materializing_every_pixel() {
 
 #[test]
 fn lazy_large_object_controls_do_not_scan_unpaged_keys() {
+    let _arena = ui_arena();
     use std::cell::Cell;
     struct LazyObject {
         key_reads: Cell<usize>,
@@ -153,6 +155,7 @@ fn lazy_large_object_controls_do_not_scan_unpaged_keys() {
 
 #[test]
 fn an_exact_chunk_budget_parent_omits_unbindable_derived_insert_controls_without_failing_the_panel() {
+    let _arena = ui_arena();
     struct BoundaryPath {
         key: String,
     }

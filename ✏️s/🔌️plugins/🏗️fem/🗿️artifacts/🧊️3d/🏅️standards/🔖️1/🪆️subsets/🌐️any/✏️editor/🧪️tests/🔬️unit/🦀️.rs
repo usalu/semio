@@ -188,7 +188,7 @@ fn every_command() -> Vec<Fem3dCommand> {
         Fem3dCommand::SetAnalysisSettings(set_analysis_settings::SetAnalysisSettings { modal_count: Some(5), buckling_count: None, deformation_scale: Some(30.0), field: None, value: None, window_id: None }),
         Fem3dCommand::RemoveSelection(remove_selection::RemoveSelection { ids: vec!["scope:1:4:node2:n1".into(), "scope:1:7:element2:e1".into()] }),
         Fem3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: semio_s_artifact_fem_3d_io::examples::demo::ID.into() }),
-        Fem3dCommand::SetCamera(set_camera::SetCamera { camera: crate::Viewport3dOrbit { position: [8.0, -3.0, 5.0], target: [0.0; 3], zoom: 1.25, up: None } }),
+        Fem3dCommand::SetCamera(set_camera::SetCamera { camera: semio_os_kernel::Viewport3dOrbit { position: [8.0, -3.0, 5.0], target: [0.0; 3], zoom: 1.25, up: None } }),
         Fem3dCommand::SetResultDisplay(set_result_display::SetResultDisplay { source_id: Some("dead".into()), mode: "modal".into(), mode_index: 0, field: None, value: None, window_id: None }),
         Fem3dCommand::PatchNode(patch_node::PatchNode { id: "n1".into(), field: "x".into(), value: "1.5".into() }),
         Fem3dCommand::PatchElement(patch_element::PatchElement { id: "e1".into(), field: "roll".into(), value: "0.1".into() }),
@@ -372,10 +372,10 @@ async fn mounted_peer_catch_up_preserves_independent_fields_and_deduplicates_eve
     use crate::context::fem3d_peer_app;
     async fn events(app: &context::Fem3dApp) -> Vec<protocol::MutationEnvelope> {
         let files = app.document_pack().await.expect("export mounted peer");
-        let parsed = store::os_store::text_format::parse_document_pack::<Fem3dSnapshot, Fem3dMutation>(&files.pack, &files.spr).await.expect("read retained peer events");
+        let parsed = store::os_store::text_format::parse_document_pack::<Fem3dSnapshot, Fem3dMutation>(&files.pack, &files.spr, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("read retained peer events");
         let mut envelope = parsed.into_envelope();
         let mut events = Vec::new();
-        for edit in &envelope.vcs.edits {
+        for edit in envelope.vcs.edits.iter() {
             events.extend(store::os_spr::mutation_envelope_from_edit::<Fem3dSnapshot, Fem3dMutation>(edit, &protocol::ArtifactId(envelope.id.clone()), &protocol::SchemaId(envelope.schema.clone())).expect("original causal envelope"));
         }
         events.extend(std::mem::take(&mut envelope.transitions));
@@ -567,6 +567,51 @@ async fn fem3d_camera_scene_encoding_preserves_the_typed_pose() {
 }
 //#endregion 🎬️SceneRender
 use store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory;
+use semio_framework::InteractiveJobClassification;
+use semio_framework::ToolJobFactory;
+use semio_s_artifact_fem_3d_editor::editor::fem3d::create_fem3d_app;
+use semio_s_artifact_fem_3d_editor::editor::fem3d::fem3d_io;
+use semio_s_artifact_fem_3d_editor::editor::fem3d::fem3d_retained_contract;
+use semio_s_artifact_fem_3d_editor::editor::fem3d::modes::edit;
+use semio_s_artifact_fem_3d_editor::editor::fem3d::Fem3dArtifactPreparationFactory;
+use semio_s_artifact_fem_3d_editor::editor::fem3d::Fem3dRetainedCommandJobFactory;
+use semio_s_artifact_fem_3d_editor::editor::fem3d::FEM3D_ARTIFACT_STORE_MAXIMUM_BYTES;
+use semio_s_artifact_fem_3d_editor::editor::fem3d::FEM3D_RETAINED_DECODED_ITEMS;
+use semio_s_artifact_fem_3d_editor::editor::fem3d::FEM3D_RETAINED_OUTPUT_BYTES;
+use semio_s_artifact_fem_3d_editor::editor::fem3d::FEM3D_RETAINED_PUBLICATION_CONTRACTS;
+use semio_s_artifact_fem_3d_editor::editor::fem3d::FEM3D_RETAINED_RAW_BYTES;
+use semio_s_artifact_fem_3d_editor::editor::fem3d::FEM3D_RETAINED_TOOL_IDS;
+use semio_s_artifact_fem_3d_editor::editor::fem3d::FEM3D_RETAINED_WORK_ITEMS;
+use semio_s_artifact_fem_3d_editor::editor::fem3d::FEM3D_WINDOW_COMMAND_VALUE_BYTES;
+use semio_s_artifact_fem_3d_editor::editor::fem3d::commands::focus_entity;
+use semio_s_artifact_fem_3d_editor::editor::fem3d::commands::gumball::rotate_selection;
+use semio_s_artifact_fem_3d_editor::editor::fem3d::commands::gumball::scale_selection;
+use semio_s_artifact_fem_3d_editor::editor::fem3d::commands::gumball::set_transform_gumball_flag;
+use semio_s_artifact_fem_3d_editor::editor::fem3d::commands::gumball::translate_selection;
+use semio_s_artifact_fem_3d_editor::editor::fem3d::commands::result_animation_tick;
+use semio_s_artifact_fem_3d_editor::editor::fem3d::commands::set_result_animation;
+use semio_s_artifact_fem_3d_editor::editor::fem3d::commands::set_result_display;
+use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::add_area_load;
+use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::add_bar;
+use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::add_combination;
+use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::add_frame;
+use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::add_load_case;
+use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::add_member_udl;
+use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::add_nodal_load;
+use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::add_node;
+use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::add_section;
+use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::add_solid;
+use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::patch_combination;
+use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::patch_element;
+use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::patch_load;
+use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::patch_load_case;
+use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::patch_material;
+use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::patch_section;
+use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::patch_solid;
+use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::patch_support;
+use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::remove_selection;
+use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::set_analysis_settings;
+use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::set_self_weight;
 #[cfg(test)] use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::set_active_example;
 #[cfg(test)] use semio_s_artifact_fem_3d_editor::editor::fem3d::commands::set_camera;
 #[cfg(test)] use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::patch_node;

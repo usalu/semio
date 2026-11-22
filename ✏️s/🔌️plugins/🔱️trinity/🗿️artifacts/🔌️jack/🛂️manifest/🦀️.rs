@@ -61,6 +61,48 @@ impl Manifest {
     pub fn nakagin_default() -> Self {
         Self::from_graph(&crate::standards::v1::subsets::any::schema::graph_manifest::nakagin::nakagin_manifest())
     }
+
+    /// 🪪️ The one interned manifest of an id: documents reference it by `manifestId` and never own a copy. Built-in ids resolve lazily; custom ones come from [`Manifest::register`].
+    pub fn shared(id: &str) -> Option<std::sync::Arc<Manifest>> {
+        let registry = manifest_registry();
+        if let Some(found) = registry.read().ok()?.get(id) {
+            return Some(found.clone());
+        }
+        let built_in = match id {
+            "nakagin" => Self::nakagin_default(),
+            _ => return None,
+        };
+        Some(registry.write().ok()?.entry(id.to_string()).or_insert_with(|| std::sync::Arc::new(built_in)).clone())
+    }
+
+    /// 🧬️ Interns a derived manifest under the id of its own content, so equal manifests share one id and one allocation.
+    pub fn intern(manifest: Manifest) -> String {
+        let text = semio_framework_pack_json::to_json_string(&manifest);
+        let hash = text.bytes().fold(0xcbf29ce484222325_u64, |hash, byte| (hash ^ u64::from(byte)).wrapping_mul(0x100000001b3));
+        let mut id = format!("content-{hash:016x}");
+        loop {
+            match Self::shared(&id) {
+                Some(existing) if *existing == manifest => return id,
+                Some(_) => id.push('+'),
+                None => {
+                    Self::register(id.clone(), manifest);
+                    return id;
+                }
+            }
+        }
+    }
+
+    /// 🧷️ Interns a custom manifest under an id, replacing any earlier registration of that id.
+    pub fn register(id: impl Into<String>, manifest: Manifest) -> std::sync::Arc<Manifest> {
+        let shared = std::sync::Arc::new(manifest);
+        manifest_registry().write().expect("manifest registry").insert(id.into(), shared.clone());
+        shared
+    }
+}
+
+fn manifest_registry() -> &'static std::sync::RwLock<std::collections::HashMap<String, std::sync::Arc<Manifest>>> {
+    static REGISTRY: std::sync::OnceLock<std::sync::RwLock<std::collections::HashMap<String, std::sync::Arc<Manifest>>>> = std::sync::OnceLock::new();
+    REGISTRY.get_or_init(Default::default)
 }
 
 impl Manifest {

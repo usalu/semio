@@ -1,0 +1,11 @@
+# Surface Publication Lease
+
+The managed Surface producer completed prototype Cargo and wasm-pack. The artifact publisher then waited for the exclusive Surface destination while holding its capture lease. The active GIS3D React session held the Surface destination as a shared reader. The lease-order guard refused the wait after 15 seconds. The temporary wasm-pack output was cleaned up and port 6041 still served the original Wasm SHA-256 `8f0e2339a91d066aaf3b52eb5a5cab83129158f1088dc364d898bce5c7462857`. [Compiler and browser evidence](./combined-basemap-scene-order.md)
+
+The long reader is established by `serveViteCommandV1`. It wraps the lifetime of its Vite child in `withViteArtifactInputsV1`, and the framework OS Vite configuration resolves engine imports from the same canonical destination. That pairing keeps JavaScript glue and Wasm consistent for a live session. Advancing the publisher while a process reads those canonical paths would violate that pairing.
+
+The in-process Vite service already has a finite captured-input route. `captureViteArtifactInputsV1` copies every admitted file, checks the original and copied digests, and releases the canonical readers before the listener starts. A projected configuration supplies the private paths for all declared inputs. The child-process launcher used by GIS React currently has no equivalent projection transport. Adopting this existing snapshot contract for child-process serving would let a newly launched dev server retain a single coherent engine generation without holding the canonical publication for its lifetime. An already running server keeps the reader established by its launcher.
+
+The current verification keeps both React sessions available. A separate test-owned Surface build can supply paired scratch glue and Wasm to a diagnostic browser run without replacing the canonical package or claiming that it has been published.
+
+The paired browser route passed its positive control against port 6041. The harness supplied the earlier diagnostic glue (`dd0a22c…`) and Wasm (`e34e178…`) to the real Vite engine URLs and asserted that the browser consumed both. Desktop Chrome rendered 49 live tiles via WebGPU and passed pan, zoom and keyboard navigation. The harness serves the pair only inside its test browser. The current-source rebuild is separate from this route control.

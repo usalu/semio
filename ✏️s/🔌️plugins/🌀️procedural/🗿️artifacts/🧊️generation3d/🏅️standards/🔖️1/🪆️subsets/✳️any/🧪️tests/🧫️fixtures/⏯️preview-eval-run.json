@@ -3,6 +3,14 @@
   "version": 1,
   "note": "The read-only `previewEval` tool run both generation3d surfaces run (`🧵️preview-eval`), declared as data: its vocabulary, the entity key a trace record names a flow node by, the verdict law an observation of the retained evaluation session answers, the scheduling law over the per-window latches, the kernel release a closed run owes, the abort affordance a preview window publishes what a surface's pending_effects owes the run, and what a LANDED GESTURE owes the attached previews. Language-agnostic: an implementation in any language must answer these exact rows. Ticket 26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS.",
   "toolId": "previewEval",
+  "mountedBaseline": {
+    "window": "mounted-preview",
+    "windowKind": "world3d",
+    "cases": [
+      { "id": "resume", "cancel": false, "deniedEffects": 0, "completed": true, "terminalEmpty": true },
+      { "id": "cancel", "cancel": true, "deniedEffects": 0, "completed": false, "terminalEmpty": true }
+    ]
+  },
   "vocabulary": {
     "mutating": false,
     "rebase": "restart",
@@ -1177,6 +1185,43 @@
             "toolRunStart"
           ]
         }
+      }
+    ]
+  },
+  "documentMoves": {
+    "note": "What a `pending_effects` poll owes the attached previews when the DOCUMENT moved under it, whichever route moved it. `undo` and `redo` are framework-reserved and never reach the app's dispatch, so no emit names them: the only thing a poll can read is the committed document it is handed. Its content revision folds the applied document-edit stack and the checkpoint, so an edit, an undo, a redo, a revert and a checkout all move it; the provisional (scrub) generation moves while a gesture is still dragging. Each poll row carries a stamp (`content` is one byte repeated across the 32-byte revision), `owedAfterPoll` says whether any attached window still owes an evaluation once the poll returned (the first poll of a boot owes the first evaluation), and `starts` how many run starts that poll asked for. Between polls the preview is evaluated and paid, so a window owes again ONLY because the stamp moved; a stamp that returns to an earlier value (an undo then a redo) is a move each time.",
+    "rows": [
+      {
+        "id": "an-undo-and-a-redo-each-owe-the-previews-an-evaluation",
+        "windows": ["preview"],
+        "servable": true,
+        "polls": [
+          { "content": 1, "provisional": 0, "owedAfterPoll": true, "starts": 1 },
+          { "content": 1, "provisional": 0, "owedAfterPoll": false, "starts": 0 },
+          { "content": 0, "provisional": 0, "owedAfterPoll": true, "starts": 1 },
+          { "content": 0, "provisional": 0, "owedAfterPoll": false, "starts": 0 },
+          { "content": 1, "provisional": 0, "owedAfterPoll": true, "starts": 1 }
+        ]
+      },
+      {
+        "id": "a-scrub-step-owes-the-previews-an-evaluation-without-a-new-revision",
+        "windows": ["preview"],
+        "servable": true,
+        "polls": [
+          { "content": 4, "provisional": 0, "owedAfterPoll": true, "starts": 1 },
+          { "content": 4, "provisional": 0, "owedAfterPoll": false, "starts": 0 },
+          { "content": 4, "provisional": 1, "owedAfterPoll": true, "starts": 1 },
+          { "content": 4, "provisional": 1, "owedAfterPoll": false, "starts": 0 }
+        ]
+      },
+      {
+        "id": "a-document-move-with-no-attached-preview-owes-and-starts-nothing",
+        "windows": [],
+        "servable": true,
+        "polls": [
+          { "content": 1, "provisional": 0, "owedAfterPoll": false, "starts": 0 },
+          { "content": 2, "provisional": 0, "owedAfterPoll": false, "starts": 0 }
+        ]
       }
     ]
   },

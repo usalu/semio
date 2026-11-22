@@ -2,8 +2,8 @@
 import json
 from semio_repo_test import Adapter, Outcome
 
-REQUIRED = {"schema", "name", "manifest", "camera", "content", "query"}
-OPTIONAL = {"manifestId", "rootNodeId"}
+REQUIRED = {"schema", "name", "manifestId", "camera", "content", "query"}
+OPTIONAL = {"rootNodeId"}
 KINDS = ("set-query", "set-root")
 
 
@@ -25,7 +25,7 @@ def parent(value):
     """🪪️ A closed parent retains its complete literal content address; no scene is reconstructed."""
     if not isinstance(value, dict) or not REQUIRED <= value.keys() or not value.keys() <= REQUIRED | OPTIONAL:
         raise AssertionError("closed Jack parent fields required")
-    if any(not isinstance(value[key], str) for key in ("schema", "name", "query")):
+    if any(not isinstance(value[key], str) for key in ("schema", "name", "manifestId", "query")):
         raise AssertionError("declared parent text required")
     content = value["content"]
     if set(content) != {"childId", "target"} or set(content["target"]) != {"artifactId", "dialect"} or set(content["target"]["dialect"]) != {"artifactKind", "standard", "subset"}:

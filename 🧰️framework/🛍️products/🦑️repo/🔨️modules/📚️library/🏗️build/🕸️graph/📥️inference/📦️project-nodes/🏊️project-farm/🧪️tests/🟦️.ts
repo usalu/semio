@@ -194,7 +194,7 @@ test("a receipt or pack that stands is the first writer's and a record is replac
  expect(plan.present).toBe(1);expect(plan.published).toBe(1);
 });
 
-test("a staged leaf that does not hold what its name says is refused, and a damaged block that stood is repaired by the verified copy",()=>{
+test("a staged leaf that does not hold what its name says is refused, and a damaged block or closure that stood is repaired by the verified copy",()=>{
  const staging=scratch(),target=scratch(),good=corpus.blocks[0]!,name=`inference/np/ob/${sha(good)}.br`;
  mkdirSync(join(staging,"build-input-closures"),{recursive:true});mkdirSync(join(staging,"inference","np","ob"),{recursive:true});
  writeFileSync(join(staging,"build-input-closures",`${sha("one")}.json`),"two");
@@ -209,7 +209,7 @@ test("a staged leaf that does not hold what its name says is refused, and a dama
  const closure=corpus.closures[0]!,closureName=`${closure.namespace}/${sha(closure.text)}.json`;
  mkdirSync(join(staging,closure.namespace),{recursive:true});writeFileSync(join(staging,closureName),closure.text);
  mkdirSync(join(target,closure.namespace),{recursive:true});writeFileSync(join(target,closureName),closure.text+" ");
- expect(()=>adopt(target,staging,[closureName])).toThrow();
+ expect(()=>adopt(target,staging,[closureName])).not.toThrow();expect(readFileSync(join(target,closureName),"utf8")).toBe(closure.text);
 });
 
 test("four processes that adopt every leaf of the corpus at the same moment leave exactly one copy of each leaf and nothing else",async()=>{

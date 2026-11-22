@@ -1,4 +1,5 @@
 import{spawnSync}from"node:child_process";
+import{realpathSync}from"node:fs";
 import imageSchema from"../../🧬️schema/🔣️.json" with { type: "json" };
 import{nativeImageInformationV1}from"../📥️information/🟦️.ts";
 const policy=imageSchema.definitions.ImageProtocol.const.reclaim.availability;
@@ -9,6 +10,16 @@ export function nativeImageEffectiveAvailableBytesV1(volumeAvailableBytes:number
  if(containerFreeBytes===undefined||containerFreeBytes-volumeAvailableBytes<=nativeImageAvailabilityToleranceV1(containerFreeBytes))return volumeAvailableBytes;
  return Math.max(volumeAvailableBytes,hostFreeBytes===undefined?containerFreeBytes:Math.min(containerFreeBytes,hostFreeBytes));
 }
+/** 🧭️ Decides the bytes a build can really write: the host-capped container estimate, so a stale volume figure can neither hide real space nor outlive the host's own. Pure and language-agnostic. */
+export function nativeImageRealAvailableBytesV1(volumeAvailableBytes:number,containerFreeBytes:number|undefined,hostFreeBytes:number):number{
+ return Math.min(hostFreeBytes,nativeImageEffectiveAvailableBytesV1(volumeAvailableBytes,containerFreeBytes,hostFreeBytes));
+}
+/** 🔒️ Decides whether a mounted volume is latched: it reports nothing available although its container still holds more than the tolerance and the host has at least the latch headroom free, so the kernel refuses every write until the volume is remounted. Pure and language-agnostic. */
+export function nativeImageVolumeLatchedV1(volumeAvailableBytes:number,containerFreeBytes:number|undefined,hostFreeBytes:number):boolean{
+ return volumeAvailableBytes===0&&containerFreeBytes!==undefined&&containerFreeBytes>nativeImageAvailabilityToleranceV1(containerFreeBytes)&&hostFreeBytes>=policy.latchedHostFreeBytes;
+}
+/** 🧯️ Names the closed arguments of the forced detach that only a latched volume may use, because its transactions can never flush and a polite detach reports busy forever. See https://ss64.com/mac/hdiutil.html */
+export const nativeImageForceDetachArgumentsV1:readonly string[]=Object.freeze([...policy.forceDetachArguments]);
 /** 🔎️ Reads the free bytes of the APFS container from the plist of `diskutil info -plist <mount>`; undefined when the document has none. */
 export function nativeImageContainerFreeBytesV1(plist:string):number|undefined{
  try{const value=nativeImageInformationV1(plist)[policy.containerFreeKey];return typeof value==="number"&&Number.isSafeInteger(value)&&value>=0?value:undefined;}catch{return undefined;}
@@ -36,7 +47,7 @@ export function nativeImageVolumeUsedBytesSyncV1(mountPoint:string,volume:Readon
   const text=run(policy.infoProgram,[...policy.infoArguments,mountPoint]);
   if(text===undefined)return undefined;
   const facts=nativeImageInformationV1(text),used=facts[policy.volumeUsedKey];
-  return facts[policy.mountPointKey]===mountPoint&&facts[policy.filesystemTypeKey]===policy.darwinFilesystemType&&typeof used==="number"&&Number.isSafeInteger(used)&&used>0&&used<=capacity?used:undefined;
+  return (facts[policy.mountPointKey]===mountPoint||facts[policy.mountPointKey]===realpathSync(mountPoint))&&facts[policy.filesystemTypeKey]===policy.darwinFilesystemType&&typeof used==="number"&&Number.isSafeInteger(used)&&used>0&&used<=capacity?used:undefined;
  }catch{return undefined;}
 }
 /** ⏳️ Names how long a stale-figure correction stays valid before the container is asked again. */

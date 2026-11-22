@@ -1,0 +1,26 @@
+{
+  "mutation": "insertCase",
+  "index": 99,
+  "case": {
+    "id": "case-c98-02",
+    "labelEn": "Storey drift",
+    "labelDe": "Stockwerksverformung",
+    "entryId": "C98-02",
+    "numbers": [
+      {
+        "id": "d_r",
+        "value": 0.012
+      },
+      {
+        "id": "h_storey",
+        "value": 3.2
+      }
+    ],
+    "texts": [
+      {
+        "id": "limit_class",
+        "value": "brittle"
+      }
+    ]
+  }
+}

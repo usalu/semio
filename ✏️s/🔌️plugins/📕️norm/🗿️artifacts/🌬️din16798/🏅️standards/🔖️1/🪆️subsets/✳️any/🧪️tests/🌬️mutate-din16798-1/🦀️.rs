@@ -28,7 +28,7 @@ mod subject {
     use semio_repo_test_host::law;
 
     /// 🗣️ The real committed DIN EN 16798 document, read where the domain already keeps it.
-    const DSL_ASSET: &str = "asset://🎬️demo/🗣️.dsl.semio";
+    const DSL_ASSET: &str = "asset://🏢️compliant-office/🗣️.dsl.semio";
 
     /// 🧫️ The committed `(before, mutation, after, outcome)` texts this scenario's steps name, in that role order.
     fn vector(ctx: &Context) -> Result<[String; 4], String> {

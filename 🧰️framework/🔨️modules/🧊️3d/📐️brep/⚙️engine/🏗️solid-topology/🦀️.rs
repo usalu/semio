@@ -14,6 +14,9 @@ use semio_framework_value::{RetainedAllocationEffect, RetainedCloneGrant as Gran
 use semio_framework_value::retained_clone::retained_clone_grant_admits;
 use std::mem::{size_of, take};
 
+#[path = "🔁️mapped-boundary/🦀️.rs"]
+pub mod mapped_boundary;
+
 #[path = "🕳️polygon-opening/🦀️.rs"]
 mod polygon_opening;
 pub use polygon_opening::{PolygonOpening, line_pcurve, point2, segments_intersect};
@@ -29,6 +32,14 @@ pub use conic_boundary::complete_conic_boundary;
 #[path = "🪓️spherical-split/🦀️.rs"]
 mod spherical_split;
 pub use spherical_split::{spherical_axial_span,split_spherical_support};
+
+#[path = "🕳️bore-stock-proof/🦀️.rs"]
+mod bore_stock_proof;
+pub use bore_stock_proof::certify_bore_stock;
+
+#[path = "🕳️published-bore-stock/🦀️.rs"]
+mod published_bore_stock;
+pub use published_bore_stock::published_bore_stock;
 
 /// 🧩️ The certified recipe that drives one unpublished solid topology.
 pub enum SolidBoundary {

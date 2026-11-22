@@ -1,5 +1,5 @@
 import{expect,test}from"bun:test";
-import{chmodSync,mkdirSync,mkdtempSync,readFileSync,rmSync,symlinkSync,writeFileSync}from"node:fs";
+import{chmodSync,mkdirSync,mkdtempSync,realpathSync,readFileSync,rmSync,symlinkSync,writeFileSync}from"node:fs";
 import{tmpdir}from"node:os";
 import{join}from"node:path";
 import{wantedServerPolicyV1}from"../../../../../🪪️graph-state/🙋️wanted/🛠️server/🟦️.ts";
@@ -15,7 +15,7 @@ const entry=(pid:number,command:string,extra:object={})=>({version:1,pid,started
 const IMAGE="native-fixed-image:/w/.cache/b/d",OTHER="native-fixed-image:/w/.cache/b/o";
 
 test("refresh suppression needs live held structural custody in the exact generation root",()=>{
- const root=mkdtempSync(join(tmpdir(),"r-")),generationsRoot=join(root,"g"),leaseDirectory=join(root,"l"),directory=join(generationsRoot,"s"),token="a".repeat(24),file=join(directory,token+".json");
+ const root=mkdtempSync(join(realpathSync(tmpdir()),"r-")),generationsRoot=join(root,"g"),leaseDirectory=join(root,"l"),directory=join(generationsRoot,"s"),token="a".repeat(24),file=join(directory,token+".json");
  const input={generationsRoot,leaseDirectory,environment:{},signal:new AbortController().signal},db=new Database(":memory:"),pid=30229,startedAtMs=NOW-900_000;
  try{
   mkdirSync(directory,{recursive:true});

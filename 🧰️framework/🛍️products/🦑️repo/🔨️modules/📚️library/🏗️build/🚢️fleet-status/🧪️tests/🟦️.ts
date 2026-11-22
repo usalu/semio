@@ -1,4 +1,4 @@
-import {expect,test} from "bun:test";
+import {expect,spyOn,test} from "bun:test";
 import Ajv from "ajv";
 import {spawnSync} from "node:child_process";
 import {mkdirSync,mkdtempSync,rmSync,writeFileSync} from "node:fs";
@@ -163,6 +163,8 @@ test("the command prints text or schema-valid JSON, refuses unknown options in b
  const text=await run(["status","--limit=1"],"de");expect(text.lines[0]).toMatch(/^Flotte /u);expect(text.lines.some(line=>line.includes("Graph: Builder pid 21"))).toBe(true);
  for(const bad of [[],["status","--nonsense"],["status","--json","--json"],["status","--limit=0"],["status","--limit=x"],["status","--limit=999"],["other"]])await expect(run(bad as string[])).rejects.toThrow(/Usage|--limit|Verwendung/u);
  expect(fleetArgumentsV1(["status","--limit=5","--json"])).toEqual({json:true,limit:5});
+ expect(fleetArgumentsV1(["status","--lang=de","--limit=5","--json"])).toEqual({json:true,limit:5});expect(fleetArgumentsV1(["status","--lang","en","--json"])).toEqual({json:true,limit:20});
+ await expect(run(["status","--language","en"])).rejects.toThrow(/Usage|Verwendung/u);
  await expect(run(["status","--nonsense"])).rejects.toThrow("Verwendung: repo fleet status");
 });
 
@@ -196,9 +198,10 @@ test("the plain-file readers parse the Bazel slot files, the generation pointer 
 test("the storage reader answers from the recorded usage of the cache partitions: after one measurement it never walks the machine cache again",async()=>{
  const {readFleetStorageV1}=await import("../📥️readers/🟦️.ts"),context={root:process.cwd(),environment:process.env,language:"en" as const,now:Date.now};
  await readFleetStorageV1(context);
- const started=performance.now(),facts=await readFleetStorageV1(context),elapsed=performance.now()-started;
+ const fs=await import("node:fs"),walked:string[]=[],original=fs.readdirSync,spy=spyOn(fs,"readdirSync").mockImplementation(((path:unknown,...rest:unknown[])=>{walked.push(String(path));return (original as (...arguments_:unknown[])=>unknown)(path,...rest);}) as typeof fs.readdirSync);
+ let facts:Awaited<ReturnType<typeof readFleetStorageV1>>;try{facts=await readFleetStorageV1(context);}finally{spy.mockRestore();}
  expect(facts.storage?.images.length).toBeGreaterThan(0);
- expect(elapsed,"the second read of the storage in milliseconds").toBeLessThan(1000);
+ expect(walked.filter(path=>/[\\/]\.cache[\\/]b([\\/]|$)/u.test(path)),"directories of the machine cache walked by the second read").toEqual([]);
 },120000);
 
 test("the fleet section lists every machine with load, pressure, queue, worker, offload and unit cache counters and the totals of the scheduler, in both languages, and satisfies the closed schema under both validators",()=>{
@@ -242,4 +245,35 @@ test("the fleet section says per machine whose worker is absent why it works not
  expect(german.filter(line=>line.includes(" Worker absent: "))).toEqual(["    g1-m02 Worker absent: "+why.de]);
  const bad=plain(facts) as unknown as {fleet:{machines:{why?:unknown}[]}};bad.fleet.machines[0]!.why={code:1};
  expect(validator("Facts")(bad)).toBe(false);expect(validateFleetFactsV1(bad as never).length).toBeGreaterThan(0);
+});
+
+test("unit keys that differ across origins for the same source are a finding naming the component, in both languages, under the closed schema",()=>{
+ const base=cases.find(row=>row.id===cases[0]!.id)!,machine=(origin:string)=>({origin,platform:"macos-arm64-0123456789abcdef",pressure:"normal",load:1,cores:8,running:0,queued:0,headroom:true,ageSeconds:1,worker:"idle",offloadedIn:0,offloadedOut:0,refused:0,cacheHit:1,cacheMiss:1});
+ const keys={origins:3,units:2,diffs:[{crate:"alpha",slot:"a".repeat(64),origins:["g1-m01","g1-m02","g1-m03"],differs:["platform"],sameSource:true},{crate:"beta",slot:"b".repeat(64),origins:["g1-m01","g1-m02"],differs:["source"],sameSource:false}],byComponent:{platform:1,source:1}};
+ const facts={...plain(base.facts),fleet:{scheduler:"http://cache.g1.semio.internal:8981",expireSeconds:15,machines:[machine("g1-m01"),machine("g1-m02"),machine("g1-m03")],queued:0,executing:0,offloadRejected:0,refused:0,retried:0,keys}} as unknown as FleetFactsV1;
+ expect(validator("Facts")(facts)).toBe(true);expect(validateFleetFactsV1(facts)).toEqual([]);
+ for(const language of["en","de"] as const){
+  const report=summarizeFleetV1(facts,language),lines=formatFleetReportV1(language,report,20).join("\n");
+  expect(validator("Report")(report)).toBe(true);expect(validateFleetReportV1(report)).toEqual([]);
+  expect(report.findings.filter(row=>row.id==="unit-key-machine-dependent").map(row=>[row.severity,row.subject,row.values.components])).toEqual([["warn","alpha","platform"]]);
+  expect(lines).toContain("alpha");expect(lines).toContain("beta");expect(lines).not.toMatch(/\{[a-zA-Z]+\}/u);
+ }
+ expect(summarizeFleetV1(facts,"en").fleet!.keys).toEqual(keys);
+});
+
+test("a machine the fleet cache refuses is an alert and every machine lists why its units were not shared, in both languages, under the closed schema",()=>{
+ const base=cases.find(row=>row.id===cases[0]!.id)!,machine=(origin:string,over:Record<string,unknown>={})=>({origin,platform:"macos-arm64-0123456789abcdef",pressure:"normal",load:1.5,cores:8,running:2,queued:0,headroom:true,ageSeconds:3,worker:"busy",offloadedIn:4,offloadedOut:1,refused:0,cacheHit:30,cacheMiss:10,...over});
+ const facts={...plain(base.facts),fleet:{scheduler:"http://cache.g1.semio.internal:8981",expireSeconds:15,machines:[machine("g1-m02",{cacheSkipped:16,cacheSkipReasons:{"upload-expired-denied":12,"read-only":3,"path-dependent":1}}),machine("g1-m01",{cacheSkipped:2,cacheSkipReasons:{"upload-expired":2}}),machine("g1-m03")],queued:0,executing:0,offloadRejected:0,refused:0,retried:0}} as unknown as FleetFactsV1;
+ expect(validator("Facts")(facts)).toBe(true);expect(validateFleetFactsV1(facts)).toEqual([]);
+ for(const language of["en","de"] as const){
+  const report=summarizeFleetV1(facts,language),lines=formatFleetReportV1(language,report,20).join("\n");
+  expect(validator("Report")(report)).toBe(true);expect(validateFleetReportV1(report)).toEqual([]);
+  expect(report.findings.filter(row=>row.id==="unit-cache-denied").map(row=>[row.severity,row.subject,row.values.count])).toEqual([["alert","g1-m02",12]]);
+  expect(report.findings.filter(row=>row.id==="unit-cache-read-only").map(row=>[row.severity,row.subject,row.values.count])).toEqual([["warn","g1-m02",3]]);
+  expect(report.summary.alerts).toBeGreaterThanOrEqual(1);
+  expect(lines).toContain("upload-expired-denied 12, read-only 3, path-dependent 1");expect(lines).toContain("upload-expired 2");
+  expect(lines).not.toMatch(/\{[a-zA-Z]+\}/u);
+ }
+ const quiet=summarizeFleetV1({...facts,fleet:{...facts.fleet!,machines:[machine("g1-m01")] as never}},"en");
+ expect(quiet.findings.some(row=>row.id.startsWith("unit-cache-"))).toBe(false);expect(formatFleetReportV1("en",quiet,20).join("\n")).not.toContain("did not share");
 });

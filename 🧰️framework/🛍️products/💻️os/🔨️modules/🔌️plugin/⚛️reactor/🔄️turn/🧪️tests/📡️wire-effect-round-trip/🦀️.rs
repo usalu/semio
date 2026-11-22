@@ -117,7 +117,7 @@ fn all_effect_wire_fixtures() -> Vec<Effect> {
             args: None,
         },
         Effect::SpawnPluginInstance { req, plugin_id: "p".into(), app_id: "a".into(), os_instance_id: None, label: None, document_json: None },
-        Effect::OpenPluginInstance { plugin_id: "p".into(), app_id: "a".into(), os_instance_id: None },
+        Effect::OpenPluginInstance { plugin_id: "p".into(), app_id: "a".into(), os_instance_id: Some("node-1".into()), document: Some(semio_framework::kernel::PluginDocumentTarget { document_id: "artifact-1".into(), schema: "artifact".into(), space_id: Some("space-1".into()) }) },
         Effect::SetActiveUtility { window_id: "w".into(), utility_id: "u".into() },
         Effect::SetActiveTool { tool_id: "t".into() },
         Effect::OpenDialog { req, dialog_id: "d".into(), args: None },
@@ -163,6 +163,9 @@ fn every_effect_kind_survives_wire_effect_round_trip() {
         let bytes = store::pack_rt::encode_wire_value(&effect.to_value());
         let decoded = decode_wire_effect(&bytes).unwrap_or_else(|_| panic!("wire table dropped {kind}"));
         assert_eq!(effect_wire_kind(&decoded), kind, "{kind} decoded as a different arm");
+        if kind == "openPluginInstance" {
+            assert_eq!(&decoded, effect);
+        }
     }
     assert_eq!(seen.len(), fixtures.len(), "wire-table completeness fixtures must be unique");
     assert_eq!(fixtures.len(), 46, "every Effect kind must have a leftover wire-table fixture");

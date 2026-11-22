@@ -1,6 +1,11 @@
 //! ⏳️ Progress, celebrate and widget painters: the presence overlay, the progress bars, the celebrate strokes and the focus ring, loading border, stack frame, separator, checkbox and slider painters. See [`super`].
 
-use super::*;
+use semio_ui_retained_tree::tree::NodeFlags;
+use semio_ui_wgpu_layout::chrome::{push_chrome_border, push_control_border, SIZE_TINY};
+use semio_ui_declaration::ui::{UiNode, UiPresence, UiProgressNode, UiStackNode, UiState, UiStatus};
+use semio_ui_draw_contract::DrawList;
+use semio_ui_theme::geometry::Rect;
+use semio_ui_theme::{Rgba, Theme};
 
 // #region paint
 /// 🎯️ Per-variant paint dispatcher for one retained node, given `(origin_x, origin_y)` — the
@@ -38,7 +43,11 @@ pub fn paint_presence_accent_effect(draw: &mut DrawList, bounds: Rect, theme: &T
     use semio_ui_draw_contract::SharedBorderState;
     let (color, border_state) = match state {
         UiState::Introducing => (theme.accent, SharedBorderState::Introduced),
-        UiState::Celebrating => (celebrate_color(theme, celebrate_turns(draw.clock_seconds(), theme.celebrate_duration_seconds)), SharedBorderState::Celebrated),
+        UiState::Celebrating if draw.reduced_motion() => (celebrate_color(theme, 0.0), SharedBorderState::Celebrated),
+        UiState::Celebrating => {
+            draw.note_motion_pending();
+            (celebrate_color(theme, celebrate_turns(draw.clock_seconds(), theme.celebrate_duration_seconds)), SharedBorderState::Celebrated)
+        }
         _ => return,
     };
     draw.push_shared_border_effect(bounds, color, theme.border_radius, theme.stroke_hairline, border_state);
@@ -203,7 +212,7 @@ pub fn color_input_swatch(bounds: Rect, text: &str) -> Option<(Rect, Rgba, Rect)
 pub fn paint_checkbox(node: &semio_ui_declaration::ui::UiToggleNode, bounds: Rect, flags: NodeFlags, theme: &Theme, inline: ui_contract::FlowInline, draw: &mut DrawList) {
     let side = SIZE_TINY.min(bounds.h).min(bounds.w);
     let rect = Rect::new(if inline.is_rtl() { bounds.x + bounds.w - side } else { bounds.x }, bounds.y + (bounds.h - side) * 0.5, side, side);
-    let border = if focus_ring_visible(flags) { theme.accent } else { theme.border_normal };
+    let border = if focus_ring_visible(flags) { theme.selected } else { theme.border_normal };
     push_control_border(draw, rect, theme, border, if node.presence.selected { theme.text } else { theme.input_bg }, if focus_ring_visible(flags) { semio_ui_draw_contract::SharedBorderState::Focus } else if node.presence.selected { semio_ui_draw_contract::SharedBorderState::Active } else { semio_ui_draw_contract::SharedBorderState::Normal });
     if node.presence.selected {
         let color = theme.panel;
@@ -212,35 +221,92 @@ pub fn paint_checkbox(node: &semio_ui_declaration::ui::UiToggleNode, bounds: Rec
     }
 }
 
+/// 🎚️ The pointer, focus and enablement a slider's travel is drawn in — React's `group-hover`, `data-[dragging]`, `focus-visible` and `data-[disabled]:opacity-50`.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct SliderTravelState {
+    pub hovered: bool,
+    pub dragging: bool,
+    pub focus_visible: bool,
+    pub disabled: bool,
+}
+
 /// 🎚️ A slider's travel at `value`: a track's rail, filled range, one tick per detent at its axis position and the thumb —
 /// or a dial's face, one radial tick per detent, the needle at the value's angle and its thumb on the rim. Shared by the
-/// retained painter and the test painter, so both draw every detent the same way.
-pub fn paint_slider_travel(node: &semio_ui_declaration::ui::UiSliderNode, value: f64, presentation: semio_ui_wgpu_layout::layout::SliderPresentation, theme: &Theme, draw: &mut DrawList) {
-    let tick_color = theme.text_element.with_alpha(theme.text_element.a * 0.6);
+/// retained painter and the test painter, so both draw every detent the same way. The range and thumb read `bg-emphasized` on hover,
+/// `bg-active-base` while dragging and the thumb also on keyboard focus (with its `border-emphasized`), the root at half opacity
+/// while disabled — `🎚️Slider/🟦️.tsx` `sliderRangeClassName` and `sliderThumbBaseClassName`.
+pub fn paint_slider_travel(node: &semio_ui_declaration::ui::UiSliderNode, value: f64, presentation: semio_ui_wgpu_layout::layout::SliderPresentation, theme: &Theme, state: SliderTravelState, draw: &mut DrawList) {
+    let dim = |color: Rgba| if state.disabled { color.with_alpha(color.a * 0.5) } else { color };
+    let ink = if state.dragging { theme.selected } else if state.hovered { theme.text } else { theme.text_element };
+    let thumb_fill = if state.dragging || state.focus_visible { theme.selected } else if state.hovered { theme.text } else { theme.text_element };
+    let tick_color = dim(theme.text_element.with_alpha(theme.text_element.a * 0.6));
+    let push_thumb = |draw: &mut DrawList, rect: [f32; 4]| {
+        let radius = rect[3] * 0.5;
+        if state.focus_visible {
+            let inset = theme.stroke_hairline;
+            draw.push_rounded(rect, dim(theme.border_emphasized), radius);
+            draw.push_rounded([rect[0] + inset, rect[1] + inset, rect[2] - inset * 2.0, rect[3] - inset * 2.0], dim(thumb_fill), radius - inset);
+        } else {
+            draw.push_rounded(rect, dim(thumb_fill), radius);
+        }
+    };
     match node.appearance {
         ui_contract::SliderAppearance::Dial => {
             let face = semio_ui_wgpu_controls::slider::dial_face(presentation.track_cell);
             let diameter = face.radius * 2.0;
-            draw.push_rounded([face.cx - face.radius, face.cy - face.radius, diameter, diameter], theme.text_element, face.radius);
+            draw.push_rounded([face.cx - face.radius, face.cy - face.radius, diameter, diameter], dim(theme.text_element), face.radius);
             let inset = theme.stroke_hairline.max(1.0);
-            draw.push_rounded([face.cx - face.radius + inset, face.cy - face.radius + inset, diameter - inset * 2.0, diameter - inset * 2.0], theme.muted, face.radius - inset);
+            draw.push_rounded([face.cx - face.radius + inset, face.cy - face.radius + inset, diameter - inset * 2.0, diameter - inset * 2.0], dim(theme.muted), face.radius - inset);
             for [x0, y0, x1, y1] in semio_ui_wgpu_controls::slider::dial_tick_lines(face, node) {
                 draw.push_line(x0, y0, x1, y1, tick_color, theme.stroke_hairline.max(1.0));
             }
             let angle = ui_contract::dial_angle(node.axis_position(value));
             let (x, y) = semio_ui_wgpu_controls::slider::dial_point(face, angle, 0.82);
-            draw.push_line(face.cx, face.cy, x, y, theme.accent, (face.radius * 0.14).max(1.5));
+            draw.push_line(face.cx, face.cy, x, y, dim(theme.selected), (face.radius * 0.14).max(1.5));
             let knob = (face.radius * 0.3).max(2.0);
-            draw.push_rounded([x - knob * 0.5, y - knob * 0.5, knob, knob], theme.text_element, knob * 0.5);
+            push_thumb(draw, [x - knob * 0.5, y - knob * 0.5, knob, knob]);
         }
         ui_contract::SliderAppearance::Track => {
-            draw.push_rounded([presentation.rail.x, presentation.rail.y, presentation.rail.w, presentation.rail.h], theme.muted, presentation.rail.h * 0.5);
-            draw.push_rounded([presentation.range.x, presentation.range.y, presentation.range.w, presentation.range.h], theme.text_element, presentation.range.h * 0.5);
+            draw.push_rounded([presentation.rail.x, presentation.rail.y, presentation.rail.w, presentation.rail.h], dim(theme.muted), presentation.rail.h * 0.5);
+            draw.push_rounded([presentation.range.x, presentation.range.y, presentation.range.w, presentation.range.h], dim(ink), presentation.range.h * 0.5);
             for tick in semio_ui_wgpu_controls::slider::slider_tick_rects(presentation.rail, node.min, node.max, node.scale, &node.snaps, theme.stroke_hairline.max(1.0), presentation.thumb.h * 0.75) {
                 draw.push_solid([tick.x, tick.y, tick.w, tick.h], tick_color);
             }
-            draw.push_rounded([presentation.thumb.x, presentation.thumb.y, presentation.thumb.w, presentation.thumb.h], theme.text_element, presentation.thumb.h * 0.5);
+            push_thumb(draw, [presentation.thumb.x, presentation.thumb.y, presentation.thumb.w, presentation.thumb.h]);
         }
+    }
+}
+
+/// 💍️ How many chords the 48-gon that stands in for React's ring track circle has.
+pub const RING_TRACK_SEGMENTS: usize = 48;
+
+/// 💍️ One chord of a ring's track — `stroke-muted-foreground/30` at `--stroke-default` (two hairlines) on the viewBox scale of `⭕️Ring/🟦️.tsx`.
+pub fn paint_ring_track_segment(draw: &mut DrawList, bounds: Rect, index: usize, theme: &Theme) {
+    let (cx, cy, scale) = semio_ui_wgpu_layout::layout::ring_center(bounds);
+    let radius = semio_ui_wgpu_layout::layout::RING_RADIUS * scale;
+    let at = |step: usize| {
+        let angle = std::f32::consts::TAU * step as f32 / RING_TRACK_SEGMENTS as f32;
+        (cx + angle.cos() * radius, cy + angle.sin() * radius)
+    };
+    let (x0, y0) = at(index);
+    let (x1, y1) = at(index + 1);
+    draw.push_line(x0, y0, x1, y1, theme.text_muted.with_alpha(theme.text_muted.a * 0.3), theme.stroke_hairline * 2.0 * scale);
+}
+
+/// 💍️ A ring's orb at `t` — `RingMarker` of `⭕️Ring/🟦️.tsx`: radius 5 (7 selected) viewBox units; `fill-foreground`, hovered `fill-accent-foreground`,
+/// selected `fill-accent` with a 1-unit `stroke-accent-foreground`, disabled `fill-muted-foreground/40` (disabled beats the other two).
+pub fn paint_ring_orb(draw: &mut DrawList, bounds: Rect, t: f64, selected: bool, hovered: bool, disabled: bool, theme: &Theme) {
+    let (_, _, scale) = semio_ui_wgpu_layout::layout::ring_center(bounds);
+    let (x, y) = semio_ui_wgpu_layout::layout::ring_point(bounds, t);
+    let radius = if selected { 7.0 } else { 5.0 } * scale;
+    let disc = |draw: &mut DrawList, radius: f32, color: Rgba| draw.push_rounded([x - radius, y - radius, radius * 2.0, radius * 2.0], color, radius);
+    if disabled {
+        disc(draw, radius, theme.text_muted.with_alpha(theme.text_muted.a * 0.4));
+    } else if selected {
+        disc(draw, radius + 0.5 * scale, theme.accent_foreground);
+        disc(draw, radius - 0.5 * scale, theme.accent);
+    } else {
+        disc(draw, radius, if hovered { theme.accent_foreground } else { theme.text });
     }
 }
 // #endregion paint

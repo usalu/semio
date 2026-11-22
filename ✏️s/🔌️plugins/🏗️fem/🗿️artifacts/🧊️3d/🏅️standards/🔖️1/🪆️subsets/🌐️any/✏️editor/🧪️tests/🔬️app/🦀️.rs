@@ -51,7 +51,7 @@ pub mod context {
 
     /// 🪟️ A one-window view model addressing the named window kind.
     pub fn view(kind: &str) -> ViewModel {
-        let id = if kind == edit::windows::model::FEM3D_WINDOW_MODEL { "model-left" } else { "results-left" };
+        let id = if kind == FEM3D_WINDOW_MODEL { "model-left" } else { "results-left" };
         ViewModel { window_id: Some(id.into()), window_instances: vec![ViewWindowInstance { id: id.into(), window_kind_id: kind.into() }], ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) }
     }
 
@@ -104,8 +104,8 @@ pub mod context {
     /// 🪟️ The window kind a command is addressed to when the test names none.
     pub fn window_kind_for(command: &Fem3dCommand) -> &'static str {
         match command {
-            Fem3dCommand::SetResultDisplay(_) | Fem3dCommand::SetResultAnimation(_) | Fem3dCommand::ResultAnimationTick(_) => edit::windows::results::FEM3D_WINDOW_RESULTS,
-            _ => edit::windows::model::FEM3D_WINDOW_MODEL,
+            Fem3dCommand::SetResultDisplay(_) | Fem3dCommand::SetResultAnimation(_) | Fem3dCommand::ResultAnimationTick(_) => FEM3D_WINDOW_RESULTS,
+            _ => FEM3D_WINDOW_MODEL,
         }
     }
 
@@ -134,7 +134,7 @@ pub mod context {
     /// history rows its completions upserted — the rows a gumball gesture's transaction landed as.
     pub async fn dispatch_rows(app: &mut Fem3dApp, command: Fem3dCommand) -> Vec<semio_framework::kernel::HistoryEntry> {
         let mut action = meta("local");
-        action.view_state = Some(view(edit::windows::model::FEM3D_WINDOW_MODEL));
+        action.view_state = Some(view(FEM3D_WINDOW_MODEL));
         semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &action, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
         let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
         let mut rows = Vec::new();
@@ -160,7 +160,7 @@ pub mod context {
     }
 
     pub fn render(app: &mut Fem3dApp, body_key: &str) -> String {
-        let kind = if body_key == edit::windows::model::FEM3D_BODY_MODEL { edit::windows::model::FEM3D_WINDOW_MODEL } else { edit::windows::results::FEM3D_WINDOW_RESULTS };
+        let kind = if body_key == FEM3D_BODY_MODEL { FEM3D_WINDOW_MODEL } else { FEM3D_WINDOW_RESULTS };
         ::semio_framework_async::poll::resolve_ready(semio_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, body_key, &view(kind), app.1.cx())).expect("fixture projection")
     }
 }

@@ -17,7 +17,7 @@ export async function registerActorCommandWindowTests(vitest: Vitest, dependenci
         readonly appId: string;
         readonly leaseWindow: string;
         readonly windows: readonly string[];
-        readonly cases: readonly Readonly<{ name: string; address: Readonly<{ kind: "window" | "command"; appId?: string; windowKindId?: string; windowInstanceId?: string }>; view: Readonly<Record<string, string>>; admitted?: string; refused?: string }>[];
+        readonly cases: readonly Readonly<{ name: string; address: Readonly<{ kind: "window" | "command"; appId?: string; windowKindId?: string; windowInstanceId?: string; actionId?: string }>; view: Readonly<Record<string, string>>; admitted?: string; refused?: string }>[];
       };
       const { createBrowserActorAppCommandRequestV1 } = await import("@semio-tech/framework/browser-bundle/action-handoff/command");
       const { BROWSER_ACTOR_ACTION_APP_CHANNEL_VERSION } = await import("@semio-tech/framework/browser-bundle/action-handoff");
@@ -26,7 +26,7 @@ export async function registerActorCommandWindowTests(vitest: Vitest, dependenci
       expect(corpus.cases.filter((row) => row.admitted !== undefined).map((row) => row.admitted)).toEqual(expect.arrayContaining([...windows]));
       for (const [index, row] of corpus.cases.entries()) {
         const invocation = row.address.kind === "window"
-          ? { address: { pluginId: corpus.pluginId, appId: row.address.appId ?? corpus.appId, modeId: "edit", windowKindId: row.address.windowKindId!, windowInstanceId: row.address.windowInstanceId!, actionId: "demoShellCommand" }, arguments: { commandId: "shell.windowActivate" } }
+          ? { address: { pluginId: corpus.pluginId, appId: row.address.appId ?? corpus.appId, modeId: "edit", windowKindId: row.address.windowKindId!, windowInstanceId: row.address.windowInstanceId!, actionId: row.address.actionId ?? "demoShellCommand" }, arguments: { commandId: "shell.windowActivate" } }
           : { address: { owner: { app: { pluginId: corpus.pluginId, appId: corpus.appId } }, commandId: "demoShellCommand" }, arguments: { commandId: "shell.windowActivate" } };
         const request = createBrowserActorAppCommandRequestV1(
           { scope: { spaceId: "space-a", documentId: "artifact-a" }, verifiedSurfaceId: "s.demo.demo@1/*#editor", appChannelVersion: BROWSER_ACTOR_ACTION_APP_CHANNEL_VERSION, activationGeneration: "1", instanceId: 0, surfaceRevision: 1, actionSequence: index + 1 },
@@ -34,7 +34,11 @@ export async function registerActorCommandWindowTests(vitest: Vitest, dependenci
           row.view as Parameters<typeof createBrowserActorAppCommandRequestV1>[2],
         );
         if (row.refused !== undefined) expect(() => testSeams.browserActorAppCommandV1(request, fields, windows), row.name).toThrow(row.refused);
-        else expect(testSeams.browserActorAppCommandV1(request, fields, windows).surfaceKey, row.name).toBe(row.admitted);
+        else {
+          const command = testSeams.browserActorAppCommandV1(request, fields, windows);
+          expect(command.surfaceKey, row.name).toBe(row.admitted);
+          expect(command.actionId, row.name).toBe("actionId" in invocation.address ? invocation.address.actionId : undefined);
+        }
       }
     });
   });

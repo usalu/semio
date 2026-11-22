@@ -5,7 +5,7 @@ use super::retained_native_provisional_fold::{NativeProvisionalFold,NativeProvis
 use super::retained_typed_input::P3ProvisionalFold;
 use super::retained_scratch_testing::ScratchCaller;
 use semio_framework_artifact_flow_flow::FlowHostSnapshot;
-use semio_framework_job::{OriginalSourceBinding,close_original_retained_step};
+use semio_framework_job::{OriginalSourceBinding,close_original_effect_step};
 fn materialize(base:&serde_json::Value,case:&serde_json::Value)->serde_json::Value{
  let mut before=base.clone();
  if let Some(params)=case["before"]["params"].as_object(){for widget in before["widgets"].as_array_mut().unwrap(){if let Some(params)=params.get(widget["id"].as_str().unwrap()){widget["params"]=params.clone()}}}
@@ -19,7 +19,7 @@ fn expected(before:&serde_json::Value,case:&serde_json::Value)->serde_json::Valu
  after
 }
 fn close(work:&mut ProvisionalTransformWork,caller:&mut ScratchCaller){
- work.begin_close();for _ in 0..32768{if work.terminal_is_empty(){return}caller.turn(|cx|cx.with_original_retirement(|same|{let d=work.next_close_demands(same.retained_grant().maximum_copy_bytes)?;close_original_retained_step(same,d,|g|work.close_step(g))?;Ok(())}));}panic!("transform did not close its original owners")
+ work.begin_close();for _ in 0..32768{if work.terminal_is_empty(){return}caller.turn(|cx|cx.with_original_retirement(|same|{let body=same.retained_grant().maximum_copy_bytes;let d=work.next_close_demands(body)?;close_original_effect_step(same,d,|effect|work.close_step(body,effect))?;Ok(())}));}panic!("transform did not close its original owners")
 }
 #[test]
 fn provisional_transforms_equal_original_central_operations_with_one_fuel_and_physical_cleanup(){

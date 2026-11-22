@@ -1,0 +1,57 @@
+{
+  "nodes": [
+    {
+      "id": "a",
+      "nodeKind": "pillar",
+      "x": 10,
+      "y": 20,
+      "handles": [{ "id": "a:left:tip", "angle": 0 }, { "id": "a:right:tip", "angle": 1 }]
+    },
+    {
+      "id": "b",
+      "nodeKind": "pillar",
+      "x": 12,
+      "y": 22,
+      "handles": [{ "id": "b:north", "angle": 2 }, { "id": "b:south", "angle": 3 }]
+    },
+    { "id": "c", "x": 50, "y": 60, "handles": [] }
+  ],
+  "edges": [
+    { "id": "first", "source": "a:left:tip", "target": "b:north", "gap": 4, "locked": true },
+    { "id": "second", "source": "a:right:tip", "target": "b:south", "gap": 7 }
+  ],
+  "selected": ["a", "b"],
+  "cutRefused": ["a", "b"],
+  "cutAllowed": ["c"],
+  "labeling": {
+    "kind": "pillar",
+    "catalog": "Column 7",
+    "peers": ["Handmade 4", null, "Other 19", "Handmade"],
+    "empty": ["Column 7", "Column 8"],
+    "occupied": ["Handmade 5", "Handmade 6"],
+    "implicit": ["pillar", "pillar 2"]
+  },
+  "occupiedSerials": {
+    "nodes": [1, 2, 3, 4, 5, 6, 7, 8, 9],
+    "edges": [10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+  },
+  "pastedIds": {
+    "nodes": ["node-10", "node-11"],
+    "edges": ["edge-21", "edge-22"]
+  },
+  "handleNamespace": {
+    "nodes": [
+      { "id": "elsewhere", "x": 30, "y": 40, "handles": [{ "id": "node-10:v1", "angle": 0 }, { "id": "node-12", "angle": 1 }] },
+      { "id": "node-11:v0", "x": 35, "y": 45, "handles": [] }
+    ],
+    "edges": [{ "id": "existing", "source": "node-10:v1", "target": "node-11:v0" }],
+    "pastedIds": {
+      "nodes": ["node-13", "node-14"],
+      "edges": ["edge-21", "edge-22"]
+    }
+  },
+  "endpoints": [
+    [[0, 0], [1, 0]],
+    [[0, 1], [1, 1]]
+  ]
+}

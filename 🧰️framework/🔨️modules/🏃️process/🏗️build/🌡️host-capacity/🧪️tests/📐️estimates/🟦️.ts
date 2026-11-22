@@ -22,7 +22,7 @@ test("The learned size of every stored case equals the Python oracle, whose weig
 
 test("The time to peak, the ramp slot and the learn rule equal the oracle on every stored vector",()=>{
  for(const item of fixture.ramps)expect(rampHostRequestV1(item.base as HostRequestV1,item.scaled as HostRequestV1,item.estimate as HostEstimateV1,(item as {measured?:boolean}).measured??false),JSON.stringify(item.estimate)).toEqual(item.expect as HostRequestV1);
- for(const item of fixture.learns)expect(learnableHostRunV1(item.status as HostRunStatusV1,item.peakRatioBasisPoints,{ratioBasisPoints:item.estimateRatioBasisPoints}),JSON.stringify(item)).toBe(item.expect);
+ for(const item of fixture.learns)expect(learnableHostRunV1(item.status as HostRunStatusV1,{limited:item.limited,pressured:item.pressured}),JSON.stringify(item)).toBe(item.expect);
  expect(fixture.ramps.some(item=>item.expect.rampSlot)&&fixture.ramps.some(item=>!item.expect.rampSlot),"vectors reach both slot verdicts").toBe(true);
  expect(fixture.ramps.some(item=>(item as {measured?:boolean}).measured===true&&(item.scaled.fixedMegabytes<item.base.fixedMegabytes||item.scaled.perJobMegabytes<item.base.perJobMegabytes)&&!item.expect.rampSlot),"a shrunk reservation backed by the class's own measured peaks takes no ramp slot").toBe(true);
  const ramps=fixture.cases.map(item=>item.expect.rampMilliseconds);
@@ -47,16 +47,15 @@ test("Law: a class that peaks late keeps its reservation counted for the time it
  expect(estimateHostRatioV1(policy,many,["run"],3000).rampMilliseconds).toBe(policy.estimates.maximumRampMilliseconds);
 });
 
-test("Law: only completed runs teach a class, a failed or cancelled run only when its partial peak already exceeds the estimate, so early deaths can never lower a reservation",()=>{
- let store=emptyHostEstimateStoreV1();
- for(let index=0;index<6;index++)store=recordHostOutcomeV1(policy,store,["run"],outcome({peakMegabytes:3000,defaultMegabytes:3000,endedAtMs:1000+index}));
- const estimate=estimateHostRatioV1(policy,store,["run"],2000);
+test("Law: only completed runs on a host without memory pressure teach a class, a run the gate stopped at its own limit teaches its grown peak, and no failed or cancelled run teaches however high its partial peak was",()=>{
  for(const status of ["failed","cancelled"] as const){
-  expect(learnableHostRunV1(status,Math.round(400*10000/3000),estimate),`${status} at 13 %`).toBe(false);
-  expect(learnableHostRunV1(status,estimate.ratioBasisPoints,estimate),`${status} at the estimate`).toBe(false);
-  expect(learnableHostRunV1(status,estimate.ratioBasisPoints+1,estimate),`${status} above the estimate`).toBe(true);
+  expect(learnableHostRunV1(status),`${status}`).toBe(false);
+  expect(learnableHostRunV1(status,{pressured:false}),`${status} calm`).toBe(false);
+  expect(learnableHostRunV1(status,{limited:true}),`${status} stopped at its limit`).toBe(true);
+  expect(learnableHostRunV1(status,{limited:true,pressured:true}),`${status} stopped under pressure`).toBe(false);
  }
- expect(learnableHostRunV1("ok",1,estimate)).toBe(true);
+ expect(learnableHostRunV1("ok")).toBe(true);
+ expect(learnableHostRunV1("ok",{pressured:true})).toBe(false);
 });
 
 test("Request scaling and priority equal the oracle on every stored vector",()=>{

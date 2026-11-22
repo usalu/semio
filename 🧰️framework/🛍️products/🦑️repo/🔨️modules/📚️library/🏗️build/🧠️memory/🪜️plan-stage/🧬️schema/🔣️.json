@@ -15,6 +15,7 @@
         },
         "parentMegabytes": 3600,
         "parentFootprintMegabytes": 1300,
+      "availableFloorMegabytes": 4096,
         "farmWorkerPeakMegabytes": {
           "project-farm": 1200
         },
@@ -29,6 +30,7 @@
         "maximumMegabytes": 16384,
         "serveHostMegabytes": 24000,
         "limitEnvironment": "SEMIO_GRAPH_PLAN_LIMIT_MB",
+        "grantEnvironment": "SEMIO_HOST_CAPACITY_REBUILD_MEGABYTES",
         "off": "off",
         "owner": "plan",
         "stages": [

@@ -55,7 +55,7 @@ try {
   process.env.PLAYWRIGHT_BROWSERS_PATH = repoToolCacheEnv(join(ticket, "../../../../../../..")).PLAYWRIGHT_BROWSERS_PATH;
   const { chromium } = await import("playwright");
   report.browser = { channel: "chromium", executable: chromium.executablePath(), browsers: process.env.PLAYWRIGHT_BROWSERS_PATH };
-  browser = await chromium.launch({ downloadsPath: join(outDir, "downloads"), channel: "chromium", headless: true, args: ["--enable-unsafe-webgpu", "--ignore-gpu-blocklist"] });
+  browser = await chromium.launch({ downloadsPath: join(outDir, "downloads"), channel: "chromium", headless: true, args: ["--enable-unsafe-webgpu", "--ignore-gpu-blocklist", "--enable-gpu", ...(process.platform === "darwin" ? ["--use-angle=metal"] : [])] });
   if (cancellation) throw Error("Browser journey cancelled: " + cancellation.reason);
   const context = await browser.newContext({ viewport: { width: 1900, height: 1200 }, acceptDownloads: true, locale: "en-US" });
   page = await context.newPage();

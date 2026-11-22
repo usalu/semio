@@ -3,6 +3,7 @@
 use semio_s_artifact_process_process3d_kit::iconed_tree_item_with_action;
 use semio_s_artifact_process_process3d_kit::installed_catalogs;
 use semio_s_artifact_process_process3d_kit::process3d_action;
+use semio_plugin::{row_action, RowActionPlacement};
 use semio_s_artifact_process_process3d_kit::editor::process3d::terminology::Process3dLabels;
 use semio_s_artifact_process_process3d_inferences::{validate_capability, validation_context_for_stock, validation_reason, ValidationContext};
 use semio_s_artifact_process_process3d_model::{snapshot::Capability, snapshot::MachineCatalog, snapshot::Process3dSnapshot, snapshot::WorkshopMachine};
@@ -48,8 +49,7 @@ fn capability_entries<'a>(machines: impl IntoIterator<Item = &'a WorkshopMachine
     machines.into_iter().flat_map(|machine| machine.capabilities.iter().map(move |capability| (machine, capability))).collect()
 }
 
-/// 🔧 One capability row: an `addStep` binding when the current stock satisfies the capability's
-/// rules, otherwise a non-clickable row carrying the failure as its reason.
+/// 🔧 Available capability rows add on label click and offer a separate positioned placement action.
 fn capability_row(machine: &WorkshopMachine, capability: &Capability, ctx: Option<&ValidationContext>, labels: &Process3dLabels) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let id = format!("process3d-catalogue.{}.{}", machine.id, capability.id);
     let label = format!("{} — {}", machine.label, capability.label);
@@ -57,7 +57,12 @@ fn capability_row(machine: &WorkshopMachine, capability: &Capability, ctx: Optio
         let failures = validate_capability(capability, ctx);
         if failures.is_empty() {
             let args = semio_s_artifact_process_process3d_kit::ui_value_map([("capabilityId", semio_s_artifact_process_process3d_kit::ui_value_text(&capability.id)?), ("machineId", semio_s_artifact_process_process3d_kit::ui_value_text(&machine.id)?)])?;
-            return iconed_tree_item_with_action(id, &label, &capability.icon_id, process3d_action("addStep", Some(args)));
+            let mut item = iconed_tree_item_with_action(id, &label, &capability.icon_id, process3d_action("addStep", Some(args)))?;
+            if let semio_plugin::Component::TreeItem(props) = &mut item.component {
+                props.row_actions.try_push(row_action("crosshair", labels.place_capability.as_str(), "placeCapability", RowActionPlacement::Row)?)
+                    .map_err(|_| semio_plugin::PluginAssemblyError::new("ui.catalogue.row-actions", "capability placement action admission failed"))?;
+            }
+            return Ok(item);
         }
         validation_reason(&failures)
     } else if labels.is_de() {

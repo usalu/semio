@@ -90,3 +90,41 @@ The physical journey extracts the two saturated colors from the PNG carried by t
 ## Large-Sheet Export Before and After Camera Motion
 
 The large-sheet browser mode checks the initial SVG for all 32 authored frame bounds. After the physical wheel and pan gestures, it downloads a second SVG and compares its entire document element through JSDOM, including child order and attributes. The subsequent comparison covers frames outside the viewport and permits the original Demo content in the first export. Five neutral cases using the shared fixture passed, covering identical content and refusal after a frame deletion, addition, reorder, or paint change. The browser script syntax and output path checks passed. Both SVG exports through the live browser remain pending.
+
+## Published Renderer and Live Boot Recovery
+
+The canonical renderer Rust and binding owners completed at 17:49 UTC. The renderer JavaScript is 191,394 bytes, SHA-256 `9302513be27134fbbeed4b99a1a7cf003d80be4c15c54ad66b169091776b7ca3`. The renderer WebAssembly is 106,367,701 bytes, SHA-256 `8ae9ec42de8265f698f4c9cfb38dc5fb7da1d49c20fa5563912b4f9797504ab1`.
+
+The first real Chromium boot exposed an unrelated Animate descriptor request in the selected Layout session. The browser worker now starts implicit variant descriptor admission with the selected entry and its registered contributors, follows dependency identities from admitted descriptors, and validates the final dependency plan before starting actors. The independent portable fixture passed with graphlib, including a deliberately unpublished unrelated descriptor and refusal for a dependency absent from the candidate roster. The canonical frame worker owner republished successfully. The real route check also caught a Preview 2 shim 404 caused by the earlier fonts mount. The exact shim mount now takes precedence and the focused route suite passed all five cases. The serve owner restarted on port 6179 with the unchanged published Wasm pair and refreshed worker.
+
+## Live HTTP Routes
+
+The restarted server returned all 14 routes in the independent Layout probe. The main document supplied `Cross-Origin-Opener-Policy: same-origin` and `Cross-Origin-Embedder-Policy: credentialless`. The Layout bridge, its JavaScript, the reachable Preview 2 shim modules, and the renderer JavaScript returned HTTP 200. Full streaming SHA-256 comparisons matched the owned Layout core Wasm (221,323,974 bytes, `931dee8febe25ed9ebf6fe45c7e188e946c650fb4dcfaeff58c29dfcdd5fe543`) and renderer Wasm (106,367,701 bytes, `8ae9ec42de8265f698f4c9cfb38dc5fb7da1d49c20fa5563912b4f9797504ab1`) byte for byte.
+
+## Live Chromium Editor Activation
+
+Chromium loaded the current Layout actor and reached the renderer readiness beacon. It produced a 1900 × 1200 canvas with no editor windows or accessible controls. The initial interaction run reached its 180-second wait limit. The actor console identifies the actual cause at 9.1 seconds. During editor instance creation the exact tool proof for `setActivePage` was refused with `interactive-job.catalog-authority`, then the guest trapped. The registered and declared owner, controller, tool, schema, and factory identities agree. The retained factory's execution contract grants 16 items in its third field while the proof declares 1. This explains why the typed join fails despite the displayed identities matching. The guest owner is unifying the contract and checking the other proof rows before rebuilding. Physical interactions and large-sheet preview remain unverified.
+
+## Listener Lifetime
+
+The pre-repair Vite listener exited with status 124 after ten quiet minutes. Its own script watchdog treated a live HTTP listener as a stalled one-shot command because it had no child process. Vite now registers the bound listener with the existing script service lifetime and releases that registration on every shutdown path. The next canonical serve owner is testing the idle lifetime while the guest rebuild runs.
+
+## Fresh Guest Source Admission
+
+The two Layout proof groups now take their contracts from the registered factory producers. The inventory check joined all 26 concrete rows. The refreshed descriptor emitter passed its capability probe and the canonical Layout guest entered compilation as `wiLotj4`. Its first pass encountered a synchronized dialect change during compilation. The same owner began its held retry with the synchronized provider and the live Drawing Birth repair. The retry's admitted source store contains the repaired Birth source at SHA-256 `f9ccb1c45bcbe59bec2d0452c2d9a9e0d29ddd57bad40a61ae8c996e37f52c7a`. Actual guest publication and activation still precede browser acceptance.
+
+## Strict Listener Verification Before Guest Refresh
+
+The canonical listener bound port 6179 after receiving the WGPU-specific one-core policy. It ran with enforced lease order and returned HTTP 200 for all 14 assets discovered by the route probe. The document returned COOP `same-origin` and COEP `credentialless`. The HTTP guest core was 221,323,974 bytes and matched SHA-256 `931dee8febe25ed9ebf6fe45c7e188e946c650fb4dcfaeff58c29dfcdd5fe543`. The separately published renderer Wasm was 106,367,701 bytes and matched SHA-256 `8ae9ec42de8265f698f4c9cfb38dc5fb7da1d49c20fa5563912b4f9797504ab1`.
+
+The ticket verifier `verify-layout-activation.ts` independently recomputed the existing activation's inventory hash `62525226b56191b6a70f121925db9005dfc287b74a5b09bd11cbf0959091262a` and verified both HTTP Wasm byte counts and hashes against their owner files. This provides a baseline before the new component is published. The route and activation checks will be repeated against the new publication before accepting the Chromium editor.
+
+A subsequent request to the owned listener's Vite client succeeded with HTTP 200 and 179,327 bytes 721.9 seconds after the previous full route crawl. The listener therefore remained available beyond the former ten-minute cutoff.
+
+## Linked Guest and Canonical Retry
+
+The guest owner finished linking the actual 165,214,208-byte Wasm component in run `wiLotj4`, SHA-256 `67df3cf3defb2a3c430ee29b98a579714e773fcd2819bea87d1275017deaf533`. The inner descriptor Cargo ingress refused its cached policy source after the canonical constraints file changed during compilation. The final owner exited 1 and left no running children. The linked bytes were retained without modifying their compiler records. The published browser module and activation receipt still identified the earlier component.
+
+The recent profile edit adds optimization for a crate absent from that Layout unit graph. The canonical component producer does not expose a verified stage-only command for those retained bytes. After applying the IDML, image and PDF, retained-child and shared offload fixes, one new canonical descriptor owner was started in session `2864`. It uses the current policy hashes and the repository's renewable compiler deadline. The ticket wrapper no longer adds a fixed outer time limit.
+
+Session `2864` stopped before component compilation on the two relative Base64 manifest paths. These paths were repaired and independently resolved to the same owned framework crate. Session `99698` is the sole canonical replacement. It has synchronized the Hub lock and reached current Cargo unit metadata. The previous strict listener stays live on 6179.

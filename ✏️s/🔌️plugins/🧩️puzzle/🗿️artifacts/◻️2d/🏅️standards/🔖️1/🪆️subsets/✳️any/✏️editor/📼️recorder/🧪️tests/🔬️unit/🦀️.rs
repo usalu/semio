@@ -51,13 +51,13 @@ fn replay(base: &Puzzle2dSnapshot, rows: &[Puzzle2dMutation]) -> (Puzzle2dSnapsh
     let mut inverses = Vec::new();
     for row in rows {
         ::semio_framework_async::poll::resolve_ready(protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(row, &state));
-        inverses.push(Mutation::<Puzzle2dSnapshot>::inverse(row, &state).expect("every recorded row inverts"));
-        state = protocol::apply_diff_cold(Mutation::<Puzzle2dSnapshot>::diff(row, &state).diff(), &state).expect("every recorded row applies");
+        inverses.push(ColdMutation::<Puzzle2dSnapshot>::inverse(row, &state).expect("every recorded row inverts"));
+        state = protocol::apply_diff_cold(ColdMutation::<Puzzle2dSnapshot>::diff(row, &state).diff(), &state).expect("every recorded row applies");
     }
     let after = state.clone();
     for inverse in inverses.iter().rev() {
         for step in inverse.iter().rev() {
-            state = protocol::apply_diff_cold(Mutation::<Puzzle2dSnapshot>::diff(step, &state).diff(), &state).expect("every inverse row applies");
+            state = protocol::apply_diff_cold(ColdMutation::<Puzzle2dSnapshot>::diff(step, &state).diff(), &state).expect("every inverse row applies");
         }
     }
     (after, state)

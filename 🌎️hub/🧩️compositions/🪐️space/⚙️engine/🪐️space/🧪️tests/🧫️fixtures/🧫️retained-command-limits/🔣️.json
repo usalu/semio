@@ -80,6 +80,13 @@
       ]
     },
     {
+      "toolId": "finishSpawnApp",
+      "lanes": [
+        "Artifact",
+        "Config"
+      ]
+    },
+    {
       "toolId": "deleteSelection",
       "lanes": [
         "Artifact",
@@ -281,6 +288,12 @@
     },
     {
       "id": "spawnApp",
+      "execution": "bounded",
+      "status": "Migrated",
+      "feature": "publish one node insertion through the installed artifact preparation factory and focus it"
+    },
+    {
+      "id": "finishSpawnApp",
       "execution": "bounded",
       "status": "Migrated",
       "feature": "publish one node insertion through the installed artifact preparation factory and focus it"

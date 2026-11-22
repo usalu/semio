@@ -1,19 +1,10 @@
-//! 🩺️ Holds the live session kernel while admitting or stepping original validation.
-
-use super::{NativeValidationReport,RetainedAllocationEffect,RetainedCloneProgress,Session,ValueError};
-use semio_framework_value::RetirementDemand;
+//! 🩺️ Publishes a validated coordinate repair under the original session owner.
+use super::{RetainedAllocationEffect, RetainedCloneProgress, Session, SolidHealing, ValueError};
 
 impl Session {
-    /// 🧭️ Admits validation of the borrowed original handle and its exact topology.
-    pub fn plan_validation_report(&self,handle:&str)->Result<NativeValidationReport,ValueError>{
-        self.with_original_geometry_query(|kernel| NativeValidationReport::new(kernel,handle))
-    }
-
-    pub fn validation_report_demand(&self,report:&NativeValidationReport,handle:&str,copy:usize)->Result<RetirementDemand,ValueError>{
-        self.with_original_geometry_query(|kernel| report.demand(kernel,handle,copy))
-    }
-
-    pub fn step_validation_report(&self,report:&mut NativeValidationReport,handle:&str,effect:&mut RetainedAllocationEffect<'_>)->Result<(Option<String>,RetainedCloneProgress),ValueError>{
-        self.with_original_geometry_query(|kernel| report.step(kernel,handle,effect))
+    /// 📤️ Commits one original solid's funded repair.
+    pub fn commit_healing(&self, handle: &str, job: &mut SolidHealing, effect: &mut RetainedAllocationEffect<'_>) -> Result<(bool, RetainedCloneProgress), ValueError> {
+        let (ready, _, receipt) = self.with_open_kernel(|kernel| kernel.commit_healing(handle, job, effect))?;
+        Ok((ready, receipt))
     }
 }

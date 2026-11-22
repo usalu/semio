@@ -11,14 +11,16 @@
       "id": "cut",
       "lanes": [
         "Artifact",
-        "Child"
+        "Child",
+        "Interaction"
       ]
     },
     {
       "id": "paste",
       "lanes": [
         "Artifact",
-        "Child"
+        "Child",
+        "Interaction"
       ]
     },
     {

@@ -3,7 +3,7 @@ import { captureProgramRetirementOwnersV1, sameProgramRetirementOwnersV1, type P
 import { useCallback, useEffect, useRef } from "../../../⚛️react-port/🟦️.ts";
 import { shellHumanChangeRecoveryV1, type ShellHumanV1 } from "../../🔀️surface-switch/🟦️.ts";
 import { renameLayoutWindowIdsV1, spawnedLayoutRenameV1 } from "../../🪟️spawned-program/🟦️.ts";
-import { type WindowLayoutNode } from "@semio-tech/ui-react";
+import type { WindowLayoutNode } from "@semio-tech/ui-layout";
 import { type ActiveSession } from "../../../🐚️Shell/📦️program-sessions/🟦️.ts";
 import { resolveFrameworkLayoutSeed, frameworkLayoutDeclaredInstances } from "../../../🛠️ShellHelpers/🛣️route-and-chrome/🟦️.tsx";
 import { panelJsonFromState, parsePanelState, type SpacePanelState } from "../../../🛠️ShellHelpers/📌️panel/🟦️.ts";
@@ -25,7 +25,7 @@ export function useUpdateSpacePanelState({ admitProgramRetirementRef, session, s
     if (focusedSpawnedId !== null && focusedApp !== null) {
       if (sessionLayoutBeforeSpawnRef.current === null) sessionLayoutBeforeSpawnRef.current = { layout: shellLayoutRef.current ?? null, activeWindowId: activeWindowIdRef.current };
       const seed = resolveFrameworkLayoutSeed(focusedApp.defaultLayout, withLocalizedWindowKindLabels(focusedApp.windowKinds), appLabelsOverlay, uiTerminology, uiLocale);
-      const modeLayout = renameLayoutWindowIdsV1(seed.modeLayout as WindowLayoutNode & { kind: "window" | "stack" | "row" | "column" }, spawnedLayoutRenameV1(focusedSpawnedId, focusedApp.windowKinds, frameworkLayoutDeclaredInstances(focusedApp.defaultLayout, focusedApp.windowKinds))) as WindowLayoutNode;
+      const modeLayout = renameLayoutWindowIdsV1(seed.modeLayout, spawnedLayoutRenameV1(focusedSpawnedId, focusedApp.windowKinds, frameworkLayoutDeclaredInstances(focusedApp.defaultLayout, focusedApp.windowKinds))) as WindowLayoutNode;
       dispatch({ type: "SET_SHELL_LAYOUT", value: modeLayout });
       dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: seededActiveWindowId(modeLayout) });
       return;

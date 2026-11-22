@@ -7,7 +7,7 @@
  * @see ../../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🖥️viewer/🟦️.ts — the owned WebGL2 viewer
  */
 import { VIEWS, authoredScales, modeOf, sceneIdOf } from "@teaching/staffage";
-import type { Asset, DisplayRange, Environment, EvaluationQuery, ForceQuantity, Language, ThermalQuantity, View } from "@teaching/staffage";
+import type { Asset, DisplayRange, Environment, EvaluationQuery, FlowLayer, ForceQuantity, Language, ThermalQuantity, View } from "@teaching/staffage";
 import { formatNumber } from "@teaching/staffage";
 import { translator, type Key } from "../🌐️i18n/🟦️.ts";
 import { VIEW_NAMES } from "../🗣️labels/🟦️.ts";
@@ -42,6 +42,8 @@ export type SpatialRequest = {
   readonly range?: DisplayRange;
   readonly theme?: "light" | "dark";
   readonly scales?: readonly number[];
+  /** 🌊️ The layers of the air flow shown over the thermal view; with any layer the model is built without emitter markers, since the flow itself shows where air leaves. */
+  readonly flow?: readonly FlowLayer[];
 };
 
 /** 🏛️ The scene of the model that a request shows: the scale and the mode of the view (`s<scale>-<mode>`); the tessellation of every scene is the one `qualityOf` of the library, the very rule the downloads use. */
@@ -71,7 +73,7 @@ export function scaleChoices(asset: Asset, language: Language): readonly ScaleCh
 export function modelKey(asset: Asset, request: SpatialRequest): string {
   const { query } = request;
   const what = query.kind === "pose" ? ["pose", query.pose] : query.kind === "clip" ? ["clip", query.clip] : [query.kind];
-  return JSON.stringify([asset.id, what, request.environment ?? null, request.thermalQuantity ?? null, request.forceQuantity ?? null, request.range?.mode === "span" ? request.range.spanK : null, request.theme ?? null, request.scales ?? null]);
+  return JSON.stringify([asset.id, what, request.environment ?? null, request.thermalQuantity ?? null, request.forceQuantity ?? null, request.range?.mode === "span" ? request.range.spanK : null, request.theme ?? null, request.scales ?? null, (request.flow?.length ?? 0) > 0]);
 }
 
 /** 🗣️ The spoken description of the model state in a language: the asset, pose or clip with its time, the representation, the scale and the camera. */

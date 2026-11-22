@@ -20,12 +20,12 @@ test("original clone-source corpus keeps issuer and aliases before terminal hand
     expect(returned.metadata).toBe(row.metadata);
   }
   const source = await Bun.file(new URL("../../🦀️.rs", import.meta.url)).text();
-  expect(source).toContain("pub fn admit_borrowed");
+  expect(source).toContain("pub fn admission_borrowed");
   expect(source).toContain("SealedShared::<RetainedCloneLeaseOwner>");
   expect(source).not.toContain("pub fn take_owner(&mut self)->Option<Arc<T>>");
   const binding = await Bun.file(new URL("../../📦️packages/🦀️rust/🦀️.rs", import.meta.url)).text();
   expect(binding).toContain("binding_copy_bytes");
-  expect(binding).toContain("try_duplicate(grant)");
+  expect(binding).toContain("self.lease.duplicate_into(&mut alias,effect)");
 });
             
 test("zero metadata copy admits an exact unsigned budget and rejects unrepresentable negative authority with the independent AJV oracle",()=>{
@@ -49,7 +49,8 @@ test("true source and borrow authority callers select one canonical combined clo
   for(const row of fixture.closeQuery.callers){
    const source=await Bun.file(new URL("../../../../"+row.path,import.meta.url)).text();
    expect(source).not.toContain(".next_close_demands(");
-   expect(source.match(/\.next_close_demand\(/g)?.length??0).toBeGreaterThanOrEqual(row.calls);
+   const calls = row.owner === "borrowAuthority" ? /s\.input\.close_demand\(body\)/g : /\.next_close_demand\(/g;
+   expect(source.match(calls)?.length??0).toBeGreaterThanOrEqual(row.calls);
    db.run("INSERT INTO callers VALUES(?,?,?)",[row.path,row.owner,row.calls]);
   }
   expect(db.query("SELECT COUNT(*) AS paths,SUM(calls) AS calls FROM callers").get()).toEqual({paths:fixture.closeQuery.callers.length,calls:fixture.closeQuery.callers.reduce((sum,row)=>sum+row.calls,0)});

@@ -13,3 +13,33 @@ fn original_display_borrows_same_channels_and_closes_every_paid_projection(){
   let(mut owner,born,free)=observe(||ControlledRetirement::new(source).unwrap_or_else(|_|unreachable!()));assert_eq!((born,free),(0,0));idle=0;for turn in 0..100000{if owner.terminal_is_empty(){break}let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:owner.next_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:owner.next_release_byte_demand().unwrap(),maximum_depth:owner.next_depth_demand().unwrap()};let(step,born,free)=observe(||owner.step(grant).unwrap());let p=step.progress();assert!(p.fits(grant));assert_eq!((born,free),(p.retained_capacity_bytes,p.released_bytes));births+=born;releases+=free;if p==Default::default(){idle+=1}else{idle=0}assert!(idle<64,"original display close stalled copy={copy} turn={turn} grant={grant:?}");}assert!(owner.terminal_is_empty());assert_eq!(original+births,releases);assert_eq!(observe(||drop(owner)),((),0,0));
  }}}
 }
+
+fn display_turns(row:&serde_json::Value,items:usize)->(usize,String){
+ let snapshot=decode(&serde_json::json!({"schema":"flow.host_snapshot","camera":{"x":0,"y":0,"zoom":1},"widgets":row["widgets"],"synapses":[],"layout":{}}).to_string());
+ let mut infos=HistoryFoldIndex::new();
+ for(kind,info)in row["kindInfos"].as_object().unwrap(){let inputs=info["inputs"].as_array().unwrap().iter().map(|name|neural::ChannelSpec::requires(name.as_str().unwrap(),&[] as &[&str])).collect();let variadic_input=info["variadicSlot"].as_str().map(|key|neural::VariadicSpec{slot_key:key.into(),min:0,max:None});infos.insert(kind.clone(),OperatorInfo{inputs,variadic_input,..Default::default()});}
+ let mut source=Sources{snapshot,channels:EvalChannels{inputs:decode(&row["inputs"].to_string()),outputs:decode(&row["outputs"].to_string())},infos,cursor:FlowDisplayCursor::new()};
+ let mut turns=0;
+ while !source.cursor.complete(){
+  let d=source.cursor.demands(&source.snapshot,&source.channels,&source.infos).unwrap();
+  let grant=RetainedCloneGrant{maximum_items:items,maximum_copy_bytes:32_768,maximum_capacity_bytes:16_777_216.max(d.capacity_bytes),maximum_release_bytes:1_048_576,maximum_depth:d.depth.max(64)};
+  source.cursor.step(&source.snapshot,&source.channels,&source.infos,grant).unwrap();
+  turns+=1;assert!(turns<100_000,"[DEBUG] display never completed under {items} item(s) per turn");
+ }
+ let text=source.cursor.text.clone().unwrap();
+ source.retire_cold();
+ (turns,text)
+}
+
+/// ⚖️ LAW: the display cursor spends every item its turn is granted, so a mounted turn (64 one-item units) writes up to 64 JSON tokens instead of one, and the published text is unchanged.
+#[test]
+fn display_writer_batches_the_granted_items_within_one_turn(){
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+ for row in fixture["cases"].as_array().unwrap(){
+  let(single,single_text)=display_turns(row,1);
+  let(mounted,mounted_text)=display_turns(row,64);
+  println!("[DEBUG] display turns: 1 item={single}, 64 items={mounted}");
+  assert_eq!(single_text,mounted_text);
+  assert!(mounted*4<single,"mounted turns {mounted} must be far fewer than single-item turns {single}");
+ }
+}

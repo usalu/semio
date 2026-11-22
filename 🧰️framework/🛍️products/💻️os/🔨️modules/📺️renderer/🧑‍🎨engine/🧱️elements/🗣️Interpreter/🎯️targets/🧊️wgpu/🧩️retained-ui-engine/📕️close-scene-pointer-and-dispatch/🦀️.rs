@@ -35,9 +35,6 @@ pub fn close_ui_document_one(cx:&mut semio_framework_job::StepContext<'_>)->Resu
     if close_window_focus_clipboard_one(window_id, owner.generation) {
         return true;
     }
-    if semio_renderer_wgpu_scene_canvas2d::ui_image_loading::close_window_image_resource_step(window_id, owner.generation) {
-        return true;
-    }
     if SCENE_INTENTS.with(|cell| cell.borrow_mut().close_window_step(window_id, owner.generation)) {
         return true;
     }
@@ -79,7 +76,9 @@ pub fn close_ui_document_one(cx:&mut semio_framework_job::StepContext<'_>)->Resu
     });
     if let Some(retired) = retirement {
         let owner = ScenePointerTarget::from(retired);
-        if owner.kind==semio_ui_declaration::ui::SurfaceKind::Paint2d{semio_renderer_wgpu_engine_board::paint2d::cancel_paint2d_pixel_selection(&owner.host_id);}
+        if owner.kind == semio_ui_declaration::ui::SurfaceKind::Paint2d {
+            semio_renderer_wgpu_engine_board::paint2d::cancel_paint2d_pixel_selection(&owner.host_id);
+        }
         semio_renderer_wgpu_scene_state::retire_scene_identity(&owner);
     }
     if complete {
@@ -117,7 +116,27 @@ pub fn retained_selection_cancellation(target:&ScenePointerTarget,actor:&str,ins
         if authority.actor!=actor||authority.app_instance_id!=instance_id||authority.window_id!=target.window_id{return None;}
         let exact=|value:&str|value.len()==16&&value.bytes().all(|byte|byte.is_ascii_digit()||(b'a'..=b'f').contains(&byte));
         if !exact(&authority.operation_id)||!exact(&authority.generation){return None;}
-        Some(ActionDescriptor{controller_id:scene.controller_id.clone(),action:"cancelTypedOperation".into(),args:Some(semio_framework::DslValue::Object(vec![("operationId".into(),semio_framework::DslValue::String(authority.operation_id.clone())),("generation".into(),semio_framework::DslValue::String(authority.generation.clone()))]))})
+        Some(ActionDescriptor {
+            controller_id: scene.controller_id.clone(),
+            action: "cancelTypedOperation".into(),
+            args: Some(semio_framework::dsl_value!({ "operationId": authority.operation_id, "generation": authority.generation })),
+        })
+    })
+}
+
+/// 🔁️ Enter or Space on the focused tiled-map scene presses its Retry button while the map shows the unavailable notice, as a React button does; `true` when it retried.
+pub fn retained_map_retry_key(target: &ScenePointerTarget, key: &str) -> bool {
+    target.kind == semio_ui_declaration::ui::SurfaceKind::TiledMap && matches!(key, "Enter" | " ") && scene_pointer_target_is_live(target) && semio_renderer_wgpu_engine_board::tiled_map::retry_tiled_map(&target.host_id)
+}
+
+/// ⌨️ Offers one key press to the live paint-2d scene that owns the keyboard; `true` when the pixel keyboard took it.
+pub fn retained_paint2d_key(target:&ScenePointerTarget,key:semio_renderer_wgpu_engine_board::paint2d::PixelKeyInput<'_>,locale:&str,input:&mut semio_ui_wgpu_input::InputState<ActionDescriptor>)->Result<bool,semio_ui_action::BoundedActionFault>{
+    if target.kind!=semio_ui_declaration::ui::SurfaceKind::Paint2d||!scene_pointer_target_is_live(target){return Ok(false);}
+    UI_ENGINE.with(|cell|{
+        let engine=cell.borrow();
+        let Some(retained)=engine.tree(&target.window_id).and_then(|tree|tree.node(target.node)) else{return Ok(false);};
+        let UiNode::ComponentScene(scene)=&retained.spec.0 else{return Ok(false);};
+        semio_renderer_wgpu_engine_board::paint2d::paint2d_key_into(scene,key,locale,input)
     })
 }
 
@@ -362,6 +381,11 @@ pub fn retained_root_is_tree(window_id: &str) -> bool {
 /// 🫳️ Retained panel/catalogue drags (`EventRouter::DragSession`) the legacy shell `tree_drag` path never sees.
 pub fn active_retained_drag_sessions() -> Vec<(String, f32, f32, std::collections::HashMap<String, String>)> {
     UI_ENGINE.with(|cell| cell.borrow().active_drag_sessions())
+}
+
+/// 🧭️ The presented row insertion marker for the window under a retained drag.
+pub fn retained_tree_row_reorder_marker(window_id: &str) -> Option<Rect> {
+    UI_ENGINE.with(|cell| cell.borrow().tree_row_reorder_marker(window_id))
 }
 
 pub fn canvas_catalogue_drag_over(window_id: &str, x: f32, y: f32, drag_data: &std::collections::HashMap<String, String>, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> bool {

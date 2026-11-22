@@ -130,7 +130,7 @@ describe("texts",()=>{
   const en=POLICY_V1.messages.en,de=POLICY_V1.messages.de;
   expect(Object.keys(en).sort()).toEqual(Object.keys(de).sort());
   const holes=(text:string)=>[...text.matchAll(/\{([A-Za-z]+)\}/gu)].map(m=>m[1]).sort();
-  for(const key of Object.keys(en)){expect(holes(de[key])).toEqual(holes(en[key]));expect(en[key]).not.toBe(de[key]);}
+  for(const key of Object.keys(en)){expect(holes(de[key])).toEqual(holes(en[key]));if(!/^\{[A-Za-z]+\} (?:min|s)$/u.test(en[key]))expect(en[key]).not.toBe(de[key]);}
  });
  test("rendering picks only the requested languages; no language is a default",()=>{
   expect(Object.keys(renderTextV1("queued",{position:2},["de"])!)).toEqual(["de"]);

@@ -38,12 +38,12 @@
     },
     {
       "name": "relativeScriptInputs",
-      "parameters": 5,
+      "parameters": 6,
       "asynchronous": true
     },
     {
       "name": "targetPolicy",
-      "parameters": 3,
+      "parameters": 4,
       "asynchronous": false
     },
     {

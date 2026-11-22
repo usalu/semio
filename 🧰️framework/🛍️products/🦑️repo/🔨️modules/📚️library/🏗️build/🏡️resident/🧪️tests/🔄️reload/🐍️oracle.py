@@ -30,4 +30,15 @@ def run(spec, case):
     return trace
 
 spec = json.load(open(sys.argv[1], encoding="utf8"))
-print(json.dumps({case["name"]: run(spec, case) for case in spec["cases"]}))
+def drain(spec, case):
+    progress = 0
+    for tick in range(case["beatMs"], case["durationMs"], case["beatMs"]):
+        if case["advances"]:
+            progress = tick
+        if tick - progress >= spec["stallMs"]:
+            return "cut"
+    return "answered"
+
+results = {case["name"]: run(spec, case) for case in spec["cases"]}
+results["drain"] = {case["name"]: drain(spec["drain"], case) for case in spec["drain"]["cases"]}
+print(json.dumps(results))

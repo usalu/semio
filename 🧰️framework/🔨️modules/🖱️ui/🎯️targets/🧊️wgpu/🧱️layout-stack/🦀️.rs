@@ -8,3 +8,6 @@ pub mod layout;
 
 #[path = "../📐️flex/🦀️.rs"]
 pub mod flex;
+
+#[path = "../📊️table-model/🦀️.rs"]
+pub mod table;

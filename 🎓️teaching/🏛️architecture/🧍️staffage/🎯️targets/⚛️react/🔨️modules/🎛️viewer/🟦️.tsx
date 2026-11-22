@@ -7,8 +7,10 @@
  * @see ../🗺️routing/🟦️.ts — `ViewerState` and its parameters
  */
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactElement } from "react";
-import { FORCE_QUANTITIES, SCALE_PRESETS, THERMAL_QUANTITIES, VIEWS, formatNumber, mmPerMetre, sectionOf, viewpointCaption } from "@teaching/staffage";
-import type { Asset, AuthoredRepresentation, DrawingScene, Environment, EvaluatedState, EvaluationQuery, ItemValue, StructuralResult, ThermalField, View, PlanarViewpoint, Viewpoint } from "@teaching/staffage";
+import { FORCE_QUANTITIES, SCALE_PRESETS, THERMAL_QUANTITIES, VIEWS, axonometricCamera, flowDetailOf, flowLegends, flowMarks, flowPaint, formatNumber, mmPerMetre, sectionOf, viewpointCaption } from "@teaching/staffage";
+import type { Asset, AuthoredRepresentation, DrawingScene, Environment, EvaluatedState, EvaluationQuery, FlowField, ItemValue, StructuralResult, ThermalField, View, PlanarViewpoint, Viewpoint } from "@teaching/staffage";
+import { ENVIRONMENT_PRESETS } from "../🌤️environments/🟦️.ts";
+import { ALL_FLOW_LAYERS, flowFrameOf, flowsIn, unionFrame } from "../🌊️flow/🟦️.ts";
 import type { ViewpointKey } from "../🔭️viewpoints/🟦️.ts";
 import { StaffageClock } from "../⏱️clock/🟦️.ts";
 import { useBreakpoint } from "../🥞️levels/🟦️.tsx";
@@ -83,6 +85,9 @@ export function Viewer(props: ViewerProps): ReactElement {
   const poseId = viewer.selection?.kind === "pose" ? viewer.selection.pose : null;
   const query: EvaluationQuery = useMemo(() => (poseId === null ? { kind: "clip", clip: clip.id, timeS: 0 } : { kind: "pose", pose: poseId }), [poseId, clip.id]);
   const analytic = ANALYTIC_VIEWS.includes(viewer.view);
+  const flowable = flowsIn(asset, viewer.view);
+  const flowLayers = flowable && viewer.flow.length > 0 ? viewer.flow : undefined;
+  const [flow, setFlow] = useState<FlowField | null>(null);
   const theme = viewer.theme === "auto" ? (dark ? "dark" : "light") : viewer.theme;
   const drawnViewpoint: Viewpoint = isDrawn(viewer.viewpoint) ? viewer.viewpoint : "elevation";
   const model = viewer.viewpoint === "model" && viewer.layout !== "all";
@@ -94,11 +99,13 @@ export function Viewer(props: ViewerProps): ReactElement {
       const state = evaluateState(asset, query);
       const baseScene = sceneOf(state, depictionOptions({ view: "dark-line", viewpoint: drawnViewpoint, scale: { denominator: viewer.scale }, language, theme, transparent: true }));
       const activeScene = viewer.view === "dark-line" ? baseScene : sceneOf(state, depictionOptions({ view: viewer.view, viewpoint: drawnViewpoint, scale: { denominator: viewer.scale }, language, theme, transparent: true }));
-      return { base: frameOf([baseScene]), byView: { [viewer.view]: frameOf([baseScene, activeScene]) } as Record<View, SceneFrame> };
+      const drawn = frameOf([baseScene, activeScene]);
+      const active = flowLayers === undefined ? drawn : unionFrame(drawn, flowFrameOf(state, drawnViewpoint, baseScene.metadata.mmPerMetre, drawnViewpoint === "axonometric" ? axonometricCamera() : undefined));
+      return { base: frameOf([baseScene]), byView: { [viewer.view]: active } as Record<View, SceneFrame> };
     } catch {
       return undefined;
     }
-  }, [asset, query, viewer.scale, viewer.view, viewer.viewpoint, drawnViewpoint, drawable, language, theme]);
+  }, [asset, query, viewer.scale, viewer.view, viewer.viewpoint, drawnViewpoint, drawable, language, theme, flowLayers === undefined]);
   const resolutions = useMemo(() => resolveFigure(asset, viewer.scale, language), [asset, viewer.scale, language]);
   const all = viewer.layout === "all";
   const sheetQueries = useMemo(() => (query.kind === "clip" ? Array.from({ length: SHEET_SAMPLES }, (_, index): EvaluationQuery => ({ kind: "clip", clip: query.clip, timeS: (clip.durationS * index) / SHEET_SAMPLES })) : [query]), [query, clip.durationS]);
@@ -107,6 +114,12 @@ export function Viewer(props: ViewerProps): ReactElement {
   const base = asset.thermal.environment;
   const environment: Environment = useMemo(() => ({ ...base, ...reasoned }), [base, JSON.stringify(reasoned)]);
   const overridden = Object.keys(reasoned).length > 0;
+  const flowScene = useMemo(() => {
+    if (flow === null || flowLayers === undefined) return null;
+    const legends = flowLegends(flow, flowMarks(flow, flow.timeS, flowDetailOf(viewer.scale)), flowPaint(theme, flow, viewer.range), flowLayers);
+    return legends.length === 0 ? null : legends;
+  }, [flow, flowLayers, viewer.scale, theme, JSON.stringify(viewer.range)]);
+  const presetKey = !overridden ? "own" : (ENVIRONMENT_PRESETS.find((preset) => (["airTempC", "meanRadiantTempC", "relativeHumidity", "windMS", "solarWM2"] as const).every((key) => reasoned[key] === preset.environment[key]))?.id ?? "custom");
   const bg = viewer.background === "auto" ? (DARK_VIEWS.includes(viewer.view) ? "dark" : analytic && theme === "dark" ? "dark" : "light") : viewer.background;
   const explicit = viewer.background !== "auto";
   const mismatch = explicit && viewer.background !== "transparent" && ((DARK_VIEWS.includes(viewer.view) && viewer.background !== "dark") || (viewer.view.startsWith("light") && viewer.background === "dark"));
@@ -201,7 +214,7 @@ export function Viewer(props: ViewerProps): ReactElement {
           <div role="group" aria-label={t("model.viewerStage", { title: asset.title[language] })} aria-describedby={`${asset.id}-model-help`} data-stage="" data-model="" data-shared-border-cell="" data-border-probe-art="" className="relative h-[clamp(22rem,64vh,42rem)] w-full">
             <span id={`${asset.id}-model-help`} className="sr-only">{t("model.viewerHelp")}</span>
             <FigureBoundary resetKey={asset} fallback={(message) => <Notice kind="error" title={asset.title[language]}>{message}</Notice>}>
-              <StaffageFigure asset={asset} query={query} clock={clock} view={viewer.view} viewpoint="model" scale={{ denominator: viewer.scale }} language={language} theme={theme} fit="contain" preset={viewer.camera} onPreset={(camera) => patch({ camera })} onScale={(scale) => patch({ scale })} onView={(view) => patch({ view })} background={groundColour} thermalQuantity={viewer.thermalQuantity} forceQuantity={viewer.forceQuantity} range={viewer.range} {...(overridden ? { environment } : {})} live />
+              <StaffageFigure asset={asset} query={query} clock={clock} view={viewer.view} viewpoint="model" scale={{ denominator: viewer.scale }} language={language} theme={theme} fit="contain" preset={viewer.camera} onPreset={(camera) => patch({ camera })} onScale={(scale) => patch({ scale })} onView={(view) => patch({ view })} background={groundColour} thermalQuantity={viewer.thermalQuantity} forceQuantity={viewer.forceQuantity} range={viewer.range} {...(overridden ? { environment } : {})} {...(flowLayers === undefined ? {} : { flow: flowLayers })} onFlow={setFlow} live />
             </FigureBoundary>
           </div>
         ) : (
@@ -231,6 +244,8 @@ export function Viewer(props: ViewerProps): ReactElement {
           patterns={viewer.patterns}
           diagrams={viewer.diagrams}
           environment={overridden ? environment : undefined}
+          {...(flowLayers === undefined ? {} : { flow: flowLayers })}
+          onFlow={setFlow}
           onEvaluated={onEvaluated}
           onInspect={(value: ItemValue | null, item) => setInspected(value === null ? null : { value, item })}
           {...(sheet === undefined
@@ -260,13 +275,18 @@ export function Viewer(props: ViewerProps): ReactElement {
         />
         )}
         {mismatch ? <Notice kind="info" compact title={t("viewer.contrast")} /> : null}
-        {isPose ? (
+        {isPose && flowLayers !== undefined ? (
+          <>
+            <Notice kind="info" compact title={t("flow.poseClock", { title: (asset.poses.find((pose) => pose.id === (viewer.selection as { pose: string }).pose)?.title ?? { en: "", de: "" })[language] })} />
+            <Transport clock={clock} label={t("viewer.transport")} onRate={(rate) => patch({ rate })} onLoop={(loop) => patch({ loop })} />
+          </>
+        ) : isPose ? (
           <Notice kind="info" compact title={t("viewer.poseStatic", { title: (asset.poses.find((pose) => pose.id === (viewer.selection as { pose: string }).pose)?.title ?? { en: "", de: "" })[language] })} />
         ) : (
           <Transport clock={clock} label={t("viewer.transport")} onUserTime={(timeS) => patch({ timeS })} onRate={(rate) => patch({ rate })} onLoop={(loop) => patch({ loop })} />
         )}
         {model ? (analytic ? <Notice kind="info" compact title={t("model.analyticNote")} /> : null) : <Inspector inspected={inspected} language={language} hasValues={hasValues} asset={asset} />}
-        {model ? null : <Legends scene={scene} language={language} patterns={viewer.patterns} />}
+        {model ? (flowScene === null ? null : <Legends scene={null} legends={flowScene} language={language} patterns={false} />) : <Legends scene={scene} {...(flowScene === null || scene === null ? {} : { legends: [...scene.legends, ...flowScene] })} language={language} patterns={viewer.patterns} />}
       </Column>
       <Column as="form" aria-label={t("viewer.controls")} onSubmit={(event) => event.preventDefault()} className="w-full bg-panel lg:w-[21rem] lg:shrink-0">
         <Segmented label={t("viewer.view")} value={viewer.view} onChange={(view) => patch({ view })} options={VIEWS.map((view) => ({ value: view, label: VIEW_NAMES[view][language], title: VIEW_NAMES[view][language] }))} />
@@ -292,8 +312,15 @@ export function Viewer(props: ViewerProps): ReactElement {
             ))}
           </Group>
         </Group>
+        <Group stacked legend={t("flow.layers")} className={cn(viewer.view !== "thermal" && "opacity-70")}>
+          <Note className="text-[0.65rem]">{t(viewer.view !== "thermal" ? "flow.onlyThermal" : flowable ? "flow.help" : "flow.none")}</Note>
+          {ALL_FLOW_LAYERS.map((layer) => (
+            <CheckField key={layer} label={t(`flow.layer.${layer}`)} checked={viewer.flow.includes(layer)} disabled={!flowable} onChange={(checked) => patch({ flow: ALL_FLOW_LAYERS.filter((candidate) => (candidate === layer ? checked : viewer.flow.includes(candidate))) })} />
+          ))}
+        </Group>
         <Group stacked legend={t("viewer.environment")}>
           <Note className="text-[0.65rem]">{t(viewer.view === "thermal" ? "viewer.environmentHelp" : "viewer.environmentOnlyThermal")}</Note>
+          <Bar><SelectField label={t("viewer.env.preset")} value={presetKey} options={[{ value: "own", label: t("viewer.env.presetOwn") }, ...ENVIRONMENT_PRESETS.map((preset) => ({ value: preset.id, label: preset.title[language] })), ...(presetKey === "custom" ? [{ value: "custom", label: t("viewer.env.presetCustom") }] : [])]} onChange={(id) => { const preset = ENVIRONMENT_PRESETS.find((candidate) => candidate.id === id); if (id === "own") patch({ environment: {} }); else if (preset !== undefined) patch({ environment: { airTempC: preset.environment.airTempC, meanRadiantTempC: preset.environment.meanRadiantTempC, relativeHumidity: preset.environment.relativeHumidity, windMS: preset.environment.windMS, solarWM2: preset.environment.solarWM2 } }); }} /></Bar>
           <SliderField label={t("viewer.env.air")} min={-30} max={45} step={0.5} value={environment.airTempC} text={`${formatNumber(environment.airTempC, 1, language)} °C`} onChange={(value) => setEnv("airTempC", value)} />
           <SliderField label={t("viewer.env.radiant")} min={-30} max={60} step={0.5} value={environment.meanRadiantTempC} text={`${formatNumber(environment.meanRadiantTempC, 1, language)} °C`} onChange={(value) => setEnv("meanRadiantTempC", value)} />
           <SliderField label={t("viewer.env.humidity")} min={0} max={100} step={1} value={Math.round(environment.relativeHumidity * 100)} text={`${Math.round(environment.relativeHumidity * 100)} %`} onChange={(value) => setEnv("relativeHumidity", value / 100)} />

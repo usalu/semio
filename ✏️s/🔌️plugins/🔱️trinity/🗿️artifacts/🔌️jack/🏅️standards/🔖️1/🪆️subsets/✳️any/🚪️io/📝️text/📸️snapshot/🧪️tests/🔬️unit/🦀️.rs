@@ -38,15 +38,13 @@ async fn dsl_round_trip_selected_child_fixture() {
 async fn dsl_round_trip_mini_fixture() {
     use crate::standards::v1::subsets::any::schema::graph::{Camera, Edge, Node, Port};
 use crate::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
-use crate::standards::v1::subsets::any::schema::manifest::Manifest;
 use semio_framework_graph_manifest::{PortDirection, PropertyBag, PropertyValue};
     use std::collections::BTreeMap;
 
     let fixture = JackSnapshot::with_content::<crate::test_support::FixtureComposition>(
         JackSnapshot::SCHEMA.into(),
         "mini".into(),
-        Some("nakagin".into()),
-        Manifest::nakagin_default(),
+        "nakagin".into(),
         Camera::default(),
         JackWorkingScene {
             nodes: vec![

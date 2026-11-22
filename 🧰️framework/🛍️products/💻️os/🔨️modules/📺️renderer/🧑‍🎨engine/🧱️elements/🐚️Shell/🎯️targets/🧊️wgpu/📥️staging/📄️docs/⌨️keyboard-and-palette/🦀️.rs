@@ -23,7 +23,7 @@ impl DocumentState {
             .app
             .keybindings
             .iter()
-            .find(|binding| binding.keys.split(',').map(|chord| chord.trim().to_ascii_lowercase()).filter(|chord| !chord.is_empty()).any(|chord| key_event_matches_chord(action, modifiers, &chord) && !reserved.contains(&chord)))
+            .find(|binding| semio_renderer_wgpu_shell_chrome_state::keybinding_override(&chrome.chrome_build.preferences.keybinding_overrides, &binding.action.action).unwrap_or(&binding.keys).split(',').map(|chord| chord.trim().to_ascii_lowercase()).filter(|chord| !chord.is_empty()).any(|chord| key_event_matches_chord(action, modifiers, &chord) && !reserved.contains(&chord)))
             .map(|binding| binding.action.clone())
     }
 }

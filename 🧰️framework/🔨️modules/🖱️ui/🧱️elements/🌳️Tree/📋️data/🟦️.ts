@@ -67,6 +67,7 @@ export function treeDataActivation(options: { readonly sectionId?: string; reado
 export interface TreeDataItem {
   id: string;
   label: React.ReactNode;
+  labelId?: string;
   icon?: React.ReactNode;
   description?: React.ReactNode;
   /** 🎛️ Inline control rendered in a property-style tree row. */

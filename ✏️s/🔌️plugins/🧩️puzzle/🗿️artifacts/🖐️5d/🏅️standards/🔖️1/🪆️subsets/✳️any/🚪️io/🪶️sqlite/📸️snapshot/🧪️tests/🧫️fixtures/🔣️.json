@@ -1,5 +1,6 @@
 {
   "dialect": "s.puzzle.puzzle5d@1/*",
+  "pagedPartCount": 37,
   "binary64Bits": [
     "0000000000000000",
     "8000000000000000",

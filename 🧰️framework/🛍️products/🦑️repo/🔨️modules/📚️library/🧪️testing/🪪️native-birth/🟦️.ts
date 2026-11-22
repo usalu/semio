@@ -1,7 +1,7 @@
 import { existsSync, realpathSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { declareBuildTestEnvelopeV1, registerBuildTestGrantIssuerV1, type BuildTestGrantIssuerV1, type BuildTestGrantV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/📥️invocation/🟦️.ts";
-import { processTestProtocolV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🗂️suites/🟦️.ts";
+import { processTestScratchParentV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🗂️suites/🟦️.ts";
 import { testSandboxEnvironmentV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
 import { createBuildBootstrapCapabilitiesV1 } from "../../🏗️build/📥️caller/📤️child/🟦️.ts";
 import { issueRepositoryScriptProvidersV1 } from "../../🏃️process/🔌️providers/🟦️.ts";
@@ -22,7 +22,7 @@ function nativeBirthEnvironmentV1(grant: BuildTestGrantV1, base: NodeJS.ProcessE
   let release = (): void => {};
   if (environment.SEMIO_TEST_ARTIFACT_DIR?.trim()) Object.assign(environment, repoTestArtifactEnvironment(root, "build-contract", environment));
   else {
-    const sandbox = testSandboxEnvironmentV1(environment, { route: "build-contract", checkout: root, ...(grant.scratch === "checkout" ? { parent: join(root, processTestProtocolV1.checkoutScratchDirectory) } : {}) });
+    const sandbox = testSandboxEnvironmentV1(environment, { route: "build-contract", checkout: root, ...(processTestScratchParentV1(root, grant.scratch) === undefined ? {} : { parent: processTestScratchParentV1(root, grant.scratch)! }) });
     Object.assign(environment, sandbox.environment);
     release = () => sandbox.release();
   }
@@ -51,7 +51,7 @@ const nativeBuildCallerIssuerV1: BuildTestGrantIssuerV1 = {
 registerBuildTestGrantIssuerV1("native-build-caller", nativeBuildCallerIssuerV1);
 
 /** 🪪️ Names the suite row a library test file belongs to: its id, which fixes the owner and the build command `@semio-tech/repo-lib:test-<suite>` whose grant the file is born with, and the scratch the row declares. @see ../../🏗️build/🗂️suites/🔣️.json */
-export type LibraryBuildTestEnvelopeV1 = Readonly<{ suite: string; scratch?: "sandbox" | "checkout"; maximumElapsedMilliseconds?: number }>;
+export type LibraryBuildTestEnvelopeV1 = Readonly<{ suite: string; scratch?: "sandbox" | "checkout" | "checkout-test"; maximumElapsedMilliseconds?: number }>;
 
 /** 🎫️ Declares the birth of a library test file: bare, the process is born with the native build caller grant of its suite target and a sandboxed artifact directory (so `bun test ./file` from the checkout gives the truth); beneath the official runner the inherited grant must be a genuine native build caller grant, else the birth is refused. */
 export function declareLibraryBuildTestEnvelopeV1(row: LibraryBuildTestEnvelopeV1): void {

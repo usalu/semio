@@ -82,5 +82,131 @@
         "value": "uniform"
       }
     ]
+  },
+  {
+    "id": "pipe-differential",
+    "entryId": "C98-19",
+    "labelEn": "Differential ground movement",
+    "labelDe": "Unterschiedliche Bodenbewegungen",
+    "numbers": [
+      {
+        "id": "pipe_deformation_radius",
+        "value": 0.4
+      },
+      {
+        "id": "pipe_deformation_thickness",
+        "value": 0.008
+      },
+      {
+        "id": "pipe_deformation_tension",
+        "value": 0.012
+      },
+      {
+        "id": "pipe_deformation_compression",
+        "value": 0.003
+      },
+      {
+        "id": "pipe_deformation_global",
+        "value": 0.85
+      }
+    ],
+    "texts": [
+      {
+        "id": "pipe_deformation_basis",
+        "value": "confirmed"
+      }
+    ]
+  },
+  {
+    "id": "pipe-fault-crossing",
+    "entryId": "C98-22",
+    "labelEn": "Pipe protection at a fault crossing",
+    "labelDe": "Rohrschutz an einer Verwerfungsquerung",
+    "numbers": [
+      {
+        "id": "pipe_fault_wall_a",
+        "value": 55
+      },
+      {
+        "id": "pipe_fault_wall_b",
+        "value": 50
+      },
+      {
+        "id": "pipe_fault_backfill_a",
+        "value": 50
+      },
+      {
+        "id": "pipe_fault_backfill_b",
+        "value": 55
+      },
+      {
+        "id": "pipe_fault_trench_a",
+        "value": 15
+      },
+      {
+        "id": "pipe_fault_trench_b",
+        "value": 16
+      }
+    ],
+    "texts": [
+      {
+        "id": "pipe_fault_basis",
+        "value": "confirmed"
+      },
+      {
+        "id": "pipe_fault_soil",
+        "value": "different"
+      }
+    ]
+  },
+  {
+    "id": "granular-silo",
+    "entryId": "C98-23",
+    "labelEn": "Seismic silo wall pressure",
+    "labelDe": "Seismischer Silowanddruck",
+    "numbers": [
+      {
+        "id": "silo_pressure_fill",
+        "value": 8
+      },
+      {
+        "id": "silo_pressure_width",
+        "value": 4
+      },
+      {
+        "id": "silo_pressure_height",
+        "value": 4
+      },
+      {
+        "id": "silo_pressure_acceleration",
+        "value": 0.5
+      },
+      {
+        "id": "silo_pressure_weight",
+        "value": 8000
+      },
+      {
+        "id": "silo_pressure_azimuth",
+        "value": 180
+      },
+      {
+        "id": "silo_pressure_static",
+        "value": 10000
+      }
+    ],
+    "texts": [
+      {
+        "id": "silo_pressure_basis",
+        "value": "confirmed"
+      },
+      {
+        "id": "silo_pressure_section",
+        "value": "flat-bottom"
+      },
+      {
+        "id": "silo_pressure_wall",
+        "value": "circular"
+      }
+    ]
   }
 ]

@@ -1,5 +1,5 @@
 /** 🏔️ Actual GIS terrain package boundary preserves exact words and independent child identities. */
-import {gisTerrainSnapshotToSqliteDatabase,gisTerrainSnapshotFromSqliteDatabase,validateGisTerrainSnapshotSqliteDialect,type GisTerrainArtifact} from "@semio-tech/gis-gisterrain";
+import {gisTerrainSnapshotToSqliteDatabase,gisTerrainSnapshotFromSqliteDatabase,validateGisTerrainSnapshotSqliteDialect,type GisTerrainArtifact} from "../../../../🟦️.ts";
 import {exportSqliteDatabase,importSqliteDatabase} from "@semio-tech/framework";
 import {Database} from "bun:sqlite";
 import {expect,test} from "bun:test";
@@ -26,18 +26,18 @@ test("GIS terrain public package preserves signaling NaN and separately owned me
 test("GIS elevation samples are normalized, ordered and independently editable in SQLite", async () => {
  const snapshot: GisTerrainArtifact = {
   exaggeration: {bits: 0x3ff0000000000000n},
-  elevationSource: {bounds: [-0, 0, 0.04, 0.04], rows: liege.rows},
+  elevationSource: {bounds: [-0, 0, 0.04, 0.04], rowsMillimetres: liege.rowsMillimetres},
  };
  const oracle = Database.deserialize(await exportSqliteDatabase(await gisTerrainSnapshotToSqliteDatabase(snapshot)));
  try {
   expect(oracle.query("PRAGMA foreign_key_check").all()).toEqual([]);
   expect(oracle.query("SELECT printf('%016x',west_ieee754_bits) AS word FROM gis_terrain_elevation_source").get()).toEqual({word: "8000000000000000"});
-  expect(oracle.query("SELECT count(*) AS samples,min(elevation_meters) AS low,max(elevation_meters) AS high FROM gis_terrain_elevation_sample").get()).toEqual({samples: 1089, low: 47, high: 252});
+  expect(oracle.query("SELECT count(*) AS samples,min(elevation_millimetres) AS low,max(elevation_millimetres) AS high FROM gis_terrain_elevation_sample").get()).toEqual({samples: 1089, low: 47_000, high: 252_000});
   const unedited = await importSqliteDatabase(oracle.serialize());
   expect(await validateGisTerrainSnapshotSqliteDialect(snapshot, fixture.dialect, unedited)).toEqual([]);
-  oracle.query("UPDATE gis_terrain_elevation_sample SET elevation_meters = -32768 WHERE ordinal = 34").run();
+  oracle.query("UPDATE gis_terrain_elevation_sample SET elevation_millimetres = -2147483648 WHERE ordinal = 34").run();
   const edited = await gisTerrainSnapshotFromSqliteDatabase(await importSqliteDatabase(oracle.serialize()));
-  expect(edited.elevationSource?.rows[1]?.[1]).toBe(-32768);
+  expect(edited.elevationSource?.rowsMillimetres[1]?.[1]).toBe(-2147483648);
   expect(Object.is(edited.elevationSource?.bounds[0], -0)).toBe(true);
   oracle.query("DELETE FROM gis_terrain_elevation_sample WHERE ordinal = 1088").run();
   await expect(gisTerrainSnapshotFromSqliteDatabase(await importSqliteDatabase(oracle.serialize()))).rejects.toThrow("sample count");

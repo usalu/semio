@@ -29,21 +29,30 @@ function canonicalBootstrapMirrorStatus(error: unknown): number {
 }
 
 function collectBackboneRequestBody(req: BackboneServerRequest, limit: number, complete: (body: Uint8Array | null) => void): void {
+  const header = req.headers?.["content-length"];
+  const declared = typeof header === "string" ? Number(header) : Number.NaN;
+  const exact = Number.isSafeInteger(declared) && declared >= 0 && declared <= limit ? new Uint8Array(declared) : null;
   const chunks: Buffer[] = [];
   let length = 0;
   let exceeded = false;
   req.on("data", (chunk) => {
     if (exceeded) return;
     const bytes = Buffer.isBuffer(chunk) ? chunk : Buffer.from(String(chunk));
-    length += bytes.byteLength;
-    if (length > limit) {
+    if (length + bytes.byteLength > limit || (exact !== null && length + bytes.byteLength > exact.length)) {
       exceeded = true;
       chunks.length = 0;
       return;
     }
-    chunks.push(bytes);
+    if (exact !== null) exact.set(bytes, length);
+    else chunks.push(bytes);
+    length += bytes.byteLength;
   });
-  req.on("end", () => complete(exceeded ? null : new Uint8Array(Buffer.concat(chunks))));
+  req.on("end", () => {
+    if (exceeded) return complete(null);
+    if (exact !== null) return complete(length === exact.length ? exact : null);
+    const joined = Buffer.concat(chunks);
+    complete(new Uint8Array(joined.buffer, joined.byteOffset, joined.byteLength));
+  });
 }
 
 /** 💾️ Vite middleware for browser file/folder backbone IO: `GET|PUT ${BACKBONE_ENDPOINT_PATH}?uri=&documentId=&schema=`
@@ -133,7 +142,7 @@ export function semioBackboneVitePlugin() {
               }
               res.statusCode = 200;
               res.setHeader("content-type", "application/octet-stream");
-              res.end(Buffer.from(payload));
+              res.end(Buffer.from(payload.buffer, payload.byteOffset, payload.byteLength));
             })
             .catch((error) => {
               res.statusCode = 500;

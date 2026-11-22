@@ -10,7 +10,8 @@
         "maximumLockBytes": 4194304,
         "maximumPackages": 8192,
         "maximumReceiptBytes": 262144,
-        "registryCache": "registry/cache"
+        "registryCache": "registry/cache",
+        "registrySource": "registry/src"
       }
     },
     "Receipt": {

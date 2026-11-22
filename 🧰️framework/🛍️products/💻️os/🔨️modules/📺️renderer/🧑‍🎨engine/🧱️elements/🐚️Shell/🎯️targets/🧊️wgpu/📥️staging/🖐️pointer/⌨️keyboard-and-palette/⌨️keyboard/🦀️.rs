@@ -82,7 +82,7 @@ impl<'ctx> PointerCtx<'ctx> {
             if let Some(step) = self.docs.chrome_tour_active_step(&self.chrome) {
                 match action {
                     semio_ui_wgpu_input::KeyAction::Escape => {
-                        if let Some(seen_key) = self.docs.introduction_seen_key() {
+                        if let Some(seen_key) = self.docs.chrome_tour_seen_key(&self.chrome) {
                             self.chrome.chrome_build.dismiss_introduction(&seen_key);
                         } else {
                             self.chrome.chrome_build.skip_introduction();
@@ -310,7 +310,7 @@ impl<'ctx> PointerCtx<'ctx> {
     pub async fn handle_keyboard_async(&mut self, action: semio_ui_wgpu_input::KeyAction, modifiers: &PointerModifiers, input: &mut InputState<ActionDescriptor>) -> Result<(), String> {
         let can_abort_world_gesture = |state: &infinite_world::world::World3dState| {
             state.authority.handle_drag_armed()
-                || state.terrain.terrain_brush().is_some() && state.authority.terrain_stroke_armed()
+                || state.terrain.terrain_pointer_utility_active() && state.authority.terrain_stroke_armed()
         };
         if action == semio_ui_wgpu_input::KeyAction::Escape && self.surfaces.world3d_states.values().any(can_abort_world_gesture) {
             for state in self.surfaces.world3d_states.values_mut().filter(|state| can_abort_world_gesture(state)) {
@@ -385,6 +385,9 @@ impl<'ctx> PointerCtx<'ctx> {
         }
         if is_context_menu_chord(&action, modifiers) && !content_is_editing(input.focused_id.as_deref(), self.sync.sync_card_kind.is_some()) && self.dock.dock_drag.is_none() {
             let (x, y) = self.keyboard_context_menu_anchor(input);
+            if self.open_world3d_suggestions_at(x, y).await? {
+                return Ok(());
+            }
             let hit = input.hit_at(x, y).cloned();
             self.open_context_menu(x, y, hit).await;
             self.settle.owe_settle();
@@ -462,7 +465,7 @@ impl<'ctx> PointerCtx<'ctx> {
                 .resolved_commands(&self.chrome, &self.plugins)
                 .into_iter()
                 .rev()
-                .find(|entry| entry.definition.in_palette && entry.definition.keybindings.iter().any(|binding| binding.platform.is_none_or(|declared| declared == platform) && key_event_matches_chord(&action, modifiers, &binding.chord)));
+                .find(|entry| entry.definition.in_palette && semio_renderer_wgpu_shell_chrome_state::command_active_chords(&entry.definition, platform, &self.chrome.chrome_build.preferences.keybinding_overrides).iter().any(|chord| key_event_matches_chord(&action, modifiers, chord)));
             if let Some(entry) = command {
                 if entry.definition.args.is_empty() {
                     if matches!(entry.address.owner, semio_framework::manifest::CommandOwnerAddress::Os) {
@@ -481,8 +484,34 @@ impl<'ctx> PointerCtx<'ctx> {
         }
         if idle {
             if let Some((surface, node)) = self.as_session().retained_keyboard_focus() {
+                if let Some(target) = semio_renderer_wgpu_ui_engine::retained_ui_engine::retained_scene_target(&surface, node) {
+                    let (key, space) = match &action {
+                        semio_ui_wgpu_input::KeyAction::Char(text) => (text.as_str(), false),
+                        semio_ui_wgpu_input::KeyAction::Space(true) => (" ", true),
+                        semio_ui_wgpu_input::KeyAction::Enter => ("Enter", false),
+                        semio_ui_wgpu_input::KeyAction::ArrowLeft => ("ArrowLeft", false),
+                        semio_ui_wgpu_input::KeyAction::ArrowRight => ("ArrowRight", false),
+                        semio_ui_wgpu_input::KeyAction::ArrowUp => ("ArrowUp", false),
+                        semio_ui_wgpu_input::KeyAction::ArrowDown => ("ArrowDown", false),
+                        _ => ("", false),
+                    };
+                    if semio_renderer_wgpu_ui_engine::retained_ui_engine::retained_map_retry_key(&target, key) {
+                        self.settle.owe_settle();
+                        return Ok(());
+                    }
+                    let locale = if format!("{:?}", self.prefs.active_locale()).eq_ignore_ascii_case("de") { "de" } else { "en" };
+                    let pixel_key = semio_renderer_wgpu_engine_board::paint2d::PixelKeyInput { key, space, shift: modifiers.shift, alt: modifiers.alt, ctrl: modifiers.ctrl, meta: modifiers.meta, repeat: modifiers.repeat };
+                    if !key.is_empty() && semio_renderer_wgpu_ui_engine::retained_ui_engine::retained_paint2d_key(&target, pixel_key, locale, input).map_err(|fault| format!("paint2d key refused: {fault:?}"))? {
+                        self.settle.owe_settle();
+                        return Ok(());
+                    }
+                }
+            }
+        }
+        if idle {
+            if let Some((surface, node)) = self.as_session().retained_keyboard_focus() {
                 debug_log(&format!("[TRACE] wgpu-shell key routing surface={surface} node={node:?} action={action:?}"));
-                let focused_select = semio_renderer_wgpu_ui_engine::retained_ui_engine::retained_node_is_select(&surface, node);
+                let focused_select = semio_renderer_wgpu_ui_engine::retained_ui_engine::retained_node_is_select(&surface, node) || semio_renderer_wgpu_ui_engine::retained_ui_engine::retained_node_is_tree_row(&surface, node);
                 if let Some(event) = ui_event_from_key_action(&action, modifiers, focused_select) {
                     let commands = semio_renderer_wgpu_ui_engine::retained_ui_engine::dispatch_ui_event(&surface, event, input);
                     self.chrome.chrome_build.note_content_focus_commands(&commands);
@@ -528,6 +557,20 @@ impl<'ctx> PointerCtx<'ctx> {
         self.as_actions().drain_gesture_bound_work().await;
         self.settle.owe_settle();
         Ok(())
+    }
+
+    /// 🌪️ Asks for the hovered vortex marker's suggestions at `(x, y)` on a world surface, announcing the localized "no marker is focused" notice when none is — React's `openSuggestionsAt`. `false` when `(x, y)` is no world surface.
+    pub async fn open_world3d_suggestions_at(&mut self, x: f32, y: f32) -> Result<bool, String> {
+        let Some(suggestions) = self.input.world3d_suggestions_request(x, y, &self.surfaces, true) else { return Ok(false) };
+        match suggestions {
+            Some(action) => self.as_actions().dispatch_action(action).await?,
+            None => {
+                let is_de = self.prefs.locale_id == "de";
+                self.chrome.show_transient_notice(shell_chrome_string("world3d.suggestions.noTarget", is_de).to_string(), semio_framework::Severity::Info, Some("shell.world3d-suggestions.no-target"));
+            }
+        }
+        self.settle.owe_settle();
+        Ok(true)
     }
 
     /// 🖐️ A recognised touch gesture of a surface (a long press released in place, a double tap): offered to the plugin's touch hook and answered like a key, as an app action, an interaction selection or a framework verb.

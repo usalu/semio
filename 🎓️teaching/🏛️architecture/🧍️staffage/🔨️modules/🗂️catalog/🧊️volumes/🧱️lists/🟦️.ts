@@ -31,7 +31,7 @@ export function solidsOf(volume: AuthoredVolume, list: VolumeList): readonly Vol
     }
     const target = body.get((solid as { of: string }).of);
     if (target === undefined) continue;
-    const { sectionFaces: _bodyFaces, slender: _bodySlender, ...shape } = target;
+    const { sectionFaces: _bodyFaces, slender: _bodySlender, sheet: _bodySheet, ...shape } = target;
     const faces = (solid as { sectionFaces?: VolumeSolid["sectionFaces"] }).sectionFaces;
     out.push({ ...shape, id: solid.id, ...(faces === undefined ? {} : { sectionFaces: faces }) } as VolumeSolid);
   }

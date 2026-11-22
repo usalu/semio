@@ -14,31 +14,33 @@ fn controlled_forecast_stops_before_the_denied_field(){
  assert_eq!(error.kind,ValueRefusalKind::WorkLimit);assert_eq!(attempted,3);assert_eq!(performed,2);
 }
 
-/// 🎟️ This finite lower-level loan exercises the actual native control, independently of job caller tests.
-struct DecodeLoan(u64);
-impl semio_framework_value::native_decoding::NativeDecodeWorkRecipient for DecodeLoan{fn available_work(&mut self,observed:u64)->Result<u64,ValueError>{let limit:u64=self.0;limit.checked_sub(observed).ok_or_else(||ValueError::invariant("native observed work exceeds its actual finite scope"))}fn admits(&mut self,observed:u64,additional:u64)->Result<bool,ValueError>{Ok(observed.checked_add(additional).is_some_and(|value|value<=self.0))}}
-struct EncodeLoan{limit:u64,posted:u64}
-impl semio_framework_value::native_encoding::NativeEncodeWorkRecipient for EncodeLoan{
- fn admits(&mut self,observed:u64,additional:u64)->Result<bool,ValueError>{Ok(observed.checked_add(additional).is_some_and(|value|value<=self.limit))}
- fn committed(&mut self,actual:u64)->Result<(),ValueError>{self.posted=self.posted.checked_add(actual).filter(|value|*value<=self.limit).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"finite forecast encoding loan"))?;Ok(())}
+/// 🎟️ This finite recipient exercises the actual native work loans, independently of job caller tests.
+struct FiniteWork(u64);
+impl semio_framework_value::native_decoding::OriginalWorkRecipient for FiniteWork{
+ type Context<'turn,'source>=() where 'source:'turn;
+ fn validate_context<'turn,'source>(&self,_:&())->Result<(),ValueError> where 'source:'turn{Ok(())}
+ fn source_turn<'turn,'source>(&self,_:&())->Option<semio_framework_value::native_decoding::OriginalSourceTurnIdentity> where 'source:'turn{None}
+ fn admits<'reply,'turn,'source>(&mut self,_:&mut (),quote:semio_framework_value::native_decoding::OriginalWorkQuote<'reply>,observed:u64,additional:u64)->semio_framework_value::native_decoding::OriginalWorkQuoteComplete<'reply> where 'source:'turn{quote.complete(Ok(observed.checked_add(additional).is_some_and(|value|value<=self.0)))}
+ fn settle_partial<'reply,'turn,'source>(&mut self,_:&mut (),check:semio_framework_value::native_decoding::OriginalWorkPartialCheck<'reply>)->semio_framework_value::native_decoding::OriginalWorkPartialCheckComplete<'reply> where 'source:'turn{check.complete(Ok(()))}
+ fn recover_partial<'reply,'turn,'source>(&mut self,_:&mut (),check:semio_framework_value::native_decoding::OriginalWorkPartialCheck<'reply>)->semio_framework_value::native_decoding::OriginalWorkPartialCheckComplete<'reply> where 'source:'turn{check.pending()}
 }
 #[test]
 fn forecast_debits_the_original_decode_and_encode_actions(){
  for limit in [2u64,5]{
-  let mut observer=|_|true;let mut native=semio_framework_value::NativeDecodeControl::new(0,&mut observer);let mut loan=DecodeLoan(limit);let mut selected=0u64;
-  let result=native.with_work_recipient(&mut loan,|native| {
+  let mut observer=|_|true;let mut native=semio_framework_value::NativeDecodeControl::new(0,&mut observer);let mut authority=semio_framework_value::native_decoding::OriginalWorkAuthority::new(FiniteWork(limit));let mut selected=0u64;
+  let result=authority.with_loan(&mut (),|loan|native.with_work_recipient(loan,|native| {
    let mut sql_observer=|_|true;let mut sql=SqliteSnapshotControl::new(&mut sql_observer,SqliteDatabaseLimits::default());
    let mut action=||{native.checkpoint()?;if !native.prepare_work(1)?{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"forecast decoding denied"))}let result=native.commit_work(1);selected+=1;result};
    let mut writer=RowWriter::forecast_controlled(&mut sql,SqliteSnapshotPhase::DecodeNative,&mut action)?;writer.work()?;writer.insert_float("node",&[Cell::Text("a"),Cell::Real(1.)],&[FloatColumn::Binary64(2)])?;writer.finish_forecast(1)
-  });
-  assert_eq!(selected,limit);assert_eq!(native.actual_work(),selected);assert_eq!(result.is_ok(),limit==5);if let Err(error)=result{assert_eq!(error.kind,ValueRefusalKind::WorkLimit)}
-  let mut observer=|_|true;let mut native=semio_framework_value::NativeEncodeControl::new(0,&mut observer);let mut loan=EncodeLoan{limit,posted:0};let mut selected=0u64;
-  let result=native.with_work_recipient(&mut loan,|native| {
+  })).unwrap();
+  assert_eq!(selected,limit);assert_eq!(native.actual_work(),u128::from(selected));assert_eq!(result.is_ok(),limit==5);if let Err(error)=result{assert_eq!(error.kind,ValueRefusalKind::WorkLimit)}
+  let mut observer=|_|true;let mut native=semio_framework_value::NativeEncodeControl::new(0,&mut observer);let mut authority=semio_framework_value::native_decoding::OriginalWorkAuthority::new(FiniteWork(limit));let mut selected=0u64;
+  let result=authority.with_loan(&mut (),|loan|native.with_work_recipient(loan,|native| {
    let mut sql_observer=|_|true;let mut sql=SqliteSnapshotControl::new(&mut sql_observer,SqliteDatabaseLimits::default());
    let mut action=||{native.checkpoint()?;if !native.prepare_work(1)?{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"forecast encoding denied"))}let result=native.commit_work(1);selected+=1;result};
    let mut writer=RowWriter::forecast_controlled(&mut sql,SqliteSnapshotPhase::EncodeNative,&mut action)?;writer.work()?;writer.insert_float("node",&[Cell::Text("a"),Cell::Real(1.)],&[FloatColumn::Binary64(2)])?;writer.finish_forecast(1)
-  });
-  assert_eq!(selected,limit);assert_eq!(native.actual_work(),selected);assert_eq!(loan.posted,selected);assert_eq!(result.is_ok(),limit==5);if let Err(error)=result{assert_eq!(error.kind,ValueRefusalKind::WorkLimit)}
+  })).unwrap();
+  assert_eq!(selected,limit);assert_eq!(native.actual_work(),u128::from(selected));assert_eq!(result.is_ok(),limit==5);if let Err(error)=result{assert_eq!(error.kind,ValueRefusalKind::WorkLimit)}
  }
 }
 

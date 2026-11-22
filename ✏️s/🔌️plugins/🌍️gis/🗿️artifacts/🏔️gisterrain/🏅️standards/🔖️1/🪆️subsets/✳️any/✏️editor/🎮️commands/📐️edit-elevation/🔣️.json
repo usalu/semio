@@ -5,12 +5,43 @@
   "additionalProperties": false,
   "required": ["operation", "column", "row", "radius", "value"],
   "properties": {
-    "operation": { "enum": ["set-sample", "raise-lower", "flatten", "smooth", "offset"] },
-    "column": { "type": "integer", "minimum": 0, "maximum": 32 },
-    "row": { "type": "integer", "minimum": 0, "maximum": 32 },
-    "radius": { "type": "integer", "minimum": 0, "maximum": 32 },
-    "value": { "type": "integer", "minimum": -32768, "maximum": 32767 }
+    "operation": { "enum": ["set-sample", "raise-lower", "flatten", "smooth", "offset", "fill-missing"] },
+    "column": { "$ref": "#/definitions/sampleIndex" },
+    "row": { "$ref": "#/definitions/sampleIndex" },
+    "radius": { "$ref": "#/definitions/sampleIndex" },
+    "value": { "type": "number" },
+    "stroke": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64,
+      "items": {
+        "type": "array",
+        "minItems": 2,
+        "maxItems": 2,
+        "items": { "$ref": "#/definitions/sampleIndex" }
+      },
+      "description": "Ordered [column, row] brush anchors for raising, lowering or smoothing. The first anchor must match the command coordinates. The expanded stroke is limited to 64 stamps and the anchors must fit the current grid."
+    }
   },
-  "if": { "properties": { "operation": { "const": "smooth" } } },
-  "then": { "properties": { "value": { "type": "integer", "minimum": 0, "maximum": 100 } } }
+  "allOf": [
+    {
+      "if": { "properties": { "operation": { "const": "smooth" } } },
+      "then": { "properties": { "value": { "type": "integer", "minimum": 0, "maximum": 100 } } },
+      "else": { "properties": { "value": { "$ref": "#/definitions/metres" } } }
+    },
+    {
+      "if": { "required": ["stroke"] },
+      "then": { "properties": { "operation": { "enum": ["raise-lower", "smooth"] } } }
+    }
+  ],
+  "definitions": {
+    "sampleIndex": { "type": "integer", "minimum": 0, "maximum": 64 },
+    "metres": {
+      "type": "number",
+      "minimum": -2147483.648,
+      "maximum": 2147483.647,
+      "multipleOf": 0.001,
+      "description": "Elevation or elevation change in metres, represented internally by signed millimetres."
+    }
+  }
 }

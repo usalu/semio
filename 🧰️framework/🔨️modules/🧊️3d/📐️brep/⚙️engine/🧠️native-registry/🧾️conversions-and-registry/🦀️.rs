@@ -150,9 +150,9 @@ impl BrepRegistry {
         }
     }
 
-    pub fn invalidate_solid_primitive(&mut self, handle: &GeometryHandle) {
+    pub fn invalidate_solid_primitive(&mut self, handle: &str) {
         self.shape_mutation_revision = self.shape_mutation_revision.checked_add(1).expect("native shape mutation revision");
-        if let Some(Entity::Solid(_, primitive)) = self.live.get_mut(handle.as_str()) {
+        if let Some(Entity::Solid(_, primitive)) = self.live.get_mut(handle) {
             if primitive.take().is_some() { self.advance_live_revision(); }
         }
     }

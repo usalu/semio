@@ -1,0 +1,26 @@
+{
+  "contract": "release-browser-transpile-key/v1",
+  "component": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "base": "semio_hub_procedural_component",
+  "tools": {
+    "base": "semio_hub_procedural_component",
+    "materialization": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "native-transpile": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+  },
+  "cases": [
+    { "id": "native-v2", "version": 2, "accepted": true },
+    { "id": "native-v1", "version": 1, "tools": { "jco": "1.39.0" }, "accepted": true },
+    { "id": "jco-v1", "version": 1, "tools": { "jco": "1.39.0" }, "removeTool": "native-transpile", "accepted": true },
+    { "id": "unknown-version", "version": 3, "accepted": false },
+    { "id": "wrong-stage", "version": 2, "stage": "optimize", "accepted": false },
+    { "id": "extra-input", "version": 2, "inputs": { "unchecked": "aaaa" }, "accepted": false },
+    { "id": "different-raw-component", "version": 2, "inputs": { "component": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb" }, "accepted": false },
+    { "id": "different-package", "version": 2, "tools": { "base": "semio_hub_process_component" }, "accepted": false },
+    { "id": "extra-jco-in-v2", "version": 2, "tools": { "jco": "1.39.0" }, "accepted": false },
+    { "id": "missing-native-in-v2", "version": 2, "removeTool": "native-transpile", "accepted": false },
+    { "id": "invalid-native-digest", "version": 2, "tools": { "native-transpile": "malformed" }, "accepted": false },
+    { "id": "missing-jco-in-v1", "version": 1, "accepted": false },
+    { "id": "empty-jco-identity", "version": 1, "tools": { "jco": "" }, "accepted": false },
+    { "id": "invalid-materializer-digest", "version": 1, "tools": { "jco": "1.39.0", "materialization": "malformed" }, "accepted": false }
+  ]
+}

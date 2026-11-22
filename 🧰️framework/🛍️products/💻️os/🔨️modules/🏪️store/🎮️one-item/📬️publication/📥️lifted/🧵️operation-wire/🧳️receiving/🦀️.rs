@@ -3,7 +3,10 @@ use super::ArtifactOperationWire;
 use semio_framework_value::{ArtifactOwnedValueRetirementFactory,DslValue,OriginalRetirementPoll,RetirementDemand,ValueError,ValueRefusalKind,RetainedAllocationEffect,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedOwnedProjection,RetainedWorkOutcome,RetainedWorkPoll};
 use semio_framework_value_native_owned::native_decoding::{NativeDecodeControl,NativeRetirementDecodeControl,NativeReceive,NativeReceivingFailure,OriginalReceivingPrimary};
 use semio_framework_pack_json::{OriginalJsonReceiving,ArtifactCanonicalJsonTree};
+use semio_framework_dsl_record::native_encoding::FieldProjectionSource;
 use std::{mem::size_of,sync::Arc};
+#[path="pack-value.rs"]
+mod pack_value;
 /// 📬️ The concrete vocabulary keeps its native parser, typed receiver and issuer until explicit closure.
 pub trait ArtifactOriginalOperationReceiving<M>:Send{
  fn demands(&self,body:usize)->Result<RetirementDemand,ValueError>;
@@ -20,7 +23,7 @@ pub trait ArtifactOriginalOperationReceiving<M>:Send{
  fn terminal_is_empty(&self)->bool;
  fn allocation_bytes(&self)->usize;
 }
-pub struct OriginalOperationReceivingAdmission<M>{pub batch_retirement:crate::lifted_member_owned_batch::BatchRetirementIssuer<M>,pub demands:fn()->RetirementDemand,pub admit:fn(&mut Option<RetainedOwnedProjection<Vec<u8>>>,&mut Option<Box<dyn ArtifactOriginalOperationReceiving<M>>>,&Arc<dyn ArtifactOwnedValueRetirementFactory<M>>,&mut NativeDecodeControl<'_>,RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>}
+pub struct OriginalOperationReceivingAdmission<M>{pub batch_retirement:crate::lifted_member_owned_batch::BatchRetirementIssuer<M>,pub demands:fn()->RetirementDemand,pub admit:fn(&mut Option<RetainedOwnedProjection<Vec<u8>>>,&mut Option<Box<dyn ArtifactOriginalOperationReceiving<M>>>,&Arc<dyn ArtifactOwnedValueRetirementFactory<M>>,&mut NativeDecodeControl<'_>,RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>,pack_value:Option<for<'a> fn(&'a M)->&'a dyn FieldProjectionSource>}
 impl<M> Copy for OriginalOperationReceivingAdmission<M>{}
 impl<M> Clone for OriginalOperationReceivingAdmission<M>{fn clone(&self)->Self{*self}}
 impl<M:NativeReceive<DslValue>+ArtifactCanonicalJsonTree+Send+Sync+'static> ArtifactOriginalOperationReceiving<M> for OriginalJsonReceiving<M>{
@@ -45,7 +48,7 @@ fn admit<M:NativeReceive<DslValue>+ArtifactCanonicalJsonTree+Send+Sync+'static>(
 }
 impl<M:NativeReceive<DslValue>+ArtifactCanonicalJsonTree+Send+Sync+'static> ArtifactOperationWire<M>{
  /// 🧬️ Registration binds one actual typed receiving implementation to this wire vocabulary.
- pub fn with_original_receiving(mut self)->Self{self.original_receiving=Some(OriginalOperationReceivingAdmission{batch_retirement:crate::lifted_member_owned_batch::BatchRetirementIssuer::typed(),demands:demands::<M>,admit:admit::<M>});self}
+ pub fn with_original_receiving(mut self)->Self{self.original_receiving=Some(OriginalOperationReceivingAdmission{batch_retirement:crate::lifted_member_owned_batch::BatchRetirementIssuer::typed(),demands:demands::<M>,admit:admit::<M>,pack_value:None});self}
 }
 
 #[path="🔢️binary/🦀️.rs"]
@@ -54,6 +57,18 @@ pub use binary::OriginalBinaryReceiving;
 impl<M:protocol::OpBinaryReceiving+Send+Sync+'static> ArtifactOperationWire<M> where M::Receiving:Send{
  /// 🔢️ Registration binds the vocabulary's own binary receiving cursor for persisted operations; the installer names the encoding, the receiver never sniffs bytes.
  pub fn with_original_binary_receiving(mut self)->Self{self.original_receiving=Some(OriginalOperationReceivingAdmission::binary(crate::lifted_member_owned_batch::BatchRetirementIssuer::typed()));self}
+}
+impl<M:protocol::OpBinaryReceiving+ArtifactCanonicalJsonTree+Send+Sync+'static> ArtifactOperationWire<M> where M::Receiving:Send{
+ /// 🎒️ Pairs a vocabulary's full Pack Value OpBinary decoder with its original typed comparison projection.
+ pub fn with_original_pack_value_receiving(self)->Self{
+  let mut wire=self.with_original_binary_receiving();
+  wire.original_receiving.as_mut().unwrap().pack_value=Some(pack_value::source::<M>);
+  wire
+ }
+}
+impl<M> ArtifactOperationWire<M>{
+ /// 🔍️ Borrows the registered Pack Value comparison projection without changing the Store publication codec.
+ pub fn original_pack_value<'a>(&self,mutation:&'a M)->Option<&'a dyn FieldProjectionSource>{self.original_receiving.as_ref()?.pack_value.map(|project|project(mutation))}
 }
 /// 🧬️ A mutation vocabulary declares how its persisted operations are encoded and installs the matching original receiving on its operation wire; the Store installs it once for every vocabulary, so persisted history with supersessions replays.
 pub trait ArtifactPersistedOperation:Sized+Send+Sync+'static{

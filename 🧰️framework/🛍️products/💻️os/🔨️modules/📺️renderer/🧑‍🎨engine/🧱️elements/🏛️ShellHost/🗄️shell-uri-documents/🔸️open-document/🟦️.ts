@@ -22,6 +22,7 @@ export function useOpenDocument({ resolveSyncTargetSession, loadedPlugins, ensur
    * are used by the manual persistence picker. Local documents never inherit the current route. */
   const openDocument = useCallback(
     async (ref: DocumentOpeningReference, bindings?: readonly PersistenceBinding[], target?: OpenDocumentSessionTarget): Promise<DocumentOpeningReceiptV1 | null> => {
+      if (target?.current?.() === false) return null;
       const documentTarget = resolveDocumentOpeningTarget(target, resolveSyncTargetSession(), loadedPlugins);
       if (!documentTarget) return null;
       const { session: targetSession, plugin } = documentTarget;
@@ -49,10 +50,11 @@ export function useOpenDocument({ resolveSyncTargetSession, loadedPlugins, ensur
         const archive = await readOwnedDocumentArchiveV1(plugin, entry, runtimeKey, openDocumentSessionsRef.current);
         if (archive === null) return;
         const archiveBytes = encodeDocumentArchiveBytes(archive);
-        worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "send", documentId: entry.documentId, clientInstanceId: entry.clientInstanceId, ...(entry.scope === undefined ? {} : { spaceId: entry.scope.spaceId }), message: { kind: "localDocumentArchive", archive: Array.from(archiveBytes) } }) });
+        const wire = encodeBackboneWorkerRequest({ kind: "send", documentId: entry.documentId, clientInstanceId: entry.clientInstanceId, ...(entry.scope === undefined ? {} : { spaceId: entry.scope.spaceId }), message: { kind: "localDocumentArchive", archive: archiveBytes } });
+        worker.postMessage({ wire }, [wire.buffer]);
       });
       const entry: OpenDocumentSession = { openingReference: { ...ref }, persistenceBindings: [...resolvedBindings], session: targetSession, plugin, documentId: ref.documentId, clientInstanceId, ...(scope === undefined ? {} : { scope }), port: null, pending: [], pendingBytes: 0, replacements: new LatestDocumentReplacementV1(), persistence, readBack: new FolderReadBackRouteV1<DocumentArchivePack>(persistence), creationMount, ready, resolveReady, rejectReady };
-      const parked = parkDocumentOpeningReplacementV1({ runtimeKey, plugin, instanceId: targetSession.instanceId, background: target?.background === true }, openDocumentSessionsRef.current, entry);
+      const parked = parkDocumentOpeningReplacementV1({ runtimeKey, plugin, instanceId: targetSession.instanceId, background: target?.background === true, predecessorClientInstanceId: target?.predecessorClientInstanceId }, openDocumentSessionsRef.current, entry);
       if (parked === null) return null;
       const predecessorActor = browserActorUiByRuntimeKeyRef.current.get(runtimeKey);
       if (predecessorActor !== undefined && predecessorActor.clientInstanceId !== clientInstanceId) {
@@ -76,7 +78,7 @@ export function useOpenDocument({ resolveSyncTargetSession, loadedPlugins, ensur
       const uri = `actor://${runtimeKey}`;
       const committed = await runDocumentOpeningAttemptV1({
         deadlineMs: documentOpeningDeadlineMs(),
-        current: () => openDocumentSessionsRef.current.get(runtimeKey) === entry && entry.creationMount?.current() !== false,
+        current: () => target?.current?.() !== false && openDocumentSessionsRef.current.get(runtimeKey) === entry && entry.creationMount?.current() !== false,
         socket: async () => {
           worker.postMessage({ wire: encodeBackboneWorkerRequest(request) });
           postBrowserActorViewState(worker, entry, targetSession);

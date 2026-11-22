@@ -1,0 +1,75 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Segmented PDF natural file source",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mediaSide",
+    "imageSide",
+    "shellCommandBytes",
+    "grayscale",
+    "rotation",
+    "sourceBytes",
+    "sourceSha256",
+    "headerOffset",
+    "version",
+    "catalogOffset",
+    "xrefOffset"
+  ],
+  "properties": {
+    "mediaSide": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "imageSide": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "shellCommandBytes": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "grayscale": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 255
+      }
+    },
+    "rotation": {
+      "enum": [
+        90,
+        180,
+        270
+      ]
+    },
+    "sourceBytes": {
+      "type": "integer",
+      "minimum": 8388609
+    },
+    "sourceSha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "headerOffset": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 1023
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+$"
+    },
+    "catalogOffset": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "xrefOffset": {
+      "type": "integer",
+      "minimum": 8388609
+    }
+  }
+}

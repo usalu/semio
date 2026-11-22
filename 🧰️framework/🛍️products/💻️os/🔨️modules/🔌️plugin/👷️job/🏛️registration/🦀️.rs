@@ -58,11 +58,11 @@ impl DeclaredToolCatalogAlias{
  }
  pub fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{
   if self.retirement.is_some(){return semio_plugin_ownership::bounded_ownership::plugin_settle_value(store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement,effect.grant().maximum_copy_bytes,effect))}
-  let grant=effect.grant();let d=self.close_demands(grant.maximum_copy_bytes)?;
-  if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,d){return Ok(RetainedCloneStep::Progress(Default::default()))}
+  let grant=effect.grant();
+  if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,self.close_demands(grant.maximum_copy_bytes)?){return Ok(RetainedCloneStep::Progress(Default::default()))}
+  if self.original.is_none(){return Ok(RetainedCloneStep::Complete(Default::default()))}
   let(original,retirement)=(&mut self.original,&mut self.retirement);
-  let step=semio_plugin_ownership::bounded_ownership::plugin_settle_value(semio_plugin_job_receiving::original_steps::replied::<OriginalRetirementFailure>(effect,|effect,reply|semio_framework_value::retirement::arc_custody::admit_shared_retirement_into(original,retirement,effect,reply).map(drop)))?;
-  Ok(if retirement.is_some(){RetainedCloneStep::Progress(step.progress())}else{step})
+  semio_plugin_ownership::bounded_ownership::plugin_settle_value(semio_plugin_job_receiving::original_steps::replied::<OriginalRetirementFailure>(effect,|effect,reply|semio_framework_value::retirement::arc_custody::admit_shared_retirement_into(original,retirement,effect,reply).map(drop)))
  }
  pub fn terminal_is_empty(&self)->bool{self.original.is_none()&&self.retirement.is_none()}
 }

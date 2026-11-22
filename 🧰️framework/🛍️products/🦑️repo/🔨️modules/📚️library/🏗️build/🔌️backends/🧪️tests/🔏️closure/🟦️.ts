@@ -12,10 +12,10 @@ const repositoryRootV1=(()=>{let directory=import.meta.dir;while(!existsRootV1(j
 declareLibraryBuildTestEnvelopeV1({suite:"build-tool-setup",maximumElapsedMilliseconds:300000});
 
 test("the lazily imported registry validation is part of the captured implementation closure of the backend door",()=>withBuildTestInvocationV1(async original=>{
- const root=repositoryRootV1,door=relative(root,fileURLToPath(new URL("../../🟦️.ts",import.meta.url))).replaceAll("\\","/"),registry=relative(root,fileURLToPath(new URL("../../📜️registry/🟦️.ts",import.meta.url))).replaceAll("\\","/");
+ const root=repositoryRootV1,door=relative(root,fileURLToPath(new URL("../../🚚️loading/🟦️.ts",import.meta.url))).replaceAll("\\","/"),registry=relative(root,fileURLToPath(new URL("../../📜️registry/🟦️.ts",import.meta.url))).replaceAll("\\","/");
  const closure=await captureCompilerBuildSourceClosureV1(root,door,original,createIssuedResourceControlV1(original,"test:backend-door-closure",240000));
  expect(closure.files.map(file=>file.path)).toContain(registry);
- expect(Object.keys(closure.files.find(file=>file.path===door)!.imports),"the door declares the lazy import to the loader").toContain("./📜️registry/🟦️.ts");
+ expect(Object.keys(closure.files.find(file=>file.path===door)!.imports),"the loader declares the lazy import of the registry validation").toContain("../📜️registry/🟦️.ts");
 }),290000);
 
 test("modules that other doors load lazily with a synchronous require are captured too: the sealed store's manager data and the Bazel status leaf's validator and texts",()=>withBuildTestInvocationV1(async original=>{

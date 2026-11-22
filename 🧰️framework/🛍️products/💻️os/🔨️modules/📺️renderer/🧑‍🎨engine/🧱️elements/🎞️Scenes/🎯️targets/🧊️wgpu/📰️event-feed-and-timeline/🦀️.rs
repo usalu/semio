@@ -502,7 +502,7 @@ pub fn render_event_feed(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut F
     let theme = ctx.theme;
     let Some(feed) = &scene.event_feed else {
         stage_event_feed_accessibility_controls(&scene.host_id, Vec::new());
-        return render_placeholder("event-feed", bounds, ctx);
+        return render_placeholder(bounds, ctx);
     };
     let entries: Vec<EventFeedEntryJson> = serde_json::from_str(&feed.entries_json).unwrap_or_default();
     let time_request = event_feed_time_request(&entries);
@@ -847,7 +847,7 @@ pub fn render_graph_timeline(scene: &UiComponentSceneNode, bounds: Rect, ctx: &m
     mutate_scene_state(&scene.host_id, |state| state.graph_timeline_label_track = label_track);
     stage_graph_timeline_accessibility_controls(&scene.host_id, graph_timeline_accessibility_controls(scene, bounds, theme, label_track));
     if scene.graph_timeline.is_none() {
-        return render_placeholder("graph-timeline", bounds, ctx);
+        return render_placeholder(bounds, ctx);
     }
     let layout = graph_timeline_layout(bounds, &columns, theme, label_track);
     let inner = layout.inner;

@@ -1,8 +1,12 @@
 {
   "bounds":[0,0,32,32],
-  "initialHeight":10,
-  "command":{"id":"construction-site","height":-45},
+  "columns":33,
+  "rows":17,
+  "initialHeightMillimetres":10000,
+  "command":{"id":"construction-site","height":-45.375},
   "rings":[[[4,4],[8,4],[8,8],[4,8]],[[5,5],[5,7],[7,7],[7,5]]],
-  "graded":16,
-  "samples":[[3,4,10],[4,4,-45],[8,8,-45],[5,5,10],[6,6,10],[8,7,-45],[9,6,10]]
+  "graded":12,
+  "samples":[[3,2,10000],[4,2,-45375],[8,4,-45375],[5,3,10000],[6,3,10000],[8,3,-45375],[9,3,10000]],
+  "heightLimits":[{"command":{"id":"construction-site","height":-2147483.648},"heightMillimetres":-2147483648},{"command":{"id":"construction-site","height":2147483.647},"heightMillimetres":2147483647}],
+  "invalidActions":[{"id":"construction-site","height":0.0005},{"id":"construction-site","height":-2147483.649},{"id":"construction-site","height":2147483.648},{"id":"   ","height":10}]
 }

@@ -137,7 +137,6 @@ pub enum Process3dMutation {
     ReplaceStockSolid(replace_stock_solid::ReplaceStockSolid),
     ResizeStock(resize_stock::ResizeStock),
 }
-dsl::original_pack_value_operation_receiving!(Process3dMutation);
 //#endregion 🔖️Mutations
 
 //#region 🧪️Tests

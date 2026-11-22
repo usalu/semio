@@ -1003,7 +1003,8 @@
         "scheduler",
         "grpc",
         "server",
-        "token"
+        "token",
+        "resolution"
       ],
       "properties": {
         "version": {
@@ -1135,6 +1136,48 @@
                 },
                 "present": {
                   "type": "boolean"
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "resolution": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "endpointFrom",
+                "schedulerFrom",
+                "factsGeneration"
+              ],
+              "properties": {
+                "endpointFrom": {
+                  "enum": [
+                    "environment",
+                    "fleet-facts"
+                  ]
+                },
+                "schedulerFrom": {
+                  "enum": [
+                    "argument",
+                    "environment",
+                    "derived"
+                  ]
+                },
+                "factsGeneration": {
+                  "oneOf": [
+                    {
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
                 }
               }
             },
@@ -1310,6 +1353,28 @@
             }
           }
         },
+        "keySamples": {
+          "description": "The reference of the key samples this machine published (digests of the key inputs of its most recent misses, one blob in the fleet cache): the sha256 of the blob, the number of units in it and when it was taken.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["blob", "count", "atMs"],
+          "properties": {
+            "blob": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+            "count": { "type": "integer", "minimum": 1, "maximum": 400 },
+            "atMs": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "skipReasons": {
+          "description": "The skipped units by reason (`breaker-denied`, `breaker-down`, `read-only`, `path-dependent`, ...); the counts add up to `unit.skipped`. A `breaker-denied` count is a provisioning error: the machine's credential is refused.",
+          "type": "object",
+          "propertyNames": {
+            "pattern": "^[a-z][a-z0-9-]{0,40}$"
+          },
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
         "offload": {
           "type": "object",
           "additionalProperties": false,
@@ -1420,7 +1485,6 @@
             "no-toolchain",
             "provisioning",
             "sandbox-unavailable",
-            "action-unsupported",
             "disk-full",
             "policy-off",
             "not-registered",

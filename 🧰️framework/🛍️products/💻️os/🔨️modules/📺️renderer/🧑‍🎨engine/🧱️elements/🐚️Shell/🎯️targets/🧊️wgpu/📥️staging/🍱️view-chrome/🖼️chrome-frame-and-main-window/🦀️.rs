@@ -206,6 +206,7 @@ impl<'ctx> ChromeViewCtx<'ctx> {
         self.dock.dock_canvas_bounds = rect;
         self.dock.dock_axis_separator = 0.0;
         self.dock.dock.mobile = self.chrome.screen_w <= semio_renderer_wgpu_dock::MODE_DOCK_MOBILE_MAX_WIDTH_PX;
+        self.dock.dock.coarse_pointer = self.dock.shell_hooks.last_input_was_touch();
         self.dock.shell_hooks.note_selection(self.input.interaction_selection.values().any(|selection| !selection.ids.is_empty()));
         if let Some(session) = self.docs.session.as_ref() {
             if let Some(key) = self.dock.shell_hooks.prefs_to_load(&session.plugin_id, &session.app.id) {
@@ -252,8 +253,14 @@ impl<'ctx> ChromeViewCtx<'ctx> {
         if target_anchor == from_anchor {
             return;
         }
-        let index = self.dock_tab_drop_index(target_anchor, x, y, theme).unwrap_or_else(|| self.dock.dock_tabs.tabs(target_anchor).len());
-        if self.as_session().move_dock_tab(tab_id, &DockTabMoveTarget { anchor: target_anchor, parent_path: Vec::new(), index }) {
+        let target = match self.dock_tab_nest_branch(target_anchor, x, y, theme) {
+            Some((branch_id, child_count)) => DockTabMoveTarget { anchor: target_anchor, parent_path: vec![branch_id], index: child_count },
+            None => {
+                let index = self.dock_tab_drop_index(target_anchor, x, y, theme).unwrap_or_else(|| self.dock.dock_tabs.tabs(target_anchor).len());
+                DockTabMoveTarget { anchor: target_anchor, parent_path: Vec::new(), index }
+            }
+        };
+        if self.as_session().move_dock_tab(tab_id, &target) {
             self.dock.anchor_state_mut(target_anchor).visible = true;
             debug_log(&format!("[TRACE] wgpu-shell dock tab {tab_id} re-anchored {} -> {}", from_anchor.as_str(), target_anchor.as_str()));
         }
@@ -290,6 +297,22 @@ impl<'ctx> ChromeViewCtx<'ctx> {
         Some(row.len())
     }
 
+    /// 🪺️ The branch of `anchor`'s root row a drop at `(x, y)` nests into — its id and child count, React's `child` target (`appendPanelTabAsChild`: the dragged tab becomes the branch's last child).
+    pub fn dock_tab_nest_branch(&mut self, anchor: PanelAnchor, x: f32, y: f32, theme: &Theme) -> Option<(String, usize)> {
+        if !self.dock.anchor_open(anchor) {
+            return None;
+        }
+        let body = self.as_session().body_rect(theme);
+        let panel = self.anchor_rect(anchor, body, theme);
+        let rows = self.dock.anchor_tab_rows(anchor);
+        let row_y = flowed_anchor_tab_row_y(anchor.flow().block, panel, 0, rows.len(), theme.control_height);
+        let row_rect = Rect::new(panel.x + theme.gap_standard, row_y, (panel.w - theme.gap_standard * 2.0).max(0.0), theme.control_height);
+        let row = self.dock.dock_tabs.tabs(anchor);
+        let mut atlas = FontAtlas::builtin();
+        let index = self.dock.dock_tab_nest_target(row, &mut atlas, theme, row_rect, 0.0, x, y)?;
+        row.get(index).map(|node| (node.id.clone(), node.children.len()))
+    }
+
     /// 🧭️ Which anchor a screen point belongs to: an open anchor's own painted box first, then the
     /// body quadrant the point falls in, so a tab can be dropped onto a FOLDED anchor too.
     pub fn anchor_at_point(&mut self, x: f32, y: f32, theme: &Theme) -> Option<PanelAnchor> {
@@ -316,6 +339,24 @@ impl<'ctx> ChromeViewCtx<'ctx> {
             (_, 1) => PanelAnchor::RightMiddle,
             (_, _) => PanelAnchor::BottomRight,
         })
+    }
+
+    /// 💧️ While a tab drag is live, every EMPTY anchor paints React's `PanelEmptyDockZone`: the passive secondary-accent fill (`dropZoneReadyFillClass`), the grip glyph in the emphasized border colour, turning accent when that anchor is the one the pointer would drop onto.
+    pub fn paint_empty_anchor_drop_zones(&mut self, draw: &mut DrawList, icons: &IconAtlas, input: &InputState<ActionDescriptor>, theme: &Theme) {
+        if self.dock.dock_tab_drag.is_none() {
+            return;
+        }
+        let body = self.as_session().body_rect(theme);
+        let hovered = self.anchor_at_point(input.pointer_x, input.pointer_y, theme);
+        for anchor in PanelAnchor::ALL {
+            if !self.dock.dock_tabs.tabs(anchor).is_empty() {
+                continue;
+            }
+            let zone = semio_renderer_wgpu_shell_dock::empty_anchor_drop_zone_rect(anchor, body, theme);
+            draw.push_solid([zone.x, zone.y, zone.w, zone.h], theme.celebrate[1]);
+            let tint = if hovered == Some(anchor) { theme.accent } else { theme.border_emphasized };
+            chrome_icon(draw, icons, "grip-vertical", zone.x + (zone.w - PANEL_CHROME_GRIP_SIZE) * 0.5, zone.y + (zone.h - PANEL_CHROME_GRIP_SIZE) * 0.5, PANEL_CHROME_GRIP_SIZE, tint);
+        }
     }
 
     /// 📑️ Paints and hit-tests one anchor's tab bar: a branch row toggles open/shut, a leaf row selects,
@@ -347,11 +388,15 @@ impl<'ctx> ChromeViewCtx<'ctx> {
             let scroll_id = panel_tab_scroll_id(anchor, row_index);
             let offset = self.input.scroll_offsets.get(&scroll_id).copied().unwrap_or_default().clamp(0.0, max_offset);
             self.input.scroll_offsets.insert(scroll_id.clone(), offset);
-            input.register_hit(HitTarget { rect: row_rect, event: None, control_id: Some(scroll_id), kind: HitKind::ScrollRegion, drag_axis: None, drag_data: None });
+            input.register_hit(HitTarget { rect: row_rect, event: None, control_id: Some(scroll_id.clone()), kind: HitKind::ScrollRegion, drag_axis: None, drag_data: None });
             let mut x = row_rect.x - offset;
             let preview = dragging.then(|| self.dock.dock_tab_insert_preview(row, atlas, theme, row_rect, offset, input.pointer_x, input.pointer_y)).flatten();
+            let nest = dragging.then(|| self.dock.dock_tab_nest_target(row, atlas, theme, row_rect, offset, input.pointer_x, input.pointer_y)).flatten();
+            if dragging {
+                draw.push_solid([panel.x, y, panel.w, row_h], theme.celebrate[1]);
+            }
             draw.push_scissor(row_rect);
-            for node in row {
+            for (node_index, node) in row.iter().enumerate() {
                 if preview == Some(x) {
                     draw.push_rounded([x, y + theme.gap_standard, TAB_INSERT_PREVIEW_WIDTH_PX, (row_h - theme.gap_standard * 2.0).max(0.0)], theme.accent, TAB_INSERT_PREVIEW_WIDTH_PX * 0.5);
                 }
@@ -359,6 +404,9 @@ impl<'ctx> ChromeViewCtx<'ctx> {
                 let item = ChromeGroupItem { control_id: node.id.as_str(), icon_id: Some(node.icon_id.as_str()), label: Some(node.label.as_str()), active: is_active, disabled: false, kind: HitKind::PanelTab };
                 let chip_w = retained_panel_chrome_item_width(atlas, theme, &item).unwrap_or(theme.control_height);
                 let chip = Rect::new(x, y + (row_h - theme.control_height) * 0.5, chip_w, theme.control_height);
+                if nest == Some(node_index) {
+                    draw.push_rounded([chip.x, chip.y, chip.w, chip.h], theme.accent.with_alpha(semio_renderer_wgpu_shell_chrome_state::chrome_parity_constants().panel_drop.nest_fill_alpha), theme.border_radius);
+                }
                 if is_active {
                     draw.push_rounded([chip.x, chip.y, chip.w, chip.h], theme.accent, theme.border_radius);
                 }
@@ -383,6 +431,7 @@ impl<'ctx> ChromeViewCtx<'ctx> {
                 draw.push_rounded([x, y + theme.gap_standard, TAB_INSERT_PREVIEW_WIDTH_PX, (row_h - theme.gap_standard * 2.0).max(0.0)], theme.accent, TAB_INSERT_PREVIEW_WIDTH_PX * 0.5);
             }
             draw.pop_scissor();
+            paint_scroll_thumb(draw, input, theme, &scroll_id, row_rect, total_width, offset, false);
         }
         let divider_y = flowed_anchor_tab_divider_y(anchor.flow().block, panel, rows.len() as f32 * row_h);
         let divider_y = if anchor.flow().block.is_reversed() { divider_y } else { divider_y - theme.stroke_hairline };
@@ -730,5 +779,18 @@ pub fn panel_band(anchor: PanelAnchor, body: Rect, theme: &Theme) -> Rect {
     }
 }
 
+/// 📜️ A shell scroll region's thumb, React's `::-webkit-scrollbar-thumb`: shown while the region is hovered or its thumb dragged, `--scrollbar-thumb-hover` under the pointer, and registered as a `ScrollThumb` hit whose `drag_data` carries what the drag needs (the offset at the grab, the content-per-thumb-pixel ratio and the furthest offset).
+#[allow(clippy::too_many_arguments, reason = "one scroll region's geometry plus the paint and input sinks")]
+pub fn paint_scroll_thumb(draw: &mut DrawList, input: &mut InputState<ActionDescriptor>, theme: &Theme, scroll_id: &str, viewport: Rect, content_extent: f32, offset: f32, vertical: bool) {
+    let Some(bar) = semio_ui_wgpu_layout::layout::scrollbar(viewport, content_extent, offset, vertical, false) else { return };
+    let dragging = input.drag.active && input.drag.target_id.as_deref() == Some(scroll_id);
+    if !(dragging || viewport.contains(input.pointer_x, input.pointer_y)) {
+        return;
+    }
+    let hot = dragging || bar.thumb.contains(input.pointer_x, input.pointer_y);
+    draw.push_solid_overlay([bar.thumb.x, bar.thumb.y, bar.thumb.w, bar.thumb.h], if hot { theme.text_muted } else { theme.border_normal });
+    let drag_data = [("scrollOffset", offset), ("scrollRatio", bar.drag_ratio()), ("scrollMax", bar.max_offset)].into_iter().map(|(key, value)| (key.to_string(), value.to_string())).collect();
+    input.register_hit(HitTarget { rect: bar.thumb, event: None, control_id: Some(scroll_id.to_string()), kind: HitKind::ScrollThumb, drag_axis: Some(if vertical { DragAxis::Vertical } else { DragAxis::Horizontal }), drag_data: Some(drag_data) });
+}
 //#endregion ShellChrome
 

@@ -93,7 +93,7 @@ pub use circular_prism_query::circular_prism_distance;
 #[path="🌗️spherical-cap-boundary/🦀️.rs"]
 mod spherical_cap_boundary;
 #[path="🟠️rounded-box-boundary/🦀️.rs"]
-mod rounded_box_boundary;
+pub mod rounded_box_boundary;
 
 #[path="✂️clip-boundary/🦀️.rs"]
 mod clip_boundary;

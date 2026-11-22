@@ -3,7 +3,7 @@
 
 use crate::editor::wfc3d::modes::edit::tools::fill;
 use crate::editor::wfc3d::modes::edit::windows::{graph, preview};
-use semio_plugin::create_default_layout;
+use semio_plugin::{create_default_layout, Axis};
 use semio_ui_locale::LocalizedLabel;
 use semio_plugin::ModeDefinition;
 use semio_plugin::WindowLayout;
@@ -18,6 +18,6 @@ pub fn definition() -> ModeDefinition {
 
 /// 🪟️ Graph left, preview right, equal halves — the problem and its solution side by side.
 pub fn layout() -> WindowLayout {
-    create_default_layout(&[graph::WFC_GRAPH_WINDOW.into(), preview::WFC_3D_PREVIEW_WINDOW.into()], "row", Some(&[50.0, 50.0]), Some(&["Graph".into(), "Preview".into()]))
+    create_default_layout(&[graph::WFC_GRAPH_WINDOW.into(), preview::WFC_3D_PREVIEW_WINDOW.into()], Axis::Horizontal, Some(&[0.5, 0.5]), Some(&["Graph".into(), "Preview".into()]))
 }
 //#endregion 🔖️Definition

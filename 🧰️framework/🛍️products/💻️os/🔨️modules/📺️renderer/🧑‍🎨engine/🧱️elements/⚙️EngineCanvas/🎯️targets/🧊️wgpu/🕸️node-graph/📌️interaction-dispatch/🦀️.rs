@@ -44,7 +44,7 @@ pub struct GraphInteractionDispatch {
     pub(super) digest: PublishedGraphInteraction,
     pub publish_select: bool,
     pub publish_hover: bool,
-    publish_viewport: bool,
+    pub publish_viewport: bool,
 }
 
 impl GraphInteractionDispatch {

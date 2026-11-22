@@ -132,9 +132,9 @@ pub fn emit_page_edit(snapshot: &PdfSnapshot, action: &str, payload: &str) -> Re
 
 /// 🪟️ Places own page drafts beside complete snapshot details.
 pub fn document_layout(main: &str) -> semio_plugin::WindowLayout {
-    use semio_plugin::{WindowLayout, WindowLayoutRoot, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutStackNode, WindowLayoutWindowNode};
-    let stack = |size, id: &str| WindowLayoutChild::Stack(WindowLayoutStackNode { kind: "stack".into(), size: Some(size), active_window_kind_id: None, children: vec![WindowLayoutWindowNode { kind: "window".into(), window_kind_id: id.into(), title: None, instance_id: None, template_id: None, corner: None }] });
-    WindowLayout { root: WindowLayoutRoot::Axis(WindowLayoutAxisNode { kind: "row".into(), size: None, children: vec![stack(0.7, main), stack(0.3, semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_WINDOW_KIND_ID)] }) }
+    use semio_plugin::{WindowLayout, WindowLayoutNode, Axis};
+    let stack = |size, id: &str| WindowLayoutNode::Stack { size: Some(size), active_window_id: None, children: vec![WindowLayoutNode::Window { window_kind_id: id.into(), title: None, instance_id: None, template_id: None, corner: None }] };
+    WindowLayout { root: WindowLayoutNode::Split { axis: Axis::Horizontal, size: None, children: vec![stack(0.7, main), stack(0.3, semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_WINDOW_KIND_ID)] } }
 }
 
 

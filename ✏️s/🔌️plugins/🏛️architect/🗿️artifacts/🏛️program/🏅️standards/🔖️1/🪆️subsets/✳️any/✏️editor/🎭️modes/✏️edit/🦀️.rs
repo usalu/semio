@@ -7,7 +7,7 @@
 //! (the `🔍️review` and `📊️report` modes reuse the same window kinds; see TEMPLATE §12.4a).
 
 use crate::editor::architect::modes::edit::windows::{adjacency, graph, register, report};
-use semio_plugin::create_default_layout;
+use semio_plugin::{create_default_layout, Axis};
 use semio_ui_locale::LocalizedLabel;
 use semio_plugin::ModeDefinition;
 use semio_plugin::WindowLayout;
@@ -24,11 +24,9 @@ pub fn definition() -> ModeDefinition {
 /// app-level `default_layout`.
 pub fn layout() -> WindowLayout {
     create_default_layout(
-        &[adjacency::ARCHITECT_WINDOW_ADJACENCY.into(), graph::ARCHITECT_WINDOW_GRAPH.into(), register::ARCHITECT_WINDOW_REGISTER.into(), report::ARCHITECT_WINDOW_REPORT.into()],
-        "row",
-        Some(&[30.0, 30.0, 20.0, 20.0]),
-        Some(&["Adjacency".into(), "Graph".into(), "Register".into(), "Report".into()]),
-    )
+        &[adjacency::ARCHITECT_WINDOW_ADJACENCY.into(), graph::ARCHITECT_WINDOW_GRAPH.into(), register::ARCHITECT_WINDOW_REGISTER.into(), report::ARCHITECT_WINDOW_REPORT.into()], Axis::Horizontal,
+        Some(&[0.3, 0.3, 0.2, 0.2]),
+        Some(&["Adjacency".into(), "Graph".into(), "Register".into(), "Report".into()]))
 }
 //#endregion 🔖️Definition
 

@@ -18,6 +18,9 @@ use semio_plugin::kernel::Effect;
 use semio_plugin::InteractionTarget;
 use semio_framework_pack_json::{json, Value};
 use std::collections::BTreeSet;
+use crate::editor::puzzle2d::engine::board_host::testkit::{set_camera_silent, set_selection_ids_silent, set_transform_flags};
+#[allow(unused_imports)]
+use crate::editor::puzzle2d::snapshot::Puzzle2dCommand;
 #[allow(unused_imports)]
 use crate::editor::puzzle2d::snapshot::{puzzle2d_scene_for, puzzle2d_scene_with, PUZZLE2D_GENERIC_TOOL_IDS, PUZZLE2D_RETAINED_TOOL_IDS, PUZZLE2D_ADD_NODE_DIALOG_ID, PUZZLE2D_BOARD_SNAPSHOT_SCHEMA, PUZZLE2D_GRANULARITY_EDGE, PUZZLE2D_GRANULARITY_HANDLE, PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID, PUZZLE2D_PLAY_EXAMPLE_NAKAGIN_ID, Puzzle2dInteractionSnapshot, Puzzle2dScene, puzzle2d_active_utility, puzzle2d_addresses_locked_entity, puzzle2d_entity_hidden, puzzle2d_entity_label, puzzle2d_interaction_definition, puzzle2d_node_kind_arg, puzzle2d_select_scope, puzzle2d_selected_node_ids, puzzle2d_selection_is_locked, puzzle2d_window_and_engagements_scope, puzzle2d_window_only_scope};
 #[allow(unused_imports)]
@@ -568,7 +571,7 @@ fn a_selection_with_repeated_ids_drags_each_target_once() {
     let command = Puzzle2dCommand::from_action("translateSelection", Some(json!({ "dx": 5.0, "dy": 0.0 })), Some(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID.to_string()));
     let selection = protocol::DomainSelection { granularity: PUZZLE2D_GRANULARITY_NODE.into(), ids: vec!["left".to_string(), "left".to_string(), "left".to_string()], anchor_id: None };
     let view = window_view(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID, crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID);
-    let (emit, _) = puzzle2d_dispatch_emit(&command, &snapshot, &Puzzle2dConfig::default(), &Puzzle2dWindowConfig::default(), &Puzzle2dWindowTransient::default(), crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID, Some(&view), crate::editor::puzzle2d::config::PUZZLE2D_SELECT_UTILITY_ID, &selection, "seed-3", "rev-1", &semio_plugin::app::GestureSlot::detached(), None).expect("emit");
+    let (emit, _) = puzzle2d_dispatch_emit::<crate::editor::puzzle2d::Puzzle2dPlayApp>(&command, &snapshot, &Puzzle2dConfig::default(), &Puzzle2dWindowConfig::default(), &Puzzle2dWindowTransient::default(), crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID, Some(&view), crate::editor::puzzle2d::config::PUZZLE2D_SELECT_UTILITY_ID, &selection, "seed-3", "rev-1", &semio_plugin::app::GestureSlot::detached(), None).expect("emit");
     assert_eq!(emit.artifact_mutations, vec![crate::standards::v1::subsets::any::schema::mutations::drag_selection(["left".into()].into_iter().collect(), 5.0, 0.0)]);
     assert!(emit.transaction.is_some(), "one transaction");
 }
@@ -591,7 +594,7 @@ fn the_board_emit_carries_the_transaction_and_the_parametric_leaf() {
     .to_string();
     let command = Puzzle2dCommand::from_action("applyBoardEvents", Some(json!({ "eventsJson": events })), None);
     let view = window_view(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID, crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID);
-    let emit_for = |seed: &str| puzzle2d_dispatch_emit(&command, &snapshot, &Puzzle2dConfig::default(), &Puzzle2dWindowConfig::default(), &Puzzle2dWindowTransient::default(), crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID, Some(&view), crate::editor::puzzle2d::config::PUZZLE2D_SELECT_UTILITY_ID, &protocol::DomainSelection::default(), seed, "rev-1", &semio_plugin::app::GestureSlot::detached(), None).expect("emit").0;
+    let emit_for = |seed: &str| puzzle2d_dispatch_emit::<crate::editor::puzzle2d::Puzzle2dPlayApp>(&command, &snapshot, &Puzzle2dConfig::default(), &Puzzle2dWindowConfig::default(), &Puzzle2dWindowTransient::default(), crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID, Some(&view), crate::editor::puzzle2d::config::PUZZLE2D_SELECT_UTILITY_ID, &protocol::DomainSelection::default(), seed, "rev-1", &semio_plugin::app::GestureSlot::detached(), None).expect("emit").0;
     let emit = emit_for("seed-7");
     let transaction = emit.transaction.clone().expect("the commit carries its transaction");
     assert!(transaction.id.starts_with("tx-") && transaction.tool == "s.puzzle.puzzle2d@1/*#editor#select", "{transaction:?}");

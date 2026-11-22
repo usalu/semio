@@ -13,6 +13,7 @@
         "token",
         "unavailable",
         "locationKinds",
+        "installKinds",
         "probe",
         "rootToken",
         "ownerToken",
@@ -42,6 +43,13 @@
           "items": {
             "type": "string"
           }
+        },
+        "installKinds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "The fact kinds whose rows about a path with a node_modules component outside a dependency generation directory name what a machine has installed; they are replaced by one row per dependency generation."
         },
         "probe": {
           "type": "string"
@@ -94,6 +102,16 @@
         "locationKinds": [
           "lstat"
         ],
+        "installKinds": [
+          "exists",
+          "directoryExists",
+          "fileExists",
+          "lstat",
+          "stat",
+          "readdir",
+          "readdirNames",
+          "directories"
+        ],
         "probe": "node_modules",
         "rootToken": "⟦semio-root⟧",
         "ownerToken": "⟦analysis-owner⟧",
@@ -127,7 +145,11 @@
           "typescriptRealpath"
         ],
         "residue": "⟦semio-",
-        "stampFields": ["mtimeMs", "ctimeMs", "ino"],
+        "stampFields": [
+          "mtimeMs",
+          "ctimeMs",
+          "ino"
+        ],
         "stampValue": 0
       }
     },

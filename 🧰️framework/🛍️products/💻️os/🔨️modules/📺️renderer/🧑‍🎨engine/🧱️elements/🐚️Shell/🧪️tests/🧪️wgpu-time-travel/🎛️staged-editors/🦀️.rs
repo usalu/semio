@@ -189,7 +189,7 @@ fn kinds_dialog() -> DialogDefinition {
     DialogDefinition { args: editor_defs(), ..DialogDefinition::new("editors", LocalizedLabel::native("Edit", "Bearbeiten"), semio_framework::ActionRef::new("apply")) }
 }
 
-fn press(shell: &mut ShellState, action: semio_ui_wgpu_input::KeyAction) {
+fn press(mut shell: &mut ShellState, action: semio_ui_wgpu_input::KeyAction) {
     let mut input = InputState::<ActionDescriptor>::default();
     PointerCtx::of(&mut shell).handle_keyboard(action, &PointerModifiers::default(), &mut input);
 }

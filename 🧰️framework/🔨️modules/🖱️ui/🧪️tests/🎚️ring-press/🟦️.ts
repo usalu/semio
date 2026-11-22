@@ -27,7 +27,7 @@ function compile(source: string): string {
 }
 
 test("the complete shared fixture pins Ring to the continuous contract", () => {
-  expect(fixture.cases.map(row => row.name)).toEqual(["input-change-per-keystroke", "input-number-commits-a-number", "input-blur-policy-is-silent-while-typing", "input-blur-policy-commits-on-enter", "input-blur-policy-commits-on-blur", "input-unbound-is-silent", "toggle-commits-the-flip", "toggle-already-on-commits-false", "slider-reads-its-own-track", "slider-clamps-past-its-end", "stepper-increment-falls-back-to-absolute", "stepper-decrement-prefers-the-delta-binding", "stepper-value-segment-commits-nothing", "ring-reads-its-own-circle", "icon-select-edits-its-icon-string"]);
+  expect(fixture.cases.map(row => row.name)).toEqual(["input-change-per-keystroke", "input-number-commits-a-number", "input-blur-policy-is-silent-while-typing", "input-blur-policy-commits-on-enter", "input-blur-policy-commits-on-blur", "input-unbound-is-silent", "toggle-commits-the-flip", "toggle-already-on-commits-false", "slider-reads-its-own-track", "slider-clamps-past-its-end", "stepper-increment-falls-back-to-absolute", "stepper-decrement-prefers-the-delta-binding", "stepper-value-segment-commits-nothing", "ring-reads-its-own-circle", "ring-ignores-a-press-off-its-orb"]);
 });
 
 test("the retained TypeScript reference independently agrees for all fifteen controls", () => {
@@ -42,9 +42,9 @@ for (const row of lifecycle.cases) test("actual React RingView and owned lane: "
   const observations: (number | string)[][] = [], listeners = new Map<string, () => void>(), cleanup: (() => void)[] = [];
   const lane = createContinuousGestureLane<number>({ send: (value, phase) => { observations.push([value, phase]); }, abort: reason => { observations.push([reason, "abort"]); } });
   const source = read(join(renderer, "🧱️elements/🗣️Interpreter/✍️input-views/🟦️.tsx"));
-  const factory = new Function("React", "Ring", "useContinuousTriggerLane", "useEffect", "window", "nodeDomId", "toUiValue", compile(declaration(source, "RingView")) + "\nreturn RingView;");
+  const factory = new Function("React", "Ring", "useContinuousTriggerLane", "useEffect", "window", "controlDomId", "toUiValue", compile(declaration(source, "RingView")) + "\nreturn RingView;");
   const view = factory(React, "owned-ring", () => lane, (effect: () => () => void) => { cleanup.push(effect()); }, { addEventListener: (name: string, listener: () => void) => listeners.set(name, listener), removeEventListener: (name: string) => listeners.delete(name) }, () => "fixture-ring", (value: number) => value) as (props: unknown) => React.ReactElement<{ onOrbChange: (id: string, before: number, after: number) => void }>;
-  const element = view({ record: { component: { orbId: "sun", t: 0 }, disabled: false }, context: {} });
+  const element = view({ record: { component: { orbId: "sun", t: 0 }, disabled: false }, context: { controls: { disabled: () => false } } });
   expect(React.isValidElement(element)).toBe(true);
   for (const value of row.values) element.props.onOrbChange("sun", 0, value);
   listeners.get(row.terminal)!();

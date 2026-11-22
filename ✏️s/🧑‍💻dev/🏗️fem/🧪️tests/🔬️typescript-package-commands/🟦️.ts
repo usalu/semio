@@ -1,53 +1,44 @@
 import type { ScriptInvocation } from "@semio-tech/process/routing";
 import { runCmd, runCargo } from "@semio-tech/process/execution";
 import { runVitest } from "@semio-tech/repo-lib/testing";
-import { policyReadModuleTreeSource } from "@semio-tech/repo-lib/inventory";
 import { join } from "node:path";
-import { toolJobFemLiveVisualPublicationExact, toolJobFemNumericalMicrocursorExact } from "@semio-tech/repo-lib/laws";
-import { toolJobFemNumericalMicrocursorSelfTests } from "../../../../🔌️plugins/🏗️fem/📦️packages/🟦️typescript/🧪️testing/🔬️tool-job-fem-numerical-microcursor/🟦️.ts";
-import { toolJobFemLiveVisualPublicationSelfTests } from "../../../../🔌️plugins/🏗️fem/📦️packages/🟦️typescript/🧪️testing/🔬️tool-job-fem-live-visual-publication/🟦️.ts";
+
+
+type BehaviouralLaw = Readonly<{ manifest: string; filters: readonly string[] }>;
+const ENGINE = "✏️s/🔨️modules/🏗️fem/⚙️engine";
+const EDITOR = "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor";
+/** 🔥️ The p6h microcursor invariants, each carried by the behavioural tests of the crate that owns it: LDLT and subspace max+1/cancel/deadline/stale/replay/parity, mesh edge-phase interrupts and mounted preparation, element stiffness cells and owned assembly lookup/partition scans. */
+const FEM_NUMERICAL_MICROCURSOR_LAWS: readonly BehaviouralLaw[] = [
+  { manifest: `${ENGINE}/🔢️sparse/🔺️ldlt/📦️packages/🦀️rust/Cargo.toml`, filters: ["p6h_ldlt_"] },
+  { manifest: `${ENGINE}/🔢️sparse/🎵️subspace/📦️packages/🦀️rust/Cargo.toml`, filters: ["p6h_subspace_"] },
+  { manifest: `${ENGINE}/🕸️mesh/📦️packages/🦀️rust/Cargo.toml`, filters: ["p6h_"] },
+  { manifest: `${ENGINE}/🧮️analyses/🧩️assembly/📦️packages/🦀️rust/Cargo.toml`, filters: ["p6h_"] },
+  { manifest: `${ENGINE}/⚖️static/📦️packages/🦀️rust/Cargo.toml`, filters: ["p6h_"] },
+];
+/** 👁️ The mounted fixed-page visual publication invariants: bounded steps, max+1 refusal before owner transfer, stale/cancel/fault/deadline/device-close preserving the last valid publication, for 2D and 3D. */
+const FEM_LIVE_VISUAL_LAWS: readonly BehaviouralLaw[] = [
+  { manifest: `✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/${EDITOR}/🎭️modes/✏️edit/🪟️windows/🧱️model/📦️packages/🦀️rust/Cargo.toml`, filters: ["visual"] },
+  { manifest: `✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/${EDITOR}/🧵️session/📦️packages/🦀️rust/Cargo.toml`, filters: ["visual"] },
+];
+
+/** 🧪️ Runs the filtered behavioural tests of each owning crate through the repository cargo gate. */
+async function runBehaviouralCargoLaws(repoRoot: string, laws: readonly BehaviouralLaw[]): Promise<void> {
+  for (const law of laws) for (const filter of law.filters) await runCargo(["test", "--manifest-path", join(repoRoot, law.manifest), "--lib", "--", "--test-threads=1", filter], repoRoot);
+}
 
 /** 🏃️ Runs the `OwnedVerifyScript` command under the caller's roots and invocation. */
 export async function runOwnedVerifyScript(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>, segments: string[]): Promise<void> {
   const args = segments.slice(1);
 if (segments[0] === "fem-live-visual-publication") {
-    const fem2dModel = policyReadModuleTreeSource(context.repoRoot, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧱️model/🦀️.rs");
-    const fem2dSession = policyReadModuleTreeSource(context.repoRoot, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🧵️session/🦀️.rs");
-    const fem3dSession = policyReadModuleTreeSource(context.repoRoot, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🧵️session/🦀️.rs");
-    const fem3dEditor = policyReadModuleTreeSource(context.repoRoot, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🦀️.rs");
-    const fem3dModel = policyReadModuleTreeSource(context.repoRoot, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧱️model/🦀️.rs");
-    const fem3dResults = policyReadModuleTreeSource(context.repoRoot, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🦀️.rs");
-    const fem3dViewer = policyReadModuleTreeSource(context.repoRoot, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/👁️viewer/🦀️.rs");
-    const fem3dViewerModel = policyReadModuleTreeSource(context.repoRoot, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🧱️model/🦀️.rs");
-    const femPluginRoot = policyReadModuleTreeSource(context.repoRoot, "🌎️hub/🧩️compositions/🏗️fem/🦀️.rs");
-    const femGlue = policyReadModuleTreeSource(context.repoRoot, "🌎️hub/🧩️compositions/🏗️fem/📦️packages/🦀️rust/🦀️.rs");
-    const femSparse = policyReadModuleTreeSource(context.repoRoot, "✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🦀️.rs");
-    const frameworkPlugin = policyReadModuleTreeSource(context.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs");
-    const frameworkWorld = ["🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🗃️model/🦀️.rs", "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧩️components/🦀️.rs", "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧲️cursors/🦀️.rs", "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧱️scene/🦀️.rs", "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🌉️bridge/🦀️.rs", "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧵️interaction/🦀️.rs", "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎛️host/🦀️.rs"].map(root => policyReadModuleTreeSource(context.repoRoot, root)).join("\n");
-    const worldSnapshot = policyReadModuleTreeSource(context.repoRoot, "🧰️framework/🔨️modules/🖱️ui/🎬️scene/🌍️world3d-snapshot/🦀️.rs");
-    const canvasSnapshot = policyReadModuleTreeSource(context.repoRoot, "🧰️framework/🔨️modules/🖱️ui/🎬️scene/🖼️canvas2d-snapshot/🦀️.rs");
-    const canvasRenderer = policyReadModuleTreeSource(context.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🎞️Scenes/🎯️targets/🧊️wgpu/🦀️.rs");
-    const femAnalyses = policyReadModuleTreeSource(context.repoRoot, "✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🦀️.rs");
-    const femMesh = policyReadModuleTreeSource(context.repoRoot, "✏️s/🔨️modules/🏗️fem/⚙️engine/🕸️mesh/🦀️.rs");
-    const mutations = args.includes("--self-test")
-      ? toolJobFemLiveVisualPublicationSelfTests(toolJobFemLiveVisualPublicationExact, fem2dModel, fem2dSession, fem3dSession, fem3dEditor, fem3dModel, fem3dResults, fem3dViewer, fem3dViewerModel, femPluginRoot, femGlue, femSparse, frameworkPlugin, frameworkWorld, worldSnapshot, canvasSnapshot, canvasRenderer, femAnalyses, femMesh)
-      : 0;
-    if (!toolJobFemLiveVisualPublicationExact(fem2dModel, fem2dSession, fem3dSession, fem3dEditor, fem3dModel, fem3dResults, fem3dViewer, fem3dViewerModel, femPluginRoot, femGlue, femSparse, frameworkPlugin, frameworkWorld, worldSnapshot, canvasSnapshot, canvasRenderer, femAnalyses, femMesh))
-      throw new Error("[verify interactivity tool-jobs p6i] mounted FEM live visual publication contract failed.");
-    console.log("[verify interactivity tool-jobs p6i] live-source clean; hostile-mutations=" + mutations + ".");
+    if (segments.length > 1) throw new Error("fem-live-visual-publication accepts no arguments");
+    await runBehaviouralCargoLaws(context.repoRoot, FEM_LIVE_VISUAL_LAWS);
+    console.log("[verify interactivity tool-jobs p6i] behavioural visual laws passed.");
     return;
   }
 if (segments[0] === "fem-numerical-microcursor") {
-    const session = policyReadModuleTreeSource(context.repoRoot, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🧵️session/🦀️.rs");
-    const sparse = policyReadModuleTreeSource(context.repoRoot, "✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🦀️.rs");
-    const mesh = policyReadModuleTreeSource(context.repoRoot, "✏️s/🔨️modules/🏗️fem/⚙️engine/🕸️mesh/🦀️.rs");
-    const analyses = policyReadModuleTreeSource(context.repoRoot, "✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🦀️.rs");
-    const model = policyReadModuleTreeSource(context.repoRoot, "✏️s/🔨️modules/🏗️fem/⚙️engine/🏗️model/🦀️.rs");
-    const elements = policyReadModuleTreeSource(context.repoRoot, "✏️s/🔨️modules/🏗️fem/⚙️engine/📏️elements2d/🦀️.rs");
-    const runtime = policyReadModuleTreeSource(context.repoRoot, "🧰️framework/🔨️modules/🧵️job/🦀️.rs");
-    const mutations = args.includes("--self-test") ? toolJobFemNumericalMicrocursorSelfTests(toolJobFemNumericalMicrocursorExact, sparse, mesh, analyses, model, elements, session, runtime) : 0;
-    if (!toolJobFemNumericalMicrocursorExact(sparse, mesh, analyses, model, elements, session, runtime)) throw new Error("[verify interactivity tool-jobs p6h] live FEM numerical microcursor contract failed.");
-    console.log(`[verify interactivity tool-jobs p6h] live-source clean; hostile-mutations=${mutations}.`);
+    if (segments.length > 1) throw new Error("fem-numerical-microcursor accepts no arguments");
+    await runBehaviouralCargoLaws(context.repoRoot, FEM_NUMERICAL_MICROCURSOR_LAWS);
+    console.log("[verify interactivity tool-jobs p6h] behavioural microcursor laws passed.");
     return;
   }
 if (segments[0] === "fem-pcg-publication-owners") {

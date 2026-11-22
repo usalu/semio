@@ -1,0 +1,138 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://repo.nx/AuthorizerBundleV1",
+  "title": "Nx Authorizer Bundle V1",
+  "description": "One compiled authorizer bundle is its own content-addressed directory beside the Nx dependency generation it runs with: the bundle, the digest manifests of its source and compiler closures and a marker naming both its own key and the dependency generation key.",
+  "type": "object",
+  "$defs": {
+    "Policy": {
+      "description": "Where bundles live below the tools image, the marker file, the manifests the key covers, the lease every reader holds and how many of the newest bundles retirement keeps.",
+      "const": {
+        "version": 1,
+        "directory": "nx-authorizers",
+        "marker": ".semio-nx-authorizers.json",
+        "manifests": [
+          ".semio-authorizer-source.json",
+          ".semio-authorizer-compiler.json"
+        ],
+        "bundle": "semio-authorizers.mjs",
+        "lease": "nx-authorizer-bundle:",
+        "keepNewest": 4,
+        "minimumAgeMilliseconds": 600000,
+        "maximumCandidates": 256,
+        "maximumMarkerBytes": 65536
+      }
+    },
+    "Marker": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "digest",
+        "deps",
+        "authorizers"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "deps": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "authorizers": {
+          "type": "object"
+        }
+      }
+    },
+    "RetirementRow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "identity",
+        "touchedAt",
+        "held"
+      ],
+      "properties": {
+        "identity": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "touchedAt": {
+          "type": "number",
+          "minimum": 0
+        },
+        "held": {
+          "type": "boolean"
+        }
+      }
+    },
+    "RetirementCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "nowMs",
+        "keepNewest",
+        "minimumAgeMilliseconds",
+        "rows",
+        "expected"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "nowMs": {
+          "type": "number",
+          "minimum": 0
+        },
+        "keepNewest": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "minimumAgeMilliseconds": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RetirementRow"
+          }
+        },
+        "expected": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          }
+        }
+      }
+    },
+    "RetirementCorpus": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "cases"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/RetirementCase"
+          }
+        }
+      }
+    }
+  }
+}

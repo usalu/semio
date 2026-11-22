@@ -1,4 +1,5 @@
 //! 📤️ Registered native JSON conversion retains original funding through interior cancellation and same-store history.
+use semio_s_artifact_puzzle_2d_records::standards::v1::subsets::any::schema::testkit as test_source_custody;
 extern crate semio_os_kernel as store;
 use semio_s_artifact_puzzle_2d_text_inverse as puzzle;
 use puzzle::{Puzzle2dSnapshot,Puzzle2dMutation};
@@ -55,11 +56,11 @@ impl Runner{
   let mut owner=ControlledRetirement::new(value).unwrap_or_else(|_|panic!("native test owner has actual paid retirement"));
   while !owner.terminal_is_empty(){self.turn(true,|cx|{
    let demand=owner.selected_demand(cx.retained_grant().maximum_copy_bytes)?;
-   semio_framework_job::close_original_retained_step(cx,demand,|grant|{let result=owner.step(grant);RetainedWorkOutcome{result,work:owner.last_turn_work()}})?;Ok(())
+   semio_framework_job::close_original_retained_step(cx,demand,|grant|{let result=test_source_custody::close_turn(grant, |effect| owner.step(4096, effect));RetainedWorkOutcome{result,work:owner.last_turn_work()}})?;Ok(())
   });}
  }
  fn request(&self,issuer:&Store)->OwnedSerializerRequest{
-  OwnedSerializerRequest{source:issuer.snapshot_read().unwrap().into_erased(),route:(dialect(&self.law["route"]["from"]),dialect(&self.law["route"]["into"])),generation:issuer.generation().0,revision:issuer.content_revision_now(),options:DslValue::Null,children:None}
+  OwnedSerializerRequest{source:issuer.snapshot_read().unwrap().into_erased(),route:(dialect(&self.law["route"]["from"]),dialect(&self.law["route"]["into"])),generation:issuer.generation(),revision:issuer.content_revision_now(),options:DslValue::Null,children:None}
  }
  fn admit(&mut self,request:OwnedSerializerRequest)->Result<Box<dyn OwnedSerializerJob>,String>{
   let mut returned=None;self.turn(false,|cx|{
@@ -157,7 +158,7 @@ fn node_count(runner:&mut Runner,issuer:&Store)->usize{let read=issuer.snapshot_
 async fn registered_owned_json_converts_cancels_and_keeps_the_same_store_live(){
  let law:Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let schema:Value=serde_json::from_str(include_str!("🧫️fixtures/📐️.json")).unwrap();assert_eq!(schema["additionalProperties"],false);for(key,value)in law.as_object().unwrap(){assert_eq!(&schema["properties"][key]["const"],value);}
  io_register(puzzle::standards::v1::subsets::any::io::routes::entries()).unwrap();
- let(native,expected)=oracle::material(&law["material"]);let mut issuer=make_store(document(&native));let mut runner=Runner::new(law,issuer.generation().0);
+ let(native,expected)=oracle::material(&law["material"]);let mut issuer=make_store(document(&native));let mut runner=Runner::new(law,issuer.generation());
  if let Err(error)=exported(&mut runner,&issuer,&expected,true){runner.close_store(&mut issuer);runner.finish();panic!("canonical registered JSON owned factory required: {error}");}
  let seed=oracle::seed();
  for word in std::iter::once(None).chain(seed["binary64Words"].as_array().unwrap().iter().map(|word|Some(u64::from_str_radix(word.as_str().unwrap(),16).unwrap()))){

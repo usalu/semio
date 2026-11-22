@@ -180,7 +180,7 @@ export async function fetchGraphEntryV1(client:GraphFleetClientV1,state:GraphSta
 }
 
 /** 🧭️ What {@link decideGraphEntryV1} is given: `busy` says whether the caller has other owners to infer (then an owner held by a live peer is skipped, never waited for), `strong` that the caller is a large machine (it never waits for a smaller one). */
-export type GraphDecideInputV1=Readonly<{client:GraphFleetClientV1;state:GraphStateV1;owner:string;signal?:AbortSignal;say?:GraphSayV1;expectedMilliseconds?:number;waitLimitMilliseconds?:number;skip?:GraphHeldV1;defer?:(name:string)=>boolean;now?:()=>number;busy?:()=>boolean;strong?:boolean}>;
+export type GraphDecideInputV1=Readonly<{client:GraphFleetClientV1;state:GraphStateV1;owner:string;signal?:AbortSignal;say?:GraphSayV1;expectedMilliseconds?:number;waitLimitMilliseconds?:number;skip?:GraphHeldV1;defer?:(name:string)=>boolean;now?:()=>number;busy?:()=>boolean;strong?:boolean;onLookupFault?:(reason:GraphLookupFaultV1)=>void}>;
 
 /** 🧭️ The protocol for one state: look it up; on a miss claim it; when another machine holds a live claim and this reader has nothing else to infer wait for its upload (at most the lease time since the owner was first seen held) and fetch it; when the holder lapses, or the lease time has passed, take over; a busy reader skips the owner and a large machine computes it at once. Anything unreachable, denied or too slow ends in `compute` without a hold, because correctness never depends on the fleet.
  * @see ../🧪️tests/⏳️lease-wait/🟦️.ts */
@@ -189,8 +189,9 @@ export async function decideGraphEntryV1(input:GraphDecideInputV1):Promise<Graph
 export async function decideGraphEntryV1(input:GraphDecideInputV1):Promise<GraphDecisionV1|GraphSkipV1>{
  const {client,state,owner,say}=input,now=input.now??Date.now,started=now(),key=graphEntryKeyV1(state),compute=(reason:string,hold?:GraphHoldV1):GraphDecisionV1=>{firstHeld.delete(key);return{outcome:"compute",hold,reason,waitedMs:now()-started};},label=state.digest.slice(0,12);
  const hit=(found:{note:GraphEntryNoteV1;documents:readonly GraphDocumentV1[];deferred:ReadonlyMap<string,GraphDeferredV1>},via:"cache"|"wait"):GraphDecisionV1=>{firstHeld.delete(key);say?.("hit",{kind:state.frame.kind,digest:label,files:found.documents.length+found.deferred.size,megabytes:Math.round((found.documents.reduce((sum,document)=>sum+document.bytes.length,0)+[...found.deferred.values()].reduce((sum,each)=>sum+each.size,0))/1048576),seconds:Math.round((now()-started)/1000)});return {outcome:"hit",via,documents:found.documents,deferred:found.deferred,note:found.note,waitedMs:now()-started};};
+ const read=()=>fetchGraphEntryV1(client,state,input.skip,input.defer,input.signal,input.onLookupFault);
  try{
-  const first=await fetchGraphEntryV1(client,state,input.skip,input.defer,input.signal);
+  const first=await read();
   if(first==="fault"){say?.("skipped",{kind:state.frame.kind,reason:"fault"});return compute("fault");}
   if(first)return hit(first,"cache");
   if(!client.claimsUsable())return compute("no-claims");
@@ -204,7 +205,7 @@ export async function decideGraphEntryV1(input:GraphDecideInputV1):Promise<Graph
     return compute("granted",hold);
    }
    input.signal?.throwIfAborted();
-   if(claim.state==="stored"){const again=await fetchGraphEntryV1(client,state,input.skip,input.defer,input.signal);if(again&&again!=="fault")return hit(again,"wait");return compute("stored-unreadable");}
+   if(claim.state==="stored"){const again=await read();if(again&&again!=="fault")return hit(again,"wait");return compute("stored-unreadable");}
    if(claim.state!=="held")return compute(claim.state==="full"?"claims-full":"claims-"+claim.fault);
    const at=now(),since=firstHeld.get(key)??at;firstHeld.set(key,since);
    const verdict=graphHeldVerdictV1({untilMilliseconds:claim.untilMilliseconds,now:at,sinceMilliseconds:since,busy:input.busy?.()===true,strong:input.strong===true});
@@ -217,7 +218,7 @@ export async function decideGraphEntryV1(input:GraphDecideInputV1):Promise<Graph
    if(remaining<=0)return compute("holder-slow");
    const waited=await client.await(key,remaining,input.signal);
    if(waited==="fault")return compute("await-fault");
-   if(waited==="stored"){const again=await fetchGraphEntryV1(client,state,input.skip,input.defer,input.signal);if(again&&again!=="fault")return hit(again,"wait");if(again==="fault")return compute("fault");}
+   if(waited==="stored"){const again=await read();if(again&&again!=="fault")return hit(again,"wait");if(again==="fault")return compute("fault");}
   }
   return compute("rounds");
  }catch{return compute("error");}finally{waiting.delete(key);}

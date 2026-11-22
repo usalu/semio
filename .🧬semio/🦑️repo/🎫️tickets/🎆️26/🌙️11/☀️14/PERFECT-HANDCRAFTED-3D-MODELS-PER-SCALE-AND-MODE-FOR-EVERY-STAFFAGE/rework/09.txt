@@ -1,0 +1,7 @@
+vehicles/city-car
+vehicles/vintage-car-1929
+vehicles/delivery-van
+vehicles/city-bus
+vehicles/tram
+vehicles/motor-scooter
+vehicles/electric-kick-scooter

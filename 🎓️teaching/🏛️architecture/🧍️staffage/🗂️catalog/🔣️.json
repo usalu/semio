@@ -220,7 +220,7 @@
         "de": "Pendler zu Fuß"
       },
       "heightM": 1.8,
-      "widthM": 0.4,
+      "widthM": 0.425,
       "powerW": 132.2,
       "poses": [
         "standing",
@@ -478,8 +478,8 @@
         "en": "Elderly Person with Cane",
         "de": "Ältere Person mit Gehstock"
       },
-      "heightM": 1.644,
-      "widthM": 0.5,
+      "heightM": 1.63,
+      "widthM": 0.48,
       "powerW": 125.6,
       "poses": [
         "stooped-standing",

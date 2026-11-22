@@ -8,31 +8,32 @@ import type { ResizableGroupHandle } from "../../↔️Resizable/🟦️.tsx";
 import { reactHostPort } from "../../🔌️Ports/⚛️react/🟦️.ts";
 import type { ResizableJoinCornerSpec } from "../../↔️Resizable/🟦️.tsx";
 import { isSurfaceActiveBackgroundPointer, setSurfaceActiveRoot } from "../../🌈️Surface/🟦️.tsx";
-import type { WindowStackCorner } from "../../../🔨️modules/🗺️window-layout/🟦️.ts";
+import { type WindowLayoutDropZone, type WindowLayoutNode, type WindowLayoutPath, type WindowStackCorner, WINDOW_STACK_CORNERS, applyWindowLayoutOp, collectWindowIds } from "@semio-tech/ui-layout";
 import { endWindowTemplateDrag } from "../🪟️template-drag/🟦️.ts";
-import { type ModeLayoutPath, collapseLayout, modeCollectWindowIds, removeWindowFromLayout, setActiveWindowInLayout } from "../🗺️layout/🟦️.ts";
-import { type ModeDragState, type ModeDropZone, type ModeStackDropTargets, applyModeDrop, computeModeDropZone } from "../🎯️drop/🟦️.ts";
-import { WINDOW_STACK_CORNERS, applyAxisSizes, safePanelGroupSetLayout } from "../📐️corners/🟦️.ts";
-import { applyAxisGroupLayoutDelta, modeAxisGroupLayout, readModeAxisKind, readModeAxisPixelSize, resolveJoinCornerPeerCrossAxes, resolveJoinCornerResizeDeltas } from "../🔗️join-corners/🟦️.ts";
+import { applyModeSplitPercents, modePathEquals, modePathFromKey, modePathKey } from "../🗺️layout/🟦️.ts";
+import { type ModeDragState, type ModeStackDropTargets, applyModeDrop, computeModeDropZone } from "../🎯️drop/🟦️.ts";
+import { applyAxisGroupLayoutDelta, modeAxisGroupLayout, readModeAxis, readModeAxisPixelSize, resolveJoinCornerPeerCrossAxes, resolveJoinCornerResizeDeltas, safePanelGroupSetLayout } from "../🔗️join-corners/🟦️.ts";
 import type { useModeLayoutState } from "../🧭️mode-layout-state-and-sync/🟦️.tsx";
 
 /** 🪟 Builds the stack drop registration, the window activation, close and maximize callbacks and the pointer drag callbacks. */
 export function useModeWindowCallbacks({ stackDropElementsRef, activeWindowId, setLayoutState, onActiveWindowChange, onWindowClose, setMaximizedStackPath, modeBodyRef, dropZoneRef, setDropZone, setPendingDrag }: Pick<ReturnType<typeof useModeLayoutState>, "stackDropElementsRef" | "setLayoutState" | "setMaximizedStackPath" | "modeBodyRef" | "dropZoneRef" | "setDropZone" | "setPendingDrag"> & { readonly activeWindowId: string | null; readonly onActiveWindowChange: ((windowId: string | null) => void) | undefined; readonly onWindowClose: WindowCloseRequestV1 | undefined }) {
-  const registerStackDropTargets = reactHostPort.useCallback((path: ModeLayoutPath, corner: WindowStackCorner, tabBarElement: HTMLElement | null, bodyElement: HTMLElement | null) => {
+  const registerStackDropTargets = reactHostPort.useCallback((path: WindowLayoutPath, corner: WindowStackCorner, tabBarElement: HTMLElement | null, bodyElement: HTMLElement | null) => {
+    const key = modePathKey(path);
     if (!tabBarElement && !bodyElement) {
-      const prev = stackDropElementsRef.current.get(path);
+      const prev = stackDropElementsRef.current.get(key);
       if (!prev) return;
       const corners = { ...prev.corners, [corner]: null };
       const hasCorner = WINDOW_STACK_CORNERS.some((entry) => corners[entry]);
       if (!hasCorner) {
-        stackDropElementsRef.current.delete(path);
+        stackDropElementsRef.current.delete(key);
         return;
       }
-      stackDropElementsRef.current.set(path, { corners, body: prev.body });
+      stackDropElementsRef.current.set(key, { path, corners, body: prev.body });
       return;
     }
-    const prev = stackDropElementsRef.current.get(path) ?? { corners: {}, body: null };
-    stackDropElementsRef.current.set(path, {
+    const prev = stackDropElementsRef.current.get(key) ?? { path, corners: {}, body: null };
+    stackDropElementsRef.current.set(key, {
+      path,
       corners: { ...prev.corners, [corner]: tabBarElement ?? prev.corners[corner] ?? null },
       body: bodyElement ?? prev.body,
     });
@@ -41,7 +42,7 @@ export function useModeWindowCallbacks({ stackDropElementsRef, activeWindowId, s
   const activateWindow = reactHostPort.useCallback(
     (windowId: string) => {
       if (activeWindowId === windowId) return;
-      setLayoutState((prev) => setActiveWindowInLayout(prev, windowId));
+      setLayoutState((prev) => applyWindowLayoutOp(prev, { op: "setActive", windowId }));
       onActiveWindowChange?.(windowId);
     },
     [activeWindowId, onActiveWindowChange],
@@ -74,8 +75,8 @@ export function useModeWindowCallbacks({ stackDropElementsRef, activeWindowId, s
     const admission = createWindowCloseAdmissionV1({
       request: windowId => closeOwnerRef.current.onWindowClose?.(windowId),
       commit: windowId => setLayoutState(prev => {
-        const next = collapseLayout(removeWindowFromLayout(prev, windowId)) ?? { kind: "stack", children: [] };
-        if (closeOwnerRef.current.activeWindowId === windowId) closeOwnerRef.current.onActiveWindowChange?.(modeCollectWindowIds(next)[0] ?? null);
+        const next = applyWindowLayoutOp(prev, { op: "closeWindow", windowId });
+        if (closeOwnerRef.current.activeWindowId === windowId) closeOwnerRef.current.onActiveWindowChange?.(collectWindowIds(next)[0] ?? null);
         return next;
       }),
       report: error => console.error("[ui] window close admission failed", error),
@@ -87,20 +88,21 @@ export function useModeWindowCallbacks({ stackDropElementsRef, activeWindowId, s
     void closeAdmissionRef.current?.close(windowId);
   }, []);
 
-  const toggleMaximize = reactHostPort.useCallback((stackPath: ModeLayoutPath) => {
-    setMaximizedStackPath((prev) => (prev === stackPath ? null : stackPath));
+  const toggleMaximize = reactHostPort.useCallback((stackPath: WindowLayoutPath) => {
+    setMaximizedStackPath((prev) => (modePathEquals(prev, stackPath) ? null : stackPath));
   }, []);
 
   const refreshDropZone = reactHostPort.useCallback((clientX: number, clientY: number) => {
-    const targets = new Map<ModeLayoutPath, ModeStackDropTargets>();
-    stackDropElementsRef.current.forEach((elements, path) => {
+    const targets = new Map<string, ModeStackDropTargets>();
+    stackDropElementsRef.current.forEach((elements, key) => {
       const corners: ModeStackDropTargets["corners"] = {};
       for (const corner of WINDOW_STACK_CORNERS) {
         const element = elements.corners[corner];
         if (!element) continue;
         corners[corner] = { rect: element.getBoundingClientRect(), element };
       }
-      targets.set(path, {
+      targets.set(key, {
+        path: elements.path,
         corners,
         body: elements.body?.getBoundingClientRect() ?? null,
       });
@@ -112,7 +114,7 @@ export function useModeWindowCallbacks({ stackDropElementsRef, activeWindowId, s
   }, []);
 
   const finishDrag = reactHostPort.useCallback(
-    (drag: ModeDragState, zone: ModeDropZone | null) => {
+    (drag: ModeDragState, zone: WindowLayoutDropZone | null) => {
       if (!zone) return;
       setLayoutState((prev) => applyModeDrop(prev, drag, zone));
       activateWindow(drag.windowId);
@@ -124,7 +126,7 @@ export function useModeWindowCallbacks({ stackDropElementsRef, activeWindowId, s
     setPendingDrag((prev) => (prev?.pointerId === pointerId ? null : prev));
   }, []);
 
-  const startTabDrag = reactHostPort.useCallback((windowId: string, stackPath: ModeLayoutPath, tabIndex: number, label: string, event: React.PointerEvent<HTMLElement>) => {
+  const startTabDrag = reactHostPort.useCallback((windowId: string, stackPath: WindowLayoutPath, tabIndex: number, label: string, event: React.PointerEvent<HTMLElement>) => {
     if (event.button !== 0) return;
     setPendingDrag({
       dragKind: "tab",
@@ -206,42 +208,46 @@ export function useModeDragEffectsAndAxisCallbacks({ pendingDrag, dragState, dra
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [dragState]);
 
-  const onAxisLayoutChanged = reactHostPort.useCallback((axisPath: ModeLayoutPath, sizes: Record<string, number>) => {
-    setLayoutState((prev) => applyAxisSizes(prev, axisPath, sizes));
+  const onAxisLayoutChanged = reactHostPort.useCallback((axisPath: WindowLayoutPath, sizes: Record<string, number>) => {
+    setLayoutState((prev) => applyModeSplitPercents(prev, axisPath, sizes));
   }, []);
 
-  const registerAxisGroup = reactHostPort.useCallback((axisPath: ModeLayoutPath, group: ResizableGroupHandle | null) => {
-    if (group) axisGroupRefsRef.current.set(axisPath, group);
-    else axisGroupRefsRef.current.delete(axisPath);
+  const registerAxisGroup = reactHostPort.useCallback((axisPath: WindowLayoutPath, group: ResizableGroupHandle | null) => {
+    const key = modePathKey(axisPath);
+    if (group) axisGroupRefsRef.current.set(key, group);
+    else axisGroupRefsRef.current.delete(key);
   }, []);
 
-  const registerAxisElement = reactHostPort.useCallback((axisPath: ModeLayoutPath, element: HTMLDivElement | null) => {
-    if (element) axisGroupElementsRef.current.set(axisPath, element);
-    else axisGroupElementsRef.current.delete(axisPath);
+  const registerAxisElement = reactHostPort.useCallback((axisPath: WindowLayoutPath, element: HTMLDivElement | null) => {
+    const key = modePathKey(axisPath);
+    if (element) axisGroupElementsRef.current.set(key, element);
+    else axisGroupElementsRef.current.delete(key);
   }, []);
 
   const onJoinCornerResize = reactHostPort.useCallback((spec: ResizableJoinCornerSpec, deltaXPx: number, deltaYPx: number) => {
     const current = layoutStateRef.current;
-    const mainKind = readModeAxisKind(current, spec.mainAxisPath);
-    const crossKind = readModeAxisKind(current, spec.crossAxisPath);
+    const mainPath = modePathFromKey(spec.mainAxisPath);
+    const crossPath = modePathFromKey(spec.crossAxisPath);
+    const mainAxis = readModeAxis(current, mainPath);
+    const crossAxis = readModeAxis(current, crossPath);
     const mainGroup = axisGroupRefsRef.current.get(spec.mainAxisPath);
     const crossGroup = axisGroupRefsRef.current.get(spec.crossAxisPath);
-    if (!mainKind || !crossKind || !mainGroup || !crossGroup) return;
+    if (!mainAxis || !crossAxis || !mainGroup || !crossGroup) return;
     const peers = resolveJoinCornerPeerCrossAxes(current, spec);
     const deltas = resolveJoinCornerResizeDeltas(
-      spec.parentKind,
+      spec.parentAxis,
       deltaXPx,
       deltaYPx,
-      readModeAxisPixelSize(axisGroupElementsRef.current.get(spec.mainAxisPath), mainKind),
-      readModeAxisPixelSize(axisGroupElementsRef.current.get(spec.crossAxisPath), crossKind),
+      readModeAxisPixelSize(axisGroupElementsRef.current.get(spec.mainAxisPath), mainAxis),
+      readModeAxisPixelSize(axisGroupElementsRef.current.get(spec.crossAxisPath), crossAxis),
     );
     const liveMainLayout = mainGroup.getLayout();
-    const currentMainLayout = Object.keys(liveMainLayout).length > 0 ? liveMainLayout : modeAxisGroupLayout(current, spec.mainAxisPath);
-    const mainLayout = applyAxisGroupLayoutDelta(currentMainLayout, spec.mainAxisPath, spec.mainSeparatorIndex, deltas.mainDeltaPct);
+    const currentMainLayout = Object.keys(liveMainLayout).length > 0 ? liveMainLayout : modeAxisGroupLayout(current, mainPath);
+    const mainLayout = applyAxisGroupLayoutDelta(currentMainLayout, mainPath, spec.mainSeparatorIndex, deltas.mainDeltaPct);
     safePanelGroupSetLayout(mainGroup, mainLayout);
-    const peerLayouts: { path: ModeLayoutPath; layout: Record<string, number> }[] = [];
+    const peerLayouts: { path: WindowLayoutPath; layout: Record<string, number> }[] = [];
     for (const peer of peers) {
-      const peerGroup = axisGroupRefsRef.current.get(peer.path);
+      const peerGroup = axisGroupRefsRef.current.get(modePathKey(peer.path));
       if (!peerGroup) continue;
       const livePeerLayout = peerGroup.getLayout();
       const currentPeerLayout = Object.keys(livePeerLayout).length > 0 ? livePeerLayout : modeAxisGroupLayout(current, peer.path);
@@ -249,7 +255,7 @@ export function useModeDragEffectsAndAxisCallbacks({ pendingDrag, dragState, dra
       safePanelGroupSetLayout(peerGroup, peerLayout);
       peerLayouts.push({ path: peer.path, layout: peerLayout });
     }
-    setLayoutState((prev) => peerLayouts.reduce((next, peer) => applyAxisSizes(next, peer.path, peer.layout), applyAxisSizes(prev, spec.mainAxisPath, mainLayout)));
+    setLayoutState((prev) => peerLayouts.reduce((next: WindowLayoutNode, peer) => applyModeSplitPercents(next, peer.path, peer.layout), applyModeSplitPercents(prev, mainPath, mainLayout)));
   }, []);
 
   const clearTemplateDragPreview = reactHostPort.useCallback(() => {
